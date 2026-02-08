@@ -3035,4 +3035,135 @@ M.E.R.L.I.N. = Memoire Eternelle des Recits et Legendes d Incarnations Narrative
 
 ---
 
-*Last updated: 2026-02-08 - Debug Round 2*
+---
+
+## Session: 2026-02-08 (Night Mode Setup)
+
+### Night Mode v2 — Boucle autonome focalisee
+- **Status:** complete
+- **Fichiers:**
+  - `tools/night_mode.ps1` — Script de lancement/handoff
+  - `tools/night_mode_protocol.md` — Regles absolues du Night Mode
+  - `night_mode_handoff.md` — Fichier de handoff dynamique (genere a chaque iteration)
+- **Concept:** Boucle IA focalisee sur UN theme unique
+  - Itere: recherche -> reflexion -> doc -> implementation -> test -> handoff
+  - Continue jusqu'a satisfaction 5/5 ou arret manuel
+  - Force planning files, agents, frontend skill, validation
+  - Zero derive thematique (decouverte hors-theme -> findings.md)
+- **Commandes VS Code:**
+  - Claude Code: `claude-vscode.editor.open` (Command Palette)
+  - Codex: `chatgpt.newCodexPanel` (Command Palette)
+- **Fallback:** Prompt toujours dans le clipboard (Ctrl+V)
+
+---
+
+---
+
+## Night Mode: LORE COMPLETE — Iteration 1
+
+### Theme
+LORE complète du monde M.E.R.L.I.N.: ce qui est revele, ce qui ne l'est pas, les histoires cachees, les factions, l'epoque, le setup du monde en integralite.
+
+### Satisfaction: 2/5
+Fondations posees, structure creee, lacunes critiques comblees. Reste le polish, l'integration et les PNJ.
+
+### Accompli
+1. **Audit complet** des 15 documents de lore existants (~4500+ lignes)
+2. **Gap analysis** identifiant 10 lacunes (Voyageur 15%, Factions 30%, Timeline 50%, etc.)
+3. **Cree 6 nouveaux documents** comblant les lacunes critiques:
+   - `00_LORE_BIBLE_INDEX.md` — Index general + hierarchie des secrets
+   - `02_CHRONOLOGIE.md` — Timeline unifiee des Geants au Futur (reconcilie les 3 natures de Merlin)
+   - `03_LES_FACTIONS.md` — 5 factions detaillees (Druides, Korrigans, Humains, Anciens, Ankou) avec leaders, culture, quetes cachees
+   - `05_LE_VOYAGEUR.md` — Le joueur: Temoin, origine, meta-narrative, dialogues par Trust
+   - `06_BESTIOLE.md` — Origine consolidee, Awen primordial, 5 stades du lien, apres la fin
+   - `09_LES_FINS.md` — 8+1 fins avec sens cosmique, correspondances celtiques, 9e fin secrete
+   - `10_LE_PONT_MECANIQUE.md` — Connexion lore-mecaniques (pourquoi 3 choix, Souffle, 6 ressources cachees, twists)
+4. **3 agents lances en parallele**: Explore (audit), Lore Writer (bible), Historien Bretagne (recherche)
+
+### Fichiers crees
+- `docs/50_lore/00_LORE_BIBLE_INDEX.md`
+- `docs/50_lore/02_CHRONOLOGIE.md`
+- `docs/50_lore/03_LES_FACTIONS.md`
+- `docs/50_lore/05_LE_VOYAGEUR.md`
+- `docs/50_lore/06_BESTIOLE.md`
+- `docs/50_lore/09_LES_FINS.md`
+- `docs/50_lore/10_LE_PONT_MECANIQUE.md`
+
+### Restant (iteration 2+)
+1. **LES_PNJ.md** — 10-15 personnages recurrents avec arcs et dialogues
+2. **08_LES_BIOMES.md** — Lore narrative des 7 lieux sacres (histoire, secrets)
+3. **OGHAM_INVOCATION_LORE.md** — Comment Bestiole canalise les druides
+4. Integration des resultats des agents (Historien Bretagne: lieux sacres reels, calendrier)
+5. Relecture coherence inter-documents (contradictions residuelles?)
+6. Mise a jour du MASTER_DOCUMENT.md avec les nouveaux docs
+7. Renumerotation/renommage des docs existants vers le schema 01-13
+
+---
+
+## Night Mode — Iteration 2: LORE COMPLETE (suite)
+### Session: 2026-02-08
+
+**Theme**: LORE, histoire du jeu, ce qui est revele, ce qui ne l'est pas
+**Satisfaction**: 4/5
+
+### Accompli (Iteration 2)
+1. **08_LES_BIOMES.md** (~400 lignes) — 7 lieux sacres avec:
+   - Geographie reelle (Paimpont, Monts d'Arree, ile de Sein, Carnac...)
+   - Sous-lieux (Fontaine de Barenton, Val sans Retour, Cite d'Ys...)
+   - Atmosphere (visuel, son, odeur)
+   - Signes d'epuisement par biome
+   - Ogham dominant + druide gardien + faction dominante
+   - Cartes narratives d'exemple
+   - Secret lore par biome (S1-S3)
+
+2. **11_LES_PNJ.md** (~400 lignes) — 12 PNJ recurrents:
+   - 7 Druides: Maelgwn, Keridwen, Talwen, Bran, Azenor, Gwydion, Elouan
+   - 3 Humains: Enora, Riwal, Yves le Roux
+   - 2 Surnaturels: Le Vieux Granit (korrigan), Niamh (Ancienne)
+   - + L'Ankou comme force
+   - Chaque PNJ: personnalite, ce qu'il sait, arc inter-runs, dialogues Trust T0-T3, quete personnelle
+   - Table des relations, evolution multi-run, easter eggs
+
+3. **07_LES_OGHAMS_COMPLET.md** (~280 lignes) — Version consolidee:
+   - Tableau synthese des 18 Oghams (arbre, druide, ancrage, categorie jeu)
+   - Dernieres paroles des 18 druides
+   - Heritage confie a Merlin
+   - Les 7 Oghams perdus
+   - La Sequence Secrete
+   - Reseau des Menhirs et festivals
+   - Mapping Oghams-Biomes
+   - Integration gameplay (skills, visuels, sons)
+   - Easter eggs multi-run
+
+4. **00_LORE_BIBLE_INDEX.md** — Mis a jour v2.0:
+   - Statut COMPLET pour tous les docs 00-11
+   - Documents supplementaires references
+   - Section verification de coherence (disambiguation Niamh, Taran, Brigid)
+   - Cross-references validees
+
+5. **Relecture coherence** — Corrections effectuees:
+   - Corrige mapping Oghams-Biomes dans 07 pour correspondre a 08
+   - Verifie 7 druides (03_FACTIONS) = 7 gardiens (08_BIOMES) = 7 profils (11_PNJ)
+   - Identifie divergence 3 Aspects (10_PONT) vs 4 Jauges (09_FINS, CLAUDE.md) — decision game design pendante
+
+### Fichiers crees/modifies
+- `docs/50_lore/07_LES_OGHAMS_COMPLET.md` (NOUVEAU)
+- `docs/50_lore/08_LES_BIOMES.md` (NOUVEAU)
+- `docs/50_lore/11_LES_PNJ.md` (NOUVEAU)
+- `docs/50_lore/00_LORE_BIBLE_INDEX.md` (MIS A JOUR v2.0)
+
+### Note de design pendante
+Le systeme mecanique a deux representations:
+- **4 Jauges** (CLAUDE.md, 09_LES_FINS): Vigueur/Esprit/Faveur/Ressources (0-100)
+- **3 Aspects** (10_PONT_MECANIQUE): Corps/Ame/Monde avec 3 etats (Bas/Equilibre/Haut)
+Decision a prendre: lequel est canonique? Les deux coexistent-ils?
+
+### Restant (iteration 3 eventuelle)
+1. Renumerotation/renommage des docs existants (01_LE_MONDE.md, 04_MERLIN.md, 12_LES_INDICES.md, 13_GARDES-FOU.md)
+2. Mise a jour du MASTER_DOCUMENT.md avec references lore
+3. Trancher 3 Aspects vs 4 Jauges
+4. Integration des resultats agent Historien Bretagne (calendrier celtique, lieux sacres supplementaires)
+
+---
+
+*Last updated: 2026-02-08 - Night Mode Lore Iteration 2*

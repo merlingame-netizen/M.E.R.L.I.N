@@ -303,7 +303,7 @@ scripts/ui/
 | 20_dru_system | Core systems | DOC_11_Reigns_Card_System.md |
 | 30_jdr | Regles RPG | narrator_constraints.md |
 | 40_world_rules | Biomes, temps | **BIOMES_SYSTEM.md** (NEW) |
-| 50_lore | Lore, verite cachee | THE_HIDDEN_TRUTH.md, MERLIN_COMPLETE_PERSONALITY.md, CELTIC_FOUNDATION.md, NARRATIVE_ENGINE.md, **COSMOLOGIE_CACHEE.md** (DEEP), **MERLIN_TRUE_NATURE.md** (DEEP), **LES_CYCLES_ANTERIEURS.md** (DEEP), **OGHAMS_SECRETS.md** (DEEP) |
+| 50_lore | Lore Bible (~10k lignes) | **00_LORE_BIBLE_INDEX.md** (index), 02_CHRONOLOGIE.md, 03_LES_FACTIONS.md, 05_LE_VOYAGEUR.md, 06_BESTIOLE.md, 07_LES_OGHAMS_COMPLET.md, 08_LES_BIOMES.md, 09_LES_FINS.md, 10_LE_PONT_MECANIQUE.md, 11_LES_PNJ.md + sources: COSMOLOGIE_CACHEE.md, OGHAMS_SECRETS.md, CELTIC_FOUNDATION.md, THE_HIDDEN_TRUTH.md |
 | 60_companion | Bestiole | bestiole_system.md |
 | 70_graphic | Art specs | gba_style.md |
 | 80_sound | Audio specs | audio_design.md |
@@ -348,6 +348,7 @@ Voir `.claude/agents/AGENTS.md` pour details.
 3. [ ] Mobile: gestes swipe exacts
 4. [x] Conditions deblocage fin secrete → Easter egg 1000 runs
 5. [x] Easter eggs pour 100+ runs → Timeline revelation
+6. [ ] **3 Aspects vs 4 Jauges** — DOC_12_Triade (3 Aspects/3 etats) vs CLAUDE.md (4 Jauges/0-100). Lequel est canonique?
 
 ---
 
@@ -367,7 +368,22 @@ Voir `.claude/agents/AGENTS.md` pour details.
 | **OGHAMS_SECRETS.md** | 18 druides dissous, 7 Oghams perdus, Sequence Secrete |
 | DOC_12_Triade_Gameplay_System.md | Systeme 3 aspects, Souffle d'Ogham, 3 options |
 
+### Lore Bible — Night Mode (Fevrier 2026)
+
+| Document | Contenu |
+|----------|---------|
+| **00_LORE_BIBLE_INDEX.md** | Index general + hierarchie des secrets S0-S4 + verification coherence |
+| **02_CHRONOLOGIE.md** | Timeline unifiee: Geants -> Druides -> Rois -> Present |
+| **03_LES_FACTIONS.md** | 5 factions (Druides, Korrigans, Humains, Anciens, Ankou) + 7 druides nommes |
+| **05_LE_VOYAGEUR.md** | Le joueur = Temoin (Tyst), role cosmique, lien Bestiole |
+| **06_BESTIOLE.md** | Fragment d'Awen primordial, 5 stades du lien, canal des Oghams |
+| **07_LES_OGHAMS_COMPLET.md** | 18+7 Oghams consolides, druides dissous, sequence secrete, mapping biomes |
+| **08_LES_BIOMES.md** | 7 sanctuaires sacres, geographie reelle, atmosphere, epuisement |
+| **09_LES_FINS.md** | 8+1 fins cosmiques, correspondances celtiques |
+| **10_LE_PONT_MECANIQUE.md** | Connexion lore-mecaniques (choix, aspects, ressources, twists) |
+| **11_LES_PNJ.md** | 12 PNJ recurrents: arcs, dialogues Trust T0-T3, quetes personnelles |
+
 ---
 
-*Document version: 3.0 (JDR Parlant)*
+*Document version: 3.1 (Lore Bible Complete)*
 *Last updated: 2026-02-08*
