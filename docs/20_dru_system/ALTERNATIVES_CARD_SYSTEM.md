@@ -1,4 +1,4 @@
-# Alternatives au Systeme Reigns — DRU: Le JDR Parlant
+# Alternatives au Systeme de Cartes — DRU: Le JDR Parlant
 
 *Document cree: 2026-02-08*
 *Agent: Game Designer*

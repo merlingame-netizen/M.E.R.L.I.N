@@ -1,7 +1,7 @@
-# DOC 11 — Systeme de Cartes Reigns (Core Gameplay)
+# DOC 11 — Systeme de Cartes Narratives (Core Gameplay)
 
 ## But
-Remplacer le combat par un systeme de choix narratifs style Reigns, ou chaque carte presente un scenario et le joueur choisit entre options qui impactent ses ressources.
+Systeme de choix narratifs par cartes, ou chaque carte presente un scenario et le joueur choisit entre options qui impactent ses ressources.
 
 ---
 

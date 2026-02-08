@@ -1,4 +1,4 @@
-# Robot Voice (GBA-like) Setup
+# Robot Voice (Retro Style) Setup
 
 Goal
 - Real-time "robot mignon" voice for Merlin (LLM text).

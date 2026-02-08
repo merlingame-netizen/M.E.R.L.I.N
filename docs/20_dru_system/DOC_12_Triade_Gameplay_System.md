@@ -391,7 +391,7 @@ Sur 30 cartes:
 
 ---
 
-## PARTIE 8: Migration depuis Reigns System
+## PARTIE 8: Migration depuis l'Ancien Systeme
 
 ### 8.1 Fichiers a Modifier
 

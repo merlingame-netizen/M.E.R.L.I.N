@@ -191,7 +191,7 @@ Si Cleanliness > 80: +1 bond par session
 
 ## UI Integration
 
-### Main Game (Reigns-style)
+### Main Game (Swipe Cards)
 ```
 +------------------------------------------+
 |  [Card Content]                          |

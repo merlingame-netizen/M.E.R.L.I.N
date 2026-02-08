@@ -1,7 +1,7 @@
-# GBA-like C++ Graphics Spec (LLM Coder)
+# Retro C++ Graphics Spec (LLM Coder)
 
 Purpose
-- Provide strict rules for a C++ CLI tool that generates GBA-like 2D pixel art.
+- Provide strict rules for a C++ CLI tool that generates retro-style 2D pixel art.
 - Output PNG (RGBA) for preview and JSON metadata for engine import.
 - Enforce handheld constraints: indexed pixels, stable palettes, tilemaps, and clean clusters.
 

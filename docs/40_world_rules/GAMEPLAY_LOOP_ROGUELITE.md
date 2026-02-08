@@ -1,10 +1,10 @@
-# Roguelite Gameplay Structure — Reigns-Style (UPDATED 2026-02-05)
+# Roguelite Gameplay Structure — Swipe Cards (UPDATED 2026-02-05)
 
 ---
 
 ## PIVOT: De Combat vers Narration Pure
 
-Le gameplay pivote d'un roguelite avec combat vers un **Reigns-like narratif**:
+Le gameplay pivote d'un roguelite avec combat vers un **jeu de cartes narratif**:
 - Pas de combat traditionnel
 - Cartes narratives avec choix binaires
 - 4 jauges a equilibrer (mort si 0 ou 100)

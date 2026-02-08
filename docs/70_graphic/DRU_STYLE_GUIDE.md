@@ -1,7 +1,7 @@
-# Reigns-Inspired Style Guide (2D Low-Poly, Minimal)
+# DRU Style Guide (2D Low-Poly, Minimal)
 
 Purpose
-- Define the visual style inspired by the Reigns series.
+- Define the visual style for DRU card game.
 - Minimalist 2D, flat shading, low-poly faceting, near-static presentation.
 - Keep assets simple, readable, and consistent.
 

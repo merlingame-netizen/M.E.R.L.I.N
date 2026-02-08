@@ -83,7 +83,7 @@ Scrollable list showing events for current month:
 
 ---
 
-## Visual Design (Reigns Aesthetic)
+## Visual Design (Card Aesthetic)
 
 ### Color Palette (Matches existing themes)
 

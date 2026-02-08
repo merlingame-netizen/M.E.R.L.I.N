@@ -454,7 +454,7 @@ func _apply_choice(direction: String):
 
 ---
 
-## PARTIE 6: Differenciation de Reigns
+## PARTIE 6: Differenciation du Genre
 
 ### 6.1 Ce que DRU fait mieux
 
