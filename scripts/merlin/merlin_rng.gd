@@ -1,5 +1,5 @@
 extends RefCounted
-class_name DruRng
+class_name MerlinRng
 
 var _state: int = 0
 

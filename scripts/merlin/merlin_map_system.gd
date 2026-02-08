@@ -1,9 +1,9 @@
 extends RefCounted
-class_name DruMapSystem
+class_name MerlinMapSystem
 
 const DEFAULT_FLOORS := 8
 
-func generate_map(floors: int, rng: DruRng, config: Dictionary = {}) -> Array:
+func generate_map(floors: int, rng: MerlinRng, config: Dictionary = {}) -> Array:
 	var total: int = max(2, floors)
 	var map: Array = []
 	for floor_idx in range(total):
@@ -33,13 +33,13 @@ func generate_map(floors: int, rng: DruRng, config: Dictionary = {}) -> Array:
 	return map
 
 
-func _node_count_for_floor(floor_idx: int, total: int, rng: DruRng) -> int:
+func _node_count_for_floor(floor_idx: int, total: int, rng: MerlinRng) -> int:
 	if floor_idx == 0 or floor_idx == total - 1:
 		return 1
 	return rng.randi_range(2, 3)
 
 
-func _pick_node_type(floor_idx: int, total: int, rng: DruRng, config: Dictionary) -> String:
+func _pick_node_type(floor_idx: int, total: int, rng: MerlinRng, config: Dictionary) -> String:
 	if floor_idx == 0:
 		return "EVENT"
 	if floor_idx == total - 1:

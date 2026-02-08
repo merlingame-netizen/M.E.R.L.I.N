@@ -233,7 +233,7 @@ func _start_phase_3() -> void:
 	var left_blocks: Array[ColorRect] = []
 	var right_blocks: Array[ColorRect] = []
 
-	var mid_col: int = LOGO_GRID[0].size() / 2
+	var mid_col: int = int(LOGO_GRID[0].size() / 2.0)
 	for block in logo_blocks:
 		var col: int = block.get_meta("col")
 		if col < mid_col:

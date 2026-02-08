@@ -240,8 +240,8 @@ func _on_merlin_status_changed(status: String, detail: String, progress: float) 
 	_update_status(detail, color, progress)
 
 
-func _on_merlin_ready_changed(is_ready: bool) -> void:
-	if is_ready:
+func _on_merlin_ready_changed(ready_state: bool) -> void:
+	if ready_state:
 		_update_status("LLM Pret", PALETTE.success, 100)
 	else:
 		_update_status("LLM Deconnecte", PALETTE.error, 0)

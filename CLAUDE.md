@@ -1,4 +1,4 @@
-# CLAUDE.md — DRU: Le Jeu des Oghams
+# CLAUDE.md — M.E.R.L.I.N.: Le Jeu des Oghams
 
 > **IMPORTANT**: Ce fichier définit les comportements OBLIGATOIRES pour Claude Code sur ce projet.
 
@@ -180,7 +180,7 @@ Co-Authored-By: Claude <noreply@anthropic.com>
 
 ## Project Overview
 
-DRU is a Reigns-style narrative roguelite game built with Godot 4.x.
+M.E.R.L.I.N. is a narrative card game built with Godot 4.x.
 - **Core Loop**: Swipe cards, balance 4 gauges, survive
 - **LLM Integration**: Trinity-Nano local LLM generates narrative cards
 - **Companion**: Bestiole provides passive skills (Oghams)
@@ -198,7 +198,7 @@ DRU is a Reigns-style narrative roguelite game built with Godot 4.x.
 godot --path .
 
 # Run specific scene
-godot --path . scenes/ReignsGame.tscn
+godot --path . scenes/MerlinGame.tscn
 
 # Build MCP server
 cd server && npm run build
@@ -208,24 +208,24 @@ cd server && npm run build
 
 ## Architecture
 
-### Core Systems (scripts/dru/)
+### Core Systems (scripts/merlin/)
 ```
-dru_store.gd          <- Central state (Redux-like)
-dru_card_system.gd    <- Reigns card engine
-dru_effect_engine.gd  <- Effect whitelist
-dru_llm_adapter.gd    <- LLM contract
-dru_constants.gd      <- Game constants
+merlin_store.gd          <- Central state (Redux-like)
+merlin_card_system.gd    <- Card engine
+merlin_effect_engine.gd  <- Effect whitelist
+merlin_llm_adapter.gd    <- LLM contract
+merlin_constants.gd      <- Game constants
 ```
 
 ### UI Layer (scripts/ui/)
 ```
-reigns_game_ui.gd         <- Card display, swipe
-reigns_game_controller.gd <- Store-UI bridge
+merlin_game_ui.gd         <- Card display, swipe
+merlin_game_controller.gd <- Store-UI bridge
 ```
 
 ### Key Documents
 - `docs/MASTER_DOCUMENT.md` — Project overview
-- `docs/20_dru_system/DOC_11_Reigns_Card_System.md` — Card system
+- `docs/20_card_system/DOC_11_Card_System.md` — Card system
 - `progress.md` — Session logs
 - `task_plan.md` — Current tasks
 - `.claude/agents/AGENTS.md` — Agent roster

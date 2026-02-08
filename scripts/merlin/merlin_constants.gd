@@ -1,5 +1,5 @@
 extends RefCounted
-class_name DruConstants
+class_name MerlinConstants
 
 # ═══════════════════════════════════════════════════════════════════════════════
 # LEGACY (kept for compatibility, prefer REIGNS_ versions)

@@ -1,12 +1,12 @@
 ## ═══════════════════════════════════════════════════════════════════════════════
-## DRU Card System — TRIADE Gameplay Engine (v0.3.0)
+## Merlin Card System — TRIADE Gameplay Engine (v0.3.0)
 ## ═══════════════════════════════════════════════════════════════════════════════
 ## Handles card generation, selection, and resolution for TRIADE system.
 ## 3 Aspects (Corps/Ame/Monde), 3 States, 3 Options per card.
 ## ═══════════════════════════════════════════════════════════════════════════════
 
 extends RefCounted
-class_name DruCardSystem
+class_name MerlinCardSystem
 
 @warning_ignore("unused_signal")
 signal card_displayed(card: Dictionary)

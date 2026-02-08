@@ -1,5 +1,5 @@
 extends RefCounted
-class_name DruActionResolver
+class_name MerlinActionResolver
 
 const STYLE_MODS := {
 	"PROTECTEUR": {"FORCE": -2, "LOGIQUE": 3, "FINESSE": 0},

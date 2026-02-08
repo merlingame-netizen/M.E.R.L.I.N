@@ -1,9 +1,9 @@
 extends RefCounted
-class_name DruSaveSystem
+class_name MerlinSaveSystem
 
 const CURRENT_VERSION := "0.1.0"
 const SLOT_COUNT := 3
-const SLOT_PATH := "user://dru_save_slot_%d.json"
+const SLOT_PATH := "user://merlin_save_slot_%d.json"
 
 func save_slot(slot: int, payload: Dictionary) -> bool:
 	if not _is_valid_slot(slot):

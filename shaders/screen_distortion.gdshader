@@ -78,17 +78,16 @@ float noise(vec2 uv) {
 // === MAIN FRAGMENT ===
 
 void fragment() {
-    vec2 uv = UV;
-    vec2 center_dist = uv - 0.5;
-    float dist_from_center = length(center_dist);
+    // Default output
+    vec4 col = texture(TEXTURE, UV);
 
-    // Skip everything if global intensity is 0
-    if (global_intensity < 0.001) {
-        COLOR = texture(TEXTURE, UV);
-        return;
-    }
+    // Only apply effects if global intensity > 0
+    if (global_intensity >= 0.001) {
+        vec2 uv = UV;
+        vec2 center_dist = uv - 0.5;
+        float dist_from_center = length(center_dist);
 
-    // === BARREL DISTORTION ===
+        // === BARREL DISTORTION ===
     if (barrel_enabled && barrel_intensity > 0.0) {
         float r2 = dot(center_dist, center_dist);
         float distort = 1.0 + r2 * barrel_intensity * global_intensity;
@@ -125,7 +124,6 @@ void fragment() {
     }
 
     // === CHROMATIC ABERRATION (edge weighted) ===
-    vec4 col;
     if (chromatic_enabled && chromatic_intensity > 0.0) {
         float edge_factor = pow(dist_from_center * 2.0, chromatic_falloff);
         float ca_amount = chromatic_intensity * edge_factor * global_intensity;
@@ -161,8 +159,9 @@ void fragment() {
         col.rgb *= mix(1.0, vignette, vignette_intensity * global_intensity);
     }
 
-    // Clamp output
-    col.rgb = clamp(col.rgb, 0.0, 1.0);
+        // Clamp output
+        col.rgb = clamp(col.rgb, 0.0, 1.0);
+    } // end if (global_intensity >= 0.001)
 
     COLOR = col;
 }

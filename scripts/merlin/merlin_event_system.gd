@@ -1,12 +1,12 @@
 extends RefCounted
-class_name DruEventSystem
+class_name MerlinEventSystem
 
-var _action_resolver: DruActionResolver
-var _minigame: DruMiniGameSystem
-var _effects: DruEffectEngine
-var _llm: DruLlmAdapter
+var _action_resolver: MerlinActionResolver
+var _minigame: MerlinMiniGameSystem
+var _effects: MerlinEffectEngine
+var _llm: MerlinLlmAdapter
 
-func setup(action_resolver: DruActionResolver, minigame: DruMiniGameSystem, effects: DruEffectEngine, llm: DruLlmAdapter) -> void:
+func setup(action_resolver: MerlinActionResolver, minigame: MerlinMiniGameSystem, effects: MerlinEffectEngine, llm: MerlinLlmAdapter) -> void:
 	_action_resolver = action_resolver
 	_minigame = minigame
 	_effects = effects

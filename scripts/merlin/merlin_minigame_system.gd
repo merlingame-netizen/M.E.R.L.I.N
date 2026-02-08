@@ -1,9 +1,9 @@
 extends RefCounted
-class_name DruMiniGameSystem
+class_name MerlinMiniGameSystem
 
-var _rng: DruRng
+var _rng: MerlinRng
 
-func set_rng(rng: DruRng) -> void:
+func set_rng(rng: MerlinRng) -> void:
 	_rng = rng
 
 

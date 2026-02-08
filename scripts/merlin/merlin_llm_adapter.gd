@@ -1,12 +1,12 @@
 ## ═══════════════════════════════════════════════════════════════════════════════
-## DRU LLM Adapter — Reigns-Style Card Contract
+## Merlin LLM Adapter — Card Contract
 ## ═══════════════════════════════════════════════════════════════════════════════
 ## Handles communication with LLM for generating narrative cards.
-## Updated 2026-02-05 for Reigns-style gameplay.
+## Updated 2026-02-08.
 ## ═══════════════════════════════════════════════════════════════════════════════
 
 extends RefCounted
-class_name DruLlmAdapter
+class_name MerlinLlmAdapter
 
 const VERSION := "2.0.0"
 

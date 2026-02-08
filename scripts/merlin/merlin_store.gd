@@ -1,12 +1,12 @@
 ## ═══════════════════════════════════════════════════════════════════════════════
-## DRU Store — Central State Management
+## Merlin Store — Central State Management
 ## ═══════════════════════════════════════════════════════════════════════════════
-## Redux-like state management for DRU game.
+## Redux-like state management for Merlin game.
 ## Updated 2026-02-08 for TRIADE system (3 aspects, 3 states, 3 options).
 ## ═══════════════════════════════════════════════════════════════════════════════
 
 extends Node
-class_name DruStore
+class_name MerlinStore
 
 signal state_changed(state: Dictionary)
 signal phase_changed(phase: String)

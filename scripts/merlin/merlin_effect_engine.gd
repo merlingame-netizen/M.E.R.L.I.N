@@ -1,5 +1,5 @@
 extends RefCounted
-class_name DruEffectEngine
+class_name MerlinEffectEngine
 
 const MAX_STATUS_TURNS := 5
 const MAX_BUFF_TURNS := 5
