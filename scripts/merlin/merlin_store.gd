@@ -24,16 +24,15 @@ const VERSION := "0.3.0"  # Updated for TRIADE system
 # ═══════════════════════════════════════════════════════════════════════════════
 
 var state: Dictionary = {}
-var rng := DruRng.new()
-var save_system := DruSaveSystem.new()
-var effects := DruEffectEngine.new()
-var action_resolver := DruActionResolver.new()
-var minigames := DruMiniGameSystem.new()
-var map_system := DruMapSystem.new()
-var llm := DruLlmAdapter.new()
-var events := DruEventSystem.new()
-var combat := DruCombatSystem.new()  # DEPRECATED - kept for compatibility
-var cards := DruCardSystem.new()  # NEW - Reigns-style cards
+var rng := MerlinRng.new()
+var save_system := MerlinSaveSystem.new()
+var effects := MerlinEffectEngine.new()
+var action_resolver := MerlinActionResolver.new()
+var minigames := MerlinMiniGameSystem.new()
+var map_system := MerlinMapSystem.new()
+var llm := MerlinLlmAdapter.new()
+var events := MerlinEventSystem.new()
+var cards := MerlinCardSystem.new()
 
 # ═══════════════════════════════════════════════════════════════════════════════
 # MERLIN OMNISCIENT SYSTEM (MOS)
@@ -47,8 +46,7 @@ var merlin: MerlinOmniscient = null
 func _ready() -> void:
 	minigames.set_rng(rng)
 	events.setup(action_resolver, minigames, effects, llm)
-	combat.setup(action_resolver, minigames, effects, rng)  # Legacy
-	cards.setup(effects, llm, rng)  # New Reigns system
+	cards.setup(effects, llm, rng)
 
 	# Connect card system signals
 	cards.gauge_critical.connect(_on_gauge_critical)
@@ -72,7 +70,7 @@ func _init_merlin_omniscient() -> void:
 		merlin = MerlinOmniscient.new()
 		merlin.setup(self)
 		add_child(merlin)
-		print("[DruStore] MERLIN OMNISCIENT SYSTEM initialized")
+		print("[MerlinStore] MERLIN OMNISCIENT SYSTEM initialized")
 	else:
 		# Try to instantiate directly (for RefCounted classes)
 		var script_path := "res://addons/merlin_ai/merlin_omniscient.gd"
@@ -83,9 +81,9 @@ func _init_merlin_omniscient() -> void:
 				merlin.setup(self)
 				# MerlinOmniscient extends Node, so add as child
 				add_child(merlin)
-				print("[DruStore] MERLIN OMNISCIENT SYSTEM initialized (script load)")
+				print("[MerlinStore] MERLIN OMNISCIENT SYSTEM initialized (script load)")
 		else:
-			print("[DruStore] MerlinOmniscient not available - using legacy LLM")
+			print("[MerlinStore] MerlinOmniscient not available - using legacy LLM")
 
 
 func get_merlin() -> MerlinOmniscient:
@@ -121,13 +119,13 @@ func build_default_state() -> Dictionary:
 
 	# TRIADE system - 3 Aspects with 3 discrete states
 	var aspects: Dictionary = {
-		"Corps": DruConstants.AspectState.EQUILIBRE,
-		"Ame": DruConstants.AspectState.EQUILIBRE,
-		"Monde": DruConstants.AspectState.EQUILIBRE,
+		"Corps": MerlinConstants.AspectState.EQUILIBRE,
+		"Ame": MerlinConstants.AspectState.EQUILIBRE,
+		"Monde": MerlinConstants.AspectState.EQUILIBRE,
 	}
 
 	var essence: Dictionary = {}
-	for element in DruConstants.ELEMENTS:
+	for element in MerlinConstants.ELEMENTS:
 		essence[element] = 0
 
 	return {
@@ -155,7 +153,7 @@ func build_default_state() -> Dictionary:
 			"relics": [],
 			# TRIADE fields (NEW v0.3.0)
 			"aspects": aspects,
-			"souffle": DruConstants.SOUFFLE_START,
+			"souffle": MerlinConstants.SOUFFLE_START,
 			"mission": {
 				"type": "",
 				"target": "",
@@ -180,11 +178,7 @@ func build_default_state() -> Dictionary:
 		},
 		"bestiole": {
 			"name": "Bestiole",
-			# Legacy combat stats (DEPRECATED)
-			"hp": 100,
-			"max_hp": 100,
-			"stats": {"power": 10, "spirit": 10, "finesse": 10},
-			# Needs (still used)
+			# Needs
 			"needs": {"Hunger": 50, "Energy": 50, "Hygiene": 50, "Mood": 50, "Stress": 0},
 			"tendency": {"Wild": 0, "Light": 0, "Discipline": 0},
 			"xp": 0,
@@ -192,8 +186,8 @@ func build_default_state() -> Dictionary:
 			"evolve_ready": false,
 			# Reigns fields (NEW)
 			"bond": 50,
-			"skills_unlocked": DruConstants.OGHAM_STARTER_SKILLS.duplicate(),
-			"skills_equipped": DruConstants.OGHAM_STARTER_SKILLS.duplicate(),
+			"skills_unlocked": MerlinConstants.OGHAM_STARTER_SKILLS.duplicate(),
+			"skills_equipped": MerlinConstants.OGHAM_STARTER_SKILLS.duplicate(),
 			"skill_cooldowns": {},
 		},
 		"meta": {
@@ -212,15 +206,7 @@ func build_default_state() -> Dictionary:
 			"endings_seen": [],
 			"gloire_points": 0,
 		},
-		"combat": {  # DEPRECATED - kept for compatibility
-			"enemy": {},
-			"enemy_intent": {},
-			"player_statuses": [],
-			"enemy_statuses": [],
-			"player_buffs": [],
-			"enemy_buffs": [],
-		},
-		"flags": {},  # NEW: Global flags for narrative
+		"flags": {},  # Global flags for narrative
 		"story_log": [],
 		"effect_log": [],
 		"transition_log": [],
@@ -284,7 +270,7 @@ func _reduce(action: Dictionary) -> Dictionary:
 
 		"TRIADE_RESOLVE_CHOICE":
 			var card = action.get("card", {})
-			var option: int = int(action.get("option", DruConstants.CardOption.LEFT))
+			var option: int = int(action.get("option", MerlinConstants.CardOption.LEFT))
 			var result = _resolve_triade_choice(card, option)
 			if result["ok"]:
 				# Record choice with MERLIN OMNISCIENT
@@ -432,19 +418,6 @@ func _reduce(action: Dictionary) -> Dictionary:
 			)
 			return result
 
-		"COMBAT_ENTER":
-			var result: Dictionary = combat.enter(action.get("enemy", {}), state)
-			state["phase"] = "combat"
-			return {"ok": true, "combat": result}
-
-		"COMBAT_STEP":
-			return combat.step(action.get("verb", ""), action.get("move", {}), state)
-
-		"COMBAT_EXIT":
-			combat.exit(state)
-			state["phase"] = "map"
-			return {"ok": true}
-
 		# ═══════════════════════════════════════════════════════════════════════
 		# SAVE/LOAD
 		# ═══════════════════════════════════════════════════════════════════════
@@ -549,11 +522,11 @@ func _init_triade_run() -> void:
 	var run = state.get("run", {})
 	run["active"] = true
 	run["aspects"] = {
-		"Corps": DruConstants.AspectState.EQUILIBRE,
-		"Ame": DruConstants.AspectState.EQUILIBRE,
-		"Monde": DruConstants.AspectState.EQUILIBRE,
+		"Corps": MerlinConstants.AspectState.EQUILIBRE,
+		"Ame": MerlinConstants.AspectState.EQUILIBRE,
+		"Monde": MerlinConstants.AspectState.EQUILIBRE,
 	}
-	run["souffle"] = DruConstants.SOUFFLE_START
+	run["souffle"] = MerlinConstants.SOUFFLE_START
 	run["mission"] = {"type": "", "target": "", "progress": 0, "total": 0, "revealed": false}
 	run["cards_played"] = 0
 	run["day"] = 1
@@ -571,18 +544,18 @@ func _init_triade_run() -> void:
 
 
 func _shift_aspect(aspect: String, direction: String) -> Dictionary:
-	if aspect not in DruConstants.TRIADE_ASPECTS:
+	if aspect not in MerlinConstants.TRIADE_ASPECTS:
 		return {"ok": false, "error": "Invalid aspect: " + aspect}
 
 	var run = state.get("run", {})
 	var aspects = run.get("aspects", {})
-	var old_state: int = int(aspects.get(aspect, DruConstants.AspectState.EQUILIBRE))
+	var old_state: int = int(aspects.get(aspect, MerlinConstants.AspectState.EQUILIBRE))
 	var new_state: int = old_state
 
 	if direction == "up":
-		new_state = mini(old_state + 1, DruConstants.AspectState.HAUT)
+		new_state = mini(old_state + 1, MerlinConstants.AspectState.HAUT)
 	elif direction == "down":
-		new_state = maxi(old_state - 1, DruConstants.AspectState.BAS)
+		new_state = maxi(old_state - 1, MerlinConstants.AspectState.BAS)
 	else:
 		return {"ok": false, "error": "Invalid direction: " + direction}
 
@@ -617,7 +590,7 @@ func _use_souffle(amount: int) -> Dictionary:
 func _add_souffle(amount: int) -> Dictionary:
 	var run = state.get("run", {})
 	var old_souffle: int = int(run.get("souffle", 0))
-	var new_souffle: int = mini(old_souffle + amount, DruConstants.SOUFFLE_MAX)
+	var new_souffle: int = mini(old_souffle + amount, MerlinConstants.SOUFFLE_MAX)
 	run["souffle"] = new_souffle
 	state["run"] = run
 	souffle_changed.emit(old_souffle, new_souffle)
@@ -630,8 +603,8 @@ func _check_souffle_regen() -> void:
 
 	# Check if all 3 aspects are balanced
 	var all_balanced: bool = true
-	for aspect in DruConstants.TRIADE_ASPECTS:
-		if int(aspects.get(aspect, 0)) != DruConstants.AspectState.EQUILIBRE:
+	for aspect in MerlinConstants.TRIADE_ASPECTS:
+		if int(aspects.get(aspect, 0)) != MerlinConstants.AspectState.EQUILIBRE:
 			all_balanced = false
 			break
 
@@ -656,18 +629,18 @@ func _resolve_triade_choice(card: Dictionary, option: int) -> Dictionary:
 	var run = state.get("run", {})
 
 	# Handle center option cost
-	if option == DruConstants.CardOption.CENTER:
-		var souffle_result = _use_souffle(DruConstants.SOUFFLE_CENTER_COST)
+	if option == MerlinConstants.CardOption.CENTER:
+		var souffle_result = _use_souffle(MerlinConstants.SOUFFLE_CENTER_COST)
 		if souffle_result.get("risk", false):
 			# Apply risk: 50% normal, 25% random down, 25% random up
 			var roll: float = rng.randf()
-			if roll < DruConstants.SOUFFLE_EMPTY_RISK["normal"]:
+			if roll < MerlinConstants.SOUFFLE_EMPTY_RISK["normal"]:
 				pass  # Normal effect
-			elif roll < DruConstants.SOUFFLE_EMPTY_RISK["normal"] + DruConstants.SOUFFLE_EMPTY_RISK["aspect_down"]:
-				var random_aspect: String = DruConstants.TRIADE_ASPECTS[rng.randi() % 3]
+			elif roll < MerlinConstants.SOUFFLE_EMPTY_RISK["normal"] + MerlinConstants.SOUFFLE_EMPTY_RISK["aspect_down"]:
+				var random_aspect: String = MerlinConstants.TRIADE_ASPECTS[rng.randi() % 3]
 				_shift_aspect(random_aspect, "down")
 			else:
-				var random_aspect: String = DruConstants.TRIADE_ASPECTS[rng.randi() % 3]
+				var random_aspect: String = MerlinConstants.TRIADE_ASPECTS[rng.randi() % 3]
 				_shift_aspect(random_aspect, "up")
 
 	# Get effects for chosen option
@@ -697,7 +670,7 @@ func _apply_triade_effect(effect: Dictionary) -> void:
 			_shift_aspect(aspect, direction)
 		"SET_ASPECT":
 			var aspect: String = effect.get("aspect", "")
-			var new_state: int = int(effect.get("state", DruConstants.AspectState.EQUILIBRE))
+			var new_state: int = int(effect.get("state", MerlinConstants.AspectState.EQUILIBRE))
 			var run = state.get("run", {})
 			var aspects = run.get("aspects", {})
 			var old_state: int = int(aspects.get(aspect, 0))
@@ -732,12 +705,12 @@ func _update_player_profile(option: int) -> void:
 	var profile = hidden.get("player_profile", {})
 
 	match option:
-		DruConstants.CardOption.LEFT:
+		MerlinConstants.CardOption.LEFT:
 			profile["prudence"] = int(profile.get("prudence", 0)) + 1
-		DruConstants.CardOption.CENTER:
+		MerlinConstants.CardOption.CENTER:
 			# Center is neutral/wise - no profile change
 			pass
-		DruConstants.CardOption.RIGHT:
+		MerlinConstants.CardOption.RIGHT:
 			profile["audace"] = int(profile.get("audace", 0)) + 1
 
 	hidden["player_profile"] = profile
@@ -750,9 +723,9 @@ func _check_triade_run_end() -> Dictionary:
 
 	# Count extreme aspects
 	var extremes: Array = []
-	for aspect in DruConstants.TRIADE_ASPECTS:
+	for aspect in MerlinConstants.TRIADE_ASPECTS:
 		var aspect_state: int = int(aspects.get(aspect, 0))
-		if aspect_state == DruConstants.AspectState.BAS or aspect_state == DruConstants.AspectState.HAUT:
+		if aspect_state == MerlinConstants.AspectState.BAS or aspect_state == MerlinConstants.AspectState.HAUT:
 			extremes.append({"aspect": aspect, "state": aspect_state})
 
 	# Game ends if 2+ aspects are extreme
@@ -772,7 +745,7 @@ func _check_triade_run_end() -> Dictionary:
 		var victory_type = _get_victory_type(aspects)
 		return {
 			"ended": true,
-			"ending": DruConstants.TRIADE_VICTORY_ENDINGS.get(victory_type, {"title": "Victoire"}),
+			"ending": MerlinConstants.TRIADE_VICTORY_ENDINGS.get(victory_type, {"title": "Victoire"}),
 			"victory": true,
 			"score": int(run.get("cards_played", 0)) * 20,
 			"cards_played": run.get("cards_played", 0),
@@ -789,26 +762,26 @@ func _get_triade_ending(extreme1: Dictionary, extreme2: Dictionary) -> Dictionar
 	var aspect2: String = extreme2.get("aspect", "").to_lower()
 	var state2: int = extreme2.get("state", 0)
 
-	var state1_str: String = "bas" if state1 == DruConstants.AspectState.BAS else "haut"
-	var state2_str: String = "bas" if state2 == DruConstants.AspectState.BAS else "haut"
+	var state1_str: String = "bas" if state1 == MerlinConstants.AspectState.BAS else "haut"
+	var state2_str: String = "bas" if state2 == MerlinConstants.AspectState.BAS else "haut"
 
 	# Try both orderings to find the ending
 	var key1: String = aspect1 + "_" + state1_str + "_" + aspect2 + "_" + state2_str
 	var key2: String = aspect2 + "_" + state2_str + "_" + aspect1 + "_" + state1_str
 
-	if DruConstants.TRIADE_ENDINGS.has(key1):
-		return DruConstants.TRIADE_ENDINGS[key1]
-	elif DruConstants.TRIADE_ENDINGS.has(key2):
-		return DruConstants.TRIADE_ENDINGS[key2]
+	if MerlinConstants.TRIADE_ENDINGS.has(key1):
+		return MerlinConstants.TRIADE_ENDINGS[key1]
+	elif MerlinConstants.TRIADE_ENDINGS.has(key2):
+		return MerlinConstants.TRIADE_ENDINGS[key2]
 
 	return {"title": "Fin Inconnue", "text": "Le destin a pris un chemin inattendu..."}
 
 
 func _get_victory_type(aspects: Dictionary) -> String:
 	var extreme_count: int = 0
-	for aspect in DruConstants.TRIADE_ASPECTS:
+	for aspect in MerlinConstants.TRIADE_ASPECTS:
 		var aspect_state: int = int(aspects.get(aspect, 0))
-		if aspect_state != DruConstants.AspectState.EQUILIBRE:
+		if aspect_state != MerlinConstants.AspectState.EQUILIBRE:
 			extreme_count += 1
 
 	if extreme_count == 0:
@@ -859,12 +832,12 @@ func _emit_state_changed() -> void:
 
 # TRIADE getters
 func get_aspect_state(aspect: String) -> int:
-	return int(state.get("run", {}).get("aspects", {}).get(aspect, DruConstants.AspectState.EQUILIBRE))
+	return int(state.get("run", {}).get("aspects", {}).get(aspect, MerlinConstants.AspectState.EQUILIBRE))
 
 
 func get_aspect_name(aspect: String) -> String:
 	var aspect_state: int = get_aspect_state(aspect)
-	var info = DruConstants.TRIADE_ASPECT_INFO.get(aspect, {})
+	var info = MerlinConstants.TRIADE_ASPECT_INFO.get(aspect, {})
 	var states = info.get("states", {})
 	return str(states.get(aspect_state, "Inconnu"))
 
@@ -874,7 +847,7 @@ func get_all_aspects() -> Dictionary:
 
 
 func get_souffle() -> int:
-	return int(state.get("run", {}).get("souffle", DruConstants.SOUFFLE_START))
+	return int(state.get("run", {}).get("souffle", MerlinConstants.SOUFFLE_START))
 
 
 func get_mission() -> Dictionary:
@@ -883,8 +856,8 @@ func get_mission() -> Dictionary:
 
 func is_all_aspects_balanced() -> bool:
 	var aspects = get_all_aspects()
-	for aspect in DruConstants.TRIADE_ASPECTS:
-		if int(aspects.get(aspect, 0)) != DruConstants.AspectState.EQUILIBRE:
+	for aspect in MerlinConstants.TRIADE_ASPECTS:
+		if int(aspects.get(aspect, 0)) != MerlinConstants.AspectState.EQUILIBRE:
 			return false
 	return true
 
@@ -892,9 +865,9 @@ func is_all_aspects_balanced() -> bool:
 func count_extreme_aspects() -> int:
 	var count: int = 0
 	var aspects = get_all_aspects()
-	for aspect in DruConstants.TRIADE_ASPECTS:
+	for aspect in MerlinConstants.TRIADE_ASPECTS:
 		var aspect_state: int = int(aspects.get(aspect, 0))
-		if aspect_state != DruConstants.AspectState.EQUILIBRE:
+		if aspect_state != MerlinConstants.AspectState.EQUILIBRE:
 			count += 1
 	return count
 

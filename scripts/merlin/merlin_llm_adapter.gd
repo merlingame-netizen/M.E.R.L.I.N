@@ -50,9 +50,9 @@ func build_context(state: Dictionary) -> Dictionary:
 	var critical_gauges := []
 	for gauge_name in VALID_GAUGES:
 		var value = int(gauges.get(gauge_name, 50))
-		if value <= DruConstants.REIGNS_GAUGE_CRITICAL_LOW:
+		if value <= MerlinConstants.REIGNS_GAUGE_CRITICAL_LOW:
 			critical_gauges.append({"name": gauge_name, "value": value, "direction": "low"})
-		elif value >= DruConstants.REIGNS_GAUGE_CRITICAL_HIGH:
+		elif value >= MerlinConstants.REIGNS_GAUGE_CRITICAL_HIGH:
 			critical_gauges.append({"name": gauge_name, "value": value, "direction": "high"})
 
 	# Get available bestiole skills (not on cooldown)
@@ -117,7 +117,7 @@ func _get_recent_story_log(log: Array, count: int) -> Array:
 # CARD VALIDATION — Ensure LLM response is safe
 # ═══════════════════════════════════════════════════════════════════════════════
 
-func validate_card(card: Dictionary, effect_engine: DruEffectEngine = null) -> Dictionary:
+func validate_card(card: Dictionary, effect_engine: MerlinEffectEngine = null) -> Dictionary:
 	"""Validate a card from LLM and sanitize effects."""
 	var result := {"ok": false, "errors": [], "card": {}}
 
@@ -180,7 +180,7 @@ func validate_card(card: Dictionary, effect_engine: DruEffectEngine = null) -> D
 		sanitized_card["tags"] = []
 
 	if card.has("type"):
-		if not card["type"] in DruConstants.REIGNS_CARD_TYPES:
+		if not card["type"] in MerlinConstants.REIGNS_CARD_TYPES:
 			sanitized_card["type"] = "narrative"
 	else:
 		sanitized_card["type"] = "narrative"
@@ -190,7 +190,7 @@ func validate_card(card: Dictionary, effect_engine: DruEffectEngine = null) -> D
 	return result
 
 
-func _validate_option(option: Dictionary, effect_engine: DruEffectEngine) -> Dictionary:
+func _validate_option(option: Dictionary, effect_engine: MerlinEffectEngine) -> Dictionary:
 	"""Validate a single option and its effects."""
 	var result := {"ok": false, "errors": [], "option": {}}
 
@@ -232,7 +232,7 @@ func _validate_option(option: Dictionary, effect_engine: DruEffectEngine) -> Dic
 	return result
 
 
-func _filter_effects(effects: Array, effect_engine: DruEffectEngine) -> Array:
+func _filter_effects(effects: Array, effect_engine: MerlinEffectEngine) -> Array:
 	"""Filter effects to only allow whitelisted types with valid values."""
 	var filtered := []
 
@@ -251,7 +251,7 @@ func _filter_effects(effects: Array, effect_engine: DruEffectEngine) -> Array:
 	return filtered
 
 
-func _validate_effect(effect: Dictionary, effect_engine: DruEffectEngine) -> Variant:
+func _validate_effect(effect: Dictionary, effect_engine: MerlinEffectEngine) -> Variant:
 	"""Validate a single effect and return sanitized version or null."""
 	var effect_type = effect.get("type", "")
 
@@ -423,9 +423,9 @@ CONTEXTE IMPORTANT:
 const LEGACY_REQUIRED_KEYS := ["scene_id", "biome", "backdrop", "text_pages", "choices"]
 const LEGACY_VERBS := ["FORCE", "LOGIQUE", "FINESSE"]
 
-func validate_scene(scene: Dictionary, effect_engine: DruEffectEngine) -> Dictionary:
+func validate_scene(scene: Dictionary, effect_engine: MerlinEffectEngine) -> Dictionary:
 	"""DEPRECATED: Legacy scene validation for old combat system."""
-	push_warning("DruLlmAdapter.validate_scene() is deprecated. Use validate_card() instead.")
+	push_warning("MerlinLlmAdapter.validate_scene() is deprecated. Use validate_card() instead.")
 	var result := {"ok": false, "errors": [], "scene": {}}
 	if typeof(scene) != TYPE_DICTIONARY:
 		result["errors"].append("Scene is not a dictionary")

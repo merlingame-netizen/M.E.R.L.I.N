@@ -47,9 +47,9 @@ const ENDINGS := {
 # DEPENDENCIES
 # ═══════════════════════════════════════════════════════════════════════════════
 
-var _effects: DruEffectEngine
-var _llm: DruLlmAdapter
-var _rng: DruRng
+var _effects: MerlinEffectEngine
+var _llm: MerlinLlmAdapter
+var _rng: MerlinRng
 var _fallback_cards: Array = []
 var _triade_fallback_cards: Array = []  # NEW: 3-option cards
 
@@ -57,7 +57,7 @@ var _triade_fallback_cards: Array = []  # NEW: 3-option cards
 # SETUP
 # ═══════════════════════════════════════════════════════════════════════════════
 
-func setup(effects: DruEffectEngine, llm: DruLlmAdapter, rng: DruRng) -> void:
+func setup(effects: MerlinEffectEngine, llm: MerlinLlmAdapter, rng: MerlinRng) -> void:
 	_effects = effects
 	_llm = llm
 	_rng = rng
@@ -473,7 +473,7 @@ func _validate_effect(effect: String) -> bool:
 
 	var code = parts[0]
 	if not ["ADD_GAUGE", "REMOVE_GAUGE", "SET_GAUGE", "ADD_TAG", "REMOVE_TAG", "SET_FLAG"].has(code):
-		# Fallback to DruEffectEngine validation
+		# Fallback to MerlinEffectEngine validation
 		return _effects.validate_effect(effect) if _effects else false
 
 	# Validate gauge name
@@ -622,7 +622,7 @@ func _apply_card_effects(state: Dictionary, effects: Array) -> Dictionary:
 					rejected.append(effect)
 
 			_:
-				# Try DruEffectEngine for other effects
+				# Try MerlinEffectEngine for other effects
 				if _effects:
 					var result = _effects.apply_effects(state, [effect], "CARD")
 					if not result["applied"].is_empty():

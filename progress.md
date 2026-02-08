@@ -3002,4 +3002,37 @@ M.E.R.L.I.N. = Memoire Eternelle des Recits et Legendes d Incarnations Narrative
 
 ---
 
-*Last updated: 2026-02-08 - Debug & KB Update*
+## Session: 2026-02-08 (Suite) - Debug Round 2
+
+### Phase 44: Corrections Debugger (Round 2)
+- **Status:** complete
+
+#### Erreurs Corrigees
+
+1. **screen_distortion.gdshader** - Using 'return' in fragment()
+   - **Probleme:** `return;` interdit dans fonction `fragment()` GLSL
+   - **Solution:** Restructure avec if-else, `vec4 col` par defaut, `COLOR = col` a la fin
+   - **Documente:** Section 1.10 knowledge base
+
+2. **llm_status_bar.gd:243** - Parameter shadowing function
+   - **Probleme:** Parametre `is_ready` masque la fonction `is_ready()` ligne 258
+   - **Solution:** Renomme en `ready_state`
+   - **Documente:** Section 1.11 knowledge base
+
+3. **IntroCeltOS.gd:236** - Integer division warning
+   - **Probleme:** `LOGO_GRID[0].size() / 2` - division entiere
+   - **Solution:** `int(LOGO_GRID[0].size() / 2.0)`
+   - **Documente:** Section 1.12 knowledge base
+
+4. **General** - Variable declared but never used
+   - **Solution:** Prefixer avec `_` les variables inutilisees
+   - **Documente:** Section 1.13 knowledge base
+
+#### Knowledge Base Updates
+- Sections 1.10-1.13 ajoutees
+- Pre-validation checklist enrichie (4 items)
+- Log des corrections mis a jour
+
+---
+
+*Last updated: 2026-02-08 - Debug Round 2*

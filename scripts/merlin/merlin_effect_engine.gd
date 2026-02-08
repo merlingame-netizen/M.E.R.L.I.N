@@ -629,8 +629,8 @@ func _to_int(value: Variant) -> int:
 func _apply_gauge_delta(state: Dictionary, gauge: String, delta: int) -> bool:
 	var run = state.get("run", {})
 	var gauges = run.get("gauges", {})
-	var current = int(gauges.get(gauge, DruConstants.REIGNS_GAUGE_START))
-	gauges[gauge] = clampi(current + delta, DruConstants.REIGNS_GAUGE_MIN, DruConstants.REIGNS_GAUGE_MAX)
+	var current = int(gauges.get(gauge, MerlinConstants.REIGNS_GAUGE_START))
+	gauges[gauge] = clampi(current + delta, MerlinConstants.REIGNS_GAUGE_MIN, MerlinConstants.REIGNS_GAUGE_MAX)
 	run["gauges"] = gauges
 	state["run"] = run
 	return true
@@ -639,7 +639,7 @@ func _apply_gauge_delta(state: Dictionary, gauge: String, delta: int) -> bool:
 func _apply_gauge_set(state: Dictionary, gauge: String, value: int) -> bool:
 	var run = state.get("run", {})
 	var gauges = run.get("gauges", {})
-	gauges[gauge] = clampi(value, DruConstants.REIGNS_GAUGE_MIN, DruConstants.REIGNS_GAUGE_MAX)
+	gauges[gauge] = clampi(value, MerlinConstants.REIGNS_GAUGE_MIN, MerlinConstants.REIGNS_GAUGE_MAX)
 	run["gauges"] = gauges
 	state["run"] = run
 	return true
@@ -756,18 +756,18 @@ func _set_skill_cooldown(state: Dictionary, skill_id: String, turns: int) -> boo
 # ═══════════════════════════════════════════════════════════════════════════════
 
 func _apply_shift_aspect(state: Dictionary, aspect: String, direction: String) -> bool:
-	if aspect not in DruConstants.TRIADE_ASPECTS:
+	if aspect not in MerlinConstants.TRIADE_ASPECTS:
 		return false
 
 	var run = state.get("run", {})
 	var aspects = run.get("aspects", {})
-	var current_state: int = int(aspects.get(aspect, DruConstants.AspectState.EQUILIBRE))
+	var current_state: int = int(aspects.get(aspect, MerlinConstants.AspectState.EQUILIBRE))
 	var new_state: int = current_state
 
 	if direction == "up":
-		new_state = mini(current_state + 1, DruConstants.AspectState.HAUT)
+		new_state = mini(current_state + 1, MerlinConstants.AspectState.HAUT)
 	elif direction == "down":
-		new_state = maxi(current_state - 1, DruConstants.AspectState.BAS)
+		new_state = maxi(current_state - 1, MerlinConstants.AspectState.BAS)
 	else:
 		return false
 
@@ -778,10 +778,10 @@ func _apply_shift_aspect(state: Dictionary, aspect: String, direction: String) -
 
 
 func _apply_set_aspect(state: Dictionary, aspect: String, new_state: int) -> bool:
-	if aspect not in DruConstants.TRIADE_ASPECTS:
+	if aspect not in MerlinConstants.TRIADE_ASPECTS:
 		return false
 
-	new_state = clampi(new_state, DruConstants.AspectState.BAS, DruConstants.AspectState.HAUT)
+	new_state = clampi(new_state, MerlinConstants.AspectState.BAS, MerlinConstants.AspectState.HAUT)
 
 	var run = state.get("run", {})
 	var aspects = run.get("aspects", {})
@@ -793,7 +793,7 @@ func _apply_set_aspect(state: Dictionary, aspect: String, new_state: int) -> boo
 
 func _apply_use_souffle(state: Dictionary, amount: int) -> bool:
 	var run = state.get("run", {})
-	var current = int(run.get("souffle", DruConstants.SOUFFLE_START))
+	var current = int(run.get("souffle", MerlinConstants.SOUFFLE_START))
 	run["souffle"] = maxi(current - amount, 0)
 	state["run"] = run
 	return true
@@ -801,8 +801,8 @@ func _apply_use_souffle(state: Dictionary, amount: int) -> bool:
 
 func _apply_add_souffle(state: Dictionary, amount: int) -> bool:
 	var run = state.get("run", {})
-	var current = int(run.get("souffle", DruConstants.SOUFFLE_START))
-	run["souffle"] = mini(current + amount, DruConstants.SOUFFLE_MAX)
+	var current = int(run.get("souffle", MerlinConstants.SOUFFLE_START))
+	run["souffle"] = mini(current + amount, MerlinConstants.SOUFFLE_MAX)
 	state["run"] = run
 	return true
 

@@ -193,6 +193,143 @@ func _ready():
 
 ---
 
+### 1.10 Return dans Shader fragment()
+
+**Erreur:** `Using 'return' in the 'fragment' processor function is incorrect`
+
+```glsl
+# WRONG - return n'est pas permis dans fragment()
+shader_type canvas_item;
+
+void fragment() {
+    if (some_condition) {
+        return;  # ERREUR: return interdit dans fragment()
+    }
+    COLOR = texture(TEXTURE, UV);
+}
+
+# CORRECT - Restructurer avec if-else
+shader_type canvas_item;
+
+void fragment() {
+    vec4 col = texture(TEXTURE, UV);  # Valeur par defaut
+
+    if (effect_enabled) {
+        // Appliquer l'effet
+        col = apply_effect(col);
+    }
+
+    COLOR = col;  # Toujours assigner a la fin
+}
+
+# PATTERN RECOMMANDE - Cascading if-else
+void fragment() {
+    vec4 col = texture(TEXTURE, UV);
+
+    if (condition_a) {
+        col = effect_a(col);
+    } else if (condition_b) {
+        col = effect_b(col);
+    }
+    // Jamais de return, toujours assigner COLOR a la fin
+    COLOR = col;
+}
+```
+
+**Regle:** Dans les shaders Godot, `fragment()` ne peut pas utiliser `return`. Toujours structurer le code avec des conditionnels et assigner `COLOR` a la fin.
+
+---
+
+### 1.11 Shadowing de Fonction par Parametre
+
+**Erreur:** `The local function parameter "X" is shadowing an already-declared function`
+
+```gdscript
+# WRONG - Le parametre "is_ready" masque la fonction is_ready()
+func is_ready() -> bool:
+    return _initialized
+
+func update_status(is_ready: bool):  # WARNING: shadows is_ready()
+    if is_ready:
+        _do_something()
+
+# CORRECT - Renommer le parametre pour eviter le conflit
+func is_ready() -> bool:
+    return _initialized
+
+func update_status(ready_state: bool):  # Pas de conflit
+    if ready_state:
+        _do_something()
+
+# ALTERNATIVE - Prefixer avec underscore si parametre inutilise
+func update_status(_is_ready: bool):  # Underscore = non utilise
+    pass
+```
+
+**Regle:** Ne jamais nommer un parametre de fonction avec le meme nom qu'une fonction existante dans la classe. Utiliser un prefixe ou un nom different.
+
+---
+
+### 1.12 Division Entiere avec Warning
+
+**Erreur:** `Integer division. Decimal part will be discarded`
+
+```gdscript
+# WRONG - Division entiere implicite genere un warning
+var mid_col: int = LOGO_GRID[0].size() / 2  # WARNING
+
+# CORRECT - Conversion explicite avec float puis int()
+var mid_col: int = int(LOGO_GRID[0].size() / 2.0)
+
+# ALTERNATIVE - Utiliser floorf/ceilf pour controler l'arrondi
+var mid_col: int = int(floor(LOGO_GRID[0].size() / 2.0))  # Arrondi vers le bas
+var mid_col: int = int(ceil(LOGO_GRID[0].size() / 2.0))   # Arrondi vers le haut
+
+# PATTERN POUR CENTRE D'ARRAY
+var array_size: int = my_array.size()
+var center_index: int = int(array_size / 2.0)
+```
+
+**Regle:** Quand on assigne le resultat d'une division a un int, utiliser un diviseur float (2.0) puis `int()` pour eviter le warning de division entiere.
+
+---
+
+### 1.13 Variable Locale Non Utilisee
+
+**Erreur:** `The local variable "X" is declared but never used in the block`
+
+```gdscript
+# WRONG - Variable declaree mais jamais utilisee
+func process_data():
+    var unused_counter: int = 0  # WARNING: never used
+    var result: String = compute()
+    return result
+
+# CORRECT - Supprimer la variable inutile
+func process_data():
+    var result: String = compute()
+    return result
+
+# ALTERNATIVE - Prefixer avec underscore pour signaler intentionnellement inutilise
+func process_data():
+    var _unused_counter: int = 0  # Underscore = intentionnellement inutilise
+    var result: String = compute()
+    return result
+
+# CAS COURANT - Parametre de callback non utilise
+signal_connection.connect(func(_unused_param):
+    do_something()
+)
+
+# AUSSI VALIDE POUR - Boucles avec index non utilise
+for _i in range(10):  # Underscore car _i n'est pas utilise
+    do_something_ten_times()
+```
+
+**Regle:** Prefixer les variables non utilisees avec underscore `_` pour supprimer le warning et indiquer clairement l'intention.
+
+---
+
 ## SECTION 2: Patterns d'Optimisation GDScript
 
 ### 2.1 Object Pooling
@@ -362,6 +499,10 @@ Avant chaque `validate.bat`, verifier:
 - [ ] `set_process(false)` sur nodes inactifs
 - [ ] Arrays types quand possible
 - [ ] Pas de concatenation `+` dans les boucles
+- [ ] Pas de `return` dans shader `fragment()` (restructurer avec if-else)
+- [ ] Pas de parametres qui masquent des fonctions (shadowing)
+- [ ] Division entiere explicite avec `int(x / 2.0)` pas `x / 2`
+- [ ] Variables non utilisees prefixees avec `_`
 
 ---
 
@@ -389,10 +530,14 @@ _Ce section est mise a jour automatiquement par l'agent Debug._
 - Initial knowledge base created
 - `[IntroCeltOS.gd:136]` Type mismatch Callable/Color → Remplace `"add_theme_color_override"` par `"theme_override_colors/font_color"` dans tween_property()
 - `[TestLLMSceneUltimate.gd:1370]` Nil access on 'text' → Ajoute guard `if status_bar == null: return` avant acces UI node
+- `[shaders/screen_distortion.gdshader]` Using 'return' in fragment() → Restructure avec if-else blocks, assigner COLOR a la fin
+- `[llm_status_bar.gd:243]` Parameter shadows function is_ready() → Renomme parametre en `ready_state`
+- `[IntroCeltOS.gd:236]` Integer division warning → Utilise `int(size / 2.0)` au lieu de `size / 2`
+- `[Multiple files]` Variable declared but never used → Prefixe avec underscore `_variable_name`
 
 <!-- CORRECTIONS_LOG_END -->
 
 ---
 
-*Last Updated: 2026-02-08 (2 corrections added)*
+*Last Updated: 2026-02-08 (6 corrections total)*
 *Maintained by: Debug Agent & Optimizer Agent*
