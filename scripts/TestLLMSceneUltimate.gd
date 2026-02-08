@@ -1367,5 +1367,7 @@ func _set_ui_enabled(enabled: bool) -> void:
 	prompt_input.editable = enabled
 
 func _update_status(text: String, color: Color = DRU_COLORS.text_dim) -> void:
+	if status_bar == null:
+		return
 	status_bar.text = text
 	status_bar.add_theme_color_override("font_color", color)

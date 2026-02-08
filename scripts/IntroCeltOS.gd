@@ -133,7 +133,7 @@ func _start_phase_1() -> void:
 	tween.tween_interval(0.15)
 	for label in boot_labels:
 		tween.parallel().tween_property(label, "modulate:a", 1.0, 0.1)
-		tween.parallel().tween_property(label, "add_theme_color_override", PALETTE.accent, 0.1)
+		tween.parallel().tween_property(label, "theme_override_colors/font_color", PALETTE.accent, 0.1)
 
 	# Puis fondu rapide
 	tween.tween_interval(0.3)

@@ -2876,7 +2876,7 @@ enum AspectState { BAS = -1, EQUILIBRE = 0, HAUT = 1 }
 
 ---
 
-## Session: 2026-02-08 (Suite) — MERLIN OMNISCIENT SYSTEM
+## Session: 2026-02-08 (Suite) ï¿½ MERLIN OMNISCIENT SYSTEM
 
 ### Phase 42: M.E.R.L.I.N. Omniscient System (MOS)
 - **Status:** complete
@@ -2892,66 +2892,66 @@ Creer un systeme qui rend Merlin veritablement omniscient:
 #### Architecture MOS
 
 **Documentation:**
--  (~700 lignes) — Specification complete
+-  (~700 lignes) ï¿½ Specification complete
 
 **5 Registres (addons/merlin_ai/registries/):**
-1.  — Profil psychologique du joueur
+1.  ï¿½ Profil psychologique du joueur
    - play_style (aggression, altruism, risk_taking, patience, curiosity)
    - skill_assessment (balance, crisis_recovery, pattern_recognition)
    - preferences (themes, complexity, pace)
    - meta-progression (total_runs, endings_seen, etc.)
 
-2.  — Historique des decisions
+2.  ï¿½ Historique des decisions
    - Tracking des choix par carte/categorie
    - Detection de patterns comportementaux
    - Karma NPC
    - Memoire cross-run
 
-3.  — Relation Merlin-Joueur
+3.  ï¿½ Relation Merlin-Joueur
    - Trust Tiers: DISTANT -> CAUTIOUS -> ATTENTIVE -> BOUND
    - Dimensions: respect, warmth, complicity, reverence, familiarity
    - Moments speciaux (melancholy_seen, nature_questioned, etc.)
 
-4.  — Gestion narrative
+4.  ï¿½ Gestion narrative
    - Arcs actifs (max 2)
    - Foreshadowing & Twists
    - Theme fatigue
    - World state
 
-5.  — Session en temps reel
+5.  ï¿½ Session en temps reel
    - Wellness: frustration, fatigue, tilt
    - Engagement level
    - Decision timing analysis
 
 **Orchestrateur:**
--  — Coordinateur principal (~650 lignes)
+-  ï¿½ Coordinateur principal (~650 lignes)
   - Generation multi-tier (LLM -> Fallback)
   - Recording des choix vers tous registres
   - Signaux pour events narratifs
 
 **Context Builder:**
--  — Agregation contexte (~230 lignes)
+-  ï¿½ Agregation contexte (~230 lignes)
   - build_full_context() pour LLM
   - build_llm_prompt_context() pour prompts
 
 **3 Processeurs (addons/merlin_ai/processors/):**
-1.  — Adaptation difficulte
+1.  ï¿½ Adaptation difficulte
    - Pity system (3 morts consecutives)
    - Skill-based scaling
    - Crisis protection
 
-2.  — Complexite narrative
+2.  ï¿½ Complexite narrative
    - Tiers: INITIATE -> APPRENTICE -> JOURNEYER -> ADEPT -> MASTER
    - Content gates (promise_cards, deep_lore, etc.)
    - Feature unlocking progressif
 
-3.  — Ton de Merlin
+3.  ï¿½ Ton de Merlin
    - 7 tons: NEUTRAL, PLAYFUL, MYSTERIOUS, WARNING, MELANCHOLY, WARM, CRYPTIC
    - Selection ponderee selon trust/session
    - Guidelines pour LLM
 
 **Generateur fallback:**
--  — Cartes de secours (~600 lignes)
+-  ï¿½ Cartes de secours (~600 lignes)
   - Pools par contexte (early, mid, late, crisis, recovery)
   - Selection ponderee avec theme fatigue
   - Emergency card ultime
@@ -2974,4 +2974,32 @@ M.E.R.L.I.N. = Memoire Eternelle des Recits et Legendes d Incarnations Narrative
 
 ---
 
-*Last updated: 2026-02-08 - MOS Complete*
+## Session: 2026-02-08 (Suite) - Debug & Knowledge Base
+
+### Phase 43: Corrections Debugger
+- **Status:** complete
+
+#### Erreurs Corrigees
+
+1. **IntroCeltOS.gd:136** - Type mismatch Callable/Color
+   - **Probleme:** `tween_property(label, "add_theme_color_override", ...)` - methode au lieu de propriete
+   - **Solution:** `tween_property(label, "theme_override_colors/font_color", ...)`
+   - **Documente:** Section 1.8 knowledge base
+
+2. **TestLLMSceneUltimate.gd:1370** - Nil base object
+   - **Probleme:** `status_bar.text` appele avant initialisation UI
+   - **Solution:** Ajout guard `if status_bar == null: return`
+   - **Documente:** Section 1.9 knowledge base
+
+#### Knowledge Base Updates
+- `.claude/agents/gdscript_knowledge_base.md` enrichie:
+  - Section 1.8: Tween Property avec Methode au lieu de Propriete
+  - Section 1.9: Acces UI Node Avant _ready()
+  - Section 6: Log chronologique des corrections
+
+#### Agents Invoques
+- debug_qa.md - Documentation knowledge base
+
+---
+
+*Last updated: 2026-02-08 - Debug & KB Update*

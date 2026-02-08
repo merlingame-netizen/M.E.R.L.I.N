@@ -136,6 +136,63 @@ func set_active(value: bool):
 
 ---
 
+### 1.8 Tween Property avec Methode au lieu de Propriete
+
+**Erreur:** `Type mismatch between initial and final value: Callable and Color`
+
+```gdscript
+# WRONG - add_theme_color_override est une METHODE, pas une propriete
+tween.tween_property(node, "add_theme_color_override", color, duration)
+
+# CORRECT - Utiliser le chemin de propriete pour les theme overrides
+tween.tween_property(node, "theme_override_colors/font_color", color, duration)
+tween.tween_property(node, "theme_override_colors/font_outline_color", outline_color, duration)
+
+# Autres proprietes de theme accessibles via tween:
+# - theme_override_colors/[color_name]
+# - theme_override_constants/[constant_name]
+# - theme_override_fonts/[font_name]
+# - theme_override_font_sizes/[size_name]
+# - theme_override_styles/[stylebox_name]
+```
+
+**Regle:** Ne jamais utiliser de noms de methodes avec `tween_property()`. Toujours utiliser les chemins de proprietes. Pour les theme overrides: `theme_override_colors/font_color`, etc.
+
+---
+
+### 1.9 Acces UI Node Avant _ready()
+
+**Erreur:** `Invalid assignment of property or key 'text' with value of type 'String' on a base object of type 'Nil'`
+
+```gdscript
+# WRONG - La methode peut etre appelee avant que le UI soit construit
+func update_status(message: String):
+    status_bar.text = message  # CRASH si status_bar est null
+
+# CORRECT - Toujours verifier null avant d'acceder aux nodes UI
+func update_status(message: String):
+    if status_bar == null:
+        return  # Silencieusement ignorer si UI pas pret
+    status_bar.text = message
+
+# ALTERNATIVE - Utiliser is_instance_valid pour plus de robustesse
+func update_status(message: String):
+    if not is_instance_valid(status_bar):
+        push_warning("status_bar not ready yet")
+        return
+    status_bar.text = message
+
+# MEILLEURE PRATIQUE - Utiliser @onready et verifier dans _ready
+@onready var status_bar: Label = $StatusBar
+
+func _ready():
+    assert(status_bar != null, "StatusBar node missing from scene tree")
+```
+
+**Regle:** Toujours proteger les acces aux nodes UI dans les methodes qui peuvent etre appelees avant `_ready()`. Utiliser des guards null ou `is_instance_valid()`.
+
+---
+
 ## SECTION 2: Patterns d'Optimisation GDScript
 
 ### 2.1 Object Pooling
@@ -330,10 +387,12 @@ _Ce section est mise a jour automatiquement par l'agent Debug._
 <!-- CORRECTIONS_LOG_START -->
 ### 2026-02-08
 - Initial knowledge base created
+- `[IntroCeltOS.gd:136]` Type mismatch Callable/Color → Remplace `"add_theme_color_override"` par `"theme_override_colors/font_color"` dans tween_property()
+- `[TestLLMSceneUltimate.gd:1370]` Nil access on 'text' → Ajoute guard `if status_bar == null: return` avant acces UI node
 
 <!-- CORRECTIONS_LOG_END -->
 
 ---
 
-*Last Updated: 2026-02-08*
+*Last Updated: 2026-02-08 (2 corrections added)*
 *Maintained by: Debug Agent & Optimizer Agent*
