@@ -74,6 +74,13 @@ Maelgwn est l'un des deux druides qui comprennent la nature cosmique de la fin. 
 **Trust T3:**
 > *"J'ai passe ma vie a ecouter la fontaine. Aujourd'hui, elle m'a dit un mot que je n'avais jamais entendu: 'merci'."*
 
+### Vocabulaire breton
+
+Maelgwn utilise des expressions rituelles anciennes:
+- **"Neart"** (force vitale) — "Le neart de la fontaine faiblit."
+- **"Bennozh Doue deoc'h"** (Que Dieu vous benisse) — Sa benediction de depart
+- **"Par les chenes de Broceliande"** — Son serment
+
 ### Quete personnelle
 
 A Trust T2, Maelgwn demande au joueur de porter un message aux 6 autres druides. Un simple mot: "Tenez." C'est sa facon de leur dire qu'il les aime sans le dire.
@@ -114,6 +121,13 @@ Keridwen sait que les pierres perdent leur resonance. Elle a developpe des remed
 **Trust T3:**
 > *"Tu sais ce qui est le plus dur? Pas que le monde meurt. C'est que les gens me demandent de le guerir. Et que je fais semblant d'essayer."*
 
+### Vocabulaire breton
+
+Keridwen utilise des formules de guerison et de malediction:
+- **"Mallozh warnat!"** (Malediction sur toi!) — Quand un patient refuse ses soins
+- **"Yec'hed mat"** (Bonne sante) — Toast ironique, vu l'etat du monde
+- **"Ar gwir a zo krenvoc'h eget ar gaou"** (La verite est plus forte que le mensonge) — Sa philosophie
+
 ---
 
 ## 3. TALWEN — La Jeune Effrayee
@@ -150,6 +164,13 @@ Talwen entend les 18 druides dissous dans les Oghams. Elle ne sait pas que ce so
 **Trust T3:**
 > *"J'ai entendu quelque chose de nouveau hier. Une voix que je ne connaissais pas. Elle disait: 'Chaque fin porte une graine.' C'etait doux. Comme une berceuse."*
 
+### Vocabulaire breton
+
+Talwen mele des mots bretons a ses dialogues nerveux:
+- **"Imbas"** (vision prophetique) — "C'est pas de l'imbas, c'est juste... des voix."
+- **"Ma Doue!"** (Mon Dieu!) — Son exclamation quand les voix sont trop fortes
+- Elle appelle les druides dissous "anaon" (ames des morts) sans savoir que c'est exactement ce qu'ils sont
+
 ### Quete personnelle
 
 Talwen demande au joueur de l'accompagner a la Pierre Tremblante pendant une nuit d'equinoxe. Elle veut essayer de **repondre** aux voix. Si le joueur accepte, ils entendent ensemble un fragment de l'accord primordial — 3 secondes de musique qui changent tout.
@@ -176,6 +197,13 @@ Bran ne parle que quand c'est necessaire. Il observe la mer comme d'autres lisen
 
 **Trust T3:**
 > *"La mer se retire. Je le vois chaque matin — un peu plus loin, un peu plus bas. Un jour, il n'y aura plus de mer. Juste... du silence mouille."*
+
+### Vocabulaire breton
+
+Bran parle peu, mais quand il parle, c'est en mots de marin breton:
+- **"Mor"** (mer) — Il dit "mor" au lieu de "mer", toujours
+- **"Enez Sun"** (Ile de Sein) — Le vrai nom de son ile
+- **"N'eus bro ebet hep mor"** (Il n'y a pas de pays sans mer) — Sa devise, qu'il repete de moins en moins
 
 ---
 
@@ -217,6 +245,13 @@ Sa grand-mere voyait les korrigans. Enora garde son journal cache dans les murs 
 **Trust T3:**
 > *"Tiens. Le journal de ma grand-mere. Elle voyait des choses. Des 'petits peuples', des 'fils de lumiere'. Je pensais qu'elle etait folle. Maintenant... maintenant je ne sais plus."*
 
+### Proverbe d'Enora
+
+Enora cite souvent sa grand-mere:
+- **"Gwelloc'h eo plega eget terri"** — Mieux vaut plier que rompre (sa philosophie de gouvernance)
+- **"Kalon vat a ra kalon vat"** — Un bon coeur fait un bon coeur (quand elle distribue le pain)
+- **"Kenavo ha trugarez"** (Au revoir et merci) — Sa formule de depart, toujours
+
 ---
 
 ## 6. RIWAL — Le Chef de Guerre Sans Guerre
@@ -241,6 +276,13 @@ Cette inutilite le ronge. Il patrouille quand meme. Il aiguise ses lames quand m
 
 **Trust T3:**
 > *"Le vieux Merlin m'a dit un jour que le vrai courage, c'est de rester debout quand il n'y a plus rien a defendre. Je crois que je comprends maintenant."*
+
+### Vocabulaire guerrier
+
+Riwal parle comme un guerrier celte:
+- **"Bleiz-garv!"** (Loup sauvage!) — Son cri de guerre, qui ne sert plus
+- **"Geis"** (interdit sacre) — "J'ai un geis: ne jamais fuir. Meme quand il n'y a rien devant moi."
+- Il appelle la brume **"an enebour"** (l'ennemi) — le seul adversaire qui lui reste
 
 ---
 
@@ -301,6 +343,10 @@ Le Vieux Granit ne parle qu'en enigmes et en rimes. Il est si ancien qu'il ne se
 **Reputation +50:**
 > *"Je te montrerai les racines. Pas celles des arbres — les VRAIES racines. Celles qui tiennent le monde a l'existence. En echange, donne-moi un souvenir. Un vrai. Pas un mensonge habille en memoire."*
 
+### Note historique
+
+> *Le Vieux Granit incarne les korrigans authentiques du folklore breton: "korrigan" signifie "petit nain" en breton. Traditionnellement facetieux et parfois malveillants, les korrigans vivent pres des menhirs, des sources et des landes. Leur tresor est reel — mais toujours piege. Le Vieux Granit transcende cette tradition: il est si ancien qu'il est devenu la pierre elle-meme.*
+
 ---
 
 ## 9. NIAMH — Le Souvenir de la Joie
@@ -341,14 +387,14 @@ Il ne parle que quand c'est necessaire. Ses mots sont precis, definitifs, et etr
 
 ### Quand il apparait
 
-- Quand une jauge atteint 0 ou 100 (fin de run)
+- Quand un aspect atteint un etat extreme (fin de run)
 - A la nuit de Samhain (apparition garantie)
 - Quand le joueur fait un choix qui cause une mort
 - Tres rarement, dans un moment de paix (il passe, c'est tout)
 
 ### Dialogues
 
-**Jauge critique:**
+**Aspect critique:**
 > *Un grincement de roues. L'ombre qui s'allonge. Une voix, pas mechante:*
 > *"Pas encore? Ou maintenant?"*
 
@@ -364,6 +410,10 @@ Il ne parle que quand c'est necessaire. Ses mots sont precis, definitifs, et etr
 > *Ankou: "Bientot."*
 > *Merlin: "... Je sais."*
 > *L'Ankou incline la tete, presque respectueusement. Puis il passe.*
+
+### Note historique
+
+> *L'Ankou est la personnification de la mort dans le folklore breton. Homme sombre en cape noire, il conduit le "karrig an Ankou" (chariot de l'Ankou) aux essieux grincants. Tradition unique: le dernier mort de l'annee devient l'Ankou de l'annee suivante. Il n'est pas un demon — il est un fonctionnaire. "Ar marv ne goulenn ket e hentoù" — La mort ne demande pas son chemin.*
 
 ---
 
@@ -389,6 +439,13 @@ C'est le druide le plus honnete. Il ne ment pas, ne minimise pas, ne console pas
 
 **Trust T3:**
 > *"Il y a un trou au fond du marais. Pas un trou dans la terre — un trou dans le reel. J'ai regarde dedans. Une seule fois. Ce que j'ai vu..." Il se tait. "Non. Certaines choses ne doivent pas etre partagees."*
+
+### Vocabulaire breton
+
+Gwydion utilise le vocabulaire de la mort bretonne:
+- **"Anaon"** (ames des morts) — Il les appelle par leur vrai nom
+- **"Pelloc'h ganit!"** (Loin de moi!) — Son cri quand le Vide pousse trop fort
+- **"Da vout lazhet gant an Ankou"** — Il ne prononce jamais cette malediction, par respect pour l'Ankou
 
 ---
 

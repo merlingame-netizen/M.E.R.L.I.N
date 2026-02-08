@@ -271,13 +271,15 @@ const LLM_REPETITION_PENALTY := 1.6
 
 ## Game Design Summary
 
-### 4 Gauges (0-100)
-| Gauge | 0 Ending | 100 Ending |
-|-------|----------|------------|
-| Vigueur | L'Epuisement | Le Surmenage |
-| Esprit | La Folie | La Possession |
-| Faveur | L'Exile | La Tyrannie |
-| Ressources | La Famine | Le Pillage |
+### 3 Aspects (Triade) — 3 etats discrets
+| Aspect | Animal | Bas | Equilibre | Haut |
+|--------|--------|-----|-----------|------|
+| Corps | Sanglier | Epuise | Robuste | Surmene |
+| Ame | Corbeau | Perdue | Centree | Possedee |
+| Monde | Cerf | Exile | Integre | Tyran |
+
+**Fins:** 12 chutes (2 aspects extremes) + 3 victoires + 1 secrete
+**Ref:** DOC_12_Triade_Gameplay_System.md, 09_LES_FINS.md
 
 ### Card Types
 - Narrative (80%) — LLM-generated scenarios

@@ -66,6 +66,16 @@ Broceliande est le centre du monde. Pas metaphoriquement — cosmiquement. Toute
 
 **Odeur** (pour les cartes narratives): Humus, mousse humide, fougere, et quelque chose d'indefinissable — comme l'odeur d'un souvenir.
 
+### Creatures du folklore
+
+| Creature | Description | Comportement dans DRU |
+|----------|-------------|-----------------------|
+| **Teuz** | Esprits malins des chemins forestiers | Egarent les voyageurs pres du Val sans Retour |
+| **Lutins** | Esprits domestiques de la foret | Aident ou nuisent selon le respect montre aux arbres |
+| **Fees des bois** | Danseuses luminescentes | Dansent de plus en plus lentement (l'Epuisement) |
+
+> *Le nemeton (clairiere sacree) est le coeur de Broceliande — les druides n'avaient pas de temples, seulement des clairieres ou le ciel touchait la terre.*
+
 ### L'Epuisement
 
 Broceliande tient. C'est le dernier biome qui tombera. Mais meme ici, les signes sont la:
@@ -124,6 +134,15 @@ Les landes sont l'immensitue — un paysage de bruyere, de granite et de vent qu
 
 **Son**: Vent constant — pas violent, mais perpetuel. Absence presque totale d'oiseaux. Le son de la bruyere qui plie sous le vent ressemble a une respiration. Les cairns produisent un son grave et profond quand le vent les traverse — un bourdon cosmique.
 
+### Creatures du folklore
+
+| Creature | Description | Comportement dans DRU |
+|----------|-------------|-----------------------|
+| **Bugul-noz** | "L'appeleur de nuit" — creature nocturne | Avertit les voyageurs du danger sur les landes |
+| **Korrigans des cairns** | Gardiens des tumulus, tresors caches | Facetieux mais moins depuis l'Epuisement |
+
+> *Le Yeun Elez etait considere comme la "Porte de l'Enfer" (Youdic) dans le folklore breton — les pretres y jetaient les ames en peine. Les Monts d'Arree (Menez Are en breton) sont les "montagnes" les plus anciennes de Bretagne.*
+
 ### L'Epuisement
 
 Les landes perdent leur etendue. L'horizon se rapproche.
@@ -179,6 +198,15 @@ Les cotes sont la frontiere. Le bord du monde connu. La ou la terre finit et l'i
 **Visuel**: Bleu-gris, ecume blanche, granite noir. Falaises abruptes, galets, algues. Le ciel et la mer se confondent a l'horizon — on ne sait plus ou l'un finit et l'autre commence. Brume persistante vers le large.
 
 **Son**: Vagues, mouettes (de plus en plus rares), vent sifflant dans les rochers. Le son de la mer qui se retire — gravier qui roule, eau qui glisse — ressemble a un chuchotement.
+
+### Creatures du folklore
+
+| Creature | Description | Comportement dans DRU |
+|----------|-------------|-----------------------|
+| **Marie-Morganes** | Fees d'eau, nees de la mer | Attirent les marins, gardiennes des epaves d'Ys |
+| **Groac'h** | Fee des eaux, parfois sirene | Gardienne de tresors sous-marins, tentation |
+
+> *La legende de Dahut et de la cite d'Ys (Ker-Is en breton, "la ville basse") est inscrite dans ce biome. Les pecheurs de Douarnenez entendent encore les cloches sous les vagues. Une prophetie dit: "Pa vo beuzet Paris, Ec'h adsavo Ker-Is" — Quand Paris sera engloutie, Ys renaitra.*
 
 ### L'Epuisement
 
@@ -236,6 +264,13 @@ Les villages sont ce qui reste de l'humanite. Des grappes de maisons de pierre, 
 
 **Son**: Voix humaines assourdies, rires d'enfants (rares), claquement d'enclume, feu qui craque. Les chansons sont nostalgiques — elles parlent toujours du passe, jamais de l'avenir.
 
+### Traditions bretonnes vivantes
+
+> *Le village d'Enora est inspire de Locronan — un des plus beaux villages bretons. Le nom "Ker" signifie "village" en breton. Les enclos paroissiaux (cimetieres clos) sont typiques de Bretagne. La forge rappelle l'art du fer celtique: "Trois arts naquirent ensemble: la Poesie, la Forge et la Guerison."*
+
+**Proverbe du village (grave sur le linteau de l'auberge):**
+> *"Ne vez ket graet un ti gant ur maen hepken"* — On ne fait pas une maison avec une seule pierre.
+
 ### L'Epuisement
 
 Les villages s'etiolent. Pas dramatiquement — doucement.
@@ -292,6 +327,12 @@ Les cercles de pierres sont les **noeuds de realite** — les points ou la Membr
 
 **Son**: Silence profond, presque total. Puis un bourdonnement grave venant des pierres — sub-audible, ressenti plus qu'entendu. Aux dates sacrees, les pierres "chantent" — un son comme du cristal qui vibre.
 
+### Authenticite historique
+
+> *Les alignements de Carnac sont le plus grand ensemble megalithique au monde — pres de 3000 menhirs eriges vers 4500 av. J.-C., alignes sur plus de 4 km en direction sud-ouest / nord-est (N 65°). Inscrits au patrimoine UNESCO en 2025. La fonction exacte reste debattue: calendrier astronomique, site rituel funeraire, ou les deux.*
+
+> *Le Tumulus de Gavrinis est reel — un cairn couvert de spirales gravees, parmi les plus anciennes d'Europe. Ces spirales sont les "archives des druides" dans notre lore.*
+
 ### L'Epuisement
 
 Les cercles perdent leur resonance.
@@ -347,6 +388,15 @@ Les marais sont le lieu le plus dangereux de Broceliande. Non pas parce qu'on pe
 **Visuel**: Noir, vert sombre, reflets iridescents dans l'eau stagnante. Brume rasante. Arbres morts aux silhouettes tordues. Lueurs intermittentes (feux follets). La lumiere n'arrive jamais tout a fait — le marais vit dans un crepuscule perpetuel.
 
 **Son**: Bulles qui crèvent la surface, glissements dans la tourbe, bourdonnement d'insectes. Le silence y est different d'ailleurs — plus lourd, plus present, comme s'il ecoutait. Parfois, des murmures montent des eaux noires — des mots dans une langue que personne ne parle plus.
+
+### Creatures du folklore
+
+| Creature | Description | Comportement dans DRU |
+|----------|-------------|-----------------------|
+| **Korrigans** | "Petits nains" en breton — etres facetieux | Gardiens de tresors ternis, danseurs fatigues |
+| **Feux follets** | Lueurs errantes des marais | Guident ou egarent — de plus en plus souvent, guident |
+
+> *Le Yeun Elez est la "Porte de l'Enfer" du folklore breton (Youdic). Les pretres y jetaient les livres des defunts (anaon) pour empecher leurs ames de revenir. La malediction la plus terrible: "Da vout lazhet gant an Ankou" — Que l'Ankou te prenne.*
 
 ### L'Epuisement
 
@@ -428,6 +478,12 @@ Les collines s'affaissent. Pas vite — imperceptiblement. Mais les mesures ne m
 **Carte Elouan:**
 > *Elouan pointe le ciel. "Regarde. Il manque trois etoiles depuis la derniere lune. Ou sont-elles parties?" Il sourit. "Peut-etre qu'elles savent quelque chose que nous ne savons pas."*
 
+### Authenticite historique
+
+> *Le Menez-Hom (330m) est un sommet reel en Finistere, considere comme sacre par les Celtes. Les dolmens sont des "antennes" cosmiques — ce n'est pas une invention du jeu: les architectures megalithiques etaient probablement orientees vers des evenements astronomiques precis. L'if (Idho en ogham) est l'arbre de la mort et de la renaissance dans la tradition celtique — certains ifs en Europe ont plus de 2000 ans.*
+
+> *Proverbe grave sur le dolmen le plus ancien: "An dour a ya d'ar mor" — L'eau va a la mer. Tout retourne a sa source.*
+
 ### Secret du biome (S1)
 
 L'if millenaire EST le druide Irial l'Immortel. Pas metaphoriquement — Irial s'est dissous dans cet arbre il y a des millenaires. L'if est la derniere incarnation physique d'un Ogham vivant. Quand Bestiole active Ioho, c'est cet arbre qui repond. Et quand le vent souffle dans ses branches noires, on peut entendre, si on ecoute tres attentivement, les dernieres paroles d'Irial: *"Je ne mourrai pas. Mais je m'oublierai peut-etre. Souviens-toi pour moi."*
@@ -454,17 +510,19 @@ Les biomes ne sont pas isoles. Des chemins les relient — mais ces chemins sont
 
 La brume qui separe les biomes n'est pas meteorologique. C'est le **Vide Entre** rendu visible. Quand la brume s'epaissit entre deux biomes, c'est que la Membrane s'amincit a cet endroit. Quand elle se dissipe, c'est que quelqu'un (un druide, un choix du joueur, une priere) a renforce le lien.
 
-### Correspondances cosmiques
+### Correspondances cosmiques (Systeme 3 Aspects)
 
-| Biome | Aspect de l'Awen | Jauge liee | Quand critique |
-|-------|-----------------|------------|----------------|
-| Foret | Awen physique | Vigueur | Arbres meurent, silence |
-| Landes | Awen aerien | Esprit | Le vent s'arrete |
-| Cotes | Awen aquatique | Ressources | La mer se vide |
-| Villages | Awen humain | Faveur | Les gens s'eteignent |
-| Cercles | Awen temporel | (Tension narrative) | Le temps se detraque |
-| Marais | Awen sombre | (Karma) | Le Vide perce |
-| Collines | Awen memorial | (Memoire du Monde) | L'oubli total |
+| Biome | Aspect de l'Awen | Aspect dominant | Quand critique |
+|-------|-----------------|-----------------|----------------|
+| Foret | Awen physique | Corps (Sanglier) | Arbres meurent, silence |
+| Landes | Awen aerien | Ame (Corbeau) | Le vent s'arrete |
+| Cotes | Awen aquatique | Monde (Cerf) | La mer se vide |
+| Villages | Awen humain | Monde (Cerf) | Les gens s'eteignent |
+| Cercles | Awen temporel | Ame (Corbeau) | Le temps se detraque |
+| Marais | Awen sombre | Corps (Sanglier) | Le Vide perce |
+| Collines | Awen memorial | Ame (Corbeau) | L'oubli total |
+
+> *Les trois animaux totems du jeu (Sanglier, Corbeau, Cerf) correspondent aux quatre animaux royaux celtes selon Cernunnos: le Cerf (regeneration, sagesse), le Sanglier (force sacerdotale, courage), le Corbeau de Lug (magie, clairvoyance). Le quatrieme — le Loup (loyaute, communaute) — reste cache dans la lore, lie a Bestiole.*
 
 ---
 

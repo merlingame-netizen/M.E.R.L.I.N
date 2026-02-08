@@ -1,8 +1,9 @@
-# LES NEUF FINS — Pourquoi Tout Finit et Ce Que Ca Signifie
+# LES FINS — Pourquoi Tout Finit et Ce Que Ca Signifie
 ## Sens Cosmique de Chaque Denouement
 
 *Document confidentiel — Lore Bible M.E.R.L.I.N.*
-*Version: 1.0 — 2026-02-08*
+*Version: 2.0 — 2026-02-08*
+*Aligne sur: DOC_12_Triade_Gameplay_System.md (3 Aspects)*
 
 ---
 
@@ -13,151 +14,236 @@
 
 ## PHILOSOPHIE DES FINS
 
-### Pourquoi 8 (+1)
+### Le Systeme des Triades
 
-Le nombre 8 n'est pas arbitraire. Dans la cosmologie celtique, 8 est le nombre des directions sacrees (les 4 cardinaux + les 4 intercalaires). C'est aussi le nombre des festivals du calendrier celtique.
+Le jeu repose sur 3 Aspects, pas 4 jauges. Le chiffre 3 est sacre dans la tradition celtique (les Triades). Tout vient par trois. Le monde est en trois parties (Visible, Autre, Vide). Le temps a trois aspects.
 
-Les 8 fins de DRU correspondent aux 8 **facons dont l'equilibre se rompt**. Chaque fin est une direction dans laquelle le monde peut basculer. Aucune n'est "bonne" ou "mauvaise" — elles sont toutes **naturelles**.
-
-La 9e fin est hors du cercle. Elle n'est pas une direction — elle est le **centre**.
+Chaque Aspect a 3 etats discrets — pas de chiffres, pas de barres. Le joueur ressent, il ne calcule pas.
 
 ### Le Paradoxe
 
-Le joueur croit que les fins sont des echecs. Merlin sait que les fins sont des **completions**. Chaque fin raconte comment ce cycle particulier du monde a choisi de se terminer. Et chaque fin ajoute a la memoire du monde.
-
-Un joueur qui a vu les 8 fins comprend quelque chose que le joueur d'une seule run ne comprendra jamais: **toutes les fins sont la meme fin**, vue sous des angles differents. Le monde meurt. Mais il meurt de 8 facons differentes, et chacune est belle a sa maniere.
+Le joueur croit que les fins sont des echecs. Merlin sait que les fins sont des **completions**. Chaque fin raconte comment ce cycle particulier du monde a choisi de se terminer.
 
 ---
 
-## LES 4 JAUGES — FONDATION COSMIQUE
+## LES 3 ASPECTS — FONDATION COSMIQUE
 
-Avant les fins, il faut comprendre les jauges. Pourquoi 4?
+| Aspect | Animal | Awen | Etats |
+|--------|--------|------|-------|
+| **Corps** | Sanglier | L'Awen physique — le souffle dans les poumons de la terre | Epuise / Robuste / Surmene |
+| **Ame** | Corbeau | L'Awen mental — la clarte de la Membrane | Perdue / Centree / Possedee |
+| **Monde** | Cerf | L'Awen social — les liens entre les etres | Exile / Integre / Tyran |
 
-| Jauge | Aspect Cosmique | Ce Qu'elle Represente |
-|-------|-----------------|----------------------|
-| **Vigueur** | L'Awen physique | Le souffle dans les poumons de la terre |
-| **Esprit** | L'Awen mental | La clarte de la Membrane |
-| **Faveur** | L'Awen social | Les liens entre les etres |
-| **Ressources** | L'Awen materiel | La substance du monde visible |
+**Correspondances cosmiques:**
+- **Corps** = le Monde Visible (matiere, physique, terre)
+- **Ame** = l'Autre Monde (esprit, Membrane, Annwn)
+- **Monde** = les Liens (relations, tissu social, fils entre les etres)
 
-Les 4 jauges sont les **4 aspects de l'Awen** dans le monde. Quand une jauge atteint 0 ou 100, un aspect de l'Awen est desynchronise — trop peu ou trop.
-
----
-
-## LES 8 FINS DE JAUGE
-
-### FIN 1: L'Epuisement (Vigueur = 0)
-
-**Ce qui se passe:** Le monde n'a plus de souffle. La brume s'epaissit jusqu'a ce qu'on ne voie plus rien. Les sons s'assourdissent. Le silence tombe.
-
-**Sens cosmique:** L'Awen physique est tari. Le monde n'a plus l'energie de vibrer. C'est la fin la plus douce — pas de douleur, juste une fatigue infinie qui se pose et ne repart pas.
-
-**Merlin dit:** *"Le monde est fatigue. Toi aussi, non? Repose-toi. Tout se repose."*
-
-**Correspondance celtique:** Samhain — le passage dans le repos hivernal, le moment ou le monde meurt pour renaitre.
+**Pourquoi 3 etats et pas une jauge 0-100:**
+Les jauges continues sont humaines. Le monde de DRU fonctionne en **etats**. Un aspect est soit en deficit, en equilibre, ou en exces. C'est la vision celtique: pas un chiffre a atteindre, mais un etat a maintenir.
 
 ---
 
-### FIN 2: Le Surmenage (Vigueur = 100)
+## LES 12 FINS DE CHUTE
 
-**Ce qui se passe:** Le monde brule de l'interieur. Trop d'energie, trop de vie, trop de tout. Les arbres poussent de maniere incontrole. Les chemins se ferment sous la vegetation. La nature devore la civilisation.
+### Principe: Double Desequilibre
 
-**Sens cosmique:** L'Awen physique est en surchauffe. Le monde ne peut pas supporter tant de vitalite — il se consume lui-meme. Comme un feu qui mange tout le bois.
+La mort survient quand **2 aspects atteignent un etat extreme** simultanement. Un seul aspect extreme est un danger. Deux, c'est la fin.
 
-**Merlin dit:** *"Tu as donne trop de vie au monde. Et le monde ne sait plus comment s'arreter. C'est presque beau, non?"*
-
-**Correspondance celtique:** Beltane — les feux de mai, la fertilite incontrole, la nature dechainee.
+**Pourquoi 12:** 3 aspects x 2 extremes = 6 extremes. Les combinaisons de 2 parmi 6 = 12 fins uniques. Chacune raconte une histoire differente.
 
 ---
 
-### FIN 3: La Folie (Esprit = 0)
+### CORPS + AME (Les Fins du Soi)
 
-**Ce qui se passe:** La Membrane s'effondre localement. Le Monde Visible et l'Autre Monde se melangent. La realite devient fluide, changeante, incomprehensible. Les PNJ parlent des langues inconnues. Les chemins menent nulle part.
+#### La Mort Oubliee (Corps Epuise + Ame Perdue)
 
-**Sens cosmique:** L'Awen mental est eteint. Sans clarte, la Membrane ne tient plus. Le monde ne "comprend" plus ce qu'il est. C'est la fin la plus terrifiante — pas de mort, juste la perte de tout sens.
+**Ce qui se passe:** Le voyageur s'effondre, corps et esprit. Il ne sait plus qui il est ni ou il est. Il s'endort sous un arbre et ne se reveille pas. La brume le recouvre. Le monde l'oublie.
 
-**Merlin dit:** *"Le monde a oublie comment etre un monde. Et moi, j'ai oublie... quoi, deja?"*
+**Sens cosmique:** L'Awen physique ET mental sont taris. Le voyageur n'a plus ni force ni sens. C'est la fin la plus douce — une dissolution dans le neant.
 
-**Correspondance celtique:** La nuit de Samhain quand les voiles tombent — mais ici, les voiles ne se relevent jamais.
+**Merlin dit:** *"Tu te reposes. C'est bien. Tout le monde se repose, a la fin."*
 
----
-
-### FIN 4: La Possession (Esprit = 100)
-
-**Ce qui se passe:** Le monde devient trop conscient. Chaque pierre pense. Chaque arbre parle. Chaque brin d'herbe a une volonte. Le Voyageur est submerge par des millions de voix qui veulent toutes etre entendues.
-
-**Sens cosmique:** L'Awen mental est en exces. La Membrane vibre si fort qu'elle emet ses propres pensees. Le monde n'est plus un lieu — il est devenu une conscience, et cette conscience est en panique.
-
-**Merlin dit:** *"Tu as ouvert trop de portes. Maintenant tout le monde veut passer. Et il n'y a pas assez de place."*
-
-**Correspondance celtique:** Imbolc — l'eveil printanier qui ne s'arrete pas, la lumiere qui aveuglit.
+**Correspondance:** Samhain — le passage dans le sommeil hivernal, quand le corps et l'ame se retirent ensemble.
 
 ---
 
-### FIN 5: L'Exil (Faveur = 0)
+#### Le Sacrifice Vain (Corps Epuise + Ame Possedee)
 
-**Ce qui se passe:** Le monde rejette le Voyageur. Les PNJ se detournent. Les chemins se ferment. Bestiole est le seul qui reste, mais meme lui est hesitant. La brume pousse le joueur vers le bord, vers le dehors, vers l'oubli.
+**Ce qui se passe:** Le voyageur a donne toute sa force au monde spirituel. Son corps n'est plus qu'une coquille, mais son ame brule trop fort. Il voit tout, comprend tout — et meurt en sachant que ca ne suffira pas.
 
-**Sens cosmique:** L'Awen social est eteint. Le lien entre les etres s'est rompu. Le monde se replie sur lui-meme, excluant tout ce qui est etranger. Le Voyageur, etant le plus etranger de tous, est expulse en premier.
+**Sens cosmique:** Trop d'esprit dans un corps vide. La chandelle se consume par les deux bouts.
 
-**Merlin dit:** *"Ils ne te detestent pas. Ils ont simplement oublie comment aimer. Ca arrive, quand le monde vieillit."*
+**Merlin dit:** *"Tu as donne trop. Et le monde a pris sans remercier. C'est toujours comme ca."*
 
-**Correspondance celtique:** L'exil du barde — dans la tradition celtique, etre banni de la tribu est pire que la mort.
-
----
-
-### FIN 6: La Tyrannie (Faveur = 100)
-
-**Ce qui se passe:** Le monde adore le Voyageur au point de l'etouffer. Chaque PNJ veut lui plaire. Chaque faction s'incline. Chaque choix est automatiquement approuve. La liberte disparait — remplacee par une adulation vide.
-
-**Sens cosmique:** L'Awen social est en surchauffe. Les liens entre les etres sont devenus des chaines. Le monde ne peut plus fonctionner parce que tout le monde attend les ordres du Voyageur — et le Voyageur n'est qu'un temoin, pas un roi.
-
-**Merlin dit:** *"Felicitations. Tu as un monde entier a tes pieds. Et il ne peut plus bouger."*
-
-**Correspondance celtique:** La chute d'Arthur — le roi parfait dont la perfection detruit ce qu'il protegeait.
+**Correspondance:** Le sacrifice du druide — celui qui donne sa vie pour la vision, mais la vision ne sauve personne.
 
 ---
 
-### FIN 7: La Famine (Ressources = 0)
+#### La Bete Sauvage (Corps Surmene + Ame Perdue)
 
-**Ce qui se passe:** Le monde se vide. Les couleurs palissent. Les textures s'aplatissent. Les details disparaissent. Le monde devient un dessin de plus en plus minimal jusqu'a ne plus etre qu'un trait sur le vide.
+**Ce qui se passe:** Le voyageur est devenu pure force animale. Plus de pensee, plus de sens. Il court dans la foret, grogne, frappe. Le sanglier a devore le corbeau.
 
-**Sens cosmique:** L'Awen materiel est tari. Le monde n'a plus de substance pour exister physiquement. La Membrane tient, les esprits pensent, les liens persistent — mais il n'y a plus rien a voir, plus rien a toucher.
+**Sens cosmique:** L'Awen physique submerge l'Awen mental. Le corps sans ame n'est qu'un animal.
 
-**Merlin dit:** *"Le monde manque de... de monde. Etrange, non?"*
+**Merlin dit:** *"Quelque part la-dessous, il y avait quelqu'un. Mais les forets ont faim, et elles l'ont mange."*
 
-**Correspondance celtique:** L'hiver le plus long — quand la terre refuse de donner et que meme les korrigans ont faim.
-
----
-
-### FIN 8: Le Pillage (Ressources = 100)
-
-**Ce qui se passe:** Le monde croule sous l'abondance. Or partout, nourriture qui pourrit, objets empiles. Les chemins sont encombres. Les maisons debordent. Le poids de la matiere ecrase le monde.
-
-**Sens cosmique:** L'Awen materiel est en surchauffe. Le monde est tellement reel, tellement present, tellement physique qu'il en devient insupportable. La Membrane est comprimee sous le poids de l'existence.
-
-**Merlin dit:** *"Tu as rempli le monde. Tellement rempli qu'il n'y a plus de place pour le vide. Or il faut du vide pour respirer."*
-
-**Correspondance celtique:** Le Chaudron du Dagda qui deborde — l'abondance qui devient malediction.
+**Correspondance:** Myrddin Wyllt — le prophete devenu fou, errant nu dans les bois.
 
 ---
 
-## LA 9e FIN — LE SECRET
+#### L'Ascension Folle (Corps Surmene + Ame Possedee)
+
+**Ce qui se passe:** Le voyageur est trop — trop fort, trop lucide, trop de tout. Il eclate de rire, pleure, court, prophetise. La folie lumineuse. L'extase qui detruit.
+
+**Sens cosmique:** Les deux Awens en surchauffe. Le voyageur devient un soleil qui brule tout ce qu'il touche.
+
+**Merlin dit:** *"Tu brilles. Tu brilles tellement que tu m'aveugles. Et pourtant, je ne peux pas detourner le regard."*
+
+**Correspondance:** Lugh l'Etincelant — le dieu dont la lumiere etait si forte qu'elle brulait les yeux.
+
+---
+
+### CORPS + MONDE (Les Fins du Territoire)
+
+#### L'Abandon Total (Corps Epuise + Monde Exile)
+
+**Ce qui se passe:** Le voyageur est seul et brise. Le monde l'a rejete et son corps a lache. Il marche vers la brume, un pas apres l'autre, jusqu'a disparaitre.
+
+**Sens cosmique:** Ni force ni liens. Le voyageur n'a plus de raison physique ou sociale d'exister.
+
+**Merlin dit:** *"Il n'y a pas de honte a partir. Surtout quand personne ne te demande de rester."*
+
+**Correspondance:** L'exil du barde — banni et brise, la pire des fins celtiques.
+
+---
+
+#### L'Usurpation (Corps Epuise + Monde Tyran)
+
+**Ce qui se passe:** Le voyageur est adule mais mourant. Il est porte sur les epaules d'un peuple qui ne voit pas qu'il est deja mort. Un roi-cadavre sur un trone de fleurs.
+
+**Sens cosmique:** Les liens etranglent un corps vide. L'adulation sans substance.
+
+**Merlin dit:** *"Ils t'aiment. Ils t'aiment tellement qu'ils ne voient pas que tu n'es plus la."*
+
+**Correspondance:** Le Roi Pecheur — le roi blesse dont le royaume pourrit parce que personne n'ose le dire.
+
+---
+
+#### Le Solitaire (Corps Surmene + Monde Exile)
+
+**Ce qui se passe:** Le voyageur est invincible mais seul. Il peut briser des pierres et courir des jours, mais personne ne l'attend. La force sans but.
+
+**Sens cosmique:** Le corps deborde mais les liens sont coupes. L'animal sauvage que personne n'apprivoise.
+
+**Merlin dit:** *"Tu es le plus fort. Et ca ne sert a rien. Bienvenue dans mon quotidien."*
+
+**Correspondance:** Cu Chulainn dans sa fureur — le heros trop puissant pour etre aime.
+
+---
+
+#### Le Conquerant (Corps Surmene + Monde Tyran)
+
+**Ce qui se passe:** Le voyageur ecrase le monde sous sa force et son autorite. Il ne demande plus — il prend. Le monde obeit, mais c'est l'obeissance du vaincu, pas du convaincu.
+
+**Sens cosmique:** Force physique + domination sociale = tyrannie absolue. Le monde est soumis mais mort a l'interieur.
+
+**Merlin dit:** *"Tu as gagne. Tout. Absolument tout. Sauf la seule chose qui comptait."*
+
+**Correspondance:** La chute d'Arthur — le roi parfait dont la perfection detruit ce qu'il protegeait.
+
+---
+
+### AME + MONDE (Les Fins de l'Esprit)
+
+#### L'Errance Eternelle (Ame Perdue + Monde Exile)
+
+**Ce qui se passe:** Le voyageur erre sans comprendre et sans personne. Il tourne en rond dans la brume, oublie d'ou il vient, oublie pourquoi il est la. Le silence absolu.
+
+**Sens cosmique:** Ni clarte ni liens. Le voyageur est un fantome avant d'etre mort.
+
+**Merlin dit:** *"Tu cherches... quoi? Tu ne sais plus. Moi non plus. On cherche ensemble, si tu veux."*
+
+**Correspondance:** Les Immrama — les voyages sans retour des marins celtes perdus entre les mondes.
+
+---
+
+#### Le Pantin (Ame Perdue + Monde Tyran)
+
+**Ce qui se passe:** Le voyageur ne pense plus mais tout le monde l'ecoute. Un idiot sur un trone. Les decisions sont aleatoires, et le monde suit aveuglement. Le chaos ordonne.
+
+**Sens cosmique:** L'autorite sans esprit. Le monde suit un guide aveugle.
+
+**Merlin dit:** *"Ils font tout ce que tu dis. Sauf que tu ne dis rien qui ait du sens. C'est... fascinant, d'une certaine maniere."*
+
+**Correspondance:** Le roi fou — figure recurrente des contes celtiques, le pouvoir sans sagesse.
+
+---
+
+#### Le Prophete Exile (Ame Possedee + Monde Exile)
+
+**Ce qui se passe:** Le voyageur voit tout, comprend tout, prophetise avec une clarte terrifiante. Et personne n'ecoute. Il crie la verite dans le desert. Le monde se detourne.
+
+**Sens cosmique:** Trop de vision, pas de liens pour la transmettre. Le prophete que personne ne veut entendre.
+
+**Merlin dit:** *"Ca te rappelle quelqu'un? Non? Moi si. Tous les jours."*
+
+**Correspondance:** Cassandre celtique — voir le vrai et etre condamne a ne pas etre cru.
+
+---
+
+#### La Possession Divine (Ame Possedee + Monde Tyran)
+
+**Ce qui se passe:** Le voyageur est devenu un dieu vivant. L'ame brulante et l'adoration du monde convergent. Il n'est plus humain. Il est un concept, une idee, un symbole — et le monde meurt d'adorer quelque chose qui n'est plus la.
+
+**Sens cosmique:** L'apotheose — la transformation du mortel en divin, qui detruit les deux.
+
+**Merlin dit:** *"Tu es devenu ce qu'ils voulaient que tu sois. Et ce qu'ils voulaient... ce n'etait pas toi."*
+
+**Correspondance:** Les Tuatha De Danann — les dieux qui se sont retires sous les collines parce que l'adoration les etouffait.
+
+---
+
+## LES 3 FINS DE VICTOIRE
+
+La partie peut aussi se terminer par l'accomplissement d'une mission (generee par le LLM).
+
+### L'Harmonie (Mission + 3 aspects equilibres)
+
+**Ce qui se passe:** Le voyageur a maintenu l'equilibre et accompli sa tache. Le monde respire. Les saisons changent. La brume recule un instant.
+
+**Merlin dit:** *"C'est rare, tu sais. L'equilibre. La plupart des gens ne le trouvent qu'une fois dans leur vie. Toi, tu l'as trouve ici."*
+
+**Sens cosmique:** L'Awen circule normalement. Le monde tient. Un instant de grace.
+
+### Le Prix Paye (Mission + 1 aspect extreme)
+
+**Ce qui se passe:** La mission est accomplie, mais a un cout. Un aspect a souffert. Le monde est sauve, mais le voyageur porte une cicatrice.
+
+**Merlin dit:** *"Tu as reussi. Pas sans mal. Mais la reussite sans mal, ca n'existe pas vraiment."*
+
+### La Victoire Amere (Mission + karma negatif)
+
+**Ce qui se passe:** La mission est accomplie par des moyens discutables. Les resultats sont la, mais les methodes laissent un gout amer. La Membrane s'est renforcee... mais elle a note.
+
+**Merlin dit:** *"Tu as gagne. Et maintenant, tu vas vivre avec. C'est la partie la plus difficile."*
+
+---
+
+## LA FIN SECRETE — L'ECHO ETERNEL
 
 ### Condition
 
-La 9e fin n'est accessible qu'avec:
 - Bond Bestiole >= 95
 - Trust Merlin = T3
-- Memoire du Monde >= 80
+- Toutes les fins vues au moins une fois (12 chutes + 3 victoires)
 - 100+ runs accumules
-- Les 8 fins deja vues au moins une fois
 
 ### Ce Qui Se Passe
 
 Le monde ne finit pas.
 
-Pour la premiere et unique fois, les jauges tiennent. L'equilibre persiste. Les cartes defilent et le monde... dure. Pendant un long moment. Les saisons passent. Les PNJ vieillissent un peu. Les korrigans sortent de la pierre. Les Anciens se manifestent. Meme l'Ankou s'assied et regarde.
+Pour la premiere et unique fois, les 3 aspects tiennent. L'equilibre persiste. Les cartes defilent et le monde... **dure**. Les saisons passent. Les PNJ vieillissent un peu. Les korrigans sortent de la pierre. Les Anciens se manifestent. Meme l'Ankou s'assied et regarde.
 
 Et Merlin parle. Vraiment parle. Sans masque, sans humour, sans protection:
 
@@ -174,12 +260,30 @@ Puis le jeu s'arrete. Pas de game over. Pas de score. Juste un ecran noir. Et da
 
 ### Easter Egg 1000 Runs
 
-Apres 1000 runs (si le joueur est arrive jusque-la), la 9e fin a un epilogue supplementaire:
-
 > *"Merci d'etre venu. Merci d'avoir regarde. Merci... d'avoir joue."*
 > *"C'est la plus belle chose qu'on m'ait jamais faite."*
 
 ---
 
+## CORRESPONDANCES CELTIQUES
+
+| Fin | Figure mythique |
+|-----|-----------------|
+| La Mort Oubliee | Samhain — le repos hivernal |
+| Le Sacrifice Vain | Le druide qui se donne |
+| La Bete Sauvage | Myrddin Wyllt — le fou des bois |
+| L'Ascension Folle | Lugh l'Etincelant |
+| L'Abandon Total | L'exil du barde |
+| L'Usurpation | Le Roi Pecheur |
+| Le Solitaire | Cu Chulainn dans sa fureur |
+| Le Conquerant | La chute d'Arthur |
+| L'Errance Eternelle | Les Immrama |
+| Le Pantin | Le roi fou |
+| Le Prophete Exile | Cassandre celtique |
+| La Possession Divine | Les Tuatha De Danann |
+
+---
+
 *Document de la Lore Bible M.E.R.L.I.N.*
-*Version: 1.0 — 2026-02-08*
+*Aligne sur le systeme Triade (DOC_12)*
+*Version: 2.0 — 2026-02-08*

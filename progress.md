@@ -3313,4 +3313,49 @@ Ecriture de tous les dialogues pour 3 scenes narratives:
 
 ---
 
-*Last updated: 2026-02-08 - Phase 10 Scene Dialogues*
+---
+
+## Night Mode — Iteration 3: LORE COMPLETE (finalisation)
+
+**Theme**: LORE — Alignement 3 Aspects, enrichissement historique, finalisation Bible
+
+### Decisions utilisateur
+1. **Renumerotation**: OUI — docs 01, 04, 12, 13 crees comme index vers les sources detaillees
+2. **3 Aspects canonique**: OUI — Systeme Corps/Ame/Monde (Sanglier/Corbeau/Cerf) remplace les 4 Jauges
+3. **Enrichissement**: OUI — Materiel de CELTIC_FOUNDATION.md integre aux biomes et PNJ
+
+### Fichiers crees
+- `docs/50_lore/01_LE_MONDE.md` — Index cosmologie (~80 lignes)
+- `docs/50_lore/04_MERLIN.md` — Index personnage central (~130 lignes)
+- `docs/50_lore/12_LES_INDICES.md` — Catalogue revelations S0-S4 (~110 lignes)
+- `docs/50_lore/13_GARDES-FOU.md` — Mots interdits, tonalite, regles (~100 lignes)
+
+### Fichiers reecrits
+- `docs/50_lore/09_LES_FINS.md` — Reecrit v2.0: 12 chutes dual-aspect + 3 victoires + 1 secrete (~290 lignes)
+
+### Fichiers enrichis (Celtic Foundation)
+- `docs/50_lore/08_LES_BIOMES.md`:
+  - Creatures folkloriques par biome (Teuz, Bugul-noz, Marie-Morganes, Groac'h, Korrigans)
+  - Notes historiques (Carnac UNESCO, Dahut/Ys, Menez-Hom, nemeton, If millenaire)
+  - Proverbes bretons graves (villages, collines)
+  - Table "Correspondances cosmiques" corrigee: 4 Jauges → 3 Aspects
+  - Note sur les 4 animaux royaux celtes (Cerf, Sanglier, Corbeau + Loup cache)
+
+- `docs/50_lore/11_LES_PNJ.md`:
+  - Vocabulaire breton par PNJ: Maelgwn (neart, bennozh), Keridwen (mallozh, yec'hed mat), Talwen (imbas, anaon), Bran (mor, enez sun), Enora (proverbes), Riwal (bleiz-garv, geis), Gwydion (anaon, pelloc'h)
+  - Notes historiques: Ankou (karrig, tradition), Vieux Granit (korrigans authentiques)
+  - Correction: "jauge atteint 0/100" → "aspect atteint etat extreme"
+
+### Fichiers mis a jour
+- `CLAUDE.md` — Section Game Design: 4 Gauges → 3 Aspects (Triade)
+- `docs/50_lore/00_LORE_BIBLE_INDEX.md` — v3.0: tous docs numerotes COMPLET, cross-refs mises a jour
+- `docs/MASTER_DOCUMENT.md` — Section Lore Bible mise a jour
+
+### Satisfaction: 5/5
+- 14 documents numerotes tous COMPLET
+- Systeme mecanique unifie (3 Aspects)
+- Enrichissement historique authentique integre
+- Vocabulaire breton coherent dans les PNJ
+- Creatures folkloriques dans les biomes
+
+*Last updated: 2026-02-08 - Night Mode Iteration 3 — Lore Bible v3.0 COMPLETE*
