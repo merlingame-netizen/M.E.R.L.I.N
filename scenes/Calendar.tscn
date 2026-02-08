@@ -1,0 +1,208 @@
+[gd_scene load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/Calendar.gd" id="1"]
+
+[node name="Calendar" type="Control"]
+anchor_right = 1.0
+anchor_bottom = 1.0
+script = ExtResource("1")
+
+[node name="Background" type="ColorRect" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+color = Color(0.12, 0.1, 0.08, 1)
+
+[node name="CalendarCard" type="PanelContainer" parent="."]
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -280.0
+offset_top = -260.0
+offset_right = 280.0
+offset_bottom = 260.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="CardContents" type="VBoxContainer" parent="CalendarCard"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+theme_override_constants/separation = 12
+
+[node name="TitleLabel" type="Label" parent="CalendarCard/CardContents"]
+layout_mode = 2
+text = "CALENDRIER CELTIQUE"
+horizontal_alignment = 1
+
+[node name="WheelContainer" type="Control" parent="CalendarCard/CardContents"]
+custom_minimum_size = Vector2(240, 240)
+layout_mode = 2
+size_flags_horizontal = 4
+
+[node name="Separator" type="ColorRect" parent="CalendarCard/CardContents"]
+custom_minimum_size = Vector2(0, 1)
+layout_mode = 2
+size_flags_horizontal = 3
+color = Color(0.12, 0.1, 0.08, 0.18)
+
+[node name="NextEventPanel" type="PanelContainer" parent="CalendarCard/CardContents"]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="EventVBox" type="VBoxContainer" parent="CalendarCard/CardContents/NextEventPanel"]
+layout_mode = 2
+theme_override_constants/separation = 4
+
+[node name="NextLabel" type="Label" parent="CalendarCard/CardContents/NextEventPanel/EventVBox"]
+layout_mode = 2
+text = "Prochain evenement:"
+
+[node name="EventDateLabel" type="Label" parent="CalendarCard/CardContents/NextEventPanel/EventVBox"]
+layout_mode = 2
+text = "14 Fevrier"
+
+[node name="EventNameLabel" type="Label" parent="CalendarCard/CardContents/NextEventPanel/EventVBox"]
+layout_mode = 2
+text = "Lueur du Gui"
+
+[node name="EventDescLabel" type="Label" parent="CalendarCard/CardContents/NextEventPanel/EventVBox"]
+layout_mode = 2
+text = "Les branches de gui brillent sous la lune..."
+autowrap_mode = 2
+
+[node name="TabsContainer" type="HBoxContainer" parent="CalendarCard/CardContents"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 8
+
+[node name="EventsTabBtn" type="Button" parent="CalendarCard/CardContents/TabsContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "Evenements"
+
+[node name="StatsTabBtn" type="Button" parent="CalendarCard/CardContents/TabsContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "Statistiques"
+
+[node name="ContentPanel" type="PanelContainer" parent="."]
+layout_mode = 1
+anchors_preset = 12
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 40.0
+offset_top = -200.0
+offset_right = -40.0
+offset_bottom = -60.0
+grow_horizontal = 2
+grow_vertical = 0
+
+[node name="ContentScroll" type="ScrollContainer" parent="ContentPanel"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+follow_focus = true
+
+[node name="ContentStack" type="VBoxContainer" parent="ContentPanel/ContentScroll"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 6
+
+[node name="EventsSection" type="VBoxContainer" parent="ContentPanel/ContentScroll/ContentStack"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 4
+
+[node name="MonthHeader" type="Label" parent="ContentPanel/ContentScroll/ContentStack/EventsSection"]
+layout_mode = 2
+text = "FEVRIER 2026"
+
+[node name="EventList" type="VBoxContainer" parent="ContentPanel/ContentScroll/ContentStack/EventsSection"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 4
+
+[node name="StatsSection" type="VBoxContainer" parent="ContentPanel/ContentScroll/ContentStack"]
+visible = false
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 6
+
+[node name="StatsTitleLabel" type="Label" parent="ContentPanel/ContentScroll/ContentStack/StatsSection"]
+layout_mode = 2
+text = "STATISTIQUES DE JEU"
+
+[node name="StatRows" type="VBoxContainer" parent="ContentPanel/ContentScroll/ContentStack/StatsSection"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 4
+
+[node name="EndingsSection" type="VBoxContainer" parent="ContentPanel/ContentScroll/ContentStack/StatsSection"]
+layout_mode = 2
+theme_override_constants/separation = 4
+
+[node name="EndingsTitleLabel" type="Label" parent="ContentPanel/ContentScroll/ContentStack/StatsSection/EndingsSection"]
+layout_mode = 2
+text = "FINS DECOUVERTES"
+
+[node name="EndingsGrid" type="GridContainer" parent="ContentPanel/ContentScroll/ContentStack/StatsSection/EndingsSection"]
+layout_mode = 2
+columns = 2
+
+[node name="BackButton" type="Button" parent="."]
+layout_mode = 1
+anchors_preset = 2
+anchor_top = 1.0
+anchor_bottom = 1.0
+offset_left = 24.0
+offset_top = -44.0
+offset_right = 120.0
+offset_bottom = -12.0
+grow_vertical = 0
+text = "Retour"
+
+[node name="CornerHints" type="Control" parent="."]
+layout_mode = 1
+anchors_preset = 1
+anchor_left = 1.0
+anchor_right = 1.0
+offset_left = -140.0
+offset_top = 12.0
+offset_right = -12.0
+offset_bottom = 60.0
+grow_horizontal = 0
+
+[node name="SeasonIndicator" type="Label" parent="CornerHints"]
+layout_mode = 1
+anchors_preset = 5
+anchor_left = 0.5
+anchor_right = 0.5
+offset_left = -50.0
+offset_right = 50.0
+offset_bottom = 20.0
+grow_horizontal = 2
+text = "Hiver"
+horizontal_alignment = 2
+
+[node name="DayCounter" type="Label" parent="CornerHints"]
+layout_mode = 1
+anchors_preset = 5
+anchor_left = 0.5
+anchor_top = 1.0
+anchor_right = 0.5
+anchor_bottom = 1.0
+offset_left = -50.0
+offset_top = -20.0
+offset_right = 50.0
+grow_horizontal = 2
+grow_vertical = 0
+text = "Jour 37"
+horizontal_alignment = 2

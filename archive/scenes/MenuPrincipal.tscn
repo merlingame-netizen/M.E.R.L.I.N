@@ -1,0 +1,70 @@
+﻿[gd_scene load_steps=2 format=3 uid="uid://byliwvo054t71"]
+
+[ext_resource type="Script" path="res://scripts/MenuPrincipal.gd" id="1_0oe1n"]
+
+[node name="MenuPrincipal" type="Control"]
+layout_mode = 3
+anchors_preset = 0
+script = ExtResource("1_0oe1n")
+
+[node name="Background" type="ColorRect" parent="."]
+layout_mode = 0
+anchor_right = 1.0
+anchor_bottom = 1.0
+color = Color(0.09411765, 0.2509804, 0.3137255, 1)
+
+[node name="TitleLabel" type="Label" parent="."]
+layout_mode = 0
+offset_left = 160.0
+offset_top = 60.0
+offset_right = 560.0
+offset_bottom = 120.0
+text = "DRU"
+horizontal_alignment = 1
+
+[node name="SubtitleLabel" type="Label" parent="."]
+layout_mode = 0
+offset_left = 160.0
+offset_top = 120.0
+offset_right = 560.0
+offset_bottom = 150.0
+text = "Le Jeu des Oghams"
+horizontal_alignment = 1
+
+[node name="VBoxContainer" type="VBoxContainer" parent="."]
+layout_mode = 0
+offset_left = 240.0
+offset_top = 200.0
+offset_right = 480.0
+offset_bottom = 400.0
+
+[node name="BtnNouvelle" type="Button" parent="VBoxContainer"]
+custom_minimum_size = Vector2(240, 40)
+layout_mode = 2
+text = "ðŸŽ® Nouvelle Partie"
+
+[node name="BtnContinuer" type="Button" parent="VBoxContainer"]
+custom_minimum_size = Vector2(240, 40)
+layout_mode = 2
+text = "ðŸ“‚ Continuer"
+
+[node name="BtnOptions" type="Button" parent="VBoxContainer"]
+custom_minimum_size = Vector2(240, 40)
+layout_mode = 2
+text = "âš™ï¸ Options"
+
+[node name="BtnTest" type="Button" parent="VBoxContainer"]
+custom_minimum_size = Vector2(240, 40)
+layout_mode = 2
+text = "ðŸ§™ Test Merlin"
+
+[node name="BtnTestTaniere" type="Button" parent="VBoxContainer"]
+custom_minimum_size = Vector2(240, 40)
+layout_mode = 2
+text = "Test Taniere"
+
+
+[node name="BtnQuitter" type="Button" parent="VBoxContainer"]
+custom_minimum_size = Vector2(240, 40)
+layout_mode = 2
+text = "ðŸ‘‹ Quitter"

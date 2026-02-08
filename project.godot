@@ -1,0 +1,46 @@
+; Engine configuration file.
+; It's best edited using the editor UI and not directly,
+; since the parameters that go here are not all obvious.
+;
+; Format:
+;   [section] ; section goes between []
+;   param=value ; assign values to parameters
+
+config_version=5
+
+[application]
+
+config/name="DRU"
+run/main_scene="res://scenes/IntroCeltOS.tscn"
+config/features=PackedStringArray("4.5", "GL Compatibility")
+config/icon="res://icon.svg"
+
+[autoload]
+
+GameManager="*res://scripts/game_manager.gd"
+MerlinAI="*res://addons/merlin_ai/merlin_ai.gd"
+ReignsBackdrop="*res://scripts/reigns_backdrop.gd"
+LLMStatusBar="*res://scripts/llm_status_bar.gd"
+ScreenEffects="*res://scripts/autoload/ScreenEffects.gd"
+
+[editor_plugins]
+
+enabled=PackedStringArray("res://addons/error_clipboard_dock/plugin.cfg", "res://addons/gd_script_deployer/plugin.cfg", "res://addons/godot_mcp/plugin.cfg")
+
+[gui]
+
+theme/custom="res://themes/reigns_theme.tres"
+
+[merlin_llm]
+
+log_enabled=true
+log_verbose=true
+log_path="user://merlin_llm/merlin.log"
+allow_native_in_editor=true
+require_native=true
+low_spec_mode=true
+
+[rendering]
+
+renderer/rendering_method="gl_compatibility"
+renderer/rendering_method.mobile="gl_compatibility"

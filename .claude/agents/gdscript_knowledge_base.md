@@ -1,0 +1,339 @@
+# GDScript Knowledge Base — Corrections & Best Practices
+
+> **FICHIER VIVANT** — Mis a jour automatiquement par l'agent Debug et Optimizer.
+> Ce fichier documente les erreurs courantes et leurs corrections pour eviter les regressions.
+
+---
+
+## SECTION 1: Erreurs GDScript Courantes (Eviter)
+
+### 1.1 Inference de Type avec Indexation
+
+**Erreur:** `Cannot infer type from expression`
+
+```gdscript
+# WRONG - GDScript ne peut pas inferer le type depuis un index
+var item := MY_ARRAY[0]
+var value := MY_DICT["key"]
+var constant := CONSTANTS[index]
+
+# CORRECT - Type explicite obligatoire
+var item: String = MY_ARRAY[0]
+var value: Dictionary = MY_DICT["key"]
+var constant: int = CONSTANTS[index]
+```
+
+**Regle:** Jamais `:=` avec `CONST[index]`, `array[index]`, ou `dict[key]`.
+
+---
+
+### 1.2 Yield Obsolete (Godot 4.x)
+
+**Erreur:** `yield is not a valid identifier`
+
+```gdscript
+# WRONG (Godot 3.x syntax)
+yield(get_tree().create_timer(1.0), "timeout")
+
+# CORRECT (Godot 4.x)
+await get_tree().create_timer(1.0).timeout
+```
+
+---
+
+### 1.3 Division Entiere
+
+**Erreur:** Comportement inattendu avec `/` pour entiers
+
+```gdscript
+# Godot 4.x: / donne toujours un float
+var result: int = 10 / 3  # Resultat: 3.333... puis cast -> 3
+
+# RECOMMANDE: Explicite
+var result: int = int(10.0 / 3.0)
+# OU utiliser modulo pour restes
+var quotient: int = 10 / 3 as int
+```
+
+---
+
+### 1.4 Appels draw_* Hors Contexte
+
+**Erreur:** `draw_* can only be called during a CanvasItem's draw cycle`
+
+```gdscript
+# WRONG - Appele dans _ready ou _process
+func _ready():
+    draw_circle(Vector2.ZERO, 50, Color.RED)  # CRASH
+
+# CORRECT - Dans _draw() uniquement
+func _draw():
+    draw_circle(Vector2.ZERO, 50, Color.RED)
+
+# OU declencher un redraw
+func update_visual():
+    queue_redraw()  # Appelera _draw()
+```
+
+---
+
+### 1.5 Signaux Non Deconnectes
+
+**Erreur:** Memory leak, callbacks orphelins
+
+```gdscript
+# WRONG - Signal jamais deconnecte
+func _ready():
+    some_node.some_signal.connect(_on_signal)
+
+# CORRECT - Cleanup dans _exit_tree
+func _exit_tree():
+    if some_node and some_node.some_signal.is_connected(_on_signal):
+        some_node.some_signal.disconnect(_on_signal)
+
+# MIEUX - Utiliser flag CONNECT_ONE_SHOT si signal unique
+some_node.some_signal.connect(_on_signal, CONNECT_ONE_SHOT)
+```
+
+---
+
+### 1.6 Concatenation de Strings Lente
+
+**Erreur:** Performance degradee avec `+` dans les boucles
+
+```gdscript
+# WRONG - Lent (cree une nouvelle string a chaque iteration)
+var result := ""
+for i in range(1000):
+    result += "item %d, " % i
+
+# CORRECT - Utiliser Array.join() ou PackedStringArray
+var parts := PackedStringArray()
+for i in range(1000):
+    parts.append("item %d" % i)
+var result := ", ".join(parts)
+```
+
+---
+
+### 1.7 _process Toujours Actif
+
+**Erreur:** CPU gaspille sur des nodes inactifs
+
+```gdscript
+# WRONG - _process tourne meme si inutile
+func _process(delta):
+    if not is_active:
+        return
+    # ... logic
+
+# CORRECT - Desactiver quand pas necessaire
+func set_active(value: bool):
+    is_active = value
+    set_process(value)
+    set_physics_process(value)
+```
+
+---
+
+## SECTION 2: Patterns d'Optimisation GDScript
+
+### 2.1 Object Pooling
+
+```gdscript
+# Pour objets crees/detruits frequemment (particules, projectiles)
+var _pool: Array[Node] = []
+var _pool_size: int = 20
+
+func _ready():
+    for i in _pool_size:
+        var obj := preload("res://scenes/Bullet.tscn").instantiate()
+        obj.set_process(false)
+        obj.visible = false
+        _pool.append(obj)
+        add_child(obj)
+
+func get_from_pool() -> Node:
+    for obj in _pool:
+        if not obj.visible:
+            obj.visible = true
+            obj.set_process(true)
+            return obj
+    return null  # Pool epuise
+
+func return_to_pool(obj: Node) -> void:
+    obj.visible = false
+    obj.set_process(false)
+```
+
+---
+
+### 2.2 Lazy Loading / Preloading
+
+```gdscript
+# PRELOAD: Pour ressources critiques (utilisees tot)
+const HeavyScene := preload("res://scenes/Heavy.tscn")
+
+# LOAD: Pour ressources optionnelles (peuvent ne pas etre utilisees)
+var _optional_scene: PackedScene = null
+func get_optional_scene() -> PackedScene:
+    if _optional_scene == null:
+        _optional_scene = load("res://scenes/Optional.tscn")
+    return _optional_scene
+
+# BACKGROUND LOADING: Pour grosses ressources
+func _load_in_background(path: String) -> void:
+    ResourceLoader.load_threaded_request(path)
+
+func _check_loaded(path: String) -> Resource:
+    if ResourceLoader.load_threaded_get_status(path) == ResourceLoader.THREAD_LOAD_LOADED:
+        return ResourceLoader.load_threaded_get(path)
+    return null
+```
+
+---
+
+### 2.3 Typed Arrays
+
+```gdscript
+# WRONG - Array generique (lent, pas de type safety)
+var items := []
+items.append("string")
+items.append(123)  # Aucune erreur, mais melange de types
+
+# CORRECT - Array type (rapide, type safe)
+var items: Array[String] = []
+items.append("valid")
+# items.append(123)  # Erreur de compilation!
+
+# Pour dictionnaires, pas de typage natif, mais documenter:
+var data: Dictionary = {}  # {String: CardData}
+```
+
+---
+
+### 2.4 Deferred Calls
+
+```gdscript
+# Pour operations lourdes qui peuvent attendre
+func _on_button_pressed():
+    # Ne pas bloquer l'input
+    _process_heavy_task.call_deferred()
+
+func _process_heavy_task():
+    # Cette fonction s'execute apres le frame courant
+    pass
+```
+
+---
+
+### 2.5 Timer-Based Polling vs Frame Polling
+
+```gdscript
+# WRONG - Poll chaque frame (16ms) = gaspillage
+while not result_ready:
+    await get_tree().process_frame  # 60 checks/seconde inutiles
+
+# CORRECT - Poll avec timer adaptatif
+var poll_interval := 0.05  # 50ms = 20 checks/seconde
+while not result_ready:
+    external_api.poll()
+    await get_tree().create_timer(poll_interval).timeout
+    # Augmenter l'intervalle si ca prend longtemps
+    poll_interval = minf(poll_interval * 1.5, 0.5)
+```
+
+---
+
+## SECTION 3: Patterns Specifiques DRU
+
+### 3.1 Integration LLM (Trinity-Nano)
+
+```gdscript
+# Parametres optimaux pour Trinity-Nano 1B
+const LLM_PARAMS := {
+    "max_tokens": 60,        # Court = rapide
+    "temperature": 0.4,      # Pas trop creatif
+    "top_p": 0.75,
+    "top_k": 25,
+    "repetition_penalty": 1.6  # Evite repetitions
+}
+
+# System prompt: MAX 10 tokens
+const SYSTEM_PROMPT := "Tu generes des cartes."  # Court!
+
+# NE PAS inclure d'exemples (le modele les repete)
+```
+
+---
+
+### 3.2 DruStore Dispatch Pattern
+
+```gdscript
+# CORRECT - Actions atomiques
+DruStore.dispatch({"type": "SET_GAUGE", "gauge": "Vigueur", "value": 50})
+
+# WRONG - Modifier le state directement
+DruStore.state["run"]["gauges"]["Vigueur"] = 50  # Bypass du reducer!
+```
+
+---
+
+### 3.3 Card Effect Validation
+
+```gdscript
+# TOUJOURS valider les effets avant application
+func apply_effect(effect: Dictionary) -> bool:
+    var type: String = effect.get("type", "")
+    if type not in EFFECT_WHITELIST:
+        push_warning("Effect type '%s' not in whitelist" % type)
+        return false
+    # ... appliquer l'effet
+    return true
+```
+
+---
+
+## SECTION 4: Checklist Pre-Validation
+
+Avant chaque `validate.bat`, verifier:
+
+- [ ] Pas de `:= CONST[index]` (grep `:= \w+\[`)
+- [ ] Pas de `yield()` (remplacer par `await`)
+- [ ] Tous les `draw_*` dans `_draw()` ou apres `queue_redraw()`
+- [ ] Signaux deconnectes dans `_exit_tree()`
+- [ ] `set_process(false)` sur nodes inactifs
+- [ ] Arrays types quand possible
+- [ ] Pas de concatenation `+` dans les boucles
+
+---
+
+## SECTION 5: Ressources Externes
+
+### Documentation Officielle
+- [GDScript Style Guide](https://docs.godotengine.org/en/stable/tutorials/scripting/gdscript/gdscript_styleguide.html)
+- [GDScript Best Practices](https://docs.godotengine.org/en/stable/tutorials/best_practices/index.html)
+- [Optimization Guide](https://docs.godotengine.org/en/stable/tutorials/performance/index.html)
+
+### Patterns Avances
+- [Object Pooling](https://docs.godotengine.org/en/stable/tutorials/performance/using_servers.html)
+- [Multithreading](https://docs.godotengine.org/en/stable/tutorials/performance/using_multiple_threads.html)
+
+---
+
+## SECTION 6: Log des Corrections (Chronologique)
+
+> **Format:** `[DATE] [FICHIER] Erreur → Correction`
+
+_Ce section est mise a jour automatiquement par l'agent Debug._
+
+<!-- CORRECTIONS_LOG_START -->
+### 2026-02-08
+- Initial knowledge base created
+
+<!-- CORRECTIONS_LOG_END -->
+
+---
+
+*Last Updated: 2026-02-08*
+*Maintained by: Debug Agent & Optimizer Agent*

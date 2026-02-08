@@ -1,0 +1,63 @@
+{
+  "world": {
+    "id": "bretagne_mystique",
+    "year": 2026,
+    "time_model": {
+      "real_day_to_game_day": 1,
+      "phases": [
+        {"name": "aube", "from": "05:00", "to": "07:59"},
+        {"name": "jour", "from": "08:00", "to": "16:59"},
+        {"name": "crepuscule", "from": "17:00", "to": "19:59"},
+        {"name": "nuit", "from": "20:00", "to": "04:59"}
+      ]
+    }
+  },
+  "progression": {
+    "daily": {"major_goals": 1, "minor_goals": 2, "base_gloire": 1},
+    "weekly": {"grand_rite_day": "Sunday", "reward": "major_tool"},
+    "season": {"arc_chapter_per_season": 1, "exclusive_mystery_per_season": 1},
+    "completion": {"target_weeks_for_full_collection": 24}
+  },
+  "promise_system": {
+    "stakes_dc": {"low": 7, "mid": 9, "high": 11, "major": 13},
+    "lie_modifiers": {"base": 2, "ancient_spirit": 3, "merlin": 6},
+    "merlin_sees_all": true,
+    "lie_to_merlin": "nearly_impossible",
+    "consequences": {
+      "success": {
+        "favor": 2,
+        "spawn_bonus_tags": ["ally", "spirit"],
+        "duration_days": 2
+      },
+      "fail": {
+        "debt_ogham": 1,
+        "conflict": 0.15,
+        "spawn_penalty": -0.2,
+        "duration_days": 3
+      }
+    },
+    "clearing_methods": [
+      {"id": "ritual_release", "cost": {"faveur": 3, "gloire": 2}, "risk": "high"},
+      {"id": "transfer_vow", "cost": {"faveur": 1}, "risk": "medium"},
+      {"id": "buyout", "cost": {"gloire": 5}, "risk": "low"}
+    ]
+  },
+  "conflict_system": {
+    "base": 0.3,
+    "thresholds": {"calm": 0.2, "tense": 0.5, "riven": 0.8},
+    "effects": {
+      "calm": {"hostile_spawn_mult": 0.8, "diplomacy_mult": 1.3},
+      "tense": {"hostile_spawn_mult": 1.0, "diplomacy_mult": 1.0},
+      "riven": {"hostile_spawn_mult": 1.3, "diplomacy_mult": 0.7, "loot_mult": 1.15}
+    }
+  },
+  "mystery_system": {
+    "base_mystery_rate": 1.0,
+    "favor_bonus_per_point": 0.05,
+    "debt_penalty_per_point": 0.07
+  },
+  "focus_rotation": {
+    "daily_focus_pool": ["spirit", "fauna", "relic", "conflict", "craft"],
+    "weekly_focus_bonus": 0.2
+  }
+}

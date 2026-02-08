@@ -1,0 +1,29 @@
+{
+  "notes": "Hours never block spawns; multipliers only increase or decrease chance.",
+  "hourly_facts": [
+    {"hour": 0, "label": "minuit", "tags": ["nuit", "ombre"], "boosts": {"global": 1.10, "spirit": 1.35, "mystery": 1.25, "conflict": 1.10}},
+    {"hour": 1, "label": "profonde_nuit", "tags": ["nuit", "silence"], "boosts": {"global": 1.12, "spirit": 1.35, "mystery": 1.20, "conflict": 1.08}},
+    {"hour": 2, "label": "veillee_tardive", "tags": ["nuit", "veillee"], "boosts": {"global": 1.12, "spirit": 1.30, "mystery": 1.18, "conflict": 1.06}},
+    {"hour": 3, "label": "silence_noir", "tags": ["nuit"], "boosts": {"global": 1.10, "spirit": 1.28, "mystery": 1.15, "conflict": 1.05}},
+    {"hour": 4, "label": "pre_aube", "tags": ["nuit", "brume"], "boosts": {"global": 1.08, "spirit": 1.20, "mystery": 1.12}},
+    {"hour": 5, "label": "aube_pale", "tags": ["aube"], "boosts": {"global": 1.05, "ritual": 1.10, "fauna": 1.05}},
+    {"hour": 6, "label": "aube", "tags": ["aube", "source"], "boosts": {"global": 1.08, "ritual": 1.15, "fauna": 1.20, "resource": 1.10}},
+    {"hour": 7, "label": "matin", "tags": ["jour", "marche"], "boosts": {"global": 1.05, "fauna": 1.15, "craft": 1.10}},
+    {"hour": 8, "label": "matin_clair", "tags": ["jour"], "boosts": {"global": 1.00, "craft": 1.20, "resource": 1.10}},
+    {"hour": 9, "label": "jour", "tags": ["jour"], "boosts": {"global": 1.00, "craft": 1.20, "resource": 1.10}},
+    {"hour": 10, "label": "jour_haut", "tags": ["jour"], "boosts": {"global": 1.00, "craft": 1.15, "resource": 1.10}},
+    {"hour": 11, "label": "approche_midi", "tags": ["jour"], "boosts": {"global": 1.02, "craft": 1.12, "resource": 1.08}},
+    {"hour": 12, "label": "midi", "tags": ["jour", "plein_lumiere"], "boosts": {"global": 1.05, "resource": 1.15, "craft": 1.10}},
+    {"hour": 13, "label": "apres_midi", "tags": ["jour"], "boosts": {"global": 1.00, "craft": 1.10, "resource": 1.05}},
+    {"hour": 14, "label": "apres_midi_long", "tags": ["jour"], "boosts": {"global": 1.00, "craft": 1.10}},
+    {"hour": 15, "label": "fin_jour", "tags": ["jour"], "boosts": {"global": 1.00, "fauna": 1.05, "mystery": 1.05}},
+    {"hour": 16, "label": "pre_crepuscule", "tags": ["crepuscule"], "boosts": {"global": 1.05, "fauna": 1.10, "mystery": 1.08}},
+    {"hour": 17, "label": "crepuscule", "tags": ["crepuscule", "ritual"], "boosts": {"global": 1.10, "ritual": 1.20, "mystery": 1.15}},
+    {"hour": 18, "label": "crepuscule_chaud", "tags": ["crepuscule", "ritual"], "boosts": {"global": 1.12, "ritual": 1.25, "spirit": 1.20, "mystery": 1.20}},
+    {"hour": 19, "label": "tombee_nuit", "tags": ["nuit", "ritual"], "boosts": {"global": 1.15, "spirit": 1.25, "mystery": 1.20}},
+    {"hour": 20, "label": "nuit", "tags": ["nuit", "ombre"], "boosts": {"global": 1.20, "spirit": 1.30, "mystery": 1.25}},
+    {"hour": 21, "label": "nuit_froide", "tags": ["nuit"], "boosts": {"global": 1.22, "spirit": 1.35, "mystery": 1.30, "conflict": 1.05}},
+    {"hour": 22, "label": "nuit_noire", "tags": ["nuit", "ombre"], "boosts": {"global": 1.25, "spirit": 1.40, "mystery": 1.35, "conflict": 1.10}},
+    {"hour": 23, "label": "veillee", "tags": ["nuit", "veillee"], "boosts": {"global": 1.20, "spirit": 1.35, "mystery": 1.30}}
+  ]
+}

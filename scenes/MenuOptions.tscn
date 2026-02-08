@@ -1,0 +1,226 @@
+[gd_scene load_steps=2 format=3 uid="uid://3sinxn3es2p0"]
+
+[ext_resource type="Script" uid="uid://bpmpggylqvu5i" path="res://scripts/MenuOptions.gd" id="1_cfg3g"]
+
+[node name="MenuOptions" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_right = -1152.0
+offset_bottom = -648.0
+script = ExtResource("1_cfg3g")
+
+[node name="Background" type="ColorRect" parent="."]
+layout_mode = 0
+anchor_right = 1.0
+anchor_bottom = 1.0
+color = Color(0.1, 0.15, 0.12, 1)
+
+[node name="TitleLabel" type="Label" parent="."]
+layout_mode = 0
+anchor_left = 0.5
+anchor_right = 0.5
+offset_top = 40.0
+offset_bottom = 40.0
+grow_horizontal = 2
+text = "OPTIONS"
+horizontal_alignment = 1
+
+[node name="ScrollContainer" type="ScrollContainer" parent="."]
+layout_mode = 0
+offset_left = 50.0
+offset_top = 120.0
+offset_right = 1102.0
+offset_bottom = 560.0
+horizontal_scroll_mode = 0
+
+[node name="OptionsContainer" type="VBoxContainer" parent="ScrollContainer"]
+layout_mode = 2
+theme_override_constants/separation = 25
+
+[node name="VideoTitle" type="Label" parent="ScrollContainer/OptionsContainer"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 22
+text = "🎮 VIDÉO"
+
+[node name="@HSeparator@25548" type="HSeparator" parent="ScrollContainer/OptionsContainer"]
+layout_mode = 2
+
+[node name="ResolutionRow" type="HBoxContainer" parent="ScrollContainer/OptionsContainer"]
+layout_mode = 2
+theme_override_constants/separation = 20
+
+[node name="@Label@25549" type="Label" parent="ScrollContainer/OptionsContainer/ResolutionRow"]
+custom_minimum_size = Vector2(250, 0)
+layout_mode = 2
+text = "Résolution :"
+
+[node name="ResolutionOption" type="OptionButton" parent="ScrollContainer/OptionsContainer/ResolutionRow"]
+custom_minimum_size = Vector2(200, 0)
+layout_mode = 2
+selected = 4
+item_count = 5
+popup/item_0/text = "1920 x 1080"
+popup/item_0/id = 0
+popup/item_1/text = "1600 x 900"
+popup/item_1/id = 1
+popup/item_2/text = "1366 x 768"
+popup/item_2/id = 2
+popup/item_3/text = "1280 x 720"
+popup/item_3/id = 3
+popup/item_4/text = "1152 x 648"
+popup/item_4/id = 4
+
+[node name="DisplayModeRow" type="HBoxContainer" parent="ScrollContainer/OptionsContainer"]
+layout_mode = 2
+theme_override_constants/separation = 20
+
+[node name="@Label@25556" type="Label" parent="ScrollContainer/OptionsContainer/DisplayModeRow"]
+custom_minimum_size = Vector2(250, 0)
+layout_mode = 2
+text = "Mode d'affichage :"
+
+[node name="DisplayModeOption" type="OptionButton" parent="ScrollContainer/OptionsContainer/DisplayModeRow"]
+custom_minimum_size = Vector2(200, 0)
+layout_mode = 2
+selected = 1
+item_count = 3
+popup/item_0/text = "Plein écran"
+popup/item_0/id = 0
+popup/item_1/text = "Fenêtré"
+popup/item_1/id = 1
+popup/item_2/text = "Borderless"
+popup/item_2/id = 2
+
+[node name="VSyncRow" type="HBoxContainer" parent="ScrollContainer/OptionsContainer"]
+layout_mode = 2
+theme_override_constants/separation = 20
+
+[node name="@Label@25563" type="Label" parent="ScrollContainer/OptionsContainer/VSyncRow"]
+custom_minimum_size = Vector2(250, 0)
+layout_mode = 2
+text = "VSync :"
+
+[node name="VSyncCheck" type="CheckBox" parent="ScrollContainer/OptionsContainer/VSyncRow"]
+layout_mode = 2
+button_pressed = true
+
+[node name="FPSRow" type="HBoxContainer" parent="ScrollContainer/OptionsContainer"]
+layout_mode = 2
+theme_override_constants/separation = 20
+
+[node name="@Label@25564" type="Label" parent="ScrollContainer/OptionsContainer/FPSRow"]
+custom_minimum_size = Vector2(250, 0)
+layout_mode = 2
+text = "Limite FPS :"
+
+[node name="FPSOption" type="OptionButton" parent="ScrollContainer/OptionsContainer/FPSRow"]
+custom_minimum_size = Vector2(200, 0)
+layout_mode = 2
+selected = 1
+item_count = 4
+popup/item_0/text = "30 FPS"
+popup/item_0/id = 0
+popup/item_1/text = "60 FPS"
+popup/item_1/id = 1
+popup/item_2/text = "120 FPS"
+popup/item_2/id = 2
+popup/item_3/text = "Illimité"
+popup/item_3/id = 3
+
+[node name="@Control@25571" type="Control" parent="ScrollContainer/OptionsContainer"]
+custom_minimum_size = Vector2(0, 30)
+layout_mode = 2
+
+[node name="AudioTitle" type="Label" parent="ScrollContainer/OptionsContainer"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 22
+text = "AUDIO"
+
+[node name="@HSeparator@25572" type="HSeparator" parent="ScrollContainer/OptionsContainer"]
+layout_mode = 2
+
+[node name="MasterVolumeRow" type="HBoxContainer" parent="ScrollContainer/OptionsContainer"]
+layout_mode = 2
+theme_override_constants/separation = 20
+
+[node name="@Label@25573" type="Label" parent="ScrollContainer/OptionsContainer/MasterVolumeRow"]
+custom_minimum_size = Vector2(250, 0)
+layout_mode = 2
+text = "Volume Principal :"
+
+[node name="MasterVolumeSlider" type="HSlider" parent="ScrollContainer/OptionsContainer/MasterVolumeRow"]
+custom_minimum_size = Vector2(300, 0)
+layout_mode = 2
+value = 80.0
+
+[node name="MasterVolumeValue" type="Label" parent="ScrollContainer/OptionsContainer/MasterVolumeRow"]
+custom_minimum_size = Vector2(60, 0)
+layout_mode = 2
+text = "80%"
+
+[node name="MusicVolumeRow" type="HBoxContainer" parent="ScrollContainer/OptionsContainer"]
+layout_mode = 2
+theme_override_constants/separation = 20
+
+[node name="@Label@25574" type="Label" parent="ScrollContainer/OptionsContainer/MusicVolumeRow"]
+custom_minimum_size = Vector2(250, 0)
+layout_mode = 2
+text = "Volume Musique :"
+
+[node name="MusicVolumeSlider" type="HSlider" parent="ScrollContainer/OptionsContainer/MusicVolumeRow"]
+custom_minimum_size = Vector2(300, 0)
+layout_mode = 2
+value = 70.0
+
+[node name="MusicVolumeValue" type="Label" parent="ScrollContainer/OptionsContainer/MusicVolumeRow"]
+custom_minimum_size = Vector2(60, 0)
+layout_mode = 2
+text = "70%"
+
+[node name="SFXVolumeRow" type="HBoxContainer" parent="ScrollContainer/OptionsContainer"]
+layout_mode = 2
+theme_override_constants/separation = 20
+
+[node name="@Label@25575" type="Label" parent="ScrollContainer/OptionsContainer/SFXVolumeRow"]
+custom_minimum_size = Vector2(250, 0)
+layout_mode = 2
+text = "Volume Effets Sonores :"
+
+[node name="SFXVolumeSlider" type="HSlider" parent="ScrollContainer/OptionsContainer/SFXVolumeRow"]
+custom_minimum_size = Vector2(300, 0)
+layout_mode = 2
+value = 75.0
+
+[node name="SFXVolumeValue" type="Label" parent="ScrollContainer/OptionsContainer/SFXVolumeRow"]
+custom_minimum_size = Vector2(60, 0)
+layout_mode = 2
+text = "75%"
+
+[node name="@Control@25576" type="Control" parent="ScrollContainer/OptionsContainer"]
+custom_minimum_size = Vector2(0, 40)
+layout_mode = 2
+
+[node name="ButtonsContainer" type="HBoxContainer" parent="."]
+layout_mode = 0
+offset_left = 300.0
+offset_top = 580.0
+offset_right = 300.0
+offset_bottom = 580.0
+theme_override_constants/separation = 20
+
+[node name="BtnAppliquer" type="Button" parent="ButtonsContainer"]
+custom_minimum_size = Vector2(150, 40)
+layout_mode = 2
+text = "Appliquer"
+
+[node name="BtnReinitialiser" type="Button" parent="ButtonsContainer"]
+custom_minimum_size = Vector2(150, 40)
+layout_mode = 2
+text = "Réinitialiser"
+
+[node name="BtnRetour" type="Button" parent="ButtonsContainer"]
+custom_minimum_size = Vector2(150, 40)
+layout_mode = 2
+text = "Retour"

@@ -1,0 +1,20 @@
+{
+  "permissions": {
+    "allow": [
+      "mcp__godot-mcp__get_project_info",
+      "mcp__godot-mcp__list_nodes",
+      "mcp__godot-mcp__get_current_scene",
+      "mcp__godot-mcp__open_scene",
+      "mcp__godot-mcp__execute_editor_script",
+      "Bash(npm cache clean:*)",
+      "Bash(npx @google/gemini-cli@latest --version)",
+      "Bash(npm install:*)",
+      "Bash(wsl --list:*)",
+      "Bash(wsl --install:*)",
+      "Bash(wsl:*)"
+    ],
+    "additionalDirectories": [
+      "C:\\Users\\PGNK2128\\OneDrive - orange.com\\Partage VOC\\Data\\Travaux cible IPSOS\\App_Cible_IPSOS_v2"
+    ]
+  }
+}

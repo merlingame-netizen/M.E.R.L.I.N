@@ -1,0 +1,424 @@
+[
+  {
+    "id": "welcome",
+    "merlin": "...\n\nOh?\n\nTu es deja la?",
+    "next": "merlin_surprise"
+  },
+
+  {
+    "id": "merlin_surprise",
+    "merlin": "Je ne t'attendais pas si tot, Voyageur.\n\nLes brumes t'ont guide plus vite que prevu.",
+    "next": "merlin_intro"
+  },
+
+  {
+    "id": "merlin_intro",
+    "merlin": "Je suis Merlin.\n\nEnchanteur. Gardien des seuils. Tisseur de brumes.\n\nCet endroit est mon antre... et tu y es le bienvenu.",
+    "next": "merlin_lair"
+  },
+
+  {
+    "id": "merlin_lair",
+    "merlin": "Ici, le temps coule autrement.\n\nLes murs respirent. Les pierres murmurent.\n\nEt moi... je veille.",
+    "next": "merlin_explain"
+  },
+
+  {
+    "id": "merlin_explain",
+    "merlin": "Tu te demandes pourquoi tu es ici?\n\nLa lande t'a appele. Pas moi.\n\nMais maintenant que tu es la...",
+    "next": "mission_intro"
+  },
+
+  {
+    "id": "mission_intro",
+    "merlin": "J'ai besoin d'un Voyageur.\n\nQuelqu'un pour marcher entre les mondes.\n\nQuelqu'un pour retisser ce qui se defait.",
+    "next": "mission_detail"
+  },
+
+  {
+    "id": "mission_detail",
+    "merlin": "L'equilibre vacille, Voyageur.\n\nQuatre forces tirent sur le voile: Vigueur, Esprit, Faveur, Ressources.\n\nSi l'une s'effondre... tout suit.",
+    "next": "mission_ask"
+  },
+
+  {
+    "id": "mission_ask",
+    "merlin": "Ta mission?\n\nSurvivre. Equilibrer. Choisir.\n\nChaque carte sera un pas. Chaque choix, une consequence.",
+    "choices": {
+      "FORCE": [
+        {"id": "f_accept", "text": "Je suis pret.", "next": "greet", "deltas": {"traits": {"courage": 1}, "verbs": {"FORCE": 1}}, "hooks": ["acts_fast"]},
+        {"id": "f_challenge", "text": "Montre-moi ce qui m'attend.", "next": "greet", "deltas": {"traits": {"orgueil": 1}, "verbs": {"FORCE": 1}}, "hooks": ["demands_proof"]}
+      ],
+      "LOGIQUE": [
+        {"id": "l_why_me", "text": "Pourquoi moi?", "next": "reply_why_me", "deltas": {"traits": {"curiosite": 1}, "verbs": {"LOGIQUE": 1}}, "hooks": ["asks_questions"]},
+        {"id": "l_rules", "text": "Quelles sont les regles?", "next": "reply_rules", "deltas": {"traits": {"controle": 1}, "verbs": {"LOGIQUE": 1}}, "hooks": ["needs_structure"]}
+      ],
+      "FINESSE": [
+        {"id": "fi_trust", "text": "Je te fais confiance.", "next": "greet", "deltas": {"traits": {"compassion": 1}, "verbs": {"FINESSE": 1}}, "hooks": ["trusts_nature"]},
+        {"id": "fi_careful", "text": "J'avancerai prudemment.", "next": "greet", "deltas": {"traits": {"controle": 1}, "verbs": {"FINESSE": 1}}, "hooks": ["moves_silent"]}
+      ]
+    }
+  },
+
+  {
+    "id": "reply_why_me",
+    "merlin": "Pourquoi toi?\n\nParce que tu as traverse les brumes. Parce que tu es encore debout.\n\nPeu y arrivent.",
+    "next": "greet"
+  },
+
+  {
+    "id": "reply_rules",
+    "merlin": "Les regles?\n\nSimples. Chaque carte, deux chemins. Gauche ou droite.\n\nTes choix nourrissent ou vident les jauges. L'equilibre est fragile.",
+    "next": "greet"
+  },
+
+  {
+    "id": "greet",
+    "merlin": "Bien.\n\nAvant le sentier, je dois te connaitre.\n\nLa brume te salue, Voyageur.",
+    "choices": {
+      "FORCE": [
+        {"id": "f_who", "text": "Qui es-tu?", "next": "reply_force", "deltas": {"traits": {"orgueil": 1, "controle": 1}, "verbs": {"FORCE": 1}}, "hooks": ["hates_vague"]},
+        {"id": "f_clear", "text": "Ecarte la brume.", "next": "reply_force", "deltas": {"traits": {"controle": 2}, "verbs": {"FORCE": 1}}, "hooks": ["wants_control"]}
+      ],
+      "LOGIQUE": [
+        {"id": "l_where", "text": "Ou suis-je?", "next": "reply_logique", "deltas": {"traits": {"curiosite": 2}, "verbs": {"LOGIQUE": 1}}, "hooks": ["seeks_explanations"]},
+        {"id": "l_why", "text": "Que veux-tu de moi?", "next": "reply_logique", "deltas": {"traits": {"verite": 1, "curiosite": 1}, "verbs": {"LOGIQUE": 1}}, "hooks": ["tests_intentions"]}
+      ],
+      "FINESSE": [
+        {"id": "fi_peace", "text": "Je viens en paix.", "next": "reply_finesse", "deltas": {"traits": {"compassion": 1}, "verbs": {"FINESSE": 1}}, "hooks": ["avoids_conflict"]},
+        {"id": "fi_pass", "text": "Je cherche un passage.", "next": "reply_finesse", "deltas": {"traits": {"curiosite": 1}, "verbs": {"FINESSE": 1}}, "hooks": ["seeks_shortcuts"]}
+      ]
+    }
+  },
+
+  {"id": "reply_force", "merlin": "Voyageur, tu frappes a la porte. C'est honnete.", "next": "ask_name"},
+  {"id": "reply_logique", "merlin": "Voyageur, tu veux comprendre avant le pas. La pierre aime cela.", "next": "ask_name"},
+  {"id": "reply_finesse", "merlin": "Voyageur, tu marches leger. La lande ecoute mieux ainsi.", "next": "ask_name"},
+
+  {
+    "id": "ask_name",
+    "merlin": "Voyageur, donne un nom a ta trace. Je le garderai.",
+    "ui": "name_input",
+    "next": "confirm_name"
+  },
+  {
+    "id": "confirm_name",
+    "merlin": "Bien. Ce nom va dans mon livre. Toi, tu restes Voyageur.",
+    "next": "pre_quiz"
+  },
+  {
+    "id": "pre_quiz",
+    "merlin": "Voyageur, avant le sentier, je pose des miroirs. Chaque reponse laisse une marque.",
+    "choices": {
+      "FORCE": [
+        {"id": "f_go", "text": "Allons-y.", "next": "q1", "deltas": {"traits": {"courage": 1}, "verbs": {"FORCE": 1}}, "hooks": ["acts_fast"]}
+      ],
+      "LOGIQUE": [
+        {"id": "l_ready", "text": "Je suis pret.", "next": "q1", "deltas": {"traits": {"controle": 1}, "verbs": {"LOGIQUE": 1}}, "hooks": ["prefers_preparation"]}
+      ],
+      "FINESSE": [
+        {"id": "fi_few", "text": "Je parlerai peu.", "next": "q1", "deltas": {"traits": {"controle": 1}, "verbs": {"FINESSE": 1}}, "hooks": ["keeps_secrets"]}
+      ]
+    }
+  },
+
+  {
+    "id": "q1",
+    "merlin": "Premier miroir: un enfant pleure dans la brume. Que fais-tu?",
+    "choices": {
+      "FORCE": [
+        {"id": "f_carry", "text": "Je le porte.", "next": "q2", "deltas": {"traits": {"compassion": 2, "courage": 1}, "verbs": {"FORCE": 1}}, "hooks": ["protects_weak"]},
+        {"id": "f_chase", "text": "Je chasse les ombres.", "next": "q2", "deltas": {"traits": {"courage": 2}, "verbs": {"FORCE": 1}}, "hooks": ["confronts_threats"]}
+      ],
+      "LOGIQUE": [
+        {"id": "l_tracks", "text": "Je suis les traces.", "next": "q2", "deltas": {"traits": {"curiosite": 1, "controle": 1}, "verbs": {"LOGIQUE": 1}}, "hooks": ["tracks_patterns"]},
+        {"id": "l_landmark", "text": "Je cherche un repere.", "next": "q2", "deltas": {"traits": {"controle": 2}, "verbs": {"LOGIQUE": 1}}, "hooks": ["needs_structure"]}
+      ],
+      "FINESSE": [
+        {"id": "fi_call", "text": "Je l'appelle doucement.", "next": "q2", "deltas": {"traits": {"compassion": 1}, "verbs": {"FINESSE": 1}}, "hooks": ["avoids_noise"]},
+        {"id": "fi_sign", "text": "Je lui fais un signe.", "next": "q2", "deltas": {"traits": {"controle": 1}, "verbs": {"FINESSE": 1}}, "hooks": ["guides_subtly"]}
+      ]
+    }
+  },
+
+  {
+    "id": "q2",
+    "merlin": "Deuxieme miroir: un menhir porte une entaille fraiche. Que fais-tu?",
+    "choices": {
+      "FORCE": [
+        {"id": "f_strike", "text": "Je frappe la pierre.", "next": "q3", "deltas": {"traits": {"orgueil": 1, "courage": 1}, "verbs": {"FORCE": 1}}, "hooks": ["tests_stone"]},
+        {"id": "f_clean", "text": "Je nettoie la marque.", "next": "q3", "deltas": {"traits": {"controle": 1}, "verbs": {"FORCE": 1}}, "hooks": ["clears_signs"]}
+      ],
+      "LOGIQUE": [
+        {"id": "l_mark", "text": "J'observe la marque.", "next": "q3", "deltas": {"traits": {"curiosite": 1, "verite": 1}, "verbs": {"LOGIQUE": 1}}, "hooks": ["reads_marks"]},
+        {"id": "l_compare", "text": "Je compare les traces.", "next": "q3", "deltas": {"traits": {"curiosite": 1, "controle": 1}, "verbs": {"LOGIQUE": 1}}, "hooks": ["compares_tracks"]}
+      ],
+      "FINESSE": [
+        {"id": "fi_touch", "text": "Je touche la pierre.", "next": "q3", "deltas": {"traits": {"compassion": 1}, "verbs": {"FINESSE": 1}}, "hooks": ["soft_touch"]},
+        {"id": "fi_circle", "text": "Je tourne autour.", "next": "q3", "deltas": {"traits": {"controle": 1}, "verbs": {"FINESSE": 1}}, "hooks": ["circles_stone"]}
+      ]
+    }
+  },
+
+  {
+    "id": "q3",
+    "merlin": "Troisieme miroir: une bete blessee tremble. Que fais-tu?",
+    "choices": {
+      "FORCE": [
+        {"id": "f_shelter", "text": "Je la porte a l'abri.", "next": "q4", "deltas": {"traits": {"compassion": 2, "courage": 1}, "verbs": {"FORCE": 1}}, "hooks": ["aids_beast"]},
+        {"id": "f_distance", "text": "Je la garde a distance.", "next": "q4", "deltas": {"traits": {"controle": 1}, "verbs": {"FORCE": 1}}, "hooks": ["keeps_distance"]}
+      ],
+      "LOGIQUE": [
+        {"id": "l_cause", "text": "Je cherche la cause.", "next": "q4", "deltas": {"traits": {"curiosite": 2, "verite": 1}, "verbs": {"LOGIQUE": 1}}, "hooks": ["seeks_cause"]},
+        {"id": "l_remedy", "text": "Je prepare un remede.", "next": "q4", "deltas": {"traits": {"controle": 1, "compassion": 1}, "verbs": {"LOGIQUE": 1}}, "hooks": ["prepares_remedy"]}
+      ],
+      "FINESSE": [
+        {"id": "fi_soft", "text": "Je parle bas.", "next": "q4", "deltas": {"traits": {"compassion": 1}, "verbs": {"FINESSE": 1}}, "hooks": ["calms_softly"]},
+        {"id": "fi_water", "text": "Je lui offre de l'eau.", "next": "q4", "deltas": {"traits": {"compassion": 1, "controle": 1}, "verbs": {"FINESSE": 1}}, "hooks": ["offers_water"]}
+      ]
+    }
+  },
+
+  {
+    "id": "q4",
+    "season": "PRINTEMPS",
+    "portrait": "res://Assets/Sprite/Merlin_PRINTEMPS.png",
+    "merlin": "Le printemps eveille la lande. Des bourgeons percent la terre noire. Une graine tombe a tes pieds. Que fais-tu?",
+    "choices": {
+      "FORCE": [
+        {"id": "f_plant", "text": "Je l'enfonce dans la terre.", "next": "q5", "deltas": {"traits": {"courage": 1, "compassion": 1}, "verbs": {"FORCE": 1}, "classes": {"druide": 2}}, "hooks": ["plants_seed"]},
+        {"id": "f_crush", "text": "Je l'ecrase.", "next": "q5", "deltas": {"traits": {"controle": 2}, "verbs": {"FORCE": 1}, "classes": {"guerrier": 1}}, "hooks": ["destroys_growth"]}
+      ],
+      "LOGIQUE": [
+        {"id": "l_examine", "text": "J'examine la graine.", "next": "q5", "deltas": {"traits": {"curiosite": 2}, "verbs": {"LOGIQUE": 1}, "classes": {"eclaireur": 2}}, "hooks": ["studies_nature"]},
+        {"id": "l_keep", "text": "Je la garde pour plus tard.", "next": "q5", "deltas": {"traits": {"controle": 1, "curiosite": 1}, "verbs": {"LOGIQUE": 1}, "classes": {"eclaireur": 1}}, "hooks": ["collects_samples"]}
+      ],
+      "FINESSE": [
+        {"id": "fi_give", "text": "Je l'offre au vent.", "next": "q5", "deltas": {"traits": {"compassion": 2}, "verbs": {"FINESSE": 1}, "classes": {"druide": 2}}, "hooks": ["trusts_nature"]},
+        {"id": "fi_sing", "text": "Je chante pour elle.", "next": "q5", "deltas": {"traits": {"compassion": 1, "verite": 1}, "verbs": {"FINESSE": 1}, "classes": {"barde": 2}}, "hooks": ["sings_to_life"]}
+      ]
+    }
+  },
+
+  {
+    "id": "q5",
+    "merlin": "Cinquieme miroir: deux sentiers se croisent, l'un clair, l'autre sombre. Que fais-tu?",
+    "choices": {
+      "FORCE": [
+        {"id": "f_dark", "text": "Je prends le sombre.", "next": "q6", "deltas": {"traits": {"courage": 2}, "verbs": {"FORCE": 1}, "classes": {"guerrier": 1}}, "hooks": ["chooses_dark"]},
+        {"id": "f_mark", "text": "Je trace un signe.", "next": "q6", "deltas": {"traits": {"controle": 1, "verite": 1}, "verbs": {"FORCE": 1}, "classes": {"eclaireur": 1}}, "hooks": ["marks_path"]}
+      ],
+      "LOGIQUE": [
+        {"id": "l_clues", "text": "Je cherche des indices.", "next": "q6", "deltas": {"traits": {"curiosite": 2}, "verbs": {"LOGIQUE": 1}, "classes": {"eclaireur": 2}}, "hooks": ["seeks_clues"]},
+        {"id": "l_wind", "text": "Je mesure le vent.", "next": "q6", "deltas": {"traits": {"controle": 1, "curiosite": 1}, "verbs": {"LOGIQUE": 1}, "classes": {"druide": 1}}, "hooks": ["reads_wind"]}
+      ],
+      "FINESSE": [
+        {"id": "fi_shadow", "text": "Je suis l'ombre douce.", "next": "q6", "deltas": {"traits": {"curiosite": 1}, "verbs": {"FINESSE": 1}, "classes": {"barde": 1}}, "hooks": ["follows_shadow"]},
+        {"id": "fi_silent", "text": "J'avance sans bruit.", "next": "q6", "deltas": {"traits": {"controle": 1}, "verbs": {"FINESSE": 1}, "classes": {"eclaireur": 1}}, "hooks": ["moves_silent"]}
+      ]
+    }
+  },
+
+  {
+    "id": "q6",
+    "merlin": "Sixieme miroir: un etranger te demande un serment. Que fais-tu?",
+    "choices": {
+      "FORCE": [
+        {"id": "f_refuse", "text": "Je refuse net.", "next": "q7", "deltas": {"traits": {"orgueil": 1, "controle": 1}, "verbs": {"FORCE": 1}, "classes": {"guerrier": 2}}, "hooks": ["refuses_oath"]},
+        {"id": "f_proof", "text": "J'exige une preuve.", "next": "q7", "deltas": {"traits": {"verite": 1, "controle": 1}, "verbs": {"FORCE": 1}, "classes": {"eclaireur": 1}}, "hooks": ["demands_proof"]}
+      ],
+      "LOGIQUE": [
+        {"id": "l_questions", "text": "Je pose des questions.", "next": "q7", "deltas": {"traits": {"curiosite": 1, "verite": 1}, "verbs": {"LOGIQUE": 1}, "classes": {"eclaireur": 2}}, "hooks": ["asks_questions"]},
+        {"id": "l_trade", "text": "Je propose un echange.", "next": "q7", "deltas": {"traits": {"controle": 1}, "verbs": {"LOGIQUE": 1}, "classes": {"barde": 1}}, "hooks": ["offers_trade"]}
+      ],
+      "FINESSE": [
+        {"id": "fi_time", "text": "Je gagne du temps.", "next": "q7", "deltas": {"traits": {"controle": 1}, "verbs": {"FINESSE": 1}, "classes": {"barde": 2}}, "hooks": ["buys_time"]},
+        {"id": "fi_observe", "text": "Je souris et j'observe.", "next": "q7", "deltas": {"traits": {"curiosite": 1}, "verbs": {"FINESSE": 1}, "classes": {"barde": 1}}, "hooks": ["observes_calm"]}
+      ]
+    }
+  },
+
+  {
+    "id": "q7",
+    "merlin": "Septieme miroir: le vent hurle et la pluie gronde. Que fais-tu?",
+    "choices": {
+      "FORCE": [
+        {"id": "f_walk", "text": "Je marche quand meme.", "next": "q8", "deltas": {"traits": {"courage": 2}, "verbs": {"FORCE": 1}, "classes": {"guerrier": 2}}, "hooks": ["pushes_through"]},
+        {"id": "f_shelter", "text": "Je cherche un abri.", "next": "q8", "deltas": {"traits": {"controle": 1}, "verbs": {"FORCE": 1}, "classes": {"eclaireur": 1}}, "hooks": ["seeks_shelter"]}
+      ],
+      "LOGIQUE": [
+        {"id": "l_sky", "text": "Je lis le ciel.", "next": "q8", "deltas": {"traits": {"curiosite": 1, "controle": 1}, "verbs": {"LOGIQUE": 1}, "classes": {"druide": 2}}, "hooks": ["reads_sky"]},
+        {"id": "l_wait", "text": "J'attends une accalmie.", "next": "q8", "deltas": {"traits": {"controle": 1}, "verbs": {"LOGIQUE": 1}, "classes": {"eclaireur": 1}}, "hooks": ["waits_calm"]}
+      ],
+      "FINESSE": [
+        {"id": "fi_trees", "text": "Je me glisse sous les arbres.", "next": "q8", "deltas": {"traits": {"controle": 1}, "verbs": {"FINESSE": 1}, "classes": {"druide": 1}}, "hooks": ["slips_trees"]},
+        {"id": "fi_tracks", "text": "Je couvre mes traces.", "next": "q8", "deltas": {"traits": {"controle": 1}, "verbs": {"FINESSE": 1}, "classes": {"eclaireur": 1}}, "hooks": ["hides_tracks"]}
+      ]
+    }
+  },
+
+  {
+    "id": "q8",
+    "season": "ETE",
+    "portrait": "res://Assets/Sprite/Merlin_ETE.png",
+    "merlin": "L'ete brule la lande. Le soleil est haut, l'air vibre. Un feu de camp fume encore. Que fais-tu?",
+    "choices": {
+      "FORCE": [
+        {"id": "f_stomp", "text": "J'etouffe les braises.", "next": "q9", "deltas": {"traits": {"courage": 1, "controle": 1}, "verbs": {"FORCE": 1}, "classes": {"guerrier": 1}}, "hooks": ["smothers_fire"]},
+        {"id": "f_add", "text": "J'ajoute du bois.", "next": "q9", "deltas": {"traits": {"courage": 2}, "verbs": {"FORCE": 1}, "classes": {"guerrier": 2}}, "hooks": ["feeds_flame"]}
+      ],
+      "LOGIQUE": [
+        {"id": "l_tracks", "text": "Je lis les traces autour.", "next": "q9", "deltas": {"traits": {"curiosite": 2}, "verbs": {"LOGIQUE": 1}, "classes": {"eclaireur": 2}}, "hooks": ["reads_camp"]},
+        {"id": "l_heat", "text": "Je mesure la chaleur.", "next": "q9", "deltas": {"traits": {"curiosite": 1, "controle": 1}, "verbs": {"LOGIQUE": 1}, "classes": {"druide": 1}}, "hooks": ["studies_fire"]}
+      ],
+      "FINESSE": [
+        {"id": "fi_warm", "text": "Je me rechauffe les mains.", "next": "q9", "deltas": {"traits": {"compassion": 1}, "verbs": {"FINESSE": 1}, "classes": {"barde": 1}}, "hooks": ["enjoys_warmth"]},
+        {"id": "fi_story", "text": "J'imagine qui etait la.", "next": "q9", "deltas": {"traits": {"curiosite": 1, "compassion": 1}, "verbs": {"FINESSE": 1}, "classes": {"barde": 2}}, "hooks": ["weaves_story"]}
+      ]
+    }
+  },
+
+  {
+    "id": "q9",
+    "merlin": "Neuvieme miroir: un pont de bois cede sur la riviere. Que fais-tu?",
+    "choices": {
+      "FORCE": [
+        {"id": "f_jump", "text": "Je saute.", "next": "q10", "deltas": {"traits": {"courage": 2}, "verbs": {"FORCE": 1}, "classes": {"guerrier": 2}}, "hooks": ["jumps_gap"]},
+        {"id": "f_reinforce", "text": "Je renforce le bois.", "next": "q10", "deltas": {"traits": {"controle": 1}, "verbs": {"FORCE": 1}, "classes": {"druide": 1}}, "hooks": ["reinforces_bridge"]}
+      ],
+      "LOGIQUE": [
+        {"id": "l_detour", "text": "Je cherche un autre passage.", "next": "q10", "deltas": {"traits": {"curiosite": 1}, "verbs": {"LOGIQUE": 1}, "classes": {"eclaireur": 2}}, "hooks": ["finds_detour"]},
+        {"id": "l_test", "text": "Je teste la rive.", "next": "q10", "deltas": {"traits": {"controle": 1, "curiosite": 1}, "verbs": {"LOGIQUE": 1}, "classes": {"eclaireur": 1}}, "hooks": ["tests_bank"]}
+      ],
+      "FINESSE": [
+        {"id": "fi_stones", "text": "Je traverse sur les pierres.", "next": "q10", "deltas": {"traits": {"controle": 1}, "verbs": {"FINESSE": 1}, "classes": {"barde": 1}}, "hooks": ["steps_stones"]},
+        {"id": "fi_rope", "text": "Je tends une corde.", "next": "q10", "deltas": {"traits": {"controle": 1}, "verbs": {"FINESSE": 1}, "classes": {"eclaireur": 1}}, "hooks": ["uses_rope"]}
+      ]
+    }
+  },
+
+  {
+    "id": "q10",
+    "merlin": "Dixieme miroir: un murmure vient des arbres. Que fais-tu?",
+    "choices": {
+      "FORCE": [
+        {"id": "f_loud", "text": "Je parle fort.", "next": "q11", "deltas": {"traits": {"orgueil": 1, "courage": 1}, "verbs": {"FORCE": 1}, "classes": {"guerrier": 1}}, "hooks": ["answers_loud"]},
+        {"id": "f_silence", "text": "Je fais taire le bois.", "next": "q11", "deltas": {"traits": {"controle": 1}, "verbs": {"FORCE": 1}, "classes": {"guerrier": 1}}, "hooks": ["silences_wood"]}
+      ],
+      "LOGIQUE": [
+        {"id": "l_rhythm", "text": "J'ecoute le rythme.", "next": "q11", "deltas": {"traits": {"curiosite": 1, "verite": 1}, "verbs": {"LOGIQUE": 1}, "classes": {"druide": 2}}, "hooks": ["listens_pattern"]},
+        {"id": "l_source", "text": "Je cherche la source.", "next": "q11", "deltas": {"traits": {"curiosite": 2}, "verbs": {"LOGIQUE": 1}, "classes": {"eclaireur": 1}}, "hooks": ["seeks_source"]}
+      ],
+      "FINESSE": [
+        {"id": "fi_soft", "text": "Je m'approche doucement.", "next": "q11", "deltas": {"traits": {"compassion": 1}, "verbs": {"FINESSE": 1}, "classes": {"druide": 1}}, "hooks": ["approaches_soft"]},
+        {"id": "fi_reply", "text": "Je murmure en retour.", "next": "q11", "deltas": {"traits": {"compassion": 1, "verite": 1}, "verbs": {"FINESSE": 1}, "classes": {"barde": 2}}, "hooks": ["whispers_back"]}
+      ]
+    }
+  },
+
+  {
+    "id": "q11",
+    "merlin": "Onzieme miroir: un corbeau te tend un objet brillant. Que fais-tu?",
+    "choices": {
+      "FORCE": [
+        {"id": "f_take", "text": "Je le prends sans mot.", "next": "q12", "deltas": {"traits": {"orgueil": 1}, "verbs": {"FORCE": 1}, "classes": {"guerrier": 1}}, "hooks": ["takes_gift"]},
+        {"id": "f_chase", "text": "Je le chasse.", "next": "q12", "deltas": {"traits": {"controle": 1}, "verbs": {"FORCE": 1}, "classes": {"guerrier": 1}}, "hooks": ["chases_crow"]}
+      ],
+      "LOGIQUE": [
+        {"id": "l_origin", "text": "Je demande d'ou il vient.", "next": "q12", "deltas": {"traits": {"curiosite": 1, "verite": 1}, "verbs": {"LOGIQUE": 1}, "classes": {"eclaireur": 1}}, "hooks": ["asks_origin"]},
+        {"id": "l_trade", "text": "Je l'echange contre un fil.", "next": "q12", "deltas": {"traits": {"controle": 1}, "verbs": {"LOGIQUE": 1}, "classes": {"barde": 1}}, "hooks": ["trades_thread"]}
+      ],
+      "FINESSE": [
+        {"id": "fi_return", "text": "Je remercie et je rends.", "next": "q12", "deltas": {"traits": {"compassion": 1}, "verbs": {"FINESSE": 1}, "classes": {"druide": 1}}, "hooks": ["returns_gift"]},
+        {"id": "fi_follow", "text": "Je suis l'oiseau.", "next": "q12", "deltas": {"traits": {"curiosite": 1}, "verbs": {"FINESSE": 1}, "classes": {"eclaireur": 1}}, "hooks": ["follows_bird"]}
+      ]
+    }
+  },
+
+  {
+    "id": "q12",
+    "season": "AUTOMNE",
+    "portrait": "res://Assets/Sprite/Merlin_AUTOMNE.png",
+    "merlin": "L'automne teinte la lande de rouille. Les feuilles tombent en spirale. Un arbre mort te barre la route. Que fais-tu?",
+    "choices": {
+      "FORCE": [
+        {"id": "f_break", "text": "Je brise les branches.", "next": "q13", "deltas": {"traits": {"courage": 1, "controle": 1}, "verbs": {"FORCE": 1}, "classes": {"guerrier": 2}}, "hooks": ["breaks_wood"]},
+        {"id": "f_climb", "text": "Je grimpe par-dessus.", "next": "q13", "deltas": {"traits": {"courage": 2}, "verbs": {"FORCE": 1}, "classes": {"guerrier": 1}}, "hooks": ["climbs_over"]}
+      ],
+      "LOGIQUE": [
+        {"id": "l_roots", "text": "J'observe les racines.", "next": "q13", "deltas": {"traits": {"curiosite": 2}, "verbs": {"LOGIQUE": 1}, "classes": {"druide": 2}}, "hooks": ["studies_roots"]},
+        {"id": "l_gap", "text": "Je cherche une breche.", "next": "q13", "deltas": {"traits": {"curiosite": 1, "controle": 1}, "verbs": {"LOGIQUE": 1}, "classes": {"eclaireur": 2}}, "hooks": ["finds_gap"]}
+      ],
+      "FINESSE": [
+        {"id": "fi_honor", "text": "Je rends hommage a l'arbre.", "next": "q13", "deltas": {"traits": {"compassion": 2}, "verbs": {"FINESSE": 1}, "classes": {"druide": 2}}, "hooks": ["honors_dead"]},
+        {"id": "fi_poem", "text": "Je compose un vers.", "next": "q13", "deltas": {"traits": {"compassion": 1, "verite": 1}, "verbs": {"FINESSE": 1}, "classes": {"barde": 2}}, "hooks": ["writes_verse"]}
+      ]
+    }
+  },
+
+  {
+    "id": "q13",
+    "merlin": "Treizieme miroir: une ombre te suit sans bruit. Que fais-tu?",
+    "choices": {
+      "FORCE": [
+        {"id": "f_turn", "text": "Je me retourne.", "next": "q14", "deltas": {"traits": {"courage": 1}, "verbs": {"FORCE": 1}, "classes": {"guerrier": 1}}, "hooks": ["turns_back"]},
+        {"id": "f_face", "text": "Je l'affronte.", "next": "q14", "deltas": {"traits": {"courage": 2}, "verbs": {"FORCE": 1}, "classes": {"guerrier": 2}}, "hooks": ["faces_shadow"]}
+      ],
+      "LOGIQUE": [
+        {"id": "l_count", "text": "Je compte les pas.", "next": "q14", "deltas": {"traits": {"curiosite": 1, "controle": 1}, "verbs": {"LOGIQUE": 1}, "classes": {"eclaireur": 1}}, "hooks": ["counts_steps"]},
+        {"id": "l_trap", "text": "Je tends un piege.", "next": "q14", "deltas": {"traits": {"controle": 1}, "verbs": {"LOGIQUE": 1}, "classes": {"eclaireur": 2}}, "hooks": ["sets_trap"]}
+      ],
+      "FINESSE": [
+        {"id": "fi_pace", "text": "Je change d'allure.", "next": "q14", "deltas": {"traits": {"controle": 1}, "verbs": {"FINESSE": 1}, "classes": {"barde": 1}}, "hooks": ["changes_pace"]},
+        {"id": "fi_hide", "text": "Je disparais entre les rocs.", "next": "q14", "deltas": {"traits": {"controle": 1}, "verbs": {"FINESSE": 1}, "classes": {"eclaireur": 1}}, "hooks": ["vanishes_rocks"]}
+      ]
+    }
+  },
+
+  {
+    "id": "q14",
+    "merlin": "Quatorzieme miroir: un livre trempe gise dans la boue. Que fais-tu?",
+    "choices": {
+      "FORCE": [
+        {"id": "f_pull", "text": "Je l'arrache du sol.", "next": "q15", "deltas": {"traits": {"courage": 1}, "verbs": {"FORCE": 1}, "classes": {"guerrier": 1}}, "hooks": ["pulls_book"]},
+        {"id": "f_leave", "text": "Je le laisse.", "next": "q15", "deltas": {"traits": {"controle": 1}, "verbs": {"FORCE": 1}, "classes": {"guerrier": 1}}, "hooks": ["leaves_book"]}
+      ],
+      "LOGIQUE": [
+        {"id": "l_open", "text": "Je l'ouvre avec soin.", "next": "q15", "deltas": {"traits": {"curiosite": 1, "verite": 1}, "verbs": {"LOGIQUE": 1}, "classes": {"druide": 1}}, "hooks": ["opens_carefully"]},
+        {"id": "l_read", "text": "Je lis une page.", "next": "q15", "deltas": {"traits": {"curiosite": 1}, "verbs": {"LOGIQUE": 1}, "classes": {"barde": 2}}, "hooks": ["reads_page"]}
+      ],
+      "FINESSE": [
+        {"id": "fi_dry", "text": "Je le seche pres du feu.", "next": "q15", "deltas": {"traits": {"compassion": 1}, "verbs": {"FINESSE": 1}, "classes": {"barde": 1}}, "hooks": ["dries_book"]},
+        {"id": "fi_hide", "text": "Je le cache.", "next": "q15", "deltas": {"traits": {"controle": 1}, "verbs": {"FINESSE": 1}, "classes": {"eclaireur": 1}}, "hooks": ["hides_book"]}
+      ]
+    }
+  },
+
+  {
+    "id": "q15",
+    "season": "HIVER",
+    "portrait": "res://Assets/Sprite/Merlin_HIVER.png",
+    "merlin": "L'hiver glace la lande. Le givre mord. Un portail d'epines barre le passage. Que fais-tu?",
+    "choices": {
+      "FORCE": [
+        {"id": "f_clear", "text": "Je les ecarte.", "next": "finale", "deltas": {"traits": {"courage": 1}, "verbs": {"FORCE": 1}, "classes": {"guerrier": 2}}, "hooks": ["clears_thorns"]},
+        {"id": "f_cut", "text": "Je coupe les epines.", "next": "finale", "deltas": {"traits": {"controle": 1}, "verbs": {"FORCE": 1}, "classes": {"guerrier": 1}}, "hooks": ["cuts_thorns"]}
+      ],
+      "LOGIQUE": [
+        {"id": "l_origin", "text": "Je cherche l'origine.", "next": "finale", "deltas": {"traits": {"curiosite": 1}, "verbs": {"LOGIQUE": 1}, "classes": {"eclaireur": 2}}, "hooks": ["seeks_origin"]},
+        {"id": "l_angle", "text": "Je trouve un angle faible.", "next": "finale", "deltas": {"traits": {"controle": 1}, "verbs": {"LOGIQUE": 1}, "classes": {"eclaireur": 1}}, "hooks": ["finds_weak"]}
+      ],
+      "FINESSE": [
+        {"id": "fi_slip", "text": "Je passe entre les pointes.", "next": "finale", "deltas": {"traits": {"controle": 1}, "verbs": {"FINESSE": 1}, "classes": {"barde": 1}}, "hooks": ["slips_thorns"]},
+        {"id": "fi_ask", "text": "Je demande un passage.", "next": "finale", "deltas": {"traits": {"compassion": 1}, "verbs": {"FINESSE": 1}, "classes": {"druide": 2}}, "hooks": ["asks_passage"]}
+      ]
+    }
+  },
+
+  {
+    "id": "finale",
+    "merlin": "Les miroirs sont poses, Voyageur. Ta voie se dessine.",
+    "ui": "show_class",
+    "next": ""
+  }
+]

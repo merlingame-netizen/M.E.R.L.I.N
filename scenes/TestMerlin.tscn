@@ -1,0 +1,119 @@
+[gd_scene load_steps=2 format=3 uid="uid://dl2isope5484d"]
+
+[ext_resource type="Texture2D" uid="uid://fmjkiey161uv" path="res://Assets/Sprite/Merlin.png" id="1_luk2j"]
+
+[node name="TestMerlin" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="Background" type="ColorRect" parent="."]
+layout_mode = 0
+anchor_right = 1.0
+anchor_bottom = 1.0
+color = Color(0.1882353, 0.3764706, 0.09411765, 1)
+
+[node name="MainContainer" type="VBoxContainer" parent="."]
+layout_mode = 0
+anchor_right = 1.0
+anchor_bottom = 1.0
+theme_override_constants/separation = 16
+
+[node name="Header" type="HBoxContainer" parent="MainContainer"]
+custom_minimum_size = Vector2(0, 60)
+layout_mode = 2
+
+[node name="BtnBack" type="Button" parent="MainContainer/Header"]
+custom_minimum_size = Vector2(120, 40)
+layout_mode = 2
+text = "← Retour"
+
+[node name="Spacer" type="Control" parent="MainContainer/Header"]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="Title" type="Label" parent="MainContainer/Header"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.972549, 0.9411765, 0.84705883, 1)
+theme_override_font_sizes/font_size = 18
+text = "🧙 CONVERSATION AVEC MERLIN"
+
+[node name="Spacer2" type="Control" parent="MainContainer/Header"]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="CenterContainer" type="HBoxContainer" parent="MainContainer"]
+layout_mode = 2
+size_flags_vertical = 3
+theme_override_constants/separation = 20
+
+[node name="MerlinPanel" type="PanelContainer" parent="MainContainer/CenterContainer"]
+custom_minimum_size = Vector2(300, 400)
+layout_mode = 2
+
+[node name="MerlinVBox" type="VBoxContainer" parent="MainContainer/CenterContainer/MerlinPanel"]
+layout_mode = 2
+
+[node name="MerlinLabel" type="Label" parent="MainContainer/CenterContainer/MerlinPanel/MerlinVBox"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 16
+text = "MERLIN"
+horizontal_alignment = 1
+
+[node name="MerlinSprite" type="TextureRect" parent="MainContainer/CenterContainer/MerlinPanel/MerlinVBox"]
+custom_minimum_size = Vector2(256, 256)
+layout_mode = 2
+texture = ExtResource("1_luk2j")
+expand_mode = 3
+stretch_mode = 5
+
+[node name="MoodLabel" type="Label" parent="MainContainer/CenterContainer/MerlinPanel/MerlinVBox"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 14
+text = "😊 Neutre"
+horizontal_alignment = 1
+
+[node name="DialoguePanel" type="VBoxContainer" parent="MainContainer/CenterContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 16
+
+[node name="HistoryPanel" type="PanelContainer" parent="MainContainer/CenterContainer/DialoguePanel"]
+layout_mode = 2
+size_flags_vertical = 3
+
+[node name="HistoryScroll" type="ScrollContainer" parent="MainContainer/CenterContainer/DialoguePanel/HistoryPanel"]
+layout_mode = 2
+follow_focus = true
+
+[node name="HistoryContainer" type="VBoxContainer" parent="MainContainer/CenterContainer/DialoguePanel/HistoryPanel/HistoryScroll"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 8
+
+[node name="ChoicesPanel" type="PanelContainer" parent="MainContainer/CenterContainer/DialoguePanel"]
+custom_minimum_size = Vector2(0, 250)
+layout_mode = 2
+
+[node name="ChoicesContainer" type="VBoxContainer" parent="MainContainer/CenterContainer/DialoguePanel/ChoicesPanel"]
+layout_mode = 2
+theme_override_constants/separation = 10
+
+[node name="ChoicesLabel" type="Label" parent="MainContainer/CenterContainer/DialoguePanel/ChoicesPanel/ChoicesContainer"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 14
+text = "Que voulez-vous dire?"
+
+[node name="ChoicesButtons" type="VBoxContainer" parent="MainContainer/CenterContainer/DialoguePanel/ChoicesPanel/ChoicesContainer"]
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="ThinkingButton" type="Button" parent="MainContainer/CenterContainer/DialoguePanel/ChoicesPanel/ChoicesContainer"]
+visible = false
+custom_minimum_size = Vector2(0, 40)
+layout_mode = 2
+disabled = true
+text = "⏳ Merlin réfléchit..."

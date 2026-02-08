@@ -1,0 +1,138 @@
+[gd_scene load_steps=4 format=3]
+
+[ext_resource type="Script" path="res://scripts/test_combat.gd" id="1"]
+[ext_resource type="Texture2D" path="res://Assets/Sprite/Merlin.png" id="2"]
+[ext_resource type="Texture2D" path="res://Assets/Sprite/Bestiole Dos.png" id="3"]
+
+[node name="TestCombat" type="Control"]
+anchor_right = 1.0
+anchor_bottom = 1.0
+script = ExtResource("1")
+
+[node name="Background" type="ColorRect" parent="."]
+anchor_right = 1.0
+anchor_bottom = 1.0
+color = Color(0.09, 0.12, 0.18, 1)
+
+[node name="EnemySprite" type="TextureRect" parent="."]
+anchor_left = 0.62
+anchor_top = 0.08
+anchor_right = 0.9
+anchor_bottom = 0.35
+texture = ExtResource("2")
+stretch_mode = 6
+
+[node name="PlayerSprite" type="TextureRect" parent="."]
+anchor_left = 0.1
+anchor_top = 0.38
+anchor_right = 0.45
+anchor_bottom = 0.68
+texture = ExtResource("3")
+stretch_mode = 6
+
+[node name="EnemyHPLabel" type="Label" parent="."]
+anchor_left = 0.6
+anchor_top = 0.02
+anchor_right = 0.9
+anchor_bottom = 0.02
+text = "ENEMY"
+horizontal_alignment = 1
+
+[node name="EnemyHP" type="ProgressBar" parent="."]
+anchor_left = 0.6
+anchor_top = 0.06
+anchor_right = 0.9
+anchor_bottom = 0.1
+value = 100
+max_value = 100
+show_percentage = false
+
+[node name="PlayerHPLabel" type="Label" parent="."]
+anchor_left = 0.1
+anchor_top = 0.32
+anchor_right = 0.45
+anchor_bottom = 0.32
+text = "PLAYER"
+horizontal_alignment = 1
+
+[node name="PlayerHP" type="ProgressBar" parent="."]
+anchor_left = 0.1
+anchor_top = 0.36
+anchor_right = 0.45
+anchor_bottom = 0.4
+value = 120
+max_value = 120
+show_percentage = false
+
+[node name="DialoguePanel" type="Panel" parent="."]
+anchor_left = 0.05
+anchor_top = 0.64
+anchor_right = 0.95
+anchor_bottom = 0.95
+
+[node name="DialogueHBox" type="HBoxContainer" parent="DialoguePanel"]
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 12.0
+offset_top = 12.0
+offset_right = -12.0
+offset_bottom = -12.0
+alignment = 0
+theme_override_constants/separation = 12
+
+[node name="TextBox" type="MarginContainer" parent="DialoguePanel/DialogueHBox"]
+size_flags_horizontal = 3
+size_flags_vertical = 3
+
+[node name="BattleText" type="Label" parent="DialoguePanel/DialogueHBox/TextBox"]
+text = "Ready for battle."
+autowrap_mode = 2
+
+[node name="Menu" type="VBoxContainer" parent="DialoguePanel/DialogueHBox"]
+size_flags_horizontal = 0
+size_flags_vertical = 3
+theme_override_constants/separation = 6
+
+[node name="BtnFight" type="Button" parent="DialoguePanel/DialogueHBox/Menu"]
+text = "Fight"
+
+[node name="BtnBag" type="Button" parent="DialoguePanel/DialogueHBox/Menu"]
+text = "Bag"
+
+[node name="BtnRun" type="Button" parent="DialoguePanel/DialogueHBox/Menu"]
+text = "Run"
+
+[node name="PauseLayer" type="CanvasLayer" parent="."]
+
+[node name="PausePanel" type="Panel" parent="PauseLayer"]
+anchor_left = 0.3
+anchor_top = 0.2
+anchor_right = 0.7
+anchor_bottom = 0.8
+visible = false
+
+[node name="VBox" type="VBoxContainer" parent="PauseLayer/PausePanel"]
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 16.0
+offset_top = 16.0
+offset_right = -16.0
+offset_bottom = -16.0
+alignment = 1
+theme_override_constants/separation = 8
+
+[node name="PauseTitle" type="Label" parent="PauseLayer/PausePanel/VBox"]
+text = "PAUSE"
+horizontal_alignment = 1
+
+[node name="BtnMenu" type="Button" parent="PauseLayer/PausePanel/VBox"]
+text = "Menu Principal"
+
+[node name="BtnTestCombat" type="Button" parent="PauseLayer/PausePanel/VBox"]
+text = "Test Combat"
+
+[node name="BtnTestAventure" type="Button" parent="PauseLayer/PausePanel/VBox"]
+text = "Test Aventure"
+
+[node name="BtnTestAntre" type="Button" parent="PauseLayer/PausePanel/VBox"]
+text = "Test Antre Merlin"

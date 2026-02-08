@@ -1,0 +1,21 @@
+{
+  "name": "dru_core_v1",
+  "version": "0.1.0",
+  "description": "Core DRU systems aligned with docs/dru_docs_md",
+  "files": [
+    { "source": "src/dru_constants.gd", "target": "res://scripts/dru/dru_constants.gd" },
+    { "source": "src/dru_rng.gd", "target": "res://scripts/dru/dru_rng.gd" },
+    { "source": "src/dru_save_system.gd", "target": "res://scripts/dru/dru_save_system.gd" },
+    { "source": "src/dru_effect_engine.gd", "target": "res://scripts/dru/dru_effect_engine.gd" },
+    { "source": "src/dru_action_resolver.gd", "target": "res://scripts/dru/dru_action_resolver.gd" },
+    { "source": "src/dru_minigame_system.gd", "target": "res://scripts/dru/dru_minigame_system.gd" },
+    { "source": "src/dru_map_system.gd", "target": "res://scripts/dru/dru_map_system.gd" },
+    { "source": "src/dru_llm_adapter.gd", "target": "res://scripts/dru/dru_llm_adapter.gd" },
+    { "source": "src/dru_event_system.gd", "target": "res://scripts/dru/dru_event_system.gd" },
+    { "source": "src/dru_combat_system.gd", "target": "res://scripts/dru/dru_combat_system.gd" },
+    { "source": "src/dru_store.gd", "target": "res://scripts/dru/dru_store.gd" }
+  ],
+  "autoloads": [
+    { "name": "DruStoreAuto", "path": "res://scripts/dru/dru_store.gd" }
+  ]
+}

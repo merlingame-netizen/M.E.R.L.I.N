@@ -1,0 +1,58 @@
+==========================================================================
+COMMANDES À COPIER-COLLER DANS CMD (une par une)
+==========================================================================
+
+Étape 1: Aller dans le dossier native
+--------------------------------------
+cd c:\Users\PGNK2128\Godot-MCP\native
+
+
+Étape 2: Supprimer l'ancienne archive (si existe)
+--------------------------------------------------
+if exist ..\merlin_llm_sources.tar.gz del /f /q ..\merlin_llm_sources.tar.gz
+
+
+Étape 3: Créer le TAR.GZ (excluant .git, build, etc.)
+------------------------------------------------------
+tar -czf ..\merlin_llm_sources.tar.gz --exclude=".git" --exclude="build" --exclude="bin" --exclude="__pycache__" --exclude="*.o" --exclude="*.obj" src CMakeLists.txt godot-cpp llama.cpp
+
+
+Étape 4: Retour au dossier principal
+-------------------------------------
+cd ..
+
+
+Étape 5: Vérifier l'archive
+----------------------------
+dir merlin_llm_sources.tar.gz
+
+
+==========================================================================
+RÉSULTAT ATTENDU
+==========================================================================
+
+Vous devriez voir:
+  merlin_llm_sources.tar.gz    XX XXX XXX octets
+
+Taille attendue: 50-150 MB (beaucoup plus petit que le ZIP!)
+
+==========================================================================
+AVANTAGES DU TAR.GZ
+==========================================================================
+
+✅ Format natif Linux (Colab)
+✅ Meilleure compression (50% plus petit)
+✅ Pas de corruption lors de l'upload
+✅ Supporte les exclusions (pas de .git, build, etc.)
+✅ Compatible 100% avec Google Colab
+
+==========================================================================
+ENSUITE
+==========================================================================
+
+1. Upload Compile_MerlinLLM_ULTRA.ipynb sur Colab
+2. Cellule 2: Upload merlin_llm_sources.tar.gz
+3. Le notebook détectera automatiquement le format TAR.GZ
+4. Extraction avec tar -xzf (natif, pas de problème)
+
+==========================================================================

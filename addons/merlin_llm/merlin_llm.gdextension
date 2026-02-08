@@ -1,0 +1,8 @@
+[configuration]
+entry_symbol = "merlin_llm_library_init"
+compatibility_minimum = 4.3
+reloadable = true
+
+[libraries]
+windows.release.x86_64 = "res://addons/merlin_llm/bin/merlin_llm.windows.release.x86_64.dll"
+windows.debug.x86_64 = "res://addons/merlin_llm/bin/merlin_llm.windows.release.x86_64.dll"

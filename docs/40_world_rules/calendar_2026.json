@@ -1,0 +1,624 @@
+{
+  "year": 2026,
+  "seasons": [
+    {"name": "winter", "start": "2026-12-01", "end": "2027-02-28", "label": "Hiver"},
+    {"name": "spring", "start": "2026-03-01", "end": "2026-05-31", "label": "Printemps"},
+    {"name": "summer", "start": "2026-06-01", "end": "2026-08-31", "label": "Ete"},
+    {"name": "autumn", "start": "2026-09-01", "end": "2026-11-30", "label": "Automne"}
+  ],
+  "events": [
+    {
+      "id": "2026-01-05_veillee_menhirs",
+      "date": "2026-01-05",
+      "name": "Veillee des Menhirs",
+      "season": "winter",
+      "season_only": true,
+      "tags": ["ritual", "menhir", "spirit"],
+      "hour_bonus": [
+        {"from": "20:00", "to": "23:59", "mult": 1.40, "reason": "pactes du soir"},
+        {"from": "05:00", "to": "06:59", "mult": 1.20, "reason": "aube sacree"}
+      ],
+      "effects": {
+        "spawn_mods": {"spirit": 0.20, "relic": 0.15},
+        "mystery_mod": 0.20,
+        "favor_mod": 0.10
+      },
+      "notes": "Rituel d ancrage, points de menhir plus actifs."
+    },
+    {
+      "id": "2026-01-21_brume_ankou",
+      "date": "2026-01-21",
+      "name": "Brume de l Ankou",
+      "season": "winter",
+      "season_only": true,
+      "tags": ["ankou", "brume", "conflit", "mystere"],
+      "hour_bonus": [
+        {"from": "22:00", "to": "02:00", "mult": 1.70, "reason": "passage de l ombre"}
+      ],
+      "effects": {
+        "spawn_mods": {"spirit": 0.35, "wisp": 0.20},
+        "conflict_mod": 0.20,
+        "mystery_mod": 0.25,
+        "weather": "fog"
+      },
+      "notes": "Les routes se plient, les rencontres deviennent plus graves."
+    },
+    {
+      "id": "2026-01-31_serment_glaces",
+      "date": "2026-01-31",
+      "name": "Serment des Glaces",
+      "season": "winter",
+      "season_only": true,
+      "tags": ["promesse", "froid", "serment"],
+      "hour_bonus": [
+        {"from": "06:00", "to": "08:00", "mult": 1.35, "reason": "serments du matin"},
+        {"from": "21:00", "to": "23:59", "mult": 1.25, "reason": "voeux du soir"}
+      ],
+      "effects": {
+        "promise_mod": 0.25,
+        "spawn_mods": {"spirit": 0.15},
+        "conflict_mod": -0.05
+      },
+      "notes": "Les promesses laissent une marque durable."
+    },
+    {
+      "id": "2026-02-02_serment_sources",
+      "date": "2026-02-02",
+      "name": "Serment des Sources",
+      "season": "winter",
+      "season_only": true,
+      "tags": ["promesse", "source", "ritual"],
+      "hour_bonus": [
+        {"from": "06:00", "to": "08:00", "mult": 1.60, "reason": "serments d aube"}
+      ],
+      "effects": {
+        "promise_mod": 0.20,
+        "spawn_mods": {"fauna": 0.10, "spirit": 0.10},
+        "conflict_mod": -0.10
+      },
+      "notes": "Faveur accrue si promesse tenue le lendemain."
+    },
+    {
+      "id": "2026-02-14_lueur_gui",
+      "date": "2026-02-14",
+      "name": "Lueur du Gui",
+      "season": "winter",
+      "season_only": false,
+      "tags": ["faveur", "soin", "plante"],
+      "hour_bonus": [
+        {"from": "12:00", "to": "14:00", "mult": 1.25, "reason": "lumiere haute"}
+      ],
+      "effects": {
+        "favor_mod": 0.20,
+        "spawn_mods": {"resource": 0.15, "fauna": 0.10},
+        "conflict_mod": -0.10
+      },
+      "notes": "Renforce les outils de soin et d entretien."
+    },
+    {
+      "id": "2026-02-26_veillee_saules",
+      "date": "2026-02-26",
+      "name": "Veillee des Saules",
+      "season": "winter",
+      "season_only": true,
+      "tags": ["mystere", "esprit", "brume"],
+      "hour_bonus": [
+        {"from": "20:00", "to": "23:59", "mult": 1.45, "reason": "chants des saules"}
+      ],
+      "effects": {
+        "spawn_mods": {"spirit": 0.20, "mystery": 0.15},
+        "mystery_mod": 0.20,
+        "conflict_mod": 0.05
+      },
+      "notes": "Les enigmes prennent des formes plus claires."
+    },
+    {
+      "id": "2026-03-08_pas_elan",
+      "date": "2026-03-08",
+      "name": "Pas de l Elan",
+      "season": "spring",
+      "season_only": true,
+      "tags": ["fauna", "chasse", "vigueur"],
+      "hour_bonus": [
+        {"from": "06:00", "to": "09:00", "mult": 1.40, "reason": "piste fraiche"}
+      ],
+      "effects": {
+        "spawn_mods": {"fauna": 0.30, "resource": 0.10},
+        "conflict_mod": 0.05
+      },
+      "notes": "Les traces animales sont plus longues a suivre."
+    },
+    {
+      "id": "2026-03-21_ouverture_menhirs",
+      "date": "2026-03-21",
+      "name": "Ouverture des Menhirs",
+      "season": "spring",
+      "season_only": true,
+      "tags": ["menhir", "passage", "mystere"],
+      "hour_bonus": [
+        {"from": "18:00", "to": "20:00", "mult": 1.35, "reason": "passage du soir"}
+      ],
+      "effects": {
+        "spawn_mods": {"relic": 0.20, "spirit": 0.15},
+        "mystery_mod": 0.20,
+        "unlock_tags": ["menhir_paths"]
+      },
+      "notes": "Ouvre des chemins caches une seule nuit."
+    },
+    {
+      "id": "2026-03-30_eveil_ruisseaux",
+      "date": "2026-03-30",
+      "name": "Eveil des Ruisseaux",
+      "season": "spring",
+      "season_only": true,
+      "tags": ["resource", "craft", "eau"],
+      "hour_bonus": [
+        {"from": "08:00", "to": "12:00", "mult": 1.25, "reason": "eau vive"}
+      ],
+      "effects": {
+        "spawn_mods": {"resource": 0.25, "craft": 0.15},
+        "conflict_mod": -0.05
+      },
+      "notes": "Favorise l artisanat et les outils d eau."
+    },
+    {
+      "id": "2026-04-12_pluie_fees",
+      "date": "2026-04-12",
+      "name": "Pluie des Fees",
+      "season": "spring",
+      "season_only": true,
+      "tags": ["fee", "wisp", "loot"],
+      "hour_bonus": [
+        {"from": "19:00", "to": "22:00", "mult": 1.40, "reason": "lueurs du soir"}
+      ],
+      "effects": {
+        "spawn_mods": {"wisp": 0.25, "relic": 0.15},
+        "loot_mod": 0.15,
+        "mystery_mod": 0.10
+      },
+      "notes": "Des objets rares tombent des lueurs."
+    },
+    {
+      "id": "2026-04-23_veillee_ajoncs",
+      "date": "2026-04-23",
+      "name": "Veillee des Ajoncs",
+      "season": "spring",
+      "season_only": true,
+      "tags": ["korrigan", "ruse", "mystere"],
+      "hour_bonus": [
+        {"from": "21:00", "to": "23:59", "mult": 1.35, "reason": "ruse nocturne"}
+      ],
+      "effects": {
+        "spawn_mods": {"korrigan": 0.30, "trick": 0.20},
+        "conflict_mod": 0.10,
+        "mystery_mod": 0.10
+      },
+      "notes": "Les korrigans testent les promesses."
+    },
+    {
+      "id": "2026-04-30_nuit_feux_follets",
+      "date": "2026-04-30",
+      "name": "Nuit des Feux Follets",
+      "season": "spring",
+      "season_only": true,
+      "tags": ["wisp", "mystere", "nuit"],
+      "hour_bonus": [
+        {"from": "22:00", "to": "02:00", "mult": 1.80, "reason": "chasse aux follets"}
+      ],
+      "effects": {
+        "spawn_mods": {"wisp": 0.40, "spirit": 0.20},
+        "mystery_mod": 0.25,
+        "conflict_mod": 0.10
+      },
+      "notes": "Evenement impossible hors printemps."
+    },
+    {
+      "id": "2026-05-09_serment_jardins",
+      "date": "2026-05-09",
+      "name": "Serment des Jardins",
+      "season": "spring",
+      "season_only": false,
+      "tags": ["promesse", "jardin", "resource"],
+      "hour_bonus": [
+        {"from": "06:00", "to": "09:00", "mult": 1.30, "reason": "promesse de pousse"}
+      ],
+      "effects": {
+        "promise_mod": 0.20,
+        "spawn_mods": {"resource": 0.20, "fauna": 0.10},
+        "conflict_mod": -0.05
+      },
+      "notes": "Booste les recoltes le lendemain si promesse tenue."
+    },
+    {
+      "id": "2026-05-23_procession_cerfs",
+      "date": "2026-05-23",
+      "name": "Procession des Cerfs",
+      "season": "spring",
+      "season_only": true,
+      "tags": ["fauna", "guardian", "ritual"],
+      "hour_bonus": [
+        {"from": "07:00", "to": "10:00", "mult": 1.35, "reason": "passage du matin"}
+      ],
+      "effects": {
+        "spawn_mods": {"fauna": 0.30, "guardian": 0.10},
+        "loot_mod": 0.10,
+        "conflict_mod": -0.05
+      },
+      "notes": "Les gardiens guident vers des sanctuaires."
+    },
+    {
+      "id": "2026-05-31_brume_dolmens",
+      "date": "2026-05-31",
+      "name": "Brume des Dolmens",
+      "season": "spring",
+      "season_only": true,
+      "tags": ["mystere", "dolmen", "brume"],
+      "hour_bonus": [
+        {"from": "20:00", "to": "23:59", "mult": 1.45, "reason": "voile leve"}
+      ],
+      "effects": {
+        "spawn_mods": {"spirit": 0.20, "relic": 0.20},
+        "mystery_mod": 0.25
+      },
+      "notes": "Plus d enigmes proches des dolmens."
+    },
+    {
+      "id": "2026-06-07_solstice_luthiers",
+      "date": "2026-06-07",
+      "name": "Solstice des Luthiers",
+      "season": "summer",
+      "season_only": true,
+      "tags": ["craft", "musique", "ete"],
+      "hour_bonus": [
+        {"from": "12:00", "to": "15:00", "mult": 1.30, "reason": "plein jour"}
+      ],
+      "effects": {
+        "spawn_mods": {"craft": 0.25, "resource": 0.20},
+        "loot_mod": 0.10
+      },
+      "notes": "Les outils sonores gagnent des bonus temporaires."
+    },
+    {
+      "id": "2026-06-24_ronde_feu",
+      "date": "2026-06-24",
+      "name": "Ronde du Feu",
+      "season": "summer",
+      "season_only": true,
+      "tags": ["ritual", "feu", "ete"],
+      "hour_bonus": [
+        {"from": "18:00", "to": "22:00", "mult": 1.45, "reason": "cercle ardent"}
+      ],
+      "effects": {
+        "spawn_mods": {"ritual": 0.30, "spirit": 0.10},
+        "conflict_mod": -0.05,
+        "mystery_mod": 0.15
+      },
+      "notes": "Boost des rituels et des rencontres d alliance."
+    },
+    {
+      "id": "2026-06-29_marche_roches",
+      "date": "2026-06-29",
+      "name": "Marche des Roches",
+      "season": "summer",
+      "season_only": false,
+      "tags": ["pierre", "relic", "craft"],
+      "hour_bonus": [
+        {"from": "09:00", "to": "12:00", "mult": 1.25, "reason": "pierre chaude"}
+      ],
+      "effects": {
+        "spawn_mods": {"relic": 0.25, "resource": 0.15},
+        "conflict_mod": 0.05
+      },
+      "notes": "Plus de fragments utiles pour les outils."
+    },
+    {
+      "id": "2026-07-09_maree_korrigans",
+      "date": "2026-07-09",
+      "name": "Maree des Korrigans",
+      "season": "summer",
+      "season_only": true,
+      "tags": ["korrigan", "ruse", "ete"],
+      "hour_bonus": [
+        {"from": "21:00", "to": "01:00", "mult": 1.55, "reason": "farces du rivage"}
+      ],
+      "effects": {
+        "spawn_mods": {"korrigan": 0.35, "spirit": 0.15},
+        "conflict_mod": 0.10,
+        "loot_mod": 0.10
+      },
+      "notes": "Les farces peuvent inverser les conflits locaux."
+    },
+    {
+      "id": "2026-07-17_chant_sources_chaudes",
+      "date": "2026-07-17",
+      "name": "Chant des Sources Chaudes",
+      "season": "summer",
+      "season_only": false,
+      "tags": ["soin", "resource", "eau"],
+      "hour_bonus": [
+        {"from": "06:00", "to": "08:00", "mult": 1.25, "reason": "vapeur claire"}
+      ],
+      "effects": {
+        "favor_mod": 0.15,
+        "spawn_mods": {"resource": 0.20},
+        "conflict_mod": -0.10
+      },
+      "notes": "Accorde des bonus d endurance pour la journee."
+    },
+    {
+      "id": "2026-07-28_veillee_gardiens",
+      "date": "2026-07-28",
+      "name": "Veillee des Gardiens",
+      "season": "summer",
+      "season_only": true,
+      "tags": ["guardian", "protection", "ritual"],
+      "hour_bonus": [
+        {"from": "20:00", "to": "23:59", "mult": 1.35, "reason": "rondes de nuit"}
+      ],
+      "effects": {
+        "spawn_mods": {"guardian": 0.25, "spirit": 0.15},
+        "conflict_mod": -0.10,
+        "mystery_mod": 0.10
+      },
+      "notes": "Diminue les pertes sur les voyages nocturnes."
+    },
+    {
+      "id": "2026-08-08_serment_ete",
+      "date": "2026-08-08",
+      "name": "Serment d Ete",
+      "season": "summer",
+      "season_only": true,
+      "tags": ["promesse", "ete", "serment"],
+      "hour_bonus": [
+        {"from": "08:00", "to": "10:00", "mult": 1.35, "reason": "voeu du jour"},
+        {"from": "19:00", "to": "21:00", "mult": 1.25, "reason": "voeu du soir"}
+      ],
+      "effects": {
+        "promise_mod": 0.30,
+        "spawn_mods": {"spirit": 0.10, "fauna": 0.10},
+        "conflict_mod": -0.05
+      },
+      "notes": "Promesses plus puissantes, mais plus risquee."
+    },
+    {
+      "id": "2026-08-21_coupe_brume",
+      "date": "2026-08-21",
+      "name": "Coupe des Brumes",
+      "season": "summer",
+      "season_only": true,
+      "tags": ["brume", "mystere", "rite"],
+      "hour_bonus": [
+        {"from": "20:00", "to": "23:59", "mult": 1.50, "reason": "coupes de brume"}
+      ],
+      "effects": {
+        "mystery_mod": 0.30,
+        "spawn_mods": {"mystery": 0.20, "spirit": 0.20},
+        "conflict_mod": 0.05
+      },
+      "notes": "Revele des passages caches pour quelques heures."
+    },
+    {
+      "id": "2026-08-31_veillee_ruines",
+      "date": "2026-08-31",
+      "name": "Veillee des Ruines",
+      "season": "summer",
+      "season_only": true,
+      "tags": ["relic", "ruine", "mystere"],
+      "hour_bonus": [
+        {"from": "22:00", "to": "02:00", "mult": 1.55, "reason": "echo des pierres"}
+      ],
+      "effects": {
+        "spawn_mods": {"relic": 0.30, "spirit": 0.15},
+        "loot_mod": 0.15,
+        "mystery_mod": 0.20
+      },
+      "notes": "Evenement impossible hors ete."
+    },
+    {
+      "id": "2026-09-02_moisson_pierres",
+      "date": "2026-09-02",
+      "name": "Moisson des Pierres",
+      "season": "autumn",
+      "season_only": true,
+      "tags": ["craft", "pierre", "resource"],
+      "hour_bonus": [
+        {"from": "09:00", "to": "12:00", "mult": 1.30, "reason": "recolte dense"}
+      ],
+      "effects": {
+        "spawn_mods": {"resource": 0.25, "craft": 0.20},
+        "loot_mod": 0.10
+      },
+      "notes": "Ouvre des recettes d outils temporaires."
+    },
+    {
+      "id": "2026-09-18_voile_dolmens",
+      "date": "2026-09-18",
+      "name": "Voile des Dolmens",
+      "season": "autumn",
+      "season_only": true,
+      "tags": ["mystere", "dolmen", "brume"],
+      "hour_bonus": [
+        {"from": "19:00", "to": "22:00", "mult": 1.40, "reason": "voile actif"}
+      ],
+      "effects": {
+        "mystery_mod": 0.25,
+        "spawn_mods": {"relic": 0.20, "spirit": 0.20},
+        "conflict_mod": 0.05
+      },
+      "notes": "Acces a des enigmes de pierre anciennes."
+    },
+    {
+      "id": "2026-09-29_rite_glands",
+      "date": "2026-09-29",
+      "name": "Rite des Glands",
+      "season": "autumn",
+      "season_only": true,
+      "tags": ["fauna", "ritual", "resource"],
+      "hour_bonus": [
+        {"from": "06:00", "to": "08:00", "mult": 1.25, "reason": "matin des bois"}
+      ],
+      "effects": {
+        "spawn_mods": {"fauna": 0.25, "resource": 0.10},
+        "ritual_mod": 0.15
+      },
+      "notes": "Les guides animaux deviennent plus cooperatifs."
+    },
+    {
+      "id": "2026-10-05_foire_mnesies",
+      "date": "2026-10-05",
+      "name": "Foire aux Mnesies",
+      "season": "autumn",
+      "season_only": true,
+      "tags": ["lore", "memoire", "mystere"],
+      "hour_bonus": [
+        {"from": "12:00", "to": "16:00", "mult": 1.25, "reason": "paroles du jour"}
+      ],
+      "effects": {
+        "mystery_mod": 0.20,
+        "loot_mod": 0.10,
+        "spawn_mods": {"relic": 0.15},
+        "knowledge_mod": 0.20
+      },
+      "notes": "Plus d indices et de fragments de lore."
+    },
+    {
+      "id": "2026-10-16_marche_ombres",
+      "date": "2026-10-16",
+      "name": "Marche des Ombres",
+      "season": "autumn",
+      "season_only": true,
+      "tags": ["ombre", "conflit", "mystere"],
+      "hour_bonus": [
+        {"from": "21:00", "to": "01:00", "mult": 1.45, "reason": "ombre en marche"}
+      ],
+      "effects": {
+        "conflict_mod": 0.20,
+        "spawn_mods": {"spirit": 0.20, "conflict": 0.20},
+        "mystery_mod": 0.10
+      },
+      "notes": "Les tensions montent, mais les recompenses aussi."
+    },
+    {
+      "id": "2026-10-27_nuit_corbeau",
+      "date": "2026-10-27",
+      "name": "Nuit du Corbeau",
+      "season": "autumn",
+      "season_only": true,
+      "tags": ["corbeau", "conflit", "mystere"],
+      "hour_bonus": [
+        {"from": "21:00", "to": "02:00", "mult": 1.75, "reason": "messagers d ombre"}
+      ],
+      "effects": {
+        "spawn_mods": {"spirit": 0.25, "raven": 0.30},
+        "conflict_inversion": true,
+        "mystery_mod": 0.15
+      },
+      "notes": "Les alliances et conflits peuvent s inverser."
+    },
+    {
+      "id": "2026-11-11_silence_landes",
+      "date": "2026-11-11",
+      "name": "Silence des Landes",
+      "season": "autumn",
+      "season_only": true,
+      "tags": ["silence", "ritual", "mystere"],
+      "hour_bonus": [
+        {"from": "05:00", "to": "07:00", "mult": 1.30, "reason": "souffle court"},
+        {"from": "20:00", "to": "22:00", "mult": 1.25, "reason": "clairiere muette"}
+      ],
+      "effects": {
+        "conflict_mod": -0.15,
+        "mystery_mod": 0.20,
+        "spawn_mods": {"spirit": 0.15}
+      },
+      "notes": "Calme les esprits et ouvre des rituels rares."
+    },
+    {
+      "id": "2026-11-21_veillee_tisserand",
+      "date": "2026-11-21",
+      "name": "Veillee du Tisserand",
+      "season": "autumn",
+      "season_only": true,
+      "tags": ["craft", "destin", "mystere"],
+      "hour_bonus": [
+        {"from": "18:00", "to": "21:00", "mult": 1.35, "reason": "fil du soir"}
+      ],
+      "effects": {
+        "spawn_mods": {"craft": 0.20, "relic": 0.15},
+        "mystery_mod": 0.15
+      },
+      "notes": "Ameliore la qualite des outils crees ce soir la."
+    },
+    {
+      "id": "2026-11-26_dernier_passage",
+      "date": "2026-11-26",
+      "name": "Dernier Passage",
+      "season": "autumn",
+      "season_only": true,
+      "tags": ["passage", "boss", "mystere"],
+      "hour_bonus": [
+        {"from": "22:00", "to": "02:00", "mult": 1.60, "reason": "porte finale"}
+      ],
+      "effects": {
+        "spawn_mods": {"spirit": 0.25, "guardian": 0.20},
+        "conflict_mod": 0.15,
+        "loot_mod": 0.20,
+        "mystery_mod": 0.20
+      },
+      "notes": "Evenement de fin de saison, rare et exigeant."
+    },
+    {
+      "id": "2026-12-06_veillee_menhirs_hiver",
+      "date": "2026-12-06",
+      "name": "Veillee des Menhirs",
+      "season": "winter",
+      "season_only": true,
+      "tags": ["ritual", "menhir", "spirit"],
+      "hour_bonus": [
+        {"from": "20:00", "to": "23:59", "mult": 1.40, "reason": "pactes du soir"},
+        {"from": "05:00", "to": "06:59", "mult": 1.20, "reason": "aube sacree"}
+      ],
+      "effects": {
+        "spawn_mods": {"spirit": 0.20, "relic": 0.15},
+        "mystery_mod": 0.20,
+        "favor_mod": 0.10
+      },
+      "notes": "Debut des rites d hiver."
+    },
+    {
+      "id": "2026-12-21_longue_nuit",
+      "date": "2026-12-21",
+      "name": "Longue Nuit",
+      "season": "winter",
+      "season_only": true,
+      "tags": ["nuit", "hiver", "mystere"],
+      "hour_bonus": [
+        {"from": "18:00", "to": "04:00", "mult": 1.90, "reason": "nuit la plus longue"}
+      ],
+      "effects": {
+        "spawn_mods": {"spirit": 0.40, "mystery": 0.30},
+        "conflict_mod": 0.10,
+        "mystery_mod": 0.35
+      },
+      "notes": "Evenement impossible hors hiver."
+    },
+    {
+      "id": "2026-12-31_serment_an_nouveau",
+      "date": "2026-12-31",
+      "name": "Serment de l An Nouveau",
+      "season": "winter",
+      "season_only": false,
+      "tags": ["promesse", "renouveau", "serment"],
+      "hour_bonus": [
+        {"from": "23:00", "to": "02:00", "mult": 1.60, "reason": "voeu de minuit"},
+        {"from": "06:00", "to": "08:00", "mult": 1.30, "reason": "voeu du matin"}
+      ],
+      "effects": {
+        "promise_mod": 0.30,
+        "favor_mod": 0.20,
+        "conflict_mod": -0.10
+      },
+      "notes": "Les promesses marquent tout le cycle a venir."
+    }
+  ]
+}

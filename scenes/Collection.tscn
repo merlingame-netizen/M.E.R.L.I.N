@@ -1,0 +1,160 @@
+[gd_scene load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/Collection.gd" id="1"]
+
+[node name="Collection" type="Control"]
+anchor_right = 1.0
+anchor_bottom = 1.0
+script = ExtResource("1")
+
+[node name="Background" type="ColorRect" parent="."]
+anchor_right = 1.0
+anchor_bottom = 1.0
+color = Color(0.05, 0.05, 0.07, 1)
+
+[node name="Margin" type="MarginContainer" parent="."]
+anchor_right = 1.0
+anchor_bottom = 1.0
+theme_override_constants/margin_left = 20
+theme_override_constants/margin_top = 16
+theme_override_constants/margin_right = 20
+theme_override_constants/margin_bottom = 16
+
+[node name="Layout" type="VBoxContainer" parent="Margin"]
+size_flags_horizontal = 3
+size_flags_vertical = 3
+theme_override_constants/separation = 10
+
+[node name="Header" type="HBoxContainer" parent="Margin/Layout"]
+size_flags_horizontal = 3
+theme_override_constants/separation = 10
+
+[node name="TitleLabel" type="Label" parent="Margin/Layout/Header"]
+size_flags_horizontal = 3
+text = "Collection"
+
+[node name="StatsVBox" type="VBoxContainer" parent="Margin/Layout/Header"]
+theme_override_constants/separation = 2
+
+[node name="GloryLabel" type="Label" parent="Margin/Layout/Header/StatsVBox"]
+text = "Gloire: 0"
+horizontal_alignment = 2
+
+[node name="RankLabel" type="Label" parent="Margin/Layout/Header/StatsVBox"]
+text = "Rang: --"
+horizontal_alignment = 2
+
+[node name="PassPanel" type="PanelContainer" parent="Margin/Layout"]
+size_flags_horizontal = 3
+
+[node name="PassVBox" type="VBoxContainer" parent="Margin/Layout/PassPanel"]
+size_flags_horizontal = 3
+theme_override_constants/separation = 4
+
+[node name="PassTitleLabel" type="Label" parent="Margin/Layout/PassPanel/PassVBox"]
+text = "Passe de Gloire"
+horizontal_alignment = 1
+
+[node name="PassProgress" type="ProgressBar" parent="Margin/Layout/PassPanel/PassVBox"]
+custom_minimum_size = Vector2(0, 20)
+show_percentage = false
+
+[node name="PassProgressLabel" type="Label" parent="Margin/Layout/PassPanel/PassVBox"]
+text = "0 / 100"
+horizontal_alignment = 1
+
+[node name="ViewTabs" type="HBoxContainer" parent="Margin/Layout"]
+size_flags_horizontal = 3
+theme_override_constants/separation = 8
+
+[node name="BtnProgression" type="Button" parent="Margin/Layout/ViewTabs"]
+size_flags_horizontal = 3
+text = "Progression"
+
+[node name="BtnRecents" type="Button" parent="Margin/Layout/ViewTabs"]
+size_flags_horizontal = 3
+text = "Recents"
+
+[node name="BtnCollection" type="Button" parent="Margin/Layout/ViewTabs"]
+size_flags_horizontal = 3
+text = "Collection"
+
+[node name="SeparatorTop" type="ColorRect" parent="Margin/Layout"]
+custom_minimum_size = Vector2(0, 2)
+size_flags_horizontal = 3
+color = Color(0.4, 0.32, 0.16, 1)
+
+[node name="ContentPanel" type="PanelContainer" parent="Margin/Layout"]
+size_flags_horizontal = 3
+size_flags_vertical = 3
+
+[node name="ContentScroll" type="ScrollContainer" parent="Margin/Layout/ContentPanel"]
+size_flags_horizontal = 3
+size_flags_vertical = 3
+follow_focus = true
+
+[node name="ContentStack" type="VBoxContainer" parent="Margin/Layout/ContentPanel/ContentScroll"]
+size_flags_horizontal = 3
+size_flags_vertical = 3
+theme_override_constants/separation = 10
+
+[node name="ProgressSection" type="VBoxContainer" parent="Margin/Layout/ContentPanel/ContentScroll/ContentStack"]
+size_flags_horizontal = 3
+theme_override_constants/separation = 6
+
+[node name="ProgressTitleLabel" type="Label" parent="Margin/Layout/ContentPanel/ContentScroll/ContentStack/ProgressSection"]
+text = "Apercu progression"
+
+[node name="ProgressHintLabel" type="Label" parent="Margin/Layout/ContentPanel/ContentScroll/ContentStack/ProgressSection"]
+text = "Choisis une categorie pour voir tes avancées."
+
+[node name="ProgressList" type="VBoxContainer" parent="Margin/Layout/ContentPanel/ContentScroll/ContentStack/ProgressSection"]
+size_flags_horizontal = 3
+theme_override_constants/separation = 4
+
+[node name="RecentSection" type="VBoxContainer" parent="Margin/Layout/ContentPanel/ContentScroll/ContentStack"]
+visible = false
+size_flags_horizontal = 3
+theme_override_constants/separation = 6
+
+[node name="RecentTitleLabel" type="Label" parent="Margin/Layout/ContentPanel/ContentScroll/ContentStack/RecentSection"]
+text = "Hauts faits recents"
+
+[node name="RecentList" type="VBoxContainer" parent="Margin/Layout/ContentPanel/ContentScroll/ContentStack/RecentSection"]
+size_flags_horizontal = 3
+theme_override_constants/separation = 4
+
+[node name="CollectionSection" type="VBoxContainer" parent="Margin/Layout/ContentPanel/ContentScroll/ContentStack"]
+visible = false
+size_flags_horizontal = 3
+theme_override_constants/separation = 6
+
+[node name="CollectionTitleLabel" type="Label" parent="Margin/Layout/ContentPanel/ContentScroll/ContentStack/CollectionSection"]
+text = "Collection"
+
+[node name="CollectionSubtitleLabel" type="Label" parent="Margin/Layout/ContentPanel/ContentScroll/ContentStack/CollectionSection"]
+text = "Artefacts et outils a debloquer"
+
+[node name="CollectionGrid" type="HFlowContainer" parent="Margin/Layout/ContentPanel/ContentScroll/ContentStack/CollectionSection"]
+size_flags_horizontal = 3
+theme_override_constants/h_separation = 6
+theme_override_constants/v_separation = 6
+
+[node name="CollectionList" type="VBoxContainer" parent="Margin/Layout/ContentPanel/ContentScroll/ContentStack/CollectionSection"]
+size_flags_horizontal = 3
+theme_override_constants/separation = 6
+
+[node name="SeparatorBottom" type="ColorRect" parent="Margin/Layout"]
+custom_minimum_size = Vector2(0, 2)
+size_flags_horizontal = 3
+color = Color(0.4, 0.32, 0.16, 1)
+
+[node name="BottomBar" type="HBoxContainer" parent="Margin/Layout"]
+size_flags_horizontal = 3
+theme_override_constants/separation = 8
+
+[node name="BottomSpacer" type="Control" parent="Margin/Layout/BottomBar"]
+size_flags_horizontal = 3
+
+[node name="BackButton" type="Button" parent="Margin/Layout/BottomBar"]
+text = "Retour"

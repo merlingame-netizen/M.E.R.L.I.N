@@ -1,0 +1,7 @@
+{
+  "dependencies": {
+    "pdfjs-dist": "^5.4.624",
+    "pptxgenjs": "^4.0.1",
+    "xlsx": "^0.18.5"
+  }
+}

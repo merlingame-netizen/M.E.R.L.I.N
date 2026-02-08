@@ -1,0 +1,59 @@
+extends Node
+
+# Test de l'extension LLM Simple
+
+@onready var llm: LLMSimple
+
+func _ready():
+	print("=== Test LLM Simple ===\n")
+
+	# Créer instance
+	llm = LLMSimple.new()
+	add_child(llm)
+
+	# Connecter signaux
+	llm.generation_started.connect(_on_generation_started)
+	llm.generation_finished.connect(_on_generation_finished)
+	llm.generation_error.connect(_on_generation_error)
+
+	# Charger modèle
+	print("Chargement du modèle...")
+	var model_path = "res://models/phi-3-mini-3b.gguf"
+
+	if llm.load_model(model_path, 8192):
+		print("✅ Modèle chargé!")
+		print("Contexte: ", llm.get_context_size(), " tokens\n")
+
+		# Test génération
+		test_generation()
+	else:
+		print("❌ Erreur: ", llm.get_last_error())
+
+func test_generation():
+	print("=== Test Génération ===\n")
+
+	var prompts = [
+		"Bonjour! Qui es-tu?",
+		"Raconte-moi une courte histoire.",
+		"Qu'est-ce que Godot Engine?"
+	]
+
+	for prompt in prompts:
+		print("Q: ", prompt)
+		var response = llm.generate(prompt, 256)
+		print("R: ", response)
+		print()
+
+func _on_generation_started():
+	print("⏳ Génération en cours...")
+
+func _on_generation_finished(text: String):
+	print("✅ Génération terminée!")
+
+func _on_generation_error(error: String):
+	print("❌ Erreur: ", error)
+
+func _exit_tree():
+	if llm and llm.is_model_loaded():
+		llm.unload_model()
+		print("Modèle déchargé")

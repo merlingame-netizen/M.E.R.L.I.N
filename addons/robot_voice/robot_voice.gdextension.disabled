@@ -1,0 +1,10 @@
+[configuration]
+entry_symbol = "robot_voice_library_init"
+compatibility_minimum = 4.3
+reloadable = true
+
+; NOTA: Les binaires ne sont pas compilés. Compilez avec 'scons' dans le dossier native/
+; ou téléchargez les binaires pré-compilés.
+[libraries]
+; windows.release.x86_64 = "res://addons/robot_voice/bin/robot_voice.windows.release.x86_64.dll"
+; windows.debug.x86_64 = "res://addons/robot_voice/bin/robot_voice.windows.release.x86_64.dll"

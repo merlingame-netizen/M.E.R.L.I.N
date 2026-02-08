@@ -1,0 +1,72 @@
+{
+  "categories": {
+    "combat": {
+      "ATTACK_MELEE": {
+        "description": "Attaque au corps a corps",
+        "params": ["target_id"],
+        "conditions": ["target_in_range"]
+      },
+      "CAST_DAMAGE_SPELL": {
+        "description": "Lance un sort offensif",
+        "params": ["spell_id", "target_id"],
+        "conditions": ["has_mana", "spell_known"]
+      },
+      "DEFEND": {
+        "description": "Posture defensive",
+        "params": [],
+        "conditions": []
+      }
+    },
+    "dialogue": {
+      "REVEAL_INFO": {
+        "description": "Revele une information au joueur",
+        "params": ["info_id"],
+        "conditions": ["info_unlocked"]
+      },
+      "GIVE_QUEST": {
+        "description": "Propose une quete",
+        "params": ["quest_id"],
+        "conditions": ["quest_available"]
+      },
+      "TRADE_OFFER": {
+        "description": "Propose un echange",
+        "params": ["item_offered", "item_requested"],
+        "conditions": []
+      }
+    },
+    "exploration": {
+      "REVEAL_PATH": {
+        "description": "Revele un chemin cache",
+        "params": ["path_id"],
+        "conditions": []
+      },
+      "MARK_LOCATION": {
+        "description": "Marque un lieu sur la carte",
+        "params": ["location_id"],
+        "conditions": []
+      },
+      "TRIGGER_EVENT": {
+        "description": "Declenche un evenement",
+        "params": ["event_id"],
+        "conditions": ["event_available"]
+      }
+    },
+    "magie": {
+      "TEACH_SPELL": {
+        "description": "Enseigne un sort",
+        "params": ["spell_id"],
+        "conditions": ["player_level_sufficient"]
+      },
+      "ENCHANT_ITEM": {
+        "description": "Enchante un objet",
+        "params": ["item_id", "enchant_type"],
+        "conditions": ["item_in_inventory"]
+      },
+      "SUMMON_CREATURE": {
+        "description": "Invoque une creature",
+        "params": ["creature_id", "location"],
+        "conditions": ["has_mana"]
+      }
+    }
+  }
+}
