@@ -3,6 +3,8 @@ extends Control
 signal intro_completed(result: Dictionary)
 
 const DATA_PATH := "res://data/intro_dialogue.json"
+const NEXT_SCENE := "res://scenes/SceneEveil.tscn"
+const MENU_SCENE := "res://scenes/MenuPrincipalReigns.tscn"
 const PORTRAIT_DEFAULT := "res://Assets/Sprite/Merlin.png"
 const PORTRAIT_PRINTEMPS := "res://Assets/Sprite/Merlin_PRINTEMPS.png"
 const PORTRAIT_ETE := "res://Assets/Sprite/Merlin_ETE.png"
@@ -667,6 +669,18 @@ func _apply_portrait_emotion(emotion: Emotion) -> void:
 	var tween := create_tween()
 	tween.tween_property(portrait, "modulate", target_color, 0.25)
 
+	# Sync screen distortion to Merlin's emotional state
+	var screen_fx := get_node_or_null("/root/ScreenEffects")
+	if screen_fx and screen_fx.has_method("set_merlin_mood"):
+		var mood_map := {
+			Emotion.SAGE: "sage",
+			Emotion.MYSTIQUE: "mystique",
+			Emotion.SERIEUX: "serieux",
+			Emotion.AMUSE: "amuse",
+			Emotion.PENSIF: "pensif",
+		}
+		screen_fx.set_merlin_mood(mood_map.get(emotion, "sage"))
+
 	# Visual effect based on emotion
 	match emotion:
 		Emotion.MYSTIQUE:
@@ -1144,6 +1158,17 @@ func _end_demo() -> void:
 		"traveler_profile": traveler_profile,
 		"merlin_memory": run_state.get("merlin_memory", [])
 	})
+
+	# Save profile to GameManager before transitioning
+	if game_manager:
+		game_manager.set("run", run_state)
+
+	# Fade out and go to game
+	var tween := create_tween()
+	tween.tween_property(self, "modulate:a", 0.0, 0.8)
+	tween.tween_callback(func():
+		get_tree().change_scene_to_file(NEXT_SCENE)
+	)
 
 
 func _ascii_only(text: String) -> String:

@@ -1,4 +1,79 @@
-# Progress Log - DRU: Le Jeu des Oghams
+# Progress Log - M.E.R.L.I.N.: Le Jeu des Oghams
+
+## Session: 2026-02-08 (Implementation — Post-Questionnaire Flow)
+
+### Phase 10: Flow Post-Questionnaire — 3 Nouvelles Scenes
+- **Status:** complete
+- **Agents consultes:** Game Designer, Narrative Writer, Art Direction, Motion Designer, Audio Designer
+- **Validation:** PASSED (0 erreurs)
+
+#### Nouvelles scenes creees:
+1. **SceneEveil.gd + .tscn** — Ecran noir, braise orange pulsante, voix Merlin typewriter, 4 lignes de dialogue, transition vers l'Antre
+2. **SceneAntreMerlin.gd + .tscn** — Antre de Merlin (cave sombre), rencontre Bestiole (creature lumineuse animee), 3 Oghams starters debloques (Beith/Luis/Quert), carte 7 biomes interactive, briefing mission, selection biome par classe
+3. **TransitionBiome.gd + .tscn** — Animation tracé de chemin (bezier), titre/sous-titre biome, texte d'arrivee narratif, commentaire Merlin, particules de brume
+
+#### Donnees:
+- **data/post_intro_dialogues.json** — Dialogues Eveil (4 lignes), Antre (Bestiole intro 4 lignes, mission 4 lignes, suggestions biome par classe, reactions), 7 biomes (nom, sous-titre, gardien, ogham, saison, texte d'arrivee, commentaire Merlin, position carte, couleur)
+
+#### Modifications existantes:
+- **IntroMerlinDialogue.gd** — NEXT_SCENE change de TriadeGame.tscn vers SceneEveil.tscn
+- **SceneSelector.gd** — 3 nouvelles entrees ajoutees au debug dropdown
+
+#### Flow complet:
+```
+IntroMerlinDialogue (15Q, classe) → SceneEveil (30-45s) → SceneAntreMerlin (Bestiole + carte) → TransitionBiome (voyage) → TriadeGame
+```
+
+#### Sauvegarde GameManager:
+- `run.current_biome` — Biome selectionne
+- `run.biome_data` — Donnees du biome (nom, couleur, gardien, etc.)
+- `run.active = true`
+- `bestiole.known_oghams = ["beith", "luis", "quert"]`
+
+---
+
+## Session: 2026-02-08 (Art Direction — Transition Scenes)
+
+### Phase: Visual Design Spec for 3 Transition Scenes
+- **Status:** complete
+- **Agent:** art_direction.md
+- Actions taken:
+  - Read existing visual style from game_manager.gd (GBC PALETTE), MenuPrincipalReigns.gd (parchment PALETTE), ScreenEffects.gd (mood profiles)
+  - Read biome lore from docs/50_lore/08_LES_BIOMES.md (7 biomes, their themes and atmosphere)
+  - Read existing shaders: reigns_paper.gdshader, screen_distortion.gdshader, bestiole_squish.gdshader
+  - Read IntroMerlinDialogue.gd for typewriter constants (TYPEWRITER_DELAY, BLIP_FREQ)
+  - Inventoried existing Merlin portrait assets (5 seasonal variants)
+  - Created comprehensive visual spec: `docs/70_graphic/VISUAL_SPEC_TRANSITION_SCENES.md`
+- **Deliverable:** Complete spec for:
+  1. **SceneEveil** — Pure black to ember awakening, typewriter text, mood mystique->warm, 30-45s cinematic
+  2. **SceneAntreMerlin** — Cave/grotto hub with Merlin portrait, crystal/candle lighting, parchment biome map, Bestiole particles
+  3. **TransitionBiome** — Map zoom, path drawing animation, mist effects, biome color palette transitions
+- **Includes:** Biome-to-palette color mapping (7 biomes), animation keyframes, particle specs, asset needs, node tree recommendations, ScreenEffects mood integration, audio cue points
+
+---
+
+## Session: 2026-02-08 (Audio Design)
+
+### Audio Design: 3 New Scenes
+- **Status:** complete
+- **Agent:** Audio Designer (`audio_designer.md`)
+- Actions taken:
+  - Analyzed existing procedural audio infrastructure (RobotBlipVoice, IntroBoot.gd, IntroMerlinDialogue.gd)
+  - Created comprehensive audio design document: `docs/80_sound/AUDIO_DESIGN_3_SCENES.md`
+  - **SceneEveil** (Awakening): 4 sounds designed (cave drone, heartbeat, light chord, Merlin ducking)
+  - **SceneAntreMerlin** (Lair): 7 sounds designed (fire, drips, crystal, Bestiole tinkle, parchment, singing bowl, biome tones)
+  - **TransitionBiome** (Journey): 3 sounds designed (wind sweep, mist layer, biome arrival)
+  - 12 of 13 sounds are fully procedural via AudioStreamGenerator (matching existing codebase pattern)
+  - 1 sound (parchment unfold) recommended as file but includes procedural fallback
+  - Updated `default_bus_layout.tres`: added Ambience, Voice, UI buses (was only Music + SFX)
+  - Bus volumes set per Mix Guide: Voice -3 dB, Music -6 dB, SFX -6 dB, Ambience -8 dB, UI -10 dB
+  - All GDScript specs use `push_frame()` / `AudioStreamGeneratorPlayback` pattern consistent with project
+  - Estimated implementation effort: ~4 days
+- Files created/modified:
+  - `docs/80_sound/AUDIO_DESIGN_3_SCENES.md` (NEW - 700+ lines)
+  - `default_bus_layout.tres` (MODIFIED - added 3 buses)
+
+---
 
 ## Session: 2026-02-05
 
@@ -3166,4 +3241,76 @@ Decision a prendre: lequel est canonique? Les deux coexistent-ils?
 
 ---
 
-*Last updated: 2026-02-08 - Night Mode Lore Iteration 2*
+---
+
+## Session: 2026-02-08 (Phase 10: Scene Dialogues)
+
+### Phase 10: Dialogues pour 3 Nouvelles Scenes
+- **Status:** complete
+- **Agent:** Narrative Writer (Merlin Voice)
+
+### Contexte
+Ecriture de tous les dialogues pour 3 scenes narratives:
+1. SceneEveil — Ecran noir, Merlin parle dans le noir, arrivee du Voyageur
+2. SceneAntreMerlin — Antre de Merlin, apparition Bestiole, mission briefing
+3. TransitionBiome — Textes de voyage entre biomes, 7 descriptions atmospheriques
+
+### Actions
+1. **Lecture contexte lore** — 10+ documents de la Lore Bible lus:
+   - MERLIN_COMPLETE_PERSONALITY.md (voix, patterns, dualite)
+   - 08_LES_BIOMES.md (7 biomes, sous-lieux, atmospheres)
+   - 05_LE_VOYAGEUR.md (nature du joueur, Temoin, silence)
+   - 06_BESTIOLE.md (fragment Awen, lien, resonance)
+   - 03_LES_FACTIONS.md (5 factions, dynamiques)
+   - 09_LES_FINS.md (8+1 fins, philosophie)
+   - 02_CHRONOLOGIE.md (timeline cosmique)
+   - 10_LE_PONT_MECANIQUE.md (lore des mecaniques)
+   - narrative_writer.md (agent instructions, voice rules)
+
+2. **Ecriture SceneEveil** — 4 lignes Merlin:
+   - eveil_01: "... Tu es la." (soulagement profond, murmure)
+   - eveil_02: Sur l'attente, le temps, la solitude
+   - eveil_03: Transition emotion -> humour (la brume laisse passer)
+   - eveil_04: Bienvenue joviale avec pointe sombre ("Quand il fait jour")
+
+3. **Ecriture SceneAntreMerlin** — 14 lignes:
+   - 3 narrations apparition Bestiole (lueur, yeux, son)
+   - 2 commentaires Merlin sur Bestiole (tendresse + humour defensif)
+   - 4 lignes mission briefing (7 terres, role, choix comptent)
+   - 1 transition carte biomes
+   - 4 variantes suggestion biome par classe (druide, guerrier, barde, eclaireur)
+   - 2 reactions joueur (acceptation/refus)
+
+4. **Ecriture TransitionBiome** — 14 textes:
+   - 7 descriptions atmospheriques d'arrivee (une par biome)
+   - 7 commentaires Merlin (humour + melancolie subtile)
+
+### Fichier cree
+- `data/dialogues/scene_dialogues.json` — Structure JSON complete
+  - Metadata avec notes de direction
+  - Timing pour chaque ligne (delay, duration, pause)
+  - Tags emotionnels et d'ambiance
+  - Indications VFX/SFX
+  - Palette, son et lumiere par biome
+
+### Voice Check
+- [x] Ton Merlin coherent (95% jovial, 5% melancolie)
+- [x] Pas de langage moderne/slang
+- [x] Pas de descriptions mecaniques
+- [x] Longueur appropriee (phrases courtes, pauses)
+- [x] Indices sombres subtils et non explicites
+- [x] Transitions surface/profondeur naturelles
+- [x] Bestiole ne parle jamais (sons uniquement)
+- [x] Le Voyageur ne parle jamais (silence respecte)
+
+### Lore Considerations
+- SceneEveil ancre la solitude de Merlin (attend depuis longtemps)
+- Bestiole est presentee comme fragment d'Awen (resonance)
+- Mission briefing dit explicitement "Pas sauver le monde" (verite cachee dans humour)
+- Chaque suggestion de biome est coherente avec le lore du biome
+- Les commentaires de transition contiennent des indices sur l'Epuisement
+- Les collines sont "plus vieilles que Merlin" (coherent avec lore)
+
+---
+
+*Last updated: 2026-02-08 - Phase 10 Scene Dialogues*
