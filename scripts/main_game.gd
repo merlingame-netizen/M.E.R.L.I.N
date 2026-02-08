@@ -503,9 +503,9 @@ func _create_combat_screen(data: Dictionary) -> Control:
 		if randf() > 0.5:
 			_transition_to_screen("map")
 		else:
-			var combat_log = screen.get_node_or_null("CombatLog")
-			if combat_log:
-				combat_log.text = "Impossible de fuir!"
+			var log_label = screen.get_node_or_null("CombatLog")
+			if log_label:
+				log_label.text = "Impossible de fuir!"
 	)
 	ui_panel.add_child(run_btn)
 	
