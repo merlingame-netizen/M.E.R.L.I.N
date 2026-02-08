@@ -295,3 +295,171 @@ const HIDDEN_DEPTH_LAYERS := [
 	"bestiole_personality",
 	"narrative_debt"
 ]
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# SOUFFLE D'AWEN — Bestiole Ogham Resource (separate from Souffle d'Ogham)
+# ═══════════════════════════════════════════════════════════════════════════════
+
+const AWEN_MAX := 5
+const AWEN_START := 2
+const AWEN_REGEN_INTERVAL := 5  # +1 every N cards played
+const AWEN_REGEN_EQUILIBRE_BONUS := 1  # +1 extra if all 3 aspects balanced
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# OGHAM FULL SPECS — Complete Ogham definitions for Triade system
+# ═══════════════════════════════════════════════════════════════════════════════
+
+const OGHAM_CATEGORIES := ["reveal", "protection", "boost", "narrative", "recovery", "special"]
+
+const OGHAM_CATEGORY_COLORS := {
+	"reveal": Color(0.294, 0.706, 0.902),
+	"protection": Color(0.314, 0.745, 0.529),
+	"boost": Color(1.0, 0.824, 0.0),
+	"narrative": Color(0.659, 0.529, 0.847),
+	"recovery": Color(1.0, 0.706, 0.902),
+	"special": Color(0.733, 0.290, 0.251),
+}
+
+const OGHAM_CATEGORY_LABELS := {
+	"reveal": "Revelation",
+	"protection": "Protection",
+	"boost": "Force",
+	"narrative": "Recit",
+	"recovery": "Guerison",
+	"special": "Secret",
+}
+
+const OGHAM_FULL_SPECS := {
+	# ── REVEAL ──
+	"beith": {
+		"name": "Bouleau", "tree": "Betula", "unicode": "\u1681",
+		"category": "reveal", "awen_cost": 1, "cooldown": 3, "starter": true,
+		"effect": "reveal_one",
+		"description": "Revele l'effet d'une option au choix",
+		"bond_required": 0,
+	},
+	"coll": {
+		"name": "Noisetier", "tree": "Corylus", "unicode": "\u1685",
+		"category": "reveal", "awen_cost": 2, "cooldown": 5, "starter": false,
+		"effect": "reveal_all",
+		"description": "Revele les effets de toutes les options",
+		"bond_required": 21,
+	},
+	"ailm": {
+		"name": "Sapin", "tree": "Abies", "unicode": "\u168f",
+		"category": "reveal", "awen_cost": 2, "cooldown": 4, "starter": false,
+		"effect": "predict_next",
+		"description": "Predit le theme de la prochaine carte",
+		"bond_required": 41,
+	},
+	# ── PROTECTION ──
+	"luis": {
+		"name": "Sorbier", "tree": "Sorbus", "unicode": "\u1682",
+		"category": "protection", "awen_cost": 1, "cooldown": 4, "starter": true,
+		"effect": "shield_shift",
+		"description": "Empeche le prochain shift negatif d'aspect",
+		"bond_required": 0,
+	},
+	"gort": {
+		"name": "Lierre", "tree": "Hedera", "unicode": "\u168c",
+		"category": "protection", "awen_cost": 2, "cooldown": 6, "starter": false,
+		"effect": "absorb_extreme",
+		"description": "Si un aspect atteint un extreme, le ramene a equilibre",
+		"bond_required": 41,
+	},
+	"eadhadh": {
+		"name": "Tremble", "tree": "Populus", "unicode": "\u1690",
+		"category": "protection", "awen_cost": 3, "cooldown": 8, "starter": false,
+		"effect": "skip_negative",
+		"description": "Annule tous les effets negatifs de la carte choisie",
+		"bond_required": 61,
+	},
+	# ── BOOST ──
+	"duir": {
+		"name": "Chene", "tree": "Quercus", "unicode": "\u1687",
+		"category": "boost", "awen_cost": 2, "cooldown": 4, "starter": false,
+		"effect": "force_equilibre",
+		"description": "Force un aspect au choix vers Equilibre",
+		"bond_required": 21,
+	},
+	"tinne": {
+		"name": "Houx", "tree": "Ilex", "unicode": "\u1688",
+		"category": "boost", "awen_cost": 2, "cooldown": 5, "starter": false,
+		"effect": "double_positive",
+		"description": "Double les effets positifs de la prochaine carte",
+		"bond_required": 41,
+	},
+	"onn": {
+		"name": "Ajonc", "tree": "Ulex", "unicode": "\u1689",
+		"category": "boost", "awen_cost": 3, "cooldown": 7, "starter": false,
+		"effect": "souffle_boost",
+		"description": "Regenere 2 Souffle d'Ogham",
+		"bond_required": 61,
+	},
+	# ── NARRATIVE ──
+	"nuin": {
+		"name": "Frene", "tree": "Fraxinus", "unicode": "\u1684",
+		"category": "narrative", "awen_cost": 2, "cooldown": 6, "starter": false,
+		"effect": "add_option",
+		"description": "Ajoute une 4eme option a la carte actuelle",
+		"bond_required": 41,
+	},
+	"huath": {
+		"name": "Aubepine", "tree": "Crataegus", "unicode": "\u1686",
+		"category": "narrative", "awen_cost": 2, "cooldown": 5, "starter": false,
+		"effect": "change_card",
+		"description": "Remplace la carte actuelle par une autre",
+		"bond_required": 21,
+	},
+	"straif": {
+		"name": "Prunellier", "tree": "Prunus", "unicode": "\u1693",
+		"category": "narrative", "awen_cost": 3, "cooldown": 10, "starter": false,
+		"effect": "force_twist",
+		"description": "Force un retournement de situation",
+		"bond_required": 81,
+	},
+	# ── RECOVERY ──
+	"quert": {
+		"name": "Pommier", "tree": "Malus", "unicode": "\u168a",
+		"category": "recovery", "awen_cost": 1, "cooldown": 4, "starter": true,
+		"effect": "heal_worst",
+		"description": "Ramene l'aspect le plus extreme vers Equilibre",
+		"bond_required": 0,
+	},
+	"ruis": {
+		"name": "Sureau", "tree": "Sambucus", "unicode": "\u1694",
+		"category": "recovery", "awen_cost": 3, "cooldown": 8, "starter": false,
+		"effect": "balance_all",
+		"description": "Ramene tous les aspects vers Equilibre",
+		"bond_required": 61,
+	},
+	"saille": {
+		"name": "Saule", "tree": "Salix", "unicode": "\u1691",
+		"category": "recovery", "awen_cost": 2, "cooldown": 6, "starter": false,
+		"effect": "regen_awen",
+		"description": "Regenere 2 Souffle d'Awen",
+		"bond_required": 41,
+	},
+	# ── SPECIAL ──
+	"muin": {
+		"name": "Vigne", "tree": "Vitis", "unicode": "\u168d",
+		"category": "special", "awen_cost": 2, "cooldown": 7, "starter": false,
+		"effect": "invert_effects",
+		"description": "Inverse les effets positifs et negatifs de la carte",
+		"bond_required": 41,
+	},
+	"ioho": {
+		"name": "If", "tree": "Taxus", "unicode": "\u1695",
+		"category": "special", "awen_cost": 3, "cooldown": 12, "starter": false,
+		"effect": "full_reroll",
+		"description": "Regenere une carte completement nouvelle",
+		"bond_required": 81,
+	},
+	"ur": {
+		"name": "Bruyere", "tree": "Calluna", "unicode": "\u1692",
+		"category": "special", "awen_cost": 3, "cooldown": 10, "starter": false,
+		"effect": "sacrifice_trade",
+		"description": "Sacrifie 1 aspect extreme pour booster les 2 autres",
+		"bond_required": 61,
+	},
+}

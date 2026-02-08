@@ -1,4 +1,4 @@
-## ═══════════════════════════════════════════════════════════════════════════════
+﻿## ═══════════════════════════════════════════════════════════════════════════════
 ## Tone Controller — Controle du Ton de Merlin
 ## ═══════════════════════════════════════════════════════════════════════════════
 ## Gere le ton de Merlin selon la confiance et le contexte.
@@ -138,7 +138,7 @@ func _recalculate_weights() -> void:
 # ═══════════════════════════════════════════════════════════════════════════════
 
 func get_tone_for_context(context: Dictionary) -> Tone:
-	"""Selectionne le ton approprie pour le contexte."""
+	## Selectionne le ton approprie pour le contexte.
 
 	# Check for crisis (warning tone)
 	if _is_crisis_context(context):
@@ -212,7 +212,7 @@ func tone_to_string(tone: Tone) -> String:
 # ═══════════════════════════════════════════════════════════════════════════════
 
 func get_tone_characteristics(tone: Tone = current_tone) -> Dictionary:
-	"""Retourne les caracteristiques pour guider la generation."""
+	## Retourne les caracteristiques pour guider la generation.
 	match tone:
 		Tone.NEUTRAL:
 			return {
@@ -268,7 +268,7 @@ func get_tone_characteristics(tone: Tone = current_tone) -> Dictionary:
 
 
 func get_sentence_prefix(tone: Tone = current_tone) -> String:
-	"""Retourne un prefixe typique pour ce ton."""
+	## Retourne un prefixe typique pour ce ton.
 	var prefixes := {
 		Tone.NEUTRAL: ["", "Alors, ", "Voyons, "],
 		Tone.PLAYFUL: ["Ah! ", "Ho ho! ", "Tiens, tiens, "],
@@ -284,7 +284,7 @@ func get_sentence_prefix(tone: Tone = current_tone) -> String:
 
 
 func get_sentence_suffix(tone: Tone = current_tone) -> String:
-	"""Retourne un suffixe typique pour ce ton."""
+	## Retourne un suffixe typique pour ce ton.
 	var suffixes := {
 		Tone.NEUTRAL: [".", ".", "."],
 		Tone.PLAYFUL: ["!", "... ou pas?", ", hehe."],
@@ -303,7 +303,7 @@ func get_sentence_suffix(tone: Tone = current_tone) -> String:
 # ═══════════════════════════════════════════════════════════════════════════════
 
 func get_tone_prompt_guidance() -> String:
-	"""Retourne des instructions de ton pour le LLM."""
+	## Retourne des instructions de ton pour le LLM.
 	var chars := get_tone_characteristics()
 	var lines := []
 

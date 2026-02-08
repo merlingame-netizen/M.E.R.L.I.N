@@ -1,4 +1,4 @@
-## ═══════════════════════════════════════════════════════════════════════════════
+﻿## ═══════════════════════════════════════════════════════════════════════════════
 ## Decision History Registry — Memoire des Choix
 ## ═══════════════════════════════════════════════════════════════════════════════
 ## Track tous les choix pour detecter les patterns et permettre les callbacks.
@@ -111,13 +111,13 @@ func _init() -> void:
 
 
 func reset_run() -> void:
-	"""Reset pour une nouvelle run."""
+	## Reset pour une nouvelle run.
 	current_run.clear()
 	npc_last_seen.clear()
 
 
 func reset_all() -> void:
-	"""Reset complet (pour debug)."""
+	## Reset complet (pour debug).
 	current_run.clear()
 	patterns_detected.clear()
 	npc_karma.clear()
@@ -138,7 +138,7 @@ func reset_all() -> void:
 # ═══════════════════════════════════════════════════════════════════════════════
 
 func record_choice(card: Dictionary, option: int, context: Dictionary) -> void:
-	"""Enregistre un choix."""
+	## Enregistre un choix.
 	var entry := {
 		"card_id": card.get("id", "unknown_%d" % Time.get_ticks_msec()),
 		"card_type": card.get("type", "narrative"),
@@ -176,7 +176,7 @@ func record_choice(card: Dictionary, option: int, context: Dictionary) -> void:
 
 
 func update_last_entry_gauges(gauges_after: Dictionary) -> void:
-	"""Met a jour les jauges finales du dernier choix."""
+	## Met a jour les jauges finales du dernier choix.
 	if current_run.is_empty():
 		return
 	current_run[-1].gauges_after = gauges_after.duplicate()
@@ -184,9 +184,9 @@ func update_last_entry_gauges(gauges_after: Dictionary) -> void:
 
 func _update_choice_ratios(option: int) -> void:
 	var total := float(historical_summary.total_choices)
-	var left_count := historical_summary.left_ratio * (total - 1)
-	var center_count := historical_summary.center_ratio * (total - 1)
-	var right_count := historical_summary.right_ratio * (total - 1)
+	var left_count: float = float(historical_summary.left_ratio) * (total - 1)
+	var center_count: float = float(historical_summary.center_ratio) * (total - 1)
+	var right_count: float = float(historical_summary.right_ratio) * (total - 1)
 
 	match option:
 		0: left_count += 1
@@ -234,7 +234,7 @@ func _track_npc_interaction(entry: Dictionary) -> void:
 
 
 func _check_npc_callback(npc_id: String) -> void:
-	"""Verifie si un NPC peut revenir dans la narration."""
+	## Verifie si un NPC peut revenir dans la narration.
 	var last_seen: int = npc_last_seen.get(npc_id, 0)
 	var current_card := current_run.size()
 
@@ -273,7 +273,7 @@ func _track_gauge_protection(entry: Dictionary, context: Dictionary) -> void:
 
 	for gauge_name in gauges:
 		var value: int = int(gauges[gauge_name])
-		var pattern_key := "protects_" + gauge_name.to_lower()
+		var pattern_key: String = "protects_" + str(gauge_name).to_lower()
 
 		if not gauge_patterns.has(pattern_key):
 			continue
@@ -296,7 +296,7 @@ func _track_gauge_protection(entry: Dictionary, context: Dictionary) -> void:
 # ═══════════════════════════════════════════════════════════════════════════════
 
 func _detect_patterns() -> void:
-	"""Detecte les patterns comportementaux."""
+	## Detecte les patterns comportementaux.
 	for pattern_name in PATTERNS:
 		var pattern_def: Dictionary = PATTERNS[pattern_name]
 		var filter_tags: Array = pattern_def.filter_tags
@@ -354,7 +354,7 @@ func has_pattern(pattern_name: String, min_confidence: float = PATTERN_DETECTION
 # ═══════════════════════════════════════════════════════════════════════════════
 
 func on_run_end(ending_data: Dictionary) -> void:
-	"""Appele a la fin d'une run."""
+	## Appele a la fin d'une run.
 	# Track death gauges
 	var gauges: Dictionary = ending_data.get("final_gauges", {})
 	for gauge_name in gauges:
@@ -453,7 +453,7 @@ func _get_recent_choices_summary(count: int) -> Array:
 
 
 func get_pattern_for_llm() -> String:
-	"""Genere une description textuelle des patterns pour le LLM."""
+	## Genere une description textuelle des patterns pour le LLM.
 	var lines := []
 
 	for pattern_name in patterns_detected:
@@ -497,7 +497,7 @@ func _pattern_to_french(pattern_name: String, data: Dictionary) -> String:
 # ═══════════════════════════════════════════════════════════════════════════════
 
 func get_callback_npcs() -> Array:
-	"""Retourne les NPCs qui pourraient revenir."""
+	## Retourne les NPCs qui pourraient revenir.
 	var callbacks := []
 
 	for npc_id in npc_karma:
@@ -517,7 +517,7 @@ func get_callback_npcs() -> Array:
 
 
 func get_previous_choice_on_tag(tag: String) -> Dictionary:
-	"""Retourne le dernier choix fait sur un tag specifique."""
+	## Retourne le dernier choix fait sur un tag specifique.
 	for i in range(current_run.size() - 1, -1, -1):
 		var entry: Dictionary = current_run[i]
 		if tag in entry.tags:

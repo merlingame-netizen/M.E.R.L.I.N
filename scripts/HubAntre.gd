@@ -1,0 +1,1910 @@
+## ═══════════════════════════════════════════════════════════════════════════════
+## HubAntre — L'Antre du Dernier Druide (Persistent Hub)
+## ═══════════════════════════════════════════════════════════════════════════════
+## Central hub scene between runs. From here the player:
+##   - Talks to Merlin (contextual dialogue with typewriter + voice)
+##   - Views Voyager status (Triade aspects, souffle, day)
+##   - Selects a biome on the Brittany map (7 sanctuaries)
+##   - Manages Bestiole (care, bond, Oghams equipped)
+##   - Views meta-progression (Grimoire summary)
+##   - Saves/loads game
+##   - Launches the next adventure
+## Style: Parchemin Mystique Breton (shared with all scenes)
+## ═══════════════════════════════════════════════════════════════════════════════
+
+extends Control
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# SCENE NAVIGATION
+# ═══════════════════════════════════════════════════════════════════════════════
+
+const SCENE_TRANSITION := "res://scenes/TransitionBiome.tscn"
+const SCENE_OPTIONS := "res://scenes/MenuOptions.tscn"
+const SCENE_CALENDAR := "res://scenes/Calendar.tscn"
+const SCENE_COLLECTION := "res://scenes/Collection.tscn"
+const SCENE_MENU := "res://scenes/MenuPrincipal.tscn"
+const SCENE_SAVE := "res://scenes/SelectionSauvegarde.tscn"
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# TYPEWRITER SETTINGS
+# ═══════════════════════════════════════════════════════════════════════════════
+
+const TYPEWRITER_DELAY := 0.030
+const TYPEWRITER_PUNCT_DELAY := 0.10
+const BLIP_FREQ := 880.0
+const BLIP_DURATION := 0.018
+const BLIP_VOLUME := 0.04
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# VISUAL CONSTANTS
+# ═══════════════════════════════════════════════════════════════════════════════
+
+const CARD_MAX_WIDTH := 680.0
+const PORTRAIT_SIZE := Vector2(160, 200)
+const MAX_CARE_ACTIONS := 3
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# PALETTE — Parchemin Mystique Breton (shared with all scenes)
+# ═══════════════════════════════════════════════════════════════════════════════
+
+const PALETTE := {
+	"paper": Color(0.965, 0.945, 0.905),
+	"paper_dark": Color(0.935, 0.905, 0.855),
+	"paper_warm": Color(0.955, 0.930, 0.890),
+	"ink": Color(0.22, 0.18, 0.14),
+	"ink_soft": Color(0.38, 0.32, 0.26),
+	"ink_faded": Color(0.50, 0.44, 0.38, 0.35),
+	"accent": Color(0.58, 0.44, 0.26),
+	"accent_soft": Color(0.65, 0.52, 0.34),
+	"accent_glow": Color(0.72, 0.58, 0.38, 0.25),
+	"shadow": Color(0.25, 0.20, 0.16, 0.18),
+	"line": Color(0.40, 0.34, 0.28, 0.12),
+	"mist": Color(0.94, 0.92, 0.88, 0.35),
+	"ogham_glow": Color(0.45, 0.62, 0.32),
+	"bestiole": Color(0.42, 0.60, 0.72),
+	"danger": Color(0.72, 0.28, 0.22),
+	"success": Color(0.32, 0.58, 0.28),
+	"warning": Color(0.72, 0.58, 0.22),
+}
+
+const PORTRAIT_DEFAULT := "res://Assets/Sprite/Merlin.png"
+const PORTRAIT_PRINTEMPS := "res://Assets/Sprite/Merlin_PRINTEMPS.png"
+const PORTRAIT_ETE := "res://Assets/Sprite/Merlin_ETE.png"
+const PORTRAIT_AUTOMNE := "res://Assets/Sprite/Merlin_AUTOMNE.png"
+const PORTRAIT_HIVER := "res://Assets/Sprite/Merlin_HIVER.png"
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# BIOME DATA — 7 Sanctuaires de Bretagne
+# ═══════════════════════════════════════════════════════════════════════════════
+
+const BIOME_DATA := {
+	"foret_broceliande": {
+		"name": "Foret de Broceliande",
+		"subtitle": "Mystere et magie ancestrale",
+		"color": Color(0.30, 0.50, 0.28),
+		"ogham": "duir",
+		"guardian": "Maelgwn",
+		"season": "automne",
+	},
+	"landes_bruyere": {
+		"name": "Landes de Bruyere",
+		"subtitle": "Solitude et endurance",
+		"color": Color(0.55, 0.40, 0.55),
+		"ogham": "onn",
+		"guardian": "Talwen",
+		"season": "hiver",
+	},
+	"cotes_sauvages": {
+		"name": "Cotes Sauvages",
+		"subtitle": "L'ocean murmurant",
+		"color": Color(0.35, 0.50, 0.65),
+		"ogham": "nuin",
+		"guardian": "Bran",
+		"season": "ete",
+	},
+	"villages_celtes": {
+		"name": "Villages Celtes",
+		"subtitle": "Flammes obstinees de l'humanite",
+		"color": Color(0.60, 0.45, 0.30),
+		"ogham": "gort",
+		"guardian": "Azenor",
+		"season": "printemps",
+	},
+	"cercles_pierres": {
+		"name": "Cercles de Pierres",
+		"subtitle": "Ou le temps hesite",
+		"color": Color(0.50, 0.50, 0.55),
+		"ogham": "huath",
+		"guardian": "Keridwen",
+		"season": "samhain",
+	},
+	"marais_korrigans": {
+		"name": "Marais des Korrigans",
+		"subtitle": "Deception et feux follets",
+		"color": Color(0.30, 0.42, 0.30),
+		"ogham": "muin",
+		"guardian": "Gwydion",
+		"season": "lughnasadh",
+	},
+	"collines_dolmens": {
+		"name": "Collines aux Dolmens",
+		"subtitle": "Les os de la terre",
+		"color": Color(0.48, 0.55, 0.40),
+		"ogham": "ioho",
+		"guardian": "Elouan",
+		"season": "yule",
+	},
+}
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# BIOME MISSIONS — Procedural mission pool per biome
+# ═══════════════════════════════════════════════════════════════════════════════
+
+const BIOME_MISSIONS := {
+	"foret_broceliande": [
+		{"type": "discovery", "target": "Trouver la Source de Barenton", "total": 8},
+		{"type": "alliance", "target": "Ecouter les murmures des arbres anciens", "total": 6},
+	],
+	"landes_bruyere": [
+		{"type": "survival", "target": "Traverser les landes sans faillir", "total": 10},
+		{"type": "recovery", "target": "Rallumer le feu de Talwen", "total": 7},
+	],
+	"cotes_sauvages": [
+		{"type": "discovery", "target": "Dechiffrer les vagues de Bran", "total": 8},
+		{"type": "alliance", "target": "Calmer les marees errantes", "total": 6},
+	],
+	"villages_celtes": [
+		{"type": "alliance", "target": "Reunir les villages epars", "total": 9},
+		{"type": "recovery", "target": "Soigner les fievres d'Azenor", "total": 7},
+	],
+	"cercles_pierres": [
+		{"type": "discovery", "target": "Reveler le chant des menhirs", "total": 8},
+		{"type": "survival", "target": "Resister au silence de Keridwen", "total": 10},
+	],
+	"marais_korrigans": [
+		{"type": "survival", "target": "Echapper aux feux follets", "total": 12},
+		{"type": "discovery", "target": "Percer les illusions de Gwydion", "total": 8},
+	],
+	"collines_dolmens": [
+		{"type": "recovery", "target": "Apaiser les ancetres d'Elouan", "total": 9},
+		{"type": "alliance", "target": "Restaurer les liens ancestraux", "total": 7},
+	],
+}
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# MERLIN GREETINGS — Contextual dialogue lines
+# ═══════════════════════════════════════════════════════════════════════════════
+
+const MERLIN_GREETINGS := {
+	"first_hub": [
+		"Bienvenue dans mon antre, %s. Il est humble, mais les murs se souviennent de tout.",
+		"Entre, %s. Le feu t'attendait. Bestiole aussi, d'ailleurs.",
+	],
+	"return": [
+		"Te revoila, %s ! Bestiole s'impatientait.",
+		"De retour ! Les murs ont chuchote ton nom, %s.",
+		"Ah, %s. Le druide ne dort jamais... et toi non plus, apparemment.",
+		"L'antre est toujours ouvert, %s. Le feu ne meurt pas ici.",
+	],
+	"after_fall": [
+		"La boucle tourne, %s. Chaque chute enseigne quelque chose.",
+		"Le monde oublie, mais moi je me souviens de tes pas, %s.",
+		"Encore toi ? Je plaisante, %s. Bienvenue a nouveau.",
+		"Tomber n'est pas echouer, %s. C'est apprendre le sol.",
+	],
+	"veteran": [
+		"Tu connais le chemin mieux que moi, %s.",
+		"Les pierres te reconnaissent, %s. Elles murmurent ton histoire.",
+		"Combien de fois maintenant ? Non, ne compte pas. Vis, %s.",
+		"%s... Parfois je me demande qui guide qui.",
+	],
+}
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# BESTIOLE CARE ACTIONS
+# ═══════════════════════════════════════════════════════════════════════════════
+
+# Map positions (proportional 0-1 within the map container) — Brittany shape
+const BIOME_MAP_POSITIONS := {
+	"cotes_sauvages": Vector2(0.18, 0.10),
+	"landes_bruyere": Vector2(0.75, 0.08),
+	"foret_broceliande": Vector2(0.10, 0.46),
+	"villages_celtes": Vector2(0.48, 0.42),
+	"collines_dolmens": Vector2(0.82, 0.48),
+	"marais_korrigans": Vector2(0.22, 0.82),
+	"cercles_pierres": Vector2(0.68, 0.84),
+}
+
+# Paths connecting adjacent biomes on the map
+const BIOME_CONNECTIONS: Array[Array] = [
+	["cotes_sauvages", "landes_bruyere"],
+	["cotes_sauvages", "foret_broceliande"],
+	["landes_bruyere", "collines_dolmens"],
+	["foret_broceliande", "villages_celtes"],
+	["villages_celtes", "collines_dolmens"],
+	["foret_broceliande", "marais_korrigans"],
+	["villages_celtes", "cercles_pierres"],
+	["marais_korrigans", "cercles_pierres"],
+]
+
+# Celtic symbols for biome markers
+const BIOME_SYMBOLS := {
+	"foret_broceliande": "\u2663",      # Club/tree
+	"landes_bruyere": "\u2736",          # Star
+	"cotes_sauvages": "\u2248",          # Waves
+	"villages_celtes": "\u2302",         # House
+	"cercles_pierres": "\u25CE",         # Bullseye/circle
+	"marais_korrigans": "\u2735",        # Star
+	"collines_dolmens": "\u25B2",        # Triangle/mountain
+}
+
+const CARE_ACTIONS := {
+	"feed": {"label": "Nourrir", "icon": "\u2022", "need": "Hunger", "amount": 20, "bond": 3},
+	"play": {"label": "Jouer", "icon": "\u25CB", "need": "Mood", "amount": 20, "bond": 5},
+	"groom": {"label": "Soigner", "icon": "\u2736", "need": "Hygiene", "amount": 20, "bond": 2},
+	"rest": {"label": "Repos", "icon": "\u223C", "need": "Energy", "amount": 20, "bond": 2, "stress_reduce": 15},
+}
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# NODES
+# ═══════════════════════════════════════════════════════════════════════════════
+
+var parchment_bg: ColorRect
+var mist_layer: ColorRect
+var celtic_top: Label
+var celtic_bottom: Label
+var tab_container: Control  # Holds all pages
+var tab_pages: Array[Control] = []  # Array of page Controls
+var tab_buttons: Array[Button] = []  # Tab bar buttons
+var current_tab: int = 0
+var main_vbox: VBoxContainer  # Used within current page
+var portrait_rect: TextureRect
+var merlin_text: RichTextLabel
+var aspect_labels: Dictionary = {}
+var souffle_label: Label
+var day_label: Label
+var mission_label: Label
+var mission_progress_bar: ProgressBar
+var biome_buttons: Dictionary = {}
+var biome_detail_label: Label
+var map_container: Control
+var map_paths_node: Control
+var time_label: Label
+var _map_pulse_tween: Tween
+var bestiole_bond_label: Label
+var bestiole_awen_label: Label
+var bestiole_needs_container: VBoxContainer
+var care_buttons: Dictionary = {}
+var care_remaining_label: Label
+var ogham_container: HBoxContainer
+var grimoire_stats_label: Label
+var adventure_btn: Button
+var save_btn: Button
+var bottom_bar: HBoxContainer
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# STATE
+# ═══════════════════════════════════════════════════════════════════════════════
+
+var store: MerlinStore = null
+var selected_biome: String = ""
+var chronicle_name: String = "Voyageur"
+var player_class: String = "eclaireur"
+var typing_active: bool = false
+var typing_abort: bool = false
+var _care_remaining: int = MAX_CARE_ACTIONS
+var _mist_tween: Tween
+var _current_mission: Dictionary = {}
+var _is_first_hub: bool = true
+
+# Fonts
+var title_font: Font
+var body_font: Font
+
+# Audio
+var audio_player: AudioStreamPlayer
+var voicebox: Node = null
+var voice_ready: bool = false
+
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# LIFECYCLE
+# ═══════════════════════════════════════════════════════════════════════════════
+
+func _ready() -> void:
+	set_anchors_preset(Control.PRESET_FULL_RECT)
+	_load_fonts()
+	_connect_store()
+	_load_player_data()
+	_build_ui()
+	_setup_audio()
+	_setup_voicebox()
+	_sync_from_state()
+
+	var screen_fx := get_node_or_null("/root/ScreenEffects")
+	if screen_fx and screen_fx.has_method("set_merlin_mood"):
+		screen_fx.set_merlin_mood("warm")
+
+	resized.connect(_on_resized)
+	_start_mist_animation()
+	_play_entry_animation.call_deferred()
+
+	await get_tree().create_timer(1.0).timeout
+	_play_merlin_greeting()
+
+
+func _input(event: InputEvent) -> void:
+	if typing_active and event is InputEventMouseButton and event.pressed:
+		typing_abort = true
+
+	# Tab navigation via keyboard/gamepad (L1/R1 or Q/E)
+	if event is InputEventKey and event.pressed:
+		match event.keycode:
+			KEY_Q:
+				_on_tab_pressed(maxi(current_tab - 1, 0))
+			KEY_E:
+				_on_tab_pressed(mini(current_tab + 1, tab_pages.size() - 1))
+	elif event is InputEventJoypadButton and event.pressed:
+		if event.button_index == JOY_BUTTON_LEFT_SHOULDER:
+			_on_tab_pressed(maxi(current_tab - 1, 0))
+		elif event.button_index == JOY_BUTTON_RIGHT_SHOULDER:
+			_on_tab_pressed(mini(current_tab + 1, tab_pages.size() - 1))
+
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# SETUP HELPERS
+# ═══════════════════════════════════════════════════════════════════════════════
+
+func _load_fonts() -> void:
+	title_font = _try_load_font("res://resources/fonts/morris/MorrisRomanBlack.otf")
+	if title_font == null:
+		title_font = _try_load_font("res://resources/fonts/morris/MorrisRomanBlack.ttf")
+	body_font = _try_load_font("res://resources/fonts/morris/MorrisRomanBlackAlt.otf")
+	if body_font == null:
+		body_font = _try_load_font("res://resources/fonts/morris/MorrisRomanBlackAlt.ttf")
+	if body_font == null:
+		body_font = title_font
+
+
+func _try_load_font(path: String) -> Font:
+	if not ResourceLoader.exists(path):
+		return null
+	var f: Resource = load(path)
+	if f is Font:
+		return f
+	return null
+
+
+func _connect_store() -> void:
+	store = get_node_or_null("/root/MerlinStore")
+
+
+func _load_player_data() -> void:
+	var gm := get_node_or_null("/root/GameManager")
+	if gm:
+		var run_data = gm.get("run")
+		if run_data is Dictionary:
+			var profile: Dictionary = run_data.get("traveler_profile", {})
+			player_class = profile.get("class", "eclaireur")
+			chronicle_name = run_data.get("chronicle_name", "Voyageur")
+			var biome_info: Dictionary = run_data.get("biome", {})
+			if biome_info.has("id"):
+				selected_biome = biome_info["id"]
+
+	if store:
+		_is_first_hub = not store.state.get("flags", {}).get("hub_visited", false)
+
+
+func _sync_from_state() -> void:
+	if store == null:
+		return
+	_update_aspect_display()
+	_update_souffle_display()
+	_update_mission_display()
+	_update_biome_selection()
+	_update_bestiole_display()
+	_update_grimoire_display()
+	_update_adventure_button()
+	if not store.state.has("flags"):
+		store.state["flags"] = {}
+	store.state["flags"]["hub_visited"] = true
+
+
+func _setup_audio() -> void:
+	audio_player = AudioStreamPlayer.new()
+	audio_player.bus = "Master"
+	add_child(audio_player)
+
+
+func _setup_voicebox() -> void:
+	var vb_scene_path := "res://addons/acvoicebox/acvoicebox.tscn"
+	if not ResourceLoader.exists(vb_scene_path):
+		return
+	var vb_scene: PackedScene = load(vb_scene_path)
+	if vb_scene == null:
+		return
+	voicebox = vb_scene.instantiate()
+	voicebox.set("pitch", 2.5)
+	voicebox.set("pitch_variation", 0.12)
+	voicebox.set("speed_scale", 0.65)
+	add_child(voicebox)
+	voice_ready = true
+
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# UI BUILD — Master orchestrator
+# ═══════════════════════════════════════════════════════════════════════════════
+
+func _build_ui() -> void:
+	_build_background()
+	_build_ornaments()
+	_build_scroll_content()
+	_build_bottom_bar()
+	_layout_ui()
+
+
+func _build_background() -> void:
+	parchment_bg = ColorRect.new()
+	parchment_bg.set_anchors_preset(Control.PRESET_FULL_RECT)
+	parchment_bg.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	var paper_shader := load("res://shaders/reigns_paper.gdshader")
+	if paper_shader:
+		var mat := ShaderMaterial.new()
+		mat.shader = paper_shader
+		mat.set_shader_parameter("paper_tint", PALETTE.paper)
+		mat.set_shader_parameter("grain_strength", 0.025)
+		mat.set_shader_parameter("vignette_strength", 0.08)
+		mat.set_shader_parameter("vignette_softness", 0.65)
+		mat.set_shader_parameter("grain_scale", 1200.0)
+		mat.set_shader_parameter("grain_speed", 0.08)
+		mat.set_shader_parameter("warp_strength", 0.001)
+		parchment_bg.material = mat
+	else:
+		parchment_bg.color = PALETTE.paper
+	add_child(parchment_bg)
+
+	mist_layer = ColorRect.new()
+	mist_layer.set_anchors_preset(Control.PRESET_FULL_RECT)
+	mist_layer.color = PALETTE.mist
+	mist_layer.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	mist_layer.modulate.a = 0.0
+	add_child(mist_layer)
+
+
+func _build_ornaments() -> void:
+	celtic_top = _make_celtic_ornament()
+	add_child(celtic_top)
+	celtic_bottom = _make_celtic_ornament()
+	add_child(celtic_bottom)
+
+
+func _build_scroll_content() -> void:
+	# Tab container holds all pages (no scrolling)
+	tab_container = Control.new()
+	tab_container.set_anchors_preset(Control.PRESET_FULL_RECT)
+	tab_container.modulate.a = 0.0
+	add_child(tab_container)
+
+	# Page 1: Merlin & Status
+	var page1 := _create_page()
+	_build_title_section_on(page1)
+	_build_merlin_section_on(page1)
+	_build_status_section_on(page1)
+	# Adventure button at bottom of page 1
+	_build_adventure_section_on(page1)
+	tab_pages.append(page1)
+	tab_container.add_child(page1)
+
+	# Page 2: Carte & Mission
+	var page2 := _create_page()
+	_build_map_section_on(page2)
+	_build_mission_section_on(page2)
+	tab_pages.append(page2)
+	tab_container.add_child(page2)
+	page2.visible = false
+
+	# Page 3: Bestiole & Grimoire
+	var page3 := _create_page()
+	_build_bestiole_section_on(page3)
+	_build_grimoire_section_on(page3)
+	tab_pages.append(page3)
+	tab_container.add_child(page3)
+	page3.visible = false
+
+	# Set main_vbox to page 1 content for layout compatibility
+	main_vbox = page1.get_child(0) as VBoxContainer
+
+
+func _create_page() -> Control:
+	## Creates a page container with a VBoxContainer inside.
+	var page := Control.new()
+	page.set_anchors_preset(Control.PRESET_FULL_RECT)
+
+	var vbox := VBoxContainer.new()
+	vbox.set_anchors_preset(Control.PRESET_FULL_RECT)
+	vbox.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	vbox.add_theme_constant_override("separation", 10)
+	page.add_child(vbox)
+
+	return page
+
+
+func _build_title_section_on(page: Control) -> void:
+	main_vbox = page.get_child(0) as VBoxContainer
+	_build_title_section()
+
+
+func _build_merlin_section_on(page: Control) -> void:
+	main_vbox = page.get_child(0) as VBoxContainer
+	_build_merlin_section()
+
+
+func _build_status_section_on(page: Control) -> void:
+	main_vbox = page.get_child(0) as VBoxContainer
+	_build_status_section()
+
+
+func _build_adventure_section_on(page: Control) -> void:
+	main_vbox = page.get_child(0) as VBoxContainer
+	# Spacer to push button to bottom
+	var spacer := Control.new()
+	spacer.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	main_vbox.add_child(spacer)
+	_build_adventure_section()
+
+
+func _build_map_section_on(page: Control) -> void:
+	main_vbox = page.get_child(0) as VBoxContainer
+	_build_map_section()
+
+
+func _build_mission_section_on(page: Control) -> void:
+	main_vbox = page.get_child(0) as VBoxContainer
+	_build_mission_section()
+
+
+func _build_bestiole_section_on(page: Control) -> void:
+	main_vbox = page.get_child(0) as VBoxContainer
+	_build_bestiole_section()
+
+
+func _build_grimoire_section_on(page: Control) -> void:
+	main_vbox = page.get_child(0) as VBoxContainer
+	_build_grimoire_section()
+
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# SECTION: Title
+# ═══════════════════════════════════════════════════════════════════════════════
+
+func _build_title_section() -> void:
+	var center := CenterContainer.new()
+	center.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	main_vbox.add_child(center)
+
+	var vbox := VBoxContainer.new()
+	vbox.alignment = BoxContainer.ALIGNMENT_CENTER
+	vbox.add_theme_constant_override("separation", 4)
+	center.add_child(vbox)
+
+	var title := Label.new()
+	title.text = "L'Antre du Dernier Druide"
+	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	if title_font:
+		title.add_theme_font_override("font", title_font)
+	title.add_theme_font_size_override("font_size", 28)
+	title.add_theme_color_override("font_color", PALETTE.ink)
+	vbox.add_child(title)
+
+	var orn := Label.new()
+	orn.text = "\u2500\u2500 \u25C6 \u2500\u2500"
+	orn.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	orn.add_theme_font_size_override("font_size", 12)
+	orn.add_theme_color_override("font_color", PALETTE.accent)
+	vbox.add_child(orn)
+
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# SECTION: Merlin (Portrait + Dialogue)
+# ═══════════════════════════════════════════════════════════════════════════════
+
+func _build_merlin_section() -> void:
+	var card := _make_card()
+	main_vbox.add_child(card)
+
+	var hbox := HBoxContainer.new()
+	hbox.alignment = BoxContainer.ALIGNMENT_CENTER
+	hbox.add_theme_constant_override("separation", 16)
+	card.add_child(hbox)
+
+	# Portrait
+	var portrait_center := CenterContainer.new()
+	hbox.add_child(portrait_center)
+
+	portrait_rect = TextureRect.new()
+	portrait_rect.custom_minimum_size = PORTRAIT_SIZE
+	portrait_rect.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	portrait_rect.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+	portrait_rect.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_load_seasonal_portrait()
+	portrait_center.add_child(portrait_rect)
+
+	# Dialogue column
+	var text_vbox := VBoxContainer.new()
+	text_vbox.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	text_vbox.add_theme_constant_override("separation", 8)
+	hbox.add_child(text_vbox)
+
+	var name_label := Label.new()
+	name_label.text = "Merlin"
+	if title_font:
+		name_label.add_theme_font_override("font", title_font)
+	name_label.add_theme_font_size_override("font_size", 18)
+	name_label.add_theme_color_override("font_color", PALETTE.accent)
+	text_vbox.add_child(name_label)
+
+	merlin_text = RichTextLabel.new()
+	merlin_text.bbcode_enabled = true
+	merlin_text.fit_content = true
+	merlin_text.scroll_active = false
+	merlin_text.custom_minimum_size = Vector2(280, 60)
+	merlin_text.visible_characters = 0
+	merlin_text.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	if body_font:
+		merlin_text.add_theme_font_override("normal_font", body_font)
+	merlin_text.add_theme_font_size_override("normal_font_size", 20)
+	merlin_text.add_theme_color_override("default_color", PALETTE.ink)
+	text_vbox.add_child(merlin_text)
+
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# SECTION: Status (Aspects + Souffle + Day)
+# ═══════════════════════════════════════════════════════════════════════════════
+
+func _build_status_section() -> void:
+	var card := _make_card()
+	main_vbox.add_child(card)
+
+	var vbox := VBoxContainer.new()
+	vbox.add_theme_constant_override("separation", 8)
+	card.add_child(vbox)
+
+	var title := _make_section_title("Etat du Voyageur")
+	vbox.add_child(title)
+
+	# Aspects row
+	var aspects_hbox := HBoxContainer.new()
+	aspects_hbox.alignment = BoxContainer.ALIGNMENT_CENTER
+	aspects_hbox.add_theme_constant_override("separation", 20)
+	vbox.add_child(aspects_hbox)
+
+	for aspect_name in ["Corps", "Ame", "Monde"]:
+		var aspect_vbox := VBoxContainer.new()
+		aspect_vbox.alignment = BoxContainer.ALIGNMENT_CENTER
+		aspect_vbox.add_theme_constant_override("separation", 2)
+		aspects_hbox.add_child(aspect_vbox)
+
+		var name_lbl := Label.new()
+		name_lbl.text = aspect_name
+		name_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		if title_font:
+			name_lbl.add_theme_font_override("font", title_font)
+		name_lbl.add_theme_font_size_override("font_size", 14)
+		name_lbl.add_theme_color_override("font_color", PALETTE.ink_soft)
+		aspect_vbox.add_child(name_lbl)
+
+		var state_lbl := Label.new()
+		state_lbl.text = "\u25CF Robuste"
+		state_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		if body_font:
+			state_lbl.add_theme_font_override("font", body_font)
+		state_lbl.add_theme_font_size_override("font_size", 16)
+		state_lbl.add_theme_color_override("font_color", PALETTE.success)
+		aspect_vbox.add_child(state_lbl)
+
+		aspect_labels[aspect_name] = state_lbl
+
+	# Souffle + Day row
+	var info_hbox := HBoxContainer.new()
+	info_hbox.alignment = BoxContainer.ALIGNMENT_CENTER
+	info_hbox.add_theme_constant_override("separation", 30)
+	vbox.add_child(info_hbox)
+
+	souffle_label = Label.new()
+	souffle_label.text = "Souffle: \u25CF\u25CF\u25CF\u25CB\u25CB\u25CB\u25CB"
+	souffle_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	if body_font:
+		souffle_label.add_theme_font_override("font", body_font)
+	souffle_label.add_theme_font_size_override("font_size", 15)
+	souffle_label.add_theme_color_override("font_color", PALETTE.ink)
+	info_hbox.add_child(souffle_label)
+
+	day_label = Label.new()
+	day_label.text = "Jour: 1"
+	day_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	if body_font:
+		day_label.add_theme_font_override("font", body_font)
+	day_label.add_theme_font_size_override("font_size", 15)
+	day_label.add_theme_color_override("font_color", PALETTE.ink)
+	info_hbox.add_child(day_label)
+
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# SECTION: Mission
+# ═══════════════════════════════════════════════════════════════════════════════
+
+func _build_mission_section() -> void:
+	var card := _make_card()
+	main_vbox.add_child(card)
+
+	var vbox := VBoxContainer.new()
+	vbox.add_theme_constant_override("separation", 6)
+	card.add_child(vbox)
+
+	var title := _make_section_title("Mission")
+	vbox.add_child(title)
+
+	mission_label = Label.new()
+	mission_label.text = "Selectionne un biome pour recevoir ta mission"
+	mission_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	mission_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	if body_font:
+		mission_label.add_theme_font_override("font", body_font)
+	mission_label.add_theme_font_size_override("font_size", 16)
+	mission_label.add_theme_color_override("font_color", PALETTE.ink)
+	vbox.add_child(mission_label)
+
+	mission_progress_bar = ProgressBar.new()
+	mission_progress_bar.custom_minimum_size = Vector2(200, 12)
+	mission_progress_bar.min_value = 0
+	mission_progress_bar.max_value = 1
+	mission_progress_bar.value = 0
+	mission_progress_bar.show_percentage = false
+	var bar_bg := StyleBoxFlat.new()
+	bar_bg.bg_color = PALETTE.paper_dark
+	bar_bg.set_corner_radius_all(3)
+	mission_progress_bar.add_theme_stylebox_override("background", bar_bg)
+	var bar_fill := StyleBoxFlat.new()
+	bar_fill.bg_color = PALETTE.accent
+	bar_fill.set_corner_radius_all(3)
+	mission_progress_bar.add_theme_stylebox_override("fill", bar_fill)
+	mission_progress_bar.visible = false
+	vbox.add_child(mission_progress_bar)
+
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# SECTION: Map — 7 Biomes of Celtic Brittany
+# ═══════════════════════════════════════════════════════════════════════════════
+
+func _build_map_section() -> void:
+	var card := _make_card()
+	main_vbox.add_child(card)
+
+	var vbox := VBoxContainer.new()
+	vbox.add_theme_constant_override("separation", 6)
+	card.add_child(vbox)
+
+	# Title row with date/time
+	var title_row := HBoxContainer.new()
+	title_row.alignment = BoxContainer.ALIGNMENT_CENTER
+	title_row.add_theme_constant_override("separation", 12)
+	vbox.add_child(title_row)
+
+	var title := _make_section_title("Carte de Bretagne")
+	title.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	title_row.add_child(title)
+
+	time_label = Label.new()
+	time_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
+	if body_font:
+		time_label.add_theme_font_override("font", body_font)
+	time_label.add_theme_font_size_override("font_size", 13)
+	time_label.add_theme_color_override("font_color", PALETTE.ink_soft)
+	title_row.add_child(time_label)
+	_update_time_display()
+
+	# Map container (positioned biomes + path lines)
+	map_container = Control.new()
+	map_container.custom_minimum_size = Vector2(0, 300)
+	map_container.clip_contents = true
+	vbox.add_child(map_container)
+
+	# Path lines between biomes (drawn first, behind markers)
+	map_paths_node = Control.new()
+	map_paths_node.set_anchors_preset(Control.PRESET_FULL_RECT)
+	map_paths_node.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	map_container.add_child(map_paths_node)
+
+	for conn in BIOME_CONNECTIONS:
+		var line := Line2D.new()
+		line.width = 1.5
+		line.default_color = Color(PALETTE.ink_faded.r, PALETTE.ink_faded.g, PALETTE.ink_faded.b, 0.25)
+		line.antialiased = true
+		line.add_point(Vector2.ZERO)
+		line.add_point(Vector2.ZERO)
+		map_paths_node.add_child(line)
+
+	# Biome markers
+	for biome_key in BIOME_MAP_POSITIONS:
+		var biome: Dictionary = BIOME_DATA.get(biome_key, {})
+		var marker := _create_biome_marker(biome_key, biome)
+		biome_buttons[biome_key] = marker
+		map_container.add_child(marker)
+
+	# Layout immediately
+	_layout_map.call_deferred()
+
+	# Time update timer
+	var timer := Timer.new()
+	timer.wait_time = 30.0
+	timer.autostart = true
+	timer.timeout.connect(_update_time_display)
+	add_child(timer)
+
+	# Biome detail text
+	biome_detail_label = Label.new()
+	biome_detail_label.text = ""
+	biome_detail_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	biome_detail_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	if body_font:
+		biome_detail_label.add_theme_font_override("font", body_font)
+	biome_detail_label.add_theme_font_size_override("font_size", 13)
+	biome_detail_label.add_theme_color_override("font_color", PALETTE.ink_soft)
+	vbox.add_child(biome_detail_label)
+
+
+func _create_biome_marker(biome_key: String, biome: Dictionary) -> Button:
+	var btn := Button.new()
+	var symbol: String = BIOME_SYMBOLS.get(biome_key, "\u25CF")
+	var biome_name: String = biome.get("name", biome_key)
+	btn.text = symbol + "\n" + biome_name
+	btn.custom_minimum_size = Vector2(110, 58)
+	btn.pressed.connect(_on_biome_selected.bind(biome_key))
+	if body_font:
+		btn.add_theme_font_override("font", body_font)
+	btn.add_theme_font_size_override("font_size", 12)
+	btn.clip_text = false
+	_style_biome_button(btn, biome, biome_key == selected_biome)
+	return btn
+
+
+func _layout_map() -> void:
+	if map_container == null:
+		return
+	var map_size := map_container.size
+	if map_size.x < 10 or map_size.y < 10:
+		return
+
+	var btn_half := Vector2(55, 29)
+
+	# Position biome markers
+	for biome_key in BIOME_MAP_POSITIONS:
+		if not biome_buttons.has(biome_key):
+			continue
+		var btn: Button = biome_buttons[biome_key]
+		var prop: Vector2 = BIOME_MAP_POSITIONS[biome_key]
+		btn.position = Vector2(prop.x * map_size.x, prop.y * map_size.y) - btn_half
+
+	# Update path lines
+	var line_idx := 0
+	for conn in BIOME_CONNECTIONS:
+		if line_idx >= map_paths_node.get_child_count():
+			break
+		var line: Line2D = map_paths_node.get_child(line_idx) as Line2D
+		var pos_a: Vector2 = BIOME_MAP_POSITIONS.get(conn[0], Vector2.ZERO)
+		var pos_b: Vector2 = BIOME_MAP_POSITIONS.get(conn[1], Vector2.ZERO)
+		line.set_point_position(0, Vector2(pos_a.x * map_size.x, pos_a.y * map_size.y))
+		line.set_point_position(1, Vector2(pos_b.x * map_size.x, pos_b.y * map_size.y))
+		line_idx += 1
+
+
+func _update_time_display() -> void:
+	if time_label == null:
+		return
+	var day := 1
+	if store:
+		day = store.state.get("run", {}).get("day", 1)
+	var now := Time.get_datetime_dict_from_system()
+	var hour: int = now.get("hour", 0)
+	var minute: int = now.get("minute", 0)
+	time_label.text = "Jour %d \u2014 %02d:%02d" % [day, hour, minute]
+
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# SECTION: Bestiole (Stats + Care + Oghams)
+# ═══════════════════════════════════════════════════════════════════════════════
+
+func _build_bestiole_section() -> void:
+	var card := _make_card()
+	main_vbox.add_child(card)
+
+	var vbox := VBoxContainer.new()
+	vbox.add_theme_constant_override("separation", 8)
+	card.add_child(vbox)
+
+	var title := _make_section_title("Bestiole")
+	vbox.add_child(title)
+
+	# Bond + Awen row
+	var top_hbox := HBoxContainer.new()
+	top_hbox.alignment = BoxContainer.ALIGNMENT_CENTER
+	top_hbox.add_theme_constant_override("separation", 24)
+	vbox.add_child(top_hbox)
+
+	bestiole_bond_label = Label.new()
+	bestiole_bond_label.text = "Lien: \u25CF\u25CF\u25CB\u25CB\u25CB Compagnon"
+	if body_font:
+		bestiole_bond_label.add_theme_font_override("font", body_font)
+	bestiole_bond_label.add_theme_font_size_override("font_size", 15)
+	bestiole_bond_label.add_theme_color_override("font_color", PALETTE.bestiole)
+	top_hbox.add_child(bestiole_bond_label)
+
+	bestiole_awen_label = Label.new()
+	bestiole_awen_label.text = "Awen: \u2605\u2605\u2606\u2606\u2606"
+	if body_font:
+		bestiole_awen_label.add_theme_font_override("font", body_font)
+	bestiole_awen_label.add_theme_font_size_override("font_size", 15)
+	bestiole_awen_label.add_theme_color_override("font_color", PALETTE.ogham_glow)
+	top_hbox.add_child(bestiole_awen_label)
+
+	# Needs display
+	bestiole_needs_container = VBoxContainer.new()
+	bestiole_needs_container.add_theme_constant_override("separation", 2)
+	vbox.add_child(bestiole_needs_container)
+
+	# Care title
+	var care_title := Label.new()
+	care_title.text = "Prendre soin"
+	care_title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	if title_font:
+		care_title.add_theme_font_override("font", title_font)
+	care_title.add_theme_font_size_override("font_size", 14)
+	care_title.add_theme_color_override("font_color", PALETTE.ink_soft)
+	vbox.add_child(care_title)
+
+	# Care action buttons
+	var care_hbox := HBoxContainer.new()
+	care_hbox.alignment = BoxContainer.ALIGNMENT_CENTER
+	care_hbox.add_theme_constant_override("separation", 8)
+	vbox.add_child(care_hbox)
+
+	for action_key in CARE_ACTIONS:
+		var action: Dictionary = CARE_ACTIONS[action_key]
+		var btn := Button.new()
+		btn.text = "%s %s" % [action.get("icon", ""), action.get("label", action_key)]
+		btn.custom_minimum_size = Vector2(100, 36)
+		btn.pressed.connect(_on_care_action.bind(action_key))
+		if body_font:
+			btn.add_theme_font_override("font", body_font)
+		btn.add_theme_font_size_override("font_size", 13)
+		_style_care_button(btn)
+		care_buttons[action_key] = btn
+		care_hbox.add_child(btn)
+
+	care_remaining_label = Label.new()
+	care_remaining_label.text = "Soins restants: %d" % _care_remaining
+	care_remaining_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	if body_font:
+		care_remaining_label.add_theme_font_override("font", body_font)
+	care_remaining_label.add_theme_font_size_override("font_size", 12)
+	care_remaining_label.add_theme_color_override("font_color", PALETTE.ink_faded)
+	vbox.add_child(care_remaining_label)
+
+	# Equipped Oghams
+	var ogham_title := Label.new()
+	ogham_title.text = "Oghams equipes"
+	ogham_title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	if title_font:
+		ogham_title.add_theme_font_override("font", title_font)
+	ogham_title.add_theme_font_size_override("font_size", 14)
+	ogham_title.add_theme_color_override("font_color", PALETTE.ogham_glow)
+	vbox.add_child(ogham_title)
+
+	ogham_container = HBoxContainer.new()
+	ogham_container.alignment = BoxContainer.ALIGNMENT_CENTER
+	ogham_container.add_theme_constant_override("separation", 12)
+	vbox.add_child(ogham_container)
+
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# SECTION: Grimoire (Meta-progression summary)
+# ═══════════════════════════════════════════════════════════════════════════════
+
+func _build_grimoire_section() -> void:
+	var card := _make_card()
+	main_vbox.add_child(card)
+
+	var vbox := VBoxContainer.new()
+	vbox.add_theme_constant_override("separation", 6)
+	card.add_child(vbox)
+
+	var title := _make_section_title("Grimoire")
+	vbox.add_child(title)
+
+	grimoire_stats_label = Label.new()
+	grimoire_stats_label.text = "Runs: 0  \u2502  Fins vues: 0/16  \u2502  Gloire: 0"
+	grimoire_stats_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	grimoire_stats_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	if body_font:
+		grimoire_stats_label.add_theme_font_override("font", body_font)
+	grimoire_stats_label.add_theme_font_size_override("font_size", 15)
+	grimoire_stats_label.add_theme_color_override("font_color", PALETTE.ink)
+	vbox.add_child(grimoire_stats_label)
+
+	var collection_btn := Button.new()
+	collection_btn.text = "\u25C6 Ouvrir le Grimoire \u25C6"
+	collection_btn.custom_minimum_size = Vector2(200, 36)
+	collection_btn.pressed.connect(_on_collection_pressed)
+	if body_font:
+		collection_btn.add_theme_font_override("font", body_font)
+	collection_btn.add_theme_font_size_override("font_size", 14)
+	_style_nav_button(collection_btn)
+
+	var btn_center := CenterContainer.new()
+	btn_center.add_child(collection_btn)
+	vbox.add_child(btn_center)
+
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# SECTION: Adventure Button (Start run)
+# ═══════════════════════════════════════════════════════════════════════════════
+
+func _build_adventure_section() -> void:
+	var center := CenterContainer.new()
+	center.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	main_vbox.add_child(center)
+
+	adventure_btn = Button.new()
+	adventure_btn.text = "\u25C6  Partir a l'Aventure  \u25C6"
+	adventure_btn.custom_minimum_size = Vector2(320, 56)
+	adventure_btn.pressed.connect(_on_start_adventure)
+
+	if title_font:
+		adventure_btn.add_theme_font_override("font", title_font)
+	adventure_btn.add_theme_font_size_override("font_size", 22)
+
+	var style := StyleBoxFlat.new()
+	style.bg_color = PALETTE.accent
+	style.border_color = PALETTE.ink
+	style.set_border_width_all(2)
+	style.set_corner_radius_all(6)
+	style.content_margin_left = 24
+	style.content_margin_right = 24
+	style.content_margin_top = 12
+	style.content_margin_bottom = 12
+	style.shadow_color = PALETTE.shadow
+	style.shadow_size = 8
+	style.shadow_offset = Vector2(0, 3)
+	adventure_btn.add_theme_stylebox_override("normal", style)
+
+	var hover := style.duplicate()
+	hover.bg_color = PALETTE.accent_soft
+	adventure_btn.add_theme_stylebox_override("hover", hover)
+
+	var pressed := style.duplicate()
+	pressed.bg_color = PALETTE.ink
+	adventure_btn.add_theme_stylebox_override("pressed", pressed)
+
+	var disabled := style.duplicate()
+	disabled.bg_color = PALETTE.paper_dark
+	disabled.border_color = PALETTE.ink_faded
+	adventure_btn.add_theme_stylebox_override("disabled", disabled)
+
+	adventure_btn.add_theme_color_override("font_color", PALETTE.paper)
+	adventure_btn.add_theme_color_override("font_hover_color", PALETTE.paper)
+	adventure_btn.add_theme_color_override("font_pressed_color", PALETTE.accent_glow)
+	adventure_btn.add_theme_color_override("font_disabled_color", PALETTE.ink_faded)
+
+	center.add_child(adventure_btn)
+
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# BOTTOM BAR — Navigation buttons
+# ═══════════════════════════════════════════════════════════════════════════════
+
+func _build_bottom_bar() -> void:
+	bottom_bar = HBoxContainer.new()
+	bottom_bar.alignment = BoxContainer.ALIGNMENT_CENTER
+	bottom_bar.add_theme_constant_override("separation", 6)
+	bottom_bar.modulate.a = 0.0
+	add_child(bottom_bar)
+
+	# Tab navigation buttons (pages)
+	var tab_items := [
+		{"text": "\u25C6 Merlin", "icon": "merlin"},
+		{"text": "\u25B2 Carte", "icon": "map"},
+		{"text": "\u2605 Bestiole", "icon": "bestiole"},
+	]
+
+	for i in range(tab_items.size()):
+		var item: Dictionary = tab_items[i]
+		var btn := Button.new()
+		btn.text = item["text"]
+		btn.custom_minimum_size = Vector2(90, 40)
+		if body_font:
+			btn.add_theme_font_override("font", body_font)
+		btn.add_theme_font_size_override("font_size", 13)
+		btn.pressed.connect(_on_tab_pressed.bind(i))
+		_style_tab_button(btn, i == 0)
+		tab_buttons.append(btn)
+		bottom_bar.add_child(btn)
+
+	# Separator
+	var sep := VSeparator.new()
+	sep.custom_minimum_size = Vector2(2, 30)
+	bottom_bar.add_child(sep)
+
+	# Utility buttons (non-tab)
+	var util_items := [
+		{"text": "Options", "action": "options"},
+		{"text": "Sauvegarde", "action": "save"},
+		{"text": "Menu", "action": "menu"},
+	]
+
+	for item in util_items:
+		var btn := Button.new()
+		btn.text = item["text"]
+		btn.custom_minimum_size = Vector2(80, 40)
+		if body_font:
+			btn.add_theme_font_override("font", body_font)
+		btn.add_theme_font_size_override("font_size", 12)
+		_style_nav_button(btn)
+
+		match item["action"]:
+			"options":
+				btn.pressed.connect(_on_options_pressed)
+			"save":
+				btn.pressed.connect(_on_save_pressed)
+				save_btn = btn
+			"menu":
+				btn.pressed.connect(_on_menu_pressed)
+
+		bottom_bar.add_child(btn)
+
+
+func _on_tab_pressed(tab_index: int) -> void:
+	## Switch between HubAntre pages (no scrolling).
+	if tab_index == current_tab or tab_index >= tab_pages.size():
+		return
+
+	# Fade out current page
+	var old_page := tab_pages[current_tab]
+	var new_page := tab_pages[tab_index]
+
+	var tw := create_tween()
+	tw.tween_property(old_page, "modulate:a", 0.0, 0.15)
+	tw.tween_callback(func(): old_page.visible = false)
+	tw.tween_callback(func():
+		new_page.visible = true
+		new_page.modulate.a = 0.0
+	)
+	tw.tween_property(new_page, "modulate:a", 1.0, 0.2)
+
+	# Update tab button styles
+	for i in range(tab_buttons.size()):
+		_style_tab_button(tab_buttons[i], i == tab_index)
+
+	current_tab = tab_index
+
+	# Re-layout map if switching to page 2
+	if tab_index == 1:
+		_layout_map.call_deferred()
+
+
+func _style_tab_button(btn: Button, is_active: bool) -> void:
+	var style := StyleBoxFlat.new()
+	if is_active:
+		style.bg_color = PALETTE.accent
+		style.border_color = PALETTE.ink
+		btn.add_theme_color_override("font_color", PALETTE.paper)
+	else:
+		style.bg_color = PALETTE.paper_warm
+		style.border_color = PALETTE.ink_faded
+		btn.add_theme_color_override("font_color", PALETTE.ink_soft)
+	style.set_border_width_all(1)
+	style.set_corner_radius_all(4)
+	style.content_margin_left = 10
+	style.content_margin_right = 10
+	style.content_margin_top = 6
+	style.content_margin_bottom = 6
+	btn.add_theme_stylebox_override("normal", style)
+
+	var hover_style := style.duplicate()
+	hover_style.bg_color = PALETTE.accent_soft if is_active else PALETTE.paper_dark
+	btn.add_theme_stylebox_override("hover", hover_style)
+
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# LAYOUT — Responsive positioning
+# ═══════════════════════════════════════════════════════════════════════════════
+
+func _layout_ui() -> void:
+	var vp := get_viewport_rect().size
+	var margin := 16.0
+
+	# Ornaments
+	celtic_top.position = Vector2(0, margin)
+	celtic_top.size = Vector2(vp.x, 24)
+	celtic_bottom.position = Vector2(0, vp.y - margin - 24)
+	celtic_bottom.size = Vector2(vp.x, 24)
+
+	# Bottom bar
+	var bottom_h := 48.0
+	bottom_bar.position = Vector2(0, vp.y - margin - 28 - bottom_h)
+	bottom_bar.size = Vector2(vp.x, bottom_h)
+
+	# Tab content area (between ornaments, above bottom bar — NO scroll)
+	var content_top: float = margin + 28
+	var content_bottom: float = bottom_bar.position.y - 8
+	var content_height: float = content_bottom - content_top
+
+	tab_container.position = Vector2(margin, content_top)
+	tab_container.size = Vector2(vp.x - margin * 2, content_height)
+
+	# Layout each page
+	var content_width: float = minf(vp.x - margin * 2 - 16, CARD_MAX_WIDTH)
+	var content_offset: float = maxf((tab_container.size.x - content_width) / 2.0, 0.0)
+
+	for page in tab_pages:
+		page.position = Vector2.ZERO
+		page.size = tab_container.size
+		var vbox := page.get_child(0) as VBoxContainer
+		if vbox:
+			vbox.position = Vector2(content_offset, 0)
+			vbox.size = Vector2(content_width, content_height)
+			vbox.custom_minimum_size = Vector2(content_width, 0)
+
+
+func _on_resized() -> void:
+	_layout_ui()
+	_layout_map()
+
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# MERLIN DIALOGUE — Typewriter + Voice
+# ═══════════════════════════════════════════════════════════════════════════════
+
+func _play_merlin_greeting() -> void:
+	var text := _get_greeting_text()
+	merlin_text.text = text
+	merlin_text.visible_characters = 0
+	typing_active = true
+	typing_abort = false
+
+	var total := merlin_text.get_total_character_count()
+	for i in range(total):
+		if typing_abort:
+			merlin_text.visible_characters = -1
+			break
+		merlin_text.visible_characters = i + 1
+
+		var ch: String = text[mini(i, text.length() - 1)]
+		if ch in [".", ",", "!", "?", ":"]:
+			_play_blip()
+			await get_tree().create_timer(TYPEWRITER_PUNCT_DELAY).timeout
+		else:
+			if i % 2 == 0:
+				_play_blip()
+			await get_tree().create_timer(TYPEWRITER_DELAY).timeout
+
+	merlin_text.visible_characters = -1
+	typing_active = false
+
+
+func _get_greeting_text() -> String:
+	var pool: Array
+	var total_runs: int = 0
+	var last_ending: String = ""
+
+	if store:
+		var meta: Dictionary = store.state.get("meta", {})
+		total_runs = meta.get("total_runs", 0)
+		var endings: Array = meta.get("endings_seen", [])
+		if endings.size() > 0:
+			last_ending = str(endings[-1])
+
+	if _is_first_hub:
+		pool = MERLIN_GREETINGS.get("first_hub", ["Bienvenue, %s."])
+	elif total_runs > 5:
+		pool = MERLIN_GREETINGS.get("veteran", ["Te revoila, %s."])
+	elif last_ending != "":
+		pool = MERLIN_GREETINGS.get("after_fall", ["La boucle tourne, %s."])
+	else:
+		pool = MERLIN_GREETINGS.get("return", ["Te revoila, %s."])
+
+	var idx: int = randi() % pool.size()
+	return pool[idx] % chronicle_name
+
+
+func _play_blip() -> void:
+	## Soft keyboard click — procedural
+	if audio_player == null:
+		return
+	var sample_rate := 44100.0
+	var duration := 0.014
+	var num_samples := int(sample_rate * duration)
+	var stream := AudioStreamWAV.new()
+	stream.format = AudioStreamWAV.FORMAT_16_BITS
+	stream.mix_rate = int(sample_rate)
+	stream.stereo = false
+
+	var data := PackedByteArray()
+	data.resize(num_samples * 2)
+	var freq := randf_range(260.0, 360.0)
+	for s in range(num_samples):
+		var t := float(s) / sample_rate
+		var envelope := exp(-t * 320.0)
+		var click := sin(TAU * freq * t) * 0.35
+		var noise := randf_range(-1.0, 1.0) * 0.12
+		var value := (click + noise) * envelope * 0.25
+		var sample_val := int(clampf(value, -1.0, 1.0) * 32767.0)
+		data[s * 2] = sample_val & 0xFF
+		data[s * 2 + 1] = (sample_val >> 8) & 0xFF
+
+	stream.data = data
+	audio_player.stream = stream
+	audio_player.volume_db = linear_to_db(BLIP_VOLUME)
+	audio_player.play()
+
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# STATE DISPLAY — Update from MerlinStore
+# ═══════════════════════════════════════════════════════════════════════════════
+
+func _update_aspect_display() -> void:
+	if store == null:
+		return
+	var aspects: Dictionary = store.state.get("run", {}).get("aspects", {})
+
+	for aspect_name in aspect_labels:
+		var label: Label = aspect_labels[aspect_name]
+		var state_val: int = aspects.get(aspect_name, 0)
+		var info: Dictionary = MerlinConstants.TRIADE_ASPECT_INFO.get(aspect_name, {})
+		var states: Dictionary = info.get("states", {})
+		var state_name: String = states.get(state_val, "Inconnu")
+
+		var icon := "\u25CF"
+		var color: Color = PALETTE.success
+		if state_val == -1:
+			icon = "\u25BC"
+			color = PALETTE.danger
+		elif state_val == 1:
+			icon = "\u25B2"
+			color = PALETTE.warning
+
+		label.text = "%s %s" % [icon, state_name]
+		label.add_theme_color_override("font_color", color)
+
+
+func _update_souffle_display() -> void:
+	if store == null or souffle_label == null:
+		return
+	var souffle: int = store.state.get("run", {}).get("souffle", MerlinConstants.SOUFFLE_START)
+	var text := "Souffle: "
+	for i in range(MerlinConstants.SOUFFLE_MAX):
+		text += "\u25CF" if i < souffle else "\u25CB"
+	souffle_label.text = text
+
+	var day: int = store.state.get("run", {}).get("day", 1)
+	if day_label:
+		day_label.text = "Jour: %d" % day
+
+
+func _update_mission_display() -> void:
+	if mission_label == null:
+		return
+	if _current_mission.is_empty():
+		mission_label.text = "Selectionne un biome pour recevoir ta mission"
+		mission_progress_bar.visible = false
+		return
+
+	mission_label.text = _current_mission.get("target", "Mission inconnue")
+	var total: int = _current_mission.get("total", 1)
+	var progress: int = _current_mission.get("progress", 0)
+	if total > 0:
+		mission_progress_bar.max_value = total
+		mission_progress_bar.value = progress
+		mission_progress_bar.visible = true
+	else:
+		mission_progress_bar.visible = false
+
+
+func _update_biome_selection() -> void:
+	# Stop existing pulse
+	if _map_pulse_tween:
+		_map_pulse_tween.kill()
+		_map_pulse_tween = null
+
+	for biome_key in biome_buttons:
+		var btn: Button = biome_buttons[biome_key]
+		var biome: Dictionary = BIOME_DATA.get(biome_key, {})
+		_style_biome_button(btn, biome, biome_key == selected_biome)
+		btn.pivot_offset = btn.size * 0.5
+
+		if biome_key == selected_biome:
+			# Gentle pulse animation on selected marker
+			_map_pulse_tween = create_tween().set_loops()
+			_map_pulse_tween.tween_property(btn, "scale", Vector2(1.06, 1.06), 0.8).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
+			_map_pulse_tween.tween_property(btn, "scale", Vector2(1.0, 1.0), 0.8).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
+		else:
+			btn.scale = Vector2(1.0, 1.0)
+
+	# Highlight connected paths
+	var line_idx := 0
+	for conn in BIOME_CONNECTIONS:
+		if line_idx >= map_paths_node.get_child_count():
+			break
+		var line: Line2D = map_paths_node.get_child(line_idx) as Line2D
+		var is_active := selected_biome in conn
+		line.default_color = Color(PALETTE.accent.r, PALETTE.accent.g, PALETTE.accent.b, 0.5) if is_active else Color(PALETTE.ink_faded.r, PALETTE.ink_faded.g, PALETTE.ink_faded.b, 0.25)
+		line.width = 2.5 if is_active else 1.5
+		line_idx += 1
+
+	if selected_biome != "" and BIOME_DATA.has(selected_biome):
+		var biome: Dictionary = BIOME_DATA[selected_biome]
+		var ogham_name: String = MerlinConstants.OGHAM_SKILLS.get(biome.get("ogham", ""), {}).get("name", "?")
+		biome_detail_label.text = "%s \u2014 Gardien: %s | Ogham: %s | Saison: %s" % [
+			biome.get("subtitle", ""),
+			biome.get("guardian", "?"),
+			ogham_name,
+			biome.get("season", "?"),
+		]
+	else:
+		biome_detail_label.text = ""
+
+
+func _update_bestiole_display() -> void:
+	if store == null:
+		return
+	var bestiole: Dictionary = store.state.get("bestiole", {})
+	var bond: int = bestiole.get("bond", 50)
+	var awen: int = bestiole.get("awen", 2)
+	var needs: Dictionary = bestiole.get("needs", {})
+
+	# Bond display
+	var tier_name := _get_bond_tier_name(bond)
+	var bond_dots := ""
+	for i in range(5):
+		bond_dots += "\u25CF" if bond >= (i + 1) * 20 else "\u25CB"
+	bestiole_bond_label.text = "Lien: %s %s (%d)" % [bond_dots, tier_name, bond]
+
+	# Awen display
+	var awen_max: int = 5
+	var awen_text := "Awen: "
+	for i in range(awen_max):
+		awen_text += "\u2605" if i < awen else "\u2606"
+	bestiole_awen_label.text = awen_text
+
+	# Needs bars
+	for child in bestiole_needs_container.get_children():
+		child.queue_free()
+
+	var need_labels := {"Hunger": "Faim", "Energy": "Energie", "Hygiene": "Hygiene", "Mood": "Humeur", "Stress": "Stress"}
+	for need_key in ["Hunger", "Energy", "Hygiene", "Mood", "Stress"]:
+		var value: int = needs.get(need_key, 50)
+		var hbox := HBoxContainer.new()
+		hbox.add_theme_constant_override("separation", 6)
+
+		var name_lbl := Label.new()
+		name_lbl.text = need_labels.get(need_key, need_key)
+		name_lbl.custom_minimum_size = Vector2(70, 0)
+		if body_font:
+			name_lbl.add_theme_font_override("font", body_font)
+		name_lbl.add_theme_font_size_override("font_size", 12)
+		name_lbl.add_theme_color_override("font_color", PALETTE.ink_soft)
+		hbox.add_child(name_lbl)
+
+		var bar := ProgressBar.new()
+		bar.custom_minimum_size = Vector2(120, 10)
+		bar.min_value = 0
+		bar.max_value = 100
+		bar.value = value
+		bar.show_percentage = false
+
+		var bg := StyleBoxFlat.new()
+		bg.bg_color = PALETTE.paper_dark
+		bg.set_corner_radius_all(2)
+		bar.add_theme_stylebox_override("background", bg)
+
+		var fill := StyleBoxFlat.new()
+		var bar_color: Color = PALETTE.success
+		if need_key == "Stress":
+			bar_color = PALETTE.danger if value > 60 else PALETTE.success
+		else:
+			bar_color = PALETTE.danger if value < 30 else PALETTE.success
+		fill.bg_color = bar_color
+		fill.set_corner_radius_all(2)
+		bar.add_theme_stylebox_override("fill", fill)
+		hbox.add_child(bar)
+
+		bestiole_needs_container.add_child(hbox)
+
+	# Oghams equipped
+	for child in ogham_container.get_children():
+		child.queue_free()
+
+	var equipped: Array = bestiole.get("skills_equipped", [])
+	for skill_id in equipped:
+		var skill_data: Dictionary = MerlinConstants.OGHAM_SKILLS.get(skill_id, {})
+		var ogham_lbl := Label.new()
+		ogham_lbl.text = skill_data.get("name", skill_id)
+		ogham_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		if body_font:
+			ogham_lbl.add_theme_font_override("font", body_font)
+		ogham_lbl.add_theme_font_size_override("font_size", 14)
+		ogham_lbl.add_theme_color_override("font_color", PALETTE.ogham_glow)
+
+		var panel := PanelContainer.new()
+		var ps := StyleBoxFlat.new()
+		ps.bg_color = PALETTE.paper_dark
+		ps.border_color = PALETTE.ogham_glow
+		ps.set_border_width_all(1)
+		ps.set_corner_radius_all(4)
+		ps.content_margin_left = 8
+		ps.content_margin_right = 8
+		ps.content_margin_top = 4
+		ps.content_margin_bottom = 4
+		panel.add_theme_stylebox_override("panel", ps)
+		panel.add_child(ogham_lbl)
+		ogham_container.add_child(panel)
+
+	# Care remaining
+	care_remaining_label.text = "Soins restants: %d" % _care_remaining
+	for btn_key in care_buttons:
+		var btn: Button = care_buttons[btn_key]
+		btn.disabled = _care_remaining <= 0
+
+
+func _update_grimoire_display() -> void:
+	if store == null or grimoire_stats_label == null:
+		return
+	var meta: Dictionary = store.state.get("meta", {})
+	var runs: int = meta.get("total_runs", 0)
+	var endings: Array = meta.get("endings_seen", [])
+	var gloire: int = meta.get("gloire_points", 0)
+	var cards: int = meta.get("total_cards_played", 0)
+	grimoire_stats_label.text = "Runs: %d  \u2502  Fins: %d/16  \u2502  Cartes: %d  \u2502  Gloire: %d" % [
+		runs, endings.size(), cards, gloire
+	]
+
+
+func _update_adventure_button() -> void:
+	if adventure_btn == null:
+		return
+	adventure_btn.disabled = selected_biome == ""
+	if selected_biome == "":
+		adventure_btn.text = "Choisis ton chemin d'abord"
+	else:
+		var biome: Dictionary = BIOME_DATA.get(selected_biome, {})
+		adventure_btn.text = "\u25C6  Partir vers %s  \u25C6" % biome.get("name", "l'Inconnu")
+
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# INTERACTIONS
+# ═══════════════════════════════════════════════════════════════════════════════
+
+func _on_biome_selected(biome_key: String) -> void:
+	selected_biome = biome_key
+	_update_biome_selection()
+
+	# Generate a mission for this biome
+	var missions: Array = BIOME_MISSIONS.get(biome_key, [])
+	if missions.size() > 0:
+		_current_mission = missions[randi() % missions.size()].duplicate()
+		_current_mission["progress"] = 0
+	else:
+		_current_mission = {"type": "exploration", "target": "Explorer ce sanctuaire", "total": 8, "progress": 0}
+
+	_update_mission_display()
+	_update_adventure_button()
+
+
+func _on_care_action(action_key: String) -> void:
+	if _care_remaining <= 0 or store == null:
+		return
+
+	_care_remaining -= 1
+	var action: Dictionary = CARE_ACTIONS.get(action_key, {})
+	var bestiole: Dictionary = store.state.get("bestiole", {})
+	var needs: Dictionary = bestiole.get("needs", {})
+	var bond: int = bestiole.get("bond", 50)
+
+	var need_key: String = action.get("need", "")
+	var amount: int = action.get("amount", 0)
+	var bond_gain: int = action.get("bond", 0)
+
+	if need_key != "":
+		needs[need_key] = mini(needs.get(need_key, 50) + amount, 100)
+
+	if action.has("stress_reduce"):
+		needs["Stress"] = maxi(needs.get("Stress", 0) - action["stress_reduce"], 0)
+
+	bond = mini(bond + bond_gain, 100)
+
+	bestiole["needs"] = needs
+	bestiole["bond"] = bond
+	store.state["bestiole"] = bestiole
+
+	_update_bestiole_display()
+
+
+func _on_save_pressed() -> void:
+	_quick_save()
+
+
+func _on_options_pressed() -> void:
+	_store_return_scene()
+	get_tree().change_scene_to_file(SCENE_OPTIONS)
+
+
+func _on_calendar_pressed() -> void:
+	_store_return_scene()
+	get_tree().change_scene_to_file(SCENE_CALENDAR)
+
+
+func _on_collection_pressed() -> void:
+	_store_return_scene()
+	get_tree().change_scene_to_file(SCENE_COLLECTION)
+
+
+func _store_return_scene() -> void:
+	var se := get_node_or_null("/root/ScreenEffects")
+	if se:
+		se.return_scene = get_tree().current_scene.scene_file_path
+
+
+func _on_menu_pressed() -> void:
+	get_tree().change_scene_to_file(SCENE_MENU)
+
+
+func _on_start_adventure() -> void:
+	if selected_biome == "":
+		return
+
+	# Set biome data for TransitionBiome
+	var gm := get_node_or_null("/root/GameManager")
+	if gm:
+		var biome_data: Dictionary = BIOME_DATA.get(selected_biome, {})
+		var run_data = gm.get("run")
+		if not run_data is Dictionary:
+			run_data = {}
+		run_data["biome"] = {
+			"id": selected_biome,
+			"name": biome_data.get("name", "Inconnu"),
+			"color": biome_data.get("color", Color.WHITE),
+			"ogham_dominant": biome_data.get("ogham", ""),
+			"gardien": biome_data.get("guardian", ""),
+			"season_forte": biome_data.get("season", ""),
+		}
+		if not _current_mission.is_empty():
+			run_data["mission_template"] = _current_mission.duplicate()
+		gm.set("run", run_data)
+
+	# Update store mission
+	if store:
+		var run: Dictionary = store.state.get("run", {})
+		var mission: Dictionary = run.get("mission", {})
+		if not _current_mission.is_empty():
+			mission["type"] = _current_mission.get("type", "")
+			mission["target"] = _current_mission.get("target", "")
+			mission["total"] = _current_mission.get("total", 8)
+			mission["progress"] = 0
+			mission["revealed"] = true
+		run["mission"] = mission
+		store.state["run"] = run
+
+	# Auto-save before adventure
+	_quick_save()
+
+	get_tree().change_scene_to_file(SCENE_TRANSITION)
+
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# SAVE SYSTEM
+# ═══════════════════════════════════════════════════════════════════════════════
+
+func _quick_save() -> void:
+	if store == null:
+		return
+	var save_data := store.state.duplicate(true)
+	save_data["timestamp"] = int(Time.get_unix_time_from_system())
+	save_data["phase"] = "hub"
+	save_data["selected_biome"] = selected_biome
+
+	var success := store.save_system.save_slot(1, save_data)
+	if success and save_btn and is_instance_valid(save_btn):
+		var original_text: String = save_btn.text
+		save_btn.text = "Sauvegarde !"
+		await get_tree().create_timer(1.5).timeout
+		if is_instance_valid(save_btn):
+			save_btn.text = original_text
+
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# VISUAL UTILITIES
+# ═══════════════════════════════════════════════════════════════════════════════
+
+func _make_card() -> PanelContainer:
+	var panel := PanelContainer.new()
+	panel.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+
+	var style := StyleBoxFlat.new()
+	style.bg_color = PALETTE.paper_warm
+	style.border_color = PALETTE.ink_faded
+	style.set_border_width_all(1)
+	style.set_corner_radius_all(4)
+	style.shadow_color = PALETTE.shadow
+	style.shadow_size = 8
+	style.shadow_offset = Vector2(0, 2)
+	style.content_margin_left = 20
+	style.content_margin_top = 16
+	style.content_margin_right = 20
+	style.content_margin_bottom = 16
+	panel.add_theme_stylebox_override("panel", style)
+
+	return panel
+
+
+func _make_section_title(text: String) -> Label:
+	var lbl := Label.new()
+	lbl.text = "\u2500\u2500 %s \u2500\u2500" % text
+	lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	if title_font:
+		lbl.add_theme_font_override("font", title_font)
+	lbl.add_theme_font_size_override("font_size", 16)
+	lbl.add_theme_color_override("font_color", PALETTE.accent)
+	return lbl
+
+
+func _make_celtic_ornament() -> Label:
+	var lbl := Label.new()
+	var pattern := ["\u2500", "\u2022", "\u2500", "\u2500", "\u25C6", "\u2500", "\u2500", "\u2022", "\u2500"]
+	var line := ""
+	for i in range(40):
+		line += pattern[i % pattern.size()]
+	lbl.text = line
+	lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	lbl.add_theme_color_override("font_color", PALETTE.ink_faded)
+	lbl.add_theme_font_size_override("font_size", 14)
+	lbl.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	lbl.modulate.a = 0.0
+	return lbl
+
+
+func _style_biome_button(btn: Button, biome: Dictionary, is_selected: bool) -> void:
+	var biome_color: Color = biome.get("color", PALETTE.ink_soft)
+
+	var style := StyleBoxFlat.new()
+	if is_selected:
+		style.bg_color = biome_color
+		style.border_color = PALETTE.ink
+		style.set_border_width_all(2)
+		btn.add_theme_color_override("font_color", PALETTE.paper)
+		btn.add_theme_color_override("font_hover_color", PALETTE.paper)
+	else:
+		style.bg_color = PALETTE.paper_dark
+		style.border_color = biome_color
+		style.set_border_width_all(1)
+		btn.add_theme_color_override("font_color", PALETTE.ink)
+		btn.add_theme_color_override("font_hover_color", biome_color)
+
+	style.set_corner_radius_all(4)
+	style.content_margin_left = 8
+	style.content_margin_right = 8
+	style.content_margin_top = 6
+	style.content_margin_bottom = 6
+	btn.add_theme_stylebox_override("normal", style)
+
+	var hover := style.duplicate()
+	if is_selected:
+		hover.bg_color = biome_color.lightened(0.15)
+	else:
+		hover.bg_color = Color(biome_color.r, biome_color.g, biome_color.b, 0.3)
+	btn.add_theme_stylebox_override("hover", hover)
+
+	var pressed := style.duplicate()
+	pressed.bg_color = biome_color.darkened(0.2)
+	btn.add_theme_stylebox_override("pressed", pressed)
+
+
+func _style_care_button(btn: Button) -> void:
+	var style := StyleBoxFlat.new()
+	style.bg_color = PALETTE.paper_dark
+	style.border_color = PALETTE.bestiole
+	style.set_border_width_all(1)
+	style.set_corner_radius_all(4)
+	style.content_margin_left = 8
+	style.content_margin_right = 8
+	style.content_margin_top = 4
+	style.content_margin_bottom = 4
+	btn.add_theme_stylebox_override("normal", style)
+
+	var hover := style.duplicate()
+	hover.bg_color = Color(PALETTE.bestiole.r, PALETTE.bestiole.g, PALETTE.bestiole.b, 0.2)
+	btn.add_theme_stylebox_override("hover", hover)
+
+	var pressed := style.duplicate()
+	pressed.bg_color = PALETTE.bestiole
+	btn.add_theme_stylebox_override("pressed", pressed)
+
+	var disabled := style.duplicate()
+	disabled.bg_color = PALETTE.paper_dark
+	disabled.border_color = PALETTE.ink_faded
+	btn.add_theme_stylebox_override("disabled", disabled)
+
+	btn.add_theme_color_override("font_color", PALETTE.ink)
+	btn.add_theme_color_override("font_hover_color", PALETTE.bestiole)
+	btn.add_theme_color_override("font_disabled_color", PALETTE.ink_faded)
+
+
+func _style_nav_button(btn: Button) -> void:
+	var style := StyleBoxFlat.new()
+	style.bg_color = PALETTE.paper_dark
+	style.border_color = PALETTE.accent_soft
+	style.set_border_width_all(1)
+	style.set_corner_radius_all(4)
+	style.content_margin_left = 12
+	style.content_margin_right = 12
+	style.content_margin_top = 6
+	style.content_margin_bottom = 6
+	btn.add_theme_stylebox_override("normal", style)
+
+	var hover := style.duplicate()
+	hover.bg_color = PALETTE.accent_glow
+	btn.add_theme_stylebox_override("hover", hover)
+
+	var pressed := style.duplicate()
+	pressed.bg_color = PALETTE.accent
+	btn.add_theme_stylebox_override("pressed", pressed)
+
+	btn.add_theme_color_override("font_color", PALETTE.ink)
+	btn.add_theme_color_override("font_hover_color", PALETTE.accent)
+
+
+func _load_seasonal_portrait() -> void:
+	var month: int = Time.get_date_dict_from_system().month
+	var path := PORTRAIT_DEFAULT
+	if month >= 3 and month <= 5:
+		path = PORTRAIT_PRINTEMPS
+	elif month >= 6 and month <= 8:
+		path = PORTRAIT_ETE
+	elif month >= 9 and month <= 11:
+		path = PORTRAIT_AUTOMNE
+	else:
+		path = PORTRAIT_HIVER
+	if ResourceLoader.exists(path):
+		portrait_rect.texture = load(path)
+	elif ResourceLoader.exists(PORTRAIT_DEFAULT):
+		portrait_rect.texture = load(PORTRAIT_DEFAULT)
+
+
+func _get_bond_tier_name(bond: int) -> String:
+	if bond >= 91:
+		return "Ame Soeur"
+	elif bond >= 71:
+		return "Lie"
+	elif bond >= 51:
+		return "Compagnon"
+	elif bond >= 31:
+		return "Curieux"
+	return "Etranger"
+
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# ANIMATIONS
+# ═══════════════════════════════════════════════════════════════════════════════
+
+func _start_mist_animation() -> void:
+	if _mist_tween:
+		_mist_tween.kill()
+	_mist_tween = create_tween().set_loops()
+	_mist_tween.tween_property(mist_layer, "modulate:a", 0.25, 4.0).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
+	_mist_tween.tween_property(mist_layer, "modulate:a", 0.05, 4.0).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
+
+
+func _play_entry_animation() -> void:
+	var tween := create_tween()
+	tween.tween_property(celtic_top, "modulate:a", 0.6, 0.8).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
+	tween.parallel().tween_property(celtic_bottom, "modulate:a", 0.6, 0.8).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
+	tween.parallel().tween_property(tab_container, "modulate:a", 1.0, 1.2).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
+	tween.parallel().tween_property(bottom_bar, "modulate:a", 1.0, 1.0).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT).set_delay(0.3)

@@ -1,0 +1,424 @@
+[
+  {
+    "id": "welcome",
+    "merlin": "...\n\nおや？\n\nもう来たのか？",
+    "next": "merlin_surprise"
+  },
+
+  {
+    "id": "merlin_surprise",
+    "merlin": "こんなに早く来るとは思わなかったぞ、旅人よ。\n\n霧がお前を、予想より早く導いたようだ。",
+    "next": "merlin_intro"
+  },
+
+  {
+    "id": "merlin_intro",
+    "merlin": "わしはMerlinだ。\n\n魔法使い。境界の守り手。霧を紡ぐ者。\n\nここはわしの隠れ処だ……お前を歓迎しよう。",
+    "next": "merlin_lair"
+  },
+
+  {
+    "id": "merlin_lair",
+    "merlin": "ここでは、時間の流れ方が違う。\n\n壁が息をしている。石が囁いている。\n\nそしてわしは……見守っておる。",
+    "next": "merlin_explain"
+  },
+
+  {
+    "id": "merlin_explain",
+    "merlin": "なぜここにいるのか、不思議に思うか？\n\n荒野がお前を呼んだのだ。わしではない。\n\nだが、来てしまった以上は……",
+    "next": "mission_intro"
+  },
+
+  {
+    "id": "mission_intro",
+    "merlin": "わしには旅人が必要なのだ。\n\n世界と世界の間を歩ける者が。\n\nほつれゆくものを、織り直せる者が。",
+    "next": "mission_detail"
+  },
+
+  {
+    "id": "mission_detail",
+    "merlin": "均衡が揺らいでおる、旅人よ。\n\n四つの力がヴェールを引き裂こうとしている。活力、精神、恩寵、資源。\n\nひとつでも崩れれば……すべてが続く。",
+    "next": "mission_ask"
+  },
+
+  {
+    "id": "mission_ask",
+    "merlin": "お前の使命か？\n\n生き延びよ。均衡を保て。選び取れ。\n\n一枚のカードが一歩となる。一つの選択が、一つの結果を生む。",
+    "choices": {
+      "FORCE": [
+        {"id": "f_accept", "text": "準備はできた。", "next": "greet", "deltas": {"traits": {"courage": 1}, "verbs": {"FORCE": 1}}, "hooks": ["acts_fast"]},
+        {"id": "f_challenge", "text": "何が待っているか見せてくれ。", "next": "greet", "deltas": {"traits": {"orgueil": 1}, "verbs": {"FORCE": 1}}, "hooks": ["demands_proof"]}
+      ],
+      "LOGIQUE": [
+        {"id": "l_why_me", "text": "なぜ俺なんだ？", "next": "reply_why_me", "deltas": {"traits": {"curiosite": 1}, "verbs": {"LOGIQUE": 1}}, "hooks": ["asks_questions"]},
+        {"id": "l_rules", "text": "ルールは何だ？", "next": "reply_rules", "deltas": {"traits": {"controle": 1}, "verbs": {"LOGIQUE": 1}}, "hooks": ["needs_structure"]}
+      ],
+      "FINESSE": [
+        {"id": "fi_trust", "text": "あんたを信じる。", "next": "greet", "deltas": {"traits": {"compassion": 1}, "verbs": {"FINESSE": 1}}, "hooks": ["trusts_nature"]},
+        {"id": "fi_careful", "text": "慎重に進む。", "next": "greet", "deltas": {"traits": {"controle": 1}, "verbs": {"FINESSE": 1}}, "hooks": ["moves_silent"]}
+      ]
+    }
+  },
+
+  {
+    "id": "reply_why_me",
+    "merlin": "なぜお前か、と？\n\n霧を越えてきたからだ。まだ立っているからだ。\n\nそれができる者は少ない。",
+    "next": "greet"
+  },
+
+  {
+    "id": "reply_rules",
+    "merlin": "ルールか？\n\n単純だ。カード一枚につき、道が二つ。左か右か。\n\nお前の選択が指標を満たすか、空にするか。均衡は脆い。",
+    "next": "greet"
+  },
+
+  {
+    "id": "greet",
+    "merlin": "よし。\n\n道に出る前に、お前のことを知らねばならぬ。\n\n霧がお前に挨拶しておるぞ、旅人よ。",
+    "choices": {
+      "FORCE": [
+        {"id": "f_who", "text": "あんたは何者だ？", "next": "reply_force", "deltas": {"traits": {"orgueil": 1, "controle": 1}, "verbs": {"FORCE": 1}}, "hooks": ["hates_vague"]},
+        {"id": "f_clear", "text": "霧を払え。", "next": "reply_force", "deltas": {"traits": {"controle": 2}, "verbs": {"FORCE": 1}}, "hooks": ["wants_control"]}
+      ],
+      "LOGIQUE": [
+        {"id": "l_where", "text": "ここはどこだ？", "next": "reply_logique", "deltas": {"traits": {"curiosite": 2}, "verbs": {"LOGIQUE": 1}}, "hooks": ["seeks_explanations"]},
+        {"id": "l_why", "text": "俺に何を望む？", "next": "reply_logique", "deltas": {"traits": {"verite": 1, "curiosite": 1}, "verbs": {"LOGIQUE": 1}}, "hooks": ["tests_intentions"]}
+      ],
+      "FINESSE": [
+        {"id": "fi_peace", "text": "争う気はない。", "next": "reply_finesse", "deltas": {"traits": {"compassion": 1}, "verbs": {"FINESSE": 1}}, "hooks": ["avoids_conflict"]},
+        {"id": "fi_pass", "text": "通り道を探している。", "next": "reply_finesse", "deltas": {"traits": {"curiosite": 1}, "verbs": {"FINESSE": 1}}, "hooks": ["seeks_shortcuts"]}
+      ]
+    }
+  },
+
+  {"id": "reply_force", "merlin": "旅人よ、お前は堂々と扉を叩く。正直な奴だ。", "next": "ask_name"},
+  {"id": "reply_logique", "merlin": "旅人よ、踏み出す前に理解したいのだな。石はそういう者を好む。", "next": "ask_name"},
+  {"id": "reply_finesse", "merlin": "旅人よ、軽やかに歩くのだな。荒野はそのほうがよく聴こえる。", "next": "ask_name"},
+
+  {
+    "id": "ask_name",
+    "merlin": "旅人よ、お前の足跡に名を与えよ。わしが預かろう。",
+    "ui": "name_input",
+    "next": "confirm_name"
+  },
+  {
+    "id": "confirm_name",
+    "merlin": "よし。その名はわしの書に記す。だがお前は、旅人のままだ。",
+    "next": "pre_quiz"
+  },
+  {
+    "id": "pre_quiz",
+    "merlin": "旅人よ、道に出る前に、鏡を置こう。答えの一つ一つが痕を残す。",
+    "choices": {
+      "FORCE": [
+        {"id": "f_go", "text": "行こう。", "next": "q1", "deltas": {"traits": {"courage": 1}, "verbs": {"FORCE": 1}}, "hooks": ["acts_fast"]}
+      ],
+      "LOGIQUE": [
+        {"id": "l_ready", "text": "準備はできた。", "next": "q1", "deltas": {"traits": {"controle": 1}, "verbs": {"LOGIQUE": 1}}, "hooks": ["prefers_preparation"]}
+      ],
+      "FINESSE": [
+        {"id": "fi_few", "text": "多くは語らない。", "next": "q1", "deltas": {"traits": {"controle": 1}, "verbs": {"FINESSE": 1}}, "hooks": ["keeps_secrets"]}
+      ]
+    }
+  },
+
+  {
+    "id": "q1",
+    "merlin": "第一の鏡：霧の中で子供が泣いている。どうする？",
+    "choices": {
+      "FORCE": [
+        {"id": "f_carry", "text": "抱き上げる。", "next": "q2", "deltas": {"traits": {"compassion": 2, "courage": 1}, "verbs": {"FORCE": 1}}, "hooks": ["protects_weak"]},
+        {"id": "f_chase", "text": "影を追い払う。", "next": "q2", "deltas": {"traits": {"courage": 2}, "verbs": {"FORCE": 1}}, "hooks": ["confronts_threats"]}
+      ],
+      "LOGIQUE": [
+        {"id": "l_tracks", "text": "足跡を辿る。", "next": "q2", "deltas": {"traits": {"curiosite": 1, "controle": 1}, "verbs": {"LOGIQUE": 1}}, "hooks": ["tracks_patterns"]},
+        {"id": "l_landmark", "text": "目印を探す。", "next": "q2", "deltas": {"traits": {"controle": 2}, "verbs": {"LOGIQUE": 1}}, "hooks": ["needs_structure"]}
+      ],
+      "FINESSE": [
+        {"id": "fi_call", "text": "そっと呼びかける。", "next": "q2", "deltas": {"traits": {"compassion": 1}, "verbs": {"FINESSE": 1}}, "hooks": ["avoids_noise"]},
+        {"id": "fi_sign", "text": "合図を送る。", "next": "q2", "deltas": {"traits": {"controle": 1}, "verbs": {"FINESSE": 1}}, "hooks": ["guides_subtly"]}
+      ]
+    }
+  },
+
+  {
+    "id": "q2",
+    "merlin": "第二の鏡：立石に新しい刻み目がある。どうする？",
+    "choices": {
+      "FORCE": [
+        {"id": "f_strike", "text": "石を叩く。", "next": "q3", "deltas": {"traits": {"orgueil": 1, "courage": 1}, "verbs": {"FORCE": 1}}, "hooks": ["tests_stone"]},
+        {"id": "f_clean", "text": "痕を拭う。", "next": "q3", "deltas": {"traits": {"controle": 1}, "verbs": {"FORCE": 1}}, "hooks": ["clears_signs"]}
+      ],
+      "LOGIQUE": [
+        {"id": "l_mark", "text": "刻み目を観察する。", "next": "q3", "deltas": {"traits": {"curiosite": 1, "verite": 1}, "verbs": {"LOGIQUE": 1}}, "hooks": ["reads_marks"]},
+        {"id": "l_compare", "text": "痕跡を比べる。", "next": "q3", "deltas": {"traits": {"curiosite": 1, "controle": 1}, "verbs": {"LOGIQUE": 1}}, "hooks": ["compares_tracks"]}
+      ],
+      "FINESSE": [
+        {"id": "fi_touch", "text": "石に触れる。", "next": "q3", "deltas": {"traits": {"compassion": 1}, "verbs": {"FINESSE": 1}}, "hooks": ["soft_touch"]},
+        {"id": "fi_circle", "text": "周りを巡る。", "next": "q3", "deltas": {"traits": {"controle": 1}, "verbs": {"FINESSE": 1}}, "hooks": ["circles_stone"]}
+      ]
+    }
+  },
+
+  {
+    "id": "q3",
+    "merlin": "第三の鏡：傷ついた獣が震えている。どうする？",
+    "choices": {
+      "FORCE": [
+        {"id": "f_shelter", "text": "安全な場所へ運ぶ。", "next": "q4", "deltas": {"traits": {"compassion": 2, "courage": 1}, "verbs": {"FORCE": 1}}, "hooks": ["aids_beast"]},
+        {"id": "f_distance", "text": "距離を保つ。", "next": "q4", "deltas": {"traits": {"controle": 1}, "verbs": {"FORCE": 1}}, "hooks": ["keeps_distance"]}
+      ],
+      "LOGIQUE": [
+        {"id": "l_cause", "text": "原因を探る。", "next": "q4", "deltas": {"traits": {"curiosite": 2, "verite": 1}, "verbs": {"LOGIQUE": 1}}, "hooks": ["seeks_cause"]},
+        {"id": "l_remedy", "text": "薬を調合する。", "next": "q4", "deltas": {"traits": {"controle": 1, "compassion": 1}, "verbs": {"LOGIQUE": 1}}, "hooks": ["prepares_remedy"]}
+      ],
+      "FINESSE": [
+        {"id": "fi_soft", "text": "低い声で話しかける。", "next": "q4", "deltas": {"traits": {"compassion": 1}, "verbs": {"FINESSE": 1}}, "hooks": ["calms_softly"]},
+        {"id": "fi_water", "text": "水を差し出す。", "next": "q4", "deltas": {"traits": {"compassion": 1, "controle": 1}, "verbs": {"FINESSE": 1}}, "hooks": ["offers_water"]}
+      ]
+    }
+  },
+
+  {
+    "id": "q4",
+    "season": "PRINTEMPS",
+    "portrait": "res://Assets/Sprite/Merlin_PRINTEMPS.png",
+    "merlin": "春が荒野を目覚めさせる。黒い土から芽が顔を出す。一粒の種がお前の足元に落ちた。どうする？",
+    "choices": {
+      "FORCE": [
+        {"id": "f_plant", "text": "土に押し込む。", "next": "q5", "deltas": {"traits": {"courage": 1, "compassion": 1}, "verbs": {"FORCE": 1}, "classes": {"druide": 2}}, "hooks": ["plants_seed"]},
+        {"id": "f_crush", "text": "踏み潰す。", "next": "q5", "deltas": {"traits": {"controle": 2}, "verbs": {"FORCE": 1}, "classes": {"guerrier": 1}}, "hooks": ["destroys_growth"]}
+      ],
+      "LOGIQUE": [
+        {"id": "l_examine", "text": "種を調べる。", "next": "q5", "deltas": {"traits": {"curiosite": 2}, "verbs": {"LOGIQUE": 1}, "classes": {"eclaireur": 2}}, "hooks": ["studies_nature"]},
+        {"id": "l_keep", "text": "後のために取っておく。", "next": "q5", "deltas": {"traits": {"controle": 1, "curiosite": 1}, "verbs": {"LOGIQUE": 1}, "classes": {"eclaireur": 1}}, "hooks": ["collects_samples"]}
+      ],
+      "FINESSE": [
+        {"id": "fi_give", "text": "風に託す。", "next": "q5", "deltas": {"traits": {"compassion": 2}, "verbs": {"FINESSE": 1}, "classes": {"druide": 2}}, "hooks": ["trusts_nature"]},
+        {"id": "fi_sing", "text": "歌を聴かせる。", "next": "q5", "deltas": {"traits": {"compassion": 1, "verite": 1}, "verbs": {"FINESSE": 1}, "classes": {"barde": 2}}, "hooks": ["sings_to_life"]}
+      ]
+    }
+  },
+
+  {
+    "id": "q5",
+    "merlin": "第五の鏡：二つの道が交差している。一つは明るく、一つは暗い。どうする？",
+    "choices": {
+      "FORCE": [
+        {"id": "f_dark", "text": "暗い道を選ぶ。", "next": "q6", "deltas": {"traits": {"courage": 2}, "verbs": {"FORCE": 1}, "classes": {"guerrier": 1}}, "hooks": ["chooses_dark"]},
+        {"id": "f_mark", "text": "印を刻む。", "next": "q6", "deltas": {"traits": {"controle": 1, "verite": 1}, "verbs": {"FORCE": 1}, "classes": {"eclaireur": 1}}, "hooks": ["marks_path"]}
+      ],
+      "LOGIQUE": [
+        {"id": "l_clues", "text": "手がかりを探す。", "next": "q6", "deltas": {"traits": {"curiosite": 2}, "verbs": {"LOGIQUE": 1}, "classes": {"eclaireur": 2}}, "hooks": ["seeks_clues"]},
+        {"id": "l_wind", "text": "風を読む。", "next": "q6", "deltas": {"traits": {"controle": 1, "curiosite": 1}, "verbs": {"LOGIQUE": 1}, "classes": {"druide": 1}}, "hooks": ["reads_wind"]}
+      ],
+      "FINESSE": [
+        {"id": "fi_shadow", "text": "柔らかな影を追う。", "next": "q6", "deltas": {"traits": {"curiosite": 1}, "verbs": {"FINESSE": 1}, "classes": {"barde": 1}}, "hooks": ["follows_shadow"]},
+        {"id": "fi_silent", "text": "音を立てずに進む。", "next": "q6", "deltas": {"traits": {"controle": 1}, "verbs": {"FINESSE": 1}, "classes": {"eclaireur": 1}}, "hooks": ["moves_silent"]}
+      ]
+    }
+  },
+
+  {
+    "id": "q6",
+    "merlin": "第六の鏡：見知らぬ者が誓いを求めてくる。どうする？",
+    "choices": {
+      "FORCE": [
+        {"id": "f_refuse", "text": "きっぱり断る。", "next": "q7", "deltas": {"traits": {"orgueil": 1, "controle": 1}, "verbs": {"FORCE": 1}, "classes": {"guerrier": 2}}, "hooks": ["refuses_oath"]},
+        {"id": "f_proof", "text": "証拠を要求する。", "next": "q7", "deltas": {"traits": {"verite": 1, "controle": 1}, "verbs": {"FORCE": 1}, "classes": {"eclaireur": 1}}, "hooks": ["demands_proof"]}
+      ],
+      "LOGIQUE": [
+        {"id": "l_questions", "text": "質問する。", "next": "q7", "deltas": {"traits": {"curiosite": 1, "verite": 1}, "verbs": {"LOGIQUE": 1}, "classes": {"eclaireur": 2}}, "hooks": ["asks_questions"]},
+        {"id": "l_trade", "text": "交換を提案する。", "next": "q7", "deltas": {"traits": {"controle": 1}, "verbs": {"LOGIQUE": 1}, "classes": {"barde": 1}}, "hooks": ["offers_trade"]}
+      ],
+      "FINESSE": [
+        {"id": "fi_time", "text": "時間を稼ぐ。", "next": "q7", "deltas": {"traits": {"controle": 1}, "verbs": {"FINESSE": 1}, "classes": {"barde": 2}}, "hooks": ["buys_time"]},
+        {"id": "fi_observe", "text": "微笑みながら観察する。", "next": "q7", "deltas": {"traits": {"curiosite": 1}, "verbs": {"FINESSE": 1}, "classes": {"barde": 1}}, "hooks": ["observes_calm"]}
+      ]
+    }
+  },
+
+  {
+    "id": "q7",
+    "merlin": "第七の鏡：風が唸り、雨が轟く。どうする？",
+    "choices": {
+      "FORCE": [
+        {"id": "f_walk", "text": "構わず歩く。", "next": "q8", "deltas": {"traits": {"courage": 2}, "verbs": {"FORCE": 1}, "classes": {"guerrier": 2}}, "hooks": ["pushes_through"]},
+        {"id": "f_shelter", "text": "避難場所を探す。", "next": "q8", "deltas": {"traits": {"controle": 1}, "verbs": {"FORCE": 1}, "classes": {"eclaireur": 1}}, "hooks": ["seeks_shelter"]}
+      ],
+      "LOGIQUE": [
+        {"id": "l_sky", "text": "空を読む。", "next": "q8", "deltas": {"traits": {"curiosite": 1, "controle": 1}, "verbs": {"LOGIQUE": 1}, "classes": {"druide": 2}}, "hooks": ["reads_sky"]},
+        {"id": "l_wait", "text": "嵐が収まるのを待つ。", "next": "q8", "deltas": {"traits": {"controle": 1}, "verbs": {"LOGIQUE": 1}, "classes": {"eclaireur": 1}}, "hooks": ["waits_calm"]}
+      ],
+      "FINESSE": [
+        {"id": "fi_trees", "text": "木の下に潜り込む。", "next": "q8", "deltas": {"traits": {"controle": 1}, "verbs": {"FINESSE": 1}, "classes": {"druide": 1}}, "hooks": ["slips_trees"]},
+        {"id": "fi_tracks", "text": "足跡を消す。", "next": "q8", "deltas": {"traits": {"controle": 1}, "verbs": {"FINESSE": 1}, "classes": {"eclaireur": 1}}, "hooks": ["hides_tracks"]}
+      ]
+    }
+  },
+
+  {
+    "id": "q8",
+    "season": "ETE",
+    "portrait": "res://Assets/Sprite/Merlin_ETE.png",
+    "merlin": "夏が荒野を焼く。太陽は高く、空気が揺れている。焚き火がまだ燻っている。どうする？",
+    "choices": {
+      "FORCE": [
+        {"id": "f_stomp", "text": "残り火を消す。", "next": "q9", "deltas": {"traits": {"courage": 1, "controle": 1}, "verbs": {"FORCE": 1}, "classes": {"guerrier": 1}}, "hooks": ["smothers_fire"]},
+        {"id": "f_add", "text": "薪を足す。", "next": "q9", "deltas": {"traits": {"courage": 2}, "verbs": {"FORCE": 1}, "classes": {"guerrier": 2}}, "hooks": ["feeds_flame"]}
+      ],
+      "LOGIQUE": [
+        {"id": "l_tracks", "text": "周囲の痕跡を読む。", "next": "q9", "deltas": {"traits": {"curiosite": 2}, "verbs": {"LOGIQUE": 1}, "classes": {"eclaireur": 2}}, "hooks": ["reads_camp"]},
+        {"id": "l_heat", "text": "熱を測る。", "next": "q9", "deltas": {"traits": {"curiosite": 1, "controle": 1}, "verbs": {"LOGIQUE": 1}, "classes": {"druide": 1}}, "hooks": ["studies_fire"]}
+      ],
+      "FINESSE": [
+        {"id": "fi_warm", "text": "手を温める。", "next": "q9", "deltas": {"traits": {"compassion": 1}, "verbs": {"FINESSE": 1}, "classes": {"barde": 1}}, "hooks": ["enjoys_warmth"]},
+        {"id": "fi_story", "text": "誰がここにいたか想像する。", "next": "q9", "deltas": {"traits": {"curiosite": 1, "compassion": 1}, "verbs": {"FINESSE": 1}, "classes": {"barde": 2}}, "hooks": ["weaves_story"]}
+      ]
+    }
+  },
+
+  {
+    "id": "q9",
+    "merlin": "第九の鏡：木の橋が川の上で崩れかけている。どうする？",
+    "choices": {
+      "FORCE": [
+        {"id": "f_jump", "text": "跳ぶ。", "next": "q10", "deltas": {"traits": {"courage": 2}, "verbs": {"FORCE": 1}, "classes": {"guerrier": 2}}, "hooks": ["jumps_gap"]},
+        {"id": "f_reinforce", "text": "木を補強する。", "next": "q10", "deltas": {"traits": {"controle": 1}, "verbs": {"FORCE": 1}, "classes": {"druide": 1}}, "hooks": ["reinforces_bridge"]}
+      ],
+      "LOGIQUE": [
+        {"id": "l_detour", "text": "別の道を探す。", "next": "q10", "deltas": {"traits": {"curiosite": 1}, "verbs": {"LOGIQUE": 1}, "classes": {"eclaireur": 2}}, "hooks": ["finds_detour"]},
+        {"id": "l_test", "text": "岸辺を調べる。", "next": "q10", "deltas": {"traits": {"controle": 1, "curiosite": 1}, "verbs": {"LOGIQUE": 1}, "classes": {"eclaireur": 1}}, "hooks": ["tests_bank"]}
+      ],
+      "FINESSE": [
+        {"id": "fi_stones", "text": "石を伝って渡る。", "next": "q10", "deltas": {"traits": {"controle": 1}, "verbs": {"FINESSE": 1}, "classes": {"barde": 1}}, "hooks": ["steps_stones"]},
+        {"id": "fi_rope", "text": "縄を張る。", "next": "q10", "deltas": {"traits": {"controle": 1}, "verbs": {"FINESSE": 1}, "classes": {"eclaireur": 1}}, "hooks": ["uses_rope"]}
+      ]
+    }
+  },
+
+  {
+    "id": "q10",
+    "merlin": "第十の鏡：木々から囁きが聞こえる。どうする？",
+    "choices": {
+      "FORCE": [
+        {"id": "f_loud", "text": "大声で話す。", "next": "q11", "deltas": {"traits": {"orgueil": 1, "courage": 1}, "verbs": {"FORCE": 1}, "classes": {"guerrier": 1}}, "hooks": ["answers_loud"]},
+        {"id": "f_silence", "text": "森を黙らせる。", "next": "q11", "deltas": {"traits": {"controle": 1}, "verbs": {"FORCE": 1}, "classes": {"guerrier": 1}}, "hooks": ["silences_wood"]}
+      ],
+      "LOGIQUE": [
+        {"id": "l_rhythm", "text": "リズムを聴き取る。", "next": "q11", "deltas": {"traits": {"curiosite": 1, "verite": 1}, "verbs": {"LOGIQUE": 1}, "classes": {"druide": 2}}, "hooks": ["listens_pattern"]},
+        {"id": "l_source", "text": "音の源を探す。", "next": "q11", "deltas": {"traits": {"curiosite": 2}, "verbs": {"LOGIQUE": 1}, "classes": {"eclaireur": 1}}, "hooks": ["seeks_source"]}
+      ],
+      "FINESSE": [
+        {"id": "fi_soft", "text": "静かに近づく。", "next": "q11", "deltas": {"traits": {"compassion": 1}, "verbs": {"FINESSE": 1}, "classes": {"druide": 1}}, "hooks": ["approaches_soft"]},
+        {"id": "fi_reply", "text": "囁き返す。", "next": "q11", "deltas": {"traits": {"compassion": 1, "verite": 1}, "verbs": {"FINESSE": 1}, "classes": {"barde": 2}}, "hooks": ["whispers_back"]}
+      ]
+    }
+  },
+
+  {
+    "id": "q11",
+    "merlin": "第十一の鏡：カラスが光るものを差し出してくる。どうする？",
+    "choices": {
+      "FORCE": [
+        {"id": "f_take", "text": "黙って受け取る。", "next": "q12", "deltas": {"traits": {"orgueil": 1}, "verbs": {"FORCE": 1}, "classes": {"guerrier": 1}}, "hooks": ["takes_gift"]},
+        {"id": "f_chase", "text": "追い払う。", "next": "q12", "deltas": {"traits": {"controle": 1}, "verbs": {"FORCE": 1}, "classes": {"guerrier": 1}}, "hooks": ["chases_crow"]}
+      ],
+      "LOGIQUE": [
+        {"id": "l_origin", "text": "どこから来たか聞く。", "next": "q12", "deltas": {"traits": {"curiosite": 1, "verite": 1}, "verbs": {"LOGIQUE": 1}, "classes": {"eclaireur": 1}}, "hooks": ["asks_origin"]},
+        {"id": "l_trade", "text": "糸と交換する。", "next": "q12", "deltas": {"traits": {"controle": 1}, "verbs": {"LOGIQUE": 1}, "classes": {"barde": 1}}, "hooks": ["trades_thread"]}
+      ],
+      "FINESSE": [
+        {"id": "fi_return", "text": "礼を言って返す。", "next": "q12", "deltas": {"traits": {"compassion": 1}, "verbs": {"FINESSE": 1}, "classes": {"druide": 1}}, "hooks": ["returns_gift"]},
+        {"id": "fi_follow", "text": "鳥を追いかける。", "next": "q12", "deltas": {"traits": {"curiosite": 1}, "verbs": {"FINESSE": 1}, "classes": {"eclaireur": 1}}, "hooks": ["follows_bird"]}
+      ]
+    }
+  },
+
+  {
+    "id": "q12",
+    "season": "AUTOMNE",
+    "portrait": "res://Assets/Sprite/Merlin_AUTOMNE.png",
+    "merlin": "秋が荒野を錆色に染める。木の葉が螺旋を描いて落ちる。枯れた大木が道を塞いでいる。どうする？",
+    "choices": {
+      "FORCE": [
+        {"id": "f_break", "text": "枝を折る。", "next": "q13", "deltas": {"traits": {"courage": 1, "controle": 1}, "verbs": {"FORCE": 1}, "classes": {"guerrier": 2}}, "hooks": ["breaks_wood"]},
+        {"id": "f_climb", "text": "乗り越える。", "next": "q13", "deltas": {"traits": {"courage": 2}, "verbs": {"FORCE": 1}, "classes": {"guerrier": 1}}, "hooks": ["climbs_over"]}
+      ],
+      "LOGIQUE": [
+        {"id": "l_roots", "text": "根を観察する。", "next": "q13", "deltas": {"traits": {"curiosite": 2}, "verbs": {"LOGIQUE": 1}, "classes": {"druide": 2}}, "hooks": ["studies_roots"]},
+        {"id": "l_gap", "text": "隙間を探す。", "next": "q13", "deltas": {"traits": {"curiosite": 1, "controle": 1}, "verbs": {"LOGIQUE": 1}, "classes": {"eclaireur": 2}}, "hooks": ["finds_gap"]}
+      ],
+      "FINESSE": [
+        {"id": "fi_honor", "text": "木に敬意を払う。", "next": "q13", "deltas": {"traits": {"compassion": 2}, "verbs": {"FINESSE": 1}, "classes": {"druide": 2}}, "hooks": ["honors_dead"]},
+        {"id": "fi_poem", "text": "詩を詠む。", "next": "q13", "deltas": {"traits": {"compassion": 1, "verite": 1}, "verbs": {"FINESSE": 1}, "classes": {"barde": 2}}, "hooks": ["writes_verse"]}
+      ]
+    }
+  },
+
+  {
+    "id": "q13",
+    "merlin": "第十三の鏡：影が音もなくお前を追っている。どうする？",
+    "choices": {
+      "FORCE": [
+        {"id": "f_turn", "text": "振り返る。", "next": "q14", "deltas": {"traits": {"courage": 1}, "verbs": {"FORCE": 1}, "classes": {"guerrier": 1}}, "hooks": ["turns_back"]},
+        {"id": "f_face", "text": "立ち向かう。", "next": "q14", "deltas": {"traits": {"courage": 2}, "verbs": {"FORCE": 1}, "classes": {"guerrier": 2}}, "hooks": ["faces_shadow"]}
+      ],
+      "LOGIQUE": [
+        {"id": "l_count", "text": "歩数を数える。", "next": "q14", "deltas": {"traits": {"curiosite": 1, "controle": 1}, "verbs": {"LOGIQUE": 1}, "classes": {"eclaireur": 1}}, "hooks": ["counts_steps"]},
+        {"id": "l_trap", "text": "罠を仕掛ける。", "next": "q14", "deltas": {"traits": {"controle": 1}, "verbs": {"LOGIQUE": 1}, "classes": {"eclaireur": 2}}, "hooks": ["sets_trap"]}
+      ],
+      "FINESSE": [
+        {"id": "fi_pace", "text": "歩調を変える。", "next": "q14", "deltas": {"traits": {"controle": 1}, "verbs": {"FINESSE": 1}, "classes": {"barde": 1}}, "hooks": ["changes_pace"]},
+        {"id": "fi_hide", "text": "岩の間に消える。", "next": "q14", "deltas": {"traits": {"controle": 1}, "verbs": {"FINESSE": 1}, "classes": {"eclaireur": 1}}, "hooks": ["vanishes_rocks"]}
+      ]
+    }
+  },
+
+  {
+    "id": "q14",
+    "merlin": "第十四の鏡：泥に濡れた本が落ちている。どうする？",
+    "choices": {
+      "FORCE": [
+        {"id": "f_pull", "text": "地面から引き抜く。", "next": "q15", "deltas": {"traits": {"courage": 1}, "verbs": {"FORCE": 1}, "classes": {"guerrier": 1}}, "hooks": ["pulls_book"]},
+        {"id": "f_leave", "text": "そのままにする。", "next": "q15", "deltas": {"traits": {"controle": 1}, "verbs": {"FORCE": 1}, "classes": {"guerrier": 1}}, "hooks": ["leaves_book"]}
+      ],
+      "LOGIQUE": [
+        {"id": "l_open", "text": "丁寧に開く。", "next": "q15", "deltas": {"traits": {"curiosite": 1, "verite": 1}, "verbs": {"LOGIQUE": 1}, "classes": {"druide": 1}}, "hooks": ["opens_carefully"]},
+        {"id": "l_read", "text": "一頁を読む。", "next": "q15", "deltas": {"traits": {"curiosite": 1}, "verbs": {"LOGIQUE": 1}, "classes": {"barde": 2}}, "hooks": ["reads_page"]}
+      ],
+      "FINESSE": [
+        {"id": "fi_dry", "text": "火のそばで乾かす。", "next": "q15", "deltas": {"traits": {"compassion": 1}, "verbs": {"FINESSE": 1}, "classes": {"barde": 1}}, "hooks": ["dries_book"]},
+        {"id": "fi_hide", "text": "隠す。", "next": "q15", "deltas": {"traits": {"controle": 1}, "verbs": {"FINESSE": 1}, "classes": {"eclaireur": 1}}, "hooks": ["hides_book"]}
+      ]
+    }
+  },
+
+  {
+    "id": "q15",
+    "season": "HIVER",
+    "portrait": "res://Assets/Sprite/Merlin_HIVER.png",
+    "merlin": "冬が荒野を凍らせる。霜が噛みつく。茨の門が行く手を阻んでいる。どうする？",
+    "choices": {
+      "FORCE": [
+        {"id": "f_clear", "text": "押し退ける。", "next": "finale", "deltas": {"traits": {"courage": 1}, "verbs": {"FORCE": 1}, "classes": {"guerrier": 2}}, "hooks": ["clears_thorns"]},
+        {"id": "f_cut", "text": "茨を切る。", "next": "finale", "deltas": {"traits": {"controle": 1}, "verbs": {"FORCE": 1}, "classes": {"guerrier": 1}}, "hooks": ["cuts_thorns"]}
+      ],
+      "LOGIQUE": [
+        {"id": "l_origin", "text": "根源を探る。", "next": "finale", "deltas": {"traits": {"curiosite": 1}, "verbs": {"LOGIQUE": 1}, "classes": {"eclaireur": 2}}, "hooks": ["seeks_origin"]},
+        {"id": "l_angle", "text": "弱い箇所を見つける。", "next": "finale", "deltas": {"traits": {"controle": 1}, "verbs": {"LOGIQUE": 1}, "classes": {"eclaireur": 1}}, "hooks": ["finds_weak"]}
+      ],
+      "FINESSE": [
+        {"id": "fi_slip", "text": "棘の間を抜ける。", "next": "finale", "deltas": {"traits": {"controle": 1}, "verbs": {"FINESSE": 1}, "classes": {"barde": 1}}, "hooks": ["slips_thorns"]},
+        {"id": "fi_ask", "text": "通してくれと頼む。", "next": "finale", "deltas": {"traits": {"compassion": 1}, "verbs": {"FINESSE": 1}, "classes": {"druide": 2}}, "hooks": ["asks_passage"]}
+      ]
+    }
+  },
+
+  {
+    "id": "finale",
+    "merlin": "鏡は揃った、旅人よ。お前の道が形を成す。",
+    "ui": "show_class",
+    "next": ""
+  }
+]

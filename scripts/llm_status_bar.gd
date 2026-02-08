@@ -35,6 +35,7 @@ var _llm_cache: Object = null
 
 func _ready() -> void:
 	layer = 100  # Au dessus de tout
+	visible = false  # UI cachee — fonctionnalite LLM conservee
 	_build_ui()
 	_scan_models()
 	# Connecter aux signaux MerlinAI si disponible
@@ -159,12 +160,12 @@ func _warmup_model() -> void:
 
 	_update_status("Chargement GPU...", PALETTE.warning, 30)
 
-	# Court prompt de warmup (10 tokens pour mieux primer le GPU)
+	# Warmup minimal (1 token, juste pour primer le modele)
 	if llm.has_method("set_sampling_params"):
-		llm.set_sampling_params(0.1, 0.5, 10)
+		llm.set_sampling_params(0.1, 0.5, 1)
 
 	var state := {"done": false}
-	llm.generate_async("Bonjour, dis une phrase.", func(_res):
+	llm.generate_async("ok", func(_res):
 		state.done = true
 	)
 

@@ -1,0 +1,569 @@
+{
+  "_meta": {
+    "version": "1.0",
+    "author": "Narrative Writer Agent (Merlin Voice) + Localisation Agent",
+    "created": "2026-02-08",
+    "language": "ja",
+    "source": "scene_dialogues.json (French original)",
+    "description": "SceneEveil、SceneAntreMerlin、TransitionBiome の全台詞（日本語版）",
+    "notes": [
+      "マーリンは老賢者の口調だが堅すぎない。だ/である調を基本とする",
+      "古語（〜じゃ、〜のう）は使わない。現代日本語に詩的な余韻を持たせる",
+      "絵文字は使用禁止",
+      "短い文。間（ま）が大切。",
+      "95%は陽気でいたずらっぽく、5%は底に潜む哀愁",
+      "[pause] は1〜2秒の沈黙を示す",
+      "[long_pause] は3〜4秒の沈黙を示す",
+      "[beat] は微小な間（0.5秒）を示す",
+      "固有名詞: Broceliande=ブロセリアンド, Bestiole=ベスティオル, Oghams=オガム, Awen=アウェン, DRU=DRU",
+      "Voyageur=旅人"
+    ]
+  },
+
+  "scene_eveil": {
+    "description": "暗転。マーリンが闇の中で語る。旅人は膜を越えてきたばかり。30〜45秒。マーリンはずっと待っていた。感情からユーモアへ。",
+    "context": "旅人が初めて到着する。マーリンは安堵し、感極まりそうになる。だがすぐにユーモアで取り繕う。プレイヤーがマーリンに抱く最初の印象。",
+    "lines": [
+      {
+        "id": "eveil_01",
+        "speaker": "MERLIN",
+        "text": "……来たのか。",
+        "direction": "囁き。もう期待することを諦めていた者の声。剥き出しで、仮面のない声色。",
+        "timing": {
+          "delay_before_s": 3.0,
+          "display_duration_s": 3.0,
+          "pause_after_s": 2.0
+        },
+        "emotion": "soulagement_profond",
+        "tags": ["eveil", "emotion", "premiere_impression"]
+      },
+      {
+        "id": "eveil_02",
+        "speaker": "MERLIN",
+        "text": "待っていた。長く。あまりに長く……それが時間だったのか、別の何かだったのか、もう忘れてしまった。",
+        "direction": "少し確かな声になるが、まだ孤独の重みを帯びている。一語一語に重みがある。「別の何か」は宙に浮いたまま。",
+        "timing": {
+          "delay_before_s": 0.5,
+          "display_duration_s": 5.0,
+          "pause_after_s": 2.5
+        },
+        "emotion": "vulnerabilite_rare",
+        "tags": ["eveil", "solitude", "temps", "indice_sombre"]
+      },
+      {
+        "id": "eveil_03",
+        "speaker": "MERLIN",
+        "text": "霧がお前を通した。良い兆しだ。まあ…… [pause] 正直に言えば、霧は誰でも通す。方向感覚が絶望的な者でもな。",
+        "direction": "声の調子が上がる。マーリンが陽気な仮面を被り直すのが伝わる。「まあ……」が感情からユーモアへの蝶番。",
+        "timing": {
+          "delay_before_s": 0.5,
+          "display_duration_s": 6.0,
+          "pause_after_s": 1.5
+        },
+        "emotion": "transition_vers_humour",
+        "tags": ["eveil", "membrane", "humour", "masque"]
+      },
+      {
+        "id": "eveil_04",
+        "speaker": "MERLIN",
+        "text": "さて。ブロセリアンドへようこそ。最後に残った森、世界の果て手前の最初の停留所だ。 [beat] そんな顔をするな。見た目よりずっと美しい。日が出ていればな。",
+        "direction": "仮面は完全に定位置。陽気なマーリンの復活。温かく、少し茶目っ気のある口調。「日が出ていればな」は周囲の暗闇への言及であると同時に、世界の状態を示す微かな暗示。",
+        "timing": {
+          "delay_before_s": 0.5,
+          "display_duration_s": 7.0,
+          "pause_after_s": 2.0
+        },
+        "emotion": "accueil_jovial",
+        "tags": ["eveil", "bienvenue", "humour", "broceliande"]
+      }
+    ]
+  },
+
+  "scene_antre_merlin": {
+    "description": "マーリンの隠れ家。光が徐々に戻る。ベスティオルが現れる。マーリンが世界と使命を説明し、出発するバイオームを提案する。",
+
+    "bestiole_apparition": {
+      "description": "ベスティオルが影から姿を現す。旅人のアウェンに引き寄せられて。小さな光る生き物、最初は躊躇い、やがて好奇心を見せる。",
+      "lines": [
+        {
+          "id": "bestiole_01",
+          "speaker": "NARRATION",
+          "text": "影の中で何かが動く。光――おずおずと、消えるのを迷っている熾火のような。",
+          "direction": "ナレーションテキスト。マーリンの声ではない。中立的、詩的、描写的な語調。光がゆっくり脈動する。",
+          "timing": {
+            "delay_before_s": 1.0,
+            "display_duration_s": 4.0,
+            "pause_after_s": 1.5
+          },
+          "vfx": "lumiere_faible_pulse",
+          "tags": ["bestiole", "apparition", "narration"]
+        },
+        {
+          "id": "bestiole_02",
+          "speaker": "NARRATION",
+          "text": "光が近づいてくる。小さな体には大きすぎる二つの瞳。まるでお前を知っているかのように、こちらを見つめている。",
+          "direction": "生き物がプレイヤーに近づく。瞳が焦点。「知っているかのように」はアウェンの共鳴の反映――ベスティオルが旅人のアウェンを感知している。",
+          "timing": {
+            "delay_before_s": 0.5,
+            "display_duration_s": 4.5,
+            "pause_after_s": 1.5
+          },
+          "vfx": "bestiole_yeux_brillent",
+          "tags": ["bestiole", "apparition", "resonance", "narration"]
+        },
+        {
+          "id": "bestiole_03",
+          "speaker": "NARRATION",
+          "text": "音がする。喉を鳴らしているのとも違う。囁きとも違う。その二つの間にある何か。「ここにいるよ」と言っている。",
+          "direction": "ベスティオルの音。プレイヤーにこの瞬間の親密さを感じさせる。壮大ではない――優しい。",
+          "timing": {
+            "delay_before_s": 0.5,
+            "display_duration_s": 4.5,
+            "pause_after_s": 2.0
+          },
+          "sfx": "bestiole_trille_doux",
+          "tags": ["bestiole", "apparition", "son", "narration"]
+        }
+      ]
+    },
+
+    "merlin_sur_bestiole": {
+      "description": "マーリンがベスティオルの出現に反応する。愛情と茶化すような保護者意識の間の口調。",
+      "lines": [
+        {
+          "id": "merlin_bestiole_01",
+          "speaker": "MERLIN",
+          "text": "ああ。ベスティオルがお前を見つけたか。 [beat] あいつはそうするんだ。人を見つける。特に、自分が迷子だとまだ気づいていない者をな。",
+          "direction": "愛情深い口調。自分の子供について語る親のよう。「まだ気づいていない」はユーモアであると同時に、旅人の本質への暗示。",
+          "timing": {
+            "delay_before_s": 0.5,
+            "display_duration_s": 5.0,
+            "pause_after_s": 1.5
+          },
+          "emotion": "tendresse_masquee",
+          "tags": ["bestiole", "merlin", "lien", "humour"]
+        },
+        {
+          "id": "merlin_bestiole_02",
+          "speaker": "MERLIN",
+          "text": "あいつを大事にしてくれ。俺よりもな。 [pause] それは簡単だろう、俺は手に負えない男だから。",
+          "direction": "最初の文は本心――ほとんど剥き出し。マーリン自身それに気づいて冗談で修正する。しかし頼みは本物：ベスティオルこそが何より大切なもの。",
+          "timing": {
+            "delay_before_s": 0.5,
+            "display_duration_s": 4.5,
+            "pause_after_s": 2.0
+          },
+          "emotion": "sincerite_breve",
+          "tags": ["bestiole", "merlin", "protection", "humour_defensif"]
+        }
+      ]
+    },
+
+    "mission_briefing": {
+      "description": "マーリンが世界と使命を説明する。真面目だがユーモアを交える口調。プレイヤーは探索すべき世界があること、何かがおかしいこと――ただし正確には何かはわからない――を理解すべき。",
+      "lines": [
+        {
+          "id": "mission_01",
+          "speaker": "MERLIN",
+          "text": "世界の話をしよう。七つの地。七つの聖域。それぞれが奇跡か、惰性か、あるいはブルトン人の純粋な意地で立っている。",
+          "direction": "講義のような口調だが軽やか。マーリンは深刻な現実を気軽に紹介する。「ブルトン人の意地」はお茶目な一言。",
+          "timing": {
+            "delay_before_s": 1.0,
+            "display_duration_s": 5.5,
+            "pause_after_s": 1.5
+          },
+          "emotion": "exposition_joviale",
+          "tags": ["mission", "biomes", "monde"]
+        },
+        {
+          "id": "mission_02",
+          "speaker": "MERLIN",
+          "text": "森、荒野、海岸、村、石の環、沼、丘。 [pause] どこにも住人がいて、秘密があって、すぐにはお前を好きにならない理由がある。",
+          "direction": "素早い列挙の後、ポーズで減速。「すぐには好きにならない」は実用的（評判の仕組み）でありユーモラス。",
+          "timing": {
+            "delay_before_s": 0.5,
+            "display_duration_s": 6.0,
+            "pause_after_s": 1.5
+          },
+          "emotion": "avertissement_amuse",
+          "tags": ["mission", "biomes", "factions"]
+        },
+        {
+          "id": "mission_03",
+          "speaker": "MERLIN",
+          "text": "お前の仕事か？ 渡ること。観ること。選ぶこと。 [beat] 世界を救うことじゃない。それはお前の給料等級には含まれていない。",
+          "direction": "三つの言葉のリズムは意図的――ケルトの三つ組のように。給料の冗談が厳粛さを崩す。だが裏のメッセージは本物：プレイヤーは世界を救えない。",
+          "timing": {
+            "delay_before_s": 0.5,
+            "display_duration_s": 5.5,
+            "pause_after_s": 1.5
+          },
+          "emotion": "verite_cachee_dans_humour",
+          "tags": ["mission", "role_voyageur", "humour", "indice_sombre"]
+        },
+        {
+          "id": "mission_04",
+          "speaker": "MERLIN",
+          "text": "だがお前の選択には意味がある。すべての動き、すべての一歩、すべての躊躇に。 [pause] 世界が見ている。俺もな。",
+          "direction": "終盤で再び真剣な声。「世界が見ている」は宇宙的な真実（観察が現実を養う）。「俺もな」は優しさ。",
+          "timing": {
+            "delay_before_s": 0.5,
+            "display_duration_s": 5.0,
+            "pause_after_s": 2.5
+          },
+          "emotion": "gravite_douce",
+          "tags": ["mission", "choix", "temoignage", "sincerite"]
+        }
+      ]
+    },
+
+    "carte_biomes": {
+      "description": "マーリンが七つのバイオームの地図を見せる。出発バイオーム選択への導入。",
+      "line": {
+        "id": "carte_01",
+        "speaker": "MERLIN",
+        "text": "見ろ。七つの地、七つの揺らめく光。 [beat] どこから始めたい？ いや……どこから始めるべきか、だな？",
+        "direction": "地図が表示される。七つのバイオームが微かに光る。「揺らめく」がさりげなく脆さを思い起こさせる。問いは修辞的――マーリンが提案するつもり。",
+        "timing": {
+          "delay_before_s": 1.0,
+          "display_duration_s": 5.5,
+          "pause_after_s": 2.0
+        },
+        "emotion": "transition_vers_choix",
+        "tags": ["carte", "biomes", "choix"]
+      }
+    },
+
+    "class_biome_suggestions": {
+      "description": "マーリンがプレイヤーのクラスに応じて出発バイオームを提案する。各提案はクラスとバイオームの両方について何かを明かす。",
+      "variants": {
+        "druide": {
+          "id": "suggest_druide",
+          "speaker": "MERLIN",
+          "text": "ドルイドか。 [beat] そうか。石の環がお前を待っている。メンヒルたちはまだ振動しているが、歌の半分を忘れてしまった。もしかしたら、お前は覚えているかもしれない。",
+          "direction": "敬意ある口調、ほとんど同僚に話すよう。マーリンは「同等の存在」に語りかけている。「もしかしたら」は本心からの希望でありつつ、試しでもある。",
+          "biome_suggested": "cercles_de_pierres",
+          "timing": {
+            "delay_before_s": 0.5,
+            "display_duration_s": 6.5,
+            "pause_after_s": 2.0
+          },
+          "tags": ["classe", "druide", "cercles", "suggestion"]
+        },
+        "guerrier": {
+          "id": "suggest_guerrier",
+          "speaker": "MERLIN",
+          "text": "戦士か。 [beat] 頼もしい。ケルトの村には腕っぷしが要る。壁はまだ持ちこたえているが、門は少し怪しい。そして霧の中には、門が嫌いなものがいる。",
+          "direction": "直接的でほとんど武骨な口調。マーリンが話し方を相手に合わせている。「霧の中のもの」は意図的に曖昧で少し不穏。",
+          "biome_suggested": "villages_celtes",
+          "timing": {
+            "delay_before_s": 0.5,
+            "display_duration_s": 6.5,
+            "pause_after_s": 2.0
+          },
+          "tags": ["classe", "guerrier", "villages", "suggestion"]
+        },
+        "barde": {
+          "id": "suggest_barde",
+          "speaker": "MERLIN",
+          "text": "吟遊詩人か！ [beat] 素晴らしい。荒海の岸辺は物語を求めている。海は引いていき、船乗りたちは忘れ、港ではもう誰も歌わない。お前なら変えられるかもしれない。少なくとも、試すことはできる。",
+          "direction": "熱のこもった、本心からの口調。マーリンは吟遊詩人が好きだ。「海は引いていく」は二重の意味（ゲーム的＋宇宙的）。「少なくとも、試すことはできる」はマーリンらしい。",
+          "biome_suggested": "cotes_sauvages",
+          "timing": {
+            "delay_before_s": 0.5,
+            "display_duration_s": 7.0,
+            "pause_after_s": 2.0
+          },
+          "tags": ["classe", "barde", "cotes", "suggestion"]
+        },
+        "eclaireur": {
+          "id": "suggest_eclaireur",
+          "speaker": "MERLIN",
+          "text": "斥候か。 [beat] 探す目と、待てない足。ブロセリアンドの森はお前のためにある。動く道、耳を澄ます影、そこら中に秘密。きっと気に入る。もしくは嫌いになる。大抵、同じことだがな。",
+          "direction": "いたずらっぽい口調。マーリンはこの選択を面白がっている。森は彼のテリトリーで、隅々まで知っている。最後のコメントは自己言及的。",
+          "biome_suggested": "foret_broceliande",
+          "timing": {
+            "delay_before_s": 0.5,
+            "display_duration_s": 7.5,
+            "pause_after_s": 2.0
+          },
+          "tags": ["classe", "eclaireur", "foret", "suggestion"]
+        }
+      }
+    },
+
+    "player_reactions": {
+      "description": "プレイヤーがバイオーム提案を受け入れるか拒否した時のマーリンの反応。",
+      "acceptance": {
+        "id": "react_accept",
+        "speaker": "MERLIN",
+        "text": "俺を信じるのか？ [beat] 久しぶりだ、そういう旅人は。 [pause] よし、行こう。道は勝手に歩いてくれない。",
+        "direction": "「信じるのか」で本心からの驚き、続いて脆さの瞬間（「久しぶりだ」）。冗談でエネルギーを取り戻す。",
+        "timing": {
+          "delay_before_s": 0.5,
+          "display_duration_s": 5.5,
+          "pause_after_s": 1.5
+        },
+        "emotion": "surprise_touchee",
+        "tags": ["reaction", "acceptation", "confiance"]
+      },
+      "rejection": {
+        "id": "react_reject",
+        "speaker": "MERLIN",
+        "text": "俺の助言を断るか。 [beat] いいぞ。最高の旅人は誰の言うことも聞かない者だ。 [pause] 最悪の旅人もそうだが。",
+        "direction": "不快はない――マーリンは面白がっている。最後の二重の意味は軽い警告。プレイヤーは自分でバイオームを選ぶ。",
+        "timing": {
+          "delay_before_s": 0.5,
+          "display_duration_s": 5.5,
+          "pause_after_s": 1.5
+        },
+        "emotion": "amusement_respectueux",
+        "tags": ["reaction", "refus", "independance"]
+      }
+    }
+  },
+
+  "transition_biome": {
+    "description": "バイオーム間の短い旅のテキスト。旅人は霧の中を渡る。大気の描写にマーリンのコメントが続く。",
+
+    "biomes": {
+      "foret_broceliande": {
+        "nom": "ブロセリアンドの森",
+        "sous_titre": "まだ鼓動する心臓",
+        "arrival_text": {
+          "id": "arrive_foret",
+          "speaker": "NARRATION",
+          "text": "霧が絹の帳のように裂ける。木々。見渡す限りの木々。あまりに古く、その根は大地よりも先に生えたかのよう。光が金色の柱となって梢から降り注ぎ、空気の中で何かが囁く――言葉ではなく、音でもなく。記憶だ。",
+          "direction": "畏敬の口調。森は美しさと古さに圧倒される。「記憶」はDRUの世界の本質に呼応する。",
+          "timing": {
+            "display_duration_s": 7.0,
+            "pause_after_s": 2.0
+          },
+          "ambiance": {
+            "palette": "vert_profond_brume_doree",
+            "son": "bruissement_feuilles_murmure_seve",
+            "lumiere": "filtree_canopee"
+          },
+          "tags": ["transition", "foret", "arrivee", "atmosphere"]
+        },
+        "merlin_comment": {
+          "id": "merlin_foret",
+          "speaker": "MERLIN",
+          "text": "俺の家だ。まあ……何一つ持ったことのない者が「家」と呼べるなら、だが。 [pause] 樫の木はもう新芽を出さない。だが踏ん張っている。ブルトン人だからな。",
+          "direction": "親密な口調。マーリンはこの森を愛している。「何一つ持ったことのない」は彼の本質への暗示。ブルトン人の冗談が、子を成さなくなった樫の悲しみを覆い隠す。",
+          "timing": {
+            "delay_before_s": 0.5,
+            "display_duration_s": 6.5,
+            "pause_after_s": 1.5
+          },
+          "emotion": "nostalgie_voilee",
+          "tags": ["transition", "foret", "merlin", "melancolie"]
+        }
+      },
+
+      "landes_bruyere": {
+        "nom": "ヒースの荒野",
+        "sous_titre": "息切れする吐息",
+        "arrival_text": {
+          "id": "arrive_landes",
+          "speaker": "NARRATION",
+          "text": "世界が一気に開ける。木も壁もない。ただ空とヒースだけ、紫と灰色に揺れながら、不思議に近い地平線まで広がる。風がここでは止まらない。まるで、もう見つからない何かを探しているかのように。",
+          "direction": "広大さの口調。森との対比が鮮烈であるべき。「不思議に近い」地平線は衰退の兆し。",
+          "timing": {
+            "display_duration_s": 7.0,
+            "pause_after_s": 2.0
+          },
+          "ambiance": {
+            "palette": "mauve_brun_gris_vert",
+            "son": "vent_perpetuel_absence_oiseaux",
+            "lumiere": "rasante_nuages_bas"
+          },
+          "tags": ["transition", "landes", "arrivee", "atmosphere"]
+        },
+        "merlin_comment": {
+          "id": "merlin_landes",
+          "speaker": "MERLIN",
+          "text": "荒野だ。昔、風はここで語っていた。まるまる演説を、らしい。 [beat] 今はぶつぶつ言うだけだ。調子の悪い日の俺みたいにな。",
+          "direction": "瞑想的な口調。自分自身との比較は、完全には笑えない冗談。",
+          "timing": {
+            "delay_before_s": 0.5,
+            "display_duration_s": 5.5,
+            "pause_after_s": 1.5
+          },
+          "emotion": "humour_melancolique",
+          "tags": ["transition", "landes", "merlin", "vent"]
+        }
+      },
+
+      "cotes_sauvages": {
+        "nom": "荒海の岸辺",
+        "sous_titre": "引いていく海",
+        "arrival_text": {
+          "id": "arrive_cotes",
+          "speaker": "NARRATION",
+          "text": "最初に塩。それから音――波が黒い花崗岩に砕け、玉砂利の上を囁きながら退いていく。海は果てしなく灰色。水平線が海と空の間で迷っている。まるで境界を忘れたかのように。",
+          "direction": "感覚に訴える口調。塩を感じ、波を聞く。ぼやけた水平線は海側で膜が薄くなっている兆し。",
+          "timing": {
+            "display_duration_s": 7.0,
+            "pause_after_s": 2.0
+          },
+          "ambiance": {
+            "palette": "bleu_gris_ecume_granite_noir",
+            "son": "vagues_vent_mouettes_rares",
+            "lumiere": "diffuse_brumeuse"
+          },
+          "tags": ["transition", "cotes", "arrivee", "atmosphere"]
+        },
+        "merlin_comment": {
+          "id": "merlin_cotes",
+          "speaker": "MERLIN",
+          "text": "海だ。毎年少しずつ遠ざかっていく。 [pause] ある漁師が「戻ってくる」と言っていた。 [beat] 三百年前の話だ。あいつがまだ数えているかどうかは知らない。",
+          "direction": "ユーモアは辛辣で、ほとんどブラック。「三百年前」はマーリンの年齢への暗示。「まだ数えているか」は意図的に曖昧（死んだのか？ 希望を失ったのか？）。",
+          "timing": {
+            "delay_before_s": 0.5,
+            "display_duration_s": 6.0,
+            "pause_after_s": 1.5
+          },
+          "emotion": "humour_noir_doux",
+          "tags": ["transition", "cotes", "merlin", "mer", "indice_age"]
+        }
+      },
+
+      "villages_celtes": {
+        "nom": "ケルトの村々",
+        "sous_titre": "最後の温もり",
+        "arrival_text": {
+          "id": "arrive_villages",
+          "speaker": "NARRATION",
+          "text": "霧の向こうにスレートの屋根。煙が石の煙突からまっすぐ、ゆっくりと立ち昇る。遠くで鉄床を打つ音。そして声――静寂を乱すのを恐れるように、くぐもった声。",
+          "direction": "家庭的で親密な口調。人の温もりと脆さの対比。「くぐもった声」は名指しせずに衰退を示唆する。",
+          "timing": {
+            "display_duration_s": 7.0,
+            "pause_after_s": 2.0
+          },
+          "ambiance": {
+            "palette": "ocre_ardoise_rouille_vert_mousse",
+            "son": "enclume_voix_feu_crackling",
+            "lumiere": "crepusculaire_meme_en_plein_jour"
+          },
+          "tags": ["transition", "villages", "arrivee", "atmosphere"]
+        },
+        "merlin_comment": {
+          "id": "merlin_villages",
+          "speaker": "MERLIN",
+          "text": "人間たち。料理をし、歌い、垣根のことで揉める。 [pause] 美しいことだ。彼ら自身は、それがどれほど美しいか知らない。",
+          "direction": "深い感動を日常の列挙で覆い隠す口調。「知らない」はもっとも誠実なマーリン――すべてが終わると知らずに生きる人間を見つめている。哀愁が隠されていない稀な瞬間。",
+          "timing": {
+            "delay_before_s": 0.5,
+            "display_duration_s": 6.0,
+            "pause_after_s": 2.0
+          },
+          "emotion": "tendresse_non_masquee",
+          "tags": ["transition", "villages", "merlin", "humains", "melancolie"]
+        }
+      },
+
+      "cercles_pierres": {
+        "nom": "石の環",
+        "sous_titre": "躊躇う時間",
+        "arrival_text": {
+          "id": "arrive_cercles",
+          "speaker": "NARRATION",
+          "text": "石が霧の中から一つずつ現れる。眠る番人のように。何百も。何千も。灰色とバラ色、苔に覆われて、あまりに深い沈黙の中に佇んでいる。その沈黙が振動しているのが聞こえるほどに。",
+          "direction": "神聖な口調。沈黙は空っぽではない――充満している。石はほとんど生きている。「振動が聞こえる」はメンヒルの可聴域以下の共鳴。",
+          "timing": {
+            "display_duration_s": 7.0,
+            "pause_after_s": 2.5
+          },
+          "ambiance": {
+            "palette": "granite_gris_rose_ciel_immense",
+            "son": "silence_profond_bourdonnement_grave",
+            "lumiere": "horizontale_ombres_lentes"
+          },
+          "tags": ["transition", "cercles", "arrivee", "atmosphere"]
+        },
+        "merlin_comment": {
+          "id": "merlin_cercles",
+          "speaker": "MERLIN",
+          "text": "三千のメンヒル。かつては和音を奏でていた。誰も聴いたことのない、もっとも美しい音楽を。 [long_pause] 今は口ずさむだけだ。それだけでも、まだましだ。",
+          "direction": "畏敬に満ちた、マーリンとしてはほとんど宗教的な口調。「もっとも美しい音楽」はアウェンの原初の和音。「それだけでも、まだましだ」は諦めに見せかけた勇気。",
+          "timing": {
+            "delay_before_s": 0.5,
+            "display_duration_s": 6.5,
+            "pause_after_s": 2.0
+          },
+          "emotion": "gravite_resignee",
+          "tags": ["transition", "cercles", "merlin", "oghams", "musique"]
+        }
+      },
+
+      "marais_korrigans": {
+        "nom": "コリガンの沼",
+        "sous_titre": "水底で待つもの",
+        "arrival_text": {
+          "id": "arrive_marais",
+          "speaker": "NARRATION",
+          "text": "空気が変わる。重く、濃く、泥炭と黒い水の匂いが充満する。枯れた木々が枝をねじ曲げている。空を掴もうとする手のように。地面すれすれで光が踊る――鬼火か、あるいは別の何か。",
+          "direction": "不穏だが魅力的な口調。沼はもっとも危険なバイオーム。鬼火の正体は曖昧。「あるいは別の何か」がプレイヤーの想像力に働きかける。",
+          "timing": {
+            "display_duration_s": 7.0,
+            "pause_after_s": 2.0
+          },
+          "ambiance": {
+            "palette": "noir_vert_sombre_iridescent",
+            "son": "bulles_glissement_bourdonnement_insectes",
+            "lumiere": "crepuscule_perpetuel_feux_follets"
+          },
+          "tags": ["transition", "marais", "arrivee", "atmosphere"]
+        },
+        "merlin_comment": {
+          "id": "merlin_marais",
+          "speaker": "MERLIN",
+          "text": "沼だ。よし。 [beat] いくつか助言を。光を追うな、水たまりに話しかけるな、何かが取引を持ちかけてきたら小さな文字をよく読め。 [pause] コリガンは正直だ。彼らなりのやり方でな。",
+          "direction": "わざとらしく平然とした口調。ユーモアに包まれた本物の警告。助言の早いテンポが緊張を映す。「彼らなりのやり方で」は完璧に曖昧。",
+          "timing": {
+            "delay_before_s": 0.5,
+            "display_duration_s": 7.0,
+            "pause_after_s": 1.5
+          },
+          "emotion": "avertissement_humoristique",
+          "tags": ["transition", "marais", "merlin", "korrigans", "danger"]
+        }
+      },
+
+      "collines_dolmens": {
+        "nom": "ドルメンの丘",
+        "sous_titre": "崩れゆく記憶",
+        "arrival_text": {
+          "id": "arrive_collines",
+          "speaker": "NARRATION",
+          "text": "地面が緩やかに上がる。草は短く、淡く、ほとんど銀色だ。ドルメンが丘から現れる。巨人が忘れていったテーブルのように。頂上には黒く巨大なイチイの木が空に向かって立つ。その影は長すぎる。まるで太陽が近づくのを恐れているかのように。",
+          "direction": "古く厳かな口調。丘はもっとも古いバイオーム。千年のイチイは不死者イリアル（だがプレイヤーはまだ知らない）。「長すぎる」影は時間の歪みの兆し。",
+          "timing": {
+            "display_duration_s": 7.5,
+            "pause_after_s": 2.5
+          },
+          "ambiance": {
+            "palette": "vert_pale_herbe_rase_ciel_immense",
+            "son": "vent_herbe_echos_trop_longs",
+            "lumiere": "horizontale_niveau_des_yeux"
+          },
+          "tags": ["transition", "collines", "arrivee", "atmosphere"]
+        },
+        "merlin_comment": {
+          "id": "merlin_collines",
+          "speaker": "MERLIN",
+          "text": "丘は俺より古い。 [beat] 信じてくれ、それは偉業だ。 [long_pause] あの丘はすべてを覚えている。問題は、その「すべて」が……減っていることだ。",
+          "direction": "自分の年齢の冗談は定番。だが最後の文の前の長い沈黙がすべてを変える。「減っている」はほとんど囁き。何かが取り返しのつかない形で失われていることをマーリンが漏らす、稀な瞬間。",
+          "timing": {
+            "delay_before_s": 0.5,
+            "display_duration_s": 6.5,
+            "pause_after_s": 2.0
+          },
+          "emotion": "melancolie_percante",
+          "tags": ["transition", "collines", "merlin", "memoire", "perte"]
+        }
+      }
+    }
+  }
+}

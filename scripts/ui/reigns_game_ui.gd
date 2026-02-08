@@ -205,7 +205,7 @@ func _style_gauge_bar(bar: ProgressBar, value: float) -> void:
 	"""Apply critical styling to gauge bars."""
 	var stylebox = bar.get_theme_stylebox("fill")
 	if stylebox is StyleBoxFlat:
-		if value <= DruConstants.REIGNS_GAUGE_CRITICAL_LOW or value >= DruConstants.REIGNS_GAUGE_CRITICAL_HIGH:
+		if value <= MerlinConstants.REIGNS_GAUGE_CRITICAL_LOW or value >= MerlinConstants.REIGNS_GAUGE_CRITICAL_HIGH:
 			stylebox.bg_color = Color(0.9, 0.2, 0.2)  # Red for critical
 		else:
 			stylebox.bg_color = Color(0.3, 0.7, 0.3)  # Green for normal
@@ -237,7 +237,7 @@ func update_skills(skills: Array, cooldowns: Dictionary) -> void:
 
 	# Create skill buttons
 	for skill_id in skills:
-		var skill_data = DruConstants.OGHAM_SKILLS.get(skill_id, {})
+		var skill_data = MerlinConstants.OGHAM_SKILLS.get(skill_id, {})
 		var cooldown = int(cooldowns.get(skill_id, 0))
 
 		var btn = Button.new()

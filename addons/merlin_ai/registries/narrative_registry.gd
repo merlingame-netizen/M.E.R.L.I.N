@@ -1,4 +1,4 @@
-## ═══════════════════════════════════════════════════════════════════════════════
+﻿## ═══════════════════════════════════════════════════════════════════════════════
 ## Narrative Registry — Memoire Narrative
 ## ═══════════════════════════════════════════════════════════════════════════════
 ## Track les elements narratifs actifs pour coherence et callbacks.
@@ -135,7 +135,7 @@ func _init() -> void:
 
 
 func reset_run() -> void:
-	"""Reset pour nouvelle run."""
+	## Reset pour nouvelle run.
 	active_arcs.clear()
 	foreshadowing.clear()
 	npcs.clear()
@@ -163,7 +163,7 @@ func _get_random_season() -> String:
 # ═══════════════════════════════════════════════════════════════════════════════
 
 func process_card(card: Dictionary) -> void:
-	"""Appele apres chaque carte jouee."""
+	## Appele apres chaque carte jouee.
 	_current_card_number += 1
 
 	# Track themes
@@ -242,7 +242,7 @@ func _update_world_state(card: Dictionary) -> void:
 # ═══════════════════════════════════════════════════════════════════════════════
 
 func start_arc(arc_id: String, initial_flags: Dictionary = {}) -> bool:
-	"""Demarre un nouvel arc narratif."""
+	## Demarre un nouvel arc narratif.
 	if active_arcs.size() >= MAX_ACTIVE_ARCS:
 		return false
 
@@ -329,7 +329,7 @@ func has_active_arc(arc_id: String) -> bool:
 # ═══════════════════════════════════════════════════════════════════════════════
 
 func plant_foreshadowing(hint_id: String, hint_text: String, twist_type: String = "") -> bool:
-	"""Plante un element de foreshadowing."""
+	## Plante un element de foreshadowing.
 	if foreshadowing.size() >= MAX_FORESHADOWING:
 		return false
 
@@ -361,7 +361,7 @@ func _check_foreshadowing_reveals() -> void:
 
 
 func reveal_foreshadowing(hint_id: String) -> bool:
-	"""Revele un element de foreshadowing."""
+	## Revele un element de foreshadowing.
 	for hint in foreshadowing:
 		if hint.id == hint_id and not hint.revealed:
 			if _current_card_number >= hint.min_reveal_card:
@@ -372,7 +372,7 @@ func reveal_foreshadowing(hint_id: String) -> bool:
 
 
 func get_revealable_foreshadowing() -> Array:
-	"""Retourne les hints qui peuvent etre reveles maintenant."""
+	## Retourne les hints qui peuvent etre reveles maintenant.
 	var revealable := []
 	for hint in foreshadowing:
 		if not hint.revealed and _current_card_number >= hint.min_reveal_card:
@@ -381,12 +381,12 @@ func get_revealable_foreshadowing() -> Array:
 
 
 func should_trigger_twist() -> bool:
-	"""Determine si un twist devrait se produire."""
+	## Determine si un twist devrait se produire.
 	return _rng.randf() < world.global_tension
 
 
 func get_available_twist() -> Dictionary:
-	"""Retourne un twist disponible a partir du foreshadowing."""
+	## Retourne un twist disponible a partir du foreshadowing.
 	var revealable := get_revealable_foreshadowing()
 	if revealable.is_empty():
 		return {}
@@ -441,7 +441,7 @@ func get_npc_info(npc_id: String) -> Dictionary:
 
 
 func get_npcs_for_callback(min_cards_since: int = 10) -> Array:
-	"""Retourne les NPCs disponibles pour un retour."""
+	## Retourne les NPCs disponibles pour un retour.
 	var available := []
 	for npc_id in npcs:
 		var npc: Dictionary = npcs[npc_id]
@@ -462,7 +462,7 @@ func get_npcs_for_callback(min_cards_since: int = 10) -> Array:
 # ═══════════════════════════════════════════════════════════════════════════════
 
 func get_theme_weight(theme: String) -> float:
-	"""Retourne le poids d'un theme (fatigue = poids bas)."""
+	## Retourne le poids d'un theme (fatigue = poids bas).
 	var base_weight := 1.0
 	var fatigue: float = theme_fatigue.get(theme, 0.0)
 	var fatigue_penalty: float = fatigue * 0.15
@@ -470,7 +470,7 @@ func get_theme_weight(theme: String) -> float:
 
 
 func get_recommended_themes() -> Array:
-	"""Retourne les themes a privilegier (peu de fatigue)."""
+	## Retourne les themes a privilegier (peu de fatigue).
 	var weights := {}
 	for theme in THEMES:
 		weights[theme] = get_theme_weight(theme)
@@ -483,7 +483,7 @@ func get_recommended_themes() -> Array:
 
 
 func get_fatigued_themes() -> Array:
-	"""Retourne les themes a eviter."""
+	## Retourne les themes a eviter.
 	var fatigued := []
 	for theme in theme_fatigue:
 		if theme_fatigue[theme] >= THEME_FATIGUE_WARNING:
@@ -495,7 +495,7 @@ func get_fatigued_themes() -> Array:
 # ═══════════════════════════════════════════════════════════════════════════════
 
 func advance_day() -> void:
-	"""Avance d'un jour."""
+	## Avance d'un jour.
 	world.day += 1
 
 	# Progress time of day
@@ -545,7 +545,7 @@ func get_context_for_llm() -> Dictionary:
 
 
 func get_summary_for_prompt() -> String:
-	"""Resume textuel pour le prompt LLM."""
+	## Resume textuel pour le prompt LLM.
 	var lines := []
 
 	# World state
@@ -585,7 +585,7 @@ func get_summary_for_prompt() -> String:
 # ═══════════════════════════════════════════════════════════════════════════════
 
 func on_run_end() -> void:
-	"""Appele a la fin d'une run."""
+	## Appele a la fin d'une run.
 	# Close all active arcs
 	for arc in active_arcs:
 		_complete_arc(arc, "run_ended")
@@ -621,4 +621,8 @@ func load_from_disk() -> void:
 		return
 
 	if data.has("completed_arcs"):
-		completed_arcs = data.completed_arcs
+		completed_arcs.clear()
+		var arcs_data: Array = data.completed_arcs if data.completed_arcs is Array else []
+		for arc in arcs_data:
+			if arc is Dictionary:
+				completed_arcs.append(arc)

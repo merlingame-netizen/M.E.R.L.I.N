@@ -1,0 +1,567 @@
+{
+  "_meta": {
+    "version": "1.0",
+    "author": "Narrative Writer Agent (Merlin Voice)",
+    "created": "2026-02-08",
+    "language": "zh-CN",
+    "description": "SceneEveil、SceneAntreMerlin 和 TransitionBiome 的完整对话 — 简体中文翻译",
+    "notes": [
+      "梅林用现代中文说话，带有诗意的点缀",
+      "没有古文腔调，没有表情符号",
+      "句子简短。停顿很重要。",
+      "95% 快乐/俏皮，5% 隐藏的忧郁",
+      "[pause] 表示1-2秒的沉默",
+      "[long_pause] 表示3-4秒的沉默",
+      "[beat] 表示微停顿（0.5秒）",
+      "专有名词：布罗塞利安德(Broceliande)、小精灵(Bestiole)、欧甘(Oghams)、灵感之光(Awen)",
+      "旅者 = Voyageur"
+    ]
+  },
+
+  "scene_eveil": {
+    "description": "黑屏。梅林在黑暗中说话。玩家刚刚穿越了薄膜。30-45秒。梅林等了很久。情绪转向幽默。",
+    "context": "旅者第一次到来。梅林如释重负，几乎感动。然后他用幽默掩饰。这是玩家对梅林的第一印象。",
+    "lines": [
+      {
+        "id": "eveil_01",
+        "speaker": "MERLIN",
+        "text": "……你来了。",
+        "direction": "低语。像一个不敢再抱希望的人。语调赤裸，没有面具。",
+        "timing": {
+          "delay_before_s": 3.0,
+          "display_duration_s": 3.0,
+          "pause_after_s": 2.0
+        },
+        "emotion": "soulagement_profond",
+        "tags": ["eveil", "emotion", "premiere_impression"]
+      },
+      {
+        "id": "eveil_02",
+        "speaker": "MERLIN",
+        "text": "我等了。很久。久到我已经忘了那究竟是时间，还是别的什么。",
+        "direction": "更加坚定，但声音仍承载着孤独的重量。每个字都经过斟酌。'别的什么'悬而未决。",
+        "timing": {
+          "delay_before_s": 0.5,
+          "display_duration_s": 5.0,
+          "pause_after_s": 2.5
+        },
+        "emotion": "vulnerabilite_rare",
+        "tags": ["eveil", "solitude", "temps", "indice_sombre"]
+      },
+      {
+        "id": "eveil_03",
+        "speaker": "MERLIN",
+        "text": "迷雾放你过来了。这是好兆头。当然…… [pause] 说实话，它谁都放过来。连完全没有方向感的人也不例外。",
+        "direction": "语调上扬。能感觉到梅林正戴上他快活的面具。转变应该是可感知的：'当然……'是情感和幽默之间的枢纽。",
+        "timing": {
+          "delay_before_s": 0.5,
+          "display_duration_s": 6.0,
+          "pause_after_s": 1.5
+        },
+        "emotion": "transition_vers_humour",
+        "tags": ["eveil", "membrane", "humour", "masque"]
+      },
+      {
+        "id": "eveil_04",
+        "speaker": "MERLIN",
+        "text": "好了。欢迎来到布罗塞利安德。最后一片还站着的森林，世界尽头前的第一站。 [beat] 别摆出那副表情。天亮的时候，它比看起来漂亮得多。",
+        "direction": "面具已就位。快乐的梅林回来了。温暖的语调，带一点调侃。'天亮的时候'既是对周围黑暗的评论，也是对世界现状的微妙暗示。",
+        "timing": {
+          "delay_before_s": 0.5,
+          "display_duration_s": 7.0,
+          "pause_after_s": 2.0
+        },
+        "emotion": "accueil_jovial",
+        "tags": ["eveil", "bienvenue", "humour", "broceliande"]
+      }
+    ]
+  },
+
+  "scene_antre_merlin": {
+    "description": "梅林的洞穴。光线逐渐恢复。小精灵出现。梅林介绍世界、任务，并建议起始生态区。",
+
+    "bestiole_apparition": {
+      "description": "小精灵从暗影中出现，被旅者的灵感之光吸引。小小的发光生物，先是犹豫，然后好奇。",
+      "lines": [
+        {
+          "id": "bestiole_01",
+          "speaker": "NARRATION",
+          "text": "暗影中有什么东西动了。一丝微光，怯怯的，像一块犹豫着要不要熄灭的余烬。",
+          "direction": "叙述文本。不是梅林的声音。中性、诗意、描写性的语调。微光轻柔地脉动着。",
+          "timing": {
+            "delay_before_s": 1.0,
+            "display_duration_s": 4.0,
+            "pause_after_s": 1.5
+          },
+          "vfx": "lumiere_faible_pulse",
+          "tags": ["bestiole", "apparition", "narration"]
+        },
+        {
+          "id": "bestiole_02",
+          "speaker": "NARRATION",
+          "text": "微光靠近了。两只巨大的眼睛，对这小小的身体来说太大了。它看着你，仿佛认出了你。",
+          "direction": "生物靠近玩家。它的眼睛是焦点。'仿佛认出了你'是灵感之光共鸣的回响：小精灵感应到了旅者的灵感之光。",
+          "timing": {
+            "delay_before_s": 0.5,
+            "display_duration_s": 4.5,
+            "pause_after_s": 1.5
+          },
+          "vfx": "bestiole_yeux_brillent",
+          "tags": ["bestiole", "apparition", "resonance", "narration"]
+        },
+        {
+          "id": "bestiole_03",
+          "speaker": "NARRATION",
+          "text": "一个声音。不完全是咕噜声。也不完全是低语。介于两者之间的什么，在说：我在这里。",
+          "direction": "小精灵的声音。玩家应该感受到这一刻的亲密感。这不壮观——这是温柔的。",
+          "timing": {
+            "delay_before_s": 0.5,
+            "display_duration_s": 4.5,
+            "pause_after_s": 2.0
+          },
+          "sfx": "bestiole_trille_doux",
+          "tags": ["bestiole", "apparition", "son", "narration"]
+        }
+      ]
+    },
+
+    "merlin_sur_bestiole": {
+      "description": "梅林对小精灵出现的反应。语调介于温柔和保护性的打趣之间。",
+      "lines": [
+        {
+          "id": "merlin_bestiole_01",
+          "speaker": "MERLIN",
+          "text": "啊。小精灵找到你了。 [beat] 它就是这样。它会找到人。尤其是那些还不知道自己已经迷路的人。",
+          "direction": "慈爱的语调。一个父亲在说他的孩子。'尤其是那些还不知道'既是幽默也是对旅者本质的暗示。",
+          "timing": {
+            "delay_before_s": 0.5,
+            "display_duration_s": 5.0,
+            "pause_after_s": 1.5
+          },
+          "emotion": "tendresse_masquee",
+          "tags": ["bestiole", "merlin", "lien", "humour"]
+        },
+        {
+          "id": "merlin_bestiole_02",
+          "speaker": "MERLIN",
+          "text": "好好照顾它。比照顾我更用心。 [pause] 这很容易，我这个人很难相处。",
+          "direction": "第一句是真诚的——几乎太真诚了。梅林意识到了，赶紧用笑话修正。但请求是真实的：小精灵才是最重要的。",
+          "timing": {
+            "delay_before_s": 0.5,
+            "display_duration_s": 4.5,
+            "pause_after_s": 2.0
+          },
+          "emotion": "sincerite_breve",
+          "tags": ["bestiole", "merlin", "protection", "humour_defensif"]
+        }
+      ]
+    },
+
+    "mission_briefing": {
+      "description": "梅林解释世界和任务。语调严肃但穿插幽默。玩家应该明白有一个世界要探索，有什么不对劲——但不知道具体是什么。",
+      "lines": [
+        {
+          "id": "mission_01",
+          "speaker": "MERLIN",
+          "text": "世界。我们来聊聊。七片土地。七座圣所。每一座都靠奇迹、靠惯性、或者靠纯粹的布列塔尼式倔强撑着。",
+          "direction": "教授式但轻松的语调。梅林用轻描淡写呈现严肃的现实。'布列塔尼式倔强'是一个眨眼。",
+          "timing": {
+            "delay_before_s": 1.0,
+            "display_duration_s": 5.5,
+            "pause_after_s": 1.5
+          },
+          "emotion": "exposition_joviale",
+          "tags": ["mission", "biomes", "monde"]
+        },
+        {
+          "id": "mission_02",
+          "speaker": "MERLIN",
+          "text": "森林、荒野、海岸、村庄、石阵、沼泽、丘陵。 [pause] 每一处都有自己的居民、秘密，以及不马上喜欢你的理由。",
+          "direction": "快速列举后在停顿处放慢。'不马上喜欢你'既是实用的（声望机制）也是有趣的。",
+          "timing": {
+            "delay_before_s": 0.5,
+            "display_duration_s": 6.0,
+            "pause_after_s": 1.5
+          },
+          "emotion": "avertissement_amuse",
+          "tags": ["mission", "biomes", "factions"]
+        },
+        {
+          "id": "mission_03",
+          "speaker": "MERLIN",
+          "text": "你的任务？穿越。观察。选择。 [beat] 不是拯救世界。那超出了你的薪资等级。",
+          "direction": "三个词的节奏是刻意的——像凯尔特三联体。关于薪资的玩笑打破了庄严感。但潜台词是真实的：玩家无法拯救世界。",
+          "timing": {
+            "delay_before_s": 0.5,
+            "display_duration_s": 5.5,
+            "pause_after_s": 1.5
+          },
+          "emotion": "verite_cachee_dans_humour",
+          "tags": ["mission", "role_voyageur", "humour", "indice_sombre"]
+        },
+        {
+          "id": "mission_04",
+          "speaker": "MERLIN",
+          "text": "但你的选择很重要。每一个举动，每一步，每一次犹豫。 [pause] 世界在看。我也在看。",
+          "direction": "最后语调重新变得严肃。'世界在看'是宇宙真理（观察滋养现实）。'我也在看'是温柔的。",
+          "timing": {
+            "delay_before_s": 0.5,
+            "display_duration_s": 5.0,
+            "pause_after_s": 2.5
+          },
+          "emotion": "gravite_douce",
+          "tags": ["mission", "choix", "temoignage", "sincerite"]
+        }
+      ]
+    },
+
+    "carte_biomes": {
+      "description": "梅林展示七大生态区的地图。过渡到起始生态区的选择。",
+      "line": {
+        "id": "carte_01",
+        "speaker": "MERLIN",
+        "text": "看。七片土地，七盏摇曳的灯火。 [beat] 你想从哪里开始？或者说……你应该从哪里开始？",
+        "direction": "地图显示。七个生态区微弱地发光。'摇曳'微妙地提醒着脆弱。问题是修辞性的——梅林会建议。",
+        "timing": {
+          "delay_before_s": 1.0,
+          "display_duration_s": 5.5,
+          "pause_after_s": 2.0
+        },
+        "emotion": "transition_vers_choix",
+        "tags": ["carte", "biomes", "choix"]
+      }
+    },
+
+    "class_biome_suggestions": {
+      "description": "梅林根据玩家职业建议起始生态区。每个建议都揭示了关于职业和生态区的信息。",
+      "variants": {
+        "druide": {
+          "id": "suggest_druide",
+          "speaker": "MERLIN",
+          "text": "一个德鲁伊。 [beat] 好吧。石阵正等着你。竖石们还在震动，但它们已经忘了一半的歌。也许你，还记得。",
+          "direction": "尊重的语调，几乎是同行间的。梅林在和一个'同等者'说话。'也许你'是真诚的希望，但也是一种考验。",
+          "biome_suggested": "cercles_de_pierres",
+          "timing": {
+            "delay_before_s": 0.5,
+            "display_duration_s": 6.5,
+            "pause_after_s": 2.0
+          },
+          "tags": ["classe", "druide", "cercles", "suggestion"]
+        },
+        "guerrier": {
+          "id": "suggest_guerrier",
+          "speaker": "MERLIN",
+          "text": "一个战士。 [beat] 结实。凯尔特村庄需要帮手。墙还撑着，门差了点。而且迷雾里有些东西不喜欢门。",
+          "direction": "直接的语调，几乎是军事化的。梅林调整了他的语域。'迷雾里的东西'故意模糊，略带不安。",
+          "biome_suggested": "villages_celtes",
+          "timing": {
+            "delay_before_s": 0.5,
+            "display_duration_s": 6.5,
+            "pause_after_s": 2.0
+          },
+          "tags": ["classe", "guerrier", "villages", "suggestion"]
+        },
+        "barde": {
+          "id": "suggest_barde",
+          "speaker": "MERLIN",
+          "text": "一个吟游诗人！ [beat] 太好了。荒野海岸渴望故事。海在退去，水手们在遗忘，港口再也没有人唱歌了。你可以改变这一切。或者至少试试。",
+          "direction": "热情的、真诚的语调。梅林喜欢吟游诗人。'海在退去'是双关（机制+宇宙层面）。'或者至少试试'是典型的梅林风格。",
+          "biome_suggested": "cotes_sauvages",
+          "timing": {
+            "delay_before_s": 0.5,
+            "display_duration_s": 7.0,
+            "pause_after_s": 2.0
+          },
+          "tags": ["classe", "barde", "cotes", "suggestion"]
+        },
+        "eclaireur": {
+          "id": "suggest_eclaireur",
+          "speaker": "MERLIN",
+          "text": "一个斥候。 [beat] 寻找的眼睛，等不及的脚步。布罗塞利安德森林就是为你准备的。会移动的小径，会倾听的暗影，到处都是秘密。你会爱上它的。或者恨它。这往往是一回事。",
+          "direction": "狡黠的语调。梅林被这个选择逗乐了。森林是他的领地，他了如指掌。最后的评论是自我指涉的。",
+          "biome_suggested": "foret_broceliande",
+          "timing": {
+            "delay_before_s": 0.5,
+            "display_duration_s": 7.5,
+            "pause_after_s": 2.0
+          },
+          "tags": ["classe", "eclaireur", "foret", "suggestion"]
+        }
+      }
+    },
+
+    "player_reactions": {
+      "description": "玩家接受或拒绝生态区建议时梅林的反应。",
+      "acceptance": {
+        "id": "react_accept",
+        "speaker": "MERLIN",
+        "text": "你信任我？ [beat] 好久没有旅者这样了。 [pause] 好吧，出发。路不会自己走。",
+        "direction": "对'你信任我'真诚地惊讶，随后是一个脆弱的瞬间（'好久没有'）。然后用玩笑恢复能量。",
+        "timing": {
+          "delay_before_s": 0.5,
+          "display_duration_s": 5.5,
+          "pause_after_s": 1.5
+        },
+        "emotion": "surprise_touchee",
+        "tags": ["reaction", "acceptation", "confiance"]
+      },
+      "rejection": {
+        "id": "react_reject",
+        "speaker": "MERLIN",
+        "text": "你拒绝了我的建议。 [beat] 好极了。最好的旅者都是谁的话也不听的。 [pause] 最差的也是，话说回来。",
+        "direction": "没有恼怒——梅林觉得有趣。最后的双关是一个轻微的警告。玩家选择自己的生态区。",
+        "timing": {
+          "delay_before_s": 0.5,
+          "display_duration_s": 5.5,
+          "pause_after_s": 1.5
+        },
+        "emotion": "amusement_respectueux",
+        "tags": ["reaction", "refus", "independance"]
+      }
+    }
+  },
+
+  "transition_biome": {
+    "description": "生态区之间的短途旅行文本。旅者穿越迷雾。氛围描写后跟梅林的评论。",
+
+    "biomes": {
+      "foret_broceliande": {
+        "nom": "布罗塞利安德森林",
+        "sous_titre": "仍在跳动的心",
+        "arrival_text": {
+          "id": "arrive_foret",
+          "speaker": "NARRATION",
+          "text": "迷雾像丝绸帷幕一样撕裂开来。树。到处都是树。古老得仿佛它们的根在大地之前就已生长。光以金色的柱子穿透树冠倾洒而下，空气中有什么在低语——不是一个词，不是一个声音。是一段记忆。",
+          "direction": "敬畏的语调。森林以美丽和古老的力量令人震撼。'记忆'呼应了 DRU 世界的本质。",
+          "timing": {
+            "display_duration_s": 7.0,
+            "pause_after_s": 2.0
+          },
+          "ambiance": {
+            "palette": "vert_profond_brume_doree",
+            "son": "bruissement_feuilles_murmure_seve",
+            "lumiere": "filtree_canopee"
+          },
+          "tags": ["transition", "foret", "arrivee", "atmosphere"]
+        },
+        "merlin_comment": {
+          "id": "merlin_foret",
+          "speaker": "MERLIN",
+          "text": "我家。嗯……说是我家，也只是一个从未拥有过任何东西的人所能称为家的地方。 [pause] 橡树不再长出新芽了。但它们还撑着。它们是布列塔尼人。",
+          "direction": "亲密的语调。梅林爱这片森林。'从未拥有过任何东西'是对他本质的暗示。关于布列塔尼人的玩笑掩饰了橡树不再生长的悲伤。",
+          "timing": {
+            "delay_before_s": 0.5,
+            "display_duration_s": 6.5,
+            "pause_after_s": 1.5
+          },
+          "emotion": "nostalgie_voilee",
+          "tags": ["transition", "foret", "merlin", "melancolie"]
+        }
+      },
+
+      "landes_bruyere": {
+        "nom": "石楠荒野",
+        "sous_titre": "渐渐微弱的呼吸",
+        "arrival_text": {
+          "id": "arrive_landes",
+          "speaker": "NARRATION",
+          "text": "世界突然敞开。没有树，没有墙。只有天空和石楠花，紫色和灰色，一直起伏到一个奇怪地近在咫尺的地平线。风在这里从不停歇。仿佛它在寻找一样再也找不到的东西。",
+          "direction": "广袤的语调。与森林的对比应该是惊人的。'奇怪地近在咫尺'的地平线是枯竭之兆。",
+          "timing": {
+            "display_duration_s": 7.0,
+            "pause_after_s": 2.0
+          },
+          "ambiance": {
+            "palette": "mauve_brun_gris_vert",
+            "son": "vent_perpetuel_absence_oiseaux",
+            "lumiere": "rasante_nuages_bas"
+          },
+          "tags": ["transition", "landes", "arrivee", "atmosphere"]
+        },
+        "merlin_comment": {
+          "id": "merlin_landes",
+          "speaker": "MERLIN",
+          "text": "荒野。风从前会说话。据说还会发表长篇大论。 [beat] 现在它只是嘟囔。有点像我，状态不好的时候。",
+          "direction": "沉思的语调。把自己比作风的笑话并不完全好笑。",
+          "timing": {
+            "delay_before_s": 0.5,
+            "display_duration_s": 5.5,
+            "pause_after_s": 1.5
+          },
+          "emotion": "humour_melancolique",
+          "tags": ["transition", "landes", "merlin", "vent"]
+        }
+      },
+
+      "cotes_sauvages": {
+        "nom": "荒野海岸",
+        "sous_titre": "退去的海",
+        "arrival_text": {
+          "id": "arrive_cotes",
+          "speaker": "NARRATION",
+          "text": "首先是盐味。然后是声音——海浪拍打在黑色花岗岩上，又在鹅卵石上低声退去。大海辽阔而灰蒙。地平线在水和天之间犹豫不决，仿佛忘记了边界在哪里。",
+          "direction": "感官的语调。能闻到盐味，听到海浪。模糊的地平线是薄膜在海边变薄的迹象。",
+          "timing": {
+            "display_duration_s": 7.0,
+            "pause_after_s": 2.0
+          },
+          "ambiance": {
+            "palette": "bleu_gris_ecume_granite_noir",
+            "son": "vagues_vent_mouettes_rares",
+            "lumiere": "diffuse_brumeuse"
+          },
+          "tags": ["transition", "cotes", "arrivee", "atmosphere"]
+        },
+        "merlin_comment": {
+          "id": "merlin_cotes",
+          "speaker": "MERLIN",
+          "text": "大海。它每年退得更远一点。 [pause] 一个渔夫告诉我它会回来的。 [beat] 那是三百年前。我不知道他是否还在数着。",
+          "direction": "幽默干涩，几乎是黑色的。'三百年'是对梅林年龄的暗示。'我不知道他是否还在数着'故意模棱两可（他死了吗？他失去希望了吗？）。",
+          "timing": {
+            "delay_before_s": 0.5,
+            "display_duration_s": 6.0,
+            "pause_after_s": 1.5
+          },
+          "emotion": "humour_noir_doux",
+          "tags": ["transition", "cotes", "merlin", "mer", "indice_age"]
+        }
+      },
+
+      "villages_celtes": {
+        "nom": "凯尔特村庄",
+        "sous_titre": "最后的温暖",
+        "arrival_text": {
+          "id": "arrive_villages",
+          "speaker": "NARRATION",
+          "text": "迷雾后面露出石板屋顶。烟直直地、缓缓地从石砌烟囱升起。远处传来铁锤敲打铁砧的声音。还有人声——低沉的，仿佛害怕打扰寂静。",
+          "direction": "家常的、亲密的语调。人间的温暖与脆弱形成对比。'低沉的'人声暗示了枯竭但未明说。",
+          "timing": {
+            "display_duration_s": 7.0,
+            "pause_after_s": 2.0
+          },
+          "ambiance": {
+            "palette": "ocre_ardoise_rouille_vert_mousse",
+            "son": "enclume_voix_feu_crackling",
+            "lumiere": "crepusculaire_meme_en_plein_jour"
+          },
+          "tags": ["transition", "villages", "arrivee", "atmosphere"]
+        },
+        "merlin_comment": {
+          "id": "merlin_villages",
+          "speaker": "MERLIN",
+          "text": "人类。他们做饭，唱歌，为篱笆的事吵架。 [pause] 这太美了。他们不知道这有多美。",
+          "direction": "深深感动的语调，被平淡的列举所掩饰。'他们不知道'是梅林最真诚的时刻——他在注视着活着的凡人，而他们不知道一切终将结束。这是少有的忧郁未被隐藏的时刻。",
+          "timing": {
+            "delay_before_s": 0.5,
+            "display_duration_s": 6.0,
+            "pause_after_s": 2.0
+          },
+          "emotion": "tendresse_non_masquee",
+          "tags": ["transition", "villages", "merlin", "humains", "melancolie"]
+        }
+      },
+
+      "cercles_pierres": {
+        "nom": "巨石阵",
+        "sous_titre": "犹豫的时间",
+        "arrival_text": {
+          "id": "arrive_cercles",
+          "speaker": "NARRATION",
+          "text": "巨石一块接一块从迷雾中浮现，像沉睡的哨兵。数百块。数千块。它们矗立在那里，灰色和粉色，覆满苔藓，在一片深到能听见它震动的寂静中。",
+          "direction": "神圣的语调。寂静不是空的——是满的。石头几乎是活的。'听见它震动'是竖石的次声波回响。",
+          "timing": {
+            "display_duration_s": 7.0,
+            "pause_after_s": 2.5
+          },
+          "ambiance": {
+            "palette": "granite_gris_rose_ciel_immense",
+            "son": "silence_profond_bourdonnement_grave",
+            "lumiere": "horizontale_ombres_lentes"
+          },
+          "tags": ["transition", "cercles", "arrivee", "atmosphere"]
+        },
+        "merlin_comment": {
+          "id": "merlin_cercles",
+          "speaker": "MERLIN",
+          "text": "三千块竖石。它们曾奏出一个和弦。从没有人听过的最美的音乐。 [long_pause] 现在它们在哼唱。总比没有好。",
+          "direction": "敬畏的语调，对梅林来说几乎是虔诚的。'最美的音乐'是灵感之光的原初和弦。'总比没有好'是伪装成认命的勇气。",
+          "timing": {
+            "delay_before_s": 0.5,
+            "display_duration_s": 6.5,
+            "pause_after_s": 2.0
+          },
+          "emotion": "gravite_resignee",
+          "tags": ["transition", "cercles", "merlin", "oghams", "musique"]
+        }
+      },
+
+      "marais_korrigans": {
+        "nom": "柯里根沼泽",
+        "sous_titre": "潜伏在下面的东西",
+        "arrival_text": {
+          "id": "arrive_marais",
+          "speaker": "NARRATION",
+          "text": "空气变了。更沉重，更浓稠，带着泥炭和黑水的气味。枯树扭曲着枝干，像一双双试图抓住天空的手。微光在地面游弋——鬼火，或者别的什么。",
+          "direction": "令人不安但引人入胜的语调。沼泽是最危险的生态区。鬼火是模糊的。'或者别的什么'让玩家的想象力去运作。",
+          "timing": {
+            "display_duration_s": 7.0,
+            "pause_after_s": 2.0
+          },
+          "ambiance": {
+            "palette": "noir_vert_sombre_iridescent",
+            "son": "bulles_glissement_bourdonnement_insectes",
+            "lumiere": "crepuscule_perpetuel_feux_follets"
+          },
+          "tags": ["transition", "marais", "arrivee", "atmosphere"]
+        },
+        "merlin_comment": {
+          "id": "merlin_marais",
+          "speaker": "MERLIN",
+          "text": "沼泽。好吧。 [beat] 几条建议：别跟着光走，别跟水洼说话，如果有什么东西跟你谈条件，看清楚附加条款。 [pause] 柯里根们是诚实的。以它们自己的方式。",
+          "direction": "假装轻松的语调。这是包装在幽默里的真正警告。快节奏的建议模拟了紧张感。'以它们自己的方式'完美地模棱两可。",
+          "timing": {
+            "delay_before_s": 0.5,
+            "display_duration_s": 7.0,
+            "pause_after_s": 1.5
+          },
+          "emotion": "avertissement_humoristique",
+          "tags": ["transition", "marais", "merlin", "korrigans", "danger"]
+        }
+      },
+
+      "collines_dolmens": {
+        "nom": "石棚丘陵",
+        "sous_titre": "消逝的记忆",
+        "arrival_text": {
+          "id": "arrive_collines",
+          "speaker": "NARRATION",
+          "text": "地势缓缓上升。草短而苍白，近乎银色。石棚从丘陵中浮现，像巨人遗忘的石桌。山顶上，一棵黑色的巨大紫杉挺立在天空下。它投下的影子太长了。仿佛太阳不敢靠近。",
+          "direction": "古老、庄严的语调。丘陵是最古老的生态区。千年紫杉是不朽的伊里亚尔（但玩家还不知道）。'太长'的影子是时间紊乱的征兆。",
+          "timing": {
+            "display_duration_s": 7.5,
+            "pause_after_s": 2.5
+          },
+          "ambiance": {
+            "palette": "vert_pale_herbe_rase_ciel_immense",
+            "son": "vent_herbe_echos_trop_longs",
+            "lumiere": "horizontale_niveau_des_yeux"
+          },
+          "tags": ["transition", "collines", "arrivee", "atmosphere"]
+        },
+        "merlin_comment": {
+          "id": "merlin_collines",
+          "speaker": "MERLIN",
+          "text": "这些丘陵比我还老。 [beat] 相信我，这可不容易。 [long_pause] 它们记得一切。问题是，那个'一切'……在变少。",
+          "direction": "关于年龄的笑话是经典的。但最后一句前的长停顿改变了一切。'在变少'几乎是低语。这是梅林少有的流露出某些东西正不可挽回地消逝的时刻。",
+          "timing": {
+            "delay_before_s": 0.5,
+            "display_duration_s": 6.5,
+            "pause_after_s": 2.0
+          },
+          "emotion": "melancolie_percante",
+          "tags": ["transition", "collines", "merlin", "memoire", "perte"]
+        }
+      }
+    }
+  }
+}

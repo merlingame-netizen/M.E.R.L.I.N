@@ -7,56 +7,70 @@ layout_mode = 3
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
-offset_right = -1152.0
-offset_bottom = -648.0
+grow_horizontal = 2
+grow_vertical = 2
 script = ExtResource("1_cfg3g")
 
 [node name="Background" type="ColorRect" parent="."]
-layout_mode = 0
+layout_mode = 1
+anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
-color = Color(0.1, 0.15, 0.12, 1)
-
-[node name="TitleLabel" type="Label" parent="."]
-layout_mode = 0
-anchor_left = 0.5
-anchor_right = 0.5
-offset_top = 40.0
-offset_bottom = 40.0
 grow_horizontal = 2
-text = "OPTIONS"
+grow_vertical = 2
+color = Color(0.965, 0.945, 0.905, 1)
+
+[node name="MainLayout" type="MarginContainer" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_constants/margin_left = 50
+theme_override_constants/margin_top = 20
+theme_override_constants/margin_right = 50
+theme_override_constants/margin_bottom = 20
+
+[node name="VBox" type="VBoxContainer" parent="MainLayout"]
+layout_mode = 2
+theme_override_constants/separation = 10
+
+[node name="TitleLabel" type="Label" parent="MainLayout/VBox"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 32
+text = "Options"
 horizontal_alignment = 1
 
-[node name="ScrollContainer" type="ScrollContainer" parent="."]
-layout_mode = 0
-offset_left = 50.0
-offset_top = 120.0
-offset_right = 1102.0
-offset_bottom = 560.0
+[node name="ScrollContainer" type="ScrollContainer" parent="MainLayout/VBox"]
+layout_mode = 2
+size_flags_vertical = 3
 horizontal_scroll_mode = 0
 
-[node name="OptionsContainer" type="VBoxContainer" parent="ScrollContainer"]
+[node name="OptionsContainer" type="VBoxContainer" parent="MainLayout/VBox/ScrollContainer"]
 layout_mode = 2
-theme_override_constants/separation = 25
+size_flags_horizontal = 3
+theme_override_constants/separation = 15
 
-[node name="VideoTitle" type="Label" parent="ScrollContainer/OptionsContainer"]
+[node name="VideoTitle" type="Label" parent="MainLayout/VBox/ScrollContainer/OptionsContainer"]
 layout_mode = 2
 theme_override_font_sizes/font_size = 22
-text = "🎮 VIDÉO"
+text = "VIDEO"
 
-[node name="@HSeparator@25548" type="HSeparator" parent="ScrollContainer/OptionsContainer"]
+[node name="HSep1" type="HSeparator" parent="MainLayout/VBox/ScrollContainer/OptionsContainer"]
 layout_mode = 2
 
-[node name="ResolutionRow" type="HBoxContainer" parent="ScrollContainer/OptionsContainer"]
+[node name="ResolutionRow" type="HBoxContainer" parent="MainLayout/VBox/ScrollContainer/OptionsContainer"]
 layout_mode = 2
 theme_override_constants/separation = 20
 
-[node name="@Label@25549" type="Label" parent="ScrollContainer/OptionsContainer/ResolutionRow"]
+[node name="Label" type="Label" parent="MainLayout/VBox/ScrollContainer/OptionsContainer/ResolutionRow"]
 custom_minimum_size = Vector2(250, 0)
 layout_mode = 2
-text = "Résolution :"
+size_flags_horizontal = 3
+text = "Resolution :"
 
-[node name="ResolutionOption" type="OptionButton" parent="ScrollContainer/OptionsContainer/ResolutionRow"]
+[node name="ResolutionOption" type="OptionButton" parent="MainLayout/VBox/ScrollContainer/OptionsContainer/ResolutionRow"]
 custom_minimum_size = Vector2(200, 0)
 layout_mode = 2
 selected = 4
@@ -72,50 +86,53 @@ popup/item_3/id = 3
 popup/item_4/text = "1152 x 648"
 popup/item_4/id = 4
 
-[node name="DisplayModeRow" type="HBoxContainer" parent="ScrollContainer/OptionsContainer"]
+[node name="DisplayModeRow" type="HBoxContainer" parent="MainLayout/VBox/ScrollContainer/OptionsContainer"]
 layout_mode = 2
 theme_override_constants/separation = 20
 
-[node name="@Label@25556" type="Label" parent="ScrollContainer/OptionsContainer/DisplayModeRow"]
+[node name="Label" type="Label" parent="MainLayout/VBox/ScrollContainer/OptionsContainer/DisplayModeRow"]
 custom_minimum_size = Vector2(250, 0)
 layout_mode = 2
+size_flags_horizontal = 3
 text = "Mode d'affichage :"
 
-[node name="DisplayModeOption" type="OptionButton" parent="ScrollContainer/OptionsContainer/DisplayModeRow"]
+[node name="DisplayModeOption" type="OptionButton" parent="MainLayout/VBox/ScrollContainer/OptionsContainer/DisplayModeRow"]
 custom_minimum_size = Vector2(200, 0)
 layout_mode = 2
 selected = 1
 item_count = 3
-popup/item_0/text = "Plein écran"
+popup/item_0/text = "Plein ecran"
 popup/item_0/id = 0
-popup/item_1/text = "Fenêtré"
+popup/item_1/text = "Fenetre"
 popup/item_1/id = 1
 popup/item_2/text = "Borderless"
 popup/item_2/id = 2
 
-[node name="VSyncRow" type="HBoxContainer" parent="ScrollContainer/OptionsContainer"]
+[node name="VSyncRow" type="HBoxContainer" parent="MainLayout/VBox/ScrollContainer/OptionsContainer"]
 layout_mode = 2
 theme_override_constants/separation = 20
 
-[node name="@Label@25563" type="Label" parent="ScrollContainer/OptionsContainer/VSyncRow"]
+[node name="Label" type="Label" parent="MainLayout/VBox/ScrollContainer/OptionsContainer/VSyncRow"]
 custom_minimum_size = Vector2(250, 0)
 layout_mode = 2
+size_flags_horizontal = 3
 text = "VSync :"
 
-[node name="VSyncCheck" type="CheckBox" parent="ScrollContainer/OptionsContainer/VSyncRow"]
+[node name="VSyncCheck" type="CheckBox" parent="MainLayout/VBox/ScrollContainer/OptionsContainer/VSyncRow"]
 layout_mode = 2
 button_pressed = true
 
-[node name="FPSRow" type="HBoxContainer" parent="ScrollContainer/OptionsContainer"]
+[node name="FPSRow" type="HBoxContainer" parent="MainLayout/VBox/ScrollContainer/OptionsContainer"]
 layout_mode = 2
 theme_override_constants/separation = 20
 
-[node name="@Label@25564" type="Label" parent="ScrollContainer/OptionsContainer/FPSRow"]
+[node name="Label" type="Label" parent="MainLayout/VBox/ScrollContainer/OptionsContainer/FPSRow"]
 custom_minimum_size = Vector2(250, 0)
 layout_mode = 2
+size_flags_horizontal = 3
 text = "Limite FPS :"
 
-[node name="FPSOption" type="OptionButton" parent="ScrollContainer/OptionsContainer/FPSRow"]
+[node name="FPSOption" type="OptionButton" parent="MainLayout/VBox/ScrollContainer/OptionsContainer/FPSRow"]
 custom_minimum_size = Vector2(200, 0)
 layout_mode = 2
 selected = 1
@@ -126,101 +143,104 @@ popup/item_1/text = "60 FPS"
 popup/item_1/id = 1
 popup/item_2/text = "120 FPS"
 popup/item_2/id = 2
-popup/item_3/text = "Illimité"
+popup/item_3/text = "Illimite"
 popup/item_3/id = 3
 
-[node name="@Control@25571" type="Control" parent="ScrollContainer/OptionsContainer"]
-custom_minimum_size = Vector2(0, 30)
+[node name="Spacer1" type="Control" parent="MainLayout/VBox/ScrollContainer/OptionsContainer"]
+custom_minimum_size = Vector2(0, 15)
 layout_mode = 2
 
-[node name="AudioTitle" type="Label" parent="ScrollContainer/OptionsContainer"]
+[node name="AudioTitle" type="Label" parent="MainLayout/VBox/ScrollContainer/OptionsContainer"]
 layout_mode = 2
 theme_override_font_sizes/font_size = 22
 text = "AUDIO"
 
-[node name="@HSeparator@25572" type="HSeparator" parent="ScrollContainer/OptionsContainer"]
+[node name="HSep2" type="HSeparator" parent="MainLayout/VBox/ScrollContainer/OptionsContainer"]
 layout_mode = 2
 
-[node name="MasterVolumeRow" type="HBoxContainer" parent="ScrollContainer/OptionsContainer"]
+[node name="MasterVolumeRow" type="HBoxContainer" parent="MainLayout/VBox/ScrollContainer/OptionsContainer"]
 layout_mode = 2
 theme_override_constants/separation = 20
 
-[node name="@Label@25573" type="Label" parent="ScrollContainer/OptionsContainer/MasterVolumeRow"]
+[node name="Label" type="Label" parent="MainLayout/VBox/ScrollContainer/OptionsContainer/MasterVolumeRow"]
 custom_minimum_size = Vector2(250, 0)
 layout_mode = 2
+size_flags_horizontal = 3
 text = "Volume Principal :"
 
-[node name="MasterVolumeSlider" type="HSlider" parent="ScrollContainer/OptionsContainer/MasterVolumeRow"]
+[node name="MasterVolumeSlider" type="HSlider" parent="MainLayout/VBox/ScrollContainer/OptionsContainer/MasterVolumeRow"]
 custom_minimum_size = Vector2(300, 0)
 layout_mode = 2
+size_flags_horizontal = 3
 value = 80.0
 
-[node name="MasterVolumeValue" type="Label" parent="ScrollContainer/OptionsContainer/MasterVolumeRow"]
+[node name="MasterVolumeValue" type="Label" parent="MainLayout/VBox/ScrollContainer/OptionsContainer/MasterVolumeRow"]
 custom_minimum_size = Vector2(60, 0)
 layout_mode = 2
 text = "80%"
 
-[node name="MusicVolumeRow" type="HBoxContainer" parent="ScrollContainer/OptionsContainer"]
+[node name="MusicVolumeRow" type="HBoxContainer" parent="MainLayout/VBox/ScrollContainer/OptionsContainer"]
 layout_mode = 2
 theme_override_constants/separation = 20
 
-[node name="@Label@25574" type="Label" parent="ScrollContainer/OptionsContainer/MusicVolumeRow"]
+[node name="Label" type="Label" parent="MainLayout/VBox/ScrollContainer/OptionsContainer/MusicVolumeRow"]
 custom_minimum_size = Vector2(250, 0)
 layout_mode = 2
+size_flags_horizontal = 3
 text = "Volume Musique :"
 
-[node name="MusicVolumeSlider" type="HSlider" parent="ScrollContainer/OptionsContainer/MusicVolumeRow"]
+[node name="MusicVolumeSlider" type="HSlider" parent="MainLayout/VBox/ScrollContainer/OptionsContainer/MusicVolumeRow"]
 custom_minimum_size = Vector2(300, 0)
 layout_mode = 2
+size_flags_horizontal = 3
 value = 70.0
 
-[node name="MusicVolumeValue" type="Label" parent="ScrollContainer/OptionsContainer/MusicVolumeRow"]
+[node name="MusicVolumeValue" type="Label" parent="MainLayout/VBox/ScrollContainer/OptionsContainer/MusicVolumeRow"]
 custom_minimum_size = Vector2(60, 0)
 layout_mode = 2
 text = "70%"
 
-[node name="SFXVolumeRow" type="HBoxContainer" parent="ScrollContainer/OptionsContainer"]
+[node name="SFXVolumeRow" type="HBoxContainer" parent="MainLayout/VBox/ScrollContainer/OptionsContainer"]
 layout_mode = 2
 theme_override_constants/separation = 20
 
-[node name="@Label@25575" type="Label" parent="ScrollContainer/OptionsContainer/SFXVolumeRow"]
+[node name="Label" type="Label" parent="MainLayout/VBox/ScrollContainer/OptionsContainer/SFXVolumeRow"]
 custom_minimum_size = Vector2(250, 0)
 layout_mode = 2
+size_flags_horizontal = 3
 text = "Volume Effets Sonores :"
 
-[node name="SFXVolumeSlider" type="HSlider" parent="ScrollContainer/OptionsContainer/SFXVolumeRow"]
+[node name="SFXVolumeSlider" type="HSlider" parent="MainLayout/VBox/ScrollContainer/OptionsContainer/SFXVolumeRow"]
 custom_minimum_size = Vector2(300, 0)
 layout_mode = 2
+size_flags_horizontal = 3
 value = 75.0
 
-[node name="SFXVolumeValue" type="Label" parent="ScrollContainer/OptionsContainer/SFXVolumeRow"]
+[node name="SFXVolumeValue" type="Label" parent="MainLayout/VBox/ScrollContainer/OptionsContainer/SFXVolumeRow"]
 custom_minimum_size = Vector2(60, 0)
 layout_mode = 2
 text = "75%"
 
-[node name="@Control@25576" type="Control" parent="ScrollContainer/OptionsContainer"]
-custom_minimum_size = Vector2(0, 40)
+[node name="Spacer2" type="Control" parent="MainLayout/VBox/ScrollContainer/OptionsContainer"]
+custom_minimum_size = Vector2(0, 20)
 layout_mode = 2
 
-[node name="ButtonsContainer" type="HBoxContainer" parent="."]
-layout_mode = 0
-offset_left = 300.0
-offset_top = 580.0
-offset_right = 300.0
-offset_bottom = 580.0
+[node name="ButtonsContainer" type="HBoxContainer" parent="MainLayout/VBox"]
+layout_mode = 2
+alignment = 1
 theme_override_constants/separation = 20
 
-[node name="BtnAppliquer" type="Button" parent="ButtonsContainer"]
+[node name="BtnAppliquer" type="Button" parent="MainLayout/VBox/ButtonsContainer"]
 custom_minimum_size = Vector2(150, 40)
 layout_mode = 2
 text = "Appliquer"
 
-[node name="BtnReinitialiser" type="Button" parent="ButtonsContainer"]
+[node name="BtnReinitialiser" type="Button" parent="MainLayout/VBox/ButtonsContainer"]
 custom_minimum_size = Vector2(150, 40)
 layout_mode = 2
-text = "Réinitialiser"
+text = "Reinitialiser"
 
-[node name="BtnRetour" type="Button" parent="ButtonsContainer"]
+[node name="BtnRetour" type="Button" parent="MainLayout/VBox/ButtonsContainer"]
 custom_minimum_size = Vector2(150, 40)
 layout_mode = 2
 text = "Retour"

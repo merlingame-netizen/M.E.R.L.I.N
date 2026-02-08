@@ -1,0 +1,198 @@
+{
+	"_comment": "Dialogues for the 3 post-questionnaire scenes: Eveil, Antre, Transition — English",
+
+	"eveil": {
+		"lines": [
+			{
+				"id": "eveil_01",
+				"text": "Ah... you're here. I've been sensing you for a while now. Like a distant warmth in a world that's growing cold.",
+				"mood": "pensif",
+				"pause_after": 2.0
+			},
+			{
+				"id": "eveil_02",
+				"text": "The Membrane opened for you. That doesn't happen often anymore. The passage is becoming rare, like everything else.",
+				"mood": "mystique",
+				"pause_after": 1.5
+			},
+			{
+				"id": "eveil_03",
+				"text": "Don't get too excited. You're not the first. But... you might be the last one who matters.",
+				"mood": "warm",
+				"pause_after": 1.5
+			},
+			{
+				"id": "eveil_04",
+				"text": "Come on, follow me. I have a place where the mist doesn't enter. Well... not yet.",
+				"mood": "amuse",
+				"pause_after": 1.0
+			}
+		]
+	},
+
+	"antre": {
+		"bestiole_intro": [
+			{
+				"id": "bestiole_01",
+				"type": "narration",
+				"text": "Something stirs in the shadows. A small, luminous shape, hesitant, approaches you.",
+				"mood": "mystique"
+			},
+			{
+				"id": "bestiole_02",
+				"type": "narration",
+				"text": "It circles around your hand, curious. Its light pulses gently, like a tiny heart.",
+				"mood": "warm"
+			},
+			{
+				"id": "bestiole_03",
+				"type": "merlin",
+				"text": "Bestiole recognizes you. That's rare. Usually, she bites first.",
+				"mood": "amuse"
+			},
+			{
+				"id": "bestiole_04",
+				"type": "merlin",
+				"text": "She carries three Oghams with her. Birch, Rowan, Apple. The oldest ones. Take them.",
+				"mood": "sage"
+			}
+		],
+		"mission_briefing": [
+			{
+				"id": "mission_01",
+				"text": "Look.",
+				"mood": "serieux",
+				"pause_after": 1.5
+			},
+			{
+				"id": "mission_02",
+				"text": "Seven lands. Seven sanctuaries. Each one fading in its own way. The Guardians hold on, but they're tiring.",
+				"mood": "serieux",
+				"pause_after": 1.0
+			},
+			{
+				"id": "mission_03",
+				"text": "You will travel. Observe. Choose. Every decision you make will nourish or weaken the balance.",
+				"mood": "sage",
+				"pause_after": 1.0
+			},
+			{
+				"id": "mission_04",
+				"text": "And me, I'll be there to tell you you're wrong. That's my favorite role.",
+				"mood": "amuse",
+				"pause_after": 0.5
+			}
+		],
+		"biome_suggestions": {
+			"druide": {
+				"text": "The forest calls to you, {name}. Broceliande is the heart of everything. Start there.",
+				"biome": "broceliande",
+				"mood": "sage"
+			},
+			"guerrier": {
+				"text": "The moors are harsh, {name}. The wind forgives nothing. You were made for this.",
+				"biome": "landes",
+				"mood": "serieux"
+			},
+			"barde": {
+				"text": "People need to hear someone, {name}. Go to the villages. They're waiting for you.",
+				"biome": "villages",
+				"mood": "warm"
+			},
+			"eclaireur": {
+				"text": "The horizon awaits you, {name}. The coasts are the edge of the world. Head for the sea.",
+				"biome": "cotes",
+				"mood": "mystique"
+			}
+		},
+		"biome_reactions": {
+			"accepted": "Good. You've got instinct. Or luck. Both work.",
+			"rejected": "Interesting... You don't listen to anyone. We'll get along just fine."
+		}
+	},
+
+	"biomes": {
+		"broceliande": {
+			"name": "Forest of Broceliande",
+			"subtitle": "The Heart That Still Beats",
+			"gardien": "Maelgwn",
+			"ogham": "Duir",
+			"saison": "Automne",
+			"arrival_text": "The oaks are so old they remember the first druid. The air smells of moss and passing time. The mist gilds the light between the branches.",
+			"merlin_comment": "First day. First mistake coming soon. I'm taking bets.",
+			"map_position": [0.65, 0.25],
+			"color": "#306018"
+		},
+		"landes": {
+			"name": "Heather Moors",
+			"subtitle": "The Breath That Falters",
+			"gardien": "Talwen",
+			"ogham": "Onn",
+			"saison": "Hiver",
+			"arrival_text": "The heather undulates like a terrestrial ocean. The wind is constant, not violent, but perpetual. The horizon seems closer than it should.",
+			"merlin_comment": "The wind will speak to you. Well, it'll whisper. It no longer has the strength to shout.",
+			"map_position": [0.75, 0.45],
+			"color": "#685030"
+		},
+		"cotes": {
+			"name": "Wild Coasts",
+			"subtitle": "The Sea That Retreats",
+			"gardien": "Bran",
+			"ogham": "Nuin",
+			"saison": "Ete",
+			"arrival_text": "Black granite meets white foam. The sky and the sea merge at the horizon. You can no longer tell where one ends and the other begins.",
+			"merlin_comment": "The sea used to know things. It's forgetting them, slowly. Like all of us.",
+			"map_position": [0.3, 0.65],
+			"color": "#205898"
+		},
+		"villages": {
+			"name": "Celtic Villages",
+			"subtitle": "The Last Warmth",
+			"gardien": "Azenor",
+			"ogham": "Gort",
+			"saison": "Printemps",
+			"arrival_text": "Grey stone, slate roofs, fire in the chimneys. The alleys are narrow and covered in ivy. The light is that of twilight, even in broad daylight.",
+			"merlin_comment": "They still laugh, you know. That's the most beautiful part. And the saddest.",
+			"map_position": [0.45, 0.8],
+			"color": "#a08058"
+		},
+		"cercles": {
+			"name": "Stone Circles",
+			"subtitle": "Time That Hesitates",
+			"gardien": "Keridwen",
+			"ogham": "Huath",
+			"saison": "Samhain",
+			"arrival_text": "Three thousand standing stones stretch as far as the eye can see. The shadows move too slowly compared to the sun. Time hesitates here, as if it had forgotten what comes next.",
+			"merlin_comment": "Don't stay too long near the stones. Time plays tricks there. I speak from experience.",
+			"map_position": [0.2, 0.35],
+			"color": "#787870"
+		},
+		"marais": {
+			"name": "Korrigan Marshes",
+			"subtitle": "What Waits Below",
+			"gardien": "Gwydion",
+			"ogham": "Muin",
+			"saison": "Lughnasadh",
+			"arrival_text": "Black, dark green, iridescent reflections in the stagnant water. The mist clings low. The silence is different here, heavier, as if it were listening.",
+			"merlin_comment": "The korrigans are there. You can't see them, but they can see you just fine. Smile.",
+			"map_position": [0.35, 0.45],
+			"color": "#403848"
+		},
+		"collines": {
+			"name": "Dolmen Hills",
+			"subtitle": "The Memory That Crumbles",
+			"gardien": "Elouan",
+			"ogham": "Ioho",
+			"saison": "Yule",
+			"arrival_text": "The rounded hills bear dolmens like crowns of stone. The mist is thick there, milky. Each step reveals a different world.",
+			"merlin_comment": "The dolmens are doorways. Don't ask me to where. I'd rather not think about it.",
+			"map_position": [0.15, 0.2],
+			"color": "#504078"
+		}
+	},
+
+	"transition": {
+		"travel_text": "The mist between the lands is not natural. It is the breath of the world hesitating between heartbeats.",
+		"travel_text_alt": "You cross the veil. The air changes. The colors change. Even the silence has a different texture."
+	}
+}

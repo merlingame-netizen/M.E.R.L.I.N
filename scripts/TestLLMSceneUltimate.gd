@@ -1313,8 +1313,8 @@ func _animate_choice_selection(index: int) -> void:
 	tween.tween_property(btn, "modulate", DRU_COLORS.accent, 0.15)
 	tween.tween_property(btn, "modulate:a", 0.0, 0.15)
 
-func _show_loading(is_visible: bool) -> void:
-	if is_visible:
+func _show_loading(visible_state: bool) -> void:
+	if visible_state:
 		loading_panel.visible = true
 		loading_panel.modulate.a = 0.0
 		var tween := create_tween()

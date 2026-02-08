@@ -1,0 +1,198 @@
+{
+	"_comment": "Dialogues for the 3 post-questionnaire scenes: Eveil, Antre, Transition — Italiano",
+
+	"eveil": {
+		"lines": [
+			{
+				"id": "eveil_01",
+				"text": "Ah... sei qui. Ti sentivo da un po'. Come un calore lontano in un mondo che si raffredda.",
+				"mood": "pensif",
+				"pause_after": 2.0
+			},
+			{
+				"id": "eveil_02",
+				"text": "La Membrana si e aperta per te. Non succede piu spesso. Il passaggio si fa raro, come tutto il resto.",
+				"mood": "mystique",
+				"pause_after": 1.5
+			},
+			{
+				"id": "eveil_03",
+				"text": "Non esaltarti. Non sei il primo. Ma... potresti essere l'ultimo che conta.",
+				"mood": "warm",
+				"pause_after": 1.5
+			},
+			{
+				"id": "eveil_04",
+				"text": "Dai, seguimi. Ho un posto dove la nebbia non entra. Beh... non ancora.",
+				"mood": "amuse",
+				"pause_after": 1.0
+			}
+		]
+	},
+
+	"antre": {
+		"bestiole_intro": [
+			{
+				"id": "bestiole_01",
+				"type": "narration",
+				"text": "Qualcosa si muove nell'ombra. Una piccola forma luminosa, esitante, si avvicina a te.",
+				"mood": "mystique"
+			},
+			{
+				"id": "bestiole_02",
+				"type": "narration",
+				"text": "Gira intorno alla tua mano, curiosa. La sua luce pulsa dolcemente, come un cuore minuscolo.",
+				"mood": "warm"
+			},
+			{
+				"id": "bestiole_03",
+				"type": "merlin",
+				"text": "Bestiole ti riconosce. E raro. Di solito, morde prima.",
+				"mood": "amuse"
+			},
+			{
+				"id": "bestiole_04",
+				"type": "merlin",
+				"text": "Porta tre Oghams con se. Betulla, Sorbo, Melo. I piu antichi. Prendili.",
+				"mood": "sage"
+			}
+		],
+		"mission_briefing": [
+			{
+				"id": "mission_01",
+				"text": "Guarda.",
+				"mood": "serieux",
+				"pause_after": 1.5
+			},
+			{
+				"id": "mission_02",
+				"text": "Sette terre. Sette santuari. Ognuno si spegne a modo suo. I Guardiani resistono, ma si stancano.",
+				"mood": "serieux",
+				"pause_after": 1.0
+			},
+			{
+				"id": "mission_03",
+				"text": "Viaggerai. Osserverai. Sceglierai. Ogni decisione che prenderai nutrira o indebolira l'equilibrio.",
+				"mood": "sage",
+				"pause_after": 1.0
+			},
+			{
+				"id": "mission_04",
+				"text": "E io saro li per dirti che hai torto. E il mio ruolo preferito.",
+				"mood": "amuse",
+				"pause_after": 0.5
+			}
+		],
+		"biome_suggestions": {
+			"druide": {
+				"text": "La foresta ti chiama, {name}. Broceliande e il cuore di tutto. Comincia da li.",
+				"biome": "broceliande",
+				"mood": "sage"
+			},
+			"guerrier": {
+				"text": "Le lande sono dure, {name}. Il vento non perdona nulla. Sei fatto per questo.",
+				"biome": "landes",
+				"mood": "serieux"
+			},
+			"barde": {
+				"text": "La gente ha bisogno di ascoltare qualcuno, {name}. Vai ai villaggi. Ti aspettano.",
+				"biome": "villages",
+				"mood": "warm"
+			},
+			"eclaireur": {
+				"text": "L'orizzonte ti aspetta, {name}. Le coste sono il confine del mondo. Parti verso il mare.",
+				"biome": "cotes",
+				"mood": "mystique"
+			}
+		},
+		"biome_reactions": {
+			"accepted": "Bene. Hai fiuto. O fortuna. Valgono entrambe.",
+			"rejected": "Interessante... Non ascolti nessuno. Andremo d'accordo."
+		}
+	},
+
+	"biomes": {
+		"broceliande": {
+			"name": "Foresta di Broceliande",
+			"subtitle": "Il Cuore Che Batte Ancora",
+			"gardien": "Maelgwn",
+			"ogham": "Duir",
+			"saison": "Automne",
+			"arrival_text": "Le querce sono cosi vecchie che ricordano il primo druido. L'aria profuma di muschio e di tempo che passa. La bruma dora la luce tra i rami.",
+			"merlin_comment": "Primo giorno. Primo errore in arrivo. Accetto scommesse.",
+			"map_position": [0.65, 0.25],
+			"color": "#306018"
+		},
+		"landes": {
+			"name": "Lande di Erica",
+			"subtitle": "Il Respiro Che Si Affievolisce",
+			"gardien": "Talwen",
+			"ogham": "Onn",
+			"saison": "Hiver",
+			"arrival_text": "L'erica ondeggia come un oceano terrestre. Il vento e costante, non violento, ma perpetuo. L'orizzonte sembra piu vicino di quanto dovrebbe.",
+			"merlin_comment": "Il vento ti parlera. Beh, sussurrera. Non ha piu la forza di gridare.",
+			"map_position": [0.75, 0.45],
+			"color": "#685030"
+		},
+		"cotes": {
+			"name": "Coste Selvagge",
+			"subtitle": "Il Mare Che Si Ritira",
+			"gardien": "Bran",
+			"ogham": "Nuin",
+			"saison": "Ete",
+			"arrival_text": "Il granito nero incontra la schiuma bianca. Il cielo e il mare si confondono all'orizzonte. Non si sa piu dove finisce l'uno e inizia l'altro.",
+			"merlin_comment": "Il mare sapeva delle cose. Le sta dimenticando, piano piano. Come tutti noi.",
+			"map_position": [0.3, 0.65],
+			"color": "#205898"
+		},
+		"villages": {
+			"name": "Villaggi Celtici",
+			"subtitle": "L'Ultimo Calore",
+			"gardien": "Azenor",
+			"ogham": "Gort",
+			"saison": "Printemps",
+			"arrival_text": "Pietra grigia, tetti di ardesia, fuoco nei camini. I vicoli sono stretti e coperti di edera. La luce e quella del crepuscolo, anche in pieno giorno.",
+			"merlin_comment": "Ridono ancora, sai. Questa e la cosa piu bella. E la piu triste.",
+			"map_position": [0.45, 0.8],
+			"color": "#a08058"
+		},
+		"cercles": {
+			"name": "Cerchi di Pietra",
+			"subtitle": "Il Tempo Che Esita",
+			"gardien": "Keridwen",
+			"ogham": "Huath",
+			"saison": "Samhain",
+			"arrival_text": "Tremila menhir si estendono a perdita d'occhio. Le ombre si muovono troppo lentamente rispetto al sole. Il tempo esita qui, come se avesse dimenticato il seguito.",
+			"merlin_comment": "Non restare troppo a lungo vicino alle pietre. Il tempo ci gioca brutti scherzi. Parlo per esperienza.",
+			"map_position": [0.2, 0.35],
+			"color": "#787870"
+		},
+		"marais": {
+			"name": "Paludi dei Korrigans",
+			"subtitle": "Cio Che Aspetta Sotto",
+			"gardien": "Gwydion",
+			"ogham": "Muin",
+			"saison": "Lughnasadh",
+			"arrival_text": "Nero, verde scuro, riflessi iridescenti nell'acqua stagnante. La nebbia e radente. Il silenzio e diverso qui, piu pesante, come se stesse ascoltando.",
+			"merlin_comment": "I korrigans sono li. Non li vedi, ma loro vedono te benissimo. Sorridi.",
+			"map_position": [0.35, 0.45],
+			"color": "#403848"
+		},
+		"collines": {
+			"name": "Colline dei Dolmen",
+			"subtitle": "La Memoria Che Si Sgretola",
+			"gardien": "Elouan",
+			"ogham": "Ioho",
+			"saison": "Yule",
+			"arrival_text": "Le colline arrotondate portano dolmen come corone di pietra. La nebbia e densa, lattiginosa. Ogni passo rivela un mondo diverso.",
+			"merlin_comment": "I dolmen sono porte. Non chiedermi verso dove. Preferisco non pensarci.",
+			"map_position": [0.15, 0.2],
+			"color": "#504078"
+		}
+	},
+
+	"transition": {
+		"travel_text": "La nebbia tra le terre non e naturale. E il respiro del mondo che esita tra un battito e l'altro.",
+		"travel_text_alt": "Attraversi il velo. L'aria cambia. I colori cambiano. Perfino il silenzio ha una consistenza diversa."
+	}
+}

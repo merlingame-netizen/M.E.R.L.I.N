@@ -330,6 +330,133 @@ for _i in range(10):  # Underscore car _i n'est pas utilise
 
 ---
 
+### 1.14 Tween Vide (Empty Tweeners)
+
+**Erreur:** `Tween without commands, aborting` / Runtime warning quand un Tween est cree mais aucun tweener n'est ajoute
+
+```gdscript
+# WRONG - Creer un Tween puis ajouter des tweeners conditionnellement
+# Si aucun parametre shader n'existe, le Tween reste vide et Godot se plaint
+var tween := create_tween()
+tween.set_parallel(true)
+for param_name in profile:
+    var raw_value = shader_material.get_shader_parameter(param_name)
+    if raw_value == null:
+        continue  # Si TOUS les params sont null, le Tween est vide!
+    tween.tween_method(setter.bind(param_name), from, to, duration)
+
+# CORRECT - Collecter les tweeners valides AVANT de creer le Tween
+var tweens_to_add: Array[Dictionary] = []
+for param_name: String in profile:
+    var raw_value = shader_material.get_shader_parameter(param_name)
+    if raw_value == null:
+        continue
+    tweens_to_add.append({"param": param_name, "from": float(raw_value), "to": float(profile[param_name])})
+
+if tweens_to_add.is_empty():
+    return  # Pas de Tween cree = pas d'erreur
+
+var tween := create_tween()
+tween.set_parallel(true)
+for t in tweens_to_add:
+    tween.tween_method(setter.bind(t["param"]), t["from"], t["to"], duration)
+```
+
+**Regle:** Ne jamais creer un Tween avant d'etre certain qu'au moins un tweener sera ajoute. Collecter les donnees en amont, verifier non-vide, puis creer le Tween.
+
+---
+
+### 1.15 Variable Locale Masquant une Methode Heritee (Shadowing Built-in)
+
+**Erreur:** `The local variable "hide" is shadowing an already-declared function` (ou `show`, `process`, etc.)
+
+```gdscript
+# WRONG - "hide" est une methode de CanvasItem — la variable la masque
+var hide := create_tween()
+hide.tween_property(panel, "modulate:a", 0.0, 0.4)
+
+# CORRECT - Suffixer avec le type (_tween, _timer, _anim)
+var hide_tween := create_tween()
+hide_tween.tween_property(panel, "modulate:a", 0.0, 0.4)
+
+# AUSSI VALIDE
+var fade_out := create_tween()
+fade_out.tween_property(panel, "modulate:a", 0.0, 0.4)
+```
+
+**Noms herites a eviter comme variables locales:**
+- `hide`, `show` (CanvasItem)
+- `process` (Node)
+- `draw` (CanvasItem)
+- `ready` (Node)
+- `queue_free` (Node)
+
+**Regle:** Ne jamais nommer une variable locale avec le meme nom qu'une methode heritee (CanvasItem, Node, Control, etc.). Utiliser un suffixe descriptif (`_tween`, `_timer`, `_anim`).
+
+---
+
+### 1.16 Chemin d'Addon Incorrect (Casse/Underscore)
+
+**Erreur:** `res://... file not found` a l'execution, souvent silencieux (le script ne charge pas)
+
+```gdscript
+# WRONG - Nom du dossier/fichier incorrect (underscore au lieu de camelCase ou inverse)
+var script_path := "res://addons/ac_voicebox/ac_voicebox.gd"   # N'EXISTE PAS
+var scene_path := "res://addons/ac_voicebox/ac_voicebox.tscn"  # N'EXISTE PAS
+
+# CORRECT - Verifier le nom EXACT du dossier sur disque
+var script_path := "res://addons/acvoicebox/acvoicebox.gd"     # Nom reel
+var scene_path := "res://addons/acvoicebox/acvoicebox.tscn"    # Nom reel
+```
+
+**Methode de verification:**
+```gdscript
+# TOUJOURS utiliser ResourceLoader.exists() avant load()
+var script_path := "res://addons/acvoicebox/acvoicebox.gd"
+if ResourceLoader.exists(script_path):
+    var scr = load(script_path)
+    # ... utiliser le script
+else:
+    push_warning("Script not found: %s" % script_path)
+```
+
+**Regle:** Toujours verifier le nom exact des dossiers/fichiers d'addon sur disque. Les noms avec underscores (`ac_voicebox`) vs. sans (`acvoicebox`) sont des chemins differents. Utiliser `ResourceLoader.exists()` comme garde.
+
+---
+
+### 1.17 set_anchors_preset sur un Node2D (Non-Control)
+
+**Erreur:** `Invalid call. Nonexistent function 'set_anchors_preset' in base 'GPUParticles2D'`
+
+```gdscript
+# WRONG - GPUParticles2D herite de Node2D, PAS de Control
+var particles := GPUParticles2D.new()
+particles.set_anchors_preset(Control.PRESET_FULL_RECT)  # CRASH: methode inexistante
+
+# Aussi WRONG pour: Sprite2D, TileMap, Camera2D, etc. (tout Node2D)
+
+# CORRECT - Utiliser position/size directement pour les Node2D
+var particles := GPUParticles2D.new()
+particles.position = Vector2(400, 300)
+# GPUParticles2D n'a pas de "size" — la zone d'emission depend du ProcessMaterial
+
+# POUR COUVRIR TOUT L'ECRAN avec des particules:
+var vp_size := get_viewport().get_visible_rect().size
+particles.position = vp_size * 0.5  # Centrer
+var mat := ParticleProcessMaterial.new()
+mat.emission_shape = ParticleProcessMaterial.EMISSION_SHAPE_BOX
+mat.emission_box_extents = Vector3(vp_size.x * 0.5, vp_size.y * 0.5, 0)
+particles.process_material = mat
+```
+
+**Hierarchie a retenir:**
+- `Control` (et ses enfants: Label, Button, Panel, etc.) → a `set_anchors_preset()`
+- `Node2D` (et ses enfants: Sprite2D, GPUParticles2D, etc.) → PAS de `set_anchors_preset()`
+
+**Regle:** `set_anchors_preset()` est exclusif a `Control` et ses sous-classes. Pour les `Node2D`, utiliser `position` directement. Verifier l'heritage du node dans la doc avant d'appeler des methodes UI.
+
+---
+
 ## SECTION 2: Patterns d'Optimisation GDScript
 
 ### 2.1 Object Pooling
@@ -503,6 +630,10 @@ Avant chaque `validate.bat`, verifier:
 - [ ] Pas de parametres qui masquent des fonctions (shadowing)
 - [ ] Division entiere explicite avec `int(x / 2.0)` pas `x / 2`
 - [ ] Variables non utilisees prefixees avec `_`
+- [ ] Tween cree seulement si au moins 1 tweener garanti (pas de Tween vide)
+- [ ] Variables locales ne masquent pas les methodes heritees (`hide`, `show`, etc.)
+- [ ] Chemins d'addons verifies sur disque (casse exacte, underscores)
+- [ ] `set_anchors_preset()` utilise uniquement sur des nodes Control (pas Node2D)
 
 ---
 
@@ -534,10 +665,14 @@ _Ce section est mise a jour automatiquement par l'agent Debug._
 - `[llm_status_bar.gd:243]` Parameter shadows function is_ready() → Renomme parametre en `ready_state`
 - `[IntroCeltOS.gd:236]` Integer division warning → Utilise `int(size / 2.0)` au lieu de `size / 2`
 - `[Multiple files]` Variable declared but never used → Prefixe avec underscore `_variable_name`
+- `[ScreenEffects.gd:set_merlin_mood]` Tween without commands → Collecte tweeners valides avant creation du Tween, skip si vide
+- `[SceneAntreMerlin.gd:762]` Variable "hide" shadows CanvasItem.hide() → Renomme en `hide_tween`
+- `[SceneAntreMerlin.gd, SceneEveil.gd, MenuPrincipalReigns.gd]` ACVoicebox wrong path "ac_voicebox" → Corrige en "acvoicebox" (nom reel du dossier)
+- `[TransitionBiome.gd:178]` set_anchors_preset() on GPUParticles2D (Node2D) → Remplace par position directe `Vector2(400, 300)`
 
 <!-- CORRECTIONS_LOG_END -->
 
 ---
 
-*Last Updated: 2026-02-08 (6 corrections total)*
+*Last Updated: 2026-02-08 (10 corrections total)*
 *Maintained by: Debug Agent & Optimizer Agent*

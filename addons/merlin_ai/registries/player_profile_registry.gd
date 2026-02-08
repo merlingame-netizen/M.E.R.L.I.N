@@ -8,7 +8,7 @@
 extends RefCounted
 class_name PlayerProfileRegistry
 
-signal profile_updated(trait: String, old_value: float, new_value: float)
+signal profile_updated(trait_name: String, old_value: float, new_value: float)
 signal skill_assessed(skill: String, level: float)
 signal preference_detected(preference: String, value: Variant)
 
@@ -138,12 +138,12 @@ func reset() -> void:
 # ═══════════════════════════════════════════════════════════════════════════════
 
 func update_from_choice(card: Dictionary, option: int, context: Dictionary) -> void:
-	"""Analyse un choix et met a jour le profil."""
+	## Analyse un choix et met a jour le profil.
 	var tags: Array = card.get("tags", [])
 	var effects: Array = _get_option_effects(card, option)
 	var decision_time_ms: int = context.get("decision_time_ms", 3000)
 
-	_current_run_data.cards_played += 1
+	_current_run_data["cards_played"] += 1
 
 	# === Update play style based on tags ===
 	_update_play_style_from_tags(tags)
@@ -215,13 +215,13 @@ func _update_patience_from_time(decision_time_ms: int) -> void:
 		_shift_trait("patience", 1.0)  # Methodique
 
 
-func _shift_trait(trait: String, target: float) -> void:
-	if not play_style.has(trait):
+func _shift_trait(trait_name: String, target: float) -> void:
+	if not play_style.has(trait_name):
 		return
-	var old_value: float = play_style[trait]
-	play_style[trait] = lerpf(old_value, target, TRAIT_LEARNING_RATE)
-	if absf(old_value - play_style[trait]) > 0.01:
-		profile_updated.emit(trait, old_value, play_style[trait])
+	var old_value: float = play_style[trait_name]
+	play_style[trait_name] = lerpf(old_value, target, TRAIT_LEARNING_RATE)
+	if absf(old_value - play_style[trait_name]) > 0.01:
+		profile_updated.emit(trait_name, old_value, play_style[trait_name])
 
 
 func _update_skill(skill: String, delta: float) -> void:
@@ -237,8 +237,9 @@ func _track_themes(tags: Array) -> void:
 	for tag in tags:
 		_theme_counter[tag] = _theme_counter.get(tag, 0) + 1
 		if _theme_counter[tag] == PREFERENCE_THRESHOLD:
-			if tag not in preferences.preferred_themes:
-				preferences.preferred_themes.append(tag)
+			var pref_themes: Array = preferences["preferred_themes"]
+			if tag not in pref_themes:
+				pref_themes.append(tag)
 				preference_detected.emit("theme", tag)
 
 
@@ -251,19 +252,21 @@ func _track_npc_interaction(card: Dictionary, option: int) -> void:
 		_npc_interactions[npc_id] = {"positive": 0, "negative": 0}
 
 	# Determine if interaction was positive or negative
+	var npc_data: Dictionary = _npc_interactions[npc_id]
 	var is_positive: bool = option == 1  # Assume right = positive for now
 	if is_positive:
-		_npc_interactions[npc_id].positive += 1
+		npc_data["positive"] += 1
 	else:
-		_npc_interactions[npc_id].negative += 1
+		npc_data["negative"] += 1
 
 	# Update favorites/disliked lists
-	var data = _npc_interactions[npc_id]
-	if data.positive >= 3 and npc_id not in preferences.favorite_npcs:
-		preferences.favorite_npcs.append(npc_id)
+	var fav_npcs: Array = preferences["favorite_npcs"]
+	var dis_npcs: Array = preferences["disliked_npcs"]
+	if npc_data["positive"] >= 3 and npc_id not in fav_npcs:
+		fav_npcs.append(npc_id)
 		preference_detected.emit("favorite_npc", npc_id)
-	elif data.negative >= 3 and npc_id not in preferences.disliked_npcs:
-		preferences.disliked_npcs.append(npc_id)
+	elif npc_data["negative"] >= 3 and npc_id not in dis_npcs:
+		dis_npcs.append(npc_id)
 		preference_detected.emit("disliked_npc", npc_id)
 
 
@@ -278,15 +281,15 @@ func _get_option_effects(card: Dictionary, option: int) -> Array:
 # ═══════════════════════════════════════════════════════════════════════════════
 
 func update_from_outcome(outcome: Dictionary) -> void:
-	"""Met a jour les skills basees sur les resultats."""
+	## Met a jour les skills basees sur les resultats.
 
 	# Crisis management
 	if outcome.get("avoided_crisis", false):
-		_current_run_data.crises_survived += 1
+		_current_run_data["crises_survived"] += 1
 		_update_skill("gauge_management", SKILL_LEARNING_RATE)
 		_update_skill("recovery", SKILL_LEARNING_RATE)
 	elif outcome.get("entered_crisis", false):
-		_current_run_data.crises_failed += 1
+		_current_run_data["crises_failed"] += 1
 		_update_skill("gauge_management", -SKILL_LEARNING_RATE * 0.5)
 
 	# Pattern recognition (if player predicted correctly)
@@ -295,10 +298,10 @@ func update_from_outcome(outcome: Dictionary) -> void:
 
 	# Promise keeping
 	if outcome.get("promise_kept", false):
-		_current_run_data.promises_kept += 1
+		_current_run_data["promises_kept"] += 1
 		_shift_trait("trust_merlin", 1.0)
 	elif outcome.get("promise_broken", false):
-		_current_run_data.promises_broken += 1
+		_current_run_data["promises_broken"] += 1
 		_shift_trait("trust_merlin", 0.0)
 
 	# Skill timing
@@ -310,31 +313,32 @@ func update_from_outcome(outcome: Dictionary) -> void:
 # ═══════════════════════════════════════════════════════════════════════════════
 
 func on_run_end(run_data: Dictionary) -> void:
-	"""Appele a la fin de chaque run."""
+	## Appele a la fin de chaque run.
 	var cards_played: int = run_data.get("cards_played", 0)
 	var is_victory: bool = run_data.get("victory", false)
 	var ending: String = run_data.get("ending", {}).get("title", "")
 
 	# Update meta
-	meta.runs_completed += 1
+	meta["runs_completed"] += 1
 	if is_victory:
-		meta.runs_won += 1
-	meta.total_cards_played += cards_played
-	meta.last_seen_date = int(Time.get_unix_time_from_system())
+		meta["runs_won"] += 1
+	meta["total_cards_played"] += cards_played
+	meta["last_seen_date"] = int(Time.get_unix_time_from_system())
 
 	# Update average run length
-	meta.average_run_length = (
-		(meta.average_run_length * (meta.runs_completed - 1) + cards_played)
-		/ float(meta.runs_completed)
+	meta["average_run_length"] = (
+		(meta["average_run_length"] * (meta["runs_completed"] - 1) + cards_played)
+		/ float(meta["runs_completed"])
 	)
 
 	# Track longest/shortest
-	meta.longest_run = maxi(meta.longest_run, cards_played)
-	meta.shortest_run = mini(meta.shortest_run, cards_played)
+	meta["longest_run"] = maxi(meta["longest_run"], cards_played)
+	meta["shortest_run"] = mini(meta["shortest_run"], cards_played)
 
 	# Track endings
-	if ending != "" and ending not in meta.endings_seen:
-		meta.endings_seen.append(ending)
+	var seen: Array = meta["endings_seen"]
+	if ending != "" and ending not in seen:
+		seen.append(ending)
 
 	# Apply session decay to traits (slow return to center)
 	_apply_session_decay()
@@ -353,10 +357,10 @@ func on_run_end(run_data: Dictionary) -> void:
 
 
 func _apply_session_decay() -> void:
-	"""Applique un leger decay vers 0.5 pour eviter les extremes."""
-	for trait in play_style:
-		var current: float = play_style[trait]
-		play_style[trait] = lerpf(current, 0.5, 1.0 - DECAY_RATE)
+	## Applique un leger decay vers 0.5 pour eviter les extremes.
+	for key in play_style:
+		var current: float = play_style[key]
+		play_style[key] = lerpf(current, 0.5, 1.0 - DECAY_RATE)
 
 # ═══════════════════════════════════════════════════════════════════════════════
 # EXPERIENCE TIER
@@ -365,7 +369,7 @@ func _apply_session_decay() -> void:
 enum ExperienceTier { INITIATE, APPRENTICE, JOURNEYER, ADEPT, MASTER }
 
 func get_experience_tier() -> ExperienceTier:
-	var runs: int = meta.runs_completed
+	var runs: int = meta["runs_completed"]
 	if runs <= 5:
 		return ExperienceTier.INITIATE
 	elif runs <= 20:
@@ -392,35 +396,37 @@ func get_experience_tier_name() -> String:
 # ═══════════════════════════════════════════════════════════════════════════════
 
 func get_context_for_llm() -> Dictionary:
-	"""Retourne un resume du profil pour le LLM."""
+	## Retourne un resume du profil pour le LLM.
+	var pref_themes: Array = preferences["preferred_themes"]
+	var avoid_themes: Array = preferences["avoided_themes"]
 	return {
 		"style": play_style.duplicate(),
 		"skill": skill_assessment.duplicate(),
-		"runs_completed": meta.runs_completed,
+		"runs_completed": meta["runs_completed"],
 		"experience_tier": get_experience_tier_name(),
-		"preferred_themes": preferences.preferred_themes.duplicate(),
-		"avoided_themes": preferences.avoided_themes.duplicate(),
-		"humor_receptivity": preferences.humor_receptivity,
-		"lore_interest": preferences.lore_interest,
+		"preferred_themes": pref_themes.duplicate(),
+		"avoided_themes": avoid_themes.duplicate(),
+		"humor_receptivity": preferences["humor_receptivity"],
+		"lore_interest": preferences["lore_interest"],
 	}
 
 
 func get_summary_for_prompt() -> String:
-	"""Retourne un resume textuel pour le prompt LLM."""
+	## Retourne un resume textuel pour le prompt LLM.
 	var lines := []
 
 	# Style dominant
-	if play_style.aggression > 0.7:
+	if play_style["aggression"] > 0.7:
 		lines.append("Joueur audacieux, prend des risques")
-	elif play_style.aggression < 0.3:
+	elif play_style["aggression"] < 0.3:
 		lines.append("Joueur prudent, evite les conflits")
 
-	if play_style.altruism > 0.7:
+	if play_style["altruism"] > 0.7:
 		lines.append("Altruiste, aide les autres")
-	elif play_style.altruism < 0.3:
+	elif play_style["altruism"] < 0.3:
 		lines.append("Pragmatique, privilegie ses interets")
 
-	if play_style.curiosity > 0.7:
+	if play_style["curiosity"] > 0.7:
 		lines.append("Explorateur, cherche les mysteres")
 
 	# Skill level
@@ -435,7 +441,7 @@ func get_summary_for_prompt() -> String:
 		lines.append("Joueur debutant")
 
 	# Experience
-	lines.append("Experience: %s (%d runs)" % [get_experience_tier_name(), meta.runs_completed])
+	lines.append("Experience: %s (%d runs)" % [get_experience_tier_name(), meta["runs_completed"]])
 
 	return "\n".join(lines)
 
@@ -463,7 +469,7 @@ func save_to_disk() -> void:
 
 func load_from_disk() -> void:
 	if not FileAccess.file_exists(SAVE_PATH):
-		meta.first_seen_date = int(Time.get_unix_time_from_system())
+		meta["first_seen_date"] = int(Time.get_unix_time_from_system())
 		return
 
 	var file := FileAccess.open(SAVE_PATH, FileAccess.READ)
@@ -479,28 +485,28 @@ func load_from_disk() -> void:
 
 	# Load each section with fallbacks
 	if data.has("play_style"):
-		for key in data.play_style:
+		for key in data["play_style"]:
 			if play_style.has(key):
-				play_style[key] = float(data.play_style[key])
+				play_style[key] = float(data["play_style"][key])
 
 	if data.has("skill_assessment"):
-		for key in data.skill_assessment:
+		for key in data["skill_assessment"]:
 			if skill_assessment.has(key):
-				skill_assessment[key] = float(data.skill_assessment[key])
+				skill_assessment[key] = float(data["skill_assessment"][key])
 
 	if data.has("preferences"):
-		for key in data.preferences:
+		for key in data["preferences"]:
 			if preferences.has(key):
-				preferences[key] = data.preferences[key]
+				preferences[key] = data["preferences"][key]
 
 	if data.has("meta"):
-		for key in data.meta:
+		for key in data["meta"]:
 			if meta.has(key):
-				meta[key] = data.meta[key]
+				meta[key] = data["meta"][key]
 
 	if data.has("_theme_counter"):
-		_theme_counter = data._theme_counter
+		_theme_counter = data["_theme_counter"]
 	if data.has("_npc_interactions"):
-		_npc_interactions = data._npc_interactions
+		_npc_interactions = data["_npc_interactions"]
 	if data.has("_gauge_protection_count"):
-		_gauge_protection_count = data._gauge_protection_count
+		_gauge_protection_count = data["_gauge_protection_count"]

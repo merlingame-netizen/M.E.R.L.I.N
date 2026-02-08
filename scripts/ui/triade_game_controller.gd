@@ -1,8 +1,9 @@
 ## ═══════════════════════════════════════════════════════════════════════════════
-## TRIADE Game Controller — Store-UI Bridge (v0.3.0)
+## TRIADE Game Controller — Store-UI Bridge (v0.4.0)
 ## ═══════════════════════════════════════════════════════════════════════════════
-## Connects DruStore TRIADE actions to TriadeGameUI.
-## Manages game flow: start run, get cards, resolve choices, end run.
+## Connects MerlinStore TRIADE actions to TriadeGameUI.
+## Manages game flow: narrator intro, start run, get cards, resolve choices.
+## LLM integration via MerlinOmniscient for real narrative card generation.
 ## ═══════════════════════════════════════════════════════════════════════════════
 
 extends Node
@@ -12,11 +13,14 @@ class_name TriadeGameController
 # REFERENCES
 # ═══════════════════════════════════════════════════════════════════════════════
 
-var store: DruStore
+var store: MerlinStore
 var ui: TriadeGameUI
+var merlin_ai: Node = null  # MerlinAI autoload reference
 
 var current_card: Dictionary = {}
 var is_processing := false
+var _intro_shown := false
+var _cards_this_run := 0
 
 # ═══════════════════════════════════════════════════════════════════════════════
 # INITIALIZATION
@@ -24,9 +28,9 @@ var is_processing := false
 
 func _ready() -> void:
 	# Find store (singleton or child)
-	store = get_node_or_null("/root/DruStore")
+	store = get_node_or_null("/root/MerlinStore")
 	if not store:
-		store = DruStore.new()
+		store = MerlinStore.new()
 		add_child(store)
 
 	# Find or create UI
@@ -36,7 +40,18 @@ func _ready() -> void:
 		ui.name = "TriadeGameUI"
 		add_child(ui)
 
+	# Find LLM interface
+	merlin_ai = get_node_or_null("/root/MerlinAI")
+	if merlin_ai:
+		print("[TriadeController] MerlinAI found, LLM generation available")
+	else:
+		print("[TriadeController] MerlinAI not found, using fallback cards")
+
 	_connect_signals()
+
+	# Auto-start run after a frame so UI is fully ready
+	await get_tree().process_frame
+	start_run()
 
 
 func _connect_signals() -> void:
@@ -54,41 +69,109 @@ func _connect_signals() -> void:
 		ui.skill_activated.connect(_on_skill_activated)
 		ui.pause_requested.connect(_on_pause_requested)
 
+	# Bestiole wheel signals
+	if ui and ui.bestiole_wheel:
+		ui.bestiole_wheel.wheel_opened.connect(_on_wheel_open_requested)
+		ui.bestiole_wheel.ogham_selected.connect(_on_ogham_selected)
+
+	# Store bestiole signals
+	if store:
+		if store.has_signal("awen_changed"):
+			store.awen_changed.connect(_on_awen_changed)
+		if store.has_signal("bond_tier_changed"):
+			store.bond_tier_changed.connect(_on_bond_tier_changed)
+
 
 # ═══════════════════════════════════════════════════════════════════════════════
 # GAME FLOW
 # ═══════════════════════════════════════════════════════════════════════════════
 
 func start_run(seed_value: int = -1) -> void:
-	"""Start a new TRIADE run."""
+	## Start a new TRIADE run with Merlin narrator intro.
 	if seed_value < 0:
 		seed_value = int(Time.get_unix_time_from_system())
 
-	var result = store.dispatch({
+	_cards_this_run = 0
+	_intro_shown = false
+
+	var result = await store.dispatch({
 		"type": "TRIADE_START_RUN",
 		"seed": seed_value,
 	})
 
 	if result.get("ok", false):
 		_sync_ui_with_state()
+
+		# Show narrator intro BEFORE first card
+		if ui:
+			await ui.show_narrator_intro()
+			_intro_shown = true
+
+		# Then get first card
 		_request_next_card()
 
 
 func _request_next_card() -> void:
-	"""Get and display the next card."""
+	## Get and display the next card (LLM or fallback).
 	if is_processing:
 		return
 
 	is_processing = true
+	_cards_this_run += 1
 
-	var result = store.dispatch({"type": "TRIADE_GET_CARD"})
+	var result = await store.dispatch({"type": "TRIADE_GET_CARD"})
 
 	if result.get("ok", false):
 		current_card = result.get("card", {})
 		if ui:
 			ui.display_card(current_card)
+	else:
+		# If store fails, try direct LLM generation
+		var llm_card := await _try_direct_llm_card()
+		if not llm_card.is_empty():
+			current_card = llm_card
+			if ui:
+				ui.display_card(current_card)
 
 	is_processing = false
+
+
+func _try_direct_llm_card() -> Dictionary:
+	## Attempt to generate a card directly via MerlinAI when store pipeline fails.
+	if merlin_ai == null or not merlin_ai.get("is_ready"):
+		return {}
+
+	if not merlin_ai.has_method("generate_with_system"):
+		return {}
+
+	var system_prompt := "Tu es un narrateur celtique. Genere une scene en 1-2 phrases, avec 2 options (gauche/droite)."
+	var user_prompt := "Carte %d. Aspects: Corps=equilibre, Ame=equilibre, Monde=equilibre." % _cards_this_run
+
+	var result: Dictionary = await merlin_ai.generate_with_system(system_prompt, user_prompt, {"max_tokens": 128, "temperature": 0.7})
+
+	if result.has("error"):
+		return {}
+
+	var text: String = result.get("text", "")
+	if text.is_empty():
+		return {}
+
+	# Parse simple text into card format
+	return {
+		"id": "llm_%d" % _cards_this_run,
+		"text": text.strip_edges(),
+		"speaker": "Merlin",
+		"type": "narrative",
+		"options": [
+			{"direction": "left", "label": "Accepter", "effects": [
+				{"type": "SHIFT_ASPECT", "aspect": "Monde", "direction": "up"}
+			], "preview": "Ouvert"},
+			{"direction": "right", "label": "Refuser", "effects": [
+				{"type": "SHIFT_ASPECT", "aspect": "Monde", "direction": "down"}
+			], "preview": "Prudent"}
+		],
+		"tags": ["llm_generated"],
+	}
 
 
 func _resolve_choice(option: int) -> void:
@@ -98,7 +181,7 @@ func _resolve_choice(option: int) -> void:
 
 	is_processing = true
 
-	var result = store.dispatch({
+	var result = await store.dispatch({
 		"type": "TRIADE_RESOLVE_CHOICE",
 		"card": current_card,
 		"option": option,
@@ -124,7 +207,7 @@ func _resolve_choice(option: int) -> void:
 
 func _use_skill(skill_id: String) -> void:
 	"""Activate a Bestiole skill."""
-	var result = store.dispatch({
+	var result = await store.dispatch({
 		"type": "TRIADE_USE_SKILL",
 		"skill_id": skill_id,
 		"card": current_card,
@@ -170,6 +253,11 @@ func _sync_ui_with_state() -> void:
 	# Cards count
 	var cards_played = store.get_cards_played()
 	ui.update_cards_count(cards_played)
+
+	# Bestiole wheel
+	if ui.bestiole_wheel:
+		ui.bestiole_wheel.update_awen(store.get_awen())
+		ui.bestiole_wheel.update_bond(store.get_bestiole_bond())
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
@@ -231,6 +319,55 @@ func _on_skill_activated(skill_id: String) -> void:
 func _on_pause_requested() -> void:
 	# TODO: Show pause menu
 	get_tree().paused = not get_tree().paused
+
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# SIGNAL HANDLERS — Bestiole Wheel
+# ═══════════════════════════════════════════════════════════════════════════════
+
+func _on_wheel_open_requested() -> void:
+	if store and ui and ui.bestiole_wheel:
+		ui.bestiole_wheel.open_wheel(store)
+
+
+func _on_ogham_selected(skill_id: String) -> void:
+	_use_ogham(skill_id)
+
+
+func _on_awen_changed(_old_value: int, new_value: int) -> void:
+	if ui and ui.bestiole_wheel:
+		ui.bestiole_wheel.update_awen(new_value)
+
+
+func _on_bond_tier_changed(_old_tier: String, _new_tier: String) -> void:
+	if store and ui and ui.bestiole_wheel:
+		ui.bestiole_wheel.update_bond(store.get_bestiole_bond())
+
+
+func _use_ogham(skill_id: String) -> void:
+	"""Activate a Bestiole Ogham skill via the store."""
+	if not store:
+		return
+
+	var result = await store.dispatch({
+		"type": "TRIADE_USE_OGHAM",
+		"skill_id": skill_id,
+		"card": current_card,
+	})
+
+	if result.get("ok", false):
+		_sync_ui_with_state()
+
+
+func _unhandled_input(event: InputEvent) -> void:
+	# Tab key toggles Bestiole wheel
+	if event is InputEventKey and event.pressed and event.keycode == KEY_TAB:
+		if ui and ui.bestiole_wheel:
+			if ui.bestiole_wheel.is_open:
+				ui.bestiole_wheel.close_wheel()
+			elif store:
+				ui.bestiole_wheel.open_wheel(store)
+			get_viewport().set_input_as_handled()
 
 
 # ═══════════════════════════════════════════════════════════════════════════════

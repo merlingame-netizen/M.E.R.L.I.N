@@ -1,0 +1,198 @@
+{
+	"_comment": "Dialogues for the 3 post-questionnaire scenes: Eveil, Antre, Transition — 日本語",
+
+	"eveil": {
+		"lines": [
+			{
+				"id": "eveil_01",
+				"text": "ああ……来たか。しばらく前から気配を感じていた。冷えゆく世界の中の、遠い温もりのようなものだ。",
+				"mood": "pensif",
+				"pause_after": 2.0
+			},
+			{
+				"id": "eveil_02",
+				"text": "膜がお前のために開いた。もうめったに起きないことだ。通り道は稀になった。他のすべてと同じように。",
+				"mood": "mystique",
+				"pause_after": 1.5
+			},
+			{
+				"id": "eveil_03",
+				"text": "浮かれるな。お前が最初ではない。だが……最後の意味ある者になるかもしれん。",
+				"mood": "warm",
+				"pause_after": 1.5
+			},
+			{
+				"id": "eveil_04",
+				"text": "さあ、ついてこい。霧が入ってこない場所がある。まあ……今のところはな。",
+				"mood": "amuse",
+				"pause_after": 1.0
+			}
+		]
+	},
+
+	"antre": {
+		"bestiole_intro": [
+			{
+				"id": "bestiole_01",
+				"type": "narration",
+				"text": "影の中で何かが動いている。小さな光る形が、おずおずとこちらに近づいてくる。",
+				"mood": "mystique"
+			},
+			{
+				"id": "bestiole_02",
+				"type": "narration",
+				"text": "好奇心いっぱいにお前の手の周りを回っている。その光は穏やかに脈打ち、まるで小さな心臓のようだ。",
+				"mood": "warm"
+			},
+			{
+				"id": "bestiole_03",
+				"type": "merlin",
+				"text": "Bestioleがお前を認めた。珍しいことだ。普段は先に噛みつくんだがな。",
+				"mood": "amuse"
+			},
+			{
+				"id": "bestiole_04",
+				"type": "merlin",
+				"text": "あいつは三つのOghamsを持っている。白樺、ナナカマド、リンゴ。最も古いものだ。受け取れ。",
+				"mood": "sage"
+			}
+		],
+		"mission_briefing": [
+			{
+				"id": "mission_01",
+				"text": "見ろ。",
+				"mood": "serieux",
+				"pause_after": 1.5
+			},
+			{
+				"id": "mission_02",
+				"text": "七つの地。七つの聖域。それぞれが己のやり方で消えていく。守護者たちは持ちこたえているが、疲れている。",
+				"mood": "serieux",
+				"pause_after": 1.0
+			},
+			{
+				"id": "mission_03",
+				"text": "お前は旅をする。観察する。選択する。お前の下す決断の一つ一つが、均衡を養うか、損なうかだ。",
+				"mood": "sage",
+				"pause_after": 1.0
+			},
+			{
+				"id": "mission_04",
+				"text": "そしてわしは、お前が間違っていると指摘するためにいる。一番好きな役回りだ。",
+				"mood": "amuse",
+				"pause_after": 0.5
+			}
+		],
+		"biome_suggestions": {
+			"druide": {
+				"text": "森がお前を呼んでいる、{name}。Broceliandeはすべての心臓だ。まずはそこから始めろ。",
+				"biome": "broceliande",
+				"mood": "sage"
+			},
+			"guerrier": {
+				"text": "荒野は厳しい、{name}。風は何も許さん。お前はそのために生まれたのだ。",
+				"biome": "landes",
+				"mood": "serieux"
+			},
+			"barde": {
+				"text": "人々は誰かの声を必要としている、{name}。村へ行け。お前を待っている。",
+				"biome": "villages",
+				"mood": "warm"
+			},
+			"eclaireur": {
+				"text": "地平線がお前を待っている、{name}。海岸は世界の果てだ。海へ向かえ。",
+				"biome": "cotes",
+				"mood": "mystique"
+			}
+		},
+		"biome_reactions": {
+			"accepted": "よし。勘がいいな。それとも運か。どちらも同じ価値がある。",
+			"rejected": "面白い……誰の言うことも聞かんのだな。うまくやっていけそうだ。"
+		}
+	},
+
+	"biomes": {
+		"broceliande": {
+			"name": "Broceliandeの森",
+			"subtitle": "まだ鼓動する心臓",
+			"gardien": "Maelgwn",
+			"ogham": "Duir",
+			"saison": "Automne",
+			"arrival_text": "樫の木は最初のドルイドを覚えているほど古い。空気は苔と過ぎゆく時の香りがする。霧が枝の間の光を金色に染めている。",
+			"merlin_comment": "初日だ。最初の失敗ももうすぐだろう。賭けてもいい。",
+			"map_position": [0.65, 0.25],
+			"color": "#306018"
+		},
+		"landes": {
+			"name": "ヒースの荒野",
+			"subtitle": "途切れゆく息吹",
+			"gardien": "Talwen",
+			"ogham": "Onn",
+			"saison": "Hiver",
+			"arrival_text": "ヒースが大地の海のようにうねっている。風は絶え間ない。激しくはないが、永遠に続く。地平線はあるべき距離より近く見える。",
+			"merlin_comment": "風がお前に語りかけるだろう。いや、囁くだろう。もう叫ぶ力は残っていない。",
+			"map_position": [0.75, 0.45],
+			"color": "#685030"
+		},
+		"cotes": {
+			"name": "荒々しい海岸",
+			"subtitle": "退いていく海",
+			"gardien": "Bran",
+			"ogham": "Nuin",
+			"saison": "Ete",
+			"arrival_text": "黒い花崗岩が白い波しぶきと出会う。空と海が水平線で溶け合い、どこで一方が終わり他方が始まるのかわからなくなる。",
+			"merlin_comment": "海はかつて多くを知っていた。今はゆっくりと忘れている。わしらと同じだ。",
+			"map_position": [0.3, 0.65],
+			"color": "#205898"
+		},
+		"villages": {
+			"name": "ケルトの村々",
+			"subtitle": "最後の温もり",
+			"gardien": "Azenor",
+			"ogham": "Gort",
+			"saison": "Printemps",
+			"arrival_text": "灰色の石、スレートの屋根、暖炉の炎。路地は狭く、蔦に覆われている。光は真昼であっても黄昏のそれだ。",
+			"merlin_comment": "まだ笑っているんだ、あの人たちは。それが一番美しいところだ。そして一番悲しいところでもある。",
+			"map_position": [0.45, 0.8],
+			"color": "#a08058"
+		},
+		"cercles": {
+			"name": "石の環",
+			"subtitle": "ためらう時間",
+			"gardien": "Keridwen",
+			"ogham": "Huath",
+			"saison": "Samhain",
+			"arrival_text": "三千の立石が見渡す限り広がっている。影は太陽に対して遅すぎる動きをしている。時間がここでためらっている。まるで次に何をすべきか忘れてしまったかのように。",
+			"merlin_comment": "石の近くに長居するな。時間がいたずらをする場所だ。経験者は語る。",
+			"map_position": [0.2, 0.35],
+			"color": "#787870"
+		},
+		"marais": {
+			"name": "コリガンの沼地",
+			"subtitle": "下で待つもの",
+			"gardien": "Gwydion",
+			"ogham": "Muin",
+			"saison": "Lughnasadh",
+			"arrival_text": "黒、深い緑、淀んだ水面に虹色の反射。霧は地を這う。ここの静寂は違う。もっと重い。まるで耳を澄ましているかのように。",
+			"merlin_comment": "コリガンたちはそこにいる。お前には見えないが、あちらからはよく見えている。笑っておけ。",
+			"map_position": [0.35, 0.45],
+			"color": "#403848"
+		},
+		"collines": {
+			"name": "ドルメンの丘",
+			"subtitle": "崩れゆく記憶",
+			"gardien": "Elouan",
+			"ogham": "Ioho",
+			"saison": "Yule",
+			"arrival_text": "丸みを帯びた丘がドルメンを石の冠のように戴いている。霧は濃く、乳白色だ。一歩ごとに違う世界が現れる。",
+			"merlin_comment": "ドルメンは扉だ。どこへ通じるかは聞くな。考えたくない。",
+			"map_position": [0.15, 0.2],
+			"color": "#504078"
+		}
+	},
+
+	"transition": {
+		"travel_text": "地と地の間の霧は自然のものではない。鼓動と鼓動の間でためらう、世界の吐息なのだ。",
+		"travel_text_alt": "帳を越える。空気が変わる。色が変わる。静寂さえも違う質感を持っている。"
+	}
+}

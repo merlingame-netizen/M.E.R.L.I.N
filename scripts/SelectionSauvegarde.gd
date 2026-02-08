@@ -1,7 +1,7 @@
 extends Control
 
 const SLOT_COUNT := 3
-const MENU_SCENE := "res://scenes/MenuPrincipal.tscn"
+const MENU_SCENE_FALLBACK := "res://scenes/HubAntre.tscn"
 const GAME_SCENE := "res://scenes/GameMain.tscn"
 
 @onready var panel: PanelContainer = $RootPanel
@@ -122,7 +122,9 @@ func _on_slot_pressed(slot: int) -> void:
 
 
 func _on_back_pressed() -> void:
-	_go_to_scene(MENU_SCENE)
+	var se := get_node_or_null("/root/ScreenEffects")
+	var target: String = se.return_scene if se and se.return_scene != "" else MENU_SCENE_FALLBACK
+	_go_to_scene(target)
 
 
 func _go_to_scene(scene_path: String) -> void:

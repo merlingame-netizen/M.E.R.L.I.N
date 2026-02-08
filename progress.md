@@ -1,5 +1,452 @@
 # Progress Log - M.E.R.L.I.N.: Le Jeu des Oghams
 
+## Session: 2026-02-08 (Major Gameplay Polish)
+
+### Phase 21: UX Typewriter + LLM Eveil + Pixel Art Characters
+- **Status:** complete
+- **Validation:** Static analysis PASSED (0 erreurs / 61 fichiers)
+
+#### 1. Click-to-skip typewriter (SceneEveil + TransitionBiome)
+- Clic = affiche texte instantanement, 0.3s pause, clic = avance
+- Joueur controle le rythme (pas d'auto-advance)
+
+#### 2. SceneEveil LLM avec blocs de reponse
+- MerlinAI warmup + pre-generation reponses joueur
+- 3 boutons interactifs aux lignes 2 et 4
+- Fallback pre-ecrit si LLM indisponible
+
+#### 3. PixelCharacterPortrait (NOUVEAU)
+- Grilles 16x16, palettes 6 couleurs, 5 templates
+- Generation procedurale depuis hash du nom
+- Animation cascade avec TRANS_BACK
+
+#### 4. TriadeGame portrait pixel
+- Speaker label + portrait pixel dynamique
+- Remplacement ancien cascade par PixelCharacterPortrait
+
+#### Fichiers:
+- `scripts/SceneEveil.gd` — LLM reponses, typewriter
+- `scripts/TransitionBiome.gd` — Typewriter click-to-advance
+- `scripts/ui/triade_game_ui.gd` — Portrait pixel, speaker
+- `scripts/ui/pixel_character_portrait.gd` — NOUVEAU
+
+### Phase 20b: TransitionBiome Fix + Biome Pixel Cascade
+- **Status:** complete
+- **Validation:** Static analysis PASSED (0 erreurs / 60 fichiers)
+
+#### Bug fix critique:
+- **TriadeGameController**: `start_run()` n'etait jamais appele apres scene change — ajoute auto-start dans `_ready()` avec `await process_frame`
+- **TransitionBiome _fade_to_game()**: supprime le tween sur `bg.color` (conflit avec ShaderMaterial)
+
+#### Ameliorations TransitionBiome:
+- **Chemin carte**: Depart depuis "Antre" (bas-gauche) vers la position du biome, avec wobble manuscrit
+- **Reperes (landmarks)**: 4 points le long du chemin (Antre, Lande, Gue, Sentier) avec marqueurs losange
+- **Palette biome**: 4 biomes avec couleurs specifiques (Broceliande=vert foret, Carnac=pierre, Avalon=lac, Annwn=pourpre)
+- **Cascade pixel CeltOS**: Icone 8x8 du biome (arbre, menhir, vague, portail) se materialise en pixels tombants avec bounce
+- **Pulse**: Icone complete pulse 2x avant de continuer
+
+#### Fichiers modifies:
+- `scripts/TransitionBiome.gd` — Carte, landmarks, pixel cascade, palette biome
+- `scripts/ui/triade_game_controller.gd` — Auto-start run
+
+### Phase 20: Major Gameplay Polish
+- **Status:** complete
+- **Agents:** Lead Godot, UI Impl, Game Designer, LLM Expert
+- **Validation:** Static analysis PASSED (0 erreurs / 60 fichiers)
+
+#### Corrections majeures:
+
+1. **Remplacement emojis par animaux dessines (TriadeGameUI)**
+   - Suppression ASPECT_ICONS (emojis: boar/raven/deer)
+   - Nouveau systeme: `_create_animal_icon()` avec custom `_draw()`
+   - 3 animaux vectoriels: `_draw_sanglier()`, `_draw_corbeau()`, `_draw_cerf()`
+   - Silhouettes style knotwork celtique, couleurs par aspect
+   - SOUFFLE_ICON: spirale Unicode au lieu d'emoji tornado
+
+2. **Theme parchemin sur gameplay**
+   - Ajout PALETTE (paper, ink, accent, shadow) sur TriadeGameUI
+   - Fond shader parchemin (reigns_paper.gdshader) sur scene de jeu
+   - Polices Morris Roman sur tous les textes gameplay
+   - Boutons options re-styles: bordures celtiques, couleurs douces, StyleBoxFlat
+
+3. **Intro narrateur Merlin**
+   - `show_narrator_intro()` joue avant la premiere carte d'un run
+   - 5 textes d'intro narrative aleatoires
+   - Typewriter avec blip procedural (AudioStreamGenerator)
+   - Options UI fade-in apres intro
+   - Signal `narrator_intro_finished`
+
+4. **Effet pixel cascade PNJ (style CeltOS)**
+   - `_play_npc_cascade(speaker_name)` materialise un PNJ en micro-pixels
+   - Pattern silhouette humanoide genere depuis hash du nom
+   - Pixels tombent en position avec Tween BOUNCE
+   - Couleurs derives du hash, variation aleatoire
+   - Auto-fadeout apres 3 secondes
+
+5. **Branchement LLM au gameplay**
+   - TriadeGameController v0.4.0: reference `merlin_ai`
+   - `_try_direct_llm_card()`: fallback generation directe via MerlinAI
+   - Pipeline: MerlinStore -> MerlinOmniscient -> MerlinAI -> LLM local (Qwen 2.5 3B)
+   - Si LLM indisponible: fallback pool (cartes pre-ecrites)
+
+6. **HubAntre: navigation par onglets (NO SCROLL)**
+   - Remplacement ScrollContainer par systeme onglets (3 pages)
+   - Page 1: Merlin + Statut + Bouton Aventure
+   - Page 2: Carte Bretagne + Mission
+   - Page 3: Bestiole + Grimoire
+   - Barre bas: 3 onglets + Options/Sauvegarde/Menu
+   - Navigation gamepad: L1/R1 (bumpers)
+   - Navigation clavier: Q/E
+   - Transition fluide entre pages (fade alpha 0.15s/0.2s)
+
+7. **Ecran de fin restyle**
+   - Fond parchemin au lieu de noir
+   - Polices Morris Roman, ornements celtiques haut/bas
+   - Couleurs: vert victoire, rouge defaite (tons doux)
+   - Score renomme "Gloire", stats avec separateurs
+
+---
+
+## Session: 2026-02-08 (Navigation, Typing Sound, Map, Cleanup)
+
+### Phase 19: Dynamic Navigation + Typing Sound + Map Rework
+- **Status:** complete
+- **Agents:** Lead Godot, UI Impl, Audio Designer
+- **Validation:** Static analysis PASSED (0 erreurs / 60 fichiers)
+
+#### Corrections majeures:
+
+1. **Navigation dynamique (return_scene)**
+   - Ajout `return_scene` dans ScreenEffects autoload
+   - HubAntre et MenuPrincipal stockent la scene courante avant navigation
+   - Options, Calendar, Collection, Save retournent a la scene d'origine
+   - Fallback: HubAntre si aucune scene stockee
+
+2. **Nettoyage MenuPrincipalReigns**
+   - Supprime MenuPrincipalReigns.tscn (inutile)
+   - Toutes refs redirigees vers MenuPrincipal.tscn
+   - HubAntre, IntroPersonalityQuiz, IntroMerlinDialogue, SceneSelector mis a jour
+
+3. **Son typing clavier doux** (remplacement ACVoicebox dans typewriter)
+   - SceneEveil, SceneAntreMerlin, TransitionBiome, HubAntre
+   - Nouveau `_play_blip()`: click procedural (260-360Hz, exp decay, noise texture)
+   - Retire le branchement ACVoicebox du typewriter (toujours typewriter manuel)
+   - Chaque frappe a une frequence aleatoire (son naturel, non repetitif)
+
+4. **Carte des biomes (HubAntre)**
+   - Remplacement grille de boutons par carte positionnee (forme Bretagne)
+   - 7 marqueurs biomes avec symboles celtiques + noms
+   - Chemins Line2D entre biomes adjacents (8 connexions)
+   - Animation pulse sur biome selectionne (scale 1.0 <-> 1.06)
+   - Chemins actifs surlignes en accent (paths connectes au biome)
+   - Affichage date/heure : "Jour X — HH:MM" (mise a jour toutes les 30s)
+
+---
+
+### Phase 18: Multi-Scene Fixes & Cleanup
+- **Status:** complete
+- **Agents:** Lead Godot, UI Impl, Audio Designer
+- **Validation:** Static analysis PASSED (0 erreurs / 60 fichiers)
+
+#### Corrections majeures:
+1. **SceneEveil.gd** — Fix voicebox hang + flow
+   - Bug: `await voicebox.finished_phrase` bloquait car banque "default" inexistante
+   - Fix: banque "whisper", check `is_ready()`, timeout safety au lieu de await signal
+   - NEXT_SCENE redirige vers HubAntre (au lieu de SceneAntreMerlin)
+   - Ajout initialisation oghams Bestiole dans `_transition_out()`
+
+2. **SceneAntreMerlin.gd** — Meme fix voicebox (whisper + safety timeout)
+
+3. **TransitionBiome.gd** — Restyle visuel complet
+   - Remplacement palette sombre par "Parchemin Mystique Breton"
+   - Nouveau `_build_ui()`: shader parchemin, ornements celtiques, polices Morris Roman
+   - Ajout `_make_celtic_ornament()`, fix mist particles, fix voicebox
+
+4. **Boutons retour vers HubAntre** (au lieu de MenuPrincipal)
+   - MenuOptions.gd, Calendar.gd, Collection.gd, SelectionSauvegarde.gd
+
+5. **ACVoicebox** — 4 nouveaux presets voix douces
+   - Doux (3.4 pitch, variation 0.12, speed 0.80)
+   - Plume (3.8, 0.18, 0.90)
+   - Cristal (4.0, 0.10, 0.75)
+   - Ancien (2.4, 0.08, 0.70)
+   - Ajout dans MenuOptions UI
+
+6. **ReignsGame.tscn** — Supprime + reference retiree de SceneSelector
+
+7. **MenuPrincipalReigns.tscn** — Cree (manquait, causait erreur runtime)
+
+8. **narrative_registry.gd:624** — Fix type Array vs Array[Dictionary]
+
+---
+
+## Session: 2026-02-08 (HUB Scene — L'Antre du Dernier Druide)
+
+### Phase 17: HUB Scene Implementation
+- **Status:** complete
+- **Agents:** Game Designer, UI Impl, Lead Godot, Producer
+- **Validation:** Static analysis PASSED (0 erreurs / 60 fichiers)
+
+#### Fichiers crees:
+1. **scripts/HubAntre.gd** (NEW, ~1200 lignes) — Scene HUB principale du jeu
+   - Section Merlin: portrait saisonnier + dialogue typewriter contextuel + voix ACVoicebox
+   - Section Etat du Voyageur: 3 aspects Triade (Corps/Ame/Monde) + Souffle + Jour
+   - Section Mission: briefing procedural par biome + barre de progression
+   - Section Carte de Bretagne: 7 biomes interactifs en layout carte (3 rangees)
+   - Section Bestiole: bond tier (5 niveaux) + Awen + 5 barres de besoins + 4 actions de soin (3/visite)
+   - Section Grimoire: meta-progression (runs, fins vues, cartes jouees, gloire)
+   - Bouton Aventure: contextuel selon biome selectionne, desactive sans selection
+   - Barre navigation: Options, Calendrier, Sauvegarder (quick save slot 1), Menu
+   - Esthetique: Parchemin Mystique Breton (palette, Celtic ornaments, mist breathing, fade-in)
+   - 14 missions procedurales (2 par biome) avec types: discovery, alliance, survival, recovery
+   - 16 dialogues Merlin contextuels (first_hub, return, after_fall, veteran)
+   - Responsive layout (mobile + desktop)
+2. **scenes/HubAntre.tscn** (NEW) — Scene Godot minimale (Control root + script)
+
+#### Fichiers modifies:
+3. **scripts/autoload/SceneSelector.gd** — Ajout HubAntre dans le registre de scenes debug
+4. **scripts/SceneAntreMerlin.gd** — NEXT_SCENE redirige vers HubAntre au lieu de TransitionBiome
+
+#### Architecture HUB:
+```
+SceneAntreMerlin (intro narrative) → HubAntre (HUB persistant)
+HubAntre → TransitionBiome → TriadeGame → [End] → HubAntre
+Menu "Continuer" → HubAntre
+```
+
+#### Systemes integres:
+- **MerlinStore**: Lecture/ecriture des aspects, souffle, bestiole, meta-progression
+- **GameManager**: Passage de donnees biome vers TransitionBiome
+- **MerlinSaveSystem**: Quick save (slot 1) + auto-save avant aventure
+- **ACVoicebox**: Synthese vocale Merlin (preset low pitch)
+- **MerlinConstants**: TRIADE_ASPECT_INFO, OGHAM_SKILLS, BOND_TIERS, SOUFFLE
+- **ScreenEffects**: Integration mood "warm"
+
+#### Features du HUB:
+- 7 biomes de Bretagne celtique avec couleurs, gardiens, oghams dominants, saisons
+- Systeme de soin Bestiole (nourrir, jouer, soigner, repos) limite a 3 actions/visite
+- Affichage bond tier (Etranger → Ame Soeur) avec icones et pourcentage
+- Oghams equipes affiches dans des panneaux styled
+- Mission generee aleatoirement selon le biome choisi
+- Sauvegarde rapide avec feedback visuel ("Sauvegarde !")
+- Navigation complete vers toutes les scenes du jeu
+
+---
+
+## Session: 2026-02-08 (Bug Fixes + Scene Flow + Voix AC + Review Agents)
+
+### Phase 16: Bug Fixes, Scene Flow, Voice Calibration
+- **Status:** complete
+- **Agents:** Lead Godot, Debug QA, Motion Designer
+- **Validation:** Static analysis PASSED (0 erreurs / 58 fichiers)
+
+#### Corrections de bugs:
+1. **ScreenEffects.gd** — Tween empty tweeners: collecte valide avant creation
+2. **SceneAntreMerlin.gd:762** — `var hide` renomme `var hide_tween` (shadowing)
+3. **ACVoicebox wrong path** — 3 fichiers corrigees de `ac_voicebox` vers `acvoicebox`
+4. **TransitionBiome.gd:178** — `set_anchors_preset` sur GPUParticles2D supprime
+5. **TransitionBiome.gd:205** — `"pitch"` corrige en `"base_pitch"` + null guard
+6. **SceneAntreMerlin.gd** — Pulse tween biome stocke et tue dans `_on_biome_selected`
+7. **ScreenEffects.gd** — `narrative_shock` restore avec EASE_OUT + TRANS_QUAD
+
+#### Changements fonctionnels:
+1. **IntroPersonalityQuiz.gd** — NEXT_SCENE: IntroMerlinDialogue -> SceneEveil
+2. **llm_status_bar.gd** — `visible = false` (UI cachee, warmup conserve)
+3. **SceneEveil.gd + SceneAntreMerlin.gd** — Artwork +40%, texte +18%
+4. **MenuPrincipalReigns.gd** — Panneau calibration voix Merlin (presets, sliders, play/stop)
+5. **MenuPrincipalReigns.gd** — Animation fade in/out du panneau voix
+
+#### Knowledge base:
+- 4 nouvelles entrees (1.14-1.17) dans gdscript_knowledge_base.md
+
+---
+
+## Session: 2026-02-08 (Bestiole Implementation — Code Complet)
+
+### Phase 15: Implementation Bestiole + Ogham Wheel
+- **Status:** complete
+- **Agents:** Game Designer, UI Impl, Art Direction, Motion Designer, Producer
+- **Validation:** Static analysis PASSED (0 erreurs)
+
+#### Fichiers modifies/crees:
+1. **merlin_constants.gd** — Ajout AWEN_MAX/START/REGEN, OGHAM_FULL_SPECS (18 Oghams), OGHAM_CATEGORIES, OGHAM_CATEGORY_COLORS/LABELS
+2. **merlin_store.gd** — Ajout awen state, signals (awen_changed, ogham_activated, bond_tier_changed), dispatch TRIADE_USE_OGHAM/ADD_AWEN/USE_AWEN, helpers (_use_ogham, _apply_ogham_effect, tick_cooldowns, can_use_ogham, etc.)
+3. **bestiole_wheel_system.gd** (NEW) — Radial menu 6 secteurs x 3 items, BestioleButton, AwenDisplay, WheelOverlay, Tooltip, animations open/close
+4. **triade_game_ui.gd** — Integration BestioleWheelSystem, signal bridge ogham_selected -> skill_activated
+5. **triade_game_controller.gd** — Handlers wheel_opened, ogham_selected, awen_changed, bond_tier_changed + Tab key toggle + _use_ogham dispatch
+
+#### Architecture:
+- Souffle d'Awen SEPARE du Souffle d'Ogham (pas de conflit Centre vs Skill)
+- 18 effets Ogham adaptes au systeme Triade (shifts discrets)
+- Bond system avec tiers et meta-progression
+- Tab key pour ouvrir/fermer la roue
+
+---
+
+## Session: 2026-02-08 (Bestiole & Ogham Wheel Design Complet)
+
+### Phase 14: Design Complet Bestiole & Roue d'Oghams
+- **Status:** complete
+- **Agent:** Game Designer (game_designer.md)
+- **Output:** `docs/60_companion/BESTIOLE_OGHAM_WHEEL_DESIGN.md` (~900 lignes)
+
+#### Documents lus pour contexte:
+- 10+ documents de lore, gameplay, et companion
+- merlin_constants.gd et merlin_store.gd (code existant)
+- CELTIC_FOUNDATION.md (Ogham authentique)
+
+#### Livrables:
+1. **Bestiole dans le jeu** — Position UI, icone, 8 animations, expressions par Bond tier
+2. **Bond system** — 5 tiers (0-100), gains/pertes, meta-progression entre runs
+3. **Souffle d'Awen** — Nouvelle ressource (separee du Souffle d'Ogham), max 5, regen/5 cartes
+4. **Roue d'Oghams** — Layout 3 anneaux, ouverture/selection/confirmation, feedback 5 phases
+5. **18 Oghams complets** — Nom, arbre, Unicode, categorie, cout, cooldown, effet Triade, synergies cachees
+6. **Equilibrage** — Matrice situations/Oghams, courbe de puissance, frequence cible, anti-abus
+7. **Specs GDScript** — OGHAM_FULL_SPECS, bestiole state, fonctions, signals, integration LLM
+
+#### Decisions cles:
+- Souffle d'Awen SEPARE du Souffle d'Ogham (evite le dilemme Centre vs Skill)
+- 1 seul Ogham par carte (pas de stacking)
+- Starters toujours actifs (pas besoin d'equiper)
+- Bond persiste entre runs (lore: fil de realite survit aux boucles)
+- Synergies cachees (profondeur decouverte progressivement)
+- Effets adaptes au systeme Triade (shifts discrets, pas pourcentages)
+
+---
+
+## Session: 2026-02-08 (Art Direction Audit — Coherence Visuelle)
+
+### Phase 13: Audit Direction Artistique Complet
+- **Status:** complete
+- **Agent:** Art Direction (art_direction.md)
+- **Output:** `docs/70_graphic/ART_DIRECTION_AUDIT.md` (684 lignes)
+
+#### Methodologie:
+- Lecture de 14+ fichiers GDScript (toutes scenes, UIs, autoloads)
+- Lecture de 4 shaders (reigns_paper, screen_distortion, seasonal_snow, bestiole_squish)
+- Cross-reference avec VISUAL_SPEC_TRANSITION_SCENES.md et art_direction.md agent
+- Inventaire complet: palettes, typographies, animations, ornements, assets
+
+#### Resultats cles:
+- **19 inconsistances identifiees** (4 P1, 6 P2, 6 P3)
+- **5 scenes coherentes** (MenuPrincipal, SceneEveil, SceneAntreMerlin, Calendar, IntroMerlinDialogue)
+- **3 scenes divergentes** (TriadeGameUI, ReignsGameUI, TestLLMSceneUltimate)
+- **1 scene intentionnellement differente** (IntroCeltOS — boot terminal, OK)
+
+#### Issues Priorite 1 (critiques):
+1. **TriadeGameUI.gd** — Aucun style parchemin, couleurs arbitraires, pas de Morris Roman
+2. **ReignsGameUI.gd** — Aucun style parchemin en code, depend de .tscn/theme externe
+3. **SceneAntreMerlin.gd** — Pas de variante cave shader (identique au menu, pas d'atmosphere grotte)
+4. **SceneAntreMerlin.gd** — 4/7 couleurs biomes significativement fausses vs VISUAL_SPEC
+
+#### Recommandations principales:
+- Creer autoload `MerlinVisual` pour palette partagee (eliminer duplication)
+- Restyler TriadeGameUI avec style parchemin complet
+- Implementer variante cave shader pour SceneAntreMerlin
+- Corriger couleurs biomes avec valeurs GBC palette canoniques
+
+---
+
+## Session: 2026-02-08 (Audit Complet — Reste a Faire)
+
+### Audit Producer: Backlog Complet du Projet
+- **Status:** complete
+- **Agent:** Producer (producer.md)
+- **Output:** Roadmap prioritisee dans task_plan.md (Phase 12)
+
+#### Methodologie:
+- Lecture de 30+ documents de design (lore, gameplay, companion, biomes, fins)
+- Inventaire de tous les scripts GDScript et scenes .tscn
+- Cross-reference exhaustive: documentation vs code implemente
+- Identification des gaps entre design et implementation
+
+#### Resultats cles:
+- **23 systemes documentes, ~8 partiellement implementes, ~15 non implementes**
+- **Core loop jouable mais incomplete** (pas de mission generation, pas de fins narratives, pas de Oghams actifs)
+- **LLM integre en infra** mais pas connecte a la boucle de gameplay Triade
+- **Lore tres avancee** (10+ documents, 7000+ lignes) mais pas injectee dans le gameplay
+- **UI Triade existe** mais feedback manquant (animations, sons, transitions)
+- **Backlog produit: 35 items, 4 niveaux de priorite, complexite estimee**
+
+---
+
+## Session: 2026-02-08 (LLM Dialogue + i18n 7 langues)
+
+### Phase 1: Systeme i18n (LocaleManager)
+- **Status:** complete
+- **Fichiers:** `scripts/autoload/LocaleManager.gd` (cree), `project.godot` (autoload ajoute)
+- **Fonctionnalites:** Singleton global, charge/sauvegarde langue depuis settings.cfg, get_data_path() avec fallback FR
+- **Langues:** fr, en, es, it, pt, zh, ja
+
+### Phase 2: Section Langue dans MenuOptions
+- **Status:** complete
+- **Fichier:** `scripts/MenuOptions.gd` (modifie)
+- **UI:** OptionButton avec 7 langues, sauvegarde dans settings.cfg section [language]
+
+### Phase 3: i18n dans scenes de dialogue
+- **Status:** complete
+- **Fichiers modifies:** SceneEveil.gd, SceneAntreMerlin.gd, IntroMerlinDialogue.gd
+- **Changement:** _load_data() utilise LocaleManager.get_data_path() avec fallback
+
+### Phase 4: Fichiers JSON traduits (18 fichiers)
+- **Status:** complete
+- **scene_dialogues:** _en, _es, _it, _pt, _zh, _ja (6 fichiers)
+- **intro_dialogue:** _en, _es, _it, _pt, _zh, _ja (6 fichiers)
+- **post_intro_dialogues:** _en, _es, _it, _pt, _zh, _ja (6 fichiers)
+
+### Phase 5: LLM Dialogue Generator (85% similarite)
+- **Status:** complete
+- **Fichier cree:** `scripts/llm_dialogue_generator.gd`
+- **Integration:** SceneEveil.gd (pre-generation batch), SceneAntreMerlin.gd (rephrase par phase)
+- **Parametres:** temp 0.3, top_p 0.8, max_tokens 80, rep_penalty 1.5
+- **Fallback:** Si LLM indisponible, texte JSON original utilise
+
+### Validation
+- **Static analysis:** 0 erreurs (57 fichiers scannes)
+- **Runtime:** 2 erreurs pre-existantes (ScreenEffects tween, TransitionBiome GPUParticles2D)
+
+---
+
+## Session: 2026-02-08 (Localisation Japonaise — Scene Dialogues)
+
+### Phase 10b: Traduction Japonaise des Dialogues de Scene
+- **Status:** complete
+- **Agent:** Localisation
+- **Output:** `data/dialogues/scene_dialogues_ja.json`
+
+#### Regles appliquees:
+- Structure JSON identique (IDs, timing, emotion, tags, vfx, sfx, ambiance inchanges)
+- Champs traduits: `text`, `direction`, `nom`, `sous_titre`, `description`, `context`, `_meta`
+- Voix Merlin: だ/である (casual), ton de vieux sage accessible, humour comme defense
+- Noms propres conserves: ブロセリアンド, ベスティオル, オガム, アウェン, DRU
+- Voyageur → 旅人
+- Tags [pause], [beat], [long_pause] conserves tels quels
+- 32 lignes de dialogue traduites (4 eveil + 16 antre + 12 biomes [sic: 14])
+
+---
+
+## Session: 2026-02-08 (Menu Principal — Eclairage & Effets Saisonniers)
+
+### Phase: Time-of-Day Lighting + Seasonal Effects (v2 — accumulation universelle)
+- **Status:** complete
+- **Validation:** PASSED (0 erreurs)
+
+#### Eclairage selon l'heure du jour:
+- 7 periodes: night, dawn, morning, midday, afternoon, dusk, evening
+- ColorRect overlay avec transition douce (tween 2s)
+
+#### Systeme d'accumulation universel (HIVER / AUTOMNE / PRINTEMPS):
+- Grille de colonnes 12px couvrant tout l'ecran
+- Particules tombent lentement, s'entassent la ou elles atterrissent
+- Hauteur max 600px: au bout d'un long moment recouvre tout le menu
+- Clic sur un tas = explosion + zone nettoyee (rayon 5 colonnes)
+- HIVER: neige blanche lente (12-35px/s) — AUTOMNE: feuilles multicolores (15-40px/s) — PRINTEMPS: petales roses (10-28px/s)
+
+#### ETE:
+- 4-6 rayons de soleil diagonaux dores avec pulsation douce
+
+---
+
 ## Session: 2026-02-08 (Implementation — Post-Questionnaire Flow)
 
 ### Phase 10: Flow Post-Questionnaire — 3 Nouvelles Scenes
@@ -29,6 +476,48 @@ IntroMerlinDialogue (15Q, classe) → SceneEveil (30-45s) → SceneAntreMerlin (
 - `run.biome_data` — Donnees du biome (nom, couleur, gardien, etc.)
 - `run.active = true`
 - `bestiole.known_oghams = ["beith", "luis", "quert"]`
+
+---
+
+## Session: 2026-02-08 (Phase 11 — Redesign Parchemin Mystique Breton)
+
+### Phase 11: Redesign 3 Scenes — Style Parchemin Mystique Breton
+- **Status:** complete
+- **Validation:** PASSED (0 erreurs statiques, 1 runtime log ancien corrige)
+
+#### Changements principaux:
+
+1. **SceneEveil.gd** — Complete rewrite (595 lignes)
+   - Style Parchemin: fond paper shader, brume, ornements celtiques haut/bas
+   - Carte centrale PanelContainer: portrait Merlin saisonnier + separateur diamant + RichTextLabel
+   - Typewriter avec voicebox fallback, emotion-to-mood mapping
+   - Dialogue depuis `data/dialogues/scene_dialogues.json` (cle: "scene_eveil")
+   - Entry animation: ornements fade in → carte slide up
+   - Transition: carte fade out, brume monte, change scene
+
+2. **SceneAntreMerlin.gd** — Complete rewrite (999 lignes)
+   - Meme style Parchemin que SceneEveil et MenuPrincipal
+   - 6 phases sequentielles: Bestiole Apparition → Merlin sur Bestiole → Ogham Reveal → Mission Briefing → Biome Selection → Transition
+   - Panel Oghams: 3 starters (Beith/Luis/Quert) avec symboles Ogham Unicode
+   - Panel Biomes: 7 biomes en boutons stylises, suggestion selon classe
+   - Dialogues depuis JSON avec fallbacks integres
+   - Sauvegarde GameManager (biome + oghams)
+
+3. **IntroMerlinDialogue.gd** — Theme adapte (style parchemin)
+   - `_apply_theme()`: couleurs sombres → palette parchemin (paper_warm, ink, accent)
+   - Card style: fond parchemin + bordure fine + ombre douce
+   - Boutons: fond paper + bordure ink_faded + hover accent
+   - Overlay classe: fond parchemin + texte encre sombre
+   - Polices: priorite Morris Roman, fallback celtic-bit
+
+4. **ScreenEffects.gd** — Bug fix
+   - `set_merlin_mood()`: null check sur `get_shader_parameter()` (retournait Nil pour parametre absent)
+
+#### Fichiers modifies:
+- `scripts/SceneEveil.gd` (rewrite)
+- `scripts/SceneAntreMerlin.gd` (rewrite)
+- `scripts/IntroMerlinDialogue.gd` (theme parchemin)
+- `scripts/autoload/ScreenEffects.gd` (null check fix)
 
 ---
 

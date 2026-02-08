@@ -15,7 +15,33 @@ signal voice_ready(is_ready: bool)
 
 const PITCH_MULTIPLIER_RANGE := 0.25
 const INFLECTION_SHIFT := 0.3
-const SOUNDS_PATH := "res://addons/acvoicebox/sounds/"
+const SOUNDS_BASE := "res://addons/acvoicebox/"
+
+## Banques de sons disponibles
+const SOUND_BANKS := {
+	"default": "sounds/",
+	"high": "sounds_high/",
+	"low": "sounds_low/",
+	"lowest": "sounds_lowest/",
+	"med": "sounds_med/",
+	"robot": "sounds_robot/",
+	"glitch": "sounds_glitch/",
+	"whisper": "sounds_whisper/",
+	"droid": "sounds_droid/",
+}
+
+## Descriptions lisibles des banques
+const SOUND_BANK_LABELS := {
+	"default": "Classique",
+	"high": "Aigu (Peppy)",
+	"low": "Grave (Cranky)",
+	"lowest": "Tres grave",
+	"med": "Medium",
+	"robot": "Robot Beep",
+	"glitch": "Glitch Bot",
+	"whisper": "Synth Whisper",
+	"droid": "Droid (R2D2)",
+}
 
 ## Mapping des caracteres vers des sons (style Animal Crossing)
 ## Chaque lettre a son propre son, les accents/chiffres utilisent des voyelles
@@ -38,6 +64,9 @@ const CHAR_TO_SOUND := {
 	"5": "i", "6": "i", "7": "e", "8": "u", "9": "a",
 }
 
+## Banque de sons active
+@export_enum("default", "high", "low", "lowest", "med", "robot", "glitch", "whisper", "droid") var sound_bank: String = "default"
+
 ## Pitch de base (2.5 = grave, 4.5 = aigu)
 @export_range(2.0, 5.0) var base_pitch := 3.5
 
@@ -56,6 +85,7 @@ const CHAR_TO_SOUND := {
 ## Sons charges dynamiquement
 var _sounds: Dictionary = {}
 var _sounds_loaded := false
+var _current_bank: String = ""
 
 ## File des sons a jouer
 var _remaining_sounds: Array = []
@@ -75,28 +105,68 @@ const VOICE_PRESETS := {
 	"Joyeux": {"base_pitch": 3.8, "pitch_variation": 0.45, "speed_scale": 1.15},
 	"Mysterieux": {"base_pitch": 2.6, "pitch_variation": 0.15, "speed_scale": 0.75},
 	"Merlin": {"base_pitch": 3.2, "pitch_variation": 0.28, "speed_scale": 0.95},
+	"Doux": {"base_pitch": 3.4, "pitch_variation": 0.12, "speed_scale": 0.80},
+	"Plume": {"base_pitch": 3.8, "pitch_variation": 0.18, "speed_scale": 0.90},
+	"Cristal": {"base_pitch": 4.0, "pitch_variation": 0.10, "speed_scale": 0.75},
+	"Ancien": {"base_pitch": 2.4, "pitch_variation": 0.08, "speed_scale": 0.70},
 }
 
 
 func _ready() -> void:
 	finished.connect(_on_finished)
-	_load_sounds()
+	_load_sounds(sound_bank)
 	voice_ready.emit(_sounds_loaded)
 
 
-func _load_sounds() -> void:
-	## Charge tous les sons disponibles
+func _get_sounds_path(bank: String) -> String:
+	var folder: String = SOUND_BANKS.get(bank, "sounds/")
+	return SOUNDS_BASE + folder
+
+
+func set_sound_bank(bank_name: String) -> void:
+	## Change la banque de sons active
+	if not SOUND_BANKS.has(bank_name):
+		push_warning("ACVoicebox: Banque inconnue: " + bank_name)
+		return
+	if bank_name == _current_bank:
+		return
+	sound_bank = bank_name
+	_load_sounds(bank_name)
+
+
+func get_sound_bank() -> String:
+	return _current_bank
+
+
+func get_sound_bank_names() -> Array[String]:
+	var names: Array[String] = []
+	for key in SOUND_BANKS.keys():
+		names.append(key)
+	return names
+
+
+func get_sound_bank_label(bank_name: String) -> String:
+	return SOUND_BANK_LABELS.get(bank_name, bank_name)
+
+
+func _load_sounds(bank: String = "default") -> void:
+	## Charge tous les sons de la banque specifiee
+	_sounds.clear()
+	_sounds_loaded = false
+	_current_bank = bank
+
+	var sounds_path: String = _get_sounds_path(bank)
 	var letters := "abcdefghijklmnopqrstuvwxyz"
 
 	for letter in letters:
-		var letter_path: String = SOUNDS_PATH + letter + ".wav"
+		var letter_path: String = sounds_path + letter + ".wav"
 		if ResourceLoader.exists(letter_path):
 			_sounds[letter] = load(letter_path)
 
 	# Sons speciaux
 	var special := ["th", "sh", "blank", "longblank"]
 	for s in special:
-		var special_path: String = SOUNDS_PATH + s + ".wav"
+		var special_path: String = sounds_path + s + ".wav"
 		if ResourceLoader.exists(special_path):
 			if s == "blank":
 				_sounds[" "] = load(special_path)
@@ -108,7 +178,7 @@ func _load_sounds() -> void:
 	_sounds_loaded = _sounds.size() > 0
 
 	if not _sounds_loaded:
-		push_warning("ACVoicebox: Aucun son trouve dans " + SOUNDS_PATH)
+		push_warning("ACVoicebox: Aucun son trouve dans " + sounds_path)
 		push_warning("ACVoicebox: Executez le script d'installation des sons")
 
 

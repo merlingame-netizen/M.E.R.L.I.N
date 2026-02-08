@@ -428,7 +428,11 @@ func _build_ui() -> void:
 	back_button = Button.new()
 	back_button.name = "BackButton"
 	back_button.text = "Retour"
-	back_button.pressed.connect(func(): get_tree().change_scene_to_file("res://scenes/MenuPrincipal.tscn"))
+	back_button.pressed.connect(func():
+		var se := get_node_or_null("/root/ScreenEffects")
+		var target: String = se.return_scene if se and se.return_scene != "" else "res://scenes/HubAntre.tscn"
+		get_tree().change_scene_to_file(target)
+	)
 	bottom_bar.add_child(back_button)
 
 func _apply_style() -> void:

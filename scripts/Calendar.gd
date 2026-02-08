@@ -6,7 +6,7 @@ extends Control
 
 const FONT_REGULAR_PATH := "res://resources/fonts/morris/MorrisRomanBlackAlt.ttf"
 const FONT_BOLD_PATH := "res://resources/fonts/morris/MorrisRomanBlack.ttf"
-const MENU_SCENE := "res://scenes/MenuPrincipal.tscn"
+const MENU_SCENE_FALLBACK := "res://scenes/HubAntre.tscn"
 const MOBILE_BREAKPOINT := 560.0
 
 const TAB_EVENTS := 0
@@ -219,9 +219,9 @@ func _julian_day(y: int, m: int, d: int) -> int:
 
 
 func _load_meta_stats() -> void:
-	var dru_store = get_node_or_null("/root/DruStore")
-	if dru_store and dru_store.state.has("meta"):
-		var meta = dru_store.state.meta
+	var merlin_store = get_node_or_null("/root/MerlinStore")
+	if merlin_store and merlin_store.state.has("meta"):
+		var meta = merlin_store.state.meta
 		meta_stats = {
 			"total_runs": meta.get("total_runs", 0),
 			"total_cards_played": meta.get("total_cards_played", 0),
@@ -496,16 +496,32 @@ func _create_tab_button(text: String) -> Button:
 
 func _build_back_button(viewport_size: Vector2) -> void:
 	back_button = Button.new()
-	back_button.text = "Retour"
+	back_button.text = "< Retour"
 	back_button.focus_mode = Control.FOCUS_NONE
-	back_button.flat = true
 	back_button.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
-	if font_regular:
-		back_button.add_theme_font_override("font", font_regular)
+	if font_bold:
+		back_button.add_theme_font_override("font", font_bold)
 	back_button.add_theme_font_size_override("font_size", 16)
-	back_button.add_theme_color_override("font_color", PALETTE.ink_soft)
-	back_button.size = Vector2(80, 36)
-	back_button.position = Vector2(28, viewport_size.y - 60)
+	back_button.add_theme_color_override("font_color", PALETTE.ink)
+	back_button.add_theme_color_override("font_hover_color", PALETTE.accent)
+
+	var btn_style := StyleBoxFlat.new()
+	btn_style.bg_color = PALETTE.paper_dark
+	btn_style.border_color = PALETTE.ink_faded
+	btn_style.set_border_width_all(1)
+	btn_style.set_corner_radius_all(4)
+	btn_style.set_content_margin_all(8)
+	btn_style.content_margin_left = 14
+	btn_style.content_margin_right = 14
+	back_button.add_theme_stylebox_override("normal", btn_style)
+
+	var btn_hover := btn_style.duplicate()
+	btn_hover.bg_color = PALETTE.accent_glow
+	btn_hover.border_color = PALETTE.accent_soft
+	back_button.add_theme_stylebox_override("hover", btn_hover)
+
+	back_button.size = Vector2(110, 40)
+	back_button.position = Vector2(28, viewport_size.y - 56)
 	back_button.pressed.connect(_on_back_pressed)
 	add_child(back_button)
 
@@ -748,18 +764,22 @@ func _play_entry_animation() -> void:
 	main_card.position.y += 30
 	celtic_ornament_top.modulate.a = 0.0
 	celtic_ornament_bottom.modulate.a = 0.0
+	back_button.modulate.a = 0.0
 
 	var tween := create_tween()
 	tween.tween_property(celtic_ornament_top, "modulate:a", 1.0, 0.5).set_trans(Tween.TRANS_SINE)
 	tween.parallel().tween_property(celtic_ornament_bottom, "modulate:a", 1.0, 0.5).set_trans(Tween.TRANS_SINE)
 	tween.tween_property(main_card, "modulate:a", 1.0, 0.4).set_trans(Tween.TRANS_SINE)
 	tween.parallel().tween_property(main_card, "position:y", main_card.position.y - 30, 0.5).set_ease(Tween.EASE_OUT)
+	tween.parallel().tween_property(back_button, "modulate:a", 1.0, 0.3).set_trans(Tween.TRANS_SINE)
 
 
 func _on_back_pressed() -> void:
+	var se := get_node_or_null("/root/ScreenEffects")
+	var target: String = se.return_scene if se and se.return_scene != "" else MENU_SCENE_FALLBACK
 	var tween := create_tween()
 	tween.tween_property(main_card, "modulate:a", 0.0, 0.2)
-	tween.tween_callback(func(): get_tree().change_scene_to_file(MENU_SCENE))
+	tween.tween_callback(func(): get_tree().change_scene_to_file(target))
 
 
 func _on_viewport_resized() -> void:

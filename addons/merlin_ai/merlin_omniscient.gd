@@ -64,7 +64,7 @@ const FALLBACK_BLEND_RATE := 0.2  # 20% fallback pour variete
 
 # Cache
 var _response_cache := {}
-const CACHE_LIMIT := 100
+const CACHE_LIMIT := 300
 
 # Stats
 var stats := {
@@ -88,7 +88,7 @@ func _ready() -> void:
 
 
 func setup(store: Node) -> void:
-	"""Configure avec reference au DruStore."""
+	## Configure avec reference au DruStore.
 	_store = store
 	_is_ready = true
 	print("[MerlinOmniscient] Setup complete. M.E.R.L.I.N. is watching.")
@@ -135,6 +135,9 @@ func _connect_signals() -> void:
 	narrative.arc_completed.connect(_on_arc_completed)
 	narrative.twist_triggered.connect(_on_twist_triggered)
 
+	# Screen distortion reacts to Merlin's tone
+	merlin_speaks.connect(_on_merlin_speaks_screen_fx)
+
 
 func is_ready() -> bool:
 	return _is_ready
@@ -144,7 +147,7 @@ func is_ready() -> bool:
 # ═══════════════════════════════════════════════════════════════════════════════
 
 func generate_card(game_state: Dictionary) -> Dictionary:
-	"""Genere une carte en utilisant toute l'omniscience de Merlin."""
+	## Genere une carte en utilisant toute l'omniscience de Merlin.
 	if _generation_in_progress:
 		return fallback_pool.get_fallback_card(_current_context)
 
@@ -184,7 +187,7 @@ func _apply_adaptive_processing() -> void:
 	difficulty_adapter.update_from_session(session)
 
 	# Update narrative features based on experience
-	var tier := player_profile.get_experience_tier()
+	var tier: int = player_profile.get_experience_tier()
 	narrative_scaler.set_tier(tier)
 
 	# Update tone based on relationship
@@ -193,7 +196,7 @@ func _apply_adaptive_processing() -> void:
 
 
 func _generate_with_strategy() -> Dictionary:
-	"""Choisit et execute la strategie de generation."""
+	## Choisit et execute la strategie de generation.
 
 	# Strategy 1: Force fallback sometimes for variety
 	if randf() < FALLBACK_BLEND_RATE:
@@ -216,7 +219,7 @@ func _generate_with_strategy() -> Dictionary:
 
 
 func _try_llm_generation() -> Dictionary:
-	"""Tente de generer via LLM avec retries."""
+	## Tente de generer via LLM avec retries.
 	var system_prompt := _build_system_prompt()
 	var user_prompt := _build_user_prompt()
 
@@ -240,7 +243,7 @@ func _try_llm_generation() -> Dictionary:
 
 
 func _build_system_prompt() -> String:
-	"""Construit le system prompt avec contexte complet."""
+	## Construit le system prompt avec contexte complet.
 	var base := """Tu es Merlin, une intelligence narrative omnisciente.
 Tu connais le joueur intimement: ses choix, ses patterns, ses preferences.
 Tu generes des cartes narratives qui s'adaptent parfaitement a lui.
@@ -258,8 +261,8 @@ FORMAT JSON:
 {
   "text": "Texte narratif...",
   "options": [
-    {"direction": "left", "label": "...", "effects": [...], "preview": "..."},
-    {"direction": "right", "label": "...", "effects": [...], "preview": "..."}
+	{"direction": "left", "label": "...", "effects": [...], "preview": "..."},
+	{"direction": "right", "label": "...", "effects": [...], "preview": "..."}
   ],
   "tags": ["tag1", "tag2"],
   "tone": "neutral|mysterious|warning|playful|melancholy"
@@ -282,7 +285,7 @@ FORMAT JSON:
 
 
 func _build_user_prompt() -> String:
-	"""Construit le user prompt avec l'etat actuel."""
+	## Construit le user prompt avec l'etat actuel.
 	var prompt := "Genere une carte pour cette situation:\n\n"
 
 	# Current game state
@@ -320,7 +323,7 @@ func _build_user_prompt() -> String:
 
 
 func _parse_llm_response(text: String) -> Dictionary:
-	"""Parse la reponse LLM en carte valide."""
+	## Parse la reponse LLM en carte valide.
 	# Find JSON in response
 	var json_start := text.find("{")
 	var json_end := text.rfind("}")
@@ -345,7 +348,7 @@ func _parse_llm_response(text: String) -> Dictionary:
 # ═══════════════════════════════════════════════════════════════════════════════
 
 func _validate_card(card: Dictionary) -> Dictionary:
-	"""Valide et sanitize une carte."""
+	## Valide et sanitize une carte.
 	if card.is_empty():
 		return fallback_pool.get_fallback_card(_current_context)
 
@@ -400,7 +403,7 @@ func _validate_option(option: Dictionary) -> Dictionary:
 
 
 func _post_process_card(card: Dictionary) -> Dictionary:
-	"""Applique les modifications post-generation."""
+	## Applique les modifications post-generation.
 
 	# Scale effects based on difficulty
 	for option in card.get("options", []):
@@ -421,20 +424,20 @@ func _post_process_card(card: Dictionary) -> Dictionary:
 
 
 func _add_narrative_elements(card: Dictionary) -> Dictionary:
-	"""Ajoute des elements narratifs contextuels."""
+	## Ajoute des elements narratifs contextuels.
 
 	# Check if should trigger foreshadowing
 	var features := narrative_scaler.get_features()
 	if features.get("foreshadowing", false):
 		if randf() < 0.1:  # 10% chance
 			var twist_types := ["identity_hidden", "consequence_differee"]
-			var twist_type := twist_types[randi() % twist_types.size()]
+			var twist_type: String = twist_types[randi() % twist_types.size()]
 			card["_foreshadowing"] = twist_type
 
 	# Check if should callback NPC
 	var callbacks := narrative.get_npcs_for_callback()
 	if callbacks.size() > 0 and randf() < 0.2:  # 20% chance
-		var npc := callbacks[randi() % callbacks.size()]
+		var npc: Dictionary = callbacks[randi() % callbacks.size()]
 		card["npc_callback"] = npc.npc_id
 		card["npc_relationship"] = npc.relationship
 
@@ -445,7 +448,7 @@ func _add_narrative_elements(card: Dictionary) -> Dictionary:
 # ═══════════════════════════════════════════════════════════════════════════════
 
 func record_choice(card: Dictionary, option: int, outcome: Dictionary) -> void:
-	"""Enregistre un choix et met a jour tous les registres."""
+	## Enregistre un choix et met a jour tous les registres.
 	var decision_time_ms := Time.get_ticks_msec() - _last_card_time_ms
 
 	var context := {
@@ -478,14 +481,14 @@ func record_choice(card: Dictionary, option: int, outcome: Dictionary) -> void:
 
 
 func on_run_start() -> void:
-	"""Appele au debut d'une run."""
+	## Appele au debut d'une run.
 	session.record_run_start()
 	decision_history.reset_run()
 	narrative.reset_run()
 
 
 func on_run_end(run_data: Dictionary) -> void:
-	"""Appele a la fin d'une run."""
+	## Appele a la fin d'une run.
 	player_profile.on_run_end(run_data)
 	decision_history.on_run_end(run_data)
 	narrative.on_run_end()
@@ -506,7 +509,7 @@ func on_run_end(run_data: Dictionary) -> void:
 # ═══════════════════════════════════════════════════════════════════════════════
 
 func get_merlin_comment(context: String) -> String:
-	"""Genere un commentaire de Merlin adapte au contexte."""
+	## Genere un commentaire de Merlin adapte au contexte.
 	var tone := tone_controller.get_current_tone()
 	var trust_tier := relationship.trust_tier
 
@@ -518,7 +521,7 @@ func get_merlin_comment(context: String) -> String:
 
 
 func _generate_merlin_comment(context: String, tone: String) -> String:
-	"""Genere un commentaire via LLM ou fallback."""
+	## Genere un commentaire via LLM ou fallback.
 	if llm_interface == null or not llm_interface.is_ready:
 		return _get_fallback_comment(context, tone)
 
@@ -542,7 +545,7 @@ Reponds uniquement avec le commentaire, sans guillemets.""" % [
 
 
 func _get_fallback_comment(context: String, tone: String) -> String:
-	"""Commentaires fallback par ton."""
+	## Commentaires fallback par ton.
 	var comments := {
 		"playful": [
 			"Interessant choix...",
@@ -598,6 +601,18 @@ func _on_arc_completed(arc_id: String, resolution: String) -> void:
 
 func _on_twist_triggered(twist_type: String) -> void:
 	narrative.decrease_tension(0.2)
+	# Narrative twists cause a screen distortion spike
+	var screen_fx := get_node_or_null("/root/ScreenEffects")
+	if screen_fx and screen_fx.has_method("narrative_shock"):
+		screen_fx.narrative_shock(0.5)
+
+
+func _on_merlin_speaks_screen_fx(text: String, tone: String) -> void:
+	## Sync screen distortion to Merlin's current tone when he speaks.
+	var screen_fx := get_node_or_null("/root/ScreenEffects")
+	if screen_fx and screen_fx.has_method("set_mood_from_tone"):
+		screen_fx.set_mood_from_tone(tone)
+
 
 # ═══════════════════════════════════════════════════════════════════════════════
 # STATS
@@ -639,7 +654,7 @@ func get_debug_info() -> Dictionary:
 # ═══════════════════════════════════════════════════════════════════════════════
 
 func save_all() -> void:
-	"""Sauvegarde tous les registres."""
+	## Sauvegarde tous les registres.
 	player_profile.save_to_disk()
 	decision_history.save_to_disk()
 	relationship.save_to_disk()

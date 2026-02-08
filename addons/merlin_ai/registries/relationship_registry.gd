@@ -1,4 +1,4 @@
-## ═══════════════════════════════════════════════════════════════════════════════
+﻿## ═══════════════════════════════════════════════════════════════════════════════
 ## Relationship Registry — Lien Merlin-Joueur
 ## ═══════════════════════════════════════════════════════════════════════════════
 ## Modele la relation evolutive entre Merlin et le joueur.
@@ -149,7 +149,7 @@ func reset() -> void:
 # ═══════════════════════════════════════════════════════════════════════════════
 
 func update_trust(event: String) -> void:
-	"""Met a jour les points de confiance suite a un evenement."""
+	## Met a jour les points de confiance suite a un evenement.
 	var change: int = TRUST_CHANGES.get(event, 0)
 	if change == 0:
 		return
@@ -218,7 +218,7 @@ func _shift_rapport(dimension: String, delta: float) -> void:
 # ═══════════════════════════════════════════════════════════════════════════════
 
 func record_interaction(interaction_type: String) -> void:
-	"""Enregistre une interaction."""
+	## Enregistre une interaction.
 	if interactions.has(interaction_type):
 		interactions[interaction_type] += 1
 
@@ -246,7 +246,7 @@ func record_interaction(interaction_type: String) -> void:
 # ═══════════════════════════════════════════════════════════════════════════════
 
 func trigger_special_moment(moment: String) -> bool:
-	"""Declenche un moment special s'il n'a pas deja eu lieu."""
+	## Declenche un moment special s'il n'a pas deja eu lieu.
 	if not special_moments.has(moment):
 		return false
 	if special_moments[moment]:
@@ -272,12 +272,12 @@ func _check_special_moment(moment: String) -> void:
 
 
 func can_show_melancholy() -> bool:
-	"""Merlin peut-il montrer sa tristesse?"""
+	## Merlin peut-il montrer sa tristesse?
 	return trust_tier >= TrustTier.BOUND or special_moments.has_seen_melancholy
 
 
 func can_show_slip() -> bool:
-	"""Merlin peut-il laisser glisser son masque?"""
+	## Merlin peut-il laisser glisser son masque?
 	return trust_tier >= TrustTier.ATTENTIVE
 
 # ═══════════════════════════════════════════════════════════════════════════════
@@ -285,7 +285,7 @@ func can_show_slip() -> bool:
 # ═══════════════════════════════════════════════════════════════════════════════
 
 func get_tone_modifiers() -> Dictionary:
-	"""Retourne les modificateurs de ton selon le niveau de confiance."""
+	## Retourne les modificateurs de ton selon le niveau de confiance.
 	var base := {}
 
 	match trust_tier:
@@ -318,7 +318,7 @@ func get_trust_tier_name() -> String:
 # ═══════════════════════════════════════════════════════════════════════════════
 
 func get_sentence_length_modifier() -> float:
-	"""Retourne un multiplicateur pour la longueur des phrases."""
+	## Retourne un multiplicateur pour la longueur des phrases.
 	# Merlin parle moins quand distant, plus quand lie
 	match trust_tier:
 		TrustTier.DISTANT: return 0.7
@@ -329,12 +329,12 @@ func get_sentence_length_modifier() -> float:
 
 
 func should_use_player_name() -> bool:
-	"""Merlin doit-il utiliser un surnom pour le joueur?"""
+	## Merlin doit-il utiliser un surnom pour le joueur?
 	return trust_tier >= TrustTier.CAUTIOUS
 
 
 func get_taunt_intensity() -> float:
-	"""Intensite des moqueries de Merlin (0.0-1.0)."""
+	## Intensite des moqueries de Merlin (0.0-1.0).
 	# Plus intense avec confiance (car playful, pas mechant)
 	var base: float = 0.3
 	match trust_tier:
@@ -350,9 +350,8 @@ func get_taunt_intensity() -> float:
 
 
 func can_reveal_lore_depth(depth: int) -> bool:
-	"""Peut-on reveler du lore de cette profondeur?
-	   depth: 1=surface, 2=medium, 3=deep, 4=secret, 5=ultimate
-	"""
+	## Peut-on reveler du lore de cette profondeur?
+	## depth: 1=surface, 2=medium, 3=deep, 4=secret, 5=ultimate
 	match trust_tier:
 		TrustTier.DISTANT: return depth <= 1
 		TrustTier.CAUTIOUS: return depth <= 2
@@ -365,7 +364,7 @@ func can_reveal_lore_depth(depth: int) -> bool:
 # ═══════════════════════════════════════════════════════════════════════════════
 
 func _apply_absence_decay() -> void:
-	"""Applique le decay pour absence prolongee."""
+	## Applique le decay pour absence prolongee.
 	if last_session_date == 0:
 		last_session_date = int(Time.get_unix_time_from_system())
 		return
@@ -399,7 +398,7 @@ func get_context_for_llm() -> Dictionary:
 
 
 func get_summary_for_prompt() -> String:
-	"""Resume textuel pour le prompt LLM."""
+	## Resume textuel pour le prompt LLM.
 	var lines := []
 
 	lines.append("Confiance: %s (%d/100)" % [get_trust_tier_name(), trust_points])

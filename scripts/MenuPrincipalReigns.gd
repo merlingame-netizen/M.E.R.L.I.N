@@ -38,7 +38,7 @@ const SUBTITLE_TEXT := "Le Dernier Druide"
 const MAIN_MENU_ITEMS := [
 	{"text": "Nouvelle Partie", "scene": "res://scenes/IntroPersonalityQuiz.tscn"},
 	{"text": "Continuer", "scene": "res://scenes/SelectionSauvegarde.tscn"},
-	{"text": "Test LLM", "scene": "res://scenes/TestLLMSceneUltimate.tscn"},
+	{"text": "Test Voix & LLM", "scene": "__voice_llm_test__"},
 	{"text": "Options", "scene": "res://scenes/MenuOptions.tscn"},
 	{"text": "Quitter", "scene": "__quit__"},
 ]
@@ -88,6 +88,10 @@ var calendar_button: Button
 var collections_button: Button
 var _corner_hover_tweens: Dictionary = {}
 
+# Clock
+var clock_label: Label
+var _last_minute: int = -1
+
 # Fonts
 var title_font: Font
 var body_font: Font
@@ -99,6 +103,17 @@ var swipe_in_progress := false
 var swipe_tween: Tween
 var _entry_tween: Tween
 var _mist_tween: Tween
+
+# Voice calibration
+var _voice_panel: CanvasLayer
+var _voice_vb: Node  # ACVoicebox instance
+var _voice_pitch_slider: HSlider
+var _voice_variation_slider: HSlider
+var _voice_speed_slider: HSlider
+var _voice_test_label: RichTextLabel
+var _voice_pitch_value: Label
+var _voice_variation_value: Label
+var _voice_speed_value: Label
 
 # Audio
 var _sfx_player: AudioStreamPlayer
@@ -112,6 +127,85 @@ const UI_SOUNDS := {
 # Season for atmosphere
 var current_season := "HIVER"
 
+# =============================================================================
+# TIME-OF-DAY LIGHTING
+# =============================================================================
+
+# Tint profiles: each hour range has a target color overlay
+const TIME_TINTS := {
+	"night":   Color(0.10, 0.12, 0.25, 0.35),   # Bleu nuit profond
+	"dawn":    Color(0.45, 0.28, 0.15, 0.20),    # Or rosé de l'aube
+	"morning": Color(0.95, 0.90, 0.80, 0.05),    # Lumière douce matinale
+	"midday":  Color(1.0, 1.0, 0.95, 0.0),       # Neutre, quasi invisible
+	"afternoon": Color(0.90, 0.82, 0.65, 0.08),  # Lumière chaude d'après-midi
+	"dusk":    Color(0.55, 0.25, 0.10, 0.25),     # Crépuscule ambré
+	"evening": Color(0.20, 0.15, 0.28, 0.30),    # Soir violet
+}
+
+var time_tint_layer: ColorRect
+var _time_tint_tween: Tween
+
+# =============================================================================
+# SEASONAL EFFECTS — Universal accumulation system
+# =============================================================================
+
+# Falling particles (all seasons except summer)
+var _falling_particles: Array[Dictionary] = []  # {node, speed, drift, time_offset}
+var _fall_timer: float = 0.0
+
+# Accumulation grid — deposits form wherever particles land
+# Each cell = column of N pixels wide, tracks accumulated height
+var _accum_grid: Array[float] = []         # height per column
+var _accum_nodes: Array[ColorRect] = []    # visual node per column
+const ACCUM_CELL_WIDTH := 12              # pixels per grid column
+const ACCUM_MAX_HEIGHT := 600.0           # can cover entire screen eventually
+const ACCUM_GROW_PER_PARTICLE := 0.15     # very slow growth per landed particle
+var _accum_container: Control              # parent node for accumulation visuals
+
+# Season-specific tuning
+const SEASON_CONFIG := {
+	"HIVER": {
+		"spawn_interval": 0.25,     # slow, contemplative snowfall
+		"max_particles": 80,
+		"size_min": 2.0, "size_max": 5.0,
+		"speed_min": 12.0, "speed_max": 35.0,  # very slow fall
+		"drift": 10.0,
+		"color_base": Color(0.95, 0.96, 1.0, 0.8),
+		"color_var": 0.05,
+		"accum_color": Color(0.94, 0.95, 1.0, 0.9),
+		"accum_grow": 0.12,    # very slow pile growth
+		"round": true,
+	},
+	"AUTOMNE": {
+		"spawn_interval": 0.6,     # sparse leaves
+		"max_particles": 35,
+		"size_min": 5.0, "size_max": 11.0,
+		"speed_min": 15.0, "speed_max": 40.0,
+		"drift": 25.0,
+		"color_base": Color(0.85, 0.45, 0.15, 0.85),
+		"color_var": 0.25,
+		"accum_color": Color(0.65, 0.35, 0.12, 0.75),
+		"accum_grow": 0.10,
+		"round": false,
+	},
+	"PRINTEMPS": {
+		"spawn_interval": 0.5,
+		"max_particles": 40,
+		"size_min": 3.0, "size_max": 7.0,
+		"speed_min": 10.0, "speed_max": 28.0,  # very gentle
+		"drift": 18.0,
+		"color_base": Color(1.0, 0.78, 0.85, 0.7),
+		"color_var": 0.15,
+		"accum_color": Color(0.95, 0.80, 0.85, 0.6),
+		"accum_grow": 0.08,
+		"round": true,
+	},
+}
+
+# Summer sun rays
+var _sun_rays: Array[ColorRect] = []
+var _sun_ray_timer: float = 0.0
+
 
 func _ready() -> void:
 	set_anchors_preset(Control.PRESET_FULL_RECT)
@@ -122,9 +216,12 @@ func _ready() -> void:
 	_build_parchment_background()
 	_build_mist_layer()
 	_build_celtic_ornaments()
+	_build_clock()
 	_build_ui()
 	_build_corner_buttons()
 	_apply_theme()
+	_build_time_tint_layer()
+	_build_seasonal_effects()
 	_layout_ui()
 	resized.connect(_on_resized)
 	_play_entry_animation.call_deferred()
@@ -286,6 +383,71 @@ func _layout_celtic_ornaments(viewport_size: Vector2) -> void:
 	if celtic_ornament_bottom:
 		celtic_ornament_bottom.size = Vector2(viewport_size.x, 30)
 		celtic_ornament_bottom.position = Vector2(0, viewport_size.y - 75)
+
+
+# =============================================================================
+# HORLOGE DIGITALE
+# =============================================================================
+
+const MONTH_NAMES := [
+	"", "Genver", "C'hwevrer", "Meurzh", "Ebrel", "Mae", "Mezheven",
+	"Gouere", "Eost", "Gwengolo", "Here", "Du", "Kerzu"
+]
+
+const DAY_NAMES := [
+	"Sul", "Lun", "Meurzh", "Merc'her", "Yaou", "Gwener", "Sadorn"
+]
+
+
+func _build_clock() -> void:
+	clock_label = Label.new()
+	clock_label.name = "ClockLabel"
+	clock_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
+	clock_label.vertical_alignment = VERTICAL_ALIGNMENT_TOP
+	clock_label.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	add_child(clock_label)
+	_update_clock_text()
+
+
+func _process(delta: float) -> void:
+	var time_dict := Time.get_time_dict_from_system()
+	var minute: int = time_dict.minute
+	if minute != _last_minute:
+		_update_clock_text()
+		_update_time_tint()
+		_last_minute = minute
+
+	# Seasonal particle systems
+	_process_seasonal_effects(delta)
+
+
+func _update_clock_text() -> void:
+	if not clock_label:
+		return
+	var time_dict := Time.get_time_dict_from_system()
+	var date_dict := _get_current_date()
+	var weekday: int = Time.get_date_dict_from_system().weekday
+	var day_name: String = DAY_NAMES[weekday]
+	var month_name: String = MONTH_NAMES[date_dict.month]
+	var time_str := "%02d:%02d" % [time_dict.hour, time_dict.minute]
+	clock_label.text = "%s. %d %s\n%s" % [
+		day_name, date_dict.day, month_name, time_str
+	]
+
+
+func _apply_clock_style() -> void:
+	if not clock_label:
+		return
+	if body_font:
+		clock_label.add_theme_font_override("font", body_font)
+	clock_label.add_theme_font_size_override("font_size", 28)
+	clock_label.add_theme_color_override("font_color", PALETTE.ink_soft)
+
+
+func _layout_clock() -> void:
+	if clock_label:
+		clock_label.position = Vector2(CORNER_BUTTON_MARGIN, 16)
+		clock_label.size = Vector2(320, 80)
 
 
 # =============================================================================
@@ -477,6 +639,9 @@ func _apply_theme() -> void:
 	_apply_corner_button_style(calendar_button)
 	_apply_corner_button_style(collections_button)
 
+	# Style horloge
+	_apply_clock_style()
+
 
 func _apply_corner_button_style(btn: Button) -> void:
 	if btn:
@@ -591,6 +756,7 @@ func _layout_ui() -> void:
 
 	_layout_corner_buttons(viewport_size)
 	_layout_celtic_ornaments(viewport_size)
+	_layout_clock()
 
 
 func _layout_corner_buttons(viewport_size: Vector2) -> void:
@@ -618,6 +784,9 @@ func _on_menu_action(scene: String) -> void:
 	if scene == "__quit__":
 		get_tree().quit()
 		return
+	if scene == "__voice_llm_test__":
+		_show_voice_llm_panel()
+		return
 	if scene == "" or swipe_in_progress:
 		return
 	swipe_in_progress = true
@@ -631,6 +800,7 @@ func _on_menu_action(scene: String) -> void:
 			dir = -1.0
 	_play_swipe(dir)
 	await get_tree().create_timer(0.25).timeout
+	_store_return_scene()
 	get_tree().change_scene_to_file(scene)
 
 
@@ -640,6 +810,7 @@ func _on_calendar_pressed() -> void:
 	swipe_in_progress = true
 	_play_swipe(-1.0)
 	await get_tree().create_timer(0.25).timeout
+	_store_return_scene()
 	get_tree().change_scene_to_file(CALENDAR_SCENE)
 
 
@@ -649,7 +820,14 @@ func _on_collections_pressed() -> void:
 	swipe_in_progress = true
 	_play_swipe(1.0)
 	await get_tree().create_timer(0.25).timeout
+	_store_return_scene()
 	get_tree().change_scene_to_file(COLLECTION_SCENE)
+
+
+func _store_return_scene() -> void:
+	var se := get_node_or_null("/root/ScreenEffects")
+	if se:
+		se.return_scene = get_tree().current_scene.scene_file_path
 
 
 func _play_swipe(dir: float) -> void:
@@ -676,3 +854,859 @@ func _play_ui_sound(sound_name: String) -> void:
 
 func _on_resized() -> void:
 	call_deferred("_layout_ui")
+	_rebuild_accum_visuals()
+
+
+# =============================================================================
+# TIME-OF-DAY TINT SYSTEM
+# =============================================================================
+
+func _build_time_tint_layer() -> void:
+	time_tint_layer = ColorRect.new()
+	time_tint_layer.name = "TimeTintLayer"
+	time_tint_layer.set_anchors_preset(Control.PRESET_FULL_RECT)
+	time_tint_layer.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	time_tint_layer.color = Color(0, 0, 0, 0)
+	add_child(time_tint_layer)
+	_update_time_tint()
+
+
+func _get_time_period(hour: int) -> String:
+	if hour >= 0 and hour < 5:
+		return "night"
+	elif hour >= 5 and hour < 7:
+		return "dawn"
+	elif hour >= 7 and hour < 10:
+		return "morning"
+	elif hour >= 10 and hour < 14:
+		return "midday"
+	elif hour >= 14 and hour < 17:
+		return "afternoon"
+	elif hour >= 17 and hour < 20:
+		return "dusk"
+	elif hour >= 20 and hour < 22:
+		return "evening"
+	else:
+		return "night"
+
+
+func _update_time_tint() -> void:
+	if not time_tint_layer:
+		return
+	var time_dict := Time.get_time_dict_from_system()
+	var hour: int = time_dict.hour
+	var period := _get_time_period(hour)
+	var target_color: Color = TIME_TINTS[period]
+
+	if _time_tint_tween:
+		_time_tint_tween.kill()
+	_time_tint_tween = create_tween().set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
+	_time_tint_tween.tween_property(time_tint_layer, "color", target_color, 2.0)
+
+
+# =============================================================================
+# SEASONAL EFFECTS — UNIFIED SYSTEM
+# =============================================================================
+
+func _build_seasonal_effects() -> void:
+	if current_season == "ETE":
+		_build_sun_rays()
+		return
+	# For HIVER, AUTOMNE, PRINTEMPS: build accumulation grid
+	_build_accum_grid()
+
+
+func _process_seasonal_effects(delta: float) -> void:
+	if current_season == "ETE":
+		_process_sun_rays(delta)
+		return
+	if not SEASON_CONFIG.has(current_season):
+		return
+	_process_falling_particles(delta)
+
+
+# =============================================================================
+# FALLING PARTICLES + ACCUMULATION (HIVER / AUTOMNE / PRINTEMPS)
+# =============================================================================
+
+func _process_falling_particles(delta: float) -> void:
+	var viewport_size := get_viewport().get_visible_rect().size
+	var cfg: Dictionary = SEASON_CONFIG[current_season]
+
+	# Spawn
+	_fall_timer += delta
+	if _fall_timer >= cfg.spawn_interval and _falling_particles.size() < cfg.max_particles:
+		_fall_timer = 0.0
+		_spawn_falling_particle(viewport_size, cfg)
+
+	# Update
+	var to_remove: Array[int] = []
+	for i in range(_falling_particles.size()):
+		var p: Dictionary = _falling_particles[i]
+		var node: ColorRect = p.node
+		if not is_instance_valid(node):
+			to_remove.append(i)
+			continue
+
+		node.position.y += p.speed * delta
+		node.position.x += sin((node.position.y * 0.015) + p.time_offset) * p.drift * delta
+		# Gentle rotation for leaves/petals
+		if not cfg.round:
+			node.rotation += p.drift * 0.02 * delta
+
+		# Check landing: particle reached the accumulation surface?
+		var col := int(clampf(node.position.x / ACCUM_CELL_WIDTH, 0, _accum_grid.size() - 1))
+		var surface_y: float = viewport_size.y - _accum_grid[col]
+		if node.position.y >= surface_y:
+			# Land! grow accumulation
+			_accum_grid[col] = minf(_accum_grid[col] + cfg.accum_grow, ACCUM_MAX_HEIGHT)
+			# Spread a tiny bit to neighbors for natural mound shape
+			if col > 0:
+				_accum_grid[col - 1] = minf(_accum_grid[col - 1] + cfg.accum_grow * 0.3, ACCUM_MAX_HEIGHT)
+			if col < _accum_grid.size() - 1:
+				_accum_grid[col + 1] = minf(_accum_grid[col + 1] + cfg.accum_grow * 0.3, ACCUM_MAX_HEIGHT)
+			_update_accum_column(col, viewport_size)
+			if col > 0:
+				_update_accum_column(col - 1, viewport_size)
+			if col < _accum_grid.size() - 1:
+				_update_accum_column(col + 1, viewport_size)
+			to_remove.append(i)
+			continue
+
+		# Off-screen
+		if node.position.x < -20 or node.position.x > viewport_size.x + 20:
+			to_remove.append(i)
+
+	# Cleanup (reverse order)
+	for i in range(to_remove.size() - 1, -1, -1):
+		var idx: int = to_remove[i]
+		if is_instance_valid(_falling_particles[idx].node):
+			_falling_particles[idx].node.queue_free()
+		_falling_particles.remove_at(idx)
+
+
+func _spawn_falling_particle(viewport_size: Vector2, cfg: Dictionary) -> void:
+	var node := ColorRect.new()
+	var s: float = randf_range(cfg.size_min, cfg.size_max)
+
+	if cfg.round:
+		node.size = Vector2(s, s)
+	else:
+		# Leaf/petal shape: wider than tall or vice versa
+		node.size = Vector2(s, s * randf_range(0.5, 0.8))
+
+	node.position = Vector2(randf_range(-10, viewport_size.x + 10), randf_range(-20, -5))
+
+	# Color with variation
+	var base: Color = cfg.color_base
+	var v: float = cfg.color_var
+	if current_season == "AUTOMNE":
+		# Pick from autumn palette
+		var autumn_colors := [
+			Color(0.85, 0.45, 0.15), Color(0.75, 0.20, 0.10),
+			Color(0.55, 0.35, 0.15), Color(0.90, 0.75, 0.20),
+			Color(0.80, 0.30, 0.08),
+		]
+		base = autumn_colors[randi() % autumn_colors.size()]
+	node.color = Color(
+		clampf(base.r + randf_range(-v, v), 0, 1),
+		clampf(base.g + randf_range(-v, v), 0, 1),
+		clampf(base.b + randf_range(-v, v), 0, 1),
+		base.a
+	)
+	node.mouse_filter = Control.MOUSE_FILTER_IGNORE
+
+	var data := {
+		"node": node,
+		"speed": randf_range(cfg.speed_min, cfg.speed_max),
+		"drift": randf_range(-cfg.drift, cfg.drift),
+		"time_offset": randf_range(0, TAU),
+	}
+
+	add_child(node)
+	# Place behind card but above background
+	if card:
+		move_child(node, card.get_index())
+	_falling_particles.append(data)
+
+
+# =============================================================================
+# ACCUMULATION GRID — grows from bottom, clickable to destroy
+# =============================================================================
+
+func _build_accum_grid() -> void:
+	var viewport_size := get_viewport().get_visible_rect().size
+	var col_count := int(ceilf(viewport_size.x / ACCUM_CELL_WIDTH)) + 1
+	_accum_grid.resize(col_count)
+	_accum_grid.fill(0.0)
+
+	# Container for accumulation visuals (above background, below card)
+	_accum_container = Control.new()
+	_accum_container.name = "AccumContainer"
+	_accum_container.set_anchors_preset(Control.PRESET_FULL_RECT)
+	_accum_container.mouse_filter = Control.MOUSE_FILTER_PASS
+	add_child(_accum_container)
+	if card:
+		move_child(_accum_container, card.get_index())
+
+	# Create one visual column per cell
+	_accum_nodes.clear()
+	var cfg: Dictionary = SEASON_CONFIG[current_season]
+	for i in range(col_count):
+		var col_node := ColorRect.new()
+		col_node.name = "AccumCol_%d" % i
+		col_node.color = cfg.accum_color
+		col_node.size = Vector2(ACCUM_CELL_WIDTH, 0)
+		col_node.position = Vector2(i * ACCUM_CELL_WIDTH, viewport_size.y)
+		col_node.mouse_filter = Control.MOUSE_FILTER_STOP
+		col_node.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
+		var col_idx := i  # capture for lambda
+		col_node.gui_input.connect(func(event: InputEvent): _on_accum_clicked(event, col_idx))
+		_accum_container.add_child(col_node)
+		_accum_nodes.append(col_node)
+
+
+func _update_accum_column(col: int, viewport_size: Vector2) -> void:
+	if col < 0 or col >= _accum_nodes.size():
+		return
+	var node: ColorRect = _accum_nodes[col]
+	if not is_instance_valid(node):
+		return
+	var h: float = _accum_grid[col]
+	node.size = Vector2(ACCUM_CELL_WIDTH, h)
+	node.position = Vector2(col * ACCUM_CELL_WIDTH, viewport_size.y - h)
+
+
+func _rebuild_accum_visuals() -> void:
+	var viewport_size := get_viewport().get_visible_rect().size
+	if _accum_nodes.is_empty():
+		return
+	# Resize grid if viewport changed
+	var needed := int(ceilf(viewport_size.x / ACCUM_CELL_WIDTH)) + 1
+	while _accum_grid.size() < needed:
+		_accum_grid.append(0.0)
+	for i in range(_accum_nodes.size()):
+		_update_accum_column(i, viewport_size)
+
+
+func _on_accum_clicked(event: InputEvent, col: int) -> void:
+	if not event is InputEventMouseButton:
+		return
+	if not event.pressed or event.button_index != MOUSE_BUTTON_LEFT:
+		return
+	if _accum_grid[col] < 2.0:
+		return  # nothing to destroy
+
+	_play_ui_sound("click")
+	_explode_accum_area(col)
+
+
+func _explode_accum_area(center_col: int) -> void:
+	var viewport_size := get_viewport().get_visible_rect().size
+	var cfg: Dictionary = SEASON_CONFIG[current_season]
+
+	# Determine blast radius (5 columns each side)
+	var blast_radius := 5
+	var total_height := 0.0
+	for c in range(maxi(0, center_col - blast_radius), mini(_accum_grid.size(), center_col + blast_radius + 1)):
+		total_height += _accum_grid[c]
+
+	# Spawn burst particles proportional to destroyed height
+	var burst_count := int(total_height * 0.4) + 8
+	burst_count = mini(burst_count, 40)
+	var center_x: float = center_col * ACCUM_CELL_WIDTH + ACCUM_CELL_WIDTH * 0.5
+	var center_y: float = viewport_size.y - _accum_grid[center_col]
+
+	for i in range(burst_count):
+		var particle := ColorRect.new()
+		var s: float = randf_range(2, 6)
+		particle.size = Vector2(s, s)
+		particle.position = Vector2(
+			center_x + randf_range(-blast_radius * ACCUM_CELL_WIDTH * 0.5, blast_radius * ACCUM_CELL_WIDTH * 0.5),
+			center_y + randf_range(-5, 5)
+		)
+		particle.color = cfg.accum_color
+		particle.color.a = randf_range(0.5, 1.0)
+		particle.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		add_child(particle)
+
+		var angle := randf_range(0, TAU)
+		var dist := randf_range(25, 80)
+		var target_pos := particle.position + Vector2(cos(angle), sin(angle) - 0.6) * dist
+		var tween := create_tween().set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
+		tween.tween_property(particle, "position", target_pos, randf_range(0.3, 0.6))
+		tween.parallel().tween_property(particle, "modulate:a", 0.0, randf_range(0.4, 0.8))
+		tween.tween_callback(particle.queue_free)
+
+	# Clear the accumulation in blast area
+	for c in range(maxi(0, center_col - blast_radius), mini(_accum_grid.size(), center_col + blast_radius + 1)):
+		_accum_grid[c] = 0.0
+		_update_accum_column(c, viewport_size)
+
+
+# =============================================================================
+# SUMMER — SUN RAYS
+# =============================================================================
+
+func _build_sun_rays() -> void:
+	var viewport_size := get_viewport().get_visible_rect().size
+	# Create 4-6 diagonal light beams
+	var ray_count := randi_range(4, 6)
+	for i in range(ray_count):
+		var ray := ColorRect.new()
+		ray.name = "SunRay_%d" % i
+		ray.mouse_filter = Control.MOUSE_FILTER_IGNORE
+
+		# Tall narrow rectangles, rotated diagonally
+		var w: float = randf_range(30, 80)
+		var h: float = viewport_size.y * randf_range(1.2, 1.6)
+		ray.size = Vector2(w, h)
+		ray.pivot_offset = Vector2(w * 0.5, 0)
+
+		# Position across the top, spread out
+		var x_spread: float = viewport_size.x / ray_count
+		ray.position = Vector2(
+			x_spread * i + randf_range(-30, 30),
+			randf_range(-h * 0.3, -h * 0.1)
+		)
+
+		# Slight diagonal rotation
+		ray.rotation = randf_range(deg_to_rad(10), deg_to_rad(35))
+
+		# Warm golden color, very transparent
+		ray.color = Color(1.0, 0.92, 0.65, randf_range(0.03, 0.07))
+
+		add_child(ray)
+		if card:
+			move_child(ray, card.get_index())
+
+		_sun_rays.append(ray)
+		ray.set_meta("base_alpha", ray.color.a)
+		ray.set_meta("phase", randf_range(0, TAU))
+		ray.set_meta("speed", randf_range(0.15, 0.4))
+
+
+func _process_sun_rays(delta: float) -> void:
+	_sun_ray_timer += delta
+	for ray in _sun_rays:
+		if not is_instance_valid(ray):
+			continue
+		var base_a: float = ray.get_meta("base_alpha")
+		var phase: float = ray.get_meta("phase")
+		var spd: float = ray.get_meta("speed")
+		# Gentle pulsing opacity
+		ray.color.a = base_a * (0.5 + 0.5 * sin(_sun_ray_timer * spd + phase))
+
+
+# =============================================================================
+# COMBINED VOICE + LLM TEST PANEL
+# =============================================================================
+
+const VOICE_TEST_TEXT := "Bienvenue, voyageur. Je suis Merlin, le dernier druide de Broceliande."
+const LLM_DEFAULT_PROMPT := "Dis bonjour au joueur."
+const LLM_SYSTEM_PROMPT := "Tu es Merlin, druide taquin d'une lande celtique. Court, percutant, 1-2 phrases max. Tutoiement. Humour et metaphores naturelles."
+
+# Params override for short, clean LLM responses
+const LLM_PARAMS_OVERRIDE := {
+	"max_tokens": 60,
+	"temperature": 0.4,
+	"top_p": 0.75,
+	"top_k": 25,
+	"repetition_penalty": 1.6,
+}
+
+# Voice: 0 = AC Voice (on), 1 = Off
+const PANEL_VOICE_LABELS := [
+	"AC Voice (Animalese)",
+	"Desactivee",
+]
+
+var _panel_voice_idx: int = 0
+var _panel_voice_bank: String = "default"
+var _panel_preset: String = "Merlin"
+var _panel_prompt_input: TextEdit
+
+
+func _show_voice_llm_panel() -> void:
+	if _voice_panel and is_instance_valid(_voice_panel):
+		_voice_panel.visible = true
+		for child in _voice_panel.get_children():
+			if child is Control:
+				child.modulate.a = 0.0
+				var tw := create_tween()
+				tw.tween_property(child, "modulate:a", 1.0, 0.25).set_ease(Tween.EASE_OUT).set_trans(Tween.TRANS_QUAD)
+		return
+	_load_voice_settings_for_panel()
+	_build_voice_llm_panel()
+
+
+func _load_voice_settings_for_panel() -> void:
+	var config := ConfigFile.new()
+	if config.load(CONFIG_PATH) == OK:
+		_panel_voice_idx = config.get_value("voice", "panel_idx", 0)
+		_panel_voice_bank = config.get_value("voice", "bank", "default")
+		_panel_preset = config.get_value("voice", "preset", "Merlin")
+
+
+func _build_voice_llm_panel() -> void:
+	_voice_panel = CanvasLayer.new()
+	_voice_panel.layer = 50
+	add_child(_voice_panel)
+
+	# Dim background
+	var dim := ColorRect.new()
+	dim.color = Color(0, 0, 0, 0.6)
+	dim.set_anchors_preset(Control.PRESET_FULL_RECT)
+	dim.mouse_filter = Control.MOUSE_FILTER_STOP
+	dim.gui_input.connect(func(ev: InputEvent):
+		if ev is InputEventMouseButton and ev.pressed:
+			_close_voice_panel()
+	)
+	_voice_panel.add_child(dim)
+
+	# Scrollable panel
+	var scroll := ScrollContainer.new()
+	scroll.set_anchors_preset(Control.PRESET_CENTER)
+	scroll.offset_left = -280
+	scroll.offset_right = 280
+	scroll.offset_top = -300
+	scroll.offset_bottom = 300
+	scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
+	_voice_panel.add_child(scroll)
+
+	var panel := PanelContainer.new()
+	panel.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	var style := StyleBoxFlat.new()
+	style.bg_color = PALETTE.paper_warm
+	style.border_color = PALETTE.accent
+	style.set_border_width_all(2)
+	style.set_corner_radius_all(8)
+	style.shadow_color = PALETTE.shadow
+	style.shadow_size = 12
+	style.set_content_margin_all(20)
+	panel.add_theme_stylebox_override("panel", style)
+	scroll.add_child(panel)
+
+	var vbox := VBoxContainer.new()
+	vbox.add_theme_constant_override("separation", 10)
+	panel.add_child(vbox)
+
+	# Title
+	var title := Label.new()
+	title.text = "Test Voix & LLM"
+	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	if body_font:
+		title.add_theme_font_override("font", body_font)
+	title.add_theme_font_size_override("font_size", 24)
+	title.add_theme_color_override("font_color", PALETTE.ink)
+	vbox.add_child(title)
+
+	var sep := HSeparator.new()
+	vbox.add_child(sep)
+
+	# --- VOICE TYPE SELECTOR (all 10 types + off) ---
+	var mode_row := _create_panel_row(vbox, "Type voix :")
+	var mode_opt := OptionButton.new()
+	mode_opt.name = "PanelVoiceTypeOpt"
+	for lbl in PANEL_VOICE_LABELS:
+		mode_opt.add_item(lbl)
+	mode_opt.selected = _panel_voice_idx
+	mode_opt.add_theme_font_size_override("font_size", 13)
+	mode_opt.item_selected.connect(func(idx: int):
+		_panel_voice_idx = idx
+		_update_panel_voice_controls()
+	)
+	mode_row.add_child(mode_opt)
+
+	# --- SOUND BANK (AC Voice only, idx 0) ---
+	var bank_row := _create_panel_row(vbox, "Banque :")
+	bank_row.name = "PanelBankRow"
+	var bank_opt := OptionButton.new()
+	bank_opt.name = "PanelBankOpt"
+	var bank_names := ["default", "high", "low", "lowest", "med", "robot", "glitch", "whisper", "droid"]
+	var bank_labels := {"default": "Classique", "high": "Aigu (Peppy)", "low": "Grave (Cranky)", "lowest": "Tres grave", "med": "Medium", "robot": "Robot Beep", "glitch": "Glitch Bot", "whisper": "Synth Whisper", "droid": "Droid (R2D2)"}
+	for bname in bank_names:
+		bank_opt.add_item(bank_labels.get(bname, bname))
+		bank_opt.set_item_metadata(bank_opt.item_count - 1, bname)
+	for i in range(bank_opt.item_count):
+		if bank_opt.get_item_metadata(i) == _panel_voice_bank:
+			bank_opt.selected = i
+			break
+	bank_opt.add_theme_font_size_override("font_size", 13)
+	bank_opt.item_selected.connect(func(idx: int):
+		_panel_voice_bank = bank_opt.get_item_metadata(idx)
+		if _voice_vb and _voice_vb.has_method("set_sound_bank"):
+			_voice_vb.set_sound_bank(_panel_voice_bank)
+	)
+	bank_row.add_child(bank_opt)
+
+	# --- PRESET (AC Voice only, idx 0) ---
+	var preset_row := _create_panel_row(vbox, "Preset :")
+	preset_row.name = "PanelPresetRow"
+	var preset_opt := OptionButton.new()
+	preset_opt.name = "PanelPresetOpt"
+	var presets := ["Merlin", "Normal", "Grave", "Sage", "Mysterieux", "Joyeux", "Aigu", "Enfant"]
+	for p in presets:
+		preset_opt.add_item(p)
+	for i in range(preset_opt.item_count):
+		if preset_opt.get_item_text(i) == _panel_preset:
+			preset_opt.selected = i
+			break
+	preset_opt.add_theme_font_size_override("font_size", 13)
+	preset_opt.item_selected.connect(func(idx: int):
+		_panel_preset = presets[idx]
+		_on_voice_preset_selected(idx)
+	)
+	preset_row.add_child(preset_opt)
+
+	# --- SLIDERS ---
+	_voice_pitch_slider = _create_voice_slider(vbox, "Pitch", 0.5, 5.0, 3.2, "_voice_pitch_value")
+	_voice_variation_slider = _create_voice_slider(vbox, "Variation", 0.0, 1.0, 0.28, "_voice_variation_value")
+	_voice_speed_slider = _create_voice_slider(vbox, "Vitesse", 0.3, 2.5, 0.95, "_voice_speed_value")
+
+	# --- LLM PROMPT INPUT ---
+	var prompt_lbl := Label.new()
+	prompt_lbl.text = "Prompt LLM :"
+	prompt_lbl.add_theme_font_size_override("font_size", 14)
+	prompt_lbl.add_theme_color_override("font_color", PALETTE.ink_soft)
+	vbox.add_child(prompt_lbl)
+
+	_panel_prompt_input = TextEdit.new()
+	_panel_prompt_input.text = LLM_DEFAULT_PROMPT
+	_panel_prompt_input.custom_minimum_size = Vector2(460, 50)
+	_panel_prompt_input.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	_panel_prompt_input.scroll_fit_content_height = true
+	_panel_prompt_input.wrap_mode = TextEdit.LINE_WRAPPING_BOUNDARY
+	_panel_prompt_input.add_theme_font_size_override("font_size", 14)
+	_panel_prompt_input.add_theme_color_override("font_color", PALETTE.ink)
+	var input_style := StyleBoxFlat.new()
+	input_style.bg_color = Color(1, 1, 1, 0.5)
+	input_style.border_color = PALETTE.ink_faded
+	input_style.set_border_width_all(1)
+	input_style.set_corner_radius_all(4)
+	input_style.set_content_margin_all(6)
+	_panel_prompt_input.add_theme_stylebox_override("normal", input_style)
+	vbox.add_child(_panel_prompt_input)
+
+	# --- TEST TEXT DISPLAY (output) ---
+	_voice_test_label = RichTextLabel.new()
+	_voice_test_label.text = ""
+	_voice_test_label.bbcode_enabled = true
+	_voice_test_label.fit_content = true
+	_voice_test_label.scroll_active = false
+	_voice_test_label.custom_minimum_size = Vector2(460, 40)
+	if body_font:
+		_voice_test_label.add_theme_font_override("normal_font", body_font)
+	_voice_test_label.add_theme_font_size_override("normal_font_size", 15)
+	_voice_test_label.add_theme_color_override("default_color", PALETTE.ink)
+	vbox.add_child(_voice_test_label)
+
+	# --- BUTTONS ---
+	var btn_row1 := HBoxContainer.new()
+	btn_row1.alignment = BoxContainer.ALIGNMENT_CENTER
+	btn_row1.add_theme_constant_override("separation", 10)
+
+	var test_voice_btn := _create_panel_button("Test Voix", func(): _on_test_voice_only())
+	btn_row1.add_child(test_voice_btn)
+
+	var test_llm_btn := _create_panel_button("Test LLM", func(): _on_test_llm_only())
+	btn_row1.add_child(test_llm_btn)
+
+	var test_both_btn := _create_panel_button("Voix + LLM", func(): _on_test_voice_and_llm())
+	btn_row1.add_child(test_both_btn)
+
+	vbox.add_child(btn_row1)
+
+	var btn_row2 := HBoxContainer.new()
+	btn_row2.alignment = BoxContainer.ALIGNMENT_CENTER
+	btn_row2.add_theme_constant_override("separation", 10)
+
+	var stop_btn := _create_panel_button("Stop", func(): _on_voice_stop())
+	btn_row2.add_child(stop_btn)
+
+	var close_btn := _create_panel_button("Fermer", func(): _close_voice_panel())
+	btn_row2.add_child(close_btn)
+
+	vbox.add_child(btn_row2)
+
+	# Initialize voicebox
+	_setup_menu_voicebox()
+	_on_voice_preset_selected(0)
+	_update_panel_voice_controls()
+
+
+func _create_panel_row(parent: VBoxContainer, label_text: String) -> HBoxContainer:
+	var row := HBoxContainer.new()
+	row.add_theme_constant_override("separation", 8)
+	var lbl := Label.new()
+	lbl.text = label_text
+	lbl.custom_minimum_size.x = 80
+	lbl.add_theme_font_size_override("font_size", 14)
+	lbl.add_theme_color_override("font_color", PALETTE.ink_soft)
+	row.add_child(lbl)
+	parent.add_child(row)
+	return row
+
+
+func _create_panel_button(label: String, callback: Callable) -> Button:
+	var btn := Button.new()
+	btn.text = label
+	btn.custom_minimum_size = Vector2(110, 36)
+	btn.add_theme_font_size_override("font_size", 15)
+	btn.pressed.connect(callback)
+	return btn
+
+
+func _update_panel_voice_controls() -> void:
+	if not _voice_panel:
+		return
+	var bank_row = _find_node_recursive(_voice_panel, "PanelBankRow")
+	var preset_row = _find_node_recursive(_voice_panel, "PanelPresetRow")
+	var is_ac: bool = (_panel_voice_idx == 0)
+	if bank_row:
+		bank_row.visible = is_ac
+	if preset_row:
+		preset_row.visible = is_ac
+
+
+func _find_node_recursive(node: Node, target_name: String) -> Node:
+	if node.name == target_name:
+		return node
+	for child in node.get_children():
+		var found := _find_node_recursive(child, target_name)
+		if found:
+			return found
+	return null
+
+
+# --- VOICE TEST ---
+
+func _on_test_voice_only() -> void:
+	_on_voice_stop()
+	if _panel_voice_idx == 0:
+		_on_voice_play()
+
+
+func _on_voice_play() -> void:
+	if not _voice_vb or not is_instance_valid(_voice_vb):
+		_setup_menu_voicebox()
+	if not _voice_vb:
+		return
+	_sync_voice_params()
+	if _voice_vb.has_method("stop_speaking"):
+		_voice_vb.stop_speaking()
+	_voice_vb.set("text_label", _voice_test_label)
+	_voice_test_label.text = VOICE_TEST_TEXT
+	_voice_test_label.visible_characters = 0
+	_voice_vb.play_string(VOICE_TEST_TEXT)
+
+
+# --- LLM TEST (async/await) ---
+
+func _on_test_llm_only() -> void:
+	_on_voice_stop()
+	_voice_test_label.text = "Envoi au LLM..."
+	_voice_test_label.visible_characters = -1
+
+	var prompt := _get_panel_prompt()
+	var text := await _call_llm(prompt)
+	_voice_test_label.text = text
+	_voice_test_label.visible_characters = -1
+
+
+func _on_test_voice_and_llm() -> void:
+	_on_voice_stop()
+	_voice_test_label.text = "Envoi au LLM..."
+	_voice_test_label.visible_characters = -1
+
+	var prompt := _get_panel_prompt()
+	var text := await _call_llm(prompt)
+
+	if _panel_voice_idx == 0 and _voice_vb and is_instance_valid(_voice_vb):
+		_sync_voice_params()
+		_voice_vb.set("text_label", _voice_test_label)
+		_voice_test_label.text = text
+		_voice_test_label.visible_characters = 0
+		_voice_vb.play_string(text)
+	else:
+		_voice_test_label.text = text
+		_voice_test_label.visible_characters = -1
+
+
+func _get_panel_prompt() -> String:
+	if _panel_prompt_input and _panel_prompt_input.text.strip_edges() != "":
+		return _panel_prompt_input.text.strip_edges()
+	return LLM_DEFAULT_PROMPT
+
+
+func _call_llm(user_prompt: String) -> String:
+	var merlin_ai = get_node_or_null("/root/MerlinAI")
+	if not merlin_ai:
+		return "MerlinAI non disponible."
+
+	# Streaming API — show chunks as they arrive
+	if merlin_ai.has_method("generate_with_system_stream"):
+		var on_chunk := func(chunk: String, _done: bool) -> void:
+			if _voice_test_label:
+				var current := _voice_test_label.text
+				if current == "Envoi au LLM..." or current == "Generation...":
+					current = ""
+				_voice_test_label.text = current + chunk
+				_voice_test_label.visible_characters = -1
+		_voice_test_label.text = "Generation..."
+		var result: Dictionary = await merlin_ai.generate_with_system_stream(
+			LLM_SYSTEM_PROMPT, user_prompt, LLM_PARAMS_OVERRIDE, on_chunk
+		)
+		if result.has("error"):
+			return "Erreur LLM: " + str(result.error)
+		return _clean_llm_response(str(result.get("text", "")))
+
+	# Fallback: non-streaming generate_with_system
+	if merlin_ai.has_method("generate_with_system"):
+		var result: Dictionary = await merlin_ai.generate_with_system(
+			LLM_SYSTEM_PROMPT, user_prompt, LLM_PARAMS_OVERRIDE
+		)
+		if result.has("error"):
+			return "Erreur LLM: " + str(result.error)
+		return _clean_llm_response(str(result.get("text", "")))
+
+	# Fallback: debug_execute_input
+	if merlin_ai.has_method("debug_execute_input"):
+		var result: Dictionary = await merlin_ai.debug_execute_input(user_prompt)
+		return _clean_llm_response(str(result.get("response", result.get("text", ""))))
+
+	return "LLM: aucune methode disponible."
+
+
+func _clean_llm_response(raw: String) -> String:
+	var text := raw.strip_edges()
+	# Truncate at first template token (all known variants)
+	var stop_tokens := [
+		"<|im_end|>", "<|im_start|>", "<|endoftext|>",
+		"<|im_end>", "<|im_start>", "<|endoftext>",
+		"<im_end>", "<im_start>",
+		"<|im_end", "<|im_start",
+	]
+	for stop_token in stop_tokens:
+		var idx := text.find(stop_token)
+		if idx >= 0:
+			text = text.substr(0, idx)
+	# Strip any remaining angle-bracket template markers via regex
+	var regex := RegEx.new()
+	regex.compile("<\\|?im_(?:end|start)\\|?>")
+	text = regex.sub(text, "", true)
+	regex.compile("<\\|?endoftext\\|?>")
+	text = regex.sub(text, "", true)
+	# Remove role prefixes
+	for prefix in ["system\n", "user\n", "assistant\n"]:
+		if text.begins_with(prefix):
+			text = text.substr(prefix.length())
+	text = text.strip_edges()
+	if text == "":
+		return "(Reponse vide du LLM)"
+	return text
+
+
+# --- SLIDERS & VOICEBOX HELPERS ---
+
+func _create_voice_slider(parent: VBoxContainer, label_text: String, min_val: float, max_val: float, default_val: float, value_var: String) -> HSlider:
+	var hbox := HBoxContainer.new()
+	hbox.add_theme_constant_override("separation", 8)
+
+	var lbl := Label.new()
+	lbl.text = label_text
+	lbl.custom_minimum_size.x = 70
+	lbl.add_theme_font_size_override("font_size", 14)
+	lbl.add_theme_color_override("font_color", PALETTE.ink_soft)
+	hbox.add_child(lbl)
+
+	var slider := HSlider.new()
+	slider.min_value = min_val
+	slider.max_value = max_val
+	slider.step = 0.01
+	slider.value = default_val
+	slider.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	slider.custom_minimum_size.x = 200
+	hbox.add_child(slider)
+
+	var val_lbl := Label.new()
+	val_lbl.text = "%.2f" % default_val
+	val_lbl.custom_minimum_size.x = 40
+	val_lbl.add_theme_font_size_override("font_size", 13)
+	val_lbl.add_theme_color_override("font_color", PALETTE.accent)
+	hbox.add_child(val_lbl)
+
+	if value_var == "_voice_pitch_value":
+		_voice_pitch_value = val_lbl
+	elif value_var == "_voice_variation_value":
+		_voice_variation_value = val_lbl
+	elif value_var == "_voice_speed_value":
+		_voice_speed_value = val_lbl
+
+	slider.value_changed.connect(func(v: float):
+		val_lbl.text = "%.2f" % v
+		_sync_voice_params()
+	)
+
+	parent.add_child(hbox)
+	return slider
+
+
+func _setup_menu_voicebox() -> void:
+	if _voice_vb and is_instance_valid(_voice_vb):
+		return
+	var script_path := "res://addons/acvoicebox/acvoicebox.gd"
+	if ResourceLoader.exists(script_path):
+		var scr = load(script_path)
+		if scr:
+			_voice_vb = scr.new()
+			_voice_vb.set("base_pitch", 3.2)
+			_voice_vb.set("pitch_variation", 0.28)
+			_voice_vb.set("speed_scale", 0.95)
+			add_child(_voice_vb)
+			if _voice_vb.has_method("set_sound_bank"):
+				_voice_vb.set_sound_bank(_panel_voice_bank)
+
+
+func _sync_voice_params() -> void:
+	if not _voice_vb or not is_instance_valid(_voice_vb):
+		return
+	if _voice_pitch_slider:
+		_voice_vb.set("base_pitch", _voice_pitch_slider.value)
+	if _voice_variation_slider:
+		_voice_vb.set("pitch_variation", _voice_variation_slider.value)
+	if _voice_speed_slider:
+		_voice_vb.set("speed_scale", _voice_speed_slider.value)
+
+
+func _on_voice_preset_selected(index: int) -> void:
+	var presets := ["Merlin", "Normal", "Grave", "Sage", "Mysterieux", "Joyeux", "Aigu", "Enfant"]
+	if index < 0 or index >= presets.size():
+		return
+	_panel_preset = presets[index]
+	if _voice_vb and _voice_vb.has_method("apply_preset"):
+		_voice_vb.apply_preset(presets[index])
+	if _voice_vb:
+		if _voice_pitch_slider:
+			_voice_pitch_slider.value = _voice_vb.get("base_pitch")
+		if _voice_variation_slider:
+			_voice_variation_slider.value = _voice_vb.get("pitch_variation")
+		if _voice_speed_slider:
+			_voice_speed_slider.value = _voice_vb.get("speed_scale")
+
+
+func _on_voice_stop() -> void:
+	if _voice_vb and _voice_vb.has_method("stop_speaking"):
+		_voice_vb.stop_speaking()
+	if _voice_test_label:
+		_voice_test_label.visible_characters = -1
+
+
+func _close_voice_panel() -> void:
+	_on_voice_stop()
+	if _voice_panel:
+		var tw := create_tween()
+		for child in _voice_panel.get_children():
+			if child is Control:
+				tw.tween_property(child, "modulate:a", 0.0, 0.2).set_ease(Tween.EASE_IN).set_trans(Tween.TRANS_QUAD)
+		tw.tween_callback(func(): _voice_panel.visible = false)

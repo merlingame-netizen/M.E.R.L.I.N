@@ -1,116 +1,226 @@
 ## ═══════════════════════════════════════════════════════════════════════════════
-## Scene Antre Merlin — Merlin's Lair
+## Scene Antre Merlin — Merlin's Lair (Parchemin Mystique Breton)
 ## ═══════════════════════════════════════════════════════════════════════════════
-## Meet Bestiole → Oghams unlock → Map of 7 biomes → Mission → Choose biome
-## Flow: Bestiole intro → Ogham reveal → Mission briefing → Biome selection
+## Meet Bestiole → Oghams unlock → Mission briefing → Biome selection
+## Style: Parchment card, Celtic ornaments, Merlin portrait, typewriter
 ## ═══════════════════════════════════════════════════════════════════════════════
 
 extends Control
 
-const NEXT_SCENE := "res://scenes/TransitionBiome.tscn"
-const DATA_PATH := "res://data/post_intro_dialogues.json"
-const PORTRAIT_PATH := "res://Assets/Sprite/Merlin.png"
+const NEXT_SCENE := "res://scenes/HubAntre.tscn"
+const DATA_PATH := "res://data/dialogues/scene_dialogues.json"
 
-const TYPEWRITER_DELAY := 0.025
-const TYPEWRITER_PUNCT_DELAY := 0.08
+const TYPEWRITER_DELAY := 0.030
+const TYPEWRITER_PUNCT_DELAY := 0.10
 const BLIP_FREQ := 880.0
 const BLIP_DURATION := 0.018
 const BLIP_VOLUME := 0.04
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# PALETTE — Parchemin Mystique Breton (shared with MenuPrincipal & SceneEveil)
+# ═══════════════════════════════════════════════════════════════════════════════
+
+const PALETTE := {
+	"paper": Color(0.965, 0.945, 0.905),
+	"paper_dark": Color(0.935, 0.905, 0.855),
+	"paper_warm": Color(0.955, 0.930, 0.890),
+	"ink": Color(0.22, 0.18, 0.14),
+	"ink_soft": Color(0.38, 0.32, 0.26),
+	"ink_faded": Color(0.50, 0.44, 0.38, 0.35),
+	"accent": Color(0.58, 0.44, 0.26),
+	"accent_soft": Color(0.65, 0.52, 0.34),
+	"accent_glow": Color(0.72, 0.58, 0.38, 0.25),
+	"shadow": Color(0.25, 0.20, 0.16, 0.18),
+	"line": Color(0.40, 0.34, 0.28, 0.12),
+	"mist": Color(0.94, 0.92, 0.88, 0.35),
+	"ogham_glow": Color(0.45, 0.62, 0.32),
+	"bestiole": Color(0.42, 0.60, 0.72),
+}
+
+const CARD_MAX_WIDTH := 720.0
+const CARD_MAX_HEIGHT := 800.0
+const PORTRAIT_SIZE := Vector2(280, 340)
+
+const PORTRAIT_DEFAULT := "res://Assets/Sprite/Merlin.png"
+const PORTRAIT_PRINTEMPS := "res://Assets/Sprite/Merlin_PRINTEMPS.png"
+const PORTRAIT_ETE := "res://Assets/Sprite/Merlin_ETE.png"
+const PORTRAIT_AUTOMNE := "res://Assets/Sprite/Merlin_AUTOMNE.png"
+const PORTRAIT_HIVER := "res://Assets/Sprite/Merlin_HIVER.png"
 
 # ═══════════════════════════════════════════════════════════════════════════════
 # BIOME CONFIG
 # ═══════════════════════════════════════════════════════════════════════════════
 
 const CLASS_TO_BIOME := {
-	"druide": "broceliande",
-	"guerrier": "landes",
-	"barde": "villages",
-	"eclaireur": "cotes",
+	"druide": "cercles_pierres",
+	"guerrier": "villages_celtes",
+	"barde": "cotes_sauvages",
+	"eclaireur": "foret_broceliande",
 }
 
-const BIOME_KEYS := ["broceliande", "landes", "cotes", "villages", "cercles", "marais", "collines"]
+const BIOME_DATA := {
+	"foret_broceliande": {"name": "Foret de Broceliande", "color": Color(0.30, 0.50, 0.28)},
+	"landes_bruyere": {"name": "Landes de Bruyere", "color": Color(0.55, 0.40, 0.55)},
+	"cotes_sauvages": {"name": "Cotes Sauvages", "color": Color(0.35, 0.50, 0.65)},
+	"villages_celtes": {"name": "Villages Celtes", "color": Color(0.60, 0.45, 0.30)},
+	"cercles_pierres": {"name": "Cercles de Pierres", "color": Color(0.50, 0.50, 0.55)},
+	"marais_korrigans": {"name": "Marais des Korrigans", "color": Color(0.30, 0.42, 0.30)},
+	"collines_dolmens": {"name": "Collines aux Dolmens", "color": Color(0.48, 0.55, 0.40)},
+}
 
-# ═══════════════════════════════════════════════════════════════════════════════
-# PALETTE (from GameManager GBC palette)
-# ═══════════════════════════════════════════════════════════════════════════════
-
-const ANTRE_BG := Color("#181810")
-const ANTRE_WARM := Color("#a08058")
-const EMBER_COLOR := Color("#f8a850")
-const TEXT_COLOR := Color("#e8e8e8")
-const TEXT_DIM := Color("#b8b0a0")
-const OGHAM_GLOW := Color("#88d850")
-const BESTIOLE_COLOR := Color("#78c8f0")
+const STARTER_OGHAMS := [
+	{"name": "Beith", "symbol": "\u1681", "meaning": "Bouleau — Nouveau depart"},
+	{"name": "Luis", "symbol": "\u1682", "meaning": "Sorbier — Protection"},
+	{"name": "Quert", "symbol": "\u168A", "meaning": "Pommier — Guerison"},
+]
 
 # ═══════════════════════════════════════════════════════════════════════════════
 # NODES
 # ═══════════════════════════════════════════════════════════════════════════════
 
-var bg: ColorRect
-var portrait: TextureRect
+var parchment_bg: ColorRect
+var mist_layer: ColorRect
+var celtic_top: Label
+var celtic_bottom: Label
+var card: PanelContainer
+var card_vbox: VBoxContainer
+var portrait_rect: TextureRect
 var merlin_text: RichTextLabel
-var bestiole_sprite: ColorRect  # Simple glow placeholder
-var ogham_container: HBoxContainer
-var map_panel: Panel
-var map_biome_buttons: Dictionary = {}
-var continue_button: Button
 var skip_hint: Label
+var ogham_panel: PanelContainer
+var biome_panel: PanelContainer
+var biome_buttons: Dictionary = {}
+var bestiole_label: Label
 var audio_player: AudioStreamPlayer
+var portrait_container: CenterContainer
+var seasonal_overlay: ColorRect
+var _biome_layout := false
 
 # ═══════════════════════════════════════════════════════════════════════════════
 # STATE
 # ═══════════════════════════════════════════════════════════════════════════════
 
-enum Phase { BESTIOLE_INTRO, OGHAM_REVEAL, MISSION_BRIEFING, BIOME_SELECTION, TRANSITIONING }
+enum Phase { BESTIOLE_INTRO, MERLIN_ON_BESTIOLE, OGHAM_REVEAL, MISSION_BRIEFING, BIOME_SELECTION, TRANSITIONING }
 
 var current_phase: int = Phase.BESTIOLE_INTRO
 var typing_active: bool = false
 var typing_abort: bool = false
 var scene_finished: bool = false
 var _advance_requested: bool = false
+var _mist_tween: Tween
+var _biome_pulse_tween: Tween
 
 var dialogue_data: Dictionary = {}
-var biomes_data: Dictionary = {}
 var selected_biome: String = ""
 var suggested_biome: String = ""
 var player_class: String = "eclaireur"
 var chronicle_name: String = "Voyageur"
 
+# Fonts
+var title_font: Font
+var body_font: Font
+
 # Voicebox
 var voicebox: Node = null
 var voice_ready: bool = false
 
+# LLM dialogue generator
+var _llm_gen: LLMDialogueGenerator = null
+var _llm_lang: String = "fr"
+
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# LIFECYCLE
+# ═══════════════════════════════════════════════════════════════════════════════
 
 func _ready() -> void:
+	set_anchors_preset(Control.PRESET_FULL_RECT)
+	_load_fonts()
 	_load_data()
 	_load_player_data()
+	_init_llm_generator()
 	_build_ui()
 	_setup_audio()
-	_setup_voicebox()
 
-	# Set mood
 	var screen_fx := get_node_or_null("/root/ScreenEffects")
 	if screen_fx and screen_fx.has_method("set_merlin_mood"):
 		screen_fx.set_merlin_mood("warm")
 
-	await get_tree().create_timer(0.5).timeout
-	_run_bestiole_intro()
+	resized.connect(_on_resized)
+	_start_mist_animation()
+	_play_entry_animation.call_deferred()
+
+	await _setup_voicebox()
+
+	await get_tree().create_timer(1.5).timeout
+	_run_phase_bestiole()
+
+
+func _load_fonts() -> void:
+	title_font = _try_load_font("res://resources/fonts/morris/MorrisRomanBlack.otf")
+	if title_font == null:
+		title_font = _try_load_font("res://resources/fonts/morris/MorrisRomanBlack.ttf")
+	body_font = _try_load_font("res://resources/fonts/morris/MorrisRomanBlackAlt.otf")
+	if body_font == null:
+		body_font = _try_load_font("res://resources/fonts/morris/MorrisRomanBlackAlt.ttf")
+	if body_font == null:
+		body_font = title_font
+
+
+func _try_load_font(path: String) -> Font:
+	if not ResourceLoader.exists(path):
+		return null
+	var f: Resource = load(path)
+	if f is Font:
+		return f
+	return null
 
 
 func _load_data() -> void:
-	if not FileAccess.file_exists(DATA_PATH):
-		push_warning("[SceneAntreMerlin] Data file not found")
+	var locale_mgr = get_node_or_null("/root/LocaleManager")
+	var path: String = DATA_PATH
+	if locale_mgr:
+		path = locale_mgr.get_data_path(DATA_PATH)
+
+	if not FileAccess.file_exists(path):
+		push_warning("[SceneAntreMerlin] Data file not found: %s" % path)
 		return
-	var file := FileAccess.open(DATA_PATH, FileAccess.READ)
+	var file := FileAccess.open(path, FileAccess.READ)
 	var json := JSON.new()
 	var err := json.parse(file.get_as_text())
 	file.close()
 	if err != OK:
-		push_warning("[SceneAntreMerlin] JSON parse error")
+		push_warning("[SceneAntreMerlin] JSON parse error: %s" % json.get_error_message())
 		return
 	var data: Dictionary = json.data
-	dialogue_data = data.get("antre", {})
-	biomes_data = data.get("biomes", {})
+	dialogue_data = data.get("scene_antre_merlin", {})
+
+
+func _init_llm_generator() -> void:
+	var gen_script = load("res://scripts/llm_dialogue_generator.gd")
+	if gen_script == null:
+		return
+	_llm_gen = gen_script.new()
+	_llm_gen.setup(get_tree())
+	var locale_mgr = get_node_or_null("/root/LocaleManager")
+	if locale_mgr:
+		_llm_lang = locale_mgr.get_language()
+
+
+func _llm_rephrase(text: String, emotion: String = "neutre") -> String:
+	if _llm_gen == null or not _llm_gen.is_llm_available():
+		return text
+	# Use a unique index based on text hash to avoid collisions
+	var idx: int = text.hash() & 0x7FFFFFFF
+	_llm_gen.generate_line_async(idx, text, emotion, _llm_lang)
+	# Wait a frame for generation to start, then poll results
+	await get_tree().process_frame
+	# The generator runs async internally; wait for result
+	var attempts := 0
+	while _llm_gen.get_result(idx, "") == "" and attempts < 300:
+		await get_tree().process_frame
+		attempts += 1
+	return _llm_gen.get_result(idx, text)
 
 
 func _load_player_data() -> void:
@@ -120,374 +230,644 @@ func _load_player_data() -> void:
 		var profile: Dictionary = run_data.get("traveler_profile", {})
 		player_class = profile.get("class", "eclaireur")
 		chronicle_name = run_data.get("chronicle_name", "Voyageur")
-	suggested_biome = CLASS_TO_BIOME.get(player_class, "broceliande")
+	suggested_biome = CLASS_TO_BIOME.get(player_class, "foret_broceliande")
 
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# UI BUILD — Parchemin Mystique Breton
+# ═══════════════════════════════════════════════════════════════════════════════
 
 func _build_ui() -> void:
-	# Background — dark cave atmosphere
-	bg = ColorRect.new()
-	bg.color = ANTRE_BG
-	bg.set_anchors_preset(Control.PRESET_FULL_RECT)
-	add_child(bg)
+	# Parchment background
+	parchment_bg = ColorRect.new()
+	parchment_bg.set_anchors_preset(Control.PRESET_FULL_RECT)
+	parchment_bg.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	var paper_shader := load("res://shaders/reigns_paper.gdshader")
+	if paper_shader:
+		var mat := ShaderMaterial.new()
+		mat.shader = paper_shader
+		mat.set_shader_parameter("paper_tint", PALETTE.paper)
+		mat.set_shader_parameter("grain_strength", 0.025)
+		mat.set_shader_parameter("vignette_strength", 0.08)
+		mat.set_shader_parameter("vignette_softness", 0.65)
+		mat.set_shader_parameter("grain_scale", 1200.0)
+		mat.set_shader_parameter("grain_speed", 0.08)
+		mat.set_shader_parameter("warp_strength", 0.001)
+		parchment_bg.material = mat
+	else:
+		parchment_bg.color = PALETTE.paper
+	add_child(parchment_bg)
 
-	# Warm ambient glow (large, soft, behind everything)
-	var ambient := ColorRect.new()
-	ambient.color = EMBER_COLOR
-	ambient.modulate.a = 0.05
-	ambient.set_anchors_preset(Control.PRESET_FULL_RECT)
-	add_child(ambient)
+	# Mist layer
+	mist_layer = ColorRect.new()
+	mist_layer.set_anchors_preset(Control.PRESET_FULL_RECT)
+	mist_layer.color = PALETTE.mist
+	mist_layer.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	mist_layer.modulate.a = 0.0
+	add_child(mist_layer)
 
-	# Portrait (top-left area)
-	portrait = TextureRect.new()
-	if ResourceLoader.exists(PORTRAIT_PATH):
-		portrait.texture = load(PORTRAIT_PATH)
-	portrait.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
-	portrait.custom_minimum_size = Vector2(180, 220)
-	portrait.size = Vector2(180, 220)
-	portrait.position = Vector2(40, 60)
-	add_child(portrait)
+	# Celtic ornaments
+	celtic_top = _make_celtic_ornament()
+	add_child(celtic_top)
+	celtic_bottom = _make_celtic_ornament()
+	add_child(celtic_bottom)
 
-	# Bestiole (small glow, starts hidden, appears from right)
-	bestiole_sprite = ColorRect.new()
-	bestiole_sprite.color = BESTIOLE_COLOR
-	bestiole_sprite.custom_minimum_size = Vector2(20, 20)
-	bestiole_sprite.size = Vector2(20, 20)
-	bestiole_sprite.position = Vector2(900, 200)
-	bestiole_sprite.modulate.a = 0.0
-	bestiole_sprite.pivot_offset = Vector2(10, 10)
-	add_child(bestiole_sprite)
+	# Central card
+	card = PanelContainer.new()
+	card.name = "Card"
+	card.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_apply_card_style()
+	add_child(card)
 
-	# Merlin text area (right of portrait, main content area)
+	card_vbox = VBoxContainer.new()
+	card_vbox.alignment = BoxContainer.ALIGNMENT_CENTER
+	card_vbox.add_theme_constant_override("separation", 16)
+	card.add_child(card_vbox)
+
+	# Portrait Merlin
+	portrait_container = CenterContainer.new()
+	card_vbox.add_child(portrait_container)
+
+	portrait_rect = TextureRect.new()
+	portrait_rect.custom_minimum_size = PORTRAIT_SIZE
+	portrait_rect.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	portrait_rect.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+	portrait_rect.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_load_seasonal_portrait()
+	portrait_container.add_child(portrait_rect)
+
+	# Separator
+	var sep_container := HBoxContainer.new()
+	sep_container.alignment = BoxContainer.ALIGNMENT_CENTER
+	sep_container.add_theme_constant_override("separation", 8)
+	card_vbox.add_child(sep_container)
+
+	var sep_left := ColorRect.new()
+	sep_left.color = PALETTE.line
+	sep_left.custom_minimum_size = Vector2(60, 1)
+	sep_container.add_child(sep_left)
+	var sep_diamond := Label.new()
+	sep_diamond.text = "\u25C6"
+	sep_diamond.add_theme_color_override("font_color", PALETTE.accent)
+	sep_diamond.add_theme_font_size_override("font_size", 10)
+	sep_container.add_child(sep_diamond)
+	var sep_right := ColorRect.new()
+	sep_right.color = PALETTE.line
+	sep_right.custom_minimum_size = Vector2(60, 1)
+	sep_container.add_child(sep_right)
+
+	# Merlin text area
 	merlin_text = RichTextLabel.new()
+	merlin_text.name = "MerlinText"
 	merlin_text.bbcode_enabled = true
 	merlin_text.fit_content = true
 	merlin_text.scroll_active = false
-	merlin_text.custom_minimum_size = Vector2(550, 80)
-	merlin_text.size = Vector2(550, 80)
-	merlin_text.position = Vector2(240, 120)
-	merlin_text.add_theme_color_override("default_color", TEXT_COLOR)
-	merlin_text.add_theme_font_size_override("normal_font_size", 20)
+	merlin_text.custom_minimum_size = Vector2(440, 130)
 	merlin_text.visible_characters = 0
 	merlin_text.text = ""
-	add_child(merlin_text)
+	merlin_text.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	if body_font:
+		merlin_text.add_theme_font_override("normal_font", body_font)
+	merlin_text.add_theme_font_size_override("normal_font_size", 26)
+	merlin_text.add_theme_color_override("default_color", PALETTE.ink)
+	card_vbox.add_child(merlin_text)
 
-	# Ogham reveal container (hidden initially)
-	ogham_container = HBoxContainer.new()
-	ogham_container.set_anchors_preset(Control.PRESET_CENTER_BOTTOM)
-	ogham_container.position = Vector2(-150, -200)
-	ogham_container.add_theme_constant_override("separation", 30)
-	ogham_container.visible = false
-	ogham_container.modulate.a = 0.0
-	add_child(ogham_container)
+	# Bestiole label (hidden, used in Phase A)
+	bestiole_label = Label.new()
+	bestiole_label.text = "\u2022"
+	bestiole_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	bestiole_label.add_theme_color_override("font_color", PALETTE.bestiole)
+	bestiole_label.add_theme_font_size_override("font_size", 28)
+	bestiole_label.visible = false
+	bestiole_label.modulate.a = 0.0
+	card_vbox.add_child(bestiole_label)
 
-	var starter_oghams := [
-		{"name": "Beith", "meaning": "Bouleau", "icon": "🌿"},
-		{"name": "Luis", "meaning": "Sorbier", "icon": "🛡"},
-		{"name": "Quert", "meaning": "Pommier", "icon": "🍎"},
-	]
-	for ogham in starter_oghams:
+	# Ogham panel (hidden, used in Phase C)
+	_build_ogham_panel()
+
+	# Biome panel (hidden, used in Phase D)
+	_build_biome_panel()
+
+	# Skip hint — inside card, below text
+	skip_hint = Label.new()
+	skip_hint.text = "Appuie pour continuer"
+	skip_hint.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	skip_hint.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	if body_font:
+		skip_hint.add_theme_font_override("font", body_font)
+	skip_hint.add_theme_font_size_override("font_size", 14)
+	skip_hint.add_theme_color_override("font_color", PALETTE.ink_faded)
+	skip_hint.visible = false
+	card_vbox.add_child(skip_hint)
+
+	# Seasonal overlay (snow/petals on card)
+	_build_seasonal_overlay()
+
+	_layout_ui()
+
+
+func _apply_card_style() -> void:
+	var style := StyleBoxFlat.new()
+	style.bg_color = PALETTE.paper_warm
+	style.border_color = PALETTE.ink_faded
+	style.set_border_width_all(1)
+	style.set_corner_radius_all(4)
+	style.shadow_color = PALETTE.shadow
+	style.shadow_size = 16
+	style.shadow_offset = Vector2(0, 4)
+	style.content_margin_left = 32
+	style.content_margin_top = 28
+	style.content_margin_right = 32
+	style.content_margin_bottom = 28
+	card.add_theme_stylebox_override("panel", style)
+
+
+func _load_seasonal_portrait() -> void:
+	var month: int = Time.get_date_dict_from_system().month
+	var path := PORTRAIT_DEFAULT
+	if month >= 3 and month <= 5:
+		path = PORTRAIT_PRINTEMPS
+	elif month >= 6 and month <= 8:
+		path = PORTRAIT_ETE
+	elif month >= 9 and month <= 11:
+		path = PORTRAIT_AUTOMNE
+	else:
+		path = PORTRAIT_HIVER
+	if ResourceLoader.exists(path):
+		portrait_rect.texture = load(path)
+	elif ResourceLoader.exists(PORTRAIT_DEFAULT):
+		portrait_rect.texture = load(PORTRAIT_DEFAULT)
+
+
+func _make_celtic_ornament() -> Label:
+	var lbl := Label.new()
+	var pattern := ["\u2500", "\u2022", "\u2500", "\u2500", "\u25C6", "\u2500", "\u2500", "\u2022", "\u2500"]
+	var line := ""
+	for i in range(40):
+		line += pattern[i % pattern.size()]
+	lbl.text = line
+	lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	lbl.add_theme_color_override("font_color", PALETTE.ink_faded)
+	lbl.add_theme_font_size_override("font_size", 14)
+	lbl.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	lbl.modulate.a = 0.0
+	return lbl
+
+
+func _build_ogham_panel() -> void:
+	ogham_panel = PanelContainer.new()
+	ogham_panel.visible = false
+	ogham_panel.modulate.a = 0.0
+
+	var ogham_style := StyleBoxFlat.new()
+	ogham_style.bg_color = PALETTE.paper_dark
+	ogham_style.border_color = PALETTE.ogham_glow
+	ogham_style.set_border_width_all(1)
+	ogham_style.set_corner_radius_all(6)
+	ogham_style.content_margin_left = 20
+	ogham_style.content_margin_right = 20
+	ogham_style.content_margin_top = 16
+	ogham_style.content_margin_bottom = 16
+	ogham_panel.add_theme_stylebox_override("panel", ogham_style)
+
+	var hbox := HBoxContainer.new()
+	hbox.alignment = BoxContainer.ALIGNMENT_CENTER
+	hbox.add_theme_constant_override("separation", 30)
+	ogham_panel.add_child(hbox)
+
+	for ogham in STARTER_OGHAMS:
 		var vbox := VBoxContainer.new()
 		vbox.alignment = BoxContainer.ALIGNMENT_CENTER
-		var icon_label := Label.new()
-		icon_label.text = ogham.icon
-		icon_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-		icon_label.add_theme_font_size_override("font_size", 36)
-		vbox.add_child(icon_label)
-		var name_label := Label.new()
-		name_label.text = ogham.name
-		name_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-		name_label.add_theme_color_override("font_color", OGHAM_GLOW)
-		name_label.add_theme_font_size_override("font_size", 16)
-		vbox.add_child(name_label)
-		var meaning_label := Label.new()
-		meaning_label.text = ogham.meaning
-		meaning_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-		meaning_label.add_theme_color_override("font_color", TEXT_DIM)
-		meaning_label.add_theme_font_size_override("font_size", 12)
-		vbox.add_child(meaning_label)
-		ogham_container.add_child(vbox)
+		vbox.add_theme_constant_override("separation", 4)
 
-	# Map panel (hidden, shown during biome selection)
-	map_panel = Panel.new()
-	map_panel.custom_minimum_size = Vector2(600, 350)
-	map_panel.size = Vector2(600, 350)
-	map_panel.set_anchors_preset(Control.PRESET_CENTER)
-	map_panel.position = Vector2(-300, -120)
-	map_panel.visible = false
-	map_panel.modulate.a = 0.0
-	var map_style := StyleBoxFlat.new()
-	map_style.bg_color = Color(0.1, 0.08, 0.06, 0.9)
-	map_style.border_color = ANTRE_WARM
-	map_style.set_border_width_all(2)
-	map_style.set_corner_radius_all(8)
-	map_panel.add_theme_stylebox_override("panel", map_style)
-	add_child(map_panel)
+		var symbol := Label.new()
+		symbol.text = ogham.symbol
+		symbol.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		symbol.add_theme_font_size_override("font_size", 32)
+		symbol.add_theme_color_override("font_color", PALETTE.ogham_glow)
+		vbox.add_child(symbol)
 
-	# Map title
-	var map_title := Label.new()
-	map_title.text = "Les Sept Sanctuaires"
-	map_title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	map_title.position = Vector2(0, 10)
-	map_title.size = Vector2(600, 30)
-	map_title.add_theme_color_override("font_color", EMBER_COLOR)
-	map_title.add_theme_font_size_override("font_size", 20)
-	map_panel.add_child(map_title)
+		var name_lbl := Label.new()
+		name_lbl.text = ogham.name
+		name_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		if title_font:
+			name_lbl.add_theme_font_override("font", title_font)
+		name_lbl.add_theme_font_size_override("font_size", 16)
+		name_lbl.add_theme_color_override("font_color", PALETTE.ink)
+		vbox.add_child(name_lbl)
 
-	# Antre marker (center of map)
-	var antre_label := Label.new()
-	antre_label.text = "★"
-	antre_label.position = Vector2(280, 160)
-	antre_label.add_theme_color_override("font_color", EMBER_COLOR)
-	antre_label.add_theme_font_size_override("font_size", 18)
-	map_panel.add_child(antre_label)
+		var meaning := Label.new()
+		meaning.text = ogham.meaning
+		meaning.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		if body_font:
+			meaning.add_theme_font_override("font", body_font)
+		meaning.add_theme_font_size_override("font_size", 11)
+		meaning.add_theme_color_override("font_color", PALETTE.ink_soft)
+		vbox.add_child(meaning)
 
-	# Biome buttons on map
-	for biome_key in BIOME_KEYS:
-		var biome_info: Dictionary = biomes_data.get(biome_key, {})
-		var map_pos: Array = biome_info.get("map_position", [0.5, 0.5])
-		var biome_color := Color(biome_info.get("color", "#787870"))
-		var biome_name: String = biome_info.get("name", biome_key)
+		hbox.add_child(vbox)
 
+	add_child(ogham_panel)
+
+
+func _build_biome_panel() -> void:
+	biome_panel = PanelContainer.new()
+	biome_panel.visible = false
+	biome_panel.modulate.a = 0.0
+
+	var panel_style := StyleBoxFlat.new()
+	panel_style.bg_color = PALETTE.paper_dark
+	panel_style.border_color = PALETTE.accent_soft
+	panel_style.set_border_width_all(1)
+	panel_style.set_corner_radius_all(6)
+	panel_style.content_margin_left = 16
+	panel_style.content_margin_right = 16
+	panel_style.content_margin_top = 16
+	panel_style.content_margin_bottom = 16
+	biome_panel.add_theme_stylebox_override("panel", panel_style)
+
+	var vbox := VBoxContainer.new()
+	vbox.add_theme_constant_override("separation", 6)
+	biome_panel.add_child(vbox)
+
+	var title := Label.new()
+	title.text = "Les Sept Sanctuaires"
+	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	if title_font:
+		title.add_theme_font_override("font", title_font)
+	title.add_theme_font_size_override("font_size", 18)
+	title.add_theme_color_override("font_color", PALETTE.accent)
+	vbox.add_child(title)
+
+	var sep := ColorRect.new()
+	sep.color = PALETTE.line
+	sep.custom_minimum_size = Vector2(0, 1)
+	vbox.add_child(sep)
+
+	for key in BIOME_DATA:
+		var biome: Dictionary = BIOME_DATA[key]
 		var btn := Button.new()
-		btn.text = biome_name
-		btn.custom_minimum_size = Vector2(130, 32)
-		btn.position = Vector2(map_pos[0] * 500 + 20, map_pos[1] * 280 + 40)
+		btn.text = biome.name
+		btn.custom_minimum_size = Vector2(280, 34)
+		btn.pressed.connect(_on_biome_selected.bind(key))
+		btn.disabled = true
 
 		var btn_style := StyleBoxFlat.new()
-		btn_style.bg_color = biome_color.darkened(0.5)
-		btn_style.border_color = biome_color
+		btn_style.bg_color = PALETTE.paper_warm
+		btn_style.border_color = PALETTE.ink_faded
 		btn_style.set_border_width_all(1)
-		btn_style.set_corner_radius_all(4)
+		btn_style.set_corner_radius_all(3)
+		btn_style.content_margin_left = 10
+		btn_style.content_margin_right = 10
 		btn.add_theme_stylebox_override("normal", btn_style)
 
 		var btn_hover := btn_style.duplicate()
-		btn_hover.bg_color = biome_color.darkened(0.2)
+		btn_hover.bg_color = PALETTE.paper_dark
+		btn_hover.border_color = biome.color
 		btn_hover.set_border_width_all(2)
 		btn.add_theme_stylebox_override("hover", btn_hover)
 
 		var btn_pressed := btn_style.duplicate()
-		btn_pressed.bg_color = biome_color
-		btn_pressed.set_border_width_all(3)
+		btn_pressed.bg_color = biome.color.lightened(0.7)
+		btn_pressed.border_color = biome.color
+		btn_pressed.set_border_width_all(2)
 		btn.add_theme_stylebox_override("pressed", btn_pressed)
 
-		btn.add_theme_color_override("font_color", TEXT_COLOR)
-		btn.add_theme_font_size_override("font_size", 12)
-		btn.pressed.connect(_on_biome_selected.bind(biome_key))
-		btn.disabled = true
+		if body_font:
+			btn.add_theme_font_override("font", body_font)
+		btn.add_theme_font_size_override("font_size", 14)
+		btn.add_theme_color_override("font_color", PALETTE.ink)
 
-		map_panel.add_child(btn)
-		map_biome_buttons[biome_key] = btn
+		vbox.add_child(btn)
+		biome_buttons[key] = btn
 
-	# Continue button (hidden, for non-map advancement)
-	continue_button = Button.new()
-	continue_button.text = "Continuer"
-	continue_button.set_anchors_preset(Control.PRESET_CENTER_BOTTOM)
-	continue_button.position = Vector2(-60, -40)
-	continue_button.custom_minimum_size = Vector2(120, 40)
-	continue_button.visible = false
-	continue_button.pressed.connect(_on_continue_pressed)
-	add_child(continue_button)
-
-	# Skip hint
-	skip_hint = Label.new()
-	skip_hint.text = "Appuie pour continuer"
-	skip_hint.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	skip_hint.set_anchors_preset(Control.PRESET_BOTTOM_WIDE)
-	skip_hint.position.y -= 20
-	skip_hint.add_theme_color_override("font_color", Color(1, 1, 1, 0.25))
-	skip_hint.add_theme_font_size_override("font_size", 13)
-	skip_hint.visible = false
-	add_child(skip_hint)
+	add_child(biome_panel)
 
 
-func _setup_audio() -> void:
-	audio_player = AudioStreamPlayer.new()
-	audio_player.bus = "Master"
-	audio_player.volume_db = linear_to_db(BLIP_VOLUME)
-	add_child(audio_player)
+func _build_seasonal_overlay() -> void:
+	var month: int = Time.get_date_dict_from_system().month
+	var is_winter := month >= 12 or month <= 2
+	if not is_winter:
+		return
+	var snow_shader = load("res://shaders/seasonal_snow.gdshader")
+	if snow_shader == null:
+		return
+	seasonal_overlay = ColorRect.new()
+	seasonal_overlay.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	var mat := ShaderMaterial.new()
+	mat.shader = snow_shader
+	mat.set_shader_parameter("speed", 0.25)
+	mat.set_shader_parameter("density", 0.22)
+	seasonal_overlay.material = mat
+	add_child(seasonal_overlay)
 
 
-func _setup_voicebox() -> void:
-	var script_path := "res://addons/ac_voicebox/ac_voicebox.gd"
-	if ResourceLoader.exists(script_path):
-		var scr = load(script_path)
-		if scr:
-			voicebox = scr.new()
-			voicebox.set("pitch", 2.5)
-			voicebox.set("pitch_variation", 0.12)
-			voicebox.set("speed_scale", 0.65)
-			add_child(voicebox)
-			voice_ready = true
+func _layout_ui() -> void:
+	var vp := get_viewport().get_visible_rect().size
+
+	var card_w := minf(CARD_MAX_WIDTH, vp.x * 0.88)
+	var card_h: float
+	if _biome_layout:
+		card_h = minf(320, vp.y * 0.38)
+	else:
+		card_h = minf(CARD_MAX_HEIGHT, vp.y * 0.72)
+	card.size = Vector2(card_w, card_h)
+
+	if _biome_layout:
+		card.position = Vector2((vp.x - card_w) * 0.5, vp.y * 0.04)
+	else:
+		card.position = (vp - card.size) * 0.5
+	card.pivot_offset = card.size * 0.5
+
+	if celtic_top:
+		celtic_top.size = Vector2(vp.x, 30)
+		celtic_top.position = Vector2(0, card.position.y - 35)
+	if celtic_bottom:
+		celtic_bottom.size = Vector2(vp.x, 30)
+		celtic_bottom.position = Vector2(0, card.position.y + card_h + 5)
+
+	# Ogham panel: centered below card
+	if ogham_panel:
+		ogham_panel.position = Vector2((vp.x - 360) * 0.5, card.position.y + card_h + 16)
+
+	# Biome panel: centered below card (fits because card is smaller in biome mode)
+	if biome_panel:
+		var bw := minf(340, vp.x * 0.8)
+		biome_panel.position = Vector2((vp.x - bw) * 0.5, card.position.y + card_h + 16)
+
+	# Seasonal overlay matches card position
+	if seasonal_overlay:
+		seasonal_overlay.position = card.position
+		seasonal_overlay.size = card.size
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
-# PHASE 1: BESTIOLE INTRO
+# ANIMATIONS
 # ═══════════════════════════════════════════════════════════════════════════════
 
-func _run_bestiole_intro() -> void:
+func _play_entry_animation() -> void:
+	if not card:
+		return
+	card.modulate.a = 0.0
+	card.position.y += 40
+
+	var tween := create_tween()
+	tween.tween_property(celtic_top, "modulate:a", 1.0, 0.8).set_trans(Tween.TRANS_SINE)
+	tween.parallel().tween_property(celtic_bottom, "modulate:a", 1.0, 0.8).set_trans(Tween.TRANS_SINE)
+
+	var target_y := card.position.y - 40
+	tween.tween_property(card, "position:y", target_y, 0.7).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_OUT)
+	tween.parallel().tween_property(card, "modulate:a", 1.0, 0.5).set_trans(Tween.TRANS_SINE)
+
+
+func _start_mist_animation() -> void:
+	if _mist_tween:
+		_mist_tween.kill()
+	_mist_tween = create_tween().set_loops()
+	_mist_tween.tween_property(mist_layer, "modulate:a", 0.20, 8.0).set_trans(Tween.TRANS_SINE)
+	_mist_tween.tween_property(mist_layer, "modulate:a", 0.06, 8.0).set_trans(Tween.TRANS_SINE)
+
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# PHASE A: BESTIOLE APPARITION
+# ═══════════════════════════════════════════════════════════════════════════════
+
+func _run_phase_bestiole() -> void:
 	current_phase = Phase.BESTIOLE_INTRO
 
-	var lines: Array = dialogue_data.get("bestiole_intro", [])
+	var lines_data: Dictionary = dialogue_data.get("bestiole_apparition", {})
+	var lines: Array = lines_data.get("lines", [])
+
+	# Fallback
+	if lines.is_empty():
+		lines = [
+			{"text": "Quelque chose bouge dans l'ombre.", "speaker": "NARRATION"},
+			{"text": "La lueur s'approche. Deux yeux immenses.", "speaker": "NARRATION"},
+			{"text": "Un son doux qui dit : je suis la.", "speaker": "NARRATION"},
+		]
+
 	for i in range(lines.size()):
+		if scene_finished:
+			return
 		var line: Dictionary = lines[i]
 		var text: String = line.get("text", "")
-		var mood: String = line.get("mood", "warm")
-		var line_type: String = line.get("type", "merlin")
+		var speaker: String = line.get("speaker", "NARRATION")
+		# LLM rephrase (narration too)
+		text = await _llm_rephrase(text, line.get("emotion", "neutre"))
 
-		# Set mood
+		# Narration style: italic/soft
+		if speaker == "NARRATION":
+			merlin_text.add_theme_color_override("default_color", PALETTE.ink_soft)
+		else:
+			merlin_text.add_theme_color_override("default_color", PALETTE.ink)
+
+		# Show bestiole glow on first line
+		if i == 0:
+			bestiole_label.visible = true
+			var glow := create_tween()
+			glow.tween_property(bestiole_label, "modulate:a", 0.7, 1.5).set_trans(Tween.TRANS_SINE)
+
+		await _show_text(text)
+		skip_hint.visible = true
+		await _wait_for_advance(5.0)
+		skip_hint.visible = false
+
+		if i < lines.size() - 1:
+			var fade := create_tween()
+			fade.tween_property(merlin_text, "modulate:a", 0.0, 0.3)
+			await fade.finished
+			merlin_text.modulate.a = 1.0
+
+	# Hide bestiole glow
+	var hide_glow := create_tween()
+	hide_glow.tween_property(bestiole_label, "modulate:a", 0.0, 0.4)
+	await hide_glow.finished
+	bestiole_label.visible = false
+
+	_run_phase_merlin_on_bestiole()
+
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# PHASE B: MERLIN ON BESTIOLE
+# ═══════════════════════════════════════════════════════════════════════════════
+
+func _run_phase_merlin_on_bestiole() -> void:
+	current_phase = Phase.MERLIN_ON_BESTIOLE
+	merlin_text.add_theme_color_override("default_color", PALETTE.ink)
+
+	var section: Dictionary = dialogue_data.get("merlin_sur_bestiole", {})
+	var lines: Array = section.get("lines", [])
+
+	if lines.is_empty():
+		lines = [
+			{"text": "Ah. Bestiole t'a trouve. Elle fait ca.", "emotion": "tendresse_masquee"},
+			{"text": "Prends soin d'elle. Plus que de moi.", "emotion": "sincerite_breve"},
+		]
+
+	for i in range(lines.size()):
+		if scene_finished:
+			return
+		var line: Dictionary = lines[i]
+		var text: String = line.get("text", "")
+		var emotion: String = line.get("emotion", "warm")
+		text = await _llm_rephrase(text, emotion)
+
+		var mood := _emotion_to_mood(emotion)
 		var screen_fx := get_node_or_null("/root/ScreenEffects")
 		if screen_fx and screen_fx.has_method("set_merlin_mood"):
 			screen_fx.set_merlin_mood(mood)
 
-		# Bestiole animation on first narration line
-		if i == 0:
-			_animate_bestiole_entrance()
-
-		# Show text with narration styling
-		if line_type == "narration":
-			merlin_text.add_theme_color_override("default_color", TEXT_DIM)
-		else:
-			merlin_text.add_theme_color_override("default_color", TEXT_COLOR)
-
 		await _show_text(text)
 		skip_hint.visible = true
-		await _wait_for_advance(4.0)
+		await _wait_for_advance(5.0)
 		skip_hint.visible = false
 
-	# Move to Ogham reveal
-	_run_ogham_reveal()
+		if i < lines.size() - 1:
+			var fade := create_tween()
+			fade.tween_property(merlin_text, "modulate:a", 0.0, 0.3)
+			await fade.finished
+			merlin_text.modulate.a = 1.0
 
-
-func _animate_bestiole_entrance() -> void:
-	# Fade in and float towards center
-	var tween := create_tween()
-	tween.set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
-	tween.tween_property(bestiole_sprite, "modulate:a", 0.8, 1.5)
-	tween.parallel().tween_property(bestiole_sprite, "position", Vector2(500, 180), 2.0)
-
-	# Start idle float animation after entrance
-	tween.tween_callback(_start_bestiole_idle)
-
-
-func _start_bestiole_idle() -> void:
-	var idle := create_tween()
-	idle.set_loops()
-	idle.set_trans(Tween.TRANS_SINE)
-	idle.tween_property(bestiole_sprite, "position:y", 170.0, 1.2)
-	idle.tween_property(bestiole_sprite, "position:y", 190.0, 1.2)
-
-	# Subtle glow pulse
-	var glow := create_tween()
-	glow.set_loops()
-	glow.tween_property(bestiole_sprite, "modulate:a", 0.5, 1.8).set_trans(Tween.TRANS_SINE)
-	glow.tween_property(bestiole_sprite, "modulate:a", 0.9, 1.8).set_trans(Tween.TRANS_SINE)
+	_run_phase_ogham()
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
-# PHASE 2: OGHAM REVEAL
+# PHASE C: OGHAM REVEAL
 # ═══════════════════════════════════════════════════════════════════════════════
 
-func _run_ogham_reveal() -> void:
+func _run_phase_ogham() -> void:
 	current_phase = Phase.OGHAM_REVEAL
 
-	# Show ogham container with glow burst
-	ogham_container.visible = true
+	var ogham_text: String = await _llm_rephrase("Tu portes deja trois Oghams. Les premiers. Ceux qui comptent le plus.", "sage")
+	await _show_text(ogham_text)
+	await get_tree().create_timer(1.0).timeout
+
+	# Show ogham panel
+	ogham_panel.visible = true
 	var tween := create_tween()
 	tween.set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
-	tween.tween_property(ogham_container, "modulate:a", 1.0, 0.8)
-	tween.parallel().tween_property(ogham_container, "scale", Vector2(1.0, 1.0), 0.6).from(Vector2(0.5, 0.5))
+	tween.tween_property(ogham_panel, "modulate:a", 1.0, 0.8)
 
-	# Brief glow flash on each ogham
+	# Flash each ogham
 	await tween.finished
-	for child in ogham_container.get_children():
+	for child in ogham_panel.get_child(0).get_children():
 		var flash := create_tween()
-		flash.tween_property(child, "modulate", Color(1.5, 1.5, 1.5, 1.0), 0.15)
+		flash.tween_property(child, "modulate", Color(1.4, 1.4, 1.0, 1.0), 0.15)
 		flash.tween_property(child, "modulate", Color(1.0, 1.0, 1.0, 1.0), 0.3)
 		await flash.finished
 
-	await _wait_for_advance(3.0)
+	skip_hint.visible = true
+	await _wait_for_advance(4.0)
+	skip_hint.visible = false
 
-	# Hide oghams, move to mission
-	var hide := create_tween()
-	hide.tween_property(ogham_container, "modulate:a", 0.0, 0.4)
-	await hide.finished
-	ogham_container.visible = false
+	# Hide oghams
+	var hide_tween := create_tween()
+	hide_tween.tween_property(ogham_panel, "modulate:a", 0.0, 0.4)
+	await hide_tween.finished
+	ogham_panel.visible = false
 
-	_run_mission_briefing()
+	_run_phase_mission()
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
-# PHASE 3: MISSION BRIEFING
+# PHASE D: MISSION BRIEFING
 # ═══════════════════════════════════════════════════════════════════════════════
 
-func _run_mission_briefing() -> void:
+func _run_phase_mission() -> void:
 	current_phase = Phase.MISSION_BRIEFING
-	merlin_text.add_theme_color_override("default_color", TEXT_COLOR)
+	merlin_text.add_theme_color_override("default_color", PALETTE.ink)
 
-	# Show map behind text
-	map_panel.visible = true
-	var map_tween := create_tween()
-	map_tween.tween_property(map_panel, "modulate:a", 0.5, 1.0)
+	var section: Dictionary = dialogue_data.get("mission_briefing", {})
+	var lines: Array = section.get("lines", [])
 
-	var screen_fx := get_node_or_null("/root/ScreenEffects")
-	var lines: Array = dialogue_data.get("mission_briefing", [])
-	for line in lines:
+	if lines.is_empty():
+		lines = [
+			{"text": "Le monde. Sept terres, sept sanctuaires.", "emotion": "exposition_joviale"},
+			{"text": "Forets, landes, cotes, villages, cercles, marais, collines.", "emotion": "avertissement_amuse"},
+			{"text": "Ton travail? Traverser. Observer. Choisir.", "emotion": "verite_cachee_dans_humour"},
+			{"text": "Tes choix comptent. Le monde regarde. Et moi aussi.", "emotion": "gravite_douce"},
+		]
+
+	for i in range(lines.size()):
+		if scene_finished:
+			return
+		var line: Dictionary = lines[i]
 		var text: String = line.get("text", "")
-		var mood: String = line.get("mood", "sage")
-		var pause: float = line.get("pause_after", 1.0)
+		var emotion: String = line.get("emotion", "sage")
+		text = await _llm_rephrase(text, emotion)
 
-		if screen_fx and screen_fx.has_method("set_merlin_mood"):
-			screen_fx.set_merlin_mood(mood)
-
-		await _show_text(text)
-		skip_hint.visible = true
-		await _wait_for_advance(pause + 2.5)
-		skip_hint.visible = false
-
-	# Now show biome suggestion
-	_run_biome_selection()
-
-
-# ═══════════════════════════════════════════════════════════════════════════════
-# PHASE 4: BIOME SELECTION
-# ═══════════════════════════════════════════════════════════════════════════════
-
-func _run_biome_selection() -> void:
-	current_phase = Phase.BIOME_SELECTION
-
-	# Full map opacity
-	var tween := create_tween()
-	tween.tween_property(map_panel, "modulate:a", 1.0, 0.5)
-
-	# Enable all biome buttons
-	for key in map_biome_buttons:
-		map_biome_buttons[key].disabled = false
-
-	# Highlight suggested biome
-	if map_biome_buttons.has(suggested_biome):
-		var suggested_btn: Button = map_biome_buttons[suggested_biome]
-		var pulse := create_tween()
-		pulse.set_loops()
-		pulse.tween_property(suggested_btn, "modulate", Color(1.3, 1.3, 1.0, 1.0), 0.8).set_trans(Tween.TRANS_SINE)
-		pulse.tween_property(suggested_btn, "modulate", Color(1.0, 1.0, 1.0, 1.0), 0.8).set_trans(Tween.TRANS_SINE)
-
-	# Show Merlin's class-based suggestion
-	var suggestions: Dictionary = dialogue_data.get("biome_suggestions", {})
-	if suggestions.has(player_class):
-		var suggestion: Dictionary = suggestions[player_class]
-		var text: String = suggestion.get("text", "").replace("{name}", chronicle_name)
-		var mood: String = suggestion.get("mood", "sage")
-
+		var mood := _emotion_to_mood(emotion)
 		var screen_fx := get_node_or_null("/root/ScreenEffects")
 		if screen_fx and screen_fx.has_method("set_merlin_mood"):
 			screen_fx.set_merlin_mood(mood)
 
 		await _show_text(text)
+		skip_hint.visible = true
+		await _wait_for_advance(5.5)
+		skip_hint.visible = false
 
-	# Move text to bottom so map is visible
-	merlin_text.position = Vector2(40, 500)
-	merlin_text.size = Vector2(700, 60)
-	skip_hint.text = "Choisis un biome sur la carte"
+		if i < lines.size() - 1:
+			var fade := create_tween()
+			fade.tween_property(merlin_text, "modulate:a", 0.0, 0.3)
+			await fade.finished
+			merlin_text.modulate.a = 1.0
+
+	_run_phase_biome_selection()
+
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# PHASE E: BIOME SELECTION
+# ═══════════════════════════════════════════════════════════════════════════════
+
+func _run_phase_biome_selection() -> void:
+	current_phase = Phase.BIOME_SELECTION
+
+	# Show Merlin's class suggestion
+	var suggestions: Dictionary = dialogue_data.get("class_biome_suggestions", {})
+	var variants: Dictionary = suggestions.get("variants", {})
+	if variants.has(player_class):
+		var suggestion: Dictionary = variants[player_class]
+		var text: String = suggestion.get("text", "")
+		text = await _llm_rephrase(text, "suggestion")
+		await _show_text(text)
+		await get_tree().create_timer(1.5).timeout
+
+	# Show carte text
+	var carte: Dictionary = dialogue_data.get("carte_biomes", {})
+	var carte_line: Dictionary = carte.get("line", {})
+	var carte_text: String = carte_line.get("text", "Par ou veux-tu commencer?")
+	carte_text = await _llm_rephrase(carte_text, "transition_vers_choix")
+
+	var fade := create_tween()
+	fade.tween_property(merlin_text, "modulate:a", 0.0, 0.3)
+	await fade.finished
+	merlin_text.modulate.a = 1.0
+
+	await _show_text(carte_text)
+
+	# Switch to compact layout — hide portrait, shrink card, show biome panel below
+	portrait_container.visible = false
+	_biome_layout = true
+	_layout_ui()
+
+	biome_panel.visible = true
+	var show_tween := create_tween()
+	show_tween.tween_property(biome_panel, "modulate:a", 1.0, 0.6).set_trans(Tween.TRANS_SINE)
+
+	# Enable buttons
+	for key in biome_buttons:
+		biome_buttons[key].disabled = false
+
+	# Highlight suggested biome
+	if biome_buttons.has(suggested_biome):
+		var suggested_btn: Button = biome_buttons[suggested_biome]
+		if _biome_pulse_tween:
+			_biome_pulse_tween.kill()
+		_biome_pulse_tween = create_tween().set_loops()
+		_biome_pulse_tween.tween_property(suggested_btn, "modulate", Color(1.15, 1.10, 1.0, 1.0), 1.0).set_trans(Tween.TRANS_SINE)
+		_biome_pulse_tween.tween_property(suggested_btn, "modulate", Color(1.0, 1.0, 1.0, 1.0), 1.0).set_trans(Tween.TRANS_SINE)
+
+	skip_hint.text = "Choisis un sanctuaire"
 	skip_hint.visible = true
 
 
@@ -498,84 +878,109 @@ func _on_biome_selected(biome_key: String) -> void:
 	selected_biome = biome_key
 	skip_hint.visible = false
 
+	# Kill pulse tween on suggested biome
+	if _biome_pulse_tween:
+		_biome_pulse_tween.kill()
+		_biome_pulse_tween = null
+
 	# Disable all buttons
-	for key in map_biome_buttons:
-		map_biome_buttons[key].disabled = true
+	for key in biome_buttons:
+		biome_buttons[key].disabled = true
 
 	# Show reaction
-	var reactions: Dictionary = dialogue_data.get("biome_reactions", {})
+	var reactions: Dictionary = dialogue_data.get("player_reactions", {})
 	var reaction_text: String
 	if biome_key == suggested_biome:
-		reaction_text = reactions.get("accepted", "Bien.")
+		var acceptance: Dictionary = reactions.get("acceptance", {})
+		reaction_text = acceptance.get("text", "Tu me fais confiance? En route.")
+		reaction_text = await _llm_rephrase(reaction_text, "surprise_touchee")
 	else:
-		reaction_text = reactions.get("rejected", "Interessant.")
+		var rejection: Dictionary = reactions.get("rejection", {})
+		reaction_text = rejection.get("text", "Tu refuses mes conseils. Excellent.")
+		reaction_text = await _llm_rephrase(reaction_text, "amusement_respectueux")
 
 	var screen_fx := get_node_or_null("/root/ScreenEffects")
 	if screen_fx and screen_fx.has_method("set_merlin_mood"):
 		screen_fx.set_merlin_mood("amuse")
 
-	await _show_text(reaction_text)
-	await get_tree().create_timer(1.5).timeout
+	var fade_txt := create_tween()
+	fade_txt.tween_property(merlin_text, "modulate:a", 0.0, 0.3)
+	await fade_txt.finished
+	merlin_text.modulate.a = 1.0
 
-	# Save to GameManager and transition
-	_save_biome_choice()
+	await _show_text(reaction_text)
+	await get_tree().create_timer(2.0).timeout
+
+	_save_and_transition()
+
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# SAVE & TRANSITION
+# ═══════════════════════════════════════════════════════════════════════════════
+
+func _save_and_transition() -> void:
+	var gm := get_node_or_null("/root/GameManager")
+	if gm:
+		var run_data: Dictionary = gm.get("run") if gm.get("run") is Dictionary else {}
+		run_data["current_biome"] = selected_biome
+		run_data["active"] = true
+		gm.set("run", run_data)
+
+		var bestiole_data: Dictionary = gm.get("bestiole") if gm.get("bestiole") is Dictionary else {}
+		bestiole_data["known_oghams"] = ["beith", "luis", "quert"]
+		bestiole_data["equipped_oghams"] = ["beith", "luis", "quert", ""]
+		gm.set("bestiole", bestiole_data)
+
 	_transition_out()
 
-
-func _save_biome_choice() -> void:
-	var gm := get_node_or_null("/root/GameManager")
-	if not gm:
-		return
-	var run_data: Dictionary = gm.get("run") if gm.get("run") is Dictionary else {}
-	run_data["current_biome"] = selected_biome
-	run_data["biome_data"] = biomes_data.get(selected_biome, {})
-	run_data["active"] = true
-	gm.set("run", run_data)
-
-	# Also set bestiole starter oghams
-	var bestiole_data: Dictionary = gm.get("bestiole") if gm.get("bestiole") is Dictionary else {}
-	bestiole_data["known_oghams"] = ["beith", "luis", "quert"]
-	bestiole_data["equipped_oghams"] = ["beith", "luis", "quert", ""]
-	gm.set("bestiole", bestiole_data)
-
-
-func _on_continue_pressed() -> void:
-	if current_phase == Phase.BESTIOLE_INTRO or current_phase == Phase.MISSION_BRIEFING:
-		_advance_requested = true
-
-
-# ═══════════════════════════════════════════════════════════════════════════════
-# TRANSITION OUT
-# ═══════════════════════════════════════════════════════════════════════════════
 
 func _transition_out() -> void:
 	scene_finished = true
 	current_phase = Phase.TRANSITIONING
 
+	var screen_fx := get_node_or_null("/root/ScreenEffects")
+	if screen_fx and screen_fx.has_method("set_merlin_mood"):
+		screen_fx.set_merlin_mood("warm")
+
 	var tween := create_tween()
-	tween.set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_IN_OUT)
-	tween.tween_property(self, "modulate:a", 0.0, 1.0)
-	tween.tween_callback(func():
-		get_tree().change_scene_to_file(NEXT_SCENE)
-	)
+	tween.set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
+	tween.tween_property(card, "modulate:a", 0.0, 0.6)
+	tween.parallel().tween_property(celtic_top, "modulate:a", 0.0, 0.4)
+	tween.parallel().tween_property(celtic_bottom, "modulate:a", 0.0, 0.4)
+	tween.parallel().tween_property(biome_panel, "modulate:a", 0.0, 0.4)
+	tween.parallel().tween_property(mist_layer, "modulate:a", 0.6, 0.8)
+	tween.tween_interval(0.3)
+	tween.tween_callback(func(): get_tree().change_scene_to_file(NEXT_SCENE))
+	await tween.finished
+
+
+func _clean_tags(text: String) -> String:
+	text = text.replace("[long_pause]", "").replace("[pause]", "").replace("[beat]", "")
+	while text.find("  ") != -1:
+		text = text.replace("  ", " ")
+	return text.strip_edges()
+
+
+func _emotion_to_mood(emotion: String) -> String:
+	if "humour" in emotion or "jovial" in emotion or "amuse" in emotion:
+		return "amuse"
+	if "vulnerabilite" in emotion or "soulagement" in emotion or "pensif" in emotion:
+		return "pensif"
+	if "accueil" in emotion or "warm" in emotion or "tendresse" in emotion:
+		return "warm"
+	if "serieux" in emotion or "gravite" in emotion:
+		return "serieux"
+	return "sage"
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
-# TEXT DISPLAY & INPUT
+# TYPEWRITER
 # ═══════════════════════════════════════════════════════════════════════════════
 
 func _show_text(text: String) -> void:
+	text = _clean_tags(text)
 	typing_active = true
 	typing_abort = false
-
-	if voice_ready and voicebox:
-		if voicebox.has_method("stop_speaking"):
-			voicebox.stop_speaking()
-		voicebox.set("text_label", merlin_text)
-		voicebox.play_string(text)
-		await voicebox.finished_phrase
-		typing_active = false
-		return
 
 	merlin_text.text = text
 	merlin_text.visible_characters = 0
@@ -610,27 +1015,24 @@ func _wait_for_advance(max_wait: float) -> void:
 	_advance_requested = false
 
 
-func _consume_advance_input() -> bool:
-	if _advance_requested:
-		_advance_requested = false
-		return true
-	return false
-
+# ═══════════════════════════════════════════════════════════════════════════════
+# INPUT
+# ═══════════════════════════════════════════════════════════════════════════════
 
 func _unhandled_input(event: InputEvent) -> void:
 	if scene_finished:
 		return
 
-	var is_press := false
+	var pressed := false
 	if event is InputEventMouseButton and event.pressed:
-		is_press = true
+		pressed = true
 	elif event is InputEventKey and event.pressed:
-		if event.keycode in [KEY_ENTER, KEY_KP_ENTER, KEY_SPACE]:
-			is_press = true
+		if event.keycode in [KEY_ENTER, KEY_KP_ENTER, KEY_SPACE, KEY_ESCAPE]:
+			pressed = true
 	elif event is InputEventScreenTouch and event.pressed:
-		is_press = true
+		pressed = true
 
-	if is_press:
+	if pressed:
 		if typing_active:
 			_skip_typewriter()
 		elif current_phase != Phase.BIOME_SELECTION:
@@ -638,22 +1040,63 @@ func _unhandled_input(event: InputEvent) -> void:
 		get_viewport().set_input_as_handled()
 
 
+# ═══════════════════════════════════════════════════════════════════════════════
+# AUDIO
+# ═══════════════════════════════════════════════════════════════════════════════
+
+func _setup_audio() -> void:
+	audio_player = AudioStreamPlayer.new()
+	audio_player.bus = "Master"
+	audio_player.volume_db = linear_to_db(BLIP_VOLUME)
+	add_child(audio_player)
+
+
+func _setup_voicebox() -> void:
+	var script_path := "res://addons/acvoicebox/acvoicebox.gd"
+	if ResourceLoader.exists(script_path):
+		var scr = load(script_path)
+		if scr:
+			voicebox = scr.new()
+			if voicebox:
+				voicebox.set("sound_bank", "whisper")
+				voicebox.set("base_pitch", 3.2)
+				voicebox.set("pitch_variation", 0.15)
+				voicebox.set("speed_scale", 0.85)
+				add_child(voicebox)
+				await get_tree().process_frame
+				if voicebox.has_method("is_ready") and voicebox.is_ready():
+					voice_ready = true
+				else:
+					voice_ready = false
+
+
 func _play_blip() -> void:
+	## Soft keyboard click — procedural
 	var sample_rate := 44100.0
-	var num_samples := int(sample_rate * BLIP_DURATION)
+	var duration := 0.014
+	var num_samples := int(sample_rate * duration)
 	var stream := AudioStreamWAV.new()
 	stream.format = AudioStreamWAV.FORMAT_16_BITS
 	stream.mix_rate = int(sample_rate)
 	stream.stereo = false
+
 	var data := PackedByteArray()
 	data.resize(num_samples * 2)
+	var freq := randf_range(260.0, 360.0)
 	for s in range(num_samples):
 		var t := float(s) / sample_rate
-		var envelope := 1.0 - (float(s) / float(num_samples))
-		var value := sin(TAU * BLIP_FREQ * t) * envelope * 0.3
-		var sample := int(clampf(value, -1.0, 1.0) * 32767.0)
-		data[s * 2] = sample & 0xFF
-		data[s * 2 + 1] = (sample >> 8) & 0xFF
+		var envelope := exp(-t * 320.0)
+		var click := sin(TAU * freq * t) * 0.35
+		var noise := randf_range(-1.0, 1.0) * 0.12
+		var value := (click + noise) * envelope * 0.25
+		var sample_val := int(clampf(value, -1.0, 1.0) * 32767.0)
+		data[s * 2] = sample_val & 0xFF
+		data[s * 2 + 1] = (sample_val >> 8) & 0xFF
+
 	stream.data = data
 	audio_player.stream = stream
 	audio_player.play()
+
+
+func _on_resized() -> void:
+	call_deferred("_layout_ui")

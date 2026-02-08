@@ -12,13 +12,12 @@ const SCENES: Array[Dictionary] = [
 	{"label": "SceneEveil", "path": "res://scenes/SceneEveil.tscn"},
 	{"label": "SceneAntreMerlin", "path": "res://scenes/SceneAntreMerlin.tscn"},
 	{"label": "TransitionBiome", "path": "res://scenes/TransitionBiome.tscn"},
+	{"label": "HubAntre", "path": "res://scenes/HubAntre.tscn"},
 	# — Menus —
 	{"label": "MenuPrincipal", "path": "res://scenes/MenuPrincipal.tscn"},
-	{"label": "MenuPrincipalReigns", "path": "res://scenes/MenuPrincipalReigns.tscn"},
 	{"label": "MenuOptions", "path": "res://scenes/MenuOptions.tscn"},
 	{"label": "SelectionSauvegarde", "path": "res://scenes/SelectionSauvegarde.tscn"},
 	# — Gameplay —
-	{"label": "ReignsGame", "path": "res://scenes/ReignsGame.tscn"},
 	{"label": "TriadeGame", "path": "res://scenes/TriadeGame.tscn"},
 	{"label": "GameMain", "path": "res://scenes/GameMain.tscn"},
 	# — Collections —
@@ -26,6 +25,7 @@ const SCENES: Array[Dictionary] = [
 	{"label": "Collection", "path": "res://scenes/Collection.tscn"},
 	# — Test —
 	{"label": "TestLLMSceneUltimate", "path": "res://scenes/TestLLMSceneUltimate.tscn"},
+	{"label": "LLM Benchmark", "path": "res://scenes/TestLLMBenchmark.tscn"},
 ]
 
 # === NODES ===
@@ -37,7 +37,7 @@ var _is_open: bool = false
 # === LIFECYCLE ===
 
 func _ready() -> void:
-	layer = 99  # Below ScreenEffects (100), above everything else
+	layer = 101  # Above ScreenEffects (100), always on top
 	_build_ui()
 
 
@@ -101,10 +101,8 @@ func _build_ui() -> void:
 
 	# Scrollable list
 	var scroll := ScrollContainer.new()
-	scroll.custom_minimum_size = Vector2(200, 0)
-	scroll.size_flags_vertical = Control.SIZE_SHRINK_BEGIN
-	# Limit max height to avoid going off-screen
-	scroll.custom_minimum_size.y = 0
+	scroll.custom_minimum_size = Vector2(200, 300)
+	scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
 
 	_list = VBoxContainer.new()
 	_list.add_theme_constant_override("separation", 1)

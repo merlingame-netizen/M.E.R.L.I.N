@@ -1,4 +1,4 @@
-## ═══════════════════════════════════════════════════════════════════════════════
+﻿## ═══════════════════════════════════════════════════════════════════════════════
 ## Merlin Context Builder — Agregateur de Contexte
 ## ═══════════════════════════════════════════════════════════════════════════════
 ## Construit le contexte complet pour le LLM a partir de tous les registres.
@@ -28,7 +28,7 @@ func setup(
 
 
 func build_full_context(game_state: Dictionary) -> Dictionary:
-	"""Construit le contexte complet pour le LLM."""
+	## Construit le contexte complet pour le LLM.
 	var run = game_state.get("run", {})
 	var bestiole = game_state.get("bestiole", {})
 
@@ -119,7 +119,7 @@ func _calculate_theme_weights() -> Dictionary:
 
 
 func build_llm_prompt_context(full_context: Dictionary) -> String:
-	"""Transforme le contexte en texte pour le prompt LLM."""
+	## Transforme le contexte en texte pour le prompt LLM.
 	var lines := []
 
 	# Jauges critiques (pour TRIADE)
@@ -197,7 +197,7 @@ func build_llm_prompt_context(full_context: Dictionary) -> String:
 
 
 func get_critical_gauges(gauges: Dictionary) -> Array:
-	"""Retourne les jauges critiques (basses ou hautes)."""
+	## Retourne les jauges critiques (basses ou hautes).
 	var critical := []
 	const LOW_THRESHOLD := 15
 	const HIGH_THRESHOLD := 85

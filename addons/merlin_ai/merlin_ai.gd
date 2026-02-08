@@ -29,9 +29,9 @@ var game_state_sync: GameStateSync
 
 var router_llm: Object = null
 var executor_llm: Object = null
-# Paramètres alignés avec Colab (Qwen 3B optimal)
-var router_params := {"temperature": 0.6, "top_p": 0.9, "max_tokens": 128, "top_k": 50, "repetition_penalty": 1.1}
-var executor_params := {"temperature": 0.7, "top_p": 0.9, "max_tokens": 512, "top_k": 50, "repetition_penalty": 1.1}
+# Qwen 2.5 3B Q4_K_M — tuned params
+var router_params := {"temperature": 0.3, "top_p": 0.85, "max_tokens": 32, "top_k": 30, "repetition_penalty": 1.0}
+var executor_params := {"temperature": 0.7, "top_p": 0.9, "max_tokens": 256, "top_k": 40, "repetition_penalty": 1.3}
 
 var prompts: Dictionary = {}
 var is_ready := false
@@ -43,11 +43,11 @@ var _last_log_line := ""
 var router_file_used := ROUTER_FILE
 var executor_file_used := EXECUTOR_FILE
 var response_cache: Dictionary = {}
-const RESPONSE_CACHE_LIMIT := 50
+const RESPONSE_CACHE_LIMIT := 200
 var session_contexts: Dictionary = {}
-const SESSION_HISTORY_LIMIT := 12
+const SESSION_HISTORY_LIMIT := 24
 const STREAM_CHUNK_TOKENS := 32
-const STREAM_MAX_ROUNDS := 6
+const STREAM_MAX_ROUNDS := 4
 var stats := {
 	"fast_route_hits": 0,
 	"fast_route_suggests": 0,
@@ -165,7 +165,7 @@ func _execute_with_context(input_text: String, context: Dictionary, category: St
 	var result = await _run_llm(executor_llm, prompt, executor_params)
 	if result.has("error"):
 		return {"response": "Erreur executeur: " + str(result.error), "action": null}
-	var text = str(result.get("text", "")).strip_edges()
+	var text := clean_response(str(result.get("text", "")))
 	_log("Reponse brute: " + text.substr(0, 100) + "...")
 	return {"response": text, "action": null}
 
@@ -177,10 +177,9 @@ func _run_llm(llm: Object, prompt: String, params: Dictionary) -> Dictionary:
 	var first_token_received = false
 	if llm.has_method("set_sampling_params"):
 		llm.set_sampling_params(float(params.temperature), float(params.top_p), int(params.max_tokens))
-	# Nouveaux paramètres avancés (top_k, repetition_penalty)
 	if llm.has_method("set_advanced_sampling"):
-		var top_k = int(params.get("top_k", 50))
-		var rep_penalty = float(params.get("repetition_penalty", 1.1))
+		var top_k = int(params.get("top_k", 40))
+		var rep_penalty = float(params.get("repetition_penalty", 1.3))
 		llm.set_advanced_sampling(top_k, rep_penalty)
 	var state = {"done": false, "result": {}}
 	llm.generate_async(prompt, func(res):
@@ -190,9 +189,17 @@ func _run_llm(llm: Object, prompt: String, params: Dictionary) -> Dictionary:
 		state.result = res
 		state.done = true
 	)
+	# Adaptive polling: fast start, then back off to save CPU
+	var poll_count := 0
 	while not state.done:
 		llm.poll_result()
-		await get_tree().process_frame
+		poll_count += 1
+		if poll_count < 5:
+			await get_tree().process_frame
+		elif poll_count < 30:
+			await get_tree().create_timer(0.005).timeout
+		else:
+			await get_tree().create_timer(0.016).timeout
 	var total_time = Time.get_ticks_msec() - start_time
 	stats.last_ttft_ms = ttft
 	stats.last_total_ms = total_time
@@ -293,6 +300,8 @@ func generate_with_system(system_prompt: String, user_input: String, params_over
 		cached["source"] = "cache"
 		return cached
 	var result = await _run_llm(executor_llm, prompt, params)
+	if result.has("text"):
+		result["text"] = clean_response(str(result.text))
 	_store_cache(cache_key, result)
 	return result
 
@@ -317,7 +326,7 @@ func generate_with_system_stream(system_prompt: String, user_input: String, para
 				tail = tail.substr(tail.length() - 400, 400)
 			prompt = base_prompt + "\n\nSuite (continue en francais, sans repeter):\n" + tail
 		var result = await _run_llm(executor_llm, prompt, params)
-		var text = str(result.get("text", "")).strip_edges()
+		var text := clean_response(str(result.get("text", "")))
 		if text == "":
 			break
 		collected += text
@@ -329,7 +338,7 @@ func generate_with_system_stream(system_prompt: String, user_input: String, para
 		rounds += 1
 	if on_chunk.is_valid():
 		on_chunk.call("", true)
-	return {"text": collected}
+	return {"text": clean_response(collected)}
 
 ## Génère une réponse rapide avec le Router LLM (3B) - utilisé pour générer des choix de joueur
 func generate_with_router(system_prompt: String, user_input: String, params_override: Dictionary = {}) -> Dictionary:
@@ -342,7 +351,10 @@ func generate_with_router(system_prompt: String, user_input: String, params_over
 	var params = router_params.duplicate(true)
 	for key in params_override.keys():
 		params[key] = params_override[key]
-	return await _run_llm(router_llm, prompt, params)
+	var result = await _run_llm(router_llm, prompt, params)
+	if result.has("text"):
+		result["text"] = clean_response(str(result.text))
+	return result
 
 func set_router_params(temp: float, top_p: float, max_tokens: int) -> void:
 	router_params.temperature = temp
@@ -448,6 +460,27 @@ func _ensure_session_map(session_id: String) -> Dictionary:
 		entry = {"default": []}
 	session_contexts[session_id] = entry
 	return entry
+
+## Strip Qwen ChatML template tokens from raw LLM output
+func clean_response(raw: String) -> String:
+	var text := raw.strip_edges()
+	# Truncate at first template token
+	for tok in ["<|im_end|>", "<|im_start|>", "<|endoftext|>", "<|im_end>", "<|im_start>"]:
+		var idx := text.find(tok)
+		if idx >= 0:
+			text = text.substr(0, idx)
+	# Regex sweep for remaining variants
+	var rx := RegEx.new()
+	rx.compile("<\\|?im_(?:end|start)\\|?>")
+	text = rx.sub(text, "", true)
+	rx.compile("<\\|?endoftext\\|?>")
+	text = rx.sub(text, "", true)
+	# Strip role prefixes
+	for prefix in ["system\n", "user\n", "assistant\n"]:
+		if text.begins_with(prefix):
+			text = text.substr(prefix.length())
+	return text.strip_edges()
+
 
 func _looks_complete(text: String) -> bool:
 	var trimmed = text.strip_edges()

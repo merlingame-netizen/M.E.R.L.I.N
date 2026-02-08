@@ -1,0 +1,565 @@
+{
+  "_meta": {
+    "version": "1.0",
+    "author": "Narrative Writer Agent (Merlin Voice)",
+    "created": "2026-02-08",
+    "language": "en",
+    "description": "Complete dialogues for SceneEveil, SceneAntreMerlin and TransitionBiome — English translation",
+    "notes": [
+      "Merlin speaks in modern English with poetic touches",
+      "No archaisms (thee/thou), no emoji",
+      "Short sentences. Pauses matter.",
+      "95% cheerful/mischievous, 5% underlying melancholy",
+      "[pause] indicates a 1-2 second silence",
+      "[long_pause] indicates a 3-4 second silence",
+      "[beat] indicates a micro-silence (0.5s)"
+    ]
+  },
+
+  "scene_eveil": {
+    "description": "Black screen. Merlin speaks in the dark. The player has just crossed the Membrane. 30-45 seconds. Merlin has been waiting a long time. Emotion -> humor.",
+    "context": "The Traveler arrives for the first time. Merlin is relieved, almost moved. Then he recovers with humor. This is the player's first impression of Merlin.",
+    "lines": [
+      {
+        "id": "eveil_01",
+        "speaker": "MERLIN",
+        "text": "... You're here.",
+        "direction": "A whisper. Like someone who no longer dared to hope. The tone is bare, unmasked.",
+        "timing": {
+          "delay_before_s": 3.0,
+          "display_duration_s": 3.0,
+          "pause_after_s": 2.0
+        },
+        "emotion": "soulagement_profond",
+        "tags": ["eveil", "emotion", "premiere_impression"]
+      },
+      {
+        "id": "eveil_02",
+        "speaker": "MERLIN",
+        "text": "I waited. A long time. So long I forgot whether it was time or something else entirely.",
+        "direction": "More assured, but the voice still carries the weight of solitude. Every word is measured. The 'something else entirely' lingers in the air.",
+        "timing": {
+          "delay_before_s": 0.5,
+          "display_duration_s": 5.0,
+          "pause_after_s": 2.5
+        },
+        "emotion": "vulnerabilite_rare",
+        "tags": ["eveil", "solitude", "temps", "indice_sombre"]
+      },
+      {
+        "id": "eveil_03",
+        "speaker": "MERLIN",
+        "text": "The mist let you through. That's a good sign. Well... [pause] it lets everyone through, to be fair. Even people with absolutely no sense of direction.",
+        "direction": "The tone lifts. You can feel Merlin putting on his mask of cheerfulness. The transition must be perceptible: the 'Well...' is the hinge between emotion and humor.",
+        "timing": {
+          "delay_before_s": 0.5,
+          "display_duration_s": 6.0,
+          "pause_after_s": 1.5
+        },
+        "emotion": "transition_vers_humour",
+        "tags": ["eveil", "membrane", "humour", "masque"]
+      },
+      {
+        "id": "eveil_04",
+        "speaker": "MERLIN",
+        "text": "Right. Welcome to Broceliande. Last forest standing, first stop before the end of the world. [beat] Don't make that face. It's prettier than it looks. When it's daylight.",
+        "direction": "The mask is in place. Merlin the Merry is back. Warm tone, slightly mocking. The 'When it's daylight' is both a comment on the ambient darkness and a subtle clue about the state of the world.",
+        "timing": {
+          "delay_before_s": 0.5,
+          "display_duration_s": 7.0,
+          "pause_after_s": 2.0
+        },
+        "emotion": "accueil_jovial",
+        "tags": ["eveil", "bienvenue", "humour", "broceliande"]
+      }
+    ]
+  },
+
+  "scene_antre_merlin": {
+    "description": "Merlin's den. Light returns gradually. Bestiole appears. Merlin introduces the world, the mission, and suggests a starting biome.",
+
+    "bestiole_apparition": {
+      "description": "Bestiole emerges from the shadows, drawn by the Traveler's Awen. A small luminous creature, hesitant then curious.",
+      "lines": [
+        {
+          "id": "bestiole_01",
+          "speaker": "NARRATION",
+          "text": "Something stirs in the dark. A glow, timid, like an ember unsure whether to die.",
+          "direction": "Narrative text. Not Merlin's voice. A neutral, poetic, descriptive tone. The glow pulses gently.",
+          "timing": {
+            "delay_before_s": 1.0,
+            "display_duration_s": 4.0,
+            "pause_after_s": 1.5
+          },
+          "vfx": "lumiere_faible_pulse",
+          "tags": ["bestiole", "apparition", "narration"]
+        },
+        {
+          "id": "bestiole_02",
+          "speaker": "NARRATION",
+          "text": "The glow draws closer. Two enormous eyes, far too large for such a small body. It looks at you as if it recognizes you.",
+          "direction": "The creature approaches the player. Its eyes are the focal point. The 'as if it recognizes you' echoes the Awen resonance: Bestiole detects the Traveler's Awen.",
+          "timing": {
+            "delay_before_s": 0.5,
+            "display_duration_s": 4.5,
+            "pause_after_s": 1.5
+          },
+          "vfx": "bestiole_yeux_brillent",
+          "tags": ["bestiole", "apparition", "resonance", "narration"]
+        },
+        {
+          "id": "bestiole_03",
+          "speaker": "NARRATION",
+          "text": "A sound. Not quite a purr. Not quite a whisper. Something in between that says: I am here.",
+          "direction": "Bestiole's sound. The player must feel the intimacy of this moment. It's not spectacular — it's gentle.",
+          "timing": {
+            "delay_before_s": 0.5,
+            "display_duration_s": 4.5,
+            "pause_after_s": 2.0
+          },
+          "sfx": "bestiole_trille_doux",
+          "tags": ["bestiole", "apparition", "son", "narration"]
+        }
+      ]
+    },
+
+    "merlin_sur_bestiole": {
+      "description": "Merlin reacts to Bestiole's appearance. Tone between tenderness and protective mockery.",
+      "lines": [
+        {
+          "id": "merlin_bestiole_01",
+          "speaker": "MERLIN",
+          "text": "Ah. Bestiole found you. [beat] She does that. She finds people. Especially those who don't know yet that they're lost.",
+          "direction": "Affectionate tone. A father speaking of his child. The 'especially those who don't know' is both humor and a clue about the Traveler's nature.",
+          "timing": {
+            "delay_before_s": 0.5,
+            "display_duration_s": 5.0,
+            "pause_after_s": 1.5
+          },
+          "emotion": "tendresse_masquee",
+          "tags": ["bestiole", "merlin", "lien", "humour"]
+        },
+        {
+          "id": "merlin_bestiole_02",
+          "speaker": "MERLIN",
+          "text": "Take care of her. More than you take care of me. [pause] That'll be easy, I'm unbearable.",
+          "direction": "The first sentence is sincere — almost too much so. Merlin realizes it and corrects with the joke. But the request is real: Bestiole is what matters most.",
+          "timing": {
+            "delay_before_s": 0.5,
+            "display_duration_s": 4.5,
+            "pause_after_s": 2.0
+          },
+          "emotion": "sincerite_breve",
+          "tags": ["bestiole", "merlin", "protection", "humour_defensif"]
+        }
+      ]
+    },
+
+    "mission_briefing": {
+      "description": "Merlin explains the world and the mission. Serious tone punctuated with humor. The player should understand there is a world to explore and that something is wrong — without knowing exactly what.",
+      "lines": [
+        {
+          "id": "mission_01",
+          "speaker": "MERLIN",
+          "text": "The world. Let's talk about it. Seven lands. Seven sanctuaries. Each one still standing by miracle, by habit, or by sheer Celtic stubbornness.",
+          "direction": "Professorial but light tone. Merlin presents a grave reality with nonchalance. The 'Celtic stubbornness' is a knowing wink.",
+          "timing": {
+            "delay_before_s": 1.0,
+            "display_duration_s": 5.5,
+            "pause_after_s": 1.5
+          },
+          "emotion": "exposition_joviale",
+          "tags": ["mission", "biomes", "monde"]
+        },
+        {
+          "id": "mission_02",
+          "speaker": "MERLIN",
+          "text": "Forests, moors, coasts, villages, stone circles, marshes, hills. [pause] Each has its own folk, its own secrets, and its own reasons not to like you right away.",
+          "direction": "Quick enumeration then slowing down on the pause. The 'not to like you right away' is both practical (reputation mechanics) and funny.",
+          "timing": {
+            "delay_before_s": 0.5,
+            "display_duration_s": 6.0,
+            "pause_after_s": 1.5
+          },
+          "emotion": "avertissement_amuse",
+          "tags": ["mission", "biomes", "factions"]
+        },
+        {
+          "id": "mission_03",
+          "speaker": "MERLIN",
+          "text": "Your job? Walk. Watch. Choose. [beat] Not save the world. That's above your pay grade.",
+          "direction": "The three-word rhythm is deliberate — like a Celtic triad. The pay grade joke breaks the solemnity. But the subtext is real: the player CANNOT save the world.",
+          "timing": {
+            "delay_before_s": 0.5,
+            "display_duration_s": 5.5,
+            "pause_after_s": 1.5
+          },
+          "emotion": "verite_cachee_dans_humour",
+          "tags": ["mission", "role_voyageur", "humour", "indice_sombre"]
+        },
+        {
+          "id": "mission_04",
+          "speaker": "MERLIN",
+          "text": "But your choices matter. Every gesture, every step, every hesitation. [pause] The world is watching. And so am I.",
+          "direction": "Tone turns serious toward the end. The 'The world is watching' is a cosmic truth (observation sustains reality). The 'And so am I' is tender.",
+          "timing": {
+            "delay_before_s": 0.5,
+            "display_duration_s": 5.0,
+            "pause_after_s": 2.5
+          },
+          "emotion": "gravite_douce",
+          "tags": ["mission", "choix", "temoignage", "sincerite"]
+        }
+      ]
+    },
+
+    "carte_biomes": {
+      "description": "Merlin shows the map of the 7 biomes. Transition toward the starting biome choice.",
+      "line": {
+        "id": "carte_01",
+        "speaker": "MERLIN",
+        "text": "Look. Seven lands, seven lights flickering. [beat] Where do you want to begin? Or rather... where should you begin?",
+        "direction": "The map appears. The 7 biomes glow faintly. The 'flickering' subtly recalls their fragility. The question is rhetorical — Merlin will suggest.",
+        "timing": {
+          "delay_before_s": 1.0,
+          "display_duration_s": 5.5,
+          "pause_after_s": 2.0
+        },
+        "emotion": "transition_vers_choix",
+        "tags": ["carte", "biomes", "choix"]
+      }
+    },
+
+    "class_biome_suggestions": {
+      "description": "Merlin suggests a starting biome based on the player's class. Each suggestion reveals something about both the class AND the biome.",
+      "variants": {
+        "druide": {
+          "id": "suggest_druide",
+          "speaker": "MERLIN",
+          "text": "A druid. [beat] Well then. The Stone Circles await you. The menhirs still hum, but they've forgotten half the songs. Perhaps you remember them.",
+          "direction": "Respectful tone, almost collegial. Merlin speaks to an 'equal'. The 'perhaps you' is a sincere hope, but also a test.",
+          "biome_suggested": "cercles_de_pierres",
+          "timing": {
+            "delay_before_s": 0.5,
+            "display_duration_s": 6.5,
+            "pause_after_s": 2.0
+          },
+          "tags": ["classe", "druide", "cercles", "suggestion"]
+        },
+        "guerrier": {
+          "id": "suggest_guerrier",
+          "speaker": "MERLIN",
+          "text": "A warrior. [beat] Solid. The Celtic Villages need strong arms. The walls still hold, the gates less so. And there are things in the mist that don't like gates.",
+          "direction": "Direct tone, almost martial. Merlin adapts his register. The 'things in the mist' is deliberately vague and slightly unsettling.",
+          "biome_suggested": "villages_celtes",
+          "timing": {
+            "delay_before_s": 0.5,
+            "display_duration_s": 6.5,
+            "pause_after_s": 2.0
+          },
+          "tags": ["classe", "guerrier", "villages", "suggestion"]
+        },
+        "barde": {
+          "id": "suggest_barde",
+          "speaker": "MERLIN",
+          "text": "A bard! [beat] Wonderful. The Wild Shores are crying out for stories. The sea is retreating, the sailors are forgetting, and no one sings at the harbor anymore. You could change that. Or at least try.",
+          "direction": "Enthusiastic, sincere tone. Merlin loves bards. The 'sea is retreating' is a double meaning (mechanical + cosmic). The 'Or at least try' is quintessential Merlin.",
+          "biome_suggested": "cotes_sauvages",
+          "timing": {
+            "delay_before_s": 0.5,
+            "display_duration_s": 7.0,
+            "pause_after_s": 2.0
+          },
+          "tags": ["classe", "barde", "cotes", "suggestion"]
+        },
+        "eclaireur": {
+          "id": "suggest_eclaireur",
+          "speaker": "MERLIN",
+          "text": "A scout. [beat] Eyes that search, feet that won't wait. The Forest of Broceliande was made for you. Paths that shift, shadows that listen, and secrets everywhere. You'll love it. Or hate it. It's often the same thing.",
+          "direction": "Mischievous tone. Merlin is amused by the choice. The Forest is his territory, he knows it intimately. The final comment is self-referential.",
+          "biome_suggested": "foret_broceliande",
+          "timing": {
+            "delay_before_s": 0.5,
+            "display_duration_s": 7.5,
+            "pause_after_s": 2.0
+          },
+          "tags": ["classe", "eclaireur", "foret", "suggestion"]
+        }
+      }
+    },
+
+    "player_reactions": {
+      "description": "Merlin's reactions when the player accepts or rejects the biome suggestion.",
+      "acceptance": {
+        "id": "react_accept",
+        "speaker": "MERLIN",
+        "text": "You trust me? [beat] First Traveler in a long while. [pause] Come on then. The road won't walk itself.",
+        "direction": "Genuine surprise at 'You trust me?', followed by a moment of vulnerability ('in a long while'). Then back to energy with the joke.",
+        "timing": {
+          "delay_before_s": 0.5,
+          "display_duration_s": 5.5,
+          "pause_after_s": 1.5
+        },
+        "emotion": "surprise_touchee",
+        "tags": ["reaction", "acceptation", "confiance"]
+      },
+      "rejection": {
+        "id": "react_reject",
+        "speaker": "MERLIN",
+        "text": "You ignore my advice. [beat] Excellent. The best Travelers are the ones who listen to no one. [pause] The worst ones too, mind you.",
+        "direction": "No offense taken — Merlin is amused. The double-edged final remark is a gentle warning. The player picks their own biome.",
+        "timing": {
+          "delay_before_s": 0.5,
+          "display_duration_s": 5.5,
+          "pause_after_s": 1.5
+        },
+        "emotion": "amusement_respectueux",
+        "tags": ["reaction", "refus", "independance"]
+      }
+    }
+  },
+
+  "transition_biome": {
+    "description": "Short travel texts between biomes. The Traveler crosses the mist. Atmospheric descriptions followed by a Merlin comment.",
+
+    "biomes": {
+      "foret_broceliande": {
+        "nom": "The Forest of Broceliande",
+        "sous_titre": "The Heart That Still Beats",
+        "arrival_text": {
+          "id": "arrive_foret",
+          "speaker": "NARRATION",
+          "text": "The mist tears apart like a curtain of silk. Trees. Trees everywhere. So old their roots seem to have grown before the ground did. Light falls in golden columns through the canopy, and something in the air whispers — not a word, not a sound. A memory.",
+          "direction": "Reverential tone. The forest is overwhelmingly beautiful and ancient. The 'memory' echoes the nature of the world of DRU.",
+          "timing": {
+            "display_duration_s": 7.0,
+            "pause_after_s": 2.0
+          },
+          "ambiance": {
+            "palette": "vert_profond_brume_doree",
+            "son": "bruissement_feuilles_murmure_seve",
+            "lumiere": "filtree_canopee"
+          },
+          "tags": ["transition", "foret", "arrivee", "atmosphere"]
+        },
+        "merlin_comment": {
+          "id": "merlin_foret",
+          "speaker": "MERLIN",
+          "text": "Home. Well... home as much as a place can belong to someone who's never owned anything. [pause] The oaks haven't put out new growth in ages. But they hold on. They're Breton.",
+          "direction": "Intimate tone. Merlin loves this forest. The 'never owned anything' is a clue about his nature. The Breton joke masks the sadness of the barren oaks.",
+          "timing": {
+            "delay_before_s": 0.5,
+            "display_duration_s": 6.5,
+            "pause_after_s": 1.5
+          },
+          "emotion": "nostalgie_voilee",
+          "tags": ["transition", "foret", "merlin", "melancolie"]
+        }
+      },
+
+      "landes_bruyere": {
+        "nom": "The Heather Moors",
+        "sous_titre": "The Breath Running Short",
+        "arrival_text": {
+          "id": "arrive_landes",
+          "speaker": "NARRATION",
+          "text": "The world cracks open all at once. No more trees, no more walls. Nothing but sky and heather, purple and grey, rippling to an oddly close horizon. The wind never stops here. As if it were searching for something it can no longer find.",
+          "direction": "Tone of vastness. The contrast with the forest must be striking. The 'oddly close' horizon is a sign of the Exhaustion.",
+          "timing": {
+            "display_duration_s": 7.0,
+            "pause_after_s": 2.0
+          },
+          "ambiance": {
+            "palette": "mauve_brun_gris_vert",
+            "son": "vent_perpetuel_absence_oiseaux",
+            "lumiere": "rasante_nuages_bas"
+          },
+          "tags": ["transition", "landes", "arrivee", "atmosphere"]
+        },
+        "merlin_comment": {
+          "id": "merlin_landes",
+          "speaker": "MERLIN",
+          "text": "The moors. The wind used to speak here, you know. Full speeches, they say. [beat] Now it mumbles. A bit like me, on bad days.",
+          "direction": "Contemplative tone. The comparison with himself is a joke that doesn't quite make you laugh.",
+          "timing": {
+            "delay_before_s": 0.5,
+            "display_duration_s": 5.5,
+            "pause_after_s": 1.5
+          },
+          "emotion": "humour_melancolique",
+          "tags": ["transition", "landes", "merlin", "vent"]
+        }
+      },
+
+      "cotes_sauvages": {
+        "nom": "The Wild Shores",
+        "sous_titre": "The Retreating Sea",
+        "arrival_text": {
+          "id": "arrive_cotes",
+          "speaker": "NARRATION",
+          "text": "The salt, first. Then the sound — waves crashing against black granite, then retreating in a whisper over the pebbles. The sea is vast and grey. The horizon wavers between water and sky, as if it has forgotten the border.",
+          "direction": "Sensory tone. You taste the salt, you hear the waves. The blurred horizon is a sign of the Membrane thinning on the sea side.",
+          "timing": {
+            "display_duration_s": 7.0,
+            "pause_after_s": 2.0
+          },
+          "ambiance": {
+            "palette": "bleu_gris_ecume_granite_noir",
+            "son": "vagues_vent_mouettes_rares",
+            "lumiere": "diffuse_brumeuse"
+          },
+          "tags": ["transition", "cotes", "arrivee", "atmosphere"]
+        },
+        "merlin_comment": {
+          "id": "merlin_cotes",
+          "speaker": "MERLIN",
+          "text": "The sea. It retreats a little more each year. [pause] A fisherman once told me it would come back. [beat] That was three centuries ago. I don't know if he's still counting.",
+          "direction": "Dry, almost dark humor. The 'three centuries' is a clue about Merlin's age. The 'still counting' is deliberately ambiguous (is he dead? has he lost hope?).",
+          "timing": {
+            "delay_before_s": 0.5,
+            "display_duration_s": 6.0,
+            "pause_after_s": 1.5
+          },
+          "emotion": "humour_noir_doux",
+          "tags": ["transition", "cotes", "merlin", "mer", "indice_age"]
+        }
+      },
+
+      "villages_celtes": {
+        "nom": "The Celtic Villages",
+        "sous_titre": "The Last Warmth",
+        "arrival_text": {
+          "id": "arrive_villages",
+          "speaker": "NARRATION",
+          "text": "Slate roofs behind the mist. Smoke rising, straight and slow, from stone chimneys. The sound of a hammer on an anvil, far off. And voices — muffled, as if afraid of disturbing the silence.",
+          "direction": "Domestic, intimate tone. Human warmth contrasts with fragility. The 'muffled' voices suggest the Exhaustion without naming it.",
+          "timing": {
+            "display_duration_s": 7.0,
+            "pause_after_s": 2.0
+          },
+          "ambiance": {
+            "palette": "ocre_ardoise_rouille_vert_mousse",
+            "son": "enclume_voix_feu_crackling",
+            "lumiere": "crepusculaire_meme_en_plein_jour"
+          },
+          "tags": ["transition", "villages", "arrivee", "atmosphere"]
+        },
+        "merlin_comment": {
+          "id": "merlin_villages",
+          "speaker": "MERLIN",
+          "text": "Humans. They cook, they sing, they argue over fences. [pause] It's beautiful. They have no idea how beautiful it is.",
+          "direction": "Deeply moved tone, masked by the prosaic enumeration. The 'They have no idea' is Merlin at his most sincere — he's watching mortals live without knowing everything will end. One of the rare moments where the melancholy is unhidden.",
+          "timing": {
+            "delay_before_s": 0.5,
+            "display_duration_s": 6.0,
+            "pause_after_s": 2.0
+          },
+          "emotion": "tendresse_non_masquee",
+          "tags": ["transition", "villages", "merlin", "humains", "melancolie"]
+        }
+      },
+
+      "cercles_pierres": {
+        "nom": "The Stone Circles",
+        "sous_titre": "Time Hesitating",
+        "arrival_text": {
+          "id": "arrive_cercles",
+          "speaker": "NARRATION",
+          "text": "The stones emerge from the mist, one by one, like sleeping sentinels. Hundreds. Thousands. They stand there, grey and pink, covered in lichen, in a silence so deep you can hear it hum.",
+          "direction": "Sacred tone. The silence is not empty — it is full. The stones are almost alive. The 'hear it hum' is the sub-audible echo of the menhirs.",
+          "timing": {
+            "display_duration_s": 7.0,
+            "pause_after_s": 2.5
+          },
+          "ambiance": {
+            "palette": "granite_gris_rose_ciel_immense",
+            "son": "silence_profond_bourdonnement_grave",
+            "lumiere": "horizontale_ombres_lentes"
+          },
+          "tags": ["transition", "cercles", "arrivee", "atmosphere"]
+        },
+        "merlin_comment": {
+          "id": "merlin_cercles",
+          "speaker": "MERLIN",
+          "text": "Three thousand menhirs. They once played a chord together. The most beautiful music no one has ever heard. [long_pause] Now they hum. It's something, at least.",
+          "direction": "Reverential tone, almost religious for Merlin. The 'most beautiful music' is the primordial chord of the Awen. The 'It's something, at least' is courage disguised as resignation.",
+          "timing": {
+            "delay_before_s": 0.5,
+            "display_duration_s": 6.5,
+            "pause_after_s": 2.0
+          },
+          "emotion": "gravite_resignee",
+          "tags": ["transition", "cercles", "merlin", "oghams", "musique"]
+        }
+      },
+
+      "marais_korrigans": {
+        "nom": "The Korrigan Marshes",
+        "sous_titre": "What Waits Below",
+        "arrival_text": {
+          "id": "arrive_marais",
+          "speaker": "NARRATION",
+          "text": "The air changes. Heavier, thicker, laden with the smell of peat and dark water. Dead trees twist their branches like hands grasping for the sky. Lights dance close to the ground — will-o'-wisps, or perhaps something else.",
+          "direction": "Unsettling but fascinating tone. The marsh is the most dangerous biome. The will-o'-wisps are ambiguous. The 'or perhaps something else' lets the player's imagination do the work.",
+          "timing": {
+            "display_duration_s": 7.0,
+            "pause_after_s": 2.0
+          },
+          "ambiance": {
+            "palette": "noir_vert_sombre_iridescent",
+            "son": "bulles_glissement_bourdonnement_insectes",
+            "lumiere": "crepuscule_perpetuel_feux_follets"
+          },
+          "tags": ["transition", "marais", "arrivee", "atmosphere"]
+        },
+        "merlin_comment": {
+          "id": "merlin_marais",
+          "speaker": "MERLIN",
+          "text": "The marshes. Right. [beat] A few tips: don't follow the lights, don't talk to the puddles, and if something offers you a deal, read the fine print. [pause] The korrigans are honest. In their own way.",
+          "direction": "Falsely casual tone. This is a real warning wrapped in humor. The rapid rhythm of the tips mimics nervousness. The 'In their own way' is perfectly ambiguous.",
+          "timing": {
+            "delay_before_s": 0.5,
+            "display_duration_s": 7.0,
+            "pause_after_s": 1.5
+          },
+          "emotion": "avertissement_humoristique",
+          "tags": ["transition", "marais", "merlin", "korrigans", "danger"]
+        }
+      },
+
+      "collines_dolmens": {
+        "nom": "The Dolmen Hills",
+        "sous_titre": "The Memory Crumbling Away",
+        "arrival_text": {
+          "id": "arrive_collines",
+          "speaker": "NARRATION",
+          "text": "The ground rises gently. The grass is short, pale, almost silver. Dolmens jut from the hills like tables forgotten by giants. At the summit, an immense black yew stands against the sky. The shadow it casts is too long. As if the sun dares not come closer.",
+          "direction": "Ancient, solemn tone. The hills are the oldest biome. The millennial yew is Irial the Immortal (though the player doesn't know this). The 'too long' shadow is a sign of time breaking down.",
+          "timing": {
+            "display_duration_s": 7.5,
+            "pause_after_s": 2.5
+          },
+          "ambiance": {
+            "palette": "vert_pale_herbe_rase_ciel_immense",
+            "son": "vent_herbe_echos_trop_longs",
+            "lumiere": "horizontale_niveau_des_yeux"
+          },
+          "tags": ["transition", "collines", "arrivee", "atmosphere"]
+        },
+        "merlin_comment": {
+          "id": "merlin_collines",
+          "speaker": "MERLIN",
+          "text": "The hills are older than me. [beat] And trust me, that's an achievement. [long_pause] They remember everything. The trouble is, 'everything'... is shrinking.",
+          "direction": "The age joke is classic. But the long pause before the last sentence changes everything. The 'shrinking' is almost whispered. One of the rare moments where Merlin lets slip that something is being lost beyond recovery.",
+          "timing": {
+            "delay_before_s": 0.5,
+            "display_duration_s": 6.5,
+            "pause_after_s": 2.0
+          },
+          "emotion": "melancolie_percante",
+          "tags": ["transition", "collines", "merlin", "memoire", "perte"]
+        }
+      }
+    }
+  }
+}

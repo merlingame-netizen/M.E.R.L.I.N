@@ -4,7 +4,7 @@ signal intro_completed(result: Dictionary)
 
 const DATA_PATH := "res://data/intro_dialogue.json"
 const NEXT_SCENE := "res://scenes/SceneEveil.tscn"
-const MENU_SCENE := "res://scenes/MenuPrincipalReigns.tscn"
+const MENU_SCENE := "res://scenes/MenuPrincipal.tscn"
 const PORTRAIT_DEFAULT := "res://Assets/Sprite/Merlin.png"
 const PORTRAIT_PRINTEMPS := "res://Assets/Sprite/Merlin_PRINTEMPS.png"
 const PORTRAIT_ETE := "res://Assets/Sprite/Merlin_ETE.png"
@@ -242,7 +242,7 @@ func _setup_class_overlay() -> void:
 
 	var dim := ColorRect.new()
 	dim.set_anchors_preset(Control.PRESET_FULL_RECT)
-	dim.color = Color(0, 0, 0, 0.7)
+	dim.color = Color(0.965, 0.945, 0.905, 0.85)
 	class_overlay.add_child(dim)
 
 	var panel := Panel.new()
@@ -256,10 +256,13 @@ func _setup_class_overlay() -> void:
 	panel.offset_top = -200
 	panel.offset_bottom = 200
 	var panel_style := StyleBoxFlat.new()
-	panel_style.bg_color = Color(0.07, 0.08, 0.1, 0.98)
-	panel_style.border_color = Color(0.74, 0.66, 0.45)
-	panel_style.set_border_width_all(3)
-	panel_style.set_corner_radius_all(16)
+	panel_style.bg_color = Color(0.955, 0.930, 0.890)
+	panel_style.border_color = Color(0.50, 0.44, 0.38, 0.35)
+	panel_style.set_border_width_all(1)
+	panel_style.set_corner_radius_all(6)
+	panel_style.shadow_color = Color(0.25, 0.20, 0.16, 0.18)
+	panel_style.shadow_size = 20
+	panel_style.shadow_offset = Vector2(0, 6)
 	panel.add_theme_stylebox_override("panel", panel_style)
 	class_overlay.add_child(panel)
 
@@ -276,14 +279,14 @@ func _setup_class_overlay() -> void:
 	title.text = "Ta voie se revele"
 	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	title.add_theme_font_size_override("font_size", 24)
-	title.add_theme_color_override("font_color", Color(0.92, 0.88, 0.72))
+	title.add_theme_color_override("font_color", Color(0.58, 0.44, 0.26))
 	vbox.add_child(title)
 
 	class_label = Label.new()
 	class_label.name = "ClassLabel"
 	class_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	class_label.add_theme_font_size_override("font_size", 36)
-	class_label.add_theme_color_override("font_color", Color(0.98, 0.88, 0.45))
+	class_label.add_theme_color_override("font_color", Color(0.22, 0.18, 0.14))
 	vbox.add_child(class_label)
 
 	class_desc_label = Label.new()
@@ -291,7 +294,7 @@ func _setup_class_overlay() -> void:
 	class_desc_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	class_desc_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	class_desc_label.add_theme_font_size_override("font_size", 18)
-	class_desc_label.add_theme_color_override("font_color", Color(0.9, 0.88, 0.82))
+	class_desc_label.add_theme_color_override("font_color", Color(0.38, 0.32, 0.26))
 	vbox.add_child(class_desc_label)
 
 	var spacer := Control.new()
@@ -305,71 +308,107 @@ func _setup_class_overlay() -> void:
 	class_continue_button.pressed.connect(_on_class_continue)
 	vbox.add_child(class_continue_button)
 
-	var body_font = _load_font("res://resources/fonts/celtic_bit/celtic-bit-thin.ttf")
-	var title_font = _load_font("res://resources/fonts/morris/MorrisRomanBlackAlt.ttf")
-	if title_font:
-		title.add_theme_font_override("font", title_font)
-		class_label.add_theme_font_override("font", title_font)
-	if body_font:
-		class_desc_label.add_theme_font_override("font", body_font)
-		class_continue_button.add_theme_font_override("font", body_font)
+	var cls_body_font = _load_font("res://resources/fonts/morris/MorrisRomanBlackAlt.ttf")
+	if cls_body_font == null:
+		cls_body_font = _load_font("res://resources/fonts/morris/MorrisRomanBlackAlt.otf")
+	var cls_title_font = _load_font("res://resources/fonts/morris/MorrisRomanBlack.ttf")
+	if cls_title_font == null:
+		cls_title_font = _load_font("res://resources/fonts/morris/MorrisRomanBlack.otf")
+	if cls_title_font:
+		title.add_theme_font_override("font", cls_title_font)
+		class_label.add_theme_font_override("font", cls_title_font)
+	if cls_body_font:
+		class_desc_label.add_theme_font_override("font", cls_body_font)
+		class_continue_button.add_theme_font_override("font", cls_body_font)
 
 	var btn_normal := StyleBoxFlat.new()
-	btn_normal.bg_color = Color(0.12, 0.14, 0.18, 1)
-	btn_normal.border_color = Color(0.6, 0.52, 0.34)
-	btn_normal.set_border_width_all(2)
-	btn_normal.set_corner_radius_all(10)
+	btn_normal.bg_color = Color(0.965, 0.945, 0.905)
+	btn_normal.border_color = Color(0.50, 0.44, 0.38, 0.35)
+	btn_normal.set_border_width_all(1)
+	btn_normal.set_corner_radius_all(3)
 	var btn_hover := btn_normal.duplicate()
-	btn_hover.bg_color = Color(0.16, 0.18, 0.24, 1)
+	btn_hover.bg_color = Color(0.935, 0.905, 0.855)
+	btn_hover.border_color = Color(0.58, 0.44, 0.26)
 	class_continue_button.add_theme_stylebox_override("normal", btn_normal)
 	class_continue_button.add_theme_stylebox_override("hover", btn_hover)
-	class_continue_button.add_theme_color_override("font_color", Color(0.9, 0.86, 0.76))
+	class_continue_button.add_theme_color_override("font_color", Color(0.22, 0.18, 0.14))
 
 
 func _apply_theme() -> void:
-	var body_font = _load_font("res://resources/fonts/celtic_bit/celtic-bit-thin.ttf")
-	var title_font = _load_font("res://resources/fonts/morris/MorrisRomanBlackAlt.ttf")
+	# — Parchemin Mystique Breton Palette —
+	var paper := Color(0.965, 0.945, 0.905)
+	var paper_warm := Color(0.955, 0.930, 0.890)
+	var paper_dark := Color(0.935, 0.905, 0.855)
+	var ink := Color(0.22, 0.18, 0.14)
+	var ink_soft := Color(0.38, 0.32, 0.26)
+	var ink_faded := Color(0.50, 0.44, 0.38, 0.35)
+	var accent := Color(0.58, 0.44, 0.26)
+	var accent_soft := Color(0.65, 0.52, 0.34)
+	var shadow := Color(0.25, 0.20, 0.16, 0.18)
+
+	var body_font = _load_font("res://resources/fonts/morris/MorrisRomanBlackAlt.ttf")
+	if body_font == null:
+		body_font = _load_font("res://resources/fonts/morris/MorrisRomanBlackAlt.otf")
+	if body_font == null:
+		body_font = _load_font("res://resources/fonts/celtic_bit/celtic-bit-thin.ttf")
+	var title_font = _load_font("res://resources/fonts/morris/MorrisRomanBlack.ttf")
+	if title_font == null:
+		title_font = _load_font("res://resources/fonts/morris/MorrisRomanBlack.otf")
+	if title_font == null:
+		title_font = _load_font("res://resources/fonts/morris/MorrisRomanBlackAlt.ttf")
 
 	var card_style := StyleBoxFlat.new()
-	card_style.bg_color = Color(0.07, 0.08, 0.1, 0.96)
-	card_style.border_color = Color(0.74, 0.66, 0.45)
-	card_style.set_border_width_all(2)
-	card_style.set_corner_radius_all(18)
+	card_style.bg_color = paper_warm
+	card_style.border_color = ink_faded
+	card_style.set_border_width_all(1)
+	card_style.set_corner_radius_all(4)
+	card_style.shadow_color = shadow
+	card_style.shadow_size = 16
+	card_style.shadow_offset = Vector2(0, 4)
 	card_panel.add_theme_stylebox_override("panel", card_style)
 
 	var portrait_style := StyleBoxFlat.new()
-	portrait_style.bg_color = Color(0.06, 0.07, 0.1, 1)
-	portrait_style.border_color = Color(0.5, 0.45, 0.32)
-	portrait_style.set_border_width_all(2)
-	portrait_style.set_corner_radius_all(12)
+	portrait_style.bg_color = paper_dark
+	portrait_style.border_color = ink_faded
+	portrait_style.set_border_width_all(1)
+	portrait_style.set_corner_radius_all(4)
 	$CardRoot/CardPanel/CardMargin/CardVBox/PortraitFrame.add_theme_stylebox_override("panel", portrait_style)
 
 	var sub_style := StyleBoxFlat.new()
-	sub_style.bg_color = Color(0.06, 0.07, 0.1, 0.95)
-	sub_style.border_color = Color(0.62, 0.55, 0.38)
-	sub_style.set_border_width_all(2)
-	sub_style.set_corner_radius_all(12)
+	sub_style.bg_color = paper_dark
+	sub_style.border_color = accent_soft
+	sub_style.set_border_width_all(1)
+	sub_style.set_corner_radius_all(6)
+	sub_style.content_margin_left = 8
+	sub_style.content_margin_right = 8
+	sub_style.content_margin_top = 6
+	sub_style.content_margin_bottom = 6
 	sub_panel.add_theme_stylebox_override("panel", sub_style)
 
 	var name_style := StyleBoxFlat.new()
-	name_style.bg_color = Color(0.07, 0.08, 0.1, 0.98)
-	name_style.border_color = Color(0.74, 0.66, 0.45)
-	name_style.set_border_width_all(2)
-	name_style.set_corner_radius_all(16)
+	name_style.bg_color = paper_warm
+	name_style.border_color = ink_faded
+	name_style.set_border_width_all(1)
+	name_style.set_corner_radius_all(6)
+	name_style.shadow_color = shadow
+	name_style.shadow_size = 12
 	$NameOverlay/NamePanel.add_theme_stylebox_override("panel", name_style)
 
 	var btn_normal := StyleBoxFlat.new()
-	btn_normal.bg_color = Color(0.09, 0.1, 0.13, 1)
-	btn_normal.border_color = Color(0.6, 0.52, 0.34)
-	btn_normal.set_border_width_all(2)
-	btn_normal.set_corner_radius_all(10)
+	btn_normal.bg_color = paper
+	btn_normal.border_color = ink_faded
+	btn_normal.set_border_width_all(1)
+	btn_normal.set_corner_radius_all(3)
+	btn_normal.content_margin_left = 10
+	btn_normal.content_margin_right = 10
 
 	var btn_hover := btn_normal.duplicate()
-	btn_hover.bg_color = Color(0.13, 0.15, 0.2, 1)
+	btn_hover.bg_color = paper_dark
+	btn_hover.border_color = accent
 
 	var btn_pressed := btn_normal.duplicate()
-	btn_pressed.bg_color = Color(0.18, 0.2, 0.26, 1)
-	btn_pressed.border_color = Color(0.85, 0.74, 0.48)
+	btn_pressed.bg_color = accent_soft.lightened(0.6)
+	btn_pressed.border_color = accent
 
 	for verb in VERBS:
 		var btn: Button = verb_buttons[verb]
@@ -383,34 +422,41 @@ func _apply_theme() -> void:
 	_style_button(name_confirm, btn_normal, btn_hover, btn_pressed, body_font)
 
 	if merlin_text:
-		merlin_text.add_theme_font_override("font", body_font)
-		merlin_text.add_theme_font_size_override("font_size", 18)
-		merlin_text.add_theme_color_override("font_color", Color(0.92, 0.9, 0.84))
+		if body_font:
+			merlin_text.add_theme_font_override("font", body_font)
+		merlin_text.add_theme_font_size_override("font_size", 22)
+		merlin_text.add_theme_color_override("font_color", ink)
 
 	if progress_label:
-		progress_label.add_theme_font_override("font", title_font)
+		if title_font:
+			progress_label.add_theme_font_override("font", title_font)
 		progress_label.add_theme_font_size_override("font_size", 16)
-		progress_label.add_theme_color_override("font_color", Color(0.9, 0.86, 0.62))
+		progress_label.add_theme_color_override("font_color", accent)
 
 	var title_label: Label = $NameOverlay/NamePanel/NameVBox/TitleLabel
 	var hint_label: Label = $NameOverlay/NamePanel/NameVBox/HintLabel
 	var error_label: Label = $NameOverlay/NamePanel/NameVBox/NameError
 	if title_label:
-		title_label.add_theme_font_override("font", title_font)
+		if title_font:
+			title_label.add_theme_font_override("font", title_font)
 		title_label.add_theme_font_size_override("font_size", 20)
-		title_label.add_theme_color_override("font_color", Color(0.92, 0.88, 0.72))
+		title_label.add_theme_color_override("font_color", accent)
 	if hint_label:
-		hint_label.add_theme_font_override("font", body_font)
+		if body_font:
+			hint_label.add_theme_font_override("font", body_font)
 		hint_label.add_theme_font_size_override("font_size", 12)
-		hint_label.add_theme_color_override("font_color", Color(0.74, 0.72, 0.66))
+		hint_label.add_theme_color_override("font_color", ink_soft)
 	if error_label:
-		error_label.add_theme_font_override("font", body_font)
+		if body_font:
+			error_label.add_theme_font_override("font", body_font)
 		error_label.add_theme_font_size_override("font_size", 12)
-		error_label.add_theme_color_override("font_color", Color(0.86, 0.52, 0.44))
+		error_label.add_theme_color_override("font_color", Color(0.72, 0.38, 0.30))
 
 	if name_edit:
-		name_edit.add_theme_font_override("font", body_font)
+		if body_font:
+			name_edit.add_theme_font_override("font", body_font)
 		name_edit.add_theme_font_size_override("font_size", 16)
+		name_edit.add_theme_color_override("font_color", ink)
 
 
 func _load_font(path: String) -> Font:
@@ -426,10 +472,11 @@ func _style_button(btn: Button, normal: StyleBoxFlat, hover: StyleBoxFlat, press
 	btn.add_theme_stylebox_override("hover", hover)
 	btn.add_theme_stylebox_override("pressed", pressed)
 	btn.add_theme_stylebox_override("focus", hover)
-	btn.add_theme_color_override("font_color", Color(0.9, 0.86, 0.76))
-	btn.add_theme_color_override("font_hover_color", Color(0.98, 0.92, 0.7))
-	btn.add_theme_color_override("font_pressed_color", Color(0.98, 0.92, 0.7))
-	btn.add_theme_font_override("font", font)
+	btn.add_theme_color_override("font_color", Color(0.22, 0.18, 0.14))
+	btn.add_theme_color_override("font_hover_color", Color(0.58, 0.44, 0.26))
+	btn.add_theme_color_override("font_pressed_color", Color(0.58, 0.44, 0.26))
+	if font:
+		btn.add_theme_font_override("font", font)
 	btn.add_theme_font_size_override("font_size", 16)
 
 
@@ -460,6 +507,10 @@ func _setup_audio() -> void:
 		$Audio.add_child(voicebox)
 		if voicebox.has_method("apply_preset"):
 			voicebox.apply_preset("Merlin")
+		# Override with robotic + soft voice
+		voicebox.set("base_pitch", 2.5)
+		voicebox.set("pitch_variation", 0.06)
+		voicebox.set("speed_scale", 0.70)
 		if voicebox.has_signal("voice_ready"):
 			voicebox.voice_ready.connect(_on_voice_ready)
 		if voicebox.has_method("is_ready"):
@@ -485,10 +536,14 @@ func _play_blip() -> void:
 func _load_dialogue() -> void:
 	node_map.clear()
 	node_order.clear()
-	if not FileAccess.file_exists(DATA_PATH):
+	var locale_mgr = get_node_or_null("/root/LocaleManager")
+	var path: String = DATA_PATH
+	if locale_mgr:
+		path = locale_mgr.get_data_path(DATA_PATH)
+	if not FileAccess.file_exists(path):
 		push_warning("IntroMerlinDialogue: data file missing")
 		return
-	var file := FileAccess.open(DATA_PATH, FileAccess.READ)
+	var file := FileAccess.open(path, FileAccess.READ)
 	if file == null:
 		return
 	var data = JSON.parse_string(file.get_as_text())

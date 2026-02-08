@@ -1,4 +1,4 @@
-## ═══════════════════════════════════════════════════════════════════════════════
+﻿## ═══════════════════════════════════════════════════════════════════════════════
 ## Difficulty Adapter — Adaptation Dynamique de Difficulte
 ## ═══════════════════════════════════════════════════════════════════════════════
 ## Ajuste invisiblement les effets des cartes selon le niveau du joueur.
@@ -58,7 +58,7 @@ func update_from_profile(profile: PlayerProfileRegistry) -> void:
 		player_skill = total / float(count)
 
 	# Adjust for experience
-	var experience := profile.get_experience_tier()
+	var experience: int = profile.get_experience_tier()
 	match experience:
 		profile.ExperienceTier.INITIATE:
 			player_skill = minf(player_skill, 0.4)
@@ -120,7 +120,7 @@ func disable_pity_mode() -> void:
 # ═══════════════════════════════════════════════════════════════════════════════
 
 func scale_effect(base_value: int, effect_type: String, context: Dictionary) -> int:
-	"""Ajuste un effet selon le contexte."""
+	## Ajuste un effet selon le contexte.
 	if base_value == 0:
 		return 0
 
@@ -192,7 +192,7 @@ func _is_in_crisis(context: Dictionary) -> bool:
 # ═══════════════════════════════════════════════════════════════════════════════
 
 func get_card_weight_modifier(card: Dictionary, context: Dictionary) -> float:
-	"""Retourne un modificateur de poids pour la selection de carte."""
+	## Retourne un modificateur de poids pour la selection de carte.
 	var weight := 1.0
 
 	var max_negative := _get_max_negative_effect(card)

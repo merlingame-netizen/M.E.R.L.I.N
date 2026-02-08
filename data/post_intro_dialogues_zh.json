@@ -1,0 +1,198 @@
+{
+	"_comment": "Dialogues for the 3 post-questionnaire scenes: Eveil, Antre, Transition — 简体中文",
+
+	"eveil": {
+		"lines": [
+			{
+				"id": "eveil_01",
+				"text": "啊……你来了。我感应到你有一阵子了。像是一个逐渐变冷的世界中，一丝遥远的温暖。",
+				"mood": "pensif",
+				"pause_after": 2.0
+			},
+			{
+				"id": "eveil_02",
+				"text": "薄膜为你打开了。这种事已经不常发生了。通道越来越稀有，就像其他一切一样。",
+				"mood": "mystique",
+				"pause_after": 1.5
+			},
+			{
+				"id": "eveil_03",
+				"text": "别太激动。你不是第一个。但……你可能是最后一个重要的人。",
+				"mood": "warm",
+				"pause_after": 1.5
+			},
+			{
+				"id": "eveil_04",
+				"text": "来吧，跟我走。我有一个迷雾进不来的地方。嗯……暂时还进不来。",
+				"mood": "amuse",
+				"pause_after": 1.0
+			}
+		]
+	},
+
+	"antre": {
+		"bestiole_intro": [
+			{
+				"id": "bestiole_01",
+				"type": "narration",
+				"text": "阴影中有什么在动。一个微小的发光形体，犹犹豫豫地向你靠近。",
+				"mood": "mystique"
+			},
+			{
+				"id": "bestiole_02",
+				"type": "narration",
+				"text": "它好奇地绕着你的手打转。它的光芒轻柔地脉动着，像一颗微小的心脏。",
+				"mood": "warm"
+			},
+			{
+				"id": "bestiole_03",
+				"type": "merlin",
+				"text": "Bestiole认出你了。这可不常见。通常它会先咬一口。",
+				"mood": "amuse"
+			},
+			{
+				"id": "bestiole_04",
+				"type": "merlin",
+				"text": "它带着三个Oghams。白桦、花楸、苹果。最古老的几个。拿去吧。",
+				"mood": "sage"
+			}
+		],
+		"mission_briefing": [
+			{
+				"id": "mission_01",
+				"text": "看。",
+				"mood": "serieux",
+				"pause_after": 1.5
+			},
+			{
+				"id": "mission_02",
+				"text": "七片土地。七座圣所。每一个都在以自己的方式消亡。守护者们在坚持，但他们越来越疲惫了。",
+				"mood": "serieux",
+				"pause_after": 1.0
+			},
+			{
+				"id": "mission_03",
+				"text": "你将去旅行。观察。选择。你做出的每一个决定都会滋养或削弱平衡。",
+				"mood": "sage",
+				"pause_after": 1.0
+			},
+			{
+				"id": "mission_04",
+				"text": "而我呢，我会在旁边告诉你，你错了。这是我最喜欢的角色。",
+				"mood": "amuse",
+				"pause_after": 0.5
+			}
+		],
+		"biome_suggestions": {
+			"druide": {
+				"text": "森林在召唤你，{name}。Broceliande是一切的心脏。从那里开始吧。",
+				"biome": "broceliande",
+				"mood": "sage"
+			},
+			"guerrier": {
+				"text": "荒原很严酷，{name}。风不会原谅任何事。你就是为此而生的。",
+				"biome": "landes",
+				"mood": "serieux"
+			},
+			"barde": {
+				"text": "人们需要有人倾听，{name}。去村庄吧。他们在等你。",
+				"biome": "villages",
+				"mood": "warm"
+			},
+			"eclaireur": {
+				"text": "地平线在等着你，{name}。海岸是世界的边界。向大海出发吧。",
+				"biome": "cotes",
+				"mood": "mystique"
+			}
+		},
+		"biome_reactions": {
+			"accepted": "好。你有直觉。或者运气。两者都一样管用。",
+			"rejected": "有意思……你谁的话都不听。我们会相处得很好。"
+		}
+	},
+
+	"biomes": {
+		"broceliande": {
+			"name": "Broceliande森林",
+			"subtitle": "仍在跳动的心脏",
+			"gardien": "Maelgwn",
+			"ogham": "Duir",
+			"saison": "Automne",
+			"arrival_text": "橡树古老得还记得第一位德鲁伊。空气中弥漫着苔藓和流逝时光的气息。薄雾在枝间为光线镀上金色。",
+			"merlin_comment": "第一天。第一个错误很快就来。我赌了。",
+			"map_position": [0.65, 0.25],
+			"color": "#306018"
+		},
+		"landes": {
+			"name": "石楠荒原",
+			"subtitle": "渐渐衰竭的呼吸",
+			"gardien": "Talwen",
+			"ogham": "Onn",
+			"saison": "Hiver",
+			"arrival_text": "石楠像陆地上的海洋般起伏。风是恒定的，不猛烈，但永不停歇。地平线似乎比它应有的更近。",
+			"merlin_comment": "风会跟你说话的。嗯，会低语。它已经没有力气呐喊了。",
+			"map_position": [0.75, 0.45],
+			"color": "#685030"
+		},
+		"cotes": {
+			"name": "狂野海岸",
+			"subtitle": "退去的大海",
+			"gardien": "Bran",
+			"ogham": "Nuin",
+			"saison": "Ete",
+			"arrival_text": "黑色花岗岩与白色浪沫相遇。天空和大海在地平线处融为一体。你已经分不清哪里是尽头，哪里是开始。",
+			"merlin_comment": "大海曾经知道很多事。它在慢慢遗忘。就像我们所有人一样。",
+			"map_position": [0.3, 0.65],
+			"color": "#205898"
+		},
+		"villages": {
+			"name": "凯尔特村庄",
+			"subtitle": "最后的温暖",
+			"gardien": "Azenor",
+			"ogham": "Gort",
+			"saison": "Printemps",
+			"arrival_text": "灰色的石头，石板屋顶，壁炉中的火焰。小巷狭窄，爬满常春藤。光线如同黄昏，即使在正午。",
+			"merlin_comment": "他们还在笑，你知道吗。这是最美的部分。也是最悲伤的。",
+			"map_position": [0.45, 0.8],
+			"color": "#a08058"
+		},
+		"cercles": {
+			"name": "石圈",
+			"subtitle": "犹豫不决的时间",
+			"gardien": "Keridwen",
+			"ogham": "Huath",
+			"saison": "Samhain",
+			"arrival_text": "三千块竖石一望无际地延伸。影子相对于太阳移动得太慢了。时间在这里犹豫，仿佛忘记了接下来该做什么。",
+			"merlin_comment": "别在石头旁边待太久。时间会在那里捉弄人。我说的是经验之谈。",
+			"map_position": [0.2, 0.35],
+			"color": "#787870"
+		},
+		"marais": {
+			"name": "科里根沼泽",
+			"subtitle": "在下方等待的东西",
+			"gardien": "Gwydion",
+			"ogham": "Muin",
+			"saison": "Lughnasadh",
+			"arrival_text": "漆黑，墨绿，死水中泛着虹彩。薄雾贴地蔓延。这里的寂静不一样，更沉重，仿佛在倾听着什么。",
+			"merlin_comment": "科里根们就在那里。你看不见它们，但它们把你看得一清二楚。笑一个。",
+			"map_position": [0.35, 0.45],
+			"color": "#403848"
+		},
+		"collines": {
+			"name": "石棚丘陵",
+			"subtitle": "正在碎裂的记忆",
+			"gardien": "Elouan",
+			"ogham": "Ioho",
+			"saison": "Yule",
+			"arrival_text": "圆润的山丘上矗立着石棚，如同石头的王冠。薄雾浓厚，乳白色。每一步都揭示一个不同的世界。",
+			"merlin_comment": "石棚是门。别问我通向哪里。我宁愿不去想。",
+			"map_position": [0.15, 0.2],
+			"color": "#504078"
+		}
+	},
+
+	"transition": {
+		"travel_text": "土地之间的迷雾并非自然形成。它是世界在心跳之间犹豫时呼出的气息。",
+		"travel_text_alt": "你穿过帷幕。空气变了。色彩变了。连寂静都有了不同的质感。"
+	}
+}

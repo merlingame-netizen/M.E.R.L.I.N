@@ -1,4 +1,4 @@
-## ═══════════════════════════════════════════════════════════════════════════════
+﻿## ═══════════════════════════════════════════════════════════════════════════════
 ## Session Registry — Contexte Temps Reel
 ## ═══════════════════════════════════════════════════════════════════════════════
 ## Track le comportement en temps reel du joueur pendant la session.
@@ -107,7 +107,7 @@ func _init() -> void:
 
 
 func start_new_session() -> void:
-	"""Demarre une nouvelle session."""
+	## Demarre une nouvelle session.
 	# Calculate days since last play
 	if history.last_session_date > 0:
 		var now := int(Time.get_unix_time_from_system())
@@ -149,7 +149,7 @@ func start_new_session() -> void:
 	decision_time_trend = 0.0
 
 	# Detect preferred play time
-	var hour := Time.get_datetime_dict_from_system().hour
+	var hour: int = int(Time.get_datetime_dict_from_system().hour)
 	var time_of_day := _get_time_of_day(hour)
 	if time_of_day not in history.preferred_play_times:
 		# Count occurrences
@@ -173,7 +173,7 @@ func _get_time_of_day(hour: int) -> String:
 # ═══════════════════════════════════════════════════════════════════════════════
 
 func record_decision(time_ms: int) -> void:
-	"""Enregistre une decision et son temps."""
+	## Enregistre une decision et son temps.
 	current.cards_this_session += 1
 	current.total_decision_time_ms += time_ms
 
@@ -189,7 +189,7 @@ func record_decision(time_ms: int) -> void:
 		_recent_decision_times.pop_front()
 
 	# Calculate average
-	var n := current.cards_this_session
+	var n: int = int(current.cards_this_session)
 	average_decision_time = current.total_decision_time_ms / float(n) / 1000.0
 
 	# Calculate trend (comparing first half to second half of recent)
@@ -225,17 +225,17 @@ func _calculate_decision_trend() -> void:
 
 
 func _update_engagement() -> void:
-	var old_level := engagement.current_level
+	var old_level: int = int(engagement.current_level)
 
 	# Calculate engagement score
 	var score := 0.5
 
 	# Rushed decisions = low engagement
-	var rush_ratio := current.rushed_decisions / maxf(1.0, current.cards_this_session)
+	var rush_ratio: float = float(current.rushed_decisions) / maxf(1.0, float(current.cards_this_session))
 	score -= rush_ratio * 0.3
 
 	# Contemplated decisions = high engagement
-	var contemplate_ratio := current.contemplated_decisions / maxf(1.0, current.cards_this_session)
+	var contemplate_ratio: float = float(current.contemplated_decisions) / maxf(1.0, float(current.cards_this_session))
 	score += contemplate_ratio * 0.2
 
 	# Skill usage = engagement
@@ -317,7 +317,7 @@ func _detect_frustration() -> void:
 
 	# Frustration = many deaths + rushed decisions in short time
 	if current.deaths_this_session >= FRUSTRATION_THRESHOLD:
-		var recent_rush_ratio := current.rushed_decisions / maxf(1.0, current.cards_this_session)
+		var recent_rush_ratio: float = float(current.rushed_decisions) / maxf(1.0, float(current.cards_this_session))
 		if recent_rush_ratio > 0.4:
 			wellness.frustration_detected = true
 			wellness_alert.emit("frustration", {
@@ -400,7 +400,7 @@ func record_break() -> void:
 # ═══════════════════════════════════════════════════════════════════════════════
 
 func end_session() -> Dictionary:
-	"""Termine la session et retourne un resume."""
+	## Termine la session et retourne un resume.
 	var session_minutes := get_session_length_minutes()
 
 	# Update history
@@ -505,7 +505,7 @@ func get_context_for_llm() -> Dictionary:
 
 
 func get_summary_for_prompt() -> String:
-	"""Resume textuel pour le prompt LLM."""
+	## Resume textuel pour le prompt LLM.
 	var lines := []
 
 	# Session info

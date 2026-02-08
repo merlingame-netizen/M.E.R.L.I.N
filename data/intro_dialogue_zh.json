@@ -1,0 +1,424 @@
+[
+  {
+    "id": "welcome",
+    "merlin": "...\n\n哦？\n\n你已经到了？",
+    "next": "merlin_surprise"
+  },
+
+  {
+    "id": "merlin_surprise",
+    "merlin": "没想到你来得这么快，旅者。\n\n迷雾引你前来，比我预想的要快。",
+    "next": "merlin_intro"
+  },
+
+  {
+    "id": "merlin_intro",
+    "merlin": "我是Merlin。\n\n魔法师。门槛的守护者。迷雾的编织者。\n\n这里是我的巢穴……欢迎你的到来。",
+    "next": "merlin_lair"
+  },
+
+  {
+    "id": "merlin_lair",
+    "merlin": "在这里，时间以不同的方式流淌。\n\n墙壁在呼吸。石头在低语。\n\n而我……我在守望。",
+    "next": "merlin_explain"
+  },
+
+  {
+    "id": "merlin_explain",
+    "merlin": "你想知道自己为什么在这里？\n\n是荒原召唤了你，不是我。\n\n但既然你已经来了……",
+    "next": "mission_intro"
+  },
+
+  {
+    "id": "mission_intro",
+    "merlin": "我需要一个旅者。\n\n一个能在诸界之间行走的人。\n\n一个能重新编织崩散之物的人。",
+    "next": "mission_detail"
+  },
+
+  {
+    "id": "mission_detail",
+    "merlin": "平衡正在动摇，旅者。\n\n四种力量撕扯着帷幕：活力、精神、恩宠、资源。\n\n若有一方崩塌……一切将随之而去。",
+    "next": "mission_ask"
+  },
+
+  {
+    "id": "mission_ask",
+    "merlin": "你的使命？\n\n生存。平衡。抉择。\n\n每张牌都是一步。每个选择，都是一个后果。",
+    "choices": {
+      "FORCE": [
+        {"id": "f_accept", "text": "我准备好了。", "next": "greet", "deltas": {"traits": {"courage": 1}, "verbs": {"FORCE": 1}}, "hooks": ["acts_fast"]},
+        {"id": "f_challenge", "text": "让我看看前方有什么。", "next": "greet", "deltas": {"traits": {"orgueil": 1}, "verbs": {"FORCE": 1}}, "hooks": ["demands_proof"]}
+      ],
+      "LOGIQUE": [
+        {"id": "l_why_me", "text": "为什么是我？", "next": "reply_why_me", "deltas": {"traits": {"curiosite": 1}, "verbs": {"LOGIQUE": 1}}, "hooks": ["asks_questions"]},
+        {"id": "l_rules", "text": "规则是什么？", "next": "reply_rules", "deltas": {"traits": {"controle": 1}, "verbs": {"LOGIQUE": 1}}, "hooks": ["needs_structure"]}
+      ],
+      "FINESSE": [
+        {"id": "fi_trust", "text": "我信任你。", "next": "greet", "deltas": {"traits": {"compassion": 1}, "verbs": {"FINESSE": 1}}, "hooks": ["trusts_nature"]},
+        {"id": "fi_careful", "text": "我会小心前行。", "next": "greet", "deltas": {"traits": {"controle": 1}, "verbs": {"FINESSE": 1}}, "hooks": ["moves_silent"]}
+      ]
+    }
+  },
+
+  {
+    "id": "reply_why_me",
+    "merlin": "为什么是你？\n\n因为你穿越了迷雾。因为你还站着。\n\n很少有人做到。",
+    "next": "greet"
+  },
+
+  {
+    "id": "reply_rules",
+    "merlin": "规则？\n\n很简单。每张牌，两条路。向左或向右。\n\n你的选择会充盈或耗尽仪表。平衡很脆弱。",
+    "next": "greet"
+  },
+
+  {
+    "id": "greet",
+    "merlin": "好。\n\n踏上旅途之前，我得先认识你。\n\n迷雾向你致意，旅者。",
+    "choices": {
+      "FORCE": [
+        {"id": "f_who", "text": "你是谁？", "next": "reply_force", "deltas": {"traits": {"orgueil": 1, "controle": 1}, "verbs": {"FORCE": 1}}, "hooks": ["hates_vague"]},
+        {"id": "f_clear", "text": "驱散迷雾。", "next": "reply_force", "deltas": {"traits": {"controle": 2}, "verbs": {"FORCE": 1}}, "hooks": ["wants_control"]}
+      ],
+      "LOGIQUE": [
+        {"id": "l_where", "text": "我在哪里？", "next": "reply_logique", "deltas": {"traits": {"curiosite": 2}, "verbs": {"LOGIQUE": 1}}, "hooks": ["seeks_explanations"]},
+        {"id": "l_why", "text": "你想从我这里得到什么？", "next": "reply_logique", "deltas": {"traits": {"verite": 1, "curiosite": 1}, "verbs": {"LOGIQUE": 1}}, "hooks": ["tests_intentions"]}
+      ],
+      "FINESSE": [
+        {"id": "fi_peace", "text": "我带着和平而来。", "next": "reply_finesse", "deltas": {"traits": {"compassion": 1}, "verbs": {"FINESSE": 1}}, "hooks": ["avoids_conflict"]},
+        {"id": "fi_pass", "text": "我在寻找一条通路。", "next": "reply_finesse", "deltas": {"traits": {"curiosite": 1}, "verbs": {"FINESSE": 1}}, "hooks": ["seeks_shortcuts"]}
+      ]
+    }
+  },
+
+  {"id": "reply_force", "merlin": "旅者，你在敲门。这很坦诚。", "next": "ask_name"},
+  {"id": "reply_logique", "merlin": "旅者，你想先理解再迈步。石头喜欢这样。", "next": "ask_name"},
+  {"id": "reply_finesse", "merlin": "旅者，你脚步轻盈。荒原更喜欢这样倾听。", "next": "ask_name"},
+
+  {
+    "id": "ask_name",
+    "merlin": "旅者，给你的足迹起个名字吧。我会替你保管。",
+    "ui": "name_input",
+    "next": "confirm_name"
+  },
+  {
+    "id": "confirm_name",
+    "merlin": "好。那个名字写进我的书中。而你，依然是旅者。",
+    "next": "pre_quiz"
+  },
+  {
+    "id": "pre_quiz",
+    "merlin": "旅者，踏上旅途之前，我设下镜子。每个回答都会留下印记。",
+    "choices": {
+      "FORCE": [
+        {"id": "f_go", "text": "出发吧。", "next": "q1", "deltas": {"traits": {"courage": 1}, "verbs": {"FORCE": 1}}, "hooks": ["acts_fast"]}
+      ],
+      "LOGIQUE": [
+        {"id": "l_ready", "text": "我准备好了。", "next": "q1", "deltas": {"traits": {"controle": 1}, "verbs": {"LOGIQUE": 1}}, "hooks": ["prefers_preparation"]}
+      ],
+      "FINESSE": [
+        {"id": "fi_few", "text": "我会少说话。", "next": "q1", "deltas": {"traits": {"controle": 1}, "verbs": {"FINESSE": 1}}, "hooks": ["keeps_secrets"]}
+      ]
+    }
+  },
+
+  {
+    "id": "q1",
+    "merlin": "第一面镜子：一个孩子在迷雾中哭泣。你怎么做？",
+    "choices": {
+      "FORCE": [
+        {"id": "f_carry", "text": "我抱起他。", "next": "q2", "deltas": {"traits": {"compassion": 2, "courage": 1}, "verbs": {"FORCE": 1}}, "hooks": ["protects_weak"]},
+        {"id": "f_chase", "text": "我驱赶暗影。", "next": "q2", "deltas": {"traits": {"courage": 2}, "verbs": {"FORCE": 1}}, "hooks": ["confronts_threats"]}
+      ],
+      "LOGIQUE": [
+        {"id": "l_tracks", "text": "我追踪足迹。", "next": "q2", "deltas": {"traits": {"curiosite": 1, "controle": 1}, "verbs": {"LOGIQUE": 1}}, "hooks": ["tracks_patterns"]},
+        {"id": "l_landmark", "text": "我寻找参照物。", "next": "q2", "deltas": {"traits": {"controle": 2}, "verbs": {"LOGIQUE": 1}}, "hooks": ["needs_structure"]}
+      ],
+      "FINESSE": [
+        {"id": "fi_call", "text": "我轻声呼唤。", "next": "q2", "deltas": {"traits": {"compassion": 1}, "verbs": {"FINESSE": 1}}, "hooks": ["avoids_noise"]},
+        {"id": "fi_sign", "text": "我向他示意。", "next": "q2", "deltas": {"traits": {"controle": 1}, "verbs": {"FINESSE": 1}}, "hooks": ["guides_subtly"]}
+      ]
+    }
+  },
+
+  {
+    "id": "q2",
+    "merlin": "第二面镜子：一块竖石上有一道新鲜的刻痕。你怎么做？",
+    "choices": {
+      "FORCE": [
+        {"id": "f_strike", "text": "我敲击石头。", "next": "q3", "deltas": {"traits": {"orgueil": 1, "courage": 1}, "verbs": {"FORCE": 1}}, "hooks": ["tests_stone"]},
+        {"id": "f_clean", "text": "我擦去痕迹。", "next": "q3", "deltas": {"traits": {"controle": 1}, "verbs": {"FORCE": 1}}, "hooks": ["clears_signs"]}
+      ],
+      "LOGIQUE": [
+        {"id": "l_mark", "text": "我观察刻痕。", "next": "q3", "deltas": {"traits": {"curiosite": 1, "verite": 1}, "verbs": {"LOGIQUE": 1}}, "hooks": ["reads_marks"]},
+        {"id": "l_compare", "text": "我比对痕迹。", "next": "q3", "deltas": {"traits": {"curiosite": 1, "controle": 1}, "verbs": {"LOGIQUE": 1}}, "hooks": ["compares_tracks"]}
+      ],
+      "FINESSE": [
+        {"id": "fi_touch", "text": "我触摸石头。", "next": "q3", "deltas": {"traits": {"compassion": 1}, "verbs": {"FINESSE": 1}}, "hooks": ["soft_touch"]},
+        {"id": "fi_circle", "text": "我绕石而行。", "next": "q3", "deltas": {"traits": {"controle": 1}, "verbs": {"FINESSE": 1}}, "hooks": ["circles_stone"]}
+      ]
+    }
+  },
+
+  {
+    "id": "q3",
+    "merlin": "第三面镜子：一只受伤的野兽在颤抖。你怎么做？",
+    "choices": {
+      "FORCE": [
+        {"id": "f_shelter", "text": "我把它带到安全的地方。", "next": "q4", "deltas": {"traits": {"compassion": 2, "courage": 1}, "verbs": {"FORCE": 1}}, "hooks": ["aids_beast"]},
+        {"id": "f_distance", "text": "我保持距离。", "next": "q4", "deltas": {"traits": {"controle": 1}, "verbs": {"FORCE": 1}}, "hooks": ["keeps_distance"]}
+      ],
+      "LOGIQUE": [
+        {"id": "l_cause", "text": "我寻找原因。", "next": "q4", "deltas": {"traits": {"curiosite": 2, "verite": 1}, "verbs": {"LOGIQUE": 1}}, "hooks": ["seeks_cause"]},
+        {"id": "l_remedy", "text": "我准备药物。", "next": "q4", "deltas": {"traits": {"controle": 1, "compassion": 1}, "verbs": {"LOGIQUE": 1}}, "hooks": ["prepares_remedy"]}
+      ],
+      "FINESSE": [
+        {"id": "fi_soft", "text": "我低声说话。", "next": "q4", "deltas": {"traits": {"compassion": 1}, "verbs": {"FINESSE": 1}}, "hooks": ["calms_softly"]},
+        {"id": "fi_water", "text": "我给它水喝。", "next": "q4", "deltas": {"traits": {"compassion": 1, "controle": 1}, "verbs": {"FINESSE": 1}}, "hooks": ["offers_water"]}
+      ]
+    }
+  },
+
+  {
+    "id": "q4",
+    "season": "PRINTEMPS",
+    "portrait": "res://Assets/Sprite/Merlin_PRINTEMPS.png",
+    "merlin": "春天唤醒了荒原。嫩芽破土而出。一颗种子落在你脚下。你怎么做？",
+    "choices": {
+      "FORCE": [
+        {"id": "f_plant", "text": "我把它按进土里。", "next": "q5", "deltas": {"traits": {"courage": 1, "compassion": 1}, "verbs": {"FORCE": 1}, "classes": {"druide": 2}}, "hooks": ["plants_seed"]},
+        {"id": "f_crush", "text": "我踩碎它。", "next": "q5", "deltas": {"traits": {"controle": 2}, "verbs": {"FORCE": 1}, "classes": {"guerrier": 1}}, "hooks": ["destroys_growth"]}
+      ],
+      "LOGIQUE": [
+        {"id": "l_examine", "text": "我仔细观察种子。", "next": "q5", "deltas": {"traits": {"curiosite": 2}, "verbs": {"LOGIQUE": 1}, "classes": {"eclaireur": 2}}, "hooks": ["studies_nature"]},
+        {"id": "l_keep", "text": "我留着以后再用。", "next": "q5", "deltas": {"traits": {"controle": 1, "curiosite": 1}, "verbs": {"LOGIQUE": 1}, "classes": {"eclaireur": 1}}, "hooks": ["collects_samples"]}
+      ],
+      "FINESSE": [
+        {"id": "fi_give", "text": "我将它交给风。", "next": "q5", "deltas": {"traits": {"compassion": 2}, "verbs": {"FINESSE": 1}, "classes": {"druide": 2}}, "hooks": ["trusts_nature"]},
+        {"id": "fi_sing", "text": "我为它吟唱。", "next": "q5", "deltas": {"traits": {"compassion": 1, "verite": 1}, "verbs": {"FINESSE": 1}, "classes": {"barde": 2}}, "hooks": ["sings_to_life"]}
+      ]
+    }
+  },
+
+  {
+    "id": "q5",
+    "merlin": "第五面镜子：两条小路交叉，一条明亮，一条幽暗。你怎么做？",
+    "choices": {
+      "FORCE": [
+        {"id": "f_dark", "text": "我走暗路。", "next": "q6", "deltas": {"traits": {"courage": 2}, "verbs": {"FORCE": 1}, "classes": {"guerrier": 1}}, "hooks": ["chooses_dark"]},
+        {"id": "f_mark", "text": "我刻下一个记号。", "next": "q6", "deltas": {"traits": {"controle": 1, "verite": 1}, "verbs": {"FORCE": 1}, "classes": {"eclaireur": 1}}, "hooks": ["marks_path"]}
+      ],
+      "LOGIQUE": [
+        {"id": "l_clues", "text": "我寻找线索。", "next": "q6", "deltas": {"traits": {"curiosite": 2}, "verbs": {"LOGIQUE": 1}, "classes": {"eclaireur": 2}}, "hooks": ["seeks_clues"]},
+        {"id": "l_wind", "text": "我测量风向。", "next": "q6", "deltas": {"traits": {"controle": 1, "curiosite": 1}, "verbs": {"LOGIQUE": 1}, "classes": {"druide": 1}}, "hooks": ["reads_wind"]}
+      ],
+      "FINESSE": [
+        {"id": "fi_shadow", "text": "我跟随柔和的阴影。", "next": "q6", "deltas": {"traits": {"curiosite": 1}, "verbs": {"FINESSE": 1}, "classes": {"barde": 1}}, "hooks": ["follows_shadow"]},
+        {"id": "fi_silent", "text": "我无声地前进。", "next": "q6", "deltas": {"traits": {"controle": 1}, "verbs": {"FINESSE": 1}, "classes": {"eclaireur": 1}}, "hooks": ["moves_silent"]}
+      ]
+    }
+  },
+
+  {
+    "id": "q6",
+    "merlin": "第六面镜子：一个陌生人向你索要誓言。你怎么做？",
+    "choices": {
+      "FORCE": [
+        {"id": "f_refuse", "text": "我断然拒绝。", "next": "q7", "deltas": {"traits": {"orgueil": 1, "controle": 1}, "verbs": {"FORCE": 1}, "classes": {"guerrier": 2}}, "hooks": ["refuses_oath"]},
+        {"id": "f_proof", "text": "我要求证据。", "next": "q7", "deltas": {"traits": {"verite": 1, "controle": 1}, "verbs": {"FORCE": 1}, "classes": {"eclaireur": 1}}, "hooks": ["demands_proof"]}
+      ],
+      "LOGIQUE": [
+        {"id": "l_questions", "text": "我提出问题。", "next": "q7", "deltas": {"traits": {"curiosite": 1, "verite": 1}, "verbs": {"LOGIQUE": 1}, "classes": {"eclaireur": 2}}, "hooks": ["asks_questions"]},
+        {"id": "l_trade", "text": "我提议交换。", "next": "q7", "deltas": {"traits": {"controle": 1}, "verbs": {"LOGIQUE": 1}, "classes": {"barde": 1}}, "hooks": ["offers_trade"]}
+      ],
+      "FINESSE": [
+        {"id": "fi_time", "text": "我拖延时间。", "next": "q7", "deltas": {"traits": {"controle": 1}, "verbs": {"FINESSE": 1}, "classes": {"barde": 2}}, "hooks": ["buys_time"]},
+        {"id": "fi_observe", "text": "我微笑着观察。", "next": "q7", "deltas": {"traits": {"curiosite": 1}, "verbs": {"FINESSE": 1}, "classes": {"barde": 1}}, "hooks": ["observes_calm"]}
+      ]
+    }
+  },
+
+  {
+    "id": "q7",
+    "merlin": "第七面镜子：狂风呼啸，暴雨倾盆。你怎么做？",
+    "choices": {
+      "FORCE": [
+        {"id": "f_walk", "text": "我照样前行。", "next": "q8", "deltas": {"traits": {"courage": 2}, "verbs": {"FORCE": 1}, "classes": {"guerrier": 2}}, "hooks": ["pushes_through"]},
+        {"id": "f_shelter", "text": "我寻找庇护。", "next": "q8", "deltas": {"traits": {"controle": 1}, "verbs": {"FORCE": 1}, "classes": {"eclaireur": 1}}, "hooks": ["seeks_shelter"]}
+      ],
+      "LOGIQUE": [
+        {"id": "l_sky", "text": "我观察天空。", "next": "q8", "deltas": {"traits": {"curiosite": 1, "controle": 1}, "verbs": {"LOGIQUE": 1}, "classes": {"druide": 2}}, "hooks": ["reads_sky"]},
+        {"id": "l_wait", "text": "我等待风停。", "next": "q8", "deltas": {"traits": {"controle": 1}, "verbs": {"LOGIQUE": 1}, "classes": {"eclaireur": 1}}, "hooks": ["waits_calm"]}
+      ],
+      "FINESSE": [
+        {"id": "fi_trees", "text": "我钻到树下。", "next": "q8", "deltas": {"traits": {"controle": 1}, "verbs": {"FINESSE": 1}, "classes": {"druide": 1}}, "hooks": ["slips_trees"]},
+        {"id": "fi_tracks", "text": "我掩盖足迹。", "next": "q8", "deltas": {"traits": {"controle": 1}, "verbs": {"FINESSE": 1}, "classes": {"eclaireur": 1}}, "hooks": ["hides_tracks"]}
+      ]
+    }
+  },
+
+  {
+    "id": "q8",
+    "season": "ETE",
+    "portrait": "res://Assets/Sprite/Merlin_ETE.png",
+    "merlin": "盛夏炙烤着荒原。骄阳高悬，空气颤动。一堆篝火余烟未尽。你怎么做？",
+    "choices": {
+      "FORCE": [
+        {"id": "f_stomp", "text": "我扑灭余烬。", "next": "q9", "deltas": {"traits": {"courage": 1, "controle": 1}, "verbs": {"FORCE": 1}, "classes": {"guerrier": 1}}, "hooks": ["smothers_fire"]},
+        {"id": "f_add", "text": "我添柴加火。", "next": "q9", "deltas": {"traits": {"courage": 2}, "verbs": {"FORCE": 1}, "classes": {"guerrier": 2}}, "hooks": ["feeds_flame"]}
+      ],
+      "LOGIQUE": [
+        {"id": "l_tracks", "text": "我查看周围的痕迹。", "next": "q9", "deltas": {"traits": {"curiosite": 2}, "verbs": {"LOGIQUE": 1}, "classes": {"eclaireur": 2}}, "hooks": ["reads_camp"]},
+        {"id": "l_heat", "text": "我感受余温。", "next": "q9", "deltas": {"traits": {"curiosite": 1, "controle": 1}, "verbs": {"LOGIQUE": 1}, "classes": {"druide": 1}}, "hooks": ["studies_fire"]}
+      ],
+      "FINESSE": [
+        {"id": "fi_warm", "text": "我暖暖双手。", "next": "q9", "deltas": {"traits": {"compassion": 1}, "verbs": {"FINESSE": 1}, "classes": {"barde": 1}}, "hooks": ["enjoys_warmth"]},
+        {"id": "fi_story", "text": "我想象谁曾在此。", "next": "q9", "deltas": {"traits": {"curiosite": 1, "compassion": 1}, "verbs": {"FINESSE": 1}, "classes": {"barde": 2}}, "hooks": ["weaves_story"]}
+      ]
+    }
+  },
+
+  {
+    "id": "q9",
+    "merlin": "第九面镜子：一座木桥在河面上断裂。你怎么做？",
+    "choices": {
+      "FORCE": [
+        {"id": "f_jump", "text": "我跳过去。", "next": "q10", "deltas": {"traits": {"courage": 2}, "verbs": {"FORCE": 1}, "classes": {"guerrier": 2}}, "hooks": ["jumps_gap"]},
+        {"id": "f_reinforce", "text": "我加固木材。", "next": "q10", "deltas": {"traits": {"controle": 1}, "verbs": {"FORCE": 1}, "classes": {"druide": 1}}, "hooks": ["reinforces_bridge"]}
+      ],
+      "LOGIQUE": [
+        {"id": "l_detour", "text": "我另寻他路。", "next": "q10", "deltas": {"traits": {"curiosite": 1}, "verbs": {"LOGIQUE": 1}, "classes": {"eclaireur": 2}}, "hooks": ["finds_detour"]},
+        {"id": "l_test", "text": "我试探河岸。", "next": "q10", "deltas": {"traits": {"controle": 1, "curiosite": 1}, "verbs": {"LOGIQUE": 1}, "classes": {"eclaireur": 1}}, "hooks": ["tests_bank"]}
+      ],
+      "FINESSE": [
+        {"id": "fi_stones", "text": "我踩石头过河。", "next": "q10", "deltas": {"traits": {"controle": 1}, "verbs": {"FINESSE": 1}, "classes": {"barde": 1}}, "hooks": ["steps_stones"]},
+        {"id": "fi_rope", "text": "我拉一根绳子。", "next": "q10", "deltas": {"traits": {"controle": 1}, "verbs": {"FINESSE": 1}, "classes": {"eclaireur": 1}}, "hooks": ["uses_rope"]}
+      ]
+    }
+  },
+
+  {
+    "id": "q10",
+    "merlin": "第十面镜子：树丛中传来低语。你怎么做？",
+    "choices": {
+      "FORCE": [
+        {"id": "f_loud", "text": "我大声说话。", "next": "q11", "deltas": {"traits": {"orgueil": 1, "courage": 1}, "verbs": {"FORCE": 1}, "classes": {"guerrier": 1}}, "hooks": ["answers_loud"]},
+        {"id": "f_silence", "text": "我让林子安静下来。", "next": "q11", "deltas": {"traits": {"controle": 1}, "verbs": {"FORCE": 1}, "classes": {"guerrier": 1}}, "hooks": ["silences_wood"]}
+      ],
+      "LOGIQUE": [
+        {"id": "l_rhythm", "text": "我聆听节奏。", "next": "q11", "deltas": {"traits": {"curiosite": 1, "verite": 1}, "verbs": {"LOGIQUE": 1}, "classes": {"druide": 2}}, "hooks": ["listens_pattern"]},
+        {"id": "l_source", "text": "我寻找源头。", "next": "q11", "deltas": {"traits": {"curiosite": 2}, "verbs": {"LOGIQUE": 1}, "classes": {"eclaireur": 1}}, "hooks": ["seeks_source"]}
+      ],
+      "FINESSE": [
+        {"id": "fi_soft", "text": "我轻轻靠近。", "next": "q11", "deltas": {"traits": {"compassion": 1}, "verbs": {"FINESSE": 1}, "classes": {"druide": 1}}, "hooks": ["approaches_soft"]},
+        {"id": "fi_reply", "text": "我低声回应。", "next": "q11", "deltas": {"traits": {"compassion": 1, "verite": 1}, "verbs": {"FINESSE": 1}, "classes": {"barde": 2}}, "hooks": ["whispers_back"]}
+      ]
+    }
+  },
+
+  {
+    "id": "q11",
+    "merlin": "第十一面镜子：一只乌鸦向你递来一个闪亮的物件。你怎么做？",
+    "choices": {
+      "FORCE": [
+        {"id": "f_take", "text": "我默默接过。", "next": "q12", "deltas": {"traits": {"orgueil": 1}, "verbs": {"FORCE": 1}, "classes": {"guerrier": 1}}, "hooks": ["takes_gift"]},
+        {"id": "f_chase", "text": "我赶走它。", "next": "q12", "deltas": {"traits": {"controle": 1}, "verbs": {"FORCE": 1}, "classes": {"guerrier": 1}}, "hooks": ["chases_crow"]}
+      ],
+      "LOGIQUE": [
+        {"id": "l_origin", "text": "我问它从哪里来。", "next": "q12", "deltas": {"traits": {"curiosite": 1, "verite": 1}, "verbs": {"LOGIQUE": 1}, "classes": {"eclaireur": 1}}, "hooks": ["asks_origin"]},
+        {"id": "l_trade", "text": "我用一根线换它。", "next": "q12", "deltas": {"traits": {"controle": 1}, "verbs": {"LOGIQUE": 1}, "classes": {"barde": 1}}, "hooks": ["trades_thread"]}
+      ],
+      "FINESSE": [
+        {"id": "fi_return", "text": "我道谢后归还。", "next": "q12", "deltas": {"traits": {"compassion": 1}, "verbs": {"FINESSE": 1}, "classes": {"druide": 1}}, "hooks": ["returns_gift"]},
+        {"id": "fi_follow", "text": "我跟随那只鸟。", "next": "q12", "deltas": {"traits": {"curiosite": 1}, "verbs": {"FINESSE": 1}, "classes": {"eclaireur": 1}}, "hooks": ["follows_bird"]}
+      ]
+    }
+  },
+
+  {
+    "id": "q12",
+    "season": "AUTOMNE",
+    "portrait": "res://Assets/Sprite/Merlin_AUTOMNE.png",
+    "merlin": "秋天为荒原染上锈色。落叶盘旋而下。一棵枯树挡住了你的去路。你怎么做？",
+    "choices": {
+      "FORCE": [
+        {"id": "f_break", "text": "我折断树枝。", "next": "q13", "deltas": {"traits": {"courage": 1, "controle": 1}, "verbs": {"FORCE": 1}, "classes": {"guerrier": 2}}, "hooks": ["breaks_wood"]},
+        {"id": "f_climb", "text": "我翻越过去。", "next": "q13", "deltas": {"traits": {"courage": 2}, "verbs": {"FORCE": 1}, "classes": {"guerrier": 1}}, "hooks": ["climbs_over"]}
+      ],
+      "LOGIQUE": [
+        {"id": "l_roots", "text": "我观察树根。", "next": "q13", "deltas": {"traits": {"curiosite": 2}, "verbs": {"LOGIQUE": 1}, "classes": {"druide": 2}}, "hooks": ["studies_roots"]},
+        {"id": "l_gap", "text": "我寻找缺口。", "next": "q13", "deltas": {"traits": {"curiosite": 1, "controle": 1}, "verbs": {"LOGIQUE": 1}, "classes": {"eclaireur": 2}}, "hooks": ["finds_gap"]}
+      ],
+      "FINESSE": [
+        {"id": "fi_honor", "text": "我向枯树致敬。", "next": "q13", "deltas": {"traits": {"compassion": 2}, "verbs": {"FINESSE": 1}, "classes": {"druide": 2}}, "hooks": ["honors_dead"]},
+        {"id": "fi_poem", "text": "我吟诵一首诗。", "next": "q13", "deltas": {"traits": {"compassion": 1, "verite": 1}, "verbs": {"FINESSE": 1}, "classes": {"barde": 2}}, "hooks": ["writes_verse"]}
+      ]
+    }
+  },
+
+  {
+    "id": "q13",
+    "merlin": "第十三面镜子：一道影子无声地跟着你。你怎么做？",
+    "choices": {
+      "FORCE": [
+        {"id": "f_turn", "text": "我转身面对。", "next": "q14", "deltas": {"traits": {"courage": 1}, "verbs": {"FORCE": 1}, "classes": {"guerrier": 1}}, "hooks": ["turns_back"]},
+        {"id": "f_face", "text": "我与它对峙。", "next": "q14", "deltas": {"traits": {"courage": 2}, "verbs": {"FORCE": 1}, "classes": {"guerrier": 2}}, "hooks": ["faces_shadow"]}
+      ],
+      "LOGIQUE": [
+        {"id": "l_count", "text": "我数着脚步。", "next": "q14", "deltas": {"traits": {"curiosite": 1, "controle": 1}, "verbs": {"LOGIQUE": 1}, "classes": {"eclaireur": 1}}, "hooks": ["counts_steps"]},
+        {"id": "l_trap", "text": "我设下陷阱。", "next": "q14", "deltas": {"traits": {"controle": 1}, "verbs": {"LOGIQUE": 1}, "classes": {"eclaireur": 2}}, "hooks": ["sets_trap"]}
+      ],
+      "FINESSE": [
+        {"id": "fi_pace", "text": "我改变步调。", "next": "q14", "deltas": {"traits": {"controle": 1}, "verbs": {"FINESSE": 1}, "classes": {"barde": 1}}, "hooks": ["changes_pace"]},
+        {"id": "fi_hide", "text": "我消失在岩石之间。", "next": "q14", "deltas": {"traits": {"controle": 1}, "verbs": {"FINESSE": 1}, "classes": {"eclaireur": 1}}, "hooks": ["vanishes_rocks"]}
+      ]
+    }
+  },
+
+  {
+    "id": "q14",
+    "merlin": "第十四面镜子：一本湿透的书躺在泥中。你怎么做？",
+    "choices": {
+      "FORCE": [
+        {"id": "f_pull", "text": "我把它从地上拽出来。", "next": "q15", "deltas": {"traits": {"courage": 1}, "verbs": {"FORCE": 1}, "classes": {"guerrier": 1}}, "hooks": ["pulls_book"]},
+        {"id": "f_leave", "text": "我不去管它。", "next": "q15", "deltas": {"traits": {"controle": 1}, "verbs": {"FORCE": 1}, "classes": {"guerrier": 1}}, "hooks": ["leaves_book"]}
+      ],
+      "LOGIQUE": [
+        {"id": "l_open", "text": "我小心翻开。", "next": "q15", "deltas": {"traits": {"curiosite": 1, "verite": 1}, "verbs": {"LOGIQUE": 1}, "classes": {"druide": 1}}, "hooks": ["opens_carefully"]},
+        {"id": "l_read", "text": "我读一页。", "next": "q15", "deltas": {"traits": {"curiosite": 1}, "verbs": {"LOGIQUE": 1}, "classes": {"barde": 2}}, "hooks": ["reads_page"]}
+      ],
+      "FINESSE": [
+        {"id": "fi_dry", "text": "我在火边把它烘干。", "next": "q15", "deltas": {"traits": {"compassion": 1}, "verbs": {"FINESSE": 1}, "classes": {"barde": 1}}, "hooks": ["dries_book"]},
+        {"id": "fi_hide", "text": "我把它藏起来。", "next": "q15", "deltas": {"traits": {"controle": 1}, "verbs": {"FINESSE": 1}, "classes": {"eclaireur": 1}}, "hooks": ["hides_book"]}
+      ]
+    }
+  },
+
+  {
+    "id": "q15",
+    "season": "HIVER",
+    "portrait": "res://Assets/Sprite/Merlin_HIVER.png",
+    "merlin": "寒冬冰封了荒原。霜寒刺骨。一道荆棘之门挡住了去路。你怎么做？",
+    "choices": {
+      "FORCE": [
+        {"id": "f_clear", "text": "我拨开它们。", "next": "finale", "deltas": {"traits": {"courage": 1}, "verbs": {"FORCE": 1}, "classes": {"guerrier": 2}}, "hooks": ["clears_thorns"]},
+        {"id": "f_cut", "text": "我斩断荆棘。", "next": "finale", "deltas": {"traits": {"controle": 1}, "verbs": {"FORCE": 1}, "classes": {"guerrier": 1}}, "hooks": ["cuts_thorns"]}
+      ],
+      "LOGIQUE": [
+        {"id": "l_origin", "text": "我寻找它的根源。", "next": "finale", "deltas": {"traits": {"curiosite": 1}, "verbs": {"LOGIQUE": 1}, "classes": {"eclaireur": 2}}, "hooks": ["seeks_origin"]},
+        {"id": "l_angle", "text": "我找到一个薄弱点。", "next": "finale", "deltas": {"traits": {"controle": 1}, "verbs": {"LOGIQUE": 1}, "classes": {"eclaireur": 1}}, "hooks": ["finds_weak"]}
+      ],
+      "FINESSE": [
+        {"id": "fi_slip", "text": "我从尖刺间穿过。", "next": "finale", "deltas": {"traits": {"controle": 1}, "verbs": {"FINESSE": 1}, "classes": {"barde": 1}}, "hooks": ["slips_thorns"]},
+        {"id": "fi_ask", "text": "我请求通行。", "next": "finale", "deltas": {"traits": {"compassion": 1}, "verbs": {"FINESSE": 1}, "classes": {"druide": 2}}, "hooks": ["asks_passage"]}
+      ]
+    }
+  },
+
+  {
+    "id": "finale",
+    "merlin": "镜子已经布下，旅者。你的道路正在成形。",
+    "ui": "show_class",
+    "next": ""
+  }
+]

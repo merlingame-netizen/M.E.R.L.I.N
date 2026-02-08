@@ -16,6 +16,9 @@ signal souffle_changed(old_value: int, new_value: int)
 signal run_ended(ending: Dictionary)
 signal card_resolved(card_id: String, option: int)
 signal mission_progress(step: int, total: int)
+signal awen_changed(old_value: int, new_value: int)
+signal ogham_activated(skill_id: String, effect: String)
+signal bond_tier_changed(old_tier: String, new_tier: String)
 
 const VERSION := "0.3.0"  # Updated for TRIADE system
 
@@ -184,11 +187,14 @@ func build_default_state() -> Dictionary:
 			"xp": 0,
 			"bond_xp": 0,
 			"evolve_ready": false,
-			# Reigns fields (NEW)
+			# Bond & Skills
 			"bond": 50,
 			"skills_unlocked": MerlinConstants.OGHAM_STARTER_SKILLS.duplicate(),
 			"skills_equipped": MerlinConstants.OGHAM_STARTER_SKILLS.duplicate(),
 			"skill_cooldowns": {},
+			# Souffle d'Awen (Ogham activation resource)
+			"awen": MerlinConstants.AWEN_START,
+			"awen_regen_counter": 0,  # Cards since last regen
 		},
 		"meta": {
 			"essence": essence,
@@ -219,7 +225,7 @@ func build_default_state() -> Dictionary:
 
 func dispatch(action: Dictionary) -> Dictionary:
 	var prev_phase: String = str(state.get("phase", ""))
-	var result: Dictionary = _reduce(action)
+	var result: Dictionary = await _reduce(action)
 	if prev_phase != state.get("phase", ""):
 		emit_signal("phase_changed", state.get("phase", ""))
 	_emit_state_changed()
@@ -310,6 +316,18 @@ func _reduce(action: Dictionary) -> Dictionary:
 			var card = action.get("card", {})
 			var result = cards.use_bestiole_skill(state, skill_id, card)
 			return result
+
+		"TRIADE_USE_OGHAM":
+			var skill_id: String = str(action.get("skill_id", ""))
+			return _use_ogham(skill_id)
+
+		"TRIADE_ADD_AWEN":
+			var amount: int = int(action.get("amount", 1))
+			return _add_awen(amount)
+
+		"TRIADE_USE_AWEN":
+			var amount: int = int(action.get("amount", 1))
+			return _use_awen(amount)
 
 		"TRIADE_END_RUN":
 			var end_check = _check_triade_run_end()
@@ -612,6 +630,275 @@ func _check_souffle_regen() -> void:
 		_add_souffle(1)
 
 
+# ═══════════════════════════════════════════════════════════════════════════════
+# AWEN / OGHAM SYSTEM
+# ═══════════════════════════════════════════════════════════════════════════════
+
+func _use_awen(amount: int) -> Dictionary:
+	var bestiole: Dictionary = state.get("bestiole", {})
+	var old_awen: int = int(bestiole.get("awen", 0))
+	if old_awen < amount:
+		return {"ok": false, "error": "Not enough Awen", "awen": old_awen}
+	var new_awen: int = old_awen - amount
+	bestiole["awen"] = new_awen
+	state["bestiole"] = bestiole
+	awen_changed.emit(old_awen, new_awen)
+	return {"ok": true, "used": amount, "awen": new_awen}
+
+
+func _add_awen(amount: int) -> Dictionary:
+	var bestiole: Dictionary = state.get("bestiole", {})
+	var old_awen: int = int(bestiole.get("awen", 0))
+	var new_awen: int = mini(old_awen + amount, MerlinConstants.AWEN_MAX)
+	bestiole["awen"] = new_awen
+	state["bestiole"] = bestiole
+	awen_changed.emit(old_awen, new_awen)
+	return {"ok": true, "added": new_awen - old_awen, "awen": new_awen}
+
+
+func _tick_awen_regen() -> void:
+	"""Called after each card resolved. Regenerates Awen every N cards."""
+	var bestiole: Dictionary = state.get("bestiole", {})
+	var counter: int = int(bestiole.get("awen_regen_counter", 0)) + 1
+
+	if counter >= MerlinConstants.AWEN_REGEN_INTERVAL:
+		counter = 0
+		var regen: int = 1
+		if is_all_aspects_balanced():
+			regen += MerlinConstants.AWEN_REGEN_EQUILIBRE_BONUS
+		_add_awen(regen)
+
+	bestiole["awen_regen_counter"] = counter
+	state["bestiole"] = bestiole
+
+
+func _use_ogham(skill_id: String) -> Dictionary:
+	"""Activate an Ogham skill, spending Awen and applying cooldown."""
+	var spec: Dictionary = MerlinConstants.OGHAM_FULL_SPECS.get(skill_id, {})
+	if spec.is_empty():
+		return {"ok": false, "error": "Unknown ogham: " + skill_id}
+
+	# Check bond requirement
+	var bond: int = get_bestiole_bond()
+	var bond_required: int = int(spec.get("bond_required", 0))
+	if bond < bond_required:
+		return {"ok": false, "error": "Bond too low", "bond": bond, "required": bond_required}
+
+	# Check cooldown
+	var bestiole: Dictionary = state.get("bestiole", {})
+	var cooldowns: Dictionary = bestiole.get("skill_cooldowns", {})
+	var remaining: int = int(cooldowns.get(skill_id, 0))
+	if remaining > 0:
+		return {"ok": false, "error": "On cooldown", "remaining": remaining}
+
+	# Check unlocked
+	var unlocked: Array = bestiole.get("skills_unlocked", [])
+	var is_starter: bool = bool(spec.get("starter", false))
+	if not is_starter and not unlocked.has(skill_id):
+		return {"ok": false, "error": "Skill not unlocked"}
+
+	# Spend Awen
+	var awen_cost: int = int(spec.get("awen_cost", 1))
+	var awen_result: Dictionary = _use_awen(awen_cost)
+	if not awen_result.get("ok", false):
+		return awen_result
+
+	# Set cooldown
+	cooldowns[skill_id] = int(spec.get("cooldown", 3))
+	bestiole["skill_cooldowns"] = cooldowns
+	state["bestiole"] = bestiole
+
+	# Emit signal
+	ogham_activated.emit(skill_id, str(spec.get("effect", "")))
+
+	# Apply effect
+	_apply_ogham_effect(skill_id, spec)
+
+	# Bond gain from using ogham
+	_modify_bond(2)
+
+	return {
+		"ok": true,
+		"skill_id": skill_id,
+		"effect": spec.get("effect", ""),
+		"awen": int(state.get("bestiole", {}).get("awen", 0)),
+	}
+
+
+func _apply_ogham_effect(_skill_id: String, spec: Dictionary) -> void:
+	"""Apply the actual Ogham effect on the game state."""
+	var effect_id: String = str(spec.get("effect", ""))
+	match effect_id:
+		"heal_worst":
+			# Quert: Bring worst aspect toward Equilibre
+			var worst_aspect: String = ""
+			var worst_distance: int = 0
+			var aspects: Dictionary = get_all_aspects()
+			for aspect in MerlinConstants.TRIADE_ASPECTS:
+				var s: int = int(aspects.get(aspect, 0))
+				if absi(s) > worst_distance:
+					worst_distance = absi(s)
+					worst_aspect = aspect
+			if not worst_aspect.is_empty() and worst_distance > 0:
+				var s: int = int(aspects.get(worst_aspect, 0))
+				var dir: String = "down" if s > 0 else "up"
+				_shift_aspect(worst_aspect, dir)
+		"shield_shift":
+			# Luis: Set a flag that prevents next negative shift
+			var run: Dictionary = state.get("run", {})
+			var modifiers: Dictionary = run.get("effect_modifier", {})
+			modifiers["shield_next_negative"] = true
+			run["effect_modifier"] = modifiers
+			state["run"] = run
+		"reveal_one", "reveal_all", "predict_next":
+			# Handled by UI (controller reads the result)
+			pass
+		"force_equilibre":
+			# Duir: Force any one aspect to Equilibre (best = worst extreme)
+			var aspects: Dictionary = get_all_aspects()
+			var worst_aspect: String = ""
+			var worst_distance: int = 0
+			for aspect in MerlinConstants.TRIADE_ASPECTS:
+				var s: int = int(aspects.get(aspect, 0))
+				if absi(s) > worst_distance:
+					worst_distance = absi(s)
+					worst_aspect = aspect
+			if not worst_aspect.is_empty():
+				var run: Dictionary = state.get("run", {})
+				var run_aspects: Dictionary = run.get("aspects", {})
+				var old_s: int = int(run_aspects.get(worst_aspect, 0))
+				run_aspects[worst_aspect] = MerlinConstants.AspectState.EQUILIBRE
+				run["aspects"] = run_aspects
+				state["run"] = run
+				if old_s != MerlinConstants.AspectState.EQUILIBRE:
+					aspect_shifted.emit(worst_aspect, old_s, MerlinConstants.AspectState.EQUILIBRE)
+		"balance_all":
+			# Ruis: All aspects toward Equilibre
+			var run: Dictionary = state.get("run", {})
+			var aspects: Dictionary = run.get("aspects", {})
+			for aspect in MerlinConstants.TRIADE_ASPECTS:
+				var s: int = int(aspects.get(aspect, 0))
+				if s != MerlinConstants.AspectState.EQUILIBRE:
+					aspects[aspect] = MerlinConstants.AspectState.EQUILIBRE
+					aspect_shifted.emit(aspect, s, MerlinConstants.AspectState.EQUILIBRE)
+			run["aspects"] = aspects
+			state["run"] = run
+		"souffle_boost":
+			# Onn: Regenerate Souffle d'Ogham
+			_add_souffle(2)
+		"regen_awen":
+			# Saille: Regenerate Awen
+			_add_awen(2)
+		"skip_negative":
+			# Eadhadh: Flag to cancel negatives on next choice
+			var run: Dictionary = state.get("run", {})
+			var modifiers: Dictionary = run.get("effect_modifier", {})
+			modifiers["skip_all_negative"] = true
+			run["effect_modifier"] = modifiers
+			state["run"] = run
+		"absorb_extreme":
+			# Gort: If an aspect hits extreme after next card, revert it
+			var run: Dictionary = state.get("run", {})
+			var modifiers: Dictionary = run.get("effect_modifier", {})
+			modifiers["absorb_extreme"] = true
+			run["effect_modifier"] = modifiers
+			state["run"] = run
+		"double_positive":
+			# Tinne: Double positives on next card
+			var run: Dictionary = state.get("run", {})
+			var modifiers: Dictionary = run.get("effect_modifier", {})
+			modifiers["double_positive"] = true
+			run["effect_modifier"] = modifiers
+			state["run"] = run
+		"invert_effects":
+			# Muin: Invert positive/negative on current card
+			var run: Dictionary = state.get("run", {})
+			var modifiers: Dictionary = run.get("effect_modifier", {})
+			modifiers["invert_effects"] = true
+			run["effect_modifier"] = modifiers
+			state["run"] = run
+		"change_card", "full_reroll", "add_option", "force_twist", "sacrifice_trade":
+			# These effects require UI/controller cooperation — flagged for controller
+			pass
+
+
+func _modify_bond(amount: int) -> void:
+	"""Modify Bestiole bond, checking for tier changes."""
+	var bestiole: Dictionary = state.get("bestiole", {})
+	var old_bond: int = int(bestiole.get("bond", 50))
+	var new_bond: int = clampi(old_bond + amount, 0, 100)
+	bestiole["bond"] = new_bond
+	state["bestiole"] = bestiole
+
+	var old_tier: String = _get_bond_tier(old_bond)
+	var new_tier: String = _get_bond_tier(new_bond)
+	if old_tier != new_tier:
+		bond_tier_changed.emit(old_tier, new_tier)
+
+
+func _get_bond_tier(bond: int) -> String:
+	for tier_name in MerlinConstants.BOND_TIERS:
+		var tier: Dictionary = MerlinConstants.BOND_TIERS[tier_name]
+		if bond >= int(tier.get("min", 0)) and bond <= int(tier.get("max", 100)):
+			return tier_name
+	return "distant"
+
+
+func tick_cooldowns() -> void:
+	"""Decrement all Ogham cooldowns by 1. Call after each card resolved."""
+	var bestiole: Dictionary = state.get("bestiole", {})
+	var cooldowns: Dictionary = bestiole.get("skill_cooldowns", {})
+	var to_remove: Array = []
+	for skill_id in cooldowns:
+		cooldowns[skill_id] = maxi(int(cooldowns[skill_id]) - 1, 0)
+		if int(cooldowns[skill_id]) <= 0:
+			to_remove.append(skill_id)
+	for skill_id in to_remove:
+		cooldowns.erase(skill_id)
+	bestiole["skill_cooldowns"] = cooldowns
+	state["bestiole"] = bestiole
+
+
+func can_use_ogham(skill_id: String) -> bool:
+	"""Check if an Ogham can be activated right now."""
+	var spec: Dictionary = MerlinConstants.OGHAM_FULL_SPECS.get(skill_id, {})
+	if spec.is_empty():
+		return false
+	var bestiole: Dictionary = state.get("bestiole", {})
+	var bond: int = int(bestiole.get("bond", 0))
+	if bond < int(spec.get("bond_required", 0)):
+		return false
+	var cooldowns: Dictionary = bestiole.get("skill_cooldowns", {})
+	if int(cooldowns.get(skill_id, 0)) > 0:
+		return false
+	var awen: int = int(bestiole.get("awen", 0))
+	if awen < int(spec.get("awen_cost", 1)):
+		return false
+	var is_starter: bool = bool(spec.get("starter", false))
+	if not is_starter:
+		var unlocked: Array = bestiole.get("skills_unlocked", [])
+		if not unlocked.has(skill_id):
+			return false
+	return true
+
+
+func get_available_oghams() -> Array:
+	"""Return list of Ogham IDs that can be used right now."""
+	var available: Array = []
+	for skill_id in MerlinConstants.OGHAM_FULL_SPECS:
+		if can_use_ogham(skill_id):
+			available.append(skill_id)
+	return available
+
+
+func get_awen() -> int:
+	return int(state.get("bestiole", {}).get("awen", MerlinConstants.AWEN_START))
+
+
+func get_awen_max() -> int:
+	return MerlinConstants.AWEN_MAX
+
+
 func _progress_mission(step: int) -> Dictionary:
 	var run = state.get("run", {})
 	var mission = run.get("mission", {})
@@ -657,6 +944,10 @@ func _resolve_triade_choice(card: Dictionary, option: int) -> Dictionary:
 
 	# Update player profile based on choice
 	_update_player_profile(option)
+
+	# Tick Ogham cooldowns and Awen regen
+	tick_cooldowns()
+	_tick_awen_regen()
 
 	return {"ok": true, "option": option, "cards_played": run["cards_played"]}
 

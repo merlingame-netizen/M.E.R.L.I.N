@@ -13,7 +13,7 @@ class_name ReignsGameController
 # ═══════════════════════════════════════════════════════════════════════════════
 
 @export var ui: ReignsGameUI
-@export var store: DruStore
+@export var store: MerlinStore
 
 # ═══════════════════════════════════════════════════════════════════════════════
 # STATE
@@ -36,7 +36,6 @@ func _ready() -> void:
 		store.state_changed.connect(_on_state_changed)
 		store.phase_changed.connect(_on_phase_changed)
 		store.run_ended.connect(_on_run_ended)
-		store.gauge_updated.connect(_on_gauge_updated)
 
 	# Connect UI signals
 	if ui:
@@ -48,25 +47,25 @@ func _ready() -> void:
 	call_deferred("_check_and_start")
 
 
-func _find_or_create_store() -> DruStore:
+func _find_or_create_store() -> MerlinStore:
 	"""Find existing store or create a new one."""
 	# Check if store exists in autoloads
-	if Engine.has_singleton("DruStore"):
-		return Engine.get_singleton("DruStore")
+	if Engine.has_singleton("MerlinStore"):
+		return Engine.get_singleton("MerlinStore")
 
 	# Check parent nodes
 	var parent = get_parent()
 	while parent:
-		if parent is DruStore:
+		if parent is MerlinStore:
 			return parent
 		for child in parent.get_children():
-			if child is DruStore:
+			if child is MerlinStore:
 				return child
 		parent = parent.get_parent()
 
 	# Create new store
-	var new_store = DruStore.new()
-	new_store.name = "DruStore"
+	var new_store = MerlinStore.new()
+	new_store.name = "MerlinStore"
 	add_child(new_store)
 	return new_store
 
@@ -90,7 +89,7 @@ func start_new_run(seed_value: int = 0) -> void:
 	if seed_value == 0:
 		seed_value = int(Time.get_unix_time_from_system())
 
-	var result = store.dispatch({"type": "REIGNS_START_RUN", "seed": seed_value})
+	var result = await store.dispatch({"type": "REIGNS_START_RUN", "seed": seed_value})
 	if result.get("ok", false):
 		is_run_active = true
 		_sync_ui_with_state()
@@ -102,7 +101,7 @@ func end_run() -> void:
 	if not store:
 		return
 
-	store.dispatch({"type": "REIGNS_END_RUN"})
+	await store.dispatch({"type": "REIGNS_END_RUN"})
 	is_run_active = false
 
 
@@ -115,7 +114,7 @@ func _request_next_card() -> void:
 	if not store or not is_run_active:
 		return
 
-	var result = store.dispatch({"type": "REIGNS_GET_CARD"})
+	var result = await store.dispatch({"type": "REIGNS_GET_CARD"})
 	if result.get("ok", false):
 		current_card = result.get("card", {})
 		if ui:
@@ -129,7 +128,7 @@ func _resolve_choice(direction: String) -> void:
 	if not store or current_card.is_empty():
 		return
 
-	var result = store.dispatch({
+	var result = await store.dispatch({
 		"type": "REIGNS_RESOLVE_CHOICE",
 		"card": current_card,
 		"direction": direction,
@@ -154,7 +153,7 @@ func _use_skill(skill_id: String) -> void:
 	if not store or current_card.is_empty():
 		return
 
-	var result = store.dispatch({
+	var result = await store.dispatch({
 		"type": "REIGNS_USE_SKILL",
 		"skill_id": skill_id,
 		"card": current_card,

@@ -1,21 +1,21 @@
 extends Control
 
-# Références aux nœuds
-@onready var resolution_option = $ScrollContainer/OptionsContainer/ResolutionRow/ResolutionOption
-@onready var display_mode_option = $ScrollContainer/OptionsContainer/DisplayModeRow/DisplayModeOption
-@onready var vsync_check = $ScrollContainer/OptionsContainer/VSyncRow/VSyncCheck
-@onready var fps_option = $ScrollContainer/OptionsContainer/FPSRow/FPSOption
+# Références aux nœuds (via MainLayout/VBox)
+@onready var resolution_option = $MainLayout/VBox/ScrollContainer/OptionsContainer/ResolutionRow/ResolutionOption
+@onready var display_mode_option = $MainLayout/VBox/ScrollContainer/OptionsContainer/DisplayModeRow/DisplayModeOption
+@onready var vsync_check = $MainLayout/VBox/ScrollContainer/OptionsContainer/VSyncRow/VSyncCheck
+@onready var fps_option = $MainLayout/VBox/ScrollContainer/OptionsContainer/FPSRow/FPSOption
 
-@onready var master_slider = $ScrollContainer/OptionsContainer/MasterVolumeRow/MasterVolumeSlider
-@onready var master_value = $ScrollContainer/OptionsContainer/MasterVolumeRow/MasterVolumeValue
-@onready var music_slider = $ScrollContainer/OptionsContainer/MusicVolumeRow/MusicVolumeSlider
-@onready var music_value = $ScrollContainer/OptionsContainer/MusicVolumeRow/MusicVolumeValue
-@onready var sfx_slider = $ScrollContainer/OptionsContainer/SFXVolumeRow/SFXVolumeSlider
-@onready var sfx_value = $ScrollContainer/OptionsContainer/SFXVolumeRow/SFXVolumeValue
+@onready var master_slider = $MainLayout/VBox/ScrollContainer/OptionsContainer/MasterVolumeRow/MasterVolumeSlider
+@onready var master_value = $MainLayout/VBox/ScrollContainer/OptionsContainer/MasterVolumeRow/MasterVolumeValue
+@onready var music_slider = $MainLayout/VBox/ScrollContainer/OptionsContainer/MusicVolumeRow/MusicVolumeSlider
+@onready var music_value = $MainLayout/VBox/ScrollContainer/OptionsContainer/MusicVolumeRow/MusicVolumeValue
+@onready var sfx_slider = $MainLayout/VBox/ScrollContainer/OptionsContainer/SFXVolumeRow/SFXVolumeSlider
+@onready var sfx_value = $MainLayout/VBox/ScrollContainer/OptionsContainer/SFXVolumeRow/SFXVolumeValue
 
-@onready var btn_apply = $ButtonsContainer/BtnAppliquer
-@onready var btn_reset = $ButtonsContainer/BtnReinitialiser
-@onready var btn_back = $ButtonsContainer/BtnRetour
+@onready var btn_apply = $MainLayout/VBox/ButtonsContainer/BtnAppliquer
+@onready var btn_reset = $MainLayout/VBox/ButtonsContainer/BtnReinitialiser
+@onready var btn_back = $MainLayout/VBox/ButtonsContainer/BtnRetour
 
 # Constantes de résolution
 const RESOLUTIONS = [
@@ -35,6 +35,9 @@ var default_config = {
 	"master_volume": 80,
 	"music_volume": 70,
 	"sfx_volume": 75,
+	"voice_mode": 0,  # 0=Voix Parlee, 1=Voix Robot, 2=Desactivee
+	"voice_bank": "default",
+	"voice_preset": "Merlin",
 	"calendar_override": false,  # Use custom date
 	"calendar_day": 1,
 	"calendar_month": 1,
@@ -46,6 +49,14 @@ var calendar_day_spin: SpinBox
 var calendar_month_spin: SpinBox
 var calendar_year_spin: SpinBox
 var calendar_override_check: CheckBox
+
+# Language selector (created dynamically)
+var language_option: OptionButton
+
+# Voice controls (created dynamically)
+var voice_mode_option: OptionButton
+var voice_bank_option: OptionButton
+var voice_preset_option: OptionButton
 
 # Configuration actuelle
 var current_config = {}
@@ -60,6 +71,12 @@ func _ready():
 	# Build calendar date UI
 	_build_calendar_options()
 
+	# Build language selector UI
+	_build_language_options()
+
+	# Build voice settings UI
+	_build_voice_options()
+
 	# Appliquer les valeurs actuelles aux contrôles
 	apply_to_ui()
 
@@ -69,7 +86,7 @@ func _ready():
 
 func _build_calendar_options() -> void:
 	# Find the options container
-	var options_container = get_node_or_null("ScrollContainer/OptionsContainer")
+	var options_container = get_node_or_null("MainLayout/VBox/ScrollContainer/OptionsContainer")
 	if not options_container:
 		return
 
@@ -79,11 +96,19 @@ func _build_calendar_options() -> void:
 	calendar_section.add_theme_constant_override("separation", 8)
 	options_container.add_child(calendar_section)
 
-	# Section header
+	# Spacer before section
+	var spacer := Control.new()
+	spacer.custom_minimum_size = Vector2(0, 15)
+	options_container.add_child(spacer)
+
+	# Section header (matches TSCN style)
 	var header := Label.new()
-	header.text = "=== Calendrier ==="
-	header.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	header.text = "CALENDRIER"
+	header.add_theme_font_size_override("font_size", 22)
 	calendar_section.add_child(header)
+
+	var hsep := HSeparator.new()
+	calendar_section.add_child(hsep)
 
 	# Override checkbox row
 	var override_row := HBoxContainer.new()
@@ -140,6 +165,203 @@ func _build_calendar_options() -> void:
 
 	# Update enabled state
 	_update_calendar_ui_enabled()
+
+
+func _build_language_options() -> void:
+	var options_container = get_node_or_null("MainLayout/VBox/ScrollContainer/OptionsContainer")
+	if not options_container:
+		return
+
+	# Spacer before section
+	var lang_spacer := Control.new()
+	lang_spacer.custom_minimum_size = Vector2(0, 15)
+	options_container.add_child(lang_spacer)
+
+	var lang_section := VBoxContainer.new()
+	lang_section.name = "LanguageSection"
+	lang_section.add_theme_constant_override("separation", 8)
+	options_container.add_child(lang_section)
+
+	var header := Label.new()
+	header.text = "LANGUE"
+	header.add_theme_font_size_override("font_size", 22)
+	lang_section.add_child(header)
+
+	var lang_hsep := HSeparator.new()
+	lang_section.add_child(lang_hsep)
+
+	var lang_row := HBoxContainer.new()
+	lang_row.add_theme_constant_override("separation", 12)
+	lang_section.add_child(lang_row)
+
+	var lang_label := Label.new()
+	lang_label.text = "Langue / Language:"
+	lang_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	lang_row.add_child(lang_label)
+
+	language_option = OptionButton.new()
+	var locale_mgr = get_node_or_null("/root/LocaleManager")
+	var codes: Array = []
+	if locale_mgr:
+		codes = locale_mgr.get_supported_codes()
+	else:
+		codes = ["fr", "en", "es", "it", "pt", "zh", "ja"]
+	var labels := {
+		"fr": "Francais", "en": "English", "es": "Espanol",
+		"it": "Italiano", "pt": "Portugues", "zh": "中文", "ja": "日本語"
+	}
+	for code in codes:
+		language_option.add_item(labels.get(code, code))
+		language_option.set_item_metadata(language_option.item_count - 1, code)
+
+	var current_lang: String = "fr"
+	if locale_mgr:
+		current_lang = locale_mgr.get_language()
+	for i in range(language_option.item_count):
+		if language_option.get_item_metadata(i) == current_lang:
+			language_option.selected = i
+			break
+	language_option.item_selected.connect(_on_language_changed)
+	lang_row.add_child(language_option)
+
+
+func _build_voice_options() -> void:
+	var options_container = get_node_or_null("MainLayout/VBox/ScrollContainer/OptionsContainer")
+	if not options_container:
+		return
+
+	# Spacer before section
+	var voice_spacer := Control.new()
+	voice_spacer.custom_minimum_size = Vector2(0, 15)
+	options_container.add_child(voice_spacer)
+
+	# Section container
+	var voice_section := VBoxContainer.new()
+	voice_section.name = "VoiceSection"
+	voice_section.add_theme_constant_override("separation", 8)
+	options_container.add_child(voice_section)
+
+	# Section header
+	var header := Label.new()
+	header.text = "VOIX"
+	header.add_theme_font_size_override("font_size", 22)
+	voice_section.add_child(header)
+
+	var hsep := HSeparator.new()
+	voice_section.add_child(hsep)
+
+	# --- Voice mode: 3 options only ---
+	var mode_row := HBoxContainer.new()
+	mode_row.add_theme_constant_override("separation", 20)
+	voice_section.add_child(mode_row)
+
+	var mode_label := Label.new()
+	mode_label.text = "Mode de voix :"
+	mode_label.custom_minimum_size = Vector2(250, 0)
+	mode_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	mode_row.add_child(mode_label)
+
+	voice_mode_option = OptionButton.new()
+	voice_mode_option.custom_minimum_size = Vector2(250, 0)
+	voice_mode_option.add_item("Voix Parlee")    # 0
+	voice_mode_option.add_item("Voix Robot")      # 1
+	voice_mode_option.add_item("Desactivee")      # 2
+	voice_mode_option.selected = current_config.get("voice_mode", 0)
+	voice_mode_option.item_selected.connect(_on_voice_mode_changed)
+	mode_row.add_child(voice_mode_option)
+
+	# --- Sound bank (Voix Parlee only) ---
+	var bank_row := HBoxContainer.new()
+	bank_row.name = "VoiceBankRow"
+	bank_row.add_theme_constant_override("separation", 20)
+	voice_section.add_child(bank_row)
+
+	var bank_label := Label.new()
+	bank_label.text = "Banque de sons :"
+	bank_label.custom_minimum_size = Vector2(250, 0)
+	bank_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	bank_row.add_child(bank_label)
+
+	voice_bank_option = OptionButton.new()
+	voice_bank_option.custom_minimum_size = Vector2(250, 0)
+	var bank_names := ["default", "high", "low", "lowest", "med", "robot", "glitch", "whisper", "droid"]
+	var bank_labels := {
+		"default": "Classique",
+		"high": "Aigu (Peppy)",
+		"low": "Grave (Cranky)",
+		"lowest": "Tres grave",
+		"med": "Medium",
+		"robot": "Robot Beep",
+		"glitch": "Glitch Bot",
+		"whisper": "Synth Whisper",
+		"droid": "Droid (R2D2)",
+	}
+	for bname in bank_names:
+		voice_bank_option.add_item(bank_labels.get(bname, bname))
+		voice_bank_option.set_item_metadata(voice_bank_option.item_count - 1, bname)
+	var cur_bank: String = current_config.get("voice_bank", "default")
+	for i in range(voice_bank_option.item_count):
+		if voice_bank_option.get_item_metadata(i) == cur_bank:
+			voice_bank_option.selected = i
+			break
+	voice_bank_option.item_selected.connect(_on_voice_bank_changed)
+	bank_row.add_child(voice_bank_option)
+
+	# --- Preset (Voix Parlee only) ---
+	var preset_row := HBoxContainer.new()
+	preset_row.add_theme_constant_override("separation", 20)
+	voice_section.add_child(preset_row)
+
+	var preset_label := Label.new()
+	preset_label.text = "Preset voix :"
+	preset_label.custom_minimum_size = Vector2(250, 0)
+	preset_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	preset_row.add_child(preset_label)
+
+	voice_preset_option = OptionButton.new()
+	voice_preset_option.custom_minimum_size = Vector2(250, 0)
+	var presets := ["Merlin", "Doux", "Plume", "Cristal", "Ancien", "Normal", "Aigu", "Grave", "Enfant", "Sage", "Joyeux", "Mysterieux"]
+	for pname in presets:
+		voice_preset_option.add_item(pname)
+	var cur_preset: String = current_config.get("voice_preset", "Merlin")
+	for i in range(voice_preset_option.item_count):
+		if voice_preset_option.get_item_text(i) == cur_preset:
+			voice_preset_option.selected = i
+			break
+	voice_preset_option.item_selected.connect(_on_voice_preset_changed)
+	preset_row.add_child(voice_preset_option)
+
+	_update_voice_ui_enabled()
+
+
+func _update_voice_ui_enabled() -> void:
+	var mode: int = current_config.get("voice_mode", 0)
+	# Bank and preset only for Voix Parlee (mode 0)
+	if voice_bank_option:
+		voice_bank_option.disabled = (mode != 0)
+	if voice_preset_option:
+		voice_preset_option.disabled = (mode != 0)
+
+
+func _on_voice_mode_changed(index: int) -> void:
+	current_config["voice_mode"] = index
+	_update_voice_ui_enabled()
+
+
+func _on_voice_bank_changed(index: int) -> void:
+	var bank_name: String = voice_bank_option.get_item_metadata(index)
+	current_config["voice_bank"] = bank_name
+
+
+func _on_voice_preset_changed(index: int) -> void:
+	current_config["voice_preset"] = voice_preset_option.get_item_text(index)
+
+
+func _on_language_changed(index: int) -> void:
+	var code: String = language_option.get_item_metadata(index)
+	var locale_mgr = get_node_or_null("/root/LocaleManager")
+	if locale_mgr:
+		locale_mgr.set_language(code)
 
 
 func _update_calendar_ui_enabled() -> void:
@@ -199,6 +421,9 @@ func load_settings():
 			"master_volume": config.get_value("audio", "master_volume", default_config.master_volume),
 			"music_volume": config.get_value("audio", "music_volume", default_config.music_volume),
 			"sfx_volume": config.get_value("audio", "sfx_volume", default_config.sfx_volume),
+			"voice_mode": config.get_value("voice", "mode", default_config.voice_mode),
+			"voice_bank": config.get_value("voice", "bank", default_config.voice_bank),
+			"voice_preset": config.get_value("voice", "preset", default_config.voice_preset),
 			"calendar_override": config.get_value("calendar", "override", default_config.calendar_override),
 			"calendar_day": config.get_value("calendar", "day", default_config.calendar_day),
 			"calendar_month": config.get_value("calendar", "month", default_config.calendar_month),
@@ -221,6 +446,11 @@ func save_settings():
 	config.set_value("audio", "master_volume", current_config.master_volume)
 	config.set_value("audio", "music_volume", current_config.music_volume)
 	config.set_value("audio", "sfx_volume", current_config.sfx_volume)
+
+	# Sauvegarder la configuration voix
+	config.set_value("voice", "mode", current_config.get("voice_mode", 0))
+	config.set_value("voice", "bank", current_config.get("voice_bank", "default"))
+	config.set_value("voice", "preset", current_config.get("voice_preset", "Merlin"))
 
 	# Sauvegarder la configuration calendrier
 	config.set_value("calendar", "override", current_config.calendar_override)
@@ -245,6 +475,23 @@ func apply_to_ui():
 
 	sfx_slider.value = current_config.sfx_volume
 	sfx_value.text = str(current_config.sfx_volume) + "%"
+
+	# Appliquer les valeurs voix
+	if voice_mode_option:
+		voice_mode_option.selected = current_config.get("voice_mode", 0)
+	if voice_bank_option:
+		var bank: String = current_config.get("voice_bank", "default")
+		for i in range(voice_bank_option.item_count):
+			if voice_bank_option.get_item_metadata(i) == bank:
+				voice_bank_option.selected = i
+				break
+	if voice_preset_option:
+		var preset: String = current_config.get("voice_preset", "Merlin")
+		for i in range(voice_preset_option.item_count):
+			if voice_preset_option.get_item_text(i) == preset:
+				voice_preset_option.selected = i
+				break
+	_update_voice_ui_enabled()
 
 	# Appliquer les valeurs du calendrier
 	if calendar_override_check:
@@ -357,5 +604,6 @@ func _on_reset_pressed():
 	print("✓ Paramètres réinitialisés")
 
 func _on_back_pressed():
-	# Retour au menu principal
-	get_tree().change_scene_to_file("res://scenes/MenuPrincipal.tscn")
+	var se := get_node_or_null("/root/ScreenEffects")
+	var target: String = se.return_scene if se and se.return_scene != "" else "res://scenes/HubAntre.tscn"
+	get_tree().change_scene_to_file(target)

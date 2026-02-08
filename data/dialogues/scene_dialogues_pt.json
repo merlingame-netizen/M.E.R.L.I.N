@@ -1,0 +1,566 @@
+{
+  "_meta": {
+    "version": "1.0",
+    "author": "Narrative Writer Agent (Merlin Voice)",
+    "created": "2026-02-08",
+    "language": "pt",
+    "description": "Dialogos completos para SceneEveil, SceneAntreMerlin e TransitionBiome — traducao portuguesa",
+    "notes": [
+      "Merlin fala em portugues moderno com toques poeticos",
+      "Sem arcaismos (vos, sois), sem emoji",
+      "Frases curtas. As pausas contam.",
+      "95% alegre/travesso, 5% melancolia subjacente",
+      "Os [pause] indicam um silencio de 1-2 segundos",
+      "Os [long_pause] indicam um silencio de 3-4 segundos",
+      "Os [beat] indicam um micro-silencio (0.5s)",
+      "Tratamento informal (tu) — portugues europeu"
+    ]
+  },
+
+  "scene_eveil": {
+    "description": "Ecra negro. Merlin fala no escuro. O jogador acabou de atravessar a Membrana. 30-45 segundos. Merlin esperou muito tempo. Emocao -> humor.",
+    "context": "O Viajante chega pela primeira vez. Merlin esta aliviado, quase comovido. Depois recompoe-se com humor. E a primeira impressao do jogador sobre Merlin.",
+    "lines": [
+      {
+        "id": "eveil_01",
+        "speaker": "MERLIN",
+        "text": "... Estas aqui.",
+        "direction": "Murmuro. Como alguem que ja nao ousava esperar. O tom e nu, sem mascara.",
+        "timing": {
+          "delay_before_s": 3.0,
+          "display_duration_s": 3.0,
+          "pause_after_s": 2.0
+        },
+        "emotion": "soulagement_profond",
+        "tags": ["eveil", "emotion", "premiere_impression"]
+      },
+      {
+        "id": "eveil_02",
+        "speaker": "MERLIN",
+        "text": "Esperei. Muito tempo. Tanto tempo que ja esqueci se era tempo ou outra coisa.",
+        "direction": "Mais seguro, mas a voz ainda carrega o peso da solidao. Cada palavra e pesada. O 'outra coisa' fica em suspenso.",
+        "timing": {
+          "delay_before_s": 0.5,
+          "display_duration_s": 5.0,
+          "pause_after_s": 2.5
+        },
+        "emotion": "vulnerabilite_rare",
+        "tags": ["eveil", "solitude", "temps", "indice_sombre"]
+      },
+      {
+        "id": "eveil_03",
+        "speaker": "MERLIN",
+        "text": "A bruma deixou-te passar. E bom sinal. Enfim... [pause] ela deixa passar toda a gente, para ser sincero. Ate pessoas sem o minimo sentido de orientacao.",
+        "direction": "O tom levanta-se. Sente-se Merlin a vestir a sua mascara de jovialidade. A transicao deve ser perceptivel: o 'Enfim...' e a charneira entre a emocao e o humor.",
+        "timing": {
+          "delay_before_s": 0.5,
+          "display_duration_s": 6.0,
+          "pause_after_s": 1.5
+        },
+        "emotion": "transition_vers_humour",
+        "tags": ["eveil", "membrane", "humour", "masque"]
+      },
+      {
+        "id": "eveil_04",
+        "speaker": "MERLIN",
+        "text": "Bom. Bem-vindo a Broceliande. Ultima floresta de pe, primeira paragem antes do fim do mundo. [beat] Nao facas essa cara. E mais bonito do que parece. Quando ha luz do dia.",
+        "direction": "A mascara esta no lugar. Merlin, o Alegre, esta de volta. Tom caloroso, ligeiramente trocista. O 'Quando ha luz do dia' e ao mesmo tempo um comentario sobre o escuro ambiente e um indicio subtil sobre o estado do mundo.",
+        "timing": {
+          "delay_before_s": 0.5,
+          "display_duration_s": 7.0,
+          "pause_after_s": 2.0
+        },
+        "emotion": "accueil_jovial",
+        "tags": ["eveil", "bienvenue", "humour", "broceliande"]
+      }
+    ]
+  },
+
+  "scene_antre_merlin": {
+    "description": "O antro de Merlin. A luz regressa progressivamente. Bestiole aparece. Merlin apresenta o mundo, a missao e sugere um bioma de partida.",
+
+    "bestiole_apparition": {
+      "description": "Bestiole emerge da sombra, atraida pelo Awen do Viajante. Pequena criatura luminosa, hesitante e depois curiosa.",
+      "lines": [
+        {
+          "id": "bestiole_01",
+          "speaker": "NARRATION",
+          "text": "Algo se mexe na sombra. Uma luz, timida, como uma brasa que hesita em apagar-se.",
+          "direction": "Texto narrativo. Nao e a voz de Merlin. Um tom neutro, poetico, descritivo. A luz pulsa suavemente.",
+          "timing": {
+            "delay_before_s": 1.0,
+            "display_duration_s": 4.0,
+            "pause_after_s": 1.5
+          },
+          "vfx": "lumiere_faible_pulse",
+          "tags": ["bestiole", "apparition", "narration"]
+        },
+        {
+          "id": "bestiole_02",
+          "speaker": "NARRATION",
+          "text": "A luz aproxima-se. Dois olhos imensos, demasiado grandes para aquele corpo pequeno. Olha para ti como se te reconhecesse.",
+          "direction": "A criatura aproxima-se do jogador. Os seus olhos sao o ponto focal. O 'como se te reconhecesse' e um eco da ressonancia Awen: Bestiole deteta o Awen do Viajante.",
+          "timing": {
+            "delay_before_s": 0.5,
+            "display_duration_s": 4.5,
+            "pause_after_s": 1.5
+          },
+          "vfx": "bestiole_yeux_brillent",
+          "tags": ["bestiole", "apparition", "resonance", "narration"]
+        },
+        {
+          "id": "bestiole_03",
+          "speaker": "NARRATION",
+          "text": "Um som. Nao propriamente um ronronar. Nao propriamente um murmuro. Algo entre os dois, que diz: estou aqui.",
+          "direction": "Som de Bestiole. O jogador deve sentir a intimidade deste momento. Nao e espetacular — e suave.",
+          "timing": {
+            "delay_before_s": 0.5,
+            "display_duration_s": 4.5,
+            "pause_after_s": 2.0
+          },
+          "sfx": "bestiole_trille_doux",
+          "tags": ["bestiole", "apparition", "son", "narration"]
+        }
+      ]
+    },
+
+    "merlin_sur_bestiole": {
+      "description": "Merlin reage ao aparecimento de Bestiole. Tom entre a ternura e a zombaria protetora.",
+      "lines": [
+        {
+          "id": "merlin_bestiole_01",
+          "speaker": "MERLIN",
+          "text": "Ah. A Bestiole encontrou-te. [beat] Ela faz isso. Encontra pessoas. Sobretudo aquelas que ainda nao sabem que estao perdidas.",
+          "direction": "Tom afetuoso. Um pai que fala do seu filho. O 'sobretudo aquelas que nao sabem' e ao mesmo tempo humor e um indicio sobre a natureza do Viajante.",
+          "timing": {
+            "delay_before_s": 0.5,
+            "display_duration_s": 5.0,
+            "pause_after_s": 1.5
+          },
+          "emotion": "tendresse_masquee",
+          "tags": ["bestiole", "merlin", "lien", "humour"]
+        },
+        {
+          "id": "merlin_bestiole_02",
+          "speaker": "MERLIN",
+          "text": "Cuida dela. Mais do que de mim. [pause] Sera facil, eu sou insuportavel.",
+          "direction": "A primeira frase e sincera — quase demais. Merlin apercebe-se disso e corrige com a piada. Mas o pedido e real: Bestiole e o que mais importa.",
+          "timing": {
+            "delay_before_s": 0.5,
+            "display_duration_s": 4.5,
+            "pause_after_s": 2.0
+          },
+          "emotion": "sincerite_breve",
+          "tags": ["bestiole", "merlin", "protection", "humour_defensif"]
+        }
+      ]
+    },
+
+    "mission_briefing": {
+      "description": "Merlin explica o mundo e a missao. Tom serio mas pontuado de humor. O jogador deve perceber que ha um mundo para explorar e que algo nao esta bem — sem saber exatamente o que.",
+      "lines": [
+        {
+          "id": "mission_01",
+          "speaker": "MERLIN",
+          "text": "O mundo. Falemos dele. Sete terras. Sete santuarios. Cada um aguenta-se de pe por milagre, por habito, ou por pura teimosia bretoa.",
+          "direction": "Tom professoral mas leve. Merlin apresenta uma realidade grave com descontracacao. A 'teimosia bretoa' e uma piscadela de olho.",
+          "timing": {
+            "delay_before_s": 1.0,
+            "display_duration_s": 5.5,
+            "pause_after_s": 1.5
+          },
+          "emotion": "exposition_joviale",
+          "tags": ["mission", "biomes", "monde"]
+        },
+        {
+          "id": "mission_02",
+          "speaker": "MERLIN",
+          "text": "Florestas, charnecas, costas, aldeias, circulos de pedras, pantanos, colinas. [pause] Cada um tem os seus habitantes, os seus segredos e as suas razoes para nao gostar de ti logo a partida.",
+          "direction": "Enumeracao rapida e depois abrandamento na pausa. O 'nao gostar de ti logo a partida' e ao mesmo tempo pratico (mecanicas de reputacao) e divertido.",
+          "timing": {
+            "delay_before_s": 0.5,
+            "display_duration_s": 6.0,
+            "pause_after_s": 1.5
+          },
+          "emotion": "avertissement_amuse",
+          "tags": ["mission", "biomes", "factions"]
+        },
+        {
+          "id": "mission_03",
+          "speaker": "MERLIN",
+          "text": "O teu trabalho? Atravessar. Observar. Escolher. [beat] Nao salvar o mundo. Isso esta acima do teu escalao salarial.",
+          "direction": "O ritmo em tres palavras e deliberado — como uma triade celta. A piada sobre o salario quebra a solenidade. Mas o subtexto e real: o jogador NAO PODE salvar o mundo.",
+          "timing": {
+            "delay_before_s": 0.5,
+            "display_duration_s": 5.5,
+            "pause_after_s": 1.5
+          },
+          "emotion": "verite_cachee_dans_humour",
+          "tags": ["mission", "role_voyageur", "humour", "indice_sombre"]
+        },
+        {
+          "id": "mission_04",
+          "speaker": "MERLIN",
+          "text": "Mas as tuas escolhas contam. Cada gesto, cada passo, cada hesitacao. [pause] O mundo observa. E eu tambem.",
+          "direction": "Tom que volta a ficar serio no final. O 'O mundo observa' e uma verdade cosmica (a observacao alimenta a realidade). O 'E eu tambem' e terno.",
+          "timing": {
+            "delay_before_s": 0.5,
+            "display_duration_s": 5.0,
+            "pause_after_s": 2.5
+          },
+          "emotion": "gravite_douce",
+          "tags": ["mission", "choix", "temoignage", "sincerite"]
+        }
+      ]
+    },
+
+    "carte_biomes": {
+      "description": "Merlin mostra o mapa dos 7 biomas. Transicao para a escolha do bioma de partida.",
+      "line": {
+        "id": "carte_01",
+        "speaker": "MERLIN",
+        "text": "Olha. Sete terras, sete luzes que vacilam. [beat] Por onde queres comecar? Ou melhor... por onde deverias comecar?",
+        "direction": "O mapa aparece. Os 7 biomas brilham fracamente. O 'vacilam' lembra subtilmente a fragilidade. A pergunta e retorica — Merlin vai sugerir.",
+        "timing": {
+          "delay_before_s": 1.0,
+          "display_duration_s": 5.5,
+          "pause_after_s": 2.0
+        },
+        "emotion": "transition_vers_choix",
+        "tags": ["carte", "biomes", "choix"]
+      }
+    },
+
+    "class_biome_suggestions": {
+      "description": "Merlin sugere um bioma de partida conforme a classe do jogador. Cada sugestao revela algo sobre a classe E sobre o bioma.",
+      "variants": {
+        "druide": {
+          "id": "suggest_druide",
+          "speaker": "MERLIN",
+          "text": "Um druida. [beat] Pois bem. Os Circulos de Pedras so esperam por ti. Os menires ainda vibram, mas esqueceram metade das cancoes. Talvez tu te lembres delas.",
+          "direction": "Tom respeitoso, quase de colega. Merlin fala a um 'igual'. O 'talvez tu' e uma esperanca sincera, mas tambem um teste.",
+          "biome_suggested": "cercles_de_pierres",
+          "timing": {
+            "delay_before_s": 0.5,
+            "display_duration_s": 6.5,
+            "pause_after_s": 2.0
+          },
+          "tags": ["classe", "druide", "cercles", "suggestion"]
+        },
+        "guerrier": {
+          "id": "suggest_guerrier",
+          "speaker": "MERLIN",
+          "text": "Um guerreiro. [beat] Solido. As Aldeias Celtas precisam de bracos. As muralhas ainda aguentam, as portas um pouco menos. E ha coisas na bruma que nao gostam de portas.",
+          "direction": "Tom direto, quase marcial. Merlin adapta o seu registo. As 'coisas na bruma' sao voluntariamente vagas e um pouco inquietantes.",
+          "biome_suggested": "villages_celtes",
+          "timing": {
+            "delay_before_s": 0.5,
+            "display_duration_s": 6.5,
+            "pause_after_s": 2.0
+          },
+          "tags": ["classe", "guerrier", "villages", "suggestion"]
+        },
+        "barde": {
+          "id": "suggest_barde",
+          "speaker": "MERLIN",
+          "text": "Um bardo! [beat] Magnifico. As Costas Selvagens pedem historias. O mar recua, os marinheiros esquecem, e ninguem canta mais no porto. Podias mudar isso. Ou pelo menos tentar.",
+          "direction": "Tom entusiasmado, sincero. Merlin gosta de bardos. O 'O mar recua' tem duplo sentido (mecanico + cosmico). O 'Ou pelo menos tentar' e tipico de Merlin.",
+          "biome_suggested": "cotes_sauvages",
+          "timing": {
+            "delay_before_s": 0.5,
+            "display_duration_s": 7.0,
+            "pause_after_s": 2.0
+          },
+          "tags": ["classe", "barde", "cotes", "suggestion"]
+        },
+        "eclaireur": {
+          "id": "suggest_eclaireur",
+          "speaker": "MERLIN",
+          "text": "Um batedor. [beat] Olhos que procuram, pes que nao esperam. A Floresta de Broceliande foi feita para ti. Caminhos que se movem, sombras que escutam e segredos por todo o lado. Vais adorar. Ou detestar. Muitas vezes e a mesma coisa.",
+          "direction": "Tom malicioso. Merlin esta divertido com a escolha. A Floresta e o seu territorio, conhece-a intimamente. O ultimo comentario e autorreferencial.",
+          "biome_suggested": "foret_broceliande",
+          "timing": {
+            "delay_before_s": 0.5,
+            "display_duration_s": 7.5,
+            "pause_after_s": 2.0
+          },
+          "tags": ["classe", "eclaireur", "foret", "suggestion"]
+        }
+      }
+    },
+
+    "player_reactions": {
+      "description": "Reacoes de Merlin quando o jogador aceita ou recusa a sugestao de bioma.",
+      "acceptance": {
+        "id": "react_accept",
+        "speaker": "MERLIN",
+        "text": "Confias em mim? [beat] Primeiro viajante ha muito tempo. [pause] Vamos, a caminho. O caminho nao se vai percorrer sozinho.",
+        "direction": "Surpresa sincera no 'Confias em mim?', seguida de um momento de vulnerabilidade ('ha muito tempo'). Depois regresso a energia com a piada.",
+        "timing": {
+          "delay_before_s": 0.5,
+          "display_duration_s": 5.5,
+          "pause_after_s": 1.5
+        },
+        "emotion": "surprise_touchee",
+        "tags": ["reaction", "acceptation", "confiance"]
+      },
+      "rejection": {
+        "id": "react_reject",
+        "speaker": "MERLIN",
+        "text": "Recusas os meus conselhos. [beat] Excelente. Os melhores viajantes sao os que nao ouvem ninguem. [pause] Os piores tambem, repara bem.",
+        "direction": "Sem melindre — Merlin esta divertido. O duplo sentido final e um aviso ligeiro. O jogador escolhe o seu proprio bioma.",
+        "timing": {
+          "delay_before_s": 0.5,
+          "display_duration_s": 5.5,
+          "pause_after_s": 1.5
+        },
+        "emotion": "amusement_respectueux",
+        "tags": ["reaction", "refus", "independance"]
+      }
+    }
+  },
+
+  "transition_biome": {
+    "description": "Textos curtos de viagem entre biomas. O Viajante atravessa a bruma. Descricoes atmosfericas seguidas de um comentario de Merlin.",
+
+    "biomes": {
+      "foret_broceliande": {
+        "nom": "A Floresta de Broceliande",
+        "sous_titre": "O Coracao Que Ainda Bate",
+        "arrival_text": {
+          "id": "arrive_foret",
+          "speaker": "NARRATION",
+          "text": "A bruma rasga-se como uma cortina de seda. Arvores. Arvores por todo o lado. Tao velhas que as suas raizes parecem ter crescido antes do chao. A luz cai em colunas douradas atraves da copa, e algo no ar murmura — nao uma palavra, nao um som. Uma memoria.",
+          "direction": "Tom reverencial. A floresta e avassaladora de beleza e de antiguidade. A 'memoria' faz eco a natureza do mundo de DRU.",
+          "timing": {
+            "display_duration_s": 7.0,
+            "pause_after_s": 2.0
+          },
+          "ambiance": {
+            "palette": "vert_profond_brume_doree",
+            "son": "bruissement_feuilles_murmure_seve",
+            "lumiere": "filtree_canopee"
+          },
+          "tags": ["transition", "foret", "arrivee", "atmosphere"]
+        },
+        "merlin_comment": {
+          "id": "merlin_foret",
+          "speaker": "MERLIN",
+          "text": "A minha casa. Enfim... minha casa tanto quanto um lugar pode pertencer a alguem que nunca possuiu nada. [pause] Os carvalhos ja nao dao rebentos novos. Mas aguentam-se. Sao bretoes.",
+          "direction": "Tom intimo. Merlin ama esta floresta. O 'nunca possuiu nada' e um indicio sobre a sua natureza. A piada sobre os bretoes mascara a tristeza dos carvalhos estereis.",
+          "timing": {
+            "delay_before_s": 0.5,
+            "display_duration_s": 6.5,
+            "pause_after_s": 1.5
+          },
+          "emotion": "nostalgie_voilee",
+          "tags": ["transition", "foret", "merlin", "melancolie"]
+        }
+      },
+
+      "landes_bruyere": {
+        "nom": "As Charnecas de Urze",
+        "sous_titre": "O Sopro Que Se Esgota",
+        "arrival_text": {
+          "id": "arrive_landes",
+          "speaker": "NARRATION",
+          "text": "O mundo abre-se de repente. Sem mais arvores, sem mais muros. Apenas o ceu e a urze, malvas e cinzentos, ondulando ate um horizonte estranhamente proximo. O vento nunca para aqui. Como se procurasse algo que ja nao encontra.",
+          "direction": "Tom de vastidao. O contraste com a floresta deve ser impressionante. O horizonte 'estranhamente proximo' e um sinal do Esgotamento.",
+          "timing": {
+            "display_duration_s": 7.0,
+            "pause_after_s": 2.0
+          },
+          "ambiance": {
+            "palette": "mauve_brun_gris_vert",
+            "son": "vent_perpetuel_absence_oiseaux",
+            "lumiere": "rasante_nuages_bas"
+          },
+          "tags": ["transition", "landes", "arrivee", "atmosphere"]
+        },
+        "merlin_comment": {
+          "id": "merlin_landes",
+          "speaker": "MERLIN",
+          "text": "As charnecas. O vento falava aqui, antigamente. Discursos inteiros, segundo dizem. [beat] Agora resmunga. Um pouco como eu, nos dias maus.",
+          "direction": "Tom contemplativo. A comparacao consigo proprio e uma piada que nao faz rir de todo.",
+          "timing": {
+            "delay_before_s": 0.5,
+            "display_duration_s": 5.5,
+            "pause_after_s": 1.5
+          },
+          "emotion": "humour_melancolique",
+          "tags": ["transition", "landes", "merlin", "vent"]
+        }
+      },
+
+      "cotes_sauvages": {
+        "nom": "As Costas Selvagens",
+        "sous_titre": "O Mar Que Se Retira",
+        "arrival_text": {
+          "id": "arrive_cotes",
+          "speaker": "NARRATION",
+          "text": "O sal, primeiro. Depois o ruido — as ondas que se esmagam contra o granito negro, e depois se retiram sussurrando sobre os seixos. O mar e imenso e cinzento. O horizonte hesita entre a agua e o ceu, como se tivesse esquecido a fronteira.",
+          "direction": "Tom sensorial. Sente-se o sal, ouvem-se as ondas. O horizonte desfocado e um sinal da Membrana que se adelgaca do lado do mar.",
+          "timing": {
+            "display_duration_s": 7.0,
+            "pause_after_s": 2.0
+          },
+          "ambiance": {
+            "palette": "bleu_gris_ecume_granite_noir",
+            "son": "vagues_vent_mouettes_rares",
+            "lumiere": "diffuse_brumeuse"
+          },
+          "tags": ["transition", "cotes", "arrivee", "atmosphere"]
+        },
+        "merlin_comment": {
+          "id": "merlin_cotes",
+          "speaker": "MERLIN",
+          "text": "O mar. Recua um pouco mais a cada ano. [pause] Um pescador disse-me que voltaria. [beat] Isso foi ha tres seculos. Nao sei se ele ainda conta com isso.",
+          "direction": "O humor e seco, quase negro. Os 'tres seculos' sao um indicio sobre a idade de Merlin. O 'nao sei se ele ainda conta com isso' e voluntariamente ambiguo (morreu? perdeu a esperanca?).",
+          "timing": {
+            "delay_before_s": 0.5,
+            "display_duration_s": 6.0,
+            "pause_after_s": 1.5
+          },
+          "emotion": "humour_noir_doux",
+          "tags": ["transition", "cotes", "merlin", "mer", "indice_age"]
+        }
+      },
+
+      "villages_celtes": {
+        "nom": "As Aldeias Celtas",
+        "sous_titre": "O Ultimo Calor",
+        "arrival_text": {
+          "id": "arrive_villages",
+          "speaker": "NARRATION",
+          "text": "Telhados de ardosia por detras da bruma. Fumo que sobe, reto e lento, de chamines de pedra. O som de um martelo numa bigorna, ao longe. E vozes — abafadas, como se tivessem medo de perturbar o silencio.",
+          "direction": "Tom domestico, intimo. O calor humano contrasta com a fragilidade. As vozes 'abafadas' sugerem o Esgotamento sem o nomear.",
+          "timing": {
+            "display_duration_s": 7.0,
+            "pause_after_s": 2.0
+          },
+          "ambiance": {
+            "palette": "ocre_ardoise_rouille_vert_mousse",
+            "son": "enclume_voix_feu_crackling",
+            "lumiere": "crepusculaire_meme_en_plein_jour"
+          },
+          "tags": ["transition", "villages", "arrivee", "atmosphere"]
+        },
+        "merlin_comment": {
+          "id": "merlin_villages",
+          "speaker": "MERLIN",
+          "text": "Os humanos. Cozinham, cantam, discutem por causa de historias de vedacoes. [pause] E magnifico. Eles nao sabem o quanto e magnifico.",
+          "direction": "Tom profundamente comovido, mascarado pela enumeracao prosaica. O 'Eles nao sabem' e Merlin no seu mais sincero — contempla mortais que vivem sem saber que tudo tera fim. E um dos raros momentos em que a melancolia nao esta escondida.",
+          "timing": {
+            "delay_before_s": 0.5,
+            "display_duration_s": 6.0,
+            "pause_after_s": 2.0
+          },
+          "emotion": "tendresse_non_masquee",
+          "tags": ["transition", "villages", "merlin", "humains", "melancolie"]
+        }
+      },
+
+      "cercles_pierres": {
+        "nom": "Os Circulos de Pedras",
+        "sous_titre": "O Tempo Que Hesita",
+        "arrival_text": {
+          "id": "arrive_cercles",
+          "speaker": "NARRATION",
+          "text": "As pedras emergem da bruma, uma a uma, como sentinelas adormecidas. Centenas. Milhares. Erguem-se ali, cinzentas e rosadas, cobertas de liquen, num silencio tao profundo que se ouve vibrar.",
+          "direction": "Tom sagrado. O silencio nao esta vazio — esta cheio. As pedras sao quase vivas. O 'ouve vibrar' e o eco sub-audivel dos menires.",
+          "timing": {
+            "display_duration_s": 7.0,
+            "pause_after_s": 2.5
+          },
+          "ambiance": {
+            "palette": "granite_gris_rose_ciel_immense",
+            "son": "silence_profond_bourdonnement_grave",
+            "lumiere": "horizontale_ombres_lentes"
+          },
+          "tags": ["transition", "cercles", "arrivee", "atmosphere"]
+        },
+        "merlin_comment": {
+          "id": "merlin_cercles",
+          "speaker": "MERLIN",
+          "text": "Tres mil menires. Tocavam um acorde, outrora. A mais bela musica que ninguem jamais ouviu. [long_pause] Agora cantarolam. Ja e alguma coisa.",
+          "direction": "Tom reverencial, quase religioso para Merlin. A 'mais bela musica' e o acorde primordial do Awen. O 'Ja e alguma coisa' e coragem disfarcada de resignacao.",
+          "timing": {
+            "delay_before_s": 0.5,
+            "display_duration_s": 6.5,
+            "pause_after_s": 2.0
+          },
+          "emotion": "gravite_resignee",
+          "tags": ["transition", "cercles", "merlin", "oghams", "musique"]
+        }
+      },
+
+      "marais_korrigans": {
+        "nom": "Os Pantanos dos Korrigans",
+        "sous_titre": "O Que Espera La em Baixo",
+        "arrival_text": {
+          "id": "arrive_marais",
+          "speaker": "NARRATION",
+          "text": "O ar muda. Mais pesado, mais espesso, carregado de um cheiro a turfa e agua negra. Arvores mortas torcem os seus ramos como maos que tentam agarrar o ceu. Luzes dancam rente ao chao — fogos-fatuos, ou talvez outra coisa.",
+          "direction": "Tom inquietante mas fascinante. O pantano e o bioma mais perigoso. Os fogos-fatuos sao ambiguos. O 'ou talvez outra coisa' deixa a imaginacao do jogador trabalhar.",
+          "timing": {
+            "display_duration_s": 7.0,
+            "pause_after_s": 2.0
+          },
+          "ambiance": {
+            "palette": "noir_vert_sombre_iridescent",
+            "son": "bulles_glissement_bourdonnement_insectes",
+            "lumiere": "crepuscule_perpetuel_feux_follets"
+          },
+          "tags": ["transition", "marais", "arrivee", "atmosphere"]
+        },
+        "merlin_comment": {
+          "id": "merlin_marais",
+          "speaker": "MERLIN",
+          "text": "Os pantanos. Bom. [beat] Alguns conselhos: nao sigas as luzes, nao fales com as pocas, e se algo te propuser um negocio, le as letras pequenas. [pause] Os korrigans sao honestos. A maneira deles.",
+          "direction": "Tom falsamente descontraido. E um aviso real envolto em humor. O ritmo rapido dos conselhos imita o nervosismo. O 'A maneira deles' e perfeitamente ambiguo.",
+          "timing": {
+            "delay_before_s": 0.5,
+            "display_duration_s": 7.0,
+            "pause_after_s": 1.5
+          },
+          "emotion": "avertissement_humoristique",
+          "tags": ["transition", "marais", "merlin", "korrigans", "danger"]
+        }
+      },
+
+      "collines_dolmens": {
+        "nom": "As Colinas dos Dolmens",
+        "sous_titre": "A Memoria Que Se Desmorona",
+        "arrival_text": {
+          "id": "arrive_collines",
+          "speaker": "NARRATION",
+          "text": "O chao sobe suavemente. A erva e rasa, palida, quase prateada. Dolmens emergem das colinas como mesas esquecidas por gigantes. No topo, um teixo negro e imenso ergue-se contra o ceu. A sombra que projeta e demasiado longa. Como se o sol nao ousasse aproximar-se.",
+          "direction": "Tom antigo, solene. As colinas sao o bioma mais velho. O teixo milenar e Irial, o Imortal (mas o jogador nao sabe disso). A sombra 'demasiado longa' e um sinal do tempo que se desregula.",
+          "timing": {
+            "display_duration_s": 7.5,
+            "pause_after_s": 2.5
+          },
+          "ambiance": {
+            "palette": "vert_pale_herbe_rase_ciel_immense",
+            "son": "vent_herbe_echos_trop_longs",
+            "lumiere": "horizontale_niveau_des_yeux"
+          },
+          "tags": ["transition", "collines", "arrivee", "atmosphere"]
+        },
+        "merlin_comment": {
+          "id": "merlin_collines",
+          "speaker": "MERLIN",
+          "text": "As colinas sao mais velhas do que eu. [beat] E acredita, isso e uma proeza. [long_pause] Elas lembram-se de tudo. O problema e que o 'tudo'... diminui.",
+          "direction": "A piada sobre a idade e classica. Mas a pausa longa antes da ultima frase muda tudo. O 'diminui' e quase murmurado. E um dos raros momentos em que Merlin deixa transparecer que algo se perde irremediavelmente.",
+          "timing": {
+            "delay_before_s": 0.5,
+            "display_duration_s": 6.5,
+            "pause_after_s": 2.0
+          },
+          "emotion": "melancolie_percante",
+          "tags": ["transition", "collines", "merlin", "memoire", "perte"]
+        }
+      }
+    }
+  }
+}

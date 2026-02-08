@@ -1,4 +1,4 @@
-## ═══════════════════════════════════════════════════════════════════════════════
+﻿## ═══════════════════════════════════════════════════════════════════════════════
 ## Narrative Scaler — Adaptation de Complexite Narrative
 ## ═══════════════════════════════════════════════════════════════════════════════
 ## Ajuste la complexite narrative selon l'experience du joueur.
@@ -102,7 +102,7 @@ const CONTENT_GATES := {
 # ═══════════════════════════════════════════════════════════════════════════════
 
 func set_tier(tier) -> void:
-	"""Set tier from PlayerProfileRegistry experience tier."""
+	## Set tier from PlayerProfileRegistry experience tier.
 	if typeof(tier) == TYPE_INT:
 		current_tier = tier
 	else:
@@ -117,7 +117,7 @@ func set_tier(tier) -> void:
 
 
 func set_tier_from_runs(runs_completed: int) -> void:
-	"""Set tier based on runs completed."""
+	## Set tier based on runs completed.
 	if runs_completed <= 5:
 		current_tier = Tier.INITIATE
 	elif runs_completed <= 20:
@@ -134,18 +134,18 @@ func set_tier_from_runs(runs_completed: int) -> void:
 # ═══════════════════════════════════════════════════════════════════════════════
 
 func get_features() -> Dictionary:
-	"""Get all features for current tier."""
+	## Get all features for current tier.
 	return TIER_FEATURES.get(current_tier, TIER_FEATURES[Tier.INITIATE])
 
 
 func get_feature(feature_name: String) -> Variant:
-	"""Get a specific feature value."""
+	## Get a specific feature value.
 	var features := get_features()
 	return features.get(feature_name, null)
 
 
 func can_use_feature(feature_name: String) -> bool:
-	"""Check if a feature is available at current tier."""
+	## Check if a feature is available at current tier.
 	var features := get_features()
 	var value = features.get(feature_name, null)
 
@@ -158,7 +158,7 @@ func can_use_feature(feature_name: String) -> bool:
 
 
 func is_content_unlocked(content_type: String) -> bool:
-	"""Check if specific content is unlocked."""
+	## Check if specific content is unlocked.
 	var required_tier = CONTENT_GATES.get(content_type, Tier.INITIATE)
 	return current_tier >= required_tier
 
@@ -167,7 +167,7 @@ func is_content_unlocked(content_type: String) -> bool:
 # ═══════════════════════════════════════════════════════════════════════════════
 
 func should_include_card(card: Dictionary) -> bool:
-	"""Determine if a card should be included based on current tier."""
+	## Determine if a card should be included based on current tier.
 	var card_type: String = card.get("type", "narrative")
 	var tags: Array = card.get("tags", [])
 	var required_tier = card.get("required_tier", Tier.INITIATE)
@@ -197,7 +197,7 @@ func should_include_card(card: Dictionary) -> bool:
 
 
 func filter_card_pool(cards: Array) -> Array:
-	"""Filter a pool of cards based on current tier."""
+	## Filter a pool of cards based on current tier.
 	return cards.filter(func(card): return should_include_card(card))
 
 # ═══════════════════════════════════════════════════════════════════════════════
@@ -239,23 +239,23 @@ func should_trigger_twist(base_tension: float) -> bool:
 # ═══════════════════════════════════════════════════════════════════════════════
 
 func get_merlin_comment_depth() -> int:
-	"""Depth level for Merlin's comments (1-5)."""
+	## Depth level for Merlin's comments (1-5).
 	return get_feature("merlin_comments_depth")
 
 
 func can_merlin_reveal_lore_level(level: int) -> bool:
-	"""Can Merlin reveal lore of this depth level?"""
+	## Can Merlin reveal lore of this depth level?
 	var depth := get_merlin_comment_depth()
 	return level <= depth
 
 
 func can_merlin_show_melancholy() -> bool:
-	"""Can Merlin show his true sadness?"""
+	## Can Merlin show his true sadness?
 	return current_tier >= Tier.ADEPT
 
 
 func can_merlin_break_fourth_wall() -> bool:
-	"""Can Merlin make meta comments?"""
+	## Can Merlin make meta comments?
 	return current_tier >= Tier.MASTER
 
 # ═══════════════════════════════════════════════════════════════════════════════
@@ -288,13 +288,13 @@ func get_tier_description() -> String:
 
 
 func get_progress_to_next_tier(runs_completed: int) -> Dictionary:
-	"""Returns progress to next tier."""
+	## Returns progress to next tier.
 	var thresholds := [5, 20, 50, 100]
 	var tier_names := ["Apprenti", "Voyageur", "Adepte", "Maitre"]
 
 	for i in range(thresholds.size()):
 		if runs_completed < thresholds[i]:
-			var prev_threshold := 0 if i == 0 else thresholds[i - 1]
+			var prev_threshold: int = 0 if i == 0 else thresholds[i - 1]
 			var progress := float(runs_completed - prev_threshold) / float(thresholds[i] - prev_threshold)
 			return {
 				"next_tier": tier_names[i],

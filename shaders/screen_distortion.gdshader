@@ -6,48 +6,51 @@ render_mode unshaded;
 // All effects are designed to be barely noticeable, creating subliminal unease
 
 // === MASTER CONTROLS ===
-uniform float global_intensity : hint_range(0.0, 1.0) = 1.0;
+uniform float global_intensity : hint_range(0.0, 1.0) = 0.35;
 
 // === CHROMATIC ABERRATION (edge only) ===
 uniform bool chromatic_enabled = true;
-uniform float chromatic_intensity : hint_range(0.0, 0.01) = 0.002;
-uniform float chromatic_falloff : hint_range(1.0, 4.0) = 2.5;
+uniform float chromatic_intensity : hint_range(0.0, 0.01) = 0.0003;
+uniform float chromatic_falloff : hint_range(1.0, 4.0) = 3.0;
 
 // === SCANLINE WOBBLE ===
 uniform bool scanline_enabled = true;
-uniform float scanline_wobble_intensity : hint_range(0.0, 0.005) = 0.0008;
+uniform float scanline_wobble_intensity : hint_range(0.0, 0.005) = 0.0001;
 uniform float scanline_wobble_frequency : hint_range(0.0, 100.0) = 30.0;
 uniform float scanline_wobble_speed : hint_range(0.0, 5.0) = 0.8;
 
 // === MICRO GLITCHES (rare, brief) ===
 uniform bool glitch_enabled = true;
-uniform float glitch_probability : hint_range(0.0, 0.1) = 0.008;
-uniform float glitch_intensity : hint_range(0.0, 0.02) = 0.005;
+uniform float glitch_probability : hint_range(0.0, 0.1) = 0.003;
+uniform float glitch_intensity : hint_range(0.0, 0.02) = 0.003;
 uniform float glitch_line_height : hint_range(0.001, 0.05) = 0.015;
 
 // === BARREL DISTORTION ===
 uniform bool barrel_enabled = true;
-uniform float barrel_intensity : hint_range(0.0, 0.1) = 0.015;
+uniform float barrel_intensity : hint_range(0.0, 0.1) = 0.001;
 
 // === COLOR SHIFTING/BLEEDING ===
 uniform bool color_shift_enabled = true;
-uniform float color_shift_intensity : hint_range(0.0, 0.02) = 0.003;
+uniform float color_shift_intensity : hint_range(0.0, 0.02) = 0.0004;
 uniform float color_shift_speed : hint_range(0.0, 2.0) = 0.3;
 
 // === TEMPORAL NOISE (grain) ===
 uniform bool noise_enabled = true;
-uniform float noise_intensity : hint_range(0.0, 0.1) = 0.02;
+uniform float noise_intensity : hint_range(0.0, 0.1) = 0.008;
 uniform float noise_speed : hint_range(1.0, 60.0) = 24.0;
 
 // === VIGNETTE ===
 uniform bool vignette_enabled = true;
-uniform float vignette_intensity : hint_range(0.0, 0.5) = 0.12;
+uniform float vignette_intensity : hint_range(0.0, 0.5) = 0.06;
 uniform float vignette_softness : hint_range(0.1, 1.0) = 0.6;
 
 // === SUBTLE BRIGHTNESS FLICKER ===
 uniform bool flicker_enabled = true;
-uniform float flicker_intensity : hint_range(0.0, 0.05) = 0.008;
+uniform float flicker_intensity : hint_range(0.0, 0.05) = 0.003;
 uniform float flicker_speed : hint_range(1.0, 30.0) = 12.0;
+
+// === SCREEN TEXTURE (for post-processing) ===
+uniform sampler2D screen_texture : hint_screen_texture, filter_linear;
 
 // === UTILITY FUNCTIONS ===
 
@@ -79,7 +82,7 @@ float noise(vec2 uv) {
 
 void fragment() {
     // Default output
-    vec4 col = texture(TEXTURE, UV);
+    vec4 col = texture(screen_texture, UV);
 
     // Only apply effects if global intensity > 0
     if (global_intensity >= 0.001) {
@@ -131,14 +134,14 @@ void fragment() {
         vec2 ca_offset = normalize(center_dist + 0.001) * ca_amount;
 
         // Sample RGB with offset + color shifting
-        float r = texture(TEXTURE, uv + ca_offset + color_offset).r;
-        float g = texture(TEXTURE, uv + color_offset * 0.5).g;
-        float b = texture(TEXTURE, uv - ca_offset + color_offset).b;
-        float a = texture(TEXTURE, uv).a;
+        float r = texture(screen_texture, uv + ca_offset + color_offset).r;
+        float g = texture(screen_texture, uv + color_offset * 0.5).g;
+        float b = texture(screen_texture, uv - ca_offset + color_offset).b;
+        float a = texture(screen_texture, uv).a;
 
         col = vec4(r, g, b, a);
     } else {
-        col = texture(TEXTURE, uv + color_offset);
+        col = texture(screen_texture, uv + color_offset);
     }
 
     // === TEMPORAL NOISE (grain) ===

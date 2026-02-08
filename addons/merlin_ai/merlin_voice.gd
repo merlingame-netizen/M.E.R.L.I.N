@@ -3,14 +3,23 @@ class_name MerlinVoice
 
 ## MerlinVoice - Voix "Yaourt" style Animal Crossing
 ##
-## Utilise ACVoicebox si disponible (sons reels)
-## Sinon utilise la synthese douce en fallback
+## 3 modes: AC Voice (Animalese WAV), Digital Voice (synthese), Off
+## AC Voice supporte 5 banques de sons differentes
 
 signal text_started(full_text: String)
 signal text_updated(visible_text: String, progress: float)
 signal text_finished()
 signal character_displayed(char: String, index: int)
 signal voice_ready(is_ready: bool)
+
+## Modes de voix
+enum VoiceMode { AC_VOICE, DIGITAL_VOICE, OFF }
+
+const VOICE_MODE_LABELS := {
+	VoiceMode.AC_VOICE: "Voix AC (Animalese)",
+	VoiceMode.DIGITAL_VOICE: "Voix Numerique",
+	VoiceMode.OFF: "Desactivee",
+}
 
 ## Presets de voix (compatibles ACVoicebox)
 const VOICE_PRESETS := {
@@ -29,8 +38,10 @@ const VOICE_PRESETS := {
 
 ## Configuration
 @export_group("Voix")
+@export var voice_mode: VoiceMode = VoiceMode.AC_VOICE
 @export var current_preset: String = "Merlin"
 @export var voice_enabled: bool = true
+@export var sound_bank: String = "default"
 
 @export_group("Parametres")
 @export_range(2.0, 5.0) var base_pitch: float = 3.2
@@ -63,9 +74,7 @@ var _last_pitch: float = 294.0
 
 func _ready() -> void:
 	_try_load_acvoicebox()
-
-	if not _using_acvoicebox:
-		_setup_fallback_audio()
+	_setup_fallback_audio()
 
 	apply_preset(current_preset)
 	_is_ready = true
@@ -83,6 +92,10 @@ func _try_load_acvoicebox() -> void:
 			_acvoicebox.name = "ACVoicebox"
 			add_child(_acvoicebox)
 
+			# Appliquer la banque de sons
+			if _acvoicebox.has_method("set_sound_bank"):
+				_acvoicebox.set_sound_bank(sound_bank)
+
 			# Connecter les signaux
 			if _acvoicebox.has_signal("characters_sounded"):
 				_acvoicebox.characters_sounded.connect(_on_ac_character)
@@ -94,12 +107,12 @@ func _try_load_acvoicebox() -> void:
 			# Verifier si les sons sont charges
 			if _acvoicebox.has_method("is_ready") and _acvoicebox.is_ready():
 				_using_acvoicebox = true
-				print("MerlinVoice: Utilisation de ACVoicebox (sons reels)")
+				print("MerlinVoice: ACVoicebox charge (banque: %s)" % sound_bank)
 			else:
 				_using_acvoicebox = false
 				_acvoicebox.queue_free()
 				_acvoicebox = null
-				print("MerlinVoice: ACVoicebox sans sons, utilisation de la synthese")
+				print("MerlinVoice: ACVoicebox sans sons, synthese disponible")
 
 
 func _setup_fallback_audio() -> void:
@@ -119,7 +132,7 @@ func _setup_fallback_audio() -> void:
 
 
 func _process(delta: float) -> void:
-	if _using_acvoicebox:
+	if voice_mode == VoiceMode.AC_VOICE and _using_acvoicebox:
 		return  # ACVoicebox gere tout
 
 	if not _is_displaying:
@@ -144,7 +157,7 @@ func _advance_one_char() -> void:
 	if text_label != null:
 		text_label.visible_characters = _visible_chars
 
-	if voice_enabled:
+	if voice_enabled and voice_mode == VoiceMode.DIGITAL_VOICE:
 		_play_soft_sound(c)
 
 	character_displayed.emit(c, _visible_chars - 1)
@@ -191,9 +204,15 @@ func display_text(text: String) -> void:
 
 	text_started.emit(text)
 
-	if _using_acvoicebox and _acvoicebox != null:
-		_acvoicebox.text_label = text_label
-		_acvoicebox.play_string(text)
+	match voice_mode:
+		VoiceMode.AC_VOICE:
+			if _using_acvoicebox and _acvoicebox != null:
+				_acvoicebox.text_label = text_label
+				_acvoicebox.play_string(text)
+		VoiceMode.DIGITAL_VOICE:
+			pass  # Handled in _process via _advance_one_char
+		VoiceMode.OFF:
+			pass  # Handled in _process (text display only, no sound)
 
 
 func speak(text: String) -> void:
@@ -202,7 +221,7 @@ func speak(text: String) -> void:
 
 func stop() -> void:
 	_is_displaying = false
-	if _using_acvoicebox and _acvoicebox != null:
+	if voice_mode == VoiceMode.AC_VOICE and _using_acvoicebox and _acvoicebox != null:
 		_acvoicebox.stop_speaking()
 
 
@@ -266,6 +285,51 @@ func get_current_preset_params() -> Dictionary:
 		"pitch_variation": pitch_variation,
 		"speed_scale": speed_scale
 	}
+
+
+## ===== MODE DE VOIX =====
+
+func set_voice_mode(mode: VoiceMode) -> void:
+	voice_mode = mode
+	voice_enabled = (mode != VoiceMode.OFF)
+
+
+func get_voice_mode() -> VoiceMode:
+	return voice_mode
+
+
+func get_voice_mode_label(mode: VoiceMode) -> String:
+	return VOICE_MODE_LABELS.get(mode, "Inconnu")
+
+
+## ===== BANQUES DE SONS =====
+
+func set_sound_bank(bank_name: String) -> void:
+	sound_bank = bank_name
+	if _using_acvoicebox and _acvoicebox != null:
+		if _acvoicebox.has_method("set_sound_bank"):
+			_acvoicebox.set_sound_bank(bank_name)
+
+
+func get_sound_bank() -> String:
+	return sound_bank
+
+
+func get_sound_bank_names() -> Array[String]:
+	if _acvoicebox != null and _acvoicebox.has_method("get_sound_bank_names"):
+		return _acvoicebox.get_sound_bank_names()
+	var names: Array[String] = ["default", "high", "low", "lowest", "med"]
+	return names
+
+
+func get_sound_bank_label(bank_name: String) -> String:
+	if _acvoicebox != null and _acvoicebox.has_method("get_sound_bank_label"):
+		return _acvoicebox.get_sound_bank_label(bank_name)
+	var labels := {
+		"default": "Classique", "high": "Aigu (Peppy)",
+		"low": "Grave (Cranky)", "lowest": "Tres grave", "med": "Medium"
+	}
+	return labels.get(bank_name, bank_name)
 
 
 ## ===== CONNEXION LLM =====
@@ -398,5 +462,6 @@ func _strip_markdown(text: String) -> String:
 	return "\n".join(clean_lines)
 
 
-func test_voice() -> void:
-	display_text("Bonjour! Je suis Merlin, votre guide magique!")
+func test_voice(custom_text: String = "") -> void:
+	var text := custom_text if custom_text != "" else "Bonjour! Je suis Merlin, votre guide magique!"
+	display_text(text)

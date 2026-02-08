@@ -13,19 +13,131 @@ class_name ScreenEffectsManager
 signal effects_enabled
 signal effects_disabled
 signal intensity_changed(new_intensity: float)
+signal mood_changed(mood: String)
 
 # === CONSTANTS ===
 const SHADER_PATH := "res://shaders/screen_distortion.gdshader"
 const FADE_DURATION := 0.3
+const MOOD_TRANSITION_DURATION := 0.6
+
+# === MERLIN MOOD PROFILES ===
+# Each mood maps to a distortion profile reflecting Merlin's emotional connection
+# Merlin is an AI from the future — his emotions ripple through the screen itself
+const MOOD_PROFILES := {
+	# Sage: connection claire, Merlin serein — quasi invisible
+	"sage": {
+		"chromatic_intensity": 0.0005,
+		"scanline_wobble_intensity": 0.0002,
+		"glitch_probability": 0.003,
+		"barrel_intensity": 0.002,
+		"color_shift_intensity": 0.0005,
+		"noise_intensity": 0.015,
+		"vignette_intensity": 0.08,
+		"flicker_intensity": 0.004,
+	},
+	# Amuse/Playful: ecran presque limpide, micro-flicker joyeux
+	"amuse": {
+		"chromatic_intensity": 0.0003,
+		"scanline_wobble_intensity": 0.0001,
+		"glitch_probability": 0.001,
+		"barrel_intensity": 0.001,
+		"color_shift_intensity": 0.0003,
+		"noise_intensity": 0.008,
+		"vignette_intensity": 0.05,
+		"flicker_intensity": 0.012,
+	},
+	# Mystique: Merlin touche l'au-dela — aberration chromatique, couleurs vibrent
+	"mystique": {
+		"chromatic_intensity": 0.003,
+		"scanline_wobble_intensity": 0.0006,
+		"glitch_probability": 0.005,
+		"barrel_intensity": 0.003,
+		"color_shift_intensity": 0.005,
+		"noise_intensity": 0.025,
+		"vignette_intensity": 0.14,
+		"flicker_intensity": 0.006,
+	},
+	# Serieux/Warning: connexion instable, Merlin angoisse — glitches lourds
+	"serieux": {
+		"chromatic_intensity": 0.002,
+		"scanline_wobble_intensity": 0.001,
+		"glitch_probability": 0.04,
+		"glitch_intensity": 0.008,
+		"barrel_intensity": 0.008,
+		"color_shift_intensity": 0.002,
+		"noise_intensity": 0.04,
+		"vignette_intensity": 0.20,
+		"flicker_intensity": 0.018,
+	},
+	# Pensif/Melancholy: Merlin se souvient — bruit doux, vignette profonde, scanlines
+	"pensif": {
+		"chromatic_intensity": 0.001,
+		"scanline_wobble_intensity": 0.0008,
+		"glitch_probability": 0.006,
+		"barrel_intensity": 0.003,
+		"color_shift_intensity": 0.001,
+		"noise_intensity": 0.035,
+		"vignette_intensity": 0.22,
+		"flicker_intensity": 0.005,
+	},
+	# Warm: Merlin chaleureux — minimal, connexion claire
+	"warm": {
+		"chromatic_intensity": 0.0004,
+		"scanline_wobble_intensity": 0.0002,
+		"glitch_probability": 0.002,
+		"barrel_intensity": 0.002,
+		"color_shift_intensity": 0.0004,
+		"noise_intensity": 0.012,
+		"vignette_intensity": 0.06,
+		"flicker_intensity": 0.006,
+	},
+	# Cryptic: Merlin cache quelque chose — interferences alternees
+	"cryptic": {
+		"chromatic_intensity": 0.004,
+		"scanline_wobble_intensity": 0.001,
+		"glitch_probability": 0.025,
+		"glitch_intensity": 0.007,
+		"barrel_intensity": 0.005,
+		"color_shift_intensity": 0.004,
+		"noise_intensity": 0.03,
+		"vignette_intensity": 0.16,
+		"flicker_intensity": 0.02,
+	},
+}
+
+# Map ToneController tones to mood names
+const TONE_TO_MOOD := {
+	"NEUTRAL": "sage",
+	"PLAYFUL": "amuse",
+	"MYSTERIOUS": "mystique",
+	"WARNING": "serieux",
+	"MELANCHOLY": "pensif",
+	"WARM": "warm",
+	"CRYPTIC": "cryptic",
+}
+
+# Map MerlinPortraitManager emotions to mood names
+const EMOTION_TO_MOOD := {
+	"SAGE": "sage",
+	"MYSTIQUE": "mystique",
+	"SERIEUX": "serieux",
+	"AMUSE": "amuse",
+	"PENSIF": "pensif",
+}
 
 # === NODES ===
 var _overlay: ColorRect
 var _shader_material: ShaderMaterial
 var _tween: Tween
+var _mood_tween: Tween
 
 # === STATE ===
 var _enabled: bool = true
-var _current_intensity: float = 1.0
+var _current_intensity: float = 0.35
+var _current_mood: String = "sage"
+
+## Scene to return to when pressing Back in sub-menus (Options, Calendar, etc.)
+var return_scene: String = ""
 
 # === EFFECT NAMES ===
 const EFFECT_NAMES: Array[String] = [
@@ -53,6 +165,7 @@ func _create_overlay() -> void:
 	_overlay = ColorRect.new()
 	_overlay.name = "DistortionOverlay"
 	_overlay.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_overlay.color = Color(1, 1, 1, 1)  # White, shader will read screen_texture
 
 	# Cover entire screen
 	_overlay.set_anchors_preset(Control.PRESET_FULL_RECT)
@@ -184,16 +297,16 @@ func apply_preset(preset_name: String) -> void:
 			disable(false)
 
 		"subtle":
-			# Very subtle, barely noticeable (default)
+			# Very subtle, barely noticeable (default) - mini bugs only
 			_apply_preset_values({
 				"global_intensity": 1.0,
-				"chromatic_intensity": 0.002,
-				"scanline_wobble_intensity": 0.0008,
+				"chromatic_intensity": 0.0008,
+				"scanline_wobble_intensity": 0.0004,
 				"glitch_probability": 0.008,
-				"barrel_intensity": 0.015,
-				"color_shift_intensity": 0.003,
+				"barrel_intensity": 0.004,
+				"color_shift_intensity": 0.001,
 				"noise_intensity": 0.02,
-				"vignette_intensity": 0.12,
+				"vignette_intensity": 0.10,
 				"flicker_intensity": 0.008
 			})
 
@@ -201,13 +314,13 @@ func apply_preset(preset_name: String) -> void:
 			# More noticeable but not distracting
 			_apply_preset_values({
 				"global_intensity": 1.0,
-				"chromatic_intensity": 0.004,
-				"scanline_wobble_intensity": 0.0015,
+				"chromatic_intensity": 0.002,
+				"scanline_wobble_intensity": 0.0008,
 				"glitch_probability": 0.02,
-				"barrel_intensity": 0.025,
-				"color_shift_intensity": 0.005,
+				"barrel_intensity": 0.010,
+				"color_shift_intensity": 0.003,
 				"noise_intensity": 0.035,
-				"vignette_intensity": 0.18,
+				"vignette_intensity": 0.15,
 				"flicker_intensity": 0.015
 			})
 
@@ -257,6 +370,110 @@ func apply_preset(preset_name: String) -> void:
 			push_warning("ScreenEffects: Unknown preset '%s'" % preset_name)
 
 
+## ═══════════════════════════════════════════════════════════════════════════════
+## MERLIN MOOD SYSTEM — Screen as emotional membrane
+## ═══════════════════════════════════════════════════════════════════════════════
+
+## Set Merlin's mood directly (sage, amuse, mystique, serieux, pensif, warm, cryptic)
+## Smoothly transitions the distortion profile over MOOD_TRANSITION_DURATION
+func set_merlin_mood(mood_name: String) -> void:
+	if _shader_material == null:
+		return
+
+	var mood_key := mood_name.to_lower()
+	if not MOOD_PROFILES.has(mood_key):
+		push_warning("ScreenEffects: Unknown mood '%s'" % mood_name)
+		return
+
+	if mood_key == _current_mood:
+		return
+
+	_current_mood = mood_key
+	var profile: Dictionary = MOOD_PROFILES[mood_key]
+
+	# Kill any ongoing mood transition
+	if _mood_tween:
+		_mood_tween.kill()
+
+	# Collect valid tweeners first to avoid empty Tween error
+	var tweens_to_add: Array[Dictionary] = []
+	for param_name: String in profile:
+		var raw_value = _shader_material.get_shader_parameter(param_name)
+		if raw_value == null:
+			continue
+		tweens_to_add.append({
+			"param": param_name,
+			"from": float(raw_value),
+			"to": float(profile[param_name]),
+		})
+
+	if tweens_to_add.is_empty():
+		mood_changed.emit(mood_key)
+		return
+
+	_mood_tween = create_tween()
+	_mood_tween.set_ease(Tween.EASE_IN_OUT)
+	_mood_tween.set_trans(Tween.TRANS_SINE)
+	_mood_tween.set_parallel(true)
+
+	for t in tweens_to_add:
+		_mood_tween.tween_method(
+			_set_shader_param.bind(t["param"]),
+			t["from"],
+			t["to"],
+			MOOD_TRANSITION_DURATION
+		)
+
+	mood_changed.emit(mood_key)
+
+
+## Set mood from a ToneController tone string (NEUTRAL, PLAYFUL, etc.)
+func set_mood_from_tone(tone: String) -> void:
+	var mood: String = TONE_TO_MOOD.get(tone.to_upper(), "sage")
+	set_merlin_mood(mood)
+
+
+## Set mood from a MerlinPortraitManager emotion string (SAGE, MYSTIQUE, etc.)
+func set_mood_from_emotion(emotion: String) -> void:
+	var mood: String = EMOTION_TO_MOOD.get(emotion.to_upper(), "sage")
+	set_merlin_mood(mood)
+
+
+## Get the current mood name
+func get_merlin_mood() -> String:
+	return _current_mood
+
+
+## Temporarily spike distortion for narrative shock moments
+## Returns to current mood after duration
+func narrative_shock(duration: float = 0.4) -> void:
+	if _shader_material == null:
+		return
+
+	# Save current values
+	var saved_glitch_prob: float = _shader_material.get_shader_parameter("glitch_probability")
+	var saved_glitch_int: float = _shader_material.get_shader_parameter("glitch_intensity")
+	var saved_chromatic: float = _shader_material.get_shader_parameter("chromatic_intensity")
+	var saved_barrel: float = _shader_material.get_shader_parameter("barrel_intensity")
+
+	# Spike all distortions
+	_shader_material.set_shader_parameter("glitch_probability", 0.2)
+	_shader_material.set_shader_parameter("glitch_intensity", 0.015)
+	_shader_material.set_shader_parameter("chromatic_intensity", 0.008)
+	_shader_material.set_shader_parameter("barrel_intensity", 0.02)
+
+	await get_tree().create_timer(duration).timeout
+
+	# Restore smoothly with deceleration
+	var restore := create_tween().set_parallel(true)
+	restore.set_ease(Tween.EASE_OUT)
+	restore.set_trans(Tween.TRANS_QUAD)
+	restore.tween_method(_set_shader_param.bind("glitch_probability"), 0.2, saved_glitch_prob, 0.3)
+	restore.tween_method(_set_shader_param.bind("glitch_intensity"), 0.015, saved_glitch_int, 0.3)
+	restore.tween_method(_set_shader_param.bind("chromatic_intensity"), 0.008, saved_chromatic, 0.3)
+	restore.tween_method(_set_shader_param.bind("barrel_intensity"), 0.02, saved_barrel, 0.3)
+
+
 ## Temporarily increase glitch intensity for dramatic moments
 func glitch_pulse(duration: float = 0.5, intensity: float = 0.1) -> void:
 	if _shader_material == null:
@@ -304,6 +521,11 @@ func _fade_intensity(from: float, to: float, duration: float) -> void:
 func _set_shader_intensity(value: float) -> void:
 	if _shader_material:
 		_shader_material.set_shader_parameter("global_intensity", value)
+
+
+func _set_shader_param(value: float, param_name: String) -> void:
+	if _shader_material:
+		_shader_material.set_shader_parameter(param_name, value)
 
 
 func _apply_preset_values(values: Dictionary) -> void:

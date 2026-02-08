@@ -1,4 +1,4 @@
-## ═══════════════════════════════════════════════════════════════════════════════
+﻿## ═══════════════════════════════════════════════════════════════════════════════
 ## Merlin Fallback Pool — Cartes de Secours
 ## ═══════════════════════════════════════════════════════════════════════════════
 ## Pool de cartes pre-ecrites avec matching contextuel.
@@ -77,7 +77,7 @@ func _count_total_cards() -> int:
 # ═══════════════════════════════════════════════════════════════════════════════
 
 func get_fallback_card(context: Dictionary) -> Dictionary:
-	"""Retourne une carte fallback appropriee au contexte."""
+	## Retourne une carte fallback appropriee au contexte.
 	var pools := _select_pools(context)
 	var valid := _filter_valid(pools, context)
 	var weighted := _apply_weights(valid, context)
@@ -225,7 +225,7 @@ func _weighted_random(weighted_cards: Array) -> Dictionary:
 # ═══════════════════════════════════════════════════════════════════════════════
 
 func _generate_emergency_card(context: Dictionary) -> Dictionary:
-	"""Genere une carte minimale en cas d'urgence."""
+	## Genere une carte minimale en cas d'urgence.
 	var aspects: Dictionary = context.get("aspects", {})
 
 	# Find most critical aspect
@@ -273,7 +273,7 @@ func _generate_emergency_card(context: Dictionary) -> Dictionary:
 # ═══════════════════════════════════════════════════════════════════════════════
 
 func _generate_default_cards() -> void:
-	"""Genere un set de cartes par defaut."""
+	## Genere un set de cartes par defaut.
 
 	# Early game cards
 	cards_by_context.early_game = [
@@ -500,7 +500,7 @@ func _generate_default_cards() -> void:
 
 
 func save_cards_to_file() -> void:
-	"""Sauvegarde les cartes actuelles dans un fichier."""
+	## Sauvegarde les cartes actuelles dans un fichier.
 	var dir := DATA_PATH.get_base_dir()
 	if not DirAccess.dir_exists_absolute(dir):
 		DirAccess.make_dir_recursive_absolute(dir)
@@ -512,7 +512,7 @@ func save_cards_to_file() -> void:
 
 
 func add_card(context: String, card: Dictionary) -> bool:
-	"""Ajoute une carte a un contexte."""
+	## Ajoute une carte a un contexte.
 	if not cards_by_context.has(context):
 		return false
 
@@ -521,7 +521,7 @@ func add_card(context: String, card: Dictionary) -> bool:
 
 
 func get_pool_sizes() -> Dictionary:
-	"""Retourne la taille de chaque pool."""
+	## Retourne la taille de chaque pool.
 	var sizes := {}
 	for context in cards_by_context:
 		sizes[context] = cards_by_context[context].size()

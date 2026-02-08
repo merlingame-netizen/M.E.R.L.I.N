@@ -9,8 +9,8 @@ signal quiz_completed(traits: Dictionary)
 # CONSTANTS
 # =============================================================================
 
-const NEXT_SCENE := "res://scenes/IntroMerlinDialogue.tscn"
-const MENU_SCENE := "res://scenes/MenuPrincipalReigns.tscn"
+const NEXT_SCENE := "res://scenes/SceneEveil.tscn"
+const MENU_SCENE := "res://scenes/MenuPrincipal.tscn"
 
 const PALETTE := {
 	"bg": Color(0.02, 0.02, 0.04),

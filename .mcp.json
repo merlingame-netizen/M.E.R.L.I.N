@@ -5,6 +5,16 @@
       "args": [
         "c:\\Users\\PGNK2128\\Godot-MCP\\server\\dist\\index.js"
       ]
+    },
+    "dbeaver": {
+      "command": "node",
+      "args": [
+        "C:\\Users\\PGNK2128\\AppData\\Roaming\\npm\\node_modules\\dbeaver-mcp-server\\dist\\index.js"
+      ],
+      "env": {
+        "DBEAVER_READ_ONLY": "false",
+        "DBEAVER_TIMEOUT": "30000"
+      }
     }
   }
 }
