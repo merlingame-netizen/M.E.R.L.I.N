@@ -2,6 +2,66 @@
 
 > **Note**: Sessions anterieures archivees dans `archive/progress_archive_2026-02-05_to_2026-02-08.md`
 
+## Session: 2026-02-09 (Phase 34 — Mini-Jeux + Dual-Brain + Dice VFX + Resource Overhaul)
+
+### Phase 34: Refonte Gameplay Majeure
+- **Status:** complete
+- **Phases:** A (Ressources), B (Dual-Brain), C (Dice VFX), D (15 Mini-Jeux), E+F (Choix Critique), G (Animations)
+
+#### Phase A: Fix Ressources + Equilibrage
+- Aspects etendus de [-2,+2] a [-3,+3], game over a abs>=3
+- Fix bug critique: `_apply_crit_success()` ne provoque plus de game over
+- Nouveau: Karma visible [-10,+10], Benedictions (bouclier, max 2)
+- Souffle max 5, regen: +1 succes, +2 crit, +1 equilibre parfait
+- Difficulte adaptative (pity mode apres 3 echecs, DC+2 apres 3 succes)
+
+#### Phase B: Integration Dual-Brain
+- `generate_parallel()` — Narrateur + Maitre du Jeu en simultane
+- Nouveau GBNF: `gamemaster_choices.gbnf` (labels + minigame + effets)
+- Nouveau template: `gamemaster_choices` dans prompt_templates.json
+- Fallback 3 niveaux: GM complet → labels GM + effets heuristiques → tout heuristique
+
+#### Phase C: Dice VFX + Audio
+- De avec deceleration organique + bounce a l'atterrissage + rotation wobble
+- CPUParticles2D par outcome (40 dorees crit, 15 vertes succes, 20 rouges echec, 30 fumee crit fail)
+- 5 nouveaux SFX dice: shake, roll, land, crit_success, crit_fail
+- Choregraphie complete: shake → roll → deceleration → land → particles → outcome
+
+#### Phase D: 15 Mini-Jeux par Champs Lexicaux
+- Architecture: MiniGameBase + MiniGameRegistry + 15 jeux
+- 5 champs: chance, bluff, observation, logique, finesse (3 jeux chacun)
+- Selection par keywords narratifs ou hint du GM
+- Conversion score 0-100 → D20
+- 5 SFX mini-jeux: start, success, fail, tick, critical_alert
+- Modificateurs Ogham (+10% score par affinite)
+
+#### Phase E+F: Choix Critique + Adaptation Quete
+- Declenchement: 15% base apres carte 3, force si karma>=5 ou 2+ aspects danger
+- DC +4, mini-jeu diff +3, bordure doree pulsante + SFX critical_alert
+- Historique quest_history pour difficulte adaptative
+- Travel text adapte aux outcomes recents et aspects en danger
+- Benediction sur fin de sous-quete
+
+#### Phase G: Animations Globales
+- Boutons: hover scale 1.05 + SFX hover, press scale 0.95 + SFX click
+- Carte: entree "depercheminement" (scaleY 0→1 + fade)
+- Jauges aspects: tween 0.3s, couleur orange zone danger
+- Travel: SFX mist_breath, texte adapte
+- Carte draw: SFX card_draw
+
+#### Fichiers crees (18 nouveaux)
+- `scripts/minigames/minigame_base.gd` — Classe de base
+- `scripts/minigames/minigame_registry.gd` — Registre par champs lexicaux
+- `scripts/minigames/mg_*.gd` — 15 mini-jeux
+- `data/ai/gamemaster_choices.gbnf` — Grammaire GM choix
+
+#### Fichiers modifies (2)
+- `scripts/TestBrainPool.gd` — Refonte complete (ressources, dual-brain, mini-jeux, VFX, choix critique, animations)
+- `scripts/autoload/SFXManager.gd` — 10 nouveaux sons proceduraux (5 dice + 5 mini-jeux)
+- `data/ai/config/prompt_templates.json` — Nouveau template gamemaster_choices
+
+---
+
 ## Session: 2026-02-09 (Phase 33 — Documentation Cleanup v4.0)
 
 ### Phase 33: Menage Extensif Documentation

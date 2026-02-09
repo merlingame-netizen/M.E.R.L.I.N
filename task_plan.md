@@ -4,7 +4,19 @@
 Developper un JDR Parlant roguelite avec LLM local (Qwen2.5-3B Multi-Brain), systeme Triade (3 aspects x 3 etats), et narration procedurale.
 
 ## Current Phase
-Phase 33 - Documentation Cleanup v4.0 (COMPLETE)
+Phase 34 - Mini-Jeux + Dual-Brain + Dice VFX + Resource Overhaul (COMPLETE)
+
+---
+
+## Phases Recentes (2026-02-09)
+
+### Phase 34: Mini-Jeux + Dual-Brain + Dice VFX + Resource Overhaul (COMPLETE)
+- [x] 34.A Fix ressources + equilibrage (aspects [-3,+3], karma, benedictions, souffle regen)
+- [x] 34.B Integration dual-brain (generate_parallel, GBNF gamemaster_choices, template)
+- [x] 34.C Animation de 2D + VFX + audio (dice deceleration, CPUParticles2D, 5 SFX dice)
+- [x] 34.D 15 mini-jeux (MiniGameBase, MiniGameRegistry, 5 champs lexicaux)
+- [x] 34.E+F Choix critique + adaptation quete (DC+4, bordure doree, travel adaptatif)
+- [x] 34.G Animations globales (hover/press SFX, card deparcheminement, jauges tween)
 
 ---
 
