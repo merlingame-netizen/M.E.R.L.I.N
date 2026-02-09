@@ -1,6 +1,42 @@
 # CLAUDE.md — M.E.R.L.I.N.: Le Jeu des Oghams
 
 > **IMPORTANT**: Ce fichier définit les comportements OBLIGATOIRES pour Claude Code sur ce projet.
+> Conforme aux best practices Orange AI-assisted coding (v1.25.0, 2025-12-31)
+> Voir aussi: `AGENTS.md` (racine) pour les instructions cross-outils.
+
+---
+
+## 🟠 CONFORMITÉ ORANGE (OBLIGATOIRE)
+
+### Traçabilité AI — Tag [AI-assisted]
+
+> **NOTE**: Ce projet (M.E.R.L.I.N.) est un projet personnel hors périmètre Orange.
+> Le tag `[AI-assisted]` n'est PAS requis ici.
+> Il est requis uniquement sur les projets Orange (Data, Cours, etc.).
+
+Format commit: **Conventional Commits** — `type(scope): description`
+
+```
+feat(card-system): add seasonal event cards
+fix(ui): resolve swipe gesture on mobile
+refactor(store): simplify state management
+```
+
+### Frugalité des modèles — Adapter le tier au besoin
+
+| Tâche | Modèle Claude Code | Commande |
+|-------|-------------------|----------|
+| Documentation, formatage, renommage simple | Haiku | Subagent `model: "haiku"` |
+| Code standard, debug, review, UI | Sonnet (défaut) | Subagent `model: "sonnet"` |
+| Architecture complexe, sécurité, refactoring multi-fichiers | Opus | Uniquement quand nécessaire |
+
+**Règle**: Utiliser Haiku ou Sonnet pour les subagents (Task tool) sauf besoin architectural.
+Exemple: `Task(model: "haiku", prompt: "Documente cette fonction")` au lieu d'Opus.
+
+### Signature des commits
+
+Tout commit doit être signé (GPG) par le développeur humain.
+Configuration: `git config --global commit.gpgsign true`
 
 ---
 
@@ -166,9 +202,9 @@ Task tool:
 - Avant un release majeur
 - Quand archive/ grossit
 
-**Format commit auto:**
+**Format commit auto (Conventional Commits):**
 ```
-[TYPE] Description courte
+type(scope): description courte
 
 - Fichier 1: changement
 - Fichier 2: changement
@@ -176,15 +212,23 @@ Task tool:
 Co-Authored-By: Claude <noreply@anthropic.com>
 ```
 
+**Types**: feat, fix, refactor, docs, test, chore, perf
+**Scope**: composant concerné (store, ui, llm, cards, lore, etc.)
+
+> Pour les projets Orange (Data, Cours): ajouter `[AI-assisted]` en suffixe.
+
 ---
 
 ## Project Overview
 
 M.E.R.L.I.N. is a narrative card game built with Godot 4.x.
-- **Core Loop**: Swipe cards, balance 4 gauges, survive
-- **LLM Integration**: Trinity-Nano local LLM generates narrative cards
-- **Companion**: Bestiole provides passive skills (Oghams)
+- **Core Loop**: Choose from 3 options per card, balance 3 Aspects (Corps/Ame/Monde), survive
+- **Game System**: Triade — 3 Aspects x 3 discrete states (Bas/Equilibre/Haut), Souffle d'Ogham
+- **LLM Integration**: Qwen2.5-3B-Instruct Q4_K_M (2.0 GB) — Multi-Brain (1-4 cerveaux)
+- **AI Architecture**: Narrator + Game Master in parallel, Worker Pool, RAG v2.0, guardrails
+- **Companion**: Bestiole provides passive skills (18 Oghams)
 - **Character**: Merlin le druide (narrator + guide)
+- **Audio**: SFXManager (30+ procedural sounds, no external audio files)
 
 ---
 
@@ -210,21 +254,30 @@ cd server && npm run build
 
 ### Core Systems (scripts/merlin/)
 ```
-merlin_store.gd          <- Central state (Redux-like)
-merlin_card_system.gd    <- Card engine
-merlin_effect_engine.gd  <- Effect whitelist
-merlin_llm_adapter.gd    <- LLM contract
-merlin_constants.gd      <- Game constants
+merlin_store.gd          <- Central state (Redux-like), Triade system
+merlin_card_system.gd    <- Card engine, fallback pool, TRIADE generation
+merlin_effect_engine.gd  <- SHIFT_ASPECT, SOUFFLE, KARMA, PROMISE
+merlin_llm_adapter.gd    <- LLM contract, format TRIADE, JSON repair
+merlin_constants.gd      <- 18 Oghams, 12 endings, 3 victoires
+merlin_save_system.gd    <- 3 slots JSON
 ```
 
 ### UI Layer (scripts/ui/)
 ```
-merlin_game_ui.gd         <- Card display, swipe
-merlin_game_controller.gd <- Store-UI bridge
+triade_game_ui.gd           <- 3 aspects, 3 options, souffle, typewriter
+triade_game_controller.gd   <- Store-UI bridge, run flow, LLM wiring
+```
+
+### AI Layer (addons/merlin_ai/)
+```
+merlin_ai.gd             <- Multi-Brain (1-4 cerveaux), worker pool
+merlin_omniscient.gd     <- Orchestrateur IA, pipeline parallele, guardrails
+rag_manager.gd           <- RAG v2.0, token budget, priority, journal
 ```
 
 ### Key Documents
-- `docs/MASTER_DOCUMENT.md` — Project overview
+- `docs/MASTER_DOCUMENT.md` — Project overview (v4.0)
+- `docs/20_card_system/DOC_12_Triade_Gameplay_System.md` — Triade system
 - `docs/20_card_system/DOC_11_Card_System.md` — Card system
 - `progress.md` — Session logs
 - `task_plan.md` — Current tasks
@@ -250,21 +303,39 @@ merlin_game_controller.gd <- Store-UI bridge
 
 ---
 
-## LLM Integration Rules (Trinity-Nano)
+## LLM Integration Rules (Qwen2.5-3B-Instruct + Multi-Brain)
+
+### Model Info
+- **Model**: Qwen2.5-3B-Instruct Q4_K_M (2.0 GB per brain)
+- **Source**: https://huggingface.co/Qwen/Qwen2.5-3B-Instruct-GGUF
+- **Benchmark**: 83% comprehension, 100% logic, 100% role-play, 100% JSON
+- **Architecture**: Multi-Brain (1-4 cerveaux adaptatifs par plateforme)
+
+### Multi-Brain Roles
+| Brain | Role | Params |
+|-------|------|--------|
+| Narrator (always) | Texte creatif, dialogues | T=0.7, top_p=0.9, max=200 |
+| Game Master (desktop+) | Effets JSON (GBNF), equilibrage | T=0.2, top_p=0.8, max=150 |
+| Worker Pool (3-4) | Prefetch, voice, balance check | Inherits from task type |
 
 ### Prompt Engineering
-- **Max 10 tokens** for system prompt
-- **NO examples** in prompts (model repeats them)
-- **repetition_penalty >= 1.5**
-- **max_tokens <= 60**
+- Qwen2.5 follows instructions well — supports longer system prompts
+- Supports French natively (29 languages)
+- RAG v2.0: token budget 180, priority-based context
+- Anti-hallucination guardrails: FR check, repetition detection (Jaccard), length bounds
 
-### Current Parameters
+### Current Parameters (in merlin_ai.gd)
 ```gdscript
-const LLM_MAX_TOKENS := 60
-const LLM_TEMPERATURE := 0.4
-const LLM_TOP_P := 0.75
-const LLM_TOP_K := 25
-const LLM_REPETITION_PENALTY := 1.6
+# Narrator — creative text generation
+var narrator_params := {
+    "temperature": 0.7, "top_p": 0.9, "max_tokens": 200,
+    "top_k": 40, "repetition_penalty": 1.3
+}
+# Game Master — structured JSON effects (GBNF)
+var gamemaster_params := {
+    "temperature": 0.2, "top_p": 0.8, "max_tokens": 150,
+    "top_k": 20, "repetition_penalty": 1.0
+}
 ```
 
 ---
@@ -278,11 +349,13 @@ const LLM_REPETITION_PENALTY := 1.6
 | Ame | Corbeau | Perdue | Centree | Possedee |
 | Monde | Cerf | Exile | Integre | Tyran |
 
+**Choix:** 3 options par carte (Gauche/Centre/Droite), Centre payant (Souffle)
+**Souffle d'Ogham:** Max 7, depart 3, +1 si 3 aspects equilibres
 **Fins:** 12 chutes (2 aspects extremes) + 3 victoires + 1 secrete
 **Ref:** DOC_12_Triade_Gameplay_System.md, 09_LES_FINS.md
 
 ### Card Types
-- Narrative (80%) — LLM-generated scenarios
+- Narrative (80%) — LLM-generated scenarios, 3 options
 - Event (10%) — Time/season triggers
 - Promise (5%) — Merlin pacts
 - Merlin Direct (5%) — Narrator messages
@@ -291,6 +364,13 @@ const LLM_REPETITION_PENALTY := 1.6
 - Starter: beith, luis, quert
 - Categories: reveal, protection, boost, narrative, recovery, special
 - Unlock via bond level
+
+### Scenes Flow
+```
+IntroBoot -> IntroCeltOS -> IntroPersonalityQuiz -> IntroMerlinDialogue
+  -> SceneEveil -> SceneAntreMerlin -> HubAntre
+  -> TransitionBiome -> TriadeGame -> [Fin] -> HubAntre
+```
 
 ---
 
@@ -337,4 +417,4 @@ Fichier: `.claude/agents/gdscript_knowledge_base.md`
 
 ---
 
-*Updated: 2026-02-08 — Added Optimizer agent + Knowledge Base*
+*Updated: 2026-02-09 — Triade system, Multi-Brain architecture, documentation cleanup v4.0*

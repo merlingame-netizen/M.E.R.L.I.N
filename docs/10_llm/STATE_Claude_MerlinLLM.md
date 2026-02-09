@@ -6,7 +6,7 @@ Purpose
 Scope
 - Paths, status, known issues, and next actions.
 
-Derniere MAJ: 2026-01-31
+Derniere MAJ: 2026-02-09
 
 Ce document resume l'etat actuel du projet, les scripts en place, les chemins exacts, et les points restants pour stabiliser/optimiser la reactivite et la coherence du LLM dans Godot.
 
@@ -16,18 +16,15 @@ Ce document resume l'etat actuel du projet, les scripts en place, les chemins ex
 
 - Moteur: Godot 4.5.1
 - Objectif: LLM local integre (pas de serveur) via GDExtension `MerlinLLM`.
-- Deux roles LLM:
-- Routeur (classification rapide) : Qwen 3B (GGUF)
-- Executeur (reponse Merlin) : Qwen 3B (GGUF)
-- UI de test principale: scene `TestMerlinGBA.tscn` (dev only; integration finale dans une seule partie)
+- Modele unique: **Qwen2.5-3B-Instruct** (Multi-Brain: 1-4 instances)
+- Quantization: Q4_K_M (2.0 GB)
+- UI de test: `TestTriadeLLMBenchmark.tscn` (5 benchmarks), `TestLLMSceneUltimate.tscn`
 
 Etat actuel:
-- Les modeles se chargent en local.
-- La conversation fonctionne, mais:
-  - Persona instable (merlin "dephase", anglais, incoherences).
-  - Reponses parfois trop longues ou coupees.
-  - Streaming natif non disponible -> pseudo streaming par chunks.
-  - Perception de lenteur comparee aux tests Colab.
+- Migration Trinity-Nano -> Qwen2.5-3B-Instruct complete (Phase 31)
+- Pipeline TRIADE fonctionnel (3 aspects, 3 options par carte)
+- Fallback automatique Q4 -> Q5 -> Q8
+- Streaming disponible via MerlinAI autoload
 
 ---
 
@@ -37,7 +34,7 @@ Etat actuel:
 - `addons/merlin_llm/merlin_llm.gdextension`
 - `addons/merlin_llm/bin/` (DLL/so)
 - `addons/merlin_llm/models/`
-- `qwen2.5-3b-instruct-q4_k_m.gguf`
+- `qwen2.5-3b-instruct-q4_k_m.gguf` (2.0 GB, default)
 
 ### 2.2 Addons AI (GDScript)
 Chemin: `addons/merlin_ai/`

@@ -63,7 +63,7 @@ Le MOS transforme Merlin d'un simple generateur de texte en une **intelligence n
                                     │
                                     ▼
                          ┌─────────────────┐
-                         │   DRU STORE     │
+                         │  MERLIN STORE   │
                          │  (Game State)   │
                          └─────────────────┘
 ```

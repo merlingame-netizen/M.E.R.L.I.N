@@ -1,0 +1,734 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>M.E.R.L.I.N. Dashboard</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #0f0c29 0%, #1a1a2e 50%, #24243e 100%);
+            color: #e0e0e0;
+            padding: 2rem;
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 3rem;
+            padding: 2rem;
+            background: linear-gradient(135deg, #16213e 0%, #1a1a2e 100%);
+            border-radius: 16px;
+            border: 2px solid rgba(255, 121, 0, 0.3);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+            position: relative;
+            overflow: hidden;
+        }
+
+        header::before {
+            content: '☘';
+            position: absolute;
+            top: -20px;
+            left: -20px;
+            font-size: 120px;
+            opacity: 0.05;
+            transform: rotate(-15deg);
+        }
+
+        header::after {
+            content: '☘';
+            position: absolute;
+            bottom: -20px;
+            right: -20px;
+            font-size: 120px;
+            opacity: 0.05;
+            transform: rotate(15deg);
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            color: #FF7900;
+            margin-bottom: 0.5rem;
+            text-shadow: 0 0 20px rgba(255, 121, 0, 0.5);
+            letter-spacing: 2px;
+        }
+
+        .subtitle {
+            color: #a0a0a0;
+            font-size: 1.1rem;
+            margin-bottom: 1rem;
+        }
+
+        .phase-badge {
+            display: inline-block;
+            background: linear-gradient(135deg, #FF7900, #ff9933);
+            color: white;
+            padding: 0.5rem 1.5rem;
+            border-radius: 25px;
+            font-weight: bold;
+            margin-top: 1rem;
+            box-shadow: 0 4px 15px rgba(255, 121, 0, 0.4);
+        }
+
+        .dashboard-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .card {
+            background: linear-gradient(135deg, #16213e 0%, #1a2332 100%);
+            border-radius: 12px;
+            padding: 1.5rem;
+            border: 1px solid rgba(255, 121, 0, 0.2);
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 30px rgba(255, 121, 0, 0.2);
+        }
+
+        .card h2 {
+            color: #FF7900;
+            font-size: 1.4rem;
+            margin-bottom: 1rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 2px solid rgba(255, 121, 0, 0.3);
+        }
+
+        .info-grid {
+            display: grid;
+            gap: 0.5rem;
+        }
+
+        .info-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 0.5rem 0;
+            border-bottom: 1px solid rgba(255, 121, 0, 0.1);
+        }
+
+        .info-label {
+            color: #a0a0a0;
+            font-weight: 500;
+        }
+
+        .info-value {
+            color: #e0e0e0;
+            font-weight: 600;
+        }
+
+        .progress-bar {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+            height: 24px;
+            margin: 0.5rem 0;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #FF7900, #ff9933);
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.85rem;
+            font-weight: bold;
+            color: white;
+            transition: width 0.5s ease;
+        }
+
+        .progress-fill.green {
+            background: linear-gradient(90deg, #50BE87, #6dd5a7);
+        }
+
+        .progress-fill.yellow {
+            background: linear-gradient(90deg, #FFD200, #ffe033);
+        }
+
+        .progress-fill.gray {
+            background: linear-gradient(90deg, #8F8F8F, #a8a8a8);
+        }
+
+        .multi-progress {
+            display: flex;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+            height: 40px;
+            overflow: hidden;
+            margin: 1rem 0;
+        }
+
+        .multi-progress div {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.85rem;
+            font-weight: bold;
+            color: white;
+        }
+
+        .architecture-diagram {
+            background: rgba(0, 0, 0, 0.3);
+            padding: 1.5rem;
+            border-radius: 8px;
+            margin: 1rem 0;
+        }
+
+        .brain-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+            gap: 1rem;
+            margin-top: 1rem;
+        }
+
+        .brain-item {
+            background: linear-gradient(135deg, #0f3460, #16213e);
+            padding: 1rem;
+            border-radius: 8px;
+            border: 2px solid rgba(255, 121, 0, 0.3);
+            text-align: center;
+        }
+
+        .brain-item .brain-icon {
+            font-size: 2rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .brain-item .brain-name {
+            color: #FF7900;
+            font-weight: bold;
+            margin-bottom: 0.3rem;
+        }
+
+        .brain-item .brain-desc {
+            font-size: 0.85rem;
+            color: #a0a0a0;
+        }
+
+        .triade-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+            margin-top: 1rem;
+        }
+
+        .aspect-card {
+            background: linear-gradient(135deg, #0f3460, #16213e);
+            padding: 1rem;
+            border-radius: 8px;
+            border: 2px solid rgba(255, 121, 0, 0.3);
+            text-align: center;
+        }
+
+        .aspect-card .aspect-icon {
+            font-size: 2.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .aspect-card .aspect-name {
+            color: #FF7900;
+            font-weight: bold;
+            font-size: 1.1rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .aspect-card .aspect-animal {
+            color: #a0a0a0;
+            font-size: 0.9rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .aspect-states {
+            display: flex;
+            flex-direction: column;
+            gap: 0.3rem;
+            margin-top: 0.5rem;
+        }
+
+        .state-item {
+            font-size: 0.85rem;
+            color: #c0c0c0;
+            padding: 0.2rem 0;
+        }
+
+        .backlog-item {
+            background: rgba(0, 0, 0, 0.3);
+            padding: 0.75rem;
+            border-radius: 6px;
+            margin: 0.5rem 0;
+            border-left: 4px solid #FF7900;
+        }
+
+        .backlog-label {
+            font-weight: bold;
+            color: #FF7900;
+            margin-bottom: 0.3rem;
+        }
+
+        .backlog-stats {
+            display: flex;
+            gap: 1rem;
+            font-size: 0.9rem;
+        }
+
+        .stat-done { color: #50BE87; }
+        .stat-progress { color: #FFD200; }
+        .stat-partial { color: #4BB4E6; }
+        .stat-todo { color: #8F8F8F; }
+
+        .timeline {
+            position: relative;
+            padding-left: 2rem;
+            margin: 1rem 0;
+        }
+
+        .timeline::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 0;
+            bottom: 0;
+            width: 2px;
+            background: linear-gradient(180deg, #FF7900, transparent);
+        }
+
+        .timeline-item {
+            position: relative;
+            margin-bottom: 1rem;
+            padding-left: 1rem;
+        }
+
+        .timeline-item::before {
+            content: '●';
+            position: absolute;
+            left: -1.65rem;
+            top: 0;
+            color: #FF7900;
+            font-size: 1.2rem;
+        }
+
+        .timeline-phase {
+            font-weight: bold;
+            color: #FF7900;
+        }
+
+        .timeline-desc {
+            color: #a0a0a0;
+            font-size: 0.9rem;
+        }
+
+        .flow-diagram {
+            background: rgba(0, 0, 0, 0.3);
+            padding: 1.5rem;
+            border-radius: 8px;
+            overflow-x: auto;
+            margin: 1rem 0;
+        }
+
+        .flow-chain {
+            display: flex;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            min-width: max-content;
+        }
+
+        .flow-node {
+            background: linear-gradient(135deg, #0f3460, #16213e);
+            padding: 0.75rem 1rem;
+            border-radius: 6px;
+            border: 2px solid rgba(255, 121, 0, 0.3);
+            font-size: 0.85rem;
+            white-space: nowrap;
+            color: #e0e0e0;
+        }
+
+        .flow-arrow {
+            color: #FF7900;
+            font-size: 1.5rem;
+            font-weight: bold;
+        }
+
+        .full-width {
+            grid-column: 1 / -1;
+        }
+
+        .celtic-ornament {
+            text-align: center;
+            font-size: 2rem;
+            color: rgba(255, 121, 0, 0.3);
+            margin: 2rem 0;
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 1.8rem;
+            }
+
+            .dashboard-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .flow-chain {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+
+            .flow-arrow {
+                transform: rotate(90deg);
+            }
+        }
+
+        .legend {
+            display: flex;
+            gap: 1rem;
+            margin-top: 1rem;
+            flex-wrap: wrap;
+            font-size: 0.85rem;
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .legend-color {
+            width: 20px;
+            height: 20px;
+            border-radius: 4px;
+        }
+
+        .doc-stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+            gap: 0.75rem;
+            margin: 1rem 0;
+        }
+
+        .doc-stat-box {
+            background: rgba(0, 0, 0, 0.3);
+            padding: 1rem;
+            border-radius: 6px;
+            text-align: center;
+            border: 2px solid rgba(255, 121, 0, 0.2);
+        }
+
+        .doc-stat-number {
+            font-size: 2rem;
+            font-weight: bold;
+            margin-bottom: 0.3rem;
+        }
+
+        .doc-stat-label {
+            font-size: 0.85rem;
+            color: #a0a0a0;
+        }
+
+        .stat-current { color: #50BE87; border-color: #50BE87; }
+        .stat-needs-update { color: #FFD200; border-color: #FFD200; }
+        .stat-legacy { color: #8F8F8F; border-color: #8F8F8F; }
+        .stat-total { color: #FF7900; border-color: #FF7900; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>⚔️ M.E.R.L.I.N. ⚔️</h1>
+            <div class="subtitle">Le Jeu des Oghams - Project Dashboard</div>
+            <div class="phase-badge">📍 Phase 33: Documentation Cleanup v4.0</div>
+        </header>
+
+        <div class="dashboard-grid">
+            <!-- Project Info -->
+            <div class="card">
+                <h2>📋 Project Info</h2>
+                <div class="info-grid">
+                    <div class="info-row">
+                        <span class="info-label">Name</span>
+                        <span class="info-value">M.E.R.L.I.N.</span>
+                    </div>
+                    <div class="info-row">
+                        <span class="info-label">Subtitle</span>
+                        <span class="info-value">Le Jeu des Oghams</span>
+                    </div>
+                    <div class="info-row">
+                        <span class="info-label">Genre</span>
+                        <span class="info-value">JDR Parlant roguelite</span>
+                    </div>
+                    <div class="info-row">
+                        <span class="info-label">Engine</span>
+                        <span class="info-value">Godot 4.x</span>
+                    </div>
+                    <div class="info-row">
+                        <span class="info-label">Native</span>
+                        <span class="info-value">GDExtension MerlinLLM</span>
+                    </div>
+                    <div class="info-row">
+                        <span class="info-label">LLM</span>
+                        <span class="info-value">Qwen2.5-3B Q4_K_M</span>
+                    </div>
+                    <div class="info-row">
+                        <span class="info-label">Architecture</span>
+                        <span class="info-value">Multi-Brain (1-4)</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Documentation Status -->
+            <div class="card">
+                <h2>📚 Documentation Status</h2>
+                <div class="doc-stats-grid">
+                    <div class="doc-stat-box stat-current">
+                        <div class="doc-stat-number">97</div>
+                        <div class="doc-stat-label">CURRENT</div>
+                    </div>
+                    <div class="doc-stat-box stat-needs-update">
+                        <div class="doc-stat-number">14</div>
+                        <div class="doc-stat-label">NEEDS UPDATE</div>
+                    </div>
+                    <div class="doc-stat-box stat-legacy">
+                        <div class="doc-stat-number">17</div>
+                        <div class="doc-stat-label">LEGACY</div>
+                    </div>
+                    <div class="doc-stat-box stat-total">
+                        <div class="doc-stat-number">129</div>
+                        <div class="doc-stat-label">TOTAL</div>
+                    </div>
+                </div>
+                <div class="multi-progress" style="margin-top: 1.5rem;">
+                    <div class="progress-fill green" style="width: 75.2%; justify-content: center;">97 CURRENT</div>
+                    <div class="progress-fill yellow" style="width: 10.9%; justify-content: center;">14 UPDATE</div>
+                    <div class="progress-fill gray" style="width: 13.9%; justify-content: center;">17 LEGACY</div>
+                </div>
+                <div style="margin-top: 1rem; font-size: 0.9rem; color: #a0a0a0; text-align: center;">
+                    12 categories • 75.2% up-to-date
+                </div>
+            </div>
+
+            <!-- Multi-Brain Architecture -->
+            <div class="card full-width">
+                <h2>🧠 Multi-Brain Architecture</h2>
+                <div class="architecture-diagram">
+                    <div class="brain-grid">
+                        <div class="brain-item">
+                            <div class="brain-icon">🎭</div>
+                            <div class="brain-name">Brain 1</div>
+                            <div class="brain-desc">Narrator</div>
+                            <div class="brain-desc" style="color: #FF7900; margin-top: 0.5rem;">Always • T=0.7</div>
+                        </div>
+                        <div class="brain-item">
+                            <div class="brain-icon">⚔️</div>
+                            <div class="brain-name">Brain 2</div>
+                            <div class="brain-desc">Game Master</div>
+                            <div class="brain-desc" style="color: #FF7900; margin-top: 0.5rem;">Desktop+ • T=0.2</div>
+                        </div>
+                        <div class="brain-item">
+                            <div class="brain-icon">⚡</div>
+                            <div class="brain-name">Brain 3</div>
+                            <div class="brain-desc">Worker Pool</div>
+                            <div class="brain-desc" style="color: #FF7900; margin-top: 0.5rem;">Prefetch • Balance</div>
+                        </div>
+                        <div class="brain-item">
+                            <div class="brain-icon">🔮</div>
+                            <div class="brain-name">Brain 4</div>
+                            <div class="brain-desc">Worker Pool</div>
+                            <div class="brain-desc" style="color: #FF7900; margin-top: 0.5rem;">Voice • Async</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Triade System -->
+            <div class="card full-width">
+                <h2>☘️ Game System: Triade</h2>
+                <div style="text-align: center; margin-bottom: 1rem; color: #a0a0a0;">
+                    3 Aspects • 3 States Each • 16 Endings (12 chutes + 3 victoires + 1 secrète)
+                </div>
+                <div class="triade-grid">
+                    <div class="aspect-card">
+                        <div class="aspect-icon">🐗</div>
+                        <div class="aspect-name">Corps</div>
+                        <div class="aspect-animal">Sanglier</div>
+                        <div class="aspect-states">
+                            <div class="state-item">⚠️ Epuisé</div>
+                            <div class="state-item">✓ Robuste</div>
+                            <div class="state-item">⚠️ Surmené</div>
+                        </div>
+                    </div>
+                    <div class="aspect-card">
+                        <div class="aspect-icon">🦅</div>
+                        <div class="aspect-name">Âme</div>
+                        <div class="aspect-animal">Corbeau</div>
+                        <div class="aspect-states">
+                            <div class="state-item">⚠️ Perdue</div>
+                            <div class="state-item">✓ Centrée</div>
+                            <div class="state-item">⚠️ Possédée</div>
+                        </div>
+                    </div>
+                    <div class="aspect-card">
+                        <div class="aspect-icon">🦌</div>
+                        <div class="aspect-name">Monde</div>
+                        <div class="aspect-animal">Cerf</div>
+                        <div class="aspect-states">
+                            <div class="state-item">⚠️ Exilé</div>
+                            <div class="state-item">✓ Intégré</div>
+                            <div class="state-item">⚠️ Tyran</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Backlog Status -->
+            <div class="card">
+                <h2>📝 Backlog Status</h2>
+                <div class="backlog-item">
+                    <div class="backlog-label">P0 - Critical (5 items)</div>
+                    <div class="backlog-stats">
+                        <span class="stat-done">1 DONE</span>
+                        <span class="stat-progress">1 IN PROGRESS</span>
+                        <span class="stat-todo">3 TODO</span>
+                    </div>
+                    <div class="progress-bar" style="margin-top: 0.5rem;">
+                        <div class="progress-fill green" style="width: 20%;">20%</div>
+                    </div>
+                </div>
+                <div class="backlog-item">
+                    <div class="backlog-label">P1 - High (10 items)</div>
+                    <div class="backlog-stats">
+                        <span class="stat-done">0 DONE</span>
+                        <span class="stat-partial">2 PARTIAL</span>
+                        <span class="stat-todo">8 TODO</span>
+                    </div>
+                    <div class="progress-bar" style="margin-top: 0.5rem;">
+                        <div class="progress-fill yellow" style="width: 20%;">20%</div>
+                    </div>
+                </div>
+                <div class="backlog-item">
+                    <div class="backlog-label">P2 - Medium (10 items)</div>
+                    <div class="backlog-stats">
+                        <span class="stat-done">0 DONE</span>
+                        <span class="stat-partial">2 PARTIAL</span>
+                        <span class="stat-todo">8 TODO</span>
+                    </div>
+                    <div class="progress-bar" style="margin-top: 0.5rem;">
+                        <div class="progress-fill yellow" style="width: 20%;">20%</div>
+                    </div>
+                </div>
+                <div class="backlog-item">
+                    <div class="backlog-label">P3 - Low (10 items)</div>
+                    <div class="backlog-stats">
+                        <span class="stat-done">0 DONE</span>
+                        <span class="stat-partial">1 PARTIAL</span>
+                        <span class="stat-todo">9 TODO</span>
+                    </div>
+                    <div class="progress-bar" style="margin-top: 0.5rem;">
+                        <div class="progress-fill gray" style="width: 10%;">10%</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Recent Phases Timeline -->
+            <div class="card">
+                <h2>⏳ Recent Phases</h2>
+                <div class="timeline">
+                    <div class="timeline-item">
+                        <div class="timeline-phase">Phase 33</div>
+                        <div class="timeline-desc">Doc Cleanup v4.0</div>
+                    </div>
+                    <div class="timeline-item">
+                        <div class="timeline-phase">Phase 32</div>
+                        <div class="timeline-desc">Multi-Brain Pool</div>
+                    </div>
+                    <div class="timeline-item">
+                        <div class="timeline-phase">Phase 31</div>
+                        <div class="timeline-desc">Qwen2.5 Switch</div>
+                    </div>
+                    <div class="timeline-item">
+                        <div class="timeline-phase">Phase 30</div>
+                        <div class="timeline-desc">GBNF Grammar</div>
+                    </div>
+                    <div class="timeline-item">
+                        <div class="timeline-phase">Phase 29</div>
+                        <div class="timeline-desc">Async Pipeline</div>
+                    </div>
+                    <div class="timeline-item">
+                        <div class="timeline-phase">Phase 28</div>
+                        <div class="timeline-desc">RAG v2.0</div>
+                    </div>
+                    <div class="timeline-item">
+                        <div class="timeline-phase">Phase 27</div>
+                        <div class="timeline-desc">Trinity Migration</div>
+                    </div>
+                    <div class="timeline-item">
+                        <div class="timeline-phase">Phase 26</div>
+                        <div class="timeline-desc">LLM TRIADE Pipeline</div>
+                    </div>
+                    <div class="timeline-item">
+                        <div class="timeline-phase">Phase 25</div>
+                        <div class="timeline-desc">Pixel Landscapes</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Scene Flow -->
+            <div class="card full-width">
+                <h2>🎬 Scene Flow</h2>
+                <div class="flow-diagram">
+                    <div class="flow-chain">
+                        <div class="flow-node">IntroBoot</div>
+                        <div class="flow-arrow">→</div>
+                        <div class="flow-node">IntroCeltOS</div>
+                        <div class="flow-arrow">→</div>
+                        <div class="flow-node">IntroPersonalityQuiz</div>
+                        <div class="flow-arrow">→</div>
+                        <div class="flow-node">IntroMerlinDialogue</div>
+                        <div class="flow-arrow">→</div>
+                        <div class="flow-node">SceneEveil</div>
+                        <div class="flow-arrow">→</div>
+                        <div class="flow-node">SceneAntreMerlin</div>
+                        <div class="flow-arrow">→</div>
+                        <div class="flow-node">HubAntre</div>
+                        <div class="flow-arrow">→</div>
+                        <div class="flow-node">TransitionBiome</div>
+                        <div class="flow-arrow">→</div>
+                        <div class="flow-node">TriadeGame</div>
+                        <div class="flow-arrow">→</div>
+                        <div class="flow-node">[End]</div>
+                        <div class="flow-arrow">↻</div>
+                        <div class="flow-node">HubAntre</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="celtic-ornament">☘ ⚔️ ☘</div>
+
+        <footer style="text-align: center; color: #8F8F8F; margin-top: 2rem; padding: 1rem;">
+            <p>M.E.R.L.I.N.: Le Jeu des Oghams • Built with Godot 4.x + GDExtension</p>
+            <p style="margin-top: 0.5rem; font-size: 0.9rem;">Dashboard generated: 2026-02-09</p>
+        </footer>
+    </div>
+</body>
+</html>
