@@ -1,6 +1,108 @@
 # Progress Log - M.E.R.L.I.N.: Le Jeu des Oghams
 
+## Session: 2026-02-09 (Transition Biome Revamp)
+
+### Phase 25: Paysage Pixel Emergent — TransitionBiome Rewrite
+- **Status:** complete
+- **Agents:** Motion Designer, Art Direction
+- **Output:** 1 fichier reecrit (906 lignes), validation 65 fichiers 0 erreur
+
+#### Changements:
+1. **Remplacement complet** de TransitionBiome.gd — nouveau flow "Paysage Pixel Emergent"
+2. **6 phases d'animation**: Brume → Emergence → Revelation → Sentier → Voix → Dissolution
+3. **7 paysages pixel-art proceduraux** (32x16 grids) — un par biome:
+   - Broceliande: foret dense, 4 coniferes, troncs, champignons
+   - Landes: menhir solitaire, collines ondulees, bruyere
+   - Cotes: falaise a gauche, vagues, plage
+   - Villages: 2 huttes celtiques, fumee, sentier
+   - Cercles: 5 menhirs en arc, etoiles, lune
+   - Marais: arbres tordus, eau sombre, phosphorescence
+   - Collines: dolmen trilithon, collines, crepuscule
+4. **Primitives de dessin procedural**: triangle, rectangle, hill (ellipse), dots
+5. **Pixel size dynamique**: s'adapte a la taille du viewport (~48% largeur)
+6. **Phase Brume**: pixels eclaireurs qui tombent et disparaissent (anticipation)
+7. **Phase Dissolution**: pixels tombent avec gravite + derive horizontale (inverse de l'emergence)
+8. **BIOME_COLORS etendu**: 7 palettes (3 couleurs chacune) vs 4 anciennes
+9. **SFX integres**: mist_breath, pixel_land, pixel_cascade, magic_reveal, path_scratch, landmark_pop, scene_transition
+
+#### Avant/Apres:
+- Avant: chemin bezier generique + icone 8x8 (~40 pixels)
+- Apres: paysage 32x16 (~200-300 pixels) unique par biome + dissolution gravitaire
+
+---
+
 ## Session: 2026-02-08 (Major Gameplay Polish)
+
+### Phase 24: Scene Fusion + Pixel Merlin + Hub Icons
+- **Status:** complete
+- **Agents:** UI Impl, Motion Designer
+- **Output:** 8 fichiers modifies/crees, 2 archives
+
+#### Changements:
+1. **PixelMerlinPortrait** (`scripts/ui/pixel_merlin_portrait.gd`) — Portrait 32x32 procedural avec cascade assembly, blink, breathe, sway, crystal glow, seasonal palettes
+2. **SceneRencontreMerlin** (`scripts/SceneRencontreMerlin.gd` + `scenes/SceneRencontreMerlin.tscn`) — Fusion de SceneEveil + SceneAntreMerlin en 7 phases, fix crash get_tree() null
+3. **Dialogue JSON** (`data/dialogues/scene_dialogues.json`) — Section `scene_rencontre_merlin` ajoutee
+4. **HubAntre** (`scripts/HubAntre.gd`) — Portrait PNG remplace par PixelMerlinPortrait, bottom-bar avec 4 icones (Calendrier, Collection, Options, Menu)
+5. **References mises a jour** — SceneSelector, IntroPersonalityQuiz, IntroMerlinDialogue pointent vers SceneRencontreMerlin
+6. **Archives** — SceneEveil.gd + SceneAntreMerlin.gd copies dans archive/scripts/
+7. **Validation** — 64 fichiers, 0 erreur
+
+### Phase 23: Complete Procedural Sound Design
+- **Status:** complete
+- **Agents:** Audio Designer (VFX expert role)
+- **Output:** `scripts/autoload/SFXManager.gd` + 8 scene scripts modified
+
+#### Architecture:
+- **SFXManager autoload**: 30+ sons proceduraux generes par synthese (sine waves, noise, envelopes)
+- **Zero fichiers audio**: tout est genere en code (AudioStreamWAV 16-bit PCM 44100Hz)
+- **Pool de 6 AudioStreamPlayers** pour superposition de sons simultanes
+- **API publique**: `play(name)`, `play_varied(name, variation)`, `set_master_volume(vol)`
+
+#### Categories de sons implementes:
+- **UI**: hover, click, slider_tick, button_appear
+- **Transitions**: whoosh, card_draw, card_swipe, scene_transition
+- **Impacts**: block_land, pixel_land, pixel_cascade, accum_explode
+- **Magic**: ogham_chime, ogham_unlock, bestiole_shimmer, eye_open, flash_boom, magic_reveal, skill_activate
+- **Ambient**: path_scratch, landmark_pop, mist_breath, aspect_shift, aspect_up, aspect_down
+- **Boot**: boot_line, boot_confirm, convergence, slit_glow
+- **Quiz**: choice_hover, choice_select, result_reveal, question_transition
+
+#### Scenes sonorisees (8):
+1. IntroCeltOS — 9 SFX (boot text, blocks, eyes, flash)
+2. MenuPrincipalReigns — Remplacement .ogg casse + 6 SFX
+3. IntroPersonalityQuiz — 9 SFX (choices, transitions, results)
+4. SceneEveil — 5 SFX (transitions, responses)
+5. SceneAntreMerlin — 7 SFX (bestiole, ogham, biomes)
+6. TransitionBiome — 6 SFX (path, landmarks, cascade)
+7. TriadeGameUI — 7 SFX + aspect tracking (cards, gauges)
+8. HubAntre — 20+ SFX (navigation, map, care, adventure)
+
+#### Validation: 62 fichiers GDScript scannes, zero erreur
+
+### Phase 22: Bestiole Bible Complete — Game Design Document
+- **Status:** complete
+- **Agents:** Game Designer, Narrative Writer
+- **Output:** `docs/60_companion/BESTIOLE_BIBLE_COMPLETE.md`
+
+#### Contenu du document (10 chapitres):
+1. **Lore** — Origine, nature, communication, relations (Merlin, Oghams)
+2. **Utilite Gameplay** — 6 axes, impact quantifie sur survie (+8 a +15% selon profil)
+3. **Systeme de Bond** — 5 tiers avec formules, budget par run, persistance inter-run
+4. **Maitrise des Oghams** — 6 niveaux (Dormant -> Transcende), bonus par Mastery, effets M4/M5
+5. **Economie d'Awen** — Recolte, regeneration, budget de depense, table par biome
+6. **Influence des Oghams** — Loadouts, generation LLM, options cachees, synergies, PNJ
+7. **Tables de Poids** — EV des 18 Oghams (tiers S/A/B/C/D), matrice de dominance
+8. **Anti-Abuse** — 8 mecanismes structurels, diminishing returns, 5 strategies identifiees/contrees
+9. **Visible vs Cache** — Table de correspondance joueur/systeme
+10. **Annexes** — Formules completes, profils archetypaux, timeline, checklist validation
+
+#### Points cles de balance:
+- Bestiole ameliore la survie de +8% (debutant) a +15% (maitre), jamais dominant
+- Expected Value (EV) calculee pour les 18 Oghams: tiers S a D
+- Loadout mixte = meilleur generaliste (8/12), aucun loadout ne domine
+- 5 strategies abusives identifiees et contrees par des mecanismes structurels
+- Mastery Transcendance (M5) gatee par Bond >= 60 + 1/run
+- Budget Awen: 10-12 par run, ~7 activations typiques (1 toutes les 4.3 cartes)
 
 ### Phase 21: UX Typewriter + LLM Eveil + Pixel Art Characters
 - **Status:** complete

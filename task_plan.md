@@ -4,7 +4,80 @@
 Iterer sur le core gameplay de "DRU: Le Jeu des Oghams" et mettre a jour la documentation complete du projet pour reflechir l'etat actuel de l'implementation et les decisions de design.
 
 ## Current Phase
-Phase 20 - Major Gameplay Polish (COMPLETE)
+Phase 25 - Paysage Pixel Emergent (COMPLETE)
+
+---
+
+## Phase 25: Paysage Pixel Emergent — TransitionBiome Rewrite (2026-02-09)
+
+### Objectif
+Remplacement complet de la scene TransitionBiome avec un systeme de paysage pixel-art procedural en 6 phases. Chaque biome a son propre paysage unique assemble par cascade de pixels.
+
+### Sous-phases
+- [x] 25.1 Design des 7 paysages proceduraux (primitives: triangle, rect, hill, dots)
+- [x] 25.2 Rewrite TransitionBiome.gd avec flow 6 phases
+- [x] 25.3 Phase Brume (pixels eclaireurs)
+- [x] 25.4 Phase Emergence (cascade pixel → paysage)
+- [x] 25.5 Phase Revelation (titre/sous-titre)
+- [x] 25.6 Phase Sentier (trace encre + diamants)
+- [x] 25.7 Phase Dissolution (pixels tombent avec gravite)
+- [x] 25.8 BIOME_COLORS etendu a 7 biomes (vs 4 avant)
+- [x] 25.9 Pixel size dynamique (responsive viewport)
+- [x] 25.10 Validation: 65 fichiers scannes, zero erreur
+
+### Fichiers modifies
+- `scripts/TransitionBiome.gd` — Rewrite complet (906 lignes)
+
+---
+
+## Phase 23: Complete Procedural Sound Design (2026-02-08)
+
+### Objectif
+Implementation d'un environnement sonore complet et procedural pour toutes les scenes du jeu, sans fichiers audio externes.
+
+### Sous-phases
+- [x] 23.1 Creation SFXManager autoload (30+ sons proceduraux, pool 6 players)
+- [x] 23.2 Registration dans project.godot
+- [x] 23.3 IntroCeltOS: boot_line, block_land, convergence, pixel_cascade, slit_glow, eye_open, flash_boom (9 SFX)
+- [x] 23.4 MenuPrincipalReigns: remplacement audio .ogg casse par SFXManager (scene_transition, button_appear, accum_explode, pixel_land)
+- [x] 23.5 IntroPersonalityQuiz: choice_hover, choice_select, question_transition, result_reveal, magic_reveal (9 SFX)
+- [x] 23.6 SceneEveil + SceneAntreMerlin: scene_transition, bestiole_shimmer, ogham_unlock, ogham_chime (12 SFX)
+- [x] 23.7 TransitionBiome: path_scratch, landmark_pop, pixel_land, magic_reveal, scene_transition (6 SFX)
+- [x] 23.8 TriadeGameUI: card_draw, hover, aspect_up/down tracking, skill_activate, whoosh (7 SFX)
+- [x] 23.9 HubAntre: navigation hover/click, biome map, bestiole care, ogham_chime, adventure (20+ SFX)
+- [x] 23.10 Validation: 62 fichiers scannes, zero erreur
+
+### Fichiers crees
+- `scripts/autoload/SFXManager.gd` — Systeme central (30+ sons, synthese procedurale, pool audio)
+
+### Fichiers modifies (8 scenes)
+- `scripts/IntroCeltOS.gd`
+- `scripts/MenuPrincipalReigns.gd`
+- `scripts/IntroPersonalityQuiz.gd`
+- `scripts/SceneEveil.gd`
+- `scripts/SceneAntreMerlin.gd`
+- `scripts/TransitionBiome.gd`
+- `scripts/ui/triade_game_ui.gd`
+- `scripts/HubAntre.gd`
+
+---
+
+## Phase 22: Bestiole Bible Complete (2026-02-08)
+
+### Objectif
+Ecriture complete de la Bible Bestiole: lore, gameplay, balance mathematique, tables de poids, anti-abuse, progression de maitrise, recolte de ressources.
+
+### Sous-phases
+- [x] 22.1 Exploration de toute la documentation existante (19 docs Bestiole, 3 docs Ogham, 10 docs lore)
+- [x] 22.2 Lore consolide + Nature + Utilite gameplay
+- [x] 22.3 Systeme de Bond avec formules et courbes de progression
+- [x] 22.4 Systeme de Maitrise des Oghams (6 niveaux, effets M4/M5)
+- [x] 22.5 Economie d'Awen detaillee (sources, depenses, biomes)
+- [x] 22.6 Influence des Oghams (loadouts, generation, synergies, PNJ)
+- [x] 22.7 Tables de poids EV + Matrice de dominance
+- [x] 22.8 Anti-abuse (8 mecanismes, 5 strategies contrees)
+- [x] 22.9 Table visible vs cache + Annexes completes
+- [x] 22.10 Documentation progress.md + task_plan.md
 
 ---
 

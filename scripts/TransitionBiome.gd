@@ -1,8 +1,8 @@
 ## ═══════════════════════════════════════════════════════════════════════════════
-## Transition Biome — Travel Animation to Selected Biome
+## Transition Biome — "Paysage Pixel Émergent"
 ## ═══════════════════════════════════════════════════════════════════════════════
-## Shows: map path drawing → biome name/subtitle → arrival text → merlin comment
-## Then transitions to TriadeGame with biome context loaded.
+## 6-phase travel animation: Brume → Émergence → Révélation → Sentier → Voix → Dissolution
+## Each biome has a unique pixel-art landscape (32×16) assembled by cascading pixels.
 ## ═══════════════════════════════════════════════════════════════════════════════
 
 extends Control
@@ -12,12 +12,13 @@ const DATA_PATH := "res://data/post_intro_dialogues.json"
 
 const TYPEWRITER_DELAY := 0.025
 const TYPEWRITER_PUNCT_DELAY := 0.08
-const BLIP_FREQ := 880.0
-const BLIP_DURATION := 0.018
 const BLIP_VOLUME := 0.04
 
+const GRID_W := 32
+const GRID_H := 16
+
 # ═══════════════════════════════════════════════════════════════════════════════
-# PALETTE — Parchemin Mystique Breton (shared with all scenes)
+# PALETTE — Parchemin Mystique Breton
 # ═══════════════════════════════════════════════════════════════════════════════
 
 const PALETTE := {
@@ -35,78 +36,43 @@ const PALETTE := {
 	"mist": Color(0.94, 0.92, 0.88, 0.35),
 }
 
-const PATH_COLOR := Color(0.58, 0.44, 0.26, 0.7)
-
-# Biome-specific color palettes
+# Biome color palettes (7 biomes)
 const BIOME_COLORS := {
 	"broceliande": {
-		"primary": Color(0.18, 0.42, 0.22),    # Deep forest green
-		"secondary": Color(0.35, 0.55, 0.28),   # Moss green
-		"accent": Color(0.62, 0.78, 0.42),      # Leaf green
-		"mist": Color(0.75, 0.82, 0.70, 0.4),   # Forest mist
+		"primary": Color(0.18, 0.42, 0.22),
+		"secondary": Color(0.35, 0.55, 0.28),
+		"accent": Color(0.62, 0.78, 0.42),
 	},
-	"carnac": {
-		"primary": Color(0.52, 0.50, 0.44),     # Standing stone grey
-		"secondary": Color(0.68, 0.62, 0.52),   # Lichen
-		"accent": Color(0.82, 0.72, 0.48),      # Sandy
-		"mist": Color(0.85, 0.82, 0.75, 0.4),
+	"landes": {
+		"primary": Color(0.55, 0.40, 0.52),
+		"secondary": Color(0.60, 0.50, 0.36),
+		"accent": Color(0.72, 0.52, 0.72),
 	},
-	"avalon": {
-		"primary": Color(0.22, 0.35, 0.55),     # Deep water
-		"secondary": Color(0.42, 0.55, 0.72),   # Lake blue
-		"accent": Color(0.72, 0.82, 0.92),      # Sky
-		"mist": Color(0.80, 0.85, 0.92, 0.5),
+	"cotes": {
+		"primary": Color(0.50, 0.48, 0.42),
+		"secondary": Color(0.68, 0.62, 0.52),
+		"accent": Color(0.38, 0.58, 0.75),
 	},
-	"annwn": {
-		"primary": Color(0.35, 0.18, 0.42),     # Deep purple
-		"secondary": Color(0.52, 0.30, 0.55),   # Twilight
-		"accent": Color(0.72, 0.55, 0.78),      # Ethereal
-		"mist": Color(0.78, 0.72, 0.85, 0.5),
+	"villages": {
+		"primary": Color(0.58, 0.44, 0.26),
+		"secondary": Color(0.45, 0.38, 0.30),
+		"accent": Color(0.82, 0.62, 0.32),
 	},
-}
-
-# Biome icon patterns (8x8 grids, 1 = pixel, 0 = empty)
-const BIOME_ICONS := {
-	"broceliande": [  # Tree
-		[0,0,0,1,1,0,0,0],
-		[0,0,1,1,1,1,0,0],
-		[0,1,1,1,1,1,1,0],
-		[1,1,1,1,1,1,1,1],
-		[0,1,1,1,1,1,1,0],
-		[0,0,0,1,1,0,0,0],
-		[0,0,0,1,1,0,0,0],
-		[0,0,1,1,1,1,0,0],
-	],
-	"carnac": [  # Standing stone
-		[0,0,1,1,1,1,0,0],
-		[0,1,1,1,1,1,1,0],
-		[0,1,1,1,1,1,1,0],
-		[0,1,1,1,1,1,1,0],
-		[0,1,1,1,1,1,1,0],
-		[0,1,1,1,1,1,1,0],
-		[1,1,1,1,1,1,1,1],
-		[1,1,1,1,1,1,1,1],
-	],
-	"avalon": [  # Wave/island
-		[0,0,0,1,1,0,0,0],
-		[0,0,1,1,1,1,0,0],
-		[0,1,1,1,1,1,1,0],
-		[0,0,1,1,1,1,0,0],
-		[1,0,0,1,1,0,0,1],
-		[1,1,0,0,0,0,1,1],
-		[0,1,1,0,0,1,1,0],
-		[0,0,1,1,1,1,0,0],
-	],
-	"annwn": [  # Portal/spiral
-		[0,0,1,1,1,1,0,0],
-		[0,1,0,0,0,0,1,0],
-		[1,0,0,1,1,0,0,1],
-		[1,0,1,0,0,1,0,1],
-		[1,0,1,0,0,1,0,1],
-		[1,0,0,1,1,0,0,1],
-		[0,1,0,0,0,0,1,0],
-		[0,0,1,1,1,1,0,0],
-	],
+	"cercles": {
+		"primary": Color(0.50, 0.48, 0.46),
+		"secondary": Color(0.38, 0.35, 0.32),
+		"accent": Color(0.72, 0.78, 0.88),
+	},
+	"marais": {
+		"primary": Color(0.28, 0.38, 0.25),
+		"secondary": Color(0.22, 0.30, 0.35),
+		"accent": Color(0.55, 0.72, 0.48),
+	},
+	"collines": {
+		"primary": Color(0.50, 0.55, 0.33),
+		"secondary": Color(0.60, 0.52, 0.40),
+		"accent": Color(0.82, 0.55, 0.30),
+	},
 }
 
 # ═══════════════════════════════════════════════════════════════════════════════
@@ -114,6 +80,7 @@ const BIOME_ICONS := {
 # ═══════════════════════════════════════════════════════════════════════════════
 
 var bg: ColorRect
+var pixel_container: Control
 var path_line: Line2D
 var biome_title: Label
 var biome_subtitle: Label
@@ -121,8 +88,6 @@ var arrival_text: RichTextLabel
 var merlin_comment: RichTextLabel
 var mist_particles: GPUParticles2D
 var audio_player: AudioStreamPlayer
-var pixel_container: Control
-var landmark_container: Control
 
 # ═══════════════════════════════════════════════════════════════════════════════
 # STATE
@@ -135,6 +100,10 @@ var typing_active: bool = false
 var typing_abort: bool = false
 var scene_finished: bool = false
 var _advance_requested: bool = false
+var _landscape_pixels: Array = []
+var _pixel_size: float = 10.0
+var _landscape_origin: Vector2 = Vector2.ZERO
+var _current_grid: Array = []
 
 # Voicebox
 var voicebox: Node = null
@@ -143,22 +112,20 @@ var voice_ready: bool = false
 
 func _ready() -> void:
 	_load_data()
+	_current_grid = _generate_landscape(biome_key)
 	_build_ui()
 	_setup_audio()
 	await _setup_voicebox()
-
 	await get_tree().create_timer(0.3).timeout
 	_play_transition()
 
 
 func _load_data() -> void:
-	# Get biome from GameManager
 	var gm := get_node_or_null("/root/GameManager")
 	if gm:
 		var run_data: Dictionary = gm.get("run") if gm.get("run") is Dictionary else {}
 		biome_key = run_data.get("current_biome", "broceliande")
 
-	# Load dialogue data
 	if FileAccess.file_exists(DATA_PATH):
 		var file := FileAccess.open(DATA_PATH, FileAccess.READ)
 		var json := JSON.new()
@@ -174,11 +141,12 @@ func _load_data() -> void:
 		"arrival_text": "Tu arrives dans un lieu etrange.",
 		"merlin_comment": "Eh bien. C'est... quelque chose.",
 		"color": "#787870",
-		"map_position": [0.5, 0.5],
 	})
 
 
 func _build_ui() -> void:
+	var vs := get_viewport_rect().size
+
 	# Parchment background with shader
 	bg = ColorRect.new()
 	bg.set_anchors_preset(Control.PRESET_FULL_RECT)
@@ -209,33 +177,20 @@ func _build_ui() -> void:
 	# Celtic ornaments
 	var celtic_top := _make_celtic_ornament()
 	celtic_top.position = Vector2(0, 20)
-	celtic_top.size = Vector2(get_viewport_rect().size.x, 30)
+	celtic_top.size = Vector2(vs.x, 30)
 	add_child(celtic_top)
 	var celtic_bottom := _make_celtic_ornament()
-	celtic_bottom.position = Vector2(0, get_viewport_rect().size.y - 50)
-	celtic_bottom.size = Vector2(get_viewport_rect().size.x, 30)
+	celtic_bottom.position = Vector2(0, vs.y - 50)
+	celtic_bottom.size = Vector2(vs.x, 30)
 	add_child(celtic_bottom)
 
-	# Landmark container (map points)
-	landmark_container = Control.new()
-	landmark_container.set_anchors_preset(Control.PRESET_FULL_RECT)
-	landmark_container.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	add_child(landmark_container)
-
-	# Path line (animated) — ink-colored on parchment
-	path_line = Line2D.new()
-	path_line.width = 2.5
-	path_line.default_color = PATH_COLOR
-	path_line.antialiased = true
-	add_child(path_line)
-
-	# Pixel cascade container (for biome icon materialization)
+	# Pixel container (landscape assembles here)
 	pixel_container = Control.new()
 	pixel_container.set_anchors_preset(Control.PRESET_FULL_RECT)
 	pixel_container.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	add_child(pixel_container)
 
-	# Mist particles (subtle, parchment-tinted)
+	# Mist particles
 	_create_mist_particles()
 
 	# Load fonts
@@ -252,12 +207,11 @@ func _build_ui() -> void:
 	if body_font == null:
 		body_font = title_font
 
-	# Biome title (centered, large)
+	# Biome title
 	biome_title = Label.new()
 	biome_title.text = biome_data.get("name", "")
 	biome_title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	biome_title.set_anchors_preset(Control.PRESET_CENTER_TOP)
-	biome_title.position = Vector2(-300, 80)
+	biome_title.position = Vector2(vs.x / 2.0 - 300, 55)
 	biome_title.size = Vector2(600, 50)
 	var biome_color_str = biome_data.get("color", "")
 	var font_color: Color = PALETTE.accent
@@ -276,8 +230,7 @@ func _build_ui() -> void:
 	biome_subtitle = Label.new()
 	biome_subtitle.text = biome_data.get("subtitle", "")
 	biome_subtitle.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	biome_subtitle.set_anchors_preset(Control.PRESET_CENTER_TOP)
-	biome_subtitle.position = Vector2(-300, 125)
+	biome_subtitle.position = Vector2(vs.x / 2.0 - 300, 95)
 	biome_subtitle.size = Vector2(600, 30)
 	biome_subtitle.add_theme_color_override("font_color", PALETTE.ink_soft)
 	if body_font:
@@ -286,15 +239,14 @@ func _build_ui() -> void:
 	biome_subtitle.modulate.a = 0.0
 	add_child(biome_subtitle)
 
-	# Arrival text
+	# Arrival text (positioned after landscape is placed)
 	arrival_text = RichTextLabel.new()
 	arrival_text.bbcode_enabled = true
 	arrival_text.fit_content = true
 	arrival_text.scroll_active = false
-	arrival_text.set_anchors_preset(Control.PRESET_CENTER)
 	arrival_text.custom_minimum_size = Vector2(650, 80)
 	arrival_text.size = Vector2(650, 80)
-	arrival_text.position = Vector2(-325, -20)
+	arrival_text.position = Vector2(vs.x / 2.0 - 325, vs.y * 0.72)
 	arrival_text.add_theme_color_override("default_color", PALETTE.ink_soft)
 	if body_font:
 		arrival_text.add_theme_font_override("normal_font", body_font)
@@ -303,15 +255,14 @@ func _build_ui() -> void:
 	arrival_text.text = ""
 	add_child(arrival_text)
 
-	# Merlin comment (below)
+	# Merlin comment
 	merlin_comment = RichTextLabel.new()
 	merlin_comment.bbcode_enabled = true
 	merlin_comment.fit_content = true
 	merlin_comment.scroll_active = false
-	merlin_comment.set_anchors_preset(Control.PRESET_CENTER_BOTTOM)
 	merlin_comment.custom_minimum_size = Vector2(600, 50)
 	merlin_comment.size = Vector2(600, 50)
-	merlin_comment.position = Vector2(-300, -120)
+	merlin_comment.position = Vector2(vs.x / 2.0 - 300, vs.y - 130)
 	merlin_comment.add_theme_color_override("default_color", PALETTE.ink)
 	if body_font:
 		merlin_comment.add_theme_font_override("normal_font", body_font)
@@ -345,7 +296,8 @@ func _create_mist_particles() -> void:
 	mist_particles = GPUParticles2D.new()
 	mist_particles.amount = 30
 	mist_particles.lifetime = 4.0
-	mist_particles.position = Vector2(400, 300)
+	var vs := get_viewport_rect().size
+	mist_particles.position = Vector2(vs.x / 2.0, vs.y / 2.0)
 	mist_particles.emitting = false
 
 	var mat := ParticleProcessMaterial.new()
@@ -358,12 +310,11 @@ func _create_mist_particles() -> void:
 	mat.scale_max = 5.0
 	mat.color = PALETTE.mist
 	mist_particles.process_material = mat
-
 	add_child(mist_particles)
 
 
 func _setup_audio() -> void:
-	pass  # audio_player created in _build_ui
+	pass
 
 
 func _setup_voicebox() -> void:
@@ -386,7 +337,215 @@ func _setup_voicebox() -> void:
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
-# TRANSITION SEQUENCE
+# LANDSCAPE GENERATION — Procedural pixel-art grids
+# ═══════════════════════════════════════════════════════════════════════════════
+
+func _make_empty_grid() -> Array:
+	var g: Array = []
+	for y in range(GRID_H):
+		var row: Array = []
+		for x in range(GRID_W):
+			row.append(0)
+		g.append(row)
+	return g
+
+
+func _grid_set(g: Array, x: int, y: int, c: int) -> void:
+	if y >= 0 and y < GRID_H and x >= 0 and x < GRID_W:
+		g[y][x] = c
+
+
+func _grid_rect(g: Array, x0: int, y0: int, w: int, h: int, c: int) -> void:
+	for dy in range(h):
+		for dx in range(w):
+			_grid_set(g, x0 + dx, y0 + dy, c)
+
+
+func _grid_triangle(g: Array, cx: int, top_y: int, base_y: int, max_w: int, c: int) -> void:
+	if base_y <= top_y:
+		return
+	var height := base_y - top_y
+	for dy in range(height + 1):
+		var y := top_y + dy
+		var t := float(dy) / float(height)
+		var half := int(t * float(max_w) / 2.0)
+		for dx in range(-half, half + 1):
+			_grid_set(g, cx + dx, y, c)
+
+
+func _grid_hill(g: Array, cx: int, base_y: int, rx: int, ry: int, c: int) -> void:
+	for dx in range(-rx, rx + 1):
+		var norm := float(dx) / float(rx)
+		var val := 1.0 - norm * norm
+		if val <= 0.0:
+			continue
+		var h := int(float(ry) * sqrt(val))
+		for dy in range(h):
+			_grid_set(g, cx + dx, base_y - dy, c)
+
+
+func _grid_dots(g: Array, positions: Array, c: int) -> void:
+	for pos in positions:
+		_grid_set(g, pos[0], pos[1], c)
+
+
+func _generate_landscape(biome: String) -> Array:
+	var g := _make_empty_grid()
+	match biome:
+		"broceliande":
+			_gen_broceliande(g)
+		"landes":
+			_gen_landes(g)
+		"cotes":
+			_gen_cotes(g)
+		"villages":
+			_gen_villages(g)
+		"cercles":
+			_gen_cercles(g)
+		"marais":
+			_gen_marais(g)
+		"collines":
+			_gen_collines(g)
+		_:
+			_gen_broceliande(g)
+	return g
+
+
+func _gen_broceliande(g: Array) -> void:
+	# Dense ancient forest — 4 conifer trees
+	_grid_triangle(g, 13, 1, 8, 14, 1)   # Big tree center-left
+	_grid_triangle(g, 23, 2, 8, 12, 1)   # Medium tree center-right
+	_grid_triangle(g, 5, 4, 8, 8, 1)     # Small tree far-left
+	_grid_triangle(g, 29, 5, 8, 6, 1)    # Tiny tree far-right
+	# Trunks
+	_grid_rect(g, 12, 9, 2, 2, 2)
+	_grid_rect(g, 22, 9, 2, 2, 2)
+	_grid_rect(g, 4, 9, 2, 2, 2)
+	_grid_rect(g, 28, 9, 2, 2, 2)
+	# Mossy ground
+	_grid_rect(g, 0, 11, GRID_W, 2, 2)
+	# Mushrooms
+	_grid_dots(g, [[2, 13], [9, 13], [17, 13], [24, 13], [30, 13]], 3)
+
+
+func _gen_landes(g: Array) -> void:
+	# Heather moors — lone menhir on rolling hills
+	# Menhir (standing stone)
+	_grid_set(g, 15, 2, 1)
+	_grid_set(g, 16, 2, 1)
+	_grid_rect(g, 14, 3, 3, 6, 1)
+	# Rolling hills
+	_grid_hill(g, 11, 11, 13, 3, 2)
+	_grid_hill(g, 25, 11, 10, 2, 2)
+	# Heather ground
+	_grid_rect(g, 0, 12, GRID_W, 2, 1)
+	# Heather flowers
+	_grid_dots(g, [[1, 14], [4, 14], [7, 14], [10, 14], [13, 14],
+		[16, 14], [19, 14], [22, 14], [25, 14], [28, 14], [31, 14]], 3)
+
+
+func _gen_cotes(g: Array) -> void:
+	# Sea cliffs — cliff face left, waves right
+	# Cliff body (stepped descent)
+	_grid_rect(g, 0, 2, 7, 10, 1)
+	_grid_rect(g, 7, 4, 3, 8, 1)
+	_grid_rect(g, 10, 6, 2, 6, 1)
+	_grid_rect(g, 12, 8, 2, 4, 1)
+	# Waves
+	_grid_dots(g, [[17, 8], [18, 8], [23, 7], [24, 7], [29, 8], [30, 8]], 3)
+	_grid_dots(g, [[16, 9], [17, 9], [21, 9], [22, 9], [27, 9], [28, 9]], 3)
+	# Sea surface
+	_grid_rect(g, 14, 10, 18, 2, 3)
+	# Beach/shore
+	_grid_rect(g, 0, 12, GRID_W, 2, 2)
+	# Foam
+	_grid_dots(g, [[3, 14], [8, 14], [15, 14], [21, 14], [27, 14]], 3)
+
+
+func _gen_villages(g: Array) -> void:
+	# Celtic hamlet — two round huts with smoke
+	# Smoke rising
+	_grid_dots(g, [[8, 0], [24, 0], [9, 1], [23, 1]], 3)
+	# Hut 1 — peaked roof + walls
+	_grid_triangle(g, 8, 2, 5, 10, 1)
+	_grid_rect(g, 4, 6, 8, 3, 2)
+	_grid_set(g, 7, 7, 3)   # door
+	_grid_set(g, 7, 8, 3)
+	# Hut 2 — peaked roof + walls
+	_grid_triangle(g, 23, 2, 5, 10, 1)
+	_grid_rect(g, 19, 6, 8, 3, 2)
+	_grid_set(g, 22, 7, 3)  # door
+	_grid_set(g, 22, 8, 3)
+	# Ground
+	_grid_rect(g, 0, 9, GRID_W, 2, 2)
+	# Path stones
+	_grid_dots(g, [[2, 11], [6, 11], [10, 11], [14, 11],
+		[18, 11], [22, 11], [26, 11], [30, 11]], 3)
+
+
+func _gen_cercles(g: Array) -> void:
+	# Stone circle under stars and moon
+	# Stars
+	_grid_dots(g, [[3, 0], [9, 1], [15, 0], [22, 1], [28, 0],
+		[6, 1], [19, 0], [26, 1], [12, 0], [30, 1]], 3)
+	# Moon
+	_grid_dots(g, [[15, 2], [16, 2], [14, 3], [15, 3], [16, 3], [17, 3]], 3)
+	# Standing stones (5 in curved arc)
+	_grid_rect(g, 3, 5, 2, 6, 1)    # Stone 1 (leftmost, shorter)
+	_grid_rect(g, 9, 4, 2, 7, 1)    # Stone 2
+	_grid_rect(g, 15, 3, 2, 8, 1)   # Stone 3 (center, tallest)
+	_grid_rect(g, 21, 4, 2, 7, 1)   # Stone 4
+	_grid_rect(g, 27, 5, 2, 6, 1)   # Stone 5 (rightmost, shorter)
+	# Ground
+	_grid_rect(g, 0, 11, GRID_W, 2, 2)
+	# Moss between stones
+	_grid_dots(g, [[6, 12], [12, 12], [18, 12], [24, 12]], 3)
+
+
+func _gen_marais(g: Array) -> void:
+	# Dark swamp — gnarled trees, water, phosphorescence
+	# Mist dots
+	_grid_dots(g, [[4, 0], [12, 1], [20, 0], [28, 1], [8, 0], [24, 1]], 3)
+	# Gnarled tree 1 — trunk + branches
+	_grid_rect(g, 5, 4, 2, 5, 1)
+	_grid_dots(g, [[4, 2], [5, 2], [7, 2], [3, 3], [4, 3], [5, 3],
+		[6, 3], [7, 3], [8, 3]], 1)
+	# Gnarled tree 2
+	_grid_rect(g, 22, 5, 2, 4, 1)
+	_grid_dots(g, [[21, 3], [22, 3], [24, 3], [20, 4], [21, 4],
+		[22, 4], [23, 4], [24, 4], [25, 4]], 1)
+	# Dark water
+	_grid_rect(g, 0, 9, GRID_W, 3, 2)
+	# Water reflections
+	_grid_dots(g, [[5, 10], [6, 10], [22, 10], [23, 10],
+		[10, 11], [15, 11], [28, 11]], 3)
+	# Muddy bank
+	_grid_rect(g, 0, 12, GRID_W, 2, 1)
+	# Phosphorescence
+	_grid_dots(g, [[2, 13], [8, 13], [14, 13], [19, 13], [26, 13]], 3)
+
+
+func _gen_collines(g: Array) -> void:
+	# Dolmen on rolling hills at sunset
+	# Sunset hints
+	_grid_dots(g, [[5, 0], [12, 0], [20, 0], [27, 0], [16, 1],
+		[8, 1], [24, 1]], 3)
+	# Dolmen capstone
+	_grid_rect(g, 11, 4, 10, 2, 1)
+	# Dolmen pillars
+	_grid_rect(g, 12, 6, 2, 4, 1)
+	_grid_rect(g, 18, 6, 2, 4, 1)
+	# Rolling hills (background)
+	_grid_hill(g, 8, 11, 10, 3, 2)
+	_grid_hill(g, 24, 11, 10, 4, 2)
+	# Ground
+	_grid_rect(g, 0, 12, GRID_W, 2, 2)
+	# Grass tufts
+	_grid_dots(g, [[2, 14], [7, 14], [14, 14], [21, 14], [26, 14], [30, 14]], 1)
+
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# TRANSITION SEQUENCE — 6 Phases
 # ═══════════════════════════════════════════════════════════════════════════════
 
 func _play_transition() -> void:
@@ -394,23 +553,28 @@ func _play_transition() -> void:
 	if screen_fx and screen_fx.has_method("set_merlin_mood"):
 		screen_fx.set_merlin_mood("mystique")
 
-	# Phase 1: Draw path on screen
-	await _animate_path()
+	# Phase 1: Brume — mist + scout pixels
+	await _phase_brume()
 
-	# Phase 2: Start mist
-	mist_particles.emitting = true
+	# Phase 2: Emergence — pixel cascade builds landscape
+	await _phase_emergence()
 
-	# Phase 3: Show biome title + subtitle
-	await _show_biome_title()
+	# Phase 3: Revelation — title + subtitle appear
+	await _phase_revelation()
 
-	# Phase 4: Show arrival text (narration) — click to show, click to advance
+	# Phase 4: Sentier — ink path traces through landscape
+	await _phase_sentier()
+
+	# Phase 5: Voix — narration + merlin comment
+	if screen_fx and screen_fx.has_method("set_merlin_mood"):
+		screen_fx.set_merlin_mood("narrateur")
+
 	var text: String = biome_data.get("arrival_text", "")
 	await _show_typewriter(arrival_text, text)
 	await get_tree().create_timer(0.3).timeout
 	_advance_requested = false
 	await _wait_for_advance(30.0)
 
-	# Phase 5: Merlin comment
 	if screen_fx and screen_fx.has_method("set_merlin_mood"):
 		screen_fx.set_merlin_mood("amuse")
 
@@ -420,57 +584,176 @@ func _play_transition() -> void:
 	_advance_requested = false
 	await _wait_for_advance(30.0)
 
-	# Phase 6: Transition to gameplay
-	await _fade_to_game()
+	# Phase 6: Dissolution — pixels fall away, transition to game
+	await _phase_dissolution()
 
 
-func _animate_path() -> void:
-	var viewport_size := get_viewport_rect().size
-	# Start from bottom-left (Antre de Merlin) to biome position
-	var start := Vector2(viewport_size.x * 0.15, viewport_size.y * 0.75)
-	var biome_pos: Array = biome_data.get("map_position", [0.7, 0.3])
-	var target := Vector2(biome_pos[0] * viewport_size.x, biome_pos[1] * viewport_size.y)
+# — Phase 1: Brume ——————————————————————————————————————————————————————————
 
-	# Place starting landmark (Antre)
-	_add_landmark(start, "Antre", PALETTE.accent)
+func _phase_brume() -> void:
+	mist_particles.emitting = true
+	SFXManager.play("mist_breath")
 
-	# Waypoints along the path
-	var waypoints := ["Lande", "Gue", "Sentier"]
-	var control := (start + target) / 2.0 + Vector2(randf_range(-80, 80), randf_range(-120, -60))
-	var steps := 40
+	var vs := get_viewport_rect().size
+	var colors: Dictionary = BIOME_COLORS.get(biome_key, BIOME_COLORS.broceliande)
+	var scout_colors: Array[Color] = [colors.primary, colors.secondary, PALETTE.ink_faded]
 
-	# Animate path drawing with subtle wobble
+	# Spawn scout pixels — brief appearances, hinting at what's coming
+	for i in range(12):
+		var px := ColorRect.new()
+		var sz := randf_range(6.0, 10.0)
+		px.size = Vector2(sz, sz)
+		px.position = Vector2(randf_range(vs.x * 0.2, vs.x * 0.8), -20.0)
+		px.color = scout_colors[i % scout_colors.size()]
+		px.modulate.a = 0.0
+		px.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		pixel_container.add_child(px)
+
+		var target_y := randf_range(vs.y * 0.25, vs.y * 0.65)
+		var tw := create_tween()
+		tw.tween_property(px, "modulate:a", 0.6, 0.08)
+		tw.parallel().tween_property(px, "position:y", target_y, randf_range(0.4, 0.8)) \
+			.set_trans(Tween.TRANS_BOUNCE).set_ease(Tween.EASE_OUT)
+		tw.tween_interval(0.15)
+		tw.tween_property(px, "modulate:a", 0.0, 0.3)
+		tw.tween_callback(px.queue_free)
+
+		await get_tree().create_timer(0.06).timeout
+
+	await get_tree().create_timer(0.4).timeout
+
+
+# — Phase 2: Emergence ——————————————————————————————————————————————————————
+
+func _phase_emergence() -> void:
+	var vs := get_viewport_rect().size
+	var colors: Dictionary = BIOME_COLORS.get(biome_key, BIOME_COLORS.broceliande)
+	var color_map := {1: colors.primary, 2: colors.secondary, 3: colors.accent}
+
+	# Dynamic pixel size — landscape fills ~50% of viewport width
+	_pixel_size = floor(vs.x * 0.48 / float(GRID_W))
+	_pixel_size = clampf(_pixel_size, 6.0, 16.0)
+
+	var total_w := GRID_W * _pixel_size
+	var total_h := GRID_H * _pixel_size
+	_landscape_origin = Vector2(
+		(vs.x - total_w) / 2.0,
+		(vs.y - total_h) / 2.0 + 25.0
+	)
+
+	# Reposition arrival text below landscape
+	arrival_text.position.y = _landscape_origin.y + total_h + 15.0
+
+	# Collect all active pixels
+	var targets: Array[Dictionary] = []
+	for row in range(GRID_H):
+		for col in range(GRID_W):
+			var c: int = _current_grid[row][col]
+			if c > 0 and color_map.has(c):
+				targets.append({
+					"row": row, "col": col,
+					"pos": _landscape_origin + Vector2(col * _pixel_size, row * _pixel_size),
+					"color": color_map[c],
+				})
+
+	# Sort by column for left-to-right wave cascade
+	targets.sort_custom(func(a: Dictionary, b: Dictionary) -> bool:
+		if a.col != b.col:
+			return a.col < b.col
+		return a.row > b.row
+	)
+
+	_landscape_pixels.clear()
+	for i in range(targets.size()):
+		var t: Dictionary = targets[i]
+		var target_pos: Vector2 = t.pos
+
+		var spawn_x := target_pos.x + randf_range(-25.0, 25.0)
+		var spawn_y := -20.0 - randf_range(0.0, 100.0)
+
+		var px := ColorRect.new()
+		px.size = Vector2(_pixel_size, _pixel_size)
+		px.position = Vector2(spawn_x, spawn_y)
+		px.color = t.color
+		px.modulate.a = 0.0
+		px.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		pixel_container.add_child(px)
+		_landscape_pixels.append(px)
+
+		var tw := create_tween()
+		tw.tween_property(px, "modulate:a", 1.0, 0.05)
+		tw.parallel().tween_property(px, "position", target_pos, randf_range(0.3, 0.55)) \
+			.set_trans(Tween.TRANS_BOUNCE).set_ease(Tween.EASE_OUT)
+
+		# Stagger: batch of 4 pixels, then tiny delay
+		if i % 4 == 3:
+			SFXManager.play_varied("pixel_land", 0.2)
+			await get_tree().create_timer(0.025).timeout
+
+	# Settle
+	await get_tree().create_timer(0.4).timeout
+
+	# Subtle glow pulse on completed landscape
+	var glow := create_tween()
+	glow.tween_property(pixel_container, "modulate", Color(1.3, 1.3, 1.3), 0.25)
+	glow.tween_property(pixel_container, "modulate", Color.WHITE, 0.25)
+	glow.tween_property(pixel_container, "modulate", Color(1.15, 1.15, 1.15), 0.2)
+	glow.tween_property(pixel_container, "modulate", Color.WHITE, 0.2)
+	await glow.finished
+	SFXManager.play("pixel_cascade")
+
+
+# — Phase 3: Revelation ————————————————————————————————————————————————————
+
+func _phase_revelation() -> void:
+	SFXManager.play("magic_reveal")
+	var tw := create_tween()
+	tw.set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
+	tw.tween_property(biome_title, "modulate:a", 1.0, 0.8)
+	tw.tween_property(biome_subtitle, "modulate:a", 1.0, 0.6)
+	await tw.finished
+	await get_tree().create_timer(0.5).timeout
+
+
+# — Phase 4: Sentier ———————————————————————————————————————————————————————
+
+func _phase_sentier() -> void:
+	var total_w := GRID_W * _pixel_size
+	var total_h := GRID_H * _pixel_size
+	var path_y := _landscape_origin.y + total_h - _pixel_size * 1.5
+
+	path_line = Line2D.new()
+	path_line.width = 2.0
+	path_line.default_color = PALETTE.ink
+	path_line.antialiased = true
+	add_child(path_line)
+
+	# Diamond marker at start
+	var start_marker := _make_diamond(_landscape_origin + Vector2(-8, total_h - _pixel_size * 2), PALETTE.accent)
+	add_child(start_marker)
+
+	var steps := 35
 	for i in range(steps + 1):
 		var t := float(i) / float(steps)
-		var p := _bezier(start, control, target, t)
-		# Subtle hand-drawn wobble
-		p += Vector2(randf_range(-1.2, 1.2), randf_range(-1.2, 1.2))
-		path_line.add_point(p)
+		var x := _landscape_origin.x + t * total_w
+		var y := path_y + sin(t * PI * 3.0) * 3.0
+		path_line.add_point(Vector2(x, y))
 
-		# Add waypoint landmarks at 25%, 50%, 75%
-		if i == steps / 4:
-			_add_landmark(p, waypoints[0], PALETTE.ink_faded)
-		elif i == steps / 2:
-			_add_landmark(p, waypoints[1], PALETTE.ink_faded)
-		elif i == steps * 3 / 4:
-			_add_landmark(p, waypoints[2], PALETTE.ink_faded)
+		if i % 7 == 0:
+			SFXManager.play_varied("path_scratch", 0.15)
 
-		# Play tiny tick at waypoints
-		if i % 10 == 0:
-			_play_blip()
+		await get_tree().create_timer(0.022).timeout
 
-		await get_tree().create_timer(0.025).timeout
-
-	# Place destination landmark with biome color
-	var colors: Dictionary = BIOME_COLORS.get(biome_key, BIOME_COLORS.broceliande)
-	_add_landmark(target, biome_data.get("name", "?"), colors.primary)
-
-	# Phase 1.5: Pixel cascade builds biome icon at destination
-	await _animate_biome_icon(target, colors)
+	# Diamond marker at end
+	var end_marker := _make_diamond(
+		_landscape_origin + Vector2(total_w + 2, total_h - _pixel_size * 2), PALETTE.accent
+	)
+	add_child(end_marker)
+	SFXManager.play("landmark_pop")
+	await get_tree().create_timer(0.3).timeout
 
 
-func _add_landmark(pos: Vector2, label_text: String, color: Color) -> void:
-	# Diamond marker
+func _make_diamond(pos: Vector2, color: Color) -> ColorRect:
 	var marker := ColorRect.new()
 	marker.size = Vector2(8, 8)
 	marker.position = pos - Vector2(4, 4)
@@ -478,99 +761,64 @@ func _add_landmark(pos: Vector2, label_text: String, color: Color) -> void:
 	marker.rotation = PI / 4.0
 	marker.pivot_offset = Vector2(4, 4)
 	marker.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	marker.modulate.a = 0.0
-	landmark_container.add_child(marker)
-
-	# Label
-	var lbl := Label.new()
-	lbl.text = label_text
-	lbl.position = pos + Vector2(8, -8)
-	lbl.add_theme_color_override("font_color", color)
-	lbl.add_theme_font_size_override("font_size", 11)
-	lbl.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	lbl.modulate.a = 0.0
-	landmark_container.add_child(lbl)
-
 	# Fade in
+	marker.modulate.a = 0.0
 	var tw := create_tween()
 	tw.tween_property(marker, "modulate:a", 1.0, 0.3)
-	tw.parallel().tween_property(lbl, "modulate:a", 0.7, 0.4)
+	return marker
 
 
-func _animate_biome_icon(center: Vector2, colors: Dictionary) -> void:
-	## Build the biome icon from falling micro-pixels (CeltOS style).
-	var icon_grid: Array = BIOME_ICONS.get(biome_key, BIOME_ICONS.broceliande)
-	var pixel_size := 6.0
-	var grid_size := 8
-	var origin := center - Vector2(grid_size * pixel_size / 2.0, grid_size * pixel_size / 2.0 + 40)
+# — Phase 6: Dissolution ——————————————————————————————————————————————————
 
-	# Collect target positions for all filled pixels
-	var targets: Array[Dictionary] = []
-	for row in range(grid_size):
-		for col in range(grid_size):
-			if icon_grid[row][col] == 1:
-				targets.append({
-					"row": row, "col": col,
-					"pos": origin + Vector2(col * pixel_size, row * pixel_size),
-				})
+func _phase_dissolution() -> void:
+	SFXManager.play("scene_transition")
+	scene_finished = true
 
-	# Shuffle for random arrival order
-	targets.shuffle()
+	# Fade text and UI elements first
+	var text_tw := create_tween()
+	text_tw.set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_IN)
+	text_tw.tween_property(arrival_text, "modulate:a", 0.0, 0.3)
+	text_tw.parallel().tween_property(merlin_comment, "modulate:a", 0.0, 0.3)
+	text_tw.parallel().tween_property(biome_title, "modulate:a", 0.0, 0.3)
+	text_tw.parallel().tween_property(biome_subtitle, "modulate:a", 0.0, 0.3)
+	if path_line:
+		text_tw.parallel().tween_property(path_line, "modulate:a", 0.0, 0.3)
+	await text_tw.finished
 
-	# Spawn pixels from random top positions, cascade down to target
-	var color_pool: Array[Color] = [colors.primary, colors.secondary, colors.accent]
-	for i in range(targets.size()):
-		var t: Dictionary = targets[i]
-		var target_pos: Vector2 = t.pos
+	# Dissolve landscape — pixels fall away with gravity
+	_landscape_pixels.shuffle()
+	for i in range(_landscape_pixels.size()):
+		var px: ColorRect = _landscape_pixels[i]
+		if not is_instance_valid(px):
+			continue
 
-		# Start position: random X near target, well above
-		var spawn_x := target_pos.x + randf_range(-40, 40)
-		var spawn_y := target_pos.y - randf_range(80, 200)
+		var fall_dist := randf_range(250.0, 500.0)
+		var fall_time := randf_range(0.5, 1.0)
 
-		var px := ColorRect.new()
-		px.size = Vector2(pixel_size, pixel_size)
-		px.position = Vector2(spawn_x, spawn_y)
-		px.color = color_pool[i % color_pool.size()]
-		px.modulate.a = 0.0
-		px.mouse_filter = Control.MOUSE_FILTER_IGNORE
-		pixel_container.add_child(px)
-
-		# Cascade tween: appear + fall to target
 		var tw := create_tween()
-		var fall_time := randf_range(0.25, 0.5)
-		tw.tween_property(px, "modulate:a", 1.0, 0.05)
-		tw.parallel().tween_property(px, "position", target_pos, fall_time).set_trans(Tween.TRANS_BOUNCE).set_ease(Tween.EASE_OUT)
+		tw.tween_property(px, "position:y", px.position.y + fall_dist, fall_time) \
+			.set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_IN)
+		tw.parallel().tween_property(px, "position:x",
+			px.position.x + randf_range(-25.0, 25.0), fall_time)
+		tw.parallel().tween_property(px, "modulate:a", 0.0, fall_time * 0.7)
 
-		# Stagger spawns (3-4 pixels per frame batch)
-		if i % 3 == 2:
-			await get_tree().create_timer(0.04).timeout
+		# Stagger dissolution
+		if i % 6 == 5:
+			await get_tree().create_timer(0.015).timeout
 
-	# Let icon settle
-	await get_tree().create_timer(0.5).timeout
+	await get_tree().create_timer(0.6).timeout
 
-	# Subtle pulse glow on completed icon
-	var glow := create_tween()
-	glow.tween_property(pixel_container, "modulate:a", 0.5, 0.3)
-	glow.tween_property(pixel_container, "modulate:a", 1.0, 0.3)
-	glow.tween_property(pixel_container, "modulate:a", 0.5, 0.3)
-	glow.tween_property(pixel_container, "modulate:a", 1.0, 0.3)
-	await glow.finished
-
-
-func _bezier(p0: Vector2, p1: Vector2, p2: Vector2, t: float) -> Vector2:
-	var q0 := p0.lerp(p1, t)
-	var q1 := p1.lerp(p2, t)
-	return q0.lerp(q1, t)
+	# Final screen fade
+	var final_tw := create_tween()
+	final_tw.tween_property(self, "modulate:a", 0.0, 0.5)
+	final_tw.tween_callback(func():
+		get_tree().change_scene_to_file(NEXT_SCENE)
+	)
 
 
-func _show_biome_title() -> void:
-	var tween := create_tween()
-	tween.set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
-	tween.tween_property(biome_title, "modulate:a", 1.0, 0.8)
-	tween.tween_property(biome_subtitle, "modulate:a", 1.0, 0.6)
-	await tween.finished
-	await get_tree().create_timer(1.0).timeout
-
+# ═══════════════════════════════════════════════════════════════════════════════
+# TYPEWRITER
+# ═══════════════════════════════════════════════════════════════════════════════
 
 func _show_typewriter(label: RichTextLabel, text: String) -> void:
 	typing_active = true
@@ -591,25 +839,6 @@ func _show_typewriter(label: RichTextLabel, text: String) -> void:
 		await get_tree().create_timer(delay).timeout
 	label.visible_characters = -1
 	typing_active = false
-
-
-func _fade_to_game() -> void:
-	scene_finished = true
-
-	# Fade out all elements
-	var tween := create_tween()
-	tween.set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_IN_OUT)
-	tween.tween_property(path_line, "modulate:a", 0.0, 0.6)
-	tween.parallel().tween_property(landmark_container, "modulate:a", 0.0, 0.6)
-	tween.parallel().tween_property(pixel_container, "modulate:a", 0.0, 0.6)
-	tween.parallel().tween_property(biome_title, "modulate:a", 0.0, 0.6)
-	tween.parallel().tween_property(biome_subtitle, "modulate:a", 0.0, 0.6)
-	tween.parallel().tween_property(arrival_text, "modulate:a", 0.0, 0.6)
-	tween.parallel().tween_property(merlin_comment, "modulate:a", 0.0, 0.6)
-	tween.tween_property(self, "modulate:a", 0.0, 0.5)
-	tween.tween_callback(func():
-		get_tree().change_scene_to_file(NEXT_SCENE)
-	)
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
@@ -647,8 +876,11 @@ func _unhandled_input(event: InputEvent) -> void:
 		get_viewport().set_input_as_handled()
 
 
+# ═══════════════════════════════════════════════════════════════════════════════
+# AUDIO
+# ═══════════════════════════════════════════════════════════════════════════════
+
 func _play_blip() -> void:
-	## Soft keyboard click — procedural
 	var sample_rate := 44100.0
 	var duration := 0.014
 	var num_samples := int(sample_rate * duration)
