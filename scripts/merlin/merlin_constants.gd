@@ -463,3 +463,377 @@ const OGHAM_FULL_SPECS := {
 		"bond_required": 61,
 	},
 }
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# FLUX SYSTEM — Hidden energy balance (Phase 35)
+# 3 axes: Terre (Environment), Esprit (Narrative), Lien (Difficulty)
+# ═══════════════════════════════════════════════════════════════════════════════
+
+const FLUX_START := {"terre": 50, "esprit": 30, "lien": 40}
+const FLUX_MIN := 0
+const FLUX_MAX := 100
+
+# Choice → Flux modification
+const FLUX_CHOICE_DELTA := {
+	"left": {"terre": 5, "esprit": 2, "lien": -3},
+	"center": {"terre": 3, "esprit": 8, "lien": -2},
+	"right": {"terre": -5, "esprit": 3, "lien": 8},
+}
+
+# Aspect state → passive Flux offset (applied once per aspect shift)
+const FLUX_ASPECT_OFFSET := {
+	"Corps": {"flux": "lien", AspectState.BAS: 15, AspectState.EQUILIBRE: 0, AspectState.HAUT: 20},
+	"Ame": {"flux": "esprit", AspectState.BAS: 15, AspectState.EQUILIBRE: 0, AspectState.HAUT: 20},
+	"Monde": {"flux": "terre", AspectState.BAS: -20, AspectState.EQUILIBRE: 0, AspectState.HAUT: 20},
+}
+
+# Tier thresholds for each Flux axis
+const FLUX_TIERS := {
+	"terre": {
+		"hostile": {"min": 0, "max": 30, "label": "Hostile", "dc_mod": 0},
+		"neutre": {"min": 31, "max": 69, "label": "Neutre", "dc_mod": 0},
+		"harmonieux": {"min": 70, "max": 100, "label": "Harmonieux", "dc_mod": 0},
+	},
+	"esprit": {
+		"stagnant": {"min": 0, "max": 30, "label": "Stagnant", "dc_mod": 0},
+		"montee": {"min": 31, "max": 69, "label": "Montee", "dc_mod": 0},
+		"climax": {"min": 70, "max": 100, "label": "Climax", "dc_mod": 0},
+	},
+	"lien": {
+		"calme": {"min": 0, "max": 30, "label": "Calme", "dc_mod": -2},
+		"modere": {"min": 31, "max": 69, "label": "Modere", "dc_mod": 0},
+		"brutal": {"min": 70, "max": 100, "label": "Brutal", "dc_mod": 3},
+	},
+}
+
+# Flux tier → LLM context hints
+const FLUX_HINTS := {
+	"terre": {
+		"hostile": "Le monde est hostile, la nature se retourne.",
+		"neutre": "",
+		"harmonieux": "La nature murmure en ta faveur.",
+	},
+	"esprit": {
+		"stagnant": "",
+		"montee": "Le recit s'intensifie.",
+		"climax": "Le destin se cristallise, chaque choix est decisif.",
+	},
+	"lien": {
+		"calme": "Le chemin est calme.",
+		"modere": "",
+		"brutal": "Le danger rode, chaque pas est un defi.",
+	},
+}
+
+# Flux → Essence rewards at run end
+const FLUX_ESSENCE_REWARDS := {
+	"terre_high": {"threshold": 70, "rewards": {"NATURE": 5, "EAU": 3}},
+	"terre_low": {"threshold_below": 30, "rewards": {"METAL": 5, "POISON": 3}},
+	"esprit_high": {"threshold": 70, "rewards": {"ESPRIT": 8, "ARCANE": 5}},
+	"lien_high": {"threshold": 70, "rewards": {"FEU": 5, "FOUDRE": 3}},
+}
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# ESSENCE REWARDS — Run end rewards (Phase 35)
+# ═══════════════════════════════════════════════════════════════════════════════
+
+const ESSENCE_BASE_REWARDS := {"TERRE": 5, "NATURE": 3}  # Always earned
+const ESSENCE_VICTORY_BONUS := {"LUMIERE": 8, "FOUDRE": 5}
+const ESSENCE_CHUTE_BONUS := {"OMBRE": 5, "GLACE": 3}
+const ESSENCE_BALANCED_BONUS := {"LUMIERE": 10}  # All 3 aspects at EQUILIBRE
+const ESSENCE_BOND_BONUS := {"BETE": 5, "NATURE": 3}  # Bond > 70
+const ESSENCE_MINIGAME_BONUS := {"AIR": 4}  # 5+ mini-games won
+const ESSENCE_OGHAM_BONUS := {"ARCANE": 5}  # 3+ Oghams used
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# BESTIOLE EVOLUTION — Persistent across runs (Phase 35)
+# ═══════════════════════════════════════════════════════════════════════════════
+
+const BESTIOLE_EVOLUTION_STAGES := {
+	1: {"name": "Enfant", "bond_base": 10, "awen_bonus": 0, "runs_required": 0, "essence_cost": {}},
+	2: {"name": "Compagnon", "bond_base": 30, "awen_bonus": 1, "runs_required": 15, "essence_cost": {}},
+	3: {"name": "Gardien", "bond_base": 50, "awen_bonus": 2, "runs_required": 40, "essence_cost": {"BETE": 200}},
+}
+
+const BESTIOLE_EVOLUTION_PATHS := {
+	"protecteur": {"name": "Protecteur", "aspect": "Corps", "runs_focused": 25, "cost": {"BETE": 150, "TERRE": 80}, "bonus": "negative_effects_minus_15"},
+	"oracle": {"name": "Oracle", "aspect": "Ame", "runs_focused": 25, "cost": {"BETE": 150, "ESPRIT": 80}, "bonus": "card_preview_1"},
+	"diplomate": {"name": "Diplomate", "aspect": "Monde", "runs_focused": 25, "cost": {"BETE": 150, "EAU": 80}, "bonus": "liens_plus_5"},
+}
+
+const BESTIOLE_BOND_RETENTION := 0.4  # Keep 40% of bond between runs
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# ARBRE DE VIE — Talent Tree (Phase 35)
+# 28 nodes: 8 Racines (Corps) + 8 Ramures (Ame) + 8 Feuillage (Monde) + 4 Tronc
+# ═══════════════════════════════════════════════════════════════════════════════
+
+const TALENT_NODES := {
+	# ── RACINES (Corps / Sanglier) ──────────────────────────────────────────
+	"racines_1": {
+		"branch": "Corps", "tier": 1,
+		"name": "Souffle Fortifie",
+		"cost": {"TERRE": 15, "fragments": 1},
+		"prerequisites": [],
+		"effect": {"type": "modify_start", "target": "souffle", "value": 1},
+		"description": "Commence chaque run avec 1 Souffle supplementaire.",
+		"lore": "Les racines du Sanglier nourrissent le souffle de la terre.",
+	},
+	"racines_2": {
+		"branch": "Corps", "tier": 1,
+		"name": "Endurance Naturelle",
+		"cost": {"NATURE": 20},
+		"prerequisites": [],
+		"effect": {"type": "cancel_first_shift", "aspect": "Corps", "direction": "down"},
+		"description": "Annule le 1er shift Corps BAS de chaque run.",
+		"lore": "La chair du Sanglier ne flanche pas au premier choc.",
+	},
+	"racines_3": {
+		"branch": "Corps", "tier": 1,
+		"name": "Peau de Chene",
+		"cost": {"METAL": 15},
+		"prerequisites": [],
+		"effect": {"type": "modify_start", "target": "blessings", "value": 1},
+		"description": "Commence chaque run avec 1 Benediction supplementaire.",
+		"lore": "L'ecorce du chene protege ceux qui la meritent.",
+	},
+	"racines_4": {
+		"branch": "Corps", "tier": 2,
+		"name": "Coeur de Sanglier",
+		"cost": {"TERRE": 50, "GLACE": 20, "fragments": 3},
+		"prerequisites": ["racines_1", "racines_2"],
+		"effect": {"type": "special_rule", "id": "corps_bas_souffle_bonus"},
+		"description": "Quand Corps = BAS, gagne +2 Souffle au lieu de 0.",
+		"lore": "Plus il tombe bas, plus le Sanglier puise dans ses reserves.",
+	},
+	"racines_5": {
+		"branch": "Corps", "tier": 2,
+		"name": "Racines Profondes",
+		"cost": {"NATURE": 40, "METAL": 20},
+		"prerequisites": ["racines_2", "racines_3"],
+		"effect": {"type": "special_rule", "id": "equilibre_souffle_double"},
+		"description": "Aspects equilibres: +2 Souffle (au lieu de +1).",
+		"lore": "L'equilibre nourrit les racines les plus profondes.",
+	},
+	"racines_6": {
+		"branch": "Corps", "tier": 3,
+		"name": "Reservoir Vital",
+		"cost": {"TERRE": 80, "NATURE": 30, "fragments": 6},
+		"prerequisites": ["racines_4"],
+		"effect": {"type": "modify_start", "target": "souffle_max", "value": 2},
+		"description": "Souffle MAX +2 (de 5 a 7).",
+		"lore": "Le Sanglier puise dans une source intarissable.",
+	},
+	"racines_7": {
+		"branch": "Corps", "tier": 3,
+		"name": "Os de la Terre",
+		"cost": {"METAL": 60, "GLACE": 40, "fragments": 5},
+		"prerequisites": ["racines_5"],
+		"effect": {"type": "special_rule", "id": "survive_game_over_once"},
+		"description": "Survit a 1 game over par run (consomme benediction).",
+		"lore": "Les os de la terre ne se brisent qu'une fois.",
+	},
+	"racines_8": {
+		"branch": "Corps", "tier": 4,
+		"name": "Sanglier Ancestral",
+		"cost": {"TERRE": 120, "NATURE": 60, "fragments": 10},
+		"prerequisites": ["racines_6", "racines_7"],
+		"effect": {"type": "special_rule", "id": "corps_haut_positive"},
+		"description": "Corps HAUT devient positif (+1 Souffle, pas de game over).",
+		"lore": "Le Sanglier Ancestral transcende ses limites.",
+	},
+	# ── RAMURES (Ame / Corbeau) ─────────────────────────────────────────────
+	"ramures_1": {
+		"branch": "Ame", "tier": 1,
+		"name": "Clarte Interieure",
+		"cost": {"LUMIERE": 15, "fragments": 1},
+		"prerequisites": [],
+		"effect": {"type": "special_rule", "id": "reveal_one_effect"},
+		"description": "Revele 1 effet de choix par carte.",
+		"lore": "Le Corbeau voit ce que les yeux ne percoivent pas.",
+	},
+	"ramures_2": {
+		"branch": "Ame", "tier": 1,
+		"name": "Flamme Spirituelle",
+		"cost": {"ESPRIT": 20},
+		"prerequisites": [],
+		"effect": {"type": "modify_start", "target": "awen", "value": 1},
+		"description": "Commence chaque run avec +1 Awen.",
+		"lore": "L'esprit brule plus vif chez ceux qui ecoutent.",
+	},
+	"ramures_3": {
+		"branch": "Ame", "tier": 1,
+		"name": "Echo des Runes",
+		"cost": {"ARCANE": 15},
+		"prerequisites": [],
+		"effect": {"type": "special_rule", "id": "show_minigame_type"},
+		"description": "Voir le type de mini-jeu avant de jouer.",
+		"lore": "Les runes chuchotent l'epreuve a venir.",
+	},
+	"ramures_4": {
+		"branch": "Ame", "tier": 2,
+		"name": "Maitrise d'Awen",
+		"cost": {"ESPRIT": 50, "FOUDRE": 20, "fragments": 3},
+		"prerequisites": ["ramures_1", "ramures_2"],
+		"effect": {"type": "special_rule", "id": "awen_regen_faster"},
+		"description": "Awen se regenere toutes les 4 cartes (au lieu de 5).",
+		"lore": "Le flux d'Awen repond a la maitrise interieure.",
+	},
+	"ramures_5": {
+		"branch": "Ame", "tier": 2,
+		"name": "Troisieme Oeil",
+		"cost": {"LUMIERE": 40, "ARCANE": 20},
+		"prerequisites": ["ramures_1", "ramures_3"],
+		"effect": {"type": "special_rule", "id": "predict_next_theme"},
+		"description": "Predit le theme de la prochaine carte.",
+		"lore": "Le troisieme oeil du Corbeau perce le voile du temps.",
+	},
+	"ramures_6": {
+		"branch": "Ame", "tier": 3,
+		"name": "Corbeau Omniscient",
+		"cost": {"LUMIERE": 80, "ESPRIT": 30, "fragments": 6},
+		"prerequisites": ["ramures_4"],
+		"effect": {"type": "special_rule", "id": "reveal_oghams_cheaper"},
+		"description": "Oghams 'reveal' coutent -1 Awen.",
+		"lore": "Le Corbeau voit tout sans effort.",
+	},
+	"ramures_7": {
+		"branch": "Ame", "tier": 3,
+		"name": "Memoire des Boucles",
+		"cost": {"ARCANE": 60, "FOUDRE": 40, "fragments": 5},
+		"prerequisites": ["ramures_5"],
+		"effect": {"type": "special_rule", "id": "know_ending_condition"},
+		"description": "Connaitre 1 condition de fin aleatoire au debut de run.",
+		"lore": "Merlin murmure: 'Je me souviens de cette boucle...'",
+	},
+	"ramures_8": {
+		"branch": "Ame", "tier": 4,
+		"name": "Fusion Ame-Bestiole",
+		"cost": {"ESPRIT": 120, "LUMIERE": 60, "fragments": 10},
+		"prerequisites": ["ramures_6", "ramures_7"],
+		"effect": {"type": "modify_start", "target": "bond", "value": 60},
+		"description": "Bond demarre a 60 (tier 'close').",
+		"lore": "L'ame et la Bestiole ne font plus qu'un.",
+	},
+	# ── FEUILLAGE (Monde / Cerf) ────────────────────────────────────────────
+	"feuillage_1": {
+		"branch": "Monde", "tier": 1,
+		"name": "Diplomatie Innee",
+		"cost": {"EAU": 15, "fragments": 1},
+		"prerequisites": [],
+		"effect": {"type": "cancel_first_shift", "aspect": "Monde", "direction": "up"},
+		"description": "Annule le 1er shift Monde HAUT de chaque run.",
+		"lore": "Le Cerf apaise les conflits avant qu'ils n'eclatent.",
+	},
+	"feuillage_2": {
+		"branch": "Monde", "tier": 1,
+		"name": "Flux Harmonieux",
+		"cost": {"AIR": 20},
+		"prerequisites": [],
+		"effect": {"type": "special_rule", "id": "free_center_once"},
+		"description": "1 Centre gratuit par run (0 Souffle).",
+		"lore": "L'air porte le souffle sans effort.",
+	},
+	"feuillage_3": {
+		"branch": "Monde", "tier": 1,
+		"name": "Instinct Animal",
+		"cost": {"BETE": 15},
+		"prerequisites": [],
+		"effect": {"type": "special_rule", "id": "minigame_field_bonus"},
+		"description": "Bonus +5% score sur detection du champ lexical mini-jeu.",
+		"lore": "L'instinct du Cerf devine la nature de l'epreuve.",
+	},
+	"feuillage_4": {
+		"branch": "Monde", "tier": 2,
+		"name": "Ruse du Renard",
+		"cost": {"POISON": 50, "AIR": 20, "fragments": 3},
+		"prerequisites": ["feuillage_1", "feuillage_2"],
+		"effect": {"type": "special_rule", "id": "critical_dc_reduced"},
+		"description": "Choix critique: DC +2 (au lieu de +4).",
+		"lore": "La ruse adoucit les epreuves les plus dures.",
+	},
+	"feuillage_5": {
+		"branch": "Monde", "tier": 2,
+		"name": "Courant Adaptable",
+		"cost": {"EAU": 40, "BETE": 20},
+		"prerequisites": ["feuillage_2", "feuillage_3"],
+		"effect": {"type": "special_rule", "id": "biome_change_souffle"},
+		"description": "Changement de biome: +2 Souffle.",
+		"lore": "Comme l'eau, le druide s'adapte a chaque terrain.",
+	},
+	"feuillage_6": {
+		"branch": "Monde", "tier": 3,
+		"name": "Cerf Communaute",
+		"cost": {"AIR": 80, "EAU": 30, "fragments": 6},
+		"prerequisites": ["feuillage_4"],
+		"effect": {"type": "special_rule", "id": "unlock_alliance_missions"},
+		"description": "Debloque les missions 'Alliance' (haute recompense).",
+		"lore": "Le troupeau du Cerf ouvre des chemins nouveaux.",
+	},
+	"feuillage_7": {
+		"branch": "Monde", "tier": 3,
+		"name": "Venin Bienveillant",
+		"cost": {"POISON": 60, "BETE": 40, "fragments": 5},
+		"prerequisites": ["feuillage_5"],
+		"effect": {"type": "special_rule", "id": "negative_effects_reduced"},
+		"description": "Effets negatifs -30% (arrondis).",
+		"lore": "Le venin, a petite dose, devient remede.",
+	},
+	"feuillage_8": {
+		"branch": "Monde", "tier": 4,
+		"name": "Roi sans Couronne",
+		"cost": {"EAU": 120, "AIR": 60, "fragments": 10},
+		"prerequisites": ["feuillage_6", "feuillage_7"],
+		"effect": {"type": "special_rule", "id": "tyran_juste_ending"},
+		"description": "Monde HAUT debloque la fin secrete 'Tyran Juste'.",
+		"lore": "Le Cerf qui guide sans regner atteint la vraie puissance.",
+	},
+	# ── TRONC (Universel) ───────────────────────────────────────────────────
+	"tronc_1": {
+		"branch": "Universel", "tier": 2,
+		"name": "Equilibre des Feux",
+		"cost": {"FEU": 40, "fragments": 3},
+		"prerequisites": ["racines_1", "ramures_1", "feuillage_1"],
+		"effect": {"type": "special_rule", "id": "flux_start_balanced"},
+		"description": "Flux commencent a 50/50/50 (au lieu de 50/30/40).",
+		"lore": "Les trois feux s'alignent a l'aurore.",
+	},
+	"tronc_2": {
+		"branch": "Universel", "tier": 3,
+		"name": "Voile Perce",
+		"cost": {"OMBRE": 80, "FEU": 40, "fragments": 6},
+		"prerequisites": ["tronc_1"],
+		"effect": {"type": "special_rule", "id": "show_flux_hints"},
+		"description": "Voir Karma et Flux (indices textuels) pendant la run.",
+		"lore": "Derriere le voile, les courants se revelent.",
+	},
+	"tronc_3": {
+		"branch": "Universel", "tier": 3,
+		"name": "Triade Parfaite",
+		"cost": {"FEU": 60, "OMBRE": 60, "fragments": 8},
+		"prerequisites": ["racines_4", "ramures_4", "feuillage_4"],
+		"effect": {"type": "special_rule", "id": "triade_parfaite_bonus"},
+		"description": "3 aspects equilibres: +3 Souffle + ignore prochain shift negatif.",
+		"lore": "L'harmonie parfaite accorde un souffle divin.",
+	},
+	"tronc_4": {
+		"branch": "Universel", "tier": 4,
+		"name": "Boucle Eternelle",
+		"cost": {"FEU": 150, "OMBRE": 150, "fragments": 20},
+		"prerequisites": ["tronc_2", "tronc_3"],
+		"effect": {"type": "special_rule", "id": "new_game_plus"},
+		"description": "New Game+: essences x1.5, fin secrete ultime.",
+		"lore": "La boucle se referme. Et recommence, plus forte.",
+	},
+}
+
+# Talent branch colors for UI
+const TALENT_BRANCH_COLORS := {
+	"Corps": Color(0.55, 0.40, 0.25),     # Earthy brown
+	"Ame": Color(0.40, 0.45, 0.70),       # Ethereal blue
+	"Monde": Color(0.35, 0.55, 0.35),     # Forest green
+	"Universel": Color(0.65, 0.45, 0.20), # Amber
+}
+
+# Talent tier names
+const TALENT_TIER_NAMES := {1: "Germe", 2: "Pousse", 3: "Branche", 4: "Cime"}

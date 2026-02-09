@@ -167,6 +167,18 @@ var _critical_used: bool = false  # Max 1 per quest (except karma-forced)
 # Quest outcome history (for adaptive difficulty)
 var _quest_history: Array[Dictionary] = []
 
+# Flux system — hidden energy balance (Phase 35)
+var _flux := {"terre": 50, "esprit": 30, "lien": 40}
+var _minigames_won: int = 0
+var _oghams_used: int = 0
+var _awen_spent: int = 0
+
+# Talent tracking (Phase 35)
+var _souffle_max: int = SOUFFLE_MAX
+var _shield_corps_used: bool = false
+var _shield_monde_used: bool = false
+var _free_center_remaining: int = 0
+
 # Card buffer (continuous pre-generation)
 var _current_card: Dictionary = {}
 var _card_buffer: Array[Dictionary] = []
@@ -763,6 +775,15 @@ func _start_quest() -> void:
 	_is_critical_choice = false
 	_critical_used = false
 	_quest_history.clear()
+	_flux = MerlinConstants.FLUX_START.duplicate()
+	_minigames_won = 0
+	_oghams_used = 0
+	_awen_spent = 0
+	_souffle_max = SOUFFLE_MAX
+	_shield_corps_used = false
+	_shield_monde_used = false
+	_free_center_remaining = 0
+	_apply_talent_bonuses()
 	_card_buffer.clear()
 	_quest_active = true
 	_is_refilling = false
@@ -882,6 +903,57 @@ func _show_quest_end(victory: bool) -> void:
 	if _narrator_badge: _narrator_badge.text = ""
 	if _effects_rtl: _effects_rtl.text = ""
 
+	# Calculate and apply run rewards (Phase 35)
+	var all_balanced: bool = (_aspects.Corps == 0 and _aspects.Ame == 0 and _aspects.Monde == 0)
+	var run_data := {
+		"victory": victory,
+		"flux": _flux.duplicate(),
+		"all_balanced": all_balanced,
+		"bond": 50,  # Placeholder — will come from bestiole state
+		"minigames_won": _minigames_won,
+		"oghams_used": _oghams_used,
+		"awen_spent": _awen_spent,
+		"score": _cards_played * (20 if victory else 10),
+		"ending_title": _quest.get("title", "") if not victory else "Victoire",
+	}
+	var store := get_node_or_null("/root/MerlinStore")
+	var rewards_text := ""
+	if store and store.has_method("calculate_run_rewards"):
+		var rewards: Dictionary = store.calculate_run_rewards(run_data)
+		store.apply_run_rewards(rewards)
+		# Build summary text
+		var ess_parts: Array[String] = []
+		for elem in rewards.get("essence", {}):
+			var val: int = int(rewards.essence[elem])
+			if val > 0:
+				ess_parts.append("%s +%d" % [elem, val])
+		if ess_parts.size() > 0:
+			rewards_text = "\n\n%sEssences gagnees:%s %s" % [C_CRIT, C_END, ", ".join(ess_parts)]
+		var frags: int = int(rewards.get("fragments", 0))
+		var liens: int = int(rewards.get("liens", 0))
+		var gloire: int = int(rewards.get("gloire", 0))
+		if frags > 0 or liens > 0 or gloire > 0:
+			rewards_text += "\n%sFragments:%s %d | %sLiens:%s %d | %sGloire:%s %d" % [
+				C_ACCENT, C_END, frags, C_ACCENT, C_END, liens, C_ACCENT, C_END, gloire
+			]
+		_log_brain("%sRecompenses appliquees: %d essences, %d frags, %d liens, %d gloire%s" % [
+			C_CRIT, ess_parts.size(), frags, liens, gloire, C_END
+		])
+
+	# Check bestiole evolution (Phase 35)
+	if store and store.has_method("check_bestiole_evolution"):
+		var evo_result: Dictionary = store.check_bestiole_evolution()
+		if evo_result.get("can_evolve", false):
+			store.evolve_bestiole()
+			var new_stage: int = int(evo_result.get("next_stage", 2))
+			var stage_names := {2: "Compagnon", 3: "Gardien"}
+			rewards_text += "\n\n%sBestiole evolue: %s !%s" % [C_CRIT, stage_names.get(new_stage, "?"), C_END]
+			_log_brain("%sBestiole evolution: stade %d !%s" % [C_CRIT, new_stage, C_END])
+
+	# Append rewards to end screen text
+	if _card_text and rewards_text != "":
+		_card_text.text += rewards_text
+
 	# Show restart button
 	if _start_overlay: _start_overlay.visible = true
 	if _start_btn: _start_btn.text = "Nouvelle Quete"
@@ -927,7 +999,10 @@ func _generate_card() -> Dictionary:
 		_aspects.get("Corps", 0), _aspects.get("Ame", 0), _aspects.get("Monde", 0), _souffle, _karma
 	]
 	var rag_summary := _get_context_summary()
+	var flux_context := _get_flux_context_for_llm()
 	var context := base_context + " " + state_context
+	if flux_context != "":
+		context += " " + flux_context
 	if rag_summary != "":
 		context += " " + rag_summary
 
@@ -1289,6 +1364,9 @@ func _on_choice(direction: String) -> void:
 
 	_log_brain("%sChoix: %s (DC %d)%s" % [C_ACCENT, direction, _dice_dc, C_END])
 
+	# Update Flux based on choice direction (Phase 35)
+	_update_flux(direction)
+
 	# Decide: mini-game or standard dice roll
 	var use_minigame: bool = false
 	var minigame_chance: float = 0.7  # 70% base chance
@@ -1366,6 +1444,9 @@ func _launch_minigame(direction: String) -> void:
 func _on_minigame_completed(result: Dictionary) -> void:
 	var score: int = int(result.get("score", 50))
 	var elapsed: int = int(result.get("time_ms", 0))
+	var mg_success: bool = bool(result.get("success", false))
+	if mg_success:
+		_minigames_won += 1
 
 	# Convert score to D20
 	_dice_target = MiniGameBase.score_to_d20(score)
@@ -1452,6 +1533,19 @@ func _on_choice_dice_settled() -> void:
 		_dice_result_label.add_theme_color_override("font_color", PALETTE.red)
 		_log_brain("%sEchec Critique ! D20 = 1%s" % [C_FAIL, C_END])
 
+	# Talent: feuillage_7 — Negative effects -30%
+	var _t_store := get_node_or_null("/root/MerlinStore")
+	if _t_store and _t_store.is_talent_active("feuillage_7"):
+		for key in final_fx:
+			if _aspects.has(key) and int(final_fx[key]) < 0:
+				final_fx[key] = int(ceili(float(final_fx[key]) * 0.7))
+
+	# Talent: feuillage_2 — Free center (no Souffle cost, 1/run)
+	if _pending_choice == "center" and _free_center_remaining > 0 and final_fx.has("cost"):
+		final_fx["cost"] = 0
+		_free_center_remaining -= 1
+		_log_brain("%sTalent: Centre gratuit utilise !%s" % [C_OK, C_END])
+
 	# Apply effects to game state
 	for key in final_fx:
 		if key == "cost":
@@ -1459,6 +1553,19 @@ func _on_choice_dice_settled() -> void:
 		elif _aspects.has(key):
 			var old_val: int = _aspects[key]
 			var new_val: int = clampi(old_val + int(final_fx[key]), ASPECT_MIN, ASPECT_MAX)
+
+			# Talent shields (Phase 35)
+			if key == "Corps" and new_val < old_val and not _shield_corps_used:
+				if _t_store and _t_store.is_talent_active("racines_2"):
+					new_val = old_val
+					_shield_corps_used = true
+					_log_brain("%sTalent: Endurance Naturelle protege Corps !%s" % [C_OK, C_END])
+			if key == "Monde" and new_val > old_val and not _shield_monde_used:
+				if _t_store and _t_store.is_talent_active("feuillage_1"):
+					new_val = old_val
+					_shield_monde_used = true
+					_log_brain("%sTalent: Diplomatie Innee protege Monde !%s" % [C_OK, C_END])
+
 			# Blessing absorbs game over
 			if abs(new_val) >= ASPECT_GAME_OVER and _blessings > 0:
 				_blessings -= 1
@@ -1470,7 +1577,7 @@ func _on_choice_dice_settled() -> void:
 	if outcome == "critical_success":
 		_karma = clampi(_karma + 2, KARMA_MIN, KARMA_MAX)
 		_blessings = mini(_blessings + 1, BLESSINGS_MAX)
-		_souffle = mini(_souffle + 2, SOUFFLE_MAX)
+		_souffle = mini(_souffle + 2, _souffle_max)
 	elif outcome == "critical_failure":
 		_karma = clampi(_karma - 2, KARMA_MIN, KARMA_MAX)
 	elif outcome == "success":
@@ -1478,12 +1585,16 @@ func _on_choice_dice_settled() -> void:
 			_karma = clampi(_karma + 1, KARMA_MIN, KARMA_MAX)
 		elif _pending_choice == "left":
 			_karma = clampi(_karma - 1, KARMA_MIN, KARMA_MAX)
-		_souffle = mini(_souffle + 1, SOUFFLE_MAX)
+		_souffle = mini(_souffle + 1, _souffle_max)
 
-	# Equilibrium bonus: if all aspects at 0, gain +1 Souffle
+	# Equilibrium bonus: if all aspects at 0, gain Souffle
 	if _aspects.Corps == 0 and _aspects.Ame == 0 and _aspects.Monde == 0:
-		_souffle = mini(_souffle + 1, SOUFFLE_MAX)
-		_log_brain("%sEquilibre parfait ! Souffle +1%s" % [C_OK, C_END])
+		var eq_bonus: int = 1
+		var _ms := get_node_or_null("/root/MerlinStore")
+		if _ms and _ms.is_talent_active("racines_5"):
+			eq_bonus = 2
+		_souffle = mini(_souffle + eq_bonus, _souffle_max)
+		_log_brain("%sEquilibre parfait ! Souffle +%d%s" % [C_OK, eq_bonus, C_END])
 
 	# Record quest history
 	_quest_history.append({
@@ -1565,15 +1676,115 @@ func _get_dc_for_direction(direction: String) -> int:
 		if consecutive_fails >= 3:
 			modifier = -4  # Pity mode
 			_log_brain("%sMode indulgent actif (DC -4)%s" % [C_INFO, C_END])
-			_souffle = mini(_souffle + 1, SOUFFLE_MAX)
+			_souffle = mini(_souffle + 1, _souffle_max)
 		elif consecutive_wins >= 3:
 			modifier = 2  # Harder
 
-	# Critical choice modifier
+	# Critical choice modifier (talent feuillage_4 reduces from +4 to +2)
 	if _is_critical_choice:
-		modifier += 4
+		var crit_penalty: int = 4
+		var _dc_store := get_node_or_null("/root/MerlinStore")
+		if _dc_store and _dc_store.is_talent_active("feuillage_4"):
+			crit_penalty = 2
+		modifier += crit_penalty
+
+	# Flux Lien (difficulty) modifier (Phase 35)
+	var lien_val: int = int(_flux.get("lien", 40))
+	if lien_val <= 30:
+		modifier -= 2   # Calme: easier
+	elif lien_val >= 70:
+		modifier += 3   # Brutal: harder
 
 	return clampi(base_dc + modifier, 2, 19)
+
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# FLUX SYSTEM — Hidden Energy Balance (Phase 35)
+# ═══════════════════════════════════════════════════════════════════════════════
+
+func _update_flux(direction: String) -> void:
+	var delta: Dictionary = MerlinConstants.FLUX_CHOICE_DELTA.get(direction, {})
+	for axis in delta:
+		_flux[axis] = clampi(int(_flux.get(axis, 50)) + int(delta[axis]),
+			MerlinConstants.FLUX_MIN, MerlinConstants.FLUX_MAX)
+
+	# Passive Aspect influence on Flux
+	for aspect_name in _aspects:
+		var offset_data: Dictionary = MerlinConstants.FLUX_ASPECT_OFFSET.get(aspect_name, {})
+		if offset_data.is_empty():
+			continue
+		var flux_axis: String = str(offset_data.get("flux", ""))
+		var aspect_val: int = _aspects[aspect_name]
+		var offset: int = int(offset_data.get(aspect_val, 0))
+		if offset != 0:
+			# Apply fractional offset (divide by cards to prevent runaway)
+			var scaled: int = clampi(int(offset / maxi(_cards_played, 3)), -5, 5)
+			_flux[flux_axis] = clampi(int(_flux.get(flux_axis, 50)) + scaled,
+				MerlinConstants.FLUX_MIN, MerlinConstants.FLUX_MAX)
+
+
+func _get_flux_tier(axis: String) -> String:
+	var val: int = int(_flux.get(axis, 50))
+	var tiers: Dictionary = MerlinConstants.FLUX_TIERS.get(axis, {})
+	for tier_name in tiers:
+		var tier_data: Dictionary = tiers[tier_name]
+		if val >= int(tier_data.get("min", 0)) and val <= int(tier_data.get("max", 100)):
+			return tier_name
+	return "neutre"
+
+
+func _get_flux_context_for_llm() -> String:
+	var terre_tier: String = _get_flux_tier("terre")
+	var esprit_tier: String = _get_flux_tier("esprit")
+	var lien_tier: String = _get_flux_tier("lien")
+
+	var hints: Array[String] = []
+	var terre_hint: String = str(MerlinConstants.FLUX_HINTS.get("terre", {}).get(terre_tier, ""))
+	var esprit_hint: String = str(MerlinConstants.FLUX_HINTS.get("esprit", {}).get(esprit_tier, ""))
+	var lien_hint: String = str(MerlinConstants.FLUX_HINTS.get("lien", {}).get(lien_tier, ""))
+	if terre_hint != "":
+		hints.append(terre_hint)
+	if esprit_hint != "":
+		hints.append(esprit_hint)
+	if lien_hint != "":
+		hints.append(lien_hint)
+
+	return " ".join(hints) if hints.size() > 0 else ""
+
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# TALENT BONUSES — Applied at start of each run (Phase 35)
+# ═══════════════════════════════════════════════════════════════════════════════
+
+func _apply_talent_bonuses() -> void:
+	var ms := get_node_or_null("/root/MerlinStore")
+	if ms == null:
+		return
+
+	# racines_1: +1 Souffle at start
+	if ms.is_talent_active("racines_1"):
+		_souffle += 1
+		_log_brain("%sTalent: Souffle Fortifie (+1 Souffle)%s" % [C_OK, C_END])
+
+	# racines_3: +1 Blessing at start
+	if ms.is_talent_active("racines_3"):
+		_blessings += 1
+		_log_brain("%sTalent: Peau de Chene (+1 Benediction)%s" % [C_OK, C_END])
+
+	# racines_6: +2 Souffle max
+	if ms.is_talent_active("racines_6"):
+		_souffle_max += 2
+		_log_brain("%sTalent: Reservoir Vital (Souffle max +2 = %d)%s" % [C_OK, _souffle_max, C_END])
+
+	# feuillage_2: 1 free center per run
+	if ms.is_talent_active("feuillage_2"):
+		_free_center_remaining = 1
+		_log_brain("%sTalent: Flux Harmonieux (1 Centre gratuit)%s" % [C_OK, C_END])
+
+	# tronc_1: Flux starts at 50/50/50
+	if ms.is_talent_active("tronc_1"):
+		_flux = {"terre": 50, "esprit": 50, "lien": 50}
+		_log_brain("%sTalent: Equilibre des Feux (Flux 50/50/50)%s" % [C_OK, C_END])
 
 
 func _apply_crit_success(base_fx: Dictionary) -> Dictionary:
@@ -1838,11 +2049,11 @@ func _update_aspect_display() -> void:
 			bar_fill.color = PALETTE.green
 			val_lbl.add_theme_color_override("font_color", PALETTE.green)
 
-	# Souffle dots (max SOUFFLE_MAX)
+	# Souffle dots (max _souffle_max)
 	var dots := ""
 	for i in range(_souffle):
 		dots += " ◆"
-	for i in range(maxi(0, SOUFFLE_MAX - _souffle)):
+	for i in range(maxi(0, _souffle_max - _souffle)):
 		dots += " ◇"
 	# Karma indicator
 	var karma_str := ""
@@ -1997,14 +2208,21 @@ func _update_monitor() -> void:
 	if _blessings > 0:
 		bless_tag = " | %sBenedictions:%s %s%d%s" % [C_ACCENT, C_END, C_CRIT, _blessings, C_END]
 
+	# Flux monitoring (Phase 35)
+	var flux_tag := "\n%sFlux:%s T:%d E:%d L:%d (%s/%s/%s)" % [
+		C_INFO, C_END,
+		int(_flux.get("terre", 50)), int(_flux.get("esprit", 30)), int(_flux.get("lien", 40)),
+		_get_flux_tier("terre").left(3), _get_flux_tier("esprit").left(3), _get_flux_tier("lien").left(3),
+	]
+
 	if _monitor_summary:
-		_monitor_summary.text = "%sMode:%s %s | %sCerveaux:%s %d | %sPool:%s %d/%d | %sBG:%s %d\n%sBuffer:%s %s%d/%d%s%s%s%s" % [
+		_monitor_summary.text = "%sMode:%s %s | %sCerveaux:%s %d | %sPool:%s %d/%d | %sBG:%s %d\n%sBuffer:%s %s%d/%d%s%s%s%s%s" % [
 			C_ACCENT, C_END, info.get("brain_mode", "?"),
 			C_ACCENT, C_END, brain_count,
 			C_ACCENT, C_END, pool_idle, pool_total,
 			C_ACCENT, C_END, active_bg,
 			C_ACCENT, C_END, buf_color, buf_count, BUFFER_SIZE, C_END, refill_tag,
-			karma_tag, bless_tag,
+			karma_tag, bless_tag, flux_tag,
 		]
 
 

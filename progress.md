@@ -2,6 +2,59 @@
 
 > **Note**: Sessions anterieures archivees dans `archive/progress_archive_2026-02-05_to_2026-02-08.md`
 
+## Session: 2026-02-09 (Phase 36 — Meta-Progression + Arbre de Vie + Flux)
+
+### Phase 36: Meta-Progression + Arbre de Vie + Balance des Flux
+- **Status:** complete
+- **Agents:** Plan (x3 parallel), Explore (codebase audit)
+- **Files modified:** merlin_constants.gd, merlin_store.gd, TestBrainPool.gd, HubAntre.gd, prompt_templates.json
+
+#### Sous-Phase 1: Backend (Donnees + Constantes)
+- Ajout constantes Flux (FLUX_START, FLUX_CHOICE_DELTA, FLUX_ASPECT_OFFSET, FLUX_TIERS, FLUX_HINTS) dans merlin_constants.gd
+- Ajout 28 TALENT_NODES (Racines/Ramures/Feuillage/Tronc) avec couts en 14 essences + fragments
+- Ajout constantes evolution Bestiole (3 stades, 3 sous-chemins)
+- Ajout TALENT_BRANCH_COLORS, TALENT_TIER_NAMES
+- Ajout meta.talent_tree + meta.bestiole_evolution dans merlin_store.gd
+- Fonctions: is_talent_active(), can_unlock_talent(), unlock_talent(), get_affordable_talents()
+- Fonctions: calculate_run_rewards(), apply_run_rewards(), check_bestiole_evolution(), evolve_bestiole()
+
+#### Sous-Phase 2: Systeme de Flux (in-run, cache)
+- 3 axes caches: Terre (environnement), Esprit (recit), Lien (difficulte) — 0 a 100
+- Mise a jour apres chaque choix (gauche/centre/droite) + influence passive des Aspects
+- DC modifie par Flux Lien (calme: -2, brutal: +3)
+- Contexte Flux envoye au LLM Narrateur via prompt_templates.json
+- Feedback subtil via texte Merlin (pas de chiffres visibles au joueur)
+- Monitor debug: affichage Flux et tiers
+
+#### Sous-Phase 3: Recompenses de fin de run
+- 14 types d'essences gagnees selon conditions (victoire, chute, flux, equilibre, bond, mini-jeux, oghams)
+- Fragments d'Ogham: 1 + floor(awen_spent/3)
+- Liens: 2 + mini-jeux + score bonus
+- Gloire: floor(score/50)
+- Affichage detaille sur ecran de fin de run
+
+#### Sous-Phase 4: Arbre de Vie — UI Hub (4eme onglet)
+- Nouvel onglet "Arbre" dans HubAntre.gd (page 4)
+- 28 noeuds organises par tier (Germe → Pousse → Branche → Cime)
+- Noeuds: gris (verrouille), or (achetable), colore (debloque)
+- Hover: nom + cout + description + lore
+- Click: debloquer si affordable (essences + fragments)
+- Affichage essences collectees + devises (fragments, liens, gloire)
+- Legende des branches (Sanglier/Tronc/Corbeau/Cerf)
+
+#### Sous-Phase 5: Talents actifs + Evolution Bestiole
+- _apply_talent_bonuses() appele au debut de chaque run
+- Talents de depart: racines_1 (+1 Souffle), racines_3 (+1 Benediction), racines_6 (+2 Souffle max), feuillage_2 (centre gratuit), tronc_1 (Flux 50/50/50)
+- Boucliers: racines_2 (Corps 1er shift BAS annule), feuillage_1 (Monde 1er shift HAUT annule)
+- DC: feuillage_4 (critique DC +2 au lieu de +4)
+- Equilibre: racines_5 (+2 Souffle au lieu de +1 quand 3 aspects a 0)
+- Reduction: feuillage_7 (effets negatifs -30%)
+- SOUFFLE_MAX dynamique via _souffle_max
+- Evolution Bestiole: verification en fin de run, 3 stades (Enfant → Compagnon → Gardien)
+- Affichage stade dans onglet Bestiole du Hub
+
+---
+
 ## Session: 2026-02-09 (Phase 35 — Project-Wide Resource Cleanup)
 
 ### Phase 35: Nettoyage Complet des Ressources Projet

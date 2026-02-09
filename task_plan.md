@@ -4,11 +4,21 @@
 Developper un JDR Parlant roguelite avec LLM local (Qwen2.5-3B Multi-Brain), systeme Triade (3 aspects x 3 etats), et narration procedurale.
 
 ## Current Phase
-Phase 35 - Project-Wide Resource Cleanup (COMPLETE)
+Phase 36 - Meta-Progression + Arbre de Vie + Flux (COMPLETE)
 
 ---
 
 ## Phases Recentes (2026-02-09)
+
+### Phase 36: Meta-Progression + Arbre de Vie + Balance des Flux (COMPLETE)
+- [x] 36.1 Backend: Constantes Flux + 28 TALENT_NODES + Evolution Bestiole dans merlin_constants.gd
+- [x] 36.2 Backend: meta.talent_tree, bestiole_evolution, fonctions unlock/rewards dans merlin_store.gd
+- [x] 36.3 Systeme de Flux cache in-run (3 axes, DC modifier, contexte LLM)
+- [x] 36.4 Recompenses de fin de run (14 essences, fragments, liens, gloire)
+- [x] 36.5 Arbre de Vie UI — 4eme onglet Hub (28 noeuds, deblocage, devises)
+- [x] 36.6 Talents actifs dans gameplay (bonuses depart, boucliers, DC, reduction)
+- [x] 36.7 Evolution Bestiole persistante (3 stades, affichage Hub)
+- [x] 36.8 Validation + Documentation + Git Commit
 
 ### Phase 35: Project-Wide Resource Cleanup (COMPLETE)
 - [x] 35.1 Supprimer fichiers junk racine (8 fichiers)

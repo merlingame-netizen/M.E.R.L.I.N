@@ -55,6 +55,13 @@ func _ready() -> void:
 	cards.gauge_critical.connect(_on_gauge_critical)
 	cards.run_ended.connect(_on_run_ended)
 
+	# Wire MerlinAI autoload to the LLM adapter
+	var merlin_ai_node := get_node_or_null("/root/MerlinAI")
+	if merlin_ai_node:
+		llm.set_merlin_ai(merlin_ai_node)
+	else:
+		call_deferred("_deferred_wire_merlin_ai")
+
 	# Initialize MERLIN OMNISCIENT SYSTEM
 	_init_merlin_omniscient()
 
@@ -97,6 +104,13 @@ func get_merlin() -> MerlinOmniscient:
 func is_merlin_active() -> bool:
 	"""Check if Merlin Omniscient is active."""
 	return merlin != null
+
+
+func _deferred_wire_merlin_ai() -> void:
+	var merlin_ai_node := get_node_or_null("/root/MerlinAI")
+	if merlin_ai_node:
+		llm.set_merlin_ai(merlin_ai_node)
+		print("[MerlinStore] MerlinAI wired to LLM adapter (deferred)")
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
@@ -206,11 +220,20 @@ func build_default_state() -> Dictionary:
 			"packages": [],
 			"active_package": "",
 			"unlocked_evolutions": [],
-			# Reigns meta (NEW)
+			# Reigns meta
 			"total_runs": 0,
 			"total_cards_played": 0,
 			"endings_seen": [],
 			"gloire_points": 0,
+			# Arbre de Vie — Talent Tree (Phase 35)
+			"talent_tree": {
+				"unlocked": [],  # Array of talent node IDs
+			},
+			# Bestiole Evolution (Phase 35)
+			"bestiole_evolution": {
+				"stage": 1,      # 1=Enfant, 2=Compagnon, 3=Gardien
+				"path": "",      # "" | "protecteur" | "oracle" | "diplomate"
+			},
 		},
 		"flags": {},  # Global flags for narrative
 		"story_log": [],
@@ -270,8 +293,16 @@ func _reduce(action: Dictionary) -> Dictionary:
 			# Use MERLIN OMNISCIENT if available
 			if merlin != null:
 				card = await merlin.generate_card(state)
+			elif llm.is_llm_ready():
+				# Direct adapter path (no MOS)
+				var ctx: Dictionary = llm.build_triade_context(state)
+				var llm_result: Dictionary = await llm.generate_card(ctx)
+				if llm_result.get("ok", false):
+					card = llm_result["card"]
+				else:
+					card = cards.get_next_triade_card(state)
 			else:
-				card = cards.get_next_card(state)
+				card = cards.get_next_triade_card(state)
 			return {"ok": true, "card": card}
 
 		"TRIADE_RESOLVE_CHOICE":
@@ -361,7 +392,7 @@ func _reduce(action: Dictionary) -> Dictionary:
 			return {"ok": true}
 
 		"REIGNS_GET_CARD":
-			var card = cards.get_next_card(state)
+			var card = await cards.get_next_card(state)
 			return {"ok": true, "card": card}
 
 		"REIGNS_RESOLVE_CHOICE":
@@ -1195,3 +1226,229 @@ func get_mode() -> String:
 
 func get_cards_played() -> int:
 	return int(state.get("run", {}).get("cards_played", 0))
+
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# TALENT TREE — Arbre de Vie (Phase 35)
+# ═══════════════════════════════════════════════════════════════════════════════
+
+func is_talent_active(node_id: String) -> bool:
+	var unlocked: Array = state.get("meta", {}).get("talent_tree", {}).get("unlocked", [])
+	return unlocked.has(node_id)
+
+
+func can_unlock_talent(node_id: String) -> bool:
+	if not MerlinConstants.TALENT_NODES.has(node_id):
+		return false
+	if is_talent_active(node_id):
+		return false
+
+	var node: Dictionary = MerlinConstants.TALENT_NODES[node_id]
+
+	# Check prerequisites
+	for prereq in node.get("prerequisites", []):
+		if not is_talent_active(prereq):
+			return false
+
+	# Check cost
+	var cost: Dictionary = node.get("cost", {})
+	var meta: Dictionary = state.get("meta", {})
+	for currency in cost:
+		if currency == "fragments":
+			if int(meta.get("ogham_fragments", 0)) < int(cost[currency]):
+				return false
+		else:
+			var essence_val: int = int(meta.get("essence", {}).get(currency, 0))
+			if essence_val < int(cost[currency]):
+				return false
+	return true
+
+
+func unlock_talent(node_id: String) -> Dictionary:
+	if not can_unlock_talent(node_id):
+		return {"ok": false, "error": "Cannot unlock"}
+
+	var node: Dictionary = MerlinConstants.TALENT_NODES[node_id]
+	var cost: Dictionary = node.get("cost", {})
+
+	# Spend currency
+	for currency in cost:
+		if currency == "fragments":
+			state.meta.ogham_fragments -= int(cost[currency])
+		else:
+			state.meta.essence[currency] -= int(cost[currency])
+
+	# Add to unlocked list
+	state.meta.talent_tree.unlocked.append(node_id)
+
+	state_changed.emit(state)
+	return {"ok": true, "node_id": node_id, "name": node.get("name", "")}
+
+
+func get_unlocked_talents() -> Array:
+	return state.get("meta", {}).get("talent_tree", {}).get("unlocked", []).duplicate()
+
+
+func get_affordable_talents() -> Array:
+	var affordable: Array = []
+	for node_id in MerlinConstants.TALENT_NODES:
+		if can_unlock_talent(node_id):
+			affordable.append(node_id)
+	return affordable
+
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# RUN REWARDS — Essence + Fragments + Liens + Gloire (Phase 35)
+# ═══════════════════════════════════════════════════════════════════════════════
+
+func calculate_run_rewards(run_data: Dictionary) -> Dictionary:
+	var rewards: Dictionary = {"essence": {}, "fragments": 0, "liens": 0, "gloire": 0}
+
+	# Initialize all essences to 0
+	for element in MerlinConstants.ELEMENTS:
+		rewards.essence[element] = 0
+
+	# Base rewards (always)
+	for elem in MerlinConstants.ESSENCE_BASE_REWARDS:
+		rewards.essence[elem] += int(MerlinConstants.ESSENCE_BASE_REWARDS[elem])
+
+	# Victory vs Chute
+	var is_victory: bool = bool(run_data.get("victory", false))
+	if is_victory:
+		for elem in MerlinConstants.ESSENCE_VICTORY_BONUS:
+			rewards.essence[elem] += int(MerlinConstants.ESSENCE_VICTORY_BONUS[elem])
+	else:
+		for elem in MerlinConstants.ESSENCE_CHUTE_BONUS:
+			rewards.essence[elem] += int(MerlinConstants.ESSENCE_CHUTE_BONUS[elem])
+
+	# Flux-based rewards
+	var flux: Dictionary = run_data.get("flux", {})
+	if int(flux.get("terre", 50)) >= 70:
+		var r: Dictionary = MerlinConstants.FLUX_ESSENCE_REWARDS.get("terre_high", {}).get("rewards", {})
+		for elem in r:
+			rewards.essence[elem] += int(r[elem])
+	if int(flux.get("terre", 50)) <= 30:
+		var r: Dictionary = MerlinConstants.FLUX_ESSENCE_REWARDS.get("terre_low", {}).get("rewards", {})
+		for elem in r:
+			rewards.essence[elem] += int(r[elem])
+	if int(flux.get("esprit", 30)) >= 70:
+		var r: Dictionary = MerlinConstants.FLUX_ESSENCE_REWARDS.get("esprit_high", {}).get("rewards", {})
+		for elem in r:
+			rewards.essence[elem] += int(r[elem])
+	if int(flux.get("lien", 40)) >= 70:
+		var r: Dictionary = MerlinConstants.FLUX_ESSENCE_REWARDS.get("lien_high", {}).get("rewards", {})
+		for elem in r:
+			rewards.essence[elem] += int(r[elem])
+
+	# Balanced aspects bonus
+	var all_balanced: bool = bool(run_data.get("all_balanced", false))
+	if all_balanced:
+		for elem in MerlinConstants.ESSENCE_BALANCED_BONUS:
+			rewards.essence[elem] += int(MerlinConstants.ESSENCE_BALANCED_BONUS[elem])
+
+	# Bond bonus
+	if int(run_data.get("bond", 0)) > 70:
+		for elem in MerlinConstants.ESSENCE_BOND_BONUS:
+			rewards.essence[elem] += int(MerlinConstants.ESSENCE_BOND_BONUS[elem])
+
+	# Mini-game bonus
+	if int(run_data.get("minigames_won", 0)) >= 5:
+		for elem in MerlinConstants.ESSENCE_MINIGAME_BONUS:
+			rewards.essence[elem] += int(MerlinConstants.ESSENCE_MINIGAME_BONUS[elem])
+
+	# Ogham bonus
+	if int(run_data.get("oghams_used", 0)) >= 3:
+		for elem in MerlinConstants.ESSENCE_OGHAM_BONUS:
+			rewards.essence[elem] += int(MerlinConstants.ESSENCE_OGHAM_BONUS[elem])
+
+	# Fragments: 1 + floor(awen_spent / 3), max 3
+	var awen_spent: int = int(run_data.get("awen_spent", 0))
+	rewards.fragments = mini(1 + int(awen_spent / 3), 3)
+
+	# Liens: 2 + mission bonus
+	rewards.liens = 2 + (5 if is_victory else 0)
+
+	# Gloire: score/50 + first ending bonus
+	var score: int = int(run_data.get("score", 0))
+	rewards.gloire = int(score / 50)
+	var ending_title: String = str(run_data.get("ending_title", ""))
+	if ending_title != "" and not state.meta.endings_seen.has(ending_title):
+		rewards.gloire += 20
+
+	return rewards
+
+
+func apply_run_rewards(rewards: Dictionary) -> void:
+	# Apply essences
+	var ess: Dictionary = rewards.get("essence", {})
+	for elem in ess:
+		if state.meta.essence.has(elem):
+			state.meta.essence[elem] += int(ess[elem])
+
+	# Apply fragments
+	state.meta.ogham_fragments += int(rewards.get("fragments", 0))
+
+	# Apply liens
+	state.meta.liens += int(rewards.get("liens", 0))
+
+	# Apply gloire
+	state.meta.gloire_points += int(rewards.get("gloire", 0))
+
+	state_changed.emit(state)
+
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# BESTIOLE EVOLUTION (Phase 35)
+# ═══════════════════════════════════════════════════════════════════════════════
+
+func get_bestiole_evolution_stage() -> int:
+	return int(state.get("meta", {}).get("bestiole_evolution", {}).get("stage", 1))
+
+
+func get_bestiole_evolution_path() -> String:
+	return str(state.get("meta", {}).get("bestiole_evolution", {}).get("path", ""))
+
+
+func check_bestiole_evolution() -> Dictionary:
+	var current_stage: int = get_bestiole_evolution_stage()
+	if current_stage >= 3:
+		return {"can_evolve": false}
+
+	var next_stage: int = current_stage + 1
+	var stage_data: Dictionary = MerlinConstants.BESTIOLE_EVOLUTION_STAGES.get(next_stage, {})
+	var runs_required: int = int(stage_data.get("runs_required", 999))
+	var essence_cost: Dictionary = stage_data.get("essence_cost", {})
+
+	if int(state.meta.total_runs) < runs_required:
+		return {"can_evolve": false, "reason": "runs", "need": runs_required, "have": state.meta.total_runs}
+
+	for elem in essence_cost:
+		if int(state.meta.essence.get(elem, 0)) < int(essence_cost[elem]):
+			return {"can_evolve": false, "reason": "essence", "need_elem": elem, "need": essence_cost[elem]}
+
+	return {"can_evolve": true, "next_stage": next_stage, "name": stage_data.get("name", "")}
+
+
+func evolve_bestiole() -> Dictionary:
+	var check: Dictionary = check_bestiole_evolution()
+	if not check.get("can_evolve", false):
+		return {"ok": false}
+
+	var next_stage: int = int(check.get("next_stage", 2))
+	var stage_data: Dictionary = MerlinConstants.BESTIOLE_EVOLUTION_STAGES.get(next_stage, {})
+
+	# Spend essence cost
+	for elem in stage_data.get("essence_cost", {}):
+		state.meta.essence[elem] -= int(stage_data.essence_cost[elem])
+
+	state.meta.bestiole_evolution.stage = next_stage
+	state_changed.emit(state)
+	return {"ok": true, "stage": next_stage, "name": stage_data.get("name", "")}
+
+
+func get_bestiole_bond_start() -> int:
+	var stage: int = get_bestiole_evolution_stage()
+	var stage_data: Dictionary = MerlinConstants.BESTIOLE_EVOLUTION_STAGES.get(stage, {})
+	var base_bond: int = int(stage_data.get("bond_base", 10))
+	var previous_bond: int = int(state.get("bestiole", {}).get("bond", 50))
+	return maxi(int(previous_bond * MerlinConstants.BESTIOLE_BOND_RETENTION), base_bond)

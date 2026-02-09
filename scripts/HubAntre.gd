@@ -67,11 +67,8 @@ const PALETTE := {
 	"warning": Color(0.72, 0.58, 0.22),
 }
 
-const PORTRAIT_DEFAULT := "res://Assets/Sprite/Merlin.png"
-const PORTRAIT_PRINTEMPS := "res://Assets/Sprite/Merlin_PRINTEMPS.png"
-const PORTRAIT_ETE := "res://Assets/Sprite/Merlin_ETE.png"
-const PORTRAIT_AUTOMNE := "res://Assets/Sprite/Merlin_AUTOMNE.png"
-const PORTRAIT_HIVER := "res://Assets/Sprite/Merlin_HIVER.png"
+# Pixel portrait (replaces PNG assets)
+const PIXEL_PORTRAIT_SIZE := Vector2(110, 128)  # 12x14 grid, ~9px/pixel
 
 # ═══════════════════════════════════════════════════════════════════════════════
 # BIOME DATA — 7 Sanctuaires de Bretagne
@@ -258,7 +255,7 @@ var tab_pages: Array[Control] = []  # Array of page Controls
 var tab_buttons: Array[Button] = []  # Tab bar buttons
 var current_tab: int = 0
 var main_vbox: VBoxContainer  # Used within current page
-var portrait_rect: TextureRect
+var pixel_portrait: Control  # PixelMerlinPortrait
 var merlin_text: RichTextLabel
 var aspect_labels: Dictionary = {}
 var souffle_label: Label
@@ -281,6 +278,11 @@ var grimoire_stats_label: Label
 var adventure_btn: Button
 var save_btn: Button
 var bottom_bar: HBoxContainer
+var arbre_node_buttons: Dictionary = {}
+var arbre_info_label: Label
+var arbre_essence_label: Label
+var arbre_currency_label: Label
+var _arbre_selected_node: String = ""
 
 # ═══════════════════════════════════════════════════════════════════════════════
 # STATE
@@ -313,6 +315,7 @@ var voice_ready: bool = false
 
 func _ready() -> void:
 	set_anchors_preset(Control.PRESET_FULL_RECT)
+	Input.set_mouse_mode(Input.MOUSE_MODE_VISIBLE)
 	_load_fonts()
 	_connect_store()
 	_load_player_data()
@@ -404,6 +407,7 @@ func _sync_from_state() -> void:
 	_update_biome_selection()
 	_update_bestiole_display()
 	_update_grimoire_display()
+	_update_arbre_display()
 	_update_adventure_button()
 	if not store.state.has("flags"):
 		store.state["flags"] = {}
@@ -511,6 +515,13 @@ func _build_scroll_content() -> void:
 	tab_container.add_child(page3)
 	page3.visible = false
 
+	# Page 4: Arbre de Vie (Talent Tree — Phase 35)
+	var page4 := _create_page()
+	_build_arbre_section_on(page4)
+	tab_pages.append(page4)
+	tab_container.add_child(page4)
+	page4.visible = false
+
 	# Set main_vbox to page 1 content for layout compatibility
 	main_vbox = page1.get_child(0) as VBoxContainer
 
@@ -573,6 +584,11 @@ func _build_grimoire_section_on(page: Control) -> void:
 	_build_grimoire_section()
 
 
+func _build_arbre_section_on(page: Control) -> void:
+	main_vbox = page.get_child(0) as VBoxContainer
+	_build_arbre_section()
+
+
 # ═══════════════════════════════════════════════════════════════════════════════
 # SECTION: Title
 # ═══════════════════════════════════════════════════════════════════════════════
@@ -617,17 +633,21 @@ func _build_merlin_section() -> void:
 	hbox.add_theme_constant_override("separation", 16)
 	card.add_child(hbox)
 
-	# Portrait
+	# Pixel Portrait (PixelMerlinPortrait)
 	var portrait_center := CenterContainer.new()
 	hbox.add_child(portrait_center)
 
-	portrait_rect = TextureRect.new()
-	portrait_rect.custom_minimum_size = PORTRAIT_SIZE
-	portrait_rect.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
-	portrait_rect.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
-	portrait_rect.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	_load_seasonal_portrait()
-	portrait_center.add_child(portrait_rect)
+	var PixelMerlinPortraitClass = load("res://scripts/ui/pixel_merlin_portrait.gd")
+	if PixelMerlinPortraitClass:
+		pixel_portrait = PixelMerlinPortraitClass.new()
+		portrait_center.add_child(pixel_portrait)
+		pixel_portrait.call("setup", 128.0)  # 12x14 grid at ~9px/pixel
+		pixel_portrait.call("assemble")
+	else:
+		# Fallback: empty control
+		pixel_portrait = Control.new()
+		pixel_portrait.custom_minimum_size = PIXEL_PORTRAIT_SIZE
+		portrait_center.add_child(pixel_portrait)
 
 	# Dialogue column
 	var text_vbox := VBoxContainer.new()
@@ -859,6 +879,7 @@ func _create_biome_marker(biome_key: String, biome: Dictionary) -> Button:
 	var biome_name: String = biome.get("name", biome_key)
 	btn.text = symbol + "\n" + biome_name
 	btn.custom_minimum_size = Vector2(110, 58)
+	btn.mouse_entered.connect(func(): SFXManager.play("hover"))
 	btn.pressed.connect(_on_biome_selected.bind(biome_key))
 	if body_font:
 		btn.add_theme_font_override("font", body_font)
@@ -973,6 +994,7 @@ func _build_bestiole_section() -> void:
 		var btn := Button.new()
 		btn.text = "%s %s" % [action.get("icon", ""), action.get("label", action_key)]
 		btn.custom_minimum_size = Vector2(100, 36)
+		btn.mouse_entered.connect(func(): SFXManager.play("hover"))
 		btn.pressed.connect(_on_care_action.bind(action_key))
 		if body_font:
 			btn.add_theme_font_override("font", body_font)
@@ -1034,6 +1056,7 @@ func _build_grimoire_section() -> void:
 	var collection_btn := Button.new()
 	collection_btn.text = "\u25C6 Ouvrir le Grimoire \u25C6"
 	collection_btn.custom_minimum_size = Vector2(200, 36)
+	collection_btn.mouse_entered.connect(func(): SFXManager.play("hover"))
 	collection_btn.pressed.connect(_on_collection_pressed)
 	if body_font:
 		collection_btn.add_theme_font_override("font", body_font)
@@ -1043,6 +1066,268 @@ func _build_grimoire_section() -> void:
 	var btn_center := CenterContainer.new()
 	btn_center.add_child(collection_btn)
 	vbox.add_child(btn_center)
+
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# SECTION: Arbre de Vie (Talent Tree — Phase 35)
+# ═══════════════════════════════════════════════════════════════════════════════
+
+const ARBRE_TIER_ORDER := [4, 3, 2, 1]
+const ARBRE_TIER_NODES := {
+	4: ["racines_8", "tronc_4", "ramures_8", "feuillage_8"],
+	3: ["racines_6", "racines_7", "tronc_2", "tronc_3", "ramures_6", "ramures_7", "feuillage_6", "feuillage_7"],
+	2: ["racines_4", "racines_5", "tronc_1", "ramures_4", "ramures_5", "feuillage_4", "feuillage_5"],
+	1: ["racines_1", "racines_2", "racines_3", "ramures_1", "ramures_2", "ramures_3", "feuillage_1", "feuillage_2", "feuillage_3"],
+}
+
+func _build_arbre_section() -> void:
+	var card := _make_card()
+	main_vbox.add_child(card)
+
+	var vbox := VBoxContainer.new()
+	vbox.add_theme_constant_override("separation", 5)
+	card.add_child(vbox)
+
+	var title := _make_section_title("Arbre de Vie")
+	vbox.add_child(title)
+
+	# Tree nodes by tier (top = secrets, bottom = germes)
+	for tier in ARBRE_TIER_ORDER:
+		var tier_name: String = MerlinConstants.TALENT_TIER_NAMES.get(tier, "?")
+		var tier_label := Label.new()
+		tier_label.text = tier_name
+		tier_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
+		if body_font:
+			tier_label.add_theme_font_override("font", body_font)
+		tier_label.add_theme_font_size_override("font_size", 11)
+		tier_label.add_theme_color_override("font_color", PALETTE.ink_faded)
+		vbox.add_child(tier_label)
+
+		var row := HBoxContainer.new()
+		row.alignment = BoxContainer.ALIGNMENT_CENTER
+		row.add_theme_constant_override("separation", 3)
+		vbox.add_child(row)
+
+		var node_ids: Array = ARBRE_TIER_NODES.get(tier, [])
+		var prev_branch := ""
+		for node_id in node_ids:
+			var node_data: Dictionary = MerlinConstants.TALENT_NODES.get(node_id, {})
+			var branch: String = node_data.get("branch", "")
+
+			# Spacer between branches
+			if prev_branch != "" and branch != prev_branch:
+				var spacer := Control.new()
+				spacer.custom_minimum_size = Vector2(6, 0)
+				row.add_child(spacer)
+			prev_branch = branch
+
+			var btn := Button.new()
+			btn.custom_minimum_size = Vector2(42, 30)
+			btn.tooltip_text = _get_arbre_node_tooltip(node_id)
+			btn.mouse_entered.connect(_on_arbre_node_hover.bind(node_id))
+			btn.pressed.connect(_on_talent_node_pressed.bind(node_id))
+			if body_font:
+				btn.add_theme_font_override("font", body_font)
+			btn.add_theme_font_size_override("font_size", 10)
+			arbre_node_buttons[node_id] = btn
+			row.add_child(btn)
+
+	# Branch legend
+	var legend := HBoxContainer.new()
+	legend.alignment = BoxContainer.ALIGNMENT_CENTER
+	legend.add_theme_constant_override("separation", 20)
+	vbox.add_child(legend)
+
+	for item in [["Sanglier", "Corps"], ["Tronc", "Universel"], ["Corbeau", "Ame"], ["Cerf", "Monde"]]:
+		var lbl := Label.new()
+		lbl.text = item[0]
+		if body_font:
+			lbl.add_theme_font_override("font", body_font)
+		lbl.add_theme_font_size_override("font_size", 11)
+		var branch_color: Color = MerlinConstants.TALENT_BRANCH_COLORS.get(item[1], PALETTE.ink_soft)
+		lbl.add_theme_color_override("font_color", branch_color)
+		legend.add_child(lbl)
+
+	# Node info label (hover detail)
+	arbre_info_label = Label.new()
+	arbre_info_label.text = "Survole un noeud pour voir ses details"
+	arbre_info_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	arbre_info_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	arbre_info_label.custom_minimum_size = Vector2(0, 32)
+	if body_font:
+		arbre_info_label.add_theme_font_override("font", body_font)
+	arbre_info_label.add_theme_font_size_override("font_size", 12)
+	arbre_info_label.add_theme_color_override("font_color", PALETTE.ink)
+	vbox.add_child(arbre_info_label)
+
+	# Essence display
+	arbre_essence_label = Label.new()
+	arbre_essence_label.text = ""
+	arbre_essence_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	arbre_essence_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	if body_font:
+		arbre_essence_label.add_theme_font_override("font", body_font)
+	arbre_essence_label.add_theme_font_size_override("font_size", 11)
+	arbre_essence_label.add_theme_color_override("font_color", PALETTE.accent)
+	vbox.add_child(arbre_essence_label)
+
+	# Currency display (fragments, liens, gloire)
+	arbre_currency_label = Label.new()
+	arbre_currency_label.text = ""
+	arbre_currency_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	if body_font:
+		arbre_currency_label.add_theme_font_override("font", body_font)
+	arbre_currency_label.add_theme_font_size_override("font_size", 12)
+	arbre_currency_label.add_theme_color_override("font_color", PALETTE.ink_soft)
+	vbox.add_child(arbre_currency_label)
+
+	_update_arbre_display()
+
+
+func _update_arbre_display() -> void:
+	if store == null:
+		return
+	var meta: Dictionary = store.state.get("meta", {})
+	var unlocked: Array = meta.get("talent_tree", {}).get("unlocked", [])
+	var affordable: Array = store.get_affordable_talents()
+
+	for node_id in arbre_node_buttons:
+		var btn: Button = arbre_node_buttons[node_id]
+		var node_data: Dictionary = MerlinConstants.TALENT_NODES.get(node_id, {})
+		var branch: String = node_data.get("branch", "")
+		var branch_color: Color = MerlinConstants.TALENT_BRANCH_COLORS.get(branch, PALETTE.ink_soft)
+		var node_name: String = node_data.get("name", node_id)
+		var tier: int = node_data.get("tier", 1)
+
+		var is_unlocked: bool = unlocked.has(node_id)
+		var is_affordable: bool = affordable.has(node_id)
+
+		# Button text
+		if is_unlocked:
+			btn.text = "\u2713"
+		elif tier == 4 and not is_affordable:
+			btn.text = "?"
+		else:
+			var words: PackedStringArray = node_name.split(" ")
+			btn.text = words[0].left(5) if words.size() > 0 else "?"
+
+		btn.tooltip_text = _get_arbre_node_tooltip(node_id)
+		_style_arbre_node(btn, branch_color, is_unlocked, is_affordable)
+
+	_update_arbre_info()
+
+	# Essence display
+	var essence: Dictionary = meta.get("essence", {})
+	var parts: PackedStringArray = []
+	for elem in MerlinConstants.ELEMENTS:
+		var count: int = essence.get(elem, 0)
+		if count > 0:
+			parts.append("%s:%d" % [elem.left(4), count])
+	if arbre_essence_label:
+		arbre_essence_label.text = " | ".join(parts) if parts.size() > 0 else "Aucune essence collectee"
+
+	# Currency display
+	var fragments: int = meta.get("ogham_fragments", 0)
+	var liens: int = meta.get("liens", 0)
+	var gloire: int = meta.get("gloire_points", 0)
+	if arbre_currency_label:
+		arbre_currency_label.text = "Fragments: %d  |  Liens: %d  |  Gloire: %d" % [fragments, liens, gloire]
+
+
+func _style_arbre_node(btn: Button, branch_color: Color, is_unlocked: bool, is_affordable: bool) -> void:
+	var style := StyleBoxFlat.new()
+	style.set_corner_radius_all(4)
+	style.content_margin_left = 4
+	style.content_margin_right = 4
+	style.content_margin_top = 2
+	style.content_margin_bottom = 2
+
+	if is_unlocked:
+		style.bg_color = branch_color
+		style.border_color = branch_color.darkened(0.3)
+		style.set_border_width_all(2)
+		btn.add_theme_color_override("font_color", PALETTE.paper)
+		btn.add_theme_color_override("font_disabled_color", PALETTE.paper)
+		btn.disabled = true
+	elif is_affordable:
+		style.bg_color = PALETTE.paper_warm
+		style.border_color = PALETTE.warning
+		style.set_border_width_all(2)
+		btn.add_theme_color_override("font_color", PALETTE.ink)
+		btn.add_theme_color_override("font_hover_color", PALETTE.warning)
+		btn.disabled = false
+	else:
+		style.bg_color = PALETTE.paper_dark
+		style.border_color = PALETTE.ink_faded
+		style.set_border_width_all(1)
+		btn.add_theme_color_override("font_color", PALETTE.ink_faded)
+		btn.add_theme_color_override("font_disabled_color", PALETTE.ink_faded)
+		btn.disabled = true
+
+	btn.add_theme_stylebox_override("normal", style)
+	btn.add_theme_stylebox_override("disabled", style.duplicate())
+
+	var hover := style.duplicate()
+	if is_affordable:
+		hover.bg_color = Color(PALETTE.warning.r, PALETTE.warning.g, PALETTE.warning.b, 0.3)
+	btn.add_theme_stylebox_override("hover", hover)
+
+	var pressed := style.duplicate()
+	if is_affordable:
+		pressed.bg_color = PALETTE.warning
+	btn.add_theme_stylebox_override("pressed", pressed)
+
+
+func _update_arbre_info() -> void:
+	if arbre_info_label == null:
+		return
+	if _arbre_selected_node == "" or not MerlinConstants.TALENT_NODES.has(_arbre_selected_node):
+		arbre_info_label.text = "Survole un noeud pour voir ses details"
+		return
+
+	var node: Dictionary = MerlinConstants.TALENT_NODES[_arbre_selected_node]
+	var talent_name: String = node.get("name", "?")
+	var desc: String = node.get("description", "")
+	var cost: Dictionary = node.get("cost", {})
+	var cost_parts: PackedStringArray = []
+	for c in cost:
+		cost_parts.append("%s %s" % [str(cost[c]), c])
+	var cost_text: String = ", ".join(cost_parts) if cost_parts.size() > 0 else "Gratuit"
+
+	var status := ""
+	if store and store.is_talent_active(_arbre_selected_node):
+		status = " [Debloque]"
+	elif store and store.can_unlock_talent(_arbre_selected_node):
+		status = " [Disponible]"
+
+	arbre_info_label.text = "%s%s — %s (Cout: %s)" % [talent_name, status, desc, cost_text]
+
+
+func _get_arbre_node_tooltip(node_id: String) -> String:
+	var node: Dictionary = MerlinConstants.TALENT_NODES.get(node_id, {})
+	var talent_name: String = node.get("name", "?")
+	var desc: String = node.get("description", "")
+	var lore: String = node.get("lore", "")
+	if lore != "":
+		return "%s\n%s\n\n%s" % [talent_name, desc, lore]
+	return "%s\n%s" % [talent_name, desc]
+
+
+func _on_arbre_node_hover(node_id: String) -> void:
+	SFXManager.play("hover")
+	_arbre_selected_node = node_id
+	_update_arbre_info()
+
+
+func _on_talent_node_pressed(node_id: String) -> void:
+	if store == null:
+		return
+	if not store.can_unlock_talent(node_id):
+		return
+	SFXManager.play("choice_select")
+	var result: Dictionary = store.unlock_talent(node_id)
+	if result.get("ok", false):
+		_update_arbre_display()
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
@@ -1057,6 +1342,7 @@ func _build_adventure_section() -> void:
 	adventure_btn = Button.new()
 	adventure_btn.text = "\u25C6  Partir a l'Aventure  \u25C6"
 	adventure_btn.custom_minimum_size = Vector2(320, 56)
+	adventure_btn.mouse_entered.connect(func(): SFXManager.play("hover"))
 	adventure_btn.pressed.connect(_on_start_adventure)
 
 	if title_font:
@@ -1114,6 +1400,7 @@ func _build_bottom_bar() -> void:
 		{"text": "\u25C6 Merlin", "icon": "merlin"},
 		{"text": "\u25B2 Carte", "icon": "map"},
 		{"text": "\u2605 Bestiole", "icon": "bestiole"},
+		{"text": "\u25B5 Arbre", "icon": "tree"},
 	]
 
 	for i in range(tab_items.size()):
@@ -1124,6 +1411,7 @@ func _build_bottom_bar() -> void:
 		if body_font:
 			btn.add_theme_font_override("font", body_font)
 		btn.add_theme_font_size_override("font_size", 13)
+		btn.mouse_entered.connect(func(): SFXManager.play("hover"))
 		btn.pressed.connect(_on_tab_pressed.bind(i))
 		_style_tab_button(btn, i == 0)
 		tab_buttons.append(btn)
@@ -1134,28 +1422,34 @@ func _build_bottom_bar() -> void:
 	sep.custom_minimum_size = Vector2(2, 30)
 	bottom_bar.add_child(sep)
 
-	# Utility buttons (non-tab)
-	var util_items := [
-		{"text": "Options", "action": "options"},
-		{"text": "Sauvegarde", "action": "save"},
-		{"text": "Menu", "action": "menu"},
+	# Icon-style utility buttons (like MenuPrincipal)
+	var icon_items := [
+		{"icon": "\u25CE", "label": "Calendrier", "action": "calendar"},
+		{"icon": "\u275B", "label": "Collection", "action": "collection"},
+		{"icon": "\u2699", "label": "Options", "action": "options"},
+		{"icon": "\u2630", "label": "Menu", "action": "menu"},
 	]
 
-	for item in util_items:
+	for item in icon_items:
 		var btn := Button.new()
-		btn.text = item["text"]
-		btn.custom_minimum_size = Vector2(80, 40)
-		if body_font:
-			btn.add_theme_font_override("font", body_font)
-		btn.add_theme_font_size_override("font_size", 12)
-		_style_nav_button(btn)
+		btn.text = item["icon"]
+		btn.tooltip_text = item["label"]
+		btn.custom_minimum_size = Vector2(52, 52)
+		btn.add_theme_font_size_override("font_size", 22)
+		btn.focus_mode = Control.FOCUS_NONE
+		btn.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
+		_style_icon_button(btn)
+
+		btn.mouse_entered.connect(_on_icon_hover.bind(btn, true))
+		btn.mouse_exited.connect(_on_icon_hover.bind(btn, false))
 
 		match item["action"]:
+			"calendar":
+				btn.pressed.connect(_on_calendar_pressed)
+			"collection":
+				btn.pressed.connect(_on_collection_pressed)
 			"options":
 				btn.pressed.connect(_on_options_pressed)
-			"save":
-				btn.pressed.connect(_on_save_pressed)
-				save_btn = btn
 			"menu":
 				btn.pressed.connect(_on_menu_pressed)
 
@@ -1166,6 +1460,7 @@ func _on_tab_pressed(tab_index: int) -> void:
 	## Switch between HubAntre pages (no scrolling).
 	if tab_index == current_tab or tab_index >= tab_pages.size():
 		return
+	SFXManager.play("click")
 
 	# Fade out current page
 	var old_page := tab_pages[current_tab]
@@ -1189,6 +1484,9 @@ func _on_tab_pressed(tab_index: int) -> void:
 	# Re-layout map if switching to page 2
 	if tab_index == 1:
 		_layout_map.call_deferred()
+	# Refresh arbre display on page 4
+	if tab_index == 3:
+		_update_arbre_display()
 
 
 func _style_tab_button(btn: Button, is_active: bool) -> void:
@@ -1461,12 +1759,23 @@ func _update_bestiole_display() -> void:
 	var awen: int = bestiole.get("awen", 2)
 	var needs: Dictionary = bestiole.get("needs", {})
 
+	# Evolution stage display (Phase 35)
+	var evo_stage: int = 1
+	var evo_path: String = ""
+	var meta_evo: Dictionary = store.state.get("meta", {}).get("bestiole_evolution", {})
+	evo_stage = int(meta_evo.get("stage", 1))
+	evo_path = str(meta_evo.get("path", ""))
+	var stage_names := {1: "Enfant", 2: "Compagnon", 3: "Gardien"}
+	var stage_text: String = stage_names.get(evo_stage, "?")
+	if evo_path != "":
+		stage_text += " (%s)" % evo_path.capitalize()
+
 	# Bond display
 	var tier_name := _get_bond_tier_name(bond)
 	var bond_dots := ""
 	for i in range(5):
 		bond_dots += "\u25CF" if bond >= (i + 1) * 20 else "\u25CB"
-	bestiole_bond_label.text = "Lien: %s %s (%d)" % [bond_dots, tier_name, bond]
+	bestiole_bond_label.text = "%s | Lien: %s %s (%d)" % [stage_text, bond_dots, tier_name, bond]
 
 	# Awen display
 	var awen_max: int = 5
@@ -1524,6 +1833,8 @@ func _update_bestiole_display() -> void:
 		child.queue_free()
 
 	var equipped: Array = bestiole.get("skills_equipped", [])
+	if equipped.size() > 0:
+		SFXManager.play("ogham_chime")
 	for skill_id in equipped:
 		var skill_data: Dictionary = MerlinConstants.OGHAM_SKILLS.get(skill_id, {})
 		var ogham_lbl := Label.new()
@@ -1584,6 +1895,7 @@ func _update_adventure_button() -> void:
 # ═══════════════════════════════════════════════════════════════════════════════
 
 func _on_biome_selected(biome_key: String) -> void:
+	SFXManager.play("choice_select")
 	selected_biome = biome_key
 	_update_biome_selection()
 
@@ -1602,6 +1914,7 @@ func _on_biome_selected(biome_key: String) -> void:
 func _on_care_action(action_key: String) -> void:
 	if _care_remaining <= 0 or store == null:
 		return
+	SFXManager.play("bestiole_shimmer")
 
 	_care_remaining -= 1
 	var action: Dictionary = CARE_ACTIONS.get(action_key, {})
@@ -1629,21 +1942,28 @@ func _on_care_action(action_key: String) -> void:
 
 
 func _on_save_pressed() -> void:
+	SFXManager.play("click")
 	_quick_save()
 
 
 func _on_options_pressed() -> void:
+	SFXManager.play("click")
 	_store_return_scene()
+	SFXManager.play("whoosh")
 	get_tree().change_scene_to_file(SCENE_OPTIONS)
 
 
 func _on_calendar_pressed() -> void:
+	SFXManager.play("click")
 	_store_return_scene()
+	SFXManager.play("whoosh")
 	get_tree().change_scene_to_file(SCENE_CALENDAR)
 
 
 func _on_collection_pressed() -> void:
+	SFXManager.play("click")
 	_store_return_scene()
+	SFXManager.play("whoosh")
 	get_tree().change_scene_to_file(SCENE_COLLECTION)
 
 
@@ -1654,12 +1974,16 @@ func _store_return_scene() -> void:
 
 
 func _on_menu_pressed() -> void:
+	SFXManager.play("click")
+	SFXManager.play("whoosh")
 	get_tree().change_scene_to_file(SCENE_MENU)
 
 
 func _on_start_adventure() -> void:
 	if selected_biome == "":
 		return
+	SFXManager.play("click")
+	SFXManager.play("whoosh")
 
 	# Set biome data for TransitionBiome
 	var gm := get_node_or_null("/root/GameManager")
@@ -1861,21 +2185,37 @@ func _style_nav_button(btn: Button) -> void:
 	btn.add_theme_color_override("font_hover_color", PALETTE.accent)
 
 
-func _load_seasonal_portrait() -> void:
-	var month: int = Time.get_date_dict_from_system().month
-	var path := PORTRAIT_DEFAULT
-	if month >= 3 and month <= 5:
-		path = PORTRAIT_PRINTEMPS
-	elif month >= 6 and month <= 8:
-		path = PORTRAIT_ETE
-	elif month >= 9 and month <= 11:
-		path = PORTRAIT_AUTOMNE
+func _style_icon_button(btn: Button) -> void:
+	var style := StyleBoxFlat.new()
+	style.bg_color = PALETTE.paper_warm
+	style.border_color = PALETTE.ink_faded
+	style.set_border_width_all(1)
+	style.set_corner_radius_all(8)
+	style.set_content_margin_all(6)
+	btn.add_theme_stylebox_override("normal", style)
+
+	var hover := style.duplicate()
+	hover.bg_color = PALETTE.paper_dark
+	hover.border_color = PALETTE.accent
+	btn.add_theme_stylebox_override("hover", hover)
+
+	var pressed := style.duplicate()
+	pressed.bg_color = PALETTE.accent
+	btn.add_theme_stylebox_override("pressed", pressed)
+
+	btn.add_theme_color_override("font_color", PALETTE.ink)
+	btn.add_theme_color_override("font_hover_color", PALETTE.accent)
+	btn.add_theme_color_override("font_pressed_color", PALETTE.paper)
+	btn.pivot_offset = Vector2(26, 26)
+
+
+func _on_icon_hover(btn: Button, hovering: bool) -> void:
+	SFXManager.play("hover")
+	var tw := create_tween().set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
+	if hovering:
+		tw.tween_property(btn, "scale", Vector2(1.15, 1.15), 0.1)
 	else:
-		path = PORTRAIT_HIVER
-	if ResourceLoader.exists(path):
-		portrait_rect.texture = load(path)
-	elif ResourceLoader.exists(PORTRAIT_DEFAULT):
-		portrait_rect.texture = load(PORTRAIT_DEFAULT)
+		tw.tween_property(btn, "scale", Vector2(1.0, 1.0), 0.1)
 
 
 func _get_bond_tier_name(bond: int) -> String:
@@ -1903,6 +2243,7 @@ func _start_mist_animation() -> void:
 
 
 func _play_entry_animation() -> void:
+	SFXManager.play("scene_transition")
 	var tween := create_tween()
 	tween.tween_property(celtic_top, "modulate:a", 0.6, 0.8).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
 	tween.parallel().tween_property(celtic_bottom, "modulate:a", 0.6, 0.8).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
