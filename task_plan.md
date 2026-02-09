@@ -4,11 +4,21 @@
 Developper un JDR Parlant roguelite avec LLM local (Qwen2.5-3B Multi-Brain), systeme Triade (3 aspects x 3 etats), et narration procedurale.
 
 ## Current Phase
-Phase 34 - Mini-Jeux + Dual-Brain + Dice VFX + Resource Overhaul (COMPLETE)
+Phase 35 - Project-Wide Resource Cleanup (COMPLETE)
 
 ---
 
 ## Phases Recentes (2026-02-09)
+
+### Phase 35: Project-Wide Resource Cleanup (COMPLETE)
+- [x] 35.1 Supprimer fichiers junk racine (8 fichiers)
+- [x] 35.2 Supprimer 19 scripts morts (3D/FPS/Reigns/anciens managers)
+- [x] 35.3 Supprimer archive/artifacts/ (390 MB LLM builds)
+- [x] 35.4 Archiver modeles 3D (Godot/ -> archive/3d_models/)
+- [x] 35.5 Deplacer orange_brand_assets/ vers Bureau/Agents/Data/
+- [x] 35.6 Nettoyer tools/ (15 JSON benchmark + 3 scripts one-time)
+- [x] 35.7 Mettre a jour .gitignore (benchmark, node_modules, artifacts)
+- [x] 35.8 Validation + Git Commit
 
 ### Phase 34: Mini-Jeux + Dual-Brain + Dice VFX + Resource Overhaul (COMPLETE)
 - [x] 34.A Fix ressources + equilibrage (aspects [-3,+3], karma, benedictions, souffle regen)

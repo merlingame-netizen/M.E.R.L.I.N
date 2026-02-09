@@ -2,6 +2,37 @@
 
 > **Note**: Sessions anterieures archivees dans `archive/progress_archive_2026-02-05_to_2026-02-08.md`
 
+## Session: 2026-02-09 (Phase 35 — Project-Wide Resource Cleanup)
+
+### Phase 35: Nettoyage Complet des Ressources Projet
+- **Status:** complete
+- **Agents:** Project Curator, Explore (audit)
+
+#### Objectif
+Audit complet du projet et suppression de ~751 MB de fichiers morts/obsoletes.
+
+#### Changements
+1. **8 fichiers junk racine** — Supprimes (nul, chemins corrompus, anciens scripts PPT, AGENTS.md doublon)
+2. **19 scripts morts** — Supprimes (3D/FPS, Reigns UI, anciens managers, shaders experimentaux)
+3. **archive/artifacts/** — Supprime (390 MB artefacts Colab LLM)
+4. **Godot/** — Archive vers archive/3d_models/ (86 fichiers .glb, 11 MB)
+5. **orange_brand_assets/** — Deplace vers Bureau/Agents/Data/ (350 MB)
+6. **tools/** — 15 fichiers JSON benchmark supprimes, 3 scripts one-time archives
+7. **.gitignore** — Mis a jour (benchmark results, node_modules, artifacts)
+
+#### Scripts supprimes (Phase 2):
+- 3D/FPS: player_fps, sea_animation, seagull_flock, lighthouse_beacon, day_night_cycle, exterior_window, flickering_light, ground_mist, volumetric_fog_ps1, merlin_house_animations
+- Shaders: ps1_shader_controller, retro_viewport, pixel_shader_controller
+- Remplaces: reigns_game_controller, reigns_game_ui, LLMManager, main_game, MerlinPortraitManager, test_merlin
+
+#### Scripts preserves (travail futur):
+- minigames/ (16 fichiers — P1.1), bestiole_wheel_system, merlin_event/map/minigame_system, merlin_action_resolver
+- pixel_character_portrait, custom_cursor, pixel_merlin_portrait (recents)
+
+#### Validation: 65 fichiers GDScript 0 erreur statique, GDExtension OK
+
+---
+
 ## Session: 2026-02-09 (Phase 34 — Mini-Jeux + Dual-Brain + Dice VFX + Resource Overhaul)
 
 ### Phase 34: Refonte Gameplay Majeure

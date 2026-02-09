@@ -1,6 +1,6 @@
 # ===========================================
-# DRU Project .gitignore
-# Updated: 2026-02-08
+# M.E.R.L.I.N. Project .gitignore
+# Updated: 2026-02-09
 # ===========================================
 
 # -------------------------------------------
@@ -150,6 +150,16 @@ tmp_xlsx/
 *.pdb
 archive/artifacts/*.zip
 archive/artifacts/*.tgz
+archive/artifacts/*.tar.gz
+
+# Benchmark results (one-time data dumps)
+tools/benchmark_results_*.json
+tools/raw_test_*.json
+tools/test_brain_pool_results_*.json
+
+# Node.js build artifacts (tools/)
+tools/node_modules/
+tools/.sharp/
 
 # Archive folder (deprecated files, review before commit)
 # archive/
