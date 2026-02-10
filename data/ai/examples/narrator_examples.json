@@ -1,0 +1,49 @@
+{
+  "_meta": {
+    "version": "1.0.0",
+    "description": "Few-shot examples for the Narrator instance — creative card text generation",
+    "usage": "Inject 2-3 examples into system prompt when context budget allows"
+  },
+  "card_text_examples": [
+    {
+      "context": "Jour 3, Corps=bas, Ame=equilibre, Monde=haut",
+      "output": "La brume s'enroule autour de tes chevilles comme un serpent affame. Merlin leve sa main noueuse vers la foret — au-dela des arbres, un feu brule. Les druides de la clairiere chantent un rituel ancien, mais leur voix porte une note de desespoir."
+    },
+    {
+      "context": "Jour 7, Corps=equilibre, Ame=haut, Monde=bas",
+      "output": "Le vent murmure des secrets que seuls les chenes comprennent. Au bord du lac sacre, une ombre danse sur l'eau — ni humaine, ni animale. Merlin plisse les yeux. Les esprits sont agites ce soir."
+    },
+    {
+      "context": "Jour 12, Corps=haut, Ame=bas, Monde=equilibre",
+      "output": "Tes muscles brulent d'une energie qui n'est pas la tienne. Au sommet du dolmen, les pierres vibrent sous tes pieds. Quelque chose approche — le sol tremble, et la voix de Merlin se fait grave."
+    },
+    {
+      "context": "Jour 1, Corps=equilibre, Ame=equilibre, Monde=equilibre",
+      "output": "Le soleil perce les feuillages du bosquet sacre, peignant des motifs dores sur la mousse. Un corbeau se pose sur ta main tendue. Merlin sourit — les augures sont favorables pour ce premier jour."
+    },
+    {
+      "context": "Jour 20, Corps=bas, Ame=bas, Monde=haut",
+      "output": "La fatigue pese sur tes epaules comme une chape de plomb. Les esprits des ancetres se sont tus, et meme Merlin semble trouble. Mais au loin, les tours de la cite brillent — le monde prospere, meme si toi, tu vacilles."
+    }
+  ],
+  "choice_label_examples": [
+    {
+      "scenario": "La brume entoure un cercle de pierres anciennes",
+      "choices": ["Traverser la brume avec prudence", "Invoquer les esprits du cercle", "Foncer a travers sans hesiter"]
+    },
+    {
+      "scenario": "Un voyageur blesse demande de l'aide au bord du chemin",
+      "choices": ["Soigner ses blessures", "Lui offrir une priere celtique", "Continuer ton chemin"]
+    },
+    {
+      "scenario": "Les flammes d'un rituel dansent dans la nuit",
+      "choices": ["Observer en silence", "Ajouter du gui sacre au feu", "Disperser les flammes"]
+    }
+  ],
+  "merlin_voice_examples": [
+    {"tone": "playful", "output": "Ah, tu choisis le chemin de l'audace... interessant."},
+    {"tone": "mysterious", "output": "Les fils du destin s'entrelacent... certains ne se defont jamais."},
+    {"tone": "warning", "output": "Prends garde, voyageur. Ce chemin ne pardonne pas deux fois."},
+    {"tone": "melancholy", "output": "Parfois, je me souviens d'un monde ou les etoiles chantaient..."}
+  ]
+}

@@ -107,14 +107,16 @@ const SAMPLE_COLLECTION := [
 	}
 ]
 
+var store: Node  # MerlinStore reference
+
 var font_regular: Font
 var font_bold: Font
 var compact_mode := false
 var current_view := VIEW_PROGRESSION
 
-var glory_value := 1280
-var rank_value := "Eclaireur"
-var pass_value := 62
+var glory_value := 0
+var rank_value := "Novice"
+var pass_value := 0
 var pass_max := 100
 
 var body_font_size := 14
@@ -160,6 +162,8 @@ var bottom_bar: HBoxContainer
 var back_button: Button
 
 func _ready() -> void:
+	store = get_node_or_null("/root/MerlinStore")
+	_load_real_data()
 	_load_fonts()
 	_build_ui()
 	_apply_style()
@@ -168,6 +172,141 @@ func _ready() -> void:
 	_set_view(VIEW_PROGRESSION)
 	_start_mist_animation()
 	get_viewport().size_changed.connect(_on_viewport_resized)
+
+
+func _load_real_data() -> void:
+	"""Load meta-progression data from store if available."""
+	if not store:
+		return
+	var meta: Dictionary = store.state.get("meta", {})
+	glory_value = int(meta.get("gloire_points", 0))
+	rank_value = _rank_from_gloire(glory_value)
+	pass_value = glory_value % 100
+	pass_max = 100
+
+
+func _rank_from_gloire(gloire: int) -> String:
+	if gloire >= 1000: return "Archidruide"
+	if gloire >= 500: return "Druide"
+	if gloire >= 200: return "Ovate"
+	if gloire >= 100: return "Barde"
+	if gloire >= 50: return "Eclaireur"
+	if gloire >= 20: return "Apprenti"
+	return "Novice"
+
+
+func _get_real_progression_stats() -> Array:
+	if not store:
+		return PROGRESSION_STATS
+	var meta: Dictionary = store.state.get("meta", {})
+	var endings_seen: Array = meta.get("endings_seen", [])
+	var unlocked_talents: Array = meta.get("talent_tree", {}).get("unlocked", [])
+	var skills_unlocked: Array = store.state.get("bestiole", {}).get("skills_unlocked", [])
+	var total_runs: int = int(meta.get("total_runs", 0))
+	var total_cards: int = int(meta.get("total_cards_played", 0))
+	var total_essence: int = _count_total_essence()
+	return [
+		{"label": "Fins vues", "current": endings_seen.size(), "max": 16},
+		{"label": "Oghams", "current": skills_unlocked.size(), "max": 18},
+		{"label": "Talents", "current": unlocked_talents.size(), "max": 28},
+		{"label": "Runs", "current": total_runs, "max": 50},
+		{"label": "Cartes", "current": total_cards, "max": 500},
+		{"label": "Essences", "current": total_essence, "max": 999},
+	]
+
+
+func _count_total_essence() -> int:
+	if not store:
+		return 0
+	var essence: Dictionary = store.state.get("meta", {}).get("essence", {})
+	var total: int = 0
+	for elem in essence:
+		total += int(essence[elem])
+	return total
+
+
+func _get_real_achievements() -> Array:
+	"""Get discovered endings as 'recent achievements'."""
+	if not store:
+		return SAMPLE_ACHIEVEMENTS
+	var endings_seen: Array = store.state.get("meta", {}).get("endings_seen", [])
+	if endings_seen.is_empty():
+		return [{"title": "Aucune fin decouverte", "desc": "Completez votre premiere run", "date": "", "icon": "?"}]
+	var result: Array = []
+	for i in range(mini(endings_seen.size(), 5)):
+		var idx: int = endings_seen.size() - 1 - i
+		var title: String = str(endings_seen[idx])
+		result.append({"title": title, "desc": _get_ending_desc(title), "date": "", "icon": title.left(1)})
+	return result
+
+
+func _get_ending_desc(ending_title: String) -> String:
+	"""Find the description/condition for an ending by title."""
+	for key in MerlinConstants.TRIADE_ENDINGS:
+		if MerlinConstants.TRIADE_ENDINGS[key].get("title", "") == ending_title:
+			var aspects: Array = MerlinConstants.TRIADE_ENDINGS[key].get("aspects", [])
+			return "Chute: %s" % " + ".join(aspects)
+	for key in MerlinConstants.TRIADE_VICTORY_ENDINGS:
+		if MerlinConstants.TRIADE_VICTORY_ENDINGS[key].get("title", "") == ending_title:
+			return str(MerlinConstants.TRIADE_VICTORY_ENDINGS[key].get("condition", "Victoire"))
+	return "Fin mystere"
+
+
+func _get_real_collection() -> Array:
+	"""Build collection from endings + Oghams with real unlock state."""
+	var items: Array = []
+	var endings_seen: Array = []
+	var skills_unlocked: Array = []
+	if store:
+		endings_seen = store.state.get("meta", {}).get("endings_seen", [])
+		skills_unlocked = store.state.get("bestiole", {}).get("skills_unlocked", [])
+
+	# 12 chute endings
+	for key in MerlinConstants.TRIADE_ENDINGS:
+		var ending: Dictionary = MerlinConstants.TRIADE_ENDINGS[key]
+		var title: String = str(ending.get("title", ""))
+		var discovered: bool = endings_seen.has(title)
+		items.append({
+			"icon": title.left(1) if discovered else "?",
+			"name": title if discovered else "???",
+			"req": "Fin decouverte" if discovered else "???",
+			"locked": not discovered,
+			"hidden": not discovered,
+		})
+
+	# 3 victory endings
+	for key in MerlinConstants.TRIADE_VICTORY_ENDINGS:
+		var ending: Dictionary = MerlinConstants.TRIADE_VICTORY_ENDINGS[key]
+		var title: String = str(ending.get("title", ""))
+		var discovered: bool = endings_seen.has(title)
+		items.append({
+			"icon": title.left(1) if discovered else "?",
+			"name": title if discovered else "???",
+			"req": str(ending.get("condition", "")) if discovered else "???",
+			"locked": not discovered,
+			"hidden": not discovered,
+		})
+
+	# Secret ending placeholder
+	items.append({
+		"icon": "?", "name": "???", "req": "???",
+		"locked": true, "hidden": true,
+	})
+
+	# 18 Oghams
+	for key in MerlinConstants.OGHAM_FULL_SPECS:
+		var spec: Dictionary = MerlinConstants.OGHAM_FULL_SPECS[key]
+		var name_val: String = str(spec.get("name", key))
+		var discovered: bool = skills_unlocked.has(key) or MerlinConstants.OGHAM_STARTER_SKILLS.has(key)
+		items.append({
+			"icon": str(spec.get("unicode", "\u2726")) if discovered else "?",
+			"name": name_val if discovered else "???",
+			"req": str(spec.get("tree", "")) + " | " + str(spec.get("description", "")) if discovered else "???",
+			"locked": not discovered,
+			"hidden": not discovered,
+		})
+
+	return items
 
 func _on_viewport_resized() -> void:
 	_update_responsive_style()
@@ -316,21 +455,30 @@ func _build_ui() -> void:
 	btn_progression.name = "BtnProgression"
 	btn_progression.text = "Progression"
 	btn_progression.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	btn_progression.pressed.connect(func(): _set_view(VIEW_PROGRESSION))
+	btn_progression.pressed.connect(func():
+		SFXManager.play("click")
+		_set_view(VIEW_PROGRESSION)
+	)
 	view_tabs.add_child(btn_progression)
 
 	btn_recents = Button.new()
 	btn_recents.name = "BtnRecents"
 	btn_recents.text = "Recents"
 	btn_recents.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	btn_recents.pressed.connect(func(): _set_view(VIEW_RECENTS))
+	btn_recents.pressed.connect(func():
+		SFXManager.play("click")
+		_set_view(VIEW_RECENTS)
+	)
 	view_tabs.add_child(btn_recents)
 
 	btn_collection = Button.new()
 	btn_collection.name = "BtnCollection"
 	btn_collection.text = "Objets"
 	btn_collection.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	btn_collection.pressed.connect(func(): _set_view(VIEW_COLLECTION))
+	btn_collection.pressed.connect(func():
+		SFXManager.play("click")
+		_set_view(VIEW_COLLECTION)
+	)
 	view_tabs.add_child(btn_collection)
 
 	# Content panel
@@ -429,6 +577,7 @@ func _build_ui() -> void:
 	back_button.name = "BackButton"
 	back_button.text = "Retour"
 	back_button.pressed.connect(func():
+		SFXManager.play("click")
 		var se := get_node_or_null("/root/ScreenEffects")
 		var target: String = se.return_scene if se and se.return_scene != "" else "res://scenes/HubAntre.tscn"
 		get_tree().change_scene_to_file(target)
@@ -631,7 +780,8 @@ func _refresh_header_and_pass() -> void:
 
 func _populate_progress_list() -> void:
 	_clear_children(progress_list)
-	for stat in PROGRESSION_STATS:
+	var stats: Array = _get_real_progression_stats()
+	for stat in stats:
 		var row := _create_progress_row(stat)
 		progress_list.add_child(row)
 
@@ -677,7 +827,8 @@ func _create_progress_row(stat: Dictionary) -> HBoxContainer:
 
 func _populate_recent_list() -> void:
 	_clear_children(recent_list)
-	for item in SAMPLE_ACHIEVEMENTS:
+	var achievements: Array = _get_real_achievements()
+	for item in achievements:
 		var row := HBoxContainer.new()
 		row.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		row.custom_minimum_size = Vector2(0, row_min_height)
@@ -708,12 +859,13 @@ func _populate_recent_list() -> void:
 		recent_list.add_child(row)
 
 func _populate_collection() -> void:
-	collection_title_label.text = "Apercu de la Collection"
-	collection_subtitle_label.text = "Objets visibles, verrouilles et mysteres"
+	collection_title_label.text = "Fins & Oghams"
+	collection_subtitle_label.text = "Fins decouvertes et Oghams debloques"
 
 	_clear_children(collection_grid)
 	_clear_children(collection_list)
-	for item in SAMPLE_COLLECTION:
+	var collection_items: Array = _get_real_collection()
+	for item in collection_items:
 		var is_hidden := bool(item.get("hidden", false))
 		var is_locked := bool(item.get("locked", true))
 		var icon_text := "?" if is_hidden else str(item.get("icon", "?"))

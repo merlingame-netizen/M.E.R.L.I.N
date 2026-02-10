@@ -36,6 +36,12 @@ var map_system := MerlinMapSystem.new()
 var llm := MerlinLlmAdapter.new()
 var events := MerlinEventSystem.new()
 var cards := MerlinCardSystem.new()
+var biomes := MerlinBiomeSystem.new()
+
+# Auto-save (debounced)
+const AUTOSAVE_DEBOUNCE_SEC := 30.0
+var _autosave_timer: Timer = null
+var _autosave_pending := false
 
 # ═══════════════════════════════════════════════════════════════════════════════
 # MERLIN OMNISCIENT SYSTEM (MOS)
@@ -67,6 +73,13 @@ func _ready() -> void:
 
 	state = build_default_state()
 	_emit_state_changed()
+
+	# Setup autosave timer
+	_autosave_timer = Timer.new()
+	_autosave_timer.one_shot = true
+	_autosave_timer.wait_time = AUTOSAVE_DEBOUNCE_SEC
+	_autosave_timer.timeout.connect(_do_autosave)
+	add_child(_autosave_timer)
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
@@ -279,41 +292,65 @@ func _reduce(action: Dictionary) -> Dictionary:
 			var seed_val: int = int(action.get("seed", int(Time.get_unix_time_from_system())))
 			rng.set_seed(seed_val)
 			_init_triade_run()
+			_reset_ai_for_new_run()
 			state["run"]["map_seed"] = seed_val
+			# Set biome from action (default: Broceliande)
+			var biome_key: String = str(action.get("biome", MerlinConstants.BIOME_DEFAULT))
+			state["run"]["current_biome"] = biome_key
+			# Apply biome flux offset
+			var flux_offset: Dictionary = biomes.get_flux_offset(biome_key)
+			var flux: Dictionary = state["run"].get("flux", MerlinConstants.FLUX_START.duplicate())
+			for axis in flux_offset:
+				flux[axis] = clampi(int(flux.get(axis, 50)) + int(flux_offset.get(axis, 0)), MerlinConstants.FLUX_MIN, MerlinConstants.FLUX_MAX)
+			state["run"]["flux"] = flux
 			state["phase"] = "card"
 			state["mode"] = "triade"
-			_log_transition("triade_run_start", {"seed": seed_val})
+			_log_transition("triade_run_start", {"seed": seed_val, "biome": biome_key})
 			# Notify MERLIN OMNISCIENT
 			if merlin != null:
 				merlin.on_run_start()
-			return {"ok": true}
+			return {"ok": true, "biome": biome_key}
 
 		"TRIADE_GET_CARD":
-			var card: Dictionary
+			var card: Dictionary = {}
 			# Use MERLIN OMNISCIENT if available
-			if merlin != null:
-				card = await merlin.generate_card(state)
-			elif llm.is_llm_ready():
+			if merlin != null and is_instance_valid(merlin):
+				print("[MerlinStore] TRIADE_GET_CARD: using MerlinOmniscient")
+				var mos_card = await merlin.generate_card(state)
+				if mos_card is Dictionary and not mos_card.is_empty():
+					card = mos_card
+				else:
+					print("[MerlinStore] MOS returned empty, falling back")
+					card = cards.get_next_triade_card(state)
+			elif llm != null and llm.is_llm_ready():
 				# Direct adapter path (no MOS)
+				print("[MerlinStore] TRIADE_GET_CARD: using direct LLM")
 				var ctx: Dictionary = llm.build_triade_context(state)
 				var llm_result: Dictionary = await llm.generate_card(ctx)
-				if llm_result.get("ok", false):
+				if llm_result.get("ok", false) and llm_result.has("card"):
 					card = llm_result["card"]
 				else:
 					card = cards.get_next_triade_card(state)
 			else:
+				print("[MerlinStore] TRIADE_GET_CARD: using fallback cards")
+				card = cards.get_next_triade_card(state)
+			# Final safety: ensure card is never empty
+			if card.is_empty():
+				push_warning("[MerlinStore] All card generation paths returned empty")
 				card = cards.get_next_triade_card(state)
 			return {"ok": true, "card": card}
 
 		"TRIADE_RESOLVE_CHOICE":
 			var card = action.get("card", {})
 			var option: int = int(action.get("option", MerlinConstants.CardOption.LEFT))
-			var result = _resolve_triade_choice(card, option)
+			var mod_effects: Array = action.get("modulated_effects", [])
+			var result = _resolve_triade_choice(card, option, mod_effects)
 			if result["ok"]:
 				# Record choice with MERLIN OMNISCIENT
 				if merlin != null:
 					merlin.record_choice(card, option, state)
 				card_resolved.emit(card.get("id", ""), option)
+				_trigger_autosave()
 				var end_check = _check_triade_run_end()
 				if end_check["ended"]:
 					state["run"]["active"] = false
@@ -360,6 +397,14 @@ func _reduce(action: Dictionary) -> Dictionary:
 			var amount: int = int(action.get("amount", 1))
 			return _use_awen(amount)
 
+		"TRIADE_UPDATE_FLUX":
+			var delta: Dictionary = action.get("delta", {})
+			var flux: Dictionary = state["run"].get("flux", MerlinConstants.FLUX_START.duplicate())
+			for axis in delta:
+				flux[axis] = clampi(int(flux.get(axis, 50)) + int(delta.get(axis, 0)), MerlinConstants.FLUX_MIN, MerlinConstants.FLUX_MAX)
+			state["run"]["flux"] = flux
+			return {"ok": true, "flux": flux}
+
 		"TRIADE_END_RUN":
 			var end_check = _check_triade_run_end()
 			if not end_check["ended"]:
@@ -377,6 +422,44 @@ func _reduce(action: Dictionary) -> Dictionary:
 			if merlin != null:
 				merlin.on_run_end(end_check)
 			return {"ok": true, "ending": end_check}
+
+		# ═══════════════════════════════════════════════════════════════════════
+		# MAP ACTIONS (Phase 37 — STS-like world map)
+		# ═══════════════════════════════════════════════════════════════════════
+		"TRIADE_GENERATE_MAP":
+			var floors: int = int(action.get("floors", MerlinConstants.DEFAULT_MAP_FLOORS))
+			var config: Dictionary = {}
+			var biome_key_map: String = str(state.get("run", {}).get("current_biome", ""))
+			if not biome_key_map.is_empty():
+				config["biome"] = biome_key_map
+				config["difficulty"] = biomes.get_difficulty_modifier(biome_key_map)
+			var map_data: Array = map_system.generate_map(floors, rng, config)
+			state["run"]["map"] = map_data
+			state["run"]["floor"] = 0
+			state["run"]["current_node_id"] = ""
+			return {"ok": true, "map": map_data}
+
+		"TRIADE_SELECT_NODE":
+			var node_id: String = str(action.get("node_id", ""))
+			var map_data: Array = state["run"].get("map", [])
+			for floor_nodes in map_data:
+				if not floor_nodes is Array:
+					continue
+				for node in floor_nodes:
+					if not node is Dictionary:
+						continue
+					if str(node.get("id", "")) == node_id:
+						node["visited"] = true
+						state["run"]["floor"] = int(node.get("floor", 0))
+						state["run"]["current_node_id"] = node_id
+						# Reveal next floor
+						var next_floor: int = int(node.get("floor", 0)) + 1
+						if next_floor < map_data.size() and map_data[next_floor] is Array:
+							for n in map_data[next_floor]:
+								if n is Dictionary:
+									n["revealed"] = true
+						return {"ok": true, "node": node}
+			return {"ok": false, "error": "Node not found: " + node_id}
 
 		# ═══════════════════════════════════════════════════════════════════════
 		# REIGNS-STYLE ACTIONS (DEPRECATED - kept for compatibility)
@@ -481,6 +564,15 @@ func _reduce(action: Dictionary) -> Dictionary:
 			if loaded.is_empty():
 				return {"ok": false}
 			state = loaded
+			_restore_ai_state()
+			return {"ok": true}
+
+		"LOAD_AUTOSAVE":
+			var loaded: Dictionary = save_system.load_autosave(build_default_state())
+			if loaded.is_empty():
+				return {"ok": false}
+			state = loaded
+			_restore_ai_state()
 			return {"ok": true}
 
 		# ═══════════════════════════════════════════════════════════════════════
@@ -502,6 +594,40 @@ func snapshot_for_save() -> Dictionary:
 	var data: Dictionary = state.duplicate(true)
 	data["timestamp"] = int(Time.get_unix_time_from_system())
 	return data
+
+
+func _trigger_autosave() -> void:
+	_autosave_pending = true
+	if _autosave_timer and not _autosave_timer.is_stopped():
+		return
+	if _autosave_timer:
+		_autosave_timer.start()
+
+
+func _do_autosave() -> void:
+	if not _autosave_pending:
+		return
+	_autosave_pending = false
+	var payload := snapshot_for_save()
+	save_system.save_autosave(payload)
+	if merlin:
+		merlin.save_all()
+
+
+func _restore_ai_state() -> void:
+	## Restore MOS registries and session history after loading a save slot.
+	if merlin:
+		merlin.reload_registries()
+	var merlin_ai_node := get_node_or_null("/root/MerlinAI")
+	if merlin_ai_node and merlin_ai_node.has_method("load_session_history"):
+		merlin_ai_node.load_session_history()
+
+
+func _reset_ai_for_new_run() -> void:
+	## Reset per-run AI state while preserving cross-run memory.
+	var merlin_ai_node := get_node_or_null("/root/MerlinAI")
+	if merlin_ai_node:
+		merlin_ai_node.session_contexts.clear()
 
 
 func _handle_run_end(end_check: Dictionary) -> void:
@@ -582,6 +708,8 @@ func _init_triade_run() -> void:
 	run["story_log"] = []
 	run["active_tags"] = []
 	run["active_promises"] = []
+	run["current_biome"] = ""
+	run["biome_passive_counter"] = 0
 	run["hidden"] = {
 		"karma": 0,
 		"tension": 0,
@@ -590,11 +718,95 @@ func _init_triade_run() -> void:
 		"narrative_debt": [],
 	}
 	state["run"] = run
+	_apply_talent_effects_for_run()
+
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# TALENT EFFECTS — Applied at run start (Phase 37)
+# ═══════════════════════════════════════════════════════════════════════════════
+
+func _apply_talent_effects_for_run() -> void:
+	"""Scan unlocked talents and apply their effects to the current run."""
+	var unlocked: Array = state.get("meta", {}).get("talent_tree", {}).get("unlocked", [])
+	if unlocked.is_empty():
+		return
+
+	var run: Dictionary = state.get("run", {})
+	var modifiers: Dictionary = {}
+
+	for node_id in unlocked:
+		var node: Dictionary = MerlinConstants.TALENT_NODES.get(node_id, {})
+		if node.is_empty():
+			continue
+		var effect: Dictionary = node.get("effect", {})
+		var effect_type: String = str(effect.get("type", ""))
+
+		match effect_type:
+			"modify_start":
+				var target: String = str(effect.get("target", ""))
+				var value: int = int(effect.get("value", 0))
+				match target:
+					"souffle":
+						run["souffle"] = int(run.get("souffle", 0)) + value
+					"blessings":
+						modifiers["extra_blessings"] = int(modifiers.get("extra_blessings", 0)) + value
+					"awen":
+						var bestiole: Dictionary = state.get("bestiole", {})
+						bestiole["awen"] = mini(int(bestiole.get("awen", 0)) + value, MerlinConstants.AWEN_MAX)
+						state["bestiole"] = bestiole
+					"souffle_max":
+						modifiers["souffle_max_bonus"] = int(modifiers.get("souffle_max_bonus", 0)) + value
+					"bond":
+						var bestiole: Dictionary = state.get("bestiole", {})
+						bestiole["bond"] = maxi(int(bestiole.get("bond", 0)), value)
+						state["bestiole"] = bestiole
+
+			"cancel_first_shift":
+				var aspect: String = str(effect.get("aspect", ""))
+				var direction: String = str(effect.get("direction", ""))
+				var key: String = "cancel_%s_%s" % [aspect.to_lower(), direction]
+				modifiers[key] = true
+
+			"special_rule":
+				var rule_id: String = str(effect.get("id", ""))
+				modifiers[rule_id] = true
+
+	# Apply flux_start_balanced if unlocked
+	if modifiers.get("flux_start_balanced", false):
+		run["flux"] = {"terre": 50, "esprit": 50, "lien": 50}
+	elif not run.has("flux"):
+		run["flux"] = MerlinConstants.FLUX_START.duplicate()
+
+	run["talent_modifiers"] = modifiers
+	state["run"] = run
+
+
+func _get_talent_modifier(key: String, default_value: Variant = false) -> Variant:
+	"""Helper to read a talent modifier from the current run."""
+	return state.get("run", {}).get("talent_modifiers", {}).get(key, default_value)
+
+
+func _consume_talent_modifier(key: String) -> bool:
+	"""Consume a one-shot talent modifier (sets it to false). Returns true if was active."""
+	var run: Dictionary = state.get("run", {})
+	var modifiers: Dictionary = run.get("talent_modifiers", {})
+	if modifiers.get(key, false):
+		modifiers[key] = false
+		run["talent_modifiers"] = modifiers
+		state["run"] = run
+		return true
+	return false
 
 
 func _shift_aspect(aspect: String, direction: String) -> Dictionary:
 	if aspect not in MerlinConstants.TRIADE_ASPECTS:
 		return {"ok": false, "error": "Invalid aspect: " + aspect}
+
+	# Talent: cancel_first_shift (one-shot per run)
+	var cancel_key: String = "cancel_%s_%s" % [aspect.to_lower(), direction]
+	if _consume_talent_modifier(cancel_key):
+		var cur_state: int = int(state.get("run", {}).get("aspects", {}).get(aspect, 0))
+		return {"ok": true, "aspect": aspect, "cancelled": true, "old_state": cur_state, "new_state": cur_state}
 
 	var run = state.get("run", {})
 	var aspects = run.get("aspects", {})
@@ -622,6 +834,11 @@ func _shift_aspect(aspect: String, direction: String) -> Dictionary:
 
 
 func _use_souffle(amount: int) -> Dictionary:
+	# Talent: free_center_once (one free center per run)
+	if amount > 0 and _consume_talent_modifier("free_center_once"):
+		var cur_souffle: int = int(state.get("run", {}).get("souffle", 0))
+		return {"ok": true, "used": 0, "risk": false, "souffle": cur_souffle, "free": true}
+
 	var run = state.get("run", {})
 	var old_souffle: int = int(run.get("souffle", 0))
 
@@ -658,7 +875,9 @@ func _check_souffle_regen() -> void:
 			break
 
 	if all_balanced:
-		_add_souffle(1)
+		# Talent: equilibre_souffle_double → +2 instead of +1
+		var amount: int = 2 if _get_talent_modifier("equilibre_souffle_double") else 1
+		_add_souffle(amount)
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
@@ -692,7 +911,12 @@ func _tick_awen_regen() -> void:
 	var bestiole: Dictionary = state.get("bestiole", {})
 	var counter: int = int(bestiole.get("awen_regen_counter", 0)) + 1
 
-	if counter >= MerlinConstants.AWEN_REGEN_INTERVAL:
+	# Talent: awen_regen_faster → interval 4 instead of 5
+	var regen_interval: int = MerlinConstants.AWEN_REGEN_INTERVAL
+	if _get_talent_modifier("awen_regen_faster"):
+		regen_interval = maxi(regen_interval - 1, 1)
+
+	if counter >= regen_interval:
 		counter = 0
 		var regen: int = 1
 		if is_all_aspects_balanced():
@@ -943,30 +1167,36 @@ func _progress_mission(step: int) -> Dictionary:
 	return {"ok": true, "progress": new_progress, "total": total, "complete": new_progress >= total}
 
 
-func _resolve_triade_choice(card: Dictionary, option: int) -> Dictionary:
+func _resolve_triade_choice(card: Dictionary, option: int, modulated_effects: Array = []) -> Dictionary:
 	var run = state.get("run", {})
 
-	# Handle center option cost
-	if option == MerlinConstants.CardOption.CENTER:
-		var souffle_result = _use_souffle(MerlinConstants.SOUFFLE_CENTER_COST)
-		if souffle_result.get("risk", false):
-			# Apply risk: 50% normal, 25% random down, 25% random up
-			var roll: float = rng.randf()
-			if roll < MerlinConstants.SOUFFLE_EMPTY_RISK["normal"]:
-				pass  # Normal effect
-			elif roll < MerlinConstants.SOUFFLE_EMPTY_RISK["normal"] + MerlinConstants.SOUFFLE_EMPTY_RISK["aspect_down"]:
-				var random_aspect: String = MerlinConstants.TRIADE_ASPECTS[rng.randi() % 3]
-				_shift_aspect(random_aspect, "down")
-			else:
-				var random_aspect: String = MerlinConstants.TRIADE_ASPECTS[rng.randi() % 3]
-				_shift_aspect(random_aspect, "up")
+	if modulated_effects.is_empty():
+		# Legacy path: controller did NOT pre-modulate → apply raw effects
+		# Handle center option cost
+		if option == MerlinConstants.CardOption.CENTER:
+			var souffle_result = _use_souffle(MerlinConstants.SOUFFLE_CENTER_COST)
+			if souffle_result.get("risk", false):
+				var roll: float = rng.randf()
+				if roll < MerlinConstants.SOUFFLE_EMPTY_RISK["normal"]:
+					pass
+				elif roll < MerlinConstants.SOUFFLE_EMPTY_RISK["normal"] + MerlinConstants.SOUFFLE_EMPTY_RISK["aspect_down"]:
+					var random_aspect: String = MerlinConstants.TRIADE_ASPECTS[rng.randi() % 3]
+					_shift_aspect(random_aspect, "down")
+				else:
+					var random_aspect: String = MerlinConstants.TRIADE_ASPECTS[rng.randi() % 3]
+					_shift_aspect(random_aspect, "up")
 
-	# Get effects for chosen option
-	var options = card.get("options", [])
-	if option >= 0 and option < options.size():
-		var chosen = options[option]
-		var card_effects = chosen.get("effects", [])
-		for effect in card_effects:
+		# Get effects for chosen option
+		var options = card.get("options", [])
+		if option >= 0 and option < options.size():
+			var chosen = options[option]
+			var card_effects = chosen.get("effects", [])
+			for effect in card_effects:
+				_apply_triade_effect(effect)
+	else:
+		# New path: controller already modulated effects (D20, talents, shields)
+		# Souffle cost already handled by controller
+		for effect in modulated_effects:
 			_apply_triade_effect(effect)
 
 	# Update run state
@@ -979,6 +1209,17 @@ func _resolve_triade_choice(card: Dictionary, option: int) -> Dictionary:
 	# Tick Ogham cooldowns and Awen regen
 	tick_cooldowns()
 	_tick_awen_regen()
+
+	# Biome passive only in legacy path (controller handles it in new path)
+	if modulated_effects.is_empty():
+		var biome_key: String = str(run.get("current_biome", ""))
+		if not biome_key.is_empty():
+			var passive: Dictionary = biomes.get_passive_effect(biome_key, int(run.get("cards_played", 0)))
+			if not passive.is_empty():
+				_apply_triade_effect(passive)
+
+	# Check promise deadlines
+	_check_promise_deadlines()
 
 	return {"ok": true, "option": option, "cards_played": run["cards_played"]}
 
@@ -1106,6 +1347,12 @@ func _get_victory_type(aspects: Dictionary) -> String:
 		if aspect_state != MerlinConstants.AspectState.EQUILIBRE:
 			extreme_count += 1
 
+	# Check for "Tyran Juste": Monde=HAUT, Corps=EQUILIBRE, Ame=EQUILIBRE
+	if int(aspects.get("Monde", 0)) == MerlinConstants.AspectState.HAUT \
+		and int(aspects.get("Corps", 0)) == MerlinConstants.AspectState.EQUILIBRE \
+		and int(aspects.get("Ame", 0)) == MerlinConstants.AspectState.EQUILIBRE:
+		return "tyran_juste"
+
 	if extreme_count == 0:
 		return "harmonie"
 	elif extreme_count == 1:
@@ -1128,8 +1375,37 @@ func _handle_triade_run_end(end_check: Dictionary) -> void:
 	meta["gloire_points"] = int(meta.get("gloire_points", 0)) + int(end_check.get("score", 0) / 100)
 
 	state["meta"] = meta
+
+	# Calculate and apply run rewards (essences, fragments, liens, gloire)
+	var rewards: Dictionary = calculate_run_rewards(end_check)
+	apply_run_rewards(rewards)
+	end_check["rewards"] = rewards
+
 	_log_transition("triade_run_end", end_check)
 	run_ended.emit(end_check)
+
+
+func _check_promise_deadlines() -> void:
+	var run: Dictionary = state.get("run", {})
+	var promises: Array = run.get("active_promises", [])
+	var current_day: int = int(run.get("day", 1))
+	var broken_count: int = 0
+
+	for promise in promises:
+		if str(promise.get("status", "")) != "active":
+			continue
+		var deadline: int = int(promise.get("deadline_day", 0))
+		if deadline > 0 and current_day > deadline:
+			promise["status"] = "broken"
+			broken_count += 1
+
+	if broken_count > 0:
+		run["active_promises"] = promises
+		state["run"] = run
+		# Apply penalties for broken promises
+		for i in broken_count:
+			_apply_triade_effect({"type": "ADD_KARMA", "amount": -15})
+			_apply_triade_effect({"type": "ADD_TENSION", "amount": 10})
 
 
 func _log_transition(kind: String, data: Dictionary) -> void:
@@ -1429,7 +1705,7 @@ func check_bestiole_evolution() -> Dictionary:
 	return {"can_evolve": true, "next_stage": next_stage, "name": stage_data.get("name", "")}
 
 
-func evolve_bestiole() -> Dictionary:
+func evolve_bestiole(path: String = "") -> Dictionary:
 	var check: Dictionary = check_bestiole_evolution()
 	if not check.get("can_evolve", false):
 		return {"ok": false}
@@ -1437,13 +1713,39 @@ func evolve_bestiole() -> Dictionary:
 	var next_stage: int = int(check.get("next_stage", 2))
 	var stage_data: Dictionary = MerlinConstants.BESTIOLE_EVOLUTION_STAGES.get(next_stage, {})
 
-	# Spend essence cost
+	# Spend stage essence cost
 	for elem in stage_data.get("essence_cost", {}):
 		state.meta.essence[elem] -= int(stage_data.essence_cost[elem])
 
+	# Apply evolution path if provided (typically for stage 2 → 3)
+	if path != "":
+		var path_data: Dictionary = MerlinConstants.BESTIOLE_EVOLUTION_PATHS.get(path, {})
+		if path_data.is_empty():
+			return {"ok": false, "error": "Invalid evolution path: " + path}
+		# Check and spend path cost
+		var path_cost: Dictionary = path_data.get("cost", {})
+		for elem in path_cost:
+			if int(state.meta.essence.get(elem, 0)) < int(path_cost[elem]):
+				return {"ok": false, "error": "Cannot afford path cost"}
+		for elem in path_cost:
+			state.meta.essence[elem] -= int(path_cost[elem])
+		state.meta.bestiole_evolution.path = path
+
 	state.meta.bestiole_evolution.stage = next_stage
 	state_changed.emit(state)
-	return {"ok": true, "stage": next_stage, "name": stage_data.get("name", "")}
+	return {"ok": true, "stage": next_stage, "name": stage_data.get("name", ""), "path": path}
+
+
+func can_afford_evolution_path(path_id: String) -> bool:
+	"""Check if player can afford a specific evolution path cost."""
+	var path_data: Dictionary = MerlinConstants.BESTIOLE_EVOLUTION_PATHS.get(path_id, {})
+	if path_data.is_empty():
+		return false
+	var cost: Dictionary = path_data.get("cost", {})
+	for elem in cost:
+		if int(state.meta.essence.get(elem, 0)) < int(cost[elem]):
+			return false
+	return true
 
 
 func get_bestiole_bond_start() -> int:

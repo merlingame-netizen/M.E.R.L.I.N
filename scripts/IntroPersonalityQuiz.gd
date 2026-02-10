@@ -9,7 +9,7 @@ signal quiz_completed(traits: Dictionary)
 # CONSTANTS
 # =============================================================================
 
-const NEXT_SCENE := "res://scenes/SceneEveil.tscn"
+const NEXT_SCENE := "res://scenes/SceneRencontreMerlin.tscn"
 const MENU_SCENE := "res://scenes/MenuPrincipal.tscn"
 
 const PALETTE := {
@@ -416,6 +416,9 @@ func _build_skip_button() -> void:
 
 
 func _show_skip_modal() -> void:
+	var sfx := get_node_or_null("/root/SFXManager")
+	if sfx:
+		sfx.play("click")
 	skip_modal_visible = true
 	skip_modal.visible = true
 	skip_modal.modulate.a = 0
@@ -424,6 +427,9 @@ func _show_skip_modal() -> void:
 
 
 func _hide_skip_modal() -> void:
+	var sfx := get_node_or_null("/root/SFXManager")
+	if sfx:
+		sfx.play("click")
 	skip_modal_visible = false
 	var tween := create_tween()
 	tween.tween_property(skip_modal, "modulate:a", 0.0, 0.15)
@@ -431,6 +437,9 @@ func _hide_skip_modal() -> void:
 
 
 func _skip_to_menu() -> void:
+	var sfx := get_node_or_null("/root/SFXManager")
+	if sfx:
+		sfx.play("click")
 	_hide_skip_modal()
 	if active_tween:
 		active_tween.kill()
@@ -442,6 +451,9 @@ func _skip_to_menu() -> void:
 
 
 func _skip_to_next_scene() -> void:
+	var sfx := get_node_or_null("/root/SFXManager")
+	if sfx:
+		sfx.play("click")
 	_hide_skip_modal()
 	# Set default personality for skipped quiz
 	var game_manager = get_node_or_null("/root/GameManager")
@@ -542,6 +554,9 @@ func _create_choice_button(text: String, index: int) -> Button:
 func _on_choice_hover(btn: Button, hovering: bool) -> void:
 	var tween := create_tween().set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
 	if hovering:
+		var sfx := get_node_or_null("/root/SFXManager")
+		if sfx:
+			sfx.play("choice_hover")
 		tween.tween_property(btn, "scale", Vector2(1.02, 1.02), 0.1)
 	else:
 		tween.tween_property(btn, "scale", Vector2(1.0, 1.0), 0.1)
@@ -551,6 +566,10 @@ func _on_choice_selected(choice_index: int) -> void:
 	if is_transitioning:
 		return
 	is_transitioning = true
+
+	var sfx := get_node_or_null("/root/SFXManager")
+	if sfx:
+		sfx.play("choice_select")
 
 	var question: Dictionary = QUESTIONS[current_question_index]
 	var choice: Dictionary = question.choices[choice_index]
@@ -585,6 +604,9 @@ func _on_choice_selected(choice_index: int) -> void:
 	active_tween.tween_interval(0.3)
 	active_tween.tween_callback(func():
 		is_transitioning = false
+		var sfx_mgr := get_node_or_null("/root/SFXManager")
+		if sfx_mgr:
+			sfx_mgr.play("question_transition")
 		_show_question(current_question_index + 1)
 	)
 
@@ -620,6 +642,10 @@ func _show_personality_reveal(personality: Dictionary) -> void:
 	# Phase 1: "Les brumes connaissent..."
 	question_label.text = "Les brumes connaissent ton coeur..."
 
+	var sfx := get_node_or_null("/root/SFXManager")
+	if sfx:
+		sfx.play("result_reveal")
+
 	if active_tween:
 		active_tween.kill()
 	active_tween = create_tween()
@@ -632,6 +658,9 @@ func _show_personality_reveal(personality: Dictionary) -> void:
 		question_label.text = archetype_title
 		question_label.add_theme_font_size_override("font_size", 42)
 		question_label.add_theme_color_override("font_color", PALETTE.accent)
+		var sfx_mgr := get_node_or_null("/root/SFXManager")
+		if sfx_mgr:
+			sfx_mgr.play("magic_reveal")
 	)
 	active_tween.tween_property(question_label, "modulate:a", 1.0, TEXT_FADE_DURATION)
 	active_tween.tween_interval(2.0)

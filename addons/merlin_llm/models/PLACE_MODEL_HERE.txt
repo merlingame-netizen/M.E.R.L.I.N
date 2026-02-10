@@ -1,2 +1,11 @@
 Place your GGUF model file here.
-Expected filename (default): qwen2.5-3b-instruct-q4_k_m.gguf
+
+Current model (Qwen2.5-3B-Instruct):
+- qwen2.5-3b-instruct-q4_k_m.gguf  (DEFAULT — 2.0 GB, best balance logic+narrative)
+
+Source: https://huggingface.co/Qwen/Qwen2.5-3B-Instruct-GGUF
+
+Benchmark results (CPU Ryzen 5 PRO, 12 tests):
+- Comprehension: 83% (10/12)
+- Logic: 100%, Role-play: 100%, JSON: 100%
+- Latency 1 word: 726ms, 1 sentence: 2.6s

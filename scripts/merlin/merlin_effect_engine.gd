@@ -575,7 +575,7 @@ func _set_meta_value(state: Dictionary, key: String, value: Variant) -> bool:
 
 
 func _log_story(state: Dictionary, entry: Dictionary) -> bool:
-	var story_log = state.get("story_log", [])
+	var story_log: Array = state.get("story_log", [])
 	story_log.append(entry)
 	state["story_log"] = story_log
 	return true

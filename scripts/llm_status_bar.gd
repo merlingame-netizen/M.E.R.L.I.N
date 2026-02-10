@@ -14,9 +14,7 @@ const PALETTE := {
 }
 
 const TRINITY_MODELS := {
-	"Q4_K_M": {"file": "Trinity-Nano-Preview-Q4_K_M.gguf", "desc": "Rapide"},
-	"Q5_K_M": {"file": "Trinity-Nano-Preview-Q5_K_M.gguf", "desc": "Equilibre"},
-	"Q8_0": {"file": "Trinity-Nano-Preview-Q8_0.gguf", "desc": "Qualite"},
+	"Q4_K_M": {"file": "qwen2.5-3b-instruct-q4_k_m.gguf", "desc": "Qwen2.5 3B (defaut)"},
 }
 
 const MODEL_DIRS := [

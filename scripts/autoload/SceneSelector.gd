@@ -8,9 +8,7 @@ const SCENES: Array[Dictionary] = [
 	# — Intro —
 	{"label": "IntroCeltOS (Boot)", "path": "res://scenes/IntroCeltOS.tscn"},
 	{"label": "IntroPersonalityQuiz", "path": "res://scenes/IntroPersonalityQuiz.tscn"},
-	{"label": "IntroMerlinDialogue", "path": "res://scenes/IntroMerlinDialogue.tscn"},
-	{"label": "SceneEveil", "path": "res://scenes/SceneEveil.tscn"},
-	{"label": "SceneAntreMerlin", "path": "res://scenes/SceneAntreMerlin.tscn"},
+	{"label": "SceneRencontreMerlin", "path": "res://scenes/SceneRencontreMerlin.tscn"},
 	{"label": "TransitionBiome", "path": "res://scenes/TransitionBiome.tscn"},
 	{"label": "HubAntre", "path": "res://scenes/HubAntre.tscn"},
 	# — Menus —
@@ -19,13 +17,13 @@ const SCENES: Array[Dictionary] = [
 	{"label": "SelectionSauvegarde", "path": "res://scenes/SelectionSauvegarde.tscn"},
 	# — Gameplay —
 	{"label": "TriadeGame", "path": "res://scenes/TriadeGame.tscn"},
-	{"label": "GameMain", "path": "res://scenes/GameMain.tscn"},
+	{"label": "MapMonde", "path": "res://scenes/MapMonde.tscn"},
 	# — Collections —
 	{"label": "Calendar", "path": "res://scenes/Calendar.tscn"},
 	{"label": "Collection", "path": "res://scenes/Collection.tscn"},
+	{"label": "ArbreDeVie", "path": "res://scenes/ArbreDeVie.tscn"},
 	# — Test —
-	{"label": "TestLLMSceneUltimate", "path": "res://scenes/TestLLMSceneUltimate.tscn"},
-	{"label": "LLM Benchmark", "path": "res://scenes/TestLLMBenchmark.tscn"},
+	{"label": "TestTriadeLLMBenchmark", "path": "res://scenes/TestTriadeLLMBenchmark.tscn"},
 ]
 
 # === NODES ===

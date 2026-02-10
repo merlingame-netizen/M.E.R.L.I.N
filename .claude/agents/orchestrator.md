@@ -1,54 +1,31 @@
-# Agent Orchestrator — DRU Multi-Agent System
+# Agent Orchestrator — M.E.R.L.I.N. Multi-Agent System
 
-## Overview
-
-This orchestrator coordinates the team of specialized Claude Code agents for the DRU project.
-Use this file to understand how to invoke and coordinate agents.
+> **NOTE**: Ce fichier est le complement de `task_dispatcher.md`.
+> Le dispatcher classifie et retourne le plan d'agents.
+> L'orchestrateur decrit les workflows et la coordination entre agents.
 
 ---
 
 ## Quick Start
 
-### Invoke a Single Agent
+### Etape 1: Dispatcher (OBLIGATOIRE)
 
 ```
-Use the Task tool with:
-- subagent_type: "general-purpose"
-- prompt: "Read c:/Users/PGNK2128/Godot-MCP/.claude/agents/[agent].md and follow its role. Task: [your task]"
+Task tool:
+  subagent_type: "general-purpose"
+  model: "haiku"
+  prompt: "Read .claude/agents/task_dispatcher.md and analyze this task: [DESCRIPTION]"
 ```
 
-### Example Invocations
+### Etape 2: Suivre le Plan
+
+Le dispatcher retourne un plan structure. Invoquer chaque agent dans l'ordre:
 
 ```
-# Lead Godot reviews architecture
-Task: Read .claude/agents/lead_godot.md. Review the dru_store.gd architecture and provide feedback.
-
-# QA tests the Reigns scene
-Task: Read .claude/agents/debug_qa.md. Test the ReignsGame.tscn scene for bugs.
-
-# Narrative Writer creates cards
-Task: Read .claude/agents/narrative_writer.md. Write 5 new fallback cards for the forest theme.
-
-# Producer plans sprint
-Task: Read .claude/agents/producer.md. Create a sprint plan for the next milestone.
+Task tool:
+  subagent_type: "general-purpose"
+  prompt: "Read .claude/agents/[agent].md and follow its role. Task: [DESCRIPTION]"
 ```
-
----
-
-## Agent Roster
-
-| Agent | File | Primary Tasks |
-|-------|------|---------------|
-| Lead Godot | `lead_godot.md` | Architecture, code review, integration |
-| Debug/QA | `debug_qa.md` | Testing, bug reports, fixes |
-| UI Impl | `ui_impl.md` | Controls, themes, animations |
-| UX Research | `ux_research.md` | Usability, readability, flow |
-| Game Designer | `game_designer.md` | Rules, balance, progression |
-| Narrative | `narrative_writer.md` | Card text, story, tone |
-| Art Direction | `art_direction.md` | Visual style, assets |
-| Audio | `audio_designer.md` | SFX, music, voice |
-| Producer | `producer.md` | Planning, coordination |
-| Localisation | `localisation.md` | Translation, i18n |
 
 ---
 
@@ -57,63 +34,94 @@ Task: Read .claude/agents/producer.md. Create a sprint plan for the next milesto
 ### Pattern 1: Feature Development
 
 ```
-1. [Producer] Define task and assign
-2. [Game Designer] Validate design
-3. [Lead Godot] Plan implementation
-4. [UI Impl / Lead Godot] Implement
-5. [Debug/QA] Test
-6. [Lead Godot] Review and approve
+0. [Dispatcher] → Classifie, retourne plan d'agents
+1. [Producer] Define task and priority
+2. [Game Designer] Validate design intent
+3. [Lead Godot] Plan architecture
+4. [Implementation Agent(s)] Implement (parallel if independent)
+5. [Debug/QA] Test implementation
+6. [Optimizer] Scan best practices [AUTO]
+7. [Lead Godot] Final review
+8. [Git Commit] Commit [AUTO]
 ```
 
 ### Pattern 2: Content Creation
 
 ```
-1. [Game Designer] Define card requirements
-2. [Narrative] Write card text
-3. [Art Direction] Specify visuals (if any)
-4. [Audio] Specify sounds (if any)
-5. [Debug/QA] Test cards in-game
+0. [Dispatcher] → Classifie, retourne plan d'agents
+1. [Game Designer] Define card requirements + Triade balance
+2. [Merlin Guardian] Review voice guidelines
+3. [Narrative Writer] Write card text (parallel with Lore Writer if mythology)
+4. [Game Designer] Validate card balance
+5. [Debug/QA] Test cards in-game [AUTO]
+6. [Git Commit] Commit [AUTO]
 ```
 
 ### Pattern 3: Bug Fix
 
 ```
-1. [Debug/QA] Report bug with reproduction
-2. [Lead Godot] Triage and assign
+0. [Dispatcher] → Classifie, retourne plan d'agents
+1. [Debug/QA] Reproduce bug, document
+2. [Lead Godot / Domain Agent] Identify root cause
 3. [Appropriate Agent] Fix
-4. [Debug/QA] Verify fix
-5. [Lead Godot] Approve
+4. [Debug/QA] Verify fix, update knowledge base [AUTO]
+5. [Optimizer] Scan for related patterns [AUTO]
+6. [Git Commit] Commit [AUTO]
 ```
 
 ### Pattern 4: UX Improvement
 
 ```
-1. [UX Research] Identify issue
+0. [Dispatcher] → Classifie, retourne plan d'agents
+1. [UX Research] Identify issue, propose solution
 2. [Game Designer] Validate design solution
-3. [UI Impl] Implement
+3. [UI Impl] Implement (parallel with Motion Designer if animation)
 4. [UX Research] Verify improvement
-5. [Debug/QA] Regression test
+5. [Debug/QA] Regression test [AUTO]
+6. [Git Commit] Commit [AUTO]
+```
+
+### Pattern 5: LLM Integration
+
+```
+0. [Dispatcher] → Classifie, retourne plan d'agents
+1. [LLM Expert] Analyze prompt/parsing issue
+2. [Lead Godot] Review architecture impact
+3. [Godot Expert] Performance considerations
+4. [Debug/QA] Test LLM integration [AUTO]
+5. [Optimizer] Scan adapter code [AUTO]
+6. [Technical Writer] Document prompt changes
+7. [Git Commit] Commit [AUTO]
 ```
 
 ---
 
 ## Parallel Agent Execution
 
-When tasks are independent, invoke multiple agents in parallel:
+Quand les agents sont independants, les invoquer en parallele:
 
 ```
-# Example: Parallel documentation and testing
-Use Task tool twice in same message:
+# Exemple: Design + Review en parallele
+Task 1 (Game Designer): Define card requirements
+Task 2 (Merlin Guardian): Review voice guidelines
+→ Les deux peuvent tourner simultanement
 
-1. Task (Lead Godot): Review architecture
-2. Task (Debug/QA): Run test suite
+# Exemple: Implementation parallele
+Task 1 (UI Impl): Implement layout
+Task 2 (Motion Designer): Implement animations
+→ Independants, parallelisables
 ```
+
+**ATTENTION**: Ne PAS paralleliser des agents dependants:
+- Debug/QA APRES implementation (pas en parallele)
+- Optimizer APRES code ecrit (pas en parallele)
+- Git Commit TOUJOURS en dernier
 
 ---
 
 ## Handoff Protocol
 
-When one agent completes work for another:
+Quand un agent termine et passe au suivant:
 
 ```markdown
 ## Handoff: [From Agent] -> [To Agent]
@@ -122,7 +130,7 @@ When one agent completes work for another:
 - Description of what was done
 
 ### Files Changed
-- `path/file.gd` - Changes made
+- `path/file.gd` — Changes made
 
 ### For [To Agent]
 - Specific request or question
@@ -133,95 +141,46 @@ When one agent completes work for another:
 
 ---
 
-## Common Multi-Agent Scenarios
-
-### Scenario: New Feature
-
-```
-Prompt:
-"Coordinate agents to implement [feature]:
-1. First, have Game Designer define requirements
-2. Then, Lead Godot plan implementation
-3. Finally, appropriate agents implement and test"
-```
-
-### Scenario: Bug Triage
-
-```
-Prompt:
-"Coordinate agents to fix [bug]:
-1. Debug/QA reproduces and documents
-2. Lead Godot identifies root cause
-3. Appropriate agent fixes
-4. Debug/QA verifies"
-```
-
-### Scenario: Content Sprint
-
-```
-Prompt:
-"Coordinate content creation:
-1. Game Designer defines 10 card themes
-2. Narrative Writer creates text
-3. Debug/QA tests cards
-4. Producer tracks progress"
-```
-
----
-
-## Agent Communication Channels
-
-### Status Updates
-Agents report status with tags:
-- `[READY]` - Work complete
-- `[WIP]` - Work in progress
-- `[BLOCKED]` - Needs input
-- `[REVIEW]` - Needs review
-
-### Escalation Path
-```
-Any Agent -> Lead Godot (technical)
-Any Agent -> Producer (process)
-Any Agent -> Game Designer (design)
-```
-
----
-
 ## Project Context Summary
 
 ### Current State (2026-02)
-- Pivoted to Reigns-style gameplay
-- Core card system implemented
-- UI implemented, needs polish
-- LLM integration pending
-- 20 fallback cards, need 80 more
+- **Game System**: Triade — 3 Aspects x 3 etats discrets
+- **LLM**: Qwen2.5-3B-Instruct Q4_K_M, Multi-Brain (1-4 cerveaux)
+- **Core Loop**: 3 options par carte, equilibrer Corps/Ame/Monde
+- **Companion**: Bestiole (18 Oghams)
+- **Audio**: SFXManager (30+ sons proceduraux)
 
 ### Key Files
 ```
-scripts/dru/dru_store.gd        <- Central state
-scripts/dru/dru_card_system.gd  <- Card engine
-scripts/ui/reigns_game_ui.gd    <- Game UI
-scenes/ReignsGame.tscn          <- Main scene
-docs/MASTER_DOCUMENT.md         <- Project overview
+scripts/merlin/merlin_store.gd      <- Central state (Redux-like), Triade
+scripts/merlin/merlin_card_system.gd <- Card engine, fallback pool
+scripts/ui/triade_game_ui.gd        <- 3 aspects, 3 options, typewriter
+scripts/ui/triade_game_controller.gd <- Store-UI bridge, LLM wiring
+addons/merlin_ai/merlin_ai.gd       <- Multi-Brain, worker pool
+addons/merlin_ai/merlin_omniscient.gd <- Orchestrateur IA, guardrails
+docs/MASTER_DOCUMENT.md              <- Project overview (v4.0)
 ```
 
 ### Tech Stack
 - Engine: Godot 4.x
 - Language: GDScript
-- State: Redux-like (DruStore)
-- LLM: Anthropic Claude (via adapter)
+- State: Redux-like (MerlinStore)
+- LLM: Qwen2.5-3B via llama.cpp (GDExtension)
+- Agents: 24 + 1 knowledge base
 
 ---
 
 ## Best Practices
 
-1. **One agent per task** - Don't mix responsibilities
-2. **Clear handoffs** - Always specify next agent
-3. **Read role first** - Agent reads its .md before acting
-4. **Document decisions** - Update docs after changes
-5. **Test after changes** - Always involve QA
+1. **Dispatcher first** — Toujours invoquer task_dispatcher.md avant d'agir
+2. **One agent per role** — Ne pas melanger les responsabilites
+3. **Clear handoffs** — Specifier le prochain agent
+4. **Read role first** — L'agent lit son .md avant d'agir
+5. **Test after changes** — Toujours impliquer debug_qa
+6. **Auto-activate** — debug_qa, optimizer, git_commit se declenchent auto
+7. **Knowledge base** — Documenter les corrections pour eviter les regressions
 
 ---
 
-*Orchestrator version: 1.0*
-*Last updated: 2026-02-06*
+*Orchestrator version: 2.0*
+*Updated: 2026-02-09 — Modernized for M.E.R.L.I.N. + Task Dispatcher integration*

@@ -1,0 +1,231 @@
+[gd_scene load_steps=3 format=3 uid="uid://c1l0w5r1wum4o"]
+
+[ext_resource type="Script" path="res://scripts/IntroMerlinDialogue.gd" id="1"]
+[ext_resource type="Texture2D" path="res://Assets/Sprite/Merlin.png" id="2"]
+
+[node name="IntroMerlinDialogue" type="Control"]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+script = ExtResource("1")
+
+[node name="Background" type="Control" parent="."]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+
+[node name="Far" type="ColorRect" parent="Background"]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+color = Color(0.05, 0.06, 0.08, 1)
+
+[node name="Mid" type="ColorRect" parent="Background"]
+anchor_left = 0.0
+anchor_top = 0.45
+anchor_right = 1.0
+anchor_bottom = 1.0
+color = Color(0.08, 0.09, 0.12, 1)
+
+[node name="Menhir" type="ColorRect" parent="Background"]
+anchor_left = 0.5
+anchor_top = 0.35
+anchor_right = 0.5
+anchor_bottom = 0.35
+offset_left = -70.0
+offset_top = -140.0
+offset_right = 70.0
+offset_bottom = 160.0
+color = Color(0.12, 0.14, 0.18, 1)
+
+[node name="Fore" type="ColorRect" parent="Background"]
+anchor_left = 0.0
+anchor_top = 0.7
+anchor_right = 1.0
+anchor_bottom = 1.0
+color = Color(0.1, 0.12, 0.16, 1)
+
+[node name="Fog" type="ColorRect" parent="Background"]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+color = Color(0.8, 0.85, 0.9, 0.06)
+
+[node name="CardRoot" type="Control" parent="."]
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -320.0
+offset_top = -380.0
+offset_right = 320.0
+offset_bottom = 380.0
+
+[node name="CardShadow" type="ColorRect" parent="CardRoot"]
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 10.0
+offset_top = 12.0
+offset_right = 10.0
+offset_bottom = 12.0
+color = Color(0, 0, 0, 0.35)
+
+[node name="CardPanel" type="Panel" parent="CardRoot"]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+
+[node name="CardMargin" type="MarginContainer" parent="CardRoot/CardPanel"]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+theme_override_constants/margin_left = 22
+theme_override_constants/margin_top = 22
+theme_override_constants/margin_right = 22
+theme_override_constants/margin_bottom = 22
+
+[node name="CardVBox" type="VBoxContainer" parent="CardRoot/CardPanel/CardMargin"]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+separation = 14
+
+[node name="PortraitFrame" type="Panel" parent="CardRoot/CardPanel/CardMargin/CardVBox"]
+custom_minimum_size = Vector2(0, 520)
+
+[node name="Portrait" type="TextureRect" parent="CardRoot/CardPanel/CardMargin/CardVBox/PortraitFrame"]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+texture = ExtResource("2")
+expand_mode = 1
+stretch_mode = 5
+
+[node name="MerlinText" type="RichTextLabel" parent="CardRoot/CardPanel/CardMargin/CardVBox"]
+autowrap_mode = 3
+size_flags_vertical = 3
+text = ""
+
+[node name="ProgressLabel" type="Label" parent="CardRoot"]
+anchor_left = 1.0
+anchor_top = 0.0
+anchor_right = 1.0
+anchor_bottom = 0.0
+offset_left = -80.0
+offset_top = 12.0
+offset_right = -12.0
+offset_bottom = 36.0
+horizontal_alignment = 2
+text = "1/?"
+visible = false
+
+[node name="ChoicesBar" type="Control" parent="."]
+anchor_left = 0.0
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_top = -200.0
+offset_bottom = 0.0
+
+[node name="VerbRow" type="HBoxContainer" parent="ChoicesBar"]
+anchor_left = 0.0
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 48.0
+offset_top = -70.0
+offset_right = -48.0
+offset_bottom = -12.0
+separation = 14
+
+[node name="ForceButton" type="Button" parent="ChoicesBar/VerbRow"]
+text = "FORCE"
+size_flags_horizontal = 3
+
+[node name="LogiqueButton" type="Button" parent="ChoicesBar/VerbRow"]
+text = "LOGIQUE"
+size_flags_horizontal = 3
+
+[node name="FinesseButton" type="Button" parent="ChoicesBar/VerbRow"]
+text = "FINESSE"
+size_flags_horizontal = 3
+
+[node name="SubChoicePanel" type="Panel" parent="ChoicesBar"]
+visible = false
+custom_minimum_size = Vector2(300, 110)
+
+[node name="SubChoiceVBox" type="VBoxContainer" parent="ChoicesBar/SubChoicePanel"]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 10.0
+offset_top = 10.0
+offset_right = -10.0
+offset_bottom = -10.0
+separation = 8
+
+[node name="SubChoice1" type="Button" parent="ChoicesBar/SubChoicePanel/SubChoiceVBox"]
+text = "..."
+
+[node name="SubChoice2" type="Button" parent="ChoicesBar/SubChoicePanel/SubChoiceVBox"]
+text = "..."
+
+[node name="NameOverlay" type="Control" parent="."]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+visible = false
+
+[node name="OverlayDim" type="ColorRect" parent="NameOverlay"]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+color = Color(0, 0, 0, 0.55)
+
+[node name="NamePanel" type="Panel" parent="NameOverlay"]
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -220.0
+offset_top = -140.0
+offset_right = 220.0
+offset_bottom = 140.0
+
+[node name="NameVBox" type="VBoxContainer" parent="NameOverlay/NamePanel"]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 18.0
+offset_top = 18.0
+offset_right = -18.0
+offset_bottom = -18.0
+separation = 10
+
+[node name="TitleLabel" type="Label" parent="NameOverlay/NamePanel/NameVBox"]
+text = "Nom de la chronique"
+
+[node name="HintLabel" type="Label" parent="NameOverlay/NamePanel/NameVBox"]
+text = "Court et clair, Voyageur."
+
+[node name="NameEdit" type="LineEdit" parent="NameOverlay/NamePanel/NameVBox"]
+placeholder_text = "Nom de la chronique"
+
+[node name="NameError" type="Label" parent="NameOverlay/NamePanel/NameVBox"]
+text = ""
+
+[node name="NameButtons" type="HBoxContainer" parent="NameOverlay/NamePanel/NameVBox"]
+separation = 10
+
+[node name="ConfirmButton" type="Button" parent="NameOverlay/NamePanel/NameVBox/NameButtons"]
+text = "Valider"
+
+[node name="Audio" type="Node" parent="."]
+
+[node name="SfxCardIn" type="AudioStreamPlayer" parent="Audio"]
+
+[node name="SfxCardOut" type="AudioStreamPlayer" parent="Audio"]
+
+[node name="SfxSelect" type="AudioStreamPlayer" parent="Audio"]
+
+[node name="SfxInk" type="AudioStreamPlayer" parent="Audio"]

@@ -108,19 +108,27 @@ var _current_grid: Array = []
 # Voicebox
 var voicebox: Node = null
 var voice_ready: bool = false
+# LLM
+var merlin_ai: Node = null
 
 
 func _ready() -> void:
+	set_anchors_preset(Control.PRESET_FULL_RECT)
 	_load_data()
 	_current_grid = _generate_landscape(biome_key)
 	_build_ui()
 	_setup_audio()
 	await _setup_voicebox()
+	if not is_inside_tree():
+		return
 	await get_tree().create_timer(0.3).timeout
+	if not is_inside_tree():
+		return
 	_play_transition()
 
 
 func _load_data() -> void:
+	merlin_ai = get_node_or_null("/root/MerlinAI")
 	var gm := get_node_or_null("/root/GameManager")
 	if gm:
 		var run_data: Dictionary = gm.get("run") if gm.get("run") is Dictionary else {}
@@ -565,11 +573,16 @@ func _play_transition() -> void:
 	# Phase 4: Sentier — ink path traces through landscape
 	await _phase_sentier()
 
-	# Phase 5: Voix — narration + merlin comment
+	# Phase 5: Voix — LLM narration with JSON fallback
 	if screen_fx and screen_fx.has_method("set_merlin_mood"):
 		screen_fx.set_merlin_mood("narrateur")
 
-	var text: String = biome_data.get("arrival_text", "")
+	var biome_name: String = biome_data.get("name", "Terre Inconnue")
+	var llm_arrival := await _try_llm_transition_text(
+		"Tu es le narrateur d'un jeu celtique. Le voyageur arrive dans %s. Decris l'ambiance en 1-2 phrases poetiques. Francais uniquement." % biome_name,
+		"Biome: %s. Le voyageur decouvre ce lieu pour la premiere fois." % biome_name
+	)
+	var text: String = llm_arrival if llm_arrival != "" else biome_data.get("arrival_text", "")
 	await _show_typewriter(arrival_text, text)
 	await get_tree().create_timer(0.3).timeout
 	_advance_requested = false
@@ -578,7 +591,11 @@ func _play_transition() -> void:
 	if screen_fx and screen_fx.has_method("set_merlin_mood"):
 		screen_fx.set_merlin_mood("amuse")
 
-	var comment: String = biome_data.get("merlin_comment", "")
+	var llm_comment := await _try_llm_transition_text(
+		"Tu es Merlin le druide. Commente l'arrivee du voyageur dans %s en 1 phrase, ton amuse. Francais uniquement." % biome_name,
+		"Le voyageur arrive dans %s." % biome_name
+	)
+	var comment: String = llm_comment if llm_comment != "" else biome_data.get("merlin_comment", "")
 	await _show_typewriter(merlin_comment, comment)
 	await get_tree().create_timer(0.3).timeout
 	_advance_requested = false
@@ -814,6 +831,32 @@ func _phase_dissolution() -> void:
 	final_tw.tween_callback(func():
 		get_tree().change_scene_to_file(NEXT_SCENE)
 	)
+
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# LLM NARRATION
+# ═══════════════════════════════════════════════════════════════════════════════
+
+func _try_llm_transition_text(system_prompt: String, user_input: String) -> String:
+	## Attempt LLM narration with 5s timeout. Returns "" on failure.
+	if merlin_ai == null or not merlin_ai.is_ready:
+		return ""
+	var _done := false
+	var _result := {}
+	var _do := func():
+		_result = await merlin_ai.generate_narrative(system_prompt, user_input, {"max_tokens": 60})
+		_done = true
+	_do.call()
+	var elapsed := 0.0
+	while not _done and elapsed < 5.0:
+		if not is_inside_tree():
+			return ""
+		await get_tree().create_timer(0.25).timeout
+		elapsed += 0.25
+	if not _done or _result.has("error"):
+		return ""
+	var text: String = str(_result.get("text", ""))
+	return text if text.length() >= 5 else ""
 
 
 # ═══════════════════════════════════════════════════════════════════════════════

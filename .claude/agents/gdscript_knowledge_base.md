@@ -670,9 +670,48 @@ _Ce section est mise a jour automatiquement par l'agent Debug._
 - `[SceneAntreMerlin.gd, SceneEveil.gd, MenuPrincipalReigns.gd]` ACVoicebox wrong path "ac_voicebox" → Corrige en "acvoicebox" (nom reel du dossier)
 - `[TransitionBiome.gd:178]` set_anchors_preset() on GPUParticles2D (Node2D) → Remplace par position directe `Vector2(400, 300)`
 
+### 2026-02-09 (Brain Pool QA Review)
+- `[merlin_ai.gd:_bg_queue]` Unbounded background task queue → Add BG_QUEUE_MAX_SIZE=100 limit with FIFO drop
+- `[merlin_ai.gd:_process]` Background tasks with no timeout detection → Add BG_TASK_TIMEOUT_MS=30000, detect stuck tasks
+- `[merlin_ai.gd:_fire_bg_task]` Missing start_time on active tasks → Add start_time: Time.get_ticks_msec() for timeout tracking
+- `[merlin_ai.gd:reload_models]` Reload during active bg tasks → Cancel active tasks and clear queue before reload
+- `[merlin_ai.gd:_lease_bg_brain]` No is_instance_valid check → Add is_instance_valid() before leasing any brain
+- **Pattern:** Busy flag set/clear must be balanced in every function that uses them (check all exit paths)
+- **Pattern:** Bounded queues: always add size limits to arrays that grow via user/system actions
+
+### 2026-02-09 (GDExtension C++ Build)
+- `[merlin_llm.cpp:181]` `llama_n_vocab(model)` compile error → API changed: now takes `const llama_vocab *` not `llama_model *`. Fix: use `llama_n_vocab(vocab)` where `vocab = llama_model_get_vocab(model)`
+- `[merlin_llm.cpp:180]` `llama_sampler_init_penalties()` signature changed → Reduced from 9 args to 4: only `(penalty_last_n, penalty_repeat, penalty_freq, penalty_present)`. Removed: n_vocab, special_eos_id, linefeed_id, penalize_nl, ignore_eos
+- `[CMakeLists.txt]` RuntimeLibrary mismatch MD vs MT → llama.cpp must be built with `-DCMAKE_MSVC_RUNTIME_LIBRARY=MultiThreaded` to match GDExtension static CRT
+- `[CMakeLists.txt]` Missing ggml libs → Add `ggml.lib`, `ggml-base.lib`, `ggml-cpu.lib` to linker (llama.cpp split ggml into sub-libs)
+
 <!-- CORRECTIONS_LOG_END -->
 
 ---
 
-*Last Updated: 2026-02-08 (10 corrections total)*
-*Maintained by: Debug Agent & Optimizer Agent*
+## SECTION 7: Task Dispatcher — Patterns Appris
+
+> **Section alimentee par le Task Dispatcher** — Documente les sequences d'agents
+> qui ont fonctionne ou echoue pour ameliorer les futures dispatches.
+
+### Format d'entree
+
+```
+### Pattern: [Nom du pattern]
+**Demande type**: [Formulation utilisateur typique]
+**Sequence optimale**: [Agent1] → [Agent2] → ... → [AgentN]
+**Piege courant**: [Ce qu'il faut eviter]
+**Resultat**: [Succes/Echec et lecon]
+```
+
+### Patterns documentes
+
+_(Section vide — sera alimentee automatiquement au fil des dispatches)_
+
+<!-- DISPATCHER_PATTERNS_START -->
+<!-- DISPATCHER_PATTERNS_END -->
+
+---
+
+*Last Updated: 2026-02-09 (14 corrections + Section 7 Dispatcher)*
+*Maintained by: Debug Agent, Optimizer Agent & Task Dispatcher*

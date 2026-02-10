@@ -52,6 +52,10 @@ var _llm: MerlinLlmAdapter
 var _rng: MerlinRng
 var _fallback_cards: Array = []
 var _triade_fallback_cards: Array = []  # NEW: 3-option cards
+var _event_cards_pool: Array = []
+var _promise_cards_pool: Array = []
+var _event_cards_seen: Array = []
+var _promise_ids_taken: Array = []
 
 # ═══════════════════════════════════════════════════════════════════════════════
 # SETUP
@@ -63,6 +67,8 @@ func setup(effects: MerlinEffectEngine, llm: MerlinLlmAdapter, rng: MerlinRng) -
 	_rng = rng
 	_load_fallback_cards()
 	_load_triade_fallback_cards()
+	_load_event_cards()
+	_load_promise_cards()
 
 
 func _load_fallback_cards() -> void:
@@ -278,7 +284,7 @@ func get_next_card(state: Dictionary) -> Dictionary:
 
 	# Try LLM first
 	if _llm != null:
-		var llm_card = _llm.generate_card(context)
+		var llm_card = await _llm.generate_card(context)
 		if llm_card.get("ok", false):
 			var validated = _validate_card(llm_card.get("card", {}))
 			if validated.get("valid", false):
@@ -427,6 +433,268 @@ func _get_emergency_card() -> Dictionary:
 		"conditions": {},
 		"weight": 1.0,
 		"tags": []
+	}
+
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# TRIADE CARD SELECTION — 3-option cards for TRIADE gameplay
+# ═══════════════════════════════════════════════════════════════════════════════
+
+func get_next_triade_card(state: Dictionary) -> Dictionary:
+	"""Get a TRIADE card with type selection (narrative/event/promise/merlin_direct)."""
+	var run: Dictionary = state.get("run", {})
+	var cards_played: int = int(run.get("cards_played", 0))
+	var card_type: String = _pick_card_type(cards_played, run)
+
+	match card_type:
+		"event":
+			var biome_key: String = str(run.get("current_biome", ""))
+			var event_card: Dictionary = _generate_event_card(state, biome_key)
+			if not event_card.is_empty():
+				return event_card
+		"promise":
+			var biome_key: String = str(run.get("current_biome", ""))
+			var promise_card: Dictionary = _generate_promise_card(state, biome_key)
+			if not promise_card.is_empty():
+				return promise_card
+		"merlin_direct":
+			var merlin_card: Dictionary = _select_merlin_direct_card(state)
+			if not merlin_card.is_empty():
+				return merlin_card
+
+	# Default: narrative fallback
+	return _select_triade_fallback_card(state)
+
+
+func _select_triade_fallback_card(state: Dictionary) -> Dictionary:
+	"""Select a TRIADE card from fallback pool, avoiding repeats."""
+	var run: Dictionary = state.get("run", {})
+	var story_log: Array = run.get("story_log", [])
+	var recent_ids: Array = []
+	for entry in story_log.slice(-5):
+		if entry is Dictionary and entry.has("card_id"):
+			recent_ids.append(entry["card_id"])
+
+	var candidates: Array = []
+	for card in _triade_fallback_cards:
+		if recent_ids.has(card.get("id", "")):
+			continue
+		candidates.append(card)
+
+	if candidates.is_empty():
+		if not _triade_fallback_cards.is_empty():
+			return _triade_fallback_cards[randi() % _triade_fallback_cards.size()].duplicate(true)
+		return _get_emergency_triade_card()
+
+	var idx: int = randi() % candidates.size() if _rng == null else int(_rng.randf() * candidates.size()) % maxi(candidates.size(), 1)
+	return candidates[idx].duplicate(true)
+
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# CARD TYPE SELECTION — Event / Promise / Merlin Direct
+# ═══════════════════════════════════════════════════════════════════════════════
+
+func _load_event_cards() -> void:
+	"""Load event cards from JSON pool."""
+	var path := "res://data/ai/event_cards.json"
+	if not FileAccess.file_exists(path):
+		return
+	var file := FileAccess.open(path, FileAccess.READ)
+	if not file:
+		return
+	var json := JSON.new()
+	var err := json.parse(file.get_as_text())
+	file.close()
+	if err != OK:
+		return
+	var data: Dictionary = json.data if json.data is Dictionary else {}
+	for key in ["seasonal", "biome", "universal"]:
+		var arr: Array = data.get(key, [])
+		for card in arr:
+			if card is Dictionary:
+				_event_cards_pool.append(card)
+
+
+func _load_promise_cards() -> void:
+	"""Load promise cards from JSON pool."""
+	var path := "res://data/ai/promise_cards.json"
+	if not FileAccess.file_exists(path):
+		return
+	var file := FileAccess.open(path, FileAccess.READ)
+	if not file:
+		return
+	var json := JSON.new()
+	var err := json.parse(file.get_as_text())
+	file.close()
+	if err != OK:
+		return
+	var data: Dictionary = json.data if json.data is Dictionary else {}
+	var arr: Array = data.get("promises", [])
+	for card in arr:
+		if card is Dictionary:
+			_promise_cards_pool.append(card)
+
+
+func _pick_card_type(cards_played: int, run: Dictionary) -> String:
+	"""Weighted selection of card type based on distribution constants."""
+	var weights: Dictionary = MerlinConstants.CARD_TYPE_WEIGHTS
+	var min_event: int = MerlinConstants.MIN_CARDS_BEFORE_EVENT
+	var min_promise: int = MerlinConstants.MIN_CARDS_BEFORE_PROMISE
+	var max_promises: int = MerlinConstants.MAX_ACTIVE_PROMISES
+
+	# Build adjusted weights
+	var adjusted: Dictionary = {}
+	for type_key in weights:
+		adjusted[type_key] = float(weights[type_key])
+
+	# Remove event if too early or no pool
+	if cards_played < min_event or _event_cards_pool.is_empty():
+		adjusted["event"] = 0.0
+
+	# Remove promise if too early, pool empty, or max active reached
+	var active_promises: Array = run.get("active_promises", [])
+	if cards_played < min_promise or _promise_cards_pool.is_empty() or active_promises.size() >= max_promises:
+		adjusted["promise"] = 0.0
+
+	# Calculate total
+	var total: float = 0.0
+	for w in adjusted.values():
+		total += float(w)
+	if total <= 0.0:
+		return "narrative"
+
+	# Weighted roll
+	var roll: float = (_rng.randf() if _rng else randf()) * total
+	var cumulative: float = 0.0
+	for type_key in adjusted:
+		cumulative += float(adjusted[type_key])
+		if roll < cumulative:
+			return type_key
+
+	return "narrative"
+
+
+func _generate_event_card(state: Dictionary, biome_key: String) -> Dictionary:
+	"""Select an event card from pool, preferring season/biome matches."""
+	if _event_cards_pool.is_empty():
+		return {}
+
+	var run: Dictionary = state.get("run", {})
+	var story_log: Array = run.get("story_log", [])
+
+	# Get current season from Calendar singleton or fallback
+	var current_season: String = ""
+	var active_festival: String = ""
+	var calendar: Node = Engine.get_main_loop().root.get_node_or_null("Calendar") if Engine.get_main_loop() else null
+	if calendar:
+		current_season = str(calendar.get("current_season"))
+		if calendar.has_method("get_active_festival"):
+			active_festival = calendar.get_active_festival()
+
+	# Score candidates
+	var candidates: Array = []
+	for card in _event_cards_pool:
+		var cid: String = str(card.get("id", ""))
+		if _event_cards_seen.has(cid):
+			continue
+
+		var score: float = 1.0
+		# Season match bonus
+		if not current_season.is_empty() and str(card.get("season", "")) == current_season:
+			score += 3.0
+		# Festival match bonus
+		if not active_festival.is_empty() and str(card.get("festival", "")) == active_festival:
+			score += 5.0
+		# Biome match bonus
+		if not biome_key.is_empty() and str(card.get("biome", "")) == biome_key:
+			score += 4.0
+
+		candidates.append({"card": card, "score": score})
+
+	if candidates.is_empty():
+		# Reset seen list if pool exhausted
+		_event_cards_seen.clear()
+		return {}
+
+	# Weighted selection by score
+	var total_score: float = 0.0
+	for c in candidates:
+		total_score += float(c["score"])
+
+	var roll: float = (_rng.randf() if _rng else randf()) * total_score
+	var cumul: float = 0.0
+	for c in candidates:
+		cumul += float(c["score"])
+		if roll < cumul:
+			var selected: Dictionary = c["card"].duplicate(true)
+			_event_cards_seen.append(str(selected.get("id", "")))
+			return selected
+
+	var fallback: Dictionary = candidates[-1]["card"].duplicate(true)
+	_event_cards_seen.append(str(fallback.get("id", "")))
+	return fallback
+
+
+func _generate_promise_card(state: Dictionary, biome_key: String) -> Dictionary:
+	"""Select a promise card, max 2 active, skip already-taken promises."""
+	if _promise_cards_pool.is_empty():
+		return {}
+
+	var run: Dictionary = state.get("run", {})
+	var active_promises: Array = run.get("active_promises", [])
+	if active_promises.size() >= MerlinConstants.MAX_ACTIVE_PROMISES:
+		return {}
+
+	# Collect active promise IDs
+	var active_ids: Array = []
+	for p in active_promises:
+		if p is Dictionary:
+			active_ids.append(str(p.get("promise_id", "")))
+
+	# Filter candidates
+	var candidates: Array = []
+	for card in _promise_cards_pool:
+		var pid: String = str(card.get("promise_id", ""))
+		if active_ids.has(pid) or _promise_ids_taken.has(pid):
+			continue
+		candidates.append(card)
+
+	if candidates.is_empty():
+		_promise_ids_taken.clear()
+		return {}
+
+	# Random selection
+	var idx: int = (_rng.randi() if _rng else randi()) % candidates.size()
+	var selected: Dictionary = candidates[idx].duplicate(true)
+	_promise_ids_taken.append(str(selected.get("promise_id", "")))
+	return selected
+
+
+func _select_merlin_direct_card(state: Dictionary) -> Dictionary:
+	"""Select a merlin_direct card from the TRIADE fallback pool."""
+	var candidates: Array = []
+	for card in _triade_fallback_cards:
+		if str(card.get("type", "")) == "merlin_direct":
+			candidates.append(card)
+	if candidates.is_empty():
+		return {}
+	var idx: int = (_rng.randi() if _rng else randi()) % candidates.size()
+	return candidates[idx].duplicate(true)
+
+
+func _get_emergency_triade_card() -> Dictionary:
+	"""Minimal TRIADE card when everything else fails."""
+	return {
+		"id": "emergency_triade_001",
+		"type": "narrative",
+		"text": "Le vent murmure entre les pierres. Le chemin se divise.",
+		"speaker": "merlin",
+		"options": [
+			{"label": "Gauche", "effects": [{"type": "SHIFT_ASPECT", "aspect": "Corps", "direction": "down"}]},
+			{"label": "Mediter", "cost": 1, "effects": []},
+			{"label": "Droite", "effects": [{"type": "SHIFT_ASPECT", "aspect": "Monde", "direction": "up"}]},
+		],
+		"tags": ["emergency"],
 	}
 
 

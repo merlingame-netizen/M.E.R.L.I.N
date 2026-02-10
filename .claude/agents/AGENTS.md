@@ -1,13 +1,24 @@
-# DRU Agent Team — Multi-Agent Architecture
+# M.E.R.L.I.N. Agent Team — Multi-Agent Architecture
 
 ## Overview
 
-This document defines the team of specialized Claude Code agents for the DRU project.
-Each agent has a specific role, expertise, and responsibilities.
+This document defines the team of specialized Claude Code agents for the M.E.R.L.I.N. project.
+**29 agents + 1 knowledge base** organized by domain.
 
 ## Usage with Claude Code
 
-To invoke a specialized agent, use the Task tool with the agent's prompt:
+**STEP 0 — TOUJOURS invoquer le Task Dispatcher EN PREMIER:**
+
+```
+Task tool:
+- subagent_type: "general-purpose"
+- model: "haiku"
+- prompt: Read .claude/agents/task_dispatcher.md and analyze this task: [DESCRIPTION]
+```
+
+Le dispatcher retourne la sequence exacte d'agents a invoquer. Suivre le plan.
+
+**Pour invoquer un agent individuel:**
 
 ```
 Task tool:
@@ -19,36 +30,46 @@ Task tool:
 
 ## Agent Roster
 
-### Core Technical Agents
+### Orchestration
+
+| Role | File | Specialty |
+|------|------|-----------|
+| **Task Dispatcher** | `task_dispatcher.md` | **Classification de tache, dispatch automatique, sequence d'agents** |
+
+> Le dispatcher est le point d'entree OBLIGATOIRE. Il classifie la tache,
+> mappe vers les agents requis, determine l'ordre d'execution, et ajoute
+> les agents auto-actives (debug_qa, optimizer, git_commit).
+
+### Core Technical Agents (6)
 
 | Role | File | Specialty |
 |------|------|-----------|
 | Lead Godot | `lead_godot.md` | Architecture, conventions, code review |
 | **Godot Expert** | `godot_expert.md` | **Performance, GDExtension, memory optimization** |
-| **LLM Expert** | `llm_expert.md` | **Prompt engineering, latency, output parsing** |
-| Debug/QA | `debug_qa.md` | Testing, bug reproduction, fixes, **lessons learned** |
+| **LLM Expert** | `llm_expert.md` | **Prompt engineering, RAG, guardrails, Multi-Brain, GBNF** |
+| Debug/QA | `debug_qa.md` | Testing, bug reproduction, fixes, **GUT framework, lessons learned** |
 | **Optimizer** | `optimizer.md` | **GDScript best practices, code scanning, optimization** |
 | **Shader Specialist** | `shader_specialist.md` | **GLSL, post-processing, VFX shaders** |
 
-### UI/UX & Animation Agents
+### UI/UX & Animation Agents (4)
 
 | Role | File | Specialty |
 |------|------|-----------|
 | UI Implementation | `ui_impl.md` | Control layouts, themes, shaders |
-| UX Research | `ux_research.md` | Usability, playtesting, iterations |
+| UX Research | `ux_research.md` | Usability, **WCAG 2.1, playtesting, journey mapping** |
 | **Motion Designer** | `motion_designer.md` | **Tweens, particles, easing, micro-interactions** |
-| **Mobile/Touch Expert** | `mobile_touch_expert.md` | **Touch gestures, responsive UI, mobile perf** |
+| **Mobile/Touch Expert** | `mobile_touch_expert.md` | **Touch gestures, haptic feedback, device quirks, battery** |
 
-### Content & Creative Agents
+### Content & Creative Agents (4)
 
 | Role | File | Specialty |
 |------|------|-----------|
-| Game Designer | `game_designer.md` | Rules, balancing, progression |
-| Narrative Writer | `narrative_writer.md` | Card text, tone, story coherence |
-| Art Direction | `art_direction.md` | Visual style, assets, consistency |
-| Audio Designer | `audio_designer.md` | SFX, music, ambiance |
+| Game Designer | `game_designer.md` | Rules, **data-driven balancing, economy, synergies** |
+| Narrative Writer | `narrative_writer.md` | Card text, **QA narrative, prompt writing, Triade templates** |
+| Art Direction | `art_direction.md` | **Pixel art pipeline, shaders, procedural landscapes** |
+| Audio Designer | `audio_designer.md` | **SFXManager procedural, adaptive music, accessibility** |
 
-### Lore & World-Building Agents
+### Lore & World-Building Agents (3)
 
 | Role | File | Specialty |
 |------|------|-----------|
@@ -56,21 +77,41 @@ Task tool:
 | **Lore Writer** | `lore_writer.md` | **Deep mythology, hidden narratives, apocalyptic truth** |
 | **Historien Bretagne** | `historien_bretagne.md` | **Celtic/Breton history, mythology research, authenticity** |
 
-### Operations & Documentation Agents
+### Operations & Documentation Agents (4)
 
 | Role | File | Specialty |
 |------|------|-----------|
-| Producer | `producer.md` | Priorities, milestones, coordination |
+| Producer | `producer.md` | Priorities, **release management, risk register, retrospectives** |
 | Localisation | `localisation.md` | Multi-language, translation |
-| **Technical Writer** | `technical_writer.md` | **Docstrings, API docs, tutorials** |
-| **Data Analyst** | `data_analyst.md` | **Game analytics, A/B testing, balance metrics** |
+| **Technical Writer** | `technical_writer.md` | **Docstrings, API docs, player docs, tutorials, onboarding** |
+| **Data Analyst** | `data_analyst.md` | **RGPD, visualization, cohort analysis, predictive analytics** |
 
-### Project Management Agents
+### Project Management Agents (2)
 
 | Role | File | Specialty |
 |------|------|-----------|
-| **Git Commit** | `git_commit.md` | **Auto-commit, message formatting, change grouping** |
+| **Git Commit** | `git_commit.md` | **Conventional commits, branch strategy, changelog, tags** |
 | **Project Curator** | `project_curator.md` | **Inventory, cleanup, orphan detection, .gitignore** |
+
+### Security & Quality Agents (3) — NEW
+
+| Role | File | Specialty |
+|------|------|-----------|
+| **Accessibility Specialist** | `accessibility_specialist.md` | **WCAG 2.1 AA/AAA, CVD modes, keyboard nav, screen readers** |
+| **Security Hardening** | `security_hardening.md` | **Save encryption, LLM sanitization, RGPD, anti-tampering** |
+| **Prompt Curator** | `prompt_curator.md` | **Golden dataset, anti-hallucination Celtic, prompt versioning** |
+
+### Progression & Economy Agents (1) — NEW
+
+| Role | File | Specialty |
+|------|------|-----------|
+| **Meta-Progression Designer** | `meta_progression_designer.md` | **Talent Tree, Essences economy, Bestiole, unlock pacing, synergies** |
+
+### CI/CD & Release Agents (1) — NEW
+
+| Role | File | Specialty |
+|------|------|-----------|
+| **CI/CD Release** | `ci_cd_release.md` | **GitHub Actions, multi-platform export, Steam, mobile stores** |
 
 ### Shared Resources
 
@@ -80,19 +121,58 @@ Task tool:
 
 ---
 
-## Workflow
-
-### Standard Task Flow
+## Summary Count
 
 ```
-1. Producer assigns task with priority
-2. Game Designer validates design intent
-3. Relevant implementation agent executes
-4. Debug/QA tests the result
-5. Lead Godot reviews and approves
+Total: 29 agents + 1 knowledge base
+
+By category:
+  Orchestration:              1 (task_dispatcher)
+  Core Technical:             6 (lead_godot, godot_expert, llm_expert, debug_qa, optimizer, shader_specialist)
+  UI/UX & Animation:          4 (ui_impl, ux_research, motion_designer, mobile_touch_expert)
+  Content & Creative:         4 (game_designer, narrative_writer, art_direction, audio_designer)
+  Lore & World-Building:      3 (merlin_guardian, lore_writer, historien_bretagne)
+  Operations & Documentation: 4 (producer, localisation, technical_writer, data_analyst)
+  Project Management:         2 (git_commit, project_curator)
+  Security & Quality:         3 (accessibility_specialist, security_hardening, prompt_curator)
+  Progression & Economy:      1 (meta_progression_designer)
+  CI/CD & Release:            1 (ci_cd_release)
+  Knowledge Base:             1 (gdscript_knowledge_base)
 ```
 
-### Cross-Functional Reviews
+---
+
+## Workflow — DISPATCH FIRST
+
+### Flux Standard (avec Dispatcher)
+
+```
+1. DISPATCHER analyse la tache → retourne plan d'agents
+2. Suivre le plan: agents de planning EN PREMIER
+3. Agents d'implementation AU MILIEU
+4. Agents de validation (debug_qa, optimizer) APRES
+5. git_commit EN DERNIER
+```
+
+### Invocation du Dispatcher
+
+```
+Task tool:
+  subagent_type: "general-purpose"
+  model: "haiku"
+  prompt: "Read .claude/agents/task_dispatcher.md and analyze this task: [DESCRIPTION]"
+```
+
+Le dispatcher retourne un plan structure avec:
+- Types de tache identifies (multi-label)
+- Agents requis avec ordre d'execution
+- Hints de parallelisation
+- Agents auto-actives appliques
+- Fichiers impactes estimes
+
+---
+
+## Cross-Functional Reviews
 
 | Change Type | Required Review |
 |-------------|-----------------|
@@ -100,7 +180,7 @@ Task tool:
 | Performance issues | **Godot Expert**, **Optimizer** |
 | LLM integration | **LLM Expert**, Godot Expert |
 | UI/UX changes | UI Impl, UX Research |
-| Card content | Narrative, Game Designer |
+| Card content | Narrative, Game Designer, **Merlin Guardian** |
 | Visual assets | Art Direction |
 | Audio changes | Audio Designer |
 | Doc changes | Producer, **Technical Writer** |
@@ -108,11 +188,16 @@ Task tool:
 | **Animations/Tweens** | **Motion Designer**, UI Impl |
 | **Touch/Mobile input** | **Mobile/Touch Expert**, UX Research |
 | **Game balance data** | **Data Analyst**, Game Designer |
+| **Lore/Mythology** | **Merlin Guardian**, **Lore Writer** |
 | **Correction learned** | **Debug/QA**, **Optimizer** |
 | **Best practice found** | **Optimizer**, Debug/QA |
 | **Phase completed** | **Git Commit** |
 | **Project cleanup** | **Project Curator** |
-| **Orphan files** | **Project Curator**, Lead Godot |
+| **Accessibility** | **Accessibility Specialist**, UX Research |
+| **Security/Privacy** | **Security Hardening**, Data Analyst |
+| **LLM content quality** | **Prompt Curator**, LLM Expert |
+| **Meta-progression** | **Meta-Progression Designer**, Game Designer |
+| **Build/Release** | **CI/CD Release**, Producer |
 
 ---
 
@@ -147,42 +232,72 @@ When an agent completes work and needs handoff:
 
 ---
 
+## Auto-Activation Matrix
+
+| Agent | Declencheur | Action |
+|-------|------------|--------|
+| **task_dispatcher.md** | Toute tache non-triviale | Classifie et dispatch — INVOQUE EN PREMIER |
+| `debug_qa.md` | Correction GDScript apprise | Documente dans gdscript_knowledge_base.md |
+| `optimizer.md` | Bonne pratique decouverte ou nouveau code GDScript | Scanner et appliquer |
+| `git_commit.md` | Phase complete, 3+ fichiers modifies | Commit conventionnel auto |
+| `project_curator.md` | "inventaire", "nettoie", "range" | Rapport + nettoyage |
+
+---
+
 ## Quick Reference Commands
 
 ```bash
+# STEP 0 — DISPATCH (TOUJOURS EN PREMIER)
+claude "Use Task with general-purpose agent (haiku) to read .claude/agents/task_dispatcher.md and analyze: [TASK]"
+
 # Invoke Lead Godot for architecture review
-claude "Use Task with general-purpose agent to read .claude/agents/lead_godot.md and review the dru_store.gd architecture"
+claude "Use Task to read .claude/agents/lead_godot.md and review the merlin_store.gd architecture"
 
 # Invoke QA for testing
-claude "Use Task with general-purpose agent to read .claude/agents/debug_qa.md and test the ReignsGame scene"
+claude "Use Task to read .claude/agents/debug_qa.md and test the TriadeGame scene"
 
 # Invoke Narrative Writer for card content
-claude "Use Task with general-purpose agent to read .claude/agents/narrative_writer.md and write 10 new fallback cards"
+claude "Use Task to read .claude/agents/narrative_writer.md and write 10 new fallback cards"
 
 # Invoke Motion Designer for animation polish
-claude "Use Task with general-purpose agent to read .claude/agents/motion_designer.md and add entry animations to the menu"
+claude "Use Task to read .claude/agents/motion_designer.md and add entry animations to the menu"
 
 # Invoke Shader Specialist for visual effects
-claude "Use Task with general-purpose agent to read .claude/agents/shader_specialist.md and create a CRT scanline effect"
+claude "Use Task to read .claude/agents/shader_specialist.md and create a CRT scanline effect"
 
 # Invoke Mobile Expert for touch optimization
-claude "Use Task with general-purpose agent to read .claude/agents/mobile_touch_expert.md and improve card swipe gesture"
+claude "Use Task to read .claude/agents/mobile_touch_expert.md and improve card swipe gesture"
 
 # Invoke Data Analyst for balance review
-claude "Use Task with general-purpose agent to read .claude/agents/data_analyst.md and analyze gauge ending distribution"
+claude "Use Task to read .claude/agents/data_analyst.md and analyze aspect ending distribution"
 
 # Invoke Technical Writer for documentation
-claude "Use Task with general-purpose agent to read .claude/agents/technical_writer.md and document the DruStore API"
+claude "Use Task to read .claude/agents/technical_writer.md and document the MerlinStore API"
 
 # Invoke Optimizer for best practices scan
-claude "Use Task with general-purpose agent to read .claude/agents/optimizer.md and scan scripts/dru/ for optimization opportunities"
+claude "Use Task to read .claude/agents/optimizer.md and scan scripts/merlin/ for optimization"
 
 # Invoke Debug with knowledge base update
-claude "Use Task with general-purpose agent to read .claude/agents/debug_qa.md and document the correction in gdscript_knowledge_base.md"
+claude "Use Task to read .claude/agents/debug_qa.md and document the correction in gdscript_knowledge_base.md"
+
+# NEW — Invoke Accessibility Specialist
+claude "Use Task to read .claude/agents/accessibility_specialist.md and audit the TriadeGame UI"
+
+# NEW — Invoke Security Hardening
+claude "Use Task to read .claude/agents/security_hardening.md and review save system encryption"
+
+# NEW — Invoke Prompt Curator
+claude "Use Task to read .claude/agents/prompt_curator.md and evaluate golden dataset coverage"
+
+# NEW — Invoke Meta-Progression Designer
+claude "Use Task to read .claude/agents/meta_progression_designer.md and balance Talent Tree costs"
+
+# NEW — Invoke CI/CD Release
+claude "Use Task to read .claude/agents/ci_cd_release.md and setup GitHub Actions pipeline"
 ```
 
 ---
 
 *Created: 2026-02-06*
-*Updated: 2026-02-08 — Added Optimizer agent + Knowledge Base (total: 23 agents + 1 shared resource)*
-*Project: DRU - Le Jeu des Oghams*
+*Updated: 2026-02-09 — 29 agents + 1 knowledge base (5 new: accessibility, ci_cd, security, prompt_curator, meta_progression)*
+*Project: M.E.R.L.I.N. — Le Jeu des Oghams*

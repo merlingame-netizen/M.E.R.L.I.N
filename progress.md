@@ -2,6 +2,91 @@
 
 > **Note**: Sessions anterieures archivees dans `archive/progress_archive_2026-02-05_to_2026-02-08.md`
 
+## Session: 2026-02-10 (Phase 37 — Stabilisation + Fusion Triade/BrainPool + LLM Rencontre + Nettoyage)
+
+### Phase 37: Stabilisation + Fusion Triade/BrainPool + LLM Rencontre + Nettoyage
+- **Status:** complete
+- **Plan:** `.claude/plans/swift-dancing-crane.md`
+- **Agents:** Plan (architecture), Explore (codebase audit)
+
+#### T1: Fix HubAntre parse error (line 2056)
+- `:=` avec `instantiate()` remplace par type explicite `var map_instance: Control`
+
+#### T2: Fix Triade crash complet
+- Root cause: chaine async non-protegee `_async_card_dispatch()` → `store.dispatch(TRIADE_GET_CARD)` → `merlin.generate_card()`
+- **triade_game_controller.gd**: null guards complets, trace logging, emergency fallback card
+- **triade_game_ui.gd**: `is_instance_valid()` sur show_thinking/hide_thinking/display_card/show_narrator_intro
+- **merlin_store.gd**: null checks TRIADE_GET_CARD handler (merlin, llm, card result)
+- **merlin_omniscient.gd**: `_emergency_card()`, `_safe_fallback()`, null checks generate_card
+
+#### T6: Warnings cleanup
+- `merlin_map_system.gd`: `config` → `_config` (unused param)
+- `merlin_effect_engine.gd`: `var story_log = ...` → `var story_log: Array = ...`
+
+#### T3a-T3l: Fusion Triade ← TestBrainPool (MAJEUR)
+- **triade_game_controller.gd** — v0.4.0 → v1.0.0 (~350 lignes ajoutees):
+  - D20 Dice system: DC 6/10/14, 4 outcomes (crit success/success/failure/crit failure)
+  - 15 minijeux branches via MiniGameRegistry (70% chance, 100% critique)
+  - Critical choice system (karma extreme, 2+ extreme aspects, 15% random)
+  - Flux system branche: `TRIADE_UPDATE_FLUX` dispatch apres chaque choix
+  - Talents branches: shields Corps/Monde, free center, -30% negatifs, equilibre bonus
+  - Biome passives branches: trigger every N cards
+  - Karma (-1 left, +1 right, ±2 crits) + Blessings (absorbe game over)
+  - Adaptive difficulty: pity (3 echecs → DC-4), challenge (3 succes → DC+2)
+  - Run rewards: essences, fragments, liens, gloire en fin de run
+  - 16 templates reactions narratives (4 outcomes × 4 messages)
+  - Travel fog animation entre cartes
+  - RAG context file (5 derniers choix+resultats)
+  - SFX choreographie complète
+- **triade_game_ui.gd** — ~250 lignes ajoutees:
+  - `show_dice_roll()` — animation D20 2.2s deceleration + bounce elastique
+  - `show_dice_instant()` — affichage apres minijeu
+  - `show_dice_result()` — texte + couleur outcome
+  - `show_travel_animation()` — full-screen fog overlay
+  - `show_reaction_text()` — reaction narrative
+  - `show_critical_badge()` — bordure doree pulsante
+  - `show_biome_passive()` — notification biome
+  - `animate_card_outcome()` — shake/pulse par outcome
+
+#### Store gaps fixes
+- **merlin_store.gd**: Ajout action `TRIADE_UPDATE_FLUX` (delta dict → clampi flux axes)
+- **merlin_store.gd**: `_resolve_triade_choice()` accepte `modulated_effects` optionnel — evite double application effets/souffle
+- **triade_game_controller.gd**: `are_all_aspects_balanced()` → `is_all_aspects_balanced()` (nom correct du store)
+
+#### T3m + T5: Archive scenes inutiles
+- Deplace vers `archive/`: TestBrainPool, TestLLMSceneUltimate, TestLLMBenchmark, GameMain (.tscn + .gd + .uid)
+- SceneSelector.gd: retire 4 entrees (GameMain, TestLLMSceneUltimate, LLM Benchmark, TestBrainPool)
+- MenuPrincipalReigns.gd: retire "Test Brain Pool" du menu
+
+#### T4: SceneRencontreMerlin — LLM dynamique
+- `_llm_rephrase(text, emotion)` — reformulation par `generate_voice()`, timeout 5s, fallback original
+- `_llm_generate_responses(context, index)` — 3 reponses joueur par `generate_narrative()`, parse JSON, timeout 8s
+- Phase 1 (Eveil): chaque ligne rephrased + reponses LLM aux moments interactifs
+- Phase 2 (Bestiole): chaque ligne rephrased
+- Phase 5 (Mission): chaque ligne rephrased
+- Prefetch: `_prefetch_rephrase()` lance la ligne suivante pendant l'affichage courante
+
+#### Validation finale: 63 fichiers GDScript, 0 erreur statique, GDExtension OK
+
+#### Fichiers modifies (8)
+| Fichier | Taches |
+|---------|--------|
+| `scripts/HubAntre.gd` | T1 |
+| `scripts/ui/triade_game_controller.gd` | T2, T3a-l, store gaps |
+| `scripts/ui/triade_game_ui.gd` | T2, T3a-l |
+| `scripts/merlin/merlin_store.gd` | T2, TRIADE_UPDATE_FLUX, modulated_effects |
+| `addons/merlin_ai/merlin_omniscient.gd` | T2 |
+| `scripts/merlin/merlin_map_system.gd` | T6 |
+| `scripts/merlin/merlin_effect_engine.gd` | T6 |
+| `scripts/SceneRencontreMerlin.gd` | T4 |
+| `scripts/autoload/SceneSelector.gd` | T5 |
+| `scripts/MenuPrincipalReigns.gd` | T5 |
+
+#### Boucle gameplay attendue
+`HubAntre → TransitionBiome → TriadeGame → [D20/Minijeux/Flux/Talents/Rewards] → HubAntre`
+
+---
+
 ## Session: 2026-02-09 (Phase 36 — Meta-Progression + Arbre de Vie + Flux)
 
 ### Phase 36: Meta-Progression + Arbre de Vie + Balance des Flux

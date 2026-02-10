@@ -33,6 +33,8 @@ private:
 	float top_p = 0.9f;
 	int32_t top_k = 50;  // Nouveau: diversité sampling
 	float repetition_penalty = 1.1f;  // Nouveau: anti-répétition
+	std::string grammar_str;  // GBNF grammar for constrained decoding
+	std::string grammar_root = "root";  // Grammar root rule name
 
 protected:
 	static void _bind_methods();
@@ -48,6 +50,8 @@ public:
 	void cancel_generation();
 	void set_sampling_params(double p_temperature, double p_top_p, int32_t p_max_tokens);
 	void set_advanced_sampling(int32_t p_top_k, double p_repetition_penalty);
+	void set_grammar(godot::String p_grammar, godot::String p_root = "root");
+	void clear_grammar();
 
 private:
 	void _emit_result();

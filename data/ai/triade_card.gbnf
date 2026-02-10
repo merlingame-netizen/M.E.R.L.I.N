@@ -1,0 +1,31 @@
+# GBNF Grammar for TRIADE Card JSON — M.E.R.L.I.N. Phase 30
+# Forces LLM to produce valid JSON matching the card schema.
+# Aspects constrained: Corps, Ame, Monde
+# Direction constrained: up, down
+# Exactly 3 options: left, center (with cost), right
+
+root ::= ws "{" ws text-kv "," ws speaker-kv "," ws options-kv ws "}" ws
+
+text-kv    ::= "\"text\"" ws ":" ws string
+speaker-kv ::= "\"speaker\"" ws ":" ws "\"merlin\""
+options-kv ::= "\"options\"" ws ":" ws "[" ws option "," ws option-center "," ws option ws "]"
+
+option        ::= "{" ws label-kv "," ws effects-kv ws "}"
+option-center ::= "{" ws label-kv "," ws cost-kv "," ws effects-kv ws "}"
+
+label-kv   ::= "\"label\"" ws ":" ws string
+cost-kv    ::= "\"cost\"" ws ":" ws [1-3]
+effects-kv ::= "\"effects\"" ws ":" ws "[" ws effect ws "]"
+
+effect       ::= "{" ws type-kv "," ws aspect-kv "," ws direction-kv ws "}"
+type-kv      ::= "\"type\"" ws ":" ws "\"SHIFT_ASPECT\""
+aspect-kv    ::= "\"aspect\"" ws ":" ws aspect
+direction-kv ::= "\"direction\"" ws ":" ws direction
+
+aspect    ::= "\"Corps\"" | "\"Ame\"" | "\"Monde\""
+direction ::= "\"up\"" | "\"down\""
+
+# String: allows any printable character except unescaped quotes/backslashes
+string ::= "\"" char* "\""
+char   ::= [^"\\\x00-\x1f] | "\\" ["\\/bfnrt]
+ws     ::= [ \t\n]*

@@ -1,0 +1,91 @@
+{
+	"triade": {
+		"souffle_max": 7,
+		"souffle_start": 3,
+		"souffle_regen_all_balanced": 1,
+		"extreme_count_for_chute": 2,
+		"mission_steps_total": 5
+	},
+	"card_distribution": {
+		"narrative": 0.80,
+		"event": 0.10,
+		"promise": 0.05,
+		"merlin_direct": 0.05
+	},
+	"card_rules": {
+		"min_cards_before_event": 3,
+		"min_cards_before_promise": 5,
+		"max_active_promises": 2
+	},
+	"biomes": {
+		"foret_broceliande": {
+			"aspect_bias": {"Corps": 1.2, "Ame": 1.0, "Monde": 0.8},
+			"passive": {"every_n": 5, "aspect": "Ame", "direction": "up"},
+			"difficulty": 0
+		},
+		"landes_bruyere": {
+			"aspect_bias": {"Corps": 0.8, "Ame": 1.2, "Monde": 1.0},
+			"passive": {"every_n": 6, "aspect": "Corps", "direction": "down"},
+			"difficulty": 1
+		},
+		"cotes_sauvages": {
+			"aspect_bias": {"Corps": 1.0, "Ame": 0.8, "Monde": 1.2},
+			"passive": {"every_n": 5, "aspect": "Monde", "direction": "up"},
+			"difficulty": 0
+		},
+		"villages_celtes": {
+			"aspect_bias": {"Corps": 0.8, "Ame": 1.0, "Monde": 1.2},
+			"passive": {"every_n": 4, "aspect": "Monde", "direction": "up"},
+			"difficulty": -1
+		},
+		"cercles_pierres": {
+			"aspect_bias": {"Corps": 1.0, "Ame": 1.4, "Monde": 0.8},
+			"passive": {"every_n": 4, "aspect": "Ame", "direction": "up"},
+			"difficulty": 1
+		},
+		"marais_korrigans": {
+			"aspect_bias": {"Corps": 1.2, "Ame": 1.0, "Monde": 0.8},
+			"passive": {"every_n": 5, "aspect": "Corps", "direction": "down"},
+			"difficulty": 2
+		},
+		"collines_dolmens": {
+			"aspect_bias": {"Corps": 1.0, "Ame": 1.0, "Monde": 1.0},
+			"passive": {"every_n": 7, "aspect": "random", "direction": "random"},
+			"difficulty": 0
+		}
+	},
+	"map": {
+		"default_floors": 8,
+		"min_floors": 3,
+		"node_types": {
+			"NARRATIVE": {"weight": 0.40, "cards_min": 2, "cards_max": 4},
+			"EVENT": {"weight": 0.15, "cards_min": 1, "cards_max": 2},
+			"PROMISE": {"weight": 0.08, "cards_min": 1, "cards_max": 1},
+			"REST": {"weight": 0.12, "cards_min": 0, "cards_max": 0},
+			"MERCHANT": {"weight": 0.08, "cards_min": 0, "cards_max": 0},
+			"MYSTERY": {"weight": 0.10, "cards_min": 1, "cards_max": 3},
+			"MERLIN": {"weight": 0.07, "cards_min": 3, "cards_max": 5}
+		},
+		"max_connections_per_node": 3,
+		"extra_connection_chance": 0.45
+	},
+	"promises": {
+		"broken_karma": -15,
+		"broken_tension": 10,
+		"max_active": 2
+	},
+	"difficulty_scaling": {
+		"base_card_danger": 0.3,
+		"per_floor_increase": 0.05,
+		"biome_difficulty_weight": 0.1
+	},
+	"rest_node": {
+		"souffle_gain": 1,
+		"aspect_balance_threshold": 0
+	},
+	"merchant_node": {
+		"offers_count": 3,
+		"essences_per_souffle": 15,
+		"essences_per_ogham_unlock": 30
+	}
+}

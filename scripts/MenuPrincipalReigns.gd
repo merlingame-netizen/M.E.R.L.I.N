@@ -33,12 +33,10 @@ const PALETTE := {
 }
 
 const TITLE_TEXT := "M  E  R  L  I  N"
-const SUBTITLE_TEXT := "Le Dernier Druide"
 
 const MAIN_MENU_ITEMS := [
 	{"text": "Nouvelle Partie", "scene": "res://scenes/IntroPersonalityQuiz.tscn"},
 	{"text": "Continuer", "scene": "res://scenes/SelectionSauvegarde.tscn"},
-	{"text": "Test Voix & LLM", "scene": "__voice_llm_test__"},
 	{"text": "Options", "scene": "res://scenes/MenuOptions.tscn"},
 	{"text": "Quitter", "scene": "__quit__"},
 ]
@@ -80,7 +78,6 @@ var card: PanelContainer
 var card_contents: VBoxContainer
 var main_buttons: VBoxContainer
 var title_label: Label
-var subtitle_label: Label
 var separator_line: ColorRect
 
 # Corner buttons
@@ -115,14 +112,12 @@ var _voice_pitch_value: Label
 var _voice_variation_value: Label
 var _voice_speed_value: Label
 
-# Audio
-var _sfx_player: AudioStreamPlayer
+# Particle landing sound counter (avoid audio spam)
+var _particle_land_count: int = 0
 
-const UI_SOUNDS := {
-	"hover": "res://audio/sfx/ui/ui_hover.ogg",
-	"click": "res://audio/sfx/ui/ui_click.ogg",
-	"whoosh": "res://audio/sfx/ui/card_swipe.ogg",
-}
+# Custom cursor
+var _custom_cursor: Control
+
 
 # Season for atmosphere
 var current_season := "HIVER"
@@ -212,7 +207,6 @@ func _ready() -> void:
 	_load_calendar_settings()
 	_determine_season()
 	_load_fonts()
-	_setup_audio()
 	_build_parchment_background()
 	_build_mist_layer()
 	_build_celtic_ornaments()
@@ -222,6 +216,7 @@ func _ready() -> void:
 	_apply_theme()
 	_build_time_tint_layer()
 	_build_seasonal_effects()
+	_build_custom_cursor()
 	_layout_ui()
 	resized.connect(_on_resized)
 	_play_entry_animation.call_deferred()
@@ -282,12 +277,6 @@ func _load_font(path: String) -> Font:
 	return ThemeDB.fallback_font
 
 
-func _setup_audio() -> void:
-	_sfx_player = AudioStreamPlayer.new()
-	_sfx_player.bus = "SFX"
-	_sfx_player.volume_db = -10.0
-	add_child(_sfx_player)
-
 
 # =============================================================================
 # FOND PARCHEMIN MYSTIQUE
@@ -344,8 +333,6 @@ func _start_mist_animation() -> void:
 # =============================================================================
 
 func _build_celtic_ornaments() -> void:
-	var viewport_size := get_viewport().get_visible_rect().size
-
 	# Ornement haut - ligne décorative celtique
 	celtic_ornament_top = Label.new()
 	celtic_ornament_top.text = _create_celtic_line(40)
@@ -476,14 +463,6 @@ func _build_ui() -> void:
 	title_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	title_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	card_contents.add_child(title_label)
-
-	# Sous-titre poétique
-	subtitle_label = Label.new()
-	subtitle_label.name = "Subtitle"
-	subtitle_label.text = SUBTITLE_TEXT
-	subtitle_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	subtitle_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-	card_contents.add_child(subtitle_label)
 
 	# Séparateur élégant avec motif central
 	var separator_container := HBoxContainer.new()
@@ -621,12 +600,6 @@ func _apply_theme() -> void:
 		title_label.add_theme_font_size_override("font_size", 52)
 		title_label.add_theme_color_override("font_color", PALETTE.ink)
 
-	# Style sous-titre
-	if subtitle_label and body_font:
-		subtitle_label.add_theme_font_override("font", body_font)
-		subtitle_label.add_theme_font_size_override("font_size", 16)
-		subtitle_label.add_theme_color_override("font_color", PALETTE.ink_soft)
-
 	# Style boutons menu
 	for btn in main_buttons.get_children():
 		if btn is Button and body_font:
@@ -651,6 +624,20 @@ func _apply_corner_button_style(btn: Button) -> void:
 
 
 # =============================================================================
+# CUSTOM CURSOR
+# =============================================================================
+
+func _build_custom_cursor() -> void:
+	var cursor_script: GDScript = load("res://scripts/ui/custom_cursor.gd")
+	if not cursor_script:
+		return
+	_custom_cursor = Control.new()
+	_custom_cursor.set_script(cursor_script)
+	_custom_cursor.set_palette(PALETTE.ink, PALETTE.ink_soft)
+	add_child(_custom_cursor)
+
+
+# =============================================================================
 # ANIMATIONS
 # =============================================================================
 
@@ -658,7 +645,9 @@ func _play_entry_animation() -> void:
 	if not card:
 		return
 
-	var viewport_size := get_viewport().get_visible_rect().size
+	var sfx := get_node_or_null("/root/SFXManager")
+	if sfx:
+		sfx.play("scene_transition")
 
 	# État initial: carte invisible, légèrement en bas
 	card.position.y = card_target_pos.y + 40
@@ -693,11 +682,16 @@ func _play_entry_animation() -> void:
 
 
 func _animate_buttons_entry() -> void:
+	var sfx := get_node_or_null("/root/SFXManager")
 	var delay := 0.0
 	for btn in main_buttons.get_children():
 		if btn is Button:
 			var tween := create_tween().set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_OUT)
 			tween.tween_interval(delay)
+			tween.tween_callback(func():
+				if sfx and sfx.has_method("play_varied"):
+					sfx.play_varied("button_appear", 0.15)
+			)
 			tween.tween_property(btn, "modulate:a", 1.0, 0.3)
 			delay += 0.05
 
@@ -842,14 +836,9 @@ func _play_swipe(dir: float) -> void:
 
 
 func _play_ui_sound(sound_name: String) -> void:
-	if not UI_SOUNDS.has(sound_name):
-		return
-	var path: String = UI_SOUNDS[sound_name]
-	if ResourceLoader.exists(path):
-		var stream = load(path)
-		if stream:
-			_sfx_player.stream = stream
-			_sfx_player.play()
+	var sfx := get_node_or_null("/root/SFXManager")
+	if sfx:
+		sfx.play(sound_name)
 
 
 func _on_resized() -> void:
@@ -959,6 +948,11 @@ func _process_falling_particles(delta: float) -> void:
 		var surface_y: float = viewport_size.y - _accum_grid[col]
 		if node.position.y >= surface_y:
 			# Land! grow accumulation
+			_particle_land_count += 1
+			if _particle_land_count % 10 == 0:
+				var sfx := get_node_or_null("/root/SFXManager")
+				if sfx and sfx.has_method("play_varied"):
+					sfx.play_varied("pixel_land", 0.2)
 			_accum_grid[col] = minf(_accum_grid[col] + cfg.accum_grow, ACCUM_MAX_HEIGHT)
 			# Spread a tiny bit to neighbors for natural mound shape
 			if col > 0:
@@ -1097,7 +1091,9 @@ func _on_accum_clicked(event: InputEvent, col: int) -> void:
 	if _accum_grid[col] < 2.0:
 		return  # nothing to destroy
 
-	_play_ui_sound("click")
+	var sfx := get_node_or_null("/root/SFXManager")
+	if sfx:
+		sfx.play("accum_explode")
 	_explode_accum_area(col)
 
 

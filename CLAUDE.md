@@ -87,133 +87,26 @@ powershell -ExecutionPolicy Bypass -File tools/validate_godot_errors.ps1
 4. Relancer validation (doit passer)
 5. PUIS tester dans Godot
 
-### 3. Agents Spécialisés — INVOQUER SELON LE TYPE
+### 3. Smart Workflow — ADAPTATIF
 
-**Matrice d'invocation OBLIGATOIRE:**
+**Classifier la complexite AVANT d'agir:**
 
-| Type de changement | Agent(s) à invoquer | Quand |
-|--------------------|---------------------|-------|
-| Code GDScript | `lead_godot.md`, `optimizer.md` | Review après implémentation |
-| Performance/Memory | `godot_expert.md`, `optimizer.md` | Problèmes de perf, GDExtension |
-| Intégration LLM | `llm_expert.md` | Prompts, latence, parsing |
-| Tests/Bugs | `debug_qa.md` | Avant validation finale |
-| **Correction apprise** | `debug_qa.md` | **Documenter dans knowledge base** |
-| **Bonne pratique découverte** | `optimizer.md` | **Scanner et appliquer au code** |
-| Interface UI | `ui_impl.md` | Layouts, thèmes, contrôles |
-| Expérience UX | `ux_research.md` | Usabilité, feedback |
-| Animations/VFX | `motion_designer.md` | Tweens, particules, easing |
-| Shaders | `shader_specialist.md` | GLSL, effets visuels |
-| Touch/Mobile | `mobile_touch_expert.md` | Gestes, responsive |
-| Contenu cartes | `narrative_writer.md` | Textes, dialogues |
-| Design règles | `game_designer.md` | Équilibrage, méchaniques |
-| Assets visuels | `art_direction.md` | Style, cohérence graphique |
-| Audio/Voix | `audio_designer.md` | SFX, musique, ACVoicebox |
-| Documentation | `technical_writer.md` | Docstrings, API docs |
-| Métriques jeu | `data_analyst.md` | Analytics, A/B testing |
-| Planning | `producer.md` | Priorisation, milestones |
-| Traduction | `localisation.md` | Multi-langue |
-| **Phase terminée** | `git_commit.md` | **Commit des changements notables** |
-| **Nettoyage projet** | `project_curator.md` | **Inventaire, fichiers orphelins** |
+| Complexite | Critere | Action |
+|------------|---------|--------|
+| **TRIVIAL** | 1 fichier, <10 lignes, typo/rename | Faire directement. Ni dispatcher, ni planning files. |
+| **SIMPLE** | 1-2 fichiers, tache claire | Faire directement. MAJ progress.md apres. |
+| **MODEREE** | 3+ fichiers OU logique complexe | Planning files obligatoires. Dispatcher optionnel. |
+| **COMPLEXE** | Multi-systeme, architecture, feature majeur | Dispatcher + planning files + agents review. |
 
-**Comment invoquer un agent:**
-```
-Task tool:
-  subagent_type: "general-purpose"
-  prompt: "Read .claude/agents/[AGENT_FILE].md and follow its instructions. Task: [DESCRIPTION]"
-```
+**Prompt optimizer actif**: Le hook severity1 evalue automatiquement la clarte des prompts.
+Prefixer avec `*` pour bypass. Les slash commands (`/`) sont auto-bypassees.
 
-### 4. Workflow Standard — SÉQUENCE OBLIGATOIRE
+**Agents auto**: `debug_qa.md` (si .gd modifie), `git_commit.md` (3+ fichiers ou phase complete).
+**Ref dispatcher/matrice/agents**: `.claude/agents/task_dispatcher.md` (lire QUE si MODEREE+).
 
-```
-┌─────────────────────────────────────────────────────────────┐
-│  NOUVELLE TÂCHE REÇUE                                       │
-└─────────────────────────────────────────────────────────────┘
-                          │
-                          ▼
-┌─────────────────────────────────────────────────────────────┐
-│  1. LIRE progress.md (contexte session précédente)          │
-│     LIRE task_plan.md (tâches en cours)                     │
-└─────────────────────────────────────────────────────────────┘
-                          │
-                          ▼
-┌─────────────────────────────────────────────────────────────┐
-│  2. CRÉER/METTRE À JOUR task_plan.md                        │
-│     - Définir les phases                                     │
-│     - Marquer status: pending/in_progress/complete           │
-└─────────────────────────────────────────────────────────────┘
-                          │
-                          ▼
-┌─────────────────────────────────────────────────────────────┐
-│  3. IMPLÉMENTER (avec agents si nécessaire)                 │
-│     - Invoquer agent(s) selon matrice                        │
-│     - Documenter dans findings.md si découvertes             │
-└─────────────────────────────────────────────────────────────┘
-                          │
-                          ▼
-┌─────────────────────────────────────────────────────────────┐
-│  4. VALIDER                                                  │
-│     - Exécuter .\validate.bat                                │
-│     - Corriger jusqu'à VALIDATION PASSED                     │
-└─────────────────────────────────────────────────────────────┘
-                          │
-                          ▼
-┌─────────────────────────────────────────────────────────────┐
-│  5. DOCUMENTER                                               │
-│     - Mettre à jour progress.md (phase complétée)            │
-│     - Mettre à jour task_plan.md (status: complete)          │
-└─────────────────────────────────────────────────────────────┘
-                          │
-                          ▼
-┌─────────────────────────────────────────────────────────────┐
-│  6. GIT COMMIT (AUTO)                                        │
-│     - Invoquer git_commit.md automatiquement                 │
-│     - Commit formaté [TYPE] message                          │
-└─────────────────────────────────────────────────────────────┘
-```
-
-### 5. Agents Auto-Invoqués — SANS DEMANDE EXPLICITE
-
-**Ces agents s'activent AUTOMATIQUEMENT selon les conditions:**
-
-| Agent | Condition d'auto-activation |
-|-------|----------------------------|
-| `debug_qa.md` | **Correction GDScript apprise** (documenter dans knowledge base) |
-| `optimizer.md` | **Bonne pratique découverte** (scanner et appliquer au code) |
-| `git_commit.md` | Phase complétée avec fichiers modifiés (3+ fichiers OU changement notable) |
-| `project_curator.md` | Demande de nettoyage, réorganisation, ou "fais le ménage" |
-
-**Déclencheurs Debug/Optimizer (automatique):**
-- Erreur GDScript corrigée → documenter dans `gdscript_knowledge_base.md`
-- Pattern problématique identifié → ajouter à la knowledge base
-- Nouveau code GDScript → scanner avec optimizer
-- Bonne pratique mentionnée → appliquer à tout le projet
-
-**Déclencheurs Git Commit (automatique):**
-- Fin de phase dans progress.md
-- Création de nouveaux fichiers importants
-- Modification de 3+ fichiers liés
-- Demande explicite de commit
-- Fin de session de travail
-
-**Déclencheurs Project Curator (sur demande ou périodique):**
-- "Fais l'inventaire" / "Nettoie le projet"
-- "Trouve les fichiers inutilisés"
-- "Réorganise" / "Range"
-- Avant un release majeur
-- Quand archive/ grossit
-
-**Format commit auto (Conventional Commits):**
-```
-type(scope): description courte
-
-- Fichier 1: changement
-- Fichier 2: changement
-
-Co-Authored-By: Claude <noreply@anthropic.com>
-```
-
-**Types**: feat, fix, refactor, docs, test, chore, perf
-**Scope**: composant concerné (store, ui, llm, cards, lore, etc.)
+**Format commit**: Conventional Commits `type(scope): description`
+`Co-Authored-By: Claude <noreply@anthropic.com>`
+**Types**: feat, fix, refactor, docs, test, chore, perf | **Scope**: composant (store, ui, llm, cards, etc.)
 
 > Pour les projets Orange (Data, Cours): ajouter `[AI-assisted]` en suffixe.
 
@@ -367,9 +260,15 @@ var gamemaster_params := {
 
 ### Scenes Flow
 ```
-IntroBoot -> IntroCeltOS -> IntroPersonalityQuiz -> IntroMerlinDialogue
-  -> SceneEveil -> SceneAntreMerlin -> HubAntre
-  -> TransitionBiome -> TriadeGame -> [Fin] -> HubAntre
+Premiere partie:
+  IntroCeltOS -> MenuPrincipal -> IntroPersonalityQuiz -> SceneRencontreMerlin
+    -> HubAntre -> TransitionBiome -> TriadeGame -> [Fin] -> HubAntre
+
+Boucle roguelite:
+  HubAntre -> TransitionBiome -> TriadeGame -> [Fin] -> HubAntre
+
+Continuer:
+  MenuPrincipal -> SelectionSauvegarde -> HubAntre
 ```
 
 ---
@@ -388,18 +287,23 @@ IntroBoot -> IntroCeltOS -> IntroPersonalityQuiz -> IntroMerlinDialogue
 
 ---
 
-## 23 Agents + 1 Knowledge Base
+## 29 Agents + 1 Knowledge Base
 
 Voir `.claude/agents/AGENTS.md` pour la liste complète et les instructions d'invocation.
 
 | Catégorie | Agents |
 |-----------|--------|
-| Core Technical | Lead Godot, Godot Expert, LLM Expert, Debug/QA, **Optimizer**, Shader Specialist |
-| UI/UX & Animation | UI Impl, UX Research, Motion Designer, Mobile/Touch Expert |
-| Content & Creative | Game Designer, Narrative Writer, Art Direction, Audio Designer |
-| Operations & Docs | Producer, Localisation, Technical Writer, Data Analyst |
-| **Project Management** | **Git Commit, Project Curator** |
-| **Knowledge Sharing** | **gdscript_knowledge_base.md** (ressource partagée) |
+| **Orchestration** | **Task Dispatcher** (invoque si complexite MODEREE+, voir Smart Workflow) |
+| Core Technical (6) | Lead Godot, Godot Expert, LLM Expert, Debug/QA, Optimizer, Shader Specialist |
+| UI/UX & Animation (4) | UI Impl, UX Research, Motion Designer, Mobile/Touch Expert |
+| Content & Creative (4) | Game Designer, Narrative Writer, Art Direction, Audio Designer |
+| Lore & World-Building (3) | Merlin Guardian, Lore Writer, Historien Bretagne |
+| Operations & Docs (4) | Producer, Localisation, Technical Writer, Data Analyst |
+| Project Management (2) | Git Commit, Project Curator |
+| **Security & Quality (3)** | **Accessibility Specialist, Security Hardening, Prompt Curator** |
+| **Progression & Economy (1)** | **Meta-Progression Designer** |
+| **CI/CD & Release (1)** | **CI/CD Release** |
+| Knowledge Sharing | gdscript_knowledge_base.md (ressource partagée) |
 
 ### Knowledge Base (NOUVEAU)
 
@@ -417,4 +321,4 @@ Fichier: `.claude/agents/gdscript_knowledge_base.md`
 
 ---
 
-*Updated: 2026-02-09 — Triade system, Multi-Brain architecture, documentation cleanup v4.0*
+*Updated: 2026-02-09 — 29 agents (5 new), enriched competencies, Task Dispatcher v1.1*

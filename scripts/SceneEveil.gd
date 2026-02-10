@@ -123,6 +123,8 @@ func _ready() -> void:
 	await _setup_voicebox()
 
 	# Begin dialogue after entry animation
+	if not is_inside_tree():
+		return
 	await get_tree().create_timer(1.5).timeout
 	_play_sequence()
 
@@ -239,6 +241,7 @@ func _build_response_ui() -> void:
 		btn.add_theme_font_size_override("font_size", 16)
 
 		btn.pressed.connect(_on_response_chosen.bind(i))
+		btn.mouse_entered.connect(func(): SFXManager.play("choice_hover"))
 		response_container.add_child(btn)
 		response_buttons.append(btn)
 
@@ -319,6 +322,7 @@ func _fallback_responses(line_index: int) -> Array[String]:
 
 
 func _on_response_chosen(index: int) -> void:
+	SFXManager.play("choice_select")
 	_response_chosen = index
 	# Visual feedback
 	for i in range(response_buttons.size()):
@@ -559,6 +563,7 @@ func _layout_ui() -> void:
 func _play_entry_animation() -> void:
 	if not card:
 		return
+	SFXManager.play("scene_transition")
 
 	card.modulate.a = 0.0
 	card.position.y += 40
@@ -610,6 +615,8 @@ func _play_sequence() -> void:
 
 		# Typewriter text (click = instant show)
 		await _show_text(text)
+		if not is_inside_tree():
+			return
 
 		# 0.3s mandatory pause after text is fully shown
 		await get_tree().create_timer(0.3).timeout
@@ -620,6 +627,7 @@ func _play_sequence() -> void:
 		else:
 			# Show hint and wait for click to advance
 			skip_hint.visible = true
+			SFXManager.play("click")
 			_advance_requested = false
 			await _wait_for_advance(30.0)
 			skip_hint.visible = false
@@ -676,10 +684,12 @@ func _show_response_blocks(line_index: int) -> void:
 
 	# Wait for player to pick a response
 	while _response_chosen < 0 and not scene_finished:
+		if not is_inside_tree():
+			return
 		await get_tree().process_frame
 
 	# Brief flash on chosen response
-	if _response_chosen >= 0:
+	if _response_chosen >= 0 and is_inside_tree():
 		await get_tree().create_timer(0.4).timeout
 
 	# Hide response container
@@ -698,6 +708,8 @@ func _animate_loading_spinner() -> void:
 	while loading_spinner.visible:
 		dots = (dots % 3) + 1
 		loading_spinner.text = ".".repeat(dots)
+		if not is_inside_tree():
+			return
 		await get_tree().create_timer(0.4).timeout
 
 
@@ -741,6 +753,8 @@ func _show_text(text: String) -> void:
 		var delay := TYPEWRITER_DELAY
 		if ch in [".", "!", "?"]:
 			delay = TYPEWRITER_PUNCT_DELAY
+		if not is_inside_tree():
+			break
 		await get_tree().create_timer(delay).timeout
 	merlin_text.visible_characters = -1
 	typing_active = false
@@ -757,7 +771,10 @@ func _skip_typewriter() -> void:
 func _wait_for_advance(max_wait: float) -> void:
 	var elapsed := 0.0
 	while elapsed < max_wait and not _advance_requested and not scene_finished:
-		await get_tree().process_frame
+		var tree := get_tree()
+		if tree == null:
+			return
+		await tree.process_frame
 		elapsed += get_process_delta_time()
 	_advance_requested = false
 
@@ -792,6 +809,7 @@ func _unhandled_input(event: InputEvent) -> void:
 # ═══════════════════════════════════════════════════════════════════════════════
 
 func _transition_out() -> void:
+	SFXManager.play("scene_transition")
 	scene_finished = true
 
 	var screen_fx := get_node_or_null("/root/ScreenEffects")
@@ -845,7 +863,8 @@ func _setup_voicebox() -> void:
 				voicebox.set("speed_scale", 0.85)
 				add_child(voicebox)
 				# Wait a frame for _ready to load sounds, then check
-				await get_tree().process_frame
+				if is_inside_tree():
+					await get_tree().process_frame
 				if voicebox.has_method("is_ready") and voicebox.is_ready():
 					voice_ready = true
 				else:

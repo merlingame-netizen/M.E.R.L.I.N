@@ -24,6 +24,7 @@ LLMStatusBar="*res://scripts/llm_status_bar.gd"
 ScreenEffects="*res://scripts/autoload/ScreenEffects.gd"
 SceneSelector="*res://scripts/autoload/SceneSelector.gd"
 LocaleManager="*res://scripts/autoload/LocaleManager.gd"
+SFXManager="*res://scripts/autoload/SFXManager.gd"
 
 [display]
 

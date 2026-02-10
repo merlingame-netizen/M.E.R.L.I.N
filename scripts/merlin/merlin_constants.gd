@@ -271,6 +271,11 @@ const TRIADE_VICTORY_ENDINGS := {
 	"victoire_amere": {
 		"title": "La Victoire Amere",
 		"condition": "Mission accomplie avec karma negatif"
+	},
+	"tyran_juste": {
+		"title": "Le Tyran Juste",
+		"description": "Tu as conquis par la force, mais gouverne avec sagesse.",
+		"condition": "Mission accomplie avec Monde=HAUT, Corps=EQUILIBRE, Ame=EQUILIBRE"
 	}
 }
 
@@ -837,3 +842,43 @@ const TALENT_BRANCH_COLORS := {
 
 # Talent tier names
 const TALENT_TIER_NAMES := {1: "Germe", 2: "Pousse", 3: "Branche", 4: "Cime"}
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# BIOME SYSTEM — 7 Celtic Biomes for TRIADE (Phase 37)
+# ═══════════════════════════════════════════════════════════════════════════════
+
+const BIOME_KEYS := [
+	"foret_broceliande", "landes_bruyere", "cotes_sauvages",
+	"villages_celtes", "cercles_pierres", "marais_korrigans", "collines_dolmens"
+]
+
+const BIOME_DEFAULT := "foret_broceliande"
+
+# Card type distribution weights (TRIADE mode)
+const CARD_TYPE_WEIGHTS := {
+	"narrative": 0.80,
+	"event": 0.10,
+	"promise": 0.05,
+	"merlin_direct": 0.05,
+}
+
+# Minimum cards before allowing event/promise cards
+const MIN_CARDS_BEFORE_EVENT := 3
+const MIN_CARDS_BEFORE_PROMISE := 5
+const MAX_ACTIVE_PROMISES := 2
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# MAP NODE TYPES — STS-like map for TRIADE (Phase 37)
+# ═══════════════════════════════════════════════════════════════════════════════
+
+const TRIADE_NODE_TYPES := {
+	"NARRATIVE": {"weight": 0.40, "label": "Recit", "cards_min": 2, "cards_max": 4, "icon": "\u2731"},
+	"EVENT": {"weight": 0.15, "label": "Evenement", "cards_min": 1, "cards_max": 2, "icon": "\u2606"},
+	"PROMISE": {"weight": 0.08, "label": "Promesse", "cards_min": 1, "cards_max": 1, "icon": "\u2662"},
+	"REST": {"weight": 0.12, "label": "Repos", "cards_min": 0, "cards_max": 0, "icon": "\u2665"},
+	"MERCHANT": {"weight": 0.08, "label": "Marchand", "cards_min": 0, "cards_max": 0, "icon": "\u25C7"},
+	"MYSTERY": {"weight": 0.10, "label": "Mystere", "cards_min": 1, "cards_max": 3, "icon": "\u003F"},
+	"MERLIN": {"weight": 0.07, "label": "Merlin", "cards_min": 3, "cards_max": 5, "icon": "\u2726"},
+}
+
+const DEFAULT_MAP_FLOORS := 8

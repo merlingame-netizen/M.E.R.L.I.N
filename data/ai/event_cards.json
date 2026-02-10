@@ -1,0 +1,258 @@
+{
+	"seasonal": [
+		{
+			"id": "event_samhain_001",
+			"type": "event",
+			"season": "autumn",
+			"festival": "samhain",
+			"text": "La nuit de Samhain, le voile entre les mondes s'amincit. Des ombres dansent entre les menhirs et les morts murmurent des secrets oublies.",
+			"options": [
+				{"position": "left", "label": "Honorer les morts", "effects": [{"type": "SHIFT_ASPECT", "aspect": "Ame", "direction": "up"}]},
+				{"position": "center", "label": "Mediter au cairn", "cost": 1, "effects": [{"type": "ADD_SOUFFLE", "amount": 2}]},
+				{"position": "right", "label": "Ignorer les signes", "effects": [{"type": "SHIFT_ASPECT", "aspect": "Monde", "direction": "down"}]}
+			],
+			"tags": ["samhain", "spiritual", "death"]
+		},
+		{
+			"id": "event_yule_001",
+			"type": "event",
+			"season": "winter",
+			"festival": "yule",
+			"text": "Le solstice d'hiver plonge le monde dans la nuit la plus longue. Un feu sacre brule au sommet de la colline, guide pour les ames perdues.",
+			"options": [
+				{"position": "left", "label": "Alimenter le feu", "effects": [{"type": "SHIFT_ASPECT", "aspect": "Corps", "direction": "up"}]},
+				{"position": "center", "label": "Veiller toute la nuit", "cost": 1, "effects": [{"type": "SHIFT_ASPECT", "aspect": "Ame", "direction": "up"}, {"type": "ADD_KARMA", "amount": 10}]},
+				{"position": "right", "label": "Dormir au chaud", "effects": [{"type": "SHIFT_ASPECT", "aspect": "Monde", "direction": "up"}]}
+			],
+			"tags": ["yule", "fire", "winter"]
+		},
+		{
+			"id": "event_imbolc_001",
+			"type": "event",
+			"season": "spring",
+			"festival": "imbolc",
+			"text": "Imbolc annonce le retour de la lumiere. La deesse Brigid benit les sources sacrees. L'eau guerit, dit-on, ceux qui osent boire.",
+			"options": [
+				{"position": "left", "label": "Boire a la source", "effects": [{"type": "SHIFT_ASPECT", "aspect": "Corps", "direction": "up"}]},
+				{"position": "center", "label": "Offrir une priere", "cost": 1, "effects": [{"type": "ADD_SOUFFLE", "amount": 1}, {"type": "ADD_KARMA", "amount": 5}]},
+				{"position": "right", "label": "Remplir ta gourde", "effects": [{"type": "SHIFT_ASPECT", "aspect": "Monde", "direction": "up"}]}
+			],
+			"tags": ["imbolc", "healing", "spring"]
+		},
+		{
+			"id": "event_beltane_001",
+			"type": "event",
+			"season": "summer",
+			"festival": "beltane",
+			"text": "Les feux de Beltane illuminent les collines. Le betail traverse les flammes purificatrices. La fertilite de la terre explose.",
+			"options": [
+				{"position": "left", "label": "Danser autour du feu", "effects": [{"type": "SHIFT_ASPECT", "aspect": "Corps", "direction": "up"}]},
+				{"position": "center", "label": "Sauter par-dessus les flammes", "cost": 1, "effects": [{"type": "SHIFT_ASPECT", "aspect": "Ame", "direction": "up"}, {"type": "SHIFT_ASPECT", "aspect": "Corps", "direction": "up"}]},
+				{"position": "right", "label": "Observer de loin", "effects": [{"type": "SHIFT_ASPECT", "aspect": "Monde", "direction": "down"}]}
+			],
+			"tags": ["beltane", "fire", "summer"]
+		},
+		{
+			"id": "event_lughnasadh_001",
+			"type": "event",
+			"season": "summer",
+			"festival": "lughnasadh",
+			"text": "La fete de Lugh celebre les premieres moissons. Des jeux sont organises — force, adresse, poesie. Chacun montre sa valeur.",
+			"options": [
+				{"position": "left", "label": "Participer aux jeux", "effects": [{"type": "SHIFT_ASPECT", "aspect": "Corps", "direction": "up"}, {"type": "PROGRESS_MISSION", "step": 1}]},
+				{"position": "center", "label": "Reciter un poeme", "cost": 1, "effects": [{"type": "SHIFT_ASPECT", "aspect": "Ame", "direction": "up"}, {"type": "SHIFT_ASPECT", "aspect": "Monde", "direction": "up"}]},
+				{"position": "right", "label": "Aider aux recoltes", "effects": [{"type": "SHIFT_ASPECT", "aspect": "Monde", "direction": "up"}]}
+			],
+			"tags": ["lughnasadh", "harvest", "competition"]
+		},
+		{
+			"id": "event_ostara_001",
+			"type": "event",
+			"season": "spring",
+			"festival": "ostara",
+			"text": "L'equinoxe de printemps equilibre le jour et la nuit. Les druides tracent des cercles dans la rosee. La terre s'eveille.",
+			"options": [
+				{"position": "left", "label": "Planter un arbre", "effects": [{"type": "SHIFT_ASPECT", "aspect": "Monde", "direction": "up"}]},
+				{"position": "center", "label": "Participer au rituel", "cost": 1, "effects": [{"type": "ADD_SOUFFLE", "amount": 1}, {"type": "SHIFT_ASPECT", "aspect": "Ame", "direction": "up"}]},
+				{"position": "right", "label": "Chasser le gibier", "effects": [{"type": "SHIFT_ASPECT", "aspect": "Corps", "direction": "up"}]}
+			],
+			"tags": ["ostara", "spring", "balance"]
+		},
+		{
+			"id": "event_litha_001",
+			"type": "event",
+			"season": "summer",
+			"festival": "litha",
+			"text": "Le solstice d'ete baigne le monde de lumiere. La nuit la plus courte — les fees dansent jusqu'a l'aube. Tout semble possible.",
+			"options": [
+				{"position": "left", "label": "Chercher les fees", "effects": [{"type": "SHIFT_ASPECT", "aspect": "Ame", "direction": "up"}]},
+				{"position": "center", "label": "Cueillir les herbes sacrees", "cost": 1, "effects": [{"type": "ADD_SOUFFLE", "amount": 2}]},
+				{"position": "right", "label": "Profiter du soleil", "effects": [{"type": "SHIFT_ASPECT", "aspect": "Corps", "direction": "up"}]}
+			],
+			"tags": ["litha", "summer", "fae"]
+		},
+		{
+			"id": "event_mabon_001",
+			"type": "event",
+			"season": "autumn",
+			"festival": "mabon",
+			"text": "L'equinoxe d'automne marque le second equilibre. Les druides remercient la terre pour ses dons. Le temps de la reflexion approche.",
+			"options": [
+				{"position": "left", "label": "Offrir les fruits", "effects": [{"type": "SHIFT_ASPECT", "aspect": "Monde", "direction": "up"}, {"type": "ADD_KARMA", "amount": 5}]},
+				{"position": "center", "label": "Mediter sur l'equilibre", "cost": 1, "effects": [{"type": "ADD_SOUFFLE", "amount": 1}, {"type": "SHIFT_ASPECT", "aspect": "Ame", "direction": "up"}]},
+				{"position": "right", "label": "Stocker pour l'hiver", "effects": [{"type": "SHIFT_ASPECT", "aspect": "Corps", "direction": "up"}]}
+			],
+			"tags": ["mabon", "autumn", "balance"]
+		}
+	],
+	"biome_specific": {
+		"foret_broceliande": [
+			{
+				"id": "event_broceliande_001",
+				"type": "event",
+				"text": "Un chene immense te barre le passage. Ses branches semblent bouger... comme si elles t'invitaient a l'ecouter.",
+				"options": [
+					{"position": "left", "label": "Toucher le tronc", "effects": [{"type": "SHIFT_ASPECT", "aspect": "Ame", "direction": "up"}]},
+					{"position": "center", "label": "Ecouter ses murmures", "cost": 1, "effects": [{"type": "SHIFT_ASPECT", "aspect": "Ame", "direction": "up"}, {"type": "PROGRESS_MISSION", "step": 1}]},
+					{"position": "right", "label": "Contourner l'arbre", "effects": [{"type": "SHIFT_ASPECT", "aspect": "Corps", "direction": "up"}]}
+				],
+				"tags": ["broceliande", "tree", "magic"]
+			}
+		],
+		"landes_bruyere": [
+			{
+				"id": "event_landes_001",
+				"type": "event",
+				"text": "La tempete se leve soudain. Le vent hurle sur les landes, la bruyere ploie. Trouver un abri ou affronter les elements?",
+				"options": [
+					{"position": "left", "label": "Courir vers un cairn", "effects": [{"type": "SHIFT_ASPECT", "aspect": "Corps", "direction": "down"}]},
+					{"position": "center", "label": "Mediter dans la tempete", "cost": 1, "effects": [{"type": "SHIFT_ASPECT", "aspect": "Ame", "direction": "up"}, {"type": "ADD_SOUFFLE", "amount": 1}]},
+					{"position": "right", "label": "Avancer malgre tout", "effects": [{"type": "SHIFT_ASPECT", "aspect": "Corps", "direction": "up"}, {"type": "PROGRESS_MISSION", "step": 1}]}
+				],
+				"tags": ["landes", "storm", "survival"]
+			}
+		],
+		"cotes_sauvages": [
+			{
+				"id": "event_cotes_001",
+				"type": "event",
+				"text": "Un navire echoue sur les rochers. Des marchands appellent a l'aide. La cargaison se repand sur la plage.",
+				"options": [
+					{"position": "left", "label": "Sauver les marchands", "effects": [{"type": "SHIFT_ASPECT", "aspect": "Monde", "direction": "up"}, {"type": "ADD_KARMA", "amount": 10}]},
+					{"position": "center", "label": "Negocier un sauvetage", "cost": 1, "effects": [{"type": "SHIFT_ASPECT", "aspect": "Monde", "direction": "up"}, {"type": "ADD_SOUFFLE", "amount": 1}]},
+					{"position": "right", "label": "Recuperer la cargaison", "effects": [{"type": "SHIFT_ASPECT", "aspect": "Monde", "direction": "down"}, {"type": "ADD_KARMA", "amount": -10}]}
+				],
+				"tags": ["cotes", "shipwreck", "moral"]
+			}
+		],
+		"villages_celtes": [
+			{
+				"id": "event_villages_001",
+				"type": "event",
+				"text": "Une assemblee villageoise debat d'une loi nouvelle. Deux clans s'opposent. Ton avis est demande.",
+				"options": [
+					{"position": "left", "label": "Soutenir le clan ancien", "effects": [{"type": "SHIFT_ASPECT", "aspect": "Monde", "direction": "up"}]},
+					{"position": "center", "label": "Proposer un compromis", "cost": 1, "effects": [{"type": "SHIFT_ASPECT", "aspect": "Ame", "direction": "up"}, {"type": "SHIFT_ASPECT", "aspect": "Monde", "direction": "up"}]},
+					{"position": "right", "label": "Soutenir les reformateurs", "effects": [{"type": "SHIFT_ASPECT", "aspect": "Monde", "direction": "down"}, {"type": "PROGRESS_MISSION", "step": 1}]}
+				],
+				"tags": ["villages", "politics", "assembly"]
+			}
+		],
+		"cercles_pierres": [
+			{
+				"id": "event_cercles_001",
+				"type": "event",
+				"text": "Les menhirs vibrent sous la lune. Un druide ancien apparait entre les pierres, translucide, les yeux emplis de sagesse.",
+				"options": [
+					{"position": "left", "label": "Lui poser une question", "effects": [{"type": "SHIFT_ASPECT", "aspect": "Ame", "direction": "up"}, {"type": "PROGRESS_MISSION", "step": 1}]},
+					{"position": "center", "label": "Participer au rituel", "cost": 1, "effects": [{"type": "SHIFT_ASPECT", "aspect": "Ame", "direction": "up"}, {"type": "ADD_SOUFFLE", "amount": 2}]},
+					{"position": "right", "label": "Observer en silence", "effects": [{"type": "ADD_KARMA", "amount": 5}]}
+				],
+				"tags": ["cercles", "druid", "ritual"]
+			}
+		],
+		"marais_korrigans": [
+			{
+				"id": "event_marais_001",
+				"type": "event",
+				"text": "Des feux follets dansent sur les eaux stagnantes. Un korrigan ricane dans l'ombre: 'Un tresor pour celui qui ose me suivre!'",
+				"options": [
+					{"position": "left", "label": "Suivre le korrigan", "effects": [{"type": "SHIFT_ASPECT", "aspect": "Corps", "direction": "down"}, {"type": "ADD_SOUFFLE", "amount": 2}]},
+					{"position": "center", "label": "Negocier un prix", "cost": 1, "effects": [{"type": "SHIFT_ASPECT", "aspect": "Monde", "direction": "up"}, {"type": "PROGRESS_MISSION", "step": 1}]},
+					{"position": "right", "label": "Refuser et fuir", "effects": [{"type": "SHIFT_ASPECT", "aspect": "Corps", "direction": "up"}]}
+				],
+				"tags": ["marais", "korrigan", "trap"]
+			}
+		],
+		"collines_dolmens": [
+			{
+				"id": "event_collines_001",
+				"type": "event",
+				"text": "Un dolmen s'ouvre lentement. A l'interieur, des inscriptions oghams brillent d'une lumiere douce. Les ancetres veulent parler.",
+				"options": [
+					{"position": "left", "label": "Entrer dans le dolmen", "effects": [{"type": "SHIFT_ASPECT", "aspect": "Ame", "direction": "up"}, {"type": "PROGRESS_MISSION", "step": 1}]},
+					{"position": "center", "label": "Dechiffrer les oghams", "cost": 1, "effects": [{"type": "ADD_SOUFFLE", "amount": 2}, {"type": "ADD_KARMA", "amount": 5}]},
+					{"position": "right", "label": "Respecter le repos des morts", "effects": [{"type": "SHIFT_ASPECT", "aspect": "Monde", "direction": "up"}]}
+				],
+				"tags": ["collines", "ancestors", "ogham"]
+			}
+		]
+	},
+	"universal": [
+		{
+			"id": "event_orage_001",
+			"type": "event",
+			"text": "L'orage eclate soudain. La foudre frappe la terre devant toi, laissant une marque fumante en forme de triskelion.",
+			"options": [
+				{"position": "left", "label": "Examiner la marque", "effects": [{"type": "SHIFT_ASPECT", "aspect": "Ame", "direction": "up"}]},
+				{"position": "center", "label": "Toucher le triskelion", "cost": 1, "effects": [{"type": "ADD_SOUFFLE", "amount": 2}]},
+				{"position": "right", "label": "Fuir la foudre", "effects": [{"type": "SHIFT_ASPECT", "aspect": "Corps", "direction": "up"}]}
+			],
+			"tags": ["storm", "omen", "universal"]
+		},
+		{
+			"id": "event_voyageur_001",
+			"type": "event",
+			"text": "Un voyageur mysterieux croise ta route. Son visage est cache sous un capuchon. Il tend la main: 'Un echange, voyageur?'",
+			"options": [
+				{"position": "left", "label": "Accepter l'echange", "effects": [{"type": "SHIFT_ASPECT", "aspect": "Monde", "direction": "up"}, {"type": "SHIFT_ASPECT", "aspect": "Corps", "direction": "down"}]},
+				{"position": "center", "label": "Demander qui il est", "cost": 1, "effects": [{"type": "SHIFT_ASPECT", "aspect": "Ame", "direction": "up"}, {"type": "ADD_KARMA", "amount": 5}]},
+				{"position": "right", "label": "Refuser poliment", "effects": [{"type": "SHIFT_ASPECT", "aspect": "Monde", "direction": "down"}]}
+			],
+			"tags": ["stranger", "trade", "universal"]
+		},
+		{
+			"id": "event_eclipse_001",
+			"type": "event",
+			"text": "Le soleil disparait. L'obscurite tombe en plein jour. Les animaux se taisent. Quelque chose de grand se prepare.",
+			"options": [
+				{"position": "left", "label": "Prier les anciens", "effects": [{"type": "SHIFT_ASPECT", "aspect": "Ame", "direction": "up"}, {"type": "ADD_KARMA", "amount": 10}]},
+				{"position": "center", "label": "Mediter dans le noir", "cost": 1, "effects": [{"type": "ADD_SOUFFLE", "amount": 3}]},
+				{"position": "right", "label": "Allumer un feu", "effects": [{"type": "SHIFT_ASPECT", "aspect": "Corps", "direction": "up"}, {"type": "SHIFT_ASPECT", "aspect": "Monde", "direction": "up"}]}
+			],
+			"tags": ["eclipse", "cosmic", "universal"]
+		},
+		{
+			"id": "event_source_001",
+			"type": "event",
+			"text": "Tu decouvres une source d'eau cristalline cachee sous un rocher mousseux. L'eau semble scintiller d'une lumiere interieure.",
+			"options": [
+				{"position": "left", "label": "Boire a la source", "effects": [{"type": "SHIFT_ASPECT", "aspect": "Corps", "direction": "up"}]},
+				{"position": "center", "label": "Te purifier dans l'eau", "cost": 1, "effects": [{"type": "ADD_SOUFFLE", "amount": 1}, {"type": "SHIFT_ASPECT", "aspect": "Ame", "direction": "up"}]},
+				{"position": "right", "label": "Laisser une offrande", "effects": [{"type": "ADD_KARMA", "amount": 10}, {"type": "SHIFT_ASPECT", "aspect": "Monde", "direction": "up"}]}
+			],
+			"tags": ["spring", "water", "universal"]
+		},
+		{
+			"id": "event_animal_001",
+			"type": "event",
+			"text": "Un corbeau te suit depuis des heures. Il se pose sur une branche basse et te fixe de ses yeux intelligents. Il croasse trois fois.",
+			"options": [
+				{"position": "left", "label": "Lui offrir de la nourriture", "effects": [{"type": "SHIFT_ASPECT", "aspect": "Monde", "direction": "up"}, {"type": "ADD_KARMA", "amount": 5}]},
+				{"position": "center", "label": "Ecouter son message", "cost": 1, "effects": [{"type": "SHIFT_ASPECT", "aspect": "Ame", "direction": "up"}, {"type": "PROGRESS_MISSION", "step": 1}]},
+				{"position": "right", "label": "Le chasser", "effects": [{"type": "SHIFT_ASPECT", "aspect": "Corps", "direction": "up"}, {"type": "ADD_KARMA", "amount": -5}]}
+			],
+			"tags": ["animal", "omen", "universal"]
+		}
+	]
+}

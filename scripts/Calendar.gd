@@ -212,10 +212,33 @@ func _days_between(y1: int, m1: int, d1: int, y2: int, m2: int, d2: int) -> int:
 
 
 func _julian_day(y: int, m: int, d: int) -> int:
+	@warning_ignore("integer_division")
 	var a := (14 - m) / 12
 	var yr := y + 4800 - a
 	var mo := m + 12 * a - 3
+	@warning_ignore("integer_division")
 	return d + (153 * mo + 2) / 5 + 365 * yr + yr / 4 - yr / 100 + yr / 400 - 32045
+
+
+func get_active_festival() -> String:
+	## Return the ID of the currently active Celtic festival (+-1 day tolerance), or "".
+	for festival_id in CELTIC_FESTIVALS:
+		var festival: Dictionary = CELTIC_FESTIVALS[festival_id]
+		var fm: int = int(festival.get("month", 0))
+		var fd: int = int(festival.get("day", 0))
+		# Check today, yesterday, and tomorrow
+		for offset in [-1, 0, 1]:
+			var check_day: int = fd + offset
+			var check_month: int = fm
+			if check_day <= 0:
+				check_month -= 1
+				check_day = 28  # Approximate
+			elif check_day > 31:
+				check_month += 1
+				check_day = 1
+			if check_month == current_date.get("month", 0) and check_day == current_date.get("day", 0):
+				return festival_id
+	return ""
 
 
 func _load_meta_stats() -> void:
@@ -475,11 +498,17 @@ func _build_tabs(parent: VBoxContainer) -> void:
 	parent.add_child(tabs_container)
 
 	events_tab_btn = _create_tab_button("Evenements")
-	events_tab_btn.pressed.connect(func(): _set_tab(TAB_EVENTS))
+	events_tab_btn.pressed.connect(func():
+		SFXManager.play("click")
+		_set_tab(TAB_EVENTS)
+	)
 	tabs_container.add_child(events_tab_btn)
 
 	stats_tab_btn = _create_tab_button("Statistiques")
-	stats_tab_btn.pressed.connect(func(): _set_tab(TAB_STATS))
+	stats_tab_btn.pressed.connect(func():
+		SFXManager.play("click")
+		_set_tab(TAB_STATS)
+	)
 	tabs_container.add_child(stats_tab_btn)
 
 
@@ -775,6 +804,7 @@ func _play_entry_animation() -> void:
 
 
 func _on_back_pressed() -> void:
+	SFXManager.play("click")
 	var se := get_node_or_null("/root/ScreenEffects")
 	var target: String = se.return_scene if se and se.return_scene != "" else MENU_SCENE_FALLBACK
 	var tween := create_tween()

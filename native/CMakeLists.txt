@@ -14,7 +14,10 @@ set(LLAMA_ROOT "${CMAKE_CURRENT_SOURCE_DIR}/llama.cpp" CACHE PATH "Path to llama
 
 # Prebuilt libraries (adjust if you build Debug or change names)
 set(GODOT_CPP_LIB "${GODOT_CPP_ROOT}/bin/libgodot-cpp.windows.template_release.x86_64.lib" CACHE FILEPATH "godot-cpp release lib")
-set(LLAMA_LIB "${LLAMA_ROOT}/build/bin/llama.lib" CACHE FILEPATH "llama.cpp release lib")
+set(LLAMA_LIB "${LLAMA_ROOT}/build/src/llama.lib" CACHE FILEPATH "llama.cpp release lib")
+set(GGML_LIB "${LLAMA_ROOT}/build/ggml/src/ggml.lib" CACHE FILEPATH "ggml lib")
+set(GGML_BASE_LIB "${LLAMA_ROOT}/build/ggml/src/ggml-base.lib" CACHE FILEPATH "ggml-base lib")
+set(GGML_CPU_LIB "${LLAMA_ROOT}/build/ggml/src/ggml-cpu.lib" CACHE FILEPATH "ggml-cpu lib")
 
 add_library(merlin_llm SHARED
 	src/merlin_llm.cpp
@@ -34,6 +37,9 @@ target_include_directories(merlin_llm PRIVATE
 target_link_libraries(merlin_llm PRIVATE
 	${GODOT_CPP_LIB}
 	${LLAMA_LIB}
+	${GGML_LIB}
+	${GGML_BASE_LIB}
+	${GGML_CPU_LIB}
 )
 
 target_compile_definitions(merlin_llm PRIVATE

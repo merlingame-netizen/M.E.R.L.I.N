@@ -24,6 +24,7 @@ const SCENE_CALENDAR := "res://scenes/Calendar.tscn"
 const SCENE_COLLECTION := "res://scenes/Collection.tscn"
 const SCENE_MENU := "res://scenes/MenuPrincipal.tscn"
 const SCENE_SAVE := "res://scenes/SelectionSauvegarde.tscn"
+const SCENE_MAPMONDE := "res://scenes/MapMonde.tscn"
 
 # ═══════════════════════════════════════════════════════════════════════════════
 # TYPEWRITER SETTINGS
@@ -82,6 +83,8 @@ const BIOME_DATA := {
 		"ogham": "duir",
 		"guardian": "Maelgwn",
 		"season": "automne",
+		"aspect_hint": "Corps +20%",
+		"difficulty_label": "Normal",
 	},
 	"landes_bruyere": {
 		"name": "Landes de Bruyere",
@@ -90,6 +93,8 @@ const BIOME_DATA := {
 		"ogham": "onn",
 		"guardian": "Talwen",
 		"season": "hiver",
+		"aspect_hint": "Ame +20%",
+		"difficulty_label": "Difficile",
 	},
 	"cotes_sauvages": {
 		"name": "Cotes Sauvages",
@@ -98,6 +103,8 @@ const BIOME_DATA := {
 		"ogham": "nuin",
 		"guardian": "Bran",
 		"season": "ete",
+		"aspect_hint": "Monde +20%",
+		"difficulty_label": "Normal",
 	},
 	"villages_celtes": {
 		"name": "Villages Celtes",
@@ -106,6 +113,8 @@ const BIOME_DATA := {
 		"ogham": "gort",
 		"guardian": "Azenor",
 		"season": "printemps",
+		"aspect_hint": "Monde +20%",
+		"difficulty_label": "Facile",
 	},
 	"cercles_pierres": {
 		"name": "Cercles de Pierres",
@@ -114,6 +123,8 @@ const BIOME_DATA := {
 		"ogham": "huath",
 		"guardian": "Keridwen",
 		"season": "samhain",
+		"aspect_hint": "Ame +40%",
+		"difficulty_label": "Difficile",
 	},
 	"marais_korrigans": {
 		"name": "Marais des Korrigans",
@@ -122,6 +133,8 @@ const BIOME_DATA := {
 		"ogham": "muin",
 		"guardian": "Gwydion",
 		"season": "lughnasadh",
+		"aspect_hint": "Corps +20%",
+		"difficulty_label": "Tres difficile",
 	},
 	"collines_dolmens": {
 		"name": "Collines aux Dolmens",
@@ -130,8 +143,12 @@ const BIOME_DATA := {
 		"ogham": "ioho",
 		"guardian": "Elouan",
 		"season": "yule",
+		"aspect_hint": "Equilibre",
+		"difficulty_label": "Normal",
 	},
 }
+
+var _biome_system := MerlinBiomeSystem.new()
 
 # ═══════════════════════════════════════════════════════════════════════════════
 # BIOME MISSIONS — Procedural mission pool per biome
@@ -341,17 +358,24 @@ func _input(event: InputEvent) -> void:
 		typing_abort = true
 
 	# Tab navigation via keyboard/gamepad (L1/R1 or Q/E)
+	# Only cycle between page tabs: 0 (Merlin) and 2 (Bestiole)
+	var page_tabs := [0, 2]
 	if event is InputEventKey and event.pressed:
 		match event.keycode:
 			KEY_Q:
-				_on_tab_pressed(maxi(current_tab - 1, 0))
+				var idx: int = page_tabs.find(current_tab)
+				if idx > 0:
+					_on_tab_pressed(page_tabs[idx - 1])
 			KEY_E:
-				_on_tab_pressed(mini(current_tab + 1, tab_pages.size() - 1))
+				var idx: int = page_tabs.find(current_tab)
+				if idx < page_tabs.size() - 1:
+					_on_tab_pressed(page_tabs[idx + 1])
 	elif event is InputEventJoypadButton and event.pressed:
-		if event.button_index == JOY_BUTTON_LEFT_SHOULDER:
-			_on_tab_pressed(maxi(current_tab - 1, 0))
-		elif event.button_index == JOY_BUTTON_RIGHT_SHOULDER:
-			_on_tab_pressed(mini(current_tab + 1, tab_pages.size() - 1))
+		var idx: int = page_tabs.find(current_tab)
+		if event.button_index == JOY_BUTTON_LEFT_SHOULDER and idx > 0:
+			_on_tab_pressed(page_tabs[idx - 1])
+		elif event.button_index == JOY_BUTTON_RIGHT_SHOULDER and idx < page_tabs.size() - 1:
+			_on_tab_pressed(page_tabs[idx + 1])
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
@@ -403,11 +427,8 @@ func _sync_from_state() -> void:
 		return
 	_update_aspect_display()
 	_update_souffle_display()
-	_update_mission_display()
-	_update_biome_selection()
 	_update_bestiole_display()
 	_update_grimoire_display()
-	_update_arbre_display()
 	_update_adventure_button()
 	if not store.state.has("flags"):
 		store.state["flags"] = {}
@@ -489,38 +510,22 @@ func _build_scroll_content() -> void:
 	tab_container.modulate.a = 0.0
 	add_child(tab_container)
 
-	# Page 1: Merlin & Status
+	# Page 0: Merlin, Status & Adventure
 	var page1 := _create_page()
 	_build_title_section_on(page1)
 	_build_merlin_section_on(page1)
 	_build_status_section_on(page1)
-	# Adventure button at bottom of page 1
 	_build_adventure_section_on(page1)
 	tab_pages.append(page1)
 	tab_container.add_child(page1)
 
-	# Page 2: Carte & Mission
+	# Page 1: Bestiole & Grimoire
 	var page2 := _create_page()
-	_build_map_section_on(page2)
-	_build_mission_section_on(page2)
+	_build_bestiole_section_on(page2)
+	_build_grimoire_section_on(page2)
 	tab_pages.append(page2)
 	tab_container.add_child(page2)
 	page2.visible = false
-
-	# Page 3: Bestiole & Grimoire
-	var page3 := _create_page()
-	_build_bestiole_section_on(page3)
-	_build_grimoire_section_on(page3)
-	tab_pages.append(page3)
-	tab_container.add_child(page3)
-	page3.visible = false
-
-	# Page 4: Arbre de Vie (Talent Tree — Phase 35)
-	var page4 := _create_page()
-	_build_arbre_section_on(page4)
-	tab_pages.append(page4)
-	tab_container.add_child(page4)
-	page4.visible = false
 
 	# Set main_vbox to page 1 content for layout compatibility
 	main_vbox = page1.get_child(0) as VBoxContainer
@@ -642,7 +647,7 @@ func _build_merlin_section() -> void:
 		pixel_portrait = PixelMerlinPortraitClass.new()
 		portrait_center.add_child(pixel_portrait)
 		pixel_portrait.call("setup", 128.0)  # 12x14 grid at ~9px/pixel
-		pixel_portrait.call("assemble")
+		pixel_portrait.call("assemble", true)  # instant — no animation in Hub
 	else:
 		# Fallback: empty control
 		pixel_portrait = Control.new()
@@ -872,6 +877,22 @@ func _build_map_section() -> void:
 	biome_detail_label.add_theme_color_override("font_color", PALETTE.ink_soft)
 	vbox.add_child(biome_detail_label)
 
+	# MapMonde overlay button
+	var map_btn := Button.new()
+	map_btn.text = "\u2726 Carte du Monde"
+	map_btn.custom_minimum_size = Vector2(200, 40)
+	map_btn.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
+	if body_font:
+		map_btn.add_theme_font_override("font", body_font)
+	map_btn.add_theme_font_size_override("font_size", 14)
+	map_btn.add_theme_color_override("font_color", PALETTE.accent)
+	map_btn.add_theme_color_override("font_hover_color", PALETTE.accent_glow)
+	map_btn.mouse_entered.connect(func(): SFXManager.play("hover"))
+	map_btn.pressed.connect(_on_mapmonde_pressed)
+	var map_btn_center := CenterContainer.new()
+	map_btn_center.add_child(map_btn)
+	vbox.add_child(map_btn_center)
+
 
 func _create_biome_marker(biome_key: String, biome: Dictionary) -> Button:
 	var btn := Button.new()
@@ -1090,6 +1111,19 @@ func _build_arbre_section() -> void:
 
 	var title := _make_section_title("Arbre de Vie")
 	vbox.add_child(title)
+
+	# Full-screen Arbre de Vie button
+	var full_btn := Button.new()
+	full_btn.text = "Ouvrir l'Arbre complet"
+	full_btn.custom_minimum_size = Vector2(0, 32)
+	if body_font:
+		full_btn.add_theme_font_override("font", body_font)
+	full_btn.add_theme_font_size_override("font_size", 12)
+	full_btn.add_theme_color_override("font_color", PALETTE.accent)
+	full_btn.pressed.connect(func():
+		get_tree().change_scene_to_file("res://scenes/ArbreDeVie.tscn")
+	)
+	vbox.add_child(full_btn)
 
 	# Tree nodes by tier (top = secrets, bottom = germes)
 	for tier in ARBRE_TIER_ORDER:
@@ -1395,22 +1429,26 @@ func _build_bottom_bar() -> void:
 	bottom_bar.modulate.a = 0.0
 	add_child(bottom_bar)
 
-	# Tab navigation buttons (pages)
-	var tab_items := [
-		{"text": "\u25C6 Merlin", "icon": "merlin"},
-		{"text": "\u25B2 Carte", "icon": "map"},
-		{"text": "\u2605 Bestiole", "icon": "bestiole"},
-		{"text": "\u25B5 Arbre", "icon": "tree"},
-	]
+	# Tab navigation buttons (pages + overlays)
+	var tab_labels := ["Merlin", "Carte", "Bestiole", "Arbre"]
 
-	for i in range(tab_items.size()):
-		var item: Dictionary = tab_items[i]
+	for i in range(tab_labels.size()):
 		var btn := Button.new()
-		btn.text = item["text"]
-		btn.custom_minimum_size = Vector2(90, 40)
+		var icon_ctrl := _make_celtic_icon(tab_labels[i].to_lower(), 18.0)
+		var hbox := HBoxContainer.new()
+		hbox.alignment = BoxContainer.ALIGNMENT_CENTER
+		hbox.add_theme_constant_override("separation", 4)
+		hbox.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		hbox.add_child(icon_ctrl)
+		var lbl := Label.new()
+		lbl.text = tab_labels[i]
+		lbl.mouse_filter = Control.MOUSE_FILTER_IGNORE
 		if body_font:
-			btn.add_theme_font_override("font", body_font)
-		btn.add_theme_font_size_override("font_size", 13)
+			lbl.add_theme_font_override("font", body_font)
+		lbl.add_theme_font_size_override("font_size", 13)
+		hbox.add_child(lbl)
+		btn.add_child(hbox)
+		btn.custom_minimum_size = Vector2(90, 40)
 		btn.mouse_entered.connect(func(): SFXManager.play("hover"))
 		btn.pressed.connect(_on_tab_pressed.bind(i))
 		_style_tab_button(btn, i == 0)
@@ -1422,23 +1460,26 @@ func _build_bottom_bar() -> void:
 	sep.custom_minimum_size = Vector2(2, 30)
 	bottom_bar.add_child(sep)
 
-	# Icon-style utility buttons (like MenuPrincipal)
+	# Icon-style utility buttons (Celtic drawn icons)
 	var icon_items := [
-		{"icon": "\u25CE", "label": "Calendrier", "action": "calendar"},
-		{"icon": "\u275B", "label": "Collection", "action": "collection"},
-		{"icon": "\u2699", "label": "Options", "action": "options"},
-		{"icon": "\u2630", "label": "Menu", "action": "menu"},
+		{"type": "calendar", "label": "Calendrier", "action": "calendar"},
+		{"type": "collection", "label": "Collection", "action": "collection"},
+		{"type": "save", "label": "Sauvegarder", "action": "save"},
+		{"type": "options", "label": "Options", "action": "options"},
+		{"type": "menu", "label": "Menu", "action": "menu"},
 	]
 
 	for item in icon_items:
 		var btn := Button.new()
-		btn.text = item["icon"]
 		btn.tooltip_text = item["label"]
-		btn.custom_minimum_size = Vector2(52, 52)
-		btn.add_theme_font_size_override("font_size", 22)
+		btn.custom_minimum_size = Vector2(44, 44)
 		btn.focus_mode = Control.FOCUS_NONE
 		btn.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
 		_style_icon_button(btn)
+		# Add drawn Celtic icon as child
+		var icon := _make_celtic_icon(item["type"], 22.0)
+		icon.position = Vector2(11, 11)
+		btn.add_child(icon)
 
 		btn.mouse_entered.connect(_on_icon_hover.bind(btn, true))
 		btn.mouse_exited.connect(_on_icon_hover.bind(btn, false))
@@ -1448,6 +1489,9 @@ func _build_bottom_bar() -> void:
 				btn.pressed.connect(_on_calendar_pressed)
 			"collection":
 				btn.pressed.connect(_on_collection_pressed)
+			"save":
+				btn.pressed.connect(_on_save_pressed)
+				save_btn = btn
 			"options":
 				btn.pressed.connect(_on_options_pressed)
 			"menu":
@@ -1458,13 +1502,23 @@ func _build_bottom_bar() -> void:
 
 func _on_tab_pressed(tab_index: int) -> void:
 	## Switch between HubAntre pages (no scrolling).
-	if tab_index == current_tab or tab_index >= tab_pages.size():
+	## Tabs 1 (Carte) and 3 (Arbre) open overlays instead of switching pages.
+	if tab_index == 1:
+		_open_mapmonde_overlay()
+		return
+	if tab_index == 3:
+		_open_arbre_overlay()
+		return
+
+	# Map logical tab indices to page indices (0→0, 2→1)
+	var page_index: int = 0 if tab_index == 0 else 1
+	var old_page_index: int = 0 if current_tab == 0 else 1
+	if page_index == old_page_index:
 		return
 	SFXManager.play("click")
 
-	# Fade out current page
-	var old_page := tab_pages[current_tab]
-	var new_page := tab_pages[tab_index]
+	var old_page := tab_pages[old_page_index]
+	var new_page := tab_pages[page_index]
 
 	var tw := create_tween()
 	tw.tween_property(old_page, "modulate:a", 0.0, 0.15)
@@ -1475,18 +1529,10 @@ func _on_tab_pressed(tab_index: int) -> void:
 	)
 	tw.tween_property(new_page, "modulate:a", 1.0, 0.2)
 
-	# Update tab button styles
 	for i in range(tab_buttons.size()):
 		_style_tab_button(tab_buttons[i], i == tab_index)
 
 	current_tab = tab_index
-
-	# Re-layout map if switching to page 2
-	if tab_index == 1:
-		_layout_map.call_deferred()
-	# Refresh arbre display on page 4
-	if tab_index == 3:
-		_update_arbre_display()
 
 
 func _style_tab_button(btn: Button, is_active: bool) -> void:
@@ -1713,13 +1759,26 @@ func _update_biome_selection() -> void:
 		_map_pulse_tween.kill()
 		_map_pulse_tween = null
 
+	var meta: Dictionary = store.state.get("meta", {}) if store else {}
+
 	for biome_key in biome_buttons:
 		var btn: Button = biome_buttons[biome_key]
 		var biome: Dictionary = BIOME_DATA.get(biome_key, {})
-		_style_biome_button(btn, biome, biome_key == selected_biome)
+		var unlocked: bool = _biome_system.is_unlocked(biome_key, meta)
+		btn.disabled = not unlocked
+
+		if not unlocked:
+			# Locked biome: show lock icon and dim
+			btn.modulate = Color(0.5, 0.5, 0.5, 0.6)
+			btn.tooltip_text = _biome_system.get_unlock_hint(biome_key)
+		else:
+			btn.modulate = Color.WHITE
+			btn.tooltip_text = ""
+			_style_biome_button(btn, biome, biome_key == selected_biome)
+
 		btn.pivot_offset = btn.size * 0.5
 
-		if biome_key == selected_biome:
+		if biome_key == selected_biome and unlocked:
 			# Gentle pulse animation on selected marker
 			_map_pulse_tween = create_tween().set_loops()
 			_map_pulse_tween.tween_property(btn, "scale", Vector2(1.06, 1.06), 0.8).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
@@ -1741,11 +1800,15 @@ func _update_biome_selection() -> void:
 	if selected_biome != "" and BIOME_DATA.has(selected_biome):
 		var biome: Dictionary = BIOME_DATA[selected_biome]
 		var ogham_name: String = MerlinConstants.OGHAM_SKILLS.get(biome.get("ogham", ""), {}).get("name", "?")
-		biome_detail_label.text = "%s \u2014 Gardien: %s | Ogham: %s | Saison: %s" % [
+		var aspect_hint: String = biome.get("aspect_hint", "")
+		var diff_label: String = biome.get("difficulty_label", "Normal")
+		biome_detail_label.text = "%s \u2014 Gardien: %s | Ogham: %s | Saison: %s | %s | %s" % [
 			biome.get("subtitle", ""),
 			biome.get("guardian", "?"),
 			ogham_name,
 			biome.get("season", "?"),
+			aspect_hint,
+			diff_label,
 		]
 	else:
 		biome_detail_label.text = ""
@@ -1973,6 +2036,79 @@ func _store_return_scene() -> void:
 		se.return_scene = get_tree().current_scene.scene_file_path
 
 
+func _open_mapmonde_overlay() -> void:
+	SFXManager.play("click")
+	if get_node_or_null("MapMondeOverlay"):
+		return  # Already open
+	var scene_res := load(SCENE_MAPMONDE)
+	if scene_res == null:
+		push_warning("[HubAntre] MapMonde scene not found: %s" % SCENE_MAPMONDE)
+		return
+	var overlay := ColorRect.new()
+	overlay.set_anchors_preset(Control.PRESET_FULL_RECT)
+	overlay.color = Color(0.0, 0.0, 0.0, 0.7)
+	overlay.name = "MapMondeOverlay"
+	overlay.z_index = 100
+	add_child(overlay)
+
+	var map_instance: Control = scene_res.instantiate()
+	map_instance.set_anchors_preset(Control.PRESET_FULL_RECT)
+	overlay.add_child(map_instance)
+
+	# Override map back button to close overlay instead of changing scene
+	if map_instance.has_signal("close_requested"):
+		map_instance.close_requested.connect(func(): overlay.queue_free())
+	var close_btn := _make_overlay_close_button(overlay)
+	overlay.add_child(close_btn)
+	SFXManager.play("whoosh")
+
+
+func _open_arbre_overlay() -> void:
+	SFXManager.play("click")
+	if get_node_or_null("ArbreOverlay"):
+		return  # Already open
+	var scene_res := load("res://scenes/ArbreDeVie.tscn")
+	if scene_res == null:
+		push_warning("[HubAntre] ArbreDeVie scene not found")
+		return
+	var overlay := ColorRect.new()
+	overlay.set_anchors_preset(Control.PRESET_FULL_RECT)
+	overlay.color = Color(0.0, 0.0, 0.0, 0.7)
+	overlay.name = "ArbreOverlay"
+	overlay.z_index = 100
+	add_child(overlay)
+
+	var arbre_instance: Control = scene_res.instantiate()
+	arbre_instance.set_anchors_preset(Control.PRESET_FULL_RECT)
+	overlay.add_child(arbre_instance)
+
+	# Override ArbreDeVie back_button to close overlay
+	if arbre_instance.get("back_button") and arbre_instance.back_button is Button:
+		for conn in arbre_instance.back_button.pressed.get_connections():
+			arbre_instance.back_button.pressed.disconnect(conn.callable)
+		arbre_instance.back_button.pressed.connect(func():
+			SFXManager.play("click")
+			overlay.queue_free()
+		)
+	var close_btn := _make_overlay_close_button(overlay)
+	overlay.add_child(close_btn)
+	SFXManager.play("whoosh")
+
+
+func _make_overlay_close_button(overlay: ColorRect) -> Button:
+	var close_btn := Button.new()
+	close_btn.text = "\u2715"
+	close_btn.custom_minimum_size = Vector2(44, 44)
+	close_btn.add_theme_font_size_override("font_size", 24)
+	close_btn.position = Vector2(12, 12)
+	close_btn.z_index = 10
+	close_btn.pressed.connect(func():
+		SFXManager.play("click")
+		overlay.queue_free()
+	)
+	return close_btn
+
+
 func _on_menu_pressed() -> void:
 	SFXManager.play("click")
 	SFXManager.play("whoosh")
@@ -2000,6 +2136,7 @@ func _on_start_adventure() -> void:
 			"gardien": biome_data.get("guardian", ""),
 			"season_forte": biome_data.get("season", ""),
 		}
+		run_data["current_biome"] = selected_biome
 		if not _current_mission.is_empty():
 			run_data["mission_template"] = _current_mission.duplicate()
 		gm.set("run", run_data)
@@ -2093,6 +2230,82 @@ func _make_celtic_ornament() -> Label:
 	lbl.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	lbl.modulate.a = 0.0
 	return lbl
+
+
+func _make_celtic_icon(icon_type: String, sz: float = 24.0) -> Control:
+	## Draw-based Celtic icon — no emoji, logical shapes.
+	var ctrl := Control.new()
+	ctrl.custom_minimum_size = Vector2(sz, sz)
+	ctrl.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	ctrl.draw.connect(func():
+		var c := sz * 0.5
+		var r := sz * 0.38
+		var col: Color = PALETTE.ink
+		match icon_type:
+			"merlin":
+				# Wizard hat silhouette
+				ctrl.draw_line(Vector2(c, c - r), Vector2(c - r, c + r), col, 1.5, true)
+				ctrl.draw_line(Vector2(c, c - r), Vector2(c + r, c + r), col, 1.5, true)
+				ctrl.draw_line(Vector2(c - r, c + r), Vector2(c + r, c + r), col, 1.5, true)
+				ctrl.draw_circle(Vector2(c, c - r * 0.6), 2.0, PALETTE.accent)
+			"carte":
+				# Compass rose / diamond with cross
+				ctrl.draw_line(Vector2(c, c - r), Vector2(c + r, c), col, 1.5, true)
+				ctrl.draw_line(Vector2(c + r, c), Vector2(c, c + r), col, 1.5, true)
+				ctrl.draw_line(Vector2(c, c + r), Vector2(c - r, c), col, 1.5, true)
+				ctrl.draw_line(Vector2(c - r, c), Vector2(c, c - r), col, 1.5, true)
+				ctrl.draw_line(Vector2(c, c - r * 0.4), Vector2(c, c + r * 0.4), col, 1.0, true)
+				ctrl.draw_line(Vector2(c - r * 0.4, c), Vector2(c + r * 0.4, c), col, 1.0, true)
+			"bestiole":
+				# Triskelion (3-arm spiral)
+				for a in range(3):
+					var angle: float = float(a) * TAU / 3.0 - PI / 2.0
+					var pts := PackedVector2Array()
+					for t in range(8):
+						var tt: float = float(t) / 7.0
+						var ar: float = r * tt * 0.8
+						var aa: float = angle + tt * PI * 0.6
+						pts.append(Vector2(c + cos(aa) * ar, c + sin(aa) * ar))
+					if pts.size() >= 2:
+						ctrl.draw_polyline(pts, col, 1.5, true)
+			"arbre":
+				# Stylized tree (trunk + 3 branches)
+				ctrl.draw_line(Vector2(c, c + r), Vector2(c, c - r * 0.2), col, 2.0, true)
+				ctrl.draw_line(Vector2(c, c - r * 0.2), Vector2(c - r * 0.7, c - r), col, 1.5, true)
+				ctrl.draw_line(Vector2(c, c - r * 0.2), Vector2(c + r * 0.7, c - r), col, 1.5, true)
+				ctrl.draw_line(Vector2(c, c * 0.6), Vector2(c - r * 0.4, c - r * 0.5), col, 1.0, true)
+				ctrl.draw_line(Vector2(c, c * 0.6), Vector2(c + r * 0.4, c - r * 0.5), col, 1.0, true)
+			"calendar":
+				# Celtic lunar wheel — circle + cross
+				ctrl.draw_arc(Vector2(c, c), r, 0, TAU, 16, col, 1.5, true)
+				ctrl.draw_line(Vector2(c, c - r), Vector2(c, c + r), col, 1.0, true)
+				ctrl.draw_line(Vector2(c - r, c), Vector2(c + r, c), col, 1.0, true)
+			"collection":
+				# Open grimoire (book shape)
+				ctrl.draw_rect(Rect2(c - r * 0.7, c - r * 0.6, r * 1.4, r * 1.2), col, false, 1.5)
+				ctrl.draw_line(Vector2(c, c - r * 0.6), Vector2(c, c + r * 0.6), PALETTE.accent, 1.0, true)
+			"save":
+				# Ogham stone — vertical line + 3 horizontal marks
+				ctrl.draw_line(Vector2(c, c - r), Vector2(c, c + r), col, 2.0, true)
+				for i in range(3):
+					var y: float = c - r * 0.5 + float(i) * r * 0.5
+					ctrl.draw_line(Vector2(c - r * 0.35, y), Vector2(c + r * 0.35, y), col, 1.5, true)
+			"options":
+				# Triple spiral (simplified triskelion)
+				for a in range(3):
+					var angle: float = float(a) * TAU / 3.0
+					ctrl.draw_arc(Vector2(c + cos(angle) * r * 0.3, c + sin(angle) * r * 0.3),
+						r * 0.3, angle, angle + PI, 8, col, 1.5, true)
+			"menu":
+				# Three horizontal ogham lines
+				for i in range(3):
+					var y: float = c - r * 0.55 + float(i) * r * 0.55
+					ctrl.draw_line(Vector2(c - r, y), Vector2(c + r, y), col, 1.5, true)
+			_:
+				# Fallback: simple dot
+				ctrl.draw_circle(Vector2(c, c), 3.0, col)
+	)
+	return ctrl
 
 
 func _style_biome_button(btn: Button, biome: Dictionary, is_selected: bool) -> void:

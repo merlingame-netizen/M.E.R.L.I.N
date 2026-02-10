@@ -758,7 +758,7 @@ func _gen_dice_shake() -> AudioStreamWAV:
 		var noise := (_rng.randf() * 2.0 - 1.0) * 0.12 * env
 		# Rapid ticking (dice faces hitting)
 		var tick_rate := 40.0
-		var tick := sin(TAU * 3200.0 * t) * 0.06 * abs(sin(TAU * tick_rate * t)) * env
+		var tick: float = sin(TAU * 3200.0 * t) * 0.06 * abs(sin(TAU * tick_rate * t)) * env
 		_write_sample(buf, i, noise + tick)
 	return _make_stream(buf)
 

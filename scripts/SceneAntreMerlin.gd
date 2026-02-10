@@ -510,6 +510,7 @@ func _build_biome_panel() -> void:
 		btn.text = biome.name
 		btn.custom_minimum_size = Vector2(280, 34)
 		btn.pressed.connect(_on_biome_selected.bind(key))
+		btn.mouse_entered.connect(func(): SFXManager.play("hover"))
 		btn.disabled = true
 
 		var btn_style := StyleBoxFlat.new()
@@ -608,6 +609,7 @@ func _layout_ui() -> void:
 func _play_entry_animation() -> void:
 	if not card:
 		return
+	SFXManager.play("scene_transition")
 	card.modulate.a = 0.0
 	card.position.y += 40
 
@@ -664,6 +666,7 @@ func _run_phase_bestiole() -> void:
 		# Show bestiole glow on first line
 		if i == 0:
 			bestiole_label.visible = true
+			SFXManager.play("bestiole_shimmer")
 			var glow := create_tween()
 			glow.tween_property(bestiole_label, "modulate:a", 0.7, 1.5).set_trans(Tween.TRANS_SINE)
 
@@ -744,6 +747,7 @@ func _run_phase_ogham() -> void:
 
 	# Show ogham panel
 	ogham_panel.visible = true
+	SFXManager.play("ogham_unlock")
 	var tween := create_tween()
 	tween.set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
 	tween.tween_property(ogham_panel, "modulate:a", 1.0, 0.8)
@@ -751,6 +755,7 @@ func _run_phase_ogham() -> void:
 	# Flash each ogham
 	await tween.finished
 	for child in ogham_panel.get_child(0).get_children():
+		SFXManager.play_varied("ogham_chime", 0.15)
 		var flash := create_tween()
 		flash.tween_property(child, "modulate", Color(1.4, 1.4, 1.0, 1.0), 0.15)
 		flash.tween_property(child, "modulate", Color(1.0, 1.0, 1.0, 1.0), 0.3)
@@ -874,6 +879,7 @@ func _run_phase_biome_selection() -> void:
 func _on_biome_selected(biome_key: String) -> void:
 	if current_phase != Phase.BIOME_SELECTION or scene_finished:
 		return
+	SFXManager.play("choice_select")
 
 	selected_biome = biome_key
 	skip_hint.visible = false
@@ -935,6 +941,7 @@ func _save_and_transition() -> void:
 
 
 func _transition_out() -> void:
+	SFXManager.play("scene_transition")
 	scene_finished = true
 	current_phase = Phase.TRANSITIONING
 

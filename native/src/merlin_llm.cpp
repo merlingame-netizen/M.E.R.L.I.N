@@ -50,6 +50,8 @@ void MerlinLLM::_bind_methods() {
 	ClassDB::bind_method(D_METHOD("cancel_generation"), &MerlinLLM::cancel_generation);
 	ClassDB::bind_method(D_METHOD("set_sampling_params", "temperature", "top_p", "max_tokens"), &MerlinLLM::set_sampling_params);
 	ClassDB::bind_method(D_METHOD("set_advanced_sampling", "top_k", "repetition_penalty"), &MerlinLLM::set_advanced_sampling);
+	ClassDB::bind_method(D_METHOD("set_grammar", "grammar", "root"), &MerlinLLM::set_grammar, DEFVAL("root"));
+	ClassDB::bind_method(D_METHOD("clear_grammar"), &MerlinLLM::clear_grammar);
 	ClassDB::bind_method(D_METHOD("_emit_result"), &MerlinLLM::_emit_result);
 }
 
@@ -176,15 +178,10 @@ void MerlinLLM::generate_async(String prompt, Callable callback) {
 			// Ordre recommandé pour llama.cpp: penalties -> top_k -> top_p -> temp
 			if (repetition_penalty > 1.0f) {
 				llama_sampler_chain_add(sampler, llama_sampler_init_penalties(
-					/*n_vocab=*/llama_n_vocab(model),
-					/*special_eos_id=*/llama_vocab_eos(vocab),
-					/*linefeed_id=*/llama_vocab_nl(vocab),
 					/*penalty_last_n=*/64,
 					/*penalty_repeat=*/repetition_penalty,
 					/*penalty_freq=*/0.0f,
-					/*penalty_present=*/0.0f,
-					/*penalize_nl=*/false,
-					/*ignore_eos=*/false
+					/*penalty_present=*/0.0f
 				));
 			}
 
@@ -194,6 +191,16 @@ void MerlinLLM::generate_async(String prompt, Callable callback) {
 
 			llama_sampler_chain_add(sampler, llama_sampler_init_top_p(top_p, 1));
 			llama_sampler_chain_add(sampler, llama_sampler_init_temp(temperature));
+
+			// GBNF Grammar constrained decoding (Phase 30)
+			if (!grammar_str.empty()) {
+				llama_sampler_chain_add(sampler, llama_sampler_init_grammar(
+					vocab,
+					grammar_str.c_str(),
+					grammar_root.c_str()
+				));
+			}
+
 			llama_sampler_chain_add(sampler, llama_sampler_init_greedy());
 		}
 
@@ -315,4 +322,14 @@ void MerlinLLM::set_sampling_params(double p_temperature, double p_top_p, int32_
 void MerlinLLM::set_advanced_sampling(int32_t p_top_k, double p_repetition_penalty) {
 	top_k = std::clamp(p_top_k, 0, 100);
 	repetition_penalty = std::clamp(static_cast<float>(p_repetition_penalty), 1.0f, 2.0f);
+}
+
+void MerlinLLM::set_grammar(String p_grammar, String p_root) {
+	grammar_str = p_grammar.utf8().get_data();
+	grammar_root = p_root.utf8().get_data();
+}
+
+void MerlinLLM::clear_grammar() {
+	grammar_str.clear();
+	grammar_root = "root";
 }

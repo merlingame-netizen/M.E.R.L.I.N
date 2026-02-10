@@ -63,6 +63,7 @@ var cards_label: Label
 var bestiole_wheel: BestioleWheelSystem
 var _pixel_portrait: PixelCharacterPortrait
 var _current_speaker_key: String = ""
+var biome_indicator: Label
 
 # ═══════════════════════════════════════════════════════════════════════════════
 # STATE
@@ -70,7 +71,21 @@ var _current_speaker_key: String = ""
 
 var current_card: Dictionary = {}
 var current_aspects: Dictionary = {}
+var _previous_aspects: Dictionary = {}
 var current_souffle: int = 3
+var _blip_pool: Array[AudioStreamPlayer] = []
+var _blip_idx: int = 0
+const BLIP_POOL_SIZE := 4
+
+# Card stacking
+var _card_shadows: Array[Panel] = []
+const MAX_CARD_SHADOWS := 3
+
+# Ambient VFX
+var _ambient_timer: Timer
+var _ambient_particles: Array[ColorRect] = []
+const MAX_AMBIENT_PARTICLES := 10
+var _ambient_biome_key: String = ""
 
 # ═══════════════════════════════════════════════════════════════════════════════
 # INITIALIZATION
@@ -78,12 +93,26 @@ var current_souffle: int = 3
 
 func _ready() -> void:
 	_setup_ui()
+	_init_blip_pool()
 	_update_aspects({
 		"Corps": MerlinConstants.AspectState.EQUILIBRE,
 		"Ame": MerlinConstants.AspectState.EQUILIBRE,
 		"Monde": MerlinConstants.AspectState.EQUILIBRE,
 	})
 	_update_souffle(MerlinConstants.SOUFFLE_START)
+
+
+func _init_blip_pool() -> void:
+	## Pre-create a pool of AudioStreamPlayers to avoid per-character allocation.
+	for i in range(BLIP_POOL_SIZE):
+		var gen := AudioStreamGenerator.new()
+		gen.mix_rate = 22050.0
+		gen.buffer_length = 0.02
+		var player := AudioStreamPlayer.new()
+		player.stream = gen
+		player.volume_db = linear_to_db(0.04)
+		add_child(player)
+		_blip_pool.append(player)
 
 
 const PALETTE := {
@@ -141,6 +170,16 @@ func _setup_ui() -> void:
 	_create_aspect_displays(top_bar)
 	_create_souffle_display(top_bar)
 
+	# Biome indicator (small label showing current biome)
+	biome_indicator = Label.new()
+	biome_indicator.text = ""
+	biome_indicator.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	biome_indicator.add_theme_font_size_override("font_size", 11)
+	biome_indicator.add_theme_color_override("font_color", Color(0.5, 0.5, 0.5, 0.7))
+	if body_font:
+		biome_indicator.add_theme_font_override("font", body_font)
+	main_vbox.add_child(biome_indicator)
+
 	# Spacer
 	var spacer1 := Control.new()
 	spacer1.size_flags_vertical = Control.SIZE_EXPAND_FILL
@@ -164,7 +203,10 @@ func _setup_ui() -> void:
 	bestiole_wheel = BestioleWheelSystem.new()
 	bestiole_wheel.name = "BestioleWheel"
 	add_child(bestiole_wheel)
-	bestiole_wheel.ogham_selected.connect(func(skill_id: String): skill_activated.emit(skill_id))
+	bestiole_wheel.ogham_selected.connect(func(skill_id: String):
+		SFXManager.play("skill_activate")
+		skill_activated.emit(skill_id)
+	)
 
 	# Narrator overlay (for Merlin intro + NPC pixel cascade)
 	narrator_overlay = Control.new()
@@ -515,6 +557,7 @@ func _create_options_bar(parent: Control) -> void:
 		btn.add_theme_color_override("font_color", config["color"])
 		btn.add_theme_color_override("font_hover_color", config["color"])
 		btn.pressed.connect(_on_option_pressed.bind(i))
+		btn.mouse_entered.connect(func(): SFXManager.play("hover"))
 		option_buttons.append(btn)
 		option_vbox.add_child(btn)
 
@@ -557,14 +600,141 @@ func _create_info_bar(parent: Control) -> void:
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
+# THINKING ANIMATION — Shown while LLM generates next card
+# ═══════════════════════════════════════════════════════════════════════════════
+
+var _thinking_active := false
+var _thinking_dots := 0
+var _thinking_timer: Timer = null
+var _thinking_spiral: Control = null
+
+func show_thinking() -> void:
+	## Show "Merlin is thinking" animation on the card area.
+	if _thinking_active:
+		return
+	_thinking_active = true
+
+	# Dim options
+	if options_container and is_instance_valid(options_container):
+		var tw := create_tween()
+		tw.tween_property(options_container, "modulate:a", 0.3, 0.2)
+
+	# Update card text with animated dots
+	if card_speaker and is_instance_valid(card_speaker):
+		card_speaker.text = "Merlin"
+		card_speaker.visible = true
+
+	# Show Celtic spiral animation (reuse if already created)
+	if card_panel and is_instance_valid(card_panel):
+		if _thinking_spiral != null and is_instance_valid(_thinking_spiral):
+			_thinking_spiral.visible = true
+		else:
+			_thinking_spiral = Control.new()
+			_thinking_spiral.name = "ThinkingSpiral"
+			_thinking_spiral.custom_minimum_size = Vector2(60, 60)
+			_thinking_spiral.set_anchors_preset(Control.PRESET_CENTER)
+			var panel_size: Vector2 = card_panel.size if card_panel.size.length() > 0 else Vector2(380, 280)
+			_thinking_spiral.position = panel_size * 0.5 - Vector2(30, 50)
+			_thinking_spiral.draw.connect(_draw_thinking_spiral.bind(_thinking_spiral))
+			card_panel.add_child(_thinking_spiral)
+
+	# Start dot animation timer
+	_thinking_dots = 0
+	if _thinking_timer == null:
+		_thinking_timer = Timer.new()
+		_thinking_timer.wait_time = 0.4
+		_thinking_timer.timeout.connect(_on_thinking_tick)
+		add_child(_thinking_timer)
+	_thinking_timer.start()
+	_on_thinking_tick()  # First tick immediately
+
+
+func hide_thinking() -> void:
+	## Hide thinking animation and restore UI.
+	if not _thinking_active:
+		return
+	_thinking_active = false
+
+	# Stop timer
+	if _thinking_timer:
+		_thinking_timer.stop()
+
+	# Hide spiral (keep for reuse — avoids node leak)
+	if _thinking_spiral and is_instance_valid(_thinking_spiral):
+		_thinking_spiral.visible = false
+
+	# Restore options opacity
+	if options_container:
+		var tw := create_tween()
+		tw.tween_property(options_container, "modulate:a", 1.0, 0.2)
+
+
+func _on_thinking_tick() -> void:
+	## Animate thinking dots on the card text.
+	_thinking_dots = (_thinking_dots + 1) % 4
+	var dots := ".".repeat(_thinking_dots)
+	if card_text:
+		card_text.text = "Merlin reflechit" + dots
+
+	# Rotate spiral
+	if _thinking_spiral and is_instance_valid(_thinking_spiral):
+		var tw := create_tween()
+		tw.tween_property(_thinking_spiral, "rotation", _thinking_spiral.rotation + PI * 0.5, 0.35)
+		_thinking_spiral.queue_redraw()
+
+
+func _draw_thinking_spiral(ctrl: Control) -> void:
+	## Draw an animated Celtic triple spiral (triskelion).
+	var cx := ctrl.size.x * 0.5
+	var cy := ctrl.size.y * 0.5
+	var r := mini(int(ctrl.size.x), int(ctrl.size.y)) * 0.35
+
+	# Draw 3 spiraling arms (triskelion)
+	for arm in range(3):
+		var angle_offset := TAU * arm / 3.0
+		var points := PackedVector2Array()
+		for i in range(20):
+			var t := float(i) / 19.0
+			var spiral_r := r * t
+			var angle := angle_offset + t * TAU * 0.75
+			points.append(Vector2(
+				cx + cos(angle) * spiral_r,
+				cy + sin(angle) * spiral_r
+			))
+		if points.size() >= 2:
+			ctrl.draw_polyline(points, PALETTE.accent, 2.0, true)
+
+	# Center dot
+	ctrl.draw_circle(Vector2(cx, cy), 3.0, PALETTE.accent)
+
+
+# ═══════════════════════════════════════════════════════════════════════════════
 # UPDATE METHODS
 # ═══════════════════════════════════════════════════════════════════════════════
+
+func update_biome_indicator(biome_name: String, biome_color: Color) -> void:
+	if biome_indicator:
+		biome_indicator.text = "\u25C6 %s \u25C6" % biome_name
+		biome_indicator.add_theme_color_override("font_color", Color(biome_color.r, biome_color.g, biome_color.b, 0.7))
+
 
 func update_aspects(aspects: Dictionary) -> void:
 	_update_aspects(aspects)
 
 
 func _update_aspects(aspects: Dictionary) -> void:
+	# Play SFX based on aspect changes (skip on first call when _previous_aspects is empty)
+	if not _previous_aspects.is_empty():
+		for aspect_name in MerlinConstants.TRIADE_ASPECTS:
+			var old_state: int = int(_previous_aspects.get(aspect_name, MerlinConstants.AspectState.EQUILIBRE))
+			var new_state: int = int(aspects.get(aspect_name, MerlinConstants.AspectState.EQUILIBRE))
+			if new_state != old_state:
+				if new_state > old_state:
+					SFXManager.play("aspect_up")
+				else:
+					SFXManager.play("aspect_down")
+
+	_previous_aspects = aspects.duplicate()
 	current_aspects = aspects
 
 	for aspect in MerlinConstants.TRIADE_ASPECTS:
@@ -643,42 +813,223 @@ func _update_souffle(souffle: int) -> void:
 
 
 func display_card(card: Dictionary) -> void:
+	if card.is_empty():
+		push_warning("[TriadeUI] display_card called with empty card")
+		return
 	current_card = card
 
+	# Card stacking: push shadow of previous card behind
+	_push_card_shadow()
+
+	SFXManager.play("card_draw")
+
 	# Resolve speaker and pixel portrait
-	var speaker: String = card.get("speaker", "")
+	var speaker: String = str(card.get("speaker", ""))
 	var speaker_key := PixelCharacterPortrait.resolve_character_key(speaker) if speaker != "" else ""
 	var is_new_speaker := speaker_key != "" and speaker_key != _current_speaker_key
 
 	# Update speaker label
-	if card_speaker:
+	if card_speaker and is_instance_valid(card_speaker):
 		card_speaker.text = PixelCharacterPortrait.get_character_name(speaker_key) if speaker_key != "" else ""
 		card_speaker.visible = not speaker.is_empty()
 
 	# Pixel portrait: assemble new character if speaker changed
-	if is_new_speaker and _pixel_portrait:
+	if is_new_speaker and _pixel_portrait and is_instance_valid(_pixel_portrait):
 		_current_speaker_key = speaker_key
 		_pixel_portrait.setup(speaker_key, 4.0)
 		_pixel_portrait.assemble(false)  # Animated assembly
 
+	# Animate card entrance
+	if card_panel and is_instance_valid(card_panel):
+		card_panel.modulate.a = 0.0
+		card_panel.position.y += 20
+		var entry_tw := create_tween()
+		entry_tw.tween_property(card_panel, "position:y", card_panel.position.y - 20, 0.25) \
+			.set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_OUT)
+		entry_tw.parallel().tween_property(card_panel, "modulate:a", 1.0, 0.2)
+
 	# Update text with typewriter
-	if card_text:
+	if card_text and is_instance_valid(card_text):
 		_typewriter_card_text(card.get("text", "..."))
 
 	# Update options
 	var options: Array = card.get("options", [])
 	for i in range(mini(options.size(), 3)):
-		var option: Dictionary = options[i]
-		if i < option_labels.size():
-			option_labels[i].text = option.get("label", "...")
-		if i < option_buttons.size():
+		var option: Dictionary = options[i] if options[i] is Dictionary else {}
+		if i < option_labels.size() and is_instance_valid(option_labels[i]):
+			option_labels[i].text = str(option.get("label", "..."))
+		if i < option_buttons.size() and is_instance_valid(option_buttons[i]):
 			var key: String = OPTION_KEYS.get(i, "?")
-			option_buttons[i].text = "[%s] %s" % [key, option.get("label", "?")]
+			option_buttons[i].text = "[%s] %s" % [key, str(option.get("label", "?"))]
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
-# PIXEL CHARACTER PORTRAIT — Now handled by PixelCharacterPortrait class
+# CARD STACKING — Shadow cards pile up behind the active card
 # ═══════════════════════════════════════════════════════════════════════════════
+
+func _push_card_shadow() -> void:
+	if not card_panel or not is_instance_valid(card_panel) or not card_container:
+		return
+	# Remove oldest shadow if at max
+	if _card_shadows.size() >= MAX_CARD_SHADOWS:
+		var oldest: Panel = _card_shadows.pop_front()
+		if is_instance_valid(oldest):
+			var fade_tw := create_tween()
+			fade_tw.tween_property(oldest, "modulate:a", 0.0, 0.2)
+			fade_tw.tween_callback(oldest.queue_free)
+
+	# Create shadow from current card position
+	var shadow := Panel.new()
+	shadow.custom_minimum_size = card_panel.custom_minimum_size
+	shadow.size = card_panel.size
+	shadow.position = card_panel.position + Vector2(2, 2) * float(_card_shadows.size() + 1)
+	shadow.modulate.a = maxf(0.06, 0.18 - 0.04 * float(_card_shadows.size()))
+	shadow.mouse_filter = Control.MOUSE_FILTER_IGNORE
+
+	var base_style = card_panel.get_theme_stylebox("panel")
+	if base_style:
+		var style: StyleBoxFlat = base_style.duplicate() as StyleBoxFlat
+		if style:
+			style.bg_color = style.bg_color.darkened(0.15)
+			shadow.add_theme_stylebox_override("panel", style)
+
+	card_container.add_child(shadow)
+	card_container.move_child(shadow, 0)  # Behind main card
+	_card_shadows.append(shadow)
+
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# PROGRESSIVE INDICATORS — Reveal aspects and souffle one by one
+# ═══════════════════════════════════════════════════════════════════════════════
+
+func show_progressive_indicators() -> void:
+	## Animate aspect and souffle indicators appearing one by one.
+	if aspect_panel and is_instance_valid(aspect_panel):
+		aspect_panel.modulate.a = 0.0
+	if souffle_panel and is_instance_valid(souffle_panel):
+		souffle_panel.modulate.a = 0.0
+
+	await get_tree().create_timer(0.3).timeout
+	if not is_inside_tree():
+		return
+
+	# Reveal each aspect sequentially
+	if aspect_panel and is_instance_valid(aspect_panel):
+		aspect_panel.modulate.a = 1.0
+	for aspect_name in MerlinConstants.TRIADE_ASPECTS:
+		if aspect_displays.has(aspect_name):
+			var container: Control = aspect_displays[aspect_name].get("container")
+			if container and is_instance_valid(container):
+				container.modulate.a = 0.0
+				SFXManager.play_varied("aspect_shift", 0.1)
+				var tw := create_tween()
+				tw.tween_property(container, "modulate:a", 1.0, 0.4).set_trans(Tween.TRANS_SINE)
+				await tw.finished
+				if not is_inside_tree():
+					return
+				await get_tree().create_timer(0.15).timeout
+
+	# Reveal souffle
+	if souffle_panel and is_instance_valid(souffle_panel):
+		SFXManager.play("ogham_chime")
+		var tw := create_tween()
+		tw.tween_property(souffle_panel, "modulate:a", 1.0, 0.5).set_trans(Tween.TRANS_SINE)
+		await tw.finished
+
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# AMBIENT VFX — Biome-themed simple particles behind the card
+# ═══════════════════════════════════════════════════════════════════════════════
+
+func start_ambient_vfx(biome_key: String) -> void:
+	## Start subtle ambient particle effects based on biome.
+	_ambient_biome_key = biome_key
+	if _ambient_timer:
+		_ambient_timer.queue_free()
+	_ambient_timer = Timer.new()
+	_ambient_timer.wait_time = 2.0
+	_ambient_timer.autostart = true
+	_ambient_timer.timeout.connect(_spawn_ambient_particle)
+	add_child(_ambient_timer)
+
+
+func _spawn_ambient_particle() -> void:
+	if _ambient_particles.size() >= MAX_AMBIENT_PARTICLES or not is_inside_tree():
+		return
+	var vp: Vector2 = get_viewport_rect().size
+	var px := ColorRect.new()
+	px.size = Vector2(randf_range(3.0, 5.0), randf_range(3.0, 5.0))
+	px.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	px.z_index = -1
+	px.modulate.a = randf_range(0.15, 0.35)
+
+	var start_pos := Vector2.ZERO
+	var end_pos := Vector2.ZERO
+	var duration: float = randf_range(4.0, 7.0)
+
+	var key: String = _ambient_biome_key.replace("foret_", "").replace("landes_", "") \
+		.replace("cotes_", "").replace("villages_", "").replace("cercles_", "") \
+		.replace("marais_", "").replace("collines_", "")
+
+	match key:
+		"broceliande":
+			# Falling leaves (green/brown)
+			px.color = [Color(0.35, 0.55, 0.28), Color(0.55, 0.40, 0.25)][randi() % 2]
+			start_pos = Vector2(randf_range(0, vp.x), -10)
+			end_pos = start_pos + Vector2(randf_range(-60, 60), vp.y + 20)
+		"bruyere":
+			# Wind dust (horizontal)
+			px.color = Color(0.55, 0.40, 0.55, 0.5)
+			start_pos = Vector2(-10, randf_range(vp.y * 0.3, vp.y * 0.8))
+			end_pos = Vector2(vp.x + 10, start_pos.y + randf_range(-30, 30))
+			duration = randf_range(3.0, 5.0)
+		"sauvages":
+			# Rising mist (blue)
+			px.color = Color(0.38, 0.58, 0.75, 0.4)
+			start_pos = Vector2(randf_range(0, vp.x), vp.y + 10)
+			end_pos = start_pos + Vector2(randf_range(-20, 20), -vp.y * 0.4)
+		"celtes":
+			# Rising smoke (gray)
+			px.color = Color(0.5, 0.48, 0.45, 0.3)
+			start_pos = Vector2(randf_range(vp.x * 0.3, vp.x * 0.7), vp.y + 10)
+			end_pos = start_pos + Vector2(randf_range(-15, 15), -vp.y * 0.5)
+		"pierres":
+			# Fireflies (warm yellow glow)
+			px.color = Color(0.85, 0.75, 0.30, 0.6)
+			px.size = Vector2(3, 3)
+			start_pos = Vector2(randf_range(vp.x * 0.1, vp.x * 0.9), randf_range(vp.y * 0.2, vp.y * 0.8))
+			end_pos = start_pos + Vector2(randf_range(-40, 40), randf_range(-40, 40))
+			duration = randf_range(2.0, 4.0)
+		"korrigans":
+			# Phosphorescence (dark green)
+			px.color = Color(0.20, 0.45, 0.25, 0.4)
+			start_pos = Vector2(randf_range(0, vp.x), vp.y * randf_range(0.6, 0.95))
+			end_pos = start_pos + Vector2(randf_range(-25, 25), randf_range(-20, -50))
+			duration = randf_range(3.0, 5.0)
+		"dolmens":
+			# Grass swaying (green tufts)
+			px.color = Color(0.40, 0.60, 0.30, 0.3)
+			start_pos = Vector2(randf_range(0, vp.x), vp.y * randf_range(0.7, 0.95))
+			end_pos = start_pos + Vector2(randf_range(-20, 20), randf_range(-10, 10))
+			duration = randf_range(2.0, 4.0)
+		_:
+			# Default: gentle floating motes
+			px.color = Color(0.6, 0.55, 0.45, 0.2)
+			start_pos = Vector2(randf_range(0, vp.x), randf_range(0, vp.y))
+			end_pos = start_pos + Vector2(randf_range(-30, 30), randf_range(-30, 30))
+
+	px.position = start_pos
+	add_child(px)
+	_ambient_particles.append(px)
+
+	var tw := create_tween()
+	tw.tween_property(px, "position", end_pos, duration).set_trans(Tween.TRANS_SINE)
+	tw.parallel().tween_property(px, "modulate:a", 0.0, duration * 0.8).set_delay(duration * 0.2)
+	tw.tween_callback(func():
+		_ambient_particles.erase(px)
+		if is_instance_valid(px):
+			px.queue_free()
+	)
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
@@ -702,16 +1053,18 @@ var _typewriter_abort := false
 
 func show_narrator_intro() -> void:
 	## Show Merlin as narrator before the first card of a run.
+	print("[TriadeUI] show_narrator_intro()")
+	SFXManager.play("whoosh")
 	_narrator_active = true
 
 	# Hide game UI during intro
-	if options_container:
+	if options_container and is_instance_valid(options_container):
 		options_container.modulate.a = 0.0
-	if info_panel:
+	if info_panel and is_instance_valid(info_panel):
 		info_panel.modulate.a = 0.0
 
 	# Show Merlin as speaker
-	if card_speaker:
+	if card_speaker and is_instance_valid(card_speaker):
 		card_speaker.text = "Merlin"
 		card_speaker.visible = true
 
@@ -722,23 +1075,26 @@ func show_narrator_intro() -> void:
 	await _typewriter_card_text(intro_text)
 
 	# Wait for player to acknowledge
+	if not is_inside_tree():
+		return
 	await get_tree().create_timer(1.5).timeout
 
 	# Fade in game UI
-	if options_container:
+	if options_container and is_instance_valid(options_container):
 		var tw := create_tween()
 		tw.tween_property(options_container, "modulate:a", 1.0, 0.4)
-	if info_panel:
+	if info_panel and is_instance_valid(info_panel):
 		var tw2 := create_tween()
 		tw2.tween_property(info_panel, "modulate:a", 1.0, 0.4)
 
 	_narrator_active = false
 	narrator_intro_finished.emit()
+	print("[TriadeUI] narrator intro finished")
 
 
 func _typewriter_card_text(full_text: String) -> void:
 	## Typewriter effect for card text with procedural blip sound.
-	if card_text == null:
+	if card_text == null or not is_instance_valid(card_text):
 		return
 
 	_typewriter_active = true
@@ -751,8 +1107,9 @@ func _typewriter_card_text(full_text: String) -> void:
 	var total := full_text.length()
 
 	for i in range(total):
-		if _typewriter_abort:
-			card_text.visible_characters = -1
+		if _typewriter_abort or not is_inside_tree():
+			if is_instance_valid(card_text):
+				card_text.visible_characters = -1
 			break
 		card_text.visible_characters = i + 1
 		var ch := full_text[i]
@@ -765,19 +1122,19 @@ func _typewriter_card_text(full_text: String) -> void:
 		else:
 			await get_tree().create_timer(0.025).timeout
 
-	card_text.visible_characters = -1
+	if is_instance_valid(card_text):
+		card_text.visible_characters = -1
 	_typewriter_active = false
 
 
 func _play_blip() -> void:
-	## Procedural keyboard click sound.
-	var gen := AudioStreamGenerator.new()
-	gen.mix_rate = 22050.0
-	gen.buffer_length = 0.02
-	var player := AudioStreamPlayer.new()
-	player.stream = gen
-	player.volume_db = linear_to_db(0.04)
-	add_child(player)
+	## Procedural keyboard click sound (pooled — no node leak).
+	if _blip_pool.is_empty():
+		return
+	var player: AudioStreamPlayer = _blip_pool[_blip_idx]
+	_blip_idx = (_blip_idx + 1) % BLIP_POOL_SIZE
+	if player.playing:
+		player.stop()
 	player.play()
 	var playback: AudioStreamGeneratorPlayback = player.get_stream_playback()
 	var freq := randf_range(280.0, 380.0)
@@ -788,9 +1145,6 @@ func _play_blip() -> void:
 		var val := sin(TAU * freq * t) * envelope * 0.3
 		val += randf_range(-0.05, 0.05) * envelope
 		playback.push_frame(Vector2(val, val))
-	# Auto cleanup
-	var tw := create_tween()
-	tw.tween_callback(player.queue_free).set_delay(0.05)
 
 
 func update_mission(mission: Dictionary) -> void:
@@ -814,6 +1168,7 @@ func update_cards_count(count: int) -> void:
 
 func _input(event: InputEvent) -> void:
 	if event.is_action_pressed("ui_cancel"):
+		SFXManager.play("click")
 		pause_requested.emit()
 		return
 
@@ -840,6 +1195,8 @@ func _input(event: InputEvent) -> void:
 func _on_option_pressed(option: int) -> void:
 	if current_card.is_empty():
 		return
+
+	SFXManager.play("choice_select")
 
 	# Animate button
 	if option < option_buttons.size():
@@ -942,6 +1299,58 @@ func show_end_screen(ending: Dictionary) -> void:
 	stats_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	vbox.add_child(stats_lbl)
 
+	# Rewards section
+	var rewards: Dictionary = ending.get("rewards", {})
+	if rewards.size() > 0:
+		var rewards_title := Label.new()
+		rewards_title.text = "Recompenses obtenues"
+		if title_font:
+			rewards_title.add_theme_font_override("font", title_font)
+		rewards_title.add_theme_font_size_override("font_size", 18)
+		rewards_title.add_theme_color_override("font_color", PALETTE.accent)
+		rewards_title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		vbox.add_child(rewards_title)
+
+		# Essences earned
+		var ess: Dictionary = rewards.get("essence", {})
+		if ess.size() > 0:
+			var parts: PackedStringArray = []
+			for elem in ess:
+				if int(ess[elem]) > 0:
+					parts.append("%s +%d" % [str(elem).left(4), int(ess[elem])])
+			if parts.size() > 0:
+				var ess_lbl := Label.new()
+				ess_lbl.text = "Essences: " + " | ".join(parts)
+				if body_font:
+					ess_lbl.add_theme_font_override("font", body_font)
+				ess_lbl.add_theme_font_size_override("font_size", 13)
+				ess_lbl.add_theme_color_override("font_color", PALETTE.ink)
+				ess_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+				ess_lbl.autowrap_mode = TextServer.AUTOWRAP_WORD
+				ess_lbl.custom_minimum_size.x = 400
+				vbox.add_child(ess_lbl)
+
+		# Fragments, Liens, Gloire
+		var currency_parts: PackedStringArray = []
+		var frag: int = int(rewards.get("fragments", 0))
+		var liens: int = int(rewards.get("liens", 0))
+		var gloire_r: int = int(rewards.get("gloire", 0))
+		if frag > 0:
+			currency_parts.append("Fragments +%d" % frag)
+		if liens > 0:
+			currency_parts.append("Liens +%d" % liens)
+		if gloire_r > 0:
+			currency_parts.append("Gloire +%d" % gloire_r)
+		if currency_parts.size() > 0:
+			var cur_lbl := Label.new()
+			cur_lbl.text = " | ".join(currency_parts)
+			if body_font:
+				cur_lbl.add_theme_font_override("font", body_font)
+			cur_lbl.add_theme_font_size_override("font_size", 14)
+			cur_lbl.add_theme_color_override("font_color", PALETTE.accent)
+			cur_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+			vbox.add_child(cur_lbl)
+
 	# Celtic ornament bottom
 	var orn_bot := Label.new()
 	orn_bot.text = "\u2500\u2500\u2500 \u25C6 \u2500\u2500\u2500"
@@ -964,13 +1373,318 @@ func show_end_screen(ending: Dictionary) -> void:
 	aspects_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	vbox.add_child(aspects_label)
 
-	# Return button
+	# Action buttons
 	var spacer := Control.new()
-	spacer.custom_minimum_size.y = 20
+	spacer.custom_minimum_size.y = 16
 	vbox.add_child(spacer)
 
-	var btn := Button.new()
-	btn.text = "Retour au menu"
-	btn.custom_minimum_size = Vector2(200, 50)
-	btn.pressed.connect(func(): get_tree().change_scene_to_file("res://scenes/MenuPrincipal.tscn"))
-	vbox.add_child(btn)
+	var btn_box := HBoxContainer.new()
+	btn_box.alignment = BoxContainer.ALIGNMENT_CENTER
+	btn_box.add_theme_constant_override("separation", 20)
+	vbox.add_child(btn_box)
+
+	var btn_hub := Button.new()
+	btn_hub.text = "Retour au Hub"
+	btn_hub.custom_minimum_size = Vector2(200, 50)
+	btn_hub.pressed.connect(func(): get_tree().change_scene_to_file("res://scenes/HubAntre.tscn"))
+	btn_box.add_child(btn_hub)
+
+	var btn_new := Button.new()
+	btn_new.text = "Nouvelle Aventure"
+	btn_new.custom_minimum_size = Vector2(200, 50)
+	btn_new.pressed.connect(func(): get_tree().change_scene_to_file("res://scenes/TransitionBiome.tscn"))
+	btn_box.add_child(btn_new)
+
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# D20 DICE UI (Phase 37 — Fusion)
+# ═══════════════════════════════════════════════════════════════════════════════
+
+var _dice_overlay: Control = null
+var _dice_display: Label = null
+var _dice_dc_label: Label = null
+var _dice_result_label: Label = null
+
+func show_dice_roll(dc: int, target: int) -> void:
+	## Show D20 dice animation (2.2s deceleration + bounce). Await this.
+	_ensure_dice_overlay()
+	_dice_overlay.visible = true
+	_dice_overlay.modulate.a = 0.0
+	_dice_dc_label.text = "Difficulte: %d" % dc
+	_dice_result_label.text = ""
+	_dice_display.text = "?"
+	_dice_display.add_theme_color_override("font_color", PALETTE.ink)
+	_dice_display.scale = Vector2.ONE
+	_dice_display.rotation = 0.0
+
+	# Fade in dice area
+	var tw_in := create_tween()
+	tw_in.tween_property(_dice_overlay, "modulate:a", 1.0, 0.2)
+	await tw_in.finished
+
+	# Dice roll animation: decelerate over 2.2s
+	var duration := 2.2
+	var elapsed := 0.0
+	while elapsed < duration and is_inside_tree():
+		var progress: float = elapsed / duration
+		var cycle_speed: float = lerpf(0.07, 0.35, progress * progress)
+		_dice_display.text = str(randi_range(1, 20))
+		_dice_display.rotation = randf_range(-0.08, 0.08) * (1.0 - progress)
+		await get_tree().create_timer(cycle_speed).timeout
+		elapsed += cycle_speed
+
+	# Land on target
+	_dice_display.text = str(target)
+	_dice_display.rotation = 0.0
+	# Bounce elastic
+	_dice_display.pivot_offset = _dice_display.size / 2.0
+	var tw_bounce := create_tween().set_trans(Tween.TRANS_ELASTIC).set_ease(Tween.EASE_OUT)
+	tw_bounce.tween_property(_dice_display, "scale", Vector2(1.3, 1.3), 0.15)
+	tw_bounce.tween_property(_dice_display, "scale", Vector2(1.0, 1.0), 0.25)
+	await tw_bounce.finished
+
+
+func show_dice_instant(dc: int, value: int) -> void:
+	## Show dice result instantly (after minigame).
+	_ensure_dice_overlay()
+	_dice_overlay.visible = true
+	_dice_overlay.modulate.a = 1.0
+	_dice_dc_label.text = "Difficulte: %d" % dc
+	_dice_result_label.text = ""
+	_dice_display.text = str(value)
+	_dice_display.rotation = 0.0
+	var glow: Color = _dice_outcome_color(value, dc)
+	_dice_display.add_theme_color_override("font_color", glow)
+	# Bounce
+	_dice_display.pivot_offset = _dice_display.size / 2.0
+	var tw := create_tween().set_trans(Tween.TRANS_ELASTIC).set_ease(Tween.EASE_OUT)
+	tw.tween_property(_dice_display, "scale", Vector2(1.3, 1.3), 0.15)
+	tw.tween_property(_dice_display, "scale", Vector2(1.0, 1.0), 0.25)
+
+
+func show_dice_result(roll: int, dc: int, outcome: String) -> void:
+	## Show final dice result text + color.
+	_ensure_dice_overlay()
+	var glow: Color = _dice_outcome_color(roll, dc)
+	_dice_display.add_theme_color_override("font_color", glow)
+
+	match outcome:
+		"critical_success":
+			_dice_result_label.text = "Coup Critique !"
+			_dice_result_label.add_theme_color_override("font_color", Color(0.85, 0.72, 0.2))
+		"success":
+			_dice_result_label.text = "Reussite ! (%d >= %d)" % [roll, dc]
+			_dice_result_label.add_theme_color_override("font_color", Color(0.3, 0.7, 0.3))
+		"failure":
+			_dice_result_label.text = "Echec... (%d < %d)" % [roll, dc]
+			_dice_result_label.add_theme_color_override("font_color", Color(0.7, 0.3, 0.3))
+		"critical_failure":
+			_dice_result_label.text = "Echec Critique !"
+			_dice_result_label.add_theme_color_override("font_color", Color(0.7, 0.2, 0.2))
+
+
+func _dice_outcome_color(roll: int, dc: int) -> Color:
+	if roll == 20:
+		return Color(0.85, 0.72, 0.2)  # Gold
+	elif roll == 1:
+		return Color(0.7, 0.2, 0.2)  # Dark red
+	elif roll >= dc:
+		return Color(0.3, 0.7, 0.3)  # Green
+	else:
+		return Color(0.7, 0.3, 0.3)  # Red
+
+
+func _ensure_dice_overlay() -> void:
+	## Create dice UI elements if not yet built.
+	if _dice_overlay and is_instance_valid(_dice_overlay):
+		return
+	_dice_overlay = Control.new()
+	_dice_overlay.name = "DiceOverlay"
+	_dice_overlay.set_anchors_preset(Control.PRESET_FULL_RECT)
+	_dice_overlay.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_dice_overlay.visible = false
+	add_child(_dice_overlay)
+
+	var center := CenterContainer.new()
+	center.set_anchors_preset(Control.PRESET_FULL_RECT)
+	_dice_overlay.add_child(center)
+
+	var vbox := VBoxContainer.new()
+	vbox.alignment = BoxContainer.ALIGNMENT_CENTER
+	vbox.add_theme_constant_override("separation", 8)
+	center.add_child(vbox)
+
+	_dice_dc_label = Label.new()
+	_dice_dc_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	_dice_dc_label.add_theme_font_size_override("font_size", 14)
+	_dice_dc_label.add_theme_color_override("font_color", PALETTE.ink_soft)
+	if body_font:
+		_dice_dc_label.add_theme_font_override("font", body_font)
+	vbox.add_child(_dice_dc_label)
+
+	_dice_display = Label.new()
+	_dice_display.text = "?"
+	_dice_display.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	if title_font:
+		_dice_display.add_theme_font_override("font", title_font)
+	_dice_display.add_theme_font_size_override("font_size", 72)
+	_dice_display.add_theme_color_override("font_color", PALETTE.ink)
+	vbox.add_child(_dice_display)
+
+	_dice_result_label = Label.new()
+	_dice_result_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	_dice_result_label.add_theme_font_size_override("font_size", 16)
+	if body_font:
+		_dice_result_label.add_theme_font_override("font", body_font)
+	vbox.add_child(_dice_result_label)
+
+
+func _hide_dice_overlay() -> void:
+	if _dice_overlay and is_instance_valid(_dice_overlay):
+		var tw := create_tween()
+		tw.tween_property(_dice_overlay, "modulate:a", 0.0, 0.3)
+		tw.tween_callback(func(): _dice_overlay.visible = false)
+
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# TRAVEL ANIMATION (fog overlay between cards)
+# ═══════════════════════════════════════════════════════════════════════════════
+
+func show_travel_animation(text: String) -> void:
+	## Full-screen fog overlay with contextual text. Awaitable.
+	_hide_dice_overlay()
+	SFXManager.play("mist_breath")
+
+	var fog := ColorRect.new()
+	fog.name = "TravelFog"
+	fog.set_anchors_preset(Control.PRESET_FULL_RECT)
+	fog.color = Color(0.08, 0.06, 0.04, 0.0)
+	fog.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	add_child(fog)
+
+	var lbl := Label.new()
+	lbl.text = text
+	lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	lbl.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	lbl.set_anchors_preset(Control.PRESET_FULL_RECT)
+	if body_font:
+		lbl.add_theme_font_override("font", body_font)
+	lbl.add_theme_font_size_override("font_size", 18)
+	lbl.add_theme_color_override("font_color", Color(0.85, 0.80, 0.70, 0.0))
+	lbl.autowrap_mode = TextServer.AUTOWRAP_WORD
+	fog.add_child(lbl)
+
+	# Fade in
+	var tw_in := create_tween()
+	tw_in.set_parallel(true)
+	tw_in.tween_property(fog, "color:a", 0.85, 0.6)
+	tw_in.tween_property(lbl, "theme_override_colors/font_color:a", 1.0, 0.6)
+	await tw_in.finished
+
+	# Hold
+	if is_inside_tree():
+		await get_tree().create_timer(1.2).timeout
+
+	# Fade out
+	var tw_out := create_tween()
+	tw_out.set_parallel(true)
+	tw_out.tween_property(fog, "color:a", 0.0, 0.6)
+	tw_out.tween_property(lbl, "theme_override_colors/font_color:a", 0.0, 0.6)
+	await tw_out.finished
+
+	if is_instance_valid(fog):
+		fog.queue_free()
+
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# REACTION TEXT + CRITICAL BADGE + BIOME PASSIVE
+# ═══════════════════════════════════════════════════════════════════════════════
+
+func show_reaction_text(text: String, outcome: String) -> void:
+	## Show narrative reaction on the card text area.
+	if not card_text or not is_instance_valid(card_text):
+		return
+	var color: Color = Color(0.3, 0.65, 0.3) if outcome.contains("success") else Color(0.7, 0.3, 0.3)
+	card_text.text = "[color=#%s]%s[/color]" % [color.to_html(false), text]
+	card_text.visible_characters = -1
+
+
+func show_critical_badge() -> void:
+	## Pulse gold border on the card panel to indicate critical choice.
+	if not card_panel or not is_instance_valid(card_panel):
+		return
+	var base_style = card_panel.get_theme_stylebox("panel")
+	if not base_style:
+		return
+	var style: StyleBoxFlat = base_style.duplicate() as StyleBoxFlat
+	if style:
+		style.border_color = Color(0.85, 0.72, 0.2)
+		style.set_border_width_all(3)
+		card_panel.add_theme_stylebox_override("panel", style)
+	# Pulse animation (infinite, stop on next card display)
+	var tw := create_tween().set_loops(0)
+	tw.tween_property(card_panel, "modulate", Color(1.15, 1.1, 0.9), 0.3)
+	tw.tween_property(card_panel, "modulate", Color.WHITE, 0.3)
+
+
+func show_biome_passive(passive: Dictionary) -> void:
+	## Brief notification for biome passive effect.
+	var text: String = str(passive.get("text", "Force du biome..."))
+	var notif := Label.new()
+	notif.text = text
+	notif.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	notif.set_anchors_preset(Control.PRESET_CENTER_BOTTOM)
+	notif.add_theme_font_size_override("font_size", 14)
+	notif.add_theme_color_override("font_color", Color(0.4, 0.7, 0.5))
+	if body_font:
+		notif.add_theme_font_override("font", body_font)
+	notif.modulate.a = 0.0
+	add_child(notif)
+	var tw := create_tween()
+	tw.tween_property(notif, "modulate:a", 1.0, 0.3)
+	tw.tween_interval(1.5)
+	tw.tween_property(notif, "modulate:a", 0.0, 0.3)
+	tw.tween_callback(notif.queue_free)
+
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# CARD OUTCOME ANIMATIONS (shake, pulse, particles)
+# ═══════════════════════════════════════════════════════════════════════════════
+
+func animate_card_outcome(outcome: String) -> void:
+	## Animate card panel based on D20 outcome.
+	if not card_panel or not is_instance_valid(card_panel):
+		return
+	match outcome:
+		"critical_success":
+			# Gold pulse
+			var tw := create_tween().set_trans(Tween.TRANS_ELASTIC).set_ease(Tween.EASE_OUT)
+			tw.tween_property(card_panel, "scale", Vector2(1.08, 1.08), 0.2)
+			tw.tween_property(card_panel, "scale", Vector2(1.0, 1.0), 0.3)
+		"success":
+			var tw := create_tween().set_trans(Tween.TRANS_ELASTIC).set_ease(Tween.EASE_OUT)
+			tw.tween_property(card_panel, "scale", Vector2(1.04, 1.04), 0.15)
+			tw.tween_property(card_panel, "scale", Vector2(1.0, 1.0), 0.2)
+		"failure":
+			# Shake horizontal x3
+			var tw := create_tween()
+			for i in range(3):
+				tw.tween_property(card_panel, "position:x", card_panel.position.x + 8, 0.05).set_trans(Tween.TRANS_SINE)
+				tw.tween_property(card_panel, "position:x", card_panel.position.x - 8, 0.05).set_trans(Tween.TRANS_SINE)
+			tw.tween_property(card_panel, "position:x", card_panel.position.x, 0.05)
+		"critical_failure":
+			# Violent shake x5 + shrink
+			var tw := create_tween()
+			for i in range(5):
+				tw.tween_property(card_panel, "position:x", card_panel.position.x + 14, 0.04).set_trans(Tween.TRANS_SINE)
+				tw.tween_property(card_panel, "position:x", card_panel.position.x - 14, 0.04).set_trans(Tween.TRANS_SINE)
+			tw.tween_property(card_panel, "position:x", card_panel.position.x, 0.04)
+			tw.tween_property(card_panel, "scale", Vector2(0.97, 0.97), 0.1)
+			tw.tween_property(card_panel, "scale", Vector2(1.0, 1.0), 0.15)
+
+
+func _exit_tree() -> void:
+	## Cleanup to prevent orphaned nodes and dangling signals.
+	_typewriter_abort = true
+	if _thinking_timer and is_instance_valid(_thinking_timer):
+		_thinking_timer.stop()

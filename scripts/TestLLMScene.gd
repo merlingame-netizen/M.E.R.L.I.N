@@ -6,11 +6,9 @@ const DEFAULT_EXTERNAL_DIR := "C:/models/trinity-nano"
 const PROMPT_MAX_CHARS := 320
 const MAX_RESPONSE_WORDS := 80
 const MODEL_FILES := {
-	"Q4_K_M": "Trinity-Nano-Preview-Q4_K_M.gguf",
-	"Q5_K_M": "Trinity-Nano-Preview-Q5_K_M.gguf",
-	"Q8_0": "Trinity-Nano-Preview-Q8_0.gguf"
+	"Q4_K_M": "qwen2.5-3b-instruct-q4_k_m.gguf",
 }
-const MODEL_ORDER := ["Q4_K_M", "Q5_K_M", "Q8_0"]
+const MODEL_ORDER := ["Q4_K_M"]
 
 const MERLIN_SYSTEM_PROMPT := """Tu es Merlin, le druide sage et bienveillant du jeu DRU.
 Tu parles uniquement en francais. Tu restes dans le role de Merlin.

@@ -1,0 +1,334 @@
+<!doctype html>
+<html lang="fr" data-bs-theme="dark">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>App Orange — Template Outillage</title>
+
+  <!-- Orange Helvetica Neue (obligatoire) -->
+  <link href="https://cdn.jsdelivr.net/npm/boosted@5.3.8/dist/css/orange-helvetica.min.css"
+        rel="stylesheet"
+        integrity="sha384-A0Qk1uKfS1i83/YuU13i2nx5pk79PkIfNFOVzTcjCMPGKIDj9Lqx9lJmV7cdBVQZ"
+        crossorigin="anonymous">
+
+  <!-- Boosted CSS -->
+  <link href="https://cdn.jsdelivr.net/npm/boosted@5.3.8/dist/css/boosted.min.css"
+        rel="stylesheet"
+        integrity="sha384-kwpgedOHSHo219WTezLqyMOgCWremFb5TML711U5X8c4TJMMBAyhHFf2gNv78IpY"
+        crossorigin="anonymous">
+
+  <style>
+    /* Styles additionnels pour l'outillage Data */
+    .app-header {
+      border-bottom: 4px solid #ff7900;
+    }
+    .stat-card {
+      transition: transform 0.2s ease;
+    }
+    .stat-card:hover {
+      transform: translateY(-2px);
+    }
+    .data-table th {
+      white-space: nowrap;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- ========== NAVBAR ORANGE ========== -->
+  <header class="app-header">
+    <nav class="navbar navbar-expand-lg" data-bs-theme="dark">
+      <div class="container-fluid">
+        <!-- Logo Orange -->
+        <a class="navbar-brand" href="#">
+          <img src="https://boosted.orange.com/docs/5.3/assets/brand/orange-logo.svg"
+               alt="Orange" width="50" height="50" loading="lazy">
+        </a>
+
+        <!-- Titre App -->
+        <a class="navbar-brand fw-bold" href="#">Nom de l'App</a>
+
+        <!-- Toggle mobile -->
+        <button class="navbar-toggler" type="button"
+                data-bs-toggle="collapse" data-bs-target="#navbarMain"
+                aria-controls="navbarMain" aria-expanded="false"
+                aria-label="Ouvrir la navigation">
+          <span class="navbar-toggler-icon"></span>
+        </button>
+
+        <!-- Navigation -->
+        <div class="collapse navbar-collapse" id="navbarMain">
+          <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+            <li class="nav-item">
+              <a class="nav-link active" aria-current="page" href="#">Tableau de bord</a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" href="#">Donnees</a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" href="#">Rapports</a>
+            </li>
+            <li class="nav-item dropdown">
+              <a class="nav-link dropdown-toggle" href="#" role="button"
+                 data-bs-toggle="dropdown" aria-expanded="false">
+                Outils
+              </a>
+              <ul class="dropdown-menu">
+                <li><a class="dropdown-item" href="#">Export CSV</a></li>
+                <li><a class="dropdown-item" href="#">Import fichier</a></li>
+                <li><hr class="dropdown-divider"></li>
+                <li><a class="dropdown-item" href="#">Configuration</a></li>
+              </ul>
+            </li>
+          </ul>
+
+          <!-- Recherche -->
+          <form class="d-flex" role="search">
+            <input class="form-control me-2" type="search"
+                   placeholder="Rechercher..." aria-label="Rechercher">
+            <button class="btn btn-primary" type="submit">Rechercher</button>
+          </form>
+        </div>
+      </div>
+    </nav>
+
+    <!-- Title bar -->
+    <div class="bg-body-secondary py-3">
+      <div class="container">
+        <h1 class="display-5 mb-0">Tableau de bord</h1>
+        <p class="lead mb-0 text-body-secondary">Sous-titre ou description de la page</p>
+      </div>
+    </div>
+  </header>
+
+  <!-- ========== CONTENU PRINCIPAL ========== -->
+  <main class="container py-4">
+
+    <!-- Alertes / Notifications -->
+    <div class="alert alert-info alert-dismissible fade show" role="alert">
+      Bienvenue dans le template outillage Orange. Personnalisez ce fichier selon votre besoin.
+      <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Fermer"></button>
+    </div>
+
+    <!-- KPIs / Stats Cards -->
+    <section class="mb-4">
+      <h2 class="h4 mb-3">Indicateurs cles</h2>
+      <div class="row g-3">
+        <div class="col-sm-6 col-xl-3">
+          <div class="card stat-card text-center">
+            <div class="card-body">
+              <h3 class="card-title display-6 text-primary">1 234</h3>
+              <p class="card-text text-body-secondary">Total enregistrements</p>
+            </div>
+          </div>
+        </div>
+        <div class="col-sm-6 col-xl-3">
+          <div class="card stat-card text-center">
+            <div class="card-body">
+              <h3 class="card-title display-6 text-success">98%</h3>
+              <p class="card-text text-body-secondary">Taux de completion</p>
+            </div>
+          </div>
+        </div>
+        <div class="col-sm-6 col-xl-3">
+          <div class="card stat-card text-center">
+            <div class="card-body">
+              <h3 class="card-title display-6 text-warning">42</h3>
+              <p class="card-text text-body-secondary">En attente</p>
+            </div>
+          </div>
+        </div>
+        <div class="col-sm-6 col-xl-3">
+          <div class="card stat-card text-center">
+            <div class="card-body">
+              <h3 class="card-title display-6 text-danger">3</h3>
+              <p class="card-text text-body-secondary">Erreurs</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Tableau de donnees -->
+    <section class="mb-4">
+      <div class="d-flex justify-content-between align-items-center mb-3">
+        <h2 class="h4 mb-0">Donnees recentes</h2>
+        <div>
+          <button class="btn btn-outline-secondary btn-sm me-1">Filtrer</button>
+          <button class="btn btn-primary btn-sm">Exporter</button>
+        </div>
+      </div>
+
+      <div class="table-responsive">
+        <table class="table table-hover data-table">
+          <thead>
+            <tr>
+              <th scope="col">#</th>
+              <th scope="col">Nom</th>
+              <th scope="col">Categorie</th>
+              <th scope="col">Statut</th>
+              <th scope="col">Date</th>
+              <th scope="col">Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <th scope="row">1</th>
+              <td>Element Alpha</td>
+              <td><span class="badge text-bg-primary">Data</span></td>
+              <td><span class="badge text-bg-success">Actif</span></td>
+              <td>2026-02-09</td>
+              <td>
+                <button class="btn btn-sm btn-outline-secondary">Voir</button>
+                <button class="btn btn-sm btn-outline-danger">Supprimer</button>
+              </td>
+            </tr>
+            <tr>
+              <th scope="row">2</th>
+              <td>Element Beta</td>
+              <td><span class="badge text-bg-info">Rapport</span></td>
+              <td><span class="badge text-bg-warning">En cours</span></td>
+              <td>2026-02-08</td>
+              <td>
+                <button class="btn btn-sm btn-outline-secondary">Voir</button>
+                <button class="btn btn-sm btn-outline-danger">Supprimer</button>
+              </td>
+            </tr>
+            <tr>
+              <th scope="row">3</th>
+              <td>Element Gamma</td>
+              <td><span class="badge text-bg-primary">Data</span></td>
+              <td><span class="badge text-bg-danger">Erreur</span></td>
+              <td>2026-02-07</td>
+              <td>
+                <button class="btn btn-sm btn-outline-secondary">Voir</button>
+                <button class="btn btn-sm btn-outline-danger">Supprimer</button>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Pagination -->
+      <nav aria-label="Navigation des pages">
+        <ul class="pagination justify-content-center">
+          <li class="page-item disabled">
+            <a class="page-link" href="#" tabindex="-1" aria-disabled="true">Precedent</a>
+          </li>
+          <li class="page-item active" aria-current="page">
+            <a class="page-link" href="#">1</a>
+          </li>
+          <li class="page-item"><a class="page-link" href="#">2</a></li>
+          <li class="page-item"><a class="page-link" href="#">3</a></li>
+          <li class="page-item">
+            <a class="page-link" href="#">Suivant</a>
+          </li>
+        </ul>
+      </nav>
+    </section>
+
+    <!-- Formulaire d'exemple -->
+    <section class="mb-4">
+      <h2 class="h4 mb-3">Formulaire</h2>
+      <div class="card">
+        <div class="card-body">
+          <form>
+            <div class="row g-3">
+              <div class="col-md-6">
+                <label for="inputNom" class="form-label">Nom</label>
+                <input type="text" class="form-control" id="inputNom" placeholder="Entrez un nom">
+              </div>
+              <div class="col-md-6">
+                <label for="inputCategorie" class="form-label">Categorie</label>
+                <select class="form-select" id="inputCategorie">
+                  <option selected>Choisir...</option>
+                  <option value="1">Data</option>
+                  <option value="2">Rapport</option>
+                  <option value="3">Export</option>
+                </select>
+              </div>
+              <div class="col-12">
+                <label for="inputDescription" class="form-label">Description</label>
+                <textarea class="form-control" id="inputDescription" rows="3"
+                          placeholder="Description optionnelle"></textarea>
+              </div>
+              <div class="col-12">
+                <div class="form-check">
+                  <input class="form-check-input" type="checkbox" id="checkActif" checked>
+                  <label class="form-check-label" for="checkActif">Actif</label>
+                </div>
+              </div>
+              <div class="col-12">
+                <button type="submit" class="btn btn-primary">Enregistrer</button>
+                <button type="reset" class="btn btn-outline-secondary ms-2">Reinitialiser</button>
+              </div>
+            </div>
+          </form>
+        </div>
+      </div>
+    </section>
+
+    <!-- Stepped Process (composant Orange) -->
+    <section class="mb-4">
+      <h2 class="h4 mb-3">Processus par etapes</h2>
+      <nav aria-label="Processus de 4 etapes">
+        <ol class="stepped-process">
+          <li class="stepped-process-item active" aria-current="step">
+            <span class="stepped-process-link">Collecte</span>
+          </li>
+          <li class="stepped-process-item">
+            <span class="stepped-process-link">Traitement</span>
+          </li>
+          <li class="stepped-process-item">
+            <span class="stepped-process-link">Validation</span>
+          </li>
+          <li class="stepped-process-item">
+            <span class="stepped-process-link">Publication</span>
+          </li>
+        </ol>
+      </nav>
+    </section>
+
+  </main>
+
+  <!-- ========== FOOTER ORANGE ========== -->
+  <footer class="footer navbar-dark bg-dark pt-4 pb-3">
+    <div class="container">
+      <div class="row">
+        <div class="col-md-4 mb-3">
+          <h3 class="h6">Projet Data</h3>
+          <p class="text-body-secondary small">
+            Outillage interne pour la gestion et le traitement des donnees.
+          </p>
+        </div>
+        <div class="col-md-4 mb-3">
+          <h3 class="h6">Liens utiles</h3>
+          <ul class="list-unstyled text-body-secondary small">
+            <li><a href="#" class="text-body-secondary text-decoration-none">Documentation</a></li>
+            <li><a href="#" class="text-body-secondary text-decoration-none">Support</a></li>
+            <li><a href="#" class="text-body-secondary text-decoration-none">Changelog</a></li>
+          </ul>
+        </div>
+        <div class="col-md-4 mb-3">
+          <h3 class="h6">Contact</h3>
+          <p class="text-body-secondary small">
+            Equipe Data &mdash; Orange Innovation
+          </p>
+        </div>
+      </div>
+      <hr>
+      <div class="d-flex justify-content-between align-items-center">
+        <img src="https://boosted.orange.com/docs/5.3/assets/brand/orange-logo.svg"
+             alt="Orange" width="30" height="30" loading="lazy">
+        <p class="text-body-secondary small mb-0">&copy; Orange 2026</p>
+      </div>
+    </div>
+  </footer>
+
+  <!-- Boosted Bundle JS -->
+  <script src="https://cdn.jsdelivr.net/npm/boosted@5.3.8/dist/js/boosted.bundle.min.js"
+          integrity="sha384-lSjE7ZAWc1Wiua5r2jyHbPL07FiKkHPWCXugD3qTq4o4M4YZQzLTrDF1CXrjxU/m"
+          crossorigin="anonymous"></script>
+
+</body>
+</html>
