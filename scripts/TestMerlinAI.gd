@@ -7,17 +7,17 @@ extends Control
 @onready var copy_button: Button = $Main/Logs/CopyButton
 @onready var reload_button: Button = $Main/Top/ReloadButton
 
-@onready var router_temp: SpinBox = $Main/Params/RouterBox/TempSpin
-@onready var router_top_p: SpinBox = $Main/Params/RouterBox/TopPSpin
-@onready var router_max: SpinBox = $Main/Params/RouterBox/MaxTokensSpin
+@onready var router_temp: SpinBox = $Main/Params/RouterBox/RouterVBox/TempRow/TempSpin
+@onready var router_top_p: SpinBox = $Main/Params/RouterBox/RouterVBox/TopPRow/TopPSpin
+@onready var router_max: SpinBox = $Main/Params/RouterBox/RouterVBox/MaxRow/MaxTokensSpin
 
-@onready var exec_temp: SpinBox = $Main/Params/ExecutorBox/TempSpin
-@onready var exec_top_p: SpinBox = $Main/Params/ExecutorBox/TopPSpin
-@onready var exec_max: SpinBox = $Main/Params/ExecutorBox/MaxTokensSpin
+@onready var exec_temp: SpinBox = $Main/Params/ExecutorBox/ExecutorVBox/TempRow/TempSpin
+@onready var exec_top_p: SpinBox = $Main/Params/ExecutorBox/ExecutorVBox/TopPRow/TopPSpin
+@onready var exec_max: SpinBox = $Main/Params/ExecutorBox/ExecutorVBox/MaxRow/MaxTokensSpin
 
 @onready var prompt_field: LineEdit = $Main/Prompt/PromptField
-@onready var route_button: Button = $Main/Prompt/RouteButton
-@onready var execute_button: Button = $Main/Prompt/ExecuteButton
+@onready var route_button: Button = $Main/Prompt/PromptButtons/RouteButton
+@onready var execute_button: Button = $Main/Prompt/PromptButtons/ExecuteButton
 @onready var output_text: RichTextLabel = $Main/Prompt/OutputText
 
 var merlin_ai: Node = null

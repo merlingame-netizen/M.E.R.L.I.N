@@ -888,7 +888,7 @@ func _build_map_section() -> void:
 	map_btn.add_theme_color_override("font_color", PALETTE.accent)
 	map_btn.add_theme_color_override("font_hover_color", PALETTE.accent_glow)
 	map_btn.mouse_entered.connect(func(): SFXManager.play("hover"))
-	map_btn.pressed.connect(_on_mapmonde_pressed)
+	map_btn.pressed.connect(_open_mapmonde_overlay)
 	var map_btn_center := CenterContainer.new()
 	map_btn_center.add_child(map_btn)
 	vbox.add_child(map_btn_center)
