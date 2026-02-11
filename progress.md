@@ -2,6 +2,36 @@
 
 > **Note**: Sessions anterieures archivees dans `archive/progress_archive_2026-02-05_to_2026-02-08.md`
 
+## Session: 2026-02-11i (Phase 43B — Fix UI + LLM + TransitionBiome)
+
+### Etape 1: UI TriadeGame — Options visibles
+- Removed spacer2 (EXPAND_FILL) → fixed 4px gap between card and options
+- Reduced card_panel: 460x360 → 460x280
+- Reduced portrait height: 96 → 72, encounter tile: 72 → 0 (auto)
+- Removed obsolete Centre cost indicator "(1 🜁)" (Centre is free since 43A)
+- Reduced buttons: 120x46 → 110x40
+
+### Etape 2: LLM Timeout + Fallback
+- `LLM_TIMEOUT_SEC`: 8.0 → 20.0 (Qwen2.5-3B needs 15-25s for GBNF JSON on CPU)
+- Added card validation: checks `options` is Array of size >= 3, else fallback
+
+### Etape 3: LLM Prompts enrichis
+- `build_triade_context()`: Added `biome` and `life_essence` fields
+- `_build_triade_system_prompt()`: Enriched with Celtic vocabulary, immersive tone
+- `_build_triade_user_prompt()`: Added biome, life essence, story_log context; removed `cost:1`
+- `_generate_card_two_stage()`: Enriched system/user prompts with biome
+- `_build_narrator_input()` (merlin_omniscient): Added biome from context
+
+### Etape 4: TransitionBiome subtile + progressive
+- Removed opaque mist_layer ColorRect (main culprit for full-screen opacity)
+- Repositioned GPU particles on landscape center (not screen center)
+- Reduced particle opacity: back 0.40→0.25, mid 0.30→0.18, front 0.20→0.12
+- Reduced volumetric fog: density 0.3→0.15, color alpha 0.2→0.12
+- Path drawing slowed: 0.022s→0.06s per step (~2.1s total)
+- End diamond pulses while waiting for LLM prefetch (up to 8s)
+
+---
+
 ## Session: 2026-02-11h (Hotfix — Pipeline Warnings + PixelEncounterTile)
 
 ### Pipeline Enhancements

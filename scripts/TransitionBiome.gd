@@ -236,12 +236,7 @@ func _build_ui() -> void:
 		bg.color = PALETTE.paper
 	add_child(bg)
 
-	# Mist layer
-	var mist_layer := ColorRect.new()
-	mist_layer.set_anchors_preset(Control.PRESET_FULL_RECT)
-	mist_layer.color = PALETTE.mist
-	mist_layer.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	add_child(mist_layer)
+	# Mist layer removed — replaced by subtle GPU particles + volumetric shader in _create_mist_particles()
 
 	# Celtic ornaments
 	var celtic_top := _make_celtic_ornament()
@@ -385,18 +380,24 @@ func _create_mist_particles() -> void:
 	var soft_tex := _create_soft_fog_texture(64)
 
 	# Layer definitions: [amount, lifetime, scale_min, scale_max, vel_min, vel_max, opacity, z_index]
+	# Subtle opacity — mist hugs the landscape, not full-screen
 	var layers := [
-		[20, 6.0, 8.0, 15.0, 10.0, 25.0, 0.40, -2],  # Back: large, slow
-		[30, 4.5, 5.0, 10.0, 20.0, 50.0, 0.30, -1],  # Mid: medium, moderate
-		[15, 3.0, 3.0, 6.0, 35.0, 70.0, 0.20, 0],     # Front: small, fast
+		[15, 6.0, 6.0, 12.0, 8.0, 20.0, 0.25, -2],  # Back: large, slow, subtle
+		[20, 4.5, 4.0, 8.0, 15.0, 40.0, 0.18, -1],   # Mid: medium, moderate
+		[10, 3.0, 2.0, 5.0, 25.0, 55.0, 0.12, 0],    # Front: small, fast, wispy
 	]
+
+	# Position mist on landscape (not center screen)
+	var total_w := GRID_W * _pixel_size
+	var total_h := GRID_H * _pixel_size
+	var mist_center := _landscape_origin + Vector2(total_w / 2.0, total_h * 0.6)
 
 	_mist_layers.clear()
 	for layer_def in layers:
 		var particles := GPUParticles2D.new()
 		particles.amount = int(layer_def[0])
 		particles.lifetime = float(layer_def[1])
-		particles.position = Vector2(vs.x / 2.0, vs.y * 0.55)
+		particles.position = mist_center
 		particles.emitting = false
 		particles.z_index = int(layer_def[7])
 		particles.texture = soft_tex
@@ -452,8 +453,8 @@ void fragment() {
 """
 	var fog_mat := ShaderMaterial.new()
 	fog_mat.shader = fog_shader
-	fog_mat.set_shader_parameter("fog_color", Color(fog_tint.r, fog_tint.g, fog_tint.b, 0.2))
-	fog_mat.set_shader_parameter("fog_density", 0.3)
+	fog_mat.set_shader_parameter("fog_color", Color(fog_tint.r, fog_tint.g, fog_tint.b, 0.12))
+	fog_mat.set_shader_parameter("fog_density", 0.15)
 	fog_mat.set_shader_parameter("time_scale", 0.3)
 	_volumetric_fog.material = fog_mat
 	_volumetric_fog.modulate.a = 0.0
@@ -938,6 +939,7 @@ func _phase_sentier() -> void:
 	var start_marker := _make_diamond(_landscape_origin + Vector2(-8, total_h - _pixel_size * 2), PALETTE.accent)
 	add_child(start_marker)
 
+	# Progressive path drawing — slower, tied to LLM prefetch progress
 	var steps := 35
 	for i in range(steps + 1):
 		var t := float(i) / float(steps)
@@ -948,14 +950,29 @@ func _phase_sentier() -> void:
 		if i % 7 == 0:
 			SFXManager.play_varied("path_scratch", 0.15)
 
-		await _safe_wait(0.022)
+		await _safe_wait(0.06)  # Slower drawing (~2.1s total vs 0.77s)
 
-	# Diamond marker at end
-	var end_marker := _make_diamond(
-		_landscape_origin + Vector2(total_w + 2, total_h - _pixel_size * 2), PALETTE.accent
-	)
+	# Diamond marker at end — pulses while waiting for LLM
+	var end_pos := _landscape_origin + Vector2(total_w + 2, total_h - _pixel_size * 2)
+	var end_marker := _make_diamond(end_pos, PALETTE.accent)
 	add_child(end_marker)
 	SFXManager.play("landmark_pop")
+
+	# If LLM prefetch not ready, pulse the diamond while waiting
+	if not _prefetch_arrival.get("done", false):
+		var pulse_tw := create_tween().set_loops()
+		pulse_tw.tween_property(end_marker, "modulate:a", 0.3, 0.5)
+		pulse_tw.tween_property(end_marker, "modulate:a", 1.0, 0.5)
+		# Wait up to 8s for LLM prefetch
+		var wait := 0.0
+		while not _prefetch_arrival.get("done", false) and wait < 8.0:
+			if not is_inside_tree():
+				break
+			await _safe_wait(0.2)
+			wait += 0.2
+		pulse_tw.kill()
+		end_marker.modulate.a = 1.0
+
 	await _safe_wait(0.3)
 
 

@@ -163,11 +163,12 @@ func _generate_card_two_stage(context: Dictionary) -> Dictionary:
 		return {"ok": false, "card": {}, "error": "LLM not ready"}
 
 	# Stage 1: Free text generation (what nano models do well)
-	var system_prompt := "Merlin le druide. Ecris un scenario court (2 phrases) pour un jeu de cartes celtique. Propose 3 choix."
+	var system_prompt := "Tu es Merlin l'Enchanteur, druide de Broceliande. Ecris un scenario court (2-3 phrases) pour un jeu de cartes celtique. Vocabulaire: nemeton, ogham, sidhe, brume, mousse. Propose 3 choix (A/B/C) avec consequences."
 	var aspects: Dictionary = context.get("aspects", {})
 	var souffle: int = int(context.get("souffle", 3))
 	var day: int = int(context.get("day", 1))
-	var user_prompt := "Jour %d. Souffle: %d." % [day, souffle]
+	var biome: String = str(context.get("biome", "foret_broceliande"))
+	var user_prompt := "Jour %d. Souffle: %d. Biome: %s." % [day, souffle, biome]
 	for aspect_name in TRIADE_ASPECTS:
 		var s: int = int(aspects.get(aspect_name, 0))
 		var state_name := "equilibre"
@@ -438,7 +439,7 @@ func calculate_smart_effects(context: Dictionary, scenario_text: String, labels:
 # ═══════════════════════════════════════════════════════════════════════════════
 
 func _build_triade_system_prompt() -> String:
-	return "Merlin druide narrateur. Genere 1 carte JSON francais. 3 options avec tradeoffs. Reponds UNIQUEMENT en JSON valide."
+	return "Tu es Merlin l'Enchanteur, druide ancestral des forets de Broceliande. Genere 1 carte JSON pour un jeu de cartes celtique. La carte contient un scenario narratif (2-3 phrases immersives) et 3 options avec des consequences sur Corps/Ame/Monde. Vocabulaire: nemeton, ogham, sidhe, dolmen, korrigans, brume, mousse. Ton: poetique et mysterieux. Reponds UNIQUEMENT en JSON valide."
 
 
 func _build_triade_user_prompt(context: Dictionary) -> String:
@@ -460,6 +461,12 @@ func _build_triade_user_prompt(context: Dictionary) -> String:
 
 	prompt += ". Souffle:%d. Jour:%d. Carte:%d." % [souffle, day, cards_played]
 
+	var biome: String = str(context.get("biome", "foret_broceliande"))
+	prompt += " Biome:%s." % biome
+
+	var life: int = int(context.get("life_essence", 5))
+	prompt += " Vie:%d." % life
+
 	if tags.size() > 0:
 		var tag_slice: Array = tags.slice(0, mini(tags.size(), 3))
 		var tag_strs: Array[String] = []
@@ -467,9 +474,16 @@ func _build_triade_user_prompt(context: Dictionary) -> String:
 			tag_strs.append(str(t))
 		prompt += " Tags:" + ",".join(tag_strs)
 
+	var story_log: Array = context.get("story_log", [])
+	if story_log.size() > 0:
+		var last_entry = story_log[-1]
+		var prev_text: String = str(last_entry.get("text", "")).substr(0, 80)
+		if prev_text.length() > 0:
+			prompt += " Precedent: %s." % prev_text
+
 	# JSON template at end of user prompt (anti-hallucination: model sees template last)
-	prompt += "\nEffets: SHIFT_ASPECT aspect=Corps/Ame/Monde direction=up/down. Centre cost:1."
-	prompt += "\n{\"text\":\"...\",\"speaker\":\"merlin\",\"options\":[{\"label\":\"...\",\"effects\":[{\"type\":\"SHIFT_ASPECT\",\"aspect\":\"Corps\",\"direction\":\"up\"}]},{\"label\":\"...\",\"cost\":1,\"effects\":[{\"type\":\"SHIFT_ASPECT\",\"aspect\":\"Ame\",\"direction\":\"up\"}]},{\"label\":\"...\",\"effects\":[{\"type\":\"SHIFT_ASPECT\",\"aspect\":\"Monde\",\"direction\":\"down\"}]}],\"tags\":[\"tag\"]}"
+	prompt += "\nEffets: SHIFT_ASPECT aspect=Corps/Ame/Monde direction=up/down."
+	prompt += "\n{\"text\":\"...\",\"speaker\":\"merlin\",\"options\":[{\"label\":\"...\",\"effects\":[{\"type\":\"SHIFT_ASPECT\",\"aspect\":\"Corps\",\"direction\":\"up\"}]},{\"label\":\"...\",\"effects\":[{\"type\":\"SHIFT_ASPECT\",\"aspect\":\"Ame\",\"direction\":\"up\"}]},{\"label\":\"...\",\"effects\":[{\"type\":\"SHIFT_ASPECT\",\"aspect\":\"Monde\",\"direction\":\"down\"}]}],\"tags\":[\"tag\"]}"
 
 	return prompt
 
@@ -491,6 +505,8 @@ func build_triade_context(state: Dictionary) -> Dictionary:
 		"active_tags": run.get("active_tags", []),
 		"active_promises": run.get("active_promises", []),
 		"story_log": _get_recent_story_log(run.get("story_log", []), 5),
+		"biome": str(run.get("current_biome", "foret_broceliande")),
+		"life_essence": int(run.get("life_essence", MerlinConstants.LIFE_ESSENCE_START)),
 		"bestiole": {
 			"mood": _get_bestiole_mood(bestiole),
 			"bond": int(bestiole.get("bond", 50)),

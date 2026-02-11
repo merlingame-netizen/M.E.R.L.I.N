@@ -635,6 +635,9 @@ func _build_narrator_input() -> String:
 		_current_context.get("souffle", 0)
 	])
 
+	var biome: String = str(_current_context.get("biome", "foret"))
+	parts.append("Biome: %s." % biome)
+
 	# Tone hint
 	var tone := tone_controller.get_current_tone() if tone_controller else "neutral"
 	if tone != "neutral":

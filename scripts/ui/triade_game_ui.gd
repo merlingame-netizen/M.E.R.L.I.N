@@ -208,10 +208,10 @@ func _setup_ui() -> void:
 	# Card area (with NPC cascade support)
 	_create_card_display(main_vbox)
 
-	# Spacer
-	var spacer2 := Control.new()
-	spacer2.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	main_vbox.add_child(spacer2)
+	# Small fixed gap before options
+	var options_gap := Control.new()
+	options_gap.custom_minimum_size = Vector2(0, 4)
+	main_vbox.add_child(options_gap)
 
 	# Options bar (3 buttons)
 	_create_options_bar(main_vbox)
@@ -518,7 +518,7 @@ func _create_card_display(parent: Control) -> void:
 	card_container.size_flags_vertical = Control.SIZE_EXPAND_FILL
 
 	card_panel = Panel.new()
-	card_panel.custom_minimum_size = Vector2(460, 360)
+	card_panel.custom_minimum_size = Vector2(460, 280)
 
 	# Celtic-style card border
 	var card_style := StyleBoxFlat.new()
@@ -556,7 +556,7 @@ func _create_card_display(parent: Control) -> void:
 	# Pixel portrait (character visualization)
 	var portrait_center := CenterContainer.new()
 	portrait_center.name = "PortraitCenter"
-	portrait_center.custom_minimum_size = Vector2(0, 96)
+	portrait_center.custom_minimum_size = Vector2(0, 72)
 	card_vbox.add_child(portrait_center)
 
 	_pixel_portrait = PixelCharacterPortrait.new()
@@ -567,7 +567,7 @@ func _create_card_display(parent: Control) -> void:
 	# Encounter tile (pixel art per card type)
 	var tile_center := CenterContainer.new()
 	tile_center.name = "TileCenter"
-	tile_center.custom_minimum_size = Vector2(0, 72)
+	tile_center.custom_minimum_size = Vector2(0, 0)
 	card_vbox.add_child(tile_center)
 
 	_encounter_tile = PixelEncounterTile.new()
@@ -627,7 +627,7 @@ func _create_options_bar(parent: Control) -> void:
 		# Button with parchment style
 		var btn := Button.new()
 		btn.text = "[%s] Choisir" % config["key"]
-		btn.custom_minimum_size = Vector2(120, 46)
+		btn.custom_minimum_size = Vector2(110, 40)
 		if title_font:
 			btn.add_theme_font_override("font", title_font)
 		btn.add_theme_font_size_override("font_size", 15)
@@ -658,17 +658,6 @@ func _create_options_bar(parent: Control) -> void:
 		btn.mouse_exited.connect(_on_option_hover_exit)
 		option_buttons.append(btn)
 		option_vbox.add_child(btn)
-
-		# Cost indicator (for center)
-		if i == 1:
-			var cost := Label.new()
-			cost.text = "(1 %s)" % SOUFFLE_ICON
-			if body_font:
-				cost.add_theme_font_override("font", body_font)
-			cost.add_theme_font_size_override("font_size", 10)
-			cost.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-			cost.add_theme_color_override("font_color", PALETTE.ink_soft)
-			option_vbox.add_child(cost)
 
 		options_container.add_child(option_vbox)
 

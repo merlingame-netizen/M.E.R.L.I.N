@@ -22,7 +22,7 @@ var is_processing := false
 var _intro_shown := false
 var _cards_this_run := 0
 var _dispatch_result: Array = [false, {}]  # [done, result] — shared with async dispatch
-const LLM_TIMEOUT_SEC := 8.0  # Qwen2.5-3B normally finishes in 2-5s; 15s masked bugs
+const LLM_TIMEOUT_SEC := 20.0  # Qwen2.5-3B Q4_K_M needs 15-25s for 200-token JSON via GBNF on CPU
 
 # ═══════════════════════════════════════════════════════════════════════════════
 # D20 DICE SYSTEM (from TestBrainPool fusion)
@@ -286,8 +286,10 @@ func _request_next_card() -> void:
 	print("[TRIADE] card dispatch result ok=%s" % str(result.get("ok", false)))
 	if result.get("ok", false):
 		current_card = result.get("card", {})
-		if current_card.is_empty():
-			print("[TRIADE] card is empty, using emergency fallback")
+		# Validate card has valid options array (size 3)
+		var opts = current_card.get("options", [])
+		if current_card.is_empty() or not opts is Array or opts.size() < 3:
+			print("[TRIADE] card malformed (options=%s), using emergency fallback" % str(opts.size() if opts is Array else "missing"))
 			current_card = _build_emergency_fallback_card()
 		# NPC encounter: 15% chance after card 5
 		if _cards_this_run > 5 and randf() < 0.15:
