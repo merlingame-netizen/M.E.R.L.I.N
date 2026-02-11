@@ -580,7 +580,6 @@ func _generate_event_card(state: Dictionary, biome_key: String) -> Dictionary:
 		return {}
 
 	var run: Dictionary = state.get("run", {})
-	var story_log: Array = run.get("story_log", [])
 
 	# Get current season from Calendar singleton or fallback
 	var current_season: String = ""
@@ -635,7 +634,7 @@ func _generate_event_card(state: Dictionary, biome_key: String) -> Dictionary:
 	return fallback
 
 
-func _generate_promise_card(state: Dictionary, biome_key: String) -> Dictionary:
+func _generate_promise_card(state: Dictionary, _biome_key: String) -> Dictionary:
 	"""Select a promise card, max 2 active, skip already-taken promises."""
 	if _promise_cards_pool.is_empty():
 		return {}

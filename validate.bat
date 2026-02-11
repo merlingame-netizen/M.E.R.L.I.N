@@ -1,6 +1,15 @@
 @echo off
 cd /d "%~dp0"
 
+REM Step 0: Editor parse check (forces full project recompilation, detects type/parse errors)
+powershell -ExecutionPolicy Bypass -File "tools/validate_editor_parse.ps1"
+if %errorlevel% neq 0 (
+    echo.
+    echo [ABORT] Editor parse check failed. Fix errors above before continuing.
+    pause
+    exit /b 1
+)
+
 REM Step 1-3: Static analysis + logs + GDExtension check
 powershell -ExecutionPolicy Bypass -File "tools/validate_godot_errors.ps1" %*
 

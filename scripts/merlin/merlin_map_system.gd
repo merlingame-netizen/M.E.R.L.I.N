@@ -57,7 +57,7 @@ func _pick_node_type(floor_idx: int, total: int, rng: MerlinRng, _config: Dictio
 		return "MERLIN"
 
 	# Midpoint: force REST or MERCHANT
-	if floor_idx == int(total / 2):
+	if floor_idx == int(total / 2.0):
 		return "REST" if rng.randf() > 0.5 else "MERCHANT"
 
 	# Weighted random selection from TRIADE node types

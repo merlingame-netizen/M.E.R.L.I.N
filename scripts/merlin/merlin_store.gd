@@ -1217,7 +1217,7 @@ func _handle_triade_run_end(end_check: Dictionary) -> void:
 	if not endings_seen.has(ending_title):
 		endings_seen.append(ending_title)
 	meta["endings_seen"] = endings_seen
-	meta["gloire_points"] = int(meta.get("gloire_points", 0)) + int(end_check.get("score", 0) / 100)
+	meta["gloire_points"] = int(meta.get("gloire_points", 0)) + int(end_check.get("score", 0) / 100.0)
 
 	state["meta"] = meta
 
@@ -1488,14 +1488,14 @@ func calculate_run_rewards(run_data: Dictionary) -> Dictionary:
 
 	# Fragments: 1 + floor(awen_spent / 3), max 3
 	var awen_spent: int = int(run_data.get("awen_spent", 0))
-	rewards.fragments = mini(1 + int(awen_spent / 3), 3)
+	rewards.fragments = mini(1 + int(awen_spent / 3.0), 3)
 
 	# Liens: 2 + mission bonus
 	rewards.liens = 2 + (5 if is_victory else 0)
 
 	# Gloire: score/50 + first ending bonus
 	var score: int = int(run_data.get("score", 0))
-	rewards.gloire = int(score / 50)
+	rewards.gloire = int(score / 50.0)
 	var ending_title: String = str(run_data.get("ending_title", ""))
 	if ending_title != "" and not state.meta.endings_seen.has(ending_title):
 		rewards.gloire += 20

@@ -129,7 +129,7 @@ M.E.R.L.I.N. is a narrative card game built with Godot 4.x.
 ## Quick Commands
 
 ```bash
-# Validation (TOUJOURS avant test)
+# Validation (TOUJOURS avant test — inclut Editor Parse Check)
 .\validate.bat
 
 # Run Godot project

@@ -137,6 +137,7 @@ function Test-GDScriptFile {
             $issues += "L$lineNum [WARN] Parameter shadows base signal"
             $script:TotalWarnings++
         }
+
     }
 
     return $issues

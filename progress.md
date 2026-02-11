@@ -2,6 +2,31 @@
 
 > **Note**: Sessions anterieures archivees dans `archive/progress_archive_2026-02-05_to_2026-02-08.md`
 
+## Session: 2026-02-11h (Hotfix — Pipeline Warnings + PixelEncounterTile)
+
+### Pipeline Enhancements
+- **validate_editor_parse.ps1**: Added warning detection (Integer division, unused vars, etc.)
+  - Warnings reported in YELLOW, non-fatal by default
+  - `--strict` flag makes warnings fatal (exit 1)
+  - Warning patterns: Integer division, unused vars/params, unused signals, narrowing conversion
+- **Editor Parse Check**: Now detects both errors AND warnings from Godot recompilation
+
+### Warning Fixes (6 integer division + 2 unused)
+- `merlin_action_resolver.gd:68` — `int(momentum / 20)` → `int(momentum / 20.0)`
+- `merlin_action_resolver.gd:134` — `int(score / 10)` → `int(score / 10.0)`
+- `merlin_map_system.gd:60` — `int(total / 2)` → `int(total / 2.0)`
+- `merlin_store.gd:1220` — `int(... / 100)` → `int(... / 100.0)`
+- `merlin_store.gd:1491` — `int(awen_spent / 3)` → `int(awen_spent / 3.0)`
+- `merlin_store.gd:1498` — `int(score / 50)` → `int(score / 50.0)`
+- `merlin_card_system.gd:583` — Removed unused `story_log` variable
+- `merlin_card_system.gd:638` — Prefixed unused `biome_key` → `_biome_key`
+
+### KB Updates
+- `gdscript_knowledge_base.md` section 1.3: Corrected integer division docs
+- `MEMORY.md`: Updated pipeline step 0 description with warning detection
+
+---
+
 ## Session: 2026-02-11g (Phase 43A — Refonte Gameplay Fondations)
 
 ### Phase 43A: Fondations Gameplay (Hand of Fate 2 inspiration)

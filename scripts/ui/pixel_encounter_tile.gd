@@ -6,8 +6,8 @@
 ## Usage: var tile = PixelEncounterTile.new(); tile.setup("combat"); parent.add_child(tile)
 ## ═══════════════════════════════════════════════════════════════════════════════
 
-extends Control
 class_name PixelEncounterTile
+extends Control
 
 const GRID_SIZE := 24
 const PIXEL_SIZE := 3.0
@@ -151,7 +151,7 @@ func _draw_npc() -> void:
 	# Body
 	for y in range(9, 16):
 		var w := 2 + (y - 9)
-		var sx := 12 - int(w / 2)
+		var sx := 12 - int(w / 2.0)
 		for x in range(sx, sx + w):
 			_set_px(x, y, f)
 	# Eyes

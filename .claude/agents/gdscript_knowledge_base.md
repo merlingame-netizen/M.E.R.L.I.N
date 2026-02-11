@@ -27,6 +27,27 @@ var constant: int = CONSTANTS[index]
 
 ---
 
+### 1.1b Fichiers .gd crees hors editeur — "Could not find type"
+
+**Erreur:** `Could not find type "MyClass" in the current scope`
+
+**Cause:** Quand un fichier .gd avec `class_name` est cree hors de l'editeur Godot (par Claude Code, un script, etc.), Godot ne genere PAS automatiquement:
+- Le fichier `.gd.uid` (identifiant unique)
+- L'entree dans `.godot/global_script_class_cache.cfg`
+
+Sans ces deux elements, les autres scripts qui referencent ce type echouent.
+
+**Solution definitive:** Lancer `validate_editor_parse.ps1` qui execute `godot --editor --headless --quit`. Cela force Godot a:
+1. Scanner tous les .gd du projet
+2. Generer les .uid manquants
+3. Regenerer le cache de types complet
+
+**Detection:** `tools/validate_editor_parse.ps1` (Step 0 de validate.bat).
+
+**Note:** Le mode `--headless --quit` (sans `--editor`) ne regenere PAS toujours le cache. L'option `--editor` est obligatoire.
+
+---
+
 ### 1.2 Yield Obsolete (Godot 4.x)
 
 **Erreur:** `yield is not a valid identifier`
@@ -41,19 +62,25 @@ await get_tree().create_timer(1.0).timeout
 
 ---
 
-### 1.3 Division Entiere
+### 1.3 Division Entiere — Warning "Integer division"
 
-**Erreur:** Comportement inattendu avec `/` pour entiers
+**Warning Godot:** `Integer division. Decimal part will be discarded.`
+
+En GDScript 4.x, `int / int` retourne un `int` (troncature). Godot emet un warning car la partie decimale est silencieusement perdue.
 
 ```gdscript
-# Godot 4.x: / donne toujours un float
-var result: int = 10 / 3  # Resultat: 3.333... puis cast -> 3
+# WRONG — genere warning "Integer division"
+var result := int(score / 10)
+var half := int(total / 2)
 
-# RECOMMANDE: Explicite
-var result: int = int(10.0 / 3.0)
-# OU utiliser modulo pour restes
-var quotient: int = 10 / 3 as int
+# CORRECT — diviseur en float, pas de warning
+var result := int(score / 10.0)
+var half := int(total / 2.0)
 ```
+
+**Regle:** Toujours utiliser un diviseur float (`10.0` au lieu de `10`) quand on divise une variable int. Le `int()` externe garantit le type de retour.
+
+**Detection:** `tools/validate_editor_parse.ps1` (warning patterns, mode `--strict`).
 
 ---
 

@@ -65,7 +65,7 @@ func _get_modifiers(state: Dictionary, verb: String, context: Dictionary) -> int
 		total += int(POSTURE_MODS[posture].get(verb, 0))
 
 	var momentum = int(run.get("momentum", 0))
-	total += int(momentum / 20)
+	total += int(momentum / 20.0)
 
 	var style = str(context.get("merlin_style", "")).to_upper()
 	if STYLE_MODS.has(style):
@@ -131,7 +131,7 @@ func _build_hidden_test(verb: String, score: int, context: Dictionary) -> Dictio
 
 
 func _normalize_hidden_test(test: Dictionary, score: int, context: Dictionary) -> Dictionary:
-	var difficulty := clampi(10 - int(score / 10), 1, 10)
+	var difficulty := clampi(10 - int(score / 10.0), 1, 10)
 	var run = context.get("state", {}).get("run", {})
 	var mod = int(run.get("difficulty_mod_next", 0))
 	if mod != 0:
