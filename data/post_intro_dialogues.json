@@ -121,7 +121,103 @@
 			"arrival_text": "Les chenes sont si vieux qu'ils se souviennent du premier druide. L'air sent la mousse et le temps qui passe. La brume dore la lumiere entre les branches.",
 			"merlin_comment": "Premier jour. Premiere erreur bientot. Je prends les paris.",
 			"map_position": [0.65, 0.25],
-			"color": "#306018"
+			"color": "#306018",
+			"atmosphere": {
+				"sounds": "bruissement de feuilles, craquements de bois, chant de merle",
+				"smell": "mousse humide, ecorce de chene, terre noire",
+				"light": "doree, tamisee par la canopee, rayons obliques",
+				"mood": "mysterieux, ancien, protecteur"
+			},
+			"variants": {
+				"balanced": [
+					{
+						"arrival": "Les chenes sont si vieux qu'ils se souviennent du premier druide. L'air sent la mousse et le temps qui passe. La brume dore la lumiere entre les branches.",
+						"merlin": "Premier jour. Premiere erreur bientot. Je prends les paris."
+					},
+					{
+						"arrival": "La canopee filtre le ciel en mille fragments de lumiere. Chaque pas fait craquer les siecles sous tes pieds.",
+						"merlin": "Pas mal pour un debut. La foret te regarde. Elle n'a pas encore decide quoi faire de toi."
+					},
+					{
+						"arrival": "Un silence feuillu t'enveloppe. Les racines dessinent des chemins que seuls les druides savaient lire.",
+						"merlin": "Tu sens cette odeur ? C'est le temps. Ici, il a un parfum de mousse."
+					},
+					{
+						"arrival": "Les troncs millennaires forment des colonnes vivantes. Entre leurs branches, le vent raconte des histoires oubliees.",
+						"merlin": "Maelgwn veille. Il ne dit rien, mais chaque feuille qui tombe est un mot de sa part."
+					},
+					{
+						"arrival": "La foret respire lentement, comme un animal endormi. Ses reves parfument l'air de resine et de mystere.",
+						"merlin": "Broceliande est patiente. Elle a survecu a tout. Sauf peut-etre a ce qui vient."
+					}
+				],
+				"corps_extreme": [
+					{
+						"arrival": "Tes jambes tremblent sous le poids de la marche. Les racines te font trebucher, comme si la foret testait ta resistance.",
+						"merlin": "Tu devrais t'asseoir. Meme les chenes se reposent en hiver."
+					},
+					{
+						"arrival": "L'air est lourd sous la canopee. Chaque pas te coute un effort que la foret semble mesurer.",
+						"merlin": "Ton corps parle plus fort que toi. Ecoute-le, pour une fois."
+					},
+					{
+						"arrival": "La mousse sous tes pieds amortit tes pas fatigues. Les arbres se penchent, comme pour te soutenir.",
+						"merlin": "La foret sent ta faiblesse. Elle peut guerir ou dévorer. Ca depend de ton prochain choix."
+					},
+					{
+						"arrival": "Tes muscles brulent d'une energie terrible. Tu pourrais arracher un chene. Ce n'est pas forcement une bonne idee.",
+						"merlin": "Tant de force, si peu de controle. Les sangliers sont pareils avant l'hiver."
+					},
+					{
+						"arrival": "Tu avances comme un vent de tempete entre les troncs. Les branches s'ecartent sur ton passage.",
+						"merlin": "Doucement. La foret n'aime pas qu'on la brusque. Et moi non plus."
+					}
+				],
+				"ame_extreme": [
+					{
+						"arrival": "Les ombres dansent entre les arbres. Tu ne sais plus si c'est le vent ou ton esprit qui les fait bouger.",
+						"merlin": "Ton esprit divague. Ca peut etre un don, ici. Ou un danger."
+					},
+					{
+						"arrival": "Les murmures de la foret se melent a tes pensees. La frontiere entre toi et Broceliande s'efface.",
+						"merlin": "Quand la foret entre dans ta tete, c'est qu'elle te fait confiance. Ou qu'elle t'absorbe."
+					},
+					{
+						"arrival": "Chaque arbre semble porter un visage. Chaque ombre cache un souvenir qui n'est pas le tien.",
+						"merlin": "Tu vois trop. Ou pas assez. Avec l'ame, c'est toujours l'un ou l'autre."
+					},
+					{
+						"arrival": "Un voile de brume interieure t'accompagne. Le monde exterieur et le monde en toi se confondent.",
+						"merlin": "Perdu dans tes pensees ? Normal. Broceliande est un miroir. Elle montre ce qu'on cache."
+					},
+					{
+						"arrival": "La lumiere entre les feuilles dessine des signes que toi seul peux lire. Le sens t'echappe, mais la beaute reste.",
+						"merlin": "L'ame possedee voit des verites que les sages preferent ignorer."
+					}
+				],
+				"monde_extreme": [
+					{
+						"arrival": "La foret te regarde comme une etrangere regarde un voyageur perdu. Tu es ici, mais tu n'es pas d'ici.",
+						"merlin": "Meme les arbres doutent de toi. Ca se merite, la confiance d'un chene."
+					},
+					{
+						"arrival": "Les oiseaux se taisent a ton passage. Le monde autour de toi retient son souffle.",
+						"merlin": "Tu es exile meme au milieu des arbres. C'est un talent rare, et pas enviable."
+					},
+					{
+						"arrival": "Les lianes s'ecartent sans que tu les touches. La foret obeit, mais sans chaleur. Comme un serviteur mefiant.",
+						"merlin": "Le monde plie devant toi. C'est flatteur. Et dangereux."
+					},
+					{
+						"arrival": "Les creatures de la foret observent depuis les branches hautes. Tu sens leurs regards, sans comprendre leur langage.",
+						"merlin": "Le lien avec le monde est fragile. Un fil de brume entre toi et tout le reste."
+					},
+					{
+						"arrival": "Broceliande t'accueille avec distance. Les sentiers se ferment derriere toi, comme si la foret hesitait.",
+						"merlin": "Ni exile, ni tyran, mais quelque part entre les deux. Trouve ta place, Voyageur."
+					}
+				]
+			}
 		},
 		"landes": {
 			"name": "Landes de Bruyere",
@@ -132,7 +228,103 @@
 			"arrival_text": "La bruyere ondule comme un ocean terrestre. Le vent est constant, pas violent, mais perpetuel. L'horizon semble plus proche qu'il ne devrait.",
 			"merlin_comment": "Le vent te parlera. Enfin, il murmurera. Il n'a plus la force de crier.",
 			"map_position": [0.75, 0.45],
-			"color": "#685030"
+			"color": "#685030",
+			"atmosphere": {
+				"sounds": "sifflement du vent, bruissement de bruyere, cri de buse",
+				"smell": "bruyere seche, tourbe, air salin lointain",
+				"light": "grise, rasante, percee de trouees pales",
+				"mood": "rude, endurant, melancolique"
+			},
+			"variants": {
+				"balanced": [
+					{
+						"arrival": "La bruyere ondule comme un ocean terrestre. Le vent est constant, pas violent, mais perpetuel. L'horizon semble plus proche qu'il ne devrait.",
+						"merlin": "Le vent te parlera. Enfin, il murmurera. Il n'a plus la force de crier."
+					},
+					{
+						"arrival": "Le ciel est bas, presque a portee de main. La lande s'etend dans toutes les directions, sans repere, sans fin.",
+						"merlin": "Talwen aime les endurants. Tu l'es ? On verra bien."
+					},
+					{
+						"arrival": "Des touffes de bruyere mauve ponctuent le paysage gris. Le vent siffle une melodie que personne n'a ecrite.",
+						"merlin": "Les landes sont honnetes. Elles ne cachent rien. C'est leur force et leur cruaute."
+					},
+					{
+						"arrival": "L'air est vif, charge de sel et de terre. Chaque respiration te rappelle que tu es vivant.",
+						"merlin": "Ici, pas de mystere. Juste toi, le vent, et ce qui reste de courage."
+					},
+					{
+						"arrival": "La tourbe craque sous tes pas. Au loin, un cairn solitaire defie l'horizon gris comme un poing leve.",
+						"merlin": "Un pas apres l'autre. C'est le seul secret que les landes connaissent."
+					}
+				],
+				"corps_extreme": [
+					{
+						"arrival": "Le vent te pousse et te retient tour a tour. Tes muscles protestent contre cette marche sans fin sur la tourbe.",
+						"merlin": "Ton corps est une plainte ambulante. Le vent s'en moque."
+					},
+					{
+						"arrival": "La lande ne pardonne pas aux faibles. Chaque pas dans la bruyere demande un effort que tu ne mesures plus.",
+						"merlin": "Les landes brisent les corps ou les forgent. Le tien hesite encore."
+					},
+					{
+						"arrival": "Tes pieds s'enfoncent dans la tourbe molle. Le paysage te defie d'avancer, metre apres metre.",
+						"merlin": "Repose-toi. Non, pas ici. Plus loin. Il y a un rocher. Peut-etre."
+					},
+					{
+						"arrival": "L'energie deborde de tes membres. Tu pourrais courir jusqu'a l'horizon. Le vent semble te porter.",
+						"merlin": "Impressionnant. Mais la lande est plus longue que tes jambes."
+					},
+					{
+						"arrival": "Tu marches comme un taureau dans la bruyere, ecrasant tout sur ton passage. La terre vibre sous tes pas.",
+						"merlin": "Cette force brute, c'est bien. Mais les landes respectent l'endurance, pas la puissance."
+					}
+				],
+				"ame_extreme": [
+					{
+						"arrival": "Le vent emporte tes pensees avant que tu puisses les former. La lande est un vide qui aspire l'esprit.",
+						"merlin": "Ton ame erre. Normal. Il n'y a rien ici pour l'ancrer."
+					},
+					{
+						"arrival": "La monotonie du paysage hypnotise. Ton esprit se perd dans les repetitions infinies de bruyere et de ciel.",
+						"merlin": "Ne te laisse pas absorber. Ceux qui revassent dans les landes ne reviennent pas toujours."
+					},
+					{
+						"arrival": "Des voix dans le vent. Des visages dans les nuages. La lande te montre ce que tu portes en toi.",
+						"merlin": "L'ame agitee voit des signes partout. Sur la lande, parfois, ce sont de vrais signes."
+					},
+					{
+						"arrival": "La solitude des landes amplifie chaque emotion. La melancolie du lieu se mele a la tienne.",
+						"merlin": "Trop de sentiments pour un endroit qui n'en a aucun. Equilibre, Voyageur."
+					},
+					{
+						"arrival": "Un calme etrange t'envahit. La lande vide ton esprit comme le vent vide les nuages.",
+						"merlin": "Ni possede ni perdu. Juste... ailleurs. Les landes font ca aux ames sensibles."
+					}
+				],
+				"monde_extreme": [
+					{
+						"arrival": "La lande ne t'accueille pas. Elle te tolere. Le vent souffle plus fort quand tu avances.",
+						"merlin": "Tu es un intrus dans un monde qui n'invite personne. Bienvenue au club."
+					},
+					{
+						"arrival": "La bruyere s'aplatit devant toi, soumise. La lande reconnait ta force et s'incline, sans amour.",
+						"merlin": "Tyran des landes. Joli titre. Inutile, mais joli."
+					},
+					{
+						"arrival": "Meme les buses evitent ton ombre. Le monde sauvage te reconnait et s'ecarte.",
+						"merlin": "Quand les animaux fuient, c'est rarement bon signe. Meme pour celui qu'ils fuient."
+					},
+					{
+						"arrival": "Le cairn au loin semble plus petit a mesure que tu approches. Comme si le monde retrecissait devant toi.",
+						"merlin": "Le monde se contracte autour de toi. C'est du pouvoir ou de la solitude. Les deux se ressemblent."
+					},
+					{
+						"arrival": "La lande est immense et tu es seul. Le vent ne te parle pas. Il parle de toi aux pierres.",
+						"merlin": "Exile sur une lande. C'est presque poetique. Si ce n'etait pas aussi froid."
+					}
+				]
+			}
 		},
 		"cotes": {
 			"name": "Cotes Sauvages",
@@ -143,7 +335,103 @@
 			"arrival_text": "Le granite noir rencontre l'ecume blanche. Le ciel et la mer se confondent a l'horizon. On ne sait plus ou l'un finit et l'autre commence.",
 			"merlin_comment": "La mer savait des choses. Elle les oublie, doucement. Comme nous tous.",
 			"map_position": [0.3, 0.65],
-			"color": "#205898"
+			"color": "#205898",
+			"atmosphere": {
+				"sounds": "ressac des vagues, cri de mouettes, vent marin",
+				"smell": "sel, algues, embruns, roche mouillee",
+				"light": "vive, reflets argentes sur l'eau, aveuglante par eclats",
+				"mood": "sauvage, immense, libre"
+			},
+			"variants": {
+				"balanced": [
+					{
+						"arrival": "Le granite noir rencontre l'ecume blanche. Le ciel et la mer se confondent a l'horizon. On ne sait plus ou l'un finit et l'autre commence.",
+						"merlin": "La mer savait des choses. Elle les oublie, doucement. Comme nous tous."
+					},
+					{
+						"arrival": "Les falaises tombent a pic dans une eau d'un bleu presque noir. Le vent porte le gout du sel et de la liberte.",
+						"merlin": "Bran surveille la cote depuis toujours. Il est fatigue, mais il ne le dit pas. Il est comme ca."
+					},
+					{
+						"arrival": "L'ecume dessine des ephemeres arabesques sur le granite. Chaque vague est un mot que la mer ne finit jamais.",
+						"merlin": "Le rivage est un seuil. Derriere, c'est un monde que meme moi je ne comprends plus."
+					},
+					{
+						"arrival": "Les rochers noirs emergent de l'eau comme des dents de la terre. Le ciel immense ecrase tout de sa lumiere pale.",
+						"merlin": "Respire un bon coup. L'air d'ici nettoie meme les pensees sales."
+					},
+					{
+						"arrival": "La maree descend, decouvrant des champs de varech et de secrets. Le rivage murmure des choses anciennes.",
+						"merlin": "Quand la mer se retire, elle laisse des reponses. Le probleme, c'est de trouver les questions."
+					}
+				],
+				"corps_extreme": [
+					{
+						"arrival": "Les rochers glissants te forcent a chaque pas une decision. Ton corps lutte contre le vent marin.",
+						"merlin": "La mer n'a pas de pitie pour les corps faibles. Le granite non plus."
+					},
+					{
+						"arrival": "Grimper sur ces falaises te coupe le souffle. Le vent sale seche ta peau et brule tes muscles.",
+						"merlin": "Tu trembles. De froid ou de fatigue ? Les deux, probablement."
+					},
+					{
+						"arrival": "L'air iode te fouette le visage. Chaque embruns est une gifle que la mer distribue sans compter.",
+						"merlin": "Ton corps crie. La mer s'en fiche. Elle a noye des marins plus solides que toi."
+					},
+					{
+						"arrival": "Tu sautes de rocher en rocher avec une agilite de phoques. La mer eclabousse tes bottes et tu ris.",
+						"merlin": "Tant d'energie au bord de la mer. C'est beau. Et un peu imprudent."
+					},
+					{
+						"arrival": "La falaise ne te fait pas peur. Tu la gravis comme si le granite etait un escalier fait pour toi.",
+						"merlin": "Le Corps exulte, mais la maree monte. La force ne negocie pas avec l'ocean."
+					}
+				],
+				"ame_extreme": [
+					{
+						"arrival": "L'horizon infini aspire ton regard et ton esprit. Tu pourrais rester la des heures, hypnotise par les vagues.",
+						"merlin": "Reviens. L'horizon est un piege pour les ames revueuses."
+					},
+					{
+						"arrival": "Le rythme des vagues s'accorde a celui de ton coeur. La mer et toi respirez ensemble.",
+						"merlin": "Quand ton ame bat au rythme de la mer, c'est qu'elle oublie son propre rythme."
+					},
+					{
+						"arrival": "Les mouettes crient et tu crois comprendre leur langage. Le vent porte des mots que personne n'a prononces.",
+						"merlin": "L'ame qui entend la mer parle une langue morte. Belle, mais morte."
+					},
+					{
+						"arrival": "Une tristesse immense et douce te submerge. La mer pleure, et tu pleures avec elle, sans savoir pourquoi.",
+						"merlin": "Les larmes et la mer, meme sel. Ne te laisse pas dissoudre."
+					},
+					{
+						"arrival": "Tu sens chaque vague dans ta poitrine, comme si l'ocean pulsait a travers toi.",
+						"merlin": "Ton ame deborde. Comme la maree. Fais attention au reflux."
+					}
+				],
+				"monde_extreme": [
+					{
+						"arrival": "La mer se retire a ton approche. Meme l'ocean semble hesiter devant toi.",
+						"merlin": "Quand la mer s'ecarte, ce n'est pas du respect. C'est de la mefiance."
+					},
+					{
+						"arrival": "Les mouettes ne survolent pas ton ombre. Le rivage se vide a mesure que tu avances.",
+						"merlin": "Exile, meme au bord du monde. Il n'y a plus loin ou fuir."
+					},
+					{
+						"arrival": "Les vagues frappent les rochers plus fort quand tu t'approches. La mer te defie, ou te salue.",
+						"merlin": "Le monde repond a ta presence. Violence ou hommage ? La mer ne fait pas la difference."
+					},
+					{
+						"arrival": "Tu marches sur les rochers comme un roi sur ses terres. La cote t'appartient, pour ce que ca vaut.",
+						"merlin": "Posseder le rivage, c'est posseder une frontiere. Ca n'a jamais rendu personne heureux."
+					},
+					{
+						"arrival": "Le vent tourne quand tu tournes. Les embruns evitent ton visage. Le monde s'adapte a toi, pas l'inverse.",
+						"merlin": "Le monde obeit. C'est un pouvoir qui isole. Bran le sait mieux que personne."
+					}
+				]
+			}
 		},
 		"villages": {
 			"name": "Villages Celtes",
@@ -154,7 +442,103 @@
 			"arrival_text": "Pierre grise, toits d'ardoise, feu dans les cheminees. Les ruelles sont etroites et couvertes de lierre. La lumiere est celle du crepuscule, meme en plein jour.",
 			"merlin_comment": "Ils rient encore, tu sais. C'est ca le plus beau. Et le plus triste.",
 			"map_position": [0.45, 0.8],
-			"color": "#a08058"
+			"color": "#a08058",
+			"atmosphere": {
+				"sounds": "craclement du feu, murmures de voix, rire d'enfants lointain",
+				"smell": "pain chaud, fumee de bois, terre mouillee",
+				"light": "chaude, orangee, filtree par les fenetres",
+				"mood": "chaleureux, communautaire, fragile"
+			},
+			"variants": {
+				"balanced": [
+					{
+						"arrival": "Pierre grise, toits d'ardoise, feu dans les cheminees. Les ruelles sont etroites et couvertes de lierre. La lumiere est celle du crepuscule, meme en plein jour.",
+						"merlin": "Ils rient encore, tu sais. C'est ca le plus beau. Et le plus triste."
+					},
+					{
+						"arrival": "L'odeur du pain chaud te guide entre les maisons de pierre. Des voix murmurent derriere les portes closes.",
+						"merlin": "Azenor tient ce village a bout de bras. Littéralement. Elle a les bras solides."
+					},
+					{
+						"arrival": "Le lierre recouvre les murs comme une couverture verte. Les paves luisent de pluie recente.",
+						"merlin": "Les villages sont la derniere chaleur. Quand ils s'eteindront, il ne restera que des pierres froides."
+					},
+					{
+						"arrival": "Une fontaine coule au centre de la place. Son murmure est le battement de coeur du village.",
+						"merlin": "Chaque maison est une histoire. Chaque cheminee, une priere. Ne l'oublie pas."
+					},
+					{
+						"arrival": "Les fenetres brillent d'une lumiere douce. Derriere chaque vitre, une vie qui s'accroche au quotidien.",
+						"merlin": "Les gens d'ici ne demandent pas grand-chose. Juste un feu, du pain, et l'espoir du lendemain."
+					}
+				],
+				"corps_extreme": [
+					{
+						"arrival": "Tes pas resonnent sur les paves. Les villageois te regardent avec un melange de curiosite et d'inquietude.",
+						"merlin": "Tu titubes. Les gens le voient. Ils ont l'habitude des voyageurs epuises."
+					},
+					{
+						"arrival": "L'odeur du ragoût te donne le vertige. Ton corps reclame repos et nourriture avec une urgence animale.",
+						"merlin": "Assieds-toi pres du feu. Personne ne te jugera. Ici, on nourrit d'abord, on questionne apres."
+					},
+					{
+						"arrival": "Tu debarques au village comme un ours affame. Les enfants s'ecartent, les anciens hochent la tete.",
+						"merlin": "Cette vigueur effraie les timides. Mais les braves te suivront."
+					},
+					{
+						"arrival": "Tes muscles noues reclament le repos des murs de pierre. Le village t'offre ce que la route t'a pris.",
+						"merlin": "Le Corps a ses limites. Meme le sanglier rentre dans sa bauge."
+					},
+					{
+						"arrival": "Tu portes ta fatigue comme un manteau. Les villageois te font une place pres du feu sans rien demander.",
+						"merlin": "Accepte leur chaleur. Le Corps a besoin de plus que de la volonte."
+					}
+				],
+				"ame_extreme": [
+					{
+						"arrival": "Les rires des enfants te percutent comme des eclats de verre. Chaque emotion est amplifiee par les murs etroits du village.",
+						"merlin": "Ton ame vibre trop fort. Les villageois le sentent. Ils reculent un peu."
+					},
+					{
+						"arrival": "Les visages autour de toi racontent des histoires que tu lis sans le vouloir. L'empathie est un fardeau dans un lieu si humain.",
+						"merlin": "Trop sensible pour un village. Tu ressens leur peur avant qu'ils ne la formulent."
+					},
+					{
+						"arrival": "La chaleur du lieu te bouleverse. Apres tant de solitude, les voix humaines sont presque douloureuses.",
+						"merlin": "L'ame perdue trouve parfois son chemin dans les yeux des autres."
+					},
+					{
+						"arrival": "Tu traverses le village comme un fantome. Present mais absent. Les gens te parlent, mais tu n'entends que le vent de tes pensees.",
+						"merlin": "Reviens parmi nous. Les murs ne sont pas des miroirs."
+					},
+					{
+						"arrival": "Chaque maison est un monde. Chaque porte fermee, un mystere qui resonne en toi.",
+						"merlin": "L'ame possedee voit des portes partout. Mais toutes ne doivent pas etre ouvertes."
+					}
+				],
+				"monde_extreme": [
+					{
+						"arrival": "Les villageois se taisent a ton passage. Tu es l'etranger, meme si tu viens les sauver.",
+						"merlin": "Exile dans un village. C'est presque comique. Ils ont besoin de toi, mais ils ne le savent pas."
+					},
+					{
+						"arrival": "Les portes se ferment doucement quand tu passes. Le village t'observe derriere ses volets.",
+						"merlin": "La confiance se merite, pas se force. Les villageois ont de la memoire."
+					},
+					{
+						"arrival": "Tu entres au village et les conversations s'arretent. Ton ombre est plus grande que celle des maisons.",
+						"merlin": "Le tyran au village. Azenor n'appréciera pas. Elle protege les siens."
+					},
+					{
+						"arrival": "Les chiens aboient, les chats fuient. Ta presence desequilibre le quotidien fragile du lieu.",
+						"merlin": "Le monde reagit a toi comme a une tempete. Calme-toi, ou ils ne t'ouvriront jamais."
+					},
+					{
+						"arrival": "La place du village est deserte a ton arrivee. Seule la fontaine ose couler en ta presence.",
+						"merlin": "Meme les pierres te jugent. C'est l'inconvenient d'etre trop... present."
+					}
+				]
+			}
 		},
 		"cercles": {
 			"name": "Cercles de Pierres",
@@ -165,7 +549,103 @@
 			"arrival_text": "Trois mille menhirs s'etendent a perte de vue. Les ombres bougent trop lentement par rapport au soleil. Le temps hesite ici, comme s'il avait oublie la suite.",
 			"merlin_comment": "Reste pas trop longtemps pres des pierres. Le temps y joue des tours. Je parle d'experience.",
 			"map_position": [0.2, 0.35],
-			"color": "#787870"
+			"color": "#787870",
+			"atmosphere": {
+				"sounds": "silence epais, bourdonnement sourd des pierres, vent entre les menhirs",
+				"smell": "lichen sec, granite froid, ozone",
+				"light": "grise uniforme, sans ombre, hors du temps",
+				"mood": "mystique, immobile, vertigineux"
+			},
+			"variants": {
+				"balanced": [
+					{
+						"arrival": "Trois mille menhirs s'etendent a perte de vue. Les ombres bougent trop lentement par rapport au soleil. Le temps hesite ici, comme s'il avait oublie la suite.",
+						"merlin": "Reste pas trop longtemps pres des pierres. Le temps y joue des tours. Je parle d'experience."
+					},
+					{
+						"arrival": "Les menhirs se dressent en rangs serres, comme une armee petrifiee. Le silence entre eux est assourdissant.",
+						"merlin": "Keridwen garde le temps. C'est le seul gardien qui ne vieillit pas. Ironique, non ?"
+					},
+					{
+						"arrival": "Le lichen couvre les pierres de motifs que le temps a dessines. Chaque menhir est un calendrier que personne ne sait plus lire.",
+						"merlin": "Ces pierres etaient la avant moi. Elles seront la apres. Ca devrait te rassurer. Ou t'inquieter."
+					},
+					{
+						"arrival": "L'air est immobile entre les alignements. Pas de vent, pas de bruit. Juste le poids du temps qui s'accumule.",
+						"merlin": "Le temps hesite. Comme toi. C'est peut-etre pour ca que tu es ici."
+					},
+					{
+						"arrival": "Les pierres chantent. Pas vraiment un son, plutot une vibration que tu ressens dans les os.",
+						"merlin": "Tu les entends ? Bien. Ceux qui n'entendent pas les pierres ne comprennent rien a ce monde."
+					}
+				],
+				"corps_extreme": [
+					{
+						"arrival": "Le poids des menhirs semble peser sur tes epaules. L'air est si dense ici que chaque pas demande un effort.",
+						"merlin": "Le temps ralentit. Ton corps aussi. C'est normal. Enfin, ici, rien n'est normal."
+					},
+					{
+						"arrival": "Tes genoux flechissent entre les pierres. Le temps epais te plaque au sol comme une main invisible.",
+						"merlin": "Le Corps fatigue plus vite pres des cercles. Le temps prend son tribut."
+					},
+					{
+						"arrival": "Tu te sens lourd, ancre au sol. Les menhirs te tirent vers le bas, vers leurs racines enfouies.",
+						"merlin": "Ne dors pas entre les pierres. Ceux qui dorment ici se reveillent dans un autre siecle."
+					},
+					{
+						"arrival": "Une energie ancienne pulse dans tes veines. Les pierres semblent te charger comme une batterie vivante.",
+						"merlin": "Le Corps s'emballe. Les cercles font ca. Ils redistribuent ce qu'ils ont stocke."
+					},
+					{
+						"arrival": "Tu marches entre les menhirs comme un geant parmi des piliers. Ton energie deborde, les pierres vibrent.",
+						"merlin": "Trop de force dans un lieu de patience. Les pierres n'aiment pas les tempetes."
+					}
+				],
+				"ame_extreme": [
+					{
+						"arrival": "Le temps se plie autour de toi. Tu vois des instants qui n'ont pas encore eu lieu flotter entre les menhirs.",
+						"merlin": "Ton ame voit a travers le temps. C'est un cadeau empoisonne."
+					},
+					{
+						"arrival": "Les pierres murmurent des noms. Tu crois reconnaitre le tien parmi eux.",
+						"merlin": "Quand les menhirs te nomment, c'est qu'ils veulent quelque chose. Mefie-toi."
+					},
+					{
+						"arrival": "Chaque pierre est un souvenir solidifie. En les touchant, des visions te traversent comme des eclairs.",
+						"merlin": "L'ame ouverte pres des cercles, c'est comme une porte sans serrure. Tout entre."
+					},
+					{
+						"arrival": "Le monde se dedouble. Tu vois les pierres telles qu'elles sont et telles qu'elles etaient, simultanement.",
+						"merlin": "Le temps et l'ame ne font pas bon menage ici. L'un devore l'autre."
+					},
+					{
+						"arrival": "Un vertige temporel te saisit. Les epoques se superposent, les voix se melent. Tu es partout et nulle part.",
+						"merlin": "Reprends-toi. Le temps n'est pas un jeu, meme si les pierres font semblant."
+					}
+				],
+				"monde_extreme": [
+					{
+						"arrival": "Les menhirs s'ecartent legerement a ton passage. Ou c'est toi qui retrecis. Le temps brouille les perspectives.",
+						"merlin": "Le monde te fuit, meme entre les pierres eternelles. C'est un exploit, a ta maniere."
+					},
+					{
+						"arrival": "Les ombres des pierres pointent vers toi, quelle que soit la position du soleil.",
+						"merlin": "Les cercles te reconnaissent. Pas forcement comme un ami."
+					},
+					{
+						"arrival": "Tu marches au centre du cercle et le silence devient absolu. Le monde retient son souffle.",
+						"merlin": "Tyran du temps. Meme Keridwen n'a pas ose toucher a ca."
+					},
+					{
+						"arrival": "Les pierres vibrent quand tu les frolent. Le monde reagit a ta presence avec une intensite inhabituelle.",
+						"merlin": "Le lien entre toi et le monde est electrique ici. Fais attention aux decharges."
+					},
+					{
+						"arrival": "Le cercle se referme derriere toi. Les menhirs semblent avoir bouge. Ou c'est le temps qui t'a deplace.",
+						"merlin": "Exile du temps. C'est la pire forme de solitude. Meme la patience n'y resiste pas."
+					}
+				]
+			}
 		},
 		"marais": {
 			"name": "Marais des Korrigans",
@@ -176,7 +656,103 @@
 			"arrival_text": "Noir, vert sombre, reflets iridescents dans l'eau stagnante. La brume est rasante. Le silence est different ici, plus lourd, comme s'il ecoutait.",
 			"merlin_comment": "Les korrigans sont la. Tu ne les vois pas, mais eux te voient tres bien. Souris.",
 			"map_position": [0.35, 0.45],
-			"color": "#403848"
+			"color": "#403848",
+			"atmosphere": {
+				"sounds": "bulles dans la vase, coassement lointain, craquement de branches mortes",
+				"smell": "tourbe humide, vegetation en decomposition, eau stagnante",
+				"light": "verdatre, filtree, diffuse, sans source visible",
+				"mood": "sombre, secret, patient"
+			},
+			"variants": {
+				"balanced": [
+					{
+						"arrival": "Noir, vert sombre, reflets iridescents dans l'eau stagnante. La brume est rasante. Le silence est different ici, plus lourd, comme s'il ecoutait.",
+						"merlin": "Les korrigans sont la. Tu ne les vois pas, mais eux te voient tres bien. Souris."
+					},
+					{
+						"arrival": "Des lumieres palles dansent a la surface de l'eau. Les saules pleureurs forment des rideaux de branches mortes.",
+						"merlin": "Gwydion connait chaque flaque, chaque ombre. Ne t'ecarte pas du chemin."
+					},
+					{
+						"arrival": "La tourbe cede sous tes pieds avec un bruit mouille. L'air est si humide qu'il colle a la peau.",
+						"merlin": "Les marais cachent tout. Les secrets, les tresors, les os. Surtout les os."
+					},
+					{
+						"arrival": "Des iris violets poussent au bord de l'eau noire. La beaute et le danger partagent le meme sol ici.",
+						"merlin": "Joli, non ? Ne touche a rien. Ce qui est beau ici est souvent mortel."
+					},
+					{
+						"arrival": "Un heron immobile te fixe depuis la brume. Il sait des choses. Il ne les partagera pas.",
+						"merlin": "Le marais a ses propres lois. La premiere : ne jamais faire confiance a ce qui flotte."
+					}
+				],
+				"corps_extreme": [
+					{
+						"arrival": "La boue aspire tes bottes a chaque pas. Avancer dans le marais est un combat contre la terre elle-meme.",
+						"merlin": "Ton corps s'enlise. Comme tout ici. Le marais ne lache rien."
+					},
+					{
+						"arrival": "L'humidite penetre tes vetements, tes os, ton souffle. Le marais te digere lentement.",
+						"merlin": "Epuise dans les marais. C'est mauvais. Les korrigans aiment les proies fatiguees."
+					},
+					{
+						"arrival": "Chaque pas est une negotiation avec la vase. Ton corps proteste contre cette lutte interminable.",
+						"merlin": "Arrete de lutter. Marche leger. Le marais respecte ceux qui n'ecrasent pas."
+					},
+					{
+						"arrival": "Tu bondis d'ilot en ilot avec une energie febrile. Le marais ne peut pas te retenir.",
+						"merlin": "Impressionnant. Mais le marais est patient. Il finit toujours par rattraper les imprudents."
+					},
+					{
+						"arrival": "Tes muscles tendus te portent au-dessus de la boue. Mais pour combien de temps encore ?",
+						"merlin": "La force brute dans un marais, c'est comme un marteau dans l'eau. Ca fait du bruit, sans plus."
+					}
+				],
+				"ame_extreme": [
+					{
+						"arrival": "Des murmures montent de l'eau stagnante. Des voix anciennes, ni humaines ni animales, qui s'adressent a ton ame.",
+						"merlin": "Le marais parle aux ames ouvertes. Ce qu'il dit n'est pas toujours agreable."
+					},
+					{
+						"arrival": "Les reflets dans l'eau montrent des images qui ne sont pas les tiennes. Des visages, des lieux, des instants voles.",
+						"merlin": "Ton ame est un miroir, et le marais adore les reflets. Ne te perds pas dedans."
+					},
+					{
+						"arrival": "Une tristesse verte et lourde monte de la tourbe. Le chagrin du marais contamine tout ce qui le traverse.",
+						"merlin": "L'ame absorbe comme la tourbe. Protege-toi, ou tu deviendras aussi sombre que cette eau."
+					},
+					{
+						"arrival": "Les feux follets t'attirent. Tu sais qu'il ne faut pas les suivre, mais chaque fibre de ton ame te pousse vers eux.",
+						"merlin": "Resiste. Les feux follets sont des souvenirs qui n'ont plus de proprietaire."
+					},
+					{
+						"arrival": "Le silence du marais n'est pas vide. Il est plein de choses que seule ton ame percoit.",
+						"merlin": "Possede par le marais. Ca arrive. Ca passe. Enfin, normalement."
+					}
+				],
+				"monde_extreme": [
+					{
+						"arrival": "L'eau stagnante se ride a ton approche. Le marais te reconnait et se prepare.",
+						"merlin": "Le marais se mefie. C'est rare. D'habitude, c'est lui qui fait peur aux autres."
+					},
+					{
+						"arrival": "Les grenouilles se taisent. Les insectes s'ecartent. Le marais te fait une place en tremblant.",
+						"merlin": "Quand le marais a peur, c'est que tu es devenu quelque chose d'inquietant."
+					},
+					{
+						"arrival": "La brume s'ecarte devant toi comme un rideau. Le marais te montre ses chemins secrets, par soumission.",
+						"merlin": "Tyran du marais. Gwydion n'aimera pas. Il partage son royaume avec personne."
+					},
+					{
+						"arrival": "Les korrigans s'enfoncent dans la vase a ton passage. Meme les creatures du marais t'evitent.",
+						"merlin": "Exile dans le marais. C'est le dernier refuge des rejetes. Et le plus dangereux."
+					},
+					{
+						"arrival": "Tu marches sur la tourbe et elle ne cede pas. Le marais te porte, a contrecoeur.",
+						"merlin": "Le monde se soumet. Meme le marais. C'est un pouvoir sombre, Voyageur."
+					}
+				]
+			}
 		},
 		"collines": {
 			"name": "Collines aux Dolmens",
@@ -187,7 +763,103 @@
 			"arrival_text": "Les collines arrondies portent des dolmens comme des couronnes de pierre. La brume y est epaisse, laiteuse. Chaque pas revele un monde different.",
 			"merlin_comment": "Les dolmens sont des portes. Ne me demande pas vers quoi. Je prefere ne pas y penser.",
 			"map_position": [0.15, 0.2],
-			"color": "#504078"
+			"color": "#504078",
+			"atmosphere": {
+				"sounds": "vent dans les herbes hautes, chant lointain, echo entre les dolmens",
+				"smell": "herbe mouillée, pierre froide, brume epaisse",
+				"light": "laiteuse, diffuse, trompeuse, changeante",
+				"mood": "onirique, nostalgique, instable"
+			},
+			"variants": {
+				"balanced": [
+					{
+						"arrival": "Les collines arrondies portent des dolmens comme des couronnes de pierre. La brume y est epaisse, laiteuse. Chaque pas revele un monde different.",
+						"merlin": "Les dolmens sont des portes. Ne me demande pas vers quoi. Je prefere ne pas y penser."
+					},
+					{
+						"arrival": "La brume laiteuse transforme chaque colline en ile. Tu navigues entre des mondes qui se touchent presque.",
+						"merlin": "Elouan veille sur les memoires. Meme celles que le monde prefere oublier."
+					},
+					{
+						"arrival": "Les dolmens emergent de la brume comme des dents de geant endormi. L'herbe est d'un vert irréel.",
+						"merlin": "La memoire s'effrite ici. Comme les pierres. Mais les morceaux racontent encore des histoires."
+					},
+					{
+						"arrival": "Le sommet de la colline offre une vue que la brume devore aussitot. Tu vois, puis tu oublies ce que tu as vu.",
+						"merlin": "C'est le propre de ce lieu. Montrer, puis reprendre. Comme un reve qu'on oublie au reveil."
+					},
+					{
+						"arrival": "Des fleurs sauvages poussent entre les pierres des dolmens. La vie insiste, meme sur les ruines de la memoire.",
+						"merlin": "Les collines sont douces. C'est leur piege. On s'y endort, et on se reveille change."
+					}
+				],
+				"corps_extreme": [
+					{
+						"arrival": "Les pentes douces te trompent. La brume masque la distance et tes jambes s'epuisent sans que tu t'en rendes compte.",
+						"merlin": "Les collines sont fourbes. Elles semblent faciles, mais elles usent les corps les plus solides."
+					},
+					{
+						"arrival": "Gravir les collines dans cette brume te donne le vertige. Le haut et le bas se confondent.",
+						"merlin": "Ton corps ne sait plus ou est le sol. C'est l'effet des dolmens. Ou de la fatigue."
+					},
+					{
+						"arrival": "L'herbe humide glisse sous tes pieds fatigues. Chaque colline vaincue revele une autre colline.",
+						"merlin": "Un pas de plus. Toujours un pas de plus. Les collines testent la persistence."
+					},
+					{
+						"arrival": "Tu devales les pentes avec une energie sauvage. La brume s'ecarte sous ta course.",
+						"merlin": "Tant d'energie dans un lieu de repos eternel. Les dolmens te regardent courir et sourient."
+					},
+					{
+						"arrival": "Tu escalades les dolmens comme un enfant. La pierre froide sous tes mains te galvanise.",
+						"merlin": "Le Corps s'emballe sur les collines. C'est la brume. Elle enivre les imprudents."
+					}
+				],
+				"ame_extreme": [
+					{
+						"arrival": "Sous chaque dolmen, des souvenirs qui ne t'appartiennent pas te submergent. La memoire du lieu entre en toi.",
+						"merlin": "Les dolmens stockent les ames. La tienne est trop ouverte. Ils en profitent."
+					},
+					{
+						"arrival": "La brume murmure des noms. Des lieux. Des dates. Ton esprit se noie dans les memoires d'autrui.",
+						"merlin": "L'ame possedee sur les collines, c'est un livre ouvert dans une bibliotheque infinie."
+					},
+					{
+						"arrival": "Tu touches un menhir et un siecle de souvenirs te traverse. Joie, peur, amour, mort, tout en un instant.",
+						"merlin": "Retire ta main. Les pierres n'ont pas de filtre. Elles donnent tout d'un coup."
+					},
+					{
+						"arrival": "La nostalgie te saisit comme une main froide. Tu pleures des choses que tu n'as jamais vecues.",
+						"merlin": "L'ame perdue ici retrouve des morceaux. Mais pas forcement les bons."
+					},
+					{
+						"arrival": "Le monde et le reve se confondent. Les collines fondent dans un brouillard interieur doux et vertigineux.",
+						"merlin": "Reviens. Les collines gardent ceux qui s'abandonnent. Et elles ne les rendent pas toujours."
+					}
+				],
+				"monde_extreme": [
+					{
+						"arrival": "La brume s'epaissit autour de toi. Les collines te cachent du monde, ou le monde se cache de toi.",
+						"merlin": "Exile sur les collines. La memoire te fuit comme les autres."
+					},
+					{
+						"arrival": "Les dolmens restent fermes. Leurs portes, si elles existent, ne s'ouvrent pas pour toi.",
+						"merlin": "Meme les portes de la memoire te rejettent. Il faut vraiment que tu travailles ton rapport au monde."
+					},
+					{
+						"arrival": "La brume te suit comme un manteau. Elle t'isole de tout, meme du paysage sous tes pieds.",
+						"merlin": "Le monde te met en quarantaine. Les collines sont douces, mais fermes."
+					},
+					{
+						"arrival": "Tu domines les collines et la brume se couche a tes pieds. Le paysage obeit, mais sans memoire.",
+						"merlin": "Tyran de la memoire. Elouan frissonne. Et Elouan ne frissonne jamais."
+					},
+					{
+						"arrival": "Chaque colline que tu gravis se referme derriere toi. Le chemin de retour disparait dans la brume.",
+						"merlin": "Le monde se reconfigure autour de toi. C'est un pouvoir que les dolmens n'ont pas prevu."
+					}
+				]
+			}
 		}
 	},
 

@@ -61,6 +61,7 @@ var card: PanelContainer
 var card_vbox: VBoxContainer
 var portrait_rect: TextureRect
 var merlin_text: RichTextLabel
+var _dialogue_source_badge: PanelContainer
 var skip_hint: Label
 var audio_player: AudioStreamPlayer
 var seasonal_overlay: ColorRect
@@ -95,6 +96,8 @@ var response_buttons: Array[Button] = []
 var _response_chosen: int = -1
 var _llm_warmup_done: bool = false
 var _preloaded_responses: Dictionary = {}  # line_index -> Array of 3 strings
+var _preloaded_sources: Dictionary = {}  # line_index -> "llm" or "fallback"
+var _response_source_badge: PanelContainer
 var loading_spinner: Label
 var merlin_ai: Node = null
 
@@ -245,6 +248,11 @@ func _build_response_ui() -> void:
 		response_container.add_child(btn)
 		response_buttons.append(btn)
 
+	# Response source badge (dev indicator)
+	_response_source_badge = LLMSourceBadge.create("static")
+	_response_source_badge.visible = false
+	response_container.add_child(_response_source_badge)
+
 
 func _warmup_llm_responses() -> void:
 	## Pre-generate response options for interactive lines (runs in background).
@@ -266,6 +274,7 @@ func _pregenerate_responses(line_index: int) -> void:
 	## Generate 3 player response options for a given dialogue line.
 	if merlin_ai == null or not merlin_ai.has_method("generate_with_system"):
 		_preloaded_responses[line_index] = _fallback_responses(line_index)
+		_preloaded_sources[line_index] = "fallback"
 		return
 
 	var line_data: Dictionary = dialogue_lines[line_index] if line_index < dialogue_lines.size() else {}
@@ -278,14 +287,17 @@ func _pregenerate_responses(line_index: int) -> void:
 
 	if result.has("error") or result.get("text", "").is_empty():
 		_preloaded_responses[line_index] = _fallback_responses(line_index)
+		_preloaded_sources[line_index] = "fallback"
 		return
 
 	var responses := _parse_numbered_responses(result.get("text", ""))
 	if responses.size() < 3:
 		_preloaded_responses[line_index] = _fallback_responses(line_index)
+		_preloaded_sources[line_index] = "fallback"
 		return
 
 	_preloaded_responses[line_index] = responses
+	_preloaded_sources[line_index] = "llm"
 
 
 func _parse_numbered_responses(text: String) -> Array[String]:
@@ -435,6 +447,11 @@ func _build_ui() -> void:
 	merlin_text.add_theme_font_size_override("normal_font_size", 26)
 	merlin_text.add_theme_color_override("default_color", PALETTE.ink)
 	card_vbox.add_child(merlin_text)
+
+	# Dialogue source badge (dev indicator)
+	_dialogue_source_badge = LLMSourceBadge.create("static")
+	_dialogue_source_badge.visible = false
+	card_vbox.add_child(_dialogue_source_badge)
 
 	# Skip hint — inside card, below text
 	skip_hint = Label.new()
@@ -601,10 +618,18 @@ func _play_sequence() -> void:
 			return
 
 		var line: Dictionary = dialogue_lines[i]
-		var text: String = line.get("text", "")
+		var original_text: String = line.get("text", "")
+		var text: String = original_text
 		# Use LLM-generated text if available
 		if _llm_gen:
-			text = _llm_gen.get_result(i, text)
+			text = _llm_gen.get_result(i, original_text)
+		# Update dialogue source badge
+		var dlg_source: String = "static"
+		if _llm_gen != null:
+			dlg_source = "llm" if text != original_text else "fallback"
+		if _dialogue_source_badge and is_instance_valid(_dialogue_source_badge):
+			LLMSourceBadge.update_badge(_dialogue_source_badge, dlg_source)
+			_dialogue_source_badge.visible = true
 
 		# Set mood via ScreenEffects
 		var emotion: String = line.get("emotion", "pensif")
@@ -675,6 +700,12 @@ func _show_response_blocks(line_index: int) -> void:
 			response_buttons[i].modulate.a = 0.0
 		else:
 			response_buttons[i].visible = false
+
+	# Update source badge
+	var resp_source: String = _preloaded_sources.get(line_index, "fallback")
+	if _response_source_badge and is_instance_valid(_response_source_badge):
+		LLMSourceBadge.update_badge(_response_source_badge, resp_source)
+		_response_source_badge.visible = true
 
 	# Reveal with cascade animation
 	response_container.visible = true

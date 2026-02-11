@@ -102,6 +102,7 @@ powershell -ExecutionPolicy Bypass -File tools/validate_godot_errors.ps1
 Prefixer avec `*` pour bypass. Les slash commands (`/`) sont auto-bypassees.
 
 **Agents auto**: `debug_qa.md` (si .gd modifie), `git_commit.md` (3+ fichiers ou phase complete).
+**LoRA auto**: `lora_gameplay_translator.md` si demande adaptation LLM ("le modele doit", "entraine", "fine-tune", "plus poetique/celtique").
 **Ref dispatcher/matrice/agents**: `.claude/agents/task_dispatcher.md` (lire QUE si MODEREE+).
 
 **Format commit**: Conventional Commits `type(scope): description`
@@ -287,7 +288,7 @@ Continuer:
 
 ---
 
-## 29 Agents + 1 Knowledge Base
+## 33 Agents + 1 Knowledge Base
 
 Voir `.claude/agents/AGENTS.md` pour la liste complète et les instructions d'invocation.
 
@@ -303,9 +304,28 @@ Voir `.claude/agents/AGENTS.md` pour la liste complète et les instructions d'in
 | **Security & Quality (3)** | **Accessibility Specialist, Security Hardening, Prompt Curator** |
 | **Progression & Economy (1)** | **Meta-Progression Designer** |
 | **CI/CD & Release (1)** | **CI/CD Release** |
+| **LoRA Fine-Tuning (4)** | **LoRA Gameplay Translator, LoRA Data Curator, LoRA Training Architect, LoRA Evaluator** |
 | Knowledge Sharing | gdscript_knowledge_base.md (ressource partagée) |
 
-### Knowledge Base (NOUVEAU)
+### LoRA Fine-Tuning Pipeline (NOUVEAU)
+
+**4 agents spécialisés** forment un pipeline complet de fine-tuning du modèle Qwen 2.5-3B :
+
+| Agent | Fichier | Rôle |
+|-------|---------|------|
+| **LoRA Gameplay Translator** | `lora_gameplay_translator.md` | **POINT D'ENTREE** — traduit demande gameplay → spec d'entraînement |
+| **LoRA Data Curator** | `lora_data_curator.md` | Extraction, curation, augmentation des datasets |
+| **LoRA Training Architect** | `lora_training_architect.md` | Hyperparamètres, architecture adapter, pilotage training |
+| **LoRA Evaluator** | `lora_evaluator.md` | Benchmark, métriques, décision GO/NO-GO |
+
+**Auto-activation**: Quand l'utilisateur demande "entraine le modèle", "le LLM doit", "plus poétique",
+"fine-tune", "adapte le modèle pour [gameplay]" → `lora_gameplay_translator.md` s'active automatiquement.
+
+**Pipeline**: `tools/lora/` (export → augment → train → convert → benchmark)
+**Datasets**: `data/ai/training/` (brut + augmenté, format ChatML)
+**Adapters**: `addons/merlin_llm/adapters/` (fichiers .gguf)
+
+### Knowledge Base
 
 Fichier: `.claude/agents/gdscript_knowledge_base.md`
 
@@ -321,4 +341,4 @@ Fichier: `.claude/agents/gdscript_knowledge_base.md`
 
 ---
 
-*Updated: 2026-02-09 — 29 agents (5 new), enriched competencies, Task Dispatcher v1.1*
+*Updated: 2026-02-11 — 33 agents (4 new: LoRA pipeline), Task Dispatcher v1.2*

@@ -2,6 +2,358 @@
 
 > **Note**: Sessions anterieures archivees dans `archive/progress_archive_2026-02-05_to_2026-02-08.md`
 
+## Session: 2026-02-11g (Phase 43A — Refonte Gameplay Fondations)
+
+### Phase 43A: Fondations Gameplay (Hand of Fate 2 inspiration)
+- **Status:** COMPLETE (validate.bat passed)
+- **Plan consolide:** `.claude/plans/playful-yawning-tarjan.md`
+
+#### A.1: Suppression game over par aspects + 12 chutes
+- Supprime Legacy section (VERBS, RUN_RESOURCES, NEEDS, etc.) + Reigns section + TRIADE_ENDINGS
+- Supprime SOUFFLE_CENTER_COST, SOUFFLE_EMPTY_RISK
+- Centre gratuit (cost=0 dans TRIADE_OPTION_INFO)
+- _check_triade_run_end(): vie=0 remplace 2 extremes
+- Supprime _handle_bestiole_care(), _get_triade_ending(), _handle_run_end()
+- Supprime actions REIGNS_* et LEGACY (START_RUN, END_RUN, APPLY_EFFECTS, RUN_EVENT)
+- Supprime bestiole.needs (Tamagotchi) de build_default_state()
+- Fix references: Collection.gd, merlin_effect_engine.gd, merlin_llm_adapter.gd
+
+#### A.2: Systeme essences de vie (jauge HP)
+- LIFE_ESSENCE_MAX=10, START=7, CRIT_FAIL_DAMAGE=2, CRIT_SUCCESS_HEAL=1
+- _damage_life(), _heal_life(), get_life_essence() dans store
+- Actions TRIADE_DAMAGE_LIFE/HEAL_LIFE + signal life_changed
+- DAMAGE_LIFE/HEAL_LIFE dans effect engine (VALID_CODES + _apply_life_delta)
+- Controller: degats crit_failure, heal crit_success, _on_life_changed
+- UI: update_life_essence() avec couleurs et animation low-life
+
+#### A.3: DC variable hybride
+- Supprime DC_LEFT=6/DC_CENTER=10/DC_RIGHT=14 fixes
+- DC_BASE ranges: left 4-8, center 7-12, right 10-16
+- ASPECT_DC_MODIFIER: balanced=-1, 1 extreme=0, 2=+1, 3=+2
+- DC_DIFFICULTY_LABELS: Facile/Normal/Difficile avec couleurs
+
+#### A.4: Missions hybrides
+- MISSION_TEMPLATES: 4 types (survive/equilibre/explore/artefact) avec poids
+- _generate_mission() weighted random dans store
+- _auto_progress_mission() par type dans controller
+
+#### A.5: Ecran resultats enrichi
+- show_end_screen() enrichi avec indicateur "Essences Epuisees"
+- update_life_essence() avec seuils couleur et animation
+
+**Fichiers modifies (8):**
+- merlin_constants.gd, merlin_store.gd, merlin_effect_engine.gd
+- triade_game_controller.gd, triade_game_ui.gd
+- Collection.gd, merlin_llm_adapter.gd, task_plan.md
+
+---
+
+## Session: 2026-02-11f (Phase 41 — Responsiveness + Qualite LLM)
+
+### Phase 41: Optimisation Responsiveness + Qualite Narrative
+- **Status:** COMPLETE
+
+#### Phase A: Responsiveness Critique
+- Remplace polling 250ms par `process_frame` dans triade_game_controller.gd (latence 250ms → ~16ms)
+- Skip typewriter deja implemente (click/tap/touche)
+- Fix polling backoff merlin_ai.gd: instant exit on done + 10ms backoff (2 sites: single + parallel)
+
+#### Phase B: Prefetch Intelligent
+- Relaxe prefetch validation: tolerance aspects ±1 step + biome exact (vs hash exact)
+- Ajoute `try_consume_prefetch()` public dans merlin_omniscient.gd
+- Deplace `_trigger_prefetch()` AVANT `display_card()` (prefetch pendant lecture)
+- Fast-path prefetch dans controller: bypass store dispatch si prefetch dispo
+
+#### Phase C: Qualite Narrative
+- RAG budget 300→600 tokens (8192 ctx, ~11% utilise)
+- Nouvelles sections RAG: karma/tension, promesses actives, arcs detailles
+- Historique etendu: 3→10 derniers choix
+- Sampling: Narrator T=0.75/top_p=0.92/rep=1.35, GM T=0.15/max=130/top_k=15
+
+#### Phase D: Robustesse
+- Brain busy timeout 60s (previent deadlock si brain crash)
+- LLM timeout 15→8s (Qwen finit en 2-5s, 15s masquait les bugs)
+- Emergency fallback contextuel (texte par biome, recovery aspect faible)
+
+**Fichiers modifies (Phase 41):**
+- `scripts/ui/triade_game_controller.gd` — Polling, prefetch, timeout, fallback
+- `addons/merlin_ai/merlin_ai.gd` — Polling backoff, busy timeout, sampling params
+- `addons/merlin_ai/merlin_omniscient.gd` — Prefetch tolerance, try_consume_prefetch
+- `addons/merlin_ai/rag_manager.gd` — Budget 600, karma/tension/promesses/arcs
+
+**Validation:** PASSED (0 erreurs, 1 warning pre-existant)
+
+---
+
+## Session: 2026-02-11e (Phase 40 — Optimisation LLM + LoRA Pipeline + Agents Fine-Tuning)
+
+### Phase 40A: Optimisation Prompts + RAG (Palier 1)
+- **Status:** COMPLETE
+- Enrichi 3 templates narrator dans `prompt_templates.json` (vocab celtique, registres, few-shot)
+- Injecte `tone_prompt_guidance()` dans `_build_narrator_prompt()` et `_build_system_prompt()`
+- Augmente CONTEXT_BUDGET 180→300 tokens dans `rag_manager.gd`
+- Ajoute `_get_tone_context()` au systeme de priorite RAG (Priority.HIGH)
+- Sync ton ToneController → RAG world_state dans `_sync_mos_to_rag()`
+
+### Phase 40B: Pipeline LoRA Complet (Palier 3)
+- **Status:** COMPLETE
+- Cree `tools/lora/export_training_data.py` v2.0 — 480 samples game-wide (0 ref scenes)
+- Cree `tools/lora/augment_dataset.py` — 2001 samples augmentes (4 strategies)
+- Cree `tools/lora/train_narrator_lora.py` — Unsloth/PEFT, QLoRA 4-bit
+- Cree `tools/lora/convert_to_gguf.sh` — Conversion HF → GGUF
+- Cree `tools/lora/benchmark_lora.py` — 6 metriques (ton, vocab, BLEU, francais, longueur, latence)
+- Cree `tools/lora/README.md` — Documentation pipeline
+- Cree `data/ai/training/tone_mapping.json` — 17 moods → 7 tons
+- Modifie `merlin_ai.gd` — Chargement LoRA auto + Multi-LoRA par ton
+- Modifie `merlin_omniscient.gd` — Switch ton LoRA avant generation
+
+### Phase 40C: Agents Fine-Tuning (4 agents)
+- **Status:** COMPLETE
+- Cree `lora_gameplay_translator.md` — Point d'entree auto-active, traduit gameplay → spec
+- Cree `lora_data_curator.md` — Extraction, curation, augmentation datasets
+- Cree `lora_training_architect.md` — Hyperparametres, architecture, pilotage training
+- Cree `lora_evaluator.md` — Benchmark, metriques GO/NO-GO, A/B testing
+- MAJ `AGENTS.md` — 29→33 agents, nouvelle categorie LoRA Fine-Tuning
+- MAJ `task_dispatcher.md` v1.2 — Types LoRA, patterns fichiers, review croise, exemples dispatch
+- MAJ `CLAUDE.md` — Auto-activation LoRA, section 33 agents, pipeline reference
+
+**Fichiers modifies (Phase 40):**
+- `data/ai/config/prompt_templates.json`
+- `addons/merlin_ai/merlin_omniscient.gd`
+- `addons/merlin_ai/rag_manager.gd`
+- `addons/merlin_ai/merlin_ai.gd`
+- `tools/lora/` (6 fichiers crees)
+- `data/ai/training/` (3 fichiers crees)
+- `.claude/agents/` (4 agents crees + 2 MAJ)
+- `CLAUDE.md`
+
+---
+
+## Session: 2026-02-11d (Phase 39B — Refonte Multi-Scenes)
+
+### Phase 39B: Refonte Multi-Scenes (5 phases)
+- **Status:** COMPLETE
+
+#### Phase 1: Fix 3 choix TriadeGame (CRITIQUE)
+- Cause racine: toutes les cartes fallback n'avaient que 2 options (LEFT+RIGHT)
+- Ajout CENTER a toutes les 13 cartes fallback + emergency cards
+- `_pad_options_to_three()` dans merlin_omniscient.gd — auto-insere CENTER contextuel
+- triade_game_ui.gd: affiche toujours 3 boutons, grise les manquants
+
+#### Phase 2: Accelerer SceneRencontreMerlin
+- Timings: typewriter 30ms→15ms, animations 50% plus rapides, fades 0.3→0.15
+- LLM: max_tokens 200→80 (RAG), 80→40 (rephrase), 100→60 (responses)
+- Fallback lines raccourcies a 2 lignes max
+- Phase BIOME_SELECTION supprimee (auto-set Broceliande)
+- Oghams enrichis avec effets gameplay visibles
+- Animation d'attente LLM ("..." pulsant)
+
+#### Phase 3: Refonte HubAntre
+- Removed numbered steps 1/2/3 → labels propres (Destination/Outil/Conditions)
+- LLM Passif: Merlin commente async via generate_voice (30 tokens, auto-fade 4s)
+- Auto-selection Broceliande si aucun biome choisi
+- Bouton aventure repositionne en haut
+
+#### Phase 4: TriadeGame UI
+- Compteur Souffle numerique "3/7" avec code couleur
+- PixelEncounterTile (NOUVEAU): tuile pixel art 24x24, 6 types de rencontre
+- Integration dans display_card() avec detection auto par tags
+
+#### Phase 5: PNJ via LLM + Mini-jeux logiques
+- 5 cartes NPC fallback (Druide, Villageoise, Barde, Guerrier, Marchand)
+- generate_npc_card() dans merlin_omniscient.gd (LLM first, fallback pool)
+- 15% chance NPC apres carte 5 dans triade_game_controller.gd
+- Mini-jeux contextuels: TAG_FIELD_MAP dans minigame_registry.gd (tags > keywords)
+
+#### Fichiers modifies
+- `addons/merlin_ai/merlin_omniscient.gd` — pad_options, generate_npc_card
+- `addons/merlin_ai/generators/fallback_pool.gd` — CENTER sur 13 cartes, 5 NPC cards
+- `scripts/ui/triade_game_ui.gd` — 3 boutons toujours, souffle counter, encounter tile
+- `scripts/ui/triade_game_controller.gd` — NPC trigger, direct LLM 3 options, tag-based minigames
+- `scripts/SceneRencontreMerlin.gd` — timings, textes courts, biome removed, oghams enrichis
+- `scripts/HubAntre.gd` — adventure flow, LLM passif, auto-broceliande
+- `scripts/ui/pixel_encounter_tile.gd` (NOUVEAU) — pixel art encounter tiles
+- `scripts/minigames/minigame_registry.gd` — TAG_FIELD_MAP, tags parameter
+
+#### Validation: PASSED (0 errors, 1 pre-existing warning)
+
+---
+
+## Session: 2026-02-11c (Phase 42 — Gameplay Bible & Audit de Coherence)
+
+### Phase 42: GAMEPLAY_BIBLE.md — Vision Complete du Jeu
+- **Status:** complete
+
+#### Livrable
+- **`docs/GAMEPLAY_BIBLE.md`** (~1500 lignes) — Reference absolue pour tout developpement futur
+
+#### Contenu de l'audit
+1. Boucle de gameplay principale (diagramme complet)
+2. Systeme TRIADE (3 aspects x 3 etats, Souffle, Awen, Flux, Karma)
+3. Systeme de cartes (4 types, pipeline LLM, fallbacks)
+4. Systeme D20 + 15 mini-jeux
+5. Flux de scenes complet (8 scenes, transitions, donnees requises)
+6. Meta-progression (Arbre de Vie 28 talents, 18 Oghams, Evolution Bestiole)
+7. Architecture IA/LLM (Multi-Brain, RAG v2.0, Guardrails)
+8. Relations inter-systemes (signaux, actions, flux de donnees)
+9. Audit de coherence complet
+
+#### Problemes identifies
+- **5 game-breaking (P0):** Mission stub, Arbre sans UI, Buffer absent, Twists absents, Fin secrete absente
+- **6 equilibrage (P1):** Souffle restrictif, Karma volatile, DC Droite dur, Awen lent, Saut aspect, Save scumming
+- **10 systemes caches non-implantes** (DOC_13 complet en attente)
+- **6 incoherences design/code** (DOC_11 obsolete, D20 non-documente, Legacy code, etc.)
+
+#### Recommandations priorisees
+- **Phase A (P0):** Mission, Buffer cartes, Validation saut, Twists
+- **Phase B (P1):** UI Arbre, Resonances, Profil joueur, Reequilibrage
+- **Phase C (P2):** Fin secrete, Synergies, Evolution Bestiole, Quetes
+- **Phase D (P3):** Nettoyage Legacy, MAJ docs
+
+---
+
+## Session: 2026-02-11b (Phase 41 — Phase 2A: Textes Dynamiques + Architecture LLM)
+
+### Phase 41: LLM Early Warmup + Textes Dynamiques + Prefetch Parallele
+- **Status:** complete (7/7 sub-phases)
+
+#### Etape 1A+1B: LLM Early Warmup + Force 2 cerveaux
+- `MenuPrincipalReigns._ready()` appelle `start_warmup()` en arriere-plan (call_deferred)
+- `_start_llm_warmup()` ne montre l'overlay QUE si LLM pas encore pret
+- `detect_optimal_brains()` force minimum 2 cerveaux sur desktop (maxi(2, detected))
+
+#### Etape 1C: Indicateur IA discret dans le menu
+- Label "IA: ..." en bas a droite, discret (ink_faded)
+- Se connecte a MerlinAI.status_changed / ready_changed
+- Passe a "IA: 2 cerveaux" (accent_soft) quand pret
+
+#### Etape 2A+2B: JSON enrichi (140 variantes + atmosphere)
+- 7 biomes x 4 categories (balanced, corps_extreme, ame_extreme, monde_extreme) x 5 variantes = 140 textes
+- Champ `atmosphere` par biome: sounds, smell, light, mood (metadonnees sensorielles)
+- Retro-compatible: arrival_text + merlin_comment toujours presents
+
+#### Etape 3A+3B: Context builders LLM
+- `_build_llm_biome_context()`: prompt systeme riche (biome, gardien, ogham, saison, atmosphere, aspects, jour, outil, condition)
+- `_build_merlin_comment_context()`: prompt pour Merlin (ton amuse/cynique)
+
+#### Etape 3C: Fallback intelligent
+- `_detect_aspect_category()`: detecte si Corps/Ame/Monde est extreme
+- `_get_fallback_text()`: selection par categorie + unseen tracking (pas de repetition)
+- `_pick_unseen_variant()`: cycle a travers les 5 variantes sans doublon
+
+#### Etape 3D: Prefetch parallele
+- LLM lance des Phase 1 (Brume), tourne pendant les 6-8s d'animation
+- `_start_llm_prefetch()`: fire-and-forget, arrival + merlin en parallele
+- `_consume_prefetch()`: attend max 3s supplementaires, puis fallback JSON
+
+#### Etape 3E: Validation LLM (guardrails)
+- Rejet si < 10 chars ou > 300 chars
+- Rejet si mots anglais detectes (the, and, you, are...)
+- Rejet si similarite Jaccard > 0.7 avec le dernier texte
+- Fallback JSON automatique en cas de rejet
+
+---
+
+## Session: 2026-02-11 (Phase 40 — Refonte HubAntre + TransitionBiome + TriadeGame)
+
+### Phase 40: UI Overhaul (Expedition System + Fog + Card Flip + Resources)
+- **Status:** complete (9/10 sub-phases, Phase 2A deferred)
+
+#### Phase 1A: Standardiser icones bottom bar HubAntre
+- ICON_STANDARDS constant (size=24, line_thickness=1.5, detail_thickness=1.0)
+- All 9 celtic icon types unified, bottom bar reduced from 4 to 2 tabs (Antre + Compagnons)
+
+#### Phase 1B+1C: Systeme d'expedition complet
+- 3-step expedition prep: Destination + Outil + Conditions de depart
+- EXPEDITION_TOOLS (4 tools with bonus_field/dc_bonus) in merlin_constants.gd
+- DEPARTURE_CONDITIONS (4 options with initial_effects) in merlin_constants.gd
+- Merlin reactive comments per selection (EXPEDITION_MERLIN_REACTIONS)
+- Partir button greyed until all 3 steps complete
+- Tool/condition data passed to GameManager.run
+
+#### Phase 2B: Zoom camera TransitionBiome
+- pixel_container.scale tween 1.0 → 1.4 after revelation phase (1.5s CUBIC)
+- Reset to 1.0 before dissolution
+
+#### Phase 2C: Brouillard volumetrique
+- 3 particle layers (Back/Mid/Front) with per-biome tint from FOG_CONFIG
+- Radial GradientTexture2D (64px) for soft particles
+- Shader-based volumetric fog (ColorRect, Perlin noise + vertical gradient)
+- 7 biome configs with direction/speed/tint
+
+#### Phase 3A: Card display agrandi + flip animation
+- Card panel 380x280 → 460x360, portrait 68 → 96px
+- Flip entrance: rotation 90→0 (ELASTIC), scale 0.8→1.0 (BACK), fade-in
+
+#### Phase 3B: Hover preview effets options
+- Tooltip panel showing DC + aspect shift previews on option hover
+- Dynamic state preview: "Corps ↑ (Robuste → Surmene)" with danger coloring
+- Supports SHIFT_ASPECT, ADD_KARMA, ADD_SOUFFLE, PROGRESS_MISSION effects
+
+#### Phase 3C: Top bar enrichie
+- Animal icons 40x36 → 56x48
+- Shift arrows (↑ red / ↓ blue) after each aspect change
+- Resource bar: equipped tool + day counter + mission progress
+- Souffle dots 20 → 28px
+
+#### Phase 3D: Souffle VFX
+- Regen: scale bounce 0.3→1.2→1.0 per gained dot
+- Consumption: shrink 0.5 then restore
+- Full (7/7): golden glow + SFX
+- Empty (0/7): blink 3x red
+
+#### Phase 3E: Mini-jeux integres + bonus outil
+- Minigame intro overlay (field icon + name + tool bonus display)
+- Tool bonus DC modifier in _run_minigame (matches bonus_field to detected field)
+- Score→D20 feedback display before dice confirmation
+- Resource bar sync in _sync_ui_with_state
+
+#### Validation
+- Static analysis: PASSED (0 errors, 1 unrelated warning)
+- Affected scene validation: 6/6 PASSED (HubAntre, MapMonde, MenuPrincipal, SceneRencontreMerlin, TransitionBiome, TriadeGame)
+
+#### Remaining: Phase 2A (Textes dynamiques + JSON enrichi)
+- Deferred: requires ~140 text variants in post_intro_dialogues.json + LLM context builder
+
+---
+
+## Session: 2026-02-10b (Phase 39 — Runtime Error Fixing + Affected Scene Validation Tool)
+
+### Phase 39: Runtime Error Fixing + Validation Pipeline Enhancement
+- **Status:** complete
+
+#### Fix TransitionBiome.gd — 17 unsafe get_tree() calls
+- Root cause: `await` yields while node exits scene tree, `get_tree()` returns null
+- Added `_safe_wait(seconds)` and `_safe_frame()` helper methods with `is_inside_tree()` guards
+- Replaced ALL 15 `get_tree().create_timer()` + 2 `get_tree().process_frame` calls
+- Added guard on `get_tree().change_scene_to_file()` in dissolution callback
+- **Result:** 0 unprotected get_tree() calls remaining
+
+#### MCP Godot Capabilities Assessment
+- Project info, scripts, scene structure: OK
+- `execute_editor_script`: KO (parse error 43)
+- Debugger/runtime logs: NOT accessible via MCP
+- **Alternative found:** Read Godot logs from `AppData\Roaming\Godot\app_userdata\DRU\logs\`
+
+#### New Tool: validate_affected_scenes.ps1
+- Auto-detects modified .gd via `git diff` (staged + unstaged + untracked)
+- Dynamically maps scripts to scenes by scanning .tscn files
+- Detects autoload/addon scripts and adds representative scenes
+- Launches each scene in Godot headless mode with timeout
+- Captures stdout/stderr, reports errors/warnings/crashes
+- PS 5.1 compatible (no .NET method calls)
+- Integrated into `validate.bat` as Step 4 (automatic)
+- **Test result:** 6/6 scenes PASS (HubAntre, MapMonde, MenuPrincipal, SceneRencontreMerlin, TransitionBiome, TriadeGame)
+
+#### validate.bat Pipeline (updated)
+1. Runtime logs analysis
+2. GDScript static analysis (63 files)
+3. GDExtension check
+4. **NEW: Affected scene validation** (headless Godot, git-diff targeted)
+5. Optional: `--smoke` full scene sweep
+
+---
+
 ## Session: 2026-02-10 (Phase 37 — Stabilisation + Fusion Triade/BrainPool + LLM Rencontre + Nettoyage)
 
 ### Phase 37: Stabilisation + Fusion Triade/BrainPool + LLM Rencontre + Nettoyage

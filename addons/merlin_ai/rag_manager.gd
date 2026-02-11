@@ -8,7 +8,7 @@
 extends Node
 class_name RAGManager
 
-const VERSION := "2.0.0"
+const VERSION := "2.1.0"
 
 # ═══════════════════════════════════════════════════════════════════════════════
 # TOKEN BUDGET — Critical for nano models
@@ -16,7 +16,7 @@ const VERSION := "2.0.0"
 
 ## Approximate tokens: 1 token ~= 4 chars (rough heuristic for multilingual)
 const CHARS_PER_TOKEN := 4
-const CONTEXT_BUDGET := 180  # max tokens for dynamic context injection
+const CONTEXT_BUDGET := 600  # max tokens for dynamic context injection (v2.2: 300→600, Qwen 2.5-3B has 8192 ctx, ~11% usage)
 
 # Priority levels for context sections (higher = more important, kept first)
 enum Priority { CRITICAL = 4, HIGH = 3, MEDIUM = 2, LOW = 1, OPTIONAL = 0 }
@@ -114,6 +114,18 @@ func get_prioritized_context(game_state: Dictionary) -> String:
 	if not biome_ctx.is_empty():
 		sections.append({"text": biome_ctx, "priority": Priority.HIGH})
 
+	var tone_ctx := _get_tone_context()
+	if not tone_ctx.is_empty():
+		sections.append({"text": tone_ctx, "priority": Priority.HIGH})
+
+	var karma_tension := _get_karma_tension_context(game_state)
+	if not karma_tension.is_empty():
+		sections.append({"text": karma_tension, "priority": Priority.HIGH})
+
+	var promises := _get_promises_context()
+	if not promises.is_empty():
+		sections.append({"text": promises, "priority": Priority.MEDIUM})
+
 	var pattern := _get_player_pattern_context()
 	if not pattern.is_empty():
 		sections.append({"text": pattern, "priority": Priority.MEDIUM})
@@ -165,11 +177,12 @@ func _get_crisis_context(game_state: Dictionary) -> String:
 func _get_recent_narrative() -> String:
 	if journal.is_empty():
 		return ""
-	var recent := journal.slice(-mini(journal.size(), 3))
+	var recent := journal.slice(-mini(journal.size(), 10))
 	var parts: Array[String] = []
 	for entry in recent:
 		if entry.get("type") == "choice_made":
-			parts.append(str(entry.get("data", {}).get("label", "?")))
+			var data: Dictionary = entry.get("data", {})
+			parts.append(str(data.get("label", "?")))
 	if parts.is_empty():
 		return ""
 	return "Recents: " + ", ".join(parts)
@@ -179,13 +192,19 @@ func _get_active_arcs_context() -> String:
 	var arcs: Array = world_state.get("active_arcs", [])
 	if arcs.is_empty():
 		return ""
-	var names: Array[String] = []
+	var parts: Array[String] = []
 	for arc in arcs:
 		if arc is Dictionary:
-			names.append(str(arc.get("id", "?")))
-	if names.is_empty():
+			var arc_id: String = str(arc.get("id", "?"))
+			var progress: int = int(arc.get("progress", 0))
+			var total: int = int(arc.get("total", 0))
+			if total > 0:
+				parts.append("%s (%d/%d)" % [arc_id, progress, total])
+			else:
+				parts.append(arc_id)
+	if parts.is_empty():
 		return ""
-	return "Arcs: " + ", ".join(names)
+	return "Arcs: " + ", ".join(parts)
 
 
 func _get_player_pattern_context() -> String:
@@ -223,6 +242,61 @@ func _get_biome_context(game_state: Dictionary) -> String:
 	var BiomeSystemClass: GDScript = load("res://scripts/merlin/merlin_biome_system.gd")
 	var biome_sys = BiomeSystemClass.new()
 	return biome_sys.get_biome_context_for_llm(biome_key)
+
+
+func _get_tone_context() -> String:
+	## Build tone/register context from synced world state.
+	var tone: String = str(world_state.get("current_tone", ""))
+	if tone.is_empty() or tone == "neutral":
+		return ""
+	var chars: Dictionary = world_state.get("tone_characteristics", {})
+	var parts: Array[String] = ["Registre: " + tone]
+	var vocab: String = str(chars.get("vocabulary", ""))
+	if not vocab.is_empty() and vocab != "standard":
+		parts.append("vocab=" + vocab)
+	var emotion: String = str(chars.get("emotion", ""))
+	if not emotion.is_empty() and emotion != "detached":
+		parts.append("emotion=" + emotion)
+	return " ".join(parts)
+
+
+func _get_karma_tension_context(game_state: Dictionary) -> String:
+	## Build karma and tension context from game state.
+	var run: Dictionary = game_state.get("run", {})
+	var parts: Array[String] = []
+	var karma: int = int(run.get("karma", 0))
+	if karma >= 5:
+		parts.append("Karma: positif fort (%d)" % karma)
+	elif karma <= -5:
+		parts.append("Karma: negatif fort (%d)" % karma)
+	var flux: Dictionary = run.get("flux", {})
+	var tension: int = int(flux.get("tension", 40))
+	if tension >= 70:
+		parts.append("Tension: haute")
+	elif tension <= 20:
+		parts.append("Tension: basse")
+	var day: int = int(run.get("day", 1))
+	if day >= 15:
+		parts.append("Jour %d (fin proche)" % day)
+	if parts.is_empty():
+		return ""
+	return "Etat: " + ", ".join(parts)
+
+
+func _get_promises_context() -> String:
+	## Build active promises/engagements context from world state.
+	var promises: Array = world_state.get("active_promises", [])
+	if promises.is_empty():
+		return ""
+	var labels: Array[String] = []
+	for promise in promises:
+		if promise is Dictionary:
+			var label: String = str(promise.get("label", ""))
+			if not label.is_empty():
+				labels.append(label)
+	if labels.is_empty():
+		return ""
+	return "Promesses: " + ", ".join(labels)
 
 
 func _get_cross_run_callbacks() -> String:

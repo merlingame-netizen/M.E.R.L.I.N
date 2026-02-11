@@ -455,6 +455,37 @@ particles.process_material = mat
 
 **Regle:** `set_anchors_preset()` est exclusif a `Control` et ses sous-classes. Pour les `Node2D`, utiliser `position` directement. Verifier l'heritage du node dans la doc avant d'appeler des methodes UI.
 
+### 1.10 get_tree() Null apres Await — "Cannot call method on a null value"
+
+**Erreur:** `Cannot call method 'create_timer' on a null value`
+
+**Cause:** Apres un `await`, le noeud peut avoir quitte le scene tree. `get_tree()` retourne alors `null`.
+
+```gdscript
+# WRONG — crash si le noeud sort de l'arbre pendant l'await
+await some_long_operation()
+await get_tree().create_timer(0.3).timeout  # CRASH: get_tree() == null
+
+# CORRECT — helper safe avec garde is_inside_tree()
+func _safe_wait(seconds: float) -> void:
+    if not is_inside_tree():
+        return
+    await get_tree().create_timer(seconds).timeout
+
+func _safe_frame() -> void:
+    if not is_inside_tree():
+        return
+    await get_tree().process_frame
+
+# Usage
+await some_long_operation()
+await _safe_wait(0.3)  # Safe: retourne immediatement si hors arbre
+```
+
+**Contexte:** Tres courant dans les scenes de transition longues (TransitionBiome, etc.) ou les operations LLM avec timeout. TOUT appel `get_tree()` apres un `await` doit etre protege.
+
+**Date:** 2026-02-10 — TransitionBiome.gd (17 appels corriges)
+
 ---
 
 ## SECTION 2: Patterns d'Optimisation GDScript

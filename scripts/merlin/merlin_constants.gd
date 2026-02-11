@@ -2,71 +2,15 @@ extends RefCounted
 class_name MerlinConstants
 
 # ═══════════════════════════════════════════════════════════════════════════════
-# LEGACY (kept for compatibility, prefer REIGNS_ versions)
+# SHARED ENUMS & ELEMENT LIST
 # ═══════════════════════════════════════════════════════════════════════════════
 
-const VERBS := ["FORCE", "LOGIQUE", "FINESSE"]
-const VERB_TO_ATTR := {
-	"FORCE": "power",
-	"LOGIQUE": "spirit",
-	"FINESSE": "finesse",
-}
-
-const RUN_RESOURCES := ["Vigueur", "Concentration", "Materiel", "Faveur", "Nourriture"]
-const RUN_RESOURCE_CAP := 9
-const RUN_RESOURCE_CAPS := {
-	"Vigueur": RUN_RESOURCE_CAP,
-	"Concentration": RUN_RESOURCE_CAP,
-	"Materiel": RUN_RESOURCE_CAP,
-	"Faveur": RUN_RESOURCE_CAP,
-	"Nourriture": RUN_RESOURCE_CAP,
-}
-
-const NEEDS := ["Hunger", "Energy", "Hygiene", "Mood", "Stress"]
-const NEED_MIN := 0
-const NEED_MAX := 100
-
-const POSTURES := ["Prudence", "Agressif", "Ruse", "Serenite"]
 const MERLIN_TONES := ["Protecteur", "Aventureux", "Pragmatique", "Sombre", "Pedagogue"]
-
-const TEST_TYPES := ["DICE", "TIMING", "MEMORY", "AIM"]
-const CHANCE_LEVELS := ["Low", "Medium", "High"]
-const RISK_LEVELS := ["Light", "Moderate", "Severe"]
 
 const ELEMENTS := [
 	"NATURE", "FEU", "EAU", "TERRE", "AIR", "FOUDRE", "GLACE", "POISON",
 	"METAL", "BETE", "ESPRIT", "OMBRE", "LUMIERE", "ARCANE"
 ]
-
-const STATUS_IDS := [
-	"BRULURE", "VENIN", "GEL", "PEUR", "CLAIRVOYANCE", "SURCHARGE"
-]
-
-const NODE_TYPES := ["COMBAT", "EVENT", "SHOP", "HEAL", "ELITE", "BOSS", "MYSTERY"]
-
-# ═══════════════════════════════════════════════════════════════════════════════
-# REIGNS-STYLE SYSTEM (NEW)
-# ═══════════════════════════════════════════════════════════════════════════════
-
-const REIGNS_GAUGES := ["Vigueur", "Esprit", "Faveur", "Ressources"]
-const REIGNS_GAUGE_MIN := 0
-const REIGNS_GAUGE_MAX := 100
-const REIGNS_GAUGE_START := 50
-const REIGNS_GAUGE_CRITICAL_LOW := 15
-const REIGNS_GAUGE_CRITICAL_HIGH := 85
-
-const REIGNS_CARD_TYPES := ["narrative", "event", "promise", "merlin_direct"]
-
-const REIGNS_ENDINGS := {
-	"vigueur_low": "L'Epuisement",
-	"vigueur_high": "Le Surmenage",
-	"esprit_low": "La Folie",
-	"esprit_high": "La Possession",
-	"faveur_low": "L'Exile",
-	"faveur_high": "La Tyrannie",
-	"ressources_low": "La Famine",
-	"ressources_high": "Le Pillage",
-}
 
 # ═══════════════════════════════════════════════════════════════════════════════
 # OGHAMS AS BESTIOLE SKILLS
@@ -155,19 +99,11 @@ const TRIADE_ASPECT_INFO := {
 	}
 }
 
-# Souffle d'Ogham (resource for center option)
+# Souffle d'Ogham — now a perk resource (no longer spent on center)
 const SOUFFLE_MAX := 7
 const SOUFFLE_START := 3
-const SOUFFLE_CENTER_COST := 1
 
-# Risk probabilities when using center without souffle
-const SOUFFLE_EMPTY_RISK := {
-	"normal": 0.50,       # 50% - effect as normal
-	"aspect_down": 0.25,  # 25% - random aspect descends
-	"aspect_up": 0.25     # 25% - random aspect ascends
-}
-
-# Card options (3 per card)
+# Card options (3 per card — all FREE, no Souffle cost)
 enum CardOption { LEFT = 0, CENTER = 1, RIGHT = 2 }
 
 const TRIADE_OPTION_INFO := {
@@ -180,8 +116,8 @@ const TRIADE_OPTION_INFO := {
 	CardOption.CENTER: {
 		"name": "center",
 		"type": "wise",
-		"cost": SOUFFLE_CENTER_COST,
-		"description": "Action sage, souvent neutre"
+		"cost": 0,
+		"description": "Action sage, equilibree"
 	},
 	CardOption.RIGHT: {
 		"name": "right",
@@ -191,71 +127,64 @@ const TRIADE_OPTION_INFO := {
 	}
 }
 
-# Run end conditions: 2 aspects at extreme states
-const TRIADE_ENDINGS := {
-	# Corps Bas combinations
-	"corps_bas_ame_basse": {
-		"title": "La Mort Oubliee",
-		"aspects": ["Corps", "Ame"],
-		"states": [AspectState.BAS, AspectState.BAS]
+# ═══════════════════════════════════════════════════════════════════════════════
+# LIFE ESSENCE — Survival gauge (Phase 43, inspired by Hand of Fate 2)
+# At 0 = premature run end. Drains on critical failures, failed events, etc.
+# ═══════════════════════════════════════════════════════════════════════════════
+
+const LIFE_ESSENCE_MAX := 10
+const LIFE_ESSENCE_START := 7
+const LIFE_ESSENCE_CRIT_FAIL_DAMAGE := 2   # Damage on critical failure
+const LIFE_ESSENCE_FAIL_DAMAGE := 0         # Normal failure = no life damage
+const LIFE_ESSENCE_EVENT_FAIL_DAMAGE := 1   # Failed event/palier
+const LIFE_ESSENCE_CRIT_SUCCESS_HEAL := 1   # Heal on critical success
+const LIFE_ESSENCE_HEAL_PER_REST := 2       # Heal at REST nodes
+const LIFE_ESSENCE_LOW_THRESHOLD := 3       # UI warning threshold
+
+# Aspect influence on life (narrative lever, not game over)
+const ASPECT_DC_MODIFIER := {
+	"all_balanced": -1,     # All 3 at EQUILIBRE = DC-1 (slight bonus)
+	"one_extreme": 0,       # 1 extreme = no modifier
+	"two_extreme": 1,       # 2 extremes = DC+1 (Merlin complicates)
+	"three_extreme": 2,     # 3 extremes = DC+2 (very hard)
+}
+
+# DC base ranges for variable DC system (replaces fixed 6/10/14)
+const DC_BASE := {
+	"left": {"min": 4, "max": 8, "default": 6},
+	"center": {"min": 7, "max": 12, "default": 9},
+	"right": {"min": 10, "max": 16, "default": 13},
+}
+
+# DC difficulty labels for UI display
+const DC_DIFFICULTY_LABELS := {
+	"easy": {"label": "Facile", "color": Color(0.35, 0.75, 0.35), "max_dc": 8},
+	"normal": {"label": "Normal", "color": Color(0.85, 0.75, 0.25), "max_dc": 13},
+	"hard": {"label": "Difficile", "color": Color(0.85, 0.30, 0.25), "max_dc": 20},
+}
+
+# Souffle Perk types (Phase B — stub for now)
+const SOUFFLE_PERK_TYPES := {
+	"bouclier": {
+		"name": "Bouclier",
+		"description": "Annule les effets negatifs du prochain choix",
+		"uses_per_run": 1,
 	},
-	"corps_bas_ame_haute": {
-		"title": "Le Sacrifice Vain",
-		"aspects": ["Corps", "Ame"],
-		"states": [AspectState.BAS, AspectState.HAUT]
+	"surge": {
+		"name": "Surge",
+		"description": "Double les effets positifs + DC-5",
+		"uses_per_run": 1,
 	},
-	"corps_bas_monde_bas": {
-		"title": "L'Abandon Total",
-		"aspects": ["Corps", "Monde"],
-		"states": [AspectState.BAS, AspectState.BAS]
+	"vision": {
+		"name": "Vision",
+		"description": "Revele tous les effets caches + predit prochaine carte",
+		"uses_per_run": 1,
 	},
-	"corps_bas_monde_haut": {
-		"title": "L'Usurpation",
-		"aspects": ["Corps", "Monde"],
-		"states": [AspectState.BAS, AspectState.HAUT]
+	"canalisation": {
+		"name": "Canalisation",
+		"description": "Bestiole canalise une rune — effet puissant lie a l'Ogham equipe",
+		"uses_per_run": 1,
 	},
-	# Corps Haut combinations
-	"corps_haut_ame_basse": {
-		"title": "La Bete Sauvage",
-		"aspects": ["Corps", "Ame"],
-		"states": [AspectState.HAUT, AspectState.BAS]
-	},
-	"corps_haut_ame_haute": {
-		"title": "L'Ascension Folle",
-		"aspects": ["Corps", "Ame"],
-		"states": [AspectState.HAUT, AspectState.HAUT]
-	},
-	"corps_haut_monde_bas": {
-		"title": "Le Solitaire",
-		"aspects": ["Corps", "Monde"],
-		"states": [AspectState.HAUT, AspectState.BAS]
-	},
-	"corps_haut_monde_haut": {
-		"title": "Le Conquerant",
-		"aspects": ["Corps", "Monde"],
-		"states": [AspectState.HAUT, AspectState.HAUT]
-	},
-	# Ame + Monde combinations (sans Corps)
-	"ame_basse_monde_bas": {
-		"title": "L'Errance Eternelle",
-		"aspects": ["Ame", "Monde"],
-		"states": [AspectState.BAS, AspectState.BAS]
-	},
-	"ame_basse_monde_haut": {
-		"title": "Le Pantin",
-		"aspects": ["Ame", "Monde"],
-		"states": [AspectState.BAS, AspectState.HAUT]
-	},
-	"ame_haute_monde_bas": {
-		"title": "Le Prophete Exile",
-		"aspects": ["Ame", "Monde"],
-		"states": [AspectState.HAUT, AspectState.BAS]
-	},
-	"ame_haute_monde_haut": {
-		"title": "La Possession Divine",
-		"aspects": ["Ame", "Monde"],
-		"states": [AspectState.HAUT, AspectState.HAUT]
-	}
 }
 
 # Victory endings
@@ -287,6 +216,37 @@ const TRIADE_SESSION := {
 	"seconds_per_card": 18,  # Average decision time
 	"mission_reveal_card": 4,  # Mission revealed around card 4
 	"climax_card_range": [20, 25]  # Climax around cards 20-25
+}
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# MISSION TEMPLATES — Hybrid system (template + LLM narrative dressing)
+# ═══════════════════════════════════════════════════════════════════════════════
+
+const MISSION_TEMPLATES := {
+	"survive": {
+		"type": "survive",
+		"target_cards": 30,
+		"description_template": "Survie dans {biome} — atteins la fin du chemin.",
+		"weight": 0.30,
+	},
+	"equilibre": {
+		"type": "equilibre",
+		"target_balanced_turns": 8,
+		"description_template": "Maintiens l'equilibre — reste centre {target} tours.",
+		"weight": 0.20,
+	},
+	"explore": {
+		"type": "explore",
+		"target_nodes": 6,
+		"description_template": "Explore {biome} — visite {target} lieux differents.",
+		"weight": 0.25,
+	},
+	"artefact": {
+		"type": "artefact",
+		"target_progress": 5,
+		"description_template": "Retrouve l'artefact cache au coeur de {biome}.",
+		"weight": 0.25,
+	},
 }
 
 # Hidden depth systems (for tracking)
@@ -882,3 +842,88 @@ const TRIADE_NODE_TYPES := {
 }
 
 const DEFAULT_MAP_FLOORS := 8
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# EXPEDITION SYSTEM — Tools & Departure Conditions (Phase 39)
+# ═══════════════════════════════════════════════════════════════════════════════
+
+const EXPEDITION_TOOLS := {
+	"baton_marche": {
+		"name": "Baton de Marche",
+		"icon": "\u2694",  # Crossed swords
+		"description": "Arme naturelle du voyageur",
+		"bonus": "Corps +1 DC en combat",
+		"bonus_field": "combat",
+		"dc_bonus": -3,
+		"initial_effect": {},
+	},
+	"besace": {
+		"name": "Besace du Druide",
+		"icon": "\u25CA",  # Diamond
+		"description": "Provisions et herbes medicinales",
+		"bonus": "+1 Souffle au depart",
+		"bonus_field": "",
+		"dc_bonus": 0,
+		"initial_effect": {"type": "ADD_SOUFFLE", "amount": 1},
+	},
+	"lanterne": {
+		"name": "Lanterne d'Ogham",
+		"icon": "\u2736",  # Star
+		"description": "Eclaire les chemins oublies",
+		"bonus": "Exploration +3 DC",
+		"bonus_field": "exploration",
+		"dc_bonus": -3,
+		"initial_effect": {},
+	},
+	"talisman": {
+		"name": "Talisman Ancien",
+		"icon": "\u2726",  # Four-pointed star
+		"description": "Resonne avec les forces invisibles",
+		"bonus": "Mysticisme +3 DC",
+		"bonus_field": "mysticisme",
+		"dc_bonus": -3,
+		"initial_effect": {},
+	},
+}
+
+const DEPARTURE_CONDITIONS := {
+	"jour": {
+		"name": "Partir de jour",
+		"icon": "\u2600",  # Sun
+		"description": "Le chemin est clair",
+		"effect_label": "Normal",
+		"initial_effects": [],
+	},
+	"nuit": {
+		"name": "Partir de nuit",
+		"icon": "\u263D",  # Moon
+		"description": "Plus risque, plus de karma",
+		"effect_label": "+karma, DCs +2",
+		"initial_effects": [{"type": "KARMA", "amount": 3}, {"type": "DC_OFFSET", "amount": 2}],
+	},
+	"compagnon": {
+		"name": "Avec compagnon",
+		"icon": "\u2660",  # Spade (companion)
+		"description": "Le Monde repond mieux",
+		"effect_label": "Monde +1",
+		"initial_effects": [{"type": "SHIFT_ASPECT", "aspect": "Monde", "direction": "up"}],
+	},
+	"leger": {
+		"name": "Voyager leger",
+		"icon": "\u2192",  # Arrow right
+		"description": "Mission plus courte",
+		"effect_label": "-2 cartes mission",
+		"initial_effects": [{"type": "MISSION_REDUCTION", "amount": 2}],
+	},
+}
+
+const EXPEDITION_MERLIN_REACTIONS := {
+	"baton_marche": "Le Baton de Marche... un classique. Il ne te trahira pas.",
+	"besace": "La Besace ! Provisions et prudence. Tu es sage.",
+	"lanterne": "La Lanterne d'Ogham... elle revele ce que l'ombre cache.",
+	"talisman": "Le Talisman vibre deja. Il sent le voyage.",
+	"jour": "De jour. La lumiere protege... mais attire aussi.",
+	"nuit": "De nuit ? Courageux. Les ombres seront plus bavard.",
+	"compagnon": "Un compagnon ! Le Monde sourit aux liens.",
+	"leger": "Voyager leger... rapide, mais tu sacrifies la preparation.",
+}

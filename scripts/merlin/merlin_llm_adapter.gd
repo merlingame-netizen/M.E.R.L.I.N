@@ -832,9 +832,10 @@ func build_context(state: Dictionary) -> Dictionary:
 	var critical_gauges := []
 	for gauge_name in VALID_GAUGES:
 		var value = int(gauges.get(gauge_name, 50))
-		if value <= MerlinConstants.REIGNS_GAUGE_CRITICAL_LOW:
+		# Legacy Reigns gauge thresholds (deprecated — inline defaults)
+		if value <= 15:
 			critical_gauges.append({"name": gauge_name, "value": value, "direction": "low"})
-		elif value >= MerlinConstants.REIGNS_GAUGE_CRITICAL_HIGH:
+		elif value >= 85:
 			critical_gauges.append({"name": gauge_name, "value": value, "direction": "high"})
 
 	var skills_ready := []
@@ -930,8 +931,10 @@ func validate_card(card: Dictionary, effect_engine: MerlinEffectEngine = null) -
 	else:
 		sanitized_card["tags"] = []
 
+	# Validate card type (inline list, Reigns constants removed)
+	var valid_card_types := ["narrative", "event", "promise", "merlin_direct"]
 	if card.has("type"):
-		if not card["type"] in MerlinConstants.REIGNS_CARD_TYPES:
+		if not card["type"] in valid_card_types:
 			sanitized_card["type"] = "narrative"
 	else:
 		sanitized_card["type"] = "narrative"

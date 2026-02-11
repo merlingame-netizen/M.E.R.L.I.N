@@ -43,7 +43,7 @@ var tone_controller: ToneController
 # GENERATORS
 # ═══════════════════════════════════════════════════════════════════════════════
 
-var llm_interface: MerlinAI  # Reference to merlin_ai.gd
+var llm_interface: Node  # Reference to merlin_ai.gd (autoload, no class_name)
 var fast_route: FastRoute
 var fallback_pool: MerlinFallbackPool
 var rag_manager: RAGManager  # RAG v2.0 — priority-based context
@@ -80,6 +80,8 @@ const CACHE_LIMIT := 300
 var _prefetched_card: Dictionary = {}
 var _prefetch_in_progress := false
 var _prefetch_context_hash: int = 0  # Hash of game state when prefetch started
+var _prefetch_aspects: Dictionary = {}  # Aspect values when prefetch started
+var _prefetch_biome: String = ""  # Biome when prefetch started
 signal prefetch_ready
 
 # Stats
@@ -250,6 +252,77 @@ func generate_card(game_state: Dictionary) -> Dictionary:
 	return card
 
 
+func generate_npc_card(game_state: Dictionary) -> Dictionary:
+	## Genere une carte de rencontre PNJ via LLM, fallback sur pool statique.
+	var npc_names := ["Druide Ancien", "Villageoise", "Barde Errant", "Guerrier du Gue", "Marchand des Ombres"]
+	var npc_name: String = npc_names[randi() % npc_names.size()]
+
+	# Try LLM generation
+	if llm_interface and llm_interface.is_ready and llm_interface.has_method("generate_with_system"):
+		var aspects_str := ""
+		if _current_context.has("aspects"):
+			var asp: Dictionary = _current_context.get("aspects", {})
+			aspects_str = "Corps=%s, Ame=%s, Monde=%s" % [str(asp.get("Corps", 0)), str(asp.get("Ame", 0)), str(asp.get("Monde", 0))]
+
+		var system_prompt := "Tu es %s, un PNJ celtique. Parle en 1-2 phrases, ton mysterieux. Reponds en francais." % npc_name
+		var user_prompt := "Le voyageur te croise en Broceliande. Aspects: %s. Dis une replique immersive." % aspects_str
+
+		var result: Dictionary = await llm_interface.generate_with_system(
+			system_prompt, user_prompt,
+			{"max_tokens": 60, "temperature": 0.8, "timeout": 5.0}
+		)
+
+		var text: String = result.get("text", "").strip_edges()
+		if text.length() > 10:
+			return {
+				"id": "npc_llm_%d" % Time.get_ticks_msec(),
+				"text": text,
+				"speaker": npc_name,
+				"type": "npc_encounter",
+				"options": [
+					{"direction": "left", "label": "Ecouter", "effects": [
+						{"type": "SHIFT_ASPECT", "aspect": "Ame", "direction": "up"}
+					], "preview": "+Ame"},
+					{"direction": "center", "label": "Mediter", "effects": [
+						{"type": "ADD_SOUFFLE", "amount": 1}
+					], "preview": "+Souffle", "cost": 1},
+					{"direction": "right", "label": "Continuer", "effects": [
+						{"type": "SHIFT_ASPECT", "aspect": "Corps", "direction": "up"}
+					], "preview": "+Corps"},
+				],
+				"tags": ["npc", "llm_generated"],
+				"source": "llm",
+			}
+
+	# Fallback: pool statique
+	if fallback_pool and fallback_pool.has_method("get_npc_card"):
+		var card: Dictionary = fallback_pool.get_npc_card()
+		if not card.is_empty():
+			card["source"] = "fallback"
+			return card
+
+	# Ultra-fallback
+	return {
+		"id": "npc_emergency_%d" % Time.get_ticks_msec(),
+		"text": "Une silhouette se dessine dans la brume. 'Voyageur... nos chemins se croisent pour une raison.'",
+		"speaker": "Inconnu",
+		"type": "npc_encounter",
+		"options": [
+			{"direction": "left", "label": "S'approcher", "effects": [
+				{"type": "SHIFT_ASPECT", "aspect": "Monde", "direction": "up"}
+			], "preview": "+Monde"},
+			{"direction": "center", "label": "Observer", "effects": [
+				{"type": "ADD_SOUFFLE", "amount": 1}
+			], "preview": "+Souffle", "cost": 1},
+			{"direction": "right", "label": "S'eloigner", "effects": [
+				{"type": "SHIFT_ASPECT", "aspect": "Corps", "direction": "up"}
+			], "preview": "+Corps"},
+		],
+		"tags": ["npc", "emergency"],
+		"source": "emergency",
+	}
+
+
 func _emergency_card() -> Dictionary:
 	## Absolute last-resort card when even fallback_pool is null.
 	return {
@@ -259,6 +332,7 @@ func _emergency_card() -> Dictionary:
 		"type": "narrative",
 		"options": [
 			{"direction": "left", "label": "Ecouter le vent", "effects": [{"type": "SHIFT_ASPECT", "aspect": "Ame", "direction": "up"}], "preview": "Sagesse"},
+			{"direction": "center", "label": "Mediter", "effects": [{"type": "ADD_SOUFFLE", "amount": 1}], "preview": "+Souffle", "cost": 1},
 			{"direction": "right", "label": "Avancer", "effects": [{"type": "SHIFT_ASPECT", "aspect": "Corps", "direction": "up"}], "preview": "Action"},
 		],
 		"tags": ["emergency"],
@@ -277,6 +351,9 @@ func prefetch_next_card(game_state: Dictionary) -> void:
 	_prefetch_in_progress = true
 	_prefetch_context_hash = _compute_context_hash(game_state)
 	_prefetched_card = {}
+	var run: Dictionary = game_state.get("run", {})
+	_prefetch_aspects = run.get("aspects", {}).duplicate()
+	_prefetch_biome = str(run.get("current_biome", ""))
 
 	# Build context for next card (simulate state after a neutral choice)
 	var prefetch_context := context_builder.build_full_context(game_state)
@@ -336,20 +413,38 @@ func _prefetch_via_pool() -> Dictionary:
 
 func _try_use_prefetch(game_state: Dictionary) -> Dictionary:
 	## Check if prefetched card is available and relevant to current state.
+	## Uses tolerance-based matching: accepts prefetch if aspects shifted by at most 1 step.
 	if _prefetched_card.is_empty():
 		return {}
 
-	var current_hash := _compute_context_hash(game_state)
 	var card := _prefetched_card
 	_prefetched_card = {}
 
-	# Accept prefetch if game state hasn't changed dramatically
-	# (same aspects configuration = same general context)
+	# Fast path: exact hash match
+	var current_hash := _compute_context_hash(game_state)
 	if current_hash == _prefetch_context_hash:
 		return card
 
-	# Prefetch is stale — discard
-	return {}
+	# Relaxed match: accept if same biome and aspects within tolerance
+	var run: Dictionary = game_state.get("run", {})
+	var current_biome: String = str(run.get("current_biome", ""))
+	if current_biome != _prefetch_biome:
+		return {}  # Biome changed — narrative context too different
+
+	var aspects: Dictionary = run.get("aspects", {})
+	for aspect in ["Corps", "Ame", "Monde"]:
+		var current_val: int = int(aspects.get(aspect, 0))
+		var prefetch_val: int = int(_prefetch_aspects.get(aspect, 0))
+		if absi(current_val - prefetch_val) > 1:
+			return {}  # Aspect shifted too far (2+ steps)
+
+	# Within tolerance — prefetch is still contextually relevant
+	return card
+
+
+func try_consume_prefetch(game_state: Dictionary) -> Dictionary:
+	## Public entry point for controller fast-path prefetch consumption.
+	return _try_use_prefetch(game_state)
 
 
 func _compute_context_hash(game_state: Dictionary) -> int:
@@ -416,6 +511,10 @@ func _try_llm_generation() -> Dictionary:
 	if llm_interface == null or not llm_interface.is_ready:
 		return {}
 
+	# Switch LoRA adapter to match current tone (covers all strategies)
+	if llm_interface.has_method("set_narrator_tone") and tone_controller:
+		llm_interface.set_narrator_tone(tone_controller.get_current_tone())
+
 	# Strategy A: Parallel generation (Phase 32 — requires 2+ brains)
 	if llm_interface.has_method("generate_parallel") and llm_interface.brain_count >= 2:
 		var parallel_card := await _try_parallel_generation()
@@ -457,6 +556,10 @@ func _try_llm_generation() -> Dictionary:
 func _try_parallel_generation() -> Dictionary:
 	## Phase 32: Generate narrative text + effects in parallel using dual instances.
 	## Narrator generates the story text, Game Master generates the effects JSON.
+
+	# Switch LoRA adapter to match current tone (Multi-LoRA mode)
+	if llm_interface and llm_interface.has_method("set_narrator_tone") and tone_controller:
+		llm_interface.set_narrator_tone(tone_controller.get_current_tone())
 
 	# Build prompts for both instances
 	var narrator_system := _build_narrator_prompt()
@@ -500,7 +603,13 @@ func _try_parallel_generation() -> Dictionary:
 
 func _build_narrator_prompt() -> String:
 	## System prompt for the Narrator instance — creative, poetic, Celtic.
-	var base := "Tu es Merlin l'Enchanteur, druide ancestral. Ecris un scenario immersif (2-3 phrases) pour un jeu de cartes celtique. Propose 3 choix: A) prudent B) mystique C) audacieux. Ecris en francais."
+	var base := "Tu es Merlin l'Enchanteur, druide ancestral des forets de Broceliande. Ecris un scenario immersif (2-3 phrases) pour un jeu de cartes celtique. Propose 3 choix: A) prudent B) mystique C) audacieux. Adapte ton registre: poetique face a la nature, grave quand tu avertis, espiegle quand tu taquines. Vocabulaire: nemeton, ogham, sidhe, dolmen, korrigans, brume, mousse, pierre dressee. Ecris en francais."
+
+	# Tone guidance from ToneController (detailed register instructions)
+	if tone_controller:
+		var tone_guidance := tone_controller.get_tone_prompt_guidance()
+		if not tone_guidance.is_empty():
+			base += "\n" + tone_guidance
 
 	# RAG context for narrative richness
 	if rag_manager:
@@ -665,14 +774,24 @@ func _sync_mos_to_rag() -> void:
 		registry_data["trust_tier_name"] = relationship.get_trust_tier_name()
 	if session:
 		registry_data["session_frustration"] = session.current.get("seems_frustrated", false) if session.current is Dictionary else false
+	# Sync current tone for RAG tone context section
+	if tone_controller:
+		registry_data["current_tone"] = tone_controller.get_current_tone()
+		registry_data["tone_characteristics"] = tone_controller.get_tone_characteristics()
 	rag_manager.sync_from_registries(registry_data)
 
 
 func _build_system_prompt() -> String:
-	## Ultra-compact system prompt for Qwen2.5-3B-Instruct.
+	## Enriched system prompt for Qwen2.5-3B-Instruct.
 	## JSON template moved to user prompt to reduce hallucination.
-	## RAG context injected via priority budget.
-	var base := "Merlin druide narrateur. Genere 1 carte JSON francais. 3 options avec tradeoffs. Reponds UNIQUEMENT en JSON valide."
+	## RAG context + tone guidance injected via priority budget.
+	var base := "Merlin druide narrateur celtique. Genere 1 carte JSON francais. 3 options avec tradeoffs. Vocabulaire druidique: nemeton, ogham, sidhe, dolmen, korrigans. Reponds UNIQUEMENT en JSON valide."
+
+	# Tone guidance from ToneController
+	if tone_controller:
+		var tone_guidance := tone_controller.get_tone_prompt_guidance()
+		if not tone_guidance.is_empty():
+			base += "\n" + tone_guidance
 
 	# RAG v2.0: priority-based dynamic context within token budget
 	var rag_context := ""
@@ -867,6 +986,9 @@ func _validate_card(card: Dictionary) -> Dictionary:
 	if card.options.size() < 2:
 		return _safe_fallback()
 
+	# Pad to 3 options if LLM only returned 2
+	_pad_options_to_three(card)
+
 	# Validate each option
 	for i in range(card.options.size()):
 		card.options[i] = _validate_option(card.options[i])
@@ -904,6 +1026,54 @@ func _validate_option(option: Dictionary) -> Dictionary:
 			effect.value = clampi(int(effect.value), -40, 40)
 
 	return option
+
+
+func _pad_options_to_three(card: Dictionary) -> void:
+	## Ensure every card has exactly 3 options (left, center, right).
+	## If LLM returned only 2, insert a generic center option.
+	var opts: Array = card.get("options", [])
+	if opts.size() >= 3:
+		return
+
+	# Determine card context for thematic center option
+	var tags: Array = card.get("tags", [])
+	var center_label := "Mediter"
+	var center_preview := "+Souffle"
+	var center_effects: Array = [{"type": "ADD_SOUFFLE", "amount": 1}]
+
+	if "combat" in tags or "danger" in tags:
+		center_label = "Ruser"
+		center_preview = "Equilibre"
+		center_effects = [{"type": "SHIFT_ASPECT", "aspect": "Corps", "direction": "up"}]
+	elif "stranger" in tags or "social" in tags:
+		center_label = "Parlementer"
+		center_preview = "+Monde"
+		center_effects = [{"type": "SHIFT_ASPECT", "aspect": "Monde", "direction": "up"}]
+	elif "magic" in tags or "lore" in tags or "mystery" in tags:
+		center_label = "Observer"
+		center_preview = "+Ame"
+		center_effects = [{"type": "SHIFT_ASPECT", "aspect": "Ame", "direction": "up"}]
+
+	var center_option := {
+		"direction": "center",
+		"label": center_label,
+		"effects": center_effects,
+		"preview": center_preview,
+		"cost": 1,
+	}
+
+	# Insert center at position 1 (between left and right)
+	if opts.size() == 2:
+		opts.insert(1, center_option)
+	elif opts.size() == 1:
+		opts.append(center_option)
+		opts.append({"direction": "right", "label": "Continuer", "effects": [], "preview": ""})
+	elif opts.size() == 0:
+		opts.append({"direction": "left", "label": "Agir", "effects": [{"type": "SHIFT_ASPECT", "aspect": "Corps", "direction": "up"}], "preview": "+Corps"})
+		opts.append(center_option)
+		opts.append({"direction": "right", "label": "Continuer", "effects": [], "preview": ""})
+
+	card["options"] = opts
 
 
 func _post_process_card(card: Dictionary) -> Dictionary:

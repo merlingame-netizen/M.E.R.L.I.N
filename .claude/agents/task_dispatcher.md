@@ -132,6 +132,20 @@ Utiliser le format de sortie ci-dessous.
 | **CI/CD** | build, pipeline, deploy, release, export, GitHub Actions, Steam, fastlane, APK, IPA | `ci_cd_release.md` | `producer.md`, `debug_qa.md` |
 | **Meta-Progression** | talent tree, arbre de vie, essence, bestiole bond, evolution, unlock, pacing, synergy, run reward | `meta_progression_designer.md` | `game_designer.md`, `data_analyst.md` |
 
+### LoRA Fine-Tuning (NOUVEAU)
+
+| Type | Mots-cles de detection | Agents primaires | Agents review |
+|------|------------------------|-----------------|---------------|
+| **Adaptation LLM** | entraine le modele, fine-tune, LoRA, adapter, le LLM doit, le modele doit, specialize, ameliore la generation, plus poetique, plus celtique, meilleur ton, autre registre | `lora_gameplay_translator.md` | `llm_expert.md`, `prompt_curator.md` |
+| **Donnees d'entrainement** | dataset, training data, augmentation, export donnees, enrichir dataset | `lora_data_curator.md` | `prompt_curator.md`, `narrative_writer.md` |
+| **Training / hyperparametres** | training, entrainement, rank, alpha, epochs, learning rate, overfitting, convergence | `lora_training_architect.md` | `llm_expert.md` |
+| **Evaluation modele** | benchmark, metriques LoRA, evaluer le modele, qualite generation, tone accuracy, GO/NO-GO | `lora_evaluator.md` | `llm_expert.md`, `prompt_curator.md` |
+
+> **IMPORTANT — Pipeline LoRA auto-orchestre**: Quand le type est "Adaptation LLM",
+> le `lora_gameplay_translator.md` est TOUJOURS le point d'entree. Il orchestre
+> automatiquement les 3 autres agents (data → training → eval).
+> NE PAS invoquer les agents LoRA individuellement sauf demande explicite.
+
 ---
 
 ## Patterns de Fichiers → Agents Additionnels
@@ -153,6 +167,9 @@ Quand la tache mentionne des chemins specifiques:
 | `data/ai/test/*.json` | `prompt_curator.md` (golden dataset) |
 | `scripts/merlin/merlin_save_system.gd` | `security_hardening.md` (encryption, integrity) |
 | `.github/workflows/*.yml` | `ci_cd_release.md` (CI/CD pipeline) |
+| `tools/lora/*.py` | `lora_training_architect.md`, `lora_data_curator.md` (pipeline LoRA) |
+| `data/ai/training/*.json` | `lora_data_curator.md`, `lora_evaluator.md` (datasets) |
+| `addons/merlin_llm/adapters/*.gguf` | `lora_evaluator.md` (validation adapter) |
 
 ---
 
@@ -178,6 +195,10 @@ Quand un agent primaire travaille, ces agents doivent REVIEW:
 | `prompt_curator.md` | llm_expert, narrative_writer | Qualite technique + ton |
 | `ci_cd_release.md` | producer, debug_qa | Release planning + tests pre-release |
 | `meta_progression_designer.md` | game_designer, data_analyst | Balance mecaniques + metriques |
+| `lora_gameplay_translator.md` | llm_expert, prompt_curator | Spec d'entrainement coherente |
+| `lora_data_curator.md` | prompt_curator, narrative_writer | Qualite donnees + voix Merlin |
+| `lora_training_architect.md` | llm_expert, godot_expert | Config technique + impact memoire |
+| `lora_evaluator.md` | llm_expert, debug_qa | Metriques fiables + integration |
 
 **Reviews universels (toujours quand leur domaine est touche):**
 - `debug_qa.md` — TOUT changement .gd
@@ -189,6 +210,7 @@ Quand un agent primaire travaille, ces agents doivent REVIEW:
 - `accessibility_specialist.md` — TOUT changement UI affectant l'accessibilite
 - `security_hardening.md` — TOUT changement save/data/LLM input
 - `prompt_curator.md` — TOUT changement de prompt ou contenu LLM
+- `lora_gameplay_translator.md` — TOUTE demande d'adaptation comportementale du LLM
 
 ---
 
@@ -311,6 +333,38 @@ Phase 6 (Finalisation): git_commit.md [AUTO]
 Total: 7 agents
 ```
 
+### Exemple 5: Adaptation LLM (Fine-Tuning LoRA)
+
+**Demande**: "Le modele doit etre plus poetique et utiliser plus de vocabulaire celtique"
+
+```
+Types: Adaptation LLM
+Complexite: Complexe
+Phase 1 (Traduction): lora_gameplay_translator.md → spec d'entrainement
+Phase 2 (Donnees): lora_data_curator.md → enrichir dataset poetique + celtique
+Phase 3 (Training): lora_training_architect.md → configurer et lancer
+Phase 4 (Evaluation): lora_evaluator.md → benchmark GO/NO-GO
+Phase 5 (Integration): llm_expert.md → verifier integration Godot
+Phase 6 (Finalisation): git_commit.md [AUTO]
+Total: 6 agents (pipeline orchestre par gameplay_translator)
+```
+
+### Exemple 6: Nouveau Gameplay + Adaptation LLM
+
+**Demande**: "Ajoute un systeme de combat et entraine le modele pour generer des cartes de combat"
+
+```
+Types: Game Design, GDScript Code, Adaptation LLM
+Complexite: Complexe
+Phase 1 (Design): game_designer.md, producer.md
+Phase 2 (Implementation): lead_godot.md, godot_expert.md
+Phase 3 (Contenu): narrative_writer.md, merlin_guardian.md
+Phase 4 (LoRA Pipeline): lora_gameplay_translator.md → orchestre Data/Train/Eval
+Phase 5 (Validation): debug_qa.md, optimizer.md [AUTO]
+Phase 6 (Finalisation): git_commit.md [AUTO]
+Total: 10+ agents (gameplay + fine-tuning en sequence)
+```
+
 ---
 
 ## Quand NE PAS Invoquer le Dispatcher
@@ -331,7 +385,7 @@ Total: 7 agents
 
 ---
 
-*Task Dispatcher v1.1*
+*Task Dispatcher v1.2*
 *Created: 2026-02-09*
-*Updated: 2026-02-09 — Added 5 new task types (accessibility, security, quality LLM, CI/CD, meta-progression)*
+*Updated: 2026-02-11 — Added LoRA Fine-Tuning task types (4 agents: gameplay_translator, data_curator, training_architect, evaluator)*
 *Project: M.E.R.L.I.N. — Le Jeu des Oghams*

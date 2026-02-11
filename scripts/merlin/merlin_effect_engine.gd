@@ -20,6 +20,8 @@ const VALID_CODES := {
 	"ADD_KARMA": 1,        # ADD_KARMA:10 (hidden)
 	"ADD_TENSION": 1,      # ADD_TENSION:15 (hidden)
 	"ADD_NARRATIVE_DEBT": 2, # ADD_NARRATIVE_DEBT:trahison:La trahison reviendra
+	"DAMAGE_LIFE": 1,      # DAMAGE_LIFE:2 (reduce life essence)
+	"HEAL_LIFE": 1,        # HEAL_LIFE:1 (restore life essence)
 	# ═══════════════════════════════════════════════════════════════════════════
 	# REIGNS-STYLE GAUGES (DEPRECATED - kept for compatibility)
 	# ═══════════════════════════════════════════════════════════════════════════
@@ -165,6 +167,10 @@ func _apply_parsed(state: Dictionary, parsed: Dictionary) -> bool:
 			return _apply_hidden_counter(state, "tension", _to_int(args[0]))
 		"ADD_NARRATIVE_DEBT":
 			return _apply_narrative_debt(state, args[0], args[1])
+		"DAMAGE_LIFE":
+			return _apply_life_delta(state, -abs(_to_int(args[0])))
+		"HEAL_LIFE":
+			return _apply_life_delta(state, abs(_to_int(args[0])))
 		# ═══════════════════════════════════════════════════════════════════════
 		# REIGNS-STYLE GAUGES (deprecated)
 		# ═══════════════════════════════════════════════════════════════════════
@@ -627,19 +633,21 @@ func _to_int(value: Variant) -> int:
 # ═══════════════════════════════════════════════════════════════════════════════
 
 func _apply_gauge_delta(state: Dictionary, gauge: String, delta: int) -> bool:
+	# Legacy Reigns gauges (deprecated — inline defaults)
 	var run = state.get("run", {})
 	var gauges = run.get("gauges", {})
-	var current = int(gauges.get(gauge, MerlinConstants.REIGNS_GAUGE_START))
-	gauges[gauge] = clampi(current + delta, MerlinConstants.REIGNS_GAUGE_MIN, MerlinConstants.REIGNS_GAUGE_MAX)
+	var current = int(gauges.get(gauge, 50))
+	gauges[gauge] = clampi(current + delta, 0, 100)
 	run["gauges"] = gauges
 	state["run"] = run
 	return true
 
 
 func _apply_gauge_set(state: Dictionary, gauge: String, value: int) -> bool:
+	# Legacy Reigns gauges (deprecated — inline defaults)
 	var run = state.get("run", {})
 	var gauges = run.get("gauges", {})
-	gauges[gauge] = clampi(value, MerlinConstants.REIGNS_GAUGE_MIN, MerlinConstants.REIGNS_GAUGE_MAX)
+	gauges[gauge] = clampi(value, 0, 100)
 	run["gauges"] = gauges
 	state["run"] = run
 	return true
@@ -829,6 +837,14 @@ func _apply_hidden_counter(state: Dictionary, key: String, delta: int) -> bool:
 		hidden[key] = current + delta
 
 	run["hidden"] = hidden
+	state["run"] = run
+	return true
+
+
+func _apply_life_delta(state: Dictionary, delta: int) -> bool:
+	var run = state.get("run", {})
+	var current = int(run.get("life_essence", MerlinConstants.LIFE_ESSENCE_START))
+	run["life_essence"] = clampi(current + delta, 0, MerlinConstants.LIFE_ESSENCE_MAX)
 	state["run"] = run
 	return true
 

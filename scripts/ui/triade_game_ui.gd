@@ -46,15 +46,31 @@ var aspect_displays: Dictionary = {}  # {"Corps": {container, icon, state_indica
 
 var souffle_panel: Control
 var souffle_display: HBoxContainer
+var _souffle_counter: Label
+
+# Life essence (Phase 43)
+var life_panel: Control
+var _life_counter: Label
+var _life_bar: ProgressBar
 
 var card_container: Control
 var card_panel: Panel
 var card_text: RichTextLabel
 var card_speaker: Label
+var _card_source_badge: PanelContainer
+var _encounter_tile: PixelEncounterTile
 
 var options_container: HBoxContainer
 var option_buttons: Array[Button] = []
 var option_labels: Array[Label] = []
+var _effect_preview_panel: Panel
+var _effect_preview_label: RichTextLabel
+var _preview_visible_for: int = -1  # Which option index is previewed
+
+var _resource_bar: HBoxContainer
+var _tool_label: Label
+var _day_label: Label
+var _mission_progress_label: Label
 
 var info_panel: Control
 var mission_label: Label
@@ -73,6 +89,7 @@ var current_card: Dictionary = {}
 var current_aspects: Dictionary = {}
 var _previous_aspects: Dictionary = {}
 var current_souffle: int = 3
+var _previous_souffle: int = -1
 var _blip_pool: Array[AudioStreamPlayer] = []
 var _blip_idx: int = 0
 const BLIP_POOL_SIZE := 4
@@ -180,6 +197,9 @@ func _setup_ui() -> void:
 		biome_indicator.add_theme_font_override("font", body_font)
 	main_vbox.add_child(biome_indicator)
 
+	# Resource bar (tool + day + mission)
+	_create_resource_bar(main_vbox)
+
 	# Spacer
 	var spacer1 := Control.new()
 	spacer1.size_flags_vertical = Control.SIZE_EXPAND_FILL
@@ -195,6 +215,9 @@ func _setup_ui() -> void:
 
 	# Options bar (3 buttons)
 	_create_options_bar(main_vbox)
+
+	# Effect preview tooltip (floating, added to self so it overlays everything)
+	_create_effect_preview_panel()
 
 	# Bottom info bar
 	_create_info_bar(main_vbox)
@@ -273,7 +296,11 @@ func _create_aspect_displays(parent: Control) -> void:
 
 		container.add_child(state_container)
 
-		# State name
+		# State name + shift arrow (inline)
+		var state_row := HBoxContainer.new()
+		state_row.alignment = BoxContainer.ALIGNMENT_CENTER
+		state_row.add_theme_constant_override("separation", 3)
+
 		var state_name := Label.new()
 		state_name.text = "Equilibre"
 		state_name.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
@@ -281,7 +308,14 @@ func _create_aspect_displays(parent: Control) -> void:
 			state_name.add_theme_font_override("font", body_font)
 		state_name.add_theme_font_size_override("font_size", 11)
 		state_name.add_theme_color_override("font_color", PALETTE.ink_soft)
-		container.add_child(state_name)
+		state_row.add_child(state_name)
+
+		var shift_arrow := Label.new()
+		shift_arrow.text = ""
+		shift_arrow.add_theme_font_size_override("font_size", 11)
+		shift_arrow.add_theme_color_override("font_color", Color.GRAY)
+		state_row.add_child(shift_arrow)
+		container.add_child(state_row)
 
 		aspect_panel.add_child(container)
 
@@ -290,13 +324,14 @@ func _create_aspect_displays(parent: Control) -> void:
 			"icon": icon,
 			"state_container": state_container,
 			"state_name": state_name,
+			"shift_arrow": shift_arrow,
 		}
 
 
 func _create_animal_icon(aspect: String) -> Control:
 	## Creates a custom-drawn Celtic animal icon for each aspect.
 	var icon := Control.new()
-	icon.custom_minimum_size = Vector2(40, 36)
+	icon.custom_minimum_size = Vector2(56, 48)
 	var aspect_color: Color = ASPECT_COLORS.get(aspect, Color.WHITE)
 	var animal: String = MerlinConstants.TRIADE_ASPECT_INFO.get(aspect, {}).get("animal", "")
 	icon.draw.connect(_draw_animal.bind(icon, animal, aspect_color))
@@ -424,11 +459,57 @@ func _create_souffle_display(parent: Control) -> void:
 	for i in range(MerlinConstants.SOUFFLE_MAX):
 		var icon := Label.new()
 		icon.text = SOUFFLE_EMPTY
-		icon.add_theme_font_size_override("font_size", 20)
+		icon.add_theme_font_size_override("font_size", 28)
 		souffle_display.add_child(icon)
 
 	souffle_panel.add_child(souffle_display)
+
+	# Numeric counter "3/7"
+	_souffle_counter = Label.new()
+	_souffle_counter.text = "3/%d" % MerlinConstants.SOUFFLE_MAX
+	_souffle_counter.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	if body_font:
+		_souffle_counter.add_theme_font_override("font", body_font)
+	_souffle_counter.add_theme_font_size_override("font_size", 12)
+	_souffle_counter.add_theme_color_override("font_color", Color(0.3, 0.7, 0.9))
+	souffle_panel.add_child(_souffle_counter)
+
 	parent.add_child(souffle_panel)
+
+
+func _create_resource_bar(parent: Control) -> void:
+	_resource_bar = HBoxContainer.new()
+	_resource_bar.alignment = BoxContainer.ALIGNMENT_CENTER
+	_resource_bar.add_theme_constant_override("separation", 20)
+
+	# Tool equipped
+	_tool_label = Label.new()
+	_tool_label.text = ""
+	if body_font:
+		_tool_label.add_theme_font_override("font", body_font)
+	_tool_label.add_theme_font_size_override("font_size", 11)
+	_tool_label.add_theme_color_override("font_color", PALETTE.accent)
+	_resource_bar.add_child(_tool_label)
+
+	# Day counter
+	_day_label = Label.new()
+	_day_label.text = "Jour 1"
+	if body_font:
+		_day_label.add_theme_font_override("font", body_font)
+	_day_label.add_theme_font_size_override("font_size", 11)
+	_day_label.add_theme_color_override("font_color", PALETTE.ink_soft)
+	_resource_bar.add_child(_day_label)
+
+	# Mission progress
+	_mission_progress_label = Label.new()
+	_mission_progress_label.text = ""
+	if body_font:
+		_mission_progress_label.add_theme_font_override("font", body_font)
+	_mission_progress_label.add_theme_font_size_override("font_size", 11)
+	_mission_progress_label.add_theme_color_override("font_color", PALETTE.ink_soft)
+	_resource_bar.add_child(_mission_progress_label)
+
+	parent.add_child(_resource_bar)
 
 
 func _create_card_display(parent: Control) -> void:
@@ -437,7 +518,7 @@ func _create_card_display(parent: Control) -> void:
 	card_container.size_flags_vertical = Control.SIZE_EXPAND_FILL
 
 	card_panel = Panel.new()
-	card_panel.custom_minimum_size = Vector2(380, 280)
+	card_panel.custom_minimum_size = Vector2(460, 360)
 
 	# Celtic-style card border
 	var card_style := StyleBoxFlat.new()
@@ -475,13 +556,24 @@ func _create_card_display(parent: Control) -> void:
 	# Pixel portrait (character visualization)
 	var portrait_center := CenterContainer.new()
 	portrait_center.name = "PortraitCenter"
-	portrait_center.custom_minimum_size = Vector2(0, 68)
+	portrait_center.custom_minimum_size = Vector2(0, 96)
 	card_vbox.add_child(portrait_center)
 
 	_pixel_portrait = PixelCharacterPortrait.new()
 	_pixel_portrait.name = "PixelPortrait"
 	_pixel_portrait.setup("merlin", 4.0)
 	portrait_center.add_child(_pixel_portrait)
+
+	# Encounter tile (pixel art per card type)
+	var tile_center := CenterContainer.new()
+	tile_center.name = "TileCenter"
+	tile_center.custom_minimum_size = Vector2(0, 72)
+	card_vbox.add_child(tile_center)
+
+	_encounter_tile = PixelEncounterTile.new()
+	_encounter_tile.name = "EncounterTile"
+	_encounter_tile.setup("mystery", 3.0)
+	tile_center.add_child(_encounter_tile)
 
 	# Card text
 	card_text = RichTextLabel.new()
@@ -494,6 +586,11 @@ func _create_card_display(parent: Control) -> void:
 	card_text.add_theme_font_size_override("normal_font_size", 16)
 	card_text.add_theme_color_override("default_color", PALETTE.ink)
 	card_vbox.add_child(card_text)
+
+	# Card source badge (dev indicator: LLM / Fallback / JSON)
+	_card_source_badge = LLMSourceBadge.create("static")
+	_card_source_badge.visible = false
+	card_vbox.add_child(_card_source_badge)
 
 	card_container.add_child(card_panel)
 	parent.add_child(card_container)
@@ -557,7 +654,8 @@ func _create_options_bar(parent: Control) -> void:
 		btn.add_theme_color_override("font_color", config["color"])
 		btn.add_theme_color_override("font_hover_color", config["color"])
 		btn.pressed.connect(_on_option_pressed.bind(i))
-		btn.mouse_entered.connect(func(): SFXManager.play("hover"))
+		btn.mouse_entered.connect(_on_option_hover_enter.bind(i))
+		btn.mouse_exited.connect(_on_option_hover_exit)
 		option_buttons.append(btn)
 		option_vbox.add_child(btn)
 
@@ -573,6 +671,153 @@ func _create_options_bar(parent: Control) -> void:
 			option_vbox.add_child(cost)
 
 		options_container.add_child(option_vbox)
+
+
+func _create_effect_preview_panel() -> void:
+	_effect_preview_panel = Panel.new()
+	_effect_preview_panel.visible = false
+	_effect_preview_panel.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_effect_preview_panel.z_index = 10
+	var style := StyleBoxFlat.new()
+	style.bg_color = Color(PALETTE.paper_dark.r, PALETTE.paper_dark.g, PALETTE.paper_dark.b, 0.95)
+	style.border_color = PALETTE.accent
+	style.set_border_width_all(1)
+	style.set_corner_radius_all(6)
+	style.content_margin_left = 10
+	style.content_margin_right = 10
+	style.content_margin_top = 6
+	style.content_margin_bottom = 6
+	_effect_preview_panel.add_theme_stylebox_override("panel", style)
+
+	_effect_preview_label = RichTextLabel.new()
+	_effect_preview_label.bbcode_enabled = true
+	_effect_preview_label.fit_content = true
+	_effect_preview_label.scroll_active = false
+	_effect_preview_label.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	if body_font:
+		_effect_preview_label.add_theme_font_override("normal_font", body_font)
+	_effect_preview_label.add_theme_font_size_override("normal_font_size", 12)
+	_effect_preview_label.add_theme_color_override("default_color", PALETTE.ink)
+	_effect_preview_panel.add_child(_effect_preview_label)
+
+	add_child(_effect_preview_panel)
+
+
+func _on_option_hover_enter(option_index: int) -> void:
+	SFXManager.play("hover")
+	_show_effect_preview(option_index)
+
+
+func _on_option_hover_exit() -> void:
+	_hide_effect_preview()
+
+
+func _show_effect_preview(option_index: int) -> void:
+	if current_card.is_empty():
+		return
+	var options: Array = current_card.get("options", [])
+	if option_index >= options.size():
+		return
+
+	var option: Dictionary = options[option_index] if options[option_index] is Dictionary else {}
+	var effects: Array = option.get("effects", [])
+
+	# Build preview text
+	var lines: Array[String] = []
+
+	# DC info
+	var dc_values := [6, 10, 14]  # LEFT, CENTER, RIGHT
+	var dc: int = dc_values[clampi(option_index, 0, 2)]
+	var dc_color: String = "green" if dc <= 6 else ("yellow" if dc <= 10 else "red")
+	lines.append("[color=%s]DC %d[/color]" % [dc_color, dc])
+
+	# Souffle cost for center
+	if option_index == 1:
+		lines.append("[color=#b08040]-%s 1 Souffle[/color]" % SOUFFLE_ICON)
+
+	# Aspect effects
+	if effects.is_empty():
+		lines.append("[color=gray]Pas d'effet direct[/color]")
+	else:
+		for e in effects:
+			if not (e is Dictionary):
+				continue
+			var etype: String = str(e.get("type", ""))
+			if etype == "SHIFT_ASPECT":
+				var aspect: String = str(e.get("aspect", ""))
+				var dir: String = str(e.get("direction", ""))
+				var arrow: String = "\u2191" if dir == "up" else "\u2193"
+				var preview_text := _format_aspect_shift_preview(aspect, dir)
+				var shift_color: String = _get_shift_color(aspect, dir)
+				lines.append("[color=%s]%s %s %s[/color]" % [shift_color, aspect, arrow, preview_text])
+			elif etype == "ADD_KARMA":
+				lines.append("[color=#c0a030]+%d Karma[/color]" % int(e.get("amount", 0)))
+			elif etype == "ADD_SOUFFLE":
+				lines.append("[color=#40a060]+%d Souffle[/color]" % int(e.get("amount", 0)))
+			elif etype == "PROGRESS_MISSION":
+				lines.append("[color=#6080c0]+%d Mission[/color]" % int(e.get("step", 1)))
+
+	# Build BBCode
+	_effect_preview_label.text = "\n".join(lines)
+
+	# Position above the hovered button
+	_preview_visible_for = option_index
+	_effect_preview_panel.visible = true
+	_effect_preview_panel.custom_minimum_size = Vector2(180, 0)
+	_effect_preview_panel.size = Vector2(180, 0)
+
+	# Wait one frame for the label to compute its size
+	await get_tree().process_frame
+	_position_preview_above_button(option_index)
+
+
+func _position_preview_above_button(option_index: int) -> void:
+	if option_index >= option_buttons.size():
+		return
+	if not _effect_preview_panel or not _effect_preview_panel.visible:
+		return
+	var btn: Button = option_buttons[option_index]
+	if not is_instance_valid(btn):
+		return
+
+	var btn_global := btn.global_position
+	var panel_h: float = maxf(_effect_preview_label.get_content_height() + 16.0, 40.0)
+	_effect_preview_panel.size.y = panel_h
+	_effect_preview_panel.global_position = Vector2(
+		btn_global.x + btn.size.x * 0.5 - 90.0,
+		btn_global.y - panel_h - 6.0
+	)
+
+
+func _hide_effect_preview() -> void:
+	_preview_visible_for = -1
+	if _effect_preview_panel:
+		_effect_preview_panel.visible = false
+
+
+func _format_aspect_shift_preview(aspect: String, direction: String) -> String:
+	## Returns "(Robuste → Surmené)" based on current state + shift direction.
+	var current_state: int = int(current_aspects.get(aspect, MerlinConstants.AspectState.EQUILIBRE))
+	var new_state: int = current_state + (1 if direction == "up" else -1)
+	new_state = clampi(new_state, MerlinConstants.AspectState.BAS, MerlinConstants.AspectState.HAUT)
+	var info: Dictionary = MerlinConstants.TRIADE_ASPECT_INFO.get(aspect, {})
+	var states: Dictionary = info.get("states", {})
+	var current_name: String = states.get(current_state, "?")
+	var new_name: String = states.get(new_state, "?")
+	if current_state == new_state:
+		return "(%s, max)" % current_name
+	return "(%s \u2192 %s)" % [current_name, new_name]
+
+
+func _get_shift_color(aspect: String, direction: String) -> String:
+	## Returns a color hex for the shift preview. Red if dangerous (toward extreme), green if safe.
+	var current_state: int = int(current_aspects.get(aspect, MerlinConstants.AspectState.EQUILIBRE))
+	var new_state: int = current_state + (1 if direction == "up" else -1)
+	new_state = clampi(new_state, MerlinConstants.AspectState.BAS, MerlinConstants.AspectState.HAUT)
+	# BAS or HAUT = dangerous
+	if new_state == MerlinConstants.AspectState.BAS or new_state == MerlinConstants.AspectState.HAUT:
+		return "#c04040"  # Red — dangerous
+	return "#40a060"  # Green — safe (toward equilibre)
 
 
 func _create_info_bar(parent: Control) -> void:
@@ -633,7 +878,7 @@ func show_thinking() -> void:
 			_thinking_spiral.name = "ThinkingSpiral"
 			_thinking_spiral.custom_minimum_size = Vector2(60, 60)
 			_thinking_spiral.set_anchors_preset(Control.PRESET_CENTER)
-			var panel_size: Vector2 = card_panel.size if card_panel.size.length() > 0 else Vector2(380, 280)
+			var panel_size: Vector2 = card_panel.size if card_panel.size.length() > 0 else Vector2(460, 360)
 			_thinking_spiral.position = panel_size * 0.5 - Vector2(30, 50)
 			_thinking_spiral.draw.connect(_draw_thinking_spiral.bind(_thinking_spiral))
 			card_panel.add_child(_thinking_spiral)
@@ -771,6 +1016,19 @@ func _update_aspects(aspects: Dictionary) -> void:
 			else:
 				state_name.add_theme_color_override("font_color", Color(0.78, 0.25, 0.22))
 
+		# Shift arrow (shows last change direction)
+		var shift_arrow: Label = display.get("shift_arrow")
+		if shift_arrow and not _previous_aspects.is_empty():
+			var old_st: int = int(_previous_aspects.get(aspect, MerlinConstants.AspectState.EQUILIBRE))
+			if aspect_state > old_st:
+				shift_arrow.text = "\u2191"
+				shift_arrow.add_theme_color_override("font_color", Color(0.78, 0.25, 0.22))
+			elif aspect_state < old_st:
+				shift_arrow.text = "\u2193"
+				shift_arrow.add_theme_color_override("font_color", Color(0.25, 0.45, 0.72))
+			else:
+				shift_arrow.text = ""
+
 		# Animate icon if extreme (now a Control, not Label)
 		var icon: Control = display.get("icon")
 		if icon:
@@ -786,7 +1044,19 @@ func update_souffle(souffle: int) -> void:
 
 
 func _update_souffle(souffle: int) -> void:
+	var old_souffle := _previous_souffle
+	_previous_souffle = souffle
 	current_souffle = souffle
+
+	# Update numeric counter
+	if _souffle_counter and is_instance_valid(_souffle_counter):
+		_souffle_counter.text = "%d/%d" % [souffle, MerlinConstants.SOUFFLE_MAX]
+		if souffle == 0:
+			_souffle_counter.add_theme_color_override("font_color", Color(0.78, 0.25, 0.22))
+		elif souffle <= 2:
+			_souffle_counter.add_theme_color_override("font_color", Color(0.72, 0.50, 0.10))
+		else:
+			_souffle_counter.add_theme_color_override("font_color", Color(0.3, 0.7, 0.9))
 
 	if not souffle_display:
 		return
@@ -801,15 +1071,84 @@ func _update_souffle(souffle: int) -> void:
 				icon.text = SOUFFLE_EMPTY
 				icon.add_theme_color_override("font_color", Color(0.4, 0.4, 0.4))
 
-	# Update center button based on souffle
-	if option_buttons.size() > 1:
-		var center_btn := option_buttons[1]
-		if souffle < MerlinConstants.SOUFFLE_CENTER_COST:
-			center_btn.text = "[B] Risque!"
-			center_btn.add_theme_color_override("font_color", Color(0.78, 0.35, 0.22))
+	# VFX: Regen animation (gained souffle)
+	if old_souffle >= 0 and souffle > old_souffle:
+		for i in range(old_souffle, mini(souffle, MerlinConstants.SOUFFLE_MAX)):
+			var icon: Label = souffle_display.get_child(i) as Label
+			if icon:
+				icon.scale = Vector2(0.3, 0.3)
+				icon.pivot_offset = icon.size * 0.5
+				var tw := create_tween()
+				tw.tween_property(icon, "scale", Vector2(1.2, 1.2), 0.25) \
+					.set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT).set_delay(0.1 * (i - old_souffle))
+				tw.tween_property(icon, "scale", Vector2(1.0, 1.0), 0.15)
+		SFXManager.play("souffle_regen")
+
+	# VFX: Consumption animation (lost souffle)
+	if old_souffle >= 0 and souffle < old_souffle:
+		for i in range(souffle, mini(old_souffle, MerlinConstants.SOUFFLE_MAX)):
+			var icon: Label = souffle_display.get_child(i) as Label
+			if icon:
+				var tw := create_tween()
+				tw.tween_property(icon, "scale", Vector2(0.5, 0.5), 0.2) \
+					.set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_IN)
+				tw.tween_property(icon, "scale", Vector2(1.0, 1.0), 0.1)
+
+	# VFX: Full souffle glow (7/7)
+	if souffle >= MerlinConstants.SOUFFLE_MAX:
+		for i in range(MerlinConstants.SOUFFLE_MAX):
+			var icon: Label = souffle_display.get_child(i) as Label
+			if icon:
+				icon.add_theme_color_override("font_color", Color(0.85, 0.75, 0.3))
+		if old_souffle >= 0 and old_souffle < MerlinConstants.SOUFFLE_MAX:
+			SFXManager.play("souffle_full")
+
+	# VFX: Empty souffle blink (0/7)
+	if souffle <= 0:
+		for i in range(MerlinConstants.SOUFFLE_MAX):
+			var icon: Label = souffle_display.get_child(i) as Label
+			if icon:
+				var tw := create_tween()
+				tw.set_loops(3)
+				tw.tween_property(icon, "modulate:a", 0.3, 0.4)
+				tw.tween_property(icon, "modulate:a", 1.0, 0.4)
+
+	# Center is now free (Phase 43) — no risk indicator needed
+
+
+func update_life_essence(life: int) -> void:
+	## Update the life essence display (Phase 43).
+	if _life_counter and is_instance_valid(_life_counter):
+		_life_counter.text = "%d/%d" % [life, MerlinConstants.LIFE_ESSENCE_MAX]
+		if life <= 0:
+			_life_counter.add_theme_color_override("font_color", Color(0.78, 0.25, 0.22))
+		elif life <= MerlinConstants.LIFE_ESSENCE_LOW_THRESHOLD:
+			_life_counter.add_theme_color_override("font_color", Color(0.72, 0.50, 0.10))
 		else:
-			center_btn.text = "[B] Choisir"
-			center_btn.add_theme_color_override("font_color", PALETTE.accent)
+			_life_counter.add_theme_color_override("font_color", Color(0.35, 0.65, 0.30))
+	if _life_bar and is_instance_valid(_life_bar):
+		_life_bar.value = life
+		if life <= MerlinConstants.LIFE_ESSENCE_LOW_THRESHOLD:
+			var tw := create_tween()
+			tw.set_loops(2)
+			tw.tween_property(_life_bar, "modulate:a", 0.5, 0.3)
+			tw.tween_property(_life_bar, "modulate:a", 1.0, 0.3)
+
+
+func update_resource_bar(tool_id: String, day: int, mission_current: int, mission_total: int) -> void:
+	if _tool_label:
+		if tool_id != "" and MerlinConstants.EXPEDITION_TOOLS.has(tool_id):
+			var tool_info: Dictionary = MerlinConstants.EXPEDITION_TOOLS[tool_id]
+			_tool_label.text = "%s %s" % [str(tool_info.get("icon", "")), str(tool_info.get("name", tool_id))]
+		else:
+			_tool_label.text = ""
+	if _day_label:
+		_day_label.text = "Jour %d" % day
+	if _mission_progress_label:
+		if mission_total > 0:
+			_mission_progress_label.text = "Mission %d/%d" % [mission_current, mission_total]
+		else:
+			_mission_progress_label.text = ""
 
 
 func display_card(card: Dictionary) -> void:
@@ -839,28 +1178,67 @@ func display_card(card: Dictionary) -> void:
 		_pixel_portrait.setup(speaker_key, 4.0)
 		_pixel_portrait.assemble(false)  # Animated assembly
 
-	# Animate card entrance
+	# Animate card entrance — flip + scale + fade
 	if card_panel and is_instance_valid(card_panel):
+		card_panel.pivot_offset = card_panel.custom_minimum_size / 2.0
 		card_panel.modulate.a = 0.0
-		card_panel.position.y += 20
+		card_panel.scale = Vector2(0.8, 0.8)
+		card_panel.rotation_degrees = 90.0
 		var entry_tw := create_tween()
-		entry_tw.tween_property(card_panel, "position:y", card_panel.position.y - 20, 0.25) \
-			.set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_OUT)
-		entry_tw.parallel().tween_property(card_panel, "modulate:a", 1.0, 0.2)
+		entry_tw.set_parallel(true)
+		entry_tw.tween_property(card_panel, "rotation_degrees", 0.0, 0.35) \
+			.set_trans(Tween.TRANS_ELASTIC).set_ease(Tween.EASE_OUT)
+		entry_tw.tween_property(card_panel, "scale", Vector2(1.0, 1.0), 0.3) \
+			.set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
+		entry_tw.tween_property(card_panel, "modulate:a", 1.0, 0.2).set_delay(0.1)
 
 	# Update text with typewriter
 	if card_text and is_instance_valid(card_text):
 		_typewriter_card_text(card.get("text", "..."))
 
-	# Update options
+	# Update source badge (dev indicator)
+	if _card_source_badge and is_instance_valid(_card_source_badge):
+		var card_source := _detect_card_source(card)
+		LLMSourceBadge.update_badge(_card_source_badge, card_source)
+		_card_source_badge.visible = true
+
+	# Update encounter tile (pixel art per card type)
+	if _encounter_tile and is_instance_valid(_encounter_tile):
+		var enc_type := PixelEncounterTile.detect_type(card)
+		_encounter_tile.setup(enc_type, 3.0)
+		_encounter_tile.assemble(true)
+
+	# Update options — always show all 3 buttons
 	var options: Array = card.get("options", [])
-	for i in range(mini(options.size(), 3)):
-		var option: Dictionary = options[i] if options[i] is Dictionary else {}
+	for i in range(3):
+		var has_option: bool = i < options.size() and options[i] is Dictionary
+		var option: Dictionary = options[i] if has_option else {}
 		if i < option_labels.size() and is_instance_valid(option_labels[i]):
-			option_labels[i].text = str(option.get("label", "..."))
+			option_labels[i].text = str(option.get("label", "...")) if has_option else "..."
+			option_labels[i].modulate.a = 1.0 if has_option else 0.4
 		if i < option_buttons.size() and is_instance_valid(option_buttons[i]):
 			var key: String = OPTION_KEYS.get(i, "?")
-			option_buttons[i].text = "[%s] %s" % [key, str(option.get("label", "?"))]
+			option_buttons[i].text = "[%s] %s" % [key, str(option.get("label", "?"))] if has_option else "[%s] —" % key
+			option_buttons[i].disabled = not has_option
+			option_buttons[i].modulate.a = 1.0 if has_option else 0.35
+
+
+func _detect_card_source(card: Dictionary) -> String:
+	## Detect whether a card was generated by LLM, fallback pool, or static.
+	var tags: Array = card.get("tags", [])
+	if "llm_generated" in tags:
+		return "llm"
+	if "emergency_fallback" in tags:
+		return "fallback"
+	var gen_by: String = str(card.get("_generated_by", ""))
+	if gen_by.contains("llm"):
+		return "llm"
+	if gen_by != "":
+		return "llm"  # Any _generated_by means LLM pipeline
+	# Check if card has omniscient pipeline marker
+	if card.has("_omniscient"):
+		return "llm"
+	return "fallback"
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
@@ -1070,6 +1448,11 @@ func show_narrator_intro() -> void:
 
 	# Pick intro text
 	var intro_text: String = NARRATOR_INTROS[randi() % NARRATOR_INTROS.size()]
+
+	# Static badge for narrator intro
+	if _card_source_badge and is_instance_valid(_card_source_badge):
+		LLMSourceBadge.update_badge(_card_source_badge, "static")
+		_card_source_badge.visible = true
 
 	# Typewriter the intro
 	await _typewriter_card_text(intro_text)
@@ -1285,6 +1668,17 @@ func show_end_screen(ending: Dictionary) -> void:
 	score.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	score.add_theme_color_override("font_color", PALETTE.accent)
 	vbox.add_child(score)
+
+	# Life depleted indicator
+	if ending.get("life_depleted", false):
+		var life_lbl := Label.new()
+		life_lbl.text = "Essences de vie epuisees"
+		if body_font:
+			life_lbl.add_theme_font_override("font", body_font)
+		life_lbl.add_theme_font_size_override("font_size", 14)
+		life_lbl.add_theme_color_override("font_color", Color(0.78, 0.35, 0.22))
+		life_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		vbox.add_child(life_lbl)
 
 	# Stats
 	var stats_lbl := Label.new()
@@ -1544,6 +1938,87 @@ func _hide_dice_overlay() -> void:
 		var tw := create_tween()
 		tw.tween_property(_dice_overlay, "modulate:a", 0.0, 0.3)
 		tw.tween_callback(func(): _dice_overlay.visible = false)
+
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# MINIGAME INTRO & SCORE DISPLAY
+# ═══════════════════════════════════════════════════════════════════════════════
+
+const MINIGAME_FIELD_ICONS := {
+	"combat": "\u2694",
+	"exploration": "\uD83D\uDD0D",
+	"mysticisme": "\u2728",
+	"survie": "\u2605",
+	"diplomatie": "\u2696",
+}
+
+func show_minigame_intro(field: String, tool_bonus_text: String, tool_bonus: int) -> void:
+	## Brief overlay announcing the minigame type and any tool bonus.
+	var overlay := ColorRect.new()
+	overlay.set_anchors_preset(Control.PRESET_FULL_RECT)
+	overlay.color = Color(0.05, 0.04, 0.03, 0.75)
+	overlay.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	overlay.modulate.a = 0.0
+	add_child(overlay)
+
+	var center := CenterContainer.new()
+	center.set_anchors_preset(Control.PRESET_FULL_RECT)
+	overlay.add_child(center)
+
+	var vbox := VBoxContainer.new()
+	vbox.alignment = BoxContainer.ALIGNMENT_CENTER
+	vbox.add_theme_constant_override("separation", 8)
+	center.add_child(vbox)
+
+	# Field icon
+	var icon_label := Label.new()
+	var field_icon: String = MINIGAME_FIELD_ICONS.get(field, "\u2726")
+	icon_label.text = field_icon
+	icon_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	icon_label.add_theme_font_size_override("font_size", 48)
+	vbox.add_child(icon_label)
+
+	# Field name
+	var name_label := Label.new()
+	name_label.text = "Epreuve: %s" % field.capitalize()
+	name_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	if title_font:
+		name_label.add_theme_font_override("font", title_font)
+	name_label.add_theme_font_size_override("font_size", 22)
+	name_label.add_theme_color_override("font_color", PALETTE.paper)
+	vbox.add_child(name_label)
+
+	# Tool bonus
+	if tool_bonus != 0 and tool_bonus_text != "":
+		var bonus_label := Label.new()
+		bonus_label.text = "%s DC %d" % [tool_bonus_text, tool_bonus]
+		bonus_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		if body_font:
+			bonus_label.add_theme_font_override("font", body_font)
+		bonus_label.add_theme_font_size_override("font_size", 16)
+		bonus_label.add_theme_color_override("font_color", Color(0.3, 0.8, 0.3))
+		vbox.add_child(bonus_label)
+
+	# Animate in then auto-remove
+	var tw := create_tween()
+	tw.tween_property(overlay, "modulate:a", 1.0, 0.2)
+	tw.tween_interval(0.8)
+	tw.tween_property(overlay, "modulate:a", 0.0, 0.2)
+	tw.tween_callback(overlay.queue_free)
+
+
+func show_score_to_d20(score: int, d20: int, tool_bonus: int) -> void:
+	## Brief display: "Score: 78 → D20: 17" (optional tool bonus shown).
+	_ensure_dice_overlay()
+	_dice_overlay.visible = true
+	_dice_overlay.modulate.a = 1.0
+	var bonus_text: String = ""
+	if tool_bonus != 0:
+		bonus_text = " (bonus %d)" % tool_bonus
+	_dice_dc_label.text = "Score: %d \u2192 D20: %d%s" % [score, d20, bonus_text]
+	_dice_dc_label.add_theme_color_override("font_color", Color(0.7, 0.8, 0.9))
+	_dice_display.text = str(d20)
+	_dice_result_label.text = ""
 
 
 # ═══════════════════════════════════════════════════════════════════════════════

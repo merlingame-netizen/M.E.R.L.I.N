@@ -1,7 +1,7 @@
 ## ═══════════════════════════════════════════════════════════════════════════════
 ## SceneRencontreMerlin — Merged Eveil + Antre in one scene
 ## ═══════════════════════════════════════════════════════════════════════════════
-## 7-phase state machine: Eveil dialogue → Bestiole → Oghams → Mission → Biome
+## 4-phase state machine: Intro Context → Bestiole Reveal → Mission Briefing → Transition
 ## Pixel Merlin portrait assembled from falling cascade. No PNG assets.
 ## ═══════════════════════════════════════════════════════════════════════════════
 
@@ -10,8 +10,8 @@ extends Control
 const NEXT_SCENE := "res://scenes/HubAntre.tscn"
 const DATA_PATH := "res://data/dialogues/scene_dialogues.json"
 
-const TYPEWRITER_DELAY := 0.030
-const TYPEWRITER_PUNCT_DELAY := 0.10
+const TYPEWRITER_DELAY := 0.015
+const TYPEWRITER_PUNCT_DELAY := 0.04
 const BLIP_VOLUME := 0.04
 
 # ═══════════════════════════════════════════════════════════════════════════════
@@ -38,9 +38,9 @@ const CARD_MAX_WIDTH := 720.0
 const CARD_MAX_HEIGHT := 800.0
 
 const STARTER_OGHAMS := [
-	{"name": "Beith", "symbol": "\u1681", "meaning": "Bouleau — Nouveau depart"},
-	{"name": "Luis", "symbol": "\u1682", "meaning": "Sorbier — Protection"},
-	{"name": "Quert", "symbol": "\u168A", "meaning": "Pommier — Guerison"},
+	{"name": "Beith", "symbol": "\u1681", "meaning": "Bouleau — Nouveau depart", "gameplay": "Revele les effets d'un choix"},
+	{"name": "Luis", "symbol": "\u1682", "meaning": "Sorbier — Protection", "gameplay": "Annule un changement negatif"},
+	{"name": "Quert", "symbol": "\u168A", "meaning": "Pommier — Guerison", "gameplay": "Ramene un aspect vers l'equilibre"},
 ]
 
 const BIOME_DATA := {
@@ -65,13 +65,10 @@ const CLASS_TO_BIOME := {
 # ═══════════════════════════════════════════════════════════════════════════════
 
 enum Phase {
-	EVEIL_DIALOGUE,
-	BESTIOLE_INTRO,
-	MERLIN_COMMENTARY,
-	OGHAM_REVEAL,
-	MISSION_BRIEFING,
-	BIOME_SELECTION,
-	TRANSITIONING,
+	INTRO_CONTEXT,      # Merlin presents the world + Triade system
+	BESTIOLE_REVEAL,    # Bestiole appears + Ogham reveal
+	MISSION_BRIEFING,   # Mission + Hub tour
+	TRANSITIONING,      # Exit to HubAntre
 }
 
 # ═══════════════════════════════════════════════════════════════════════════════
@@ -94,12 +91,16 @@ var biome_panel: PanelContainer
 var biome_buttons: Dictionary = {}
 var response_container: VBoxContainer
 var response_buttons: Array[Button] = []
+var _dialogue_source_badge: PanelContainer
+var _response_source_badge: PanelContainer
+var _last_response_source: String = "static"
+var _last_rephrase_source: String = "static"
 
 # ═══════════════════════════════════════════════════════════════════════════════
 # STATE
 # ═══════════════════════════════════════════════════════════════════════════════
 
-var current_phase: Phase = Phase.EVEIL_DIALOGUE
+var current_phase: Phase = Phase.INTRO_CONTEXT
 var scene_finished: bool = false
 var typing_active: bool = false
 var typing_abort: bool = false
@@ -107,6 +108,7 @@ var _advance_requested: bool = false
 var _mist_tween: Tween
 var _entry_tween: Tween
 var _biome_pulse_tween: Tween
+var _llm_wait_tween: Tween
 var card_target_pos := Vector2.ZERO
 
 # Dialogue data
@@ -129,6 +131,7 @@ var body_font: Font
 var _llm_gen: Node = null
 var merlin_ai: Node = null
 var _prefetched_rephrase: Dictionary = {}  # {line_index: String}
+var _prefetched_rephrase_sources: Dictionary = {}  # {line_index: "llm"|"fallback"}
 var _prefetched_responses: Dictionary = {}  # {line_index: Array}
 
 
@@ -161,12 +164,11 @@ func _ready() -> void:
 		return
 
 	_play_entry_animation()
-	await get_tree().create_timer(1.0).timeout
 	if not is_inside_tree():
 		return
 
 	# Start phase machine
-	_run_phase(Phase.EVEIL_DIALOGUE)
+	_run_phase(Phase.INTRO_CONTEXT)
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
@@ -326,6 +328,11 @@ func _build_ui() -> void:
 	merlin_text.add_theme_color_override("default_color", PALETTE.ink)
 	card_vbox.add_child(merlin_text)
 
+	# Dialogue source badge (dev indicator: LLM / Fallback)
+	_dialogue_source_badge = LLMSourceBadge.create("static")
+	_dialogue_source_badge.visible = false
+	card_vbox.add_child(_dialogue_source_badge)
+
 	# Skip hint
 	skip_hint = Label.new()
 	skip_hint.text = "Appuie pour continuer"
@@ -388,7 +395,7 @@ func _build_response_ui() -> void:
 
 	for i in range(3):
 		var btn := Button.new()
-		btn.custom_minimum_size = Vector2(400, 44)
+		btn.custom_minimum_size = Vector2(0, 44)
 		btn.alignment = HORIZONTAL_ALIGNMENT_LEFT
 		btn.text = "..."
 		btn.mouse_filter = Control.MOUSE_FILTER_STOP
@@ -417,6 +424,11 @@ func _build_response_ui() -> void:
 		btn.mouse_entered.connect(func(): SFXManager.play("choice_hover"))
 		response_container.add_child(btn)
 		response_buttons.append(btn)
+
+	# Response source badge (dev indicator — appended after buttons)
+	_response_source_badge = LLMSourceBadge.create("static")
+	_response_source_badge.visible = false
+	response_container.add_child(_response_source_badge)
 
 
 func _build_ogham_panel() -> void:
@@ -465,6 +477,17 @@ func _build_ogham_panel() -> void:
 		meaning.add_theme_font_size_override("font_size", 11)
 		meaning.add_theme_color_override("font_color", PALETTE.ink_soft)
 		vbox.add_child(meaning)
+		# Gameplay effect label
+		var gameplay := Label.new()
+		gameplay.text = ogham.get("gameplay", "")
+		gameplay.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		if body_font:
+			gameplay.add_theme_font_override("font", body_font)
+		gameplay.add_theme_font_size_override("font_size", 10)
+		gameplay.add_theme_color_override("font_color", PALETTE.ogham_glow)
+		gameplay.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+		gameplay.custom_minimum_size.x = 120
+		vbox.add_child(gameplay)
 		hbox.add_child(vbox)
 	add_child(ogham_panel)
 
@@ -544,7 +567,7 @@ func _layout_ui() -> void:
 	if _biome_layout:
 		card_h = minf(CARD_MAX_HEIGHT * 0.45, vp.y * 0.35)
 	else:
-		card_h = minf(CARD_MAX_HEIGHT, vp.y * 0.78)
+		card_h = minf(CARD_MAX_HEIGHT, vp.y * 0.62)
 	card.size = Vector2(card_w, card_h)
 	card.position = Vector2((vp.x - card_w) * 0.5, (vp.y - card_h) * 0.5)
 	if _biome_layout:
@@ -590,10 +613,10 @@ func _play_entry_animation() -> void:
 	if _entry_tween:
 		_entry_tween.kill()
 	_entry_tween = create_tween()
-	_entry_tween.tween_property(celtic_top, "modulate:a", 1.0, 0.8).set_trans(Tween.TRANS_SINE)
-	_entry_tween.parallel().tween_property(celtic_bottom, "modulate:a", 1.0, 0.8).set_trans(Tween.TRANS_SINE)
-	_entry_tween.tween_property(card, "position:y", target_y, 0.7).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_OUT)
-	_entry_tween.parallel().tween_property(card, "modulate:a", 1.0, 0.5).set_trans(Tween.TRANS_SINE)
+	_entry_tween.tween_property(celtic_top, "modulate:a", 1.0, 0.4).set_trans(Tween.TRANS_SINE)
+	_entry_tween.parallel().tween_property(celtic_bottom, "modulate:a", 1.0, 0.4).set_trans(Tween.TRANS_SINE)
+	_entry_tween.tween_property(card, "position:y", target_y, 0.35).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_OUT)
+	_entry_tween.parallel().tween_property(card, "modulate:a", 1.0, 0.25).set_trans(Tween.TRANS_SINE)
 
 
 func _start_mist_animation() -> void:
@@ -614,333 +637,168 @@ func _run_phase(phase: Phase) -> void:
 	current_phase = phase
 
 	match phase:
-		Phase.EVEIL_DIALOGUE:
-			await _phase_eveil()
-		Phase.BESTIOLE_INTRO:
-			await _phase_bestiole_intro()
-		Phase.MERLIN_COMMENTARY:
-			await _phase_merlin_commentary()
-		Phase.OGHAM_REVEAL:
-			await _phase_ogham_reveal()
+		Phase.INTRO_CONTEXT:
+			await _phase_intro_context()
+		Phase.BESTIOLE_REVEAL:
+			await _phase_bestiole_reveal()
 		Phase.MISSION_BRIEFING:
 			await _phase_mission_briefing()
-		Phase.BIOME_SELECTION:
-			await _phase_biome_selection()
 		Phase.TRANSITIONING:
 			await _transition_out()
 
 
-## Phase 1: Eveil — 4 dialogue lines, interactive responses after 1 and 3
-func _phase_eveil() -> void:
-	# Wait for LLM readiness (max 3s) to avoid fallback-only dialogue
+## RAG system prompts for LLM-guided intro phases
+const RAG_INTRO_CONTEXT := "Tu es Merlin le druide. Un voyageur (%s) arrive a Broceliande. 2 phrases maximum: accueille-le et mentionne la Triade (Corps/Ame/Monde). Ton bienveillant. Francais."
+const RAG_BESTIOLE := "Tu es Merlin. La Bestiole du voyageur apparait avec 3 Oghams. 2 phrases maximum, ton amuse. Francais."
+const RAG_MISSION_HUB := "Tu es Merlin. Explique au voyageur: Carte du Monde, Oghams, sauvegardes. 2 phrases maximum, ton encourageant. Francais."
+
+
+## Phase 1: Intro Context — Merlin presents the world + Triade system
+func _phase_intro_context() -> void:
+	# Wait for LLM readiness (max 5s)
 	if merlin_ai and not merlin_ai.is_ready:
 		var wait_elapsed: float = 0.0
-		while merlin_ai and not merlin_ai.is_ready and wait_elapsed < 3.0:
+		while merlin_ai and not merlin_ai.is_ready and wait_elapsed < 5.0:
 			await get_tree().create_timer(0.5).timeout
 			wait_elapsed += 0.5
 			if not is_inside_tree():
 				return
 
-	# Prefetch first line rephrase
-	_prefetch_rephrase(eveil_lines, 0)
+	_set_mood("pensif")
 
-	for i in range(eveil_lines.size()):
-		if scene_finished or not is_inside_tree():
-			return
-
-		var line: Dictionary = eveil_lines[i]
-		var emotion: String = line.get("emotion", "pensif")
-
-		# Set mood
-		_set_mood(emotion)
-
-		# Get LLM-rephrased text (or original as fallback)
-		var text: String = await _get_rephrased_line(eveil_lines, i)
-
-		# Prefetch next line in background while displaying current
-		if i + 1 < eveil_lines.size():
-			_prefetch_rephrase(eveil_lines, i + 1)
-
-		# Typewriter
-		await _show_text(text)
-		if not is_inside_tree():
-			return
-		await get_tree().create_timer(0.3).timeout
-
-		# Interactive? Show LLM-generated response buttons
-		if i == 1 or i == 3:
-			await _show_response_blocks(i, text)
-		else:
-			skip_hint.visible = true
-			SFXManager.play("click")
-			_advance_requested = false
-			await _wait_for_advance(30.0)
-			skip_hint.visible = false
-
-		if not is_inside_tree():
-			return
-
-		# Fade between lines
-		if i < eveil_lines.size() - 1:
-			var fade := create_tween()
-			fade.tween_property(merlin_text, "modulate:a", 0.0, 0.3)
-			await fade.finished
-			merlin_text.modulate.a = 1.0
-
-	# Save eveil flag
+	# Get archetype for RAG prompt
+	var archetype: String = "druide"
 	var gm := get_node_or_null("/root/GameManager")
-	if gm and gm.has_method("set"):
-		gm.set("eveil_seen", true)
+	if gm and gm.get("archetype_title") is String:
+		archetype = str(gm.get("archetype_title"))
 
-	_run_phase(Phase.BESTIOLE_INTRO)
+	# Try LLM with RAG context
+	var llm_text := await _llm_generate_from_rag(RAG_INTRO_CONTEXT % archetype)
 
-
-## Phase 2: Bestiole intro narration (LLM-rephrased)
-func _phase_bestiole_intro() -> void:
-	var lines: Array = dialogue_data.get("bestiole_apparition", {}).get("lines", [])
-	if lines.is_empty():
-		lines = [
-			{"text": "Quelque chose bouge dans la brume..."},
-			{"text": "Un eclat de lumiere, timide."},
-			{"text": "Ta Bestiole est la. Elle t'attendait."},
-		]
-
-	_prefetched_rephrase.clear()
-	_prefetch_rephrase(lines, 0)
-
-	for i in range(lines.size()):
-		if not is_inside_tree():
-			return
-		var text: String = await _get_rephrased_line(lines, i)
-		if i + 1 < lines.size():
-			_prefetch_rephrase(lines, i + 1)
-
-		await _show_text(text)
-		if not is_inside_tree():
-			return
-		await get_tree().create_timer(0.3).timeout
-		skip_hint.visible = true
-		_advance_requested = false
-		await _wait_for_advance(20.0)
-		skip_hint.visible = false
-
-		if i < lines.size() - 1:
-			var fade := create_tween()
-			fade.tween_property(merlin_text, "modulate:a", 0.0, 0.3)
-			await fade.finished
-			merlin_text.modulate.a = 1.0
-
-	_run_phase(Phase.MERLIN_COMMENTARY)
-
-
-## Phase 3: Merlin comments on Bestiole (LLM-first with JSON fallback)
-func _phase_merlin_commentary() -> void:
-	_set_mood("amuse")
-
-	# Try LLM-generated commentary first
-	var llm_text := await _try_llm_commentary()
 	if llm_text != "":
+		_update_dialogue_badge("llm")
 		await _show_text(llm_text)
 		if not is_inside_tree():
 			return
-		await get_tree().create_timer(0.3).timeout
+		await get_tree().create_timer(0.15).timeout
 		skip_hint.visible = true
 		_advance_requested = false
-		await _wait_for_advance(20.0)
+		await _wait_for_advance(30.0)
 		skip_hint.visible = false
-		_run_phase(Phase.OGHAM_REVEAL)
-		return
-
-	# Fallback: static JSON dialogue
-	var lines: Array = dialogue_data.get("merlin_sur_bestiole", {}).get("lines", [])
-	if lines.is_empty():
-		lines = [
-			{"text": "Ah, elle est mignonne celle-la."},
-			{"text": "Prends-en soin. Elle sera ton ancre."},
+	else:
+		# Fallback: scripted lines with LLM rephrase
+		var lines: Array = eveil_lines if not eveil_lines.is_empty() else [
+			{"text": "Bienvenue a Broceliande, voyageur.", "emotion": "warm"},
+			{"text": "Corps, Ame, Monde — equilibre-les. Chaque choix pese.", "emotion": "serieux"},
 		]
+		_prefetched_rephrase.clear()
+		_prefetched_rephrase_sources.clear()
+		_prefetch_rephrase(lines, 0)
+		for i in range(lines.size()):
+			if scene_finished or not is_inside_tree():
+				return
+			var line: Dictionary = lines[i] if lines[i] is Dictionary else {"text": str(lines[i])}
+			_set_mood(line.get("emotion", "pensif"))
+			var text: String = await _get_rephrased_line(lines, i)
+			_update_dialogue_badge(_last_rephrase_source)
+			if i + 1 < lines.size():
+				_prefetch_rephrase(lines, i + 1)
+			await _show_text(text)
+			if not is_inside_tree():
+				return
+			await get_tree().create_timer(0.3).timeout
+			skip_hint.visible = true
+			_advance_requested = false
+			await _wait_for_advance(20.0)
+			skip_hint.visible = false
+			if i < lines.size() - 1:
+				var fade := create_tween()
+				fade.tween_property(merlin_text, "modulate:a", 0.0, 0.15)
+				await fade.finished
+				merlin_text.modulate.a = 1.0
 
-	for i in range(lines.size()):
-		if not is_inside_tree():
-			return
-		var text: String = lines[i].get("text", "") if lines[i] is Dictionary else str(lines[i])
-		await _show_text(text)
-		if not is_inside_tree():
-			return
-		await get_tree().create_timer(0.3).timeout
-		skip_hint.visible = true
-		_advance_requested = false
-		await _wait_for_advance(20.0)
-		skip_hint.visible = false
-
-		if i < lines.size() - 1:
-			var fade := create_tween()
-			fade.tween_property(merlin_text, "modulate:a", 0.0, 0.3)
-			await fade.finished
-			merlin_text.modulate.a = 1.0
-
-	_run_phase(Phase.OGHAM_REVEAL)
-
-
-func _try_llm_commentary() -> String:
-	## Attempt LLM-generated Merlin commentary with timeout. Returns "" on failure.
-	if merlin_ai == null or not merlin_ai.is_ready:
-		return ""
-
-	var gm := get_node_or_null("/root/GameManager")
-	var archetype: String = ""
-	if gm:
-		archetype = str(gm.get("archetype_title")) if gm.get("archetype_title") is String else ""
-
-	var system_prompt := "Tu es Merlin le druide. Un voyageur vient d'arriver dans ton antre avec sa Bestiole. Commente la scene en 1-2 phrases, ton amuse et bienveillant. Reponds en francais uniquement."
-	var user_input := "Le voyageur est un %s. Sa Bestiole vient d'apparaitre." % [archetype if archetype != "" else "druide"]
-
-	# Race with timeout
-	var _done := false
-	var _result := {}
-	var _do := func():
-		_result = await merlin_ai.generate_narrative(system_prompt, user_input, {"max_tokens": 80})
-		_done = true
-	_do.call()
-
-	var elapsed := 0.0
-	while not _done and elapsed < 10.0:
-		if not is_inside_tree():
-			return ""
-		await get_tree().create_timer(0.25).timeout
-		elapsed += 0.25
-
-	if not _done or _result.has("error"):
-		return ""
-
-	var text: String = str(_result.get("text", ""))
-	if text.length() < 5:
-		return ""
-
-	return text
-
-
-## LLM rephrase — rewrite scripted text with same meaning but LLM voice
-func _llm_rephrase(scripted_text: String, emotion: String = "", _context: String = "") -> String:
-	if merlin_ai == null or not merlin_ai.is_ready:
-		return scripted_text
-
-	var system := "Tu es Merlin le druide. Reformule cette phrase en gardant exactement le meme sens et la meme intention."
-	if emotion != "":
-		system += " Emotion: %s." % emotion
-	system += " 1-2 phrases maximum. Francais uniquement. Ne dis rien d'autre que la reformulation."
-	var user_input := scripted_text
-
-	var _done := false
-	var _result := {}
-	var _do := func():
-		_result = await merlin_ai.generate_voice(system, user_input, {"max_tokens": 80, "temperature": 0.7})
-		_done = true
-	_do.call()
-
-	var elapsed := 0.0
-	while not _done and elapsed < 5.0:
-		if not is_inside_tree():
-			return scripted_text
-		await get_tree().create_timer(0.2).timeout
-		elapsed += 0.2
-
-	if not _done or _result.has("error"):
-		return scripted_text
-
-	var text: String = str(_result.get("text", "")).strip_edges()
-	# Guardrails: minimum length, no empty
-	if text.length() < 10:
-		return scripted_text
-	return text
-
-
-## LLM generate 3 player responses to a Merlin line
-func _llm_generate_responses(context_line: String, line_index: int) -> Array[String]:
-	if merlin_ai == null or not merlin_ai.is_ready:
-		return _get_fallback_responses(line_index)
-
-	var system := "Tu es l'assistant d'un jeu narratif. Merlin vient de dire une phrase au joueur. Genere exactement 3 reponses courtes que le joueur pourrait donner. Reponds UNIQUEMENT avec un JSON array de 3 strings en francais. Exemple: [\"Reponse 1\", \"Reponse 2\", \"Reponse 3\"]"
-	var user_input := "Merlin dit: \"%s\"" % context_line
-
-	var _done := false
-	var _result := {}
-	var _do := func():
-		_result = await merlin_ai.generate_narrative(system, user_input, {"max_tokens": 100, "temperature": 0.6})
-		_done = true
-	_do.call()
-
-	var elapsed := 0.0
-	while not _done and elapsed < 8.0:
-		if not is_inside_tree():
-			return _get_fallback_responses(line_index)
-		await get_tree().create_timer(0.2).timeout
-		elapsed += 0.2
-
-	if not _done or _result.has("error"):
-		return _get_fallback_responses(line_index)
-
-	var raw_text: String = str(_result.get("text", ""))
-	# Parse JSON array
-	var json := JSON.new()
-	if json.parse(raw_text) == OK and json.data is Array:
-		var arr: Array = json.data
-		if arr.size() >= 3:
-			var out: Array[String] = []
-			for i in range(3):
-				out.append(str(arr[i]).strip_edges())
-			return out
-
-	# Try extracting JSON from mixed output (LLM may wrap in text)
-	var bracket_start := raw_text.find("[")
-	var bracket_end := raw_text.rfind("]")
-	if bracket_start >= 0 and bracket_end > bracket_start:
-		var json_slice := raw_text.substr(bracket_start, bracket_end - bracket_start + 1)
-		if json.parse(json_slice) == OK and json.data is Array:
-			var arr: Array = json.data
-			if arr.size() >= 3:
-				var out: Array[String] = []
-				for i in range(3):
-					out.append(str(arr[i]).strip_edges())
-				return out
-
-	return _get_fallback_responses(line_index)
-
-
-## Prefetch rephrase for next line (non-blocking, stores result for later)
-func _prefetch_rephrase(lines: Array, next_idx: int) -> void:
-	if next_idx >= lines.size():
-		return
-	if _prefetched_rephrase.has(next_idx):
-		return
-	var line: Dictionary = lines[next_idx] if lines[next_idx] is Dictionary else {"text": str(lines[next_idx])}
-	var text: String = line.get("text", "")
-	var emotion: String = line.get("emotion", "")
-	# Fire and forget — result stored in dict
-	var rephrased := await _llm_rephrase(text, emotion)
-	_prefetched_rephrase[next_idx] = rephrased
-
-
-## Get rephrased text (use prefetch if available, else rephrase now)
-func _get_rephrased_line(lines: Array, idx: int) -> String:
-	if _prefetched_rephrase.has(idx):
-		var result: String = _prefetched_rephrase[idx]
-		_prefetched_rephrase.erase(idx)
-		return result
-	var line: Dictionary = lines[idx] if lines[idx] is Dictionary else {"text": str(lines[idx])}
-	return await _llm_rephrase(line.get("text", ""), line.get("emotion", ""))
-
-
-## Phase 4: Ogham reveal with panel
-func _phase_ogham_reveal() -> void:
-	_set_mood("sage")
-	var line_data: Dictionary = dialogue_data.get("ogham_reveal", {}).get("line", {})
-	var text: String = line_data.get("text", "Trois Oghams pour commencer ton chemin.")
-
-	await _show_text(text)
 	if not is_inside_tree():
 		return
 
-	# Show ogham panel with animation
+	# Interactive response after intro context
+	var fade2 := create_tween()
+	fade2.tween_property(merlin_text, "modulate:a", 0.0, 0.15)
+	await fade2.finished
+	merlin_text.modulate.a = 1.0
+	await _show_response_blocks(1, "Merlin t'a presente le monde et la Triade.")
+
+	# Save eveil flag
+	if gm and gm.has_method("set"):
+		gm.set("eveil_seen", true)
+
+	_run_phase(Phase.BESTIOLE_REVEAL)
+
+
+## Phase 2: Bestiole Reveal — Bestiole appears + Ogham reveal (merged)
+func _phase_bestiole_reveal() -> void:
+	_set_mood("amuse")
+
+	# Try LLM for bestiole narration
+	var llm_text: String = await _llm_generate_from_rag(RAG_BESTIOLE)
+
+	if llm_text != "":
+		_update_dialogue_badge("llm")
+		await _show_text(llm_text)
+		if not is_inside_tree():
+			return
+		await get_tree().create_timer(0.15).timeout
+		skip_hint.visible = true
+		_advance_requested = false
+		await _wait_for_advance(15.0)
+		skip_hint.visible = false
+	else:
+		# Fallback
+		var lines: Array = dialogue_data.get("bestiole_apparition", {}).get("lines", [])
+		if lines.is_empty():
+			lines = [
+				{"text": "Ta Bestiole apparait dans la brume, timide et lumineuse."},
+			]
+		_prefetched_rephrase.clear()
+		_prefetched_rephrase_sources.clear()
+		_prefetch_rephrase(lines, 0)
+		for i in range(lines.size()):
+			if not is_inside_tree():
+				return
+			var text: String = await _get_rephrased_line(lines, i)
+			_update_dialogue_badge(_last_rephrase_source)
+			if i + 1 < lines.size():
+				_prefetch_rephrase(lines, i + 1)
+			await _show_text(text)
+			if not is_inside_tree():
+				return
+			await get_tree().create_timer(0.3).timeout
+			skip_hint.visible = true
+			_advance_requested = false
+			await _wait_for_advance(15.0)
+			skip_hint.visible = false
+			if i < lines.size() - 1:
+				var fade := create_tween()
+				fade.tween_property(merlin_text, "modulate:a", 0.0, 0.15)
+				await fade.finished
+				merlin_text.modulate.a = 1.0
+
+	if not is_inside_tree():
+		return
+
+	# Ogham reveal — static text from JSON
+	_update_dialogue_badge("static")
+	_set_mood("sage")
+	var ogham_line: String = dialogue_data.get("ogham_reveal", {}).get("line", {}).get("text", "Trois Oghams pour commencer ton chemin.")
+	var fade_pre := create_tween()
+	fade_pre.tween_property(merlin_text, "modulate:a", 0.0, 0.15)
+	await fade_pre.finished
+	merlin_text.modulate.a = 1.0
+
+	await _show_text(ogham_line)
+	if not is_inside_tree():
+		return
+
+	# Show ogham panel
 	SFXManager.play("flash_boom")
 	ogham_panel.visible = true
 	_layout_ui()
@@ -966,55 +824,227 @@ func _phase_ogham_reveal() -> void:
 	skip_hint.visible = false
 
 	# Hide ogham panel
-	var hide := create_tween()
-	hide.tween_property(ogham_panel, "modulate:a", 0.0, 0.4)
-	await hide.finished
+	var hide_tw := create_tween()
+	hide_tw.tween_property(ogham_panel, "modulate:a", 0.0, 0.4)
+	await hide_tw.finished
 	ogham_panel.visible = false
 
 	_run_phase(Phase.MISSION_BRIEFING)
 
 
-## Phase 5: Mission briefing (LLM-rephrased)
+## LLM generate from RAG prompt — returns full narrative text or "" on failure
+func _llm_generate_from_rag(rag_prompt: String) -> String:
+	if merlin_ai == null or not merlin_ai.is_ready:
+		return ""
+	if not merlin_ai.has_method("generate_narrative"):
+		return ""
+
+	_show_llm_waiting()
+	var result: Dictionary = await merlin_ai.generate_narrative(rag_prompt, "Genere le texte.", {"max_tokens": 80, "temperature": 0.7})
+	_hide_llm_waiting()
+
+	if result.has("error"):
+		return ""
+	var text: String = str(result.get("text", "")).strip_edges()
+	if text.length() < 15:
+		return ""
+	return text
+
+
+## LLM rephrase — rewrite scripted text with same meaning but LLM voice
+func _llm_rephrase(scripted_text: String, emotion: String = "", _context: String = "") -> String:
+	if merlin_ai == null or not merlin_ai.is_ready:
+		_last_rephrase_source = "fallback"
+		return scripted_text
+
+	var system := "Tu es Merlin le druide. Reformule cette phrase en gardant exactement le meme sens et la meme intention."
+	if emotion != "":
+		system += " Emotion: %s." % emotion
+	system += " 1-2 phrases maximum. Francais uniquement. Ne dis rien d'autre que la reformulation."
+	var user_input := scripted_text
+
+	var _done := false
+	var _result := {}
+	var _do := func():
+		_result = await merlin_ai.generate_voice(system, user_input, {"max_tokens": 40, "temperature": 0.7})
+		_done = true
+	_do.call()
+
+	var elapsed := 0.0
+	while not _done and elapsed < 5.0:
+		if not is_inside_tree():
+			_last_rephrase_source = "fallback"
+			return scripted_text
+		await get_tree().create_timer(0.2).timeout
+		elapsed += 0.2
+
+	if not _done or _result.has("error"):
+		_last_rephrase_source = "fallback"
+		return scripted_text
+
+	var text: String = str(_result.get("text", "")).strip_edges()
+	# Guardrails: minimum length, no empty
+	if text.length() < 10:
+		_last_rephrase_source = "fallback"
+		return scripted_text
+	_last_rephrase_source = "llm"
+	return text
+
+
+## LLM generate 3 player responses to a Merlin line
+func _llm_generate_responses(context_line: String, line_index: int) -> Array[String]:
+	if merlin_ai == null or not merlin_ai.is_ready:
+		_last_response_source = "fallback"
+		return _get_fallback_responses(line_index)
+
+	var system := "Tu es l'assistant d'un jeu narratif. Genere 3 reponses courtes (5-10 mots chacune) du joueur a Merlin. JSON array de 3 strings. Francais."
+	var user_input := "Merlin dit: \"%s\"" % context_line
+
+	var _done := false
+	var _result := {}
+	var _do := func():
+		_result = await merlin_ai.generate_narrative(system, user_input, {"max_tokens": 60, "temperature": 0.6})
+		_done = true
+	_do.call()
+
+	var elapsed := 0.0
+	while not _done and elapsed < 5.0:
+		if not is_inside_tree():
+			return _get_fallback_responses(line_index)
+		await get_tree().create_timer(0.2).timeout
+		elapsed += 0.2
+
+	if not _done or _result.has("error"):
+		_last_response_source = "fallback"
+		return _get_fallback_responses(line_index)
+
+	var raw_text: String = str(_result.get("text", ""))
+	# Parse JSON array
+	var json := JSON.new()
+	if json.parse(raw_text) == OK and json.data is Array:
+		var arr: Array = json.data
+		if arr.size() >= 3:
+			var out: Array[String] = []
+			for i in range(3):
+				out.append(str(arr[i]).strip_edges())
+			_last_response_source = "llm"
+			return out
+
+	# Try extracting JSON from mixed output (LLM may wrap in text)
+	var bracket_start := raw_text.find("[")
+	var bracket_end := raw_text.rfind("]")
+	if bracket_start >= 0 and bracket_end > bracket_start:
+		var json_slice := raw_text.substr(bracket_start, bracket_end - bracket_start + 1)
+		if json.parse(json_slice) == OK and json.data is Array:
+			var arr: Array = json.data
+			if arr.size() >= 3:
+				var out: Array[String] = []
+				for i in range(3):
+					out.append(str(arr[i]).strip_edges())
+				_last_response_source = "llm"
+				return out
+
+	_last_response_source = "fallback"
+	return _get_fallback_responses(line_index)
+
+
+## Prefetch rephrase for next line (non-blocking, stores result for later)
+func _prefetch_rephrase(lines: Array, next_idx: int) -> void:
+	if next_idx >= lines.size():
+		return
+	if _prefetched_rephrase.has(next_idx):
+		return
+	var line: Dictionary = lines[next_idx] if lines[next_idx] is Dictionary else {"text": str(lines[next_idx])}
+	var text: String = line.get("text", "")
+	var emotion: String = line.get("emotion", "")
+	# Fire and forget — result stored in dict
+	var rephrased := await _llm_rephrase(text, emotion)
+	_prefetched_rephrase[next_idx] = rephrased
+	_prefetched_rephrase_sources[next_idx] = _last_rephrase_source
+
+
+## Get rephrased text (use prefetch if available, else rephrase now)
+func _get_rephrased_line(lines: Array, idx: int) -> String:
+	if _prefetched_rephrase.has(idx):
+		var result: String = _prefetched_rephrase[idx]
+		_prefetched_rephrase.erase(idx)
+		# Restore source from prefetch
+		_last_rephrase_source = _prefetched_rephrase_sources.get(idx, "fallback")
+		_prefetched_rephrase_sources.erase(idx)
+		return result
+	var line: Dictionary = lines[idx] if lines[idx] is Dictionary else {"text": str(lines[idx])}
+	return await _llm_rephrase(line.get("text", ""), line.get("emotion", ""))
+
+
+## Phase 3: Mission Briefing — Mission + Hub tour (RAG-guided)
 func _phase_mission_briefing() -> void:
 	_set_mood("serieux")
-	var lines: Array = dialogue_data.get("mission_briefing", {}).get("lines", [])
-	if lines.is_empty():
-		lines = [
-			{"text": "Ecoute bien. Le monde est fragile."},
-			{"text": "Corps, Ame, Monde — trois aspects a equilibrer."},
-			{"text": "Chaque choix pese. Chaque carte compte."},
-			{"text": "Mais tu n'es pas seul. Je serai la."},
-		]
 
-	_prefetched_rephrase.clear()
-	_prefetch_rephrase(lines, 0)
+	# Try LLM with RAG hub tour context
+	var llm_text: String = await _llm_generate_from_rag(RAG_MISSION_HUB)
 
-	for i in range(lines.size()):
+	if llm_text != "":
+		_update_dialogue_badge("llm")
+		await _show_text(llm_text)
 		if not is_inside_tree():
 			return
-		var text: String = await _get_rephrased_line(lines, i)
-		if i + 1 < lines.size():
-			_prefetch_rephrase(lines, i + 1)
-
-		await _show_text(text)
-		if not is_inside_tree():
-			return
-		await get_tree().create_timer(0.3).timeout
+		await get_tree().create_timer(0.15).timeout
 		skip_hint.visible = true
 		_advance_requested = false
-		await _wait_for_advance(20.0)
+		await _wait_for_advance(30.0)
 		skip_hint.visible = false
+	else:
+		# Fallback: scripted mission lines + hub explanation
+		var lines: Array = dialogue_data.get("mission_briefing", {}).get("lines", [])
+		if lines.is_empty():
+			lines = [
+				{"text": "Carte, Oghams, sauvegardes — tout t'attend dans l'Antre."},
+				{"text": "Tu n'es pas seul. Je serai la."},
+			]
+		_prefetched_rephrase.clear()
+		_prefetched_rephrase_sources.clear()
+		_prefetch_rephrase(lines, 0)
 
-		if i < lines.size() - 1:
-			var fade := create_tween()
-			fade.tween_property(merlin_text, "modulate:a", 0.0, 0.3)
-			await fade.finished
-			merlin_text.modulate.a = 1.0
+		for i in range(lines.size()):
+			if not is_inside_tree():
+				return
+			var text: String = await _get_rephrased_line(lines, i)
+			_update_dialogue_badge(_last_rephrase_source)
+			if i + 1 < lines.size():
+				_prefetch_rephrase(lines, i + 1)
+			await _show_text(text)
+			if not is_inside_tree():
+				return
+			await get_tree().create_timer(0.3).timeout
+			skip_hint.visible = true
+			_advance_requested = false
+			await _wait_for_advance(20.0)
+			skip_hint.visible = false
+			if i < lines.size() - 1:
+				var fade := create_tween()
+				fade.tween_property(merlin_text, "modulate:a", 0.0, 0.15)
+				await fade.finished
+				merlin_text.modulate.a = 1.0
 
-	_run_phase(Phase.BIOME_SELECTION)
+	if not is_inside_tree():
+		return
+
+	# Interactive response after mission briefing
+	var fade2 := create_tween()
+	fade2.tween_property(merlin_text, "modulate:a", 0.0, 0.15)
+	await fade2.finished
+	merlin_text.modulate.a = 1.0
+	await _show_response_blocks(3, "Merlin t'a explique la mission et le Hub.")
+
+	# Default biome = foret_broceliande (biome selection moved to HubAntre)
+	var gm2 := get_node_or_null("/root/GameManager")
+	if gm2 and gm2.has_method("set"):
+		gm2.set("selected_biome", "foret_broceliande")
+
+	_run_phase(Phase.TRANSITIONING)
 
 
-## Phase 6: Biome selection
+## Phase 4: Biome selection
 func _phase_biome_selection() -> void:
 	_set_mood("warm")
 
@@ -1087,6 +1117,18 @@ func _on_biome_selected(key: String) -> void:
 # TYPEWRITER
 # ═══════════════════════════════════════════════════════════════════════════════
 
+func _update_dialogue_badge(source: String) -> void:
+	if _dialogue_source_badge and is_instance_valid(_dialogue_source_badge):
+		LLMSourceBadge.update_badge(_dialogue_source_badge, source)
+		_dialogue_source_badge.visible = true
+
+
+func _update_response_badge(source: String) -> void:
+	if _response_source_badge and is_instance_valid(_response_source_badge):
+		LLMSourceBadge.update_badge(_response_source_badge, source)
+		_response_source_badge.visible = true
+
+
 func _show_text(text: String) -> void:
 	text = text.replace("[long_pause]", "").replace("[pause]", "").replace("[beat]", "").strip_edges()
 	typing_active = true
@@ -1118,6 +1160,27 @@ func _skip_typewriter() -> void:
 		merlin_text.visible_characters = -1
 
 
+func _show_llm_waiting() -> void:
+	## Show pulsing "..." while LLM generates text.
+	if not merlin_text or not is_instance_valid(merlin_text):
+		return
+	merlin_text.text = "..."
+	merlin_text.visible_characters = -1
+	if _llm_wait_tween:
+		_llm_wait_tween.kill()
+	_llm_wait_tween = create_tween().set_loops()
+	_llm_wait_tween.tween_property(merlin_text, "modulate:a", 0.3, 0.6).set_trans(Tween.TRANS_SINE)
+	_llm_wait_tween.tween_property(merlin_text, "modulate:a", 1.0, 0.6).set_trans(Tween.TRANS_SINE)
+
+
+func _hide_llm_waiting() -> void:
+	if _llm_wait_tween:
+		_llm_wait_tween.kill()
+		_llm_wait_tween = null
+	if merlin_text and is_instance_valid(merlin_text):
+		merlin_text.modulate.a = 1.0
+
+
 # ═══════════════════════════════════════════════════════════════════════════════
 # RESPONSE BLOCKS
 # ═══════════════════════════════════════════════════════════════════════════════
@@ -1131,6 +1194,7 @@ func _show_response_blocks(line_index: int, context_line: String = "") -> void:
 
 	# Try LLM-generated responses, fallback to static
 	var responses: Array[String] = await _llm_generate_responses(context_line, line_index)
+	_update_response_badge(_last_response_source)
 	for i in range(response_buttons.size()):
 		if i < responses.size():
 			response_buttons[i].text = responses[i]
@@ -1139,16 +1203,21 @@ func _show_response_blocks(line_index: int, context_line: String = "") -> void:
 		else:
 			response_buttons[i].visible = false
 
-	# Position from bottom of viewport to ensure all 3 buttons are visible
+	# Position buttons between card bottom and viewport bottom
 	var visible_count := mini(responses.size(), 3)
 	var total_h := visible_count * 44.0 + (visible_count - 1) * 10.0
-	response_container.position = Vector2((vp.x - rc_width) * 0.5, vp.y - total_h - 32.0)
+	var btn_area_top := card.position.y + card.size.y + 16.0
+	var btn_area_bottom := vp.y - 24.0
+	var available_h := btn_area_bottom - btn_area_top
+	var btn_y := btn_area_top + (available_h - total_h) * 0.5
+	btn_y = clampf(btn_y, btn_area_top, vp.y - total_h - 16.0)
+	response_container.position = Vector2((vp.x - rc_width) * 0.5, btn_y)
 	response_container.size.x = rc_width
 
 	response_container.visible = true
 	for i in range(visible_count):
 		var tw := create_tween()
-		tw.tween_property(response_buttons[i], "modulate:a", 1.0, 0.3).set_delay(i * 0.15)
+		tw.tween_property(response_buttons[i], "modulate:a", 1.0, 0.2).set_delay(i * 0.05)
 
 	while _response_chosen < 0 and not scene_finished:
 		if not is_inside_tree():

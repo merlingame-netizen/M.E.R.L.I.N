@@ -75,6 +75,17 @@ const BIOME_COLORS := {
 	},
 }
 
+# Biome-specific fog tint and behavior
+const FOG_CONFIG := {
+	"broceliande": {"tint": Color(0.82, 0.94, 0.84), "direction": Vector3(-0.5, -0.3, 0), "speed": 0.7},
+	"landes": {"tint": Color(0.92, 0.88, 0.94), "direction": Vector3(-1, 0.1, 0), "speed": 1.3},
+	"cotes": {"tint": Color(0.84, 0.92, 0.98), "direction": Vector3(-1, 0, 0), "speed": 1.5},
+	"villages": {"tint": Color(0.98, 0.94, 0.88), "direction": Vector3(0, -1, 0), "speed": 0.5},
+	"cercles": {"tint": Color(0.90, 0.90, 0.92), "direction": Vector3(0, 0, 0), "speed": 0.3},
+	"marais": {"tint": Color(0.88, 0.94, 0.88), "direction": Vector3(-0.3, 0.5, 0), "speed": 0.6},
+	"collines": {"tint": Color(0.94, 0.94, 0.88), "direction": Vector3(-0.7, -0.2, 0), "speed": 0.9},
+}
+
 # ═══════════════════════════════════════════════════════════════════════════════
 # NODES
 # ═══════════════════════════════════════════════════════════════════════════════
@@ -86,7 +97,11 @@ var biome_title: Label
 var biome_subtitle: Label
 var arrival_text: RichTextLabel
 var merlin_comment: RichTextLabel
+var _arrival_badge: PanelContainer
+var _merlin_badge: PanelContainer
 var mist_particles: GPUParticles2D
+var _mist_layers: Array = []  # Multi-layer fog system
+var _volumetric_fog: ColorRect  # Shader-based fog layer
 var audio_player: AudioStreamPlayer
 
 # ═══════════════════════════════════════════════════════════════════════════════
@@ -110,6 +125,17 @@ var voicebox: Node = null
 var voice_ready: bool = false
 # LLM
 var merlin_ai: Node = null
+# LLM Prefetch state
+var _prefetch_arrival: Dictionary = {}
+var _prefetch_merlin: Dictionary = {}
+var _seen_variants: Dictionary = {}
+var _last_arrival_text: String = ""
+
+
+func _exit_tree() -> void:
+	# Kill any active tweens to prevent "data.tree is null" errors
+	scene_finished = true
+	typing_abort = true
 
 
 func _ready() -> void:
@@ -121,10 +147,34 @@ func _ready() -> void:
 	await _setup_voicebox()
 	if not is_inside_tree():
 		return
-	await get_tree().create_timer(0.3).timeout
+	await _safe_wait(0.3)
 	if not is_inside_tree():
 		return
 	_play_transition()
+
+
+## Safe helpers — prevent crashes when node exits tree during await
+func _safe_wait(seconds: float) -> void:
+	if not is_inside_tree():
+		return
+	await get_tree().create_timer(seconds).timeout
+
+func _safe_frame() -> void:
+	if not is_inside_tree():
+		return
+	await get_tree().process_frame
+
+
+## Full key → short key mapping (HubAntre uses full keys, TransitionBiome uses short)
+const BIOME_KEY_MAP := {
+	"foret_broceliande": "broceliande",
+	"landes_bruyere": "landes",
+	"cotes_sauvages": "cotes",
+	"villages_celtes": "villages",
+	"cercles_pierres": "cercles",
+	"marais_korrigans": "marais",
+	"collines_dolmens": "collines",
+}
 
 
 func _load_data() -> void:
@@ -132,7 +182,9 @@ func _load_data() -> void:
 	var gm := get_node_or_null("/root/GameManager")
 	if gm:
 		var run_data: Dictionary = gm.get("run") if gm.get("run") is Dictionary else {}
-		biome_key = run_data.get("current_biome", "broceliande")
+		var raw_key: String = run_data.get("current_biome", "broceliande")
+		# Normalize full biome keys to short keys used by BIOME_COLORS and _generate_landscape
+		biome_key = BIOME_KEY_MAP.get(raw_key, raw_key)
 
 	if FileAccess.file_exists(DATA_PATH):
 		var file := FileAccess.open(DATA_PATH, FileAccess.READ)
@@ -143,13 +195,22 @@ func _load_data() -> void:
 			var data: Dictionary = json.data
 			biomes_all = data.get("biomes", {})
 
-	biome_data = biomes_all.get(biome_key, {
-		"name": "Terre Inconnue",
-		"subtitle": "L'Inconnu",
-		"arrival_text": "Tu arrives dans un lieu etrange.",
-		"merlin_comment": "Eh bien. C'est... quelque chose.",
-		"color": "#787870",
-	})
+	# Try both short and full keys for biome dialogue data
+	biome_data = biomes_all.get(biome_key, {})
+	if biome_data.is_empty():
+		# Try full key lookup in case dialogue data uses full keys
+		for full_key in BIOME_KEY_MAP:
+			if BIOME_KEY_MAP[full_key] == biome_key:
+				biome_data = biomes_all.get(full_key, {})
+				break
+	if biome_data.is_empty():
+		biome_data = {
+			"name": "Terre Inconnue",
+			"subtitle": "L'Inconnu",
+			"arrival_text": "Tu arrives dans un lieu etrange.",
+			"merlin_comment": "Eh bien. C'est... quelque chose.",
+			"color": "#787870",
+		}
 
 
 func _build_ui() -> void:
@@ -263,6 +324,12 @@ func _build_ui() -> void:
 	arrival_text.text = ""
 	add_child(arrival_text)
 
+	# Arrival source badge (dev indicator)
+	_arrival_badge = LLMSourceBadge.create("static")
+	_arrival_badge.position = Vector2(arrival_text.position.x + arrival_text.custom_minimum_size.x - 60, arrival_text.position.y - 18)
+	_arrival_badge.visible = false
+	add_child(_arrival_badge)
+
 	# Merlin comment
 	merlin_comment = RichTextLabel.new()
 	merlin_comment.bbcode_enabled = true
@@ -278,6 +345,12 @@ func _build_ui() -> void:
 	merlin_comment.visible_characters = 0
 	merlin_comment.text = ""
 	add_child(merlin_comment)
+
+	# Merlin source badge (dev indicator)
+	_merlin_badge = LLMSourceBadge.create("static")
+	_merlin_badge.position = Vector2(merlin_comment.position.x + merlin_comment.custom_minimum_size.x - 60, merlin_comment.position.y - 18)
+	_merlin_badge.visible = false
+	add_child(_merlin_badge)
 
 	# Audio
 	audio_player = AudioStreamPlayer.new()
@@ -301,24 +374,106 @@ func _make_celtic_ornament() -> Label:
 
 
 func _create_mist_particles() -> void:
-	mist_particles = GPUParticles2D.new()
-	mist_particles.amount = 30
-	mist_particles.lifetime = 4.0
+	## Multi-layer volumetric fog system with biome-specific tinting.
 	var vs := get_viewport_rect().size
-	mist_particles.position = Vector2(vs.x / 2.0, vs.y / 2.0)
-	mist_particles.emitting = false
+	var fog_cfg: Dictionary = FOG_CONFIG.get(biome_key, FOG_CONFIG.broceliande)
+	var fog_tint: Color = fog_cfg.get("tint", PALETTE.mist)
+	var fog_dir: Vector3 = fog_cfg.get("direction", Vector3(-1, 0, 0))
+	var fog_speed: float = fog_cfg.get("speed", 1.0)
 
-	var mat := ParticleProcessMaterial.new()
-	mat.direction = Vector3(-1, 0, 0)
-	mat.spread = 30.0
-	mat.initial_velocity_min = 20.0
-	mat.initial_velocity_max = 60.0
-	mat.gravity = Vector3.ZERO
-	mat.scale_min = 2.0
-	mat.scale_max = 5.0
-	mat.color = PALETTE.mist
-	mist_particles.process_material = mat
-	add_child(mist_particles)
+	# Create soft circular gradient texture for particles
+	var soft_tex := _create_soft_fog_texture(64)
+
+	# Layer definitions: [amount, lifetime, scale_min, scale_max, vel_min, vel_max, opacity, z_index]
+	var layers := [
+		[20, 6.0, 8.0, 15.0, 10.0, 25.0, 0.40, -2],  # Back: large, slow
+		[30, 4.5, 5.0, 10.0, 20.0, 50.0, 0.30, -1],  # Mid: medium, moderate
+		[15, 3.0, 3.0, 6.0, 35.0, 70.0, 0.20, 0],     # Front: small, fast
+	]
+
+	_mist_layers.clear()
+	for layer_def in layers:
+		var particles := GPUParticles2D.new()
+		particles.amount = int(layer_def[0])
+		particles.lifetime = float(layer_def[1])
+		particles.position = Vector2(vs.x / 2.0, vs.y * 0.55)
+		particles.emitting = false
+		particles.z_index = int(layer_def[7])
+		particles.texture = soft_tex
+
+		var mat := ParticleProcessMaterial.new()
+		mat.direction = fog_dir
+		mat.spread = 25.0
+		mat.initial_velocity_min = float(layer_def[4]) * fog_speed
+		mat.initial_velocity_max = float(layer_def[5]) * fog_speed
+		mat.gravity = Vector3.ZERO
+		mat.scale_min = float(layer_def[2])
+		mat.scale_max = float(layer_def[3])
+		var layer_color := Color(fog_tint.r, fog_tint.g, fog_tint.b, float(layer_def[6]))
+		mat.color = layer_color
+
+		particles.process_material = mat
+		add_child(particles)
+		_mist_layers.append(particles)
+
+	# Keep first layer reference for legacy compatibility
+	mist_particles = _mist_layers[0] if _mist_layers.size() > 0 else null
+
+	# Shader-based volumetric fog background
+	_volumetric_fog = ColorRect.new()
+	_volumetric_fog.set_anchors_preset(Control.PRESET_FULL_RECT)
+	_volumetric_fog.z_index = -3
+	_volumetric_fog.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	var fog_shader := Shader.new()
+	fog_shader.code = """shader_type canvas_item;
+uniform vec4 fog_color : source_color = vec4(0.94, 0.92, 0.88, 0.15);
+uniform float fog_density : hint_range(0.0, 1.0) = 0.25;
+uniform float time_scale : hint_range(0.0, 2.0) = 0.3;
+float hash(vec2 p) {
+	return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453);
+}
+float noise(vec2 p) {
+	vec2 i = floor(p); vec2 f = fract(p);
+	float a = hash(i); float b = hash(i + vec2(1.0, 0.0));
+	float c = hash(i + vec2(0.0, 1.0)); float d = hash(i + vec2(1.0, 1.0));
+	vec2 u = f * f * (3.0 - 2.0 * f);
+	return mix(a, b, u.x) + (c - a) * u.y * (1.0 - u.x) + (d - b) * u.x * u.y;
+}
+void fragment() {
+	vec2 uv = UV;
+	float t = TIME * time_scale;
+	float n = noise(uv * 4.0 + vec2(t * 0.5, t * 0.3));
+	n += noise(uv * 8.0 - vec2(t * 0.3, t * 0.2)) * 0.5;
+	n = n / 1.5;
+	float vertical_grad = smoothstep(0.0, 0.6, uv.y);
+	float fog = n * fog_density * vertical_grad;
+	COLOR = vec4(fog_color.rgb, fog_color.a * fog);
+}
+"""
+	var fog_mat := ShaderMaterial.new()
+	fog_mat.shader = fog_shader
+	fog_mat.set_shader_parameter("fog_color", Color(fog_tint.r, fog_tint.g, fog_tint.b, 0.2))
+	fog_mat.set_shader_parameter("fog_density", 0.3)
+	fog_mat.set_shader_parameter("time_scale", 0.3)
+	_volumetric_fog.material = fog_mat
+	_volumetric_fog.modulate.a = 0.0
+	add_child(_volumetric_fog)
+
+
+func _create_soft_fog_texture(tex_size: int) -> GradientTexture2D:
+	## Create a soft circular gradient for fog particles.
+	var gradient := Gradient.new()
+	gradient.add_point(0.0, Color(1, 1, 1, 1.0))
+	gradient.add_point(0.5, Color(1, 1, 1, 0.5))
+	gradient.add_point(1.0, Color(1, 1, 1, 0.0))
+	var texture := GradientTexture2D.new()
+	texture.gradient = gradient
+	texture.fill = GradientTexture2D.FILL_RADIAL
+	texture.fill_from = Vector2(0.5, 0.5)
+	texture.fill_to = Vector2(1.0, 0.5)
+	texture.width = tex_size
+	texture.height = tex_size
+	return texture
 
 
 func _setup_audio() -> void:
@@ -337,7 +492,7 @@ func _setup_voicebox() -> void:
 				voicebox.set("pitch_variation", 0.15)
 				voicebox.set("speed_scale", 0.85)
 				add_child(voicebox)
-				await get_tree().process_frame
+				await _safe_frame()
 				if voicebox.has_method("is_ready") and voicebox.is_ready():
 					voice_ready = true
 				else:
@@ -561,6 +716,11 @@ func _play_transition() -> void:
 	if screen_fx and screen_fx.has_method("set_merlin_mood"):
 		screen_fx.set_merlin_mood("mystique")
 
+	# Start LLM prefetch immediately — runs in parallel with animations
+	_prefetch_arrival = {"done": false, "text": ""}
+	_prefetch_merlin = {"done": false, "text": ""}
+	_start_llm_prefetch()
+
 	# Phase 1: Brume — mist + scout pixels
 	await _phase_brume()
 
@@ -573,31 +733,33 @@ func _play_transition() -> void:
 	# Phase 4: Sentier — ink path traces through landscape
 	await _phase_sentier()
 
-	# Phase 5: Voix — LLM narration with JSON fallback
+	# Phase 5: Voix — consume prefetch results (generated during animations)
 	if screen_fx and screen_fx.has_method("set_merlin_mood"):
-		screen_fx.set_merlin_mood("narrateur")
+		screen_fx.set_merlin_mood("sage")
 
-	var biome_name: String = biome_data.get("name", "Terre Inconnue")
-	var llm_arrival := await _try_llm_transition_text(
-		"Tu es le narrateur d'un jeu celtique. Le voyageur arrive dans %s. Decris l'ambiance en 1-2 phrases poetiques. Francais uniquement." % biome_name,
-		"Biome: %s. Le voyageur decouvre ce lieu pour la premiere fois." % biome_name
-	)
-	var text: String = llm_arrival if llm_arrival != "" else biome_data.get("arrival_text", "")
-	await _show_typewriter(arrival_text, text)
-	await get_tree().create_timer(0.3).timeout
+	var arrival_result: Dictionary = await _consume_prefetch(_prefetch_arrival, "arrival")
+	var arrival_str: String = arrival_result.get("text", "")
+	_last_arrival_text = arrival_str
+	# Show source badge
+	if _arrival_badge and is_instance_valid(_arrival_badge):
+		LLMSourceBadge.update_badge(_arrival_badge, arrival_result.get("source", "static"))
+		_arrival_badge.visible = true
+	await _show_typewriter(arrival_text, arrival_str)
+	await _safe_wait(0.3)
 	_advance_requested = false
 	await _wait_for_advance(30.0)
 
 	if screen_fx and screen_fx.has_method("set_merlin_mood"):
 		screen_fx.set_merlin_mood("amuse")
 
-	var llm_comment := await _try_llm_transition_text(
-		"Tu es Merlin le druide. Commente l'arrivee du voyageur dans %s en 1 phrase, ton amuse. Francais uniquement." % biome_name,
-		"Le voyageur arrive dans %s." % biome_name
-	)
-	var comment: String = llm_comment if llm_comment != "" else biome_data.get("merlin_comment", "")
-	await _show_typewriter(merlin_comment, comment)
-	await get_tree().create_timer(0.3).timeout
+	var merlin_result: Dictionary = await _consume_prefetch(_prefetch_merlin, "merlin")
+	var merlin_str: String = merlin_result.get("text", "")
+	# Show source badge
+	if _merlin_badge and is_instance_valid(_merlin_badge):
+		LLMSourceBadge.update_badge(_merlin_badge, merlin_result.get("source", "static"))
+		_merlin_badge.visible = true
+	await _show_typewriter(merlin_comment, merlin_str)
+	await _safe_wait(0.3)
 	_advance_requested = false
 	await _wait_for_advance(30.0)
 
@@ -608,7 +770,14 @@ func _play_transition() -> void:
 # — Phase 1: Brume ——————————————————————————————————————————————————————————
 
 func _phase_brume() -> void:
-	mist_particles.emitting = true
+	# Activate all fog layers
+	for layer in _mist_layers:
+		if is_instance_valid(layer):
+			layer.emitting = true
+	# Fade in volumetric fog shader
+	if _volumetric_fog:
+		var fog_tw := create_tween()
+		fog_tw.tween_property(_volumetric_fog, "modulate:a", 1.0, 1.5)
 	SFXManager.play("mist_breath")
 
 	var vs := get_viewport_rect().size
@@ -635,9 +804,9 @@ func _phase_brume() -> void:
 		tw.tween_property(px, "modulate:a", 0.0, 0.3)
 		tw.tween_callback(px.queue_free)
 
-		await get_tree().create_timer(0.06).timeout
+		await _safe_wait(0.06)
 
-	await get_tree().create_timer(0.4).timeout
+	await _safe_wait(0.4)
 
 
 # — Phase 2: Emergence ——————————————————————————————————————————————————————
@@ -705,10 +874,10 @@ func _phase_emergence() -> void:
 		# Stagger: batch of 4 pixels, then tiny delay
 		if i % 4 == 3:
 			SFXManager.play_varied("pixel_land", 0.2)
-			await get_tree().create_timer(0.025).timeout
+			await _safe_wait(0.025)
 
 	# Settle
-	await get_tree().create_timer(0.4).timeout
+	await _safe_wait(0.4)
 
 	# Subtle glow pulse on completed landscape
 	var glow := create_tween()
@@ -729,7 +898,27 @@ func _phase_revelation() -> void:
 	tw.tween_property(biome_title, "modulate:a", 1.0, 0.8)
 	tw.tween_property(biome_subtitle, "modulate:a", 1.0, 0.6)
 	await tw.finished
-	await get_tree().create_timer(0.5).timeout
+	await _safe_wait(0.3)
+
+	# Camera zoom into landscape using Control.scale
+	await _zoom_into_landscape()
+
+
+func _zoom_into_landscape() -> void:
+	## Cinematic zoom into the pixel landscape (1.0 → 1.4x).
+	if pixel_container == null:
+		await _safe_wait(0.5)
+		return
+	var total_w := GRID_W * _pixel_size
+	var total_h := GRID_H * _pixel_size
+	pixel_container.pivot_offset = _landscape_origin + Vector2(total_w / 2.0, total_h / 2.0)
+
+	SFXManager.play("camera_focus")
+	var zoom_tw := create_tween()
+	zoom_tw.set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_IN_OUT)
+	zoom_tw.tween_property(pixel_container, "scale", Vector2(1.4, 1.4), 1.5)
+	await zoom_tw.finished
+	await _safe_wait(0.3)
 
 
 # — Phase 4: Sentier ———————————————————————————————————————————————————————
@@ -759,7 +948,7 @@ func _phase_sentier() -> void:
 		if i % 7 == 0:
 			SFXManager.play_varied("path_scratch", 0.15)
 
-		await get_tree().create_timer(0.022).timeout
+		await _safe_wait(0.022)
 
 	# Diamond marker at end
 	var end_marker := _make_diamond(
@@ -767,7 +956,7 @@ func _phase_sentier() -> void:
 	)
 	add_child(end_marker)
 	SFXManager.play("landmark_pop")
-	await get_tree().create_timer(0.3).timeout
+	await _safe_wait(0.3)
 
 
 func _make_diamond(pos: Vector2, color: Color) -> ColorRect:
@@ -791,6 +980,12 @@ func _phase_dissolution() -> void:
 	SFXManager.play("scene_transition")
 	scene_finished = true
 
+	# Reset zoom before dissolving
+	if pixel_container and pixel_container.scale != Vector2.ONE:
+		var reset_tw := create_tween()
+		reset_tw.tween_property(pixel_container, "scale", Vector2.ONE, 0.3)
+		await reset_tw.finished
+
 	# Fade text and UI elements first
 	var text_tw := create_tween()
 	text_tw.set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_IN)
@@ -800,6 +995,8 @@ func _phase_dissolution() -> void:
 	text_tw.parallel().tween_property(biome_subtitle, "modulate:a", 0.0, 0.3)
 	if path_line:
 		text_tw.parallel().tween_property(path_line, "modulate:a", 0.0, 0.3)
+	if _volumetric_fog:
+		text_tw.parallel().tween_property(_volumetric_fog, "modulate:a", 0.0, 0.3)
 	await text_tw.finished
 
 	# Dissolve landscape — pixels fall away with gravity
@@ -821,15 +1018,16 @@ func _phase_dissolution() -> void:
 
 		# Stagger dissolution
 		if i % 6 == 5:
-			await get_tree().create_timer(0.015).timeout
+			await _safe_wait(0.015)
 
-	await get_tree().create_timer(0.6).timeout
+	await _safe_wait(0.6)
 
 	# Final screen fade
 	var final_tw := create_tween()
 	final_tw.tween_property(self, "modulate:a", 0.0, 0.5)
 	final_tw.tween_callback(func():
-		get_tree().change_scene_to_file(NEXT_SCENE)
+		if is_inside_tree():
+			get_tree().change_scene_to_file(NEXT_SCENE)
 	)
 
 
@@ -837,26 +1035,218 @@ func _phase_dissolution() -> void:
 # LLM NARRATION
 # ═══════════════════════════════════════════════════════════════════════════════
 
-func _try_llm_transition_text(system_prompt: String, user_input: String) -> String:
-	## Attempt LLM narration with 5s timeout. Returns "" on failure.
+# ═══════════════════════════════════════════════════════════════════════════════
+# LLM CONTEXT BUILDERS
+# ═══════════════════════════════════════════════════════════════════════════════
+
+func _build_llm_biome_context() -> String:
+	## Build a rich system prompt for the Narrator brain.
+	var parts: PackedStringArray = []
+	parts.append("Tu es le narrateur poetique d'un jeu celtique breton.")
+	parts.append("Biome: %s (%s)." % [biome_data.get("name", ""), biome_data.get("subtitle", "")])
+	parts.append("Gardien: %s. Ogham: %s. Saison: %s." % [
+		biome_data.get("gardien", ""), biome_data.get("ogham", ""), biome_data.get("saison", "")])
+	# Atmosphere sensorielle
+	var atmo: Dictionary = biome_data.get("atmosphere", {})
+	if not atmo.is_empty():
+		parts.append("Ambiance: sons=%s, odeurs=%s, lumiere=%s, mood=%s." % [
+			atmo.get("sounds", ""), atmo.get("smell", ""), atmo.get("light", ""), atmo.get("mood", "")])
+	# Player aspect states
+	var store: Node = get_node_or_null("/root/MerlinStore")
+	if store and store.has_method("get_all_aspects"):
+		var aspects: Dictionary = store.get_all_aspects()
+		var aspect_labels: PackedStringArray = []
+		for a in MerlinConstants.TRIADE_ASPECTS:
+			var st: int = int(aspects.get(a, 0))
+			var info: Dictionary = MerlinConstants.TRIADE_ASPECT_INFO.get(a, {})
+			var states_dict: Dictionary = info.get("states", {})
+			var state_name: String = str(states_dict.get(st, "?"))
+			aspect_labels.append("%s=%s" % [a, state_name])
+		parts.append("Etat du voyageur: %s." % ", ".join(aspect_labels))
+	# Day, tool, departure condition
+	var gm: Node = get_node_or_null("/root/GameManager")
+	if gm and "run" in gm:
+		var run: Dictionary = gm.run if gm.run is Dictionary else {}
+		var day: int = int(run.get("day", 1))
+		parts.append("Jour %d de l'expedition." % day)
+		var tool_id: String = str(run.get("tool", ""))
+		if tool_id != "" and MerlinConstants.EXPEDITION_TOOLS.has(tool_id):
+			parts.append("Outil: %s." % MerlinConstants.EXPEDITION_TOOLS[tool_id].get("name", ""))
+		var cond: String = str(run.get("departure_condition", ""))
+		if cond != "" and MerlinConstants.DEPARTURE_CONDITIONS.has(cond):
+			parts.append("Condition: %s." % MerlinConstants.DEPARTURE_CONDITIONS[cond].get("name", ""))
+	parts.append("Ecris 1-2 phrases poetiques en francais. Pas de guillemets.")
+	return "\n".join(parts)
+
+
+func _build_merlin_comment_context() -> String:
+	## Build system prompt for Merlin's comment (amused/sage tone).
+	var parts: PackedStringArray = []
+	parts.append("Tu es Merlin le druide, guide amuse et un peu cynique.")
+	parts.append("Biome: %s. Gardien: %s." % [biome_data.get("name", ""), biome_data.get("gardien", "")])
+	# Player aspect states
+	var store: Node = get_node_or_null("/root/MerlinStore")
+	if store and store.has_method("get_all_aspects"):
+		var aspects: Dictionary = store.get_all_aspects()
+		var aspect_labels: PackedStringArray = []
+		for a in MerlinConstants.TRIADE_ASPECTS:
+			var st: int = int(aspects.get(a, 0))
+			var info: Dictionary = MerlinConstants.TRIADE_ASPECT_INFO.get(a, {})
+			var states_dict: Dictionary = info.get("states", {})
+			var state_name: String = str(states_dict.get(st, "?"))
+			aspect_labels.append("%s=%s" % [a, state_name])
+		parts.append("Le voyageur est %s." % ", ".join(aspect_labels))
+	# Day and tool context
+	var gm: Node = get_node_or_null("/root/GameManager")
+	if gm and "run" in gm:
+		var run: Dictionary = gm.run if gm.run is Dictionary else {}
+		var day: int = int(run.get("day", 1))
+		parts.append("Jour %d." % day)
+		var tool_id: String = str(run.get("tool", ""))
+		if tool_id != "" and MerlinConstants.EXPEDITION_TOOLS.has(tool_id):
+			parts.append("Outil: %s." % MerlinConstants.EXPEDITION_TOOLS[tool_id].get("name", ""))
+	parts.append("Commente en 1 phrase avec ton amuse. Francais uniquement.")
+	return "\n".join(parts)
+
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# FALLBACK INTELLIGENT (JSON VARIANTS)
+# ═══════════════════════════════════════════════════════════════════════════════
+
+func _get_fallback_text(bkey: String) -> Dictionary:
+	## Returns {"arrival": "...", "merlin": "..."} from JSON variants.
+	## Selects category based on current aspect states.
+	var category := _detect_aspect_category()
+	var variants_dict: Dictionary = biome_data.get("variants", {})
+	var variants: Array = variants_dict.get(category, [])
+	if variants.is_empty():
+		# Try balanced as fallback category
+		variants = variants_dict.get("balanced", [])
+	if variants.is_empty():
+		# Ultimate fallback: old single-variant system
+		return {"arrival": biome_data.get("arrival_text", ""), "merlin": biome_data.get("merlin_comment", "")}
+	var idx: int = _pick_unseen_variant(bkey, category, variants.size())
+	var v: Dictionary = variants[idx]
+	return {"arrival": str(v.get("arrival", "")), "merlin": str(v.get("merlin", ""))}
+
+
+func _detect_aspect_category() -> String:
+	## Returns "balanced", "corps_extreme", "ame_extreme", or "monde_extreme".
+	var store: Node = get_node_or_null("/root/MerlinStore")
+	if not store or not store.has_method("get_aspect_state"):
+		return "balanced"
+	for a in ["Corps", "Ame", "Monde"]:
+		var st: int = store.get_aspect_state(a)
+		if st != MerlinConstants.AspectState.EQUILIBRE:
+			return a.to_lower() + "_extreme"
+	return "balanced"
+
+
+func _pick_unseen_variant(bkey: String, category: String, total: int) -> int:
+	## Returns variant index, preferring those not yet seen this session.
+	var seen_key := "%s_%s" % [bkey, category]
+	if not _seen_variants.has(seen_key):
+		_seen_variants[seen_key] = []
+	var seen: Array = _seen_variants[seen_key]
+	var unseen: Array = []
+	for i in range(total):
+		if i not in seen:
+			unseen.append(i)
+	if unseen.is_empty():
+		seen.clear()
+		for i in range(total):
+			unseen.append(i)
+	var idx: int = unseen[randi() % unseen.size()]
+	seen.append(idx)
+	return idx
+
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# LLM PREFETCH + VALIDATION
+# ═══════════════════════════════════════════════════════════════════════════════
+
+func _start_llm_prefetch() -> void:
+	## Fire-and-forget: starts both LLM calls in parallel while animations play.
 	if merlin_ai == null or not merlin_ai.is_ready:
-		return ""
-	var _done := false
-	var _result := {}
-	var _do := func():
-		_result = await merlin_ai.generate_narrative(system_prompt, user_input, {"max_tokens": 60})
-		_done = true
-	_do.call()
-	var elapsed := 0.0
-	while not _done and elapsed < 5.0:
+		_prefetch_arrival = {"done": true, "text": ""}
+		_prefetch_merlin = {"done": true, "text": ""}
+		return
+	# Arrival text
+	var sys_arrival := _build_llm_biome_context()
+	var usr_arrival := "Decris l'arrivee du voyageur dans ce biome."
+	_async_generate(_prefetch_arrival, sys_arrival, usr_arrival)
+	# Merlin comment
+	var sys_merlin := _build_merlin_comment_context()
+	var usr_merlin := "Commente l'arrivee du voyageur."
+	_async_generate(_prefetch_merlin, sys_merlin, usr_merlin)
+
+
+func _async_generate(state: Dictionary, system_prompt: String, user_input: String) -> void:
+	## Async LLM generation — updates state dict when done.
+	var result: Dictionary = await merlin_ai.generate_narrative(system_prompt, user_input, {"max_tokens": 80})
+	var text: String = str(result.get("text", ""))
+	# Validate the generated text
+	text = _validate_llm_text(text)
+	state["text"] = text
+	state["done"] = true
+
+
+func _consume_prefetch(state: Dictionary, fallback_type: String) -> Dictionary:
+	## Wait for prefetch result (max 3s extra), then return {"text": ..., "source": "llm"|"fallback"}.
+	var wait := 0.0
+	while not state.get("done", false) and wait < 3.0:
 		if not is_inside_tree():
-			return ""
-		await get_tree().create_timer(0.25).timeout
-		elapsed += 0.25
-	if not _done or _result.has("error"):
+			break
+		await _safe_wait(0.2)
+		wait += 0.2
+	var text: String = str(state.get("text", ""))
+	var source: String = ""
+	if text != "":
+		source = "llm"
+	else:
+		var fb := _get_fallback_text(biome_key)
+		text = str(fb.get(fallback_type, biome_data.get("arrival_text", "")))
+		source = "fallback"
+	return {"text": text, "source": source}
+
+
+func _validate_llm_text(text: String) -> String:
+	## Validate LLM output. Returns "" if invalid (triggers fallback).
+	if text.length() < 10 or text.length() > 300:
 		return ""
-	var text: String = str(_result.get("text", ""))
-	return text if text.length() >= 5 else ""
+	# Reject if contains common English words
+	var lower := text.to_lower()
+	for eng_word in ["the ", " and ", " you ", " are ", " this ", " that "]:
+		if eng_word in lower:
+			return ""
+	# Reject if too similar to last text (Jaccard > 0.7)
+	if _last_arrival_text != "" and text != "":
+		var sim := _jaccard_similarity(text, _last_arrival_text)
+		if sim > 0.7:
+			return ""
+	return text
+
+
+func _jaccard_similarity(a: String, b: String) -> float:
+	## Simple word-level Jaccard similarity.
+	var words_a: PackedStringArray = a.to_lower().split(" ", false)
+	var words_b: PackedStringArray = b.to_lower().split(" ", false)
+	if words_a.is_empty() or words_b.is_empty():
+		return 0.0
+	var set_a: Dictionary = {}
+	for w in words_a:
+		set_a[w] = true
+	var set_b: Dictionary = {}
+	for w in words_b:
+		set_b[w] = true
+	var intersection: int = 0
+	for w in set_a:
+		if set_b.has(w):
+			intersection += 1
+	var union_size: int = set_a.size() + set_b.size() - intersection
+	if union_size == 0:
+		return 0.0
+	return float(intersection) / float(union_size)
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
@@ -870,7 +1260,7 @@ func _show_typewriter(label: RichTextLabel, text: String) -> void:
 	label.text = text
 	label.visible_characters = 0
 	for i in range(text.length()):
-		if typing_abort:
+		if typing_abort or not is_inside_tree():
 			break
 		label.visible_characters = i + 1
 		var ch := text[i]
@@ -879,7 +1269,7 @@ func _show_typewriter(label: RichTextLabel, text: String) -> void:
 		var delay := TYPEWRITER_DELAY
 		if ch in [".", "!", "?"]:
 			delay = TYPEWRITER_PUNCT_DELAY
-		await get_tree().create_timer(delay).timeout
+		await _safe_wait(delay)
 	label.visible_characters = -1
 	typing_active = false
 
@@ -891,7 +1281,11 @@ func _show_typewriter(label: RichTextLabel, text: String) -> void:
 func _wait_for_advance(max_wait: float) -> void:
 	var elapsed := 0.0
 	while elapsed < max_wait and not _advance_requested and not scene_finished:
-		await get_tree().process_frame
+		if not is_inside_tree():
+			break
+		await _safe_frame()
+		if not is_inside_tree():
+			break
 		elapsed += get_process_delta_time()
 	_advance_requested = false
 

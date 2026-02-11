@@ -13,6 +13,7 @@ signal phase_changed(phase: String)
 signal transition_logged(entry: Dictionary)
 signal aspect_shifted(aspect: String, old_state: int, new_state: int)
 signal souffle_changed(old_value: int, new_value: int)
+signal life_changed(old_value: int, new_value: int)
 signal run_ended(ending: Dictionary)
 signal card_resolved(card_id: String, option: int)
 signal mission_progress(step: int, total: int)
@@ -131,22 +132,6 @@ func _deferred_wire_merlin_ai() -> void:
 # ═══════════════════════════════════════════════════════════════════════════════
 
 func build_default_state() -> Dictionary:
-	# Legacy resources (for compatibility)
-	var resources: Dictionary = {
-		"Vigueur": 2,
-		"Concentration": 2,
-		"Materiel": 2,
-		"Faveur": 0,
-		"Nourriture": 1,
-	}
-	var resource_caps: Dictionary = {
-		"Vigueur": 9,
-		"Concentration": 9,
-		"Materiel": 9,
-		"Faveur": 9,
-		"Nourriture": 9,
-	}
-
 	# TRIADE system - 3 Aspects with 3 discrete states
 	var aspects: Dictionary = {
 		"Corps": MerlinConstants.AspectState.EQUILIBRE,
@@ -161,32 +146,22 @@ func build_default_state() -> Dictionary:
 	return {
 		"version": VERSION,
 		"phase": "title",
-		"mode": "triade",  # "triade" (new), "reigns" (deprecated), or "legacy"
+		"mode": "triade",
 		"timestamp": int(Time.get_unix_time_from_system()),
 		"run": {
 			"active": false,
-			# Legacy fields (for compatibility)
-			"resources": resources,
-			"resource_caps": resource_caps,
 			"floor": 0,
 			"map_seed": 0,
 			"map": [],
 			"path": [],
-			"posture": "Prudence",
-			"momentum": 0,
-			"fail_streak": 0,
-			"difficulty_mod_next": 0,
-			"force_soft_success": false,
-			"next_node_override": "",
-			"map_reveals": [],
-			"inventory": {},
-			"relics": [],
-			# TRIADE fields (NEW v0.3.0)
+			# TRIADE fields
 			"aspects": aspects,
 			"souffle": MerlinConstants.SOUFFLE_START,
+			"life_essence": MerlinConstants.LIFE_ESSENCE_START,
 			"mission": {
 				"type": "",
 				"target": "",
+				"description": "",
 				"progress": 0,
 				"total": 0,
 				"revealed": false,
@@ -208,8 +183,6 @@ func build_default_state() -> Dictionary:
 		},
 		"bestiole": {
 			"name": "Bestiole",
-			# Needs
-			"needs": {"Hunger": 50, "Energy": 50, "Hygiene": 50, "Mood": 50, "Stress": 0},
 			"tendency": {"Wild": 0, "Light": 0, "Discipline": 0},
 			"xp": 0,
 			"bond_xp": 0,
@@ -233,7 +206,6 @@ func build_default_state() -> Dictionary:
 			"packages": [],
 			"active_package": "",
 			"unlocked_evolutions": [],
-			# Reigns meta
 			"total_runs": 0,
 			"total_cards_played": 0,
 			"endings_seen": [],
@@ -462,95 +434,6 @@ func _reduce(action: Dictionary) -> Dictionary:
 			return {"ok": false, "error": "Node not found: " + node_id}
 
 		# ═══════════════════════════════════════════════════════════════════════
-		# REIGNS-STYLE ACTIONS (DEPRECATED - kept for compatibility)
-		# ═══════════════════════════════════════════════════════════════════════
-		"REIGNS_START_RUN":
-			var seed_val: int = int(action.get("seed", int(Time.get_unix_time_from_system())))
-			rng.set_seed(seed_val)
-			cards.init_run(state)
-			state["run"]["map_seed"] = seed_val
-			state["phase"] = "card"
-			state["mode"] = "reigns"
-			_log_transition("reigns_run_start", {"seed": seed_val})
-			return {"ok": true}
-
-		"REIGNS_GET_CARD":
-			var card = await cards.get_next_card(state)
-			return {"ok": true, "card": card}
-
-		"REIGNS_RESOLVE_CHOICE":
-			var card = action.get("card", {})
-			var direction = action.get("direction", "")
-			var result = cards.resolve_choice(state, card, direction)
-			if result["ok"]:
-				card_resolved.emit(card.get("id", ""), 0 if direction == "left" else 1)
-				var end_check = cards.check_run_end(state)
-				if end_check["ended"]:
-					state["run"]["active"] = false
-					state["phase"] = "end"
-					_handle_run_end(end_check)
-					return {"ok": true, "run_ended": true, "ending": end_check}
-			return result
-
-		"REIGNS_USE_SKILL":
-			var skill_id = action.get("skill_id", "")
-			var card = action.get("card", {})
-			var result = cards.use_bestiole_skill(state, skill_id, card)
-			return result
-
-		"REIGNS_END_RUN":
-			var end_check = cards.check_run_end(state)
-			if not end_check["ended"]:
-				end_check = {
-					"ended": true,
-					"ending": {"title": "Abandon", "text": "Tu abandonnes ta quete..."},
-					"score": state["run"].get("cards_played", 0) * 5,
-					"cards_played": state["run"].get("cards_played", 0),
-					"days_survived": state["run"].get("day", 1),
-				}
-			state["run"]["active"] = false
-			state["phase"] = "end"
-			_handle_run_end(end_check)
-			return {"ok": true, "ending": end_check}
-
-		# ═══════════════════════════════════════════════════════════════════════
-		# LEGACY ACTIONS (kept for compatibility)
-		# ═══════════════════════════════════════════════════════════════════════
-		"START_RUN":
-			var seed: int = int(action.get("seed", int(Time.get_unix_time_from_system())))
-			rng.set_seed(seed)
-			var run: Dictionary = state["run"]
-			run["active"] = true
-			run["floor"] = 0
-			run["map_seed"] = seed
-			run["path"] = []
-			run["map"] = map_system.generate_map(int(action.get("floors", 8)), rng, action.get("map_config", {}))
-			state["run"] = run
-			state["phase"] = "map"
-			state["mode"] = "legacy"
-			_log_transition("run_start", {"seed": seed})
-			return {"ok": true}
-
-		"END_RUN":
-			state["run"]["active"] = false
-			state["phase"] = "end"
-			_log_transition("run_end", {"victory": action.get("victory", false)})
-			return {"ok": true}
-
-		"APPLY_EFFECTS":
-			var result: Dictionary = effects.apply_effects(state, action.get("effects", []), action.get("source", "SYSTEM"))
-			return {"ok": true, "result": result}
-
-		"RUN_EVENT":
-			var result: Dictionary = events.run_scene(
-				action.get("scene", {}),
-				action.get("verb", ""),
-				int(action.get("choice_index", 0)),
-				state
-			)
-			return result
-
-		# ═══════════════════════════════════════════════════════════════════════
 		# SAVE/LOAD
 		# ═══════════════════════════════════════════════════════════════════════
 		"SAVE_SLOT":
@@ -576,11 +459,15 @@ func _reduce(action: Dictionary) -> Dictionary:
 			return {"ok": true}
 
 		# ═══════════════════════════════════════════════════════════════════════
-		# BESTIOLE CARE
+		# LIFE ESSENCE ACTIONS (Phase 43)
 		# ═══════════════════════════════════════════════════════════════════════
-		"BESTIOLE_CARE":
-			var action_name = action.get("action", "")
-			return _handle_bestiole_care(action_name)
+		"TRIADE_DAMAGE_LIFE":
+			var amount: int = int(action.get("amount", 1))
+			return _damage_life(amount)
+
+		"TRIADE_HEAL_LIFE":
+			var amount: int = int(action.get("amount", 1))
+			return _heal_life(amount)
 
 		_:
 			return {"ok": false, "error": "Unknown action"}
@@ -630,55 +517,53 @@ func _reset_ai_for_new_run() -> void:
 		merlin_ai_node.session_contexts.clear()
 
 
-func _handle_run_end(end_check: Dictionary) -> void:
-	var meta = state.get("meta", {})
-	meta["total_runs"] = int(meta.get("total_runs", 0)) + 1
-	meta["total_cards_played"] = int(meta.get("total_cards_played", 0)) + int(end_check.get("cards_played", 0))
 
-	# Track ending seen
-	var ending = end_check.get("ending", {})
-	var ending_title = ending.get("title", "")
-	var endings_seen = meta.get("endings_seen", [])
-	if not endings_seen.has(ending_title):
-		endings_seen.append(ending_title)
-	meta["endings_seen"] = endings_seen
-
-	# Award gloire points
-	meta["gloire_points"] = int(meta.get("gloire_points", 0)) + int(end_check.get("score", 0) / 100)
-
-	state["meta"] = meta
-	_log_transition("reigns_run_end", end_check)
-	run_ended.emit(end_check)
+func _damage_life(amount: int) -> Dictionary:
+	var run: Dictionary = state.get("run", {})
+	var old_life: int = int(run.get("life_essence", MerlinConstants.LIFE_ESSENCE_START))
+	var new_life: int = maxi(old_life - amount, 0)
+	run["life_essence"] = new_life
+	state["run"] = run
+	life_changed.emit(old_life, new_life)
+	return {"ok": true, "old": old_life, "new": new_life, "damage": old_life - new_life}
 
 
-func _handle_bestiole_care(action_name: String) -> Dictionary:
-	var bestiole = state.get("bestiole", {})
-	var needs = bestiole.get("needs", {})
+func _heal_life(amount: int) -> Dictionary:
+	var run: Dictionary = state.get("run", {})
+	var old_life: int = int(run.get("life_essence", MerlinConstants.LIFE_ESSENCE_START))
+	var new_life: int = mini(old_life + amount, MerlinConstants.LIFE_ESSENCE_MAX)
+	run["life_essence"] = new_life
+	state["run"] = run
+	life_changed.emit(old_life, new_life)
+	return {"ok": true, "old": old_life, "new": new_life, "healed": new_life - old_life}
 
-	match action_name:
-		"feed":
-			needs["Hunger"] = mini(int(needs.get("Hunger", 50)) + 30, 100)
-			needs["Mood"] = mini(int(needs.get("Mood", 50)) + 5, 100)
-			bestiole["bond"] = mini(int(bestiole.get("bond", 50)) + 2, 100)
-		"play":
-			needs["Mood"] = mini(int(needs.get("Mood", 50)) + 20, 100)
-			needs["Energy"] = maxi(int(needs.get("Energy", 50)) - 10, 0)
-			bestiole["bond"] = mini(int(bestiole.get("bond", 50)) + 3, 100)
-		"groom":
-			needs["Hygiene"] = mini(int(needs.get("Hygiene", 50)) + 25, 100)
-			bestiole["bond"] = mini(int(bestiole.get("bond", 50)) + 2, 100)
-		"rest":
-			needs["Energy"] = mini(int(needs.get("Energy", 50)) + 40, 100)
-			needs["Stress"] = maxi(int(needs.get("Stress", 0)) - 10, 0)
-		"gift":
-			bestiole["bond"] = mini(int(bestiole.get("bond", 50)) + 15, 100)
-			needs["Mood"] = mini(int(needs.get("Mood", 50)) + 10, 100)
-		_:
-			return {"ok": false, "error": "Unknown care action"}
 
-	bestiole["needs"] = needs
-	state["bestiole"] = bestiole
-	return {"ok": true, "needs": needs, "bond": bestiole["bond"]}
+func _generate_mission() -> Dictionary:
+	var templates: Dictionary = MerlinConstants.MISSION_TEMPLATES
+	# Weighted random pick
+	var total_weight: float = 0.0
+	for key in templates:
+		total_weight += float(templates[key].get("weight", 1.0))
+	var roll: float = rng.randf() * total_weight
+	var picked_key: String = ""
+	var cumul: float = 0.0
+	for key in templates:
+		cumul += float(templates[key].get("weight", 1.0))
+		if roll <= cumul:
+			picked_key = key
+			break
+	if picked_key.is_empty():
+		picked_key = templates.keys()[0]
+	var tmpl: Dictionary = templates[picked_key]
+	var target_val: int = int(tmpl.get("target", 10))
+	return {
+		"type": picked_key,
+		"target": str(tmpl.get("name", picked_key)),
+		"description": str(tmpl.get("description", "")),
+		"progress": 0,
+		"total": target_val,
+		"revealed": false,
+	}
 
 
 func _on_gauge_critical(gauge: String, value: int, direction: String) -> void:
@@ -702,7 +587,9 @@ func _init_triade_run() -> void:
 		"Monde": MerlinConstants.AspectState.EQUILIBRE,
 	}
 	run["souffle"] = MerlinConstants.SOUFFLE_START
-	run["mission"] = {"type": "", "target": "", "progress": 0, "total": 0, "revealed": false}
+	run["life_essence"] = MerlinConstants.LIFE_ESSENCE_START
+	# Generate a mission from templates
+	run["mission"] = _generate_mission()
 	run["cards_played"] = 0
 	run["day"] = 1
 	run["story_log"] = []
@@ -1172,21 +1059,7 @@ func _resolve_triade_choice(card: Dictionary, option: int, modulated_effects: Ar
 
 	if modulated_effects.is_empty():
 		# Legacy path: controller did NOT pre-modulate → apply raw effects
-		# Handle center option cost
-		if option == MerlinConstants.CardOption.CENTER:
-			var souffle_result = _use_souffle(MerlinConstants.SOUFFLE_CENTER_COST)
-			if souffle_result.get("risk", false):
-				var roll: float = rng.randf()
-				if roll < MerlinConstants.SOUFFLE_EMPTY_RISK["normal"]:
-					pass
-				elif roll < MerlinConstants.SOUFFLE_EMPTY_RISK["normal"] + MerlinConstants.SOUFFLE_EMPTY_RISK["aspect_down"]:
-					var random_aspect: String = MerlinConstants.TRIADE_ASPECTS[rng.randi() % 3]
-					_shift_aspect(random_aspect, "down")
-				else:
-					var random_aspect: String = MerlinConstants.TRIADE_ASPECTS[rng.randi() % 3]
-					_shift_aspect(random_aspect, "up")
-
-		# Get effects for chosen option
+		# Center is now FREE (no Souffle cost)
 		var options = card.get("options", [])
 		if option >= 0 and option < options.size():
 			var chosen = options[option]
@@ -1284,22 +1157,16 @@ func _check_triade_run_end() -> Dictionary:
 	var run = state.get("run", {})
 	var aspects = run.get("aspects", {})
 
-	# Count extreme aspects
-	var extremes: Array = []
-	for aspect in MerlinConstants.TRIADE_ASPECTS:
-		var aspect_state: int = int(aspects.get(aspect, 0))
-		if aspect_state == MerlinConstants.AspectState.BAS or aspect_state == MerlinConstants.AspectState.HAUT:
-			extremes.append({"aspect": aspect, "state": aspect_state})
-
-	# Game ends if 2+ aspects are extreme
-	if extremes.size() >= 2:
-		var ending = _get_triade_ending(extremes[0], extremes[1])
+	# Life essence = 0 → premature run end (replaces 2-extreme game over)
+	var life: int = int(run.get("life_essence", MerlinConstants.LIFE_ESSENCE_START))
+	if life <= 0:
 		return {
 			"ended": true,
-			"ending": ending,
+			"ending": {"title": "Essences Epuisees", "text": "Tes essences de vie se sont taries... la foret te rappelle a elle."},
 			"score": int(run.get("cards_played", 0)) * 10,
 			"cards_played": run.get("cards_played", 0),
 			"days_survived": run.get("day", 1),
+			"life_depleted": true,
 		}
 
 	# Check for victory (mission complete)
@@ -1316,28 +1183,6 @@ func _check_triade_run_end() -> Dictionary:
 		}
 
 	return {"ended": false}
-
-
-func _get_triade_ending(extreme1: Dictionary, extreme2: Dictionary) -> Dictionary:
-	# Build ending key from the two extreme aspects
-	var aspect1: String = extreme1.get("aspect", "").to_lower()
-	var state1: int = extreme1.get("state", 0)
-	var aspect2: String = extreme2.get("aspect", "").to_lower()
-	var state2: int = extreme2.get("state", 0)
-
-	var state1_str: String = "bas" if state1 == MerlinConstants.AspectState.BAS else "haut"
-	var state2_str: String = "bas" if state2 == MerlinConstants.AspectState.BAS else "haut"
-
-	# Try both orderings to find the ending
-	var key1: String = aspect1 + "_" + state1_str + "_" + aspect2 + "_" + state2_str
-	var key2: String = aspect2 + "_" + state2_str + "_" + aspect1 + "_" + state1_str
-
-	if MerlinConstants.TRIADE_ENDINGS.has(key1):
-		return MerlinConstants.TRIADE_ENDINGS[key1]
-	elif MerlinConstants.TRIADE_ENDINGS.has(key2):
-		return MerlinConstants.TRIADE_ENDINGS[key2]
-
-	return {"title": "Fin Inconnue", "text": "Le destin a pris un chemin inattendu..."}
 
 
 func _get_victory_type(aspects: Dictionary) -> String:
@@ -1446,6 +1291,10 @@ func get_all_aspects() -> Dictionary:
 
 func get_souffle() -> int:
 	return int(state.get("run", {}).get("souffle", MerlinConstants.SOUFFLE_START))
+
+
+func get_life_essence() -> int:
+	return int(state.get("run", {}).get("life_essence", MerlinConstants.LIFE_ESSENCE_START))
 
 
 func get_mission() -> Dictionary:

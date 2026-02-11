@@ -3,7 +3,7 @@
 ## Overview
 
 This document defines the team of specialized Claude Code agents for the M.E.R.L.I.N. project.
-**29 agents + 1 knowledge base** organized by domain.
+**33 agents + 1 knowledge base** organized by domain.
 
 ## Usage with Claude Code
 
@@ -113,6 +113,19 @@ Task tool:
 |------|------|-----------|
 | **CI/CD Release** | `ci_cd_release.md` | **GitHub Actions, multi-platform export, Steam, mobile stores** |
 
+### LoRA Fine-Tuning Agents (4) — NEW
+
+| Role | File | Specialty |
+|------|------|-----------|
+| **LoRA Gameplay Translator** | `lora_gameplay_translator.md` | **Point d'entree: traduit demande gameplay → plan d'entrainement LoRA** |
+| **LoRA Data Curator** | `lora_data_curator.md` | **Extraction, curation, augmentation datasets d'entrainement** |
+| **LoRA Training Architect** | `lora_training_architect.md` | **Hyperparametres, architecture adapter, pilotage training** |
+| **LoRA Evaluator** | `lora_evaluator.md` | **Benchmark, metriques, GO/NO-GO, A/B testing** |
+
+> Ces 4 agents forment un pipeline complet de fine-tuning. Le **Gameplay Translator**
+> est le point d'entree auto-active quand l'utilisateur demande une adaptation du LLM.
+> Il orchestre les 3 autres agents dans l'ordre: Data → Training → Evaluation.
+
 ### Shared Resources
 
 | Resource | File | Purpose |
@@ -124,7 +137,7 @@ Task tool:
 ## Summary Count
 
 ```
-Total: 29 agents + 1 knowledge base
+Total: 33 agents + 1 knowledge base
 
 By category:
   Orchestration:              1 (task_dispatcher)
@@ -137,6 +150,7 @@ By category:
   Security & Quality:         3 (accessibility_specialist, security_hardening, prompt_curator)
   Progression & Economy:      1 (meta_progression_designer)
   CI/CD & Release:            1 (ci_cd_release)
+  LoRA Fine-Tuning:           4 (lora_gameplay_translator, lora_data_curator, lora_training_architect, lora_evaluator)
   Knowledge Base:             1 (gdscript_knowledge_base)
 ```
 
@@ -198,6 +212,10 @@ Le dispatcher retourne un plan structure avec:
 | **LLM content quality** | **Prompt Curator**, LLM Expert |
 | **Meta-progression** | **Meta-Progression Designer**, Game Designer |
 | **Build/Release** | **CI/CD Release**, Producer |
+| **LLM adaptation/fine-tuning** | **LoRA Gameplay Translator**, LLM Expert |
+| **Training data changes** | **LoRA Data Curator**, Prompt Curator |
+| **LoRA training/hyperparams** | **LoRA Training Architect**, LLM Expert |
+| **Model benchmark/evaluation** | **LoRA Evaluator**, LLM Expert |
 
 ---
 
@@ -241,6 +259,9 @@ When an agent completes work and needs handoff:
 | `optimizer.md` | Bonne pratique decouverte ou nouveau code GDScript | Scanner et appliquer |
 | `git_commit.md` | Phase complete, 3+ fichiers modifies | Commit conventionnel auto |
 | `project_curator.md` | "inventaire", "nettoie", "range" | Rapport + nettoyage |
+| **`lora_gameplay_translator.md`** | **"entraine le modele", "le LLM doit", "adapte le modele", "fine-tune", adaptation gameplay LLM** | **Traduit demande → plan d'entrainement, orchestre pipeline LoRA** |
+| `lora_data_curator.md` | Modification JSON contenu narratif, ajout nouveau gameplay | Re-export + augmentation dataset |
+| `lora_evaluator.md` | Apres training LoRA complet | Benchmark automatique, decision GO/NO-GO |
 
 ---
 
@@ -294,10 +315,23 @@ claude "Use Task to read .claude/agents/meta_progression_designer.md and balance
 
 # NEW — Invoke CI/CD Release
 claude "Use Task to read .claude/agents/ci_cd_release.md and setup GitHub Actions pipeline"
+
+# NEW — LoRA Fine-Tuning Pipeline
+# Point d'entree: Gameplay Translator (auto-active par "le LLM doit", "entraine le modele")
+claude "Use Task to read .claude/agents/lora_gameplay_translator.md and translate this need: le modele doit etre plus poetique dans les biomes forestiers"
+
+# LoRA Data Curator (auto-active par modification contenu JSON)
+claude "Use Task to read .claude/agents/lora_data_curator.md and re-export training data after content update"
+
+# LoRA Training Architect
+claude "Use Task to read .claude/agents/lora_training_architect.md and configure training for multi-LoRA per tone"
+
+# LoRA Evaluator (auto-active apres training)
+claude "Use Task to read .claude/agents/lora_evaluator.md and benchmark the new narrator adapter"
 ```
 
 ---
 
 *Created: 2026-02-06*
-*Updated: 2026-02-09 — 29 agents + 1 knowledge base (5 new: accessibility, ci_cd, security, prompt_curator, meta_progression)*
+*Updated: 2026-02-11 — 33 agents + 1 knowledge base (4 new: lora_gameplay_translator, lora_data_curator, lora_training_architect, lora_evaluator)*
 *Project: M.E.R.L.I.N. — Le Jeu des Oghams*

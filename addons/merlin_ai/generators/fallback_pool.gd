@@ -24,6 +24,7 @@ var cards_by_context := {
 	"universal": [],       # Always valid
 	"merlin_direct": [],   # Merlin commentary
 	"promise": [],         # Promise cards
+	"npc_encounter": [],   # NPC dialogue cards
 }
 
 # ═══════════════════════════════════════════════════════════════════════════════
@@ -256,12 +257,21 @@ func _generate_emergency_card(context: Dictionary) -> Dictionary:
 				"preview": "Equilibrer"
 			},
 			{
-				"direction": "right",
-				"label": "Continuer",
+				"direction": "center",
+				"label": "Mediter",
 				"effects": [
 					{"type": "ADD_SOUFFLE", "amount": 1}
 				],
-				"preview": "+1 Souffle"
+				"preview": "+Souffle",
+				"cost": 1,
+			},
+			{
+				"direction": "right",
+				"label": "Continuer",
+				"effects": [
+					{"type": "SHIFT_ASPECT", "aspect": worst_aspect, "direction": opposite_direction}
+				],
+				"preview": "Risque"
 			}
 		],
 		"tags": ["recovery", "emergency"],
@@ -285,6 +295,9 @@ func _generate_default_cards() -> void:
 				{"direction": "left", "label": "L'eviter", "effects": [
 					{"type": "SHIFT_ASPECT", "aspect": "Monde", "direction": "down"}
 				], "preview": "Prudent"},
+				{"direction": "center", "label": "Observer", "effects": [
+					{"type": "SHIFT_ASPECT", "aspect": "Ame", "direction": "up"}
+				], "preview": "+Ame", "cost": 1},
 				{"direction": "right", "label": "Approcher", "effects": [
 					{"type": "SHIFT_ASPECT", "aspect": "Monde", "direction": "up"}
 				], "preview": "Social"}
@@ -300,6 +313,9 @@ func _generate_default_cards() -> void:
 				{"direction": "left", "label": "Vers la lumiere", "effects": [
 					{"type": "SHIFT_ASPECT", "aspect": "Ame", "direction": "up"}
 				], "preview": "Spirituel"},
+				{"direction": "center", "label": "Mediter", "effects": [
+					{"type": "ADD_SOUFFLE", "amount": 1}
+				], "preview": "+Souffle", "cost": 1},
 				{"direction": "right", "label": "Vers l'ombre", "effects": [
 					{"type": "SHIFT_ASPECT", "aspect": "Ame", "direction": "down"}
 				], "preview": "Mystere"}
@@ -316,6 +332,9 @@ func _generate_default_cards() -> void:
 					{"type": "SHIFT_ASPECT", "aspect": "Corps", "direction": "up"},
 					{"type": "ADD_SOUFFLE", "amount": 1}
 				], "preview": "+Corps"},
+				{"direction": "center", "label": "Observer", "effects": [
+					{"type": "SHIFT_ASPECT", "aspect": "Ame", "direction": "up"}
+				], "preview": "+Ame", "cost": 1},
 				{"direction": "right", "label": "Continuer", "effects": [
 					{"type": "SHIFT_ASPECT", "aspect": "Corps", "direction": "down"}
 				], "preview": "Fatigue"}
@@ -335,6 +354,9 @@ func _generate_default_cards() -> void:
 				{"direction": "left", "label": "Se mefier", "effects": [
 					{"type": "SHIFT_ASPECT", "aspect": "Monde", "direction": "down"}
 				], "preview": "Prudent"},
+				{"direction": "center", "label": "Parlementer", "effects": [
+					{"type": "SHIFT_ASPECT", "aspect": "Ame", "direction": "up"}
+				], "preview": "+Ame", "cost": 1},
 				{"direction": "right", "label": "Ecouter", "effects": [
 					{"type": "SHIFT_ASPECT", "aspect": "Monde", "direction": "up"}
 				], "preview": "Ouvert"}
@@ -355,6 +377,9 @@ func _generate_default_cards() -> void:
 					{"type": "SHIFT_ASPECT", "aspect": "Ame", "direction": "up"},
 					{"type": "USE_SOUFFLE", "amount": 1}
 				], "preview": "Magie"},
+				{"direction": "center", "label": "Observer", "effects": [
+					{"type": "ADD_SOUFFLE", "amount": 1}
+				], "preview": "+Souffle", "cost": 1},
 				{"direction": "right", "label": "Les ignorer", "effects": [
 					{"type": "SHIFT_ASPECT", "aspect": "Ame", "direction": "down"}
 				], "preview": "Pratique"}
@@ -375,6 +400,9 @@ func _generate_default_cards() -> void:
 					{"type": "SHIFT_ASPECT", "aspect": "Corps", "direction": "up"},
 					{"type": "ADD_SOUFFLE", "amount": 1}
 				], "preview": "Recuperation"},
+				{"direction": "center", "label": "Mediter", "effects": [
+					{"type": "SHIFT_ASPECT", "aspect": "Ame", "direction": "up"}
+				], "preview": "+Ame", "cost": 1},
 				{"direction": "right", "label": "Boire vite et partir", "effects": [
 					{"type": "ADD_SOUFFLE", "amount": 1}
 				], "preview": "+Souffle"}
@@ -390,6 +418,9 @@ func _generate_default_cards() -> void:
 				{"direction": "left", "label": "S'abriter", "effects": [
 					{"type": "SHIFT_ASPECT", "aspect": "Corps", "direction": "up"}
 				], "preview": "Repos"},
+				{"direction": "center", "label": "Mediter", "effects": [
+					{"type": "ADD_SOUFFLE", "amount": 1}
+				], "preview": "+Souffle", "cost": 1},
 				{"direction": "right", "label": "Pousser encore", "effects": [
 					{"type": "SHIFT_ASPECT", "aspect": "Corps", "direction": "down"},
 					{"type": "SHIFT_ASPECT", "aspect": "Monde", "direction": "up"}
@@ -410,6 +441,9 @@ func _generate_default_cards() -> void:
 				{"direction": "left", "label": "Lacher prise", "effects": [
 					{"type": "SHIFT_ASPECT", "aspect": "Corps", "direction": "down"}
 				], "preview": "Calme"},
+				{"direction": "center", "label": "Mediter", "effects": [
+					{"type": "ADD_SOUFFLE", "amount": 1}
+				], "preview": "+Souffle", "cost": 1},
 				{"direction": "right", "label": "Tenir bon", "effects": [
 					{"type": "USE_SOUFFLE", "amount": 1}
 				], "preview": "-Souffle"}
@@ -429,6 +463,9 @@ func _generate_default_cards() -> void:
 				{"direction": "left", "label": "Mediter", "effects": [
 					{"type": "ADD_SOUFFLE", "amount": 1}
 				], "preview": "+Souffle"},
+				{"direction": "center", "label": "Observer", "effects": [
+					{"type": "SHIFT_ASPECT", "aspect": "Ame", "direction": "up"}
+				], "preview": "+Ame", "cost": 1},
 				{"direction": "right", "label": "Agir", "effects": [
 					{"type": "SHIFT_ASPECT", "aspect": "Monde", "direction": "up"}
 				], "preview": "+Monde"}
@@ -447,6 +484,9 @@ func _generate_default_cards() -> void:
 				{"direction": "left", "label": "Ecouter", "effects": [
 					{"type": "SHIFT_ASPECT", "aspect": "Ame", "direction": "up"}
 				], "preview": "+Ame"},
+				{"direction": "center", "label": "Mediter", "effects": [
+					{"type": "ADD_SOUFFLE", "amount": 1}
+				], "preview": "+Souffle", "cost": 1},
 				{"direction": "right", "label": "Ignorer", "effects": [
 					{"type": "SHIFT_ASPECT", "aspect": "Ame", "direction": "down"}
 				], "preview": "-Ame"}
@@ -461,6 +501,9 @@ func _generate_default_cards() -> void:
 				{"direction": "left", "label": "Prudemment", "effects": [
 					{"type": "SHIFT_ASPECT", "aspect": "Corps", "direction": "up"}
 				], "preview": "Prudent"},
+				{"direction": "center", "label": "Observer", "effects": [
+					{"type": "SHIFT_ASPECT", "aspect": "Ame", "direction": "up"}
+				], "preview": "+Ame", "cost": 1},
 				{"direction": "right", "label": "Rapidement", "effects": [
 					{"type": "SHIFT_ASPECT", "aspect": "Corps", "direction": "down"}
 				], "preview": "Rapide"}
@@ -475,6 +518,9 @@ func _generate_default_cards() -> void:
 				{"direction": "left", "label": "La voie sage", "effects": [
 					{"type": "ADD_SOUFFLE", "amount": 1}
 				], "preview": "+Souffle"},
+				{"direction": "center", "label": "Mediter", "effects": [
+					{"type": "SHIFT_ASPECT", "aspect": "Ame", "direction": "up"}
+				], "preview": "+Ame", "cost": 1},
 				{"direction": "right", "label": "La voie audacieuse", "effects": [
 					{"type": "SHIFT_ASPECT", "aspect": "Monde", "direction": "up"}
 				], "preview": "+Monde"}
@@ -492,9 +538,106 @@ func _generate_default_cards() -> void:
 			"type": "merlin",
 			"options": [
 				{"direction": "left", "label": "Merci", "effects": [], "preview": ""},
+				{"direction": "center", "label": "Mediter", "effects": [
+					{"type": "ADD_SOUFFLE", "amount": 1}
+				], "preview": "+Souffle", "cost": 1},
 				{"direction": "right", "label": "Je sais", "effects": [], "preview": ""}
 			],
 			"tags": ["merlin", "encouragement"]
+		},
+	]
+
+	# NPC encounter cards
+	cards_by_context.npc_encounter = [
+		{
+			"id": "npc_druide_001",
+			"text": "Un vieux druide emerge de la brume, son baton orne de gui. 'Les esprits m'ont parle de toi, voyageur.'",
+			"speaker": "Druide Ancien",
+			"type": "npc_encounter",
+			"options": [
+				{"direction": "left", "label": "Demander conseil", "effects": [
+					{"type": "SHIFT_ASPECT", "aspect": "Ame", "direction": "up"}
+				], "preview": "+Ame"},
+				{"direction": "center", "label": "Offrir du Souffle", "effects": [
+					{"type": "ADD_SOUFFLE", "amount": 1}
+				], "preview": "+Souffle", "cost": 1},
+				{"direction": "right", "label": "Passer son chemin", "effects": [
+					{"type": "SHIFT_ASPECT", "aspect": "Corps", "direction": "up"}
+				], "preview": "+Corps"},
+			],
+			"tags": ["npc", "magic", "lore"]
+		},
+		{
+			"id": "npc_villageois_001",
+			"text": "Une villageoise t'interpelle depuis le seuil de sa chaumiere. 'Etranger ! Les loups rodent plus pres chaque nuit.'",
+			"speaker": "Villageoise",
+			"type": "npc_encounter",
+			"options": [
+				{"direction": "left", "label": "Proposer de l'aide", "effects": [
+					{"type": "SHIFT_ASPECT", "aspect": "Monde", "direction": "up"}
+				], "preview": "+Monde"},
+				{"direction": "center", "label": "Ecouter attentivement", "effects": [
+					{"type": "SHIFT_ASPECT", "aspect": "Ame", "direction": "up"}
+				], "preview": "+Ame", "cost": 1},
+				{"direction": "right", "label": "Ignorer l'appel", "effects": [
+					{"type": "SHIFT_ASPECT", "aspect": "Monde", "direction": "down"}
+				], "preview": "-Monde"},
+			],
+			"tags": ["npc", "social", "danger"]
+		},
+		{
+			"id": "npc_barde_001",
+			"text": "Un barde assis pres du feu gratte sa lyre. 'Chaque histoire a trois faces, ami. Laquelle veux-tu entendre ?'",
+			"speaker": "Barde Errant",
+			"type": "npc_encounter",
+			"options": [
+				{"direction": "left", "label": "L'histoire du heros", "effects": [
+					{"type": "SHIFT_ASPECT", "aspect": "Corps", "direction": "up"}
+				], "preview": "+Corps"},
+				{"direction": "center", "label": "L'histoire du sage", "effects": [
+					{"type": "SHIFT_ASPECT", "aspect": "Ame", "direction": "up"}
+				], "preview": "+Ame", "cost": 1},
+				{"direction": "right", "label": "L'histoire du roi", "effects": [
+					{"type": "SHIFT_ASPECT", "aspect": "Monde", "direction": "up"}
+				], "preview": "+Monde"},
+			],
+			"tags": ["npc", "social", "lore"]
+		},
+		{
+			"id": "npc_guerrier_001",
+			"text": "Un guerrier balafre bloque le passage, lance au poing. 'On ne passe pas sans prouver sa valeur.'",
+			"speaker": "Guerrier du Gue",
+			"type": "npc_encounter",
+			"options": [
+				{"direction": "left", "label": "Affronter le defi", "effects": [
+					{"type": "SHIFT_ASPECT", "aspect": "Corps", "direction": "up"}
+				], "preview": "+Corps"},
+				{"direction": "center", "label": "Ruser pour passer", "effects": [
+					{"type": "SHIFT_ASPECT", "aspect": "Ame", "direction": "up"}
+				], "preview": "+Ame", "cost": 1},
+				{"direction": "right", "label": "Contourner le gue", "effects": [
+					{"type": "SHIFT_ASPECT", "aspect": "Corps", "direction": "down"}
+				], "preview": "-Corps"},
+			],
+			"tags": ["npc", "combat", "danger"]
+		},
+		{
+			"id": "npc_marchand_001",
+			"text": "Un marchand itinerant etale ses curiosites sur un tapis use. 'Tout se troque, voyageur. Meme le temps.'",
+			"speaker": "Marchand des Ombres",
+			"type": "npc_encounter",
+			"options": [
+				{"direction": "left", "label": "Troquer un souvenir", "effects": [
+					{"type": "SHIFT_ASPECT", "aspect": "Ame", "direction": "down"}
+				], "preview": "-Ame"},
+				{"direction": "center", "label": "Observer ses merveilles", "effects": [
+					{"type": "ADD_SOUFFLE", "amount": 1}
+				], "preview": "+Souffle", "cost": 1},
+				{"direction": "right", "label": "Marchander dur", "effects": [
+					{"type": "SHIFT_ASPECT", "aspect": "Monde", "direction": "up"}
+				], "preview": "+Monde"},
+			],
+			"tags": ["npc", "merchant", "trade"]
 		},
 	]
 
@@ -518,6 +661,21 @@ func add_card(context: String, card: Dictionary) -> bool:
 
 	cards_by_context[context].append(card)
 	return true
+
+
+func get_npc_card() -> Dictionary:
+	## Retourne une carte PNJ aleatoire du pool npc_encounter.
+	var pool: Array = cards_by_context.get("npc_encounter", [])
+	if pool.is_empty():
+		return {}
+	var filtered := pool.filter(func(c): return c.get("id", "") not in recently_used)
+	if filtered.is_empty():
+		filtered = pool
+	var selected: Dictionary = filtered[randi() % filtered.size()]
+	recently_used.append(selected.get("id", ""))
+	if recently_used.size() > RECENT_LIMIT:
+		recently_used.pop_front()
+	return selected
 
 
 func get_pool_sizes() -> Dictionary:

@@ -33,10 +33,36 @@ const OGHAM_FIELD_BONUS := {
 
 
 ## Select the best mini-game field from narrative text
-static func detect_field(narrative_text: String, gm_hint: String = "") -> String:
+## Tag-to-field mapping for contextual mini-game selection
+const TAG_FIELD_MAP := {
+	"combat": "finesse",
+	"danger": "finesse",
+	"stranger": "bluff",
+	"social": "bluff",
+	"npc": "bluff",
+	"mystery": "logique",
+	"magic": "logique",
+	"lore": "logique",
+	"exploration": "observation",
+	"nature": "observation",
+	"choice": "chance",
+	"merchant": "bluff",
+	"trade": "bluff",
+	"recovery": "chance",
+	"balance": "logique",
+}
+
+
+static func detect_field(narrative_text: String, gm_hint: String = "", tags: Array = []) -> String:
 	# GM hint takes priority
 	if gm_hint != "" and FIELDS.has(gm_hint):
 		return gm_hint
+
+	# Tag-based detection (higher priority than keyword)
+	for tag in tags:
+		var tag_str: String = str(tag).to_lower()
+		if TAG_FIELD_MAP.has(tag_str):
+			return TAG_FIELD_MAP[tag_str]
 
 	# Keyword matching in narrative text
 	var lower := narrative_text.to_lower()

@@ -259,6 +259,16 @@ const CARE_ACTIONS := {
 	"rest": {"label": "Repos", "icon": "\u223C", "need": "Energy", "amount": 20, "bond": 2, "stress_reduce": 15},
 }
 
+# Icon standardization — unified Celtic style
+const ICON_STANDARDS := {
+	"size": 24.0,
+	"line_thickness": 1.5,
+	"detail_thickness": 1.0,
+	"accent_dot": 2.0,
+	"radius_ratio": 0.38,
+	"corner_radius": 8,
+}
+
 # ═══════════════════════════════════════════════════════════════════════════════
 # NODES
 # ═══════════════════════════════════════════════════════════════════════════════
@@ -274,6 +284,7 @@ var current_tab: int = 0
 var main_vbox: VBoxContainer  # Used within current page
 var pixel_portrait: Control  # PixelMerlinPortrait
 var merlin_text: RichTextLabel
+var merlin_source_badge: PanelContainer
 var aspect_labels: Dictionary = {}
 var souffle_label: Label
 var day_label: Label
@@ -307,6 +318,9 @@ var _arbre_selected_node: String = ""
 
 var store: MerlinStore = null
 var selected_biome: String = ""
+var selected_tool: String = ""
+var selected_departure_condition: String = ""
+var expedition_ready: bool = false
 var chronicle_name: String = "Voyageur"
 var player_class: String = "eclaireur"
 var typing_active: bool = false
@@ -315,6 +329,13 @@ var _care_remaining: int = MAX_CARE_ACTIONS
 var _mist_tween: Tween
 var _current_mission: Dictionary = {}
 var _is_first_hub: bool = true
+
+# Expedition UI nodes
+var tool_buttons: Dictionary = {}
+var departure_buttons: Dictionary = {}
+var merlin_reaction_label: RichTextLabel
+var destination_display_label: Label
+var expedition_check_labels: Array[Label] = []
 
 # Fonts
 var title_font: Font
@@ -357,25 +378,20 @@ func _input(event: InputEvent) -> void:
 	if typing_active and event is InputEventMouseButton and event.pressed:
 		typing_abort = true
 
-	# Tab navigation via keyboard/gamepad (L1/R1 or Q/E)
-	# Only cycle between page tabs: 0 (Merlin) and 2 (Bestiole)
-	var page_tabs := [0, 2]
+	# Tab navigation via keyboard/gamepad (L1/R1 or Q/E) — 2 tabs: Antre (0), Compagnons (1)
 	if event is InputEventKey and event.pressed:
 		match event.keycode:
 			KEY_Q:
-				var idx: int = page_tabs.find(current_tab)
-				if idx > 0:
-					_on_tab_pressed(page_tabs[idx - 1])
+				if current_tab > 0:
+					_on_tab_pressed(current_tab - 1)
 			KEY_E:
-				var idx: int = page_tabs.find(current_tab)
-				if idx < page_tabs.size() - 1:
-					_on_tab_pressed(page_tabs[idx + 1])
+				if current_tab < 1:
+					_on_tab_pressed(current_tab + 1)
 	elif event is InputEventJoypadButton and event.pressed:
-		var idx: int = page_tabs.find(current_tab)
-		if event.button_index == JOY_BUTTON_LEFT_SHOULDER and idx > 0:
-			_on_tab_pressed(page_tabs[idx - 1])
-		elif event.button_index == JOY_BUTTON_RIGHT_SHOULDER and idx < page_tabs.size() - 1:
-			_on_tab_pressed(page_tabs[idx + 1])
+		if event.button_index == JOY_BUTTON_LEFT_SHOULDER and current_tab > 0:
+			_on_tab_pressed(current_tab - 1)
+		elif event.button_index == JOY_BUTTON_RIGHT_SHOULDER and current_tab < 1:
+			_on_tab_pressed(current_tab + 1)
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
@@ -417,6 +433,10 @@ func _load_player_data() -> void:
 			var biome_info: Dictionary = run_data.get("biome", {})
 			if biome_info.has("id"):
 				selected_biome = biome_info["id"]
+
+	# Auto-select Broceliande if no biome chosen (first visit)
+	if selected_biome == "":
+		selected_biome = "foret_broceliande"
 
 	if store:
 		_is_first_hub = not store.state.get("flags", {}).get("hub_visited", false)
@@ -510,16 +530,16 @@ func _build_scroll_content() -> void:
 	tab_container.modulate.a = 0.0
 	add_child(tab_container)
 
-	# Page 0: Merlin, Status & Adventure
+	# Page 0: Antre — Merlin, Status & Expedition Preparation
 	var page1 := _create_page()
 	_build_title_section_on(page1)
 	_build_merlin_section_on(page1)
 	_build_status_section_on(page1)
-	_build_adventure_section_on(page1)
+	_build_expedition_prep_on(page1)
 	tab_pages.append(page1)
 	tab_container.add_child(page1)
 
-	# Page 1: Bestiole & Grimoire
+	# Page 1: Compagnons — Bestiole & Grimoire
 	var page2 := _create_page()
 	_build_bestiole_section_on(page2)
 	_build_grimoire_section_on(page2)
@@ -539,7 +559,7 @@ func _create_page() -> Control:
 	var vbox := VBoxContainer.new()
 	vbox.set_anchors_preset(Control.PRESET_FULL_RECT)
 	vbox.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	vbox.add_theme_constant_override("separation", 10)
+	vbox.add_theme_constant_override("separation", 6)
 	page.add_child(vbox)
 
 	return page
@@ -560,13 +580,9 @@ func _build_status_section_on(page: Control) -> void:
 	_build_status_section()
 
 
-func _build_adventure_section_on(page: Control) -> void:
+func _build_expedition_prep_on(page: Control) -> void:
 	main_vbox = page.get_child(0) as VBoxContainer
-	# Spacer to push button to bottom
-	var spacer := Control.new()
-	spacer.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	main_vbox.add_child(spacer)
-	_build_adventure_section()
+	_build_expedition_prep_section()
 
 
 func _build_map_section_on(page: Control) -> void:
@@ -613,14 +629,14 @@ func _build_title_section() -> void:
 	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	if title_font:
 		title.add_theme_font_override("font", title_font)
-	title.add_theme_font_size_override("font_size", 28)
+	title.add_theme_font_size_override("font_size", 22)
 	title.add_theme_color_override("font_color", PALETTE.ink)
 	vbox.add_child(title)
 
 	var orn := Label.new()
 	orn.text = "\u2500\u2500 \u25C6 \u2500\u2500"
 	orn.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	orn.add_theme_font_size_override("font_size", 12)
+	orn.add_theme_font_size_override("font_size", 10)
 	orn.add_theme_color_override("font_color", PALETTE.accent)
 	vbox.add_child(orn)
 
@@ -646,7 +662,7 @@ func _build_merlin_section() -> void:
 	if PixelMerlinPortraitClass:
 		pixel_portrait = PixelMerlinPortraitClass.new()
 		portrait_center.add_child(pixel_portrait)
-		pixel_portrait.call("setup", 128.0)  # 12x14 grid at ~9px/pixel
+		pixel_portrait.call("setup", 96.0)  # 12x14 grid, compact
 		pixel_portrait.call("assemble", true)  # instant — no animation in Hub
 	else:
 		# Fallback: empty control
@@ -672,14 +688,17 @@ func _build_merlin_section() -> void:
 	merlin_text.bbcode_enabled = true
 	merlin_text.fit_content = true
 	merlin_text.scroll_active = false
-	merlin_text.custom_minimum_size = Vector2(280, 60)
+	merlin_text.custom_minimum_size = Vector2(240, 40)
 	merlin_text.visible_characters = 0
 	merlin_text.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	if body_font:
 		merlin_text.add_theme_font_override("normal_font", body_font)
-	merlin_text.add_theme_font_size_override("normal_font_size", 20)
+	merlin_text.add_theme_font_size_override("normal_font_size", 16)
 	merlin_text.add_theme_color_override("default_color", PALETTE.ink)
 	text_vbox.add_child(merlin_text)
+
+	merlin_source_badge = LLMSourceBadge.create("static")
+	text_vbox.add_child(merlin_source_badge)
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
@@ -691,7 +710,7 @@ func _build_status_section() -> void:
 	main_vbox.add_child(card)
 
 	var vbox := VBoxContainer.new()
-	vbox.add_theme_constant_override("separation", 8)
+	vbox.add_theme_constant_override("separation", 4)
 	card.add_child(vbox)
 
 	var title := _make_section_title("Etat du Voyageur")
@@ -714,7 +733,7 @@ func _build_status_section() -> void:
 		name_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 		if title_font:
 			name_lbl.add_theme_font_override("font", title_font)
-		name_lbl.add_theme_font_size_override("font_size", 14)
+		name_lbl.add_theme_font_size_override("font_size", 12)
 		name_lbl.add_theme_color_override("font_color", PALETTE.ink_soft)
 		aspect_vbox.add_child(name_lbl)
 
@@ -723,7 +742,7 @@ func _build_status_section() -> void:
 		state_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 		if body_font:
 			state_lbl.add_theme_font_override("font", body_font)
-		state_lbl.add_theme_font_size_override("font_size", 16)
+		state_lbl.add_theme_font_size_override("font_size", 14)
 		state_lbl.add_theme_color_override("font_color", PALETTE.success)
 		aspect_vbox.add_child(state_lbl)
 
@@ -740,7 +759,7 @@ func _build_status_section() -> void:
 	souffle_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	if body_font:
 		souffle_label.add_theme_font_override("font", body_font)
-	souffle_label.add_theme_font_size_override("font_size", 15)
+	souffle_label.add_theme_font_size_override("font_size", 13)
 	souffle_label.add_theme_color_override("font_color", PALETTE.ink)
 	info_hbox.add_child(souffle_label)
 
@@ -749,7 +768,7 @@ func _build_status_section() -> void:
 	day_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	if body_font:
 		day_label.add_theme_font_override("font", body_font)
-	day_label.add_theme_font_size_override("font_size", 15)
+	day_label.add_theme_font_size_override("font_size", 13)
 	day_label.add_theme_color_override("font_color", PALETTE.ink)
 	info_hbox.add_child(day_label)
 
@@ -1368,20 +1387,174 @@ func _on_talent_node_pressed(node_id: String) -> void:
 # SECTION: Adventure Button (Start run)
 # ═══════════════════════════════════════════════════════════════════════════════
 
-func _build_adventure_section() -> void:
+func _build_expedition_prep_section() -> void:
+	## Streamlined adventure preparation — no numbered steps.
+	## All choices visible, Merlin comments via LLM passively.
+	var card := _make_card()
+	main_vbox.add_child(card)
+
+	var vbox := VBoxContainer.new()
+	vbox.add_theme_constant_override("separation", 5)
+	card.add_child(vbox)
+
+	var title := _make_section_title("Aventure")
+	vbox.add_child(title)
+
+	expedition_check_labels.clear()
+
+	# ── Adventure Button (prominent, at the top) ──
+	_build_adventure_button(vbox)
+
+	# ── Merlin Reactive Comment (LLM passive) ──
+	merlin_reaction_label = RichTextLabel.new()
+	merlin_reaction_label.bbcode_enabled = true
+	merlin_reaction_label.fit_content = true
+	merlin_reaction_label.scroll_active = false
+	merlin_reaction_label.custom_minimum_size = Vector2(0, 0)
+	if body_font:
+		merlin_reaction_label.add_theme_font_override("normal_font", body_font)
+	merlin_reaction_label.add_theme_font_size_override("normal_font_size", 13)
+	merlin_reaction_label.add_theme_color_override("default_color", PALETTE.ink_soft)
+	merlin_reaction_label.text = ""
+	vbox.add_child(merlin_reaction_label)
+
+	# ── Destination ──
+	_build_prep_step_destination(vbox)
+
+	# ── Tool Selection ──
+	_build_prep_step_tools(vbox)
+
+	# ── Departure Conditions ──
+	_build_prep_step_conditions(vbox)
+
+	_update_adventure_button_state()
+
+
+func _build_prep_step_destination(parent: VBoxContainer) -> void:
+	var step_vbox := VBoxContainer.new()
+	step_vbox.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	step_vbox.add_theme_constant_override("separation", 4)
+	parent.add_child(step_vbox)
+
+	var step_title := Label.new()
+	step_title.text = "Destination"
+	if title_font:
+		step_title.add_theme_font_override("font", title_font)
+	step_title.add_theme_font_size_override("font_size", 13)
+	step_title.add_theme_color_override("font_color", PALETTE.accent)
+	step_vbox.add_child(step_title)
+
+	destination_display_label = Label.new()
+	destination_display_label.text = "Aucune destination choisie"
+	destination_display_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	if body_font:
+		destination_display_label.add_theme_font_override("font", body_font)
+	destination_display_label.add_theme_font_size_override("font_size", 12)
+	destination_display_label.add_theme_color_override("font_color", PALETTE.ink_faded)
+	step_vbox.add_child(destination_display_label)
+
+	var map_btn := Button.new()
+	map_btn.text = "\u25C6 Voir la Carte"
+	map_btn.custom_minimum_size = Vector2(140, 28)
+	map_btn.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
+	if body_font:
+		map_btn.add_theme_font_override("font", body_font)
+	map_btn.add_theme_font_size_override("font_size", 13)
+	map_btn.mouse_entered.connect(func(): SFXManager.play("hover"))
+	map_btn.pressed.connect(_open_mapmonde_overlay)
+	_style_nav_button(map_btn)
+	step_vbox.add_child(map_btn)
+
+	# Update display if biome already selected
+	if selected_biome != "":
+		_update_destination_display()
+
+
+func _build_prep_step_tools(parent: VBoxContainer) -> void:
+	var step_vbox := VBoxContainer.new()
+	step_vbox.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	step_vbox.add_theme_constant_override("separation", 4)
+	parent.add_child(step_vbox)
+
+	var step_title := Label.new()
+	step_title.text = "Outil"
+	if title_font:
+		step_title.add_theme_font_override("font", title_font)
+	step_title.add_theme_font_size_override("font_size", 13)
+	step_title.add_theme_color_override("font_color", PALETTE.accent)
+	step_vbox.add_child(step_title)
+
+	var tools_flow := HBoxContainer.new()
+	tools_flow.alignment = BoxContainer.ALIGNMENT_CENTER
+	tools_flow.add_theme_constant_override("separation", 6)
+	step_vbox.add_child(tools_flow)
+
+	tool_buttons.clear()
+	for tool_id in MerlinConstants.EXPEDITION_TOOLS:
+		var tool_data: Dictionary = MerlinConstants.EXPEDITION_TOOLS[tool_id]
+		var btn := Button.new()
+		btn.text = "%s\n%s" % [tool_data.get("icon", "?"), tool_data.get("name", "")]
+		btn.custom_minimum_size = Vector2(80, 38)
+		btn.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
+		btn.clip_text = false
+		if body_font:
+			btn.add_theme_font_override("font", body_font)
+		btn.add_theme_font_size_override("font_size", 10)
+		btn.tooltip_text = tool_data.get("description", "") + "\n" + tool_data.get("bonus", "")
+		btn.mouse_entered.connect(func(): SFXManager.play("hover"))
+		btn.pressed.connect(_on_tool_selected.bind(tool_id))
+		_style_tool_button(btn, false)
+		tool_buttons[tool_id] = btn
+		tools_flow.add_child(btn)
+
+
+func _build_prep_step_conditions(parent: VBoxContainer) -> void:
+	var step_vbox := VBoxContainer.new()
+	step_vbox.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	step_vbox.add_theme_constant_override("separation", 3)
+	parent.add_child(step_vbox)
+
+	var step_title := Label.new()
+	step_title.text = "Conditions"
+	if title_font:
+		step_title.add_theme_font_override("font", title_font)
+	step_title.add_theme_font_size_override("font_size", 13)
+	step_title.add_theme_color_override("font_color", PALETTE.accent)
+	step_vbox.add_child(step_title)
+
+	departure_buttons.clear()
+	for cond_id in MerlinConstants.DEPARTURE_CONDITIONS:
+		var cond: Dictionary = MerlinConstants.DEPARTURE_CONDITIONS[cond_id]
+		var btn := Button.new()
+		btn.text = "%s %s  —  %s" % [cond.get("icon", ""), cond.get("name", ""), cond.get("effect_label", "")]
+		btn.toggle_mode = true
+		btn.custom_minimum_size = Vector2(0, 24)
+		btn.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
+		if body_font:
+			btn.add_theme_font_override("font", body_font)
+		btn.add_theme_font_size_override("font_size", 11)
+		btn.mouse_entered.connect(func(): SFXManager.play("hover"))
+		btn.pressed.connect(_on_departure_condition_selected.bind(cond_id))
+		_style_condition_button(btn, false)
+		departure_buttons[cond_id] = btn
+		step_vbox.add_child(btn)
+
+
+func _build_adventure_button(parent: VBoxContainer) -> void:
 	var center := CenterContainer.new()
 	center.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	main_vbox.add_child(center)
+	parent.add_child(center)
 
 	adventure_btn = Button.new()
-	adventure_btn.text = "\u25C6  Partir a l'Aventure  \u25C6"
-	adventure_btn.custom_minimum_size = Vector2(320, 56)
+	adventure_btn.text = "\u25C7  Incomplet  \u25C7"
+	adventure_btn.custom_minimum_size = Vector2(280, 42)
+	adventure_btn.disabled = true
 	adventure_btn.mouse_entered.connect(func(): SFXManager.play("hover"))
 	adventure_btn.pressed.connect(_on_start_adventure)
 
 	if title_font:
 		adventure_btn.add_theme_font_override("font", title_font)
-	adventure_btn.add_theme_font_size_override("font_size", 22)
+	adventure_btn.add_theme_font_size_override("font_size", 20)
 
 	var style := StyleBoxFlat.new()
 	style.bg_color = PALETTE.accent
@@ -1418,6 +1591,191 @@ func _build_adventure_section() -> void:
 	center.add_child(adventure_btn)
 
 
+# ── Expedition Selection Handlers ──
+
+func _on_tool_selected(tool_id: String) -> void:
+	SFXManager.play("click")
+	selected_tool = tool_id
+	for tid in tool_buttons:
+		_style_tool_button(tool_buttons[tid], tid == selected_tool)
+	_update_expedition_checks()
+	_update_merlin_reaction()
+	_update_adventure_button_state()
+
+
+func _on_departure_condition_selected(cond_id: String) -> void:
+	SFXManager.play("click")
+	selected_departure_condition = cond_id
+	for cid in departure_buttons:
+		var btn: Button = departure_buttons[cid]
+		btn.button_pressed = (cid == selected_departure_condition)
+		_style_condition_button(btn, cid == selected_departure_condition)
+	_update_expedition_checks()
+	_update_merlin_reaction()
+	_update_adventure_button_state()
+
+
+func _update_destination_display() -> void:
+	if destination_display_label == null:
+		return
+	if selected_biome == "":
+		destination_display_label.text = "Aucune destination choisie"
+		destination_display_label.add_theme_color_override("font_color", PALETTE.ink_faded)
+	else:
+		var biome: Dictionary = BIOME_DATA.get(selected_biome, {})
+		var bc: Color = biome.get("color", PALETTE.ink)
+		destination_display_label.text = "\u2192 %s  —  %s" % [biome.get("name", "Inconnu"), biome.get("subtitle", "")]
+		destination_display_label.add_theme_color_override("font_color", bc)
+
+
+func _update_expedition_checks() -> void:
+	# No more check marks — handled by adventure button state
+	_update_adventure_button_state()
+
+
+func _update_merlin_reaction() -> void:
+	if merlin_reaction_label == null:
+		return
+
+	# Build context for Merlin's reaction
+	var context_parts: PackedStringArray = []
+	if selected_biome != "":
+		var biome_name: String = BIOME_DATA.get(selected_biome, {}).get("name", selected_biome)
+		context_parts.append("destination: %s" % biome_name)
+	if selected_tool != "":
+		var tool_name: String = MerlinConstants.EXPEDITION_TOOLS.get(selected_tool, {}).get("name", selected_tool)
+		context_parts.append("outil: %s" % tool_name)
+	if selected_departure_condition != "":
+		var cond_name: String = MerlinConstants.DEPARTURE_CONDITIONS.get(selected_departure_condition, {}).get("name", selected_departure_condition)
+		context_parts.append("condition: %s" % cond_name)
+
+	if context_parts.is_empty():
+		merlin_reaction_label.text = ""
+		return
+
+	# Try LLM passive comment (async, non-blocking)
+	_request_merlin_passive_comment(", ".join(context_parts))
+
+	# Immediate fallback while LLM generates
+	var fallback_lines: PackedStringArray = []
+	if selected_tool != "":
+		var reaction: String = MerlinConstants.EXPEDITION_MERLIN_REACTIONS.get(selected_tool, "")
+		if reaction != "":
+			fallback_lines.append("[i]\u00AB %s \u00BB[/i]" % reaction)
+	if selected_biome != "" and selected_tool != "" and selected_departure_condition != "":
+		fallback_lines.append("[color=#%s][i]\u00AB Tu es pret, Voyageur. \u00BB[/i][/color]" % PALETTE.success.to_html(false))
+	merlin_reaction_label.text = "\n".join(fallback_lines)
+
+
+var _passive_llm_pending: bool = false
+
+func _request_merlin_passive_comment(context: String) -> void:
+	## Async LLM call for Merlin's passive commentary. Non-blocking.
+	var merlin_node := get_node_or_null("/root/MerlinAI")
+	if merlin_node == null or not merlin_node.get("is_ready"):
+		return
+	if _passive_llm_pending:
+		return
+	if not merlin_node.has_method("generate_voice"):
+		return
+
+	_passive_llm_pending = true
+	var system := "Tu es Merlin le druide. Commente le choix du joueur en 1 phrase courte (10 mots max). Ton bienveillant ou espiegle. Francais."
+	var user_input := "Le joueur prepare: %s" % context
+
+	var result: Dictionary = await merlin_node.generate_voice(system, user_input, {"max_tokens": 30, "temperature": 0.8})
+	_passive_llm_pending = false
+
+	if result.has("error") or not is_inside_tree():
+		return
+	var text: String = str(result.get("text", "")).strip_edges()
+	if text.length() < 5 or text.length() > 80:
+		return
+
+	# Update merlin reaction with LLM text + auto-fade after 4s
+	if merlin_reaction_label and is_instance_valid(merlin_reaction_label):
+		merlin_reaction_label.text = "[i]\u00AB %s \u00BB[/i]" % text
+		if merlin_source_badge and is_instance_valid(merlin_source_badge):
+			LLMSourceBadge.update_badge(merlin_source_badge, "llm")
+		# Auto-fade after 4s
+		var fade_tw := create_tween()
+		fade_tw.tween_interval(4.0)
+		fade_tw.tween_property(merlin_reaction_label, "modulate:a", 0.3, 1.0)
+		fade_tw.tween_callback(func():
+			if merlin_reaction_label and is_instance_valid(merlin_reaction_label):
+				merlin_reaction_label.modulate.a = 1.0
+		)
+
+
+func _update_adventure_button_state() -> void:
+	expedition_ready = (selected_biome != "" and selected_tool != "" and selected_departure_condition != "")
+	if adventure_btn == null:
+		return
+	if expedition_ready:
+		adventure_btn.disabled = false
+		var biome: Dictionary = BIOME_DATA.get(selected_biome, {})
+		adventure_btn.text = "\u25C6  PARTIR VERS %s  \u25C6" % biome.get("name", "L'INCONNU").to_upper()
+	else:
+		adventure_btn.disabled = true
+		var missing: PackedStringArray = []
+		if selected_biome == "":
+			missing.append("destination")
+		if selected_tool == "":
+			missing.append("outil")
+		if selected_departure_condition == "":
+			missing.append("conditions")
+		adventure_btn.text = "\u25C7  Incomplet: %s  \u25C7" % ", ".join(missing)
+
+
+func _style_tool_button(btn: Button, is_selected: bool) -> void:
+	var style := StyleBoxFlat.new()
+	if is_selected:
+		style.bg_color = PALETTE.accent
+		style.border_color = PALETTE.ink
+		style.set_border_width_all(2)
+		btn.add_theme_color_override("font_color", PALETTE.paper)
+	else:
+		style.bg_color = PALETTE.paper_dark
+		style.border_color = PALETTE.accent_soft
+		style.set_border_width_all(1)
+		btn.add_theme_color_override("font_color", PALETTE.ink)
+	style.set_corner_radius_all(6)
+	style.content_margin_left = 6
+	style.content_margin_right = 6
+	style.content_margin_top = 4
+	style.content_margin_bottom = 4
+	btn.add_theme_stylebox_override("normal", style)
+	var hover_style := style.duplicate()
+	hover_style.bg_color = PALETTE.accent_soft if is_selected else PALETTE.accent_glow
+	btn.add_theme_stylebox_override("hover", hover_style)
+	var pressed_style := style.duplicate()
+	pressed_style.bg_color = PALETTE.accent
+	btn.add_theme_stylebox_override("pressed", pressed_style)
+
+
+func _style_condition_button(btn: Button, is_selected: bool) -> void:
+	var style := StyleBoxFlat.new()
+	if is_selected:
+		style.bg_color = Color(PALETTE.accent.r, PALETTE.accent.g, PALETTE.accent.b, 0.25)
+		style.border_color = PALETTE.accent
+		style.set_border_width_all(1)
+		btn.add_theme_color_override("font_color", PALETTE.ink)
+	else:
+		style.bg_color = Color.TRANSPARENT
+		style.border_color = PALETTE.ink_faded
+		style.set_border_width_all(1)
+		btn.add_theme_color_override("font_color", PALETTE.ink_soft)
+	style.set_corner_radius_all(4)
+	style.content_margin_left = 8
+	style.content_margin_right = 8
+	style.content_margin_top = 3
+	style.content_margin_bottom = 3
+	btn.add_theme_stylebox_override("normal", style)
+	var hover_style := style.duplicate()
+	hover_style.bg_color = PALETTE.accent_glow
+	btn.add_theme_stylebox_override("hover", hover_style)
+
+
 # ═══════════════════════════════════════════════════════════════════════════════
 # BOTTOM BAR — Navigation buttons
 # ═══════════════════════════════════════════════════════════════════════════════
@@ -1425,42 +1783,45 @@ func _build_adventure_section() -> void:
 func _build_bottom_bar() -> void:
 	bottom_bar = HBoxContainer.new()
 	bottom_bar.alignment = BoxContainer.ALIGNMENT_CENTER
-	bottom_bar.add_theme_constant_override("separation", 6)
+	bottom_bar.add_theme_constant_override("separation", 4)
 	bottom_bar.modulate.a = 0.0
 	add_child(bottom_bar)
 
-	# Tab navigation buttons (pages + overlays)
-	var tab_labels := ["Merlin", "Carte", "Bestiole", "Arbre"]
+	# LEFT: Tab buttons (compact)
+	var tab_defs := [
+		{"label": "Antre", "icon": "merlin"},
+		{"label": "Compagnons", "icon": "bestiole"},
+	]
 
-	for i in range(tab_labels.size()):
+	for i in range(tab_defs.size()):
 		var btn := Button.new()
-		var icon_ctrl := _make_celtic_icon(tab_labels[i].to_lower(), 18.0)
+		var icon_ctrl := _make_celtic_icon(tab_defs[i]["icon"], 16.0)
 		var hbox := HBoxContainer.new()
 		hbox.alignment = BoxContainer.ALIGNMENT_CENTER
-		hbox.add_theme_constant_override("separation", 4)
+		hbox.add_theme_constant_override("separation", 3)
 		hbox.mouse_filter = Control.MOUSE_FILTER_IGNORE
 		hbox.add_child(icon_ctrl)
 		var lbl := Label.new()
-		lbl.text = tab_labels[i]
+		lbl.text = tab_defs[i]["label"]
 		lbl.mouse_filter = Control.MOUSE_FILTER_IGNORE
 		if body_font:
 			lbl.add_theme_font_override("font", body_font)
-		lbl.add_theme_font_size_override("font_size", 13)
+		lbl.add_theme_font_size_override("font_size", 12)
 		hbox.add_child(lbl)
 		btn.add_child(hbox)
-		btn.custom_minimum_size = Vector2(90, 40)
+		btn.custom_minimum_size = Vector2(100, 36)
 		btn.mouse_entered.connect(func(): SFXManager.play("hover"))
 		btn.pressed.connect(_on_tab_pressed.bind(i))
 		_style_tab_button(btn, i == 0)
 		tab_buttons.append(btn)
 		bottom_bar.add_child(btn)
 
-	# Separator
-	var sep := VSeparator.new()
-	sep.custom_minimum_size = Vector2(2, 30)
-	bottom_bar.add_child(sep)
+	# Flexible spacer between tabs and utility icons
+	var spacer := Control.new()
+	spacer.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	bottom_bar.add_child(spacer)
 
-	# Icon-style utility buttons (Celtic drawn icons)
+	# RIGHT: Utility icon buttons (compact)
 	var icon_items := [
 		{"type": "calendar", "label": "Calendrier", "action": "calendar"},
 		{"type": "collection", "label": "Collection", "action": "collection"},
@@ -1472,13 +1833,12 @@ func _build_bottom_bar() -> void:
 	for item in icon_items:
 		var btn := Button.new()
 		btn.tooltip_text = item["label"]
-		btn.custom_minimum_size = Vector2(44, 44)
+		btn.custom_minimum_size = Vector2(36, 36)
 		btn.focus_mode = Control.FOCUS_NONE
 		btn.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
 		_style_icon_button(btn)
-		# Add drawn Celtic icon as child
-		var icon := _make_celtic_icon(item["type"], 22.0)
-		icon.position = Vector2(11, 11)
+		var icon := _make_celtic_icon(item["type"], 18.0)
+		icon.position = Vector2(9, 9)
 		btn.add_child(icon)
 
 		btn.mouse_entered.connect(_on_icon_hover.bind(btn, true))
@@ -1501,24 +1861,15 @@ func _build_bottom_bar() -> void:
 
 
 func _on_tab_pressed(tab_index: int) -> void:
-	## Switch between HubAntre pages (no scrolling).
-	## Tabs 1 (Carte) and 3 (Arbre) open overlays instead of switching pages.
-	if tab_index == 1:
-		_open_mapmonde_overlay()
+	## Switch between 2 pages: Antre (0) and Compagnons (1).
+	if tab_index == current_tab:
 		return
-	if tab_index == 3:
-		_open_arbre_overlay()
-		return
-
-	# Map logical tab indices to page indices (0→0, 2→1)
-	var page_index: int = 0 if tab_index == 0 else 1
-	var old_page_index: int = 0 if current_tab == 0 else 1
-	if page_index == old_page_index:
+	if tab_index < 0 or tab_index >= tab_pages.size():
 		return
 	SFXManager.play("click")
 
-	var old_page := tab_pages[old_page_index]
-	var new_page := tab_pages[page_index]
+	var old_page := tab_pages[current_tab]
+	var new_page := tab_pages[tab_index]
 
 	var tw := create_tween()
 	tw.tween_property(old_page, "modulate:a", 0.0, 0.15)
@@ -1565,6 +1916,7 @@ func _style_tab_button(btn: Button, is_active: bool) -> void:
 func _layout_ui() -> void:
 	var vp := get_viewport_rect().size
 	var margin := 16.0
+	var compact: bool = vp.y < 800
 
 	# Ornaments
 	celtic_top.position = Vector2(0, margin)
@@ -1573,7 +1925,7 @@ func _layout_ui() -> void:
 	celtic_bottom.size = Vector2(vp.x, 24)
 
 	# Bottom bar
-	var bottom_h := 48.0
+	var bottom_h: float = 40.0 if compact else 48.0
 	bottom_bar.position = Vector2(0, vp.y - margin - 28 - bottom_h)
 	bottom_bar.size = Vector2(vp.x, bottom_h)
 
@@ -1583,19 +1935,20 @@ func _layout_ui() -> void:
 	var content_height: float = content_bottom - content_top
 
 	tab_container.position = Vector2(margin, content_top)
-	tab_container.size = Vector2(vp.x - margin * 2, content_height)
+	var tab_size := Vector2(vp.x - margin * 2, content_height)
+	tab_container.set_deferred("size", tab_size)
 
 	# Layout each page
 	var content_width: float = minf(vp.x - margin * 2 - 16, CARD_MAX_WIDTH)
-	var content_offset: float = maxf((tab_container.size.x - content_width) / 2.0, 0.0)
+	var content_offset: float = maxf((tab_size.x - content_width) / 2.0, 0.0)
 
 	for page in tab_pages:
 		page.position = Vector2.ZERO
-		page.size = tab_container.size
+		page.set_deferred("size", tab_size)
 		var vbox := page.get_child(0) as VBoxContainer
 		if vbox:
 			vbox.position = Vector2(content_offset, 0)
-			vbox.size = Vector2(content_width, content_height)
+			vbox.set_deferred("size", Vector2(content_width, content_height))
 			vbox.custom_minimum_size = Vector2(content_width, 0)
 
 
@@ -1788,6 +2141,8 @@ func _update_biome_selection() -> void:
 
 	# Highlight connected paths
 	var line_idx := 0
+	if map_paths_node == null:
+		return
 	for conn in BIOME_CONNECTIONS:
 		if line_idx >= map_paths_node.get_child_count():
 			break
@@ -1943,14 +2298,9 @@ func _update_grimoire_display() -> void:
 
 
 func _update_adventure_button() -> void:
-	if adventure_btn == null:
-		return
-	adventure_btn.disabled = selected_biome == ""
-	if selected_biome == "":
-		adventure_btn.text = "Choisis ton chemin d'abord"
-	else:
-		var biome: Dictionary = BIOME_DATA.get(selected_biome, {})
-		adventure_btn.text = "\u25C6  Partir vers %s  \u25C6" % biome.get("name", "l'Inconnu")
+	# Redirect to new expedition system
+	_update_expedition_checks()
+	_update_adventure_button_state()
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
@@ -1971,7 +2321,10 @@ func _on_biome_selected(biome_key: String) -> void:
 		_current_mission = {"type": "exploration", "target": "Explorer ce sanctuaire", "total": 8, "progress": 0}
 
 	_update_mission_display()
-	_update_adventure_button()
+	_update_destination_display()
+	_update_expedition_checks()
+	_update_merlin_reaction()
+	_update_adventure_button_state()
 
 
 func _on_care_action(action_key: String) -> void:
@@ -2055,6 +2408,17 @@ func _open_mapmonde_overlay() -> void:
 	map_instance.set_anchors_preset(Control.PRESET_FULL_RECT)
 	overlay.add_child(map_instance)
 
+	# Sync current selection to the map
+	if map_instance.has_method("set_selected_biome") and selected_biome != "":
+		map_instance.set_selected_biome(selected_biome)
+
+	# Wire biome selection: MapMonde -> HubAntre biome + adventure flow
+	if map_instance.has_signal("node_selected"):
+		map_instance.node_selected.connect(func(biome_key: String):
+			_on_biome_selected(biome_key)
+			_update_adventure_button()
+		)
+
 	# Override map back button to close overlay instead of changing scene
 	if map_instance.has_signal("close_requested"):
 		map_instance.close_requested.connect(func(): overlay.queue_free())
@@ -2116,12 +2480,12 @@ func _on_menu_pressed() -> void:
 
 
 func _on_start_adventure() -> void:
-	if selected_biome == "":
+	if not expedition_ready:
 		return
 	SFXManager.play("click")
 	SFXManager.play("whoosh")
 
-	# Set biome data for TransitionBiome
+	# Set biome + expedition data for TransitionBiome
 	var gm := get_node_or_null("/root/GameManager")
 	if gm:
 		var biome_data: Dictionary = BIOME_DATA.get(selected_biome, {})
@@ -2137,6 +2501,8 @@ func _on_start_adventure() -> void:
 			"season_forte": biome_data.get("season", ""),
 		}
 		run_data["current_biome"] = selected_biome
+		run_data["tool"] = selected_tool
+		run_data["departure_condition"] = selected_departure_condition
 		if not _current_mission.is_empty():
 			run_data["mission_template"] = _current_mission.duplicate()
 		gm.set("run", run_data)
@@ -2197,10 +2563,10 @@ func _make_card() -> PanelContainer:
 	style.shadow_color = PALETTE.shadow
 	style.shadow_size = 8
 	style.shadow_offset = Vector2(0, 2)
-	style.content_margin_left = 20
-	style.content_margin_top = 16
-	style.content_margin_right = 20
-	style.content_margin_bottom = 16
+	style.content_margin_left = 14
+	style.content_margin_top = 10
+	style.content_margin_right = 14
+	style.content_margin_bottom = 10
 	panel.add_theme_stylebox_override("panel", style)
 
 	return panel
@@ -2233,29 +2599,32 @@ func _make_celtic_ornament() -> Label:
 
 
 func _make_celtic_icon(icon_type: String, sz: float = 24.0) -> Control:
-	## Draw-based Celtic icon — no emoji, logical shapes.
+	## Draw-based Celtic icon — standardized line thickness and spacing.
 	var ctrl := Control.new()
 	ctrl.custom_minimum_size = Vector2(sz, sz)
 	ctrl.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	var lw: float = ICON_STANDARDS.line_thickness  # 1.5 — main strokes
+	var dw: float = ICON_STANDARDS.detail_thickness  # 1.0 — details
+	var ad: float = ICON_STANDARDS.accent_dot  # 2.0 — decorative dots
 	ctrl.draw.connect(func():
 		var c := sz * 0.5
-		var r := sz * 0.38
+		var r := sz * ICON_STANDARDS.radius_ratio
 		var col: Color = PALETTE.ink
 		match icon_type:
 			"merlin":
 				# Wizard hat silhouette
-				ctrl.draw_line(Vector2(c, c - r), Vector2(c - r, c + r), col, 1.5, true)
-				ctrl.draw_line(Vector2(c, c - r), Vector2(c + r, c + r), col, 1.5, true)
-				ctrl.draw_line(Vector2(c - r, c + r), Vector2(c + r, c + r), col, 1.5, true)
-				ctrl.draw_circle(Vector2(c, c - r * 0.6), 2.0, PALETTE.accent)
+				ctrl.draw_line(Vector2(c, c - r), Vector2(c - r, c + r), col, lw, true)
+				ctrl.draw_line(Vector2(c, c - r), Vector2(c + r, c + r), col, lw, true)
+				ctrl.draw_line(Vector2(c - r, c + r), Vector2(c + r, c + r), col, lw, true)
+				ctrl.draw_circle(Vector2(c, c - r * 0.6), ad, PALETTE.accent)
 			"carte":
 				# Compass rose / diamond with cross
-				ctrl.draw_line(Vector2(c, c - r), Vector2(c + r, c), col, 1.5, true)
-				ctrl.draw_line(Vector2(c + r, c), Vector2(c, c + r), col, 1.5, true)
-				ctrl.draw_line(Vector2(c, c + r), Vector2(c - r, c), col, 1.5, true)
-				ctrl.draw_line(Vector2(c - r, c), Vector2(c, c - r), col, 1.5, true)
-				ctrl.draw_line(Vector2(c, c - r * 0.4), Vector2(c, c + r * 0.4), col, 1.0, true)
-				ctrl.draw_line(Vector2(c - r * 0.4, c), Vector2(c + r * 0.4, c), col, 1.0, true)
+				ctrl.draw_line(Vector2(c, c - r), Vector2(c + r, c), col, lw, true)
+				ctrl.draw_line(Vector2(c + r, c), Vector2(c, c + r), col, lw, true)
+				ctrl.draw_line(Vector2(c, c + r), Vector2(c - r, c), col, lw, true)
+				ctrl.draw_line(Vector2(c - r, c), Vector2(c, c - r), col, lw, true)
+				ctrl.draw_line(Vector2(c, c - r * 0.4), Vector2(c, c + r * 0.4), col, dw, true)
+				ctrl.draw_line(Vector2(c - r * 0.4, c), Vector2(c + r * 0.4, c), col, dw, true)
 			"bestiole":
 				# Triskelion (3-arm spiral)
 				for a in range(3):
@@ -2267,43 +2636,51 @@ func _make_celtic_icon(icon_type: String, sz: float = 24.0) -> Control:
 						var aa: float = angle + tt * PI * 0.6
 						pts.append(Vector2(c + cos(aa) * ar, c + sin(aa) * ar))
 					if pts.size() >= 2:
-						ctrl.draw_polyline(pts, col, 1.5, true)
+						ctrl.draw_polyline(pts, col, lw, true)
 			"arbre":
-				# Stylized tree (trunk + 3 branches)
-				ctrl.draw_line(Vector2(c, c + r), Vector2(c, c - r * 0.2), col, 2.0, true)
-				ctrl.draw_line(Vector2(c, c - r * 0.2), Vector2(c - r * 0.7, c - r), col, 1.5, true)
-				ctrl.draw_line(Vector2(c, c - r * 0.2), Vector2(c + r * 0.7, c - r), col, 1.5, true)
-				ctrl.draw_line(Vector2(c, c * 0.6), Vector2(c - r * 0.4, c - r * 0.5), col, 1.0, true)
-				ctrl.draw_line(Vector2(c, c * 0.6), Vector2(c + r * 0.4, c - r * 0.5), col, 1.0, true)
+				# Stylized tree (trunk + branches)
+				ctrl.draw_line(Vector2(c, c + r), Vector2(c, c - r * 0.2), col, lw, true)
+				ctrl.draw_line(Vector2(c, c - r * 0.2), Vector2(c - r * 0.7, c - r), col, lw, true)
+				ctrl.draw_line(Vector2(c, c - r * 0.2), Vector2(c + r * 0.7, c - r), col, lw, true)
+				ctrl.draw_line(Vector2(c, c * 0.6), Vector2(c - r * 0.4, c - r * 0.5), col, dw, true)
+				ctrl.draw_line(Vector2(c, c * 0.6), Vector2(c + r * 0.4, c - r * 0.5), col, dw, true)
 			"calendar":
 				# Celtic lunar wheel — circle + cross
-				ctrl.draw_arc(Vector2(c, c), r, 0, TAU, 16, col, 1.5, true)
-				ctrl.draw_line(Vector2(c, c - r), Vector2(c, c + r), col, 1.0, true)
-				ctrl.draw_line(Vector2(c - r, c), Vector2(c + r, c), col, 1.0, true)
+				ctrl.draw_arc(Vector2(c, c), r, 0, TAU, 16, col, lw, true)
+				ctrl.draw_line(Vector2(c, c - r), Vector2(c, c + r), col, dw, true)
+				ctrl.draw_line(Vector2(c - r, c), Vector2(c + r, c), col, dw, true)
+				# 4 phase dots at cardinal points
+				for a in range(4):
+					var angle: float = float(a) * TAU / 4.0 - PI / 2.0
+					ctrl.draw_circle(Vector2(c + cos(angle) * r, c + sin(angle) * r), ad * 0.6, col)
 			"collection":
 				# Open grimoire (book shape)
-				ctrl.draw_rect(Rect2(c - r * 0.7, c - r * 0.6, r * 1.4, r * 1.2), col, false, 1.5)
-				ctrl.draw_line(Vector2(c, c - r * 0.6), Vector2(c, c + r * 0.6), PALETTE.accent, 1.0, true)
+				ctrl.draw_rect(Rect2(c - r * 0.7, c - r * 0.6, r * 1.4, r * 1.2), col, false, lw)
+				ctrl.draw_line(Vector2(c, c - r * 0.6), Vector2(c, c + r * 0.6), PALETTE.accent, dw, true)
+				# 3 text lines
+				for i in range(3):
+					var y: float = c - r * 0.25 + float(i) * r * 0.35
+					ctrl.draw_line(Vector2(c - r * 0.45, y), Vector2(c + r * 0.45, y), Color(col, 0.3), dw * 0.5, true)
 			"save":
 				# Ogham stone — vertical line + 3 horizontal marks
-				ctrl.draw_line(Vector2(c, c - r), Vector2(c, c + r), col, 2.0, true)
+				ctrl.draw_line(Vector2(c, c - r), Vector2(c, c + r), col, lw, true)
 				for i in range(3):
 					var y: float = c - r * 0.5 + float(i) * r * 0.5
-					ctrl.draw_line(Vector2(c - r * 0.35, y), Vector2(c + r * 0.35, y), col, 1.5, true)
+					ctrl.draw_line(Vector2(c - r * 0.35, y), Vector2(c + r * 0.35, y), col, lw, true)
 			"options":
-				# Triple spiral (simplified triskelion)
+				# Triple spiral (3 arcs, each 120 degrees apart)
 				for a in range(3):
 					var angle: float = float(a) * TAU / 3.0
 					ctrl.draw_arc(Vector2(c + cos(angle) * r * 0.3, c + sin(angle) * r * 0.3),
-						r * 0.3, angle, angle + PI, 8, col, 1.5, true)
+						r * 0.3, angle, angle + PI, 8, col, lw, true)
 			"menu":
-				# Three horizontal ogham lines
+				# Three horizontal lines (standardized spacing)
 				for i in range(3):
 					var y: float = c - r * 0.55 + float(i) * r * 0.55
-					ctrl.draw_line(Vector2(c - r, y), Vector2(c + r, y), col, 1.5, true)
+					ctrl.draw_line(Vector2(c - r, y), Vector2(c + r, y), col, lw, true)
 			_:
 				# Fallback: simple dot
-				ctrl.draw_circle(Vector2(c, c), 3.0, col)
+				ctrl.draw_circle(Vector2(c, c), ad, col)
 	)
 	return ctrl
 

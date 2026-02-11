@@ -47,10 +47,17 @@ var game_state_sync: GameStateSync
 var narrator_llm: Object = null      # Brain 1: Creative (toujours present)
 var gamemaster_llm: Object = null    # Brain 2: Logic/JSON (desktop+)
 
+# ── LoRA Adapters — Style specialization for Narrator brain ────────────────
+const LORA_ADAPTER_DIR := "res://addons/merlin_llm/adapters/"
+const LORA_NARRATOR_FILE := "merlin_narrator_lora.gguf"
+var _narrator_lora_loaded := false
+var _lora_adapters: Dictionary = {}  # tone_name -> adapter_id
+var _current_lora_tone := ""
+
 # Narrator: creative text, scenarios, dialogue, Merlin voice
-var narrator_params := {"temperature": 0.7, "top_p": 0.9, "max_tokens": 200, "top_k": 40, "repetition_penalty": 1.3}
-# Game Master: effects JSON, balance, rules, structured output
-var gamemaster_params := {"temperature": 0.2, "top_p": 0.8, "max_tokens": 150, "top_k": 20, "repetition_penalty": 1.0}
+var narrator_params := {"temperature": 0.75, "top_p": 0.92, "max_tokens": 200, "top_k": 40, "repetition_penalty": 1.35}
+# Game Master: effects JSON, balance, rules, structured output (tighter for speed)
+var gamemaster_params := {"temperature": 0.15, "top_p": 0.8, "max_tokens": 130, "top_k": 15, "repetition_penalty": 1.0}
 
 # ── Worker Pool (Brain 3+) — background tasks ─────────────────────────────
 # With 2 brains: primary brains handle bg tasks when idle (transparent)
@@ -59,6 +66,9 @@ var _pool_workers: Array = []       # LLM instances (Brain 3, 4)
 var _pool_busy: Array = []          # Busy state per pool worker
 var _primary_narrator_busy := false # True during generate_narrative/parallel
 var _primary_gm_busy := false       # True during generate_structured/parallel
+var _narrator_busy_since := 0       # Timestamp (ms) when narrator became busy
+var _gm_busy_since := 0             # Timestamp (ms) when GM became busy
+const BRAIN_BUSY_TIMEOUT_MS := 60000  # 60s — force release if brain stuck
 
 # Background task system (fire-and-forget via _process polling)
 var _active_bg_tasks: Array = []    # Running: {type, llm, state, callback, params, start_time}
@@ -111,6 +121,8 @@ var stats := {
 	"llm_calls": 0
 }
 
+var _warmup_started := false
+
 func _ready() -> void:
 	set_process(false)  # Enabled when background tasks are active
 	rag_manager = RAGManager.new()
@@ -121,8 +133,17 @@ func _ready() -> void:
 	add_child(game_state_sync)
 	_load_prompts()
 	_load_prompt_templates()
-	_init_local_models()
+	# Models loaded on demand via start_warmup() — not at autoload time
 	load_session_history()
+
+
+## Start LLM model loading. Call from MenuPrincipal on "Nouvelle Partie"/"Continuer".
+## Emits status_changed during loading and ready_changed(true) when done.
+func start_warmup() -> void:
+	if _warmup_started or is_ready:
+		return
+	_warmup_started = true
+	_init_local_models()
 
 
 func _exit_tree() -> void:
@@ -248,17 +269,17 @@ func _run_llm(llm: Object, prompt: String, params: Dictionary) -> Dictionary:
 		state.result = res
 		state.done = true
 	)
-	# Adaptive polling: fast start, then back off to save CPU
+	# Adaptive polling: instant exit on done, then back off to save CPU
 	var poll_count := 0
 	while not state.done:
 		llm.poll_result()
+		if state.done:
+			break
 		poll_count += 1
-		if poll_count < 5:
+		if poll_count < 10:
 			await get_tree().process_frame
-		elif poll_count < 30:
-			await get_tree().create_timer(0.005).timeout
 		else:
-			await get_tree().create_timer(0.016).timeout
+			await get_tree().create_timer(0.01).timeout
 	var total_time = Time.get_ticks_msec() - start_time
 	stats.last_ttft_ms = ttft
 	stats.last_total_ms = total_time
@@ -331,6 +352,8 @@ func _init_local_models() -> void:
 	# In single-brain mode, narrator handles everything
 	gamemaster_llm = narrator_llm
 	_log("Brain 1 (Narrator) loaded")
+	# Load LoRA adapter for Narrator (style specialization)
+	_load_narrator_lora()
 
 	# ── Brain 2: Game Master (desktop + high-end mobile) ───────────────────
 	if target >= BRAIN_DUAL:
@@ -372,6 +395,80 @@ func _init_local_models() -> void:
 	_log("Model OK: %s | %d brains | %s | ~%d MB RAM" % [model_file_used, brain_count, mode_name, ram_estimate])
 
 
+# ═══════════════════════════════════════════════════════════════════════════════
+# LORA ADAPTER MANAGEMENT — Style specialization for Narrator
+# ═══════════════════════════════════════════════════════════════════════════════
+
+func _load_narrator_lora() -> void:
+	## Load LoRA adapter for the Narrator brain (Celtic narrative style).
+	## Supports single adapter or multi-adapter (per-tone) mode.
+	if narrator_llm == null or not narrator_llm.has_method("load_lora_adapter"):
+		_log("LoRA: MerlinLLM does not support load_lora_adapter — skipping")
+		return
+
+	# Try single narrator adapter first
+	var single_path := LORA_ADAPTER_DIR + LORA_NARRATOR_FILE
+	if FileAccess.file_exists(single_path):
+		var fs_path := _to_fs_path(single_path)
+		var err = narrator_llm.load_lora_adapter(fs_path, 1.0)
+		if err == OK:
+			_narrator_lora_loaded = true
+			_log("LoRA: Narrator adapter loaded: %s" % LORA_NARRATOR_FILE)
+		else:
+			_log("LoRA: Narrator adapter load failed (err %d)" % err)
+		return
+
+	# Try per-tone adapters (Multi-LoRA mode)
+	_load_tone_adapters()
+
+
+func _load_tone_adapters() -> void:
+	## Load tone-specific LoRA adapters for dynamic switching.
+	## Files: lora_playful.gguf, lora_melancholy.gguf, etc.
+	if narrator_llm == null or not narrator_llm.has_method("load_lora_adapter"):
+		return
+	var tones := ["playful", "melancholy", "cryptic", "warning", "mysterious", "warm"]
+	var loaded := 0
+	for tone in tones:
+		var path := LORA_ADAPTER_DIR + "lora_%s.gguf" % tone
+		if FileAccess.file_exists(path):
+			var fs_path := _to_fs_path(path)
+			var adapter_id = narrator_llm.load_lora_adapter(fs_path)
+			if adapter_id != null and adapter_id >= 0:
+				_lora_adapters[tone] = adapter_id
+				loaded += 1
+				_log("LoRA: Tone adapter '%s' loaded (id=%d)" % [tone, adapter_id])
+	if loaded > 0:
+		_narrator_lora_loaded = true
+		_log("LoRA: Multi-tone mode active (%d adapters)" % loaded)
+	else:
+		_log("LoRA: No adapters found in %s" % LORA_ADAPTER_DIR)
+
+
+func set_narrator_tone(tone: String) -> void:
+	## Switch the active LoRA adapter based on narrative tone.
+	## Called by MerlinOmniscient before each Narrator generation.
+	if not _narrator_lora_loaded or _lora_adapters.is_empty():
+		return
+	if tone == _current_lora_tone:
+		return  # Already active
+	if narrator_llm == null:
+		return
+	if _lora_adapters.has(tone):
+		if narrator_llm.has_method("set_lora_adapter"):
+			narrator_llm.set_lora_adapter(_lora_adapters[tone])
+			_current_lora_tone = tone
+	else:
+		# No adapter for this tone — use base model
+		if narrator_llm.has_method("clear_lora_adapter"):
+			narrator_llm.clear_lora_adapter()
+			_current_lora_tone = ""
+
+
+func has_lora_adapters() -> bool:
+	return _narrator_lora_loaded
+
+
 ## Detect the optimal number of brains based on platform and available resources.
 static func detect_optimal_brains() -> int:
 	# Mobile: check for mobile/web feature flags
@@ -390,15 +487,17 @@ static func detect_optimal_brains() -> int:
 			return 2  # Flagship: 8+ cores = likely 8-12 GB RAM
 		return 1  # Entry/mid-range: single brain
 
-	# Desktop: use processor count as tier indicator
+	# Desktop: use processor count as tier indicator — minimum 2 brains
 	var cpu_count: int = OS.get_processor_count()
+	var detected: int = 1
 	if cpu_count >= 16:
-		return 4  # Ultra desktop: 16+ threads = Ryzen 9/i9 (32+ GB RAM)
+		detected = 4  # Ultra desktop: 16+ threads = Ryzen 9/i9 (32+ GB RAM)
 	elif cpu_count >= 12:
-		return 3  # High-end desktop: 12+ threads (32+ GB RAM)
+		detected = 3  # High-end desktop: 12+ threads (32+ GB RAM)
 	elif cpu_count >= 6:
-		return 2  # Mid desktop: 6+ threads (16+ GB RAM)
-	return 1  # Low-end: single brain
+		detected = 2  # Mid desktop: 6+ threads (16+ GB RAM)
+	# Force minimum 2 brains on desktop (Narrator + Game Master always needed)
+	return maxi(2, detected)
 
 
 ## Set the target brain count. Call before _init_local_models() or use reload_models().
@@ -431,7 +530,7 @@ func reload_models() -> void:
 
 func ensure_ready() -> void:
 	if not is_ready:
-		_init_local_models()
+		start_warmup()
 
 func generate_with_system(system_prompt: String, user_input: String, params_override: Dictionary = {}) -> Dictionary:
 	if not is_ready:
@@ -717,6 +816,7 @@ func generate_narrative(system_prompt: String, user_input: String, params_overri
 	if not is_ready or narrator_llm == null:
 		return {"error": "Narrator LLM non pret"}
 	_primary_narrator_busy = true
+	_narrator_busy_since = Time.get_ticks_msec()
 	var template: String = prompts.get("executor_template", "{system}\n{input}")
 	var prompt: String = template.format({"system": system_prompt, "input": user_input})
 	var params: Dictionary = narrator_params.duplicate(true)
@@ -728,6 +828,7 @@ func generate_narrative(system_prompt: String, user_input: String, params_overri
 	if result.has("text"):
 		result["text"] = clean_response(str(result.text))
 	_primary_narrator_busy = false
+	_narrator_busy_since = 0
 	_dispatch_from_queue()
 	return result
 
@@ -736,6 +837,7 @@ func generate_structured(system_prompt: String, user_input: String, grammar: Str
 	if not is_ready or gamemaster_llm == null:
 		return {"error": "Game Master LLM non pret"}
 	_primary_gm_busy = true
+	_gm_busy_since = Time.get_ticks_msec()
 	var template: String = prompts.get("executor_template", "{system}\n{input}")
 	var prompt: String = template.format({"system": system_prompt, "input": user_input})
 	var params: Dictionary = gamemaster_params.duplicate(true)
@@ -751,6 +853,7 @@ func generate_structured(system_prompt: String, user_input: String, grammar: Str
 	if result.has("text"):
 		result["text"] = clean_response(str(result.text))
 	_primary_gm_busy = false
+	_gm_busy_since = 0
 	_dispatch_from_queue()
 	return result
 
@@ -769,7 +872,9 @@ func generate_parallel(narrator_system: String, narrator_input: String,
 
 	# TRUE PARALLEL: both instances generate simultaneously on separate threads
 	_primary_narrator_busy = true
+	_narrator_busy_since = Time.get_ticks_msec()
 	_primary_gm_busy = true
+	_gm_busy_since = Time.get_ticks_msec()
 	var template: String = prompts.get("executor_template", "{system}\n{input}")
 	var narrator_prompt: String = template.format({"system": narrator_system, "input": narrator_input})
 	var gm_prompt: String = template.format({"system": gm_system, "input": gm_input})
@@ -804,20 +909,20 @@ func generate_parallel(narrator_system: String, narrator_input: String,
 		state.gm_done = true
 	)
 
-	# Poll both until done
+	# Poll both until done — instant exit on completion
 	var poll_count := 0
 	while not state.narrator_done or not state.gm_done:
 		if not state.narrator_done:
 			narrator_llm.poll_result()
 		if not state.gm_done:
 			gamemaster_llm.poll_result()
+		if state.narrator_done and state.gm_done:
+			break
 		poll_count += 1
-		if poll_count < 5:
+		if poll_count < 10:
 			await get_tree().process_frame
-		elif poll_count < 30:
-			await get_tree().create_timer(0.005).timeout
 		else:
-			await get_tree().create_timer(0.016).timeout
+			await get_tree().create_timer(0.01).timeout
 
 	var total_time := Time.get_ticks_msec() - start_time
 	_log("Parallel generation: %dms (brains=%d)" % [total_time, brain_count])
@@ -835,7 +940,9 @@ func generate_parallel(narrator_system: String, narrator_input: String,
 		gm_result["text"] = clean_response(str(gm_result.text))
 
 	_primary_narrator_busy = false
+	_narrator_busy_since = 0
 	_primary_gm_busy = false
+	_gm_busy_since = 0
 	_dispatch_from_queue()
 	return {"narrative": narrative_result, "structured": gm_result, "parallel": true, "time_ms": total_time}
 
@@ -947,6 +1054,17 @@ func _looks_complete(text: String) -> bool:
 
 func _process(_delta: float) -> void:
 	## Poll active background tasks (fire-and-forget mode).
+	# Brain busy timeout — prevent deadlock if a brain crashes
+	var now_check := Time.get_ticks_msec()
+	if _primary_narrator_busy and _narrator_busy_since > 0 and now_check - _narrator_busy_since > BRAIN_BUSY_TIMEOUT_MS:
+		_primary_narrator_busy = false
+		_narrator_busy_since = 0
+		_log("Narrator busy timeout (%ds) — force release" % [BRAIN_BUSY_TIMEOUT_MS / 1000])
+	if _primary_gm_busy and _gm_busy_since > 0 and now_check - _gm_busy_since > BRAIN_BUSY_TIMEOUT_MS:
+		_primary_gm_busy = false
+		_gm_busy_since = 0
+		_log("GM busy timeout (%ds) — force release" % [BRAIN_BUSY_TIMEOUT_MS / 1000])
+
 	if _active_bg_tasks.is_empty() and _bg_queue.is_empty():
 		set_process(false)
 		return

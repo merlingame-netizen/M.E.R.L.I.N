@@ -242,14 +242,14 @@ func _get_real_achievements() -> Array:
 
 func _get_ending_desc(ending_title: String) -> String:
 	"""Find the description/condition for an ending by title."""
-	for key in MerlinConstants.TRIADE_ENDINGS:
-		if MerlinConstants.TRIADE_ENDINGS[key].get("title", "") == ending_title:
-			var aspects: Array = MerlinConstants.TRIADE_ENDINGS[key].get("aspects", [])
-			return "Chute: %s" % " + ".join(aspects)
+	# Victory endings
 	for key in MerlinConstants.TRIADE_VICTORY_ENDINGS:
 		if MerlinConstants.TRIADE_VICTORY_ENDINGS[key].get("title", "") == ending_title:
 			return str(MerlinConstants.TRIADE_VICTORY_ENDINGS[key].get("condition", "Victoire"))
-	return "Fin mystere"
+	# Life essence depletion
+	if ending_title == "Essences Epuisees":
+		return "Essences de vie taries"
+	return "Fin decouverte"
 
 
 func _get_real_collection() -> Array:
@@ -261,20 +261,7 @@ func _get_real_collection() -> Array:
 		endings_seen = store.state.get("meta", {}).get("endings_seen", [])
 		skills_unlocked = store.state.get("bestiole", {}).get("skills_unlocked", [])
 
-	# 12 chute endings
-	for key in MerlinConstants.TRIADE_ENDINGS:
-		var ending: Dictionary = MerlinConstants.TRIADE_ENDINGS[key]
-		var title: String = str(ending.get("title", ""))
-		var discovered: bool = endings_seen.has(title)
-		items.append({
-			"icon": title.left(1) if discovered else "?",
-			"name": title if discovered else "???",
-			"req": "Fin decouverte" if discovered else "???",
-			"locked": not discovered,
-			"hidden": not discovered,
-		})
-
-	# 3 victory endings
+	# Victory endings (no more 12 chute endings — Phase 43)
 	for key in MerlinConstants.TRIADE_VICTORY_ENDINGS:
 		var ending: Dictionary = MerlinConstants.TRIADE_VICTORY_ENDINGS[key]
 		var title: String = str(ending.get("title", ""))

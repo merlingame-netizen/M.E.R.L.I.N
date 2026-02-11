@@ -108,6 +108,7 @@ var _voice_pitch_slider: HSlider
 var _voice_variation_slider: HSlider
 var _voice_speed_slider: HSlider
 var _voice_test_label: RichTextLabel
+var _llm_test_badge: PanelContainer
 var _voice_pitch_value: Label
 var _voice_variation_value: Label
 var _voice_speed_value: Label
@@ -118,6 +119,8 @@ var _particle_land_count: int = 0
 # Custom cursor
 var _custom_cursor: Control
 
+# LLM status indicator
+var _ai_status_label: Label
 
 # Season for atmosphere
 var current_season := "HIVER"
@@ -221,6 +224,9 @@ func _ready() -> void:
 	resized.connect(_on_resized)
 	_play_entry_animation.call_deferred()
 	_start_mist_animation()
+	# Eager LLM warmup — start loading both brains immediately in background
+	call_deferred("_start_llm_warmup_background")
+	_build_ai_status_indicator()
 
 
 func _load_calendar_settings() -> void:
@@ -751,6 +757,8 @@ func _layout_ui() -> void:
 	_layout_corner_buttons(viewport_size)
 	_layout_celtic_ornaments(viewport_size)
 	_layout_clock()
+	if _ai_status_label:
+		_ai_status_label.position = Vector2(viewport_size.x - 212, viewport_size.y - 28)
 
 
 func _layout_corner_buttons(viewport_size: Vector2) -> void:
@@ -783,6 +791,12 @@ func _on_menu_action(scene: String) -> void:
 		return
 	if scene == "" or swipe_in_progress:
 		return
+
+	# Trigger LLM warm-up for game sessions (not Calendar/Collection)
+	var game_scenes := ["res://scenes/IntroPersonalityQuiz.tscn", "res://scenes/SelectionSauvegarde.tscn"]
+	if scene in game_scenes:
+		_start_llm_warmup()
+
 	swipe_in_progress = true
 	_play_ui_sound("whoosh")
 
@@ -816,6 +830,81 @@ func _on_collections_pressed() -> void:
 	await get_tree().create_timer(0.25).timeout
 	_store_return_scene()
 	get_tree().change_scene_to_file(COLLECTION_SCENE)
+
+
+func _build_ai_status_indicator() -> void:
+	## Discreet AI status label in bottom-right corner.
+	_ai_status_label = Label.new()
+	_ai_status_label.name = "AIStatus"
+	_ai_status_label.text = "IA: ..."
+	_ai_status_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
+	_ai_status_label.add_theme_font_size_override("font_size", 11)
+	_ai_status_label.add_theme_color_override("font_color", PALETTE.ink_faded)
+	if body_font:
+		_ai_status_label.add_theme_font_override("font", body_font)
+	add_child(_ai_status_label)
+	# Position bottom-right
+	var vp_size: Vector2 = get_viewport().get_visible_rect().size
+	_ai_status_label.size = Vector2(200, 20)
+	_ai_status_label.position = Vector2(vp_size.x - 212, vp_size.y - 28)
+	# Connect to MerlinAI signals
+	var mai := get_node_or_null("/root/MerlinAI")
+	if mai == null:
+		_ai_status_label.text = "IA: offline"
+		return
+	if mai.is_ready:
+		_ai_status_label.text = "IA: %d cerveaux" % mai.brain_count
+		_ai_status_label.add_theme_color_override("font_color", PALETTE.accent_soft)
+	if mai.has_signal("status_changed"):
+		mai.status_changed.connect(_on_ai_status_changed)
+	if mai.has_signal("ready_changed"):
+		mai.ready_changed.connect(_on_ai_ready_changed)
+
+
+func _on_ai_status_changed(status_text: String, _detail: String, _progress: float) -> void:
+	if _ai_status_label and is_instance_valid(_ai_status_label):
+		_ai_status_label.text = "IA: " + status_text.substr(0, 24)
+
+
+func _on_ai_ready_changed(is_ai_ready: bool) -> void:
+	if not _ai_status_label or not is_instance_valid(_ai_status_label):
+		return
+	if is_ai_ready:
+		var mai := get_node_or_null("/root/MerlinAI")
+		var bc: int = mai.brain_count if mai else 0
+		_ai_status_label.text = "IA: %d cerveaux" % bc
+		_ai_status_label.add_theme_color_override("font_color", PALETTE.accent_soft)
+		# Subtle fade-in accent
+		var tw := create_tween()
+		_ai_status_label.modulate.a = 0.3
+		tw.tween_property(_ai_status_label, "modulate:a", 1.0, 0.5)
+
+
+func _start_llm_warmup_background() -> void:
+	## Silent warmup — starts loading LLM brains without overlay.
+	var mai := get_node_or_null("/root/MerlinAI")
+	if mai == null or not mai.has_method("start_warmup"):
+		return
+	if mai.is_ready:
+		return
+	mai.start_warmup()
+
+
+func _start_llm_warmup() -> void:
+	## Explicit warmup with overlay — called when player clicks "Jouer".
+	var mai := get_node_or_null("/root/MerlinAI")
+	if mai == null:
+		return
+	# If already ready (background warmup succeeded), skip overlay
+	if mai.is_ready:
+		return
+	if mai.has_method("start_warmup"):
+		mai.start_warmup()
+	# Show overlay only if models are still loading
+	var OverlayScript = load("res://scripts/ui/llm_warmup_overlay.gd")
+	if OverlayScript:
+		var overlay = OverlayScript.new()
+		add_child(overlay)
 
 
 func _store_return_scene() -> void:
@@ -1397,6 +1486,11 @@ func _build_voice_llm_panel() -> void:
 	_voice_test_label.add_theme_color_override("default_color", PALETTE.ink)
 	vbox.add_child(_voice_test_label)
 
+	# LLM source badge (dev indicator)
+	_llm_test_badge = LLMSourceBadge.create("static")
+	_llm_test_badge.visible = false
+	vbox.add_child(_llm_test_badge)
+
 	# --- BUTTONS ---
 	var btn_row1 := HBoxContainer.new()
 	btn_row1.alignment = BoxContainer.ALIGNMENT_CENTER
@@ -1535,9 +1629,16 @@ func _get_panel_prompt() -> String:
 	return LLM_DEFAULT_PROMPT
 
 
+func _update_llm_test_badge(source: String) -> void:
+	if _llm_test_badge and is_instance_valid(_llm_test_badge):
+		LLMSourceBadge.update_badge(_llm_test_badge, source)
+		_llm_test_badge.visible = true
+
+
 func _call_llm(user_prompt: String) -> String:
 	var merlin_ai = get_node_or_null("/root/MerlinAI")
 	if not merlin_ai:
+		_update_llm_test_badge("error")
 		return "MerlinAI non disponible."
 
 	# Streaming API — show chunks as they arrive
@@ -1554,7 +1655,9 @@ func _call_llm(user_prompt: String) -> String:
 			LLM_SYSTEM_PROMPT, user_prompt, LLM_PARAMS_OVERRIDE, on_chunk
 		)
 		if result.has("error"):
+			_update_llm_test_badge("error")
 			return "Erreur LLM: " + str(result.error)
+		_update_llm_test_badge("llm")
 		return _clean_llm_response(str(result.get("text", "")))
 
 	# Fallback: non-streaming generate_with_system
@@ -1563,12 +1666,15 @@ func _call_llm(user_prompt: String) -> String:
 			LLM_SYSTEM_PROMPT, user_prompt, LLM_PARAMS_OVERRIDE
 		)
 		if result.has("error"):
+			_update_llm_test_badge("error")
 			return "Erreur LLM: " + str(result.error)
+		_update_llm_test_badge("llm")
 		return _clean_llm_response(str(result.get("text", "")))
 
 	# Fallback: debug_execute_input
 	if merlin_ai.has_method("debug_execute_input"):
 		var result: Dictionary = await merlin_ai.debug_execute_input(user_prompt)
+		_update_llm_test_badge("llm")
 		return _clean_llm_response(str(result.get("response", result.get("text", ""))))
 
 	return "LLM: aucune methode disponible."
