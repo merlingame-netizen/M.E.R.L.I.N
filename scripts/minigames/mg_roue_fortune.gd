@@ -17,7 +17,7 @@ func _on_start() -> void:
 
 func _setup_segments() -> void:
 	# Difficulty affects bad segments ratio
-	var bad_count: int = mini(1 + _difficulty / 3, 5)
+	var bad_count: int = mini(1 + int(_difficulty / 3.0), 5)
 	segments = [100, 100, 75, 75, 50, 50, 20, 0]
 
 	# Shuffle to randomize positions

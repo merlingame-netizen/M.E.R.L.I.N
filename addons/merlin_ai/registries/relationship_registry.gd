@@ -370,7 +370,7 @@ func _apply_absence_decay() -> void:
 		return
 
 	var now := int(Time.get_unix_time_from_system())
-	var days_away := (now - last_session_date) / 86400  # Seconds per day
+	var days_away := int((now - last_session_date) / 86400.0)  # Seconds per day
 	days_away = mini(days_away, MAX_DECAY_DAYS)
 
 	if days_away > 0:

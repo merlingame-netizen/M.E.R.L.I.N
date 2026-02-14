@@ -30,7 +30,7 @@ const BOOT_LINES := [
 	"Loading druid_core.ko",
 	"Loading ogham_driver.ko",
 	"Ley line scan... FOUND",
-	"LLM: Qwen2.5-3B",
+	"LLM: Ministral-3B",
 	"Warmup inference...",
 	"Systems ready",
 ]
@@ -296,7 +296,7 @@ func _start_phase_3() -> void:
 func _phase_3a_converge() -> void:
 	# SFX: convergence drone
 	SFXManager.play("convergence")
-	var mid: int = logo_blocks.size() / 2
+	var mid: int = int(logo_blocks.size() / 2.0)
 	var left_targets := _random_eye_positions(_left_center, _eye_width, _eye_height, mid)
 	var right_targets := _random_eye_positions(_right_center, _eye_width, _eye_height, logo_blocks.size() - mid)
 

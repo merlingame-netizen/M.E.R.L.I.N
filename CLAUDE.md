@@ -118,7 +118,7 @@ Prefixer avec `*` pour bypass. Les slash commands (`/`) sont auto-bypassees.
 M.E.R.L.I.N. is a narrative card game built with Godot 4.x.
 - **Core Loop**: Choose from 3 options per card, balance 3 Aspects (Corps/Ame/Monde), survive
 - **Game System**: Triade — 3 Aspects x 3 discrete states (Bas/Equilibre/Haut), Souffle d'Ogham
-- **LLM Integration**: Qwen2.5-3B-Instruct Q4_K_M (2.0 GB) — Multi-Brain (1-4 cerveaux)
+- **LLM Integration**: Ministral 3B Instruct (3.4 GB) — Multi-Brain (1-4 cerveaux)
 - **AI Architecture**: Narrator + Game Master in parallel, Worker Pool, RAG v2.0, guardrails
 - **Companion**: Bestiole provides passive skills (18 Oghams)
 - **Character**: Merlin le druide (narrator + guide)
@@ -197,24 +197,25 @@ rag_manager.gd           <- RAG v2.0, token budget, priority, journal
 
 ---
 
-## LLM Integration Rules (Qwen2.5-3B-Instruct + Multi-Brain)
+## LLM Integration Rules (Ministral 3B Instruct + Multi-Brain)
 
 ### Model Info
-- **Model**: Qwen2.5-3B-Instruct Q4_K_M (2.0 GB per brain)
-- **Source**: https://huggingface.co/Qwen/Qwen2.5-3B-Instruct-GGUF
-- **Benchmark**: 83% comprehension, 100% logic, 100% role-play, 100% JSON
+- **Model**: Ministral 3B Instruct (~3.4 GB, from Ollama)
+- **Source**: https://ollama.com/library/ministral
+- **Chat template**: `[INST] {system} {prompt} [/INST]`
+- **Context window**: 4096 tokens
 - **Architecture**: Multi-Brain (1-4 cerveaux adaptatifs par plateforme)
 
 ### Multi-Brain Roles
 | Brain | Role | Params |
 |-------|------|--------|
-| Narrator (always) | Texte creatif, dialogues | T=0.7, top_p=0.9, max=200 |
-| Game Master (desktop+) | Effets JSON (GBNF), equilibrage | T=0.2, top_p=0.8, max=150 |
+| Narrator (always) | Texte creatif, dialogues | T=0.75, top_p=0.92, max=200 |
+| Game Master (desktop+) | Effets JSON (GBNF), equilibrage | T=0.15, top_p=0.8, max=130 |
 | Worker Pool (3-4) | Prefetch, voice, balance check | Inherits from task type |
 
 ### Prompt Engineering
-- Qwen2.5 follows instructions well — supports longer system prompts
-- Supports French natively (29 languages)
+- Mistral follows [INST] format — supports structured system prompts
+- Supports French natively
 - RAG v2.0: token budget 180, priority-based context
 - Anti-hallucination guardrails: FR check, repetition detection (Jaccard), length bounds
 
@@ -309,7 +310,7 @@ Voir `.claude/agents/AGENTS.md` pour la liste complète et les instructions d'in
 
 ### LoRA Fine-Tuning Pipeline (NOUVEAU)
 
-**4 agents spécialisés** forment un pipeline complet de fine-tuning du modèle Qwen 2.5-3B :
+**4 agents spécialisés** forment un pipeline complet de fine-tuning du modèle Ministral 3B :
 
 | Agent | Fichier | Rôle |
 |-------|---------|------|

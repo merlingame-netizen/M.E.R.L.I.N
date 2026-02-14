@@ -2,6 +2,23 @@
 
 > **Note**: Sessions anterieures archivees dans `archive/progress_archive_2026-02-05_to_2026-02-08.md`
 
+## Session: 2026-02-14a (Fix Warnings + Migration Qwen -> Ministral 3B)
+
+### GDScript Warnings Fixed
+- **Integer divisions (7 total)**: relationship_registry, session_registry (x2), IntroCeltOS, mg_lame_druide, mg_roue_fortune, triade_game_controller — pattern `int(x / N.0)`
+- **Unused class variables (3)**: Removed `_preloaded_responses`, `_llm_gen`, `_prefetched_responses` from SceneRencontreMerlin.gd
+- **Lambda capture bug (2)**: `_llm_rephrase()` et `_llm_generate_responses()` — GDScript 4 lambdas capture by value, refactored to Dictionary (reference type) as shared state
+
+### Migration LLM: Qwen2.5-3B -> Ministral 3B Instruct
+- **Model**: `ministral-3b-instruct.gguf` (3.52 GB, from Ollama blob storage)
+- **Ollama**: `ministral-3b-instruct:latest` deja installe
+- **MODEL_FILE**: Updated in merlin_ai.gd
+- **RAM_PER_BRAIN_MB**: 2200 -> 3800
+- **Fichiers code mis a jour** (12): merlin_ai, merlin_omniscient, rag_manager, merlin_llm_adapter, triade_game_controller, IntroCeltOS, TestLLMScene, llm_source_badge, llm_status_bar, PLACE_MODEL_HERE, CLAUDE.md, SceneRencontreMerlin
+- **Note**: LoRA pipeline et docs secondaires encore references Qwen (migration progressive)
+
+---
+
 ## Session: 2026-02-11i (Phase 43B — Fix UI + LLM + TransitionBiome)
 
 ### Etape 1: UI TriadeGame — Options visibles

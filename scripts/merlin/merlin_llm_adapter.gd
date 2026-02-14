@@ -31,9 +31,9 @@ const TRIADE_ASPECTS := ["Corps", "Ame", "Monde"]
 const TRIADE_DIRECTIONS := ["up", "down"]
 const TRIADE_STATES := [-1, 0, 1]
 
-# LLM generation params tuned for Qwen2.5-3B-Instruct Q4_K_M
+# LLM generation params tuned for Ministral 3B Instruct
 const TRIADE_LLM_PARAMS := {
-	"max_tokens": 200,
+	"max_tokens": 360,
 	"temperature": 0.6,
 	"top_p": 0.85,
 	"top_k": 30,
@@ -163,7 +163,7 @@ func _generate_card_two_stage(context: Dictionary) -> Dictionary:
 		return {"ok": false, "card": {}, "error": "LLM not ready"}
 
 	# Stage 1: Free text generation (what nano models do well)
-	var system_prompt := "Tu es Merlin l'Enchanteur, druide de Broceliande. Ecris un scenario court (2-3 phrases) pour un jeu de cartes celtique. Vocabulaire: nemeton, ogham, sidhe, brume, mousse. Propose 3 choix (A/B/C) avec consequences."
+	var system_prompt := "Tu es Merlin l'Enchanteur, druide de Broceliande. Ecris une situation riche et evocatrice (5-7 phrases, 420-620 caracteres) pour un jeu de cartes celtique. Vocabulaire: nemeton, ogham, sidhe, brume, mousse, serment, clairiere. Propose exactement 3 choix (A/B/C) avec des verbes d'action et une consequence implicite."
 	var aspects: Dictionary = context.get("aspects", {})
 	var souffle: int = int(context.get("souffle", 3))
 	var day: int = int(context.get("day", 1))
@@ -175,12 +175,12 @@ func _generate_card_two_stage(context: Dictionary) -> Dictionary:
 		if s < 0: state_name = "bas"
 		elif s > 0: state_name = "haut"
 		user_prompt += " %s=%s." % [aspect_name, state_name]
-	user_prompt += " Format: scenario puis 3 choix (A/B/C)."
+	user_prompt += " Format: scenario long puis 3 choix (A/B/C) relies a la situation."
 
 	# No grammar for free text generation
 	var free_params := TRIADE_LLM_PARAMS.duplicate()
 	free_params.erase("grammar")
-	free_params["max_tokens"] = 150
+	free_params["max_tokens"] = 340
 	free_params["temperature"] = 0.7
 
 	var result: Dictionary = await _merlin_ai.generate_with_system(
@@ -435,11 +435,11 @@ func calculate_smart_effects(context: Dictionary, scenario_text: String, labels:
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
-# TRIADE SYSTEM PROMPT — Compact for Qwen2.5-3B-Instruct
+# TRIADE SYSTEM PROMPT — Compact for Ministral 3B Instruct
 # ═══════════════════════════════════════════════════════════════════════════════
 
 func _build_triade_system_prompt() -> String:
-	return "Tu es Merlin l'Enchanteur, druide ancestral des forets de Broceliande. Genere 1 carte JSON pour un jeu de cartes celtique. La carte contient un scenario narratif (2-3 phrases immersives) et 3 options avec des consequences sur Corps/Ame/Monde. Vocabulaire: nemeton, ogham, sidhe, dolmen, korrigans, brume, mousse. Ton: poetique et mysterieux. Reponds UNIQUEMENT en JSON valide."
+	return "Tu es Merlin l'Enchanteur, druide ancestral des forets de Broceliande. Genere 1 carte JSON pour un jeu de cartes celtique. La carte contient une situation narrative dense et developpee (5-7 phrases, 420-620 caracteres) et 3 options basees sur des verbes d'action avec consequences sur Corps/Ame/Monde. Vocabulaire: nemeton, ogham, sidhe, dolmen, korrigans, brume, mousse, serment. Ton: poetique, concret et mysterieux. Reponds UNIQUEMENT en JSON valide."
 
 
 func _build_triade_user_prompt(context: Dictionary) -> String:
@@ -483,6 +483,7 @@ func _build_triade_user_prompt(context: Dictionary) -> String:
 
 	# JSON template at end of user prompt (anti-hallucination: model sees template last)
 	prompt += "\nEffets: SHIFT_ASPECT aspect=Corps/Ame/Monde direction=up/down."
+	prompt += "\nLe champ text doit etre detaille (5-7 phrases, 420-620 caracteres), les labels doivent commencer par un verbe d'action."
 	prompt += "\n{\"text\":\"...\",\"speaker\":\"merlin\",\"options\":[{\"label\":\"...\",\"effects\":[{\"type\":\"SHIFT_ASPECT\",\"aspect\":\"Corps\",\"direction\":\"up\"}]},{\"label\":\"...\",\"effects\":[{\"type\":\"SHIFT_ASPECT\",\"aspect\":\"Ame\",\"direction\":\"up\"}]},{\"label\":\"...\",\"effects\":[{\"type\":\"SHIFT_ASPECT\",\"aspect\":\"Monde\",\"direction\":\"down\"}]}],\"tags\":[\"tag\"]}"
 
 	return prompt

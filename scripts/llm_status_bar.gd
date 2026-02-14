@@ -14,7 +14,7 @@ const PALETTE := {
 }
 
 const TRINITY_MODELS := {
-	"Q4_K_M": {"file": "qwen2.5-3b-instruct-q4_k_m.gguf", "desc": "Qwen2.5 3B (defaut)"},
+	"default": {"file": "ministral-3b-instruct.gguf", "desc": "Ministral 3B (defaut)"},
 }
 
 const MODEL_DIRS := [

@@ -111,7 +111,7 @@ func start_new_session() -> void:
 	# Calculate days since last play
 	if history.last_session_date > 0:
 		var now := int(Time.get_unix_time_from_system())
-		history.days_since_last_play = (now - history.last_session_date) / 86400
+		history.days_since_last_play = int((now - history.last_session_date) / 86400.0)
 
 		# Update streak
 		if history.days_since_last_play <= 1:
@@ -207,7 +207,7 @@ func _calculate_decision_trend() -> void:
 		decision_time_trend = 0.0
 		return
 
-	var half := _recent_decision_times.size() / 2
+	var half := int(_recent_decision_times.size() / 2.0)
 	var first_half_avg := 0.0
 	var second_half_avg := 0.0
 

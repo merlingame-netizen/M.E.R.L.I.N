@@ -76,7 +76,7 @@ static func _apply_source(panel: PanelContainer, label: Label, source: String) -
 	# Tooltip
 	match key:
 		"llm":
-			panel.tooltip_text = "Texte genere par le LLM (Qwen2.5-3B)"
+			panel.tooltip_text = "Texte genere par le LLM (Ministral 3B)"
 		"fallback":
 			panel.tooltip_text = "Texte de secours (JSON / pool)"
 		"static":

@@ -7,17 +7,19 @@ signal status_changed(status_text: String, detail_text: String, progress_value: 
 signal ready_changed(is_ready: bool)
 signal log_updated(log_text: String)
 
-# ARCHITECTURE MULTI-BRAIN + WORKER POOL — Qwen2.5-3B-Instruct (1 a 4 cerveaux)
+# ARCHITECTURE MULTI-BRAIN + WORKER POOL — Ministral 3B Instruct (1 a 4 cerveaux)
 # Phase 32: Instances specialisees, meme modele, configs differentes
 # Brain 1 = Narrator (creatif), Brain 2 = Game Master (logique)
 # Brain 3-4 = Worker Pool (prefetch, voice, balance — taches de fond)
-const MODEL_FILE := "res://addons/merlin_llm/models/qwen2.5-3b-instruct-q4_k_m.gguf"
+const MODEL_FILE := "res://addons/merlin_llm/models/ministral-3b-instruct.gguf"
 const MODEL_CANDIDATES := [MODEL_FILE]
 const FastRoute = preload("res://addons/merlin_ai/fast_route.gd")
 
 const PROMPTS_PATH := "res://data/ai/config/prompts.json"
 const PROMPT_TEMPLATES_PATH := "res://data/ai/config/prompt_templates.json"
 const ACTIONS_PATH := "res://data/ai/config/actions.json"
+const SCENE_PROFILES_PATH := "res://data/ai/config/scene_profiles.json"
+const PERSONA_CONFIG_PATH := "res://data/ai/config/merlin_persona.json"
 
 # ═══════════════════════════════════════════════════════════════════════════════
 # BRAIN CONFIGURATION — Adaptatif selon plateforme
@@ -33,8 +35,8 @@ const BRAIN_TRIPLE := 3   # ~6.5 GB RAM
 const BRAIN_QUAD := 4     # ~8.8 GB RAM
 const BRAIN_MAX := BRAIN_QUAD
 
-# RAM par instance Qwen2.5-3B Q4_K_M
-const RAM_PER_BRAIN_MB := 2200  # ~2.2 GB modele + KV cache
+# RAM par instance Ministral 3B (~3.4 GB GGUF + KV cache)
+const RAM_PER_BRAIN_MB := 3800  # ~3.8 GB modele + KV cache
 
 var brain_count: int = 0  # Actual loaded count (set by _init_local_models)
 var _target_brain_count: int = 0  # Requested count (0 = auto-detect)
@@ -92,6 +94,8 @@ var executor_params: Dictionary:
 
 # Prompt templates (loaded from prompt_templates.json)
 var prompt_templates: Dictionary = {}
+var _scene_profiles: Dictionary = {}
+var _scene_context: Dictionary = {}
 
 var prompts: Dictionary = {}
 var is_ready := false
@@ -104,7 +108,13 @@ var model_file_used := MODEL_FILE
 var response_cache: Dictionary = {}
 const RESPONSE_CACHE_LIMIT := 200
 var session_contexts: Dictionary = {}
-const SESSION_HISTORY_LIMIT := 24
+const SESSION_HISTORY_LIMIT := 48
+
+# Persona config (loaded from merlin_persona.json)
+var persona_config: Dictionary = {}
+var _persona_forbidden_words: PackedStringArray = []
+var _persona_few_shots: Array = []
+const PERSONA_DRIFT_THRESHOLD := 3  # Consecutive responses without Celtic vocabulary
 const SESSION_PERSIST_PATH := "user://ai/memory/llm_session_history.json"
 const SESSION_PERSIST_LIMIT := 50
 const STREAM_CHUNK_TOKENS := 32
@@ -133,6 +143,8 @@ func _ready() -> void:
 	add_child(game_state_sync)
 	_load_prompts()
 	_load_prompt_templates()
+	_load_scene_profiles()
+	_load_persona_config()
 	# Models loaded on demand via start_warmup() — not at autoload time
 	load_session_history()
 
@@ -237,15 +249,25 @@ func _route_input(input_text: String) -> String:
 	return _parse_category(str(result.get("text", "")))
 
 func _execute_with_context(input_text: String, context: Dictionary, category: String) -> Dictionary:
-	# Prompt simplifie pour les petits modeles
+	# Prompt simplifie pour les petits modeles — persona enrichie + few-shots
 	var system = prompts.get("executor_system", "Tu es Merlin, un sage druide. Reponds brievement.")
+	system = _augment_system_prompt_with_scene(system, "legacy")
+	var few_shot_block := _build_few_shot_chatml()
 	var template = prompts.get("executor_template", "<|im_start|>system\n{system}<|im_end|>\n<|im_start|>user\n{input}<|im_end|>\n<|im_start|>assistant\n")
-	var prompt = template.format({"system": system, "input": input_text})
+	var prompt: String
+	if few_shot_block != "":
+		prompt = "<|im_start|>system\n%s<|im_end|>\n%s\n<|im_start|>user\n%s<|im_end|>\n<|im_start|>assistant\n" % [system, few_shot_block, input_text]
+	else:
+		prompt = template.format({"system": system, "input": input_text})
 	_log("Prompt envoye: " + prompt.substr(0, 100) + "...")
 	var result = await _run_llm(narrator_llm, prompt, narrator_params)
 	if result.has("error"):
 		return {"response": "Erreur executeur: " + str(result.error), "action": null}
 	var text := clean_response(str(result.get("text", "")))
+	# Persona compliance check
+	var compliance := check_persona_compliance(text)
+	if not compliance.valid:
+		_log("Persona violation: %s" % str(compliance.violations))
 	_log("Reponse brute: " + text.substr(0, 100) + "...")
 	return {"response": text, "action": null}
 
@@ -319,6 +341,183 @@ func _load_prompts() -> void:
 		file.close()
 		if typeof(data) == TYPE_DICTIONARY:
 			prompts = data
+
+func _load_persona_config() -> void:
+	if not FileAccess.file_exists(PERSONA_CONFIG_PATH):
+		_log("Persona config not found: %s" % PERSONA_CONFIG_PATH)
+		return
+	var file := FileAccess.open(PERSONA_CONFIG_PATH, FileAccess.READ)
+	if file == null:
+		return
+	var data = JSON.parse_string(file.get_as_text())
+	file.close()
+	if data is Dictionary:
+		persona_config = data
+		_persona_few_shots = data.get("few_shot", [])
+		var forbidden: Array = data.get("forbidden_words", [])
+		_persona_forbidden_words.clear()
+		for word in forbidden:
+			_persona_forbidden_words.append(str(word).to_lower())
+		_log("Persona config loaded: %d few-shots, %d forbidden words" % [_persona_few_shots.size(), _persona_forbidden_words.size()])
+
+
+## Build ChatML few-shot block from persona config (2-3 random examples)
+func _build_few_shot_chatml() -> String:
+	if _persona_few_shots.is_empty():
+		return ""
+	var count: int = mini(3, _persona_few_shots.size())
+	var indices: Array = range(_persona_few_shots.size())
+	indices.shuffle()
+	var selected: Array = indices.slice(0, count)
+	var parts: PackedStringArray = []
+	for idx in selected:
+		var fs: Dictionary = _persona_few_shots[idx]
+		var user_text: String = str(fs.get("user", ""))
+		var assistant_text: String = str(fs.get("assistant", ""))
+		if user_text != "" and assistant_text != "":
+			parts.append("<|im_start|>user\n%s<|im_end|>" % user_text)
+			parts.append("<|im_start|>assistant\n%s<|im_end|>" % assistant_text)
+	return "\n".join(parts)
+
+
+## Check persona compliance of a response (forbidden words, English, length)
+func check_persona_compliance(response: String) -> Dictionary:
+	var violations: PackedStringArray = []
+	var response_lower := response.to_lower()
+	for word in _persona_forbidden_words:
+		if response_lower.find(word) != -1:
+			violations.append("Mot interdit: '%s'" % word)
+	var english_markers := [" the ", " is ", " are ", " you ", " i am ", " hello ", " please ", " thank "]
+	for marker in english_markers:
+		if response_lower.find(marker) != -1:
+			violations.append("Anglais detecte: '%s'" % marker.strip_edges())
+	if response.length() > 500:
+		violations.append("Trop long: %d chars" % response.length())
+	var score: float = maxf(0.0, 1.0 - violations.size() * 0.25)
+	return {"valid": violations.is_empty(), "violations": violations, "score": score}
+
+
+func _load_scene_profiles() -> void:
+	_scene_profiles.clear()
+	if not FileAccess.file_exists(SCENE_PROFILES_PATH):
+		return
+	var file := FileAccess.open(SCENE_PROFILES_PATH, FileAccess.READ)
+	if file == null:
+		return
+	var parsed = JSON.parse_string(file.get_as_text())
+	file.close()
+	if parsed is Dictionary:
+		_scene_profiles = parsed
+		_log("Scene profiles loaded: %d" % _scene_profiles.size())
+
+func set_scene_context(scene_id: String, overrides: Dictionary = {}) -> void:
+	var normalized_id := scene_id.strip_edges()
+	if normalized_id == "":
+		clear_scene_context()
+		return
+	var merged: Dictionary = {}
+	if _scene_profiles.has("default") and _scene_profiles["default"] is Dictionary:
+		merged = _scene_profiles["default"].duplicate(true)
+	if _scene_profiles.has(normalized_id) and _scene_profiles[normalized_id] is Dictionary:
+		merged = _deep_merge_dict(merged, _scene_profiles[normalized_id])
+	if not overrides.is_empty():
+		merged = _deep_merge_dict(merged, overrides)
+	merged["scene_id"] = normalized_id
+	_scene_context = merged
+	if rag_manager and rag_manager.has_method("set_scene_context"):
+		rag_manager.set_scene_context(_scene_context)
+	_log("Scene context active: %s" % normalized_id)
+
+func clear_scene_context() -> void:
+	_scene_context.clear()
+	if rag_manager and rag_manager.has_method("clear_scene_context"):
+		rag_manager.clear_scene_context()
+
+func get_scene_context() -> Dictionary:
+	return _scene_context.duplicate(true)
+
+func _deep_merge_dict(base: Dictionary, overlay: Dictionary) -> Dictionary:
+	var merged: Dictionary = base.duplicate(true)
+	for key in overlay.keys():
+		var value = overlay[key]
+		if merged.has(key) and merged[key] is Dictionary and value is Dictionary:
+			merged[key] = _deep_merge_dict(merged[key], value)
+		else:
+			merged[key] = value
+	return merged
+
+func _resolve_scene_context(channel: String) -> Dictionary:
+	if _scene_context.is_empty():
+		return {}
+	var resolved: Dictionary = _scene_context.duplicate(true)
+	var channels = _scene_context.get("channels", {})
+	if channels is Dictionary and channels.has(channel) and channels[channel] is Dictionary:
+		resolved = _deep_merge_dict(resolved, channels[channel])
+	return resolved
+
+func _to_string_list(value) -> PackedStringArray:
+	var out: PackedStringArray = []
+	if value is PackedStringArray:
+		return value
+	if value is Array:
+		for item in value:
+			var text := str(item).strip_edges()
+			if text != "":
+				out.append(text)
+	return out
+
+func _build_scene_contract_lines(channel: String) -> PackedStringArray:
+	var context := _resolve_scene_context(channel)
+	var lines: PackedStringArray = []
+	if context.is_empty():
+		return lines
+	var scene_id := str(context.get("scene_id", ""))
+	if scene_id != "":
+		lines.append("Scene active: %s" % scene_id)
+	var phase := str(context.get("phase", ""))
+	if phase != "":
+		lines.append("Phase: %s" % phase)
+	var intent := str(context.get("intent", ""))
+	if intent != "":
+		lines.append("Objectif narratif: %s" % intent)
+	var tone_target := str(context.get("tone_target", ""))
+	if tone_target != "":
+		lines.append("Ton cible: %s" % tone_target)
+	var allowed := _to_string_list(context.get("allowed_topics", []))
+	if not allowed.is_empty():
+		lines.append("Sujets autorises: %s" % ", ".join(allowed))
+	var forbidden := _to_string_list(context.get("forbidden_topics", []))
+	if not forbidden.is_empty():
+		lines.append("Sujets interdits: %s" % ", ".join(forbidden))
+	var must_ref := _to_string_list(context.get("must_reference", []))
+	if not must_ref.is_empty():
+		lines.append("References obligatoires: %s" % ", ".join(must_ref))
+	var guardrails := _to_string_list(context.get("response_guardrails", []))
+	if not guardrails.is_empty():
+		lines.append("Garde-fous: %s" % " | ".join(guardrails))
+	var limits := context.get("response_limits", {})
+	if limits is Dictionary and not limits.is_empty():
+		var max_sentences: int = int(limits.get("max_sentences", 0))
+		if max_sentences > 0:
+			lines.append("Limite: %d phrases maximum." % max_sentences)
+		var max_words: int = int(limits.get("max_words", 0))
+		if max_words > 0:
+			lines.append("Limite: %d mots maximum." % max_words)
+		var style := str(limits.get("style", ""))
+		if style != "":
+			lines.append("Style attendu: %s" % style)
+	return lines
+
+func _augment_system_prompt_with_scene(system_prompt: String, channel: String, params_override: Dictionary = {}) -> String:
+	if bool(params_override.get("skip_scene_contract", false)):
+		return system_prompt
+	var lines := _build_scene_contract_lines(channel)
+	if lines.is_empty():
+		return system_prompt
+	var contract := "[CONTRAT_SCENE]\n%s\nRespecte strictement ce contrat. Si la demande sort du cadre, recentre-toi sur la scene active." % "\n".join(lines)
+	if system_prompt.strip_edges() == "":
+		return contract
+	return system_prompt.strip_edges() + "\n\n" + contract
 
 func _init_local_models() -> void:
 	_set_status("Connexion: ...", "Preparation des modeles", 5.0)
@@ -535,15 +734,23 @@ func ensure_ready() -> void:
 func generate_with_system(system_prompt: String, user_input: String, params_override: Dictionary = {}) -> Dictionary:
 	if not is_ready:
 		return {"error": "LLM non pret"}
-	var template = prompts.get("executor_template", "{system}\n{input}")
-	var prompt = template.format({"system": system_prompt, "input": user_input})
-	# Use gamemaster for grammar-constrained, narrator otherwise
+	var scoped_system_prompt := _augment_system_prompt_with_scene(system_prompt, "general", params_override)
+	# Inject few-shots for narrator (non-grammar) calls to reinforce persona
 	var has_grammar: bool = params_override.has("grammar") and str(params_override.get("grammar", "")) != ""
+	var few_shot_block := "" if has_grammar else _build_few_shot_chatml()
+	var prompt: String
+	if few_shot_block != "":
+		prompt = "<|im_start|>system\n%s<|im_end|>\n%s\n<|im_start|>user\n%s<|im_end|>\n<|im_start|>assistant\n" % [scoped_system_prompt, few_shot_block, user_input]
+	else:
+		var template = prompts.get("executor_template", "{system}\n{input}")
+		prompt = template.format({"system": scoped_system_prompt, "input": user_input})
+	# Use gamemaster for grammar-constrained, narrator otherwise
 	var target_llm: Object = gamemaster_llm if has_grammar else narrator_llm
 	var params: Dictionary = (gamemaster_params if has_grammar else narrator_params).duplicate(true)
 	for key in params_override.keys():
 		params[key] = params_override[key]
-	var cache_key = _make_cache_key(system_prompt, user_input, params)
+	params.erase("skip_scene_contract")
+	var cache_key = _make_cache_key(scoped_system_prompt, user_input, params)
 	if response_cache.has(cache_key):
 		var cached = response_cache[cache_key]
 		cached["source"] = "cache"
@@ -566,11 +773,13 @@ func generate_with_system(system_prompt: String, user_input: String, params_over
 func generate_with_system_stream(system_prompt: String, user_input: String, params_override: Dictionary = {}, on_chunk: Callable = Callable()) -> Dictionary:
 	if not is_ready:
 		return {"error": "LLM non pret"}
+	var scoped_system_prompt := _augment_system_prompt_with_scene(system_prompt, "stream", params_override)
 	var template = prompts.get("executor_template", "{system}\n{input}")
-	var base_prompt = template.format({"system": system_prompt, "input": user_input})
+	var base_prompt = template.format({"system": scoped_system_prompt, "input": user_input})
 	var params_base = narrator_params.duplicate(true)
 	for key in params_override.keys():
 		params_base[key] = params_override[key]
+	params_base.erase("skip_scene_contract")
 	var remaining = int(params_base.get("max_tokens", narrator_params.max_tokens))
 	var collected := ""
 	var rounds := 0
@@ -817,13 +1026,14 @@ func generate_narrative(system_prompt: String, user_input: String, params_overri
 		return {"error": "Narrator LLM non pret"}
 	_primary_narrator_busy = true
 	_narrator_busy_since = Time.get_ticks_msec()
+	var scoped_system_prompt := _augment_system_prompt_with_scene(system_prompt, "narrative", params_override)
 	var template: String = prompts.get("executor_template", "{system}\n{input}")
-	var prompt: String = template.format({"system": system_prompt, "input": user_input})
+	var prompt: String = template.format({"system": scoped_system_prompt, "input": user_input})
 	var params: Dictionary = narrator_params.duplicate(true)
 	for key in params_override.keys():
 		params[key] = params_override[key]
-	# Narrator never uses grammar — free text only
 	params.erase("grammar")
+	params.erase("skip_scene_contract")
 	var result: Dictionary = await _run_llm(narrator_llm, prompt, params)
 	if result.has("text"):
 		result["text"] = clean_response(str(result.text))
@@ -838,11 +1048,13 @@ func generate_structured(system_prompt: String, user_input: String, grammar: Str
 		return {"error": "Game Master LLM non pret"}
 	_primary_gm_busy = true
 	_gm_busy_since = Time.get_ticks_msec()
+	var scoped_system_prompt := _augment_system_prompt_with_scene(system_prompt, "structured", params_override)
 	var template: String = prompts.get("executor_template", "{system}\n{input}")
-	var prompt: String = template.format({"system": system_prompt, "input": user_input})
+	var prompt: String = template.format({"system": scoped_system_prompt, "input": user_input})
 	var params: Dictionary = gamemaster_params.duplicate(true)
 	for key in params_override.keys():
 		params[key] = params_override[key]
+	params.erase("skip_scene_contract")
 	# Apply GBNF grammar if provided
 	if grammar != "" and gamemaster_llm.has_method("set_grammar"):
 		gamemaster_llm.set_grammar(grammar, "root")
@@ -875,18 +1087,22 @@ func generate_parallel(narrator_system: String, narrator_input: String,
 	_narrator_busy_since = Time.get_ticks_msec()
 	_primary_gm_busy = true
 	_gm_busy_since = Time.get_ticks_msec()
+	var scoped_narrator_system := _augment_system_prompt_with_scene(narrator_system, "narrative", narrator_overrides)
+	var scoped_gm_system := _augment_system_prompt_with_scene(gm_system, "structured", gm_overrides)
 	var template: String = prompts.get("executor_template", "{system}\n{input}")
-	var narrator_prompt: String = template.format({"system": narrator_system, "input": narrator_input})
-	var gm_prompt: String = template.format({"system": gm_system, "input": gm_input})
+	var narrator_prompt: String = template.format({"system": scoped_narrator_system, "input": narrator_input})
+	var gm_prompt: String = template.format({"system": scoped_gm_system, "input": gm_input})
 
 	var n_params: Dictionary = narrator_params.duplicate(true)
 	for key in narrator_overrides.keys():
 		n_params[key] = narrator_overrides[key]
 	n_params.erase("grammar")
+	n_params.erase("skip_scene_contract")
 
 	var gm_params: Dictionary = gamemaster_params.duplicate(true)
 	for key in gm_overrides.keys():
 		gm_params[key] = gm_overrides[key]
+	gm_params.erase("skip_scene_contract")
 
 	# Apply GBNF grammar to Game Master
 	if grammar != "" and gamemaster_llm.has_method("set_grammar"):
@@ -954,12 +1170,14 @@ func generate_prefetch(system_prompt: String, user_input: String, params_overrid
 	var target_llm: Object = _lease_bg_brain()
 	if target_llm == null:
 		return {"error": "Tous les cerveaux occupes"}
+	var scoped_system_prompt := _augment_system_prompt_with_scene(system_prompt, "prefetch", params_override)
 	var template: String = prompts.get("executor_template", "{system}\n{input}")
-	var prompt: String = template.format({"system": system_prompt, "input": user_input})
+	var prompt: String = template.format({"system": scoped_system_prompt, "input": user_input})
 	var params: Dictionary = narrator_params.duplicate(true)
 	for key in params_override.keys():
 		params[key] = params_override[key]
 	params.erase("grammar")
+	params.erase("skip_scene_contract")
 	var result: Dictionary = await _run_llm(target_llm, prompt, params)
 	_release_bg_brain(target_llm)
 	if result.has("text"):
@@ -974,14 +1192,16 @@ func generate_voice(system_prompt: String, user_input: String, params_override: 
 	var target_llm: Object = _lease_bg_brain()
 	if target_llm == null:
 		return {"error": "Tous les cerveaux occupes"}
+	var scoped_system_prompt := _augment_system_prompt_with_scene(system_prompt, "voice", params_override)
 	var template: String = prompts.get("executor_template", "{system}\n{input}")
-	var prompt: String = template.format({"system": system_prompt, "input": user_input})
+	var prompt: String = template.format({"system": scoped_system_prompt, "input": user_input})
 	var params: Dictionary = narrator_params.duplicate(true)
 	params["max_tokens"] = 64
 	params["temperature"] = 0.6
 	for key in params_override.keys():
 		params[key] = params_override[key]
 	params.erase("grammar")
+	params.erase("skip_scene_contract")
 	var result: Dictionary = await _run_llm(target_llm, prompt, params)
 	_release_bg_brain(target_llm)
 	if result.has("text"):
@@ -1147,8 +1367,10 @@ func submit_balance_check(system_prompt: String, user_input: String,
 func _fire_bg_task(task: Dictionary, llm: Object) -> void:
 	## Launch a background task on the given brain (fire-and-forget).
 	var template: String = prompts.get("executor_template", "{system}\n{input}")
-	var prompt: String = template.format({"system": task.system, "input": task.input})
-	var params: Dictionary = task.params
+	var params: Dictionary = task.params.duplicate(true)
+	var scoped_system := _augment_system_prompt_with_scene(str(task.system), str(task.type), params)
+	params.erase("skip_scene_contract")
+	var prompt: String = template.format({"system": scoped_system, "input": task.input})
 	_apply_sampling(llm, params)
 	# Grammar
 	var grammar_str: String = str(params.get("grammar", ""))

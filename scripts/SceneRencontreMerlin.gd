@@ -10,9 +10,15 @@ extends Control
 const NEXT_SCENE := "res://scenes/HubAntre.tscn"
 const DATA_PATH := "res://data/dialogues/scene_dialogues.json"
 
-const TYPEWRITER_DELAY := 0.015
-const TYPEWRITER_PUNCT_DELAY := 0.04
+const UI_SPEED_FACTOR := 1.45
+const TYPEWRITER_DELAY := 0.011
+const TYPEWRITER_PUNCT_DELAY := 0.028
 const BLIP_VOLUME := 0.04
+const MAX_ADVANCE_WAIT := 16.0
+const LLM_READY_WAIT_MAX := 3.0
+const LLM_STEP_TIMEOUT := 3.2
+const LLM_POLL_INTERVAL := 0.12
+const RESPONSE_CONFIRM_DELAY := 0.22
 
 # ═══════════════════════════════════════════════════════════════════════════════
 # PALETTE — Parchemin Mystique Breton
@@ -109,13 +115,13 @@ var _mist_tween: Tween
 var _entry_tween: Tween
 var _biome_pulse_tween: Tween
 var _llm_wait_tween: Tween
+var _skip_hint_tween: Tween
 var card_target_pos := Vector2.ZERO
 
 # Dialogue data
 var dialogue_data: Dictionary = {}
 var eveil_lines: Array = []
 var _response_chosen: int = -1
-var _preloaded_responses: Dictionary = {}
 
 # Game state
 var player_class: String = "druide"
@@ -128,11 +134,9 @@ var title_font: Font
 var body_font: Font
 
 # LLM
-var _llm_gen: Node = null
 var merlin_ai: Node = null
 var _prefetched_rephrase: Dictionary = {}  # {line_index: String}
 var _prefetched_rephrase_sources: Dictionary = {}  # {line_index: "llm"|"fallback"}
-var _prefetched_responses: Dictionary = {}  # {line_index: Array}
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
@@ -169,6 +173,10 @@ func _ready() -> void:
 
 	# Start phase machine
 	_run_phase(Phase.INTRO_CONTEXT)
+
+
+func _exit_tree() -> void:
+	_clear_merlin_scene_context()
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
@@ -235,6 +243,23 @@ func _load_game_state() -> void:
 		player_class = gm.get("player_class") if gm.get("player_class") is String else "druide"
 	suggested_biome = CLASS_TO_BIOME.get(player_class, "foret_broceliande")
 	merlin_ai = get_node_or_null("/root/MerlinAI")
+
+
+func _set_merlin_scene_context(scene_id: String, overrides: Dictionary = {}) -> void:
+	if merlin_ai == null or not merlin_ai.has_method("set_scene_context"):
+		return
+	var payload: Dictionary = {
+		"player_class": player_class,
+		"suggested_biome": suggested_biome
+	}
+	for key in overrides.keys():
+		payload[key] = overrides[key]
+	merlin_ai.set_scene_context(scene_id, payload)
+
+
+func _clear_merlin_scene_context() -> void:
+	if merlin_ai and merlin_ai.has_method("clear_scene_context"):
+		merlin_ai.clear_scene_context()
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
@@ -613,10 +638,10 @@ func _play_entry_animation() -> void:
 	if _entry_tween:
 		_entry_tween.kill()
 	_entry_tween = create_tween()
-	_entry_tween.tween_property(celtic_top, "modulate:a", 1.0, 0.4).set_trans(Tween.TRANS_SINE)
-	_entry_tween.parallel().tween_property(celtic_bottom, "modulate:a", 1.0, 0.4).set_trans(Tween.TRANS_SINE)
-	_entry_tween.tween_property(card, "position:y", target_y, 0.35).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_OUT)
-	_entry_tween.parallel().tween_property(card, "modulate:a", 1.0, 0.25).set_trans(Tween.TRANS_SINE)
+	_entry_tween.tween_property(celtic_top, "modulate:a", 1.0, _scaled_delay(0.32)).set_trans(Tween.TRANS_SINE)
+	_entry_tween.parallel().tween_property(celtic_bottom, "modulate:a", 1.0, _scaled_delay(0.32)).set_trans(Tween.TRANS_SINE)
+	_entry_tween.tween_property(card, "position:y", target_y, _scaled_delay(0.28)).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_OUT)
+	_entry_tween.parallel().tween_property(card, "modulate:a", 1.0, _scaled_delay(0.18)).set_trans(Tween.TRANS_SINE)
 
 
 func _start_mist_animation() -> void:
@@ -635,6 +660,7 @@ func _run_phase(phase: Phase) -> void:
 	if scene_finished or not is_inside_tree():
 		return
 	current_phase = phase
+	_apply_scene_profile_for_phase(phase)
 
 	match phase:
 		Phase.INTRO_CONTEXT:
@@ -647,6 +673,28 @@ func _run_phase(phase: Phase) -> void:
 			await _transition_out()
 
 
+func _apply_scene_profile_for_phase(phase: Phase) -> void:
+	match phase:
+		Phase.INTRO_CONTEXT:
+			_set_merlin_scene_context("scene_rencontre_merlin_intro", {
+				"phase": "intro_context",
+				"must_reference": ["Triade (Corps/Ame/Monde)"]
+			})
+		Phase.BESTIOLE_REVEAL:
+			_set_merlin_scene_context("scene_rencontre_merlin_bestiole", {
+				"phase": "bestiole_reveal",
+				"must_reference": ["Bestiole", "Oghams"]
+			})
+		Phase.MISSION_BRIEFING:
+			_set_merlin_scene_context("scene_rencontre_merlin_mission", {
+				"phase": "mission_briefing",
+				"must_reference": ["Carte du Monde", "Hub", "Oghams"]
+			})
+		Phase.TRANSITIONING:
+			# Keep current profile until scene switch, then clear in _transition_out.
+			pass
+
+
 ## RAG system prompts for LLM-guided intro phases
 const RAG_INTRO_CONTEXT := "Tu es Merlin le druide. Un voyageur (%s) arrive a Broceliande. 2 phrases maximum: accueille-le et mentionne la Triade (Corps/Ame/Monde). Ton bienveillant. Francais."
 const RAG_BESTIOLE := "Tu es Merlin. La Bestiole du voyageur apparait avec 3 Oghams. 2 phrases maximum, ton amuse. Francais."
@@ -655,12 +703,12 @@ const RAG_MISSION_HUB := "Tu es Merlin. Explique au voyageur: Carte du Monde, Og
 
 ## Phase 1: Intro Context — Merlin presents the world + Triade system
 func _phase_intro_context() -> void:
-	# Wait for LLM readiness (max 5s)
+	# Wait for LLM readiness (short cap to keep pacing snappy)
 	if merlin_ai and not merlin_ai.is_ready:
 		var wait_elapsed: float = 0.0
-		while merlin_ai and not merlin_ai.is_ready and wait_elapsed < 5.0:
-			await get_tree().create_timer(0.5).timeout
-			wait_elapsed += 0.5
+		while merlin_ai and not merlin_ai.is_ready and wait_elapsed < LLM_READY_WAIT_MAX:
+			await get_tree().create_timer(LLM_POLL_INTERVAL).timeout
+			wait_elapsed += LLM_POLL_INTERVAL
 			if not is_inside_tree():
 				return
 
@@ -680,11 +728,11 @@ func _phase_intro_context() -> void:
 		await _show_text(llm_text)
 		if not is_inside_tree():
 			return
-		await get_tree().create_timer(0.15).timeout
-		skip_hint.visible = true
+		await get_tree().create_timer(_scaled_delay(0.1)).timeout
+		_set_skip_hint(true)
 		_advance_requested = false
 		await _wait_for_advance(30.0)
-		skip_hint.visible = false
+		_set_skip_hint(false)
 	else:
 		# Fallback: scripted lines with LLM rephrase
 		var lines: Array = eveil_lines if not eveil_lines.is_empty() else [
@@ -706,14 +754,14 @@ func _phase_intro_context() -> void:
 			await _show_text(text)
 			if not is_inside_tree():
 				return
-			await get_tree().create_timer(0.3).timeout
-			skip_hint.visible = true
+			await get_tree().create_timer(_scaled_delay(0.18)).timeout
+			_set_skip_hint(true)
 			_advance_requested = false
 			await _wait_for_advance(20.0)
-			skip_hint.visible = false
+			_set_skip_hint(false)
 			if i < lines.size() - 1:
 				var fade := create_tween()
-				fade.tween_property(merlin_text, "modulate:a", 0.0, 0.15)
+				fade.tween_property(merlin_text, "modulate:a", 0.0, _scaled_delay(0.12))
 				await fade.finished
 				merlin_text.modulate.a = 1.0
 
@@ -722,7 +770,7 @@ func _phase_intro_context() -> void:
 
 	# Interactive response after intro context
 	var fade2 := create_tween()
-	fade2.tween_property(merlin_text, "modulate:a", 0.0, 0.15)
+	fade2.tween_property(merlin_text, "modulate:a", 0.0, _scaled_delay(0.12))
 	await fade2.finished
 	merlin_text.modulate.a = 1.0
 	await _show_response_blocks(1, "Merlin t'a presente le monde et la Triade.")
@@ -746,11 +794,11 @@ func _phase_bestiole_reveal() -> void:
 		await _show_text(llm_text)
 		if not is_inside_tree():
 			return
-		await get_tree().create_timer(0.15).timeout
-		skip_hint.visible = true
+		await get_tree().create_timer(_scaled_delay(0.1)).timeout
+		_set_skip_hint(true)
 		_advance_requested = false
 		await _wait_for_advance(15.0)
-		skip_hint.visible = false
+		_set_skip_hint(false)
 	else:
 		# Fallback
 		var lines: Array = dialogue_data.get("bestiole_apparition", {}).get("lines", [])
@@ -771,14 +819,14 @@ func _phase_bestiole_reveal() -> void:
 			await _show_text(text)
 			if not is_inside_tree():
 				return
-			await get_tree().create_timer(0.3).timeout
-			skip_hint.visible = true
+			await get_tree().create_timer(_scaled_delay(0.18)).timeout
+			_set_skip_hint(true)
 			_advance_requested = false
 			await _wait_for_advance(15.0)
-			skip_hint.visible = false
+			_set_skip_hint(false)
 			if i < lines.size() - 1:
 				var fade := create_tween()
-				fade.tween_property(merlin_text, "modulate:a", 0.0, 0.15)
+				fade.tween_property(merlin_text, "modulate:a", 0.0, _scaled_delay(0.12))
 				await fade.finished
 				merlin_text.modulate.a = 1.0
 
@@ -790,7 +838,7 @@ func _phase_bestiole_reveal() -> void:
 	_set_mood("sage")
 	var ogham_line: String = dialogue_data.get("ogham_reveal", {}).get("line", {}).get("text", "Trois Oghams pour commencer ton chemin.")
 	var fade_pre := create_tween()
-	fade_pre.tween_property(merlin_text, "modulate:a", 0.0, 0.15)
+	fade_pre.tween_property(merlin_text, "modulate:a", 0.0, _scaled_delay(0.12))
 	await fade_pre.finished
 	merlin_text.modulate.a = 1.0
 
@@ -803,7 +851,7 @@ func _phase_bestiole_reveal() -> void:
 	ogham_panel.visible = true
 	_layout_ui()
 	var tw := create_tween()
-	tw.tween_property(ogham_panel, "modulate:a", 1.0, 0.8).set_trans(Tween.TRANS_SINE)
+	tw.tween_property(ogham_panel, "modulate:a", 1.0, _scaled_delay(0.6)).set_trans(Tween.TRANS_SINE)
 	await tw.finished
 
 	# Store oghams
@@ -817,15 +865,15 @@ func _phase_bestiole_reveal() -> void:
 
 	if not is_inside_tree():
 		return
-	await get_tree().create_timer(1.0).timeout
-	skip_hint.visible = true
+	await get_tree().create_timer(_scaled_delay(0.65)).timeout
+	_set_skip_hint(true)
 	_advance_requested = false
 	await _wait_for_advance(30.0)
-	skip_hint.visible = false
+	_set_skip_hint(false)
 
 	# Hide ogham panel
 	var hide_tw := create_tween()
-	hide_tw.tween_property(ogham_panel, "modulate:a", 0.0, 0.4)
+	hide_tw.tween_property(ogham_panel, "modulate:a", 0.0, _scaled_delay(0.28))
 	await hide_tw.finished
 	ogham_panel.visible = false
 
@@ -863,26 +911,26 @@ func _llm_rephrase(scripted_text: String, emotion: String = "", _context: String
 	system += " 1-2 phrases maximum. Francais uniquement. Ne dis rien d'autre que la reformulation."
 	var user_input := scripted_text
 
-	var _done := false
-	var _result := {}
+	# Use Dictionary (reference type) — lambdas capture locals by value in GDScript 4
+	var state := {"done": false, "result": {}}
 	var _do := func():
-		_result = await merlin_ai.generate_voice(system, user_input, {"max_tokens": 40, "temperature": 0.7})
-		_done = true
+		state["result"] = await merlin_ai.generate_voice(system, user_input, {"max_tokens": 40, "temperature": 0.7})
+		state["done"] = true
 	_do.call()
 
 	var elapsed := 0.0
-	while not _done and elapsed < 5.0:
+	while not state["done"] and elapsed < LLM_STEP_TIMEOUT:
 		if not is_inside_tree():
 			_last_rephrase_source = "fallback"
 			return scripted_text
-		await get_tree().create_timer(0.2).timeout
-		elapsed += 0.2
+		await get_tree().create_timer(LLM_POLL_INTERVAL).timeout
+		elapsed += LLM_POLL_INTERVAL
 
-	if not _done or _result.has("error"):
+	if not state["done"] or state["result"].has("error"):
 		_last_rephrase_source = "fallback"
 		return scripted_text
 
-	var text: String = str(_result.get("text", "")).strip_edges()
+	var text: String = str(state["result"].get("text", "")).strip_edges()
 	# Guardrails: minimum length, no empty
 	if text.length() < 10:
 		_last_rephrase_source = "fallback"
@@ -900,25 +948,25 @@ func _llm_generate_responses(context_line: String, line_index: int) -> Array[Str
 	var system := "Tu es l'assistant d'un jeu narratif. Genere 3 reponses courtes (5-10 mots chacune) du joueur a Merlin. JSON array de 3 strings. Francais."
 	var user_input := "Merlin dit: \"%s\"" % context_line
 
-	var _done := false
-	var _result := {}
+	# Use Dictionary (reference type) — lambdas capture locals by value in GDScript 4
+	var state := {"done": false, "result": {}}
 	var _do := func():
-		_result = await merlin_ai.generate_narrative(system, user_input, {"max_tokens": 60, "temperature": 0.6})
-		_done = true
+		state["result"] = await merlin_ai.generate_narrative(system, user_input, {"max_tokens": 60, "temperature": 0.6})
+		state["done"] = true
 	_do.call()
 
 	var elapsed := 0.0
-	while not _done and elapsed < 5.0:
+	while not state["done"] and elapsed < LLM_STEP_TIMEOUT:
 		if not is_inside_tree():
 			return _get_fallback_responses(line_index)
-		await get_tree().create_timer(0.2).timeout
-		elapsed += 0.2
+		await get_tree().create_timer(LLM_POLL_INTERVAL).timeout
+		elapsed += LLM_POLL_INTERVAL
 
-	if not _done or _result.has("error"):
+	if not state["done"] or state["result"].has("error"):
 		_last_response_source = "fallback"
 		return _get_fallback_responses(line_index)
 
-	var raw_text: String = str(_result.get("text", ""))
+	var raw_text: String = str(state["result"].get("text", ""))
 	# Parse JSON array
 	var json := JSON.new()
 	if json.parse(raw_text) == OK and json.data is Array:
@@ -988,11 +1036,11 @@ func _phase_mission_briefing() -> void:
 		await _show_text(llm_text)
 		if not is_inside_tree():
 			return
-		await get_tree().create_timer(0.15).timeout
-		skip_hint.visible = true
+		await get_tree().create_timer(_scaled_delay(0.1)).timeout
+		_set_skip_hint(true)
 		_advance_requested = false
 		await _wait_for_advance(30.0)
-		skip_hint.visible = false
+		_set_skip_hint(false)
 	else:
 		# Fallback: scripted mission lines + hub explanation
 		var lines: Array = dialogue_data.get("mission_briefing", {}).get("lines", [])
@@ -1015,14 +1063,14 @@ func _phase_mission_briefing() -> void:
 			await _show_text(text)
 			if not is_inside_tree():
 				return
-			await get_tree().create_timer(0.3).timeout
-			skip_hint.visible = true
+			await get_tree().create_timer(_scaled_delay(0.18)).timeout
+			_set_skip_hint(true)
 			_advance_requested = false
 			await _wait_for_advance(20.0)
-			skip_hint.visible = false
+			_set_skip_hint(false)
 			if i < lines.size() - 1:
 				var fade := create_tween()
-				fade.tween_property(merlin_text, "modulate:a", 0.0, 0.15)
+				fade.tween_property(merlin_text, "modulate:a", 0.0, _scaled_delay(0.12))
 				await fade.finished
 				merlin_text.modulate.a = 1.0
 
@@ -1031,7 +1079,7 @@ func _phase_mission_briefing() -> void:
 
 	# Interactive response after mission briefing
 	var fade2 := create_tween()
-	fade2.tween_property(merlin_text, "modulate:a", 0.0, 0.15)
+	fade2.tween_property(merlin_text, "modulate:a", 0.0, _scaled_delay(0.12))
 	await fade2.finished
 	merlin_text.modulate.a = 1.0
 	await _show_response_blocks(3, "Merlin t'a explique la mission et le Hub.")
@@ -1062,7 +1110,7 @@ func _phase_biome_selection() -> void:
 	biome_panel.visible = true
 	_layout_ui()
 	var tw := create_tween()
-	tw.tween_property(biome_panel, "modulate:a", 1.0, 0.6).set_trans(Tween.TRANS_SINE)
+	tw.tween_property(biome_panel, "modulate:a", 1.0, _scaled_delay(0.45)).set_trans(Tween.TRANS_SINE)
 	await tw.finished
 
 	# Enable buttons
@@ -1078,8 +1126,7 @@ func _phase_biome_selection() -> void:
 		_biome_pulse_tween.tween_property(sbtn, "modulate", Color(1.15, 1.10, 1.0), 1.0).set_trans(Tween.TRANS_SINE)
 		_biome_pulse_tween.tween_property(sbtn, "modulate", Color.WHITE, 1.0).set_trans(Tween.TRANS_SINE)
 
-	skip_hint.text = "Choisis un sanctuaire"
-	skip_hint.visible = true
+	_set_skip_hint(true, "Choisis un sanctuaire")
 
 	# Wait for biome selection
 	while selected_biome.is_empty() and not scene_finished:
@@ -1087,7 +1134,7 @@ func _phase_biome_selection() -> void:
 			return
 		await get_tree().process_frame
 
-	skip_hint.visible = false
+	_set_skip_hint(false, "Appuie pour continuer")
 	if _biome_pulse_tween:
 		_biome_pulse_tween.kill()
 
@@ -1098,7 +1145,7 @@ func _phase_biome_selection() -> void:
 
 	if not is_inside_tree():
 		return
-	await get_tree().create_timer(0.5).timeout
+	await get_tree().create_timer(_scaled_delay(0.35)).timeout
 	_run_phase(Phase.TRANSITIONING)
 
 
@@ -1148,7 +1195,7 @@ func _show_text(text: String) -> void:
 			delay = TYPEWRITER_PUNCT_DELAY
 		if not is_inside_tree():
 			break
-		await get_tree().create_timer(delay).timeout
+		await get_tree().create_timer(_scaled_delay(delay)).timeout
 
 	merlin_text.visible_characters = -1
 	typing_active = false
@@ -1169,8 +1216,8 @@ func _show_llm_waiting() -> void:
 	if _llm_wait_tween:
 		_llm_wait_tween.kill()
 	_llm_wait_tween = create_tween().set_loops()
-	_llm_wait_tween.tween_property(merlin_text, "modulate:a", 0.3, 0.6).set_trans(Tween.TRANS_SINE)
-	_llm_wait_tween.tween_property(merlin_text, "modulate:a", 1.0, 0.6).set_trans(Tween.TRANS_SINE)
+	_llm_wait_tween.tween_property(merlin_text, "modulate:a", 0.3, _scaled_delay(0.45)).set_trans(Tween.TRANS_SINE)
+	_llm_wait_tween.tween_property(merlin_text, "modulate:a", 1.0, _scaled_delay(0.45)).set_trans(Tween.TRANS_SINE)
 
 
 func _hide_llm_waiting() -> void:
@@ -1197,7 +1244,7 @@ func _show_response_blocks(line_index: int, context_line: String = "") -> void:
 	_update_response_badge(_last_response_source)
 	for i in range(response_buttons.size()):
 		if i < responses.size():
-			response_buttons[i].text = responses[i]
+			response_buttons[i].text = "[%d] %s" % [i + 1, responses[i]]
 			response_buttons[i].visible = true
 			response_buttons[i].modulate.a = 0.0
 		else:
@@ -1217,7 +1264,7 @@ func _show_response_blocks(line_index: int, context_line: String = "") -> void:
 	response_container.visible = true
 	for i in range(visible_count):
 		var tw := create_tween()
-		tw.tween_property(response_buttons[i], "modulate:a", 1.0, 0.2).set_delay(i * 0.05)
+		tw.tween_property(response_buttons[i], "modulate:a", 1.0, _scaled_delay(0.16)).set_delay(_scaled_delay(float(i) * 0.04))
 
 	while _response_chosen < 0 and not scene_finished:
 		if not is_inside_tree():
@@ -1225,10 +1272,10 @@ func _show_response_blocks(line_index: int, context_line: String = "") -> void:
 		await get_tree().process_frame
 
 	if _response_chosen >= 0 and is_inside_tree():
-		await get_tree().create_timer(0.4).timeout
+		await get_tree().create_timer(_scaled_delay(RESPONSE_CONFIRM_DELAY)).timeout
 
 	var hide_tw := create_tween()
-	hide_tw.tween_property(response_container, "modulate:a", 0.0, 0.3)
+	hide_tw.tween_property(response_container, "modulate:a", 0.0, _scaled_delay(0.22))
 	await hide_tw.finished
 	response_container.visible = false
 	response_container.modulate.a = 1.0
@@ -1260,13 +1307,39 @@ func _get_fallback_responses(line_index: int) -> Array[String]:
 	]
 
 
+func _scaled_delay(seconds: float) -> float:
+	return maxf(0.01, seconds / UI_SPEED_FACTOR)
+
+
+func _set_skip_hint(show: bool, custom_text: String = "") -> void:
+	if not skip_hint or not is_instance_valid(skip_hint):
+		return
+	if custom_text != "":
+		skip_hint.text = custom_text
+	if show:
+		skip_hint.visible = true
+		skip_hint.modulate.a = 1.0
+		if _skip_hint_tween:
+			_skip_hint_tween.kill()
+		_skip_hint_tween = create_tween().set_loops()
+		_skip_hint_tween.tween_property(skip_hint, "modulate:a", 0.42, _scaled_delay(0.45)).set_trans(Tween.TRANS_SINE)
+		_skip_hint_tween.tween_property(skip_hint, "modulate:a", 1.0, _scaled_delay(0.45)).set_trans(Tween.TRANS_SINE)
+	else:
+		if _skip_hint_tween:
+			_skip_hint_tween.kill()
+			_skip_hint_tween = null
+		skip_hint.visible = false
+		skip_hint.modulate.a = 1.0
+
+
 # ═══════════════════════════════════════════════════════════════════════════════
 # INPUT & WAIT
 # ═══════════════════════════════════════════════════════════════════════════════
 
 func _wait_for_advance(max_wait: float) -> void:
+	var effective_wait := minf(max_wait, MAX_ADVANCE_WAIT)
 	var elapsed := 0.0
-	while elapsed < max_wait and not _advance_requested and not scene_finished:
+	while elapsed < effective_wait and not _advance_requested and not scene_finished:
 		if not is_inside_tree():
 			return
 		await get_tree().process_frame
@@ -1280,7 +1353,22 @@ func _unhandled_input(event: InputEvent) -> void:
 	var pressed := false
 	if event is InputEventMouseButton and event.pressed:
 		pressed = true
-	elif event is InputEventKey and event.pressed:
+	elif event is InputEventKey and event.pressed and not event.echo:
+		var response_idx := -1
+		match event.keycode:
+			KEY_1, KEY_KP_1:
+				response_idx = 0
+			KEY_2, KEY_KP_2:
+				response_idx = 1
+			KEY_3, KEY_KP_3:
+				response_idx = 2
+		if response_idx >= 0 and response_container and response_container.visible and _response_chosen < 0:
+			if response_idx < response_buttons.size():
+				var btn: Button = response_buttons[response_idx]
+				if btn and btn.visible and not btn.disabled:
+					_on_response_chosen(response_idx)
+					get_viewport().set_input_as_handled()
+					return
 		if event.keycode in [KEY_ENTER, KEY_KP_ENTER, KEY_SPACE, KEY_ESCAPE]:
 			pressed = true
 	elif event is InputEventScreenTouch and event.pressed:
@@ -1321,14 +1409,15 @@ func _transition_out() -> void:
 
 	var tween := create_tween()
 	tween.set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
-	tween.tween_property(card, "modulate:a", 0.0, 0.6)
-	tween.parallel().tween_property(celtic_top, "modulate:a", 0.0, 0.4)
-	tween.parallel().tween_property(celtic_bottom, "modulate:a", 0.0, 0.4)
-	tween.parallel().tween_property(mist_layer, "modulate:a", 0.6, 0.8)
+	tween.tween_property(card, "modulate:a", 0.0, _scaled_delay(0.45))
+	tween.parallel().tween_property(celtic_top, "modulate:a", 0.0, _scaled_delay(0.28))
+	tween.parallel().tween_property(celtic_bottom, "modulate:a", 0.0, _scaled_delay(0.28))
+	tween.parallel().tween_property(mist_layer, "modulate:a", 0.6, _scaled_delay(0.55))
 	if biome_panel and biome_panel.visible:
-		tween.parallel().tween_property(biome_panel, "modulate:a", 0.0, 0.4)
-	tween.tween_interval(0.3)
+		tween.parallel().tween_property(biome_panel, "modulate:a", 0.0, _scaled_delay(0.28))
+	tween.tween_interval(_scaled_delay(0.18))
 	tween.tween_callback(func():
+		_clear_merlin_scene_context()
 		if is_inside_tree():
 			get_tree().change_scene_to_file(NEXT_SCENE)
 	)

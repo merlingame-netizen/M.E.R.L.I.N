@@ -10,9 +10,20 @@ extends Control
 const NEXT_SCENE := "res://scenes/TriadeGame.tscn"
 const DATA_PATH := "res://data/post_intro_dialogues.json"
 
-const TYPEWRITER_DELAY := 0.025
-const TYPEWRITER_PUNCT_DELAY := 0.08
+const ANIMATION_SPEED_FACTOR := 1.7
+const TYPEWRITER_DELAY := 0.016
+const TYPEWRITER_PUNCT_DELAY := 0.045
 const BLIP_VOLUME := 0.04
+const LLM_POLL_INTERVAL := 0.12
+const PREFETCH_WAIT_MAX := 2.2
+const PREFETCH_SENTIER_WAIT_MAX := 3.0
+const MAX_ADVANCE_WAIT := 16.0
+const WEATHER_CLEAR := "clear"
+const WEATHER_CLOUDY := "cloudy"
+const WEATHER_RAIN := "rain"
+const WEATHER_STORM := "storm"
+const WEATHER_MIST := "mist"
+const WEATHER_SNOW := "snow"
 
 const GRID_W := 32
 const GRID_H := 16
@@ -92,16 +103,27 @@ const FOG_CONFIG := {
 
 var bg: ColorRect
 var pixel_container: Control
-var path_line: Line2D
 var biome_title: Label
 var biome_subtitle: Label
 var arrival_text: RichTextLabel
 var merlin_comment: RichTextLabel
 var _arrival_badge: PanelContainer
 var _merlin_badge: PanelContainer
-var mist_particles: GPUParticles2D
-var _mist_layers: Array = []  # Multi-layer fog system
-var _volumetric_fog: ColorRect  # Shader-based fog layer
+var _weather_overlay: ColorRect
+var _rain_particles: GPUParticles2D
+var _snow_particles: GPUParticles2D
+var _weather_mode: String = ""
+var _weather_check_timer: float = 0.0
+var _weather_light_factor: float = 1.0
+var _weather_tween: Tween
+var _storm_flash_timer: float = 0.0
+var _solar_arc: Line2D
+var _blue_sun: Panel
+var _blue_sun_style: StyleBoxFlat
+var _clock_panel: PanelContainer
+var _clock_label: Label
+var _solar_arc_points: PackedVector2Array = PackedVector2Array()
+var _weather_rng := RandomNumberGenerator.new()
 var audio_player: AudioStreamPlayer
 
 # ═══════════════════════════════════════════════════════════════════════════════
@@ -136,10 +158,12 @@ func _exit_tree() -> void:
 	# Kill any active tweens to prevent "data.tree is null" errors
 	scene_finished = true
 	typing_abort = true
+	_clear_merlin_scene_context()
 
 
 func _ready() -> void:
 	set_anchors_preset(Control.PRESET_FULL_RECT)
+	_weather_rng.seed = int(Time.get_unix_time_from_system())
 	_load_data()
 	_current_grid = _generate_landscape(biome_key)
 	_build_ui()
@@ -153,11 +177,28 @@ func _ready() -> void:
 	_play_transition()
 
 
+func _process(delta: float) -> void:
+	if scene_finished:
+		return
+	_weather_check_timer += delta
+	if _weather_check_timer >= 1.0:
+		_weather_check_timer = 0.0
+		var now: Dictionary = Time.get_datetime_dict_from_system()
+		_apply_weather_for_hour(int(now.get("hour", 12)), false)
+	_update_solar_clock(false)
+	if _weather_mode == WEATHER_STORM:
+		_storm_flash_timer -= delta
+		if _storm_flash_timer <= 0.0 and _weather_overlay and is_instance_valid(_weather_overlay):
+			var flash_strength := _weather_rng.randf_range(0.06, 0.16)
+			_weather_overlay.color = _weather_overlay.color.lightened(flash_strength)
+			_storm_flash_timer = _weather_rng.randf_range(1.8, 4.8)
+
+
 ## Safe helpers — prevent crashes when node exits tree during await
 func _safe_wait(seconds: float) -> void:
 	if not is_inside_tree():
 		return
-	await get_tree().create_timer(seconds).timeout
+	await get_tree().create_timer(maxf(0.01, seconds / ANIMATION_SPEED_FACTOR)).timeout
 
 func _safe_frame() -> void:
 	if not is_inside_tree():
@@ -213,6 +254,23 @@ func _load_data() -> void:
 		}
 
 
+func _set_merlin_scene_context(scene_id: String, overrides: Dictionary = {}) -> void:
+	if merlin_ai == null or not merlin_ai.has_method("set_scene_context"):
+		return
+	var payload: Dictionary = {
+		"biome": biome_key,
+		"biome_name": str(biome_data.get("name", biome_key))
+	}
+	for key in overrides.keys():
+		payload[key] = overrides[key]
+	merlin_ai.set_scene_context(scene_id, payload)
+
+
+func _clear_merlin_scene_context() -> void:
+	if merlin_ai and merlin_ai.has_method("clear_scene_context"):
+		merlin_ai.clear_scene_context()
+
+
 func _build_ui() -> void:
 	var vs := get_viewport_rect().size
 
@@ -236,7 +294,7 @@ func _build_ui() -> void:
 		bg.color = PALETTE.paper
 	add_child(bg)
 
-	# Mist layer removed — replaced by subtle GPU particles + volumetric shader in _create_mist_particles()
+	# Dynamic weather + solar clock overlay.
 
 	# Celtic ornaments
 	var celtic_top := _make_celtic_ornament()
@@ -254,7 +312,7 @@ func _build_ui() -> void:
 	pixel_container.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	add_child(pixel_container)
 
-	# Mist particles
+	# Dynamic weather + solar clock overlay
 	_create_mist_particles()
 
 	# Load fonts
@@ -317,6 +375,7 @@ func _build_ui() -> void:
 	arrival_text.add_theme_font_size_override("normal_font_size", 18)
 	arrival_text.visible_characters = 0
 	arrival_text.text = ""
+	arrival_text.visible = false
 	add_child(arrival_text)
 
 	# Arrival source badge (dev indicator)
@@ -339,6 +398,7 @@ func _build_ui() -> void:
 	merlin_comment.add_theme_font_size_override("normal_font_size", 20)
 	merlin_comment.visible_characters = 0
 	merlin_comment.text = ""
+	merlin_comment.visible = false
 	add_child(merlin_comment)
 
 	# Merlin source badge (dev indicator)
@@ -369,116 +429,291 @@ func _make_celtic_ornament() -> Label:
 
 
 func _create_mist_particles() -> void:
-	## Multi-layer volumetric fog system with biome-specific tinting.
+	## Active weather + solar arc overlay replacing old 2D fog path.
 	var vs := get_viewport_rect().size
-	var fog_cfg: Dictionary = FOG_CONFIG.get(biome_key, FOG_CONFIG.broceliande)
-	var fog_tint: Color = fog_cfg.get("tint", PALETTE.mist)
-	var fog_dir: Vector3 = fog_cfg.get("direction", Vector3(-1, 0, 0))
-	var fog_speed: float = fog_cfg.get("speed", 1.0)
 
-	# Create soft circular gradient texture for particles
-	var soft_tex := _create_soft_fog_texture(64)
+	_weather_overlay = ColorRect.new()
+	_weather_overlay.set_anchors_preset(Control.PRESET_FULL_RECT)
+	_weather_overlay.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_weather_overlay.z_index = 1
+	_weather_overlay.color = Color(0.14, 0.19, 0.28, 0.06)
+	add_child(_weather_overlay)
 
-	# Layer definitions: [amount, lifetime, scale_min, scale_max, vel_min, vel_max, opacity, z_index]
-	# Subtle opacity — mist hugs the landscape, not full-screen
-	var layers := [
-		[15, 6.0, 6.0, 12.0, 8.0, 20.0, 0.25, -2],  # Back: large, slow, subtle
-		[20, 4.5, 4.0, 8.0, 15.0, 40.0, 0.18, -1],   # Mid: medium, moderate
-		[10, 3.0, 2.0, 5.0, 25.0, 55.0, 0.12, 0],    # Front: small, fast, wispy
-	]
+	var rain_tex := _create_weather_particle_texture(48, true)
+	_rain_particles = GPUParticles2D.new()
+	_rain_particles.amount = 680
+	_rain_particles.lifetime = 1.3
+	_rain_particles.preprocess = 0.8
+	_rain_particles.one_shot = false
+	_rain_particles.emitting = false
+	_rain_particles.texture = rain_tex
+	_rain_particles.position = Vector2(vs.x * 0.5, -18.0)
+	_rain_particles.visibility_rect = Rect2(-vs.x * 0.62, -40.0, vs.x * 1.24, vs.y + 90.0)
+	_rain_particles.z_index = 2
+	var rain_proc := ParticleProcessMaterial.new()
+	rain_proc.emission_shape = ParticleProcessMaterial.EMISSION_SHAPE_BOX
+	rain_proc.emission_box_extents = Vector3(vs.x * 0.52, 1.0, 1.0)
+	rain_proc.direction = Vector3(0.0, 1.0, 0.0)
+	rain_proc.spread = 12.0
+	rain_proc.gravity = Vector3(0.0, 360.0, 0.0)
+	rain_proc.initial_velocity_min = 260.0
+	rain_proc.initial_velocity_max = 390.0
+	rain_proc.scale_min = 0.9
+	rain_proc.scale_max = 1.4
+	rain_proc.color = Color(0.62, 0.80, 1.0, 0.52)
+	_rain_particles.process_material = rain_proc
+	add_child(_rain_particles)
 
-	# Position mist on landscape (not center screen)
-	var total_w := GRID_W * _pixel_size
-	var total_h := GRID_H * _pixel_size
-	var mist_center := _landscape_origin + Vector2(total_w / 2.0, total_h * 0.6)
+	var snow_tex := _create_weather_particle_texture(48, false)
+	_snow_particles = GPUParticles2D.new()
+	_snow_particles.amount = 360
+	_snow_particles.lifetime = 5.2
+	_snow_particles.preprocess = 1.2
+	_snow_particles.one_shot = false
+	_snow_particles.emitting = false
+	_snow_particles.texture = snow_tex
+	_snow_particles.position = Vector2(vs.x * 0.5, -18.0)
+	_snow_particles.visibility_rect = Rect2(-vs.x * 0.62, -40.0, vs.x * 1.24, vs.y + 90.0)
+	_snow_particles.z_index = 2
+	var snow_proc := ParticleProcessMaterial.new()
+	snow_proc.emission_shape = ParticleProcessMaterial.EMISSION_SHAPE_BOX
+	snow_proc.emission_box_extents = Vector3(vs.x * 0.52, 1.0, 1.0)
+	snow_proc.direction = Vector3(0.0, 1.0, 0.0)
+	snow_proc.spread = 30.0
+	snow_proc.gravity = Vector3(0.0, 58.0, 0.0)
+	snow_proc.initial_velocity_min = 34.0
+	snow_proc.initial_velocity_max = 88.0
+	snow_proc.scale_min = 0.6
+	snow_proc.scale_max = 1.2
+	snow_proc.color = Color(0.90, 0.96, 1.0, 0.7)
+	_snow_particles.process_material = snow_proc
+	add_child(_snow_particles)
 
-	_mist_layers.clear()
-	for layer_def in layers:
-		var particles := GPUParticles2D.new()
-		particles.amount = int(layer_def[0])
-		particles.lifetime = float(layer_def[1])
-		particles.position = mist_center
-		particles.emitting = false
-		particles.z_index = int(layer_def[7])
-		particles.texture = soft_tex
+	_blue_sun = Panel.new()
+	_blue_sun.size = Vector2(26, 26)
+	_blue_sun.pivot_offset = _blue_sun.size * 0.5
+	_blue_sun.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_blue_sun.z_index = 4
+	_blue_sun.modulate.a = 0.0
+	_blue_sun_style = StyleBoxFlat.new()
+	_blue_sun_style.set_corner_radius_all(13)
+	_blue_sun_style.border_width_left = 1
+	_blue_sun_style.border_width_top = 1
+	_blue_sun_style.border_width_right = 1
+	_blue_sun_style.border_width_bottom = 1
+	_blue_sun_style.border_color = Color(0.75, 0.90, 1.0, 0.8)
+	_blue_sun_style.bg_color = Color(0.34, 0.70, 1.0, 0.96)
+	_blue_sun.add_theme_stylebox_override("panel", _blue_sun_style)
+	add_child(_blue_sun)
 
-		var mat := ParticleProcessMaterial.new()
-		mat.direction = fog_dir
-		mat.spread = 25.0
-		mat.initial_velocity_min = float(layer_def[4]) * fog_speed
-		mat.initial_velocity_max = float(layer_def[5]) * fog_speed
-		mat.gravity = Vector3.ZERO
-		mat.scale_min = float(layer_def[2])
-		mat.scale_max = float(layer_def[3])
-		var layer_color := Color(fog_tint.r, fog_tint.g, fog_tint.b, float(layer_def[6]))
-		mat.color = layer_color
+	_clock_panel = PanelContainer.new()
+	_clock_panel.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_clock_panel.z_index = 5
+	_clock_panel.modulate.a = 0.0
+	var clock_style := StyleBoxFlat.new()
+	clock_style.bg_color = Color(PALETTE.paper_dark.r, PALETTE.paper_dark.g, PALETTE.paper_dark.b, 0.9)
+	clock_style.border_color = Color(0.32, 0.54, 0.94, 0.85)
+	clock_style.set_border_width_all(1)
+	clock_style.set_corner_radius_all(6)
+	clock_style.content_margin_left = 10
+	clock_style.content_margin_right = 10
+	clock_style.content_margin_top = 4
+	clock_style.content_margin_bottom = 3
+	_clock_panel.add_theme_stylebox_override("panel", clock_style)
+	add_child(_clock_panel)
 
-		particles.process_material = mat
-		add_child(particles)
-		_mist_layers.append(particles)
+	_clock_label = Label.new()
+	_clock_label.text = "00:00"
+	_clock_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	_clock_label.add_theme_font_size_override("font_size", 14)
+	_clock_label.add_theme_color_override("font_color", PALETTE.ink)
+	_clock_panel.add_child(_clock_label)
 
-	# Keep first layer reference for legacy compatibility
-	mist_particles = _mist_layers[0] if _mist_layers.size() > 0 else null
-
-	# Shader-based volumetric fog background
-	_volumetric_fog = ColorRect.new()
-	_volumetric_fog.set_anchors_preset(Control.PRESET_FULL_RECT)
-	_volumetric_fog.z_index = -3
-	_volumetric_fog.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	var fog_shader := Shader.new()
-	fog_shader.code = """shader_type canvas_item;
-uniform vec4 fog_color : source_color = vec4(0.94, 0.92, 0.88, 0.15);
-uniform float fog_density : hint_range(0.0, 1.0) = 0.25;
-uniform float time_scale : hint_range(0.0, 2.0) = 0.3;
-float hash(vec2 p) {
-	return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453);
-}
-float noise(vec2 p) {
-	vec2 i = floor(p); vec2 f = fract(p);
-	float a = hash(i); float b = hash(i + vec2(1.0, 0.0));
-	float c = hash(i + vec2(0.0, 1.0)); float d = hash(i + vec2(1.0, 1.0));
-	vec2 u = f * f * (3.0 - 2.0 * f);
-	return mix(a, b, u.x) + (c - a) * u.y * (1.0 - u.x) + (d - b) * u.x * u.y;
-}
-void fragment() {
-	vec2 uv = UV;
-	float t = TIME * time_scale;
-	float n = noise(uv * 4.0 + vec2(t * 0.5, t * 0.3));
-	n += noise(uv * 8.0 - vec2(t * 0.3, t * 0.2)) * 0.5;
-	n = n / 1.5;
-	float vertical_grad = smoothstep(0.0, 0.6, uv.y);
-	float fog = n * fog_density * vertical_grad;
-	COLOR = vec4(fog_color.rgb, fog_color.a * fog);
-}
-"""
-	var fog_mat := ShaderMaterial.new()
-	fog_mat.shader = fog_shader
-	fog_mat.set_shader_parameter("fog_color", Color(fog_tint.r, fog_tint.g, fog_tint.b, 0.12))
-	fog_mat.set_shader_parameter("fog_density", 0.15)
-	fog_mat.set_shader_parameter("time_scale", 0.3)
-	_volumetric_fog.material = fog_mat
-	_volumetric_fog.modulate.a = 0.0
-	add_child(_volumetric_fog)
+	_layout_solar_arc_geometry()
+	var initial_hour := int(Time.get_datetime_dict_from_system().get("hour", 12))
+	_apply_weather_for_hour(initial_hour, true)
+	_update_solar_clock(true)
 
 
-func _create_soft_fog_texture(tex_size: int) -> GradientTexture2D:
-	## Create a soft circular gradient for fog particles.
+func _create_weather_particle_texture(tex_size: int, elongated: bool = false) -> GradientTexture2D:
 	var gradient := Gradient.new()
-	gradient.add_point(0.0, Color(1, 1, 1, 1.0))
-	gradient.add_point(0.5, Color(1, 1, 1, 0.5))
-	gradient.add_point(1.0, Color(1, 1, 1, 0.0))
+	if elongated:
+		gradient.add_point(0.0, Color(1, 1, 1, 0.0))
+		gradient.add_point(0.30, Color(1, 1, 1, 0.55))
+		gradient.add_point(0.75, Color(1, 1, 1, 0.25))
+		gradient.add_point(1.0, Color(1, 1, 1, 0.0))
+	else:
+		gradient.add_point(0.0, Color(1, 1, 1, 0.95))
+		gradient.add_point(0.55, Color(1, 1, 1, 0.65))
+		gradient.add_point(1.0, Color(1, 1, 1, 0.0))
 	var texture := GradientTexture2D.new()
 	texture.gradient = gradient
-	texture.fill = GradientTexture2D.FILL_RADIAL
-	texture.fill_from = Vector2(0.5, 0.5)
-	texture.fill_to = Vector2(1.0, 0.5)
 	texture.width = tex_size
 	texture.height = tex_size
+	if elongated:
+		texture.fill = GradientTexture2D.FILL_LINEAR
+		texture.fill_from = Vector2(0.5, 0.0)
+		texture.fill_to = Vector2(0.5, 1.0)
+	else:
+		texture.fill = GradientTexture2D.FILL_RADIAL
+		texture.fill_from = Vector2(0.5, 0.5)
+		texture.fill_to = Vector2(1.0, 0.5)
 	return texture
 
 
+func _layout_solar_arc_geometry() -> void:
+	var vs := get_viewport_rect().size
+	_solar_arc_points = PackedVector2Array()
+	if _clock_panel and is_instance_valid(_clock_panel):
+		_clock_panel.position = Vector2(vs.x * 0.5 - 52.0, 22.0)
+
+
+func _current_time_float() -> float:
+	var now: Dictionary = Time.get_datetime_dict_from_system()
+	return float(now.get("hour", 12)) + float(now.get("minute", 0)) / 60.0 + float(now.get("second", 0)) / 3600.0
+
+
+func _sun_position_for_time(time_float: float) -> Vector2:
+	var vs := get_viewport_rect().size
+	var t := clampf(fposmod(time_float, 24.0) / 24.0, 0.0, 1.0)
+	var margin := clampf(vs.x * 0.06, 40.0, 140.0)
+	var x := lerpf(margin, vs.x - margin, t)
+	var y := clampf(vs.y * 0.14, 48.0, 126.0)
+	if _landscape_origin != Vector2.ZERO and _pixel_size > 0.0:
+		var landscape_top := _landscape_origin.y - _pixel_size * 0.7
+		y = minf(y, maxf(40.0, landscape_top - 18.0))
+	return Vector2(x, y)
+
+
+func _is_moon_hour(time_float: float) -> bool:
+	var hour := int(floor(fposmod(time_float, 24.0)))
+	return hour >= 22 or hour < 6
+
+
+func _update_solar_clock(instant: bool) -> void:
+	if not _blue_sun or not is_instance_valid(_blue_sun):
+		return
+	_layout_solar_arc_geometry()
+	var now: Dictionary = Time.get_datetime_dict_from_system()
+	if _clock_label and is_instance_valid(_clock_label):
+		_clock_label.text = "%02d:%02d" % [int(now.get("hour", 0)), int(now.get("minute", 0))]
+	var tf := _current_time_float()
+	var moon_mode := _is_moon_hour(tf)
+	var pulse := 1.0 + sin(float(Time.get_ticks_msec()) * 0.0032) * 0.045
+	var base_size := 24.0 if moon_mode else 28.0
+	var sphere_size := base_size * pulse
+	_blue_sun.size = Vector2(sphere_size, sphere_size)
+	_blue_sun.pivot_offset = _blue_sun.size * 0.5
+	var target_center := _sun_position_for_time(tf)
+	var target_pos := target_center - _blue_sun.size * 0.5
+	if instant or _blue_sun.modulate.a <= 0.01:
+		_blue_sun.position = target_pos
+	else:
+		_blue_sun.position = _blue_sun.position.lerp(target_pos, 0.18)
+
+	if _blue_sun_style:
+		if moon_mode:
+			_blue_sun_style.bg_color = Color(0.66, 0.48, 0.92, 0.95)
+			_blue_sun_style.border_color = Color(0.86, 0.72, 1.0, 0.92)
+		else:
+			_blue_sun_style.bg_color = Color(0.32, 0.72, 1.0, 0.95)
+			_blue_sun_style.border_color = Color(0.78, 0.92, 1.0, 0.90)
+		var radius := maxi(8, int(_blue_sun.size.x * 0.5))
+		_blue_sun_style.set_corner_radius_all(radius)
+		_blue_sun.add_theme_stylebox_override("panel", _blue_sun_style)
+
+
+func _weather_mode_for_hour(hour: int) -> String:
+	if hour >= 0 and hour < 5:
+		return WEATHER_MIST
+	if hour >= 5 and hour < 9:
+		return WEATHER_CLEAR
+	if hour >= 9 and hour < 13:
+		return WEATHER_CLOUDY
+	if hour >= 13 and hour < 17:
+		return WEATHER_RAIN
+	if hour >= 17 and hour < 21:
+		return WEATHER_STORM
+	if hour >= 21 and hour < 23:
+		return WEATHER_CLOUDY
+	return WEATHER_SNOW
+
+
+func _apply_weather_for_hour(hour: int, instant: bool) -> void:
+	_apply_weather_mode(_weather_mode_for_hour(hour), instant)
+
+
+func _apply_weather_mode(mode: String, instant: bool) -> void:
+	_weather_mode = mode
+	var target_overlay := Color(0.14, 0.19, 0.28, 0.06)
+	_weather_light_factor = 1.0
+	var rain_enabled := false
+	var snow_enabled := false
+	var rain_amount := 560
+	var snow_amount := 280
+
+	match mode:
+		WEATHER_CLEAR:
+			target_overlay = Color(0.10, 0.20, 0.38, 0.04)
+			_weather_light_factor = 1.0
+		WEATHER_CLOUDY:
+			target_overlay = Color(0.18, 0.24, 0.34, 0.12)
+			_weather_light_factor = 0.9
+		WEATHER_RAIN:
+			target_overlay = Color(0.16, 0.20, 0.30, 0.20)
+			_weather_light_factor = 0.78
+			rain_enabled = true
+			rain_amount = 760
+		WEATHER_STORM:
+			target_overlay = Color(0.10, 0.14, 0.22, 0.28)
+			_weather_light_factor = 0.62
+			rain_enabled = true
+			rain_amount = 940
+			_storm_flash_timer = _weather_rng.randf_range(1.2, 3.3)
+		WEATHER_MIST:
+			target_overlay = Color(0.22, 0.25, 0.30, 0.18)
+			_weather_light_factor = 0.72
+		WEATHER_SNOW:
+			target_overlay = Color(0.24, 0.28, 0.38, 0.16)
+			_weather_light_factor = 0.8
+			snow_enabled = true
+			snow_amount = 420
+
+	if _rain_particles and is_instance_valid(_rain_particles):
+		_rain_particles.amount = rain_amount
+		_rain_particles.emitting = rain_enabled
+	if _snow_particles and is_instance_valid(_snow_particles):
+		_snow_particles.amount = snow_amount
+		_snow_particles.emitting = snow_enabled
+
+	var light_color := Color(
+		clampf(_weather_light_factor * 1.03, 0.60, 1.1),
+		clampf(_weather_light_factor, 0.56, 1.06),
+		clampf(_weather_light_factor * 1.08, 0.62, 1.14),
+		1.0
+	)
+
+	if instant:
+		if _weather_overlay and is_instance_valid(_weather_overlay):
+			_weather_overlay.color = target_overlay
+		if pixel_container and is_instance_valid(pixel_container):
+			pixel_container.modulate = light_color
+	else:
+		if _weather_tween:
+			_weather_tween.kill()
+		_weather_tween = create_tween().set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
+		if _weather_overlay and is_instance_valid(_weather_overlay):
+			_weather_tween.tween_property(_weather_overlay, "color", target_overlay, 1.2)
+		if pixel_container and is_instance_valid(pixel_container):
+			_weather_tween.parallel().tween_property(pixel_container, "modulate", light_color, 1.2)
+
+
 func _setup_audio() -> void:
-	pass
+	if audio_player and is_instance_valid(audio_player):
+		return
+	audio_player = AudioStreamPlayer.new()
+	audio_player.bus = "Master"
+	add_child(audio_player)
 
 
 func _setup_voicebox() -> void:
@@ -718,8 +953,8 @@ func _play_transition() -> void:
 		screen_fx.set_merlin_mood("mystique")
 
 	# Start LLM prefetch immediately — runs in parallel with animations
-	_prefetch_arrival = {"done": false, "text": ""}
-	_prefetch_merlin = {"done": false, "text": ""}
+	_prefetch_arrival = {"done": false, "text": "", "source": "pending"}
+	_prefetch_merlin = {"done": false, "text": "", "source": "pending"}
 	_start_llm_prefetch()
 
 	# Phase 1: Brume — mist + scout pixels
@@ -731,38 +966,30 @@ func _play_transition() -> void:
 	# Phase 3: Revelation — title + subtitle appear
 	await _phase_revelation()
 
-	# Phase 4: Sentier — ink path traces through landscape
+	# Phase 4: Cadran — solar arc + blue sun + clock reveal
 	await _phase_sentier()
 
-	# Phase 5: Voix — consume prefetch results (generated during animations)
+	# Phase 5: Voix — consume prefetch results (LLM or fallback), no blocking UX
 	if screen_fx and screen_fx.has_method("set_merlin_mood"):
 		screen_fx.set_merlin_mood("sage")
 
 	var arrival_result: Dictionary = await _consume_prefetch(_prefetch_arrival, "arrival")
-	var arrival_str: String = arrival_result.get("text", "")
-	_last_arrival_text = arrival_str
-	# Show source badge
+	_last_arrival_text = str(arrival_result.get("text", ""))
 	if _arrival_badge and is_instance_valid(_arrival_badge):
 		LLMSourceBadge.update_badge(_arrival_badge, arrival_result.get("source", "static"))
-		_arrival_badge.visible = true
-	await _show_typewriter(arrival_text, arrival_str)
-	await _safe_wait(0.3)
-	_advance_requested = false
-	await _wait_for_advance(30.0)
+		_arrival_badge.visible = false
 
 	if screen_fx and screen_fx.has_method("set_merlin_mood"):
 		screen_fx.set_merlin_mood("amuse")
 
 	var merlin_result: Dictionary = await _consume_prefetch(_prefetch_merlin, "merlin")
-	var merlin_str: String = merlin_result.get("text", "")
-	# Show source badge
+	if merlin_comment and is_instance_valid(merlin_comment):
+		merlin_comment.text = str(merlin_result.get("text", ""))
 	if _merlin_badge and is_instance_valid(_merlin_badge):
 		LLMSourceBadge.update_badge(_merlin_badge, merlin_result.get("source", "static"))
-		_merlin_badge.visible = true
-	await _show_typewriter(merlin_comment, merlin_str)
-	await _safe_wait(0.3)
-	_advance_requested = false
-	await _wait_for_advance(30.0)
+		_merlin_badge.visible = false
+
+	await _safe_wait(0.18)
 
 	# Phase 6: Dissolution — pixels fall away, transition to game
 	await _phase_dissolution()
@@ -771,43 +998,33 @@ func _play_transition() -> void:
 # — Phase 1: Brume ——————————————————————————————————————————————————————————
 
 func _phase_brume() -> void:
-	# Activate all fog layers
-	for layer in _mist_layers:
-		if is_instance_valid(layer):
-			layer.emitting = true
-	# Fade in volumetric fog shader
-	if _volumetric_fog:
-		var fog_tw := create_tween()
-		fog_tw.tween_property(_volumetric_fog, "modulate:a", 1.0, 1.5)
+	var now := Time.get_datetime_dict_from_system()
+	_apply_weather_for_hour(int(now.get("hour", 12)), false)
+	_update_solar_clock(true)
 	SFXManager.play("mist_breath")
 
 	var vs := get_viewport_rect().size
 	var colors: Dictionary = BIOME_COLORS.get(biome_key, BIOME_COLORS.broceliande)
-	var scout_colors: Array[Color] = [colors.primary, colors.secondary, PALETTE.ink_faded]
-
-	# Spawn scout pixels — brief appearances, hinting at what's coming
-	for i in range(12):
+	var scout_colors: Array[Color] = [colors.primary, colors.secondary, PALETTE.accent]
+	for i in range(10):
 		var px := ColorRect.new()
-		var sz := randf_range(6.0, 10.0)
+		var sz := randf_range(5.0, 9.0)
 		px.size = Vector2(sz, sz)
-		px.position = Vector2(randf_range(vs.x * 0.2, vs.x * 0.8), -20.0)
+		px.position = Vector2(randf_range(vs.x * 0.2, vs.x * 0.8), randf_range(vs.y * 0.2, vs.y * 0.7))
 		px.color = scout_colors[i % scout_colors.size()]
 		px.modulate.a = 0.0
 		px.mouse_filter = Control.MOUSE_FILTER_IGNORE
 		pixel_container.add_child(px)
 
-		var target_y := randf_range(vs.y * 0.25, vs.y * 0.65)
 		var tw := create_tween()
-		tw.tween_property(px, "modulate:a", 0.6, 0.08)
-		tw.parallel().tween_property(px, "position:y", target_y, randf_range(0.4, 0.8)) \
-			.set_trans(Tween.TRANS_BOUNCE).set_ease(Tween.EASE_OUT)
-		tw.tween_interval(0.15)
-		tw.tween_property(px, "modulate:a", 0.0, 0.3)
+		tw.tween_property(px, "modulate:a", 0.65, 0.06)
+		tw.parallel().tween_property(px, "scale", Vector2(1.35, 1.35), 0.22)
+		tw.tween_property(px, "modulate:a", 0.0, 0.18)
 		tw.tween_callback(px.queue_free)
+		if i % 2 == 1:
+			await _safe_wait(0.04)
 
-		await _safe_wait(0.06)
-
-	await _safe_wait(0.4)
+	await _safe_wait(0.2)
 
 
 # — Phase 2: Emergence ——————————————————————————————————————————————————————
@@ -830,6 +1047,7 @@ func _phase_emergence() -> void:
 
 	# Reposition arrival text below landscape
 	arrival_text.position.y = _landscape_origin.y + total_h + 15.0
+	_layout_solar_arc_geometry()
 
 	# Collect all active pixels
 	var targets: Array[Dictionary] = []
@@ -925,55 +1143,26 @@ func _zoom_into_landscape() -> void:
 # — Phase 4: Sentier ———————————————————————————————————————————————————————
 
 func _phase_sentier() -> void:
-	var total_w := GRID_W * _pixel_size
-	var total_h := GRID_H * _pixel_size
-	var path_y := _landscape_origin.y + total_h - _pixel_size * 1.5
+	if not _blue_sun or not is_instance_valid(_blue_sun):
+		await _safe_wait(0.2)
+		return
+	SFXManager.play("magic_reveal")
+	_update_solar_clock(true)
+	_blue_sun.modulate.a = 0.0
+	_blue_sun.scale = Vector2(0.82, 0.82)
+	var sun_tw := create_tween().set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_OUT)
+	sun_tw.tween_property(_blue_sun, "modulate:a", 1.0, 0.26)
+	sun_tw.parallel().tween_property(_blue_sun, "scale", Vector2(1.06, 1.06), 0.22)
+	sun_tw.tween_property(_blue_sun, "scale", Vector2.ONE, 0.16)
+	await sun_tw.finished
 
-	path_line = Line2D.new()
-	path_line.width = 2.0
-	path_line.default_color = PALETTE.ink
-	path_line.antialiased = true
-	add_child(path_line)
+	if _clock_panel and is_instance_valid(_clock_panel):
+		var clock_tw := create_tween()
+		clock_tw.tween_property(_clock_panel, "modulate:a", 1.0, 0.22)
+		await clock_tw.finished
 
-	# Diamond marker at start
-	var start_marker := _make_diamond(_landscape_origin + Vector2(-8, total_h - _pixel_size * 2), PALETTE.accent)
-	add_child(start_marker)
-
-	# Progressive path drawing — slower, tied to LLM prefetch progress
-	var steps := 35
-	for i in range(steps + 1):
-		var t := float(i) / float(steps)
-		var x := _landscape_origin.x + t * total_w
-		var y := path_y + sin(t * PI * 3.0) * 3.0
-		path_line.add_point(Vector2(x, y))
-
-		if i % 7 == 0:
-			SFXManager.play_varied("path_scratch", 0.15)
-
-		await _safe_wait(0.06)  # Slower drawing (~2.1s total vs 0.77s)
-
-	# Diamond marker at end — pulses while waiting for LLM
-	var end_pos := _landscape_origin + Vector2(total_w + 2, total_h - _pixel_size * 2)
-	var end_marker := _make_diamond(end_pos, PALETTE.accent)
-	add_child(end_marker)
-	SFXManager.play("landmark_pop")
-
-	# If LLM prefetch not ready, pulse the diamond while waiting
-	if not _prefetch_arrival.get("done", false):
-		var pulse_tw := create_tween().set_loops()
-		pulse_tw.tween_property(end_marker, "modulate:a", 0.3, 0.5)
-		pulse_tw.tween_property(end_marker, "modulate:a", 1.0, 0.5)
-		# Wait up to 8s for LLM prefetch
-		var wait := 0.0
-		while not _prefetch_arrival.get("done", false) and wait < 8.0:
-			if not is_inside_tree():
-				break
-			await _safe_wait(0.2)
-			wait += 0.2
-		pulse_tw.kill()
-		end_marker.modulate.a = 1.0
-
-	await _safe_wait(0.3)
+	_update_solar_clock(true)
+	await _safe_wait(0.15)
 
 
 func _make_diamond(pos: Vector2, color: Color) -> ColorRect:
@@ -1010,10 +1199,12 @@ func _phase_dissolution() -> void:
 	text_tw.parallel().tween_property(merlin_comment, "modulate:a", 0.0, 0.3)
 	text_tw.parallel().tween_property(biome_title, "modulate:a", 0.0, 0.3)
 	text_tw.parallel().tween_property(biome_subtitle, "modulate:a", 0.0, 0.3)
-	if path_line:
-		text_tw.parallel().tween_property(path_line, "modulate:a", 0.0, 0.3)
-	if _volumetric_fog:
-		text_tw.parallel().tween_property(_volumetric_fog, "modulate:a", 0.0, 0.3)
+	if _blue_sun and is_instance_valid(_blue_sun):
+		text_tw.parallel().tween_property(_blue_sun, "modulate:a", 0.0, 0.3)
+	if _clock_panel and is_instance_valid(_clock_panel):
+		text_tw.parallel().tween_property(_clock_panel, "modulate:a", 0.0, 0.3)
+	if _weather_overlay and is_instance_valid(_weather_overlay):
+		text_tw.parallel().tween_property(_weather_overlay, "modulate:a", 0.0, 0.3)
 	await text_tw.finished
 
 	# Dissolve landscape — pixels fall away with gravity
@@ -1043,6 +1234,7 @@ func _phase_dissolution() -> void:
 	var final_tw := create_tween()
 	final_tw.tween_property(self, "modulate:a", 0.0, 0.5)
 	final_tw.tween_callback(func():
+		_clear_merlin_scene_context()
 		if is_inside_tree():
 			get_tree().change_scene_to_file(NEXT_SCENE)
 	)
@@ -1185,44 +1377,63 @@ func _pick_unseen_variant(bkey: String, category: String, total: int) -> int:
 func _start_llm_prefetch() -> void:
 	## Fire-and-forget: starts both LLM calls in parallel while animations play.
 	if merlin_ai == null or not merlin_ai.is_ready:
-		_prefetch_arrival = {"done": true, "text": ""}
-		_prefetch_merlin = {"done": true, "text": ""}
+		_prefetch_arrival = {"done": true, "text": "", "source": "fallback"}
+		_prefetch_merlin = {"done": true, "text": "", "source": "fallback"}
 		return
 	# Arrival text
+	_set_merlin_scene_context("transition_biome_arrival", {
+		"phase": "biome_arrival"
+	})
 	var sys_arrival := _build_llm_biome_context()
 	var usr_arrival := "Decris l'arrivee du voyageur dans ce biome."
 	_async_generate(_prefetch_arrival, sys_arrival, usr_arrival)
 	# Merlin comment
+	_set_merlin_scene_context("transition_biome_merlin", {
+		"phase": "biome_merlin_comment"
+	})
 	var sys_merlin := _build_merlin_comment_context()
 	var usr_merlin := "Commente l'arrivee du voyageur."
 	_async_generate(_prefetch_merlin, sys_merlin, usr_merlin)
 
 
 func _async_generate(state: Dictionary, system_prompt: String, user_input: String) -> void:
-	## Async LLM generation — updates state dict when done.
+	## Async LLM generation — updates state dict when done with explicit source.
+	state["done"] = false
+	state["text"] = ""
+	state["source"] = "fallback"
+
+	if merlin_ai == null or not merlin_ai.is_ready:
+		state["done"] = true
+		return
+
 	var result: Dictionary = await merlin_ai.generate_narrative(system_prompt, user_input, {"max_tokens": 80})
+	if result.has("error"):
+		state["done"] = true
+		return
+
 	var text: String = str(result.get("text", ""))
-	# Validate the generated text
 	text = _validate_llm_text(text)
-	state["text"] = text
+	if not text.is_empty():
+		state["text"] = text
+		state["source"] = "llm"
+
 	state["done"] = true
 
 
 func _consume_prefetch(state: Dictionary, fallback_type: String) -> Dictionary:
-	## Wait for prefetch result (max 3s extra), then return {"text": ..., "source": "llm"|"fallback"}.
+	## Wait for prefetch result (short cap), then return {"text": ..., "source": "llm"|"fallback"}.
 	var wait := 0.0
-	while not state.get("done", false) and wait < 3.0:
+	while not state.get("done", false) and wait < PREFETCH_WAIT_MAX:
 		if not is_inside_tree():
 			break
-		await _safe_wait(0.2)
-		wait += 0.2
+		await _safe_wait(LLM_POLL_INTERVAL)
+		wait += LLM_POLL_INTERVAL
 	var text: String = str(state.get("text", ""))
-	var source: String = ""
-	if text != "":
-		source = "llm"
-	else:
+	var source: String = str(state.get("source", "fallback"))
+	if source != "llm" or text.is_empty():
 		var fb := _get_fallback_text(biome_key)
-		text = str(fb.get(fallback_type, biome_data.get("arrival_text", "")))
+		var legacy_key := "arrival_text" if fallback_type == "arrival" else "merlin_comment"
+		text = str(fb.get(fallback_type, biome_data.get(legacy_key, "")))
 		source = "fallback"
 	return {"text": text, "source": source}
 
@@ -1296,8 +1507,9 @@ func _show_typewriter(label: RichTextLabel, text: String) -> void:
 # ═══════════════════════════════════════════════════════════════════════════════
 
 func _wait_for_advance(max_wait: float) -> void:
+	var effective_wait := minf(max_wait, MAX_ADVANCE_WAIT)
 	var elapsed := 0.0
-	while elapsed < max_wait and not _advance_requested and not scene_finished:
+	while elapsed < effective_wait and not _advance_requested and not scene_finished:
 		if not is_inside_tree():
 			break
 		await _safe_frame()

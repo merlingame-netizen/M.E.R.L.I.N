@@ -1,11 +1,10 @@
 Place your GGUF model file here.
 
-Current model (Qwen2.5-3B-Instruct):
-- qwen2.5-3b-instruct-q4_k_m.gguf  (DEFAULT — 2.0 GB, best balance logic+narrative)
+Current model (Ministral 3B Instruct):
+- ministral-3b-instruct.gguf  (DEFAULT — 3.4 GB, from Ollama)
 
-Source: https://huggingface.co/Qwen/Qwen2.5-3B-Instruct-GGUF
+Previous model: qwen2.5-3b-instruct-q4_k_m.gguf (deprecated)
 
-Benchmark results (CPU Ryzen 5 PRO, 12 tests):
-- Comprehension: 83% (10/12)
-- Logic: 100%, Role-play: 100%, JSON: 100%
-- Latency 1 word: 726ms, 1 sentence: 2.6s
+Source: https://ollama.com/library/ministral
+Chat template: [INST] {system} {prompt} [/INST]
+Context window: 4096 tokens

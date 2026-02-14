@@ -55,6 +55,7 @@ var rag_manager: RAGManager  # RAG v2.0 — priority-based context
 var _store: Node = null  # Reference to DruStore
 var _is_ready := false
 var _current_context: Dictionary = {}
+var _scene_context: Dictionary = {}
 var _generation_in_progress := false
 var _last_card_time_ms := 0
 
@@ -71,6 +72,9 @@ const GUARDRAIL_LANG_THRESHOLD := 2  # min French keywords to pass
 var _recent_card_texts: Array[String] = []
 const RECENT_CARDS_MEMORY := 10
 const REPETITION_SIMILARITY_THRESHOLD := 0.7
+
+# Persona guardrails — forbidden words loaded from merlin_persona.json via MerlinAI
+var _persona_forbidden_words: PackedStringArray = []
 
 # Cache
 var _response_cache := {}
@@ -143,6 +147,8 @@ func _init_generators() -> void:
 	if llm_interface == null:
 		# Autoload may not be ready yet, defer lookup
 		call_deferred("_deferred_find_merlin_ai")
+	else:
+		_sync_persona_forbidden_words()
 
 	fallback_pool = MerlinFallbackPool.new()
 
@@ -163,6 +169,13 @@ func _deferred_find_merlin_ai() -> void:
 			if rag_manager and rag_manager.get_parent() == self:
 				rag_manager.queue_free()
 			rag_manager = llm_interface.rag_manager
+		_sync_persona_forbidden_words()
+
+
+func _sync_persona_forbidden_words() -> void:
+	if llm_interface and llm_interface.get("_persona_forbidden_words") != null:
+		_persona_forbidden_words = llm_interface._persona_forbidden_words.duplicate()
+		print("[MerlinOmniscient] Synced %d forbidden words from persona config" % _persona_forbidden_words.size())
 
 
 func _connect_signals() -> void:
@@ -206,6 +219,7 @@ func generate_card(game_state: Dictionary) -> Dictionary:
 	else:
 		push_warning("[MOS] context_builder is null, using empty context")
 		_current_context = {}
+	_refresh_scene_context()
 
 	# Check if prefetched card is available and relevant
 	card = _try_use_prefetch(game_state)
@@ -358,6 +372,7 @@ func prefetch_next_card(game_state: Dictionary) -> void:
 	# Build context for next card (simulate state after a neutral choice)
 	var prefetch_context := context_builder.build_full_context(game_state)
 	_current_context = prefetch_context
+	_refresh_scene_context()
 
 	# Sync and process
 	_sync_mos_to_rag()
@@ -510,6 +525,7 @@ func _try_llm_generation() -> Dictionary:
 
 	if llm_interface == null or not llm_interface.is_ready:
 		return {}
+	_refresh_scene_context()
 
 	# Switch LoRA adapter to match current tone (covers all strategies)
 	if llm_interface.has_method("set_narrator_tone") and tone_controller:
@@ -526,6 +542,8 @@ func _try_llm_generation() -> Dictionary:
 	if _store and _store.llm and _store.llm.is_llm_ready():
 		var adapter: MerlinLlmAdapter = _store.llm
 		var ctx: Dictionary = adapter.build_triade_context(_store.state)
+		if not _scene_context.is_empty():
+			ctx["scene_context"] = _scene_context
 		var adapter_result: Dictionary = await adapter.generate_card(ctx)
 		if adapter_result.get("ok", false):
 			return adapter_result.get("card", {})
@@ -604,6 +622,10 @@ func _try_parallel_generation() -> Dictionary:
 func _build_narrator_prompt() -> String:
 	## System prompt for the Narrator instance — creative, poetic, Celtic.
 	var base := "Tu es Merlin l'Enchanteur, druide ancestral des forets de Broceliande. Ecris un scenario immersif (2-3 phrases) pour un jeu de cartes celtique. Propose 3 choix: A) prudent B) mystique C) audacieux. Adapte ton registre: poetique face a la nature, grave quand tu avertis, espiegle quand tu taquines. Vocabulaire: nemeton, ogham, sidhe, dolmen, korrigans, brume, mousse, pierre dressee. Ecris en francais."
+	_refresh_scene_context()
+	var scene_block := _build_scene_contract_block()
+	if not scene_block.is_empty():
+		base += "\n" + scene_block
 
 	# Tone guidance from ToneController (detailed register instructions)
 	if tone_controller:
@@ -637,6 +659,13 @@ func _build_narrator_input() -> String:
 
 	var biome: String = str(_current_context.get("biome", "foret"))
 	parts.append("Biome: %s." % biome)
+	if not _scene_context.is_empty():
+		var scene_id := str(_scene_context.get("scene_id", ""))
+		var phase := str(_scene_context.get("phase", ""))
+		if scene_id != "":
+			parts.append("Scene: %s." % scene_id)
+		if phase != "":
+			parts.append("Phase: %s." % phase)
 
 	# Tone hint
 	var tone := tone_controller.get_current_tone() if tone_controller else "neutral"
@@ -657,7 +686,12 @@ func _build_narrator_input() -> String:
 
 func _build_gm_prompt() -> String:
 	## System prompt for Game Master — logic, effects, balance.
-	return "Tu es le Maitre du Jeu. Genere les effets mecaniques pour 3 options de carte. Reponds UNIQUEMENT en JSON valide. Effets: SHIFT_ASPECT (aspect=Corps/Ame/Monde, direction=up/down), ADD_KARMA (amount), ADD_TENSION (amount)."
+	_refresh_scene_context()
+	var base := "Tu es le Maitre du Jeu. Genere les effets mecaniques pour 3 options de carte. Reponds UNIQUEMENT en JSON valide. Effets: SHIFT_ASPECT (aspect=Corps/Ame/Monde, direction=up/down), ADD_KARMA (amount), ADD_TENSION (amount)."
+	var scene_block := _build_scene_contract_block()
+	if not scene_block.is_empty():
+		base += "\n" + scene_block + "\nNe genere aucun effet hors contrat de scene."
+	return base
 
 
 func _build_gm_input() -> String:
@@ -672,6 +706,13 @@ func _build_gm_input() -> String:
 	parts.append("Souffle=%d" % int(_current_context.get("souffle", 0)))
 	parts.append("Jour=%d" % int(_current_context.get("day", 1)))
 	parts.append("Carte=%d" % int(_current_context.get("cards_played", 0)))
+	if not _scene_context.is_empty():
+		var scene_id := str(_scene_context.get("scene_id", ""))
+		var phase := str(_scene_context.get("phase", ""))
+		if scene_id != "":
+			parts.append("Scene=%s" % scene_id)
+		if phase != "":
+			parts.append("Phase=%s" % phase)
 
 	# Template to guide output format
 	parts.append("\n{\"options\":[{\"label\":\"...\",\"effects\":[{\"type\":\"SHIFT_ASPECT\",\"aspect\":\"Corps\",\"direction\":\"up\"}]},{\"label\":\"...\",\"cost\":1,\"effects\":[{\"type\":\"SHIFT_ASPECT\",\"aspect\":\"Ame\",\"direction\":\"up\"}]},{\"label\":\"...\",\"effects\":[{\"type\":\"SHIFT_ASPECT\",\"aspect\":\"Monde\",\"direction\":\"down\"}]}]}")
@@ -757,10 +798,64 @@ func _merge_parallel_results(narrative: Dictionary, structured: Dictionary) -> D
 	}
 
 
+func _get_live_scene_context() -> Dictionary:
+	if llm_interface and llm_interface.has_method("get_scene_context"):
+		var ctx = llm_interface.get_scene_context()
+		if ctx is Dictionary:
+			return ctx.duplicate(true)
+	return {}
+
+
+func _refresh_scene_context() -> void:
+	_scene_context = _get_live_scene_context()
+	if _scene_context.is_empty():
+		_current_context.erase("scene_context")
+	else:
+		_current_context["scene_context"] = _scene_context
+
+
+func _scene_list_to_strings(value) -> Array[String]:
+	var out: Array[String] = []
+	if value is Array:
+		for item in value:
+			var text := str(item).strip_edges()
+			if text != "":
+				out.append(text)
+	return out
+
+
+func _build_scene_contract_block() -> String:
+	if _scene_context.is_empty():
+		return ""
+	var parts: Array[String] = []
+	var scene_id := str(_scene_context.get("scene_id", ""))
+	if scene_id != "":
+		parts.append("Scene=%s" % scene_id)
+	var phase := str(_scene_context.get("phase", ""))
+	if phase != "":
+		parts.append("Phase=%s" % phase)
+	var intent := str(_scene_context.get("intent", ""))
+	if intent != "":
+		parts.append("Intent=%s" % intent)
+	var tone := str(_scene_context.get("tone_target", ""))
+	if tone != "":
+		parts.append("Tone=%s" % tone)
+	var must_ref := _scene_list_to_strings(_scene_context.get("must_reference", []))
+	if not must_ref.is_empty():
+		parts.append("Must=%s" % ", ".join(must_ref.slice(0, mini(must_ref.size(), 4))))
+	var forbidden := _scene_list_to_strings(_scene_context.get("forbidden_topics", []))
+	if not forbidden.is_empty():
+		parts.append("Forbidden=%s" % ", ".join(forbidden.slice(0, mini(forbidden.size(), 4))))
+	if parts.is_empty():
+		return ""
+	return "[CONTRAT_SCENE] " + " | ".join(parts)
+
+
 func _sync_mos_to_rag() -> void:
 	## Sync MOS registries into RAG v2.0 world state for priority-based retrieval.
 	if rag_manager == null:
 		return
+	_refresh_scene_context()
 	var registry_data := {}
 	if player_profile:
 		var patterns: Dictionary = decision_history.patterns_detected if decision_history else {}
@@ -781,14 +876,20 @@ func _sync_mos_to_rag() -> void:
 	if tone_controller:
 		registry_data["current_tone"] = tone_controller.get_current_tone()
 		registry_data["tone_characteristics"] = tone_controller.get_tone_characteristics()
+	if not _scene_context.is_empty():
+		registry_data["scene_context"] = _scene_context
 	rag_manager.sync_from_registries(registry_data)
 
 
 func _build_system_prompt() -> String:
-	## Enriched system prompt for Qwen2.5-3B-Instruct.
+	## Enriched system prompt for Ministral 3B Instruct.
 	## JSON template moved to user prompt to reduce hallucination.
 	## RAG context + tone guidance injected via priority budget.
 	var base := "Merlin druide narrateur celtique. Genere 1 carte JSON francais. 3 options avec tradeoffs. Vocabulaire druidique: nemeton, ogham, sidhe, dolmen, korrigans. Reponds UNIQUEMENT en JSON valide."
+	_refresh_scene_context()
+	var scene_block := _build_scene_contract_block()
+	if not scene_block.is_empty():
+		base += "\n" + scene_block
 
 	# Tone guidance from ToneController
 	if tone_controller:
@@ -827,6 +928,13 @@ func _build_user_prompt() -> String:
 		_current_context.get("day", 1),
 		_current_context.get("cards_played", 0)
 	])
+	if not _scene_context.is_empty():
+		var scene_id := str(_scene_context.get("scene_id", ""))
+		var phase := str(_scene_context.get("phase", ""))
+		if scene_id != "":
+			parts.append("Scene:%s" % scene_id)
+		if phase != "":
+			parts.append("Phase:%s" % phase)
 
 	# Tone hint from relationship
 	var tone := tone_controller.get_current_tone() if tone_controller else "neutral"
@@ -911,7 +1019,13 @@ func _apply_guardrails(card: Dictionary) -> Dictionary:
 		fallback_used.emit("guardrail_language")
 		return _safe_fallback()
 
-	# 3. Repetition check (reject if too similar to recent cards)
+	# 3. Persona forbidden words check
+	if _contains_forbidden_words(text):
+		stats.llm_failures += 1
+		fallback_used.emit("guardrail_persona_forbidden")
+		return _safe_fallback()
+
+	# 4. Repetition check (reject if too similar to recent cards)
 	if _is_repetitive(text):
 		stats.llm_failures += 1
 		fallback_used.emit("guardrail_repetition")
@@ -935,6 +1049,17 @@ func _check_french_language(text: String) -> bool:
 		if lower.contains(" " + kw + " ") or lower.begins_with(kw + " ") or lower.ends_with(" " + kw):
 			count += 1
 	return count >= GUARDRAIL_LANG_THRESHOLD
+
+
+func _contains_forbidden_words(text: String) -> bool:
+	## Check if text contains any persona-forbidden words (meta/AI references).
+	if _persona_forbidden_words.is_empty():
+		return false
+	var lower := text.to_lower()
+	for word in _persona_forbidden_words:
+		if lower.contains(word):
+			return true
+	return false
 
 
 func _is_repetitive(text: String) -> bool:

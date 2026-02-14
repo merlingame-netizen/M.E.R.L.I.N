@@ -22,7 +22,7 @@ var is_processing := false
 var _intro_shown := false
 var _cards_this_run := 0
 var _dispatch_result: Array = [false, {}]  # [done, result] — shared with async dispatch
-const LLM_TIMEOUT_SEC := 20.0  # Qwen2.5-3B Q4_K_M needs 15-25s for 200-token JSON via GBNF on CPU
+const LLM_TIMEOUT_SEC := 20.0  # Ministral 3B needs 15-25s for 200-token JSON via GBNF on CPU
 
 # ═══════════════════════════════════════════════════════════════════════════════
 # D20 DICE SYSTEM (from TestBrainPool fusion)
@@ -140,7 +140,6 @@ func _connect_signals() -> void:
 	# UI signals
 	if ui:
 		ui.option_chosen.connect(_on_option_chosen)
-		ui.skill_activated.connect(_on_skill_activated)
 		ui.pause_requested.connect(_on_pause_requested)
 
 	# Bestiole wheel signals
@@ -188,11 +187,18 @@ func start_run(seed_value: int = -1) -> void:
 
 	# Read biome from GameManager run data
 	var biome_key: String = MerlinConstants.BIOME_DEFAULT
+	var season_hint := ""
+	var hour_hint := -1
 	var gm := get_node_or_null("/root/GameManager")
 	if gm:
 		var run_data = gm.get("run")
 		if run_data is Dictionary:
 			biome_key = str(run_data.get("current_biome", run_data.get("biome", {}).get("id", biome_key)))
+			season_hint = str(run_data.get("season", run_data.get("saison", "")))
+			if run_data.has("hour"):
+				hour_hint = int(run_data.get("hour", -1))
+			elif run_data.has("heure"):
+				hour_hint = int(run_data.get("heure", -1))
 
 	print("[TRIADE] dispatching TRIADE_START_RUN biome=%s" % biome_key)
 	var result = await store.dispatch({
@@ -204,9 +210,13 @@ func start_run(seed_value: int = -1) -> void:
 
 	if result.get("ok", false):
 		_sync_ui_with_state()
+		if ui and is_instance_valid(ui) and ui.has_method("reset_run_visuals"):
+			ui.reset_run_visuals()
 
-		# Show narrator intro BEFORE first card
+		# Opening sequence then narrator intro before first card.
 		if ui and is_instance_valid(ui):
+			if ui.has_method("show_opening_sequence"):
+				await ui.show_opening_sequence(biome_key, season_hint, hour_hint)
 			await ui.show_narrator_intro()
 			_intro_shown = true
 			# Progressive reveal of aspect/souffle indicators
@@ -342,7 +352,7 @@ func _build_emergency_fallback_card() -> Dictionary:
 		"ys": "Les vagues d'Ys battent les murailles sans repit...",
 		"sidhe": "Les collines du Sidhe resonnent d'echos lointains...",
 	}
-	var text: String = "La brume s'epaissit autour de toi. Le chemin se divise..."
+	var text: String = "La brume s'epaissit autour de toi. Une odeur de cendre flotte entre les chenes. Des traces recentes traversent la mousse et disparaissent vers une clairiere en pente. Le silence n'est pas vide: quelque chose attend ta decision."
 	if store:
 		var biome_key: String = str(store.state.get("run", {}).get("current_biome", ""))
 		if biome_texts.has(biome_key):
@@ -408,10 +418,10 @@ func _try_direct_llm_card() -> Dictionary:
 	if not merlin_ai.has_method("generate_with_system"):
 		return {}
 
-	var system_prompt := "Tu es un narrateur celtique. Genere une scene en 1-2 phrases, avec 2 options (gauche/droite)."
-	var user_prompt := "Carte %d. Aspects: Corps=equilibre, Ame=equilibre, Monde=equilibre." % _cards_this_run
+	var system_prompt := "Tu es un narrateur celtique. Genere une scene dense et detaillee en 5-7 phrases (420-620 caracteres), puis 3 options d'action exprimees par des verbes (gauche/centre/droite)."
+	var user_prompt := "Carte %d. Aspects: Corps=equilibre, Ame=equilibre, Monde=equilibre. Les choix doivent correspondre a la situation et annoncer une consequence." % _cards_this_run
 
-	var result: Dictionary = await merlin_ai.generate_with_system(system_prompt, user_prompt, {"max_tokens": 128, "temperature": 0.7})
+	var result: Dictionary = await merlin_ai.generate_with_system(system_prompt, user_prompt, {"max_tokens": 340, "temperature": 0.7})
 
 	if result.has("error"):
 		return {}
@@ -546,6 +556,8 @@ func _resolve_choice(option: int) -> void:
 		var ending = result.get("ending", {})
 		# Calculate and apply rewards
 		_apply_run_rewards(ending)
+		if ui and is_instance_valid(ui) and ui.has_method("mark_card_completed"):
+			ui.mark_card_completed()
 		if ui and is_instance_valid(ui):
 			ui.show_end_screen(ending)
 		is_processing = false
@@ -553,6 +565,8 @@ func _resolve_choice(option: int) -> void:
 
 	# --- 17. Travel animation → next card ---
 	_sync_ui_with_state()
+	if ui and is_instance_valid(ui) and ui.has_method("mark_card_completed"):
+		ui.mark_card_completed()
 	current_card = {}
 	if ui and is_instance_valid(ui):
 		var travel_text: String = _pick_travel_text(outcome)
@@ -596,7 +610,7 @@ func _run_minigame(direction: String, dc: int) -> int:
 	# Detect field from narrative + tags
 	var card_tags: Array = current_card.get("tags", [])
 	var field: String = MiniGameRegistry.detect_field(narrative_text, gm_hint, card_tags)
-	var base_diff: int = clampi(dc / 2, 1, 10)
+	var base_diff: int = clampi(int(dc / 2.0), 1, 10)
 	if _is_critical_choice:
 		base_diff = mini(base_diff + 3, 10)
 
@@ -864,6 +878,8 @@ func _update_karma(outcome: String, direction: String) -> void:
 func _apply_souffle_bonus(outcome: String) -> void:
 	if not store:
 		return
+	if MerlinConstants.SOUFFLE_SINGLE_USE:
+		return
 	match outcome:
 		"critical_success":
 			store.dispatch({"type": "TRIADE_ADD_SOUFFLE", "amount": 2})
@@ -1064,26 +1080,33 @@ func _write_context_entry(entry: String) -> void:
 
 func _use_skill(skill_id: String) -> void:
 	"""Activate a Bestiole skill."""
-	var result = await store.dispatch({
+	if skill_id.strip_edges().is_empty():
+		return
+	if not store or not is_instance_valid(store):
+		return
+
+	var raw_result: Variant = await store.dispatch({
 		"type": "TRIADE_USE_SKILL",
 		"skill_id": skill_id,
 		"card": current_card,
 	})
+	var result: Dictionary = raw_result if raw_result is Dictionary else {"ok": false, "error": "invalid_result"}
 
-	if result.get("ok", false):
-		# Handle skill result
-		var skill_type = result.get("type", "")
+	if not result.get("ok", false):
+		return
 
-		match skill_type:
-			"reveal_one", "reveal_all":
-				# TODO: Show revealed effects in UI
-				pass
-			"reroll_card", "full_reroll":
-				# Get new card
+	# Handle skill result
+	var skill_type := str(result.get("type", ""))
+	match skill_type:
+		"reveal_one", "reveal_all":
+			# TODO: Show revealed effects in UI
+			pass
+		"reroll_card", "full_reroll":
+			if not is_processing:
 				_request_next_card()
-			_:
-				# Other skills just update state
-				_sync_ui_with_state()
+		_:
+			# Other skills just update state
+			_sync_ui_with_state()
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
@@ -1101,7 +1124,7 @@ func _sync_ui_with_state() -> void:
 		ui.update_aspects(aspects)
 
 	# Souffle
-	var souffle: int = store.get_souffle() if store.has_method("get_souffle") else 3
+	var souffle: int = store.get_souffle() if store.has_method("get_souffle") else MerlinConstants.SOUFFLE_START
 	ui.update_souffle(souffle)
 
 	# Life essence (Phase 43)
@@ -1129,8 +1152,11 @@ func _sync_ui_with_state() -> void:
 	var mission_data: Dictionary = run.get("mission", {})
 	var m_current: int = int(mission_data.get("progress", 0))
 	var m_total: int = int(mission_data.get("target", 0))
+	var essences_collected: int = int(run.get("essences_collected", 0))
 	if ui.has_method("update_resource_bar"):
-		ui.update_resource_bar(tool_id, day, m_current, m_total)
+		ui.update_resource_bar(tool_id, day, m_current, m_total, essences_collected)
+	if ui.has_method("update_essences_collected"):
+		ui.update_essences_collected(essences_collected)
 
 	# Bestiole wheel
 	if ui.bestiole_wheel and is_instance_valid(ui.bestiole_wheel):
@@ -1254,14 +1280,17 @@ func _on_bond_tier_changed(_old_tier: String, _new_tier: String) -> void:
 
 func _use_ogham(skill_id: String) -> void:
 	"""Activate a Bestiole Ogham skill via the store."""
-	if not store:
+	if skill_id.strip_edges().is_empty():
+		return
+	if not store or not is_instance_valid(store):
 		return
 
-	var result = await store.dispatch({
+	var raw_result: Variant = await store.dispatch({
 		"type": "TRIADE_USE_OGHAM",
 		"skill_id": skill_id,
 		"card": current_card,
 	})
+	var result: Dictionary = raw_result if raw_result is Dictionary else {"ok": false, "error": "invalid_result"}
 
 	if result.get("ok", false):
 		_sync_ui_with_state()

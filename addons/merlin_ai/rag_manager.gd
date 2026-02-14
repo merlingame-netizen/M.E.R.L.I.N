@@ -1,5 +1,5 @@
 ## ═══════════════════════════════════════════════════════════════════════════════
-## RAG Manager v2.0 — Retrieval Augmented Generation for Qwen2.5-3B-Instruct
+## RAG Manager v2.0 — Retrieval Augmented Generation for Ministral 3B Instruct
 ## ═══════════════════════════════════════════════════════════════════════════════
 ## Structured retrieval with token budget, game journal, and cross-run memory.
 ## Optimized for nano models (~2048 token context window).
@@ -16,7 +16,7 @@ const VERSION := "2.1.0"
 
 ## Approximate tokens: 1 token ~= 4 chars (rough heuristic for multilingual)
 const CHARS_PER_TOKEN := 4
-const CONTEXT_BUDGET := 600  # max tokens for dynamic context injection (v2.2: 300→600, Qwen 2.5-3B has 8192 ctx, ~11% usage)
+const CONTEXT_BUDGET := 1500  # max tokens for dynamic context (v2.3: 600→1500, exploiting 32k ctx window, ~5% usage)
 
 # Priority levels for context sections (higher = more important, kept first)
 enum Priority { CRITICAL = 4, HIGH = 3, MEDIUM = 2, LOW = 1, OPTIONAL = 0 }
@@ -56,6 +56,7 @@ var cross_run_memory: Array[Dictionary] = []
 
 var world_state: Dictionary = {}
 var actions_by_category: Dictionary = {}
+var _scene_context: Dictionary = {}
 
 # ═══════════════════════════════════════════════════════════════════════════════
 # INITIALIZATION
@@ -101,6 +102,10 @@ func get_prioritized_context(game_state: Dictionary) -> String:
 	var crisis := _get_crisis_context(game_state)
 	if not crisis.is_empty():
 		sections.append({"text": crisis, "priority": Priority.CRITICAL})
+
+	var scene_ctx := _get_scene_contract_context()
+	if not scene_ctx.is_empty():
+		sections.append({"text": scene_ctx, "priority": Priority.CRITICAL})
 
 	var recent := _get_recent_narrative()
 	if not recent.is_empty():
@@ -154,6 +159,47 @@ func get_prioritized_context(game_state: Dictionary) -> String:
 			break
 
 	return result.strip_edges()
+
+
+func _to_string_list(value) -> Array[String]:
+	var out: Array[String] = []
+	if value is Array:
+		for item in value:
+			var text := str(item).strip_edges()
+			if text != "":
+				out.append(text)
+	return out
+
+
+func _get_scene_contract_context() -> String:
+	var ctx := get_scene_context()
+	if ctx.is_empty():
+		return ""
+	var parts: Array[String] = []
+	var scene_id := str(ctx.get("scene_id", ""))
+	if scene_id != "":
+		parts.append("Scene=%s" % scene_id)
+	var phase := str(ctx.get("phase", ""))
+	if phase != "":
+		parts.append("Phase=%s" % phase)
+	var intent := str(ctx.get("intent", ""))
+	if intent != "":
+		parts.append("Intent=%s" % intent)
+	var tone := str(ctx.get("tone_target", ""))
+	if tone != "":
+		parts.append("Tone=%s" % tone)
+	var allowed := _to_string_list(ctx.get("allowed_topics", []))
+	if not allowed.is_empty():
+		parts.append("Allowed=" + ", ".join(allowed.slice(0, mini(allowed.size(), 5))))
+	var required := _to_string_list(ctx.get("must_reference", []))
+	if not required.is_empty():
+		parts.append("Must=" + ", ".join(required.slice(0, mini(required.size(), 5))))
+	var forbidden := _to_string_list(ctx.get("forbidden_topics", []))
+	if not forbidden.is_empty():
+		parts.append("Forbidden=" + ", ".join(forbidden.slice(0, mini(forbidden.size(), 5))))
+	if parts.is_empty():
+		return ""
+	return "SceneContract: " + " | ".join(parts)
 
 
 func _get_crisis_context(game_state: Dictionary) -> String:
@@ -421,9 +467,32 @@ func update_world_state(key: String, value) -> void:
 	world_state[key] = value
 
 
+func set_scene_context(scene_context: Dictionary) -> void:
+	_scene_context = scene_context.duplicate(true)
+	if _scene_context.is_empty():
+		world_state.erase("scene_context")
+	else:
+		world_state["scene_context"] = _scene_context
+
+
+func clear_scene_context() -> void:
+	_scene_context.clear()
+	world_state.erase("scene_context")
+
+
+func get_scene_context() -> Dictionary:
+	if not _scene_context.is_empty():
+		return _scene_context.duplicate(true)
+	if world_state.has("scene_context") and world_state["scene_context"] is Dictionary:
+		return world_state["scene_context"].duplicate(true)
+	return {}
+
+
 func sync_from_registries(registries: Dictionary) -> void:
 	for key in registries:
 		world_state[key] = registries[key]
+	if world_state.has("scene_context") and world_state["scene_context"] is Dictionary:
+		_scene_context = world_state["scene_context"].duplicate(true)
 	save_world_state()
 
 
@@ -508,6 +577,8 @@ func _load_world_state() -> void:
 			file.close()
 			if data is Dictionary:
 				world_state = data
+				if world_state.has("scene_context") and world_state["scene_context"] is Dictionary:
+					_scene_context = world_state["scene_context"].duplicate(true)
 
 
 func _load_actions() -> void:

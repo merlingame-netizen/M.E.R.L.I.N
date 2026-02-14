@@ -18,7 +18,7 @@ func _on_start() -> void:
 	_build_overlay()
 
 	# Difficulty affects sequence length and time
-	var seq_length: int = 3 + int(_difficulty / 3)  # 3-6 symbols
+	var seq_length: int = 3 + int(_difficulty / 3.0)  # 3-6 symbols
 	_timer = 7.0 - (_difficulty * 0.25)  # 6.75s to 4.5s
 
 	# Generate sequence
