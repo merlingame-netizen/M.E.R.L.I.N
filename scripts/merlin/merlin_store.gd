@@ -11,7 +11,6 @@ class_name MerlinStore
 signal state_changed(state: Dictionary)
 signal phase_changed(phase: String)
 signal transition_logged(entry: Dictionary)
-signal aspect_shifted(aspect: String, old_state: int, new_state: int)
 signal souffle_changed(old_value: int, new_value: int)
 signal life_changed(old_value: int, new_value: int)
 signal run_ended(ending: Dictionary)
@@ -20,8 +19,11 @@ signal mission_progress(step: int, total: int)
 signal awen_changed(old_value: int, new_value: int)
 signal ogham_activated(skill_id: String, effect: String)
 signal bond_tier_changed(old_tier: String, new_tier: String)
+signal gauges_changed(gauges: Dictionary)
+signal season_changed(new_season: String)
+signal event_available(event_id: String, event_data: Dictionary)
 
-const VERSION := "0.3.0"  # Updated for TRIADE system
+const VERSION := "0.4.0"  # Updated for World Map gauge system
 
 # ═══════════════════════════════════════════════════════════════════════════════
 # SYSTEMS
@@ -120,6 +122,13 @@ func is_merlin_active() -> bool:
 	return merlin != null
 
 
+func get_event_adapter() -> EventAdapter:
+	"""Get the EventAdapter from MerlinOmniscient."""
+	if merlin and merlin.event_adapter:
+		return merlin.event_adapter
+	return null
+
+
 func _deferred_wire_merlin_ai() -> void:
 	var merlin_ai_node := get_node_or_null("/root/MerlinAI")
 	if merlin_ai_node:
@@ -157,6 +166,7 @@ func build_default_state() -> Dictionary:
 			# TRIADE fields
 			"aspects": aspects,
 			"souffle": MerlinConstants.SOUFFLE_START,
+			"souffle_used_once": false,
 			"life_essence": MerlinConstants.LIFE_ESSENCE_START,
 			"mission": {
 				"type": "",
@@ -168,6 +178,10 @@ func build_default_state() -> Dictionary:
 			},
 			"cards_played": 0,
 			"day": 1,
+			"start_date": Time.get_date_dict_from_system(),
+			"events_seen": [],
+			"event_locks": [],        # Locked event IDs (Brumes feature, max 3/run)
+			"event_rerolls_used": 0,  # Reroll count this run (Brumes, max 3/run)
 			"story_log": [],
 			"active_tags": [],
 			"active_promises": [],
@@ -219,6 +233,16 @@ func build_default_state() -> Dictionary:
 				"stage": 1,      # 1=Enfant, 2=Compagnon, 3=Gardien
 				"path": "",      # "" | "protecteur" | "oracle" | "diplomate"
 			},
+		},
+		# World Map progression — persistent across runs
+		"map_progression": {
+			"gauges": MerlinGaugeSystem.new().build_default_gauges(),
+			"current_biome": "foret_broceliande",
+			"completed_biomes": [],
+			"visited_biomes": ["foret_broceliande"],
+			"items_collected": [],
+			"reputations": [],
+			"tier_progress": 1,
 		},
 		"flags": {},  # Global flags for narrative
 		"story_log": [],
@@ -277,10 +301,15 @@ func _reduce(action: Dictionary) -> Dictionary:
 			state["run"]["flux"] = flux
 			state["phase"] = "card"
 			state["mode"] = "triade"
+			# Initialize calendar context for this run (real date)
+			_init_calendar_context()
 			_log_transition("triade_run_start", {"seed": seed_val, "biome": biome_key})
 			# Notify MERLIN OMNISCIENT
 			if merlin != null:
 				merlin.on_run_start()
+				# Reset EventAdapter for new run
+				if merlin.event_adapter:
+					merlin.event_adapter.reset_for_new_run()
 			return {"ok": true, "biome": biome_key}
 
 		"TRIADE_GET_CARD":
@@ -306,10 +335,23 @@ func _reduce(action: Dictionary) -> Dictionary:
 			else:
 				print("[MerlinStore] TRIADE_GET_CARD: using fallback cards")
 				card = cards.get_next_triade_card(state)
-			# Final safety: ensure card is never empty
-			if card.is_empty():
-				push_warning("[MerlinStore] All card generation paths returned empty")
-				card = cards.get_next_triade_card(state)
+			# Final safety: ensure card is never empty and has valid options
+			if card.is_empty() or not card.has("options") or card.get("options", []).size() < 2:
+				push_warning("[MerlinStore] Card generation returned invalid card, using emergency fallback")
+				if merlin != null and merlin.has_method("_get_emergency_fallback_card"):
+					card = merlin._get_emergency_fallback_card()
+				else:
+					card = {
+						"id": "emergency_%d" % Time.get_ticks_msec(),
+						"text": "La brume se leve sur Broceliande. Un sentier s'ouvre devant toi.",
+						"speaker": "merlin",
+						"options": [
+							{"label": "Avancer prudemment", "effects": [{"type": "HEAL_LIFE", "amount": 3}], "reward_type": "vie"},
+							{"label": "Mediter", "effects": [{"type": "ADD_KARMA", "amount": 1}], "cost": 1, "reward_type": "karma"},
+							{"label": "Explorer les bois", "effects": [{"type": "DAMAGE_LIFE", "amount": 2}], "reward_type": "mystere"},
+						],
+						"tags": ["emergency_fallback"],
+					}
 			return {"ok": true, "card": card}
 
 		"TRIADE_RESOLVE_CHOICE":
@@ -469,6 +511,24 @@ func _reduce(action: Dictionary) -> Dictionary:
 			var amount: int = int(action.get("amount", 1))
 			return _heal_life(amount)
 
+		# ═══════════════════════════════════════════════════════════════════════
+		# WORLD MAP PROGRESSION ACTIONS
+		# ═══════════════════════════════════════════════════════════════════════
+		"MAP_UPDATE_GAUGES":
+			return _map_update_gauges(action)
+
+		"MAP_COMPLETE_BIOME":
+			return _map_complete_biome(action)
+
+		"MAP_COLLECT_ITEM":
+			return _map_collect_item(action)
+
+		"MAP_ADD_REPUTATION":
+			return _map_add_reputation(action)
+
+		"MAP_SELECT_BIOME":
+			return _map_select_biome(action)
+
 		_:
 			return {"ok": false, "error": "Unknown action"}
 
@@ -555,11 +615,16 @@ func _generate_mission() -> Dictionary:
 	if picked_key.is_empty():
 		picked_key = templates.keys()[0]
 	var tmpl: Dictionary = templates[picked_key]
-	var target_val: int = int(tmpl.get("target", 10))
+	# Extract target from type-specific key (target_cards, target_nodes, etc.)
+	var target_val: int = 10
+	for key in tmpl:
+		if str(key).begins_with("target_"):
+			target_val = int(tmpl[key])
+			break
 	return {
 		"type": picked_key,
 		"target": str(tmpl.get("name", picked_key)),
-		"description": str(tmpl.get("description", "")),
+		"description": str(tmpl.get("description_template", "")),
 		"progress": 0,
 		"total": target_val,
 		"revealed": false,
@@ -587,6 +652,7 @@ func _init_triade_run() -> void:
 		"Monde": MerlinConstants.AspectState.EQUILIBRE,
 	}
 	run["souffle"] = MerlinConstants.SOUFFLE_START
+	run["souffle_used_once"] = false
 	run["life_essence"] = MerlinConstants.LIFE_ESSENCE_START
 	# Generate a mission from templates
 	run["mission"] = _generate_mission()
@@ -606,6 +672,39 @@ func _init_triade_run() -> void:
 	}
 	state["run"] = run
 	_apply_talent_effects_for_run()
+
+
+func _init_calendar_context() -> void:
+	## Set real-date calendar context for this run (CAL-REQ-001).
+	var today := Time.get_date_dict_from_system()
+	var run: Dictionary = state.get("run", {})
+	run["start_date"] = {"year": today.year, "month": today.month, "day": today.day}
+	run["events_seen"] = []
+	run["event_locks"] = []
+	run["event_rerolls_used"] = 0
+
+	# Determine season from real date
+	var month: int = int(today.month)
+	var season := "winter"
+	if month >= 3 and month <= 5:
+		season = "spring"
+	elif month >= 6 and month <= 8:
+		season = "summer"
+	elif month >= 9 and month <= 11:
+		season = "autumn"
+	run["season"] = season
+
+	state["run"] = run
+	season_changed.emit(season)
+
+	# Update EventAdapter calendar context if available
+	if merlin and merlin.event_adapter:
+		var days_table := [0, 31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31]
+		var doy := 0
+		for m in range(1, month):
+			doy += days_table[m]
+		doy += int(today.day)
+		merlin.event_adapter.update_calendar_context(season, month, int(today.day), doy)
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
@@ -634,7 +733,11 @@ func _apply_talent_effects_for_run() -> void:
 				var value: int = int(effect.get("value", 0))
 				match target:
 					"souffle":
-						run["souffle"] = int(run.get("souffle", 0)) + value
+						run["souffle"] = clampi(
+							int(run.get("souffle", MerlinConstants.SOUFFLE_START)) + value,
+							0,
+							MerlinConstants.SOUFFLE_MAX
+						)
 					"blessings":
 						modifiers["extra_blessings"] = int(modifiers.get("extra_blessings", 0)) + value
 					"awen":
@@ -711,11 +814,7 @@ func _shift_aspect(aspect: String, direction: String) -> Dictionary:
 		aspects[aspect] = new_state
 		run["aspects"] = aspects
 		state["run"] = run
-		aspect_shifted.emit(aspect, old_state, new_state)
 		_log_transition("aspect_shift", {"aspect": aspect, "from": old_state, "to": new_state})
-
-		# Check for souffle regeneration (all 3 aspects balanced)
-		_check_souffle_regen()
 
 	return {"ok": true, "aspect": aspect, "old_state": old_state, "new_state": new_state}
 
@@ -728,6 +827,8 @@ func _use_souffle(amount: int) -> Dictionary:
 
 	var run = state.get("run", {})
 	var old_souffle: int = int(run.get("souffle", 0))
+	if MerlinConstants.SOUFFLE_SINGLE_USE and bool(run.get("souffle_used_once", false)):
+		return {"ok": true, "used": 0, "risk": true, "souffle": old_souffle, "single_use_locked": true}
 
 	if old_souffle < amount:
 		# Allow use but with risk
@@ -735,6 +836,8 @@ func _use_souffle(amount: int) -> Dictionary:
 
 	var new_souffle: int = old_souffle - amount
 	run["souffle"] = new_souffle
+	if MerlinConstants.SOUFFLE_SINGLE_USE and amount > 0:
+		run["souffle_used_once"] = true
 	state["run"] = run
 	souffle_changed.emit(old_souffle, new_souffle)
 	return {"ok": true, "used": amount, "risk": false, "souffle": new_souffle}
@@ -743,6 +846,8 @@ func _use_souffle(amount: int) -> Dictionary:
 func _add_souffle(amount: int) -> Dictionary:
 	var run = state.get("run", {})
 	var old_souffle: int = int(run.get("souffle", 0))
+	if MerlinConstants.SOUFFLE_SINGLE_USE and bool(run.get("souffle_used_once", false)):
+		return {"ok": true, "added": 0, "souffle": old_souffle, "single_use_locked": true}
 	var new_souffle: int = mini(old_souffle + amount, MerlinConstants.SOUFFLE_MAX)
 	run["souffle"] = new_souffle
 	state["run"] = run
@@ -751,20 +856,8 @@ func _add_souffle(amount: int) -> Dictionary:
 
 
 func _check_souffle_regen() -> void:
-	var run = state.get("run", {})
-	var aspects = run.get("aspects", {})
-
-	# Check if all 3 aspects are balanced
-	var all_balanced: bool = true
-	for aspect in MerlinConstants.TRIADE_ASPECTS:
-		if int(aspects.get(aspect, 0)) != MerlinConstants.AspectState.EQUILIBRE:
-			all_balanced = false
-			break
-
-	if all_balanced:
-		# Talent: equilibre_souffle_double → +2 instead of +1
-		var amount: int = 2 if _get_talent_modifier("equilibre_souffle_double") else 1
-		_add_souffle(amount)
+	# Aspect system removed — souffle regen handled by controller
+	pass
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
@@ -872,19 +965,8 @@ func _apply_ogham_effect(_skill_id: String, spec: Dictionary) -> void:
 	var effect_id: String = str(spec.get("effect", ""))
 	match effect_id:
 		"heal_worst":
-			# Quert: Bring worst aspect toward Equilibre
-			var worst_aspect: String = ""
-			var worst_distance: int = 0
-			var aspects: Dictionary = get_all_aspects()
-			for aspect in MerlinConstants.TRIADE_ASPECTS:
-				var s: int = int(aspects.get(aspect, 0))
-				if absi(s) > worst_distance:
-					worst_distance = absi(s)
-					worst_aspect = aspect
-			if not worst_aspect.is_empty() and worst_distance > 0:
-				var s: int = int(aspects.get(worst_aspect, 0))
-				var dir: String = "down" if s > 0 else "up"
-				_shift_aspect(worst_aspect, dir)
+			# Quert: Aspect system removed — heal life instead
+			_heal_life(10)
 		"shield_shift":
 			# Luis: Set a flag that prevents next negative shift
 			var run: Dictionary = state.get("run", {})
@@ -906,25 +988,11 @@ func _apply_ogham_effect(_skill_id: String, spec: Dictionary) -> void:
 					worst_distance = absi(s)
 					worst_aspect = aspect
 			if not worst_aspect.is_empty():
-				var run: Dictionary = state.get("run", {})
-				var run_aspects: Dictionary = run.get("aspects", {})
-				var old_s: int = int(run_aspects.get(worst_aspect, 0))
-				run_aspects[worst_aspect] = MerlinConstants.AspectState.EQUILIBRE
-				run["aspects"] = run_aspects
-				state["run"] = run
-				if old_s != MerlinConstants.AspectState.EQUILIBRE:
-					aspect_shifted.emit(worst_aspect, old_s, MerlinConstants.AspectState.EQUILIBRE)
+				# Aspect system removed — heal life instead
+				_heal_life(15)
 		"balance_all":
-			# Ruis: All aspects toward Equilibre
-			var run: Dictionary = state.get("run", {})
-			var aspects: Dictionary = run.get("aspects", {})
-			for aspect in MerlinConstants.TRIADE_ASPECTS:
-				var s: int = int(aspects.get(aspect, 0))
-				if s != MerlinConstants.AspectState.EQUILIBRE:
-					aspects[aspect] = MerlinConstants.AspectState.EQUILIBRE
-					aspect_shifted.emit(aspect, s, MerlinConstants.AspectState.EQUILIBRE)
-			run["aspects"] = aspects
-			state["run"] = run
+			# Ruis: Aspect system removed — heal life instead
+			_heal_life(20)
 		"souffle_boost":
 			# Onn: Regenerate Souffle d'Ogham
 			_add_souffle(2)
@@ -1074,6 +1142,20 @@ func _resolve_triade_choice(card: Dictionary, option: int, modulated_effects: Ar
 
 	# Update run state
 	run["cards_played"] = int(run.get("cards_played", 0)) + 1
+
+	# Record card text + choice in story_log for LLM context variety
+	var story_log: Array = run.get("story_log", [])
+	var card_text: String = str(card.get("text", "")).substr(0, 120)
+	var options_arr: Array = card.get("options", [])
+	var chosen_label: String = ""
+	if option >= 0 and option < options_arr.size():
+		chosen_label = str(options_arr[option].get("label", ""))
+	story_log.append({"text": card_text, "choice": chosen_label, "card_idx": run["cards_played"]})
+	# Keep only last 5 entries to bound memory
+	if story_log.size() > 5:
+		story_log = story_log.slice(-5)
+	run["story_log"] = story_log
+
 	state["run"] = run
 
 	# Update player profile based on choice
@@ -1100,21 +1182,15 @@ func _resolve_triade_choice(card: Dictionary, option: int, modulated_effects: Ar
 func _apply_triade_effect(effect: Dictionary) -> void:
 	var effect_type: String = str(effect.get("type", ""))
 	match effect_type:
-		"SHIFT_ASPECT":
-			var aspect: String = effect.get("aspect", "")
-			var direction: String = effect.get("direction", "")
-			_shift_aspect(aspect, direction)
-		"SET_ASPECT":
-			var aspect: String = effect.get("aspect", "")
-			var new_state: int = int(effect.get("state", MerlinConstants.AspectState.EQUILIBRE))
-			var run = state.get("run", {})
-			var aspects = run.get("aspects", {})
-			var old_state: int = int(aspects.get(aspect, 0))
-			aspects[aspect] = new_state
-			run["aspects"] = aspects
-			state["run"] = run
-			if old_state != new_state:
-				aspect_shifted.emit(aspect, old_state, new_state)
+		"SHIFT_ASPECT", "SET_ASPECT":
+			# Aspect system removed — no-op
+			pass
+		"DAMAGE_LIFE":
+			var amount: int = int(effect.get("amount", 0))
+			_damage_life(amount)
+		"HEAL_LIFE":
+			var amount: int = int(effect.get("amount", 0))
+			_heal_life(amount)
 		"USE_SOUFFLE":
 			var amount: int = int(effect.get("amount", 1))
 			_use_souffle(amount)
@@ -1169,9 +1245,10 @@ func _check_triade_run_end() -> Dictionary:
 			"life_depleted": true,
 		}
 
-	# Check for victory (mission complete)
+	# Check for victory (mission complete + minimum cards played)
 	var mission = run.get("mission", {})
-	if int(mission.get("progress", 0)) >= int(mission.get("total", 0)) and int(mission.get("total", 0)) > 0:
+	var cards_played: int = int(run.get("cards_played", 0))
+	if int(mission.get("progress", 0)) >= int(mission.get("total", 0)) and int(mission.get("total", 0)) > 0 and cards_played >= MerlinConstants.MIN_CARDS_FOR_VICTORY:
 		var victory_type = _get_victory_type(aspects)
 		return {
 			"ended": true,
@@ -1185,25 +1262,16 @@ func _check_triade_run_end() -> Dictionary:
 	return {"ended": false}
 
 
-func _get_victory_type(aspects: Dictionary) -> String:
-	var extreme_count: int = 0
-	for aspect in MerlinConstants.TRIADE_ASPECTS:
-		var aspect_state: int = int(aspects.get(aspect, 0))
-		if aspect_state != MerlinConstants.AspectState.EQUILIBRE:
-			extreme_count += 1
-
-	# Check for "Tyran Juste": Monde=HAUT, Corps=EQUILIBRE, Ame=EQUILIBRE
-	if int(aspects.get("Monde", 0)) == MerlinConstants.AspectState.HAUT \
-		and int(aspects.get("Corps", 0)) == MerlinConstants.AspectState.EQUILIBRE \
-		and int(aspects.get("Ame", 0)) == MerlinConstants.AspectState.EQUILIBRE:
-		return "tyran_juste"
-
-	if extreme_count == 0:
+func _get_victory_type(_aspects: Dictionary) -> String:
+	# Aspect system removed — victory type based on life/karma
+	var hidden: Dictionary = state.get("run", {}).get("hidden", {})
+	var karma: int = int(hidden.get("karma", 0))
+	if karma >= 5:
 		return "harmonie"
-	elif extreme_count == 1:
-		return "prix_paye"
-	else:
+	elif karma <= -5:
 		return "victoire_amere"
+	else:
+		return "prix_paye"
 
 
 func _handle_triade_run_end(end_check: Dictionary) -> void:
@@ -1251,6 +1319,83 @@ func _check_promise_deadlines() -> void:
 		for i in broken_count:
 			_apply_triade_effect({"type": "ADD_KARMA", "amount": -15})
 			_apply_triade_effect({"type": "ADD_TENSION", "amount": 10})
+
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# WORLD MAP PROGRESSION HELPERS
+# ═══════════════════════════════════════════════════════════════════════════════
+
+func _map_update_gauges(action: Dictionary) -> Dictionary:
+	var delta: Dictionary = action.get("delta", {})
+	if delta.is_empty():
+		return {"ok": false, "error": "No delta provided"}
+	var map_prog: Dictionary = state.get("map_progression", {})
+	var gauges: Dictionary = map_prog.get("gauges", {})
+	var gauge_sys := MerlinGaugeSystem.new()
+	var new_gauges: Dictionary = gauge_sys.apply_delta(gauges, delta)
+	map_prog["gauges"] = new_gauges
+	state["map_progression"] = map_prog
+	emit_signal("gauges_changed", new_gauges)
+	return {"ok": true, "gauges": new_gauges}
+
+
+func _map_complete_biome(action: Dictionary) -> Dictionary:
+	var biome_key: String = str(action.get("biome_key", ""))
+	if biome_key.is_empty():
+		return {"ok": false, "error": "No biome_key"}
+	var map_prog: Dictionary = state.get("map_progression", {})
+	var completed: Array = map_prog.get("completed_biomes", [])
+	if not biome_key in completed:
+		completed.append(biome_key)
+	map_prog["completed_biomes"] = completed
+	# Update tier progress
+	var tree := MerlinBiomeTree.new()
+	var tier: int = tree.get_tier(biome_key)
+	var current_tier: int = int(map_prog.get("tier_progress", 1))
+	if tier > current_tier:
+		map_prog["tier_progress"] = tier
+	state["map_progression"] = map_prog
+	return {"ok": true, "completed_biomes": completed}
+
+
+func _map_collect_item(action: Dictionary) -> Dictionary:
+	var item_id: String = str(action.get("item_id", ""))
+	if item_id.is_empty():
+		return {"ok": false, "error": "No item_id"}
+	var map_prog: Dictionary = state.get("map_progression", {})
+	var items: Array = map_prog.get("items_collected", [])
+	if not item_id in items:
+		items.append(item_id)
+	map_prog["items_collected"] = items
+	state["map_progression"] = map_prog
+	return {"ok": true, "items_collected": items}
+
+
+func _map_add_reputation(action: Dictionary) -> Dictionary:
+	var rep_id: String = str(action.get("reputation_id", ""))
+	if rep_id.is_empty():
+		return {"ok": false, "error": "No reputation_id"}
+	var map_prog: Dictionary = state.get("map_progression", {})
+	var reps: Array = map_prog.get("reputations", [])
+	if not rep_id in reps:
+		reps.append(rep_id)
+	map_prog["reputations"] = reps
+	state["map_progression"] = map_prog
+	return {"ok": true, "reputations": reps}
+
+
+func _map_select_biome(action: Dictionary) -> Dictionary:
+	var biome_key: String = str(action.get("biome_key", ""))
+	if biome_key.is_empty():
+		return {"ok": false, "error": "No biome_key"}
+	var map_prog: Dictionary = state.get("map_progression", {})
+	map_prog["current_biome"] = biome_key
+	var visited: Array = map_prog.get("visited_biomes", [])
+	if not biome_key in visited:
+		visited.append(biome_key)
+	map_prog["visited_biomes"] = visited
+	state["map_progression"] = map_prog
+	return {"ok": true, "current_biome": biome_key}
 
 
 func _log_transition(kind: String, data: Dictionary) -> void:
@@ -1347,6 +1492,27 @@ func is_run_active() -> bool:
 
 func get_mode() -> String:
 	return str(state.get("mode", "triade"))
+
+
+# World Map getters
+func get_map_progression() -> Dictionary:
+	return state.get("map_progression", {}).duplicate(true)
+
+
+func get_map_gauges() -> Dictionary:
+	return state.get("map_progression", {}).get("gauges", {}).duplicate()
+
+
+func get_map_gauge(gauge_key: String) -> int:
+	return int(state.get("map_progression", {}).get("gauges", {}).get(gauge_key, 0))
+
+
+func get_current_biome() -> String:
+	return str(state.get("map_progression", {}).get("current_biome", "foret_broceliande"))
+
+
+func get_completed_biomes() -> Array:
+	return state.get("map_progression", {}).get("completed_biomes", []).duplicate()
 
 
 func get_cards_played() -> int:

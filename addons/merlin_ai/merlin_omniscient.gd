@@ -11,7 +11,7 @@ extends Node
 class_name MerlinOmniscient
 
 signal card_generated(card: Dictionary)
-signal fallback_used(reason: String)
+signal generation_failed(reason: String)
 signal context_built(context: Dictionary)
 signal trust_tier_changed(old_tier: int, new_tier: int)
 signal pattern_detected(pattern: String, confidence: float)
@@ -36,6 +36,7 @@ var session: SessionRegistry
 
 var context_builder: MerlinContextBuilder
 var difficulty_adapter: DifficultyAdapter
+var event_adapter: EventAdapter
 var narrative_scaler: NarrativeScaler
 var tone_controller: ToneController
 
@@ -45,8 +46,8 @@ var tone_controller: ToneController
 
 var llm_interface: Node  # Reference to merlin_ai.gd (autoload, no class_name)
 var fast_route: FastRoute
-var fallback_pool: MerlinFallbackPool
 var rag_manager: RAGManager  # RAG v2.0 — priority-based context
+var event_selector: EventCategorySelector  # Phase 44 — weighted event picker
 
 # ═══════════════════════════════════════════════════════════════════════════════
 # STATE
@@ -58,15 +59,15 @@ var _current_context: Dictionary = {}
 var _scene_context: Dictionary = {}
 var _generation_in_progress := false
 var _last_card_time_ms := 0
+var _last_event_selection: Dictionary = {}  # Phase 44 — last selected category
 
 # LLM Configuration
-const LLM_TIMEOUT_MS := 5000
+const LLM_TIMEOUT_MS := 300000  # 300s — CPU-only Qwen 3B, generous for cold start
 const MAX_RETRIES := 2
-const FALLBACK_BLEND_RATE := 0.2  # 20% fallback pour variete
 
 # Guardrails
 const GUARDRAIL_MIN_TEXT_LEN := 10
-const GUARDRAIL_MAX_TEXT_LEN := 500
+const GUARDRAIL_MAX_TEXT_LEN := 1200  # LLM with 250 max_tokens can produce up to ~1000 chars
 const GUARDRAIL_LANG_KEYWORDS := ["le", "la", "de", "un", "une", "du", "les", "des", "en", "et"]
 const GUARDRAIL_LANG_THRESHOLD := 2  # min French keywords to pass
 var _recent_card_texts: Array[String] = []
@@ -137,6 +138,8 @@ func _init_processors() -> void:
 	context_builder.setup(player_profile, decision_history, relationship, narrative, session)
 
 	difficulty_adapter = DifficultyAdapter.new()
+	event_adapter = EventAdapter.new()
+	event_adapter.setup(difficulty_adapter)
 	narrative_scaler = NarrativeScaler.new()
 	tone_controller = ToneController.new()
 
@@ -150,7 +153,11 @@ func _init_generators() -> void:
 	else:
 		_sync_persona_forbidden_words()
 
-	fallback_pool = MerlinFallbackPool.new()
+
+	# Phase 44 — Event category selector (weighted narrative event picker)
+	event_selector = EventCategorySelector.new()
+	if event_selector.is_loaded():
+		print("[MerlinOmniscient] EventCategorySelector loaded (%d categories)" % event_selector.get_all_categories().size())
 
 	# RAG v2.0 — get from MerlinAI autoload or create standalone
 	if llm_interface and llm_interface.rag_manager:
@@ -204,9 +211,32 @@ func generate_card(game_state: Dictionary) -> Dictionary:
 	## Utilise le prefetch si disponible et pertinent.
 	## Protected: always returns a valid card, never crashes.
 	if _generation_in_progress:
-		if fallback_pool:
-			return fallback_pool.get_fallback_card(_current_context)
-		return _emergency_card()
+		# Wait for current generation to finish instead of returning empty
+		print("[MOS] generate_card: generation already in progress, waiting...")
+		var gen_wait_start := Time.get_ticks_msec()
+		while _generation_in_progress and (Time.get_ticks_msec() - gen_wait_start) < 180000:
+			await get_tree().create_timer(0.5).timeout
+		if _generation_in_progress:
+			print("[MOS] generate_card: still busy after 180s, returning empty")
+			return {}
+		print("[MOS] generate_card: previous generation finished in %dms" % (Time.get_ticks_msec() - gen_wait_start))
+
+	# If prefetch is in progress, wait for it to finish instead of cancelling
+	# (cancel_generation + generate_async causes ~80s blocking in C++ backend)
+	if _prefetch_in_progress:
+		print("[MOS] generate_card: prefetch in progress, waiting for completion...")
+		var pfx_wait_start := Time.get_ticks_msec()
+		while _prefetch_in_progress and (Time.get_ticks_msec() - pfx_wait_start) < 120000:
+			await get_tree().create_timer(0.5).timeout
+		if _prefetch_in_progress:
+			# Timeout — force cancel as last resort
+			print("[MOS] generate_card: prefetch still running after 120s, force cancel")
+			_prefetch_in_progress = false
+			if llm_interface and llm_interface.has_method("cancel_current_generation"):
+				llm_interface.cancel_current_generation()
+				await get_tree().create_timer(1.0).timeout
+		else:
+			print("[MOS] generate_card: prefetch completed in %dms" % (Time.get_ticks_msec() - pfx_wait_start))
 
 	_generation_in_progress = true
 	var start_time := Time.get_ticks_msec()
@@ -228,6 +258,20 @@ func generate_card(game_state: Dictionary) -> Dictionary:
 	else:
 		stats.prefetch_misses += 1
 
+		# Phase 44: Select event category for this card
+		_last_event_selection = {}
+		if event_selector and event_selector.is_loaded():
+			_last_event_selection = event_selector.select_event(game_state)
+			if not _last_event_selection.is_empty():
+				_current_context["event_category"] = _last_event_selection.get("category", "")
+				_current_context["event_sub_type"] = _last_event_selection.get("sub_type", "")
+				_current_context["narrator_guidance"] = _last_event_selection.get("narrator_guidance", "")
+
+		# Calendar event injection (CAL-REQ-060: ~15% chance)
+		var calendar_card := _try_calendar_event(game_state)
+		if not calendar_card.is_empty():
+			card = calendar_card
+
 		# Sync MOS registries to RAG v2.0 for prioritized retrieval
 		if context_builder and narrative:
 			_sync_mos_to_rag()
@@ -240,10 +284,13 @@ func generate_card(game_state: Dictionary) -> Dictionary:
 		card = await _generate_with_strategy()
 
 	# Guardrails: validate language, repetition, length
+	print("[MOS] pre-guardrails: card empty=%s text_len=%d opts=%d" % [str(card.is_empty()), str(card.get("text", "")).length(), card.get("options", []).size()])
 	card = _apply_guardrails(card)
+	print("[MOS] post-guardrails: card empty=%s text_len=%d opts=%d" % [str(card.is_empty()), str(card.get("text", "")).length(), card.get("options", []).size()])
 
 	# Validate and sanitize
 	card = _validate_card(card)
+	print("[MOS] post-validate: card empty=%s opts=%d" % [str(card.is_empty()), card.get("options", []).size()])
 
 	# Post-process (apply difficulty scaling, etc.)
 	if difficulty_adapter:
@@ -308,49 +355,139 @@ func generate_npc_card(game_state: Dictionary) -> Dictionary:
 				"source": "llm",
 			}
 
-	# Fallback: pool statique
-	if fallback_pool and fallback_pool.has_method("get_npc_card"):
-		var card: Dictionary = fallback_pool.get_npc_card()
-		if not card.is_empty():
-			card["source"] = "fallback"
-			return card
+	# LLM failed — return empty, controller will retry
+	return {}
 
-	# Ultra-fallback
+
+func _try_calendar_event(game_state: Dictionary) -> Dictionary:
+	## Check if a calendar event should be injected as the next card.
+	## Returns a TRIADE-format card, or empty dict if no event fires.
+	if event_adapter == null:
+		return {}
+
+	var run: Dictionary = game_state.get("run", {})
+	var cards_played: int = int(run.get("cards_played", 0))
+
+	# Don't inject events in the first few cards
+	if cards_played < MerlinConstants.MIN_CARDS_BEFORE_EVENT:
+		return {}
+
+	# Roll for event probability (~15%)
+	var prob: float = MerlinConstants.EVENT_CARD_PROBABILITY
+	# Boost near sabbats (date proximity already handled by EventAdapter weights)
+	if randf() > prob:
+		return {}
+
+	# Build context for EventAdapter
+	var ctx := _build_event_context(game_state)
+
+	# Ask EventAdapter for best event
+	var selected: Dictionary = event_adapter.select_event_for_card(ctx)
+	if selected.is_empty():
+		return {}
+
+	# Record event seen
+	var ev_id: String = str(selected.get("id", ""))
+	event_adapter.record_event(ev_id)
+	var events_seen: Array = run.get("events_seen", [])
+	events_seen.append(ev_id)
+	run["events_seen"] = events_seen
+
+	print("[MOS] Calendar event injected: %s" % ev_id)
+
+	# Convert to TRIADE card format
+	return _calendar_event_to_card(selected)
+
+
+func _build_event_context(game_state: Dictionary) -> Dictionary:
+	## Build the context dictionary that EventAdapter needs for condition checks.
+	var run: Dictionary = game_state.get("run", {})
+	var meta: Dictionary = game_state.get("meta", {})
+	var hidden: Dictionary = run.get("hidden", {})
+
 	return {
-		"id": "npc_emergency_%d" % Time.get_ticks_msec(),
-		"text": "Une silhouette se dessine dans la brume. 'Voyageur... nos chemins se croisent pour une raison.'",
-		"speaker": "Inconnu",
-		"type": "npc_encounter",
-		"options": [
-			{"direction": "left", "label": "S'approcher", "effects": [
-				{"type": "SHIFT_ASPECT", "aspect": "Monde", "direction": "up"}
-			], "preview": "+Monde"},
-			{"direction": "center", "label": "Observer", "effects": [
-				{"type": "ADD_SOUFFLE", "amount": 1}
-			], "preview": "+Souffle", "cost": 1},
-			{"direction": "right", "label": "S'eloigner", "effects": [
-				{"type": "SHIFT_ASPECT", "aspect": "Corps", "direction": "up"}
-			], "preview": "+Corps"},
-		],
-		"tags": ["npc", "emergency"],
-		"source": "emergency",
+		"aspects": run.get("aspects", {}),
+		"cards_played": int(run.get("cards_played", 0)),
+		"total_runs": int(meta.get("total_runs", 0)),
+		"karma": int(hidden.get("karma", 0)),
+		"tension": int(hidden.get("tension", 0)),
+		"flags": game_state.get("flags", {}),
+		"bestiole_bond": int(game_state.get("bestiole", {}).get("bond", 0)),
+		"trust_merlin": 0,  # TODO: wire from relationship registry
+		"endings_seen_count": int(meta.get("endings_seen", []).size()),
+		"calendrier_des_brumes": meta.get("talent_tree", {}).get("unlocked", []).has("calendrier_des_brumes"),
+		"life_essence": int(run.get("life_essence", 100)),
 	}
 
 
-func _emergency_card() -> Dictionary:
-	## Absolute last-resort card when even fallback_pool is null.
+func _calendar_event_to_card(ev: Dictionary) -> Dictionary:
+	## Convert a calendar event from JSON to TRIADE card format (3 options).
+	var ev_id: String = str(ev.get("id", ""))
+	var text: String = str(ev.get("text", ""))
+	var effects: Array = ev.get("effects", [])
+	var visual: Dictionary = ev.get("visual", {})
+	var tags: Array = ev.get("tags", [])
+	var category: String = str(ev.get("category", ""))
+
+	# Build 3 options: Accept / Meditate (Souffle) / Observe
+	# Left: primary effects from event
+	# Center: spiritual engagement (costs Souffle)
+	# Right: cautious observation (minor karma)
+	var left_effects: Array = effects.duplicate()
+	var center_effects: Array = [{"type": "ADD_SOUFFLE", "amount": 1}]
+	if effects.size() > 0:
+		center_effects.append(effects[0].duplicate())
+	var right_effects: Array = [{"type": "ADD_KARMA", "amount": 3}]
+
+	# Adjust labels based on category
+	var left_label := "Accueillir l'evenement"
+	var center_label := "Mediter sur son sens"
+	var right_label := "Observer de loin"
+
+	if category == "sabbat":
+		left_label = "Participer au rituel"
+		center_label = "Communier avec les esprits"
+		right_label = "Observer la ceremonie"
+	elif category == "transition":
+		left_label = "Embrasser le changement"
+		center_label = "S'adapter en douceur"
+		right_label = "Resister au passage"
+	elif category == "secret":
+		left_label = "Plonger dans le mystere"
+		center_label = "Dechiffrer les signes"
+		right_label = "Garder ses distances"
+
 	return {
-		"id": "emergency_%d" % Time.get_ticks_msec(),
-		"text": "Le vent murmure entre les pierres dressees. Tu sens le poids du destin peser sur tes epaules...",
+		"id": "cal_%s_%d" % [ev_id, Time.get_ticks_msec()],
+		"text": text,
 		"speaker": "Merlin",
-		"type": "narrative",
+		"type": "event",
+		"calendar_event_id": ev_id,
 		"options": [
-			{"direction": "left", "label": "Ecouter le vent", "effects": [{"type": "SHIFT_ASPECT", "aspect": "Ame", "direction": "up"}], "preview": "Sagesse"},
-			{"direction": "center", "label": "Mediter", "effects": [{"type": "ADD_SOUFFLE", "amount": 1}], "preview": "+Souffle", "cost": 1},
-			{"direction": "right", "label": "Avancer", "effects": [{"type": "SHIFT_ASPECT", "aspect": "Corps", "direction": "up"}], "preview": "Action"},
+			{
+				"direction": "left",
+				"label": left_label,
+				"effects": left_effects,
+				"preview": ev.get("name", ""),
+			},
+			{
+				"direction": "center",
+				"label": center_label,
+				"effects": center_effects,
+				"preview": "+Souffle",
+				"cost": 1,
+			},
+			{
+				"direction": "right",
+				"label": right_label,
+				"effects": right_effects,
+				"preview": "+Karma",
+			},
 		],
-		"tags": ["emergency"],
+		"tags": tags + ["calendar_event", category],
+		"visual_theme": str(visual.get("theme", "")),
 	}
+
 
 
 func prefetch_next_card(game_state: Dictionary) -> void:
@@ -378,16 +515,8 @@ func prefetch_next_card(game_state: Dictionary) -> void:
 	_sync_mos_to_rag()
 	_apply_adaptive_processing()
 
-	# Pool path: use generate_prefetch (leases best available brain)
-	if llm_interface.has_method("generate_prefetch") and llm_interface.has_prefetcher():
-		var card := await _prefetch_via_pool()
-		if _prefetch_in_progress and not card.is_empty():
-			_prefetched_card = card
-			_prefetch_in_progress = false
-			prefetch_ready.emit()
-			return
-
-	# Fallback: use full strategy pipeline
+	# Always use full strategy pipeline (includes adapter two-stage fallback).
+	# Pool path disabled: single-brain mode + JSON always malformed = pool never works.
 	var card := await _generate_with_strategy()
 
 	# Only store if still relevant (no new generation started)
@@ -464,13 +593,15 @@ func try_consume_prefetch(game_state: Dictionary) -> Dictionary:
 
 func _compute_context_hash(game_state: Dictionary) -> int:
 	## Compute a hash of the game state for prefetch validation.
-	## Two states with the same aspects are considered equivalent.
+	## Includes cards_played and life_essence to detect state changes from choice resolution.
 	var run: Dictionary = game_state.get("run", {})
 	var aspects: Dictionary = run.get("aspects", {})
 	var hash_val: int = 0
 	for aspect in ["Corps", "Ame", "Monde"]:
 		hash_val = hash_val * 7 + int(aspects.get(aspect, 0)) + 2
 	hash_val = hash_val * 13 + int(run.get("souffle", 0))
+	hash_val = hash_val * 17 + int(run.get("cards_played", 0))
+	hash_val = hash_val * 23 + int(run.get("life_essence", 100))
 	return hash_val
 
 
@@ -495,14 +626,8 @@ func _apply_adaptive_processing() -> void:
 
 
 func _generate_with_strategy() -> Dictionary:
-	## Choisit et execute la strategie de generation.
+	## LLM generation with emergency fallback pool if LLM unavailable.
 
-	# Strategy 1: Force fallback sometimes for variety
-	if randf() < FALLBACK_BLEND_RATE and fallback_pool:
-		stats.fallback_uses += 1
-		return fallback_pool.get_fallback_card(_current_context)
-
-	# Strategy 2: Try LLM if available
 	if llm_interface != null and llm_interface.is_ready:
 		var llm_card := await _try_llm_generation()
 		if not llm_card.is_empty():
@@ -511,12 +636,107 @@ func _generate_with_strategy() -> Dictionary:
 		else:
 			stats.llm_failures += 1
 
-	# Strategy 3: Fallback pool
+	# Emergency fallback — never return empty (prevents infinite retry loop)
 	stats.fallback_uses += 1
-	fallback_used.emit("llm_unavailable")
-	if fallback_pool:
-		return fallback_pool.get_fallback_card(_current_context)
-	return _emergency_card()
+	generation_failed.emit("llm_unavailable")
+	return _get_emergency_fallback_card()
+
+
+func _get_emergency_fallback_card() -> Dictionary:
+	## Emergency fallback — returns a valid TRIADE card when LLM is unavailable.
+	## Prevents infinite retry loop in the controller.
+	var pool := [
+		# --- 1. Nemeton brume ---
+		{"text": "La brume s'epaissit autour du nemeton. Les pierres dressees vibrent d'une energie ancienne, et le murmure des esprits porte un avertissement. Le chemin se divise en trois sentiers perdus dans la mousse.", "speaker": "merlin",
+		 "options": [
+			{"label": "Suivre la mousse lumineuse", "effects": [{"type": "HEAL_LIFE", "amount": 8}], "reward_type": "vie"},
+			{"label": "Ecouter les pierres", "effects": [{"type": "ADD_KARMA", "amount": 3}], "cost": 1, "reward_type": "karma"},
+			{"label": "Traverser la brume", "effects": [{"type": "DAMAGE_LIFE", "amount": 6}], "reward_type": "mystere"},
+		 ], "tags": ["fallback_pool", "brume", "nemeton"]},
+		# --- 2. Korrigan marche ---
+		{"text": "Un korrigan surgit d'entre les racines d'un chene centenaire. Ses yeux brillent comme des braises, et il tend une main griffue. 'Un marche, druide ? Ton souffle contre ma sagesse.' La foret retient son haleine.", "speaker": "merlin",
+		 "options": [
+			{"label": "Accepter le marche", "effects": [{"type": "ADD_SOUFFLE", "amount": 1}], "reward_type": "souffle"},
+			{"label": "Negocier prudemment", "effects": [{"type": "ADD_KARMA", "amount": 2}], "cost": 1, "reward_type": "karma"},
+			{"label": "Refuser et avancer", "effects": [{"type": "DAMAGE_LIFE", "amount": 5}], "reward_type": "mystere"},
+		 ], "tags": ["fallback_pool", "korrigan", "marche"]},
+		# --- 3. Dolmen ogham ---
+		{"text": "Le dolmen au sommet de la colline pulse d'une lumiere opaline. Les oghams graves sur la pierre racontent une histoire oubliee. Poser la main sur la rune centrale pourrait reveler un secret — ou reveiller ce qui dort.", "speaker": "merlin",
+		 "options": [
+			{"label": "Toucher la rune", "effects": [{"type": "DAMAGE_LIFE", "amount": 7}], "reward_type": "mystere"},
+			{"label": "Dechiffrer les oghams", "effects": [{"type": "ADD_KARMA", "amount": 4}], "cost": 1, "reward_type": "karma"},
+			{"label": "Contourner le dolmen", "effects": [{"type": "HEAL_LIFE", "amount": 6}], "reward_type": "vie"},
+		 ], "tags": ["fallback_pool", "dolmen", "ogham"]},
+		# --- 4. Cerf sidhe ---
+		{"text": "Une clairiere baignee de lumiere argentee s'ouvre devant toi. Au centre, un cerf blanc immobile te fixe de ses yeux de sidhe. Le temps semble suspendu entre deux battements de coeur. Chaque pas resonne comme un serment.", "speaker": "merlin",
+		 "options": [
+			{"label": "S'approcher doucement", "effects": [{"type": "HEAL_LIFE", "amount": 10}], "reward_type": "vie"},
+			{"label": "Mediter face au cerf", "effects": [{"type": "ADD_SOUFFLE", "amount": 1}], "cost": 1, "reward_type": "souffle"},
+			{"label": "Fuir la clairiere", "effects": [{"type": "DAMAGE_LIFE", "amount": 4}], "reward_type": "mystere"},
+		 ], "tags": ["fallback_pool", "cerf", "sidhe"]},
+		# --- 5. Orage druide ---
+		{"text": "L'orage gronde au-dessus de Broceliande. Les eclairs dessinent des runes ephemeres dans le ciel noir. Un vieux druide assis sous un if te fait signe. 'Le tonnerre parle, jeune voyageur. Sais-tu ecouter?'", "speaker": "merlin",
+		 "options": [
+			{"label": "Ecouter le druide", "effects": [{"type": "ADD_KARMA", "amount": 3}], "reward_type": "karma"},
+			{"label": "Observer les eclairs", "effects": [{"type": "HEAL_LIFE", "amount": 5}], "cost": 1, "reward_type": "vie"},
+			{"label": "Chercher un abri", "effects": [{"type": "DAMAGE_LIFE", "amount": 8}], "reward_type": "mystere"},
+		 ], "tags": ["fallback_pool", "orage", "druide"]},
+		# --- 6. Source sacree ---
+		{"text": "Une source jaillit entre les racines d'un if millenaire. L'eau chante une melodie que tu reconnais sans l'avoir jamais entendue. Une fee des eaux emerge, les cheveux d'argent.", "speaker": "merlin",
+		 "options": [
+			{"label": "Boire a la source", "effects": [{"type": "HEAL_LIFE", "amount": 12}], "reward_type": "vie"},
+			{"label": "Parler a la fee", "effects": [{"type": "ADD_KARMA", "amount": 3}], "cost": 1, "reward_type": "karma"},
+			{"label": "Jeter une offrande", "effects": [{"type": "DAMAGE_LIFE", "amount": 5}], "reward_type": "mystere"},
+		 ], "tags": ["fallback_pool", "source", "fee"]},
+		# --- 7. Loup garou ---
+		{"text": "Un hurlement dechire la nuit. Entre les troncs, deux yeux jaunes te fixent. Le loup-garou de Huelgoat barre le sentier. Ses crocs brillent sous la lune noire, mais sa posture n'est pas celle d'un predateur — plutot d'un garde.", "speaker": "merlin",
+		 "options": [
+			{"label": "Affronter la bete", "effects": [{"type": "DAMAGE_LIFE", "amount": 10}], "reward_type": "mystere"},
+			{"label": "Montrer le signe druidique", "effects": [{"type": "HEAL_LIFE", "amount": 6}], "cost": 1, "reward_type": "vie"},
+			{"label": "Rebrousser chemin", "effects": [{"type": "DAMAGE_LIFE", "amount": 3}], "reward_type": "vie"},
+		 ], "tags": ["fallback_pool", "loup", "huelgoat"]},
+		# --- 8. Cairn ancien ---
+		{"text": "Le cairn s'eleve comme une tour de pierres brutes. A son sommet, une flamme pale brule sans combustible. Les morts murmurent ici des secrets que les vivants ne devraient pas entendre.", "speaker": "merlin",
+		 "options": [
+			{"label": "Gravir le cairn", "effects": [{"type": "DAMAGE_LIFE", "amount": 8}], "reward_type": "mystere"},
+			{"label": "Deposer une pierre", "effects": [{"type": "ADD_KARMA", "amount": 4}], "reward_type": "karma"},
+			{"label": "Prier les ancetres", "effects": [{"type": "HEAL_LIFE", "amount": 7}], "cost": 1, "reward_type": "vie"},
+		 ], "tags": ["fallback_pool", "cairn", "ancetres"]},
+		# --- 9. Riviere enchantee ---
+		{"text": "La riviere coule a l'envers. Les saumons d'argent remontent le courant en formant des spirales. Sur l'autre rive, un chaudron de bronze attend. Le prix du passage n'est pas mesure en pieces.", "speaker": "merlin",
+		 "options": [
+			{"label": "Traverser a gue", "effects": [{"type": "DAMAGE_LIFE", "amount": 6}], "reward_type": "mystere"},
+			{"label": "Suivre les saumons", "effects": [{"type": "ADD_SOUFFLE", "amount": 1}], "cost": 1, "reward_type": "souffle"},
+			{"label": "Longer la berge", "effects": [{"type": "HEAL_LIFE", "amount": 5}], "reward_type": "vie"},
+		 ], "tags": ["fallback_pool", "riviere", "chaudron"]},
+		# --- 10. Arbre parlant ---
+		{"text": "Le chene a un visage. Ses noeuds forment des yeux mi-clos, sa fissure une bouche qui s'ouvre lentement. 'Druide,' gronde l'arbre, 'le vent du nord porte la cendre. Que choisis-tu de proteger?'", "speaker": "merlin",
+		 "options": [
+			{"label": "Proteger la foret", "effects": [{"type": "HEAL_LIFE", "amount": 8}], "reward_type": "vie"},
+			{"label": "Ecouter le vent du nord", "effects": [{"type": "ADD_KARMA", "amount": 5}], "cost": 1, "reward_type": "karma"},
+			{"label": "Ignorer l'arbre", "effects": [{"type": "DAMAGE_LIFE", "amount": 9}], "reward_type": "mystere"},
+		 ], "tags": ["fallback_pool", "chene", "prophecie"]},
+		# --- 11. Marais toxique ---
+		{"text": "Le marais exhale des vapeurs verdatres. Chaque pas enfonce un peu plus. Des feux follets dansent au-dessus de la boue noire, tentants et mortels. Le sentier sur s'enfonce dans les ronces.", "speaker": "merlin",
+		 "options": [
+			{"label": "Suivre les feux follets", "effects": [{"type": "DAMAGE_LIFE", "amount": 12}], "reward_type": "mystere"},
+			{"label": "Utiliser un ogham de protection", "effects": [{"type": "HEAL_LIFE", "amount": 4}], "cost": 1, "reward_type": "vie"},
+			{"label": "Forcer a travers les ronces", "effects": [{"type": "DAMAGE_LIFE", "amount": 6}], "reward_type": "vie"},
+		 ], "tags": ["fallback_pool", "marais", "feux_follets"]},
+		# --- 12. Sanctuaire envahi ---
+		{"text": "Le sanctuaire est envahi par le lierre noir. L'autel de Belenos porte encore les traces d'un rituel inacheve. Trois chemins de bougies s'eteignent un a un. Il faut choisir avant que la derniere ne s'eteigne.", "speaker": "merlin",
+		 "options": [
+			{"label": "Terminer le rituel", "effects": [{"type": "HEAL_LIFE", "amount": 14}], "reward_type": "vie"},
+			{"label": "Purifier l'autel", "effects": [{"type": "ADD_KARMA", "amount": 5}], "cost": 1, "reward_type": "karma"},
+			{"label": "Fuir le sanctuaire", "effects": [{"type": "DAMAGE_LIFE", "amount": 7}], "reward_type": "mystere"},
+		 ], "tags": ["fallback_pool", "sanctuaire", "belenos"]},
+	]
+	var idx: int = randi() % pool.size()
+	var card: Dictionary = pool[idx].duplicate(true)
+	card["id"] = "fallback_%d_%d" % [idx, Time.get_ticks_msec()]
+	card["_generated_by"] = "emergency_fallback"
+	card["source"] = "fallback"
+	return card
 
 
 func _try_llm_generation() -> Dictionary:
@@ -524,18 +744,22 @@ func _try_llm_generation() -> Dictionary:
 	## Phase 32: Priorite au pipeline parallele (Narrator + Game Master)
 
 	if llm_interface == null or not llm_interface.is_ready:
+		print("[MOS] _try_llm_generation: llm_interface null or not ready (is_ready=%s)" % str(llm_interface.is_ready if llm_interface else "null"))
 		return {}
 	_refresh_scene_context()
+
+	var start_time := Time.get_ticks_msec()
 
 	# Switch LoRA adapter to match current tone (covers all strategies)
 	if llm_interface.has_method("set_narrator_tone") and tone_controller:
 		llm_interface.set_narrator_tone(tone_controller.get_current_tone())
 
-	# Strategy A: Parallel generation (Phase 32 — requires 2+ brains)
-	if llm_interface.has_method("generate_parallel") and llm_interface.brain_count >= 2:
+	# Strategy A: Parallel generation DISABLED — segfault in NobodyWho GDExtension
+	if false and llm_interface.has_method("generate_parallel") and llm_interface.brain_count >= 2:
 		var parallel_card := await _try_parallel_generation()
 		if not parallel_card.is_empty():
 			parallel_card["_strategy"] = "parallel"
+			print("[MOS] Strategy A (parallel): SUCCESS in %dms" % (Time.get_ticks_msec() - start_time))
 			return parallel_card
 
 	# Strategy B: Use MerlinLlmAdapter if available (TRIADE-validated, single-instance)
@@ -544,30 +768,49 @@ func _try_llm_generation() -> Dictionary:
 		var ctx: Dictionary = adapter.build_triade_context(_store.state)
 		if not _scene_context.is_empty():
 			ctx["scene_context"] = _scene_context
+		print("[MOS] Strategy B: starting adapter.generate_card()...")
 		var adapter_result: Dictionary = await adapter.generate_card(ctx)
+		var b_elapsed := Time.get_ticks_msec() - start_time
 		if adapter_result.get("ok", false):
-			return adapter_result.get("card", {})
+			var card: Dictionary = adapter_result.get("card", {})
+			card["_strategy"] = "adapter"
+			card["_generation_time_ms"] = b_elapsed
+			print("[MOS] Strategy B: SUCCESS in %dms" % b_elapsed)
+			return card
+		else:
+			print("[MOS] Strategy B: FAILED in %dms — %s" % [b_elapsed, str(adapter_result.get("error", "unknown"))])
 
 	# Strategy C: Direct LLM call (fallback)
 	var system_prompt := _build_system_prompt()
 	var user_prompt := _build_user_prompt()
 
 	for attempt in range(MAX_RETRIES):
+		var c_start := Time.get_ticks_msec()
+		print("[MOS] Strategy C attempt %d/%d starting..." % [attempt + 1, MAX_RETRIES])
 		var result: Dictionary = await llm_interface.generate_with_system(
 			system_prompt,
 			user_prompt,
 			{"max_tokens": 200, "temperature": 0.6}
 		)
+		var c_elapsed := Time.get_ticks_msec() - c_start
 
 		if result.has("error"):
+			print("[MOS] Strategy C attempt %d: error in %dms — %s" % [attempt + 1, c_elapsed, str(result.get("error", ""))])
 			continue
 
 		var text: String = result.get("text", "")
+		print("[MOS] Strategy C attempt %d: got %d chars in %dms" % [attempt + 1, text.length(), c_elapsed])
 		var parsed := _parse_llm_response(text)
 
 		if not parsed.is_empty():
+			parsed["_strategy"] = "direct_c"
+			parsed["_generation_time_ms"] = Time.get_ticks_msec() - start_time
+			print("[MOS] Strategy C: SUCCESS (total %dms)" % (Time.get_ticks_msec() - start_time))
 			return parsed
+		else:
+			print("[MOS] Strategy C attempt %d: parse failed (text=%s...)" % [attempt + 1, text.substr(0, 80)])
 
+	print("[MOS] ALL strategies FAILED (total %dms)" % (Time.get_ticks_msec() - start_time))
 	return {}
 
 
@@ -621,7 +864,19 @@ func _try_parallel_generation() -> Dictionary:
 
 func _build_narrator_prompt() -> String:
 	## System prompt for the Narrator instance — creative, poetic, Celtic.
-	var base := "Tu es Merlin l'Enchanteur, druide ancestral des forets de Broceliande. Ecris un scenario immersif (2-3 phrases) pour un jeu de cartes celtique. Propose 3 choix: A) prudent B) mystique C) audacieux. Adapte ton registre: poetique face a la nature, grave quand tu avertis, espiegle quand tu taquines. Vocabulaire: nemeton, ogham, sidhe, dolmen, korrigans, brume, mousse, pierre dressee. Ecris en francais."
+	## Phase 44: Use category-specific template from scenario_prompts.json if available.
+	var base := ""
+
+	# Try category-specific prompt from scenario_prompts.json
+	var category: String = str(_current_context.get("event_category", ""))
+	if not category.is_empty() and _store and _store.llm:
+		var adapter: MerlinLlmAdapter = _store.llm
+		var cat_prompt := adapter.build_category_system_prompt(category)
+		if not cat_prompt.is_empty():
+			base = cat_prompt
+
+	if base.is_empty():
+		base = "Tu es Merlin l'Enchanteur, druide ancestral des forets de Broceliande. Ecris un scenario immersif (2-3 phrases) pour un jeu de cartes celtique. Propose 3 choix: A) prudent B) mystique C) audacieux. Adapte ton registre: poetique face a la nature, grave quand tu avertis, espiegle quand tu taquines. Vocabulaire: nemeton, ogham, sidhe, dolmen, korrigans, brume, mousse, pierre dressee. Ecris en francais."
 	_refresh_scene_context()
 	var scene_block := _build_scene_contract_block()
 	if not scene_block.is_empty():
@@ -882,7 +1137,7 @@ func _sync_mos_to_rag() -> void:
 
 
 func _build_system_prompt() -> String:
-	## Enriched system prompt for Ministral 3B Instruct.
+	## Enriched system prompt for Qwen 2.5-3B-Instruct.
 	## JSON template moved to user prompt to reduce hallucination.
 	## RAG context + tone guidance injected via priority budget.
 	var base := "Merlin druide narrateur celtique. Genere 1 carte JSON francais. 3 options avec tradeoffs. Vocabulaire druidique: nemeton, ogham, sidhe, dolmen, korrigans. Reponds UNIQUEMENT en JSON valide."
@@ -993,45 +1248,56 @@ func _parse_llm_response(text: String) -> Dictionary:
 # GUARDRAILS — Language, repetition, length, content safety
 # ═══════════════════════════════════════════════════════════════════════════════
 
-func _safe_fallback() -> Dictionary:
-	## Get a fallback card, or emergency card if fallback_pool is null.
-	if fallback_pool:
-		return fallback_pool.get_fallback_card(_current_context)
-	return _emergency_card()
-
-
 func _apply_guardrails(card: Dictionary) -> Dictionary:
-	## Apply output guardrails. Returns fallback if card fails checks.
+	## Apply output guardrails. LLM-sourced cards get soft warnings instead of hard rejects.
 	if card.is_empty():
 		return card
 
 	var text: String = str(card.get("text", ""))
+	var source: String = str(card.get("_generated_by", card.get("_strategy", "")))
+	var is_llm: bool = not source.is_empty() and source != "emergency_fallback" and source != "fallback_pool"
 
-	# 1. Length check
+	# 1. Length check — hard reject only for extreme violations
+	if text.length() < 5:
+		stats.llm_failures += 1
+		generation_failed.emit("guardrail_length_critical")
+		return {}
 	if text.length() < GUARDRAIL_MIN_TEXT_LEN or text.length() > GUARDRAIL_MAX_TEXT_LEN:
-		stats.llm_failures += 1
-		fallback_used.emit("guardrail_length")
-		return _safe_fallback()
+		if is_llm:
+			push_warning("[MOS] Guardrail soft: text length %d (bounds %d-%d)" % [text.length(), GUARDRAIL_MIN_TEXT_LEN, GUARDRAIL_MAX_TEXT_LEN])
+		else:
+			stats.llm_failures += 1
+			generation_failed.emit("guardrail_length")
+			return {}
 
-	# 2. Language check (must contain French keywords)
+	# 2. Language check — soft for LLM (Qwen sometimes mixes languages)
 	if not _check_french_language(text):
-		stats.llm_failures += 1
-		fallback_used.emit("guardrail_language")
-		return _safe_fallback()
+		if is_llm:
+			push_warning("[MOS] Guardrail soft: French language check failed")
+		else:
+			stats.llm_failures += 1
+			generation_failed.emit("guardrail_language")
+			return {}
 
-	# 3. Persona forbidden words check
-	if _contains_forbidden_words(text):
-		stats.llm_failures += 1
-		fallback_used.emit("guardrail_persona_forbidden")
-		return _safe_fallback()
+	# 3. Persona forbidden words — hard reject for non-LLM, soft for LLM
+	var forbidden_hit: String = _find_forbidden_word(text)
+	if not forbidden_hit.is_empty():
+		if is_llm:
+			push_warning("[MOS] Guardrail soft: forbidden word '%s' in LLM text (allowing)" % forbidden_hit)
+		else:
+			stats.llm_failures += 1
+			generation_failed.emit("guardrail_persona_forbidden")
+			return {}
 
-	# 4. Repetition check (reject if too similar to recent cards)
+	# 4. Repetition check — soft for LLM (prefer similar card over fallback)
 	if _is_repetitive(text):
-		stats.llm_failures += 1
-		fallback_used.emit("guardrail_repetition")
-		return _safe_fallback()
+		if is_llm:
+			push_warning("[MOS] Guardrail soft: repetitive text detected")
+		else:
+			stats.llm_failures += 1
+			generation_failed.emit("guardrail_repetition")
+			return {}
 
-	# 4. JSON conformity (must have valid structure — already checked by parser)
 	# 5. Track card text for future repetition checks
 	_recent_card_texts.append(text)
 	if _recent_card_texts.size() > RECENT_CARDS_MEMORY:
@@ -1051,15 +1317,17 @@ func _check_french_language(text: String) -> bool:
 	return count >= GUARDRAIL_LANG_THRESHOLD
 
 
-func _contains_forbidden_words(text: String) -> bool:
-	## Check if text contains any persona-forbidden words (meta/AI references).
+func _find_forbidden_word(text: String) -> String:
+	## Check if text contains any persona-forbidden word as a WHOLE WORD.
+	## Returns the matched word, or "" if none found.
 	if _persona_forbidden_words.is_empty():
-		return false
+		return ""
 	var lower := text.to_lower()
 	for word in _persona_forbidden_words:
-		if lower.contains(word):
-			return true
-	return false
+		# Whole-word match: space-delimited (prevents "ia" matching "confiance")
+		if lower.contains(" " + word + " ") or lower.begins_with(word + " ") or lower.ends_with(" " + word) or lower == word:
+			return word
+	return ""
 
 
 func _is_repetitive(text: String) -> bool:
@@ -1101,7 +1369,7 @@ func _jaccard_similarity(a: String, b: String) -> float:
 func _validate_card(card: Dictionary) -> Dictionary:
 	## Valide et sanitize une carte.
 	if card.is_empty():
-		return _safe_fallback()
+		return {}
 
 	# Validate text
 	if typeof(card.get("text", null)) != TYPE_STRING:
@@ -1112,7 +1380,7 @@ func _validate_card(card: Dictionary) -> Dictionary:
 		card["options"] = []
 
 	if card.options.size() < 2:
-		return _safe_fallback()
+		return {}
 
 	# Pad to 3 options if LLM only returned 2
 	_pad_options_to_three(card)
@@ -1206,6 +1474,8 @@ func _pad_options_to_three(card: Dictionary) -> void:
 
 func _post_process_card(card: Dictionary) -> Dictionary:
 	## Applique les modifications post-generation.
+	if card.is_empty() or not card.has("options"):
+		return card
 
 	# Scale effects based on difficulty
 	for option in card.get("options", []):
@@ -1452,6 +1722,19 @@ func _on_merlin_speaks_screen_fx(text: String, tone: String) -> void:
 func _update_stats(generation_time: int, card: Dictionary) -> void:
 	stats.cards_generated += 1
 
+	# Phase 44: Record event category selection for anti-repetition
+	if event_selector and not _last_event_selection.is_empty():
+		event_selector.record_selection(
+			str(_last_event_selection.get("category", "")),
+			str(_last_event_selection.get("sub_type", "")),
+			stats.cards_generated
+		)
+		# Tag card with category
+		if card.has("tags") and card["tags"] is Array:
+			var cat: String = str(_last_event_selection.get("category", ""))
+			if not cat.is_empty() and not card["tags"].has("cat_" + cat):
+				card["tags"].append("cat_" + cat)
+
 	# Update average generation time
 	stats.average_generation_time_ms = (
 		(stats.average_generation_time_ms * (stats.cards_generated - 1) + generation_time)
@@ -1483,6 +1766,10 @@ func get_debug_info() -> Dictionary:
 		info["rag_journal_size"] = rag_manager.journal.size()
 		info["rag_cross_runs"] = rag_manager.get_run_count()
 		info["rag_last_ending"] = rag_manager.get_last_ending()
+	if event_selector and event_selector.is_loaded():
+		info["event_selector_loaded"] = true
+		info["event_history_size"] = event_selector.get_history().size()
+		info["last_event_category"] = _last_event_selection.get("category", "none")
 	return info
 
 # ═══════════════════════════════════════════════════════════════════════════════

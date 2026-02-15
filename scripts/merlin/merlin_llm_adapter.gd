@@ -15,25 +15,28 @@ const VERSION := "3.0.0"
 # ═══════════════════════════════════════════════════════════════════════════════
 
 const TRIADE_EFFECT_TYPES := [
-	"SHIFT_ASPECT",
-	"SET_ASPECT",
 	"USE_SOUFFLE",
 	"ADD_SOUFFLE",
 	"PROGRESS_MISSION",
 	"ADD_KARMA",
 	"ADD_TENSION",
 	"ADD_NARRATIVE_DEBT",
+	"DAMAGE_LIFE",
+	"HEAL_LIFE",
 	"SET_FLAG",
 	"ADD_TAG",
+	"CREATE_PROMISE",
+	"FULFILL_PROMISE",
+	"BREAK_PROMISE",
 ]
 
 const TRIADE_ASPECTS := ["Corps", "Ame", "Monde"]
 const TRIADE_DIRECTIONS := ["up", "down"]
 const TRIADE_STATES := [-1, 0, 1]
 
-# LLM generation params tuned for Ministral 3B Instruct
+# LLM generation params tuned for Qwen 2.5-3B-Instruct
 const TRIADE_LLM_PARAMS := {
-	"max_tokens": 360,
+	"max_tokens": 250,  # ~60s on CPU (was 480 = 120s timeout)
 	"temperature": 0.6,
 	"top_p": 0.85,
 	"top_k": 30,
@@ -42,9 +45,38 @@ const TRIADE_LLM_PARAMS := {
 
 const GENERATION_TIMEOUT_MS := 8000
 
+# Rotating celtic theme keywords — injected into prompts for variety
+const CELTIC_THEMES: Array[String] = [
+	"nemeton sacre", "brume matinale", "dolmen ancien", "sources enchantees",
+	"korrigans farceurs", "cercle de pierres", "chene millénaire", "sidhe lumineux",
+	"lande sauvage", "torque d'or", "chaudron de Dagda", "harpe de Taliesin",
+	"gui sacre", "serment de sang", "barque de verre", "fontaine de Barenton",
+	"cavalier spectral", "feu de Beltaine", "nuit de Samhain", "aurore druidique",
+	"marais brumeux", "grotte aux cristaux", "sentier des fées", "île d'Avalon",
+	"loup blanc", "cerf aux bois d'argent", "corbeau prophete", "saumon de sagesse",
+	"racines du monde", "vent du nord", "tonnerre lointain", "pluie d'étoiles",
+]
+
+# Multiple fallback label sets — rotated by cards_played to avoid repetition
+const FALLBACK_LABEL_SETS: Array = [
+	["Agir avec prudence", "Mediter en silence", "Foncer tete baissee"],
+	["Explorer les alentours", "Invoquer les esprits", "Defier le danger"],
+	["Offrir un present", "Ecouter attentivement", "Poursuivre sans hesiter"],
+	["Contourner l'obstacle", "Consulter les oghams", "Affronter directement"],
+	["Chercher un abri", "Observer les signes", "Avancer coute que coute"],
+	["Poser une question", "Rester immobile", "Saisir l'opportunite"],
+	["Faire demi-tour", "Attendre un signe", "Plonger dans l'inconnu"],
+	["Partager tes vivres", "Dechiffrer les runes", "Briser le silence"],
+]
+
 # GBNF Grammar for constrained JSON generation (Phase 30)
 const TRIADE_GRAMMAR_PATH := "res://data/ai/triade_card.gbnf"
 var _triade_grammar: String = ""
+
+# Scenario prompts — per-category templates (Phase 44)
+const SCENARIO_PROMPTS_PATH := "res://data/ai/config/scenario_prompts.json"
+var _scenario_prompts: Dictionary = {}
+var _scenario_prompts_loaded := false
 
 # ═══════════════════════════════════════════════════════════════════════════════
 # LEGACY REIGNS WHITELIST (kept for backward compatibility)
@@ -82,6 +114,7 @@ func set_merlin_ai(ai_node: Node) -> void:
 	if _merlin_ai:
 		print("[MerlinLlmAdapter] MerlinAI wired (ready=%s)" % str(_merlin_ai.is_ready))
 	_load_triade_grammar()
+	_load_scenario_prompts()
 
 ## Load GBNF grammar for constrained JSON decoding (Phase 30).
 func _load_triade_grammar() -> void:
@@ -94,6 +127,99 @@ func _load_triade_grammar() -> void:
 		_triade_grammar = ""
 		print("[MerlinLlmAdapter] No GBNF grammar found, using post-processing fallback")
 
+## Load scenario prompt templates for per-category LLM generation (Phase 44).
+func _load_scenario_prompts() -> void:
+	if not FileAccess.file_exists(SCENARIO_PROMPTS_PATH):
+		_scenario_prompts_loaded = false
+		print("[MerlinLlmAdapter] No scenario prompts found at %s" % SCENARIO_PROMPTS_PATH)
+		return
+
+	var file := FileAccess.open(SCENARIO_PROMPTS_PATH, FileAccess.READ)
+	if not file:
+		return
+	var data = JSON.parse_string(file.get_as_text())
+	file.close()
+
+	if data is Dictionary:
+		_scenario_prompts = data
+		_scenario_prompts_loaded = true
+		var count := _scenario_prompts.size() - (1 if _scenario_prompts.has("_meta") else 0)
+		print("[MerlinLlmAdapter] Loaded %d scenario prompt templates" % count)
+
+
+## Get a scenario prompt template by event category key.
+## Returns { system, user_template, role, max_tokens, temperature } or empty.
+func get_scenario_template(event_key: String) -> Dictionary:
+	if not _scenario_prompts_loaded:
+		return {}
+	return _scenario_prompts.get(event_key, {})
+
+
+## Build a category-specific system prompt from scenario_prompts.json.
+## Falls back to generic prompt if template not found.
+func build_category_system_prompt(event_category: String) -> String:
+	var template_key := "event_" + event_category
+	var template := get_scenario_template(template_key)
+	if template.is_empty():
+		return _build_triade_system_prompt()
+	return str(template.get("system", _build_triade_system_prompt()))
+
+
+## Build a category-specific user prompt, replacing variables from context.
+func build_category_user_prompt(event_category: String, context: Dictionary) -> String:
+	var template_key := "event_" + event_category
+	var template := get_scenario_template(template_key)
+	if template.is_empty():
+		return _build_triade_user_prompt(context)
+
+	var user_tpl: String = str(template.get("user_template", ""))
+	if user_tpl.is_empty():
+		return _build_triade_user_prompt(context)
+
+	# Replace variables in template
+	var aspects: Dictionary = context.get("aspects", {})
+	user_tpl = user_tpl.replace("{biome}", str(context.get("biome", "foret_broceliande")))
+	user_tpl = user_tpl.replace("{day}", str(context.get("day", 1)))
+	user_tpl = user_tpl.replace("{season}", str(context.get("season", "spring")))
+	user_tpl = user_tpl.replace("{souffle}", str(context.get("souffle", 3)))
+	user_tpl = user_tpl.replace("{karma}", str(context.get("karma", 0)))
+	user_tpl = user_tpl.replace("{tension}", str(context.get("tension", 40)))
+	user_tpl = user_tpl.replace("{life}", str(context.get("life_essence", 100)))
+	user_tpl = user_tpl.replace("{bestiole_bond}", str(context.get("bestiole_bond", 50)))
+
+	# Aspect states
+	for aspect in ["Corps", "Ame", "Monde"]:
+		var val: int = int(aspects.get(aspect, 0))
+		var state_name := "equilibre"
+		if val < 0: state_name = "bas"
+		elif val > 0: state_name = "haut"
+		user_tpl = user_tpl.replace("{%s_state}" % aspect.to_lower(), state_name)
+
+	# Sub-type and arc context (optional)
+	user_tpl = user_tpl.replace("{sub_type}", str(context.get("sub_type", "")))
+	user_tpl = user_tpl.replace("{arc_context}", str(context.get("arc_context", "")))
+	user_tpl = user_tpl.replace("{recent_events}", str(context.get("recent_events", "")))
+	user_tpl = user_tpl.replace("{active_tags}", str(context.get("active_tags_str", "")))
+	user_tpl = user_tpl.replace("{faction_status}", str(context.get("faction_status", "")))
+
+	return user_tpl
+
+
+## Get LLM params tuned for a specific event category.
+func get_category_llm_params(event_category: String) -> Dictionary:
+	var template_key := "event_" + event_category
+	var template := get_scenario_template(template_key)
+	if template.is_empty():
+		return TRIADE_LLM_PARAMS.duplicate()
+
+	var params := TRIADE_LLM_PARAMS.duplicate()
+	if template.has("temperature"):
+		params["temperature"] = float(template["temperature"])
+	if template.has("max_tokens"):
+		params["max_tokens"] = int(template["max_tokens"])
+	return params
+
+
 ## Check if the LLM is available and ready.
 func is_llm_ready() -> bool:
 	return _merlin_ai != null and _merlin_ai.is_ready
@@ -105,6 +231,9 @@ func is_llm_ready() -> bool:
 
 ## Generate a TRIADE card via LLM. Async — must be awaited.
 ## Returns {ok: bool, card: Dictionary, error: String, raw: String}
+## Uses two-stage approach directly: free text + programmatic JSON wrap.
+## JSON primary generation skipped — Qwen 3B CPU always produces malformed JSON
+## and wastes 120s before falling back anyway.
 func generate_card(context: Dictionary) -> Dictionary:
 	if context.is_empty():
 		return {"ok": false, "card": {}, "error": "Empty context"}
@@ -112,43 +241,14 @@ func generate_card(context: Dictionary) -> Dictionary:
 	if not is_llm_ready():
 		return {"ok": false, "card": {}, "error": "LLM not ready"}
 
-	var system_prompt := _build_triade_system_prompt()
-	var user_prompt := _build_triade_user_prompt(context)
-
-	# Pass GBNF grammar if available (Phase 30 — constrained decoding)
-	var params := TRIADE_LLM_PARAMS.duplicate()
-	if _triade_grammar != "":
-		params["grammar"] = _triade_grammar
-
-	var start_time := Time.get_ticks_msec()
-	var result: Dictionary = await _merlin_ai.generate_with_system(
-		system_prompt, user_prompt, params
-	)
-	var elapsed := Time.get_ticks_msec() - start_time
-
-	if elapsed > GENERATION_TIMEOUT_MS:
-		return {"ok": false, "card": {}, "error": "Timeout: %dms" % elapsed}
-
-	if result.has("error"):
-		return {"ok": false, "card": {}, "error": str(result.error)}
-
-	var raw_text: String = str(result.get("text", ""))
-	if raw_text.is_empty():
-		return {"ok": false, "card": {}, "error": "Empty LLM response"}
-
-	var parsed := _extract_json_from_response(raw_text)
-	if not parsed.is_empty():
-		var validated := validate_triade_card(parsed)
-		if validated["ok"]:
-			return {"ok": true, "card": validated["card"]}
-
-	# Primary generation failed — try two-stage fallback (Phase 30)
-	print("[MerlinLlmAdapter] Primary generation failed, trying two-stage fallback")
+	# Go directly to two-stage (free text → programmatic wrap).
+	# Skips JSON generation which always fails with Qwen 3B on CPU.
+	print("[MerlinLlmAdapter] generate_card: using two-stage (free text + wrap)")
 	var two_stage_result := await _generate_card_two_stage(context)
 	if two_stage_result["ok"]:
 		return two_stage_result
 
-	return {"ok": false, "card": {}, "error": "All generation strategies failed", "raw": raw_text}
+	return {"ok": false, "card": {}, "error": "Two-stage generation failed"}
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
@@ -163,24 +263,40 @@ func _generate_card_two_stage(context: Dictionary) -> Dictionary:
 		return {"ok": false, "card": {}, "error": "LLM not ready"}
 
 	# Stage 1: Free text generation (what nano models do well)
-	var system_prompt := "Tu es Merlin l'Enchanteur, druide de Broceliande. Ecris une situation riche et evocatrice (5-7 phrases, 420-620 caracteres) pour un jeu de cartes celtique. Vocabulaire: nemeton, ogham, sidhe, brume, mousse, serment, clairiere. Propose exactement 3 choix (A/B/C) avec des verbes d'action et une consequence implicite."
+	# Inject a random celtic theme word to force narrative variety
+	var cards_played: int = int(context.get("cards_played", 0))
+	var theme_idx: int = (cards_played + randi()) % CELTIC_THEMES.size()
+	var theme_word: String = CELTIC_THEMES[theme_idx]
+
+	var system_prompt := "Tu es Merlin l'Enchanteur, druide de Broceliande. Ecris une situation UNIQUE riche et evocatrice (5-7 phrases, 420-620 caracteres) pour un jeu de cartes celtique. Theme impose: %s. INTERDIT de repeter une scene precedente. Propose exactement 3 choix (A/B/C) avec des verbes d'action DISTINCTS et une consequence implicite." % theme_word
 	var aspects: Dictionary = context.get("aspects", {})
 	var souffle: int = int(context.get("souffle", 3))
 	var day: int = int(context.get("day", 1))
 	var biome: String = str(context.get("biome", "foret_broceliande"))
-	var user_prompt := "Jour %d. Souffle: %d. Biome: %s." % [day, souffle, biome]
+	var life: int = int(context.get("life_essence", 100))
+	var karma: int = int(context.get("karma", 0))
+	var user_prompt := "Carte %d du voyage. Jour %d. Souffle: %d. Vie: %d. Karma: %d. Biome: %s." % [cards_played + 1, day, souffle, life, karma, biome]
 	for aspect_name in TRIADE_ASPECTS:
 		var s: int = int(aspects.get(aspect_name, 0))
 		var state_name := "equilibre"
 		if s < 0: state_name = "bas"
 		elif s > 0: state_name = "haut"
 		user_prompt += " %s=%s." % [aspect_name, state_name]
-	user_prompt += " Format: scenario long puis 3 choix (A/B/C) relies a la situation."
+
+	# Include previous card text for continuity (avoid repetition)
+	var story_log: Array = context.get("story_log", [])
+	if story_log.size() > 0:
+		var last_entry = story_log[-1]
+		var prev_text: String = str(last_entry.get("text", "")).substr(0, 100)
+		if prev_text.length() > 10:
+			user_prompt += " Scene precedente (NE PAS REPETER): '%s'." % prev_text
+
+	user_prompt += " Theme: %s. Genere une scene DIFFERENTE des precedentes, avec 3 choix (A/B/C) relies a la situation." % theme_word
 
 	# No grammar for free text generation
 	var free_params := TRIADE_LLM_PARAMS.duplicate()
 	free_params.erase("grammar")
-	free_params["max_tokens"] = 340
+	free_params["max_tokens"] = 250
 	free_params["temperature"] = 0.7
 
 	var result: Dictionary = await _merlin_ai.generate_with_system(
@@ -221,22 +337,26 @@ func _wrap_text_as_card(raw_text: String, context: Dictionary) -> Dictionary:
 		if first_choice:
 			text = text.substr(0, first_choice.get_start()).strip_edges()
 
-	# Fallback labels if extraction failed
+	# Fallback labels if extraction failed — rotate by cards_played for variety
 	if labels.size() < 3:
-		labels = ["Agir avec prudence", "Mediter en silence", "Foncer tete baissee"]
+		var cp: int = int(context.get("cards_played", 0))
+		var set_idx: int = cp % FALLBACK_LABEL_SETS.size()
+		var chosen_set: Array = FALLBACK_LABEL_SETS[set_idx]
+		labels = [str(chosen_set[0]), str(chosen_set[1]), str(chosen_set[2])]
 
 	# Generate context-appropriate effects
 	var aspects: Dictionary = context.get("aspects", {})
 	var effects := _generate_contextual_effects(aspects)
 
+	var options_out: Array = [
+		{"label": labels[0], "reward_type": MerlinConstants.infer_reward_type([effects[0]]), "effects": [effects[0]]},
+		{"label": labels[1], "reward_type": MerlinConstants.infer_reward_type([effects[1]]), "cost": 1, "effects": [effects[1]]},
+		{"label": labels[2], "reward_type": MerlinConstants.infer_reward_type([effects[2]]), "effects": [effects[2]]},
+	]
 	return {
 		"text": text if text.length() > 5 else raw_text.substr(0, mini(raw_text.length(), 200)),
 		"speaker": "merlin",
-		"options": [
-			{"label": labels[0], "effects": [effects[0]]},
-			{"label": labels[1], "cost": 1, "effects": [effects[1]]},
-			{"label": labels[2], "effects": [effects[2]]},
-		],
+		"options": options_out,
 		"tags": ["llm_generated"],
 	}
 
@@ -258,34 +378,15 @@ func _extract_labels_from_text(text: String) -> Array[String]:
 
 
 ## Generate effects that make sense given current aspect states.
-func _generate_contextual_effects(aspects: Dictionary) -> Array:
-	var aspect_names := ["Corps", "Ame", "Monde"]
+func _generate_contextual_effects(_aspects: Dictionary) -> Array:
+	## Generate Vie/Karma/Souffle effects for 3 options.
 	var effects: Array = []
-
-	# Find the lowest and highest aspects for smart targeting
-	var lowest_aspect := "Corps"
-	var highest_aspect := "Monde"
-	var lowest_val := 999
-	var highest_val := -999
-	for a in aspect_names:
-		var v: int = int(aspects.get(a, 0))
-		if v < lowest_val:
-			lowest_val = v
-			lowest_aspect = a
-		if v > highest_val:
-			highest_val = v
-			highest_aspect = a
-
-	# Option 1 (left): Boost lowest aspect
-	effects.append({"type": "SHIFT_ASPECT", "aspect": lowest_aspect, "direction": "up"})
-	# Option 2 (center): Balance — different aspect
-	var center_aspect: String = aspect_names[1]
-	if center_aspect == lowest_aspect or center_aspect == highest_aspect:
-		center_aspect = aspect_names[0] if aspect_names[0] != lowest_aspect else aspect_names[2]
-	effects.append({"type": "SHIFT_ASPECT", "aspect": center_aspect, "direction": "up"})
-	# Option 3 (right): Risk — lower highest but different feel
-	effects.append({"type": "SHIFT_ASPECT", "aspect": highest_aspect, "direction": "down"})
-
+	# Option 1 (left): Heal life (prudent)
+	effects.append({"type": "HEAL_LIFE", "amount": 5})
+	# Option 2 (center): Add karma (balanced)
+	effects.append({"type": "ADD_KARMA", "amount": 1})
+	# Option 3 (right): Risk damage (audacious)
+	effects.append({"type": "DAMAGE_LIFE", "amount": 3})
 	return effects
 
 
@@ -404,15 +505,13 @@ func calculate_smart_effects(context: Dictionary, scenario_text: String, labels:
 	if _gm_grammar == "":
 		_load_gm_grammar()
 
-	var aspects: Dictionary = context.get("aspects", {})
-	var system := "Tu es le Maitre du Jeu. Genere les effets JSON pour 3 options. Effets: SHIFT_ASPECT, ADD_KARMA, ADD_TENSION."
-	var user_input := "Scenario: %s\nChoix: %s\nCorps=%d Ame=%d Monde=%d Souffle=%d" % [
+	var system := "Tu es le Maitre du Jeu. Genere les effets JSON pour 3 options. Effets: DAMAGE_LIFE, HEAL_LIFE, ADD_KARMA, ADD_SOUFFLE."
+	var user_input := "Scenario: %s\nChoix: %s\nSouffle=%d" % [
 		scenario_text.substr(0, 100),
 		", ".join(labels),
-		int(aspects.get("Corps", 0)), int(aspects.get("Ame", 0)), int(aspects.get("Monde", 0)),
 		int(context.get("souffle", 3))
 	]
-	user_input += "\n{\"options\":[{\"label\":\"...\",\"effects\":[{\"type\":\"SHIFT_ASPECT\",\"aspect\":\"Corps\",\"direction\":\"up\"}]},{\"label\":\"...\",\"cost\":1,\"effects\":[{\"type\":\"SHIFT_ASPECT\",\"aspect\":\"Ame\",\"direction\":\"up\"}]},{\"label\":\"...\",\"effects\":[{\"type\":\"SHIFT_ASPECT\",\"aspect\":\"Monde\",\"direction\":\"down\"}]}]}"
+	user_input += "\n{\"options\":[{\"label\":\"...\",\"effects\":[{\"type\":\"HEAL_LIFE\",\"amount\":5}]},{\"label\":\"...\",\"effects\":[{\"type\":\"ADD_KARMA\",\"amount\":1}]},{\"label\":\"...\",\"effects\":[{\"type\":\"DAMAGE_LIFE\",\"amount\":3}]}]}"
 
 	var result: Dictionary = await _merlin_ai.generate_structured(system, user_input, _gm_grammar)
 	if result.has("text"):
@@ -427,39 +526,28 @@ func calculate_smart_effects(context: Dictionary, scenario_text: String, labels:
 					if opt is Dictionary and opt.has("effects"):
 						effects.append_array(opt.effects)
 					else:
-						effects.append({"type": "SHIFT_ASPECT", "aspect": "Corps", "direction": "up"})
+						effects.append({"type": "HEAL_LIFE", "amount": 5})
 				return effects
 
 	# Fallback to heuristic
-	return _generate_contextual_effects(aspects)
+	return _generate_contextual_effects({})
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
-# TRIADE SYSTEM PROMPT — Compact for Ministral 3B Instruct
+# TRIADE SYSTEM PROMPT — Compact for Qwen 2.5-3B-Instruct
 # ═══════════════════════════════════════════════════════════════════════════════
 
 func _build_triade_system_prompt() -> String:
-	return "Tu es Merlin l'Enchanteur, druide ancestral des forets de Broceliande. Genere 1 carte JSON pour un jeu de cartes celtique. La carte contient une situation narrative dense et developpee (5-7 phrases, 420-620 caracteres) et 3 options basees sur des verbes d'action avec consequences sur Corps/Ame/Monde. Vocabulaire: nemeton, ogham, sidhe, dolmen, korrigans, brume, mousse, serment. Ton: poetique, concret et mysterieux. Reponds UNIQUEMENT en JSON valide."
+	return "Tu es Merlin l'Enchanteur, druide ancestral des forets de Broceliande. Genere 1 carte JSON pour un jeu de cartes celtique. La carte contient une situation narrative dense et developpee (5-7 phrases, 420-620 caracteres) et 3 options basees sur des verbes d'action avec consequences sur Vie/Karma/Souffle. Chaque option a un reward_type parmi: vie, essence, souffle, karma, mystere. Effets possibles: HEAL_LIFE, DAMAGE_LIFE, ADD_KARMA, ADD_SOUFFLE. Ajoute result_success (2-3 phrases si reussite) et result_failure (2-3 phrases si echec). Vocabulaire: nemeton, ogham, sidhe, dolmen, korrigans, brume, mousse, serment. Ton: poetique, concret et mysterieux. Reponds UNIQUEMENT en JSON valide."
 
 
 func _build_triade_user_prompt(context: Dictionary) -> String:
-	var aspects: Dictionary = context.get("aspects", {})
 	var souffle: int = int(context.get("souffle", 3))
 	var cards_played: int = int(context.get("cards_played", 0))
 	var day: int = int(context.get("day", 1))
 	var tags: Array = context.get("active_tags", [])
 
-	var prompt := "Aspects:"
-	for aspect in TRIADE_ASPECTS:
-		var s: int = int(aspects.get(aspect, 0))
-		var state_name := "equilibre"
-		if s < 0:
-			state_name = "bas"
-		elif s > 0:
-			state_name = "haut"
-		prompt += " %s=%s" % [aspect, state_name]
-
-	prompt += ". Souffle:%d. Jour:%d. Carte:%d." % [souffle, day, cards_played]
+	var prompt := "Souffle:%d. Jour:%d. Carte:%d." % [souffle, day, cards_played]
 
 	var biome: String = str(context.get("biome", "foret_broceliande"))
 	prompt += " Biome:%s." % biome
@@ -482,9 +570,9 @@ func _build_triade_user_prompt(context: Dictionary) -> String:
 			prompt += " Precedent: %s." % prev_text
 
 	# JSON template at end of user prompt (anti-hallucination: model sees template last)
-	prompt += "\nEffets: SHIFT_ASPECT aspect=Corps/Ame/Monde direction=up/down."
+	prompt += "\nEffets: HEAL_LIFE amount=N, DAMAGE_LIFE amount=N, ADD_KARMA amount=N, ADD_SOUFFLE amount=N."
 	prompt += "\nLe champ text doit etre detaille (5-7 phrases, 420-620 caracteres), les labels doivent commencer par un verbe d'action."
-	prompt += "\n{\"text\":\"...\",\"speaker\":\"merlin\",\"options\":[{\"label\":\"...\",\"effects\":[{\"type\":\"SHIFT_ASPECT\",\"aspect\":\"Corps\",\"direction\":\"up\"}]},{\"label\":\"...\",\"effects\":[{\"type\":\"SHIFT_ASPECT\",\"aspect\":\"Ame\",\"direction\":\"up\"}]},{\"label\":\"...\",\"effects\":[{\"type\":\"SHIFT_ASPECT\",\"aspect\":\"Monde\",\"direction\":\"down\"}]}],\"tags\":[\"tag\"]}"
+	prompt += "\n{\"text\":\"...\",\"speaker\":\"merlin\",\"options\":[{\"label\":\"...\",\"reward_type\":\"vie\",\"effects\":[{\"type\":\"HEAL_LIFE\",\"amount\":5}]},{\"label\":\"...\",\"reward_type\":\"karma\",\"effects\":[{\"type\":\"ADD_KARMA\",\"amount\":1}]},{\"label\":\"...\",\"reward_type\":\"vie\",\"effects\":[{\"type\":\"DAMAGE_LIFE\",\"amount\":3}]}],\"result_success\":\"...\",\"result_failure\":\"...\",\"tags\":[\"tag\"]}"
 
 	return prompt
 
@@ -498,6 +586,7 @@ func build_triade_context(state: Dictionary) -> Dictionary:
 	var run: Dictionary = state.get("run", {})
 	var bestiole: Dictionary = state.get("bestiole", {})
 
+	var hidden: Dictionary = run.get("hidden", {})
 	return {
 		"aspects": run.get("aspects", {}).duplicate(),
 		"souffle": int(run.get("souffle", MerlinConstants.SOUFFLE_START)),
@@ -508,6 +597,7 @@ func build_triade_context(state: Dictionary) -> Dictionary:
 		"story_log": _get_recent_story_log(run.get("story_log", []), 5),
 		"biome": str(run.get("current_biome", "foret_broceliande")),
 		"life_essence": int(run.get("life_essence", MerlinConstants.LIFE_ESSENCE_START)),
+		"karma": int(hidden.get("karma", 0)),
 		"bestiole": {
 			"mood": _get_bestiole_mood(bestiole),
 			"bond": int(bestiole.get("bond", 50)),
@@ -656,33 +746,20 @@ func _regex_extract_card_fields(raw: String) -> Dictionary:
 	var speaker_match := rx.search(raw)
 	var speaker: String = speaker_match.get_string(1) if speaker_match else "merlin"
 
-	# Try to find aspect/direction pairs in effects
 	var options: Array = []
-	rx.compile("\"aspect\"\\s*:\\s*\"(Corps|Ame|Monde)\"")
-	var aspect_matches := rx.search_all(raw)
-	rx.compile("\"direction\"\\s*:\\s*\"(up|down)\"")
-	var dir_matches := rx.search_all(raw)
 
 	for idx in range(labels.size()):
 		var opt: Dictionary = {"label": labels[idx], "effects": []}
 		if idx == 1:
 			opt["cost"] = 1
 		# Try to pair with an effect
-		if idx < aspect_matches.size() and idx < dir_matches.size():
-			opt["effects"].append({
-				"type": "SHIFT_ASPECT",
-				"aspect": aspect_matches[idx].get_string(1),
-				"direction": dir_matches[idx].get_string(1),
-			})
-		else:
-			# Default effect based on position
-			var aspects_list: Array[String] = ["Corps", "Ame", "Monde"]
-			var aspect_idx: int = idx % 3
-			opt["effects"].append({
-				"type": "SHIFT_ASPECT",
-				"aspect": aspects_list[aspect_idx],
-				"direction": "up" if idx == 0 else "down",
-			})
+		# Default Vie/Karma/Souffle effects based on position
+		var default_effects: Array = [
+			{"type": "HEAL_LIFE", "amount": 5},
+			{"type": "ADD_KARMA", "amount": 1},
+			{"type": "DAMAGE_LIFE", "amount": 3},
+		]
+		opt["effects"].append(default_effects[idx % 3])
 		options.append(opt)
 
 	return {
@@ -728,7 +805,7 @@ func validate_triade_card(card: Dictionary) -> Dictionary:
 		sanitized["options"].insert(1, {
 			"label": "Mediter",
 			"cost": 1,
-			"effects": [{"type": "SHIFT_ASPECT", "aspect": "Ame", "direction": "up"}],
+			"effects": [{"type": "ADD_KARMA", "amount": 1}],
 		})
 
 	# Ensure speaker
@@ -791,19 +868,13 @@ func _validate_triade_effect(effect: Dictionary) -> Dictionary:
 		return {}
 
 	match effect_type:
-		"SHIFT_ASPECT":
-			var aspect := str(effect.get("aspect", ""))
-			var direction := str(effect.get("direction", ""))
-			if not aspect in TRIADE_ASPECTS or not direction in TRIADE_DIRECTIONS:
-				return {}
-			return {"type": "SHIFT_ASPECT", "aspect": aspect, "direction": direction}
+		"SHIFT_ASPECT", "SET_ASPECT":
+			# Aspect system removed — convert to HEAL_LIFE
+			return {"type": "HEAL_LIFE", "amount": 5}
 
-		"SET_ASPECT":
-			var aspect := str(effect.get("aspect", ""))
-			var state_val := int(effect.get("state", 0))
-			if not aspect in TRIADE_ASPECTS or not state_val in TRIADE_STATES:
-				return {}
-			return {"type": "SET_ASPECT", "aspect": aspect, "state": state_val}
+		"DAMAGE_LIFE", "HEAL_LIFE":
+			var amount := clampi(int(effect.get("amount", 5)), 1, 20)
+			return {"type": effect_type, "amount": amount}
 
 		"USE_SOUFFLE", "ADD_SOUFFLE":
 			var amount := clampi(int(effect.get("amount", 1)), 1, 3)

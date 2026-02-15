@@ -2,20 +2,195 @@
 
 > **Note**: Sessions anterieures archivees dans `archive/progress_archive_2026-02-05_to_2026-02-08.md`
 
-## Session: 2026-02-14a (Fix Warnings + Migration Qwen -> Ministral 3B)
+## Session: 2026-02-15d (Fix LLM Pipeline — 0% to 100% LLM)
+
+### Objectif
+Corriger le pipeline LLM pour que 100% des cartes soient generees par le LLM (core feature du jeu).
+Run 5 E2E avait montre 0% LLM — toutes les cartes venaient de emergency_fallback.
+
+### Causes racines identifiees (chaine de defaillance)
+1. Controller LLM_TIMEOUT_SEC=25s trop court pour CPU inference (~60s)
+2. Retry "_retry_llm_generation" echouait car "Already generating" (thread C++ actif)
+3. Adapter GENERATION_TIMEOUT_MS=8s rejetait tout resultat >8s (double-kill)
+4. `_run_llm()` sans timeout → attend indefiniment si callback ne fire pas
+5. JSON primary generation TOUJOURS malformee avec Qwen 3B CPU → 120s gaspillees
+
+### Corrections appliquees (5 fichiers)
+
+**1. merlin_ai.gd** — Core LLM interface
+- Ajout `cancel_current_generation()` et `is_llm_busy()` (methodes C++ existantes)
+- Ajout `_warmup_generate()` — prime le cache CPU apres chargement modele (7.8s)
+- Timeouts: LLM_POLL_TIMEOUT_FIRST_MS=300s, LLM_POLL_TIMEOUT_MS=120s
+- Backoff polling 50ms (vs 10ms)
+
+**2. merlin_omniscient.gd** — MOS orchestrateur
+- `generate_card()` attend `_generation_in_progress` et `_prefetch_in_progress` (vs return empty)
+- Prefetch: pool path desactive → toujours pipeline complet (Strategy B)
+- LLM_TIMEOUT_MS: 5000 → 300000
+
+**3. merlin_llm_adapter.gd** — Adaptateur TRIADE
+- Skip JSON primary generation → two-stage direct (free text + wrap programmatique)
+- Suppression du post-hoc timeout de 8s
+
+**4. triade_game_controller.gd** — Controller
+- LLM_TIMEOUT_SEC: 25 → 360
+- Guard retry si LLM busy
+- max_tokens: 380 → 250
+
+**5. auto_play_runner.gd** — Runner E2E
+- Detection resolution par `current_card.is_empty()` (vs `is_processing`)
+- POLL_TIMEOUT_SEC: 90 → 420, resolution timeout: 60 → 300
+- Classification source amelioree (detecte `_strategy` field)
+
+### Runs E2E (9 → 13)
+| Run | Cartes | LLM% | Resultat | Cause echec |
+|-----|--------|------|----------|-------------|
+| 9 | 0 | 0% | Timeout | Cold start 120s + runner 180s timeout |
+| 10 | 1 | 100% | Timeout | Resolution timeout 60s trop court |
+| 11 | 1 | 100% | Bloque | cancel_generation() bloque C++ 80s |
+| 12 | 1 | 0% | Bloque | _generation_in_progress stuck true |
+| 12b | 5 | 0% | Fallback | Pool path JSON toujours malformed |
+| **13** | **31** | **100%** | **VICTOIRE** | **Mission survive 30/30 completee** |
+
+### Run 13 — Resultats detailles
+- **31 cartes jouees, 100% LLM, VICTOIRE ("Le Prix Paye")**
+- Card 1: 113s (cold start), Cards 2-31: **~2.9s** (prefetch)
+- Total run: 448s (7.5 min)
+- Life: 86 final, Karma: -3, Souffle: 1
+- Outcomes: 2 crit_success, 14 success, 14 failure, 1 crit_fail
+- Flux: terre=91, esprit=100, lien=64
+
+### Issue identifiee: Textes repetitifs
+- Les 31 cartes ont le MEME texte (prefetch genere avant update du game state)
+- Options generiques ("Agir avec prudence", "Mediter en silence", "Foncer tete baissee")
+
+---
+
+## Session: 2026-02-15e (Text Variety + Guardrail Fix — 100% LLM unique)
+
+### Objectif
+Corriger la repetition textuelle (31 cartes identiques dans Run 13) et les faux positifs guardrails.
+
+### Causes racines (5 bugs)
+1. **story_log jamais peuple** — le store l'initialisait a `[]` mais ne le remplissait jamais
+2. **Prompt two-stage sans variance** — memes inputs = memes outputs
+3. **Context hash trop simple** — ne detectait pas le changement de cards_played/life
+4. **Fallback labels toujours identiques** — meme triplet "Agir/Mediter/Foncer"
+5. **Prefetch avant resolution** — utilisait l'ancien game state (stale data)
+
+### Bug supplementaire (Run 14b): Guardrails faux positifs
+- `_contains_forbidden_words()` utilisait `.contains()` (substring match)
+- Le mot interdit "ia" matchait "conf**ia**nce", "all**ia**nce", etc.
+- 2/5 cartes LLM valides (670 et 590 chars) rejetees par guardrails
+
+### Corrections (4 fichiers)
+
+**1. merlin_llm_adapter.gd** — Enrichissement prompt + rotation labels
+- 32 themes celtiques (CELTIC_THEMES) injectes aleatoirement dans le prompt
+- 8 sets de fallback labels (FALLBACK_LABEL_SETS) rotatifs par cards_played
+- Prompt enrichi: cards_played, life, karma, story_log, theme word
+
+**2. merlin_store.gd** — Population story_log
+- `_resolve_triade_choice()` enregistre card text + chosen label (5 derniers)
+
+**3. merlin_omniscient.gd** — Context hash + guardrails
+- Hash enrichi: + cards_played + life_essence
+- GUARDRAIL_MAX_TEXT_LEN: 500 → 1200
+- `_contains_forbidden_words()` → `_find_forbidden_word()` (whole-word matching)
+- Forbidden words: soft warning pour LLM (vs hard reject avant)
+- Diagnostic logging (pre/post guardrails, post-validate)
+
+**4. triade_game_controller.gd** — Prefetch timing
+- Prefetch deplace APRES resolution (state a jour, pas stale)
+- Labels retry rotatifs
+
+### Runs E2E (14 → 15)
+| Run | Cartes | LLM% | Fallback | Guardrail rejets | Texte unique |
+|-----|--------|------|----------|-----------------|-------------|
+| 14 | 2 | 50% | 1 | 1 (max_len 500) | Oui |
+| 14b | 5 | 60% | 2 | 2 (forbidden "ia") | Oui |
+| **15** | **7** | **100%** | **0** | **0** | **Oui** |
+
+### Run 15 — Resultats
+- **7 cartes jouees, 100% LLM, 0 fallback, mission equilibre 7/8**
+- Timeout 600s avant 8e carte (CPU inference ~70s/carte)
+- Themes varies: saumon/riviere, feu/saule, lande sauvage, tonnerre
+- Guardrails: 0 rejections, 0 soft warnings
+- NPC encounter (Marchand des Ombres) detecte et traite correctement
+
+---
+
+## Session: 2026-02-15c (Audit Complet Projet — Coherence + Headless)
+
+### Audit par 3 agents paralleles (structure, logs, lore)
+- 75+ scripts, 19 scenes actives, 43 scenes total inspectees
+- Coherence lore/data: 7 biomes, 7 druides, 18 Oghams, Triade — TOUT OK
+- 6 fichiers JSON data/ai/config/ valides et coherents
+
+### Bugs corriges
+1. **CRITIQUE** — MerlinStore pas enregistre comme singleton (14+ scripts le cherchent via `/root/MerlinStore`)
+   - class_name + autoload meme nom = interdit en Godot 4
+   - Fix: GameManager._ready() cree MerlinStore et l'ajoute a root
+   - Supprime le fallback local dans triade_game_controller.gd
+2. **Calendar.gd:180** — `Dictionary == "floating"` crash runtime (19 erreurs)
+   - Fix: `if date_val is String and date_val == "floating"`
+3. **SceneAntreMerlin.gd + SceneEveil.gd** — 10 constantes vers sprites supprimes
+   - Fix: pointer vers M.E.R.L.I.N.png
+4. **HubAntre.gd:1956,1965** — Control anchor/size warnings
+   - Fix: `set_deferred("size", vp)`
+
+### Validation
+- Editor Parse Check: PASSED (0 errors, 0 warnings)
+- Smoke Test: **19/19 scenes PASS** (toutes en headless)
+- KB mise a jour: 7 nouvelles entrees + 2 patterns
+
+---
+
+## Session: 2026-02-15b (Bestiaire de Broceliande — Catalogue des Rencontres)
+
+### Document cree: `docs/50_lore/14_BESTIAIRE_BROCELIANDE.md` (~700 lignes, 32K chars)
+- Catalogue complet de toutes les entites rencontrables dans le monde de DRU
+- 12 sections: 7 Druides, 3 Humains, 5 Anciens du Sidhe, Korrigans, Creatures folkloriques, L'Ankou, Bestiole, 18 Druides dissous + 7 perdus, Merlin, Matrice de rencontres, Evolution multi-run, Relations
+- Matrice de rencontres croisee (36 entites x 7 biomes x conditions)
+- Cross-references vers tous les docs source (11_PNJ, 03_FACTIONS, 08_BIOMES, 07_OGHAMS, 06_BESTIOLE, 04_MERLIN)
+
+### MAJ Index: `docs/50_lore/00_LORE_BIBLE_INDEX.md`
+- Entree #14 ajoutee dans la table des documents
+- Cross-reference ajoutee dans la section verification
+- Total corpus: ~12,700+ lignes
+
+---
+
+## Session: 2026-02-15 (Revert Ministral -> Qwen 2.5-3B definitive)
+
+### Benchmark comparatif hors-Godot (Ollama API, 20 prompts)
+- **Qwen 2.5-3B**: 95% persona, 3 violations, 8.99s latence — coherent, francais correct
+- **Ministral 3B**: 62% persona, 16 violations, 40.19s latence — incohérent, texte casse
+- **Verdict**: Qwen gagne sur tous les fronts
+
+### Migration complete: suppression totale de Ministral
+- **GGUF supprime**: `ministral-3b-instruct.gguf` (3.3 GB)
+- **Ollama purge**: `ollama rm ministral-3b-instruct:latest`
+- **MODEL_FILE**: `qwen2.5-3b-instruct-q4_k_m.gguf` dans merlin_ai.gd
+- **RAM_PER_BRAIN_MB**: 3800 -> 2200
+- **Fichiers GDScript (9)**: merlin_ai, merlin_omniscient, rag_manager, merlin_llm_adapter, triade_game_controller, IntroCeltOS, TestLLMScene, llm_source_badge, llm_status_bar
+- **Config**: PLACE_MODEL_HERE.txt
+- **Outils Python (2)**: test_merlin_chat.py (reecrit Ollama API), compare_models.py (Qwen-only)
+- **Docs (10+)**: CLAUDE.md, GAMEPLAY_BIBLE, MASTER_DOCUMENT, TRINITY_ARCHITECTURE, STATE_Claude_MerlinLLM, MOS_ARCHITECTURE, GUIDE_SCENARIOS_LLM, ci_cd_release.md
+- **Grep zero Ministral**: confirme dans *.gd, *.json, *.txt (residus historiques OK dans docs)
+
+---
+
+## Session: 2026-02-14a (Fix Warnings + Migration Qwen -> Ministral 3B — REVERTED)
 
 ### GDScript Warnings Fixed
 - **Integer divisions (7 total)**: relationship_registry, session_registry (x2), IntroCeltOS, mg_lame_druide, mg_roue_fortune, triade_game_controller — pattern `int(x / N.0)`
 - **Unused class variables (3)**: Removed `_preloaded_responses`, `_llm_gen`, `_prefetched_responses` from SceneRencontreMerlin.gd
 - **Lambda capture bug (2)**: `_llm_rephrase()` et `_llm_generate_responses()` — GDScript 4 lambdas capture by value, refactored to Dictionary (reference type) as shared state
 
-### Migration LLM: Qwen2.5-3B -> Ministral 3B Instruct
-- **Model**: `ministral-3b-instruct.gguf` (3.52 GB, from Ollama blob storage)
-- **Ollama**: `ministral-3b-instruct:latest` deja installe
-- **MODEL_FILE**: Updated in merlin_ai.gd
-- **RAM_PER_BRAIN_MB**: 2200 -> 3800
-- **Fichiers code mis a jour** (12): merlin_ai, merlin_omniscient, rag_manager, merlin_llm_adapter, triade_game_controller, IntroCeltOS, TestLLMScene, llm_source_badge, llm_status_bar, PLACE_MODEL_HERE, CLAUDE.md, SceneRencontreMerlin
-- **Note**: LoRA pipeline et docs secondaires encore references Qwen (migration progressive)
+### Migration LLM: Qwen2.5-3B -> Ministral 3B Instruct (REVERTED 2026-02-15)
+- **REVERT**: Benchmark a demontre que Ministral est inutilisable (62% persona, texte incohérent)
+- Migration annulee et remplacee par Qwen definitif (session 2026-02-15)
 
 ---
 

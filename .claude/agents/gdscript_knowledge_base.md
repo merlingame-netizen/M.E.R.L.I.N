@@ -626,23 +626,31 @@ while not result_ready:
 
 ## SECTION 3: Patterns Specifiques DRU
 
-### 3.1 Integration LLM (Trinity-Nano)
+### 3.1 Integration LLM (Qwen 2.5-3B-Instruct CPU)
 
 ```gdscript
-# Parametres optimaux pour Trinity-Nano 1B
-const LLM_PARAMS := {
-    "max_tokens": 60,        # Court = rapide
-    "temperature": 0.4,      # Pas trop creatif
-    "top_p": 0.75,
-    "top_k": 25,
-    "repetition_penalty": 1.6  # Evite repetitions
+# Parametres optimaux pour Qwen 2.5-3B Q4_K_M (CPU ~4 tok/s)
+# Narrator (texte creatif)
+var narrator_params := {
+    "temperature": 0.7, "top_p": 0.9, "max_tokens": 250,
+    "top_k": 40, "repetition_penalty": 1.3
 }
 
-# System prompt: MAX 10 tokens
-const SYSTEM_PROMPT := "Tu generes des cartes."  # Court!
+# REGLE CRITIQUE: JSON generation TOUJOURS malformee avec Qwen 3B CPU
+# -> Utiliser two-stage: free text + wrap programmatique
+# -> JAMAIS de JSON primary generation (perte de 120s)
 
-# NE PAS inclure d'exemples (le modele les repete)
+# Timeouts CPU (generosite obligatoire)
+const LLM_POLL_TIMEOUT_FIRST_MS := 300000  # 5min cold start
+const LLM_POLL_TIMEOUT_MS := 120000        # 2min normal
 ```
+
+**Lecons LLM Pipeline (Run 13, 2026-02-15):**
+1. **cancel_generation() bloque C++** — Ne jamais cancel + generate_async dans la foulee (~80s de blocage). Preferer WAIT for completion.
+2. **Warmup obligatoire** — `_warmup_generate()` apres chargement modele prime le cache CPU. Reduit premiere gen de >120s a ~60s.
+3. **Prefetch = cle de la performance** — Pre-generer pendant resolution joueur. Cards 2-31 servies en ~2ms.
+4. **GDScript lambda capture** — Les primitives (int, float, bool) sont capturees par valeur. Utiliser Dictionary comme shared state pour les callbacks async.
+5. **is_generating_now() avant generate_async()** — Toujours verifier que le thread C++ est libre avant de lancer une generation.
 
 ---
 
@@ -743,6 +751,25 @@ _Ce section est mise a jour automatiquement par l'agent Debug._
 - `[CMakeLists.txt]` RuntimeLibrary mismatch MD vs MT → llama.cpp must be built with `-DCMAKE_MSVC_RUNTIME_LIBRARY=MultiThreaded` to match GDExtension static CRT
 - `[CMakeLists.txt]` Missing ggml libs → Add `ggml.lib`, `ggml-base.lib`, `ggml-cpu.lib` to linker (llama.cpp split ggml into sub-libs)
 
+### 2026-02-15 (Audit Complet Projet)
+- `[project.godot + game_manager.gd]` MerlinStore pas enregistre comme singleton → class_name interdit autoload meme nom en Godot 4. Fix: GameManager._ready() cree MerlinStore et l'ajoute a root via call_deferred
+- `[Calendar.gd:180]` `Dictionary == "floating"` crash runtime → date_val peut etre Dictionary ou String. Fix: `if date_val is String and date_val == "floating"`
+- `[SceneAntreMerlin.gd:24-28, SceneEveil.gd:25-29]` Chemins sprites supprimes (Merlin.png, _AUTOMNE, _ETE, _HIVER, _PRINTEMPS) → Fix: pointer vers M.E.R.L.I.N.png
+- `[HubAntre.gd:1956,1965]` Control anchor/size warnings → Fix: `set_deferred("size", vp)` au lieu de `.size = vp`
+- `[triade_game_controller.gd:105-107]` Fallback MerlinStore.new() local inutile → Supprime (GameManager gere maintenant)
+- **Pattern:** En Godot 4, `class_name Foo` + autoload `Foo` = conflit. Soit retirer class_name, soit creer le singleton manuellement via un autre autoload
+- **Pattern:** Comparaison polymorphe (JSON date peut etre String ou Dict) — toujours tester le type avec `is` avant `==`
+
+### 2026-02-15 (LLM Text Variety + Guardrails)
+- `[merlin_omniscient.gd:_contains_forbidden_words]` `.contains()` = substring match → "ia" matchait "confiance", "alliance", etc. Fix: `_find_forbidden_word()` avec whole-word matching (space-delimited)
+- `[merlin_omniscient.gd:GUARDRAIL_MAX_TEXT_LEN]` 500 chars trop restrictif pour LLM 250 max_tokens → Fix: 1200
+- `[merlin_omniscient.gd:_apply_guardrails]` Forbidden words = hard reject meme pour LLM → Fix: soft warning pour LLM (prefer LLM text > fallback)
+- `[merlin_store.gd:_resolve_triade_choice]` story_log jamais peuple → Fix: append card text + chosen label (5 derniers)
+- `[triade_game_controller.gd]` Prefetch avant resolution = stale state = textes identiques → Fix: deplacer prefetch APRES resolution
+- **Pattern:** String.contains() pour guardrails = DANGER. Toujours whole-word match pour mots courts (<4 chars)
+- **Pattern:** Prefetch LLM doit utiliser le state APRES resolution, pas avant (sinon contexte stale = repetition)
+- **Pattern:** Guardrails LLM doivent etre soft (warning) sauf mots interdits meta/AI. Mieux vaut un texte LLM imparfait qu'un fallback generique
+
 <!-- CORRECTIONS_LOG_END -->
 
 ---
@@ -771,5 +798,5 @@ _(Section vide — sera alimentee automatiquement au fil des dispatches)_
 
 ---
 
-*Last Updated: 2026-02-09 (14 corrections + Section 7 Dispatcher)*
+*Last Updated: 2026-02-15 (14 corrections + LLM pipeline lessons + Section 7 Dispatcher)*
 *Maintained by: Debug Agent, Optimizer Agent & Task Dispatcher*
