@@ -55,6 +55,7 @@ var event_selector: EventCategorySelector  # Phase 44 — weighted event picker
 
 var _store: Node = null  # Reference to DruStore
 var _is_ready := false
+var _quality_judge: BrainQualityJudge = null  # Phase 4 — scoring + best-of-N
 var _current_context: Dictionary = {}
 var _scene_context: Dictionary = {}
 var _generation_in_progress := false
@@ -89,6 +90,11 @@ var _prefetch_aspects: Dictionary = {}  # Aspect values when prefetch started
 var _prefetch_biome: String = ""  # Biome when prefetch started
 signal prefetch_ready
 
+# Deep prefetch buffer (Phase 5 — BitNet swarm)
+var _prefetch_buffer: Array = []  # Array of {card, context_hash, aspects, biome}
+const PREFETCH_BUFFER_MAX := 3     # Max pre-generated cards
+var _prefetch_depth: int = 1       # Current depth (1 = legacy, 2-3 = swarm)
+
 # Stats
 var stats := {
 	"cards_generated": 0,
@@ -110,6 +116,7 @@ func _ready() -> void:
 	_init_processors()
 	_init_generators()
 	_connect_signals()
+	_quality_judge = BrainQualityJudge.new()
 
 
 func setup(store: Node) -> void:
@@ -491,8 +498,8 @@ func _calendar_event_to_card(ev: Dictionary) -> Dictionary:
 
 
 func prefetch_next_card(game_state: Dictionary) -> void:
-	## Pre-generate the next card in background while player reads current card.
-	## Uses the worker pool: dedicated workers (3-4 brains) or idle primary brains (2 brains).
+	## Pre-generate the next card(s) in background while player reads current card.
+	## Deep prefetch: with BitNet swarm, generates up to _prefetch_depth cards.
 	## Called by the controller after displaying a card.
 	if _prefetch_in_progress or _generation_in_progress:
 		return
@@ -515,15 +522,56 @@ func prefetch_next_card(game_state: Dictionary) -> void:
 	_sync_mos_to_rag()
 	_apply_adaptive_processing()
 
-	# Always use full strategy pipeline (includes adapter two-stage fallback).
-	# Pool path disabled: single-brain mode + JSON always malformed = pool never works.
+	# Generate card N+1 (always)
 	var card := await _generate_with_strategy()
 
-	# Only store if still relevant (no new generation started)
 	if _prefetch_in_progress:
 		_prefetched_card = card
+		# Deep prefetch: fill buffer with cards N+2, N+3 (if swarm active)
+		if _prefetch_depth > 1 and not card.is_empty():
+			_prefetch_buffer.clear()
+			_prefetch_buffer.append({
+				"card": card,
+				"context_hash": _prefetch_context_hash,
+				"aspects": _prefetch_aspects.duplicate(),
+				"biome": _prefetch_biome,
+			})
+			# Generate additional cards via background tasks (non-blocking)
+			var extra: int = mini(_prefetch_depth - 1, PREFETCH_BUFFER_MAX - 1)
+			for i in range(extra):
+				_submit_deep_prefetch(game_state, i + 2)
 		_prefetch_in_progress = false
 		prefetch_ready.emit()
+
+
+func _submit_deep_prefetch(game_state: Dictionary, card_index: int) -> void:
+	## Submit a deep prefetch card generation as a background task.
+	if llm_interface == null or not llm_interface.has_method("submit_background_task"):
+		return
+	var system_prompt := _build_system_prompt()
+	var user_prompt := _build_user_prompt()
+	# Slight temperature variation for diversity
+	var temp: float = 0.55 + card_index * 0.08
+	var biome: String = _prefetch_biome
+	var aspects: Dictionary = _prefetch_aspects.duplicate()
+
+	llm_interface.submit_background_task("prefetch", system_prompt, user_prompt,
+		{"max_tokens": 200, "temperature": temp},
+		func(result: Dictionary) -> void:
+			if result.has("text"):
+				var parsed := _parse_llm_response(str(result.text))
+				if not parsed.is_empty():
+					parsed["_prefetched"] = true
+					parsed["_deep_index"] = card_index
+					if _prefetch_buffer.size() < PREFETCH_BUFFER_MAX:
+						_prefetch_buffer.append({
+							"card": parsed,
+							"context_hash": _prefetch_context_hash,
+							"aspects": aspects,
+							"biome": biome,
+						})
+					print("[MOS] Deep prefetch card %d buffered (buffer=%d)" % [card_index, _prefetch_buffer.size()])
+	)
 
 
 func _prefetch_via_pool() -> Dictionary:
@@ -558,37 +606,59 @@ func _prefetch_via_pool() -> Dictionary:
 func _try_use_prefetch(game_state: Dictionary) -> Dictionary:
 	## Check if prefetched card is available and relevant to current state.
 	## Uses tolerance-based matching: accepts prefetch if aspects shifted by at most 1 step.
-	if _prefetched_card.is_empty():
-		return {}
+	## Phase 5: Also checks deep prefetch buffer.
 
-	var card := _prefetched_card
-	_prefetched_card = {}
+	# Try primary prefetch first
+	if not _prefetched_card.is_empty():
+		var card := _prefetched_card
+		_prefetched_card = {}
+		if _is_prefetch_valid(game_state, _prefetch_context_hash, _prefetch_aspects, _prefetch_biome):
+			# Promote next buffer entry to primary slot
+			if not _prefetch_buffer.is_empty():
+				var next: Dictionary = _prefetch_buffer.pop_front()
+				_prefetched_card = next.get("card", {})
+			stats.prefetch_hits += 1
+			return card
 
-	# Fast path: exact hash match
+	# Try deep buffer entries
+	for i in range(_prefetch_buffer.size()):
+		var entry: Dictionary = _prefetch_buffer[i]
+		var buf_hash: int = int(entry.get("context_hash", 0))
+		var buf_aspects: Dictionary = entry.get("aspects", {})
+		var buf_biome: String = str(entry.get("biome", ""))
+		if _is_prefetch_valid(game_state, buf_hash, buf_aspects, buf_biome):
+			var card: Dictionary = entry.get("card", {})
+			_prefetch_buffer.remove_at(i)
+			stats.prefetch_hits += 1
+			return card
+
+	return {}
+
+
+func _is_prefetch_valid(game_state: Dictionary, context_hash: int, prefetch_aspects: Dictionary, prefetch_biome: String) -> bool:
+	## Validate a prefetched card against current game state.
 	var current_hash := _compute_context_hash(game_state)
-	if current_hash == _prefetch_context_hash:
-		return card
-
-	# Relaxed match: accept if same biome and aspects within tolerance
+	if current_hash == context_hash:
+		return true
 	var run: Dictionary = game_state.get("run", {})
 	var current_biome: String = str(run.get("current_biome", ""))
-	if current_biome != _prefetch_biome:
-		return {}  # Biome changed — narrative context too different
-
+	if current_biome != prefetch_biome:
+		return false
 	var aspects: Dictionary = run.get("aspects", {})
 	for aspect in ["Corps", "Ame", "Monde"]:
 		var current_val: int = int(aspects.get(aspect, 0))
-		var prefetch_val: int = int(_prefetch_aspects.get(aspect, 0))
+		var prefetch_val: int = int(prefetch_aspects.get(aspect, 0))
 		if absi(current_val - prefetch_val) > 1:
-			return {}  # Aspect shifted too far (2+ steps)
-
-	# Within tolerance — prefetch is still contextually relevant
-	return card
+			return false
+	return true
 
 
 func try_consume_prefetch(game_state: Dictionary) -> Dictionary:
 	## Public entry point for controller fast-path prefetch consumption.
-	return _try_use_prefetch(game_state)
+	var card := _try_use_prefetch(game_state)
+	if card.is_empty() and not _prefetched_card.is_empty():
+		stats.prefetch_misses += 1
+	return card
 
 
 func _compute_context_hash(game_state: Dictionary) -> int:
@@ -608,6 +678,7 @@ func _compute_context_hash(game_state: Dictionary) -> int:
 func invalidate_prefetch() -> void:
 	## Cancel any ongoing prefetch (e.g., when game state changes significantly).
 	_prefetched_card = {}
+	_prefetch_buffer.clear()
 	_prefetch_in_progress = false
 
 
@@ -626,7 +697,8 @@ func _apply_adaptive_processing() -> void:
 
 
 func _generate_with_strategy() -> Dictionary:
-	## LLM generation with emergency fallback pool if LLM unavailable.
+	## LLM generation — zero fallback policy.
+	## Returns empty dict on failure. Controller handles retry + UI overlay.
 
 	if llm_interface != null and llm_interface.is_ready:
 		var llm_card := await _try_llm_generation()
@@ -636,107 +708,13 @@ func _generate_with_strategy() -> Dictionary:
 		else:
 			stats.llm_failures += 1
 
-	# Emergency fallback — never return empty (prevents infinite retry loop)
-	stats.fallback_uses += 1
+	# Zero fallback: signal failure, let controller retry with backoff
 	generation_failed.emit("llm_unavailable")
-	return _get_emergency_fallback_card()
+	return {}
 
 
-func _get_emergency_fallback_card() -> Dictionary:
-	## Emergency fallback — returns a valid TRIADE card when LLM is unavailable.
-	## Prevents infinite retry loop in the controller.
-	var pool := [
-		# --- 1. Nemeton brume ---
-		{"text": "La brume s'epaissit autour du nemeton. Les pierres dressees vibrent d'une energie ancienne, et le murmure des esprits porte un avertissement. Le chemin se divise en trois sentiers perdus dans la mousse.", "speaker": "merlin",
-		 "options": [
-			{"label": "Suivre la mousse lumineuse", "effects": [{"type": "HEAL_LIFE", "amount": 8}], "reward_type": "vie"},
-			{"label": "Ecouter les pierres", "effects": [{"type": "ADD_KARMA", "amount": 3}], "cost": 1, "reward_type": "karma"},
-			{"label": "Traverser la brume", "effects": [{"type": "DAMAGE_LIFE", "amount": 6}], "reward_type": "mystere"},
-		 ], "tags": ["fallback_pool", "brume", "nemeton"]},
-		# --- 2. Korrigan marche ---
-		{"text": "Un korrigan surgit d'entre les racines d'un chene centenaire. Ses yeux brillent comme des braises, et il tend une main griffue. 'Un marche, druide ? Ton souffle contre ma sagesse.' La foret retient son haleine.", "speaker": "merlin",
-		 "options": [
-			{"label": "Accepter le marche", "effects": [{"type": "ADD_SOUFFLE", "amount": 1}], "reward_type": "souffle"},
-			{"label": "Negocier prudemment", "effects": [{"type": "ADD_KARMA", "amount": 2}], "cost": 1, "reward_type": "karma"},
-			{"label": "Refuser et avancer", "effects": [{"type": "DAMAGE_LIFE", "amount": 5}], "reward_type": "mystere"},
-		 ], "tags": ["fallback_pool", "korrigan", "marche"]},
-		# --- 3. Dolmen ogham ---
-		{"text": "Le dolmen au sommet de la colline pulse d'une lumiere opaline. Les oghams graves sur la pierre racontent une histoire oubliee. Poser la main sur la rune centrale pourrait reveler un secret — ou reveiller ce qui dort.", "speaker": "merlin",
-		 "options": [
-			{"label": "Toucher la rune", "effects": [{"type": "DAMAGE_LIFE", "amount": 7}], "reward_type": "mystere"},
-			{"label": "Dechiffrer les oghams", "effects": [{"type": "ADD_KARMA", "amount": 4}], "cost": 1, "reward_type": "karma"},
-			{"label": "Contourner le dolmen", "effects": [{"type": "HEAL_LIFE", "amount": 6}], "reward_type": "vie"},
-		 ], "tags": ["fallback_pool", "dolmen", "ogham"]},
-		# --- 4. Cerf sidhe ---
-		{"text": "Une clairiere baignee de lumiere argentee s'ouvre devant toi. Au centre, un cerf blanc immobile te fixe de ses yeux de sidhe. Le temps semble suspendu entre deux battements de coeur. Chaque pas resonne comme un serment.", "speaker": "merlin",
-		 "options": [
-			{"label": "S'approcher doucement", "effects": [{"type": "HEAL_LIFE", "amount": 10}], "reward_type": "vie"},
-			{"label": "Mediter face au cerf", "effects": [{"type": "ADD_SOUFFLE", "amount": 1}], "cost": 1, "reward_type": "souffle"},
-			{"label": "Fuir la clairiere", "effects": [{"type": "DAMAGE_LIFE", "amount": 4}], "reward_type": "mystere"},
-		 ], "tags": ["fallback_pool", "cerf", "sidhe"]},
-		# --- 5. Orage druide ---
-		{"text": "L'orage gronde au-dessus de Broceliande. Les eclairs dessinent des runes ephemeres dans le ciel noir. Un vieux druide assis sous un if te fait signe. 'Le tonnerre parle, jeune voyageur. Sais-tu ecouter?'", "speaker": "merlin",
-		 "options": [
-			{"label": "Ecouter le druide", "effects": [{"type": "ADD_KARMA", "amount": 3}], "reward_type": "karma"},
-			{"label": "Observer les eclairs", "effects": [{"type": "HEAL_LIFE", "amount": 5}], "cost": 1, "reward_type": "vie"},
-			{"label": "Chercher un abri", "effects": [{"type": "DAMAGE_LIFE", "amount": 8}], "reward_type": "mystere"},
-		 ], "tags": ["fallback_pool", "orage", "druide"]},
-		# --- 6. Source sacree ---
-		{"text": "Une source jaillit entre les racines d'un if millenaire. L'eau chante une melodie que tu reconnais sans l'avoir jamais entendue. Une fee des eaux emerge, les cheveux d'argent.", "speaker": "merlin",
-		 "options": [
-			{"label": "Boire a la source", "effects": [{"type": "HEAL_LIFE", "amount": 12}], "reward_type": "vie"},
-			{"label": "Parler a la fee", "effects": [{"type": "ADD_KARMA", "amount": 3}], "cost": 1, "reward_type": "karma"},
-			{"label": "Jeter une offrande", "effects": [{"type": "DAMAGE_LIFE", "amount": 5}], "reward_type": "mystere"},
-		 ], "tags": ["fallback_pool", "source", "fee"]},
-		# --- 7. Loup garou ---
-		{"text": "Un hurlement dechire la nuit. Entre les troncs, deux yeux jaunes te fixent. Le loup-garou de Huelgoat barre le sentier. Ses crocs brillent sous la lune noire, mais sa posture n'est pas celle d'un predateur — plutot d'un garde.", "speaker": "merlin",
-		 "options": [
-			{"label": "Affronter la bete", "effects": [{"type": "DAMAGE_LIFE", "amount": 10}], "reward_type": "mystere"},
-			{"label": "Montrer le signe druidique", "effects": [{"type": "HEAL_LIFE", "amount": 6}], "cost": 1, "reward_type": "vie"},
-			{"label": "Rebrousser chemin", "effects": [{"type": "DAMAGE_LIFE", "amount": 3}], "reward_type": "vie"},
-		 ], "tags": ["fallback_pool", "loup", "huelgoat"]},
-		# --- 8. Cairn ancien ---
-		{"text": "Le cairn s'eleve comme une tour de pierres brutes. A son sommet, une flamme pale brule sans combustible. Les morts murmurent ici des secrets que les vivants ne devraient pas entendre.", "speaker": "merlin",
-		 "options": [
-			{"label": "Gravir le cairn", "effects": [{"type": "DAMAGE_LIFE", "amount": 8}], "reward_type": "mystere"},
-			{"label": "Deposer une pierre", "effects": [{"type": "ADD_KARMA", "amount": 4}], "reward_type": "karma"},
-			{"label": "Prier les ancetres", "effects": [{"type": "HEAL_LIFE", "amount": 7}], "cost": 1, "reward_type": "vie"},
-		 ], "tags": ["fallback_pool", "cairn", "ancetres"]},
-		# --- 9. Riviere enchantee ---
-		{"text": "La riviere coule a l'envers. Les saumons d'argent remontent le courant en formant des spirales. Sur l'autre rive, un chaudron de bronze attend. Le prix du passage n'est pas mesure en pieces.", "speaker": "merlin",
-		 "options": [
-			{"label": "Traverser a gue", "effects": [{"type": "DAMAGE_LIFE", "amount": 6}], "reward_type": "mystere"},
-			{"label": "Suivre les saumons", "effects": [{"type": "ADD_SOUFFLE", "amount": 1}], "cost": 1, "reward_type": "souffle"},
-			{"label": "Longer la berge", "effects": [{"type": "HEAL_LIFE", "amount": 5}], "reward_type": "vie"},
-		 ], "tags": ["fallback_pool", "riviere", "chaudron"]},
-		# --- 10. Arbre parlant ---
-		{"text": "Le chene a un visage. Ses noeuds forment des yeux mi-clos, sa fissure une bouche qui s'ouvre lentement. 'Druide,' gronde l'arbre, 'le vent du nord porte la cendre. Que choisis-tu de proteger?'", "speaker": "merlin",
-		 "options": [
-			{"label": "Proteger la foret", "effects": [{"type": "HEAL_LIFE", "amount": 8}], "reward_type": "vie"},
-			{"label": "Ecouter le vent du nord", "effects": [{"type": "ADD_KARMA", "amount": 5}], "cost": 1, "reward_type": "karma"},
-			{"label": "Ignorer l'arbre", "effects": [{"type": "DAMAGE_LIFE", "amount": 9}], "reward_type": "mystere"},
-		 ], "tags": ["fallback_pool", "chene", "prophecie"]},
-		# --- 11. Marais toxique ---
-		{"text": "Le marais exhale des vapeurs verdatres. Chaque pas enfonce un peu plus. Des feux follets dansent au-dessus de la boue noire, tentants et mortels. Le sentier sur s'enfonce dans les ronces.", "speaker": "merlin",
-		 "options": [
-			{"label": "Suivre les feux follets", "effects": [{"type": "DAMAGE_LIFE", "amount": 12}], "reward_type": "mystere"},
-			{"label": "Utiliser un ogham de protection", "effects": [{"type": "HEAL_LIFE", "amount": 4}], "cost": 1, "reward_type": "vie"},
-			{"label": "Forcer a travers les ronces", "effects": [{"type": "DAMAGE_LIFE", "amount": 6}], "reward_type": "vie"},
-		 ], "tags": ["fallback_pool", "marais", "feux_follets"]},
-		# --- 12. Sanctuaire envahi ---
-		{"text": "Le sanctuaire est envahi par le lierre noir. L'autel de Belenos porte encore les traces d'un rituel inacheve. Trois chemins de bougies s'eteignent un a un. Il faut choisir avant que la derniere ne s'eteigne.", "speaker": "merlin",
-		 "options": [
-			{"label": "Terminer le rituel", "effects": [{"type": "HEAL_LIFE", "amount": 14}], "reward_type": "vie"},
-			{"label": "Purifier l'autel", "effects": [{"type": "ADD_KARMA", "amount": 5}], "cost": 1, "reward_type": "karma"},
-			{"label": "Fuir le sanctuaire", "effects": [{"type": "DAMAGE_LIFE", "amount": 7}], "reward_type": "mystere"},
-		 ], "tags": ["fallback_pool", "sanctuaire", "belenos"]},
-	]
-	var idx: int = randi() % pool.size()
-	var card: Dictionary = pool[idx].duplicate(true)
-	card["id"] = "fallback_%d_%d" % [idx, Time.get_ticks_msec()]
-	card["_generated_by"] = "emergency_fallback"
-	card["source"] = "fallback"
-	return card
+# Zero fallback policy: _get_emergency_fallback_card() removed.
+# All cards must be LLM-generated. Controller handles retry + UI overlay.
 
 
 func _try_llm_generation() -> Dictionary:
@@ -753,6 +731,18 @@ func _try_llm_generation() -> Dictionary:
 	# Switch LoRA adapter to match current tone (covers all strategies)
 	if llm_interface.has_method("set_narrator_tone") and tone_controller:
 		llm_interface.set_narrator_tone(tone_controller.get_current_tone())
+
+	# Strategy S: Swarm pipeline (BitNet) — Narrator generates, Judge scores, best-of-N
+	if llm_interface.active_backend == 2 and _quality_judge != null:  # BackendType.BITNET = 2
+		var swarm_card := await _try_swarm_generation()
+		if not swarm_card.is_empty():
+			swarm_card["_strategy"] = "swarm"
+			print("[MOS] Strategy S (swarm): SUCCESS in %dms (score=%.2f)" % [
+				Time.get_ticks_msec() - start_time,
+				float(swarm_card.get("_quality_score", 0.0))
+			])
+			return swarm_card
+		print("[MOS] Strategy S: failed, falling through to B/C")
 
 	# Strategy A: Parallel generation DISABLED — segfault in NobodyWho GDExtension
 	if false and llm_interface.has_method("generate_parallel") and llm_interface.brain_count >= 2:
@@ -812,6 +802,76 @@ func _try_llm_generation() -> Dictionary:
 
 	print("[MOS] ALL strategies FAILED (total %dms)" % (Time.get_ticks_msec() - start_time))
 	return {}
+
+
+func _try_swarm_generation() -> Dictionary:
+	## Strategy S: BitNet swarm pipeline.
+	## 1. Narrator brain generates N=2 variants
+	## 2. Quality Judge scores both and picks the best
+	## 3. If score < threshold, request refinement via a second pass
+	## 4. Parse the winning text into a card
+
+	var system_prompt := _build_system_prompt()
+	var user_prompt := _build_user_prompt()
+	var n_variants: int = BrainQualityJudge.BEST_OF_N_DEFAULT
+
+	# ── Step 1: Generate N variants via narrator ──────────────────────────
+	var candidates: Array = []
+	for i in range(n_variants):
+		var result: Dictionary = await llm_interface.generate_with_system(
+			system_prompt,
+			user_prompt,
+			{"max_tokens": 200, "temperature": 0.65 + i * 0.1}  # Slight temp variation
+		)
+		if result.has("text") and result.text.strip_edges().length() > 10:
+			candidates.append(result.text)
+		else:
+			print("[MOS] Swarm variant %d: failed (%s)" % [i + 1, str(result.get("error", "empty"))])
+
+	if candidates.is_empty():
+		print("[MOS] Swarm: no valid candidates generated")
+		return {}
+
+	# ── Step 2: Judge picks the best ──────────────────────────────────────
+	var best: Dictionary = _quality_judge.pick_best(candidates)
+	var best_text: String = best.get("text", "")
+	var best_score: float = best.get("score", 0.0)
+	print("[MOS] Swarm: %d candidates, best score=%.2f (idx=%d)" % [candidates.size(), best_score, best.get("index", 0)])
+
+	# ── Step 3: Refinement if score is low ────────────────────────────────
+	if best_score < BrainQualityJudge.GOOD_SCORE and best_score >= BrainQualityJudge.MIN_ACCEPTABLE_SCORE:
+		var refinement_prompt: String = _quality_judge.suggest_refinement(best_text, best.get("detail", {}))
+		if refinement_prompt != "":
+			print("[MOS] Swarm: requesting refinement (score %.2f < %.2f)" % [best_score, BrainQualityJudge.GOOD_SCORE])
+			var refined: Dictionary = await llm_interface.generate_with_system(
+				system_prompt,
+				refinement_prompt,
+				{"max_tokens": 200, "temperature": 0.6}
+			)
+			if refined.has("text"):
+				var refined_score: Dictionary = _quality_judge.score_text(refined.text)
+				if refined_score.total > best_score:
+					best_text = refined.text
+					best_score = refined_score.total
+					print("[MOS] Swarm: refinement improved score to %.2f" % best_score)
+				else:
+					print("[MOS] Swarm: refinement did not improve (%.2f vs %.2f)" % [refined_score.total, best_score])
+
+	# ── Step 4: Reject if still too low ───────────────────────────────────
+	if best_score < BrainQualityJudge.MIN_ACCEPTABLE_SCORE:
+		print("[MOS] Swarm: best score %.2f below minimum %.2f — rejecting" % [best_score, BrainQualityJudge.MIN_ACCEPTABLE_SCORE])
+		return {}
+
+	# ── Step 5: Parse into card ───────────────────────────────────────────
+	var parsed := _parse_llm_response(best_text)
+	if parsed.is_empty():
+		print("[MOS] Swarm: parse failed for winning text (%.0f chars)" % best_text.length())
+		return {}
+
+	# Register with judge for future repetition detection
+	_quality_judge.register_text(best_text)
+	parsed["_quality_score"] = best_score
+	return parsed
 
 
 func _try_parallel_generation() -> Dictionary:
@@ -1061,7 +1121,15 @@ func _get_live_scene_context() -> Dictionary:
 	return {}
 
 
+var _scene_context_version: int = -1
+
 func _refresh_scene_context() -> void:
+	# Deduplicated: skip refresh if scene context hasn't changed since last call
+	if llm_interface and llm_interface.has_method("get_scene_context_version"):
+		var new_version: int = llm_interface.get_scene_context_version()
+		if new_version == _scene_context_version and not _scene_context.is_empty():
+			return  # Cache hit — skip redundant refresh
+		_scene_context_version = new_version
 	_scene_context = _get_live_scene_context()
 	if _scene_context.is_empty():
 		_current_context.erase("scene_context")
@@ -1255,7 +1323,7 @@ func _apply_guardrails(card: Dictionary) -> Dictionary:
 
 	var text: String = str(card.get("text", ""))
 	var source: String = str(card.get("_generated_by", card.get("_strategy", "")))
-	var is_llm: bool = not source.is_empty() and source != "emergency_fallback" and source != "fallback_pool"
+	var is_llm: bool = not source.is_empty()
 
 	# 1. Length check — hard reject only for extreme violations
 	if text.length() < 5:
@@ -1617,7 +1685,8 @@ func get_merlin_comment(context: String) -> String:
 
 
 func _generate_merlin_comment(context: String, tone: String) -> String:
-	## Genere un commentaire via pool (ne bloque pas Narrator/GM) ou fallback.
+	## Genere un commentaire via pool/voice brain (ne bloque pas Narrator/GM) ou fallback.
+	## Phase 5: Routes to dedicated Voice brain via swarm scheduler when available.
 	if llm_interface == null or not llm_interface.is_ready:
 		return _get_fallback_comment(context, tone)
 
@@ -1633,7 +1702,23 @@ Reponds uniquement avec le commentaire, sans guillemets.""" % [
 		context
 	]
 
-	# Use pool-based voice generation (prefers pool worker, falls back to idle primary)
+	# Phase 5: Submit as LOW priority background task via voice brain
+	if llm_interface.has_method("submit_background_task"):
+		var comment_done := {"text": ""}
+		llm_interface.submit_background_task("voice", system, "",
+			{"max_tokens": 64, "temperature": 0.7},
+			func(result: Dictionary) -> void:
+				if result.has("text"):
+					comment_done.text = str(result.text).strip_edges()
+		)
+		# Brief wait for voice brain response (non-blocking timeout)
+		var wait_start := Time.get_ticks_msec()
+		while comment_done.text == "" and Time.get_ticks_msec() - wait_start < 5000:
+			await get_tree().create_timer(0.1).timeout
+		if comment_done.text != "":
+			return comment_done.text
+
+	# Fallback: direct generation (legacy path)
 	var result: Dictionary
 	if llm_interface.has_method("generate_voice"):
 		result = await llm_interface.generate_voice(system, "")

@@ -7,13 +7,23 @@ signal status_changed(status_text: String, detail_text: String, progress_value: 
 signal ready_changed(is_ready: bool)
 signal log_updated(log_text: String)
 
-# ARCHITECTURE MULTI-BRAIN + WORKER POOL — Ministral 3B Instruct (1 a 4 cerveaux)
+# ARCHITECTURE MULTI-BRAIN + WORKER POOL — Qwen 2.5-3B-Instruct (1 a 4 cerveaux)
 # Phase 32: Instances specialisees, meme modele, configs differentes
 # Brain 1 = Narrator (creatif), Brain 2 = Game Master (logique)
 # Brain 3-4 = Worker Pool (prefetch, voice, balance — taches de fond)
-const MODEL_FILE := "res://addons/merlin_llm/models/ministral-3b-instruct.gguf"
+const MODEL_FILE := "res://addons/merlin_llm/models/qwen2.5-3b-instruct-q4_k_m.gguf"
 const MODEL_CANDIDATES := [MODEL_FILE]
 const FastRoute = preload("res://addons/merlin_ai/fast_route.gd")
+const OllamaBackendScript = preload("res://addons/merlin_ai/ollama_backend.gd")
+const BitNetBackendScript = preload("res://addons/merlin_ai/bitnet_backend.gd")
+const BrainProcessManagerScript = preload("res://addons/merlin_ai/brain_process_manager.gd")
+const BrainSwarmSchedulerScript = preload("res://addons/merlin_ai/brain_swarm_scheduler.gd")
+
+# Backend type tracking
+enum BackendType { NONE, OLLAMA, BITNET, MERLIN_LLM }
+var active_backend: int = BackendType.NONE
+var _brain_process_manager: BrainProcessManager = null  # Auto-spawn manager (Phase 2)
+var _swarm_scheduler: BrainSwarmScheduler = null          # Smart allocation (Phase 3)
 
 const PROMPTS_PATH := "res://data/ai/config/prompts.json"
 const PROMPT_TEMPLATES_PATH := "res://data/ai/config/prompt_templates.json"
@@ -35,8 +45,8 @@ const BRAIN_TRIPLE := 3   # ~6.5 GB RAM
 const BRAIN_QUAD := 4     # ~8.8 GB RAM
 const BRAIN_MAX := BRAIN_QUAD
 
-# RAM par instance Ministral 3B (~3.4 GB GGUF + KV cache)
-const RAM_PER_BRAIN_MB := 3800  # ~3.8 GB modele + KV cache
+# RAM par instance Qwen 2.5-3B Q4_K_M (~2.0 GB GGUF + KV cache)
+const RAM_PER_BRAIN_MB := 2200  # ~2.2 GB modele + KV cache
 
 var brain_count: int = 0  # Actual loaded count (set by _init_local_models)
 var _target_brain_count: int = 0  # Requested count (0 = auto-detect)
@@ -57,9 +67,9 @@ var _lora_adapters: Dictionary = {}  # tone_name -> adapter_id
 var _current_lora_tone := ""
 
 # Narrator: creative text, scenarios, dialogue, Merlin voice
-var narrator_params := {"temperature": 0.75, "top_p": 0.92, "max_tokens": 200, "top_k": 40, "repetition_penalty": 1.35}
+var narrator_params := {"temperature": 0.75, "top_p": 0.92, "max_tokens": 100, "top_k": 40, "repetition_penalty": 1.35}
 # Game Master: effects JSON, balance, rules, structured output (tighter for speed)
-var gamemaster_params := {"temperature": 0.15, "top_p": 0.8, "max_tokens": 130, "top_k": 15, "repetition_penalty": 1.0}
+var gamemaster_params := {"temperature": 0.15, "top_p": 0.8, "max_tokens": 80, "top_k": 15, "repetition_penalty": 1.0}
 
 # ── Worker Pool (Brain 3+) — background tasks ─────────────────────────────
 # With 2 brains: primary brains handle bg tasks when idle (transparent)
@@ -83,6 +93,9 @@ const TASK_BALANCE := "balance"
 const TASK_PRIORITIES := {"prefetch": 0, "voice": 1, "balance": 2}
 const BG_QUEUE_MAX_SIZE := 100      # Max pending tasks (prevents OOM)
 const BG_TASK_TIMEOUT_MS := 30000   # 30s timeout for stuck bg tasks
+const LLM_POLL_TIMEOUT_MS := 120000       # 120s — generous for CPU-only Qwen 3B
+const LLM_POLL_TIMEOUT_FIRST_MS := 300000 # 300s (5min) — cold start can be very slow on CPU
+var _first_generation_done := false
 
 # Backward-compatible aliases (router = narrator, executor = gamemaster)
 var router_params: Dictionary:
@@ -145,8 +158,19 @@ func _ready() -> void:
 	_load_prompt_templates()
 	_load_scene_profiles()
 	_load_persona_config()
+	_load_brain_config()
 	# Models loaded on demand via start_warmup() — not at autoload time
 	load_session_history()
+
+
+func _load_brain_config() -> void:
+	var cfg := ConfigFile.new()
+	if cfg.load("user://settings.cfg") != OK:
+		return  # No saved config — auto-detect will be used
+	var saved: int = cfg.get_value("ai", "brain_count", 0)
+	if saved > 0:
+		set_brain_count(saved)
+		_log("Brain config loaded from settings: %d cerveaux" % saved)
 
 
 ## Start LLM model loading. Call from MenuPrincipal on "Nouvelle Partie"/"Continuer".
@@ -160,6 +184,13 @@ func start_warmup() -> void:
 
 func _exit_tree() -> void:
 	save_session_history()
+	# Clean shutdown of BitNet swarm
+	if _swarm_scheduler != null:
+		_swarm_scheduler.clear()
+		_swarm_scheduler = null
+	if _brain_process_manager != null:
+		_brain_process_manager.stop_all()
+		_brain_process_manager = null
 
 
 func process_player_input(input_text: String) -> void:
@@ -238,6 +269,20 @@ func get_performance_stats() -> Dictionary:
 		"tokens_per_sec": "%.1f" % (1000.0 / stats.avg_total_ms) if stats.avg_total_ms > 0 else "N/A"
 	}
 
+func cancel_current_generation() -> void:
+	## Cancel any in-progress LLM generation (prefetch or otherwise).
+	## Called by MOS when generate_card() needs to reclaim the LLM.
+	if narrator_llm and narrator_llm.has_method("is_generating_now") and narrator_llm.is_generating_now():
+		print("[MerlinAI] cancel_current_generation: narrator LLM busy, cancelling")
+		if narrator_llm.has_method("cancel_generation"):
+			narrator_llm.cancel_generation()
+
+func is_llm_busy() -> bool:
+	## Check if the LLM is currently generating.
+	if narrator_llm and narrator_llm.has_method("is_generating_now"):
+		return narrator_llm.is_generating_now()
+	return false
+
 func _route_input(input_text: String) -> String:
 	var system = prompts.get("router_system", "")
 	var template = prompts.get("router_template", "{input}")
@@ -274,41 +319,89 @@ func _execute_with_context(input_text: String, context: Dictionary, category: St
 func _run_llm(llm: Object, prompt: String, params: Dictionary) -> Dictionary:
 	if llm == null:
 		return {"error": "LLM manquant"}
-	var start_time = Time.get_ticks_msec()
-	var ttft = 0
-	var first_token_received = false
+	if not llm.has_method("generate_async") or not llm.has_method("poll_result"):
+		return {"error": "LLM interface incomplete (missing generate_async/poll_result)"}
+
+	# Pre-flight: if LLM is stuck generating from a previous call, wait or cancel
+	if llm.has_method("is_generating_now") and llm.is_generating_now():
+		print("[MerlinAI] WARNING: LLM already generating, waiting up to 5s...")
+		var wait_start := Time.get_ticks_msec()
+		while llm.is_generating_now() and (Time.get_ticks_msec() - wait_start) < 5000:
+			llm.poll_result()
+			await get_tree().process_frame
+		if llm.is_generating_now():
+			print("[MerlinAI] LLM stuck — calling cancel_generation()")
+			if llm.has_method("cancel_generation"):
+				llm.cancel_generation()
+			await get_tree().create_timer(0.1).timeout
+
+	var start_time := Time.get_ticks_msec()
+	var ttft := 0
+	var first_token_received := false
 	if llm.has_method("set_sampling_params"):
 		llm.set_sampling_params(float(params.temperature), float(params.top_p), int(params.max_tokens))
 	if llm.has_method("set_advanced_sampling"):
-		var top_k = int(params.get("top_k", 40))
-		var rep_penalty = float(params.get("repetition_penalty", 1.3))
+		var top_k := int(params.get("top_k", 40))
+		var rep_penalty := float(params.get("repetition_penalty", 1.3))
 		llm.set_advanced_sampling(top_k, rep_penalty)
-	var state = {"done": false, "result": {}}
-	llm.generate_async(prompt, func(res):
+
+	var state := {"done": false, "result": {}}
+	print("[MerlinAI] LLM generate_async: prompt=%d chars, max_tokens=%d" % [prompt.length(), int(params.max_tokens)])
+
+	llm.generate_async(prompt, func(res: Dictionary) -> void:
 		if not first_token_received:
 			ttft = Time.get_ticks_msec() - start_time
 			first_token_received = true
 		state.result = res
 		state.done = true
 	)
-	# Adaptive polling: instant exit on done, then back off to save CPU
+
+	# Determine timeout (more generous for first/cold start generation)
+	var timeout_ms: int = LLM_POLL_TIMEOUT_FIRST_MS if not _first_generation_done else LLM_POLL_TIMEOUT_MS
+
+	# Adaptive polling with timeout and progress logging
 	var poll_count := 0
+	var last_progress_log := start_time
 	while not state.done:
 		llm.poll_result()
 		if state.done:
 			break
+
+		var elapsed := Time.get_ticks_msec() - start_time
+
+		# Timeout check
+		if elapsed > timeout_ms:
+			print("[MerlinAI] ERROR: LLM poll timeout after %dms (limit=%dms, polls=%d)" % [elapsed, timeout_ms, poll_count])
+			if llm.has_method("cancel_generation"):
+				llm.cancel_generation()
+				print("[MerlinAI]   Cancelled stuck generation")
+			return {"error": "LLM timeout (%dms)" % elapsed}
+
+		# Progress logging every 10s
+		if elapsed - (last_progress_log - start_time) > 10000:
+			var still_gen: bool = llm.is_generating_now() if llm.has_method("is_generating_now") else false
+			print("[MerlinAI] LLM polling: %dms elapsed, polls=%d, is_generating=%s" % [elapsed, poll_count, str(still_gen)])
+			last_progress_log = Time.get_ticks_msec()
+
 		poll_count += 1
 		if poll_count < 10:
 			await get_tree().process_frame
 		else:
-			await get_tree().create_timer(0.01).timeout
-	var total_time = Time.get_ticks_msec() - start_time
+			await get_tree().create_timer(0.05).timeout  # 50ms backoff
+
+	_first_generation_done = true
+	var total_time := Time.get_ticks_msec() - start_time
 	stats.last_ttft_ms = ttft
 	stats.last_total_ms = total_time
 	stats.llm_calls += 1
 	stats.avg_ttft_ms = (stats.avg_ttft_ms * (stats.llm_calls - 1) + ttft) / float(stats.llm_calls)
 	stats.avg_total_ms = (stats.avg_total_ms * (stats.llm_calls - 1) + total_time) / float(stats.llm_calls)
-	_log("LLM timing: TTFT=%dms Total=%dms Tokens=%d" % [ttft, total_time, int(params.max_tokens)])
+	print("[MerlinAI] LLM done: TTFT=%dms Total=%dms polls=%d" % [ttft, total_time, poll_count])
+
+	if state.result.is_empty():
+		print("[MerlinAI] WARNING: LLM returned empty result after %dms" % total_time)
+		return {"error": "LLM returned empty result"}
+
 	return state.result
 
 func _parse_category(response: String) -> String:
@@ -521,25 +614,327 @@ func _augment_system_prompt_with_scene(system_prompt: String, channel: String, p
 
 func _init_local_models() -> void:
 	_set_status("Connexion: ...", "Preparation des modeles", 5.0)
+
+	# Determine how many brains to load
+	var target: int = _target_brain_count if _target_brain_count > 0 else _detect_optimal_brains()
+	target = clampi(target, BRAIN_SINGLE, BRAIN_MAX)
+	_log("Target brains: %d" % target)
+
+	# ── Strategy 1: Try Ollama backend (fast, multi-brain native) ──────────
+	if await _try_init_ollama(target):
+		return
+
+	# ── Strategy 2: Try BitNet swarm (llama-server.exe instances) ─────────
+	if await _try_init_bitnet(target):
+		return
+
+	# ── Strategy 3: Fallback to MerlinLLM (C++ GDExtension) ───────────────
+	await _try_init_merlin_llm(target)
+
+
+func _try_init_ollama(target: int) -> bool:
+	_set_status("Connexion: ...", "Detection Ollama...", 10.0)
+	var ollama_test := OllamaBackendScript.new()
+	if not ollama_test.check_available():
+		_log("Ollama: non disponible (ollama serve non lance?)")
+		return false
+	if not ollama_test.check_model_available():
+		_log("Ollama: modele '%s' non trouve" % OllamaBackendScript.DEFAULT_MODEL)
+		return false
+	_log("Ollama: detecte et modele disponible")
+
+	brain_count = 0
+
+	# ── Brain 1: Narrator via Ollama ───────────────────────────────────────
+	_set_status("Connexion: ...", "Ollama Brain 1/Narrator", 30.0)
+	narrator_llm = OllamaBackendScript.new()
+	brain_count = 1
+	gamemaster_llm = narrator_llm
+	_log("Brain 1 (Narrator) -> Ollama")
+
+	# ── Brain 2: Game Master via Ollama (separate instance, parallel safe) ─
+	if target >= BRAIN_DUAL:
+		_set_status("Connexion: ...", "Ollama Brain 2/Game Master", 50.0)
+		gamemaster_llm = OllamaBackendScript.new()
+		brain_count = 2
+		_log("Brain 2 (Game Master) -> Ollama (instance separee)")
+
+	active_backend = BackendType.OLLAMA
+	var mode_name := _get_brain_mode_name()
+
+	# Warmup: primes Ollama model (loads into RAM if cold)
+	_set_status("Connexion: ...", "Warmup Ollama (chargement modele)", 90.0)
+	_log("Starting warmup generation (Ollama)...")
+	await _warmup_generate()
+
+	_set_status("Connexion: OK", "Ollama %s (%d cerveaux)" % [mode_name, brain_count], 100.0)
+	is_ready = true
+	ready_changed.emit(true)
+	_log("Backend: Ollama | %d brains | %s" % [brain_count, mode_name])
+	return true
+
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# BITNET SWARM — Multiple llama-server.exe instances on different ports
+# ═══════════════════════════════════════════════════════════════════════════════
+# Port map:
+#   8081 = Brain 1 (Narrator, typically Falcon3-7B-1.58bit)
+#   8082 = Brain 2 (Game Master, typically BitNet-2B4T)
+#   8083 = Brain 3 (Worker, typically BitNet-2B4T)
+#   8084 = Brain 4 (Worker, typically BitNet-2B4T)
+# Mode 1: Servers pre-launched externally (tools/start_bitnet_brains.ps1)
+# Mode 2: Auto-spawn via BrainProcessManager (if llama-server.exe found on disk)
+
+const BITNET_BASE_PORT := 8081
+const BITNET_MAX_BRAINS := 4
+const BITNET_BRAIN_ROLES := ["narrator", "gamemaster", "worker", "worker"]
+
+# Auto-spawn paths (searched in order)
+const BITNET_SERVER_CANDIDATES := [
+	"C:/Users/PGNK2128/BitNet/build/bin/llama-server.exe",  # Dev machine
+	"res://bin/llama-server.exe",  # Bundled with game (future)
+]
+const BITNET_MODEL_CANDIDATES := {
+	"narrator": [
+		"C:/Users/PGNK2128/BitNet/models/Falcon3-7B-Instruct-1.58bit/ggml-model-i2_s.gguf",
+		"C:/Users/PGNK2128/BitNet/models/BitNet-b1.58-2B-4T/ggml-model-i2_s.gguf",
+	],
+	"gamemaster": [
+		"C:/Users/PGNK2128/BitNet/models/BitNet-b1.58-2B-4T/ggml-model-i2_s.gguf",
+	],
+	"worker": [
+		"C:/Users/PGNK2128/BitNet/models/BitNet-b1.58-2B-4T/ggml-model-i2_s.gguf",
+	],
+}
+# Thread and context budget per role
+const BITNET_BRAIN_PARAMS := {
+	"narrator":    {"threads": 3, "n_ctx": 1024},
+	"gamemaster":  {"threads": 2, "n_ctx": 512},
+	"worker":      {"threads": 2, "n_ctx": 512},
+}
+
+func _try_init_bitnet(target: int) -> bool:
+	_set_status("Connexion: ...", "Detection BitNet swarm...", 10.0)
+
+	# ── Mode 1: Check if servers are already running ──────────────────────
+	var probe := BitNetBackendScript.new()
+	probe.port = BITNET_BASE_PORT
+	if probe.check_available():
+		_log("BitNet: llama-server detecte sur port %d (mode manuel)" % BITNET_BASE_PORT)
+		return await _init_bitnet_from_running_servers(target)
+
+	# ── Mode 2: Auto-spawn via BrainProcessManager ───────────────────────
+	_log("BitNet: aucun serveur sur port %d, tentative auto-spawn..." % BITNET_BASE_PORT)
+	return await _init_bitnet_auto_spawn(target)
+
+
+## Mode 1: Connect to pre-launched llama-server instances (manual/debug).
+func _init_bitnet_from_running_servers(target: int) -> bool:
+	brain_count = 0
+
+	# Brain 1: Narrator
+	_set_status("Connexion: ...", "BitNet Brain 1/Narrator (port %d)" % BITNET_BASE_PORT, 30.0)
+	narrator_llm = BitNetBackendScript.new()
+	narrator_llm.port = BITNET_BASE_PORT
+	narrator_llm.brain_role = "narrator"
+	narrator_llm.set_sampling_params(narrator_params.temperature, narrator_params.top_p, narrator_params.max_tokens)
+	narrator_llm.set_advanced_sampling(narrator_params.top_k, narrator_params.repetition_penalty)
+	brain_count = 1
+	gamemaster_llm = narrator_llm
+	_log("Brain 1 (Narrator) -> BitNet port %d" % BITNET_BASE_PORT)
+
+	# Brain 2+: Probe additional ports
+	var max_probe: int = mini(target, BITNET_MAX_BRAINS)
+	for i in range(1, max_probe):
+		var port: int = BITNET_BASE_PORT + i
+		var role: String = BITNET_BRAIN_ROLES[i] if i < BITNET_BRAIN_ROLES.size() else "worker"
+		_set_status("Connexion: ...", "BitNet Brain %d/%s (port %d)" % [i + 1, role, port], 30.0 + i * 15.0)
+
+		var brain := BitNetBackendScript.new()
+		brain.port = port
+		brain.brain_role = role
+		if not brain.check_available():
+			_log("BitNet Brain %d: port %d non disponible — arret scan" % [i + 1, port])
+			break
+		_assign_bitnet_brain(brain, role, i + 1, port)
+		brain_count += 1
+
+	return await _finalize_bitnet_init()
+
+
+## Mode 2: Auto-spawn llama-server.exe processes, then connect.
+func _init_bitnet_auto_spawn(target: int) -> bool:
+	# Find llama-server.exe
+	var server_path := _find_bitnet_server()
+	if server_path == "":
+		_log("BitNet: llama-server.exe introuvable")
+		return false
+
+	# Build brain definitions
+	var brain_defs: Array = []
+	var max_brains: int = mini(target, BITNET_MAX_BRAINS)
+	for i in range(max_brains):
+		var role: String = BITNET_BRAIN_ROLES[i] if i < BITNET_BRAIN_ROLES.size() else "worker"
+		var model_path := _find_bitnet_model(role)
+		if model_path == "":
+			_log("BitNet: modele introuvable pour role '%s' — arret a %d brains" % [role, i])
+			break
+		var params: Dictionary = BITNET_BRAIN_PARAMS.get(role, {"threads": 2, "n_ctx": 512})
+		brain_defs.append({
+			"role": role,
+			"model": model_path,
+			"threads": params.threads,
+			"n_ctx": params.n_ctx,
+		})
+
+	if brain_defs.is_empty():
+		_log("BitNet: aucune config de brain valide")
+		return false
+
+	# Spawn processes
+	_set_status("Connexion: ...", "BitNet auto-spawn (%d brains)..." % brain_defs.size(), 20.0)
+	_brain_process_manager = BrainProcessManagerScript.new()
+	_brain_process_manager.configure(server_path, brain_defs)
+	var started: int = _brain_process_manager.start_all()
+	if started == 0:
+		_log("BitNet: echec spawn — aucun process demarre")
+		_brain_process_manager = null
+		return false
+	_log("BitNet: %d/%d process demarres, attente health..." % [started, brain_defs.size()])
+
+	# Wait for health
+	_set_status("Connexion: ...", "BitNet: chargement modeles...", 40.0)
+	var healthy: int = _brain_process_manager.wait_for_healthy()
+	if healthy == 0:
+		_log("BitNet: aucun brain healthy apres timeout — arret")
+		_brain_process_manager.stop_all()
+		_brain_process_manager = null
+		return false
+	_log("BitNet: %d brains healthy" % healthy)
+
+	# Create backends from healthy brains
+	brain_count = 0
+	for i in range(brain_defs.size()):
+		var info: Array = _brain_process_manager.get_brain_info()
+		if i >= info.size() or not info[i].get("running", false):
+			continue
+		var backend: Object = _brain_process_manager.create_backend(i)
+		if backend == null:
+			continue
+		var role: String = brain_defs[i].role
+		var port: int = BrainProcessManagerScript.BASE_PORT + i
+		if brain_count == 0:
+			# First healthy brain = Narrator
+			narrator_llm = backend
+			narrator_llm.set_sampling_params(narrator_params.temperature, narrator_params.top_p, narrator_params.max_tokens)
+			narrator_llm.set_advanced_sampling(narrator_params.top_k, narrator_params.repetition_penalty)
+			gamemaster_llm = narrator_llm
+			brain_count = 1
+			_log("Brain 1 (Narrator) -> BitNet auto port %d" % port)
+		else:
+			_assign_bitnet_brain(backend, role, brain_count + 1, port)
+			brain_count += 1
+
+	if brain_count == 0:
+		_brain_process_manager.stop_all()
+		_brain_process_manager = null
+		return false
+
+	return await _finalize_bitnet_init()
+
+
+## Assign a brain backend to its role (shared by Mode 1 and Mode 2).
+func _assign_bitnet_brain(brain: Object, role: String, brain_num: int, port: int) -> void:
+	if role == "gamemaster":
+		gamemaster_llm = brain
+		brain.set_sampling_params(gamemaster_params.temperature, gamemaster_params.top_p, gamemaster_params.max_tokens)
+		brain.set_advanced_sampling(gamemaster_params.top_k, gamemaster_params.repetition_penalty)
+		_log("Brain %d (Game Master) -> BitNet port %d" % [brain_num, port])
+	else:
+		_pool_workers.append(brain)
+		_pool_busy.append(false)
+		brain.set_sampling_params(gamemaster_params.temperature, gamemaster_params.top_p, gamemaster_params.max_tokens)
+		brain.set_advanced_sampling(gamemaster_params.top_k, gamemaster_params.repetition_penalty)
+		_log("Brain %d (Worker) -> BitNet port %d" % [brain_num, port])
+
+
+## Finalize BitNet init: warmup + status update.
+func _finalize_bitnet_init() -> bool:
+	active_backend = BackendType.BITNET
+	var mode_name := _get_brain_mode_name()
+	var spawn_mode := "auto-spawn" if _brain_process_manager != null else "manuel"
+
+	# ── Initialize swarm scheduler (Phase 3) ──────────────────────────────
+	_swarm_scheduler = BrainSwarmSchedulerScript.new()
+	# Register narrator (always present)
+	var narrator_size := _detect_model_size(narrator_llm)
+	_swarm_scheduler.register_brain(narrator_llm, "narrator", narrator_size)
+	# Register gamemaster (if distinct)
+	if gamemaster_llm != narrator_llm:
+		var gm_size := _detect_model_size(gamemaster_llm)
+		_swarm_scheduler.register_brain(gamemaster_llm, "gamemaster", gm_size)
+	# Register pool workers
+	for worker in _pool_workers:
+		var w_size := _detect_model_size(worker)
+		_swarm_scheduler.register_brain(worker, "worker", w_size)
+	_log("Scheduler initialized: %d brains, tier=%s" % [_swarm_scheduler.get_total_count(), _swarm_scheduler.get_tier_name()])
+
+	_set_status("Connexion: ...", "Warmup BitNet (Narrator)", 90.0)
+	_log("Starting warmup generation (BitNet %s)..." % spawn_mode)
+	await _warmup_generate()
+
+	_set_status("Connexion: OK", "BitNet %s (%d cerveaux, %s)" % [mode_name, brain_count, spawn_mode], 100.0)
+	is_ready = true
+	ready_changed.emit(true)
+	_log("Backend: BitNet swarm | %d brains | %s | %s" % [brain_count, mode_name, spawn_mode])
+	return true
+
+
+## Detect model size from backend for scheduler timeout calibration.
+func _detect_model_size(llm: Object) -> String:
+	if llm is BitNetBackendScript:
+		# Port 8081 = typically Falcon3-7B (large), others = BitNet-2B4T (small)
+		if llm.port == BITNET_BASE_PORT:
+			return "large"  # Narrator brain, potentially Falcon3-7B
+	return "small"
+
+
+func _find_bitnet_server() -> String:
+	for candidate in BITNET_SERVER_CANDIDATES:
+		var path: String = candidate
+		if path.begins_with("res://"):
+			path = ProjectSettings.globalize_path(path)
+		if FileAccess.file_exists(path):
+			_log("BitNet: llama-server found at %s" % path)
+			return path
+	return ""
+
+
+func _find_bitnet_model(role: String) -> String:
+	var candidates: Array = BITNET_MODEL_CANDIDATES.get(role, [])
+	for candidate in candidates:
+		if FileAccess.file_exists(candidate):
+			return candidate
+	return ""
+
+
+func _try_init_merlin_llm(target: int) -> void:
 	if not ClassDB.class_exists("MerlinLLM"):
-		_set_status("Connexion: OFF", "Classe MerlinLLM absente (GDExtension)", 0.0)
+		_set_status("Connexion: OFF", "Ni Ollama ni MerlinLLM disponibles", 0.0)
+		_log("MerlinLLM: classe absente (GDExtension non chargee)")
 		ready_changed.emit(false)
 		return
 	model_file_used = _resolve_model_file(MODEL_CANDIDATES)
 	if model_file_used == "":
-		_set_status("Connexion: OFF", "Modele manquant (aucun GGUF)", 0.0)
+		_set_status("Connexion: OFF", "Modele GGUF manquant", 0.0)
 		ready_changed.emit(false)
 		return
-
-	# Determine how many brains to load
-	var target: int = _target_brain_count if _target_brain_count > 0 else detect_optimal_brains()
-	_log("Target brains: %d (requested=%d, auto=%d)" % [target, _target_brain_count, detect_optimal_brains()])
 
 	var model_path := _to_fs_path(model_file_used)
 	brain_count = 0
 
 	# ── Brain 1: Narrator (always loaded) ──────────────────────────────────
-	_set_status("Connexion: ...", "Chargement Brain 1/Narrator", 10.0)
+	_set_status("Connexion: ...", "Chargement Brain 1/Narrator (C++)", 10.0)
 	narrator_llm = ClassDB.instantiate("MerlinLLM")
 	var narrator_err = narrator_llm.load_model(model_path)
 	if narrator_err != OK:
@@ -548,50 +943,68 @@ func _init_local_models() -> void:
 		ready_changed.emit(false)
 		return
 	brain_count = 1
-	# In single-brain mode, narrator handles everything
 	gamemaster_llm = narrator_llm
-	_log("Brain 1 (Narrator) loaded")
-	# Load LoRA adapter for Narrator (style specialization)
+	_log("Brain 1 (Narrator) -> MerlinLLM")
 	_load_narrator_lora()
 
-	# ── Brain 2: Game Master (desktop + high-end mobile) ───────────────────
+	# ── Brain 2: disabled for MerlinLLM (NobodyWho segfault) ──────────────
+	# Multi-brain MerlinLLM disabled due to GDExtension instability.
+	# Use Ollama for multi-brain support.
 	if target >= BRAIN_DUAL:
-		_set_status("Connexion: ...", "Chargement Brain 2/Game Master", 40.0)
-		var gm_instance = ClassDB.instantiate("MerlinLLM")
-		var gm_err = gm_instance.load_model(model_path)
-		if gm_err == OK:
-			gamemaster_llm = gm_instance
-			brain_count = 2
-			_log("Brain 2 (Game Master) loaded")
-		else:
-			_log("Brain 2 (Game Master) failed — staying at 1 brain")
+		_log("Brain 2: MerlinLLM multi-instance desactive (segfault). Lancez 'ollama serve' pour multi-brain.")
 
-	# ── Brain 3-4: Worker Pool (background tasks) ─────────────────────────
+	# ── Worker Pool: disabled for MerlinLLM ───────────────────────────────
 	_pool_workers.clear()
 	_pool_busy.clear()
-	var pool_names := ["Worker A", "Worker B"]
-	for i in range(2):
-		var pool_brain_num: int = 3 + i
-		if target >= pool_brain_num and brain_count >= pool_brain_num - 1:
-			var progress_pct: float = 50.0 + i * 20.0
-			_set_status("Connexion: ...", "Chargement Brain %d/%s" % [pool_brain_num, pool_names[i]], progress_pct)
-			var pw_instance = ClassDB.instantiate("MerlinLLM")
-			var pw_err = pw_instance.load_model(model_path)
-			if pw_err == OK:
-				_pool_workers.append(pw_instance)
-				_pool_busy.append(false)
-				brain_count = pool_brain_num
-				_log("Brain %d (%s) loaded -> pool" % [pool_brain_num, pool_names[i]])
-			else:
-				_log("Brain %d (%s) failed — pool stays at %d workers" % [pool_brain_num, pool_names[i], _pool_workers.size()])
-				break  # Don't try Brain 4 if Brain 3 failed
 
+	active_backend = BackendType.MERLIN_LLM
 	var ram_estimate: int = brain_count * RAM_PER_BRAIN_MB
 	var mode_name := _get_brain_mode_name()
-	_set_status("Connexion: OK", "%s (%d cerveaux, ~%d MB)" % [mode_name, brain_count, ram_estimate], 100.0)
+	_set_status("Connexion: ...", "Warmup generation (CPU cache prime)", 95.0)
+	_log("Starting warmup generation (MerlinLLM C++)...")
+	await _warmup_generate()
+	_set_status("Connexion: OK", "MerlinLLM %s (%d cerveau, ~%d MB)" % [mode_name, brain_count, ram_estimate], 100.0)
 	is_ready = true
 	ready_changed.emit(true)
-	_log("Model OK: %s | %d brains | %s | ~%d MB RAM" % [model_file_used, brain_count, mode_name, ram_estimate])
+	_log("Backend: MerlinLLM | %d brain | %s | ~%d MB RAM" % [brain_count, mode_name, ram_estimate])
+
+
+func _detect_optimal_brains() -> int:
+	var ram_mb: int = int(OS.get_static_memory_usage() / (1024 * 1024))  # Rough estimate
+	var cpu_count: int = OS.get_processor_count()
+	# Desktop with 16+ cores: 2 brains (Narrator + GM)
+	if cpu_count >= 8:
+		return BRAIN_DUAL
+	return BRAIN_SINGLE
+
+
+func _warmup_generate() -> void:
+	## Short warmup generation to prime llama.cpp KV cache + CPU caches.
+	## Generates ~10 tokens with a minimal prompt, then discards the result.
+	if narrator_llm == null or not narrator_llm.has_method("generate_async"):
+		return
+	var warmup_prompt := "<|im_start|>system\nTu es Merlin.\n<|im_end|>\n<|im_start|>user\nBonjour.\n<|im_end|>\n<|im_start|>assistant\n"
+	if narrator_llm.has_method("set_sampling_params"):
+		narrator_llm.set_sampling_params(0.1, 0.9, 10)  # Very few tokens
+	var warmup_done := {"done": false}
+	var warmup_start := Time.get_ticks_msec()
+	narrator_llm.generate_async(warmup_prompt, func(_res: Dictionary) -> void:
+		warmup_done.done = true
+	)
+	# Poll until done or 60s timeout
+	while not warmup_done.done:
+		narrator_llm.poll_result()
+		if warmup_done.done:
+			break
+		if Time.get_ticks_msec() - warmup_start > 60000:
+			print("[MerlinAI] Warmup timeout (60s), cancelling")
+			if narrator_llm.has_method("cancel_generation"):
+				narrator_llm.cancel_generation()
+			break
+		await get_tree().create_timer(0.05).timeout
+	var warmup_elapsed := Time.get_ticks_msec() - warmup_start
+	print("[MerlinAI] Warmup generation completed in %dms" % warmup_elapsed)
+	_first_generation_done = true  # Mark as warm — use normal timeout from now on
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
@@ -857,8 +1270,14 @@ func get_status() -> Dictionary:
 	return {"status": status_text, "detail": detail_text, "progress": progress_value, "ready": is_ready}
 
 func get_model_info() -> Dictionary:
-	return {
+	var backend_name: String = "unknown"
+	match active_backend:
+		BackendType.OLLAMA: backend_name = "ollama"
+		BackendType.BITNET: backend_name = "bitnet"
+		BackendType.MERLIN_LLM: backend_name = "merlin_llm"
+	var info := {
 		"model": model_file_used,
+		"backend": backend_name,
 		"brain_count": brain_count,
 		"brain_mode": _get_brain_mode_name(),
 		"pool_workers": _pool_workers.size(),
@@ -872,6 +1291,12 @@ func get_model_info() -> Dictionary:
 		"executor": model_file_used,
 		"has_prefetcher": _pool_workers.size() > 0,
 	}
+	# Merge BitNet-specific stats if available
+	if active_backend == BackendType.BITNET and narrator_llm is BitNetBackendScript:
+		info["narrator_stats"] = narrator_llm.stats.duplicate()
+		if gamemaster_llm != narrator_llm and gamemaster_llm is BitNetBackendScript:
+			info["gamemaster_stats"] = gamemaster_llm.stats.duplicate()
+	return info
 
 func is_dual_mode() -> bool:
 	return brain_count >= 2
@@ -1274,16 +1699,32 @@ func _looks_complete(text: String) -> bool:
 
 func _process(_delta: float) -> void:
 	## Poll active background tasks (fire-and-forget mode).
-	# Brain busy timeout — prevent deadlock if a brain crashes
-	var now_check := Time.get_ticks_msec()
-	if _primary_narrator_busy and _narrator_busy_since > 0 and now_check - _narrator_busy_since > BRAIN_BUSY_TIMEOUT_MS:
-		_primary_narrator_busy = false
-		_narrator_busy_since = 0
-		_log("Narrator busy timeout (%ds) — force release" % [BRAIN_BUSY_TIMEOUT_MS / 1000])
-	if _primary_gm_busy and _gm_busy_since > 0 and now_check - _gm_busy_since > BRAIN_BUSY_TIMEOUT_MS:
-		_primary_gm_busy = false
-		_gm_busy_since = 0
-		_log("GM busy timeout (%ds) — force release" % [BRAIN_BUSY_TIMEOUT_MS / 1000])
+	# ── Scheduler timeout check (BitNet swarm) ────────────────────────────
+	if _swarm_scheduler != null:
+		_swarm_scheduler.check_timeouts()
+		# Also poll health from BrainProcessManager (if auto-spawned)
+		if _brain_process_manager != null:
+			var health_results: Array = _brain_process_manager.poll_health()
+			if not health_results.is_empty():
+				var brain_info: Array = _brain_process_manager.get_brain_info()
+				for i in range(health_results.size()):
+					if not health_results[i] and i < brain_info.size() and not brain_info[i].get("running", false):
+						# Brain crashed — mark dead in scheduler
+						var dead_backend: Object = _brain_process_manager.create_backend(i)
+						if dead_backend != null:
+							_swarm_scheduler.mark_brain_dead(dead_backend)
+						_log("Brain %d crashed — scheduler degraded to %s" % [i + 1, _swarm_scheduler.get_tier_name()])
+	else:
+		# ── Legacy timeout check (Ollama / MerlinLLM) ─────────────────────
+		var now_check := Time.get_ticks_msec()
+		if _primary_narrator_busy and _narrator_busy_since > 0 and now_check - _narrator_busy_since > BRAIN_BUSY_TIMEOUT_MS:
+			_primary_narrator_busy = false
+			_narrator_busy_since = 0
+			_log("Narrator busy timeout (%ds) — force release" % [BRAIN_BUSY_TIMEOUT_MS / 1000])
+		if _primary_gm_busy and _gm_busy_since > 0 and now_check - _gm_busy_since > BRAIN_BUSY_TIMEOUT_MS:
+			_primary_gm_busy = false
+			_gm_busy_since = 0
+			_log("GM busy timeout (%ds) — force release" % [BRAIN_BUSY_TIMEOUT_MS / 1000])
 
 	if _active_bg_tasks.is_empty() and _bg_queue.is_empty():
 		set_process(false)
@@ -1407,8 +1848,14 @@ func _dispatch_from_queue() -> void:
 
 
 ## Lease an idle brain for background work. Returns null if all busy.
-## Priority: pool workers first, then idle primary brains.
-func _lease_bg_brain() -> Object:
+## task_role: hint for affinity ("narrator", "gamemaster", "worker").
+## priority: BrainSwarmScheduler.Priority value (default NORMAL).
+func _lease_bg_brain(task_role: String = "", priority: int = 2) -> Object:
+	# ── Scheduler path (BitNet swarm) ─────────────────────────────────────
+	if _swarm_scheduler != null:
+		return _swarm_scheduler.request_brain(task_role, priority)
+
+	# ── Legacy path (Ollama / MerlinLLM — unchanged) ─────────────────────
 	# 1. Pool workers (dedicated, always preferred)
 	for i in range(_pool_workers.size()):
 		if not _pool_busy[i] and is_instance_valid(_pool_workers[i]):
@@ -1427,6 +1874,12 @@ func _lease_bg_brain() -> Object:
 
 ## Release a brain back to the pool after background work.
 func _release_bg_brain(llm: Object) -> void:
+	# ── Scheduler path ────────────────────────────────────────────────────
+	if _swarm_scheduler != null:
+		_swarm_scheduler.release_brain(llm)
+		return
+
+	# ── Legacy path ───────────────────────────────────────────────────────
 	for i in range(_pool_workers.size()):
 		if _pool_workers[i] == llm:
 			_pool_busy[i] = false
