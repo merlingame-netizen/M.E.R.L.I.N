@@ -1,0 +1,220 @@
+{
+  "version": "1.0.0",
+  "project": "merlin",
+  "max_workers": 5,
+  "cycle_tick_seconds": 60,
+  "veto_delay_seconds": 120,
+  "worktree_base": "C:/Users/PGNK2128/Godot-MCP-worktrees",
+  "validate_command": ".\\validate.bat",
+  "godot_exe": "C:/Users/PGNK2128/Godot/Godot_v4.5.1-stable_win64_console.exe",
+  "claude_exe": "C:/Users/PGNK2128/.local/bin/claude.exe",
+  "claude_model": "sonnet",
+  "claude_allowed_tools": "Edit,Write,Bash,Read,Glob,Grep,Task,TodoWrite",
+  "claude_permission_mode": "bypassPermissions",
+
+  "merge_order": ["gameplay", "llm-lora", "ui-ux", "world-structure", "visual-polish"],
+
+  "domains": [
+    {
+      "name": "ui-ux",
+      "branch": "autodev/ui-ux",
+      "description": "UI/UX: Arbre de Vie, Calendar, Bestiole wheel",
+      "file_scope": [
+        "scripts/ui/arbre_de_vie_ui.gd",
+        "scripts/ui/bestiole_wheel_system.gd",
+        "scripts/ui/map_ui.gd",
+        "scripts/Calendar.gd",
+        "scripts/ui/biome_radial.gd"
+      ],
+      "tasks": [
+        {
+          "id": "B.2",
+          "title": "UI Arbre de Vie (page 4 Hub)",
+          "description": "Implementer l'arbre de progression visuel sur la page 4 du Hub. Affiche les noeuds debloqués, les connexions, et les bonus actifs du joueur.",
+          "priority": "high"
+        },
+        {
+          "id": "C.4",
+          "title": "Refonte calendrier UI",
+          "description": "Refactorer l'interface du calendrier pour integrer les saisons, les evenements et la timeline visuelle.",
+          "priority": "medium"
+        }
+      ],
+      "agents": [
+        ".claude/agents/ui_impl.md",
+        ".claude/agents/ux_research.md",
+        ".claude/agents/motion_designer.md"
+      ],
+      "review_agents": [
+        ".claude/agents/debug_qa.md",
+        ".claude/agents/optimizer.md"
+      ]
+    },
+    {
+      "name": "gameplay",
+      "branch": "autodev/gameplay",
+      "description": "Gameplay core: Souffle perks, Archetype, Aspects, progression",
+      "file_scope": [
+        "scripts/merlin/merlin_store.gd",
+        "scripts/merlin/merlin_card_system.gd",
+        "scripts/merlin/merlin_effect_engine.gd",
+        "scripts/merlin/merlin_constants.gd"
+      ],
+      "exclusive_files": [
+        "scripts/merlin/merlin_store.gd",
+        "scripts/merlin/merlin_constants.gd"
+      ],
+      "tasks": [
+        {
+          "id": "B.1",
+          "title": "Souffle d'Ogham → Perk personnalisable",
+          "description": "Transformer le Souffle en systeme de perks. Le joueur choisit des bonus passifs lies aux Oghams debloqués. Chaque perk coute du Souffle et offre un avantage contextuel.",
+          "priority": "high"
+        },
+        {
+          "id": "B.3",
+          "title": "Archetype → bonus DC + contexte RAG",
+          "description": "L'archetype du joueur (determine par le quiz) modifie le DC des jets et injecte du contexte specifique dans le RAG pour personnaliser la narration.",
+          "priority": "high"
+        },
+        {
+          "id": "B.4",
+          "title": "Aspects → impact narratif + bonus/malus",
+          "description": "Les etats des 3 aspects (Bas/Equilibre/Haut) doivent influencer la narration LLM et appliquer des bonus/malus mecaniques (ex: Corps Epuise = DC+2).",
+          "priority": "medium"
+        },
+        {
+          "id": "B.5",
+          "title": "Premiere run skip Hub",
+          "description": "A la toute premiere partie, permettre au joueur de sauter le Hub et aller directement en jeu pour une onboarding plus fluide.",
+          "priority": "low"
+        }
+      ],
+      "agents": [
+        ".claude/agents/game_designer.md",
+        ".claude/agents/meta_progression_designer.md",
+        ".claude/agents/narrative_writer.md"
+      ],
+      "review_agents": [
+        ".claude/agents/debug_qa.md",
+        ".claude/agents/optimizer.md",
+        ".claude/agents/lead_godot.md"
+      ]
+    },
+    {
+      "name": "llm-lora",
+      "branch": "autodev/llm-lora",
+      "description": "LLM integration: LoRA v2, RAG archetype, prompt quality",
+      "file_scope": [
+        "addons/merlin_ai/ollama_backend.gd",
+        "addons/merlin_ai/merlin_ai.gd",
+        "addons/merlin_ai/merlin_omniscient.gd",
+        "addons/merlin_ai/rag_manager.gd",
+        "scripts/merlin/merlin_llm_adapter.gd",
+        "data/ai/training/",
+        "tools/lora/"
+      ],
+      "tasks": [
+        {
+          "id": "LLM.1",
+          "title": "LoRA v2 adapter integration",
+          "description": "Integrer l'adapter LoRA v2 (quand l'entrainement sera termine) dans le pipeline Ollama. Ajouter le chargement conditionnel de l'adapter et le benchmark automatique.",
+          "priority": "high"
+        },
+        {
+          "id": "LLM.2",
+          "title": "RAG archetype injection",
+          "description": "Enrichir le RAG v2.0 pour injecter le contexte d'archetype du joueur dans les prompts, personalisant la narration selon le profil.",
+          "priority": "medium"
+        }
+      ],
+      "agents": [
+        ".claude/agents/llm_expert.md",
+        ".claude/agents/lora_gameplay_translator.md",
+        ".claude/agents/lora_data_curator.md",
+        ".claude/agents/lora_training_architect.md",
+        ".claude/agents/lora_evaluator.md",
+        ".claude/agents/prompt_curator.md"
+      ],
+      "review_agents": [
+        ".claude/agents/debug_qa.md",
+        ".claude/agents/lead_godot.md"
+      ]
+    },
+    {
+      "name": "world-structure",
+      "branch": "autodev/world",
+      "description": "World structure: Bestiole refactor, semi-linear map, inter-run consequences",
+      "file_scope": [
+        "scripts/merlin/merlin_biome_system.gd",
+        "scripts/TransitionBiome.gd",
+        "scripts/HubAntre.gd",
+        "scripts/merlin/merlin_save_system.gd",
+        "scripts/Collection.gd"
+      ],
+      "tasks": [
+        {
+          "id": "C.1",
+          "title": "Refonte Bestiole (runes, sauveur)",
+          "description": "Refactorer le systeme Bestiole: option de remplacement de compagnon, systeme de runes liees aux Oghams, role de sauveur lors des chutes critiques.",
+          "priority": "high"
+        },
+        {
+          "id": "C.2",
+          "title": "Structure semi-lineaire (carte noeuds)",
+          "description": "Remplacer la progression lineaire par une carte a noeuds (style Slay the Spire) avec choix de chemin entre biomes.",
+          "priority": "medium"
+        },
+        {
+          "id": "C.3",
+          "title": "Consequences long terme inter-runs",
+          "description": "Implementer la persistance inter-runs: standing des factions, memoire du monde, deblocages permanents qui affectent les futures parties.",
+          "priority": "medium"
+        }
+      ],
+      "agents": [
+        ".claude/agents/game_designer.md",
+        ".claude/agents/lore_writer.md",
+        ".claude/agents/merlin_guardian.md"
+      ],
+      "review_agents": [
+        ".claude/agents/debug_qa.md",
+        ".claude/agents/lead_godot.md"
+      ]
+    },
+    {
+      "name": "visual-polish",
+      "branch": "autodev/visual",
+      "description": "Visual polish: seasonal effects, portraits, shaders",
+      "file_scope": [
+        "shaders/",
+        "scripts/autoload/merlin_visual.gd",
+        "scripts/merlin_backdrop.gd",
+        "scripts/test/pixel_art_showcase.gd",
+        "themes/merlin_theme.tres"
+      ],
+      "tasks": [
+        {
+          "id": "D.1",
+          "title": "Effets saisonniers menu",
+          "description": "Ajouter des effets visuels saisonniers (particules neige/feuilles/fleurs/chaleur) au menu principal, pilotes par le calendrier in-game.",
+          "priority": "low"
+        },
+        {
+          "id": "D.2",
+          "title": "Art Kingdom Two Crowns (portraits)",
+          "description": "Integrer les portraits style Kingdom Two Crowns pour les PNJ et Merlin. Pipeline: pixel art reference → shader + palette GBC.",
+          "priority": "low"
+        }
+      ],
+      "agents": [
+        ".claude/agents/art_direction.md",
+        ".claude/agents/shader_specialist.md"
+      ],
+      "review_agents": [
+        ".claude/agents/debug_qa.md",
+        ".claude/agents/ui_impl.md"
+      ]
+    }
+  ]
+}
