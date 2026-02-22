@@ -1,8 +1,10 @@
-# Art Direction Audit Report
+# Art Direction Audit Report (LEGACY)
 ## M.E.R.L.I.N. — Le Jeu des Oghams
 
+> **LEGACY DOC** : Ce document reference des fichiers supprimes (`MenuPrincipalReigns.gd`, `ReignsGameUI.gd`, `reigns_paper.gdshader`, `reigns_theme.tres`). La palette canonique est desormais dans `MerlinVisual.PALETTE` (`scripts/autoload/merlin_visual.gd`). Le shader est `merlin_paper.gdshader`. Le theme est `merlin_theme.tres`. Source de verite visuelle : `docs/70_graphic/UI_UX_BIBLE.md`.
+
 **Author:** Art Direction Agent
-**Date:** 2026-02-08
+**Date:** 2026-02-08 (legacy banner 2026-02-22)
 **Scope:** Full visual consistency audit across all scenes, shaders, palettes, typography, animations
 
 ---

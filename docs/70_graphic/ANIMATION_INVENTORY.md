@@ -92,7 +92,7 @@
 
 ---
 
-### 1.5 MenuPrincipalReigns.gd (Main Menu)
+### 1.5 MenuPrincipalMerlin.gd (Main Menu) *(was MenuPrincipalMerlin.gd)*
 
 | Ligne | Type | Propriete | Duree | Easing | Description |
 |-------|------|-----------|-------|--------|-------------|
@@ -317,7 +317,7 @@
 |-----------|--------|--------|
 | State machine | 1 | IntroBoot (5 phases) |
 | Continuous ambient | 7 | merlin_house_animations (fire, candles, runes, etc.) |
-| Particle systems | 2 | MenuPrincipalReigns (seasonal + sun rays) |
+| Particle systems | 2 | MenuPrincipalMerlin (seasonal + sun rays) |
 | Gauge/card lerp | 1 | reigns_game_ui |
 | CRT retro effects | 1 | IntroBoot |
 
@@ -342,7 +342,7 @@
 
 | Shader | Type | Utilise par | Animation |
 |--------|------|-------------|-----------|
-| `reigns_paper.gdshader` | Static (grain animes TIME) | Menu, Calendar, Collection, SceneEveil, SceneAntre | Grain + warp via TIME |
+| `merlin_paper.gdshader` | Static (grain animes TIME) | Menu, Calendar, Collection, SceneEveil, SceneAntre | Grain + warp via TIME |
 | `screen_distortion.gdshader` | Dynamic (tweened params) | ScreenEffects autoload | Scanline, glitch, chromatic, flicker, noise |
 | `seasonal_snow.gdshader` | Animated (TIME) | SceneEveil, SceneAntre (hiver) | Falling snow, 5 layers, wind offset |
 | `bestiole_squish.gdshader` | Interactive | (non utilise actuellement) | Press deformation UV |
@@ -354,7 +354,7 @@
 
 ## 3. SHADERS ANIMES (DETAIL)
 
-### 3.1 reigns_paper.gdshader
+### 3.1 merlin_paper.gdshader
 - **Parametres constants entre scenes** (BIEN):
   - `paper_tint`: PALETTE.paper (identique partout)
   - `grain_strength`: 0.025
@@ -363,7 +363,7 @@
   - `grain_scale`: 1200.0
   - `grain_speed`: 0.08
   - `warp_strength`: 0.001
-- **Exception**: `reigns_backdrop.gd` utilise des valeurs differentes (grain 0.04, vignette 0.12, warp 0.0018)
+- **Exception**: `merlin_backdrop.gd` utilise des valeurs differentes (grain 0.04, vignette 0.12, warp 0.0018)
 - **Recommandation**: Centraliser les valeurs dans une constante partagee
 
 ### 3.2 screen_distortion.gdshader
@@ -421,7 +421,7 @@
 |----------|---------|----------|
 | **Mist amplitude mixte** | Menu: 0.08-0.25, SceneEveil: 0.08-0.25, SceneAntre: 0.06-0.20, Collection: 0.6-1.0 | MINEUR |
 | **Easing boutons inconsistant** | Menu: TRANS_SINE, menu_return: TRANS_QUAD, triade_ui: aucun | MINEUR |
-| **Paper shader params divergent** | reigns_backdrop.gd utilise grain 0.04/vignette 0.12 vs 0.025/0.08 partout ailleurs | MINEUR |
+| **Paper shader params divergent** | merlin_backdrop.gd utilise grain 0.04/vignette 0.12 vs 0.025/0.08 partout ailleurs | MINEUR |
 | **Bestiole float sans easing** | main_game.gd L681: pas d'easing (linear), type_label L226 a EASE_IN_OUT | MINEUR |
 | **Scene fade-out durees** | IntroMerlinDialogue: 0.8s, SceneEveil: 0.6s, SceneAntre: 0.6s | MINEUR |
 | **Typewriter vitesse variable** | Certaines scenes utilisent un delai fixe 0.03s, d'autres un delay/char variable | ACCEPTABLE |
@@ -438,7 +438,7 @@
 | IntroCeltOS | Oui (tween chain) | Oui (flash) | NON |
 | IntroMerlinDialogue | NON DETECTABLE | Oui (fade 0.8s) | **Entree manquante** (probablement geree par scene precedente) |
 | IntroPersonalityQuiz | NON DETECTABLE | Oui (fade) | **Entree manquante** |
-| MenuPrincipalReigns | Oui (orchestrated) | Oui (card swipe) | NON |
+| MenuPrincipalMerlin | Oui (orchestrated) | Oui (card swipe) | NON |
 | SceneEveil | Oui (orchestrated) | Oui (orchestrated) | NON |
 | SceneAntreMerlin | Oui (orchestrated) | Oui (orchestrated) | NON |
 | TransitionBiome | Oui (typewriter) | Oui (fade) | NON |
@@ -686,7 +686,7 @@ const DEFAULT_EASE_INOUT := Tween.EASE_IN_OUT
 
 - [x] Aucun `_process()` inutile (merlin_house_animations est 3D legacy, pas utilise en 2D)
 - [x] Tweens tues avant recrea dans ScreenEffects (bon pattern)
-- [ ] **Manquant**: Tuer les tweens avant recreation dans MenuPrincipalReigns (hover/press)
+- [ ] **Manquant**: Tuer les tweens avant recreation dans MenuPrincipalMerlin (hover/press)
 - [x] GPU particles limites (30 dans TransitionBiome, OK)
 - [x] Shaders avec early-exit (screen_distortion: `if global_intensity >= 0.001`)
 - [ ] **Manquant**: Bestiole idle tweens doivent etre tues a la sortie de scene

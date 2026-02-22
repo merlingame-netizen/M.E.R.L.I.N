@@ -89,7 +89,7 @@ Scrollable list showing events for current month:
 
 ```gdscript
 const CALENDAR_COLORS := {
-    # Base (paper/ink from Reigns theme)
+    # Base (paper/ink from Merlin theme)
     "paper": Color(0.96, 0.92, 0.84),
     "paper_dark": Color(0.93, 0.88, 0.80),
     "ink": Color(0.12, 0.10, 0.08),
@@ -577,7 +577,7 @@ func _switch_tab(to_tab: int) -> void:
 
 1. Wheel renders at all screen sizes
 2. Event list scrolls smoothly with 30+ items
-3. Colors match Reigns theme
+3. Colors match Merlin theme
 4. Fonts load correctly (fallback works)
 
 ### User Experience Tests

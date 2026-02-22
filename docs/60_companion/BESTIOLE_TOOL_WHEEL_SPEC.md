@@ -49,7 +49,7 @@ BestiolePanel (anchors: bottom, full width, 100px height)
 - Pas adapte au tactile (boutons trop petits)
 - Occupe de l'espace ecran permanent
 
-### 1.3 Theme visuel — `reigns_theme.tres`
+### 1.3 Theme visuel — `merlin_theme.tres`
 
 **Palette parchemin coherente:**
 - Paper: `Color(0.96, 0.92, 0.84)` (fond principal)

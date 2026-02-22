@@ -1,8 +1,10 @@
-# Visual Design Specification: Transition Scenes
+# Visual Design Specification: Transition Scenes (LEGACY)
 ## M.E.R.L.I.N. — Le Jeu des Oghams
 
+> **LEGACY DOC** : Ce document reference les scenes `SceneEveil` et `SceneAntreMerlin` qui ont ete remplacees par `SceneRencontreMerlin` et `HubAntre`. Les specs visuelles (palettes, animations) restent valides mais les noms de scenes sont obsoletes. Source de verite : `docs/30_scenes/CANONICAL_ONBOARDING_FLOW.md`.
+
 **Author:** Art Direction Agent
-**Version:** 1.0
+**Version:** 1.1 (updated 2026-02-22 — legacy banner)
 **Date:** 2026-02-08
 
 ---
@@ -118,7 +120,7 @@ All three scenes share a unified visual language:
 "thunder_dark":  Color("#a89020") # Storm amber
 ```
 
-### Parchment Palette Constants (from MenuPrincipalReigns.gd PALETTE)
+### Parchment Palette Constants (from MerlinVisual.PALETTE)
 
 ```gdscript
 # Referenced as PALETTE["key"] in parchment-style scenes
@@ -270,7 +272,7 @@ TIMELINE (seconds)
 8.0s:  Gradient radius = 15% of screen
 15.0s: Gradient radius = 40% of screen
 25.0s: Gradient transitions to full cream (paper shader begins)
-35.0s: reigns_paper.gdshader fully active with parchment tint
+35.0s: merlin_paper.gdshader fully active with parchment tint
 
 [EMBER (ColorRect + shader or Sprite2D)]
 0.0s:  Invisible
@@ -404,8 +406,8 @@ The Lair uses a restricted subset to create a warm, enclosed feel:
 #### 4.1 Cave Background (ColorRect + Shader)
 
 ```gdscript
-# Use reigns_paper.gdshader with dark cave tinting
-var cave_shader := load("res://shaders/reigns_paper.gdshader")
+# Use merlin_paper.gdshader with dark cave tinting
+var cave_shader := load("res://shaders/merlin_paper.gdshader")
 var cave_mat := ShaderMaterial.new()
 cave_mat.shader = cave_shader
 cave_mat.set_shader_parameter("paper_tint", Color("#484840"))     # dark_gray
@@ -960,7 +962,7 @@ func _get_path_gradient(origin: String, destination: String) -> Gradient:
 |-------|------|-------|
 | Merlin Portrait | `res://Assets/Sprite/Merlin.png` | Default portrait in lair |
 | Merlin Seasonal | `res://Assets/Sprite/Merlin_HIVER.png` etc. | Seasonal variants |
-| Paper Shader | `res://shaders/reigns_paper.gdshader` | Parchment backgrounds |
+| Paper Shader | `res://shaders/merlin_paper.gdshader` | Parchment backgrounds |
 | Screen Distortion | `res://shaders/screen_distortion.gdshader` | ScreenEffects mood system |
 | Bestiole Squish | `res://shaders/bestiole_squish.gdshader` | Bestiole tap interaction |
 | Morris Roman | `res://resources/fonts/morris/MorrisRomanBlack.otf` | Title text |
@@ -1043,7 +1045,7 @@ Control (TransitionBiome.gd)
 ### Performance Considerations
 
 - **Particle count:** Keep total particles under 50 per scene (mobile target)
-- **Shader complexity:** reigns_paper.gdshader is already optimized; reuse it for cave bg
+- **Shader complexity:** merlin_paper.gdshader is already optimized; reuse it for cave bg
 - **Tween management:** Always kill previous tweens before creating new ones (pattern from MenuPrincipalReigns)
 - **Texture sizes:** All new textures should be power-of-2 and under 256x256
 - **ScreenEffects:** Mood transitions use MOOD_TRANSITION_DURATION (0.6s) -- do not fight this timing
