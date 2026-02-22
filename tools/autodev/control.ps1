@@ -77,14 +77,28 @@ switch ($Action) {
         Write-Host "[CONTROL] Launching AUTODEV pipeline..." -ForegroundColor Green
         Write-Host "[CONTROL] Command: $fullCmd" -ForegroundColor Gray
 
-        # Launch as background process (detached from current session)
+        # Log file for Tee-Object (both visible AND logged)
         $logFile = Join-Path (Join-Path $scriptDir "logs") "orchestrator_$(Get-Date -Format 'yyyyMMdd_HHmmss').log"
-        $errLogFile = Join-Path (Join-Path $scriptDir "logs") "orchestrator_err.log"
+
+        # Launch in VISIBLE window (dashboard) with Tee-Object for logging
+        $dashboardTitle = "[AUTODEV] Dashboard - Cycle Runner"
+        $dashboardCmd = @(
+            "`$host.UI.RawUI.WindowTitle = '$dashboardTitle'",
+            "Write-Host '' -ForegroundColor Cyan",
+            "Write-Host '[==================================================]' -ForegroundColor Cyan",
+            "Write-Host '|  M.E.R.L.I.N. AUTODEV v2 -- Dashboard            |' -ForegroundColor Cyan",
+            "Write-Host '|  Workers will open in separate windows            |' -ForegroundColor Cyan",
+            "Write-Host '|  Drop VETO file in tools/autodev/ to stop all     |' -ForegroundColor Cyan",
+            "Write-Host '[==================================================]' -ForegroundColor Cyan",
+            "Write-Host ''",
+            "& powershell -ExecutionPolicy Bypass -File `"$orchScript`" $argString 2>&1 | Tee-Object -FilePath '$logFile'",
+            "Write-Host ''",
+            "Write-Host '[AUTODEV] Pipeline finished. Window closes in 120s...' -ForegroundColor Yellow",
+            "Start-Sleep -Seconds 120"
+        ) -join "; "
+
         $proc = Start-Process -FilePath "powershell" `
-            -ArgumentList "-ExecutionPolicy Bypass -File `"$orchScript`" $argString" `
-            -RedirectStandardOutput $logFile `
-            -RedirectStandardError $errLogFile `
-            -WindowStyle Hidden `
+            -ArgumentList @("-ExecutionPolicy", "Bypass", "-NoProfile", "-Command", $dashboardCmd) `
             -PassThru
 
         # Save PID
@@ -97,6 +111,7 @@ switch ($Action) {
         }
 
         Write-Host "[CONTROL] AUTODEV started (PID $($proc.Id))" -ForegroundColor Green
+        Write-Host "[CONTROL] Dashboard window: '$dashboardTitle'" -ForegroundColor Cyan
         Write-Host "[CONTROL] Log: $logFile" -ForegroundColor Gray
         Write-Host "[CONTROL] Stop: .\control.ps1 -Action Stop" -ForegroundColor Gray
     }
@@ -129,8 +144,9 @@ switch ($Action) {
             }
 
             if (-not $stopped -and $procId) {
-                Write-Host "[CONTROL] Timeout -- force killing PID $procId" -ForegroundColor Red
-                Stop-Process -Id $procId -Force -ErrorAction SilentlyContinue
+                Write-Host "[CONTROL] Timeout -- force killing process tree PID $procId" -ForegroundColor Red
+                # Kill entire process tree (dashboard + orchestrator + workers)
+                & taskkill /T /F /PID $procId 2>$null | Out-Null
             }
 
             Remove-Item $pidFile -Force -ErrorAction SilentlyContinue
@@ -155,8 +171,9 @@ switch ($Action) {
         $isRunning = $false
 
         if (Test-Path $pidFile) {
-            $pid = (Get-Content $pidFile -Raw).Trim()
-            $proc = Get-Process -Id $pid -ErrorAction SilentlyContinue
+            $procId = (Get-Content $pidFile -Raw -ErrorAction SilentlyContinue)
+            if ($procId) { $procId = $procId.Trim() }
+            $proc = if ($procId) { Get-Process -Id $procId -ErrorAction SilentlyContinue } else { $null }
             $isRunning = ($null -ne $proc)
         }
 

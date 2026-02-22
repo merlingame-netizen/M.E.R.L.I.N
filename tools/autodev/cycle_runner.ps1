@@ -20,7 +20,6 @@ param(
 
 $ErrorActionPreference = "Continue"
 $scriptDir = Split-Path -Parent $MyInvocation.MyCommand.Path
-$projectRoot = (Resolve-Path (Join-Path $scriptDir "../..")).Path
 $configPath = Join-Path $scriptDir "config/work_units_v2.json"
 $statusDir = Join-Path $scriptDir "status"
 $logDir = Join-Path $scriptDir "logs"
@@ -65,6 +64,127 @@ function Show-WaveBanner {
     Write-Host "[================================================================]" -ForegroundColor Cyan
 }
 
+# ── Visible Process Launcher ──────────────────────────────────────────
+
+function Start-VisibleWorker {
+    param(
+        [string]$Script,
+        [string]$Domain,
+        [string]$Mode = "build",
+        [string]$WaveLabel = "BUILD",
+        [switch]$IsDryRun,
+        [string[]]$ExtraArgs = @()
+    )
+
+    $title = "[AUTODEV] $Domain - $WaveLabel (Cycle $currentCycle)"
+    $logFile = Join-Path $logDir "${Domain}_${WaveLabel}_$(Get-Date -Format 'yyyyMMdd_HHmmss').log"
+
+    # Build the command to run inside the visible window
+    $innerArgs = @("-ExecutionPolicy", "Bypass", "-File", "`"$Script`"", "-Domain", "`"$Domain`"")
+    if ($Mode -and $Mode -ne "build") { $innerArgs += @("-Mode", "`"$Mode`"") }
+    if ($IsDryRun) { $innerArgs += "-DryRun" }
+    foreach ($ea in $ExtraArgs) { $innerArgs += $ea }
+    $innerCmd = $innerArgs -join " "
+
+    # Wrapper command: set title, run worker, show result, pause
+    $wrapperCmd = @(
+        "`$host.UI.RawUI.WindowTitle = '$title'",
+        "Write-Host '============================================' -ForegroundColor Cyan",
+        "Write-Host '  AUTODEV Worker: $Domain ($WaveLabel)' -ForegroundColor Cyan",
+        "Write-Host '  Cycle: $currentCycle | Mode: $Mode' -ForegroundColor Cyan",
+        "Write-Host '  Log: $logFile' -ForegroundColor Gray",
+        "Write-Host '============================================' -ForegroundColor Cyan",
+        "Write-Host ''",
+        "& powershell $innerCmd 2>&1 | Tee-Object -FilePath '$logFile'",
+        "Write-Host ''",
+        "Write-Host '============================================' -ForegroundColor Green",
+        "Write-Host '  [DONE] $Domain $WaveLabel finished' -ForegroundColor Green",
+        "Write-Host '  Window closes in 60s...' -ForegroundColor Yellow",
+        "Write-Host '============================================' -ForegroundColor Green",
+        "Start-Sleep -Seconds 60"
+    ) -join "; "
+
+    $proc = Start-Process powershell -ArgumentList @(
+        "-ExecutionPolicy", "Bypass",
+        "-NoProfile",
+        "-Command", $wrapperCmd
+    ) -PassThru
+
+    Write-Host "[CYCLE]   -> PID $($proc.Id) | Window: '$title'" -ForegroundColor Gray
+    return $proc
+}
+
+# ── Wait for visible processes ────────────────────────────────────────
+
+function Wait-ForProcesses {
+    param([hashtable]$Processes, [string]$Label)
+
+    if ($Processes.Count -eq 0) { return @{} }
+
+    $tickSeconds = if ($config.cycle_tick_seconds) { $config.cycle_tick_seconds } else { 30 }
+    $statusSummary = @{}
+
+    while ($true) {
+        if (Test-Veto) {
+            Write-Host "[CYCLE] VETO -- stopping $Label workers" -ForegroundColor Red
+            foreach ($name in $Processes.Keys) {
+                $p = $Processes[$name]
+                if (-not $p.HasExited) {
+                    Stop-Process -Id $p.Id -Force -ErrorAction SilentlyContinue
+                }
+            }
+            break
+        }
+
+        $runningCount = 0
+        $doneCount = 0
+
+        foreach ($name in $Processes.Keys) {
+            $p = $Processes[$name]
+
+            $fileStatus = "unknown"
+            $statusFile = Join-Path $statusDir "$name.json"
+            if (Test-Path $statusFile) {
+                $s = Get-Content $statusFile -Raw | ConvertFrom-Json -ErrorAction SilentlyContinue
+                if ($s) { $fileStatus = $s.status }
+            }
+
+            if ($p.HasExited) {
+                $doneCount++
+                $exitState = if ($p.ExitCode -eq 0) { "Completed" } else { "Failed" }
+                $statusSummary[$name] = @{ job_state = $exitState; file_status = $fileStatus }
+            } else {
+                $runningCount++
+                $statusSummary[$name] = @{ job_state = "Running"; file_status = $fileStatus }
+            }
+        }
+
+        # Display status in dashboard window
+        Write-Host "[CYCLE] [$Label] $(Get-Date -Format 'HH:mm:ss') Running: $runningCount, Done: $doneCount/$($Processes.Count)" -ForegroundColor Cyan
+        foreach ($name in $statusSummary.Keys) {
+            $s = $statusSummary[$name]
+            $icon = switch ($s.job_state) {
+                "Running"   { "[..]" }
+                "Completed" { "[OK]" }
+                "Failed"    { "[!!]" }
+                default     { "[??]" }
+            }
+            $color = switch ($s.job_state) {
+                "Running"   { "Yellow" }
+                "Completed" { "Green" }
+                "Failed"    { "Red" }
+                default     { "Gray" }
+            }
+            Write-Host "    $icon $name (status: $($s.file_status))" -ForegroundColor $color
+        }
+
+        if ($runningCount -eq 0) { break }
+        Start-Sleep -Seconds $tickSeconds
+    }
+
+    return $statusSummary
+}
+
 # ── WAVE 1: BUILD ──────────────────────────────────────────────────────
 
 function Invoke-BuildWave {
@@ -76,7 +196,7 @@ function Invoke-BuildWave {
     & powershell -File (Join-Path $scriptDir "notify.ps1") -Event "wave_start" -Message "Cycle $CycleNum Wave 1 BUILD: $($buildDomains.Count) workers"
 
     $workerScript = Join-Path $scriptDir "worker.ps1"
-    $jobs = @{}
+    $procs = @{}
     $failedDomains = @()
 
     foreach ($d in $buildDomains) {
@@ -100,21 +220,11 @@ function Invoke-BuildWave {
 
         Write-Host "[CYCLE] Launching: $($d.name) (mode=$mode, $($d.tasks.Count) tasks)" -ForegroundColor Green
 
-        if ($DryRun) {
-            $jobs[$d.name] = Start-Job -ScriptBlock {
-                param($script, $domain, $mode)
-                & powershell -ExecutionPolicy Bypass -File $script -Domain $domain -Mode $mode -DryRun
-            } -ArgumentList $workerScript, $d.name, $mode
-        } else {
-            $jobs[$d.name] = Start-Job -ScriptBlock {
-                param($script, $domain, $mode)
-                & powershell -ExecutionPolicy Bypass -File $script -Domain $domain -Mode $mode
-            } -ArgumentList $workerScript, $d.name, $mode
-        }
+        $procs[$d.name] = Start-VisibleWorker -Script $workerScript -Domain $d.name -Mode $mode -WaveLabel "BUILD" -IsDryRun:$DryRun
     }
 
-    # Monitor build jobs
-    $statusSummary = Wait-ForJobs -Jobs $jobs -Label "BUILD"
+    # Monitor build processes in visible windows
+    $statusSummary = Wait-ForProcesses -Processes $procs -Label "BUILD"
 
     # Identify failed domains
     foreach ($name in $statusSummary.Keys) {
@@ -124,7 +234,7 @@ function Invoke-BuildWave {
         }
     }
 
-    & powershell -File (Join-Path $scriptDir "notify.ps1") -Event "wave_complete" -Message "BUILD done: $($jobs.Count - $failedDomains.Count) OK, $($failedDomains.Count) failed"
+    & powershell -File (Join-Path $scriptDir "notify.ps1") -Event "wave_complete" -Message "BUILD done: $($procs.Count - $failedDomains.Count) OK, $($failedDomains.Count) failed"
 
     # Wrap in array to prevent PS from unwrapping the hashtable
     return ,@{ status = $statusSummary; failed = $failedDomains }
@@ -217,7 +327,7 @@ function Invoke-ReviewWave {
     & powershell -File (Join-Path $scriptDir "notify.ps1") -Event "wave_start" -Message "Cycle $CycleNum Wave 3 REVIEW: $($reviewDomains.Count) reviewers"
 
     $reviewScript = Join-Path $scriptDir "review_worker.ps1"
-    $jobs = @{}
+    $procs = @{}
 
     foreach ($d in $reviewDomains) {
         if (Test-Veto) {
@@ -227,21 +337,11 @@ function Invoke-ReviewWave {
 
         Write-Host "[CYCLE] Launching reviewer: $($d.name)" -ForegroundColor Green
 
-        if ($DryRun) {
-            $jobs[$d.name] = Start-Job -ScriptBlock {
-                param($script, $domain)
-                & powershell -ExecutionPolicy Bypass -File $script -Domain $domain -DryRun
-            } -ArgumentList $reviewScript, $d.name
-        } else {
-            $jobs[$d.name] = Start-Job -ScriptBlock {
-                param($script, $domain)
-                & powershell -ExecutionPolicy Bypass -File $script -Domain $domain
-            } -ArgumentList $reviewScript, $d.name
-        }
+        $procs[$d.name] = Start-VisibleWorker -Script $reviewScript -Domain $d.name -Mode "review" -WaveLabel "REVIEW" -IsDryRun:$DryRun
     }
 
-    # Monitor review jobs
-    $statusSummary = Wait-ForJobs -Jobs $jobs -Label "REVIEW"
+    # Monitor review processes in visible windows
+    $statusSummary = Wait-ForProcesses -Processes $procs -Label "REVIEW"
 
     & powershell -File (Join-Path $scriptDir "notify.ps1") -Event "review_done" -Message "REVIEW done (cycle $CycleNum)"
 
@@ -264,27 +364,17 @@ function Invoke-FixWave {
     & powershell -File (Join-Path $scriptDir "notify.ps1") -Event "wave_start" -Message "Cycle $CycleNum Wave 4 FIX: $($FailedDomains -join ', ')"
 
     $workerScript = Join-Path $scriptDir "worker.ps1"
-    $jobs = @{}
+    $procs = @{}
 
     foreach ($domainName in $FailedDomains) {
         if (Test-Veto) { continue }
 
         Write-Host "[CYCLE] Launching fix worker: $domainName" -ForegroundColor Yellow
 
-        if ($DryRun) {
-            $jobs[$domainName] = Start-Job -ScriptBlock {
-                param($script, $domain)
-                & powershell -ExecutionPolicy Bypass -File $script -Domain $domain -Mode "fix" -DryRun
-            } -ArgumentList $workerScript, $domainName
-        } else {
-            $jobs[$domainName] = Start-Job -ScriptBlock {
-                param($script, $domain)
-                & powershell -ExecutionPolicy Bypass -File $script -Domain $domain -Mode "fix"
-            } -ArgumentList $workerScript, $domainName
-        }
+        $procs[$domainName] = Start-VisibleWorker -Script $workerScript -Domain $domainName -Mode "fix" -WaveLabel "FIX" -IsDryRun:$DryRun
     }
 
-    $statusSummary = Wait-ForJobs -Jobs $jobs -Label "FIX"
+    $statusSummary = Wait-ForProcesses -Processes $procs -Label "FIX"
 
     & powershell -File (Join-Path $scriptDir "notify.ps1") -Event "fix_done" -Message "FIX done (cycle $CycleNum)"
 
@@ -306,69 +396,7 @@ function Invoke-FeedbackAggregation {
     }
 }
 
-# ── Job Monitor ────────────────────────────────────────────────────────
-
-function Wait-ForJobs {
-    param([hashtable]$Jobs, [string]$Label)
-
-    if ($Jobs.Count -eq 0) { return @{} }
-
-    $tickSeconds = if ($config.cycle_tick_seconds) { $config.cycle_tick_seconds } else { 30 }
-    $statusSummary = @{}
-
-    while ($true) {
-        if (Test-Veto) {
-            Write-Host "[CYCLE] VETO -- stopping $Label workers" -ForegroundColor Red
-            foreach ($name in $Jobs.Keys) {
-                if ($Jobs[$name].State -eq "Running") {
-                    Stop-Job -Job $Jobs[$name] -ErrorAction SilentlyContinue
-                }
-            }
-            break
-        }
-
-        $runningCount = 0
-        $doneCount = 0
-
-        foreach ($name in $Jobs.Keys) {
-            $job = $Jobs[$name]
-            $jobState = $job.State
-
-            $fileStatus = "unknown"
-            $statusFile = Join-Path $statusDir "$name.json"
-            if (Test-Path $statusFile) {
-                $s = Get-Content $statusFile -Raw | ConvertFrom-Json -ErrorAction SilentlyContinue
-                if ($s) { $fileStatus = $s.status }
-            }
-
-            $statusSummary[$name] = @{ job_state = [string]$jobState; file_status = $fileStatus }
-
-            switch ($jobState) {
-                "Running"   { $runningCount++ }
-                "Completed" { $doneCount++ }
-                "Failed"    {
-                    $doneCount++
-                    $null = Receive-Job -Job $job -ErrorAction SilentlyContinue
-                }
-            }
-        }
-
-        # Display
-        $icon = if ($runningCount -gt 0) { ".." } else { "OK" }
-        Write-Host "[CYCLE] [$Label] $(Get-Date -Format 'HH:mm:ss') Running: $runningCount, Done: $doneCount/$($Jobs.Count)" -ForegroundColor Cyan
-
-        if ($runningCount -eq 0) { break }
-        Start-Sleep -Seconds $tickSeconds
-    }
-
-    # Cleanup jobs
-    foreach ($name in $Jobs.Keys) {
-        $null = Receive-Job -Job $Jobs[$name] -ErrorAction SilentlyContinue
-        Remove-Job -Job $Jobs[$name] -ErrorAction SilentlyContinue
-    }
-
-    return $statusSummary
-}
+# (Wait-ForJobs replaced by Wait-ForProcesses above — visible windows)
 
 # ── Cycle Report ───────────────────────────────────────────────────────
 
@@ -429,6 +457,17 @@ if (-not $DryRun) {
     Write-Host "[CYCLE] Health monitor started (Job $($healthJob.Id))" -ForegroundColor Gray
 }
 
+# Launch live monitor dashboard in its own visible window
+$monitorScript = Join-Path $scriptDir "monitor_dashboard.ps1"
+$monitorProc = $null
+if (Test-Path $monitorScript) {
+    $monitorProc = Start-Process powershell -ArgumentList @(
+        "-ExecutionPolicy", "Bypass", "-NoProfile",
+        "-File", $monitorScript, "-RefreshSeconds", "5"
+    ) -PassThru
+    Write-Host "[CYCLE] Live monitor dashboard opened (PID $($monitorProc.Id))" -ForegroundColor Gray
+}
+
 $currentCycle = $Cycle
 
 while ($currentCycle -le ($Cycle + $MaxCycles - 1)) {
@@ -486,6 +525,12 @@ Write-ControlState -State "idle" -CycleNum ($currentCycle - 1) -Detail "Pipeline
 if ($healthJob) {
     Stop-Job -Job $healthJob -ErrorAction SilentlyContinue
     Remove-Job -Job $healthJob -ErrorAction SilentlyContinue
+}
+
+# Close monitor dashboard
+if ($monitorProc -and -not $monitorProc.HasExited) {
+    Stop-Process -Id $monitorProc.Id -Force -ErrorAction SilentlyContinue
+    Write-Host "[CYCLE] Monitor dashboard closed" -ForegroundColor Gray
 }
 
 Write-Host "`n[CYCLE] AUTODEV v2 pipeline complete." -ForegroundColor Green
