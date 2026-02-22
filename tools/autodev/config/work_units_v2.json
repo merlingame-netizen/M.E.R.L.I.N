@@ -14,6 +14,11 @@
   "claude_permission_mode": "bypassPermissions",
 
   "wave_mode": true,
+  "director_model": "sonnet",
+  "director_tools": "Read,Glob,Grep,Write,TodoWrite",
+  "escalation_timeout_hours": 24,
+  "cross_inspection": true,
+  "tag_on_merge": true,
   "stats_frequency": 2,
   "screenshot_frequency": 1,
   "max_fix_attempts": 2,
@@ -352,6 +357,28 @@
         ".claude/agents/narrative_writer.md"
       ],
       "inputs": ["batch_autoplay_results.json", "stats_summary.json"]
+    },
+    {
+      "name": "game-director",
+      "type": "director",
+      "description": "Game Director: autonomous decision-maker for pipeline flow control",
+      "agents": [
+        ".claude/agents/game_director.md"
+      ],
+      "inputs": [
+        "reviews/testing/fix_priorities.json",
+        "reviews/testing/executive_summary.json",
+        "reviews/game-design/proposed_changes.json",
+        "reviews/game-design/EXECUTIVE_SUMMARY.json",
+        "reviews/lore/cycle_1_summary.json",
+        "test_results.json",
+        "stats_summary.json"
+      ],
+      "outputs": [
+        "director_decision.json",
+        "director_directives.json",
+        "director_questions.json"
+      ]
     }
   ]
 }

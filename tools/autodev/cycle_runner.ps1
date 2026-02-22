@@ -1,15 +1,20 @@
-# cycle_runner.ps1 -- AUTODEV v2: Wave-based cycle orchestration
+# cycle_runner.ps1 -- AUTODEV v3: Wave-based cycle orchestration with Game Director
 # Usage: .\cycle_runner.ps1 [-MaxCycles 3] [-DryRun] [-Cycle 1]
 #
-# Runs 4 waves per cycle:
-#   WAVE 1: BUILD  (parallel, 5 build domains)
-#   WAVE 2: TEST   (sequential, Godot mutex)
-#     2a. Merge branches + validate Step 0
+# Runs 5 waves per cycle:
+#   WAVE 1:   BUILD    (parallel, 5 build domains)
+#   WAVE 2:   TEST     (sequential, Godot mutex)
+#     2a. Merge branches + tag autodev/good_cycle_N + validate Step 0
 #     2b. Screenshots (if cycle % screenshot_frequency == 0)
 #     2c. Stats runner (if cycle % stats_frequency == 0)
 #     2d. Smoke tests + flow order
-#   WAVE 3: REVIEW (parallel, 3 review domains)
-#   WAVE 4: FIX    (parallel, failed build domains only)
+#   WAVE 3:   REVIEW   (parallel, 3 reviewers + cross-inspection)
+#   WAVE 3.5: DIRECTOR (sequential, Game Director decision)
+#     -> PROCEED: continue to FIX wave
+#     -> ROLLBACK: revert to last_good, restart cycle
+#     -> ESCALATE: pause pipeline, wait for human
+#     -> OVERRIDE: adjust FIX priorities, continue
+#   WAVE 4:   FIX      (parallel, failed/targeted build domains)
 #   -> Feedback aggregation -> next cycle
 
 param(
@@ -59,7 +64,7 @@ function Show-WaveBanner {
     param([int]$CycleNum, [string]$WaveName, [int]$WaveNum, [string]$Mode = "")
     Write-Host "" -ForegroundColor Cyan
     Write-Host "[================================================================]" -ForegroundColor Cyan
-    Write-Host "|  AUTODEV v2 -- Cycle $CycleNum / Wave $WaveNum : $WaveName" -ForegroundColor Cyan
+    Write-Host "|  AUTODEV v3 -- Cycle $CycleNum / Wave $WaveNum : $WaveName" -ForegroundColor Cyan
     if ($Mode) { Write-Host "|  Mode: $Mode" -ForegroundColor Cyan }
     Write-Host "[================================================================]" -ForegroundColor Cyan
 }
@@ -282,11 +287,10 @@ function Invoke-TestWave {
     # 2a. Merge all completed build branches
     Write-Host "`n[CYCLE] Step 2a: Merge completed branches..." -ForegroundColor Yellow
     $mergeScript = Join-Path $scriptDir "merge_coordinator.ps1"
-    if ($DryRun) {
-        & powershell -File $mergeScript -All -DryRun
-    } else {
-        & powershell -File $mergeScript -All
-    }
+    $mergeArgs = @("-All", "-Cycle", $CycleNum)
+    if ($config.tag_on_merge) { $mergeArgs += "-TagOnSuccess" }
+    if ($DryRun) { $mergeArgs += "-DryRun" }
+    & powershell -NoProfile -File $mergeScript @mergeArgs
 
     if (Test-Veto) { return }
 
@@ -391,6 +395,151 @@ function Invoke-ReviewWave {
     return $statusSummary
 }
 
+# ── WAVE 3.5: DIRECTOR ─────────────────────────────────────────────────
+
+function Invoke-DirectorWave {
+    param([int]$CycleNum)
+
+    Show-WaveBanner -CycleNum $CycleNum -WaveName "DIRECTOR" -WaveNum "3.5" -Mode "Game Director decision"
+    Write-ControlState -State "running" -CycleNum $CycleNum -Wave "director" -Detail "Game Director analyzing cycle $CycleNum"
+
+    & powershell -NoProfile -File (Join-Path $scriptDir "notify.ps1") -Event "wave_start" -Message "Cycle $CycleNum Wave 3.5 DIRECTOR"
+
+    $directorScript = Join-Path $scriptDir "director_worker.ps1"
+
+    if (-not (Test-Path $directorScript)) {
+        Write-Host "[CYCLE] director_worker.ps1 not found --skipping Director wave" -ForegroundColor Yellow
+        return @{ decision = "PROCEED"; reason = "no_director_script" }
+    }
+
+    $directorLog = Join-Path $logDir "director_DIRECTOR_$(Get-Date -Format 'yyyyMMdd_HHmmss').log"
+    "" | Set-Content $directorLog -Encoding UTF8
+
+    Write-Host "[CYCLE] Launching Game Director (cycle $CycleNum)..." -ForegroundColor Green
+
+    # Director runs in visible window (single worker, important output)
+    $directorArgs = @("-Cycle", $CycleNum)
+    if ($DryRun) { $directorArgs += "-DryRun" }
+
+    & powershell -NoProfile -ExecutionPolicy Bypass -File $directorScript @directorArgs 2>&1 |
+        Tee-Object -FilePath $directorLog
+
+    $exitCode = $LASTEXITCODE
+
+    if ($exitCode -ne 0) {
+        Write-Host "[CYCLE] Director worker failed (exit $exitCode) --defaulting to PROCEED" -ForegroundColor Red
+        return @{ decision = "PROCEED"; reason = "director_error"; exit_code = $exitCode }
+    }
+
+    # Parse the Director's decision
+    $decisionFile = Join-Path $statusDir "director_decision.json"
+    if (-not (Test-Path $decisionFile)) {
+        Write-Host "[CYCLE] No director_decision.json --defaulting to PROCEED" -ForegroundColor Yellow
+        return @{ decision = "PROCEED"; reason = "no_decision_file" }
+    }
+
+    $decision = Get-Content $decisionFile -Raw | ConvertFrom-Json -ErrorAction SilentlyContinue
+    if (-not $decision -or -not $decision.decision) {
+        Write-Host "[CYCLE] Could not parse director_decision.json --defaulting to PROCEED" -ForegroundColor Yellow
+        return @{ decision = "PROCEED"; reason = "parse_error" }
+    }
+
+    $dec = $decision.decision.ToUpper()
+    Write-Host "[CYCLE] Director decision: $dec (quality=$($decision.quality_score), confidence=$($decision.confidence))" -ForegroundColor Cyan
+
+    & powershell -NoProfile -File (Join-Path $scriptDir "notify.ps1") -Event "wave_complete" -Message "DIRECTOR: $dec (Q=$($decision.quality_score) C=$($decision.confidence))"
+
+    return @{
+        decision     = $dec
+        quality      = $decision.quality_score
+        confidence   = $decision.confidence
+        rationale    = $decision.rationale
+        reason       = "director_decision"
+    }
+}
+
+# ── Director Decision Router ──────────────────────────────────────────
+
+function Invoke-DirectorDecisionRoute {
+    param([int]$CycleNum, $DirectorResult)
+
+    $dec = $DirectorResult.decision
+
+    if ($dec -eq "PROCEED") {
+        Write-Host "[CYCLE] Director: PROCEED --continuing to FIX wave" -ForegroundColor Green
+        return "continue"
+    }
+
+    if ($dec -eq "OVERRIDE") {
+        Write-Host "[CYCLE] Director: OVERRIDE --adjusting FIX priorities, then continuing" -ForegroundColor Yellow
+        return "continue"
+    }
+
+    if ($dec -eq "ROLLBACK") {
+        Write-Host "[CYCLE] Director: ROLLBACK --reverting to last known good state" -ForegroundColor Red
+        $rollbackScript = Join-Path $scriptDir "git_rollback.ps1"
+        if (Test-Path $rollbackScript) {
+            $rbArgs = @("-Action", "RollbackFull", "-Cycle", $CycleNum)
+            if ($DryRun) { $rbArgs += "-DryRun" }
+            & powershell -NoProfile -File $rollbackScript @rbArgs
+        } else {
+            Write-Host "[CYCLE] git_rollback.ps1 not found! Cannot rollback." -ForegroundColor Red
+        }
+        & powershell -NoProfile -File (Join-Path $scriptDir "notify.ps1") -Event "rollback" -Message "Director ROLLBACK cycle $CycleNum" -Details $DirectorResult.rationale
+        return "rollback"
+    }
+
+    if ($dec -eq "ESCALATE") {
+        Write-Host "[CYCLE] Director: ESCALATE --waiting for human input" -ForegroundColor Yellow
+        $escalationScript = Join-Path $scriptDir "human_escalation.ps1"
+
+        if (-not (Test-Path $escalationScript)) {
+            Write-Host "[CYCLE] human_escalation.ps1 not found --defaulting to PROCEED" -ForegroundColor Yellow
+            return "continue"
+        }
+
+        $timeoutHours = 24
+        if ($config.escalation_timeout_hours) { $timeoutHours = $config.escalation_timeout_hours }
+
+        Write-Host "[CYCLE] Entering escalation wait (timeout: ${timeoutHours}h)..." -ForegroundColor Yellow
+        $escArgs = @("-Action", "Wait", "-Cycle", $CycleNum, "-TimeoutHours", $timeoutHours)
+        $escResultJson = & powershell -NoProfile -File $escalationScript @escArgs
+        $escResult = $escResultJson | ConvertFrom-Json -ErrorAction SilentlyContinue
+
+        if (-not $escResult) {
+            Write-Host "[CYCLE] Escalation returned no result --defaulting to PROCEED" -ForegroundColor Yellow
+            return "continue"
+        }
+
+        $humanDecision = $escResult.decision
+        Write-Host "[CYCLE] Human response: $humanDecision (reason: $($escResult.reason))" -ForegroundColor Cyan
+
+        if ($humanDecision -eq "proceed") { return "continue" }
+        if ($humanDecision -eq "veto") { return "veto" }
+        if ($humanDecision -eq "rollback") {
+            $rbScript = Join-Path $scriptDir "git_rollback.ps1"
+            if (Test-Path $rbScript) {
+                $rbArgs2 = @("-Action", "RollbackFull", "-Cycle", $CycleNum)
+                if ($DryRun) { $rbArgs2 += "-DryRun" }
+                & powershell -NoProfile -File $rbScript @rbArgs2
+            }
+            return "rollback"
+        }
+        if ($humanDecision -eq "custom") {
+            Write-Host "[CYCLE] Human custom: $($escResult.details)" -ForegroundColor Cyan
+            $customFile = Join-Path $statusDir "feedback/human_custom.json"
+            $customObj = @{ cycle = $CycleNum; details = $escResult.details; timestamp = (Get-Date -Format "o") }
+            $customObj | ConvertTo-Json -Depth 3 | Set-Content $customFile -Encoding UTF8
+            return "continue"
+        }
+        return "continue"
+    }
+
+    # Unknown decision
+    Write-Host "[CYCLE] Unknown Director decision '$dec' --defaulting to PROCEED" -ForegroundColor Yellow
+    return "continue"
+}
+
 # ── WAVE 4: FIX ────────────────────────────────────────────────────────
 
 function Invoke-FixWave {
@@ -456,7 +605,7 @@ function Invoke-FeedbackAggregation {
     }
 }
 
-# (Wait-ForJobs replaced by Wait-ForProcesses above — visible windows)
+# (Wait-ForJobs replaced by Wait-ForProcesses above --visible windows)
 
 # ── Cycle Report ───────────────────────────────────────────────────────
 
@@ -498,7 +647,7 @@ function New-CycleReport {
 Write-Host ""
 Write-Host "[================================================================]" -ForegroundColor Cyan
 Write-Host "|                                                                |" -ForegroundColor Cyan
-Write-Host "|  M.E.R.L.I.N. AUTODEV v2 -- Wave-Based Cycle Runner           |" -ForegroundColor Cyan
+Write-Host "|  M.E.R.L.I.N. AUTODEV v3 -- Wave-Based Cycle Runner           |" -ForegroundColor Cyan
 Write-Host "|                                                                |" -ForegroundColor Cyan
 Write-Host "|  Cycles: $MaxCycles | Build: $($buildDomains.Count) | Review: $($reviewDomains.Count)                          |" -ForegroundColor Cyan
 Write-Host "|  Veto: Drop 'VETO' file in tools/autodev/ to stop             |" -ForegroundColor Cyan
@@ -546,16 +695,46 @@ while ($currentCycle -le ($Cycle + $MaxCycles - 1)) {
     Invoke-TestWave -CycleNum $currentCycle
     if (Test-Veto) { break }
 
-    # WAVE 3: REVIEW
+    # WAVE 3: REVIEW (with cross-inspection)
     $reviewResult = Invoke-ReviewWave -CycleNum $currentCycle
     if (Test-Veto) { break }
 
-    # Feedback aggregation (between REVIEW and FIX, feeds next cycle)
+    # Feedback aggregation (between REVIEW and DIRECTOR, feeds both)
     Invoke-FeedbackAggregation -CycleNum $currentCycle
     if (Test-Veto) { break }
 
-    # WAVE 4: FIX (only if build had failures)
-    $fixResult = Invoke-FixWave -CycleNum $currentCycle -FailedDomains $buildResult.failed
+    # WAVE 3.5: DIRECTOR
+    $directorResult = Invoke-DirectorWave -CycleNum $currentCycle
+    if (Test-Veto) { break }
+
+    # Route Director's decision
+    $directorRoute = Invoke-DirectorDecisionRoute -CycleNum $currentCycle -DirectorResult $directorResult
+
+    if ($directorRoute -eq "veto") {
+        Write-Host "[CYCLE] VETO from escalation. Stopping." -ForegroundColor Red
+        break
+    }
+    if ($directorRoute -eq "rollback") {
+        Write-Host "[CYCLE] ROLLBACK --skipping FIX wave, restarting cycle" -ForegroundColor Yellow
+        # Don't increment cycle --retry after rollback
+        # But do count it to avoid infinite loop
+        $currentCycle++
+        continue
+    }
+
+    # WAVE 4: FIX (domains from build failures + Director directives)
+    $fixTargets = @($buildResult.failed)
+    # Add Director-targeted domains (from director_directives.json)
+    $directivesFile = Join-Path $statusDir "director_directives.json"
+    if (Test-Path $directivesFile) {
+        $directives = Get-Content $directivesFile -Raw | ConvertFrom-Json -ErrorAction SilentlyContinue
+        if ($directives -and $directives.fix_targets) {
+            foreach ($ft in $directives.fix_targets) {
+                if ($ft -notin $fixTargets) { $fixTargets += $ft }
+            }
+        }
+    }
+    $fixResult = Invoke-FixWave -CycleNum $currentCycle -FailedDomains $fixTargets
     if (Test-Veto) { break }
 
     # Cycle report
@@ -593,4 +772,4 @@ if ($monitorProc -and -not $monitorProc.HasExited) {
     Write-Host "[CYCLE] Monitor dashboard closed" -ForegroundColor Gray
 }
 
-Write-Host "`n[CYCLE] AUTODEV v2 pipeline complete." -ForegroundColor Green
+Write-Host "`n[CYCLE] AUTODEV v3 pipeline complete." -ForegroundColor Green

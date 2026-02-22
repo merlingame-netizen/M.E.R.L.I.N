@@ -6,7 +6,8 @@ param(
     [switch]$All,
     [switch]$DryRun,
     [switch]$PostMergeScreenshots,  # v2: capture screenshots after successful merge
-    [int]$Cycle = 0                 # v2: current cycle number (for screenshot naming)
+    [int]$Cycle = 0,                # v2: current cycle number (for screenshot naming)
+    [switch]$TagOnSuccess           # v3: tag autodev/good_cycle_N + autodev/last_good after all merges OK
 )
 
 $ErrorActionPreference = "Stop"
@@ -239,4 +240,22 @@ if ($PostMergeScreenshots -and $anySuccess -and -not $DryRun) {
     }
 } elseif ($PostMergeScreenshots -and $DryRun) {
     Write-Host "`n[DRY RUN] Would capture post-merge screenshots" -ForegroundColor Magenta
+}
+
+# v3: Tag after successful merge (all domains OK)
+$allMergesOk = ($results.Values | Where-Object { $_ -eq $false }).Count -eq 0
+if ($TagOnSuccess -and $allMergesOk -and $anySuccess) {
+    Write-Host "`n[MERGE] Tagging successful merge state..." -ForegroundColor Cyan
+    $rollbackScript = Join-Path $scriptDir "git_rollback.ps1"
+    if (Test-Path $rollbackScript) {
+        $tagArgs = @("-Action", "Tag", "-Cycle", $Cycle)
+        if ($DryRun) { $tagArgs += "-DryRun" }
+        & powershell -NoProfile -File $rollbackScript @tagArgs
+    } else {
+        Write-Host "[MERGE] git_rollback.ps1 not found, skipping tagging" -ForegroundColor Yellow
+    }
+} elseif ($TagOnSuccess -and -not $allMergesOk) {
+    Write-Host "`n[MERGE] Some merges failed --skipping tagging" -ForegroundColor Yellow
+} elseif ($TagOnSuccess -and $DryRun) {
+    Write-Host "`n[DRY RUN] Would tag after merge (if all OK)" -ForegroundColor Magenta
 }

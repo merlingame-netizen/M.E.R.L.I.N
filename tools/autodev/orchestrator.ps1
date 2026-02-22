@@ -40,7 +40,7 @@ if ($Wave) {
     $cycleArgs = @("-MaxCycles", $MaxCycles)
     if ($DryRun) { $cycleArgs += "-DryRun" }
 
-    & powershell -ExecutionPolicy Bypass -File (Join-Path $scriptDir "cycle_runner.ps1") @cycleArgs
+    & powershell -NoProfile -ExecutionPolicy Bypass -File (Join-Path $scriptDir "cycle_runner.ps1") @cycleArgs
 
     # Update control_state when done
     $controlState.state = "idle"

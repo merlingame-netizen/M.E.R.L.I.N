@@ -1,18 +1,21 @@
-# control.ps1 -- AUTODEV v2 Conversation Control Bridge
+# control.ps1 -- AUTODEV v3 Conversation Control Bridge
 # Usage:
 #   .\control.ps1 -Action Start [-Wave] [-Domains "all"] [-MaxCycles 0] [-DryRun]
 #   .\control.ps1 -Action Stop
 #   .\control.ps1 -Action Status
+#   .\control.ps1 -Action Respond -Decision "proceed|rollback|custom" [-Details "..."]
 
 param(
     [Parameter(Mandatory=$true)]
-    [ValidateSet("Start", "Stop", "Status")]
+    [ValidateSet("Start", "Stop", "Status", "Respond")]
     [string]$Action,
 
     [switch]$Wave,
     [string]$Domains = "",
     [int]$MaxCycles = 0,
-    [switch]$DryRun
+    [switch]$DryRun,
+    [string]$Decision = "",
+    [string]$Details = ""
 )
 
 $ErrorActionPreference = "Continue"
@@ -91,7 +94,7 @@ switch ($Action) {
             "Write-Host '|  Drop VETO file in tools/autodev/ to stop all     |' -ForegroundColor Cyan",
             "Write-Host '[==================================================]' -ForegroundColor Cyan",
             "Write-Host ''",
-            "& powershell -ExecutionPolicy Bypass -File `"$orchScript`" $argString 2>&1 | Tee-Object -FilePath '$logFile'",
+            "& powershell -NoProfile -ExecutionPolicy Bypass -File `"$orchScript`" $argString 2>&1 | Tee-Object -FilePath '$logFile'",
             "Write-Host ''",
             "Write-Host '[AUTODEV] Pipeline finished. Window closes in 120s...' -ForegroundColor Yellow",
             "Start-Sleep -Seconds 120"
@@ -161,6 +164,37 @@ switch ($Action) {
         }
     }
 
+    "Respond" {
+        # v3: Human responds to Director escalation
+        if (-not $Decision) {
+            Write-Host "[CONTROL] -Decision required. Options: proceed, rollback, custom" -ForegroundColor Red
+            exit 1
+        }
+
+        # Check if pipeline is in waiting_human state
+        if (Test-Path $controlFile) {
+            $state = Get-Content $controlFile -Raw | ConvertFrom-Json -ErrorAction SilentlyContinue
+            if ($state -and $state.state -ne "waiting_human") {
+                Write-Host "[CONTROL] Pipeline state is '$($state.state)', not 'waiting_human'" -ForegroundColor Yellow
+                Write-Host "[CONTROL] Sending response anyway..." -ForegroundColor Yellow
+            }
+        }
+
+        # Delegate to human_escalation.ps1
+        $escalationScript = Join-Path $scriptDir "human_escalation.ps1"
+        if (-not (Test-Path $escalationScript)) {
+            Write-Host "[CONTROL] human_escalation.ps1 not found" -ForegroundColor Red
+            exit 1
+        }
+
+        $escArgs = @("-Action", "Respond", "-Decision", $Decision)
+        if ($Details) { $escArgs += @("-Details", $Details) }
+        & powershell -NoProfile -File $escalationScript @escArgs
+
+        Write-Host "[CONTROL] Response sent: $Decision" -ForegroundColor Green
+        if ($Details) { Write-Host "[CONTROL] Details: $Details" -ForegroundColor Gray }
+    }
+
     "Status" {
         if (-not (Test-Path $controlFile)) {
             Write-Host "[CONTROL] No AUTODEV session found" -ForegroundColor Gray
@@ -192,6 +226,42 @@ switch ($Action) {
                 Write-Host "`n  --- Health ---" -ForegroundColor Cyan
                 Write-Host "  Workers: $($health.active_workers -join ', ')" -ForegroundColor Gray
                 Write-Host "  Alerts:  $($health.alerts.Count)" -ForegroundColor $(if($health.alerts.Count -eq 0){"Green"}else{"Red"})
+            }
+        }
+
+        # v3: Show Director decision if available
+        $directorFile = Join-Path $statusDir "director_decision.json"
+        if (Test-Path $directorFile) {
+            $director = Get-Content $directorFile -Raw | ConvertFrom-Json -ErrorAction SilentlyContinue
+            if ($director) {
+                Write-Host "`n  --- Director ---" -ForegroundColor Cyan
+                $decColor = switch ($director.decision) {
+                    "PROCEED"  { "Green" }
+                    "OVERRIDE" { "Yellow" }
+                    "ESCALATE" { "Magenta" }
+                    "ROLLBACK" { "Red" }
+                    default    { "Gray" }
+                }
+                Write-Host "  Decision:   $($director.decision)" -ForegroundColor $decColor
+                Write-Host "  Quality:    $($director.quality_score)/100" -ForegroundColor Gray
+                Write-Host "  Confidence: $($director.confidence)/100" -ForegroundColor Gray
+                Write-Host "  Cycle:      $($director.cycle)" -ForegroundColor Gray
+            }
+        }
+
+        # v3: Show escalation info if waiting
+        if ($state.state -eq "waiting_human") {
+            Write-Host "`n  --- ESCALATION (Awaiting Human) ---" -ForegroundColor Yellow
+            $questionsFile = Join-Path $statusDir "director_questions.json"
+            if (Test-Path $questionsFile) {
+                $questions = Get-Content $questionsFile -Raw | ConvertFrom-Json -ErrorAction SilentlyContinue
+                if ($questions) {
+                    Write-Host "  Reason: $($questions.escalation_reason)" -ForegroundColor Yellow
+                    if ($questions.questions) {
+                        foreach ($q in $questions.questions) { Write-Host "    ? $q" -ForegroundColor White }
+                    }
+                    Write-Host "`n  Respond: .\control.ps1 -Action Respond -Decision <proceed|rollback|custom>" -ForegroundColor Cyan
+                }
             }
         }
 

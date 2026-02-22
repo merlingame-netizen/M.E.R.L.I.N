@@ -75,6 +75,61 @@ function Get-InputContext {
     return $context
 }
 
+# ── v3: Cross-Inspection --collect diffs from ALL build domains ───────
+
+function Get-CrossInspectionContext {
+    $crossContext = ""
+    $allDomains = @($config.domains | Where-Object { $_.type -eq "build" })
+
+    if ($allDomains.Count -eq 0) {
+        return ""
+    }
+
+    $crossContext += "`n=== CROSS-INSPECTION: ALL BUILD DOMAINS' CHANGES ===`n"
+    $crossContext += "You are reviewing ALL domains, not just your own.`n"
+    $crossContext += "Report issues you find in ANY domain, structured by domain name.`n`n"
+
+    Push-Location $projectRoot
+
+    foreach ($d in $allDomains) {
+        $branch = $d.branch
+        $crossContext += "--- Domain: $($d.name) (branch: $branch) ---`n"
+
+        # Check if branch exists
+        $branchExists = git branch --list $branch 2>$null
+        if (-not $branchExists) {
+            $crossContext += "(branch not found --skipped)`n`n"
+            Write-Host "[REVIEW]   Cross-inspect $($d.name): branch not found" -ForegroundColor Yellow
+            continue
+        }
+
+        # Get diff stat (summary)
+        $diffStat = git diff main..$branch --stat 2>$null
+        if ($diffStat) {
+            $crossContext += "Diff stat:`n$diffStat`n`n"
+        } else {
+            $crossContext += "(no changes vs main)`n`n"
+            continue
+        }
+
+        # Get actual GDScript diffs (truncated to 200 lines per domain)
+        $gdDiff = git diff main..$branch -- "*.gd" 2>$null
+        if ($gdDiff) {
+            $gdDiffLines = ($gdDiff -split "`n")
+            $maxLines = 200
+            if ($gdDiffLines.Count -gt $maxLines) {
+                $gdDiff = ($gdDiffLines | Select-Object -First $maxLines) -join "`n"
+                $gdDiff += "`n... (truncated, $($gdDiffLines.Count) lines total)"
+            }
+            $crossContext += "GDScript changes:`n$gdDiff`n`n"
+            Write-Host "[REVIEW]   Cross-inspect $($d.name): $($gdDiffLines.Count) diff lines" -ForegroundColor Gray
+        }
+    }
+
+    Pop-Location
+    return $crossContext
+}
+
 # ── Build review prompt ───────────────────────────────────────────────
 
 function Build-ReviewPrompt {
@@ -109,6 +164,8 @@ function Build-ReviewPrompt {
         ""
         "DONNEES A ANALYSER:"
         $inputContext
+        ""
+        (Get-CrossInspectionContext)
         ""
         "TACHES A REALISER (JSON):"
         $tasksJson
