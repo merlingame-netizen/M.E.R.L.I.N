@@ -22,6 +22,16 @@
 
 ## Taxonomie de Classification
 
+### Direction Creative (NEW)
+
+| Type | Mots-cles de detection | Agents primaires | Agents review |
+|------|------------------------|-----------------|---------------|
+| **Direction Creative** | vision du jeu, direction creative, le joueur doit ressentir, coherence narrative, est-ce coherent, priorite feature, conflit agents, ton du jeu, emotion visee | `game_director.md` | `merlin_guardian.md`, `game_designer.md` |
+
+> **REGLE** : Le Game Director est consulte AVANT implementation quand une decision creative
+> est ambigue. Il repond avec un verdict (APPROUVE/REJETE/MODIFIE/ESCALADE_PDG) et un test emotionnel.
+> Decisions sur les piliers VARIABLES : autonome. Piliers IMMUABLES : escalade au PDG humain.
+
 ### Taches Techniques Core
 
 | Type | Mots-cles de detection | Agents primaires | Agents review |
@@ -163,11 +173,11 @@ Quand un agent primaire travaille, ces agents doivent REVIEW:
 | `motion_designer.md` | ux_research | Animation n'altere pas l'UX |
 | `shader_specialist.md` | godot_expert | Impact performance shaders |
 | `llm_expert.md` | lead_godot, godot_expert | Integration affecte l'architecture |
-| `narrative_writer.md` | game_designer, merlin_guardian | Contenu conforme au design + voix |
-| `game_designer.md` | data_analyst | Decisions de balance besoin data |
+| `narrative_writer.md` | game_designer, merlin_guardian, **game_director** | Contenu conforme au design + voix + **vision** |
+| `game_designer.md` | data_analyst, **game_director** | Decisions de balance besoin data + **coherence vision** |
 | `audio_designer.md` | ui_impl | Timing audio synchronise UI |
 | `art_direction.md` | ui_impl | Assets integres correctement |
-| `lore_writer.md` | merlin_guardian, narrative_writer | Lore conforme au canon |
+| `lore_writer.md` | merlin_guardian, narrative_writer, **game_director** | Lore conforme au canon + **vision** |
 | `localisation.md` | narrative_writer | Traductions preservent le ton |
 | `accessibility_specialist.md` | ux_research, ui_impl | WCAG compliance + UI compat |
 | `security_hardening.md` | lead_godot, debug_qa | Architecture securite + tests |
@@ -185,6 +195,7 @@ Quand un agent primaire travaille, ces agents doivent REVIEW:
 - `lead_godot.md` — TOUT changement d'architecture
 - `ux_research.md` — TOUT changement UI/interaction
 - `game_designer.md` — TOUT changement de mecanique
+- `game_director.md` — TOUTE decision creative ambigue ou conflit inter-agents
 - `merlin_guardian.md` — TOUT contenu impliquant Merlin
 - `accessibility_specialist.md` — TOUT changement UI affectant l'accessibilite
 - `security_hardening.md` — TOUT changement save/data/LLM input
@@ -279,7 +290,21 @@ Phase 6 (Finalisation): git_commit.md [AUTO]
 Total: 6 agents (pipeline orchestre par gameplay_translator)
 ```
 
-### Exemple 6: Nouveau Gameplay + Adaptation LLM
+### Exemple 6: Decision de Direction Creative (NEW)
+
+**Demande**: "Le narrative_writer veut que Merlin soit plus sombre dans le biome Marais"
+
+```
+Types: Direction Creative, Lore Merlin
+Complexite: Moderee
+Phase 1 (Direction): game_director.md → verdict APPROUVE/REJETE/MODIFIE + test emotionnel
+Phase 2 (Implementation si approuve): narrative_writer.md, merlin_guardian.md
+Phase 3 (Validation): game_designer.md (impact gameplay)
+Phase 4 (Finalisation): git_commit.md [AUTO]
+Total: 5 agents
+```
+
+### Exemple 7: Nouveau Gameplay + Adaptation LLM
 
 **Demande**: "Ajoute un systeme de combat et entraine le modele pour generer des cartes de combat"
 
@@ -311,5 +336,5 @@ Regles M.E.R.L.I.N. specifiques:
 
 *Task Dispatcher v2.0 (overlay)*
 *Base: `~/.claude/agents/common/dispatcher_base.md`*
-*Created: 2026-02-09 | Updated: 2026-02-18 — Refactored as overlay extending dispatcher_base*
+*Created: 2026-02-09 | Updated: 2026-02-22 — Added Game Director (Direction Creative category, cross-review)*
 *Project: M.E.R.L.I.N. — Le Jeu des Oghams*

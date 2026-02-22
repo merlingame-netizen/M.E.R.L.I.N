@@ -3,7 +3,7 @@
 ## Overview
 
 This document defines the team of specialized Claude Code agents for the M.E.R.L.I.N. project.
-**33 agents + 1 knowledge base** organized by domain.
+**34 agents + 1 knowledge base** organized by domain.
 
 ## Usage with Claude Code
 
@@ -29,6 +29,16 @@ Task tool:
 ---
 
 ## Agent Roster
+
+### Direction (NEW)
+
+| Role | File | Specialty |
+|------|------|-----------|
+| **Game Director** | `game_director.md` | **Vision du createur, decisions directionnelles, coherence globale, arbitrage inter-agents, test emotionnel** |
+
+> Le Game Director est l'incarnation de la vision du createur humain. Il repond aux autres
+> agents sur la direction creative et gameplay. Decide seul sur les piliers VARIABLES (80%),
+> escalade au PDG humain sur les piliers IMMUABLES (20%). Toute decision inclut un "test emotionnel".
 
 ### Orchestration
 
@@ -137,9 +147,10 @@ Task tool:
 ## Summary Count
 
 ```
-Total: 33 agents + 1 knowledge base
+Total: 34 agents + 1 knowledge base
 
 By category:
+  Direction:                  1 (game_director)
   Orchestration:              1 (task_dispatcher)
   Core Technical:             6 (lead_godot, godot_expert, llm_expert, debug_qa, optimizer, shader_specialist)
   UI/UX & Animation:          4 (ui_impl, ux_research, motion_designer, mobile_touch_expert)
@@ -203,6 +214,7 @@ Le dispatcher retourne un plan structure avec:
 | **Touch/Mobile input** | **Mobile/Touch Expert**, UX Research |
 | **Game balance data** | **Data Analyst**, Game Designer |
 | **Lore/Mythology** | **Merlin Guardian**, **Lore Writer** |
+| **Creative direction** | **Game Director** |
 | **Correction learned** | **Debug/QA**, **Optimizer** |
 | **Best practice found** | **Optimizer**, Debug/QA |
 | **Phase completed** | **Git Commit** |
@@ -259,6 +271,7 @@ When an agent completes work and needs handoff:
 | `optimizer.md` | Bonne pratique decouverte ou nouveau code GDScript | Scanner et appliquer |
 | `git_commit.md` | Phase complete, 3+ fichiers modifies | Commit conventionnel auto |
 | `project_curator.md` | "inventaire", "nettoie", "range" | Rapport + nettoyage |
+| **`game_director.md`** | **"vision du jeu", "direction creative", "le joueur doit ressentir", "coherence narrative", conflit inter-agents, ambiguite de direction** | **Evalue contre la vision du createur, decide ou escalade au PDG** |
 | **`lora_gameplay_translator.md`** | **"entraine le modele", "le LLM doit", "adapte le modele", "fine-tune", adaptation gameplay LLM** | **Traduit demande → plan d'entrainement, orchestre pipeline LoRA** |
 | `lora_data_curator.md` | Modification JSON contenu narratif, ajout nouveau gameplay | Re-export + augmentation dataset |
 | `lora_evaluator.md` | Apres training LoRA complet | Benchmark automatique, decision GO/NO-GO |
@@ -268,6 +281,9 @@ When an agent completes work and needs handoff:
 ## Quick Reference Commands
 
 ```bash
+# NEW — Invoke Game Director for creative direction
+claude "Use Task to read .claude/agents/game_director.md and evaluate: est-ce coherent avec la vision du jeu de [feature proposee]?"
+
 # STEP 0 — DISPATCH (TOUJOURS EN PREMIER)
 claude "Use Task with general-purpose agent (haiku) to read .claude/agents/task_dispatcher.md and analyze: [TASK]"
 
@@ -333,5 +349,5 @@ claude "Use Task to read .claude/agents/lora_evaluator.md and benchmark the new 
 ---
 
 *Created: 2026-02-06*
-*Updated: 2026-02-11 — 33 agents + 1 knowledge base (4 new: lora_gameplay_translator, lora_data_curator, lora_training_architect, lora_evaluator)*
+*Updated: 2026-02-22 — 34 agents + 1 knowledge base (new: game_director — creative vision oracle)*
 *Project: M.E.R.L.I.N. — Le Jeu des Oghams*
