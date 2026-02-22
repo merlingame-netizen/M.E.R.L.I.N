@@ -4,7 +4,9 @@
 param(
     [Parameter(Mandatory=$true)]
     [ValidateSet("cycle_start", "cycle_complete", "worker_done", "worker_blocked",
-                 "worker_error", "merge_ok", "merge_conflict", "veto", "health_alert")]
+                 "worker_error", "merge_ok", "merge_conflict", "veto", "health_alert",
+                 "wave_start", "wave_complete", "screenshot_done", "stats_done",
+                 "review_done", "fix_done")]
     [string]$Event,
 
     [string]$Domain = "",
@@ -26,6 +28,12 @@ $eventConfig = @{
     "merge_conflict" = @{ title = "AUTODEV - CONFLIT Merge";  priority = "high";    tags = "boom" }
     "veto"           = @{ title = "AUTODEV - STOPPE (Veto)";  priority = "urgent";  tags = "stop_sign" }
     "health_alert"   = @{ title = "AUTODEV - Alerte Sante";   priority = "high";    tags = "stethoscope" }
+    "wave_start"     = @{ title = "AUTODEV - Wave Demarre";   priority = "default"; tags = "ocean" }
+    "wave_complete"  = @{ title = "AUTODEV - Wave Termine";   priority = "default"; tags = "checkered_flag" }
+    "screenshot_done"= @{ title = "AUTODEV - Screenshots OK"; priority = "default"; tags = "camera" }
+    "stats_done"     = @{ title = "AUTODEV - Stats Calcules"; priority = "default"; tags = "bar_chart" }
+    "review_done"    = @{ title = "AUTODEV - Review Termine"; priority = "default"; tags = "mag" }
+    "fix_done"       = @{ title = "AUTODEV - Fixes Appliques";priority = "default"; tags = "wrench" }
 }
 
 $config = $eventConfig[$Event]

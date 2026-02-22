@@ -8,15 +8,49 @@ param(
     [string]$Domains = "",          # Comma-separated list, or empty for all
     [int]$MaxCycles = 1,            # Max cycles before stopping (0 = infinite)
     [switch]$DryRun,                # Simulate without executing
-    [switch]$NoContinue             # Don't auto-continue to next cycle
+    [switch]$NoContinue,            # Don't auto-continue to next cycle
+    [switch]$Wave                   # v2 wave mode: BUILD -> TEST -> REVIEW -> FIX cycles
 )
 
 $ErrorActionPreference = "Continue"
 $scriptDir = Split-Path -Parent $MyInvocation.MyCommand.Path
 $projectRoot = (Resolve-Path (Join-Path $scriptDir "../..")).Path
-$configPath = Join-Path $scriptDir "config/work_units.json"
+# Support both v1 and v2 config
+$configV2Path = Join-Path $scriptDir "config/work_units_v2.json"
+$configV1Path = Join-Path $scriptDir "config/work_units.json"
+$configPath = if (Test-Path $configV2Path) { $configV2Path } else { $configV1Path }
 $statusDir = Join-Path $scriptDir "status"
 $logDir = Join-Path $scriptDir "logs"
+
+# ── v2 Wave mode delegation ───────────────────────────────────────────
+if ($Wave) {
+    Write-Host "[ORCH] Wave mode enabled -- delegating to cycle_runner.ps1" -ForegroundColor Cyan
+
+    # Write control_state for the conversation bridge
+    $controlState = @{
+        state      = "running"
+        wave_mode  = $true
+        max_cycles = $MaxCycles
+        dry_run    = $DryRun.IsPresent
+        timestamp  = (Get-Date -Format "o")
+        pid        = $PID
+    }
+    $controlState | ConvertTo-Json -Depth 3 | Set-Content (Join-Path $statusDir "control_state.json") -Encoding UTF8
+
+    $cycleArgs = @("-MaxCycles", $MaxCycles)
+    if ($DryRun) { $cycleArgs += "-DryRun" }
+
+    & powershell -ExecutionPolicy Bypass -File (Join-Path $scriptDir "cycle_runner.ps1") @cycleArgs
+
+    # Update control_state when done
+    $controlState.state = "idle"
+    $controlState.timestamp = (Get-Date -Format "o")
+    $controlState | ConvertTo-Json -Depth 3 | Set-Content (Join-Path $statusDir "control_state.json") -Encoding UTF8
+
+    exit $LASTEXITCODE
+}
+
+# ── v1 Legacy mode (no -Wave) ─────────────────────────────────────────
 
 # Ensure directories exist
 @($statusDir, $logDir, (Join-Path $statusDir "patches")) | ForEach-Object {

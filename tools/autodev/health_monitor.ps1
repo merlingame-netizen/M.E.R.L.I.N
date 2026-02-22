@@ -9,11 +9,15 @@ param(
 $ErrorActionPreference = "Continue"
 $scriptDir = Split-Path -Parent $MyInvocation.MyCommand.Path
 $projectRoot = (Resolve-Path (Join-Path $scriptDir "../..")).Path
-$configPath = Join-Path $scriptDir "config/work_units.json"
+# Support both v1 and v2 config
+$configV2Path = Join-Path $scriptDir "config/work_units_v2.json"
+$configV1Path = Join-Path $scriptDir "config/work_units.json"
+$configPath = if (Test-Path $configV2Path) { $configV2Path } else { $configV1Path }
 $statusDir = Join-Path $scriptDir "status"
 
 $config = Get-Content $configPath -Raw | ConvertFrom-Json
 $worktreeBase = $config.worktree_base
+$isV2 = (Test-Path $configV2Path)
 
 Write-Host "[HEALTH] Monitor started (interval: ${IntervalSeconds}s)" -ForegroundColor Cyan
 
@@ -165,6 +169,60 @@ function Run-HealthCheck {
         }
     }
     $report.worker_statuses = $workerStatuses
+
+    # 5. v2: Wave/cycle state monitoring
+    if ($isV2) {
+        $controlFile = Join-Path $statusDir "control_state.json"
+        if (Test-Path $controlFile) {
+            $controlState = Get-Content $controlFile -Raw | ConvertFrom-Json -ErrorAction SilentlyContinue
+            if ($controlState) {
+                $report.wave_state = @{
+                    state = $controlState.state
+                    cycle = $controlState.cycle
+                    wave  = $controlState.wave
+                }
+            }
+        }
+
+        # Check screenshots report
+        $screenshotsReport = Join-Path $statusDir "screenshots_report.json"
+        if (Test-Path $screenshotsReport) {
+            $ssData = Get-Content $screenshotsReport -Raw | ConvertFrom-Json -ErrorAction SilentlyContinue
+            if ($ssData) {
+                $report.screenshots = @{
+                    captured = $ssData.captured
+                    failed   = $ssData.failed
+                    total    = $ssData.total
+                }
+                if ($ssData.failed -gt 0) {
+                    $report.alerts += "SCREENSHOTS: $($ssData.failed)/$($ssData.total) captures failed"
+                }
+            }
+        }
+
+        # Check stats report
+        $statsReport = Join-Path $statusDir "stats_report.json"
+        if (Test-Path $statsReport) {
+            $stData = Get-Content $statsReport -Raw | ConvertFrom-Json -ErrorAction SilentlyContinue
+            if ($stData) {
+                $report.stats = @{
+                    successful = $stData.successful
+                    failed     = $stData.failed
+                    total      = $stData.total_runs
+                }
+                if ($stData.failed -gt 0) {
+                    $report.alerts += "STATS: $($stData.failed)/$($stData.total_runs) auto-play runs failed"
+                }
+            }
+        }
+
+        # Check review outputs
+        $reviewsDir = Join-Path $statusDir "reviews"
+        if (Test-Path $reviewsDir) {
+            $reviewDomains = @(Get-ChildItem $reviewsDir -Directory -ErrorAction SilentlyContinue)
+            $report.review_domains = @($reviewDomains | ForEach-Object { $_.Name })
+        }
+    }
 
     # Write health report
     $reportPath = Join-Path $statusDir "health_report.json"

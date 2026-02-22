@@ -4,13 +4,18 @@
 param(
     [string]$Domain = "",
     [switch]$All,
-    [switch]$DryRun
+    [switch]$DryRun,
+    [switch]$PostMergeScreenshots,  # v2: capture screenshots after successful merge
+    [int]$Cycle = 0                 # v2: current cycle number (for screenshot naming)
 )
 
 $ErrorActionPreference = "Stop"
 $scriptDir = Split-Path -Parent $MyInvocation.MyCommand.Path
 $projectRoot = (Resolve-Path (Join-Path $scriptDir "../..")).Path
-$configPath = Join-Path $scriptDir "config/work_units.json"
+# Support both v1 and v2 config
+$configV2Path = Join-Path $scriptDir "config/work_units_v2.json"
+$configV1Path = Join-Path $scriptDir "config/work_units.json"
+$configPath = if (Test-Path $configV2Path) { $configV2Path } else { $configV1Path }
 $statusDir = Join-Path $scriptDir "status"
 
 $config = Get-Content $configPath -Raw | ConvertFrom-Json
@@ -214,8 +219,24 @@ foreach ($d in $domainsToMerge) {
 # Summary
 Write-Host "`n[MERGE] ==========================================" -ForegroundColor Cyan
 Write-Host "[MERGE] Results:" -ForegroundColor Cyan
+$anySuccess = $false
 foreach ($d in $results.Keys) {
     $icon = if ($results[$d]) { "OK" } else { "FAIL" }
     $color = if ($results[$d]) { "Green" } else { "Red" }
     Write-Host "  [$icon] $d" -ForegroundColor $color
+    if ($results[$d]) { $anySuccess = $true }
+}
+
+# v2: Post-merge screenshots
+if ($PostMergeScreenshots -and $anySuccess -and -not $DryRun) {
+    Write-Host "`n[MERGE] Capturing post-merge screenshots..." -ForegroundColor Cyan
+    $screenshotScript = Join-Path $scriptDir "screenshot_capture.ps1"
+    if (Test-Path $screenshotScript) {
+        $screenshotArgs = @("-Cycle", $Cycle)
+        & powershell -File $screenshotScript @screenshotArgs
+    } else {
+        Write-Host "[MERGE] screenshot_capture.ps1 not found, skipping" -ForegroundColor Yellow
+    }
+} elseif ($PostMergeScreenshots -and $DryRun) {
+    Write-Host "`n[DRY RUN] Would capture post-merge screenshots" -ForegroundColor Magenta
 }

@@ -1,9 +1,13 @@
 # worker.ps1 -- AUTODEV Worker: launches a Claude CLI session in an isolated worktree
-# Usage: .\worker.ps1 -Domain "ui-ux" [-DryRun]
+# Usage: .\worker.ps1 -Domain "ui-ux" [-Mode build] [-DryRun]
+# Modes: build (default), fix (targeted fixes from feedback)
 
 param(
     [Parameter(Mandatory=$true)]
     [string]$Domain,
+
+    [ValidateSet("build", "fix")]
+    [string]$Mode = "build",
 
     [switch]$DryRun
 )
@@ -11,7 +15,10 @@ param(
 $ErrorActionPreference = "Stop"
 $scriptDir = Split-Path -Parent $MyInvocation.MyCommand.Path
 $projectRoot = (Resolve-Path (Join-Path $scriptDir "../..")).Path
-$configPath = Join-Path $scriptDir "config/work_units.json"
+# Support both v1 and v2 config
+$configV2Path = Join-Path $scriptDir "config/work_units_v2.json"
+$configV1Path = Join-Path $scriptDir "config/work_units.json"
+$configPath = if (Test-Path $configV2Path) { $configV2Path } else { $configV1Path }
 $statusDir = Join-Path $scriptDir "status"
 $logDir = Join-Path $scriptDir "logs"
 
@@ -85,11 +92,51 @@ function Setup-Worktree {
     Pop-Location
 }
 
+# --- Load feedback from previous cycle (if exists) ---
+function Get-FeedbackContext {
+    $feedbackFile = Join-Path $statusDir "feedback/$Domain.json"
+    if (Test-Path $feedbackFile) {
+        $fb = Get-Content $feedbackFile -Raw | ConvertFrom-Json -ErrorAction SilentlyContinue
+        if ($fb) {
+            $lines = @()
+            $lines += "=== FEEDBACK DU CYCLE PRECEDENT (cycle $($fb.cycle)) ==="
+
+            if ($fb.priority_fixes -and $fb.priority_fixes.Count -gt 0) {
+                $lines += "FIXES PRIORITAIRES:"
+                foreach ($fix in $fb.priority_fixes) { $lines += "  - $fix" }
+            }
+
+            if ($fb.balance_suggestions -and $fb.balance_suggestions.PSObject.Properties.Count -gt 0) {
+                $lines += "AJUSTEMENTS BALANCE:"
+                foreach ($prop in $fb.balance_suggestions.PSObject.Properties) {
+                    $lines += "  - $($prop.Name): $($prop.Value)"
+                }
+            }
+
+            if ($fb.lore_notes -and $fb.lore_notes.Count -gt 0) {
+                $lines += "NOTES LORE:"
+                foreach ($note in $fb.lore_notes) { $lines += "  - $note" }
+            }
+
+            if ($fb.stats_snapshot) {
+                $ss = $fb.stats_snapshot
+                $lines += "STATS SNAPSHOT: balance=$($ss.balance_score) fun=$($ss.fun_score) survie=$($ss.survival_rate)"
+            }
+
+            $lines += "=== FIN FEEDBACK ==="
+            Write-Host "[WORKER] Feedback loaded from cycle $($fb.cycle)" -ForegroundColor Gray
+            return ($lines -join "`n")
+        }
+    }
+    return ""
+}
+
 # --- Build worker prompt ---
 function Build-WorkerPrompt {
     $fileScope = ($domainConfig.file_scope | ForEach-Object { "- $_" }) -join "`n"
     $tasksJson = ($domainConfig.tasks | ConvertTo-Json -Depth 3)
     $agentFiles = ($domainConfig.agents | ForEach-Object { "- $_" }) -join "`n"
+    $feedbackContext = Get-FeedbackContext
 
     $lines = @(
         "Tu es un worker autonome du systeme AUTODEV pour le projet M.E.R.L.I.N. (Godot 4)."
@@ -135,9 +182,31 @@ function Build-WorkerPrompt {
         ""
         "SI BLOQUE: Ecris dans tools/autodev/status/${Domain}_blocked.json pourquoi."
         ""
-        "IMPORTANT: Tu es AUTONOME. Commence IMMEDIATEMENT. Pas de questions."
-        "Traite les taches dans l'ordre de priorite (high puis medium puis low)."
     )
+
+    # Inject feedback from previous cycle
+    if ($feedbackContext) {
+        $lines += ""
+        $lines += $feedbackContext
+        $lines += ""
+        $lines += "INSTRUCTION: Prends en compte le feedback ci-dessus."
+        $lines += "Les FIXES PRIORITAIRES doivent etre traites AVANT les nouvelles taches."
+        $lines += "Les AJUSTEMENTS BALANCE doivent etre integres aux modifications de constantes."
+    }
+
+    # Fix mode: override tasks with targeted fixes
+    if ($Mode -eq "fix") {
+        $lines += ""
+        $lines += "MODE FIX: Tu es en mode correction ciblee."
+        $lines += "Concentre-toi UNIQUEMENT sur les fixes prioritaires du feedback."
+        $lines += "Ne fais PAS de nouvelles fonctionnalites."
+    }
+
+    $lines += ""
+    $lines += "IMPORTANT: Tu es AUTONOME. Commence IMMEDIATEMENT. Pas de questions."
+    $lines += "Traite les taches dans l'ordre de priorite (high puis medium puis low)."
+
+    $dummy = $lines  # Force array evaluation
 
     return ($lines -join "`n")
 }

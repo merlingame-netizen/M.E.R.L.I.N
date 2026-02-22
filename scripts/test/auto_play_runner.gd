@@ -580,8 +580,85 @@ func _print_summary() -> void:
 		_log("  Chosen: %s \"%s\" -> %s (D20=%d DC=%d)" % [
 			e["direction"], e["opt_label"], e["outcome"], e["d20"], e["dc"]])
 
+	# Export structured JSON for AUTODEV stats pipeline
+	_export_json_results(outcomes, total_outcomes)
+
 	_log("")
 	_log("=== AUTO-PLAY RUNNER END ===")
+
+
+func _export_json_results(outcomes: Dictionary, total_outcomes: int) -> void:
+	var final_life: int = 0
+	var final_souffle: int = 0
+	var final_karma: int = 0
+	var ending_type: String = "unknown"
+	if _store:
+		final_life = int(_store.state.get("run", {}).get("life", 0))
+		final_souffle = int(_store.state.get("run", {}).get("souffle", 0))
+		final_karma = int(_store.state.get("run", {}).get("karma", 0))
+		ending_type = str(_store.state.get("run", {}).get("ending", "survived"))
+
+	var p50_gen: int = 0
+	var p90_gen: int = 0
+	var avg_gen: int = 0
+	if _card_gen_times.size() > 0:
+		var sorted: Array[int] = _card_gen_times.duplicate()
+		sorted.sort()
+		p50_gen = sorted[int(sorted.size() * 0.5)]
+		p90_gen = sorted[mini(int(sorted.size() * 0.9), sorted.size() - 1)]
+		var total_gen: int = 0
+		for t in sorted:
+			total_gen += t
+		avg_gen = int(total_gen / sorted.size())
+
+	var aspect_trajectory: Array[Dictionary] = []
+	for e in _run_log:
+		aspect_trajectory.append({
+			"card": e["card_num"],
+			"corps": e.get("aspect_corps", 0),
+			"ame": e.get("aspect_ame", 0),
+			"monde": e.get("aspect_monde", 0),
+		})
+
+	var result: Dictionary = {
+		"strategy": Strategy.keys()[strategy],
+		"cards_played": _cards_played,
+		"final_life": final_life,
+		"final_souffle": final_souffle,
+		"final_karma": final_karma,
+		"ending_type": ending_type,
+		"total_life_drain": _total_life_drain,
+		"llm_count": _llm_count,
+		"fallback_count": _fallback_count,
+		"llm_ratio": float(_llm_count) / float(maxi(_llm_count + _fallback_count, 1)),
+		"avg_gen_time_ms": avg_gen,
+		"p50_gen_time_ms": p50_gen,
+		"p90_gen_time_ms": p90_gen,
+		"outcome_distribution": outcomes,
+		"total_outcomes": total_outcomes,
+		"aspect_trajectory": aspect_trajectory,
+		"run_duration_ms": Time.get_ticks_msec() - _run_start_ms,
+		"timestamp": Time.get_datetime_string_from_system(),
+	}
+
+	# Read output path from config, default to user://autoplay_results.json
+	var output_path: String = "user://autoplay_results.json"
+	var config_path: String = "user://autoplay_config.json"
+	if FileAccess.file_exists(config_path):
+		var cf: FileAccess = FileAccess.open(config_path, FileAccess.READ)
+		if cf:
+			var json: JSON = JSON.new()
+			if json.parse(cf.get_as_text()) == OK and json.data is Dictionary:
+				output_path = str(json.data.get("output_path", output_path))
+			cf.close()
+
+	var f: FileAccess = FileAccess.open(output_path, FileAccess.WRITE)
+	if f:
+		f.store_string(JSON.stringify(result, "\t"))
+		f.close()
+		_log("JSON results exported to: %s" % output_path)
+	else:
+		_log("WARNING: Could not export JSON results to %s" % output_path)
 
 
 func _find_node_by_class(class_name_str: String) -> Node:
