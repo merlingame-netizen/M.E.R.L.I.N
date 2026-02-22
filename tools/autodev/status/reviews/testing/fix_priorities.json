@@ -1,0 +1,138 @@
+{
+  "timestamp": "2026-02-22T22:40:00+01:00",
+  "cycle": 1,
+  "summary": {
+    "total_issues": 5,
+    "blocking": 2,
+    "critical": 1,
+    "high": 1,
+    "medium": 1,
+    "low": 0
+  },
+  "issues": [
+    {
+      "id": "INFRA-001",
+      "title": "test_results.json not generated",
+      "domain": "infrastructure",
+      "severity": "BLOCKING",
+      "priority": 1,
+      "description": "Core test results file is missing. Cannot perform failure analysis, regression detection, or fix prioritization without this data.",
+      "impact": "Entire test review pipeline blocked",
+      "affected_systems": ["testing", "CI/CD", "reporting"],
+      "actionable_steps": [
+        "Create test result aggregator script: tools/autodev/aggregate_test_results.ps1",
+        "Execute validate_editor_parse.ps1 and capture output",
+        "Execute validate_flow_order.ps1 and capture output",
+        "Parse logs and generate test_results.json with schema: {timestamp, cycle, total_tests, passed, failed, skipped, failures[], domains{}}",
+        "Integrate into AUTODEV cycle pipeline"
+      ],
+      "estimated_effort": "2 hours",
+      "dependencies": [],
+      "assigned_to": "AUTODEV Builder/Infra worker"
+    },
+    {
+      "id": "INFRA-002",
+      "title": "stats_summary.json not generated",
+      "domain": "infrastructure",
+      "severity": "BLOCKING",
+      "priority": 2,
+      "description": "Performance and coverage metrics file is missing. Cannot track code coverage, LLM performance, Triade state coverage, or ending coverage.",
+      "impact": "No baseline metrics for performance regression detection",
+      "affected_systems": ["testing", "performance", "coverage"],
+      "actionable_steps": [
+        "Define stats_summary.json schema with coverage, performance, triade_coverage fields",
+        "Create stats aggregator script: tools/autodev/generate_stats_summary.ps1",
+        "Integrate GUT test runner output parsing (when GUT installed)",
+        "Add LLM performance logging to MerlinAI/MerlinOmniscient",
+        "Track Triade state coverage in MerlinStore dispatch logging"
+      ],
+      "estimated_effort": "3 hours",
+      "dependencies": ["INFRA-003"],
+      "assigned_to": "AUTODEV Builder worker"
+    },
+    {
+      "id": "INFRA-003",
+      "title": "GUT framework not installed",
+      "domain": "testing",
+      "severity": "CRITICAL",
+      "priority": 3,
+      "description": "Godot Unit Testing (GUT) framework is not installed. Zero automated unit/integration test coverage exists.",
+      "impact": "Cannot write or run automated tests for core systems (MerlinStore, CardSystem, LLM pipeline, etc.)",
+      "affected_systems": ["testing", "quality_assurance"],
+      "actionable_steps": [
+        "Clone GUT to addons/gut: git clone https://github.com/bitwes/Gut.git addons/gut",
+        "Enable GUT plugin in Godot Editor (Project Settings > Plugins > GUT > Enable)",
+        "Create test directories: test/unit/ and test/integration/",
+        "Write initial test suite: test/unit/test_merlin_store.gd (5 tests for aspect state transitions)",
+        "Configure GUT runner in project settings",
+        "Add GUT execution to validate.bat pipeline"
+      ],
+      "estimated_effort": "2 hours (installation + first 5 tests)",
+      "dependencies": [],
+      "assigned_to": "AUTODEV Builder worker"
+    },
+    {
+      "id": "TEST-001",
+      "title": "Screenshot scene list unpopulated",
+      "domain": "testing",
+      "severity": "HIGH",
+      "priority": 4,
+      "description": "Screenshot report shows 14 total scenes but 0 identified/captured. Scene list configuration is empty or misconfigured.",
+      "impact": "Visual regression testing non-functional. Cannot detect UI/rendering issues.",
+      "affected_systems": ["testing", "visual_qa"],
+      "actionable_steps": [
+        "Locate screenshot capture script configuration",
+        "Populate scene list with 8 core scenes: IntroCeltOS, MenuPrincipal, IntroPersonalityQuiz, SceneRencontreMerlin, SelectionSauvegarde, HubAntre, TransitionBiome, MerlinGame",
+        "Re-run screenshot capture to verify configuration",
+        "Validate screenshots_report.json shows 8/8 captured"
+      ],
+      "estimated_effort": "1 hour",
+      "dependencies": [],
+      "assigned_to": "AUTODEV Testing worker"
+    },
+    {
+      "id": "TEST-002",
+      "title": "Zero edge case coverage",
+      "domain": "testing",
+      "severity": "MEDIUM",
+      "priority": 5,
+      "description": "None of the 10 critical edge cases documented in debug_qa.md are tested. Risk of undetected bugs in extreme game states.",
+      "impact": "Potential game-breaking bugs in edge cases (extreme aspects, souffle=0, LLM timeout, etc.) will only be discovered by players.",
+      "affected_systems": ["MerlinStore", "CardSystem", "LLM", "UI", "SaveSystem"],
+      "actionable_steps": [
+        "Create test/unit/test_edge_cases.gd",
+        "Write tests for: (1) all 3 aspects at extreme, (2) Souffle at 0, (3) empty card queue + LLM timeout",
+        "Write tests for: (4) rapid button clicking, (5) scene transitions mid-animation, (6) Bond at 0 and 100",
+        "Write tests for: (7) all 16 endings reachable, (8) Karma at extremes, (9) Talent Tree unlock failures, (10) save/load mid-run",
+        "Document discovered bugs in fix_priorities.json for next cycle"
+      ],
+      "estimated_effort": "6 hours (10 tests @ ~30-45 min each)",
+      "dependencies": ["INFRA-003"],
+      "assigned_to": "AUTODEV Testing worker + QA specialist"
+    }
+  ],
+  "recommendations": {
+    "immediate": [
+      "Execute INFRA-001 to unblock test review pipeline",
+      "Execute INFRA-003 to establish automated testing foundation",
+      "Execute TEST-001 to enable visual regression testing"
+    ],
+    "short_term": [
+      "Execute INFRA-002 to track performance/coverage metrics",
+      "Execute TEST-002 to improve edge case coverage"
+    ],
+    "long_term": [
+      "Implement Triade state coverage campaign (343 combinations)",
+      "Create LLM narrative golden dataset (50+ cards)",
+      "Build E2E testing for all 16 endings"
+    ]
+  },
+  "next_cycle_goals": {
+    "cycle_2": {
+      "target_coverage": "20%",
+      "target_tests_passing": "80%",
+      "target_scenes_captured": "8/8",
+      "critical_fixes": ["INFRA-001", "INFRA-003", "TEST-001"]
+    }
+  }
+}

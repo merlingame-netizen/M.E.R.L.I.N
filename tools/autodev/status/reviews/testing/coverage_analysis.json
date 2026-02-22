@@ -1,0 +1,297 @@
+{
+  "timestamp": "2026-02-22T22:40:00+01:00",
+  "cycle": 1,
+  "summary": {
+    "overall_coverage": "0%",
+    "unit_test_coverage": "0%",
+    "integration_test_coverage": "0%",
+    "e2e_test_coverage": "0%",
+    "edge_case_coverage": "0/10 (0%)",
+    "triade_state_coverage": "0/343 (0%)",
+    "ending_coverage": "0/16 (0%)"
+  },
+  "domain_coverage": {
+    "parse_validation": {
+      "description": "GDScript parse-time error detection (validate_editor_parse.ps1)",
+      "status": "tool_exists",
+      "executed": false,
+      "coverage": "unknown"
+    },
+    "flow_validation": {
+      "description": "Scene flow runtime validation (validate_flow_order.ps1)",
+      "status": "tool_exists",
+      "executed": false,
+      "coverage": "unknown"
+    },
+    "unit_tests": {
+      "description": "GUT framework unit tests",
+      "status": "not_installed",
+      "executed": false,
+      "coverage": "0%"
+    },
+    "integration_tests": {
+      "description": "GUT framework integration tests (card pipeline, store-to-UI)",
+      "status": "not_installed",
+      "executed": false,
+      "coverage": "0%"
+    },
+    "visual_regression": {
+      "description": "Screenshot-based visual regression testing",
+      "status": "partial",
+      "executed": true,
+      "coverage": "0/14 scenes captured"
+    }
+  },
+  "critical_systems_untested": {
+    "MerlinStore": {
+      "description": "Central state management (Redux-like), Triade aspect system",
+      "priority": "CRITICAL",
+      "test_files_needed": ["test/unit/test_merlin_store.gd"],
+      "key_scenarios": [
+        "Aspect state transitions (SHIFT_ASPECT)",
+        "Game over detection (2 aspects at extreme)",
+        "Souffle d'Ogham economy (max 5/7, cost, regen)",
+        "DC-based resolution (D20 roll, critical success/failure)",
+        "State immutability (dispatch returns new state)"
+      ]
+    },
+    "MerlinCardSystem": {
+      "description": "Card generation, fallback pool, LLM integration",
+      "priority": "CRITICAL",
+      "test_files_needed": ["test/unit/test_card_system.gd", "test/integration/test_card_pipeline.gd"],
+      "key_scenarios": [
+        "LLM card generation with 6-stage fallback",
+        "JSON parsing with 4 repair strategies",
+        "Fallback pool exhaustion",
+        "Card option validation (3 options, effects valid)",
+        "RAG context assembly (180 token budget)"
+      ]
+    },
+    "MerlinEffectEngine": {
+      "description": "Effect execution (SHIFT_ASPECT, SOUFFLE, KARMA, PROMISE)",
+      "priority": "HIGH",
+      "test_files_needed": ["test/unit/test_effect_engine.gd"],
+      "key_scenarios": [
+        "SHIFT_ASPECT clamping (-3 to +3)",
+        "SOUFFLE cost validation and Risk Mode",
+        "KARMA tracking and boundaries (-10 to +10)",
+        "PROMISE tracking and resolution"
+      ]
+    },
+    "MerlinLLMAdapter": {
+      "description": "LLM contract, TRIADE format, JSON repair",
+      "priority": "HIGH",
+      "test_files_needed": ["test/unit/test_llm_adapter.gd"],
+      "key_scenarios": [
+        "TRIADE format validation (text + 3 options + effects)",
+        "JSON repair strategies (4 fallbacks)",
+        "Timeout handling (3s target)",
+        "Prefetch system (context hash matching)"
+      ]
+    },
+    "MerlinSaveSystem": {
+      "description": "JSON save slots (3), persistence, migration",
+      "priority": "MEDIUM",
+      "test_files_needed": ["test/integration/test_save_system.gd"],
+      "key_scenarios": [
+        "Save mid-run",
+        "Load from slot",
+        "Slot corruption handling",
+        "Migration from old save format"
+      ]
+    },
+    "MerlinBiomeSystem": {
+      "description": "Biome transitions, theming, unlock progression",
+      "priority": "MEDIUM",
+      "test_files_needed": ["test/unit/test_biome_system.gd"],
+      "key_scenarios": [
+        "Biome unlock based on run progress",
+        "Transition animations",
+        "Theme application to UI"
+      ]
+    }
+  },
+  "edge_cases": {
+    "tested": 0,
+    "total": 10,
+    "cases": [
+      {
+        "id": "EDGE-001",
+        "description": "All 3 aspects at extreme (-3 or +3)",
+        "status": "not_tested",
+        "severity": "CRITICAL",
+        "expected_behavior": "Game over with specific ending (L'Effondrement Total)"
+      },
+      {
+        "id": "EDGE-002",
+        "description": "Souffle at 0 (Risk Mode)",
+        "status": "not_tested",
+        "severity": "HIGH",
+        "expected_behavior": "Risk Mode UI activated, no souffle cost for next card"
+      },
+      {
+        "id": "EDGE-003",
+        "description": "Empty card queue + LLM timeout",
+        "status": "not_tested",
+        "severity": "HIGH",
+        "expected_behavior": "Fallback to static pool, no game crash"
+      },
+      {
+        "id": "EDGE-004",
+        "description": "Rapid button clicking during typewriter",
+        "status": "not_tested",
+        "severity": "MEDIUM",
+        "expected_behavior": "Text completes instantly, no duplicate actions"
+      },
+      {
+        "id": "EDGE-005",
+        "description": "Scene transitions mid-animation",
+        "status": "not_tested",
+        "severity": "MEDIUM",
+        "expected_behavior": "Clean transition, no orphaned tweens or signals"
+      },
+      {
+        "id": "EDGE-006",
+        "description": "Bond at 0 and 100 (Bestiole tiers)",
+        "status": "not_tested",
+        "severity": "MEDIUM",
+        "expected_behavior": "Tier 1 at 0-33, Tier 2 at 34-66, Tier 3 at 67-100"
+      },
+      {
+        "id": "EDGE-007",
+        "description": "All 16 endings reachable",
+        "status": "not_tested",
+        "severity": "CRITICAL",
+        "expected_behavior": "12 fall endings + 3 victory + 1 secret all trigger correctly"
+      },
+      {
+        "id": "EDGE-008",
+        "description": "Karma at -10 and +10",
+        "status": "not_tested",
+        "severity": "MEDIUM",
+        "expected_behavior": "Karma clamped, affects ending selection"
+      },
+      {
+        "id": "EDGE-009",
+        "description": "Talent Tree unlock with insufficient essences",
+        "status": "not_tested",
+        "severity": "LOW",
+        "expected_behavior": "UI blocks unlock, shows required amount"
+      },
+      {
+        "id": "EDGE-010",
+        "description": "Save/load mid-run",
+        "status": "not_tested",
+        "severity": "HIGH",
+        "expected_behavior": "All state restored (aspects, souffle, karma, bond, biome, card queue)"
+      }
+    ]
+  },
+  "triade_state_space": {
+    "total_combinations": 343,
+    "tested_combinations": 0,
+    "coverage_percentage": 0,
+    "aspect_states": {
+      "corps": {
+        "-3": false,
+        "-2": false,
+        "-1": false,
+        "0": false,
+        "1": false,
+        "2": false,
+        "3": false
+      },
+      "ame": {
+        "-3": false,
+        "-2": false,
+        "-1": false,
+        "0": false,
+        "1": false,
+        "2": false,
+        "3": false
+      },
+      "monde": {
+        "-3": false,
+        "-2": false,
+        "-1": false,
+        "0": false,
+        "1": false,
+        "2": false,
+        "3": false
+      }
+    },
+    "endings": {
+      "tested": 0,
+      "total": 16,
+      "fall_endings": {
+        "tested": 0,
+        "total": 12,
+        "list": [
+          "Corps Low + Ame Low",
+          "Corps Low + Monde Low",
+          "Corps Low + Ame High",
+          "Corps Low + Monde High",
+          "Corps High + Ame Low",
+          "Corps High + Monde Low",
+          "Corps High + Ame High",
+          "Corps High + Monde High",
+          "Ame Low + Monde Low",
+          "Ame Low + Monde High",
+          "Ame High + Monde Low",
+          "Ame High + Monde High"
+        ]
+      },
+      "victory_endings": {
+        "tested": 0,
+        "total": 3,
+        "list": ["L'Harmonie", "Le Prix Paye", "Victory 3"]
+      },
+      "secret_ending": {
+        "tested": false,
+        "name": "Secret Ending"
+      }
+    }
+  },
+  "performance_baselines": {
+    "llm_latency": {
+      "target_ms": 3000,
+      "current_avg_ms": null,
+      "status": "not_measured"
+    },
+    "json_parse_success_rate": {
+      "target_percentage": 60,
+      "current_percentage": null,
+      "status": "not_measured"
+    },
+    "prefetch_hit_rate": {
+      "target_percentage": 40,
+      "current_percentage": null,
+      "status": "not_measured"
+    },
+    "fps_min": {
+      "target": 60,
+      "current": null,
+      "status": "not_measured"
+    },
+    "memory_peak_mb": {
+      "target": 5120,
+      "current_mb": null,
+      "status": "not_measured"
+    },
+    "scene_transition_time_ms": {
+      "target": 500,
+      "current_ms": null,
+      "status": "not_measured"
+    }
+  },
+  "recommendations": [
+    "Install GUT framework to enable unit/integration testing",
+    "Write first 5 unit tests for MerlinStore (SHIFT_ASPECT, game over detection, souffle economy)",
+    "Write integration test for card pipeline (LLM generation → card validation → UI display)",
+    "Execute validate_editor_parse.ps1 and validate_flow_order.ps1 to establish baseline",
+    "Add LLM performance logging to track latency and JSON parse success rate",
+    "Create test/unit/test_edge_cases.gd to cover all 10 critical edge cases",
+    "Implement Triade state coverage tracking in MerlinStore.dispatch()",
+    "Create performance benchmarking script to measure FPS, memory, scene transitions"
+  ]
+}

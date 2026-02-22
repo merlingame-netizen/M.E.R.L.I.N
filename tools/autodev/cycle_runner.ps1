@@ -64,53 +64,66 @@ function Show-WaveBanner {
     Write-Host "[================================================================]" -ForegroundColor Cyan
 }
 
-# ── Visible Process Launcher ──────────────────────────────────────────
+# ── Worker Launcher (hidden, writes to log file) ─────────────────────
 
-function Start-VisibleWorker {
+function Start-HiddenWorker {
     param(
         [string]$Script,
         [string]$Domain,
         [string]$Mode = "build",
         [string]$WaveLabel = "BUILD",
-        [switch]$IsDryRun,
-        [string[]]$ExtraArgs = @()
+        [string]$LogFile,
+        [switch]$IsDryRun
     )
 
-    $title = "[AUTODEV] $Domain - $WaveLabel (Cycle $currentCycle)"
-    $logFile = Join-Path $logDir "${Domain}_${WaveLabel}_$(Get-Date -Format 'yyyyMMdd_HHmmss').log"
-
-    # Build the command to run inside the visible window
+    # Build the command: run worker and tee output to log file
     $innerArgs = @("-ExecutionPolicy", "Bypass", "-File", "`"$Script`"", "-Domain", "`"$Domain`"")
     if ($Mode -and $Mode -ne "build") { $innerArgs += @("-Mode", "`"$Mode`"") }
     if ($IsDryRun) { $innerArgs += "-DryRun" }
-    foreach ($ea in $ExtraArgs) { $innerArgs += $ea }
     $innerCmd = $innerArgs -join " "
 
-    # Wrapper command: set title, run worker, show result, pause
     $wrapperCmd = @(
-        "`$host.UI.RawUI.WindowTitle = '$title'",
-        "Write-Host '============================================' -ForegroundColor Cyan",
-        "Write-Host '  AUTODEV Worker: $Domain ($WaveLabel)' -ForegroundColor Cyan",
-        "Write-Host '  Cycle: $currentCycle | Mode: $Mode' -ForegroundColor Cyan",
-        "Write-Host '  Log: $logFile' -ForegroundColor Gray",
-        "Write-Host '============================================' -ForegroundColor Cyan",
-        "Write-Host ''",
-        "& powershell $innerCmd 2>&1 | Tee-Object -FilePath '$logFile'",
-        "Write-Host ''",
-        "Write-Host '============================================' -ForegroundColor Green",
-        "Write-Host '  [DONE] $Domain $WaveLabel finished' -ForegroundColor Green",
-        "Write-Host '  Window closes in 60s...' -ForegroundColor Yellow",
-        "Write-Host '============================================' -ForegroundColor Green",
-        "Start-Sleep -Seconds 60"
+        "& powershell $innerCmd 2>&1 | Tee-Object -FilePath '$LogFile'"
     ) -join "; "
 
     $proc = Start-Process powershell -ArgumentList @(
-        "-ExecutionPolicy", "Bypass",
-        "-NoProfile",
+        "-ExecutionPolicy", "Bypass", "-NoProfile",
+        "-WindowStyle", "Hidden",
         "-Command", $wrapperCmd
+    ) -WindowStyle Hidden -PassThru
+
+    Write-Host "[CYCLE]   -> PID $($proc.Id) | Log: $LogFile" -ForegroundColor Gray
+    return $proc
+}
+
+# ── Aggregated View Launcher ─────────────────────────────────────────
+
+function Start-AggregatedView {
+    param(
+        [array]$PaneSpecs,    # Array of @{title; logFile; statusFile}
+        [string]$WaveLabel
+    )
+
+    $aggrScript = Join-Path $scriptDir "aggregated_view.ps1"
+    if (-not (Test-Path $aggrScript)) {
+        Write-Host "[CYCLE] aggregated_view.ps1 not found, skipping aggregator" -ForegroundColor Yellow
+        return $null
+    }
+
+    # Write pane specs to a temp JSON file
+    $specFile = Join-Path $statusDir "pane_specs_${WaveLabel}.json"
+    $PaneSpecs | ConvertTo-Json -Depth 3 | Set-Content $specFile -Encoding UTF8
+
+    $windowTitle = "AUTODEV - Cycle $currentCycle - $WaveLabel ($($PaneSpecs.Count) workers)"
+
+    $proc = Start-Process powershell -ArgumentList @(
+        "-ExecutionPolicy", "Bypass", "-NoProfile",
+        "-File", $aggrScript,
+        "-PaneSpecsFile", $specFile,
+        "-WindowTitle", $windowTitle
     ) -PassThru
 
-    Write-Host "[CYCLE]   -> PID $($proc.Id) | Window: '$title'" -ForegroundColor Gray
+    Write-Host "[CYCLE] Aggregated view launched: $windowTitle ($($PaneSpecs.Count) panes)" -ForegroundColor Cyan
     return $proc
 }
 
@@ -198,6 +211,7 @@ function Invoke-BuildWave {
     $workerScript = Join-Path $scriptDir "worker.ps1"
     $procs = @{}
     $failedDomains = @()
+    $paneSpecs = @()
 
     foreach ($d in $buildDomains) {
         if (Test-Veto) {
@@ -218,13 +232,28 @@ function Invoke-BuildWave {
             }
         }
 
+        $workerLog = Join-Path $logDir "$($d.name)_BUILD_$(Get-Date -Format 'yyyyMMdd_HHmmss').log"
+        $statusFile = Join-Path $statusDir "$($d.name).json"
+
         Write-Host "[CYCLE] Launching: $($d.name) (mode=$mode, $($d.tasks.Count) tasks)" -ForegroundColor Green
 
-        $procs[$d.name] = Start-VisibleWorker -Script $workerScript -Domain $d.name -Mode $mode -WaveLabel "BUILD" -IsDryRun:$DryRun
+        # Pre-create empty log so tail_log can find it quickly
+        "" | Set-Content $workerLog -Encoding UTF8
+
+        $procs[$d.name] = Start-HiddenWorker -Script $workerScript -Domain $d.name -Mode $mode -WaveLabel "BUILD" -LogFile $workerLog -IsDryRun:$DryRun
+        $paneSpecs += @{ title = "$($d.name) BUILD"; logFile = $workerLog; statusFile = $statusFile }
     }
 
-    # Monitor build processes in visible windows
+    # Launch aggregated view (single WT window with all worker logs)
+    $aggrProc = Start-AggregatedView -PaneSpecs $paneSpecs -WaveLabel "BUILD"
+
+    # Monitor build processes via status files
     $statusSummary = Wait-ForProcesses -Processes $procs -Label "BUILD"
+
+    # Close aggregated view when wave completes
+    if ($aggrProc -and -not $aggrProc.HasExited) {
+        Stop-Process -Id $aggrProc.Id -Force -ErrorAction SilentlyContinue
+    }
 
     # Identify failed domains
     foreach ($name in $statusSummary.Keys) {
@@ -328,6 +357,7 @@ function Invoke-ReviewWave {
 
     $reviewScript = Join-Path $scriptDir "review_worker.ps1"
     $procs = @{}
+    $paneSpecs = @()
 
     foreach ($d in $reviewDomains) {
         if (Test-Veto) {
@@ -335,13 +365,26 @@ function Invoke-ReviewWave {
             continue
         }
 
+        $workerLog = Join-Path $logDir "$($d.name)_REVIEW_$(Get-Date -Format 'yyyyMMdd_HHmmss').log"
+        $statusFile = Join-Path $statusDir "$($d.name).json"
+
         Write-Host "[CYCLE] Launching reviewer: $($d.name)" -ForegroundColor Green
 
-        $procs[$d.name] = Start-VisibleWorker -Script $reviewScript -Domain $d.name -Mode "review" -WaveLabel "REVIEW" -IsDryRun:$DryRun
+        "" | Set-Content $workerLog -Encoding UTF8
+
+        $procs[$d.name] = Start-HiddenWorker -Script $reviewScript -Domain $d.name -Mode "review" -WaveLabel "REVIEW" -LogFile $workerLog -IsDryRun:$DryRun
+        $paneSpecs += @{ title = "$($d.name) REVIEW"; logFile = $workerLog; statusFile = $statusFile }
     }
 
-    # Monitor review processes in visible windows
+    # Launch aggregated view for review wave
+    $aggrProc = Start-AggregatedView -PaneSpecs $paneSpecs -WaveLabel "REVIEW"
+
+    # Monitor review processes via status files
     $statusSummary = Wait-ForProcesses -Processes $procs -Label "REVIEW"
+
+    if ($aggrProc -and -not $aggrProc.HasExited) {
+        Stop-Process -Id $aggrProc.Id -Force -ErrorAction SilentlyContinue
+    }
 
     & powershell -File (Join-Path $scriptDir "notify.ps1") -Event "review_done" -Message "REVIEW done (cycle $CycleNum)"
 
@@ -365,16 +408,33 @@ function Invoke-FixWave {
 
     $workerScript = Join-Path $scriptDir "worker.ps1"
     $procs = @{}
+    $paneSpecs = @()
 
     foreach ($domainName in $FailedDomains) {
         if (Test-Veto) { continue }
 
+        $workerLog = Join-Path $logDir "${domainName}_FIX_$(Get-Date -Format 'yyyyMMdd_HHmmss').log"
+        $statusFile = Join-Path $statusDir "${domainName}.json"
+
         Write-Host "[CYCLE] Launching fix worker: $domainName" -ForegroundColor Yellow
 
-        $procs[$domainName] = Start-VisibleWorker -Script $workerScript -Domain $domainName -Mode "fix" -WaveLabel "FIX" -IsDryRun:$DryRun
+        "" | Set-Content $workerLog -Encoding UTF8
+
+        $procs[$domainName] = Start-HiddenWorker -Script $workerScript -Domain $domainName -Mode "fix" -WaveLabel "FIX" -LogFile $workerLog -IsDryRun:$DryRun
+        $paneSpecs += @{ title = "$domainName FIX"; logFile = $workerLog; statusFile = $statusFile }
+    }
+
+    # Launch aggregated view for fix wave
+    $aggrProc = $null
+    if ($paneSpecs.Count -gt 0) {
+        $aggrProc = Start-AggregatedView -PaneSpecs $paneSpecs -WaveLabel "FIX"
     }
 
     $statusSummary = Wait-ForProcesses -Processes $procs -Label "FIX"
+
+    if ($aggrProc -and -not $aggrProc.HasExited) {
+        Stop-Process -Id $aggrProc.Id -Force -ErrorAction SilentlyContinue
+    }
 
     & powershell -File (Join-Path $scriptDir "notify.ps1") -Event "fix_done" -Message "FIX done (cycle $CycleNum)"
 

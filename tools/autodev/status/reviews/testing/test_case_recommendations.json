@@ -1,0 +1,280 @@
+{
+  "timestamp": "2026-02-22T22:40:00+01:00",
+  "cycle": 1,
+  "summary": {
+    "total_recommended_tests": 23,
+    "priority_high": 10,
+    "priority_medium": 8,
+    "priority_low": 5
+  },
+  "unit_tests": {
+    "test_merlin_store": {
+      "priority": "HIGH",
+      "file_path": "test/unit/test_merlin_store.gd",
+      "estimated_effort": "2 hours",
+      "tests": [
+        {
+          "name": "test_aspect_shift_up",
+          "description": "Verify SHIFT_ASPECT action increases aspect value by delta",
+          "setup": "Create MerlinStore, dispatch START_RUN",
+          "action": "dispatch({type: SHIFT_ASPECT, aspect: corps, delta: 1})",
+          "assertion": "assert_eq(store.state.run.aspects.corps, 1)"
+        },
+        {
+          "name": "test_aspect_shift_down",
+          "description": "Verify SHIFT_ASPECT action decreases aspect value by delta",
+          "setup": "Create MerlinStore, dispatch START_RUN",
+          "action": "dispatch({type: SHIFT_ASPECT, aspect: ame, delta: -1})",
+          "assertion": "assert_eq(store.state.run.aspects.ame, -1)"
+        },
+        {
+          "name": "test_aspect_clamping_max",
+          "description": "Verify aspect values are clamped at +3",
+          "setup": "Create MerlinStore, set corps to 2",
+          "action": "dispatch({type: SHIFT_ASPECT, aspect: corps, delta: 2})",
+          "assertion": "assert_eq(store.state.run.aspects.corps, 3)"
+        },
+        {
+          "name": "test_aspect_clamping_min",
+          "description": "Verify aspect values are clamped at -3",
+          "setup": "Create MerlinStore, set ame to -2",
+          "action": "dispatch({type: SHIFT_ASPECT, aspect: ame, delta: -2})",
+          "assertion": "assert_eq(store.state.run.aspects.ame, -3)"
+        },
+        {
+          "name": "test_game_over_two_extremes",
+          "description": "Verify game over when 2 aspects reach extreme values",
+          "setup": "Create MerlinStore, set corps=3, ame=-3",
+          "action": "call check_run_end()",
+          "assertion": "assert_true(result.ended)"
+        },
+        {
+          "name": "test_souffle_cost_deduction",
+          "description": "Verify souffle is deducted when choosing card option with cost",
+          "setup": "Create MerlinStore, set souffle=5",
+          "action": "dispatch({type: USE_SOUFFLE, cost: 2})",
+          "assertion": "assert_eq(store.state.run.souffle, 3)"
+        },
+        {
+          "name": "test_souffle_risk_mode",
+          "description": "Verify Risk Mode activates when souffle reaches 0",
+          "setup": "Create MerlinStore, set souffle=1",
+          "action": "dispatch({type: USE_SOUFFLE, cost: 1})",
+          "assertion": "assert_eq(store.state.run.souffle, 0) and assert_true(store.state.run.risk_mode)"
+        }
+      ]
+    },
+    "test_card_system": {
+      "priority": "HIGH",
+      "file_path": "test/unit/test_card_system.gd",
+      "estimated_effort": "1.5 hours",
+      "tests": [
+        {
+          "name": "test_fallback_card_generation",
+          "description": "Verify fallback pool generates valid TRIADE cards",
+          "setup": "None",
+          "action": "var card = MerlinCardSystem.generate_fallback_card('forest')",
+          "assertion": "assert_not_null(card) and assert_has(card, 'text') and assert_has(card, 'options') and assert_eq(card.options.size(), 3)"
+        },
+        {
+          "name": "test_card_option_structure",
+          "description": "Verify each option has required fields (label, effects)",
+          "setup": "Generate fallback card",
+          "action": "for option in card.options: check structure",
+          "assertion": "assert_has(option, 'label') and assert_has(option, 'effects')"
+        },
+        {
+          "name": "test_fallback_pool_exhaustion",
+          "description": "Verify system handles fallback pool exhaustion gracefully",
+          "setup": "Deplete fallback pool (generate all cards)",
+          "action": "generate_fallback_card('forest')",
+          "assertion": "assert_not_null(card) (should cycle/reshuffle)"
+        }
+      ]
+    },
+    "test_effect_engine": {
+      "priority": "MEDIUM",
+      "file_path": "test/unit/test_effect_engine.gd",
+      "estimated_effort": "1 hour",
+      "tests": [
+        {
+          "name": "test_execute_shift_aspect",
+          "description": "Verify SHIFT_ASPECT effect is executed correctly",
+          "setup": "Create MerlinStore, create effect {type: SHIFT_ASPECT, aspect: corps, delta: 1}",
+          "action": "MerlinEffectEngine.execute(effect, store)",
+          "assertion": "assert_eq(store.state.run.aspects.corps, 1)"
+        },
+        {
+          "name": "test_execute_souffle_cost",
+          "description": "Verify SOUFFLE effect deducts cost",
+          "setup": "Create MerlinStore, create effect {type: SOUFFLE, cost: 2}",
+          "action": "MerlinEffectEngine.execute(effect, store)",
+          "assertion": "assert_eq(store.state.run.souffle, initial_souffle - 2)"
+        },
+        {
+          "name": "test_execute_karma",
+          "description": "Verify KARMA effect updates karma value",
+          "setup": "Create MerlinStore, create effect {type: KARMA, delta: 3}",
+          "action": "MerlinEffectEngine.execute(effect, store)",
+          "assertion": "assert_eq(store.state.run.karma, 3)"
+        }
+      ]
+    },
+    "test_edge_cases": {
+      "priority": "HIGH",
+      "file_path": "test/unit/test_edge_cases.gd",
+      "estimated_effort": "3 hours",
+      "tests": [
+        {
+          "name": "test_all_aspects_extreme",
+          "description": "EDGE-001: All 3 aspects at extreme",
+          "setup": "Create MerlinStore, set corps=3, ame=-3, monde=3",
+          "action": "check_run_end()",
+          "assertion": "assert_true(result.ended) and assert_eq(result.ending_type, 'effondrement_total')"
+        },
+        {
+          "name": "test_souffle_zero_risk_mode",
+          "description": "EDGE-002: Souffle at 0 activates Risk Mode",
+          "setup": "Create MerlinStore, set souffle=0",
+          "action": "check Risk Mode UI state",
+          "assertion": "assert_true(store.state.run.risk_mode)"
+        },
+        {
+          "name": "test_empty_queue_llm_timeout",
+          "description": "EDGE-003: Empty card queue + LLM timeout",
+          "setup": "Empty card queue, mock LLM timeout",
+          "action": "request next card",
+          "assertion": "assert_not_null(card) (fallback to static pool)"
+        }
+      ]
+    }
+  },
+  "integration_tests": {
+    "test_card_pipeline": {
+      "priority": "HIGH",
+      "file_path": "test/integration/test_card_pipeline.gd",
+      "estimated_effort": "2 hours",
+      "tests": [
+        {
+          "name": "test_llm_to_ui_flow",
+          "description": "Verify full pipeline: LLM generation → validation → UI display",
+          "setup": "Create MerlinStore, MerlinCardSystem, mock LLM",
+          "action": "generate card, validate, send to UI",
+          "assertion": "UI displays 3 options with correct labels and effects"
+        },
+        {
+          "name": "test_json_repair_strategies",
+          "description": "Verify 4 JSON repair strategies handle malformed LLM output",
+          "setup": "Mock LLM with malformed JSON (missing quotes, trailing commas, etc.)",
+          "action": "parse and repair JSON",
+          "assertion": "assert_not_null(parsed_card) (successful repair)"
+        },
+        {
+          "name": "test_rag_context_assembly",
+          "description": "Verify RAG context stays within 180 token budget",
+          "setup": "Create context with biome, aspects, recent cards",
+          "action": "assemble RAG context",
+          "assertion": "assert_lte(token_count, 180)"
+        }
+      ]
+    },
+    "test_save_system": {
+      "priority": "MEDIUM",
+      "file_path": "test/integration/test_save_system.gd",
+      "estimated_effort": "1.5 hours",
+      "tests": [
+        {
+          "name": "test_save_mid_run",
+          "description": "Verify save captures all run state (aspects, souffle, karma, bond, biome)",
+          "setup": "Create MerlinStore with non-default state (corps=2, souffle=3, etc.)",
+          "action": "MerlinSaveSystem.save_to_slot(1, store.state)",
+          "assertion": "assert_file_exists('user://saves/slot_1.json')"
+        },
+        {
+          "name": "test_load_from_slot",
+          "description": "Verify load restores all state correctly",
+          "setup": "Save a known state to slot 1",
+          "action": "MerlinSaveSystem.load_from_slot(1)",
+          "assertion": "assert_eq(loaded_state.run.aspects.corps, saved_state.run.aspects.corps)"
+        },
+        {
+          "name": "test_slot_corruption_handling",
+          "description": "EDGE-010: Verify graceful handling of corrupted save file",
+          "setup": "Write malformed JSON to slot file",
+          "action": "load_from_slot(1)",
+          "assertion": "assert_null(loaded_state) or assert_eq(error_code, CORRUPTED)"
+        }
+      ]
+    }
+  },
+  "e2e_tests": {
+    "test_full_playthrough": {
+      "priority": "MEDIUM",
+      "file_path": "test/e2e/test_playthrough.gd",
+      "estimated_effort": "4 hours",
+      "tests": [
+        {
+          "name": "test_scene_flow_canonical_order",
+          "description": "Verify canonical scene flow: IntroCeltOS → MenuPrincipal → ... → MerlinGame",
+          "setup": "Launch IntroCeltOS scene",
+          "action": "Simulate user interactions through full flow",
+          "assertion": "assert_eq(final_scene, 'MerlinGame.tscn')"
+        },
+        {
+          "name": "test_fall_ending_trigger",
+          "description": "EDGE-007: Verify one fall ending is reachable",
+          "setup": "Script a playthrough forcing corps=3, ame=-3",
+          "action": "trigger check_run_end()",
+          "assertion": "assert_true(ending_triggered) and assert_eq(ending.type, 'fall')"
+        },
+        {
+          "name": "test_victory_ending_trigger",
+          "description": "EDGE-007: Verify one victory ending is reachable",
+          "setup": "Script a playthrough with balanced aspects and high karma",
+          "action": "complete run",
+          "assertion": "assert_eq(ending.type, 'victory')"
+        }
+      ]
+    }
+  },
+  "performance_tests": {
+    "test_llm_latency": {
+      "priority": "LOW",
+      "file_path": "test/performance/test_llm_benchmarks.gd",
+      "estimated_effort": "1 hour",
+      "tests": [
+        {
+          "name": "test_card_generation_latency",
+          "description": "Verify LLM card generation completes in < 3s",
+          "setup": "Mock LLM with realistic delay",
+          "action": "measure time from request to response",
+          "assertion": "assert_lt(elapsed_ms, 3000)"
+        },
+        {
+          "name": "test_json_parse_success_rate",
+          "description": "Verify JSON parse success rate > 60% over 100 samples",
+          "setup": "Generate 100 LLM responses with known success rate",
+          "action": "parse all responses, count successes",
+          "assertion": "assert_gt(success_rate, 0.6)"
+        }
+      ]
+    }
+  },
+  "recommendations": {
+    "immediate": [
+      "Write test_merlin_store.gd with 7 tests (2 hours)",
+      "Write test_card_system.gd with 3 tests (1.5 hours)",
+      "Write test_edge_cases.gd with 3 critical edge cases (3 hours)"
+    ],
+    "short_term": [
+      "Write test_card_pipeline.gd integration tests (2 hours)",
+      "Write test_save_system.gd integration tests (1.5 hours)",
+      "Write test_effect_engine.gd unit tests (1 hour)"
+    ],
+    "long_term": [
+      "Write test_playthrough.gd E2E tests (4 hours)",
+      "Write test_llm_benchmarks.gd performance tests (1 hour)",
+      "Implement Triade state coverage campaign (343 combinations) (20+ hours)"
+    ]
+  }
+}

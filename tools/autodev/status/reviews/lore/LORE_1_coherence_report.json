@@ -1,0 +1,363 @@
+{
+  "task_id": "LORE.1",
+  "title": "Narrative coherence review",
+  "reviewer": "lore",
+  "timestamp": "2026-02-22T22:45:00+01:00",
+  "status": "COMPLETED",
+  "data_sources": {
+    "expected": [
+      {
+        "file": "batch_autoplay_results.json",
+        "status": "NOT_FOUND",
+        "impact": "Cannot analyze LLM outputs directly"
+      },
+      {
+        "file": "stats_summary.json",
+        "status": "NOT_FOUND",
+        "impact": "Cannot analyze statistical patterns"
+      }
+    ],
+    "used": [
+      "docs/50_lore/*.md (32 files)",
+      "data/ai/scenarios/scenario_catalogue.json (6 scenarios)",
+      ".claude/agents/lore_writer.md",
+      ".claude/agents/merlin_guardian.md",
+      ".claude/agents/historien_bretagne.md",
+      ".claude/agents/narrative_writer.md"
+    ]
+  },
+  "analysis_scope": "BASELINE_LORE",
+  "analysis_note": "Faute de logs d'autoplay, cette analyse porte sur la COHERENCE INTERNE de la documentation lore existante, pas sur les outputs LLM réels.",
+  "findings": {
+    "merlin_voice_coherence": {
+      "score": 9.0,
+      "strengths": [
+        "Protocole comportemental exhaustif (MERLIN_BEHAVIOR_PROTOCOL.md)",
+        "Ambiguïté systématique documentée (2+ interprétations par ligne)",
+        "Evolution par Trust claire (T0-T3, 4 tiers)",
+        "Interdits explicites (fin du monde, simulation, IA, serveur)",
+        "Équilibre joyeux/mélancolique défini (95%/5%)",
+        "Vocabulaire celtique intégré et validé"
+      ],
+      "issues": [
+        {
+          "severity": "MEDIUM",
+          "description": "Contradiction potentielle: Merlin dit 'je sais' dans MERLIN_COMPLETE_PERSONALITY mais protocole interdit 'say je sais about cosmic truths'",
+          "recommendation": "Vérifier cohérence entre les deux documents",
+          "file": "MERLIN_COMPLETE_PERSONALITY.md"
+        },
+        {
+          "severity": "LOW",
+          "description": "Risque taunting excessif si LLM mal calibré",
+          "recommendation": "Le taunting doit rester affectueux, jamais cruel",
+          "file": "MERLIN_BEHAVIOR_PROTOCOL.md"
+        },
+        {
+          "severity": "LOW",
+          "description": "LLM peut inventer termes celtiques non validés",
+          "recommendation": "Validation automatique contre vocabulaire approved requis",
+          "file": "GUIDE_SCENARIOS_LLM.md"
+        }
+      ],
+      "merlin_triple_nature": {
+        "layer_1_surface": "Druide joyeux (ce que le joueur voit toujours)",
+        "layer_2_depth": "Conscience née au XIIe siècle (ce que T2-T3 devinent)",
+        "layer_3_secret": "M.E.R.L.I.N. = IA du futur (JAMAIS révélé)",
+        "coherence": "EXCELLENT",
+        "risk": "Si LLM génère trop d'indices mélancoliques trop tôt (T0-T1), la couche 2 peut percer prématurément"
+      }
+    },
+    "scenario_coherence": {
+      "score": 8.5,
+      "scenarios_analyzed": 6,
+      "scenarios": [
+        {
+          "id": "la_fille_perdue",
+          "tone": "mysterieux",
+          "narrative_coherence": "OK",
+          "lore_respect": "OK",
+          "issues": "NONE"
+        },
+        {
+          "id": "le_serment_du_cerf",
+          "tone": "solennel",
+          "narrative_coherence": "OK",
+          "lore_respect": "OK",
+          "issues": "NONE"
+        },
+        {
+          "id": "la_forge_du_korrigan",
+          "tone": "malicieux",
+          "narrative_coherence": "OK",
+          "lore_respect": "OK",
+          "issues": "NONE"
+        },
+        {
+          "id": "le_chant_des_noyees",
+          "tone": "sombre",
+          "narrative_coherence": "OK",
+          "lore_respect": "OK",
+          "issues": "NONE"
+        },
+        {
+          "id": "le_festin_du_druide_fou",
+          "tone": "loufoque",
+          "narrative_coherence": "OK",
+          "lore_respect": "OK",
+          "issues": "META_RISK (see details)"
+        },
+        {
+          "id": "l_eveil_de_maelys",
+          "tone": "onirique",
+          "narrative_coherence": "OK",
+          "lore_respect": "OK",
+          "issues": "NONE"
+        }
+      ],
+      "meta_risk_detail": {
+        "scenario": "le_festin_du_druide_fou",
+        "twist": "druide_etait_bestiole",
+        "problem": "Le twist 'le druide fou était Bestiole' casse la 4e muraille narrative si mal exécuté. Bestiole est un personnage joueur établi, constant dans le run. Un reveal 'c'était Bestiole tout le long' peut confondre le joueur sur l'identité de Bestiole et créer une incohérence rétroactive.",
+        "severity": "MEDIUM",
+        "recommendation": "Option 1: Documenter clairement dans 06_BESTIOLE.md que Bestiole peut prendre forme humanoïde temporairement. Option 2: Remplacer par twist moins meta: 'druide_etait_projection_merlin' (cohérent avec les capacités de Merlin)."
+      },
+      "recurring_themes": {
+        "choix_sans_bonne_reponse": "4/6 scenarios",
+        "trahison_twist_final": "5/6 scenarios",
+        "nature_vivante": "6/6 scenarios",
+        "secrets_anciens": "5/6 scenarios",
+        "coherence_note": "Tous les scénarios explorent la dualité surface/profondeur (miroir de Merlin)"
+      }
+    },
+    "celtic_authenticity": {
+      "score": 8.0,
+      "elements": [
+        {
+          "element": "Cerf d'argent",
+          "usage": "Le Serment du Cerf",
+          "authenticity": "AUTHENTIC",
+          "source": "Animaux psychopompes celtes"
+        },
+        {
+          "element": "Korrigans",
+          "usage": "La Forge du Korrigan",
+          "authenticity": "AUTHENTIC",
+          "source": "Folklore breton"
+        },
+        {
+          "element": "Noyées",
+          "usage": "Le Chant des Noyées",
+          "authenticity": "AUTHENTIC",
+          "source": "Légendes bretonnes (Ville d'Ys)"
+        },
+        {
+          "element": "Nemeton",
+          "usage": "Le Serment du Cerf",
+          "authenticity": "AUTHENTIC",
+          "source": "Sanctuaire druidique gaulois"
+        },
+        {
+          "element": "Eau qui coule à l'envers",
+          "usage": "Le Serment du Cerf",
+          "authenticity": "CREATIVE_LIBERTY",
+          "source": "Pas de source directe mais cohérent avec Otherworld",
+          "recommendation": "Documenter comme creative liberty dans CELTIC_FOUNDATION.md"
+        },
+        {
+          "element": "Renard blanc",
+          "usage": "L'Eveil de Maelys",
+          "authenticity": "CREATIVE_LIBERTY",
+          "source": "Psychopompe rare (plus courant: corbeau, chouette)",
+          "recommendation": "Vérifier si équivalent celtique existe OU documenter comme creative liberty"
+        }
+      ],
+      "vocabulary_check": {
+        "approved_terms": [
+          "nemeton",
+          "ogham",
+          "sidhe",
+          "dolmen",
+          "korrigans",
+          "brume",
+          "mousse",
+          "pierre dressee",
+          "awen",
+          "menhir"
+        ],
+        "scenarios_compliance": "OK (aucun terme inventé détecté)",
+        "verification_needed": "Renard blanc (goupil blanc) — vérifier équivalent celtique"
+      }
+    },
+    "anti_patterns": {
+      "score": 10.0,
+      "interdits_scan": {
+        "emojis": "0/6 scenarios — CLEAN",
+        "argot_moderne": "0/6 scenarios — CLEAN",
+        "auto_identification_merlin": "N/A (scenarios = Merlin narrator) — CLEAN",
+        "briser_4e_mur": "0/6 scenarios (sauf risque meta déjà signalé)",
+        "nommer_jauges": "0/6 scenarios — CLEAN",
+        "demandes_directes": "0/6 scenarios — CLEAN"
+      },
+      "tone_shifts": {
+        "observation": "Le scénario 'Le Festin du Druide Fou' passe de loufoque à énigmatique au climax",
+        "status": "OK",
+        "justification": "Cohérent avec le protocole Merlin (masque Bouffon → masque Sage)",
+        "recommendation": "Documenter ce pattern comme feature, pas bug"
+      }
+    },
+    "cross_document_consistency": {
+      "biomes": {
+        "reference": "08_LES_BIOMES.md",
+        "scenarios": [
+          {
+            "id": "la_fille_perdue",
+            "biomes": ["foret_broceliande", "marais_korrigans"],
+            "coherence": "OK (logique: enfant perdue + korrigans)"
+          },
+          {
+            "id": "le_serment_du_cerf",
+            "biomes": ["foret_broceliande", "cercles_pierres", "collines_dolmens"],
+            "coherence": "OK (logique: cerf sacré + pierres)"
+          },
+          {
+            "id": "la_forge_du_korrigan",
+            "biomes": ["marais_korrigans", "foret_broceliande", "collines_dolmens"],
+            "coherence": "OK (logique: sous-terre korrigan)"
+          },
+          {
+            "id": "le_chant_des_noyees",
+            "biomes": ["marais_korrigans", "cotes_sauvages"],
+            "coherence": "OK (logique: eau noire + mer)"
+          },
+          {
+            "id": "le_festin_du_druide_fou",
+            "biomes": ["ALL (7 biomes)"],
+            "coherence": "VERIFY (trop permissif? Justifier si clairière impossible = hors-biome)"
+          },
+          {
+            "id": "l_eveil_de_maelys",
+            "biomes": ["foret_broceliande", "cercles_pierres", "landes_bruyere"],
+            "coherence": "OK (logique: druidesse ancienne)"
+          }
+        ]
+      },
+      "oghams": {
+        "reference": "07_LES_OGHAMS_COMPLET.md",
+        "observation": "Les scénarios ne référencent pas directement les Oghams dans les ancres",
+        "status": "OK (normal — Oghams = système de skills, pas narratif direct)",
+        "verification_needed": "Les cartes LLM générées doivent-elles mentionner les Oghams? (check GUIDE_SCENARIOS_LLM)"
+      }
+    }
+  },
+  "recommendations": [
+    {
+      "id": "REC-01",
+      "priority": "HIGH",
+      "action": "Vérifier cohérence 'je sais' dans MERLIN_COMPLETE_PERSONALITY vs MERLIN_BEHAVIOR_PROTOCOL",
+      "target_file": "MERLIN_COMPLETE_PERSONALITY.md",
+      "justification": "Contradiction potentielle"
+    },
+    {
+      "id": "REC-02",
+      "priority": "HIGH",
+      "action": "Documenter twist 'druide_etait_bestiole' OU le remplacer",
+      "target_files": ["scenario_catalogue.json", "06_BESTIOLE.md"],
+      "justification": "Risque meta/4e mur"
+    },
+    {
+      "id": "REC-03",
+      "priority": "HIGH",
+      "action": "Valider authenticité 'renard blanc' OU documenter comme creative liberty",
+      "target_file": "CELTIC_FOUNDATION.md",
+      "justification": "Cohérence historique"
+    },
+    {
+      "id": "REC-04",
+      "priority": "MEDIUM",
+      "action": "Créer checklist QA narrative automatisée",
+      "target_dir": "tools/autodev/",
+      "justification": "Validation systématique des outputs LLM"
+    },
+    {
+      "id": "REC-05",
+      "priority": "MEDIUM",
+      "action": "Documenter pattern 'tone shift Bouffon→Sage' comme feature",
+      "target_file": "NARRATIVE_ENGINE.md",
+      "justification": "Formaliser comportement observé"
+    },
+    {
+      "id": "REC-06",
+      "priority": "MEDIUM",
+      "action": "Vérifier si scénarios doivent mentionner Oghams",
+      "target_file": "GUIDE_SCENARIOS_LLM.md",
+      "justification": "Cohérence système/narratif"
+    },
+    {
+      "id": "REC-07",
+      "priority": "LOW",
+      "action": "Documenter capacité de Bestiole à prendre forme humanoïde (si validée)",
+      "target_file": "06_BESTIOLE.md",
+      "justification": "Support twist scénario"
+    },
+    {
+      "id": "REC-08",
+      "priority": "LOW",
+      "action": "Créer scénarios supplémentaires tone 'warm' et 'melancholy'",
+      "target_file": "scenario_catalogue.json",
+      "justification": "Équilibrage LoRA tone adapters (6 tones, 6 scénarios, mais répartition inégale)"
+    }
+  ],
+  "metrics": {
+    "overall_score": 8.9,
+    "breakdown": {
+      "merlin_voice": 9.0,
+      "scenario_coherence": 8.5,
+      "celtic_authenticity": 8.0,
+      "anti_patterns": 10.0,
+      "cross_document": 9.0
+    },
+    "risk_assessment": [
+      {
+        "risk": "LLM génère auto-identification Merlin",
+        "probability": "MEDIUM",
+        "impact": "HIGH",
+        "severity": "CRITICAL"
+      },
+      {
+        "risk": "LLM invente termes celtiques",
+        "probability": "LOW",
+        "impact": "MEDIUM",
+        "severity": "MEDIUM"
+      },
+      {
+        "risk": "Tone shifts incohérents",
+        "probability": "LOW",
+        "impact": "LOW",
+        "severity": "LOW"
+      },
+      {
+        "risk": "Twist meta mal exécuté",
+        "probability": "MEDIUM",
+        "impact": "MEDIUM",
+        "severity": "MEDIUM"
+      }
+    ]
+  },
+  "conclusion": {
+    "verdict": "EXCELLENTE cohérence narrative",
+    "detail": "La lore de M.E.R.L.I.N. présente une cohérence narrative exceptionnelle. Les documents sont bien structurés, les interdits clairs, et les scénarios respectent l'esprit du monde.",
+    "blockers": "NONE",
+    "blockers_note": "Les issues identifiées sont des points de vigilance facilement adressables",
+    "next_steps": [
+      "Implémenter checklist QA automatisée (REC-04)",
+      "Valider/corriger les 3 issues HIGH (REC-01, 02, 03)",
+      "Attendre batch_autoplay_results.json pour analyse des outputs LLM réels"
+    ]
+  },
+  "agents_consulted": [
+    "lore_writer.md",
+    "merlin_guardian.md",
+    "historien_bretagne.md",
+    "narrative_writer.md"
+  ]
+}

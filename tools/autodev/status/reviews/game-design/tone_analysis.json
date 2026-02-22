@@ -1,0 +1,178 @@
+{
+  "task_id": "GD.2",
+  "title": "Fun factor and tone evaluation",
+  "status": "completed",
+  "timestamp": "2026-02-22T23:15:00Z",
+  "sources": [
+    "data/ai/scenarios/scenario_catalogue.json",
+    "data/ai/config/merlin_persona.json",
+    ".claude/agents/game_designer.md"
+  ],
+  "target_tone": "quirky & mysterious — druide parlant, humour decale, secrets caches partout, narration a double fond",
+  "findings": {
+    "merlin_persona_tone": {
+      "status": "✅ EXCELLENT",
+      "current_tone": "mysterieux, bienveillant, taquin, philosophique",
+      "appellations": ["Voyageur", "Ami", "Cher ami", "Petit etre curieux", "Intrepide inconscient"],
+      "quirky_elements": [
+        "Glitchs occasionnels: repetitions courtes, pauses '...'",
+        "Lapsus meta-narratifs: 'mes circuits... mes os'",
+        "Bug templates: 'Je bugue, donc je pense'",
+        "Technical freeze: '...' puis 'Je reviens, Voyageur'"
+      ],
+      "mysterious_elements": [
+        "Celtic vocabulary: brume, pierre, ogham, nemeton, sidhe, dolmen, korrigans",
+        "Self-reference: 'Un vieux druide aux secrets rapioces'",
+        "Cryptic hints: 'Le cercle de pierres n'est pas un cercle'",
+        "Memory lapses: 'Ma memoire tremble, pardon'"
+      ],
+      "humor_type": "Dry, subtle, self-aware meta-humor disguised as druide wisdom",
+      "verdict": "Persona nails the 'quirky & mysterious' target perfectly"
+    },
+    "scenario_tone_diversity": {
+      "status": "⚠️ MODERATE",
+      "scenarios_analyzed": 2,
+      "tones_found": {
+        "la_fille_perdue": "mysterieux",
+        "le_serment_du_cerf": "solennel"
+      },
+      "missing_tones": [
+        "humour decale (no comedic scenarios)",
+        "absurde (no surreal scenarios)",
+        "meta-narratif (no 4th-wall breaks in scenarios)"
+      ],
+      "strength": "Scenarios have strong narrative hooks and double meanings",
+      "weakness": "Tone variety limited to serious/solemn — needs more tonal range",
+      "example_double_meaning": {
+        "scenario": "la_fille_perdue",
+        "surface": "Rescue lost child",
+        "twist": "Child has been adopted by forest / child has become something else",
+        "tone_shift": "innocent rescue → body horror / loss of humanity"
+      },
+      "recommendation": "Add 2-3 scenarios with 'absurde' or 'farceur' tone to balance seriousness"
+    },
+    "card_option_distinctness": {
+      "status": "UNKNOWN",
+      "reason": "No autoplay logs available to analyze actual card option texts",
+      "design_intent": "3 options per card — Left (safe), Center (balanced), Right (risky)",
+      "theoretical_assessment": {
+        "mechanical_distinctness": "✅ OK (DC ranges create different success rates)",
+        "narrative_distinctness": "⚠️ UNVERIFIED (need LLM-generated card samples)"
+      },
+      "target": "Each option must be narratively distinct, not just mechanically",
+      "example_good_distinctness": {
+        "scenario": "Encounter with korrigan",
+        "left": "Bow respectfully and offer honey (diplomatic)",
+        "center": "Negotiate for safe passage (transactional)",
+        "right": "Challenge the korrigan to a riddle contest (bold)"
+      },
+      "recommendation": "Collect 50 LLM-generated cards from autoplay and analyze option texts for variety"
+    },
+    "choice_meaningfulness": {
+      "status": "✅ STRONG",
+      "evidence": "Scenario anchors create branching narratives based on flags",
+      "example": {
+        "scenario": "la_fille_perdue",
+        "anchor_2_branches": {
+          "default": "Chasseur bourru emerge des taillis",
+          "if_flag_ruban_trouve": "Chasseur remarque le ruban rouge — eclair de panique"
+        },
+        "impact": "Player's earlier choice (finding ribbon) changes NPC reaction"
+      },
+      "assessment": "Choices have narrative memory and consequence",
+      "verdict": "Meaningfulness achieved through flag-based branching"
+    },
+    "variety_assessment": {
+      "status": "⚠️ MODERATE",
+      "scenario_count": 2,
+      "biome_variety": "Good (scenarios span 5+ biomes)",
+      "tone_variety": "Low (2 serious tones, 0 comedic/absurd)",
+      "narrative_structure_variety": "High (discovery → encounter → climax with branches)",
+      "recommendation": "Add 3-5 more scenarios with diverse tones to reach target variety"
+    },
+    "secrets_and_double_meanings": {
+      "status": "✅ EXCELLENT",
+      "examples": [
+        {
+          "element": "Merlin persona",
+          "surface": "Helpful druide guide",
+          "secret": "AI from future reliving memories (lore reveal at T4)"
+        },
+        {
+          "element": "Glitch templates",
+          "surface": "Druide memory lapses",
+          "secret": "Merlin is breaking down (meta-narrative clue)"
+        },
+        {
+          "element": "La fille perdue",
+          "surface": "Missing child rescue",
+          "secret": "Child has been changed by forest / is no longer human"
+        },
+        {
+          "element": "Le serment du cerf",
+          "surface": "Mysterious quest with silver stag",
+          "secret": "Player carries unfinished oath they don't remember"
+        }
+      ],
+      "verdict": "Secrets are LAYERED and DISCOVERABLE over multiple runs",
+      "lore_progression": "T0 (surface) → T1 (patterns) → T2 (Merlin's nature) → T3 (cycles) → T4 (full truth)"
+    }
+  },
+  "tone_scorecard": {
+    "quirky": {
+      "score": 9,
+      "max": 10,
+      "evidence": "Merlin's glitches, meta-humor, Celtic vocabulary quirks"
+    },
+    "mysterious": {
+      "score": 10,
+      "max": 10,
+      "evidence": "Layered secrets, cryptic hints, double meanings, lore reveals over 50+ runs"
+    },
+    "humour_decale": {
+      "score": 6,
+      "max": 10,
+      "evidence": "Present in Merlin persona (bugs, lapsus), MISSING in scenarios"
+    },
+    "narration_double_fond": {
+      "score": 10,
+      "max": 10,
+      "evidence": "Scenario twists, Merlin's true nature, child transformation, oath mystery"
+    }
+  },
+  "action_items": [
+    {
+      "priority": "HIGH",
+      "action": "Collect 50 LLM-generated cards from autoplay logs",
+      "rationale": "Verify option text distinctness and narrative variety"
+    },
+    {
+      "priority": "MEDIUM",
+      "action": "Add 2-3 'absurde' or 'farceur' tone scenarios",
+      "rationale": "Balance serious scenarios with comedic relief",
+      "examples": [
+        "Korrigan market — absurd haggling with faeries over meaningless objects",
+        "Drunk dolmen — talking stone that can't stop hiccuping prophecies",
+        "Merlin's lost hat — ridiculous fetch quest that reveals deep lore"
+      ]
+    },
+    {
+      "priority": "LOW",
+      "action": "Add more Merlin meta-humor variants",
+      "rationale": "Expand glitch templates for long-term replayability"
+    }
+  ],
+  "strengths": [
+    "Merlin persona is PERFECTLY quirky & mysterious",
+    "Secrets are layered across 50+ runs (meta-progression lore reveals)",
+    "Scenario twists create double meanings (child transformation, oath mystery)",
+    "Flag-based branching makes choices meaningful",
+    "Celtic vocabulary creates strong atmospheric tone"
+  ],
+  "weaknesses": [
+    "Scenario tone variety limited to serious/solemn (no comedy)",
+    "No autoplay data to verify LLM-generated card option distinctness",
+    "Only 2 scenarios in catalogue (need 5-10 for variety)"
+  ],
+  "overall_verdict": "Tone is STRONG for mystery and secrets, MODERATE for humor variety. Add comedic scenarios to fully achieve 'quirky & mysterious' balance."
+}

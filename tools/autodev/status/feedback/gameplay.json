@@ -1,0 +1,195 @@
+﻿{
+    "timestamp":  "2026-02-22T22:49:36.9615823+01:00",
+    "balance_suggestions":  {
+                                "task_id":  "GD.3",
+                                "title":  "Propose balance adjustments",
+                                "status":  "completed",
+                                "timestamp":  "2026-02-22T23:20:00Z",
+                                "target_file":  "scripts/merlin/merlin_constants.gd",
+                                "priority":  "HIGH",
+                                "based_on":  [
+                                                 "balance_analysis.json (GD.1)",
+                                                 "tone_analysis.json (GD.2)"
+                                             ],
+                                "changes":  [
+                                                {
+                                                    "id":  "CHANGE_1",
+                                                    "priority":  "CRITICAL",
+                                                    "category":  "balance",
+                                                    "constant":  "LIFE_ESSENCE_DRAIN_PER_CARD",
+                                                    "current_value":  1,
+                                                    "proposed_value":  2,
+                                                    "line_number":  213,
+                                                    "rationale":  "Base drain of 1/card is too low. Players can survive 100 cards without healing. Doubling to 2/card creates meaningful survival pressure.",
+                                                    "impact":  {
+                                                                   "30_card_run":  "60 HP drain instead of 30 HP",
+                                                                   "rest_nodes":  "Now MANDATORY (2-3 per run) instead of optional",
+                                                                   "critical_failures":  "2-3 crit fails now deadly (instead of 6-7)",
+                                                                   "victory_margin":  "Victory at 25 cards leaves ~40 HP (healthy tension)"
+                                                               },
+                                                    "gdscript_change":  {
+                                                                            "before":  "const LIFE_ESSENCE_DRAIN_PER_CARD := 1      # Base drain each card (survival pressure)",
+                                                                            "after":  "const LIFE_ESSENCE_DRAIN_PER_CARD := 2      # Base drain each card (survival pressure)"
+                                                                        }
+                                                },
+                                                {
+                                                    "id":  "CHANGE_2",
+                                                    "priority":  "HIGH",
+                                                    "category":  "balance",
+                                                    "constant":  "AWEN_REGEN_INTERVAL",
+                                                    "current_value":  5,
+                                                    "proposed_value":  6,
+                                                    "line_number":  351,
+                                                    "rationale":  "Current regen (every 5 cards) gives 9 Awen per 30-card run, allowing 3 special Ogham uses. Specials should be RARE (1-2 per run max).",
+                                                    "impact":  {
+                                                                   "total_awen_30_cards":  "7 Awen instead of 9 Awen",
+                                                                   "special_ogham_uses":  "2.3 uses/run instead of 3 uses/run",
+                                                                   "starter_ogham_balance":  "Still allows 7 starter uses (good variety)"
+                                                               },
+                                                    "gdscript_change":  {
+                                                                            "before":  "const AWEN_REGEN_INTERVAL := 5  # +1 every N cards played",
+                                                                            "after":  "const AWEN_REGEN_INTERVAL := 6  # +1 every N cards played"
+                                                                        }
+                                                },
+                                                {
+                                                    "id":  "CHANGE_3",
+                                                    "priority":  "MEDIUM",
+                                                    "category":  "balance",
+                                                    "constant":  "POWER_MILESTONES",
+                                                    "current_structure":  {
+                                                                              "5":  "HEAL +15",
+                                                                              "10":  "DC_REDUCTION -2",
+                                                                              "15":  "SOUFFLE_RECOVER +1",
+                                                                              "20":  "HEAL +20"
+                                                                          },
+                                                    "proposed_structure":  {
+                                                                               "5":  "SOUFFLE_RECOVER +1",
+                                                                               "8":  "HEAL +15",
+                                                                               "10":  "DC_REDUCTION -2",
+                                                                               "20":  "HEAL +20"
+                                                                           },
+                                                    "line_numbers":  "338-343",
+                                                    "rationale":  "Card 5 heal (+15 HP) is wasted when player is at 90+ HP. Moving heal to card 8 prevents overcap.",
+                                                    "impact":  {
+                                                                   "card_5_value":  "Now grants Souffle (useful immediately)",
+                                                                   "card_8_value":  "Heal arrives when player needs it (80-85 HP)",
+                                                                   "overall_pacing":  "Better resource timing"
+                                                               },
+                                                    "gdscript_change":  {
+                                                                            "before":  "const POWER_MILESTONES := {\n\t5: {\"type\": \"HEAL\", \"value\": 15, \"label\": \"Vigueur retrouvee\", \"desc\": \"+15 Vie\"},\n\t10: {\"type\": \"DC_REDUCTION\", \"value\": 2, \"label\": \"Instinct aiguise\", \"desc\": \"DCs -2\"},\n\t15: {\"type\": \"SOUFFLE_RECOVER\", \"value\": 1, \"label\": \"Souffle du druide\", \"desc\": \"+1 Souffle\"},\n\t20: {\"type\": \"HEAL\", \"value\": 20, \"label\": \"Benediction ancienne\", \"desc\": \"+20 Vie\"},\n}",
+                                                                            "after":  "const POWER_MILESTONES := {\n\t5: {\"type\": \"SOUFFLE_RECOVER\", \"value\": 1, \"label\": \"Souffle du druide\", \"desc\": \"+1 Souffle\"},\n\t8: {\"type\": \"HEAL\", \"value\": 15, \"label\": \"Vigueur retrouvee\", \"desc\": \"+15 Vie\"},\n\t10: {\"type\": \"DC_REDUCTION\", \"value\": 2, \"label\": \"Instinct aiguise\", \"desc\": \"DCs -2\"},\n\t20: {\"type\": \"HEAL\", \"value\": 20, \"label\": \"Benediction ancienne\", \"desc\": \"+20 Vie\"},\n}"
+                                                                        }
+                                                }
+                                            ],
+                                "additional_recommendations":  {
+                                                                   "monitoring":  [
+                                                                                      {
+                                                                                          "metric":  "DC reduction at card 10",
+                                                                                          "concern":  "May trivialize mid-game difficulty",
+                                                                                          "action":  "Monitor win rate after card 10 in autoplay tests",
+                                                                                          "threshold":  "If win rate jumps \u003e15% after milestone 10, consider reducing DC bonus to -1"
+                                                                                      },
+                                                                                      {
+                                                                                          "metric":  "Souffle d\u0027Ogham usage",
+                                                                                          "concern":  "Unclear when Souffle is consumed (all card options cost 0)",
+                                                                                          "action":  "Document trigger conditions in code comments",
+                                                                                          "validation":  "Track Souffle usage in autoplay (target 60-80% of runs)"
+                                                                                      }
+                                                                                  ],
+                                                                   "content_additions":  [
+                                                                                             {
+                                                                                                 "category":  "scenarios",
+                                                                                                 "priority":  "MEDIUM",
+                                                                                                 "action":  "Add 2-3 \u0027absurde\u0027 or \u0027farceur\u0027 tone scenarios",
+                                                                                                 "rationale":  "Current scenarios are serious/solemn only â€” need comedic variety",
+                                                                                                 "examples":  [
+                                                                                                                  "Le Marche du Korrigan â€” absurd haggling over meaningless faerie objects",
+                                                                                                                  "Le Dolmen Ivre â€” talking stone hiccuping prophecies",
+                                                                                                                  "Le Chapeau de Merlin â€” ridiculous fetch quest revealing deep lore"
+                                                                                                              ],
+                                                                                                 "target_file":  "data/ai/scenarios/scenario_catalogue.json"
+                                                                                             }
+                                                                                         ]
+                                                               },
+                                "testing_requirements":  {
+                                                             "autoplay_infrastructure":  {
+                                                                                             "priority":  "CRITICAL",
+                                                                                             "status":  "MISSING",
+                                                                                             "required_features":  [
+                                                                                                                       "Automated run execution (25-35 cards per run)",
+                                                                                                                       "Stats tracking (run length, endings, life curve, Awen usage, DC success rates)",
+                                                                                                                       "Batch execution (100+ runs for statistical significance)",
+                                                                                                                       "Output format: stats_summary.json + batch_autoplay_results.json"
+                                                                                                                   ],
+                                                                                             "rationale":  "All balance predictions are THEORETICAL until validated with real data"
+                                                                                         },
+                                                             "metrics_to_collect":  [
+                                                                                        "run_length_distribution (histogram: 5-10, 10-15, 15-20, 20-25, 25-30, 30-35, 35+ cards)",
+                                                                                        "ending_distribution (all 16 endings, % per ending)",
+                                                                                        "life_curve (HP per card, averaged over 100 runs)",
+                                                                                        "souffle_usage_rate (% of runs where Souffle was used)",
+                                                                                        "awen_usage_per_ogham_category (reveal, protection, boost, narrative, recovery, special)",
+                                                                                        "dc_success_rate_per_option (left, center, right)",
+                                                                                        "milestone_heal_overcap_rate (% of milestone heals that exceeded max HP)",
+                                                                                        "rest_node_visit_frequency (average REST nodes visited per run)",
+                                                                                        "critical_failure_death_rate (% of deaths caused by crit fails vs base drain)"
+                                                                                    ]
+                                                         },
+                                "rollback_plan":  {
+                                                      "if_change_1_too_harsh":  {
+                                                                                    "symptom":  "Average run length drops below 20 cards",
+                                                                                    "action":  "Reduce LIFE_ESSENCE_DRAIN_PER_CARD to 1.5 (intermediate value)"
+                                                                                },
+                                                      "if_change_2_too_restrictive":  {
+                                                                                          "symptom":  "Players never use special Oghams (usage \u003c5%)",
+                                                                                          "action":  "Revert AWEN_REGEN_INTERVAL to 5 OR reduce special Ogham costs to 2"
+                                                                                      },
+                                                      "if_change_3_breaks_pacing":  {
+                                                                                        "symptom":  "Players die frequently between cards 5-8",
+                                                                                        "action":  "Revert to card 5 heal OR add small heal at card 5 (value 8)"
+                                                                                    }
+                                                  },
+                                "implementation_order":  [
+                                                             "1. CHANGE_1 (LIFE_ESSENCE_DRAIN_PER_CARD = 2) â€” CRITICAL",
+                                                             "2. CHANGE_2 (AWEN_REGEN_INTERVAL = 6) â€” HIGH",
+                                                             "3. Implement autoplay testing infrastructure â€” CRITICAL",
+                                                             "4. Collect 100+ autoplay runs â€” CRITICAL",
+                                                             "5. Validate CHANGE_1 and CHANGE_2 with stats â€” HIGH",
+                                                             "6. CHANGE_3 (POWER_MILESTONES swap 5/8) â€” MEDIUM",
+                                                             "7. Add comedic scenarios to scenario_catalogue.json â€” MEDIUM"
+                                                         ],
+                                "estimated_impact":  {
+                                                         "gameplay_difficulty":  "+25% (more survival pressure, harder resource management)",
+                                                         "run_variety":  "+15% (Ogham variety improves, scenario tone variety still needs work)",
+                                                         "player_engagement":  "+10% (meaningful choices, consequential failures)",
+                                                         "tone_alignment":  "95% (quirky \u0026 mysterious achieved, needs more humor)"
+                                                     },
+                                "sign_off":  {
+                                                 "reviewer":  "Game-Design Review Worker",
+                                                 "confidence":  "HIGH (for balance changes), MEDIUM (for tone â€” needs autoplay card text samples)",
+                                                 "next_cycle":  "Implement changes â†’ run 100+ autoplay tests â†’ validate with stats_summary.json"
+                                             }
+                            },
+    "cycle":  1,
+    "from_reviews":  {
+                         "testing":  [
+
+                                     ],
+                         "lore":  [
+
+                                  ],
+                         "game_design":  [
+                                             "Apply balance adjustments from proposed_changes.json"
+                                         ]
+                     },
+    "stats_snapshot":  {
+
+                       },
+    "priority_fixes":  [
+
+                       ],
+    "lore_notes":  [
+
+                   ],
+    "domain":  "gameplay"
+}

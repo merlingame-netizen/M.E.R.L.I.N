@@ -1,0 +1,271 @@
+{
+  "task_id": "LORE.2",
+  "title": "Lore expansion from gameplay",
+  "reviewer": "lore",
+  "timestamp": "2026-02-22T23:00:00+01:00",
+  "status": "COMPLETED",
+  "data_sources": {
+    "scenarios_analyzed": "data/ai/scenarios/scenario_catalogue.json (6 scenarios)",
+    "lore_docs_reviewed": [
+      "docs/50_lore/11_LES_PNJ.md (12 NPCs)",
+      "docs/50_lore/14_BESTIAIRE_BROCELIANDE.md (bestiaire complet)",
+      "docs/50_lore/07_LES_OGHAMS_COMPLET.md (18 Oghams + druides dissous)",
+      "docs/50_lore/08_LES_BIOMES.md (7 biomes)"
+    ]
+  },
+  "expansion_rationale": "Basé sur les 6 scénarios du catalogue, identifier les opportunités d'expansion narrative qui enrichiraient le monde sans contredire la lore existante.",
+  "expansions": [
+    {
+      "id": "EXP-01",
+      "source_scenario": "la_fille_perdue",
+      "expansion_type": "NPC_BACKSTORY",
+      "target_file": "docs/50_lore/11_LES_PNJ.md",
+      "priority": "HIGH",
+      "title": "Le Chasseur Tourmenté",
+      "description": "Le scénario 'La Fille Perdue' mentionne un chasseur bourru qui traque l'enfant disparue. Son rôle dans le scénario suggère une histoire plus profonde (main tremblante, panique au ruban rouge). Créer un NPC récurrent: 'Edern le Chasseur'.",
+      "proposed_content": {
+        "name": "Edern le Chasseur",
+        "biome": "foret_broceliande",
+        "role": "Chasseur solitaire, ancien père",
+        "age_apparent": "40 ans, visage marqué, barbe rousse",
+        "personality": "Bourru en surface, hanté en profondeur. Traque les créatures dangereuses mais ne peut plus tuer les jeunes (rappellent sa fille perdue il y a 10 ans).",
+        "secret_s3": "Sa fille n'a jamais été retrouvée. Parfois, il entend sa voix dans les bois — mais c'est toujours un korrigan qui se moque.",
+        "trust_evolution": {
+          "t0": "Méfiant, demande ce que le voyageur fait dans SES bois",
+          "t1": "Partage des conseils de survie, parle de la forêt",
+          "t2": "Confie l'histoire de sa fille (nom: Maëlle)",
+          "t3": "Demande au voyageur de laisser un message à Maëlle si il la croise (sachant qu'elle est probablement morte ou changée)"
+        },
+        "vocabulary_breton": [
+          "Digoradenn (ouverture — moment où la forêt s'ouvre)",
+          "Kroget eo ar gevrin (la chasse a commencé)"
+        ],
+        "narrative_hooks": [
+          "Le joueur peut retrouver la fille perdue d'Edern dans un run (mais elle est devenue fae)",
+          "Edern apparaît comme allié potentiel dans scénarios liés à la forêt",
+          "Quête cachée: réunir Edern et Maëlle (fin douce-amère)"
+        ]
+      },
+      "integration_notes": "Ce NPC enrichit le thème récurrent 'enfants perdus' et la dualité parent/enfant du projet. Cohérent avec le ton mélancolique sous la surface joyeuse."
+    },
+    {
+      "id": "EXP-02",
+      "source_scenario": "l_eveil_de_maelys",
+      "expansion_type": "LORE_DOCUMENT",
+      "target_file": "docs/50_lore/11_LES_PNJ.md (nouveau: §13 Maelys)",
+      "priority": "HIGH",
+      "title": "Maëlys la Rêveuse — 8e Druidesse",
+      "description": "Le scénario 'L'Eveil de Maëlys' présente une druidesse endormie depuis des siècles. Actuellement, seuls 7 druides vivants sont documentés (11_LES_PNJ.md). Maëlys devrait être la 8e — celle qui a choisi le sommeil plutôt que le sacrifice ou la folie.",
+      "proposed_content": {
+        "name": "Maëlys la Rêveuse",
+        "status": "Endormie sous le Grand Chêne de Brocéliande",
+        "biome": "foret_broceliande",
+        "specialite": "Oniromancie, voyages entre Monde Réel et Annwn",
+        "age_apparent": "Éternellement jeune (sommeil suspendu)",
+        "saison_forte": "Beltane (mai)",
+        "ogham_lie": "Beith (Bouleau — les commencements)",
+        "nature": "Druidesse qui a compris la fin avant les autres. A choisi de s'endormir dans un cocon de rêves pour ne pas devenir folle. Ses rêves débordent et colorent le monde réel (renard blanc, arbres de cristal).",
+        "backstory": {
+          "il_y_a_300_ans": "Maëlys était la plus jeune des druides, la plus douée en divination. Elle a VU la fin avec une clarté terrifiante lors de Samhain.",
+          "le_choix": "Plutôt que se dissoudre dans un Ogham (comme les 18) ou continuer à vivre avec ce savoir (comme Maelgwn), elle a choisi une 3e voie: le Sommeil Éternel sous le Grand Chêne.",
+          "le_gardien": "Le renard blanc est son gardien/projection. Il veille sur son sommeil et cherche celui qui pourra la réveiller sans la briser."
+        },
+        "conditions_eveil": {
+          "positive": "Si le joueur a Trust T3 avec Merlin ET a complété l'arc Maëlys avec compassion, elle s'éveille sereine et devient guide spirituel.",
+          "negative": "Si éveil forcé ou prématuré, elle s'éveille folle et ses cauchemars consument la forêt.",
+          "neutral": "Le joueur peut choisir de la laisser dormir — c'est un choix valide (thème: respecter le repos)."
+        },
+        "post_eveil_role": "Si éveillée positivement, Maëlys devient la 8e druidesse vivante. Elle offre au joueur des visions oniriques (mini-scenarios dans Annwn). Elle sait des choses que même Maelgwn ignore."
+      },
+      "integration_notes": "Maëlys comble le gap entre les 7 druides vivants et les 18 druides dissous. Elle représente la 3e voie: ni sacrifice, ni endurance, mais suspension. Cohérent avec le thème 'choix sans bonne réponse'."
+    },
+    {
+      "id": "EXP-03",
+      "source_scenario": "le_serment_du_cerf",
+      "expansion_type": "BIOME_DETAIL",
+      "target_file": "docs/50_lore/08_LES_BIOMES.md (section Brocéliande)",
+      "priority": "MEDIUM",
+      "title": "Le Gué aux Eaux Inversées",
+      "description": "Le scénario 'Le Serment du Cerf' mentionne un gué où l'eau coule à l'envers. Ce lieu magique devrait être documenté comme landmark de Brocéliande.",
+      "proposed_content": {
+        "name": "Le Gué aux Eaux Inversées (Gwarv an Dour Gont)",
+        "biome": "foret_broceliande",
+        "type": "Lieu liminal (frontière entre Monde Réel et Annwn)",
+        "description_visuelle": "Un gué peu profond où l'eau coule du sud vers le nord au lieu de suivre la pente. Les pierres du fond brillent faiblement la nuit. Des reflets impossibles dansent à la surface.",
+        "description_narrative": "Pour traverser le gué, il faut abandonner quelque chose — un souvenir, une force, une certitude. L'eau ne prend pas physiquement, elle DISSOUT. Ce qui est abandonné ici ne revient jamais.",
+        "lore_secret_s2": "Le gué marque l'endroit où la Membrane est la plus fine. L'eau coule à l'envers car elle vient d'Annwn, pas du monde réel. Traverser le gué = traverser la frontière des mondes temporairement.",
+        "rencontres_possibles": [
+          "Le Cerf d'Argent (attend de l'autre côté)",
+          "Des esprits noyés (ceux qui ont abandonné trop et se sont dissous)",
+          "Reflets de soi-même (version alternative du voyageur)"
+        ],
+        "mecanique_narrative": "Carte spéciale 'Traversée du Gué' déclenche un choix: Abandonner Corps/Ame/Monde pour gain temporaire majeur dans les 2 autres. Représente le sacrifice du Cerf.",
+        "vocabulaire_breton": "Gwarv (gué), Dour Gont (eau à l'envers — terme inventé mais construit sur racines valides)"
+      },
+      "integration_notes": "Enrichit Brocéliande avec un landmark iconique. Cohérent avec le thème liminalité (frontières floues entre mondes)."
+    },
+    {
+      "id": "EXP-04",
+      "source_scenario": "la_forge_du_korrigan",
+      "expansion_type": "BESTIARY_ENTRY",
+      "target_file": "docs/50_lore/14_BESTIAIRE_BROCELIANDE.md",
+      "priority": "MEDIUM",
+      "title": "Gwrac'h — Le Korrigan Forgeron",
+      "description": "Le scénario 'La Forge du Korrigan' présente un korrigan forgeron malicieux mais non nommé. Créer une entité bestiaire récurrente.",
+      "proposed_content": {
+        "name": "Gwrac'h (prononcé gou-rach')",
+        "species": "Korrigan artisan (sous-type rare — 1% des korrigans)",
+        "biome_principal": "marais_korrigans (sous-terre)",
+        "biomes_secondaires": ["collines_dolmens", "foret_broceliande"],
+        "apparence": "Petit (90cm), laid, mains noires de suie, yeux comme des braises. Porte un tablier de cuir brûlé et des lunettes de forgeron (anachronisme volontaire — il les a volées à un voyageur).",
+        "personnalite": "Malicieux mais pas cruel. Respecte les contrats à la lettre (fae law). Aime les énigmes et les jeux de mots. Rit beaucoup, surtout quand les mortels réalisent qu'ils ont été dupés.",
+        "backstory_s3": "Gwrac'h était forgeron humain il y a 400 ans. Il a conclu un marché avec les korrigans pour prolonger sa vie. Il a obtenu l'immortalité mais a été transformé en korrigan. Il ne regrette rien.",
+        "specialite": "Forge des objets enchantés (toujours maudits d'une façon ou d'une autre). Ses créations fonctionnent EXACTEMENT comme promis — c'est juste que les promesses sont ambiguës.",
+        "exemples_objets": [
+          "Épée qui ne rate jamais (mais ne peut frapper que ceux qu'on aime)",
+          "Lanterne qui éclaire la vérité (et rend aveugle aux mensonges bienveillants)",
+          "Boussole qui mène au cœur du désir (pas toujours ce qu'on croit désirer)"
+        ],
+        "marches_types": "Gwrac'h demande 3 réponses vraies à 3 questions. Les questions sont toujours piège (ex: 'Qu'est-ce que tu crains le plus?' — répondre révèle une faiblesse qu'il exploitera).",
+        "evolution_runs": {
+          "1-10": "Propose marché standard, dupe le joueur",
+          "11-30": "Commence à respecter le voyageur, réduit les malédictions",
+          "31+": "Offre un objet SANS malédiction (événement rare, montre qu'il est devenu ami)"
+        },
+        "vocabulaire_breton": "Gwrac'h (sorcière/être fae en breton — nom ironique)"
+      },
+      "integration_notes": "Gwrac'h devient le korrigan iconique du projet. Ajoute humour noir et dilemmes moraux (accepter objet maudit vs refuser aide)."
+    },
+    {
+      "id": "EXP-05",
+      "source_scenario": "le_chant_des_noyees",
+      "expansion_type": "LORE_FRAGMENT",
+      "target_file": "docs/50_lore/THE_HIDDEN_TRUTH.md (nouvelle section: Légendes Locales)",
+      "priority": "LOW",
+      "title": "La Légende de Morgane et ses Sœurs",
+      "description": "Le scénario 'Le Chant des Noyées' mentionne des femmes noyées (ou poussées) dans le marais. Créer une micro-légende locale qui explique leur origine.",
+      "proposed_content": {
+        "title": "Morgane et les Trois Sœurs Noyées",
+        "type": "Légende locale (connue des villageois, racontée à Samhain)",
+        "periode": "Il y a 200 ans (époque pré-Révolution)",
+        "resume": "Trois sœurs — Morgane, Enora et Gwenola — vivaient près du marais noir. Morgane était guérisseuse, Enora tisseuse, Gwenola chanteuse. Un noble local les a accusées de sorcellerie (en réalité, il convoitait leurs terres). Les trois ont été jetées dans le marais la nuit de Samhain.",
+        "la_verite_cachee_s2": "Le noble ne les a pas jetées par superstition — il savait qu'elles étaient des druidesses mineures (non initiées au cercle mais douées). Il voulait éteindre leur pouvoir avant qu'elles ne deviennent dangereuses pour son autorité.",
+        "la_verite_ultime_s1": "Morgane n'est pas morte. Elle s'est transformée en esprit des eaux (similaire aux Bean-Nighe irlandaises). Ses sœurs sont mortes, mais Morgane les maintient 'vivantes' par son chant. Si Morgane est libérée, Enora et Gwenola disparaissent définitivement.",
+        "dilemme_moral": "Le joueur découvre que le 'meurtrier' à juger n'est pas le noble (mort depuis longtemps) mais Morgane elle-même — qui maintient ses sœurs dans un état de souffrance éternelle par refus de les laisser partir.",
+        "resolutions": {
+          "justice": "Forcer Morgane à libérer ses sœurs (elles trouvent la paix, Morgane reste seule et hurle de chagrin)",
+          "pitie": "Pardonner à Morgane, lui permettre de continuer à chanter (sœurs restent prisonnières mais ensemble)",
+          "twist": "Découvrir que les sœurs VEULENT rester — la solitude de la mort est pire que la souffrance partagée"
+        },
+        "integration_scenario": "Cette légende devient le backstory du scénario 'Le Chant des Noyées'. Les cartes anchor font référence aux trois sœurs."
+      },
+      "integration_notes": "Enrichit le marais avec une tragédie humaine devenue mythe. Thème: l'amour qui refuse de lâcher prise peut devenir une prison."
+    },
+    {
+      "id": "EXP-06",
+      "source_scenario": "le_festin_du_druide_fou",
+      "expansion_type": "SECRET_OGHAM",
+      "target_file": "docs/50_lore/07_LES_OGHAMS_COMPLET.md (section Secrets)",
+      "priority": "LOW",
+      "title": "Révélation du 19e Ogham Perdu — Eadha (Peuplier)",
+      "description": "Le scénario 'Le Festin du Druide Fou' offre une 'vérité ou oubli'. Proposer que cette vérité soit la révélation d'un Ogham perdu (1 des 7 manquants).",
+      "proposed_content": {
+        "ogham_name": "Eadha (Peuplier)",
+        "status": "Perdu il y a 800 ans, résonne faiblement dans le festin du druide fou",
+        "druide_dissous": "Eadhadh le Joyeux (druide qui refusait la mélancolie)",
+        "ce_qu_il_ancrait": "La joie gratuite, le rire sans raison, la célébration malgré tout",
+        "pourquoi_perdu": "Quand le monde a commencé à mourir, Eadhadh a refusé d'accepter. Il a organisé un festin éternel pour nier la fin. Le festin a dévoré son essence — l'Ogham s'est dissous dans la fête elle-même.",
+        "ou_il_resonne_encore": "Le Festin du Druide Fou n'est pas organisé par un druide vivant — c'est l'écho d'Eadhadh, rejouant éternellement son dernier repas.",
+        "effet_si_recupere": "Si le joueur choisit 'accepter la vérité' au climax du scénario, il entend la note d'Eadha. Bestiole ne peut pas l'activer (trop fragmenté) mais le voyageur RESSENT sa vibration: un buff permanent +1 joie (cosmétique — interface plus colorée, dialogues Merlin plus chaleureux).",
+        "citation_eadhadh": "Pourquoi pleurer ce qui meurt quand on peut célébrer ce qui a vécu?",
+        "lien_merlin": "Merlin aimait profondément Eadhadh. Sa mort (dissolution dans le festin) est l'une des cicatrices que Merlin cache sous son humour. Quand Merlin taunt le joueur avec joie, c'est un hommage à Eadhadh."
+      },
+      "integration_notes": "Explique pourquoi il y a 18 Oghams au lieu de 25. Donne profondeur au Festin du Druide Fou (pas juste absurde, mais tragédie déguisée). Thème: la joie comme acte de résistance face à la mort."
+    }
+  ],
+  "biome_enrichment_suggestions": [
+    {
+      "biome": "foret_broceliande",
+      "new_landmarks": [
+        "Le Gué aux Eaux Inversées (EXP-03)",
+        "Le Grand Chêne de Maëlys (EXP-02)",
+        "La Clairière du Festin (EXP-06)"
+      ]
+    },
+    {
+      "biome": "marais_korrigans",
+      "new_landmarks": [
+        "La Forge Souterraine de Gwrac'h (EXP-04)",
+        "Le Cairn des Trois Sœurs (EXP-05)"
+      ]
+    }
+  ],
+  "ogham_secrets_additions": [
+    {
+      "ogham": "Beith (Bouleau)",
+      "new_connection": "Lié à Maëlys la Rêveuse (commencements éternels via le sommeil)"
+    },
+    {
+      "lost_ogham": "Eadha (Peuplier)",
+      "proposed_recovery_arc": "Via scénario Festin du Druide Fou, révélation partielle possible"
+    }
+  ],
+  "npc_roster_expansion": {
+    "current_count": 12,
+    "proposed_additions": [
+      "Edern le Chasseur (EXP-01)",
+      "Maëlys la Rêveuse (EXP-02)",
+      "Gwrac'h le Korrigan Forgeron (EXP-04)"
+    ],
+    "new_total": 15,
+    "diversity_check": {
+      "gender_balance": "Amélioration: +1 femme (Maëlys), équilibre 7F/8M",
+      "age_range": "Amélioration: Maëlys (éternellement jeune) vs Edern (40 ans, âge moyen)",
+      "species": "Amélioration: +1 korrigan nommé (Gwrac'h)",
+      "moral_alignment": "Équilibré: Edern (tourmenté), Maëlys (neutre), Gwrac'h (chaotic neutral)"
+    }
+  },
+  "thematic_coherence_check": {
+    "recurring_themes_reinforced": [
+      "Enfants perdus (Edern et sa fille Maëlle)",
+      "Choix sans bonne réponse (Morgane et ses sœurs)",
+      "Sommeil vs Éveil (Maëlys)",
+      "Contrats et conséquences (Gwrac'h)",
+      "Lieux liminaux (Gué aux Eaux Inversées)",
+      "Joie masquant le chagrin (Eadha/Festin)"
+    ],
+    "no_contradictions": "Toutes les expansions respectent la lore établie (vérification croisée effectuée)"
+  },
+  "implementation_priority": {
+    "high": [
+      "EXP-01 (Edern le Chasseur) — enrichit scénario existant immédiatement",
+      "EXP-02 (Maëlys) — comble gap 7→8 druides, central au scénario"
+    ],
+    "medium": [
+      "EXP-03 (Gué) — landmark iconique pour Brocéliande",
+      "EXP-04 (Gwrac'h) — NPC récurrent pour marais"
+    ],
+    "low": [
+      "EXP-05 (Morgane) — enrichit backstory scénario, pas critique",
+      "EXP-06 (Eadha) — révélation profonde, pour joueurs avancés (T3)"
+    ]
+  },
+  "word_count_estimate": {
+    "exp_01": "~400 mots",
+    "exp_02": "~600 mots",
+    "exp_03": "~300 mots",
+    "exp_04": "~500 mots",
+    "exp_05": "~450 mots",
+    "exp_06": "~400 mots",
+    "total": "~2650 mots d'expansion lore"
+  },
+  "conclusion": {
+    "verdict": "6 expansions proposées, toutes cohérentes avec la lore existante",
+    "impact": "Enrichissement significatif sans dilution thématique",
+    "next_steps": [
+      "Valider EXP-01 et EXP-02 (HIGH priority) avec lore_writer",
+      "Rédiger les entrées complètes pour docs/50_lore/",
+      "Intégrer les nouveaux éléments dans scenario_catalogue.json si validés"
+    ]
+  }
+}

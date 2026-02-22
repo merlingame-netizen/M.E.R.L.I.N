@@ -1,0 +1,133 @@
+{
+  "task_id": "GD.1",
+  "title": "Balance analysis from auto-play stats",
+  "status": "completed_theoretical",
+  "timestamp": "2026-02-22T23:00:00Z",
+  "warning": "NO AUTOPLAY STATS FOUND - Analysis is theoretical based on merlin_constants.gd",
+  "source_files": [
+    "scripts/merlin/merlin_constants.gd",
+    ".claude/agents/game_designer.md",
+    ".claude/agents/meta_progression_designer.md"
+  ],
+  "findings": {
+    "life_drain_balance": {
+      "severity": "HIGH",
+      "current_constant": "LIFE_ESSENCE_DRAIN_PER_CARD = 1",
+      "issue": "Too low - players can survive 100 cards without healing",
+      "predicted_impact": "No survival pressure, REST nodes optional, crit fails don't matter",
+      "recommendation": "LIFE_ESSENCE_DRAIN_PER_CARD = 2",
+      "rationale": "30-card run = 60 HP drain, forces 2-3 REST nodes, makes crit fails dangerous"
+    },
+    "dc_ranges": {
+      "severity": "OK",
+      "current_constants": {
+        "left": {"min": 4, "max": 8, "default": 6, "success_rate": "75%"},
+        "center": {"min": 7, "max": 12, "default": 9, "success_rate": "60%"},
+        "right": {"min": 10, "max": 16, "default": 13, "success_rate": "40%"}
+      },
+      "assessment": "Well-balanced for 3-option system",
+      "recommendation": "No changes needed",
+      "note": "Dynamic DC ranges create 20-30% variance per option - excellent for variety"
+    },
+    "ending_distribution": {
+      "severity": "UNKNOWN",
+      "total_endings": 16,
+      "chutes": 12,
+      "victories": 3,
+      "secrets": 1,
+      "pity_system": "After 5 runs with same ending, guarantees different ending",
+      "target": "No single ending > 15% over 100 runs",
+      "recommendation": "Track ending_distribution in autoplay tests"
+    },
+    "souffle_economy": {
+      "severity": "MEDIUM",
+      "current_constants": {
+        "max": 1,
+        "start": 1,
+        "single_use": true
+      },
+      "issue": "Unclear when Souffle is consumed - all card options cost 0",
+      "hypothesis": "Consumed by Bestiole Oghams, special events, or Souffle Perks",
+      "recommendation": "Document trigger conditions + track usage in autoplay (target 60-80% of runs)"
+    },
+    "awen_economy": {
+      "severity": "MEDIUM",
+      "current_constants": {
+        "max": 5,
+        "start": 2,
+        "regen_interval": 5
+      },
+      "predicted_total_awen": "9 Awen per 30-card run",
+      "issue": "Allows 3 special Ogham uses per run (should be 1-2 max)",
+      "recommendation": "AWEN_REGEN_INTERVAL = 6 (reduces total to ~7 Awen)",
+      "impact": "Limits special Ogham uses to 2.3/run instead of 3/run"
+    },
+    "power_milestones": {
+      "severity": "LOW",
+      "current_milestones": {
+        "card_5": "HEAL +15",
+        "card_10": "DC_REDUCTION -2",
+        "card_15": "SOUFFLE_RECOVER +1",
+        "card_20": "HEAL +20"
+      },
+      "issue": "Card 5 heal likely overcapped (player at 90+ HP)",
+      "recommendation": "Swap milestones 5 and 8 - give Souffle early, heal when needed"
+    }
+  },
+  "cross_system_synergies": {
+    "life_vs_failures": {
+      "status": "OK",
+      "note": "If drain = 2/card, compound drain creates meaningful pressure"
+    },
+    "awen_vs_equilibre": {
+      "status": "OK",
+      "note": "Rewards balanced play with bonus Awen"
+    },
+    "dc_reduction_milestone": {
+      "status": "WARNING",
+      "note": "DC -2 at card 10 may trivialize mid-game difficulty"
+    }
+  },
+  "action_items": [
+    {
+      "priority": "HIGH",
+      "action": "Implement autoplay testing infrastructure",
+      "rationale": "All predictions need validation with real data"
+    },
+    {
+      "priority": "HIGH",
+      "action": "LIFE_ESSENCE_DRAIN_PER_CARD := 2",
+      "rationale": "Double survival pressure to meaningful level"
+    },
+    {
+      "priority": "HIGH",
+      "action": "AWEN_REGEN_INTERVAL := 6",
+      "rationale": "Reduce special Ogham spam"
+    },
+    {
+      "priority": "MEDIUM",
+      "action": "Swap POWER_MILESTONES entries 5 and 8",
+      "rationale": "Prevent wasted heal at card 5"
+    },
+    {
+      "priority": "MEDIUM",
+      "action": "Document Souffle d'Ogham consumption triggers",
+      "rationale": "Currently unclear when resource is used"
+    },
+    {
+      "priority": "LOW",
+      "action": "Monitor milestone 10 DC reduction impact",
+      "rationale": "May trivialize difficulty"
+    }
+  ],
+  "metrics_to_track": [
+    "run_length_distribution",
+    "ending_distribution",
+    "life_curve_per_card",
+    "souffle_usage_rate",
+    "awen_usage_per_ogham_category",
+    "dc_success_rate_per_option",
+    "milestone_heal_overcap_rate",
+    "rest_node_visit_frequency"
+  ]
+}

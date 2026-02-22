@@ -1,0 +1,147 @@
+{
+  "title": "GUT Framework Installation Guide",
+  "purpose": "Install Godot Unit Testing (GUT) framework to enable automated unit/integration tests",
+  "priority": "CRITICAL",
+  "estimated_time": "30 minutes",
+  "steps": [
+    {
+      "step": 1,
+      "title": "Clone GUT repository",
+      "commands": [
+        "cd C:\\Users\\PGNK2128\\Godot-MCP\\addons",
+        "git clone https://github.com/bitwes/Gut.git gut"
+      ],
+      "expected_result": "addons/gut/ directory created with GUT framework files",
+      "troubleshooting": "If git fails, download ZIP from https://github.com/bitwes/Gut/releases and extract to addons/gut/"
+    },
+    {
+      "step": 2,
+      "title": "Enable GUT plugin in Godot Editor",
+      "instructions": [
+        "Open Godot Editor (4.5.1-stable)",
+        "Go to Project > Project Settings > Plugins",
+        "Find 'Gut' in the list",
+        "Enable the plugin (checkbox on the right)",
+        "Restart Godot Editor"
+      ],
+      "expected_result": "GUT panel appears in bottom dock",
+      "troubleshooting": "If plugin not visible, verify addons/gut/plugin.cfg exists"
+    },
+    {
+      "step": 3,
+      "title": "Create test directories",
+      "commands": [
+        "mkdir C:\\Users\\PGNK2128\\Godot-MCP\\test",
+        "mkdir C:\\Users\\PGNK2128\\Godot-MCP\\test\\unit",
+        "mkdir C:\\Users\\PGNK2128\\Godot-MCP\\test\\integration"
+      ],
+      "expected_result": "test/unit/ and test/integration/ directories created",
+      "note": "GUT looks for tests in res://test/ by default"
+    },
+    {
+      "step": 4,
+      "title": "Copy initial test file",
+      "instructions": [
+        "Verify scripts/test/test_merlin_store.gd exists (created by AUTODEV)",
+        "If not, this file contains 7 unit tests for MerlinStore",
+        "Copy to test/unit/test_merlin_store.gd (if needed)"
+      ],
+      "expected_result": "test/unit/test_merlin_store.gd ready to run",
+      "note": "File already created at scripts/test/test_merlin_store.gd by AUTODEV worker"
+    },
+    {
+      "step": 5,
+      "title": "Configure GUT test runner",
+      "instructions": [
+        "In Godot Editor, click GUT panel (bottom dock)",
+        "Click 'Settings' icon",
+        "Set 'Test Directory' to 'res://test/'",
+        "Set 'Test Prefix' to 'test_'",
+        "Set 'Test Suffix' to '.gd'",
+        "Enable 'Exit On Finish' (for CI/CD)",
+        "Save settings"
+      ],
+      "expected_result": "GUT configured to find tests in res://test/",
+      "troubleshooting": "If tests not found, verify path format (res:// prefix required)"
+    },
+    {
+      "step": 6,
+      "title": "Run first test suite (GUI)",
+      "instructions": [
+        "In GUT panel, click 'Run All'",
+        "Observe test results in GUT panel",
+        "Green = PASS, Red = FAIL"
+      ],
+      "expected_result": "7 tests from test_merlin_store.gd execute (may fail if MerlinStore structure differs)",
+      "troubleshooting": "If all tests fail, verify MerlinStore.gd exists at scripts/merlin/merlin_store.gd and has expected methods (dispatch, check_run_end)"
+    },
+    {
+      "step": 7,
+      "title": "Run tests from command line (CI/CD integration)",
+      "commands": [
+        "cd C:\\Users\\PGNK2128\\Godot-MCP",
+        "& 'C:\\Users\\PGNK2128\\Godot\\Godot_v4.5.1-stable_win64_console.exe' --path . -s addons/gut/gut_cmdln.gd -gdir=res://test/ -gexit"
+      ],
+      "expected_result": "GUT runs headless, outputs results to console, exits with code 0 (pass) or 1 (fail)",
+      "note": "Use this command in validate.bat or AUTODEV pipeline"
+    },
+    {
+      "step": 8,
+      "title": "Integrate with validate.bat",
+      "instructions": [
+        "Edit tools/validate.bat (or create if missing)",
+        "Add GUT execution step after validate_flow_order.ps1",
+        "Capture GUT output to logs/gut_cycle_N.log",
+        "Parse output in aggregate_test_results.ps1"
+      ],
+      "expected_result": "GUT tests run automatically as part of validation pipeline",
+      "example_code": "powershell -ExecutionPolicy Bypass -File tools\\run_gut_tests.ps1 > logs\\gut.log 2>&1"
+    }
+  ],
+  "verification": {
+    "checklist": [
+      "addons/gut/ directory exists",
+      "GUT plugin enabled in Godot Editor",
+      "test/unit/ and test/integration/ directories exist",
+      "test_merlin_store.gd runs successfully (or fails with actionable errors)",
+      "GUT command line execution works",
+      "GUT integrated into validate.bat"
+    ],
+    "success_criteria": "At least 1 test file runs (pass or fail), GUT reports test count"
+  },
+  "common_issues": [
+    {
+      "issue": "Plugin not appearing in Godot Editor",
+      "cause": "plugin.cfg missing or malformed",
+      "solution": "Re-clone GUT repository, verify addons/gut/plugin.cfg exists"
+    },
+    {
+      "issue": "Tests not found by GUT",
+      "cause": "Incorrect test directory path",
+      "solution": "Verify 'Test Directory' in GUT settings is 'res://test/' (not 'test/' or 'C:\\...')"
+    },
+    {
+      "issue": "All tests fail with 'Script does not exist'",
+      "cause": "Test file references preload() path that does not exist",
+      "solution": "Verify MerlinStore.gd exists at res://scripts/merlin/merlin_store.gd, adjust path in test file if needed"
+    },
+    {
+      "issue": "GUT command line exits with code 1 but no failures shown",
+      "cause": "GUT considers warnings as failures",
+      "solution": "Add -gignore_warnings flag to gut_cmdln.gd invocation"
+    }
+  ],
+  "next_steps_after_installation": [
+    "Run test_merlin_store.gd and fix any failures (likely due to MerlinStore API differences)",
+    "Write 3 additional test files: test_card_system.gd, test_effect_engine.gd, test_edge_cases.gd",
+    "Integrate GUT into aggregate_test_results.ps1 (parse GUT JSON output)",
+    "Set up coverage tracking (GUT coverage plugin or manual instrumentation)",
+    "Document test writing conventions in debug_qa.md or gdscript_knowledge_base.md"
+  ],
+  "resources": [
+    "GUT documentation: https://github.com/bitwes/Gut/wiki",
+    "GUT command line guide: https://github.com/bitwes/Gut/wiki/Command-Line",
+    "GUT best practices: https://github.com/bitwes/Gut/wiki/Best-Practices",
+    "GDScript testing patterns (M.E.R.L.I.N. project): .claude/agents/debug_qa.md (Section: GUT Testing Framework)"
+  ]
+}
