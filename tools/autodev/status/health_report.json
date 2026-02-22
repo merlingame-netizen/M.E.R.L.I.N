@@ -1,0 +1,39 @@
+﻿{
+    "merge_conflicts":  [
+
+                        ],
+    "worker_statuses":  {
+                            "visual-polish":  {
+                                                  "domain":  "visual-polish",
+                                                  "blockers":  [
+
+                                                               ],
+                                                  "timestamp":  "2026-02-22T21:31:57.9399145+01:00",
+                                                  "current_task":  "",
+                                                  "status":  "done",
+                                                  "files_modified":  [
+
+                                                                     ],
+                                                  "tasks_completed":  [
+                                                                          "D.1",
+                                                                          "D.2"
+                                                                      ],
+                                                  "tasks_remaining":  [
+
+                                                                      ]
+                                              }
+                        },
+    "scope_violations":  [
+
+                         ],
+    "timestamp":  "2026-02-22T21:32:54.6777285+01:00",
+    "alerts":  [
+
+               ],
+    "validation_mutex":  {
+                             "active":  false
+                         },
+    "active_workers":  [
+                           "visual-polish"
+                       ]
+}

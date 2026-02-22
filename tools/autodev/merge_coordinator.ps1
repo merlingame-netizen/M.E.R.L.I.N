@@ -93,10 +93,14 @@ function Merge-Domain {
     Push-Location $projectRoot
 
     try {
-        # 1. Ensure we're on main and up to date
+        # 1. Ensure we're on main
         Write-Host "[MERGE] Switching to main..." -ForegroundColor Gray
-        git checkout main 2>$null
-        git pull origin main 2>$null
+        $null = git checkout main 2>&1
+        # Pull is optional (may fail if no remote or auth)
+        $null = git pull origin main 2>&1
+
+        # Reset LASTEXITCODE before merge
+        $null = git status 2>$null
 
         # 2. Attempt merge
         Write-Host "[MERGE] Merging $branch..." -ForegroundColor Gray
@@ -179,7 +183,7 @@ function Merge-Domain {
 
     } catch {
         Write-Host "[MERGE] ERROR: $($_.Exception.Message)" -ForegroundColor Red
-        git merge --abort 2>$null
+        $null = git merge --abort 2>&1
         Release-ValidationMutex
         Pop-Location
         return $false
