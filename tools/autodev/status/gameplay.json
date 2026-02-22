@@ -1,0 +1,84 @@
+{
+  "domain": "gameplay",
+  "domain_description": "Gameplay core: Souffle perks, Archetype, Aspects, progression",
+  "tasks": [
+    {
+      "id": "B.1",
+      "title": "Souffle d'Ogham -> Perk personnalisable",
+      "description": "Transformer le Souffle en système de perks. Le joueur choisit des bonus passifs liés aux Oghams débloqués. Chaque perk coûte du Souffle et offre un avantage contextuel.",
+      "priority": "high",
+      "status": "completed_store_only",
+      "implementation_notes": [
+        "Structure des perks déjà définie dans MerlinConstants.SOUFFLE_PERK_TYPES (6 perks)",
+        "Activation implémentée dans MerlinStore._activate_souffle_perk()",
+        "Effets appliqués dans effect_modifier du run state",
+        "Getters ajoutés: get_active_perk_modifiers(), consume_perk_modifier()",
+        "PENDING: Controller doit lire effect_modifier et appliquer les effets (voir patches/gameplay.json)"
+      ],
+      "files_modified": [
+        "scripts/merlin/merlin_store.gd"
+      ],
+      "patch_requests": [
+        "patches/gameplay.json#B.1_controller_perk_support"
+      ]
+    },
+    {
+      "id": "B.3",
+      "title": "Archetype -> bonus DC + contexte RAG",
+      "description": "L'archetype du joueur (déterminé par le quiz) modifie le DC des jets et injecte du contexte spécifique dans le RAG pour personnaliser la narration.",
+      "priority": "high",
+      "status": "completed_store_only",
+      "implementation_notes": [
+        "Archétypes déjà définis dans MerlinConstants.ARCHETYPES (4 archétypes)",
+        "Store getters déjà implémentés: get_archetype_dc_modifier(), get_archetype_rag_context()",
+        "RAG context déjà injecté dans merlin_card_system._build_llm_context()",
+        "PENDING: Controller doit appliquer le modificateur de DC (voir patches/gameplay.json)"
+      ],
+      "files_modified": [],
+      "patch_requests": [
+        "patches/gameplay.json#B.3_archetype_dc_integration"
+      ]
+    },
+    {
+      "id": "B.4",
+      "title": "Aspects -> impact narratif + bonus/malus",
+      "description": "Les états des 3 aspects (Bas/Equilibre/Haut) doivent influencer la narration LLM et appliquer des bonus/malus mécaniques (ex: Corps Épuisé = DC+2).",
+      "priority": "medium",
+      "status": "completed_store_only",
+      "implementation_notes": [
+        "Aspects mechanical_effects déjà définis dans MerlinConstants.TRIADE_ASPECT_INFO",
+        "Store getters déjà implémentés: get_aspect_dc_modifier(), get_all_aspects_dc_modifier(), get_aspect_narrative_hint(), get_all_aspects_narrative_hints()",
+        "Narrative hints déjà injectés dans merlin_card_system._build_llm_context()",
+        "PENDING: Controller doit appliquer les modificateurs de DC et afficher les hints narratifs (voir patches/gameplay.json)"
+      ],
+      "files_modified": [],
+      "patch_requests": [
+        "patches/gameplay.json#B.4_aspect_dc_integration"
+      ]
+    },
+    {
+      "id": "B.5",
+      "title": "Première run skip Hub",
+      "description": "A la toute première partie, permettre au joueur de sauter le Hub et aller directement en jeu pour une onboarding plus fluide.",
+      "priority": "low",
+      "status": "completed_store_only",
+      "implementation_notes": [
+        "Store helpers déjà implémentés: should_skip_hub(), mark_first_run_completed()",
+        "Flag first_run_completed stocké dans state.meta",
+        "PENDING: MenuPrincipal ou SelectionSauvegarde doit vérifier should_skip_hub() et router vers TransitionBiome (voir patches/gameplay.json)"
+      ],
+      "files_modified": [],
+      "patch_requests": [
+        "patches/gameplay.json#B.5_skip_hub_first_run"
+      ]
+    }
+  ],
+  "summary": {
+    "total_tasks": 4,
+    "completed_in_scope": 1,
+    "pending_controller": 3,
+    "scope_limitation": "Controller (triade_game_controller.gd) et scenes (MenuPrincipal.gd, SelectionSauvegarde.gd) hors scope. Patch requests créés.",
+    "next_actions": "Les workers du domaine ui-ux ou control-state doivent implémenter les patches."
+  },
+  "updated_at": "2026-02-22T15:35:00Z"
+}

@@ -1,0 +1,83 @@
+{
+  "domain": "gameplay",
+  "patches": [
+    {
+      "id": "B.1_controller_perk_support",
+      "title": "Controller support for Souffle Perks",
+      "description": "Le TriadeGameController doit lire et appliquer les modificateurs des Souffle Perks actifs.",
+      "target_file": "scripts/ui/triade_game_controller.gd",
+      "rationale": "Les Souffle Perks sont activés dans MerlinStore, mais leurs effets doivent être appliqués par le controller avant/après résolution de carte.",
+      "code_changes": [
+        {
+          "location": "_on_choice_selected() — avant appel LLM",
+          "add": "var perk_mods: Dictionary = store.get_active_perk_modifiers()\nif perk_mods.get('reveal_all_effects', false):\n    # Révéler tous les effets de la carte\n    _show_all_option_effects(card)\nif perk_mods.get('predict_next', false):\n    # Afficher un hint sur la prochaine carte\n    _show_next_card_hint()"
+        },
+        {
+          "location": "_apply_card_effects() — avant application des effets",
+          "add": "var perk_mods: Dictionary = store.get_active_perk_modifiers()\nif perk_mods.get('shield_next_negative', false):\n    # Filtrer les effets négatifs\n    effects = _filter_negative_effects(effects)\n    store.consume_perk_modifier('shield_next_negative')\nif perk_mods.get('double_positive', false):\n    # Doubler les effets positifs\n    effects = _amplify_positive_effects(effects, 2.0)\n    store.consume_perk_modifier('double_positive')"
+        },
+        {
+          "location": "_calculate_dc() — calcul du DC",
+          "add": "var perk_mods: Dictionary = store.get_active_perk_modifiers()\nvar dc_reduction: int = int(perk_mods.get('dc_reduction', 0))\nfinal_dc = maxi(final_dc - dc_reduction, 1)\nif perk_mods.get('dc_reduction', 0) != 0:\n    store.consume_perk_modifier('dc_reduction')"
+        },
+        {
+          "location": "_on_ogham_activated() — utilisation Ogham",
+          "add": "var perk_mods: Dictionary = store.get_active_perk_modifiers()\nif perk_mods.get('free_next_ogham', false):\n    # Ne pas consommer Awen ni appliquer cooldown\n    store.consume_perk_modifier('free_next_ogham')\n    return _apply_ogham_free(skill_id)"
+        },
+        {
+          "location": "_on_choice_selected() — après choix, avant résolution",
+          "add": "var perk_mods: Dictionary = store.get_active_perk_modifiers()\nif perk_mods.get('force_aspect_equilibre', false):\n    # Demander au joueur quel aspect ramener à Equilibre\n    _show_aspect_choice_popup()\n    store.consume_perk_modifier('force_aspect_equilibre')"
+        }
+      ]
+    },
+    {
+      "id": "B.3_archetype_dc_integration",
+      "title": "Archetype DC modifier integration in controller",
+      "description": "Le controller doit ajouter les modificateurs de DC de l'archetype lors du calcul du DC final.",
+      "target_file": "scripts/ui/triade_game_controller.gd",
+      "rationale": "Les bonus/malus de DC par archetype sont déjà implémentés dans MerlinStore (get_archetype_dc_modifier), mais le controller ne les utilise pas encore.",
+      "code_changes": [
+        {
+          "location": "_calculate_dc() — calcul du DC final",
+          "add": "# Appliquer modificateur d'archetype\nvar archetype_mod: int = store.get_archetype_dc_modifier(option_direction)\nfinal_dc += archetype_mod"
+        }
+      ]
+    },
+    {
+      "id": "B.4_aspect_dc_integration",
+      "title": "Aspect state DC modifier integration in controller",
+      "description": "Le controller doit ajouter les modificateurs de DC des états d'aspects lors du calcul du DC final.",
+      "target_file": "scripts/ui/triade_game_controller.gd",
+      "rationale": "Les bonus/malus de DC par état d'aspect (Corps Bas = DC+2, etc.) sont déjà implémentés dans MerlinStore (get_all_aspects_dc_modifier), mais le controller ne les utilise pas encore.",
+      "code_changes": [
+        {
+          "location": "_calculate_dc() — calcul du DC final",
+          "add": "# Appliquer modificateurs d'états d'aspects\nvar aspect_dc_mod: int = store.get_all_aspects_dc_modifier()\nfinal_dc += aspect_dc_mod"
+        },
+        {
+          "location": "_update_ui() — affichage des aspects",
+          "add": "# Afficher les hints narratifs des aspects non-équilibrés\nvar narrative_hints: Array = store.get_all_aspects_narrative_hints()\nif not narrative_hints.is_empty():\n    _show_aspect_warnings(narrative_hints)"
+        }
+      ]
+    },
+    {
+      "id": "B.5_skip_hub_first_run",
+      "title": "Skip Hub on first run integration",
+      "description": "Le MenuPrincipal ou SelectionSauvegarde doit vérifier should_skip_hub() et router directement vers TransitionBiome si première run.",
+      "target_file": "scenes/MenuPrincipal.gd OU scenes/SelectionSauvegarde.gd",
+      "rationale": "La logique should_skip_hub() est déjà dans MerlinStore. Il faut que le flow de scènes l'utilise pour skipper HubAntre lors de la première partie.",
+      "code_changes": [
+        {
+          "location": "_on_nouvelle_partie_pressed() — MenuPrincipal",
+          "add": "# Après création de la nouvelle partie, vérifier si skip Hub\nif store.should_skip_hub():\n    # Aller directement en jeu via TransitionBiome\n    get_tree().change_scene_to_file('res://scenes/TransitionBiome.tscn')\nelse:\n    # Flow normal: aller au Hub\n    get_tree().change_scene_to_file('res://scenes/HubAntre.tscn')"
+        },
+        {
+          "location": "_on_run_ended() — à la fin de la première run",
+          "add": "# Marquer la première run comme complétée\nif store.should_skip_hub():\n    store.mark_first_run_completed()"
+        }
+      ]
+    }
+  ],
+  "created_at": "2026-02-22T15:30:00Z",
+  "status": "pending_review"
+}
