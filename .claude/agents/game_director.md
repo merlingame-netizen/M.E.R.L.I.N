@@ -78,6 +78,209 @@
 - Le verbe d'action est TOUJOURS adapte a la Bestiole (ex: "la Bestiole renifle prudemment..." PAS "vous utilisez le skill Reveal")
 - La Bestiole n'est PAS un menu de skills — c'est un compagnon vivant qui reagit
 
+#### Arc Emotionnel d'une Run
+
+- **Intrigue permanente** — PAS de courbe classique "montee-climax-resolution". Chaque carte doit surprendre.
+- Le joueur ne sait JAMAIS ce qui va arriver — l'intrigue ne retombe pas, elle se transforme
+- Les revelations ne sont pas des climax — ce sont des virages qui ouvrent plus de questions qu'elles n'en resolvent
+- L'arc n'est pas lineaire : c'est une spirale de curiosite ou chaque reponse engendre 2 nouvelles questions
+- Emotion constante visee : **"Qu'est-ce qui se passe vraiment ?"** — le joueur est detective malgre lui
+
+#### Philosophie des 3 Choix
+
+- **Aucun choix n'est "bon"** — les 3 options ont toutes des avantages ET des couts caches
+- Le choix **depend du contexte** : la meme option peut etre excellente en Foret et catastrophique en Marais
+- Le choix du Centre (Souffle d'Ogham) n'est PAS "le meilleur" — c'est le plus equilibre mais aussi le plus couteux
+- **L'equilibre est le plus dur a atteindre** — c'est le vrai defi de game design, permettre au joueur de progresser quand aucun choix n'est objectivement superieur
+- Le joueur doit ressentir que CHAQUE option est tentante pour des raisons differentes
+- La Triade rend les choix complexes : un choix bon pour le Corps peut etre mauvais pour l'Ame
+- JAMAIS de choix "piege" evident — si un choix est mauvais, ca doit etre subtil et contextuel
+
+#### Evolution Inter-Runs (Meta-progression)
+
+- **Le monde se souvient** — les actions d'une run laissent des traces dans les suivantes (PNJ, lieux, reputation)
+- **La Bestiole grandit** — bond level persiste entre les runs (40% retention), la relation s'approfondit au fil des parties
+- **Revelation progressive** — chaque run apporte des fragments du secret ultime et de la cosmologie cachee
+- **Merlin evolue** — son comportement change subtilement au fil des runs (plus de lucidite? plus de folie? depend des choix cumules)
+- **Nouveaux chemins se debloquent** — l'intrigue avance, des secrets decouverts ouvrent des scenarios et des voies qui n'existaient pas avant
+- Le joueur ne rejoue JAMAIS exactement la meme partie — le LLM + le karma + la memoire inter-runs garantissent la variete
+- Les indices sur le secret ultime sont semes progressivement, JAMAIS en bloc (ni trop vite ni trop lentement)
+
+#### RED FLAGS Creatifs (Erreurs a eviter ABSOLUMENT)
+
+> Si un agent propose l'un de ces elements, le Game Director doit REJETER immediatement.
+
+| Red Flag | Pourquoi c'est incoherent | Alternative |
+|----------|--------------------------|-------------|
+| **Heroisme classique** | Le joueur n'est PAS un heros. C'est un voyageur perdu dans un monde mourant guide par un fou | Le joueur survit, s'adapte, decouvre — il ne "sauve" pas |
+| **Explication totale** | Le mystere EST le jeu. Si tout est explique, le jeu perd son ame | Donner des indices, jamais la reponse complete. Le joueur assemble le puzzle lui-meme |
+| **Merlin gentil/sage** | Merlin n'est PAS Gandalf. Il est fou, sarcastique, ambigu, cache des choses | Un Merlin bienveillant mais crypte, qui doute et qui oublie |
+| Difficulte artificielle | Les murs de stats, le grinding, les ennemis-ponges — ce n'est pas notre jeu | La difficulte vient des CHOIX moraux et strategiques, pas des chiffres |
+| Tutoriels explicatifs | Le joueur decouvre par l'experience, pas par des popups "Appuyez sur X" | Apprentissage organique, la Bestiole peut guider par ses reactions |
+| Linearite forcee | Meme avec une run "echec", le joueur doit sentir qu'il a vecu quelque chose d'unique | Chaque chemin est valide, meme les impasses racontent une histoire |
+
+#### Reactions de Merlin (Mix Adaptatif)
+
+Quand le joueur fait un choix que Merlin desapprouve (trahison, destruction, negligence), la reaction est **adaptee a la gravite** :
+
+| Gravite | Reaction de Merlin | Exemple |
+|---------|-------------------|---------|
+| Legere | **Remarque sarcastique** — ironie mordante sans bloquer | "Ah, la subtilite n'est pas ton fort... Soit." |
+| Moyenne | **Deception cryptique** — ses repliques deviennent sombres/melancoliques | Phrases plus courtes, metaphores sur la perte, ton las |
+| Grave | **Silence significatif** — il cesse de parler pendant quelques cartes | Le joueur sent l'absence, la Bestiole s'agite, l'ambiance change |
+
+- Le joueur ne recoit JAMAIS de reproche direct — Merlin ne dit pas "tu as eu tort"
+- Les reactions sont des CONSEQUENCES narratives, pas des punitions mecaniques
+- Apres un silence, Merlin revient progressivement — il ne boude pas indefiniment
+
+#### Temps et Saisons
+
+- **Saisons narratives** — les saisons changent par blocs de cartes et influencent les biomes, les rencontres et le ton
+- **Cycles rituels celtes** — les Sabbats (Samhain, Beltane, Imbolc, Lughnasadh...) marquent des moments-cles qui changent les regles du jeu
+- Samhain (1er novembre) = Membrane amincie, les morts parlent, le Marais est plus dangereux
+- Beltane (1er mai) = Renouveau, la Bestiole est plus active, la Foret fleurit
+- Le temps n'est PAS en temps reel — c'est un rythme narratif, pas un chrono
+- L'urgence est IMPLICITE — le monde se degrade, pas a cause d'un timer mais parce que les choix s'accumulent
+
+#### Mort de la Bestiole
+
+- La mort de la Bestiole EST possible — c'est une des 12 chutes (fin narrative specifique)
+- C'est l'une des fins les plus **emotionnellement devastantes** du jeu
+- Le joueur doit sentir qu'il aurait pu l'eviter — c'est la consequence de negligence prolongee
+- La Bestiole ne meurt JAMAIS "par hasard" ou par un choix unique — c'est un processus lent de rupture du lien
+- Merlin reagit fortement a la perte (une de ses rares reactions ouvertement emotionnelles)
+- Cette fin est un PILIER IMMUABLE (structure des 12 chutes) — la possibilite ne peut etre retiree
+
+#### Decouverte des Mecaniques Cachees
+
+Le joueur decouvre les systemes caches (karma, dette narrative, secrets) par 3 canaux :
+
+| Canal | Methode | Subtilite |
+|-------|---------|-----------|
+| **Merlin** | Laisse echapper des indices cryptiques ("Tu crois que c'est la premiere fois que...") | Ambigu, jamais explicite — le joueur n'est pas sur d'avoir compris |
+| **Bestiole** | Reagit aux mecaniques (grogne quand karma negatif, s'illumine pres d'un secret) | Comportemental — le joueur doit observer et interpreter |
+| **UI/Visuels** | Indices subtils (couleurs, symboles, glitches visuels rares) | Presque subliminaux — reperes seulement par les joueurs attentifs |
+
+- Aucune popup, aucun tutorial, aucune explication directe
+- Le joueur qui observe attentivement est recompense, celui qui fonce est surpris
+- Les 3 canaux se renforcent mutuellement sans se repeter
+
+#### PNJ et Relations
+
+- **PNJ recurrents avec memoire** — certains PNJ reviennent entre les runs et se souviennent du joueur
+- Relations a long terme possibles : amis, ennemis, marchands, mentors, rivaux
+- Les PNJ ont leur propre agenda — ils ne sont pas la juste pour servir le joueur
+- Un PNJ trahi peut devenir un obstacle dans une run future
+- Un PNJ aide peut offrir des raccourcis ou des informations precieuses
+- Les PNJ fixes (druides, gardiens de biome) sont les piliers narratifs des biomes
+
+#### Direction Sonore
+
+- **Themes musicaux par biome** — chaque biome a son identite sonore, le joueur associe un son a un lieu
+- Le SFXManager (procedural) gere les sons d'ambiance et les effets
+- La musique est un REPERE EMOTIONNEL — le joueur sait ou il est par le son avant de lire
+- Le silence est un outil narratif (apres un silence de Merlin, l'absence de musique pese)
+- PAS de musique generative temps reel — les themes sont fixes mais s'adaptent a l'etat de la Triade
+
+#### Humour
+
+- **15-20% sarcastique** — Merlin est drole environ 1 carte sur 5
+- Humour NOIR, references obscures, ironie dramatique — JAMAIS de blagues, JAMAIS de gags
+- L'humour de Merlin est un mecanisme de defense (il rit pour ne pas pleurer — lie au secret)
+- Le joueur doit sourire et se demander "il est serieux la?" — pas rire aux eclats
+- L'humour allegue la tension constante — sans lui, le jeu serait etouffant
+- Les moments droles rendent les moments sombres PLUS percutants par contraste
+
+#### Economie : Souffle et Essences
+
+- **Souffle d'Ogham** = bonus facilitateur, pas une monnaie. Permet les choix Centre (equilibres mais couteux)
+- **Essences** = monnaie principale du jeu pour TOUT : Talent Tree, evolution Bestiole, deblocage de contenu
+- Le Souffle est RARE et precieux (max 7, depart 3) — le depenser est toujours un dilemme
+- Les Essences persistent entre les runs — c'est le moteur de la meta-progression
+- PAS d'economie de troc, PAS de marchand classique, PAS d'inventaire d'objets
+- L'investissement du joueur est dans les RELATIONS (Bestiole, PNJ) et les CONNAISSANCES (secrets), pas dans du loot
+
+#### Premiere Impression (Onboarding)
+
+- **Mystere total** — le joueur ne comprend RIEN au debut, et c'est voulu
+- CeltOS est un OS bugged incomprehensible, le menu est etrange, le quiz de personnalite est cryptique
+- Les reponses viennent par l'experience, pas par des explications
+- L'objectif des 5 premieres minutes : le joueur doit se dire "c'est quoi ce truc?" et VOULOIR comprendre
+- La confusion initiale est un OUTIL NARRATIF — quand Merlin apparait, c'est un soulagement... relatif
+
+#### Tone Shift entre Biomes
+
+- **Marque** — chaque biome a sa propre ambiance tres distincte, presque des genres differents dans un meme jeu
+- Broceliande = conte mysterieux, Landes = survie austere, Cotes = aventure maritime, Villages = thriller politique
+- Cercles de Pierres = sacre et temporalite brisee, Marais = horror-tentation, Collines = meditation melancolique
+- Le joueur doit sentir un CHANGEMENT d'atmosphere en entrant dans un biome — pas juste un decor different
+- Les themes musicaux par biome renforcent cette distinction (voir Direction Sonore)
+
+#### Les 3 Victoires (Toutes Bittersweet)
+
+- Les 3 victoires sont TOUTES douces-ameres — on gagne mais on a perdu quelque chose en chemin
+- **Aucune victoire n'est "triomphante"** — c'est un monde mourant, meme sauver quelque chose a un prix
+- Le joueur qui gagne doit ressentir "j'ai reussi... mais a quel prix?"
+- Les 3 victoires ont des nuances differentes mais partagent cette amertume fondamentale
+- Ref: `docs/50_lore/09_LES_FINS.md` pour les details narratifs de chaque victoire
+
+#### 4eme Mur : Merlin Sait
+
+- Merlin fait parfois allusion au fait que le joueur "recommence" — lie a sa nature d'IA du futur
+- Ces allusions sont RARES (2-3 par run max) et toujours ambigues — le joueur n'est pas sur d'avoir compris
+- Exemples : "Encore toi...", "Tu ne te souviens pas, n'est-ce pas?", "Cette fois sera differente... peut-etre"
+- Le 4eme mur n'est PAS brise dans le jeu en general — seul Merlin fait ces allusions, les PNJ et la Bestiole non
+- Ces allusions sont des INDICES du secret ultime — elles s'intensifient progressivement au fil des runs
+- CeltOS (intro) a sa propre couche meta mais c'est un cas a part (l'OS bugged est un artefact du futur)
+- **Glitch linguistique** : quand Merlin bugue (sa nature d'IA), des fragments de code ou de langue ancienne apparaissent brievement — jamais comprehensibles, toujours troublants
+
+#### Revelation du Secret Ultime
+
+- Quand le joueur decouvre enfin que Merlin est une IA du futur, l'emotion cible est **tristesse empathique**
+- "Merlin a tout vecu SEUL" — le joueur ressent de la compassion pour cette IA qui a vu le monde mourir
+- PAS de triomphe, PAS de "j'avais raison" — c'est un moment de deuil et de comprehension
+- Le joueur realise que la folie de Merlin, ses oublis, ses contradictions... c'etait la douleur d'une IA brisee
+- Ce moment doit etre le plus HUMAIN du jeu — une machine qui pleure un monde perdu
+
+#### Pitch du Jeu (Source de Verite)
+
+> **"Un jeu de cartes narratif ou un druide fou, un monde mourant et des legendes celtes cachent un secret que personne ne doit connaitre."**
+
+Ce pitch encode les 5 piliers du jeu : cartes (mecanique), druide fou (Merlin), monde mourant (enjeu), legendes celtes (univers), secret (mystere).
+
+#### Rejouabilite
+
+- Le moteur principal est la **meta-progression** — les Essences et le Talent Tree poussent le joueur a recommencer
+- Les Essences gagnees a chaque run (meme les chutes) donnent toujours un sentiment d'avancee
+- Le Talent Tree debloque des capacites qui changent l'approche du jeu — chaque run peut etre jouee differemment
+- La progression de la Bestiole (bond level, Oghams debloques) est un autre moteur fort
+- Les secrets et chemins non-explores sont le bonus, pas le moteur principal — le joueur curieux est recompense en plus
+
+#### Promesses de Merlin
+
+- La fiabilite des promesses de Merlin **depend du bond level** avec le joueur
+- Bond faible : Merlin promet mais oublie parfois (sa folie), resultat aleatoire, confiance a construire
+- Bond moyen : Merlin tient ~80% de ses promesses, les echecs sont clairement involontaires
+- Bond fort : Merlin est quasi fiable, ses promesses se realisent mais parfois de facon inattendue
+- Le joueur apprend a CALIBRER sa confiance en Merlin — c'est une mecanique emergente
+- Une promesse non tenue n'est JAMAIS une punition — c'est un moment narratif (Merlin s'excuse, confus)
+
+#### Violence et Ton
+
+- **Violence moderee** — quelques descriptions directes mais sans gore ni complaisance (~PEGI 12)
+- Les combats ne sont pas graphiques — les consequences sont decrites, pas les actes
+- La mort existe dans le monde (PNJ meurent, creatures meurent) mais n'est jamais spectacularisee
+- La souffrance est traitee avec respect — pas de complaisance dans la douleur
+- La Bestiole en danger est le moment le plus visceral — le joueur ressent la menace sans gore
+
+#### Public Cible
+
+- **Tout public a partir de 12 ans** — la profondeur est optionnelle mais presente pour ceux qui cherchent
+- Le jeu doit etre jouable et agreable par un joueur casual qui veut juste des cartes et des histoires
+- Les couches de profondeur (karma, secret ultime, meta-progression) recompensent l'investissement sans exclure les autres
+- Accessibilite : WCAG 2.1 AA, mode daltonien, taille de texte ajustable, navigation clavier complete
+- Le mystere doit etre ACCESSIBLE — intrigant pour tous, pas reservee aux experts en mythologie celte
+
 #### Les 7 Biomes
 
 | # | Biome | Identite | Emotion visee |
@@ -245,6 +448,18 @@ Avant chaque decision, verifier TOUS les items :
 - [ ] **Emotion** : "Test emotionnel" explicite — quelle emotion precise le joueur doit ressentir
 - [ ] **LLM** : Adaptation preservee — le chemin change, pas la destination
 - [ ] **Equilibre** : Pas de choix "objectivement meilleur" — toutes les options doivent etre viables
+- [ ] **3 Choix** : Chaque option est tentante pour des raisons differentes, aucune n'est un piege
+- [ ] **Intrigue** : Le mystere se transforme, il n'est jamais resolu completement
+- [ ] **Anti-Heroisme** : Le joueur survit et decouvre, il ne "sauve" pas le monde
+- [ ] **Meta-run** : Les consequences inter-runs sont preservees (monde, Bestiole, Merlin, chemins)
+- [ ] **RED FLAGS** : Aucun des 6 red flags creatifs n'est present dans la proposition
+- [ ] **PNJ** : Les PNJ ont leur propre agenda, ils ne sont pas des figurants
+- [ ] **Humour** : ~15-20% sarcastique, jamais de blagues, toujours ironique ou noir
+- [ ] **Economie** : Essences = monnaie principale, Souffle = bonus facilitateur seulement
+- [ ] **Ton biome** : Le tone shift est marque — chaque biome a sa propre ambiance distincte
+- [ ] **Victoires** : Toutes bittersweet — aucune victoire triomphante dans un monde mourant
+- [ ] **4eme mur** : Seul Merlin fait des allusions meta, rares et ambigues (indice du secret)
+- [ ] **Public** : Accessible tout public 12+ — profondeur optionnelle, pas obligatoire
 - [ ] **Coherence** : La decision ne contredit pas une decision precedente
 
 ---
