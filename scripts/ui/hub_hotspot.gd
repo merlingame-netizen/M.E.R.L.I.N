@@ -111,7 +111,7 @@ func _draw() -> void:
 		draw_circle(center, GLOW_RADIUS * final_scale, glow_color)
 
 	# Background circle
-	var bg_color: Color = MerlinVisual.PALETTE["bg_dark"]
+	var bg_color: Color = MerlinVisual.CRT_PALETTE["bg_dark"]
 	var outline_color: Color = accent_color.darkened(0.4)
 	draw_circle(center, CIRCLE_RADIUS * final_scale, bg_color)
 	draw_arc(center, CIRCLE_RADIUS * final_scale, 0, TAU, 32, outline_color, 1.0)
@@ -123,7 +123,7 @@ func _draw() -> void:
 	if _label_alpha > 0.01:
 		var font: Font = MerlinVisual.get_font("body")
 		var label_pos: Vector2 = Vector2(32, LABEL_Y_OFFSET + _label_offset)
-		var label_color: Color = MerlinVisual.PALETTE["text_light"]
+		var label_color: Color = MerlinVisual.CRT_PALETTE["phosphor"]
 		label_color.a = _label_alpha
 		draw_string(font, label_pos, label_text, HORIZONTAL_ALIGNMENT_CENTER, -1, MerlinVisual.CAPTION_SIZE, label_color)
 

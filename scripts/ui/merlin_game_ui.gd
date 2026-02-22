@@ -258,23 +258,9 @@ func _configure_ui() -> void:
 	if body_font == null:
 		body_font = title_font
 
-	# Parchment shader
-	var paper_shader := load("res://shaders/merlin_paper.gdshader")
-	if paper_shader:
-		var mat := ShaderMaterial.new()
-		mat.shader = paper_shader
-		mat.set_shader_parameter("paper_tint", MerlinVisual.PALETTE.paper)
-		mat.set_shader_parameter("grain_strength", 0.025)
-		mat.set_shader_parameter("vignette_strength", 0.08)
-		mat.set_shader_parameter("vignette_softness", 0.65)
-		mat.set_shader_parameter("grain_scale", 1200.0)
-		mat.set_shader_parameter("grain_speed", 0.08)
-		mat.set_shader_parameter("warp_strength", 0.001)
-		parchment_bg.material = mat
-	else:
-		parchment_bg.color = MerlinVisual.PALETTE.paper
-	var seasonal_tint: Color = MerlinVisual.get_seasonal_tint()
-	parchment_bg.modulate = Color(seasonal_tint.r, seasonal_tint.g, seasonal_tint.b, 0.16)
+	# CRT terminal background
+	parchment_bg.material = null
+	parchment_bg.color = MerlinVisual.CRT_PALETTE.bg_panel
 
 	# Life bar theming
 	_life_bar.max_value = MerlinConstants.LIFE_ESSENCE_MAX
@@ -295,7 +281,7 @@ func _configure_ui() -> void:
 		card_container.clip_contents = true
 	_card_illustration_panel.add_theme_stylebox_override("panel", MerlinVisual.make_card_illustration_style())
 	_card_body_panel.add_theme_stylebox_override("panel", MerlinVisual.make_card_body_style())
-	var ink_bg: Color = MerlinVisual.PALETTE.ink
+	var ink_bg: Color = MerlinVisual.CRT_PALETTE.phosphor
 	_illo_bg.color = Color(ink_bg.r, ink_bg.g, ink_bg.b, 0.95)
 
 	# Dynamic nodes: scene compositor + portrait
@@ -324,7 +310,7 @@ func _configure_ui() -> void:
 	option_buttons = [_btn_a, _btn_b, _btn_c]
 	var option_configs := [
 		{"key": "A", "color": MerlinVisual.ASPECT_COLORS["Monde"]},
-		{"key": "B", "color": MerlinVisual.PALETTE.accent},
+		{"key": "B", "color": MerlinVisual.CRT_PALETTE.amber},
 		{"key": "C", "color": MerlinVisual.ASPECT_COLORS["Corps"]},
 	]
 	for i in range(3):
@@ -343,7 +329,7 @@ func _configure_ui() -> void:
 		options_container.mouse_filter = Control.MOUSE_FILTER_PASS
 
 	# Action description labels — ABOVE each option button (shown on hover)
-	var desc_color: Color = MerlinVisual.PALETTE.get("ink_soft", Color(0.45, 0.4, 0.35))
+	var desc_color: Color = MerlinVisual.CRT_PALETTE.get("phosphor_dim", Color(0.45, 0.4, 0.35))
 	_option_desc_labels.clear()
 	for i2 in range(3):
 		var desc_lbl := Label.new()
@@ -368,7 +354,7 @@ func _configure_ui() -> void:
 	if body_font:
 		_minigame_badge.add_theme_font_override("font", body_font)
 	_minigame_badge.add_theme_font_size_override("font_size", 11)
-	_minigame_badge.add_theme_color_override("font_color", MerlinVisual.PALETTE.celtic_gold)
+	_minigame_badge.add_theme_color_override("font_color", MerlinVisual.CRT_PALETTE.amber_bright)
 	_minigame_badge.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	_minigame_badge.visible = false
 	_card_body_vbox.add_child(_minigame_badge)
@@ -383,7 +369,7 @@ func _configure_ui() -> void:
 	_souffle_btn.text = SOUFFLE_ICON
 	_souffle_btn.custom_minimum_size = Vector2(56, 56)
 	_souffle_btn.tooltip_text = "Souffle d'Ogham: +4 au prochain jet (usage unique)"
-	MerlinVisual.apply_celtic_option_theme(_souffle_btn, MerlinVisual.PALETTE.souffle)
+	MerlinVisual.apply_celtic_option_theme(_souffle_btn, MerlinVisual.CRT_PALETTE.souffle)
 	_souffle_btn.z_index = 20
 	_souffle_btn.mouse_filter = Control.MOUSE_FILTER_STOP
 	_souffle_btn.pressed.connect(_on_souffle_btn_pressed)
@@ -401,7 +387,7 @@ func _configure_ui() -> void:
 	if body_font:
 		_bestiole_mini.add_theme_font_override("font", body_font)
 	_bestiole_mini.add_theme_font_size_override("font_size", 18)
-	var bestiole_col: Color = MerlinVisual.PALETTE.get("bestiole", Color(0.6, 0.8, 0.5))
+	var bestiole_col: Color = MerlinVisual.CRT_PALETTE.get("bestiole", Color(0.6, 0.8, 0.5))
 	_bestiole_mini.add_theme_color_override("font_color", bestiole_col)
 	_bestiole_mini.position = Vector2(16, get_viewport_rect().size.y - 64)
 	_bestiole_mini.z_index = 15
@@ -413,7 +399,7 @@ func _configure_ui() -> void:
 	if body_font:
 		_bestiole_emote.add_theme_font_override("font", body_font)
 	_bestiole_emote.add_theme_font_size_override("font_size", 14)
-	_bestiole_emote.add_theme_color_override("font_color", MerlinVisual.PALETTE.get("celtic_gold", Color(0.85, 0.65, 0.13)))
+	_bestiole_emote.add_theme_color_override("font_color", MerlinVisual.CRT_PALETTE.get("amber_bright", Color(0.85, 0.65, 0.13)))
 	_bestiole_emote.position = Vector2(16, get_viewport_rect().size.y - 82)
 	_bestiole_emote.z_index = 16
 	_bestiole_emote.modulate.a = 0.0
@@ -445,38 +431,38 @@ func _apply_label_theming() -> void:
 		if title_font:
 			lbl.add_theme_font_override("font", title_font)
 		lbl.add_theme_font_size_override("font_size", 13)
-		lbl.add_theme_color_override("font_color", MerlinVisual.PALETTE.ink_soft)
+		lbl.add_theme_color_override("font_color", MerlinVisual.CRT_PALETTE.phosphor_dim)
 
 	# Life counter
 	_life_counter.text = "%d/%d" % [MerlinConstants.LIFE_ESSENCE_START, MerlinConstants.LIFE_ESSENCE_MAX]
 	if body_font:
 		_life_counter.add_theme_font_override("font", body_font)
 	_life_counter.add_theme_font_size_override("font_size", 12)
-	_life_counter.add_theme_color_override("font_color", MerlinVisual.PALETTE.danger)
+	_life_counter.add_theme_color_override("font_color", MerlinVisual.CRT_PALETTE.danger)
 
 	# Souffle counter
 	_souffle_counter.text = "%d/%d" % [MerlinConstants.SOUFFLE_START, MerlinConstants.SOUFFLE_MAX]
 	if body_font:
 		_souffle_counter.add_theme_font_override("font", body_font)
 	_souffle_counter.add_theme_font_size_override("font_size", 12)
-	_souffle_counter.add_theme_color_override("font_color", MerlinVisual.PALETTE.souffle)
+	_souffle_counter.add_theme_color_override("font_color", MerlinVisual.CRT_PALETTE.souffle)
 
 	# Essence counter
 	if body_font:
 		_essence_counter.add_theme_font_override("font", body_font)
 	_essence_counter.add_theme_font_size_override("font_size", 22)
-	_essence_counter.add_theme_color_override("font_color", MerlinVisual.PALETTE.celtic_gold)
+	_essence_counter.add_theme_color_override("font_color", MerlinVisual.CRT_PALETTE.amber_bright)
 
 	# Essence caption
 	var caption: Label = $MainVBox/TopStatusBar/EssencePanel/EssenceCaption
 	if body_font:
 		caption.add_theme_font_override("font", body_font)
 	caption.add_theme_font_size_override("font_size", 10)
-	caption.add_theme_color_override("font_color", MerlinVisual.PALETTE.ink_soft)
+	caption.add_theme_color_override("font_color", MerlinVisual.CRT_PALETTE.phosphor_dim)
 
 	# Clock label
 	_status_clock_label.add_theme_font_size_override("font_size", 15)
-	_status_clock_label.add_theme_color_override("font_color", MerlinVisual.PALETTE.ink)
+	_status_clock_label.add_theme_color_override("font_color", MerlinVisual.CRT_PALETTE.phosphor)
 	if body_font:
 		_status_clock_label.add_theme_font_override("font", body_font)
 
@@ -488,26 +474,26 @@ func _apply_label_theming() -> void:
 		if title_font:
 			lbl.add_theme_font_override("font", title_font)
 		lbl.add_theme_font_size_override("font_size", 16)
-		lbl.add_theme_color_override("font_color", MerlinVisual.PALETTE.ink_soft)
+		lbl.add_theme_color_override("font_color", MerlinVisual.CRT_PALETTE.phosphor_dim)
 
 	# Deck + discard count labels
 	for lbl: Label in [_remaining_deck_label, _discard_label]:
 		if body_font:
 			lbl.add_theme_font_override("font", body_font)
 		lbl.add_theme_font_size_override("font_size", 18)
-		lbl.add_theme_color_override("font_color", MerlinVisual.PALETTE.ink)
+		lbl.add_theme_color_override("font_color", MerlinVisual.CRT_PALETTE.phosphor)
 
 	# Card speaker
 	if title_font:
 		card_speaker.add_theme_font_override("font", title_font)
 	card_speaker.add_theme_font_size_override("font_size", 17)
-	card_speaker.add_theme_color_override("font_color", MerlinVisual.PALETTE.accent)
+	card_speaker.add_theme_color_override("font_color", MerlinVisual.CRT_PALETTE.amber)
 
 	# Card text
 	if body_font:
 		card_text.add_theme_font_override("normal_font", body_font)
 	card_text.add_theme_font_size_override("normal_font_size", 15)
-	card_text.add_theme_color_override("default_color", MerlinVisual.PALETTE.ink)
+	card_text.add_theme_color_override("default_color", MerlinVisual.CRT_PALETTE.phosphor)
 	card_text.mouse_filter = Control.MOUSE_FILTER_IGNORE
 
 	# Option buttons font
@@ -521,7 +507,7 @@ func _apply_label_theming() -> void:
 		if body_font:
 			lbl.add_theme_font_override("font", body_font)
 		lbl.add_theme_font_size_override("font_size", 13)
-		lbl.add_theme_color_override("font_color", MerlinVisual.PALETTE.ink_soft)
+		lbl.add_theme_color_override("font_color", MerlinVisual.CRT_PALETTE.phosphor_dim)
 
 func _update_clock_status() -> void:
 	if not _status_clock_label or not is_instance_valid(_status_clock_label):
@@ -647,9 +633,9 @@ func _build_remaining_deck_stack() -> void:
 		deck_card.modulate.a = 0.95 - float(i) * 0.1
 		deck_card.pivot_offset = deck_card.size * 0.5
 		var deck_style := StyleBoxFlat.new()
-		var ink_deck: Color = MerlinVisual.PALETTE.ink
+		var ink_deck: Color = MerlinVisual.CRT_PALETTE.phosphor
 		deck_style.bg_color = Color(ink_deck.r, ink_deck.g, ink_deck.b, 0.96)
-		var bestiole: Color = MerlinVisual.PALETTE.bestiole
+		var bestiole: Color = MerlinVisual.CRT_PALETTE.bestiole
 		deck_style.border_color = Color(bestiole.r, bestiole.g, bestiole.b, 0.72)
 		deck_style.set_border_width_all(2)
 		deck_style.set_corner_radius_all(7)
@@ -1142,10 +1128,10 @@ func _draw_thinking_spiral(ctrl: Control) -> void:
 				cy + sin(angle) * spiral_r
 			))
 		if points.size() >= 2:
-			ctrl.draw_polyline(points, MerlinVisual.PALETTE.accent, 2.0, true)
+			ctrl.draw_polyline(points, MerlinVisual.CRT_PALETTE.amber, 2.0, true)
 
 	# Center dot
-	ctrl.draw_circle(Vector2(cx, cy), 3.0, MerlinVisual.PALETTE.accent)
+	ctrl.draw_circle(Vector2(cx, cy), 3.0, MerlinVisual.CRT_PALETTE.amber)
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
@@ -1176,11 +1162,11 @@ func _update_souffle(souffle: int) -> void:
 	if _souffle_counter and is_instance_valid(_souffle_counter):
 		_souffle_counter.text = "%d/%d" % [souffle, MerlinConstants.SOUFFLE_MAX]
 		if souffle == 0:
-			_souffle_counter.add_theme_color_override("font_color", MerlinVisual.PALETTE.danger)
+			_souffle_counter.add_theme_color_override("font_color", MerlinVisual.CRT_PALETTE.danger)
 		elif souffle <= 2:
-			_souffle_counter.add_theme_color_override("font_color", MerlinVisual.PALETTE.warning)
+			_souffle_counter.add_theme_color_override("font_color", MerlinVisual.CRT_PALETTE.warning)
 		else:
-			_souffle_counter.add_theme_color_override("font_color", MerlinVisual.PALETTE.souffle)
+			_souffle_counter.add_theme_color_override("font_color", MerlinVisual.CRT_PALETTE.souffle)
 
 	if not souffle_display:
 		return
@@ -1190,10 +1176,10 @@ func _update_souffle(souffle: int) -> void:
 		if icon:
 			if i < souffle:
 				icon.text = SOUFFLE_ICON
-				icon.add_theme_color_override("font_color", MerlinVisual.PALETTE.souffle)
+				icon.add_theme_color_override("font_color", MerlinVisual.CRT_PALETTE.souffle)
 			else:
 				icon.text = SOUFFLE_EMPTY
-				icon.add_theme_color_override("font_color", MerlinVisual.PALETTE.inactive_dark)
+				icon.add_theme_color_override("font_color", MerlinVisual.CRT_PALETTE.inactive_dark)
 
 	# VFX: Regen animation (gained souffle)
 	if old_souffle >= 0 and souffle > old_souffle:
@@ -1223,7 +1209,7 @@ func _update_souffle(souffle: int) -> void:
 		for i in range(MerlinConstants.SOUFFLE_MAX):
 			var icon: Label = souffle_display.get_child(i) as Label
 			if icon:
-				icon.add_theme_color_override("font_color", MerlinVisual.PALETTE.souffle_full)
+				icon.add_theme_color_override("font_color", MerlinVisual.CRT_PALETTE.souffle_full)
 		if old_souffle >= 0 and old_souffle < MerlinConstants.SOUFFLE_MAX:
 			SFXManager.play("souffle_full")
 
@@ -1302,11 +1288,11 @@ func update_life_essence(life: int) -> void:
 	if _life_counter and is_instance_valid(_life_counter):
 		_life_counter.text = "%d/%d" % [life, MerlinConstants.LIFE_ESSENCE_MAX]
 		if life <= 0:
-			_life_counter.add_theme_color_override("font_color", MerlinVisual.PALETTE.danger)
+			_life_counter.add_theme_color_override("font_color", MerlinVisual.CRT_PALETTE.danger)
 		elif life <= MerlinConstants.LIFE_ESSENCE_LOW_THRESHOLD:
-			_life_counter.add_theme_color_override("font_color", MerlinVisual.PALETTE.warning)
+			_life_counter.add_theme_color_override("font_color", MerlinVisual.CRT_PALETTE.warning)
 		else:
-			_life_counter.add_theme_color_override("font_color", MerlinVisual.PALETTE.danger)
+			_life_counter.add_theme_color_override("font_color", MerlinVisual.CRT_PALETTE.danger)
 	if _life_bar and is_instance_valid(_life_bar):
 		_life_bar.value = life
 		if life <= MerlinConstants.LIFE_ESSENCE_LOW_THRESHOLD:
@@ -2070,7 +2056,7 @@ func _animate_deck_assembly(biome_key: String) -> void:
 		card.modulate.a = 0.0
 		card.mouse_filter = Control.MOUSE_FILTER_IGNORE
 		var style := StyleBoxFlat.new()
-		style.bg_color = Color(MerlinVisual.PALETTE.paper_dark.r, MerlinVisual.PALETTE.paper_dark.g, MerlinVisual.PALETTE.paper_dark.b, 0.96)
+		style.bg_color = Color(MerlinVisual.CRT_PALETTE.bg_dark.r, MerlinVisual.CRT_PALETTE.bg_dark.g, MerlinVisual.CRT_PALETTE.bg_dark.b, 0.96)
 		style.border_color = edge_color
 		style.set_border_width_all(2)
 		style.set_corner_radius_all(5)
@@ -2612,7 +2598,7 @@ func show_end_screen(ending: Dictionary) -> void:
 
 	# Create parchment overlay
 	var overlay := ColorRect.new()
-	overlay.color = Color(MerlinVisual.PALETTE.paper.r, MerlinVisual.PALETTE.paper.g, MerlinVisual.PALETTE.paper.b, 0.95)
+	overlay.color = Color(MerlinVisual.CRT_PALETTE.bg_panel.r, MerlinVisual.CRT_PALETTE.bg_panel.g, MerlinVisual.CRT_PALETTE.bg_panel.b, 0.95)
 	overlay.set_anchors_preset(Control.PRESET_FULL_RECT)
 	overlay.modulate.a = 0.0
 	add_child(overlay)
@@ -2635,7 +2621,7 @@ func show_end_screen(ending: Dictionary) -> void:
 	orn_top.text = "\u2500\u2500\u2500 # \u2500\u2500\u2500"
 	orn_top.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	orn_top.add_theme_font_size_override("font_size", 14)
-	orn_top.add_theme_color_override("font_color", MerlinVisual.PALETTE.accent)
+	orn_top.add_theme_color_override("font_color", MerlinVisual.CRT_PALETTE.amber)
 	vbox.add_child(orn_top)
 
 	# Ending title
@@ -2648,9 +2634,9 @@ func show_end_screen(ending: Dictionary) -> void:
 	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 
 	if ending.get("victory", false):
-		title.add_theme_color_override("font_color", MerlinVisual.PALETTE.success)
+		title.add_theme_color_override("font_color", MerlinVisual.CRT_PALETTE.success)
 	else:
-		title.add_theme_color_override("font_color", MerlinVisual.PALETTE.danger)
+		title.add_theme_color_override("font_color", MerlinVisual.CRT_PALETTE.danger)
 
 	vbox.add_child(title)
 
@@ -2661,7 +2647,7 @@ func show_end_screen(ending: Dictionary) -> void:
 		if body_font:
 			text.add_theme_font_override("font", body_font)
 		text.add_theme_font_size_override("font_size", 16)
-		text.add_theme_color_override("font_color", MerlinVisual.PALETTE.ink)
+		text.add_theme_color_override("font_color", MerlinVisual.CRT_PALETTE.phosphor)
 		text.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 		text.autowrap_mode = TextServer.AUTOWRAP_WORD
 		text.custom_minimum_size.x = 400
@@ -2674,7 +2660,7 @@ func show_end_screen(ending: Dictionary) -> void:
 		score.add_theme_font_override("font", title_font)
 	score.add_theme_font_size_override("font_size", 22)
 	score.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	score.add_theme_color_override("font_color", MerlinVisual.PALETTE.accent)
+	score.add_theme_color_override("font_color", MerlinVisual.CRT_PALETTE.amber)
 	vbox.add_child(score)
 
 	# Life depleted indicator
@@ -2684,7 +2670,7 @@ func show_end_screen(ending: Dictionary) -> void:
 		if body_font:
 			life_lbl.add_theme_font_override("font", body_font)
 		life_lbl.add_theme_font_size_override("font_size", 14)
-		life_lbl.add_theme_color_override("font_color", MerlinVisual.PALETTE.danger)
+		life_lbl.add_theme_color_override("font_color", MerlinVisual.CRT_PALETTE.danger)
 		life_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 		vbox.add_child(life_lbl)
 
@@ -2697,7 +2683,7 @@ func show_end_screen(ending: Dictionary) -> void:
 	if body_font:
 		stats_lbl.add_theme_font_override("font", body_font)
 	stats_lbl.add_theme_font_size_override("font_size", 14)
-	stats_lbl.add_theme_color_override("font_color", MerlinVisual.PALETTE.ink_soft)
+	stats_lbl.add_theme_color_override("font_color", MerlinVisual.CRT_PALETTE.phosphor_dim)
 	stats_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	vbox.add_child(stats_lbl)
 
@@ -2709,7 +2695,7 @@ func show_end_screen(ending: Dictionary) -> void:
 		if title_font:
 			path_title.add_theme_font_override("font", title_font)
 		path_title.add_theme_font_size_override("font_size", 16)
-		path_title.add_theme_color_override("font_color", MerlinVisual.PALETTE.accent)
+		path_title.add_theme_color_override("font_color", MerlinVisual.CRT_PALETTE.amber)
 		path_title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 		vbox.add_child(path_title)
 
@@ -2725,7 +2711,7 @@ func show_end_screen(ending: Dictionary) -> void:
 			if body_font:
 				path_lbl.add_theme_font_override("font", body_font)
 			path_lbl.add_theme_font_size_override("font_size", 12)
-			path_lbl.add_theme_color_override("font_color", MerlinVisual.PALETTE.ink_soft)
+			path_lbl.add_theme_color_override("font_color", MerlinVisual.CRT_PALETTE.phosphor_dim)
 			path_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 			path_lbl.autowrap_mode = TextServer.AUTOWRAP_WORD
 			path_lbl.custom_minimum_size.x = 400
@@ -2741,7 +2727,7 @@ func show_end_screen(ending: Dictionary) -> void:
 			if body_font:
 				partial_lbl.add_theme_font_override("font", body_font)
 			partial_lbl.add_theme_font_size_override("font_size", 14)
-			partial_lbl.add_theme_color_override("font_color", MerlinVisual.PALETTE.danger)
+			partial_lbl.add_theme_color_override("font_color", MerlinVisual.CRT_PALETTE.danger)
 			partial_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 			vbox.add_child(partial_lbl)
 
@@ -2750,7 +2736,7 @@ func show_end_screen(ending: Dictionary) -> void:
 		if title_font:
 			rewards_title.add_theme_font_override("font", title_font)
 		rewards_title.add_theme_font_size_override("font_size", 18)
-		rewards_title.add_theme_color_override("font_color", MerlinVisual.PALETTE.accent)
+		rewards_title.add_theme_color_override("font_color", MerlinVisual.CRT_PALETTE.amber)
 		rewards_title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 		vbox.add_child(rewards_title)
 
@@ -2767,7 +2753,7 @@ func show_end_screen(ending: Dictionary) -> void:
 				if body_font:
 					ess_lbl.add_theme_font_override("font", body_font)
 				ess_lbl.add_theme_font_size_override("font_size", 13)
-				ess_lbl.add_theme_color_override("font_color", MerlinVisual.PALETTE.ink)
+				ess_lbl.add_theme_color_override("font_color", MerlinVisual.CRT_PALETTE.phosphor)
 				ess_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 				ess_lbl.autowrap_mode = TextServer.AUTOWRAP_WORD
 				ess_lbl.custom_minimum_size.x = 400
@@ -2790,7 +2776,7 @@ func show_end_screen(ending: Dictionary) -> void:
 			if body_font:
 				cur_lbl.add_theme_font_override("font", body_font)
 			cur_lbl.add_theme_font_size_override("font_size", 14)
-			cur_lbl.add_theme_color_override("font_color", MerlinVisual.PALETTE.accent)
+			cur_lbl.add_theme_color_override("font_color", MerlinVisual.CRT_PALETTE.amber)
 			cur_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 			vbox.add_child(cur_lbl)
 
@@ -2799,7 +2785,7 @@ func show_end_screen(ending: Dictionary) -> void:
 	orn_bot.text = "\u2500\u2500\u2500 # \u2500\u2500\u2500"
 	orn_bot.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	orn_bot.add_theme_font_size_override("font_size", 14)
-	orn_bot.add_theme_color_override("font_color", MerlinVisual.PALETTE.accent)
+	orn_bot.add_theme_color_override("font_color", MerlinVisual.CRT_PALETTE.amber)
 	vbox.add_child(orn_bot)
 
 	# Aspects final state
@@ -2893,7 +2879,7 @@ func show_dice_roll(dc: int, target: int) -> void:
 	_dice_dc_label.text = "Difficulte: %d" % dc
 	_dice_result_label.text = ""
 	_dice_display.text = "?"
-	_dice_display.add_theme_color_override("font_color", MerlinVisual.PALETTE.ink)
+	_dice_display.add_theme_color_override("font_color", MerlinVisual.CRT_PALETTE.phosphor)
 	_dice_display.scale = Vector2.ONE
 	if _dice_bg_panel and is_instance_valid(_dice_bg_panel):
 		_dice_bg_panel.scale = Vector2.ONE
@@ -2966,27 +2952,27 @@ func show_dice_result(roll: int, dc: int, outcome: String) -> void:
 	match outcome:
 		"critical_success":
 			_dice_result_label.text = "Coup Critique !"
-			_dice_result_label.add_theme_color_override("font_color", MerlinVisual.PALETTE.souffle_full)
+			_dice_result_label.add_theme_color_override("font_color", MerlinVisual.CRT_PALETTE.souffle_full)
 		"success":
 			_dice_result_label.text = "Reussite ! (%d >= %d)" % [roll, dc]
-			_dice_result_label.add_theme_color_override("font_color", MerlinVisual.PALETTE.success)
+			_dice_result_label.add_theme_color_override("font_color", MerlinVisual.CRT_PALETTE.success)
 		"failure":
 			_dice_result_label.text = "Echec... (%d < %d)" % [roll, dc]
-			_dice_result_label.add_theme_color_override("font_color", MerlinVisual.PALETTE.danger)
+			_dice_result_label.add_theme_color_override("font_color", MerlinVisual.CRT_PALETTE.danger)
 		"critical_failure":
 			_dice_result_label.text = "Echec Critique !"
-			_dice_result_label.add_theme_color_override("font_color", MerlinVisual.PALETTE.danger)
+			_dice_result_label.add_theme_color_override("font_color", MerlinVisual.CRT_PALETTE.danger)
 
 
 func _dice_outcome_color(roll: int, dc: int) -> Color:
 	if roll == 20:
-		return MerlinVisual.PALETTE.souffle_full  # Gold
+		return MerlinVisual.CRT_PALETTE.souffle_full  # Gold
 	elif roll == 1:
-		return MerlinVisual.PALETTE.danger  # Dark red
+		return MerlinVisual.CRT_PALETTE.danger  # Dark red
 	elif roll >= dc:
-		return MerlinVisual.PALETTE.success  # Green
+		return MerlinVisual.CRT_PALETTE.success  # Green
 	else:
-		return MerlinVisual.PALETTE.danger  # Red
+		return MerlinVisual.CRT_PALETTE.danger  # Red
 
 
 func _ensure_dice_overlay() -> void:
@@ -3014,7 +3000,7 @@ func _ensure_dice_overlay() -> void:
 	_dice_dc_label = Label.new()
 	_dice_dc_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	_dice_dc_label.add_theme_font_size_override("font_size", 12)
-	_dice_dc_label.add_theme_color_override("font_color", MerlinVisual.PALETTE.ink_soft)
+	_dice_dc_label.add_theme_color_override("font_color", MerlinVisual.CRT_PALETTE.phosphor_dim)
 	if body_font:
 		_dice_dc_label.add_theme_font_override("font", body_font)
 	vbox.add_child(_dice_dc_label)
@@ -3026,8 +3012,8 @@ func _ensure_dice_overlay() -> void:
 	_dice_bg_panel = PanelContainer.new()
 	_dice_bg_panel.custom_minimum_size = Vector2(70, 70)
 	var dice_style := StyleBoxFlat.new()
-	dice_style.bg_color = MerlinVisual.PALETTE.paper_dark
-	dice_style.border_color = MerlinVisual.PALETTE.accent
+	dice_style.bg_color = MerlinVisual.CRT_PALETTE.bg_dark
+	dice_style.border_color = MerlinVisual.CRT_PALETTE.amber
 	dice_style.set_border_width_all(2)
 	dice_style.set_corner_radius_all(10)
 	dice_style.content_margin_left = 6
@@ -3048,7 +3034,7 @@ func _ensure_dice_overlay() -> void:
 	if title_font:
 		_dice_display.add_theme_font_override("font", title_font)
 	_dice_display.add_theme_font_size_override("font_size", 48)
-	_dice_display.add_theme_color_override("font_color", MerlinVisual.PALETTE.ink)
+	_dice_display.add_theme_color_override("font_color", MerlinVisual.CRT_PALETTE.phosphor)
 	_dice_display.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	_dice_bg_panel.add_child(_dice_display)
 
@@ -3118,7 +3104,7 @@ func show_minigame_intro(field: String, tool_bonus_text: String, tool_bonus: int
 	if title_font:
 		name_label.add_theme_font_override("font", title_font)
 	name_label.add_theme_font_size_override("font_size", 18)
-	name_label.add_theme_color_override("font_color", MerlinVisual.PALETTE.ink)
+	name_label.add_theme_color_override("font_color", MerlinVisual.CRT_PALETTE.phosphor)
 	vbox.add_child(name_label)
 
 	# Tool bonus
@@ -3129,7 +3115,7 @@ func show_minigame_intro(field: String, tool_bonus_text: String, tool_bonus: int
 		if body_font:
 			bonus_label.add_theme_font_override("font", body_font)
 		bonus_label.add_theme_font_size_override("font_size", 13)
-		bonus_label.add_theme_color_override("font_color", MerlinVisual.PALETTE.success)
+		bonus_label.add_theme_color_override("font_color", MerlinVisual.CRT_PALETTE.success)
 		vbox.add_child(bonus_label)
 
 	# Animate in then auto-remove (stays in card body)
@@ -3150,7 +3136,7 @@ func show_score_to_d20(score: int, d20: int, tool_bonus: int) -> void:
 	if tool_bonus != 0:
 		bonus_text = " (bonus %d)" % tool_bonus
 	_dice_dc_label.text = "Score: %d \u2192 D20: %d%s" % [score, d20, bonus_text]
-	_dice_dc_label.add_theme_color_override("font_color", MerlinVisual.PALETTE.bestiole)
+	_dice_dc_label.add_theme_color_override("font_color", MerlinVisual.CRT_PALETTE.bestiole)
 	_dice_display.text = str(d20)
 	_dice_result_label.text = ""
 
@@ -3167,7 +3153,7 @@ func show_travel_animation(text: String) -> void:
 	var fog := ColorRect.new()
 	fog.name = "TravelFog"
 	fog.set_anchors_preset(Control.PRESET_FULL_RECT)
-	var fog_base: Color = MerlinVisual.PALETTE.ink
+	var fog_base: Color = MerlinVisual.CRT_PALETTE.phosphor
 	fog.color = Color(fog_base.r * 0.4, fog_base.g * 0.4, fog_base.b * 0.4, 0.0)
 	fog.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	add_child(fog)
@@ -3180,7 +3166,7 @@ func show_travel_animation(text: String) -> void:
 	if body_font:
 		lbl.add_theme_font_override("font", body_font)
 	lbl.add_theme_font_size_override("font_size", 18)
-	var lbl_base: Color = MerlinVisual.PALETTE.paper_warm
+	var lbl_base: Color = MerlinVisual.CRT_PALETTE.bg_panel
 	lbl.add_theme_color_override("font_color", Color(lbl_base.r, lbl_base.g, lbl_base.b, 0.0))
 	lbl.autowrap_mode = TextServer.AUTOWRAP_WORD
 	fog.add_child(lbl)
@@ -3217,7 +3203,7 @@ func show_reaction_text(text: String, outcome: String) -> void:
 		return
 	# Restore card text VBox (may be hidden after dice/minigame)
 	switch_body_to_text()
-	var color: Color = MerlinVisual.PALETTE.success if outcome.contains("success") else MerlinVisual.PALETTE.danger
+	var color: Color = MerlinVisual.CRT_PALETTE.success if outcome.contains("success") else MerlinVisual.CRT_PALETTE.danger
 	card_text.text = "[color=#%s]%s[/color]" % [color.to_html(false), text]
 	card_text.visible_characters = -1
 	card_text.modulate.a = 1.0
@@ -3241,19 +3227,19 @@ func show_result_text_transition(result_text: String, outcome: String) -> void:
 		match outcome:
 			"critical_success":
 				card_speaker.text = "Reussite critique !"
-				card_speaker.add_theme_color_override("font_color", MerlinVisual.PALETTE.souffle_full)
+				card_speaker.add_theme_color_override("font_color", MerlinVisual.CRT_PALETTE.souffle_full)
 			"success":
 				card_speaker.text = "Reussite"
-				card_speaker.add_theme_color_override("font_color", MerlinVisual.PALETTE.success)
+				card_speaker.add_theme_color_override("font_color", MerlinVisual.CRT_PALETTE.success)
 			"critical_failure":
 				card_speaker.text = "Echec critique..."
-				card_speaker.add_theme_color_override("font_color", MerlinVisual.PALETTE.danger)
+				card_speaker.add_theme_color_override("font_color", MerlinVisual.CRT_PALETTE.danger)
 			_:
 				card_speaker.text = "Echec"
-				card_speaker.add_theme_color_override("font_color", MerlinVisual.PALETTE.danger)
+				card_speaker.add_theme_color_override("font_color", MerlinVisual.CRT_PALETTE.danger)
 
 	# Colorize and typewriter the result
-	var color: Color = MerlinVisual.PALETTE.success if outcome.contains("success") else MerlinVisual.PALETTE.danger
+	var color: Color = MerlinVisual.CRT_PALETTE.success if outcome.contains("success") else MerlinVisual.CRT_PALETTE.danger
 	var bbcode_text := "[color=#%s]%s[/color]" % [color.to_html(false), result_text]
 	card_text.modulate.a = 1.0
 	_typewriter_card_text(bbcode_text)
@@ -3268,7 +3254,7 @@ func show_critical_badge() -> void:
 		return
 	var style: StyleBoxFlat = base_style.duplicate() as StyleBoxFlat
 	if style:
-		style.border_color = MerlinVisual.PALETTE.souffle_full
+		style.border_color = MerlinVisual.CRT_PALETTE.souffle_full
 		style.set_border_width_all(3)
 		card_panel.add_theme_stylebox_override("panel", style)
 	# Pulse animation (infinite, stop on next card display)
@@ -3285,7 +3271,7 @@ func show_biome_passive(passive: Dictionary) -> void:
 	notif.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	notif.set_anchors_preset(Control.PRESET_CENTER_BOTTOM)
 	notif.add_theme_font_size_override("font_size", 14)
-	notif.add_theme_color_override("font_color", MerlinVisual.PALETTE.success)
+	notif.add_theme_color_override("font_color", MerlinVisual.CRT_PALETTE.success)
 	if body_font:
 		notif.add_theme_font_override("font", body_font)
 	notif.modulate.a = 0.0
@@ -3338,7 +3324,7 @@ func show_milestone_popup(title_text: String, desc_text: String) -> void:
 	## Power milestone popup — gold panel, fade in → 2.5s → fade out.
 	var popup := PanelContainer.new()
 	var style := StyleBoxFlat.new()
-	var gold: Color = MerlinVisual.PALETTE.get("celtic_gold", Color(0.85, 0.65, 0.13))
+	var gold: Color = MerlinVisual.CRT_PALETTE.get("amber_bright", Color(0.85, 0.65, 0.13))
 	style.bg_color = Color(gold.r, gold.g, gold.b, 0.92)
 	style.corner_radius_top_left = 8
 	style.corner_radius_top_right = 8
@@ -3355,7 +3341,7 @@ func show_milestone_popup(title_text: String, desc_text: String) -> void:
 	if title_font:
 		lbl.add_theme_font_override("font", title_font)
 	lbl.add_theme_font_size_override("font_size", 18)
-	var paper_color: Color = MerlinVisual.PALETTE.get("paper", Color.WHITE)
+	var paper_color: Color = MerlinVisual.CRT_PALETTE.get("bg_panel", Color.WHITE)
 	lbl.add_theme_color_override("font_color", paper_color)
 	popup.add_child(lbl)
 	add_child(popup)
@@ -3389,7 +3375,7 @@ func show_life_delta(delta: int) -> void:
 		return
 
 	var is_damage: bool = delta < 0
-	var color: Color = MerlinVisual.PALETTE.danger if is_damage else MerlinVisual.PALETTE.success
+	var color: Color = MerlinVisual.CRT_PALETTE.danger if is_damage else MerlinVisual.CRT_PALETTE.success
 
 	# --- Stage 1: Screen flash (red for damage, green for heal) ---
 	var flash := ColorRect.new()
@@ -3473,7 +3459,7 @@ func show_merlin_thinking_overlay() -> void:
 	_merlin_overlay.z_index = 20
 	var bg := ColorRect.new()
 	bg.set_anchors_preset(Control.PRESET_FULL_RECT)
-	var p: Color = MerlinVisual.PALETTE.paper
+	var p: Color = MerlinVisual.CRT_PALETTE.bg_panel
 	bg.color = Color(p.r, p.g, p.b, 0.85)
 	bg.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	_merlin_overlay.add_child(bg)
@@ -3483,7 +3469,7 @@ func show_merlin_thinking_overlay() -> void:
 	lbl.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	lbl.set_anchors_preset(Control.PRESET_CENTER)
 	lbl.add_theme_font_size_override("font_size", 22)
-	lbl.add_theme_color_override("font_color", MerlinVisual.PALETTE.ink)
+	lbl.add_theme_color_override("font_color", MerlinVisual.CRT_PALETTE.phosphor)
 	if title_font:
 		lbl.add_theme_font_override("font", title_font)
 	_merlin_overlay.add_child(lbl)

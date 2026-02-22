@@ -46,14 +46,14 @@ func _ready() -> void:
 
 func _configure_ui() -> void:
 	# Runtime color overrides (depend on MerlinVisual palette)
-	_bg.color = Color(MerlinVisual.PALETTE.paper.r, MerlinVisual.PALETTE.paper.g, MerlinVisual.PALETTE.paper.b, 0.94)
+	_bg.color = Color(MerlinVisual.CRT_PALETTE.bg_panel.r, MerlinVisual.CRT_PALETTE.bg_panel.g, MerlinVisual.CRT_PALETTE.bg_panel.b, 0.94)
 	_title_label.text = WARMUP_MESSAGES[randi() % WARMUP_MESSAGES.size()]
-	_title_label.add_theme_color_override("font_color", MerlinVisual.PALETTE.ink)
+	_title_label.add_theme_color_override("font_color", MerlinVisual.CRT_PALETTE.phosphor)
 	_spinner_label.text = SPINNER_CHARS[0]
-	_spinner_label.add_theme_color_override("font_color", MerlinVisual.PALETTE.accent)
-	_detail_label.add_theme_color_override("font_color", MerlinVisual.PALETTE.ink_soft)
-	_progress_bar.color = MerlinVisual.PALETTE.paper_warm
-	_progress_fill.color = MerlinVisual.PALETTE.accent
+	_spinner_label.add_theme_color_override("font_color", MerlinVisual.CRT_PALETTE.amber)
+	_detail_label.add_theme_color_override("font_color", MerlinVisual.CRT_PALETTE.phosphor_dim)
+	_progress_bar.color = MerlinVisual.CRT_PALETTE.bg_panel
+	_progress_fill.color = MerlinVisual.CRT_PALETTE.amber
 
 	_layout()
 	_container.resized.connect(_layout)

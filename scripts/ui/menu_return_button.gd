@@ -38,27 +38,27 @@ func _ready() -> void:
 
 func _apply_style() -> void:
 	var normal := StyleBoxFlat.new()
-	normal.bg_color = MerlinVisual.PALETTE.paper
-	normal.border_color = MerlinVisual.PALETTE.ink_soft
+	normal.bg_color = MerlinVisual.CRT_PALETTE.bg_panel
+	normal.border_color = MerlinVisual.CRT_PALETTE.phosphor_dim
 	normal.set_border_width_all(1)
 	normal.set_corner_radius_all(4)
 	normal.set_content_margin_all(8)
 
 	var hover := normal.duplicate()
-	hover.bg_color = MerlinVisual.PALETTE.paper_dark
-	hover.border_color = MerlinVisual.PALETTE.accent
+	hover.bg_color = MerlinVisual.CRT_PALETTE.bg_dark
+	hover.border_color = MerlinVisual.CRT_PALETTE.amber
 
 	var pressed_style := hover.duplicate()
-	pressed_style.bg_color = Color(MerlinVisual.PALETTE.paper_dark.r, MerlinVisual.PALETTE.paper_dark.g, MerlinVisual.PALETTE.paper_dark.b, 0.9)
+	pressed_style.bg_color = Color(MerlinVisual.CRT_PALETTE.bg_dark.r, MerlinVisual.CRT_PALETTE.bg_dark.g, MerlinVisual.CRT_PALETTE.bg_dark.b, 0.9)
 
 	add_theme_stylebox_override("normal", normal)
 	add_theme_stylebox_override("hover", hover)
 	add_theme_stylebox_override("pressed", pressed_style)
 	add_theme_stylebox_override("focus", hover)
 
-	add_theme_color_override("font_color", MerlinVisual.PALETTE.ink)
-	add_theme_color_override("font_hover_color", MerlinVisual.PALETTE.accent)
-	add_theme_color_override("font_pressed_color", MerlinVisual.PALETTE.accent)
+	add_theme_color_override("font_color", MerlinVisual.CRT_PALETTE.phosphor)
+	add_theme_color_override("font_hover_color", MerlinVisual.CRT_PALETTE.amber)
+	add_theme_color_override("font_pressed_color", MerlinVisual.CRT_PALETTE.amber)
 	add_theme_font_size_override("font_size", 16)
 
 	pivot_offset = BUTTON_SIZE / 2

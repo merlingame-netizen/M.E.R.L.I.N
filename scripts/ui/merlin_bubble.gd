@@ -33,9 +33,9 @@ var _text_color: Color
 
 func _ready() -> void:
 	# Load colors from MerlinVisual
-	_border_color = MerlinVisual.PALETTE["celtic_gold"]
+	_border_color = MerlinVisual.CRT_PALETTE["amber_bright"]
 	_border_color.a = 0.3
-	_text_color = MerlinVisual.PALETTE["paper"]
+	_text_color = MerlinVisual.CRT_PALETTE["bg_panel"]
 
 	# Setup control
 	mouse_filter = Control.MOUSE_FILTER_PASS

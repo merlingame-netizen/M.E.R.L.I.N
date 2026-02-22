@@ -4,7 +4,7 @@ extends CanvasLayer
 
 
 const TRINITY_MODELS := {
-	"default": {"file": "qwen2.5-3b-instruct-q4_k_m.gguf", "desc": "Qwen 2.5-3B (defaut)"},
+	"default": {"file": "qwen2.5-3b-instruct-q4_k_m.gguf", "desc": "M.E.R.L.I.N.-3B (defaut)"},
 }
 
 const MODEL_DIRS := [

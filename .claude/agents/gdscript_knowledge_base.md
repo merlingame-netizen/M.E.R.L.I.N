@@ -25,6 +25,40 @@ var constant: int = CONSTANTS[index]
 
 **Regle:** Jamais `:=` avec `CONST[index]`, `array[index]`, ou `dict[key]`.
 
+**Extension (2026-02-22):** Meme probleme avec les proprietes d'objets issus d'arrays non types:
+```gdscript
+var _hotspots: Array = []  # Array non type = elements Variant
+
+# WRONG — hs est Variant, hs.position est Variant, := echoue
+for hs in _hotspots:
+    var target := hs.position + Vector2(32, 32)
+
+# CORRECT — type explicite
+for hs in _hotspots:
+    var target: Vector2 = hs.position + Vector2(32, 32)
+```
+
+---
+
+### 1.1c Static functions appelees sur instance autoload
+
+**Warning:** `STATIC_CALLED_ON_INSTANCE: The function "xxx()" is a static function but was called from an instance`
+
+**Cause:** Fonctions `static func` dans un script autoload appelees via `AutoloadName.func()`. L'autoload est une instance dans l'arbre de scene, pas un type.
+
+```gdscript
+# WRONG — MerlinVisual est un autoload (instance) + func est static
+parchment_bg.modulate = MerlinVisual.get_seasonal_tint()
+
+# FIX 1 (prefere): retirer static si toujours appele via autoload
+func get_seasonal_tint() -> Color:  # pas 'static func'
+
+# FIX 2 (alternatif): ajouter class_name au script autoload
+# Puis appeler via le type: MerlinVisualType.get_seasonal_tint()
+```
+
+**Regle:** Sur un autoload sans `class_name`, ne pas utiliser `static func`. Utiliser `func` simple.
+
 ---
 
 ### 1.1b Fichiers .gd crees hors editeur — "Could not find type"

@@ -291,27 +291,12 @@ func _load_font(path: String) -> Font:
 # =============================================================================
 
 func _configure_background() -> void:
-	# Apply shader to parchment bg (scene node)
-	var paper_shader := load("res://shaders/merlin_paper.gdshader")
-	if paper_shader:
-		var mat := ShaderMaterial.new()
-		mat.shader = paper_shader
-		# Paramètres pour un parchemin doux et sobre
-		mat.set_shader_parameter("paper_tint", MerlinVisual.PALETTE.paper)
-		mat.set_shader_parameter("grain_strength", 0.025)      # Grain très subtil
-		mat.set_shader_parameter("vignette_strength", 0.08)    # Vignette légère
-		mat.set_shader_parameter("vignette_softness", 0.65)    # Bords doux
-		mat.set_shader_parameter("grain_scale", 1200.0)        # Grain fin
-		mat.set_shader_parameter("grain_speed", 0.08)          # Mouvement lent
-		mat.set_shader_parameter("warp_strength", 0.001)       # Ondulation minimale
-		parchment_background.material = mat
-	else:
-		# Fallback: couleur unie
-		parchment_background.color = MerlinVisual.PALETTE.paper
-
-	parchment_background.modulate.a = 0.55
+	# CRT terminal background
+	parchment_background.material = null
+	parchment_background.color = MerlinVisual.CRT_PALETTE.bg_dark
+	parchment_background.modulate.a = 1.0
 	# Mist layer
-	mist_layer.color = MerlinVisual.PALETTE.mist
+	mist_layer.color = MerlinVisual.CRT_PALETTE.mist
 
 
 # =============================================================================
@@ -409,7 +394,7 @@ func _build_pixel_landscape() -> void:
 	var primary_color: Color = colors.get("primary", Color(0.18, 0.42, 0.22))
 	var secondary_color: Color = colors.get("secondary", Color(0.35, 0.55, 0.28))
 	var accent_color: Color = colors.get("accent", Color(0.62, 0.78, 0.42))
-	var window_color: Color = MerlinVisual.PALETTE.get("celtic_gold", Color(0.68, 0.55, 0.32))
+	var window_color: Color = MerlinVisual.CRT_PALETTE.get("amber_bright", Color(0.68, 0.55, 0.32))
 
 	var color_map := {
 		1: primary_color,
@@ -521,7 +506,7 @@ func _start_tower_glow() -> void:
 	var tower_top_y: float = origin_y
 
 	# 3 volumetric light rays fanning upward
-	var ray_color: Color = MerlinVisual.PALETTE.get("celtic_gold", Color(0.68, 0.55, 0.32))
+	var ray_color: Color = MerlinVisual.CRT_PALETTE.get("amber_bright", Color(0.68, 0.55, 0.32))
 	for i in range(3):
 		var ray := ColorRect.new()
 		ray.size = Vector2(3.0, 70.0)
@@ -579,10 +564,10 @@ func _start_mist_animation() -> void:
 func _configure_celtic_ornaments() -> void:
 	var line_text := _create_celtic_line(40)
 	celtic_ornament_top.text = line_text
-	celtic_ornament_top.add_theme_color_override("font_color", MerlinVisual.PALETTE.ink_faded)
+	celtic_ornament_top.add_theme_color_override("font_color", MerlinVisual.CRT_PALETTE.border)
 	celtic_ornament_top.position = Vector2(0, 50)
 	celtic_ornament_bottom.text = line_text
-	celtic_ornament_bottom.add_theme_color_override("font_color", MerlinVisual.PALETTE.ink_faded)
+	celtic_ornament_bottom.add_theme_color_override("font_color", MerlinVisual.CRT_PALETTE.border)
 
 
 func _create_celtic_line(length: int) -> String:
@@ -654,7 +639,7 @@ func _apply_clock_style() -> void:
 	if body_font:
 		clock_label.add_theme_font_override("font", body_font)
 	clock_label.add_theme_font_size_override("font_size", 28)
-	clock_label.add_theme_color_override("font_color", MerlinVisual.PALETTE.ink_soft)
+	clock_label.add_theme_color_override("font_color", MerlinVisual.CRT_PALETTE.phosphor_dim)
 
 
 func _layout_clock() -> void:
@@ -669,9 +654,9 @@ func _layout_clock() -> void:
 
 func _configure_main_ui() -> void:
 	# Separator colors (runtime palette)
-	_sep_left.color = MerlinVisual.PALETTE.line
-	_sep_diamond.add_theme_color_override("font_color", MerlinVisual.PALETTE.accent)
-	_sep_right.color = MerlinVisual.PALETTE.line
+	_sep_left.color = MerlinVisual.CRT_PALETTE.line
+	_sep_diamond.add_theme_color_override("font_color", MerlinVisual.CRT_PALETTE.amber)
+	_sep_right.color = MerlinVisual.CRT_PALETTE.line
 
 	# Populate menu buttons (data-driven from MAIN_MENU_ITEMS)
 	for item in MAIN_MENU_ITEMS:
@@ -697,8 +682,8 @@ func _apply_theme() -> void:
 
 	# Style carte - parchemin élégant avec bordure fine
 	var card_style := StyleBoxFlat.new()
-	card_style.bg_color = MerlinVisual.PALETTE.paper_warm
-	card_style.border_color = MerlinVisual.PALETTE.ink_faded
+	card_style.bg_color = MerlinVisual.CRT_PALETTE.bg_panel
+	card_style.border_color = MerlinVisual.CRT_PALETTE.border
 	card_style.border_width_left = 1
 	card_style.border_width_top = 1
 	card_style.border_width_right = 1
@@ -707,7 +692,7 @@ func _apply_theme() -> void:
 	card_style.corner_radius_top_right = 4
 	card_style.corner_radius_bottom_left = 4
 	card_style.corner_radius_bottom_right = 4
-	card_style.shadow_color = MerlinVisual.PALETTE.shadow
+	card_style.shadow_color = MerlinVisual.CRT_PALETTE.shadow
 	card_style.shadow_size = 16
 	card_style.shadow_offset = Vector2(0, 4)
 	card_style.content_margin_left = 36
@@ -728,8 +713,8 @@ func _apply_theme() -> void:
 	btn_normal.content_margin_bottom = 14
 
 	var btn_hover := StyleBoxFlat.new()
-	btn_hover.bg_color = MerlinVisual.PALETTE.accent_glow
-	btn_hover.border_color = MerlinVisual.PALETTE.accent
+	btn_hover.bg_color = MerlinVisual.CRT_PALETTE.phosphor_glow
+	btn_hover.border_color = MerlinVisual.CRT_PALETTE.amber
 	btn_hover.border_width_bottom = 1
 	btn_hover.corner_radius_top_left = 2
 	btn_hover.corner_radius_top_right = 2
@@ -741,7 +726,7 @@ func _apply_theme() -> void:
 	btn_hover.content_margin_bottom = 14
 
 	var btn_pressed := btn_hover.duplicate()
-	var accent_color: Color = MerlinVisual.PALETTE.accent
+	var accent_color: Color = MerlinVisual.CRT_PALETTE.amber
 	btn_pressed.bg_color = Color(accent_color.r, accent_color.g, accent_color.b, 0.15)
 
 	menu_theme.set_stylebox("normal", "Button", btn_normal)
@@ -750,12 +735,12 @@ func _apply_theme() -> void:
 	menu_theme.set_stylebox("focus", "Button", btn_hover)
 	menu_theme.set_stylebox("disabled", "Button", btn_normal)
 
-	menu_theme.set_color("font_color", "Button", MerlinVisual.PALETTE.ink)
-	menu_theme.set_color("font_hover_color", "Button", MerlinVisual.PALETTE.accent)
-	menu_theme.set_color("font_pressed_color", "Button", MerlinVisual.PALETTE.accent)
-	menu_theme.set_color("font_disabled_color", "Button", MerlinVisual.PALETTE.ink_faded)
+	menu_theme.set_color("font_color", "Button", MerlinVisual.CRT_PALETTE.phosphor)
+	menu_theme.set_color("font_hover_color", "Button", MerlinVisual.CRT_PALETTE.amber)
+	menu_theme.set_color("font_pressed_color", "Button", MerlinVisual.CRT_PALETTE.amber)
+	menu_theme.set_color("font_disabled_color", "Button", MerlinVisual.CRT_PALETTE.border)
 
-	menu_theme.set_color("font_color", "Label", MerlinVisual.PALETTE.ink)
+	menu_theme.set_color("font_color", "Label", MerlinVisual.CRT_PALETTE.phosphor)
 
 	self.theme = menu_theme
 
@@ -763,14 +748,14 @@ func _apply_theme() -> void:
 	if title_label and title_font:
 		title_label.add_theme_font_override("font", title_font)
 		title_label.add_theme_font_size_override("font_size", 52)
-		title_label.add_theme_color_override("font_color", MerlinVisual.PALETTE.ink)
+		title_label.add_theme_color_override("font_color", MerlinVisual.CRT_PALETTE.phosphor)
 
 	# Style boutons menu
 	for btn in main_buttons.get_children():
 		if btn is Button and body_font:
 			btn.add_theme_font_override("font", body_font)
 			btn.add_theme_font_size_override("font_size", 22)
-			btn.add_theme_color_override("font_color", MerlinVisual.PALETTE.ink)
+			btn.add_theme_color_override("font_color", MerlinVisual.CRT_PALETTE.phosphor)
 			btn.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
 
 	# Style boutons coins
@@ -784,7 +769,7 @@ func _apply_theme() -> void:
 func _apply_corner_button_style(btn: Button) -> void:
 	if btn:
 		btn.add_theme_font_size_override("font_size", 22)
-		btn.add_theme_color_override("font_color", MerlinVisual.PALETTE.ink_soft)
+		btn.add_theme_color_override("font_color", MerlinVisual.CRT_PALETTE.phosphor_dim)
 		btn.pivot_offset = CORNER_BUTTON_SIZE * 0.5
 
 
@@ -798,7 +783,7 @@ func _build_custom_cursor() -> void:
 		return
 	_custom_cursor = Control.new()
 	_custom_cursor.set_script(cursor_script)
-	_custom_cursor.set_palette(MerlinVisual.PALETTE.ink, MerlinVisual.PALETTE.ink_soft)
+	_custom_cursor.set_palette(MerlinVisual.CRT_PALETTE.phosphor, MerlinVisual.CRT_PALETTE.phosphor_dim)
 	add_child(_custom_cursor)
 
 
@@ -892,10 +877,10 @@ func _on_corner_button_hover(btn: Button, hovering: bool) -> void:
 	_corner_hover_tweens[btn] = tween
 	if hovering:
 		tween.tween_property(btn, "scale", Vector2(1.15, 1.15), 0.2)
-		btn.add_theme_color_override("font_color", MerlinVisual.PALETTE.accent)
+		btn.add_theme_color_override("font_color", MerlinVisual.CRT_PALETTE.amber)
 	else:
 		tween.tween_property(btn, "scale", Vector2(1.0, 1.0), 0.15)
-		btn.add_theme_color_override("font_color", MerlinVisual.PALETTE.ink_soft)
+		btn.add_theme_color_override("font_color", MerlinVisual.CRT_PALETTE.phosphor_dim)
 
 
 # =============================================================================
@@ -1010,7 +995,7 @@ func _build_ai_status_indicator() -> void:
 	_ai_status_label.text = "IA: ..."
 	_ai_status_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
 	_ai_status_label.add_theme_font_size_override("font_size", 11)
-	_ai_status_label.add_theme_color_override("font_color", MerlinVisual.PALETTE.ink_faded)
+	_ai_status_label.add_theme_color_override("font_color", MerlinVisual.CRT_PALETTE.border)
 	if body_font:
 		_ai_status_label.add_theme_font_override("font", body_font)
 	add_child(_ai_status_label)
@@ -1025,7 +1010,7 @@ func _build_ai_status_indicator() -> void:
 		return
 	if mai.is_ready:
 		_ai_status_label.text = "IA: %d cerveaux" % mai.brain_count
-		_ai_status_label.add_theme_color_override("font_color", MerlinVisual.PALETTE.accent_soft)
+		_ai_status_label.add_theme_color_override("font_color", MerlinVisual.CRT_PALETTE.amber_dim)
 	if mai.has_signal("status_changed"):
 		mai.status_changed.connect(_on_ai_status_changed)
 	if mai.has_signal("ready_changed"):
@@ -1044,7 +1029,7 @@ func _on_ai_ready_changed(is_ai_ready: bool) -> void:
 		var mai := get_node_or_null("/root/MerlinAI")
 		var bc: int = mai.brain_count if mai else 0
 		_ai_status_label.text = "IA: %d cerveaux" % bc
-		_ai_status_label.add_theme_color_override("font_color", MerlinVisual.PALETTE.accent_soft)
+		_ai_status_label.add_theme_color_override("font_color", MerlinVisual.CRT_PALETTE.amber_dim)
 		# Subtle fade-in accent
 		var tw := create_tween()
 		_ai_status_label.modulate.a = 0.3
@@ -1538,11 +1523,11 @@ func _build_voice_llm_panel() -> void:
 	var panel := PanelContainer.new()
 	panel.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	var style := StyleBoxFlat.new()
-	style.bg_color = MerlinVisual.PALETTE.paper_warm
-	style.border_color = MerlinVisual.PALETTE.accent
+	style.bg_color = MerlinVisual.CRT_PALETTE.bg_panel
+	style.border_color = MerlinVisual.CRT_PALETTE.amber
 	style.set_border_width_all(2)
 	style.set_corner_radius_all(8)
-	style.shadow_color = MerlinVisual.PALETTE.shadow
+	style.shadow_color = MerlinVisual.CRT_PALETTE.shadow
 	style.shadow_size = 12
 	style.set_content_margin_all(20)
 	panel.add_theme_stylebox_override("panel", style)
@@ -1559,7 +1544,7 @@ func _build_voice_llm_panel() -> void:
 	if body_font:
 		title.add_theme_font_override("font", body_font)
 	title.add_theme_font_size_override("font_size", 24)
-	title.add_theme_color_override("font_color", MerlinVisual.PALETTE.ink)
+	title.add_theme_color_override("font_color", MerlinVisual.CRT_PALETTE.phosphor)
 	vbox.add_child(title)
 
 	var sep := HSeparator.new()
@@ -1629,7 +1614,7 @@ func _build_voice_llm_panel() -> void:
 	var prompt_lbl := Label.new()
 	prompt_lbl.text = "Prompt LLM :"
 	prompt_lbl.add_theme_font_size_override("font_size", 14)
-	prompt_lbl.add_theme_color_override("font_color", MerlinVisual.PALETTE.ink_soft)
+	prompt_lbl.add_theme_color_override("font_color", MerlinVisual.CRT_PALETTE.phosphor_dim)
 	vbox.add_child(prompt_lbl)
 
 	_panel_prompt_input = TextEdit.new()
@@ -1639,11 +1624,11 @@ func _build_voice_llm_panel() -> void:
 	_panel_prompt_input.scroll_fit_content_height = true
 	_panel_prompt_input.wrap_mode = TextEdit.LINE_WRAPPING_BOUNDARY
 	_panel_prompt_input.add_theme_font_size_override("font_size", 14)
-	_panel_prompt_input.add_theme_color_override("font_color", MerlinVisual.PALETTE.ink)
+	_panel_prompt_input.add_theme_color_override("font_color", MerlinVisual.CRT_PALETTE.phosphor)
 	var input_style := StyleBoxFlat.new()
 	var white_base: Color = MerlinVisual.GBC.white
 	input_style.bg_color = Color(white_base.r, white_base.g, white_base.b, 0.5)
-	input_style.border_color = MerlinVisual.PALETTE.ink_faded
+	input_style.border_color = MerlinVisual.CRT_PALETTE.border
 	input_style.set_border_width_all(1)
 	input_style.set_corner_radius_all(4)
 	input_style.set_content_margin_all(6)
@@ -1660,7 +1645,7 @@ func _build_voice_llm_panel() -> void:
 	if body_font:
 		_voice_test_label.add_theme_font_override("normal_font", body_font)
 	_voice_test_label.add_theme_font_size_override("normal_font_size", 15)
-	_voice_test_label.add_theme_color_override("default_color", MerlinVisual.PALETTE.ink)
+	_voice_test_label.add_theme_color_override("default_color", MerlinVisual.CRT_PALETTE.phosphor)
 	vbox.add_child(_voice_test_label)
 
 	# LLM source badge (dev indicator)
@@ -1709,7 +1694,7 @@ func _create_panel_row(parent: VBoxContainer, label_text: String) -> HBoxContain
 	lbl.text = label_text
 	lbl.custom_minimum_size.x = 80
 	lbl.add_theme_font_size_override("font_size", 14)
-	lbl.add_theme_color_override("font_color", MerlinVisual.PALETTE.ink_soft)
+	lbl.add_theme_color_override("font_color", MerlinVisual.CRT_PALETTE.phosphor_dim)
 	row.add_child(lbl)
 	parent.add_child(row)
 	return row
@@ -1896,7 +1881,7 @@ func _create_voice_slider(parent: VBoxContainer, label_text: String, min_val: fl
 	lbl.text = label_text
 	lbl.custom_minimum_size.x = 70
 	lbl.add_theme_font_size_override("font_size", 14)
-	lbl.add_theme_color_override("font_color", MerlinVisual.PALETTE.ink_soft)
+	lbl.add_theme_color_override("font_color", MerlinVisual.CRT_PALETTE.phosphor_dim)
 	hbox.add_child(lbl)
 
 	var slider := HSlider.new()
@@ -1912,7 +1897,7 @@ func _create_voice_slider(parent: VBoxContainer, label_text: String, min_val: fl
 	val_lbl.text = "%.2f" % default_val
 	val_lbl.custom_minimum_size.x = 40
 	val_lbl.add_theme_font_size_override("font_size", 13)
-	val_lbl.add_theme_color_override("font_color", MerlinVisual.PALETTE.accent)
+	val_lbl.add_theme_color_override("font_color", MerlinVisual.CRT_PALETTE.amber)
 	hbox.add_child(val_lbl)
 
 	if value_var == "_voice_pitch_value":

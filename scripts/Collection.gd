@@ -293,28 +293,20 @@ func _load_fonts() -> void:
 		font_bold = font_regular
 
 func _configure_ui() -> void:
-	# Configure parchment background shader
-	parchment_bg.color = MerlinVisual.PALETTE.paper
-	var paper_shader := load("res://shaders/merlin_paper.gdshader")
-	if paper_shader:
-		var mat := ShaderMaterial.new()
-		mat.shader = paper_shader
-		mat.set_shader_parameter("paper_tint", MerlinVisual.PALETTE.paper)
-		mat.set_shader_parameter("grain_strength", 0.025)
-		mat.set_shader_parameter("vignette_strength", 0.08)
-		mat.set_shader_parameter("vignette_softness", 0.65)
-		parchment_bg.material = mat
+	# CRT terminal background
+	parchment_bg.material = null
+	parchment_bg.color = MerlinVisual.CRT_PALETTE.bg_panel
 
 	# Configure mist + ornaments
-	mist_layer.color = MerlinVisual.PALETTE.mist
+	mist_layer.color = MerlinVisual.CRT_PALETTE.mist
 	ornament_top.text = "".join(CELTIC_ORNAMENT)
 	ornament_bottom.text = "".join(CELTIC_ORNAMENT)
 
 	# Configure separator colors
 	var sep_top: ColorRect = $MainContainer/Layout/SepTop
 	var sep_bottom: ColorRect = $MainContainer/Layout/SepBottom
-	sep_top.color = MerlinVisual.PALETTE.line
-	sep_bottom.color = MerlinVisual.PALETTE.line
+	sep_top.color = MerlinVisual.CRT_PALETTE.line
+	sep_bottom.color = MerlinVisual.CRT_PALETTE.line
 
 	# Wire tab button signals
 	btn_progression.pressed.connect(func():
@@ -340,17 +332,17 @@ func _configure_ui() -> void:
 
 func _apply_style() -> void:
 	# Panel styles - parchment look
-	_apply_panel_style(pass_panel, MerlinVisual.PALETTE.paper_warm)
+	_apply_panel_style(pass_panel, MerlinVisual.CRT_PALETTE.bg_panel)
 
 	# Content panel - subtle border
 	var content_panel := layout.get_node_or_null("ContentPanel")
 	if content_panel:
-		_apply_panel_style(content_panel, MerlinVisual.PALETTE.paper_dark)
+		_apply_panel_style(content_panel, MerlinVisual.CRT_PALETTE.bg_dark)
 
 	# Progress bar styling
 	var pass_bg := StyleBoxFlat.new()
-	pass_bg.bg_color = MerlinVisual.PALETTE.paper_dark
-	pass_bg.border_color = MerlinVisual.PALETTE.accent_soft
+	pass_bg.bg_color = MerlinVisual.CRT_PALETTE.bg_dark
+	pass_bg.border_color = MerlinVisual.CRT_PALETTE.amber_dim
 	pass_bg.set_border_width_all(1)
 	pass_bg.corner_radius_top_left = 4
 	pass_bg.corner_radius_top_right = 4
@@ -359,7 +351,7 @@ func _apply_style() -> void:
 	pass_progress.add_theme_stylebox_override("background", pass_bg)
 
 	var pass_fill := StyleBoxFlat.new()
-	pass_fill.bg_color = MerlinVisual.PALETTE.success
+	pass_fill.bg_color = MerlinVisual.CRT_PALETTE.success
 	pass_fill.corner_radius_top_left = 3
 	pass_fill.corner_radius_top_right = 3
 	pass_fill.corner_radius_bottom_left = 3
@@ -369,7 +361,7 @@ func _apply_style() -> void:
 func _apply_panel_style(panel: PanelContainer, fill_color: Color) -> void:
 	var style := StyleBoxFlat.new()
 	style.bg_color = fill_color
-	style.border_color = MerlinVisual.PALETTE.line
+	style.border_color = MerlinVisual.CRT_PALETTE.line
 	style.set_border_width_all(1)
 	style.corner_radius_top_left = 6
 	style.corner_radius_top_right = 6
@@ -434,8 +426,8 @@ func _update_responsive_style() -> void:
 	# Ornament styling
 	ornament_top.add_theme_font_size_override("font_size", 14 if compact_mode else 18)
 	ornament_bottom.add_theme_font_size_override("font_size", 14 if compact_mode else 18)
-	ornament_top.add_theme_color_override("font_color", MerlinVisual.PALETTE.accent_soft)
-	ornament_bottom.add_theme_color_override("font_color", MerlinVisual.PALETTE.accent_soft)
+	ornament_top.add_theme_color_override("font_color", MerlinVisual.CRT_PALETTE.amber_dim)
+	ornament_bottom.add_theme_color_override("font_color", MerlinVisual.CRT_PALETTE.amber_dim)
 	if font_regular:
 		ornament_top.add_theme_font_override("font", font_regular)
 		ornament_bottom.add_theme_font_override("font", font_regular)
@@ -445,24 +437,24 @@ func _update_responsive_style() -> void:
 		tab_btn.custom_minimum_size = Vector2(0, 32 if compact_mode else 38)
 
 	# Colors
-	title_label.add_theme_color_override("font_color", MerlinVisual.PALETTE.celtic_gold)
-	pass_title_label.add_theme_color_override("font_color", MerlinVisual.PALETTE.accent)
-	progress_title_label.add_theme_color_override("font_color", MerlinVisual.PALETTE.accent)
-	recent_title_label.add_theme_color_override("font_color", MerlinVisual.PALETTE.accent)
-	collection_title_label.add_theme_color_override("font_color", MerlinVisual.PALETTE.accent)
-	glory_label.add_theme_color_override("font_color", MerlinVisual.PALETTE.celtic_gold)
-	rank_label.add_theme_color_override("font_color", MerlinVisual.PALETTE.ink_soft)
-	progress_hint_label.add_theme_color_override("font_color", MerlinVisual.PALETTE.ink_soft)
-	collection_subtitle_label.add_theme_color_override("font_color", MerlinVisual.PALETTE.ink_soft)
-	pass_progress_label.add_theme_color_override("font_color", MerlinVisual.PALETTE.ink_soft)
+	title_label.add_theme_color_override("font_color", MerlinVisual.CRT_PALETTE.amber_bright)
+	pass_title_label.add_theme_color_override("font_color", MerlinVisual.CRT_PALETTE.amber)
+	progress_title_label.add_theme_color_override("font_color", MerlinVisual.CRT_PALETTE.amber)
+	recent_title_label.add_theme_color_override("font_color", MerlinVisual.CRT_PALETTE.amber)
+	collection_title_label.add_theme_color_override("font_color", MerlinVisual.CRT_PALETTE.amber)
+	glory_label.add_theme_color_override("font_color", MerlinVisual.CRT_PALETTE.amber_bright)
+	rank_label.add_theme_color_override("font_color", MerlinVisual.CRT_PALETTE.phosphor_dim)
+	progress_hint_label.add_theme_color_override("font_color", MerlinVisual.CRT_PALETTE.phosphor_dim)
+	collection_subtitle_label.add_theme_color_override("font_color", MerlinVisual.CRT_PALETTE.phosphor_dim)
+	pass_progress_label.add_theme_color_override("font_color", MerlinVisual.CRT_PALETTE.phosphor_dim)
 
 	# Back button styling
 	_style_back_button()
 
 func _style_back_button() -> void:
 	var normal := StyleBoxFlat.new()
-	normal.bg_color = MerlinVisual.PALETTE.paper_warm
-	normal.border_color = MerlinVisual.PALETTE.accent_soft
+	normal.bg_color = MerlinVisual.CRT_PALETTE.bg_panel
+	normal.border_color = MerlinVisual.CRT_PALETTE.amber_dim
 	normal.set_border_width_all(1)
 	normal.corner_radius_top_left = 4
 	normal.corner_radius_top_right = 4
@@ -474,18 +466,18 @@ func _style_back_button() -> void:
 	normal.content_margin_bottom = 6
 
 	var hover := normal.duplicate()
-	hover.bg_color = MerlinVisual.PALETTE.paper_dark
-	hover.border_color = MerlinVisual.PALETTE.accent
+	hover.bg_color = MerlinVisual.CRT_PALETTE.bg_dark
+	hover.border_color = MerlinVisual.CRT_PALETTE.amber
 
 	var pressed := normal.duplicate()
-	pressed.bg_color = MerlinVisual.PALETTE.accent_glow
-	pressed.border_color = MerlinVisual.PALETTE.accent
+	pressed.bg_color = MerlinVisual.CRT_PALETTE.phosphor_glow
+	pressed.border_color = MerlinVisual.CRT_PALETTE.amber
 
 	back_button.add_theme_stylebox_override("normal", normal)
 	back_button.add_theme_stylebox_override("hover", hover)
 	back_button.add_theme_stylebox_override("pressed", pressed)
-	back_button.add_theme_color_override("font_color", MerlinVisual.PALETTE.ink)
-	back_button.add_theme_color_override("font_hover_color", MerlinVisual.PALETTE.accent)
+	back_button.add_theme_color_override("font_color", MerlinVisual.CRT_PALETTE.phosphor)
+	back_button.add_theme_color_override("font_hover_color", MerlinVisual.CRT_PALETTE.amber)
 	if font_regular:
 		back_button.add_theme_font_override("font", font_regular)
 
@@ -494,7 +486,7 @@ func _apply_font_recursive(node: Node, font: Font, font_size: int) -> void:
 		var lbl := node as Label
 		lbl.add_theme_font_override("font", font)
 		lbl.add_theme_font_size_override("font_size", font_size)
-		lbl.add_theme_color_override("font_color", MerlinVisual.PALETTE.ink)
+		lbl.add_theme_color_override("font_color", MerlinVisual.CRT_PALETTE.phosphor)
 	if node is Button:
 		var btn := node as Button
 		btn.add_theme_font_override("font", font)
@@ -547,7 +539,7 @@ func _create_progress_row(stat: Dictionary) -> HBoxContainer:
 	var label := Label.new()
 	label.text = str(stat.get("label", ""))
 	label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	_style_label(label, MerlinVisual.PALETTE.ink, body_font_size, true)
+	_style_label(label, MerlinVisual.CRT_PALETTE.phosphor, body_font_size, true)
 	row.add_child(label)
 
 	var current: int = stat.get("current", 0)
@@ -561,20 +553,20 @@ func _create_progress_row(stat: Dictionary) -> HBoxContainer:
 
 	var bar_bg := ColorRect.new()
 	bar_bg.set_anchors_preset(Control.PRESET_FULL_RECT)
-	bar_bg.color = MerlinVisual.PALETTE.paper_dark
+	bar_bg.color = MerlinVisual.CRT_PALETTE.bg_dark
 	bar_container.add_child(bar_bg)
 
 	var bar_fill := ColorRect.new()
 	bar_fill.set_anchors_preset(Control.PRESET_LEFT_WIDE)
 	bar_fill.anchor_right = ratio
-	bar_fill.color = MerlinVisual.PALETTE.accent_soft
+	bar_fill.color = MerlinVisual.CRT_PALETTE.amber_dim
 	bar_container.add_child(bar_fill)
 
 	var count_label := Label.new()
 	count_label.text = "%d / %d" % [current, max_val]
 	count_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
 	count_label.custom_minimum_size = Vector2(50 if compact_mode else 60, 0)
-	_style_label(count_label, MerlinVisual.PALETTE.ink_soft, small_font_size)
+	_style_label(count_label, MerlinVisual.CRT_PALETTE.phosphor_dim, small_font_size)
 	row.add_child(count_label)
 
 	return row
@@ -599,14 +591,14 @@ func _populate_recent_list() -> void:
 		title.text = "%s  (%s)" % [str(item.get("title", "")), str(item.get("date", ""))]
 		title.clip_text = true
 		title.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
-		_style_label(title, MerlinVisual.PALETTE.ink, body_font_size, true)
+		_style_label(title, MerlinVisual.CRT_PALETTE.phosphor, body_font_size, true)
 		text_box.add_child(title)
 
 		var desc := Label.new()
 		desc.text = str(item.get("desc", ""))
 		desc.clip_text = true
 		desc.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
-		_style_label(desc, MerlinVisual.PALETTE.ink_soft, small_font_size)
+		_style_label(desc, MerlinVisual.CRT_PALETTE.phosphor_dim, small_font_size)
 		text_box.add_child(desc)
 
 		row.add_child(text_box)
@@ -647,11 +639,11 @@ func _set_view(view_id: int) -> void:
 func _style_tab_button(btn: Button, selected: bool) -> void:
 	var normal := StyleBoxFlat.new()
 	if selected:
-		normal.bg_color = MerlinVisual.PALETTE.paper_warm
-		normal.border_color = MerlinVisual.PALETTE.accent
+		normal.bg_color = MerlinVisual.CRT_PALETTE.bg_panel
+		normal.border_color = MerlinVisual.CRT_PALETTE.amber
 	else:
-		normal.bg_color = MerlinVisual.PALETTE.paper
-		normal.border_color = MerlinVisual.PALETTE.line
+		normal.bg_color = MerlinVisual.CRT_PALETTE.bg_panel
+		normal.border_color = MerlinVisual.CRT_PALETTE.line
 	normal.set_border_width_all(1)
 	normal.corner_radius_top_left = 4
 	normal.corner_radius_top_right = 4
@@ -661,14 +653,14 @@ func _style_tab_button(btn: Button, selected: bool) -> void:
 	normal.content_margin_bottom = 6
 
 	var hover := normal.duplicate()
-	hover.bg_color = MerlinVisual.PALETTE.paper_dark
-	hover.border_color = MerlinVisual.PALETTE.accent_soft
+	hover.bg_color = MerlinVisual.CRT_PALETTE.bg_dark
+	hover.border_color = MerlinVisual.CRT_PALETTE.amber_dim
 
 	btn.add_theme_stylebox_override("normal", normal)
 	btn.add_theme_stylebox_override("hover", hover)
 	btn.add_theme_stylebox_override("pressed", hover)
-	btn.add_theme_color_override("font_color", MerlinVisual.PALETTE.accent if selected else MerlinVisual.PALETTE.ink)
-	btn.add_theme_color_override("font_hover_color", MerlinVisual.PALETTE.accent)
+	btn.add_theme_color_override("font_color", MerlinVisual.CRT_PALETTE.amber if selected else MerlinVisual.CRT_PALETTE.phosphor)
+	btn.add_theme_color_override("font_hover_color", MerlinVisual.CRT_PALETTE.amber)
 	if font_regular:
 		btn.add_theme_font_override("font", font_regular)
 
@@ -693,11 +685,11 @@ func _create_icon_tile(text_value: String, locked: bool) -> Panel:
 
 	var style := StyleBoxFlat.new()
 	if locked:
-		style.bg_color = MerlinVisual.PALETTE.paper_dark
-		style.border_color = MerlinVisual.PALETTE.locked
+		style.bg_color = MerlinVisual.CRT_PALETTE.bg_dark
+		style.border_color = MerlinVisual.CRT_PALETTE.locked
 	else:
-		style.bg_color = MerlinVisual.PALETTE.paper_warm
-		style.border_color = MerlinVisual.PALETTE.accent_soft
+		style.bg_color = MerlinVisual.CRT_PALETTE.bg_panel
+		style.border_color = MerlinVisual.CRT_PALETTE.amber_dim
 	style.set_border_width_all(1)
 	style.corner_radius_top_left = 4
 	style.corner_radius_top_right = 4
@@ -711,7 +703,7 @@ func _create_icon_tile(text_value: String, locked: bool) -> Panel:
 	label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	label.anchor_right = 1.0
 	label.anchor_bottom = 1.0
-	_style_label(label, MerlinVisual.PALETTE.locked if locked else MerlinVisual.PALETTE.accent, small_font_size + 1, true)
+	_style_label(label, MerlinVisual.CRT_PALETTE.locked if locked else MerlinVisual.CRT_PALETTE.amber, small_font_size + 1, true)
 	panel.add_child(label)
 	return panel
 
@@ -720,11 +712,11 @@ func _create_ogham_icon_tile(ogham_key: String, locked: bool) -> Panel:
 	panel.custom_minimum_size = Vector2(icon_tile_size, icon_tile_size)
 	var style := StyleBoxFlat.new()
 	if locked:
-		style.bg_color = MerlinVisual.PALETTE.paper_dark
-		style.border_color = MerlinVisual.PALETTE.locked
+		style.bg_color = MerlinVisual.CRT_PALETTE.bg_dark
+		style.border_color = MerlinVisual.CRT_PALETTE.locked
 	else:
-		style.bg_color = MerlinVisual.PALETTE.paper_warm
-		style.border_color = MerlinVisual.PALETTE.accent_soft
+		style.bg_color = MerlinVisual.CRT_PALETTE.bg_panel
+		style.border_color = MerlinVisual.CRT_PALETTE.amber_dim
 	style.set_border_width_all(1)
 	style.corner_radius_top_left = 4
 	style.corner_radius_top_right = 4
@@ -761,14 +753,14 @@ func _create_collection_row(icon_text: String, name_text: String, req_text: Stri
 	name_label.text = name_text
 	name_label.clip_text = true
 	name_label.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
-	_style_label(name_label, MerlinVisual.PALETTE.ink_soft if hidden else MerlinVisual.PALETTE.ink, body_font_size, true)
+	_style_label(name_label, MerlinVisual.CRT_PALETTE.phosphor_dim if hidden else MerlinVisual.CRT_PALETTE.phosphor, body_font_size, true)
 	text_box.add_child(name_label)
 
 	var req_label := Label.new()
 	req_label.text = req_text
 	req_label.clip_text = true
 	req_label.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
-	_style_label(req_label, MerlinVisual.PALETTE.ink_faded if locked else MerlinVisual.PALETTE.success, small_font_size)
+	_style_label(req_label, MerlinVisual.CRT_PALETTE.border if locked else MerlinVisual.CRT_PALETTE.success, small_font_size)
 	text_box.add_child(req_label)
 
 	row.add_child(text_box)

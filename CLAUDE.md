@@ -87,6 +87,21 @@ powershell -ExecutionPolicy Bypass -File tools/validate_godot_errors.ps1
 4. Relancer validation (doit passer)
 5. PUIS tester dans Godot
 
+### 2b. Post-Dev Checklist — FIN DE SESSION (OBLIGATOIRE)
+
+**SYSTÉMATIQUEMENT après chaque modification de fichiers .gd/.tscn:**
+
+```
+1. VALIDATE  — .\validate.bat (Step 0 minimum)
+2. FIX       — Corriger TOUTES erreurs + warnings
+3. REVALIDATE — Confirmer 0 errors, 0 warnings
+4. COMMIT    — git add + git commit (conventional commits)
+5. PUSH      — git push origin main (ou rappeler si auth requise)
+```
+
+**JAMAIS** terminer une session ou répondre "terminé" sans avoir fait les 5 étapes.
+**Erreurs typiques à vérifier**: type inference (`:=` sur Variant), static call on instance, unused vars.
+
 ### 3. Smart Workflow — ADAPTATIF
 
 **Classifier la complexite AVANT d'agir:**

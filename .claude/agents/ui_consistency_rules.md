@@ -5,61 +5,73 @@
 This document defines the binding rules for all agents working on UI/UX in M.E.R.L.I.N.
 Violation of these rules creates visual inconsistency. Full spec: docs/70_graphic/UI_UX_BIBLE.md.
 
-## 1. Visual System: MerlinVisual Autoload
+## 1. Visual System: MerlinVisual Autoload (CRT Terminal Aesthetic)
 
 ALL visual constants are centralized in scripts/autoload/merlin_visual.gd. ONLY source of truth.
 
-### Colors
+### Colors — CRT Terminal (CRT_PALETTE)
 
-    # Parchment palette (narrative UI)
-    MerlinVisual.PALETTE["paper"]        # Background
-    MerlinVisual.PALETTE["ink"]          # Text
-    MerlinVisual.PALETTE["accent"]       # Bronze highlights
-    MerlinVisual.PALETTE["celtic_gold"]  # Celtic metalwork
-    MerlinVisual.PALETTE["danger"]       # Critical state
-    MerlinVisual.PALETTE["success"]      # Positive state
+    # Backgrounds (dark with green tinge)
+    MerlinVisual.CRT_PALETTE["bg_deep"]         # Deepest black
+    MerlinVisual.CRT_PALETTE["bg_dark"]          # Dark panel
+    MerlinVisual.CRT_PALETTE["bg_panel"]         # Standard panel bg
+    MerlinVisual.CRT_PALETTE["bg_highlight"]     # Highlighted bg
 
-    # GBC palette (biome/gameplay colors)
-    MerlinVisual.GBC["grass"]           # Nature/Monde
-    MerlinVisual.GBC["fire"]            # Fire/Force
-    MerlinVisual.GBC["mystic"]          # Arcane/Ame
-    MerlinVisual.GBC["earth"]           # Earth/Corps
+    # Primary text (phosphor green)
+    MerlinVisual.CRT_PALETTE["phosphor"]         # Main text
+    MerlinVisual.CRT_PALETTE["phosphor_dim"]     # Secondary text
+    MerlinVisual.CRT_PALETTE["phosphor_bright"]  # Bright/hover text
 
-    # Aspect colors (Triade system)
-    MerlinVisual.ASPECT_COLORS["Corps"]  # Earthy brown
-    MerlinVisual.ASPECT_COLORS["Ame"]    # Purple mystic
-    MerlinVisual.ASPECT_COLORS["Monde"]  # Forest green
+    # Accents (amber)
+    MerlinVisual.CRT_PALETTE["amber"]            # Accent highlights
+    MerlinVisual.CRT_PALETTE["amber_bright"]     # Gold/celtic accent
 
-### Fonts
+    # Special
+    MerlinVisual.CRT_PALETTE["cyan"]             # Mystic/magic
+    MerlinVisual.CRT_PALETTE["border"]           # Panel borders
+    MerlinVisual.CRT_PALETTE["danger"]           # Critical state
+    MerlinVisual.CRT_PALETTE["success"]          # Positive state
 
-    MerlinVisual.get_font("title")   # MorrisRomanBlack
-    MerlinVisual.get_font("body")    # MorrisRomanBlackAlt
-    MerlinVisual.get_font("celtic")  # celtic-bit
+    # CRT Aspect colors (Triade in terminal phosphor)
+    MerlinVisual.CRT_ASPECT_COLORS["Corps"]      # Red-orange phosphor
+    MerlinVisual.CRT_ASPECT_COLORS["Ame"]        # Blue-violet phosphor
+    MerlinVisual.CRT_ASPECT_COLORS["Monde"]      # Green phosphor
 
-    # Sizes
-    MerlinVisual.TITLE_SIZE     # 48
-    MerlinVisual.TITLE_SMALL    # 36
-    MerlinVisual.BODY_SIZE      # 20
-    MerlinVisual.BODY_LARGE     # 22
-    MerlinVisual.CAPTION_SIZE   # 14
-    MerlinVisual.BUTTON_SIZE    # 18
+    # Biome CRT palettes (8 colors per biome, phosphor tint + distortion)
+    MerlinVisual.apply_biome_crt("broceliande")  # Apply to CRTLayer
 
-### Styles
+### Fonts — VT323 Monospace Terminal
 
-    MerlinVisual.make_parchment_style()  # Parchment panel
-    MerlinVisual.make_grotte_style()     # Cave/dark panel
-    MerlinVisual.apply_button_theme(btn) # Full button styling
+    MerlinVisual.get_font("title")     # VT323-Regular
+    MerlinVisual.get_font("body")      # VT323-Regular
+    MerlinVisual.get_font("terminal")  # VT323-Regular
+    MerlinVisual.get_font("celtic")    # celtic-bit (pixel accents)
+
+    # Sizes (increased for CRT readability through scanlines)
+    MerlinVisual.TITLE_SIZE     # 52
+    MerlinVisual.TITLE_SMALL    # 38
+    MerlinVisual.BODY_SIZE      # 22
+    MerlinVisual.BODY_LARGE     # 26
+    MerlinVisual.CAPTION_SIZE   # 16
+    MerlinVisual.BUTTON_SIZE    # 22
+
+### Styles — Sharp CRT Terminal Panels (corner_radius=0, shadow=0)
+
+    MerlinVisual.make_parchment_style()  # CRT terminal panel
+    MerlinVisual.make_grotte_style()     # Deep dark panel
+    MerlinVisual.apply_button_theme(btn) # CRT button (phosphor text)
     MerlinVisual.apply_label_style(lbl, "title", MerlinVisual.TITLE_SIZE)
-    MerlinVisual.celtic_ornament()       # Ornament divider string
+    MerlinVisual.make_celtic_option_style(color) # Left-accent terminal option
+    MerlinVisual.make_modal_style()      # Deep black modal
 
-### Animation
+### CRT Animations
 
-    MerlinVisual.ANIM_FAST       # 0.2s
-    MerlinVisual.ANIM_NORMAL     # 0.3s
-    MerlinVisual.ANIM_SLOW       # 0.5s
-    MerlinVisual.ANIM_VERY_SLOW  # 1.5s
-    MerlinVisual.TW_DELAY        # 0.025s per letter
-    MerlinVisual.TW_PUNCT_DELAY  # 0.080s punctuation
+    MerlinVisual.phosphor_reveal(label)       # Text fades dim->bright
+    MerlinVisual.phosphor_fade(label)         # Text dims with afterglow
+    MerlinVisual.create_cursor_blink(parent)  # Blinking _ cursor
+    MerlinVisual.boot_line_type(label, text)  # Terminal boot typing
+    MerlinVisual.glitch_pulse()               # Screen glitch flash
+    MerlinVisual.TW_DELAY        # 0.015s per letter (fast terminal)
     MerlinVisual.EASING_UI       # Tween.EASE_OUT
     MerlinVisual.TRANS_UI        # Tween.TRANS_SINE
 
@@ -67,49 +79,49 @@ ALL visual constants are centralized in scripts/autoload/merlin_visual.gd. ONLY 
 
 | Pattern | Why | Correct |
 |---------|-----|---------|
-| Color(0.5, 0.3, 0.7) | Hardcoded | MerlinVisual.PALETTE["accent"] |
-| const PALETTE := {} | Local copy | MerlinVisual.PALETTE |
+| Color(0.5, 0.3, 0.7) | Hardcoded | MerlinVisual.CRT_PALETTE["amber"] |
+| MerlinVisual.PALETTE["x"] | LEGACY deprecated | MerlinVisual.CRT_PALETTE["x"] |
+| const MY_PALETTE := {} | Local copy | MerlinVisual.CRT_PALETTE |
 | Default Godot font | Breaks unity | MerlinVisual.get_font("body") |
-| var c := MerlinVisual.PALETTE["x"] | Type inference | var c: Color = MerlinVisual.PALETTE["x"] |
+| var c := CRT_PALETTE["x"] | Type inference | var c: Color = CRT_PALETTE["x"] |
+| corner_radius > 0 | CRT = sharp | set_corner_radius_all(0) |
+| shadow_size > 0 | No CRT shadows | shadow_size = 0 |
+| White/parchment bg | Wrong aesthetic | CRT_PALETTE bg_* dark colors |
+| Morris Roman font | LEGACY deprecated | VT323 terminal font |
 | yield() | Deprecated | await |
-| Blocking animations | Freezes input | Non-blocking tweens |
-| Bold/italic body | Typography rules | Only MorrisRomanBlack titles |
-| Red/green gauges | Generic | MerlinVisual.ASPECT_COLORS |
 
 ## 3. Pre-Commit Checklist
 
-    [ ] All colors from MerlinVisual.PALETTE or MerlinVisual.GBC
-    [ ] All fonts from MerlinVisual.get_font()
-    [ ] Font sizes from MerlinVisual constants
-    [ ] Panels use make_parchment_style() or make_grotte_style()
-    [ ] Buttons styled via apply_button_theme()
-    [ ] Touch targets >= 48px (MerlinVisual.MIN_TOUCH_TARGET)
-    [ ] Animations use MerlinVisual timing constants
-    [ ] Easing uses EASING_UI / TRANS_UI
-    [ ] Celtic ornaments via celtic_ornament()
-    [ ] Type annotations on all dictionary accesses
-    [ ] No blocking animations
-    [ ] Responsive layout (anchors + size_flags)
-    [ ] validate.bat passes (Step 0)
+    [ ] All colors from MerlinVisual.CRT_PALETTE or MerlinVisual.GBC
+    [ ] All fonts from MerlinVisual.get_font() (VT323)
+    [ ] Corner radius = 0 (sharp CRT corners)
+    [ ] Shadow size = 0 (no drop shadows)
+    [ ] Dark backgrounds (CRT_PALETTE bg_* colors)
+    [ ] Phosphor text (CRT_PALETTE phosphor* colors)
+    [ ] Type annotations on all dict accesses
+    [ ] Touch targets >= 48px
+    [ ] validate.bat Step 0 passes
 
-## 4. Scene-Specific Rules
+## 4. Scene CRT Rules
 
-| Scene | Background | Key Colors | Special |
-|-------|-----------|-----------|---------|
-| MenuPrincipal | paper shader | Full parchment | Card swipe |
-| IntroCeltOS | Black | fire palette | Ember timeline |
-| SceneEveil | Fire->parchment | fire + parchment | Typewriter |
-| HubAntre | Grotte shader | parchment + celtic_gold | Map, Bestiole, portrait |
-| TransitionBiome | Biome colors | BIOME_COLORS | 6-phase landscape |
-| TriadeGameUI | Paper shader | ASPECT_COLORS | 3 cards, gauges |
-| Calendar | Paper panel | SEASON_COLORS | Season wheel |
-| Collection | Paper panel | celtic_gold | Achievement cards |
-| BestioleWheel | Dark bg | OGHAM_CATEGORY_COLORS | Radial menu |
-| ArbreDeVie | Paper panel | ASPECT_COLORS + amber | Node network |
+| Scene | Background | Key Colors | CRT Profile |
+|-------|-----------|-----------|-------------|
+| MenuPrincipal | bg_dark | phosphor + amber | medium |
+| IntroCeltOS | bg_deep | phosphor + cyan | boot sequence |
+| IntroQuiz | bg_panel | phosphor + choice_* | subtle |
+| Rencontre | bg_deep | phosphor + amber | medium |
+| HubAntre | bg_dark | amber + phosphor | medium |
+| TransitionBiome | bg_dark | BIOME_CRT_PALETTES | per-biome |
+| MerlinGame | bg_panel | CRT_ASPECT_COLORS | per-biome |
+| Calendar | bg_dark | amber + event colors | subtle |
+| Collection | bg_dark | amber_bright | subtle |
+| ArbreDeVie | bg_panel | CRT_ASPECT_COLORS | medium |
 
 ## 5. Quick Reference
 
-    SHADER: res://shaders/merlin_paper.gdshader
-    FONTS: res://resources/fonts/morris/ + res://resources/fonts/celtic_bit/
-    AUTOLOAD: MerlinVisual (scripts/autoload/merlin_visual.gd)
-    BIBLE: docs/70_graphic/UI_UX_BIBLE.md
+    CRT SHADER: res://shaders/crt_terminal.gdshader
+    CRT LAYER: scripts/ui/screen_dither_layer.gd (CRTLayer, autoload ScreenDither)
+    SCREEN FX: scripts/autoload/ScreenEffects.gd (mood system -> CRTLayer)
+    VISUAL: scripts/autoload/merlin_visual.gd (CRT_PALETTE, factories, animations)
+    FONTS: res://resources/fonts/terminal/VT323-Regular.ttf
+    THEME: themes/merlin_theme.tres (VT323, dark bg, phosphor text)

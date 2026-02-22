@@ -111,34 +111,22 @@ func _compute_biome_states() -> void:
 # =============================================================================
 
 func _configure_ui() -> void:
-	# Parchment shader material
-	var paper_shader := load("res://shaders/merlin_paper.gdshader")
-	if paper_shader:
-		var mat := ShaderMaterial.new()
-		mat.shader = paper_shader
-		mat.set_shader_parameter("paper_tint", MerlinVisual.PALETTE.paper)
-		mat.set_shader_parameter("grain_strength", 0.03)
-		mat.set_shader_parameter("vignette_strength", 0.12)
-		mat.set_shader_parameter("vignette_softness", 0.6)
-		mat.set_shader_parameter("grain_scale", 1200.0)
-		mat.set_shader_parameter("grain_speed", 0.06)
-		mat.set_shader_parameter("warp_strength", 0.001)
-		_parchment_bg.material = mat
-	else:
-		_parchment_bg.color = MerlinVisual.PALETTE.paper
+	# CRT terminal background
+	_parchment_bg.material = null
+	_parchment_bg.color = MerlinVisual.CRT_PALETTE.bg_panel
 
 	# Font + color overrides (runtime-dependent on MerlinVisual)
 	if _title_font:
 		_title_label.add_theme_font_override("font", _title_font)
-	_title_label.add_theme_color_override("font_color", MerlinVisual.PALETTE.ink)
+	_title_label.add_theme_color_override("font_color", MerlinVisual.CRT_PALETTE.phosphor)
 
 	if _body_font:
 		_subtitle_label.add_theme_font_override("font", _body_font)
-	_subtitle_label.add_theme_color_override("font_color", MerlinVisual.PALETTE.accent)
+	_subtitle_label.add_theme_color_override("font_color", MerlinVisual.CRT_PALETTE.amber)
 
 	if _body_font:
 		_detail_label.add_theme_font_override("font", _body_font)
-	_detail_label.add_theme_color_override("font_color", MerlinVisual.PALETTE.ink)
+	_detail_label.add_theme_color_override("font_color", MerlinVisual.CRT_PALETTE.phosphor)
 
 	# Draw signal connections
 	_paths_layer.draw.connect(_draw_paths)
@@ -163,35 +151,35 @@ func _configure_ui() -> void:
 
 func _style_action_button(button: Button, primary: bool) -> void:
 	var normal := StyleBoxFlat.new()
-	normal.bg_color = MerlinVisual.PALETTE.accent if primary else MerlinVisual.PALETTE.paper_dark
-	normal.border_color = MerlinVisual.PALETTE.ink
+	normal.bg_color = MerlinVisual.CRT_PALETTE.amber if primary else MerlinVisual.CRT_PALETTE.bg_dark
+	normal.border_color = MerlinVisual.CRT_PALETTE.phosphor
 	normal.set_border_width_all(1)
 	normal.set_corner_radius_all(6)
 	normal.content_margin_left = 10
 	normal.content_margin_right = 10
 	normal.content_margin_top = 6
 	normal.content_margin_bottom = 6
-	normal.shadow_color = MerlinVisual.PALETTE.shadow
+	normal.shadow_color = MerlinVisual.CRT_PALETTE.shadow
 	normal.shadow_size = 3
 	normal.shadow_offset = Vector2(0, 1)
 	button.add_theme_stylebox_override("normal", normal)
 
 	var hover := normal.duplicate()
-	hover.bg_color = MerlinVisual.PALETTE.accent_soft if primary else MerlinVisual.PALETTE.paper_warm
+	hover.bg_color = MerlinVisual.CRT_PALETTE.amber_dim if primary else MerlinVisual.CRT_PALETTE.bg_panel
 	button.add_theme_stylebox_override("hover", hover)
 
 	var disabled := normal.duplicate()
-	var disabled_bg: Color = MerlinVisual.PALETTE.inactive
-	var disabled_border: Color = MerlinVisual.PALETTE.inactive_dark
+	var disabled_bg: Color = MerlinVisual.CRT_PALETTE.inactive
+	var disabled_border: Color = MerlinVisual.CRT_PALETTE.inactive_dark
 	disabled.bg_color = Color(disabled_bg.r, disabled_bg.g, disabled_bg.b, 0.60)
 	disabled.border_color = Color(disabled_border.r, disabled_border.g, disabled_border.b, 0.7)
 	button.add_theme_stylebox_override("disabled", disabled)
 
 	if primary:
-		button.add_theme_color_override("font_color", MerlinVisual.PALETTE.paper)
-		button.add_theme_color_override("font_hover_color", MerlinVisual.PALETTE.paper)
+		button.add_theme_color_override("font_color", MerlinVisual.CRT_PALETTE.bg_panel)
+		button.add_theme_color_override("font_hover_color", MerlinVisual.CRT_PALETTE.bg_panel)
 	else:
-		button.add_theme_color_override("font_color", MerlinVisual.PALETTE.ink)
+		button.add_theme_color_override("font_color", MerlinVisual.CRT_PALETTE.phosphor)
 
 
 # =============================================================================
@@ -303,21 +291,21 @@ func _draw_nodes() -> void:
 			"locked":
 				var dim_color := Color(biome_color.r, biome_color.g, biome_color.b, 0.35)
 				_nodes_layer.draw_circle(center, NODE_RADIUS, dim_color)
-				_nodes_layer.draw_arc(center, NODE_RADIUS, 0, TAU, 24, MerlinVisual.PALETTE.locked, 1.5, true)
+				_nodes_layer.draw_arc(center, NODE_RADIUS, 0, TAU, 24, MerlinVisual.CRT_PALETTE.locked, 1.5, true)
 				# Lock icon (small X)
 				var lk := 4.0
-				_nodes_layer.draw_line(center - Vector2(lk, lk), center + Vector2(lk, lk), MerlinVisual.PALETTE.locked, 1.5, true)
-				_nodes_layer.draw_line(center - Vector2(-lk, lk), center + Vector2(-lk, lk), MerlinVisual.PALETTE.locked, 1.5, true)
+				_nodes_layer.draw_line(center - Vector2(lk, lk), center + Vector2(lk, lk), MerlinVisual.CRT_PALETTE.locked, 1.5, true)
+				_nodes_layer.draw_line(center - Vector2(-lk, lk), center + Vector2(-lk, lk), MerlinVisual.CRT_PALETTE.locked, 1.5, true)
 
 			"accessible":
 				_nodes_layer.draw_circle(center, NODE_RADIUS, biome_color)
-				var outline_color: Color = MerlinVisual.PALETTE.accent if not is_selected else MerlinVisual.PALETTE.success
+				var outline_color: Color = MerlinVisual.CRT_PALETTE.amber if not is_selected else MerlinVisual.CRT_PALETTE.success
 				_nodes_layer.draw_arc(center, NODE_RADIUS + 1.0, 0, TAU, 24, outline_color, 2.0, true)
 
 			"current":
 				_nodes_layer.draw_circle(center, NODE_RADIUS + 2.0, Color(biome_color.r, biome_color.g, biome_color.b, 0.25))
 				_nodes_layer.draw_circle(center, NODE_RADIUS, biome_color)
-				_nodes_layer.draw_arc(center, NODE_RADIUS + 2.0, 0, TAU, 24, MerlinVisual.PALETTE.success, 2.5, true)
+				_nodes_layer.draw_arc(center, NODE_RADIUS + 2.0, 0, TAU, 24, MerlinVisual.CRT_PALETTE.success, 2.5, true)
 				# Animated pulse indicator (small triangle)
 				var tri_size := 5.0
 				var tri_top := center + Vector2(0, -NODE_RADIUS - 8)
@@ -327,21 +315,21 @@ func _draw_nodes() -> void:
 						tri_top + Vector2(-tri_size, -tri_size),
 						tri_top + Vector2(tri_size, -tri_size),
 					]),
-					MerlinVisual.PALETTE.success
+					MerlinVisual.CRT_PALETTE.success
 				)
 
 			"completed":
 				var dim := Color(biome_color.r * 0.7, biome_color.g * 0.7, biome_color.b * 0.7, 0.75)
 				_nodes_layer.draw_circle(center, NODE_RADIUS, dim)
-				_nodes_layer.draw_arc(center, NODE_RADIUS, 0, TAU, 24, MerlinVisual.PALETTE.ink_soft, 1.5, true)
+				_nodes_layer.draw_arc(center, NODE_RADIUS, 0, TAU, 24, MerlinVisual.CRT_PALETTE.phosphor_dim, 1.5, true)
 				# Checkmark
 				var ck := 5.0
-				_nodes_layer.draw_line(center + Vector2(-ck, 0), center + Vector2(-ck * 0.3, ck), MerlinVisual.PALETTE.success, 2.0, true)
-				_nodes_layer.draw_line(center + Vector2(-ck * 0.3, ck), center + Vector2(ck, -ck), MerlinVisual.PALETTE.success, 2.0, true)
+				_nodes_layer.draw_line(center + Vector2(-ck, 0), center + Vector2(-ck * 0.3, ck), MerlinVisual.CRT_PALETTE.success, 2.0, true)
+				_nodes_layer.draw_line(center + Vector2(-ck * 0.3, ck), center + Vector2(ck, -ck), MerlinVisual.CRT_PALETTE.success, 2.0, true)
 
 		# Selection ring
 		if is_selected and state_key != "locked":
-			_nodes_layer.draw_arc(center, NODE_RADIUS + 4.0, 0, TAU, 24, MerlinVisual.PALETTE.success, 1.5, true)
+			_nodes_layer.draw_arc(center, NODE_RADIUS + 4.0, 0, TAU, 24, MerlinVisual.CRT_PALETTE.success, 1.5, true)
 
 		# Biome name label
 		var name_text: String = str(MerlinBiomeTree.BIOME_NAMES.get(biome_key, biome_key))
@@ -349,14 +337,14 @@ func _draw_nodes() -> void:
 		var font_size: int = 11
 		var text_size := font.get_string_size(name_text, HORIZONTAL_ALIGNMENT_CENTER, -1, font_size)
 		var text_pos := center + Vector2(-text_size.x * 0.5, NODE_RADIUS + 14)
-		var text_color: Color = MerlinVisual.PALETTE.ink if state_key != "locked" else MerlinVisual.PALETTE.ink_faded
+		var text_color: Color = MerlinVisual.CRT_PALETTE.phosphor if state_key != "locked" else MerlinVisual.CRT_PALETTE.border
 		_nodes_layer.draw_string(font, text_pos, name_text, HORIZONTAL_ALIGNMENT_LEFT, -1, font_size, text_color)
 
 		# Tier label
 		var tier: int = _biome_tree.get_tier(biome_key)
 		var tier_text: String = "T%d" % tier if tier < 4 else "FIN"
 		var tier_pos := center + Vector2(-8, -NODE_RADIUS - 4)
-		_nodes_layer.draw_string(font, tier_pos, tier_text, HORIZONTAL_ALIGNMENT_LEFT, -1, 9, MerlinVisual.PALETTE.ink_faded)
+		_nodes_layer.draw_string(font, tier_pos, tier_text, HORIZONTAL_ALIGNMENT_LEFT, -1, 9, MerlinVisual.CRT_PALETTE.border)
 
 
 # =============================================================================
@@ -383,17 +371,17 @@ func _draw_gauges() -> void:
 		var value_text: String = "%d" % int(display.get("value", 0))
 
 		# Background bar
-		_gauge_panel.draw_rect(Rect2(x, y, GAUGE_BAR_WIDTH, GAUGE_BAR_HEIGHT), MerlinVisual.PALETTE.ink_faded)
+		_gauge_panel.draw_rect(Rect2(x, y, GAUGE_BAR_WIDTH, GAUGE_BAR_HEIGHT), MerlinVisual.CRT_PALETTE.border)
 		# Fill bar
 		var fill_width: float = GAUGE_BAR_WIDTH * pct
 		_gauge_panel.draw_rect(Rect2(x, y, fill_width, GAUGE_BAR_HEIGHT), color)
 		# Border
-		_gauge_panel.draw_rect(Rect2(x, y, GAUGE_BAR_WIDTH, GAUGE_BAR_HEIGHT), MerlinVisual.PALETTE.ink_soft, false, 1.0)
+		_gauge_panel.draw_rect(Rect2(x, y, GAUGE_BAR_WIDTH, GAUGE_BAR_HEIGHT), MerlinVisual.CRT_PALETTE.phosphor_dim, false, 1.0)
 
 		# Label below
 		var font: Font = _body_font if _body_font else ThemeDB.fallback_font
 		var label_text: String = "%s %s" % [name_text, value_text]
-		_gauge_panel.draw_string(font, Vector2(x, y + GAUGE_BAR_HEIGHT + 12), label_text, HORIZONTAL_ALIGNMENT_LEFT, GAUGE_BAR_WIDTH, 9, MerlinVisual.PALETTE.ink_soft)
+		_gauge_panel.draw_string(font, Vector2(x, y + GAUGE_BAR_HEIGHT + 12), label_text, HORIZONTAL_ALIGNMENT_LEFT, GAUGE_BAR_WIDTH, 9, MerlinVisual.CRT_PALETTE.phosphor_dim)
 
 
 # =============================================================================

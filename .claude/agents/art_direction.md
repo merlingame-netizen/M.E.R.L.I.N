@@ -42,40 +42,47 @@ You are the **Art Director** for the M.E.R.L.I.N. project. You are responsible f
 
 ## Visual Style Guide
 
-### Art Direction: Pixel Celtic Mysticism
+### Art Direction: CRT Terminal Druido-Tech
+
+#### Concept
+Merlin is an AI from the future communicating through a CRT terminal.
+Dark backgrounds, phosphor-green text, amber accents, scanlines, curvature.
+The player sees a druido-tech interface — ancient wisdom rendered through retro computing.
 
 #### Inspiration
-- Card-based narrative games (flat, minimal cards)
-- Celtic/Druidic imagery
-- GBA-era pixel art aesthetics
-- Medieval manuscripts and illuminations
-- **Hyper Light Drifter (color + pixel atmosphere)**
-- **Celeste (pixel character expression)**
-- **Undertale (pixel UI design)**
+- **Fallout terminal UI** (green phosphor CRT)
+- **Hyper Light Drifter** (color atmosphere + pixel art)
+- **Celeste** (pixel character expression)
+- **Undertale** (pixel UI design)
+- **Alien: Isolation** (CRT monitor aesthetic)
+- Celtic/Druidic imagery reinterpreted through terminal
 
-#### Color Palette
+#### Color Palette — CRT Terminal
 ```
-Primary:
-- Paper: #F5EBD7 (warm parchment)
-- Ink: #1F1A14 (deep brown-black)
-- Accent: #752D29 (dried blood/rust)
+Terminal Backgrounds (dark with green tinge):
+- bg_deep:      (0.02, 0.04, 0.02) — deepest terminal black
+- bg_dark:      (0.04, 0.08, 0.04) — dark panel
+- bg_panel:     (0.06, 0.12, 0.06) — standard panel
+- bg_highlight: (0.08, 0.16, 0.08) — hover/active panel
 
-Aspect Colors:
-- Corps (Sanglier): #C85A3D (warm rust)
-- Ame (Corbeau): #6B4FA0 (mystic purple)
-- Monde (Cerf): #4A7B3E (forest green)
+Phosphor Text (primary green):
+- phosphor:        (0.20, 1.00, 0.40) — main text
+- phosphor_dim:    (0.12, 0.60, 0.24) — secondary text
+- phosphor_bright: (0.40, 1.00, 0.60) — highlighted text
 
-Secondary:
-- Nature: #4A5D23 (moss green)
-- Spirit: #3B5998 (mystic blue)
-- Warning: #8B0000 (dark red)
-- Gold: #C9A227 (metallic accent)
-- Souffle: #D4A626 (amber gold)
+Amber Accent (secondary):
+- amber:        (1.00, 0.75, 0.20) — accent/gold
+- amber_dim:    (0.60, 0.45, 0.12) — subtle accent
+- amber_bright: (1.00, 0.85, 0.40) — celtic gold equivalent
 
-Neutrals:
-- Shadow: rgba(5,5,5,0.35)
-- Muted: #4D4335
-- Dark BG: #0A0A0A (eco-mode, saves energy)
+Celtic Mystic (tertiary):
+- cyan:     (0.30, 0.85, 0.80) — magic/special
+- cyan_dim: (0.15, 0.42, 0.40) — subtle mystic
+
+CRT Aspect Colors (Triade in terminal phosphor):
+- Corps: Red-orange phosphor (1.00, 0.35, 0.20)
+- Ame:   Blue-violet phosphor (0.45, 0.35, 1.00)
+- Monde: Green phosphor (0.20, 1.00, 0.40)
 ```
 
 #### Colorblind-Safe Alternates
@@ -87,20 +94,25 @@ Neutrals:
 
 ---
 
-### Typography
+### Typography — VT323 Monospace Terminal
 
 #### Fonts
-- **Display**: MorrisRomanBlack (medieval feel)
-- **Body**: MorrisRomanBlackAlt
-- **Fallback**: Arial (if fonts unavailable)
-- **Pixel UI**: Custom bitmap font (8x8 or 16x16)
+- **ALL UI**: VT323-Regular (monospace terminal font)
+- **Celtic accents**: celtic-bit (pixel accents only, sparingly)
+- **Fallback**: System monospace
+- **FORBIDDEN**: MorrisRomanBlack, serif fonts, variable-width fonts
 
-#### Sizing
-- Title: 56px
-- Subtitle: 24px
-- Body: 18-20px
-- Caption: 14px
-- **Pixel UI labels: 8px or 16px (integer scaling)**
+#### Sizing (increased for CRT readability through scanlines)
+- Title: 52px (`MerlinVisual.TITLE_SIZE`)
+- Title small: 38px (`MerlinVisual.TITLE_SMALL`)
+- Body: 22px (`MerlinVisual.BODY_SIZE`)
+- Body large: 26px (`MerlinVisual.BODY_LARGE`)
+- Caption: 16px (`MerlinVisual.CAPTION_SIZE`)
+- Button: 22px (`MerlinVisual.BUTTON_SIZE`)
+
+#### Font Source
+- Path: `res://resources/fonts/terminal/VT323-Regular.ttf`
+- Access: `MerlinVisual.get_font("title")` / `"body"` / `"terminal"` / `"celtic"`
 
 ---
 
@@ -159,41 +171,47 @@ Individual frames:
 
 ---
 
-## Card Design (Triade System)
+## Card Design (Triade System) — CRT Terminal
 
 ### Card Layout
 ```
 +---------------------------+
-|     [Border: 2px ink]     |
+|     [Border: 1px green]   |
+|     [Corner radius: 0]    |
+|     [No shadow]           |
 |                           |
-|    ╔═══════════════╗      |
-|    ║   Portrait    ║      |
-|    ║  (pixel art)  ║      |
-|    ╚═══════════════╝      |
+|    ┌───────────────┐      |
+|    │   Portrait    │      |
+|    │  (pixel art)  │      |
+|    └───────────────┘      |
 |                           |
-|    "Card text here        |
+|    "Card text here        |  ← phosphor green VT323
 |     spans multiple        |
 |     lines..."             |
 |                           |
-|    — MERLIN               |
+|    — MERLIN               |  ← amber accent
 |                           |
-|  [Left] [Centre] [Right]  |
+|  [Left] [Centre] [Right]  |  ← CRT option buttons
 |                           |
-| [Corner radius: 6px]      |
-| [Shadow: 12px blur]       |
 +---------------------------+
+bg: CRT_PALETTE["bg_panel"]
+border: CRT_PALETTE["border_bright"]
 ```
 
-### Option Button Style
+### Option Button Style (CRT Terminal)
 ```
-Normal: paper background, ink text, 1px border
-Hover: slight glow, border thickens to 2px
-Pressed: inverted colors (ink bg, paper text)
-Disabled: faded, 50% opacity
+Normal: bg_dark background, phosphor text, 1px border
+Hover: bg_highlight background, phosphor_bright text
+Pressed: amber bg (20% alpha), amber border, amber text
+Disabled: faded, 40% opacity
 
-Centre button: amber/gold accent (#D4A626)
+Centre button: amber accent (CRT_PALETTE["amber"])
   - Visual cue that it costs Souffle
   - Small Souffle icon next to label
+
+Left accent: 3px left border in aspect/choice color
+Corner radius: ALWAYS 0 (sharp CRT terminal)
+Shadow: ALWAYS 0 (no drop shadows)
 ```
 
 ---
@@ -233,66 +251,87 @@ Animation: idle sway (4 frames, 600ms per frame)
 
 ## Aspect Display Design
 
-### Aspect Indicators
+### Aspect Indicators (CRT Phosphor)
 ```
 Each aspect shown as:
   - Animal icon (pixel art, 32x32)
-  - State label (Bas/Equilibre/Haut)
+  - State label (Bas/Equilibre/Haut) in VT323 phosphor
   - Visual state:
-    - Extreme low (-3): icon dimmed, red tint, shake animation
-    - Low (-2,-1): icon slightly faded
-    - Equilibre (0): icon normal, subtle glow
-    - High (+1,+2): icon brightened
+    - Extreme low (-3): icon dimmed, danger tint, shake animation
+    - Low (-2,-1): icon slightly faded (phosphor_dim)
+    - Equilibre (0): icon normal, phosphor glow
+    - High (+1,+2): icon brightened (phosphor_bright)
     - Extreme high (+3): icon oversaturated, pulse animation
 
-Corps (Sanglier): warm rust tones
-Ame (Corbeau): cool purple tones
-Monde (Cerf): green earth tones
+CRT Aspect Colors (terminal phosphor variants):
+  Corps (Sanglier): CRT_ASPECT_COLORS["Corps"] — red-orange phosphor (1.00, 0.35, 0.20)
+  Ame (Corbeau):   CRT_ASPECT_COLORS["Ame"]   — blue-violet phosphor (0.45, 0.35, 1.00)
+  Monde (Cerf):    CRT_ASPECT_COLORS["Monde"]  — green phosphor (0.20, 1.00, 0.40)
 ```
 
-### Souffle Display
+### Souffle Display (CRT Terminal)
 ```
 Visual: Row of 7 circles (max)
-  - Filled circle: active Souffle (amber gold #D4A626)
-  - Empty circle: spent Souffle (grey #4D4335)
-  - Risk Mode (0): all empty, pulsing red border
-Animation: fill/drain with liquid-like tween
+  - Filled circle: active Souffle (CRT_PALETTE["amber"] — amber gold)
+  - Empty circle: spent Souffle (CRT_PALETTE["border"] — dim green)
+  - Risk Mode (0): all empty, pulsing CRT_PALETTE["danger"] border
+Animation: fill/drain with phosphor fade tween
 ```
 
 ---
 
-## Procedural Pixel Landscapes
+## Procedural CRT Landscapes
 
-### 6-Phase Biome Transition
+### 6-Phase Biome Transition (CRT Phosphor)
 ```
-Phase 1: Sky gradient (4-6 colors, banded)
-Phase 2: Distant background (mountains/trees, 2 colors)
-Phase 3: Mid-ground (detailed terrain, 4-6 colors)
-Phase 4: Foreground elements (rocks, plants, 6-8 colors)
-Phase 5: Atmospheric effects (fog, particles, shader)
-Phase 6: Lighting overlay (time of day, season)
+Phase 1: Sky gradient (4-6 CRT colors, banded with scanlines)
+Phase 2: Distant background (mountains/trees, 2 phosphor tints)
+Phase 3: Mid-ground (detailed terrain, 4-6 CRT colors)
+Phase 4: Foreground elements (rocks, plants, 6-8 CRT colors)
+Phase 5: CRT atmospheric effects (scanline intensity, curvature)
+Phase 6: CRT distortion overlay (per-biome profile)
 
-Each biome = unique palette + element set
-Transitions = 3-second crossfade between palettes
+Each biome = BIOME_CRT_PALETTES[biome] (8 strict colors)
+             + BIOME_CRT_PROFILES[biome] (CRT distortion params)
+Transitions = MerlinVisual.apply_biome_crt(biome_key)
 ```
 
-### Biome Visual Themes
-| Biome | Sky | Ground | Features | Particles |
-|-------|-----|--------|----------|-----------|
-| Broceliande | Deep green/blue | Moss, roots | Ancient oaks, mist | Fireflies |
-| Carnac | Grey/purple | Stone, grass | Standing stones | Dust motes |
-| Avalon | White/gold | Water, sand | Lake, mist isle | Water drops |
-| Annwn | Black/red | Obsidian | Portals, skulls | Embers |
+### Biome Visual Themes (CRT Terminal)
+| Biome | Phosphor Tint | CRT Profile | Features | Particles |
+|-------|--------------|-------------|----------|-----------|
+| Broceliande | Deep green | medium distortion | Ancient oaks, mist | Fireflies |
+| Carnac | Grey/violet | heavy distortion | Standing stones | Dust motes |
+| Avalon | White/cyan | subtle distortion | Lake, mist isle | Water drops |
+| Annwn | Red/black | heavy + flicker | Portals, skulls | Embers |
+| Foret Brochet | Emerald green | medium | Dense forest | Leaves |
+| Marais Morgane | Purple/teal | heavy + blur | Fog, water | Bubbles |
+| Plaine Viviane | Gold/green | subtle | Open fields | Pollen |
 
 ---
 
-## Shader Effects for Pixel Art
+## CRT Shader System
 
-### Outline Shader
+### Global CRT Post-Processing (ALL scenes)
+```
+Shader: res://shaders/crt_terminal.gdshader
+Layer: CRTLayer (CanvasLayer 100, class_name for screen_dither_layer.gd)
+Controller: ScreenEffects autoload (delegates to CRTLayer)
+
+Presets:
+  off:     scanlines=0.0, curvature=0.0, vignette=0.0, bloom=0.0
+  subtle:  scanlines=0.15, curvature=0.01, vignette=0.2, bloom=0.1
+  medium:  scanlines=0.3, curvature=0.02, vignette=0.35, bloom=0.15
+  heavy:   scanlines=0.5, curvature=0.04, vignette=0.5, bloom=0.2
+
+Per-biome CRT profiles: MerlinVisual.BIOME_CRT_PROFILES[biome_key]
+Apply: MerlinVisual.apply_biome_crt(biome_key)
+```
+
+### Outline Shader (phosphor green)
 ```glsl
-// 1px outline around pixel sprites
+// 1px outline around pixel sprites — CRT phosphor color
 shader_type canvas_item;
-uniform vec4 outline_color : source_color = vec4(0.12, 0.10, 0.08, 1.0);
+uniform vec4 outline_color : source_color = vec4(0.12, 0.30, 0.14, 1.0);
 uniform float outline_width : hint_range(0.0, 2.0) = 1.0;
 
 void fragment() {
@@ -311,38 +350,14 @@ void fragment() {
 }
 ```
 
-### Palette Restriction Shader
+### Screen Dithering Shader
 ```glsl
-// Force colors to nearest palette entry
-shader_type canvas_item;
-uniform sampler2D palette_texture;
-uniform int palette_size = 16;
-
-void fragment() {
-    vec4 col = texture(TEXTURE, UV);
-    float min_dist = 999.0;
-    vec4 closest = col;
-    for (int i = 0; i < palette_size; i++) {
-        vec4 pal_col = texture(palette_texture, vec2(float(i) / float(palette_size), 0.5));
-        float dist = distance(col.rgb, pal_col.rgb);
-        if (dist < min_dist) {
-            min_dist = dist;
-            closest = pal_col;
-        }
-    }
-    COLOR = vec4(closest.rgb, col.a);
-}
-```
-
-### Dithering Shader
-```glsl
-// Ordered dithering (Bayer 4x4) for smooth color transitions
+// Ordered dithering (Bayer 4x4) for CRT color banding
 shader_type canvas_item;
 uniform float dither_strength : hint_range(0.0, 1.0) = 0.5;
 
 void fragment() {
     vec4 col = texture(TEXTURE, UV);
-    // Bayer 4x4 matrix
     int x = int(mod(FRAGCOORD.x, 4.0));
     int y = int(mod(FRAGCOORD.y, 4.0));
     float threshold = float(x * 4 + y) / 16.0;
@@ -353,24 +368,42 @@ void fragment() {
 
 ---
 
-## Animation Style Guide
+## Animation Style Guide — CRT Terminal
+
+### CRT Animation Helpers (MerlinVisual)
+```
+MerlinVisual.phosphor_reveal(label)       # Text fades dim→bright (0.4s)
+MerlinVisual.phosphor_fade(label)         # Text dims with afterglow (0.6s)
+MerlinVisual.create_cursor_blink(parent)  # Blinking _ cursor (Timer)
+MerlinVisual.boot_line_type(label, text)  # Character-by-character terminal typing
+MerlinVisual.glitch_pulse()               # Screen glitch flash via ScreenEffects
+```
 
 ### Tween Guidelines
 ```
 UI animations:
   - Duration: 0.15-0.3s (snappy)
-  - Easing: EASE_OUT for enter, EASE_IN for exit
+  - Easing: EASE_OUT (MerlinVisual.EASING_UI) for enter
+  - Transition: TRANS_SINE (MerlinVisual.TRANS_UI)
   - Never exceed 0.5s for UI elements
+  - Typewriter speed: 0.015s/letter (MerlinVisual.TW_DELAY)
 
 Card animations:
   - Appear: scale 0→1, 0.3s, BACK easing
-  - Choose: slide + fade, 0.2s
+  - Choose: slide + phosphor_fade, 0.2s
   - Discard: slide out + scale down, 0.25s
+
+CRT-specific animations:
+  - phosphor_reveal: dim green → bright green (text appear)
+  - phosphor_fade: bright → dim with afterglow (text dismiss)
+  - boot_line_type: terminal boot-up character typing
+  - cursor_blink: 0.53s on/off blinking underscore
+  - glitch_pulse: full-screen CRT interference flash
 
 Aspect animations:
   - Shift: color tween + slight shake, 0.2s
-  - Extreme: pulse loop, 1.0s cycle
-  - Equilibre: subtle glow loop, 2.0s cycle
+  - Extreme: pulse loop, 1.0s cycle (CRT_ASPECT_COLORS)
+  - Equilibre: subtle phosphor glow loop, 2.0s cycle
 
 Pixel sprite animations:
   - Always integer pixel positions
@@ -381,32 +414,39 @@ Pixel sprite animations:
 ### Animation DO / DON'T
 ```
 DO:
-  - Use consistent easing across all UI
-  - Animate position/scale/modulate (not shader params for UI)
+  - Use MerlinVisual.EASING_UI / TRANS_UI for all UI tweens
+  - Use phosphor_reveal/phosphor_fade for text transitions
   - Chain animations sequentially (not simultaneous overload)
   - Add slight delay between cascading elements (0.05s stagger)
+  - Use CRT glitch_pulse for dramatic moments
 
 DON'T:
   - Animate pixel art rotation (breaks grid)
   - Use bounce easing on pixel sprites
   - Exceed 0.5s for any single UI animation
   - Animate during player decision-making (distraction)
+  - Use white/bright flashes (CRT phosphor colors only)
 ```
 
 ---
 
-## Asset Review Checklist
+## Asset Review Checklist (CRT Terminal)
 
-- [ ] Matches color palette (primary or aspect)
-- [ ] Consistent pixel density with existing assets
-- [ ] 1px outline in correct color (#1F1A14)
+- [ ] All colors from MerlinVisual.CRT_PALETTE or MerlinVisual.GBC
+- [ ] All fonts from MerlinVisual.get_font() (VT323)
+- [ ] Corner radius = 0 (sharp CRT corners)
+- [ ] Shadow size = 0 (no drop shadows)
+- [ ] Dark backgrounds (CRT_PALETTE bg_* colors)
+- [ ] Phosphor text (CRT_PALETTE phosphor* colors)
+- [ ] 1px outline in phosphor green (not brown)
 - [ ] Works at target display sizes (1x, 2x, 3x, 4x)
 - [ ] File format correct (PNG, no compression)
 - [ ] Named correctly (snake_case)
 - [ ] Import settings: filter OFF, mipmaps OFF
 - [ ] Colorblind-safe (distinguishable in CVD modes)
-- [ ] Animation smooth (no jarring frames)
-- [ ] Matches biome/scene context
+- [ ] Animation uses MerlinVisual tween helpers
+- [ ] Matches biome CRT profile
+- [ ] validate.bat Step 0 passes
 
 ---
 
@@ -461,12 +501,18 @@ Description of current state.
 
 ## Reference Files
 
+- `scripts/autoload/merlin_visual.gd` — CRT_PALETTE, GBC, style factories, animations
+- `scripts/ui/screen_dither_layer.gd` — CRTLayer (CanvasLayer 100)
+- `scripts/autoload/ScreenEffects.gd` — mood system → CRTLayer delegation
+- `shaders/crt_terminal.gdshader` — Global CRT post-processing shader
+- `themes/merlin_theme.tres` — VT323, dark bg, phosphor text
+- `.claude/agents/ui_consistency_rules.md` — Binding rules for all UI agents
+- `docs/70_graphic/UI_UX_BIBLE.md` — Complete visual specification
 - `docs/70_graphic/` — Graphic specs
-- `themes/` — Godot themes
 - `Assets/` — Current assets
-- `resources/` — Shared resources
+- `resources/fonts/terminal/VT323-Regular.ttf` — Terminal font
 
 ---
 
-*Updated: 2026-02-09 — Added pixel art pipeline, shaders, animation guide, procedural landscapes*
+*Updated: 2026-02-22 — CRT Terminal Druido-Tech aesthetic, VT323 font, biome CRT profiles, phosphor animations*
 *Project: M.E.R.L.I.N. — Le Jeu des Oghams*

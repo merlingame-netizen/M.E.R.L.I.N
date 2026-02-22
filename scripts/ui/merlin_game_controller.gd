@@ -175,6 +175,9 @@ func start_run(seed_value: int = -1) -> void:
 			elif run_data.has("heure"):
 				hour_hint = int(run_data.get("heure", -1))
 
+	# Apply biome CRT profile (phosphor tint + distortion)
+	MerlinVisual.apply_biome_crt(biome_key)
+
 	# Start biome music (crossfade from menu music)
 	var music_mgr: Node = get_node_or_null("/root/MusicManager")
 	if music_mgr and music_mgr.has_method("play_biome_music"):

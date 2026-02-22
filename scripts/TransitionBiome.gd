@@ -34,7 +34,7 @@ const QUEST_TREE_H := 14
 const PRERUN_CARD_COUNT := 5
 const PRERUN_CARDS_PATH := "user://temp_run_cards.json"
 
-# PALETTE constant removed — using MerlinVisual.PALETTE autoload
+# PALETTE constant removed — using MerlinVisual.CRT_PALETTE autoload
 
 # Biome-specific fog tint and behavior (lazy init — autoloads not available at const time)
 var _fog_config: Dictionary = {}
@@ -42,13 +42,13 @@ var _fog_config: Dictionary = {}
 func _get_fog_config() -> Dictionary:
 	if _fog_config.is_empty():
 		_fog_config = {
-			"broceliande": {"tint": MerlinVisual.PALETTE.mist.lightened(0.05), "direction": Vector3(-0.5, -0.3, 0), "speed": 0.7},
-			"landes": {"tint": MerlinVisual.PALETTE.mist, "direction": Vector3(-1, 0.1, 0), "speed": 1.3},
-			"cotes": {"tint": MerlinVisual.PALETTE.mist.lightened(0.08), "direction": Vector3(-1, 0, 0), "speed": 1.5},
-			"villages": {"tint": MerlinVisual.PALETTE.paper_warm, "direction": Vector3(0, -1, 0), "speed": 0.5},
-			"cercles": {"tint": MerlinVisual.PALETTE.paper.darkened(0.05), "direction": Vector3(0, 0, 0), "speed": 0.3},
-			"marais": {"tint": MerlinVisual.PALETTE.mist.lightened(0.02), "direction": Vector3(-0.3, 0.5, 0), "speed": 0.6},
-			"collines": {"tint": MerlinVisual.PALETTE.paper_warm.lightened(0.02), "direction": Vector3(-0.7, -0.2, 0), "speed": 0.9},
+			"broceliande": {"tint": MerlinVisual.CRT_PALETTE.mist.lightened(0.05), "direction": Vector3(-0.5, -0.3, 0), "speed": 0.7},
+			"landes": {"tint": MerlinVisual.CRT_PALETTE.mist, "direction": Vector3(-1, 0.1, 0), "speed": 1.3},
+			"cotes": {"tint": MerlinVisual.CRT_PALETTE.mist.lightened(0.08), "direction": Vector3(-1, 0, 0), "speed": 1.5},
+			"villages": {"tint": MerlinVisual.CRT_PALETTE.bg_panel, "direction": Vector3(0, -1, 0), "speed": 0.5},
+			"cercles": {"tint": MerlinVisual.CRT_PALETTE.bg_panel.darkened(0.05), "direction": Vector3(0, 0, 0), "speed": 0.3},
+			"marais": {"tint": MerlinVisual.CRT_PALETTE.mist.lightened(0.02), "direction": Vector3(-0.3, 0.5, 0), "speed": 0.6},
+			"collines": {"tint": MerlinVisual.CRT_PALETTE.bg_panel.lightened(0.02), "direction": Vector3(-0.7, -0.2, 0), "speed": 0.9},
 		}
 	return _fog_config
 
@@ -185,6 +185,8 @@ func _load_data() -> void:
 		var raw_key: String = run_data.get("current_biome", "broceliande")
 		# Normalize full biome keys to short keys used by MerlinVisual.BIOME_COLORS and _generate_landscape
 		biome_key = BIOME_KEY_MAP.get(raw_key, raw_key)
+	# Apply biome CRT profile (phosphor tint + distortion)
+	MerlinVisual.apply_biome_crt(biome_key)
 
 	if FileAccess.file_exists(DATA_PATH):
 		var file := FileAccess.open(DATA_PATH, FileAccess.READ)
@@ -233,23 +235,9 @@ func _clear_merlin_scene_context() -> void:
 func _configure_ui() -> void:
 	var vs := get_viewport_rect().size
 
-	# Configure parchment background shader + seasonal tint
-	var seasonal_pal: Dictionary = MerlinVisual.get_seasonal_palette()
-	var paper_shader := load("res://shaders/merlin_paper.gdshader")
-	if paper_shader:
-		var mat := ShaderMaterial.new()
-		mat.shader = paper_shader
-		mat.set_shader_parameter("paper_tint", MerlinVisual.PALETTE.paper)
-		mat.set_shader_parameter("grain_strength", 0.025)
-		mat.set_shader_parameter("vignette_strength", 0.08)
-		mat.set_shader_parameter("vignette_softness", 0.65)
-		mat.set_shader_parameter("grain_scale", 1200.0)
-		mat.set_shader_parameter("grain_speed", 0.08)
-		mat.set_shader_parameter("warp_strength", 0.001)
-		bg.material = mat
-	else:
-		bg.color = MerlinVisual.PALETTE.paper
-	bg.modulate = seasonal_pal.get("bg_modulate", Color(1, 1, 1))
+	# CRT terminal background
+	bg.material = null
+	bg.color = MerlinVisual.CRT_PALETTE.bg_dark
 
 	# Configure celtic ornaments
 	_configure_celtic_ornament($CelticTop, Vector2(0, 20), Vector2(vs.x, 30))
@@ -269,7 +257,7 @@ func _configure_ui() -> void:
 	biome_title.position = Vector2(vs.x / 2.0 - 300, 55)
 	biome_title.size = Vector2(600, 50)
 	var biome_color_str = biome_data.get("color", "")
-	var font_color: Color = MerlinVisual.PALETTE.accent
+	var font_color: Color = MerlinVisual.CRT_PALETTE.amber
 	if biome_color_str is String and biome_color_str != "":
 		font_color = Color(biome_color_str)
 	elif biome_color_str is Color:
@@ -282,14 +270,14 @@ func _configure_ui() -> void:
 	biome_subtitle.text = biome_data.get("subtitle", "")
 	biome_subtitle.position = Vector2(vs.x / 2.0 - 300, 95)
 	biome_subtitle.size = Vector2(600, 30)
-	biome_subtitle.add_theme_color_override("font_color", MerlinVisual.PALETTE.ink_soft)
+	biome_subtitle.add_theme_color_override("font_color", MerlinVisual.CRT_PALETTE.phosphor_dim)
 	if body_font:
 		biome_subtitle.add_theme_font_override("font", body_font)
 
 	# Configure arrival text (sized for dealer monologue — 4-6 sentences)
 	arrival_text.size = Vector2(680, 200)
 	arrival_text.position = Vector2(vs.x / 2.0 - 340, vs.y * 0.65)
-	arrival_text.add_theme_color_override("default_color", MerlinVisual.PALETTE.ink_soft)
+	arrival_text.add_theme_color_override("default_color", MerlinVisual.CRT_PALETTE.phosphor_dim)
 	if body_font:
 		arrival_text.add_theme_font_override("normal_font", body_font)
 	arrival_text.add_theme_font_size_override("normal_font_size", 18)
@@ -297,7 +285,7 @@ func _configure_ui() -> void:
 	# Configure merlin comment
 	merlin_comment.size = Vector2(600, 50)
 	merlin_comment.position = Vector2(vs.x / 2.0 - 300, vs.y - 130)
-	merlin_comment.add_theme_color_override("default_color", MerlinVisual.PALETTE.ink)
+	merlin_comment.add_theme_color_override("default_color", MerlinVisual.CRT_PALETTE.phosphor)
 	if body_font:
 		merlin_comment.add_theme_font_override("normal_font", body_font)
 	merlin_comment.add_theme_font_size_override("normal_font_size", 20)
@@ -314,19 +302,19 @@ func _configure_celtic_ornament(lbl: Label, pos: Vector2, sz: Vector2) -> void:
 	lbl.text = line
 	lbl.position = pos
 	lbl.size = sz
-	lbl.add_theme_color_override("font_color", MerlinVisual.PALETTE.ink_faded)
+	lbl.add_theme_color_override("font_color", MerlinVisual.CRT_PALETTE.border)
 
 
 func _configure_weather_system() -> void:
 	## Configure weather overlay + solar clock from scene nodes.
 
-	var base_overlay: Color = MerlinVisual.PALETTE.ink
+	var base_overlay: Color = MerlinVisual.CRT_PALETTE.phosphor
 	_weather_overlay.color = Color(base_overlay.r, base_overlay.g, base_overlay.b, 0.06)
 
 	# Style clock panel
 	var clock_style := StyleBoxFlat.new()
-	var clock_bg: Color = MerlinVisual.PALETTE.paper_dark
-	var clock_border: Color = MerlinVisual.PALETTE.souffle
+	var clock_bg: Color = MerlinVisual.CRT_PALETTE.bg_dark
+	var clock_border: Color = MerlinVisual.CRT_PALETTE.souffle
 	clock_style.bg_color = Color(clock_bg.r, clock_bg.g, clock_bg.b, 0.9)
 	clock_style.border_color = Color(clock_border.r, clock_border.g, clock_border.b, 0.85)
 	clock_style.set_border_width_all(1)
@@ -338,7 +326,7 @@ func _configure_weather_system() -> void:
 	_clock_panel.add_theme_stylebox_override("panel", clock_style)
 
 	# Style clock label
-	_clock_label.add_theme_color_override("font_color", MerlinVisual.PALETTE.ink)
+	_clock_label.add_theme_color_override("font_color", MerlinVisual.CRT_PALETTE.phosphor)
 
 	_layout_solar_arc_geometry()
 	var initial_hour := int(Time.get_datetime_dict_from_system().get("hour", 12))
@@ -404,7 +392,7 @@ func _apply_weather_for_hour(hour: int, instant: bool) -> void:
 
 func _apply_weather_mode(mode: String, instant: bool) -> void:
 	_weather_mode = mode
-	var overlay_base: Color = MerlinVisual.PALETTE.ink
+	var overlay_base: Color = MerlinVisual.CRT_PALETTE.phosphor
 	var target_overlay := Color(overlay_base.r, overlay_base.g, overlay_base.b, 0.06)
 	_weather_light_factor = 1.0
 
@@ -877,7 +865,7 @@ func _phase_brume() -> void:
 
 	var vs := get_viewport_rect().size
 	var colors: Dictionary = MerlinVisual.BIOME_COLORS.get(biome_key, MerlinVisual.BIOME_COLORS.broceliande)
-	var scout_colors: Array[Color] = [colors.primary, colors.secondary, MerlinVisual.PALETTE.accent]
+	var scout_colors: Array[Color] = [colors.primary, colors.secondary, MerlinVisual.CRT_PALETTE.amber]
 	for i in range(10):
 		var px := ColorRect.new()
 		var sz := randf_range(5.0, 9.0)
@@ -1111,7 +1099,7 @@ func _phase_quest_preparation() -> void:
 	_quest_progress_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	_quest_progress_label.position = Vector2(vs.x / 2.0 - 200, vs.y * 0.82)
 	_quest_progress_label.size = Vector2(400, 30)
-	_quest_progress_label.add_theme_color_override("font_color", MerlinVisual.PALETTE.ink_soft)
+	_quest_progress_label.add_theme_color_override("font_color", MerlinVisual.CRT_PALETTE.phosphor_dim)
 	_quest_progress_label.add_theme_font_size_override("font_size", 16)
 	var progress_font: Font = MerlinVisual.get_font("body")
 	if progress_font:
@@ -1205,17 +1193,17 @@ func _create_quest_button(vs: Vector2) -> Button:
 	btn.position = Vector2(vs.x / 2.0 - 120, vs.y * 0.86)
 	btn.pivot_offset = Vector2(120, 24)
 	var style := StyleBoxFlat.new()
-	style.bg_color = MerlinVisual.PALETTE.accent
+	style.bg_color = MerlinVisual.CRT_PALETTE.amber
 	style.set_corner_radius_all(8)
 	style.set_content_margin_all(12)
 	btn.add_theme_stylebox_override("normal", style)
 	var hover_style: StyleBoxFlat = style.duplicate()
-	hover_style.bg_color = MerlinVisual.PALETTE.accent.lightened(0.15)
+	hover_style.bg_color = MerlinVisual.CRT_PALETTE.amber.lightened(0.15)
 	btn.add_theme_stylebox_override("hover", hover_style)
 	var pressed_style: StyleBoxFlat = style.duplicate()
-	pressed_style.bg_color = MerlinVisual.PALETTE.accent.darkened(0.1)
+	pressed_style.bg_color = MerlinVisual.CRT_PALETTE.amber.darkened(0.1)
 	btn.add_theme_stylebox_override("pressed", pressed_style)
-	btn.add_theme_color_override("font_color", MerlinVisual.PALETTE.paper)
+	btn.add_theme_color_override("font_color", MerlinVisual.CRT_PALETTE.bg_panel)
 	btn.add_theme_font_size_override("font_size", 18)
 	var title_font: Font = MerlinVisual.get_font("title")
 	if title_font:

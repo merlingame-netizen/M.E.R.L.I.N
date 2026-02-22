@@ -348,21 +348,12 @@ func _configure_ui() -> void:
 	var viewport_size := get_viewport().get_visible_rect().size
 	compact_mode = viewport_size.x < MOBILE_BREAKPOINT
 
-	# Configure parchment background shader
-	var paper_shader := load("res://shaders/merlin_paper.gdshader")
-	if paper_shader:
-		var mat := ShaderMaterial.new()
-		mat.shader = paper_shader
-		mat.set_shader_parameter("paper_tint", MerlinVisual.PALETTE.paper)
-		mat.set_shader_parameter("grain_strength", 0.025)
-		mat.set_shader_parameter("vignette_strength", 0.08)
-		mat.set_shader_parameter("vignette_softness", 0.65)
-		parchment_bg.material = mat
-	else:
-		parchment_bg.color = MerlinVisual.PALETTE.paper
+	# CRT terminal background (no paper shader — CRT post-process handles vignette/grain)
+	parchment_bg.material = null
+	parchment_bg.color = MerlinVisual.CRT_PALETTE.bg_panel
 
 	# Configure mist
-	mist_layer.color = MerlinVisual.PALETTE.mist
+	mist_layer.color = MerlinVisual.CRT_PALETTE.mist
 
 	# Configure celtic ornaments
 	_configure_celtic_ornaments(viewport_size)
@@ -378,12 +369,12 @@ func _configure_celtic_ornaments(viewport_size: Vector2) -> void:
 	var ornament_line := _create_celtic_line(35)
 
 	celtic_ornament_top.text = ornament_line
-	celtic_ornament_top.add_theme_color_override("font_color", MerlinVisual.PALETTE.ink_faded)
+	celtic_ornament_top.add_theme_color_override("font_color", MerlinVisual.CRT_PALETTE.border)
 	celtic_ornament_top.size = Vector2(viewport_size.x, 30)
 	celtic_ornament_top.position = Vector2(0, 35)
 
 	celtic_ornament_bottom.text = ornament_line
-	celtic_ornament_bottom.add_theme_color_override("font_color", MerlinVisual.PALETTE.ink_faded)
+	celtic_ornament_bottom.add_theme_color_override("font_color", MerlinVisual.CRT_PALETTE.border)
 	celtic_ornament_bottom.size = Vector2(viewport_size.x, 30)
 	celtic_ornament_bottom.position = Vector2(0, viewport_size.y - 65)
 
@@ -404,11 +395,11 @@ func _configure_main_card(viewport_size: Vector2) -> void:
 	main_card.pivot_offset = main_card.size / 2
 
 	var card_style := StyleBoxFlat.new()
-	card_style.bg_color = MerlinVisual.PALETTE.paper_warm
-	card_style.border_color = MerlinVisual.PALETTE.ink_faded
+	card_style.bg_color = MerlinVisual.CRT_PALETTE.bg_panel
+	card_style.border_color = MerlinVisual.CRT_PALETTE.border
 	card_style.set_border_width_all(1)
 	card_style.set_corner_radius_all(4)
-	card_style.shadow_color = MerlinVisual.PALETTE.shadow
+	card_style.shadow_color = MerlinVisual.CRT_PALETTE.shadow
 	card_style.shadow_size = 12
 	card_style.shadow_offset = Vector2(0, 4)
 	card_style.set_content_margin_all(20)
@@ -419,7 +410,7 @@ func _configure_main_card(viewport_size: Vector2) -> void:
 	if font_bold:
 		title_label.add_theme_font_override("font", font_bold)
 	title_label.add_theme_font_size_override("font_size", 28 if not compact_mode else 22)
-	title_label.add_theme_color_override("font_color", MerlinVisual.PALETTE.ink)
+	title_label.add_theme_color_override("font_color", MerlinVisual.CRT_PALETTE.phosphor)
 
 	# Style subtitle (season + moon)
 	var subtitle_label: Label = $MainCard/CardVBox/SubtitleLabel
@@ -428,15 +419,15 @@ func _configure_main_card(viewport_size: Vector2) -> void:
 	if font_regular:
 		subtitle_label.add_theme_font_override("font", font_regular)
 	subtitle_label.add_theme_font_size_override("font_size", 16)
-	subtitle_label.add_theme_color_override("font_color", MerlinVisual.PALETTE.get(current_season, MerlinVisual.PALETTE.ink_soft))
+	subtitle_label.add_theme_color_override("font_color", MerlinVisual.CRT_PALETTE.get(current_season, MerlinVisual.CRT_PALETTE.phosphor_dim))
 
 	# Style separator
 	var sep_left: ColorRect = $MainCard/CardVBox/SeparatorContainer/SepLeft
 	var sep_diamond: Label = $MainCard/CardVBox/SeparatorContainer/SepDiamond
 	var sep_right: ColorRect = $MainCard/CardVBox/SeparatorContainer/SepRight
-	sep_left.color = MerlinVisual.PALETTE.line
-	sep_diamond.add_theme_color_override("font_color", MerlinVisual.PALETTE.accent)
-	sep_right.color = MerlinVisual.PALETTE.line
+	sep_left.color = MerlinVisual.CRT_PALETTE.line
+	sep_diamond.add_theme_color_override("font_color", MerlinVisual.CRT_PALETTE.amber)
+	sep_right.color = MerlinVisual.CRT_PALETTE.line
 
 	# Configure wheel
 	wheel_container.custom_minimum_size = Vector2(0, 140 if not compact_mode else 100)
@@ -451,8 +442,8 @@ func _configure_main_card(viewport_size: Vector2) -> void:
 
 func _configure_event_panel() -> void:
 	var style := StyleBoxFlat.new()
-	style.bg_color = MerlinVisual.PALETTE.paper_dark
-	style.border_color = MerlinVisual.PALETTE.accent_soft
+	style.bg_color = MerlinVisual.CRT_PALETTE.bg_dark
+	style.border_color = MerlinVisual.CRT_PALETTE.amber_dim
 	style.set_border_width_all(1)
 	style.set_corner_radius_all(3)
 	style.set_content_margin_all(12)
@@ -467,7 +458,7 @@ func _configure_event_panel() -> void:
 	if font_regular:
 		header.add_theme_font_override("font", font_regular)
 	header.add_theme_font_size_override("font_size", 12)
-	header.add_theme_color_override("font_color", MerlinVisual.PALETTE.ink_soft)
+	header.add_theme_color_override("font_color", MerlinVisual.CRT_PALETTE.phosphor_dim)
 	evbox.add_child(header)
 
 	if not next_event.is_empty():
@@ -477,7 +468,7 @@ func _configure_event_panel() -> void:
 		if font_bold:
 			date_lbl.add_theme_font_override("font", font_bold)
 		date_lbl.add_theme_font_size_override("font_size", 14)
-		date_lbl.add_theme_color_override("font_color", MerlinVisual.PALETTE.event_today)
+		date_lbl.add_theme_color_override("font_color", MerlinVisual.CRT_PALETTE.event_today)
 		evbox.add_child(date_lbl)
 
 		var name_lbl := Label.new()
@@ -485,7 +476,7 @@ func _configure_event_panel() -> void:
 		if font_bold:
 			name_lbl.add_theme_font_override("font", font_bold)
 		name_lbl.add_theme_font_size_override("font_size", 16)
-		name_lbl.add_theme_color_override("font_color", MerlinVisual.PALETTE.ink)
+		name_lbl.add_theme_color_override("font_color", MerlinVisual.CRT_PALETTE.phosphor)
 		evbox.add_child(name_lbl)
 
 		var desc_lbl := Label.new()
@@ -494,7 +485,7 @@ func _configure_event_panel() -> void:
 		if font_regular:
 			desc_lbl.add_theme_font_override("font", font_regular)
 		desc_lbl.add_theme_font_size_override("font_size", 12)
-		desc_lbl.add_theme_color_override("font_color", MerlinVisual.PALETTE.ink_soft)
+		desc_lbl.add_theme_color_override("font_color", MerlinVisual.CRT_PALETTE.phosphor_dim)
 		evbox.add_child(desc_lbl)
 
 
@@ -544,12 +535,12 @@ func _configure_back_button(viewport_size: Vector2) -> void:
 	if font_bold:
 		back_button.add_theme_font_override("font", font_bold)
 	back_button.add_theme_font_size_override("font_size", 16)
-	back_button.add_theme_color_override("font_color", MerlinVisual.PALETTE.ink)
-	back_button.add_theme_color_override("font_hover_color", MerlinVisual.PALETTE.accent)
+	back_button.add_theme_color_override("font_color", MerlinVisual.CRT_PALETTE.phosphor)
+	back_button.add_theme_color_override("font_hover_color", MerlinVisual.CRT_PALETTE.amber)
 
 	var btn_style := StyleBoxFlat.new()
-	btn_style.bg_color = MerlinVisual.PALETTE.paper_dark
-	btn_style.border_color = MerlinVisual.PALETTE.ink_faded
+	btn_style.bg_color = MerlinVisual.CRT_PALETTE.bg_dark
+	btn_style.border_color = MerlinVisual.CRT_PALETTE.border
 	btn_style.set_border_width_all(1)
 	btn_style.set_corner_radius_all(4)
 	btn_style.set_content_margin_all(8)
@@ -558,8 +549,8 @@ func _configure_back_button(viewport_size: Vector2) -> void:
 	back_button.add_theme_stylebox_override("normal", btn_style)
 
 	var btn_hover := btn_style.duplicate()
-	btn_hover.bg_color = MerlinVisual.PALETTE.accent_glow
-	btn_hover.border_color = MerlinVisual.PALETTE.accent_soft
+	btn_hover.bg_color = MerlinVisual.CRT_PALETTE.phosphor_glow
+	btn_hover.border_color = MerlinVisual.CRT_PALETTE.amber_dim
 	back_button.add_theme_stylebox_override("hover", btn_hover)
 
 	back_button.size = Vector2(110, 40)
@@ -583,15 +574,15 @@ func _set_tab(tab: int) -> void:
 
 func _style_tab_button(btn: Button, selected: bool) -> void:
 	var style := StyleBoxFlat.new()
-	style.bg_color = MerlinVisual.PALETTE.accent_glow if selected else Color(1, 1, 1, 0)
-	style.border_color = MerlinVisual.PALETTE.accent if selected else MerlinVisual.PALETTE.ink_faded
+	style.bg_color = MerlinVisual.CRT_PALETTE.phosphor_glow if selected else Color(1, 1, 1, 0)
+	style.border_color = MerlinVisual.CRT_PALETTE.amber if selected else MerlinVisual.CRT_PALETTE.border
 	style.border_width_bottom = 1 if selected else 0
 	style.set_corner_radius_all(2)
 	style.set_content_margin_all(8)
 	btn.add_theme_stylebox_override("normal", style)
 	btn.add_theme_stylebox_override("hover", style)
 	btn.add_theme_stylebox_override("pressed", style)
-	btn.add_theme_color_override("font_color", MerlinVisual.PALETTE.accent if selected else MerlinVisual.PALETTE.ink_soft)
+	btn.add_theme_color_override("font_color", MerlinVisual.CRT_PALETTE.amber if selected else MerlinVisual.CRT_PALETTE.phosphor_dim)
 
 
 func _populate_all() -> void:
@@ -610,7 +601,7 @@ func _populate_events() -> void:
 	if font_bold:
 		header.add_theme_font_override("font", font_bold)
 	header.add_theme_font_size_override("font_size", 16)
-	header.add_theme_color_override("font_color", MerlinVisual.PALETTE.accent)
+	header.add_theme_color_override("font_color", MerlinVisual.CRT_PALETTE.amber)
 	events_section.add_child(header)
 
 	var events: Array = calendar_events_display if not calendar_events_display.is_empty() else CALENDAR_EVENTS
@@ -639,11 +630,11 @@ func _create_event_row(event: Dictionary) -> HBoxContainer:
 		date_lbl.add_theme_font_override("font", font_regular)
 	date_lbl.add_theme_font_size_override("font_size", 12)
 	if is_today:
-		date_lbl.add_theme_color_override("font_color", MerlinVisual.PALETTE.event_today)
+		date_lbl.add_theme_color_override("font_color", MerlinVisual.CRT_PALETTE.event_today)
 	elif is_past:
-		date_lbl.add_theme_color_override("font_color", MerlinVisual.PALETTE.event_past)
+		date_lbl.add_theme_color_override("font_color", MerlinVisual.CRT_PALETTE.event_past)
 	else:
-		date_lbl.add_theme_color_override("font_color", MerlinVisual.PALETTE.ink_soft)
+		date_lbl.add_theme_color_override("font_color", MerlinVisual.CRT_PALETTE.phosphor_dim)
 	row.add_child(date_lbl)
 
 	var name_lbl := Label.new()
@@ -655,17 +646,17 @@ func _create_event_row(event: Dictionary) -> HBoxContainer:
 		name_lbl.add_theme_font_override("font", font_regular)
 	name_lbl.add_theme_font_size_override("font_size", 14)
 	if is_today:
-		name_lbl.add_theme_color_override("font_color", MerlinVisual.PALETTE.event_today)
+		name_lbl.add_theme_color_override("font_color", MerlinVisual.CRT_PALETTE.event_today)
 	elif is_past:
-		name_lbl.add_theme_color_override("font_color", MerlinVisual.PALETTE.event_past)
+		name_lbl.add_theme_color_override("font_color", MerlinVisual.CRT_PALETTE.event_past)
 	else:
-		name_lbl.add_theme_color_override("font_color", MerlinVisual.PALETTE.ink)
+		name_lbl.add_theme_color_override("font_color", MerlinVisual.CRT_PALETTE.phosphor)
 	row.add_child(name_lbl)
 
 	var state := Label.new()
 	state.text = "\u25c6" if is_today else ("\u2500" if is_past else "\u25cb")
 	state.add_theme_font_size_override("font_size", 10)
-	state.add_theme_color_override("font_color", MerlinVisual.PALETTE.event_today if is_today else MerlinVisual.PALETTE.ink_faded)
+	state.add_theme_color_override("font_color", MerlinVisual.CRT_PALETTE.event_today if is_today else MerlinVisual.CRT_PALETTE.border)
 	row.add_child(state)
 
 	return row
@@ -690,7 +681,7 @@ func _populate_stats() -> void:
 	if font_bold:
 		header.add_theme_font_override("font", font_bold)
 	header.add_theme_font_size_override("font_size", 16)
-	header.add_theme_color_override("font_color", MerlinVisual.PALETTE.accent)
+	header.add_theme_color_override("font_color", MerlinVisual.CRT_PALETTE.amber)
 	stats_section.add_child(header)
 
 	_add_stat_row("Runs", str(meta_stats.total_runs))
@@ -703,7 +694,7 @@ func _populate_stats() -> void:
 	if font_bold:
 		endings_header.add_theme_font_override("font", font_bold)
 	endings_header.add_theme_font_size_override("font_size", 14)
-	endings_header.add_theme_color_override("font_color", MerlinVisual.PALETTE.ink)
+	endings_header.add_theme_color_override("font_color", MerlinVisual.CRT_PALETTE.phosphor)
 	stats_section.add_child(endings_header)
 
 	for ending in ALL_ENDINGS:
@@ -713,7 +704,7 @@ func _populate_stats() -> void:
 		if font_regular:
 			end_lbl.add_theme_font_override("font", font_regular)
 		end_lbl.add_theme_font_size_override("font_size", 12)
-		end_lbl.add_theme_color_override("font_color", MerlinVisual.PALETTE.ink if seen else MerlinVisual.PALETTE.ink_faded)
+		end_lbl.add_theme_color_override("font_color", MerlinVisual.CRT_PALETTE.phosphor if seen else MerlinVisual.CRT_PALETTE.border)
 		stats_section.add_child(end_lbl)
 
 
@@ -727,7 +718,7 @@ func _add_stat_row(label_text: String, value_text: String) -> void:
 	if font_regular:
 		label.add_theme_font_override("font", font_regular)
 	label.add_theme_font_size_override("font_size", 14)
-	label.add_theme_color_override("font_color", MerlinVisual.PALETTE.ink_soft)
+	label.add_theme_color_override("font_color", MerlinVisual.CRT_PALETTE.phosphor_dim)
 	row.add_child(label)
 
 	var value := Label.new()
@@ -736,7 +727,7 @@ func _add_stat_row(label_text: String, value_text: String) -> void:
 	if font_bold:
 		value.add_theme_font_override("font", font_bold)
 	value.add_theme_font_size_override("font_size", 14)
-	value.add_theme_color_override("font_color", MerlinVisual.PALETTE.accent)
+	value.add_theme_color_override("font_color", MerlinVisual.CRT_PALETTE.amber)
 	row.add_child(value)
 
 	stats_section.add_child(row)
@@ -758,7 +749,7 @@ func _populate_brumes() -> void:
 	if font_bold:
 		header.add_theme_font_override("font", font_bold)
 	header.add_theme_font_size_override("font_size", 16)
-	header.add_theme_color_override("font_color", MerlinVisual.PALETTE.accent)
+	header.add_theme_color_override("font_color", MerlinVisual.CRT_PALETTE.amber)
 	brumes_section.add_child(header)
 
 	var desc := Label.new()
@@ -767,7 +758,7 @@ func _populate_brumes() -> void:
 	if font_regular:
 		desc.add_theme_font_override("font", font_regular)
 	desc.add_theme_font_size_override("font_size", 12)
-	desc.add_theme_color_override("font_color", MerlinVisual.PALETTE.ink_soft)
+	desc.add_theme_color_override("font_color", MerlinVisual.CRT_PALETTE.phosphor_dim)
 	brumes_section.add_child(desc)
 
 	var upcoming := _get_upcoming_events(BRUMES_LOOKAHEAD_EVENTS)
@@ -777,7 +768,7 @@ func _populate_brumes() -> void:
 		if font_regular:
 			empty_lbl.add_theme_font_override("font", font_regular)
 		empty_lbl.add_theme_font_size_override("font_size", 12)
-		empty_lbl.add_theme_color_override("font_color", MerlinVisual.PALETTE.ink_faded)
+		empty_lbl.add_theme_color_override("font_color", MerlinVisual.CRT_PALETTE.border)
 		brumes_section.add_child(empty_lbl)
 		return
 
@@ -806,7 +797,7 @@ func _create_brumes_event_row(event: Dictionary) -> PanelContainer:
 	var panel := PanelContainer.new()
 	panel.tooltip_text = _build_event_tooltip(event)
 	var style := StyleBoxFlat.new()
-	style.bg_color = MerlinVisual.PALETTE.paper_dark
+	style.bg_color = MerlinVisual.CRT_PALETTE.bg_dark
 	style.set_corner_radius_all(3)
 	style.set_content_margin_all(8)
 
@@ -815,13 +806,13 @@ func _create_brumes_event_row(event: Dictionary) -> PanelContainer:
 	if ResourceLoader.exists("res://shaders/iridescent_border.gdshader"):
 		iridescent_shader = load("res://shaders/iridescent_border.gdshader")
 	if iridescent_shader:
-		style.border_color = MerlinVisual.PALETTE.accent_soft
+		style.border_color = MerlinVisual.CRT_PALETTE.amber_dim
 		style.set_border_width_all(2)
 		var mat := ShaderMaterial.new()
 		mat.shader = iridescent_shader
 		panel.material = mat
 	else:
-		style.border_color = MerlinVisual.PALETTE.accent_soft
+		style.border_color = MerlinVisual.CRT_PALETTE.amber_dim
 		style.set_border_width_all(1)
 
 	panel.add_theme_stylebox_override("panel", style)
@@ -837,7 +828,7 @@ func _create_brumes_event_row(event: Dictionary) -> PanelContainer:
 	if font_bold:
 		date_lbl.add_theme_font_override("font", font_bold)
 	date_lbl.add_theme_font_size_override("font_size", 13)
-	date_lbl.add_theme_color_override("font_color", MerlinVisual.PALETTE.accent)
+	date_lbl.add_theme_color_override("font_color", MerlinVisual.CRT_PALETTE.amber)
 	hbox.add_child(date_lbl)
 
 	var info := VBoxContainer.new()
@@ -849,7 +840,7 @@ func _create_brumes_event_row(event: Dictionary) -> PanelContainer:
 	if font_bold:
 		name_lbl.add_theme_font_override("font", font_bold)
 	name_lbl.add_theme_font_size_override("font_size", 13)
-	name_lbl.add_theme_color_override("font_color", MerlinVisual.PALETTE.ink)
+	name_lbl.add_theme_color_override("font_color", MerlinVisual.CRT_PALETTE.phosphor)
 	info.add_child(name_lbl)
 
 	var desc_lbl := Label.new()
@@ -858,7 +849,7 @@ func _create_brumes_event_row(event: Dictionary) -> PanelContainer:
 	if font_regular:
 		desc_lbl.add_theme_font_override("font", font_regular)
 	desc_lbl.add_theme_font_size_override("font_size", 11)
-	desc_lbl.add_theme_color_override("font_color", MerlinVisual.PALETTE.ink_soft)
+	desc_lbl.add_theme_color_override("font_color", MerlinVisual.CRT_PALETTE.phosphor_dim)
 	info.add_child(desc_lbl)
 
 	# Reroll/Lock actions (only if upgrade active)
@@ -876,7 +867,7 @@ func _create_brumes_event_row(event: Dictionary) -> PanelContainer:
 	var icon_lbl := Label.new()
 	icon_lbl.text = icon_text
 	icon_lbl.add_theme_font_size_override("font_size", 16)
-	icon_lbl.add_theme_color_override("font_color", MerlinVisual.PALETTE.accent_soft)
+	icon_lbl.add_theme_color_override("font_color", MerlinVisual.CRT_PALETTE.amber_dim)
 	hbox.add_child(icon_lbl)
 
 	return panel
@@ -966,7 +957,7 @@ func _add_brumes_actions(parent: VBoxContainer, event: Dictionary) -> void:
 	if font_regular:
 		counter.add_theme_font_override("font", font_regular)
 	counter.add_theme_font_size_override("font_size", 10)
-	counter.add_theme_color_override("font_color", MerlinVisual.PALETTE.ink_faded)
+	counter.add_theme_color_override("font_color", MerlinVisual.CRT_PALETTE.border)
 	actions.add_child(counter)
 
 
@@ -1024,30 +1015,30 @@ func _on_wheel_draw() -> void:
 	_draw_season_arc(center, arc_radius, arc_width, PI, 3*PI/2, "autumn")
 
 	# Cercle intérieur
-	wheel_container.draw_arc(center, radius - 18, 0, TAU, 64, MerlinVisual.PALETTE.ink_faded, 1.0)
+	wheel_container.draw_arc(center, radius - 18, 0, TAU, 64, MerlinVisual.CRT_PALETTE.border, 1.0)
 
 	# Marqueurs festivals
 	for festival_id in CELTIC_FESTIVALS:
 		var festival: Dictionary = CELTIC_FESTIVALS[festival_id]
 		var angle := _date_to_angle(festival.month, festival.day)
 		var pos := center + Vector2.from_angle(angle) * (radius - 6)
-		wheel_container.draw_circle(pos, 3, MerlinVisual.PALETTE.accent)
+		wheel_container.draw_circle(pos, 3, MerlinVisual.CRT_PALETTE.amber)
 
 	# Marqueur jour actuel
 	var today_angle := _date_to_angle(current_date.month, current_date.day)
 	var today_pos := center + Vector2.from_angle(today_angle) * (radius - 6)
-	wheel_container.draw_circle(today_pos, 6, MerlinVisual.PALETTE.event_today)
-	wheel_container.draw_circle(today_pos, 4, MerlinVisual.PALETTE.paper)
+	wheel_container.draw_circle(today_pos, 6, MerlinVisual.CRT_PALETTE.event_today)
+	wheel_container.draw_circle(today_pos, 4, MerlinVisual.CRT_PALETTE.bg_panel)
 
 	# Lune au centre
 	var moon_r := radius * 0.25
 	var moon_info: Dictionary = MOON_PHASES.get(current_moon_phase, {})
-	wheel_container.draw_circle(center, moon_r, MerlinVisual.PALETTE.ink_faded)
-	wheel_container.draw_arc(center, moon_r, 0, TAU, 32, MerlinVisual.PALETTE.accent_soft, 1.5)
+	wheel_container.draw_circle(center, moon_r, MerlinVisual.CRT_PALETTE.border)
+	wheel_container.draw_arc(center, moon_r, 0, TAU, 32, MerlinVisual.CRT_PALETTE.amber_dim, 1.5)
 
 
 func _draw_season_arc(center: Vector2, radius: float, width: float, start: float, end: float, season: String) -> void:
-	var color: Color = MerlinVisual.PALETTE.get(season, MerlinVisual.PALETTE.ink_soft)
+	var color: Color = MerlinVisual.CRT_PALETTE.get(season, MerlinVisual.CRT_PALETTE.phosphor_dim)
 	var is_current := (season == current_season)
 	if is_current:
 		color = color.lightened(0.15)

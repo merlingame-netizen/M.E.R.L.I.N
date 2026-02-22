@@ -9,7 +9,7 @@ const SECTION_MARGIN := 20.0
 const H_GAP := 12.0
 const V_GAP := 8.0
 
-var _dither_layer: ScreenDitherLayer
+var _dither_layer: CRTLayer
 var _portraits: Array[PixelNpcPortrait] = []
 var _ogham_icons: Array[PixelOghamIcon] = []
 
@@ -33,7 +33,7 @@ func _ready() -> void:
 	_add_animation_controls(vbox)
 
 	# Global dither post-process
-	_dither_layer = ScreenDitherLayer.new()
+	_dither_layer = CRTLayer.new()
 	add_child(_dither_layer)
 
 	# Trigger assembly animations after a short delay
@@ -48,14 +48,14 @@ func _ready() -> void:
 func _build_background() -> void:
 	var bg := ColorRect.new()
 	bg.set_anchors_preset(PRESET_FULL_RECT)
-	bg.color = MerlinVisual.PALETTE.get("bg_mid", Color("#2a1f14"))
+	bg.color = MerlinVisual.CRT_PALETTE.get("bg_mid", Color("#2a1f14"))
 	add_child(bg)
 
 
 func _add_title(parent: Control) -> void:
 	var label := _make_label("M.E.R.L.I.N. — Pixel Art Showcase", 28)
 	label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	label.add_theme_color_override("font_color", MerlinVisual.PALETTE.get("ink_gold", Color("#c49256")))
+	label.add_theme_color_override("font_color", MerlinVisual.CRT_PALETTE.get("ink_gold", Color("#c49256")))
 	parent.add_child(label)
 
 
@@ -82,7 +82,7 @@ func _add_portraits_section(parent: Control) -> void:
 
 		var name_label := _make_label(PixelNpcPortrait.get_npc_display_name(key), 11)
 		name_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-		name_label.add_theme_color_override("font_color", MerlinVisual.PALETTE.get("ink_warm", Color("#c0b8ad")))
+		name_label.add_theme_color_override("font_color", MerlinVisual.CRT_PALETTE.get("ink_warm", Color("#c0b8ad")))
 		container.add_child(name_label)
 
 		hbox.add_child(container)
@@ -124,7 +124,7 @@ func _add_ogham_section(parent: Control) -> void:
 
 			var icon_label := _make_label(ogham_key, 9)
 			icon_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-			icon_label.add_theme_color_override("font_color", MerlinVisual.PALETTE.get("ink_warm", Color("#a88d7b")))
+			icon_label.add_theme_color_override("font_color", MerlinVisual.CRT_PALETTE.get("ink_warm", Color("#a88d7b")))
 			icon_container.add_child(icon_label)
 
 			row_container.add_child(icon_container)
@@ -213,7 +213,7 @@ func _make_label(text: String, font_size: int) -> Label:
 func _make_section_label(text: String) -> Label:
 	var label := _make_label("— " + text + " —", 16)
 	label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	label.add_theme_color_override("font_color", MerlinVisual.PALETTE.get("ink_gold", Color("#c49256")))
+	label.add_theme_color_override("font_color", MerlinVisual.CRT_PALETTE.get("ink_gold", Color("#c49256")))
 	var margin := label.custom_minimum_size
 	margin.y = 32.0
 	label.custom_minimum_size = margin
@@ -229,7 +229,7 @@ func _make_button(text: String) -> Button:
 
 func _add_slider(parent: Control, label_text: String, min_val: float, max_val: float, default_val: float, callback: Callable) -> void:
 	var label := _make_label(label_text, 12)
-	label.add_theme_color_override("font_color", MerlinVisual.PALETTE.get("ink_warm", Color("#c0b8ad")))
+	label.add_theme_color_override("font_color", MerlinVisual.CRT_PALETTE.get("ink_warm", Color("#c0b8ad")))
 	parent.add_child(label)
 
 	var slider := HSlider.new()

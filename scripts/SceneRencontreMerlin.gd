@@ -20,7 +20,7 @@ const LLM_STEP_TIMEOUT := 3.2
 const LLM_POLL_INTERVAL := 0.12
 const RESPONSE_CONFIRM_DELAY := 0.22
 
-# PALETTE constant removed — using MerlinVisual.PALETTE autoload
+# PALETTE constant removed — using MerlinVisual.CRT_PALETTE autoload
 
 const CARD_MAX_WIDTH := 720.0
 const CARD_MAX_HEIGHT := 800.0
@@ -251,21 +251,12 @@ func _clear_merlin_scene_context() -> void:
 # ═══════════════════════════════════════════════════════════════════════════════
 
 func _configure_ui() -> void:
-	# Configure parchment background shader
-	var paper_shader := load("res://shaders/merlin_paper.gdshader")
-	if paper_shader:
-		var mat := ShaderMaterial.new()
-		mat.shader = paper_shader
-		mat.set_shader_parameter("paper_tint", MerlinVisual.PALETTE.paper)
-		mat.set_shader_parameter("grain_strength", 0.025)
-		mat.set_shader_parameter("vignette_strength", 0.08)
-		mat.set_shader_parameter("vignette_softness", 0.65)
-		parchment_bg.material = mat
-	else:
-		parchment_bg.color = MerlinVisual.PALETTE.paper
+	# CRT terminal background
+	parchment_bg.material = null
+	parchment_bg.color = MerlinVisual.CRT_PALETTE.bg_deep
 
 	# Configure mist layer
-	mist_layer.color = MerlinVisual.PALETTE.mist
+	mist_layer.color = MerlinVisual.CRT_PALETTE.mist
 
 	# Configure celtic ornaments
 	_configure_celtic_ornament(celtic_top)
@@ -284,15 +275,15 @@ func _configure_ui() -> void:
 	var sep_left: ColorRect = $Card/CardVBox/SeparatorContainer/SepLeft
 	var sep_diamond: Label = $Card/CardVBox/SeparatorContainer/SepDiamond
 	var sep_right: ColorRect = $Card/CardVBox/SeparatorContainer/SepRight
-	sep_left.color = MerlinVisual.PALETTE.line
-	sep_diamond.add_theme_color_override("font_color", MerlinVisual.PALETTE.accent)
-	sep_right.color = MerlinVisual.PALETTE.line
+	sep_left.color = MerlinVisual.CRT_PALETTE.line
+	sep_diamond.add_theme_color_override("font_color", MerlinVisual.CRT_PALETTE.amber)
+	sep_right.color = MerlinVisual.CRT_PALETTE.line
 
 	# Style text area
 	if body_font:
 		merlin_text.add_theme_font_override("normal_font", body_font)
 	merlin_text.add_theme_font_size_override("normal_font_size", 24)
-	merlin_text.add_theme_color_override("default_color", MerlinVisual.PALETTE.ink)
+	merlin_text.add_theme_color_override("default_color", MerlinVisual.CRT_PALETTE.phosphor)
 
 	# Dialogue source badge (dynamic — LLMSourceBadge)
 	_dialogue_source_badge = LLMSourceBadge.create("static")
@@ -302,7 +293,7 @@ func _configure_ui() -> void:
 	# Style skip hint
 	if body_font:
 		skip_hint.add_theme_font_override("font", body_font)
-	skip_hint.add_theme_color_override("font_color", MerlinVisual.PALETTE.ink_faded)
+	skip_hint.add_theme_color_override("font_color", MerlinVisual.CRT_PALETTE.border)
 
 	# Response buttons (dynamic)
 	_build_response_buttons()
@@ -316,11 +307,11 @@ func _configure_ui() -> void:
 
 func _apply_card_style() -> void:
 	var style := StyleBoxFlat.new()
-	style.bg_color = MerlinVisual.PALETTE.paper_warm
-	style.border_color = MerlinVisual.PALETTE.ink_faded
+	style.bg_color = MerlinVisual.CRT_PALETTE.bg_panel
+	style.border_color = MerlinVisual.CRT_PALETTE.border
 	style.set_border_width_all(1)
 	style.set_corner_radius_all(4)
-	style.shadow_color = MerlinVisual.PALETTE.shadow
+	style.shadow_color = MerlinVisual.CRT_PALETTE.shadow
 	style.shadow_size = 16
 	style.shadow_offset = Vector2(0, 4)
 	style.content_margin_left = 32
@@ -336,7 +327,7 @@ func _configure_celtic_ornament(lbl: Label) -> void:
 	for i in range(40):
 		line += pattern[i % pattern.size()]
 	lbl.text = line
-	lbl.add_theme_color_override("font_color", MerlinVisual.PALETTE.ink_faded)
+	lbl.add_theme_color_override("font_color", MerlinVisual.CRT_PALETTE.border)
 
 
 func _build_response_buttons() -> void:
@@ -348,8 +339,8 @@ func _build_response_buttons() -> void:
 		btn.mouse_filter = Control.MOUSE_FILTER_STOP
 
 		var btn_style := StyleBoxFlat.new()
-		btn_style.bg_color = MerlinVisual.PALETTE.paper_warm
-		btn_style.border_color = MerlinVisual.PALETTE.ink_faded
+		btn_style.bg_color = MerlinVisual.CRT_PALETTE.bg_panel
+		btn_style.border_color = MerlinVisual.CRT_PALETTE.border
 		btn_style.set_border_width_all(1)
 		btn_style.set_corner_radius_all(4)
 		btn_style.content_margin_left = 16
@@ -357,13 +348,13 @@ func _build_response_buttons() -> void:
 		btn_style.content_margin_top = 8
 		btn_style.content_margin_bottom = 8
 		var btn_hover := btn_style.duplicate()
-		btn_hover.bg_color = MerlinVisual.PALETTE.paper_dark
-		btn_hover.border_color = MerlinVisual.PALETTE.accent
+		btn_hover.bg_color = MerlinVisual.CRT_PALETTE.bg_dark
+		btn_hover.border_color = MerlinVisual.CRT_PALETTE.amber
 		btn.add_theme_stylebox_override("normal", btn_style)
 		btn.add_theme_stylebox_override("hover", btn_hover)
 		btn.add_theme_stylebox_override("pressed", btn_hover)
-		btn.add_theme_color_override("font_color", MerlinVisual.PALETTE.ink)
-		btn.add_theme_color_override("font_hover_color", MerlinVisual.PALETTE.accent)
+		btn.add_theme_color_override("font_color", MerlinVisual.CRT_PALETTE.phosphor)
+		btn.add_theme_color_override("font_hover_color", MerlinVisual.CRT_PALETTE.amber)
 		if body_font:
 			btn.add_theme_font_override("font", body_font)
 		btn.add_theme_font_size_override("font_size", 16)
@@ -383,8 +374,8 @@ func _build_ogham_panel() -> void:
 	ogham_panel.visible = false
 	ogham_panel.modulate.a = 0.0
 	var style := StyleBoxFlat.new()
-	style.bg_color = MerlinVisual.PALETTE.paper_dark
-	style.border_color = MerlinVisual.PALETTE.ogham_glow
+	style.bg_color = MerlinVisual.CRT_PALETTE.bg_dark
+	style.border_color = MerlinVisual.CRT_PALETTE.ogham_glow
 	style.set_border_width_all(1)
 	style.set_corner_radius_all(6)
 	style.content_margin_left = 20
@@ -412,7 +403,7 @@ func _build_ogham_panel() -> void:
 		symbol.text = ogham.symbol
 		symbol.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 		symbol.add_theme_font_size_override("font_size", 32)
-		symbol.add_theme_color_override("font_color", MerlinVisual.PALETTE.ogham_glow)
+		symbol.add_theme_color_override("font_color", MerlinVisual.CRT_PALETTE.ogham_glow)
 		vbox.add_child(symbol)
 		var name_lbl := Label.new()
 		name_lbl.text = ogham.name
@@ -420,7 +411,7 @@ func _build_ogham_panel() -> void:
 		if title_font:
 			name_lbl.add_theme_font_override("font", title_font)
 		name_lbl.add_theme_font_size_override("font_size", 16)
-		name_lbl.add_theme_color_override("font_color", MerlinVisual.PALETTE.ink)
+		name_lbl.add_theme_color_override("font_color", MerlinVisual.CRT_PALETTE.phosphor)
 		vbox.add_child(name_lbl)
 		var meaning := Label.new()
 		meaning.text = ogham.meaning
@@ -428,7 +419,7 @@ func _build_ogham_panel() -> void:
 		if body_font:
 			meaning.add_theme_font_override("font", body_font)
 		meaning.add_theme_font_size_override("font_size", 11)
-		meaning.add_theme_color_override("font_color", MerlinVisual.PALETTE.ink_soft)
+		meaning.add_theme_color_override("font_color", MerlinVisual.CRT_PALETTE.phosphor_dim)
 		vbox.add_child(meaning)
 		# Gameplay effect label
 		var gameplay := Label.new()
@@ -437,7 +428,7 @@ func _build_ogham_panel() -> void:
 		if body_font:
 			gameplay.add_theme_font_override("font", body_font)
 		gameplay.add_theme_font_size_override("font_size", 10)
-		gameplay.add_theme_color_override("font_color", MerlinVisual.PALETTE.ogham_glow)
+		gameplay.add_theme_color_override("font_color", MerlinVisual.CRT_PALETTE.ogham_glow)
 		gameplay.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 		gameplay.custom_minimum_size.x = 120
 		vbox.add_child(gameplay)
@@ -450,8 +441,8 @@ func _build_biome_panel() -> void:
 	biome_panel.visible = false
 	biome_panel.modulate.a = 0.0
 	var style := StyleBoxFlat.new()
-	style.bg_color = MerlinVisual.PALETTE.paper_dark
-	style.border_color = MerlinVisual.PALETTE.accent_soft
+	style.bg_color = MerlinVisual.CRT_PALETTE.bg_dark
+	style.border_color = MerlinVisual.CRT_PALETTE.amber_dim
 	style.set_border_width_all(1)
 	style.set_corner_radius_all(6)
 	style.content_margin_left = 16
@@ -470,11 +461,11 @@ func _build_biome_panel() -> void:
 	if title_font:
 		title.add_theme_font_override("font", title_font)
 	title.add_theme_font_size_override("font_size", 18)
-	title.add_theme_color_override("font_color", MerlinVisual.PALETTE.accent)
+	title.add_theme_color_override("font_color", MerlinVisual.CRT_PALETTE.amber)
 	vbox.add_child(title)
 
 	var sep := ColorRect.new()
-	sep.color = MerlinVisual.PALETTE.line
+	sep.color = MerlinVisual.CRT_PALETTE.line
 	sep.custom_minimum_size = Vector2(0, 1)
 	vbox.add_child(sep)
 
@@ -488,22 +479,22 @@ func _build_biome_panel() -> void:
 		btn.disabled = true
 
 		var btn_style := StyleBoxFlat.new()
-		btn_style.bg_color = MerlinVisual.PALETTE.paper_warm
-		btn_style.border_color = MerlinVisual.PALETTE.ink_faded
+		btn_style.bg_color = MerlinVisual.CRT_PALETTE.bg_panel
+		btn_style.border_color = MerlinVisual.CRT_PALETTE.border
 		btn_style.set_border_width_all(1)
 		btn_style.set_corner_radius_all(3)
 		btn_style.content_margin_left = 10
 		btn_style.content_margin_right = 10
 		btn.add_theme_stylebox_override("normal", btn_style)
 		var btn_hover := btn_style.duplicate()
-		btn_hover.bg_color = MerlinVisual.PALETTE.paper_dark
+		btn_hover.bg_color = MerlinVisual.CRT_PALETTE.bg_dark
 		btn_hover.border_color = biome.color
 		btn_hover.set_border_width_all(2)
 		btn.add_theme_stylebox_override("hover", btn_hover)
 		if body_font:
 			btn.add_theme_font_override("font", body_font)
 		btn.add_theme_font_size_override("font_size", 14)
-		btn.add_theme_color_override("font_color", MerlinVisual.PALETTE.ink)
+		btn.add_theme_color_override("font_color", MerlinVisual.CRT_PALETTE.phosphor)
 		vbox.add_child(btn)
 		biome_buttons[key] = btn
 	add_child(biome_panel)
@@ -1101,7 +1092,7 @@ func _on_biome_selected(key: String) -> void:
 	# Visual feedback
 	for k in biome_buttons:
 		if k == key:
-			biome_buttons[k].add_theme_color_override("font_color", MerlinVisual.PALETTE.accent)
+			biome_buttons[k].add_theme_color_override("font_color", MerlinVisual.CRT_PALETTE.amber)
 		else:
 			biome_buttons[k].modulate.a = 0.4
 
@@ -1246,7 +1237,7 @@ func _on_response_chosen(index: int) -> void:
 	_response_chosen = index
 	for i in range(response_buttons.size()):
 		if i == index:
-			response_buttons[i].add_theme_color_override("font_color", MerlinVisual.PALETTE.accent)
+			response_buttons[i].add_theme_color_override("font_color", MerlinVisual.CRT_PALETTE.amber)
 		else:
 			response_buttons[i].modulate.a = 0.4
 

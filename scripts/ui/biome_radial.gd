@@ -57,9 +57,9 @@ const BACKGROUND_ALPHA := 0.4
 var _is_open := false
 var _center_pos := Vector2.ZERO
 var _hovered_index := -1
-var _biome_positions := []
-var _biome_scales := []
-var _biome_current_scales := []
+var _biome_positions: Array[Vector2] = []
+var _biome_scales: Array[float] = []
+var _biome_current_scales: Array[float] = []
 
 # === LIFECYCLE ===
 
@@ -230,9 +230,9 @@ func _is_point_in_icon(pos: Vector2, index: int) -> bool:
 	if index < 0 or index >= _biome_positions.size():
 		return false
 
-	var icon_pos := _biome_positions[index]
+	var icon_pos: Vector2 = _biome_positions[index]
 	var distance := pos.distance_to(icon_pos)
-	var scaled_radius := ICON_RADIUS * _biome_scales[index]
+	var scaled_radius: float = ICON_RADIUS * _biome_scales[index]
 
 	return distance <= scaled_radius
 
@@ -240,17 +240,17 @@ func _draw_biome_icon(index: int) -> void:
 	if _biome_scales[index] <= 0.0:
 		return
 
-	var pos := _biome_positions[index]
-	var scale := _biome_scales[index] * _biome_current_scales[index]
+	var pos: Vector2 = _biome_positions[index]
+	var scale: float = _biome_scales[index] * _biome_current_scales[index]
 
 	# Get biome accent color
-	var biome_key := BIOMES[index]
-	var profile_key := BIOME_PROFILE_KEYS[biome_key]
+	var biome_key: String = BIOMES[index]
+	var profile_key: String = BIOME_PROFILE_KEYS[biome_key]
 	var c_accent: Color = MerlinVisual.BIOME_ART_PROFILES[profile_key]["accent"]
-	var c_outline: Color = MerlinVisual.PALETTE["gbc_dark_1"]
+	var c_outline: Color = MerlinVisual.GBC["dark_gray"]
 
 	# Draw circle background
-	var radius := ICON_RADIUS * scale
+	var radius: float = ICON_RADIUS * scale
 	draw_circle(pos, radius, c_accent)
 	draw_arc(pos, radius, 0.0, TAU, 32, c_outline, 1.0, true)
 
@@ -283,7 +283,7 @@ func _draw_procedural_icon(pos: Vector2, profile_key: String, scale: float) -> v
 
 func _draw_forest_icon(pos: Vector2, size: float) -> void:
 	# 3 triangle trees
-	var c_tree: Color = MerlinVisual.PALETTE["gbc_dark_2"]
+	var c_tree: Color = MerlinVisual.GBC["gray"]
 	var spacing := size * 0.3
 
 	for i in 3:
@@ -293,7 +293,7 @@ func _draw_forest_icon(pos: Vector2, size: float) -> void:
 
 func _draw_grass_icon(pos: Vector2, size: float) -> void:
 	# 3 wavy grass lines
-	var c_grass: Color = MerlinVisual.PALETTE["gbc_mid_1"]
+	var c_grass: Color = MerlinVisual.GBC["light_gray"]
 	var spacing := size * 0.3
 
 	for i in 3:
@@ -303,8 +303,8 @@ func _draw_grass_icon(pos: Vector2, size: float) -> void:
 
 func _draw_coast_icon(pos: Vector2, size: float) -> void:
 	# Wave curve + dot rock
-	var c_wave: Color = MerlinVisual.PALETTE["gbc_light_1"]
-	var c_rock: Color = MerlinVisual.PALETTE["gbc_dark_2"]
+	var c_wave: Color = MerlinVisual.GBC["cream"]
+	var c_rock: Color = MerlinVisual.GBC["gray"]
 
 	# Simple wave as arc
 	draw_arc(pos, size * 0.4, 0.0, PI, 16, c_wave, 1.5, true)
@@ -314,7 +314,7 @@ func _draw_coast_icon(pos: Vector2, size: float) -> void:
 
 func _draw_village_icon(pos: Vector2, size: float) -> void:
 	# Simple house shape
-	var c_house: Color = MerlinVisual.PALETTE["gbc_mid_2"]
+	var c_house: Color = MerlinVisual.GBC["cream"]
 
 	# House base
 	var rect := Rect2(pos - Vector2(size * 0.3, size * 0.1), Vector2(size * 0.6, size * 0.4))
@@ -325,7 +325,7 @@ func _draw_village_icon(pos: Vector2, size: float) -> void:
 
 func _draw_stones_icon(pos: Vector2, size: float) -> void:
 	# 3 vertical menhirs
-	var c_stone: Color = MerlinVisual.PALETTE["gbc_mid_1"]
+	var c_stone: Color = MerlinVisual.GBC["light_gray"]
 	var spacing := size * 0.3
 
 	for i in 3:
@@ -335,8 +335,8 @@ func _draw_stones_icon(pos: Vector2, size: float) -> void:
 
 func _draw_marsh_icon(pos: Vector2, size: float) -> void:
 	# Wavy water + small dot
-	var c_water: Color = MerlinVisual.PALETTE["gbc_light_1"]
-	var c_plant: Color = MerlinVisual.PALETTE["gbc_mid_2"]
+	var c_water: Color = MerlinVisual.GBC["cream"]
+	var c_plant: Color = MerlinVisual.GBC["cream"]
 
 	# Water waves
 	draw_arc(pos, size * 0.35, 0.0, PI, 16, c_water, 1.5, true)
@@ -346,8 +346,8 @@ func _draw_marsh_icon(pos: Vector2, size: float) -> void:
 
 func _draw_hills_icon(pos: Vector2, size: float) -> void:
 	# Hill curve + dolmen rectangle
-	var c_hill: Color = MerlinVisual.PALETTE["gbc_mid_1"]
-	var c_stone: Color = MerlinVisual.PALETTE["gbc_dark_2"]
+	var c_hill: Color = MerlinVisual.GBC["light_gray"]
+	var c_stone: Color = MerlinVisual.GBC["gray"]
 
 	# Hill arc
 	draw_arc(pos + Vector2(0, size * 0.2), size * 0.4, PI, TAU, 16, c_hill, 2.0, true)
@@ -365,7 +365,7 @@ func _draw_triangle(pos: Vector2, size: float, color: Color) -> void:
 	draw_colored_polygon(points, color)
 
 func _draw_biome_label(pos: Vector2, biome_key: String) -> void:
-	var label_text := BIOME_SHORT_NAMES[biome_key]
+	var label_text: String = BIOME_SHORT_NAMES[biome_key]
 	var font := MerlinVisual.get_font("body")
 	var font_size := 10
 
@@ -373,9 +373,9 @@ func _draw_biome_label(pos: Vector2, biome_key: String) -> void:
 	var label_pos := pos + Vector2(-text_size.x * 0.5, ICON_RADIUS + 16.0)
 
 	# Shadow
-	var c_shadow: Color = MerlinVisual.PALETTE["gbc_dark_0"]
+	var c_shadow: Color = MerlinVisual.GBC["black"]
 	draw_string(font, label_pos + Vector2(1, 1), label_text, HORIZONTAL_ALIGNMENT_CENTER, -1, font_size, c_shadow)
 
 	# Text
-	var c_text: Color = MerlinVisual.PALETTE["gbc_light_0"]
+	var c_text: Color = MerlinVisual.GBC["white"]
 	draw_string(font, label_pos, label_text, HORIZONTAL_ALIGNMENT_CENTER, -1, font_size, c_text)

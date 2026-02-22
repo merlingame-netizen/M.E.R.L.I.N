@@ -107,8 +107,8 @@ const REWARD_TYPES := {
 	"vie": {"icon": "\u2764", "label": "Vie", "color_key": "danger"},
 	"essence": {"icon": "#", "label": "Essence", "color_key": "bestiole"},
 	"souffle": {"icon": "*", "label": "Souffle", "color_key": "souffle"},
-	"karma": {"icon": "\u2726", "label": "Karma", "color_key": "celtic_gold"},
-	"mystere": {"icon": "?", "label": "Mystere", "color_key": "accent"},
+	"karma": {"icon": "\u2726", "label": "Karma", "color_key": "amber_bright"},
+	"mystere": {"icon": "?", "label": "Mystere", "color_key": "amber"},
 }
 
 

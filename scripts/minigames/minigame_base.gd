@@ -12,15 +12,15 @@ var _started: bool = false
 var _finished: bool = false
 var _start_time_ms: int = 0
 
-# Colors matching the parchment theme
+# Colors matching the CRT terminal theme
 const MG_PALETTE := {
-	"bg": Color(0.965, 0.945, 0.905, 0.95),
-	"ink": Color(0.22, 0.18, 0.14),
-	"accent": Color(0.58, 0.44, 0.26),
-	"gold": Color(0.68, 0.55, 0.32),
-	"green": Color(0.25, 0.55, 0.25),
-	"red": Color(0.65, 0.20, 0.15),
-	"paper": Color(0.955, 0.930, 0.890),
+	"bg": Color(0.06, 0.12, 0.06, 0.95),
+	"ink": Color(0.20, 1.00, 0.40),
+	"accent": Color(1.00, 0.75, 0.20),
+	"gold": Color(1.00, 0.85, 0.40),
+	"green": Color(0.20, 1.00, 0.40),
+	"red": Color(1.00, 0.25, 0.20),
+	"paper": Color(0.04, 0.08, 0.04),
 }
 
 

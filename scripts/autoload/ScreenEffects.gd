@@ -1,13 +1,14 @@
-extends CanvasLayer
+extends Node
 class_name ScreenEffectsManager
-## ScreenEffects - Global screen distortion overlay
-## Autoload singleton that applies subtle screen imperfections to the entire game
+## ScreenEffects — Mood-driven CRT distortion controller
+## Autoload singleton that controls the CRT terminal post-process via CRTLayer.
+## No longer renders its own overlay — delegates all shader parameters to ScreenDither.
 ##
 ## Usage:
 ##   ScreenEffects.enable()
 ##   ScreenEffects.disable()
 ##   ScreenEffects.set_intensity(0.5)
-##   ScreenEffects.set_effect("chromatic", false)
+##   ScreenEffects.set_merlin_mood("mystique")
 
 # === SIGNALS ===
 signal effects_enabled
@@ -16,13 +17,12 @@ signal intensity_changed(new_intensity: float)
 signal mood_changed(mood: String)
 
 # === CONSTANTS ===
-const SHADER_PATH := "res://shaders/screen_distortion.gdshader"
 const FADE_DURATION := 0.3
 const MOOD_TRANSITION_DURATION := 0.6
 
 # === MERLIN MOOD PROFILES ===
-# Each mood maps to a distortion profile reflecting Merlin's emotional connection
-# Merlin is an AI from the future — his emotions ripple through the screen itself
+# Each mood maps to CRT distortion parameters reflecting Merlin's emotional state.
+# Merlin is an AI from the future — his emotions ripple through the CRT screen itself.
 const MOOD_PROFILES := {
 	# Sage: connection claire, Merlin serein — quasi invisible
 	"sage": {
@@ -69,7 +69,7 @@ const MOOD_PROFILES := {
 		"vignette_intensity": 0.20,
 		"flicker_intensity": 0.018,
 	},
-	# Pensif/Melancholy: Merlin se souvient — bruit doux, vignette profonde, scanlines
+	# Pensif/Melancholy: Merlin se souvient — bruit doux, vignette profonde
 	"pensif": {
 		"chromatic_intensity": 0.001,
 		"scanline_wobble_intensity": 0.0008,
@@ -125,21 +125,17 @@ const EMOTION_TO_MOOD := {
 	"PENSIF": "pensif",
 }
 
-# === NODES ===
-var _overlay: ColorRect
-var _shader_material: ShaderMaterial
-var _tween: Tween
-var _mood_tween: Tween
-
 # === STATE ===
 var _enabled: bool = true
-var _current_intensity: float = 0.35
+var _current_intensity: float = 0.6
 var _current_mood: String = "sage"
+var _mood_tween: Tween
+var _fade_tween: Tween
 
 ## Scene to return to when pressing Back in sub-menus (Options, Calendar, etc.)
 var return_scene: String = ""
 
-# === EFFECT NAMES ===
+# === EFFECT NAMES (kept for API compatibility) ===
 const EFFECT_NAMES: Array[String] = [
 	"chromatic",
 	"scanline",
@@ -151,41 +147,18 @@ const EFFECT_NAMES: Array[String] = [
 	"flicker"
 ]
 
+
 # === LIFECYCLE ===
 
 func _ready() -> void:
-	# Set layer to render on top of everything
-	layer = 100
-
-	_create_overlay()
-	_load_shader()
+	# No longer creates its own overlay — CRTLayer handles all rendering
+	pass
 
 
-func _create_overlay() -> void:
-	_overlay = ColorRect.new()
-	_overlay.name = "DistortionOverlay"
-	_overlay.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	_overlay.color = Color(1, 1, 1, 1)  # White, shader will read screen_texture
+# === PRIVATE — CRTLayer reference ===
 
-	# Cover entire screen
-	_overlay.set_anchors_preset(Control.PRESET_FULL_RECT)
-	_overlay.offset_left = 0
-	_overlay.offset_top = 0
-	_overlay.offset_right = 0
-	_overlay.offset_bottom = 0
-
-	add_child(_overlay)
-
-
-func _load_shader() -> void:
-	var shader := load(SHADER_PATH) as Shader
-	if shader == null:
-		push_error("ScreenEffects: Could not load shader at %s" % SHADER_PATH)
-		return
-
-	_shader_material = ShaderMaterial.new()
-	_shader_material.shader = shader
-	_overlay.material = _shader_material
+func _get_crt_layer() -> Node:
+	return get_node_or_null("/root/ScreenDither")
 
 
 # === PUBLIC API ===
@@ -194,13 +167,15 @@ func _load_shader() -> void:
 func enable(fade: bool = true) -> void:
 	if _enabled:
 		return
-
 	_enabled = true
+	var crt := _get_crt_layer()
+	if crt == null:
+		return
 
-	if fade and _shader_material:
+	if fade:
 		_fade_intensity(0.0, _current_intensity, FADE_DURATION)
-	elif _shader_material:
-		_shader_material.set_shader_parameter("global_intensity", _current_intensity)
+	else:
+		crt.set_shader_parameter("global_intensity", _current_intensity)
 
 	effects_enabled.emit()
 
@@ -209,13 +184,15 @@ func enable(fade: bool = true) -> void:
 func disable(fade: bool = true) -> void:
 	if not _enabled:
 		return
-
 	_enabled = false
+	var crt := _get_crt_layer()
+	if crt == null:
+		return
 
-	if fade and _shader_material:
+	if fade:
 		_fade_intensity(_current_intensity, 0.0, FADE_DURATION)
-	elif _shader_material:
-		_shader_material.set_shader_parameter("global_intensity", 0.0)
+	else:
+		crt.set_shader_parameter("global_intensity", 0.0)
 
 	effects_disabled.emit()
 
@@ -236,11 +213,12 @@ func is_enabled() -> bool:
 ## Set global intensity (0.0 to 1.0)
 func set_intensity(intensity: float, fade: bool = false) -> void:
 	var new_intensity := clampf(intensity, 0.0, 1.0)
+	var crt := _get_crt_layer()
 
-	if fade and _shader_material:
+	if fade and crt:
 		_fade_intensity(_current_intensity, new_intensity, FADE_DURATION)
-	elif _shader_material:
-		_shader_material.set_shader_parameter("global_intensity", new_intensity)
+	elif crt:
+		crt.set_shader_parameter("global_intensity", new_intensity)
 
 	_current_intensity = new_intensity
 	intensity_changed.emit(_current_intensity)
@@ -252,9 +230,9 @@ func get_intensity() -> float:
 
 
 ## Enable/disable a specific effect
-## effect_name: "chromatic", "scanline", "glitch", "barrel", "color_shift", "noise", "vignette", "flicker"
 func set_effect(effect_name: String, enabled: bool) -> void:
-	if _shader_material == null:
+	var crt := _get_crt_layer()
+	if crt == null:
 		return
 
 	var param_name := _get_effect_param_name(effect_name)
@@ -262,31 +240,35 @@ func set_effect(effect_name: String, enabled: bool) -> void:
 		push_warning("ScreenEffects: Unknown effect name '%s'" % effect_name)
 		return
 
-	_shader_material.set_shader_parameter(param_name, enabled)
+	crt.set_shader_parameter(param_name, enabled)
 
 
 ## Check if a specific effect is enabled
 func is_effect_enabled(effect_name: String) -> bool:
-	if _shader_material == null:
+	var crt := _get_crt_layer()
+	if crt == null:
 		return false
 
 	var param_name := _get_effect_param_name(effect_name)
 	if param_name.is_empty():
 		return false
 
-	return _shader_material.get_shader_parameter(param_name)
+	var val = crt.get_shader_parameter(param_name)
+	return val if val != null else false
 
 
 ## Set a specific shader parameter directly
 func set_parameter(param_name: String, value: Variant) -> void:
-	if _shader_material:
-		_shader_material.set_shader_parameter(param_name, value)
+	var crt := _get_crt_layer()
+	if crt:
+		crt.set_shader_parameter(param_name, value)
 
 
 ## Get a shader parameter value
 func get_parameter(param_name: String) -> Variant:
-	if _shader_material:
-		return _shader_material.get_shader_parameter(param_name)
+	var crt := _get_crt_layer()
+	if crt:
+		return crt.get_shader_parameter(param_name)
 	return null
 
 
@@ -297,7 +279,6 @@ func apply_preset(preset_name: String) -> void:
 			disable(false)
 
 		"subtle":
-			# Very subtle, barely noticeable (default) - mini bugs only
 			_apply_preset_values({
 				"global_intensity": 1.0,
 				"chromatic_intensity": 0.0008,
@@ -311,7 +292,6 @@ func apply_preset(preset_name: String) -> void:
 			})
 
 		"medium":
-			# More noticeable but not distracting
 			_apply_preset_values({
 				"global_intensity": 1.0,
 				"chromatic_intensity": 0.002,
@@ -325,7 +305,6 @@ func apply_preset(preset_name: String) -> void:
 			})
 
 		"intense":
-			# Clearly visible retro/VHS feel
 			_apply_preset_values({
 				"global_intensity": 1.0,
 				"chromatic_intensity": 0.008,
@@ -339,7 +318,6 @@ func apply_preset(preset_name: String) -> void:
 			})
 
 		"mobile":
-			# Optimized for mobile - fewer effects, lower intensity
 			_apply_preset_values({
 				"global_intensity": 0.8,
 				"chromatic_enabled": false,
@@ -357,7 +335,6 @@ func apply_preset(preset_name: String) -> void:
 			})
 
 		"glitch_heavy":
-			# For dramatic moments
 			_apply_preset_values({
 				"global_intensity": 1.0,
 				"glitch_probability": 0.15,
@@ -370,14 +347,15 @@ func apply_preset(preset_name: String) -> void:
 			push_warning("ScreenEffects: Unknown preset '%s'" % preset_name)
 
 
-## ═══════════════════════════════════════════════════════════════════════════════
-## MERLIN MOOD SYSTEM — Screen as emotional membrane
-## ═══════════════════════════════════════════════════════════════════════════════
+# ═══════════════════════════════════════════════════════════════════════════════
+# MERLIN MOOD SYSTEM — Screen as emotional membrane
+# ═══════════════════════════════════════════════════════════════════════════════
 
 ## Set Merlin's mood directly (sage, amuse, mystique, serieux, pensif, warm, cryptic)
 ## Smoothly transitions the distortion profile over MOOD_TRANSITION_DURATION
 func set_merlin_mood(mood_name: String) -> void:
-	if _shader_material == null:
+	var crt := _get_crt_layer()
+	if crt == null:
 		return
 
 	var mood_key := mood_name.to_lower()
@@ -395,10 +373,10 @@ func set_merlin_mood(mood_name: String) -> void:
 	if _mood_tween:
 		_mood_tween.kill()
 
-	# Collect valid tweeners first to avoid empty Tween error
+	# Collect valid tweeners
 	var tweens_to_add: Array[Dictionary] = []
 	for param_name: String in profile:
-		var raw_value = _shader_material.get_shader_parameter(param_name)
+		var raw_value = crt.get_shader_parameter(param_name)
 		if raw_value == null:
 			continue
 		tweens_to_add.append({
@@ -418,7 +396,7 @@ func set_merlin_mood(mood_name: String) -> void:
 
 	for t in tweens_to_add:
 		_mood_tween.tween_method(
-			_set_shader_param.bind(t["param"]),
+			_set_crt_param.bind(t["param"]),
 			t["from"],
 			t["to"],
 			MOOD_TRANSITION_DURATION
@@ -447,48 +425,50 @@ func get_merlin_mood() -> String:
 ## Temporarily spike distortion for narrative shock moments
 ## Returns to current mood after duration
 func narrative_shock(duration: float = 0.4) -> void:
-	if _shader_material == null:
+	var crt := _get_crt_layer()
+	if crt == null:
 		return
 
 	# Save current values
-	var saved_glitch_prob: float = _shader_material.get_shader_parameter("glitch_probability")
-	var saved_glitch_int: float = _shader_material.get_shader_parameter("glitch_intensity")
-	var saved_chromatic: float = _shader_material.get_shader_parameter("chromatic_intensity")
-	var saved_barrel: float = _shader_material.get_shader_parameter("barrel_intensity")
+	var saved_glitch_prob: float = crt.get_shader_parameter("glitch_probability")
+	var saved_glitch_int: float = crt.get_shader_parameter("glitch_intensity")
+	var saved_chromatic: float = crt.get_shader_parameter("chromatic_intensity")
+	var saved_barrel: float = crt.get_shader_parameter("barrel_intensity")
 
 	# Spike all distortions
-	_shader_material.set_shader_parameter("glitch_probability", 0.2)
-	_shader_material.set_shader_parameter("glitch_intensity", 0.015)
-	_shader_material.set_shader_parameter("chromatic_intensity", 0.008)
-	_shader_material.set_shader_parameter("barrel_intensity", 0.02)
+	crt.set_shader_parameter("glitch_probability", 0.2)
+	crt.set_shader_parameter("glitch_intensity", 0.015)
+	crt.set_shader_parameter("chromatic_intensity", 0.008)
+	crt.set_shader_parameter("barrel_intensity", 0.02)
 
 	await get_tree().create_timer(duration).timeout
 
-	# Restore smoothly with deceleration
+	# Restore smoothly
 	var restore := create_tween().set_parallel(true)
 	restore.set_ease(Tween.EASE_OUT)
 	restore.set_trans(Tween.TRANS_QUAD)
-	restore.tween_method(_set_shader_param.bind("glitch_probability"), 0.2, saved_glitch_prob, 0.3)
-	restore.tween_method(_set_shader_param.bind("glitch_intensity"), 0.015, saved_glitch_int, 0.3)
-	restore.tween_method(_set_shader_param.bind("chromatic_intensity"), 0.008, saved_chromatic, 0.3)
-	restore.tween_method(_set_shader_param.bind("barrel_intensity"), 0.02, saved_barrel, 0.3)
+	restore.tween_method(_set_crt_param.bind("glitch_probability"), 0.2, saved_glitch_prob, 0.3)
+	restore.tween_method(_set_crt_param.bind("glitch_intensity"), 0.015, saved_glitch_int, 0.3)
+	restore.tween_method(_set_crt_param.bind("chromatic_intensity"), 0.008, saved_chromatic, 0.3)
+	restore.tween_method(_set_crt_param.bind("barrel_intensity"), 0.02, saved_barrel, 0.3)
 
 
 ## Temporarily increase glitch intensity for dramatic moments
 func glitch_pulse(duration: float = 0.5, intensity: float = 0.1) -> void:
-	if _shader_material == null:
+	var crt := _get_crt_layer()
+	if crt == null:
 		return
 
-	var original_prob: float = _shader_material.get_shader_parameter("glitch_probability")
-	var original_int: float = _shader_material.get_shader_parameter("glitch_intensity")
+	var original_prob: float = crt.get_shader_parameter("glitch_probability")
+	var original_int: float = crt.get_shader_parameter("glitch_intensity")
 
-	_shader_material.set_shader_parameter("glitch_probability", intensity)
-	_shader_material.set_shader_parameter("glitch_intensity", 0.02)
+	crt.set_shader_parameter("glitch_probability", intensity)
+	crt.set_shader_parameter("glitch_intensity", 0.02)
 
 	await get_tree().create_timer(duration).timeout
 
-	_shader_material.set_shader_parameter("glitch_probability", original_prob)
-	_shader_material.set_shader_parameter("glitch_intensity", original_int)
+	crt.set_shader_parameter("glitch_probability", original_prob)
+	crt.set_shader_parameter("glitch_intensity", original_int)
 
 
 # === PRIVATE HELPERS ===
@@ -507,33 +487,34 @@ func _get_effect_param_name(effect_name: String) -> String:
 
 
 func _fade_intensity(from: float, to: float, duration: float) -> void:
-	if _tween:
-		_tween.kill()
+	if _fade_tween:
+		_fade_tween.kill()
 
-	_tween = create_tween()
-	_tween.set_ease(Tween.EASE_OUT)
-	_tween.set_trans(Tween.TRANS_QUAD)
-
-	# Animate via callback since we're setting shader params
-	_tween.tween_method(_set_shader_intensity, from, to, duration)
+	_fade_tween = create_tween()
+	_fade_tween.set_ease(Tween.EASE_OUT)
+	_fade_tween.set_trans(Tween.TRANS_QUAD)
+	_fade_tween.tween_method(_set_crt_intensity, from, to, duration)
 
 
-func _set_shader_intensity(value: float) -> void:
-	if _shader_material:
-		_shader_material.set_shader_parameter("global_intensity", value)
+func _set_crt_intensity(value: float) -> void:
+	var crt := _get_crt_layer()
+	if crt:
+		crt.set_shader_parameter("global_intensity", value)
 
 
-func _set_shader_param(value: float, param_name: String) -> void:
-	if _shader_material:
-		_shader_material.set_shader_parameter(param_name, value)
+func _set_crt_param(value: float, param_name: String) -> void:
+	var crt := _get_crt_layer()
+	if crt:
+		crt.set_shader_parameter(param_name, value)
 
 
 func _apply_preset_values(values: Dictionary) -> void:
-	if _shader_material == null:
+	var crt := _get_crt_layer()
+	if crt == null:
 		return
 
 	for param_name: String in values:
-		_shader_material.set_shader_parameter(param_name, values[param_name])
+		crt.set_shader_parameter(param_name, values[param_name])
 
 	if values.has("global_intensity"):
 		_current_intensity = values["global_intensity"]

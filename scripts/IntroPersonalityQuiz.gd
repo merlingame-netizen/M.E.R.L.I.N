@@ -12,7 +12,7 @@ signal quiz_completed(traits: Dictionary)
 const NEXT_SCENE := "res://scenes/SceneRencontreMerlin.tscn"
 const MENU_SCENE := "res://scenes/MenuPrincipal.tscn"
 
-# PALETTE constant removed — using MerlinVisual.PALETTE autoload
+# PALETTE constant removed — using MerlinVisual.CRT_PALETTE autoload
 
 const FADE_DURATION := 1.5
 const TEXT_FADE_DURATION := 0.8
@@ -323,7 +323,7 @@ func _build_skip_button() -> void:
 		skip_button.add_theme_font_override("font", body_font)
 	skip_button.add_theme_font_size_override("font_size", 16)
 	skip_button.add_theme_color_override("font_color", Color(0.92, 0.88, 0.80, 0.6))
-	skip_button.add_theme_color_override("font_hover_color", MerlinVisual.PALETTE.accent)
+	skip_button.add_theme_color_override("font_hover_color", MerlinVisual.CRT_PALETTE.amber)
 	skip_button.pressed.connect(_show_skip_modal)
 	add_child(skip_button)
 
@@ -340,7 +340,7 @@ func _build_skip_button() -> void:
 	var modal_style := StyleBoxFlat.new()
 	modal_style.bg_color = Color(0.08, 0.08, 0.12, 0.95)
 	modal_style.set_border_width_all(2)
-	modal_style.border_color = MerlinVisual.PALETTE.accent
+	modal_style.border_color = MerlinVisual.CRT_PALETTE.amber
 	modal_style.set_corner_radius_all(8)
 	modal_style.content_margin_left = 24
 	modal_style.content_margin_right = 24
@@ -393,8 +393,8 @@ func _build_skip_button() -> void:
 	if body_font:
 		continue_btn.add_theme_font_override("font", body_font)
 	continue_btn.add_theme_font_size_override("font_size", 16)
-	continue_btn.add_theme_color_override("font_color", MerlinVisual.PALETTE.accent)
-	continue_btn.add_theme_color_override("font_hover_color", MerlinVisual.PALETTE.choice_hover)
+	continue_btn.add_theme_color_override("font_color", MerlinVisual.CRT_PALETTE.amber)
+	continue_btn.add_theme_color_override("font_hover_color", MerlinVisual.CRT_PALETTE.choice_hover)
 	continue_btn.pressed.connect(_skip_to_next_scene)
 	buttons_hbox.add_child(continue_btn)
 
@@ -545,9 +545,9 @@ func _create_choice_button(text: String, index: int) -> Button:
 	if body_font:
 		btn.add_theme_font_override("font", body_font)
 	btn.add_theme_font_size_override("font_size", 20)
-	btn.add_theme_color_override("font_color", MerlinVisual.PALETTE.choice_normal)
-	btn.add_theme_color_override("font_hover_color", MerlinVisual.PALETTE.choice_hover)
-	btn.add_theme_color_override("font_pressed_color", MerlinVisual.PALETTE.choice_selected)
+	btn.add_theme_color_override("font_color", MerlinVisual.CRT_PALETTE.choice_normal)
+	btn.add_theme_color_override("font_hover_color", MerlinVisual.CRT_PALETTE.choice_hover)
+	btn.add_theme_color_override("font_pressed_color", MerlinVisual.CRT_PALETTE.choice_selected)
 
 	# Connect signals
 	btn.pressed.connect(func(): _on_choice_selected(index))
@@ -594,7 +594,7 @@ func _on_choice_selected(choice_index: int) -> void:
 
 	# Flash selected button
 	var selected_btn: Button = choice_buttons[choice_index]
-	selected_btn.add_theme_color_override("font_color", MerlinVisual.PALETTE.choice_selected)
+	selected_btn.add_theme_color_override("font_color", MerlinVisual.CRT_PALETTE.choice_selected)
 
 	# Pixel dissolve all
 	var pca: Node = get_node_or_null("/root/PixelContentAnimator")
@@ -676,7 +676,7 @@ func _show_personality_reveal(personality: Dictionary) -> void:
 	# Phase 2: Archetype title
 	question_label.text = archetype_title
 	question_label.add_theme_font_size_override("font_size", 42)
-	question_label.add_theme_color_override("font_color", MerlinVisual.PALETTE.accent)
+	question_label.add_theme_color_override("font_color", MerlinVisual.CRT_PALETTE.amber)
 	question_label.modulate.a = 0.0
 	if sfx:
 		sfx.play("magic_reveal")

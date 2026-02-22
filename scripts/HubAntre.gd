@@ -69,7 +69,7 @@ const BIOME_DATA := {
 	"cercles_pierres": {
 		"name": "Cercles de Pierres",
 		"subtitle": "Ou le temps hesite",
-		"color": MerlinVisual.PALETTE.inactive,
+		"color": MerlinVisual.CRT_PALETTE.inactive,
 		"ogham": "huath",
 		"guardian": "Keridwen",
 		"season": "samhain",
@@ -164,10 +164,10 @@ const MERLIN_GREETINGS := {
 # =============================================================================
 
 const HOTSPOT_DEFS := [
-	{"name": "calendar", "icon": 0, "label": "Calendrier", "palette_key": "celtic_gold", "ratio": Vector2(0.08, 0.10)},
-	{"name": "options", "icon": 3, "label": "Options", "palette_key": "ink_soft", "ratio": Vector2(0.86, 0.10)},
-	{"name": "arbre", "icon": 1, "label": "Arbre", "palette_key": "celtic_green", "ratio": Vector2(0.06, 0.45)},
-	{"name": "collection", "icon": 2, "label": "Collection", "palette_key": "celtic_brown", "ratio": Vector2(0.88, 0.45)},
+	{"name": "calendar", "icon": 0, "label": "Calendrier", "palette_key": "amber_bright", "ratio": Vector2(0.08, 0.10)},
+	{"name": "options", "icon": 3, "label": "Options", "palette_key": "phosphor_dim", "ratio": Vector2(0.86, 0.10)},
+	{"name": "arbre", "icon": 1, "label": "Arbre", "palette_key": "phosphor_dim", "ratio": Vector2(0.06, 0.45)},
+	{"name": "collection", "icon": 2, "label": "Collection", "palette_key": "amber_dim", "ratio": Vector2(0.88, 0.45)},
 ]
 
 # =============================================================================
@@ -263,10 +263,9 @@ func _load_player_data() -> void:
 
 
 func _configure_background() -> void:
-	parchment_bg.color = Color(0.12, 0.11, 0.10)
-	parchment_bg.modulate = MerlinVisual.get_seasonal_tint()
-	var seasonal: Dictionary = MerlinVisual.get_seasonal_palette()
-	mist_layer.color = seasonal.get("fog_tint", MerlinVisual.PALETTE["mist"])
+	parchment_bg.material = null
+	parchment_bg.color = MerlinVisual.CRT_PALETTE.bg_dark
+	mist_layer.color = MerlinVisual.CRT_PALETTE.mist
 
 
 func _setup_audio() -> void:
@@ -342,7 +341,7 @@ func _create_hotspots() -> void:
 	for def in HOTSPOT_DEFS:
 		var hs := HubHotspot.new()
 		var icon_type: int = def["icon"]
-		hs.setup(icon_type, def["name"], def["label"], MerlinVisual.PALETTE[def["palette_key"]])
+		hs.setup(icon_type, def["name"], def["label"], MerlinVisual.CRT_PALETTE[def["palette_key"]])
 		hs.position = vp * Vector2(def["ratio"])
 		add_child(hs)
 		hs.hotspot_hovered.connect(_on_hotspot_hovered)
@@ -378,32 +377,32 @@ func _create_partir_button() -> void:
 
 func _style_partir_button() -> void:
 	var style := StyleBoxFlat.new()
-	style.bg_color = MerlinVisual.PALETTE["accent"]
-	style.border_color = MerlinVisual.PALETTE["celtic_gold"]
+	style.bg_color = MerlinVisual.CRT_PALETTE["amber"]
+	style.border_color = MerlinVisual.CRT_PALETTE["amber_bright"]
 	style.set_border_width_all(2)
 	style.set_corner_radius_all(6)
 	style.content_margin_left = 28
 	style.content_margin_right = 28
 	style.content_margin_top = 12
 	style.content_margin_bottom = 12
-	style.shadow_color = MerlinVisual.PALETTE["shadow"]
+	style.shadow_color = MerlinVisual.CRT_PALETTE["shadow"]
 	style.shadow_size = 10
 	style.shadow_offset = Vector2(0, 4)
 	_partir_btn.add_theme_stylebox_override("normal", style)
 
 	var hover := style.duplicate()
-	hover.bg_color = MerlinVisual.PALETTE["accent_soft"]
+	hover.bg_color = MerlinVisual.CRT_PALETTE["amber_dim"]
 	hover.shadow_size = 14
 	_partir_btn.add_theme_stylebox_override("hover", hover)
 
 	var pressed := style.duplicate()
-	pressed.bg_color = MerlinVisual.PALETTE["celtic_gold"]
+	pressed.bg_color = MerlinVisual.CRT_PALETTE["amber_bright"]
 	pressed.shadow_size = 4
 	_partir_btn.add_theme_stylebox_override("pressed", pressed)
 
-	_partir_btn.add_theme_color_override("font_color", MerlinVisual.PALETTE["paper"])
-	_partir_btn.add_theme_color_override("font_hover_color", MerlinVisual.PALETTE["paper"])
-	_partir_btn.add_theme_color_override("font_pressed_color", MerlinVisual.PALETTE["ink"])
+	_partir_btn.add_theme_color_override("font_color", MerlinVisual.CRT_PALETTE["bg_panel"])
+	_partir_btn.add_theme_color_override("font_hover_color", MerlinVisual.CRT_PALETTE["bg_panel"])
+	_partir_btn.add_theme_color_override("font_pressed_color", MerlinVisual.CRT_PALETTE["phosphor"])
 
 	_partir_btn.pivot_offset = Vector2(90, 26)
 

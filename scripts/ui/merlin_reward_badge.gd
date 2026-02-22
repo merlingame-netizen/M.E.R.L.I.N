@@ -94,12 +94,12 @@ func show_for_option(option: Dictionary, above_node: Control) -> void:
 	var badge_color: Color
 	match risk_level:
 		"faible":
-			badge_color = MerlinVisual.PALETTE.get("primary", Color(0.2, 0.7, 0.3))
+			badge_color = MerlinVisual.CRT_PALETTE.get("primary", Color(0.2, 0.7, 0.3))
 		"eleve":
-			badge_color = MerlinVisual.PALETTE.get("danger", Color(0.8, 0.2, 0.2))
+			badge_color = MerlinVisual.CRT_PALETTE.get("danger", Color(0.8, 0.2, 0.2))
 		_:
-			var color_key: String = str(info.get("color_key", "accent"))
-			badge_color = MerlinVisual.PALETTE.get(color_key, MerlinVisual.PALETTE.accent)
+			var color_key: String = str(info.get("color_key", "amber"))
+			badge_color = MerlinVisual.CRT_PALETTE.get(color_key, MerlinVisual.CRT_PALETTE.amber)
 
 	_icon_label.add_theme_color_override("font_color", badge_color)
 	_text_label.add_theme_color_override("font_color", badge_color)

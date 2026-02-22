@@ -88,25 +88,25 @@ func _load_font() -> void:
 func _configure_bestiole_button() -> void:
 	# Runtime styling (depends on MerlinVisual palette)
 	var style := StyleBoxFlat.new()
-	style.bg_color = MerlinVisual.PALETTE.paper_warm
-	style.border_color = MerlinVisual.PALETTE.accent
+	style.bg_color = MerlinVisual.CRT_PALETTE.bg_panel
+	style.border_color = MerlinVisual.CRT_PALETTE.amber
 	style.set_border_width_all(2)
 	style.set_corner_radius_all(28)
-	style.shadow_color = MerlinVisual.PALETTE.shadow
+	style.shadow_color = MerlinVisual.CRT_PALETTE.shadow
 	style.shadow_size = 4
 	bestiole_button.add_theme_stylebox_override("normal", style)
 
 	var hover_style := style.duplicate() as StyleBoxFlat
-	hover_style.bg_color = MerlinVisual.PALETTE.paper
-	hover_style.border_color = MerlinVisual.PALETTE.celtic_gold
+	hover_style.bg_color = MerlinVisual.CRT_PALETTE.bg_panel
+	hover_style.border_color = MerlinVisual.CRT_PALETTE.amber_bright
 	hover_style.set_border_width_all(3)
 	bestiole_button.add_theme_stylebox_override("hover", hover_style)
 
 	var pressed_style := style.duplicate() as StyleBoxFlat
-	pressed_style.bg_color = MerlinVisual.PALETTE.accent_glow
+	pressed_style.bg_color = MerlinVisual.CRT_PALETTE.phosphor_glow
 	bestiole_button.add_theme_stylebox_override("pressed", pressed_style)
 
-	bestiole_button.add_theme_color_override("font_color", MerlinVisual.PALETTE.accent)
+	bestiole_button.add_theme_color_override("font_color", MerlinVisual.CRT_PALETTE.amber)
 	if _font:
 		bestiole_button.add_theme_font_override("font", _font)
 
@@ -119,7 +119,7 @@ func _configure_awen_display() -> void:
 		var icon := Label.new()
 		icon.text = AWEN_EMPTY
 		icon.add_theme_font_size_override("font_size", 14)
-		icon.add_theme_color_override("font_color", MerlinVisual.PALETTE.ink_soft)
+		icon.add_theme_color_override("font_color", MerlinVisual.CRT_PALETTE.phosphor_dim)
 		if _font:
 			icon.add_theme_font_override("font", _font)
 		awen_display.add_child(icon)
@@ -128,9 +128,9 @@ func _configure_awen_display() -> void:
 func _configure_wheel_overlay() -> void:
 	# Runtime color (depends on MerlinVisual palette)
 	var dim_color: Color = Color(
-		MerlinVisual.PALETTE["shadow"].r,
-		MerlinVisual.PALETTE["shadow"].g,
-		MerlinVisual.PALETTE["shadow"].b,
+		MerlinVisual.CRT_PALETTE["shadow"].r,
+		MerlinVisual.CRT_PALETTE["shadow"].g,
+		MerlinVisual.CRT_PALETTE["shadow"].b,
 		0.5
 	)
 	dim_bg.color = dim_color
@@ -144,11 +144,11 @@ func _configure_wheel_overlay() -> void:
 func _configure_tooltip() -> void:
 	# Tooltip panel style (runtime palette)
 	var style := StyleBoxFlat.new()
-	style.bg_color = MerlinVisual.PALETTE.paper
-	style.border_color = MerlinVisual.PALETTE.accent
+	style.bg_color = MerlinVisual.CRT_PALETTE.bg_panel
+	style.border_color = MerlinVisual.CRT_PALETTE.amber
 	style.set_border_width_all(2)
 	style.set_corner_radius_all(6)
-	style.shadow_color = MerlinVisual.PALETTE.shadow
+	style.shadow_color = MerlinVisual.CRT_PALETTE.shadow
 	style.shadow_size = 6
 	style.set_content_margin_all(10)
 	tooltip_panel.add_theme_stylebox_override("panel", style)
@@ -163,12 +163,12 @@ func _configure_tooltip() -> void:
 	tooltip_vbox.move_child(_tooltip_ogham_icon, 0)
 
 	# Runtime color overrides
-	tooltip_name.add_theme_color_override("font_color", MerlinVisual.PALETTE.ink)
+	tooltip_name.add_theme_color_override("font_color", MerlinVisual.CRT_PALETTE.phosphor)
 	if _font:
 		tooltip_name.add_theme_font_override("font", _font)
-	tooltip_tree.add_theme_color_override("font_color", MerlinVisual.PALETTE.ink_soft)
-	tooltip_effect.add_theme_color_override("font_color", MerlinVisual.PALETTE.accent)
-	tooltip_cost.add_theme_color_override("font_color", MerlinVisual.PALETTE.celtic_gold)
+	tooltip_tree.add_theme_color_override("font_color", MerlinVisual.CRT_PALETTE.phosphor_dim)
+	tooltip_effect.add_theme_color_override("font_color", MerlinVisual.CRT_PALETTE.amber)
+	tooltip_cost.add_theme_color_override("font_color", MerlinVisual.CRT_PALETTE.amber_bright)
 
 
 # =============================================================================
@@ -262,10 +262,10 @@ func update_awen(awen: int) -> void:
 			if icon:
 				if i < awen:
 					icon.text = AWEN_ICON
-					icon.add_theme_color_override("font_color", MerlinVisual.PALETTE.celtic_gold)
+					icon.add_theme_color_override("font_color", MerlinVisual.CRT_PALETTE.amber_bright)
 				else:
 					icon.text = AWEN_EMPTY
-					icon.add_theme_color_override("font_color", MerlinVisual.PALETTE.ink_soft)
+					icon.add_theme_color_override("font_color", MerlinVisual.CRT_PALETTE.phosphor_dim)
 
 
 func update_bond(bond: int) -> void:
@@ -274,11 +274,11 @@ func update_bond(bond: int) -> void:
 	if not bestiole_button:
 		return
 	if bond >= 81:
-		bestiole_button.add_theme_color_override("font_color", MerlinVisual.PALETTE.celtic_gold)
+		bestiole_button.add_theme_color_override("font_color", MerlinVisual.CRT_PALETTE.amber_bright)
 	elif bond >= 41:
-		bestiole_button.add_theme_color_override("font_color", MerlinVisual.PALETTE.accent)
+		bestiole_button.add_theme_color_override("font_color", MerlinVisual.CRT_PALETTE.amber)
 	else:
-		bestiole_button.add_theme_color_override("font_color", MerlinVisual.PALETTE.ink_soft)
+		bestiole_button.add_theme_color_override("font_color", MerlinVisual.CRT_PALETTE.phosphor_dim)
 
 
 func set_wheel_enabled(enabled: bool) -> void:
