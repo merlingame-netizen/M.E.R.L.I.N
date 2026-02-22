@@ -12,8 +12,6 @@ const VALID_CODES := {
 	# ═══════════════════════════════════════════════════════════════════════════
 	# TRIADE SYSTEM (v0.3.0)
 	# ═══════════════════════════════════════════════════════════════════════════
-	"SHIFT_ASPECT": 2,     # SHIFT_ASPECT:Corps:up / SHIFT_ASPECT:Ame:down
-	"SET_ASPECT": 2,       # SET_ASPECT:Monde:0 (0=EQUILIBRE, -1=BAS, 1=HAUT)
 	"USE_SOUFFLE": 1,      # USE_SOUFFLE:1
 	"ADD_SOUFFLE": 1,      # ADD_SOUFFLE:2
 	"PROGRESS_MISSION": 1, # PROGRESS_MISSION:1
@@ -23,7 +21,7 @@ const VALID_CODES := {
 	"DAMAGE_LIFE": 1,      # DAMAGE_LIFE:2 (reduce life essence)
 	"HEAL_LIFE": 1,        # HEAL_LIFE:1 (restore life essence)
 	# ═══════════════════════════════════════════════════════════════════════════
-	# REIGNS-STYLE GAUGES (DEPRECATED - kept for compatibility)
+	# LEGACY GAUGES (DEPRECATED - kept for compatibility)
 	# ═══════════════════════════════════════════════════════════════════════════
 	"ADD_GAUGE": 2,        # ADD_GAUGE:Vigueur:10
 	"REMOVE_GAUGE": 2,     # REMOVE_GAUGE:Esprit:15
@@ -151,10 +149,6 @@ func _apply_parsed(state: Dictionary, parsed: Dictionary) -> bool:
 		# ═══════════════════════════════════════════════════════════════════════
 		# TRIADE SYSTEM (v0.3.0)
 		# ═══════════════════════════════════════════════════════════════════════
-		"SHIFT_ASPECT":
-			return _apply_shift_aspect(state, args[0], args[1])
-		"SET_ASPECT":
-			return _apply_set_aspect(state, args[0], _to_int(args[1]))
 		"USE_SOUFFLE":
 			return _apply_use_souffle(state, _to_int(args[0]))
 		"ADD_SOUFFLE":
@@ -172,7 +166,7 @@ func _apply_parsed(state: Dictionary, parsed: Dictionary) -> bool:
 		"HEAL_LIFE":
 			return _apply_life_delta(state, abs(_to_int(args[0])))
 		# ═══════════════════════════════════════════════════════════════════════
-		# REIGNS-STYLE GAUGES (deprecated)
+		# LEGACY GAUGES (deprecated)
 		# ═══════════════════════════════════════════════════════════════════════
 		"ADD_GAUGE":
 			return _apply_gauge_delta(state, args[0], _to_int(args[1]))
@@ -629,11 +623,11 @@ func _to_int(value: Variant) -> int:
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
-# REIGNS-STYLE GAUGE FUNCTIONS
+# LEGACY GAUGE FUNCTIONS
 # ═══════════════════════════════════════════════════════════════════════════════
 
 func _apply_gauge_delta(state: Dictionary, gauge: String, delta: int) -> bool:
-	# Legacy Reigns gauges (deprecated — inline defaults)
+	# Legacy gauges (deprecated — inline defaults)
 	var run = state.get("run", {})
 	var gauges = run.get("gauges", {})
 	var current = int(gauges.get(gauge, 50))
@@ -644,7 +638,7 @@ func _apply_gauge_delta(state: Dictionary, gauge: String, delta: int) -> bool:
 
 
 func _apply_gauge_set(state: Dictionary, gauge: String, value: int) -> bool:
-	# Legacy Reigns gauges (deprecated — inline defaults)
+	# Legacy gauges (deprecated — inline defaults)
 	var run = state.get("run", {})
 	var gauges = run.get("gauges", {})
 	gauges[gauge] = clampi(value, 0, 100)
@@ -763,42 +757,6 @@ func _set_skill_cooldown(state: Dictionary, skill_id: String, turns: int) -> boo
 # TRIADE SYSTEM FUNCTIONS (v0.3.0)
 # ═══════════════════════════════════════════════════════════════════════════════
 
-func _apply_shift_aspect(state: Dictionary, aspect: String, direction: String) -> bool:
-	if aspect not in MerlinConstants.TRIADE_ASPECTS:
-		return false
-
-	var run = state.get("run", {})
-	var aspects = run.get("aspects", {})
-	var current_state: int = int(aspects.get(aspect, MerlinConstants.AspectState.EQUILIBRE))
-	var new_state: int = current_state
-
-	if direction == "up":
-		new_state = mini(current_state + 1, MerlinConstants.AspectState.HAUT)
-	elif direction == "down":
-		new_state = maxi(current_state - 1, MerlinConstants.AspectState.BAS)
-	else:
-		return false
-
-	aspects[aspect] = new_state
-	run["aspects"] = aspects
-	state["run"] = run
-	return true
-
-
-func _apply_set_aspect(state: Dictionary, aspect: String, new_state: int) -> bool:
-	if aspect not in MerlinConstants.TRIADE_ASPECTS:
-		return false
-
-	new_state = clampi(new_state, MerlinConstants.AspectState.BAS, MerlinConstants.AspectState.HAUT)
-
-	var run = state.get("run", {})
-	var aspects = run.get("aspects", {})
-	aspects[aspect] = new_state
-	run["aspects"] = aspects
-	state["run"] = run
-	return true
-
-
 func _apply_use_souffle(state: Dictionary, amount: int) -> bool:
 	var run = state.get("run", {})
 	var current = int(run.get("souffle", MerlinConstants.SOUFFLE_START))
@@ -866,3 +824,106 @@ func _apply_narrative_debt(state: Dictionary, debt_type: String, description: St
 	run["hidden"] = hidden
 	state["run"] = run
 	return true
+
+
+# =============================================================================
+# TWIST DETECTION — Phase 44 (narrative climax triggers)
+# =============================================================================
+
+const TWIST_TENSION_THRESHOLD := 70
+const TWIST_MIN_CARDS := 12
+const TWIST_COOLDOWN_CARDS := 8
+
+## Check if conditions are ripe for a narrative twist.
+## Returns { should_twist: bool, twist_type: String, setup_hints: Array }
+func check_twist_conditions(state: Dictionary) -> Dictionary:
+	var run: Dictionary = state.get("run", {})
+	var hidden: Dictionary = run.get("hidden", {})
+	var cards_played: int = int(run.get("cards_played", 0))
+	var tension: int = int(hidden.get("tension", 0))
+	var last_twist_card: int = int(hidden.get("last_twist_card", -100))
+
+	# Not enough cards played
+	if cards_played < TWIST_MIN_CARDS:
+		return {"should_twist": false}
+
+	# Cooldown not elapsed
+	if cards_played - last_twist_card < TWIST_COOLDOWN_CARDS:
+		return {"should_twist": false}
+
+	# Tension not high enough
+	if tension < TWIST_TENSION_THRESHOLD:
+		return {"should_twist": false}
+
+	# Check for unresolved narrative debts (setup for payoff)
+	var debts: Array = hidden.get("narrative_debt", [])
+	var unresolved: Array = []
+	for debt in debts:
+		if debt is Dictionary and not debt.get("resolved", false):
+			unresolved.append(debt)
+
+	# Must have at least one setup to pay off
+	if unresolved.is_empty():
+		return {"should_twist": false}
+
+	# Select twist type based on debt types
+	var twist_type := _select_twist_type(unresolved)
+	var setup_hints: Array = []
+	for debt in unresolved.slice(0, mini(unresolved.size(), 3)):
+		if debt is Dictionary:
+			setup_hints.append(str(debt.get("description", "")))
+
+	return {
+		"should_twist": true,
+		"twist_type": twist_type,
+		"setup_hints": setup_hints,
+		"tension": tension,
+		"cards_played": cards_played,
+	}
+
+
+## Mark a twist as triggered (updates cooldown, reduces tension).
+func record_twist_triggered(state: Dictionary) -> void:
+	var run: Dictionary = state.get("run", {})
+	var hidden: Dictionary = run.get("hidden", {})
+	hidden["last_twist_card"] = int(run.get("cards_played", 0))
+	# Tension drops after twist payoff
+	hidden["tension"] = maxi(int(hidden.get("tension", 0)) - 30, 0)
+	# Mark oldest unresolved debt as resolved
+	var debts: Array = hidden.get("narrative_debt", [])
+	for i in range(debts.size()):
+		if debts[i] is Dictionary and not debts[i].get("resolved", false):
+			debts[i]["resolved"] = true
+			break
+	hidden["narrative_debt"] = debts
+	run["hidden"] = hidden
+	state["run"] = run
+
+
+func _select_twist_type(unresolved_debts: Array) -> String:
+	## Select twist type based on narrative debt types.
+	var debt_types: Array[String] = []
+	for debt in unresolved_debts:
+		if debt is Dictionary:
+			debt_types.append(str(debt.get("type", "")))
+
+	if "trahison" in debt_types or "betrayal" in debt_types:
+		return "identite_cachee"
+	elif "consequence" in debt_types:
+		return "consequence_differee"
+	elif "promesse" in debt_types or "promise" in debt_types:
+		return "fausse_victoire"
+	else:
+		return "motivation_inversee"
+
+
+## Get all unresolved narrative debts.
+func get_unresolved_debts(state: Dictionary) -> Array:
+	var run: Dictionary = state.get("run", {})
+	var hidden: Dictionary = run.get("hidden", {})
+	var debts: Array = hidden.get("narrative_debt", [])
+	var unresolved: Array = []
+	for debt in debts:
+		if debt is Dictionary and not debt.get("resolved", false):
+			unresolved.append(debt)
+	return unresolved

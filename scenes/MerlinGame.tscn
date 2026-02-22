@@ -1,16 +1,9 @@
 [gd_scene load_steps=3 format=3 uid="uid://triade_game_scene"]
 
-[ext_resource type="Script" path="res://scripts/ui/triade_game_controller.gd" id="1_controller"]
-[ext_resource type="Script" path="res://scripts/ui/triade_game_ui.gd" id="2_ui"]
+[ext_resource type="Script" path="res://scripts/ui/merlin_game_controller.gd" id="1_controller"]
+[ext_resource type="PackedScene" path="res://scenes/ui/MerlinGameUI.tscn" id="2_ui_scene"]
 
-[node name="TriadeGame" type="Node"]
+[node name="MerlinGame" type="Node"]
 script = ExtResource("1_controller")
 
-[node name="TriadeGameUI" type="Control" parent="."]
-layout_mode = 3
-anchors_preset = 15
-anchor_right = 1.0
-anchor_bottom = 1.0
-grow_horizontal = 2
-grow_vertical = 2
-script = ExtResource("2_ui")
+[node name="MerlinGameUI" parent="." instance=ExtResource("2_ui_scene")]

@@ -16,14 +16,14 @@ const SCENES: Array[Dictionary] = [
 	{"label": "MenuOptions", "path": "res://scenes/MenuOptions.tscn"},
 	{"label": "SelectionSauvegarde", "path": "res://scenes/SelectionSauvegarde.tscn"},
 	# — Gameplay —
-	{"label": "TriadeGame", "path": "res://scenes/TriadeGame.tscn"},
+	{"label": "MerlinGame", "path": "res://scenes/MerlinGame.tscn"},
 	{"label": "MapMonde", "path": "res://scenes/MapMonde.tscn"},
 	# — Collections —
 	{"label": "Calendar", "path": "res://scenes/Calendar.tscn"},
 	{"label": "Collection", "path": "res://scenes/Collection.tscn"},
 	{"label": "ArbreDeVie", "path": "res://scenes/ArbreDeVie.tscn"},
 	# — Test —
-	{"label": "TestTriadeLLMBenchmark", "path": "res://scenes/TestTriadeLLMBenchmark.tscn"},
+	{"label": "TestMerlinLLMBenchmark", "path": "res://scenes/TestMerlinLLMBenchmark.tscn"},
 ]
 
 # === NODES ===
@@ -173,7 +173,7 @@ func _on_scene_selected(index: int) -> void:
 	_is_open = false
 	_dropdown.visible = false
 	_toggle_btn.text = "Scenes"
-	get_tree().change_scene_to_file(scene_path)
+	PixelTransition.transition_instant(scene_path)
 
 
 func _refresh_current_highlight() -> void:

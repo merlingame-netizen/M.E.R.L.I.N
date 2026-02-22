@@ -68,7 +68,7 @@ const MAX_RETRIES := 2
 
 # Guardrails
 const GUARDRAIL_MIN_TEXT_LEN := 10
-const GUARDRAIL_MAX_TEXT_LEN := 1200  # LLM with 250 max_tokens can produce up to ~1000 chars
+const GUARDRAIL_MAX_TEXT_LEN := 1200  # LLM with 200 max_tokens can produce up to ~1000 chars
 const GUARDRAIL_LANG_KEYWORDS := ["le", "la", "de", "un", "une", "du", "les", "des", "en", "et"]
 const GUARDRAIL_LANG_THRESHOLD := 2  # min French keywords to pass
 var _recent_card_texts: Array[String] = []
@@ -258,6 +258,21 @@ func generate_card(game_state: Dictionary) -> Dictionary:
 		_current_context = {}
 	_refresh_scene_context()
 
+	# Scenario system: inject anchor/theme into context
+	if _store and _store.has_method("get_scenario_manager"):
+		var scenario_mgr = _store.get_scenario_manager()
+		if scenario_mgr and scenario_mgr.is_scenario_active():
+			var cards_played: int = int(game_state.get("run", {}).get("cards_played", 0))
+			var game_flags: Dictionary = game_state.get("flags", {})
+			var anchor: Dictionary = scenario_mgr.get_anchor_for_card(cards_played, game_flags)
+			if not anchor.is_empty():
+				_current_context["scenario_anchor"] = anchor
+				_current_context["force_anchor"] = true
+			_current_context["scenario_theme"] = scenario_mgr.get_theme_injection()
+			_current_context["scenario_tone"] = scenario_mgr.get_scenario_tone()
+			_current_context["scenario_title"] = scenario_mgr.get_scenario_title()
+			_current_context["scenario_ambient_tags"] = scenario_mgr.get_ambient_tags()
+
 	# Check if prefetched card is available and relevant
 	card = _try_use_prefetch(game_state)
 	if not card.is_empty():
@@ -273,6 +288,16 @@ func generate_card(game_state: Dictionary) -> Dictionary:
 				_current_context["event_category"] = _last_event_selection.get("category", "")
 				_current_context["event_sub_type"] = _last_event_selection.get("sub_type", "")
 				_current_context["narrator_guidance"] = _last_event_selection.get("narrator_guidance", "")
+				_current_context["effect_profile"] = _last_event_selection.get("effect_profile", {})
+
+			# Card modifier selection (card-typology phase)
+			var category_str: String = str(_current_context.get("event_category", ""))
+			var modifier: Dictionary = event_selector.select_modifier(game_state, category_str)
+			if not modifier.is_empty():
+				_current_context["card_modifier"] = modifier
+				event_selector.record_modifier(str(modifier.get("modifier", "")))
+			else:
+				event_selector.record_modifier("")
 
 		# Calendar event injection (CAL-REQ-060: ~15% chance)
 		var calendar_card := _try_calendar_event(game_state)
@@ -302,6 +327,33 @@ func generate_card(game_state: Dictionary) -> Dictionary:
 	# Post-process (apply difficulty scaling, etc.)
 	if difficulty_adapter:
 		card = _post_process_card(card)
+
+	# Tag scenario anchor cards for controller resolution
+	if _current_context.get("force_anchor", false) and not card.is_empty():
+		var anchor: Dictionary = _current_context.get("scenario_anchor", {})
+		card["anchor_id"] = str(anchor.get("anchor_id", ""))
+		var card_tags: Array = card.get("tags", [])
+		if not card_tags.has("scenario_anchor"):
+			card_tags.append("scenario_anchor")
+		card["tags"] = card_tags
+
+	# Card-typology: apply modifier to generated card
+	if not card.is_empty():
+		var card_mod: Dictionary = _current_context.get("card_modifier", {})
+		if not card_mod.is_empty():
+			card["modifier"] = str(card_mod.get("modifier", ""))
+			# Chance modifier: select random minigame
+			var mg_pool: Array = card_mod.get("minigame_pool", [])
+			if not mg_pool.is_empty():
+				var mg_idx: int = randi() % mg_pool.size()
+				card["minigame"] = str(mg_pool[mg_idx])
+			# Effect modifier: add extra effect
+			var eff_mod: Dictionary = card_mod.get("effect_modifier", {})
+			var add_eff: String = str(eff_mod.get("add_effect", ""))
+			if not add_eff.is_empty():
+				var card_tags_m: Array = card.get("tags", [])
+				card_tags_m.append("modifier_" + str(card_mod.get("modifier", "")))
+				card["tags"] = card_tags_m
 
 	# Journal: log the generated card in RAG
 	if rag_manager:
@@ -700,6 +752,21 @@ func _generate_with_strategy() -> Dictionary:
 	## LLM generation — zero fallback policy.
 	## Returns empty dict on failure. Controller handles retry + UI overlay.
 
+	# Ensure LLM warmup is triggered if not ready
+	if llm_interface != null and not llm_interface.is_ready:
+		print("[MOS] LLM not ready, triggering ensure_ready()")
+		if llm_interface.has_method("ensure_ready"):
+			llm_interface.ensure_ready()
+		# Wait up to 20s for warmup to complete
+		var wait_start := Time.get_ticks_msec()
+		while llm_interface != null and not llm_interface.is_ready:
+			if Time.get_ticks_msec() - wait_start > 20000:
+				print("[MOS] LLM warmup timeout after 20s")
+				break
+			await get_tree().create_timer(0.5).timeout
+		if llm_interface != null and llm_interface.is_ready:
+			print("[MOS] LLM became ready after %dms" % (Time.get_ticks_msec() - wait_start))
+
 	if llm_interface != null and llm_interface.is_ready:
 		var llm_card := await _try_llm_generation()
 		if not llm_card.is_empty():
@@ -954,11 +1021,17 @@ func _build_narrator_prompt() -> String:
 		if not rag_ctx.is_empty():
 			base += "\n" + rag_ctx
 
+	# Scenario theme injection (ambient context for all cards in a scenario run)
+	var scenario_theme: String = str(_current_context.get("scenario_theme", ""))
+	if not scenario_theme.is_empty():
+		base += "\nCONTEXTE SCENARIO: " + scenario_theme
+
 	return base
 
 
 func _build_narrator_input() -> String:
 	## User prompt for Narrator — game state in natural language.
+	## If a scenario anchor is active, its prompt_override takes priority.
 	var aspects: Dictionary = _current_context.get("aspects", {})
 	var parts: Array[String] = []
 
@@ -982,9 +1055,10 @@ func _build_narrator_input() -> String:
 		if phase != "":
 			parts.append("Phase: %s." % phase)
 
-	# Tone hint
-	var tone := tone_controller.get_current_tone() if tone_controller else "neutral"
-	if tone != "neutral":
+	# Tone hint (scenario tone overrides if present)
+	var scenario_tone: String = str(_current_context.get("scenario_tone", ""))
+	var tone: String = scenario_tone if not scenario_tone.is_empty() else (tone_controller.get_current_tone() if tone_controller else "neutral")
+	if tone != "neutral" and not tone.is_empty():
 		parts.append("Ton: %s." % tone)
 
 	# Themes
@@ -994,6 +1068,26 @@ func _build_narrator_input() -> String:
 		for t in themes.slice(0, mini(themes.size(), 2)):
 			theme_strs.append(str(t))
 		parts.append("Themes: %s." % ", ".join(theme_strs))
+
+	# Scenario anchor: prepend prompt_override for anchor cards
+	if _current_context.get("force_anchor", false):
+		var anchor: Dictionary = _current_context.get("scenario_anchor", {})
+		var prompt_override: String = str(anchor.get("prompt_override", ""))
+		if not prompt_override.is_empty():
+			parts.insert(0, "CARTE-ANCRE DE SCENARIO: " + prompt_override)
+			var must_refs: Array = anchor.get("must_reference", [])
+			if not must_refs.is_empty():
+				var refs_str: Array[String] = []
+				for r in must_refs:
+					refs_str.append(str(r))
+				parts.append("References obligatoires: %s." % ", ".join(refs_str))
+
+	# Card modifier injection (card-typology phase)
+	var card_modifier: Dictionary = _current_context.get("card_modifier", {})
+	if not card_modifier.is_empty():
+		var injection: String = str(card_modifier.get("prompt_injection", ""))
+		if not injection.is_empty():
+			parts.append("MODIFICATEUR: " + injection)
 
 	parts.append("Ecris le scenario puis les 3 choix (A/B/C).")
 	return " ".join(parts)
@@ -1006,6 +1100,24 @@ func _build_gm_prompt() -> String:
 	var scene_block := _build_scene_contract_block()
 	if not scene_block.is_empty():
 		base += "\n" + scene_block + "\nNe genere aucun effet hors contrat de scene."
+
+	# Card-typology: inject effect_profile constraints from category
+	var effect_profile: Dictionary = _current_context.get("effect_profile", {})
+	if not effect_profile.is_empty():
+		var primary: String = str(effect_profile.get("primary", ""))
+		var intensity: String = str(effect_profile.get("intensity", "medium"))
+		var secondary: Array = effect_profile.get("secondary", [])
+		if not primary.is_empty():
+			var sec_str: Array[String] = []
+			for s in secondary:
+				sec_str.append(str(s))
+			base += "\nCategorie: %s. Effet primaire: %s. Secondaires: %s. Intensite: %s." % [
+				str(_current_context.get("event_category", "")),
+				primary,
+				", ".join(sec_str) if not sec_str.is_empty() else "aucun",
+				intensity
+			]
+
 	return base
 
 
@@ -1047,21 +1159,22 @@ func _merge_parallel_results(narrative: Dictionary, structured: Dictionary) -> D
 	var scenario_text := narrative_text
 	var narrator_labels: Array[String] = []
 
-	# Extract A) B) C) labels
+	# Extract A) B) C) labels — permissive for 1.5B markdown/format variants
 	var rx := RegEx.new()
-	rx.compile("(?m)^\\s*(?:[A-C]\\)|[1-3][.)]|[-*])\\s+(.+)")
+	rx.compile("(?m)^\\s*(?:[-*]\\s*)?\\*{0,2}(?:(?:Action\\s+)?[A-C][):.\\]]|[1-3][.)]|[-*])\\*{0,2}[:\\s]+(.+)")
 	var matches := rx.search_all(narrative_text)
 	for m in matches:
-		var label := m.get_string(1).strip_edges()
-		if label.length() > 2 and label.length() < 80:
+		var label := m.get_string(1).strip_edges().replace("**", "").replace("*", "")
+		if label.length() > 2 and label.length() < 120:
 			narrator_labels.append(label)
 
 	# Remove choice lines from scenario text
 	if narrator_labels.size() >= 2:
-		rx.compile("(?m)^\\s*(?:[A-C]\\)|[1-3][.)]|[-*])\\s+")
+		rx.compile("(?m)^\\s*(?:[-*]\\s*)?\\*{0,2}(?:(?:Action\\s+)?[A-C][):.\\]]|[1-3][.)]|[-*])\\*{0,2}[:\\s]+")
 		var first_choice := rx.search(scenario_text)
 		if first_choice:
 			scenario_text = scenario_text.substr(0, first_choice.get_start()).strip_edges()
+	scenario_text = scenario_text.replace("**", "").replace("*", "")
 
 	# Parse Game Master JSON effects
 	var gm_effects: Dictionary = {}
@@ -1208,7 +1321,7 @@ func _build_system_prompt() -> String:
 	## Enriched system prompt for Qwen 2.5-3B-Instruct.
 	## JSON template moved to user prompt to reduce hallucination.
 	## RAG context + tone guidance injected via priority budget.
-	var base := "Merlin druide narrateur celtique. Genere 1 carte JSON francais. 3 options avec tradeoffs. Vocabulaire druidique: nemeton, ogham, sidhe, dolmen, korrigans. Reponds UNIQUEMENT en JSON valide."
+	var base := "Narrateur celtique de Broceliande. Ecris en francais une scene courte (2-3 phrases) avec vocabulaire druidique (nemeton, ogham, sidhe, dolmen, korrigans). Puis donne EXACTEMENT 3 choix:\nA) [verbe action]\nB) [verbe action]\nC) [verbe action]"
 	_refresh_scene_context()
 	var scene_block := _build_scene_contract_block()
 	if not scene_block.is_empty():
@@ -1273,44 +1386,106 @@ func _build_user_prompt() -> String:
 			theme_strs.append(str(t))
 		parts.append("Themes:" + ",".join(theme_strs))
 
-	# JSON template in user prompt (anti-hallucination: model sees template last)
-	parts.append("Effets: SHIFT_ASPECT aspect=Corps/Ame/Monde direction=up/down. Option centre cost:1.")
-	parts.append("{\"text\":\"...\",\"speaker\":\"merlin\",\"options\":[{\"label\":\"...\",\"effects\":[{\"type\":\"SHIFT_ASPECT\",\"aspect\":\"Corps\",\"direction\":\"up\"}]},{\"label\":\"...\",\"cost\":1,\"effects\":[{\"type\":\"SHIFT_ASPECT\",\"aspect\":\"Ame\",\"direction\":\"up\"}]},{\"label\":\"...\",\"effects\":[{\"type\":\"SHIFT_ASPECT\",\"aspect\":\"Monde\",\"direction\":\"down\"}]}],\"tags\":[\"tag\"]}")
+	# Plain text format — no JSON for small models
+	parts.append("Ecris la scene puis les 3 choix A) B) C) en francais.")
 
 	return "\n".join(parts)
 
 
 func _parse_llm_response(text: String) -> Dictionary:
 	## Parse la reponse LLM en carte TRIADE valide.
-	# Delegate to adapter's robust extraction if available
+	## Supports both JSON and plain text format (A/B/C choices).
+
+	# Strategy 1: Try JSON extraction via adapter
 	if _store and _store.llm:
 		var adapter: MerlinLlmAdapter = _store.llm
 		var extracted: Dictionary = adapter._extract_json_from_response(text)
-		if extracted.is_empty():
-			return {}
-		var validated: Dictionary = adapter.validate_triade_card(extracted)
-		if validated.get("ok", false):
-			return validated.get("card", {})
-		return {}
+		if not extracted.is_empty():
+			var validated: Dictionary = adapter.validate_triade_card(extracted)
+			if validated.get("ok", false):
+				return validated.get("card", {})
 
-	# Fallback: basic extraction
+	# Strategy 2: Plain text extraction (A/B/C choices)
+	var plain_card := _parse_plain_text_response(text)
+	if not plain_card.is_empty():
+		return plain_card
+
+	# Strategy 3: Basic JSON extraction (no adapter)
 	var json_start := text.find("{")
 	var json_end := text.rfind("}")
-	if json_start == -1 or json_end == -1:
+	if json_start != -1 and json_end > json_start:
+		var json_text := text.substr(json_start, json_end - json_start + 1)
+		var parsed = JSON.parse_string(json_text)
+		if typeof(parsed) == TYPE_DICTIONARY:
+			if parsed.has("text") and parsed.has("options"):
+				if typeof(parsed["options"]) == TYPE_ARRAY and parsed["options"].size() >= 2:
+					return parsed
+
+	return {}
+
+
+func _parse_plain_text_response(text: String) -> Dictionary:
+	## Extract narrative + A/B/C choices from plain text LLM output.
+	## Handles markdown bold markers (**A)**), arrow sequel hooks, etc.
+	# Permissive regex for 1.5B output variants: A), **A)**, A:, Action A:, - **B**:, etc.
+	var rx := RegEx.new()
+	rx.compile("(?m)^\\s*(?:[-*]\\s*)?\\*{0,2}(?:(?:Action\\s+)?[A-C][):.\\]]|[1-3][.)]|[-*])\\*{0,2}[:\\s]+(.+)")
+	var matches := rx.search_all(text)
+
+	var labels: Array[String] = []
+	for m in matches:
+		var label := m.get_string(1).strip_edges().replace("**", "").replace("*", "")
+		# Strip arrow sequel hooks
+		var arrow_pos := label.find(" -> ")
+		if arrow_pos > 0:
+			label = label.substr(0, arrow_pos).strip_edges()
+		if label.length() > 2 and label.length() < 120:
+			labels.append(label)
+
+	# Accept even with 0 labels — narrative text alone is still useful
+	# (fallback labels will be used)
+
+	# Extract narrative text (everything before first choice)
+	var rx2 := RegEx.new()
+	rx2.compile("(?m)^\\s*(?:[-*]\\s*)?\\*{0,2}(?:(?:Action\\s+)?[A-C][):.\\]]|[1-3][.)]|[-*])\\*{0,2}[:\\s]+")
+	var first_choice := rx2.search(text)
+	var narrative := text.strip_edges()
+	if first_choice:
+		narrative = text.substr(0, first_choice.get_start()).strip_edges()
+	# Strip any remaining markdown
+	narrative = narrative.replace("**", "").replace("*", "")
+
+	if narrative.length() < 10:
 		return {}
 
-	var json_text := text.substr(json_start, json_end - json_start + 1)
-	var parsed = JSON.parse_string(json_text)
-	if typeof(parsed) != TYPE_DICTIONARY:
-		return {}
+	# Pad to 3 labels if needed
+	while labels.size() < 3:
+		var fallback_labels := ["Avancer prudemment", "Observer en silence", "Agir sans hesiter"]
+		labels.append(fallback_labels[labels.size()])
 
-	# Basic TRIADE validation
-	if not parsed.has("text") or not parsed.has("options"):
-		return {}
-	if typeof(parsed["options"]) != TYPE_ARRAY or parsed["options"].size() < 2:
-		return {}
+	# Build card with default effects
+	var effect_cycle := [
+		[{"type": "HEAL_LIFE", "amount": 5}],
+		[{"type": "ADD_KARMA", "amount": 3}],
+		[{"type": "DAMAGE_LIFE", "amount": 3}],
+	]
+	var options: Array = []
+	for j in range(3):
+		var opt: Dictionary = {
+			"label": labels[j],
+			"effects": effect_cycle[j],
+		}
+		if j == 1:
+			opt["cost"] = 1
+		options.append(opt)
 
-	return parsed
+	return {
+		"text": narrative,
+		"speaker": "merlin",
+		"options": options,
+		"tags": ["llm_generated", "plain_text_parsed"],
+		"_generated_by": "mos_plain_text",
+	}
 
 # ═══════════════════════════════════════════════════════════════════════════════
 # GUARDRAILS — Language, repetition, length, content safety

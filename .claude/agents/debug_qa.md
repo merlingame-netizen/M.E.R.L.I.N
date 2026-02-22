@@ -77,6 +77,66 @@ See full checklist: `.claude/agents/gdscript_knowledge_base.md` (SECTION 4)
 - [ ] Tweens never created empty (collect tweeners first)
 - [ ] `set_anchors_preset()` only on Control nodes (not Node2D)
 
+## POST-IMPLEMENTATION VALIDATION SEQUENCE (OBLIGATOIRE)
+
+After ANY code modification (.gd files), run the following sequence **before declaring work complete**:
+
+### Step 1: Editor Parse Check (compile-time errors)
+```powershell
+powershell -ExecutionPolicy Bypass -File tools/validate_editor_parse.ps1
+```
+Catches: parse errors, missing types, .uid generation, warnings.
+**BLOCKING**: Do NOT proceed if this fails.
+
+### Step 2: Game Flow Order Validation (runtime errors)
+```powershell
+powershell -ExecutionPolicy Bypass -File tools/validate_flow_order.ps1
+```
+Runs 8 scenes in canonical game order:
+1. IntroCeltOS (boot)
+2. MenuPrincipal (menu)
+3. IntroPersonalityQuiz (onboarding)
+4. SceneRencontreMerlin (encounter)
+5. SelectionSauvegarde (continue)
+6. HubAntre (hub)
+7. TransitionBiome (travel)
+8. MerlinGame (gameplay - known standalone issues)
+
+**Flags**: `-Quick` (only git-affected scenes), `-StopOnFail` (halt on first error).
+
+### Step 3: Targeted Scene Validation (if Step 2 finds issues)
+```powershell
+powershell -ExecutionPolicy Bypass -File tools/validate_affected_scenes.ps1 -Scripts "scripts/file.gd"
+```
+Targeted test of specific script-to-scene mapping.
+
+### Step 4: Fix-and-Retest Loop
+If errors found:
+1. Read the error output (scene name + line number)
+2. Fix the error in the source file
+3. Re-run Step 1 (parse)
+4. Re-run Step 2 (flow order)
+5. Repeat until 0 BLOCKING failures
+
+### Known Standalone Issues
+These scenes require the full game flow to work correctly:
+- **MerlinGame**: needs GameManager (not autoload) to create MerlinStore
+- Pattern: `push_error("[TRIADE] store is null")` = expected standalone
+
+### Quick Reference
+```powershell
+# Full validation pipeline
+.\validate.bat
+
+# Fast flow-order only
+powershell -ExecutionPolicy Bypass -File tools/validate_flow_order.ps1 -Quick
+
+# Single scene debug
+& 'C:\Users\PGNK2128\Godot\Godot_v4.5.1-stable_win64_console.exe' --path . --headless --quit-after 12 res://scenes/TransitionBiome.tscn 2>&1
+```
+
+---
+
 ## Testing Focus Areas
 
 ### Core Systems (Triade)

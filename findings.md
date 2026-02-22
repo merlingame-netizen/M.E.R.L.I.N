@@ -1,5 +1,29 @@
 # Findings & Decisions - DRU: Le Jeu des Oghams
 
+## Session: 2026-02-19
+
+### Bug Fix: _validate_triade_option stripping gameplay keys
+`_validate_triade_option()` was creating a new dict with only `label`, `cost`, `effects` — losing `dc_hint`, `risk_level`, `reward_type`, `result_success`, `result_failure`. Fixed by preserving these keys.
+
+### Bug Fix: Anti-leakage regex case sensitivity
+`_wrap_text_as_card()` lowercased text before matching label-only lines but the regex `[A-D]` only matched uppercase. Fixed to `[a-dA-D]`.
+
+### Bug Fix: GDScript `:=` type inference with Array constants
+`var x := _adapter.VERB_POOL_SAFE` fails because GDScript can't infer the type of an untyped `Array` constant. Must use `var x: Array = ...` explicitly.
+
+### P1-P6 Narrative Quality Improvements
+Implemented 6 axes to close the gap between LLM output and the quality target in `EXAMPLE_RUN_DANGER_PROGRESSIF.md`:
+- P1: max_tokens 200→350, atmospheric prompt rewrite
+- P2: Stage 3 consequence generation via LLM (result_success/failure per option)
+- P3: story_log injection with recurring motif extraction
+- P4: Phase-aware verb pools (SAFE/FRAGILE/CRITICAL) replacing static fallback
+- P5: Enhanced anti-leakage (bracket patterns, label-only lines)
+- P6: Prologue/epilogue generation functions
+
+### Test Results: 24/24 PASS (Suite 1), 4/4 PASS pending (Suite 2)
+
+---
+
 ## Session: 2026-02-05
 
 ---
@@ -7,16 +31,16 @@
 ## PIVOT DECISION (2026-02-05)
 
 ### Nouvelle Direction
-Le jeu pivote vers un **Reigns-like** avec LLM dynamique:
+Le jeu pivote vers un **jeu de cartes narratif** avec LLM dynamique:
 - **PAS de combat traditionnel** - Uniquement des choix narratifs
 - **Bestiole = support passif** - Bonus passifs, outils, skills (pas de combat direct)
-- **Scenarios dynamiques via LLM** - Style Reigns avec cartes/choix
+- **Scenarios dynamiques via LLM** - Cartes narratives avec choix
 - **Focus**: Narration + choix a consequences
 
 ### Ce qui change
 | Avant | Apres |
 |-------|-------|
-| Combat FORCE/LOGIQUE/FINESSE | Choix narratifs type Reigns |
+| Combat FORCE/LOGIQUE/FINESSE | Choix narratifs Merlin-style |
 | Bestiole combat actions | Bestiole = bonus passifs + outils |
 | Turn-based combat | Swipe/choix binaires ou multiples |
 | Oghams = attaques | Oghams = declencheurs narratifs? |
@@ -24,22 +48,22 @@ Le jeu pivote vers un **Reigns-like** avec LLM dynamique:
 ### Architecture Decision
 - **Fusionner vers DruStore** (modulaire, pret LLM)
 - Abandonner le combat GameManager v7.0
-- Garder l'UI style GBC/Reigns
+- Garder l'UI style GBC/Merlin
 
 ---
 
 ## Project Overview
 
 ### Identity (UPDATED)
-- **Game**: DRU: Le Jeu des Oghams (Merlin)
-- **Genre**: Reigns-like narrative roguelite avec LLM
+- **Game**: M.E.R.L.I.N.: Le Jeu des Oghams
+- **Genre**: Card-based narrative roguelite avec LLM
 - **Core duo**: Merlin (LLM narrator) + Bestiole (support passif)
 - **World**: Bretagne mystique, controlled by supercomputer "Merlin"
 - **Philosophy**: Simple choices, complex consequences
 
 ### Gameplay Loop (NEW)
 1. LLM genere un scenario/carte
-2. Joueur fait un choix (style Reigns: swipe ou boutons)
+2. Joueur fait un choix (style card-based: swipe ou boutons)
 3. Consequences s'appliquent aux ressources/stats
 4. Bestiole donne des bonus passifs selon son etat
 5. Boucle continue jusqu'a fin de run
@@ -56,7 +80,7 @@ Le projet contient **deux systemes paralleles**:
 dru_store.gd          -> Central state management (Redux-like)
 dru_event_system.gd   -> Event handling (KEEP - pour scenarios)
 dru_effect_engine.gd  -> Effect application (whitelist)
-dru_action_resolver.gd -> Resolution (A ADAPTER pour Reigns)
+dru_action_resolver.gd -> Resolution (A ADAPTER pour card system)
 dru_llm_adapter.gd    -> LLM integration contract (CORE)
 dru_save_system.gd    -> Save/load
 dru_rng.gd            -> Deterministic RNG
@@ -72,12 +96,12 @@ dru_minigame_system.gd -> PEUT-ETRE garder pour tests narratifs?
 #### 2. GameManager System - A MIGRER
 ```
 game_manager.gd       -> Migrer vers DruStore
-main_game.gd          -> Refactorer UI vers Reigns-style
+main_game.gd          -> Refactorer UI vers Merlin card-style
 ```
 
 ---
 
-## Reigns-Style Design Requirements
+## Merlin Card-Style Design Requirements
 
 ### Card/Choice Structure
 ```gdscript
@@ -94,10 +118,10 @@ var choice = {
 }
 ```
 
-### Resources (Reigns-style bars)
-Typiquement 4 resources a equilibrer:
-- **Vigueur** (sante/energie physique)
-- **Esprit** (sante mentale/magie)
+### Resources (Card-style gauges)
+Typiquement 3-4 resources a equilibrer:
+- **Corps** (sante/energie physique)
+- **Ame** (sante mentale/magie)
 - **Faveur** (reputation/relations)
 - **Ressources** (materiel/or)
 

@@ -1,5 +1,5 @@
 ## ═══════════════════════════════════════════════════════════════════════════════
-## TRIADE Game Controller — Store-UI Bridge (v1.0.0 — Fusion Phase 37)
+## Merlin Game Controller — Store-UI Bridge (v1.0.0 — Fusion Phase 37)
 ## ═══════════════════════════════════════════════════════════════════════════════
 ## Full gameplay controller: D20 dice, 15 minigames, critical choices,
 ## flux/talents/biome passives, karma/blessings/adaptive difficulty,
@@ -7,14 +7,14 @@
 ## ═══════════════════════════════════════════════════════════════════════════════
 
 extends Node
-class_name TriadeGameController
+class_name MerlinGameController
 
 # ═══════════════════════════════════════════════════════════════════════════════
 # REFERENCES
 # ═══════════════════════════════════════════════════════════════════════════════
 
 var store: MerlinStore
-var ui: TriadeGameUI
+var ui: MerlinGameUI
 var merlin_ai: Node = null  # MerlinAI autoload reference
 
 var current_card: Dictionary = {}
@@ -49,12 +49,17 @@ var _free_center_remaining: int = 0
 var _shield_corps_used := false
 var _shield_monde_used := false
 
+# Dynamic difficulty (balance-driven, Phase 5 LLM Intelligence Pipeline)
+var _dynamic_modifier: int = 0
+var _cards_since_rule_check: int = 0
+const RULE_CHECK_INTERVAL := 3
+
 # LLM cards include result_success/result_failure — no static reaction pools needed.
 # Travel text is inline — no static pools needed.
 
 # Card buffer for smooth gameplay
 var _card_buffer: Array[Dictionary] = []
-const BUFFER_SIZE := 3
+const BUFFER_SIZE := 5  # Ollama backend: <3s/card, 5 cards = ~15s at biome load
 
 # Prerun choice tracking for sequel cards
 var _prerun_choices: Array[Dictionary] = []
@@ -72,18 +77,18 @@ func _ready() -> void:
 	store = get_node_or_null("/root/MerlinStore")
 
 	# Find or create UI
-	ui = get_node_or_null("TriadeGameUI")
+	ui = get_node_or_null("MerlinGameUI")
 	if not ui:
-		ui = TriadeGameUI.new()
-		ui.name = "TriadeGameUI"
+		ui = MerlinGameUI.new()
+		ui.name = "MerlinGameUI"
 		add_child(ui)
 
 	# Find LLM interface
 	merlin_ai = get_node_or_null("/root/MerlinAI")
 	if merlin_ai:
-		print("[TriadeController] MerlinAI found, LLM generation available")
+		print("[MerlinController] MerlinAI found, LLM generation available")
 	else:
-		push_warning("[TriadeController] MerlinAI not found — LLM unavailable")
+		push_warning("[MerlinController] MerlinAI not found — LLM unavailable")
 
 	_connect_signals()
 
@@ -105,6 +110,8 @@ func _connect_signals() -> void:
 	if ui:
 		ui.option_chosen.connect(_on_option_chosen)
 		ui.pause_requested.connect(_on_pause_requested)
+		if ui.has_signal("souffle_activated"):
+			ui.souffle_activated.connect(func(): print("[TRIADE] Souffle d'Ogham activated by player"))
 
 	# Bestiole wheel signals
 	if ui and ui.bestiole_wheel:
@@ -140,6 +147,8 @@ func start_run(seed_value: int = -1) -> void:
 	_free_center_remaining = 0
 	_shield_corps_used = false
 	_shield_monde_used = false
+	_dynamic_modifier = 0
+	_cards_since_rule_check = 0
 	_card_buffer.clear()
 	_prerun_choices.clear()
 	_load_prerun_cards()
@@ -166,6 +175,11 @@ func start_run(seed_value: int = -1) -> void:
 			elif run_data.has("heure"):
 				hour_hint = int(run_data.get("heure", -1))
 
+	# Start biome music (crossfade from menu music)
+	var music_mgr: Node = get_node_or_null("/root/MusicManager")
+	if music_mgr and music_mgr.has_method("play_biome_music"):
+		music_mgr.play_biome_music(biome_key)
+
 	print("[TRIADE] dispatching TRIADE_START_RUN biome=%s" % biome_key)
 	var result = await store.dispatch({
 		"type": "TRIADE_START_RUN",
@@ -176,25 +190,34 @@ func start_run(seed_value: int = -1) -> void:
 
 	if result.get("ok", false):
 		_sync_ui_with_state()
-		if ui and is_instance_valid(ui) and ui.has_method("reset_run_visuals"):
-			ui.reset_run_visuals()
+	if ui and is_instance_valid(ui) and ui.has_method("reset_run_visuals"):
+		ui.reset_run_visuals()
 
-		# Opening sequence then narrator intro before first card.
-		if ui and is_instance_valid(ui):
-			if ui.has_method("show_opening_sequence"):
-				await ui.show_opening_sequence(biome_key, season_hint, hour_hint)
-			await ui.show_narrator_intro()
-			_intro_shown = true
-			# Progressive reveal of aspect/souffle indicators
-			if ui.has_method("show_progressive_indicators"):
-				await ui.show_progressive_indicators()
-			# Start biome ambient VFX
-			if ui.has_method("start_ambient_vfx"):
-				ui.start_ambient_vfx(biome_key)
-			print("[TRIADE] narrator intro finished, requesting first card")
+	# Opening sequence then narrator intro before first card (always, even if store failed).
+	if ui and is_instance_valid(ui):
+		if ui.has_method("show_opening_sequence"):
+			await ui.show_opening_sequence(biome_key, season_hint, hour_hint)
+		await ui.show_narrator_intro(biome_key)
+		_intro_shown = true
+		# Scenario-specific intro (dealer_intro_context) before first card
+		if store and store.has_method("get_scenario_manager"):
+			var scenario_mgr = store.get_scenario_manager()
+			if scenario_mgr and scenario_mgr.is_scenario_active():
+				var intro_data: Dictionary = scenario_mgr.get_dealer_intro_override()
+				var intro_ctx: String = str(intro_data.get("context", ""))
+				var intro_title: String = str(intro_data.get("title", ""))
+				if not intro_ctx.is_empty() and ui and is_instance_valid(ui):
+					await ui.show_scenario_intro(intro_title, intro_ctx)
+		# Progressive reveal of aspect/souffle indicators
+		if ui.has_method("show_progressive_indicators"):
+			await ui.show_progressive_indicators()
+		# Start biome ambient VFX
+		if ui.has_method("start_ambient_vfx"):
+			ui.start_ambient_vfx(biome_key)
+		print("[TRIADE] narrator intro finished, requesting first card")
 
-		# Then get first card
-		_request_next_card()
+	# Then get first card
+	_request_next_card()
 
 
 func _request_next_card() -> void:
@@ -212,6 +235,9 @@ func _request_next_card() -> void:
 
 	is_processing = true
 	_cards_this_run += 1
+
+	# Check power milestones (player gets stronger every 5 cards)
+	_check_power_milestone()
 
 	# Fast path: consume from pre-generated card buffer (from TransitionBiome)
 	if not _card_buffer.is_empty():
@@ -272,7 +298,7 @@ func _request_next_card() -> void:
 		ui.hide_thinking()
 
 	if not _dispatch_result[0]:
-		push_warning("[TriadeController] Card generation timed out after %.0fs, retrying LLM" % LLM_TIMEOUT_SEC)
+		push_warning("[MerlinController] Card generation timed out after %.0fs, retrying LLM" % LLM_TIMEOUT_SEC)
 		var retry_card := await _retry_llm_generation(3)
 		if retry_card.is_empty():
 			# Show thinking overlay and wait for prefetch
@@ -357,6 +383,9 @@ func _async_card_dispatch() -> void:
 func _retry_llm_generation(max_retries: int) -> Dictionary:
 	## Retry LLM generation with escalating temperature. Returns card or {}.
 	if merlin_ai == null or not merlin_ai.get("is_ready"):
+		# Try triggering warmup for next attempt
+		if merlin_ai and merlin_ai.has_method("ensure_ready"):
+			merlin_ai.ensure_ready()
 		return {}
 	if not merlin_ai.has_method("generate_with_system"):
 		return {}
@@ -366,53 +395,53 @@ func _retry_llm_generation(max_retries: int) -> Dictionary:
 		return {}
 
 	var temperatures := [0.6, 0.7, 0.8]
-	var system_prompt := "Tu es Merlin l'Enchanteur, narrateur celtique. Genere une scene immersive en 5-7 phrases (420-620 caracteres). Puis propose exactement 3 options d'action:\nA) [verbe d'action]\nB) [verbe d'action]\nC) [verbe d'action]"
+	var system_prompt := "Tu es Merlin, druide FOU de Broceliande. Decris une SITUATION que le voyageur VIT (danger, enigme, rencontre). PAS ce que Merlin fait. Les 3 choix = REACTIONS du voyageur. Verbes SPECIFIQUES (jamais 'avancer'/'observer'/'fuir'/'suivre'). TU (jamais nous/je). Phrases courtes. Pas de 'Voici'. Pas de meta.\nExemple:\nHa! Un dolmen fissure bloque le sentier... Des runes pulsent sur la pierre, voyageur. Quelque chose gratte de l'autre cote.\nA) Escalader\nB) Dechiffrer\nC) Contourner\n4-5 phrases puis A) B) C). RIEN d'autre."
 
 	for i in range(mini(max_retries, temperatures.size())):
 		var temp: float = temperatures[i]
-		var user_prompt := "Carte %d du voyage. Genere une scene narrative unique et poetique avec 3 choix." % _cards_this_run
+		var user_prompt := "Carte %d. Decris une SITUATION que le voyageur vit. Puis A) B) C) = ses REACTIONS. Verbes SPECIFIQUES lies a la scene." % _cards_this_run
 
 		var result: Dictionary = await merlin_ai.generate_with_system(
 			system_prompt, user_prompt,
-			{"max_tokens": 250, "temperature": temp}
+			{"max_tokens": 180, "temperature": temp}
 		)
 
-		if result.has("error") or str(result.get("text", "")).length() < 30:
-			print("[TRIADE] LLM retry %d failed (temp=%.1f)" % [i + 1, temp])
+		if result.has("error") or str(result.get("text", "")).length() < 20:
+			print("[TRIADE] LLM retry %d failed (temp=%.1f, err=%s)" % [i + 1, temp, str(result.get("error", "short"))])
 			continue
 
 		var raw_text: String = str(result.get("text", ""))
+		print("[TRIADE] LLM retry %d got %d chars" % [i + 1, raw_text.length()])
 
-		# Parse labels from A/B/C or 1/2/3 patterns
+		# Parse labels — permissive regex for 1.5B output variants
 		var labels: Array[String] = []
 		var rx := RegEx.new()
-		rx.compile("(?m)^\\s*(?:[A-C]\\)|[1-3][.)]|[-*])\\s+(.+)")
+		rx.compile("(?m)^\\s*(?:[-*]\\s*)?\\*{0,2}(?:(?:Action\\s+)?[A-C][):.\\]]|[1-3][.)]|[-*])\\*{0,2}[:\\s]+(.+)")
 		var matches := rx.search_all(raw_text)
 		for m in matches:
-			var label := m.get_string(1).strip_edges()
-			if label.length() > 2 and label.length() < 80:
+			var label := m.get_string(1).strip_edges().replace("**", "").replace("*", "")
+			if label.length() > 2 and label.length() < 120:
 				labels.append(label)
 
 		# Extract narrative (text before first label)
 		var narrative := raw_text
-		if labels.size() >= 2:
-			var rx2 := RegEx.new()
-			rx2.compile("(?m)^\\s*(?:[A-C]\\)|[1-3][.)]|[-*])\\s+")
-			var first_choice := rx2.search(raw_text)
-			if first_choice:
-				narrative = raw_text.substr(0, first_choice.get_start()).strip_edges()
+		var rx2 := RegEx.new()
+		rx2.compile("(?m)^\\s*(?:[-*]\\s*)?\\*{0,2}(?:(?:Action\\s+)?[A-C][):.\\]]|[1-3][.)]|[-*])\\*{0,2}[:\\s]+")
+		var first_choice := rx2.search(raw_text)
+		if first_choice:
+			narrative = raw_text.substr(0, first_choice.get_start()).strip_edges()
+		narrative = narrative.replace("**", "").replace("*", "")
 
-		if labels.size() < 3:
-			# Rotate fallback labels by card count for variety
-			var fallback_sets: Array = [
-				["Avancer prudemment", "Observer en silence", "Agir sans hesiter"],
-				["Explorer les ruines", "Invoquer un esprit", "Braver le peril"],
-				["Offrir une priere", "Dechiffrer le signe", "Forcer le passage"],
-				["Chercher un guide", "Ecouter le vent", "Plonger dans l'ombre"],
-			]
-			var fb_idx: int = _cards_this_run % fallback_sets.size()
-			var fb_set: Array = fallback_sets[fb_idx]
-			labels = [str(fb_set[0]), str(fb_set[1]), str(fb_set[2])]
+		# Accept narrative even with < 3 labels — pad with fallbacks
+		if narrative.length() < 10:
+			print("[TRIADE] LLM retry %d: narrative too short, skipping" % (i + 1))
+			continue
+
+		# Pad labels to 3 if needed
+		var fallback_labels := ["Avancer prudemment", "Observer en silence", "Agir sans hesiter"]
+		while labels.size() < 3:
+			labels.append(fallback_labels[labels.size()])
+		print("[TRIADE] LLM retry %d: %d labels extracted" % [i + 1, matches.size()])
 
 		# Build card with Vie/Karma/Souffle effects (no SHIFT_ASPECT)
 		var effect_sets: Array = [
@@ -425,9 +454,11 @@ func _retry_llm_generation(max_retries: int) -> Dictionary:
 		for j in range(3):
 			var opt: Dictionary = {
 				"direction": directions[j],
-				"label": labels[j] if j < labels.size() else "Choix %d" % (j + 1),
+				"label": labels[j],
 				"effects": effect_sets[j],
 			}
+			if j == 1:
+				opt["cost"] = 1
 			options.append(opt)
 
 		print("[TRIADE] LLM retry %d succeeded (temp=%.1f)" % [i + 1, temp])
@@ -532,7 +563,8 @@ func _try_sequel_card() -> Dictionary:
 			narrative = raw_text.substr(0, first_choice.get_start()).strip_edges()
 
 	if labels.size() < 3:
-		labels = ["Assumer les consequences", "Chercher une alternative", "Ignorer les signes"]
+		# LLM-only: reject sequel with insufficient labels
+		return {}
 
 	var sequel_effects: Array = [
 		[{"type": "HEAL_LIFE", "amount": 5}],
@@ -606,10 +638,15 @@ func _resolve_choice(option: int) -> void:
 	if _is_critical_choice and not headless_mode:
 		use_minigame = true
 
+	# Chance modifier: force minigame with specific type from card
+	var chance_minigame: String = str(current_card.get("minigame", ""))
+	if not chance_minigame.is_empty() and not headless_mode:
+		use_minigame = true
+
 	SFXManager.play("card_draw")
 
 	if use_minigame:
-		dice_result = await _run_minigame(direction, dc)
+		dice_result = await _run_minigame(direction, dc, chance_minigame)
 	else:
 		dice_result = await _run_dice_roll(dc)
 
@@ -636,6 +673,10 @@ func _resolve_choice(option: int) -> void:
 	var options: Array = current_card.get("options", [])
 	var base_effects: Array = options[clampi(option, 0, options.size() - 1)].get("effects", []) if option < options.size() else []
 	var modulated: Array = _modulate_effects(base_effects, outcome, direction)
+
+	# --- 7b. Chance modifier: double positive on success, add penalty on failure ---
+	if not chance_minigame.is_empty():
+		modulated = _apply_chance_modifier_effects(modulated, outcome)
 
 	# --- 8. Apply talent shields & blessings ---
 	modulated = _apply_talent_shields(modulated)
@@ -680,10 +721,22 @@ func _resolve_choice(option: int) -> void:
 			"outcome": outcome,
 		})
 
-	# --- 12b. Auto-progress mission (Phase 43) ---
+	# --- 12b. Scenario anchor resolution ---
+	if store and store.has_method("get_scenario_manager"):
+		var scenario_mgr = store.get_scenario_manager()
+		if scenario_mgr and scenario_mgr.is_scenario_active():
+			var anchor_id: String = str(current_card.get("anchor_id", ""))
+			if not anchor_id.is_empty():
+				scenario_mgr.resolve_anchor(anchor_id, option)
+				# Apply scenario flags as game effects
+				var sc_flags: Dictionary = scenario_mgr.get_scenario_flags()
+				for flag_key in sc_flags:
+					store.dispatch({"type": "APPLY_EFFECTS", "effects": ["SET_FLAG:%s:%s" % [flag_key, str(sc_flags[flag_key])]], "source": "scenario"})
+
+	# --- 12c. Auto-progress mission (Phase 43) ---
 	_auto_progress_mission(outcome)
 
-	# --- 12c. Apply GAUGE_DELTA effects to WorldMapSystem ---
+	# --- 12d. Apply GAUGE_DELTA effects to WorldMapSystem ---
 	_apply_gauge_deltas(modulated)
 
 	# --- 13. Biome passive check ---
@@ -693,13 +746,21 @@ func _resolve_choice(option: int) -> void:
 	# Runs in background while player sees result text + travel animation (~4-6s)
 	_trigger_prefetch()
 
-	# --- 14. Narrative result text (immersive) or reaction fallback ---
+	# --- 14. Narrative result text (per-option first, then card-level, then reaction) ---
 	var _result_shown := false
 	if ui and is_instance_valid(ui) and current_card.size() > 0:
 		var result_key: String = "result_success" if outcome.contains("success") else "result_failure"
-		var result_text: String = str(current_card.get(result_key, ""))
+		# Try per-option result text first (richer, contextual)
+		var result_text := ""
+		var opts_for_result: Array = current_card.get("options", [])
+		if option < opts_for_result.size() and opts_for_result[option] is Dictionary:
+			var chosen_opt: Dictionary = opts_for_result[option]
+			result_text = str(chosen_opt.get(result_key, ""))
+		# Fallback to card-level result text
+		if result_text.is_empty():
+			result_text = str(current_card.get(result_key, ""))
 		if not result_text.is_empty():
-			ui.show_result_text_transition(result_text, outcome)
+			await ui.show_result_text_transition(result_text, outcome)
 			_result_shown = true
 	if not _result_shown and ui and is_instance_valid(ui):
 		var reaction_text: String = _get_reaction_text(outcome, choice_label)
@@ -731,6 +792,7 @@ func _resolve_choice(option: int) -> void:
 	if result.get("ok", false) and result.get("run_ended", false):
 		print("[TRIADE] run ended!")
 		var ending = result.get("ending", {})
+		ending["story_log"] = _quest_history.duplicate()
 		# Calculate and apply rewards
 		_apply_run_rewards(ending)
 		if ui and is_instance_valid(ui) and ui.has_method("mark_card_completed"):
@@ -754,9 +816,66 @@ func _resolve_choice(option: int) -> void:
 	# --- 18. Write RAG context ---
 	_write_context_entry("Choix: %s (%s, D20=%d vs DC%d)" % [choice_label, outcome, dice_result, dc])
 
+	# --- 18b. Dynamic difficulty check (every N cards) ---
+	_cards_since_rule_check += 1
+	if _cards_since_rule_check >= RULE_CHECK_INTERVAL:
+		_cards_since_rule_check = 0
+		_update_dynamic_difficulty()
+
 	# --- 19. Next card ---
 	is_processing = false
 	_request_next_card()
+
+
+## Check power milestones — player gets stronger every 5 cards during a run.
+func _check_power_milestone() -> void:
+	var cards: int = _cards_this_run
+	if not MerlinConstants.POWER_MILESTONES.has(cards):
+		return
+	var ms: Dictionary = MerlinConstants.POWER_MILESTONES[cards]
+	var mtype: String = str(ms.get("type", ""))
+	var mval: int = int(ms.get("value", 0))
+	print("[TRIADE] Power milestone at card %d: %s +%d" % [cards, mtype, mval])
+	match mtype:
+		"HEAL":
+			if store:
+				store.dispatch({"type": "TRIADE_HEAL_LIFE", "amount": mval})
+		"DC_REDUCTION":
+			if store:
+				var run_state: Dictionary = store.state.get("run", {})
+				var bonuses: Dictionary = run_state.get("power_bonuses", {})
+				bonuses["dc_reduction"] = int(bonuses.get("dc_reduction", 0)) + mval
+				run_state["power_bonuses"] = bonuses
+		"SOUFFLE_RECOVER":
+			if store:
+				store.dispatch({"type": "TRIADE_ADD_SOUFFLE", "amount": mval})
+	# Show popup + sound
+	if ui and is_instance_valid(ui) and ui.has_method("show_milestone_popup"):
+		ui.show_milestone_popup(str(ms.get("label", "")), str(ms.get("desc", "")))
+	SFXManager.play("ogham_chime")
+
+
+## Update dynamic difficulty using balance heuristic (0ms, no LLM).
+func _update_dynamic_difficulty() -> void:
+	if not store or not store.llm:
+		return
+	var ctx: Dictionary = store.llm.build_triade_context(store.state)
+	var tendency: String = str(ctx.get("player_tendency", "neutre"))
+	var rule_change: Dictionary = store.llm._suggest_rule_heuristic(ctx, tendency)
+
+	var rule_type: String = str(rule_change.get("type", "none"))
+	var adjustment: int = int(rule_change.get("adjustment", 0))
+
+	match rule_type:
+		"difficulty":
+			_dynamic_modifier = clampi(_dynamic_modifier + int(adjustment / 5), -3, 3)
+		"tension":
+			if store:
+				store.dispatch({"type": "ADD_TENSION", "amount": adjustment})
+		"karma":
+			if store:
+				store.dispatch({"type": "ADD_KARMA", "amount": adjustment})
+	print("[TRIADE] Rule check: type=%s adj=%d -> dynamic_modifier=%d" % [rule_type, adjustment, _dynamic_modifier])
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
@@ -766,6 +885,15 @@ func _resolve_choice(option: int) -> void:
 func _run_dice_roll(dc: int) -> int:
 	## Animate D20 dice roll. Returns final value (1-20).
 	var target: int = randi_range(1, 20)
+
+	# Souffle d'Ogham bonus: +4 if active
+	if ui and is_instance_valid(ui) and ui.is_souffle_active():
+		target = mini(target + 4, 20)
+		ui.consume_souffle_active()
+		if store and store.has_method("use_souffle"):
+			store.use_souffle()
+		print("[TRIADE] Souffle bonus applied: +4 → D20=%d" % target)
+
 	SFXManager.play("dice_shake")
 	if is_inside_tree():
 		get_tree().create_timer(0.3).timeout.connect(func(): SFXManager.play("dice_roll"), CONNECT_ONE_SHOT)
@@ -779,14 +907,14 @@ func _run_dice_roll(dc: int) -> int:
 	return target
 
 
-func _run_minigame(direction: String, dc: int) -> int:
+func _run_minigame(direction: String, dc: int, override_field: String = "") -> int:
 	## Launch a minigame, convert score to D20. Fallback to dice if no registry.
 	var narrative_text: String = str(current_card.get("text", ""))
 	var gm_hint: String = str(current_card.get("minigame_hint", ""))
 
 	# Detect field from narrative + tags
 	var card_tags: Array = current_card.get("tags", [])
-	var field: String = MiniGameRegistry.detect_field(narrative_text, gm_hint, card_tags)
+	var field: String = override_field if not override_field.is_empty() else MiniGameRegistry.detect_field(narrative_text, gm_hint, card_tags)
 	var base_diff: int = clampi(int(dc / 2.0), 1, 10)
 	if _is_critical_choice:
 		base_diff = mini(base_diff + 3, 10)
@@ -833,6 +961,9 @@ func _run_minigame(direction: String, dc: int) -> int:
 		ui.switch_body_to_content()
 	else:
 		add_child(game)
+	# Hide option buttons during minigame so player uses minigame controls
+	if ui and is_instance_valid(ui) and ui.has_method("set_options_visible"):
+		ui.set_options_visible(false)
 	game.start()
 
 	# Timeout safety: don't hang forever if minigame fails to emit
@@ -852,6 +983,8 @@ func _run_minigame(direction: String, dc: int) -> int:
 		push_warning("[TRIADE] minigame timed out after %.0fs, using dice fallback" % mg_timeout)
 		if is_instance_valid(game):
 			game.queue_free()
+		if ui and is_instance_valid(ui) and ui.has_method("set_options_visible"):
+			ui.set_options_visible(true)
 		return await _run_dice_roll(dc)
 	var mg_result: Dictionary = mg_state[1]
 	var score: int = int(mg_result.get("score", 50))
@@ -865,6 +998,9 @@ func _run_minigame(direction: String, dc: int) -> int:
 	# Cleanup minigame
 	if is_instance_valid(game):
 		game.queue_free()
+	# Restore option buttons after minigame
+	if ui and is_instance_valid(ui) and ui.has_method("set_options_visible"):
+		ui.set_options_visible(true)
 
 	# Convert score to D20 + apply tool bonus
 	var d20: int = MiniGameBase.score_to_d20(score)
@@ -904,6 +1040,16 @@ func _get_dc_for_direction(direction: String) -> int:
 	var dc_max: int = int(dc_info.get("max", 12))
 	var base_dc: int = randi_range(dc_min, dc_max)
 
+	# Blend with card's dc_hint if available (60% base + 40% card hint)
+	var option_idx: int = ["left", "center", "right"].find(direction)
+	if option_idx >= 0:
+		var opts: Array = current_card.get("options", [])
+		if option_idx < opts.size() and opts[option_idx] is Dictionary:
+			var hint: Dictionary = opts[option_idx].get("dc_hint", {})
+			if hint.has("min") and hint.has("max"):
+				var hint_dc: int = randi_range(int(hint["min"]), int(hint["max"]))
+				base_dc = int(base_dc * 0.6 + hint_dc * 0.4)
+
 	var modifier: int = 0
 
 	# Adaptive difficulty (pity / challenge)
@@ -923,6 +1069,12 @@ func _get_dc_for_direction(direction: String) -> int:
 				store.dispatch({"type": "TRIADE_ADD_SOUFFLE", "amount": 1})
 		elif consecutive_wins >= 3:
 			modifier = 2  # Challenge mode
+			# Souffle recovery on 3 consecutive successes
+			if store:
+				var cur_souffle: int = int(store.state.get("run", {}).get("souffle", 0))
+				if cur_souffle < MerlinConstants.SOUFFLE_MAX:
+					store.dispatch({"type": "TRIADE_ADD_SOUFFLE", "amount": 1})
+					print("[TRIADE] 3 wins streak! Souffle recovered +1")
 
 	# Critical choice modifier
 	if _is_critical_choice:
@@ -947,7 +1099,12 @@ func _get_dc_for_direction(direction: String) -> int:
 			var biome_data: Dictionary = store.biomes.get_biome_data(biome_key) if store.biomes.has_method("get_biome_data") else {}
 			modifier += int(biome_data.get("difficulty", 0))
 
-	return clampi(base_dc + modifier, 2, 19)
+	# Power milestone DC reduction
+	var dc_bonus: int = 0
+	if store:
+		dc_bonus = int(store.state.get("run", {}).get("power_bonuses", {}).get("dc_reduction", 0))
+
+	return clampi(base_dc + modifier + _dynamic_modifier - dc_bonus, 2, 19)
 
 
 func _get_choice_label(option: int) -> String:
@@ -1036,6 +1193,14 @@ func _modulate_effects(base_effects: Array, outcome: String, _direction: String)
 	if outcome == "critical_success" and store:
 		store.dispatch({"type": "TRIADE_HEAL_LIFE", "amount": MerlinConstants.LIFE_ESSENCE_CRIT_SUCCESS_HEAL})
 		print("[TRIADE] Critical success! Life essence +%d" % MerlinConstants.LIFE_ESSENCE_CRIT_SUCCESS_HEAL)
+		# Souffle recovery on nat 20
+		var current_souffle: int = int(store.state.get("run", {}).get("souffle", 0))
+		var max_souffle: int = MerlinConstants.SOUFFLE_MAX
+		if current_souffle < max_souffle:
+			store.dispatch({"type": "TRIADE_ADD_SOUFFLE", "amount": 1})
+			print("[TRIADE] Nat 20! Souffle recovered +1")
+			if ui and is_instance_valid(ui) and ui.has_method("show_milestone_popup"):
+				ui.show_milestone_popup("Souffle retrouve!", "+1 Souffle (nat 20)")
 
 	# Talent: feuillage_7 — Negative effects -30%
 	if store and store.has_method("is_talent_active") and store.is_talent_active("feuillage_7"):
@@ -1138,6 +1303,53 @@ func _detect_critical_choice() -> void:
 		SFXManager.play("critical_alert")
 		if ui and is_instance_valid(ui):
 			ui.show_critical_badge()
+
+	# Show modifier badge if card has a modifier
+	_show_card_modifier_indicator()
+
+
+func _show_card_modifier_indicator() -> void:
+	## Show badge for card modifiers (chance, bestiole, ogham, nocturne, saisonnier).
+	if not ui or not is_instance_valid(ui):
+		return
+	var modifier_name: String = str(current_card.get("modifier", ""))
+	if modifier_name.is_empty():
+		return
+	if ui.has_method("show_modifier_badge"):
+		ui.show_modifier_badge(modifier_name)
+	if modifier_name == "chance":
+		SFXManager.play("dice_shake")
+		print("[TRIADE] Chance modifier active! Minigame: %s" % str(current_card.get("minigame", "")))
+	elif modifier_name == "bestiole":
+		print("[TRIADE] Bestiole modifier active!")
+	elif modifier_name == "nocturne":
+		print("[TRIADE] Nocturne modifier active!")
+
+
+func _apply_chance_modifier_effects(effects: Array, outcome: String) -> Array:
+	## Chance modifier: double positive effects on success, add penalty on failure.
+	var is_success: bool = outcome == "success" or outcome == "critical_success"
+	if is_success:
+		var result: Array = []
+		for e in effects:
+			var eff: Dictionary = e.duplicate() if e is Dictionary else {}
+			var etype: String = str(eff.get("type", ""))
+			if etype == "HEAL_LIFE" or etype == "ADD_KARMA" or etype == "ADD_SOUFFLE":
+				eff["amount"] = int(eff.get("amount", 0)) * 2
+			elif etype == "GAUGE_DELTA":
+				var delta: Dictionary = eff.get("delta", {})
+				var doubled: Dictionary = {}
+				for k in delta:
+					doubled[k] = int(delta[k]) * 2
+				eff["delta"] = doubled
+			result.append(eff)
+		print("[TRIADE] Chance modifier: doubled positive effects (success)")
+		return result
+	else:
+		var result: Array = effects.duplicate()
+		result.append({"type": "DAMAGE_LIFE", "amount": 8})
+		print("[TRIADE] Chance modifier: added penalty (failure)")
+		return result
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
@@ -1251,6 +1463,13 @@ func _play_outcome_sfx(outcome: String) -> void:
 		"success": SFXManager.play("aspect_up")
 		"failure": SFXManager.play("aspect_down")
 		"critical_failure": SFXManager.play("dice_crit_fail")
+	# Bestiole emotes
+	if ui and is_instance_valid(ui) and ui.has_method("show_bestiole_emote"):
+		match outcome:
+			"critical_success": ui.show_bestiole_emote("!!!")
+			"success": ui.show_bestiole_emote("^_^")
+			"failure": ui.show_bestiole_emote("T_T")
+			"critical_failure": ui.show_bestiole_emote(">_<")
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
@@ -1267,6 +1486,7 @@ func _apply_run_rewards(ending: Dictionary) -> void:
 		"bond": store.get_bestiole_bond() if store.has_method("get_bestiole_bond") else 0,
 		"minigames_won": _minigames_won,
 		"score": ending.get("score", 0),
+		"cards_played": _cards_this_run,
 	}
 	var rewards: Dictionary = store.calculate_run_rewards(run_data)
 	store.apply_run_rewards(rewards)
@@ -1396,6 +1616,8 @@ func _on_souffle_changed(old_value: int, new_value: int) -> void:
 	if new_value > old_value:
 		SFXManager.play("ogham_chime")
 		print("[TRIADE] Souffle regenerated: +%d" % (new_value - old_value))
+		if ui and is_instance_valid(ui) and ui.has_method("show_bestiole_emote"):
+			ui.show_bestiole_emote("*")
 	elif new_value < old_value:
 		SFXManager.play("aspect_down")
 
@@ -1414,6 +1636,7 @@ func _on_life_changed(old_value: int, new_value: int) -> void:
 
 func _on_run_ended(ending: Dictionary) -> void:
 	print("[TRIADE] _on_run_ended signal received")
+	ending["story_log"] = _quest_history.duplicate()
 	# Archive run in RAG cross-run memory
 	if merlin_ai and is_instance_valid(merlin_ai) and merlin_ai.get("rag_manager"):
 		var ending_title: String = ending.get("ending", {}).get("title", "")

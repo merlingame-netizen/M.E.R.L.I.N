@@ -140,7 +140,7 @@ void fragment() {
 | Shader | Location | Purpose |
 |--------|----------|---------|
 | `crt_static.gdshader` | `shaders/` | CRT monitor effect |
-| `reigns_paper.gdshader` | `shaders/` | Parchment texture |
+| `merlin_paper.gdshader` | `shaders/` | Parchment texture |
 | `pixelate.gdshader` | `shaders/` | Retro pixel effect |
 
 ## Performance Guidelines

@@ -1,6 +1,6 @@
-# GAMEPLAY BIBLE — M.E.R.L.I.N.: Le Jeu des Oghams
+﻿# GAMEPLAY BIBLE â€” M.E.R.L.I.N.: Le Jeu des Oghams
 
-> **Version:** 1.0.0 — Phase 42 Audit
+> **Version:** 1.0.0 â€” Phase 42 Audit
 > **Date:** 2026-02-11
 > **Statut:** Reference absolue pour tout developpement futur
 > **Auteur:** Audit automatise (Claude Code) sur la base de 41 phases d'implementation
@@ -9,11 +9,11 @@
 
 ## Table des Matieres
 
-1. [Vue d'Ensemble — La Boucle Principale](#1-vue-densemble)
-2. [Systeme TRIADE — Coeur du Gameplay](#2-systeme-triade)
+1. [Vue d'Ensemble â€” La Boucle Principale](#1-vue-densemble)
+2. [Systeme TRIADE â€” Coeur du Gameplay](#2-systeme-triade)
 3. [Systeme de Cartes](#3-systeme-de-cartes)
 4. [Systeme D20 et Mini-Jeux](#4-systeme-d20-et-mini-jeux)
-5. [Scenes et Menus — Flux Complet](#5-scenes-et-menus)
+5. [Scenes et Menus â€” Flux Complet](#5-scenes-et-menus)
 6. [Meta-Progression](#6-meta-progression)
 7. [IA et LLM](#7-ia-et-llm)
 8. [Relations Inter-Systemes](#8-relations-inter-systemes)
@@ -27,10 +27,10 @@
 ## 1.1 Pitch
 
 M.E.R.L.I.N. est un **jeu de cartes narratif roguelite** ou le joueur explore la Bretagne celtique
-en equilibrant 3 Aspects (Corps, Ame, Monde). Chaque carte offre 3 choix. Un LLM local (Qwen2.5-3B)
+en equilibrant 3 Aspects (Corps, Ame, Monde). Chaque carte offre 3 choix. Un LLM local (Qwen 2.5-3B-Instruct)
 genere le contenu narratif en temps reel. Merlin est le narrateur et guide.
 
-**Boucle fondamentale :** Choisir → Risquer (D20/Mini-jeu) → Subir les effets → Survivre ou triompher.
+**Boucle fondamentale :** Choisir â†’ Risquer (D20/Mini-jeu) â†’ Subir les effets â†’ Survivre ou triompher.
 
 ## 1.2 Boucle de Gameplay Principale
 
@@ -40,7 +40,7 @@ MENU PRINCIPAL
   +---> [Nouvelle Partie]
   |       |
   |       v
-  |     QUIZ PERSONNALITE (4 questions → archetype)
+  |     QUIZ PERSONNALITE (4 questions â†’ archetype)
   |       |
   |       v
   |     RENCONTRE MERLIN (7 phases : contexte, bestiole, mission, biome)
@@ -49,7 +49,7 @@ MENU PRINCIPAL
   +---> [Continuer] ---> SELECTION SAUVEGARDE (3 slots)
   |       |                    |
   |       v                    v
-  |     HUB — ANTRE DE MERLIN  <-----------------------------------+
+  |     HUB â€” ANTRE DE MERLIN  <-----------------------------------+
   |       |                                                         |
   |       +---> Carte du Monde (7 biomes)                          |
   |       +---> Arbre de Vie (talents, 28 noeuds)                  |
@@ -125,8 +125,8 @@ Le joueur gere 3 Aspects, chacun avec **3 etats discrets** (pas de jauge continu
 
 - **Source :** `merlin_constants.gd:121-156`
 - **Etat initial :** Tous a EQUILIBRE (0)
-- **Transition :** Un aspect se deplace de +-1 par effet (BAS→EQUILIBRE ou EQUILIBRE→HAUT)
-- **Pas de saut :** Le design indique qu'un aspect ne peut PAS sauter un etat (BAS→HAUT directement)
+- **Transition :** Un aspect se deplace de +-1 par effet (BASâ†’EQUILIBRE ou EQUILIBREâ†’HAUT)
+- **Pas de saut :** Le design indique qu'un aspect ne peut PAS sauter un etat (BASâ†’HAUT directement)
 
 > **BUG IDENTIFIE :** Le code `_apply_shift_aspect` dans `merlin_effect_engine.gd:152-153` ne valide PAS cette regle.
 > Un effet `SET_ASPECT` peut forcer n'importe quel etat directement.
@@ -159,7 +159,7 @@ Ressource separee pour activer les competences Ogham de la Bestiole.
 |-----------|--------|--------|
 | Maximum | **5** | `merlin_constants.gd:308` |
 | Depart | **2** | `merlin_constants.gd:309` |
-| Intervalle regen | **5 cartes** → +1 Awen | `merlin_constants.gd:310` |
+| Intervalle regen | **5 cartes** â†’ +1 Awen | `merlin_constants.gd:310` |
 | Bonus equilibre | **+1 extra** si 3 aspects equilibres lors de la regen | `merlin_constants.gd:311` |
 
 > **CONFUSION NOMMAGE :** "Souffle d'Ogham" (pour Centre) et "Souffle d'Awen" (pour competences) portent des noms similaires. Risque de confusion joueur.
@@ -178,7 +178,7 @@ Ressource separee pour activer les competences Ogham de la Bestiole.
 
 > **ANOMALIE FLUX :** Les Flux ne demarrent pas a 50/50/50 (Esprit=30, Lien=40). Cette asymetrie n'est pas documentee. Le talent `tronc_1` corrige cela en forcant 50/50/50.
 
-### Flux — Impact par Choix
+### Flux â€” Impact par Choix
 
 | Choix | Terre | Esprit | Lien |
 |-------|-------|--------|------|
@@ -188,7 +188,7 @@ Ressource separee pour activer les competences Ogham de la Bestiole.
 
 **Source :** `merlin_constants.gd:482-486`
 
-### Flux — Modificateurs de DC
+### Flux â€” Modificateurs de DC
 
 Seul le Flux Lien modifie actuellement le DC :
 
@@ -200,7 +200,7 @@ Seul le Flux Lien modifie actuellement le DC :
 
 **Source :** `merlin_constants.gd:507-511`
 
-> **NOTE :** Les Flux Terre et Esprit ont `dc_mod: 0` pour tous les tiers — ils n'impactent donc PAS la difficulte.
+> **NOTE :** Les Flux Terre et Esprit ont `dc_mod: 0` pour tous les tiers â€” ils n'impactent donc PAS la difficulte.
 
 ## 2.5 Conditions de Fin de Run
 
@@ -350,7 +350,7 @@ Demande de carte
        |
        +--[MISS]--> [2] MerlinOmniscient (Narrateur + Game Master en parallele)
                           |
-                          +--[OK] --> Guardrails → Valider → Afficher
+                          +--[OK] --> Guardrails â†’ Valider â†’ Afficher
                           |
                           +--[TIMEOUT 15s] --> [3] LLM direct (merlin_ai)
                                                     |
@@ -359,7 +359,7 @@ Demande de carte
                                                     +--[FAIL] --> [4] Carte Fallback Emergency
 ```
 
-**Cartes fallback emergency :** `triade_game_controller.gd:311-330` — une seule carte generique "La brume s'epaissit..." avec 3 options simples (1 par aspect).
+**Cartes fallback emergency :** `triade_game_controller.gd:311-330` â€” une seule carte generique "La brume s'epaissit..." avec 3 options simples (1 par aspect).
 
 ---
 
@@ -430,7 +430,7 @@ Le **score du mini-jeu** est converti en equivalent D20 pour determiner succes/e
 
 ## 5.1 Menu Principal
 
-**Fichier :** `scripts/MenuPrincipalReigns.gd`
+**Fichier :** `scripts/MenuPrincipalMerlin.gd`
 
 ### Elements UI
 - Titre "M  E  R  L  I  N" avec ornements celtiques
@@ -444,13 +444,13 @@ Le **score du mini-jeu** est converti en equivalent D20 pour determiner succes/e
 - Papier : `#F6F0E7` (ivoire ancien)
 - Encre : `#382E24` (brun profond)
 - Accent : `#947038` (bronze ancien)
-- Shader : `reigns_paper.gdshader` (grain + vignette)
+- Shader : `merlin_paper.gdshader` (grain + vignette)
 
 ### Transitions
-- **Nouvelle Partie** → `IntroPersonalityQuiz.tscn` + lancement LLM warmup
-- **Continuer** → `SelectionSauvegarde.tscn`
-- **Options** → `MenuOptions.tscn`
-- **Quitter** → `get_tree().quit()`
+- **Nouvelle Partie** â†’ `IntroPersonalityQuiz.tscn` + lancement LLM warmup
+- **Continuer** â†’ `SelectionSauvegarde.tscn`
+- **Options** â†’ `MenuOptions.tscn`
+- **Quitter** â†’ `get_tree().quit()`
 
 ## 5.2 Quiz de Personnalite
 
@@ -493,9 +493,9 @@ Machine a etats en **7 phases** fusionnant l'ancien SceneEveil + SceneAntreMerli
 ### Phase 2 : BESTIOLE_REVEAL
 - Animation d'apparition de la Bestiole
 - Revelation des 3 Oghams de depart :
-  - **Beith** (Bouleau) — Revelation : revele 1 option
-  - **Luis** (Sorbier) — Protection : empeche 1 shift negatif
-  - **Quert** (Pommier) — Guerison : ramene l'aspect le plus extreme vers Equilibre
+  - **Beith** (Bouleau) â€” Revelation : revele 1 option
+  - **Luis** (Sorbier) â€” Protection : empeche 1 shift negatif
+  - **Quert** (Pommier) â€” Guerison : ramene l'aspect le plus extreme vers Equilibre
 - Panneau Ogham avec glyphes celtiques
 
 ### Phase 3 : MISSION_BRIEFING
@@ -507,37 +507,41 @@ Machine a etats en **7 phases** fusionnant l'ancien SceneEveil + SceneAntreMerli
 - Portrait cache, carte reduite en haut
 - 7 boutons biomes affiches
 - Biome suggere pulse (correspond a l'archetype)
-- Le joueur clique → `selected_biome` stocke
+- Le joueur clique â†’ `selected_biome` stocke
 
 **Donnees stockees :** `eveil_seen = true`, `selected_biome`, Oghams initiaux
 **Transite vers :** `HubAntre.tscn`
 
-## 5.4 Hub — Antre de Merlin
+## 5.4 Hub â€” Antre de Merlin
 
 **Fichier :** `scripts/HubAntre.gd`
+**Flow canonique onboarding/pre-run :** `docs/30_scenes/CANONICAL_ONBOARDING_FLOW.md`
 
 Centre nevralgique entre les runs. Le joueur prepare son expedition.
 
 ### Pages/Onglets
-1. **Antre** — Vue principale, preparation expedition
-2. **Compagnons** — Bestiole, Oghams equipes, bond level
-3. **Collection** — Compendium des cartes/fins vues
-4. **Arbre de Vie** — Talents (**BACKEND SEUL — PAS D'UI**)
+1. **Antre** - Vue principale, preparation expedition
+2. **Compagnons** - Bestiole, Oghams equipes, bond level
+
+### Actions laterales (pas des tabs)
+- **Collection** - ecran satellite
+- **Arbre de Vie** - overlay dedie
+- **Calendrier**, **Sauvegarde**, **Options**, **Menu**
 
 ### Systeme d'Expedition (3 etapes)
 
-**Etape 1 : Destination** — Choix du biome via la carte
+**Etape 1 : Destination** â€” Choix du biome via la carte
 
-**Etape 2 : Outil** — 4 outils disponibles :
+**Etape 2 : Outil** â€” 4 outils disponibles :
 
 | Outil | Bonus | Effet Initial |
 |-------|-------|---------------|
 | Baton de Marche | Combat DC -3 | Aucun |
-| Besace du Druide | — | +1 Souffle au depart |
+| Besace du Druide | â€” | +1 Souffle au depart |
 | Lanterne d'Ogham | Exploration DC -3 | Aucun |
 | Talisman Ancien | Mysticisme DC -3 | Aucun |
 
-**Etape 3 : Conditions de depart** — 4 conditions :
+**Etape 3 : Conditions de depart** â€” 4 conditions :
 
 | Condition | Effet |
 |-----------|-------|
@@ -547,6 +551,10 @@ Centre nevralgique entre les runs. Le joueur prepare son expedition.
 | Voyager leger | -2 cartes mission |
 
 **Source :** `merlin_constants.gd:890-958`
+
+Mode assiste de condition:
+- **ON**: condition auto (jour/nuit), visible et explicite
+- **OFF**: choix manuel obligatoire de la condition
 
 Le bouton "Partir" est grise tant que les 3 etapes ne sont pas completees.
 
@@ -563,7 +571,7 @@ Animation en **6 phases** introduisant le biome choisi :
 |-------|-----|-------------|-------|
 | 1 | BRUME | Pixels scouts dans la brume | ~2s |
 | 2 | EMERGENCE | Cascade de pixels assemblant le paysage 32x16 | ~3s |
-| 3 | REVELATION | Nom du biome + sous-titre fade-in, zoom 1.0→1.4x | ~2s |
+| 3 | REVELATION | Nom du biome + sous-titre fade-in, zoom 1.0â†’1.4x | ~2s |
 | 4 | SENTIER | Ligne d'encre trace le chemin + marqueurs | ~2s |
 | 5 | VOIX | Texte LLM d'arrivee + commentaire Merlin | Variable |
 | 6 | DISSOLUTION | Pixels tombent avec gravite, transition | ~1.5s |
@@ -585,7 +593,7 @@ Animation en **6 phases** introduisant le biome choisi :
 **LLM :** Texte d'arrivee genere par LLM (ou fallback JSON avec 140 variantes : 7 biomes x 4 categories x 5 textes).
 
 **Source donnees :** `data/post_intro_dialogues.json`
-**Transite vers :** `TriadeGame.tscn`
+**Transite vers :** `MerlinGame.tscn`
 
 ## 5.6 Triade Game (Gameplay Principal)
 
@@ -613,7 +621,7 @@ Animation en **6 phases** introduisant le biome choisi :
 |                                                    |
 |  [Gauche: DC6]  [Centre: DC10]  [Droite: DC14]  |  <- 3 boutons options
 |                                                    |
-|  Tooltip: "Corps ↑ (Robuste → Surmene)"         |  <- Preview au hover
+|  Tooltip: "Corps â†‘ (Robuste â†’ Surmene)"         |  <- Preview au hover
 |                                                    |
 |  Mission: Sanctuaire 2/5    Cartes: 12/30         |
 |                                                    |
@@ -685,8 +693,8 @@ Carte geographique interactive des 7 biomes bretons.
 - **Biomes verrouilles :** Gris, non-cliquables
 
 ### Signaux
-- `node_selected(biome_key)` → Stocke la selection, ouvre TransitionBiome
-- `close_requested` → Retour au Hub
+- `node_selected(biome_key)` â†’ Stocke la selection, ouvre TransitionBiome
+- `close_requested` â†’ Retour au Hub
 
 ## 5.8 Resume des Transitions
 
@@ -702,7 +710,7 @@ HubAntre
   +---> ArbreDeVie (meta-progression) [BACKEND SEUL]
   +---> Collection (compendium)
   +---> SelectionSauvegarde (save/load)
-  +---> [Partir] ---> TransitionBiome ---> TriadeGame
+  +---> [Partir] ---> TransitionBiome ---> MerlinGame
                                              +---> [Fin] ---> HubAntre
 ```
 
@@ -715,7 +723,7 @@ HubAntre
 | SceneRencontreMerlin | Apres quiz | `player_class` | `eveil_seen`, oghams, biome |
 | HubAntre | Apres Rencontre / Continuer | `eveil_seen=true` | run config |
 | TransitionBiome | Apres selection biome | `run.current_biome` | Aucune |
-| TriadeGame | Apres transition | Biome + aspects + souffle | Tout l'etat gameplay |
+| MerlinGame | Apres transition | Biome + aspects + souffle | Tout l'etat gameplay |
 | MapMonde | Depuis HubAntre | Etat deverrouillage | `selected_biome` |
 
 ---
@@ -728,14 +736,14 @@ HubAntre
 
 ### Structure
 
-4 branches, 4 tiers (Germe → Pousse → Branche → Cime) :
+4 branches, 4 tiers (Germe â†’ Pousse â†’ Branche â†’ Cime) :
 
 | Branche | Aspect | Animal | Noeuds | Theme |
 |---------|--------|--------|--------|-------|
 | **Racines** | Corps | Sanglier | 8 | Souffle, endurance, survie |
 | **Ramures** | Ame | Corbeau | 8 | Revelation, Awen, prevision |
 | **Feuillage** | Monde | Cerf | 8 | Diplomatie, DC, adaptation |
-| **Tronc** | Universel | — | 4 | Flux, equilibre, New Game+ |
+| **Tronc** | Universel | â€” | 4 | Flux, equilibre, New Game+ |
 
 ### Talents Notables
 
@@ -781,7 +789,7 @@ La Bestiole est un compagnon permanent qui fournit des competences passives/acti
 
 **Retention inter-runs :** 40% du bond conserve (`merlin_constants.gd:569`)
 
-### Les 18 Oghams — Catalogue Complet
+### Les 18 Oghams â€” Catalogue Complet
 
 #### Revelation (3)
 | Ogham | Arbre | Cout Awen | Cooldown | Bond Requis | Effet |
@@ -794,13 +802,13 @@ La Bestiole est un compagnon permanent qui fournit des competences passives/acti
 | Ogham | Arbre | Cout Awen | Cooldown | Bond Requis | Effet |
 |-------|-------|-----------|----------|-------------|-------|
 | **Luis** | Sorbier | 1 | 4 | 0 (starter) | Empeche 1 shift negatif |
-| **Gort** | Lierre | 2 | 6 | 41 | Ramene extreme → equilibre |
+| **Gort** | Lierre | 2 | 6 | 41 | Ramene extreme â†’ equilibre |
 | **Eadhadh** | Tremble | 3 | 8 | 61 | Annule tous effets negatifs |
 
 #### Force (3)
 | Ogham | Arbre | Cout Awen | Cooldown | Bond Requis | Effet |
 |-------|-------|-----------|----------|-------------|-------|
-| **Duir** | Chene | 2 | 4 | 21 | Force 1 aspect → Equilibre |
+| **Duir** | Chene | 2 | 4 | 21 | Force 1 aspect â†’ Equilibre |
 | **Tinne** | Houx | 2 | 5 | 41 | Double effets positifs prochaine carte |
 | **Onn** | Ajonc | 3 | 7 | 61 | +2 Souffle d'Ogham |
 
@@ -814,8 +822,8 @@ La Bestiole est un compagnon permanent qui fournit des competences passives/acti
 #### Guerison (3)
 | Ogham | Arbre | Cout Awen | Cooldown | Bond Requis | Effet |
 |-------|-------|-----------|----------|-------------|-------|
-| **Quert** | Pommier | 1 | 4 | 0 (starter) | Ramene aspect extreme → Equilibre |
-| **Ruis** | Sureau | 3 | 8 | 61 | Ramene TOUS les aspects → Equilibre |
+| **Quert** | Pommier | 1 | 4 | 0 (starter) | Ramene aspect extreme â†’ Equilibre |
+| **Ruis** | Sureau | 3 | 8 | 61 | Ramene TOUS les aspects â†’ Equilibre |
 | **Saille** | Saule | 2 | 6 | 41 | Regenere 2 Awen |
 
 #### Secret (3)
@@ -831,8 +839,8 @@ La Bestiole est un compagnon permanent qui fournit des competences passives/acti
 
 | Stade | Nom | Bond Base | Awen Bonus | Runs Requis | Cout |
 |-------|-----|-----------|-----------|-------------|------|
-| 1 | Enfant | 10 | 0 | 0 | — |
-| 2 | Compagnon | 30 | +1 | 15 | — |
+| 1 | Enfant | 10 | 0 | 0 | â€” |
+| 2 | Compagnon | 30 | +1 | 15 | â€” |
 | 3 | Gardien | 50 | +2 | 40 | 200 BETE |
 
 | Voie | Nom | Aspect | Runs Focalises | Cout | Bonus |
@@ -892,12 +900,12 @@ Collectees en fin de run, utilisees pour l'Arbre de Vie.
 
 | Plateforme | Cerveaux | RAM Estimee |
 |-----------|----------|-------------|
-| Web | 1 (Narrateur) | 2.2 GB |
-| Mobile (< 4.5 GB RAM) | 1 | 2.2 GB |
-| Mobile (>= 4.5 GB RAM) | 2 (Narrateur + GM) | 4.4 GB |
-| Desktop | 2-4 (Narrateur + GM + Workers) | 4.4-8.8 GB |
+| Web | 1 (Narrateur) | 2.0 GB |
+| Mobile (< 4.5 GB RAM) | 1 | 2.0 GB |
+| Mobile (>= 4.5 GB RAM) | 2 (Narrateur + GM) | 4.0 GB |
+| Desktop | 2-4 (Narrateur + GM + Workers) | 4.0-8.0 GB |
 
-**Modele :** Qwen2.5-3B-Instruct Q4_K_M (2.0 GB par cerveau)
+**Modele :** Qwen 2.5-3B-Instruct Q4_K_M (2.0 GB par cerveau)
 
 ### Roles des Cerveaux
 
@@ -905,7 +913,7 @@ Collectees en fin de run, utilisees pour l'Arbre de Vie.
 |---------|------|------------|-------|------------|
 | **Narrateur** (toujours) | Texte creatif, dialogues | 0.6 | 0.85 | 200 |
 | **Game Master** (desktop+) | Effets JSON structurees | 0.2 | 0.80 | 150 |
-| **Workers** (3-4, desktop) | Prefetch, voix, analyse | Herite du role | — | — |
+| **Workers** (3-4, desktop) | Prefetch, voix, analyse | Herite du role | â€” | â€” |
 
 ## 7.2 Pipeline Omniscient
 
@@ -936,7 +944,7 @@ Demande de carte
 
 ### Prefetch
 
-- **Hash de contexte :** MD5(aspects + mission_stage) — invalide si aspects changent
+- **Hash de contexte :** MD5(aspects + mission_stage) â€” invalide si aspects changent
 - **Lancement :** Pendant que le joueur lit la carte actuelle
 - **Timeout :** 3s supplementaires max pour consommer le prefetch
 
@@ -972,7 +980,7 @@ Demande de carte
 | Mots anglais | Detection (the, and, you, are...) | Rejet |
 | Repetition | Similarite Jaccard >= 0.7 vs 10 dernieres cartes | Rejet |
 | Whitelist effets | 9 types TRIADE autorises | Filtrage silencieux |
-| Reparation JSON | 4 etapes (braces → corrections → agressif → regex) | Fallback |
+| Reparation JSON | 4 etapes (braces â†’ corrections â†’ agressif â†’ regex) | Fallback |
 
 ---
 
@@ -1016,7 +1024,7 @@ Demande de carte
                         ^
                         |
                 +-------+--------+
-                | TriadeGame     |
+                | MerlinGame     |
                 | Controller     |
                 | (bridge)       |
                 +-------+--------+
@@ -1063,33 +1071,33 @@ Demande de carte
 
 ### Demarrage d'une Run
 ```
-GameManager.run → biome_key → TriadeController.start_run()
-  → Store.dispatch(TRIADE_START_RUN) → _init_triade_run()
-    → Aspects = EQUILIBRE x3
-    → Souffle = SOUFFLE_START (3) + talents
-    → Flux = FLUX_START + biome_offset + talents
-    → Mission = {} (stub vide)
-    → MerlinOmniscient.on_run_start()
+GameManager.run â†’ biome_key â†’ TriadeController.start_run()
+  â†’ Store.dispatch(TRIADE_START_RUN) â†’ _init_triade_run()
+    â†’ Aspects = EQUILIBRE x3
+    â†’ Souffle = SOUFFLE_START (3) + talents
+    â†’ Flux = FLUX_START + biome_offset + talents
+    â†’ Mission = {} (stub vide)
+    â†’ MerlinOmniscient.on_run_start()
 ```
 
 ### Choix du Joueur
 ```
-UI.option_chosen(index) → Controller._on_option_chosen(index)
-  → Determiner DC (6/10/14) + modificateurs
-  → Mini-jeu (70%) ou D20 (30%)
-  → Moduler effets par resultat
-  → Store.dispatch(TRIADE_RESOLVE_CHOICE)
-    → EffectEngine.apply_effects()
-      → SHIFT_ASPECT, ADD_KARMA, etc.
-    → _check_run_end()
-      → 2 extremes ? → run_ended signal
-      → Mission complete + equilibre ? → victoire
-    → Souffle regen check
-    → Awen regen check
-  → UI.show_reaction()
-  → UI.travel_animation()
-  → RAG.write_context()
-  → Prefetch next card
+UI.option_chosen(index) â†’ Controller._on_option_chosen(index)
+  â†’ Determiner DC (6/10/14) + modificateurs
+  â†’ Mini-jeu (70%) ou D20 (30%)
+  â†’ Moduler effets par resultat
+  â†’ Store.dispatch(TRIADE_RESOLVE_CHOICE)
+    â†’ EffectEngine.apply_effects()
+      â†’ SHIFT_ASPECT, ADD_KARMA, etc.
+    â†’ _check_run_end()
+      â†’ 2 extremes ? â†’ run_ended signal
+      â†’ Mission complete + equilibre ? â†’ victoire
+    â†’ Souffle regen check
+    â†’ Awen regen check
+  â†’ UI.show_reaction()
+  â†’ UI.travel_animation()
+  â†’ RAG.write_context()
+  â†’ Prefetch next card
 ```
 
 ---
@@ -1137,7 +1145,7 @@ UI.option_chosen(index) → Controller._on_option_chosen(index)
 
 **Localisation :** `triade_game_controller.gd:92-93`
 
-Le buffer de 3 cartes est declare (`_card_buffer: Array[Dictionary]`, `BUFFER_SIZE := 3`) mais le code `_request_next_card()` ne l'utilise pas — il fait un dispatch synchrone avec timeout de 15s.
+Le buffer de 3 cartes est declare (`_card_buffer: Array[Dictionary]`, `BUFFER_SIZE := 3`) mais le code `_request_next_card()` ne l'utilise pas â€” il fait un dispatch synchrone avec timeout de 15s.
 
 **Impact :** Gel de 1-3 secondes entre chaque carte sur systemes CPU. Sur le timeout de 15s, le joueur voit un ecran de chargement.
 
@@ -1217,7 +1225,7 @@ Sans modificateurs, la Droite echoue **65% du temps**. C'est punitif pour un jeu
 
 ### P1-4 : Awen Regen trop Lent
 
-Pour utiliser les 18 Oghams (cout 1-3 Awen), le joueur dispose de 2 Awen de depart et regenere +1 toutes les 5 cartes. Sur une run de 30 cartes, il obtient ~8 Awen total. Les Oghams coutent en moyenne 2 Awen → **seulement 4 utilisations par run**.
+Pour utiliser les 18 Oghams (cout 1-3 Awen), le joueur dispose de 2 Awen de depart et regenere +1 toutes les 5 cartes. Sur une run de 30 cartes, il obtient ~8 Awen total. Les Oghams coutent en moyenne 2 Awen â†’ **seulement 4 utilisations par run**.
 
 **Recommendation :** Reduire intervalle a 3 cartes, OU ajouter +1 Awen sur succes critique.
 
@@ -1225,7 +1233,7 @@ Pour utiliser les 18 Oghams (cout 1-3 Awen), le joueur dispose de 2 Awen de depa
 
 ### P1-5 : Shift Aspect sans Validation de Saut
 
-Le design (DOC_12) stipule qu'un aspect ne peut pas sauter un etat (BAS → HAUT directement). Mais `SET_ASPECT` dans l'Effect Engine permet de forcer n'importe quel etat.
+Le design (DOC_12) stipule qu'un aspect ne peut pas sauter un etat (BAS â†’ HAUT directement). Mais `SET_ASPECT` dans l'Effect Engine permet de forcer n'importe quel etat.
 
 **Recommendation :** Ajouter validation dans `_apply_set_aspect` : si ecart > 1, forcer passage par EQUILIBRE.
 
@@ -1246,7 +1254,7 @@ Tout le contenu de `docs/20_card_system/DOC_13_Hidden_Depth_System.md` est **en 
 | # | Systeme | Description | Design | Code | Priorite |
 |---|---------|-------------|--------|------|----------|
 | 1 | **Resonances** | 6 positives + 6 tension, bonus quand 2-3 aspects meme etat | DOC_13 Partie 1 | Aucun | P1 |
-| 2 | **Profil Joueur** | 3 axes (audace/altruisme/spirituel) → modifie cartes | DOC_13 Partie 2 | Stub (valeurs 0) | P1 |
+| 2 | **Profil Joueur** | 3 axes (audace/altruisme/spirituel) â†’ modifie cartes | DOC_13 Partie 2 | Stub (valeurs 0) | P1 |
 | 3 | **Echos Inter-Runs** | Actions laissent traces dans la run suivante | DOC_13 Partie 3 | Aucun | P1 |
 | 4 | **Synergies Oghams** | 8 combos secretes de 3 Oghams | DOC_13 Partie 4 | Aucun | P2 |
 | 5 | **Quetes Cachees** | 10 objectifs secrets avec recompenses | DOC_13 Partie 5 | Aucun | P2 |
@@ -1316,56 +1324,56 @@ Le talent `tronc_1` ("Equilibre des Feux") corrige cela en forcant 50/50/50, sug
 ```
 CRITIQUE (jeu casse)
   |
-  ├── Mission = stub vide → PAS DE VICTOIRE
-  ├── Arbre de Vie sans UI → ESSENCES INUTILISABLES
-  ├── Buffer cartes absent → GEL 1-3s
-  ├── Twists absents → ARC PLAT
-  └── Fin secrete absente → RECOMPENSE ULTIME MANQUANTE
+  â”œâ”€â”€ Mission = stub vide â†’ PAS DE VICTOIRE
+  â”œâ”€â”€ Arbre de Vie sans UI â†’ ESSENCES INUTILISABLES
+  â”œâ”€â”€ Buffer cartes absent â†’ GEL 1-3s
+  â”œâ”€â”€ Twists absents â†’ ARC PLAT
+  â””â”€â”€ Fin secrete absente â†’ RECOMPENSE ULTIME MANQUANTE
 
 HAUT (experience degradee)
   |
-  ├── Souffle trop restrictif → FRUSTRATION
-  ├── Karma volatile → SATURATION RAPIDE
-  ├── DC Droite punitif → EVITEMENT CHOIX AUDACIEUX
-  ├── Awen lent → OGHAMS SOUS-UTILISES
-  ├── Saut d'aspect → GAME OVER INATTENDU
-  └── Save scumming → PAS DE TENSION
+  â”œâ”€â”€ Souffle trop restrictif â†’ FRUSTRATION
+  â”œâ”€â”€ Karma volatile â†’ SATURATION RAPIDE
+  â”œâ”€â”€ DC Droite punitif â†’ EVITEMENT CHOIX AUDACIEUX
+  â”œâ”€â”€ Awen lent â†’ OGHAMS SOUS-UTILISES
+  â”œâ”€â”€ Saut d'aspect â†’ GAME OVER INATTENDU
+  â””â”€â”€ Save scumming â†’ PAS DE TENSION
 
 MOYEN (profondeur manquante)
   |
-  ├── 10 systemes caches non-implantes → DEPTH LAYER ABSENT
-  ├── Flux dormant (Terre/Esprit) → COMPLEXITY SANS IMPACT
-  ├── Resonances absentes → BONUS INVISIBLES MANQUANTS
-  └── RAG incomplet → LLM DECONNECTE DE L'ETAT PROFOND
+  â”œâ”€â”€ 10 systemes caches non-implantes â†’ DEPTH LAYER ABSENT
+  â”œâ”€â”€ Flux dormant (Terre/Esprit) â†’ COMPLEXITY SANS IMPACT
+  â”œâ”€â”€ Resonances absentes â†’ BONUS INVISIBLES MANQUANTS
+  â””â”€â”€ RAG incomplet â†’ LLM DECONNECTE DE L'ETAT PROFOND
 ```
 
 ---
 
 # 10. RECOMMANDATIONS PRIORISEES
 
-## Phase A — "Rendre le jeu jouable" (P0)
+## Phase A â€” "Rendre le jeu jouable" (P0)
 
 | # | Action | Fichier(s) | Effort |
 |---|--------|-----------|--------|
 | A1 | Implementer systeme de Mission (generation, progression, detection victoire) | `merlin_store.gd`, `merlin_omniscient.gd`, `merlin_constants.gd` | LOURD |
 | A2 | Implementer buffer de cartes (3 pre-generees) | `triade_game_controller.gd` | MOYEN |
-| A3 | Ajouter validation saut d'aspect (pas BAS→HAUT direct) | `merlin_effect_engine.gd` | LEGER |
-| A4 | Cabler Twists (tension >= 70 → carte speciale) | `merlin_omniscient.gd`, `merlin_card_system.gd` | MOYEN |
+| A3 | Ajouter validation saut d'aspect (pas BASâ†’HAUT direct) | `merlin_effect_engine.gd` | LEGER |
+| A4 | Cabler Twists (tension >= 70 â†’ carte speciale) | `merlin_omniscient.gd`, `merlin_card_system.gd` | MOYEN |
 
-## Phase B — "Rendre le jeu profond" (P1)
+## Phase B â€” "Rendre le jeu profond" (P1)
 
 | # | Action | Fichier(s) | Effort |
 |---|--------|-----------|--------|
 | B1 | UI Arbre de Vie (page 4 HubAntre) | `HubAntre.gd` | LOURD |
 | B2 | Resonances entre aspects | `merlin_store.gd`, `merlin_constants.gd` | MOYEN |
-| B3 | Profil joueur → contexte LLM | `rag_manager.gd`, `merlin_store.gd` | MOYEN |
+| B3 | Profil joueur â†’ contexte LLM | `rag_manager.gd`, `merlin_store.gd` | MOYEN |
 | B4 | Echos inter-runs | `merlin_save_system.gd`, `merlin_store.gd` | MOYEN |
 | B5 | Reequilibrage Souffle (max 10 ou regen plus frequent) | `merlin_constants.gd` | LEGER |
 | B6 | Reequilibrage Karma (plage -20/+20 ou delta +-1) | `merlin_constants.gd`, `triade_game_controller.gd` | LEGER |
 | B7 | DC adaptatif (selon progression run) | `triade_game_controller.gd` | MOYEN |
 | B8 | Integrer hidden resources dans RAG | `rag_manager.gd` | MOYEN |
 
-## Phase C — "Rendre le jeu memorable" (P2)
+## Phase C â€” "Rendre le jeu memorable" (P2)
 
 | # | Action | Fichier(s) | Effort |
 |---|--------|-----------|--------|
@@ -1376,7 +1384,7 @@ MOYEN (profondeur manquante)
 | C5 | Personnalite Bestiole | `merlin_store.gd` | MOYEN |
 | C6 | Dette narrative (callbacks) | `merlin_omniscient.gd`, `merlin_card_system.gd` | MOYEN |
 
-## Phase D — "Nettoyage" (P3)
+## Phase D â€” "Nettoyage" (P3)
 
 | # | Action | Fichier(s) | Effort |
 |---|--------|-----------|--------|
@@ -1390,7 +1398,7 @@ MOYEN (profondeur manquante)
 
 ---
 
-## Annexe A — Fichiers de Reference
+## Annexe A â€” Fichiers de Reference
 
 | Fichier | Contenu | Lignes |
 |---------|---------|--------|
@@ -1402,7 +1410,7 @@ MOYEN (profondeur manquante)
 | `scripts/merlin/merlin_save_system.gd` | Persistance JSON | ~200+ |
 | `scripts/ui/triade_game_controller.gd` | Bridge Store-UI, D20, mini-jeux | ~800+ |
 | `scripts/ui/triade_game_ui.gd` | Interface TRIADE | ~600+ |
-| `scripts/MenuPrincipalReigns.gd` | Menu principal | ~400+ |
+| `scripts/MenuPrincipalMerlin.gd` | Menu principal | ~400+ |
 | `scripts/SceneRencontreMerlin.gd` | Onboarding 7 phases | ~500+ |
 | `scripts/HubAntre.gd` | Hub central | ~1000+ |
 | `scripts/TransitionBiome.gd` | Transition biome | ~500+ |
@@ -1411,19 +1419,20 @@ MOYEN (profondeur manquante)
 | `addons/merlin_ai/merlin_omniscient.gd` | Orchestrateur IA | ~500+ |
 | `addons/merlin_ai/rag_manager.gd` | RAG v2.0 | ~465 |
 
-## Annexe B — Documents de Design
+## Annexe B â€” Documents de Design
 
 | Document | Statut |
 |----------|--------|
-| `docs/20_card_system/DOC_12_Triade_Gameplay_System.md` | **ACTIF** — Reference pour TRIADE |
-| `docs/20_card_system/DOC_13_Hidden_Depth_System.md` | **DESIGN VALIDE** — Non implemente |
-| `docs/40_world_rules/BIOMES_SYSTEM.md` | **ACTIF** — 7 biomes + Twists |
-| `docs/20_card_system/DOC_11_Card_System.md` | **OBSOLETE** — Remplace par DOC_12 |
-| `docs/40_world_rules/TUNING_SHEET.md` | **DESALIGNE** — Concerne ancien systeme |
-| `docs/40_world_rules/KNOWN_RISKS.md` | **DESALIGNE** — Concerne permanent world |
-| `docs/50_lore/LORE_BIBLE_MERLIN.md` | **ACTIF** — Lore reference |
-| `docs/60_companion/BESTIOLE_*.md` | **ACTIF** — 12 docs Bestiole |
+| `docs/20_card_system/DOC_12_Triade_Gameplay_System.md` | **ACTIF** â€” Reference pour TRIADE |
+| `docs/20_card_system/DOC_13_Hidden_Depth_System.md` | **DESIGN VALIDE** â€” Non implemente |
+| `docs/40_world_rules/BIOMES_SYSTEM.md` | **ACTIF** â€” 7 biomes + Twists |
+| `docs/20_card_system/DOC_11_Card_System.md` | **OBSOLETE** â€” Remplace par DOC_12 |
+| `docs/40_world_rules/TUNING_SHEET.md` | **DESALIGNE** â€” Concerne ancien systeme |
+| `docs/40_world_rules/KNOWN_RISKS.md` | **DESALIGNE** â€” Concerne permanent world |
+| `docs/50_lore/LORE_BIBLE_MERLIN.md` | **ACTIF** â€” Lore reference |
+| `docs/60_companion/BESTIOLE_*.md` | **ACTIF** â€” 12 docs Bestiole |
 
 ---
 
-*Fin de la Bible de Gameplay — M.E.R.L.I.N. v1.0.0*
+*Fin de la Bible de Gameplay â€” M.E.R.L.I.N. v1.0.0*
+

@@ -1,0 +1,556 @@
+{
+  "_meta": {
+    "version": "1.0.0",
+    "phase": 44,
+    "description": "Catalogue des evenements calendaires (32+). 4 categories: transitions saisonnieres, sabbats, consequences narratives, secrets. Consomme par Calendar.gd et EventAdapter.",
+    "references": "event_cards.json pour les cartes TRIADE, event_categories.json pour la taxonomie, merlin_constants.gd pour les aspects",
+    "spec": "CAL-REQ-040 a CAL-REQ-043"
+  },
+  "events": [
+    {
+      "id": "TRANS_SPRING",
+      "category": "transition",
+      "date": {"month": 3, "day": 1},
+      "name": "Eveil du Printemps",
+      "text": "La terre fremit. Sous la neige fondante, les premieres pousses percent le sol gele. L'air porte une promesse de renouveau.",
+      "tags": ["season", "spring", "transition", "recovery"],
+      "conditions": {"min_run_index": 0},
+      "weight_base": 1.10,
+      "effects": [
+        {"type": "SHIFT_ASPECT", "aspect": "Corps", "direction": "up"},
+        {"type": "ADD_KARMA", "amount": 5}
+      ],
+      "visual": {"icon": "spring", "theme": "green_soft"},
+      "repeatable": true
+    },
+    {
+      "id": "TRANS_SUMMER",
+      "category": "transition",
+      "date": {"month": 6, "day": 1},
+      "name": "Soleil de l'Ete",
+      "text": "Le soleil brule haut et longtemps. Les champs sont dores, les rivieres chantent. La terre donne sans compter.",
+      "tags": ["season", "summer", "transition", "boost"],
+      "conditions": {"min_run_index": 0},
+      "weight_base": 1.10,
+      "effects": [
+        {"type": "SHIFT_ASPECT", "aspect": "Corps", "direction": "up"},
+        {"type": "SHIFT_ASPECT", "aspect": "Monde", "direction": "up"}
+      ],
+      "visual": {"icon": "summer", "theme": "gold_warm"},
+      "repeatable": true
+    },
+    {
+      "id": "TRANS_AUTUMN",
+      "category": "transition",
+      "date": {"month": 9, "day": 1},
+      "name": "Souffle d'Automne",
+      "text": "Les feuilles tombent en spirale. Le vent porte les murmures des ancetres. Le temps de la reflexion est venu.",
+      "tags": ["season", "autumn", "transition", "introspection"],
+      "conditions": {"min_run_index": 0},
+      "weight_base": 1.10,
+      "effects": [
+        {"type": "SHIFT_ASPECT", "aspect": "Ame", "direction": "up"},
+        {"type": "ADD_KARMA", "amount": 3}
+      ],
+      "visual": {"icon": "autumn", "theme": "amber"},
+      "repeatable": true
+    },
+    {
+      "id": "TRANS_WINTER",
+      "category": "transition",
+      "date": {"month": 12, "day": 1},
+      "name": "Nuit de l'Hiver",
+      "text": "Le froid mord les os. Les nuits s'allongent et les ombres s'epaississent. Seuls les forts survivent a la longue nuit.",
+      "tags": ["season", "winter", "transition", "risk"],
+      "conditions": {"min_run_index": 0},
+      "weight_base": 1.10,
+      "effects": [
+        {"type": "SHIFT_ASPECT", "aspect": "Ame", "direction": "down"},
+        {"type": "ADD_TENSION", "amount": 10}
+      ],
+      "visual": {"icon": "winter", "theme": "frost"},
+      "repeatable": true
+    },
+
+    {
+      "id": "SABBAT_SAMHAIN",
+      "category": "sabbat",
+      "date": {"month": 10, "day": 31},
+      "name": "Samhain",
+      "text": "Le voile entre les mondes est au plus fin. Les morts murmurent des secrets oublies. L'annee celtique s'acheve et renait.",
+      "tags": ["sabbat", "autumn", "death", "spiritual", "major"],
+      "conditions": {"min_run_index": 0},
+      "weight_base": 1.30,
+      "effects": [
+        {"type": "SHIFT_ASPECT", "aspect": "Ame", "direction": "up"},
+        {"type": "ADD_SOUFFLE", "amount": 1},
+        {"type": "ADD_KARMA", "amount": 10}
+      ],
+      "visual": {"icon": "samhain", "theme": "dark_purple"},
+      "repeatable": true
+    },
+    {
+      "id": "SABBAT_YULE",
+      "category": "sabbat",
+      "date": {"month": 12, "day": 21},
+      "name": "Yule",
+      "text": "Solstice d'hiver — la nuit la plus longue. Un feu sacre brule au sommet de la colline, guide pour les ames perdues.",
+      "tags": ["sabbat", "winter", "fire", "rebirth", "major"],
+      "conditions": {"min_run_index": 0},
+      "weight_base": 1.20,
+      "effects": [
+        {"type": "SHIFT_ASPECT", "aspect": "Corps", "direction": "up"},
+        {"type": "ADD_SOUFFLE", "amount": 1},
+        {"type": "ADD_KARMA", "amount": 5}
+      ],
+      "visual": {"icon": "yule", "theme": "gold"},
+      "repeatable": true
+    },
+    {
+      "id": "SABBAT_IMBOLC",
+      "category": "sabbat",
+      "date": {"month": 2, "day": 1},
+      "name": "Imbolc",
+      "text": "Imbolc annonce le retour de la lumiere. La deesse Brigid benit les sources sacrees. L'eau guerit ceux qui osent boire.",
+      "tags": ["sabbat", "spring", "healing", "brigid", "major"],
+      "conditions": {"min_run_index": 0},
+      "weight_base": 1.20,
+      "effects": [
+        {"type": "SHIFT_ASPECT", "aspect": "Corps", "direction": "up"},
+        {"type": "ADD_KARMA", "amount": 5}
+      ],
+      "visual": {"icon": "imbolc", "theme": "white_gold"},
+      "repeatable": true
+    },
+    {
+      "id": "SABBAT_OSTARA",
+      "category": "sabbat",
+      "date": {"month": 3, "day": 21},
+      "name": "Ostara",
+      "text": "L'equinoxe de printemps equilibre le jour et la nuit. Les druides tracent des cercles dans la rosee. La terre s'eveille.",
+      "tags": ["sabbat", "spring", "balance", "druid", "major"],
+      "conditions": {"min_run_index": 0},
+      "weight_base": 1.20,
+      "effects": [
+        {"type": "SHIFT_ASPECT", "aspect": "Ame", "direction": "up"},
+        {"type": "ADD_SOUFFLE", "amount": 1}
+      ],
+      "visual": {"icon": "ostara", "theme": "green_gold"},
+      "repeatable": true
+    },
+    {
+      "id": "SABBAT_BELTANE",
+      "category": "sabbat",
+      "date": {"month": 5, "day": 1},
+      "name": "Beltane",
+      "text": "Les feux de Beltane illuminent les collines. Le betail traverse les flammes purificatrices. La fertilite de la terre explose.",
+      "tags": ["sabbat", "summer", "fire", "fertility", "major"],
+      "conditions": {"min_run_index": 0},
+      "weight_base": 1.25,
+      "effects": [
+        {"type": "SHIFT_ASPECT", "aspect": "Corps", "direction": "up"},
+        {"type": "SHIFT_ASPECT", "aspect": "Monde", "direction": "up"},
+        {"type": "ADD_KARMA", "amount": 5}
+      ],
+      "visual": {"icon": "beltane", "theme": "fire_orange"},
+      "repeatable": true
+    },
+    {
+      "id": "SABBAT_LITHA",
+      "category": "sabbat",
+      "date": {"month": 6, "day": 21},
+      "name": "Litha",
+      "text": "Solstice d'ete — la nuit la plus courte. Les fees dansent jusqu'a l'aube. Tout semble possible.",
+      "tags": ["sabbat", "summer", "fae", "magic", "major"],
+      "conditions": {"min_run_index": 0},
+      "weight_base": 1.20,
+      "effects": [
+        {"type": "ADD_SOUFFLE", "amount": 2},
+        {"type": "ADD_KARMA", "amount": 5}
+      ],
+      "visual": {"icon": "litha", "theme": "sun_gold"},
+      "repeatable": true
+    },
+    {
+      "id": "SABBAT_LUGHNASADH",
+      "category": "sabbat",
+      "date": {"month": 8, "day": 1},
+      "name": "Lughnasadh",
+      "text": "Fete des moissons et du dieu Lugh. Des jeux sont organises — force, adresse, poesie. Chacun montre sa valeur.",
+      "tags": ["sabbat", "summer", "harvest", "competition", "major"],
+      "conditions": {"min_run_index": 0},
+      "weight_base": 1.20,
+      "effects": [
+        {"type": "SHIFT_ASPECT", "aspect": "Corps", "direction": "up"},
+        {"type": "SHIFT_ASPECT", "aspect": "Monde", "direction": "up"}
+      ],
+      "visual": {"icon": "lughnasadh", "theme": "wheat_gold"},
+      "repeatable": true
+    },
+    {
+      "id": "SABBAT_MABON",
+      "category": "sabbat",
+      "date": {"month": 9, "day": 21},
+      "name": "Mabon",
+      "text": "Equinoxe d'automne — le second equilibre. Les druides remercient la terre. Le temps de la reflexion approche.",
+      "tags": ["sabbat", "autumn", "balance", "gratitude", "major"],
+      "conditions": {"min_run_index": 0},
+      "weight_base": 1.20,
+      "effects": [
+        {"type": "SHIFT_ASPECT", "aspect": "Monde", "direction": "up"},
+        {"type": "ADD_KARMA", "amount": 5},
+        {"type": "ADD_SOUFFLE", "amount": 1}
+      ],
+      "visual": {"icon": "mabon", "theme": "amber_gold"},
+      "repeatable": true
+    },
+
+    {
+      "id": "CONS_VEILLEE_MENHIRS",
+      "category": "consequence",
+      "date": {"month": 1, "day": 5},
+      "name": "Veillee des Menhirs",
+      "text": "Les pierres anciennes veillent sous les etoiles. Un bourdonnement sourd emane du cercle. Les menhirs se souviennent.",
+      "tags": ["consequence", "winter", "stone", "mystere"],
+      "conditions": {"min_run_index": 0},
+      "weight_base": 0.90,
+      "effects": [
+        {"type": "SHIFT_ASPECT", "aspect": "Ame", "direction": "up"},
+        {"type": "ADD_KARMA", "amount": 3}
+      ],
+      "visual": {"icon": "menhir", "theme": "stone_grey"},
+      "repeatable": true
+    },
+    {
+      "id": "CONS_BRUME_ANKOU",
+      "category": "consequence",
+      "date": {"month": 1, "day": 21},
+      "name": "Brume de l'Ankou",
+      "text": "La brume enveloppe les landes, epaisse comme un linceul. L'Ankou rode, sa charrette grince dans le silence.",
+      "tags": ["consequence", "winter", "death", "ankou", "risk"],
+      "conditions": {"min_run_index": 1, "min_cards_played": 5},
+      "weight_base": 0.85,
+      "effects": [
+        {"type": "SHIFT_ASPECT", "aspect": "Ame", "direction": "down"},
+        {"type": "ADD_TENSION", "amount": 15}
+      ],
+      "visual": {"icon": "ankou", "theme": "mist_dark"},
+      "repeatable": true
+    },
+    {
+      "id": "CONS_SERMENT_SOURCES",
+      "category": "consequence",
+      "date": {"month": 2, "day": 2},
+      "name": "Serment des Sources",
+      "text": "Les sources sacrees murmurent des promesses anciennes. L'eau chante un serment oublie. Qui ose ecouter?",
+      "tags": ["consequence", "spring", "water", "promise"],
+      "conditions": {"min_run_index": 0},
+      "weight_base": 0.90,
+      "effects": [
+        {"type": "SHIFT_ASPECT", "aspect": "Ame", "direction": "up"},
+        {"type": "SET_FLAG", "flag": "heard_source_oath"}
+      ],
+      "visual": {"icon": "source", "theme": "water_blue"},
+      "repeatable": true
+    },
+    {
+      "id": "CONS_LUEUR_GUI",
+      "category": "consequence",
+      "date": {"month": 2, "day": 14},
+      "name": "Lueur du Gui",
+      "text": "Les branches de gui brillent sous la lune. Le druide les cueille avec une serpe d'or. Une benediction pour qui les porte.",
+      "tags": ["consequence", "spring", "gui", "blessing", "druid"],
+      "conditions": {"min_run_index": 0},
+      "weight_base": 0.95,
+      "effects": [
+        {"type": "ADD_SOUFFLE", "amount": 1},
+        {"type": "ADD_KARMA", "amount": 5}
+      ],
+      "visual": {"icon": "gui", "theme": "mistletoe_green"},
+      "repeatable": true
+    },
+    {
+      "id": "CONS_AUBE_BRIGID",
+      "category": "consequence",
+      "date": {"window": {"start_month": 2, "start_day": 1, "end_month": 2, "end_day": 3}},
+      "name": "Aube de Brigid",
+      "text": "Brigid marche sur les eaux gelees. La ou elle pose le pied, les fleurs eclosent. La forge de l'ame se rallume.",
+      "tags": ["consequence", "spring", "brigid", "healing", "blessing"],
+      "conditions": {"min_run_index": 0, "aspect_condition": {"Ame": ["BAS", "EQUILIBRE"]}},
+      "weight_base": 0.85,
+      "effects": [
+        {"type": "SHIFT_ASPECT", "aspect": "Corps", "direction": "up"},
+        {"type": "SHIFT_ASPECT", "aspect": "Ame", "direction": "up"}
+      ],
+      "visual": {"icon": "brigid", "theme": "white_flame"},
+      "repeatable": true
+    },
+    {
+      "id": "CONS_CHASSE_SAUVAGE",
+      "category": "consequence",
+      "date": {"window": {"start_month": 10, "start_day": 15, "end_month": 11, "end_day": 15}},
+      "name": "Chasse Sauvage",
+      "text": "Le cor resonne dans la nuit. Les cavaliers spectraux chevauchent le ciel. Malheur a qui croise leur route sans y etre invite.",
+      "tags": ["consequence", "autumn", "death", "danger", "hunt"],
+      "conditions": {"min_run_index": 1, "min_cards_played": 8},
+      "weight_base": 0.80,
+      "effects": [
+        {"type": "SHIFT_ASPECT", "aspect": "Corps", "direction": "down"},
+        {"type": "ADD_TENSION", "amount": 20},
+        {"type": "SET_FLAG", "flag": "survived_wild_hunt"}
+      ],
+      "visual": {"icon": "hunt", "theme": "dark_storm"},
+      "repeatable": false
+    },
+    {
+      "id": "CONS_NUIT_FEES",
+      "category": "consequence",
+      "date": {"month": 6, "day": 23},
+      "name": "Nuit des Fees",
+      "text": "La nuit la plus courte. Les fees dansent entre les pierres. Quiconque les voit peut demander un voeu — mais a quel prix?",
+      "tags": ["consequence", "summer", "fae", "magic", "wish"],
+      "conditions": {"min_run_index": 0, "min_cards_played": 3},
+      "weight_base": 0.95,
+      "effects": [
+        {"type": "SHIFT_ASPECT", "aspect": "Ame", "direction": "up"},
+        {"type": "ADD_SOUFFLE", "amount": 1},
+        {"type": "SET_FLAG", "flag": "seen_faeries"}
+      ],
+      "visual": {"icon": "faerie", "theme": "moonlight_blue"},
+      "repeatable": true
+    },
+    {
+      "id": "CONS_LUNE_SANG",
+      "category": "consequence",
+      "date": "floating",
+      "name": "Lune de Sang",
+      "text": "La lune se teinte de rouge. Les loups hurlent a l'unisson. Le sang appelle le sang — un conflit couve.",
+      "tags": ["consequence", "conflict", "moon", "danger", "omen"],
+      "conditions": {"moon_phase": "full", "tension_above": 40, "min_cards_played": 5},
+      "weight_base": 0.75,
+      "effects": [
+        {"type": "ADD_TENSION", "amount": 25},
+        {"type": "SHIFT_ASPECT", "aspect": "Monde", "direction": "down"},
+        {"type": "SET_FLAG", "flag": "blood_moon_witnessed"}
+      ],
+      "visual": {"icon": "blood_moon", "theme": "crimson"},
+      "repeatable": false
+    },
+    {
+      "id": "CONS_APPEL_FORET",
+      "category": "consequence",
+      "date": "floating",
+      "name": "Appel de la Foret",
+      "text": "Les arbres murmurent ton nom. Quelque chose dans les bois t'attend — patient, ancien, bienveillant. Ou pas.",
+      "tags": ["consequence", "spring", "summer", "nature", "mystere"],
+      "conditions": {"season": ["spring", "summer"], "aspect_condition": {"Ame": ["HAUT"]}, "min_cards_played": 5},
+      "weight_base": 0.80,
+      "effects": [
+        {"type": "SHIFT_ASPECT", "aspect": "Ame", "direction": "up"},
+        {"type": "PROGRESS_MISSION", "step": 1}
+      ],
+      "visual": {"icon": "forest", "theme": "deep_green"},
+      "repeatable": true
+    },
+    {
+      "id": "CONS_RETOUR_EXILE",
+      "category": "consequence",
+      "date": "floating",
+      "name": "Retour de l'Exile",
+      "text": "Un ancien banni revient au village. Les regards se detournent. Lui pardonner ou le chasser? Le choix definit ta lignee.",
+      "tags": ["consequence", "dilemme", "exile", "clan"],
+      "conditions": {"aspect_condition": {"Monde": ["BAS"]}, "min_cards_played": 10},
+      "weight_base": 0.70,
+      "effects": [
+        {"type": "SHIFT_ASPECT", "aspect": "Monde", "direction": "up"},
+        {"type": "ADD_KARMA", "amount": 10},
+        {"type": "SET_FLAG", "flag": "exile_returned"}
+      ],
+      "visual": {"icon": "exile", "theme": "grey_warm"},
+      "repeatable": false
+    },
+    {
+      "id": "CONS_MARCHE_OMBRE",
+      "category": "consequence",
+      "date": "floating",
+      "name": "Marche dans l'Ombre",
+      "text": "Les nuits d'hiver, les ombres prennent forme. Quelque chose te suit — non pas hostile, mais curieux. Ton ombre a un visage.",
+      "tags": ["consequence", "winter", "shadow", "mystere", "introspection"],
+      "conditions": {"season": ["winter", "autumn"], "min_cards_played": 5},
+      "weight_base": 0.75,
+      "effects": [
+        {"type": "SHIFT_ASPECT", "aspect": "Ame", "direction": "down"},
+        {"type": "ADD_TENSION", "amount": 10},
+        {"type": "SET_FLAG", "flag": "shadow_walk"}
+      ],
+      "visual": {"icon": "shadow", "theme": "dark_mist"},
+      "repeatable": true
+    },
+    {
+      "id": "CONS_FORGERON_ERRANT",
+      "category": "consequence",
+      "date": "floating",
+      "name": "Le Forgeron Errant",
+      "text": "Un forgeron itinerant plante son enclume au bord du chemin. Il forge des lames, des outils, des destins. Que veux-tu qu'il forge pour toi?",
+      "tags": ["consequence", "stranger", "craft", "trade"],
+      "conditions": {"flags_required": ["has_ally"], "min_cards_played": 8},
+      "weight_base": 0.80,
+      "effects": [
+        {"type": "SHIFT_ASPECT", "aspect": "Corps", "direction": "up"},
+        {"type": "SHIFT_ASPECT", "aspect": "Monde", "direction": "up"}
+      ],
+      "visual": {"icon": "forge", "theme": "ember_red"},
+      "repeatable": false
+    },
+    {
+      "id": "CONS_CHANT_SIRENES",
+      "category": "consequence",
+      "date": "floating",
+      "name": "Chant des Sirenes",
+      "text": "Sur les cotes, une melodie monte des vagues. Envoûtante, hypnotique. Les marins bouchent leurs oreilles. Toi, tu ecoutes.",
+      "tags": ["consequence", "summer", "cotes", "danger", "magic"],
+      "conditions": {"season": ["summer"], "biome": ["cotes_sauvages"], "min_cards_played": 5},
+      "weight_base": 0.70,
+      "effects": [
+        {"type": "SHIFT_ASPECT", "aspect": "Ame", "direction": "up"},
+        {"type": "SHIFT_ASPECT", "aspect": "Corps", "direction": "down"},
+        {"type": "ADD_SOUFFLE", "amount": 1}
+      ],
+      "visual": {"icon": "siren", "theme": "sea_blue"},
+      "repeatable": true
+    },
+    {
+      "id": "CONS_FIEVRE_BRUME",
+      "category": "consequence",
+      "date": "floating",
+      "name": "Fievre des Brumes",
+      "text": "La fievre te saisit. Le monde se trouble, les voix se melent. Dans le delire, tu vois des choses que nul ne devrait voir.",
+      "tags": ["consequence", "autumn", "winter", "illness", "vision"],
+      "conditions": {"season": ["autumn", "winter"], "aspect_condition": {"Corps": ["BAS"]}, "min_cards_played": 5},
+      "weight_base": 0.65,
+      "effects": [
+        {"type": "SHIFT_ASPECT", "aspect": "Corps", "direction": "down"},
+        {"type": "SHIFT_ASPECT", "aspect": "Ame", "direction": "up"},
+        {"type": "SET_FLAG", "flag": "fever_vision"}
+      ],
+      "visual": {"icon": "fever", "theme": "haze_purple"},
+      "repeatable": false
+    },
+    {
+      "id": "CONS_RASSEMBLEMENT_CLANS",
+      "category": "consequence",
+      "date": "floating",
+      "name": "Rassemblement des Clans",
+      "text": "Les chefs de clan convergent vers le nemeton sacre. Des decisions qui façonneront le monde se prennent ici. Ta voix compte.",
+      "tags": ["consequence", "politics", "clan", "assembly", "major"],
+      "conditions": {"aspect_condition": {"Monde": ["HAUT"]}, "min_cards_played": 15},
+      "weight_base": 0.75,
+      "effects": [
+        {"type": "SHIFT_ASPECT", "aspect": "Monde", "direction": "up"},
+        {"type": "SHIFT_ASPECT", "aspect": "Ame", "direction": "up"},
+        {"type": "ADD_KARMA", "amount": 15},
+        {"type": "SET_FLAG", "flag": "attended_clan_gathering"}
+      ],
+      "visual": {"icon": "assembly", "theme": "royal_blue"},
+      "repeatable": false
+    },
+
+    {
+      "id": "SECRET_GRAAL_BRETON",
+      "category": "secret",
+      "date": "floating",
+      "name": "Le Graal Breton",
+      "text": "Un eclat dore dans les tenebres. Le calice sacre — pas le Graal des legendes, mais quelque chose de plus ancien, de plus vrai.",
+      "tags": ["secret", "graal", "quest", "sacred", "hidden"],
+      "conditions": {"karma_above": 30, "min_cards_played": 20, "hidden": true},
+      "weight_base": 0.30,
+      "effects": [
+        {"type": "ADD_SOUFFLE", "amount": 3},
+        {"type": "SHIFT_ASPECT", "aspect": "Ame", "direction": "up"},
+        {"type": "ADD_KARMA", "amount": 20},
+        {"type": "SET_FLAG", "flag": "found_graal"}
+      ],
+      "visual": {"icon": "graal", "theme": "divine_gold"},
+      "repeatable": false
+    },
+    {
+      "id": "SECRET_VOIX_ANCETRES",
+      "category": "secret",
+      "date": "floating",
+      "name": "Voix des Ancetres",
+      "text": "Ils parlent tous en meme temps — tes ancetres, les leurs, et ceux d'avant. Un choeur de memoire qui t'enseigne ce que les livres ont oublie.",
+      "tags": ["secret", "ancestors", "wisdom", "spiritual", "hidden"],
+      "conditions": {"aspect_condition": {"Ame": ["HAUT"]}, "flags_required": ["promise_fulfilled"], "hidden": true},
+      "weight_base": 0.25,
+      "effects": [
+        {"type": "ADD_SOUFFLE", "amount": 2},
+        {"type": "SHIFT_ASPECT", "aspect": "Ame", "direction": "up"},
+        {"type": "PROGRESS_MISSION", "step": 2},
+        {"type": "SET_FLAG", "flag": "heard_ancestors"}
+      ],
+      "visual": {"icon": "ancestors", "theme": "ethereal_white"},
+      "repeatable": false
+    },
+    {
+      "id": "SECRET_CHAUDRON_DAGDA",
+      "category": "secret",
+      "date": "floating",
+      "name": "Le Chaudron du Dagda",
+      "text": "Le chaudron sans fond apparait dans la brume. Quiconque y goute ne connait plus la faim — ni du corps, ni de l'ame.",
+      "tags": ["secret", "dagda", "cauldron", "abundance", "hidden"],
+      "conditions": {"all_aspects_equilibre": true, "min_cards_played": 15, "hidden": true},
+      "weight_base": 0.25,
+      "effects": [
+        {"type": "SHIFT_ASPECT", "aspect": "Corps", "direction": "up"},
+        {"type": "SHIFT_ASPECT", "aspect": "Ame", "direction": "up"},
+        {"type": "ADD_SOUFFLE", "amount": 2},
+        {"type": "SET_FLAG", "flag": "found_cauldron"}
+      ],
+      "visual": {"icon": "cauldron", "theme": "mist_silver"},
+      "repeatable": false
+    },
+    {
+      "id": "SECRET_ARBRE_MONDE",
+      "category": "secret",
+      "date": "floating",
+      "name": "L'Arbre-Monde",
+      "text": "Un arbre immense dont les racines plongent dans l'autre monde. Ses branches touchent les etoiles. La Bestiole ronronne a ses pieds.",
+      "tags": ["secret", "tree", "bestiole", "cosmic", "hidden"],
+      "conditions": {"bestiole_bond_above": 80, "min_cards_played": 15, "hidden": true},
+      "weight_base": 0.20,
+      "effects": [
+        {"type": "ADD_SOUFFLE", "amount": 3},
+        {"type": "ADD_KARMA", "amount": 25},
+        {"type": "SET_FLAG", "flag": "found_world_tree"}
+      ],
+      "visual": {"icon": "world_tree", "theme": "cosmic_green"},
+      "repeatable": false
+    },
+    {
+      "id": "SECRET_MEMOIRE_MERLIN",
+      "category": "secret",
+      "date": "floating",
+      "name": "Memoire de Merlin",
+      "text": "Merlin se tait. Pour la premiere fois, ses yeux trahissent quelque chose — un souvenir, un regret. Il murmure: 'Je me souviens d'un monde...'",
+      "tags": ["secret", "merlin", "memory", "lore", "hidden"],
+      "conditions": {"trust_merlin_above": 50, "min_endings_seen": 3, "min_cards_played": 20, "hidden": true},
+      "weight_base": 0.15,
+      "effects": [
+        {"type": "ADD_SOUFFLE", "amount": 2},
+        {"type": "ADD_KARMA", "amount": 30},
+        {"type": "SHIFT_ASPECT", "aspect": "Ame", "direction": "up"},
+        {"type": "SET_FLAG", "flag": "merlin_remembers"}
+      ],
+      "visual": {"icon": "merlin_eye", "theme": "deep_blue"},
+      "repeatable": false
+    }
+  ],
+  "display_config": {
+    "color_past": "event_past",
+    "color_today": "event_today",
+    "color_future": "ink_soft",
+    "color_sabbat": "accent",
+    "color_secret": "mist",
+    "icon_prefix": "res://ui/icons/calendar/"
+  }
+}

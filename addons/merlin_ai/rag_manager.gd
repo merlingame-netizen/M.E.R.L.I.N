@@ -1,5 +1,5 @@
 ## ═══════════════════════════════════════════════════════════════════════════════
-## RAG Manager v2.0 — Retrieval Augmented Generation for Ministral 3B Instruct
+## RAG Manager v2.0 — Retrieval Augmented Generation for Qwen 2.5-3B-Instruct
 ## ═══════════════════════════════════════════════════════════════════════════════
 ## Structured retrieval with token budget, game journal, and cross-run memory.
 ## Optimized for nano models (~2048 token context window).
@@ -16,7 +16,7 @@ const VERSION := "2.1.0"
 
 ## Approximate tokens: 1 token ~= 4 chars (rough heuristic for multilingual)
 const CHARS_PER_TOKEN := 4
-const CONTEXT_BUDGET := 1500  # max tokens for dynamic context (v2.3: 600→1500, exploiting 32k ctx window, ~5% usage)
+const CONTEXT_BUDGET := 400  # max tokens for dynamic context (v2.5: 600→400, Ollama backend fast enough)
 
 # Priority levels for context sections (higher = more important, kept first)
 enum Priority { CRITICAL = 4, HIGH = 3, MEDIUM = 2, LOW = 1, OPTIONAL = 0 }
@@ -58,6 +58,12 @@ var world_state: Dictionary = {}
 var actions_by_category: Dictionary = {}
 var _scene_context: Dictionary = {}
 
+# Phase 44 — Tag glossary for narrative context enrichment
+var _tag_glossary: Dictionary = {}
+var _theme_dualities: Array = []
+var _biome_tags: Dictionary = {}
+var _tag_glossary_loaded := false
+
 # ═══════════════════════════════════════════════════════════════════════════════
 # INITIALIZATION
 # ═══════════════════════════════════════════════════════════════════════════════
@@ -68,6 +74,7 @@ func _ready() -> void:
 	_load_cross_run_memory()
 	_load_world_state()
 	_load_actions()
+	_load_tag_glossary()
 
 
 func _ensure_storage() -> void:
@@ -138,6 +145,11 @@ func get_prioritized_context(game_state: Dictionary) -> String:
 	var bestiole := _get_bestiole_context(game_state)
 	if not bestiole.is_empty():
 		sections.append({"text": bestiole, "priority": Priority.MEDIUM})
+
+	# Phase 44: Event category context from tag glossary
+	var event_ctx := _get_event_category_context(game_state)
+	if not event_ctx.is_empty():
+		sections.append({"text": event_ctx, "priority": Priority.MEDIUM})
 
 	var callbacks := _get_cross_run_callbacks()
 	if not callbacks.is_empty():
@@ -279,15 +291,22 @@ func _get_bestiole_context(game_state: Dictionary) -> String:
 	return ""
 
 
+var _biome_cache_key: String = ""
+var _biome_cache_text: String = ""
+
 func _get_biome_context(game_state: Dictionary) -> String:
 	var run: Dictionary = game_state.get("run", {})
 	var biome_key: String = str(run.get("current_biome", ""))
 	if biome_key.is_empty():
 		return ""
-	# Access MerlinBiomeSystem via explicit load (avoids parse-order issues)
+	# Cache: avoid re-instantiating MerlinBiomeSystem on every call
+	if biome_key == _biome_cache_key and not _biome_cache_text.is_empty():
+		return _biome_cache_text
 	var BiomeSystemClass: GDScript = load("res://scripts/merlin/merlin_biome_system.gd")
 	var biome_sys = BiomeSystemClass.new()
-	return biome_sys.get_biome_context_for_llm(biome_key)
+	_biome_cache_text = biome_sys.get_biome_context_for_llm(biome_key)
+	_biome_cache_key = biome_key
+	return _biome_cache_text
 
 
 func _get_tone_context() -> String:
@@ -343,6 +362,56 @@ func _get_promises_context() -> String:
 	if labels.is_empty():
 		return ""
 	return "Promesses: " + ", ".join(labels)
+
+
+func _get_event_category_context(game_state: Dictionary) -> String:
+	## Phase 44: Build context from event category + tag glossary.
+	if not _tag_glossary_loaded:
+		return ""
+
+	var run: Dictionary = game_state.get("run", {})
+	var biome: String = str(run.get("current_biome", ""))
+	var event_category: String = str(world_state.get("event_category", ""))
+	var parts: Array[String] = []
+
+	# Biome-specific tags (if available)
+	if not biome.is_empty() and _biome_tags.has(biome):
+		var b_tags: Array = _biome_tags[biome]
+		if not b_tags.is_empty():
+			var tag_strs: Array[String] = []
+			for t in b_tags.slice(0, mini(b_tags.size(), 5)):
+				tag_strs.append(str(t))
+			parts.append("Themes biome: " + ", ".join(tag_strs))
+
+	# Event category guidance
+	if not event_category.is_empty():
+		parts.append("Categorie: " + event_category)
+
+	if parts.is_empty():
+		return ""
+	return " | ".join(parts)
+
+
+func get_random_duality() -> Dictionary:
+	## Phase 44: Return a random theme duality pair for dilemma generation.
+	## Returns { a: String, b: String } or empty.
+	if _theme_dualities.is_empty():
+		return {}
+	var idx: int = randi() % _theme_dualities.size()
+	var duality = _theme_dualities[idx]
+	if duality is Dictionary:
+		return duality
+	return {}
+
+
+func get_tags_for_biome(biome: String) -> Array:
+	## Phase 44: Get tags associated with a specific biome.
+	return _biome_tags.get(biome, [])
+
+
+func get_tag_info(tag_name: String) -> Dictionary:
+	## Phase 44: Get info for a specific tag from glossary.
+	return _tag_glossary.get(tag_name, {})
 
 
 func _get_cross_run_callbacks() -> String:
@@ -590,6 +659,41 @@ func _load_actions() -> void:
 			file.close()
 			if data is Dictionary and data.has("categories"):
 				actions_by_category = data.categories
+
+
+func _load_tag_glossary() -> void:
+	## Phase 44: Load tag glossary for narrative context enrichment.
+	var path := "res://data/ai/config/tag_glossary.json"
+	if not FileAccess.file_exists(path):
+		return
+	var file := FileAccess.open(path, FileAccess.READ)
+	if not file:
+		return
+	var data = JSON.parse_string(file.get_as_text())
+	file.close()
+	if not data is Dictionary:
+		return
+
+	# Load tags
+	var tags_dict: Dictionary = data.get("tags", {})
+	_tag_glossary = tags_dict
+
+	# Load theme dualities for dilemma generation
+	var dualities_raw = data.get("theme_dualities", {})
+	if dualities_raw is Dictionary:
+		_theme_dualities = dualities_raw.get("pairs", [])
+	elif dualities_raw is Array:
+		_theme_dualities = dualities_raw
+
+	# Load biome-specific tags
+	var biome_tags: Dictionary = data.get("biome_tags", {})
+	_biome_tags = biome_tags
+
+	_tag_glossary_loaded = not _tag_glossary.is_empty()
+	if _tag_glossary_loaded:
+		print("[RAGManager] Tag glossary loaded: %d tags, %d dualities, %d biomes" % [
+			_tag_glossary.size(), _theme_dualities.size(), _biome_tags.size()
+		])
 
 
 # ═══════════════════════════════════════════════════════════════════════════════

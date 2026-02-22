@@ -98,12 +98,15 @@ powershell -ExecutionPolicy Bypass -File tools/validate_godot_errors.ps1
 | **MODEREE** | 3+ fichiers OU logique complexe | Planning files obligatoires. Dispatcher optionnel. |
 | **COMPLEXE** | Multi-systeme, architecture, feature majeur | Dispatcher + planning files + agents review. |
 
-**Prompt optimizer actif**: Le hook severity1 evalue automatiquement la clarte des prompts.
-Prefixer avec `*` pour bypass. Les slash commands (`/`) sont auto-bypassees.
+**Hook v2 actif**: `route-and-dispatch.py` detecte automatiquement le projet, classifie la complexite, et injecte le dispatcher + skills.
+Prefixer avec `*` pour bypass. Les slash commands (`/`) et `#` sont auto-bypassees.
+Source de verite: `~/.claude/project_registry.json` (detection projet, keywords, branding, skills).
 
 **Agents auto**: `debug_qa.md` (si .gd modifie), `git_commit.md` (3+ fichiers ou phase complete).
 **LoRA auto**: `lora_gameplay_translator.md` si demande adaptation LLM ("le modele doit", "entraine", "fine-tune", "plus poetique/celtique").
-**Ref dispatcher/matrice/agents**: `.claude/agents/task_dispatcher.md` (lire QUE si MODEREE+).
+**Dispatcher**: `.claude/agents/task_dispatcher.md` (overlay v2.0, EXTENDS `~/.claude/agents/common/dispatcher_base.md`).
+**Agents communs**: `~/.claude/agents/common/` — dispatcher_base, git_commit_base, security_review_base, planning_enforcer, AGENT_TEMPLATE.
+**Metriques**: `~/.claude/metrics/agent_invocations.jsonl` (hook PostToolUse automatique, dashboard: `python ~/.claude/metrics/dashboard.py`).
 
 **Format commit**: Conventional Commits `type(scope): description`
 `Co-Authored-By: Claude <noreply@anthropic.com>`
@@ -118,7 +121,7 @@ Prefixer avec `*` pour bypass. Les slash commands (`/`) sont auto-bypassees.
 M.E.R.L.I.N. is a narrative card game built with Godot 4.x.
 - **Core Loop**: Choose from 3 options per card, balance 3 Aspects (Corps/Ame/Monde), survive
 - **Game System**: Triade — 3 Aspects x 3 discrete states (Bas/Equilibre/Haut), Souffle d'Ogham
-- **LLM Integration**: Ministral 3B Instruct (3.4 GB) — Multi-Brain (1-4 cerveaux)
+- **LLM Integration**: Qwen 2.5-1.5B (1.0 GB via Ollama, 17.8 tok/s) — DUAL Brain default
 - **AI Architecture**: Narrator + Game Master in parallel, Worker Pool, RAG v2.0, guardrails
 - **Companion**: Bestiole provides passive skills (18 Oghams)
 - **Character**: Merlin le druide (narrator + guide)
@@ -162,15 +165,26 @@ triade_game_ui.gd           <- 3 aspects, 3 options, souffle, typewriter
 triade_game_controller.gd   <- Store-UI bridge, run flow, LLM wiring
 ```
 
+### Visual System (scripts/autoload/)
+```
+merlin_visual.gd            <- Centralized visual constants (PALETTE, GBC, fonts, animations)
+```
+- **UI/UX Bible**: `docs/70_graphic/UI_UX_BIBLE.md` — Complete visual specification
+- **Agent Rules**: `.claude/agents/ui_consistency_rules.md` — Binding rules for UI agents
+- **RULE**: ALL colors from `MerlinVisual.PALETTE` / `MerlinVisual.GBC`, ALL fonts from `MerlinVisual.get_font()`
+- **RULE**: `var c: Color = MerlinVisual.PALETTE["x"]` (explicit type, NEVER `:=` with Dictionary)
+
 ### AI Layer (addons/merlin_ai/)
 ```
-merlin_ai.gd             <- Multi-Brain (1-4 cerveaux), worker pool
-merlin_omniscient.gd     <- Orchestrateur IA, pipeline parallele, guardrails
-rag_manager.gd           <- RAG v2.0, token budget, priority, journal
+ollama_backend.gd        <- Backend Ollama HTTP API (drop-in MerlinLLM)
+merlin_ai.gd             <- Multi-Brain (1-2 cerveaux), routing Ollama/MerlinLLM
+merlin_omniscient.gd     <- Orchestrateur IA, zero fallback, scene cache, guardrails
+rag_manager.gd           <- RAG v2.0, biome cache, token budget 400, journal
 ```
 
 ### Key Documents
 - `docs/MASTER_DOCUMENT.md` — Project overview (v4.0)
+- `docs/70_graphic/UI_UX_BIBLE.md` — Visual system specification (palettes, typography, animations, per-scene rules)
 - `docs/20_card_system/DOC_12_Triade_Gameplay_System.md` — Triade system
 - `docs/20_card_system/DOC_11_Card_System.md` — Card system
 - `progress.md` — Session logs
@@ -197,39 +211,64 @@ rag_manager.gd           <- RAG v2.0, token budget, priority, journal
 
 ---
 
-## LLM Integration Rules (Ministral 3B Instruct + Multi-Brain)
+## LLM Integration Rules (Qwen 2.5-1.5B + Ollama + DUAL Brain)
 
-### Model Info
-- **Model**: Ministral 3B Instruct (~3.4 GB, from Ollama)
-- **Source**: https://ollama.com/library/ministral
-- **Chat template**: `[INST] {system} {prompt} [/INST]`
-- **Context window**: 4096 tokens
-- **Architecture**: Multi-Brain (1-4 cerveaux adaptatifs par plateforme)
+### Model & Backend
+- **Model**: Qwen 2.5-1.5B (~1.0 GB via Ollama, 17.8 tok/s)
+- **Backend primaire**: Ollama HTTP API (`/api/generate`, raw=true, ~8s/carte avec 150 tokens)
+- **Backend secondaire**: MerlinLLM C++ GDExtension (Qwen 3B GGUF, fallback si pas Ollama)
+- **Ollama**: `ollama pull qwen2.5:1.5b`
+- **Chat template**: ChatML (`<|im_start|>/<|im_end|>`)
+- **Context window**: 4096 tokens (Ollama), 2048 (MerlinLLM)
+- **Prompt format**: Plain text (pas de JSON) — scene + A)/B)/C) choices
 
-### Multi-Brain Roles
+### DUAL Brain (default, CPU >= 6 threads)
 | Brain | Role | Params |
 |-------|------|--------|
-| Narrator (always) | Texte creatif, dialogues | T=0.75, top_p=0.92, max=200 |
-| Game Master (desktop+) | Effets JSON (GBNF), equilibrage | T=0.15, top_p=0.8, max=130 |
-| Worker Pool (3-4) | Prefetch, voice, balance check | Inherits from task type |
+| Narrator (always) | Texte creatif, dialogues | T=0.75, top_p=0.92, max=150 |
+| Game Master (dual+) | Effets JSON, equilibrage, prefetch | T=0.15, top_p=0.8, max=80 |
+
+### Zero Fallback Policy
+- **Aucune carte statique** n'est jamais servie au joueur
+- Toutes les cartes proviennent du LLM (Ollama ou MerlinLLM)
+- Echec LLM: retry backoff + "Merlin medite..." overlay + retour hub en dernier recours
+- Labels generiques: `["Avancer prudemment", "Observer en silence", "Agir sans hesiter"]` (si LLM omet les labels)
+- Parsers permissifs: gere A), **A)**, A:, Action A:, - **B**: etc.
+
+### Performance KPIs
+| Metrique | Seuil | Actuel (1.5B, 150tok) | Benchmark |
+|----------|-------|-----------------------|-----------|
+| p50 latence (warm) | < 10s | **~7s** | `--mode perf` |
+| p90 latence (warm) | < 15s | **~11s** | `--mode perf` |
+| Fallback rate | 0% | 0% | Zero Fallback test |
+| Text variety (Jaccard) | < 0.7 | OK | Zero Fallback test |
+| Throughput | > 10 tok/s | **17.8 tok/s** | `--mode perf` |
+| French output | > 80% | **80%** | Quality test |
+
+### Benchmarks
+- **CLI**: `python tools/test_merlin_chat.py --mode perf --perf-runs 20`
+- **In-engine**: Scene `TestTriadeLLMBenchmark.gd` (Perf + Zero Fallback buttons)
+- **Resultats**: `tmp/perf_results.json`
 
 ### Prompt Engineering
-- Mistral follows [INST] format — supports structured system prompts
+- Qwen 2.5 uses ChatML format — supports structured system prompts
 - Supports French natively
-- RAG v2.0: token budget 180, priority-based context
+- RAG v2.0: token budget 400, biome cache, priority-based context
+- Scene context: version-tracked cache (deduplique refresh 4x → 1x)
 - Anti-hallucination guardrails: FR check, repetition detection (Jaccard), length bounds
+- Buffer: 5 cartes pre-generees, prefetch Brain 2 si dual
 
 ### Current Parameters (in merlin_ai.gd)
 ```gdscript
 # Narrator — creative text generation
 var narrator_params := {
-    "temperature": 0.7, "top_p": 0.9, "max_tokens": 200,
-    "top_k": 40, "repetition_penalty": 1.3
+    "temperature": 0.75, "top_p": 0.92, "max_tokens": 150,
+    "top_k": 40, "repetition_penalty": 1.35
 }
-# Game Master — structured JSON effects (GBNF)
+# Game Master — structured JSON effects
 var gamemaster_params := {
-    "temperature": 0.2, "top_p": 0.8, "max_tokens": 150,
-    "top_k": 20, "repetition_penalty": 1.0
+    "temperature": 0.15, "top_p": 0.8, "max_tokens": 80,
+    "top_k": 15, "repetition_penalty": 1.0
 }
 ```
 
@@ -264,10 +303,10 @@ var gamemaster_params := {
 ```
 Premiere partie:
   IntroCeltOS -> MenuPrincipal -> IntroPersonalityQuiz -> SceneRencontreMerlin
-    -> HubAntre -> TransitionBiome -> TriadeGame -> [Fin] -> HubAntre
+    -> HubAntre -> TransitionBiome -> MerlinGame -> [Fin] -> HubAntre
 
 Boucle roguelite:
-  HubAntre -> TransitionBiome -> TriadeGame -> [Fin] -> HubAntre
+  HubAntre -> TransitionBiome -> MerlinGame -> [Fin] -> HubAntre
 
 Continuer:
   MenuPrincipal -> SelectionSauvegarde -> HubAntre
@@ -310,7 +349,7 @@ Voir `.claude/agents/AGENTS.md` pour la liste complète et les instructions d'in
 
 ### LoRA Fine-Tuning Pipeline (NOUVEAU)
 
-**4 agents spécialisés** forment un pipeline complet de fine-tuning du modèle Ministral 3B :
+**4 agents spécialisés** forment un pipeline complet de fine-tuning du modèle Qwen 2.5-3B :
 
 | Agent | Fichier | Rôle |
 |-------|---------|------|
@@ -325,6 +364,37 @@ Voir `.claude/agents/AGENTS.md` pour la liste complète et les instructions d'in
 **Pipeline**: `tools/lora/` (export → augment → train → convert → benchmark)
 **Datasets**: `data/ai/training/` (brut + augmenté, format ChatML)
 **Adapters**: `addons/merlin_llm/adapters/` (fichiers .gguf)
+
+### Skills Transversaux (AUTO-ACTIVATION)
+
+**REGLE MCP-FIRST**: Les MCP (godot-mcp, dbeaver) sont l'action primaire. Les skills completent la methode.
+`get_script` / `scene_tree` → MCP Godot d'abord, skills ensuite.
+
+| Skill | Quand | Phase | Slash Command |
+|-------|-------|-------|---------------|
+| `planning-with-files` | Tache > 2 etapes | DEBUT | Auto (hooks) |
+| `superpowers-writing-plans` | Spec multi-step avant code | DEBUT | `/write-plan` |
+| `superpowers-executing-plans` | Executer un plan ecrit | EXECUTION | `/execute-plan` |
+| `superpowers-systematic-debugging` | Bug, erreur, comportement inattendu | APRES repro | Auto |
+| `superpowers-test-driven-development` | Nouvelle feature ou bug fix | AVANT code | Auto |
+| `superpowers-verification-before-completion` | Avant commit/PR | FIN | Auto |
+| `superpowers-dispatching-parallel-agents` | 2+ taches independantes | DEBUT | Auto |
+| `superpowers-requesting-code-review` | Apres implementation | FIN | Auto |
+| `tdd-workflow` (ECC) | TDD GDScript | AVANT code | `/tdd` |
+| `verification-loop` (ECC) | Verification complete | FIN | `/verify` |
+| `security-review` (ECC) | Save system, LLM input, data | VALIDATION | Auto |
+| `coding-standards` (ECC) | Code GDScript quality | VALIDATION | Auto |
+| `ui-ux-pro-max` | Interface UI/UX design | CONCEPTION | Auto |
+
+**GSD Commands disponibles:**
+- `/gsd:plan-phase` — Planifier une phase de dev
+- `/gsd:execute-phase` — Executer avec wave-based parallelization
+- `/gsd:debug` — Debugging systematique persistant
+- `/gsd:verify-work` — Verification avant commit
+- `/gsd:map-codebase` — Cartographier l'architecture
+- `/gsd:progress` — Voir l'avancement global
+
+Ref complete: `~/.claude/rules/common/skill-activation-matrix.md`
 
 ### Knowledge Base
 
@@ -342,4 +412,4 @@ Fichier: `.claude/agents/gdscript_knowledge_base.md`
 
 ---
 
-*Updated: 2026-02-11 — 33 agents (4 new: LoRA pipeline), Task Dispatcher v1.2*
+*Updated: 2026-02-18 — Agent system v2.0 (common base + overlays), Hook v2 (route-and-dispatch), Metrics, 33 agents + 5 common*

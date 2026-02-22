@@ -62,7 +62,7 @@ The Calendar uses a **single card/scroll layout** that echoes the main menu's ce
 
 ## Color Palette
 
-### Primary Colors (from MenuPrincipalReigns.gd)
+### Primary Colors (from MenuPrincipalMerlin.gd)
 
 ```gdscript
 const CALENDAR_PALETTE := {
@@ -433,8 +433,8 @@ tween.tween_property(event_card, "modulate:a", 1.0, 0.8)
 
 - [x] Color palette compliance (paper/ink/accent from main menu)
 - [x] Typography correct (MorrisRoman family)
-- [x] Consistent with existing assets (matches MenuPrincipalReigns.gd)
-- [x] Reigns style guide compliance (flat, minimal, silhouette-first)
+- [x] Consistent with existing assets (matches MenuPrincipalMerlin.gd)
+- [x] Merlin style guide compliance (flat, minimal, silhouette-first)
 - [x] Responsive considerations for mobile
 
 ---
@@ -488,8 +488,8 @@ The Calendar scene should read from:
 
 ### Related Files
 
-- `c:/Users/PGNK2128/Godot-MCP/scripts/MenuPrincipalReigns.gd` - Reference palette and card style
-- `c:/Users/PGNK2128/Godot-MCP/themes/reigns_theme.tres` - Base theme to extend
+- `c:/Users/PGNK2128/Godot-MCP/scripts/MenuPrincipalMerlin.gd` - Reference palette and card style
+- `c:/Users/PGNK2128/Godot-MCP/themes/merlin_theme.tres` - Base theme to extend
 - `c:/Users/PGNK2128/Godot-MCP/docs/40_world_rules/calendar_2026.json` - Event data
 - `c:/Users/PGNK2128/Godot-MCP/docs/40_world_rules/HOURLY_SLICES_GUIDE.md` - Hour system
 

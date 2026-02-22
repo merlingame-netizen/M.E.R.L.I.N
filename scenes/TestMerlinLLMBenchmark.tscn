@@ -1,8 +1,8 @@
 [gd_scene load_steps=2 format=3]
 
-[ext_resource type="Script" path="res://scripts/TestTriadeLLMBenchmark.gd" id="1"]
+[ext_resource type="Script" path="res://scripts/TestMerlinLLMBenchmark.gd" id="1"]
 
-[node name="TestTriadeLLMBenchmark" type="Control"]
+[node name="TestMerlinLLMBenchmark" type="Control"]
 layout_mode = 3
 anchors_preset = 15
 anchor_right = 1.0

@@ -4,7 +4,7 @@
 
 extends MiniGameBase
 
-const SYMBOLS := ["◯", "△", "□", "◇"]
+const SYMBOLS := ["\u25ef", "\u25b3", "\u25a1", "\u25c7"]
 var _sequence: Array[String] = []
 var _player_input: Array[String] = []
 var _timer: float = 6.0
@@ -105,6 +105,14 @@ func _process(delta: float) -> void:
 
 	if _timer <= 0:
 		_fail_game()
+
+
+func _on_key_pressed(keycode: int) -> void:
+	# Keys 1-4 map to symbols: 1=circle, 2=triangle, 3=square, 4=diamond
+	if keycode >= KEY_1 and keycode <= KEY_4:
+		var symbol_index: int = keycode - KEY_1
+		if symbol_index < SYMBOLS.size():
+			_on_symbol_pressed(SYMBOLS[symbol_index])
 
 
 func _on_symbol_pressed(symbol: String) -> void:

@@ -1,0 +1,76 @@
+{
+  "_meta": {
+    "version": "1.0.0",
+    "description": "5 modificateurs overlay applicables a n'importe quelle categorie d'evenement. Un seul par carte. ~15% des cartes modifiees. Consomme par event_category_selector.gd.",
+    "references": "event_categories.json pour les categories, scenario_prompts.json pour les templates LLM"
+  },
+  "modifiers": {
+    "chance": {
+      "label": "Chance",
+      "probability": 0.08,
+      "description": "Element aleatoire: de du destin, pile ou face ou rune cachee. Le hasard decide du resultat.",
+      "trigger": {},
+      "prompt_injection": "Cette carte inclut un element de CHANCE. Un des 3 choix declenche un jeu de hasard (de, piece ou rune). Decris l'enjeu du hasard dans le texte narratif — le voyageur prend un risque dont l'issue depend du destin.",
+      "minigame_pool": ["de_du_destin", "pile_ou_face", "rune_cachee"],
+      "effect_modifier": {
+        "on_success": "double_positive",
+        "on_failure": "apply_negative"
+      },
+      "category_exclusions": ["repos"]
+    },
+    "bestiole": {
+      "label": "Bestiole",
+      "probability": 0.10,
+      "description": "Bestiole intervient directement dans la scene. Modifie une option ou revele un indice.",
+      "trigger": {"bestiole_bond_above": 50},
+      "prompt_injection": "Bestiole (le compagnon animal du voyageur) intervient dans cette scene. Elle reagit, aide ou complique la situation. Mentionne Bestiole dans le texte narratif et dans au moins une option.",
+      "effect_modifier": {
+        "add_effect": "MODIFY_BOND:3"
+      },
+      "category_exclusions": []
+    },
+    "ogham": {
+      "label": "Ogham",
+      "probability": 0.06,
+      "description": "Savoir druidique, l'Ogham du biome s'active. Connaissance ancienne guide ou avertit.",
+      "trigger": {"biome_has_ogham_bonus": true},
+      "prompt_injection": "Un Ogham (lettre de l'alphabet sacre des druides) brille sur une pierre ou un tronc d'arbre. Le savoir ancien guide ou avertit le voyageur. Integre cet Ogham dans le texte narratif et dans les choix.",
+      "effect_modifier": {
+        "add_effect": "ADD_TAG:ogham_activated"
+      },
+      "category_exclusions": []
+    },
+    "nocturne": {
+      "label": "Nocturne",
+      "probability": 0.05,
+      "description": "Variante nuit. Ton plus sombre, creatures nocturnes, mystere accentue.",
+      "trigger": {"cards_played_min": 15},
+      "prompt_injection": "La scene se deroule DE NUIT. L'obscurite change tout: les ombres bougent, les sons sont amplifies, la brume est plus dense. Ton plus sombre et mysterieux. Les creatures nocturnes rodent.",
+      "effect_modifier": {
+        "add_effect": "ADD_TENSION:5"
+      },
+      "category_exclusions": ["repos"]
+    },
+    "saisonnier": {
+      "label": "Saisonnier",
+      "probability": 0.04,
+      "description": "Evenement lie a la saison celtique courante. Fete, phenomene naturel ou rituel saisonnier.",
+      "trigger": {"season_active": true},
+      "prompt_injection": "La SAISON marque profondement cette scene. {season_description}. Integre les elements saisonniers dans le decor et les enjeux.",
+      "season_descriptions": {
+        "spring": "Imbolc: purification par le feu, pousses vertes, Brigid bienveillante, renouveau apres l'hiver",
+        "summer": "Beltane puis Lughnasadh: feux de joie, fertilite, recolte doree, competitions entre clans, abondance",
+        "autumn": "Samhain: le voile entre les mondes s'amincit, les ancetres reviennent, ombres longues, dernier souffle avant l'hiver",
+        "winter": "Solstice d'hiver: gel mordant, survie, lumiere rare et precieuse, Cailleach la vieille, renaissance du soleil"
+      },
+      "category_exclusions": []
+    }
+  },
+  "selection_rules": {
+    "max_modifiers_per_card": 1,
+    "max_consecutive_modified": 2,
+    "min_gap_same_modifier": 5,
+    "scenario_anchor_never_modified": true,
+    "total_modifier_rate": 0.15
+  }
+}

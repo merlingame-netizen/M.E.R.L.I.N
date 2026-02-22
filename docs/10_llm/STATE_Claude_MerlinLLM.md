@@ -16,12 +16,12 @@ Ce document resume l'etat actuel du projet, les scripts en place, les chemins ex
 
 - Moteur: Godot 4.5.1
 - Objectif: LLM local integre (pas de serveur) via GDExtension `MerlinLLM`.
-- Modele unique: **Qwen2.5-3B-Instruct** (Multi-Brain: 1-4 instances)
+- Modele unique: **Qwen 2.5-3B-Instruct** (Multi-Brain: 1-4 instances)
 - Quantization: Q4_K_M (2.0 GB)
 - UI de test: `TestTriadeLLMBenchmark.tscn` (5 benchmarks), `TestLLMSceneUltimate.tscn`
 
 Etat actuel:
-- Migration Trinity-Nano -> Qwen2.5-3B-Instruct complete (Phase 31)
+- Migration Ministral -> Qwen 2.5-3B-Instruct complete (Phase 31)
 - Pipeline TRIADE fonctionnel (3 aspects, 3 options par carte)
 - Fallback automatique Q4 -> Q5 -> Q8
 - Streaming disponible via MerlinAI autoload

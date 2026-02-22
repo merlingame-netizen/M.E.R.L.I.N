@@ -225,10 +225,149 @@ text = "75%"
 custom_minimum_size = Vector2(0, 20)
 layout_mode = 2
 
+[node name="Spacer3" type="Control" parent="MainLayout/VBox/ScrollContainer/OptionsContainer"]
+layout_mode = 2
+
+[node name="CalendarSection" type="VBoxContainer" parent="MainLayout/VBox/ScrollContainer/OptionsContainer"]
+layout_mode = 2
+
+[node name="CalendarTitle" type="Label" parent="MainLayout/VBox/ScrollContainer/OptionsContainer/CalendarSection"]
+layout_mode = 2
+text = "CALENDRIER"
+
+[node name="HSep3" type="HSeparator" parent="MainLayout/VBox/ScrollContainer/OptionsContainer/CalendarSection"]
+layout_mode = 2
+
+[node name="OverrideRow" type="HBoxContainer" parent="MainLayout/VBox/ScrollContainer/OptionsContainer/CalendarSection"]
+layout_mode = 2
+
+[node name="OverrideLabel" type="Label" parent="MainLayout/VBox/ScrollContainer/OptionsContainer/CalendarSection/OverrideRow"]
+layout_mode = 2
+text = "Date personnalisee :"
+
+[node name="CalendarOverrideCheck" type="CheckBox" parent="MainLayout/VBox/ScrollContainer/OptionsContainer/CalendarSection/OverrideRow"]
+layout_mode = 2
+
+[node name="DateRow" type="HBoxContainer" parent="MainLayout/VBox/ScrollContainer/OptionsContainer/CalendarSection"]
+layout_mode = 2
+
+[node name="DayLabel" type="Label" parent="MainLayout/VBox/ScrollContainer/OptionsContainer/CalendarSection/DateRow"]
+layout_mode = 2
+text = "Jour:"
+
+[node name="CalendarDaySpin" type="SpinBox" parent="MainLayout/VBox/ScrollContainer/OptionsContainer/CalendarSection/DateRow"]
+layout_mode = 2
+
+[node name="MonthLabel" type="Label" parent="MainLayout/VBox/ScrollContainer/OptionsContainer/CalendarSection/DateRow"]
+layout_mode = 2
+text = "Mois:"
+
+[node name="CalendarMonthSpin" type="SpinBox" parent="MainLayout/VBox/ScrollContainer/OptionsContainer/CalendarSection/DateRow"]
+layout_mode = 2
+
+[node name="YearLabel" type="Label" parent="MainLayout/VBox/ScrollContainer/OptionsContainer/CalendarSection/DateRow"]
+layout_mode = 2
+text = "Annee:"
+
+[node name="CalendarYearSpin" type="SpinBox" parent="MainLayout/VBox/ScrollContainer/OptionsContainer/CalendarSection/DateRow"]
+layout_mode = 2
+
+[node name="Spacer4" type="Control" parent="MainLayout/VBox/ScrollContainer/OptionsContainer"]
+layout_mode = 2
+
+[node name="LanguageSection" type="VBoxContainer" parent="MainLayout/VBox/ScrollContainer/OptionsContainer"]
+layout_mode = 2
+
+[node name="LanguageTitle" type="Label" parent="MainLayout/VBox/ScrollContainer/OptionsContainer/LanguageSection"]
+layout_mode = 2
+text = "LANGUE"
+
+[node name="HSep4" type="HSeparator" parent="MainLayout/VBox/ScrollContainer/OptionsContainer/LanguageSection"]
+layout_mode = 2
+
+[node name="LanguageRow" type="HBoxContainer" parent="MainLayout/VBox/ScrollContainer/OptionsContainer/LanguageSection"]
+layout_mode = 2
+
+[node name="LanguageLabel" type="Label" parent="MainLayout/VBox/ScrollContainer/OptionsContainer/LanguageSection/LanguageRow"]
+layout_mode = 2
+text = "Langue / Language :"
+
+[node name="LanguageOption" type="OptionButton" parent="MainLayout/VBox/ScrollContainer/OptionsContainer/LanguageSection/LanguageRow"]
+layout_mode = 2
+
+[node name="Spacer5" type="Control" parent="MainLayout/VBox/ScrollContainer/OptionsContainer"]
+layout_mode = 2
+
+[node name="VoiceSection" type="VBoxContainer" parent="MainLayout/VBox/ScrollContainer/OptionsContainer"]
+layout_mode = 2
+
+[node name="VoiceTitle" type="Label" parent="MainLayout/VBox/ScrollContainer/OptionsContainer/VoiceSection"]
+layout_mode = 2
+text = "VOIX"
+
+[node name="HSep5" type="HSeparator" parent="MainLayout/VBox/ScrollContainer/OptionsContainer/VoiceSection"]
+layout_mode = 2
+
+[node name="VoiceModeRow" type="HBoxContainer" parent="MainLayout/VBox/ScrollContainer/OptionsContainer/VoiceSection"]
+layout_mode = 2
+
+[node name="ModeLabel" type="Label" parent="MainLayout/VBox/ScrollContainer/OptionsContainer/VoiceSection/VoiceModeRow"]
+layout_mode = 2
+text = "Mode de voix :"
+
+[node name="VoiceModeOption" type="OptionButton" parent="MainLayout/VBox/ScrollContainer/OptionsContainer/VoiceSection/VoiceModeRow"]
+layout_mode = 2
+
+[node name="VoiceBankRow" type="HBoxContainer" parent="MainLayout/VBox/ScrollContainer/OptionsContainer/VoiceSection"]
+layout_mode = 2
+
+[node name="BankLabel" type="Label" parent="MainLayout/VBox/ScrollContainer/OptionsContainer/VoiceSection/VoiceBankRow"]
+layout_mode = 2
+text = "Banque de sons :"
+
+[node name="VoiceBankOption" type="OptionButton" parent="MainLayout/VBox/ScrollContainer/OptionsContainer/VoiceSection/VoiceBankRow"]
+layout_mode = 2
+
+[node name="VoicePresetRow" type="HBoxContainer" parent="MainLayout/VBox/ScrollContainer/OptionsContainer/VoiceSection"]
+layout_mode = 2
+
+[node name="PresetLabel" type="Label" parent="MainLayout/VBox/ScrollContainer/OptionsContainer/VoiceSection/VoicePresetRow"]
+layout_mode = 2
+text = "Preset voix :"
+
+[node name="VoicePresetOption" type="OptionButton" parent="MainLayout/VBox/ScrollContainer/OptionsContainer/VoiceSection/VoicePresetRow"]
+layout_mode = 2
+
+[node name="Spacer6" type="Control" parent="MainLayout/VBox/ScrollContainer/OptionsContainer"]
+layout_mode = 2
+
+[node name="IASection" type="VBoxContainer" parent="MainLayout/VBox/ScrollContainer/OptionsContainer"]
+layout_mode = 2
+
+[node name="IATitle" type="Label" parent="MainLayout/VBox/ScrollContainer/OptionsContainer/IASection"]
+layout_mode = 2
+text = "INTELLIGENCE ARTIFICIELLE"
+
+[node name="HSep6" type="HSeparator" parent="MainLayout/VBox/ScrollContainer/OptionsContainer/IASection"]
+layout_mode = 2
+
+[node name="BrainRow" type="HBoxContainer" parent="MainLayout/VBox/ScrollContainer/OptionsContainer/IASection"]
+layout_mode = 2
+
+[node name="BrainLabel" type="Label" parent="MainLayout/VBox/ScrollContainer/OptionsContainer/IASection/BrainRow"]
+layout_mode = 2
+text = "Cerveaux IA :"
+
+[node name="BrainCountOption" type="OptionButton" parent="MainLayout/VBox/ScrollContainer/OptionsContainer/IASection/BrainRow"]
+layout_mode = 2
+
+[node name="BrainInfoLabel" type="Label" parent="MainLayout/VBox/ScrollContainer/OptionsContainer/IASection"]
+layout_mode = 2
+
 [node name="ButtonsContainer" type="HBoxContainer" parent="MainLayout/VBox"]
 layout_mode = 2
-alignment = 1
 theme_override_constants/separation = 20
+alignment = 1
 
 [node name="BtnAppliquer" type="Button" parent="MainLayout/VBox/ButtonsContainer"]
 custom_minimum_size = Vector2(150, 40)

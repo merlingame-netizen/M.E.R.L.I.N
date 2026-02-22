@@ -28,10 +28,10 @@ const BADGE_LABELS := {
 }
 
 const BADGE_DOTS := {
-	"llm": "\u25CF ",      # ● filled circle
-	"fallback": "\u25CB ", # ○ empty circle
-	"static": "\u25AA ",   # ▪ small square
-	"error": "\u2716 ",    # ✖ cross
+	"llm": "* ",       # Was U+25CF
+	"fallback": "o ",  # Was U+25CB
+	"static": "# ",    # Was U+25AA
+	"error": "x ",     # Was U+2716
 }
 
 const FONT_SIZE := 10
@@ -76,7 +76,7 @@ static func _apply_source(panel: PanelContainer, label: Label, source: String) -
 	# Tooltip
 	match key:
 		"llm":
-			panel.tooltip_text = "Texte genere par le LLM (Ministral 3B)"
+			panel.tooltip_text = "Texte genere par le LLM (Qwen 2.5-3B)"
 		"fallback":
 			panel.tooltip_text = "Texte de secours (JSON / pool)"
 		"static":

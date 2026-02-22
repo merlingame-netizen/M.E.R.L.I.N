@@ -67,6 +67,16 @@ func _on_start() -> void:
 	_current_round = 1
 
 
+func _on_key_pressed(keycode: int) -> void:
+	match keycode:
+		KEY_Q:
+			_on_choice(Choice.PIERRE)
+		KEY_W:
+			_on_choice(Choice.FEUILLE)
+		KEY_E:
+			_on_choice(Choice.RACINE)
+
+
 func _on_choice(player_choice: Choice) -> void:
 	if _waiting_for_result:
 		return

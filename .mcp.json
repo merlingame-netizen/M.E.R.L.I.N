@@ -24,6 +24,26 @@
       "env": {
         "PBI_MODELING_MCP_CLIENT_ID": "ea0616ba-638b-4df5-95b9-636659ae5121"
       }
+    },
+    "powerbi-dashboard-mcp": {
+      "command": "node",
+      "args": [
+        "C:\\Users\\PGNK2128\\OneDrive - orange.com\\Bureau\\Agents\\Data\\powerbi-dashboard-mcp\\dist\\index.js"
+      ]
+    },
+    "pbi-workflow-mcp": {
+      "command": "node",
+      "args": [
+        "C:\\Users\\PGNK2128\\OneDrive - orange.com\\Partage VOC\\Data\\Travaux cible IPSOS\\App_Cible_IPSOS_v2\\pbi-workflow-mcp\\dist\\index.js"
+      ]
+    },
+    "pixellab": {
+      "url": "https://api.pixellab.ai/mcp",
+      "transport": "http",
+      "headers": {
+        "Authorization": "Bearer PIXELLAB_API_TOKEN_HERE"
+      },
+      "_comment": "PixelLab AI pixel art generator — get token at https://www.pixellab.ai/pixellab-api"
     }
   }
 }

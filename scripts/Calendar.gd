@@ -11,40 +11,10 @@ const MOBILE_BREAKPOINT := 560.0
 
 const TAB_EVENTS := 0
 const TAB_STATS := 1
+const TAB_BRUMES := 2
+const EVENTS_JSON_PATH := "res://data/calendar_events.json"
+const BRUMES_LOOKAHEAD_EVENTS := 7
 
-# Palette Parchemin Mystique Breton (cohérente avec MenuPrincipalReigns)
-const PALETTE := {
-	# Fond parchemin
-	"paper": Color(0.965, 0.945, 0.905),
-	"paper_dark": Color(0.935, 0.905, 0.855),
-	"paper_warm": Color(0.955, 0.930, 0.890),
-	"mist": Color(0.94, 0.92, 0.88, 0.35),
-
-	# Encres
-	"ink": Color(0.22, 0.18, 0.14),
-	"ink_soft": Color(0.38, 0.32, 0.26),
-	"ink_faded": Color(0.50, 0.44, 0.38, 0.35),
-
-	# Accents bronze/or
-	"accent": Color(0.58, 0.44, 0.26),
-	"accent_soft": Color(0.65, 0.52, 0.34),
-	"accent_glow": Color(0.72, 0.58, 0.38, 0.25),
-
-	# Saisons
-	"spring": Color(0.45, 0.55, 0.35),
-	"summer": Color(0.70, 0.58, 0.30),
-	"autumn": Color(0.60, 0.40, 0.25),
-	"winter": Color(0.40, 0.45, 0.50),
-
-	# États événements
-	"event_past": Color(0.55, 0.50, 0.45, 0.6),
-	"event_today": Color(0.68, 0.55, 0.32),
-	"event_future": Color(0.22, 0.18, 0.14),
-
-	# Ombres
-	"shadow": Color(0.25, 0.20, 0.16, 0.18),
-	"line": Color(0.40, 0.34, 0.28, 0.15),
-}
 
 const MONTH_NAMES := [
 	"", "Janvier", "Fevrier", "Mars", "Avril", "Mai", "Juin",
@@ -59,14 +29,14 @@ const SEASON_NAMES := {
 }
 
 const MOON_PHASES := {
-	"new": {"name": "Nouvelle Lune", "icon": "●", "power": 0.0},
-	"waxing_crescent": {"name": "Premier Croissant", "icon": "☽", "power": 0.25},
-	"first_quarter": {"name": "Premier Quartier", "icon": "◐", "power": 0.5},
-	"waxing_gibbous": {"name": "Lune Gibbeuse", "icon": "◑", "power": 0.75},
-	"full": {"name": "Pleine Lune", "icon": "○", "power": 1.0},
-	"waning_gibbous": {"name": "Lune Decroissante", "icon": "◑", "power": 0.75},
-	"last_quarter": {"name": "Dernier Quartier", "icon": "◐", "power": 0.5},
-	"waning_crescent": {"name": "Dernier Croissant", "icon": "☾", "power": 0.25},
+	"new": {"name": "Nouvelle Lune", "icon": "\u25cf", "power": 0.0},
+	"waxing_crescent": {"name": "Premier Croissant", "icon": "\u263d", "power": 0.25},
+	"first_quarter": {"name": "Premier Quartier", "icon": "\u25d0", "power": 0.5},
+	"waxing_gibbous": {"name": "Lune Gibbeuse", "icon": "\u25d1", "power": 0.75},
+	"full": {"name": "Pleine Lune", "icon": "\u25cb", "power": 1.0},
+	"waning_gibbous": {"name": "Lune Decroissante", "icon": "\u25d1", "power": 0.75},
+	"last_quarter": {"name": "Dernier Quartier", "icon": "\u25d0", "power": 0.5},
+	"waning_crescent": {"name": "Dernier Croissant", "icon": "\u263e", "power": 0.25},
 }
 
 const CELTIC_FESTIVALS := {
@@ -105,21 +75,25 @@ const ALL_ENDINGS := [
 	{"title": "Le Pillage", "gauge": "Ressources", "direction": 100},
 ]
 
-# UI Elements
-var parchment_bg: ColorRect
-var mist_layer: ColorRect
-var main_card: PanelContainer
-var wheel_container: Control
-var event_panel: PanelContainer
-var tabs_container: HBoxContainer
+# Scene nodes (@onready)
+@onready var parchment_bg: ColorRect = $ParchmentBg
+@onready var mist_layer: ColorRect = $MistLayer
+@onready var main_card: PanelContainer = $MainCard
+@onready var wheel_container: Control = $MainCard/CardVBox/WheelContainer
+@onready var event_panel: PanelContainer = $MainCard/CardVBox/EventPanel
+@onready var tabs_container: HBoxContainer = $MainCard/CardVBox/TabsContainer
+@onready var content_scroll: ScrollContainer = $MainCard/CardVBox/ContentScroll
+@onready var events_section: VBoxContainer = $MainCard/CardVBox/ContentScroll/ContentVBox/EventsSection
+@onready var stats_section: VBoxContainer = $MainCard/CardVBox/ContentScroll/ContentVBox/StatsSection
+@onready var brumes_section: VBoxContainer = $MainCard/CardVBox/ContentScroll/ContentVBox/BrumesSection
+@onready var back_button: Button = $BackButton
+@onready var celtic_ornament_top: Label = $CelticOrnamentTop
+@onready var celtic_ornament_bottom: Label = $CelticOrnamentBottom
+
+# Dynamic nodes (created at runtime)
 var events_tab_btn: Button
 var stats_tab_btn: Button
-var content_scroll: ScrollContainer
-var events_section: VBoxContainer
-var stats_section: VBoxContainer
-var back_button: Button
-var celtic_ornament_top: Label
-var celtic_ornament_bottom: Label
+var brumes_tab_btn: Button
 
 var font_regular: Font
 var font_bold: Font
@@ -134,13 +108,18 @@ var meta_stats: Dictionary = {}
 var current_moon_phase: String = "new"
 var moon_power: float = 0.0
 
+## Events loaded from JSON (or fallback to CALENDAR_EVENTS)
+var calendar_events_display: Array = []
+var has_brumes_upgrade := false
+
 
 func _ready() -> void:
 	set_anchors_preset(Control.PRESET_FULL_RECT)
 	_load_fonts()
+	_load_events_from_json()
 	_determine_current_context()
 	_load_meta_stats()
-	_build_ui()
+	_configure_ui()
 	_populate_all()
 	_set_tab(TAB_EVENTS)
 	get_viewport().size_changed.connect(_on_viewport_resized)
@@ -156,6 +135,84 @@ func _load_fonts() -> void:
 		font_regular = font_bold
 	if font_bold == null:
 		font_bold = font_regular
+
+
+func _load_events_from_json() -> void:
+	if not FileAccess.file_exists(EVENTS_JSON_PATH):
+		push_warning("Calendar: JSON not found at %s, using hardcoded fallback" % EVENTS_JSON_PATH)
+		_use_fallback_events()
+		return
+
+	var file := FileAccess.open(EVENTS_JSON_PATH, FileAccess.READ)
+	if file == null:
+		push_warning("Calendar: Cannot open %s, using fallback" % EVENTS_JSON_PATH)
+		_use_fallback_events()
+		return
+
+	var json := JSON.new()
+	var err := json.parse(file.get_as_text())
+	file.close()
+	if err != OK:
+		push_warning("Calendar: JSON parse error at line %d: %s" % [json.get_error_line(), json.get_error_message()])
+		_use_fallback_events()
+		return
+
+	var data: Dictionary = json.data if json.data is Dictionary else {}
+	var raw_events: Array = data.get("events", [])
+	if raw_events.is_empty():
+		push_warning("Calendar: No events in JSON, using fallback")
+		_use_fallback_events()
+		return
+
+	calendar_events_display.clear()
+	for ev in raw_events:
+		var display := _json_event_to_display(ev)
+		if not display.is_empty():
+			calendar_events_display.append(display)
+
+	calendar_events_display.sort_custom(func(a: Dictionary, b: Dictionary) -> bool:
+		return a.date < b.date
+	)
+
+
+func _json_event_to_display(ev: Dictionary) -> Dictionary:
+	## Convert a JSON event entry to the display format used by _populate_events.
+	## Returns empty dict for floating/window events that have no fixed date.
+	var date_val = ev.get("date", null)
+	if date_val == null or (date_val is String and date_val == "floating"):
+		return {}
+
+	var month := 0
+	var day := 0
+	if date_val is Dictionary:
+		if date_val.has("window"):
+			# Window events: use start date for display
+			var w: Dictionary = date_val.window
+			month = int(w.get("start_month", 0))
+			day = int(w.get("start_day", 0))
+		else:
+			month = int(date_val.get("month", 0))
+			day = int(date_val.get("day", 0))
+
+	if month == 0 or day == 0:
+		return {}
+
+	return {
+		"date": "%02d-%02d" % [month, day],
+		"name": ev.get("name", ""),
+		"desc": ev.get("text", ""),
+		"id": ev.get("id", ""),
+		"category": ev.get("category", ""),
+		"tags": ev.get("tags", []),
+		"effects": ev.get("effects", []),
+		"visual": ev.get("visual", {}),
+	}
+
+
+func _use_fallback_events() -> void:
+	calendar_events_display.clear()
+	for ev in CALENDAR_EVENTS:
+		calendar_events_display.append(ev.duplicate())
 
 
 func _determine_current_context() -> void:
@@ -187,11 +244,12 @@ func _get_day_of_year(month: int, day: int) -> int:
 
 
 func _find_next_event() -> Dictionary:
+	var events: Array = calendar_events_display if not calendar_events_display.is_empty() else CALENDAR_EVENTS
 	var today_str: String = "%02d-%02d" % [current_date.month, current_date.day]
-	for event in CALENDAR_EVENTS:
+	for event in events:
 		if event.date >= today_str:
 			return event
-	return CALENDAR_EVENTS[0] if CALENDAR_EVENTS.size() > 0 else {}
+	return events[0] if events.size() > 0 else {}
 
 
 func _calculate_moon_phase() -> String:
@@ -241,6 +299,30 @@ func get_active_festival() -> String:
 	return ""
 
 
+func get_all_events() -> Array:
+	## Public accessor for other systems (EventAdapter, card generation).
+	return calendar_events_display.duplicate()
+
+
+func get_events_for_month(month: int) -> Array:
+	## Return all display events for a specific month.
+	var month_str: String = "%02d" % month
+	var result: Array = []
+	for ev in calendar_events_display:
+		if ev.date.substr(0, 2) == month_str:
+			result.append(ev)
+	return result
+
+
+func get_events_in_window(from_date: String, to_date: String) -> Array:
+	## Return events between two dates (inclusive). Dates as "MM-DD".
+	var result: Array = []
+	for ev in calendar_events_display:
+		if ev.date >= from_date and ev.date <= to_date:
+			result.append(ev)
+	return result
+
+
 func _load_meta_stats() -> void:
 	var merlin_store = get_node_or_null("/root/MerlinStore")
 	if merlin_store and merlin_store.state.has("meta"):
@@ -251,86 +333,70 @@ func _load_meta_stats() -> void:
 			"endings_seen": meta.get("endings_seen", []),
 			"gloire_points": meta.get("gloire_points", 0),
 		}
+		var unlocked: Array = meta.get("talent_tree", {}).get("unlocked", [])
+		has_brumes_upgrade = unlocked.has("calendrier_des_brumes")
 	else:
 		meta_stats = {"total_runs": 0, "total_cards_played": 0, "endings_seen": [], "gloire_points": 0}
+		has_brumes_upgrade = false
 
 
 # =============================================================================
 # UI BUILDING
 # =============================================================================
 
-func _build_ui() -> void:
+func _configure_ui() -> void:
 	var viewport_size := get_viewport().get_visible_rect().size
 	compact_mode = viewport_size.x < MOBILE_BREAKPOINT
 
-	# Fond parchemin avec shader
-	parchment_bg = ColorRect.new()
-	parchment_bg.set_anchors_preset(Control.PRESET_FULL_RECT)
-	parchment_bg.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	var paper_shader := load("res://shaders/reigns_paper.gdshader")
+	# Configure parchment background shader
+	var paper_shader := load("res://shaders/merlin_paper.gdshader")
 	if paper_shader:
 		var mat := ShaderMaterial.new()
 		mat.shader = paper_shader
-		mat.set_shader_parameter("paper_tint", PALETTE.paper)
+		mat.set_shader_parameter("paper_tint", MerlinVisual.PALETTE.paper)
 		mat.set_shader_parameter("grain_strength", 0.025)
 		mat.set_shader_parameter("vignette_strength", 0.08)
 		mat.set_shader_parameter("vignette_softness", 0.65)
 		parchment_bg.material = mat
 	else:
-		parchment_bg.color = PALETTE.paper
-	add_child(parchment_bg)
+		parchment_bg.color = MerlinVisual.PALETTE.paper
 
-	# Brume subtile
-	mist_layer = ColorRect.new()
-	mist_layer.set_anchors_preset(Control.PRESET_FULL_RECT)
-	mist_layer.color = PALETTE.mist
-	mist_layer.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	add_child(mist_layer)
+	# Configure mist
+	mist_layer.color = MerlinVisual.PALETTE.mist
 
-	# Ornements celtiques
-	_build_celtic_ornaments(viewport_size)
+	# Configure celtic ornaments
+	_configure_celtic_ornaments(viewport_size)
 
-	# Carte principale
-	_build_main_card(viewport_size)
+	# Configure main card
+	_configure_main_card(viewport_size)
 
-	# Bouton retour
-	_build_back_button(viewport_size)
+	# Configure back button
+	_configure_back_button(viewport_size)
 
 
-func _build_celtic_ornaments(viewport_size: Vector2) -> void:
+func _configure_celtic_ornaments(viewport_size: Vector2) -> void:
 	var ornament_line := _create_celtic_line(35)
 
-	celtic_ornament_top = Label.new()
 	celtic_ornament_top.text = ornament_line
-	celtic_ornament_top.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	celtic_ornament_top.add_theme_color_override("font_color", PALETTE.ink_faded)
-	celtic_ornament_top.add_theme_font_size_override("font_size", 14)
+	celtic_ornament_top.add_theme_color_override("font_color", MerlinVisual.PALETTE.ink_faded)
 	celtic_ornament_top.size = Vector2(viewport_size.x, 30)
 	celtic_ornament_top.position = Vector2(0, 35)
-	celtic_ornament_top.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	add_child(celtic_ornament_top)
 
-	celtic_ornament_bottom = Label.new()
 	celtic_ornament_bottom.text = ornament_line
-	celtic_ornament_bottom.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	celtic_ornament_bottom.add_theme_color_override("font_color", PALETTE.ink_faded)
-	celtic_ornament_bottom.add_theme_font_size_override("font_size", 14)
+	celtic_ornament_bottom.add_theme_color_override("font_color", MerlinVisual.PALETTE.ink_faded)
 	celtic_ornament_bottom.size = Vector2(viewport_size.x, 30)
 	celtic_ornament_bottom.position = Vector2(0, viewport_size.y - 65)
-	celtic_ornament_bottom.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	add_child(celtic_ornament_bottom)
 
 
 func _create_celtic_line(length: int) -> String:
 	var line := ""
-	var pattern := ["─", "•", "─", "─", "◆", "─", "─", "•", "─"]
+	var pattern := ["\u2500", "\u2022", "\u2500", "\u2500", "\u25c6", "\u2500", "\u2500", "\u2022", "\u2500"]
 	for i in range(length):
 		line += pattern[i % pattern.size()]
 	return line
 
 
-func _build_main_card(viewport_size: Vector2) -> void:
-	main_card = PanelContainer.new()
+func _configure_main_card(viewport_size: Vector2) -> void:
 	var card_w := minf(520.0, viewport_size.x * 0.88)
 	var card_h := minf(580.0, viewport_size.y * 0.78)
 	main_card.size = Vector2(card_w, card_h)
@@ -338,111 +404,59 @@ func _build_main_card(viewport_size: Vector2) -> void:
 	main_card.pivot_offset = main_card.size / 2
 
 	var card_style := StyleBoxFlat.new()
-	card_style.bg_color = PALETTE.paper_warm
-	card_style.border_color = PALETTE.ink_faded
+	card_style.bg_color = MerlinVisual.PALETTE.paper_warm
+	card_style.border_color = MerlinVisual.PALETTE.ink_faded
 	card_style.set_border_width_all(1)
 	card_style.set_corner_radius_all(4)
-	card_style.shadow_color = PALETTE.shadow
+	card_style.shadow_color = MerlinVisual.PALETTE.shadow
 	card_style.shadow_size = 12
 	card_style.shadow_offset = Vector2(0, 4)
 	card_style.set_content_margin_all(20)
 	main_card.add_theme_stylebox_override("panel", card_style)
-	add_child(main_card)
 
-	var vbox := VBoxContainer.new()
-	vbox.add_theme_constant_override("separation", 12)
-	main_card.add_child(vbox)
-
-	# Titre
-	var title := Label.new()
-	title.text = "Calendrier Celtique"
-	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	# Style title
+	var title_label: Label = $MainCard/CardVBox/TitleLabel
 	if font_bold:
-		title.add_theme_font_override("font", font_bold)
-	title.add_theme_font_size_override("font_size", 28 if not compact_mode else 22)
-	title.add_theme_color_override("font_color", PALETTE.ink)
-	vbox.add_child(title)
+		title_label.add_theme_font_override("font", font_bold)
+	title_label.add_theme_font_size_override("font_size", 28 if not compact_mode else 22)
+	title_label.add_theme_color_override("font_color", MerlinVisual.PALETTE.ink)
 
-	# Sous-titre saison + lune
+	# Style subtitle (season + moon)
+	var subtitle_label: Label = $MainCard/CardVBox/SubtitleLabel
 	var moon_info: Dictionary = MOON_PHASES.get(current_moon_phase, {})
-	var subtitle := Label.new()
-	subtitle.text = "%s  %s" % [SEASON_NAMES.get(current_season, ""), moon_info.get("icon", "●")]
-	subtitle.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	subtitle_label.text = "%s  %s" % [SEASON_NAMES.get(current_season, ""), moon_info.get("icon", "\u25cf")]
 	if font_regular:
-		subtitle.add_theme_font_override("font", font_regular)
-	subtitle.add_theme_font_size_override("font_size", 16)
-	subtitle.add_theme_color_override("font_color", PALETTE.get(current_season, PALETTE.ink_soft))
-	vbox.add_child(subtitle)
+		subtitle_label.add_theme_font_override("font", font_regular)
+	subtitle_label.add_theme_font_size_override("font_size", 16)
+	subtitle_label.add_theme_color_override("font_color", MerlinVisual.PALETTE.get(current_season, MerlinVisual.PALETTE.ink_soft))
 
-	# Séparateur
-	var sep := _create_separator()
-	vbox.add_child(sep)
+	# Style separator
+	var sep_left: ColorRect = $MainCard/CardVBox/SeparatorContainer/SepLeft
+	var sep_diamond: Label = $MainCard/CardVBox/SeparatorContainer/SepDiamond
+	var sep_right: ColorRect = $MainCard/CardVBox/SeparatorContainer/SepRight
+	sep_left.color = MerlinVisual.PALETTE.line
+	sep_diamond.add_theme_color_override("font_color", MerlinVisual.PALETTE.accent)
+	sep_right.color = MerlinVisual.PALETTE.line
 
-	# Wheel container
-	wheel_container = Control.new()
+	# Configure wheel
 	wheel_container.custom_minimum_size = Vector2(0, 140 if not compact_mode else 100)
 	wheel_container.draw.connect(_on_wheel_draw)
-	vbox.add_child(wheel_container)
 
-	# Prochain événement
-	_build_next_event_panel(vbox)
+	# Configure next event panel
+	_configure_event_panel()
 
-	# Tabs
-	_build_tabs(vbox)
-
-	# Contenu scrollable
-	content_scroll = ScrollContainer.new()
-	content_scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	content_scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
-	vbox.add_child(content_scroll)
-
-	var content_vbox := VBoxContainer.new()
-	content_vbox.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	content_scroll.add_child(content_vbox)
-
-	events_section = VBoxContainer.new()
-	events_section.add_theme_constant_override("separation", 6)
-	content_vbox.add_child(events_section)
-
-	stats_section = VBoxContainer.new()
-	stats_section.add_theme_constant_override("separation", 8)
-	content_vbox.add_child(stats_section)
+	# Configure tabs (dynamic buttons)
+	_configure_tabs()
 
 
-func _create_separator() -> HBoxContainer:
-	var sep := HBoxContainer.new()
-	sep.alignment = BoxContainer.ALIGNMENT_CENTER
-	sep.add_theme_constant_override("separation", 8)
-
-	var left := ColorRect.new()
-	left.color = PALETTE.line
-	left.custom_minimum_size = Vector2(50, 1)
-	sep.add_child(left)
-
-	var diamond := Label.new()
-	diamond.text = "◆"
-	diamond.add_theme_color_override("font_color", PALETTE.accent)
-	diamond.add_theme_font_size_override("font_size", 10)
-	sep.add_child(diamond)
-
-	var right := ColorRect.new()
-	right.color = PALETTE.line
-	right.custom_minimum_size = Vector2(50, 1)
-	sep.add_child(right)
-
-	return sep
-
-
-func _build_next_event_panel(parent: VBoxContainer) -> void:
-	event_panel = PanelContainer.new()
+func _configure_event_panel() -> void:
 	var style := StyleBoxFlat.new()
-	style.bg_color = PALETTE.paper_dark
-	style.border_color = PALETTE.accent_soft
+	style.bg_color = MerlinVisual.PALETTE.paper_dark
+	style.border_color = MerlinVisual.PALETTE.accent_soft
 	style.set_border_width_all(1)
 	style.set_corner_radius_all(3)
 	style.set_content_margin_all(12)
 	event_panel.add_theme_stylebox_override("panel", style)
-	parent.add_child(event_panel)
 
 	var evbox := VBoxContainer.new()
 	evbox.add_theme_constant_override("separation", 4)
@@ -453,7 +467,7 @@ func _build_next_event_panel(parent: VBoxContainer) -> void:
 	if font_regular:
 		header.add_theme_font_override("font", font_regular)
 	header.add_theme_font_size_override("font_size", 12)
-	header.add_theme_color_override("font_color", PALETTE.ink_soft)
+	header.add_theme_color_override("font_color", MerlinVisual.PALETTE.ink_soft)
 	evbox.add_child(header)
 
 	if not next_event.is_empty():
@@ -463,7 +477,7 @@ func _build_next_event_panel(parent: VBoxContainer) -> void:
 		if font_bold:
 			date_lbl.add_theme_font_override("font", font_bold)
 		date_lbl.add_theme_font_size_override("font_size", 14)
-		date_lbl.add_theme_color_override("font_color", PALETTE.event_today)
+		date_lbl.add_theme_color_override("font_color", MerlinVisual.PALETTE.event_today)
 		evbox.add_child(date_lbl)
 
 		var name_lbl := Label.new()
@@ -471,7 +485,7 @@ func _build_next_event_panel(parent: VBoxContainer) -> void:
 		if font_bold:
 			name_lbl.add_theme_font_override("font", font_bold)
 		name_lbl.add_theme_font_size_override("font_size", 16)
-		name_lbl.add_theme_color_override("font_color", PALETTE.ink)
+		name_lbl.add_theme_color_override("font_color", MerlinVisual.PALETTE.ink)
 		evbox.add_child(name_lbl)
 
 		var desc_lbl := Label.new()
@@ -480,7 +494,7 @@ func _build_next_event_panel(parent: VBoxContainer) -> void:
 		if font_regular:
 			desc_lbl.add_theme_font_override("font", font_regular)
 		desc_lbl.add_theme_font_size_override("font_size", 12)
-		desc_lbl.add_theme_color_override("font_color", PALETTE.ink_soft)
+		desc_lbl.add_theme_color_override("font_color", MerlinVisual.PALETTE.ink_soft)
 		evbox.add_child(desc_lbl)
 
 
@@ -491,12 +505,7 @@ func _parse_event_date(date_str: String) -> Dictionary:
 	return {"month": 1, "day": 1}
 
 
-func _build_tabs(parent: VBoxContainer) -> void:
-	tabs_container = HBoxContainer.new()
-	tabs_container.alignment = BoxContainer.ALIGNMENT_CENTER
-	tabs_container.add_theme_constant_override("separation", 12)
-	parent.add_child(tabs_container)
-
+func _configure_tabs() -> void:
 	events_tab_btn = _create_tab_button("Evenements")
 	events_tab_btn.pressed.connect(func():
 		SFXManager.play("click")
@@ -511,6 +520,14 @@ func _build_tabs(parent: VBoxContainer) -> void:
 	)
 	tabs_container.add_child(stats_tab_btn)
 
+	brumes_tab_btn = _create_tab_button("Brumes")
+	brumes_tab_btn.pressed.connect(func():
+		SFXManager.play("click")
+		_set_tab(TAB_BRUMES)
+	)
+	tabs_container.add_child(brumes_tab_btn)
+	brumes_tab_btn.visible = has_brumes_upgrade
+
 
 func _create_tab_button(text: String) -> Button:
 	var btn := Button.new()
@@ -523,20 +540,16 @@ func _create_tab_button(text: String) -> Button:
 	return btn
 
 
-func _build_back_button(viewport_size: Vector2) -> void:
-	back_button = Button.new()
-	back_button.text = "< Retour"
-	back_button.focus_mode = Control.FOCUS_NONE
-	back_button.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
+func _configure_back_button(viewport_size: Vector2) -> void:
 	if font_bold:
 		back_button.add_theme_font_override("font", font_bold)
 	back_button.add_theme_font_size_override("font_size", 16)
-	back_button.add_theme_color_override("font_color", PALETTE.ink)
-	back_button.add_theme_color_override("font_hover_color", PALETTE.accent)
+	back_button.add_theme_color_override("font_color", MerlinVisual.PALETTE.ink)
+	back_button.add_theme_color_override("font_hover_color", MerlinVisual.PALETTE.accent)
 
 	var btn_style := StyleBoxFlat.new()
-	btn_style.bg_color = PALETTE.paper_dark
-	btn_style.border_color = PALETTE.ink_faded
+	btn_style.bg_color = MerlinVisual.PALETTE.paper_dark
+	btn_style.border_color = MerlinVisual.PALETTE.ink_faded
 	btn_style.set_border_width_all(1)
 	btn_style.set_corner_radius_all(4)
 	btn_style.set_content_margin_all(8)
@@ -545,14 +558,13 @@ func _build_back_button(viewport_size: Vector2) -> void:
 	back_button.add_theme_stylebox_override("normal", btn_style)
 
 	var btn_hover := btn_style.duplicate()
-	btn_hover.bg_color = PALETTE.accent_glow
-	btn_hover.border_color = PALETTE.accent_soft
+	btn_hover.bg_color = MerlinVisual.PALETTE.accent_glow
+	btn_hover.border_color = MerlinVisual.PALETTE.accent_soft
 	back_button.add_theme_stylebox_override("hover", btn_hover)
 
 	back_button.size = Vector2(110, 40)
 	back_button.position = Vector2(28, viewport_size.y - 56)
 	back_button.pressed.connect(_on_back_pressed)
-	add_child(back_button)
 
 
 # =============================================================================
@@ -563,26 +575,29 @@ func _set_tab(tab: int) -> void:
 	current_tab = tab
 	events_section.visible = (tab == TAB_EVENTS)
 	stats_section.visible = (tab == TAB_STATS)
+	brumes_section.visible = (tab == TAB_BRUMES)
 	_style_tab_button(events_tab_btn, tab == TAB_EVENTS)
 	_style_tab_button(stats_tab_btn, tab == TAB_STATS)
+	_style_tab_button(brumes_tab_btn, tab == TAB_BRUMES)
 
 
 func _style_tab_button(btn: Button, selected: bool) -> void:
 	var style := StyleBoxFlat.new()
-	style.bg_color = PALETTE.accent_glow if selected else Color(1, 1, 1, 0)
-	style.border_color = PALETTE.accent if selected else PALETTE.ink_faded
+	style.bg_color = MerlinVisual.PALETTE.accent_glow if selected else Color(1, 1, 1, 0)
+	style.border_color = MerlinVisual.PALETTE.accent if selected else MerlinVisual.PALETTE.ink_faded
 	style.border_width_bottom = 1 if selected else 0
 	style.set_corner_radius_all(2)
 	style.set_content_margin_all(8)
 	btn.add_theme_stylebox_override("normal", style)
 	btn.add_theme_stylebox_override("hover", style)
 	btn.add_theme_stylebox_override("pressed", style)
-	btn.add_theme_color_override("font_color", PALETTE.accent if selected else PALETTE.ink_soft)
+	btn.add_theme_color_override("font_color", MerlinVisual.PALETTE.accent if selected else MerlinVisual.PALETTE.ink_soft)
 
 
 func _populate_all() -> void:
 	_populate_events()
 	_populate_stats()
+	_populate_brumes()
 	wheel_container.queue_redraw()
 
 
@@ -595,11 +610,12 @@ func _populate_events() -> void:
 	if font_bold:
 		header.add_theme_font_override("font", font_bold)
 	header.add_theme_font_size_override("font_size", 16)
-	header.add_theme_color_override("font_color", PALETTE.accent)
+	header.add_theme_color_override("font_color", MerlinVisual.PALETTE.accent)
 	events_section.add_child(header)
 
+	var events: Array = calendar_events_display if not calendar_events_display.is_empty() else CALENDAR_EVENTS
 	var current_month_str: String = "%02d" % current_date.month
-	for event in CALENDAR_EVENTS:
+	for event in events:
 		var event_month: String = event.date.substr(0, 2)
 		if event_month == current_month_str:
 			var row := _create_event_row(event)
@@ -609,6 +625,8 @@ func _populate_events() -> void:
 func _create_event_row(event: Dictionary) -> HBoxContainer:
 	var row := HBoxContainer.new()
 	row.add_theme_constant_override("separation", 12)
+	row.tooltip_text = _build_event_tooltip(event)
+	row.mouse_filter = Control.MOUSE_FILTER_STOP
 
 	var event_date := _parse_event_date(event.date)
 	var is_past := _is_date_past(event_date.month, event_date.day)
@@ -621,11 +639,11 @@ func _create_event_row(event: Dictionary) -> HBoxContainer:
 		date_lbl.add_theme_font_override("font", font_regular)
 	date_lbl.add_theme_font_size_override("font_size", 12)
 	if is_today:
-		date_lbl.add_theme_color_override("font_color", PALETTE.event_today)
+		date_lbl.add_theme_color_override("font_color", MerlinVisual.PALETTE.event_today)
 	elif is_past:
-		date_lbl.add_theme_color_override("font_color", PALETTE.event_past)
+		date_lbl.add_theme_color_override("font_color", MerlinVisual.PALETTE.event_past)
 	else:
-		date_lbl.add_theme_color_override("font_color", PALETTE.ink_soft)
+		date_lbl.add_theme_color_override("font_color", MerlinVisual.PALETTE.ink_soft)
 	row.add_child(date_lbl)
 
 	var name_lbl := Label.new()
@@ -637,17 +655,17 @@ func _create_event_row(event: Dictionary) -> HBoxContainer:
 		name_lbl.add_theme_font_override("font", font_regular)
 	name_lbl.add_theme_font_size_override("font_size", 14)
 	if is_today:
-		name_lbl.add_theme_color_override("font_color", PALETTE.event_today)
+		name_lbl.add_theme_color_override("font_color", MerlinVisual.PALETTE.event_today)
 	elif is_past:
-		name_lbl.add_theme_color_override("font_color", PALETTE.event_past)
+		name_lbl.add_theme_color_override("font_color", MerlinVisual.PALETTE.event_past)
 	else:
-		name_lbl.add_theme_color_override("font_color", PALETTE.ink)
+		name_lbl.add_theme_color_override("font_color", MerlinVisual.PALETTE.ink)
 	row.add_child(name_lbl)
 
 	var state := Label.new()
-	state.text = "◆" if is_today else ("─" if is_past else "○")
+	state.text = "\u25c6" if is_today else ("\u2500" if is_past else "\u25cb")
 	state.add_theme_font_size_override("font_size", 10)
-	state.add_theme_color_override("font_color", PALETTE.event_today if is_today else PALETTE.ink_faded)
+	state.add_theme_color_override("font_color", MerlinVisual.PALETTE.event_today if is_today else MerlinVisual.PALETTE.ink_faded)
 	row.add_child(state)
 
 	return row
@@ -672,7 +690,7 @@ func _populate_stats() -> void:
 	if font_bold:
 		header.add_theme_font_override("font", font_bold)
 	header.add_theme_font_size_override("font_size", 16)
-	header.add_theme_color_override("font_color", PALETTE.accent)
+	header.add_theme_color_override("font_color", MerlinVisual.PALETTE.accent)
 	stats_section.add_child(header)
 
 	_add_stat_row("Runs", str(meta_stats.total_runs))
@@ -685,7 +703,7 @@ func _populate_stats() -> void:
 	if font_bold:
 		endings_header.add_theme_font_override("font", font_bold)
 	endings_header.add_theme_font_size_override("font_size", 14)
-	endings_header.add_theme_color_override("font_color", PALETTE.ink)
+	endings_header.add_theme_color_override("font_color", MerlinVisual.PALETTE.ink)
 	stats_section.add_child(endings_header)
 
 	for ending in ALL_ENDINGS:
@@ -695,7 +713,7 @@ func _populate_stats() -> void:
 		if font_regular:
 			end_lbl.add_theme_font_override("font", font_regular)
 		end_lbl.add_theme_font_size_override("font_size", 12)
-		end_lbl.add_theme_color_override("font_color", PALETTE.ink if seen else PALETTE.ink_faded)
+		end_lbl.add_theme_color_override("font_color", MerlinVisual.PALETTE.ink if seen else MerlinVisual.PALETTE.ink_faded)
 		stats_section.add_child(end_lbl)
 
 
@@ -709,7 +727,7 @@ func _add_stat_row(label_text: String, value_text: String) -> void:
 	if font_regular:
 		label.add_theme_font_override("font", font_regular)
 	label.add_theme_font_size_override("font_size", 14)
-	label.add_theme_color_override("font_color", PALETTE.ink_soft)
+	label.add_theme_color_override("font_color", MerlinVisual.PALETTE.ink_soft)
 	row.add_child(label)
 
 	var value := Label.new()
@@ -718,10 +736,272 @@ func _add_stat_row(label_text: String, value_text: String) -> void:
 	if font_bold:
 		value.add_theme_font_override("font", font_bold)
 	value.add_theme_font_size_override("font_size", 14)
-	value.add_theme_color_override("font_color", PALETTE.accent)
+	value.add_theme_color_override("font_color", MerlinVisual.PALETTE.accent)
 	row.add_child(value)
 
 	stats_section.add_child(row)
+
+
+# =============================================================================
+# CALENDRIER DES BRUMES
+# =============================================================================
+
+func _populate_brumes() -> void:
+	for child in brumes_section.get_children():
+		child.queue_free()
+
+	if not has_brumes_upgrade:
+		return
+
+	var header := Label.new()
+	header.text = "Calendrier des Brumes"
+	if font_bold:
+		header.add_theme_font_override("font", font_bold)
+	header.add_theme_font_size_override("font_size", 16)
+	header.add_theme_color_override("font_color", MerlinVisual.PALETTE.accent)
+	brumes_section.add_child(header)
+
+	var desc := Label.new()
+	desc.text = "Les %d prochains evenements reveles par les brumes..." % BRUMES_LOOKAHEAD_EVENTS
+	desc.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	if font_regular:
+		desc.add_theme_font_override("font", font_regular)
+	desc.add_theme_font_size_override("font_size", 12)
+	desc.add_theme_color_override("font_color", MerlinVisual.PALETTE.ink_soft)
+	brumes_section.add_child(desc)
+
+	var upcoming := _get_upcoming_events(BRUMES_LOOKAHEAD_EVENTS)
+	if upcoming.is_empty():
+		var empty_lbl := Label.new()
+		empty_lbl.text = "Aucun evenement a l'horizon..."
+		if font_regular:
+			empty_lbl.add_theme_font_override("font", font_regular)
+		empty_lbl.add_theme_font_size_override("font_size", 12)
+		empty_lbl.add_theme_color_override("font_color", MerlinVisual.PALETTE.ink_faded)
+		brumes_section.add_child(empty_lbl)
+		return
+
+	for ev in upcoming:
+		var row := _create_brumes_event_row(ev)
+		brumes_section.add_child(row)
+
+
+func _get_upcoming_events(count: int) -> Array:
+	## Return the next N events from today, wrapping to next year if needed.
+	var today_str: String = "%02d-%02d" % [current_date.month, current_date.day]
+	var future: Array = []
+	var wrapped: Array = []
+
+	for ev in calendar_events_display:
+		if ev.date >= today_str:
+			future.append(ev)
+		else:
+			wrapped.append(ev)
+
+	var combined: Array = future + wrapped
+	return combined.slice(0, count)
+
+
+func _create_brumes_event_row(event: Dictionary) -> PanelContainer:
+	var panel := PanelContainer.new()
+	panel.tooltip_text = _build_event_tooltip(event)
+	var style := StyleBoxFlat.new()
+	style.bg_color = MerlinVisual.PALETTE.paper_dark
+	style.set_corner_radius_all(3)
+	style.set_content_margin_all(8)
+
+	# Apply iridescent border if shader available
+	var iridescent_shader: Shader = null
+	if ResourceLoader.exists("res://shaders/iridescent_border.gdshader"):
+		iridescent_shader = load("res://shaders/iridescent_border.gdshader")
+	if iridescent_shader:
+		style.border_color = MerlinVisual.PALETTE.accent_soft
+		style.set_border_width_all(2)
+		var mat := ShaderMaterial.new()
+		mat.shader = iridescent_shader
+		panel.material = mat
+	else:
+		style.border_color = MerlinVisual.PALETTE.accent_soft
+		style.set_border_width_all(1)
+
+	panel.add_theme_stylebox_override("panel", style)
+
+	var hbox := HBoxContainer.new()
+	hbox.add_theme_constant_override("separation", 10)
+	panel.add_child(hbox)
+
+	var event_date := _parse_event_date(event.date)
+	var date_lbl := Label.new()
+	date_lbl.text = "%d %s" % [event_date.day, MONTH_NAMES[event_date.month].substr(0, 3)]
+	date_lbl.custom_minimum_size = Vector2(55, 0)
+	if font_bold:
+		date_lbl.add_theme_font_override("font", font_bold)
+	date_lbl.add_theme_font_size_override("font_size", 13)
+	date_lbl.add_theme_color_override("font_color", MerlinVisual.PALETTE.accent)
+	hbox.add_child(date_lbl)
+
+	var info := VBoxContainer.new()
+	info.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	hbox.add_child(info)
+
+	var name_lbl := Label.new()
+	name_lbl.text = event.name
+	if font_bold:
+		name_lbl.add_theme_font_override("font", font_bold)
+	name_lbl.add_theme_font_size_override("font_size", 13)
+	name_lbl.add_theme_color_override("font_color", MerlinVisual.PALETTE.ink)
+	info.add_child(name_lbl)
+
+	var desc_lbl := Label.new()
+	desc_lbl.text = event.get("desc", "")
+	desc_lbl.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	if font_regular:
+		desc_lbl.add_theme_font_override("font", font_regular)
+	desc_lbl.add_theme_font_size_override("font_size", 11)
+	desc_lbl.add_theme_color_override("font_color", MerlinVisual.PALETTE.ink_soft)
+	info.add_child(desc_lbl)
+
+	# Reroll/Lock actions (only if upgrade active)
+	if has_brumes_upgrade:
+		_add_brumes_actions(info, event)
+
+	# Category icon
+	var cat: String = event.get("category", "")
+	var icon_text := "\u25cb"
+	match cat:
+		"sabbat": icon_text = "\u263d"
+		"transition": icon_text = "\u25c6"
+		"consequence": icon_text = "\u25c7"
+		"secret": icon_text = "?"
+	var icon_lbl := Label.new()
+	icon_lbl.text = icon_text
+	icon_lbl.add_theme_font_size_override("font_size", 16)
+	icon_lbl.add_theme_color_override("font_color", MerlinVisual.PALETTE.accent_soft)
+	hbox.add_child(icon_lbl)
+
+	return panel
+
+
+# =============================================================================
+# TOOLTIPS & REROLL/LOCK
+# =============================================================================
+
+const MAX_EVENT_REROLLS := 3
+const MAX_EVENT_LOCKS := 3
+const REROLL_AWEN_COST := 1
+
+func _build_event_tooltip(event: Dictionary) -> String:
+	var parts: Array = []
+	parts.append(event.get("name", ""))
+	var desc: String = event.get("desc", "")
+	if desc != "":
+		parts.append(desc)
+	var cat: String = event.get("category", "")
+	if cat != "":
+		parts.append("Categorie: %s" % cat)
+	var tags: Array = event.get("tags", [])
+	if not tags.is_empty():
+		parts.append("Tags: %s" % ", ".join(tags))
+	var effects: Array = event.get("effects", [])
+	if not effects.is_empty():
+		var fx_lines: Array = []
+		for fx in effects:
+			var fx_type: String = str(fx.get("type", ""))
+			var fx_target: String = str(fx.get("aspect", fx.get("target", "")))
+			var fx_val: String = str(fx.get("direction", fx.get("amount", "")))
+			if fx_type != "":
+				fx_lines.append("%s %s %s" % [fx_type, fx_target, fx_val])
+		if not fx_lines.is_empty():
+			parts.append("Effets: %s" % ", ".join(fx_lines))
+	return "\n".join(parts)
+
+
+func _add_brumes_actions(parent: VBoxContainer, event: Dictionary) -> void:
+	## Add Reroll/Lock buttons for a Brumes event row.
+	var merlin_store = get_node_or_null("/root/MerlinStore")
+	if merlin_store == null:
+		return
+	var run: Dictionary = merlin_store.state.get("run", {})
+	var event_id: String = event.get("id", "")
+
+	var actions := HBoxContainer.new()
+	actions.alignment = BoxContainer.ALIGNMENT_END
+	actions.add_theme_constant_override("separation", 6)
+	parent.add_child(actions)
+
+	# Lock button
+	var locked: Array = run.get("event_locks", [])
+	var is_locked: bool = locked.has(event_id)
+	var lock_btn := Button.new()
+	lock_btn.text = "Verrouille" if is_locked else "Verrouiller"
+	lock_btn.disabled = is_locked or (locked.size() >= MAX_EVENT_LOCKS and not is_locked)
+	lock_btn.focus_mode = Control.FOCUS_NONE
+	lock_btn.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
+	if font_regular:
+		lock_btn.add_theme_font_override("font", font_regular)
+	lock_btn.add_theme_font_size_override("font_size", 11)
+	lock_btn.pressed.connect(func():
+		_on_lock_event(event_id)
+	)
+	actions.add_child(lock_btn)
+
+	# Reroll button
+	var rerolls_used: int = run.get("event_rerolls_used", 0)
+	var reroll_btn := Button.new()
+	reroll_btn.text = "Reroll (1 Awen)"
+	reroll_btn.disabled = rerolls_used >= MAX_EVENT_REROLLS or is_locked
+	reroll_btn.focus_mode = Control.FOCUS_NONE
+	reroll_btn.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
+	if font_regular:
+		reroll_btn.add_theme_font_override("font", font_regular)
+	reroll_btn.add_theme_font_size_override("font_size", 11)
+	reroll_btn.pressed.connect(func():
+		_on_reroll_event(event_id)
+	)
+	actions.add_child(reroll_btn)
+
+	# Counter label
+	var counter := Label.new()
+	counter.text = "(%d/%d)" % [rerolls_used, MAX_EVENT_REROLLS]
+	if font_regular:
+		counter.add_theme_font_override("font", font_regular)
+	counter.add_theme_font_size_override("font_size", 10)
+	counter.add_theme_color_override("font_color", MerlinVisual.PALETTE.ink_faded)
+	actions.add_child(counter)
+
+
+func _on_lock_event(event_id: String) -> void:
+	var merlin_store = get_node_or_null("/root/MerlinStore")
+	if merlin_store == null:
+		return
+	var run: Dictionary = merlin_store.state.get("run", {})
+	var locks: Array = run.get("event_locks", [])
+	if locks.size() >= MAX_EVENT_LOCKS or locks.has(event_id):
+		return
+	locks.append(event_id)
+	run["event_locks"] = locks
+	merlin_store.state["run"] = run
+	SFXManager.play("click")
+	_populate_brumes()
+
+
+func _on_reroll_event(_event_id: String) -> void:
+	var merlin_store = get_node_or_null("/root/MerlinStore")
+	if merlin_store == null:
+		return
+	var run: Dictionary = merlin_store.state.get("run", {})
+	var rerolls: int = run.get("event_rerolls_used", 0)
+	if rerolls >= MAX_EVENT_REROLLS:
+		return
+	# Check Awen cost
+	var awen: int = run.get("awen", 0)
+	if awen < REROLL_AWEN_COST:
+		return
+	run["awen"] = awen - REROLL_AWEN_COST
+	run["event_rerolls_used"] = rerolls + 1
+	merlin_store.state["run"] = run
+	SFXManager.play("click")
+	_populate_brumes()
 
 
 # =============================================================================
@@ -744,30 +1024,30 @@ func _on_wheel_draw() -> void:
 	_draw_season_arc(center, arc_radius, arc_width, PI, 3*PI/2, "autumn")
 
 	# Cercle intérieur
-	wheel_container.draw_arc(center, radius - 18, 0, TAU, 64, PALETTE.ink_faded, 1.0)
+	wheel_container.draw_arc(center, radius - 18, 0, TAU, 64, MerlinVisual.PALETTE.ink_faded, 1.0)
 
 	# Marqueurs festivals
 	for festival_id in CELTIC_FESTIVALS:
 		var festival: Dictionary = CELTIC_FESTIVALS[festival_id]
 		var angle := _date_to_angle(festival.month, festival.day)
 		var pos := center + Vector2.from_angle(angle) * (radius - 6)
-		wheel_container.draw_circle(pos, 3, PALETTE.accent)
+		wheel_container.draw_circle(pos, 3, MerlinVisual.PALETTE.accent)
 
 	# Marqueur jour actuel
 	var today_angle := _date_to_angle(current_date.month, current_date.day)
 	var today_pos := center + Vector2.from_angle(today_angle) * (radius - 6)
-	wheel_container.draw_circle(today_pos, 6, PALETTE.event_today)
-	wheel_container.draw_circle(today_pos, 4, PALETTE.paper)
+	wheel_container.draw_circle(today_pos, 6, MerlinVisual.PALETTE.event_today)
+	wheel_container.draw_circle(today_pos, 4, MerlinVisual.PALETTE.paper)
 
 	# Lune au centre
 	var moon_r := radius * 0.25
 	var moon_info: Dictionary = MOON_PHASES.get(current_moon_phase, {})
-	wheel_container.draw_circle(center, moon_r, PALETTE.ink_faded)
-	wheel_container.draw_arc(center, moon_r, 0, TAU, 32, PALETTE.accent_soft, 1.5)
+	wheel_container.draw_circle(center, moon_r, MerlinVisual.PALETTE.ink_faded)
+	wheel_container.draw_arc(center, moon_r, 0, TAU, 32, MerlinVisual.PALETTE.accent_soft, 1.5)
 
 
 func _draw_season_arc(center: Vector2, radius: float, width: float, start: float, end: float, season: String) -> void:
-	var color: Color = PALETTE.get(season, PALETTE.ink_soft)
+	var color: Color = MerlinVisual.PALETTE.get(season, MerlinVisual.PALETTE.ink_soft)
 	var is_current := (season == current_season)
 	if is_current:
 		color = color.lightened(0.15)
@@ -795,21 +1075,39 @@ func _play_entry_animation() -> void:
 	celtic_ornament_bottom.modulate.a = 0.0
 	back_button.modulate.a = 0.0
 
-	var tween := create_tween()
-	tween.tween_property(celtic_ornament_top, "modulate:a", 1.0, 0.5).set_trans(Tween.TRANS_SINE)
-	tween.parallel().tween_property(celtic_ornament_bottom, "modulate:a", 1.0, 0.5).set_trans(Tween.TRANS_SINE)
-	tween.tween_property(main_card, "modulate:a", 1.0, 0.4).set_trans(Tween.TRANS_SINE)
-	tween.parallel().tween_property(main_card, "position:y", main_card.position.y - 30, 0.5).set_ease(Tween.EASE_OUT)
-	tween.parallel().tween_property(back_button, "modulate:a", 1.0, 0.3).set_trans(Tween.TRANS_SINE)
+	var pca: Node = get_node_or_null("/root/PixelContentAnimator")
+	if pca:
+		await get_tree().process_frame
+		pca.reveal(celtic_ornament_top, {"duration": 0.4, "block_size": 10})
+		pca.reveal(celtic_ornament_bottom, {"duration": 0.4, "block_size": 10})
+		await get_tree().create_timer(0.2).timeout
+		# Slide main_card into position while pixel revealing
+		var tween := create_tween()
+		tween.tween_property(main_card, "position:y", main_card.position.y - 30, 0.5).set_ease(Tween.EASE_OUT)
+		pca.reveal(main_card, {"duration": 0.4, "block_size": 8})
+		pca.reveal(back_button, {"duration": 0.3, "block_size": 8})
+	else:
+		var tween := create_tween()
+		tween.tween_property(celtic_ornament_top, "modulate:a", 1.0, 0.5).set_trans(Tween.TRANS_SINE)
+		tween.parallel().tween_property(celtic_ornament_bottom, "modulate:a", 1.0, 0.5).set_trans(Tween.TRANS_SINE)
+		tween.tween_property(main_card, "modulate:a", 1.0, 0.4).set_trans(Tween.TRANS_SINE)
+		tween.parallel().tween_property(main_card, "position:y", main_card.position.y - 30, 0.5).set_ease(Tween.EASE_OUT)
+		tween.parallel().tween_property(back_button, "modulate:a", 1.0, 0.3).set_trans(Tween.TRANS_SINE)
 
 
 func _on_back_pressed() -> void:
 	SFXManager.play("click")
 	var se := get_node_or_null("/root/ScreenEffects")
 	var target: String = se.return_scene if se and se.return_scene != "" else MENU_SCENE_FALLBACK
-	var tween := create_tween()
-	tween.tween_property(main_card, "modulate:a", 0.0, 0.2)
-	tween.tween_callback(func(): get_tree().change_scene_to_file(target))
+	var pca_back: Node = get_node_or_null("/root/PixelContentAnimator")
+	if pca_back:
+		pca_back.dissolve(main_card, {"duration": 0.25, "block_size": 10})
+		await get_tree().create_timer(0.3).timeout
+		PixelTransition.transition_to(target)
+	else:
+		var tween := create_tween()
+		tween.tween_property(main_card, "modulate:a", 0.0, 0.2)
+		tween.tween_callback(func(): PixelTransition.transition_to(target))
 
 
 func _on_viewport_resized() -> void:

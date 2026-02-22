@@ -58,7 +58,7 @@ const BOND_TIERS := {
 }
 
 # ═══════════════════════════════════════════════════════════════════════════════
-# TRIADE SYSTEM (v2.0 - Replaces Reigns gauges)
+# TRIADE SYSTEM (v2.0 - Replaces legacy gauges)
 # ═══════════════════════════════════════════════════════════════════════════════
 
 # 3 Aspects with 3 discrete states each
@@ -99,9 +99,85 @@ const TRIADE_ASPECT_INFO := {
 	}
 }
 
-# Souffle d'Ogham — now a perk resource (no longer spent on center)
-const SOUFFLE_MAX := 7
-const SOUFFLE_START := 3
+# ═══════════════════════════════════════════════════════════════════════════════
+# REWARD TYPES — Badge display for card option hover (Phase UX)
+# ═══════════════════════════════════════════════════════════════════════════════
+
+const REWARD_TYPES := {
+	"vie": {"icon": "\u2764", "label": "Vie", "color_key": "danger"},
+	"essence": {"icon": "#", "label": "Essence", "color_key": "bestiole"},
+	"souffle": {"icon": "*", "label": "Souffle", "color_key": "souffle"},
+	"karma": {"icon": "\u2726", "label": "Karma", "color_key": "celtic_gold"},
+	"mystere": {"icon": "?", "label": "Mystere", "color_key": "accent"},
+}
+
+
+## Infers the reward type from an option's effects array.
+## Returns one of the REWARD_TYPES keys.
+static func infer_reward_type(effects: Array) -> String:
+	for e in effects:
+		if not (e is Dictionary):
+			continue
+		var etype: String = str(e.get("type", ""))
+		match etype:
+			"HEAL_LIFE":
+				return "vie"
+			"DAMAGE_LIFE":
+				return "vie"
+			"ADD_SOUFFLE":
+				return "souffle"
+			"USE_SOUFFLE":
+				return "souffle"
+			"ADD_KARMA":
+				return "karma"
+			"ADD_ESSENCE":
+				return "essence"
+	return "mystere"
+
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# ESSENCE COLLECTIBLES — Fragments magiques lies aux categories Ogham
+# ═══════════════════════════════════════════════════════════════════════════════
+
+const ESSENCE_TYPES := {
+	"eclat_bouleau": {"name": "Eclat de Bouleau", "category": "reveal", "rarity": "common", "icon": "<>"},
+	"seve_sorbier": {"name": "Seve de Sorbier", "category": "protection", "rarity": "common", "icon": "^"},
+	"coeur_chene": {"name": "Coeur de Chene", "category": "boost", "rarity": "uncommon", "icon": "\u2666"},
+	"larme_saule": {"name": "Larme de Saule", "category": "recovery", "rarity": "uncommon", "icon": "\u2728"},
+	"braise_prunellier": {"name": "Braise de Prunellier", "category": "narrative", "rarity": "rare", "icon": "\u2736"},
+	"racine_if": {"name": "Racine d'If", "category": "special", "rarity": "rare", "icon": "\u2742"},
+}
+
+const ESSENCE_DROP_CHANCE := 0.2  # 20% on non-anchor SUCCESS
+const ESSENCE_ANCHOR_DROP := 2    # Guaranteed +2 at anchor positions
+const ESSENCE_NORMAL_DROP := 1    # +1 on SUCCESS (20% chance)
+const ESSENCE_ANCHOR_CARDS: Array[int] = [3, 7, 12, 16]  # Guaranteed drop positions (0-indexed)
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# MINIGAME CATALOGUE — Epreuves detectees par mots-cles dans le texte narratif
+# ═══════════════════════════════════════════════════════════════════════════════
+
+const MINIGAME_CATALOGUE := {
+	"traces": {"name": "Traces", "desc": "Suivre une sequence d'empreintes sans sortir du chemin", "trigger": "piste|trace|empreinte|pas|sentier"},
+	"runes": {"name": "Runes", "desc": "Dechiffrer un ogham cache dans la pierre", "trigger": "rune|ogham|symbole|gravure|inscription"},
+	"equilibre": {"name": "Equilibre", "desc": "Maintenir l'equilibre sur un passage instable", "trigger": "pont|equilibre|vertige|gouffre|precipice"},
+	"herboristerie": {"name": "Herboristerie", "desc": "Identifier la bonne plante parmi les toxiques", "trigger": "plante|herbe|champignon|racine|cueillir|potion"},
+	"negociation": {"name": "Negociation", "desc": "Convaincre un esprit par les mots justes", "trigger": "esprit|fae|parler|negocier|korrigan|convaincre|marchander"},
+	"combat_rituel": {"name": "Combat Rituel", "desc": "Esquiver dans un cercle sacre", "trigger": "combat|defi|guerrier|lame|epee|duel"},
+	"apaisement": {"name": "Apaisement", "desc": "Calmer un gardien par le rythme et la respiration", "trigger": "apaiser|calmer|respir|gardien|rage|colere"},
+	"sang_froid": {"name": "Sang-froid", "desc": "Maintenir le curseur stable malgre les pulsations", "trigger": "piege|danger|froid|sang|approcher|appat"},
+	"course": {"name": "Course", "desc": "QTE pour maintenir la poursuite ou fuir", "trigger": "courir|pourchasser|fuir|sprint|trouee|course"},
+	"fouille": {"name": "Fouille", "desc": "Trouver l'indice cache en temps limite", "trigger": "fouille|chercher|indice|recueillir|ruban|preuve"},
+	"ombres": {"name": "Ombres", "desc": "Se deplacer entre couvertures sans etre vu", "trigger": "cacher|ombre|discret|invisible|embuscade"},
+	"volonte": {"name": "Volonte", "desc": "Tenir le focus malgre les murmures et le doute", "trigger": "douter|murmure|resister|volonte|doute|hesiter"},
+	"regard": {"name": "Regard", "desc": "Memoriser puis reproduire une sequence de formes", "trigger": "vision|forme|memoriser|fixer|apparition|spectr"},
+	"echo": {"name": "Echo", "desc": "Suivre l'intensite sonore vers la bonne direction", "trigger": "voix|appel|son|echo|ecouter|cri|chant"},
+}
+
+# Souffle d'Ogham — single-use run resource.
+const SOUFFLE_MAX := 1
+const SOUFFLE_START := 1
+const SOUFFLE_SINGLE_USE := true
 
 # Card options (3 per card — all FREE, no Souffle cost)
 enum CardOption { LEFT = 0, CENTER = 1, RIGHT = 2 }
@@ -132,22 +208,16 @@ const TRIADE_OPTION_INFO := {
 # At 0 = premature run end. Drains on critical failures, failed events, etc.
 # ═══════════════════════════════════════════════════════════════════════════════
 
-const LIFE_ESSENCE_MAX := 10
-const LIFE_ESSENCE_START := 7
-const LIFE_ESSENCE_CRIT_FAIL_DAMAGE := 2   # Damage on critical failure
+const LIFE_ESSENCE_MAX := 100
+const LIFE_ESSENCE_START := 100
+const LIFE_ESSENCE_DRAIN_PER_CARD := 1      # Base drain each card (survival pressure)
+const MIN_CARDS_FOR_VICTORY := 25           # Must survive 25+ cards before victory allowed
+const LIFE_ESSENCE_CRIT_FAIL_DAMAGE := 10   # Damage on critical failure
 const LIFE_ESSENCE_FAIL_DAMAGE := 0         # Normal failure = no life damage
-const LIFE_ESSENCE_EVENT_FAIL_DAMAGE := 1   # Failed event/palier
-const LIFE_ESSENCE_CRIT_SUCCESS_HEAL := 1   # Heal on critical success
-const LIFE_ESSENCE_HEAL_PER_REST := 2       # Heal at REST nodes
-const LIFE_ESSENCE_LOW_THRESHOLD := 3       # UI warning threshold
-
-# Aspect influence on life (narrative lever, not game over)
-const ASPECT_DC_MODIFIER := {
-	"all_balanced": -1,     # All 3 at EQUILIBRE = DC-1 (slight bonus)
-	"one_extreme": 0,       # 1 extreme = no modifier
-	"two_extreme": 1,       # 2 extremes = DC+1 (Merlin complicates)
-	"three_extreme": 2,     # 3 extremes = DC+2 (very hard)
-}
+const LIFE_ESSENCE_EVENT_FAIL_DAMAGE := 6   # Failed event/palier
+const LIFE_ESSENCE_CRIT_SUCCESS_HEAL := 5   # Heal on critical success
+const LIFE_ESSENCE_HEAL_PER_REST := 18      # Heal at REST nodes
+const LIFE_ESSENCE_LOW_THRESHOLD := 25      # UI warning threshold
 
 # DC base ranges for variable DC system (replaces fixed 6/10/14)
 const DC_BASE := {
@@ -260,6 +330,17 @@ const HIDDEN_DEPTH_LAYERS := [
 	"bestiole_personality",
 	"narrative_debt"
 ]
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# POWER MILESTONES — Player gets stronger every 5 cards during a run
+# ═══════════════════════════════════════════════════════════════════════════════
+
+const POWER_MILESTONES := {
+	5: {"type": "HEAL", "value": 15, "label": "Vigueur retrouvee", "desc": "+15 Vie"},
+	10: {"type": "DC_REDUCTION", "value": 2, "label": "Instinct aiguise", "desc": "DCs -2"},
+	15: {"type": "SOUFFLE_RECOVER", "value": 1, "label": "Souffle du druide", "desc": "+1 Souffle"},
+	20: {"type": "HEAL", "value": 20, "label": "Benediction ancienne", "desc": "+20 Vie"},
+}
 
 # ═══════════════════════════════════════════════════════════════════════════════
 # SOUFFLE D'AWEN — Bestiole Ogham Resource (separate from Souffle d'Ogham)
@@ -443,13 +524,6 @@ const FLUX_CHOICE_DELTA := {
 	"left": {"terre": 5, "esprit": 2, "lien": -3},
 	"center": {"terre": 3, "esprit": 8, "lien": -2},
 	"right": {"terre": -5, "esprit": 3, "lien": 8},
-}
-
-# Aspect state → passive Flux offset (applied once per aspect shift)
-const FLUX_ASPECT_OFFSET := {
-	"Corps": {"flux": "lien", AspectState.BAS: 15, AspectState.EQUILIBRE: 0, AspectState.HAUT: 20},
-	"Ame": {"flux": "esprit", AspectState.BAS: 15, AspectState.EQUILIBRE: 0, AspectState.HAUT: 20},
-	"Monde": {"flux": "terre", AspectState.BAS: -20, AspectState.EQUILIBRE: 0, AspectState.HAUT: 20},
 }
 
 # Tier thresholds for each Flux axis
@@ -790,6 +864,25 @@ const TALENT_NODES := {
 		"description": "New Game+: essences x1.5, fin secrete ultime.",
 		"lore": "La boucle se referme. Et recommence, plus forte.",
 	},
+	# ── CALENDRIER DES BRUMES (CAL-REQ-050) ────────────────────────────────
+	"calendrier_des_brumes": {
+		"branch": "Ame", "tier": 2,
+		"name": "Calendrier des Brumes",
+		"cost": {"ESPRIT": 40, "OMBRE": 25, "fragments": 3},
+		"prerequisites": ["ramures_1"],
+		"effect": {"type": "special_rule", "id": "calendrier_des_brumes"},
+		"description": "Revele 7 prochains evenements. Primes aux evenements atteints.",
+		"lore": "A travers les brumes, Merlin te montre ce qui vient...",
+	},
+}
+
+# Achievement for unlocking Calendrier des Brumes
+const ACHIEVEMENT_PELERIN_DES_DATES := {
+	"id": "pelerin_des_dates",
+	"name": "Pelerin des Dates",
+	"description": "Participe a 8 evenements calendaires.",
+	"condition": {"events_participated": 8},
+	"reward": "calendrier_des_brumes",
 }
 
 # Talent branch colors for UI
@@ -814,12 +907,67 @@ const BIOME_KEYS := [
 
 const BIOME_DEFAULT := "foret_broceliande"
 
+# Mission templates per biome — quest briefing shown at run start (from SPEC_TRANSITION_SCENES)
+# Static func because nested dict literals are not always valid const expressions in GDScript 4.x.
+static func get_mission_template(biome_key: String) -> Dictionary:
+	match biome_key:
+		"broceliande", "foret_broceliande":
+			return {"title": "Le Souffle de Barenton", "text": "La Fontaine de Barenton s'assombrit. Trouve ce qui la trouble et ramene la clarte.", "name": "Foret de Broceliande"}
+		"landes", "landes_bruyere":
+			return {"title": "Le Chant des Cairns", "text": "Les cairns du vent se taisent. Retrouve la melodie perdue avant que le silence ne gagne.", "name": "Landes de Bruyere"}
+		"cotes", "cotes_sauvages":
+			return {"title": "Le Signal de Sein", "text": "L'ile de Sein ne repond plus. Navigue jusqu'au phare et decouvre pourquoi.", "name": "Cotes Sauvages"}
+		"villages", "villages_celtes":
+			return {"title": "Le Puits des Souhaits", "text": "L'eau du puits sacre est tarie. Aide le village a retrouver sa source.", "name": "Villages Celtes"}
+		"cercles", "cercles_pierres":
+			return {"title": "L'Alignement Perdu", "text": "Les menhirs de Carnac sont desalignes. Le temps se detraque. Restaure l'accord.", "name": "Cercles de Pierres"}
+		"marais", "marais_korrigans":
+			return {"title": "Le Tertre du Silence", "text": "Le chef des korrigans ne rit plus. Descends dans le tertre et affronte le Vide.", "name": "Marais des Korrigans"}
+		"collines", "collines_dolmens":
+			return {"title": "La Voix de l'If", "text": "L'if millenaire perd ses branches. Ecoute ses dernieres paroles avant qu'il ne se taise.", "name": "Collines aux Dolmens"}
+	return {}
+
 # Card type distribution weights (TRIADE mode)
 const CARD_TYPE_WEIGHTS := {
 	"narrative": 0.80,
 	"event": 0.10,
 	"promise": 0.05,
 	"merlin_direct": 0.05,
+}
+
+# Event card probability (CAL-REQ-060 — ~15% of pool when EventAdapter active)
+const EVENT_CARD_PROBABILITY := 0.15
+
+# Seasonal effects on gameplay (CAL-REQ-120)
+const SEASONAL_EFFECTS := {
+	"spring": {
+		"label": "Printemps",
+		"aspect_bias": "Corps",
+		"bias_direction": "up",
+		"narrative_tone": "renouveau",
+		"event_weight_mod": 1.1,
+	},
+	"summer": {
+		"label": "Ete",
+		"aspect_bias": "Monde",
+		"bias_direction": "up",
+		"narrative_tone": "aventure",
+		"event_weight_mod": 1.0,
+	},
+	"autumn": {
+		"label": "Automne",
+		"aspect_bias": "Ame",
+		"bias_direction": "up",
+		"narrative_tone": "reflexion",
+		"event_weight_mod": 1.15,
+	},
+	"winter": {
+		"label": "Hiver",
+		"aspect_bias": "Ame",
+		"bias_direction": "down",
+		"narrative_tone": "survie",
+		"event_weight_mod": 1.2,
+	},
 }
 
 # Minimum cards before allowing event/promise cards
@@ -836,7 +984,7 @@ const TRIADE_NODE_TYPES := {
 	"EVENT": {"weight": 0.15, "label": "Evenement", "cards_min": 1, "cards_max": 2, "icon": "\u2606"},
 	"PROMISE": {"weight": 0.08, "label": "Promesse", "cards_min": 1, "cards_max": 1, "icon": "\u2662"},
 	"REST": {"weight": 0.12, "label": "Repos", "cards_min": 0, "cards_max": 0, "icon": "\u2665"},
-	"MERCHANT": {"weight": 0.08, "label": "Marchand", "cards_min": 0, "cards_max": 0, "icon": "\u25C7"},
+	"MERCHANT": {"weight": 0.08, "label": "Marchand", "cards_min": 0, "cards_max": 0, "icon": "<>"},
 	"MYSTERY": {"weight": 0.10, "label": "Mystere", "cards_min": 1, "cards_max": 3, "icon": "\u003F"},
 	"MERLIN": {"weight": 0.07, "label": "Merlin", "cards_min": 3, "cards_max": 5, "icon": "\u2726"},
 }
@@ -859,7 +1007,7 @@ const EXPEDITION_TOOLS := {
 	},
 	"besace": {
 		"name": "Besace du Druide",
-		"icon": "\u25CA",  # Diamond
+		"icon": "<>",  # Diamond
 		"description": "Provisions et herbes medicinales",
 		"bonus": "+1 Souffle au depart",
 		"bonus_field": "",
@@ -906,7 +1054,7 @@ const DEPARTURE_CONDITIONS := {
 		"icon": "\u2660",  # Spade (companion)
 		"description": "Le Monde repond mieux",
 		"effect_label": "Monde +1",
-		"initial_effects": [{"type": "SHIFT_ASPECT", "aspect": "Monde", "direction": "up"}],
+		"initial_effects": [{"type": "HEAL_LIFE", "amount": 10}],
 	},
 	"leger": {
 		"name": "Voyager leger",

@@ -85,6 +85,15 @@ func _make_spacer(height: int) -> Control:
 	spacer.custom_minimum_size = Vector2(0, height)
 	return spacer
 
+func _on_key_pressed(keycode: int) -> void:
+	if keycode == KEY_LEFT and slider.editable:
+		slider.value = maxf(slider.value - 5.0, slider.min_value)
+	elif keycode == KEY_RIGHT and slider.editable:
+		slider.value = minf(slider.value + 5.0, slider.max_value)
+	elif keycode == KEY_ENTER or keycode == KEY_SPACE:
+		_on_confirm_pressed()
+
+
 func _on_slider_changed(value: float) -> void:
 	value_label.text = str(int(value))
 

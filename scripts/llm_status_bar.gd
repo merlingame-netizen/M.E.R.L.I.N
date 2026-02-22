@@ -2,19 +2,9 @@ extends CanvasLayer
 ## Barre de statut LLM globale - visible sur tous les ecrans
 ## Autoload: affiche le statut du LLM en bas au centre + selecteur de modele
 
-const PALETTE := {
-	"bg": Color(0.08, 0.09, 0.11, 0.92),
-	"bg_hover": Color(0.12, 0.14, 0.18, 0.95),
-	"text": Color(0.85, 0.82, 0.72),
-	"text_dim": Color(0.55, 0.52, 0.48),
-	"accent": Color(0.74, 0.66, 0.45),
-	"success": Color(0.4, 0.75, 0.45),
-	"warning": Color(0.85, 0.65, 0.25),
-	"error": Color(0.85, 0.35, 0.35),
-}
 
 const TRINITY_MODELS := {
-	"default": {"file": "ministral-3b-instruct.gguf", "desc": "Ministral 3B (defaut)"},
+	"default": {"file": "qwen2.5-3b-instruct-q4_k_m.gguf", "desc": "Qwen 2.5-3B (defaut)"},
 }
 
 const MODEL_DIRS := [
@@ -22,19 +12,18 @@ const MODEL_DIRS := [
 	"C:/models/trinity-nano",
 ]
 
-var status_panel: PanelContainer
-var status_label: Label
-var model_button: Button
-var model_popup: PopupMenu
-var progress_bar: ProgressBar
+@onready var status_panel: PanelContainer = $Container/StatusPanel
+@onready var status_label: Label = $Container/StatusPanel/VBox/HBox/StatusLabel
+@onready var _status_icon: Label = $Container/StatusPanel/VBox/HBox/StatusIcon
+@onready var model_button: Button = $Container/StatusPanel/VBox/HBox/ModelButton
+@onready var model_popup: PopupMenu = $ModelPopup
+@onready var progress_bar: ProgressBar = $Container/StatusPanel/VBox/ProgressBar
 var warmup_done := false
 var current_model_path := ""
 var _llm_cache: Object = null
 
 func _ready() -> void:
-	layer = 100  # Au dessus de tout
-	visible = false  # UI cachee — fonctionnalite LLM conservee
-	_build_ui()
+	_configure_ui()
 	_scan_models()
 	# Connecter aux signaux MerlinAI si disponible
 	if Engine.has_singleton("MerlinAI") or has_node("/root/MerlinAI"):
@@ -44,30 +33,14 @@ func _ready() -> void:
 				merlin.status_changed.connect(_on_merlin_status_changed)
 			if merlin.has_signal("ready_changed"):
 				merlin.ready_changed.connect(_on_merlin_ready_changed)
-	# Prechauffement au demarrage
-	_warmup_model.call_deferred()
+	# Warmup differe — declenche depuis MenuPrincipal quand le joueur lance une partie
+	# (ne pas charger 3.3 Go au demarrage, ca bloque le thread principal)
 
 
-func _build_ui() -> void:
-	var container := Control.new()
-	container.set_anchors_preset(Control.PRESET_FULL_RECT)
-	container.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	add_child(container)
-
-	status_panel = PanelContainer.new()
-	# Centre bas de l'ecran
-	status_panel.anchor_left = 0.5
-	status_panel.anchor_right = 0.5
-	status_panel.anchor_top = 1.0
-	status_panel.anchor_bottom = 1.0
-	status_panel.offset_left = -140  # Moitie de la largeur (280/2)
-	status_panel.offset_right = 140
-	status_panel.offset_top = -56
-	status_panel.offset_bottom = -12
-	container.add_child(status_panel)
-
+func _configure_ui() -> void:
+	# Panel style (runtime-dependent on MerlinVisual)
 	var style := StyleBoxFlat.new()
-	style.bg_color = PALETTE.bg
+	style.bg_color = MerlinVisual.LLM_STATUS.bg
 	style.set_corner_radius_all(8)
 	style.content_margin_left = 12
 	style.content_margin_right = 12
@@ -75,54 +48,21 @@ func _build_ui() -> void:
 	style.content_margin_bottom = 8
 	status_panel.add_theme_stylebox_override("panel", style)
 
-	var vbox := VBoxContainer.new()
-	vbox.add_theme_constant_override("separation", 4)
-	status_panel.add_child(vbox)
+	# Color overrides
+	_status_icon.add_theme_color_override("font_color", MerlinVisual.LLM_STATUS.warning)
+	status_label.add_theme_color_override("font_color", MerlinVisual.LLM_STATUS.text)
 
-	# Ligne 1: Status + bouton modele
-	var hbox := HBoxContainer.new()
-	hbox.add_theme_constant_override("separation", 8)
-	vbox.add_child(hbox)
-
-	var status_icon := Label.new()
-	status_icon.text = "●"
-	status_icon.name = "StatusIcon"
-	status_icon.add_theme_color_override("font_color", PALETTE.warning)
-	status_icon.add_theme_font_size_override("font_size", 12)
-	hbox.add_child(status_icon)
-
-	status_label = Label.new()
-	status_label.text = "LLM: Initialisation..."
-	status_label.add_theme_color_override("font_color", PALETTE.text)
-	status_label.add_theme_font_size_override("font_size", 13)
-	status_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	hbox.add_child(status_label)
-
-	model_button = Button.new()
-	model_button.text = "▼"
-	model_button.custom_minimum_size = Vector2(28, 24)
-	model_button.add_theme_font_size_override("font_size", 10)
+	# Model button style
 	var btn_style := StyleBoxFlat.new()
-	btn_style.bg_color = PALETTE.bg_hover
+	btn_style.bg_color = MerlinVisual.LLM_STATUS.bg_hover
 	btn_style.set_corner_radius_all(4)
 	model_button.add_theme_stylebox_override("normal", btn_style)
 	model_button.add_theme_stylebox_override("hover", btn_style)
 	model_button.add_theme_stylebox_override("pressed", btn_style)
+
+	# Signal connections
 	model_button.pressed.connect(_on_model_button_pressed)
-	hbox.add_child(model_button)
-
-	# Ligne 2: Barre de progression
-	progress_bar = ProgressBar.new()
-	progress_bar.custom_minimum_size = Vector2(0, 6)
-	progress_bar.max_value = 100
-	progress_bar.value = 0
-	progress_bar.show_percentage = false
-	vbox.add_child(progress_bar)
-
-	# Popup menu pour les modeles
-	model_popup = PopupMenu.new()
 	model_popup.id_pressed.connect(_on_model_selected)
-	add_child(model_popup)
 
 
 func _scan_models() -> void:
@@ -145,18 +85,18 @@ func _warmup_model() -> void:
 	if warmup_done or current_model_path.is_empty():
 		return
 
-	_update_status("Prechauffement...", PALETTE.warning, 10)
+	_update_status("Prechauffement...", MerlinVisual.LLM_STATUS.warning, 10)
 
 	if not ClassDB.class_exists("MerlinLLM"):
-		_update_status("MerlinLLM indisponible", PALETTE.error, 0)
+		_update_status("MerlinLLM indisponible", MerlinVisual.LLM_STATUS.error, 0)
 		return
 
 	var llm := _get_or_load_model(current_model_path)
 	if llm == null:
-		_update_status("Erreur chargement", PALETTE.error, 0)
+		_update_status("Erreur chargement", MerlinVisual.LLM_STATUS.error, 0)
 		return
 
-	_update_status("Chargement GPU...", PALETTE.warning, 30)
+	_update_status("Chargement GPU...", MerlinVisual.LLM_STATUS.warning, 30)
 
 	# Warmup minimal (1 token, juste pour primer le modele)
 	if llm.has_method("set_sampling_params"):
@@ -174,7 +114,7 @@ func _warmup_model() -> void:
 
 	while not state.done:
 		if Time.get_ticks_msec() - start_time > timeout_ms:
-			_update_status("Timeout warmup", PALETTE.error, 0)
+			_update_status("Timeout warmup", MerlinVisual.LLM_STATUS.error, 0)
 			return
 		llm.poll_result()
 		poll_count += 1
@@ -187,7 +127,7 @@ func _warmup_model() -> void:
 			await get_tree().create_timer(0.1).timeout
 
 	warmup_done = true
-	_update_status("LLM Pret", PALETTE.success, 100)
+	_update_status("LLM Pret", MerlinVisual.LLM_STATUS.success, 100)
 
 
 func _get_or_load_model(path: String) -> Object:
@@ -206,9 +146,8 @@ func _get_or_load_model(path: String) -> Object:
 
 func _update_status(text: String, color: Color, progress: float) -> void:
 	status_label.text = text
-	var icon := status_panel.get_node_or_null("VBoxContainer/HBoxContainer/StatusIcon")
-	if icon:
-		icon.add_theme_color_override("font_color", color)
+	if _status_icon:
+		_status_icon.add_theme_color_override("font_color", color)
 	progress_bar.value = progress
 
 
@@ -229,21 +168,21 @@ func _on_model_selected(id: int) -> void:
 
 
 func _on_merlin_status_changed(status: String, detail: String, progress: float) -> void:
-	var color := PALETTE.text
+	var color: Color = MerlinVisual.LLM_STATUS.text
 	if "OK" in status:
-		color = PALETTE.success
+		color = MerlinVisual.LLM_STATUS.success
 	elif "OFF" in status:
-		color = PALETTE.error
+		color = MerlinVisual.LLM_STATUS.error
 	elif "..." in status:
-		color = PALETTE.warning
+		color = MerlinVisual.LLM_STATUS.warning
 	_update_status(detail, color, progress)
 
 
 func _on_merlin_ready_changed(ready_state: bool) -> void:
 	if ready_state:
-		_update_status("LLM Pret", PALETTE.success, 100)
+		_update_status("LLM Pret", MerlinVisual.LLM_STATUS.success, 100)
 	else:
-		_update_status("LLM Deconnecte", PALETTE.error, 0)
+		_update_status("LLM Deconnecte", MerlinVisual.LLM_STATUS.error, 0)
 
 
 ## API publique pour obtenir le LLM prechauffe

@@ -1,7 +1,7 @@
 # Task Plan: M.E.R.L.I.N. — Le Jeu des Oghams
 
 ## Goal
-Developper un JDR Parlant roguelite avec LLM local (Qwen2.5-3B Multi-Brain), systeme Triade (3 aspects x 3 etats), et narration procedurale.
+Developper un JDR Parlant roguelite avec LLM local (Qwen 2.5-3B-Instruct Multi-Brain), systeme Triade (3 aspects x 3 etats), et narration procedurale.
 
 ## Current Phase
 Phase 43 — Refonte Gameplay (Plan consolide Phase 42 walkthrough)
@@ -53,6 +53,27 @@ Phase 43 — Refonte Gameplay (Plan consolide Phase 42 walkthrough)
 
 ---
 
+## Migration Scene-Based Design — COMPLETE (2026-02-17)
+
+Plan: `.claude/plans/majestic-sprouting-pond.md`
+
+| Phase | Cible | Lignes | Status |
+|-------|-------|--------|--------|
+| 1 | Theme System (fondation) | ~-100 | FAIT |
+| 2 | TriadeGameUI extraction | -408 | FAIT |
+| 3 | HubAntre extraction | ~-300 | FAIT |
+| 4 | MenuPrincipalMerlin extraction | -94 | FAIT |
+| 5 | Scenes secondaires (4 scenes) | -432 | FAIT |
+
+**Total: ~1334 lignes supprimees, ratio scene/script 5% → 60%**
+
+### Bug pre-existant: gui_embed_subviewports — CORRIGE
+- `pixel_content_animator.gd:386` utilisait `svp.gui_embed_subviewports = false` (propriete Window, pas SubViewport)
+- Fix: remplace par `svp.gui_disable_input = true` (propriete Viewport valide)
+- **18/18 scenes PASS en headless** apres correction
+
+---
+
 ## Backlog
 
 ### Phase B — Progression
@@ -79,5 +100,6 @@ Phase 43 — Refonte Gameplay (Plan consolide Phase 42 walkthrough)
 | D.2 | Art Kingdom Two Crowns (portraits) | A FAIRE |
 | D.3 | Nettoyage code legacy restant | A FAIRE |
 | D.4 | Equilibrage global | A FAIRE |
+| D.5 | ~~Fix gui_embed_subviewports~~ | FAIT |
 
-*Updated: 2026-02-11 — Phase 43A COMPLETE (validate.bat passed)*
+*Updated: 2026-02-17 — Migration Scene-Based COMPLETE, Phase 43A+Migration done*

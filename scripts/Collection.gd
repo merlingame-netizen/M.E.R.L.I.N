@@ -10,27 +10,8 @@ const VIEW_PROGRESSION := 0
 const VIEW_RECENTS := 1
 const VIEW_COLLECTION := 2
 
-# Palette Parchemin Celtique - identique au MenuPrincipalReigns
-const PALETTE := {
-	"paper": Color(0.965, 0.945, 0.905),
-	"paper_dark": Color(0.935, 0.905, 0.855),
-	"paper_warm": Color(0.955, 0.930, 0.890),
-	"ink": Color(0.22, 0.18, 0.14),
-	"ink_soft": Color(0.38, 0.32, 0.26),
-	"ink_faded": Color(0.50, 0.44, 0.38, 0.35),
-	"accent": Color(0.58, 0.44, 0.26),
-	"accent_soft": Color(0.65, 0.52, 0.34),
-	"accent_glow": Color(0.72, 0.58, 0.38, 0.25),
-	"shadow": Color(0.25, 0.20, 0.16, 0.18),
-	"line": Color(0.40, 0.34, 0.28, 0.15),
-	"mist": Color(0.94, 0.92, 0.88, 0.35),
-	"celtic_gold": Color(0.68, 0.55, 0.32),
-	"celtic_brown": Color(0.45, 0.36, 0.28),
-	"success": Color(0.35, 0.55, 0.40),
-	"locked": Color(0.55, 0.50, 0.45, 0.6),
-}
 
-const CELTIC_ORNAMENT := ["─", "•", "─", "─", "◆", "─", "─", "•", "─"]
+const CELTIC_ORNAMENT := ["\u2500", "\u2022", "\u2500", "\u2500", "\u25c6", "\u2500", "\u2500", "\u2022", "\u2500"]
 
 const PROGRESSION_STATS := [
 	{"label": "General", "current": 6, "max": 24},
@@ -125,47 +106,47 @@ var small_font_size := 12
 var icon_tile_size := 32
 var row_min_height := 48
 
-# UI References
-var parchment_bg: ColorRect
-var mist_layer: ColorRect
-var ornament_top: Label
-var ornament_bottom: Label
-var main_container: MarginContainer
-var layout: VBoxContainer
-var header: HBoxContainer
-var title_label: Label
-var glory_label: Label
-var rank_label: Label
-var pass_panel: PanelContainer
-var pass_title_label: Label
-var pass_progress: ProgressBar
-var pass_progress_label: Label
-var view_tabs: HBoxContainer
-var btn_progression: Button
-var btn_recents: Button
-var btn_collection: Button
-var content_scroll: ScrollContainer
-var content_stack: VBoxContainer
-var progress_section: VBoxContainer
-var progress_title_label: Label
-var progress_hint_label: Label
-var progress_list: VBoxContainer
-var recent_section: VBoxContainer
-var recent_title_label: Label
-var recent_list: VBoxContainer
-var collection_section: VBoxContainer
-var collection_title_label: Label
-var collection_subtitle_label: Label
-var collection_grid: HFlowContainer
-var collection_list: VBoxContainer
-var bottom_bar: HBoxContainer
-var back_button: Button
+# Scene nodes (@onready)
+@onready var parchment_bg: ColorRect = $ParchmentBg
+@onready var mist_layer: ColorRect = $MistLayer
+@onready var ornament_top: Label = $OrnamentTop
+@onready var ornament_bottom: Label = $OrnamentBottom
+@onready var main_container: MarginContainer = $MainContainer
+@onready var layout: VBoxContainer = $MainContainer/Layout
+@onready var header: HBoxContainer = $MainContainer/Layout/Header
+@onready var title_label: Label = $MainContainer/Layout/Header/TitleLabel
+@onready var glory_label: Label = $MainContainer/Layout/Header/StatsVBox/GloryLabel
+@onready var rank_label: Label = $MainContainer/Layout/Header/StatsVBox/RankLabel
+@onready var pass_panel: PanelContainer = $MainContainer/Layout/PassPanel
+@onready var pass_title_label: Label = $MainContainer/Layout/PassPanel/PassVBox/PassTitleLabel
+@onready var pass_progress: ProgressBar = $MainContainer/Layout/PassPanel/PassVBox/PassProgress
+@onready var pass_progress_label: Label = $MainContainer/Layout/PassPanel/PassVBox/PassProgressLabel
+@onready var view_tabs: HBoxContainer = $MainContainer/Layout/ViewTabs
+@onready var btn_progression: Button = $MainContainer/Layout/ViewTabs/BtnProgression
+@onready var btn_recents: Button = $MainContainer/Layout/ViewTabs/BtnRecents
+@onready var btn_collection: Button = $MainContainer/Layout/ViewTabs/BtnCollection
+@onready var content_scroll: ScrollContainer = $MainContainer/Layout/ContentPanel/ContentScroll
+@onready var content_stack: VBoxContainer = $MainContainer/Layout/ContentPanel/ContentScroll/ContentStack
+@onready var progress_section: VBoxContainer = $MainContainer/Layout/ContentPanel/ContentScroll/ContentStack/ProgressSection
+@onready var progress_title_label: Label = $MainContainer/Layout/ContentPanel/ContentScroll/ContentStack/ProgressSection/ProgressTitleLabel
+@onready var progress_hint_label: Label = $MainContainer/Layout/ContentPanel/ContentScroll/ContentStack/ProgressSection/ProgressHintLabel
+@onready var progress_list: VBoxContainer = $MainContainer/Layout/ContentPanel/ContentScroll/ContentStack/ProgressSection/ProgressList
+@onready var recent_section: VBoxContainer = $MainContainer/Layout/ContentPanel/ContentScroll/ContentStack/RecentSection
+@onready var recent_title_label: Label = $MainContainer/Layout/ContentPanel/ContentScroll/ContentStack/RecentSection/RecentTitleLabel
+@onready var recent_list: VBoxContainer = $MainContainer/Layout/ContentPanel/ContentScroll/ContentStack/RecentSection/RecentList
+@onready var collection_section: VBoxContainer = $MainContainer/Layout/ContentPanel/ContentScroll/ContentStack/CollectionSection
+@onready var collection_title_label: Label = $MainContainer/Layout/ContentPanel/ContentScroll/ContentStack/CollectionSection/CollectionTitleLabel
+@onready var collection_subtitle_label: Label = $MainContainer/Layout/ContentPanel/ContentScroll/ContentStack/CollectionSection/CollectionSubtitleLabel
+@onready var collection_grid: HFlowContainer = $MainContainer/Layout/ContentPanel/ContentScroll/ContentStack/CollectionSection/CollectionGrid
+@onready var collection_list: VBoxContainer = $MainContainer/Layout/ContentPanel/ContentScroll/ContentStack/CollectionSection/CollectionList
+@onready var bottom_bar: HBoxContainer = $MainContainer/Layout/BottomBar
+@onready var back_button: Button = $MainContainer/Layout/BottomBar/BackButton
 
 func _ready() -> void:
 	store = get_node_or_null("/root/MerlinStore")
 	_load_real_data()
 	_load_fonts()
-	_build_ui()
+	_configure_ui()
 	_apply_style()
 	_update_responsive_style()
 	_populate_all()
@@ -291,6 +272,7 @@ func _get_real_collection() -> Array:
 			"req": str(spec.get("tree", "")) + " | " + str(spec.get("description", "")) if discovered else "???",
 			"locked": not discovered,
 			"hidden": not discovered,
+			"ogham_key": key,
 		})
 
 	return items
@@ -310,280 +292,65 @@ func _load_fonts() -> void:
 	if font_bold == null:
 		font_bold = font_regular
 
-func _build_ui() -> void:
-	# Clear existing children
-	for child in get_children():
-		child.queue_free()
-
-	# Parchment background with shader
-	parchment_bg = ColorRect.new()
-	parchment_bg.name = "ParchmentBg"
-	parchment_bg.set_anchors_preset(Control.PRESET_FULL_RECT)
-	parchment_bg.color = PALETTE.paper
-	add_child(parchment_bg)
-
-	var paper_shader := load("res://shaders/reigns_paper.gdshader")
+func _configure_ui() -> void:
+	# Configure parchment background shader
+	parchment_bg.color = MerlinVisual.PALETTE.paper
+	var paper_shader := load("res://shaders/merlin_paper.gdshader")
 	if paper_shader:
 		var mat := ShaderMaterial.new()
 		mat.shader = paper_shader
-		mat.set_shader_parameter("paper_tint", PALETTE.paper)
+		mat.set_shader_parameter("paper_tint", MerlinVisual.PALETTE.paper)
 		mat.set_shader_parameter("grain_strength", 0.025)
 		mat.set_shader_parameter("vignette_strength", 0.08)
 		mat.set_shader_parameter("vignette_softness", 0.65)
 		parchment_bg.material = mat
 
-	# Mist layer for atmosphere
-	mist_layer = ColorRect.new()
-	mist_layer.name = "MistLayer"
-	mist_layer.set_anchors_preset(Control.PRESET_FULL_RECT)
-	mist_layer.color = PALETTE.mist
-	mist_layer.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	add_child(mist_layer)
-
-	# Celtic ornament top
-	ornament_top = Label.new()
-	ornament_top.name = "OrnamentTop"
+	# Configure mist + ornaments
+	mist_layer.color = MerlinVisual.PALETTE.mist
 	ornament_top.text = "".join(CELTIC_ORNAMENT)
-	ornament_top.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	ornament_top.set_anchors_preset(Control.PRESET_TOP_WIDE)
-	ornament_top.offset_top = 8
-	ornament_top.offset_bottom = 28
-	add_child(ornament_top)
-
-	# Celtic ornament bottom
-	ornament_bottom = Label.new()
-	ornament_bottom.name = "OrnamentBottom"
 	ornament_bottom.text = "".join(CELTIC_ORNAMENT)
-	ornament_bottom.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	ornament_bottom.set_anchors_preset(Control.PRESET_BOTTOM_WIDE)
-	ornament_bottom.offset_top = -28
-	ornament_bottom.offset_bottom = -8
-	add_child(ornament_bottom)
 
-	# Main container
-	main_container = MarginContainer.new()
-	main_container.name = "MainContainer"
-	main_container.set_anchors_preset(Control.PRESET_FULL_RECT)
-	add_child(main_container)
+	# Configure separator colors
+	var sep_top: ColorRect = $MainContainer/Layout/SepTop
+	var sep_bottom: ColorRect = $MainContainer/Layout/SepBottom
+	sep_top.color = MerlinVisual.PALETTE.line
+	sep_bottom.color = MerlinVisual.PALETTE.line
 
-	# Main layout
-	layout = VBoxContainer.new()
-	layout.name = "Layout"
-	layout.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	layout.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	main_container.add_child(layout)
-
-	# Header
-	header = HBoxContainer.new()
-	header.name = "Header"
-	layout.add_child(header)
-
-	title_label = Label.new()
-	title_label.name = "TitleLabel"
-	title_label.text = "Collection"
-	title_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	header.add_child(title_label)
-
-	var stats_vbox := VBoxContainer.new()
-	stats_vbox.name = "StatsVBox"
-	stats_vbox.add_theme_constant_override("separation", 2)
-	header.add_child(stats_vbox)
-
-	glory_label = Label.new()
-	glory_label.name = "GloryLabel"
-	glory_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
-	stats_vbox.add_child(glory_label)
-
-	rank_label = Label.new()
-	rank_label.name = "RankLabel"
-	rank_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
-	stats_vbox.add_child(rank_label)
-
-	# Separator line
-	var sep_top := ColorRect.new()
-	sep_top.name = "SeparatorTop"
-	sep_top.custom_minimum_size = Vector2(0, 1)
-	sep_top.color = PALETTE.line
-	layout.add_child(sep_top)
-
-	# Pass panel
-	pass_panel = PanelContainer.new()
-	pass_panel.name = "PassPanel"
-	layout.add_child(pass_panel)
-
-	var pass_vbox := VBoxContainer.new()
-	pass_vbox.name = "PassVBox"
-	pass_vbox.add_theme_constant_override("separation", 6)
-	pass_panel.add_child(pass_vbox)
-
-	pass_title_label = Label.new()
-	pass_title_label.name = "PassTitleLabel"
-	pass_title_label.text = "Passe de Gloire"
-	pass_vbox.add_child(pass_title_label)
-
-	pass_progress = ProgressBar.new()
-	pass_progress.name = "PassProgress"
-	pass_progress.custom_minimum_size = Vector2(0, 16)
-	pass_progress.show_percentage = false
-	pass_vbox.add_child(pass_progress)
-
-	pass_progress_label = Label.new()
-	pass_progress_label.name = "PassProgressLabel"
-	pass_progress_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	pass_vbox.add_child(pass_progress_label)
-
-	# View tabs
-	view_tabs = HBoxContainer.new()
-	view_tabs.name = "ViewTabs"
-	view_tabs.add_theme_constant_override("separation", 8)
-	layout.add_child(view_tabs)
-
-	btn_progression = Button.new()
-	btn_progression.name = "BtnProgression"
-	btn_progression.text = "Progression"
-	btn_progression.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	# Wire tab button signals
 	btn_progression.pressed.connect(func():
 		SFXManager.play("click")
 		_set_view(VIEW_PROGRESSION)
 	)
-	view_tabs.add_child(btn_progression)
-
-	btn_recents = Button.new()
-	btn_recents.name = "BtnRecents"
-	btn_recents.text = "Recents"
-	btn_recents.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	btn_recents.pressed.connect(func():
 		SFXManager.play("click")
 		_set_view(VIEW_RECENTS)
 	)
-	view_tabs.add_child(btn_recents)
-
-	btn_collection = Button.new()
-	btn_collection.name = "BtnCollection"
-	btn_collection.text = "Objets"
-	btn_collection.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	btn_collection.pressed.connect(func():
 		SFXManager.play("click")
 		_set_view(VIEW_COLLECTION)
 	)
-	view_tabs.add_child(btn_collection)
 
-	# Content panel
-	var content_panel := PanelContainer.new()
-	content_panel.name = "ContentPanel"
-	content_panel.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	layout.add_child(content_panel)
-
-	content_scroll = ScrollContainer.new()
-	content_scroll.name = "ContentScroll"
-	content_scroll.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	content_scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	content_panel.add_child(content_scroll)
-
-	content_stack = VBoxContainer.new()
-	content_stack.name = "ContentStack"
-	content_stack.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	content_scroll.add_child(content_stack)
-
-	# Progress section
-	progress_section = VBoxContainer.new()
-	progress_section.name = "ProgressSection"
-	progress_section.add_theme_constant_override("separation", 8)
-	content_stack.add_child(progress_section)
-
-	progress_title_label = Label.new()
-	progress_title_label.name = "ProgressTitleLabel"
-	progress_title_label.text = "Progression par categorie"
-	progress_section.add_child(progress_title_label)
-
-	progress_hint_label = Label.new()
-	progress_hint_label.name = "ProgressHintLabel"
-	progress_hint_label.text = "Accomplissez des hauts faits pour debloquer des recompenses"
-	progress_section.add_child(progress_hint_label)
-
-	progress_list = VBoxContainer.new()
-	progress_list.name = "ProgressList"
-	progress_list.add_theme_constant_override("separation", 6)
-	progress_section.add_child(progress_list)
-
-	# Recent section
-	recent_section = VBoxContainer.new()
-	recent_section.name = "RecentSection"
-	recent_section.add_theme_constant_override("separation", 8)
-	content_stack.add_child(recent_section)
-
-	recent_title_label = Label.new()
-	recent_title_label.name = "RecentTitleLabel"
-	recent_title_label.text = "Hauts faits recents"
-	recent_section.add_child(recent_title_label)
-
-	recent_list = VBoxContainer.new()
-	recent_list.name = "RecentList"
-	recent_list.add_theme_constant_override("separation", 6)
-	recent_section.add_child(recent_list)
-
-	# Collection section
-	collection_section = VBoxContainer.new()
-	collection_section.name = "CollectionSection"
-	collection_section.add_theme_constant_override("separation", 8)
-	content_stack.add_child(collection_section)
-
-	collection_title_label = Label.new()
-	collection_title_label.name = "CollectionTitleLabel"
-	collection_title_label.text = "Apercu de la Collection"
-	collection_section.add_child(collection_title_label)
-
-	collection_subtitle_label = Label.new()
-	collection_subtitle_label.name = "CollectionSubtitleLabel"
-	collection_subtitle_label.text = "Objets visibles, verrouilles et mysteres"
-	collection_section.add_child(collection_subtitle_label)
-
-	collection_grid = HFlowContainer.new()
-	collection_grid.name = "CollectionGrid"
-	collection_section.add_child(collection_grid)
-
-	collection_list = VBoxContainer.new()
-	collection_list.name = "CollectionList"
-	collection_list.add_theme_constant_override("separation", 6)
-	collection_section.add_child(collection_list)
-
-	# Separator bottom
-	var sep_bottom := ColorRect.new()
-	sep_bottom.name = "SeparatorBottom"
-	sep_bottom.custom_minimum_size = Vector2(0, 1)
-	sep_bottom.color = PALETTE.line
-	layout.add_child(sep_bottom)
-
-	# Bottom bar
-	bottom_bar = HBoxContainer.new()
-	bottom_bar.name = "BottomBar"
-	bottom_bar.alignment = BoxContainer.ALIGNMENT_CENTER
-	layout.add_child(bottom_bar)
-
-	back_button = Button.new()
-	back_button.name = "BackButton"
-	back_button.text = "Retour"
+	# Wire back button
 	back_button.pressed.connect(func():
 		SFXManager.play("click")
 		var se := get_node_or_null("/root/ScreenEffects")
 		var target: String = se.return_scene if se and se.return_scene != "" else "res://scenes/HubAntre.tscn"
-		get_tree().change_scene_to_file(target)
+		PixelTransition.transition_to(target)
 	)
-	bottom_bar.add_child(back_button)
 
 func _apply_style() -> void:
 	# Panel styles - parchment look
-	_apply_panel_style(pass_panel, PALETTE.paper_warm)
+	_apply_panel_style(pass_panel, MerlinVisual.PALETTE.paper_warm)
 
 	# Content panel - subtle border
 	var content_panel := layout.get_node_or_null("ContentPanel")
 	if content_panel:
-		_apply_panel_style(content_panel, PALETTE.paper_dark)
+		_apply_panel_style(content_panel, MerlinVisual.PALETTE.paper_dark)
 
 	# Progress bar styling
 	var pass_bg := StyleBoxFlat.new()
-	pass_bg.bg_color = PALETTE.paper_dark
-	pass_bg.border_color = PALETTE.accent_soft
+	pass_bg.bg_color = MerlinVisual.PALETTE.paper_dark
+	pass_bg.border_color = MerlinVisual.PALETTE.accent_soft
 	pass_bg.set_border_width_all(1)
 	pass_bg.corner_radius_top_left = 4
 	pass_bg.corner_radius_top_right = 4
@@ -592,7 +359,7 @@ func _apply_style() -> void:
 	pass_progress.add_theme_stylebox_override("background", pass_bg)
 
 	var pass_fill := StyleBoxFlat.new()
-	pass_fill.bg_color = PALETTE.success
+	pass_fill.bg_color = MerlinVisual.PALETTE.success
 	pass_fill.corner_radius_top_left = 3
 	pass_fill.corner_radius_top_right = 3
 	pass_fill.corner_radius_bottom_left = 3
@@ -602,7 +369,7 @@ func _apply_style() -> void:
 func _apply_panel_style(panel: PanelContainer, fill_color: Color) -> void:
 	var style := StyleBoxFlat.new()
 	style.bg_color = fill_color
-	style.border_color = PALETTE.line
+	style.border_color = MerlinVisual.PALETTE.line
 	style.set_border_width_all(1)
 	style.corner_radius_top_left = 6
 	style.corner_radius_top_right = 6
@@ -667,8 +434,8 @@ func _update_responsive_style() -> void:
 	# Ornament styling
 	ornament_top.add_theme_font_size_override("font_size", 14 if compact_mode else 18)
 	ornament_bottom.add_theme_font_size_override("font_size", 14 if compact_mode else 18)
-	ornament_top.add_theme_color_override("font_color", PALETTE.accent_soft)
-	ornament_bottom.add_theme_color_override("font_color", PALETTE.accent_soft)
+	ornament_top.add_theme_color_override("font_color", MerlinVisual.PALETTE.accent_soft)
+	ornament_bottom.add_theme_color_override("font_color", MerlinVisual.PALETTE.accent_soft)
 	if font_regular:
 		ornament_top.add_theme_font_override("font", font_regular)
 		ornament_bottom.add_theme_font_override("font", font_regular)
@@ -678,24 +445,24 @@ func _update_responsive_style() -> void:
 		tab_btn.custom_minimum_size = Vector2(0, 32 if compact_mode else 38)
 
 	# Colors
-	title_label.add_theme_color_override("font_color", PALETTE.celtic_gold)
-	pass_title_label.add_theme_color_override("font_color", PALETTE.accent)
-	progress_title_label.add_theme_color_override("font_color", PALETTE.accent)
-	recent_title_label.add_theme_color_override("font_color", PALETTE.accent)
-	collection_title_label.add_theme_color_override("font_color", PALETTE.accent)
-	glory_label.add_theme_color_override("font_color", PALETTE.celtic_gold)
-	rank_label.add_theme_color_override("font_color", PALETTE.ink_soft)
-	progress_hint_label.add_theme_color_override("font_color", PALETTE.ink_soft)
-	collection_subtitle_label.add_theme_color_override("font_color", PALETTE.ink_soft)
-	pass_progress_label.add_theme_color_override("font_color", PALETTE.ink_soft)
+	title_label.add_theme_color_override("font_color", MerlinVisual.PALETTE.celtic_gold)
+	pass_title_label.add_theme_color_override("font_color", MerlinVisual.PALETTE.accent)
+	progress_title_label.add_theme_color_override("font_color", MerlinVisual.PALETTE.accent)
+	recent_title_label.add_theme_color_override("font_color", MerlinVisual.PALETTE.accent)
+	collection_title_label.add_theme_color_override("font_color", MerlinVisual.PALETTE.accent)
+	glory_label.add_theme_color_override("font_color", MerlinVisual.PALETTE.celtic_gold)
+	rank_label.add_theme_color_override("font_color", MerlinVisual.PALETTE.ink_soft)
+	progress_hint_label.add_theme_color_override("font_color", MerlinVisual.PALETTE.ink_soft)
+	collection_subtitle_label.add_theme_color_override("font_color", MerlinVisual.PALETTE.ink_soft)
+	pass_progress_label.add_theme_color_override("font_color", MerlinVisual.PALETTE.ink_soft)
 
 	# Back button styling
 	_style_back_button()
 
 func _style_back_button() -> void:
 	var normal := StyleBoxFlat.new()
-	normal.bg_color = PALETTE.paper_warm
-	normal.border_color = PALETTE.accent_soft
+	normal.bg_color = MerlinVisual.PALETTE.paper_warm
+	normal.border_color = MerlinVisual.PALETTE.accent_soft
 	normal.set_border_width_all(1)
 	normal.corner_radius_top_left = 4
 	normal.corner_radius_top_right = 4
@@ -707,18 +474,18 @@ func _style_back_button() -> void:
 	normal.content_margin_bottom = 6
 
 	var hover := normal.duplicate()
-	hover.bg_color = PALETTE.paper_dark
-	hover.border_color = PALETTE.accent
+	hover.bg_color = MerlinVisual.PALETTE.paper_dark
+	hover.border_color = MerlinVisual.PALETTE.accent
 
 	var pressed := normal.duplicate()
-	pressed.bg_color = PALETTE.accent_glow
-	pressed.border_color = PALETTE.accent
+	pressed.bg_color = MerlinVisual.PALETTE.accent_glow
+	pressed.border_color = MerlinVisual.PALETTE.accent
 
 	back_button.add_theme_stylebox_override("normal", normal)
 	back_button.add_theme_stylebox_override("hover", hover)
 	back_button.add_theme_stylebox_override("pressed", pressed)
-	back_button.add_theme_color_override("font_color", PALETTE.ink)
-	back_button.add_theme_color_override("font_hover_color", PALETTE.accent)
+	back_button.add_theme_color_override("font_color", MerlinVisual.PALETTE.ink)
+	back_button.add_theme_color_override("font_hover_color", MerlinVisual.PALETTE.accent)
 	if font_regular:
 		back_button.add_theme_font_override("font", font_regular)
 
@@ -727,7 +494,7 @@ func _apply_font_recursive(node: Node, font: Font, font_size: int) -> void:
 		var lbl := node as Label
 		lbl.add_theme_font_override("font", font)
 		lbl.add_theme_font_size_override("font_size", font_size)
-		lbl.add_theme_color_override("font_color", PALETTE.ink)
+		lbl.add_theme_color_override("font_color", MerlinVisual.PALETTE.ink)
 	if node is Button:
 		var btn := node as Button
 		btn.add_theme_font_override("font", font)
@@ -780,7 +547,7 @@ func _create_progress_row(stat: Dictionary) -> HBoxContainer:
 	var label := Label.new()
 	label.text = str(stat.get("label", ""))
 	label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	_style_label(label, PALETTE.ink, body_font_size, true)
+	_style_label(label, MerlinVisual.PALETTE.ink, body_font_size, true)
 	row.add_child(label)
 
 	var current: int = stat.get("current", 0)
@@ -794,20 +561,20 @@ func _create_progress_row(stat: Dictionary) -> HBoxContainer:
 
 	var bar_bg := ColorRect.new()
 	bar_bg.set_anchors_preset(Control.PRESET_FULL_RECT)
-	bar_bg.color = PALETTE.paper_dark
+	bar_bg.color = MerlinVisual.PALETTE.paper_dark
 	bar_container.add_child(bar_bg)
 
 	var bar_fill := ColorRect.new()
 	bar_fill.set_anchors_preset(Control.PRESET_LEFT_WIDE)
 	bar_fill.anchor_right = ratio
-	bar_fill.color = PALETTE.accent_soft
+	bar_fill.color = MerlinVisual.PALETTE.accent_soft
 	bar_container.add_child(bar_fill)
 
 	var count_label := Label.new()
 	count_label.text = "%d / %d" % [current, max_val]
 	count_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
 	count_label.custom_minimum_size = Vector2(50 if compact_mode else 60, 0)
-	_style_label(count_label, PALETTE.ink_soft, small_font_size)
+	_style_label(count_label, MerlinVisual.PALETTE.ink_soft, small_font_size)
 	row.add_child(count_label)
 
 	return row
@@ -832,14 +599,14 @@ func _populate_recent_list() -> void:
 		title.text = "%s  (%s)" % [str(item.get("title", "")), str(item.get("date", ""))]
 		title.clip_text = true
 		title.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
-		_style_label(title, PALETTE.ink, body_font_size, true)
+		_style_label(title, MerlinVisual.PALETTE.ink, body_font_size, true)
 		text_box.add_child(title)
 
 		var desc := Label.new()
 		desc.text = str(item.get("desc", ""))
 		desc.clip_text = true
 		desc.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
-		_style_label(desc, PALETTE.ink_soft, small_font_size)
+		_style_label(desc, MerlinVisual.PALETTE.ink_soft, small_font_size)
 		text_box.add_child(desc)
 
 		row.add_child(text_box)
@@ -861,7 +628,11 @@ func _populate_collection() -> void:
 			"Debloque" if not is_locked else "Condition: %s" % str(item.get("req", ""))
 		)
 
-		collection_grid.add_child(_create_icon_tile(icon_text, is_locked))
+		var ogham_key: String = str(item.get("ogham_key", ""))
+		if not ogham_key.is_empty() and not is_hidden:
+			collection_grid.add_child(_create_ogham_icon_tile(ogham_key, is_locked))
+		else:
+			collection_grid.add_child(_create_icon_tile(icon_text, is_locked))
 		collection_list.add_child(_create_collection_row(icon_text, name_text, req_text, is_locked, is_hidden))
 
 func _set_view(view_id: int) -> void:
@@ -876,11 +647,11 @@ func _set_view(view_id: int) -> void:
 func _style_tab_button(btn: Button, selected: bool) -> void:
 	var normal := StyleBoxFlat.new()
 	if selected:
-		normal.bg_color = PALETTE.paper_warm
-		normal.border_color = PALETTE.accent
+		normal.bg_color = MerlinVisual.PALETTE.paper_warm
+		normal.border_color = MerlinVisual.PALETTE.accent
 	else:
-		normal.bg_color = PALETTE.paper
-		normal.border_color = PALETTE.line
+		normal.bg_color = MerlinVisual.PALETTE.paper
+		normal.border_color = MerlinVisual.PALETTE.line
 	normal.set_border_width_all(1)
 	normal.corner_radius_top_left = 4
 	normal.corner_radius_top_right = 4
@@ -890,14 +661,14 @@ func _style_tab_button(btn: Button, selected: bool) -> void:
 	normal.content_margin_bottom = 6
 
 	var hover := normal.duplicate()
-	hover.bg_color = PALETTE.paper_dark
-	hover.border_color = PALETTE.accent_soft
+	hover.bg_color = MerlinVisual.PALETTE.paper_dark
+	hover.border_color = MerlinVisual.PALETTE.accent_soft
 
 	btn.add_theme_stylebox_override("normal", normal)
 	btn.add_theme_stylebox_override("hover", hover)
 	btn.add_theme_stylebox_override("pressed", hover)
-	btn.add_theme_color_override("font_color", PALETTE.accent if selected else PALETTE.ink)
-	btn.add_theme_color_override("font_hover_color", PALETTE.accent)
+	btn.add_theme_color_override("font_color", MerlinVisual.PALETTE.accent if selected else MerlinVisual.PALETTE.ink)
+	btn.add_theme_color_override("font_hover_color", MerlinVisual.PALETTE.accent)
 	if font_regular:
 		btn.add_theme_font_override("font", font_regular)
 
@@ -922,11 +693,11 @@ func _create_icon_tile(text_value: String, locked: bool) -> Panel:
 
 	var style := StyleBoxFlat.new()
 	if locked:
-		style.bg_color = PALETTE.paper_dark
-		style.border_color = PALETTE.locked
+		style.bg_color = MerlinVisual.PALETTE.paper_dark
+		style.border_color = MerlinVisual.PALETTE.locked
 	else:
-		style.bg_color = PALETTE.paper_warm
-		style.border_color = PALETTE.accent_soft
+		style.bg_color = MerlinVisual.PALETTE.paper_warm
+		style.border_color = MerlinVisual.PALETTE.accent_soft
 	style.set_border_width_all(1)
 	style.corner_radius_top_left = 4
 	style.corner_radius_top_right = 4
@@ -940,9 +711,38 @@ func _create_icon_tile(text_value: String, locked: bool) -> Panel:
 	label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	label.anchor_right = 1.0
 	label.anchor_bottom = 1.0
-	_style_label(label, PALETTE.locked if locked else PALETTE.accent, small_font_size + 1, true)
+	_style_label(label, MerlinVisual.PALETTE.locked if locked else MerlinVisual.PALETTE.accent, small_font_size + 1, true)
 	panel.add_child(label)
 	return panel
+
+func _create_ogham_icon_tile(ogham_key: String, locked: bool) -> Panel:
+	var panel := Panel.new()
+	panel.custom_minimum_size = Vector2(icon_tile_size, icon_tile_size)
+	var style := StyleBoxFlat.new()
+	if locked:
+		style.bg_color = MerlinVisual.PALETTE.paper_dark
+		style.border_color = MerlinVisual.PALETTE.locked
+	else:
+		style.bg_color = MerlinVisual.PALETTE.paper_warm
+		style.border_color = MerlinVisual.PALETTE.accent_soft
+	style.set_border_width_all(1)
+	style.corner_radius_top_left = 4
+	style.corner_radius_top_right = 4
+	style.corner_radius_bottom_left = 4
+	style.corner_radius_bottom_right = 4
+	panel.add_theme_stylebox_override("panel", style)
+	var icon := PixelOghamIcon.new()
+	icon.setup(ogham_key, icon_tile_size - 8.0)
+	icon.set_anchors_preset(Control.PRESET_CENTER)
+	icon.position = Vector2(4, 4)
+	if not locked:
+		icon.reveal(true)
+	else:
+		icon.modulate.a = 0.3
+		icon.reveal(true)
+	panel.add_child(icon)
+	return panel
+
 
 func _create_collection_row(icon_text: String, name_text: String, req_text: String, locked: bool, hidden: bool) -> HBoxContainer:
 	var row := HBoxContainer.new()
@@ -961,14 +761,14 @@ func _create_collection_row(icon_text: String, name_text: String, req_text: Stri
 	name_label.text = name_text
 	name_label.clip_text = true
 	name_label.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
-	_style_label(name_label, PALETTE.ink_soft if hidden else PALETTE.ink, body_font_size, true)
+	_style_label(name_label, MerlinVisual.PALETTE.ink_soft if hidden else MerlinVisual.PALETTE.ink, body_font_size, true)
 	text_box.add_child(name_label)
 
 	var req_label := Label.new()
 	req_label.text = req_text
 	req_label.clip_text = true
 	req_label.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
-	_style_label(req_label, PALETTE.ink_faded if locked else PALETTE.success, small_font_size)
+	_style_label(req_label, MerlinVisual.PALETTE.ink_faded if locked else MerlinVisual.PALETTE.success, small_font_size)
 	text_box.add_child(req_label)
 
 	row.add_child(text_box)

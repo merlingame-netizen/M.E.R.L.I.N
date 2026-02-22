@@ -1,0 +1,357 @@
+[gd_scene load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://scripts/ui/merlin_game_ui.gd" id="1_script"]
+[ext_resource type="Theme" uid="uid://pixj7s1gkmxd" path="res://themes/merlin_theme.tres" id="2_theme"]
+
+[node name="MerlinGameUI" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme = ExtResource("2_theme")
+script = ExtResource("1_script")
+
+[node name="ParchmentBg" type="ColorRect" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+mouse_filter = 2
+
+[node name="BiomeArtLayer" type="Control" parent="."]
+visible = false
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+mouse_filter = 2
+
+[node name="MainVBox" type="VBoxContainer" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+theme_override_constants/separation = 0
+
+[node name="TopStatusBar" type="HBoxContainer" parent="MainVBox"]
+layout_mode = 2
+mouse_filter = 2
+alignment = 1
+theme_override_constants/separation = 26
+
+[node name="LifePanel" type="VBoxContainer" parent="MainVBox/TopStatusBar"]
+layout_mode = 2
+alignment = 1
+
+[node name="LifeTitle" type="Label" parent="MainVBox/TopStatusBar/LifePanel"]
+layout_mode = 2
+text = "Vie"
+horizontal_alignment = 1
+
+[node name="LifeBar" type="ProgressBar" parent="MainVBox/TopStatusBar/LifePanel"]
+layout_mode = 2
+custom_minimum_size = Vector2(168, 12)
+step = 1.0
+show_percentage = false
+
+[node name="LifeCounter" type="Label" parent="MainVBox/TopStatusBar/LifePanel"]
+layout_mode = 2
+horizontal_alignment = 1
+
+[node name="SoufflePanel" type="VBoxContainer" parent="MainVBox/TopStatusBar"]
+layout_mode = 2
+alignment = 1
+
+[node name="SouffleTitle" type="Label" parent="MainVBox/TopStatusBar/SoufflePanel"]
+layout_mode = 2
+text = "Souffle unique"
+horizontal_alignment = 1
+
+[node name="SouffleIcons" type="HBoxContainer" parent="MainVBox/TopStatusBar/SoufflePanel"]
+layout_mode = 2
+alignment = 1
+theme_override_constants/separation = 4
+
+[node name="Icon0" type="Label" parent="MainVBox/TopStatusBar/SoufflePanel/SouffleIcons"]
+layout_mode = 2
+text = "o"
+theme_override_font_sizes/font_size = 28
+
+[node name="Icon1" type="Label" parent="MainVBox/TopStatusBar/SoufflePanel/SouffleIcons"]
+layout_mode = 2
+text = "o"
+theme_override_font_sizes/font_size = 28
+
+[node name="Icon2" type="Label" parent="MainVBox/TopStatusBar/SoufflePanel/SouffleIcons"]
+layout_mode = 2
+text = "o"
+theme_override_font_sizes/font_size = 28
+
+[node name="Icon3" type="Label" parent="MainVBox/TopStatusBar/SoufflePanel/SouffleIcons"]
+layout_mode = 2
+text = "o"
+theme_override_font_sizes/font_size = 28
+
+[node name="Icon4" type="Label" parent="MainVBox/TopStatusBar/SoufflePanel/SouffleIcons"]
+layout_mode = 2
+text = "o"
+theme_override_font_sizes/font_size = 28
+
+[node name="Icon5" type="Label" parent="MainVBox/TopStatusBar/SoufflePanel/SouffleIcons"]
+layout_mode = 2
+text = "o"
+theme_override_font_sizes/font_size = 28
+
+[node name="Icon6" type="Label" parent="MainVBox/TopStatusBar/SoufflePanel/SouffleIcons"]
+layout_mode = 2
+text = "o"
+theme_override_font_sizes/font_size = 28
+
+[node name="SouffleCounter" type="Label" parent="MainVBox/TopStatusBar/SoufflePanel"]
+layout_mode = 2
+horizontal_alignment = 1
+
+[node name="EssencePanel" type="VBoxContainer" parent="MainVBox/TopStatusBar"]
+layout_mode = 2
+alignment = 1
+
+[node name="EssenceTitle" type="Label" parent="MainVBox/TopStatusBar/EssencePanel"]
+layout_mode = 2
+text = "Essences"
+horizontal_alignment = 1
+
+[node name="EssenceCounter" type="Label" parent="MainVBox/TopStatusBar/EssencePanel"]
+layout_mode = 2
+text = "0"
+horizontal_alignment = 1
+
+[node name="EssenceCaption" type="Label" parent="MainVBox/TopStatusBar/EssencePanel"]
+layout_mode = 2
+text = "a collecter"
+horizontal_alignment = 1
+
+[node name="MiddleZone" type="HBoxContainer" parent="MainVBox"]
+layout_mode = 2
+mouse_filter = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+theme_override_constants/separation = 0
+
+[node name="PiocheColumn" type="VBoxContainer" parent="MainVBox/MiddleZone"]
+layout_mode = 2
+custom_minimum_size = Vector2(140, 0)
+size_flags_vertical = 3
+alignment = 1
+theme_override_constants/separation = 6
+
+[node name="PiocheTitle" type="Label" parent="MainVBox/MiddleZone/PiocheColumn"]
+layout_mode = 2
+text = "Restant"
+horizontal_alignment = 1
+
+[node name="DeckRoot" type="Control" parent="MainVBox/MiddleZone/PiocheColumn"]
+layout_mode = 2
+custom_minimum_size = Vector2(110, 150)
+mouse_filter = 2
+
+[node name="DeckCount" type="Label" parent="MainVBox/MiddleZone/PiocheColumn"]
+layout_mode = 2
+text = "24"
+horizontal_alignment = 1
+
+[node name="CardContainer" type="Control" parent="MainVBox/MiddleZone"]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="CardPanel" type="Panel" parent="MainVBox/MiddleZone/CardContainer"]
+mouse_filter = 2
+z_index = 2
+
+[node name="CardVisualSplit" type="VBoxContainer" parent="MainVBox/MiddleZone/CardContainer/CardPanel"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+theme_override_constants/separation = 0
+
+[node name="CardIllustration" type="PanelContainer" parent="MainVBox/MiddleZone/CardContainer/CardPanel/CardVisualSplit"]
+layout_mode = 2
+size_flags_vertical = 3
+
+[node name="IlloLayer" type="Control" parent="MainVBox/MiddleZone/CardContainer/CardPanel/CardVisualSplit/CardIllustration"]
+layout_mode = 2
+custom_minimum_size = Vector2(0, 220)
+
+[node name="IlloBg" type="ColorRect" parent="MainVBox/MiddleZone/CardContainer/CardPanel/CardVisualSplit/CardIllustration/IlloLayer"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+mouse_filter = 2
+
+[node name="TileCenter" type="CenterContainer" parent="MainVBox/MiddleZone/CardContainer/CardPanel/CardVisualSplit/CardIllustration/IlloLayer"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+
+[node name="PortraitCenter" type="CenterContainer" parent="MainVBox/MiddleZone/CardContainer/CardPanel/CardVisualSplit/CardIllustration/IlloLayer"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+mouse_filter = 2
+
+[node name="CardBodyPanel" type="PanelContainer" parent="MainVBox/MiddleZone/CardContainer/CardPanel/CardVisualSplit"]
+layout_mode = 2
+size_flags_vertical = 3
+
+[node name="CardBodyVBox" type="VBoxContainer" parent="MainVBox/MiddleZone/CardContainer/CardPanel/CardVisualSplit/CardBodyPanel"]
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="CardSpeaker" type="Label" parent="MainVBox/MiddleZone/CardContainer/CardPanel/CardVisualSplit/CardBodyPanel/CardBodyVBox"]
+layout_mode = 2
+text = "MERLIN"
+horizontal_alignment = 1
+
+[node name="CardText" type="RichTextLabel" parent="MainVBox/MiddleZone/CardContainer/CardPanel/CardVisualSplit/CardBodyPanel/CardBodyVBox"]
+layout_mode = 2
+size_flags_vertical = 3
+bbcode_enabled = true
+text = "Le vent souffle sur les landes..."
+fit_content = false
+scroll_active = true
+scroll_following = true
+
+[node name="BodyContentHost" type="Control" parent="MainVBox/MiddleZone/CardContainer/CardPanel/CardVisualSplit/CardBodyPanel"]
+visible = false
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+mouse_filter = 2
+
+[node name="TextPixelFxLayer" type="Control" parent="MainVBox/MiddleZone/CardContainer/CardPanel"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+mouse_filter = 2
+z_index = 5
+
+[node name="CimetiereColumn" type="VBoxContainer" parent="MainVBox/MiddleZone"]
+layout_mode = 2
+custom_minimum_size = Vector2(140, 0)
+size_flags_vertical = 3
+alignment = 1
+theme_override_constants/separation = 6
+
+[node name="CimetiereTitle" type="Label" parent="MainVBox/MiddleZone/CimetiereColumn"]
+layout_mode = 2
+text = "Passe"
+horizontal_alignment = 1
+
+[node name="DiscardRoot" type="Control" parent="MainVBox/MiddleZone/CimetiereColumn"]
+layout_mode = 2
+custom_minimum_size = Vector2(100, 130)
+mouse_filter = 2
+
+[node name="DiscardCount" type="Label" parent="MainVBox/MiddleZone/CimetiereColumn"]
+layout_mode = 2
+text = "0"
+horizontal_alignment = 1
+
+[node name="BottomZone" type="VBoxContainer" parent="MainVBox"]
+layout_mode = 2
+size_flags_horizontal = 3
+z_index = 10
+theme_override_constants/separation = 6
+
+[node name="BottomSpacer" type="Control" parent="MainVBox/BottomZone"]
+layout_mode = 2
+size_flags_vertical = 0
+custom_minimum_size = Vector2(0, 4)
+
+[node name="OptionsBar" type="HBoxContainer" parent="MainVBox/BottomZone"]
+layout_mode = 2
+size_flags_horizontal = 3
+alignment = 1
+mouse_filter = 1
+theme_override_constants/separation = 10
+
+[node name="OptionVBoxA" type="VBoxContainer" parent="MainVBox/BottomZone/OptionsBar"]
+layout_mode = 2
+alignment = 1
+
+[node name="BtnA" type="Button" parent="MainVBox/BottomZone/OptionsBar/OptionVBoxA"]
+layout_mode = 2
+custom_minimum_size = Vector2(280, 56)
+text = "[A] Agir"
+
+[node name="OptionVBoxB" type="VBoxContainer" parent="MainVBox/BottomZone/OptionsBar"]
+layout_mode = 2
+alignment = 1
+
+[node name="BtnB" type="Button" parent="MainVBox/BottomZone/OptionsBar/OptionVBoxB"]
+layout_mode = 2
+custom_minimum_size = Vector2(280, 56)
+text = "[B] Agir"
+
+[node name="OptionVBoxC" type="VBoxContainer" parent="MainVBox/BottomZone/OptionsBar"]
+layout_mode = 2
+alignment = 1
+
+[node name="BtnC" type="Button" parent="MainVBox/BottomZone/OptionsBar/OptionVBoxC"]
+layout_mode = 2
+custom_minimum_size = Vector2(280, 56)
+text = "[C] Agir"
+
+[node name="InfoPanel" type="HBoxContainer" parent="MainVBox/BottomZone"]
+visible = false
+layout_mode = 2
+alignment = 1
+theme_override_constants/separation = 30
+
+[node name="MissionLabel" type="Label" parent="MainVBox/BottomZone/InfoPanel"]
+layout_mode = 2
+text = "Mission: ???"
+
+[node name="CardsLabel" type="Label" parent="MainVBox/BottomZone/InfoPanel"]
+layout_mode = 2
+text = "Cartes: 0"
+
+[node name="DeckFxLayer" type="Control" parent="."]
+visible = false
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+mouse_filter = 2
+
+[node name="ClockPanel" type="PanelContainer" parent="."]
+layout_mode = 1
+anchors_preset = 0
+offset_left = 18.0
+offset_top = 14.0
+mouse_filter = 2
+z_index = 8
+
+[node name="ClockLabel" type="Label" parent="ClockPanel"]
+layout_mode = 2
+text = "00:00"
+horizontal_alignment = 1
+
+[node name="ClockTimer" type="Timer" parent="."]
+wait_time = 1.0
+autostart = true
+
+[node name="NarratorOverlay" type="Control" parent="."]
+visible = false
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+mouse_filter = 2

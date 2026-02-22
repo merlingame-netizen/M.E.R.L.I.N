@@ -110,6 +110,14 @@ func _next_round() -> void:
 		sfx.play("minigame_tick")
 
 
+func _on_key_pressed(keycode: int) -> void:
+	# Keys 1-3 map to paths A, B, C
+	if keycode >= KEY_1 and keycode <= KEY_3:
+		var path_index: int = keycode - KEY_1
+		if path_index < _paths.size():
+			_on_path_chosen(_paths[path_index])
+
+
 func _on_path_chosen(path: String) -> void:
 	if _finished:
 		return

@@ -94,6 +94,11 @@ func _process(delta: float) -> void:
 			wheel_speed = 0.0
 			_finish_spin(segment_index)
 
+func _on_key_pressed(keycode: int) -> void:
+	if keycode == KEY_SPACE or keycode == KEY_ENTER:
+		_on_stop_pressed()
+
+
 func _on_stop_pressed() -> void:
 	stop_button.disabled = true
 	stop_button.text = "Ralentissement..."

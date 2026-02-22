@@ -3,7 +3,7 @@ extends Control
 ## TRIADE LLM Benchmark — Test card generation pipeline
 ## Tests: JSON quality, schema validation, parameter sweep, E2E mini-run
 
-const VERSION := "1.0.0"
+const VERSION := "2.0.0"
 
 # ═══════════════════════════════════════════════════════════════════════════════
 # TEST SCENARIOS — Different game states for card generation
@@ -85,12 +85,13 @@ func _build_ui() -> void:
 	btn_row.add_theme_constant_override("separation", 12)
 	vbox.add_child(btn_row)
 
-	_add_button(btn_row, "Cartes TRIADE", _run_card_benchmark, Vector2(180, 40))
-	_add_button(btn_row, "Sweep Params", _run_param_sweep, Vector2(160, 40))
-	_add_button(btn_row, "Mini-Run E2E", _run_e2e, Vector2(150, 40))
-	_add_button(btn_row, "Streaming", _run_streaming, Vector2(140, 40))
-	_add_button(btn_row, "Clear Cache", _clear_cache, Vector2(130, 40))
-	_add_button(btn_row, "Retour", _go_back, Vector2(100, 40))
+	_add_button(btn_row, "Cartes TRIADE", _run_card_benchmark, Vector2(160, 40))
+	_add_button(btn_row, "Sweep Params", _run_param_sweep, Vector2(140, 40))
+	_add_button(btn_row, "Mini-Run E2E", _run_e2e, Vector2(130, 40))
+	_add_button(btn_row, "Perf (p50/p90)", _run_perf_benchmark, Vector2(140, 40))
+	_add_button(btn_row, "Zero Fallback", _run_zero_fallback_test, Vector2(130, 40))
+	_add_button(btn_row, "Clear Cache", _clear_cache, Vector2(110, 40))
+	_add_button(btn_row, "Retour", _go_back, Vector2(90, 40))
 
 	var scroll := ScrollContainer.new()
 	scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
@@ -109,7 +110,8 @@ func _build_ui() -> void:
 	_log_label.text += "  [color=cyan]Cartes TRIADE[/color] — 5 scenarios, mesure JSON valide + schema\n"
 	_log_label.text += "  [color=cyan]Sweep Params[/color] — 4 configs temperature/tokens\n"
 	_log_label.text += "  [color=cyan]Mini-Run E2E[/color] — 5 cartes jouees via pipeline complet\n"
-	_log_label.text += "  [color=cyan]Streaming[/color] — TTFC + latence par chunk\n"
+	_log_label.text += "  [color=cyan]Perf (p50/p90)[/color] — Cold/warm, percentiles, buffer hit rate\n"
+	_log_label.text += "  [color=cyan]Zero Fallback[/color] — Assert 100% LLM, variete texte\n"
 
 
 func _add_button(parent: Node, text: String, callback: Callable, min_size: Vector2) -> void:
@@ -125,7 +127,7 @@ func _log(msg: String) -> void:
 
 
 func _go_back() -> void:
-	get_tree().change_scene_to_file("res://scenes/MenuPrincipal.tscn")
+	PixelTransition.transition_to("res://scenes/MenuPrincipal.tscn")
 
 
 func _clear_cache() -> void:
@@ -356,66 +358,220 @@ func _run_e2e() -> void:
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
-# BENCHMARK 4: Streaming
+# BENCHMARK 4: Performance (cold/warm, p50/p90/p99, buffer hit rate)
 # ═══════════════════════════════════════════════════════════════════════════════
 
-func _run_streaming() -> void:
+const PERF_RUNS := 10
+
+func _run_perf_benchmark() -> void:
 	if _running:
 		return
 	_running = true
-	_log_label.text = "[color=gold]========== STREAMING BENCHMARK ==========[/color]"
+	_log_label.text = "[color=gold]========== PERF BENCHMARK (cold/warm, percentiles) ==========[/color]"
 
+	var adapter := _get_adapter()
+	if adapter == null:
+		_running = false
+		return
+
+	var latencies: Array[float] = []
+	var cold_latency_ms := 0
+	var warm_latencies: Array[float] = []
+
+	# Cold start: first call after cache clear
 	var merlin_ai := get_node_or_null("/root/MerlinAI")
-	if not merlin_ai or not merlin_ai.is_ready:
-		_log("[color=red]MerlinAI non pret.[/color]")
-		_running = false
-		return
+	if merlin_ai and merlin_ai.has_method("clear_response_cache"):
+		merlin_ai.clear_response_cache()
+	_log("\n[color=cyan]--- COLD START ---[/color]")
 
-	if not merlin_ai.has_method("generate_with_system_stream"):
-		_log("[color=red]Streaming non disponible dans cette version de MerlinAI.[/color]")
-		_running = false
-		return
+	var t0 := Time.get_ticks_msec()
+	var cold_result: Dictionary = await adapter.generate_card(SCENARIOS[0])
+	cold_latency_ms = Time.get_ticks_msec() - t0
+	latencies.append(float(cold_latency_ms))
 
-	var adapter := MerlinLlmAdapter.new()
-	adapter.set_merlin_ai(merlin_ai)
-	var system_prompt: String = adapter._build_triade_system_prompt()
+	if cold_result.get("ok", false):
+		_log("  [color=green]OK[/color] — %dms (cold)" % cold_latency_ms)
+	else:
+		_log("  [color=red]FAIL[/color] — %dms (cold) — %s" % [cold_latency_ms, str(cold_result.get("error", ""))])
 
-	for i in range(mini(SCENARIOS.size(), 3)):
-		var scenario: Dictionary = SCENARIOS[i]
-		var user_prompt: String = adapter._build_triade_user_prompt(scenario)
-		_log("\n[color=cyan]--- Stream %d/3: %s ---[/color]" % [i + 1, scenario.name])
+	# Warm runs: PERF_RUNS x SCENARIOS
+	_log("\n[color=cyan]--- WARM RUNS (%d x %d = %d calls) ---[/color]" % [
+		PERF_RUNS, SCENARIOS.size(), PERF_RUNS * SCENARIOS.size()])
 
-		var chunks: Array = []
-		var first_chunk_ms := 0
-		var t0 := Time.get_ticks_msec()
+	var success_count := 0
+	var fallback_count := 0
+	var total_calls := PERF_RUNS * SCENARIOS.size()
 
-		var on_chunk := func(chunk: String, _done: bool) -> void:
-			if not chunk.is_empty() and chunks.is_empty():
-				first_chunk_ms = Time.get_ticks_msec() - t0
-			if not chunk.is_empty():
-				chunks.append(chunk)
+	for run_idx in range(PERF_RUNS):
+		for sc_idx in range(SCENARIOS.size()):
+			var scenario: Dictionary = SCENARIOS[sc_idx]
+			var tw := Time.get_ticks_msec()
+			var result: Dictionary = await adapter.generate_card(scenario)
+			var elapsed_ms: int = Time.get_ticks_msec() - tw
+			var elapsed_f := float(elapsed_ms)
+			latencies.append(elapsed_f)
+			warm_latencies.append(elapsed_f)
 
-		var result: Dictionary = await merlin_ai.generate_with_system_stream(
-			system_prompt, user_prompt, adapter.TRIADE_LLM_PARAMS, on_chunk
-		)
-		var total_ms := Time.get_ticks_msec() - t0
-		var full_text := str(result.get("text", ""))
-
-		_log("  TTFC: %dms | Total: %dms | Chunks: %d" % [first_chunk_ms, total_ms, chunks.size()])
-		_log("  Reponse (%d chars): %s" % [full_text.length(), full_text.substr(0, 100)])
-
-		# Try validating the streamed response
-		var parsed: Dictionary = adapter._extract_json_from_response(full_text)
-		if not parsed.is_empty():
-			var validated: Dictionary = adapter.validate_triade_card(parsed)
-			if validated.get("ok", false):
-				_log("  [color=green]JSON TRIADE valide[/color]")
+			if result.get("ok", false):
+				success_count += 1
 			else:
-				_log("  [color=yellow]JSON ok, schema invalide[/color]")
-		else:
-			_log("  [color=red]JSON invalide[/color]")
+				fallback_count += 1
 
-	_log("\n[color=gold]========== STREAMING DONE ==========[/color]")
+			var status_color := "green" if elapsed_ms < 8000 else "red"
+			if run_idx == 0:
+				_log("  [color=%s]%s[/color] %dms — %s" % [
+					status_color,
+					"OK" if result.get("ok", false) else "FAIL",
+					elapsed_ms, scenario.name])
+
+		if run_idx > 0 and run_idx % 5 == 0:
+			_log("  ... run %d/%d complete" % [run_idx, PERF_RUNS])
+
+	# Compute percentiles
+	latencies.sort()
+	warm_latencies.sort()
+
+	var p50 := _percentile(latencies, 50.0)
+	var p90 := _percentile(latencies, 90.0)
+	var p99 := _percentile(latencies, 99.0)
+	var wp50 := _percentile(warm_latencies, 50.0)
+	var wp90 := _percentile(warm_latencies, 90.0)
+
+	var avg_ms := 0.0
+	for l in latencies:
+		avg_ms += l
+	if not latencies.is_empty():
+		avg_ms /= float(latencies.size())
+
+	# Buffer/prefetch stats from MerlinOmniscient
+	var omniscient := get_node_or_null("/root/MerlinAI")
+	var buffer_stats := ""
+	if omniscient and omniscient.has_method("get_generation_stats"):
+		var gen_stats: Dictionary = omniscient.get_generation_stats()
+		var prefetch_hits: int = int(gen_stats.get("prefetch_hits", 0))
+		var prefetch_misses: int = int(gen_stats.get("prefetch_misses", 0))
+		var prefetch_total: int = prefetch_hits + prefetch_misses
+		var hit_rate := 0.0
+		if prefetch_total > 0:
+			hit_rate = float(prefetch_hits) / float(prefetch_total) * 100.0
+		buffer_stats = "Prefetch hit rate: %.0f%% (%d/%d)" % [hit_rate, prefetch_hits, prefetch_total]
+
+	# Report
+	_log("\n[color=gold]========== PERF RESULTS ==========[/color]")
+	_log("  Total calls:  %d (1 cold + %d warm)" % [latencies.size(), warm_latencies.size()])
+	_log("  Success:      %d/%d (%.0f%%)" % [success_count, total_calls, float(success_count) / float(total_calls) * 100.0])
+	_log("  Cold start:   %dms" % cold_latency_ms)
+	_log("  [color=cyan]All (incl. cold):[/color]")
+	_log("    p50: %.0fms | p90: %.0fms | p99: %.0fms" % [p50, p90, p99])
+	_log("    avg: %.0fms | min: %.0fms | max: %.0fms" % [avg_ms, latencies[0], latencies[-1]])
+	_log("  [color=cyan]Warm only:[/color]")
+	_log("    p50: %.0fms | p90: %.0fms" % [wp50, wp90])
+	if not buffer_stats.is_empty():
+		_log("  %s" % buffer_stats)
+
+	# Alerts
+	if wp90 > 8000.0:
+		_log("\n  [color=red]ALERT: warm p90 %.0fms > 8000ms threshold![/color]" % wp90)
+	else:
+		_log("\n  [color=green]OK: warm p90 %.0fms < 8000ms[/color]" % wp90)
+
+	if fallback_count > 0:
+		_log("  [color=red]ALERT: %d fallbacks detected (zero-fallback policy violated)[/color]" % fallback_count)
+	else:
+		_log("  [color=green]OK: 0 fallbacks (zero-fallback policy respected)[/color]")
+
+	_log("[color=gold]========== FIN PERF ==========[/color]")
+	_running = false
+
+
+func _percentile(sorted_arr: Array[float], p: float) -> float:
+	if sorted_arr.is_empty():
+		return 0.0
+	var k: float = (float(sorted_arr.size()) - 1.0) * p / 100.0
+	var f_idx: int = int(k)
+	var c_idx: int = f_idx + 1
+	if c_idx >= sorted_arr.size():
+		return sorted_arr[-1]
+	return sorted_arr[f_idx] + (k - float(f_idx)) * (sorted_arr[c_idx] - sorted_arr[f_idx])
+
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# BENCHMARK 5: Zero Fallback Assertion Test
+# ═══════════════════════════════════════════════════════════════════════════════
+
+func _run_zero_fallback_test() -> void:
+	if _running:
+		return
+	_running = true
+	_log_label.text = "[color=gold]========== ZERO FALLBACK ASSERTION ==========[/color]"
+
+	var adapter := _get_adapter()
+	if adapter == null:
+		_running = false
+		return
+
+	var total := SCENARIOS.size()
+	var llm_ok := 0
+	var llm_fail := 0
+	var texts_seen: Array[String] = []
+
+	_log("\nGenerating %d cards — asserting ALL are LLM-generated (no static fallback)...\n" % total)
+
+	for i in range(total):
+		var scenario: Dictionary = SCENARIOS[i]
+		_log("[color=cyan]--- %d/%d: %s ---[/color]" % [i + 1, total, scenario.name])
+
+		var t0 := Time.get_ticks_msec()
+		var result: Dictionary = await adapter.generate_card(scenario)
+		var elapsed := Time.get_ticks_msec() - t0
+
+		if result.get("ok", false):
+			llm_ok += 1
+			var card: Dictionary = result.get("card", {})
+			var text: String = str(card.get("text", ""))
+			texts_seen.append(text)
+			_log("  [color=green]LLM OK[/color] — %dms — %s" % [elapsed, text.substr(0, 60)])
+		else:
+			llm_fail += 1
+			_log("  [color=red]FAIL[/color] — %dms — %s" % [elapsed, str(result.get("error", ""))])
+
+	# Variety check (Jaccard similarity between consecutive texts)
+	var variety_ok := true
+	if texts_seen.size() >= 2:
+		for j in range(1, texts_seen.size()):
+			var words_a: PackedStringArray = texts_seen[j - 1].to_lower().split(" ")
+			var words_b: PackedStringArray = texts_seen[j].to_lower().split(" ")
+			var set_a := {}
+			for w in words_a:
+				set_a[w] = true
+			var intersection := 0
+			var union_count: int = set_a.size()
+			for w in words_b:
+				if set_a.has(w):
+					intersection += 1
+				else:
+					union_count += 1
+			var jaccard := float(intersection) / float(maxi(union_count, 1))
+			if jaccard > 0.7:
+				variety_ok = false
+				_log("  [color=yellow]WARN: Cards %d-%d too similar (Jaccard=%.2f)[/color]" % [j, j + 1, jaccard])
+
+	# Report
+	_log("\n[color=gold]========== ZERO FALLBACK RESULTS ==========[/color]")
+	_log("  LLM success:  %d/%d" % [llm_ok, total])
+	_log("  LLM fail:     %d/%d" % [llm_fail, total])
+
+	if llm_fail == 0:
+		_log("  [color=green]PASS: Zero fallback policy — all cards from LLM[/color]")
+	else:
+		_log("  [color=red]FAIL: %d cards failed LLM generation[/color]" % llm_fail)
+
+	if variety_ok:
+		_log("  [color=green]PASS: Text variety — no duplicate cards[/color]")
+	else:
+		_log("  [color=red]FAIL: Some cards too similar (possible repetition)[/color]")
+
+	_log("[color=gold]========== FIN ==========[/color]")
 	_running = false
 
 

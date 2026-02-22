@@ -151,6 +151,14 @@ func _make_spacer_h(width: int) -> Control:
 	spacer.custom_minimum_size = Vector2(width, 0)
 	return spacer
 
+func _on_key_pressed(keycode: int) -> void:
+	# Keys 1-3 map to choice buttons left to right
+	if keycode >= KEY_1 and keycode <= KEY_3:
+		var choice_index: int = keycode - KEY_1
+		if choice_index < choice_buttons.size():
+			_on_choice_selected(choice_buttons[choice_index].text)
+
+
 func _on_choice_selected(choice: String) -> void:
 	# Disable all buttons
 	for button in choice_buttons:

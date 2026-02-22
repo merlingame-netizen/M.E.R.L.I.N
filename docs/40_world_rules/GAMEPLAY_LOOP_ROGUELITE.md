@@ -339,5 +339,5 @@ Selection based on:
 
 ---
 
-*Document version: 2.0 (post-pivot to Reigns-style)*
+*Document version: 2.0 (post-pivot to Merlin card-based narrative)*
 *Last updated: 2026-02-05*

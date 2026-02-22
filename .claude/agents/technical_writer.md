@@ -358,7 +358,7 @@ Design principles:
 1. Clone the repo
 2. Open `project.godot` in Godot
 3. Run `.\validate.bat` to check setup
-4. Play `scenes/MenuPrincipalReigns.tscn` to see the game
+4. Play `scenes/MenuPrincipal.tscn` to see the game
 
 ## Architecture Overview
 [Link to architecture diagram]

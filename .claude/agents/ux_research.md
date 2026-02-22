@@ -160,7 +160,7 @@ Full keyboard map verification:
 ### Recruitment
 ```
 Target profiles:
-  1. Card game players (Slay the Spire, Inscryption, Reigns)
+  1. Card game players (Slay the Spire, Inscryption, card-based narratives)
   2. Narrative game players (Disco Elysium, Hades)
   3. Casual gamers (first-time roguelite)
   4. Accessibility testers (motor/visual/cognitive disabilities)
@@ -256,7 +256,7 @@ Stage 6: Mastery (Repeated runs)
 ### Persona Profiles
 ```
 Persona 1: "Lea" — Casual Card Player
-  Age: 28, plays Reigns on commute
+  Age: 28, plays card games on commute
   Goal: Quick satisfying sessions
   Pain: Complex systems overwhelm
   Need: Progressive disclosure, short runs

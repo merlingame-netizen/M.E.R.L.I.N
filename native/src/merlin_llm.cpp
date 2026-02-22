@@ -20,8 +20,9 @@ MerlinLLM::MerlinLLM() {
 	}
 	const uint32_t hw_threads = std::thread::hardware_concurrency();
 	if (hw_threads > 0) {
-		n_threads = std::max<int32_t>(2, static_cast<int32_t>(hw_threads));
-		n_threads_batch = n_threads;
+		// Gen threads = half cores (leaves CPU for game), batch = all cores (prompt eval)
+		n_threads = std::max<int32_t>(2, static_cast<int32_t>(hw_threads / 2));
+		n_threads_batch = std::max<int32_t>(2, static_cast<int32_t>(hw_threads));
 	}
 }
 
@@ -52,6 +53,9 @@ void MerlinLLM::_bind_methods() {
 	ClassDB::bind_method(D_METHOD("set_advanced_sampling", "top_k", "repetition_penalty"), &MerlinLLM::set_advanced_sampling);
 	ClassDB::bind_method(D_METHOD("set_grammar", "grammar", "root"), &MerlinLLM::set_grammar, DEFVAL("root"));
 	ClassDB::bind_method(D_METHOD("clear_grammar"), &MerlinLLM::clear_grammar);
+	ClassDB::bind_method(D_METHOD("set_context_size", "n_ctx"), &MerlinLLM::set_context_size);
+	ClassDB::bind_method(D_METHOD("set_thread_count", "gen_threads", "batch_threads"), &MerlinLLM::set_thread_count);
+	ClassDB::bind_method(D_METHOD("get_model_info"), &MerlinLLM::get_model_info);
 	ClassDB::bind_method(D_METHOD("_emit_result"), &MerlinLLM::_emit_result);
 }
 
@@ -77,6 +81,7 @@ Error MerlinLLM::load_model(String path) {
 	cp.n_ctx = n_ctx;
 	cp.n_threads = n_threads;
 	cp.n_threads_batch = n_threads_batch;
+	cp.flash_attn_type = LLAMA_FLASH_ATTN_TYPE_ENABLED;  // Phase 6: ~10-15% speedup on prompt eval
 
 	ctx = llama_new_context_with_model(model, cp);
 	if (!ctx) {
@@ -156,18 +161,51 @@ void MerlinLLM::generate_async(String prompt, Callable callback) {
 			}
 			tokens.resize(static_cast<size_t>(n_tok_final));
 
+			// Phase 6: KV cache prefix reuse — skip re-encoding shared system prompt
 			llama_memory_t mem = llama_get_memory(ctx);
-			if (mem) {
-				llama_memory_clear(mem, true);
-			}
-			llama_batch batch = llama_batch_get_one(tokens.data(), static_cast<int32_t>(tokens.size()));
-			if (batch.logits) {
-				batch.logits[batch.n_tokens - 1] = true;
+			int32_t common_prefix = 0;
+			if (mem && !last_prompt_tokens.empty()) {
+				const int32_t max_check = std::min(
+					static_cast<int32_t>(last_prompt_tokens.size()),
+					n_tok_final);
+				for (int32_t i = 0; i < max_check; i++) {
+					if (tokens[static_cast<size_t>(i)] == last_prompt_tokens[static_cast<size_t>(i)]) {
+						common_prefix = i + 1;
+					} else {
+						break;
+					}
+				}
 			}
 
-			if (llama_decode(ctx, batch) != 0) {
-				error_msg = "Prompt decode failed";
+			if (common_prefix > 0 && mem) {
+				// Remove only the diverging KV entries, keep the common prefix
+				llama_memory_seq_rm(mem, 0, common_prefix, -1);
+				// Decode only the new (non-cached) tokens
+				llama_batch batch = llama_batch_get_one(
+					tokens.data() + common_prefix,
+					n_tok_final - common_prefix);
+				if (batch.logits && batch.n_tokens > 0) {
+					batch.logits[batch.n_tokens - 1] = true;
+				}
+				if (llama_decode(ctx, batch) != 0) {
+					error_msg = "Prompt decode failed (prefix reuse)";
+				}
+			} else {
+				// Full clear + decode (first call or no common prefix)
+				if (mem) {
+					llama_memory_clear(mem, true);
+				}
+				llama_batch batch = llama_batch_get_one(tokens.data(), n_tok_final);
+				if (batch.logits) {
+					batch.logits[batch.n_tokens - 1] = true;
+				}
+				if (llama_decode(ctx, batch) != 0) {
+					error_msg = "Prompt decode failed";
+				}
 			}
+
+			// Store tokens for next call's prefix comparison
+			last_prompt_tokens.assign(tokens.begin(), tokens.begin() + n_tok_final);
 		}
 
 		llama_sampler * sampler = nullptr;
@@ -207,6 +245,10 @@ void MerlinLLM::generate_async(String prompt, Callable callback) {
 		if (!decode_failed && error_msg.empty()) {
 			int32_t n_past = static_cast<int32_t>(tokens.size());
 			for (int i = 0; i < max_tokens; i++) {
+				// Cooperative cancel: check if cancel_generation() was called
+				if (!is_generating.load()) {
+					break;
+				}
 				if (ctx_len > 0 && n_past >= (ctx_len - 1)) {
 					break;
 				}
@@ -307,7 +349,7 @@ bool MerlinLLM::is_generating_now() {
 }
 
 void MerlinLLM::cancel_generation() {
-	// Placeholder: llama.cpp does not expose cooperative cancel in this minimal wrapper.
+	// Cooperative cancel: token loop checks is_generating flag each iteration
 	is_generating.store(false);
 }
 
@@ -332,4 +374,32 @@ void MerlinLLM::set_grammar(String p_grammar, String p_root) {
 void MerlinLLM::clear_grammar() {
 	grammar_str.clear();
 	grammar_root = "root";
+}
+
+void MerlinLLM::set_context_size(int32_t p_n_ctx) {
+	// Must be called BEFORE load_model (context is created during load)
+	n_ctx = std::clamp(p_n_ctx, static_cast<int32_t>(512), static_cast<int32_t>(32768));
+}
+
+void MerlinLLM::set_thread_count(int32_t p_gen_threads, int32_t p_batch_threads) {
+	n_threads = std::max<int32_t>(1, p_gen_threads);
+	n_threads_batch = std::max<int32_t>(1, p_batch_threads);
+	// If context exists, update thread counts for next generation
+	if (ctx) {
+		llama_set_n_threads(ctx, n_threads, n_threads_batch);
+	}
+}
+
+Dictionary MerlinLLM::get_model_info() {
+	Dictionary info;
+	info["n_ctx"] = n_ctx;
+	info["n_threads"] = n_threads;
+	info["n_threads_batch"] = n_threads_batch;
+	info["max_tokens"] = max_tokens;
+	info["model_loaded"] = (model != nullptr);
+	if (model) {
+		info["vocab_size"] = static_cast<int64_t>(llama_model_n_params(model));
+		info["n_embd"] = llama_model_n_embd(model);
+	}
+	return info;
 }

@@ -302,11 +302,11 @@ build/
 | Component | Size | Notes |
 |-----------|------|-------|
 | Godot PCK | ~50 MB | Scripts, scenes, resources |
-| LLM Model (Q5_K_M) | 4.1 GB | Desktop only |
-| LLM Model (Q4_K_M) | 3.6 GB | Mobile fallback |
+| LLM Model (Q5_K_M) | 2.2 GB | Desktop only |
+| LLM Model (Q4_K_M) | 2.0 GB | Mobile fallback |
 | GDExtension DLLs | ~20 MB | llama.cpp, ggml |
-| Total (Desktop) | ~4.2 GB | With model |
-| Total (Mobile) | ~3.7 GB | Lighter model |
+| Total (Desktop) | ~2.3 GB | With model |
+| Total (Mobile) | ~2.1 GB | Lighter model |
 ```
 
 ---

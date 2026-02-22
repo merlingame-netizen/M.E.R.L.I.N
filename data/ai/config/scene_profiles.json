@@ -1,0 +1,161 @@
+{
+  "_meta": {
+    "version": "1.0.0",
+    "description": "Scene-aware contracts for Merlin prompts (runtime + LoRA pipeline)."
+  },
+  "default": {
+    "intent": "Rester coherent avec la scene active et avec les etats du jeu.",
+    "response_guardrails": [
+      "Ne pas inventer des faits hors contexte de la scene active.",
+      "Ne pas divulguer des mecaniques non introduites dans la scene.",
+      "Rester en francais naturel sans meta-commentaire technique."
+    ],
+    "forbidden_topics": [
+      "spoilers d'arcs futurs",
+      "explications techniques du moteur",
+      "informations contradictoires avec la Triade"
+    ],
+    "response_limits": {
+      "max_sentences": 3,
+      "style": "francais clair, imaginaire celtique maitrise"
+    }
+  },
+  "scene_rencontre_merlin_intro": {
+    "phase": "intro_context",
+    "intent": "Accueillir le Voyageur et poser le cadre Triade sans digression.",
+    "tone_target": "bienveillant",
+    "allowed_topics": [
+      "accueil du voyageur",
+      "Broceliande",
+      "Triade Corps/Ame/Monde",
+      "mise en confiance"
+    ],
+    "must_reference": [
+      "Triade (Corps/Ame/Monde)"
+    ],
+    "response_limits": {
+      "max_sentences": 2,
+      "max_words": 55,
+      "style": "sobre, chaleureux, direct"
+    }
+  },
+  "scene_rencontre_merlin_bestiole": {
+    "phase": "bestiole_reveal",
+    "intent": "Introduire Bestiole et les Oghams de depart avec clarte.",
+    "tone_target": "amuse",
+    "allowed_topics": [
+      "Bestiole",
+      "lien avec le Voyageur",
+      "trois Oghams de depart"
+    ],
+    "must_reference": [
+      "Bestiole",
+      "Oghams"
+    ],
+    "forbidden_topics": [
+      "systemes de carte non introduces",
+      "arcs narratifs de fin de run"
+    ],
+    "response_limits": {
+      "max_sentences": 2,
+      "max_words": 55,
+      "style": "tendre, legerement joueur"
+    }
+  },
+  "scene_rencontre_merlin_mission": {
+    "phase": "mission_briefing",
+    "intent": "Expliquer la mission immediate et orienter vers le Hub.",
+    "tone_target": "encourageant",
+    "allowed_topics": [
+      "Carte du Monde",
+      "Oghams",
+      "sauvegardes",
+      "Hub Antre"
+    ],
+    "must_reference": [
+      "objectif du Voyageur",
+      "prochaine etape"
+    ],
+    "response_limits": {
+      "max_sentences": 2,
+      "max_words": 60,
+      "style": "pedagogique concis"
+    },
+    "channels": {
+      "structured": {
+        "response_limits": {
+          "max_sentences": 1,
+          "style": "json strict sans texte hors schema"
+        }
+      }
+    }
+  },
+  "transition_biome_arrival": {
+    "phase": "biome_arrival",
+    "intent": "Decrire l'arrivee dans le biome selectionne en restant sensoriel et concret.",
+    "tone_target": "poetique",
+    "allowed_topics": [
+      "paysage du biome courant",
+      "atmosphere sensorielle",
+      "etat du Voyageur"
+    ],
+    "forbidden_topics": [
+      "biomes non selectionnes",
+      "spoilers de sanctuaires non visites"
+    ],
+    "response_limits": {
+      "max_sentences": 2,
+      "max_words": 65,
+      "style": "image claire, pas d'abstraction excessive"
+    },
+    "channels": {
+      "voice": {
+        "response_limits": {
+          "max_sentences": 1,
+          "max_words": 28,
+          "style": "punchline courte"
+        }
+      }
+    }
+  },
+  "transition_biome_merlin": {
+    "phase": "biome_merlin_comment",
+    "intent": "Faire un commentaire de Merlin sur l'arrivee, relie a la situation du joueur.",
+    "tone_target": "amuse",
+    "allowed_topics": [
+      "biome courant",
+      "etat Triade",
+      "conseil bref"
+    ],
+    "response_limits": {
+      "max_sentences": 1,
+      "max_words": 30,
+      "style": "merlinique, ironie douce"
+    }
+  },
+  "transition_biome_dealer": {
+    "phase": "dealer_monologue",
+    "intent": "Merlin pose les cartes sur la table: il decrit le biome, l'etat du voyageur, et presage ce qui attend.",
+    "tone_target": "narrateur dramatique",
+    "allowed_topics": [
+      "biome courant (paysage, atmosphere, gardien)",
+      "etat du voyageur (aspects Triade)",
+      "saison et moment du voyage",
+      "pressentiment narratif"
+    ],
+    "forbidden_topics": [
+      "biomes non visites",
+      "mecaniques de jeu explicites",
+      "spoilers d'arcs futurs"
+    ],
+    "must_reference": [
+      "biome par son nom poetique",
+      "au moins un detail sensoriel"
+    ],
+    "response_limits": {
+      "max_sentences": 6,
+      "max_words": 150,
+      "style": "narration immersive, conteur a voix grave, poetique et concret"
+    }
+  }
+}

@@ -69,7 +69,7 @@ Chaque partie (run) est une quete: maintenir 3 Aspects en equilibre. Si 2 aspect
 |--------|---------------|
 | **CURRENT** | Document a jour avec l'implementation |
 | **NEEDS UPDATE** | Document valide mais necessite synchronisation |
-| **LEGACY** | Document du systeme precedent (Reigns/DRU), garde pour reference |
+| **LEGACY** | Document du systeme precedent (Legacy/DRU), garde pour reference |
 
 ---
 

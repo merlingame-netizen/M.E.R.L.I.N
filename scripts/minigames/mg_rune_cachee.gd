@@ -4,7 +4,7 @@
 extends MiniGameBase
 
 const GRID_SIZE: int = 4
-const SYMBOLS := ["◯", "△", "□", "◇", "☆", "✦", "⬡", "◈"]
+const SYMBOLS := ["\u25ef", "\u25b3", "\u25a1", "\u25c7", "\u2606", "\u2726", "\u2b21", "\u25c8"]
 var _correct_index: int = -1
 var _timer: float = 4.0
 var _buttons: Array[Button] = []
@@ -75,7 +75,7 @@ func _on_start() -> void:
 
 
 func _process(delta: float) -> void:
-	if _finished:
+	if _finished or _timer_label == null:
 		return
 
 	_timer -= delta
@@ -83,6 +83,14 @@ func _process(delta: float) -> void:
 
 	if _timer <= 0:
 		_fail_game()
+
+
+func _on_key_pressed(keycode: int) -> void:
+	# Keys 1-9 map to grid positions 0-8 (first 9 cells of 4x4 grid)
+	if keycode >= KEY_1 and keycode <= KEY_9:
+		var grid_index: int = keycode - KEY_1
+		if grid_index < _buttons.size():
+			_on_rune_clicked(grid_index)
 
 
 func _on_rune_clicked(index: int) -> void:

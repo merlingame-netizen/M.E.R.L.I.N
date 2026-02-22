@@ -97,6 +97,11 @@ func _process(delta: float) -> void:
 	_target_marker.position.x = x_pos
 
 
+func _on_key_pressed(keycode: int) -> void:
+	if keycode == KEY_SPACE or keycode == KEY_ENTER:
+		_on_fire_clicked()
+
+
 func _on_fire_clicked() -> void:
 	if _fired or not _oscillating:
 		return

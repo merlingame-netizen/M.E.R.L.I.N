@@ -8,21 +8,7 @@ extends Control
 
 signal boot_complete
 
-const PALETTE := {
-	"bg": Color(0.015, 0.015, 0.025),
-	"text": Color(0.6, 0.7, 0.65),
-	"text_dim": Color(0.25, 0.35, 0.30),
-	"accent": Color(0.4, 0.85, 0.55),
-	"block": Color(0.25, 0.75, 0.45),
-	"block_alt": Color(0.3, 0.6, 0.85),
-	# Eye palette (matching Merlin illustration)
-	"eye_deep": Color(0.15, 0.45, 0.85),
-	"eye_outer": Color(0.2, 0.55, 0.9),
-	"eye_cyan": Color(0.35, 0.78, 1.0),
-	"eye_bright": Color(0.65, 0.9, 1.0),
-	"eye_white": Color(0.9, 0.97, 1.0),
-	"slit_glow": Color(0.5, 0.85, 1.0),
-}
+# PALETTE constant removed — using MerlinVisual.GBC for this retro-styled intro
 
 const BOOT_LINES := [
 	"BIOS POST check...",
@@ -30,7 +16,7 @@ const BOOT_LINES := [
 	"Loading druid_core.ko",
 	"Loading ogham_driver.ko",
 	"Ley line scan... FOUND",
-	"LLM: Ministral-3B",
+	"LLM: Qwen2.5-3B",
 	"Warmup inference...",
 	"Systems ready",
 ]
@@ -79,6 +65,7 @@ func _ready() -> void:
 	Input.set_mouse_mode(Input.MOUSE_MODE_HIDDEN)
 	_build_ui()
 	_warmup_llm_async()
+	MusicManager.play_intro_music()
 	_start_phase_1()
 
 
@@ -117,7 +104,7 @@ func _process(delta: float) -> void:
 func _build_ui() -> void:
 	background = ColorRect.new()
 	background.set_anchors_preset(Control.PRESET_FULL_RECT)
-	background.color = PALETTE.bg
+	background.color = MerlinVisual.GBC.black
 	add_child(background)
 
 	boot_container = Control.new()
@@ -147,14 +134,10 @@ func _build_ui() -> void:
 
 
 func _warmup_llm_async() -> void:
-	var llm_bar = get_node_or_null("/root/LLMStatusBar")
-	if llm_bar and llm_bar.has_method("is_ready"):
-		while not llm_bar.is_ready():
-			await get_tree().create_timer(0.1).timeout
-		_warmup_done = true
-	else:
-		await get_tree().create_timer(2.0).timeout
-		_warmup_done = true
+	# LLM warmup is triggered by MenuPrincipal, not here.
+	# Just wait for the intro animation duration then proceed.
+	await get_tree().create_timer(2.0).timeout
+	_warmup_done = true
 
 
 # ============================================================
@@ -176,7 +159,7 @@ func _start_phase_1() -> void:
 		label.position.y = start_y + i * (line_height + line_spacing)
 		label.position.x = -200
 		label.add_theme_font_size_override("font_size", 13)
-		label.add_theme_color_override("font_color", PALETTE.text_dim)
+		label.add_theme_color_override("font_color", MerlinVisual.GBC.grass_dark)
 		label.modulate.a = 0.0
 		boot_container.add_child(label)
 		boot_labels.append(label)
@@ -193,7 +176,7 @@ func _start_phase_1() -> void:
 	tween.tween_callback(func() -> void: SFXManager.play("boot_confirm"))
 	for label in boot_labels:
 		tween.parallel().tween_property(label, "modulate:a", 1.0, 0.1)
-		tween.parallel().tween_property(label, "theme_override_colors/font_color", PALETTE.accent, 0.1)
+		tween.parallel().tween_property(label, "theme_override_colors/font_color", MerlinVisual.PALETTE.accent, 0.1)
 
 	tween.tween_interval(0.3)
 	tween.tween_property(boot_container, "modulate:a", 0.0, 0.4)
@@ -232,9 +215,9 @@ func _start_phase_2() -> void:
 				block.position = Vector2(final_x, -50 - randf() * 200)
 
 				if (row + col) % 2 == 0:
-					block.color = PALETTE.block
+					block.color = MerlinVisual.PALETTE.block
 				else:
-					block.color = PALETTE.block_alt
+					block.color = MerlinVisual.PALETTE.block_alt
 
 				block.set_meta("final_pos", Vector2(final_x, final_y))
 				block.set_meta("col", col)
@@ -266,10 +249,10 @@ func _start_phase_2() -> void:
 	# SFX: logo flash
 	tween.tween_callback(func() -> void: SFXManager.play("flash_boom"))
 	for block in logo_blocks:
-		tween.parallel().tween_property(block, "color", PALETTE.accent, 0.15)
+		tween.parallel().tween_property(block, "color", MerlinVisual.PALETTE.accent, 0.15)
 	tween.tween_interval(0.1)
 	for block in logo_blocks:
-		tween.parallel().tween_property(block, "color", PALETTE.eye_cyan, 0.2)
+		tween.parallel().tween_property(block, "color", MerlinVisual.PALETTE.eye_cyan, 0.2)
 
 	tween.tween_interval(0.3)
 	tween.tween_callback(_start_phase_3)
@@ -314,7 +297,7 @@ func _phase_3a_converge() -> void:
 			block, "position", target, 0.9
 		).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
 		tween.parallel().tween_property(block, "size", Vector2(5, 5), 0.7)
-		tween.parallel().tween_property(block, "color", PALETTE.eye_cyan, 0.6)
+		tween.parallel().tween_property(block, "color", MerlinVisual.PALETTE.eye_cyan, 0.6)
 
 	tween.tween_interval(0.15)
 	tween.tween_callback(_phase_3b_spawn_pixels)
@@ -337,7 +320,7 @@ func _phase_3b_spawn_pixels() -> void:
 	for pos in all_positions:
 		var px := ColorRect.new()
 		px.size = Vector2(4, 4)
-		px.color = Color(PALETTE.eye_cyan.r, PALETTE.eye_cyan.g, PALETTE.eye_cyan.b, 0.0)
+		px.color = Color(MerlinVisual.PALETTE.eye_cyan.r, MerlinVisual.PALETTE.eye_cyan.g, MerlinVisual.PALETTE.eye_cyan.b, 0.0)
 		# Spawn depuis un bord aleatoire
 		var edge := randi() % 4
 		match edge:
@@ -365,20 +348,20 @@ func _phase_3b_spawn_pixels() -> void:
 	# SFX: white flash
 	tween.tween_callback(func() -> void: SFXManager.play("flash_boom"))
 	for block in logo_blocks:
-		tween.parallel().tween_property(block, "color", PALETTE.eye_white, 0.1)
+		tween.parallel().tween_property(block, "color", MerlinVisual.PALETTE.eye_white, 0.1)
 	for px in pixel_blocks:
 		tween.parallel().tween_property(
 			px, "color",
-			Color(PALETTE.eye_white.r, PALETTE.eye_white.g, PALETTE.eye_white.b, 0.9),
+			Color(MerlinVisual.PALETTE.eye_white.r, MerlinVisual.PALETTE.eye_white.g, MerlinVisual.PALETTE.eye_white.b, 0.9),
 			0.1
 		)
 	tween.tween_interval(0.08)
 	for block in logo_blocks:
-		tween.parallel().tween_property(block, "color", PALETTE.eye_cyan, 0.15)
+		tween.parallel().tween_property(block, "color", MerlinVisual.PALETTE.eye_cyan, 0.15)
 	for px in pixel_blocks:
 		tween.parallel().tween_property(
 			px, "color",
-			Color(PALETTE.eye_cyan.r, PALETTE.eye_cyan.g, PALETTE.eye_cyan.b, 0.8),
+			Color(MerlinVisual.PALETTE.eye_cyan.r, MerlinVisual.PALETTE.eye_cyan.g, MerlinVisual.PALETTE.eye_cyan.b, 0.8),
 			0.15
 		)
 
@@ -479,7 +462,7 @@ func _draw_single_eye(node: Control, center: Vector2, w: float, h: float, open: 
 	# --- Fente lumineuse quand presque ferme ---
 	if open < 0.15:
 		var slit_alpha := (1.0 - open / 0.15) * 0.8
-		var slit_color := Color(PALETTE.slit_glow.r, PALETTE.slit_glow.g, PALETTE.slit_glow.b, slit_alpha)
+		var slit_color := Color(MerlinVisual.PALETTE.slit_glow.r, MerlinVisual.PALETTE.slit_glow.g, MerlinVisual.PALETTE.slit_glow.b, slit_alpha)
 		node.draw_line(
 			center + Vector2(-w / 2.0, 0),
 			center + Vector2(w / 2.0, 0),
@@ -493,7 +476,7 @@ func _draw_single_eye(node: Control, center: Vector2, w: float, h: float, open: 
 		var alpha := 0.022 * float(glow_layers - i + 1) * glow
 		if alpha < 0.003:
 			continue
-		var glow_color := Color(PALETTE.eye_cyan.r, PALETTE.eye_cyan.g, PALETTE.eye_cyan.b, alpha)
+		var glow_color := Color(MerlinVisual.PALETTE.eye_cyan.r, MerlinVisual.PALETTE.eye_cyan.g, MerlinVisual.PALETTE.eye_cyan.b, alpha)
 		var pts := _almond_points(center, w * glow_scale, h * open * glow_scale)
 		if pts.size() >= 3:
 			node.draw_polygon(pts, PackedColorArray([glow_color]))
@@ -501,33 +484,33 @@ func _draw_single_eye(node: Control, center: Vector2, w: float, h: float, open: 
 	# --- Eye base fill (deep blue) ---
 	var main_pts := _almond_points(center, w, h * open)
 	if main_pts.size() >= 3:
-		node.draw_polygon(main_pts, PackedColorArray([PALETTE.eye_deep]))
+		node.draw_polygon(main_pts, PackedColorArray([MerlinVisual.PALETTE.eye_deep]))
 
 	# --- Mid layer (outer cyan) ---
 	var mid_pts := _almond_points(center, w * 0.85, h * open * 0.82)
 	if mid_pts.size() >= 3:
-		node.draw_polygon(mid_pts, PackedColorArray([PALETTE.eye_outer]))
+		node.draw_polygon(mid_pts, PackedColorArray([MerlinVisual.PALETTE.eye_outer]))
 
 	# --- Inner cyan ---
 	var inner_pts := _almond_points(center, w * 0.68, h * open * 0.65)
 	if inner_pts.size() >= 3:
-		node.draw_polygon(inner_pts, PackedColorArray([PALETTE.eye_cyan]))
+		node.draw_polygon(inner_pts, PackedColorArray([MerlinVisual.PALETTE.eye_cyan]))
 
 	# --- Bright center ---
 	var bright_pts := _almond_points(center, w * 0.45, h * open * 0.45)
 	if bright_pts.size() >= 3:
-		node.draw_polygon(bright_pts, PackedColorArray([PALETTE.eye_bright]))
+		node.draw_polygon(bright_pts, PackedColorArray([MerlinVisual.PALETTE.eye_bright]))
 
 	# --- White hot core ---
 	var white_pts := _almond_points(center, w * 0.22, h * open * 0.25)
 	if white_pts.size() >= 3:
-		node.draw_polygon(white_pts, PackedColorArray([PALETTE.eye_white]))
+		node.draw_polygon(white_pts, PackedColorArray([MerlinVisual.PALETTE.eye_white]))
 
 	# --- Eye outline ---
 	if main_pts.size() >= 3:
 		var outline := PackedVector2Array(main_pts)
 		outline.append(main_pts[0])
-		node.draw_polyline(outline, PALETTE.eye_bright, 1.5, true)
+		node.draw_polyline(outline, MerlinVisual.PALETTE.eye_bright, 1.5, true)
 
 	# --- Radial light rays (visible when opening > 30%) ---
 	if open > 0.3:
@@ -539,7 +522,7 @@ func _draw_single_eye(node: Control, center: Vector2, w: float, h: float, open: 
 			var inner_r := w * 0.15
 			var start_pt := center + Vector2(cos(angle), sin(angle)) * inner_r
 			var end_pt := center + Vector2(cos(angle), sin(angle)) * ray_length
-			var ray_col := Color(PALETTE.eye_cyan.r, PALETTE.eye_cyan.g, PALETTE.eye_cyan.b, ray_alpha * (0.5 + 0.5 * sin(angle * 3.0 + _ray_rotation * 4.0)))
+			var ray_col := Color(MerlinVisual.PALETTE.eye_cyan.r, MerlinVisual.PALETTE.eye_cyan.g, MerlinVisual.PALETTE.eye_cyan.b, ray_alpha * (0.5 + 0.5 * sin(angle * 3.0 + _ray_rotation * 4.0)))
 			node.draw_line(start_pt, end_pt, ray_col, 1.5, true)
 
 	# --- Iris ring (visible quand ouvert > 40%) ---
@@ -547,14 +530,14 @@ func _draw_single_eye(node: Control, center: Vector2, w: float, h: float, open: 
 		var iris_alpha := clampf((open - 0.4) / 0.3, 0.0, 1.0)
 		var iris_radius: float = min(w * 0.16, h * open * 0.32)
 		var iris_color := Color(
-			PALETTE.eye_white.r, PALETTE.eye_white.g, PALETTE.eye_white.b,
+			MerlinVisual.PALETTE.eye_white.r, MerlinVisual.PALETTE.eye_white.g, MerlinVisual.PALETTE.eye_white.b,
 			iris_alpha * 0.5
 		)
 		node.draw_arc(center, iris_radius, 0, TAU, 48, iris_color, 2.0)
 
 		# --- Inner iris luminescence ring ---
 		var inner_iris_r := iris_radius * (0.6 + _pupil_pulse)
-		var lum_color := Color(PALETTE.eye_bright.r, PALETTE.eye_bright.g, PALETTE.eye_bright.b, iris_alpha * 0.3)
+		var lum_color := Color(MerlinVisual.PALETTE.eye_bright.r, MerlinVisual.PALETTE.eye_bright.g, MerlinVisual.PALETTE.eye_bright.b, iris_alpha * 0.3)
 		node.draw_arc(center, inner_iris_r, 0, TAU, 32, lum_color, 1.0)
 
 	# --- Specular highlight (primary — large white dot) ---
@@ -576,7 +559,7 @@ func _draw_single_eye(node: Control, center: Vector2, w: float, h: float, open: 
 		var spec3_offset := Vector2(-w * 0.03, h * open * 0.04)
 		node.draw_circle(
 			center + spec3_offset, spec_radius * 0.35,
-			Color(PALETTE.eye_bright.r, PALETTE.eye_bright.g, PALETTE.eye_bright.b, spec_alpha * 0.3)
+			Color(MerlinVisual.PALETTE.eye_bright.r, MerlinVisual.PALETTE.eye_bright.g, MerlinVisual.PALETTE.eye_bright.b, spec_alpha * 0.3)
 		)
 
 	# --- Pulsating white core (enhanced with pupil beat) ---
@@ -667,7 +650,7 @@ func _spawn_eye_particle(eye_center: Vector2, progress: float) -> void:
 	var p := ColorRect.new()
 	var sz := randf_range(2.0, 5.0)
 	p.size = Vector2(sz, sz)
-	p.color = PALETTE.eye_cyan if randf() > 0.3 else PALETTE.eye_white
+	p.color = MerlinVisual.PALETTE.eye_cyan if randf() > 0.3 else MerlinVisual.PALETTE.eye_white
 	p.color.a = randf_range(0.4, 0.8)
 	p.mouse_filter = Control.MOUSE_FILTER_IGNORE
 
@@ -718,7 +701,7 @@ func _spawn_flash_burst() -> void:
 			var p := ColorRect.new()
 			var sz := randf_range(3.0, 8.0)
 			p.size = Vector2(sz, sz)
-			p.color = PALETTE.eye_white if randf() > 0.4 else PALETTE.eye_bright
+			p.color = MerlinVisual.PALETTE.eye_white if randf() > 0.4 else MerlinVisual.PALETTE.eye_bright
 			p.color.a = randf_range(0.6, 1.0)
 			p.mouse_filter = Control.MOUSE_FILTER_IGNORE
 			p.position = eye_center + Vector2(randf_range(-10, 10), randf_range(-10, 10))
@@ -752,4 +735,4 @@ func _wait_for_warmup() -> void:
 
 func _transition_to_menu() -> void:
 	boot_complete.emit()
-	get_tree().change_scene_to_file("res://scenes/MenuPrincipal.tscn")
+	PixelTransition.transition_to("res://scenes/MenuPrincipal.tscn")

@@ -1,0 +1,568 @@
+{
+  "_meta": {
+    "version": "1.0.0",
+    "phase": 44,
+    "description": "Glossaire complet des tags narratifs pour le moteur d'evenements. 80+ tags en 8 categories avec mapping systeme, affinite biome et table de dualites thematiques.",
+    "usage": "Charge par rag_manager.gd pour injecter le contexte tags dans les prompts LLM. Reference par event_categories.json et scenario_prompts.json."
+  },
+  "categories": {
+    "temporal": {
+      "description": "Moments du jour et fetes celtiques",
+      "tags": ["nuit", "aube", "crepuscule", "midi", "samhain", "beltane", "imbolc", "lughnasadh", "equinoxe", "solstice"]
+    },
+    "entities": {
+      "description": "Creatures, esprits et etres du monde celtique",
+      "tags": ["korrigan", "corbeau", "sanglier", "cerf", "guardian", "wisp", "druide", "ankou", "sidhe", "loup", "renard", "serpent", "chouette", "saumon"]
+    },
+    "social": {
+      "description": "Interactions humaines et commerce",
+      "tags": ["stranger", "village", "merchant", "noble", "pelerins", "guerrier", "paysan", "forgeron", "barde", "ovate", "clan", "alliance", "trahison"]
+    },
+    "nature": {
+      "description": "Environnement naturel et phenomenes",
+      "tags": ["forest", "storm", "harvest", "brume", "mer", "vent", "pluie", "neige", "source", "clairiere", "rocher", "mousse", "racines", "maree"]
+    },
+    "mystical": {
+      "description": "Magie, rituels et lore druidique",
+      "tags": ["ritual", "omen", "awen", "ogham", "menhir", "dolmen", "nemeton", "mystere", "blessing", "curse", "vision", "prophecy", "rune", "chaudron", "gui", "sidhe_passage"]
+    },
+    "conflict": {
+      "description": "Tensions, combats et menaces",
+      "tags": ["war", "raid", "dispute", "challenge", "betrayal", "threat", "siege", "duel", "embuscade", "pillage"]
+    },
+    "personal": {
+      "description": "Experiences interieures et choix moraux",
+      "tags": ["dream", "memory", "choice", "sacrifice", "loss", "bond", "promise", "regret", "courage", "peur", "espoir", "deuil"]
+    },
+    "system": {
+      "description": "Tags techniques pour le moteur de jeu",
+      "tags": ["hour_bonus", "best_time", "anomaly", "guided", "no_hint", "lore_fragment", "arc_start", "arc_climax", "arc_end", "pity_card", "recovery", "danger"]
+    }
+  },
+  "tag_definitions": {
+    "nuit": {
+      "category": "temporal",
+      "description": "Scenes nocturnes, mysteres, creatures de l'ombre",
+      "system_mapping": ["ADD_TENSION:5"],
+      "biome_affinity": ["foret_broceliande", "marais_korrigans"]
+    },
+    "aube": {
+      "category": "temporal",
+      "description": "Renouveau, depart, espoir fragile",
+      "system_mapping": ["ADD_KARMA:3"],
+      "biome_affinity": ["landes_bruyere", "collines_dolmens"]
+    },
+    "crepuscule": {
+      "category": "temporal",
+      "description": "Transition, entre-deux, decisions urgentes",
+      "system_mapping": ["ADD_TENSION:3"],
+      "biome_affinity": ["cotes_sauvages", "cercles_pierres"]
+    },
+    "samhain": {
+      "category": "temporal",
+      "description": "Fete des morts, voile entre mondes amincie",
+      "system_mapping": ["ADD_TENSION:10", "SET_FLAG:samhain_active:true"],
+      "biome_affinity": ["marais_korrigans", "cercles_pierres"]
+    },
+    "beltane": {
+      "category": "temporal",
+      "description": "Fete du feu, fertilite, renouveau",
+      "system_mapping": ["ADD_KARMA:5", "HEAL_LIFE:3"],
+      "biome_affinity": ["foret_broceliande", "villages_celtes"]
+    },
+    "imbolc": {
+      "category": "temporal",
+      "description": "Purification, debut du printemps, Brigid",
+      "system_mapping": ["ADD_SOUFFLE:1"],
+      "biome_affinity": ["villages_celtes", "collines_dolmens"]
+    },
+    "lughnasadh": {
+      "category": "temporal",
+      "description": "Fete des recoltes, competitions, Lugh",
+      "system_mapping": ["ADD_KARMA:3"],
+      "biome_affinity": ["landes_bruyere", "villages_celtes"]
+    },
+    "korrigan": {
+      "category": "entities",
+      "description": "Petits etres feeriques farceurs, gardiens de tresors",
+      "system_mapping": ["ADD_TENSION:8", "SET_FLAG:met_korrigan:true"],
+      "biome_affinity": ["marais_korrigans", "foret_broceliande"]
+    },
+    "corbeau": {
+      "category": "entities",
+      "description": "Messager entre mondes, omen, lie a l'Ame",
+      "system_mapping": ["SHIFT_ASPECT:Ame:up"],
+      "biome_affinity": ["landes_bruyere", "cercles_pierres"]
+    },
+    "sanglier": {
+      "category": "entities",
+      "description": "Force brute, courage, lie au Corps",
+      "system_mapping": ["SHIFT_ASPECT:Corps:up"],
+      "biome_affinity": ["foret_broceliande", "landes_bruyere"]
+    },
+    "cerf": {
+      "category": "entities",
+      "description": "Sagesse, royaute, Cernunnos, lie au Monde",
+      "system_mapping": ["SHIFT_ASPECT:Monde:up"],
+      "biome_affinity": ["foret_broceliande", "collines_dolmens"]
+    },
+    "guardian": {
+      "category": "entities",
+      "description": "Protecteur de lieu sacre, defi a relever",
+      "system_mapping": ["ADD_TENSION:5", "PROGRESS_MISSION:1"],
+      "biome_affinity": ["cercles_pierres", "foret_broceliande"]
+    },
+    "wisp": {
+      "category": "entities",
+      "description": "Feu follet, guide ou piege, lumiere trompeuse",
+      "system_mapping": ["ADD_TENSION:3"],
+      "biome_affinity": ["marais_korrigans", "foret_broceliande"]
+    },
+    "druide": {
+      "category": "entities",
+      "description": "Sage, gardien du savoir, maitre des rites",
+      "system_mapping": ["ADD_KARMA:5", "SHIFT_ASPECT:Ame:up"],
+      "biome_affinity": ["foret_broceliande", "cercles_pierres", "collines_dolmens"]
+    },
+    "ankou": {
+      "category": "entities",
+      "description": "Passeur des morts, ni bon ni mauvais, ineluctable",
+      "system_mapping": ["ADD_TENSION:15", "DAMAGE_LIFE:5"],
+      "biome_affinity": ["marais_korrigans"]
+    },
+    "sidhe": {
+      "category": "entities",
+      "description": "Anciens divins, observateurs entre les mondes",
+      "system_mapping": ["ADD_KARMA:10", "ADD_SOUFFLE:1"],
+      "biome_affinity": ["cercles_pierres", "foret_broceliande"]
+    },
+    "loup": {
+      "category": "entities",
+      "description": "Predateur, meute, instinct, danger naturel",
+      "system_mapping": ["SHIFT_ASPECT:Corps:down", "ADD_TENSION:5"],
+      "biome_affinity": ["foret_broceliande", "landes_bruyere"]
+    },
+    "stranger": {
+      "category": "social",
+      "description": "Inconnu sur le chemin, intentions incertaines",
+      "system_mapping": ["ADD_TENSION:3"],
+      "biome_affinity": ["landes_bruyere", "cotes_sauvages"]
+    },
+    "village": {
+      "category": "social",
+      "description": "Communaute locale, refuge ou source de conflits",
+      "system_mapping": ["SHIFT_ASPECT:Monde:up"],
+      "biome_affinity": ["villages_celtes"]
+    },
+    "merchant": {
+      "category": "social",
+      "description": "Commerce, troc, objets rares, information",
+      "system_mapping": ["ADD_KARMA:2"],
+      "biome_affinity": ["villages_celtes", "cotes_sauvages"]
+    },
+    "noble": {
+      "category": "social",
+      "description": "Chef de clan, pouvoir politique, faveurs",
+      "system_mapping": ["SHIFT_ASPECT:Monde:up", "ADD_TENSION:5"],
+      "biome_affinity": ["villages_celtes"]
+    },
+    "barde": {
+      "category": "social",
+      "description": "Conteur, musicien, gardien de memoire orale",
+      "system_mapping": ["SHIFT_ASPECT:Ame:up", "ADD_KARMA:3"],
+      "biome_affinity": ["villages_celtes", "foret_broceliande"]
+    },
+    "clan": {
+      "category": "social",
+      "description": "Loyaute tribale, honneur familial, rivalites",
+      "system_mapping": ["ADD_TENSION:5"],
+      "biome_affinity": ["villages_celtes", "landes_bruyere"]
+    },
+    "alliance": {
+      "category": "social",
+      "description": "Pacte entre groupes, cooperation forcee ou sincere",
+      "system_mapping": ["SHIFT_ASPECT:Monde:up", "ADD_KARMA:5"],
+      "biome_affinity": ["villages_celtes"]
+    },
+    "forest": {
+      "category": "nature",
+      "description": "Foret ancienne, mysteres naturels, abri",
+      "system_mapping": ["SHIFT_ASPECT:Ame:up"],
+      "biome_affinity": ["foret_broceliande"]
+    },
+    "storm": {
+      "category": "nature",
+      "description": "Tempete, danger naturel, purification violente",
+      "system_mapping": ["SHIFT_ASPECT:Corps:down", "ADD_TENSION:8"],
+      "biome_affinity": ["cotes_sauvages", "landes_bruyere"]
+    },
+    "harvest": {
+      "category": "nature",
+      "description": "Recolte, abondance, travail communautaire",
+      "system_mapping": ["HEAL_LIFE:3", "ADD_KARMA:3"],
+      "biome_affinity": ["villages_celtes", "collines_dolmens"]
+    },
+    "brume": {
+      "category": "nature",
+      "description": "Brouillard magique, frontieres floues, desorientation",
+      "system_mapping": ["ADD_TENSION:5"],
+      "biome_affinity": ["marais_korrigans", "foret_broceliande"]
+    },
+    "mer": {
+      "category": "nature",
+      "description": "Ocean, immensiste, voyages, monde inconnu",
+      "system_mapping": ["SHIFT_ASPECT:Monde:up"],
+      "biome_affinity": ["cotes_sauvages"]
+    },
+    "source": {
+      "category": "nature",
+      "description": "Source d'eau pure, guerison, lieu sacre",
+      "system_mapping": ["HEAL_LIFE:5", "ADD_SOUFFLE:1"],
+      "biome_affinity": ["foret_broceliande", "collines_dolmens"]
+    },
+    "clairiere": {
+      "category": "nature",
+      "description": "Espace ouvert dans la foret, lieu de rencontre",
+      "system_mapping": [],
+      "biome_affinity": ["foret_broceliande"]
+    },
+    "ritual": {
+      "category": "mystical",
+      "description": "Ceremonie druidique, voeux, rites sacres",
+      "system_mapping": ["CREATE_PROMISE", "ADD_KARMA:5"],
+      "biome_affinity": ["cercles_pierres", "foret_broceliande"]
+    },
+    "omen": {
+      "category": "mystical",
+      "description": "Presage, signe du destin, avertissement cosmique",
+      "system_mapping": ["ADD_TENSION:5"],
+      "biome_affinity": ["cercles_pierres", "marais_korrigans"]
+    },
+    "awen": {
+      "category": "mystical",
+      "description": "Inspiration divine, souffle poetique, illumination",
+      "system_mapping": ["ADD_SOUFFLE:1", "SHIFT_ASPECT:Ame:up"],
+      "biome_affinity": ["foret_broceliande", "cercles_pierres"]
+    },
+    "ogham": {
+      "category": "mystical",
+      "description": "Alphabet sacre des arbres, pouvoir des runes",
+      "system_mapping": ["ADD_KARMA:3"],
+      "biome_affinity": ["foret_broceliande", "collines_dolmens"]
+    },
+    "menhir": {
+      "category": "mystical",
+      "description": "Pierre dressee, marqueur de lieu de pouvoir",
+      "system_mapping": ["ADD_SOUFFLE:1"],
+      "biome_affinity": ["cercles_pierres", "landes_bruyere"]
+    },
+    "dolmen": {
+      "category": "mystical",
+      "description": "Table de pierre, passage vers l'Autre Monde",
+      "system_mapping": ["ADD_TENSION:8"],
+      "biome_affinity": ["collines_dolmens", "cercles_pierres"]
+    },
+    "nemeton": {
+      "category": "mystical",
+      "description": "Sanctuaire forestier sacre, lieu de pouvoir druide",
+      "system_mapping": ["ADD_SOUFFLE:2", "ADD_KARMA:5"],
+      "biome_affinity": ["foret_broceliande"]
+    },
+    "mystere": {
+      "category": "mystical",
+      "description": "Enigme non resolue, secret a decouvrir",
+      "system_mapping": ["ADD_TENSION:3", "PROGRESS_MISSION:1"],
+      "biome_affinity": ["marais_korrigans", "foret_broceliande"]
+    },
+    "blessing": {
+      "category": "mystical",
+      "description": "Benediction divine ou druidique, protection",
+      "system_mapping": ["HEAL_LIFE:5", "ADD_KARMA:5"],
+      "biome_affinity": ["cercles_pierres", "collines_dolmens"]
+    },
+    "curse": {
+      "category": "mystical",
+      "description": "Malediction, punition surnaturelle, dette cosmique",
+      "system_mapping": ["DAMAGE_LIFE:5", "ADD_TENSION:10"],
+      "biome_affinity": ["marais_korrigans"]
+    },
+    "vision": {
+      "category": "mystical",
+      "description": "Reve prophetique, revelation spirituelle",
+      "system_mapping": ["SHIFT_ASPECT:Ame:up", "ADD_TENSION:3"],
+      "biome_affinity": ["cercles_pierres", "foret_broceliande"]
+    },
+    "gui": {
+      "category": "mystical",
+      "description": "Plante sacree des druides, guerison et protection",
+      "system_mapping": ["HEAL_LIFE:3"],
+      "biome_affinity": ["foret_broceliande"]
+    },
+    "war": {
+      "category": "conflict",
+      "description": "Guerre entre clans ou factions, chaos",
+      "system_mapping": ["ADD_TENSION:15", "DAMAGE_LIFE:5"],
+      "biome_affinity": ["villages_celtes", "landes_bruyere"]
+    },
+    "raid": {
+      "category": "conflict",
+      "description": "Attaque surprise, pillage, urgence",
+      "system_mapping": ["ADD_TENSION:10", "DAMAGE_LIFE:3", "SHIFT_ASPECT:Corps:down"],
+      "biome_affinity": ["villages_celtes", "cotes_sauvages"]
+    },
+    "dispute": {
+      "category": "conflict",
+      "description": "Querelle verbale, desaccord, tension sociale",
+      "system_mapping": ["ADD_TENSION:5", "SHIFT_ASPECT:Monde:down"],
+      "biome_affinity": ["villages_celtes"]
+    },
+    "challenge": {
+      "category": "conflict",
+      "description": "Defi rituel, epreuve de force ou d'esprit",
+      "system_mapping": ["ADD_TENSION:5"],
+      "biome_affinity": ["landes_bruyere", "cercles_pierres"]
+    },
+    "betrayal": {
+      "category": "conflict",
+      "description": "Trahison d'un allie, rupture de confiance",
+      "system_mapping": ["ADD_TENSION:15", "ADD_KARMA:-10", "SHIFT_ASPECT:Monde:down"],
+      "biome_affinity": ["villages_celtes"]
+    },
+    "embuscade": {
+      "category": "conflict",
+      "description": "Piege tendu, attaque par surprise",
+      "system_mapping": ["ADD_TENSION:10", "DAMAGE_LIFE:5"],
+      "biome_affinity": ["foret_broceliande", "marais_korrigans"]
+    },
+    "dream": {
+      "category": "personal",
+      "description": "Reve revelateur, message de l'inconscient",
+      "system_mapping": ["SHIFT_ASPECT:Ame:up"],
+      "biome_affinity": ["foret_broceliande", "cercles_pierres"]
+    },
+    "memory": {
+      "category": "personal",
+      "description": "Souvenir resurgi, lien avec le passe",
+      "system_mapping": ["ADD_KARMA:2"],
+      "biome_affinity": ["collines_dolmens"]
+    },
+    "choice": {
+      "category": "personal",
+      "description": "Decision cruciale, embranchement du destin",
+      "system_mapping": ["ADD_TENSION:5"],
+      "biome_affinity": []
+    },
+    "sacrifice": {
+      "category": "personal",
+      "description": "Renoncement volontaire, prix a payer",
+      "system_mapping": ["ADD_KARMA:10", "DAMAGE_LIFE:5"],
+      "biome_affinity": ["cercles_pierres"]
+    },
+    "bond": {
+      "category": "personal",
+      "description": "Lien affectif, Bestiole, amitie profonde",
+      "system_mapping": ["ADD_KARMA:3"],
+      "biome_affinity": ["foret_broceliande"]
+    },
+    "promise": {
+      "category": "personal",
+      "description": "Engagement solennel, pacte avec Merlin",
+      "system_mapping": ["CREATE_PROMISE"],
+      "biome_affinity": ["cercles_pierres", "foret_broceliande"]
+    },
+    "courage": {
+      "category": "personal",
+      "description": "Bravoure face au danger, depassement de soi",
+      "system_mapping": ["ADD_KARMA:5", "SHIFT_ASPECT:Corps:up"],
+      "biome_affinity": ["landes_bruyere"]
+    },
+    "peur": {
+      "category": "personal",
+      "description": "Terreur, paralysie, confrontation avec l'inconnu",
+      "system_mapping": ["ADD_TENSION:8", "SHIFT_ASPECT:Ame:down"],
+      "biome_affinity": ["marais_korrigans"]
+    },
+    "espoir": {
+      "category": "personal",
+      "description": "Lueur d'optimisme, resilience, force interieure",
+      "system_mapping": ["HEAL_LIFE:3", "ADD_KARMA:3"],
+      "biome_affinity": ["collines_dolmens"]
+    },
+    "arc_start": {
+      "category": "system",
+      "description": "Debut d'un mini-arc narratif",
+      "system_mapping": ["SET_FLAG:arc_active:true"],
+      "biome_affinity": []
+    },
+    "arc_climax": {
+      "category": "system",
+      "description": "Point culminant d'un arc narratif",
+      "system_mapping": ["ADD_TENSION:10"],
+      "biome_affinity": []
+    },
+    "arc_end": {
+      "category": "system",
+      "description": "Resolution d'un arc narratif",
+      "system_mapping": ["SET_FLAG:arc_active:false"],
+      "biome_affinity": []
+    },
+    "pity_card": {
+      "category": "system",
+      "description": "Carte de secours quand joueur en difficulte",
+      "system_mapping": ["HEAL_LIFE:10"],
+      "biome_affinity": []
+    },
+    "recovery": {
+      "category": "system",
+      "description": "Evenement de recuperation post-crise",
+      "system_mapping": ["HEAL_LIFE:5", "ADD_SOUFFLE:1"],
+      "biome_affinity": []
+    },
+    "danger": {
+      "category": "system",
+      "description": "Evenement dangereux, risque eleve",
+      "system_mapping": ["ADD_TENSION:10"],
+      "biome_affinity": []
+    },
+    "lore_fragment": {
+      "category": "system",
+      "description": "Fragment de lore decouvrable, enrichit le meta",
+      "system_mapping": ["ADD_KARMA:2", "PROGRESS_MISSION:1"],
+      "biome_affinity": []
+    },
+    "enigme": {
+      "category": "personal",
+      "description": "Devinette, enigme a resoudre, test de logique",
+      "system_mapping": ["ADD_TENSION:3", "PROGRESS_MISSION:1"],
+      "biome_affinity": ["cercles_pierres", "foret_broceliande"]
+    },
+    "endurance": {
+      "category": "personal",
+      "description": "Test de resistance physique, epreuve de force",
+      "system_mapping": ["SHIFT_ASPECT:Corps:up"],
+      "biome_affinity": ["landes_bruyere", "cotes_sauvages"]
+    },
+    "metamorphose": {
+      "category": "mystical",
+      "description": "Changement de forme, evolution, transformation magique",
+      "system_mapping": ["SHIFT_ASPECT:Ame:up", "ADD_KARMA:5"],
+      "biome_affinity": ["foret_broceliande", "cercles_pierres"]
+    },
+    "portail": {
+      "category": "mystical",
+      "description": "Passage entre mondes, porte dimensionnelle, chemin sidhe",
+      "system_mapping": ["ADD_TENSION:8", "ADD_SOUFFLE:1"],
+      "biome_affinity": ["cercles_pierres", "marais_korrigans"]
+    },
+    "sidhe_passage": {
+      "category": "mystical",
+      "description": "Sentier des Sidhe entre les mondes, raccourci enchante",
+      "system_mapping": ["ADD_TENSION:5", "SHIFT_ASPECT:Ame:up"],
+      "biome_affinity": ["foret_broceliande", "marais_korrigans"]
+    },
+    "message_quete": {
+      "category": "social",
+      "description": "Message porteur d'une quete, lettre, parchemin, reve messager",
+      "system_mapping": ["PROGRESS_MISSION:1", "ADD_TENSION:3"],
+      "biome_affinity": ["villages_celtes", "landes_bruyere"]
+    },
+    "marche_noir": {
+      "category": "social",
+      "description": "Marche clandestin, deal douteux, commerce interdit",
+      "system_mapping": ["ADD_TENSION:5", "ADD_KARMA:-3"],
+      "biome_affinity": ["cotes_sauvages", "marais_korrigans"]
+    },
+    "pacte_lie": {
+      "category": "personal",
+      "description": "Engagement magique contraignant, promesse liee par la magie",
+      "system_mapping": ["CREATE_PROMISE", "ADD_KARMA:5"],
+      "biome_affinity": ["cercles_pierres", "foret_broceliande"]
+    },
+    "ogham_activated": {
+      "category": "system",
+      "description": "Un Ogham du biome s'est active, savoir druidique revele",
+      "system_mapping": ["ADD_SOUFFLE:1"],
+      "biome_affinity": []
+    },
+    "nuit_tombee": {
+      "category": "temporal",
+      "description": "La nuit est tombee, creatures nocturnes, mystere accentue",
+      "system_mapping": ["ADD_TENSION:5"],
+      "biome_affinity": ["foret_broceliande", "marais_korrigans"]
+    },
+    "halte": {
+      "category": "nature",
+      "description": "Lieu de repos, feu de camp, abri temporaire",
+      "system_mapping": ["HEAL_LIFE:5"],
+      "biome_affinity": ["foret_broceliande", "collines_dolmens"]
+    },
+    "festin_partage": {
+      "category": "social",
+      "description": "Repas communautaire, partage, liens sociaux renforces",
+      "system_mapping": ["HEAL_LIFE:3", "SHIFT_ASPECT:Monde:up"],
+      "biome_affinity": ["villages_celtes"]
+    },
+    "reve_vision": {
+      "category": "personal",
+      "description": "Reve prophetique ou revelateur pendant le sommeil",
+      "system_mapping": ["SHIFT_ASPECT:Ame:up", "ADD_TENSION:3"],
+      "biome_affinity": ["cercles_pierres", "foret_broceliande"]
+    },
+    "meditation_druide": {
+      "category": "mystical",
+      "description": "Meditation profonde, communion druidique avec la nature",
+      "system_mapping": ["ADD_SOUFFLE:1", "HEAL_LIFE:3"],
+      "biome_affinity": ["cercles_pierres", "foret_broceliande"]
+    },
+    "epreuve_reussie": {
+      "category": "system",
+      "description": "Le voyageur a reussi une epreuve, fierete et progression",
+      "system_mapping": ["ADD_KARMA:5", "ADD_SOUFFLE:1"],
+      "biome_affinity": []
+    }
+  },
+  "biome_tags": {
+    "foret_broceliande": ["forest", "brume", "druide", "awen", "mystere", "ogham", "nemeton", "mousse", "gui", "corbeau", "loup", "wisp", "halte", "metamorphose", "sidhe_passage"],
+    "landes_bruyere": ["storm", "vent", "sanglier", "loup", "stranger", "challenge", "courage", "solitude", "endurance", "message_quete"],
+    "cotes_sauvages": ["mer", "storm", "merchant", "maree", "vent", "pelerins", "coquillage", "sel", "marche_noir"],
+    "villages_celtes": ["village", "noble", "merchant", "clan", "alliance", "dispute", "barde", "forgeron", "harvest", "festin_partage", "message_quete", "marche_noir"],
+    "cercles_pierres": ["menhir", "dolmen", "ritual", "sidhe", "omen", "awen", "vision", "blessing", "sacrifice", "enigme", "meditation_druide", "portail"],
+    "marais_korrigans": ["korrigan", "brume", "ankou", "curse", "wisp", "peur", "embuscade", "nuit", "nuit_tombee", "sidhe_passage", "portail"],
+    "collines_dolmens": ["dolmen", "memory", "espoir", "harvest", "source", "cerf", "aube", "paix", "halte", "enigme"]
+  },
+  "theme_dualities": {
+    "_meta": "Paires de themes en tension pour generer des dilemmes. Chaque paire cree un conflit moral sans bonne reponse.",
+    "pairs": [
+      {"a": "honneur", "b": "survie", "description": "Respecter un code ou sauver sa peau"},
+      {"a": "verite", "b": "paix", "description": "Reveler un secret douloureux ou maintenir l'harmonie"},
+      {"a": "tradition", "b": "progres", "description": "Suivre les anciens ou innover"},
+      {"a": "communaute", "b": "liberte", "description": "Servir le groupe ou suivre son chemin"},
+      {"a": "justice", "b": "misericorde", "description": "Punir le coupable ou pardonner"},
+      {"a": "pouvoir", "b": "sagesse", "description": "Dominer ou comprendre"},
+      {"a": "amour", "b": "devoir", "description": "Suivre son coeur ou ses obligations"},
+      {"a": "courage", "b": "prudence", "description": "Foncer ou reflechir"},
+      {"a": "loyaute", "b": "conscience", "description": "Obeir a son chef ou a sa morale"},
+      {"a": "ambition", "b": "humilite", "description": "Viser haut ou accepter sa place"},
+      {"a": "connaissance", "b": "innocence", "description": "Savoir qui blesse ou ignorer qui protege"},
+      {"a": "sacrifice", "b": "preservation", "description": "Donner de soi ou se proteger"},
+      {"a": "foi", "b": "doute", "description": "Croire aveugle ou questionner tout"},
+      {"a": "individu", "b": "collectif", "description": "Un seul contre le bien de tous"},
+      {"a": "nature", "b": "civilisation", "description": "La foret sauvage ou le village ordonne"},
+      {"a": "passe", "b": "avenir", "description": "Honorer les morts ou batir pour les vivants"},
+      {"a": "force", "b": "ruse", "description": "Affronter de face ou contourner"},
+      {"a": "parole", "b": "action", "description": "Negocier ou agir"},
+      {"a": "abondance", "b": "partage", "description": "Garder ses ressources ou distribuer"},
+      {"a": "vengeance", "b": "pardon", "description": "Rendre la pareille ou tourner la page"},
+      {"a": "secret", "b": "transparence", "description": "Garder pour soi ou reveler a tous"},
+      {"a": "risque", "b": "securite", "description": "Oser l'inconnu ou rester en terrain sur"},
+      {"a": "beaute", "b": "utilite", "description": "L'art pour l'art ou le pragmatisme"},
+      {"a": "memoire", "b": "oubli", "description": "Se souvenir de tout ou lacher prise"},
+      {"a": "vie", "b": "mort", "description": "Prolonger a tout prix ou accepter le passage"},
+      {"a": "lumiere", "b": "ombre", "description": "Exposer au grand jour ou proteger dans le noir"},
+      {"a": "hospitalite", "b": "mefiance", "description": "Accueillir l'etranger ou fermer sa porte"},
+      {"a": "ordre", "b": "chaos", "description": "Maintenir la structure ou laisser le hasard"},
+      {"a": "anciens", "b": "jeunesse", "description": "La sagesse de l'age ou l'energie du neuf"},
+      {"a": "terre", "b": "ciel", "description": "Le concret ou le spirituel"}
+    ]
+  }
+}

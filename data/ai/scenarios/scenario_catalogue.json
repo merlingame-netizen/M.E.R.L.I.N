@@ -1,0 +1,459 @@
+{
+  "_meta": {
+    "version": "1.0.0",
+    "description": "Catalogue de scenarios/quetes pour runs narratifs. Chaque scenario couvre un run entier avec des cartes-ancres a des positions specifiques.",
+    "biomes_ref": ["foret_broceliande", "landes_bruyere", "cotes_sauvages", "villages_celtes", "cercles_pierres", "marais_korrigans", "collines_dolmens"]
+  },
+  "scenarios": {
+    "la_fille_perdue": {
+      "id": "la_fille_perdue",
+      "title": "La Fille Perdue de Broceliande",
+      "tone": "mysterieux",
+      "dealer_intro_context": "Une enfant a disparu dans les bois profonds. Les villageois murmurent mais n'osent pas s'y aventurer. Seul un voyageur etranger pourrait retrouver sa trace avant que la foret ne la reclame.",
+      "biome_affinity": ["foret_broceliande", "marais_korrigans"],
+      "difficulty": "medium",
+      "weight": 1.0,
+      "min_cards": 15,
+      "anchors": [
+        {
+          "id": "fille_trace",
+          "position": 3,
+          "position_flex": 1,
+          "type": "discovery",
+          "prompt_override": "Le voyageur decouvre un ruban rouge accroche a une branche basse, a hauteur d'enfant. Plus loin, des empreintes minuscules s'enfoncent dans la mousse humide. Quelque chose a ete abandonne ici — volontairement ou non.",
+          "flags_set": ["ruban_trouve"],
+          "tags_add": ["piste_enfant"],
+          "must_reference": ["ruban rouge", "empreintes dans la mousse"]
+        },
+        {
+          "id": "fille_chasseur",
+          "position": 8,
+          "position_flex": 2,
+          "type": "encounter",
+          "condition": {},
+          "branches": {
+            "default": {
+              "prompt_override": "Un chasseur bourru emerge des taillis, arc a la main. Il dit chercher la meme enfant, envoye par le village. Mais ses yeux evitent les votres et sa main tremble sur la corde.",
+              "flags_set": ["chasseur_rencontre"]
+            },
+            "if_flag_ruban_trouve": {
+              "prompt_override": "Le chasseur remarque le ruban rouge dans la sacoche du voyageur. Son visage change — un eclair de panique, vite masque. Il connait ce ruban. Il l'a deja vu.",
+              "flags_set": ["chasseur_suspicion"]
+            }
+          },
+          "must_reference": ["chasseur", "arc"]
+        },
+        {
+          "id": "fille_climax",
+          "position": 14,
+          "position_flex": 2,
+          "type": "climax",
+          "condition": {"any_flag": ["chasseur_rencontre", "chasseur_suspicion"]},
+          "branches": {
+            "if_flag_chasseur_suspicion": {
+              "prompt_override": "La clairiere s'ouvre sur un cercle de pierres moussues. L'enfant est la, assise au centre, les yeux clos, fredonnant une melodie que personne ne lui a apprise. Le chasseur surgit derriere vous, le visage defait. Ce n'est pas lui le danger — c'est ce que l'enfant est devenue.",
+              "tone": "tendu",
+              "flags_set": ["fille_changee"]
+            },
+            "default": {
+              "prompt_override": "Au fond d'un ravin tapisse de fougeres, une voix d'enfant fredonne. Elle est la, pieds nus, couverte de mousse comme si la foret l'avait adoptee. Elle ne pleure pas. Elle ne veut pas partir.",
+              "flags_set": ["fille_trouvee"]
+            }
+          },
+          "tags_add": ["climax_enfant"]
+        }
+      ],
+      "ambient_tags": ["enfant_perdue", "foret_profonde", "innocence", "traces"],
+      "theme_injection": "Une enfant a disparu dans ces bois. Chaque bruissement, chaque ombre entre les arbres rappelle sa presence. Des indices subtils — un jouet abandonne, un chant lointain, des branches brisees a hauteur d'enfant — parsement le chemin du voyageur.",
+      "resolution_flags": {
+        "victoire": ["fille_sauvee"],
+        "sombre": ["fille_adoptee_foret"],
+        "twist": ["fille_changee"]
+      }
+    },
+    "le_serment_du_cerf": {
+      "id": "le_serment_du_cerf",
+      "title": "Le Serment du Cerf d'Argent",
+      "tone": "solennel",
+      "dealer_intro_context": "Un cerf aux bois d'argent a ete apercu dans la brume. Les anciens disent qu'il apparait a ceux qui portent un serment inacheve. Le voyageur ignore encore quel serment la foret attend de lui.",
+      "biome_affinity": ["foret_broceliande", "cercles_pierres", "collines_dolmens"],
+      "difficulty": "hard",
+      "weight": 0.8,
+      "min_cards": 18,
+      "anchors": [
+        {
+          "id": "cerf_vision",
+          "position": 2,
+          "position_flex": 1,
+          "type": "discovery",
+          "prompt_override": "A l'aube, entre deux chenes centenaires, une silhouette argentee se dessine. Un cerf immense, les bois scintillants comme du givre sous la lune. Il fixe le voyageur un instant — une seconde qui dure une eternite — puis disparait dans la brume sans un bruit.",
+          "flags_set": ["cerf_apercu"],
+          "tags_add": ["vision_cerf", "serment_inconnu"],
+          "must_reference": ["cerf d'argent", "brume", "bois scintillants"]
+        },
+        {
+          "id": "cerf_gardien",
+          "position": 6,
+          "position_flex": 1,
+          "type": "encounter",
+          "condition": {"flag": "cerf_apercu"},
+          "branches": {
+            "default": {
+              "prompt_override": "Une vieille femme, appuyee sur un baton noueux, barre le sentier. Ses yeux sont blancs comme la lune. Elle parle du cerf comme d'un vieil ami. Le voyageur devra faire un choix: accepter le serment que la foret exige, ou continuer en aveugle.",
+              "flags_set": ["gardienne_rencontree"]
+            }
+          },
+          "must_reference": ["vieille femme", "baton noueux", "yeux blancs"]
+        },
+        {
+          "id": "cerf_epreuve",
+          "position": 11,
+          "position_flex": 2,
+          "type": "encounter",
+          "condition": {"flag": "gardienne_rencontree"},
+          "branches": {
+            "default": {
+              "prompt_override": "Le sentier mene a un gue ou l'eau coule a l'envers. De l'autre cote, le cerf d'argent attend, immobile. Pour traverser, il faut abandonner quelque chose — un souvenir, une force, une certitude. Le gue ne laisse passer que ceux qui acceptent de perdre.",
+              "flags_set": ["epreuve_gue"]
+            }
+          },
+          "must_reference": ["gue", "eau a l'envers", "cerf immobile"]
+        },
+        {
+          "id": "cerf_serment",
+          "position": 16,
+          "position_flex": 2,
+          "type": "climax",
+          "condition": {"flag": "epreuve_gue"},
+          "branches": {
+            "default": {
+              "prompt_override": "Le cerf d'argent se tient au coeur d'un nemeton, ses bois irradiant une lumiere pale. Il baisse la tete, offrant ses bois comme un autel. Le serment est la, suspendu dans l'air: proteger ce qui est fragile, meme au prix de soi. Accepter ou refuser — les deux choix ont un prix.",
+              "tone": "sacre",
+              "flags_set": ["serment_offert"]
+            }
+          },
+          "tags_add": ["climax_serment"]
+        }
+      ],
+      "ambient_tags": ["cerf_argent", "serment", "brume_sacree", "sacrifice"],
+      "theme_injection": "Le cerf d'argent rode dans les liseres de la perception. Son ombre passe entre les arbres, ses bois scintillent dans les flaques. La foret entiere semble attendre un serment que le voyageur n'a pas encore prononce.",
+      "resolution_flags": {
+        "victoire": ["serment_accepte"],
+        "sombre": ["serment_refuse"],
+        "twist": ["cerf_etait_merlin"]
+      }
+    },
+    "la_forge_du_korrigan": {
+      "id": "la_forge_du_korrigan",
+      "title": "La Forge du Korrigan",
+      "tone": "malicieux",
+      "dealer_intro_context": "Un tintement metallique resonne sous terre, la ou aucun forgeron humain n'a jamais pose le pied. Un korrigan propose un marche — mais les korrigans ne donnent rien pour rien, et leurs contrats ont toujours une clause invisible.",
+      "biome_affinity": ["marais_korrigans", "foret_broceliande", "collines_dolmens"],
+      "difficulty": "medium",
+      "weight": 1.0,
+      "min_cards": 12,
+      "anchors": [
+        {
+          "id": "korrigan_bruit",
+          "position": 3,
+          "position_flex": 1,
+          "type": "discovery",
+          "prompt_override": "Un bruit de marteau sur l'enclume monte du sol, rythmique et obstiné. Sous une pierre plate, un escalier descend dans l'obscurite. L'air qui s'en echappe sent le fer chaud et la terre mouillee. Un rire aigre monte des profondeurs.",
+          "flags_set": ["forge_decouverte"],
+          "tags_add": ["korrigan_proche", "sous_terre"],
+          "must_reference": ["bruit de marteau", "escalier", "rire"]
+        },
+        {
+          "id": "korrigan_marche",
+          "position": 7,
+          "position_flex": 2,
+          "type": "encounter",
+          "condition": {"flag": "forge_decouverte"},
+          "branches": {
+            "default": {
+              "prompt_override": "Le korrigan est petit, laid et magnifique. Ses mains sont noires de suie, ses yeux brillent comme des braises. Il propose un marche: il forgera ce que le voyageur desire — arme, outil ou talisman — en echange de trois reponses vraies a trois questions. Mais le korrigan ne pose jamais les questions qu'on attend.",
+              "flags_set": ["marche_propose"]
+            }
+          },
+          "must_reference": ["korrigan", "forge", "marche", "trois questions"]
+        },
+        {
+          "id": "korrigan_trahison",
+          "position": 12,
+          "position_flex": 2,
+          "type": "climax",
+          "condition": {"flag": "marche_propose"},
+          "branches": {
+            "default": {
+              "prompt_override": "L'objet forge est splendide — et maudit. Le korrigan rit, montrant ses dents pointues. Le contrat disait 'ce que le voyageur desire', pas 'ce dont il a besoin'. L'objet fait exactement ce qu'il promet, mais a un cout que personne n'avait prevu. Le korrigan propose un second marche pour lever la malediction — evidemment.",
+              "tone": "espiegle",
+              "flags_set": ["objet_maudit"]
+            }
+          },
+          "tags_add": ["climax_korrigan", "malediction"]
+        }
+      ],
+      "ambient_tags": ["forge", "korrigan", "marche_fae", "malice", "sous_terre"],
+      "theme_injection": "L'echo d'un marteau resonne dans les profondeurs. Des objets metalliques apparaissent sur le chemin — clous tordus, fils de cuivre, rouages minuscules. Les korrigans observent, invisibles, et attendent leur heure.",
+      "resolution_flags": {
+        "victoire": ["korrigan_surpasse"],
+        "sombre": ["dette_korrigan"],
+        "twist": ["korrigan_allie"]
+      }
+    },
+    "le_chant_des_noyees": {
+      "id": "le_chant_des_noyees",
+      "title": "Le Chant des Noyees",
+      "tone": "sombre",
+      "dealer_intro_context": "La nuit, le marais chante. Des voix de femmes montent de l'eau noire, belles et terrifiantes. Les anciens disent que ce sont les noyees — celles qui n'ont jamais trouve le repos. Leur chant attire les vivants vers les profondeurs.",
+      "biome_affinity": ["marais_korrigans", "cotes_sauvages"],
+      "difficulty": "hard",
+      "weight": 0.7,
+      "min_cards": 16,
+      "anchors": [
+        {
+          "id": "noyees_chant",
+          "position": 2,
+          "position_flex": 1,
+          "type": "discovery",
+          "prompt_override": "A la tombee du jour, un chant monte du marais. Pas de mots, juste des notes pures et tristes qui font vibrer les os. Le voyageur sent ses pieds le porter vers l'eau sombre malgre lui. Il faut un effort de volonte pour rester sur la terre ferme.",
+          "flags_set": ["chant_entendu"],
+          "tags_add": ["noyees", "chant_hypnotique"],
+          "must_reference": ["chant", "marais", "eau sombre"]
+        },
+        {
+          "id": "noyees_riviere",
+          "position": 6,
+          "position_flex": 2,
+          "type": "encounter",
+          "condition": {"flag": "chant_entendu"},
+          "branches": {
+            "default": {
+              "prompt_override": "Au bord de la riviere noire, une femme pale se tient debout, les pieds dans l'eau. Elle ne respire pas. Elle tend la main et murmure un nom — le nom du voyageur. Comment le connait-elle? Son visage porte la marque d'un chagrin ancien, plus vieux que la foret.",
+              "flags_set": ["spectre_rencontre"]
+            }
+          },
+          "must_reference": ["femme pale", "riviere noire", "nom du voyageur"]
+        },
+        {
+          "id": "noyees_verite",
+          "position": 10,
+          "position_flex": 2,
+          "type": "encounter",
+          "condition": {"flag": "spectre_rencontre"},
+          "branches": {
+            "default": {
+              "prompt_override": "Le voyageur trouve un cairn au bord de l'eau. Sous les pierres, des objets: un anneau, un peigne, une lettre jamais envoyee. L'histoire des noyees se revele — elles n'ont pas ete noyees. Elles ont ete poussees. Et celui qui les a poussees est encore la, quelque part dans le marais.",
+              "flags_set": ["verite_decouverte"],
+              "tags_add": ["meurtre_ancien"]
+            }
+          },
+          "must_reference": ["cairn", "objets personnels", "verite"]
+        },
+        {
+          "id": "noyees_choix",
+          "position": 15,
+          "position_flex": 2,
+          "type": "climax",
+          "condition": {"flag": "verite_decouverte"},
+          "branches": {
+            "default": {
+              "prompt_override": "Le meurtrier est un esprit lui aussi, enchaine au marais par sa culpabilite. Les noyees exigent justice. L'esprit supplie le pardon. Le voyageur se tient entre les morts, seul vivant capable de trancher. La justice ou la pitie — les deux ont un prix dans le monde des esprits.",
+              "tone": "grave",
+              "flags_set": ["jugement_rendu"]
+            }
+          },
+          "tags_add": ["climax_noyees", "jugement"]
+        }
+      ],
+      "ambient_tags": ["noyees", "eau_noire", "chagrin", "spectres", "chant"],
+      "theme_injection": "L'eau est partout — flaques, brume, rosee. Le chant des noyees murmure a la peripherie de l'audition, jamais assez fort pour etre clair, jamais assez faible pour etre ignore. Les miroirs d'eau montrent des visages qui ne sont pas celui du voyageur.",
+      "resolution_flags": {
+        "victoire": ["noyees_liberees"],
+        "sombre": ["voyageur_hante"],
+        "twist": ["meurtrier_pardonne"]
+      }
+    },
+    "le_festin_du_druide": {
+      "id": "le_festin_du_druide",
+      "title": "Le Festin du Druide Fou",
+      "tone": "loufoque",
+      "dealer_intro_context": "Une invitation gravee sur ecorce de bouleau attend le voyageur: un druide legendaire organise un festin dans une clairiere qui n'existe que certaines nuits. Les plats sont impossibles, les convives improbables, et les regles du festin changent a chaque service.",
+      "biome_affinity": ["foret_broceliande", "landes_bruyere", "cercles_pierres", "villages_celtes", "cotes_sauvages", "marais_korrigans", "collines_dolmens"],
+      "difficulty": "easy",
+      "weight": 1.2,
+      "min_cards": 10,
+      "anchors": [
+        {
+          "id": "festin_invitation",
+          "position": 2,
+          "position_flex": 1,
+          "type": "discovery",
+          "prompt_override": "Une ecorce de bouleau tombe des branches, gravee de runes qui bougent quand on les regarde. C'est une invitation: 'Au Festin du Druide Fou — venez comme vous etes, partez comme vous ne l'etiez pas.' L'adresse est un cercle de champignons qui n'etait pas la hier.",
+          "flags_set": ["invitation_recue"],
+          "tags_add": ["festin", "druide_fou"],
+          "must_reference": ["ecorce de bouleau", "runes", "champignons"]
+        },
+        {
+          "id": "festin_epreuves",
+          "position": 6,
+          "position_flex": 2,
+          "type": "encounter",
+          "condition": {"flag": "invitation_recue"},
+          "branches": {
+            "default": {
+              "prompt_override": "Le druide est grand, depenaille, et rit constamment. La table est dressee dans une clairiere impossible: les plats flottent, les bougies brulent a l'envers, et un sanglier vivant sert de sommelier. Premiere epreuve: manger un plat sans connaitre ses ingredients. Le druide assure que c'est 'probablement comestible'.",
+              "flags_set": ["festin_commence"]
+            }
+          },
+          "must_reference": ["druide", "table flottante", "sanglier sommelier"]
+        },
+        {
+          "id": "festin_revelation",
+          "position": 10,
+          "position_flex": 2,
+          "type": "climax",
+          "condition": {"flag": "festin_commence"},
+          "branches": {
+            "default": {
+              "prompt_override": "Au dessert, le druide devient serieux pour la premiere fois. La clairiere se fige. Il revele que le festin n'etait pas un jeu mais un rituel ancien de divination. Chaque plat goute, chaque rire partage, chaque choix fait a revele quelque chose sur le voyageur. Le druide offre cette verite — ou l'oubli. A choisir.",
+              "tone": "enigmatique",
+              "flags_set": ["verite_offerte"]
+            }
+          },
+          "tags_add": ["climax_festin", "divination"]
+        }
+      ],
+      "ambient_tags": ["festin", "druide_fou", "absurde", "nourriture_magique", "rire"],
+      "theme_injection": "Des odeurs de cuisine impossible flottent dans l'air — miel de lune, soupe de brume, pain cuit dans le tonnerre. Des bruits de vaisselle et de rires lointains percent le silence de la foret. Le druide fou observe tout, meme ce qu'on ne voit pas.",
+      "resolution_flags": {
+        "victoire": ["verite_acceptee"],
+        "sombre": ["oubli_choisi"],
+        "twist": ["druide_etait_bestiole"]
+      }
+    },
+    "l_eveil_de_maelys": {
+      "id": "l_eveil_de_maelys",
+      "title": "L'Eveil de Maelys",
+      "tone": "onirique",
+      "dealer_intro_context": "Dans les brumes de Broceliande, une druidesse endormie depuis des siecles commence a rever a nouveau. Ses reves s'echappent dans le monde reel — des visions de renards blancs, de flammes froides et de memoires qui ne sont pas les votres. Maelys s'eveille, et le monde tremble avec elle.",
+      "biome_affinity": ["foret_broceliande", "cercles_pierres", "landes_bruyere"],
+      "difficulty": "medium",
+      "weight": 1.0,
+      "min_cards": 20,
+      "anchors": [
+        {
+          "id": "maelys_decouverte",
+          "position": 2,
+          "position_flex": 1,
+          "type": "discovery",
+          "prompt_override": "Un renard blanc traverse le sentier, laissant des empreintes lumineuses sur la mousse. Il s'arrete, te fixe avec des yeux trop humains, puis disparait dans un buisson de houx. La ou il se tenait, une plume irisee flotte dans l'air, vibrant d'une chaleur impossible.",
+          "flags_set": ["renard_blanc_apercu"],
+          "tags_add": ["renard_blanc", "plume_irisee"],
+          "must_reference": ["renard blanc", "empreintes lumineuses", "plume irisee"]
+        },
+        {
+          "id": "maelys_gardien_reve",
+          "position": 5,
+          "position_flex": 1,
+          "type": "encounter",
+          "condition": {"flag": "renard_blanc_apercu"},
+          "branches": {
+            "default": {
+              "prompt_override": "Un vieux druide assis sur un dolmen sculpte une branche d'if. Il ne leve pas les yeux mais parle directement au voyageur: 'Tu as vu le renard. Donc elle t'a choisi.' Il parle de Maelys, la druidesse endormie sous les racines du Grand Chene. Ses reves debordent, et le monde en est change.",
+              "flags_set": ["gardien_rencontre"]
+            }
+          },
+          "must_reference": ["druide", "dolmen", "Maelys", "reves"]
+        },
+        {
+          "id": "maelys_monde_reve",
+          "position": 8,
+          "position_flex": 2,
+          "type": "discovery",
+          "condition": {"flag": "gardien_rencontre"},
+          "branches": {
+            "default": {
+              "prompt_override": "Le sol s'ouvre sans prevenir et le voyageur tombe — non pas dans la terre mais dans un reve. Des arbres de cristal poussent a l'envers, des rivierescoulent vers le ciel. Au loin, une silhouette feminine marche sur l'eau, les cheveux flottant comme des algues. C'est Maelys, ou du moins son ombre de reve.",
+              "flags_set": ["monde_reve_visite"]
+            }
+          },
+          "tags_add": ["monde_onirique", "cristal"],
+          "must_reference": ["arbres de cristal", "reve", "silhouette feminine"]
+        },
+        {
+          "id": "maelys_ombre",
+          "position": 11,
+          "position_flex": 2,
+          "type": "encounter",
+          "condition": {"flag": "monde_reve_visite"},
+          "branches": {
+            "default": {
+              "prompt_override": "L'ombre de Maelys prend forme — non pas la druidesse, mais son cauchemar. Une creature faite de racines noires et de souvenirs brises se dresse entre les menhirs. Elle hurle sans voix, et chaque cri fait palir la lune. Le renard blanc gronde a cote du voyageur, pret au combat.",
+              "flags_set": ["ombre_affrontee"],
+              "tags_add": ["ombre_cauchemar"]
+            }
+          },
+          "must_reference": ["ombre", "racines noires", "renard blanc"]
+        },
+        {
+          "id": "maelys_memoire",
+          "position": 14,
+          "position_flex": 2,
+          "type": "discovery",
+          "condition": {"flag": "ombre_affrontee"},
+          "branches": {
+            "default": {
+              "prompt_override": "Dans les debris du cauchemar, des fragments de memoire flottent comme des feuilles mortes. Le voyageur les touche et voit: Maelys jeune, riant pres d'un feu. Maelys en colere, les mains brillant de pouvoir. Maelys seule, choisissant le sommeil plutot que la folie. Chaque fragment revele une piece du puzzle — et un choix qu'elle regrette.",
+              "flags_set": ["memoire_reconstituee"]
+            }
+          },
+          "tags_add": ["fragments_memoire"],
+          "must_reference": ["fragments de memoire", "Maelys jeune", "sommeil"]
+        },
+        {
+          "id": "maelys_climax",
+          "position": 17,
+          "position_flex": 2,
+          "type": "climax",
+          "condition": {"any_flag": ["memoire_reconstituee", "ombre_affrontee"]},
+          "branches": {
+            "if_flag_memoire_reconstituee": {
+              "prompt_override": "Les racines du Grand Chene s'ecartent, revelant Maelys endormie dans un cocon de mousse et de lumiere. Ses paupieres fremissent. Le voyageur tient dans ses mains les fragments de sa memoire — il peut les lui rendre et la reveiller, ou les garder pour proteger le monde de ses pouvoirs. Le renard blanc attend, silencieux.",
+              "tone": "sacre",
+              "flags_set": ["choix_eveil"]
+            },
+            "default": {
+              "prompt_override": "Le Grand Chene pulse d'une lumiere malade. Maelys est piegee entre le reve et l'eveil, son pouvoir devorant lentement la foret. Le voyageur doit choisir: plonger dans son reve pour la guider dehors, ou sceller le chene pour toujours et condamner Maelys a un sommeil eternel.",
+              "tone": "grave",
+              "flags_set": ["choix_eveil"]
+            }
+          },
+          "tags_add": ["climax_eveil"]
+        },
+        {
+          "id": "maelys_resolution",
+          "position": 20,
+          "position_flex": 1,
+          "type": "climax",
+          "condition": {"flag": "choix_eveil"},
+          "branches": {
+            "default": {
+              "prompt_override": "Le choix est fait. La foret retient son souffle. Que Maelys s'eveille ou reste endormie, le monde ne sera plus le meme. Le renard blanc pose sa tete sur la main du voyageur, et pour la premiere fois, le voyageur entend sa voix: 'Merci. Elle m'avait demande de te trouver.' Le renard ferme les yeux et se dissout en lumiere.",
+              "tone": "onirique",
+              "flags_set": ["resolution_maelys"]
+            }
+          },
+          "tags_add": ["resolution_maelys"]
+        }
+      ],
+      "ambient_tags": ["reve", "druidesse", "eveil", "ombre", "memoire", "renard_blanc"],
+      "theme_injection": "Des visions fugaces traversent le voyage — un eclat de cristal dans une flaque, une voix feminine dans le vent, des empreintes de renard qui brillent dans l'obscurite. Maelys reve, et ses reves colorent le monde. Parfois, le voyageur ne sait plus s'il est eveille ou s'il marche dans le songe d'une druidesse.",
+      "resolution_flags": {
+        "victoire": ["maelys_eveillee"],
+        "sombre": ["maelys_scellee"],
+        "twist": ["renard_etait_maelys"]
+      }
+    }
+  }
+}

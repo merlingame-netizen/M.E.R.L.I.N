@@ -7,7 +7,7 @@
 
 extends Control
 
-const NEXT_SCENE := "res://scenes/TriadeGame.tscn"
+const NEXT_SCENE := "res://scenes/MerlinGame.tscn"
 const DATA_PATH := "res://data/post_intro_dialogues.json"
 
 const ANIMATION_SPEED_FACTOR := 1.7
@@ -15,7 +15,7 @@ const TYPEWRITER_DELAY := 0.016
 const TYPEWRITER_PUNCT_DELAY := 0.045
 const BLIP_VOLUME := 0.04
 const LLM_POLL_INTERVAL := 0.12
-const PREFETCH_WAIT_MAX := 2.2
+const PREFETCH_WAIT_MAX := 6.0
 const PREFETCH_SENTIER_WAIT_MAX := 3.0
 const MAX_ADVANCE_WAIT := 16.0
 const WEATHER_CLEAR := "clear"
@@ -28,103 +28,56 @@ const WEATHER_SNOW := "snow"
 const GRID_W := 32
 const GRID_H := 16
 
-# ═══════════════════════════════════════════════════════════════════════════════
-# PALETTE — Parchemin Mystique Breton
-# ═══════════════════════════════════════════════════════════════════════════════
+# Quest preparation — pre-generate cards with tree animation
+const QUEST_TREE_W := 10
+const QUEST_TREE_H := 14
+const PRERUN_CARD_COUNT := 5
+const PRERUN_CARDS_PATH := "user://temp_run_cards.json"
 
-const PALETTE := {
-	"paper": Color(0.965, 0.945, 0.905),
-	"paper_dark": Color(0.935, 0.905, 0.855),
-	"paper_warm": Color(0.955, 0.930, 0.890),
-	"ink": Color(0.22, 0.18, 0.14),
-	"ink_soft": Color(0.38, 0.32, 0.26),
-	"ink_faded": Color(0.50, 0.44, 0.38, 0.35),
-	"accent": Color(0.58, 0.44, 0.26),
-	"accent_soft": Color(0.65, 0.52, 0.34),
-	"accent_glow": Color(0.72, 0.58, 0.38, 0.25),
-	"shadow": Color(0.25, 0.20, 0.16, 0.18),
-	"line": Color(0.40, 0.34, 0.28, 0.12),
-	"mist": Color(0.94, 0.92, 0.88, 0.35),
-}
+# PALETTE constant removed — using MerlinVisual.PALETTE autoload
 
-# Biome color palettes (7 biomes)
-const BIOME_COLORS := {
-	"broceliande": {
-		"primary": Color(0.18, 0.42, 0.22),
-		"secondary": Color(0.35, 0.55, 0.28),
-		"accent": Color(0.62, 0.78, 0.42),
-	},
-	"landes": {
-		"primary": Color(0.55, 0.40, 0.52),
-		"secondary": Color(0.60, 0.50, 0.36),
-		"accent": Color(0.72, 0.52, 0.72),
-	},
-	"cotes": {
-		"primary": Color(0.50, 0.48, 0.42),
-		"secondary": Color(0.68, 0.62, 0.52),
-		"accent": Color(0.38, 0.58, 0.75),
-	},
-	"villages": {
-		"primary": Color(0.58, 0.44, 0.26),
-		"secondary": Color(0.45, 0.38, 0.30),
-		"accent": Color(0.82, 0.62, 0.32),
-	},
-	"cercles": {
-		"primary": Color(0.50, 0.48, 0.46),
-		"secondary": Color(0.38, 0.35, 0.32),
-		"accent": Color(0.72, 0.78, 0.88),
-	},
-	"marais": {
-		"primary": Color(0.28, 0.38, 0.25),
-		"secondary": Color(0.22, 0.30, 0.35),
-		"accent": Color(0.55, 0.72, 0.48),
-	},
-	"collines": {
-		"primary": Color(0.50, 0.55, 0.33),
-		"secondary": Color(0.60, 0.52, 0.40),
-		"accent": Color(0.82, 0.55, 0.30),
-	},
-}
+# Biome-specific fog tint and behavior (lazy init — autoloads not available at const time)
+var _fog_config: Dictionary = {}
 
-# Biome-specific fog tint and behavior
-const FOG_CONFIG := {
-	"broceliande": {"tint": Color(0.82, 0.94, 0.84), "direction": Vector3(-0.5, -0.3, 0), "speed": 0.7},
-	"landes": {"tint": Color(0.92, 0.88, 0.94), "direction": Vector3(-1, 0.1, 0), "speed": 1.3},
-	"cotes": {"tint": Color(0.84, 0.92, 0.98), "direction": Vector3(-1, 0, 0), "speed": 1.5},
-	"villages": {"tint": Color(0.98, 0.94, 0.88), "direction": Vector3(0, -1, 0), "speed": 0.5},
-	"cercles": {"tint": Color(0.90, 0.90, 0.92), "direction": Vector3(0, 0, 0), "speed": 0.3},
-	"marais": {"tint": Color(0.88, 0.94, 0.88), "direction": Vector3(-0.3, 0.5, 0), "speed": 0.6},
-	"collines": {"tint": Color(0.94, 0.94, 0.88), "direction": Vector3(-0.7, -0.2, 0), "speed": 0.9},
-}
+func _get_fog_config() -> Dictionary:
+	if _fog_config.is_empty():
+		_fog_config = {
+			"broceliande": {"tint": MerlinVisual.PALETTE.mist.lightened(0.05), "direction": Vector3(-0.5, -0.3, 0), "speed": 0.7},
+			"landes": {"tint": MerlinVisual.PALETTE.mist, "direction": Vector3(-1, 0.1, 0), "speed": 1.3},
+			"cotes": {"tint": MerlinVisual.PALETTE.mist.lightened(0.08), "direction": Vector3(-1, 0, 0), "speed": 1.5},
+			"villages": {"tint": MerlinVisual.PALETTE.paper_warm, "direction": Vector3(0, -1, 0), "speed": 0.5},
+			"cercles": {"tint": MerlinVisual.PALETTE.paper.darkened(0.05), "direction": Vector3(0, 0, 0), "speed": 0.3},
+			"marais": {"tint": MerlinVisual.PALETTE.mist.lightened(0.02), "direction": Vector3(-0.3, 0.5, 0), "speed": 0.6},
+			"collines": {"tint": MerlinVisual.PALETTE.paper_warm.lightened(0.02), "direction": Vector3(-0.7, -0.2, 0), "speed": 0.9},
+		}
+	return _fog_config
 
 # ═══════════════════════════════════════════════════════════════════════════════
-# NODES
+# SCENE NODES (@onready)
 # ═══════════════════════════════════════════════════════════════════════════════
 
-var bg: ColorRect
-var pixel_container: Control
-var biome_title: Label
-var biome_subtitle: Label
-var arrival_text: RichTextLabel
-var merlin_comment: RichTextLabel
-var _arrival_badge: PanelContainer
-var _merlin_badge: PanelContainer
-var _weather_overlay: ColorRect
-var _rain_particles: GPUParticles2D
-var _snow_particles: GPUParticles2D
+@onready var bg: ColorRect = $Bg
+@onready var pixel_container: Control = $PixelContainer
+@onready var biome_title: Label = $BiomeTitle
+@onready var biome_subtitle: Label = $BiomeSubtitle
+@onready var arrival_text: RichTextLabel = $ArrivalText
+@onready var merlin_comment: RichTextLabel = $MerlinComment
+@onready var _weather_overlay: ColorRect = $WeatherOverlay
+@onready var _clock_panel: PanelContainer = $ClockPanel
+@onready var _clock_label: Label = $ClockPanel/ClockLabel
+@onready var audio_player: AudioStreamPlayer = $AudioPlayer
+
+# Dynamic nodes (created at runtime)
+
+# Weather state
 var _weather_mode: String = ""
 var _weather_check_timer: float = 0.0
 var _weather_light_factor: float = 1.0
 var _weather_tween: Tween
 var _storm_flash_timer: float = 0.0
 var _solar_arc: Line2D
-var _blue_sun: Panel
-var _blue_sun_style: StyleBoxFlat
-var _clock_panel: PanelContainer
-var _clock_label: Label
 var _solar_arc_points: PackedVector2Array = PackedVector2Array()
 var _weather_rng := RandomNumberGenerator.new()
-var audio_player: AudioStreamPlayer
 
 # ═══════════════════════════════════════════════════════════════════════════════
 # STATE
@@ -147,11 +100,17 @@ var voicebox: Node = null
 var voice_ready: bool = false
 # LLM
 var merlin_ai: Node = null
-# LLM Prefetch state
-var _prefetch_arrival: Dictionary = {}
-var _prefetch_merlin: Dictionary = {}
+# LLM Prefetch state — dealer monologue (Hand of Fate 2 style)
+var _prefetch_monologue: Dictionary = {}
 var _seen_variants: Dictionary = {}
-var _last_arrival_text: String = ""
+var _last_monologue_text: String = ""
+
+# Quest preparation state
+var _quest_button: Button = null
+var _quest_tree_container: Control = null
+var _quest_tree_pixel_nodes: Array = []
+var _quest_progress_label: Label = null
+var _prerun_cards: Array = []
 
 
 func _exit_tree() -> void:
@@ -166,8 +125,8 @@ func _ready() -> void:
 	_weather_rng.seed = int(Time.get_unix_time_from_system())
 	_load_data()
 	_current_grid = _generate_landscape(biome_key)
-	_build_ui()
-	_setup_audio()
+	_configure_ui()
+	_configure_audio()
 	await _setup_voicebox()
 	if not is_inside_tree():
 		return
@@ -224,7 +183,7 @@ func _load_data() -> void:
 	if gm:
 		var run_data: Dictionary = gm.get("run") if gm.get("run") is Dictionary else {}
 		var raw_key: String = run_data.get("current_biome", "broceliande")
-		# Normalize full biome keys to short keys used by BIOME_COLORS and _generate_landscape
+		# Normalize full biome keys to short keys used by MerlinVisual.BIOME_COLORS and _generate_landscape
 		biome_key = BIOME_KEY_MAP.get(raw_key, raw_key)
 
 	if FileAccess.file_exists(DATA_PATH):
@@ -271,18 +230,16 @@ func _clear_merlin_scene_context() -> void:
 		merlin_ai.clear_scene_context()
 
 
-func _build_ui() -> void:
+func _configure_ui() -> void:
 	var vs := get_viewport_rect().size
 
-	# Parchment background with shader
-	bg = ColorRect.new()
-	bg.set_anchors_preset(Control.PRESET_FULL_RECT)
-	bg.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	var paper_shader := load("res://shaders/reigns_paper.gdshader")
+	# Configure parchment background shader + seasonal tint
+	var seasonal_pal: Dictionary = MerlinVisual.get_seasonal_palette()
+	var paper_shader := load("res://shaders/merlin_paper.gdshader")
 	if paper_shader:
 		var mat := ShaderMaterial.new()
 		mat.shader = paper_shader
-		mat.set_shader_parameter("paper_tint", PALETTE.paper)
+		mat.set_shader_parameter("paper_tint", MerlinVisual.PALETTE.paper)
 		mat.set_shader_parameter("grain_strength", 0.025)
 		mat.set_shader_parameter("vignette_strength", 0.08)
 		mat.set_shader_parameter("vignette_softness", 0.65)
@@ -291,52 +248,28 @@ func _build_ui() -> void:
 		mat.set_shader_parameter("warp_strength", 0.001)
 		bg.material = mat
 	else:
-		bg.color = PALETTE.paper
-	add_child(bg)
+		bg.color = MerlinVisual.PALETTE.paper
+	bg.modulate = seasonal_pal.get("bg_modulate", Color(1, 1, 1))
 
-	# Dynamic weather + solar clock overlay.
+	# Configure celtic ornaments
+	_configure_celtic_ornament($CelticTop, Vector2(0, 20), Vector2(vs.x, 30))
+	_configure_celtic_ornament($CelticBottom, Vector2(0, vs.y - 50), Vector2(vs.x, 30))
 
-	# Celtic ornaments
-	var celtic_top := _make_celtic_ornament()
-	celtic_top.position = Vector2(0, 20)
-	celtic_top.size = Vector2(vs.x, 30)
-	add_child(celtic_top)
-	var celtic_bottom := _make_celtic_ornament()
-	celtic_bottom.position = Vector2(0, vs.y - 50)
-	celtic_bottom.size = Vector2(vs.x, 30)
-	add_child(celtic_bottom)
+	# Configure weather + solar clock overlay
+	_configure_weather_system()
 
-	# Pixel container (landscape assembles here)
-	pixel_container = Control.new()
-	pixel_container.set_anchors_preset(Control.PRESET_FULL_RECT)
-	pixel_container.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	add_child(pixel_container)
-
-	# Dynamic weather + solar clock overlay
-	_create_mist_particles()
-
-	# Load fonts
-	var title_font: Font = null
-	var body_font: Font = null
-	if ResourceLoader.exists("res://resources/fonts/morris/MorrisRomanBlack.otf"):
-		title_font = load("res://resources/fonts/morris/MorrisRomanBlack.otf")
-	elif ResourceLoader.exists("res://resources/fonts/morris/MorrisRomanBlack.ttf"):
-		title_font = load("res://resources/fonts/morris/MorrisRomanBlack.ttf")
-	if ResourceLoader.exists("res://resources/fonts/morris/MorrisRomanBlackAlt.otf"):
-		body_font = load("res://resources/fonts/morris/MorrisRomanBlackAlt.otf")
-	elif ResourceLoader.exists("res://resources/fonts/morris/MorrisRomanBlackAlt.ttf"):
-		body_font = load("res://resources/fonts/morris/MorrisRomanBlackAlt.ttf")
+	# Load fonts from MerlinVisual
+	var title_font: Font = MerlinVisual.get_font("title")
+	var body_font: Font = MerlinVisual.get_font("body")
 	if body_font == null:
 		body_font = title_font
 
-	# Biome title
-	biome_title = Label.new()
+	# Configure biome title
 	biome_title.text = biome_data.get("name", "")
-	biome_title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	biome_title.position = Vector2(vs.x / 2.0 - 300, 55)
 	biome_title.size = Vector2(600, 50)
 	var biome_color_str = biome_data.get("color", "")
-	var font_color: Color = PALETTE.accent
+	var font_color: Color = MerlinVisual.PALETTE.accent
 	if biome_color_str is String and biome_color_str != "":
 		font_color = Color(biome_color_str)
 	elif biome_color_str is Color:
@@ -344,175 +277,58 @@ func _build_ui() -> void:
 	biome_title.add_theme_color_override("font_color", font_color)
 	if title_font:
 		biome_title.add_theme_font_override("font", title_font)
-	biome_title.add_theme_font_size_override("font_size", 32)
-	biome_title.modulate.a = 0.0
-	add_child(biome_title)
 
-	# Subtitle
-	biome_subtitle = Label.new()
+	# Configure subtitle
 	biome_subtitle.text = biome_data.get("subtitle", "")
-	biome_subtitle.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	biome_subtitle.position = Vector2(vs.x / 2.0 - 300, 95)
 	biome_subtitle.size = Vector2(600, 30)
-	biome_subtitle.add_theme_color_override("font_color", PALETTE.ink_soft)
+	biome_subtitle.add_theme_color_override("font_color", MerlinVisual.PALETTE.ink_soft)
 	if body_font:
 		biome_subtitle.add_theme_font_override("font", body_font)
-	biome_subtitle.add_theme_font_size_override("font_size", 18)
-	biome_subtitle.modulate.a = 0.0
-	add_child(biome_subtitle)
 
-	# Arrival text (positioned after landscape is placed)
-	arrival_text = RichTextLabel.new()
-	arrival_text.bbcode_enabled = true
-	arrival_text.fit_content = true
-	arrival_text.scroll_active = false
-	arrival_text.custom_minimum_size = Vector2(650, 80)
-	arrival_text.size = Vector2(650, 80)
-	arrival_text.position = Vector2(vs.x / 2.0 - 325, vs.y * 0.72)
-	arrival_text.add_theme_color_override("default_color", PALETTE.ink_soft)
+	# Configure arrival text (sized for dealer monologue — 4-6 sentences)
+	arrival_text.size = Vector2(680, 200)
+	arrival_text.position = Vector2(vs.x / 2.0 - 340, vs.y * 0.65)
+	arrival_text.add_theme_color_override("default_color", MerlinVisual.PALETTE.ink_soft)
 	if body_font:
 		arrival_text.add_theme_font_override("normal_font", body_font)
 	arrival_text.add_theme_font_size_override("normal_font_size", 18)
-	arrival_text.visible_characters = 0
-	arrival_text.text = ""
-	arrival_text.visible = false
-	add_child(arrival_text)
 
-	# Arrival source badge (dev indicator)
-	_arrival_badge = LLMSourceBadge.create("static")
-	_arrival_badge.position = Vector2(arrival_text.position.x + arrival_text.custom_minimum_size.x - 60, arrival_text.position.y - 18)
-	_arrival_badge.visible = false
-	add_child(_arrival_badge)
-
-	# Merlin comment
-	merlin_comment = RichTextLabel.new()
-	merlin_comment.bbcode_enabled = true
-	merlin_comment.fit_content = true
-	merlin_comment.scroll_active = false
-	merlin_comment.custom_minimum_size = Vector2(600, 50)
+	# Configure merlin comment
 	merlin_comment.size = Vector2(600, 50)
 	merlin_comment.position = Vector2(vs.x / 2.0 - 300, vs.y - 130)
-	merlin_comment.add_theme_color_override("default_color", PALETTE.ink)
+	merlin_comment.add_theme_color_override("default_color", MerlinVisual.PALETTE.ink)
 	if body_font:
 		merlin_comment.add_theme_font_override("normal_font", body_font)
 	merlin_comment.add_theme_font_size_override("normal_font_size", 20)
-	merlin_comment.visible_characters = 0
-	merlin_comment.text = ""
-	merlin_comment.visible = false
-	add_child(merlin_comment)
 
-	# Merlin source badge (dev indicator)
-	_merlin_badge = LLMSourceBadge.create("static")
-	_merlin_badge.position = Vector2(merlin_comment.position.x + merlin_comment.custom_minimum_size.x - 60, merlin_comment.position.y - 18)
-	_merlin_badge.visible = false
-	add_child(_merlin_badge)
-
-	# Audio
-	audio_player = AudioStreamPlayer.new()
-	audio_player.bus = "Master"
+	# Configure audio volume
 	audio_player.volume_db = linear_to_db(BLIP_VOLUME)
-	add_child(audio_player)
 
 
-func _make_celtic_ornament() -> Label:
-	var lbl := Label.new()
-	var pattern := ["\u2500", "\u2022", "\u2500", "\u2500", "\u25C6", "\u2500", "\u2500", "\u2022", "\u2500"]
+func _configure_celtic_ornament(lbl: Label, pos: Vector2, sz: Vector2) -> void:
+	var pattern := ["\u2500", "\u2022", "\u2500", "\u2500", "#", "\u2500", "\u2500", "\u2022", "\u2500"]
 	var line := ""
 	for i in range(40):
 		line += pattern[i % pattern.size()]
 	lbl.text = line
-	lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	lbl.add_theme_color_override("font_color", PALETTE.ink_faded)
-	lbl.add_theme_font_size_override("font_size", 14)
-	lbl.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	return lbl
+	lbl.position = pos
+	lbl.size = sz
+	lbl.add_theme_color_override("font_color", MerlinVisual.PALETTE.ink_faded)
 
 
-func _create_mist_particles() -> void:
-	## Active weather + solar arc overlay replacing old 2D fog path.
-	var vs := get_viewport_rect().size
+func _configure_weather_system() -> void:
+	## Configure weather overlay + solar clock from scene nodes.
 
-	_weather_overlay = ColorRect.new()
-	_weather_overlay.set_anchors_preset(Control.PRESET_FULL_RECT)
-	_weather_overlay.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	_weather_overlay.z_index = 1
-	_weather_overlay.color = Color(0.14, 0.19, 0.28, 0.06)
-	add_child(_weather_overlay)
+	var base_overlay: Color = MerlinVisual.PALETTE.ink
+	_weather_overlay.color = Color(base_overlay.r, base_overlay.g, base_overlay.b, 0.06)
 
-	var rain_tex := _create_weather_particle_texture(48, true)
-	_rain_particles = GPUParticles2D.new()
-	_rain_particles.amount = 680
-	_rain_particles.lifetime = 1.3
-	_rain_particles.preprocess = 0.8
-	_rain_particles.one_shot = false
-	_rain_particles.emitting = false
-	_rain_particles.texture = rain_tex
-	_rain_particles.position = Vector2(vs.x * 0.5, -18.0)
-	_rain_particles.visibility_rect = Rect2(-vs.x * 0.62, -40.0, vs.x * 1.24, vs.y + 90.0)
-	_rain_particles.z_index = 2
-	var rain_proc := ParticleProcessMaterial.new()
-	rain_proc.emission_shape = ParticleProcessMaterial.EMISSION_SHAPE_BOX
-	rain_proc.emission_box_extents = Vector3(vs.x * 0.52, 1.0, 1.0)
-	rain_proc.direction = Vector3(0.0, 1.0, 0.0)
-	rain_proc.spread = 12.0
-	rain_proc.gravity = Vector3(0.0, 360.0, 0.0)
-	rain_proc.initial_velocity_min = 260.0
-	rain_proc.initial_velocity_max = 390.0
-	rain_proc.scale_min = 0.9
-	rain_proc.scale_max = 1.4
-	rain_proc.color = Color(0.62, 0.80, 1.0, 0.52)
-	_rain_particles.process_material = rain_proc
-	add_child(_rain_particles)
-
-	var snow_tex := _create_weather_particle_texture(48, false)
-	_snow_particles = GPUParticles2D.new()
-	_snow_particles.amount = 360
-	_snow_particles.lifetime = 5.2
-	_snow_particles.preprocess = 1.2
-	_snow_particles.one_shot = false
-	_snow_particles.emitting = false
-	_snow_particles.texture = snow_tex
-	_snow_particles.position = Vector2(vs.x * 0.5, -18.0)
-	_snow_particles.visibility_rect = Rect2(-vs.x * 0.62, -40.0, vs.x * 1.24, vs.y + 90.0)
-	_snow_particles.z_index = 2
-	var snow_proc := ParticleProcessMaterial.new()
-	snow_proc.emission_shape = ParticleProcessMaterial.EMISSION_SHAPE_BOX
-	snow_proc.emission_box_extents = Vector3(vs.x * 0.52, 1.0, 1.0)
-	snow_proc.direction = Vector3(0.0, 1.0, 0.0)
-	snow_proc.spread = 30.0
-	snow_proc.gravity = Vector3(0.0, 58.0, 0.0)
-	snow_proc.initial_velocity_min = 34.0
-	snow_proc.initial_velocity_max = 88.0
-	snow_proc.scale_min = 0.6
-	snow_proc.scale_max = 1.2
-	snow_proc.color = Color(0.90, 0.96, 1.0, 0.7)
-	_snow_particles.process_material = snow_proc
-	add_child(_snow_particles)
-
-	_blue_sun = Panel.new()
-	_blue_sun.size = Vector2(26, 26)
-	_blue_sun.pivot_offset = _blue_sun.size * 0.5
-	_blue_sun.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	_blue_sun.z_index = 4
-	_blue_sun.modulate.a = 0.0
-	_blue_sun_style = StyleBoxFlat.new()
-	_blue_sun_style.set_corner_radius_all(13)
-	_blue_sun_style.border_width_left = 1
-	_blue_sun_style.border_width_top = 1
-	_blue_sun_style.border_width_right = 1
-	_blue_sun_style.border_width_bottom = 1
-	_blue_sun_style.border_color = Color(0.75, 0.90, 1.0, 0.8)
-	_blue_sun_style.bg_color = Color(0.34, 0.70, 1.0, 0.96)
-	_blue_sun.add_theme_stylebox_override("panel", _blue_sun_style)
-	add_child(_blue_sun)
-
-	_clock_panel = PanelContainer.new()
-	_clock_panel.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	_clock_panel.z_index = 5
-	_clock_panel.modulate.a = 0.0
+	# Style clock panel
 	var clock_style := StyleBoxFlat.new()
-	clock_style.bg_color = Color(PALETTE.paper_dark.r, PALETTE.paper_dark.g, PALETTE.paper_dark.b, 0.9)
-	clock_style.border_color = Color(0.32, 0.54, 0.94, 0.85)
+	var clock_bg: Color = MerlinVisual.PALETTE.paper_dark
+	var clock_border: Color = MerlinVisual.PALETTE.souffle
+	clock_style.bg_color = Color(clock_bg.r, clock_bg.g, clock_bg.b, 0.9)
+	clock_style.border_color = Color(clock_border.r, clock_border.g, clock_border.b, 0.85)
 	clock_style.set_border_width_all(1)
 	clock_style.set_corner_radius_all(6)
 	clock_style.content_margin_left = 10
@@ -520,45 +336,14 @@ func _create_mist_particles() -> void:
 	clock_style.content_margin_top = 4
 	clock_style.content_margin_bottom = 3
 	_clock_panel.add_theme_stylebox_override("panel", clock_style)
-	add_child(_clock_panel)
 
-	_clock_label = Label.new()
-	_clock_label.text = "00:00"
-	_clock_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	_clock_label.add_theme_font_size_override("font_size", 14)
-	_clock_label.add_theme_color_override("font_color", PALETTE.ink)
-	_clock_panel.add_child(_clock_label)
+	# Style clock label
+	_clock_label.add_theme_color_override("font_color", MerlinVisual.PALETTE.ink)
 
 	_layout_solar_arc_geometry()
 	var initial_hour := int(Time.get_datetime_dict_from_system().get("hour", 12))
 	_apply_weather_for_hour(initial_hour, true)
 	_update_solar_clock(true)
-
-
-func _create_weather_particle_texture(tex_size: int, elongated: bool = false) -> GradientTexture2D:
-	var gradient := Gradient.new()
-	if elongated:
-		gradient.add_point(0.0, Color(1, 1, 1, 0.0))
-		gradient.add_point(0.30, Color(1, 1, 1, 0.55))
-		gradient.add_point(0.75, Color(1, 1, 1, 0.25))
-		gradient.add_point(1.0, Color(1, 1, 1, 0.0))
-	else:
-		gradient.add_point(0.0, Color(1, 1, 1, 0.95))
-		gradient.add_point(0.55, Color(1, 1, 1, 0.65))
-		gradient.add_point(1.0, Color(1, 1, 1, 0.0))
-	var texture := GradientTexture2D.new()
-	texture.gradient = gradient
-	texture.width = tex_size
-	texture.height = tex_size
-	if elongated:
-		texture.fill = GradientTexture2D.FILL_LINEAR
-		texture.fill_from = Vector2(0.5, 0.0)
-		texture.fill_to = Vector2(0.5, 1.0)
-	else:
-		texture.fill = GradientTexture2D.FILL_RADIAL
-		texture.fill_from = Vector2(0.5, 0.5)
-		texture.fill_to = Vector2(1.0, 0.5)
-	return texture
 
 
 func _layout_solar_arc_geometry() -> void:
@@ -590,37 +375,11 @@ func _is_moon_hour(time_float: float) -> bool:
 	return hour >= 22 or hour < 6
 
 
-func _update_solar_clock(instant: bool) -> void:
-	if not _blue_sun or not is_instance_valid(_blue_sun):
-		return
+func _update_solar_clock(_instant: bool) -> void:
 	_layout_solar_arc_geometry()
 	var now: Dictionary = Time.get_datetime_dict_from_system()
 	if _clock_label and is_instance_valid(_clock_label):
 		_clock_label.text = "%02d:%02d" % [int(now.get("hour", 0)), int(now.get("minute", 0))]
-	var tf := _current_time_float()
-	var moon_mode := _is_moon_hour(tf)
-	var pulse := 1.0 + sin(float(Time.get_ticks_msec()) * 0.0032) * 0.045
-	var base_size := 24.0 if moon_mode else 28.0
-	var sphere_size := base_size * pulse
-	_blue_sun.size = Vector2(sphere_size, sphere_size)
-	_blue_sun.pivot_offset = _blue_sun.size * 0.5
-	var target_center := _sun_position_for_time(tf)
-	var target_pos := target_center - _blue_sun.size * 0.5
-	if instant or _blue_sun.modulate.a <= 0.01:
-		_blue_sun.position = target_pos
-	else:
-		_blue_sun.position = _blue_sun.position.lerp(target_pos, 0.18)
-
-	if _blue_sun_style:
-		if moon_mode:
-			_blue_sun_style.bg_color = Color(0.66, 0.48, 0.92, 0.95)
-			_blue_sun_style.border_color = Color(0.86, 0.72, 1.0, 0.92)
-		else:
-			_blue_sun_style.bg_color = Color(0.32, 0.72, 1.0, 0.95)
-			_blue_sun_style.border_color = Color(0.78, 0.92, 1.0, 0.90)
-		var radius := maxi(8, int(_blue_sun.size.x * 0.5))
-		_blue_sun_style.set_corner_radius_all(radius)
-		_blue_sun.add_theme_stylebox_override("panel", _blue_sun_style)
 
 
 func _weather_mode_for_hour(hour: int) -> String:
@@ -645,46 +404,30 @@ func _apply_weather_for_hour(hour: int, instant: bool) -> void:
 
 func _apply_weather_mode(mode: String, instant: bool) -> void:
 	_weather_mode = mode
-	var target_overlay := Color(0.14, 0.19, 0.28, 0.06)
+	var overlay_base: Color = MerlinVisual.PALETTE.ink
+	var target_overlay := Color(overlay_base.r, overlay_base.g, overlay_base.b, 0.06)
 	_weather_light_factor = 1.0
-	var rain_enabled := false
-	var snow_enabled := false
-	var rain_amount := 560
-	var snow_amount := 280
 
 	match mode:
 		WEATHER_CLEAR:
-			target_overlay = Color(0.10, 0.20, 0.38, 0.04)
+			target_overlay = Color(overlay_base.r * 0.7, overlay_base.g * 1.1, overlay_base.b * 1.35, 0.04)
 			_weather_light_factor = 1.0
 		WEATHER_CLOUDY:
-			target_overlay = Color(0.18, 0.24, 0.34, 0.12)
+			target_overlay = Color(overlay_base.r * 0.8, overlay_base.g * 1.1, overlay_base.b * 1.2, 0.12)
 			_weather_light_factor = 0.9
 		WEATHER_RAIN:
-			target_overlay = Color(0.16, 0.20, 0.30, 0.20)
+			target_overlay = Color(overlay_base.r * 0.7, overlay_base.g * 0.9, overlay_base.b * 1.05, 0.20)
 			_weather_light_factor = 0.78
-			rain_enabled = true
-			rain_amount = 760
 		WEATHER_STORM:
-			target_overlay = Color(0.10, 0.14, 0.22, 0.28)
+			target_overlay = Color(overlay_base.r * 0.45, overlay_base.g * 0.65, overlay_base.b * 0.78, 0.28)
 			_weather_light_factor = 0.62
-			rain_enabled = true
-			rain_amount = 940
 			_storm_flash_timer = _weather_rng.randf_range(1.2, 3.3)
 		WEATHER_MIST:
-			target_overlay = Color(0.22, 0.25, 0.30, 0.18)
+			target_overlay = Color(overlay_base.r, overlay_base.g * 1.15, overlay_base.b * 1.05, 0.18)
 			_weather_light_factor = 0.72
 		WEATHER_SNOW:
-			target_overlay = Color(0.24, 0.28, 0.38, 0.16)
+			target_overlay = Color(overlay_base.r * 1.1, overlay_base.g * 1.3, overlay_base.b * 1.35, 0.16)
 			_weather_light_factor = 0.8
-			snow_enabled = true
-			snow_amount = 420
-
-	if _rain_particles and is_instance_valid(_rain_particles):
-		_rain_particles.amount = rain_amount
-		_rain_particles.emitting = rain_enabled
-	if _snow_particles and is_instance_valid(_snow_particles):
-		_snow_particles.amount = snow_amount
-		_snow_particles.emitting = snow_enabled
 
 	var light_color := Color(
 		clampf(_weather_light_factor * 1.03, 0.60, 1.1),
@@ -708,12 +451,9 @@ func _apply_weather_mode(mode: String, instant: bool) -> void:
 			_weather_tween.parallel().tween_property(pixel_container, "modulate", light_color, 1.2)
 
 
-func _setup_audio() -> void:
-	if audio_player and is_instance_valid(audio_player):
-		return
-	audio_player = AudioStreamPlayer.new()
-	audio_player.bus = "Master"
-	add_child(audio_player)
+func _configure_audio() -> void:
+	# Audio player is already in the scene — nothing extra needed
+	pass
 
 
 func _setup_voicebox() -> void:
@@ -811,20 +551,148 @@ func _generate_landscape(biome: String) -> Array:
 
 
 func _gen_broceliande(g: Array) -> void:
-	# Dense ancient forest — 4 conifer trees
-	_grid_triangle(g, 13, 1, 8, 14, 1)   # Big tree center-left
-	_grid_triangle(g, 23, 2, 8, 12, 1)   # Medium tree center-right
-	_grid_triangle(g, 5, 4, 8, 8, 1)     # Small tree far-left
-	_grid_triangle(g, 29, 5, 8, 6, 1)    # Tiny tree far-right
-	# Trunks
-	_grid_rect(g, 12, 9, 2, 2, 2)
-	_grid_rect(g, 22, 9, 2, 2, 2)
-	_grid_rect(g, 4, 9, 2, 2, 2)
-	_grid_rect(g, 28, 9, 2, 2, 2)
-	# Mossy ground
-	_grid_rect(g, 0, 11, GRID_W, 2, 2)
-	# Mushrooms
-	_grid_dots(g, [[2, 13], [9, 13], [17, 13], [24, 13], [30, 13]], 3)
+	## Dense ancient forest — populated from stages for consistent grid.
+	var stages := _get_broceliande_stages()
+	for stage in stages:
+		for pixel in stage:
+			var col: int = int(pixel[0])
+			var row: int = int(pixel[1])
+			var ck: String = str(pixel[2])
+			var c: int = {"p": 1, "s": 2, "a": 3}.get(ck, 1)
+			_grid_set(g, col, row, c)
+
+
+func _get_broceliande_stages() -> Array:
+	## Returns 5 progressive growth stages for a dense Broceliande forest.
+	## Each stage = Array of [col, row, color_key].
+	## "p" = primary (leaves), "s" = secondary (trunk/bark), "a" = accent (details).
+	return [
+		# Stage 1: Ground + moss + stones
+		_broceliande_stage_ground(),
+		# Stage 2: Tree trunks + roots emerge
+		_broceliande_stage_trunks(),
+		# Stage 3: Lower branches + understory bushes
+		_broceliande_stage_branches(),
+		# Stage 4: Dense canopy connecting between trees
+		_broceliande_stage_canopy(),
+		# Stage 5: Details — mushrooms, flowers, fireflies
+		_broceliande_stage_details(),
+	]
+
+
+func _broceliande_stage_ground() -> Array:
+	var px: Array = []
+	# Full-width mossy ground (rows 12-15)
+	for x in range(GRID_W):
+		for y in range(12, 16):
+			px.append([x, y, "s"])
+	# Stones scattered on ground
+	for pos in [[3, 12], [10, 12], [19, 12], [27, 12]]:
+		px.append([pos[0], pos[1], "a"])
+	return px
+
+
+func _broceliande_stage_trunks() -> Array:
+	var px: Array = []
+	# 6 trunks of varying heights emerging from ground
+	# Trunk 1 — large oak center-left
+	for y in range(5, 12):
+		px.append([12, y, "s"])
+		px.append([13, y, "s"])
+	# Trunk 2 — large oak center-right
+	for y in range(4, 12):
+		px.append([22, y, "s"])
+		px.append([23, y, "s"])
+	# Trunk 3 — medium left
+	for y in range(6, 12):
+		px.append([5, y, "s"])
+	# Trunk 4 — medium right
+	for y in range(7, 12):
+		px.append([29, y, "s"])
+	# Trunk 5 — small between
+	for y in range(8, 12):
+		px.append([17, y, "s"])
+	# Trunk 6 — small far-left
+	for y in range(9, 12):
+		px.append([1, y, "s"])
+	# Roots spreading at base
+	for pos in [[11, 11], [14, 11], [21, 11], [24, 11], [4, 11], [6, 11], [28, 11], [30, 11]]:
+		px.append([pos[0], pos[1], "s"])
+	return px
+
+
+func _broceliande_stage_branches() -> Array:
+	var px: Array = []
+	# Lower branches spreading from trunks
+	# Oak 1 (center-left) branches
+	for x in range(9, 16):
+		px.append([x, 5, "p"])
+		px.append([x, 6, "p"])
+	# Oak 2 (center-right) branches
+	for x in range(19, 27):
+		px.append([x, 4, "p"])
+		px.append([x, 5, "p"])
+	# Medium tree left branches
+	for x in range(3, 8):
+		px.append([x, 6, "p"])
+		px.append([x, 7, "p"])
+	# Medium tree right branches
+	for x in range(27, 31):
+		px.append([x, 7, "p"])
+	# Understory bushes between trees
+	for x in range(7, 11):
+		px.append([x, 10, "p"])
+		px.append([x, 11, "p"])
+	for x in range(15, 19):
+		px.append([x, 10, "p"])
+		px.append([x, 11, "p"])
+	for x in range(25, 28):
+		px.append([x, 10, "p"])
+	return px
+
+
+func _broceliande_stage_canopy() -> Array:
+	var px: Array = []
+	# Dense canopy — fills gaps between trees creating a continuous green mass
+	# Known trunk columns (from _broceliande_stage_trunks) — skip when filling canopy
+	var trunk_cols: Array = [1, 5, 12, 13, 17, 22, 23, 29]
+	# Upper canopy row 1-3 (nearly full width)
+	for x in range(2, 30):
+		px.append([x, 2, "p"])
+		px.append([x, 3, "p"])
+	# Mid canopy row 4 (full connecting canopy)
+	for x in range(1, 31):
+		px.append([x, 4, "p"])
+	# Canopy extensions at row 5 — skip trunk positions
+	for x in range(0, GRID_W):
+		if not trunk_cols.has(x):
+			px.append([x, 5, "p"])
+	# Fill remaining gaps at row 6-9 between trunks (sparse for natural look)
+	for x in range(0, GRID_W):
+		for y in range(6, 10):
+			if not trunk_cols.has(x) and (x + y) % 3 != 0:
+				px.append([x, y, "p"])
+	# Canopy crown peaks
+	for pos in [[8, 1], [9, 1], [14, 0], [15, 0], [20, 1], [21, 1], [25, 1]]:
+		px.append([pos[0], pos[1], "p"])
+	return px
+
+
+func _broceliande_stage_details() -> Array:
+	var px: Array = []
+	# Mushrooms (glowing)
+	for pos in [[2, 13], [9, 14], [16, 13], [24, 14], [30, 13]]:
+		px.append([pos[0], pos[1], "a"])
+	# Flowers
+	for pos in [[6, 12], [14, 12], [20, 12], [26, 12]]:
+		px.append([pos[0], pos[1], "a"])
+	# Fireflies / light particles in canopy
+	for pos in [[4, 3], [11, 2], [18, 1], [25, 3], [7, 5], [22, 4], [15, 3], [28, 2]]:
+		px.append([pos[0], pos[1], "a"])
+	# Hanging vines from canopy
+	for pos in [[8, 8], [8, 9], [16, 8], [16, 9], [26, 8]]:
+		px.append([pos[0], pos[1], "p"])
+	return px
 
 
 func _gen_landes(g: Array) -> void:
@@ -952,9 +820,8 @@ func _play_transition() -> void:
 	if screen_fx and screen_fx.has_method("set_merlin_mood"):
 		screen_fx.set_merlin_mood("mystique")
 
-	# Start LLM prefetch immediately — runs in parallel with animations
-	_prefetch_arrival = {"done": false, "text": "", "source": "pending"}
-	_prefetch_merlin = {"done": false, "text": "", "source": "pending"}
+	# Start LLM dealer monologue prefetch — runs in parallel with animations
+	_prefetch_monologue = {"done": false, "text": "", "source": "pending"}
 	_start_llm_prefetch()
 
 	# Phase 1: Brume — mist + scout pixels
@@ -969,27 +836,32 @@ func _play_transition() -> void:
 	# Phase 4: Cadran — solar arc + blue sun + clock reveal
 	await _phase_sentier()
 
-	# Phase 5: Voix — consume prefetch results (LLM or fallback), no blocking UX
+	# Phase 5: Voix — dealer monologue (Hand of Fate 2 style)
 	if screen_fx and screen_fx.has_method("set_merlin_mood"):
 		screen_fx.set_merlin_mood("sage")
 
-	var arrival_result: Dictionary = await _consume_prefetch(_prefetch_arrival, "arrival")
-	_last_arrival_text = str(arrival_result.get("text", ""))
-	if _arrival_badge and is_instance_valid(_arrival_badge):
-		LLMSourceBadge.update_badge(_arrival_badge, arrival_result.get("source", "static"))
-		_arrival_badge.visible = false
+	SFXManager.play("convergence")
+	var monologue_result: Dictionary = await _consume_prefetch(_prefetch_monologue, "monologue")
+	var monologue_text: String = str(monologue_result.get("text", ""))
+	_last_monologue_text = monologue_text
 
-	if screen_fx and screen_fx.has_method("set_merlin_mood"):
-		screen_fx.set_merlin_mood("amuse")
+	# Resize arrival_text for full monologue display
+	if arrival_text and is_instance_valid(arrival_text):
+		arrival_text.size = Vector2(650, 200)
+		arrival_text.modulate.a = 1.0
 
-	var merlin_result: Dictionary = await _consume_prefetch(_prefetch_merlin, "merlin")
+	# Display monologue via typewriter with voice
+	if not monologue_text.is_empty() and arrival_text and is_instance_valid(arrival_text):
+		await _show_typewriter(arrival_text, monologue_text)
+		await _safe_wait(1.5)
+
+	# Hide merlin comment (replaced by monologue)
 	if merlin_comment and is_instance_valid(merlin_comment):
-		merlin_comment.text = str(merlin_result.get("text", ""))
-	if _merlin_badge and is_instance_valid(_merlin_badge):
-		LLMSourceBadge.update_badge(_merlin_badge, merlin_result.get("source", "static"))
-		_merlin_badge.visible = false
+		merlin_comment.text = ""
+		merlin_comment.visible = false
 
-	await _safe_wait(0.18)
+	# Phase 5.5: Quest Preparation — generate cards with tree animation
+	await _phase_quest_preparation()
 
 	# Phase 6: Dissolution — pixels fall away, transition to game
 	await _phase_dissolution()
@@ -1004,8 +876,8 @@ func _phase_brume() -> void:
 	SFXManager.play("mist_breath")
 
 	var vs := get_viewport_rect().size
-	var colors: Dictionary = BIOME_COLORS.get(biome_key, BIOME_COLORS.broceliande)
-	var scout_colors: Array[Color] = [colors.primary, colors.secondary, PALETTE.accent]
+	var colors: Dictionary = MerlinVisual.BIOME_COLORS.get(biome_key, MerlinVisual.BIOME_COLORS.broceliande)
+	var scout_colors: Array[Color] = [colors.primary, colors.secondary, MerlinVisual.PALETTE.accent]
 	for i in range(10):
 		var px := ColorRect.new()
 		var sz := randf_range(5.0, 9.0)
@@ -1031,7 +903,7 @@ func _phase_brume() -> void:
 
 func _phase_emergence() -> void:
 	var vs := get_viewport_rect().size
-	var colors: Dictionary = BIOME_COLORS.get(biome_key, BIOME_COLORS.broceliande)
+	var colors: Dictionary = MerlinVisual.BIOME_COLORS.get(biome_key, MerlinVisual.BIOME_COLORS.broceliande)
 	var color_map := {1: colors.primary, 2: colors.secondary, 3: colors.accent}
 
 	# Dynamic pixel size — landscape fills ~50% of viewport width
@@ -1049,51 +921,55 @@ func _phase_emergence() -> void:
 	arrival_text.position.y = _landscape_origin.y + total_h + 15.0
 	_layout_solar_arc_geometry()
 
-	# Collect all active pixels
-	var targets: Array[Dictionary] = []
-	for row in range(GRID_H):
-		for col in range(GRID_W):
-			var c: int = _current_grid[row][col]
-			if c > 0 and color_map.has(c):
-				targets.append({
-					"row": row, "col": col,
-					"pos": _landscape_origin + Vector2(col * _pixel_size, row * _pixel_size),
-					"color": color_map[c],
-				})
-
-	# Sort by column for left-to-right wave cascade
-	targets.sort_custom(func(a: Dictionary, b: Dictionary) -> bool:
-		if a.col != b.col:
-			return a.col < b.col
-		return a.row > b.row
-	)
-
 	_landscape_pixels.clear()
-	for i in range(targets.size()):
-		var t: Dictionary = targets[i]
-		var target_pos: Vector2 = t.pos
 
-		var spawn_x := target_pos.x + randf_range(-25.0, 25.0)
-		var spawn_y := -20.0 - randf_range(0.0, 100.0)
+	# Broceliande: progressive 5-stage forest growth
+	if biome_key == "broceliande" or biome_key == "":
+		var stages := _get_broceliande_stages()
+		for stage in stages:
+			await _cascade_landscape_stage(stage)
+	else:
+		# Other biomes: classic full cascade
+		var targets: Array[Dictionary] = []
+		for row in range(GRID_H):
+			for col in range(GRID_W):
+				var c: int = _current_grid[row][col]
+				if c > 0 and color_map.has(c):
+					targets.append({
+						"row": row, "col": col,
+						"pos": _landscape_origin + Vector2(col * _pixel_size, row * _pixel_size),
+						"color": color_map[c],
+					})
 
-		var px := ColorRect.new()
-		px.size = Vector2(_pixel_size, _pixel_size)
-		px.position = Vector2(spawn_x, spawn_y)
-		px.color = t.color
-		px.modulate.a = 0.0
-		px.mouse_filter = Control.MOUSE_FILTER_IGNORE
-		pixel_container.add_child(px)
-		_landscape_pixels.append(px)
+		targets.sort_custom(func(a: Dictionary, b: Dictionary) -> bool:
+			if a.col != b.col:
+				return a.col < b.col
+			return a.row > b.row
+		)
 
-		var tw := create_tween()
-		tw.tween_property(px, "modulate:a", 1.0, 0.05)
-		tw.parallel().tween_property(px, "position", target_pos, randf_range(0.3, 0.55)) \
-			.set_trans(Tween.TRANS_BOUNCE).set_ease(Tween.EASE_OUT)
+		for i in range(targets.size()):
+			var t: Dictionary = targets[i]
+			var target_pos: Vector2 = t.pos
+			var spawn_x := target_pos.x + randf_range(-25.0, 25.0)
+			var spawn_y := -20.0 - randf_range(0.0, 100.0)
 
-		# Stagger: batch of 4 pixels, then tiny delay
-		if i % 4 == 3:
-			SFXManager.play_varied("pixel_land", 0.2)
-			await _safe_wait(0.025)
+			var px := ColorRect.new()
+			px.size = Vector2(_pixel_size, _pixel_size)
+			px.position = Vector2(spawn_x, spawn_y)
+			px.color = t.color
+			px.modulate.a = 0.0
+			px.mouse_filter = Control.MOUSE_FILTER_IGNORE
+			pixel_container.add_child(px)
+			_landscape_pixels.append(px)
+
+			var tw := create_tween()
+			tw.tween_property(px, "modulate:a", 1.0, 0.05)
+			tw.parallel().tween_property(px, "position", target_pos, randf_range(0.3, 0.55)) \
+				.set_trans(Tween.TRANS_BOUNCE).set_ease(Tween.EASE_OUT)
+
+			if i % 4 == 3:
+				SFXManager.play_varied("pixel_land", 0.2)
+				await _safe_wait(0.025)
 
 	# Settle
 	await _safe_wait(0.4)
@@ -1143,18 +1019,8 @@ func _zoom_into_landscape() -> void:
 # — Phase 4: Sentier ———————————————————————————————————————————————————————
 
 func _phase_sentier() -> void:
-	if not _blue_sun or not is_instance_valid(_blue_sun):
-		await _safe_wait(0.2)
-		return
 	SFXManager.play("magic_reveal")
 	_update_solar_clock(true)
-	_blue_sun.modulate.a = 0.0
-	_blue_sun.scale = Vector2(0.82, 0.82)
-	var sun_tw := create_tween().set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_OUT)
-	sun_tw.tween_property(_blue_sun, "modulate:a", 1.0, 0.26)
-	sun_tw.parallel().tween_property(_blue_sun, "scale", Vector2(1.06, 1.06), 0.22)
-	sun_tw.tween_property(_blue_sun, "scale", Vector2.ONE, 0.16)
-	await sun_tw.finished
 
 	if _clock_panel and is_instance_valid(_clock_panel):
 		var clock_tw := create_tween()
@@ -1180,6 +1046,499 @@ func _make_diamond(pos: Vector2, color: Color) -> ColorRect:
 	return marker
 
 
+# ═══════════════════════════════════════════════════════════════════════════════
+# QUEST PREPARATION — Pre-generate cards with growing tree animation
+# ═══════════════════════════════════════════════════════════════════════════════
+
+func _phase_quest_preparation() -> void:
+	## Show "Partir en quete" button, then pre-generate cards with tree animation.
+	var vs := get_viewport_rect().size
+
+	# Create and show button
+	_quest_button = _create_quest_button(vs)
+	add_child(_quest_button)
+
+	# Fade in with bounce
+	var btn_tw := create_tween()
+	btn_tw.tween_property(_quest_button, "modulate:a", 1.0, 0.4)
+	btn_tw.tween_property(_quest_button, "scale", Vector2(1.06, 1.06), 0.15)
+	btn_tw.tween_property(_quest_button, "scale", Vector2.ONE, 0.1)
+	await btn_tw.finished
+
+	# Wait for click (Array container for lambda capture)
+	var clicked: Array = [false]
+	_quest_button.pressed.connect(func(): clicked[0] = true, CONNECT_ONE_SHOT)
+	while not clicked[0] and not scene_finished:
+		if not is_inside_tree():
+			return
+		await get_tree().process_frame
+
+	SFXManager.play("card_draw")
+
+	# Fade out button
+	var hide_tw := create_tween()
+	hide_tw.tween_property(_quest_button, "modulate:a", 0.0, 0.2)
+	await hide_tw.finished
+	_quest_button.queue_free()
+	_quest_button = null
+
+	# Reset landscape zoom
+	if pixel_container and pixel_container.scale != Vector2.ONE:
+		var zoom_tw := create_tween()
+		zoom_tw.tween_property(pixel_container, "scale", Vector2.ONE, 0.4) \
+			.set_trans(Tween.TRANS_CUBIC)
+		await zoom_tw.finished
+
+	# Fade out existing text elements
+	var text_fade := create_tween().set_parallel(true)
+	if arrival_text and is_instance_valid(arrival_text):
+		text_fade.tween_property(arrival_text, "modulate:a", 0.0, 0.3)
+	if merlin_comment and is_instance_valid(merlin_comment):
+		text_fade.tween_property(merlin_comment, "modulate:a", 0.0, 0.3)
+	if biome_title and is_instance_valid(biome_title):
+		text_fade.tween_property(biome_title, "modulate:a", 0.3, 0.3)
+	if biome_subtitle and is_instance_valid(biome_subtitle):
+		text_fade.tween_property(biome_subtitle, "modulate:a", 0.0, 0.3)
+	await text_fade.finished
+
+	# Create tree container
+	_quest_tree_container = Control.new()
+	_quest_tree_container.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	add_child(_quest_tree_container)
+
+	# Progress label
+	_quest_progress_label = Label.new()
+	_quest_progress_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	_quest_progress_label.position = Vector2(vs.x / 2.0 - 200, vs.y * 0.82)
+	_quest_progress_label.size = Vector2(400, 30)
+	_quest_progress_label.add_theme_color_override("font_color", MerlinVisual.PALETTE.ink_soft)
+	_quest_progress_label.add_theme_font_size_override("font_size", 16)
+	var progress_font: Font = MerlinVisual.get_font("body")
+	if progress_font:
+		_quest_progress_label.add_theme_font_override("font", progress_font)
+	_quest_progress_label.modulate.a = 0.0
+	add_child(_quest_progress_label)
+	var plbl_tw := create_tween()
+	plbl_tw.tween_property(_quest_progress_label, "modulate:a", 1.0, 0.3)
+	await plbl_tw.finished
+
+	# Wait for MerlinAI to be ready (model loading) — trigger warmup if needed
+	_quest_progress_label.text = "Invocation de Merlin..."
+	if merlin_ai and not merlin_ai.get("is_ready"):
+		# Trigger warmup if not already started
+		if merlin_ai.has_method("ensure_ready"):
+			print("[TransitionBiome] Triggering MerlinAI.ensure_ready()")
+			merlin_ai.ensure_ready()
+		elif merlin_ai.has_method("start_warmup"):
+			merlin_ai.start_warmup()
+		var wait_start := Time.get_ticks_msec()
+		const MAX_WAIT_MS := 30000  # 30s max (Ollama cold start can take 15s+)
+		while merlin_ai and not merlin_ai.get("is_ready"):
+			if scene_finished or not is_inside_tree():
+				break
+			var elapsed := Time.get_ticks_msec() - wait_start
+			if elapsed >= MAX_WAIT_MS:
+				print("[TransitionBiome] MerlinAI warmup timeout after 30s")
+				break
+			_quest_progress_label.text = "Invocation de Merlin... %ds" % int(elapsed / 1000.0)
+			await get_tree().process_frame
+		if merlin_ai and merlin_ai.get("is_ready"):
+			print("[TransitionBiome] MerlinAI ready after %dms" % (Time.get_ticks_msec() - wait_start))
+
+	# Generate cards with tree animation (LLM only, no fallback)
+	_prerun_cards.clear()
+	var tree_stages := _get_quest_tree_stages()
+	for i in range(PRERUN_CARD_COUNT):
+		if scene_finished or not is_inside_tree():
+			break
+		_quest_progress_label.text = "Tissage du destin... %d/%d" % [i + 1, PRERUN_CARD_COUNT]
+
+		# Generate card via LLM (skip if empty)
+		var card: Dictionary = await _generate_prerun_card(i)
+		if card.is_empty():
+			continue
+		_prerun_cards.append(card)
+
+		# Animate tree stage
+		if i < tree_stages.size():
+			await _cascade_tree_stage(tree_stages[i], vs)
+
+		SFXManager.play_varied("pixel_land", 0.3)
+		await _safe_wait(0.15)
+
+	# Tree complete — glow pulse
+	_quest_progress_label.text = "Le destin est tisse."
+	SFXManager.play("magic_reveal")
+	if _quest_tree_container and is_instance_valid(_quest_tree_container):
+		var glow_tw := create_tween()
+		glow_tw.tween_property(_quest_tree_container, "modulate", Color(1.4, 1.4, 1.2), 0.3)
+		glow_tw.tween_property(_quest_tree_container, "modulate", Color.WHITE, 0.3)
+		await glow_tw.finished
+
+	await _safe_wait(0.5)
+
+	# Save pre-generated cards
+	_save_prerun_cards()
+
+	# Generate narrator intro for MerlinGame (short, async)
+	await _generate_run_intro()
+
+	# Merge tree pixels into landscape for unified dissolution
+	for px in _quest_tree_pixel_nodes:
+		if is_instance_valid(px):
+			_landscape_pixels.append(px)
+	_quest_tree_pixel_nodes.clear()
+
+	# Fade progress label
+	var fade_tw := create_tween()
+	fade_tw.tween_property(_quest_progress_label, "modulate:a", 0.0, 0.3)
+	await fade_tw.finished
+	if _quest_progress_label and is_instance_valid(_quest_progress_label):
+		_quest_progress_label.queue_free()
+		_quest_progress_label = null
+
+
+func _create_quest_button(vs: Vector2) -> Button:
+	var btn := Button.new()
+	btn.text = "Partir en quete"
+	btn.custom_minimum_size = Vector2(240, 48)
+	btn.position = Vector2(vs.x / 2.0 - 120, vs.y * 0.86)
+	btn.pivot_offset = Vector2(120, 24)
+	var style := StyleBoxFlat.new()
+	style.bg_color = MerlinVisual.PALETTE.accent
+	style.set_corner_radius_all(8)
+	style.set_content_margin_all(12)
+	btn.add_theme_stylebox_override("normal", style)
+	var hover_style: StyleBoxFlat = style.duplicate()
+	hover_style.bg_color = MerlinVisual.PALETTE.accent.lightened(0.15)
+	btn.add_theme_stylebox_override("hover", hover_style)
+	var pressed_style: StyleBoxFlat = style.duplicate()
+	pressed_style.bg_color = MerlinVisual.PALETTE.accent.darkened(0.1)
+	btn.add_theme_stylebox_override("pressed", pressed_style)
+	btn.add_theme_color_override("font_color", MerlinVisual.PALETTE.paper)
+	btn.add_theme_font_size_override("font_size", 18)
+	var title_font: Font = MerlinVisual.get_font("title")
+	if title_font:
+		btn.add_theme_font_override("font", title_font)
+	btn.modulate.a = 0.0
+	return btn
+
+
+func _get_quest_tree_stages() -> Array:
+	## Returns 5 stages of pixel data for a growing oak tree.
+	## Each stage = array of [col, row, color_key].
+	## "p" = primary (leaves), "s" = secondary (trunk), "a" = accent (fruit).
+	return [
+		# Stage 1: Roots + ground
+		[
+			[0,13,"s"],[1,13,"s"],[2,13,"s"],[3,13,"s"],[4,13,"s"],
+			[5,13,"s"],[6,13,"s"],[7,13,"s"],[8,13,"s"],[9,13,"s"],
+			[3,12,"s"],[4,12,"s"],[5,12,"s"],[6,12,"s"],
+			[2,12,"s"],[7,12,"s"],
+		],
+		# Stage 2: Trunk
+		[
+			[4,11,"s"],[5,11,"s"],
+			[4,10,"s"],[5,10,"s"],
+			[4,9,"s"],[5,9,"s"],
+			[4,8,"s"],[5,8,"s"],
+			[4,7,"s"],[5,7,"s"],
+		],
+		# Stage 3: Lower branches
+		[
+			[2,7,"p"],[3,7,"p"],[6,7,"p"],[7,7,"p"],
+			[2,6,"p"],[3,6,"p"],[4,6,"p"],[5,6,"p"],[6,6,"p"],[7,6,"p"],
+			[1,6,"p"],[8,6,"p"],
+			[3,5,"p"],[4,5,"p"],[5,5,"p"],[6,5,"p"],
+		],
+		# Stage 4: Upper canopy
+		[
+			[2,5,"p"],[7,5,"p"],
+			[2,4,"p"],[3,4,"p"],[4,4,"p"],[5,4,"p"],[6,4,"p"],[7,4,"p"],
+			[3,3,"p"],[4,3,"p"],[5,3,"p"],[6,3,"p"],
+			[4,2,"p"],[5,2,"p"],
+		],
+		# Stage 5: Crown + golden accents
+		[
+			[3,2,"p"],[6,2,"p"],
+			[3,1,"a"],[4,1,"p"],[5,1,"p"],[6,1,"a"],
+			[4,0,"a"],[5,0,"a"],
+			[1,5,"a"],[8,5,"a"],[2,3,"a"],
+		],
+	]
+
+
+func _cascade_tree_stage(stage_pixels: Array, vs: Vector2) -> void:
+	## Animate one stage of tree pixels cascading into place.
+	var colors: Dictionary = MerlinVisual.BIOME_COLORS.get(biome_key, MerlinVisual.BIOME_COLORS.broceliande)
+	var color_map := {"p": colors.primary, "s": colors.secondary, "a": colors.accent}
+	var px_size := clampf(vs.x * 0.02, 8.0, 18.0)
+	var tree_origin := Vector2(
+		vs.x / 2.0 - (QUEST_TREE_W * px_size) / 2.0,
+		vs.y * 0.25
+	)
+
+	for i in range(stage_pixels.size()):
+		var data: Array = stage_pixels[i]
+		var col: int = int(data[0])
+		var row: int = int(data[1])
+		var color_key: String = str(data[2])
+		var target_pos := tree_origin + Vector2(col * px_size, row * px_size)
+		var color: Color = color_map.get(color_key, colors.primary)
+
+		var px := ColorRect.new()
+		px.size = Vector2(px_size, px_size)
+		px.position = Vector2(target_pos.x + randf_range(-15.0, 15.0), -20.0 - randf_range(0, 60))
+		px.color = color
+		px.modulate.a = 0.0
+		px.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		_quest_tree_container.add_child(px)
+		_quest_tree_pixel_nodes.append(px)
+
+		var tw := create_tween()
+		tw.tween_property(px, "modulate:a", 1.0, 0.05)
+		tw.parallel().tween_property(px, "position", target_pos, randf_range(0.25, 0.45)) \
+			.set_trans(Tween.TRANS_BOUNCE).set_ease(Tween.EASE_OUT)
+
+		if i % 3 == 2:
+			await _safe_wait(0.02)
+
+	await _safe_wait(0.2)
+
+
+func _cascade_landscape_stage(stage_pixels: Array) -> void:
+	## Animate one stage of landscape pixels cascading into place.
+	## Uses _landscape_origin and _pixel_size set by _phase_emergence().
+	var colors: Dictionary = MerlinVisual.BIOME_COLORS.get(biome_key, MerlinVisual.BIOME_COLORS.broceliande)
+	var color_map := {"p": colors.primary, "s": colors.secondary, "a": colors.accent}
+
+	for i in range(stage_pixels.size()):
+		var data: Array = stage_pixels[i]
+		var col: int = int(data[0])
+		var row: int = int(data[1])
+		var color_key: String = str(data[2])
+		var target_pos := _landscape_origin + Vector2(col * _pixel_size, row * _pixel_size)
+		var color: Color = color_map.get(color_key, colors.primary)
+
+		var px := ColorRect.new()
+		px.size = Vector2(_pixel_size, _pixel_size)
+		px.position = Vector2(target_pos.x + randf_range(-20.0, 20.0), -20.0 - randf_range(0, 80))
+		px.color = color
+		px.modulate.a = 0.0
+		px.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		pixel_container.add_child(px)
+		_landscape_pixels.append(px)
+
+		var tw := create_tween()
+		tw.tween_property(px, "modulate:a", 1.0, 0.05)
+		tw.parallel().tween_property(px, "position", target_pos, randf_range(0.25, 0.45)) \
+			.set_trans(Tween.TRANS_BOUNCE).set_ease(Tween.EASE_OUT)
+
+		if i % 4 == 3:
+			SFXManager.play_varied("pixel_land", 0.15)
+			await _safe_wait(0.018)
+
+	await _safe_wait(0.25)
+
+
+func _generate_prerun_card(index: int) -> Dictionary:
+	## Generate one pre-run card via LLM only. Returns {} if LLM unavailable.
+	if not merlin_ai or not merlin_ai.get("is_ready") or not merlin_ai.has_method("generate_with_system"):
+		print("[TransitionBiome] LLM unavailable for card %d" % index)
+		return {}
+	var card := await _try_llm_prerun_card(index)
+	if not card.is_empty():
+		return card
+	# Retry once after brief delay
+	await get_tree().create_timer(0.5).timeout
+	card = await _try_llm_prerun_card(index)
+	return card
+
+
+func _try_llm_prerun_card(index: int) -> Dictionary:
+	var biome_name: String = str(biome_data.get("name", "Broceliande"))
+
+	# Arc-based prompt: each card has a narrative role
+	var arc_roles: Array[String] = [
+		"INTRODUCTION: Etablis le lieu, le danger et l'atmosphere. Le voyageur decouvre le biome.",
+		"EXPLORATION: Le voyageur explore, la tension monte. Un indice subtil apparait.",
+		"COMPLICATION: Un obstacle majeur se dresse. La situation se complexifie.",
+		"CLIMAX: Le moment critique. Le choix du voyageur a des consequences lourdes.",
+		"RETOURNEMENT: Une revelation inattendue. Rien n'est ce qu'il semblait etre.",
+	]
+	var arc_role: String = arc_roles[mini(index, arc_roles.size() - 1)]
+
+	var system_prompt := (
+		"Tu es Merlin l'Enchanteur, druide de Broceliande. Conte au present en francais.\n"
+		+ "BIOME: %s | CARTE: %d/5 | ROLE: %s\n" % [biome_name, index + 1, arc_role]
+		+ "\nREGLE STRICTE:\n"
+		+ "1. Ecris UNE scene narrative (3-5 phrases, vocabulaire celtique)\n"
+		+ "2. Puis EXACTEMENT 3 choix:\nA) [verbe a l'infinitif + complement]\nB) [verbe + complement]\nC) [verbe + complement]\n"
+		+ "3. JAMAIS de meta-commentaire, JAMAIS d'anglais\n\n"
+		+ "EXEMPLE:\nLa brume s'epaissit entre les menhirs. Un corbeau croasse depuis le chene mort.\n"
+		+ "A) Toucher la rune pulsante\nB) Suivre le corbeau\nC) Contourner le menhir"
+	)
+	var user_prompt := "Carte %d/5. Biome: %s. %s" % [index + 1, biome_name, arc_role.split(":")[0]]
+
+	var params := {"max_tokens": 200, "temperature": 0.7 + index * 0.02}
+	var result: Dictionary = await merlin_ai.generate_with_system(system_prompt, user_prompt, params)
+
+	if result.has("error") or str(result.get("text", "")).length() < 20:
+		return {}
+
+	var raw_text: String = str(result.get("text", ""))
+
+	# Try to extract labels and sequel hooks from text
+	var labels: Array[String] = []
+	var sequel_hooks: Array[String] = []
+	var rx := RegEx.new()
+	rx.compile("(?m)^\\s*(?:[-*]\\s*)?\\*{0,2}(?:(?:Action\\s+)?[A-C][):.\\]]|[1-3][.)]|[-*])\\*{0,2}[:\\s]+(.+)")
+	var matches := rx.search_all(raw_text)
+	for m in matches:
+		var full_label := m.get_string(1).strip_edges().replace("**", "").replace("*", "")
+		if full_label.length() > 2 and full_label.length() < 120:
+			# Parse sequel hook after " -> "
+			var arrow_pos := full_label.find(" -> ")
+			if arrow_pos > 0:
+				labels.append(full_label.substr(0, arrow_pos).strip_edges())
+				sequel_hooks.append(full_label.substr(arrow_pos + 4).strip_edges())
+			else:
+				labels.append(full_label)
+				sequel_hooks.append("")
+
+	# Remove choices from narrative text
+	var narrative := raw_text
+	if labels.size() >= 2:
+		var rx2 := RegEx.new()
+		rx2.compile("(?m)^\\s*(?:[-*]\\s*)?\\*{0,2}(?:(?:Action\\s+)?[A-C][):.\\]]|[1-3][.)]|[-*])\\*{0,2}[:\\s]+")
+		var first_choice := rx2.search(raw_text)
+		if first_choice:
+			narrative = raw_text.substr(0, first_choice.get_start()).strip_edges()
+
+	if labels.size() < 3:
+		labels = ["Avancer prudemment", "Observer en silence", "Agir sans hesiter"]
+		sequel_hooks = ["La prudence sera recompensee", "Le silence revele des secrets", "L'audace attire l'attention"]
+
+	# Dynamic effects scaling with card position
+	var base_amt: int = 3 + index  # 3 for card 0, up to 7 for card 4
+	var effect_pool: Array = [
+		[{"type": "HEAL_LIFE", "amount": base_amt}],           # left: prudent
+		[{"type": "ADD_KARMA", "amount": clampi(base_amt / 2, 1, 3)}],  # center: balanced
+		[{"type": "DAMAGE_LIFE", "amount": base_amt}],         # right: risky
+	]
+	# Late arc: add PROGRESS_MISSION to option C
+	if index >= 3:
+		effect_pool[2] = [{"type": "PROGRESS_MISSION", "step": 1}]
+
+	var dc_hints: Array = [
+		{"min": 4, "max": 8},
+		{"min": 7, "max": 12},
+		{"min": 10, "max": 16},
+	]
+	var risk_levels: Array[String] = ["faible", "moyen", "eleve"]
+
+	var options: Array = []
+	for j in range(3):
+		var hook: String = sequel_hooks[j] if j < sequel_hooks.size() else ""
+		var label_text: String = labels[j] if j < labels.size() else "Choix %d" % (j + 1)
+		var opt: Dictionary = {
+			"label": label_text,
+			"effects": effect_pool[j],
+			"sequel_hook": hook,
+			"dc_hint": dc_hints[j],
+			"risk_level": risk_levels[j],
+			"result_success": "Votre %s s'avere payant." % label_text.split(" ")[0].to_lower(),
+			"result_failure": "Malgre vos efforts, %s ne suffit pas." % label_text.split(" ")[0].to_lower(),
+		}
+		if j == 1:
+			opt["cost"] = 1
+		options.append(opt)
+
+	return {
+		"id": "prerun_%d" % index,
+		"text": narrative if narrative.length() > 20 else raw_text.substr(0, mini(raw_text.length(), 300)),
+		"speaker": "Merlin",
+		"type": "narrative",
+		"options": options,
+		"card_position": index + 1,
+		"arc_phase": ["intro", "exploration", "complication", "climax", "twist"][mini(index, 4)],
+		"result_success": "Le choix porte ses fruits, la foret repond a ton audace.",
+		"result_failure": "Le sentier se referme, les ombres grondent autour de toi.",
+		"tags": ["prerun", "llm_generated"],
+	}
+
+
+
+func _save_prerun_cards() -> void:
+	if _prerun_cards.is_empty():
+		return
+	var file := FileAccess.open(PRERUN_CARDS_PATH, FileAccess.WRITE)
+	if file:
+		file.store_string(JSON.stringify(_prerun_cards, "\t"))
+		file.close()
+		print("[TransitionBiome] Saved %d pre-generated cards to %s" % [_prerun_cards.size(), PRERUN_CARDS_PATH])
+
+
+func _generate_run_intro() -> void:
+	## Generate a cinematic LLM intro (Hand of Fate 2 style dealer monologue).
+	## Saves to user://temp_run_intro.json for consumption by MerlinGameUI.
+	if merlin_ai == null or not merlin_ai.is_ready:
+		return
+
+	var biome_name: String = str(biome_data.get("name", "Broceliande"))
+	var biome_subtitle: String = str(biome_data.get("sous_titre", ""))
+	var guardian: String = str(biome_data.get("gardien", ""))
+	var ogham: String = str(biome_data.get("ogham", ""))
+
+	# Use dealer_monologue template from scenario_prompts.json
+	var sys := (
+		"Tu es Merlin l'Enchanteur, conteur et maitre des cartes. "
+		+ "Tu poses les cartes du destin sur la table de pierre devant le Voyageur. "
+		+ "Decris le biome avec tes sens de druide (odeurs, sons, lumiere, textures). "
+		+ "Mentionne l'etat du voyageur sans nommer les mecaniques. "
+		+ "Termine par un pressentiment enigmatique sur ce qui attend. "
+		+ "4-6 phrases en francais, ton grave et theatral, comme un conteur au coin du feu. "
+		+ "Pas de guillemets. Vocabulaire celtique: nemeton, ogham, sidhe, dolmen, brume, racines, pierre dressee."
+	)
+	var usr := "Biome: %s (%s). Gardien: %s. Ogham: %s. Genere le monologue du dealer." % [
+		biome_name, biome_subtitle, guardian, ogham
+	]
+
+	# Enrich with scenario context if active
+	var store: Node = get_node_or_null("/root/MerlinStore")
+	if store and store.has_method("get_scenario_manager"):
+		var scenario_mgr = store.get_scenario_manager()
+		if scenario_mgr and scenario_mgr.is_scenario_active():
+			var title: String = scenario_mgr.get_scenario_title()
+			var tone: String = scenario_mgr.get_scenario_tone()
+			if not title.is_empty():
+				usr += " Scenario: %s. Ton: %s." % [title, tone]
+
+	var result: Dictionary = await merlin_ai.generate_narrative(sys, usr, {"max_tokens": 250})
+	var text: String = str(result.get("text", "")).strip_edges()
+
+	# Validate basic quality (allow longer intro for dealer monologue)
+	if text.length() < 10 or text.length() > 800:
+		return
+	var lower := text.to_lower()
+	for eng_word in ["the ", " and ", " you "]:
+		if eng_word in lower:
+			return
+
+	# Save for MerlinGame
+	var intro_data := {
+		"text": text,
+		"biome": biome_key,
+		"source": "llm",
+		"timestamp": Time.get_ticks_msec()
+	}
+	var f := FileAccess.open("user://temp_run_intro.json", FileAccess.WRITE)
+	if f:
+		f.store_string(JSON.stringify(intro_data))
+		f.close()
+		print("[TransitionBiome] Run intro saved: %s" % text.left(60))
+
+
 # — Phase 6: Dissolution ——————————————————————————————————————————————————
 
 func _phase_dissolution() -> void:
@@ -1199,8 +1558,6 @@ func _phase_dissolution() -> void:
 	text_tw.parallel().tween_property(merlin_comment, "modulate:a", 0.0, 0.3)
 	text_tw.parallel().tween_property(biome_title, "modulate:a", 0.0, 0.3)
 	text_tw.parallel().tween_property(biome_subtitle, "modulate:a", 0.0, 0.3)
-	if _blue_sun and is_instance_valid(_blue_sun):
-		text_tw.parallel().tween_property(_blue_sun, "modulate:a", 0.0, 0.3)
 	if _clock_panel and is_instance_valid(_clock_panel):
 		text_tw.parallel().tween_property(_clock_panel, "modulate:a", 0.0, 0.3)
 	if _weather_overlay and is_instance_valid(_weather_overlay):
@@ -1236,7 +1593,7 @@ func _phase_dissolution() -> void:
 	final_tw.tween_callback(func():
 		_clear_merlin_scene_context()
 		if is_inside_tree():
-			get_tree().change_scene_to_file(NEXT_SCENE)
+			PixelTransition.transition_to(NEXT_SCENE)
 	)
 
 
@@ -1272,18 +1629,12 @@ func _build_llm_biome_context() -> String:
 			var state_name: String = str(states_dict.get(st, "?"))
 			aspect_labels.append("%s=%s" % [a, state_name])
 		parts.append("Etat du voyageur: %s." % ", ".join(aspect_labels))
-	# Day, tool, departure condition
+	# Day context
 	var gm: Node = get_node_or_null("/root/GameManager")
 	if gm and "run" in gm:
 		var run: Dictionary = gm.run if gm.run is Dictionary else {}
 		var day: int = int(run.get("day", 1))
 		parts.append("Jour %d de l'expedition." % day)
-		var tool_id: String = str(run.get("tool", ""))
-		if tool_id != "" and MerlinConstants.EXPEDITION_TOOLS.has(tool_id):
-			parts.append("Outil: %s." % MerlinConstants.EXPEDITION_TOOLS[tool_id].get("name", ""))
-		var cond: String = str(run.get("departure_condition", ""))
-		if cond != "" and MerlinConstants.DEPARTURE_CONDITIONS.has(cond):
-			parts.append("Condition: %s." % MerlinConstants.DEPARTURE_CONDITIONS[cond].get("name", ""))
 	parts.append("Ecris 1-2 phrases poetiques en francais. Pas de guillemets.")
 	return "\n".join(parts)
 
@@ -1305,17 +1656,108 @@ func _build_merlin_comment_context() -> String:
 			var state_name: String = str(states_dict.get(st, "?"))
 			aspect_labels.append("%s=%s" % [a, state_name])
 		parts.append("Le voyageur est %s." % ", ".join(aspect_labels))
-	# Day and tool context
+	# Day context
 	var gm: Node = get_node_or_null("/root/GameManager")
 	if gm and "run" in gm:
 		var run: Dictionary = gm.run if gm.run is Dictionary else {}
 		var day: int = int(run.get("day", 1))
 		parts.append("Jour %d." % day)
-		var tool_id: String = str(run.get("tool", ""))
-		if tool_id != "" and MerlinConstants.EXPEDITION_TOOLS.has(tool_id):
-			parts.append("Outil: %s." % MerlinConstants.EXPEDITION_TOOLS[tool_id].get("name", ""))
 	parts.append("Commente en 1 phrase avec ton amuse. Francais uniquement.")
 	return "\n".join(parts)
+
+
+func _build_dealer_monologue_prompt() -> Dictionary:
+	## Build system + user prompt for dealer monologue (Hand of Fate 2 style).
+	## Returns {"system": ..., "user": ...} using scenario_prompts template.
+	var template: Dictionary = {}
+	var store: Node = get_node_or_null("/root/MerlinStore")
+	if store and store.get("llm") and store.llm.has_method("get_scenario_template"):
+		template = store.llm.get_scenario_template("dealer_monologue")
+
+	var system_prompt: String = str(template.get("system", ""))
+	var user_template: String = str(template.get("user_template", ""))
+
+	# Fallback if template not loaded
+	if system_prompt.is_empty():
+		system_prompt = "Tu es Merlin l'Enchanteur, conteur et maitre des cartes. Decris le biome avec tes sens de druide. 4-6 phrases en francais, ton grave et theatral. Pas de guillemets."
+	if user_template.is_empty():
+		user_template = "Biome: {biome_name}. Gardien: {guardian}. Saison: {season}. Jour {day}. Etat: Corps={corps_state}, Ame={ame_state}, Monde={monde_state}. Souffle={souffle}/7. Genere le monologue du dealer."
+
+	# Collect template variables
+	var vars := {}
+	vars["biome_name"] = str(biome_data.get("name", "Inconnu"))
+	vars["biome_subtitle"] = str(biome_data.get("subtitle", ""))
+	vars["guardian"] = str(biome_data.get("gardien", ""))
+	vars["ogham"] = str(biome_data.get("ogham", ""))
+	vars["season"] = str(biome_data.get("saison", biome_data.get("season_forte", "")))
+
+	# Day
+	var gm: Node = get_node_or_null("/root/GameManager")
+	if gm and "run" in gm:
+		var run: Dictionary = gm.run if gm.run is Dictionary else {}
+		vars["day"] = str(int(run.get("day", 1)))
+	else:
+		vars["day"] = "1"
+
+	# Player aspects (reuse store from above)
+	vars["corps_state"] = "Equilibre"
+	vars["ame_state"] = "Equilibre"
+	vars["monde_state"] = "Equilibre"
+	vars["souffle"] = "3"
+	if store and store.has_method("get_all_aspects"):
+		var aspects: Dictionary = store.get_all_aspects()
+		for a in MerlinConstants.TRIADE_ASPECTS:
+			var st: int = int(aspects.get(a, 0))
+			var info: Dictionary = MerlinConstants.TRIADE_ASPECT_INFO.get(a, {})
+			var states_dict: Dictionary = info.get("states", {})
+			var state_name: String = str(states_dict.get(st, "Equilibre"))
+			match a:
+				"Corps": vars["corps_state"] = state_name
+				"Ame": vars["ame_state"] = state_name
+				"Monde": vars["monde_state"] = state_name
+	if store and store.has_method("get_state"):
+		var state: Dictionary = store.get_state()
+		vars["souffle"] = str(int(state.get("souffle", 3)))
+
+	# Replace template variables
+	var user_prompt := user_template
+	for key in vars:
+		user_prompt = user_prompt.replace("{%s}" % key, str(vars[key]))
+
+	# Scenario context injection (Hand of Fate 2-style quest)
+	if store and store.has_method("get_scenario_manager"):
+		var scenario_mgr = store.get_scenario_manager()
+		if scenario_mgr and scenario_mgr.is_scenario_active():
+			var override: Dictionary = scenario_mgr.get_dealer_intro_override()
+			if not override.is_empty():
+				user_prompt += "\nQUETE EN COURS: %s. %s" % [
+					str(override.get("title", "")),
+					str(override.get("context", ""))
+				]
+				var scenario_tone: String = str(override.get("tone", ""))
+				if not scenario_tone.is_empty():
+					user_prompt += " Ton dominant: %s." % scenario_tone
+
+	return {"system": system_prompt, "user": user_prompt}
+
+
+const FALLBACK_MONOLOGUES := {
+	"foret_broceliande": "Les cartes s'agitent sous mes doigts, Voyageur. La foret de Broceliande murmure ton nom entre ses chenes centenaires. L'odeur de mousse et de terre humide monte deja vers toi, comme un souvenir que tu n'as pas encore vecu. Les racines anciennes savent des choses que les pierres ont oubliees. Ton chemin commence ou la brume se dechire.",
+	"landes_bruyere": "Ecoute le vent, Voyageur. Les landes de bruyere s'etendent devant toi comme un ocean de solitude violette. Ici les pierres dressees comptent les siecles en silence, et chaque pas crisse sur un secret enterre. Le gardien Talwen observe depuis les hauteurs. Ton ame sera mise a l'epreuve dans cette immensity.",
+	"cotes_sauvages": "Sens-tu le sel sur tes levres, Voyageur ? Les cotes sauvages grondent de l'autre cote du voile. Les vagues frappent les falaises comme les battements d'un coeur ancien. Bran le gardien attend au bord de l'ecume. Le monde marin a ses propres regles, et tu devras les apprendre vite.",
+	"villages_celtes": "Les flammes dansent dans les villages celtes, Voyageur. L'odeur de tourbe et de pain chaud porte jusqu'ici. Azenor la gardienne veille sur les siens avec une fermete douce. Chaque foyer raconte une histoire, chaque porte cache un choix. Le printemps reveille les esperances et les vieilles querelles.",
+	"cercles_pierres": "Le temps hesite entre ces pierres dressees, Voyageur. Les cercles de pierres sont des portes que seuls les inities franchissent. Keridwen la gardienne tisse ses sortileges dans la brume du samhain. Ici l'ame se reflete dans le granit poli par les ages. Choisis bien tes pas.",
+	"marais_enchantes": "Les eaux dormantes cachent bien des verites, Voyageur. Les marais enchantes brillent d'une lumiere trompeuse sous la lune. Gwydion le gardien connait chaque sentier entre les roseaux. Le corps s'alourdit dans ces brumes, mais l'esprit s'affute. N'oublie pas de regarder sous la surface.",
+	"monts_arree": "Les monts d'Arree se dressent comme les dents d'un monde oublie, Voyageur. Le vent hurle entre les cretes et porte les echos du Yeun Elez. Dahut la gardienne regne sur ces hauteurs ou les nuages rampent comme des serpents. Ici tout est vertical : la montee, la chute, le choix.",
+}
+
+
+func _get_fallback_monologue() -> String:
+	## Return a pre-written monologue for the current biome.
+	var text: String = str(FALLBACK_MONOLOGUES.get(biome_key, ""))
+	if text.is_empty():
+		text = "Les cartes du destin s'etalent devant toi, Voyageur. Merlin observe la brume qui se dissipe lentement. Chaque chemin mene quelque part, mais aucun ne ramene au meme endroit. Ton histoire s'ecrit a chaque pas."
+	return text
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
@@ -1375,28 +1817,18 @@ func _pick_unseen_variant(bkey: String, category: String, total: int) -> int:
 # ═══════════════════════════════════════════════════════════════════════════════
 
 func _start_llm_prefetch() -> void:
-	## Fire-and-forget: starts both LLM calls in parallel while animations play.
+	## Fire-and-forget: starts dealer monologue generation while animations play.
 	if merlin_ai == null or not merlin_ai.is_ready:
-		_prefetch_arrival = {"done": true, "text": "", "source": "fallback"}
-		_prefetch_merlin = {"done": true, "text": "", "source": "fallback"}
+		_prefetch_monologue = {"done": true, "text": "", "source": "fallback"}
 		return
-	# Arrival text
-	_set_merlin_scene_context("transition_biome_arrival", {
-		"phase": "biome_arrival"
+	_set_merlin_scene_context("transition_biome_dealer", {
+		"phase": "dealer_monologue"
 	})
-	var sys_arrival := _build_llm_biome_context()
-	var usr_arrival := "Decris l'arrivee du voyageur dans ce biome."
-	_async_generate(_prefetch_arrival, sys_arrival, usr_arrival)
-	# Merlin comment
-	_set_merlin_scene_context("transition_biome_merlin", {
-		"phase": "biome_merlin_comment"
-	})
-	var sys_merlin := _build_merlin_comment_context()
-	var usr_merlin := "Commente l'arrivee du voyageur."
-	_async_generate(_prefetch_merlin, sys_merlin, usr_merlin)
+	var prompt_data: Dictionary = _build_dealer_monologue_prompt()
+	_async_generate(_prefetch_monologue, prompt_data["system"], prompt_data["user"], 250)
 
 
-func _async_generate(state: Dictionary, system_prompt: String, user_input: String) -> void:
+func _async_generate(state: Dictionary, system_prompt: String, user_input: String, max_tokens: int = 80) -> void:
 	## Async LLM generation — updates state dict when done with explicit source.
 	state["done"] = false
 	state["text"] = ""
@@ -1406,7 +1838,7 @@ func _async_generate(state: Dictionary, system_prompt: String, user_input: Strin
 		state["done"] = true
 		return
 
-	var result: Dictionary = await merlin_ai.generate_narrative(system_prompt, user_input, {"max_tokens": 80})
+	var result: Dictionary = await merlin_ai.generate_narrative(system_prompt, user_input, {"max_tokens": max_tokens})
 	if result.has("error"):
 		state["done"] = true
 		return
@@ -1431,16 +1863,19 @@ func _consume_prefetch(state: Dictionary, fallback_type: String) -> Dictionary:
 	var text: String = str(state.get("text", ""))
 	var source: String = str(state.get("source", "fallback"))
 	if source != "llm" or text.is_empty():
-		var fb := _get_fallback_text(biome_key)
-		var legacy_key := "arrival_text" if fallback_type == "arrival" else "merlin_comment"
-		text = str(fb.get(fallback_type, biome_data.get(legacy_key, "")))
+		if fallback_type == "monologue":
+			text = _get_fallback_monologue()
+		else:
+			var fb := _get_fallback_text(biome_key)
+			var legacy_key := "arrival_text" if fallback_type == "arrival" else "merlin_comment"
+			text = str(fb.get(fallback_type, biome_data.get(legacy_key, "")))
 		source = "fallback"
 	return {"text": text, "source": source}
 
 
 func _validate_llm_text(text: String) -> String:
 	## Validate LLM output. Returns "" if invalid (triggers fallback).
-	if text.length() < 10 or text.length() > 300:
+	if text.length() < 10 or text.length() > 800:
 		return ""
 	# Reject if contains common English words
 	var lower := text.to_lower()
@@ -1448,8 +1883,8 @@ func _validate_llm_text(text: String) -> String:
 		if eng_word in lower:
 			return ""
 	# Reject if too similar to last text (Jaccard > 0.7)
-	if _last_arrival_text != "" and text != "":
-		var sim := _jaccard_similarity(text, _last_arrival_text)
+	if _last_monologue_text != "" and text != "":
+		var sim := _jaccard_similarity(text, _last_monologue_text)
 		if sim > 0.7:
 			return ""
 	return text

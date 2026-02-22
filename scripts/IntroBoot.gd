@@ -31,9 +31,9 @@ enum BootPhase {
 const POWER_ON_DURATION := 1.8
 const BOOT_DURATION := 6.0
 const LOADING_DURATION := 4.5
-const ORB_TRANSFORM_DURATION := 1.2
-const ORB_POSITION_DURATION := 1.5
-const TRANSITION_DURATION := 0.8
+const ORB_TRANSFORM_DURATION := 2.5  # Pixel rain phase — longer for visual impact
+const ORB_POSITION_DURATION := 0.0  # Skipped — flash goes directly to menu
+const TRANSITION_DURATION := 0.5  # Flash duration
 
 # =============================================================================
 # COULEURS
@@ -111,6 +111,11 @@ var orb_target_size := 25.0
 var current_hour := 0.0
 var clock_center := Vector2.ZERO
 var clock_radius := 0.0
+
+# Pixel rain particles
+var _rain_pixels: Array[Dictionary] = []  # {pos, vel, color, sparkle_freq, sparkle_phase, size}
+const RAIN_PIXEL_COUNT := 180
+const RAIN_GRAVITY := 280.0
 
 # Transition
 var transition_alpha := 0.0
@@ -353,25 +358,66 @@ func _process_boot(delta: float) -> void:
 		_play_orb_sound()
 
 
-func _process_orb_transform(_delta: float) -> void:
+func _process_orb_transform(delta: float) -> void:
 	orb_transform_progress = minf(phase_timer / ORB_TRANSFORM_DURATION, 1.0)
+	var vs := get_viewport_rect().size
 
-	# La barre se compresse en orbe
-	var t := _ease_in_out_cubic(orb_transform_progress)
-	orb_size = lerpf(0.0, orb_target_size, t)
+	# Initialize pixel rain on first frame
+	if _rain_pixels.is_empty():
+		_init_rain_pixels(vs)
 
-	# Petit mouvement vers le haut pendant la transformation
-	orb_current_pos.y = lerpf(orb_start_pos.y, orb_start_pos.y - 30, t)
+	# Phase 1 (0-0.6): Pixels fall with gravity and sparkle
+	# Phase 2 (0.6-0.85): Pixels converge toward center eye
+	# Phase 3 (0.85-1.0): Flash white
+	var t := orb_transform_progress
 
-	static_intensity = lerpf(0.2, 0.0, orb_transform_progress)
+	if t < 0.6:
+		# Falling phase — gravity + bounce
+		for px in _rain_pixels:
+			px.vel.y += RAIN_GRAVITY * delta
+			px.pos.x += px.vel.x * delta
+			px.pos.y += px.vel.y * delta
+			# Bounce off bottom
+			if px.pos.y > vs.y * 0.7:
+				px.vel.y = -abs(px.vel.y) * 0.4
+				px.pos.y = vs.y * 0.7
+			px.sparkle_phase += px.sparkle_freq * delta
+	elif t < 0.85:
+		# Convergence phase — pixels fly toward center
+		var convergence_t := (t - 0.6) / 0.25
+		var center := Vector2(vs.x * 0.5, vs.y * 0.4)
+		for px in _rain_pixels:
+			var target := center + Vector2(rng.randf_range(-15.0, 15.0), rng.randf_range(-15.0, 15.0))
+			px.pos = px.pos.lerp(target, convergence_t * 0.12)
+			px.sparkle_phase += px.sparkle_freq * delta * 2.0
 
-	if orb_transform_progress >= 1.0:
-		current_phase = BootPhase.ORB_POSITION
+	static_intensity = lerpf(0.15, 0.0, t)
+
+	if t >= 1.0:
+		# Skip ORB_POSITION, go directly to TRANSITION (flash -> menu)
+		current_phase = BootPhase.TRANSITION
 		phase_timer = 0.0
-		orb_position_progress = 0.0
-		orb_start_pos = orb_current_pos
+		transition_alpha = 0.0
 		static_rect.visible = false
-		_play_orb_move_sound()
+		_save_orb_data()
+
+
+func _init_rain_pixels(vs: Vector2) -> void:
+	## Generate pixel rain particles across the top of screen.
+	var eye_colors: Array[Color] = [
+		COLOR_BLUE_GLOW, COLOR_BLUE_BRIGHT, COLOR_BLUE_CORE,
+		COLOR_CYAN, COLOR_WHITE,
+	]
+	_rain_pixels.clear()
+	for i in range(RAIN_PIXEL_COUNT):
+		_rain_pixels.append({
+			"pos": Vector2(rng.randf_range(vs.x * 0.1, vs.x * 0.9), rng.randf_range(-vs.y * 0.3, vs.y * 0.1)),
+			"vel": Vector2(rng.randf_range(-20.0, 20.0), rng.randf_range(30.0, 120.0)),
+			"color": eye_colors[i % eye_colors.size()],
+			"sparkle_freq": rng.randf_range(3.0, 8.0),
+			"sparkle_phase": rng.randf_range(0.0, TAU),
+			"size": rng.randf_range(3.0, 7.0),
+		})
 
 
 func _process_orb_position(_delta: float) -> void:
@@ -428,9 +474,8 @@ func _draw() -> void:
 			_draw_clock_arc(viewport_size)
 			_draw_orb(viewport_size)
 		BootPhase.TRANSITION:
-			_draw_clock_arc(viewport_size)
-			_draw_orb(viewport_size)
-			_draw_transition(viewport_size)
+			# Flash white → fade to menu (no orb/clock since we skip ORB_POSITION)
+			draw_rect(Rect2(Vector2.ZERO, viewport_size), Color(0.95, 0.97, 1.0, maxf(0.0, 1.0 - transition_alpha)))
 
 
 func _draw_power_on(viewport_size: Vector2) -> void:
@@ -656,64 +701,42 @@ func _draw_orb_transform(viewport_size: Vector2) -> void:
 	if not font:
 		return
 
-	var center_x := viewport_size.x * 0.5
-	var bar_y := viewport_size.y * LOADING_BAR_Y_RATIO
-	var bar_max_width := viewport_size.x * 0.55
-	var bar_height := 14.0
-
 	var t := orb_transform_progress
-	var glow_pulse := 0.7 + 0.3 * sin(bar_glow_phase)
-	bar_glow_phase += 0.18
+	var center := Vector2(viewport_size.x * 0.5, viewport_size.y * 0.4)
 
-	# Particules d'énergie convergentes
-	var particle_count := int(20 * t)
-	for i in range(particle_count):
-		var angle := float(i) / float(maxi(particle_count, 1)) * TAU + time_elapsed * 2.0
-		var dist := lerpf(120.0, 0.0, t) * (0.5 + 0.5 * sin(float(i) * 1.3))
-		var px := orb_current_pos.x + cos(angle) * dist
-		var py := orb_current_pos.y + sin(angle) * dist
-		var psize := lerpf(1.0, 3.0, t) * rng.randf_range(0.5, 1.5)
-		draw_rect(Rect2(px - psize * 0.5, py - psize * 0.5, psize, psize), Color(0.6, 0.85, 1.0, 0.5 * t * glow_pulse))
+	# Phase 1+2: Draw falling/converging pixel rain
+	if t < 0.85:
+		for px in _rain_pixels:
+			var sparkle := 0.5 + 0.5 * sin(px.sparkle_phase)
+			var alpha := clampf(sparkle, 0.3, 1.0)
+			# Glow halo around each pixel
+			var glow_size: float = px.size * 2.5
+			draw_rect(Rect2(px.pos.x - glow_size * 0.5, px.pos.y - glow_size * 0.5, glow_size, glow_size),
+				Color(px.color.r, px.color.g, px.color.b, alpha * 0.15))
+			# Core pixel
+			draw_rect(Rect2(px.pos.x - px.size * 0.5, px.pos.y - px.size * 0.5, px.size, px.size),
+				Color(px.color.r, px.color.g, px.color.b, alpha))
 
-	# La barre se compresse vers le centre
-	var current_width := lerpf(bar_max_width, 0.0, _ease_in_cubic(t))
-	var current_height := lerpf(bar_height, orb_target_size * 2, t)
+	# Phase 3 (0.85-1.0): Bright flash expanding from center
+	if t >= 0.85:
+		var flash_t := (t - 0.85) / 0.15
+		var flash_alpha := 1.0 - flash_t * 0.3  # Stay bright
+		var flash_radius := flash_t * maxf(viewport_size.x, viewport_size.y)
+		# Draw expanding white glow circles
+		for i in range(5):
+			var r := flash_radius * (1.0 - float(i) * 0.15)
+			var a := flash_alpha * (1.0 - float(i) * 0.18)
+			if r > 0 and a > 0:
+				draw_rect(Rect2(center.x - r, center.y - r, r * 2.0, r * 2.0),
+					Color(0.95, 0.97, 1.0, a))
 
-	# Glow massif croissant
-	var energy := 1.0 + t * 1.2
-	for i in range(6):
-		var glow_expand := float(6 - i) * 12.0 * energy
-		var glow_alpha := 0.06 * (1.0 - float(i) * 0.15) * glow_pulse * energy
-		draw_rect(Rect2(orb_current_pos.x - glow_expand, orb_current_pos.y - glow_expand, glow_expand * 2, glow_expand * 2), Color(0.2, 0.5, 1.0, glow_alpha))
-
-	if current_width > orb_target_size * 2.5:
-		var bar_x := center_x - current_width * 0.5
-
-		# Glow de la barre
-		for i in range(4):
-			var inner_glow := float(4 - i) * 8.0
-			var inner_alpha := 0.12 * (1.0 - float(i) * 0.2) * glow_pulse * energy
-			draw_rect(Rect2(bar_x - inner_glow, bar_y - current_height * 0.5 - inner_glow, current_width + inner_glow * 2, current_height + inner_glow * 2), Color(0.3, 0.6, 1.0, inner_alpha))
-
-		# Barre compressée
-		draw_rect(Rect2(bar_x, bar_y - current_height * 0.5, current_width, current_height), Color(0.4, 0.7, 1.0, 1.0))
-
-		# Coeur lumineux
-		var core_h := current_height * 0.5
-		draw_rect(Rect2(bar_x, bar_y - core_h * 0.5, current_width, core_h), Color(0.75, 0.9, 1.0, glow_pulse))
-
-	# Orbe émergeant
-	var orb_t := clampf((t - 0.2) / 0.8, 0.0, 1.0)
-	if orb_t > 0:
-		_draw_orb_at(orb_current_pos, orb_size * orb_t)
-
-	# Titre fade out
+	# Title fade out during pixel rain
 	var title := "C e l t O S"
 	var title_size := 40
 	var title_width := font.get_string_size(title, HORIZONTAL_ALIGNMENT_CENTER, -1, title_size).x
-	var title_alpha := maxf(0.0, 1.0 - t * 1.5)
+	var title_alpha := maxf(0.0, 1.0 - t * 2.0)
 	if title_alpha > 0:
-		draw_string(font, Vector2(center_x - title_width * 0.5, viewport_size.y * 0.30), title, HORIZONTAL_ALIGNMENT_LEFT, -1, title_size, Color(COLOR_AMBER.r, COLOR_AMBER.g, COLOR_AMBER.b, title_alpha))
+		draw_string(font, Vector2(viewport_size.x * 0.5 - title_width * 0.5, viewport_size.y * 0.30), title, HORIZONTAL_ALIGNMENT_LEFT, -1, title_size, Color(COLOR_AMBER.r, COLOR_AMBER.g, COLOR_AMBER.b, title_alpha))
 
 
 func _draw_clock_arc(viewport_size: Vector2) -> void:
@@ -882,7 +905,7 @@ func _ease_in_out_cubic(t: float) -> float:
 # =============================================================================
 
 func _go_to_menu() -> void:
-	get_tree().change_scene_to_file("res://scenes/MenuPrincipal.tscn")
+	PixelTransition.transition_to("res://scenes/MenuPrincipal.tscn")
 
 # =============================================================================
 # AUDIO

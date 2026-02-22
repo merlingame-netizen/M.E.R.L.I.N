@@ -14,7 +14,7 @@ Systeme de choix narratifs par cartes, ou chaque carte presente un scenario et l
 - **Equilibre constant**: Ressources a maintenir
 
 ### Inspiration
-- **Reigns**: Swipe cards, 4 jauges, mort si 0 ou max
+- **Card-based narrative games**: Swipe cards, gauges, death if extreme
 - **Gnosia**: Narration emergente, relations
 - **Slay the Spire**: Roguelite structure, meta progression
 

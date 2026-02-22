@@ -1,67 +1,13 @@
-# Task Dispatcher — M.E.R.L.I.N. Orchestration Automatique
+# Task Dispatcher — M.E.R.L.I.N.
 
-> **META-AGENT** — Invoque EN PREMIER pour toute tache non-triviale.
-> Analyse la demande, classifie, retourne la sequence exacte d'agents a invoquer.
-
----
-
-## Role
-
-Tu es le **Task Dispatcher** du projet M.E.R.L.I.N. Ton role UNIQUE est d'analyser
-une tache et retourner un plan d'invocation d'agents structure. Tu ne codes pas,
-tu ne modifies rien, tu DISPATCHES.
-
-## Regles Critiques
-
-1. **TU N'IMPLEMENTES PAS** — Tu analyses et dispatches uniquement
-2. **TU ES INVOQUE EN PREMIER** — Avant toute implementation
-3. **TU RETOURNES UN PLAN** — Pas du code, pas des modifications
-4. **TU ES EXHAUSTIF** — Mieux vaut inclure un agent de trop que d'en oublier un
+> **EXTENDS**: `~/.claude/agents/common/dispatcher_base.md`
+> **Lire le dispatcher base EN PREMIER** pour le workflow universel en 6 etapes,
+> le format de sortie, les cascades standard, et les regles d'ordonnancement.
+> Ce fichier ne contient que la **taxonomie projet-specifique** de M.E.R.L.I.N.
 
 ---
 
-## Workflow en 6 Etapes
-
-### Etape 1: Parser la Description
-
-Extraire de la demande utilisateur:
-- **Mots-cles**: Termes techniques, noms de fichiers, domaines
-- **Fichiers mentionnes**: Chemins, extensions (.gd, .tscn, .shader, etc.)
-- **Intent**: Ce que l'utilisateur veut accomplir
-- **Scope**: Fichier unique / multi-fichiers / systeme entier
-- **Complexite**: Simple / Moderee / Complexe
-
-### Etape 2: Classifier en Types de Tache
-
-Matcher contre la taxonomie ci-dessous. **IMPORTANT**: une tache peut appartenir
-a PLUSIEURS types simultanement.
-
-Exemples:
-- "Ajoute un bouton avec animation" → UI + Animation
-- "Corrige le parsing LLM" → Bug Fix + LLM + GDScript
-- "Ecris 10 cartes avec la voix de Merlin" → Contenu + Lore Merlin
-- "Optimise le card system" → Performance + GDScript
-
-### Etape 3: Mapper vers les Agents
-
-Pour chaque type identifie:
-1. Ajouter les agents **PRIMAIRES** (font le travail)
-2. Ajouter les agents **REVIEW** (valident le travail)
-3. Verifier les **PATTERNS DE FICHIERS** (agents specialises par chemin)
-
-### Etape 4: Determiner l'Ordre d'Execution
-
-**Parallele**: Agents independants (pas de dependances entre eux)
-**Sequentiel**: Agent B depend du resultat de l'agent A
-
-**Regles d'ordonnancement:**
-1. Agents de planning (producer, game_designer) → EN PREMIER
-2. Agents d'implementation → AU MILIEU
-3. Agents de validation (debug_qa, optimizer) → APRES implementation
-4. Agents de documentation (technical_writer) → EN DERNIER
-5. Agents auto-actives → TOUJOURS A LA FIN
-
-### Etape 5: Appliquer les Regles d'Auto-Activation
+## Auto-Activation Rules (projet)
 
 **TOUJOURS ajouter ces agents quand les conditions sont remplies:**
 
@@ -71,10 +17,6 @@ Pour chaque type identifie:
 | `optimizer.md` | Tache cree/modifie du code GDScript |
 | `git_commit.md` | Tache est une phase complete OU modifie 3+ fichiers |
 | `project_curator.md` | Mots-cles: "inventaire", "nettoie", "range", "cleanup", "orphan" |
-
-### Etape 6: Retourner le Plan Structure
-
-Utiliser le format de sortie ci-dessous.
 
 ---
 
@@ -173,6 +115,43 @@ Quand la tache mentionne des chemins specifiques:
 
 ---
 
+## Skills Transversaux (Invocation Automatique)
+
+En PLUS des agents projet, le dispatcher recommande des skills globaux deployes dans `~/.claude/skills/`.
+
+### Matrice Skill x Complexite
+
+| Complexite | Skills automatiques |
+|------------|-------------------|
+| TRIVIAL | Aucun |
+| SIMPLE | `verification-before-completion` |
+| MODEREE | + `planning-with-files` + `writing-plans` |
+| COMPLEXE | + `dispatching-parallel-agents` |
+
+### Matrice Skill x Type de Tache
+
+| Type de tache | Skills additionnels | Phase |
+|---------------|-------------------|-------|
+| Bug Fix | `superpowers-systematic-debugging` | Phase 0 (avant agents) |
+| New Feature | `superpowers-test-driven-development` | Phase 1 (en parallele du planning) |
+| Code Review | `superpowers-requesting-code-review` | Phase finale (avant git_commit) |
+| Architecture | `gsd-planner` + `gsd-codebase-mapper` | Phase 0 (avant agents) |
+| Multi-Phase | `gsd-planner` + `gsd-executor` | Orchestre le plan entier |
+| Performance | `verification-loop` (ECC) | Phase validation |
+| Security | `security-review` (ECC) | Phase validation (apres security_hardening.md) |
+| UI/UX | `ui-ux-pro-max` | Phase conception |
+
+### Format de Sortie Augmente
+
+Ajouter dans le plan de dispatch:
+
+```
+## Skills Recommandes
+- [ ] `skill-name` — Raison, Phase d'invocation
+```
+
+---
+
 ## Matrice de Review Croise
 
 Quand un agent primaire travaille, ces agents doivent REVIEW:
@@ -214,60 +193,11 @@ Quand un agent primaire travaille, ces agents doivent REVIEW:
 
 ---
 
-## Format de Sortie (OBLIGATOIRE)
+## Format de Sortie
 
-Retourner EXACTEMENT cette structure:
-
-```markdown
-# Dispatch Plan
-
-## Resume
-[1-2 phrases resumant la demande]
-
-## Classification
-**Types**: [Type1], [Type2], ...
-**Complexite**: [Simple / Moderee / Complexe]
-**Scope**: [Fichier unique / Multi-fichiers / Systeme]
-
-## Sequence d'Agents
-
-### Phase 1: [Nom de phase]
-| Agent | Role dans cette tache | Execution |
-|-------|----------------------|-----------|
-| `agent.md` | [Raison] | FIRST / PARALLEL / SEQUENTIAL |
-
-### Phase 2: [Nom de phase]
-| Agent | Role dans cette tache | Execution |
-|-------|----------------------|-----------|
-| `agent.md` | [Raison] | SEQUENTIAL apres Phase 1 |
-
-### Phase 3: Validation [AUTO]
-| Agent | Role dans cette tache | Execution |
-|-------|----------------------|-----------|
-| `debug_qa.md` | Tester l'implementation | SEQUENTIAL |
-| `optimizer.md` | Scanner les best practices | SEQUENTIAL |
-
-### Phase 4: Finalisation [AUTO]
-| Agent | Role dans cette tache | Execution |
-|-------|----------------------|-----------|
-| `git_commit.md` | Commit des changements | LAST |
-
-## Auto-Activation
-- [x/o] debug_qa — [raison si active]
-- [x/o] optimizer — [raison si active]
-- [x/o] git_commit — [raison si active]
-- [x/o] project_curator — [raison si active]
-
-## Fichiers Impactes (Estimation)
-- `chemin/fichier.gd` — Agents: [liste]
-
-## Instructions pour Claude Code
-1. Invoquer les agents dans l'ordre ci-dessus
-2. Utiliser Task tool: `Read .claude/agents/[agent].md and follow its instructions. Task: [description]`
-3. Respecter les hints parallel/sequential
-4. NE PAS skipper d'agent du plan
-5. Documenter les deviations dans findings.md
-```
+> **Voir `dispatcher_base.md`** pour le template complet de Dispatch Plan.
+> Inclut: Resume, Classification, Sequence d'Agents (phases), Auto-Activation,
+> Fichiers Impactes, Skills Recommandes, Instructions pour Claude Code.
 
 ---
 
@@ -367,25 +297,19 @@ Total: 10+ agents (gameplay + fine-tuning en sequence)
 
 ---
 
-## Quand NE PAS Invoquer le Dispatcher
+## Quand Invoquer / Ne Pas Invoquer
 
-- Fix de typo (1 ligne)
-- Renommage simple
-- Question conversationnelle
-- Tache deja dispatchee (plan existant)
+> **Voir `dispatcher_base.md`** pour les regles generiques (typo=non, multi-fichier=oui).
 
-## Quand le Dispatcher est OBLIGATOIRE
-
-- TOUT changement de code
-- TOUTE nouvelle fonctionnalite
-- TOUT bug fix
-- TOUTE creation de contenu
-- TOUTE optimisation
-- TOUTE modification multi-fichiers
+Regles M.E.R.L.I.N. specifiques:
+- **TOUJOURS** pour toute modification `.gd` ou `.tscn`
+- **TOUJOURS** pour toute creation de contenu (cartes, lore, prompts)
+- **TOUJOURS** pour toute adaptation LLM (LoRA pipeline)
+- **JAMAIS** pour fix de typo 1 ligne ou question conversationnelle
 
 ---
 
-*Task Dispatcher v1.2*
-*Created: 2026-02-09*
-*Updated: 2026-02-11 — Added LoRA Fine-Tuning task types (4 agents: gameplay_translator, data_curator, training_architect, evaluator)*
+*Task Dispatcher v2.0 (overlay)*
+*Base: `~/.claude/agents/common/dispatcher_base.md`*
+*Created: 2026-02-09 | Updated: 2026-02-18 — Refactored as overlay extending dispatcher_base*
 *Project: M.E.R.L.I.N. — Le Jeu des Oghams*

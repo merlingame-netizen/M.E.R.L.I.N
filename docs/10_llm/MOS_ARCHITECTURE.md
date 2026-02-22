@@ -50,8 +50,8 @@ Le MOS transforme Merlin d'un simple generateur de texte en une **intelligence n
 │  │                                                                      │  │
 │  │    FastRoute → Template Engine → LLM Client → Validator → Output    │  │
 │  │         ↓             ↓              ↓            ↓                 │  │
-│  │    Instant       Cached          Qwen 3B     Sanitize              │  │
-│  │    Response      Templates       Generate    + Clamp                │  │
+│  │    Instant       Cached          Qwen 2.5-3B  Sanitize             │  │
+│  │    Response      Templates       Generate     + Clamp               │  │
 │  │                                                                      │  │
 │  │    ┌──────────────────────────────────────────────────────────┐     │  │
 │  │    │              FALLBACK POOL (Always Ready)                 │     │  │

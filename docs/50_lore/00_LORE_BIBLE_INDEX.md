@@ -40,6 +40,7 @@ Ce que le joueur voit des le debut. Le monde tel qu'il apparait.
 | 11 | **11_LES_PNJ.md** | 12 personnages recurrents, arcs, dialogues, vocabulaire breton | COMPLET | ~550 |
 | 12 | **12_LES_INDICES.md** | Catalogue de hints par palier S0-S4 (index vers 4 docs source) | COMPLET | ~110 |
 | 13 | **13_GARDES-FOU.md** | Regles de revelation, mots interdits, tonalite (index vers 2 docs source) | COMPLET | ~100 |
+| 14 | **14_BESTIAIRE_BROCELIANDE.md** | Catalogue complet des rencontres: PNJ, creatures, Anciens, Oghams, matrice biome | COMPLET | ~700 |
 
 ### Documents Supplementaires (non-numerotes)
 
@@ -92,9 +93,10 @@ Ce que le joueur voit des le debut. Le monde tel qu'il apparait.
 - Bestiole (06_BESTIOLE) = canal des Oghams (07_OGHAMS) = fragment d'Awen (COSMOLOGIE_CACHEE)
 - Le Voyageur (05_VOYAGEUR) = Tyst/Temoin (COSMOLOGIE_CACHEE) = pont entre mondes
 - Merlin porte 18 heritages (07_OGHAMS) + triple nature (MERLIN_TRUE_NATURE)
+- Bestiaire (14_BESTIAIRE) consolide PNJ + creatures + Anciens + matrice de rencontres
 
 ---
 
 *Lore Bible v3.0 — Night Mode Iterations 1-3 + Enrichissement Celtic Foundation*
 *Updated: 2026-02-08*
-*Total corpus: ~12,000+ lignes de lore (14 docs numerotes + docs source detailles)*
+*Total corpus: ~12,700+ lignes de lore (15 docs numerotes + docs source detailles)*

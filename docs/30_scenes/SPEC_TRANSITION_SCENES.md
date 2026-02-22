@@ -1,44 +1,47 @@
-# SPEC: Scenes de Transition — Eveil, Antre, Biome
+﻿# SPEC (LEGACY): Scenes de Transition - Eveil, Antre, Biome
 ## Specification Complete d'Interaction et de Gameplay
 
-*Version: 1.0 — 2026-02-08*
+*Version: 1.1 - 2026-02-13*
 *Auteur: Game Designer Agent*
 
 ---
 
 > *"Tu n'es pas d'ici. Et pourtant, d'ou tu viens n'a aucune importance.*
 > *Ce qui compte, c'est que tu sois venu."*
-> — Merlin, Trust T0
+> â€” Merlin, Trust T0
 
 ---
 
 ## VUE D'ENSEMBLE
 
+> STATUT DOC: specification legacy conservee pour reference.
+> Source de verite runtime: `docs/30_scenes/CANONICAL_ONBOARDING_FLOW.md`.
+
 ### Probleme
 
-Le flux actuel saute directement de `IntroMerlinDialogue` (questionnaire) vers `TriadeGame` (gameplay). Le joueur recoit sa classe, puis se retrouve immediatement en jeu sans comprendre:
+Le flux actuel saute directement de `IntroMerlinDialogue` (questionnaire) vers `MerlinGame` (gameplay). Le joueur recoit sa classe, puis se retrouve immediatement en jeu sans comprendre:
 - Ou il est
 - Pourquoi il est la
 - Qui est Bestiole
 - Quel est son objectif
 - Dans quel biome il va jouer
 
-### Solution: 3 scenes de transition
+### Flux canonique runtime (onboarding + pre-run)
 
 ```
-IntroMerlinDialogue ──► SceneEveil ──► SceneAntreMerlin ──► TransitionBiome ──► TriadeGame
-   (questionnaire)     (arrivee)     (briefing/compagnon)   (voyage/carte)     (gameplay)
+IntroPersonalityQuiz -> SceneRencontreMerlin -> HubAntre -> TransitionBiome -> MerlinGame
+   (questionnaire)      (eveil+antre fusionnes) (preparation run) (voyage/carte) (gameplay)
 ```
 
 ### Durees cibles
 
 | Scene | Duree min | Duree typique | Duree max | Skippable |
 |-------|-----------|---------------|-----------|-----------|
-| SceneEveil | 20s | 45s | 90s | Apres 1ere visite (flag) |
-| SceneAntreMerlin | 60s | 120s | 180s | Non (interactions requises) |
+| SceneRencontreMerlin | 90s | 150s | 240s | Apres 1ere visite (flag) |
+| HubAntre | Variable | 45s | 300s+ | Non |
 | TransitionBiome | 8s | 15s | 25s | Tap pour accelerer |
 
-**Duree totale transition: ~3 minutes** (premiere fois), ~1 minute (revisites).
+**Duree totale onboarding+pre-run: ~3-6 minutes** (premiere fois), puis variable selon choix joueur.
 
 ---
 
@@ -83,13 +86,13 @@ GameManager.run["eveil_timestamp"] = int        # moment d'arrivee (pour duree t
 GameManager.run["traveler_profile"]["aspect_dominant"] = String  # "Corps"|"Ame"|"Monde"
 ```
 
-### Ce que TriadeGame recoit
+### Ce que MerlinGame recoit
 
-TriadeGame lit `GameManager.run` au demarrage. Les nouvelles donnees sont:
-- `biome` — pour theming des cartes, couleurs, atmosphere
-- `bestiole_met` — pour sauter l'intro Bestiole si deja vue
-- `mission_briefing` — pour afficher en UI
-- `aspect_dominant` — pour orienter la generation LLM des premieres cartes
+MerlinGame lit `GameManager.run` au demarrage. Les nouvelles donnees sont:
+- `biome` â€” pour theming des cartes, couleurs, atmosphere
+- `bestiole_met` â€” pour sauter l'intro Bestiole si deja vue
+- `mission_briefing` â€” pour afficher en UI
+- `aspect_dominant` â€” pour orienter la generation LLM des premieres cartes
 
 ---
 
@@ -97,53 +100,53 @@ TriadeGame lit `GameManager.run` au demarrage. Les nouvelles donnees sont:
 
 ### Concept Narratif
 
-Ecran noir. Le joueur "traverse la Membrane" et arrive dans le monde de Broceliande. Merlin parle dans le noir avant que la lumiere ne revienne. C'est l'equivalent d'un "reveil" — le Voyageur ouvre les yeux pour la premiere fois.
+Ecran noir. Le joueur "traverse la Membrane" et arrive dans le monde de Broceliande. Merlin parle dans le noir avant que la lumiere ne revienne. C'est l'equivalent d'un "reveil" â€” le Voyageur ouvre les yeux pour la premiere fois.
 
 **Ton**: Mysterieux, intime, desorientant puis rassurant.
 
 ### Fichier scene
 
-`res://scenes/SceneEveil.tscn` — root: `Control` (plein ecran)
+`res://archive/scenes/SceneEveil.tscn` (legacy, non runtime) â€” root: `Control` (plein ecran)
 
 ### Structure de nodes
 
 ```
 SceneEveil (Control, PRESET_FULL_RECT)
-├── Background (ColorRect, noir #000000)
-├── VoiceText (RichTextLabel, centre vertical)
-├── SkipHint (Label, coin bas-droit, "Toucher pour continuer")
-├── LightOverlay (ColorRect, blanc, alpha=0)
-├── Audio
-│   ├── AmbianceDrone (AudioStreamPlayer)
-│   ├── VoiceBlip (AudioStreamPlayer)
-│   └── SfxAwaken (AudioStreamPlayer)
-└── Particles (GPUParticles2D, particules flottantes subtiles)
+â”œâ”€â”€ Background (ColorRect, noir #000000)
+â”œâ”€â”€ VoiceText (RichTextLabel, centre vertical)
+â”œâ”€â”€ SkipHint (Label, coin bas-droit, "Toucher pour continuer")
+â”œâ”€â”€ LightOverlay (ColorRect, blanc, alpha=0)
+â”œâ”€â”€ Audio
+â”‚   â”œâ”€â”€ AmbianceDrone (AudioStreamPlayer)
+â”‚   â”œâ”€â”€ VoiceBlip (AudioStreamPlayer)
+â”‚   â””â”€â”€ SfxAwaken (AudioStreamPlayer)
+â””â”€â”€ Particles (GPUParticles2D, particules flottantes subtiles)
 ```
 
 ### Sequence d'evenements
 
 ```
 PHASE 1: LE NOIR (0s - 10s)
-─────────────────────────────
+â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 [0.0s] Ecran completement noir
 [0.5s] Drone ambiant demarre (son grave, distant)
 [2.0s] Particules tres subtiles apparaissent (lucioles dans le noir)
 [3.0s] Texte typewriter: dialogue_merlin_eveil[0] (adapte a la classe)
-[---]  Joueur tape → texte suivant (ou auto-avance apres 5s)
+[---]  Joueur tape â†’ texte suivant (ou auto-avance apres 5s)
 
 PHASE 2: LA MEMBRANE (10s - 25s)
-─────────────────────────────────
+â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 [---]  Texte typewriter: dialogue_merlin_eveil[1..3]
 [---]  Effet visuel: ondulation subtile du fond (shader wave)
 [---]  Les particules s'intensifient progressivement
 [---]  Le drone ambiant monte en intensite
 
 PHASE 3: L'EVEIL (25s - 45s)
-─────────────────────────────
+â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 [---]  Dernier texte de Merlin
-[---]  Flash blanc progressif (LightOverlay alpha: 0 → 0.8 en 2s)
+[---]  Flash blanc progressif (LightOverlay alpha: 0 â†’ 0.8 en 2s)
 [---]  Son de "traversee" (SfxAwaken)
-[---]  Flash retombe (alpha 0.8 → 0 en 1s)
+[---]  Flash retombe (alpha 0.8 â†’ 0 en 1s)
 [---]  Transition vers SceneAntreMerlin
 ```
 
@@ -204,7 +207,7 @@ GameManager.flags["eveil_seen"] = true
 - **Premiere visite**: Non skippable (aucun hint de skip)
 - **Revisites** (`GameManager.flags["eveil_seen"] == true`):
   - Affiche "Toucher 2s pour passer" en bas
-  - Long press 2s → fade to white → transition directe
+  - Long press 2s â†’ fade to white â†’ transition directe
 
 ### Timing et Pacing
 
@@ -234,62 +237,62 @@ L'antre de Merlin. Lieu chaud, intime, encombre de livres et d'artefacts. C'est 
 
 ### Fichier scene
 
-`res://scenes/SceneAntreMerlin.tscn` — root: `Control` (plein ecran)
+`res://archive/scenes/SceneAntreMerlin.tscn` (legacy, non runtime) â€” root: `Control` (plein ecran)
 
 ### Structure de nodes
 
 ```
 SceneAntreMerlin (Control, PRESET_FULL_RECT)
-├── Background (TextureRect, illustration antre)
-├── CharacterLayer
-│   ├── MerlinSprite (TextureRect ou AnimatedSprite2D)
-│   └── BestioleSprite (TextureRect ou AnimatedSprite2D)
-├── DialogueCard (Panel, meme style que IntroMerlinDialogue)
-│   ├── SpeakerName (Label)
-│   ├── DialogueText (RichTextLabel, typewriter)
-│   └── ContinueHint (Label, "Toucher pour continuer")
-├── MapOverlay (Control, invisible au debut)
-│   ├── MapBackground (TextureRect, carte Broceliande stylisee)
-│   ├── BiomeNodes (Control)
-│   │   ├── BiomeDot_broceliande (TextureButton)
-│   │   ├── BiomeDot_landes (TextureButton)
-│   │   ├── BiomeDot_cotes (TextureButton)
-│   │   ├── BiomeDot_villages (TextureButton)
-│   │   ├── BiomeDot_cercles (TextureButton)
-│   │   ├── BiomeDot_marais (TextureButton)
-│   │   └── BiomeDot_collines (TextureButton)
-│   ├── BiomeInfoPanel (Panel, detail du biome selectionne)
-│   │   ├── BiomeName (Label)
-│   │   ├── BiomeDescription (RichTextLabel)
-│   │   └── BiomeConfirmButton (Button, "Partir vers...")
-│   └── AssignedBiomeHighlight (Sprite2D, halo dore)
-├── MissionCard (Panel, invisible au debut)
-│   ├── MissionTitle (Label)
-│   ├── MissionText (RichTextLabel)
-│   └── MissionAcceptButton (Button)
-├── Audio
-│   ├── AmbianceAntre (AudioStreamPlayer, feu de cheminee)
-│   ├── SfxBestioleAppear (AudioStreamPlayer)
-│   ├── SfxMapReveal (AudioStreamPlayer)
-│   └── VoiceBlip (AudioStreamPlayer)
-└── AspectReveal (Control, invisible)
-    ├── AspectIcon (TextureRect)
-    ├── AspectName (Label)
-    └── AspectDescription (RichTextLabel)
+â”œâ”€â”€ Background (TextureRect, illustration antre)
+â”œâ”€â”€ CharacterLayer
+â”‚   â”œâ”€â”€ MerlinSprite (TextureRect ou AnimatedSprite2D)
+â”‚   â””â”€â”€ BestioleSprite (TextureRect ou AnimatedSprite2D)
+â”œâ”€â”€ DialogueCard (Panel, meme style que IntroMerlinDialogue)
+â”‚   â”œâ”€â”€ SpeakerName (Label)
+â”‚   â”œâ”€â”€ DialogueText (RichTextLabel, typewriter)
+â”‚   â””â”€â”€ ContinueHint (Label, "Toucher pour continuer")
+â”œâ”€â”€ MapOverlay (Control, invisible au debut)
+â”‚   â”œâ”€â”€ MapBackground (TextureRect, carte Broceliande stylisee)
+â”‚   â”œâ”€â”€ BiomeNodes (Control)
+â”‚   â”‚   â”œâ”€â”€ BiomeDot_broceliande (TextureButton)
+â”‚   â”‚   â”œâ”€â”€ BiomeDot_landes (TextureButton)
+â”‚   â”‚   â”œâ”€â”€ BiomeDot_cotes (TextureButton)
+â”‚   â”‚   â”œâ”€â”€ BiomeDot_villages (TextureButton)
+â”‚   â”‚   â”œâ”€â”€ BiomeDot_cercles (TextureButton)
+â”‚   â”‚   â”œâ”€â”€ BiomeDot_marais (TextureButton)
+â”‚   â”‚   â””â”€â”€ BiomeDot_collines (TextureButton)
+â”‚   â”œâ”€â”€ BiomeInfoPanel (Panel, detail du biome selectionne)
+â”‚   â”‚   â”œâ”€â”€ BiomeName (Label)
+â”‚   â”‚   â”œâ”€â”€ BiomeDescription (RichTextLabel)
+â”‚   â”‚   â””â”€â”€ BiomeConfirmButton (Button, "Partir vers...")
+â”‚   â””â”€â”€ AssignedBiomeHighlight (Sprite2D, halo dore)
+â”œâ”€â”€ MissionCard (Panel, invisible au debut)
+â”‚   â”œâ”€â”€ MissionTitle (Label)
+â”‚   â”œâ”€â”€ MissionText (RichTextLabel)
+â”‚   â””â”€â”€ MissionAcceptButton (Button)
+â”œâ”€â”€ Audio
+â”‚   â”œâ”€â”€ AmbianceAntre (AudioStreamPlayer, feu de cheminee)
+â”‚   â”œâ”€â”€ SfxBestioleAppear (AudioStreamPlayer)
+â”‚   â”œâ”€â”€ SfxMapReveal (AudioStreamPlayer)
+â”‚   â””â”€â”€ VoiceBlip (AudioStreamPlayer)
+â””â”€â”€ AspectReveal (Control, invisible)
+    â”œâ”€â”€ AspectIcon (TextureRect)
+    â”œâ”€â”€ AspectName (Label)
+    â””â”€â”€ AspectDescription (RichTextLabel)
 ```
 
 ### Phases de la scene
 
 ```
 PHASE A: ACCUEIL MERLIN (0s - 30s)
-───────────────────────────────────
+â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 [0.0s]  Fade in sur l'antre de Merlin
 [1.0s]  MerlinSprite idle animation
 [2.0s]  Dialogue Merlin: accueil personnalise (utilise chronicle_name + classe)
 [---]   3-4 lignes de dialogue, tap pour avancer
 
 PHASE B: RENCONTRE BESTIOLE (30s - 60s)
-────────────────────────────────────────
+â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 [---]   Merlin annonce Bestiole
 [---]   SfxBestioleAppear joue
 [---]   BestioleSprite entre en scene (animation: timide, puis approche)
@@ -298,7 +301,7 @@ PHASE B: RENCONTRE BESTIOLE (30s - 60s)
 [---]   Bestiole reagit (petit bounce ou trille)
 
 PHASE C: ASPECT DOMINANT (60s - 80s)
-─────────────────────────────────────
+â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 [---]   Merlin observe le Voyageur
 [---]   AspectReveal apparait avec animation
 [---]   Revele l'aspect dominant (Corps/Ame/Monde) base sur le profil
@@ -306,7 +309,7 @@ PHASE C: ASPECT DOMINANT (60s - 80s)
 [---]   Merlin: "Ton [animal] guide tes pas."
 
 PHASE D: CARTE DES BIOMES (80s - 140s)
-───────────────────────────────────────
+â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 [---]   Merlin: "Laisse-moi te montrer ce qui reste..."
 [---]   MapOverlay fade in (animation reveal de la carte)
 [---]   Les 7 biomes apparaissent un par un (stagger 0.3s chacun)
@@ -317,7 +320,7 @@ PHASE D: CARTE DES BIOMES (80s - 140s)
 [---]   Confirmation du biome
 
 PHASE E: MISSION BRIEFING (140s - 170s)
-────────────────────────────────────────
+â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 [---]   MapOverlay fade out
 [---]   MissionCard fade in
 [---]   Merlin donne la mission (adaptee au biome choisi)
@@ -325,7 +328,7 @@ PHASE E: MISSION BRIEFING (140s - 170s)
 [---]   Transition vers TransitionBiome
 ```
 
-### Dialogues de Merlin (Phase A — Accueil)
+### Dialogues de Merlin (Phase A â€” Accueil)
 
 ```gdscript
 # %s = chronicle_name, classe determinee
@@ -353,7 +356,7 @@ const ACCUEIL_DIALOGUES := {
 }
 ```
 
-### Dialogues de Merlin (Phase B — Bestiole)
+### Dialogues de Merlin (Phase B â€” Bestiole)
 
 ```gdscript
 const BESTIOLE_DIALOGUES := [
@@ -365,7 +368,7 @@ const BESTIOLE_DIALOGUES := [
 ]
 ```
 
-### Dialogues de Merlin (Phase C — Aspect Dominant)
+### Dialogues de Merlin (Phase C â€” Aspect Dominant)
 
 ```gdscript
 const ASPECT_DIALOGUES := {
@@ -539,7 +542,7 @@ const BIOMES := {
 1. Si le joueur tape sur un biome different du biome assigne
 2. Le BiomeInfoPanel affiche le detail + bouton "Partir vers [biome]"
 3. Merlin reagit: "Hmm. [biome] au lieu de [biome_assigne]? Ton choix, Voyageur."
-4. Le joueur confirme → le biome change
+4. Le joueur confirme â†’ le biome change
 5. **Note**: aucun malus/bonus. Le choix est purement narratif.
 
 **Confirmation:**
@@ -565,25 +568,25 @@ func _on_biome_confirmed(biome_id: String) -> void:
 
 ### Mecanique: Oghams de Depart (Bestiole)
 
-Les 3 Oghams starter (beith, luis, quert) sont deja definis dans `MerlinConstants.OGHAM_STARTER_SKILLS`. La scene ne modifie pas les skills — elle les **presente** narrativement.
+Les 3 Oghams starter (beith, luis, quert) sont deja definis dans `MerlinConstants.OGHAM_STARTER_SKILLS`. La scene ne modifie pas les skills â€” elle les **presente** narrativement.
 
 **Presentation visuelle:**
 
 ```
-┌──────────────────────────────────────┐
-│  Bestiole porte 3 Oghams:           │
-│                                      │
-│  ◆ Beith (Bouleau)  — Revelation    │
-│    "Revele les effets d'un choix"    │
-│                                      │
-│  ◆ Luis (Sorbier)   — Protection    │
-│    "Reduit les degats de 30%"        │
-│                                      │
-│  ◆ Quert (Pommier)  — Guerison      │
-│    "Soigne l'aspect le plus bas"     │
-│                                      │
-│  [Compris]                           │
-└──────────────────────────────────────┘
+â”Œâ”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”
+â”‚  Bestiole porte 3 Oghams:           â”‚
+â”‚                                      â”‚
+â”‚  â—† Beith (Bouleau)  â€” Revelation    â”‚
+â”‚    "Revele les effets d'un choix"    â”‚
+â”‚                                      â”‚
+â”‚  â—† Luis (Sorbier)   â€” Protection    â”‚
+â”‚    "Reduit les degats de 30%"        â”‚
+â”‚                                      â”‚
+â”‚  â—† Quert (Pommier)  â€” Guerison      â”‚
+â”‚    "Soigne l'aspect le plus bas"     â”‚
+â”‚                                      â”‚
+â”‚  [Compris]                           â”‚
+â””â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”˜
 ```
 
 Ce n'est qu'un affichage informatif. Pas de choix. Les skills sont deja equipes dans `state.bestiole.skills_equipped`.
@@ -648,7 +651,7 @@ func _on_mission_accepted() -> void:
 
     GameManager.run["mission_briefing"] = template["text"]
 
-    # Pre-configure la mission dans le store pour TriadeGame
+    # Pre-configure la mission dans le store pour MerlinGame
     # (sera formellement lancee par TRIADE_START_RUN)
     GameManager.run["mission_template"] = {
         "type": template["mission_type"],
@@ -657,7 +660,7 @@ func _on_mission_accepted() -> void:
     }
 ```
 
-### Game State Changes (complet, Phase A → E)
+### Game State Changes (complet, Phase A â†’ E)
 
 ```gdscript
 # Phase A
@@ -703,37 +706,37 @@ Animation de voyage entre l'antre de Merlin et le biome choisi. La camera "survo
 
 ### Fichier scene
 
-`res://scenes/TransitionBiome.tscn` — root: `Control` (plein ecran)
+`res://scenes/TransitionBiome.tscn` â€” root: `Control` (plein ecran)
 
 ### Structure de nodes
 
 ```
 TransitionBiome (Control, PRESET_FULL_RECT)
-├── MapCanvas (TextureRect, carte de Broceliande vue d'en haut)
-├── TravelPath (Line2D, trace du chemin)
-├── TravelerIcon (Sprite2D, petite icone qui se deplace sur la carte)
-├── NarrativeOverlay (Panel, en bas de l'ecran)
-│   ├── NarrativeText (RichTextLabel)
-│   └── BiomeArrivalName (Label, apparait a la fin)
-├── FogOfWar (ColorRect + shader, brume autour du chemin)
-├── Audio
-│   ├── TravelMusic (AudioStreamPlayer, theme de voyage)
-│   └── SfxArrival (AudioStreamPlayer)
-└── SkipHint (Label, "Toucher pour accelerer")
+â”œâ”€â”€ MapCanvas (TextureRect, carte de Broceliande vue d'en haut)
+â”œâ”€â”€ TravelPath (Line2D, trace du chemin)
+â”œâ”€â”€ TravelerIcon (Sprite2D, petite icone qui se deplace sur la carte)
+â”œâ”€â”€ NarrativeOverlay (Panel, en bas de l'ecran)
+â”‚   â”œâ”€â”€ NarrativeText (RichTextLabel)
+â”‚   â””â”€â”€ BiomeArrivalName (Label, apparait a la fin)
+â”œâ”€â”€ FogOfWar (ColorRect + shader, brume autour du chemin)
+â”œâ”€â”€ Audio
+â”‚   â”œâ”€â”€ TravelMusic (AudioStreamPlayer, theme de voyage)
+â”‚   â””â”€â”€ SfxArrival (AudioStreamPlayer)
+â””â”€â”€ SkipHint (Label, "Toucher pour accelerer")
 ```
 
 ### Sequence d'evenements
 
 ```
 PHASE 1: DEPART (0s - 3s)
-─────────────────────────
+â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 [0.0s]  Carte visible, zoom sur l'antre de Merlin (centre)
 [0.5s]  TravelerIcon apparait a la position de l'antre
 [1.0s]  TravelMusic demarre (theme doux, celtique)
 [2.0s]  Camera commence a zoomer out doucement
 
 PHASE 2: VOYAGE (3s - 12s)
-──────────────────────────
+â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 [---]   TravelerIcon se deplace le long de TravelPath
 [---]   TravelPath se dessine progressivement (Line2D animated)
 [---]   FogOfWar s'ecarte sur le passage du voyageur
@@ -741,13 +744,13 @@ PHASE 2: VOYAGE (3s - 12s)
 [---]   Camera suit le TravelerIcon avec un leger lag
 
 PHASE 3: ARRIVEE (12s - 15s)
-─────────────────────────────
+â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 [---]   TravelerIcon arrive au biome
 [---]   Camera zoom sur le biome
 [---]   SfxArrival joue
 [---]   BiomeArrivalName apparait en grand (fade in + scale)
 [---]   Ecran fade vers le biome (couleur dominante du biome)
-[---]   Transition vers TriadeGame
+[---]   Transition vers MerlinGame
 ```
 
 ### Textes Narratifs de Voyage
@@ -830,11 +833,11 @@ func _generate_travel_path(biome_id: String) -> PackedVector2Array:
 ### Game State Changes
 
 ```gdscript
-# Aucun changement d'etat ici — tout est visuel
-# La scene ne fait que transitionner vers TriadeGame
+# Aucun changement d'etat ici â€” tout est visuel
+# La scene ne fait que transitionner vers MerlinGame
 
 func _on_transition_complete() -> void:
-    get_tree().change_scene_to_file("res://scenes/TriadeGame.tscn")
+    get_tree().change_scene_to_file("res://scenes/MerlinGame.tscn")
 ```
 
 ### Timing et Pacing
@@ -853,65 +856,65 @@ func _on_transition_complete() -> void:
 ### Scene Routing
 
 ```gdscript
-# Dans IntroMerlinDialogue._end_demo() — MODIFIER:
-# Ancien: NEXT_SCENE := "res://scenes/TriadeGame.tscn"
+# Dans IntroMerlinDialogue._end_demo() â€” MODIFIER:
+# Ancien: NEXT_SCENE := "res://scenes/MerlinGame.tscn"
 # Nouveau:
-const NEXT_SCENE := "res://scenes/SceneEveil.tscn"
+const NEXT_SCENE := "res://scenes/SceneRencontreMerlin.tscn"
 
-# Dans SceneEveil._on_eveil_complete():
-get_tree().change_scene_to_file("res://scenes/SceneAntreMerlin.tscn")
+# Dans SceneRencontreMerlin._on_scene_complete():
+get_tree().change_scene_to_file("res://scenes/HubAntre.tscn")
 
-# Dans SceneAntreMerlin._on_mission_accepted():
+# Dans HubAntre._commit_adventure_transition():
 get_tree().change_scene_to_file("res://scenes/TransitionBiome.tscn")
 
 # Dans TransitionBiome._on_transition_complete():
-get_tree().change_scene_to_file("res://scenes/TriadeGame.tscn")
+get_tree().change_scene_to_file("res://scenes/MerlinGame.tscn")
 ```
 
 ### Data Flow Diagram
 
 ```
 IntroMerlinDialogue
-│
-│  Ecrit dans GameManager.run:
-│  - chronicle_name
-│  - traveler_profile (class, traits, verbs, hooks)
-│  - merlin_memory
-│
-▼
+â”‚
+â”‚  Ecrit dans GameManager.run:
+â”‚  - chronicle_name
+â”‚  - traveler_profile (class, traits, verbs, hooks)
+â”‚  - merlin_memory
+â”‚
+â–¼
 SceneEveil
-│
-│  Ecrit dans GameManager:
-│  - run.eveil_timestamp
-│  - flags.eveil_seen
-│
-▼
+â”‚
+â”‚  Ecrit dans GameManager:
+â”‚  - run.eveil_timestamp
+â”‚  - flags.eveil_seen
+â”‚
+â–¼
 SceneAntreMerlin
-│
-│  Ecrit dans GameManager:
-│  - run.bestiole_met
-│  - run.traveler_profile.aspect_dominant
-│  - run.biome (id, name, gardien, ogham, season)
-│  - run.mission_briefing
-│  - run.mission_template
-│  - flags.antre_visited
-│
-▼
+â”‚
+â”‚  Ecrit dans GameManager:
+â”‚  - run.bestiole_met
+â”‚  - run.traveler_profile.aspect_dominant
+â”‚  - run.biome (id, name, gardien, ogham, season)
+â”‚  - run.mission_briefing
+â”‚  - run.mission_template
+â”‚  - flags.antre_visited
+â”‚
+â–¼
 TransitionBiome
-│
-│  Lit depuis GameManager.run:
-│  - biome (pour position, couleur, textes)
-│
-│  N'ecrit rien.
-│
-▼
-TriadeGame
-│
-│  Lit depuis GameManager.run:
-│  - biome → theming, card generation, atmosphere
-│  - mission_template → init mission dans MerlinStore
-│  - aspect_dominant → oriente les premieres cartes LLM
-│  - chronicle_name → affichage UI
+â”‚
+â”‚  Lit depuis GameManager.run:
+â”‚  - biome (pour position, couleur, textes)
+â”‚
+â”‚  N'ecrit rien.
+â”‚
+â–¼
+MerlinGame
+â”‚
+â”‚  Lit depuis GameManager.run:
+â”‚  - biome â†’ theming, card generation, atmosphere
+â”‚  - mission_template â†’ init mission dans MerlinStore
+â”‚  - aspect_dominant â†’ oriente les premieres cartes LLM
+â”‚  - chronicle_name â†’ affichage UI
 ```
 
 ---
@@ -928,8 +931,8 @@ TriadeGame
 
 | Scene | Ambiance | SFX |
 |-------|----------|-----|
-| SceneEveil | Drone grave (loop) | Blips voix, flash d'eveil |
-| SceneAntreMerlin | Feu de cheminee (loop) | Bestiole trille, map reveal, mission accept |
+| SceneRencontreMerlin | 90s | 150s | 240s | Apres 1ere visite (flag) |
+| HubAntre | Variable | 45s | 300s+ | Non |
 | TransitionBiome | Theme voyage (one-shot) | Arrivee |
 
 **Note**: Utiliser ACVoicebox pour tous les textes de Merlin si disponible (meme preset que IntroMerlinDialogue: robotic, low pitch 2.5).
@@ -979,7 +982,7 @@ TriadeGame
 ### Phase 4: Integration (1h)
 1. Modifier `IntroMerlinDialogue.NEXT_SCENE`
 2. Verifier le data flow GameManager.run
-3. Ajouter lecture des nouvelles donnees dans TriadeGameController
+3. Ajouter lecture des nouvelles donnees dans MerlinGameController
 4. Tester le flux complet bout en bout
 
 ---
@@ -998,6 +1001,9 @@ TriadeGame
 
 ---
 
-*Document de specification — M.E.R.L.I.N.*
+*Document de specification â€” M.E.R.L.I.N.*
 *Game Designer Agent*
-*Version: 1.0 — 2026-02-08*
+*Version: 1.1 - 2026-02-13*
+
+
+

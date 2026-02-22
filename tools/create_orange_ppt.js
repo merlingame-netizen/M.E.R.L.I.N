@@ -1,27 +1,39 @@
 /**
- * Générateur de PowerPoint conforme à la Charte Orange
- * Usage: node create_orange_ppt.js
+ * Generateur PowerPoint ISO template officiel Orange — v1 + Rich Components
  *
- * Ce script crée des présentations respectant strictement
- * la charte graphique Orange (brand.orange.com)
+ * Style v1 (fidele au Guide_Template_Orange_VoC_DEF_v2.pptx):
+ *   - Helvetica 75 Bold partout (Arial Bold fallback)
+ *   - Bullets en-dash U+2013 inline
+ *   - lineSpacingPercent 85-90%
+ *   - Pas de kerning force, pas de getLineHeight()
+ *
+ * Composants riches (extraits du guide PPT XML):
+ *   - Cards avec coins arrondis + bande orange optionnelle
+ *   - Info box avec bordure gauche orange
+ *   - Badges/pilules orange avec texte blanc
+ *   - Color swatches (grille de couleurs)
+ *   - Slide comparaison (2 panneaux cote a cote)
+ *   - Slide grille de cards (4 cards avec bande haute)
+ *
+ * Usage: node create_orange_ppt.js [noir|blanc]
  */
 
 const pptxgen = require('pptxgenjs');
+const path = require('path');
+const fs = require('fs');
 
 // ============================================
 // CHARTE ORANGE - COULEURS
 // ============================================
 const ORANGE_COLORS = {
-    // Couleurs principales (80% minimum)
     primary: {
-        orange: 'FF7900',      // Couleur emblématique
+        orange: 'FF7900',
         black: '000000',
         white: 'FFFFFF',
         grayDark: '595959',
         grayMedium: '8F8F8F',
         grayLight: 'D6D6D6'
     },
-    // Couleurs secondaires (20% maximum)
     secondary: {
         blue: '4BB4E6',
         green: '50BE87',
@@ -29,7 +41,6 @@ const ORANGE_COLORS = {
         yellow: 'FFD200',
         purple: 'A885D8'
     },
-    // Teintes claires (illustrations uniquement)
     light: {
         blue: 'B5E8F7',
         green: 'B8EBD6',
@@ -37,324 +48,863 @@ const ORANGE_COLORS = {
         purple: 'D9C2F0',
         yellow: 'FFF6B6'
     },
-    // Teintes foncées (illustrations uniquement)
     dark: {
         blue: '085EBD',
         green: '0A6E31',
         pink: 'FF8AD4',
         yellow: 'FFB400',
         purple: '492191'
+    },
+    bg: {
+        card: 'F5F5F5'      // Fond gris clair pour cards/info boxes (du guide PPT)
     }
 };
 
 // ============================================
-// CHARTE ORANGE - TYPOGRAPHIE
+// CHARTE ORANGE - TYPOGRAPHIE (v1 = 75 Bold partout)
 // ============================================
 const ORANGE_FONTS = {
-    title: 'Arial',           // Fallback pour Helvetica Neue Bold
-    body: 'Arial',            // Fallback pour Helvetica Neue Roman
-    // Règles:
-    // - Interlettrage: -20% (charSpacing dans pptxgen)
-    // - JAMAIS majuscules complètes
-    // - JAMAIS italique
-    // - Texte: noir, blanc ou orange uniquement
+    title: 'Helvetica 75 Bold',     // Partout (v1 style)
+    fallback: 'Arial'
 };
 
 // ============================================
-// STYLES PRÉDÉFINIS
+// POSITIONS OFFICIELLES (EMU -> inches, du guide PPT)
+// ============================================
+const POS = {
+    title:    { x: 0.344, y: 0.294, w: 9.315, h: 0.811 },
+    body:     { x: 0.344, y: 1.292, w: 9.312, h: 3.686 },
+    titleBig: { x: 0.344, y: 0.293, w: 5.282, h: 2.52 },
+    subtitle: { x: 0.344, y: 3.25,  w: 5.282, h: 0.85 },
+    sideText: { x: 6.343, y: 0.292, w: 3.313, h: 3.723 },
+    section:  { x: 0.343, y: 0.294, w: 6.668, h: 4.686 },
+    logo:     { x: 0.343, y: 4.63,  w: 0.67,  h: 0.67 },
+    slideNum: { x: 9.35,  y: 4.96,  w: 0.301, h: 0.366 },
+    colLeft:  { x: 0.343, y: 1.292, w: 4.34,  h: 3.686 },
+    colRight: { x: 5.321, y: 1.292, w: 4.336, h: 3.686 }
+};
+
+// Zone de securite: aucun element ne doit depasser ce Y
+const LOGO_SAFE_Y = 4.45;
+
+// ============================================
+// CONSTANTES VISUELLES (extraites du guide PPT XML)
+// ============================================
+const VISUAL = {
+    cardRadius: 0.04,        // Coins arrondis cards (adj val 2000 EMU)
+    swatchRadius: 0.08,      // Coins arrondis swatches (adj val 6000 EMU)
+    stripe: 0.06,            // Epaisseur bande orange (54864 EMU)
+    cardPadding: 0.15,       // Padding interne des cards
+    gap: 0.15                // Espacement entre elements
+};
+
+// ============================================
+// STYLES v1 (fideles au guide PPT)
 // ============================================
 const STYLES = {
-    title: {
+    contentTitle: {
         fontFace: ORANGE_FONTS.title,
-        fontSize: 36,
+        fontSize: 20,
         bold: true,
-        color: ORANGE_COLORS.primary.black,
-        charSpacing: -2  // Approximation -20%
+        color: ORANGE_COLORS.primary.orange,
+        lineSpacingPercent: 90,
+        shrinkText: true,
+        bullet: false
     },
-    subtitle: {
+    bigTitle: {
         fontFace: ORANGE_FONTS.title,
-        fontSize: 24,
+        fontSize: 55,
         bold: true,
-        color: ORANGE_COLORS.primary.orange
+        lineSpacingPercent: 85,
+        shrinkText: true,
+        bullet: false
     },
     body: {
-        fontFace: ORANGE_FONTS.body,
-        fontSize: 18,
-        color: ORANGE_COLORS.primary.black,
-        charSpacing: -2
+        fontFace: ORANGE_FONTS.title,
+        fontSize: 14,
+        bold: true,
+        lineSpacingPercent: 90,
+        shrinkText: true,
+        bullet: false,
+        paraSpaceBefore: 4,
+        paraSpaceAfter: 4
     },
-    bullet: {
-        fontFace: ORANGE_FONTS.body,
-        fontSize: 16,
-        color: ORANGE_COLORS.primary.black,
-        bullet: {
-            type: 'number',
-            style: 'arabicPeriod'
-        }
+    slideNum: {
+        fontFace: ORANGE_FONTS.title,
+        fontSize: 8,
+        bold: true,
+        shrinkText: true,
+        bullet: false,
+        valign: 'bottom'
+    },
+    // Styles pour composants riches
+    cardTitle: {
+        fontFace: ORANGE_FONTS.title,
+        fontSize: 14,
+        bold: true,
+        color: ORANGE_COLORS.primary.orange,
+        lineSpacingPercent: 90,
+        shrinkText: true,
+        bullet: false
+    },
+    cardBody: {
+        fontFace: ORANGE_FONTS.title,
+        fontSize: 11,
+        bold: true,
+        color: ORANGE_COLORS.primary.grayDark,
+        lineSpacingPercent: 90,
+        shrinkText: true,
+        bullet: false
+    },
+    badge: {
+        fontFace: ORANGE_FONTS.title,
+        fontSize: 11,
+        bold: true,
+        color: ORANGE_COLORS.primary.white,
+        align: 'center',
+        valign: 'middle',
+        shrinkText: true,
+        bullet: false
+    },
+    swatchLabel: {
+        fontFace: ORANGE_FONTS.title,
+        fontSize: 8,
+        bold: true,
+        color: ORANGE_COLORS.primary.grayDark,
+        align: 'center',
+        shrinkText: true,
+        bullet: false
     }
 };
 
 // ============================================
-// CRÉATION DE PRÉSENTATION
+// BULLET HELPER (v1 = en-dash inline)
 // ============================================
 
 /**
- * Crée une nouvelle présentation Orange
- * @param {string} title - Titre de la présentation
- * @returns {pptxgen} Instance de présentation
+ * Formate un item bullet avec en-dash U+2013 (style guide PPT v1)
+ * @param {string} text - Texte du bullet
+ * @param {string} color - Couleur du texte (hex sans #)
+ * @param {number} [fontSize=14] - Taille de police
+ * @returns {string} Texte formate avec en-dash
  */
-function createOrangePres(title = 'Présentation Orange') {
-    const pres = new pptxgen();
-
-    // Métadonnées
-    pres.author = 'Orange';
-    pres.company = 'Orange';
-    pres.title = title;
-
-    // Format 16:9 standard
-    pres.defineLayout({ name: 'ORANGE', width: 10, height: 5.625 });
-    pres.layout = 'ORANGE';
-
-    return pres;
+function formatBullet(text, color, fontSize) {
+    return '\u2013  ' + text;
 }
 
+// ============================================
+// THEMES : FOND NOIR vs FOND BLANC
+// ============================================
+function getTheme(mode) {
+    if (mode === 'blanc') {
+        return {
+            mode: 'blanc',
+            bg: 'FFFFFF',
+            title: 'FF7900',
+            body: '000000',
+            slideNum: '000000',
+            sectionTitle: 'FF7900',
+            sideText: '595959'
+        };
+    }
+    return {
+        mode: 'noir',
+        bg: '000000',
+        title: 'FFFFFF',
+        body: 'FFFFFF',
+        slideNum: 'FFFFFF',
+        sectionTitle: 'FFFFFF',
+        sideText: '8F8F8F'
+    };
+}
+
+// ============================================
+// LOGO (small logo PNG ou simulation)
+// ============================================
+const SMALL_LOGO_PATH = path.join(
+    process.env.USERPROFILE || '',
+    'OneDrive - orange.com', 'Bureau', 'Agents', 'Data',
+    'orange_brand_assets', 'mastermedia1', 'small_logo',
+    'ORANGE_Small Logo', 'Small_Logo_Digital', 'Small_Logo_RGB.png'
+);
+
+function addOrangeLogo(slide) {
+    if (fs.existsSync(SMALL_LOGO_PATH)) {
+        slide.addImage({
+            path: SMALL_LOGO_PATH,
+            x: POS.logo.x, y: POS.logo.y,
+            w: POS.logo.w, h: POS.logo.h
+        });
+    } else {
+        // Fallback: carre orange + ligne blanche
+        slide.addShape('rect', {
+            x: POS.logo.x, y: POS.logo.y, w: POS.logo.w, h: POS.logo.h,
+            fill: { color: ORANGE_COLORS.primary.orange },
+            line: { type: 'none' }
+        });
+        slide.addShape('line', {
+            x: POS.logo.x + 0.08, y: POS.logo.y + 0.38,
+            w: POS.logo.w - 0.16, h: 0,
+            line: { color: ORANGE_COLORS.primary.white, width: 2 }
+        });
+    }
+}
+
+function addSlideNumber(slide, num, theme) {
+    if (num == null) return;
+    slide.addText(String(num), {
+        x: POS.slideNum.x, y: POS.slideNum.y,
+        w: POS.slideNum.w, h: POS.slideNum.h,
+        ...STYLES.slideNum,
+        color: theme.slideNum,
+        align: 'right'
+    });
+}
+
+// ============================================
+// COMPOSANTS RICHES — CARDS
+// ============================================
+
 /**
- * Ajoute une slide titre
- * @param {pptxgen} pres - Présentation
- * @param {string} title - Titre principal
- * @param {string} subtitle - Sous-titre (optionnel)
+ * Ajoute une card avec fond gris et coins arrondis
+ * Option: bande orange en haut (topStripe)
+ *
+ * @param {object} slide - Slide pptxgenjs
+ * @param {object} pos - { x, y, w, h }
+ * @param {object} opts - { title, body, bgColor, topStripe, titleColor, bodyColor }
  */
-function addTitleSlide(pres, title, subtitle = '') {
-    const slide = pres.addSlide();
+function addCard(slide, pos, opts = {}) {
+    const bgColor = opts.bgColor || ORANGE_COLORS.bg.card;
 
-    // Fond noir (eco-branding digital)
-    slide.background = { color: ORANGE_COLORS.primary.black };
-
-    // Bande orange en haut
-    slide.addShape('rect', {
-        x: 0, y: 0, w: '100%', h: 0.8,
-        fill: { color: ORANGE_COLORS.primary.orange }
+    // Fond de la card (rounded rect)
+    slide.addShape('roundRect', {
+        x: pos.x, y: pos.y, w: pos.w, h: pos.h,
+        fill: { color: bgColor },
+        line: { type: 'none' },
+        rectRadius: VISUAL.cardRadius
     });
 
-    // Titre en blanc sur fond noir
-    slide.addText(title, {
-        x: 0.5, y: 2, w: 9, h: 1,
-        ...STYLES.title,
-        color: ORANGE_COLORS.primary.white,
-        align: 'left'
-    });
-
-    // Sous-titre en orange
-    if (subtitle) {
-        slide.addText(subtitle, {
-            x: 0.5, y: 3, w: 9, h: 0.6,
-            ...STYLES.subtitle,
-            color: ORANGE_COLORS.primary.orange,
-            align: 'left'
+    // Bande orange en haut (optionnel)
+    if (opts.topStripe) {
+        slide.addShape('rect', {
+            x: pos.x, y: pos.y,
+            w: pos.w, h: VISUAL.stripe,
+            fill: { color: ORANGE_COLORS.primary.orange },
+            line: { type: 'none' }
         });
     }
 
-    // Small logo simulé (carré orange coin bas droit)
+    // Titre de la card
+    const textY = opts.topStripe
+        ? pos.y + VISUAL.stripe + VISUAL.cardPadding * 0.5
+        : pos.y + VISUAL.cardPadding;
+
+    if (opts.title) {
+        slide.addText(opts.title, {
+            x: pos.x + VISUAL.cardPadding,
+            y: textY,
+            w: pos.w - VISUAL.cardPadding * 2,
+            h: 0.35,
+            ...STYLES.cardTitle,
+            color: opts.titleColor || ORANGE_COLORS.primary.orange
+        });
+    }
+
+    // Body de la card
+    if (opts.body) {
+        const bodyY = opts.title ? textY + 0.35 : textY;
+        slide.addText(opts.body, {
+            x: pos.x + VISUAL.cardPadding,
+            y: bodyY,
+            w: pos.w - VISUAL.cardPadding * 2,
+            h: pos.h - (bodyY - pos.y) - VISUAL.cardPadding,
+            ...STYLES.cardBody,
+            color: opts.bodyColor || ORANGE_COLORS.primary.grayDark
+        });
+    }
+}
+
+// ============================================
+// COMPOSANTS RICHES — INFO BOX
+// ============================================
+
+/**
+ * Ajoute une info box avec bordure gauche orange (du guide PPT slide 3)
+ *
+ * @param {object} slide - Slide pptxgenjs
+ * @param {object} pos - { x, y, w, h }
+ * @param {string} text - Texte de l'info box
+ * @param {object} [opts] - { bgColor, borderColor, textColor, fontSize }
+ */
+function addInfoBox(slide, pos, text, opts = {}) {
+    const bgColor = opts.bgColor || ORANGE_COLORS.bg.card;
+    const borderColor = opts.borderColor || ORANGE_COLORS.primary.orange;
+
+    // Fond gris
     slide.addShape('rect', {
-        x: 9.2, y: 4.9, w: 0.5, h: 0.5,
-        fill: { color: ORANGE_COLORS.primary.orange }
-    });
-    // Ligne blanche dans le carré (Small logo)
-    slide.addShape('line', {
-        x: 9.25, y: 5.15, w: 0.4, h: 0,
-        line: { color: ORANGE_COLORS.primary.white, width: 2 }
+        x: pos.x, y: pos.y, w: pos.w, h: pos.h,
+        fill: { color: bgColor },
+        line: { type: 'none' }
     });
 
+    // Bande orange a gauche
+    slide.addShape('rect', {
+        x: pos.x, y: pos.y,
+        w: VISUAL.stripe, h: pos.h,
+        fill: { color: borderColor },
+        line: { type: 'none' }
+    });
+
+    // Texte
+    slide.addText(text, {
+        x: pos.x + VISUAL.stripe + VISUAL.cardPadding,
+        y: pos.y + VISUAL.cardPadding * 0.5,
+        w: pos.w - VISUAL.stripe - VISUAL.cardPadding * 2,
+        h: pos.h - VISUAL.cardPadding,
+        fontFace: ORANGE_FONTS.title,
+        fontSize: opts.fontSize || 11,
+        bold: true,
+        color: opts.textColor || ORANGE_COLORS.primary.grayDark,
+        lineSpacingPercent: 90,
+        valign: 'top',
+        shrinkText: true,
+        bullet: false
+    });
+}
+
+// ============================================
+// COMPOSANTS RICHES — BADGE / PILULE
+// ============================================
+
+/**
+ * Ajoute un badge/pilule orange avec texte blanc (du guide PPT slide 5)
+ *
+ * @param {object} slide - Slide pptxgenjs
+ * @param {object} pos - { x, y, w, h }
+ * @param {string} text - Texte du badge
+ * @param {object} [opts] - { bgColor, textColor, fontSize }
+ */
+function addBadge(slide, pos, text, opts = {}) {
+    const bgColor = opts.bgColor || ORANGE_COLORS.primary.orange;
+
+    slide.addShape('roundRect', {
+        x: pos.x, y: pos.y, w: pos.w, h: pos.h,
+        fill: { color: bgColor },
+        line: { type: 'none' },
+        rectRadius: pos.h / 2    // Pilule = rayon = moitie hauteur
+    });
+
+    slide.addText(text, {
+        x: pos.x, y: pos.y, w: pos.w, h: pos.h,
+        ...STYLES.badge,
+        fontSize: opts.fontSize || 11,
+        color: opts.textColor || ORANGE_COLORS.primary.white
+    });
+}
+
+// ============================================
+// COMPOSANTS RICHES — COLOR SWATCH
+// ============================================
+
+/**
+ * Ajoute un swatch de couleur (carre arrondi + label en dessous)
+ *
+ * @param {object} slide - Slide pptxgenjs
+ * @param {object} pos - { x, y, size } (size = cote du carre)
+ * @param {string} color - Couleur hex (sans #)
+ * @param {string} label - Label sous le swatch (#FF7900)
+ * @param {object} [opts] - { labelColor }
+ */
+function addColorSwatch(slide, pos, color, label, opts = {}) {
+    const size = pos.size || 0.5;
+
+    slide.addShape('roundRect', {
+        x: pos.x, y: pos.y, w: size, h: size,
+        fill: { color: color },
+        line: { type: 'none' },
+        rectRadius: VISUAL.swatchRadius
+    });
+
+    if (label) {
+        slide.addText(label, {
+            x: pos.x - 0.05, y: pos.y + size + 0.04,
+            w: size + 0.1, h: 0.2,
+            ...STYLES.swatchLabel,
+            color: opts.labelColor || ORANGE_COLORS.primary.grayDark
+        });
+    }
+}
+
+// ============================================
+// CREATION DE PRESENTATION
+// ============================================
+
+function createOrangePres(title = 'Presentation Orange', mode = 'noir') {
+    const pres = new pptxgen();
+    pres.author = 'Orange';
+    pres.company = 'Orange';
+    pres.title = title;
+    pres.defineLayout({ name: 'ORANGE_16x9', width: 10, height: 5.625 });
+    pres.layout = 'ORANGE_16x9';
+
+    const theme = getTheme(mode);
+    return { pres, theme };
+}
+
+// ============================================
+// SLIDE TITRE (Layout 2 — 55pt, couverture)
+// ============================================
+
+function addTitleSlide(pres, title, subtitle, theme, opts = {}) {
+    const slide = pres.addSlide();
+    slide.background = { color: theme.bg };
+
+    // Titre 55pt
+    slide.addText(title, {
+        x: POS.titleBig.x, y: POS.titleBig.y,
+        w: POS.titleBig.w, h: POS.titleBig.h,
+        ...STYLES.bigTitle,
+        color: theme.mode === 'noir' ? ORANGE_COLORS.primary.white : ORANGE_COLORS.primary.orange,
+        align: 'left', valign: 'top'
+    });
+
+    // Sous-titre 18pt
+    if (subtitle) {
+        slide.addText(subtitle, {
+            x: POS.subtitle.x, y: POS.subtitle.y,
+            w: POS.subtitle.w, h: POS.subtitle.h,
+            fontFace: ORANGE_FONTS.title,
+            fontSize: 18,
+            bold: true,
+            color: theme.mode === 'noir' ? ORANGE_COLORS.primary.white : ORANGE_COLORS.primary.black,
+            align: 'left', valign: 'top',
+            lineSpacingPercent: 90,
+            shrinkText: true, bullet: false
+        });
+    }
+
+    // Texte lateral
+    if (opts.sideText) {
+        slide.addText(opts.sideText, {
+            x: POS.sideText.x, y: POS.sideText.y,
+            w: POS.sideText.w, h: POS.sideText.h,
+            fontFace: ORANGE_FONTS.title,
+            fontSize: 14,
+            bold: true,
+            color: theme.sideText,
+            align: 'left', valign: 'top',
+            lineSpacingPercent: 90,
+            shrinkText: true, bullet: false
+        });
+    }
+
+    addOrangeLogo(slide);
+    if (opts.slideNum != null) addSlideNumber(slide, opts.slideNum, theme);
     return slide;
 }
 
-/**
- * Ajoute une slide de contenu
- * @param {pptxgen} pres - Présentation
- * @param {string} title - Titre de la slide
- * @param {string[]} bullets - Liste de points
- */
-function addContentSlide(pres, title, bullets = []) {
+// ============================================
+// SLIDE CONTENU (Layout 1 — 20pt titre + bullets en-dash)
+// ============================================
+
+function addContentSlide(pres, title, bullets, theme, opts = {}) {
     const slide = pres.addSlide();
+    slide.background = { color: theme.bg };
 
-    // Fond blanc (ou noir selon usage)
-    slide.background = { color: ORANGE_COLORS.primary.white };
-
-    // Bandeau orange en haut
-    slide.addShape('rect', {
-        x: 0, y: 0, w: '100%', h: 0.1,
-        fill: { color: ORANGE_COLORS.primary.orange }
-    });
-
-    // Titre
+    // Titre 20pt orange
     slide.addText(title, {
-        x: 0.5, y: 0.3, w: 9, h: 0.8,
-        ...STYLES.title,
-        color: ORANGE_COLORS.primary.black
+        x: POS.title.x, y: POS.title.y,
+        w: POS.title.w, h: POS.title.h,
+        ...STYLES.contentTitle,
+        color: ORANGE_COLORS.primary.orange
     });
 
-    // Contenu avec puces carrées orange
-    if (bullets.length > 0) {
-        const bulletItems = bullets.map(text => ({
-            text: text,
-            options: {
-                ...STYLES.body,
-                bullet: {
-                    type: 'bullet',
-                    characterCode: '25A0',  // Carré plein
-                    color: ORANGE_COLORS.primary.orange
-                },
-                paraSpaceAfter: 10
-            }
-        }));
-
-        slide.addText(bulletItems, {
-            x: 0.5, y: 1.3, w: 9, h: 3.5,
+    // Bullets avec en-dash (v1 style)
+    if (bullets && bullets.length > 0) {
+        const bulletText = bullets.map(b => formatBullet(b)).join('\n');
+        slide.addText(bulletText, {
+            x: POS.body.x, y: POS.body.y,
+            w: POS.body.w, h: POS.body.h,
+            ...STYLES.body,
+            color: theme.body,
             valign: 'top'
         });
     }
 
-    // Small logo coin bas droit
-    slide.addShape('rect', {
-        x: 9.2, y: 5.0, w: 0.5, h: 0.5,
-        fill: { color: ORANGE_COLORS.primary.orange }
-    });
-    slide.addShape('line', {
-        x: 9.25, y: 5.25, w: 0.4, h: 0,
-        line: { color: ORANGE_COLORS.primary.white, width: 2 }
-    });
-
-    return slide;
-}
-
-/**
- * Ajoute une slide section (transition)
- * @param {pptxgen} pres - Présentation
- * @param {string} sectionTitle - Titre de section
- * @param {number} sectionNumber - Numéro de section (optionnel)
- */
-function addSectionSlide(pres, sectionTitle, sectionNumber = null) {
-    const slide = pres.addSlide();
-
-    // Fond orange (emblématique)
-    slide.background = { color: ORANGE_COLORS.primary.orange };
-
-    // Numéro de section
-    if (sectionNumber) {
-        slide.addText(String(sectionNumber).padStart(2, '0'), {
-            x: 0.5, y: 1.5, w: 2, h: 1,
-            fontFace: ORANGE_FONTS.title,
-            fontSize: 72,
-            bold: true,
-            color: ORANGE_COLORS.primary.white
-        });
-    }
-
-    // Titre de section
-    slide.addText(sectionTitle, {
-        x: 0.5, y: 2.8, w: 9, h: 1,
-        ...STYLES.title,
-        fontSize: 40,
-        color: ORANGE_COLORS.primary.white
-    });
-
-    return slide;
-}
-
-/**
- * Ajoute une slide de fin
- * @param {pptxgen} pres - Présentation
- * @param {string} message - Message de fin (default: "Merci")
- */
-function addEndSlide(pres, message = 'Merci') {
-    const slide = pres.addSlide();
-
-    // Fond noir
-    slide.background = { color: ORANGE_COLORS.primary.black };
-
-    // Message centré en orange
-    slide.addText(message, {
-        x: 0, y: 2, w: '100%', h: 1.5,
-        fontFace: ORANGE_FONTS.title,
-        fontSize: 48,
-        bold: true,
-        color: ORANGE_COLORS.primary.orange,
-        align: 'center'
-    });
-
-    // Signature "Orange est là"
-    slide.addText('Orange est là', {
-        x: 0, y: 4, w: '100%', h: 0.5,
-        fontFace: ORANGE_FONTS.body,
-        fontSize: 18,
-        color: ORANGE_COLORS.primary.white,
-        align: 'center'
-    });
-
-    // Logo
-    slide.addShape('rect', {
-        x: 4.5, y: 4.6, w: 0.6, h: 0.6,
-        fill: { color: ORANGE_COLORS.primary.orange }
-    });
-    slide.addShape('line', {
-        x: 4.55, y: 4.9, w: 0.5, h: 0,
-        line: { color: ORANGE_COLORS.primary.white, width: 2 }
-    });
-
+    addOrangeLogo(slide);
+    addSlideNumber(slide, opts.slideNum, theme);
     return slide;
 }
 
 // ============================================
-// EXPORT DES FONCTIONS
+// SLIDE SECTION (Layout 4 — 55pt)
+// ============================================
+
+function addSectionSlide(pres, sectionTitle, sectionNumber, theme) {
+    const slide = pres.addSlide();
+    slide.background = { color: theme.bg };
+
+    let text = '';
+    if (sectionNumber != null) {
+        text = String(sectionNumber).padStart(2, '0') + '\n';
+    }
+    text += sectionTitle;
+
+    slide.addText(text, {
+        x: POS.section.x, y: POS.section.y,
+        w: POS.section.w, h: POS.section.h,
+        ...STYLES.bigTitle,
+        color: theme.sectionTitle,
+        align: 'left', valign: 'top'
+    });
+
+    addOrangeLogo(slide);
+    return slide;
+}
+
+// ============================================
+// SLIDE DEUX COLONNES (Layout 5)
+// ============================================
+
+function addTwoColumnSlide(pres, title, leftBullets, rightBullets, theme, opts = {}) {
+    const slide = pres.addSlide();
+    slide.background = { color: theme.bg };
+
+    // Titre
+    slide.addText(title, {
+        x: POS.title.x, y: POS.title.y,
+        w: POS.title.w, h: POS.title.h,
+        ...STYLES.contentTitle,
+        color: ORANGE_COLORS.primary.orange
+    });
+
+    // Colonne gauche
+    if (leftBullets && leftBullets.length > 0) {
+        const text = leftBullets.map(b => formatBullet(b)).join('\n');
+        slide.addText(text, {
+            x: POS.colLeft.x, y: POS.colLeft.y,
+            w: POS.colLeft.w, h: POS.colLeft.h,
+            ...STYLES.body, color: theme.body, valign: 'top'
+        });
+    }
+
+    // Colonne droite
+    if (rightBullets && rightBullets.length > 0) {
+        const text = rightBullets.map(b => formatBullet(b)).join('\n');
+        slide.addText(text, {
+            x: POS.colRight.x, y: POS.colRight.y,
+            w: POS.colRight.w, h: POS.colRight.h,
+            ...STYLES.body, color: theme.body, valign: 'top'
+        });
+    }
+
+    addOrangeLogo(slide);
+    addSlideNumber(slide, opts.slideNum, theme);
+    return slide;
+}
+
+// ============================================
+// SLIDE COMPARAISON (2 cards cote a cote, du guide PPT slide 3)
+// ============================================
+
+/**
+ * @param {pptxgen} pres
+ * @param {string} title - Titre de la slide
+ * @param {object} left - { title, body, bgColor, titleColor, bodyColor }
+ * @param {object} right - { title, body, bgColor, titleColor, bodyColor }
+ * @param {object} theme
+ * @param {object} [opts] - { slideNum, infoBox }
+ */
+function addComparisonSlide(pres, title, left, right, theme, opts = {}) {
+    const slide = pres.addSlide();
+    slide.background = { color: theme.bg };
+
+    // Titre
+    slide.addText(title, {
+        x: POS.title.x, y: POS.title.y,
+        w: POS.title.w, h: POS.title.h,
+        ...STYLES.contentTitle,
+        color: ORANGE_COLORS.primary.orange
+    });
+
+    const cardW = 4.34;
+    const cardH = 2.5;
+    const cardY = 1.3;
+
+    // Card gauche
+    addCard(slide, { x: 0.343, y: cardY, w: cardW, h: cardH }, {
+        title: left.title,
+        body: left.body,
+        bgColor: left.bgColor || ORANGE_COLORS.bg.card,
+        titleColor: left.titleColor,
+        bodyColor: left.bodyColor
+    });
+
+    // Card droite
+    addCard(slide, { x: 5.321, y: cardY, w: cardW, h: cardH }, {
+        title: right.title,
+        body: right.body,
+        bgColor: right.bgColor || ORANGE_COLORS.bg.card,
+        titleColor: right.titleColor,
+        bodyColor: right.bodyColor
+    });
+
+    // Info box en bas (optionnel)
+    if (opts.infoBox) {
+        addInfoBox(slide, {
+            x: 0.343, y: cardY + cardH + VISUAL.gap,
+            w: 9.315, h: 0.6
+        }, opts.infoBox);
+    }
+
+    addOrangeLogo(slide);
+    addSlideNumber(slide, opts.slideNum, theme);
+    return slide;
+}
+
+// ============================================
+// SLIDE CARD GRID (grille de cards avec bande haute, du guide PPT slide 7)
+// ============================================
+
+/**
+ * @param {pptxgen} pres
+ * @param {string} title - Titre de la slide
+ * @param {Array<{title: string, body: string}>} cards - 2 a 4 cards
+ * @param {object} theme
+ * @param {object} [opts] - { slideNum, cols }
+ */
+function addCardGridSlide(pres, title, cards, theme, opts = {}) {
+    const slide = pres.addSlide();
+    slide.background = { color: theme.bg };
+
+    // Titre
+    slide.addText(title, {
+        x: POS.title.x, y: POS.title.y,
+        w: POS.title.w, h: POS.title.h,
+        ...STYLES.contentTitle,
+        color: ORANGE_COLORS.primary.orange
+    });
+
+    const cols = opts.cols || Math.min(cards.length, 4);
+    const totalW = 9.315;
+    const startX = 0.343;
+    const startY = 1.3;
+    const gap = VISUAL.gap;
+    const cardW = (totalW - gap * (cols - 1)) / cols;
+    const cardH = 2.8;
+
+    cards.forEach((card, i) => {
+        const col = i % cols;
+        const row = Math.floor(i / cols);
+        const x = startX + col * (cardW + gap);
+        const y = startY + row * (cardH + gap);
+
+        addCard(slide, { x, y, w: cardW, h: cardH }, {
+            title: card.title,
+            body: card.body,
+            topStripe: true,
+            titleColor: card.titleColor,
+            bodyColor: card.bodyColor
+        });
+    });
+
+    addOrangeLogo(slide);
+    addSlideNumber(slide, opts.slideNum, theme);
+    return slide;
+}
+
+// ============================================
+// SLIDE BADGES (pilules orange, du guide PPT slide 5)
+// ============================================
+
+/**
+ * @param {pptxgen} pres
+ * @param {string} title - Titre de la slide
+ * @param {Array<{label: string, description: string}>} badges - Liste de badges
+ * @param {object} theme
+ * @param {object} [opts] - { slideNum }
+ */
+function addBadgeSlide(pres, title, badges, theme, opts = {}) {
+    const slide = pres.addSlide();
+    slide.background = { color: theme.bg };
+
+    // Titre
+    slide.addText(title, {
+        x: POS.title.x, y: POS.title.y,
+        w: POS.title.w, h: POS.title.h,
+        ...STYLES.contentTitle,
+        color: ORANGE_COLORS.primary.orange
+    });
+
+    const startY = 1.4;
+    const badgeW = 2.2;
+    const badgeH = 0.35;
+    const rowH = 0.9;
+
+    badges.forEach((b, i) => {
+        const y = startY + i * rowH;
+
+        // Badge pilule
+        addBadge(slide, { x: 0.5, y, w: badgeW, h: badgeH }, b.label);
+
+        // Description a droite
+        if (b.description) {
+            slide.addText(b.description, {
+                x: 0.5 + badgeW + 0.3, y,
+                w: 6.5, h: badgeH + 0.15,
+                fontFace: ORANGE_FONTS.title,
+                fontSize: 12,
+                bold: true,
+                color: theme.body,
+                align: 'left', valign: 'middle',
+                lineSpacingPercent: 90,
+                shrinkText: true, bullet: false
+            });
+        }
+    });
+
+    addOrangeLogo(slide);
+    addSlideNumber(slide, opts.slideNum, theme);
+    return slide;
+}
+
+// ============================================
+// SLIDE COLOR PALETTE (grille de couleurs, du guide PPT slide 4)
+// ============================================
+
+/**
+ * @param {pptxgen} pres
+ * @param {string} title - Titre de la slide
+ * @param {Array<{color: string, label: string}>} swatches - Couleurs a afficher
+ * @param {object} theme
+ * @param {object} [opts] - { slideNum, rulesPanel, swatchSize, cols }
+ */
+function addColorPaletteSlide(pres, title, swatches, theme, opts = {}) {
+    const slide = pres.addSlide();
+    slide.background = { color: theme.bg };
+
+    // Titre
+    slide.addText(title, {
+        x: POS.title.x, y: POS.title.y,
+        w: POS.title.w, h: POS.title.h,
+        ...STYLES.contentTitle,
+        color: ORANGE_COLORS.primary.orange
+    });
+
+    const size = opts.swatchSize || 0.55;
+    const cols = opts.cols || 6;
+    const gap = 0.2;
+    const startX = 0.5;
+    const startY = 1.4;
+
+    swatches.forEach((s, i) => {
+        const col = i % cols;
+        const row = Math.floor(i / cols);
+        const x = startX + col * (size + gap);
+        const y = startY + row * (size + 0.35);
+
+        addColorSwatch(slide, { x, y, size }, s.color, s.label);
+    });
+
+    // Panneau de regles a droite (optionnel, comme slide 4 du guide)
+    if (opts.rulesPanel) {
+        const panelX = startX + cols * (size + gap) + 0.3;
+        const panelW = 10 - panelX - 0.35;
+        addInfoBox(slide, {
+            x: panelX, y: startY,
+            w: panelW, h: 3.2
+        }, opts.rulesPanel);
+    }
+
+    addOrangeLogo(slide);
+    addSlideNumber(slide, opts.slideNum, theme);
+    return slide;
+}
+
+// ============================================
+// SLIDE FIN
+// ============================================
+
+function addEndSlide(pres, message, theme) {
+    const slide = pres.addSlide();
+    slide.background = { color: theme.bg };
+
+    const textColor = theme.mode === 'noir'
+        ? ORANGE_COLORS.primary.white
+        : ORANGE_COLORS.primary.orange;
+
+    slide.addText(message || 'Merci', {
+        x: 0, y: 1.5, w: 10, h: 2,
+        fontFace: ORANGE_FONTS.title,
+        fontSize: 55,
+        bold: true,
+        color: textColor,
+        align: 'center', valign: 'middle',
+        lineSpacingPercent: 85,
+        shrinkText: true, bullet: false
+    });
+
+    addOrangeLogo(slide);
+    return slide;
+}
+
+// ============================================
+// EXPORT
 // ============================================
 module.exports = {
     ORANGE_COLORS,
     ORANGE_FONTS,
     STYLES,
+    POS,
+    VISUAL,
+    LOGO_SAFE_Y,
+    getTheme,
+    formatBullet,
     createOrangePres,
+    addOrangeLogo,
+    addSlideNumber,
+    // Slides de base
     addTitleSlide,
     addContentSlide,
     addSectionSlide,
-    addEndSlide
+    addTwoColumnSlide,
+    addEndSlide,
+    // Slides riches (du guide PPT)
+    addComparisonSlide,
+    addCardGridSlide,
+    addBadgeSlide,
+    addColorPaletteSlide,
+    // Composants unitaires
+    addCard,
+    addInfoBox,
+    addBadge,
+    addColorSwatch
 };
 
 // ============================================
-// EXEMPLE D'UTILISATION
+// EXEMPLE (si lance directement)
 // ============================================
 if (require.main === module) {
-    // Création d'une présentation exemple
-    const pres = createOrangePres('Exemple Charte Orange');
+    const mode = process.argv[2] || 'noir';
+    const { pres, theme } = createOrangePres('Exemple Charte Orange v1 + Rich', mode);
 
-    // Slide titre
-    addTitleSlide(pres, 'Les fondamentaux de la marque', 'Charte graphique Orange');
+    addTitleSlide(pres, 'Les fondamentaux\nde la marque', 'Charte graphique Orange', theme, {
+        sideText: 'Fevrier 2026\nOrange Brand'
+    });
 
-    // Section 1
-    addSectionSlide(pres, 'Nos valeurs', 1);
+    addSectionSlide(pres, 'Nos valeurs', 1, theme);
 
-    // Contenu
     addContentSlide(pres, 'Nos principes', [
         'Simple et proche des gens',
         'Positif et audacieux',
-        'Langage parlé, sans bla bla',
+        'Langage parle, sans bla bla',
         'Respectueux et inclusif'
-    ]);
+    ], theme, { slideNum: 3 });
 
-    // Section 2
-    addSectionSlide(pres, 'Nos couleurs', 2);
+    addEndSlide(pres, 'Merci', theme);
 
-    addContentSlide(pres, 'Palette de couleurs', [
-        'Orange #FF7900 - notre couleur emblématique',
-        'Noir, blanc et gris - couleurs principales',
-        'Bleu, vert, rose, jaune, pourpre - couleurs secondaires',
-        'Règle 80/20: 80% principales, 20% max secondaires'
-    ]);
-
-    // Fin
-    addEndSlide(pres, 'Merci');
-
-    // Sauvegarde
-    const fileName = 'exemple_charte_orange.pptx';
+    const fileName = `exemple_charte_orange_${mode}.pptx`;
     pres.writeFile({ fileName })
-        .then(() => console.log(`Présentation créée: ${fileName}`))
+        .then(() => console.log(`OK: ${fileName} (mode ${mode})`))
         .catch(err => console.error('Erreur:', err));
 }

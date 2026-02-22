@@ -1,0 +1,44 @@
+{
+  "_meta": {
+    "description": "Maps mood tags from dialogue JSON files to ToneController enum values for LoRA training",
+    "version": "1.0.0",
+    "source_enum": "addons/merlin_ai/processors/tone_controller.gd::Tone"
+  },
+  "mood_to_tone": {
+    "pensif": "mysterious",
+    "mystique": "mysterious",
+    "warm": "warm",
+    "amuse": "playful",
+    "sage": "neutral",
+    "serieux": "warning",
+    "solennel": "cryptic",
+    "inquiet": "warning",
+    "triste": "melancholy",
+    "joyeux": "playful",
+    "taquin": "playful",
+    "grave": "warning",
+    "poetique": "melancholy",
+    "enigmatique": "cryptic",
+    "bienveillant": "warm",
+    "protecteur": "warm",
+    "nostalgique": "melancholy"
+  },
+  "tone_descriptions": {
+    "neutral": "Voix descriptive et equilibree. Phrases moyennes, ponctuation standard.",
+    "playful": "Taquiner gentiment, humour leger. Phrases courtes et vives, exclamations.",
+    "mysterious": "Indices ambigus, ellipses. Phrases variees, vocabulaire archaique.",
+    "warning": "Ton urgent mais pas paniquant. Conseils directs, phrases courtes.",
+    "melancholy": "Rare tristesse, nostalgie. Phrases longues, pauses, vocabulaire poetique.",
+    "warm": "Chaleureux, supportif. Encourager le joueur, vocabulaire familier.",
+    "cryptic": "Double-sens, symbolisme. Phrases courtes, vocabulaire symbolique."
+  },
+  "aspect_states": {
+    "balanced": "Corps=eq Ame=eq Monde=eq",
+    "corps_extreme": "Corps=bas/haut",
+    "ame_extreme": "Ame=bas/haut",
+    "monde_extreme": "Monde=bas/haut"
+  },
+  "biomes": [
+    "broceliande", "landes", "cotes", "villages", "cercles", "marais", "collines"
+  ]
+}

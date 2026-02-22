@@ -50,12 +50,13 @@ const ENDINGS := {
 var _effects: MerlinEffectEngine
 var _llm: MerlinLlmAdapter
 var _rng: MerlinRng
-var _fallback_cards: Array = []
-var _triade_fallback_cards: Array = []  # NEW: 3-option cards
 var _event_cards_pool: Array = []
 var _promise_cards_pool: Array = []
 var _event_cards_seen: Array = []
 var _promise_ids_taken: Array = []
+
+# Phase 44 — Event category selector for weighted narrative events
+var _event_selector: EventCategorySelector = null
 
 # ═══════════════════════════════════════════════════════════════════════════════
 # SETUP
@@ -65,159 +66,26 @@ func setup(effects: MerlinEffectEngine, llm: MerlinLlmAdapter, rng: MerlinRng) -
 	_effects = effects
 	_llm = llm
 	_rng = rng
-	_load_fallback_cards()
-	_load_triade_fallback_cards()
 	_load_event_cards()
 	_load_promise_cards()
+	# Phase 44 — shared event selector (may be overridden by MOS)
+	_event_selector = EventCategorySelector.new()
 
 
-func _load_fallback_cards() -> void:
-	# Base fallback cards when LLM is unavailable
-	_fallback_cards = [
-		{
-			"id": "fb_intro_001",
-			"type": "narrative",
-			"text": "Le vent souffle fort ce soir. Que fais-tu?",
-			"speaker": "",
-			"options": [
-				{"direction": "left", "label": "Se reposer", "effects": ["ADD_GAUGE:Vigueur:10", "REMOVE_GAUGE:Ressources:5"]},
-				{"direction": "right", "label": "Continuer", "effects": ["REMOVE_GAUGE:Vigueur:5", "ADD_GAUGE:Ressources:5"]}
-			],
-			"conditions": {},
-			"weight": 1.0,
-			"tags": ["early"]
-		},
-		{
-			"id": "fb_stranger_001",
-			"type": "narrative",
-			"text": "Un voyageur s'approche de ton campement...",
-			"speaker": "",
-			"options": [
-				{"direction": "left", "label": "Le chasser", "effects": ["ADD_GAUGE:Vigueur:5", "REMOVE_GAUGE:Faveur:15"]},
-				{"direction": "right", "label": "L'accueillir", "effects": ["ADD_GAUGE:Faveur:20", "REMOVE_GAUGE:Ressources:10"]}
-			],
-			"conditions": {},
-			"weight": 1.0,
-			"tags": ["social"]
-		},
-		{
-			"id": "fb_merlin_001",
-			"type": "merlin_direct",
-			"text": "Prends garde, jeune druide. Les equilibres sont fragiles.",
-			"speaker": "MERLIN",
-			"options": [
-				{"direction": "left", "label": "Merci du conseil", "effects": ["ADD_GAUGE:Esprit:5"]},
-				{"direction": "right", "label": "Je sais ce que je fais", "effects": ["ADD_GAUGE:Faveur:5", "REMOVE_GAUGE:Esprit:5"]}
-			],
-			"conditions": {},
-			"weight": 0.5,
-			"tags": ["merlin", "advice"]
-		},
-		{
-			"id": "fb_resource_001",
-			"type": "narrative",
-			"text": "Tu trouves un ancien cairn. Des offrandes y reposent.",
-			"speaker": "",
-			"options": [
-				{"direction": "left", "label": "Respecter le lieu", "effects": ["ADD_GAUGE:Esprit:15", "ADD_GAUGE:Faveur:5"]},
-				{"direction": "right", "label": "Prendre les offrandes", "effects": ["ADD_GAUGE:Ressources:20", "REMOVE_GAUGE:Esprit:10", "REMOVE_GAUGE:Faveur:10"]}
-			],
-			"conditions": {},
-			"weight": 1.0,
-			"tags": ["discovery", "moral"]
-		},
-		{
-			"id": "fb_conflict_001",
-			"type": "narrative",
-			"text": "Deux villageois se disputent devant toi.",
-			"speaker": "",
-			"options": [
-				{"direction": "left", "label": "Prendre parti", "effects": ["ADD_GAUGE:Faveur:10", "REMOVE_GAUGE:Faveur:15"]},
-				{"direction": "right", "label": "Medier", "effects": ["REMOVE_GAUGE:Vigueur:10", "ADD_GAUGE:Esprit:10"]}
-			],
-			"conditions": {},
-			"weight": 1.0,
-			"tags": ["social", "conflict"]
-		},
-	]
+## Set a shared EventCategorySelector instance (from MerlinOmniscient).
+func set_event_selector(selector: EventCategorySelector) -> void:
+	_event_selector = selector
 
 
-func _load_triade_fallback_cards() -> void:
-	# TRIADE fallback cards with 3 options (left/center/right)
-	_triade_fallback_cards = [
-		{
-			"id": "triade_intro_001",
-			"type": "narrative",
-			"text": "Un druide noir te barre le chemin. Derriere lui, des villageois ligotes attendent leur sort.",
-			"speaker": "MERLIN",
-			"options": [
-				{"position": "left", "label": "FUIR", "effects": [{"type": "SHIFT_ASPECT", "aspect": "Monde", "direction": "down"}]},
-				{"position": "center", "label": "PARLEMENTER", "cost": 1, "effects": []},
-				{"position": "right", "label": "ATTAQUER", "effects": [{"type": "SHIFT_ASPECT", "aspect": "Corps", "direction": "down"}, {"type": "SHIFT_ASPECT", "aspect": "Ame", "direction": "up"}]}
-			],
-			"tags": ["confrontation", "druide_noir"]
-		},
-		{
-			"id": "triade_stranger_001",
-			"type": "narrative",
-			"text": "Un voyageur epuise s'effondre a tes pieds. Il semble porter un message urgent.",
-			"speaker": "",
-			"options": [
-				{"position": "left", "label": "IGNORER", "effects": [{"type": "SHIFT_ASPECT", "aspect": "Monde", "direction": "down"}]},
-				{"position": "center", "label": "L'ECOUTER", "cost": 1, "effects": [{"type": "ADD_KARMA", "amount": 5}]},
-				{"position": "right", "label": "LE SOIGNER", "effects": [{"type": "SHIFT_ASPECT", "aspect": "Corps", "direction": "down"}, {"type": "SHIFT_ASPECT", "aspect": "Monde", "direction": "up"}]}
-			],
-			"tags": ["social", "voyageur"]
-		},
-		{
-			"id": "triade_sacred_001",
-			"type": "narrative",
-			"text": "Tu decouvres un ancien cairn. Des offrandes intactes y reposent depuis des siecles.",
-			"speaker": "",
-			"options": [
-				{"position": "left", "label": "PRIER", "effects": [{"type": "SHIFT_ASPECT", "aspect": "Ame", "direction": "up"}]},
-				{"position": "center", "label": "MEDITER", "cost": 1, "effects": [{"type": "ADD_SOUFFLE", "amount": 1}]},
-				{"position": "right", "label": "PRENDRE", "effects": [{"type": "SHIFT_ASPECT", "aspect": "Ame", "direction": "down"}, {"type": "PROGRESS_MISSION", "step": 1}]}
-			],
-			"tags": ["sacred", "cairn", "moral"]
-		},
-		{
-			"id": "triade_merlin_001",
-			"type": "merlin_direct",
-			"text": "Je t'observe depuis un moment. Tu as fait des choix... interessants. La foret murmure ton nom.",
-			"speaker": "MERLIN",
-			"options": [
-				{"position": "left", "label": "MERCI", "effects": []},
-				{"position": "center", "label": "CONSEILLE-MOI", "cost": 1, "effects": [{"type": "SHIFT_ASPECT", "aspect": "Ame", "direction": "up"}]},
-				{"position": "right", "label": "TAIS-TOI", "effects": [{"type": "SHIFT_ASPECT", "aspect": "Monde", "direction": "down"}]}
-			],
-			"tags": ["merlin", "advice"]
-		},
-		{
-			"id": "triade_conflict_001",
-			"type": "narrative",
-			"text": "Deux clans se disputent un territoire sacre. Les deux camps attendent ta decision.",
-			"speaker": "",
-			"options": [
-				{"position": "left", "label": "CLAN A", "effects": [{"type": "SHIFT_ASPECT", "aspect": "Monde", "direction": "up"}, {"type": "SHIFT_ASPECT", "aspect": "Monde", "direction": "down"}]},
-				{"position": "center", "label": "NEGOCIER", "cost": 1, "effects": [{"type": "ADD_KARMA", "amount": 10}]},
-				{"position": "right", "label": "CLAN B", "effects": [{"type": "SHIFT_ASPECT", "aspect": "Monde", "direction": "up"}, {"type": "SHIFT_ASPECT", "aspect": "Monde", "direction": "down"}]}
-			],
-			"tags": ["conflict", "clans", "diplomacy"]
-		},
-		{
-			"id": "triade_beast_001",
-			"type": "narrative",
-			"text": "Une bete sauvage te barre le passage. Elle semble blessée mais reste menaçante.",
-			"speaker": "",
-			"options": [
-				{"position": "left", "label": "CONTOURNER", "effects": [{"type": "SHIFT_ASPECT", "aspect": "Corps", "direction": "down"}]},
-				{"position": "center", "label": "APAISER", "cost": 1, "effects": [{"type": "SHIFT_ASPECT", "aspect": "Ame", "direction": "up"}]},
-				{"position": "right", "label": "AFFRONTER", "effects": [{"type": "SHIFT_ASPECT", "aspect": "Corps", "direction": "up"}, {"type": "SHIFT_ASPECT", "aspect": "Ame", "direction": "down"}]}
-			],
-			"tags": ["beast", "nature", "danger"]
-		},
-	]
+## Get the event category for the current game state.
+func get_event_category(state: Dictionary) -> Dictionary:
+	if _event_selector and _event_selector.is_loaded():
+		return _event_selector.select_event(state)
+	return {}
+
+
+
+
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
@@ -346,51 +214,9 @@ func _get_critical_gauges(run: Dictionary) -> Array:
 	return critical
 
 
-func _select_fallback_card(state: Dictionary) -> Dictionary:
-	"""Select a card from fallback pool based on conditions and weights."""
-	var run = state.get("run", {})
-	var story_log = run.get("story_log", [])
-	var recent_ids = []
-	for entry in story_log.slice(-5):
-		if entry.has("card_id"):
-			recent_ids.append(entry["card_id"])
-
-	# Filter and weight cards
-	var candidates = []
-	var total_weight = 0.0
-
-	for card in _fallback_cards:
-		# Skip recently played
-		if recent_ids.has(card.get("id", "")):
-			continue
-
-		# Check conditions (simplified)
-		if _check_card_conditions(card, state):
-			var weight = float(card.get("weight", 1.0))
-
-			# Boost weight if pity needed
-			var critical = _get_critical_gauges(run)
-			if not critical.is_empty():
-				# Prefer cards that help with critical gauges
-				weight *= 1.5
-
-			candidates.append({"card": card, "weight": weight})
-			total_weight += weight
-
-	if candidates.is_empty():
-		# Emergency fallback
-		return _fallback_cards[0] if not _fallback_cards.is_empty() else _get_emergency_card()
-
-	# Weighted random selection
-	var roll = _rng.randf() * total_weight if _rng else randf() * total_weight
-	var cumulative = 0.0
-
-	for candidate in candidates:
-		cumulative += candidate["weight"]
-		if roll <= cumulative:
-			return candidate["card"].duplicate(true)
-
-	return candidates[-1]["card"].duplicate(true)
+func _select_fallback_card(_state: Dictionary) -> Dictionary:
+	## Fallback cards removed — return empty, controller retries LLM.
+	return {}
 
 
 func _check_card_conditions(card: Dictionary, state: Dictionary) -> bool:
@@ -462,32 +288,8 @@ func get_next_triade_card(state: Dictionary) -> Dictionary:
 			if not merlin_card.is_empty():
 				return merlin_card
 
-	# Default: narrative fallback
-	return _select_triade_fallback_card(state)
-
-
-func _select_triade_fallback_card(state: Dictionary) -> Dictionary:
-	"""Select a TRIADE card from fallback pool, avoiding repeats."""
-	var run: Dictionary = state.get("run", {})
-	var story_log: Array = run.get("story_log", [])
-	var recent_ids: Array = []
-	for entry in story_log.slice(-5):
-		if entry is Dictionary and entry.has("card_id"):
-			recent_ids.append(entry["card_id"])
-
-	var candidates: Array = []
-	for card in _triade_fallback_cards:
-		if recent_ids.has(card.get("id", "")):
-			continue
-		candidates.append(card)
-
-	if candidates.is_empty():
-		if not _triade_fallback_cards.is_empty():
-			return _triade_fallback_cards[randi() % _triade_fallback_cards.size()].duplicate(true)
-		return _get_emergency_triade_card()
-
-	var idx: int = randi() % candidates.size() if _rng == null else int(_rng.randf() * candidates.size()) % maxi(candidates.size(), 1)
-	return candidates[idx].duplicate(true)
+	# No fallback — return empty, controller will retry LLM
+	return {}
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
@@ -663,38 +465,16 @@ func _generate_promise_card(state: Dictionary, _biome_key: String) -> Dictionary
 		return {}
 
 	# Random selection
-	var idx: int = (_rng.randi() if _rng else randi()) % candidates.size()
+	var idx: int = (_rng.randi_range(0, candidates.size() - 1) if _rng else randi() % candidates.size())
 	var selected: Dictionary = candidates[idx].duplicate(true)
 	_promise_ids_taken.append(str(selected.get("promise_id", "")))
 	return selected
 
 
-func _select_merlin_direct_card(state: Dictionary) -> Dictionary:
-	"""Select a merlin_direct card from the TRIADE fallback pool."""
-	var candidates: Array = []
-	for card in _triade_fallback_cards:
-		if str(card.get("type", "")) == "merlin_direct":
-			candidates.append(card)
-	if candidates.is_empty():
-		return {}
-	var idx: int = (_rng.randi() if _rng else randi()) % candidates.size()
-	return candidates[idx].duplicate(true)
+func _select_merlin_direct_card(_state: Dictionary) -> Dictionary:
+	## Merlin direct cards removed — return empty, LLM generates all content.
+	return {}
 
-
-func _get_emergency_triade_card() -> Dictionary:
-	"""Minimal TRIADE card when everything else fails."""
-	return {
-		"id": "emergency_triade_001",
-		"type": "narrative",
-		"text": "Le vent murmure entre les pierres. Le chemin se divise.",
-		"speaker": "merlin",
-		"options": [
-			{"label": "Gauche", "effects": [{"type": "SHIFT_ASPECT", "aspect": "Corps", "direction": "down"}]},
-			{"label": "Mediter", "cost": 1, "effects": []},
-			{"label": "Droite", "effects": [{"type": "SHIFT_ASPECT", "aspect": "Monde", "direction": "up"}]},
-		],
-		"tags": ["emergency"],
-	}
 
 
 # ═══════════════════════════════════════════════════════════════════════════════

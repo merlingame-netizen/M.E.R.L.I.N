@@ -1,12 +1,89 @@
-[gd_scene load_steps=2 format=3 uid="uid://efm8j2bu6cew"]
+[gd_scene load_steps=3 format=3 uid="uid://efm8j2bu6cew"]
 
 [ext_resource type="Script" path="res://scripts/TransitionBiome.gd" id="1_6f1m4"]
+[ext_resource type="Theme" uid="uid://pixj7s1gkmxd" path="res://themes/merlin_theme.tres" id="2_theme"]
 
 [node name="TransitionBiome" type="Control"]
 layout_mode = 3
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
-offset_right = 0.0
-offset_bottom = 0.0
+theme = ExtResource("2_theme")
 script = ExtResource("1_6f1m4")
+
+[node name="Bg" type="ColorRect" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+mouse_filter = 2
+
+[node name="CelticTop" type="Label" parent="."]
+layout_mode = 0
+mouse_filter = 2
+theme_override_font_sizes/font_size = 14
+
+[node name="CelticBottom" type="Label" parent="."]
+layout_mode = 0
+mouse_filter = 2
+theme_override_font_sizes/font_size = 14
+
+[node name="PixelContainer" type="Control" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+mouse_filter = 2
+
+[node name="WeatherOverlay" type="ColorRect" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+mouse_filter = 2
+z_index = 1
+
+[node name="ClockPanel" type="PanelContainer" parent="."]
+layout_mode = 0
+mouse_filter = 2
+z_index = 5
+modulate = Color(1, 1, 1, 0)
+
+[node name="ClockLabel" type="Label" parent="ClockPanel"]
+layout_mode = 2
+text = "00:00"
+horizontal_alignment = 1
+theme_override_font_sizes/font_size = 14
+
+[node name="BiomeTitle" type="Label" parent="."]
+layout_mode = 0
+horizontal_alignment = 1
+modulate = Color(1, 1, 1, 0)
+theme_override_font_sizes/font_size = 32
+
+[node name="BiomeSubtitle" type="Label" parent="."]
+layout_mode = 0
+horizontal_alignment = 1
+modulate = Color(1, 1, 1, 0)
+theme_override_font_sizes/font_size = 18
+
+[node name="ArrivalText" type="RichTextLabel" parent="."]
+layout_mode = 0
+custom_minimum_size = Vector2(650, 80)
+visible = false
+bbcode_enabled = true
+fit_content = true
+scroll_active = false
+visible_characters = 0
+
+[node name="MerlinComment" type="RichTextLabel" parent="."]
+layout_mode = 0
+custom_minimum_size = Vector2(600, 50)
+visible = false
+bbcode_enabled = true
+fit_content = true
+scroll_active = false
+visible_characters = 0
+
+[node name="AudioPlayer" type="AudioStreamPlayer" parent="."]
+bus = &"Master"

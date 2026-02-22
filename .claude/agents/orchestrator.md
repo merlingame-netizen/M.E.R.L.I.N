@@ -1,8 +1,10 @@
-# Agent Orchestrator — M.E.R.L.I.N. Multi-Agent System
+# Agent Orchestrator — DEPRECATED
 
-> **NOTE**: Ce fichier est le complement de `task_dispatcher.md`.
-> Le dispatcher classifie et retourne le plan d'agents.
-> L'orchestrateur decrit les workflows et la coordination entre agents.
+> **DEPRECATED**: Ce fichier est remplace par `task_dispatcher.md` + `~/.claude/agents/common/dispatcher_base.md`.
+> Les workflow patterns (cascades) ont ete integres dans le dispatcher base commun.
+> Ce fichier est conserve temporairement comme reference. A SUPPRIMER apres migration complete.
+>
+> **UTILISER A LA PLACE**: `task_dispatcher.md` (overlay projet) qui extend `dispatcher_base.md` (commun).
 
 ---
 

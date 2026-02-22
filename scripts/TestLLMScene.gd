@@ -6,7 +6,7 @@ const DEFAULT_EXTERNAL_DIR := "C:/models/trinity-nano"
 const PROMPT_MAX_CHARS := 320
 const MAX_RESPONSE_WORDS := 80
 const MODEL_FILES := {
-	"default": "ministral-3b-instruct.gguf",
+	"default": "qwen2.5-3b-instruct-q4_k_m.gguf",
 }
 const MODEL_ORDER := ["Q4_K_M"]
 

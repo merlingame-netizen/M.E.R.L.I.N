@@ -6,24 +6,6 @@ extends Control
 const FONT_REGULAR_PATH := "res://resources/fonts/morris/MorrisRomanBlackAlt.ttf"
 const FONT_BOLD_PATH := "res://resources/fonts/morris/MorrisRomanBlack.ttf"
 
-const PALETTE := {
-	"paper": Color(0.965, 0.945, 0.905),
-	"paper_dark": Color(0.935, 0.905, 0.855),
-	"paper_warm": Color(0.955, 0.930, 0.890),
-	"ink": Color(0.22, 0.18, 0.14),
-	"ink_soft": Color(0.38, 0.32, 0.26),
-	"ink_faded": Color(0.50, 0.44, 0.38, 0.35),
-	"accent": Color(0.58, 0.44, 0.26),
-	"accent_soft": Color(0.65, 0.52, 0.34),
-	"accent_glow": Color(0.72, 0.58, 0.38, 0.25),
-	"shadow": Color(0.25, 0.20, 0.16, 0.18),
-	"line": Color(0.40, 0.34, 0.28, 0.15),
-	"celtic_gold": Color(0.68, 0.55, 0.32),
-	"success": Color(0.35, 0.55, 0.40),
-	"locked": Color(0.55, 0.50, 0.45, 0.6),
-	"available_glow": Color(0.72, 0.58, 0.38, 0.6),
-}
-
 # Layout: branches organized by section, bottom to top
 const BRANCH_ORDER := ["Corps", "Universel", "Ame", "Monde"]
 const BRANCH_LABELS := {
@@ -38,16 +20,18 @@ var font_regular: Font
 var font_bold: Font
 var compact_mode := false
 
-# UI references
-var parchment_bg: ColorRect
-var header_bar: HBoxContainer
-var title_label: Label
-var currency_label: Label
-var scroll: ScrollContainer
-var tree_vbox: VBoxContainer
-var back_button: Button
-var detail_panel: PanelContainer
-var detail_vbox: VBoxContainer
+# UI references (scene nodes)
+@onready var parchment_bg: ColorRect = $ParchmentBG
+@onready var main_margin: MarginContainer = $MainMargin
+@onready var header_bar: HBoxContainer = $MainMargin/RootVBox/HeaderBar
+@onready var title_label: Label = $MainMargin/RootVBox/HeaderBar/TitleLabel
+@onready var currency_label: Label = $MainMargin/RootVBox/HeaderBar/CurrencyLabel
+@onready var separator: ColorRect = $MainMargin/RootVBox/Separator
+@onready var scroll: ScrollContainer = $MainMargin/RootVBox/HSplit/TreeScroll
+@onready var tree_vbox: VBoxContainer = $MainMargin/RootVBox/HSplit/TreeScroll/TreeVBox
+@onready var detail_panel: PanelContainer = $MainMargin/RootVBox/HSplit/DetailPanel
+@onready var detail_vbox: VBoxContainer = $MainMargin/RootVBox/HSplit/DetailPanel/DetailVBox
+@onready var back_button: Button = $MainMargin/RootVBox/BottomBar/BackButton
 
 # Node buttons map for refresh
 var _node_buttons: Dictionary = {}
@@ -57,7 +41,7 @@ var _selected_node_id: String = ""
 func _ready() -> void:
 	store = get_node_or_null("/root/MerlinStore")
 	_load_fonts()
-	_build_ui()
+	_configure_ui()
 	_refresh_tree()
 	get_viewport().size_changed.connect(_on_viewport_resized)
 
@@ -67,103 +51,52 @@ func _on_viewport_resized() -> void:
 
 
 func _load_fonts() -> void:
-	if ResourceLoader.exists(FONT_REGULAR_PATH):
-		font_regular = load(FONT_REGULAR_PATH)
-	if ResourceLoader.exists(FONT_BOLD_PATH):
-		font_bold = load(FONT_BOLD_PATH)
+	font_regular = MerlinVisual.get_font("body")
+	font_bold = MerlinVisual.get_font("title")
 	if font_regular == null:
 		font_regular = font_bold
 	if font_bold == null:
 		font_bold = font_regular
 
 
-func _build_ui() -> void:
+func _configure_ui() -> void:
 	compact_mode = get_viewport_rect().size.x <= 560.0
 
-	# Background
-	parchment_bg = ColorRect.new()
-	parchment_bg.set_anchors_preset(Control.PRESET_FULL_RECT)
-	parchment_bg.color = PALETTE.paper
-	var paper_shader := load("res://shaders/reigns_paper.gdshader")
+	# Parchment shader (runtime material)
+	parchment_bg.color = MerlinVisual.PALETTE.paper
+	var paper_shader := load("res://shaders/merlin_paper.gdshader")
 	if paper_shader:
 		var mat := ShaderMaterial.new()
 		mat.shader = paper_shader
-		mat.set_shader_parameter("paper_tint", PALETTE.paper)
+		mat.set_shader_parameter("paper_tint", MerlinVisual.PALETTE.paper)
 		mat.set_shader_parameter("grain_strength", 0.025)
 		mat.set_shader_parameter("vignette_strength", 0.08)
 		mat.set_shader_parameter("vignette_softness", 0.65)
 		parchment_bg.material = mat
-	add_child(parchment_bg)
 
-	# Main layout
-	var margin := MarginContainer.new()
-	margin.set_anchors_preset(Control.PRESET_FULL_RECT)
+	# Compact mode margins
 	var m: int = 16 if compact_mode else 28
-	margin.add_theme_constant_override("margin_left", m)
-	margin.add_theme_constant_override("margin_top", m)
-	margin.add_theme_constant_override("margin_right", m)
-	margin.add_theme_constant_override("margin_bottom", m)
-	add_child(margin)
+	main_margin.add_theme_constant_override("margin_left", m)
+	main_margin.add_theme_constant_override("margin_top", m)
+	main_margin.add_theme_constant_override("margin_right", m)
+	main_margin.add_theme_constant_override("margin_bottom", m)
 
-	var root_vbox := VBoxContainer.new()
-	root_vbox.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	root_vbox.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	root_vbox.add_theme_constant_override("separation", 10)
-	margin.add_child(root_vbox)
-
-	# Header
-	header_bar = HBoxContainer.new()
-	header_bar.add_theme_constant_override("separation", 12)
-	root_vbox.add_child(header_bar)
-
-	title_label = Label.new()
-	title_label.text = "Arbre de Vie"
-	title_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	# Font + color overrides (runtime — depends on MerlinVisual)
 	if font_bold:
 		title_label.add_theme_font_override("font", font_bold)
 	title_label.add_theme_font_size_override("font_size", 28 if not compact_mode else 22)
-	title_label.add_theme_color_override("font_color", PALETTE.celtic_gold)
-	header_bar.add_child(title_label)
+	title_label.add_theme_color_override("font_color", MerlinVisual.PALETTE.celtic_gold)
 
-	currency_label = Label.new()
-	currency_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
 	if font_regular:
 		currency_label.add_theme_font_override("font", font_regular)
-	currency_label.add_theme_font_size_override("font_size", 12)
-	currency_label.add_theme_color_override("font_color", PALETTE.ink_soft)
-	header_bar.add_child(currency_label)
+	currency_label.add_theme_color_override("font_color", MerlinVisual.PALETTE.ink_soft)
 
-	# Separator
-	var sep := ColorRect.new()
-	sep.custom_minimum_size = Vector2(0, 1)
-	sep.color = PALETTE.line
-	root_vbox.add_child(sep)
+	separator.color = MerlinVisual.PALETTE.line
 
-	# Main content: scroll + detail side by side
-	var hsplit := HBoxContainer.new()
-	hsplit.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	hsplit.add_theme_constant_override("separation", 10)
-	root_vbox.add_child(hsplit)
-
-	# Left: tree scroll
-	scroll = ScrollContainer.new()
-	scroll.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
-	hsplit.add_child(scroll)
-
-	tree_vbox = VBoxContainer.new()
-	tree_vbox.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	tree_vbox.add_theme_constant_override("separation", 14)
-	scroll.add_child(tree_vbox)
-
-	# Right: detail panel (hidden by default)
-	detail_panel = PanelContainer.new()
-	detail_panel.custom_minimum_size = Vector2(220, 0)
-	detail_panel.visible = false
+	# Detail panel style (runtime StyleBoxFlat)
 	var dp_style := StyleBoxFlat.new()
-	dp_style.bg_color = PALETTE.paper_warm
-	dp_style.border_color = PALETTE.line
+	dp_style.bg_color = MerlinVisual.PALETTE.paper_warm
+	dp_style.border_color = MerlinVisual.PALETTE.line
 	dp_style.set_border_width_all(1)
 	dp_style.corner_radius_top_left = 6
 	dp_style.corner_radius_top_right = 6
@@ -174,28 +107,14 @@ func _build_ui() -> void:
 	dp_style.content_margin_right = 12
 	dp_style.content_margin_bottom = 12
 	detail_panel.add_theme_stylebox_override("panel", dp_style)
-	hsplit.add_child(detail_panel)
 
-	detail_vbox = VBoxContainer.new()
-	detail_vbox.add_theme_constant_override("separation", 8)
-	detail_panel.add_child(detail_vbox)
-
-	# Bottom bar
-	var bottom := HBoxContainer.new()
-	bottom.alignment = BoxContainer.ALIGNMENT_CENTER
-	root_vbox.add_child(bottom)
-
-	back_button = Button.new()
-	back_button.text = "Retour"
-	back_button.custom_minimum_size = Vector2(120, 36)
+	# Back button
 	if font_regular:
 		back_button.add_theme_font_override("font", font_regular)
-	back_button.add_theme_font_size_override("font_size", 14)
 	_style_button(back_button)
 	back_button.pressed.connect(func():
-		get_tree().change_scene_to_file("res://scenes/HubAntre.tscn")
+		PixelTransition.transition_to("res://scenes/HubAntre.tscn")
 	)
-	bottom.add_child(back_button)
 
 
 func _refresh_tree() -> void:
@@ -235,7 +154,7 @@ func _build_tree_nodes() -> void:
 	# Build from bottom (Racines) to top (Feuillage)
 	for branch in BRANCH_ORDER:
 		var branch_label_text: String = BRANCH_LABELS.get(branch, branch)
-		var branch_color: Color = MerlinConstants.TALENT_BRANCH_COLORS.get(branch, PALETTE.ink)
+		var branch_color: Color = MerlinConstants.TALENT_BRANCH_COLORS.get(branch, MerlinVisual.PALETTE.ink)
 
 		# Branch header
 		var header := Label.new()
@@ -270,7 +189,7 @@ func _build_tree_nodes() -> void:
 			if font_regular:
 				tier_lbl.add_theme_font_override("font", font_regular)
 			tier_lbl.add_theme_font_size_override("font_size", 11)
-			tier_lbl.add_theme_color_override("font_color", PALETTE.ink_faded)
+			tier_lbl.add_theme_color_override("font_color", MerlinVisual.PALETTE.ink_faded)
 			tree_vbox.add_child(tier_lbl)
 
 			# Nodes row
@@ -288,7 +207,7 @@ func _build_tree_nodes() -> void:
 		# Separator between branches
 		var sep := ColorRect.new()
 		sep.custom_minimum_size = Vector2(0, 1)
-		sep.color = PALETTE.line
+		sep.color = MerlinVisual.PALETTE.line
 		tree_vbox.add_child(sep)
 
 
@@ -325,24 +244,24 @@ func _create_talent_button(node_id: String, branch_color: Color) -> Button:
 	normal.content_margin_bottom = 4
 
 	if is_unlocked:
-		normal.bg_color = branch_color.lerp(PALETTE.paper, 0.5)
+		normal.bg_color = branch_color.lerp(MerlinVisual.PALETTE.paper, 0.5)
 		normal.border_color = branch_color
 		normal.set_border_width_all(2)
-		btn.add_theme_color_override("font_color", PALETTE.ink)
+		btn.add_theme_color_override("font_color", MerlinVisual.PALETTE.ink)
 	elif is_available:
-		normal.bg_color = PALETTE.paper_warm
-		normal.border_color = PALETTE.available_glow
+		normal.bg_color = MerlinVisual.PALETTE.paper_warm
+		normal.border_color = MerlinVisual.PALETTE.accent_glow
 		normal.set_border_width_all(2)
-		btn.add_theme_color_override("font_color", PALETTE.accent)
+		btn.add_theme_color_override("font_color", MerlinVisual.PALETTE.accent)
 	else:
-		normal.bg_color = PALETTE.paper_dark
-		normal.border_color = PALETTE.locked
+		normal.bg_color = MerlinVisual.PALETTE.paper_dark
+		normal.border_color = MerlinVisual.PALETTE.locked
 		normal.set_border_width_all(1)
-		btn.add_theme_color_override("font_color", PALETTE.ink_faded)
+		btn.add_theme_color_override("font_color", MerlinVisual.PALETTE.ink_faded)
 
 	var hover := normal.duplicate()
 	hover.bg_color = normal.bg_color.lightened(0.08)
-	hover.border_color = PALETTE.accent
+	hover.border_color = MerlinVisual.PALETTE.accent
 
 	btn.add_theme_stylebox_override("normal", normal)
 	btn.add_theme_stylebox_override("hover", hover)
@@ -413,7 +332,7 @@ func _update_detail_panel() -> void:
 	var prereqs: Array = node.get("prerequisites", [])
 	var is_unlocked: bool = store.is_talent_active(_selected_node_id) if store else false
 	var is_available: bool = store.can_unlock_talent(_selected_node_id) if store else false
-	var branch_color: Color = MerlinConstants.TALENT_BRANCH_COLORS.get(branch, PALETTE.ink)
+	var branch_color: Color = MerlinConstants.TALENT_BRANCH_COLORS.get(branch, MerlinVisual.PALETTE.ink)
 
 	# Name
 	var name_lbl := Label.new()
@@ -432,7 +351,7 @@ func _update_detail_panel() -> void:
 	if font_regular:
 		branch_lbl.add_theme_font_override("font", font_regular)
 	branch_lbl.add_theme_font_size_override("font_size", 11)
-	branch_lbl.add_theme_color_override("font_color", PALETTE.ink_soft)
+	branch_lbl.add_theme_color_override("font_color", MerlinVisual.PALETTE.ink_soft)
 	detail_vbox.add_child(branch_lbl)
 
 	# Description
@@ -441,7 +360,7 @@ func _update_detail_panel() -> void:
 	if font_regular:
 		desc_lbl.add_theme_font_override("font", font_regular)
 	desc_lbl.add_theme_font_size_override("font_size", 13)
-	desc_lbl.add_theme_color_override("font_color", PALETTE.ink)
+	desc_lbl.add_theme_color_override("font_color", MerlinVisual.PALETTE.ink)
 	desc_lbl.autowrap_mode = TextServer.AUTOWRAP_WORD
 	detail_vbox.add_child(desc_lbl)
 
@@ -452,7 +371,7 @@ func _update_detail_panel() -> void:
 		if font_regular:
 			lore_lbl.add_theme_font_override("font", font_regular)
 		lore_lbl.add_theme_font_size_override("font_size", 11)
-		lore_lbl.add_theme_color_override("font_color", PALETTE.ink_faded)
+		lore_lbl.add_theme_color_override("font_color", MerlinVisual.PALETTE.ink_faded)
 		lore_lbl.autowrap_mode = TextServer.AUTOWRAP_WORD
 		detail_vbox.add_child(lore_lbl)
 
@@ -462,7 +381,7 @@ func _update_detail_panel() -> void:
 	if font_bold:
 		cost_header.add_theme_font_override("font", font_bold)
 	cost_header.add_theme_font_size_override("font_size", 12)
-	cost_header.add_theme_color_override("font_color", PALETTE.accent)
+	cost_header.add_theme_color_override("font_color", MerlinVisual.PALETTE.accent)
 	detail_vbox.add_child(cost_header)
 
 	var meta: Dictionary = store.state.get("meta", {}) if store else {}
@@ -482,7 +401,8 @@ func _update_detail_panel() -> void:
 		if font_regular:
 			cost_line.add_theme_font_override("font", font_regular)
 		cost_line.add_theme_font_size_override("font_size", 11)
-		cost_line.add_theme_color_override("font_color", PALETTE.success if enough else Color(0.7, 0.3, 0.3))
+		var cost_color: Color = MerlinVisual.PALETTE["success"] if enough else MerlinVisual.PALETTE["danger"]
+		cost_line.add_theme_color_override("font_color", cost_color)
 		detail_vbox.add_child(cost_line)
 
 	# Prerequisites
@@ -492,7 +412,7 @@ func _update_detail_panel() -> void:
 		if font_bold:
 			prereq_header.add_theme_font_override("font", font_bold)
 		prereq_header.add_theme_font_size_override("font_size", 12)
-		prereq_header.add_theme_color_override("font_color", PALETTE.accent)
+		prereq_header.add_theme_color_override("font_color", MerlinVisual.PALETTE.accent)
 		detail_vbox.add_child(prereq_header)
 
 		for p in prereqs:
@@ -504,20 +424,21 @@ func _update_detail_panel() -> void:
 			if font_regular:
 				prereq_lbl.add_theme_font_override("font", font_regular)
 			prereq_lbl.add_theme_font_size_override("font_size", 11)
-			prereq_lbl.add_theme_color_override("font_color", PALETTE.success if p_unlocked else Color(0.7, 0.3, 0.3))
+			var prereq_color: Color = MerlinVisual.PALETTE["success"] if p_unlocked else MerlinVisual.PALETTE["danger"]
+			prereq_lbl.add_theme_color_override("font_color", prereq_color)
 			detail_vbox.add_child(prereq_lbl)
 
 	# Status + Action button
 	var status_lbl := Label.new()
 	if is_unlocked:
 		status_lbl.text = "\u2713 Debloque"
-		status_lbl.add_theme_color_override("font_color", PALETTE.success)
+		status_lbl.add_theme_color_override("font_color", MerlinVisual.PALETTE.success)
 	elif is_available:
 		status_lbl.text = "Disponible"
-		status_lbl.add_theme_color_override("font_color", PALETTE.accent)
+		status_lbl.add_theme_color_override("font_color", MerlinVisual.PALETTE.accent)
 	else:
 		status_lbl.text = "Verrouille"
-		status_lbl.add_theme_color_override("font_color", PALETTE.locked)
+		status_lbl.add_theme_color_override("font_color", MerlinVisual.PALETTE.locked)
 	if font_bold:
 		status_lbl.add_theme_font_override("font", font_bold)
 	status_lbl.add_theme_font_size_override("font_size", 14)
@@ -532,7 +453,7 @@ func _update_detail_panel() -> void:
 		if font_bold:
 			unlock_btn.add_theme_font_override("font", font_bold)
 		unlock_btn.add_theme_font_size_override("font_size", 14)
-		_style_button(unlock_btn, PALETTE.success)
+		_style_button(unlock_btn, MerlinVisual.PALETTE.success)
 		unlock_btn.pressed.connect(_on_unlock_pressed.bind(_selected_node_id))
 		detail_vbox.add_child(unlock_btn)
 
@@ -555,9 +476,9 @@ func _on_unlock_pressed(node_id: String) -> void:
 
 
 func _style_button(btn: Button, accent_color: Color = Color.TRANSPARENT) -> void:
-	var color: Color = accent_color if accent_color.a > 0.1 else PALETTE.accent_soft
+	var color: Color = accent_color if accent_color.a > 0.1 else MerlinVisual.PALETTE.accent_soft
 	var normal := StyleBoxFlat.new()
-	normal.bg_color = PALETTE.paper_warm
+	normal.bg_color = MerlinVisual.PALETTE.paper_warm
 	normal.border_color = color
 	normal.set_border_width_all(1)
 	normal.corner_radius_top_left = 4
@@ -570,11 +491,11 @@ func _style_button(btn: Button, accent_color: Color = Color.TRANSPARENT) -> void
 	normal.content_margin_bottom = 6
 
 	var hover := normal.duplicate()
-	hover.bg_color = PALETTE.paper_dark
+	hover.bg_color = MerlinVisual.PALETTE.paper_dark
 	hover.border_color = color.lightened(0.15)
 
 	btn.add_theme_stylebox_override("normal", normal)
 	btn.add_theme_stylebox_override("hover", hover)
 	btn.add_theme_stylebox_override("pressed", hover)
-	btn.add_theme_color_override("font_color", PALETTE.ink)
+	btn.add_theme_color_override("font_color", MerlinVisual.PALETTE.ink)
 	btn.add_theme_color_override("font_hover_color", color)

@@ -1,6 +1,7 @@
-[gd_scene load_steps=2 format=3]
+[gd_scene load_steps=3 format=3 uid="uid://bd6djtasj0svx"]
 
-[ext_resource type="Script" path="res://scripts/ui/arbre_de_vie_ui.gd" id="1"]
+[ext_resource type="Script" uid="uid://bqf1ogmt5tgwk" path="res://scripts/ui/arbre_de_vie_ui.gd" id="1"]
+[ext_resource type="Theme" uid="uid://pixj7s1gkmxd" path="res://themes/merlin_theme.tres" id="2_theme"]
 
 [node name="ArbreDeVie" type="Control"]
 layout_mode = 3
@@ -9,4 +10,85 @@ anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
+theme = ExtResource("2_theme")
 script = ExtResource("1")
+
+[node name="ParchmentBG" type="ColorRect" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="MainMargin" type="MarginContainer" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_constants/margin_left = 28
+theme_override_constants/margin_top = 28
+theme_override_constants/margin_right = 28
+theme_override_constants/margin_bottom = 28
+
+[node name="RootVBox" type="VBoxContainer" parent="MainMargin"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+theme_override_constants/separation = 10
+
+[node name="HeaderBar" type="HBoxContainer" parent="MainMargin/RootVBox"]
+layout_mode = 2
+theme_override_constants/separation = 12
+
+[node name="TitleLabel" type="Label" parent="MainMargin/RootVBox/HeaderBar"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_font_sizes/font_size = 28
+text = "Arbre de Vie"
+
+[node name="CurrencyLabel" type="Label" parent="MainMargin/RootVBox/HeaderBar"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 12
+horizontal_alignment = 2
+
+[node name="Separator" type="ColorRect" parent="MainMargin/RootVBox"]
+custom_minimum_size = Vector2(0, 1)
+layout_mode = 2
+
+[node name="HSplit" type="HBoxContainer" parent="MainMargin/RootVBox"]
+layout_mode = 2
+size_flags_vertical = 3
+theme_override_constants/separation = 10
+
+[node name="TreeScroll" type="ScrollContainer" parent="MainMargin/RootVBox/HSplit"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+horizontal_scroll_mode = 0
+
+[node name="TreeVBox" type="VBoxContainer" parent="MainMargin/RootVBox/HSplit/TreeScroll"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 14
+
+[node name="DetailPanel" type="PanelContainer" parent="MainMargin/RootVBox/HSplit"]
+visible = false
+custom_minimum_size = Vector2(220, 0)
+layout_mode = 2
+
+[node name="DetailVBox" type="VBoxContainer" parent="MainMargin/RootVBox/HSplit/DetailPanel"]
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="BottomBar" type="HBoxContainer" parent="MainMargin/RootVBox"]
+layout_mode = 2
+alignment = 1
+
+[node name="BackButton" type="Button" parent="MainMargin/RootVBox/BottomBar"]
+custom_minimum_size = Vector2(120, 36)
+layout_mode = 2
+theme_override_font_sizes/font_size = 14
+text = "Retour"

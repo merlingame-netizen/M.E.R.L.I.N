@@ -5,45 +5,28 @@
 ## Duration: ~30-45 seconds, tap to advance each line
 ## ═══════════════════════════════════════════════════════════════════════════════
 
+## LEGACY NOTE:
+## This script is kept for archive/reference only.
+## Canonical onboarding scene is `res://scenes/SceneRencontreMerlin.tscn`.
 extends Control
 
 const NEXT_SCENE := "res://scenes/HubAntre.tscn"
 const DATA_PATH := "res://data/dialogues/scene_dialogues.json"
 
-const TYPEWRITER_DELAY := 0.030
-const TYPEWRITER_PUNCT_DELAY := 0.10
-const BLIP_FREQ := 880.0
-const BLIP_DURATION := 0.018
-const BLIP_VOLUME := 0.04
+# Typewriter constants removed — using MerlinVisual equivalents
+# MerlinVisual.TW_DELAY, TW_PUNCT_DELAY, TW_BLIP_FREQ, TW_BLIP_DURATION, TW_BLIP_VOLUME
 
-# ═══════════════════════════════════════════════════════════════════════════════
-# PALETTE — Parchemin Mystique Breton (shared with MenuPrincipal)
-# ═══════════════════════════════════════════════════════════════════════════════
-
-const PALETTE := {
-	"paper": Color(0.965, 0.945, 0.905),
-	"paper_dark": Color(0.935, 0.905, 0.855),
-	"paper_warm": Color(0.955, 0.930, 0.890),
-	"ink": Color(0.22, 0.18, 0.14),
-	"ink_soft": Color(0.38, 0.32, 0.26),
-	"ink_faded": Color(0.50, 0.44, 0.38, 0.35),
-	"accent": Color(0.58, 0.44, 0.26),
-	"accent_soft": Color(0.65, 0.52, 0.34),
-	"accent_glow": Color(0.72, 0.58, 0.38, 0.25),
-	"shadow": Color(0.25, 0.20, 0.16, 0.18),
-	"line": Color(0.40, 0.34, 0.28, 0.12),
-	"mist": Color(0.94, 0.92, 0.88, 0.35),
-}
+# PALETTE constant removed — using MerlinVisual.PALETTE autoload
 
 const CARD_MAX_WIDTH := 720.0
 const CARD_MAX_HEIGHT := 800.0
 const PORTRAIT_SIZE := Vector2(280, 340)
 
-const PORTRAIT_DEFAULT := "res://Assets/Sprite/Merlin.png"
-const PORTRAIT_PRINTEMPS := "res://Assets/Sprite/Merlin_PRINTEMPS.png"
-const PORTRAIT_ETE := "res://Assets/Sprite/Merlin_ETE.png"
-const PORTRAIT_AUTOMNE := "res://Assets/Sprite/Merlin_AUTOMNE.png"
-const PORTRAIT_HIVER := "res://Assets/Sprite/Merlin_HIVER.png"
+const PORTRAIT_DEFAULT := "res://Assets/Sprite/M.E.R.L.I.N.png"
+const PORTRAIT_PRINTEMPS := "res://Assets/Sprite/M.E.R.L.I.N.png"
+const PORTRAIT_ETE := "res://Assets/Sprite/M.E.R.L.I.N.png"
+const PORTRAIT_AUTOMNE := "res://Assets/Sprite/M.E.R.L.I.N.png"
+const PORTRAIT_HIVER := "res://Assets/Sprite/M.E.R.L.I.N.png"
 
 const UI_SOUNDS := {
 	"click": "res://audio/sfx/ui/ui_click.ogg",
@@ -59,8 +42,9 @@ var celtic_top: Label
 var celtic_bottom: Label
 var card: PanelContainer
 var card_vbox: VBoxContainer
-var portrait_rect: TextureRect
+var merlin_portrait: Control
 var merlin_text: RichTextLabel
+var _dialogue_source_badge: PanelContainer
 var skip_hint: Label
 var audio_player: AudioStreamPlayer
 var seasonal_overlay: ColorRect
@@ -95,6 +79,8 @@ var response_buttons: Array[Button] = []
 var _response_chosen: int = -1
 var _llm_warmup_done: bool = false
 var _preloaded_responses: Dictionary = {}  # line_index -> Array of 3 strings
+var _preloaded_sources: Dictionary = {}  # line_index -> "llm" or "fallback"
+var _response_source_badge: PanelContainer
 var loading_spinner: Label
 var merlin_ai: Node = null
 
@@ -114,6 +100,7 @@ func _ready() -> void:
 	var screen_fx := get_node_or_null("/root/ScreenEffects")
 	if screen_fx and screen_fx.has_method("set_merlin_mood"):
 		screen_fx.set_merlin_mood("pensif")
+	_set_merlin_portrait_mood("pensif")
 
 	resized.connect(_on_resized)
 	_start_mist_animation()
@@ -219,8 +206,8 @@ func _build_response_ui() -> void:
 
 		# Parchment button style
 		var btn_style := StyleBoxFlat.new()
-		btn_style.bg_color = PALETTE.paper_warm
-		btn_style.border_color = PALETTE.ink_faded
+		btn_style.bg_color = MerlinVisual.PALETTE.paper_warm
+		btn_style.border_color = MerlinVisual.PALETTE.ink_faded
 		btn_style.set_border_width_all(1)
 		btn_style.set_corner_radius_all(4)
 		btn_style.content_margin_left = 16
@@ -228,14 +215,14 @@ func _build_response_ui() -> void:
 		btn_style.content_margin_top = 8
 		btn_style.content_margin_bottom = 8
 		var btn_hover := btn_style.duplicate()
-		btn_hover.bg_color = PALETTE.paper_dark
-		btn_hover.border_color = PALETTE.accent
+		btn_hover.bg_color = MerlinVisual.PALETTE.paper_dark
+		btn_hover.border_color = MerlinVisual.PALETTE.accent
 		btn.add_theme_stylebox_override("normal", btn_style)
 		btn.add_theme_stylebox_override("hover", btn_hover)
 		btn.add_theme_stylebox_override("pressed", btn_hover)
 		btn.add_theme_stylebox_override("focus", btn_hover)
-		btn.add_theme_color_override("font_color", PALETTE.ink)
-		btn.add_theme_color_override("font_hover_color", PALETTE.accent)
+		btn.add_theme_color_override("font_color", MerlinVisual.PALETTE.ink)
+		btn.add_theme_color_override("font_hover_color", MerlinVisual.PALETTE.accent)
 		if body_font:
 			btn.add_theme_font_override("font", body_font)
 		btn.add_theme_font_size_override("font_size", 16)
@@ -244,6 +231,11 @@ func _build_response_ui() -> void:
 		btn.mouse_entered.connect(func(): SFXManager.play("choice_hover"))
 		response_container.add_child(btn)
 		response_buttons.append(btn)
+
+	# Response source badge (dev indicator)
+	_response_source_badge = LLMSourceBadge.create("static")
+	_response_source_badge.visible = false
+	response_container.add_child(_response_source_badge)
 
 
 func _warmup_llm_responses() -> void:
@@ -266,6 +258,7 @@ func _pregenerate_responses(line_index: int) -> void:
 	## Generate 3 player response options for a given dialogue line.
 	if merlin_ai == null or not merlin_ai.has_method("generate_with_system"):
 		_preloaded_responses[line_index] = _fallback_responses(line_index)
+		_preloaded_sources[line_index] = "fallback"
 		return
 
 	var line_data: Dictionary = dialogue_lines[line_index] if line_index < dialogue_lines.size() else {}
@@ -278,14 +271,17 @@ func _pregenerate_responses(line_index: int) -> void:
 
 	if result.has("error") or result.get("text", "").is_empty():
 		_preloaded_responses[line_index] = _fallback_responses(line_index)
+		_preloaded_sources[line_index] = "fallback"
 		return
 
 	var responses := _parse_numbered_responses(result.get("text", ""))
 	if responses.size() < 3:
 		_preloaded_responses[line_index] = _fallback_responses(line_index)
+		_preloaded_sources[line_index] = "fallback"
 		return
 
 	_preloaded_responses[line_index] = responses
+	_preloaded_sources[line_index] = "llm"
 
 
 func _parse_numbered_responses(text: String) -> Array[String]:
@@ -327,7 +323,7 @@ func _on_response_chosen(index: int) -> void:
 	# Visual feedback
 	for i in range(response_buttons.size()):
 		if i == index:
-			response_buttons[i].add_theme_color_override("font_color", PALETTE.accent)
+			response_buttons[i].add_theme_color_override("font_color", MerlinVisual.PALETTE.accent)
 		else:
 			response_buttons[i].modulate.a = 0.4
 
@@ -346,11 +342,11 @@ func _build_ui() -> void:
 	parchment_bg = ColorRect.new()
 	parchment_bg.set_anchors_preset(Control.PRESET_FULL_RECT)
 	parchment_bg.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	var paper_shader := load("res://shaders/reigns_paper.gdshader")
+	var paper_shader := load("res://shaders/merlin_paper.gdshader")
 	if paper_shader:
 		var mat := ShaderMaterial.new()
 		mat.shader = paper_shader
-		mat.set_shader_parameter("paper_tint", PALETTE.paper)
+		mat.set_shader_parameter("paper_tint", MerlinVisual.PALETTE.paper)
 		mat.set_shader_parameter("grain_strength", 0.025)
 		mat.set_shader_parameter("vignette_strength", 0.08)
 		mat.set_shader_parameter("vignette_softness", 0.65)
@@ -359,13 +355,13 @@ func _build_ui() -> void:
 		mat.set_shader_parameter("warp_strength", 0.001)
 		parchment_bg.material = mat
 	else:
-		parchment_bg.color = PALETTE.paper
+		parchment_bg.color = MerlinVisual.PALETTE.paper
 	add_child(parchment_bg)
 
 	# Mist layer
 	mist_layer = ColorRect.new()
 	mist_layer.set_anchors_preset(Control.PRESET_FULL_RECT)
-	mist_layer.color = PALETTE.mist
+	mist_layer.color = MerlinVisual.PALETTE.mist
 	mist_layer.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	mist_layer.modulate.a = 0.0
 	add_child(mist_layer)
@@ -392,13 +388,16 @@ func _build_ui() -> void:
 	var portrait_container := CenterContainer.new()
 	card_vbox.add_child(portrait_container)
 
-	portrait_rect = TextureRect.new()
-	portrait_rect.custom_minimum_size = PORTRAIT_SIZE
-	portrait_rect.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
-	portrait_rect.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
-	portrait_rect.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	_load_seasonal_portrait()
-	portrait_container.add_child(portrait_rect)
+	var PixelMerlinClass = load("res://scripts/ui/pixel_merlin_portrait.gd")
+	if PixelMerlinClass:
+		merlin_portrait = PixelMerlinClass.new()
+		portrait_container.add_child(merlin_portrait)
+		merlin_portrait.call("setup", 220.0)
+		merlin_portrait.call_deferred("assemble", false)
+	else:
+		merlin_portrait = Control.new()
+		merlin_portrait.custom_minimum_size = PORTRAIT_SIZE
+		portrait_container.add_child(merlin_portrait)
 
 	# Separator
 	var sep_container := HBoxContainer.new()
@@ -407,16 +406,16 @@ func _build_ui() -> void:
 	card_vbox.add_child(sep_container)
 
 	var sep_left := ColorRect.new()
-	sep_left.color = PALETTE.line
+	sep_left.color = MerlinVisual.PALETTE.line
 	sep_left.custom_minimum_size = Vector2(60, 1)
 	sep_container.add_child(sep_left)
 	var sep_diamond := Label.new()
 	sep_diamond.text = "◆"
-	sep_diamond.add_theme_color_override("font_color", PALETTE.accent)
+	sep_diamond.add_theme_color_override("font_color", MerlinVisual.PALETTE.accent)
 	sep_diamond.add_theme_font_size_override("font_size", 10)
 	sep_container.add_child(sep_diamond)
 	var sep_right := ColorRect.new()
-	sep_right.color = PALETTE.line
+	sep_right.color = MerlinVisual.PALETTE.line
 	sep_right.custom_minimum_size = Vector2(60, 1)
 	sep_container.add_child(sep_right)
 
@@ -433,8 +432,13 @@ func _build_ui() -> void:
 	if body_font:
 		merlin_text.add_theme_font_override("normal_font", body_font)
 	merlin_text.add_theme_font_size_override("normal_font_size", 26)
-	merlin_text.add_theme_color_override("default_color", PALETTE.ink)
+	merlin_text.add_theme_color_override("default_color", MerlinVisual.PALETTE.ink)
 	card_vbox.add_child(merlin_text)
+
+	# Dialogue source badge (dev indicator)
+	_dialogue_source_badge = LLMSourceBadge.create("static")
+	_dialogue_source_badge.visible = false
+	card_vbox.add_child(_dialogue_source_badge)
 
 	# Skip hint — inside card, below text
 	skip_hint = Label.new()
@@ -444,7 +448,7 @@ func _build_ui() -> void:
 	if body_font:
 		skip_hint.add_theme_font_override("font", body_font)
 	skip_hint.add_theme_font_size_override("font_size", 14)
-	skip_hint.add_theme_color_override("font_color", PALETTE.ink_faded)
+	skip_hint.add_theme_color_override("font_color", MerlinVisual.PALETTE.ink_faded)
 	skip_hint.visible = false
 	card_vbox.add_child(skip_hint)
 
@@ -455,7 +459,7 @@ func _build_ui() -> void:
 	loading_spinner = Label.new()
 	loading_spinner.text = "..."
 	loading_spinner.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	loading_spinner.add_theme_color_override("font_color", PALETTE.accent)
+	loading_spinner.add_theme_color_override("font_color", MerlinVisual.PALETTE.accent)
 	loading_spinner.add_theme_font_size_override("font_size", 18)
 	if body_font:
 		loading_spinner.add_theme_font_override("font", body_font)
@@ -471,11 +475,11 @@ func _build_ui() -> void:
 
 func _apply_card_style() -> void:
 	var style := StyleBoxFlat.new()
-	style.bg_color = PALETTE.paper_warm
-	style.border_color = PALETTE.ink_faded
+	style.bg_color = MerlinVisual.PALETTE.paper_warm
+	style.border_color = MerlinVisual.PALETTE.ink_faded
 	style.set_border_width_all(1)
 	style.set_corner_radius_all(4)
-	style.shadow_color = PALETTE.shadow
+	style.shadow_color = MerlinVisual.PALETTE.shadow
 	style.shadow_size = 16
 	style.shadow_offset = Vector2(0, 4)
 	style.content_margin_left = 36
@@ -486,20 +490,7 @@ func _apply_card_style() -> void:
 
 
 func _load_seasonal_portrait() -> void:
-	var month: int = Time.get_date_dict_from_system().month
-	var path := PORTRAIT_DEFAULT
-	if month >= 3 and month <= 5:
-		path = PORTRAIT_PRINTEMPS
-	elif month >= 6 and month <= 8:
-		path = PORTRAIT_ETE
-	elif month >= 9 and month <= 11:
-		path = PORTRAIT_AUTOMNE
-	else:
-		path = PORTRAIT_HIVER
-	if ResourceLoader.exists(path):
-		portrait_rect.texture = load(path)
-	elif ResourceLoader.exists(PORTRAIT_DEFAULT):
-		portrait_rect.texture = load(PORTRAIT_DEFAULT)
+	pass
 
 
 func _make_celtic_ornament() -> Label:
@@ -510,7 +501,7 @@ func _make_celtic_ornament() -> Label:
 		line += pattern[i % pattern.size()]
 	lbl.text = line
 	lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	lbl.add_theme_color_override("font_color", PALETTE.ink_faded)
+	lbl.add_theme_color_override("font_color", MerlinVisual.PALETTE.ink_faded)
 	lbl.add_theme_font_size_override("font_size", 14)
 	lbl.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	lbl.modulate.a = 0.0
@@ -601,10 +592,18 @@ func _play_sequence() -> void:
 			return
 
 		var line: Dictionary = dialogue_lines[i]
-		var text: String = line.get("text", "")
+		var original_text: String = line.get("text", "")
+		var text: String = original_text
 		# Use LLM-generated text if available
 		if _llm_gen:
-			text = _llm_gen.get_result(i, text)
+			text = _llm_gen.get_result(i, original_text)
+		# Update dialogue source badge
+		var dlg_source: String = "static"
+		if _llm_gen != null:
+			dlg_source = "llm" if text != original_text else "fallback"
+		if _dialogue_source_badge and is_instance_valid(_dialogue_source_badge):
+			LLMSourceBadge.update_badge(_dialogue_source_badge, dlg_source)
+			_dialogue_source_badge.visible = true
 
 		# Set mood via ScreenEffects
 		var emotion: String = line.get("emotion", "pensif")
@@ -612,6 +611,7 @@ func _play_sequence() -> void:
 		var screen_fx := get_node_or_null("/root/ScreenEffects")
 		if screen_fx and screen_fx.has_method("set_merlin_mood"):
 			screen_fx.set_merlin_mood(mood)
+		_set_merlin_portrait_mood(mood)
 
 		# Typewriter text (click = instant show)
 		await _show_text(text)
@@ -676,6 +676,12 @@ func _show_response_blocks(line_index: int) -> void:
 		else:
 			response_buttons[i].visible = false
 
+	# Update source badge
+	var resp_source: String = _preloaded_sources.get(line_index, "fallback")
+	if _response_source_badge and is_instance_valid(_response_source_badge):
+		LLMSourceBadge.update_badge(_response_source_badge, resp_source)
+		_response_source_badge.visible = true
+
 	# Reveal with cascade animation
 	response_container.visible = true
 	for i in range(mini(responses.size(), 3)):
@@ -732,6 +738,11 @@ func _emotion_to_mood(emotion: String) -> String:
 	return "sage"
 
 
+func _set_merlin_portrait_mood(mood: String) -> void:
+	if merlin_portrait and merlin_portrait.has_method("set_mood"):
+		merlin_portrait.call("set_mood", mood)
+
+
 # ═══════════════════════════════════════════════════════════════════════════════
 # TYPEWRITER
 # ═══════════════════════════════════════════════════════════════════════════════
@@ -750,9 +761,9 @@ func _show_text(text: String) -> void:
 		var ch := text[i]
 		if ch != " ":
 			_play_blip()
-		var delay := TYPEWRITER_DELAY
+		var delay: float = MerlinVisual.TW_DELAY
 		if ch in [".", "!", "?"]:
-			delay = TYPEWRITER_PUNCT_DELAY
+			delay = MerlinVisual.TW_PUNCT_DELAY
 		if not is_inside_tree():
 			break
 		await get_tree().create_timer(delay).timeout
@@ -815,6 +826,7 @@ func _transition_out() -> void:
 	var screen_fx := get_node_or_null("/root/ScreenEffects")
 	if screen_fx and screen_fx.has_method("set_merlin_mood"):
 		screen_fx.set_merlin_mood("warm")
+	_set_merlin_portrait_mood("warm")
 
 	# Store eveil flag + initial oghams (previously done in SceneAntreMerlin)
 	var gm := get_node_or_null("/root/GameManager")
@@ -846,7 +858,7 @@ func _transition_out() -> void:
 func _setup_audio() -> void:
 	audio_player = AudioStreamPlayer.new()
 	audio_player.bus = "Master"
-	audio_player.volume_db = linear_to_db(BLIP_VOLUME)
+	audio_player.volume_db = linear_to_db(MerlinVisual.TW_BLIP_VOLUME)
 	add_child(audio_player)
 
 

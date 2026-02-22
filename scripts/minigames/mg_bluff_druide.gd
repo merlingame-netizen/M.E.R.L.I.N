@@ -110,6 +110,13 @@ func _show_hint() -> void:
 		hint_label.text = "Le druide reste silencieux..."
 		hint_label.modulate = MG_PALETTE.ink
 
+func _on_key_pressed(keycode: int) -> void:
+	if keycode == KEY_UP or keycode == KEY_W:
+		_on_bet_high()
+	elif keycode == KEY_DOWN or keycode == KEY_S:
+		_on_bet_low()
+
+
 func _on_bet_high() -> void:
 	_resolve_bet(true)
 

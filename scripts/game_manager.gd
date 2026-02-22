@@ -21,81 +21,8 @@ signal type_changed(new_type: String)
 signal transition_requested(transition_type: String, data: Dictionary)
 
 # ═══════════════════════════════════════════════════════════════════════════════
-# CONSTANTS - GBC PALETTE
+# CONSTANTS
 # ═══════════════════════════════════════════════════════════════════════════════
-
-const PALETTE := {
-	# Base
-	"white": Color("#e8e8e8"),
-	"cream": Color("#f8f0d8"),
-	"light_gray": Color("#b8b0a0"),
-	"gray": Color("#787870"),
-	"dark_gray": Color("#484840"),
-	"black": Color("#181810"),
-	
-	# Nature
-	"grass_light": Color("#88d850"),
-	"grass": Color("#48a028"),
-	"grass_dark": Color("#306018"),
-	
-	# Water
-	"water_light": Color("#78c8f0"),
-	"water": Color("#3888c8"),
-	"water_dark": Color("#205898"),
-	
-	# Fire
-	"fire_light": Color("#f8a850"),
-	"fire": Color("#e07028"),
-	"fire_dark": Color("#a04818"),
-	
-	# Earth
-	"earth_light": Color("#d0b080"),
-	"earth": Color("#a08058"),
-	"earth_dark": Color("#685030"),
-	
-	# Mystic/Arcane
-	"mystic_light": Color("#c0a0e0"),
-	"mystic": Color("#8868b0"),
-	"mystic_dark": Color("#504078"),
-	
-	# Ice
-	"ice_light": Color("#d0f0f8"),
-	"ice": Color("#90d0e8"),
-	"ice_dark": Color("#5898b8"),
-	
-	# Thunder
-	"thunder_light": Color("#f8f080"),
-	"thunder": Color("#e8c830"),
-	"thunder_dark": Color("#a89020"),
-	
-	# Poison
-	"poison_light": Color("#c888d0"),
-	"poison": Color("#a050a8"),
-	"poison_dark": Color("#683870"),
-	
-	# Metal
-	"metal_light": Color("#c8c8d0"),
-	"metal": Color("#909098"),
-	"metal_dark": Color("#585860"),
-	
-	# Shadow
-	"shadow_light": Color("#686078"),
-	"shadow": Color("#403848"),
-	"shadow_dark": Color("#201820"),
-	
-	# Light
-	"light_light": Color("#f8f8c0"),
-	"light": Color("#f0e890"),
-	"light_dark": Color("#c8b858"),
-	
-	# UI bars
-	"hp_green": Color("#48a028"),
-	"hp_yellow": Color("#e8c030"),
-	"hp_red": Color("#d03028"),
-	"hunger_orange": Color("#e08028"),
-	"happy_pink": Color("#e080a0"),
-	"energy_blue": Color("#4898d0"),
-}
 
 # ═══════════════════════════════════════════════════════════════════════════════
 # TYPES SYSTEM (14 types)
@@ -548,8 +475,8 @@ func get_type_multiplier(attack_type: String, defense_type: String) -> float:
 
 func get_type_color(type_name: String) -> Color:
 	if not TYPES.has(type_name):
-		return PALETTE.gray
-	return PALETTE[TYPES[type_name].color]
+		return MerlinVisual.GBC.gray
+	return MerlinVisual.GBC[TYPES[type_name].color]
 
 func is_type_unlocked(type_name: String) -> bool:
 	return meta.unlocked_types.has(type_name)
@@ -839,6 +766,12 @@ func delete_save_slot(slot: int) -> void:
 # ═══════════════════════════════════════════════════════════════════════════════
 
 func _ready() -> void:
+	# Register MerlinStore as root singleton (class_name prevents autoload registration)
+	if not get_node_or_null("/root/MerlinStore"):
+		var store := MerlinStore.new()
+		store.name = "MerlinStore"
+		get_tree().root.call_deferred("add_child", store)
+
 	# Initialize essence dictionary
 	for type_name in TYPES:
 		meta.essence[type_name] = 0

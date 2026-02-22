@@ -8,15 +8,6 @@
 
 extends CanvasLayer
 
-const PALETTE := {
-	"paper": Color(0.965, 0.945, 0.905),
-	"ink": Color(0.22, 0.18, 0.14),
-	"ink_soft": Color(0.38, 0.32, 0.26),
-	"accent": Color(0.58, 0.44, 0.26),
-	"accent_soft": Color(0.65, 0.52, 0.34),
-	"bar_bg": Color(0.90, 0.88, 0.84),
-}
-
 const WARMUP_MESSAGES := [
 	"Les cerveaux de M.E.R.L.I.N. s'eveillent...",
 	"Les runes s'illuminent...",
@@ -24,29 +15,28 @@ const WARMUP_MESSAGES := [
 	"Les esprits se rassemblent...",
 ]
 
-var _bg: ColorRect
-var _title_label: Label
-var _detail_label: Label
-var _progress_bar: ColorRect
-var _progress_fill: ColorRect
-var _spinner_label: Label
-var _container: Control
+@onready var _container: Control = $Container
+@onready var _bg: ColorRect = $Container/BG
+@onready var _spinner_label: Label = $Container/SpinnerLabel
+@onready var _title_label: Label = $Container/TitleLabel
+@onready var _detail_label: Label = $Container/DetailLabel
+@onready var _progress_bar: ColorRect = $Container/ProgressBar
+@onready var _progress_fill: ColorRect = $Container/ProgressBar/ProgressFill
 var _merlin_ai: Node
 var _spinner_angle: float = 0.0
 var _dismissed: bool = false
 
-const SPINNER_CHARS := ["◐", "◓", "◑", "◒"]
+const SPINNER_CHARS := ["\u25d0", "\u25d3", "\u25d1", "\u25d2"]
 
 
 func _ready() -> void:
-	layer = 100
 	_merlin_ai = Engine.get_singleton("MerlinAI") if Engine.has_singleton("MerlinAI") else null
 	if _merlin_ai == null:
 		var root := get_tree().root if get_tree() else null
 		if root:
 			_merlin_ai = root.get_node_or_null("MerlinAI")
 
-	_build_ui()
+	_configure_ui()
 	_connect_signals()
 
 	# If already ready, dismiss immediately
@@ -54,52 +44,16 @@ func _ready() -> void:
 		_dismiss()
 
 
-func _build_ui() -> void:
-	_container = Control.new()
-	_container.set_anchors_preset(Control.PRESET_FULL_RECT)
-	_container.mouse_filter = Control.MOUSE_FILTER_STOP
-	add_child(_container)
-
-	# Semi-opaque parchment background
-	_bg = ColorRect.new()
-	_bg.set_anchors_preset(Control.PRESET_FULL_RECT)
-	_bg.color = Color(PALETTE.paper.r, PALETTE.paper.g, PALETTE.paper.b, 0.94)
-	_bg.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	_container.add_child(_bg)
-
-	# Title
-	_title_label = Label.new()
+func _configure_ui() -> void:
+	# Runtime color overrides (depend on MerlinVisual palette)
+	_bg.color = Color(MerlinVisual.PALETTE.paper.r, MerlinVisual.PALETTE.paper.g, MerlinVisual.PALETTE.paper.b, 0.94)
 	_title_label.text = WARMUP_MESSAGES[randi() % WARMUP_MESSAGES.size()]
-	_title_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	_title_label.add_theme_font_size_override("font_size", 22)
-	_title_label.add_theme_color_override("font_color", PALETTE.ink)
-	_container.add_child(_title_label)
-
-	# Spinner
-	_spinner_label = Label.new()
+	_title_label.add_theme_color_override("font_color", MerlinVisual.PALETTE.ink)
 	_spinner_label.text = SPINNER_CHARS[0]
-	_spinner_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	_spinner_label.add_theme_font_size_override("font_size", 32)
-	_spinner_label.add_theme_color_override("font_color", PALETTE.accent)
-	_container.add_child(_spinner_label)
-
-	# Detail (brain being loaded)
-	_detail_label = Label.new()
-	_detail_label.text = "Preparation..."
-	_detail_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	_detail_label.add_theme_font_size_override("font_size", 14)
-	_detail_label.add_theme_color_override("font_color", PALETTE.ink_soft)
-	_container.add_child(_detail_label)
-
-	# Progress bar background
-	_progress_bar = ColorRect.new()
-	_progress_bar.color = PALETTE.bar_bg
-	_container.add_child(_progress_bar)
-
-	# Progress bar fill
-	_progress_fill = ColorRect.new()
-	_progress_fill.color = PALETTE.accent
-	_progress_bar.add_child(_progress_fill)
+	_spinner_label.add_theme_color_override("font_color", MerlinVisual.PALETTE.accent)
+	_detail_label.add_theme_color_override("font_color", MerlinVisual.PALETTE.ink_soft)
+	_progress_bar.color = MerlinVisual.PALETTE.paper_warm
+	_progress_fill.color = MerlinVisual.PALETTE.accent
 
 	_layout()
 	_container.resized.connect(_layout)

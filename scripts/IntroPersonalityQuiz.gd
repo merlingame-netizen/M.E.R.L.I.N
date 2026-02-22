@@ -12,15 +12,7 @@ signal quiz_completed(traits: Dictionary)
 const NEXT_SCENE := "res://scenes/SceneRencontreMerlin.tscn"
 const MENU_SCENE := "res://scenes/MenuPrincipal.tscn"
 
-const PALETTE := {
-	"bg": Color(0.02, 0.02, 0.04),
-	"text": Color(0.92, 0.88, 0.80),
-	"text_dim": Color(0.6, 0.55, 0.50),
-	"accent": Color(0.85, 0.70, 0.35),
-	"choice_normal": Color(0.75, 0.70, 0.65),
-	"choice_hover": Color(0.95, 0.90, 0.80),
-	"choice_selected": Color(0.85, 0.70, 0.35),
-}
+# PALETTE constant removed — using MerlinVisual.PALETTE autoload
 
 const FADE_DURATION := 1.5
 const TEXT_FADE_DURATION := 0.8
@@ -254,7 +246,7 @@ func _build_ui() -> void:
 	background = ColorRect.new()
 	background.name = "Background"
 	background.set_anchors_preset(Control.PRESET_FULL_RECT)
-	background.color = PALETTE.bg
+	background.color = Color(0.02, 0.02, 0.04)
 	add_child(background)
 
 	# Center container for content
@@ -279,7 +271,7 @@ func _build_ui() -> void:
 	if title_font:
 		question_label.add_theme_font_override("font", title_font)
 	question_label.add_theme_font_size_override("font_size", 28)
-	question_label.add_theme_color_override("font_color", PALETTE.text)
+	question_label.add_theme_color_override("font_color", Color(0.92, 0.88, 0.80))
 	question_label.modulate.a = 0
 	vbox.add_child(question_label)
 
@@ -305,7 +297,7 @@ func _build_ui() -> void:
 	if body_font:
 		progress_label.add_theme_font_override("font", body_font)
 	progress_label.add_theme_font_size_override("font_size", 14)
-	progress_label.add_theme_color_override("font_color", PALETTE.text_dim)
+	progress_label.add_theme_color_override("font_color", Color(0.92, 0.88, 0.80, 0.6))
 	progress_label.modulate.a = 0
 	add_child(progress_label)
 
@@ -330,8 +322,8 @@ func _build_skip_button() -> void:
 	if body_font:
 		skip_button.add_theme_font_override("font", body_font)
 	skip_button.add_theme_font_size_override("font_size", 16)
-	skip_button.add_theme_color_override("font_color", PALETTE.text_dim)
-	skip_button.add_theme_color_override("font_hover_color", PALETTE.accent)
+	skip_button.add_theme_color_override("font_color", Color(0.92, 0.88, 0.80, 0.6))
+	skip_button.add_theme_color_override("font_hover_color", MerlinVisual.PALETTE.accent)
 	skip_button.pressed.connect(_show_skip_modal)
 	add_child(skip_button)
 
@@ -348,7 +340,7 @@ func _build_skip_button() -> void:
 	var modal_style := StyleBoxFlat.new()
 	modal_style.bg_color = Color(0.08, 0.08, 0.12, 0.95)
 	modal_style.set_border_width_all(2)
-	modal_style.border_color = PALETTE.accent
+	modal_style.border_color = MerlinVisual.PALETTE.accent
 	modal_style.set_corner_radius_all(8)
 	modal_style.content_margin_left = 24
 	modal_style.content_margin_right = 24
@@ -368,7 +360,7 @@ func _build_skip_button() -> void:
 	if body_font:
 		modal_title.add_theme_font_override("font", body_font)
 	modal_title.add_theme_font_size_override("font_size", 18)
-	modal_title.add_theme_color_override("font_color", PALETTE.text)
+	modal_title.add_theme_color_override("font_color", Color(0.92, 0.88, 0.80))
 	modal_vbox.add_child(modal_title)
 
 	var buttons_hbox := HBoxContainer.new()
@@ -386,8 +378,8 @@ func _build_skip_button() -> void:
 	if body_font:
 		menu_btn.add_theme_font_override("font", body_font)
 	menu_btn.add_theme_font_size_override("font_size", 16)
-	menu_btn.add_theme_color_override("font_color", PALETTE.text_dim)
-	menu_btn.add_theme_color_override("font_hover_color", PALETTE.text)
+	menu_btn.add_theme_color_override("font_color", Color(0.92, 0.88, 0.80, 0.6))
+	menu_btn.add_theme_color_override("font_hover_color", Color(0.92, 0.88, 0.80))
 	menu_btn.pressed.connect(_skip_to_menu)
 	buttons_hbox.add_child(menu_btn)
 
@@ -401,8 +393,8 @@ func _build_skip_button() -> void:
 	if body_font:
 		continue_btn.add_theme_font_override("font", body_font)
 	continue_btn.add_theme_font_size_override("font_size", 16)
-	continue_btn.add_theme_color_override("font_color", PALETTE.accent)
-	continue_btn.add_theme_color_override("font_hover_color", PALETTE.choice_hover)
+	continue_btn.add_theme_color_override("font_color", MerlinVisual.PALETTE.accent)
+	continue_btn.add_theme_color_override("font_hover_color", MerlinVisual.PALETTE.choice_hover)
 	continue_btn.pressed.connect(_skip_to_next_scene)
 	buttons_hbox.add_child(continue_btn)
 
@@ -411,7 +403,7 @@ func _build_skip_button() -> void:
 	cancel_hint.text = "(Echap pour annuler)"
 	cancel_hint.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	cancel_hint.add_theme_font_size_override("font_size", 12)
-	cancel_hint.add_theme_color_override("font_color", PALETTE.text_dim)
+	cancel_hint.add_theme_color_override("font_color", Color(0.92, 0.88, 0.80, 0.6))
 	modal_vbox.add_child(cancel_hint)
 
 
@@ -446,7 +438,7 @@ func _skip_to_menu() -> void:
 	active_tween = create_tween()
 	active_tween.tween_property(self, "modulate:a", 0.0, 0.5)
 	active_tween.tween_callback(func():
-		get_tree().change_scene_to_file(MENU_SCENE)
+		PixelTransition.transition_to(MENU_SCENE)
 	)
 
 
@@ -500,31 +492,45 @@ func _show_question(index: int) -> void:
 	# Update progress
 	progress_label.text = "%d / %d" % [index + 1, QUESTIONS.size()]
 
-	# Fade in question text
+	# Set question text (hidden initially)
 	question_label.text = question.text
+	question_label.modulate.a = 0.0
+	progress_label.modulate.a = 0.0
 
 	if active_tween:
 		active_tween.kill()
-	active_tween = create_tween()
 
-	# Fade in question
-	active_tween.tween_property(question_label, "modulate:a", 1.0, TEXT_FADE_DURATION)
-	active_tween.parallel().tween_property(progress_label, "modulate:a", 0.5, TEXT_FADE_DURATION)
+	# Pixel reveal question + progress
+	var pca: Node = get_node_or_null("/root/PixelContentAnimator")
+	if pca:
+		await get_tree().process_frame
+		pca.reveal(question_label, {"duration": 0.4, "block_size": 8})
+		pca.reveal(progress_label, {"duration": 0.3, "block_size": 6})
+	else:
+		question_label.modulate.a = 1.0
+		progress_label.modulate.a = 0.5
 
 	# Wait then show choices
-	active_tween.tween_interval(QUESTION_DELAY)
+	await get_tree().create_timer(QUESTION_DELAY).timeout
 
 	# Create choice buttons
 	var choices: Array = question.choices
+	var btns_to_reveal: Array[Control] = []
 	for i in range(choices.size()):
 		var choice: Dictionary = choices[i]
 		var btn := _create_choice_button(choice.text, i)
-		btn.modulate.a = 0
+		btn.modulate.a = 0.0
 		choices_container.add_child(btn)
 		choice_buttons.append(btn)
+		btns_to_reveal.append(btn)
 
-		# Stagger fade in
-		active_tween.tween_property(btn, "modulate:a", 1.0, 0.3).set_delay(i * CHOICE_STAGGER)
+	# Pixel reveal choice buttons as a group
+	if pca:
+		await get_tree().process_frame
+		pca.reveal_group(btns_to_reveal, {"duration": 0.3, "block_size": 8, "inter_delay": 0.1})
+	else:
+		for btn in btns_to_reveal:
+			btn.modulate.a = 1.0
 
 
 func _create_choice_button(text: String, index: int) -> Button:
@@ -539,9 +545,9 @@ func _create_choice_button(text: String, index: int) -> Button:
 	if body_font:
 		btn.add_theme_font_override("font", body_font)
 	btn.add_theme_font_size_override("font_size", 20)
-	btn.add_theme_color_override("font_color", PALETTE.choice_normal)
-	btn.add_theme_color_override("font_hover_color", PALETTE.choice_hover)
-	btn.add_theme_color_override("font_pressed_color", PALETTE.choice_selected)
+	btn.add_theme_color_override("font_color", MerlinVisual.PALETTE.choice_normal)
+	btn.add_theme_color_override("font_hover_color", MerlinVisual.PALETTE.choice_hover)
+	btn.add_theme_color_override("font_pressed_color", MerlinVisual.PALETTE.choice_selected)
 
 	# Connect signals
 	btn.pressed.connect(func(): _on_choice_selected(index))
@@ -588,27 +594,35 @@ func _on_choice_selected(choice_index: int) -> void:
 
 	# Flash selected button
 	var selected_btn: Button = choice_buttons[choice_index]
-	selected_btn.add_theme_color_override("font_color", PALETTE.choice_selected)
+	selected_btn.add_theme_color_override("font_color", MerlinVisual.PALETTE.choice_selected)
 
-	# Fade out all
-	if active_tween:
-		active_tween.kill()
-	active_tween = create_tween()
-	active_tween.tween_property(question_label, "modulate:a", 0.0, 0.4)
-	active_tween.parallel().tween_property(progress_label, "modulate:a", 0.0, 0.4)
-
-	for btn in choice_buttons:
-		active_tween.parallel().tween_property(btn, "modulate:a", 0.0, 0.3)
+	# Pixel dissolve all
+	var pca: Node = get_node_or_null("/root/PixelContentAnimator")
+	if pca:
+		pca.dissolve(question_label, {"duration": 0.35, "block_size": 8})
+		pca.dissolve(progress_label, {"duration": 0.25, "block_size": 6})
+		var btns_arr: Array[Control] = []
+		for btn in choice_buttons:
+			btns_arr.append(btn)
+		pca.dissolve_group(btns_arr, {"duration": 0.25, "block_size": 8, "inter_delay": 0.05})
+		# Wait for dissolve to finish
+		await get_tree().create_timer(0.5).timeout
+	else:
+		if active_tween:
+			active_tween.kill()
+		active_tween = create_tween()
+		active_tween.tween_property(question_label, "modulate:a", 0.0, 0.4)
+		active_tween.parallel().tween_property(progress_label, "modulate:a", 0.0, 0.4)
+		for btn in choice_buttons:
+			active_tween.parallel().tween_property(btn, "modulate:a", 0.0, 0.3)
+		await active_tween.finished
 
 	# Next question or complete
-	active_tween.tween_interval(0.3)
-	active_tween.tween_callback(func():
-		is_transitioning = false
-		var sfx_mgr := get_node_or_null("/root/SFXManager")
-		if sfx_mgr:
-			sfx_mgr.play("question_transition")
-		_show_question(current_question_index + 1)
-	)
+	is_transitioning = false
+	var sfx_mgr := get_node_or_null("/root/SFXManager")
+	if sfx_mgr:
+		sfx_mgr.play("question_transition")
+	_show_question(current_question_index + 1)
 
 
 # =============================================================================
@@ -639,57 +653,83 @@ func _show_personality_reveal(personality: Dictionary) -> void:
 	var archetype_desc: String = personality.archetype_desc
 	var traits: Array = personality.dominant_traits
 
-	# Phase 1: "Les brumes connaissent..."
-	question_label.text = "Les brumes connaissent ton coeur..."
-
+	var pca: Node = get_node_or_null("/root/PixelContentAnimator")
 	var sfx := get_node_or_null("/root/SFXManager")
 	if sfx:
 		sfx.play("result_reveal")
 
-	if active_tween:
-		active_tween.kill()
-	active_tween = create_tween()
-	active_tween.tween_property(question_label, "modulate:a", 1.0, TEXT_FADE_DURATION)
-	active_tween.tween_interval(1.5)
-	active_tween.tween_property(question_label, "modulate:a", 0.0, 0.5)
+	# Phase 1: "Les brumes connaissent..."
+	question_label.text = "Les brumes connaissent ton coeur..."
+	question_label.modulate.a = 0.0
+	await get_tree().process_frame
+	if pca:
+		pca.reveal(question_label, {"duration": 0.5, "block_size": 8})
+	else:
+		question_label.modulate.a = 1.0
+	await get_tree().create_timer(1.5).timeout
+	if pca:
+		pca.dissolve(question_label, {"duration": 0.4, "block_size": 8})
+	else:
+		question_label.modulate.a = 0.0
+	await get_tree().create_timer(0.5).timeout
 
 	# Phase 2: Archetype title
-	active_tween.tween_callback(func():
-		question_label.text = archetype_title
-		question_label.add_theme_font_size_override("font_size", 42)
-		question_label.add_theme_color_override("font_color", PALETTE.accent)
-		var sfx_mgr := get_node_or_null("/root/SFXManager")
-		if sfx_mgr:
-			sfx_mgr.play("magic_reveal")
-	)
-	active_tween.tween_property(question_label, "modulate:a", 1.0, TEXT_FADE_DURATION)
-	active_tween.tween_interval(2.0)
-	active_tween.tween_property(question_label, "modulate:a", 0.0, 0.5)
+	question_label.text = archetype_title
+	question_label.add_theme_font_size_override("font_size", 42)
+	question_label.add_theme_color_override("font_color", MerlinVisual.PALETTE.accent)
+	question_label.modulate.a = 0.0
+	if sfx:
+		sfx.play("magic_reveal")
+	await get_tree().process_frame
+	if pca:
+		pca.reveal(question_label, {"duration": 0.5, "block_size": 6})
+	else:
+		question_label.modulate.a = 1.0
+	await get_tree().create_timer(2.0).timeout
+	if pca:
+		pca.dissolve(question_label, {"duration": 0.4, "block_size": 6})
+	else:
+		question_label.modulate.a = 0.0
+	await get_tree().create_timer(0.5).timeout
 
 	# Phase 3: Description
-	active_tween.tween_callback(func():
-		question_label.text = archetype_desc
-		question_label.add_theme_font_size_override("font_size", 24)
-		question_label.add_theme_color_override("font_color", PALETTE.text)
-	)
-	active_tween.tween_property(question_label, "modulate:a", 1.0, TEXT_FADE_DURATION)
-	active_tween.tween_interval(3.0)
+	question_label.text = archetype_desc
+	question_label.add_theme_font_size_override("font_size", 24)
+	question_label.add_theme_color_override("font_color", Color(0.92, 0.88, 0.80))
+	question_label.modulate.a = 0.0
+	await get_tree().process_frame
+	if pca:
+		pca.reveal(question_label, {"duration": 0.5, "block_size": 8})
+	else:
+		question_label.modulate.a = 1.0
+	await get_tree().create_timer(3.0).timeout
 
 	# Phase 4: Traits summary
 	if traits.size() > 0:
 		var traits_text := "Tes traits:\n" + ", ".join(traits)
-		active_tween.tween_property(question_label, "modulate:a", 0.0, 0.5)
-		active_tween.tween_callback(func():
-			question_label.text = traits_text
-			question_label.add_theme_font_size_override("font_size", 20)
-			question_label.add_theme_color_override("font_color", PALETTE.text_dim)
-		)
-		active_tween.tween_property(question_label, "modulate:a", 1.0, TEXT_FADE_DURATION)
-		active_tween.tween_interval(2.0)
+		if pca:
+			pca.dissolve(question_label, {"duration": 0.4, "block_size": 8})
+		else:
+			question_label.modulate.a = 0.0
+		await get_tree().create_timer(0.5).timeout
+		question_label.text = traits_text
+		question_label.add_theme_font_size_override("font_size", 20)
+		question_label.add_theme_color_override("font_color", Color(0.82, 0.78, 0.70))
+		question_label.modulate.a = 0.0
+		await get_tree().process_frame
+		if pca:
+			pca.reveal(question_label, {"duration": 0.5, "block_size": 8})
+		else:
+			question_label.modulate.a = 1.0
+		await get_tree().create_timer(2.0).timeout
 
-	# Final fade and transition
-	active_tween.tween_property(question_label, "modulate:a", 0.0, FADE_DURATION)
-	active_tween.tween_callback(_transition_to_next_scene)
+	# Final dissolve and transition
+	if pca:
+		pca.dissolve(question_label, {"duration": 0.5, "block_size": 8})
+	else:
+		question_label.modulate.a = 0.0
+	await get_tree().create_timer(FADE_DURATION).timeout
+	_transition_to_next_scene()
 
 
 func _calculate_personality() -> Dictionary:
@@ -760,7 +800,7 @@ func _transition_to_next_scene() -> void:
 	active_tween = create_tween()
 	active_tween.tween_property(self, "modulate:a", 0.0, FADE_DURATION)
 	active_tween.tween_callback(func():
-		get_tree().change_scene_to_file(NEXT_SCENE)
+		PixelTransition.transition_to(NEXT_SCENE)
 	)
 
 

@@ -1,34 +1,38 @@
-# Architecture LLM Qwen2.5-3B-Instruct — M.E.R.L.I.N.
+# Architecture LLM Qwen 2.5-3B-Instruct — M.E.R.L.I.N.
 
-> MAJ: 2026-02-09 — Phase 30: GBNF Grammar + Two-Stage Fallback + Q5_K_M Default
+> MAJ: 2026-02-15 — Ollama Backend + Zero Fallback + Multi-Brain + Buffer 5
 
 ---
 
 ## 1. Vue d'ensemble
 
 ```
-Gameplay (TriadeGameController)
+Gameplay (TriadeGameController, BUFFER_SIZE=5)
   │
   ├→ show_thinking()  ← Celtic triskelion animation pendant LLM
   │
   └→ MerlinStore.TRIADE_GET_CARD
        ├→ MerlinOmniscient (MOS + 5 registres + RAG v2.0 + Prefetch)
-       │    ├→ _try_use_prefetch()   ← carte pre-generee? (0ms si hit)
-       │    ├→ _sync_mos_to_rag()    ← registries → RAG world state
-       │    ├→ RAG.get_prioritized_context()  ← token budget 180
+       │    ├→ _try_use_prefetch()   ← buffer 5 cartes (0ms si hit)
+       │    ├→ Scene context cache   ← version tracking (deduplique refresh)
+       │    ├→ RAG.get_prioritized_context()  ← token budget 400
        │    ├→ _apply_guardrails()   ← language + repetition + length
-       │    └→ RAG.log_card_played() ← journal structured
+       │    ├→ RAG.log_card_played() ← journal structured
+       │    └→ ZERO FALLBACK: retry ou "Merlin medite" overlay
        ├→ MerlinLlmAdapter.generate_card() → carte LLM brute validee
        │    └→ _extract_json: 4 strategies (parse → fix → repair → regex)
-       └→ MerlinCardSystem.get_next_triade_card() → fallback pool
+       └→ [SUPPRIME] Plus de fallback pool statique
   │
   ├→ hide_thinking() + display_card()
   └→ prefetch_next_card()  ← pre-genere carte N+1 en arriere-plan
 
-MerlinAI (autoload)
-  ├→ Single LLM:   Qwen2.5-3B-Instruct Q4_K_M (router == executor, 1 instance)
-  ├→ RAGManager v2.0 (journal + cross-run + world state + token budget)
-  └→ Fallback chain: Q4_K_M → Q5_K_M → Q8_0
+MerlinAI (autoload, Multi-Brain)
+  ├→ Backend primaire: Ollama HTTP (<3s/carte)
+  │    ├→ Brain 1 (Narrateur): T=0.7, top_p=0.9, max=200
+  │    └→ Brain 2 (Game Master): T=0.2, top_p=0.8, max=150
+  ├→ Backend secondaire: MerlinLLM C++ (si pas Ollama, single brain)
+  ├→ RAGManager v2.0 (journal + cross-run + world state + budget 400)
+  └→ Detection auto: Ollama → MerlinLLM → erreur
 ```
 
 ---
@@ -37,9 +41,9 @@ MerlinAI (autoload)
 
 | Quantization | Fichier | Taille | Usage | JSON Valid | Vitesse |
 |--------------|---------|--------|-------|------------|---------|
-| Q4_K_M | `Qwen2.5-3B-Instruct-Preview-Q4_K_M.gguf` | ~3.6 GB | Fallback leger | 20% | Rapide |
-| **Q5_K_M** | `Qwen2.5-3B-Instruct-Preview-Q5_K_M.gguf` | ~4.1 GB | **DEFAULT** (Phase 30) | **60%** | Moyen |
-| Q8_0 | `Qwen2.5-3B-Instruct-Preview-Q8_0.gguf` | ~6.1 GB | Fallback qualite max | 40% | Lent |
+| Q4_K_M | `qwen2.5-3b-instruct-q4_k_m.gguf` | ~2.0 GB | Fallback leger | 20% | Rapide |
+| **Q5_K_M** | `qwen2.5-3b-instruct-q5_k_m.gguf` | ~2.4 GB | **DEFAULT** (Phase 30) | **60%** | Moyen |
+| Q8_0 | `qwen2.5-3b-instruct-q8_0.gguf` | ~3.2 GB | Fallback qualite max | 40% | Lent |
 
 **Recommandation production**: Q5_K_M pour le meilleur ratio JSON validite/latence (benchmark Phase 30).
 Q4 trop degradee en qualite JSON (20%). Q8 plus lourd mais pas meilleur en JSON (40%).
@@ -90,21 +94,21 @@ STREAM_MAX_ROUNDS = 4          # Max iterations streaming
 
 | Composant | RAM estimee | Notes |
 |-----------|-------------|-------|
-| Modele Q4_K_M | ~3.6 GB | Poids du modele en memoire |
+| Modele Q4_K_M | ~2.0 GB | Poids du modele en memoire |
 | KV Cache (2048 tokens) | ~512 MB | Proportionnel a n_ctx |
 | Godot Engine | ~200-400 MB | Scenes, textures, audio |
-| **TOTAL** | **~4.5 GB** | Target: machines 8 GB RAM |
+| **TOTAL** | **~2.7 GB** | Target: machines 4+ GB RAM |
 
 ### 4.2 Strategies d'optimisation memoire
 
 1. **Modele unique (router == executor)**: Un seul MerlinLLM en RAM.
-   Gain: ~3.6 GB par rapport a l'architecture dual-model. (Phase 28 fix)
+   Gain: ~2.0 GB par rapport a l'architecture dual-model. (Phase 28 fix)
 
 2. **n_ctx minimal**: 2048 tokens au lieu de 4096.
    Gain: ~256 MB de KV cache en moins.
 
 3. **Quantization Q4_K_M**: Le plus leger qui preserve la qualite.
-   Gain: ~2.5 GB vs Q8_0.
+   Gain: ~1.2 GB vs Q8_0.
 
 4. **max_tokens court (200)**: Limite la generation pour eviter la latence.
    Gain: ~50% temps de generation vs max_tokens=512.
@@ -170,7 +174,7 @@ User (variable, ~30-50 tokens):
 
 ### Token Budget Management
 ```
-CONTEXT_BUDGET = 180 tokens (~720 chars)
+CONTEXT_BUDGET = 400 tokens (~1600 chars)  # Reduit de 600 (Phase Ollama)
 CHARS_PER_TOKEN = 4 (heuristique multilingue)
 
 Priorite enum:
@@ -223,37 +227,37 @@ _apply_guardrails(card):
   3. Repetition    — Jaccard word similarity < 0.7 vs 10 dernières cartes
   4. Structure     — JSON valide (deja verifie par parser)
 
-Si echec → fallback_pool.get_fallback_card()
+Si echec → generation_failed signal (ZERO FALLBACK, plus de pool statique)
 ```
 
 ---
 
-## 6. Architecture de fallback + Prefetch (Phase 29)
+## 6. Architecture Zero Fallback + Prefetch (Phase Ollama)
 
 ```
 Requete carte
   │
-  ├─[0] Prefetch Check (NOUVEAU Phase 29)
+  ├─[0] Prefetch Check (buffer 5 cartes)
   │     Carte pre-generee disponible + contexte hash match?
-  │     Si oui → retour immediat (~0ms) ← supprime latence
+  │     Si oui → retour immediat (~0ms)
   │
   ├─[1] MerlinOmniscient (MOS)
-  │     Cache + registres → carte contextualisee
-  │     Si cache hit → retour immediat (~0ms)
+  │     Scene context cache (version) + RAG (budget 400)
+  │     Guardrails: FR check, repetition Jaccard, longueur
   │
   ├─[2] MerlinLlmAdapter.generate_card()
-  │     Qwen2.5-3B-Instruct → JSON → 4 strategies d'extraction
-  │     Si JSON valide + schema OK → retour (~1-3s)
+  │     Ollama (<3s) ou MerlinLLM C++ → JSON → 4 strategies d'extraction
+  │     Si JSON valide + schema OK → retour
   │
-  └─[3] MerlinCardSystem.get_next_triade_card()
-        Pool de cartes pre-ecrites → fallback garanti
-        Si LLM echoue → carte d'urgence (~0ms)
+  └─[3] ZERO FALLBACK (plus de pool statique)
+        Si echec: signal generation_failed("llm_unavailable")
+        Controller: retry backoff → "Merlin medite..." → retour hub
 
 Apres affichage carte N:
-  └→ prefetch_next_card() ← generation carte N+1 en arriere-plan
+  └→ prefetch_next_card() ← generation carte N+1 (Brain 2 si dual)
 ```
 
-**Taux de succes vise**: 40%+ prefetch, 40%+ LLM, 15% MOS cache, 5% fallback pool.
+**Taux de succes vise**: 60%+ prefetch, 35%+ LLM direct, 5% retry. 0% fallback statique.
 
 ### 6b. JSON Extraction Pipeline (Phase 29)
 
@@ -342,27 +346,27 @@ Joueur fait un choix → TRIADE_RESOLVE_CHOICE
 
 | Fichier | Role |
 |---------|------|
-| `addons/merlin_ai/merlin_ai.gd` | Autoload LLM, init modeles, routing |
-| `addons/merlin_ai/rag_manager.gd` | RAG v2.0: journal, cross-run, token budget |
-| `addons/merlin_ai/merlin_omniscient.gd` | Orchestrateur MOS + RAG + guardrails + prefetch |
-| `scripts/merlin/merlin_llm_adapter.gd` | Contract carte TRIADE, prompts, validation, 4-stage JSON repair, two-stage fallback |
-| `data/ai/triade_card.gbnf` | Grammaire GBNF pour decodage contraint des cartes TRIADE |
-| `native/src/merlin_llm.h/.cpp` | GDExtension C++ — wrapper llama.cpp avec GBNF grammar support |
-| `tools/benchmark_llm.mjs` | Benchmark standalone (Node.js) — test hors-Godot |
+| `addons/merlin_ai/ollama_backend.gd` | Backend Ollama HTTP API (drop-in MerlinLLM) |
+| `addons/merlin_ai/merlin_ai.gd` | Multi-brain, routing Ollama/MerlinLLM, init modeles |
+| `addons/merlin_ai/rag_manager.gd` | RAG v2.0: journal, cross-run, biome cache, budget 400 |
+| `addons/merlin_ai/merlin_omniscient.gd` | Orchestrateur MOS + RAG + zero fallback + scene cache |
+| `scripts/merlin/merlin_llm_adapter.gd` | Contract carte TRIADE, prompts, labels generiques |
+| `data/ai/triade_card.gbnf` | Grammaire GBNF pour decodage contraint (C++ seulement) |
+| `native/src/merlin_llm.h/.cpp` | GDExtension C++ — wrapper llama.cpp (backend secondaire) |
+| `tools/test_merlin_chat.py` | Benchmark CLI (chat, card, gamemaster, benchmark, perf) |
 | `scripts/merlin/merlin_store.gd` | Redux-like state, dispatch TRIADE |
-| `scripts/merlin/merlin_card_system.gd` | Pool cartes, fallback TRIADE |
+| `scripts/merlin/merlin_card_system.gd` | Pool cartes TRIADE |
 | `scripts/merlin/merlin_constants.gd` | Constantes gameplay |
 | `scripts/ui/triade_game_ui.gd` | UI cartes + thinking animation triskelion |
-| `scripts/ui/triade_game_controller.gd` | Store-UI bridge + animation masking + prefetch |
-| `scripts/LLMManager.gd` | Manager global legacy |
-| `scripts/TestTriadeLLMBenchmark.gd` | Benchmark 5 tests |
+| `scripts/ui/triade_game_controller.gd` | Store-UI bridge + buffer 5 + retry + prefetch |
+| `scripts/TestTriadeLLMBenchmark.gd` | Benchmark in-engine (6 tests incl. perf + zero fallback) |
 
 ---
 
-## 8. Migration Qwen → Trinity (historique)
+## 8. Migration Ministral → Qwen (historique)
 
 **Date**: 2026-02-09
-**Raison**: Consolidation sur un modele optimise et prometteur.
+**Raison**: Migration de Ministral 3B vers Qwen 2.5-3B-Instruct pour meilleure qualite.
 
 ### Fichiers modifies
 - `addons/merlin_ai/merlin_ai.gd` — ROUTER_FILE + EXECUTOR_FILE + candidates
@@ -375,7 +379,7 @@ Joueur fait un choix → TRIADE_RESOLVE_CHOICE
 - `data/ai/models/README.txt` — Liste modeles
 
 ### Fichier supprime
-- `addons/merlin_llm/models/qwen2.5-3b-instruct-q4_k_m.gguf` (~2 GB)
+- `addons/merlin_llm/models/ministral-3b-instruct.gguf` (~3.4 GB)
 
 ### Fichiers NON touches (archives historiques)
 - `archive/scripts/TestMerlinGBA.gd`
@@ -387,17 +391,19 @@ Joueur fait un choix → TRIADE_RESOLVE_CHOICE
 
 ## 9. Prochaines optimisations possibles
 
-1. ~~**Speculative decoding**: Pre-generer des tokens avec un draft model ultra-leger~~ → Remplace par prefetch (Phase 29)
-2. ~~**GBNF Grammar**: Decodage contraint JSON au niveau token~~ → Implemente Phase 30 (necessite recompilation)
-3. ~~**Two-stage generation**: Texte libre + JSON wrapper programmatique~~ → Implemente Phase 30
-4. ~~**Q5_K_M par defaut**: Meilleur ratio qualite/latence au benchmark~~ → Applique Phase 30
-5. **Recompiler GDExtension**: Activer le grammar sampler avec CMake + Visual Studio
-6. **LoRA fine-tuning**: 200-500 exemples de cartes TRIADE pour specialiser Qwen2.5-3B-Instruct
-7. **Prompt caching**: Garder le KV cache du system prompt entre les appels
-8. **Context pruning**: Reduire n_ctx a 1024 si le prompt total < 500 tokens (gain ~256 MB)
-9. **Batch generation**: Generer 3 cartes en parallele pour le pre-fetching
-10. **Hybrid local/API**: Fallback vers API cloud sur mobile (bande passante vs latence)
+1. ~~**Speculative decoding**~~ → Remplace par prefetch buffer 5
+2. ~~**GBNF Grammar**~~ → Implemente Phase 30 (C++ backend seulement)
+3. ~~**Two-stage generation**~~ → Implemente Phase 30
+4. ~~**Q5_K_M par defaut**~~ → Applique Phase 30
+5. ~~**Ollama backend**~~ → Implemente (Phase Ollama, <3s/carte)
+6. ~~**Zero fallback**~~ → Implemente (plus de pool statique)
+7. ~~**Multi-brain**~~ → Implemente (Ollama dual-instance)
+8. ~~**Scene context cache**~~ → Implemente (version tracking)
+9. ~~**Biome context cache**~~ → Implemente (cache par cle)
+10. **Recompiler GDExtension**: Activer flash attention + KV cache prefix reuse (Phase 6 optionnelle)
+11. **LoRA fine-tuning**: 200-500 exemples de cartes TRIADE pour specialiser Qwen
+12. **Hybrid local/API**: Fallback vers API cloud sur mobile (bande passante vs latence)
 
 ---
 
-*Genere par l'equipe projet M.E.R.L.I.N. — Claude Code + 23 agents specialises*
+*Genere par l'equipe projet M.E.R.L.I.N. — Claude Code + 33 agents specialises*

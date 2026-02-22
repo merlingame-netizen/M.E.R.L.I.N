@@ -1,10 +1,9 @@
 Place your GGUF model file here.
 
-Current model (Ministral 3B Instruct):
-- ministral-3b-instruct.gguf  (DEFAULT — 3.4 GB, from Ollama)
+Current model (Qwen 2.5-3B-Instruct):
+- qwen2.5-3b-instruct-q4_k_m.gguf  (DEFAULT — 2.0 GB, Q4_K_M quantization)
 
-Previous model: qwen2.5-3b-instruct-q4_k_m.gguf (deprecated)
-
-Source: https://ollama.com/library/ministral
-Chat template: [INST] {system} {prompt} [/INST]
-Context window: 4096 tokens
+Source: https://huggingface.co/Qwen/Qwen2.5-3B-Instruct-GGUF
+Ollama: ollama pull qwen2.5-3b-instruct
+Chat template: ChatML (<|im_start|>/<|im_end|>)
+Context window: 32768 tokens

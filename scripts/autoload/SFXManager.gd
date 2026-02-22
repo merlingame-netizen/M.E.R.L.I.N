@@ -98,8 +98,8 @@ func _get_volume_for(sound_name: String) -> float:
 		return VOLUME.ui
 	if sound_name in ["whoosh", "card_draw", "card_swipe", "scene_transition"]:
 		return VOLUME.transition
-	if sound_name in ["block_land", "pixel_land", "pixel_cascade", "accum_explode",
-			"dice_land", "dice_roll"]:
+	if sound_name in ["block_land", "pixel_land", "pixel_cascade", "pixel_scatter",
+			"accum_explode", "dice_land", "dice_roll"]:
 		return VOLUME.impact
 	if sound_name in ["ogham_chime", "ogham_unlock", "bestiole_shimmer", "eye_open",
 			"flash_boom", "magic_reveal", "skill_activate",
@@ -135,6 +135,7 @@ func _generate_all_sounds() -> void:
 	_sounds["block_land"] = _gen_block_land()
 	_sounds["pixel_land"] = _gen_pixel_land()
 	_sounds["pixel_cascade"] = _gen_pixel_cascade()
+	_sounds["pixel_scatter"] = _gen_pixel_scatter()
 	_sounds["accum_explode"] = _gen_accum_explode()
 
 	# --- Magic / Mystical Sounds ---
@@ -385,6 +386,22 @@ func _gen_pixel_cascade() -> AudioStreamWAV:
 		var freq := 3000.0 + sin(t * 80.0) * 1500.0
 		var val := sin(TAU * freq * t) * 0.06 * env
 		val += (_rng.randf() * 2.0 - 1.0) * 0.05 * env
+		_write_sample(buf, i, val)
+	return _make_stream(buf)
+
+
+func _gen_pixel_scatter() -> AudioStreamWAV:
+	## Pixels scattering upward — ascending sweep with noise burst
+	var dur := 0.12
+	var buf := _alloc_buffer(dur)
+	var count := _sample_count(dur)
+	for i in range(count):
+		var t := float(i) / SAMPLE_RATE
+		var env := 1.0 - (t / dur)  # Linear decay
+		env *= env  # Quadratic falloff
+		var freq := 1200.0 + (t / dur) * 3000.0  # Ascending sweep
+		var val := sin(TAU * freq * t) * 0.05 * env
+		val += (_rng.randf() * 2.0 - 1.0) * 0.06 * env
 		_write_sample(buf, i, val)
 	return _make_stream(buf)
 

@@ -42,21 +42,26 @@ var default_config = {
 	"calendar_day": 1,
 	"calendar_month": 1,
 	"calendar_year": 2026,
+	"brain_count": 0,  # 0=Auto, 2=Dual, 3=Triple
 }
 
-# Calendar date spinboxes (created dynamically)
-var calendar_day_spin: SpinBox
-var calendar_month_spin: SpinBox
-var calendar_year_spin: SpinBox
-var calendar_override_check: CheckBox
+# Calendar controls (scene nodes)
+@onready var calendar_override_check: CheckBox = $MainLayout/VBox/ScrollContainer/OptionsContainer/CalendarSection/OverrideRow/CalendarOverrideCheck
+@onready var calendar_day_spin: SpinBox = $MainLayout/VBox/ScrollContainer/OptionsContainer/CalendarSection/DateRow/CalendarDaySpin
+@onready var calendar_month_spin: SpinBox = $MainLayout/VBox/ScrollContainer/OptionsContainer/CalendarSection/DateRow/CalendarMonthSpin
+@onready var calendar_year_spin: SpinBox = $MainLayout/VBox/ScrollContainer/OptionsContainer/CalendarSection/DateRow/CalendarYearSpin
 
-# Language selector (created dynamically)
-var language_option: OptionButton
+# Language selector (scene node)
+@onready var language_option: OptionButton = $MainLayout/VBox/ScrollContainer/OptionsContainer/LanguageSection/LanguageRow/LanguageOption
 
-# Voice controls (created dynamically)
-var voice_mode_option: OptionButton
-var voice_bank_option: OptionButton
-var voice_preset_option: OptionButton
+# Voice controls (scene nodes)
+@onready var voice_mode_option: OptionButton = $MainLayout/VBox/ScrollContainer/OptionsContainer/VoiceSection/VoiceModeRow/VoiceModeOption
+@onready var voice_bank_option: OptionButton = $MainLayout/VBox/ScrollContainer/OptionsContainer/VoiceSection/VoiceBankRow/VoiceBankOption
+@onready var voice_preset_option: OptionButton = $MainLayout/VBox/ScrollContainer/OptionsContainer/VoiceSection/VoicePresetRow/VoicePresetOption
+
+# IA controls (scene nodes)
+@onready var brain_count_option: OptionButton = $MainLayout/VBox/ScrollContainer/OptionsContainer/IASection/BrainRow/BrainCountOption
+@onready var brain_info_label: Label = $MainLayout/VBox/ScrollContainer/OptionsContainer/IASection/BrainInfoLabel
 
 # Configuration actuelle
 var current_config = {}
@@ -65,141 +70,33 @@ var current_config = {}
 const CONFIG_PATH = "user://settings.cfg"
 
 func _ready():
-	# Charger la configuration
 	load_settings()
-
-	# Build calendar date UI
-	_build_calendar_options()
-
-	# Build language selector UI
-	_build_language_options()
-
-	# Build voice settings UI
-	_build_voice_options()
-
-	# Appliquer les valeurs actuelles aux contrôles
+	_configure_calendar_options()
+	_configure_language_options()
+	_configure_voice_options()
+	_configure_ia_options()
 	apply_to_ui()
-
-	# Connecter les signaux
 	connect_signals()
 
 
-func _build_calendar_options() -> void:
-	# Find the options container
-	var options_container = get_node_or_null("MainLayout/VBox/ScrollContainer/OptionsContainer")
-	if not options_container:
-		return
-
-	# Create calendar section
-	var calendar_section := VBoxContainer.new()
-	calendar_section.name = "CalendarSection"
-	calendar_section.add_theme_constant_override("separation", 8)
-	options_container.add_child(calendar_section)
-
-	# Spacer before section
-	var spacer := Control.new()
-	spacer.custom_minimum_size = Vector2(0, 15)
-	options_container.add_child(spacer)
-
-	# Section header (matches TSCN style)
-	var header := Label.new()
-	header.text = "CALENDRIER"
-	header.add_theme_font_size_override("font_size", 22)
-	calendar_section.add_child(header)
-
-	var hsep := HSeparator.new()
-	calendar_section.add_child(hsep)
-
-	# Override checkbox row
-	var override_row := HBoxContainer.new()
-	override_row.add_theme_constant_override("separation", 12)
-	calendar_section.add_child(override_row)
-
-	var override_label := Label.new()
-	override_label.text = "Date personnalisee:"
-	override_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	override_row.add_child(override_label)
-
-	calendar_override_check = CheckBox.new()
-	calendar_override_check.button_pressed = current_config.get("calendar_override", false)
-	calendar_override_check.toggled.connect(_on_calendar_override_toggled)
-	override_row.add_child(calendar_override_check)
-
-	# Date row
-	var date_row := HBoxContainer.new()
-	date_row.add_theme_constant_override("separation", 8)
-	calendar_section.add_child(date_row)
-
-	var day_label := Label.new()
-	day_label.text = "Jour:"
-	date_row.add_child(day_label)
-
-	calendar_day_spin = SpinBox.new()
+func _configure_calendar_options() -> void:
+	# Configure SpinBox ranges (nodes already in scene)
 	calendar_day_spin.min_value = 1
 	calendar_day_spin.max_value = 31
-	calendar_day_spin.value = current_config.get("calendar_day", 1)
-	calendar_day_spin.value_changed.connect(_on_calendar_day_changed)
-	date_row.add_child(calendar_day_spin)
-
-	var month_label := Label.new()
-	month_label.text = "Mois:"
-	date_row.add_child(month_label)
-
-	calendar_month_spin = SpinBox.new()
 	calendar_month_spin.min_value = 1
 	calendar_month_spin.max_value = 12
-	calendar_month_spin.value = current_config.get("calendar_month", 1)
-	calendar_month_spin.value_changed.connect(_on_calendar_month_changed)
-	date_row.add_child(calendar_month_spin)
-
-	var year_label := Label.new()
-	year_label.text = "Annee:"
-	date_row.add_child(year_label)
-
-	calendar_year_spin = SpinBox.new()
 	calendar_year_spin.min_value = 2020
 	calendar_year_spin.max_value = 2100
-	calendar_year_spin.value = current_config.get("calendar_year", 2026)
+
+	# Connect signals
+	calendar_override_check.toggled.connect(_on_calendar_override_toggled)
+	calendar_day_spin.value_changed.connect(_on_calendar_day_changed)
+	calendar_month_spin.value_changed.connect(_on_calendar_month_changed)
 	calendar_year_spin.value_changed.connect(_on_calendar_year_changed)
-	date_row.add_child(calendar_year_spin)
-
-	# Update enabled state
-	_update_calendar_ui_enabled()
 
 
-func _build_language_options() -> void:
-	var options_container = get_node_or_null("MainLayout/VBox/ScrollContainer/OptionsContainer")
-	if not options_container:
-		return
-
-	# Spacer before section
-	var lang_spacer := Control.new()
-	lang_spacer.custom_minimum_size = Vector2(0, 15)
-	options_container.add_child(lang_spacer)
-
-	var lang_section := VBoxContainer.new()
-	lang_section.name = "LanguageSection"
-	lang_section.add_theme_constant_override("separation", 8)
-	options_container.add_child(lang_section)
-
-	var header := Label.new()
-	header.text = "LANGUE"
-	header.add_theme_font_size_override("font_size", 22)
-	lang_section.add_child(header)
-
-	var lang_hsep := HSeparator.new()
-	lang_section.add_child(lang_hsep)
-
-	var lang_row := HBoxContainer.new()
-	lang_row.add_theme_constant_override("separation", 12)
-	lang_section.add_child(lang_row)
-
-	var lang_label := Label.new()
-	lang_label.text = "Langue / Language:"
-	lang_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	lang_row.add_child(lang_label)
-
-	language_option = OptionButton.new()
+func _configure_language_options() -> void:
+	# Populate language items (data-driven, node already in scene)
 	var locale_mgr = get_node_or_null("/root/LocaleManager")
 	var codes: Array = []
 	if locale_mgr:
@@ -222,79 +119,22 @@ func _build_language_options() -> void:
 			language_option.selected = i
 			break
 	language_option.item_selected.connect(_on_language_changed)
-	lang_row.add_child(language_option)
 
 
-func _build_voice_options() -> void:
-	var options_container = get_node_or_null("MainLayout/VBox/ScrollContainer/OptionsContainer")
-	if not options_container:
-		return
-
-	# Spacer before section
-	var voice_spacer := Control.new()
-	voice_spacer.custom_minimum_size = Vector2(0, 15)
-	options_container.add_child(voice_spacer)
-
-	# Section container
-	var voice_section := VBoxContainer.new()
-	voice_section.name = "VoiceSection"
-	voice_section.add_theme_constant_override("separation", 8)
-	options_container.add_child(voice_section)
-
-	# Section header
-	var header := Label.new()
-	header.text = "VOIX"
-	header.add_theme_font_size_override("font_size", 22)
-	voice_section.add_child(header)
-
-	var hsep := HSeparator.new()
-	voice_section.add_child(hsep)
-
-	# --- Voice mode: 3 options only ---
-	var mode_row := HBoxContainer.new()
-	mode_row.add_theme_constant_override("separation", 20)
-	voice_section.add_child(mode_row)
-
-	var mode_label := Label.new()
-	mode_label.text = "Mode de voix :"
-	mode_label.custom_minimum_size = Vector2(250, 0)
-	mode_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	mode_row.add_child(mode_label)
-
-	voice_mode_option = OptionButton.new()
-	voice_mode_option.custom_minimum_size = Vector2(250, 0)
+func _configure_voice_options() -> void:
+	# Populate voice mode (3 items, node already in scene)
 	voice_mode_option.add_item("Voix Parlee")    # 0
 	voice_mode_option.add_item("Voix Robot")      # 1
 	voice_mode_option.add_item("Desactivee")      # 2
 	voice_mode_option.selected = current_config.get("voice_mode", 0)
 	voice_mode_option.item_selected.connect(_on_voice_mode_changed)
-	mode_row.add_child(voice_mode_option)
 
-	# --- Sound bank (Voix Parlee only) ---
-	var bank_row := HBoxContainer.new()
-	bank_row.name = "VoiceBankRow"
-	bank_row.add_theme_constant_override("separation", 20)
-	voice_section.add_child(bank_row)
-
-	var bank_label := Label.new()
-	bank_label.text = "Banque de sons :"
-	bank_label.custom_minimum_size = Vector2(250, 0)
-	bank_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	bank_row.add_child(bank_label)
-
-	voice_bank_option = OptionButton.new()
-	voice_bank_option.custom_minimum_size = Vector2(250, 0)
+	# Populate sound banks (9 banks with metadata)
 	var bank_names := ["default", "high", "low", "lowest", "med", "robot", "glitch", "whisper", "droid"]
 	var bank_labels := {
-		"default": "Classique",
-		"high": "Aigu (Peppy)",
-		"low": "Grave (Cranky)",
-		"lowest": "Tres grave",
-		"med": "Medium",
-		"robot": "Robot Beep",
-		"glitch": "Glitch Bot",
-		"whisper": "Synth Whisper",
-		"droid": "Droid (R2D2)",
+		"default": "Classique", "high": "Aigu (Peppy)", "low": "Grave (Cranky)",
+		"lowest": "Tres grave", "med": "Medium", "robot": "Robot Beep",
+		"glitch": "Glitch Bot", "whisper": "Synth Whisper", "droid": "Droid (R2D2)",
 	}
 	for bname in bank_names:
 		voice_bank_option.add_item(bank_labels.get(bname, bname))
@@ -305,21 +145,8 @@ func _build_voice_options() -> void:
 			voice_bank_option.selected = i
 			break
 	voice_bank_option.item_selected.connect(_on_voice_bank_changed)
-	bank_row.add_child(voice_bank_option)
 
-	# --- Preset (Voix Parlee only) ---
-	var preset_row := HBoxContainer.new()
-	preset_row.add_theme_constant_override("separation", 20)
-	voice_section.add_child(preset_row)
-
-	var preset_label := Label.new()
-	preset_label.text = "Preset voix :"
-	preset_label.custom_minimum_size = Vector2(250, 0)
-	preset_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	preset_row.add_child(preset_label)
-
-	voice_preset_option = OptionButton.new()
-	voice_preset_option.custom_minimum_size = Vector2(250, 0)
+	# Populate voice presets (12 items)
 	var presets := ["Merlin", "Doux", "Plume", "Cristal", "Ancien", "Normal", "Aigu", "Grave", "Enfant", "Sage", "Joyeux", "Mysterieux"]
 	for pname in presets:
 		voice_preset_option.add_item(pname)
@@ -329,7 +156,6 @@ func _build_voice_options() -> void:
 			voice_preset_option.selected = i
 			break
 	voice_preset_option.item_selected.connect(_on_voice_preset_changed)
-	preset_row.add_child(voice_preset_option)
 
 	_update_voice_ui_enabled()
 
@@ -355,6 +181,49 @@ func _on_voice_bank_changed(index: int) -> void:
 
 func _on_voice_preset_changed(index: int) -> void:
 	current_config["voice_preset"] = voice_preset_option.get_item_text(index)
+
+
+const BRAIN_OPTIONS := [
+	{"value": 0, "label": "Auto (recommande)", "info": "Detection automatique selon votre machine"},
+	{"value": 2, "label": "2 cerveaux (Narrateur + Maitre du Jeu)", "info": "~4.4 GB RAM — Generation parallele narrative + effets"},
+	{"value": 3, "label": "3 cerveaux (+ Worker prefetch)", "info": "~6.6 GB RAM — Prefetch cartes en arriere-plan, zero latence"},
+]
+
+
+func _configure_ia_options() -> void:
+	# Populate brain count options (node already in scene)
+	for opt in BRAIN_OPTIONS:
+		brain_count_option.add_item(opt["label"])
+		brain_count_option.set_item_metadata(brain_count_option.item_count - 1, opt["value"])
+	var cur_brain: int = current_config.get("brain_count", 0)
+	for i in range(brain_count_option.item_count):
+		if int(brain_count_option.get_item_metadata(i)) == cur_brain:
+			brain_count_option.selected = i
+			break
+	brain_count_option.item_selected.connect(_on_brain_count_changed)
+
+	# Configure info label styling
+	brain_info_label.add_theme_font_size_override("font_size", 14)
+	brain_info_label.add_theme_color_override("font_color", Color(0.5, 0.45, 0.4, 0.8))
+	brain_info_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	_update_brain_info_label()
+
+
+func _on_brain_count_changed(index: int) -> void:
+	var value: int = int(brain_count_option.get_item_metadata(index))
+	current_config["brain_count"] = value
+	_update_brain_info_label()
+
+
+func _update_brain_info_label() -> void:
+	if brain_info_label == null:
+		return
+	var cur_brain: int = current_config.get("brain_count", 0)
+	for opt in BRAIN_OPTIONS:
+		if int(opt["value"]) == cur_brain:
+			brain_info_label.text = str(opt["info"])
+			return
+	brain_info_label.text = ""
 
 
 func _on_language_changed(index: int) -> void:
@@ -428,6 +297,7 @@ func load_settings():
 			"calendar_day": config.get_value("calendar", "day", default_config.calendar_day),
 			"calendar_month": config.get_value("calendar", "month", default_config.calendar_month),
 			"calendar_year": config.get_value("calendar", "year", default_config.calendar_year),
+			"brain_count": config.get_value("ai", "brain_count", default_config.brain_count),
 		}
 	else:
 		# Utiliser les valeurs par défaut
@@ -457,6 +327,9 @@ func save_settings():
 	config.set_value("calendar", "day", current_config.calendar_day)
 	config.set_value("calendar", "month", current_config.calendar_month)
 	config.set_value("calendar", "year", current_config.calendar_year)
+
+	# Sauvegarder la configuration IA
+	config.set_value("ai", "brain_count", current_config.get("brain_count", 0))
 
 	config.save(CONFIG_PATH)
 
@@ -492,6 +365,15 @@ func apply_to_ui():
 				voice_preset_option.selected = i
 				break
 	_update_voice_ui_enabled()
+
+	# Appliquer les valeurs IA
+	if brain_count_option:
+		var cur_brain: int = current_config.get("brain_count", 0)
+		for i in range(brain_count_option.item_count):
+			if int(brain_count_option.get_item_metadata(i)) == cur_brain:
+				brain_count_option.selected = i
+				break
+	_update_brain_info_label()
 
 	# Appliquer les valeurs du calendrier
 	if calendar_override_check:
@@ -593,7 +475,22 @@ func _on_fps_changed(index):
 func _on_apply_pressed():
 	apply_settings()
 	save_settings()
-	print("✓ Paramètres appliqués et sauvegardés")
+	_apply_brain_count()
+	print("Parametres appliques et sauvegardes")
+
+
+func _apply_brain_count() -> void:
+	var mai = get_node_or_null("/root/MerlinAI")
+	if mai == null:
+		return
+	var target: int = current_config.get("brain_count", 0)
+	var current_target: int = mai._target_brain_count if "_target_brain_count" in mai else -1
+	if target == current_target:
+		return
+	mai.set_brain_count(target)
+	# Reload models only if warmup already happened (avoid cold reload at boot)
+	if mai.is_ready:
+		mai.reload_models()
 
 func _on_reset_pressed():
 	# Réinitialiser aux valeurs par défaut
@@ -606,4 +503,4 @@ func _on_reset_pressed():
 func _on_back_pressed():
 	var se := get_node_or_null("/root/ScreenEffects")
 	var target: String = se.return_scene if se and se.return_scene != "" else "res://scenes/HubAntre.tscn"
-	get_tree().change_scene_to_file(target)
+	PixelTransition.transition_to(target)

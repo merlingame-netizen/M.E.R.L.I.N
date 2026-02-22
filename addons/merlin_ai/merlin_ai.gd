@@ -7,7 +7,7 @@ signal status_changed(status_text: String, detail_text: String, progress_value: 
 signal ready_changed(is_ready: bool)
 signal log_updated(log_text: String)
 
-# ARCHITECTURE MULTI-BRAIN + WORKER POOL — Qwen 2.5-3B-Instruct (1 a 4 cerveaux)
+# ARCHITECTURE MULTI-BRAIN + WORKER POOL — Qwen 2.5-1.5B (1 a 4 cerveaux)
 # Phase 32: Instances specialisees, meme modele, configs differentes
 # Brain 1 = Narrator (creatif), Brain 2 = Game Master (logique)
 # Brain 3-4 = Worker Pool (prefetch, voice, balance — taches de fond)
@@ -39,14 +39,14 @@ const PERSONA_CONFIG_PATH := "res://data/ai/config/merlin_persona.json"
 # 3 cerveaux: Desktop+ (32+ GB RAM)     — + 1 Worker dedie
 # 4 cerveaux: Desktop Ultra (32+ GB RAM, 16+ threads) — + 2 Workers dedies
 
-const BRAIN_SINGLE := 1   # ~2.5 GB RAM
-const BRAIN_DUAL := 2     # ~4.5 GB RAM
-const BRAIN_TRIPLE := 3   # ~6.5 GB RAM
-const BRAIN_QUAD := 4     # ~8.8 GB RAM
+const BRAIN_SINGLE := 1   # ~1.2 GB RAM
+const BRAIN_DUAL := 2     # ~2.4 GB RAM
+const BRAIN_TRIPLE := 3   # ~3.6 GB RAM
+const BRAIN_QUAD := 4     # ~4.8 GB RAM
 const BRAIN_MAX := BRAIN_QUAD
 
-# RAM par instance Qwen 2.5-3B Q4_K_M (~2.0 GB GGUF + KV cache)
-const RAM_PER_BRAIN_MB := 2200  # ~2.2 GB modele + KV cache
+# RAM par instance Qwen 2.5-1.5B (~1.0 GB Ollama + KV cache)
+const RAM_PER_BRAIN_MB := 1200  # ~1.2 GB modele + KV cache
 
 var brain_count: int = 0  # Actual loaded count (set by _init_local_models)
 var _target_brain_count: int = 0  # Requested count (0 = auto-detect)
@@ -67,7 +67,7 @@ var _lora_adapters: Dictionary = {}  # tone_name -> adapter_id
 var _current_lora_tone := ""
 
 # Narrator: creative text, scenarios, dialogue, Merlin voice
-var narrator_params := {"temperature": 0.75, "top_p": 0.92, "max_tokens": 100, "top_k": 40, "repetition_penalty": 1.35}
+var narrator_params := {"temperature": 0.70, "top_p": 0.90, "max_tokens": 180, "top_k": 40, "repetition_penalty": 1.45}
 # Game Master: effects JSON, balance, rules, structured output (tighter for speed)
 var gamemaster_params := {"temperature": 0.15, "top_p": 0.8, "max_tokens": 80, "top_k": 15, "repetition_penalty": 1.0}
 
@@ -93,8 +93,8 @@ const TASK_BALANCE := "balance"
 const TASK_PRIORITIES := {"prefetch": 0, "voice": 1, "balance": 2}
 const BG_QUEUE_MAX_SIZE := 100      # Max pending tasks (prevents OOM)
 const BG_TASK_TIMEOUT_MS := 30000   # 30s timeout for stuck bg tasks
-const LLM_POLL_TIMEOUT_MS := 120000       # 120s — generous for CPU-only Qwen 3B
-const LLM_POLL_TIMEOUT_FIRST_MS := 300000 # 300s (5min) — cold start can be very slow on CPU
+const LLM_POLL_TIMEOUT_MS := 45000         # 45s — Qwen 1.5B: ~7s warm, 15s worst case
+const LLM_POLL_TIMEOUT_FIRST_MS := 90000   # 90s — cold start loads 1GB model into RAM
 var _first_generation_done := false
 
 # Backward-compatible aliases (router = narrator, executor = gamemaster)
@@ -145,6 +145,7 @@ var stats := {
 }
 
 var _warmup_started := false
+var _warmup_attempt_time := 0
 
 func _ready() -> void:
 	set_process(false)  # Enabled when background tasks are active
@@ -176,9 +177,17 @@ func _load_brain_config() -> void:
 ## Start LLM model loading. Call from MenuPrincipal on "Nouvelle Partie"/"Continuer".
 ## Emits status_changed during loading and ready_changed(true) when done.
 func start_warmup() -> void:
-	if _warmup_started or is_ready:
+	if is_ready:
 		return
+	if _warmup_started:
+		# Allow retry after 30s if previous attempt failed
+		if not is_ready and Time.get_ticks_msec() - _warmup_attempt_time > 30000:
+			print("[MerlinAI] Previous warmup failed, retrying...")
+			_warmup_started = false
+		else:
+			return
 	_warmup_started = true
+	_warmup_attempt_time = Time.get_ticks_msec()
 	_init_local_models()
 
 
@@ -613,6 +622,7 @@ func _augment_system_prompt_with_scene(system_prompt: String, channel: String, p
 	return system_prompt.strip_edges() + "\n\n" + contract
 
 func _init_local_models() -> void:
+	print("[MerlinAI] _init_local_models() starting...")
 	_set_status("Connexion: ...", "Preparation des modeles", 5.0)
 
 	# Determine how many brains to load
@@ -970,10 +980,11 @@ func _try_init_merlin_llm(target: int) -> void:
 
 
 func _detect_optimal_brains() -> int:
-	var ram_mb: int = int(OS.get_static_memory_usage() / (1024 * 1024))  # Rough estimate
 	var cpu_count: int = OS.get_processor_count()
-	# Desktop with 16+ cores: 2 brains (Narrator + GM)
-	if cpu_count >= 8:
+	# Qwen 2.5-1.5B: ~1.3 GB/brain via Ollama
+	# DUAL (Narrator + GM) = 2.6 GB — any desktop with 6+ threads
+	# SINGLE = fallback for very low-end hardware
+	if cpu_count >= 6:
 		return BRAIN_DUAL
 	return BRAIN_SINGLE
 
@@ -1142,6 +1153,7 @@ func reload_models() -> void:
 
 func ensure_ready() -> void:
 	if not is_ready:
+		print("[MerlinAI] ensure_ready: not ready, triggering warmup")
 		start_warmup()
 
 func generate_with_system(system_prompt: String, user_input: String, params_override: Dictionary = {}) -> Dictionary:
@@ -1364,6 +1376,7 @@ func _log(message: String) -> void:
 	if line == _last_log_line:
 		return
 	_last_log_line = line
+	print("[MerlinAI] %s" % message)
 	log_entries.append(line)
 	if log_entries.size() > 200:
 		log_entries = log_entries.slice(log_entries.size() - 200, log_entries.size())

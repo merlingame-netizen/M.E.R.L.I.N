@@ -1,35 +1,34 @@
 ## ═══════════════════════════════════════════════════════════════════════════════
-## TRIADE Game UI — Main Gameplay Interface (v0.3.0)
+## Merlin Game UI — Main Gameplay Interface (v0.3.0)
 ## ═══════════════════════════════════════════════════════════════════════════════
-## UI for TRIADE system: 3 Aspects, 3 States, 3 Options per card.
+## UI for Merlin Triade system: 3 Aspects, 3 States, 3 Options per card.
 ## Celtic symbols: Sanglier (Corps), Corbeau (Ame), Cerf (Monde)
 ## ═══════════════════════════════════════════════════════════════════════════════
 
 extends Control
-class_name TriadeGameUI
+class_name MerlinGameUI
 
 signal option_chosen(option: int)  # 0=LEFT, 1=CENTER, 2=RIGHT
 signal skill_activated(skill_id: String)
 signal pause_requested
+signal souffle_activated
+
+# Explicit preloads — required when scripts created outside editor (UID cache stale)
+const PixelSceneCompositor = preload("res://scripts/ui/pixel_scene_compositor.gd")
+const PixelSceneData = preload("res://scripts/ui/pixel_scene_data.gd")
 
 # ═══════════════════════════════════════════════════════════════════════════════
 # CONFIGURATION
 # ═══════════════════════════════════════════════════════════════════════════════
 
-const ASPECT_COLORS := {
-	"Corps": Color(0.8, 0.4, 0.2),   # Orange-brown (earth)
-	"Ame": Color(0.5, 0.3, 0.7),     # Purple (spirit)
-	"Monde": Color(0.3, 0.6, 0.4),   # Green (nature)
-}
-
 const STATE_LABELS := {
-	MerlinConstants.AspectState.BAS: "\u25BC",
-	MerlinConstants.AspectState.EQUILIBRE: "\u25CF",
-	MerlinConstants.AspectState.HAUT: "\u25B2",
+	MerlinConstants.AspectState.BAS: "v",       # Was U+25BC (TextServerFallback incompatible)
+	MerlinConstants.AspectState.EQUILIBRE: "=",  # Was U+25CF
+	MerlinConstants.AspectState.HAUT: "^",       # Was U+25B2
 }
 
-const SOUFFLE_ICON := "\u0DA7"  # Celtic spiral (Sinhala character shaped like a spiral)
-const SOUFFLE_EMPTY := "\u25CB"
+const SOUFFLE_ICON := "*"   # Was U+0DA7 (TextServerFallback incompatible)
+const SOUFFLE_EMPTY := "o"  # Was U+25CB
 
 const OPTION_KEYS := {
 	MerlinConstants.CardOption.LEFT: "A",
@@ -45,13 +44,24 @@ const INTRO_DECK_COUNT := 12
 const LIVE_DECK_VISIBLE_COUNT := 5
 const DISCARD_VISIBLE_COUNT := 5
 const RUN_DECK_ESTIMATE := 24
-const TOP_ZONE_RATIO := 0.15
-const CARD_ZONE_RATIO := 0.70
-const BOTTOM_ZONE_RATIO := 0.15
-const CARD_FLOAT_OFFSET := 7.0
-const CARD_FLOAT_DURATION := 1.6
-const CARD_PORTRAIT_RATIO := 0.74
+const TOP_ZONE_RATIO := 0.10
+const CARD_ZONE_RATIO := 0.72
+const BOTTOM_ZONE_RATIO := 0.18
+# Use MerlinVisual constants for card animation
+# const CARD_FLOAT_OFFSET := MerlinVisual.CARD_FLOAT_OFFSET
+# const CARD_FLOAT_DURATION := MerlinVisual.CARD_FLOAT_DURATION
+const CARD_PORTRAIT_RATIO := 1.05
 const ACTION_VERB_FALLBACK := ["Observer", "Canaliser", "Braver"]
+const ACTION_VERBS := [
+	"Explorer", "Fuir", "Negocier", "Observer", "Defier", "Invoquer",
+	"Traverser", "Accepter", "Refuser", "Proteger", "Attaquer", "Apaiser",
+	"Chercher", "Ecouter", "Suivre", "Braver", "Canaliser", "Mediter",
+	"Soigner", "Sacrifier", "Marchander", "Implorer", "Confronter",
+	"Esquiver", "Sonder", "Conjurer", "Purifier", "Resister",
+	"Avancer", "Agir", "Reculer", "Parler", "Ignorer", "Prendre",
+	"Toucher", "Ouvrir", "Courir", "Attendre", "Prier", "Ramasser",
+	"Contourner", "Plonger", "Grimper", "Frapper", "Appeler",
+]
 
 const BIOME_SHORT_NAMES := {
 	"foret_broceliande": "broceliande",
@@ -61,23 +71,6 @@ const BIOME_SHORT_NAMES := {
 	"cercles_pierres": "cercles",
 	"marais_korrigans": "marais",
 	"collines_dolmens": "collines",
-}
-
-const BIOME_ART_PROFILES := {
-	"broceliande": {"sky": Color(0.16, 0.24, 0.14), "mist": Color(0.30, 0.38, 0.24), "mid": Color(0.14, 0.30, 0.16), "accent": Color(0.42, 0.56, 0.30), "foreground": Color(0.08, 0.16, 0.10), "feature_density": 0.64},
-	"landes": {"sky": Color(0.28, 0.22, 0.34), "mist": Color(0.44, 0.36, 0.52), "mid": Color(0.36, 0.24, 0.34), "accent": Color(0.64, 0.46, 0.62), "foreground": Color(0.24, 0.17, 0.23), "feature_density": 0.48},
-	"cotes": {"sky": Color(0.20, 0.28, 0.36), "mist": Color(0.34, 0.42, 0.50), "mid": Color(0.30, 0.34, 0.36), "accent": Color(0.54, 0.66, 0.74), "foreground": Color(0.16, 0.21, 0.24), "feature_density": 0.50},
-	"villages": {"sky": Color(0.30, 0.23, 0.16), "mist": Color(0.48, 0.37, 0.26), "mid": Color(0.38, 0.28, 0.20), "accent": Color(0.74, 0.52, 0.30), "foreground": Color(0.22, 0.16, 0.12), "feature_density": 0.55},
-	"cercles": {"sky": Color(0.23, 0.24, 0.27), "mist": Color(0.36, 0.38, 0.41), "mid": Color(0.28, 0.29, 0.30), "accent": Color(0.66, 0.70, 0.76), "foreground": Color(0.18, 0.18, 0.20), "feature_density": 0.42},
-	"marais": {"sky": Color(0.17, 0.24, 0.22), "mist": Color(0.26, 0.36, 0.33), "mid": Color(0.20, 0.30, 0.25), "accent": Color(0.52, 0.66, 0.50), "foreground": Color(0.10, 0.17, 0.15), "feature_density": 0.60},
-	"collines": {"sky": Color(0.26, 0.29, 0.19), "mist": Color(0.42, 0.45, 0.30), "mid": Color(0.34, 0.39, 0.22), "accent": Color(0.70, 0.56, 0.34), "foreground": Color(0.20, 0.22, 0.13), "feature_density": 0.52},
-}
-
-const SEASON_TINTS := {
-	"printemps": Color(1.02, 1.07, 1.00),
-	"ete": Color(1.08, 1.04, 0.95),
-	"automne": Color(1.10, 0.92, 0.82),
-	"hiver": Color(0.84, 0.90, 1.08),
 }
 
 const BIOME_DEFAULT_SEASON := {
@@ -91,50 +84,84 @@ const BIOME_DEFAULT_SEASON := {
 }
 
 # ═══════════════════════════════════════════════════════════════════════════════
-# REFERENCES (set by scene or dynamically created)
+# SCENE REFERENCES (@onready from MerlinGameUI.tscn)
 # ═══════════════════════════════════════════════════════════════════════════════
 
-var aspect_panel: Control
-var aspect_displays: Dictionary = {}  # {"Corps": {container, icon, state_indicator}}
+# Top status bar
+@onready var _top_status_bar: HBoxContainer = $MainVBox/TopStatusBar
+@onready var life_panel: VBoxContainer = $MainVBox/TopStatusBar/LifePanel
+@onready var _life_bar: ProgressBar = $MainVBox/TopStatusBar/LifePanel/LifeBar
+@onready var _life_counter: Label = $MainVBox/TopStatusBar/LifePanel/LifeCounter
+@onready var souffle_panel: VBoxContainer = $MainVBox/TopStatusBar/SoufflePanel
+@onready var souffle_display: HBoxContainer = $MainVBox/TopStatusBar/SoufflePanel/SouffleIcons
+@onready var _souffle_counter: Label = $MainVBox/TopStatusBar/SoufflePanel/SouffleCounter
+@onready var _essence_counter: Label = $MainVBox/TopStatusBar/EssencePanel/EssenceCounter
 
-var souffle_panel: Control
-var souffle_display: HBoxContainer
-var _souffle_counter: Label
+# Card area
+@onready var card_container: Control = $MainVBox/MiddleZone/CardContainer
+@onready var card_panel: Panel = $MainVBox/MiddleZone/CardContainer/CardPanel
+@onready var _card_visual_split: VBoxContainer = $MainVBox/MiddleZone/CardContainer/CardPanel/CardVisualSplit
+@onready var _card_illustration_panel: PanelContainer = $MainVBox/MiddleZone/CardContainer/CardPanel/CardVisualSplit/CardIllustration
+@onready var _card_body_panel: PanelContainer = $MainVBox/MiddleZone/CardContainer/CardPanel/CardVisualSplit/CardBodyPanel
+@onready var _card_body_vbox: VBoxContainer = $MainVBox/MiddleZone/CardContainer/CardPanel/CardVisualSplit/CardBodyPanel/CardBodyVBox
+@onready var card_speaker: Label = $MainVBox/MiddleZone/CardContainer/CardPanel/CardVisualSplit/CardBodyPanel/CardBodyVBox/CardSpeaker
+@onready var card_text: RichTextLabel = $MainVBox/MiddleZone/CardContainer/CardPanel/CardVisualSplit/CardBodyPanel/CardBodyVBox/CardText
+@onready var _card_body_content_host: Control = $MainVBox/MiddleZone/CardContainer/CardPanel/CardVisualSplit/CardBodyPanel/BodyContentHost
+@onready var _text_pixel_fx_layer: Control = $MainVBox/MiddleZone/CardContainer/CardPanel/TextPixelFxLayer
+@onready var _illo_bg: ColorRect = $MainVBox/MiddleZone/CardContainer/CardPanel/CardVisualSplit/CardIllustration/IlloLayer/IlloBg
+@onready var _tile_center: CenterContainer = $MainVBox/MiddleZone/CardContainer/CardPanel/CardVisualSplit/CardIllustration/IlloLayer/TileCenter
+@onready var _portrait_center: CenterContainer = $MainVBox/MiddleZone/CardContainer/CardPanel/CardVisualSplit/CardIllustration/IlloLayer/PortraitCenter
 
-# Life essence (Phase 43)
-var life_panel: Control
-var _life_counter: Label
-var _life_bar: ProgressBar
+# Deck columns
+@onready var _pioche_column: VBoxContainer = $MainVBox/MiddleZone/PiocheColumn
+@onready var _remaining_deck_root: Control = $MainVBox/MiddleZone/PiocheColumn/DeckRoot
+@onready var _remaining_deck_label: Label = $MainVBox/MiddleZone/PiocheColumn/DeckCount
+@onready var _cimetiere_column: VBoxContainer = $MainVBox/MiddleZone/CimetiereColumn
+@onready var _discard_root: Control = $MainVBox/MiddleZone/CimetiereColumn/DiscardRoot
+@onready var _discard_label: Label = $MainVBox/MiddleZone/CimetiereColumn/DiscardCount
 
-var card_container: Control
-var card_panel: Panel
-var card_text: RichTextLabel
-var card_speaker: Label
+# Bottom zone + options
+@onready var _bottom_zone: VBoxContainer = $MainVBox/BottomZone
+@onready var _bottom_push_spacer: Control = $MainVBox/BottomZone/BottomSpacer
+@onready var options_container: HBoxContainer = $MainVBox/BottomZone/OptionsBar
+@onready var _btn_a: Button = $MainVBox/BottomZone/OptionsBar/OptionVBoxA/BtnA
+@onready var _btn_b: Button = $MainVBox/BottomZone/OptionsBar/OptionVBoxB/BtnB
+@onready var _btn_c: Button = $MainVBox/BottomZone/OptionsBar/OptionVBoxC/BtnC
+@onready var info_panel: HBoxContainer = $MainVBox/BottomZone/InfoPanel
+@onready var mission_label: Label = $MainVBox/BottomZone/InfoPanel/MissionLabel
+@onready var cards_label: Label = $MainVBox/BottomZone/InfoPanel/CardsLabel
+
+# Overlay layers
+@onready var parchment_bg: ColorRect = $ParchmentBg
+@onready var biome_art_layer: Control = $BiomeArtLayer
+@onready var main_vbox: VBoxContainer = $MainVBox
+@onready var _middle_zone: HBoxContainer = $MainVBox/MiddleZone
+@onready var _deck_fx_layer: Control = $DeckFxLayer
+@onready var _status_clock_panel: PanelContainer = $ClockPanel
+@onready var _status_clock_label: Label = $ClockPanel/ClockLabel
+@onready var _status_clock_timer: Timer = $ClockTimer
+@onready var narrator_overlay: Control = $NarratorOverlay
+
+# Dynamic nodes (created in _configure_ui)
 var _card_source_badge: PanelContainer
-var _encounter_tile: PixelEncounterTile
-
-var options_container: HBoxContainer
+var _scene_compositor: PixelSceneCompositor
+var _pixel_portrait: PixelCharacterPortrait
+var _npc_portrait: PixelNpcPortrait
+var bestiole_wheel: BestioleWheelSystem
+var _reward_badge: MerlinRewardBadge
 var option_buttons: Array[Button] = []
 var option_labels: Array[Label] = []
-var _effect_preview_panel: Panel
-var _effect_preview_label: RichTextLabel
-var _preview_visible_for: int = -1  # Which option index is previewed
+var _option_desc_labels: Array[Label] = []
+var _minigame_badge: Label
+var aspect_panel: Control
+var aspect_displays: Dictionary = {}
 
-var _resource_bar: HBoxContainer
+# Unused but referenced by update_resource_bar() — kept for interface compat
 var _tool_label: Label
 var _day_label: Label
 var _mission_progress_label: Label
-var _essence_counter: Label
-var _status_clock_panel: PanelContainer
-var _status_clock_label: Label
-var _status_clock_timer: Timer
 
-var info_panel: Control
-var mission_label: Label
-var cards_label: Label
-
-var bestiole_wheel: BestioleWheelSystem
-var _pixel_portrait: PixelCharacterPortrait
+# State (non-scene)
 var _current_speaker_key: String = ""
 var biome_indicator: Label
 
@@ -163,35 +190,36 @@ var _ambient_biome_key: String = ""
 var _opening_sequence_done := false
 var _ui_blocks_for_intro: Array[Control] = []
 var _biome_art_pixels: Array[ColorRect] = []
-var _top_status_bar: HBoxContainer
-var _card_visual_split: VBoxContainer
-var _card_illustration_panel: PanelContainer
-var _card_body_panel: PanelContainer
-var _text_pixel_fx_layer: Control
 var _card_float_tween: Tween
 var _card_entry_tween: Tween
 var _card_base_pos: Vector2 = Vector2.ZERO
-var _remaining_deck_root: Control
 var _remaining_deck_cards: Array[Panel] = []
-var _remaining_deck_label: Label
 var _remaining_deck_estimate: int = RUN_DECK_ESTIMATE
-var _discard_root: Control
 var _discard_cards: Array[Panel] = []
-var _discard_label: Label
 var _discard_total: int = 0
+
+# Fake 3D card tilt
+var _card_hovered := false
+var _card_tilt_target: Vector2 = Vector2.ZERO  # x=horizontal tilt, y=vertical tilt (-1..1)
+var _card_tilt_current: Vector2 = Vector2.ZERO
+var _card_3d_shine: ColorRect  # Subtle highlight overlay for 3D effect
+var _card_3d_active := false   # Only tilt when card is displayed and idle
+
+# Souffle d'Ogham button (bottom-right)
+var _souffle_btn: Button
+var _souffle_active := false
+
+# Bestiole companion (bottom-left, permanent)
+var _bestiole_mini: Label
+var _bestiole_emote: Label
 
 # ═══════════════════════════════════════════════════════════════════════════════
 # INITIALIZATION
 # ═══════════════════════════════════════════════════════════════════════════════
 
 func _ready() -> void:
-	_setup_ui()
+	_configure_ui()
 	_init_blip_pool()
-	_update_aspects({
-		"Corps": MerlinConstants.AspectState.EQUILIBRE,
-		"Ame": MerlinConstants.AspectState.EQUILIBRE,
-		"Monde": MerlinConstants.AspectState.EQUILIBRE,
-	})
 	_update_souffle(MerlinConstants.SOUFFLE_START)
 	update_life_essence(MerlinConstants.LIFE_ESSENCE_START)
 	update_essences_collected(0)
@@ -199,7 +227,7 @@ func _ready() -> void:
 
 
 func _process(delta: float) -> void:
-	_update_low_poly_background(delta)
+	_update_card_3d_tilt(delta)
 
 
 func _init_blip_pool() -> void:
@@ -215,62 +243,27 @@ func _init_blip_pool() -> void:
 		_blip_pool.append(player)
 
 
-const PALETTE := {
-	"paper": Color(0.965, 0.945, 0.905),
-	"paper_dark": Color(0.935, 0.905, 0.855),
-	"ink": Color(0.22, 0.18, 0.14),
-	"ink_soft": Color(0.38, 0.32, 0.26),
-	"ink_faded": Color(0.50, 0.44, 0.38, 0.35),
-	"accent": Color(0.58, 0.44, 0.26),
-	"shadow": Color(0.25, 0.20, 0.16, 0.18),
-	"line": Color(0.40, 0.34, 0.28, 0.12),
-}
-
 var title_font: Font
 var body_font: Font
-var _bg3d_container: SubViewportContainer
-var _bg3d_viewport: SubViewport
-var _bg3d_root: Node3D
-var _bg3d_geometry_root: Node3D
-var _bg3d_environment: Environment
-var _bg3d_camera: Camera3D
-var _bg3d_sun: DirectionalLight3D
-var _bg3d_fill: DirectionalLight3D
-var _bg3d_rain: GPUParticles3D
-var _bg3d_snow: GPUParticles3D
-var _bg3d_leaves: GPUParticles3D
-var _bg3d_clouds: Array[MeshInstance3D] = []
-var _bg3d_animals: Array[Node3D] = []
-var _bg3d_rng := RandomNumberGenerator.new()
-var _bg3d_weather_mode: String = "clear"
-var _bg3d_weather_timer: float = 0.0
-var _bg3d_light_factor: float = 1.0
 var _active_biome_visual: String = "broceliande"
 var _active_season_visual: String = "automne"
 var _active_hour_visual: int = -1
-var parchment_bg: ColorRect
-var biome_art_layer: Control
-var _deck_fx_layer: Control
-var main_vbox: VBoxContainer
-var _bottom_zone: VBoxContainer
-var _bottom_push_spacer: Control
-var _run_stack_bar: HBoxContainer
-var narrator_overlay: Control  # For narrator intro + NPC pixel cascade
 
 
-func _setup_ui() -> void:
-	_load_fonts()
-	_build_low_poly_background()
+func _configure_ui() -> void:
+	## Apply runtime styling and create dynamic nodes. Structure is in MerlinGameUI.tscn.
+	# Fonts
+	title_font = MerlinVisual.get_font("title")
+	body_font = MerlinVisual.get_font("body")
+	if body_font == null:
+		body_font = title_font
 
-	# Parchment background
-	parchment_bg = ColorRect.new()
-	parchment_bg.set_anchors_preset(Control.PRESET_FULL_RECT)
-	parchment_bg.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	var paper_shader := load("res://shaders/reigns_paper.gdshader")
+	# Parchment shader
+	var paper_shader := load("res://shaders/merlin_paper.gdshader")
 	if paper_shader:
 		var mat := ShaderMaterial.new()
 		mat.shader = paper_shader
-		mat.set_shader_parameter("paper_tint", PALETTE.paper)
+		mat.set_shader_parameter("paper_tint", MerlinVisual.PALETTE.paper)
 		mat.set_shader_parameter("grain_strength", 0.025)
 		mat.set_shader_parameter("vignette_strength", 0.08)
 		mat.set_shader_parameter("vignette_softness", 0.65)
@@ -279,622 +272,256 @@ func _setup_ui() -> void:
 		mat.set_shader_parameter("warp_strength", 0.001)
 		parchment_bg.material = mat
 	else:
-		parchment_bg.color = PALETTE.paper
-	add_child(parchment_bg)
-	parchment_bg.modulate = Color(1.0, 1.0, 1.0, 0.16)
+		parchment_bg.color = MerlinVisual.PALETTE.paper
+	var seasonal_tint: Color = MerlinVisual.get_seasonal_tint()
+	parchment_bg.modulate = Color(seasonal_tint.r, seasonal_tint.g, seasonal_tint.b, 0.16)
 
-	# Pixel-art biome background built at run start.
-	biome_art_layer = Control.new()
-	biome_art_layer.set_anchors_preset(Control.PRESET_FULL_RECT)
-	biome_art_layer.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	biome_art_layer.visible = false
-	add_child(biome_art_layer)
+	# Life bar theming
+	_life_bar.max_value = MerlinConstants.LIFE_ESSENCE_MAX
+	_life_bar.value = MerlinConstants.LIFE_ESSENCE_START
+	MerlinVisual.apply_bar_theme(_life_bar, "danger")
 
-	# Main layout
-	main_vbox = VBoxContainer.new()
-	main_vbox.set_anchors_preset(Control.PRESET_FULL_RECT)
-	main_vbox.add_theme_constant_override("separation", 0)
-	add_child(main_vbox)
+	# Clock panel styling
+	_status_clock_panel.add_theme_stylebox_override("panel", MerlinVisual.make_clock_panel_style())
+	_status_clock_timer.timeout.connect(_update_clock_status)
+	_update_clock_status()
 
-	# Deck animation layer (used during opening sequence).
-	_deck_fx_layer = Control.new()
-	_deck_fx_layer.set_anchors_preset(Control.PRESET_FULL_RECT)
-	_deck_fx_layer.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	_deck_fx_layer.visible = false
-	add_child(_deck_fx_layer)
+	# Card panel styling
+	card_panel.add_theme_stylebox_override("panel", MerlinVisual.make_card_panel_style())
+	card_panel.pivot_offset = Vector2(320, 200)
+	card_panel.clip_contents = true
+	_setup_card_3d()
+	if card_container and is_instance_valid(card_container):
+		card_container.clip_contents = true
+	_card_illustration_panel.add_theme_stylebox_override("panel", MerlinVisual.make_card_illustration_style())
+	_card_body_panel.add_theme_stylebox_override("panel", MerlinVisual.make_card_body_style())
+	var ink_bg: Color = MerlinVisual.PALETTE.ink
+	_illo_bg.color = Color(ink_bg.r, ink_bg.g, ink_bg.b, 0.95)
 
-	# Top HUD: only health, souffle, essences.
-	_top_status_bar = HBoxContainer.new()
-	_top_status_bar.alignment = BoxContainer.ALIGNMENT_CENTER
-	_top_status_bar.add_theme_constant_override("separation", 26)
-	main_vbox.add_child(_top_status_bar)
-	_create_life_display(_top_status_bar)
-	_create_souffle_display(_top_status_bar)
-	_create_essence_display(_top_status_bar)
-	_create_clock_status_panel()
+	# Dynamic nodes: scene compositor + portrait
+	_scene_compositor = PixelSceneCompositor.new()
+	_scene_compositor.name = "SceneCompositor"
+	_scene_compositor.setup(220.0)
+	_tile_center.add_child(_scene_compositor)
 
-	# Optional biome indicator kept hidden; artwork already conveys biome.
+	_pixel_portrait = PixelCharacterPortrait.new()
+	_pixel_portrait.name = "PixelPortrait"
+	_pixel_portrait.setup("merlin", 5.8)
+	_portrait_center.add_child(_pixel_portrait)
+
+	# NPC portrait (32x32) — shown when speaker is an NPC archetype
+	_npc_portrait = PixelNpcPortrait.new()
+	_npc_portrait.name = "NpcPortrait"
+	_npc_portrait.visible = false
+	_portrait_center.add_child(_npc_portrait)
+
+	# LLM source badge
+	_card_source_badge = LLMSourceBadge.create("static")
+	_card_source_badge.visible = false
+	_card_body_vbox.add_child(_card_source_badge)
+
+	# Option buttons — collect refs + wire signals
+	option_buttons = [_btn_a, _btn_b, _btn_c]
+	var option_configs := [
+		{"key": "A", "color": MerlinVisual.ASPECT_COLORS["Monde"]},
+		{"key": "B", "color": MerlinVisual.PALETTE.accent},
+		{"key": "C", "color": MerlinVisual.ASPECT_COLORS["Corps"]},
+	]
+	for i in range(3):
+		var btn: Button = option_buttons[i]
+		MerlinVisual.apply_celtic_option_theme(btn, option_configs[i]["color"])
+		btn.pressed.connect(_on_option_pressed.bind(i))
+		btn.mouse_entered.connect(_on_option_hover_enter.bind(i))
+		btn.mouse_exited.connect(_on_option_hover_exit)
+		btn.mouse_filter = Control.MOUSE_FILTER_STOP
+		btn.get_parent().mouse_filter = Control.MOUSE_FILTER_PASS
+
+	# Ensure parent containers don't block mouse events on buttons
+	if _bottom_zone and is_instance_valid(_bottom_zone):
+		_bottom_zone.mouse_filter = Control.MOUSE_FILTER_PASS
+	if options_container and is_instance_valid(options_container):
+		options_container.mouse_filter = Control.MOUSE_FILTER_PASS
+
+	# Action description labels — ABOVE each option button (shown on hover)
+	var desc_color: Color = MerlinVisual.PALETTE.get("ink_soft", Color(0.45, 0.4, 0.35))
+	_option_desc_labels.clear()
+	for i2 in range(3):
+		var desc_lbl := Label.new()
+		desc_lbl.name = "DescLabel%s" % ["A", "B", "C"][i2]
+		if body_font:
+			desc_lbl.add_theme_font_override("font", body_font)
+		desc_lbl.add_theme_font_size_override("font_size", 10)
+		desc_lbl.add_theme_color_override("font_color", desc_color)
+		desc_lbl.custom_minimum_size = Vector2(0, 18)
+		desc_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		desc_lbl.autowrap_mode = TextServer.AUTOWRAP_WORD
+		desc_lbl.visible = false
+		desc_lbl.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		var parent_vbox: Control = option_buttons[i2].get_parent()
+		parent_vbox.add_child(desc_lbl)
+		parent_vbox.move_child(desc_lbl, 0)  # Move BEFORE the button
+		_option_desc_labels.append(desc_lbl)
+
+	# Minigame badge — displayed below card text when a minigame is detected
+	_minigame_badge = Label.new()
+	_minigame_badge.name = "MinigameBadge"
+	if body_font:
+		_minigame_badge.add_theme_font_override("font", body_font)
+	_minigame_badge.add_theme_font_size_override("font_size", 11)
+	_minigame_badge.add_theme_color_override("font_color", MerlinVisual.PALETTE.celtic_gold)
+	_minigame_badge.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	_minigame_badge.visible = false
+	_card_body_vbox.add_child(_minigame_badge)
+
+	# Reward badge (floating overlay)
+	_reward_badge = MerlinRewardBadge.new()
+	add_child(_reward_badge)
+
+	# Souffle d'Ogham button (bottom-right, dedicated activation)
+	_souffle_btn = Button.new()
+	_souffle_btn.name = "SouffleBtn"
+	_souffle_btn.text = SOUFFLE_ICON
+	_souffle_btn.custom_minimum_size = Vector2(56, 56)
+	_souffle_btn.tooltip_text = "Souffle d'Ogham: +4 au prochain jet (usage unique)"
+	MerlinVisual.apply_celtic_option_theme(_souffle_btn, MerlinVisual.PALETTE.souffle)
+	_souffle_btn.z_index = 20
+	_souffle_btn.mouse_filter = Control.MOUSE_FILTER_STOP
+	_souffle_btn.pressed.connect(_on_souffle_btn_pressed)
+	_souffle_btn.mouse_entered.connect(func(): SFXManager.play("hover"))
+	add_child(_souffle_btn)
+	_update_souffle_btn_state()
+
+	# Bestiole wheel: lazy-loaded on Tab press (no permanent button to avoid duplication with SouffleBtn)
+	# bestiole_wheel variable stays null until Tab is pressed — see _input()
+
+	# Bestiole companion mini (bottom-left, permanent)
+	_bestiole_mini = Label.new()
+	_bestiole_mini.name = "BestioleMini"
+	_bestiole_mini.text = "~(o.o)~"
+	if body_font:
+		_bestiole_mini.add_theme_font_override("font", body_font)
+	_bestiole_mini.add_theme_font_size_override("font_size", 18)
+	var bestiole_col: Color = MerlinVisual.PALETTE.get("bestiole", Color(0.6, 0.8, 0.5))
+	_bestiole_mini.add_theme_color_override("font_color", bestiole_col)
+	_bestiole_mini.position = Vector2(16, get_viewport_rect().size.y - 64)
+	_bestiole_mini.z_index = 15
+	add_child(_bestiole_mini)
+
+	_bestiole_emote = Label.new()
+	_bestiole_emote.name = "BestioleEmote"
+	_bestiole_emote.text = ""
+	if body_font:
+		_bestiole_emote.add_theme_font_override("font", body_font)
+	_bestiole_emote.add_theme_font_size_override("font_size", 14)
+	_bestiole_emote.add_theme_color_override("font_color", MerlinVisual.PALETTE.get("celtic_gold", Color(0.85, 0.65, 0.13)))
+	_bestiole_emote.position = Vector2(16, get_viewport_rect().size.y - 82)
+	_bestiole_emote.z_index = 16
+	_bestiole_emote.modulate.a = 0.0
+	add_child(_bestiole_emote)
+
+	# Biome indicator (orphan label, not in tree)
 	biome_indicator = Label.new()
 	biome_indicator.visible = false
 
-	# Card area (70% viewport target)
-	_create_card_display(main_vbox)
+	# Apply font/color theming to scene labels
+	_apply_label_theming()
 
-	# Bottom zone (15%): choices aligned low + run stacks.
-	_bottom_zone = VBoxContainer.new()
-	_bottom_zone.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	_bottom_zone.size_flags_vertical = Control.SIZE_FILL
-	_bottom_zone.add_theme_constant_override("separation", 6)
-	main_vbox.add_child(_bottom_zone)
-
-	_bottom_push_spacer = Control.new()
-	_bottom_push_spacer.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	_bottom_zone.add_child(_bottom_push_spacer)
-
-	_create_options_bar(_bottom_zone)
-	_create_run_stack_bar(_bottom_zone)
-
-	# Effect preview tooltip (floating, added to self so it overlays everything)
-	_create_effect_preview_panel()
-
-	# Optional info bar kept hidden in the revamp UX.
-	_create_info_bar(_bottom_zone)
-	if info_panel and is_instance_valid(info_panel):
-		info_panel.visible = false
-
-	# Bestiole Ogham Wheel (overlay, self-positioned bottom-right)
-	bestiole_wheel = BestioleWheelSystem.new()
-	bestiole_wheel.name = "BestioleWheel"
-	add_child(bestiole_wheel)
-	bestiole_wheel.ogham_selected.connect(func(_skill_id: String):
-		SFXManager.play("skill_activate")
-	)
-
-	# Narrator overlay (for Merlin intro + NPC pixel cascade)
-	narrator_overlay = Control.new()
-	narrator_overlay.set_anchors_preset(Control.PRESET_FULL_RECT)
-	narrator_overlay.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	narrator_overlay.visible = false
-	add_child(narrator_overlay)
-
+	# Dynamic deck stacks + layout
 	_build_remaining_deck_stack()
 	_build_discard_stack()
-	_ui_blocks_for_intro = [_top_status_bar, options_container, _run_stack_bar]
+	_ui_blocks_for_intro = [_top_status_bar, options_container, _pioche_column, _cimetiere_column]
 	_layout_run_zones()
-	_layout_card_stage()
-
-
-func _load_fonts() -> void:
-	title_font = _try_load_font("res://resources/fonts/morris/MorrisRomanBlack.otf")
-	if title_font == null:
-		title_font = _try_load_font("res://resources/fonts/morris/MorrisRomanBlack.ttf")
-	body_font = _try_load_font("res://resources/fonts/morris/MorrisRomanBlackAlt.otf")
-	if body_font == null:
-		body_font = _try_load_font("res://resources/fonts/morris/MorrisRomanBlackAlt.ttf")
-	if body_font == null:
-		body_font = title_font
-
-
-func _try_load_font(path: String) -> Font:
-	if not ResourceLoader.exists(path):
-		return null
-	var f: Resource = load(path)
-	if f is Font:
-		return f
-	return null
-
-
-func _is_forward_plus_renderer() -> bool:
-	var method := str(ProjectSettings.get_setting("rendering/renderer/rendering_method", "forward_plus"))
-	return method == "forward_plus"
-
-
-func _build_low_poly_background() -> void:
-	if _bg3d_container and is_instance_valid(_bg3d_container):
-		return
-
-	_bg3d_rng.seed = int(Time.get_unix_time_from_system())
-	_bg3d_container = SubViewportContainer.new()
-	_bg3d_container.set_anchors_preset(Control.PRESET_FULL_RECT)
-	_bg3d_container.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	_bg3d_container.stretch = false
-	_bg3d_container.modulate = Color(1.0, 1.0, 1.0, 0.0)
-	add_child(_bg3d_container)
-
-	_bg3d_viewport = SubViewport.new()
-	_bg3d_viewport.render_target_update_mode = SubViewport.UPDATE_ALWAYS
-	_bg3d_viewport.msaa_3d = Viewport.MSAA_2X
-	_bg3d_container.add_child(_bg3d_viewport)
-
-	_bg3d_root = Node3D.new()
-	_bg3d_viewport.add_child(_bg3d_root)
-
-	_bg3d_geometry_root = Node3D.new()
-	_bg3d_root.add_child(_bg3d_geometry_root)
-
-	_setup_low_poly_environment()
-	_build_low_poly_weather_emitters()
-	_resize_low_poly_background()
-
-
-func _setup_low_poly_environment() -> void:
-	var world_env := WorldEnvironment.new()
-	_bg3d_environment = Environment.new()
-	_bg3d_environment.background_mode = Environment.BG_COLOR
-	_bg3d_environment.background_color = Color(0.03, 0.06, 0.08)
-	_bg3d_environment.ambient_light_source = Environment.AMBIENT_SOURCE_COLOR
-	_bg3d_environment.ambient_light_color = Color(0.24, 0.30, 0.32)
-	_bg3d_environment.ambient_light_energy = 0.64
-	_bg3d_environment.fog_enabled = true
-	_bg3d_environment.fog_density = 0.016
-	_bg3d_environment.fog_light_color = Color(0.24, 0.34, 0.30)
-	if _is_forward_plus_renderer():
-		_bg3d_environment.set("volumetric_fog_enabled", true)
-		_bg3d_environment.set("volumetric_fog_density", 0.036)
-		_bg3d_environment.set("volumetric_fog_albedo", Color(0.26, 0.36, 0.31))
-		_bg3d_environment.set("volumetric_fog_emission", Color(0.03, 0.04, 0.05))
-	world_env.environment = _bg3d_environment
-	_bg3d_root.add_child(world_env)
-
-	_bg3d_camera = Camera3D.new()
-	_bg3d_camera.current = true
-	_bg3d_camera.fov = 56.0
-	_bg3d_camera.position = Vector3(0.0, 24.0, 72.0)
-	_bg3d_camera.look_at_from_position(_bg3d_camera.position, Vector3(0.0, 8.0, 0.0), Vector3.UP)
-	_bg3d_root.add_child(_bg3d_camera)
-
-	_bg3d_sun = DirectionalLight3D.new()
-	_bg3d_sun.light_color = Color(0.30, 0.62, 1.0)
-	_bg3d_sun.light_energy = 1.35
-	_bg3d_sun.shadow_enabled = true
-	_bg3d_sun.shadow_blur = 0.8
-	_bg3d_root.add_child(_bg3d_sun)
-
-	_bg3d_fill = DirectionalLight3D.new()
-	_bg3d_fill.light_color = Color(0.44, 0.28, 0.56)
-	_bg3d_fill.light_energy = 0.28
-	_bg3d_fill.rotation_degrees = Vector3(-20.0, -120.0, 0.0)
-	_bg3d_root.add_child(_bg3d_fill)
-
-
-func _build_low_poly_weather_emitters() -> void:
-	_bg3d_rain = GPUParticles3D.new()
-	_bg3d_rain.amount = 3600
-	_bg3d_rain.lifetime = 2.0
-	_bg3d_rain.preprocess = 1.0
-	_bg3d_rain.one_shot = false
-	_bg3d_rain.emitting = false
-	_bg3d_rain.position = Vector3(0.0, 55.0, 0.0)
-	_bg3d_rain.visibility_aabb = AABB(Vector3(-120.0, -20.0, -120.0), Vector3(240.0, 130.0, 240.0))
-	var rain_mesh := QuadMesh.new()
-	rain_mesh.size = Vector2(0.06, 0.64)
-	_bg3d_rain.draw_pass_1 = rain_mesh
-	var rain_process := ParticleProcessMaterial.new()
-	rain_process.emission_shape = ParticleProcessMaterial.EMISSION_SHAPE_BOX
-	rain_process.emission_box_extents = Vector3(110.0, 1.0, 110.0)
-	rain_process.direction = Vector3(0.0, -1.0, 0.0)
-	rain_process.spread = 8.0
-	rain_process.gravity = Vector3(0.0, -34.0, 0.0)
-	rain_process.initial_velocity_min = 20.0
-	rain_process.initial_velocity_max = 34.0
-	rain_process.scale_min = 0.2
-	rain_process.scale_max = 0.46
-	rain_process.color = Color(0.58, 0.78, 1.0, 0.55)
-	_bg3d_rain.process_material = rain_process
-	_bg3d_root.add_child(_bg3d_rain)
-
-	_bg3d_snow = GPUParticles3D.new()
-	_bg3d_snow.amount = 1800
-	_bg3d_snow.lifetime = 5.8
-	_bg3d_snow.preprocess = 1.0
-	_bg3d_snow.one_shot = false
-	_bg3d_snow.emitting = false
-	_bg3d_snow.position = Vector3(0.0, 55.0, 0.0)
-	_bg3d_snow.visibility_aabb = AABB(Vector3(-120.0, -20.0, -120.0), Vector3(240.0, 130.0, 240.0))
-	var snow_mesh := SphereMesh.new()
-	snow_mesh.radius = 0.07
-	snow_mesh.height = 0.14
-	snow_mesh.radial_segments = 6
-	snow_mesh.rings = 4
-	_bg3d_snow.draw_pass_1 = snow_mesh
-	var snow_process := ParticleProcessMaterial.new()
-	snow_process.emission_shape = ParticleProcessMaterial.EMISSION_SHAPE_BOX
-	snow_process.emission_box_extents = Vector3(110.0, 1.0, 110.0)
-	snow_process.direction = Vector3(0.0, -1.0, 0.0)
-	snow_process.spread = 28.0
-	snow_process.gravity = Vector3(0.0, -4.0, 0.0)
-	snow_process.initial_velocity_min = 2.4
-	snow_process.initial_velocity_max = 5.0
-	snow_process.scale_min = 0.22
-	snow_process.scale_max = 0.52
-	snow_process.color = Color(0.90, 0.96, 1.0, 0.78)
-	_bg3d_snow.process_material = snow_process
-	_bg3d_root.add_child(_bg3d_snow)
-
-	_bg3d_leaves = GPUParticles3D.new()
-	_bg3d_leaves.amount = 1200
-	_bg3d_leaves.lifetime = 5.0
-	_bg3d_leaves.preprocess = 0.8
-	_bg3d_leaves.one_shot = false
-	_bg3d_leaves.emitting = false
-	_bg3d_leaves.position = Vector3(0.0, 40.0, 0.0)
-	_bg3d_leaves.visibility_aabb = AABB(Vector3(-120.0, -20.0, -120.0), Vector3(240.0, 120.0, 240.0))
-	var leaf_mesh := QuadMesh.new()
-	leaf_mesh.size = Vector2(0.22, 0.14)
-	_bg3d_leaves.draw_pass_1 = leaf_mesh
-	var leaf_process := ParticleProcessMaterial.new()
-	leaf_process.emission_shape = ParticleProcessMaterial.EMISSION_SHAPE_BOX
-	leaf_process.emission_box_extents = Vector3(90.0, 1.0, 90.0)
-	leaf_process.direction = Vector3(0.0, -1.0, 0.0)
-	leaf_process.spread = 52.0
-	leaf_process.gravity = Vector3(0.0, -1.9, 0.0)
-	leaf_process.initial_velocity_min = 1.0
-	leaf_process.initial_velocity_max = 3.4
-	leaf_process.angular_velocity_min = -1.8
-	leaf_process.angular_velocity_max = 1.8
-	leaf_process.color = Color(0.70, 0.52, 0.24, 0.72)
-	_bg3d_leaves.process_material = leaf_process
-	_bg3d_root.add_child(_bg3d_leaves)
-
-
-func _resize_low_poly_background() -> void:
-	if not _bg3d_viewport or not is_instance_valid(_bg3d_viewport):
-		return
-	var vp_size := get_viewport_rect().size
-	_bg3d_viewport.size = Vector2i(maxi(1, int(vp_size.x)), maxi(1, int(vp_size.y)))
-
-
-func _configure_low_poly_background(biome_key: String, season_key: String, hour: int) -> void:
-	if not _bg3d_geometry_root or not is_instance_valid(_bg3d_geometry_root):
-		return
-
-	_active_biome_visual = biome_key
-	_active_season_visual = season_key
-	_active_hour_visual = clampi(hour, 0, 23)
-	_bg3d_light_factor = 1.0
-
-	for child in _bg3d_geometry_root.get_children():
-		child.queue_free()
-	_bg3d_clouds.clear()
-	_bg3d_animals.clear()
-
-	var profile: Dictionary = BIOME_ART_PROFILES.get(biome_key, BIOME_ART_PROFILES.broceliande)
-	var season_tint: Color = SEASON_TINTS.get(season_key, Color.WHITE)
-	var hour_light: Color = _hour_light_color(hour)
-	var ground_color := _tone_color(profile.foreground, hour_light, season_tint)
-	var hill_color := _tone_color(profile.mid, hour_light, season_tint)
-	var accent_color := _tone_color(profile.accent, hour_light, season_tint)
-
-	var ground := MeshInstance3D.new()
-	var ground_mesh := PlaneMesh.new()
-	ground_mesh.size = Vector2(460.0, 460.0)
-	ground.mesh = ground_mesh
-	var ground_mat := StandardMaterial3D.new()
-	ground_mat.albedo_color = ground_color.darkened(0.14)
-	ground_mat.roughness = 1.0
-	ground.material_override = ground_mat
-	_bg3d_geometry_root.add_child(ground)
-
-	for i in range(34):
-		var hill := MeshInstance3D.new()
-		var hill_mesh := BoxMesh.new()
-		hill_mesh.size = Vector3(_bg3d_rng.randf_range(8.0, 24.0), _bg3d_rng.randf_range(6.0, 18.0), _bg3d_rng.randf_range(10.0, 26.0))
-		hill.mesh = hill_mesh
-		var hill_mat := StandardMaterial3D.new()
-		hill_mat.albedo_color = hill_color.darkened(_bg3d_rng.randf_range(0.08, 0.26))
-		hill_mat.roughness = 1.0
-		hill.material_override = hill_mat
-		var angle := _bg3d_rng.randf_range(0.0, TAU)
-		var radius := _bg3d_rng.randf_range(90.0, 170.0)
-		hill.position = Vector3(cos(angle) * radius, hill_mesh.size.y * 0.35, sin(angle) * radius)
-		hill.rotation_degrees.y = _bg3d_rng.randf_range(0.0, 360.0)
-		_bg3d_geometry_root.add_child(hill)
-
-	_build_low_poly_forest(accent_color)
-	_build_low_poly_clouds()
-	_spawn_low_poly_animals()
-	_apply_low_poly_weather(_weather_mode_for_hour(hour), true)
-	_update_low_poly_solar(Time.get_time_dict_from_system())
-
-
-func _build_low_poly_forest(accent_color: Color) -> void:
-	var tree_count := 220 if _active_biome_visual == "broceliande" else 130
-	for i in range(tree_count):
-		var angle := _bg3d_rng.randf_range(0.0, TAU)
-		var radius := _bg3d_rng.randf_range(18.0, 160.0)
-		var pos := Vector3(cos(angle) * radius, _bg3d_rng.randf_range(-0.1, 0.4), sin(angle) * radius)
-		var scale_factor := _bg3d_rng.randf_range(0.78, 1.48)
-		var ancient := _active_biome_visual == "broceliande" and _bg3d_rng.randf() < 0.24
-		_spawn_low_poly_tree(pos, scale_factor, ancient, accent_color)
-
-
-func _spawn_low_poly_tree(base_pos: Vector3, scale_factor: float, ancient: bool, accent_color: Color) -> void:
-	var tree_root := Node3D.new()
-	tree_root.position = base_pos
-	tree_root.rotation_degrees.y = _bg3d_rng.randf_range(0.0, 360.0)
-	_bg3d_geometry_root.add_child(tree_root)
-
-	var trunk := MeshInstance3D.new()
-	var trunk_mesh := CylinderMesh.new()
-	trunk_mesh.height = (2.4 if ancient else 1.9) * scale_factor
-	trunk_mesh.bottom_radius = (0.22 if ancient else 0.15) * scale_factor
-	trunk_mesh.top_radius = (0.17 if ancient else 0.11) * scale_factor
-	trunk_mesh.radial_segments = 5
-	trunk.mesh = trunk_mesh
-	trunk.position.y = trunk_mesh.height * 0.5
-	var trunk_mat := StandardMaterial3D.new()
-	trunk_mat.albedo_color = Color(0.20, 0.13, 0.09)
-	trunk_mat.roughness = 1.0
-	trunk.material_override = trunk_mat
-	tree_root.add_child(trunk)
-
-	for layer in range(4 if ancient else 3):
-		var crown := MeshInstance3D.new()
-		var crown_mesh := CylinderMesh.new()
-		crown_mesh.height = (1.2 - float(layer) * 0.14) * scale_factor
-		crown_mesh.bottom_radius = (1.18 - float(layer) * 0.18) * scale_factor
-		crown_mesh.top_radius = 0.0
-		crown_mesh.radial_segments = 5
-		crown.mesh = crown_mesh
-		crown.position.y = trunk_mesh.height + 0.28 + float(layer) * 0.52
-		var crown_mat := StandardMaterial3D.new()
-		var tint := _bg3d_rng.randf_range(-0.10, 0.08)
-		crown_mat.albedo_color = Color(
-			clampf(accent_color.r + tint, 0.0, 1.0),
-			clampf(accent_color.g + tint * 0.6, 0.0, 1.0),
-			clampf(accent_color.b + tint * 0.2, 0.0, 1.0)
-		).darkened(0.32)
-		crown_mat.roughness = 1.0
-		crown.material_override = crown_mat
-		tree_root.add_child(crown)
-
-
-func _build_low_poly_clouds() -> void:
-	for i in range(16):
-		var cloud := MeshInstance3D.new()
-		var mesh := SphereMesh.new()
-		mesh.radius = _bg3d_rng.randf_range(1.4, 3.1)
-		mesh.height = mesh.radius * 1.2
-		mesh.radial_segments = 8
-		mesh.rings = 4
-		cloud.mesh = mesh
-		var mat := StandardMaterial3D.new()
-		mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
-		mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
-		mat.albedo_color = Color(0.80, 0.88, 0.96, 0.36)
-		cloud.material_override = mat
-		cloud.position = Vector3(
-			_bg3d_rng.randf_range(-180.0, 180.0),
-			_bg3d_rng.randf_range(34.0, 58.0),
-			_bg3d_rng.randf_range(-130.0, 120.0)
-		)
-		cloud.scale = Vector3(_bg3d_rng.randf_range(2.4, 6.8), _bg3d_rng.randf_range(0.35, 1.0), _bg3d_rng.randf_range(1.8, 3.4))
-		cloud.set_meta("speed", _bg3d_rng.randf_range(0.6, 1.5))
-		_bg3d_geometry_root.add_child(cloud)
-		_bg3d_clouds.append(cloud)
-
-
-func _spawn_low_poly_animals() -> void:
-	for i in range(3):
-		var animal := Node3D.new()
-		animal.position = Vector3(_bg3d_rng.randf_range(-120.0, 120.0), 0.35, _bg3d_rng.randf_range(24.0, 68.0))
-		animal.set_meta("speed", _bg3d_rng.randf_range(3.8, 6.8))
-		animal.set_meta("dir", -1.0 if _bg3d_rng.randf() < 0.5 else 1.0)
-
-		var body := MeshInstance3D.new()
-		var body_mesh := BoxMesh.new()
-		body_mesh.size = Vector3(1.2, 0.7, 0.5)
-		body.mesh = body_mesh
-		var body_mat := StandardMaterial3D.new()
-		body_mat.albedo_color = Color(0.28, 0.20, 0.14)
-		body_mat.roughness = 1.0
-		body.material_override = body_mat
-		animal.add_child(body)
-
-		var head := MeshInstance3D.new()
-		var head_mesh := SphereMesh.new()
-		head_mesh.radius = 0.22
-		head_mesh.height = 0.44
-		head.mesh = head_mesh
-		head.position = Vector3(0.76, 0.16, 0.0)
-		head.material_override = body_mat
-		animal.add_child(head)
-
-		_bg3d_geometry_root.add_child(animal)
-		_bg3d_animals.append(animal)
-
-
-func _animate_low_poly_background_reveal() -> void:
-	if not _bg3d_container or not is_instance_valid(_bg3d_container):
-		return
-	var tw := create_tween()
-	tw.tween_property(_bg3d_container, "modulate:a", 1.0, 0.30).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_OUT)
-	await tw.finished
-
-
-func _weather_mode_for_hour(hour: int) -> String:
-	if hour >= 0 and hour < 5:
-		return "mist"
-	if hour >= 5 and hour < 9:
-		return "clear"
-	if hour >= 9 and hour < 13:
-		return "cloudy"
-	if hour >= 13 and hour < 17:
-		return "rain"
-	if hour >= 17 and hour < 21:
-		return "storm"
-	if hour >= 21 and hour < 23:
-		return "cloudy"
-	return "snow"
-
-
-func _apply_low_poly_weather(mode: String, instant: bool) -> void:
-	_bg3d_weather_mode = mode
-	var fog_density := 0.016
-	var fog_color := Color(0.24, 0.34, 0.30)
-	var volumetric_density := 0.036
-	var enable_rain := false
-	var enable_snow := false
-	var enable_leaves := _active_biome_visual == "broceliande"
-	_bg3d_light_factor = 1.0
-
-	match mode:
-		"clear":
-			fog_density = 0.010
-			fog_color = Color(0.28, 0.40, 0.38)
-			volumetric_density = 0.022
-			_bg3d_light_factor = 1.0
-		"cloudy":
-			fog_density = 0.015
-			fog_color = Color(0.23, 0.34, 0.40)
-			volumetric_density = 0.032
-			_bg3d_light_factor = 0.84
-		"rain":
-			fog_density = 0.022
-			fog_color = Color(0.18, 0.28, 0.36)
-			volumetric_density = 0.050
-			enable_rain = true
-			_bg3d_light_factor = 0.70
-		"storm":
-			fog_density = 0.028
-			fog_color = Color(0.13, 0.20, 0.30)
-			volumetric_density = 0.065
-			enable_rain = true
-			_bg3d_light_factor = 0.56
-		"mist":
-			fog_density = 0.031
-			fog_color = Color(0.22, 0.34, 0.36)
-			volumetric_density = 0.075
-			_bg3d_light_factor = 0.62
-		"snow":
-			fog_density = 0.024
-			fog_color = Color(0.34, 0.44, 0.54)
-			volumetric_density = 0.052
-			enable_snow = true
-			enable_leaves = false
-			_bg3d_light_factor = 0.76
-
-	if _bg3d_environment and is_instance_valid(_bg3d_environment):
-		if instant:
-			_bg3d_environment.fog_density = fog_density
-			_bg3d_environment.fog_light_color = fog_color
-			_bg3d_environment.set("volumetric_fog_density", volumetric_density)
-			_bg3d_environment.set("volumetric_fog_albedo", fog_color)
-		else:
-			var tw := create_tween().set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
-			tw.tween_property(_bg3d_environment, "fog_density", fog_density, 1.4)
-			tw.parallel().tween_property(_bg3d_environment, "fog_light_color", fog_color, 1.4)
-
-	if _bg3d_rain and is_instance_valid(_bg3d_rain):
-		_bg3d_rain.emitting = enable_rain
-	if _bg3d_snow and is_instance_valid(_bg3d_snow):
-		_bg3d_snow.emitting = enable_snow
-	if _bg3d_leaves and is_instance_valid(_bg3d_leaves):
-		_bg3d_leaves.emitting = enable_leaves
-
-
-func _update_low_poly_solar(now_time: Dictionary) -> void:
-	if not _bg3d_sun or not is_instance_valid(_bg3d_sun):
-		return
-	var hour := float(now_time.get("hour", 12))
-	var minute := float(now_time.get("minute", 0))
-	var second := float(now_time.get("second", 0))
-	var time_float := hour + minute / 60.0 + second / 3600.0
-	var orbit := (time_float / 24.0) * TAU
-	var altitude := sin(orbit - PI * 0.5)
-	var daylight := clampf((altitude + 0.22) / 1.22, 0.0, 1.0)
-	var azimuth := wrapf((time_float / 24.0) * 360.0 + 32.0, 0.0, 360.0)
-
-	_bg3d_sun.rotation_degrees = Vector3(lerpf(24.0, -84.0, daylight), azimuth, 0.0)
-	_bg3d_sun.light_color = Color(0.08, 0.16, 0.40).lerp(Color(0.28, 0.62, 1.0), daylight)
-	_bg3d_sun.light_energy = lerpf(0.08, 1.62, daylight) * _bg3d_light_factor
-
-	if _bg3d_fill and is_instance_valid(_bg3d_fill):
-		_bg3d_fill.light_color = Color(0.46, 0.28, 0.62).lerp(Color(0.24, 0.30, 0.40), daylight)
-		_bg3d_fill.light_energy = lerpf(0.34, 0.08, daylight)
-
-	if _bg3d_environment and is_instance_valid(_bg3d_environment):
-		_bg3d_environment.background_color = Color(0.02, 0.04, 0.10).lerp(Color(0.12, 0.26, 0.34), daylight)
-		_bg3d_environment.ambient_light_energy = lerpf(0.28, 0.92, daylight) * _bg3d_light_factor
-
-
-func _update_low_poly_background(delta: float) -> void:
-	if not _bg3d_geometry_root or not is_instance_valid(_bg3d_geometry_root):
-		return
-
-	for cloud in _bg3d_clouds:
-		if not cloud or not is_instance_valid(cloud):
-			continue
-		var speed := float(cloud.get_meta("speed", 0.9))
-		var pos := cloud.position
-		pos.x += speed * delta * 4.0
-		if pos.x > 190.0:
-			pos.x = -190.0
-		cloud.position = pos
-
-	for animal in _bg3d_animals:
-		if not animal or not is_instance_valid(animal):
-			continue
-		var speed := float(animal.get_meta("speed", 4.5))
-		var direction := float(animal.get_meta("dir", 1.0))
-		var pos := animal.position
-		pos.x += speed * direction * delta
-		if pos.x > 140.0:
-			pos.x = -140.0
-			pos.z = _bg3d_rng.randf_range(24.0, 68.0)
-		elif pos.x < -140.0:
-			pos.x = 140.0
-			pos.z = _bg3d_rng.randf_range(24.0, 68.0)
-		animal.position = pos
-		animal.rotation_degrees.y = 0.0 if direction > 0.0 else 180.0
-
-	_bg3d_weather_timer += delta
-	if _bg3d_weather_timer >= 1.0:
-		_bg3d_weather_timer = 0.0
-		var now := Time.get_time_dict_from_system()
-		var hour := int(now.get("hour", 12))
-		var target_mode := _weather_mode_for_hour(hour)
-		if target_mode != _bg3d_weather_mode:
-			_apply_low_poly_weather(target_mode, false)
-
-	_update_low_poly_solar(Time.get_time_dict_from_system())
-
-
-func _create_clock_status_panel() -> void:
-	_status_clock_panel = PanelContainer.new()
-	_status_clock_panel.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	_status_clock_panel.z_index = 8
-	_status_clock_panel.set_anchors_preset(Control.PRESET_TOP_LEFT)
-	_status_clock_panel.position = Vector2(18, 14)
-
-	var panel_style := StyleBoxFlat.new()
-	panel_style.bg_color = Color(PALETTE.paper_dark.r, PALETTE.paper_dark.g, PALETTE.paper_dark.b, 0.92)
-	panel_style.border_color = PALETTE.accent
-	panel_style.set_border_width_all(1)
-	panel_style.set_corner_radius_all(6)
-	panel_style.content_margin_left = 10
-	panel_style.content_margin_right = 10
-	panel_style.content_margin_top = 5
-	panel_style.content_margin_bottom = 4
-	_status_clock_panel.add_theme_stylebox_override("panel", panel_style)
-	add_child(_status_clock_panel)
-
-	_status_clock_label = Label.new()
-	_status_clock_label.text = "00:00"
-	_status_clock_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	call_deferred("_layout_card_stage")
+
+
+func _apply_label_theming() -> void:
+	## Apply MerlinVisual fonts and colors to scene labels.
+	# Title-style labels
+	for lbl: Label in [
+		$MainVBox/TopStatusBar/LifePanel/LifeTitle,
+		$MainVBox/TopStatusBar/SoufflePanel/SouffleTitle,
+		$MainVBox/TopStatusBar/EssencePanel/EssenceTitle,
+	]:
+		if title_font:
+			lbl.add_theme_font_override("font", title_font)
+		lbl.add_theme_font_size_override("font_size", 13)
+		lbl.add_theme_color_override("font_color", MerlinVisual.PALETTE.ink_soft)
+
+	# Life counter
+	_life_counter.text = "%d/%d" % [MerlinConstants.LIFE_ESSENCE_START, MerlinConstants.LIFE_ESSENCE_MAX]
+	if body_font:
+		_life_counter.add_theme_font_override("font", body_font)
+	_life_counter.add_theme_font_size_override("font_size", 12)
+	_life_counter.add_theme_color_override("font_color", MerlinVisual.PALETTE.danger)
+
+	# Souffle counter
+	_souffle_counter.text = "%d/%d" % [MerlinConstants.SOUFFLE_START, MerlinConstants.SOUFFLE_MAX]
+	if body_font:
+		_souffle_counter.add_theme_font_override("font", body_font)
+	_souffle_counter.add_theme_font_size_override("font_size", 12)
+	_souffle_counter.add_theme_color_override("font_color", MerlinVisual.PALETTE.souffle)
+
+	# Essence counter
+	if body_font:
+		_essence_counter.add_theme_font_override("font", body_font)
+	_essence_counter.add_theme_font_size_override("font_size", 22)
+	_essence_counter.add_theme_color_override("font_color", MerlinVisual.PALETTE.celtic_gold)
+
+	# Essence caption
+	var caption: Label = $MainVBox/TopStatusBar/EssencePanel/EssenceCaption
+	if body_font:
+		caption.add_theme_font_override("font", body_font)
+	caption.add_theme_font_size_override("font_size", 10)
+	caption.add_theme_color_override("font_color", MerlinVisual.PALETTE.ink_soft)
+
+	# Clock label
 	_status_clock_label.add_theme_font_size_override("font_size", 15)
-	_status_clock_label.add_theme_color_override("font_color", PALETTE.ink)
+	_status_clock_label.add_theme_color_override("font_color", MerlinVisual.PALETTE.ink)
 	if body_font:
 		_status_clock_label.add_theme_font_override("font", body_font)
-	_status_clock_panel.add_child(_status_clock_label)
-	_update_clock_status()
 
-	_status_clock_timer = Timer.new()
-	_status_clock_timer.wait_time = 1.0
-	_status_clock_timer.autostart = true
-	_status_clock_timer.timeout.connect(_update_clock_status)
-	add_child(_status_clock_timer)
+	# Pioche + Cimetiere titles
+	for lbl: Label in [
+		$MainVBox/MiddleZone/PiocheColumn/PiocheTitle,
+		$MainVBox/MiddleZone/CimetiereColumn/CimetiereTitle,
+	]:
+		if title_font:
+			lbl.add_theme_font_override("font", title_font)
+		lbl.add_theme_font_size_override("font_size", 16)
+		lbl.add_theme_color_override("font_color", MerlinVisual.PALETTE.ink_soft)
 
+	# Deck + discard count labels
+	for lbl: Label in [_remaining_deck_label, _discard_label]:
+		if body_font:
+			lbl.add_theme_font_override("font", body_font)
+		lbl.add_theme_font_size_override("font_size", 18)
+		lbl.add_theme_color_override("font_color", MerlinVisual.PALETTE.ink)
+
+	# Card speaker
+	if title_font:
+		card_speaker.add_theme_font_override("font", title_font)
+	card_speaker.add_theme_font_size_override("font_size", 17)
+	card_speaker.add_theme_color_override("font_color", MerlinVisual.PALETTE.accent)
+
+	# Card text
+	if body_font:
+		card_text.add_theme_font_override("normal_font", body_font)
+	card_text.add_theme_font_size_override("normal_font_size", 15)
+	card_text.add_theme_color_override("default_color", MerlinVisual.PALETTE.ink)
+	card_text.mouse_filter = Control.MOUSE_FILTER_IGNORE
+
+	# Option buttons font
+	for btn: Button in option_buttons:
+		if title_font:
+			btn.add_theme_font_override("font", title_font)
+		btn.add_theme_font_size_override("font_size", 17)
+
+	# Info panel labels
+	for lbl: Label in [mission_label, cards_label]:
+		if body_font:
+			lbl.add_theme_font_override("font", body_font)
+		lbl.add_theme_font_size_override("font_size", 13)
+		lbl.add_theme_color_override("font_color", MerlinVisual.PALETTE.ink_soft)
 
 func _update_clock_status() -> void:
 	if not _status_clock_label or not is_instance_valid(_status_clock_label):
@@ -903,85 +530,6 @@ func _update_clock_status() -> void:
 	var hour := int(now.get("hour", 0))
 	var minute := int(now.get("minute", 0))
 	_status_clock_label.text = "%02d:%02d" % [hour, minute]
-
-
-func _create_aspect_displays(parent: Control) -> void:
-	aspect_panel = HBoxContainer.new()
-	aspect_panel.add_theme_constant_override("separation", 16)
-	parent.add_child(aspect_panel)
-
-	for aspect in MerlinConstants.TRIADE_ASPECTS:
-		var container := VBoxContainer.new()
-		container.alignment = BoxContainer.ALIGNMENT_CENTER
-
-		# Drawn Celtic animal icon (custom Control with _draw)
-		var icon := _create_animal_icon(aspect)
-		container.add_child(icon)
-
-		# Aspect name
-		var name_label := Label.new()
-		name_label.text = aspect
-		name_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-		name_label.add_theme_color_override("font_color", ASPECT_COLORS.get(aspect, Color.WHITE))
-		if title_font:
-			name_label.add_theme_font_override("font", title_font)
-		name_label.add_theme_font_size_override("font_size", 13)
-		container.add_child(name_label)
-
-		# State indicator (3 dots)
-		var state_container := HBoxContainer.new()
-		state_container.alignment = BoxContainer.ALIGNMENT_CENTER
-		state_container.add_theme_constant_override("separation", 4)
-
-		for i in range(3):
-			var circle := Label.new()
-			circle.text = "\u25CB"
-			circle.add_theme_font_size_override("font_size", 14)
-			circle.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-			state_container.add_child(circle)
-
-		container.add_child(state_container)
-
-		# State name + shift arrow (inline)
-		var state_row := HBoxContainer.new()
-		state_row.alignment = BoxContainer.ALIGNMENT_CENTER
-		state_row.add_theme_constant_override("separation", 3)
-
-		var state_name := Label.new()
-		state_name.text = "Equilibre"
-		state_name.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-		if body_font:
-			state_name.add_theme_font_override("font", body_font)
-		state_name.add_theme_font_size_override("font_size", 11)
-		state_name.add_theme_color_override("font_color", PALETTE.ink_soft)
-		state_row.add_child(state_name)
-
-		var shift_arrow := Label.new()
-		shift_arrow.text = ""
-		shift_arrow.add_theme_font_size_override("font_size", 11)
-		shift_arrow.add_theme_color_override("font_color", Color.GRAY)
-		state_row.add_child(shift_arrow)
-		container.add_child(state_row)
-
-		aspect_panel.add_child(container)
-
-		aspect_displays[aspect] = {
-			"container": container,
-			"icon": icon,
-			"state_container": state_container,
-			"state_name": state_name,
-			"shift_arrow": shift_arrow,
-		}
-
-
-func _create_animal_icon(aspect: String) -> Control:
-	## Creates a custom-drawn Celtic animal icon for each aspect.
-	var icon := Control.new()
-	icon.custom_minimum_size = Vector2(56, 48)
-	var aspect_color: Color = ASPECT_COLORS.get(aspect, Color.WHITE)
-	var animal: String = MerlinConstants.TRIADE_ASPECT_INFO.get(aspect, {}).get("animal", "")
-	icon.draw.connect(_draw_animal.bind(icon, animal, aspect_color))
-	return icon
 
 
 func _draw_animal(ctrl: Control, animal: String, color: Color) -> void:
@@ -1085,281 +633,6 @@ func _draw_cerf(ctrl: Control, cx: float, cy: float, r: float, color: Color) -> 
 	ctrl.draw_line(Vector2(cx + r * 0.2, cy - r * 0.3), Vector2(cx + r * 0.35, cy - r * 0.45), color, 1.5)
 
 
-func _create_life_display(parent: Control) -> void:
-	life_panel = VBoxContainer.new()
-	life_panel.alignment = BoxContainer.ALIGNMENT_CENTER
-
-	var title := Label.new()
-	title.text = "Vie"
-	if title_font:
-		title.add_theme_font_override("font", title_font)
-	title.add_theme_font_size_override("font_size", 13)
-	title.add_theme_color_override("font_color", PALETTE.ink_soft)
-	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	life_panel.add_child(title)
-
-	_life_bar = ProgressBar.new()
-	_life_bar.custom_minimum_size = Vector2(168, 12)
-	_life_bar.min_value = 0
-	_life_bar.max_value = MerlinConstants.LIFE_ESSENCE_MAX
-	_life_bar.step = 1
-	_life_bar.show_percentage = false
-	_life_bar.value = MerlinConstants.LIFE_ESSENCE_START
-
-	var fill_style := StyleBoxFlat.new()
-	fill_style.bg_color = Color(0.78, 0.18, 0.16)
-	fill_style.set_corner_radius_all(3)
-	_life_bar.add_theme_stylebox_override("fill", fill_style)
-	var background_style := StyleBoxFlat.new()
-	background_style.bg_color = Color(0.08, 0.08, 0.08, 0.55)
-	background_style.set_corner_radius_all(3)
-	_life_bar.add_theme_stylebox_override("background", background_style)
-	life_panel.add_child(_life_bar)
-
-	_life_counter = Label.new()
-	_life_counter.text = "%d/%d" % [MerlinConstants.LIFE_ESSENCE_START, MerlinConstants.LIFE_ESSENCE_MAX]
-	_life_counter.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	if body_font:
-		_life_counter.add_theme_font_override("font", body_font)
-	_life_counter.add_theme_font_size_override("font_size", 12)
-	_life_counter.add_theme_color_override("font_color", Color(0.82, 0.24, 0.22))
-	life_panel.add_child(_life_counter)
-
-	parent.add_child(life_panel)
-
-
-func _create_souffle_display(parent: Control) -> void:
-	souffle_panel = VBoxContainer.new()
-	souffle_panel.alignment = BoxContainer.ALIGNMENT_CENTER
-
-	var title := Label.new()
-	title.text = "Souffle unique"
-	if title_font:
-		title.add_theme_font_override("font", title_font)
-	title.add_theme_font_size_override("font_size", 13)
-	title.add_theme_color_override("font_color", PALETTE.ink_soft)
-	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	souffle_panel.add_child(title)
-
-	souffle_display = HBoxContainer.new()
-	souffle_display.alignment = BoxContainer.ALIGNMENT_CENTER
-	souffle_display.add_theme_constant_override("separation", 4)
-
-	for i in range(MerlinConstants.SOUFFLE_MAX):
-		var icon := Label.new()
-		icon.text = SOUFFLE_EMPTY
-		icon.add_theme_font_size_override("font_size", 28)
-		souffle_display.add_child(icon)
-
-	souffle_panel.add_child(souffle_display)
-
-	# Numeric counter "3/7"
-	_souffle_counter = Label.new()
-	_souffle_counter.text = "%d/%d" % [MerlinConstants.SOUFFLE_START, MerlinConstants.SOUFFLE_MAX]
-	_souffle_counter.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	if body_font:
-		_souffle_counter.add_theme_font_override("font", body_font)
-	_souffle_counter.add_theme_font_size_override("font_size", 12)
-	_souffle_counter.add_theme_color_override("font_color", Color(0.3, 0.7, 0.9))
-	souffle_panel.add_child(_souffle_counter)
-
-	parent.add_child(souffle_panel)
-
-
-func _create_essence_display(parent: Control) -> void:
-	var essence_panel := VBoxContainer.new()
-	essence_panel.alignment = BoxContainer.ALIGNMENT_CENTER
-
-	var title := Label.new()
-	title.text = "Essences"
-	if title_font:
-		title.add_theme_font_override("font", title_font)
-	title.add_theme_font_size_override("font_size", 13)
-	title.add_theme_color_override("font_color", PALETTE.ink_soft)
-	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	essence_panel.add_child(title)
-
-	_essence_counter = Label.new()
-	_essence_counter.text = "0"
-	if body_font:
-		_essence_counter.add_theme_font_override("font", body_font)
-	_essence_counter.add_theme_font_size_override("font_size", 22)
-	_essence_counter.add_theme_color_override("font_color", Color(0.68, 0.56, 0.30))
-	_essence_counter.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	essence_panel.add_child(_essence_counter)
-
-	var caption := Label.new()
-	caption.text = "a collecter"
-	if body_font:
-		caption.add_theme_font_override("font", body_font)
-	caption.add_theme_font_size_override("font_size", 10)
-	caption.add_theme_color_override("font_color", PALETTE.ink_soft)
-	caption.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	essence_panel.add_child(caption)
-
-	parent.add_child(essence_panel)
-
-
-func _create_resource_bar(parent: Control) -> void:
-	_resource_bar = HBoxContainer.new()
-	_resource_bar.alignment = BoxContainer.ALIGNMENT_CENTER
-	_resource_bar.add_theme_constant_override("separation", 20)
-
-	# Tool equipped
-	_tool_label = Label.new()
-	_tool_label.text = ""
-	if body_font:
-		_tool_label.add_theme_font_override("font", body_font)
-	_tool_label.add_theme_font_size_override("font_size", 11)
-	_tool_label.add_theme_color_override("font_color", PALETTE.accent)
-	_resource_bar.add_child(_tool_label)
-
-	# Day counter
-	_day_label = Label.new()
-	_day_label.text = "Jour 1"
-	if body_font:
-		_day_label.add_theme_font_override("font", body_font)
-	_day_label.add_theme_font_size_override("font_size", 11)
-	_day_label.add_theme_color_override("font_color", PALETTE.ink_soft)
-	_resource_bar.add_child(_day_label)
-
-	# Mission progress
-	_mission_progress_label = Label.new()
-	_mission_progress_label.text = ""
-	if body_font:
-		_mission_progress_label.add_theme_font_override("font", body_font)
-	_mission_progress_label.add_theme_font_size_override("font_size", 11)
-	_mission_progress_label.add_theme_color_override("font_color", PALETTE.ink_soft)
-	_resource_bar.add_child(_mission_progress_label)
-
-	parent.add_child(_resource_bar)
-
-
-func _create_card_display(parent: Control) -> void:
-	card_container = Control.new()
-	card_container.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	card_container.size_flags_vertical = Control.SIZE_FILL
-	card_container.clip_contents = false
-	parent.add_child(card_container)
-
-	card_panel = Panel.new()
-	card_panel.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	card_panel.z_index = 2
-	card_panel.pivot_offset = Vector2(320, 200)
-
-	var card_style := StyleBoxFlat.new()
-	card_style.bg_color = PALETTE.paper_dark
-	card_style.border_color = PALETTE.accent
-	card_style.set_border_width_all(2)
-	card_style.set_corner_radius_all(10)
-	card_style.shadow_color = PALETTE.shadow
-	card_style.shadow_size = 12
-	card_style.shadow_offset = Vector2(0, 5)
-	card_panel.add_theme_stylebox_override("panel", card_style)
-	card_container.add_child(card_panel)
-
-	_card_visual_split = VBoxContainer.new()
-	_card_visual_split.set_anchors_preset(Control.PRESET_FULL_RECT)
-	_card_visual_split.add_theme_constant_override("separation", 0)
-	card_panel.add_child(_card_visual_split)
-
-	_card_illustration_panel = PanelContainer.new()
-	_card_illustration_panel.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	var illo_style := StyleBoxFlat.new()
-	illo_style.bg_color = Color(0.12, 0.14, 0.18, 0.78)
-	illo_style.border_color = Color(PALETTE.accent.r, PALETTE.accent.g, PALETTE.accent.b, 0.5)
-	illo_style.set_border_width_all(1)
-	illo_style.set_corner_radius_all(8)
-	illo_style.content_margin_left = 6
-	illo_style.content_margin_right = 6
-	illo_style.content_margin_top = 6
-	illo_style.content_margin_bottom = 6
-	_card_illustration_panel.add_theme_stylebox_override("panel", illo_style)
-	_card_visual_split.add_child(_card_illustration_panel)
-
-	var illo_layer := Control.new()
-	illo_layer.custom_minimum_size = Vector2(0, 220)
-	illo_layer.set_anchors_preset(Control.PRESET_FULL_RECT)
-	_card_illustration_panel.add_child(illo_layer)
-
-	var illo_bg := ColorRect.new()
-	illo_bg.set_anchors_preset(Control.PRESET_FULL_RECT)
-	illo_bg.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	illo_bg.color = Color(0.10, 0.12, 0.15, 0.95)
-	illo_layer.add_child(illo_bg)
-
-	var tile_center := CenterContainer.new()
-	tile_center.name = "TileCenter"
-	tile_center.set_anchors_preset(Control.PRESET_FULL_RECT)
-	illo_layer.add_child(tile_center)
-
-	_encounter_tile = PixelEncounterTile.new()
-	_encounter_tile.name = "EncounterTile"
-	_encounter_tile.setup("mystery", 7.2)
-	tile_center.add_child(_encounter_tile)
-
-	var portrait_center := CenterContainer.new()
-	portrait_center.name = "PortraitCenter"
-	portrait_center.set_anchors_preset(Control.PRESET_FULL_RECT)
-	portrait_center.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	illo_layer.add_child(portrait_center)
-
-	_pixel_portrait = PixelCharacterPortrait.new()
-	_pixel_portrait.name = "PixelPortrait"
-	_pixel_portrait.setup("merlin", 5.8)
-	portrait_center.add_child(_pixel_portrait)
-
-	_card_body_panel = PanelContainer.new()
-	_card_body_panel.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	var body_style := StyleBoxFlat.new()
-	body_style.bg_color = Color(PALETTE.paper.r, PALETTE.paper.g, PALETTE.paper.b, 0.96)
-	body_style.border_color = Color(PALETTE.ink_faded.r, PALETTE.ink_faded.g, PALETTE.ink_faded.b, 0.6)
-	body_style.set_border_width_all(1)
-	body_style.set_corner_radius_all(8)
-	body_style.content_margin_left = 18
-	body_style.content_margin_right = 18
-	body_style.content_margin_top = 12
-	body_style.content_margin_bottom = 12
-	_card_body_panel.add_theme_stylebox_override("panel", body_style)
-	_card_visual_split.add_child(_card_body_panel)
-
-	var body_vbox := VBoxContainer.new()
-	body_vbox.set_anchors_preset(Control.PRESET_FULL_RECT)
-	body_vbox.add_theme_constant_override("separation", 8)
-	_card_body_panel.add_child(body_vbox)
-
-	card_speaker = Label.new()
-	card_speaker.text = "MERLIN"
-	if title_font:
-		card_speaker.add_theme_font_override("font", title_font)
-	card_speaker.add_theme_font_size_override("font_size", 20)
-	card_speaker.add_theme_color_override("font_color", PALETTE.accent)
-	card_speaker.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	body_vbox.add_child(card_speaker)
-
-	card_text = RichTextLabel.new()
-	card_text.text = "Le vent souffle sur les landes..."
-	card_text.bbcode_enabled = true
-	card_text.fit_content = true
-	card_text.scroll_active = false
-	card_text.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	if body_font:
-		card_text.add_theme_font_override("normal_font", body_font)
-	card_text.add_theme_font_size_override("normal_font_size", 18)
-	card_text.add_theme_color_override("default_color", PALETTE.ink)
-	body_vbox.add_child(card_text)
-
-	_card_source_badge = LLMSourceBadge.create("static")
-	_card_source_badge.visible = false
-	body_vbox.add_child(_card_source_badge)
-
-	_text_pixel_fx_layer = Control.new()
-	_text_pixel_fx_layer.set_anchors_preset(Control.PRESET_FULL_RECT)
-	_text_pixel_fx_layer.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	_text_pixel_fx_layer.z_index = 5
-	card_panel.add_child(_text_pixel_fx_layer)
-
-
 func _build_remaining_deck_stack() -> void:
 	if not _remaining_deck_root or not is_instance_valid(_remaining_deck_root):
 		return
@@ -1369,13 +642,15 @@ func _build_remaining_deck_stack() -> void:
 
 	for i in range(LIVE_DECK_VISIBLE_COUNT):
 		var deck_card := Panel.new()
-		deck_card.size = Vector2(68, 94)
+		deck_card.size = Vector2(78, 106)
 		deck_card.mouse_filter = Control.MOUSE_FILTER_IGNORE
 		deck_card.modulate.a = 0.95 - float(i) * 0.1
 		deck_card.pivot_offset = deck_card.size * 0.5
 		var deck_style := StyleBoxFlat.new()
-		deck_style.bg_color = Color(0.14, 0.18, 0.25, 0.96)
-		deck_style.border_color = Color(0.42, 0.62, 0.84, 0.72)
+		var ink_deck: Color = MerlinVisual.PALETTE.ink
+		deck_style.bg_color = Color(ink_deck.r, ink_deck.g, ink_deck.b, 0.96)
+		var bestiole: Color = MerlinVisual.PALETTE.bestiole
+		deck_style.border_color = Color(bestiole.r, bestiole.g, bestiole.b, 0.72)
 		deck_style.set_border_width_all(2)
 		deck_style.set_corner_radius_all(7)
 		deck_style.shadow_color = Color(0, 0, 0, 0.3)
@@ -1396,13 +671,13 @@ func _update_remaining_deck_visual() -> void:
 		var card := _remaining_deck_cards[i]
 		if not card or not is_instance_valid(card):
 			continue
-		card.position = Vector2(10.0 + float(i) * 3.0, 12.0 - float(i) * 2.0)
-		card.rotation_degrees = -8.0 + float(i) * 2.4
+		card.position = Vector2(12.0 + float(i) * 2.0, 10.0 + float(i) * 3.0)
+		card.rotation_degrees = -2.0 + float(i) * 1.2
 		card.scale = Vector2(1.0, 1.0)
 		card.modulate.a = clampf(0.92 - float(i) * 0.12, 0.18, 1.0) if i < visible_count else 0.0
 
 	if _remaining_deck_label and is_instance_valid(_remaining_deck_label):
-		_remaining_deck_label.text = "Run: %d restantes" % maxi(_remaining_deck_estimate, 0)
+		_remaining_deck_label.text = "%d" % maxi(_remaining_deck_estimate, 0)
 
 
 func _build_discard_stack() -> void:
@@ -1414,18 +689,10 @@ func _build_discard_stack() -> void:
 
 	for i in range(DISCARD_VISIBLE_COUNT):
 		var discard_card := Panel.new()
-		discard_card.size = Vector2(44, 62)
+		discard_card.size = Vector2(62, 86)
 		discard_card.mouse_filter = Control.MOUSE_FILTER_IGNORE
 		discard_card.pivot_offset = discard_card.size * 0.5
-		var style := StyleBoxFlat.new()
-		style.bg_color = Color(0.16, 0.14, 0.12, 0.70)
-		style.border_color = Color(0.64, 0.56, 0.42, 0.82)
-		style.set_border_width_all(1)
-		style.set_corner_radius_all(4)
-		style.shadow_color = Color(0, 0, 0, 0.24)
-		style.shadow_size = 4
-		style.shadow_offset = Vector2(0, 1)
-		discard_card.add_theme_stylebox_override("panel", style)
+		discard_card.add_theme_stylebox_override("panel", MerlinVisual.make_discard_card_style())
 		_discard_root.add_child(discard_card)
 		_discard_cards.append(discard_card)
 
@@ -1440,11 +707,11 @@ func _update_discard_visual() -> void:
 		var card := _discard_cards[i]
 		if not card or not is_instance_valid(card):
 			continue
-		card.position = Vector2(6.0 + float(i) * 3.0, 14.0 - float(i) * 1.6)
-		card.rotation_degrees = 2.0 + float(i) * 1.8
+		card.position = Vector2(10.0 + float(i) * 2.0, 8.0 + float(i) * 3.0)
+		card.rotation_degrees = 1.8 + float(i) * 1.0
 		card.modulate.a = clampf(0.86 - float(i) * 0.14, 0.18, 1.0) if i < visible_count else 0.08
 	if _discard_label and is_instance_valid(_discard_label):
-		_discard_label.text = "Cimetiere: %d" % maxi(_discard_total, 0)
+		_discard_label.text = "%d" % maxi(_discard_total, 0)
 
 
 func reset_run_visuals() -> void:
@@ -1461,26 +728,44 @@ func mark_card_completed() -> void:
 		return
 	_discard_total += 1
 	_update_discard_visual()
+	# Animate card flying to discard pile — dramatic exit
+	if card_panel and is_instance_valid(card_panel) and _discard_root and is_instance_valid(_discard_root):
+		if _card_float_tween:
+			_card_float_tween.kill()
+		var discard_pos: Vector2 = _discard_root.global_position - card_container.global_position
+		var tw := create_tween()
+		# Small bounce before departure
+		tw.tween_property(card_panel, "scale", Vector2(1.04, 1.04), 0.1).set_trans(Tween.TRANS_SINE)
+		tw.set_parallel(true)
+		tw.tween_property(card_panel, "position", discard_pos, MerlinVisual.CARD_EXIT_DURATION).set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_IN)
+		tw.tween_property(card_panel, "scale", Vector2(0.12, 0.12), MerlinVisual.CARD_EXIT_DURATION).set_trans(Tween.TRANS_CUBIC)
+		tw.tween_property(card_panel, "modulate:a", 0.0, MerlinVisual.CARD_EXIT_DURATION * 0.7).set_delay(0.15)
+		tw.tween_property(card_panel, "rotation_degrees", randf_range(-25.0, 25.0), MerlinVisual.CARD_EXIT_DURATION)
+		SFXManager.play("card_place")
 
 
 func _layout_run_zones() -> void:
 	var vp_size := get_viewport_rect().size
 	if vp_size.y <= 0.0:
 		return
-	var top_h := maxf(68.0, vp_size.y * TOP_ZONE_RATIO)
-	var card_h := maxf(260.0, vp_size.y * CARD_ZONE_RATIO)
-	var bottom_h := maxf(94.0, vp_size.y * BOTTOM_ZONE_RATIO)
-	var total := top_h + card_h + bottom_h
+	var top_h := maxf(52.0, vp_size.y * TOP_ZONE_RATIO)
+	var middle_h := maxf(260.0, vp_size.y * CARD_ZONE_RATIO)
+	var bottom_h := maxf(80.0, vp_size.y * BOTTOM_ZONE_RATIO)
+	var total := top_h + middle_h + bottom_h
 	if total > vp_size.y:
 		var overflow := total - vp_size.y
-		card_h = maxf(220.0, card_h - overflow)
+		middle_h = maxf(220.0, middle_h - overflow)
 
 	if _top_status_bar and is_instance_valid(_top_status_bar):
 		_top_status_bar.custom_minimum_size = Vector2(0.0, top_h)
-	if card_container and is_instance_valid(card_container):
-		card_container.custom_minimum_size = Vector2(0.0, card_h)
+	if _middle_zone and is_instance_valid(_middle_zone):
+		_middle_zone.custom_minimum_size = Vector2(0.0, middle_h)
 	if _bottom_zone and is_instance_valid(_bottom_zone):
 		_bottom_zone.custom_minimum_size = Vector2(0.0, bottom_h)
+
+	# Position Souffle button bottom-right
+	if _souffle_btn and is_instance_valid(_souffle_btn):
+		_souffle_btn.position = Vector2(vp_size.x - 68.0, vp_size.y - 68.0)
 
 
 func _layout_card_stage() -> void:
@@ -1489,9 +774,12 @@ func _layout_card_stage() -> void:
 	var stage_size := card_container.size
 	if stage_size.x <= 40.0 or stage_size.y <= 40.0:
 		stage_size = get_viewport_rect().size
+		# Use card zone height (70% viewport) instead of full viewport for Y centering
+		if card_container.custom_minimum_size.y > 0.0:
+			stage_size.y = card_container.custom_minimum_size.y
 
-	var target_h := clampf(stage_size.y, 260.0, 1080.0)
-	var max_w := minf(stage_size.x * 0.80, 920.0)
+	var target_h := clampf(stage_size.y - 12.0, 260.0, stage_size.y - 12.0)
+	var max_w := minf(stage_size.x * 0.88, 960.0)
 	var target_w := clampf(target_h * CARD_PORTRAIT_RATIO, 220.0, max_w)
 	var target_size := Vector2(target_w, target_h)
 	card_panel.size = target_size
@@ -1506,9 +794,9 @@ func _layout_card_stage() -> void:
 	card_panel.pivot_offset = target_size * 0.5
 
 	if _card_illustration_panel and is_instance_valid(_card_illustration_panel):
-		_card_illustration_panel.custom_minimum_size = Vector2(0.0, target_size.y * 0.72)
+		_card_illustration_panel.custom_minimum_size = Vector2(0.0, target_size.y * 0.18)
 	if _card_body_panel and is_instance_valid(_card_body_panel):
-		_card_body_panel.custom_minimum_size = Vector2(0.0, target_size.y * 0.28)
+		_card_body_panel.custom_minimum_size = Vector2(0.0, target_size.y * 0.82)
 	_update_remaining_deck_visual()
 	_update_discard_visual()
 
@@ -1550,11 +838,16 @@ func _animate_remaining_deck_draw() -> void:
 	_deck_fx_layer.visible = true
 
 	var tw := create_tween()
-	tw.tween_property(ghost, "position", target_fx, 0.16).set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_OUT)
-	tw.parallel().tween_property(ghost, "rotation_degrees", randf_range(-13.0, 13.0), 0.16)
-	tw.parallel().tween_property(ghost, "scale", Vector2(1.08, 1.08), 0.16)
-	tw.tween_property(ghost, "scale:x", 0.02, 0.09).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN)
-	tw.parallel().tween_property(ghost, "modulate:a", 0.0, 0.08)
+	# Arc path: rise then descend (more dramatic)
+	var mid_y := minf(start_fx.y, target_fx.y) - MerlinVisual.CARD_DEAL_ARC_HEIGHT
+	var mid_pos := Vector2((start_fx.x + target_fx.x) * 0.5, mid_y)
+	var half_dur: float = MerlinVisual.CARD_DEAL_DURATION * 0.5
+	tw.tween_property(ghost, "position", mid_pos, half_dur).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_OUT)
+	tw.tween_property(ghost, "position", target_fx, half_dur).set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_IN)
+	tw.parallel().tween_property(ghost, "rotation_degrees", randf_range(-20.0, 20.0), MerlinVisual.CARD_DEAL_DURATION)
+	tw.parallel().tween_property(ghost, "scale", Vector2(1.15, 1.15), MerlinVisual.CARD_DEAL_DURATION * 0.4)
+	tw.tween_property(ghost, "scale:x", 0.02, 0.12).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN)
+	tw.parallel().tween_property(ghost, "modulate:a", 0.0, 0.10)
 	tw.tween_callback(func():
 		if is_instance_valid(ghost):
 			ghost.queue_free()
@@ -1568,304 +861,174 @@ func _start_card_float_motion() -> void:
 		return
 	if _card_float_tween:
 		_card_float_tween.kill()
-	_card_panel_safe_reset_transform()
+	# Only reset position (rotation/scale managed by 3D tilt when active)
+	card_panel.position = _card_base_pos
 	_card_float_tween = create_tween().set_loops()
-	_card_float_tween.tween_property(card_panel, "position:y", _card_base_pos.y - CARD_FLOAT_OFFSET, CARD_FLOAT_DURATION).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
-	_card_float_tween.tween_property(card_panel, "position:y", _card_base_pos.y + CARD_FLOAT_OFFSET * 0.6, CARD_FLOAT_DURATION).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
+	_card_float_tween.tween_property(card_panel, "position:y", _card_base_pos.y - MerlinVisual.CARD_FLOAT_OFFSET, MerlinVisual.CARD_FLOAT_DURATION).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
+	_card_float_tween.tween_property(card_panel, "position:y", _card_base_pos.y + MerlinVisual.CARD_FLOAT_OFFSET * 0.6, MerlinVisual.CARD_FLOAT_DURATION).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
+
+
+func _start_card_float_and_3d() -> void:
+	## Start idle float + enable fake 3D tilt. Called after card entry settles.
+	_start_card_float_motion()
+	_enable_card_3d()
 
 
 func _card_panel_safe_reset_transform() -> void:
 	if not card_panel or not is_instance_valid(card_panel):
 		return
+	_disable_card_3d()
 	card_panel.scale = Vector2.ONE
 	card_panel.rotation_degrees = 0.0
 	card_panel.position = _card_base_pos
 
 
-func _create_options_bar(parent: Control) -> void:
-	options_container = HBoxContainer.new()
-	options_container.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	options_container.alignment = BoxContainer.ALIGNMENT_CENTER
-	options_container.add_theme_constant_override("separation", 14)
-	parent.add_child(options_container)
-
-	var option_configs := [
-		{"key": "A", "pos": "left", "color": Color(0.35, 0.55, 0.72)},
-		{"key": "B", "pos": "center", "color": PALETTE.accent},
-		{"key": "C", "pos": "right", "color": Color(0.72, 0.35, 0.32)},
-	]
-
-	for i in range(3):
-		var config = option_configs[i]
-		var option_vbox := VBoxContainer.new()
-		option_vbox.alignment = BoxContainer.ALIGNMENT_CENTER
-
-		# Option label
-		var label := Label.new()
-		label.text = "Action"
-		if body_font:
-			label.add_theme_font_override("font", body_font)
-		label.add_theme_font_size_override("font_size", 12)
-		label.add_theme_color_override("font_color", PALETTE.ink_soft)
-		label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-		option_labels.append(label)
-		option_vbox.add_child(label)
-
-		# Button with parchment style
-		var btn := Button.new()
-		btn.text = "[%s] Agir" % config["key"]
-		btn.custom_minimum_size = Vector2(232, 52)
-		if title_font:
-			btn.add_theme_font_override("font", title_font)
-		btn.add_theme_font_size_override("font_size", 17)
-
-		var btn_style := StyleBoxFlat.new()
-		btn_style.bg_color = PALETTE.paper
-		btn_style.border_color = config["color"]
-		btn_style.set_border_width_all(2)
-		btn_style.set_corner_radius_all(6)
-		btn_style.content_margin_left = 14
-		btn_style.content_margin_right = 14
-		btn_style.content_margin_top = 11
-		btn_style.content_margin_bottom = 11
-		btn_style.shadow_color = PALETTE.shadow
-		btn_style.shadow_size = 5
-		btn_style.shadow_offset = Vector2(0, 2)
-		btn.add_theme_stylebox_override("normal", btn_style)
-
-		var btn_hover := btn_style.duplicate()
-		btn_hover.bg_color = PALETTE.paper_dark
-		btn.add_theme_stylebox_override("hover", btn_hover)
-
-		var btn_pressed := btn_style.duplicate()
-		btn_pressed.bg_color = Color(config["color"].r, config["color"].g, config["color"].b, 0.15)
-		btn.add_theme_stylebox_override("pressed", btn_pressed)
-
-		btn.add_theme_color_override("font_color", config["color"])
-		btn.add_theme_color_override("font_hover_color", config["color"])
-		btn.pressed.connect(_on_option_pressed.bind(i))
-		btn.mouse_entered.connect(_on_option_hover_enter.bind(i))
-		btn.mouse_exited.connect(_on_option_hover_exit)
-		option_buttons.append(btn)
-		option_vbox.add_child(btn)
-
-		options_container.add_child(option_vbox)
-
-
-func _create_run_stack_bar(parent: Control) -> void:
-	_run_stack_bar = HBoxContainer.new()
-	_run_stack_bar.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	_run_stack_bar.add_theme_constant_override("separation", 18)
-	parent.add_child(_run_stack_bar)
-
-	var deck_wrap := VBoxContainer.new()
-	deck_wrap.custom_minimum_size = Vector2(180, 82)
-	deck_wrap.alignment = BoxContainer.ALIGNMENT_CENTER
-	_run_stack_bar.add_child(deck_wrap)
-
-	_remaining_deck_label = Label.new()
-	_remaining_deck_label.text = "Run: 24 restantes"
-	if body_font:
-		_remaining_deck_label.add_theme_font_override("font", body_font)
-	_remaining_deck_label.add_theme_font_size_override("font_size", 11)
-	_remaining_deck_label.add_theme_color_override("font_color", PALETTE.ink_soft)
-	deck_wrap.add_child(_remaining_deck_label)
-
-	_remaining_deck_root = Control.new()
-	_remaining_deck_root.custom_minimum_size = Vector2(154, 102)
-	_remaining_deck_root.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	_remaining_deck_root.z_index = 0
-	deck_wrap.add_child(_remaining_deck_root)
-
-	var center_gap := Control.new()
-	center_gap.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	_run_stack_bar.add_child(center_gap)
-
-	var discard_wrap := VBoxContainer.new()
-	discard_wrap.custom_minimum_size = Vector2(128, 82)
-	discard_wrap.alignment = BoxContainer.ALIGNMENT_CENTER
-	_run_stack_bar.add_child(discard_wrap)
-
-	_discard_label = Label.new()
-	_discard_label.text = "Cimetiere: 0"
-	if body_font:
-		_discard_label.add_theme_font_override("font", body_font)
-	_discard_label.add_theme_font_size_override("font_size", 11)
-	_discard_label.add_theme_color_override("font_color", PALETTE.ink_soft)
-	_discard_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
-	discard_wrap.add_child(_discard_label)
-
-	_discard_root = Control.new()
-	_discard_root.custom_minimum_size = Vector2(112, 78)
-	_discard_root.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	discard_wrap.add_child(_discard_root)
-
-
-func _create_effect_preview_panel() -> void:
-	_effect_preview_panel = Panel.new()
-	_effect_preview_panel.visible = false
-	_effect_preview_panel.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	_effect_preview_panel.z_index = 10
-	var style := StyleBoxFlat.new()
-	style.bg_color = Color(PALETTE.paper_dark.r, PALETTE.paper_dark.g, PALETTE.paper_dark.b, 0.95)
-	style.border_color = PALETTE.accent
-	style.set_border_width_all(1)
-	style.set_corner_radius_all(6)
-	style.content_margin_left = 10
-	style.content_margin_right = 10
-	style.content_margin_top = 6
-	style.content_margin_bottom = 6
-	_effect_preview_panel.add_theme_stylebox_override("panel", style)
-
-	_effect_preview_label = RichTextLabel.new()
-	_effect_preview_label.bbcode_enabled = true
-	_effect_preview_label.fit_content = true
-	_effect_preview_label.scroll_active = false
-	_effect_preview_label.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	if body_font:
-		_effect_preview_label.add_theme_font_override("normal_font", body_font)
-	_effect_preview_label.add_theme_font_size_override("normal_font_size", 12)
-	_effect_preview_label.add_theme_color_override("default_color", PALETTE.ink)
-	_effect_preview_panel.add_child(_effect_preview_label)
-
-	add_child(_effect_preview_panel)
-
-
 func _on_option_hover_enter(option_index: int) -> void:
 	SFXManager.play("hover")
-	_show_effect_preview(option_index)
-
-
-func _on_option_hover_exit() -> void:
-	_hide_effect_preview()
-
-
-func _show_effect_preview(option_index: int) -> void:
 	if current_card.is_empty():
 		return
 	var options: Array = current_card.get("options", [])
 	if option_index >= options.size():
 		return
-
 	var option: Dictionary = options[option_index] if options[option_index] is Dictionary else {}
-	var effects: Array = option.get("effects", [])
+	var btn: Button = option_buttons[option_index] if option_index < option_buttons.size() else null
+	if _reward_badge and is_instance_valid(_reward_badge) and btn and is_instance_valid(btn):
+		_reward_badge.show_for_option(option, btn)
 
-	# Build preview text
-	var lines: Array[String] = []
+	# Hover scale-up (amplified)
+	if btn and is_instance_valid(btn):
+		btn.pivot_offset = btn.size / 2.0
+		var tw := create_tween().set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
+		tw.tween_property(btn, "scale", Vector2(1.07, 1.07), 0.18)
 
-	# DC info
-	var dc_values := [6, 10, 14]  # LEFT, CENTER, RIGHT
-	var dc: int = dc_values[clampi(option_index, 0, 2)]
-	var dc_color: String = "green" if dc <= 6 else ("yellow" if dc <= 10 else "red")
-	lines.append("[color=%s]DC %d[/color]" % [dc_color, dc])
+	# Show action description below hovered button
+	for k in range(_option_desc_labels.size()):
+		if k < _option_desc_labels.size() and is_instance_valid(_option_desc_labels[k]):
+			var show_it: bool = k == option_index and not _option_desc_labels[k].text.is_empty()
+			_option_desc_labels[k].visible = show_it
+			if show_it:
+				_option_desc_labels[k].modulate.a = 0.0
+				var desc_tw := create_tween()
+				desc_tw.tween_property(_option_desc_labels[k], "modulate:a", 1.0, 0.15)
 
-	# Aspect effects
-	if effects.is_empty():
-		lines.append("[color=gray]Pas d'effet direct[/color]")
+
+func _on_option_hover_exit() -> void:
+	if _reward_badge and is_instance_valid(_reward_badge):
+		_reward_badge.hide_badge()
+	# Reset button scales and hide desc labels
+	for ob in option_buttons:
+		if is_instance_valid(ob):
+			ob.scale = Vector2.ONE
+	for dl in _option_desc_labels:
+		if is_instance_valid(dl):
+			dl.visible = false
+
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# FAKE 3D CARD TILT — Perspective effect on mouse hover
+# ═══════════════════════════════════════════════════════════════════════════════
+
+func _setup_card_3d() -> void:
+	## Setup fake 3D tilt. Hover detected via card_container rect (not card_panel signals)
+	## to avoid blocking mouse events on buttons below the card.
+	if not card_panel or not is_instance_valid(card_panel):
+		return
+	# CRITICAL: MOUSE_FILTER_IGNORE prevents card from intercepting clicks on buttons
+	card_panel.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	# Shine overlay (subtle highlight that shifts with tilt)
+	_card_3d_shine = ColorRect.new()
+	_card_3d_shine.name = "Card3DShine"
+	_card_3d_shine.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_card_3d_shine.color = Color(1.0, 1.0, 1.0, 0.0)
+	_card_3d_shine.z_index = 6
+	_card_3d_shine.set_anchors_preset(Control.PRESET_FULL_RECT)
+	card_panel.add_child(_card_3d_shine)
+
+
+func _update_card_3d_tilt(delta: float) -> void:
+	## Interpolate card rotation + scale for fake 3D perspective. Called every frame.
+	## Hover is detected via card_container rect (not card_panel signals) to avoid
+	## blocking mouse events on option buttons below.
+	if not card_panel or not is_instance_valid(card_panel):
+		return
+	if not _card_3d_active:
+		# Smoothly return to neutral when not active
+		if _card_tilt_current.length() > 0.001:
+			_card_tilt_current = _card_tilt_current.lerp(Vector2.ZERO, delta * MerlinVisual.CARD_3D_TILT_SPEED)
+			_apply_card_3d_transform()
+		return
+
+	# Detect hover via card_container rect (not card_panel mouse signals)
+	var is_hovering := false
+	if card_container and is_instance_valid(card_container):
+		var mouse_global := get_global_mouse_position()
+		is_hovering = card_container.get_global_rect().has_point(mouse_global)
+	_card_hovered = is_hovering
+
+	# Compute tilt target from mouse position relative to card center
+	if _card_hovered:
+		var mouse_pos := card_panel.get_local_mouse_position()
+		var card_size := card_panel.size
+		if card_size.x > 10.0 and card_size.y > 10.0:
+			var normalized := Vector2(
+				clampf((mouse_pos.x / card_size.x - 0.5) * 2.0, -1.0, 1.0),
+				clampf((mouse_pos.y / card_size.y - 0.5) * 2.0, -1.0, 1.0)
+			)
+			_card_tilt_target = normalized
 	else:
-		for e in effects:
-			if not (e is Dictionary):
-				continue
-			var etype: String = str(e.get("type", ""))
-			if etype == "SHIFT_ASPECT":
-				var aspect: String = str(e.get("aspect", ""))
-				var dir: String = str(e.get("direction", ""))
-				var arrow: String = "\u2191" if dir == "up" else "\u2193"
-				var preview_text := _format_aspect_shift_preview(aspect, dir)
-				var shift_color: String = _get_shift_color(aspect, dir)
-				lines.append("[color=%s]%s %s %s[/color]" % [shift_color, aspect, arrow, preview_text])
-			elif etype == "ADD_KARMA":
-				lines.append("[color=#c0a030]+%d Karma[/color]" % int(e.get("amount", 0)))
-			elif etype == "ADD_SOUFFLE":
-				lines.append("[color=#40a060]+%d Souffle[/color]" % int(e.get("amount", 0)))
-			elif etype == "PROGRESS_MISSION":
-				lines.append("[color=#6080c0]+%d Mission[/color]" % int(e.get("step", 1)))
+		_card_tilt_target = Vector2.ZERO
 
-	# Build BBCode
-	_effect_preview_label.text = "\n".join(lines)
-
-	# Position above the hovered button
-	_preview_visible_for = option_index
-	_effect_preview_panel.visible = true
-	_effect_preview_panel.custom_minimum_size = Vector2(180, 0)
-	_effect_preview_panel.size = Vector2(180, 0)
-
-	# Wait one frame for the label to compute its size
-	await get_tree().process_frame
-	_position_preview_above_button(option_index)
+	# Smooth interpolation
+	_card_tilt_current = _card_tilt_current.lerp(_card_tilt_target, delta * MerlinVisual.CARD_3D_TILT_SPEED)
+	_apply_card_3d_transform()
 
 
-func _position_preview_above_button(option_index: int) -> void:
-	if option_index >= option_buttons.size():
+func _apply_card_3d_transform() -> void:
+	## Apply rotation + scale + parallax + shine based on current tilt values.
+	## Creates a convincing fake 3D perspective effect on a 2D card.
+	if not card_panel or not is_instance_valid(card_panel):
 		return
-	if not _effect_preview_panel or not _effect_preview_panel.visible:
-		return
-	var btn: Button = option_buttons[option_index]
-	if not is_instance_valid(btn):
-		return
+	var tilt := _card_tilt_current
+	# Rotation: horizontal mouse offset tilts card left/right
+	var rotation_deg: float = tilt.x * MerlinVisual.CARD_3D_TILT_MAX
+	card_panel.rotation_degrees = rotation_deg
 
-	var btn_global := btn.global_position
-	var panel_h: float = maxf(_effect_preview_label.get_content_height() + 16.0, 40.0)
-	_effect_preview_panel.size.y = panel_h
-	_effect_preview_panel.global_position = Vector2(
-		btn_global.x + btn.size.x * 0.5 - 90.0,
-		btn_global.y - panel_h - 6.0
-	)
+	# Scale: enlargement when hovered + slight asymmetry from vertical tilt
+	var hover_factor: float = clampf(tilt.length(), 0.0, 1.0)
+	var base_scale: float = lerpf(1.0, MerlinVisual.CARD_3D_SCALE_HOVER, hover_factor)
+	# Vertical tilt creates subtle perspective (wider at bottom when hovering top)
+	var scale_x: float = base_scale + tilt.y * 0.012
+	var scale_y: float = base_scale - tilt.y * 0.008
+	card_panel.scale = Vector2(scale_x, scale_y)
 
+	# Shadow shift: move panel style shadow opposite to tilt direction
+	var panel_style := card_panel.get_theme_stylebox("panel")
+	if panel_style is StyleBoxFlat:
+		var base_offset := Vector2(2.0, 4.0)
+		var tilt_shift := Vector2(-tilt.x, -tilt.y) * MerlinVisual.CARD_3D_SHADOW_SHIFT
+		panel_style.shadow_offset = base_offset + tilt_shift
 
-func _hide_effect_preview() -> void:
-	_preview_visible_for = -1
-	if _effect_preview_panel:
-		_effect_preview_panel.visible = false
-
-
-func _format_aspect_shift_preview(aspect: String, direction: String) -> String:
-	## Returns "(Robuste → Surmené)" based on current state + shift direction.
-	var current_state: int = int(current_aspects.get(aspect, MerlinConstants.AspectState.EQUILIBRE))
-	var new_state: int = current_state + (1 if direction == "up" else -1)
-	new_state = clampi(new_state, MerlinConstants.AspectState.BAS, MerlinConstants.AspectState.HAUT)
-	var info: Dictionary = MerlinConstants.TRIADE_ASPECT_INFO.get(aspect, {})
-	var states: Dictionary = info.get("states", {})
-	var current_name: String = states.get(current_state, "?")
-	var new_name: String = states.get(new_state, "?")
-	if current_state == new_state:
-		return "(%s, max)" % current_name
-	return "(%s \u2192 %s)" % [current_name, new_name]
+	# Shine overlay: shifts across card surface based on tilt direction
+	if _card_3d_shine and is_instance_valid(_card_3d_shine):
+		var shine_alpha: float = hover_factor * MerlinVisual.CARD_3D_SHINE_ALPHA
+		_card_3d_shine.color = Color(1.0, 1.0, 1.0, shine_alpha)
+		# Shift shine position to follow "light source" (upper-left)
+		var shine_margin_x: float = tilt.x * 20.0
+		var shine_margin_y: float = tilt.y * 15.0
+		_card_3d_shine.position = Vector2(shine_margin_x, shine_margin_y)
 
 
-func _get_shift_color(aspect: String, direction: String) -> String:
-	## Returns a color hex for the shift preview. Red if dangerous (toward extreme), green if safe.
-	var current_state: int = int(current_aspects.get(aspect, MerlinConstants.AspectState.EQUILIBRE))
-	var new_state: int = current_state + (1 if direction == "up" else -1)
-	new_state = clampi(new_state, MerlinConstants.AspectState.BAS, MerlinConstants.AspectState.HAUT)
-	# BAS or HAUT = dangerous
-	if new_state == MerlinConstants.AspectState.BAS or new_state == MerlinConstants.AspectState.HAUT:
-		return "#c04040"  # Red — dangerous
-	return "#40a060"  # Green — safe (toward equilibre)
+func _enable_card_3d() -> void:
+	## Enable 3D tilt tracking (call after card entry animation settles).
+	_card_3d_active = true
+	_card_tilt_current = Vector2.ZERO
+	_card_tilt_target = Vector2.ZERO
 
 
-func _create_info_bar(parent: Control) -> void:
-	info_panel = HBoxContainer.new()
-	info_panel.alignment = BoxContainer.ALIGNMENT_CENTER
-	info_panel.add_theme_constant_override("separation", 30)
-
-	mission_label = Label.new()
-	mission_label.text = "Mission: ???"
-	if body_font:
-		mission_label.add_theme_font_override("font", body_font)
-	mission_label.add_theme_font_size_override("font_size", 13)
-	mission_label.add_theme_color_override("font_color", PALETTE.ink_soft)
-	info_panel.add_child(mission_label)
-
-	cards_label = Label.new()
-	cards_label.text = "Cartes: 0"
-	if body_font:
-		cards_label.add_theme_font_override("font", body_font)
-	cards_label.add_theme_font_size_override("font_size", 13)
-	cards_label.add_theme_color_override("font_color", PALETTE.ink_soft)
-	info_panel.add_child(cards_label)
-
-	parent.add_child(info_panel)
+func _disable_card_3d() -> void:
+	## Disable 3D tilt (call before card exit or during transitions).
+	_card_3d_active = false
+	_card_tilt_target = Vector2.ZERO
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
@@ -1881,7 +1044,11 @@ func show_thinking() -> void:
 	## Show "Merlin is thinking" animation on the card area.
 	if _thinking_active:
 		return
+	if not card_panel or not is_instance_valid(card_panel):
+		push_warning("[MerlinUI] show_thinking: card_panel invalid, skipping")
+		return
 	_thinking_active = true
+	_disable_card_3d()
 
 	# Dim options
 	if options_container and is_instance_valid(options_container):
@@ -1933,17 +1100,21 @@ func hide_thinking() -> void:
 		_thinking_spiral.visible = false
 
 	# Restore options opacity
-	if options_container:
+	if options_container and is_instance_valid(options_container):
 		var tw := create_tween()
 		tw.tween_property(options_container, "modulate:a", 1.0, 0.2)
 
 
 func _on_thinking_tick() -> void:
 	## Animate thinking dots on the card text.
+	if not card_text or not is_instance_valid(card_text):
+		if _thinking_timer and is_instance_valid(_thinking_timer):
+			_thinking_timer.stop()
+		_thinking_active = false
+		return
 	_thinking_dots = (_thinking_dots + 1) % 4
 	var dots := ".".repeat(_thinking_dots)
-	if card_text:
-		card_text.text = "Merlin reflechit" + dots
+	card_text.text = "Merlin reflechit" + dots
 
 	# Rotate spiral
 	if _thinking_spiral and is_instance_valid(_thinking_spiral):
@@ -1971,10 +1142,10 @@ func _draw_thinking_spiral(ctrl: Control) -> void:
 				cy + sin(angle) * spiral_r
 			))
 		if points.size() >= 2:
-			ctrl.draw_polyline(points, PALETTE.accent, 2.0, true)
+			ctrl.draw_polyline(points, MerlinVisual.PALETTE.accent, 2.0, true)
 
 	# Center dot
-	ctrl.draw_circle(Vector2(cx, cy), 3.0, PALETTE.accent)
+	ctrl.draw_circle(Vector2(cx, cy), 3.0, MerlinVisual.PALETTE.accent)
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
@@ -1983,84 +1154,13 @@ func _draw_thinking_spiral(ctrl: Control) -> void:
 
 func update_biome_indicator(biome_name: String, biome_color: Color) -> void:
 	if biome_indicator:
-		biome_indicator.text = "\u25C6 %s \u25C6" % biome_name
+		biome_indicator.text = "# %s #" % biome_name
 		biome_indicator.add_theme_color_override("font_color", Color(biome_color.r, biome_color.g, biome_color.b, 0.7))
 
 
-func update_aspects(aspects: Dictionary) -> void:
-	_update_aspects(aspects)
-
-
-func _update_aspects(aspects: Dictionary) -> void:
-	# Play SFX based on aspect changes (skip on first call when _previous_aspects is empty)
-	if not _previous_aspects.is_empty():
-		for aspect_name in MerlinConstants.TRIADE_ASPECTS:
-			var old_state: int = int(_previous_aspects.get(aspect_name, MerlinConstants.AspectState.EQUILIBRE))
-			var new_state: int = int(aspects.get(aspect_name, MerlinConstants.AspectState.EQUILIBRE))
-			if new_state != old_state:
-				if new_state > old_state:
-					SFXManager.play("aspect_up")
-				else:
-					SFXManager.play("aspect_down")
-
-	_previous_aspects = aspects.duplicate()
-	current_aspects = aspects
-
-	for aspect in MerlinConstants.TRIADE_ASPECTS:
-		var display = aspect_displays.get(aspect, {})
-		if display.is_empty():
-			continue
-
-		var aspect_state: int = int(aspects.get(aspect, MerlinConstants.AspectState.EQUILIBRE))
-
-		# Update state indicator circles
-		var state_container: HBoxContainer = display.get("state_container")
-		if state_container:
-			for i in range(3):
-				var circle: Label = state_container.get_child(i) as Label
-				if circle:
-					var target_state: int = i - 1  # -1, 0, 1
-					if target_state == aspect_state:
-						circle.text = "●"
-						circle.add_theme_color_override("font_color", ASPECT_COLORS.get(aspect, Color.WHITE))
-					else:
-						circle.text = "○"
-						circle.add_theme_color_override("font_color", Color(0.5, 0.5, 0.5))
-
-		# Update state name
-		var state_name: Label = display.get("state_name")
-		if state_name:
-			var info = MerlinConstants.TRIADE_ASPECT_INFO.get(aspect, {})
-			var states = info.get("states", {})
-			state_name.text = str(states.get(aspect_state, "???"))
-
-			# Color based on extreme state
-			if aspect_state == MerlinConstants.AspectState.EQUILIBRE:
-				state_name.add_theme_color_override("font_color", PALETTE.ink_soft)
-			else:
-				state_name.add_theme_color_override("font_color", Color(0.78, 0.25, 0.22))
-
-		# Shift arrow (shows last change direction)
-		var shift_arrow: Label = display.get("shift_arrow")
-		if shift_arrow and not _previous_aspects.is_empty():
-			var old_st: int = int(_previous_aspects.get(aspect, MerlinConstants.AspectState.EQUILIBRE))
-			if aspect_state > old_st:
-				shift_arrow.text = "\u2191"
-				shift_arrow.add_theme_color_override("font_color", Color(0.78, 0.25, 0.22))
-			elif aspect_state < old_st:
-				shift_arrow.text = "\u2193"
-				shift_arrow.add_theme_color_override("font_color", Color(0.25, 0.45, 0.72))
-			else:
-				shift_arrow.text = ""
-
-		# Animate icon if extreme (now a Control, not Label)
-		var icon: Control = display.get("icon")
-		if icon:
-			if aspect_state != MerlinConstants.AspectState.EQUILIBRE:
-				var tween := create_tween()
-				tween.set_loops(2)
-				tween.tween_property(icon, "modulate:a", 0.5, 0.3)
-				tween.tween_property(icon, "modulate:a", 1.0, 0.3)
+func update_aspects(_aspects: Dictionary) -> void:
+	# Aspect system removed — no-op (kept for interface compatibility)
+	pass
 
 
 func update_souffle(souffle: int) -> void:
@@ -2076,11 +1176,11 @@ func _update_souffle(souffle: int) -> void:
 	if _souffle_counter and is_instance_valid(_souffle_counter):
 		_souffle_counter.text = "%d/%d" % [souffle, MerlinConstants.SOUFFLE_MAX]
 		if souffle == 0:
-			_souffle_counter.add_theme_color_override("font_color", Color(0.78, 0.25, 0.22))
+			_souffle_counter.add_theme_color_override("font_color", MerlinVisual.PALETTE.danger)
 		elif souffle <= 2:
-			_souffle_counter.add_theme_color_override("font_color", Color(0.72, 0.50, 0.10))
+			_souffle_counter.add_theme_color_override("font_color", MerlinVisual.PALETTE.warning)
 		else:
-			_souffle_counter.add_theme_color_override("font_color", Color(0.3, 0.7, 0.9))
+			_souffle_counter.add_theme_color_override("font_color", MerlinVisual.PALETTE.souffle)
 
 	if not souffle_display:
 		return
@@ -2090,10 +1190,10 @@ func _update_souffle(souffle: int) -> void:
 		if icon:
 			if i < souffle:
 				icon.text = SOUFFLE_ICON
-				icon.add_theme_color_override("font_color", Color(0.3, 0.7, 0.9))
+				icon.add_theme_color_override("font_color", MerlinVisual.PALETTE.souffle)
 			else:
 				icon.text = SOUFFLE_EMPTY
-				icon.add_theme_color_override("font_color", Color(0.4, 0.4, 0.4))
+				icon.add_theme_color_override("font_color", MerlinVisual.PALETTE.inactive_dark)
 
 	# VFX: Regen animation (gained souffle)
 	if old_souffle >= 0 and souffle > old_souffle:
@@ -2123,7 +1223,7 @@ func _update_souffle(souffle: int) -> void:
 		for i in range(MerlinConstants.SOUFFLE_MAX):
 			var icon: Label = souffle_display.get_child(i) as Label
 			if icon:
-				icon.add_theme_color_override("font_color", Color(0.85, 0.75, 0.3))
+				icon.add_theme_color_override("font_color", MerlinVisual.PALETTE.souffle_full)
 		if old_souffle >= 0 and old_souffle < MerlinConstants.SOUFFLE_MAX:
 			SFXManager.play("souffle_full")
 
@@ -2138,6 +1238,63 @@ func _update_souffle(souffle: int) -> void:
 				tw.tween_property(icon, "modulate:a", 1.0, 0.4)
 
 	# Center is now free (Phase 43) — no risk indicator needed
+	_update_souffle_btn_state()
+
+
+func _on_souffle_btn_pressed() -> void:
+	## Activate Souffle d'Ogham — boosts next action's dice success.
+	if current_souffle <= 0 or _souffle_active:
+		SFXManager.play("error")
+		return
+	_souffle_active = true
+	SFXManager.play("souffle_regen")
+	# Visual confirmation: change icon + pulse animation
+	if _souffle_btn and is_instance_valid(_souffle_btn):
+		_souffle_btn.text = "+" + SOUFFLE_ICON
+		_souffle_btn.pivot_offset = _souffle_btn.size / 2.0
+		var tw := create_tween().set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
+		tw.tween_property(_souffle_btn, "scale", Vector2(1.3, 1.3), 0.15)
+		tw.tween_property(_souffle_btn, "scale", Vector2(1.1, 1.1), 0.25)
+	souffle_activated.emit()
+
+
+func _update_souffle_btn_state() -> void:
+	## Enable/disable Souffle button based on available charges.
+	if not _souffle_btn or not is_instance_valid(_souffle_btn):
+		return
+	var can_use: bool = current_souffle > 0 and not _souffle_active
+	_souffle_btn.disabled = not can_use
+	_souffle_btn.modulate.a = 1.0 if can_use else 0.35
+
+
+func is_souffle_active() -> bool:
+	return _souffle_active
+
+
+func consume_souffle_active() -> void:
+	## Called by controller after resolving dice with Souffle bonus.
+	_souffle_active = false
+	_update_souffle_btn_state()
+
+
+func _toggle_bestiole_wheel() -> void:
+	## Lazy-load and toggle Bestiole Ogham wheel (Tab key).
+	if not bestiole_wheel or not is_instance_valid(bestiole_wheel):
+		var wheel_scene := preload("res://scenes/ui/BestioleWheel.tscn")
+		bestiole_wheel = wheel_scene.instantiate() as BestioleWheelSystem
+		add_child(bestiole_wheel)
+		bestiole_wheel.z_index = 25
+		bestiole_wheel.ogham_selected.connect(func(_skill_id: String):
+			SFXManager.play("skill_activate")
+		)
+	if bestiole_wheel.is_open:
+		bestiole_wheel.close_wheel()
+	else:
+		var store_node: Node = get_node_or_null("/root/MerlinStore")
+		if store_node and store_node is MerlinStore:
+			bestiole_wheel.open_wheel(store_node as MerlinStore)
+		else:
+			SFXManager.play("error")
 
 
 func update_life_essence(life: int) -> void:
@@ -2145,11 +1302,11 @@ func update_life_essence(life: int) -> void:
 	if _life_counter and is_instance_valid(_life_counter):
 		_life_counter.text = "%d/%d" % [life, MerlinConstants.LIFE_ESSENCE_MAX]
 		if life <= 0:
-			_life_counter.add_theme_color_override("font_color", Color(0.90, 0.12, 0.12))
+			_life_counter.add_theme_color_override("font_color", MerlinVisual.PALETTE.danger)
 		elif life <= MerlinConstants.LIFE_ESSENCE_LOW_THRESHOLD:
-			_life_counter.add_theme_color_override("font_color", Color(0.86, 0.38, 0.10))
+			_life_counter.add_theme_color_override("font_color", MerlinVisual.PALETTE.warning)
 		else:
-			_life_counter.add_theme_color_override("font_color", Color(0.82, 0.24, 0.22))
+			_life_counter.add_theme_color_override("font_color", MerlinVisual.PALETTE.danger)
 	if _life_bar and is_instance_valid(_life_bar):
 		_life_bar.value = life
 		if life <= MerlinConstants.LIFE_ESSENCE_LOW_THRESHOLD:
@@ -2183,9 +1340,32 @@ func update_resource_bar(tool_id: String, day: int, mission_current: int, missio
 
 func display_card(card: Dictionary) -> void:
 	if card.is_empty():
-		push_warning("[TriadeUI] display_card called with empty card")
+		push_warning("[MerlinUI] display_card called with empty card")
 		return
 	current_card = card
+	_highlighted_option = -1  # Reset arrow-key highlight for new card
+	if _reward_badge and is_instance_valid(_reward_badge):
+		_reward_badge.hide_badge()
+
+	# Safety: ensure thinking overlay is hidden before showing card
+	hide_merlin_thinking_overlay()
+
+	# Reset button states completely for new card (undo all tween effects)
+	for btn in option_buttons:
+		if is_instance_valid(btn):
+			btn.set_pressed_no_signal(false)
+			btn.release_focus()
+			btn.disabled = false
+			btn.scale = Vector2.ONE
+			btn.modulate = Color.WHITE
+			var parent_c: Control = btn.get_parent()
+			if parent_c and is_instance_valid(parent_c) and parent_c is Container:
+				(parent_c as Container).queue_sort()
+
+	# Ensure options container is visible (may have been hidden by opening sequence)
+	if options_container and is_instance_valid(options_container):
+		options_container.modulate.a = 1.0
+		options_container.visible = true
 
 	_layout_card_stage()
 	_push_card_shadow()
@@ -2204,31 +1384,53 @@ func display_card(card: Dictionary) -> void:
 		card_speaker.visible = not speaker.is_empty()
 
 	# Pixel portrait: assemble new character if speaker changed
-	if is_new_speaker and _pixel_portrait and is_instance_valid(_pixel_portrait):
+	if is_new_speaker:
 		_current_speaker_key = speaker_key
-		_pixel_portrait.setup(speaker_key, 5.8)
-		_pixel_portrait.assemble(false)  # Animated assembly
+		# Check if speaker is an NPC archetype (32x32 portrait)
+		var npc_key := PixelNpcPortrait.resolve_npc_key(speaker)
+		if not npc_key.is_empty() and _npc_portrait and is_instance_valid(_npc_portrait):
+			_npc_portrait.visible = true
+			_npc_portrait.setup(npc_key, 80.0)
+			_npc_portrait.assemble(false)
+			if _pixel_portrait and is_instance_valid(_pixel_portrait):
+				_pixel_portrait.visible = false
+		elif _pixel_portrait and is_instance_valid(_pixel_portrait):
+			_pixel_portrait.visible = true
+			_pixel_portrait.setup(speaker_key, 5.8)
+			_pixel_portrait.assemble(false)
+			if _npc_portrait and is_instance_valid(_npc_portrait):
+				_npc_portrait.visible = false
 
-	# Animate card entrance — flip + scale + fade
+	# Disable 3D tilt during card transition
+	_disable_card_3d()
+
+	# Animate card entrance — dramatic distribution from left
 	if card_panel and is_instance_valid(card_panel):
 		if _card_float_tween:
 			_card_float_tween.kill()
 		if _card_entry_tween:
 			_card_entry_tween.kill()
-		var draw_origin := _get_deck_draw_origin()
-		card_panel.position = draw_origin
+		# Start from left edge of screen (deal from left)
+		var start_pos := Vector2(-card_panel.size.x * 0.6, _card_base_pos.y + 30.0)
+		card_panel.position = start_pos
 		card_panel.modulate.a = 0.0
-		card_panel.scale = Vector2(0.12, 0.12)
-		card_panel.rotation_degrees = randf_range(-10.0, 10.0)
+		card_panel.scale = Vector2(0.4, 0.4)
+		card_panel.rotation_degrees = -15.0
 		_card_entry_tween = create_tween()
+		# Phase 1: Glide to center with overshoot
 		_card_entry_tween.set_parallel(true)
-		_card_entry_tween.tween_property(card_panel, "modulate:a", 1.0, 0.10)
-		_card_entry_tween.tween_property(card_panel, "position", _card_base_pos, 0.25).set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_OUT)
-		_card_entry_tween.tween_property(card_panel, "rotation_degrees", 0.0, 0.25).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
-		_card_entry_tween.tween_property(card_panel, "scale", Vector2(1.06, 1.06), 0.22).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
+		_card_entry_tween.tween_property(card_panel, "modulate:a", 1.0, 0.2)
+		_card_entry_tween.tween_property(card_panel, "position", _card_base_pos, MerlinVisual.CARD_ENTRY_DURATION).set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_OUT)
+		_card_entry_tween.tween_property(card_panel, "rotation_degrees", 2.0, MerlinVisual.CARD_ENTRY_DURATION).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
+		var overshoot_v := Vector2(MerlinVisual.CARD_ENTRY_OVERSHOOT, MerlinVisual.CARD_ENTRY_OVERSHOOT)
+		_card_entry_tween.tween_property(card_panel, "scale", overshoot_v, MerlinVisual.CARD_ENTRY_DURATION * 0.85).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
+		# Phase 2: Elastic settle to 1.0
 		_card_entry_tween.set_parallel(false)
-		_card_entry_tween.tween_property(card_panel, "scale", Vector2.ONE, 0.10).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_OUT)
-		_card_entry_tween.finished.connect(_start_card_float_motion, CONNECT_ONE_SHOT)
+		_card_entry_tween.tween_property(card_panel, "scale", Vector2.ONE, MerlinVisual.CARD_ENTRY_SETTLE).set_trans(Tween.TRANS_ELASTIC).set_ease(Tween.EASE_OUT)
+		_card_entry_tween.parallel().tween_property(card_panel, "rotation_degrees", 0.0, MerlinVisual.CARD_ENTRY_SETTLE).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_OUT)
+		# Phase 3: Start idle float + enable fake 3D tilt + reveal buttons
+		_card_entry_tween.tween_callback(_start_card_float_and_3d)
+		_card_entry_tween.tween_callback(_animate_option_entrance)
 
 	# Update text with typewriter
 	if card_text and is_instance_valid(card_text):
@@ -2240,11 +1442,15 @@ func display_card(card: Dictionary) -> void:
 		LLMSourceBadge.update_badge(_card_source_badge, card_source)
 		_card_source_badge.visible = true
 
-	# Update encounter tile (pixel art per card type)
-	if _encounter_tile and is_instance_valid(_encounter_tile):
-		var enc_type := PixelEncounterTile.detect_type(card)
-		_encounter_tile.setup(enc_type, 7.2)
-		_encounter_tile.assemble(true)
+	# Update scene compositor (dynamic pixel art per card context)
+	if _scene_compositor and is_instance_valid(_scene_compositor):
+		var vtags: Array = card.get("visual_tags", [])
+		var biome: String = str(card.get("biome", "foret_broceliande"))
+		var season: String = str(card.get("season", "automne"))
+		if vtags.is_empty():
+			vtags = _derive_card_fallback_tags(card)
+		_scene_compositor.compose_scene(vtags, biome, season)
+		_scene_compositor.assemble(true)
 
 	# Update options — always show all 3 buttons in action-verb style.
 	var options: Array = card.get("options", [])
@@ -2252,30 +1458,107 @@ func display_card(card: Dictionary) -> void:
 		var has_option: bool = i < options.size() and options[i] is Dictionary
 		var option: Dictionary = options[i] if has_option else {}
 		var action_label := _actionize_option_label(str(option.get("label", "")), i)
-		if i < option_labels.size() and is_instance_valid(option_labels[i]):
-			option_labels[i].text = action_label if has_option else "..."
-			option_labels[i].modulate.a = 1.0 if has_option else 0.4
+		# Labels above buttons removed (text already in buttons)
 		if i < option_buttons.size() and is_instance_valid(option_buttons[i]):
 			var key: String = OPTION_KEYS.get(i, "?")
-			option_buttons[i].text = "[%s] %s" % [key, action_label] if has_option else "[%s] —" % key
+			option_buttons[i].text = action_label if has_option else "—"
 			option_buttons[i].disabled = not has_option
 			option_buttons[i].modulate.a = 1.0 if has_option else 0.35
+		# Action description — shown as subtitle label above button on hover
+		if i < _option_desc_labels.size() and is_instance_valid(_option_desc_labels[i]):
+			var action_desc: String = str(option.get("action_desc", ""))
+			if action_desc.is_empty():
+				# Fallback: show risk level if no action description
+				var risk: String = str(option.get("risk_level", ""))
+				match risk:
+					"faible": action_desc = "Prudent"
+					"moyen": action_desc = "Equilibre"
+					"eleve": action_desc = "Audacieux"
+			# Truncate long descriptions for UI fit
+			if action_desc.length() > 80:
+				var cut := action_desc.rfind(" ", 77)
+				if cut > 40:
+					action_desc = action_desc.substr(0, cut) + "..."
+				else:
+					action_desc = action_desc.substr(0, 77) + "..."
+			_option_desc_labels[i].text = action_desc
+			_option_desc_labels[i].visible = false  # Shown on hover via _on_option_hover_enter
+		# Also set button tooltip for accessibility
+		if i < option_buttons.size() and is_instance_valid(option_buttons[i]):
+			var risk2: String = str(option.get("risk_level", ""))
+			match risk2:
+				"faible": option_buttons[i].tooltip_text = "Prudent — risque faible"
+				"moyen": option_buttons[i].tooltip_text = "Equilibre — risque moyen (coute 1 Souffle)"
+				"eleve": option_buttons[i].tooltip_text = "Audacieux — risque eleve"
+
+	# Minigame badge
+	if _minigame_badge and is_instance_valid(_minigame_badge):
+		var minigame: Dictionary = card.get("minigame", {})
+		if not minigame.is_empty():
+			_minigame_badge.text = "\u2694 Mini-jeu: %s (%s)" % [
+				str(minigame.get("name", "")), str(minigame.get("desc", ""))]
+			_minigame_badge.visible = true
+		else:
+			_minigame_badge.visible = false
+
+	# Pre-hide buttons and reset state from previous card animations
+	for j in range(option_buttons.size()):
+		if is_instance_valid(option_buttons[j]):
+			option_buttons[j].modulate.a = 0.0
+			option_buttons[j].scale = Vector2.ONE
+			# Force parent Container to re-compute layout (fixes residual position offsets)
+			var parent_container: Control = option_buttons[j].get_parent()
+			if parent_container and is_instance_valid(parent_container) and parent_container is Container:
+				(parent_container as Container).queue_sort()
 
 
 func _actionize_option_label(raw_label: String, option_index: int) -> String:
+	## Returns ONLY a single action verb (title case). No description, no prefix.
+	## Trusts the LLM adapter — no secondary whitelist rejection.
 	var clean := raw_label.strip_edges()
-	if clean == "":
+	if clean.is_empty():
 		return ACTION_VERB_FALLBACK[clampi(option_index, 0, ACTION_VERB_FALLBACK.size() - 1)]
 	var words: PackedStringArray = clean.replace(":", " ").replace(",", " ").replace(".", " ").split(" ", false)
 	if words.is_empty():
 		return ACTION_VERB_FALLBACK[clampi(option_index, 0, ACTION_VERB_FALLBACK.size() - 1)]
-	var verb := words[0].capitalize()
-	var detail := ""
-	if words.size() > 1:
-		var max_words := mini(words.size(), 4)
-		for i in range(1, max_words):
-			detail += (" " if i > 1 else "") + words[i]
-	return "%s %s" % [verb, detail] if detail != "" else verb
+	return words[0].capitalize()
+
+
+func _animate_option_entrance() -> void:
+	## Fade-in stagger entrance for option buttons. Called after card entry settles.
+	## Uses only modulate:a and scale (no position:y mutation — Container manages layout).
+	for j in range(option_buttons.size()):
+		if not is_instance_valid(option_buttons[j]) or option_buttons[j].disabled:
+			continue
+		var btn: Button = option_buttons[j]
+		btn.pivot_offset = btn.size / 2.0
+		btn.modulate.a = 0.0
+		btn.scale = Vector2(0.9, 0.9)
+		var slide_tw := create_tween().set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
+		var delay: float = float(j) * MerlinVisual.OPTION_STAGGER_DELAY
+		slide_tw.tween_property(btn, "modulate:a", 1.0, 0.15).set_delay(delay)
+		slide_tw.parallel().tween_property(btn, "scale", Vector2.ONE, MerlinVisual.OPTION_SLIDE_DURATION).set_delay(delay)
+	# Safety timer: ensure all buttons reach alpha=1.0 even if tween is killed
+	get_tree().create_timer(0.8).timeout.connect(func():
+		for btn2 in option_buttons:
+			if is_instance_valid(btn2) and not btn2.disabled and btn2.modulate.a < 0.5:
+				btn2.modulate.a = 1.0
+				btn2.scale = Vector2.ONE
+	)
+
+
+func _derive_card_fallback_tags(card: Dictionary) -> Array:
+	## Derive visual tags from card metadata when LLM tags are missing.
+	var biome: String = str(card.get("biome", "foret_broceliande"))
+	var base: Array = PixelSceneData.BIOME_DEFAULT_TAGS.get(biome, ["foret", "arbres"])
+	var result: Array = base.duplicate()
+	var tags: Array = card.get("tags", [])
+	for tag in tags:
+		var modifier_tags: Array = PixelSceneData.MODIFIER_TAGS.get(str(tag), [])
+		for mt in modifier_tags:
+			if mt not in result:
+				result.append(mt)
+	return result
 
 
 func _detect_card_source(card: Dictionary) -> String:
@@ -2336,7 +1619,7 @@ func _push_card_shadow() -> void:
 # ═══════════════════════════════════════════════════════════════════════════════
 
 func show_progressive_indicators() -> void:
-	## Animate only the top HUD metrics (health, souffle, essences).
+	## Animate only the top HUD metrics (health, souffle, essences) via pixel reveal.
 	var essence_panel: Control = _essence_counter.get_parent() if _essence_counter and is_instance_valid(_essence_counter) else null
 	if _top_status_bar and is_instance_valid(_top_status_bar):
 		_top_status_bar.modulate.a = 1.0
@@ -2351,21 +1634,29 @@ func show_progressive_indicators() -> void:
 	if not is_inside_tree():
 		return
 
+	var pca: Node = get_node_or_null("/root/PixelContentAnimator")
+
 	if life_panel and is_instance_valid(life_panel):
-		var life_tw := create_tween()
-		life_tw.tween_property(life_panel, "modulate:a", 1.0, 0.26).set_trans(Tween.TRANS_SINE)
-		await life_tw.finished
+		if pca:
+			pca.reveal(life_panel, {"duration": 0.3, "block_size": 6})
+			await get_tree().create_timer(0.32).timeout
+		else:
+			life_panel.modulate.a = 1.0
 
 	if souffle_panel and is_instance_valid(souffle_panel):
 		SFXManager.play("ogham_chime")
-		var tw := create_tween()
-		tw.tween_property(souffle_panel, "modulate:a", 1.0, 0.32).set_trans(Tween.TRANS_SINE)
-		await tw.finished
+		if pca:
+			pca.reveal(souffle_panel, {"duration": 0.35, "block_size": 6})
+			await get_tree().create_timer(0.38).timeout
+		else:
+			souffle_panel.modulate.a = 1.0
 
 	if essence_panel and is_instance_valid(essence_panel):
-		var essence_tw := create_tween()
-		essence_tw.tween_property(essence_panel, "modulate:a", 1.0, 0.24).set_trans(Tween.TRANS_SINE)
-		await essence_tw.finished
+		if pca:
+			pca.reveal(essence_panel, {"duration": 0.28, "block_size": 6})
+			await get_tree().create_timer(0.3).timeout
+		else:
+			essence_panel.modulate.a = 1.0
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
@@ -2479,8 +1770,11 @@ func show_opening_sequence(biome_key: String, season_hint: String = "", hour_hin
 		var now: Dictionary = Time.get_datetime_dict_from_system()
 		hour = int(now.get("hour", 12))
 
-	_configure_low_poly_background(key, season, hour)
-	await _animate_low_poly_background_reveal()
+	_build_biome_artwork(key, season, hour)
+	biome_art_layer.visible = true
+	biome_art_layer.modulate.a = 0.0
+	await _animate_biome_artwork_stack()
+	_dim_biome_background()
 	await _animate_deck_assembly(key)
 	_set_empty_center_card_state()
 	await _reveal_empty_center_card()
@@ -2496,7 +1790,8 @@ func _set_intro_hidden_state() -> void:
 		essence_panel,
 		card_container,
 		_bottom_zone,
-		_run_stack_bar,
+		_pioche_column,
+		_cimetiere_column,
 		options_container,
 		info_panel,
 	]
@@ -2534,7 +1829,8 @@ func _reveal_empty_center_card() -> void:
 
 
 func _reveal_intro_blocks() -> void:
-	var reveal_targets: Array = [_top_status_bar, _bottom_zone, _run_stack_bar]
+	var essence_panel: Control = _essence_counter.get_parent() if _essence_counter and is_instance_valid(_essence_counter) else null
+	var reveal_targets: Array = [_top_status_bar, _bottom_zone, _pioche_column, _cimetiere_column, card_container, info_panel, life_panel, souffle_panel, essence_panel]
 	for i in range(reveal_targets.size()):
 		var target: Control = reveal_targets[i] as Control
 		if not target or not is_instance_valid(target):
@@ -2546,7 +1842,7 @@ func _reveal_intro_blocks() -> void:
 
 func _normalize_biome_key(biome_key: String) -> String:
 	var key := str(biome_key).strip_edges().to_lower()
-	if BIOME_ART_PROFILES.has(key):
+	if MerlinVisual.BIOME_ART_PROFILES.has(key):
 		return key
 	if BIOME_SHORT_NAMES.has(key):
 		return str(BIOME_SHORT_NAMES[key])
@@ -2557,7 +1853,7 @@ func _normalize_season(season_hint: String, biome_key: String) -> String:
 	var season := str(season_hint).strip_edges().to_lower()
 	if season == "automn":
 		season = "automne"
-	if SEASON_TINTS.has(season):
+	if MerlinVisual.SEASON_TINTS.has(season):
 		return season
 	return str(BIOME_DEFAULT_SEASON.get(biome_key, "automne"))
 
@@ -2585,9 +1881,16 @@ func _build_biome_artwork(biome_key: String, season_key: String, hour: int) -> v
 	for child in biome_art_layer.get_children():
 		child.queue_free()
 	_biome_art_pixels.clear()
+	# TODO: When 2D biome assets are available, load them here:
+	# var texture_path := "res://assets/biomes/%s.png" % biome_key
+	# if ResourceLoader.exists(texture_path):
+	#     _load_biome_texture(texture_path, season_key, hour)
+	#     return
+	# Procedural pixel art disabled — waiting for 2D assets
+	return
 
-	var profile: Dictionary = BIOME_ART_PROFILES.get(biome_key, BIOME_ART_PROFILES.broceliande)
-	var season_tint: Color = SEASON_TINTS.get(season_key, Color.WHITE)
+	var profile: Dictionary = MerlinVisual.BIOME_ART_PROFILES.get(biome_key, MerlinVisual.BIOME_ART_PROFILES.broceliande)
+	var season_tint: Color = MerlinVisual.SEASON_TINTS.get(season_key, Color.WHITE)
 	var hour_light: Color = _hour_light_color(hour)
 	var sky_color := _tone_color(profile.sky, hour_light, season_tint)
 	var mist_color := _tone_color(profile.mist, hour_light, season_tint)
@@ -2720,6 +2023,28 @@ func _animate_biome_artwork_stack() -> void:
 	await pulse.finished
 
 
+func _dim_biome_background() -> void:
+	## Dim biome art layer to serve as subtle atmospheric background during gameplay.
+	if not biome_art_layer or not is_instance_valid(biome_art_layer):
+		return
+	biome_art_layer.visible = true
+	var tw := create_tween()
+	tw.tween_property(biome_art_layer, "modulate:a", 0.25, 0.8) \
+		.set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
+	_start_biome_breathing()
+
+
+func _start_biome_breathing() -> void:
+	## Subtle breathing animation on the biome background layer.
+	if not biome_art_layer or not is_instance_valid(biome_art_layer):
+		return
+	var breath := create_tween().set_loops()
+	breath.tween_property(biome_art_layer, "modulate:a", 0.30, 4.0) \
+		.set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
+	breath.tween_property(biome_art_layer, "modulate:a", 0.20, 4.0) \
+		.set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
+
+
 func _animate_deck_assembly(biome_key: String) -> void:
 	if not _deck_fx_layer or not is_instance_valid(_deck_fx_layer):
 		return
@@ -2727,7 +2052,7 @@ func _animate_deck_assembly(biome_key: String) -> void:
 		child.queue_free()
 	_deck_fx_layer.visible = true
 
-	var profile: Dictionary = BIOME_ART_PROFILES.get(biome_key, BIOME_ART_PROFILES.broceliande)
+	var profile: Dictionary = MerlinVisual.BIOME_ART_PROFILES.get(biome_key, MerlinVisual.BIOME_ART_PROFILES.broceliande)
 	var edge_color: Color = Color(profile.accent)
 	var vp := get_viewport_rect().size
 	var center := Vector2(vp.x * 0.5, vp.y * 0.60)
@@ -2745,7 +2070,7 @@ func _animate_deck_assembly(biome_key: String) -> void:
 		card.modulate.a = 0.0
 		card.mouse_filter = Control.MOUSE_FILTER_IGNORE
 		var style := StyleBoxFlat.new()
-		style.bg_color = Color(PALETTE.paper_dark.r, PALETTE.paper_dark.g, PALETTE.paper_dark.b, 0.96)
+		style.bg_color = Color(MerlinVisual.PALETTE.paper_dark.r, MerlinVisual.PALETTE.paper_dark.g, MerlinVisual.PALETTE.paper_dark.b, 0.96)
 		style.border_color = edge_color
 		style.set_border_width_all(2)
 		style.set_corner_radius_all(5)
@@ -2859,94 +2184,246 @@ const NARRATOR_INTROS := [
 ]
 
 var _narrator_active := false
+var _waiting_narrator_click := false
 var _typewriter_active := false
 var _typewriter_abort := false
+var _highlighted_option: int = -1  # Arrow key highlight without confirm (-1 = none)
 
 
-func show_narrator_intro() -> void:
-	## Show Merlin as narrator before the first card of a run.
-	print("[TriadeUI] show_narrator_intro()")
+func show_narrator_intro(biome_key: String = "") -> void:
+	## Show Merlin as narrator + quest briefing before the first card of a run.
+	print("[MerlinUI] show_narrator_intro(biome=%s)" % biome_key)
 	SFXManager.play("whoosh")
 	_narrator_active = true
 	var should_dim_ui := not _opening_sequence_done
 
-	# Hide game UI during intro
+	# Hide game UI during intro (pixel dissolve)
+	var pca: Node = get_node_or_null("/root/PixelContentAnimator")
 	if should_dim_ui and options_container and is_instance_valid(options_container):
-		options_container.modulate.a = 0.0
+		if pca and options_container.modulate.a > 0.1:
+			pca.dissolve(options_container, {"duration": 0.3, "block_size": 8})
+		else:
+			options_container.modulate.a = 0.0
 	if should_dim_ui and info_panel and is_instance_valid(info_panel):
-		info_panel.modulate.a = 0.0
+		if pca and info_panel.modulate.a > 0.1:
+			pca.dissolve(info_panel, {"duration": 0.3, "block_size": 8})
+		else:
+			info_panel.modulate.a = 0.0
 
-	# Show Merlin as speaker
+	# Resolve biome key — try parameter, then GameManager, then default
+	var bk: String = biome_key.strip_edges().to_lower()
+	if bk.is_empty():
+		var gm: Node = get_node_or_null("/root/GameManager")
+		if gm:
+			var run_data = gm.get("run")
+			if run_data is Dictionary:
+				bk = str(run_data.get("current_biome", run_data.get("biome", {}).get("id", "")))
+	if bk.is_empty():
+		bk = "broceliande"
+	# Normalize: strip "foret_" etc. for MISSION_TEMPLATES lookup
+	var bk_short: String = bk
+	for prefix in ["foret_", "landes_", "cotes_", "villages_", "cercles_", "marais_", "collines_"]:
+		bk_short = bk_short.replace(prefix, "")
+
+	# Look up mission template from docs spec
+	var mission: Dictionary = MerlinConstants.get_mission_template(bk_short)
+	if mission.is_empty():
+		mission = MerlinConstants.get_mission_template(bk)
+
+	# Show Merlin as speaker with biome context (always show biome name)
 	if card_speaker and is_instance_valid(card_speaker):
-		card_speaker.text = "Merlin"
+		var biome_display: String = bk.replace("_", " ").capitalize()
+		if not mission.is_empty():
+			var mission_name: String = str(mission.get("name", biome_display))
+			card_speaker.text = "Merlin \u2014 %s" % mission_name
+		else:
+			card_speaker.text = "Merlin \u2014 %s" % biome_display
 		card_speaker.visible = true
 
-	# Pick intro text
-	var intro_text: String = NARRATOR_INTROS[randi() % NARRATOR_INTROS.size()]
+	# Try LLM intro (generated by TransitionBiome), fallback to static
+	var atmo_text: String = ""
+	var intro_source: String = "static"
+	var intro_file := FileAccess.open("user://temp_run_intro.json", FileAccess.READ)
+	if intro_file:
+		var json_str := intro_file.get_as_text()
+		intro_file.close()
+		var parsed = JSON.parse_string(json_str)
+		if parsed is Dictionary:
+			var llm_text: String = str(parsed.get("text", ""))
+			if llm_text.length() >= 10:
+				atmo_text = llm_text
+				intro_source = "llm"
+				print("[MerlinUI] LLM narrator intro loaded: %s" % llm_text.left(50))
+		DirAccess.remove_absolute("user://temp_run_intro.json")
 
-	# Static badge for narrator intro
+	# Fallback: try inline LLM generation with 3s timeout, then static
+	if atmo_text.is_empty():
+		var merlin_ai: Node = get_node_or_null("/root/MerlinAI")
+		if merlin_ai and merlin_ai.has_method("generate_text") and merlin_ai.get("is_ready"):
+			var inline_prompt := "Tu es Merlin. Accueille le voyageur en 2 phrases. Biome: %s." % bk
+			var t0 := Time.get_ticks_msec()
+			var llm_r = await merlin_ai.generate_text(inline_prompt, {"max_tokens": 40, "temperature": 0.8})
+			if (Time.get_ticks_msec() - t0) < 3000 and llm_r is Dictionary:
+				var txt: String = str(llm_r.get("text", ""))
+				if txt.length() >= 10:
+					atmo_text = txt
+					intro_source = "llm_inline"
+	if atmo_text.is_empty():
+		atmo_text = NARRATOR_INTROS[randi() % NARRATOR_INTROS.size()]
+
+	# Compose full quest intro: mission title first, then atmospheric text
+	var intro_text: String = ""
+	if not mission.is_empty():
+		var quest_title: String = str(mission.get("title", ""))
+		var quest_text: String = str(mission.get("text", ""))
+		if not quest_title.is_empty():
+			intro_text = quest_title + "\n\n" + atmo_text
+			if not quest_text.is_empty():
+				intro_text += "\n\n" + quest_text
+	if intro_text.is_empty():
+		intro_text = atmo_text
+
+	# Source badge for narrator intro
 	if _card_source_badge and is_instance_valid(_card_source_badge):
-		LLMSourceBadge.update_badge(_card_source_badge, "static")
+		LLMSourceBadge.update_badge(_card_source_badge, intro_source)
 		_card_source_badge.visible = true
 
-	# Typewriter the intro
-	await _typewriter_card_text(intro_text)
+	# SFX: eye_open before narration
+	SFXManager.play("eye_open")
 
-	# Wait for player to acknowledge
-	if not is_inside_tree():
-		return
-	await get_tree().create_timer(0.65).timeout
+	# Multi-page typewriter: split long text into readable pages
+	var pages: Array[String] = _split_into_pages(intro_text)
+	for page_idx in range(pages.size()):
+		if not is_inside_tree():
+			return
+		await _typewriter_card_text(pages[page_idx])
+		# After each page: wait for click/key to continue
+		if not is_inside_tree():
+			return
+		var is_last_page: bool = (page_idx == pages.size() - 1)
+		var continue_hint: String = "[color=#8a7a6a][i]Cliquez pour continuer...[/i][/color]" if not is_last_page else "[color=#8a7a6a][i]Cliquez pour commencer l'aventure...[/i][/color]"
+		if card_text and is_instance_valid(card_text):
+			card_text.text += "\n\n" + continue_hint
+		_waiting_narrator_click = true
+		var safety_deadline := Time.get_ticks_msec() + 30000
+		while _waiting_narrator_click and is_inside_tree() and Time.get_ticks_msec() < safety_deadline:
+			await get_tree().process_frame
+		_waiting_narrator_click = false
+		if not is_last_page:
+			SFXManager.play("card_draw")
 
-	# Fade in game UI
+	# SFX: card_draw after full narration
+	SFXManager.play("card_draw")
+
+	# Pixel reveal game UI
 	if should_dim_ui and options_container and is_instance_valid(options_container):
-		var tw := create_tween()
-		tw.tween_property(options_container, "modulate:a", 1.0, 0.4)
+		if pca:
+			pca.reveal(options_container, {"duration": 0.35, "block_size": 8})
+		else:
+			options_container.modulate.a = 1.0
 	if should_dim_ui and info_panel and is_instance_valid(info_panel):
-		var tw2 := create_tween()
-		tw2.tween_property(info_panel, "modulate:a", 1.0, 0.4)
+		if pca:
+			pca.reveal(info_panel, {"duration": 0.35, "block_size": 8})
+		else:
+			info_panel.modulate.a = 1.0
 
 	_narrator_active = false
 	narrator_intro_finished.emit()
-	print("[TriadeUI] narrator intro finished")
+	print("[MerlinUI] narrator intro finished")
+
+
+func show_scenario_intro(title: String, context: String) -> void:
+	## Display scenario-specific introduction before the first card.
+	## Uses dealer_intro_context from the active scenario.
+	if not card_text or not is_instance_valid(card_text):
+		return
+	if context.strip_edges().is_empty():
+		return
+	print("[MerlinUI] show_scenario_intro: %s" % title)
+	# Speaker = scenario title
+	if card_speaker and is_instance_valid(card_speaker):
+		card_speaker.text = title if not title.is_empty() else "Scenario"
+		card_speaker.visible = true
+	SFXManager.play("eye_open")
+	# Typewriter the context text
+	await _typewriter_card_text(context)
+	# Wait for click to continue
+	if card_text and is_instance_valid(card_text):
+		card_text.text += "\n\n[color=#8a7a6a][i]Cliquez pour commencer...[/i][/color]"
+	_waiting_narrator_click = true
+	var deadline := Time.get_ticks_msec() + 30000
+	while _waiting_narrator_click and is_inside_tree() and Time.get_ticks_msec() < deadline:
+		await get_tree().process_frame
+	_waiting_narrator_click = false
+	SFXManager.play("card_draw")
+
+
+func _split_into_pages(text: String, max_chars: int = 180) -> Array[String]:
+	## Split long text into readable pages at sentence boundaries.
+	## Returns at least 1 page. Double newlines always force a page break.
+	var pages: Array[String] = []
+	# First split on double newlines (explicit page breaks)
+	var blocks: Array[String] = []
+	for block in text.split("\n\n"):
+		var trimmed: String = block.strip_edges()
+		if not trimmed.is_empty():
+			blocks.append(trimmed)
+	# Then split any block longer than max_chars at sentence boundaries
+	for block in blocks:
+		if block.length() <= max_chars:
+			pages.append(block)
+		else:
+			# Split at sentence endings (. ! ?) keeping the punctuation
+			var sentences: PackedStringArray = block.split(". ")
+			var current_page: String = ""
+			for sent in sentences:
+				var candidate: String = sent.strip_edges()
+				if candidate.is_empty():
+					continue
+				# Re-add period if it was split off (unless ends with ! or ?)
+				if not candidate.ends_with(".") and not candidate.ends_with("!") and not candidate.ends_with("?"):
+					candidate += "."
+				if current_page.is_empty():
+					current_page = candidate
+				elif (current_page + " " + candidate).length() <= max_chars:
+					current_page += " " + candidate
+				else:
+					pages.append(current_page)
+					current_page = candidate
+			if not current_page.is_empty():
+				pages.append(current_page)
+	if pages.is_empty():
+		pages.append(text.strip_edges())
+	return pages
 
 
 func _typewriter_card_text(full_text: String) -> void:
-	## Typewriter effect for card text with procedural blip sound.
+	## Pixel rain reveal for card text (replaces legacy typewriter).
 	if card_text == null or not is_instance_valid(card_text):
 		return
 
 	_typewriter_active = true
 	_typewriter_abort = false
-	card_text.text = ""
-	card_text.visible_characters = 0
 	if _text_pixel_fx_layer and is_instance_valid(_text_pixel_fx_layer):
 		for child in _text_pixel_fx_layer.get_children():
 			child.queue_free()
 
-	# Set full text but reveal character by character
+	# Set full text hidden, then pixel reveal
 	card_text.text = full_text
-	var total := full_text.length()
-	var max_index := maxi(total - 1, 1)
+	card_text.visible_characters = -1
+	card_text.modulate.a = 0.0
 
-	for i in range(total):
-		if _typewriter_abort or not is_inside_tree():
-			if is_instance_valid(card_text):
-				card_text.visible_characters = -1
-			break
-		card_text.visible_characters = i + 1
-		var ch := full_text[i]
-		# Procedural blip
-		if ch != " " and ch != "\n":
-			_play_blip()
-			_spawn_text_pixel_drop(float(i) / float(max_index))
-		# Punctuation pause
-		if ch in [".", ",", "!", "?", ":"]:
-			await get_tree().create_timer(0.036).timeout
-		else:
-			await get_tree().create_timer(0.012).timeout
+	var pca: Node = get_node_or_null("/root/PixelContentAnimator")
+	if pca:
+		await get_tree().process_frame
+		pca.reveal(card_text, {"duration": 0.35, "block_size": 6, "easing": "back_out"})
+		# Play a blip burst for audio feedback
+		_play_blip()
+		await get_tree().create_timer(0.4).timeout
+	else:
+		# Fallback: instant reveal
+		card_text.modulate.a = 1.0
 
-	if is_instance_valid(card_text):
-		card_text.visible_characters = -1
 	_typewriter_active = false
 
 
@@ -3016,11 +2493,8 @@ func update_cards_count(count: int) -> void:
 
 func _notification(what: int) -> void:
 	if what == NOTIFICATION_RESIZED:
-		_resize_low_poly_background()
 		_layout_run_zones()
 		_layout_card_stage()
-		if _preview_visible_for >= 0:
-			_position_preview_above_button(_preview_visible_for)
 
 
 func _input(event: InputEvent) -> void:
@@ -3029,38 +2503,98 @@ func _input(event: InputEvent) -> void:
 		pause_requested.emit()
 		return
 
-	# Skip typewriter on click/tap
+	# Skip typewriter on click/tap (don't return — let click reach buttons)
 	if _typewriter_active and event is InputEventMouseButton and event.pressed:
 		_typewriter_abort = true
-		return
 
-	# Keyboard shortcuts for options
+	# Narrator intro: click to dismiss
+	if _waiting_narrator_click and event is InputEventMouseButton and event.pressed:
+		_waiting_narrator_click = false
+
+	# Keyboard shortcuts for options (highlight first, confirm with Enter/Space)
 	if event is InputEventKey and event.pressed:
 		# Skip typewriter on any key
 		if _typewriter_active:
 			_typewriter_abort = true
 			return
+		# Narrator intro: any key to dismiss
+		if _waiting_narrator_click:
+			_waiting_narrator_click = false
+			return
 		match event.keycode:
 			KEY_A, KEY_LEFT, KEY_1, KEY_KP_1:
-				_on_option_pressed(MerlinConstants.CardOption.LEFT)
+				_highlight_option(MerlinConstants.CardOption.LEFT)
 			KEY_B, KEY_UP, KEY_2, KEY_KP_2:
-				_on_option_pressed(MerlinConstants.CardOption.CENTER)
+				_highlight_option(MerlinConstants.CardOption.CENTER)
 			KEY_C, KEY_RIGHT, KEY_3, KEY_KP_3:
-				_on_option_pressed(MerlinConstants.CardOption.RIGHT)
+				_highlight_option(MerlinConstants.CardOption.RIGHT)
+			KEY_ENTER, KEY_KP_ENTER, KEY_SPACE:
+				if _highlighted_option >= 0:
+					_on_option_pressed(_highlighted_option)
+			KEY_TAB:
+				_toggle_bestiole_wheel()
+
+
+func _highlight_option(option: int) -> void:
+	## Highlight an option without confirming (arrow key / letter key behavior).
+	if current_card.is_empty():
+		return
+	if _highlighted_option == option:
+		return  # Already highlighted
+
+	# Reset all buttons to normal
+	for i in range(option_buttons.size()):
+		var btn: Button = option_buttons[i]
+		if is_instance_valid(btn):
+			btn.scale = Vector2.ONE
+			btn.pivot_offset = btn.size / 2.0
+
+	_highlighted_option = option
+	SFXManager.play("hover")
+
+	# Scale up and show badge for the highlighted option
+	if option < option_buttons.size():
+		var btn: Button = option_buttons[option]
+		if is_instance_valid(btn):
+			btn.pivot_offset = btn.size / 2.0
+			var tw := create_tween().set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
+			tw.tween_property(btn, "scale", Vector2(1.08, 1.08), 0.12)
+		_on_option_hover_enter(option)
 
 
 func _on_option_pressed(option: int) -> void:
 	if current_card.is_empty():
 		return
 
+	_highlighted_option = -1  # Reset highlight on confirm
 	SFXManager.play("choice_select")
 
-	# Animate button
+	# Animate selected button: flash + scale slam
 	if option < option_buttons.size():
 		var btn := option_buttons[option]
+		btn.pivot_offset = btn.size / 2.0
 		var tween := create_tween()
-		tween.tween_property(btn, "modulate", Color(1.5, 1.5, 1.5), 0.1)
-		tween.tween_property(btn, "modulate", Color.WHITE, 0.1)
+		tween.tween_property(btn, "scale", Vector2(0.92, 0.92), 0.08)
+		tween.parallel().tween_property(btn, "modulate", Color(1.5, 1.5, 1.5), 0.08)
+		tween.tween_property(btn, "scale", Vector2.ONE, 0.15).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
+		tween.parallel().tween_property(btn, "modulate", Color.WHITE, 0.15)
+
+	# Clear non-selected buttons: fade out + scale down (no position:y — Container manages layout)
+	for j in range(option_buttons.size()):
+		if j == option:
+			continue
+		if not is_instance_valid(option_buttons[j]):
+			continue
+		var other_btn: Button = option_buttons[j]
+		other_btn.pivot_offset = other_btn.size / 2.0
+		var clear_tw := create_tween().set_parallel(true)
+		clear_tw.tween_property(other_btn, "modulate:a", 0.0, 0.25)
+		clear_tw.tween_property(other_btn, "scale", Vector2(0.85, 0.85), 0.25)
+
+	# Hide all desc labels
+	for dl in _option_desc_labels:
+		if is_instance_valid(dl):
+			dl.visible = false
 
 	option_chosen.emit(option)
 
@@ -3078,7 +2612,7 @@ func show_end_screen(ending: Dictionary) -> void:
 
 	# Create parchment overlay
 	var overlay := ColorRect.new()
-	overlay.color = Color(PALETTE.paper.r, PALETTE.paper.g, PALETTE.paper.b, 0.95)
+	overlay.color = Color(MerlinVisual.PALETTE.paper.r, MerlinVisual.PALETTE.paper.g, MerlinVisual.PALETTE.paper.b, 0.95)
 	overlay.set_anchors_preset(Control.PRESET_FULL_RECT)
 	overlay.modulate.a = 0.0
 	add_child(overlay)
@@ -3098,10 +2632,10 @@ func show_end_screen(ending: Dictionary) -> void:
 
 	# Celtic ornament top
 	var orn_top := Label.new()
-	orn_top.text = "\u2500\u2500\u2500 \u25C6 \u2500\u2500\u2500"
+	orn_top.text = "\u2500\u2500\u2500 # \u2500\u2500\u2500"
 	orn_top.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	orn_top.add_theme_font_size_override("font_size", 14)
-	orn_top.add_theme_color_override("font_color", PALETTE.accent)
+	orn_top.add_theme_color_override("font_color", MerlinVisual.PALETTE.accent)
 	vbox.add_child(orn_top)
 
 	# Ending title
@@ -3114,9 +2648,9 @@ func show_end_screen(ending: Dictionary) -> void:
 	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 
 	if ending.get("victory", false):
-		title.add_theme_color_override("font_color", Color(0.32, 0.58, 0.28))
+		title.add_theme_color_override("font_color", MerlinVisual.PALETTE.success)
 	else:
-		title.add_theme_color_override("font_color", Color(0.72, 0.28, 0.22))
+		title.add_theme_color_override("font_color", MerlinVisual.PALETTE.danger)
 
 	vbox.add_child(title)
 
@@ -3127,7 +2661,7 @@ func show_end_screen(ending: Dictionary) -> void:
 		if body_font:
 			text.add_theme_font_override("font", body_font)
 		text.add_theme_font_size_override("font_size", 16)
-		text.add_theme_color_override("font_color", PALETTE.ink)
+		text.add_theme_color_override("font_color", MerlinVisual.PALETTE.ink)
 		text.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 		text.autowrap_mode = TextServer.AUTOWRAP_WORD
 		text.custom_minimum_size.x = 400
@@ -3140,7 +2674,7 @@ func show_end_screen(ending: Dictionary) -> void:
 		score.add_theme_font_override("font", title_font)
 	score.add_theme_font_size_override("font_size", 22)
 	score.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	score.add_theme_color_override("font_color", PALETTE.accent)
+	score.add_theme_color_override("font_color", MerlinVisual.PALETTE.accent)
 	vbox.add_child(score)
 
 	# Life depleted indicator
@@ -3150,7 +2684,7 @@ func show_end_screen(ending: Dictionary) -> void:
 		if body_font:
 			life_lbl.add_theme_font_override("font", body_font)
 		life_lbl.add_theme_font_size_override("font_size", 14)
-		life_lbl.add_theme_color_override("font_color", Color(0.78, 0.35, 0.22))
+		life_lbl.add_theme_color_override("font_color", MerlinVisual.PALETTE.danger)
 		life_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 		vbox.add_child(life_lbl)
 
@@ -3163,19 +2697,60 @@ func show_end_screen(ending: Dictionary) -> void:
 	if body_font:
 		stats_lbl.add_theme_font_override("font", body_font)
 	stats_lbl.add_theme_font_size_override("font_size", 14)
-	stats_lbl.add_theme_color_override("font_color", PALETTE.ink_soft)
+	stats_lbl.add_theme_color_override("font_color", MerlinVisual.PALETTE.ink_soft)
 	stats_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	vbox.add_child(stats_lbl)
+
+	# Story summary — "Ton chemin" (last 5 choices)
+	var story_log: Array = ending.get("story_log", [])
+	if story_log.size() > 0:
+		var path_title := Label.new()
+		path_title.text = "Ton chemin"
+		if title_font:
+			path_title.add_theme_font_override("font", title_font)
+		path_title.add_theme_font_size_override("font_size", 16)
+		path_title.add_theme_color_override("font_color", MerlinVisual.PALETTE.accent)
+		path_title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		vbox.add_child(path_title)
+
+		var last_entries: Array = story_log.slice(-5) if story_log.size() > 5 else story_log
+		var path_parts: PackedStringArray = []
+		for entry in last_entries:
+			var choice_text: String = str(entry.get("choice", ""))
+			if not choice_text.is_empty():
+				path_parts.append(choice_text)
+		if path_parts.size() > 0:
+			var path_lbl := Label.new()
+			path_lbl.text = " > ".join(path_parts)
+			if body_font:
+				path_lbl.add_theme_font_override("font", body_font)
+			path_lbl.add_theme_font_size_override("font_size", 12)
+			path_lbl.add_theme_color_override("font_color", MerlinVisual.PALETTE.ink_soft)
+			path_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+			path_lbl.autowrap_mode = TextServer.AUTOWRAP_WORD
+			path_lbl.custom_minimum_size.x = 400
+			vbox.add_child(path_lbl)
 
 	# Rewards section
 	var rewards: Dictionary = ending.get("rewards", {})
 	if rewards.size() > 0:
+		# Partial rewards indicator
+		if rewards.get("partial", false):
+			var partial_lbl := Label.new()
+			partial_lbl.text = "Run incomplete \u2014 recompenses x0.25"
+			if body_font:
+				partial_lbl.add_theme_font_override("font", body_font)
+			partial_lbl.add_theme_font_size_override("font_size", 14)
+			partial_lbl.add_theme_color_override("font_color", MerlinVisual.PALETTE.danger)
+			partial_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+			vbox.add_child(partial_lbl)
+
 		var rewards_title := Label.new()
 		rewards_title.text = "Recompenses obtenues"
 		if title_font:
 			rewards_title.add_theme_font_override("font", title_font)
 		rewards_title.add_theme_font_size_override("font_size", 18)
-		rewards_title.add_theme_color_override("font_color", PALETTE.accent)
+		rewards_title.add_theme_color_override("font_color", MerlinVisual.PALETTE.accent)
 		rewards_title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 		vbox.add_child(rewards_title)
 
@@ -3192,7 +2767,7 @@ func show_end_screen(ending: Dictionary) -> void:
 				if body_font:
 					ess_lbl.add_theme_font_override("font", body_font)
 				ess_lbl.add_theme_font_size_override("font_size", 13)
-				ess_lbl.add_theme_color_override("font_color", PALETTE.ink)
+				ess_lbl.add_theme_color_override("font_color", MerlinVisual.PALETTE.ink)
 				ess_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 				ess_lbl.autowrap_mode = TextServer.AUTOWRAP_WORD
 				ess_lbl.custom_minimum_size.x = 400
@@ -3215,16 +2790,16 @@ func show_end_screen(ending: Dictionary) -> void:
 			if body_font:
 				cur_lbl.add_theme_font_override("font", body_font)
 			cur_lbl.add_theme_font_size_override("font_size", 14)
-			cur_lbl.add_theme_color_override("font_color", PALETTE.accent)
+			cur_lbl.add_theme_color_override("font_color", MerlinVisual.PALETTE.accent)
 			cur_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 			vbox.add_child(cur_lbl)
 
 	# Celtic ornament bottom
 	var orn_bot := Label.new()
-	orn_bot.text = "\u2500\u2500\u2500 \u25C6 \u2500\u2500\u2500"
+	orn_bot.text = "\u2500\u2500\u2500 # \u2500\u2500\u2500"
 	orn_bot.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	orn_bot.add_theme_font_size_override("font_size", 14)
-	orn_bot.add_theme_color_override("font_color", PALETTE.accent)
+	orn_bot.add_theme_color_override("font_color", MerlinVisual.PALETTE.accent)
 	vbox.add_child(orn_bot)
 
 	# Aspects final state
@@ -3254,80 +2829,132 @@ func show_end_screen(ending: Dictionary) -> void:
 	var btn_hub := Button.new()
 	btn_hub.text = "Retour au Hub"
 	btn_hub.custom_minimum_size = Vector2(200, 50)
-	btn_hub.pressed.connect(func(): get_tree().change_scene_to_file("res://scenes/HubAntre.tscn"))
+	btn_hub.pressed.connect(func(): PixelTransition.transition_to("res://scenes/HubAntre.tscn"))
 	btn_box.add_child(btn_hub)
 
 	var btn_new := Button.new()
 	btn_new.text = "Nouvelle Aventure"
 	btn_new.custom_minimum_size = Vector2(200, 50)
-	btn_new.pressed.connect(func(): get_tree().change_scene_to_file("res://scenes/TransitionBiome.tscn"))
+	btn_new.pressed.connect(func(): PixelTransition.transition_to("res://scenes/TransitionBiome.tscn"))
 	btn_box.add_child(btn_new)
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
-# D20 DICE UI (Phase 37 — Fusion)
+# CARD BODY CONTENT HOST — Switch body between text and dice/minigame
+# ═══════════════════════════════════════════════════════════════════════════════
+
+func switch_body_to_content() -> void:
+	## Hide card text, show content host for dice/minigame.
+	if _card_body_vbox and is_instance_valid(_card_body_vbox):
+		_card_body_vbox.visible = false
+	if _card_body_content_host and is_instance_valid(_card_body_content_host):
+		_card_body_content_host.visible = true
+		_card_body_content_host.mouse_filter = Control.MOUSE_FILTER_STOP
+
+
+func switch_body_to_text() -> void:
+	## Restore card text, hide content host. Clears any content host children.
+	if _card_body_content_host and is_instance_valid(_card_body_content_host):
+		for child in _card_body_content_host.get_children():
+			child.queue_free()
+		_card_body_content_host.visible = false
+		_card_body_content_host.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	if _card_body_vbox and is_instance_valid(_card_body_vbox):
+		_card_body_vbox.visible = true
+
+
+func get_body_content_host() -> Control:
+	## Returns the content host inside the card body for hosting dice/minigames.
+	return _card_body_content_host
+
+
+func set_options_visible(visible: bool) -> void:
+	## Show or hide the option buttons bar (used during minigames).
+	if options_container and is_instance_valid(options_container):
+		options_container.visible = visible
+
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# D20 DICE UI — Inside card body (Phase 44)
 # ═══════════════════════════════════════════════════════════════════════════════
 
 var _dice_overlay: Control = null
 var _dice_display: Label = null
 var _dice_dc_label: Label = null
 var _dice_result_label: Label = null
+var _dice_bg_panel: PanelContainer = null
 
 func show_dice_roll(dc: int, target: int) -> void:
-	## Show D20 dice animation (2.2s deceleration + bounce). Await this.
+	## Show D20 dice animation inside card body. Await this.
 	_ensure_dice_overlay()
+	switch_body_to_content()
 	_dice_overlay.visible = true
 	_dice_overlay.modulate.a = 0.0
 	_dice_dc_label.text = "Difficulte: %d" % dc
 	_dice_result_label.text = ""
 	_dice_display.text = "?"
-	_dice_display.add_theme_color_override("font_color", PALETTE.ink)
+	_dice_display.add_theme_color_override("font_color", MerlinVisual.PALETTE.ink)
 	_dice_display.scale = Vector2.ONE
-	_dice_display.rotation = 0.0
+	if _dice_bg_panel and is_instance_valid(_dice_bg_panel):
+		_dice_bg_panel.scale = Vector2.ONE
+		_dice_bg_panel.rotation = 0.0
 
 	# Fade in dice area
 	var tw_in := create_tween()
 	tw_in.tween_property(_dice_overlay, "modulate:a", 1.0, 0.2)
 	await tw_in.finished
 
-	# Dice roll animation: decelerate over 2.2s
-	var duration := 2.2
+	# Dice roll animation: decelerate over 3.0s
+	var duration := 3.0
 	var elapsed := 0.0
 	while elapsed < duration and is_inside_tree():
 		var progress: float = elapsed / duration
 		var cycle_speed: float = lerpf(0.07, 0.35, progress * progress)
 		_dice_display.text = str(randi_range(1, 20))
-		_dice_display.rotation = randf_range(-0.08, 0.08) * (1.0 - progress)
+		# Wobble the dice panel during cycling
+		if _dice_bg_panel and is_instance_valid(_dice_bg_panel):
+			_dice_bg_panel.rotation = randf_range(-0.1, 0.1) * (1.0 - progress)
 		await get_tree().create_timer(cycle_speed).timeout
 		elapsed += cycle_speed
 
 	# Land on target
 	_dice_display.text = str(target)
-	_dice_display.rotation = 0.0
-	# Bounce elastic
-	_dice_display.pivot_offset = _dice_display.size / 2.0
-	var tw_bounce := create_tween().set_trans(Tween.TRANS_ELASTIC).set_ease(Tween.EASE_OUT)
-	tw_bounce.tween_property(_dice_display, "scale", Vector2(1.3, 1.3), 0.15)
-	tw_bounce.tween_property(_dice_display, "scale", Vector2(1.0, 1.0), 0.25)
-	await tw_bounce.finished
+	if _dice_bg_panel and is_instance_valid(_dice_bg_panel):
+		_dice_bg_panel.rotation = 0.0
+		var tw_bounce := create_tween().set_trans(Tween.TRANS_ELASTIC).set_ease(Tween.EASE_OUT)
+		tw_bounce.tween_property(_dice_bg_panel, "scale", Vector2(1.25, 1.25), 0.15)
+		tw_bounce.tween_property(_dice_bg_panel, "scale", Vector2(1.0, 1.0), 0.3)
+		await tw_bounce.finished
+	else:
+		_dice_display.pivot_offset = _dice_display.size / 2.0
+		var tw_bounce := create_tween().set_trans(Tween.TRANS_ELASTIC).set_ease(Tween.EASE_OUT)
+		tw_bounce.tween_property(_dice_display, "scale", Vector2(1.3, 1.3), 0.15)
+		tw_bounce.tween_property(_dice_display, "scale", Vector2(1.0, 1.0), 0.25)
+		await tw_bounce.finished
 
 
 func show_dice_instant(dc: int, value: int) -> void:
-	## Show dice result instantly (after minigame).
+	## Show dice result instantly (after minigame) inside card body.
 	_ensure_dice_overlay()
+	switch_body_to_content()
 	_dice_overlay.visible = true
 	_dice_overlay.modulate.a = 1.0
 	_dice_dc_label.text = "Difficulte: %d" % dc
 	_dice_result_label.text = ""
 	_dice_display.text = str(value)
-	_dice_display.rotation = 0.0
 	var glow: Color = _dice_outcome_color(value, dc)
 	_dice_display.add_theme_color_override("font_color", glow)
-	# Bounce
-	_dice_display.pivot_offset = _dice_display.size / 2.0
-	var tw := create_tween().set_trans(Tween.TRANS_ELASTIC).set_ease(Tween.EASE_OUT)
-	tw.tween_property(_dice_display, "scale", Vector2(1.3, 1.3), 0.15)
-	tw.tween_property(_dice_display, "scale", Vector2(1.0, 1.0), 0.25)
+	# Bounce panel
+	if _dice_bg_panel and is_instance_valid(_dice_bg_panel):
+		_dice_bg_panel.rotation = 0.0
+		var tw := create_tween().set_trans(Tween.TRANS_ELASTIC).set_ease(Tween.EASE_OUT)
+		tw.tween_property(_dice_bg_panel, "scale", Vector2(1.25, 1.25), 0.15)
+		tw.tween_property(_dice_bg_panel, "scale", Vector2(1.0, 1.0), 0.3)
+	else:
+		_dice_display.pivot_offset = _dice_display.size / 2.0
+		var tw := create_tween().set_trans(Tween.TRANS_ELASTIC).set_ease(Tween.EASE_OUT)
+		tw.tween_property(_dice_display, "scale", Vector2(1.3, 1.3), 0.15)
+		tw.tween_property(_dice_display, "scale", Vector2(1.0, 1.0), 0.25)
 
 
 func show_dice_result(roll: int, dc: int, outcome: String) -> void:
@@ -3339,39 +2966,41 @@ func show_dice_result(roll: int, dc: int, outcome: String) -> void:
 	match outcome:
 		"critical_success":
 			_dice_result_label.text = "Coup Critique !"
-			_dice_result_label.add_theme_color_override("font_color", Color(0.85, 0.72, 0.2))
+			_dice_result_label.add_theme_color_override("font_color", MerlinVisual.PALETTE.souffle_full)
 		"success":
 			_dice_result_label.text = "Reussite ! (%d >= %d)" % [roll, dc]
-			_dice_result_label.add_theme_color_override("font_color", Color(0.3, 0.7, 0.3))
+			_dice_result_label.add_theme_color_override("font_color", MerlinVisual.PALETTE.success)
 		"failure":
 			_dice_result_label.text = "Echec... (%d < %d)" % [roll, dc]
-			_dice_result_label.add_theme_color_override("font_color", Color(0.7, 0.3, 0.3))
+			_dice_result_label.add_theme_color_override("font_color", MerlinVisual.PALETTE.danger)
 		"critical_failure":
 			_dice_result_label.text = "Echec Critique !"
-			_dice_result_label.add_theme_color_override("font_color", Color(0.7, 0.2, 0.2))
+			_dice_result_label.add_theme_color_override("font_color", MerlinVisual.PALETTE.danger)
 
 
 func _dice_outcome_color(roll: int, dc: int) -> Color:
 	if roll == 20:
-		return Color(0.85, 0.72, 0.2)  # Gold
+		return MerlinVisual.PALETTE.souffle_full  # Gold
 	elif roll == 1:
-		return Color(0.7, 0.2, 0.2)  # Dark red
+		return MerlinVisual.PALETTE.danger  # Dark red
 	elif roll >= dc:
-		return Color(0.3, 0.7, 0.3)  # Green
+		return MerlinVisual.PALETTE.success  # Green
 	else:
-		return Color(0.7, 0.3, 0.3)  # Red
+		return MerlinVisual.PALETTE.danger  # Red
 
 
 func _ensure_dice_overlay() -> void:
-	## Create dice UI elements if not yet built.
+	## Create dice UI elements inside the card body content host.
 	if _dice_overlay and is_instance_valid(_dice_overlay):
+		return
+	if not _card_body_content_host or not is_instance_valid(_card_body_content_host):
 		return
 	_dice_overlay = Control.new()
 	_dice_overlay.name = "DiceOverlay"
 	_dice_overlay.set_anchors_preset(Control.PRESET_FULL_RECT)
 	_dice_overlay.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	_dice_overlay.visible = false
-	add_child(_dice_overlay)
+	_card_body_content_host.add_child(_dice_overlay)
 
 	var center := CenterContainer.new()
 	center.set_anchors_preset(Control.PRESET_FULL_RECT)
@@ -3379,29 +3008,53 @@ func _ensure_dice_overlay() -> void:
 
 	var vbox := VBoxContainer.new()
 	vbox.alignment = BoxContainer.ALIGNMENT_CENTER
-	vbox.add_theme_constant_override("separation", 8)
+	vbox.add_theme_constant_override("separation", 4)
 	center.add_child(vbox)
 
 	_dice_dc_label = Label.new()
 	_dice_dc_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	_dice_dc_label.add_theme_font_size_override("font_size", 14)
-	_dice_dc_label.add_theme_color_override("font_color", PALETTE.ink_soft)
+	_dice_dc_label.add_theme_font_size_override("font_size", 12)
+	_dice_dc_label.add_theme_color_override("font_color", MerlinVisual.PALETTE.ink_soft)
 	if body_font:
 		_dice_dc_label.add_theme_font_override("font", body_font)
 	vbox.add_child(_dice_dc_label)
 
+	# Dice frame panel (smaller: 70x70, font 48px for in-card display)
+	var dice_center := CenterContainer.new()
+	vbox.add_child(dice_center)
+
+	_dice_bg_panel = PanelContainer.new()
+	_dice_bg_panel.custom_minimum_size = Vector2(70, 70)
+	var dice_style := StyleBoxFlat.new()
+	dice_style.bg_color = MerlinVisual.PALETTE.paper_dark
+	dice_style.border_color = MerlinVisual.PALETTE.accent
+	dice_style.set_border_width_all(2)
+	dice_style.set_corner_radius_all(10)
+	dice_style.content_margin_left = 6
+	dice_style.content_margin_right = 6
+	dice_style.content_margin_top = 6
+	dice_style.content_margin_bottom = 6
+	dice_style.shadow_color = Color(0, 0, 0, 0.2)
+	dice_style.shadow_size = 3
+	dice_style.shadow_offset = Vector2(1, 2)
+	_dice_bg_panel.add_theme_stylebox_override("panel", dice_style)
+	_dice_bg_panel.pivot_offset = Vector2(35, 35)
+	dice_center.add_child(_dice_bg_panel)
+
 	_dice_display = Label.new()
 	_dice_display.text = "?"
 	_dice_display.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	_dice_display.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	if title_font:
 		_dice_display.add_theme_font_override("font", title_font)
-	_dice_display.add_theme_font_size_override("font_size", 72)
-	_dice_display.add_theme_color_override("font_color", PALETTE.ink)
-	vbox.add_child(_dice_display)
+	_dice_display.add_theme_font_size_override("font_size", 48)
+	_dice_display.add_theme_color_override("font_color", MerlinVisual.PALETTE.ink)
+	_dice_display.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	_dice_bg_panel.add_child(_dice_display)
 
 	_dice_result_label = Label.new()
 	_dice_result_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	_dice_result_label.add_theme_font_size_override("font_size", 16)
+	_dice_result_label.add_theme_font_size_override("font_size", 13)
 	if body_font:
 		_dice_result_label.add_theme_font_override("font", body_font)
 	vbox.add_child(_dice_result_label)
@@ -3411,7 +3064,10 @@ func _hide_dice_overlay() -> void:
 	if _dice_overlay and is_instance_valid(_dice_overlay):
 		var tw := create_tween()
 		tw.tween_property(_dice_overlay, "modulate:a", 0.0, 0.3)
-		tw.tween_callback(func(): _dice_overlay.visible = false)
+		tw.tween_callback(func():
+			_dice_overlay.visible = false
+			switch_body_to_text()
+		)
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
@@ -3427,13 +3083,16 @@ const MINIGAME_FIELD_ICONS := {
 }
 
 func show_minigame_intro(field: String, tool_bonus_text: String, tool_bonus: int) -> void:
-	## Brief overlay announcing the minigame type and any tool bonus.
-	var overlay := ColorRect.new()
+	## Brief intro announcing the minigame type inside the card body.
+	if not _card_body_content_host or not is_instance_valid(_card_body_content_host):
+		return
+	switch_body_to_content()
+
+	var overlay := Control.new()
+	overlay.name = "MinigameIntro"
 	overlay.set_anchors_preset(Control.PRESET_FULL_RECT)
-	overlay.color = Color(0.05, 0.04, 0.03, 0.75)
-	overlay.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	overlay.modulate.a = 0.0
-	add_child(overlay)
+	_card_body_content_host.add_child(overlay)
 
 	var center := CenterContainer.new()
 	center.set_anchors_preset(Control.PRESET_FULL_RECT)
@@ -3441,7 +3100,7 @@ func show_minigame_intro(field: String, tool_bonus_text: String, tool_bonus: int
 
 	var vbox := VBoxContainer.new()
 	vbox.alignment = BoxContainer.ALIGNMENT_CENTER
-	vbox.add_theme_constant_override("separation", 8)
+	vbox.add_theme_constant_override("separation", 6)
 	center.add_child(vbox)
 
 	# Field icon
@@ -3449,7 +3108,7 @@ func show_minigame_intro(field: String, tool_bonus_text: String, tool_bonus: int
 	var field_icon: String = MINIGAME_FIELD_ICONS.get(field, "\u2726")
 	icon_label.text = field_icon
 	icon_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	icon_label.add_theme_font_size_override("font_size", 48)
+	icon_label.add_theme_font_size_override("font_size", 36)
 	vbox.add_child(icon_label)
 
 	# Field name
@@ -3458,8 +3117,8 @@ func show_minigame_intro(field: String, tool_bonus_text: String, tool_bonus: int
 	name_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	if title_font:
 		name_label.add_theme_font_override("font", title_font)
-	name_label.add_theme_font_size_override("font_size", 22)
-	name_label.add_theme_color_override("font_color", PALETTE.paper)
+	name_label.add_theme_font_size_override("font_size", 18)
+	name_label.add_theme_color_override("font_color", MerlinVisual.PALETTE.ink)
 	vbox.add_child(name_label)
 
 	# Tool bonus
@@ -3469,11 +3128,11 @@ func show_minigame_intro(field: String, tool_bonus_text: String, tool_bonus: int
 		bonus_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 		if body_font:
 			bonus_label.add_theme_font_override("font", body_font)
-		bonus_label.add_theme_font_size_override("font_size", 16)
-		bonus_label.add_theme_color_override("font_color", Color(0.3, 0.8, 0.3))
+		bonus_label.add_theme_font_size_override("font_size", 13)
+		bonus_label.add_theme_color_override("font_color", MerlinVisual.PALETTE.success)
 		vbox.add_child(bonus_label)
 
-	# Animate in then auto-remove
+	# Animate in then auto-remove (stays in card body)
 	var tw := create_tween()
 	tw.tween_property(overlay, "modulate:a", 1.0, 0.2)
 	tw.tween_interval(0.8)
@@ -3482,15 +3141,16 @@ func show_minigame_intro(field: String, tool_bonus_text: String, tool_bonus: int
 
 
 func show_score_to_d20(score: int, d20: int, tool_bonus: int) -> void:
-	## Brief display: "Score: 78 → D20: 17" (optional tool bonus shown).
+	## Brief display: "Score: 78 -> D20: 17" inside card body.
 	_ensure_dice_overlay()
+	switch_body_to_content()
 	_dice_overlay.visible = true
 	_dice_overlay.modulate.a = 1.0
 	var bonus_text: String = ""
 	if tool_bonus != 0:
 		bonus_text = " (bonus %d)" % tool_bonus
 	_dice_dc_label.text = "Score: %d \u2192 D20: %d%s" % [score, d20, bonus_text]
-	_dice_dc_label.add_theme_color_override("font_color", Color(0.7, 0.8, 0.9))
+	_dice_dc_label.add_theme_color_override("font_color", MerlinVisual.PALETTE.bestiole)
 	_dice_display.text = str(d20)
 	_dice_result_label.text = ""
 
@@ -3507,7 +3167,8 @@ func show_travel_animation(text: String) -> void:
 	var fog := ColorRect.new()
 	fog.name = "TravelFog"
 	fog.set_anchors_preset(Control.PRESET_FULL_RECT)
-	fog.color = Color(0.08, 0.06, 0.04, 0.0)
+	var fog_base: Color = MerlinVisual.PALETTE.ink
+	fog.color = Color(fog_base.r * 0.4, fog_base.g * 0.4, fog_base.b * 0.4, 0.0)
 	fog.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	add_child(fog)
 
@@ -3519,7 +3180,8 @@ func show_travel_animation(text: String) -> void:
 	if body_font:
 		lbl.add_theme_font_override("font", body_font)
 	lbl.add_theme_font_size_override("font_size", 18)
-	lbl.add_theme_color_override("font_color", Color(0.85, 0.80, 0.70, 0.0))
+	var lbl_base: Color = MerlinVisual.PALETTE.paper_warm
+	lbl.add_theme_color_override("font_color", Color(lbl_base.r, lbl_base.g, lbl_base.b, 0.0))
 	lbl.autowrap_mode = TextServer.AUTOWRAP_WORD
 	fog.add_child(lbl)
 
@@ -3530,9 +3192,9 @@ func show_travel_animation(text: String) -> void:
 	tw_in.tween_property(lbl, "theme_override_colors/font_color:a", 1.0, 0.6)
 	await tw_in.finished
 
-	# Hold
+	# Hold (extended for LLM generation time)
 	if is_inside_tree():
-		await get_tree().create_timer(1.2).timeout
+		await get_tree().create_timer(1.8).timeout
 
 	# Fade out
 	var tw_out := create_tween()
@@ -3553,9 +3215,48 @@ func show_reaction_text(text: String, outcome: String) -> void:
 	## Show narrative reaction on the card text area.
 	if not card_text or not is_instance_valid(card_text):
 		return
-	var color: Color = Color(0.3, 0.65, 0.3) if outcome.contains("success") else Color(0.7, 0.3, 0.3)
+	# Restore card text VBox (may be hidden after dice/minigame)
+	switch_body_to_text()
+	var color: Color = MerlinVisual.PALETTE.success if outcome.contains("success") else MerlinVisual.PALETTE.danger
 	card_text.text = "[color=#%s]%s[/color]" % [color.to_html(false), text]
 	card_text.visible_characters = -1
+	card_text.modulate.a = 1.0
+
+
+func show_result_text_transition(result_text: String, outcome: String) -> void:
+	## Replace card text with a narrative result using fade + typewriter.
+	if not card_text or not is_instance_valid(card_text):
+		return
+	# Switch body back to text mode (dice/minigame hid the card text VBox)
+	switch_body_to_text()
+	# Fade out current text
+	var tw := create_tween()
+	tw.tween_property(card_text, "modulate:a", 0.0, 0.3).set_trans(Tween.TRANS_SINE)
+	await tw.finished
+	if not is_inside_tree():
+		return
+
+	# Update speaker label
+	if card_speaker and is_instance_valid(card_speaker):
+		match outcome:
+			"critical_success":
+				card_speaker.text = "Reussite critique !"
+				card_speaker.add_theme_color_override("font_color", MerlinVisual.PALETTE.souffle_full)
+			"success":
+				card_speaker.text = "Reussite"
+				card_speaker.add_theme_color_override("font_color", MerlinVisual.PALETTE.success)
+			"critical_failure":
+				card_speaker.text = "Echec critique..."
+				card_speaker.add_theme_color_override("font_color", MerlinVisual.PALETTE.danger)
+			_:
+				card_speaker.text = "Echec"
+				card_speaker.add_theme_color_override("font_color", MerlinVisual.PALETTE.danger)
+
+	# Colorize and typewriter the result
+	var color: Color = MerlinVisual.PALETTE.success if outcome.contains("success") else MerlinVisual.PALETTE.danger
+	var bbcode_text := "[color=#%s]%s[/color]" % [color.to_html(false), result_text]
+	card_text.modulate.a = 1.0
+	_typewriter_card_text(bbcode_text)
 
 
 func show_critical_badge() -> void:
@@ -3567,7 +3268,7 @@ func show_critical_badge() -> void:
 		return
 	var style: StyleBoxFlat = base_style.duplicate() as StyleBoxFlat
 	if style:
-		style.border_color = Color(0.85, 0.72, 0.2)
+		style.border_color = MerlinVisual.PALETTE.souffle_full
 		style.set_border_width_all(3)
 		card_panel.add_theme_stylebox_override("panel", style)
 	# Pulse animation (infinite, stop on next card display)
@@ -3584,7 +3285,7 @@ func show_biome_passive(passive: Dictionary) -> void:
 	notif.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	notif.set_anchors_preset(Control.PRESET_CENTER_BOTTOM)
 	notif.add_theme_font_size_override("font_size", 14)
-	notif.add_theme_color_override("font_color", Color(0.4, 0.7, 0.5))
+	notif.add_theme_color_override("font_color", MerlinVisual.PALETTE.success)
 	if body_font:
 		notif.add_theme_font_override("font", body_font)
 	notif.modulate.a = 0.0
@@ -3602,6 +3303,7 @@ func show_biome_passive(passive: Dictionary) -> void:
 
 func animate_card_outcome(outcome: String) -> void:
 	## Animate card panel based on D20 outcome.
+	_disable_card_3d()
 	if not card_panel or not is_instance_valid(card_panel):
 		return
 	match outcome:
@@ -3630,6 +3332,177 @@ func animate_card_outcome(outcome: String) -> void:
 			tw.tween_property(card_panel, "position:x", card_panel.position.x, 0.04)
 			tw.tween_property(card_panel, "scale", Vector2(0.97, 0.97), 0.1)
 			tw.tween_property(card_panel, "scale", Vector2(1.0, 1.0), 0.15)
+
+
+func show_milestone_popup(title_text: String, desc_text: String) -> void:
+	## Power milestone popup — gold panel, fade in → 2.5s → fade out.
+	var popup := PanelContainer.new()
+	var style := StyleBoxFlat.new()
+	var gold: Color = MerlinVisual.PALETTE.get("celtic_gold", Color(0.85, 0.65, 0.13))
+	style.bg_color = Color(gold.r, gold.g, gold.b, 0.92)
+	style.corner_radius_top_left = 8
+	style.corner_radius_top_right = 8
+	style.corner_radius_bottom_left = 8
+	style.corner_radius_bottom_right = 8
+	style.content_margin_left = 16
+	style.content_margin_right = 16
+	style.content_margin_top = 12
+	style.content_margin_bottom = 12
+	popup.add_theme_stylebox_override("panel", style)
+	var lbl := Label.new()
+	lbl.text = "%s\n%s" % [title_text, desc_text]
+	lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	if title_font:
+		lbl.add_theme_font_override("font", title_font)
+	lbl.add_theme_font_size_override("font_size", 18)
+	var paper_color: Color = MerlinVisual.PALETTE.get("paper", Color.WHITE)
+	lbl.add_theme_color_override("font_color", paper_color)
+	popup.add_child(lbl)
+	add_child(popup)
+	popup.custom_minimum_size = Vector2(260, 60)
+	popup.position = Vector2(size.x / 2.0 - 130, size.y * 0.35)
+	popup.modulate.a = 0.0
+	popup.z_index = 30
+	var tw := create_tween()
+	tw.tween_property(popup, "modulate:a", 1.0, 0.3)
+	tw.tween_interval(2.5)
+	tw.tween_property(popup, "modulate:a", 0.0, 0.5)
+	tw.tween_callback(popup.queue_free)
+
+
+func show_bestiole_emote(emote: String) -> void:
+	## Show a brief emote above the bestiole companion. Fade in, bounce, fade out.
+	if not _bestiole_emote or not is_instance_valid(_bestiole_emote):
+		return
+	_bestiole_emote.text = emote
+	var tw := create_tween()
+	tw.tween_property(_bestiole_emote, "modulate:a", 1.0, 0.15)
+	tw.tween_property(_bestiole_emote, "position:y", _bestiole_emote.position.y - 6, 0.12)
+	tw.tween_property(_bestiole_emote, "position:y", _bestiole_emote.position.y, 0.12)
+	tw.tween_interval(1.8)
+	tw.tween_property(_bestiole_emote, "modulate:a", 0.0, 0.4)
+
+
+func show_life_delta(delta: int) -> void:
+	## Dramatic life change: screen flash, camera shake, zoom bar, smooth tween, BIG number.
+	if delta == 0:
+		return
+
+	var is_damage: bool = delta < 0
+	var color: Color = MerlinVisual.PALETTE.danger if is_damage else MerlinVisual.PALETTE.success
+
+	# --- Stage 1: Screen flash (red for damage, green for heal) ---
+	var flash := ColorRect.new()
+	flash.set_anchors_preset(Control.PRESET_FULL_RECT)
+	flash.color = Color(color.r, color.g, color.b, 0.0)
+	flash.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	flash.z_index = 30
+	add_child(flash)
+	var tw_flash := create_tween()
+	tw_flash.tween_property(flash, "color:a", 0.25 if is_damage else 0.15, 0.08)
+	tw_flash.tween_property(flash, "color:a", 0.0, 0.15)
+	tw_flash.tween_callback(flash.queue_free)
+
+	# --- Stage 2: Camera shake (damage only) ---
+	if is_damage and main_vbox and is_instance_valid(main_vbox):
+		var base_pos := main_vbox.position
+		var shake_tw := create_tween()
+		for i in range(4):
+			var intensity: float = 4.0 * (1.0 - float(i) / 4.0)
+			shake_tw.tween_property(main_vbox, "position:x", base_pos.x + intensity, 0.035)
+			shake_tw.tween_property(main_vbox, "position:y", base_pos.y - intensity * 0.5, 0.035)
+			shake_tw.tween_property(main_vbox, "position:x", base_pos.x - intensity, 0.035)
+			shake_tw.tween_property(main_vbox, "position:y", base_pos.y + intensity * 0.5, 0.035)
+		shake_tw.tween_property(main_vbox, "position", base_pos, 0.04)
+
+	# --- Stage 3: Zoom life bar (elastic scale 1.0 -> 1.6 -> 1.0) ---
+	if life_panel and is_instance_valid(life_panel):
+		life_panel.pivot_offset = life_panel.size * 0.5
+		var tw_zoom := create_tween().set_trans(Tween.TRANS_ELASTIC).set_ease(Tween.EASE_OUT)
+		tw_zoom.tween_property(life_panel, "scale", Vector2(1.6, 1.6), 0.2)
+		tw_zoom.tween_property(life_panel, "scale", Vector2(1.0, 1.0), 0.4)
+
+	# --- Stage 4: Smooth bar value tween ---
+	if _life_bar and is_instance_valid(_life_bar):
+		var old_val: float = _life_bar.value
+		var new_val: float = clampf(old_val + float(delta), 0.0, float(MerlinConstants.LIFE_ESSENCE_MAX))
+		var tw_bar := create_tween().set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_OUT)
+		tw_bar.tween_property(_life_bar, "value", new_val, 0.5)
+
+	# --- Stage 5: BIG floating number (48px, bounce scale, rises 80px) ---
+	var label := Label.new()
+	label.text = "+%d" % delta if delta > 0 else "%d" % delta
+	if title_font:
+		label.add_theme_font_override("font", title_font)
+	label.add_theme_font_size_override("font_size", 48)
+	label.add_theme_color_override("font_color", color)
+	label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	label.z_index = 25
+
+	# Position near the life bar
+	if life_panel and is_instance_valid(life_panel):
+		var bar_global := life_panel.global_position
+		label.position = Vector2(bar_global.x + life_panel.size.x * 0.5 - 30, bar_global.y - 10)
+	else:
+		label.position = Vector2(size.x * 0.5 - 40, size.y * 0.15)
+
+	label.pivot_offset = Vector2(30, 24)
+	label.scale = Vector2(0.3, 0.3)
+	add_child(label)
+
+	var tw_num := create_tween()
+	tw_num.tween_property(label, "scale", Vector2(1.2, 1.2), 0.15).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
+	tw_num.tween_property(label, "scale", Vector2(1.0, 1.0), 0.1)
+	tw_num.tween_property(label, "position:y", label.position.y - 80.0, 1.0).set_trans(Tween.TRANS_SINE)
+	tw_num.parallel().tween_property(label, "modulate:a", 0.0, 0.6).set_delay(0.5)
+	tw_num.tween_callback(label.queue_free)
+
+
+var _merlin_overlay: Control = null
+
+func show_merlin_thinking_overlay() -> void:
+	## Show "Merlin reflechit..." overlay when LLM takes extra time.
+	if _merlin_overlay and is_instance_valid(_merlin_overlay):
+		_merlin_overlay.visible = true
+		_merlin_overlay.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		return
+	_merlin_overlay = Control.new()
+	_merlin_overlay.name = "MerlinThinkingOverlay"
+	_merlin_overlay.set_anchors_preset(Control.PRESET_FULL_RECT)
+	_merlin_overlay.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_merlin_overlay.z_index = 20
+	var bg := ColorRect.new()
+	bg.set_anchors_preset(Control.PRESET_FULL_RECT)
+	var p: Color = MerlinVisual.PALETTE.paper
+	bg.color = Color(p.r, p.g, p.b, 0.85)
+	bg.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_merlin_overlay.add_child(bg)
+	var lbl := Label.new()
+	lbl.text = "Merlin reflechit..."
+	lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	lbl.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	lbl.set_anchors_preset(Control.PRESET_CENTER)
+	lbl.add_theme_font_size_override("font_size", 22)
+	lbl.add_theme_color_override("font_color", MerlinVisual.PALETTE.ink)
+	if title_font:
+		lbl.add_theme_font_override("font", title_font)
+	_merlin_overlay.add_child(lbl)
+	add_child(_merlin_overlay)
+	_merlin_overlay.modulate.a = 0.0
+	var tw := create_tween()
+	tw.tween_property(_merlin_overlay, "modulate:a", 1.0, 0.4)
+
+
+func hide_merlin_thinking_overlay() -> void:
+	if not _merlin_overlay or not is_instance_valid(_merlin_overlay):
+		return
+	var tw := create_tween()
+	tw.tween_property(_merlin_overlay, "modulate:a", 0.0, 0.3)
+	tw.tween_callback(func():
+		if _merlin_overlay and is_instance_valid(_merlin_overlay):
+			_merlin_overlay.visible = false
+			_merlin_overlay.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	)
 
 
 func _exit_tree() -> void:

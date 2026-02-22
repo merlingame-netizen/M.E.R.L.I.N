@@ -104,6 +104,13 @@ func _process(delta: float) -> void:
 		_fail_dodge()
 
 
+func _on_key_pressed(keycode: int) -> void:
+	if keycode == KEY_LEFT or keycode == KEY_Q:
+		_on_dodge("left")
+	elif keycode == KEY_RIGHT or keycode == KEY_E:
+		_on_dodge("right")
+
+
 func _on_dodge(direction: String) -> void:
 	if _finished or _current_obstacle == 0 or _obstacle_side == "":
 		return

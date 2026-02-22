@@ -1,7 +1,7 @@
 extends RefCounted
 class_name MerlinSaveSystem
 
-const CURRENT_VERSION := "0.3.0"
+const CURRENT_VERSION := "0.4.0"
 const SLOT_COUNT := 3
 const SLOT_PATH := "user://merlin_save_slot_%d.json"
 const AUTOSAVE_PATH := "user://merlin_autosave.json"
@@ -182,6 +182,9 @@ func migrate(payload: Dictionary, default_state: Dictionary = {}) -> Dictionary:
 	if version == "0.2.0":
 		data = _migrate_0_2_to_0_3(data)
 		version = "0.3.0"
+	if version == "0.3.0":
+		data = _migrate_0_3_to_0_4(data)
+		version = "0.4.0"
 
 	data["version"] = CURRENT_VERSION
 	if not default_state.is_empty():
@@ -194,7 +197,9 @@ func _migrate_0_1_to_0_2(data: Dictionary) -> Dictionary:
 	if not run.has("aspects"):
 		run["aspects"] = {"Corps": 0, "Ame": 0, "Monde": 0}
 	if not run.has("souffle"):
-		run["souffle"] = 3
+		run["souffle"] = MerlinConstants.SOUFFLE_START
+	if not run.has("souffle_used_once"):
+		run["souffle_used_once"] = false
 	if not run.has("cards_played"):
 		run["cards_played"] = 0
 	if not run.has("day"):
@@ -203,7 +208,7 @@ func _migrate_0_1_to_0_2(data: Dictionary) -> Dictionary:
 		run["hidden"] = {"karma": 0, "tension": 0, "player_profile": {}, "resonances_active": [], "narrative_debt": []}
 	data["run"] = run
 	if not data.has("mode"):
-		data["mode"] = "reigns"
+		data["mode"] = "merlin"
 	data["version"] = "0.2.0"
 	return data
 
@@ -248,6 +253,21 @@ func _migrate_0_2_to_0_3(data: Dictionary) -> Dictionary:
 		meta["gloire_points"] = 0
 	data["meta"] = meta
 	data["version"] = "0.3.0"
+	return data
+
+
+func _migrate_0_3_to_0_4(data: Dictionary) -> Dictionary:
+	if not data.has("map_progression"):
+		data["map_progression"] = {
+			"gauges": {"esprit": 30, "vigueur": 50, "faveur": 40, "logique": 35, "ressources": 45},
+			"current_biome": "foret_broceliande",
+			"completed_biomes": [],
+			"visited_biomes": ["foret_broceliande"],
+			"items_collected": [],
+			"reputations": [],
+			"tier_progress": 1,
+		}
+	data["version"] = "0.4.0"
 	return data
 
 

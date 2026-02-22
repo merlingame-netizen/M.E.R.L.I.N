@@ -24,9 +24,20 @@ const MG_PALETTE := {
 }
 
 
+var _in_card_mode: bool = false
+var _card_host: Control = null
+
+
 func setup(difficulty: int, modifiers: Dictionary = {}) -> void:
 	_difficulty = clampi(difficulty, 1, 10)
 	_modifiers = modifiers
+
+
+func setup_in_card(host: Control) -> void:
+	## Host this minigame inside the card body content area.
+	_in_card_mode = true
+	_card_host = host
+	host.add_child(self)
 
 
 func start() -> void:
@@ -39,6 +50,17 @@ func start() -> void:
 func _on_start() -> void:
 	# Override in subclasses
 	pass
+
+
+func _unhandled_input(event: InputEvent) -> void:
+	if _finished:
+		return
+	if event is InputEventKey and event.pressed and not event.echo:
+		_on_key_pressed(event.keycode)
+
+
+func _on_key_pressed(_keycode: int) -> void:
+	pass  # Override in subclasses
 
 
 func _complete(success: bool, score: int) -> void:
@@ -95,8 +117,8 @@ func _make_button(text: String, callback: Callable) -> Button:
 	b.text = text
 	b.focus_mode = Control.FOCUS_NONE
 	b.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
-	b.add_theme_font_size_override("font_size", 18)
-	b.custom_minimum_size = Vector2(140, 40)
+	b.add_theme_font_size_override("font_size", 16)
+	b.custom_minimum_size = Vector2(100, 36)
 	b.pressed.connect(callback)
 	return b
 

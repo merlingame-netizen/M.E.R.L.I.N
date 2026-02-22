@@ -69,6 +69,16 @@ func _on_start() -> void:
 	_current_round = 1
 
 
+func _on_key_pressed(keycode: int) -> void:
+	match keycode:
+		KEY_A:
+			_on_choice(Action.ATTAQUE)
+		KEY_S:
+			_on_choice(Action.RUSE)
+		KEY_D:
+			_on_choice(Action.DEFENSE)
+
+
 func _on_choice(player_action: Action) -> void:
 	if _waiting_for_result:
 		return

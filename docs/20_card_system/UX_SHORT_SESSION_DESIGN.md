@@ -3,13 +3,13 @@
 **Agent:** UX Research
 **Date:** 2026-02-08
 **Version:** 1.0
-**Contexte:** DRU - "JDR Parlant" style Reigns avec LLM
+**Contexte:** M.E.R.L.I.N. - "JDR Parlant" style card-based narrative avec LLM
 
 ---
 
 ## Executive Summary
 
-Ce rapport analyse comment creer une experience de partie courte (<10 minutes) engageante pour DRU, en se differenciant de Reigns tout en capitalisant sur ses forces. L'objectif est de transformer chaque session de 10 minutes en une experience narrative complete et satisfaisante.
+Ce rapport analyse comment creer une experience de partie courte (<10 minutes) engageante pour M.E.R.L.I.N., en se differenciant des jeux de cartes narratives classiques tout en capitalisant sur leurs forces. L'objectif est de transformer chaque session de 10 minutes en une experience narrative complete et satisfaisante.
 
 **Recommandations cles:**
 - **25-35 cartes par session** (vs 50-100 dans la spec actuelle)
@@ -456,10 +456,10 @@ func _apply_choice(direction: String):
 
 ## PARTIE 6: Differenciation du Genre
 
-### 6.1 Ce que DRU fait mieux
+### 6.1 Ce que M.E.R.L.I.N. fait mieux
 
-| Aspect | Reigns | DRU | Avantage DRU |
-|--------|--------|-----|--------------|
+| Aspect | Card games classiques | M.E.R.L.I.N. | Avantage |
+|--------|---------------------|--------------|----------|
 | Narration | Pre-ecrite | LLM generee | Infinie variete |
 | Personnalite narrateur | Neutre | Merlin joyeux/sombre | Attachement |
 | Compagnon | Aucun | Bestiole | Lien emotionnel |
@@ -468,10 +468,10 @@ func _apply_choice(direction: String):
 | Verite secrete | Aucune | Apocalypse cachee | Long terme |
 | Audio | Sons basiques | Voix Merlin | Personnalite |
 
-### 6.2 Ce que DRU doit eviter
+### 6.2 Ce que M.E.R.L.I.N. doit eviter
 
-| Piege Reigns | Solution DRU |
-|--------------|--------------|
+| Piege des card games | Solution M.E.R.L.I.N. |
+|---------------------|---------------------|
 | Repetition lassante | LLM + contexte = cartes uniques |
 | Mort arbitraire | Pity system + grace period |
 | Manque de but | Verite cachee a decouvrir |
@@ -551,7 +551,7 @@ Avant release, verifier:
 
 ### C. References Recherche
 
-- Reigns session design (TouchArcade, SteamSpy)
+- Card-based narrative game design (TouchArcade, SteamSpy)
 - Mobile game UX trends 2025 (Red Apple Technologies, Game-Ace)
 - Roguelite run length psychology (Medium, Gamasutra)
 - Card narrative pacing (Emily Short, Larksuite)

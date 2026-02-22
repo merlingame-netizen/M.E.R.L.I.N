@@ -22,26 +22,14 @@ const INNER_RADIUS := 60.0
 const CENTER_RADIUS := 40.0
 const SECTOR_COUNT := 6
 const ITEMS_PER_SECTOR := 3
-const OPEN_DURATION := 0.3
-const CLOSE_DURATION := 0.2
+const OPEN_DURATION := MerlinVisual.ANIM_NORMAL
+const CLOSE_DURATION := MerlinVisual.ANIM_FAST
 const MIN_TOUCH_TARGET := 48.0
 
 const CATEGORY_ORDER: Array[String] = ["reveal", "protection", "boost", "narrative", "recovery", "special"]
 
-# Parchment palette (matching project charter)
-const PALETTE := {
-	"paper": Color(0.965, 0.945, 0.905),
-	"paper_warm": Color(0.955, 0.930, 0.890),
-	"ink": Color(0.22, 0.18, 0.14),
-	"ink_soft": Color(0.38, 0.32, 0.26),
-	"accent": Color(0.58, 0.44, 0.26),
-	"accent_glow": Color(0.72, 0.58, 0.38, 0.25),
-	"shadow": Color(0.25, 0.20, 0.16, 0.18),
-	"celtic_gold": Color(0.68, 0.55, 0.32),
-}
-
 const AWEN_ICON := "᚛"
-const AWEN_EMPTY := "○"
+const AWEN_EMPTY := "\u25cb"
 
 # =============================================================================
 # STATE
@@ -61,19 +49,20 @@ var current_awen: int = 0
 var current_bond: int = 0
 
 # =============================================================================
-# NODE REFERENCES
+# NODE REFERENCES (scene nodes)
 # =============================================================================
 
-var bestiole_button: Button
-var awen_display: HBoxContainer
-var wheel_overlay: CanvasLayer
-var dim_bg: ColorRect
-var wheel_container: Control
-var tooltip_panel: PanelContainer
-var tooltip_name: Label
-var tooltip_tree: Label
-var tooltip_effect: Label
-var tooltip_cost: Label
+@onready var bestiole_button: Button = $BestioleButton
+@onready var awen_display: HBoxContainer = $AwenDisplay
+@onready var wheel_overlay: CanvasLayer = $WheelOverlay
+@onready var dim_bg: ColorRect = $WheelOverlay/DimBG
+@onready var wheel_container: Control = $WheelOverlay/WheelContainer
+@onready var tooltip_panel: PanelContainer = $WheelOverlay/TooltipPanel
+@onready var tooltip_name: Label = $WheelOverlay/TooltipPanel/TooltipVBox/TooltipName
+@onready var tooltip_tree: Label = $WheelOverlay/TooltipPanel/TooltipVBox/TooltipTree
+@onready var tooltip_effect: Label = $WheelOverlay/TooltipPanel/TooltipVBox/TooltipEffect
+@onready var tooltip_cost: Label = $WheelOverlay/TooltipPanel/TooltipVBox/TooltipCost
+var _tooltip_ogham_icon: PixelOghamIcon
 
 # Font
 var _font: Font = null
@@ -84,168 +73,102 @@ var _font: Font = null
 
 func _ready() -> void:
 	_load_font()
-	_setup_bestiole_button()
-	_setup_awen_display()
-	_setup_wheel_overlay()
+	_configure_bestiole_button()
+	_configure_awen_display()
+	_configure_wheel_overlay()
+	_configure_tooltip()
 
 
 func _load_font() -> void:
-	for path in [
-		"res://resources/fonts/morris/MorrisRomanBlackAlt.otf",
-		"res://resources/fonts/morris/MorrisRomanBlackAlt.ttf",
-		"res://resources/fonts/morris/MorrisRomanBlack.ttf",
-	]:
-		if ResourceLoader.exists(path):
-			_font = load(path) as Font
-			if _font:
-				return
+	_font = MerlinVisual.get_font("body")
+	if _font == null:
+		_font = MerlinVisual.get_font("title")
 
 
-func _setup_bestiole_button() -> void:
-	bestiole_button = Button.new()
-	bestiole_button.name = "BestioleButton"
-	bestiole_button.custom_minimum_size = Vector2(56, 56)
-	bestiole_button.text = "✦"
-	bestiole_button.tooltip_text = "Oghams de Bestiole (Tab)"
-
-	# Position: bottom-right
-	bestiole_button.set_anchors_preset(Control.PRESET_BOTTOM_RIGHT)
-	bestiole_button.offset_left = -72
-	bestiole_button.offset_top = -72
-	bestiole_button.offset_right = -16
-	bestiole_button.offset_bottom = -16
-
-	# Style: parchment
+func _configure_bestiole_button() -> void:
+	# Runtime styling (depends on MerlinVisual palette)
 	var style := StyleBoxFlat.new()
-	style.bg_color = PALETTE["paper_warm"]
-	style.border_color = PALETTE["accent"]
+	style.bg_color = MerlinVisual.PALETTE.paper_warm
+	style.border_color = MerlinVisual.PALETTE.accent
 	style.set_border_width_all(2)
 	style.set_corner_radius_all(28)
-	style.shadow_color = PALETTE["shadow"]
+	style.shadow_color = MerlinVisual.PALETTE.shadow
 	style.shadow_size = 4
 	bestiole_button.add_theme_stylebox_override("normal", style)
 
 	var hover_style := style.duplicate() as StyleBoxFlat
-	hover_style.bg_color = PALETTE["paper"]
-	hover_style.border_color = PALETTE["celtic_gold"]
+	hover_style.bg_color = MerlinVisual.PALETTE.paper
+	hover_style.border_color = MerlinVisual.PALETTE.celtic_gold
 	hover_style.set_border_width_all(3)
 	bestiole_button.add_theme_stylebox_override("hover", hover_style)
 
 	var pressed_style := style.duplicate() as StyleBoxFlat
-	pressed_style.bg_color = PALETTE["accent_glow"]
+	pressed_style.bg_color = MerlinVisual.PALETTE.accent_glow
 	bestiole_button.add_theme_stylebox_override("pressed", pressed_style)
 
-	bestiole_button.add_theme_font_size_override("font_size", 24)
-	bestiole_button.add_theme_color_override("font_color", PALETTE["accent"])
+	bestiole_button.add_theme_color_override("font_color", MerlinVisual.PALETTE.accent)
 	if _font:
 		bestiole_button.add_theme_font_override("font", _font)
 
 	bestiole_button.pressed.connect(_on_bestiole_pressed)
-	add_child(bestiole_button)
 
 
-func _setup_awen_display() -> void:
-	awen_display = HBoxContainer.new()
-	awen_display.name = "AwenDisplay"
-	awen_display.set_anchors_preset(Control.PRESET_BOTTOM_RIGHT)
-	awen_display.offset_left = -140
-	awen_display.offset_top = -28
-	awen_display.offset_right = -80
-	awen_display.offset_bottom = -12
-	awen_display.alignment = BoxContainer.ALIGNMENT_CENTER
-	awen_display.add_theme_constant_override("separation", 2)
-
+func _configure_awen_display() -> void:
+	# Populate awen icons (dynamic count from MerlinConstants)
 	for i in range(MerlinConstants.AWEN_MAX):
 		var icon := Label.new()
 		icon.text = AWEN_EMPTY
 		icon.add_theme_font_size_override("font_size", 14)
-		icon.add_theme_color_override("font_color", PALETTE["ink_soft"])
+		icon.add_theme_color_override("font_color", MerlinVisual.PALETTE.ink_soft)
 		if _font:
 			icon.add_theme_font_override("font", _font)
 		awen_display.add_child(icon)
 
-	add_child(awen_display)
 
-
-func _setup_wheel_overlay() -> void:
-	wheel_overlay = CanvasLayer.new()
-	wheel_overlay.name = "WheelOverlay"
-	wheel_overlay.layer = 10
-	wheel_overlay.visible = false
-	add_child(wheel_overlay)
-
-	# Dim background
-	dim_bg = ColorRect.new()
-	dim_bg.color = Color(0, 0, 0, 0.5)
-	dim_bg.set_anchors_preset(Control.PRESET_FULL_RECT)
-	dim_bg.mouse_filter = Control.MOUSE_FILTER_STOP
+func _configure_wheel_overlay() -> void:
+	# Runtime color (depends on MerlinVisual palette)
+	var dim_color: Color = Color(
+		MerlinVisual.PALETTE["shadow"].r,
+		MerlinVisual.PALETTE["shadow"].g,
+		MerlinVisual.PALETTE["shadow"].b,
+		0.5
+	)
+	dim_bg.color = dim_color
 	dim_bg.gui_input.connect(_on_dim_bg_input)
-	wheel_overlay.add_child(dim_bg)
 
-	# Wheel container (centered on screen)
-	wheel_container = Control.new()
-	wheel_container.name = "WheelContainer"
-	wheel_container.set_anchors_preset(Control.PRESET_CENTER)
+	# Initial wheel scale
 	wheel_container.pivot_offset = Vector2.ZERO
 	wheel_container.scale = Vector2.ZERO
-	wheel_overlay.add_child(wheel_container)
-
-	# Tooltip panel
-	_setup_tooltip()
 
 
-func _setup_tooltip() -> void:
-	tooltip_panel = PanelContainer.new()
-	tooltip_panel.name = "TooltipPanel"
-	tooltip_panel.visible = false
-	tooltip_panel.set_anchors_preset(Control.PRESET_CENTER_BOTTOM)
-	tooltip_panel.offset_top = -120
-	tooltip_panel.offset_bottom = -40
-	tooltip_panel.offset_left = -150
-	tooltip_panel.offset_right = 150
-
+func _configure_tooltip() -> void:
+	# Tooltip panel style (runtime palette)
 	var style := StyleBoxFlat.new()
-	style.bg_color = PALETTE["paper"]
-	style.border_color = PALETTE["accent"]
+	style.bg_color = MerlinVisual.PALETTE.paper
+	style.border_color = MerlinVisual.PALETTE.accent
 	style.set_border_width_all(2)
 	style.set_corner_radius_all(6)
-	style.shadow_color = PALETTE["shadow"]
+	style.shadow_color = MerlinVisual.PALETTE.shadow
 	style.shadow_size = 6
 	style.set_content_margin_all(10)
 	tooltip_panel.add_theme_stylebox_override("panel", style)
 
-	var vbox := VBoxContainer.new()
-	vbox.add_theme_constant_override("separation", 4)
+	# Pixel art ogham icon (dynamic, added before first label)
+	var tooltip_vbox: VBoxContainer = $WheelOverlay/TooltipPanel/TooltipVBox
+	_tooltip_ogham_icon = PixelOghamIcon.new()
+	_tooltip_ogham_icon.setup("beith", 32.0)
+	_tooltip_ogham_icon.reveal(true)
+	_tooltip_ogham_icon.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
+	tooltip_vbox.add_child(_tooltip_ogham_icon)
+	tooltip_vbox.move_child(_tooltip_ogham_icon, 0)
 
-	tooltip_name = Label.new()
-	tooltip_name.add_theme_font_size_override("font_size", 18)
-	tooltip_name.add_theme_color_override("font_color", PALETTE["ink"])
-	tooltip_name.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	# Runtime color overrides
+	tooltip_name.add_theme_color_override("font_color", MerlinVisual.PALETTE.ink)
 	if _font:
 		tooltip_name.add_theme_font_override("font", _font)
-	vbox.add_child(tooltip_name)
-
-	tooltip_tree = Label.new()
-	tooltip_tree.add_theme_font_size_override("font_size", 12)
-	tooltip_tree.add_theme_color_override("font_color", PALETTE["ink_soft"])
-	tooltip_tree.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	vbox.add_child(tooltip_tree)
-
-	tooltip_effect = Label.new()
-	tooltip_effect.add_theme_font_size_override("font_size", 14)
-	tooltip_effect.add_theme_color_override("font_color", PALETTE["accent"])
-	tooltip_effect.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	tooltip_effect.autowrap_mode = TextServer.AUTOWRAP_WORD
-	vbox.add_child(tooltip_effect)
-
-	tooltip_cost = Label.new()
-	tooltip_cost.add_theme_font_size_override("font_size", 12)
-	tooltip_cost.add_theme_color_override("font_color", PALETTE["celtic_gold"])
-	tooltip_cost.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	vbox.add_child(tooltip_cost)
-
-	tooltip_panel.add_child(vbox)
-	wheel_overlay.add_child(tooltip_panel)
+	tooltip_tree.add_theme_color_override("font_color", MerlinVisual.PALETTE.ink_soft)
+	tooltip_effect.add_theme_color_override("font_color", MerlinVisual.PALETTE.accent)
+	tooltip_cost.add_theme_color_override("font_color", MerlinVisual.PALETTE.celtic_gold)
 
 
 # =============================================================================
@@ -339,10 +262,10 @@ func update_awen(awen: int) -> void:
 			if icon:
 				if i < awen:
 					icon.text = AWEN_ICON
-					icon.add_theme_color_override("font_color", PALETTE["celtic_gold"])
+					icon.add_theme_color_override("font_color", MerlinVisual.PALETTE.celtic_gold)
 				else:
 					icon.text = AWEN_EMPTY
-					icon.add_theme_color_override("font_color", PALETTE["ink_soft"])
+					icon.add_theme_color_override("font_color", MerlinVisual.PALETTE.ink_soft)
 
 
 func update_bond(bond: int) -> void:
@@ -351,11 +274,11 @@ func update_bond(bond: int) -> void:
 	if not bestiole_button:
 		return
 	if bond >= 81:
-		bestiole_button.add_theme_color_override("font_color", PALETTE["celtic_gold"])
+		bestiole_button.add_theme_color_override("font_color", MerlinVisual.PALETTE.celtic_gold)
 	elif bond >= 41:
-		bestiole_button.add_theme_color_override("font_color", PALETTE["accent"])
+		bestiole_button.add_theme_color_override("font_color", MerlinVisual.PALETTE.accent)
 	else:
-		bestiole_button.add_theme_color_override("font_color", PALETTE["ink_soft"])
+		bestiole_button.add_theme_color_override("font_color", MerlinVisual.PALETTE.ink_soft)
 
 
 func set_wheel_enabled(enabled: bool) -> void:
@@ -471,6 +394,10 @@ func _update_hover(local_pos: Vector2) -> void:
 	if not hovered_skill_id.is_empty():
 		var info: Dictionary = all_skills.get(hovered_skill_id, {})
 		var spec: Dictionary = info.get("spec", {})
+		# Update pixel ogham icon
+		_tooltip_ogham_icon.setup(hovered_skill_id, 32.0)
+		_tooltip_ogham_icon.reveal(true)
+		_tooltip_ogham_icon.set_active(bool(info.get("can_use", false)))
 		tooltip_name.text = "%s  %s" % [str(spec.get("unicode", "")), str(spec.get("name", ""))]
 		tooltip_tree.text = str(spec.get("tree", ""))
 		tooltip_effect.text = str(spec.get("description", ""))

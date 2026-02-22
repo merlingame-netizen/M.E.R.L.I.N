@@ -218,7 +218,10 @@ func get_passive_effect(biome_key: String, cards_played: int) -> Dictionary:
 	if aspect.is_empty() or direction.is_empty():
 		return {}
 
-	return {"type": "SHIFT_ASPECT", "aspect": aspect, "direction": direction}
+	if direction == "up":
+		return {"type": "HEAL_LIFE", "amount": 5}
+	else:
+		return {"type": "DAMAGE_LIFE", "amount": 5}
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
@@ -318,6 +321,30 @@ func get_unlock_hint(biome_key: String) -> String:
 	if hints.is_empty():
 		return ""
 	return "Requiert: " + ", ".join(hints)
+
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# GAUGE MODIFIER BRIDGE — Delegates to MerlinGaugeSystem
+# ═══════════════════════════════════════════════════════════════════════════════
+
+## Get gauge modifier for a biome (bridges to MerlinGaugeSystem constants).
+## Returns multiplicator (1.0 = neutral, >1.0 = boost, <1.0 = penalty).
+func get_gauge_modifier(biome_key: String, gauge_key: String, weather: String = "clear") -> float:
+	var gauge_sys := MerlinGaugeSystem.new()
+	return gauge_sys.get_biome_modifier(biome_key, gauge_key, weather)
+
+
+## Check biome accessibility via WorldMapSystem (gauge-based tree) with legacy fallback.
+## Prefers WorldMapSystem if available, otherwise falls back to legacy is_unlocked().
+func is_unlocked_v2(biome_key: String, meta: Dictionary, tree_root: Node = null) -> bool:
+	# Try WorldMapSystem first (gauge-based tree navigation)
+	var wms: Node = null
+	if tree_root:
+		wms = tree_root.get_node_or_null("/root/WorldMapSystem")
+	if wms and wms.has_method("is_biome_accessible"):
+		return wms.is_biome_accessible(biome_key)
+	# Fallback to legacy unlock conditions (min_runs, min_endings)
+	return is_unlocked(biome_key, meta)
 
 
 # ═══════════════════════════════════════════════════════════════════════════════

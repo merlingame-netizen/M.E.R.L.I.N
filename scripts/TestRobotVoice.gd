@@ -131,4 +131,4 @@ func _on_stop_pressed() -> void:
 	status_label.text = "Lecture stoppee"
 
 func _on_back_pressed() -> void:
-	get_tree().change_scene_to_file("res://scenes/MenuPrincipal.tscn")
+	PixelTransition.transition_to("res://scenes/MenuPrincipal.tscn")

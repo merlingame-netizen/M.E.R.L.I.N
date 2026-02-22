@@ -40,6 +40,7 @@ var llm := MerlinLlmAdapter.new()
 var events := MerlinEventSystem.new()
 var cards := MerlinCardSystem.new()
 var biomes := MerlinBiomeSystem.new()
+var scenarios := MerlinScenarioManager.new()
 
 # Auto-save (debounced)
 const AUTOSAVE_DEBOUNCE_SEC := 30.0
@@ -120,6 +121,10 @@ func get_merlin() -> MerlinOmniscient:
 func is_merlin_active() -> bool:
 	"""Check if Merlin Omniscient is active."""
 	return merlin != null
+
+
+func get_scenario_manager() -> MerlinScenarioManager:
+	return scenarios
 
 
 func get_event_adapter() -> EventAdapter:
@@ -314,15 +319,14 @@ func _reduce(action: Dictionary) -> Dictionary:
 
 		"TRIADE_GET_CARD":
 			var card: Dictionary = {}
-			# Use MERLIN OMNISCIENT if available
+			# LLM-only: use MERLIN OMNISCIENT or direct LLM, no static fallback
 			if merlin != null and is_instance_valid(merlin):
 				print("[MerlinStore] TRIADE_GET_CARD: using MerlinOmniscient")
 				var mos_card = await merlin.generate_card(state)
 				if mos_card is Dictionary and not mos_card.is_empty():
 					card = mos_card
 				else:
-					print("[MerlinStore] MOS returned empty, falling back")
-					card = cards.get_next_triade_card(state)
+					print("[MerlinStore] MOS returned empty, controller will retry LLM")
 			elif llm != null and llm.is_llm_ready():
 				# Direct adapter path (no MOS)
 				print("[MerlinStore] TRIADE_GET_CARD: using direct LLM")
@@ -331,27 +335,12 @@ func _reduce(action: Dictionary) -> Dictionary:
 				if llm_result.get("ok", false) and llm_result.has("card"):
 					card = llm_result["card"]
 				else:
-					card = cards.get_next_triade_card(state)
+					print("[MerlinStore] Direct LLM failed, controller will retry")
 			else:
-				print("[MerlinStore] TRIADE_GET_CARD: using fallback cards")
-				card = cards.get_next_triade_card(state)
-			# Final safety: ensure card is never empty and has valid options
+				push_warning("[MerlinStore] TRIADE_GET_CARD: no LLM available — controller must retry")
+			# Validate card has usable options (LLM-only: no emergency fallback)
 			if card.is_empty() or not card.has("options") or card.get("options", []).size() < 2:
-				push_warning("[MerlinStore] Card generation returned invalid card, using emergency fallback")
-				if merlin != null and merlin.has_method("_get_emergency_fallback_card"):
-					card = merlin._get_emergency_fallback_card()
-				else:
-					card = {
-						"id": "emergency_%d" % Time.get_ticks_msec(),
-						"text": "La brume se leve sur Broceliande. Un sentier s'ouvre devant toi.",
-						"speaker": "merlin",
-						"options": [
-							{"label": "Avancer prudemment", "effects": [{"type": "HEAL_LIFE", "amount": 3}], "reward_type": "vie"},
-							{"label": "Mediter", "effects": [{"type": "ADD_KARMA", "amount": 1}], "cost": 1, "reward_type": "karma"},
-							{"label": "Explorer les bois", "effects": [{"type": "DAMAGE_LIFE", "amount": 2}], "reward_type": "mystere"},
-						],
-						"tags": ["emergency_fallback"],
-					}
+				return {"ok": false, "error": "llm_no_card"}
 			return {"ok": true, "card": card}
 
 		"TRIADE_RESOLVE_CHOICE":
@@ -540,6 +529,7 @@ func _reduce(action: Dictionary) -> Dictionary:
 func snapshot_for_save() -> Dictionary:
 	var data: Dictionary = state.duplicate(true)
 	data["timestamp"] = int(Time.get_unix_time_from_system())
+	data["scenario_state"] = scenarios.save_state()
 	return data
 
 
@@ -568,6 +558,8 @@ func _restore_ai_state() -> void:
 	var merlin_ai_node := get_node_or_null("/root/MerlinAI")
 	if merlin_ai_node and merlin_ai_node.has_method("load_session_history"):
 		merlin_ai_node.load_session_history()
+	# Restore scenario state from save data
+	scenarios.load_state(state.get("scenario_state", {}))
 
 
 func _reset_ai_for_new_run() -> void:
@@ -670,7 +662,20 @@ func _init_triade_run() -> void:
 		"resonances_active": [],
 		"narrative_debt": [],
 	}
+	run["power_bonuses"] = {"dc_reduction": 0}
 	state["run"] = run
+
+	# Select scenario for this run (Hand of Fate 2-style quest)
+	var biome_for_scenario: String = str(run.get("current_biome", ""))
+	var selected_scenario: Dictionary = scenarios.select_scenario(biome_for_scenario, state.get("meta", {}))
+	if not selected_scenario.is_empty():
+		scenarios.start_scenario(selected_scenario)
+		run["active_scenario"] = str(selected_scenario.get("id", ""))
+		state["run"] = run
+	else:
+		run["active_scenario"] = ""
+		state["run"] = run
+
 	_apply_talent_effects_for_run()
 
 
@@ -1151,9 +1156,9 @@ func _resolve_triade_choice(card: Dictionary, option: int, modulated_effects: Ar
 	if option >= 0 and option < options_arr.size():
 		chosen_label = str(options_arr[option].get("label", ""))
 	story_log.append({"text": card_text, "choice": chosen_label, "card_idx": run["cards_played"]})
-	# Keep only last 5 entries to bound memory
-	if story_log.size() > 5:
-		story_log = story_log.slice(-5)
+	# Keep only last 2 entries to bound token usage (~60 tokens saved)
+	if story_log.size() > 2:
+		story_log = story_log.slice(-2)
 	run["story_log"] = story_log
 
 	state["run"] = run
@@ -1665,6 +1670,16 @@ func calculate_run_rewards(run_data: Dictionary) -> Dictionary:
 	var ending_title: String = str(run_data.get("ending_title", ""))
 	if ending_title != "" and not state.meta.endings_seen.has(ending_title):
 		rewards.gloire += 20
+
+	# Partial rewards: death before 25 cards = all rewards /4
+	var cards_played: int = int(run_data.get("cards_played", 0))
+	if not is_victory and cards_played < MerlinConstants.MIN_CARDS_FOR_VICTORY:
+		for elem in rewards.essence:
+			rewards.essence[elem] = int(rewards.essence[elem] / 4.0)
+		rewards.fragments = int(rewards.fragments / 4.0)
+		rewards.liens = int(rewards.liens / 4.0)
+		rewards.gloire = int(rewards.gloire / 4.0)
+		rewards["partial"] = true
 
 	return rewards
 

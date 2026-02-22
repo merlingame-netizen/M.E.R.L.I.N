@@ -1,6 +1,6 @@
-## PixelMerlinPortrait — Chunky pixel art Merlin bust (12x14 grid)
-## Style: Reigns / retro pixel — bold colors, big pixels, simple shapes.
-## Only head + hat + upper body. CeltOS cascade assembly animation.
+## PixelMerlinPortrait — PNG-based pixel portrait with rain reconstitution
+## Loads actual sprite PNG, auto-detects art pixel grid, animates assembly.
+## Drop-in replacement: same class_name, signals, and public API.
 
 class_name PixelMerlinPortrait
 extends Control
@@ -8,306 +8,504 @@ extends Control
 signal assembly_complete
 signal disassembly_complete
 
-const GRID_W := 12
-const GRID_H := 14
+# ═══════════════════════════════════════════════════════════════════
+# CONFIGURATION
+# ═══════════════════════════════════════════════════════════════════
+
+const DEFAULT_SPRITE := "res://Assets/Sprite/M.E.R.L.I.N.png"
 const DEFAULT_TARGET_SIZE := 192.0
+const MAX_GRID := 64
+const ALPHA_THRESHOLD := 0.1
+const COLOR_TOLERANCE := 0.05
 
-# ═══════════════════════════════════════════════════════════════════
-# PALETTE — Bold, flat, high-contrast (Reigns style)
-# 0=empty 1=hat(blue) 2=skin(gray) 3=dark(brim) 4=robe(black)
-# 5=robe_accent 6=crystal(gold) 7=beard 8=eyes(bright blue)
-# ═══════════════════════════════════════════════════════════════════
+# Assembly cascade timing
+const BATCH_SIZE := 6
+const BATCH_DELAY := 0.02
+const PIXEL_DURATION := 0.25
+const FADE_IN_FRACTION := 0.15
+const SCATTER_X := 30.0
+const SCATTER_Y_MIN := 60.0
+const SCATTER_Y_MAX := 160.0
 
-var _palette: Array[Color] = [
-	Color.TRANSPARENT,                     # 0 = empty
-	Color(0.18, 0.28, 0.58),              # 1 = hat blue
-	Color(0.62, 0.60, 0.56),              # 2 = skin gray
-	Color(0.06, 0.05, 0.08),              # 3 = dark (brim, nose)
-	Color(0.08, 0.07, 0.10),              # 4 = robe black
-	Color(0.14, 0.13, 0.18),              # 5 = robe accent / collar
-	Color(0.85, 0.65, 0.20),              # 6 = crystal gold
-	Color(0.72, 0.70, 0.66),              # 7 = beard silver
-	Color(0.30, 0.65, 1.0),               # 8 = eyes bright blue
-]
+# Disassembly timing
+const DIS_MOVE_DURATION := 0.3
+const DIS_FADE_DURATION := 0.25
+const DIS_SETTLE_TIME := 0.4
 
-const SEASON_CRYSTAL := {
-	"hiver": Color(0.80, 0.70, 0.30),
-	"printemps": Color(0.75, 0.80, 0.25),
-	"ete": Color(0.90, 0.70, 0.15),
-	"automne": Color(0.85, 0.55, 0.15),
-}
+# Idle animation
+const BREATHE_SPEED := 1.4
+const BREATHE_AMP := 1.5
+const BLINK_DURATION := 0.12
+const BLINK_MIN := 2.5
+const BLINK_MAX := 5.0
+const GLOW_SPEED := 3.2
+const GLOW_BASE := 0.7
+const GLOW_RANGE := 0.3
 
-# ═══════════════════════════════════════════════════════════════════
-# 12x14 MERLIN BUST — Wizard hat + face + upper body
-# ═══════════════════════════════════════════════════════════════════
-#     Col: 0  1  2  3  4  5  6  7  8  9  10 11
-
-const MERLIN_GRID := [
-	# Row 0: Crystal at hat tip
-	[0, 0, 0, 0, 0, 6, 6, 0, 0, 0, 0, 0],
-	# Row 1: Hat tip
-	[0, 0, 0, 0, 1, 1, 1, 1, 0, 0, 0, 0],
-	# Row 2: Hat wider
-	[0, 0, 0, 1, 1, 1, 1, 1, 1, 0, 0, 0],
-	# Row 3: Hat mid
-	[0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0],
-	# Row 4: Hat base
-	[0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0],
-	# Row 5: Brim (dark band)
-	[3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3],
-	# Row 6: Forehead
-	[0, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 0],
-	# Row 7: Eyes (2x1 bright blue blocks)
-	[0, 2, 8, 8, 2, 2, 2, 8, 8, 2, 2, 0],
-	# Row 8: Nose (single dark pixel)
-	[0, 2, 2, 2, 2, 3, 2, 2, 2, 2, 2, 0],
-	# Row 9: Beard top
-	[0, 2, 7, 7, 7, 7, 7, 7, 7, 7, 2, 0],
-	# Row 10: Beard bottom
-	[0, 0, 7, 7, 7, 7, 7, 7, 7, 7, 0, 0],
-	# Row 11: Collar
-	[0, 0, 5, 5, 5, 5, 5, 5, 5, 5, 0, 0],
-	# Row 12: Robe
-	[0, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 0],
-	# Row 13: Robe bottom + belt accent
-	[4, 4, 4, 4, 4, 5, 5, 4, 4, 4, 4, 4],
-]
-
-# Eye pixel coordinates for blink
-const EYE_COORDS := [
-	[7, 2], [7, 3],   # left eye
-	[7, 7], [7, 8],   # right eye
-]
-
-# Crystal pixel coordinates for glow
-const CRYSTAL_COORDS := [[0, 5], [0, 6]]
-
+# Eye detection thresholds (bright blue pixels)
+const EYE_HUE_LO := 0.5
+const EYE_HUE_HI := 0.7
+const EYE_SAT_MIN := 0.4
+const EYE_VAL_MIN := 0.6
 
 # ═══════════════════════════════════════════════════════════════════
 # STATE
 # ═══════════════════════════════════════════════════════════════════
 
-var pixel_size: float = 14.0
-var pixels: Array[ColorRect] = []
-var _eye_pixels: Array[ColorRect] = []
-var _crystal_pixels: Array[ColorRect] = []
-var assembled: bool = false
-var _idle_active: bool = false
-var _container: Control
-var _season: String = ""
+enum Phase { IDLE, ASSEMBLING, ASSEMBLED, DISASSEMBLING }
 
-# Idle animation state
+var pixel_size: float = 14.0
+var assembled: bool = false
+
+var _phase: int = Phase.IDLE
+var _pixel_count: int = 0
+var _grid_w: int = 0
+var _grid_h: int = 0
+
+# Permanent pixel data (never modified after extraction)
+var _colors: PackedColorArray
+var _grid_x: PackedFloat32Array
+var _grid_y: PackedFloat32Array
+var _is_eye: Array[bool] = []
+var _is_glow: Array[bool] = []
+
+# Animation working arrays
+var _cur_x: PackedFloat32Array
+var _cur_y: PackedFloat32Array
+var _cur_a: PackedFloat32Array
+var _from_x: PackedFloat32Array
+var _from_y: PackedFloat32Array
+var _to_x: PackedFloat32Array
+var _to_y: PackedFloat32Array
+var _delay: PackedFloat32Array
+
+# Timing
+var _elapsed: float = 0.0
+
+# Idle state
+var _idle_active: bool = false
+var _breathe_t: float = 0.0
+var _glow_t: float = 0.0
 var _blink_timer: float = 0.0
 var _blink_interval: float = 3.5
 var _is_blinking: bool = false
-var _breathe_time: float = 0.0
-var _glow_time: float = 0.0
+var _eye_alpha: float = 1.0
+
+# Mood
+var _mood_tint: Color = Color.WHITE
 
 
 # ═══════════════════════════════════════════════════════════════════
 # SETUP
 # ═══════════════════════════════════════════════════════════════════
 
-func setup(target_size: float = DEFAULT_TARGET_SIZE, season: String = "") -> void:
-	pixel_size = target_size / float(GRID_H)
-	_season = season if not season.is_empty() else _detect_season()
-	_apply_season()
-
-	var display_w: float = GRID_W * pixel_size
-	var display_h: float = GRID_H * pixel_size
-	custom_minimum_size = Vector2(display_w, display_h)
-	size = custom_minimum_size
+func setup(target_size: float = DEFAULT_TARGET_SIZE, _season: String = "") -> void:
 	mouse_filter = Control.MOUSE_FILTER_IGNORE
 
-	_container = Control.new()
-	_container.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	add_child(_container)
+	var image := _load_sprite_image()
+	if image == null:
+		push_warning("PixelMerlinPortrait: sprite not found at " + DEFAULT_SPRITE)
+		return
+
+	var block_size := _detect_block_size(image)
+	_grid_w = int(float(image.get_width()) / float(block_size))
+	_grid_h = int(float(image.get_height()) / float(block_size))
+
+	# Cap grid to MAX_GRID
+	if _grid_w > MAX_GRID or _grid_h > MAX_GRID:
+		var img_max := maxi(image.get_width(), image.get_height())
+		block_size = ceili(float(img_max) / float(MAX_GRID))
+		_grid_w = int(float(image.get_width()) / float(block_size))
+		_grid_h = int(float(image.get_height()) / float(block_size))
+
+	pixel_size = target_size / float(maxi(_grid_w, _grid_h))
+
+	custom_minimum_size = Vector2(_grid_w * pixel_size, _grid_h * pixel_size)
+	size = custom_minimum_size
+
+	_extract_pixels(image, block_size)
 
 
-func _detect_season() -> String:
-	var m: int = Time.get_date_dict_from_system().month
-	if m >= 3 and m <= 5: return "printemps"
-	if m >= 6 and m <= 8: return "ete"
-	if m >= 9 and m <= 11: return "automne"
-	return "hiver"
-
-
-func _apply_season() -> void:
-	if SEASON_CRYSTAL.has(_season):
-		_palette[6] = SEASON_CRYSTAL[_season]
-
-
-func set_season(s: String) -> void:
-	_season = s
-	_apply_season()
+func _load_sprite_image() -> Image:
+	if not ResourceLoader.exists(DEFAULT_SPRITE):
+		return null
+	var tex: Texture2D = load(DEFAULT_SPRITE)
+	if tex == null:
+		return null
+	return tex.get_image()
 
 
 # ═══════════════════════════════════════════════════════════════════
-# ASSEMBLY — CeltOS cascade: each pixel falls from above
+# AUTO-DETECTION — Art pixel block size via GCD of uniform runs
+# ═══════════════════════════════════════════════════════════════════
+
+func _detect_block_size(image: Image) -> int:
+	var w := image.get_width()
+	var h := image.get_height()
+	if w == 0 or h == 0:
+		return 1
+
+	var runs: Array[int] = []
+	var step_h := maxi(1, int(float(h) / 20.0))
+	var step_w := maxi(1, int(float(w) / 20.0))
+
+	# Horizontal scan on sampled rows
+	for row in range(0, h, step_h):
+		var prev := Color.TRANSPARENT
+		var run := 0
+		for x in range(w):
+			var c := image.get_pixel(x, row)
+			if c.a < ALPHA_THRESHOLD:
+				if run > 1:
+					runs.append(run)
+				run = 0
+				prev = Color.TRANSPARENT
+				continue
+			if _colors_match(c, prev):
+				run += 1
+			else:
+				if run > 1:
+					runs.append(run)
+				prev = c
+				run = 1
+		if run > 1:
+			runs.append(run)
+
+	# Vertical scan on sampled columns
+	for col in range(0, w, step_w):
+		var prev := Color.TRANSPARENT
+		var run := 0
+		for y in range(h):
+			var c := image.get_pixel(col, y)
+			if c.a < ALPHA_THRESHOLD:
+				if run > 1:
+					runs.append(run)
+				run = 0
+				prev = Color.TRANSPARENT
+				continue
+			if _colors_match(c, prev):
+				run += 1
+			else:
+				if run > 1:
+					runs.append(run)
+				prev = c
+				run = 1
+		if run > 1:
+			runs.append(run)
+
+	if runs.is_empty():
+		return maxi(1, ceili(float(w) / float(MAX_GRID)))
+
+	var result := runs[0]
+	for i in range(1, runs.size()):
+		result = _gcd(result, runs[i])
+		if result <= 1:
+			break
+
+	result = maxi(result, 1)
+	if int(float(w) / float(result)) > MAX_GRID:
+		result = ceili(float(w) / float(MAX_GRID))
+
+	return result
+
+
+static func _colors_match(a: Color, b: Color) -> bool:
+	if b.a < 0.01:
+		return false
+	return absf(a.r - b.r) < COLOR_TOLERANCE \
+		and absf(a.g - b.g) < COLOR_TOLERANCE \
+		and absf(a.b - b.b) < COLOR_TOLERANCE \
+		and absf(a.a - b.a) < COLOR_TOLERANCE
+
+
+static func _gcd(a: int, b: int) -> int:
+	while b != 0:
+		var t := b
+		b = a % b
+		a = t
+	return a
+
+
+# ═══════════════════════════════════════════════════════════════════
+# PIXEL EXTRACTION — Sample grid cells from image
+# ═══════════════════════════════════════════════════════════════════
+
+func _extract_pixels(image: Image, block_size: int) -> void:
+	var tc := PackedColorArray()
+	var tgx := PackedFloat32Array()
+	var tgy := PackedFloat32Array()
+	var t_eye: Array[bool] = []
+	var t_glow: Array[bool] = []
+
+	var half := int(float(block_size) / 2.0)
+	var max_x := image.get_width() - 1
+	var max_y := image.get_height() - 1
+
+	for row in range(_grid_h):
+		for col in range(_grid_w):
+			var sx := mini(col * block_size + half, max_x)
+			var sy := mini(row * block_size + half, max_y)
+			var c := image.get_pixel(sx, sy)
+			if c.a < ALPHA_THRESHOLD:
+				continue
+
+			tc.append(c)
+			tgx.append(col * pixel_size)
+			tgy.append(row * pixel_size)
+
+			var is_eye := c.h >= EYE_HUE_LO and c.h <= EYE_HUE_HI \
+				and c.s >= EYE_SAT_MIN and c.v >= EYE_VAL_MIN
+			t_eye.append(is_eye)
+			t_glow.append(c.v > 0.8 and c.s > 0.3)
+
+	_colors = tc
+	_grid_x = tgx
+	_grid_y = tgy
+	_is_eye = t_eye
+	_is_glow = t_glow
+	_pixel_count = _colors.size()
+
+	# Pre-allocate working arrays
+	_cur_x = PackedFloat32Array()
+	_cur_y = PackedFloat32Array()
+	_cur_a = PackedFloat32Array()
+	_from_x = PackedFloat32Array()
+	_from_y = PackedFloat32Array()
+	_to_x = PackedFloat32Array()
+	_to_y = PackedFloat32Array()
+	_delay = PackedFloat32Array()
+	_cur_x.resize(_pixel_count)
+	_cur_y.resize(_pixel_count)
+	_cur_a.resize(_pixel_count)
+	_from_x.resize(_pixel_count)
+	_from_y.resize(_pixel_count)
+	_to_x.resize(_pixel_count)
+	_to_y.resize(_pixel_count)
+	_delay.resize(_pixel_count)
+
+
+# ═══════════════════════════════════════════════════════════════════
+# ASSEMBLY — Rain reconstitution cascade
 # ═══════════════════════════════════════════════════════════════════
 
 func assemble(instant: bool = false) -> void:
-	_clear_pixels()
 	assembled = false
 	_idle_active = false
 
-	# Build lookup sets for eye/crystal tracking
-	var eye_set := {}
-	for coord in EYE_COORDS:
-		eye_set[Vector2i(coord[0], coord[1])] = true
-	var crystal_set := {}
-	for coord in CRYSTAL_COORDS:
-		crystal_set[Vector2i(coord[0], coord[1])] = true
-
-	# Collect non-empty pixels
-	var targets: Array[Dictionary] = []
-	for row in range(GRID_H):
-		var row_data: Array = MERLIN_GRID[row]
-		for col in range(GRID_W):
-			var color_idx: int = int(row_data[col])
-			if color_idx <= 0 or color_idx >= _palette.size():
-				continue
-			var coord := Vector2i(row, col)
-			targets.append({
-				"row": row, "col": col,
-				"color": _palette[color_idx],
-				"pos": Vector2(col * pixel_size, row * pixel_size),
-				"is_eye": eye_set.has(coord),
-				"is_crystal": crystal_set.has(coord),
-			})
-
-	if instant:
-		for t in targets:
-			var px := _make_pixel(t)
-			px.position = t.pos
-			px.modulate.a = 1.0
+	if _pixel_count == 0:
 		assembled = true
 		_idle_active = true
 		assembly_complete.emit()
 		return
 
-	# Shuffle for random arrival
-	targets.shuffle()
+	if instant:
+		for i in range(_pixel_count):
+			_cur_x[i] = _grid_x[i]
+			_cur_y[i] = _grid_y[i]
+			_cur_a[i] = 1.0
+		assembled = true
+		_idle_active = true
+		_phase = Phase.ASSEMBLED
+		queue_redraw()
+		assembly_complete.emit()
+		return
 
-	for i in range(targets.size()):
-		var t: Dictionary = targets[i]
-		var target_pos: Vector2 = t.pos
+	# Shuffled order for staggered arrival
+	var order: Array[int] = []
+	order.resize(_pixel_count)
+	for i in range(_pixel_count):
+		order[i] = i
+	order.shuffle()
 
-		var px := _make_pixel(t)
-		# Start above with scatter
-		px.position = Vector2(
-			target_pos.x + randf_range(-30, 30),
-			target_pos.y - randf_range(60, 160),
-		)
-		px.modulate.a = 0.0
+	for batch_idx in range(order.size()):
+		var i: int = order[batch_idx]
+		_delay[i] = float(int(float(batch_idx) / float(BATCH_SIZE))) * BATCH_DELAY
+		_from_x[i] = _grid_x[i] + randf_range(-SCATTER_X, SCATTER_X)
+		_from_y[i] = _grid_y[i] - randf_range(SCATTER_Y_MIN, SCATTER_Y_MAX)
+		_to_x[i] = _grid_x[i]
+		_to_y[i] = _grid_y[i]
+		_cur_x[i] = _from_x[i]
+		_cur_y[i] = _from_y[i]
+		_cur_a[i] = 0.0
 
-		# Cascade tween — fall into place with bounce
-		var tw := create_tween()
-		tw.tween_property(px, "modulate:a", 1.0, 0.04)
-		tw.parallel().tween_property(px, "position", target_pos, randf_range(0.15, 0.3)) \
-			.set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
+	_elapsed = 0.0
+	_phase = Phase.ASSEMBLING
+	queue_redraw()
 
-		# Stagger: 6 pixels per batch (~120 pixels total → ~0.4s)
-		if i % 6 == 5:
-			if not is_inside_tree():
-				return
-			await get_tree().create_timer(0.02).timeout
-
-	assembled = true
-	_idle_active = true
-	assembly_complete.emit()
-
-
-func _make_pixel(t: Dictionary) -> ColorRect:
-	var px := ColorRect.new()
-	px.size = Vector2(pixel_size, pixel_size)
-	px.color = t.color
-	px.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	_container.add_child(px)
-	pixels.append(px)
-
-	if t.is_eye:
-		_eye_pixels.append(px)
-	if t.is_crystal:
-		_crystal_pixels.append(px)
-
-	return px
+	await assembly_complete
 
 
 func disassemble() -> void:
-	_idle_active = false
-	for px in pixels:
-		if not is_instance_valid(px):
-			continue
-		var scatter := px.position + Vector2(
-			randf_range(-40, 40),
-			randf_range(-60, -15),
-		)
-		var tw := create_tween()
-		tw.tween_property(px, "position", scatter, 0.3).set_trans(Tween.TRANS_QUAD)
-		tw.parallel().tween_property(px, "modulate:a", 0.0, 0.25)
-
-	var done_tw := create_tween()
-	done_tw.tween_interval(0.4)
-	done_tw.tween_callback(func():
-		_clear_pixels()
-		assembled = false
+	if _pixel_count == 0:
 		disassembly_complete.emit()
-	)
+		return
 
+	_idle_active = false
 
-func _clear_pixels() -> void:
-	for px in pixels:
-		if is_instance_valid(px):
-			px.queue_free()
-	pixels.clear()
-	_eye_pixels.clear()
-	_crystal_pixels.clear()
+	for i in range(_pixel_count):
+		_from_x[i] = _grid_x[i]
+		_from_y[i] = _grid_y[i]
+		_to_x[i] = _grid_x[i] + randf_range(-40.0, 40.0)
+		_to_y[i] = _grid_y[i] + randf_range(-60.0, -15.0)
+		_delay[i] = 0.0
+		_cur_a[i] = 1.0
+
+	_elapsed = 0.0
+	_phase = Phase.DISASSEMBLING
+	queue_redraw()
+
+	await disassembly_complete
 
 
 # ═══════════════════════════════════════════════════════════════════
-# IDLE ANIMATIONS — Breathe, Blink, Crystal Glow
+# EASING — Manual implementations for _draw-based animation
+# ═══════════════════════════════════════════════════════════════════
+
+static func _ease_back_out(t: float) -> float:
+	var c1 := 1.70158
+	var c3 := c1 + 1.0
+	return 1.0 + c3 * pow(t - 1.0, 3.0) + c1 * pow(t - 1.0, 2.0)
+
+
+static func _ease_quad_out(t: float) -> float:
+	return 1.0 - (1.0 - t) * (1.0 - t)
+
+
+# ═══════════════════════════════════════════════════════════════════
+# PROCESS — Animate pixels each frame
 # ═══════════════════════════════════════════════════════════════════
 
 func _process(delta: float) -> void:
-	if not _idle_active or not assembled:
+	match _phase:
+		Phase.ASSEMBLING:
+			_tick_assembly(delta)
+		Phase.DISASSEMBLING:
+			_tick_disassembly(delta)
+		Phase.ASSEMBLED:
+			_tick_idle(delta)
+
+
+func _tick_assembly(delta: float) -> void:
+	_elapsed += delta
+	var all_done := true
+
+	for i in range(_pixel_count):
+		var t := (_elapsed - _delay[i]) / PIXEL_DURATION
+		if t < 0.0:
+			all_done = false
+			continue
+		if t >= 1.0:
+			_cur_x[i] = _to_x[i]
+			_cur_y[i] = _to_y[i]
+			_cur_a[i] = 1.0
+			continue
+		all_done = false
+		var e := _ease_back_out(t)
+		_cur_x[i] = lerpf(_from_x[i], _to_x[i], e)
+		_cur_y[i] = lerpf(_from_y[i], _to_y[i], e)
+		_cur_a[i] = minf(t / FADE_IN_FRACTION, 1.0)
+
+	queue_redraw()
+
+	if all_done:
+		assembled = true
+		_idle_active = true
+		_phase = Phase.ASSEMBLED
+		assembly_complete.emit()
+
+
+func _tick_disassembly(delta: float) -> void:
+	_elapsed += delta
+	var t_move := minf(_elapsed / DIS_MOVE_DURATION, 1.0)
+	var t_fade := minf(_elapsed / DIS_FADE_DURATION, 1.0)
+	var e_move := _ease_quad_out(t_move)
+
+	for i in range(_pixel_count):
+		_cur_x[i] = lerpf(_from_x[i], _to_x[i], e_move)
+		_cur_y[i] = lerpf(_from_y[i], _to_y[i], e_move)
+		_cur_a[i] = 1.0 - t_fade
+
+	queue_redraw()
+
+	if _elapsed >= DIS_SETTLE_TIME:
+		assembled = false
+		_phase = Phase.IDLE
+		disassembly_complete.emit()
+
+
+func _tick_idle(delta: float) -> void:
+	if not _idle_active:
 		return
 
-	# Breathing — gentle vertical oscillation
-	_breathe_time += delta
-	_container.position.y = sin(_breathe_time * 1.4) * 1.5
-
-	# Crystal glow pulse
-	_glow_time += delta
-	for px in _crystal_pixels:
-		if is_instance_valid(px):
-			var g := 0.7 + sin(_glow_time * 3.0) * 0.3
-			px.self_modulate = Color(g, g, g + 0.1)
+	_breathe_t += delta
+	_glow_t += delta
 
 	# Blink timer
 	_blink_timer += delta
 	if not _is_blinking and _blink_timer >= _blink_interval:
-		_do_blink()
+		_is_blinking = true
+		_eye_alpha = 0.0
 		_blink_timer = 0.0
-		_blink_interval = randf_range(2.5, 5.0)
+		_blink_interval = randf_range(BLINK_MIN, BLINK_MAX)
+		if is_inside_tree():
+			var tw := create_tween()
+			tw.tween_interval(BLINK_DURATION)
+			tw.tween_callback(_end_blink)
+
+	queue_redraw()
 
 
-func _do_blink() -> void:
-	_is_blinking = true
-	for px in _eye_pixels:
-		if is_instance_valid(px):
-			px.self_modulate.a = 0.0
-	if not is_inside_tree():
-		_is_blinking = false
+func _end_blink() -> void:
+	_eye_alpha = 1.0
+	_is_blinking = false
+	queue_redraw()
+
+
+# ═══════════════════════════════════════════════════════════════════
+# DRAW — Render all pixels via draw_rect (no child nodes)
+# ═══════════════════════════════════════════════════════════════════
+
+func _draw() -> void:
+	if _pixel_count == 0:
 		return
-	var tw := create_tween()
-	tw.tween_interval(0.12)
-	tw.tween_callback(func():
-		for px in _eye_pixels:
-			if is_instance_valid(px):
-				px.self_modulate.a = 1.0
-		_is_blinking = false
-	)
+
+	# Breathing offset (only when assembled + idle)
+	var breath_y := 0.0
+	if _phase == Phase.ASSEMBLED and _idle_active:
+		breath_y = sin(_breathe_t * BREATHE_SPEED) * BREATHE_AMP
+
+	# Glow pulse factor
+	var glow := GLOW_BASE + sin(_glow_t * GLOW_SPEED) * GLOW_RANGE
+
+	var ps := pixel_size
+	var tint := _mood_tint
+
+	for i in range(_pixel_count):
+		var a := _cur_a[i]
+		if a < 0.01:
+			continue
+
+		var px := _cur_x[i]
+		var py := _cur_y[i] + breath_y
+		var c := _colors[i]
+
+		# Eye blink override
+		if _is_eye[i]:
+			a *= _eye_alpha
+
+		# Glow pulse on bright pixels (only when assembled)
+		if _is_glow[i] and _phase == Phase.ASSEMBLED:
+			c = Color(
+				minf(c.r * (0.8 + glow * 0.25), 1.0),
+				minf(c.g * (0.9 + glow * 0.15), 1.0),
+				c.b, a)
+		else:
+			c = Color(c.r, c.g, c.b, a)
+
+		# Mood tint
+		c = Color(c.r * tint.r, c.g * tint.g, c.b * tint.b, c.a)
+
+		draw_rect(Rect2(px, py, ps, ps), c)
 
 
 # ═══════════════════════════════════════════════════════════════════
@@ -315,12 +513,14 @@ func _do_blink() -> void:
 # ═══════════════════════════════════════════════════════════════════
 
 func set_mood(mood: String) -> void:
-	var tint: Color
 	match mood:
-		"amuse": tint = Color(1.05, 1.0, 0.95)
-		"pensif": tint = Color(0.92, 0.92, 1.0)
-		"serieux": tint = Color(0.88, 0.88, 0.95)
-		"warm": tint = Color(1.0, 0.98, 0.92)
-		_: tint = Color.WHITE
-	if _container:
-		_container.self_modulate = tint
+		"amuse": _mood_tint = Color(1.05, 1.0, 0.95)
+		"pensif": _mood_tint = Color(0.92, 0.92, 1.0)
+		"serieux": _mood_tint = Color(0.88, 0.88, 0.95)
+		"warm": _mood_tint = Color(1.0, 0.98, 0.92)
+		_: _mood_tint = Color.WHITE
+	queue_redraw()
+
+
+func set_season(_s: String) -> void:
+	pass  # PNG-based: sprite colors are intrinsic, no season override needed

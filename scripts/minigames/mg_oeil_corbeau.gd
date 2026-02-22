@@ -1,7 +1,7 @@
 extends MiniGameBase
 ## Oeil du Corbeau — Spot the different symbol in a 3x3 grid (observation-based)
 
-const SYMBOLS: Array[String] = ["▲", "●", "■", "✦", "◆", "▼", "○", "□"]
+const SYMBOLS: Array[String] = ["\u25b2", "\u25cf", "\u25a0", "\u2726", "\u25c6", "\u25bc", "\u25cb", "\u25a1"]
 
 var grid_cells: Array[Button] = []
 var different_index: int = -1
@@ -108,6 +108,14 @@ func _process(delta: float) -> void:
 	# Timeout
 	if time_left <= 0.0:
 		_game_over(false)
+
+func _on_key_pressed(keycode: int) -> void:
+	# Keys 1-9 map to grid cells
+	if keycode >= KEY_1 and keycode <= KEY_9:
+		var cell_index: int = keycode - KEY_1
+		if cell_index < grid_cells.size():
+			_on_cell_clicked(cell_index)
+
 
 func _on_cell_clicked(index: int) -> void:
 	if game_over:

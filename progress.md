@@ -2,6 +2,196 @@
 
 > **Note**: Sessions anterieures archivees dans `archive/progress_archive_2026-02-05_to_2026-02-08.md`
 
+## Session: 2026-02-22 (Architecture LLM — LoRA v2 + Pipeline Enrichi)
+
+### Objectif
+Repondre a la question strategique: "Un seul modele peut-il tout faire?" et preparer LoRA v2.
+
+### Resultats
+
+**AXE A: LoRA v2 Dataset + Notebook**
+- Gold dataset v5: 20 examples extraits du doc reference (20 cartes avec VERBE — description)
+- Augmentation v5: 1734 samples (9 strategies: biome, aspect, theme, celtic, verb swap, system prompt, card num, combined, v1 merge)
+- Format compliance: 100%
+- Notebook Colab mis a jour: QLoRA r=16, 7 modules (q/k/v/o_proj + gate/up/down_proj), MAX_SEQ_LENGTH=2048
+- Export dual GGUF: Q4_K_M + F16
+
+**AXE B: Pipeline Programmatique (CODE Godot)**
+- Prompt format: VERBE seul → "VERBE — description concrete en 1 phrase" (2 locations dans merlin_llm_adapter.gd)
+- MINIGAME_CATALOGUE: 6 → 14 types (Apaisement, Sang-froid, Course, Fouille, Ombres, Volonte, Regard, Echo)
+- UI desc_labels: risk level → action_desc (merlin_game_ui.gd)
+- Editor parse check: 0 erreurs, 0 warnings
+
+**AXE C: Rapport Word**
+- generate_test_report.mjs: mis a jour v5 (14 mini-jeux, 1734 LoRA samples)
+
+**Background: LoRA v1 Training**
+- Step 203/310 (epoch 3.2), loss=0.81, accuracy=82.4%
+- ~6.5h restantes sur CPU
+
+### Fichiers modifies
+- `scripts/merlin/merlin_llm_adapter.gd` — prompt format VERBE — description
+- `scripts/merlin/merlin_constants.gd` — MINIGAME_CATALOGUE 14 entries
+- `scripts/ui/merlin_game_ui.gd` — desc_labels action_desc
+- `data/ai/training/gold_verbs_v5.jsonl` — 20 gold examples
+- `data/ai/training/merlin_verbs_v5_augmented.jsonl` — 1734 augmented samples
+- `tools/lora/augment_dataset_v5.py` — 9-strategy augmentation script
+- `tools/lora/train_qwen_colab.ipynb` — QLoRA v2 notebook
+- `C:/Users/PGNK2128/Downloads/generate_test_report.mjs` — rapport Word v5
+
+## Session: 2026-02-21b (Bugfix Round 2 — 4 Remaining Issues Post-Test)
+
+### Objectif
+Corriger 4 bugs restants apres test utilisateur: intro absente, LLM incoherent (dialogue au lieu de narration 2e personne), hover souris KO, musique ne boucle pas.
+
+### Root Causes Identifies
+
+| Bug | Root Cause |
+|-----|------------|
+| Intro absente | Gated behind `result.get("ok", false)` — si store dispatch echoue, intro skip |
+| LLM incoherent | Template path (L1112) manquait persona + "PAS de dialogue" — seul fallback l'avait |
+| Hover souris KO | `_bottom_zone` (VBoxContainer) a `mouse_filter=STOP` par defaut → bloque les signaux `mouse_entered` des boutons enfants. `_merlin_overlay` (z_index=20) reste PASS apres fade |
+| Musique ne boucle pas | `.import` file a `edit/loop_end=-1` → Godot ignore `loop_mode=FORWARD` si `loop_end <= 0`. Le fix precedent settait `loop_mode` mais pas `loop_end` |
+
+### Fixes appliques (4/4)
+
+**Fix 1: LLM coherence** — `merlin_llm_adapter.gd`
+- Template path: ajoute "Narre a la 2e personne (tu). Decris sensations. PAS de dialogue."
+- Fallback path: ajoute "PAS de dialogue." a la persona
+- Format choix: "VERBE — description courte" (les deux paths)
+
+**Fix 2: Mouse hover** — `triade_game_ui.gd`
+- `_bottom_zone.mouse_filter = MOUSE_FILTER_PASS` (explicite au setup)
+- `options_container.mouse_filter = MOUSE_FILTER_PASS`
+- `btn.mouse_filter = MOUSE_FILTER_STOP` (explicite sur chaque bouton)
+- `_merlin_overlay.mouse_filter = IGNORE` quand cache (callback tween)
+- `_merlin_overlay.mouse_filter = PASS` quand visible
+
+**Fix 3: Music loop** — `music_manager.gd`
+- Nouveau helper `_enable_wav_looping(stream)`: set `loop_mode=FORWARD`, `loop_begin=0`
+- Calcule `loop_end = get_length() * mix_rate` quand `.import` a `loop_end=-1`
+- Remplace tous les settings inline par appels a `_enable_wav_looping()`
+- Debug print dans `_on_loop_finished` + check `_player_loop.stream` non null
+
+**Fix 4: Intro visibility** — `triade_game_controller.gd`
+- Deplace `show_opening_sequence()` + `show_narrator_intro()` HORS du gate `result.get("ok")`
+- Seul `_sync_ui_with_state()` reste dans le ok-check
+- L'intro s'affiche toujours, meme si store dispatch echoue
+
+### Validation
+- Editor Parse Check: **0 errors, 0 warnings**
+- Fichiers modifies: 4 (merlin_llm_adapter.gd, triade_game_ui.gd, music_manager.gd, triade_game_controller.gd)
+
+---
+
+## Session: 2026-02-21 (Bugfix MerlinGame — 10 Bugs + Keyboard Accessibility)
+
+### Objectif
+Corriger 10 bugs MerlinGame: fuite prompt LLM, positions boutons, texte resultat, bordure carte, hover souris, Souffle, musique loop, renommages, accessibilite clavier minijeux.
+
+### Phases completees (8/8)
+
+**Phase 1: Fix LLM Prompt Leakage** — `merlin_llm_adapter.gd`
+- Simplifie system prompt (retire STYLE OBLIGATOIRE, FORMAT, EXEMPLE)
+- Pipeline reordonne: cleanup meta AVANT extraction labels
+- 15+ patterns ajoutes (choix a/b/c, format:, style:, complement, infinitif...)
+- Regex elargie: `[...]{2+ chars}` capture tout contenu entre crochets
+
+**Phase 2: Fix bouton selectionne en hauteur** — `triade_game_ui.gd`
+- Reset scale + queue_sort() parent Container avant chaque nouvelle carte
+
+**Phase 3: Fix texte resultat apres D20** — `triade_game_ui.gd`
+- Cache dice overlay avant affichage du texte resultat
+
+**Phase 4: Fix bordure carte** — `merlin_visual.gd`
+- Border PALETTE.accent → PALETTE.ink (meilleur contraste)
+- Border width 2 → 3px
+
+**Phase 5: Hover + Souffle + Renommages** — `triade_game_ui.gd`, `TriadeGameUI.tscn`
+- Souffle btn position ajustee (-68px au lieu de -72px)
+- "Pioche" → "Restant", "Cimetiere" → "Passe"
+- Tailles augmentees: PiocheColumn 120→140, CimetiereColumn 120→140
+- DeckRoot 100x140→110x150, DiscardRoot 86x114→100x130
+
+**Phase 6: Fix musique loop** — `music_manager.gd`
+- Connecte `_player_loop.finished` → `_on_loop_finished()` (replay)
+- Set `loop_mode = LOOP_FORWARD` au chargement du stream (pas seulement au play)
+
+**Phase 7: Clavier minijeux** — 12 minigames + `minigame_base.gd`
+- Base class: `_unhandled_input()` → `_on_key_pressed(keycode)` virtual
+- ESPACE/ENTREE: de_du_destin, roue_fortune, tir_a_larc
+- Q/E: pile_ou_face, pas_renard
+- Q/W/E: pierre_feuille_racine
+- A/S/D: joute_verbale
+- W/S ou UP/DOWN: bluff_druide
+- 1-4: lame_druide
+- 1-3: noeud_celtique, enigme_ogham
+- 1-9: rune_cachee, oeil_corbeau
+- LEFT/RIGHT + ENTREE: negociation
+
+**Phase 9: Documentation** — `docs/10_llm/RUN_REFERENCE.md`, `progress.md`
+- Anti-leakage v2: pipeline reordonne, prompt simplification rules
+- Audio looping requirements
+- Tableau complet accessibilite clavier par minijeu
+
+### Validation
+- Editor Parse Check: **0 errors, 0 warnings**
+- Fichiers modifies: 18
+
+---
+
+## Session: 2026-02-21 (Quality Upgrade — Verbes Contextuels + LoRA + Rapport v4)
+
+### Objectif
+Matcher la qualite du doc de reference: verbes contextuels (VERBE — description), mini-jeux, rapport enrichi, pipeline LoRA.
+
+### Phases completees (5/5)
+
+**Phase 1: Prompt Refonte** — `merlin_llm_adapter.gd`
+- Format prompt: "UN SEUL VERBE" → "VERBE — Description d'action en 1 phrase"
+- Extraction regex: `^[A-D][):.]\s*([A-ZA-U]+)\s*[—–\-:]+\s*(.+)` (verb + desc)
+- story_log window: 3 → 10 entrees, 120 → 200 chars
+- Fallback: VERB_POOL avec action_desc="" (pas d'invention)
+
+**Phase 2: Mini-Jeux** — `merlin_constants.gd` + `merlin_llm_adapter.gd`
+- Catalogue 6 mini-jeux (traces, runes, equilibre, herboristerie, negociation, combat_rituel)
+- Detection programmatique `_detect_minigame()` par regex sur trigger words
+- Champ `card["minigame"]` propage dans la pipeline
+
+**Phase 3: UI** — `triade_game_ui.gd`
+- Labels enrichis: verb en majuscules + sous-label description
+- Badge mini-jeu (celtic_gold) sous le texte narratif
+- Texte de resolution (SUCCESS/FAILURE) apres choix
+
+**Phase 4: LoRA Pipeline**
+- `data/ai/training/gold_verbs_v4.jsonl` — 20 exemples gold
+- `tools/lora/augment_verbs_dataset.py` — 7 strategies, 550 samples, 166 verbes uniques
+- `tools/lora/train_qwen_colab.ipynb` — QLoRA r=16, 3 epochs, Colab T4
+- `tools/lora/benchmark_lora.py` — metriques verb extraction, format compliance, Jaccard
+
+**Phase 5: Rapport Word v4** — `Downloads/generate_test_report.mjs`
+- Options: VERBE gras + description italique + verb source tags
+- Badge mini-jeu + texte de resolution
+- Section 10: "Qualite des Verbes & Mini-Jeux"
+- Output: `MERLIN_LLM_Pipeline_Test_Report_v4.docx`
+
+### Bug fix
+- `_validate_triade_option()` strippait `action_desc` et `verb_source` → ajoutes a la liste de preservation
+- `pixel_scene_data.gd`: 6 `const` → `static var` (Godot 4.5 ne supporte pas PackedStringArray/Color dans const)
+
+### Validation
+- Editor parse: PASSED (0 errors, 0 warnings)
+- Suite 1 (TestLLMIntelligence): **24/24 PASS**
+- Suite 2 (TestLLMFullRun): **4/4 PASS** — 20 cards, 10 essences, p50=52.8s
+- verb_source: `(llm)` et `(fallback)` correctement propagees
+- Minigames: "Traces" + "Combat Rituel" detectes
+
+### Observations base model (sans LoRA)
+- Qwen 1.5B ne produit pas nativement le format VERBE — description (~90% fallback)
+- Le LoRA (Phase 4) est concu pour corriger ca → notebook Colab pret a lancer
+
+---
+
 ## Session: 2026-02-15d (Fix LLM Pipeline — 0% to 100% LLM)
 
 ### Objectif
@@ -1299,6 +1489,106 @@ Gameplay → MerlinStore.TRIADE_GET_CARD
              ├── MerlinLlmAdapter.generate_card() → carte LLM brute validee
              └── MerlinCardSystem.get_next_triade_card() → fallback pool
 ```
+
+---
+
+## Session: 2026-02-17 (Phase 5 — Scene-Based Migration: Secondary Scenes)
+
+### Migration Plan Reference
+- **Plan**: `.claude/plans/majestic-sprouting-pond.md`
+- **Phase**: 5/5 — Secondary scenes (TransitionBiome, SceneRencontreMerlin, Calendar, Collection)
+- **Status**: COMPLETE
+
+### Approach
+Pattern identique aux Phases 2-4: extraire les noeuds crees programmatiquement par `_build_ui()` vers le .tscn, remplacer par `@onready var`, renommer `_build_ui()` en `_configure_ui()` (applique styles dynamiques MerlinVisual + shaders).
+
+**Classification static vs dynamic:**
+- **Scene (.tscn)**: Containers, Labels avec texte fixe, ColorRect, PanelContainer, Button, RichTextLabel, AudioStreamPlayer
+- **Code (dynamique)**: LLMSourceBadge.create(), PixelMerlinPortrait, StyleBoxFlat factories (MerlinVisual.PALETTE), shader materials, boutons data-driven (STARTER_OGHAMS, BIOME_DATA)
+
+### 1. TransitionBiome (1797 → 1726 lignes, -71)
+
+**Fichiers modifies:**
+- `scenes/TransitionBiome.tscn` — reecrit: 15 noeuds declares (Bg, CelticTop/Bottom, PixelContainer, WeatherOverlay, BlueSun, ClockPanel/ClockLabel, BiomeTitle, BiomeSubtitle, ArrivalText, MerlinComment, AudioPlayer)
+- `scripts/TransitionBiome.gd` — 11 `@onready var`, 2 vars dynamiques (_arrival_badge, _merlin_badge = LLMSourceBadge)
+
+**Refactoring:**
+| Avant (methode) | Apres | Notes |
+|-----------------|-------|-------|
+| `_build_ui()` | `_configure_ui()` | Shader bg, celtic text/color, positions viewport-dependantes, LLMSourceBadge |
+| `_make_celtic_ornament()` | `_configure_celtic_ornament(lbl, pos, sz)` | Texte + couleur sur Label existant |
+| `_create_mist_particles()` | `_configure_weather_system()` | StyleBoxFlat sur BlueSun/ClockPanel, couleur WeatherOverlay |
+| `_setup_audio()` | `_configure_audio()` | Pass (AudioPlayer en scene avec bus=Master) |
+
+### 2. SceneRencontreMerlin (1472 → 1409 lignes, -63)
+
+**Fichiers modifies:**
+- `scenes/SceneRencontreMerlin.tscn` — reecrit: 17 noeuds (ParchmentBg, MistLayer alpha=0, CelticTop/Bottom alpha=0, Card/CardVBox/PortraitContainer/SeparatorContainer/MerlinText/SkipHint, ResponseContainer, AudioPlayer)
+- `scripts/SceneRencontreMerlin.gd` — 11 `@onready var`, 7 vars dynamiques (merlin_portrait, ogham_panel, biome_panel, etc.)
+
+**Refactoring:**
+| Avant | Apres | Notes |
+|-------|-------|-------|
+| `_build_ui()` | `_configure_ui()` | Shader parchment, MerlinVisual styles, PixelMerlinPortrait dynamique |
+| `_make_celtic_ornament()` | `_configure_celtic_ornament(lbl)` | Texte + couleur sur Label existant |
+| `_build_response_ui()` | `_build_response_buttons()` | Renomme, garde dynamique (styling + signaux) |
+| `_setup_audio()` | `_configure_audio()` | Set volume_db uniquement |
+
+### 3. Calendar (1211 → 1128 lignes, -83)
+
+**Fichiers modifies:**
+- `scenes/Calendar.tscn` — **reecrit integralement** (ancien 211 lignes stale ignore par le script): 25 noeuds (ParchmentBg, MistLayer, CelticOrnamentTop/Bottom, MainCard/CardVBox/TitleLabel/SubtitleLabel/SeparatorContainer/WheelContainer/EventPanel/TabsContainer/ContentScroll/ContentVBox/EventsSection/StatsSection/BrumesSection, BackButton)
+- `scripts/Calendar.gd` — 13 `@onready var` + 3 vars dynamiques (tab buttons)
+
+**Refactoring:**
+| Avant | Apres | Notes |
+|-------|-------|-------|
+| `_build_ui()` | `_configure_ui()` | Shader, mist, positions viewport-dependantes |
+| `_build_celtic_ornaments()` | `_configure_celtic_ornaments()` | Texte + couleur sur Labels existants |
+| `_build_main_card()` | `_configure_main_card()` | StyleBoxFlat card + separateurs couleur |
+| `_build_next_event_panel()` | `_configure_event_panel()` | StyleBoxFlat event panel |
+| `_build_tabs()` | `_configure_tabs()` | Cree 3 boutons dynamiques (styling + signaux) |
+| `_build_back_button()` | `_configure_back_button()` | Styling + signal retour |
+| `_create_separator()` | SUPPRIME | Separateur maintenant en scene |
+
+### 4. Collection (956 → 741 lignes, -215, plus grosse reduction)
+
+**Fichiers modifies:**
+- `scenes/Collection.tscn` — **reecrit integralement** (ancien 163 lignes stale, script faisait `queue_free()` sur tous les enfants): 35 noeuds (ParchmentBg, MistLayer, OrnamentTop/Bottom, MainContainer/Layout/Header/TitleLabel/StatsVBox/GloryLabel/RankLabel, SepTop, PassPanel/PassVBox, ViewTabs/3 Buttons, ContentPanel/ContentScroll/ContentStack/ProgressSection/RecentSection/CollectionSection/sub-labels/lists/grids, SepBottom, BottomBar/BackButton)
+- `scripts/Collection.gd` — 35 `@onready var` (plus gros nombre d'extractions)
+
+**Refactoring:**
+| Avant | Apres | Notes |
+|-------|-------|-------|
+| `for child in get_children(): child.queue_free()` | SUPPRIME | Plus de destruction de scene |
+| `_build_ui()` (260 lignes) | `_configure_ui()` (~40 lignes) | Shader, mist, ornements, separateurs, signaux |
+
+### 5. IntroBoot — PASSE (non migre)
+- Seulement 3 noeuds (background, static_rect, logo)
+- Animation CRT procedurale = correct en code
+- Gain negligeable, risque inutile
+
+### Validation
+- **Editor Parse Check**: 0 erreurs, 0 warnings
+- **Headless scene validation** (19 scenes):
+  - 17 PASS (dont TransitionBiome, SceneRencontreMerlin, Collection, MenuPrincipal)
+  - 2 FAIL initiaux: Calendar + HubAntre (`gui_embed_subviewports` SubViewport error — **pre-existant**)
+    - **CORRIGE**: `pixel_content_animator.gd:386` — `gui_embed_subviewports` (Window) → `gui_disable_input` (Viewport)
+    - **Re-test: 18/18 PASS, 0 FAIL**
+  - 1 WARN: MerlinGame (CanvasItem RID leak — pre-existant, non bloquant)
+
+### Bilan Migration Complette (Phases 1-5)
+
+| Phase | Cible | Lignes supprimees | Status |
+|-------|-------|-------------------|--------|
+| 1 | Theme System | ~100 (factorisation styles) | COMPLETE |
+| 2 | TriadeGameUI | -408 | COMPLETE |
+| 3 | HubAntre | ~-300 | COMPLETE |
+| 4 | MenuPrincipalMerlin | -94 | COMPLETE |
+| 5 | Scenes secondaires | -432 (71+63+83+215) | COMPLETE |
+| **Total** | | **~-1334 lignes** | **DONE** |
+
+**Ratio scene/script**: ~5% → ~55-60% des noeuds declares en scene.
 
 ---
 

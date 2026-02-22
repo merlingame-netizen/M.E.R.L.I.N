@@ -1,0 +1,556 @@
+{
+  "_meta": {
+    "version": "2.0.0",
+    "phase": 44,
+    "description": "Taxonomie des 6 categories d'evenements narratifs avec sous-types, triggers, poids et matrice de frequence dynamique. Consomme par event_category_selector.gd et merlin_card_system.gd.",
+    "references": "tag_glossary.json pour les tags, merlin_constants.gd pour les biomes et aspects"
+  },
+  "categories": {
+    "rencontre": {
+      "label": "Rencontre",
+      "description": "Le voyageur croise un etre sur son chemin. Etablit des relations, revele le monde.",
+      "base_weight": 0.30,
+      "sub_types": {
+        "voyageur": {
+          "description": "Marchands, pelerins, bardes errants",
+          "weight": 0.35,
+          "tags": ["stranger", "merchant", "pelerins", "barde"],
+          "triggers": {
+            "biome": ["cotes_sauvages", "landes_bruyere", "villages_celtes"],
+            "min_cards_played": 0
+          }
+        },
+        "creature": {
+          "description": "Animaux, etres feeriques, esprits",
+          "weight": 0.22,
+          "tags": ["korrigan", "corbeau", "cerf", "loup", "wisp", "sidhe"],
+          "triggers": {
+            "biome": ["foret_broceliande", "marais_korrigans"],
+            "aspect_condition": {"Ame": ["BAS", "HAUT"]}
+          }
+        },
+        "autochtone": {
+          "description": "Villageois, druides, nobles locaux",
+          "weight": 0.18,
+          "tags": ["village", "noble", "druide", "clan", "forgeron"],
+          "triggers": {
+            "biome": ["villages_celtes"],
+            "aspect_condition": {"Monde": ["EQUILIBRE"]}
+          }
+        },
+        "revenant": {
+          "description": "Esprit d'un mort, apparition, memoire vivante",
+          "weight": 0.15,
+          "tags": ["ankou", "memory", "nuit", "brume"],
+          "triggers": {
+            "flags_required": ["promise_broken"],
+            "min_cards_played": 10
+          }
+        },
+        "messager": {
+          "description": "Porteur de nouvelle, messager de quete ou d'avertissement",
+          "weight": 0.10,
+          "tags": ["stranger", "message_quete", "omen"],
+          "triggers": {
+            "flags_required": ["scenario_active"],
+            "min_cards_played": 5
+          }
+        }
+      },
+      "narrator_guidance": "Introduis le personnage avec un trait visible et un trait cache. Le joueur doit sentir qu'il y a plus sous la surface.",
+      "effect_profile": {
+        "primary": "SHIFT_ASPECT:Monde",
+        "secondary": ["ADD_KARMA", "SET_FLAG"],
+        "intensity": "low"
+      }
+    },
+    "dilemme": {
+      "label": "Dilemme moral",
+      "description": "Situation sans bonne reponse. Definit la personnalite du joueur, cree des flags.",
+      "base_weight": 0.20,
+      "sub_types": {
+        "sacrifice": {
+          "description": "Renoncer a quelque chose de precieux pour un bien superieur",
+          "weight": 0.30,
+          "tags": ["sacrifice", "choice", "courage"],
+          "triggers": {
+            "aspect_condition": {"Corps": ["HAUT"], "Ame": ["BAS"]},
+            "min_cards_played": 5
+          }
+        },
+        "loyaute": {
+          "description": "Choisir entre deux alliances, deux devoirs",
+          "weight": 0.25,
+          "tags": ["clan", "alliance", "betrayal", "promise"],
+          "triggers": {
+            "aspect_condition": {"Monde": ["HAUT"]},
+            "flags_required": ["has_ally"]
+          }
+        },
+        "verite": {
+          "description": "Reveler un secret ou le garder, dire la verite ou mentir",
+          "weight": 0.25,
+          "tags": ["mystere", "choice", "secret"],
+          "triggers": {
+            "aspect_condition": {"Ame": ["HAUT"]},
+            "min_cards_played": 8
+          }
+        },
+        "survie": {
+          "description": "Sauver sa peau au detriment d'autrui ou se sacrifier",
+          "weight": 0.20,
+          "tags": ["danger", "sacrifice", "peur", "courage"],
+          "triggers": {
+            "life_below": 40,
+            "tension_above": 50
+          }
+        }
+      },
+      "narrator_guidance": "Presente une situation ou les deux options ont un prix. Pas de jugement moral dans le texte. Merlin observe, ne juge pas.",
+      "effect_profile": {
+        "primary": "ADD_KARMA",
+        "secondary": ["SHIFT_ASPECT", "ADD_TENSION", "SET_FLAG"],
+        "intensity": "high"
+      }
+    },
+    "decouverte": {
+      "label": "Decouverte",
+      "description": "Le voyageur trouve quelque chose de nouveau. Ajoute des tags, ouvre des arcs.",
+      "base_weight": 0.12,
+      "sub_types": {
+        "lieu": {
+          "description": "Clairiere cachee, ruine ancienne, grotte, source",
+          "weight": 0.35,
+          "tags": ["clairiere", "nemeton", "source", "dolmen"],
+          "triggers": {
+            "biome": ["foret_broceliande", "collines_dolmens", "marais_korrigans"],
+            "aspect_condition": {"Corps": ["HAUT", "EQUILIBRE"]}
+          }
+        },
+        "objet": {
+          "description": "Artefact, message grave, relique oubliee",
+          "weight": 0.30,
+          "tags": ["ogham", "rune", "lore_fragment"],
+          "triggers": {
+            "biome": ["cercles_pierres", "collines_dolmens"],
+            "aspect_condition": {"Ame": ["HAUT"]}
+          }
+        },
+        "savoir": {
+          "description": "Rune dechiffree, rituel appris, secret revele",
+          "weight": 0.20,
+          "tags": ["ritual", "ogham", "mystere", "lore_fragment"],
+          "triggers": {
+            "aspect_condition": {"Ame": ["HAUT"]},
+            "min_cards_played": 8
+          }
+        },
+        "passage": {
+          "description": "Chemin sidhe, portail cache, raccourci entre biomes",
+          "weight": 0.15,
+          "tags": ["sidhe_passage", "brume", "portail", "mystere"],
+          "triggers": {
+            "biome": ["foret_broceliande", "marais_korrigans"],
+            "aspect_condition": {"Ame": ["HAUT"]}
+          }
+        }
+      },
+      "narrator_guidance": "Decris la decouverte avec emerveillement contenu. Merlin laisse le voyageur decouvrir par lui-meme, ne mache pas les revelations.",
+      "effect_profile": {
+        "primary": "ADD_TAG",
+        "secondary": ["PROGRESS_MISSION", "ADD_KARMA", "ADD_SOUFFLE"],
+        "intensity": "medium"
+      }
+    },
+    "conflit": {
+      "label": "Conflit",
+      "description": "Tension qui eclate. Escalade ou resolution de tensions existantes.",
+      "base_weight": 0.08,
+      "sub_types": {
+        "interpersonnel": {
+          "description": "Dispute entre individus, rivalite, desaccord",
+          "weight": 0.50,
+          "tags": ["dispute", "clan", "betrayal"],
+          "triggers": {
+            "flags_required": ["met_npc_conflict"],
+            "min_cards_since_last_encounter": 3
+          }
+        },
+        "faction": {
+          "description": "Conflit entre groupes, clans, villages",
+          "weight": 0.30,
+          "tags": ["war", "raid", "clan", "siege"],
+          "triggers": {
+            "aspect_condition": {"Monde": ["BAS", "HAUT"]},
+            "tension_above": 60
+          }
+        },
+        "interieur": {
+          "description": "Doute interieur, tentation, crise de foi",
+          "weight": 0.20,
+          "tags": ["dream", "peur", "choice", "memory"],
+          "triggers": {
+            "aspect_condition": {"Ame": ["BAS", "HAUT"]},
+            "tension_above": 40
+          }
+        }
+      },
+      "narrator_guidance": "Le conflit est deja engage. Merlin decrit la situation avec urgence mais sans panique. Les options sont escalader ou apaiser.",
+      "effect_profile": {
+        "primary": "ADD_TENSION",
+        "secondary": ["SHIFT_ASPECT", "DAMAGE_LIFE", "ADD_KARMA"],
+        "intensity": "high"
+      }
+    },
+    "merveille": {
+      "label": "Merveille",
+      "description": "Quelque chose de magique ou inexplique se produit. Revele le lore indirectement, donne des avantages.",
+      "base_weight": 0.08,
+      "sub_types": {
+        "vision_prophetique": {
+          "description": "Reve eveille, presage, message des esprits",
+          "weight": 0.30,
+          "tags": ["vision", "omen", "dream", "prophecy"],
+          "triggers": {
+            "aspect_condition": {"Ame": ["BAS", "HAUT"]},
+            "min_cards_played": 5
+          }
+        },
+        "manifestation": {
+          "description": "Phenomene etrange, aurore boreale, pierre qui chante",
+          "weight": 0.25,
+          "tags": ["awen", "sidhe", "mystere", "blessing"],
+          "triggers": {
+            "flags_required": ["promise_fulfilled"],
+            "biome": ["cercles_pierres", "foret_broceliande"]
+          }
+        },
+        "don": {
+          "description": "Cadeau mysterieux, pouvoir revele, Bestiole evolue",
+          "weight": 0.25,
+          "tags": ["bond", "ogham", "blessing", "gui"],
+          "triggers": {
+            "bestiole_bond_above": 70,
+            "karma_above": 20
+          }
+        },
+        "transformation": {
+          "description": "Metamorphose, evolution, changement de forme ou de nature",
+          "weight": 0.20,
+          "tags": ["metamorphose", "bond", "awen", "blessing"],
+          "triggers": {
+            "bestiole_bond_above": 70,
+            "min_cards_played": 12
+          }
+        }
+      },
+      "narrator_guidance": "Reste mysterieux. Ne nomme pas la magie, decris ses effets sur les sens. Merlin semble a la fois surpris et pas du tout surpris.",
+      "effect_profile": {
+        "primary": "ADD_SOUFFLE",
+        "secondary": ["HEAL_LIFE", "ADD_KARMA", "SHIFT_ASPECT"],
+        "intensity": "medium"
+      }
+    },
+    "catastrophe": {
+      "label": "Catastrophe",
+      "description": "Une crise frappe. Force des choix difficiles sous pression.",
+      "base_weight": 0.05,
+      "sub_types": {
+        "naturelle": {
+          "description": "Tempete, famine, inondation, gel brutal",
+          "weight": 0.50,
+          "tags": ["storm", "danger", "neige", "pluie"],
+          "triggers": {
+            "season": ["winter", "autumn"],
+            "biome": ["cotes_sauvages", "landes_bruyere"]
+          }
+        },
+        "surnaturelle": {
+          "description": "Malediction, brume devorante, esprit vengeur",
+          "weight": 0.30,
+          "tags": ["curse", "brume", "ankou", "nuit"],
+          "triggers": {
+            "flags_required": ["promise_broken"],
+            "tension_above": 70
+          }
+        },
+        "humaine": {
+          "description": "Raid ennemi, trahison, revolte",
+          "weight": 0.20,
+          "tags": ["raid", "betrayal", "war", "embuscade"],
+          "triggers": {
+            "aspect_condition": {"Monde": ["BAS", "HAUT"]},
+            "tension_above": 60
+          }
+        }
+      },
+      "narrator_guidance": "La catastrophe est soudaine et violente. Merlin est grave, presque triste. Les options sont: proteger soi-meme ou proteger autrui.",
+      "effect_profile": {
+        "primary": "DAMAGE_LIFE",
+        "secondary": ["SHIFT_ASPECT", "ADD_TENSION", "ADD_KARMA"],
+        "intensity": "very_high"
+      }
+    },
+    "epreuve": {
+      "label": "Epreuve",
+      "description": "Un defi actif teste les capacites du voyageur. Succes ou echec clair avec consequences proportionnelles.",
+      "base_weight": 0.07,
+      "sub_types": {
+        "physique": {
+          "description": "Test d'endurance, de force ou d'agilite",
+          "weight": 0.30,
+          "tags": ["challenge", "courage", "endurance"],
+          "triggers": {
+            "aspect_condition": {"Corps": ["BAS", "HAUT"]},
+            "min_cards_played": 3
+          }
+        },
+        "mentale": {
+          "description": "Enigme, devinette, test de memoire ou de logique",
+          "weight": 0.25,
+          "tags": ["enigme", "mystere", "ogham", "rune"],
+          "triggers": {
+            "aspect_condition": {"Ame": ["EQUILIBRE", "HAUT"]},
+            "min_cards_played": 5
+          }
+        },
+        "rituelle": {
+          "description": "Ceremonie druidique, rite de passage, invocation",
+          "weight": 0.25,
+          "tags": ["ritual", "nemeton", "ogham", "druide"],
+          "triggers": {
+            "biome": ["cercles_pierres", "foret_broceliande"],
+            "min_cards_played": 8
+          }
+        },
+        "sociale": {
+          "description": "Negociation, eloquence, epreuve de reputation",
+          "weight": 0.20,
+          "tags": ["village", "noble", "clan", "barde"],
+          "triggers": {
+            "aspect_condition": {"Monde": ["HAUT"]},
+            "biome": ["villages_celtes"]
+          }
+        }
+      },
+      "narrator_guidance": "L'epreuve a des regles claires. Decris le defi, les enjeux, puis les 3 approches. Option prudente reussit partiellement, audacieuse peut echouer spectaculairement ou triompher.",
+      "effect_profile": {
+        "primary": "SHIFT_ASPECT",
+        "secondary": ["ADD_KARMA", "PROGRESS_MISSION", "ADD_SOUFFLE"],
+        "intensity": "high"
+      }
+    },
+    "commerce": {
+      "label": "Commerce",
+      "description": "Echange, negociation, pacte. Le voyageur donne pour recevoir.",
+      "base_weight": 0.05,
+      "sub_types": {
+        "troc": {
+          "description": "Echange d'objets, de services ou d'informations",
+          "weight": 0.35,
+          "tags": ["merchant", "village", "forgeron"],
+          "triggers": {
+            "biome": ["villages_celtes", "cotes_sauvages"],
+            "min_cards_played": 3
+          }
+        },
+        "marche_noir": {
+          "description": "Deal douteux, prix cache, vendeur suspect",
+          "weight": 0.20,
+          "tags": ["stranger", "nuit", "secret", "korrigan"],
+          "triggers": {
+            "aspect_condition": {"Monde": ["BAS"]},
+            "min_cards_played": 10
+          }
+        },
+        "pacte": {
+          "description": "Accord contraignant avec consequences a long terme",
+          "weight": 0.25,
+          "tags": ["promise", "alliance", "druide", "sidhe"],
+          "triggers": {
+            "min_cards_played": 8,
+            "aspect_condition": {"Ame": ["BAS", "HAUT"]}
+          }
+        },
+        "offrande": {
+          "description": "Sacrifice volontaire aux esprits, a la nature ou au nemeton",
+          "weight": 0.20,
+          "tags": ["ritual", "sacrifice", "nemeton", "blessing"],
+          "triggers": {
+            "biome": ["cercles_pierres", "foret_broceliande"],
+            "karma_above": 10
+          }
+        }
+      },
+      "narrator_guidance": "Presente le deal clairement: ce que le voyageur donne, ce qu'il recoit. L'option prudente est un echange equitable, l'audacieuse est un pari. Ne jamais reveler la valeur reelle.",
+      "effect_profile": {
+        "primary": "SET_FLAG",
+        "secondary": ["ADD_KARMA", "SHIFT_ASPECT", "CREATE_PROMISE"],
+        "intensity": "medium"
+      }
+    },
+    "repos": {
+      "label": "Repos",
+      "description": "Moment de repit. Le voyageur reprend son souffle, reflechit, reve. Respiration narrative.",
+      "base_weight": 0.05,
+      "sub_types": {
+        "halte": {
+          "description": "Pause physique, feu de camp, abri temporaire",
+          "weight": 0.35,
+          "tags": ["source", "clairiere", "forest", "halte"],
+          "triggers": {
+            "life_below": 50,
+            "min_cards_played": 5
+          }
+        },
+        "festin": {
+          "description": "Repas partage avec des inconnus ou des allies",
+          "weight": 0.25,
+          "tags": ["village", "bond", "barde", "harvest", "festin_partage"],
+          "triggers": {
+            "biome": ["villages_celtes"],
+            "aspect_condition": {"Monde": ["EQUILIBRE"]}
+          }
+        },
+        "reve_lucide": {
+          "description": "Vision pendant le sommeil, message de l'au-dela",
+          "weight": 0.20,
+          "tags": ["dream", "vision", "memory", "nuit", "reve_vision"],
+          "triggers": {
+            "aspect_condition": {"Ame": ["BAS", "HAUT"]},
+            "min_cards_played": 10
+          }
+        },
+        "meditation": {
+          "description": "Communion avec la nature, introspection druidique",
+          "weight": 0.20,
+          "tags": ["ritual", "nemeton", "ogham", "awen", "meditation_druide"],
+          "triggers": {
+            "biome": ["cercles_pierres", "foret_broceliande"],
+            "aspect_condition": {"Ame": ["EQUILIBRE"]}
+          }
+        }
+      },
+      "narrator_guidance": "Le repos est une parenthese poetique. Merlin est doux, presque paternel. Les options ne menacent pas — elles offrent differentes formes de reconfort. Le danger est mis en pause.",
+      "effect_profile": {
+        "primary": "HEAL_LIFE",
+        "secondary": ["ADD_SOUFFLE", "SHIFT_ASPECT", "MODIFY_BOND"],
+        "intensity": "low"
+      }
+    }
+  },
+  "frequency_matrix": {
+    "_meta": "Multiplicateurs appliques au base_weight selon l'etat du jeu. Valeur 1.0 = neutre. Somme des poids finaux re-normalisee a 1.0.",
+    "debut_run": {
+      "description": "Cartes 1-8. Presentation du monde, peu de danger.",
+      "condition": {"cards_played_max": 8},
+      "multipliers": {
+        "rencontre": 1.30,
+        "dilemme": 0.60,
+        "decouverte": 1.70,
+        "conflit": 0.50,
+        "merveille": 1.00,
+        "catastrophe": 0.00,
+        "epreuve": 0.60,
+        "commerce": 0.40,
+        "repos": 1.50
+      }
+    },
+    "milieu_run": {
+      "description": "Cartes 9-20. Montee en tension, dilemmes frequents.",
+      "condition": {"cards_played_min": 9, "cards_played_max": 20},
+      "multipliers": {
+        "rencontre": 0.85,
+        "dilemme": 1.20,
+        "decouverte": 1.00,
+        "conflit": 1.50,
+        "merveille": 0.80,
+        "catastrophe": 0.40,
+        "epreuve": 1.30,
+        "commerce": 1.20,
+        "repos": 0.80
+      }
+    },
+    "fin_run": {
+      "description": "Cartes 21+. Resolution, enjeux maximaux.",
+      "condition": {"cards_played_min": 21},
+      "multipliers": {
+        "rencontre": 0.70,
+        "dilemme": 1.40,
+        "decouverte": 0.65,
+        "conflit": 1.50,
+        "merveille": 1.00,
+        "catastrophe": 1.00,
+        "epreuve": 1.50,
+        "commerce": 0.80,
+        "repos": 0.60
+      }
+    },
+    "jauges_stables": {
+      "description": "Tous les aspects a EQUILIBRE. Jeu calme, exploration favorisee.",
+      "condition": {"all_aspects": "EQUILIBRE"},
+      "multipliers": {
+        "rencontre": 1.00,
+        "dilemme": 0.80,
+        "decouverte": 1.35,
+        "conflit": 1.00,
+        "merveille": 1.20,
+        "catastrophe": 0.60,
+        "epreuve": 0.80,
+        "commerce": 1.30,
+        "repos": 1.20
+      }
+    },
+    "jauges_critiques": {
+      "description": "Au moins 1 aspect a BAS ou HAUT. Tension narrative maximale.",
+      "condition": {"any_aspect": ["BAS", "HAUT"]},
+      "multipliers": {
+        "rencontre": 0.55,
+        "dilemme": 1.60,
+        "decouverte": 0.65,
+        "conflit": 1.50,
+        "merveille": 0.50,
+        "catastrophe": 2.00,
+        "epreuve": 1.50,
+        "commerce": 0.50,
+        "repos": 1.80
+      }
+    }
+  },
+  "pity_system": {
+    "_meta": "Ajustements quand le joueur est en difficulte (life < 25 ou 2+ aspects extremes).",
+    "recovery_boost": {
+      "description": "Augmente les merveilles et decouvertes, reduit catastrophes et conflits",
+      "condition": {"life_below": 25},
+      "overrides": {
+        "merveille": 2.50,
+        "decouverte": 1.50,
+        "catastrophe": 0.10,
+        "conflit": 0.30,
+        "epreuve": 0.20,
+        "commerce": 0.50,
+        "repos": 2.50
+      }
+    },
+    "challenge_boost": {
+      "description": "Augmente conflits et dilemmes quand le joueur domine",
+      "condition": {"life_above": 80, "all_aspects": "EQUILIBRE"},
+      "overrides": {
+        "conflit": 2.00,
+        "dilemme": 1.50,
+        "catastrophe": 1.50,
+        "merveille": 0.30,
+        "decouverte": 0.50,
+        "epreuve": 2.00,
+        "commerce": 1.00,
+        "repos": 0.20
+      }
+    }
+  },
+  "anti_repetition": {
+    "min_gap_same_category": 2,
+    "min_gap_same_subtype": 4,
+    "max_consecutive_same_category": 2,
+    "history_window": 10
+  }
+}

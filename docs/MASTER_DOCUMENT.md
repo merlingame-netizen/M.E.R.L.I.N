@@ -12,7 +12,7 @@ Derniere MAJ: 2026-02-09
 - **Core duo**: Merlin (narrateur/juge IA) + Bestiole (compagnon support)
 - **Experience**: Choix simples (3 options), consequences complexes, verite progressive
 - **Engine**: Godot 4.x + GDExtension MerlinLLM (llama.cpp)
-- **LLM**: Qwen2.5-3B-Instruct Q4_K_M (2.0 GB) — Multi-Brain (1-4 cerveaux)
+- **LLM**: Qwen 2.5-3B-Instruct Q4_K_M (2.0 GB) — Multi-Brain (1-4 cerveaux)
 
 ---
 
@@ -333,7 +333,7 @@ SFXManager     <- 30+ sons proceduraux, synthese, pool audio
 ```
 IntroBoot -> IntroCeltOS -> IntroPersonalityQuiz -> IntroMerlinDialogue
     -> SceneEveil -> SceneAntreMerlin -> HubAntre
-    -> TransitionBiome -> TriadeGame -> [Fin de Run] -> HubAntre
+    -> TransitionBiome -> MerlinGame -> [Fin de Run] -> HubAntre
 ```
 
 | Scene | Description |
@@ -346,7 +346,7 @@ IntroBoot -> IntroCeltOS -> IntroPersonalityQuiz -> IntroMerlinDialogue
 | SceneAntreMerlin | Antre du druide, briefing |
 | HubAntre | HUB central (biome, bestiole, grimoire, save) |
 | TransitionBiome | Paysage pixel procedural (7 biomes) |
-| TriadeGame | Gameplay principal (cartes, aspects, LLM) |
+| MerlinGame | Gameplay principal (cartes, aspects, LLM) |
 | SceneRencontreMerlin | Rencontre narrative |
 | TestBrainPool | Test Multi-Brain interactif |
 | TestTriadeLLMBenchmark | Benchmark LLM TRIADE |

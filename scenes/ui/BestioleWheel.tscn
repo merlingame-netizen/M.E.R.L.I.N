@@ -1,0 +1,105 @@
+[gd_scene load_steps=2 format=3 uid="uid://dphd1bpi8li55"]
+
+[ext_resource type="Script" path="res://scripts/ui/bestiole_wheel_system.gd" id="1_script"]
+
+[node name="BestioleWheelSystem" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+script = ExtResource("1_script")
+
+[node name="BestioleButton" type="Button" parent="."]
+custom_minimum_size = Vector2(56, 56)
+anchors_preset = 3
+anchor_left = 1.0
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = -72.0
+offset_top = -72.0
+offset_right = -16.0
+offset_bottom = -16.0
+grow_horizontal = 0
+grow_vertical = 0
+tooltip_text = "Oghams de Bestiole (Tab)"
+theme_override_font_sizes/font_size = 24
+text = "✦"
+
+[node name="AwenDisplay" type="HBoxContainer" parent="."]
+anchors_preset = 3
+anchor_left = 1.0
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = -140.0
+offset_top = -28.0
+offset_right = -80.0
+offset_bottom = -12.0
+grow_horizontal = 0
+grow_vertical = 0
+theme_override_constants/separation = 2
+alignment = 1
+
+[node name="WheelOverlay" type="CanvasLayer" parent="."]
+layer = 10
+visible = false
+
+[node name="DimBG" type="ColorRect" parent="WheelOverlay"]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="WheelContainer" type="Control" parent="WheelOverlay"]
+layout_mode = 3
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="TooltipPanel" type="PanelContainer" parent="WheelOverlay"]
+visible = false
+anchors_preset = 7
+anchor_left = 0.5
+anchor_top = 1.0
+anchor_right = 0.5
+anchor_bottom = 1.0
+offset_left = -150.0
+offset_top = -120.0
+offset_right = 150.0
+offset_bottom = -40.0
+grow_horizontal = 2
+grow_vertical = 0
+
+[node name="TooltipVBox" type="VBoxContainer" parent="WheelOverlay/TooltipPanel"]
+layout_mode = 2
+theme_override_constants/separation = 4
+
+[node name="TooltipName" type="Label" parent="WheelOverlay/TooltipPanel/TooltipVBox"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 18
+horizontal_alignment = 1
+
+[node name="TooltipTree" type="Label" parent="WheelOverlay/TooltipPanel/TooltipVBox"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 12
+horizontal_alignment = 1
+
+[node name="TooltipEffect" type="Label" parent="WheelOverlay/TooltipPanel/TooltipVBox"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 14
+horizontal_alignment = 1
+autowrap_mode = 3
+
+[node name="TooltipCost" type="Label" parent="WheelOverlay/TooltipPanel/TooltipVBox"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 12
+horizontal_alignment = 1

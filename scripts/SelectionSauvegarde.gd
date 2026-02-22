@@ -206,7 +206,7 @@ func _go_to_scene(scene_path: String) -> void:
 	if not ResourceLoader.exists(scene_path):
 		_show_message("Scene introuvable.")
 		return
-	get_tree().change_scene_to_file(scene_path)
+	PixelTransition.transition_to(scene_path)
 
 
 func _show_message(text: String) -> void:
@@ -220,11 +220,20 @@ func _show_message(text: String) -> void:
 	msg.position.y += 150
 	msg.modulate.a = 0.0
 	add_child(msg)
-	var tween = create_tween()
-	tween.tween_property(msg, "modulate:a", 1.0, 0.2)
-	tween.tween_interval(1.2)
-	tween.tween_property(msg, "modulate:a", 0.0, 0.2)
-	tween.tween_callback(msg.queue_free)
+	var pca: Node = get_node_or_null("/root/PixelContentAnimator")
+	if pca:
+		await get_tree().process_frame
+		pca.reveal(msg, {"duration": 0.25, "block_size": 6})
+		await get_tree().create_timer(1.4).timeout
+		pca.dissolve(msg, {"duration": 0.25, "block_size": 6})
+		await get_tree().create_timer(0.3).timeout
+		msg.queue_free()
+	else:
+		var tween = create_tween()
+		tween.tween_property(msg, "modulate:a", 1.0, 0.2)
+		tween.tween_interval(1.2)
+		tween.tween_property(msg, "modulate:a", 0.0, 0.2)
+		tween.tween_callback(msg.queue_free)
 
 
 func _unhandled_input(event: InputEvent) -> void:

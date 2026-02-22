@@ -733,7 +733,7 @@ _Ce section est mise a jour automatiquement par l'agent Debug._
 - `[Multiple files]` Variable declared but never used → Prefixe avec underscore `_variable_name`
 - `[ScreenEffects.gd:set_merlin_mood]` Tween without commands → Collecte tweeners valides avant creation du Tween, skip si vide
 - `[SceneAntreMerlin.gd:762]` Variable "hide" shadows CanvasItem.hide() → Renomme en `hide_tween`
-- `[SceneAntreMerlin.gd, SceneEveil.gd, MenuPrincipalReigns.gd]` ACVoicebox wrong path "ac_voicebox" → Corrige en "acvoicebox" (nom reel du dossier)
+- `[SceneAntreMerlin.gd, SceneEveil.gd, MenuPrincipalMerlin.gd]` ACVoicebox wrong path "ac_voicebox" → Corrige en "acvoicebox" (nom reel du dossier)
 - `[TransitionBiome.gd:178]` set_anchors_preset() on GPUParticles2D (Node2D) → Remplace par position directe `Vector2(400, 300)`
 
 ### 2026-02-09 (Brain Pool QA Review)
@@ -770,6 +770,13 @@ _Ce section est mise a jour automatiquement par l'agent Debug._
 - **Pattern:** Prefetch LLM doit utiliser le state APRES resolution, pas avant (sinon contexte stale = repetition)
 - **Pattern:** Guardrails LLM doivent etre soft (warning) sauf mots interdits meta/AI. Mieux vaut un texte LLM imparfait qu'un fallback generique
 
+### 2026-02-19 (LLM Intelligence Pipeline Tests — T18-T27)
+- `[merlin_llm_adapter.gd:_validate_triade_option]` Sanitization drops gameplay keys → Crée un nouveau dict avec seulement `label`, `cost`, `effects`, perdant `dc_hint`, `risk_level`, `reward_type`, `result_success`, `result_failure`. Fix: boucle de preservation des clés gameplay
+- `[merlin_llm_adapter.gd:_wrap_text_as_card]` Regex anti-leakage case-insensitive manquant → `[A-D]` dans regex ne matche pas le texte lowercased. Fix: `[a-dA-D]`
+- `[test_llm_intelligence.gd:809,828,847]` `:=` avec constante Array non typée → `var safe_all := _adapter.VERB_POOL_SAFE` échoue car GDScript ne peut pas inférer le type. Fix: `var safe_all: Array = _adapter.VERB_POOL_SAFE`
+- **Pattern:** `_validate_triade_option()` et tout sanitizer de dict: TOUJOURS préserver les clés métier au-delà du trio label/cost/effects. Utiliser une liste blanche explicite de clés à conserver
+- **Pattern:** Regex anti-leakage: quand le texte est lowercased avant matching, le pattern doit inclure les deux casses `[a-dA-D]` ou utiliser le flag case-insensitive
+
 <!-- CORRECTIONS_LOG_END -->
 
 ---
@@ -798,5 +805,5 @@ _(Section vide — sera alimentee automatiquement au fil des dispatches)_
 
 ---
 
-*Last Updated: 2026-02-15 (14 corrections + LLM pipeline lessons + Section 7 Dispatcher)*
+*Last Updated: 2026-02-19 (17 corrections + LLM Intelligence Pipeline tests + Section 7 Dispatcher)*
 *Maintained by: Debug Agent, Optimizer Agent & Task Dispatcher*

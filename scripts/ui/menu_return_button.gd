@@ -11,14 +11,6 @@ const MENU_SCENE := "res://scenes/MenuPrincipal.tscn"
 const BUTTON_SIZE := Vector2(100, 40)
 const BUTTON_MARGIN := 16
 
-const PALETTE := {
-	"paper": Color(0.96, 0.92, 0.84),
-	"paper_dark": Color(0.93, 0.88, 0.80),
-	"ink": Color(0.12, 0.10, 0.08),
-	"ink_soft": Color(0.18, 0.16, 0.13),
-	"accent": Color(0.46, 0.18, 0.16),
-}
-
 @export var button_text: String = "Menu"
 @export var position_corner: int = 0  # 0=top-left, 1=top-right, 2=bottom-left, 3=bottom-right
 @export var confirm_before_exit: bool = false
@@ -46,27 +38,27 @@ func _ready() -> void:
 
 func _apply_style() -> void:
 	var normal := StyleBoxFlat.new()
-	normal.bg_color = PALETTE.paper
-	normal.border_color = PALETTE.ink_soft
+	normal.bg_color = MerlinVisual.PALETTE.paper
+	normal.border_color = MerlinVisual.PALETTE.ink_soft
 	normal.set_border_width_all(1)
 	normal.set_corner_radius_all(4)
 	normal.set_content_margin_all(8)
 
 	var hover := normal.duplicate()
-	hover.bg_color = PALETTE.paper_dark
-	hover.border_color = PALETTE.accent
+	hover.bg_color = MerlinVisual.PALETTE.paper_dark
+	hover.border_color = MerlinVisual.PALETTE.accent
 
 	var pressed_style := hover.duplicate()
-	pressed_style.bg_color = Color(PALETTE.paper_dark.r, PALETTE.paper_dark.g, PALETTE.paper_dark.b, 0.9)
+	pressed_style.bg_color = Color(MerlinVisual.PALETTE.paper_dark.r, MerlinVisual.PALETTE.paper_dark.g, MerlinVisual.PALETTE.paper_dark.b, 0.9)
 
 	add_theme_stylebox_override("normal", normal)
 	add_theme_stylebox_override("hover", hover)
 	add_theme_stylebox_override("pressed", pressed_style)
 	add_theme_stylebox_override("focus", hover)
 
-	add_theme_color_override("font_color", PALETTE.ink)
-	add_theme_color_override("font_hover_color", PALETTE.accent)
-	add_theme_color_override("font_pressed_color", PALETTE.accent)
+	add_theme_color_override("font_color", MerlinVisual.PALETTE.ink)
+	add_theme_color_override("font_hover_color", MerlinVisual.PALETTE.accent)
+	add_theme_color_override("font_pressed_color", MerlinVisual.PALETTE.accent)
 	add_theme_font_size_override("font_size", 16)
 
 	pivot_offset = BUTTON_SIZE / 2
@@ -125,7 +117,7 @@ func _return_to_menu() -> void:
 	_tween = create_tween().set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_IN)
 	_tween.tween_property(get_tree().current_scene, "modulate:a", 0.0, 0.2)
 	_tween.tween_callback(func():
-		get_tree().change_scene_to_file(target_scene)
+		PixelTransition.transition_to(target_scene)
 	)
 
 

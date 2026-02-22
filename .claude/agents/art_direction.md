@@ -45,7 +45,7 @@ You are the **Art Director** for the M.E.R.L.I.N. project. You are responsible f
 ### Art Direction: Pixel Celtic Mysticism
 
 #### Inspiration
-- Reigns series (flat, minimal cards)
+- Card-based narrative games (flat, minimal cards)
 - Celtic/Druidic imagery
 - GBA-era pixel art aesthetics
 - Medieval manuscripts and illuminations

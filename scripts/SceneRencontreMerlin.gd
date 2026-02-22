@@ -20,25 +20,7 @@ const LLM_STEP_TIMEOUT := 3.2
 const LLM_POLL_INTERVAL := 0.12
 const RESPONSE_CONFIRM_DELAY := 0.22
 
-# ═══════════════════════════════════════════════════════════════════════════════
-# PALETTE — Parchemin Mystique Breton
-# ═══════════════════════════════════════════════════════════════════════════════
-
-const PALETTE := {
-	"paper": Color(0.965, 0.945, 0.905),
-	"paper_dark": Color(0.935, 0.905, 0.855),
-	"paper_warm": Color(0.955, 0.930, 0.890),
-	"ink": Color(0.22, 0.18, 0.14),
-	"ink_soft": Color(0.38, 0.32, 0.26),
-	"ink_faded": Color(0.50, 0.44, 0.38, 0.35),
-	"accent": Color(0.58, 0.44, 0.26),
-	"accent_soft": Color(0.65, 0.52, 0.34),
-	"shadow": Color(0.25, 0.20, 0.16, 0.18),
-	"line": Color(0.40, 0.34, 0.28, 0.12),
-	"mist": Color(0.94, 0.92, 0.88, 0.35),
-	"ogham_glow": Color(0.45, 0.62, 0.32),
-	"bestiole": Color(0.42, 0.60, 0.72),
-}
+# PALETTE constant removed — using MerlinVisual.PALETTE autoload
 
 const CARD_MAX_WIDTH := 720.0
 const CARD_MAX_HEIGHT := 800.0
@@ -78,24 +60,26 @@ enum Phase {
 }
 
 # ═══════════════════════════════════════════════════════════════════════════════
-# NODES
+# SCENE NODES (@onready)
 # ═══════════════════════════════════════════════════════════════════════════════
 
-var parchment_bg: ColorRect
-var mist_layer: ColorRect
-var celtic_top: Label
-var celtic_bottom: Label
-var card: PanelContainer
-var card_vbox: VBoxContainer
-var portrait_container: CenterContainer
+@onready var parchment_bg: ColorRect = $ParchmentBg
+@onready var mist_layer: ColorRect = $MistLayer
+@onready var celtic_top: Label = $CelticTop
+@onready var celtic_bottom: Label = $CelticBottom
+@onready var card: PanelContainer = $Card
+@onready var card_vbox: VBoxContainer = $Card/CardVBox
+@onready var portrait_container: CenterContainer = $Card/CardVBox/PortraitContainer
+@onready var merlin_text: RichTextLabel = $Card/CardVBox/MerlinText
+@onready var skip_hint: Label = $Card/CardVBox/SkipHint
+@onready var response_container: VBoxContainer = $ResponseContainer
+@onready var audio_player: AudioStreamPlayer = $AudioPlayer
+
+# Dynamic nodes (created at runtime)
 var merlin_portrait: Control  # PixelMerlinPortrait (loaded dynamically)
-var merlin_text: RichTextLabel
-var skip_hint: Label
-var audio_player: AudioStreamPlayer
 var ogham_panel: PanelContainer
 var biome_panel: PanelContainer
 var biome_buttons: Dictionary = {}
-var response_container: VBoxContainer
 var response_buttons: Array[Button] = []
 var _dialogue_source_badge: PanelContainer
 var _response_source_badge: PanelContainer
@@ -149,8 +133,8 @@ func _ready() -> void:
 	_load_fonts()
 	_load_data()
 	_load_game_state()
-	_build_ui()
-	_setup_audio()
+	_configure_ui()
+	_configure_audio()
 
 	var screen_fx := get_node_or_null("/root/ScreenEffects")
 	if screen_fx and screen_fx.has_method("set_merlin_mood"):
@@ -266,115 +250,65 @@ func _clear_merlin_scene_context() -> void:
 # UI BUILD
 # ═══════════════════════════════════════════════════════════════════════════════
 
-func _build_ui() -> void:
-	# Parchment background
-	parchment_bg = ColorRect.new()
-	parchment_bg.set_anchors_preset(Control.PRESET_FULL_RECT)
-	parchment_bg.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	var paper_shader := load("res://shaders/reigns_paper.gdshader")
+func _configure_ui() -> void:
+	# Configure parchment background shader
+	var paper_shader := load("res://shaders/merlin_paper.gdshader")
 	if paper_shader:
 		var mat := ShaderMaterial.new()
 		mat.shader = paper_shader
-		mat.set_shader_parameter("paper_tint", PALETTE.paper)
+		mat.set_shader_parameter("paper_tint", MerlinVisual.PALETTE.paper)
 		mat.set_shader_parameter("grain_strength", 0.025)
 		mat.set_shader_parameter("vignette_strength", 0.08)
 		mat.set_shader_parameter("vignette_softness", 0.65)
 		parchment_bg.material = mat
 	else:
-		parchment_bg.color = PALETTE.paper
-	add_child(parchment_bg)
+		parchment_bg.color = MerlinVisual.PALETTE.paper
 
-	# Mist layer
-	mist_layer = ColorRect.new()
-	mist_layer.set_anchors_preset(Control.PRESET_FULL_RECT)
-	mist_layer.color = PALETTE.mist
-	mist_layer.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	mist_layer.modulate.a = 0.0
-	add_child(mist_layer)
+	# Configure mist layer
+	mist_layer.color = MerlinVisual.PALETTE.mist
 
-	# Celtic ornaments
-	celtic_top = _make_celtic_ornament()
-	add_child(celtic_top)
-	celtic_bottom = _make_celtic_ornament()
-	add_child(celtic_bottom)
+	# Configure celtic ornaments
+	_configure_celtic_ornament(celtic_top)
+	_configure_celtic_ornament(celtic_bottom)
 
-	# Central card
-	card = PanelContainer.new()
-	card.name = "Card"
-	card.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	# Style central card
 	_apply_card_style()
-	add_child(card)
 
-	card_vbox = VBoxContainer.new()
-	card_vbox.alignment = BoxContainer.ALIGNMENT_CENTER
-	card_vbox.add_theme_constant_override("separation", 16)
-	card.add_child(card_vbox)
-
-	# Pixel Merlin portrait
-	portrait_container = CenterContainer.new()
-	card_vbox.add_child(portrait_container)
-
+	# Create Pixel Merlin portrait (dynamic class)
 	var PixelMerlinClass = load("res://scripts/ui/pixel_merlin_portrait.gd")
 	merlin_portrait = PixelMerlinClass.new()
 	portrait_container.add_child(merlin_portrait)
 	merlin_portrait.call("setup", 192.0)
 
-	# Separator
-	var sep_container := HBoxContainer.new()
-	sep_container.alignment = BoxContainer.ALIGNMENT_CENTER
-	sep_container.add_theme_constant_override("separation", 8)
-	card_vbox.add_child(sep_container)
-	var sep_left := ColorRect.new()
-	sep_left.color = PALETTE.line
-	sep_left.custom_minimum_size = Vector2(60, 1)
-	sep_container.add_child(sep_left)
-	var sep_diamond := Label.new()
-	sep_diamond.text = "◆"
-	sep_diamond.add_theme_color_override("font_color", PALETTE.accent)
-	sep_diamond.add_theme_font_size_override("font_size", 10)
-	sep_container.add_child(sep_diamond)
-	var sep_right := ColorRect.new()
-	sep_right.color = PALETTE.line
-	sep_right.custom_minimum_size = Vector2(60, 1)
-	sep_container.add_child(sep_right)
+	# Style separator
+	var sep_left: ColorRect = $Card/CardVBox/SeparatorContainer/SepLeft
+	var sep_diamond: Label = $Card/CardVBox/SeparatorContainer/SepDiamond
+	var sep_right: ColorRect = $Card/CardVBox/SeparatorContainer/SepRight
+	sep_left.color = MerlinVisual.PALETTE.line
+	sep_diamond.add_theme_color_override("font_color", MerlinVisual.PALETTE.accent)
+	sep_right.color = MerlinVisual.PALETTE.line
 
-	# Text area
-	merlin_text = RichTextLabel.new()
-	merlin_text.name = "MerlinText"
-	merlin_text.bbcode_enabled = true
-	merlin_text.fit_content = true
-	merlin_text.scroll_active = false
-	merlin_text.custom_minimum_size = Vector2(440, 100)
-	merlin_text.visible_characters = 0
-	merlin_text.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	# Style text area
 	if body_font:
 		merlin_text.add_theme_font_override("normal_font", body_font)
 	merlin_text.add_theme_font_size_override("normal_font_size", 24)
-	merlin_text.add_theme_color_override("default_color", PALETTE.ink)
-	card_vbox.add_child(merlin_text)
+	merlin_text.add_theme_color_override("default_color", MerlinVisual.PALETTE.ink)
 
-	# Dialogue source badge (dev indicator: LLM / Fallback)
+	# Dialogue source badge (dynamic — LLMSourceBadge)
 	_dialogue_source_badge = LLMSourceBadge.create("static")
 	_dialogue_source_badge.visible = false
 	card_vbox.add_child(_dialogue_source_badge)
 
-	# Skip hint
-	skip_hint = Label.new()
-	skip_hint.text = "Appuie pour continuer"
-	skip_hint.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	skip_hint.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	# Style skip hint
 	if body_font:
 		skip_hint.add_theme_font_override("font", body_font)
-	skip_hint.add_theme_font_size_override("font_size", 14)
-	skip_hint.add_theme_color_override("font_color", PALETTE.ink_faded)
-	skip_hint.visible = false
-	card_vbox.add_child(skip_hint)
+	skip_hint.add_theme_color_override("font_color", MerlinVisual.PALETTE.ink_faded)
 
-	# Response buttons
-	_build_response_ui()
-	# Ogham panel
+	# Response buttons (dynamic)
+	_build_response_buttons()
+	# Ogham panel (dynamic)
 	_build_ogham_panel()
-	# Biome panel
+	# Biome panel (dynamic)
 	_build_biome_panel()
 
 	_layout_ui()
@@ -382,11 +316,11 @@ func _build_ui() -> void:
 
 func _apply_card_style() -> void:
 	var style := StyleBoxFlat.new()
-	style.bg_color = PALETTE.paper_warm
-	style.border_color = PALETTE.ink_faded
+	style.bg_color = MerlinVisual.PALETTE.paper_warm
+	style.border_color = MerlinVisual.PALETTE.ink_faded
 	style.set_border_width_all(1)
 	style.set_corner_radius_all(4)
-	style.shadow_color = PALETTE.shadow
+	style.shadow_color = MerlinVisual.PALETTE.shadow
 	style.shadow_size = 16
 	style.shadow_offset = Vector2(0, 4)
 	style.content_margin_left = 32
@@ -396,28 +330,16 @@ func _apply_card_style() -> void:
 	card.add_theme_stylebox_override("panel", style)
 
 
-func _make_celtic_ornament() -> Label:
-	var lbl := Label.new()
-	var pattern := ["─", "•", "─", "─", "◆", "─", "─", "•", "─"]
+func _configure_celtic_ornament(lbl: Label) -> void:
+	var pattern := ["\u2500", "\u2022", "\u2500", "\u2500", "\u25c6", "\u2500", "\u2500", "\u2022", "\u2500"]
 	var line := ""
 	for i in range(40):
 		line += pattern[i % pattern.size()]
 	lbl.text = line
-	lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	lbl.add_theme_color_override("font_color", PALETTE.ink_faded)
-	lbl.add_theme_font_size_override("font_size", 14)
-	lbl.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	lbl.modulate.a = 0.0
-	return lbl
+	lbl.add_theme_color_override("font_color", MerlinVisual.PALETTE.ink_faded)
 
 
-func _build_response_ui() -> void:
-	response_container = VBoxContainer.new()
-	response_container.add_theme_constant_override("separation", 10)
-	response_container.visible = false
-	response_container.mouse_filter = Control.MOUSE_FILTER_STOP
-	add_child(response_container)
-
+func _build_response_buttons() -> void:
 	for i in range(3):
 		var btn := Button.new()
 		btn.custom_minimum_size = Vector2(0, 44)
@@ -426,8 +348,8 @@ func _build_response_ui() -> void:
 		btn.mouse_filter = Control.MOUSE_FILTER_STOP
 
 		var btn_style := StyleBoxFlat.new()
-		btn_style.bg_color = PALETTE.paper_warm
-		btn_style.border_color = PALETTE.ink_faded
+		btn_style.bg_color = MerlinVisual.PALETTE.paper_warm
+		btn_style.border_color = MerlinVisual.PALETTE.ink_faded
 		btn_style.set_border_width_all(1)
 		btn_style.set_corner_radius_all(4)
 		btn_style.content_margin_left = 16
@@ -435,13 +357,13 @@ func _build_response_ui() -> void:
 		btn_style.content_margin_top = 8
 		btn_style.content_margin_bottom = 8
 		var btn_hover := btn_style.duplicate()
-		btn_hover.bg_color = PALETTE.paper_dark
-		btn_hover.border_color = PALETTE.accent
+		btn_hover.bg_color = MerlinVisual.PALETTE.paper_dark
+		btn_hover.border_color = MerlinVisual.PALETTE.accent
 		btn.add_theme_stylebox_override("normal", btn_style)
 		btn.add_theme_stylebox_override("hover", btn_hover)
 		btn.add_theme_stylebox_override("pressed", btn_hover)
-		btn.add_theme_color_override("font_color", PALETTE.ink)
-		btn.add_theme_color_override("font_hover_color", PALETTE.accent)
+		btn.add_theme_color_override("font_color", MerlinVisual.PALETTE.ink)
+		btn.add_theme_color_override("font_hover_color", MerlinVisual.PALETTE.accent)
 		if body_font:
 			btn.add_theme_font_override("font", body_font)
 		btn.add_theme_font_size_override("font_size", 16)
@@ -461,8 +383,8 @@ func _build_ogham_panel() -> void:
 	ogham_panel.visible = false
 	ogham_panel.modulate.a = 0.0
 	var style := StyleBoxFlat.new()
-	style.bg_color = PALETTE.paper_dark
-	style.border_color = PALETTE.ogham_glow
+	style.bg_color = MerlinVisual.PALETTE.paper_dark
+	style.border_color = MerlinVisual.PALETTE.ogham_glow
 	style.set_border_width_all(1)
 	style.set_corner_radius_all(6)
 	style.content_margin_left = 20
@@ -480,11 +402,17 @@ func _build_ogham_panel() -> void:
 		var vbox := VBoxContainer.new()
 		vbox.alignment = BoxContainer.ALIGNMENT_CENTER
 		vbox.add_theme_constant_override("separation", 4)
+		# Pixel art ogham icon (16x16 scaled to 36px)
+		var ogham_key: String = str(ogham.name).to_lower()
+		var ogham_icon := PixelOghamIcon.new()
+		ogham_icon.setup(ogham_key, 36.0)
+		ogham_icon.reveal(true)
+		vbox.add_child(ogham_icon)
 		var symbol := Label.new()
 		symbol.text = ogham.symbol
 		symbol.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 		symbol.add_theme_font_size_override("font_size", 32)
-		symbol.add_theme_color_override("font_color", PALETTE.ogham_glow)
+		symbol.add_theme_color_override("font_color", MerlinVisual.PALETTE.ogham_glow)
 		vbox.add_child(symbol)
 		var name_lbl := Label.new()
 		name_lbl.text = ogham.name
@@ -492,7 +420,7 @@ func _build_ogham_panel() -> void:
 		if title_font:
 			name_lbl.add_theme_font_override("font", title_font)
 		name_lbl.add_theme_font_size_override("font_size", 16)
-		name_lbl.add_theme_color_override("font_color", PALETTE.ink)
+		name_lbl.add_theme_color_override("font_color", MerlinVisual.PALETTE.ink)
 		vbox.add_child(name_lbl)
 		var meaning := Label.new()
 		meaning.text = ogham.meaning
@@ -500,7 +428,7 @@ func _build_ogham_panel() -> void:
 		if body_font:
 			meaning.add_theme_font_override("font", body_font)
 		meaning.add_theme_font_size_override("font_size", 11)
-		meaning.add_theme_color_override("font_color", PALETTE.ink_soft)
+		meaning.add_theme_color_override("font_color", MerlinVisual.PALETTE.ink_soft)
 		vbox.add_child(meaning)
 		# Gameplay effect label
 		var gameplay := Label.new()
@@ -509,7 +437,7 @@ func _build_ogham_panel() -> void:
 		if body_font:
 			gameplay.add_theme_font_override("font", body_font)
 		gameplay.add_theme_font_size_override("font_size", 10)
-		gameplay.add_theme_color_override("font_color", PALETTE.ogham_glow)
+		gameplay.add_theme_color_override("font_color", MerlinVisual.PALETTE.ogham_glow)
 		gameplay.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 		gameplay.custom_minimum_size.x = 120
 		vbox.add_child(gameplay)
@@ -522,8 +450,8 @@ func _build_biome_panel() -> void:
 	biome_panel.visible = false
 	biome_panel.modulate.a = 0.0
 	var style := StyleBoxFlat.new()
-	style.bg_color = PALETTE.paper_dark
-	style.border_color = PALETTE.accent_soft
+	style.bg_color = MerlinVisual.PALETTE.paper_dark
+	style.border_color = MerlinVisual.PALETTE.accent_soft
 	style.set_border_width_all(1)
 	style.set_corner_radius_all(6)
 	style.content_margin_left = 16
@@ -542,11 +470,11 @@ func _build_biome_panel() -> void:
 	if title_font:
 		title.add_theme_font_override("font", title_font)
 	title.add_theme_font_size_override("font_size", 18)
-	title.add_theme_color_override("font_color", PALETTE.accent)
+	title.add_theme_color_override("font_color", MerlinVisual.PALETTE.accent)
 	vbox.add_child(title)
 
 	var sep := ColorRect.new()
-	sep.color = PALETTE.line
+	sep.color = MerlinVisual.PALETTE.line
 	sep.custom_minimum_size = Vector2(0, 1)
 	vbox.add_child(sep)
 
@@ -560,22 +488,22 @@ func _build_biome_panel() -> void:
 		btn.disabled = true
 
 		var btn_style := StyleBoxFlat.new()
-		btn_style.bg_color = PALETTE.paper_warm
-		btn_style.border_color = PALETTE.ink_faded
+		btn_style.bg_color = MerlinVisual.PALETTE.paper_warm
+		btn_style.border_color = MerlinVisual.PALETTE.ink_faded
 		btn_style.set_border_width_all(1)
 		btn_style.set_corner_radius_all(3)
 		btn_style.content_margin_left = 10
 		btn_style.content_margin_right = 10
 		btn.add_theme_stylebox_override("normal", btn_style)
 		var btn_hover := btn_style.duplicate()
-		btn_hover.bg_color = PALETTE.paper_dark
+		btn_hover.bg_color = MerlinVisual.PALETTE.paper_dark
 		btn_hover.border_color = biome.color
 		btn_hover.set_border_width_all(2)
 		btn.add_theme_stylebox_override("hover", btn_hover)
 		if body_font:
 			btn.add_theme_font_override("font", body_font)
 		btn.add_theme_font_size_override("font_size", 14)
-		btn.add_theme_color_override("font_color", PALETTE.ink)
+		btn.add_theme_color_override("font_color", MerlinVisual.PALETTE.ink)
 		vbox.add_child(btn)
 		biome_buttons[key] = btn
 	add_child(biome_panel)
@@ -846,13 +774,20 @@ func _phase_bestiole_reveal() -> void:
 	if not is_inside_tree():
 		return
 
-	# Show ogham panel
+	# Show ogham panel (pixel reveal)
 	SFXManager.play("flash_boom")
 	ogham_panel.visible = true
+	ogham_panel.modulate.a = 0.0
 	_layout_ui()
-	var tw := create_tween()
-	tw.tween_property(ogham_panel, "modulate:a", 1.0, _scaled_delay(0.6)).set_trans(Tween.TRANS_SINE)
-	await tw.finished
+	var pca: Node = get_node_or_null("/root/PixelContentAnimator")
+	if pca:
+		await get_tree().process_frame
+		pca.reveal(ogham_panel, {"duration": 0.5, "block_size": 8})
+		await get_tree().create_timer(0.55).timeout
+	else:
+		var tw := create_tween()
+		tw.tween_property(ogham_panel, "modulate:a", 1.0, _scaled_delay(0.6)).set_trans(Tween.TRANS_SINE)
+		await tw.finished
 
 	# Store oghams
 	var gm := get_node_or_null("/root/GameManager")
@@ -871,10 +806,14 @@ func _phase_bestiole_reveal() -> void:
 	await _wait_for_advance(30.0)
 	_set_skip_hint(false)
 
-	# Hide ogham panel
-	var hide_tw := create_tween()
-	hide_tw.tween_property(ogham_panel, "modulate:a", 0.0, _scaled_delay(0.28))
-	await hide_tw.finished
+	# Hide ogham panel (pixel dissolve)
+	if pca:
+		pca.dissolve(ogham_panel, {"duration": 0.3, "block_size": 8})
+		await get_tree().create_timer(0.35).timeout
+	else:
+		var hide_tw := create_tween()
+		hide_tw.tween_property(ogham_panel, "modulate:a", 0.0, _scaled_delay(0.28))
+		await hide_tw.finished
 	ogham_panel.visible = false
 
 	_run_phase(Phase.MISSION_BRIEFING)
@@ -1106,12 +1045,19 @@ func _phase_biome_selection() -> void:
 	if not is_inside_tree():
 		return
 
-	# Show biome panel
+	# Show biome panel (pixel reveal)
 	biome_panel.visible = true
+	biome_panel.modulate.a = 0.0
 	_layout_ui()
-	var tw := create_tween()
-	tw.tween_property(biome_panel, "modulate:a", 1.0, _scaled_delay(0.45)).set_trans(Tween.TRANS_SINE)
-	await tw.finished
+	var pca_bp: Node = get_node_or_null("/root/PixelContentAnimator")
+	if pca_bp:
+		await get_tree().process_frame
+		pca_bp.reveal(biome_panel, {"duration": 0.4, "block_size": 8})
+		await get_tree().create_timer(0.45).timeout
+	else:
+		var tw := create_tween()
+		tw.tween_property(biome_panel, "modulate:a", 1.0, _scaled_delay(0.45)).set_trans(Tween.TRANS_SINE)
+		await tw.finished
 
 	# Enable buttons
 	for key in biome_buttons:
@@ -1155,7 +1101,7 @@ func _on_biome_selected(key: String) -> void:
 	# Visual feedback
 	for k in biome_buttons:
 		if k == key:
-			biome_buttons[k].add_theme_color_override("font_color", PALETTE.accent)
+			biome_buttons[k].add_theme_color_override("font_color", MerlinVisual.PALETTE.accent)
 		else:
 			biome_buttons[k].modulate.a = 0.4
 
@@ -1262,9 +1208,17 @@ func _show_response_blocks(line_index: int, context_line: String = "") -> void:
 	response_container.size.x = rc_width
 
 	response_container.visible = true
-	for i in range(visible_count):
-		var tw := create_tween()
-		tw.tween_property(response_buttons[i], "modulate:a", 1.0, _scaled_delay(0.16)).set_delay(_scaled_delay(float(i) * 0.04))
+	var pca_rb: Node = get_node_or_null("/root/PixelContentAnimator")
+	if pca_rb:
+		var btns_reveal: Array[Control] = []
+		for i in range(visible_count):
+			btns_reveal.append(response_buttons[i])
+		await get_tree().process_frame
+		pca_rb.reveal_group(btns_reveal, {"duration": 0.2, "block_size": 8, "inter_delay": 0.06})
+	else:
+		for i in range(visible_count):
+			var tw := create_tween()
+			tw.tween_property(response_buttons[i], "modulate:a", 1.0, _scaled_delay(0.16)).set_delay(_scaled_delay(float(i) * 0.04))
 
 	while _response_chosen < 0 and not scene_finished:
 		if not is_inside_tree():
@@ -1274,9 +1228,13 @@ func _show_response_blocks(line_index: int, context_line: String = "") -> void:
 	if _response_chosen >= 0 and is_inside_tree():
 		await get_tree().create_timer(_scaled_delay(RESPONSE_CONFIRM_DELAY)).timeout
 
-	var hide_tw := create_tween()
-	hide_tw.tween_property(response_container, "modulate:a", 0.0, _scaled_delay(0.22))
-	await hide_tw.finished
+	if pca_rb:
+		pca_rb.dissolve(response_container, {"duration": 0.25, "block_size": 8})
+		await get_tree().create_timer(0.3).timeout
+	else:
+		var hide_tw := create_tween()
+		hide_tw.tween_property(response_container, "modulate:a", 0.0, _scaled_delay(0.22))
+		await hide_tw.finished
 	response_container.visible = false
 	response_container.modulate.a = 1.0
 	for btn in response_buttons:
@@ -1288,7 +1246,7 @@ func _on_response_chosen(index: int) -> void:
 	_response_chosen = index
 	for i in range(response_buttons.size()):
 		if i == index:
-			response_buttons[i].add_theme_color_override("font_color", PALETTE.accent)
+			response_buttons[i].add_theme_color_override("font_color", MerlinVisual.PALETTE.accent)
 		else:
 			response_buttons[i].modulate.a = 0.4
 
@@ -1419,7 +1377,7 @@ func _transition_out() -> void:
 	tween.tween_callback(func():
 		_clear_merlin_scene_context()
 		if is_inside_tree():
-			get_tree().change_scene_to_file(NEXT_SCENE)
+			PixelTransition.transition_to(NEXT_SCENE)
 	)
 	await tween.finished
 
@@ -1428,11 +1386,8 @@ func _transition_out() -> void:
 # AUDIO
 # ═══════════════════════════════════════════════════════════════════════════════
 
-func _setup_audio() -> void:
-	audio_player = AudioStreamPlayer.new()
-	audio_player.bus = "Master"
+func _configure_audio() -> void:
 	audio_player.volume_db = linear_to_db(BLIP_VOLUME)
-	add_child(audio_player)
 
 
 func _play_blip() -> void:

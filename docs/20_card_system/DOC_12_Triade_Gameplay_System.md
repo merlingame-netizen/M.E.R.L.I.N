@@ -7,7 +7,7 @@
 
 ## Vision
 
-DRU se differencie de Reigns par un systeme base sur les **Triades Celtiques**:
+Le systeme Merlin est base sur les **Triades Celtiques**:
 - 3 aspects au lieu de 4 jauges
 - 3 etats discrets au lieu de valeurs 0-100
 - 3 options par carte au lieu de 2
@@ -402,7 +402,7 @@ Sur 30 cartes:
 | `dru_effect_engine.gd` | SHIFT_ASPECT au lieu de ADD_RESOURCE |
 | `dru_llm_adapter.gd` | Nouveau format de prompt/response |
 | `dru_constants.gd` | Nouvelles constantes (ASPECTS, ETATS) |
-| `reigns_game_ui.gd` | UI 3 options, symboles celtiques |
+| `triade_game_ui.gd` | UI 3 options, symboles celtiques |
 
 ### 8.2 Nouveaux Effets
 
