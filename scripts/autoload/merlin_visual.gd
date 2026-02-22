@@ -1109,3 +1109,74 @@ static func apply_theme_to_root(root: Control) -> void:
 	var theme := get_merlin_theme()
 	if theme:
 		root.theme = theme
+
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# KINGDOM TWO CROWNS PORTRAIT HELPERS (D.2)
+# ═══════════════════════════════════════════════════════════════════════════════
+# Pipeline: pixel art reference → shader + palette swap → GBC aesthetic
+
+
+## Create a Kingdom Two Crowns style portrait material (palette swap + outline)
+## @param biome: biome key for palette selection (default "broceliande")
+## @return ShaderMaterial configured for Kingdom Two Crowns aesthetic
+static func create_kingdom_portrait_material(biome: String = "broceliande") -> ShaderMaterial:
+	var shader: Shader = load("res://shaders/palette_swap.gdshader")
+	var material := ShaderMaterial.new()
+	material.shader = shader
+
+	# Create palette texture from biome CRT palette
+	var palette_tex: ImageTexture = create_kingdom_palette(biome)
+	material.set_shader_parameter("palette", palette_tex)
+	material.set_shader_parameter("target_row", 1)
+	material.set_shader_parameter("tolerance", 0.02)
+	material.set_shader_parameter("blend", 1.0)
+
+	return material
+
+
+## Create Kingdom Two Crowns palette texture (reference row + target row)
+## @param biome: biome key for target palette
+## @return ImageTexture with reference colors (row 0) and biome palette (row 1)
+static func create_kingdom_palette(biome: String = "broceliande") -> ImageTexture:
+	var biome_colors: Array = BIOME_CRT_PALETTES.get(biome, BIOME_CRT_PALETTES["broceliande"])
+
+	# Reference palette — standard grayscale 8 levels (what the pixel art uses)
+	var reference_palette: Array = [
+		Color(0.00, 0.00, 0.00),  # Black (darkest)
+		Color(0.14, 0.14, 0.14),  # Very dark gray
+		Color(0.29, 0.29, 0.29),  # Dark gray
+		Color(0.43, 0.43, 0.43),  # Medium-dark gray
+		Color(0.57, 0.57, 0.57),  # Medium gray
+		Color(0.71, 0.71, 0.71),  # Medium-light gray
+		Color(0.86, 0.86, 0.86),  # Light gray
+		Color(1.00, 1.00, 1.00),  # White (brightest)
+	]
+
+	# Create 8x2 image (8 colors wide, 2 rows tall)
+	var img := Image.create(8, 2, false, Image.FORMAT_RGBA8)
+
+	# Row 0: reference palette (grayscale)
+	for i: int in range(8):
+		img.set_pixel(i, 0, reference_palette[i])
+
+	# Row 1: target palette (biome CRT colors)
+	for i: int in range(8):
+		img.set_pixel(i, 1, biome_colors[i])
+
+	return ImageTexture.create_from_image(img)
+
+
+## Apply Kingdom Two Crowns style to a TextureRect (portrait node)
+## @param portrait: TextureRect containing pixel art
+## @param biome: biome key for palette (default current biome or "broceliande")
+static func apply_kingdom_portrait(portrait: TextureRect, biome: String = "") -> void:
+	if biome.is_empty():
+		biome = "broceliande"  # Default fallback
+
+	var material: ShaderMaterial = create_kingdom_portrait_material(biome)
+	portrait.material = material
+
+	# Ensure texture filtering is off (pixel-perfect)
+	if portrait.texture:
+		portrait.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST

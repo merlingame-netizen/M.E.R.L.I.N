@@ -27,7 +27,9 @@ func _ready() -> void:
 	scroll.add_child(vbox)
 
 	_add_title(vbox)
+	_add_seasonal_demo(vbox)
 	_add_portraits_section(vbox)
+	_add_kingdom_portraits_section(vbox)
 	_add_ogham_section(vbox)
 	_add_shader_controls(vbox)
 	_add_animation_controls(vbox)
@@ -60,6 +62,64 @@ func _add_title(parent: Control) -> void:
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
+# SEASONAL EFFECTS DEMO (D.1)
+# ═══════════════════════════════════════════════════════════════════════════════
+
+func _add_seasonal_demo(parent: Control) -> void:
+	parent.add_child(_make_section_label("Effets Saisonniers — Menu"))
+
+	var demo_container := PanelContainer.new()
+	demo_container.custom_minimum_size = Vector2(600, 300)
+	var demo_style := StyleBoxFlat.new()
+	demo_style.bg_color = Color(0.02, 0.04, 0.02)
+	demo_style.border_color = MerlinVisual.CRT_PALETTE.get("border", Color(0.12, 0.30, 0.14))
+	demo_style.set_border_width_all(1)
+	demo_container.add_theme_stylebox_override("panel", demo_style)
+	parent.add_child(demo_container)
+
+	var demo_label := Label.new()
+	demo_label.text = "Zone de demo effets saisonniers\n(particules neige/feuilles/fleurs/chaleur)"
+	demo_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	demo_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	demo_label.add_theme_color_override("font_color", MerlinVisual.CRT_PALETTE.get("phosphor_dim", Color(0.12, 0.60, 0.24)))
+	demo_container.add_child(demo_label)
+
+	# Apply seasonal shader
+	var shader_mat := ShaderMaterial.new()
+	var shader: Shader = load("res://shaders/seasonal_particles.gdshader")
+	shader_mat.shader = shader
+	shader_mat.set_shader_parameter("season_type", 3)  # Winter by default
+	shader_mat.set_shader_parameter("particle_color", Color(0.80, 0.85, 0.95, 0.20))
+	shader_mat.set_shader_parameter("particle_density", 0.50)
+	shader_mat.set_shader_parameter("animation_speed", 1.0)
+	demo_container.material = shader_mat
+
+	# Season selector buttons
+	var season_buttons := HBoxContainer.new()
+	season_buttons.add_theme_constant_override("separation", 8)
+	parent.add_child(season_buttons)
+
+	var seasons := [
+		{"key": "printemps", "label": "Printemps (fleurs)", "type": 0},
+		{"key": "ete", "label": "Ete (chaleur)", "type": 1},
+		{"key": "automne", "label": "Automne (feuilles)", "type": 2},
+		{"key": "hiver", "label": "Hiver (neige)", "type": 3},
+	]
+
+	for season: Dictionary in seasons:
+		var btn := Button.new()
+		btn.text = season["label"]
+		btn.add_theme_font_size_override("font_size", 12)
+		btn.pressed.connect(func() -> void:
+			var settings: Dictionary = MerlinVisual.SEASONAL_PALETTES.get(season["key"], {})
+			shader_mat.set_shader_parameter("season_type", season["type"])
+			if settings.has("particle_color"):
+				shader_mat.set_shader_parameter("particle_color", settings["particle_color"])
+		)
+		season_buttons.add_child(btn)
+
+
+# ═══════════════════════════════════════════════════════════════════════════════
 # PORTRAITS SECTION
 # ═══════════════════════════════════════════════════════════════════════════════
 
@@ -87,6 +147,64 @@ func _add_portraits_section(parent: Control) -> void:
 
 		hbox.add_child(container)
 		_portraits.append(portrait)
+
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# KINGDOM TWO CROWNS PORTRAITS SECTION (D.2)
+# ═══════════════════════════════════════════════════════════════════════════════
+
+func _add_kingdom_portraits_section(parent: Control) -> void:
+	parent.add_child(_make_section_label("Portraits Kingdom Two Crowns — Pipeline Shader + Palette GBC"))
+
+	var desc_label := _make_label("Pipeline: pixel art grayscale → palette_swap.gdshader → BIOME_CRT_PALETTES", 11)
+	desc_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	desc_label.add_theme_color_override("font_color", MerlinVisual.CRT_PALETTE.get("phosphor_dim", Color(0.12, 0.60, 0.24)))
+	parent.add_child(desc_label)
+
+	var grid := GridContainer.new()
+	grid.columns = 4
+	grid.add_theme_constant_override("h_separation", int(H_GAP))
+	grid.add_theme_constant_override("v_separation", int(V_GAP))
+	parent.add_child(grid)
+
+	var biomes: Array = ["broceliande", "landes", "cotes", "villages", "cercles", "marais", "collines"]
+	var demo_portrait_path := "res://Assets/portraits/pixel/demo_portrait_32x32.png"
+
+	# Check if demo portrait exists, otherwise create placeholder
+	var has_demo: bool = ResourceLoader.exists(demo_portrait_path)
+
+	for biome: String in biomes:
+		var container := VBoxContainer.new()
+		container.alignment = BoxContainer.ALIGNMENT_CENTER
+
+		var portrait_rect := TextureRect.new()
+		portrait_rect.custom_minimum_size = Vector2(PORTRAIT_SIZE, PORTRAIT_SIZE)
+		portrait_rect.expand_mode = TextureRect.EXPAND_FIT_WIDTH_PROPORTIONAL
+		portrait_rect.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+
+		if has_demo:
+			portrait_rect.texture = load(demo_portrait_path)
+		else:
+			# Create placeholder gradient
+			var placeholder := Image.create(32, 32, false, Image.FORMAT_RGBA8)
+			for y: int in range(32):
+				var brightness: float = float(y) / 31.0
+				var gray: Color = Color(brightness, brightness, brightness, 1.0)
+				for x: int in range(32):
+					placeholder.set_pixel(x, y, gray)
+			portrait_rect.texture = ImageTexture.create_from_image(placeholder)
+
+		# Apply Kingdom Two Crowns style
+		MerlinVisual.apply_kingdom_portrait(portrait_rect, biome)
+
+		container.add_child(portrait_rect)
+
+		var biome_label := _make_label(biome.capitalize(), 10)
+		biome_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		biome_label.add_theme_color_override("font_color", MerlinVisual.BIOME_CRT_PALETTES.get(biome, [Color.WHITE])[5])
+		container.add_child(biome_label)
+
+		grid.add_child(container)
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
