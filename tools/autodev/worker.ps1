@@ -173,14 +173,11 @@ try {
 
     # Write prompt to temp file to avoid CLI argument truncation
     $promptFile = Join-Path $env:TEMP "autodev_prompt_$Domain.txt"
-    [System.IO.File]::WriteAllText($promptFile, $prompt, [System.Text.Encoding]::UTF8)
+    $prompt | Out-File -FilePath $promptFile -Encoding UTF8 -NoNewline
     Write-Host "[WORKER] Prompt written to $promptFile ($($prompt.Length) chars)" -ForegroundColor Gray
 
-    # Set UTF-8 encoding for output capture (PS 5.x compat)
-    [Console]::OutputEncoding = [System.Text.Encoding]::UTF8
-    $OutputEncoding = [System.Text.Encoding]::UTF8
-
     # Pipe prompt via stdin to claude -p (avoids argument length limits)
+    # Note: no .NET calls -- Constrained Language Mode safe
     $output = Get-Content $promptFile -Raw | & $claudeExe -p --allowed-tools $allowedTools --model $model --output-format text --permission-mode bypassPermissions 2>&1 | Tee-Object -FilePath $logFile
 
     $exitCode = $LASTEXITCODE
