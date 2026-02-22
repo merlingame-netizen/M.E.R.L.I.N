@@ -94,6 +94,11 @@ function Build-WorkerPrompt {
     $lines = @(
         "Tu es un worker autonome du systeme AUTODEV pour le projet M.E.R.L.I.N. (Godot 4)."
         ""
+        "MODE: NON-INTERACTIF (claude -p). Tu NE PEUX PAS poser de questions."
+        "BYPASS TOTAL du questioning protocol. Agis directement, sans demander confirmation."
+        "NE JAMAIS utiliser AskUserQuestion. NE JAMAIS attendre de reponse."
+        "Si une information manque, fais un choix raisonnable et documente-le."
+        ""
         "IDENTITE: Domaine $Domain -- $($domainConfig.description)"
         "BRANCH: $branch"
         "WORKING DIRECTORY: $worktreePath"
@@ -107,7 +112,7 @@ function Build-WorkerPrompt {
         "REGLE ABSOLUE: Si tu as besoin de modifier un fichier hors de cette liste,"
         "NE LE FAIS PAS. Ecris un patch request JSON dans tools/autodev/status/patches/$Domain.json"
         ""
-        "TACHES A REALISER:"
+        "TACHES A REALISER (JSON):"
         $tasksJson
         ""
         "AGENTS A CONSULTER (lis ces fichiers pour les instructions):"
@@ -126,12 +131,12 @@ function Build-WorkerPrompt {
         "1. Lire le code existant des fichiers de ton scope"
         "2. Lire les agents assignes pour les instructions"
         "3. Implementer en respectant les patterns existants"
-        "4. Ecrire un status JSON dans tools/autodev/status/$Domain.json"
-        "5. git add + git commit -m feat($Domain): description"
+        "4. git add + git commit -m feat($Domain): description"
         ""
         "SI BLOQUE: Ecris dans tools/autodev/status/${Domain}_blocked.json pourquoi."
         ""
-        "COMMENCE MAINTENANT. Traite les taches dans l'ordre de priorite (high puis medium puis low)."
+        "IMPORTANT: Tu es AUTONOME. Commence IMMEDIATEMENT. Pas de questions."
+        "Traite les taches dans l'ordre de priorite (high puis medium puis low)."
     )
 
     return ($lines -join "`n")
@@ -166,8 +171,17 @@ try {
 
     $logFile = Join-Path $logDir "$Domain-$(Get-Date -Format 'yyyyMMdd-HHmmss').log"
 
-    # Execute claude -p with the worker prompt (autonomous mode)
-    $output = & $claudeExe -p $prompt --allowed-tools $allowedTools --model $model --output-format text --permission-mode bypassPermissions 2>&1 | Tee-Object -FilePath $logFile
+    # Write prompt to temp file to avoid CLI argument truncation
+    $promptFile = Join-Path $env:TEMP "autodev_prompt_$Domain.txt"
+    [System.IO.File]::WriteAllText($promptFile, $prompt, [System.Text.Encoding]::UTF8)
+    Write-Host "[WORKER] Prompt written to $promptFile ($($prompt.Length) chars)" -ForegroundColor Gray
+
+    # Set UTF-8 encoding for output capture (PS 5.x compat)
+    [Console]::OutputEncoding = [System.Text.Encoding]::UTF8
+    $OutputEncoding = [System.Text.Encoding]::UTF8
+
+    # Pipe prompt via stdin to claude -p (avoids argument length limits)
+    $output = Get-Content $promptFile -Raw | & $claudeExe -p --allowed-tools $allowedTools --model $model --output-format text --permission-mode bypassPermissions 2>&1 | Tee-Object -FilePath $logFile
 
     $exitCode = $LASTEXITCODE
 
