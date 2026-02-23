@@ -258,8 +258,34 @@ try {
         $stagedFiles = @(git diff --cached --name-only 2>$null)
         Pop-Location
 
-        Write-Status -Status "done" -Completed $taskIds -Remaining @()
-        & powershell -File (Join-Path $scriptDir "notify.ps1") -Event "worker_done" -Domain $Domain -Message "Termine: $($modifiedFiles.Count + $stagedFiles.Count) fichiers modifies"
+        # INFRA.2: Run validate.bat Step 0 automatically before marking as done
+        Write-Host "[WORKER] Running validation (Step 0)..." -ForegroundColor Cyan
+        $validateScript = Join-Path $scriptDir "generate_test_results.ps1"
+        $testResultsFile = Join-Path $scriptDir "status\test_results.json"
+
+        if (Test-Path $validateScript) {
+            Push-Location $worktreePath
+            $validateOutput = & powershell -ExecutionPolicy Bypass -File $validateScript -OutputFile $testResultsFile 2>&1
+            $validateExitCode = $LASTEXITCODE
+            Pop-Location
+
+            if ($validateExitCode -ne 0) {
+                # Validation failed - set status to error
+                Write-Host "[WORKER] Validation FAILED - setting status to 'error'" -ForegroundColor Red
+                Write-Status -Status "error" -Remaining $taskIds -Blockers @("Validation failed: $($validateExitCode) errors found")
+                & powershell -File (Join-Path $scriptDir "notify.ps1") -Event "worker_error" -Domain $Domain -Message "Validation failed - worker cannot complete" -Details ($validateOutput | Select-Object -Last 20 | Out-String)
+            } else {
+                # Validation passed - mark as done
+                Write-Host "[WORKER] Validation PASSED" -ForegroundColor Green
+                Write-Status -Status "done" -Completed $taskIds -Remaining @()
+                & powershell -File (Join-Path $scriptDir "notify.ps1") -Event "worker_done" -Domain $Domain -Message "Termine: $($modifiedFiles.Count + $stagedFiles.Count) fichiers modifies, validation OK"
+            }
+        } else {
+            # Validation script not found - proceed without validation
+            Write-Host "[WORKER] Validation script not found, skipping validation" -ForegroundColor Yellow
+            Write-Status -Status "done" -Completed $taskIds -Remaining @()
+            & powershell -File (Join-Path $scriptDir "notify.ps1") -Event "worker_done" -Domain $Domain -Message "Termine: $($modifiedFiles.Count + $stagedFiles.Count) fichiers modifies (no validation)"
+        }
     } else {
         Write-Status -Status "error" -Remaining $taskIds -Blockers @("Exit code: $exitCode")
         $lastLines = ($output | Select-Object -Last 10) -join "`n"
