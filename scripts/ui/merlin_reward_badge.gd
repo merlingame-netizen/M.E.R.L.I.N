@@ -57,7 +57,7 @@ func _create_content() -> void:
 	var font: Font = MerlinVisual.get_font("body")
 	if font:
 		_text_label.add_theme_font_override("font", font)
-	_text_label.add_theme_font_size_override("font_size", 13)
+	_text_label.add_theme_font_size_override("font_size", MerlinVisual.CAPTION_SMALL)
 	hbox.add_child(_text_label)
 
 	# Row 2: DC hint

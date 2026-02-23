@@ -14,29 +14,29 @@ render_mode unshaded;
 uniform sampler2D screen_texture : hint_screen_texture, filter_linear;
 
 // === MASTER CONTROLS ===
-uniform float global_intensity : hint_range(0.0, 1.0) = 0.6;
+uniform float global_intensity : hint_range(0.0, 1.0) = 0.4;
 
 // === CRT CURVATURE ===
 uniform float curvature : hint_range(0.0, 0.15) = 0.04;
 
 // === CRT SCANLINES ===
-uniform float scanline_opacity : hint_range(0.0, 1.0) = 0.18;
+uniform float scanline_opacity : hint_range(0.0, 1.0) = 0.12;
 uniform float scanline_count : hint_range(100.0, 800.0) = 400.0;
 
 // === PHOSPHOR TINT ===
 uniform vec4 phosphor_tint : source_color = vec4(0.2, 1.0, 0.4, 1.0);
-uniform float tint_blend : hint_range(0.0, 1.0) = 0.06;
+uniform float tint_blend : hint_range(0.0, 1.0) = 0.03;
 
 // === DITHERING (Bayer 4x4) ===
 uniform float dither_strength : hint_range(0.0, 1.0) = 0.3;
 uniform float color_levels : hint_range(2.0, 32.0, 1.0) = 8.0;
 
 // === PHOSPHOR GLOW ===
-uniform float phosphor_glow : hint_range(0.0, 1.0) = 0.12;
+uniform float phosphor_glow : hint_range(0.0, 1.0) = 0.06;
 
 // === CHROMATIC ABERRATION (edge only) ===
 uniform bool chromatic_enabled = true;
-uniform float chromatic_intensity : hint_range(0.0, 0.01) = 0.0008;
+uniform float chromatic_intensity : hint_range(0.0, 0.01) = 0.0005;
 uniform float chromatic_falloff : hint_range(1.0, 4.0) = 3.0;
 
 // === SCANLINE WOBBLE ===
@@ -62,17 +62,17 @@ uniform float color_shift_speed : hint_range(0.0, 2.0) = 0.3;
 
 // === TEMPORAL NOISE (grain) ===
 uniform bool noise_enabled = true;
-uniform float noise_intensity : hint_range(0.0, 0.1) = 0.015;
+uniform float noise_intensity : hint_range(0.0, 0.1) = 0.010;
 uniform float noise_speed : hint_range(1.0, 60.0) = 24.0;
 
 // === VIGNETTE ===
 uniform bool vignette_enabled = true;
-uniform float vignette_intensity : hint_range(0.0, 0.5) = 0.12;
+uniform float vignette_intensity : hint_range(0.0, 0.5) = 0.08;
 uniform float vignette_softness : hint_range(0.1, 1.0) = 0.55;
 
 // === BRIGHTNESS FLICKER ===
 uniform bool flicker_enabled = true;
-uniform float flicker_intensity : hint_range(0.0, 0.05) = 0.006;
+uniform float flicker_intensity : hint_range(0.0, 0.05) = 0.003;
 uniform float flicker_speed : hint_range(1.0, 30.0) = 12.0;
 
 

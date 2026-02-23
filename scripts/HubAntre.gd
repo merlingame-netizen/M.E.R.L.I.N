@@ -357,7 +357,7 @@ func _create_partir_button() -> void:
 	var font: Font = MerlinVisual.get_font("title")
 	if font:
 		_partir_btn.add_theme_font_override("font", font)
-	_partir_btn.add_theme_font_size_override("font_size", 22)
+	_partir_btn.add_theme_font_size_override("font_size", MerlinVisual.BUTTON_SIZE)
 	_style_partir_button()
 
 	add_child(_partir_btn)

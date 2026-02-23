@@ -714,20 +714,26 @@ func mark_card_completed() -> void:
 		return
 	_discard_total += 1
 	_update_discard_visual()
-	# Animate card flying to discard pile — dramatic exit
-	if card_panel and is_instance_valid(card_panel) and _discard_root and is_instance_valid(_discard_root):
+	# Animate card dissolving into pixels — dramatic exit
+	if card_panel and is_instance_valid(card_panel):
 		if _card_float_tween:
 			_card_float_tween.kill()
-		var discard_pos: Vector2 = _discard_root.global_position - card_container.global_position
-		var tw := create_tween()
-		# Small bounce before departure
-		tw.tween_property(card_panel, "scale", Vector2(1.04, 1.04), 0.1).set_trans(Tween.TRANS_SINE)
-		tw.set_parallel(true)
-		tw.tween_property(card_panel, "position", discard_pos, MerlinVisual.CARD_EXIT_DURATION).set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_IN)
-		tw.tween_property(card_panel, "scale", Vector2(0.12, 0.12), MerlinVisual.CARD_EXIT_DURATION).set_trans(Tween.TRANS_CUBIC)
-		tw.tween_property(card_panel, "modulate:a", 0.0, MerlinVisual.CARD_EXIT_DURATION * 0.7).set_delay(0.15)
-		tw.tween_property(card_panel, "rotation_degrees", randf_range(-25.0, 25.0), MerlinVisual.CARD_EXIT_DURATION)
-		SFXManager.play("card_place")
+		_disable_card_3d()
+		card_panel.scale = Vector2.ONE
+		card_panel.rotation_degrees = 0.0
+		# Pixel dissolve: blocks scatter upward from the card
+		var pixel_exit_config: Dictionary = {
+			"duration": MerlinVisual.CARD_EXIT_DURATION,
+			"block_size": 8,
+			"row_stagger": 0.005,
+			"jitter": 0.012,
+			"scatter_x": 28.0,
+			"scatter_y_min": -50.0,
+			"scatter_y_max": -120.0,
+			"easing": "cubic_out",
+			"sfx": "card_place",
+		}
+		PixelContentAnimator.dissolve(card_panel, pixel_exit_config)
 
 
 func _layout_run_zones() -> void:
@@ -1390,31 +1396,34 @@ func display_card(card: Dictionary) -> void:
 	# Disable 3D tilt during card transition
 	_disable_card_3d()
 
-	# Animate card entrance — dramatic distribution from left
+	# Animate card entrance — pixel construction (blocks assemble from above)
 	if card_panel and is_instance_valid(card_panel):
 		if _card_float_tween:
 			_card_float_tween.kill()
 		if _card_entry_tween:
 			_card_entry_tween.kill()
-		# Start from left edge of screen (deal from left)
-		var start_pos := Vector2(-card_panel.size.x * 0.6, _card_base_pos.y + 30.0)
-		card_panel.position = start_pos
+		# Position card at final location, hidden — PixelContentAnimator will reveal it
+		card_panel.position = _card_base_pos
 		card_panel.modulate.a = 0.0
-		card_panel.scale = Vector2(0.4, 0.4)
-		card_panel.rotation_degrees = -15.0
+		card_panel.scale = Vector2.ONE
+		card_panel.rotation_degrees = 0.0
+		# Pixel reveal: blocks rain from above to form the card
+		# Note: SFX already played by SFXManager.play("card_draw") above — no sfx in config
+		var pixel_entry_config: Dictionary = {
+			"duration": MerlinVisual.CARD_ENTRY_DURATION,
+			"block_size": 8,
+			"row_stagger": 0.006,
+			"jitter": 0.015,
+			"scatter_x": 24.0,
+			"scatter_y_min": -40.0,
+			"scatter_y_max": -100.0,
+			"easing": "back_out",
+		}
+		PixelContentAnimator.reveal(card_panel, pixel_entry_config)
+		# Chain post-reveal callbacks: float + 3D tilt + option buttons
+		# Use animation_complete signal to trigger after pixel assembly finishes
 		_card_entry_tween = create_tween()
-		# Phase 1: Glide to center with overshoot
-		_card_entry_tween.set_parallel(true)
-		_card_entry_tween.tween_property(card_panel, "modulate:a", 1.0, 0.2)
-		_card_entry_tween.tween_property(card_panel, "position", _card_base_pos, MerlinVisual.CARD_ENTRY_DURATION).set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_OUT)
-		_card_entry_tween.tween_property(card_panel, "rotation_degrees", 2.0, MerlinVisual.CARD_ENTRY_DURATION).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
-		var overshoot_v := Vector2(MerlinVisual.CARD_ENTRY_OVERSHOOT, MerlinVisual.CARD_ENTRY_OVERSHOOT)
-		_card_entry_tween.tween_property(card_panel, "scale", overshoot_v, MerlinVisual.CARD_ENTRY_DURATION * 0.85).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
-		# Phase 2: Elastic settle to 1.0
-		_card_entry_tween.set_parallel(false)
-		_card_entry_tween.tween_property(card_panel, "scale", Vector2.ONE, MerlinVisual.CARD_ENTRY_SETTLE).set_trans(Tween.TRANS_ELASTIC).set_ease(Tween.EASE_OUT)
-		_card_entry_tween.parallel().tween_property(card_panel, "rotation_degrees", 0.0, MerlinVisual.CARD_ENTRY_SETTLE).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_OUT)
-		# Phase 3: Start idle float + enable fake 3D tilt + reveal buttons
+		_card_entry_tween.tween_interval(MerlinVisual.CARD_ENTRY_DURATION + 0.15)
 		_card_entry_tween.tween_callback(_start_card_float_and_3d)
 		_card_entry_tween.tween_callback(_animate_option_entrance)
 
@@ -1511,21 +1520,35 @@ func _actionize_option_label(raw_label: String, option_index: int) -> String:
 
 
 func _animate_option_entrance() -> void:
-	## Fade-in stagger entrance for option buttons. Called after card entry settles.
-	## Uses only modulate:a and scale (no position:y mutation — Container manages layout).
+	## Pixel reveal stagger entrance for option buttons. Called after card pixel-assembles.
+	## Uses PixelContentAnimator for pixel construction effect + scale settle.
+	var pixel_btn_config: Dictionary = {
+		"duration": MerlinVisual.OPTION_SLIDE_DURATION,
+		"block_size": 6,
+		"row_stagger": 0.003,
+		"jitter": 0.008,
+		"scatter_x": 12.0,
+		"scatter_y_min": -20.0,
+		"scatter_y_max": -50.0,
+		"easing": "back_out",
+	}
 	for j in range(option_buttons.size()):
 		if not is_instance_valid(option_buttons[j]) or option_buttons[j].disabled:
 			continue
 		var btn: Button = option_buttons[j]
 		btn.pivot_offset = btn.size / 2.0
 		btn.modulate.a = 0.0
-		btn.scale = Vector2(0.9, 0.9)
-		var slide_tw := create_tween().set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
+		btn.scale = Vector2(0.95, 0.95)
 		var delay: float = float(j) * MerlinVisual.OPTION_STAGGER_DELAY
-		slide_tw.tween_property(btn, "modulate:a", 1.0, 0.15).set_delay(delay)
-		slide_tw.parallel().tween_property(btn, "scale", Vector2.ONE, MerlinVisual.OPTION_SLIDE_DURATION).set_delay(delay)
-	# Safety timer: ensure all buttons reach alpha=1.0 even if tween is killed
-	get_tree().create_timer(0.8).timeout.connect(func():
+		# Stagger: wait then pixel-reveal each button
+		if delay > 0.0:
+			await get_tree().create_timer(delay).timeout
+		PixelContentAnimator.reveal(btn, pixel_btn_config)
+		# Subtle scale settle alongside pixel reveal
+		var settle_tw := create_tween().set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
+		settle_tw.tween_property(btn, "scale", Vector2.ONE, MerlinVisual.OPTION_SLIDE_DURATION)
+	# Safety timer: ensure all buttons reach alpha=1.0 even if pixel anim is killed
+	get_tree().create_timer(1.2).timeout.connect(func():
 		for btn2 in option_buttons:
 			if is_instance_valid(btn2) and not btn2.disabled and btn2.modulate.a < 0.5:
 				btn2.modulate.a = 1.0

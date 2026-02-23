@@ -99,8 +99,10 @@ func _start_phase_1() -> void:
 		label.set_anchors_preset(Control.PRESET_CENTER_TOP)
 		label.position.y = start_y + i * (line_height + line_spacing)
 		label.position.x = -200
-		label.add_theme_font_size_override("font_size", 13)
+		label.add_theme_font_size_override("font_size", MerlinVisual.CAPTION_SMALL)
 		label.add_theme_color_override("font_color", MerlinVisual.CRT_PALETTE.phosphor_dim)
+		label.add_theme_constant_override("outline_size", MerlinVisual.OUTLINE_SIZE)
+		label.add_theme_color_override("font_outline_color", MerlinVisual.OUTLINE_COLOR)
 		label.modulate.a = 0.0
 		boot_container.add_child(label)
 		boot_labels.append(label)
@@ -220,8 +222,10 @@ func _start_phase_3() -> void:
 	loading_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	loading_label.set_anchors_preset(Control.PRESET_CENTER_TOP)
 	loading_label.position = Vector2(-160, bar_y - 30)
-	loading_label.add_theme_font_size_override("font_size", 16)
+	loading_label.add_theme_font_size_override("font_size", MerlinVisual.CAPTION_SIZE)
 	loading_label.add_theme_color_override("font_color", MerlinVisual.CRT_PALETTE.phosphor_dim)
+	loading_label.add_theme_constant_override("outline_size", MerlinVisual.OUTLINE_SIZE)
+	loading_label.add_theme_color_override("font_outline_color", MerlinVisual.OUTLINE_COLOR)
 	loading_container.add_child(loading_label)
 
 	# Background bar

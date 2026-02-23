@@ -261,17 +261,13 @@ func _determine_season() -> void:
 
 
 func _load_fonts() -> void:
-	# Morris Roman pour l'élégance celtique
-	title_font = _load_font("res://resources/fonts/morris/MorrisRomanBlack.otf")
-	if title_font == null:
-		title_font = _load_font("res://resources/fonts/morris/MorrisRomanBlack.ttf")
-	body_font = _load_font("res://resources/fonts/morris/MorrisRomanBlackAlt.otf")
-	if body_font == null:
-		body_font = _load_font("res://resources/fonts/morris/MorrisRomanBlackAlt.ttf")
+	# VT323 terminal font via MerlinVisual (CRT aesthetic)
+	title_font = MerlinVisual.get_font("title")
+	body_font = MerlinVisual.get_font("body")
 	if body_font == null:
 		body_font = title_font
 	# Celtic font for ornaments
-	celtic_font = _load_font("res://resources/fonts/celtic_bit/celtic-bit.ttf")
+	celtic_font = MerlinVisual.get_font("celtic")
 	if celtic_font == null:
 		celtic_font = body_font
 
@@ -1245,7 +1241,7 @@ func _spawn_falling_particle(viewport_size: Vector2, cfg: Dictionary) -> void:
 		var autumn_colors: Array[Color] = [
 			MerlinVisual.GBC.fire_light,      # Bright orange leaf
 			MerlinVisual.GBC.fire_dark,       # Deep red-brown
-			MerlinVisual.ASPECT_COLORS["Corps"],  # Earthy brown
+			MerlinVisual.CRT_ASPECT_COLORS["Corps"],  # Terminal red-orange
 			MerlinVisual.GBC.thunder,         # Golden yellow
 			MerlinVisual.SEASON_COLORS["automne"],  # Base autumn tone
 		]
@@ -1557,7 +1553,7 @@ func _build_voice_llm_panel() -> void:
 	for lbl in PANEL_VOICE_LABELS:
 		mode_opt.add_item(lbl)
 	mode_opt.selected = _panel_voice_idx
-	mode_opt.add_theme_font_size_override("font_size", 13)
+	mode_opt.add_theme_font_size_override("font_size", MerlinVisual.CAPTION_SMALL)
 	mode_opt.item_selected.connect(func(idx: int):
 		_panel_voice_idx = idx
 		_update_panel_voice_controls()
@@ -1578,7 +1574,7 @@ func _build_voice_llm_panel() -> void:
 		if bank_opt.get_item_metadata(i) == _panel_voice_bank:
 			bank_opt.selected = i
 			break
-	bank_opt.add_theme_font_size_override("font_size", 13)
+	bank_opt.add_theme_font_size_override("font_size", MerlinVisual.CAPTION_SMALL)
 	bank_opt.item_selected.connect(func(idx: int):
 		_panel_voice_bank = bank_opt.get_item_metadata(idx)
 		if _voice_vb and _voice_vb.has_method("set_sound_bank"):
@@ -1598,7 +1594,7 @@ func _build_voice_llm_panel() -> void:
 		if preset_opt.get_item_text(i) == _panel_preset:
 			preset_opt.selected = i
 			break
-	preset_opt.add_theme_font_size_override("font_size", 13)
+	preset_opt.add_theme_font_size_override("font_size", MerlinVisual.CAPTION_SMALL)
 	preset_opt.item_selected.connect(func(idx: int):
 		_panel_preset = presets[idx]
 		_on_voice_preset_selected(idx)
@@ -1896,7 +1892,7 @@ func _create_voice_slider(parent: VBoxContainer, label_text: String, min_val: fl
 	var val_lbl := Label.new()
 	val_lbl.text = "%.2f" % default_val
 	val_lbl.custom_minimum_size.x = 40
-	val_lbl.add_theme_font_size_override("font_size", 13)
+	val_lbl.add_theme_font_size_override("font_size", MerlinVisual.CAPTION_SMALL)
 	val_lbl.add_theme_color_override("font_color", MerlinVisual.CRT_PALETTE.amber)
 	hbox.add_child(val_lbl)
 

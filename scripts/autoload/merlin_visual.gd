@@ -546,13 +546,13 @@ const BIOME_CRT_PALETTES := {
 
 # Per-biome CRT distortion profiles (noise, scanlines, glitch intensity)
 const BIOME_CRT_PROFILES := {
-	"broceliande": {"noise": 0.04, "scanline_opacity": 0.22, "glitch_probability": 0.008, "tint_blend": 0.08},
-	"landes":      {"noise": 0.03, "scanline_opacity": 0.18, "glitch_probability": 0.006, "tint_blend": 0.07},
-	"cotes":       {"noise": 0.05, "scanline_opacity": 0.16, "glitch_probability": 0.010, "tint_blend": 0.06},
-	"villages":    {"noise": 0.02, "scanline_opacity": 0.15, "glitch_probability": 0.004, "tint_blend": 0.05},
-	"cercles":     {"noise": 0.06, "scanline_opacity": 0.25, "glitch_probability": 0.015, "tint_blend": 0.10},
-	"marais":      {"noise": 0.07, "scanline_opacity": 0.20, "glitch_probability": 0.020, "tint_blend": 0.09},
-	"collines":    {"noise": 0.03, "scanline_opacity": 0.16, "glitch_probability": 0.005, "tint_blend": 0.06},
+	"broceliande": {"noise": 0.03, "scanline_opacity": 0.15, "glitch_probability": 0.005, "tint_blend": 0.06},
+	"landes":      {"noise": 0.022, "scanline_opacity": 0.13, "glitch_probability": 0.004, "tint_blend": 0.05},
+	"cotes":       {"noise": 0.038, "scanline_opacity": 0.11, "glitch_probability": 0.006, "tint_blend": 0.04},
+	"villages":    {"noise": 0.015, "scanline_opacity": 0.10, "glitch_probability": 0.002, "tint_blend": 0.035},
+	"cercles":     {"noise": 0.045, "scanline_opacity": 0.18, "glitch_probability": 0.009, "tint_blend": 0.07},
+	"marais":      {"noise": 0.052, "scanline_opacity": 0.14, "glitch_probability": 0.012, "tint_blend": 0.06},
+	"collines":    {"noise": 0.022, "scanline_opacity": 0.11, "glitch_probability": 0.003, "tint_blend": 0.04},
 }
 
 
@@ -601,7 +601,12 @@ const TITLE_SMALL := 38
 const BODY_SIZE := 22
 const BODY_LARGE := 26
 const CAPTION_SIZE := 16
+const CAPTION_SMALL := 13
 const BUTTON_SIZE := 22
+
+# Outline defaults for CRT readability (phosphor on dark CRT + scanlines)
+const OUTLINE_SIZE := 2
+const OUTLINE_COLOR: Color = Color(0.02, 0.04, 0.02)
 
 var _font_cache: Dictionary = {}
 
@@ -858,14 +863,19 @@ static func apply_button_theme(button: Button) -> void:
 	button.custom_minimum_size.y = MIN_TOUCH_TARGET
 
 
-## Apply CRT label style — default phosphor text on dark terminal
-static func apply_label_style(label: Label, font_type: String, font_size: int, color_key: String = "phosphor") -> void:
+## Apply CRT label style — default phosphor text on dark terminal with outline for readability.
+## The subtle outline (bg_deep color) ensures phosphor text stays readable on
+## intermediate CRT backgrounds and through scanline overlay.
+static func apply_label_style(label: Label, font_type: String, font_size: int, color_key: String = "phosphor", outline: bool = true) -> void:
 	var font: Font = MerlinVisual.new().get_font(font_type)
 	if font != null:
 		label.add_theme_font_override("font", font)
 	label.add_theme_font_size_override("font_size", font_size)
 	var palette: Dictionary = CRT_PALETTE if CRT_PALETTE.has(color_key) else PALETTE
 	label.add_theme_color_override("font_color", palette[color_key])
+	if outline:
+		label.add_theme_constant_override("outline_size", OUTLINE_SIZE)
+		label.add_theme_color_override("font_outline_color", OUTLINE_COLOR)
 
 
 # ═══════════════════════════════════════════════════════════════════════════════

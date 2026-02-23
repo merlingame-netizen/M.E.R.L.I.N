@@ -1100,7 +1100,7 @@ func _phase_quest_preparation() -> void:
 	_quest_progress_label.position = Vector2(vs.x / 2.0 - 200, vs.y * 0.82)
 	_quest_progress_label.size = Vector2(400, 30)
 	_quest_progress_label.add_theme_color_override("font_color", MerlinVisual.CRT_PALETTE.phosphor_dim)
-	_quest_progress_label.add_theme_font_size_override("font_size", 16)
+	_quest_progress_label.add_theme_font_size_override("font_size", MerlinVisual.CAPTION_SIZE)
 	var progress_font: Font = MerlinVisual.get_font("body")
 	if progress_font:
 		_quest_progress_label.add_theme_font_override("font", progress_font)

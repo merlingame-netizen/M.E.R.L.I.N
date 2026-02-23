@@ -64,6 +64,45 @@ const BUFFER_SIZE := 5  # Ollama backend: <3s/card, 5 cards = ~15s at biome load
 # Prerun choice tracking for sequel cards
 var _prerun_choices: Array[Dictionary] = []
 
+# Signal emitted when the card deck is ready (buffer loaded or first LLM card available)
+signal deck_ready(card_count: int)
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# MERLIN INTRO SPEECH TEMPLATES (contextual biome + season)
+# ═══════════════════════════════════════════════════════════════════════════════
+
+## Biome display names for intro speeches (poetic, French, immersive)
+const _BIOME_DISPLAY_NAMES: Dictionary = {
+	"foret_broceliande": "la foret de Broceliande",
+	"villages_celtes": "les villages celtes",
+	"cotes_sauvages": "les cotes sauvages",
+	"landes_bruyere": "les landes de bruyere",
+	"marais_korrigans": "les marais des Korrigans",
+	"cercles_pierres": "les cercles de pierres",
+	"collines_dolmens": "les collines aux dolmens",
+}
+
+## Merlin intro speech templates — %s = biome display name
+const _MERLIN_INTRO_SPEECHES: Array[String] = [
+	"Les brumes de %s s'ouvrent devant toi, voyageur... Le terminal a capte des echos anciens.",
+	"Merlin scrute %s a travers le cristal... Les chemins se dessinent, mais lequel choisiras-tu?",
+	"Le cristal revele les sentiers de %s... Quelque chose t'attend au-dela du voile.",
+	"Ah, %s... Les pierres murmurent ici des verites que peu osent entendre.",
+	"Les runes pulsent et %s se devoile... Merlin sent le poids du destin, voyageur.",
+]
+
+## Season-specific flavor appended to intro (optional)
+const _SEASON_FLAVOR: Dictionary = {
+	"printemps": " La seve monte et la terre s'eveille.",
+	"ete": " Le soleil brule haut et les ombres sont courtes.",
+	"automne": " Les feuilles tombent et les esprits s'agitent.",
+	"hiver": " Le givre mord et le silence est roi.",
+	"spring": " La seve monte et la terre s'eveille.",
+	"summer": " Le soleil brule haut et les ombres sont courtes.",
+	"autumn": " Les feuilles tombent et les esprits s'agitent.",
+	"winter": " Le givre mord et le silence est roi.",
+}
+
 # RAG context for LLM
 const CONTEXT_FILE := "user://triade_context.txt"
 const CONTEXT_MAX_ENTRIES := 5
@@ -211,6 +250,15 @@ func start_run(seed_value: int = -1) -> void:
 				var intro_title: String = str(intro_data.get("title", ""))
 				if not intro_ctx.is_empty() and ui and is_instance_valid(ui):
 					await ui.show_scenario_intro(intro_title, intro_ctx)
+
+		# --- Merlin contextual speech (biome + season) before first card ---
+		var merlin_speech: String = _build_merlin_intro_speech(biome_key, season_hint)
+		if not merlin_speech.is_empty() and ui.has_method("show_narrator_text"):
+			await ui.show_narrator_text(merlin_speech)
+		elif not merlin_speech.is_empty():
+			# Fallback: print speech for logging even if UI method missing
+			print("[TRIADE] Merlin speech: %s" % merlin_speech)
+
 		# Progressive reveal of aspect/souffle indicators
 		if ui.has_method("show_progressive_indicators"):
 			await ui.show_progressive_indicators()
@@ -218,6 +266,21 @@ func start_run(seed_value: int = -1) -> void:
 		if ui.has_method("start_ambient_vfx"):
 			ui.start_ambient_vfx(biome_key)
 		print("[TRIADE] narrator intro finished, requesting first card")
+
+	# --- Verify card buffer before first card ---
+	var buffer_ready: bool = await _ensure_card_buffer_ready()
+	if buffer_ready:
+		deck_ready.emit(_card_buffer.size())
+		print("[TRIADE] Deck ready: %d cards buffered" % _card_buffer.size())
+	else:
+		print("[TRIADE] Card buffer empty, LLM will generate on demand")
+		# Show contextual waiting message instead of generic spinner
+		if ui and is_instance_valid(ui) and ui.has_method("show_merlin_thinking_overlay"):
+			ui.show_merlin_thinking_overlay()
+			if is_inside_tree():
+				await get_tree().create_timer(1.5).timeout
+			if ui and is_instance_valid(ui) and ui.has_method("hide_merlin_thinking_overlay"):
+				ui.hide_merlin_thinking_overlay()
 
 	# Then get first card
 	_request_next_card()
@@ -245,7 +308,9 @@ func _request_next_card() -> void:
 	# Fast path: consume from pre-generated card buffer (from TransitionBiome)
 	if not _card_buffer.is_empty():
 		current_card = _card_buffer.pop_front()
-		print("[TRIADE] Using pre-generated card (%d remaining)" % _card_buffer.size())
+		var remaining: int = _card_buffer.size()
+		print("[TRIADE] Using pre-generated card (%d remaining)" % remaining)
+		deck_ready.emit(remaining)
 		_detect_critical_choice()
 		# Prefetch moved to _resolve_choice() — state must be updated first
 		if ui and is_instance_valid(ui):
@@ -505,6 +570,54 @@ func _load_prerun_cards() -> void:
 			_card_buffer.append(card)
 	if not _card_buffer.is_empty():
 		print("[TRIADE] Loaded %d pre-generated cards from TransitionBiome" % _card_buffer.size())
+
+
+func _build_merlin_intro_speech(biome_key: String, season_hint: String) -> String:
+	## Build a contextual Merlin intro speech from templates.
+	## Returns a single sentence with biome name and optional season flavor.
+	var biome_display: String = _BIOME_DISPLAY_NAMES.get(biome_key, "")
+	if biome_display.is_empty():
+		# Fallback: humanize the key
+		biome_display = biome_key.replace("_", " ")
+	var template: String = _MERLIN_INTRO_SPEECHES[randi() % _MERLIN_INTRO_SPEECHES.size()]
+	var speech: String = template % biome_display
+	# Append season flavor if available
+	var season_lower: String = season_hint.strip_edges().to_lower()
+	if not season_lower.is_empty():
+		var flavor: String = str(_SEASON_FLAVOR.get(season_lower, ""))
+		if not flavor.is_empty():
+			speech += flavor
+	return speech
+
+
+func _ensure_card_buffer_ready() -> bool:
+	## Verify that the card buffer has at least one card ready.
+	## If empty, attempt to wait for a prefetched card (up to 5s).
+	## Returns true if at least one card is available, false otherwise.
+	if not _card_buffer.is_empty():
+		return true
+	# Try consuming a prefetched card from MerlinOmniscient
+	if store and store.has_method("get_merlin"):
+		var merlin_mos = store.get_merlin()
+		if merlin_mos and merlin_mos.has_method("try_consume_prefetch"):
+			var prefetched: Dictionary = merlin_mos.try_consume_prefetch(store.state)
+			if not prefetched.is_empty():
+				_card_buffer.append(prefetched)
+				return true
+	# Wait up to 5 seconds for a prefetched card to become available
+	var wait_deadline: int = Time.get_ticks_msec() + 5000
+	while Time.get_ticks_msec() < wait_deadline:
+		if not is_inside_tree():
+			return false
+		if store and store.has_method("get_merlin"):
+			var merlin_mos = store.get_merlin()
+			if merlin_mos and merlin_mos.has_method("try_consume_prefetch"):
+				var prefetched: Dictionary = merlin_mos.try_consume_prefetch(store.state)
+				if not prefetched.is_empty():
+					_card_buffer.append(prefetched)
+					return true
+		await get_tree().process_frame
+	return false
 
 
 func _try_npc_encounter() -> Dictionary:

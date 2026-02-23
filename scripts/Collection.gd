@@ -2,8 +2,8 @@ extends Control
 ## Collection - Style Parchemin Celtique
 ## Hauts faits, progression et collection d'objets
 
-const FONT_REGULAR_PATH := "res://resources/fonts/morris/MorrisRomanBlackAlt.ttf"
-const FONT_BOLD_PATH := "res://resources/fonts/morris/MorrisRomanBlack.ttf"
+const FONT_REGULAR_PATH_LEGACY := "res://resources/fonts/morris/MorrisRomanBlackAlt.ttf"  # Legacy
+const FONT_BOLD_PATH_LEGACY := "res://resources/fonts/morris/MorrisRomanBlack.ttf"  # Legacy
 const MOBILE_BREAKPOINT := 560.0
 
 const VIEW_PROGRESSION := 0
@@ -283,10 +283,8 @@ func _on_viewport_resized() -> void:
 	_set_view(current_view)
 
 func _load_fonts() -> void:
-	if ResourceLoader.exists(FONT_REGULAR_PATH):
-		font_regular = load(FONT_REGULAR_PATH)
-	if ResourceLoader.exists(FONT_BOLD_PATH):
-		font_bold = load(FONT_BOLD_PATH)
+	font_regular = MerlinVisual.get_font("body")
+	font_bold = MerlinVisual.get_font("title")
 	if font_regular == null:
 		font_regular = font_bold
 	if font_bold == null:

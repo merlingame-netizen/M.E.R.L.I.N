@@ -217,24 +217,8 @@ func _ready() -> void:
 
 
 func _load_fonts() -> void:
-	var font_paths := [
-		"res://resources/fonts/morris/MorrisRomanBlack.otf",
-		"res://resources/fonts/morris/MorrisRomanBlack.ttf",
-	]
-	for path in font_paths:
-		if ResourceLoader.exists(path):
-			title_font = load(path)
-			break
-
-	var body_paths := [
-		"res://resources/fonts/morris/MorrisRomanBlackAlt.otf",
-		"res://resources/fonts/morris/MorrisRomanBlackAlt.ttf",
-	]
-	for path in body_paths:
-		if ResourceLoader.exists(path):
-			body_font = load(path)
-			break
-
+	title_font = MerlinVisual.get_font("title")
+	body_font = MerlinVisual.get_font("body")
 	if body_font == null:
 		body_font = title_font
 
@@ -246,7 +230,7 @@ func _build_ui() -> void:
 	background = ColorRect.new()
 	background.name = "Background"
 	background.set_anchors_preset(Control.PRESET_FULL_RECT)
-	background.color = Color(0.02, 0.02, 0.04)
+	background.color = MerlinVisual.CRT_PALETTE.bg_deep
 	add_child(background)
 
 	# Center container for content
@@ -271,7 +255,8 @@ func _build_ui() -> void:
 	if title_font:
 		question_label.add_theme_font_override("font", title_font)
 	question_label.add_theme_font_size_override("font_size", 28)
-	question_label.add_theme_color_override("font_color", Color(0.92, 0.88, 0.80))
+	var question_color: Color = MerlinVisual.CRT_PALETTE["phosphor_bright"]
+	question_label.add_theme_color_override("font_color", question_color)
 	question_label.modulate.a = 0
 	vbox.add_child(question_label)
 
@@ -297,7 +282,8 @@ func _build_ui() -> void:
 	if body_font:
 		progress_label.add_theme_font_override("font", body_font)
 	progress_label.add_theme_font_size_override("font_size", 14)
-	progress_label.add_theme_color_override("font_color", Color(0.92, 0.88, 0.80, 0.6))
+	var progress_color: Color = MerlinVisual.CRT_PALETTE["phosphor_dim"]
+	progress_label.add_theme_color_override("font_color", progress_color)
 	progress_label.modulate.a = 0
 	add_child(progress_label)
 
@@ -322,7 +308,8 @@ func _build_skip_button() -> void:
 	if body_font:
 		skip_button.add_theme_font_override("font", body_font)
 	skip_button.add_theme_font_size_override("font_size", 16)
-	skip_button.add_theme_color_override("font_color", Color(0.92, 0.88, 0.80, 0.6))
+	var skip_font_color: Color = MerlinVisual.CRT_PALETTE["phosphor_dim"]
+	skip_button.add_theme_color_override("font_color", skip_font_color)
 	skip_button.add_theme_color_override("font_hover_color", MerlinVisual.CRT_PALETTE.amber)
 	skip_button.pressed.connect(_show_skip_modal)
 	add_child(skip_button)
@@ -338,7 +325,8 @@ func _build_skip_button() -> void:
 	skip_modal.offset_bottom = 80
 
 	var modal_style := StyleBoxFlat.new()
-	modal_style.bg_color = Color(0.08, 0.08, 0.12, 0.95)
+	var modal_bg: Color = MerlinVisual.CRT_PALETTE["bg_dark"]
+	modal_style.bg_color = Color(modal_bg.r, modal_bg.g, modal_bg.b, 0.95)
 	modal_style.set_border_width_all(2)
 	modal_style.border_color = MerlinVisual.CRT_PALETTE.amber
 	modal_style.set_corner_radius_all(8)
@@ -360,7 +348,8 @@ func _build_skip_button() -> void:
 	if body_font:
 		modal_title.add_theme_font_override("font", body_font)
 	modal_title.add_theme_font_size_override("font_size", 18)
-	modal_title.add_theme_color_override("font_color", Color(0.92, 0.88, 0.80))
+	var modal_title_color: Color = MerlinVisual.CRT_PALETTE["phosphor_bright"]
+	modal_title.add_theme_color_override("font_color", modal_title_color)
 	modal_vbox.add_child(modal_title)
 
 	var buttons_hbox := HBoxContainer.new()
@@ -378,8 +367,10 @@ func _build_skip_button() -> void:
 	if body_font:
 		menu_btn.add_theme_font_override("font", body_font)
 	menu_btn.add_theme_font_size_override("font_size", 16)
-	menu_btn.add_theme_color_override("font_color", Color(0.92, 0.88, 0.80, 0.6))
-	menu_btn.add_theme_color_override("font_hover_color", Color(0.92, 0.88, 0.80))
+	var menu_btn_color: Color = MerlinVisual.CRT_PALETTE["phosphor_dim"]
+	var menu_btn_hover: Color = MerlinVisual.CRT_PALETTE["phosphor_bright"]
+	menu_btn.add_theme_color_override("font_color", menu_btn_color)
+	menu_btn.add_theme_color_override("font_hover_color", menu_btn_hover)
 	menu_btn.pressed.connect(_skip_to_menu)
 	buttons_hbox.add_child(menu_btn)
 
@@ -403,7 +394,8 @@ func _build_skip_button() -> void:
 	cancel_hint.text = "(Echap pour annuler)"
 	cancel_hint.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	cancel_hint.add_theme_font_size_override("font_size", 12)
-	cancel_hint.add_theme_color_override("font_color", Color(0.92, 0.88, 0.80, 0.6))
+	var cancel_hint_color: Color = MerlinVisual.CRT_PALETTE["phosphor_dim"]
+	cancel_hint.add_theme_color_override("font_color", cancel_hint_color)
 	modal_vbox.add_child(cancel_hint)
 
 
@@ -695,7 +687,8 @@ func _show_personality_reveal(personality: Dictionary) -> void:
 	# Phase 3: Description
 	question_label.text = archetype_desc
 	question_label.add_theme_font_size_override("font_size", 24)
-	question_label.add_theme_color_override("font_color", Color(0.92, 0.88, 0.80))
+	var desc_color: Color = MerlinVisual.CRT_PALETTE["phosphor_bright"]
+	question_label.add_theme_color_override("font_color", desc_color)
 	question_label.modulate.a = 0.0
 	await get_tree().process_frame
 	if pca:
@@ -714,7 +707,8 @@ func _show_personality_reveal(personality: Dictionary) -> void:
 		await get_tree().create_timer(0.5).timeout
 		question_label.text = traits_text
 		question_label.add_theme_font_size_override("font_size", 20)
-		question_label.add_theme_color_override("font_color", Color(0.82, 0.78, 0.70))
+		var traits_color: Color = MerlinVisual.CRT_PALETTE["phosphor_dim"]
+		question_label.add_theme_color_override("font_color", traits_color)
 		question_label.modulate.a = 0.0
 		await get_tree().process_frame
 		if pca:

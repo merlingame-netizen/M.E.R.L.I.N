@@ -26,41 +26,39 @@ func _ready() -> void:
 
 
 func _load_fonts() -> void:
-	var title_path = "res://resources/fonts/morris/MorrisRomanBlack.ttf"
-	var body_path = "res://resources/fonts/morris/MorrisRomanBlackAlt.ttf"
-	if ResourceLoader.exists(title_path):
-		font_title = load(title_path)
-	else:
+	font_title = MerlinVisual.get_font("title")
+	if font_title == null:
 		font_title = ThemeDB.fallback_font
-	if ResourceLoader.exists(body_path):
-		font_body = load(body_path)
-	else:
+	font_body = MerlinVisual.get_font("body")
+	if font_body == null:
 		font_body = ThemeDB.fallback_font
 
 
 func _apply_theme() -> void:
-	# Parchment background (override dark .tscn background)
+	# CRT terminal background
 	var bg := get_node_or_null("Background")
 	if bg is ColorRect:
-		bg.color = Color(0.965, 0.945, 0.905)
+		bg.color = MerlinVisual.CRT_PALETTE["bg_dark"]
 
 	var panel_style := StyleBoxFlat.new()
-	panel_style.bg_color = Color(0.955, 0.930, 0.890)
-	panel_style.border_color = Color(0.40, 0.34, 0.28, 0.25)
+	panel_style.bg_color = MerlinVisual.CRT_PALETTE["bg_panel"]
+	panel_style.border_color = MerlinVisual.CRT_PALETTE["border"]
 	panel_style.set_border_width_all(1)
 	panel_style.set_corner_radius_all(4)
-	panel_style.shadow_color = Color(0.25, 0.20, 0.16, 0.18)
+	panel_style.shadow_color = MerlinVisual.CRT_PALETTE["shadow"]
 	panel_style.shadow_size = 12
 	panel_style.shadow_offset = Vector2(0, 4)
 	panel.add_theme_stylebox_override("panel", panel_style)
 
 	title_label.add_theme_font_override("font", font_title)
 	title_label.add_theme_font_size_override("font_size", 30)
-	title_label.add_theme_color_override("font_color", Color(0.22, 0.18, 0.14))
+	var title_color: Color = MerlinVisual.CRT_PALETTE["phosphor"]
+	title_label.add_theme_color_override("font_color", title_color)
 
 	hint_label.add_theme_font_override("font", font_body)
 	hint_label.add_theme_font_size_override("font_size", 14)
-	hint_label.add_theme_color_override("font_color", Color(0.50, 0.44, 0.38))
+	var hint_color: Color = MerlinVisual.CRT_PALETTE["phosphor_dim"]
+	hint_label.add_theme_color_override("font_color", hint_color)
 
 	_style_button(back_button)
 
@@ -69,8 +67,8 @@ func _style_button(btn: Button) -> void:
 	if btn == null:
 		return
 	var normal := StyleBoxFlat.new()
-	normal.bg_color = Color(0.955, 0.930, 0.890)
-	normal.border_color = Color(0.40, 0.34, 0.28, 0.20)
+	normal.bg_color = MerlinVisual.CRT_PALETTE["bg_panel"]
+	normal.border_color = MerlinVisual.CRT_PALETTE["border"]
 	normal.set_border_width_all(1)
 	normal.set_corner_radius_all(4)
 	normal.content_margin_left = 16
@@ -79,20 +77,22 @@ func _style_button(btn: Button) -> void:
 	normal.content_margin_bottom = 8
 
 	var hover := normal.duplicate()
-	hover.bg_color = Color(0.935, 0.905, 0.855)
-	hover.border_color = Color(0.58, 0.44, 0.26)
+	hover.bg_color = MerlinVisual.CRT_PALETTE["bg_dark"]
+	hover.border_color = MerlinVisual.CRT_PALETTE["amber"]
 
 	var pressed := normal.duplicate()
-	pressed.bg_color = Color(0.92, 0.89, 0.84)
-	pressed.border_color = Color(0.58, 0.44, 0.26)
+	pressed.bg_color = MerlinVisual.CRT_PALETTE["bg_highlight"]
+	pressed.border_color = MerlinVisual.CRT_PALETTE["amber"]
 
 	btn.add_theme_stylebox_override("normal", normal)
 	btn.add_theme_stylebox_override("hover", hover)
 	btn.add_theme_stylebox_override("pressed", pressed)
 	btn.add_theme_stylebox_override("focus", hover)
-	btn.add_theme_color_override("font_color", Color(0.22, 0.18, 0.14))
-	btn.add_theme_color_override("font_hover_color", Color(0.58, 0.44, 0.26))
-	btn.add_theme_color_override("font_pressed_color", Color(0.58, 0.44, 0.26))
+	var btn_font_color: Color = MerlinVisual.CRT_PALETTE["phosphor"]
+	var btn_accent_color: Color = MerlinVisual.CRT_PALETTE["amber"]
+	btn.add_theme_color_override("font_color", btn_font_color)
+	btn.add_theme_color_override("font_hover_color", btn_accent_color)
+	btn.add_theme_color_override("font_pressed_color", btn_accent_color)
 	btn.add_theme_font_override("font", font_body)
 	btn.add_theme_font_size_override("font_size", 16)
 
@@ -214,7 +214,8 @@ func _show_message(text: String) -> void:
 	msg.text = text
 	msg.add_theme_font_override("font", font_body)
 	msg.add_theme_font_size_override("font_size", 16)
-	msg.add_theme_color_override("font_color", Color(0.72, 0.28, 0.22))
+	var msg_color: Color = MerlinVisual.CRT_PALETTE["danger"]
+	msg.add_theme_color_override("font_color", msg_color)
 	msg.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	msg.set_anchors_preset(Control.PRESET_CENTER)
 	msg.position.y += 150

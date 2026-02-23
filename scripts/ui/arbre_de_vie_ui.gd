@@ -3,8 +3,8 @@ extends Control
 ## Visual tree layout: Racines (bottom) → Tronc → Ramures → Feuillage (top)
 ## Each node shows state (locked/available/unlocked), cost, and lore.
 
-const FONT_REGULAR_PATH := "res://resources/fonts/morris/MorrisRomanBlackAlt.ttf"
-const FONT_BOLD_PATH := "res://resources/fonts/morris/MorrisRomanBlack.ttf"
+const FONT_REGULAR_PATH_LEGACY := "res://resources/fonts/morris/MorrisRomanBlackAlt.ttf"  # Legacy
+const FONT_BOLD_PATH_LEGACY := "res://resources/fonts/morris/MorrisRomanBlack.ttf"  # Legacy
 
 # Layout: branches organized by section, bottom to top
 const BRANCH_ORDER := ["Corps", "Universel", "Ame", "Monde"]
@@ -351,7 +351,7 @@ func _update_detail_panel() -> void:
 	desc_lbl.text = desc
 	if font_regular:
 		desc_lbl.add_theme_font_override("font", font_regular)
-	desc_lbl.add_theme_font_size_override("font_size", 13)
+	desc_lbl.add_theme_font_size_override("font_size", MerlinVisual.CAPTION_SMALL)
 	desc_lbl.add_theme_color_override("font_color", MerlinVisual.CRT_PALETTE.phosphor)
 	desc_lbl.autowrap_mode = TextServer.AUTOWRAP_WORD
 	detail_vbox.add_child(desc_lbl)

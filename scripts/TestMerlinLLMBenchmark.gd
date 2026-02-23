@@ -102,7 +102,7 @@ func _build_ui() -> void:
 	_log_label.fit_content = true
 	_log_label.scroll_active = false
 	_log_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	_log_label.add_theme_font_size_override("normal_font_size", 13)
+	_log_label.add_theme_font_size_override("normal_font_size", MerlinVisual.CAPTION_SMALL)
 	_log_label.add_theme_color_override("default_color", Color(0.85, 0.85, 0.85))
 	scroll.add_child(_log_label)
 

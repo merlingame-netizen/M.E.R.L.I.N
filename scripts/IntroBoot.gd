@@ -7,7 +7,7 @@ extends Control
 # CONFIGURATION
 # =============================================================================
 
-const FONT_PATH := "res://resources/fonts/morris/MorrisRomanBlackAlt.ttf"
+const FONT_PATH_LEGACY := "res://resources/fonts/morris/MorrisRomanBlackAlt.ttf"  # Legacy — use MerlinVisual
 const LOGO_PATH := "res://icon.svg"
 const STATIC_SHADER_PATH := "res://shaders/crt_static.gdshader"
 
@@ -151,9 +151,8 @@ func _ready() -> void:
 	var time_dict := Time.get_time_dict_from_system()
 	current_hour = float(time_dict.hour) + float(time_dict.minute) / 60.0
 
-	if ResourceLoader.exists(FONT_PATH):
-		font = load(FONT_PATH)
-	else:
+	font = MerlinVisual.get_font("terminal")
+	if font == null:
 		font = ThemeDB.fallback_font
 
 	_setup_nodes()

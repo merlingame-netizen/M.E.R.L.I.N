@@ -31,15 +31,9 @@ const STARTER_OGHAMS := [
 	{"name": "Quert", "symbol": "\u168A", "meaning": "Pommier — Guerison", "gameplay": "Ramene un aspect vers l'equilibre"},
 ]
 
-const BIOME_DATA := {
-	"foret_broceliande": {"name": "Foret de Broceliande", "color": Color(0.30, 0.50, 0.28)},
-	"landes_bruyere": {"name": "Landes de Bruyere", "color": Color(0.55, 0.40, 0.55)},
-	"cotes_sauvages": {"name": "Cotes Sauvages", "color": Color(0.35, 0.50, 0.65)},
-	"villages_celtes": {"name": "Villages Celtes", "color": Color(0.60, 0.45, 0.30)},
-	"cercles_pierres": {"name": "Cercles de Pierres", "color": Color(0.50, 0.50, 0.55)},
-	"marais_korrigans": {"name": "Marais des Korrigans", "color": Color(0.30, 0.42, 0.30)},
-	"collines_dolmens": {"name": "Collines aux Dolmens", "color": Color(0.48, 0.55, 0.40)},
-}
+# Biome data — sourced from MerlinVisual.BIOME_VISUALS (single source of truth)
+# Initialized at runtime since MerlinVisual is an autoload singleton
+var BIOME_DATA: Dictionary = MerlinVisual.BIOME_VISUALS
 
 const CLASS_TO_BIOME := {
 	"druide": "cercles_pierres",
@@ -168,18 +162,8 @@ func _exit_tree() -> void:
 # ═══════════════════════════════════════════════════════════════════════════════
 
 func _load_fonts() -> void:
-	for path in ["res://resources/fonts/morris/MorrisRomanBlack.otf",
-				  "res://resources/fonts/morris/MorrisRomanBlack.ttf"]:
-		if title_font == null and ResourceLoader.exists(path):
-			var f = load(path)
-			if f is Font:
-				title_font = f
-	for path in ["res://resources/fonts/morris/MorrisRomanBlackAlt.otf",
-				  "res://resources/fonts/morris/MorrisRomanBlackAlt.ttf"]:
-		if body_font == null and ResourceLoader.exists(path):
-			var f = load(path)
-			if f is Font:
-				body_font = f
+	title_font = MerlinVisual.get_font("title")
+	body_font = MerlinVisual.get_font("body")
 	if body_font == null:
 		body_font = title_font
 

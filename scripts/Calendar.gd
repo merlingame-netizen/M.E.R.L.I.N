@@ -4,8 +4,8 @@ extends Control
 ## Design sobre et épuré, cohérent avec le menu principal
 ## =============================================================================
 
-const FONT_REGULAR_PATH := "res://resources/fonts/morris/MorrisRomanBlackAlt.ttf"
-const FONT_BOLD_PATH := "res://resources/fonts/morris/MorrisRomanBlack.ttf"
+const FONT_REGULAR_PATH_LEGACY := "res://resources/fonts/morris/MorrisRomanBlackAlt.ttf"  # Legacy
+const FONT_BOLD_PATH_LEGACY := "res://resources/fonts/morris/MorrisRomanBlack.ttf"  # Legacy
 const MENU_SCENE_FALLBACK := "res://scenes/HubAntre.tscn"
 const MOBILE_BREAKPOINT := 560.0
 
@@ -127,10 +127,8 @@ func _ready() -> void:
 
 
 func _load_fonts() -> void:
-	if ResourceLoader.exists(FONT_BOLD_PATH):
-		font_bold = load(FONT_BOLD_PATH)
-	if ResourceLoader.exists(FONT_REGULAR_PATH):
-		font_regular = load(FONT_REGULAR_PATH)
+	font_bold = MerlinVisual.get_font("title")
+	font_regular = MerlinVisual.get_font("body")
 	if font_regular == null:
 		font_regular = font_bold
 	if font_bold == null:
@@ -827,7 +825,7 @@ func _create_brumes_event_row(event: Dictionary) -> PanelContainer:
 	date_lbl.custom_minimum_size = Vector2(55, 0)
 	if font_bold:
 		date_lbl.add_theme_font_override("font", font_bold)
-	date_lbl.add_theme_font_size_override("font_size", 13)
+	date_lbl.add_theme_font_size_override("font_size", MerlinVisual.CAPTION_SMALL)
 	date_lbl.add_theme_color_override("font_color", MerlinVisual.CRT_PALETTE.amber)
 	hbox.add_child(date_lbl)
 
@@ -839,7 +837,7 @@ func _create_brumes_event_row(event: Dictionary) -> PanelContainer:
 	name_lbl.text = event.name
 	if font_bold:
 		name_lbl.add_theme_font_override("font", font_bold)
-	name_lbl.add_theme_font_size_override("font_size", 13)
+	name_lbl.add_theme_font_size_override("font_size", MerlinVisual.CAPTION_SMALL)
 	name_lbl.add_theme_color_override("font_color", MerlinVisual.CRT_PALETTE.phosphor)
 	info.add_child(name_lbl)
 
