@@ -145,92 +145,91 @@ void fragment() {
 	// Black outside CRT bounds (curved edges)
 	if (uv.x < 0.0 || uv.x > 1.0 || uv.y < 0.0 || uv.y > 1.0) {
 		COLOR = vec4(0.0, 0.0, 0.0, 1.0);
-		return;
-	}
-
-	// ─── STAGE 2: COLOR SAMPLING ─────────────────────────────────────
-
-	vec4 col;
-
-	// Color shifting offset
-	vec2 color_offset = vec2(0.0);
-	if (color_shift_enabled && color_shift_intensity > 0.0 && global_intensity >= 0.001) {
-		float shift_time = TIME * color_shift_speed;
-		color_offset.x = sin(shift_time + uv.y * 5.0) * color_shift_intensity * global_intensity;
-		color_offset.y = cos(shift_time * 0.7 + uv.x * 5.0) * color_shift_intensity * 0.5 * global_intensity;
-	}
-
-	// Chromatic aberration (edge-weighted RGB split)
-	if (chromatic_enabled && chromatic_intensity > 0.0 && global_intensity >= 0.001) {
-		float edge_factor = pow(dist_from_center * 2.0, chromatic_falloff);
-		float ca_amount = chromatic_intensity * edge_factor * global_intensity;
-		vec2 ca_offset = normalize(center_dist + 0.001) * ca_amount;
-
-		float r = texture(screen_texture, uv + ca_offset + color_offset).r;
-		float g = texture(screen_texture, uv + color_offset * 0.5).g;
-		float b = texture(screen_texture, uv - ca_offset + color_offset).b;
-		col = vec4(r, g, b, 1.0);
 	} else {
-		col = texture(screen_texture, uv + color_offset);
+		// ─── STAGE 2: COLOR SAMPLING ─────────────────────────────────────
+
+		vec4 col;
+
+		// Color shifting offset
+		vec2 color_offset = vec2(0.0);
+		if (color_shift_enabled && color_shift_intensity > 0.0 && global_intensity >= 0.001) {
+			float shift_time = TIME * color_shift_speed;
+			color_offset.x = sin(shift_time + uv.y * 5.0) * color_shift_intensity * global_intensity;
+			color_offset.y = cos(shift_time * 0.7 + uv.x * 5.0) * color_shift_intensity * 0.5 * global_intensity;
+		}
+
+		// Chromatic aberration (edge-weighted RGB split)
+		if (chromatic_enabled && chromatic_intensity > 0.0 && global_intensity >= 0.001) {
+			float edge_factor = pow(dist_from_center * 2.0, chromatic_falloff);
+			float ca_amount = chromatic_intensity * edge_factor * global_intensity;
+			vec2 ca_offset = normalize(center_dist + 0.001) * ca_amount;
+
+			float r = texture(screen_texture, uv + ca_offset + color_offset).r;
+			float g = texture(screen_texture, uv + color_offset * 0.5).g;
+			float b = texture(screen_texture, uv - ca_offset + color_offset).b;
+			col = vec4(r, g, b, 1.0);
+		} else {
+			col = texture(screen_texture, uv + color_offset);
+		}
+
+		// ─── STAGE 3: COLOR PROCESSING ───────────────────────────────────
+
+		if (global_intensity >= 0.001) {
+			// Temporal noise (grain)
+			if (noise_enabled && noise_intensity > 0.0) {
+				float grain = rand(uv * 500.0 + floor(TIME * noise_speed)) - 0.5;
+				col.rgb += grain * noise_intensity * global_intensity;
+			}
+
+			// Brightness flicker
+			if (flicker_enabled && flicker_intensity > 0.0) {
+				float flick = 1.0 + (rand(vec2(floor(TIME * flicker_speed), 0.0)) - 0.5) * flicker_intensity * global_intensity * 2.0;
+				col.rgb *= flick;
+			}
+
+			// Phosphor tint (biome-driven green/amber/colored)
+			if (tint_blend > 0.0) {
+				col.rgb = mix(col.rgb, col.rgb * phosphor_tint.rgb, tint_blend * global_intensity);
+			}
+
+			// CRT Scanlines (horizontal dark bands)
+			if (scanline_opacity > 0.0) {
+				float scanline = sin(uv.y * scanline_count * 3.14159) * 0.5 + 0.5;
+				scanline = pow(scanline, 1.5);
+				col.rgb *= 1.0 - (scanline * scanline_opacity * global_intensity);
+			}
+
+			// Phosphor glow (bright pixels bloom slightly)
+			if (phosphor_glow > 0.0) {
+				float luminance = dot(col.rgb, vec3(0.299, 0.587, 0.114));
+				float bloom_factor = smoothstep(0.5, 1.0, luminance) * phosphor_glow * global_intensity;
+				col.rgb += col.rgb * bloom_factor;
+			}
+
+			// Vignette (CRT edge darkening)
+			if (vignette_enabled && vignette_intensity > 0.0) {
+				float vignette = 1.0 - smoothstep(vignette_softness, 1.0, dist_from_center * 2.0);
+				col.rgb *= mix(1.0, vignette, vignette_intensity * global_intensity);
+			}
+		}
+
+		// ─── STAGE 4: DITHERING ──────────────────────────────────────────
+
+		if (dither_strength > 0.0 && global_intensity >= 0.001) {
+			ivec2 screen_pos = ivec2(FRAGCOORD.xy);
+			float threshold = bayer4x4(screen_pos);
+
+			float levels = color_levels - 1.0;
+			vec3 dithered = col.rgb * levels;
+			dithered += (threshold - 0.5) * dither_strength * global_intensity;
+			dithered = floor(dithered + 0.5) / levels;
+			dithered = clamp(dithered, 0.0, 1.0);
+
+			col.rgb = dithered;
+		}
+
+		// Clamp final output
+		col.rgb = clamp(col.rgb, 0.0, 1.0);
+		COLOR = col;
 	}
-
-	// ─── STAGE 3: COLOR PROCESSING ───────────────────────────────────
-
-	if (global_intensity >= 0.001) {
-		// Temporal noise (grain)
-		if (noise_enabled && noise_intensity > 0.0) {
-			float grain = rand(uv * 500.0 + floor(TIME * noise_speed)) - 0.5;
-			col.rgb += grain * noise_intensity * global_intensity;
-		}
-
-		// Brightness flicker
-		if (flicker_enabled && flicker_intensity > 0.0) {
-			float flick = 1.0 + (rand(vec2(floor(TIME * flicker_speed), 0.0)) - 0.5) * flicker_intensity * global_intensity * 2.0;
-			col.rgb *= flick;
-		}
-
-		// Phosphor tint (biome-driven green/amber/colored)
-		if (tint_blend > 0.0) {
-			col.rgb = mix(col.rgb, col.rgb * phosphor_tint.rgb, tint_blend * global_intensity);
-		}
-
-		// CRT Scanlines (horizontal dark bands)
-		if (scanline_opacity > 0.0) {
-			float scanline = sin(uv.y * scanline_count * 3.14159) * 0.5 + 0.5;
-			scanline = pow(scanline, 1.5);
-			col.rgb *= 1.0 - (scanline * scanline_opacity * global_intensity);
-		}
-
-		// Phosphor glow (bright pixels bloom slightly)
-		if (phosphor_glow > 0.0) {
-			float luminance = dot(col.rgb, vec3(0.299, 0.587, 0.114));
-			float bloom_factor = smoothstep(0.5, 1.0, luminance) * phosphor_glow * global_intensity;
-			col.rgb += col.rgb * bloom_factor;
-		}
-
-		// Vignette (CRT edge darkening)
-		if (vignette_enabled && vignette_intensity > 0.0) {
-			float vignette = 1.0 - smoothstep(vignette_softness, 1.0, dist_from_center * 2.0);
-			col.rgb *= mix(1.0, vignette, vignette_intensity * global_intensity);
-		}
-	}
-
-	// ─── STAGE 4: DITHERING ──────────────────────────────────────────
-
-	if (dither_strength > 0.0 && global_intensity >= 0.001) {
-		ivec2 screen_pos = ivec2(FRAGCOORD.xy);
-		float threshold = bayer4x4(screen_pos);
-
-		float levels = color_levels - 1.0;
-		vec3 dithered = col.rgb * levels;
-		dithered += (threshold - 0.5) * dither_strength * global_intensity;
-		dithered = floor(dithered + 0.5) / levels;
-		dithered = clamp(dithered, 0.0, 1.0);
-
-		col.rgb = dithered;
-	}
-
-	// Clamp final output
-	col.rgb = clamp(col.rgb, 0.0, 1.0);
-	COLOR = col;
 }

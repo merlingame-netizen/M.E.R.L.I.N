@@ -40,57 +40,55 @@ void fragment() {
 	// Skip transparent pixels
 	if (original.a < 0.01) {
 		COLOR = original;
-		return;
-	}
+	} else {
+		// Get palette dimensions
+		ivec2 pal_size = textureSize(palette, 0);
+		int num_colors = pal_size.x;
+		int num_rows = pal_size.y;
 
-	// Get palette dimensions
-	ivec2 pal_size = textureSize(palette, 0);
-	int num_colors = pal_size.x;
-	int num_rows = pal_size.y;
+		// Nothing to swap if palette is too small
+		if (num_colors < 1 || num_rows < 2) {
+			COLOR = original;
+		} else {
+			// Determine active target row
+			int row = target_row;
+			if (animation_fps > 0.0) {
+				// Cycle through rows 1..num_rows-1
+				int num_targets = num_rows - 1;
+				float cycle = mod(TIME * animation_fps, float(num_targets));
+				row = int(floor(cycle)) + 1;
+			}
+			row = clamp(row, 1, num_rows - 1);
 
-	// Nothing to swap if palette is too small
-	if (num_colors < 1 || num_rows < 2) {
-		COLOR = original;
-		return;
-	}
+			// Convert original color to integer for faster matching
+			ivec3 orig_int = ivec3(round(original.rgb * 255.0));
 
-	// Determine active target row
-	int row = target_row;
-	if (animation_fps > 0.0) {
-		// Cycle through rows 1..num_rows-1
-		int num_targets = num_rows - 1;
-		float cycle = mod(TIME * animation_fps, float(num_targets));
-		row = int(floor(cycle)) + 1;
-	}
-	row = clamp(row, 1, num_rows - 1);
+			// Search reference row (row 0) for a matching color
+			vec4 result = original;
+			for (int i = 0; i < num_colors; i++) {
+				// Sample reference color (row 0)
+				vec2 ref_uv = vec2((float(i) + 0.5) / float(num_colors), 0.5 / float(num_rows));
+				vec4 ref_color = texture(palette, ref_uv);
 
-	// Convert original color to integer for faster matching
-	ivec3 orig_int = ivec3(round(original.rgb * 255.0));
+				// Integer comparison for accuracy
+				ivec3 ref_int = ivec3(round(ref_color.rgb * 255.0));
+				ivec3 diff = abs(orig_int - ref_int);
+				int max_diff = max(diff.r, max(diff.g, diff.b));
 
-	// Search reference row (row 0) for a matching color
-	vec4 result = original;
-	for (int i = 0; i < num_colors; i++) {
-		// Sample reference color (row 0)
-		vec2 ref_uv = vec2((float(i) + 0.5) / float(num_colors), 0.5 / float(num_rows));
-		vec4 ref_color = texture(palette, ref_uv);
+				if (max_diff <= int(tolerance * 255.0)) {
+					// Match found — sample target color from the active row
+					vec2 target_uv = vec2(
+						(float(i) + 0.5) / float(num_colors),
+						(float(row) + 0.5) / float(num_rows)
+					);
+					vec4 target_color = texture(palette, target_uv);
+					result = vec4(target_color.rgb, original.a);
+					break;
+				}
+			}
 
-		// Integer comparison for accuracy
-		ivec3 ref_int = ivec3(round(ref_color.rgb * 255.0));
-		ivec3 diff = abs(orig_int - ref_int);
-		int max_diff = max(diff.r, max(diff.g, diff.b));
-
-		if (max_diff <= int(tolerance * 255.0)) {
-			// Match found — sample target color from the active row
-			vec2 target_uv = vec2(
-				(float(i) + 0.5) / float(num_colors),
-				(float(row) + 0.5) / float(num_rows)
-			);
-			vec4 target_color = texture(palette, target_uv);
-			result = vec4(target_color.rgb, original.a);
-			break;
+			// Blend between original and swapped
+			COLOR = mix(original, result, blend);
 		}
 	}
-
-	// Blend between original and swapped
-	COLOR = mix(original, result, blend);
 }

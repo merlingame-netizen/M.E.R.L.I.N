@@ -59,26 +59,25 @@ void fragment() {
 	// Skip transparent pixels
 	if (col.a < 0.01) {
 		COLOR = col;
-		return;
+	} else {
+		// Apply warm parchment tint
+		col.rgb = mix(col.rgb, warm_tint.rgb, tint_blend);
+
+		// Get screen-space pixel position for dither pattern
+		ivec2 screen_pos = ivec2(FRAGCOORD.xy);
+		float threshold = bayer4x4(screen_pos);
+
+		// Quantize with dithering
+		float levels = color_levels - 1.0;
+		vec3 dithered = col.rgb * levels;
+
+		// Add Bayer offset before quantization
+		dithered += (threshold - 0.5) * dither_strength;
+
+		// Quantize
+		dithered = floor(dithered + 0.5) / levels;
+		dithered = clamp(dithered, 0.0, 1.0);
+
+		COLOR = vec4(dithered, col.a);
 	}
-
-	// Apply warm parchment tint
-	col.rgb = mix(col.rgb, warm_tint.rgb, tint_blend);
-
-	// Get screen-space pixel position for dither pattern
-	ivec2 screen_pos = ivec2(FRAGCOORD.xy);
-	float threshold = bayer4x4(screen_pos);
-
-	// Quantize with dithering
-	float levels = color_levels - 1.0;
-	vec3 dithered = col.rgb * levels;
-
-	// Add Bayer offset before quantization
-	dithered += (threshold - 0.5) * dither_strength;
-
-	// Quantize
-	dithered = floor(dithered + 0.5) / levels;
-	dithered = clamp(dithered, 0.0, 1.0);
-
-	COLOR = vec4(dithered, col.a);
 }
