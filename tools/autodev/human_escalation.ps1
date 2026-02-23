@@ -104,16 +104,16 @@ function Invoke-WaitForHuman {
     }
 
     Write-EscalationLog "" "INFO"
-    Write-EscalationLog "Respond with: .\control.ps1 -Action Respond -Decision <proceed|rollback|custom>" "HUMAN"
+    Write-EscalationLog "Waiting for response via Claude Code (human_response.json)" "HUMAN"
     Write-EscalationLog "Timeout: ${MaxHours}h (auto-rollback after timeout)" "WARN"
 
     # Update control state to waiting_human
     Update-ControlState -State "waiting_human" -Detail "Escalation cycle $CycleNum --awaiting human decision"
 
-    # Notify
+    # Notify (suppress output to avoid polluting function return)
     & powershell -NoProfile -File (Join-Path $scriptDir "notify.ps1") `
         -Event "escalation" -Message "Director ESCALATED (cycle $CycleNum)" `
-        -Details $questions.escalation_reason
+        -Details $questions.escalation_reason | Out-Null
 
     # Remove stale response file
     if (Test-Path $responseFile) {
@@ -158,8 +158,10 @@ function Invoke-WaitForHuman {
 
         # Status display every 5 minutes
         if ($elapsed % 300 -eq 0 -and $elapsed -gt 0) {
-            $hoursLeft = [math]::Round(($maxSeconds - $elapsed) / 3600, 1)
-            Write-EscalationLog "Still waiting... (${hoursLeft}h remaining)" "INFO"
+            $secsLeft = $maxSeconds - $elapsed
+            $hrsLeft = [int]($secsLeft / 3600)
+            $minsLeft = [int](($secsLeft % 3600) / 60)
+            Write-EscalationLog "Still waiting... (${hrsLeft}h ${minsLeft}m remaining)" "INFO"
         }
 
         Start-Sleep -Seconds $pollIntervalSeconds
@@ -170,7 +172,7 @@ function Invoke-WaitForHuman {
     Write-EscalationLog "TIMEOUT (${MaxHours}h) --triggering auto-rollback" "ERROR"
 
     & powershell -NoProfile -File (Join-Path $scriptDir "notify.ps1") `
-        -Event "escalation_timeout" -Message "Escalation timeout after ${MaxHours}h --auto-rollback"
+        -Event "escalation_timeout" -Message "Escalation timeout after ${MaxHours}h --auto-rollback" | Out-Null
 
     return @{ decision = "rollback"; reason = "timeout" }
 }

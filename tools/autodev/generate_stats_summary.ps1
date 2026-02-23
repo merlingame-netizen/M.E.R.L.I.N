@@ -114,7 +114,8 @@ function Parse-LlmPerformance {
 
     if ($latencies.Count -gt 0) {
         $stats.performance.llm_latency_avg_ms = ($latencies | Measure-Object -Average).Average
-        $stats.performance.llm_latency_p95_ms = ($latencies | Sort-Object)[[math]::Floor($latencies.Count * 0.95)]
+        $p95idx = [int]($latencies.Count * 95 / 100)
+        $stats.performance.llm_latency_p95_ms = ($latencies | Sort-Object)[$p95idx]
         Write-Host "[LLM] Avg latency: $($stats.performance.llm_latency_avg_ms)ms" -ForegroundColor Gray
     }
 }
@@ -146,7 +147,7 @@ function Parse-TriadeCoverage {
     }
 
     $stats.triade_coverage.aspect_states_tested = $uniqueStates.Count
-    $stats.triade_coverage.coverage_percentage = [math]::Round(($uniqueStates.Count / 343.0) * 100, 2)
+    $stats.triade_coverage.coverage_percentage = [int](($uniqueStates.Count / 343.0) * 10000) / 100
     Write-Host "[TRIADE] Unique states: $($uniqueStates.Count)/343" -ForegroundColor Gray
 }
 

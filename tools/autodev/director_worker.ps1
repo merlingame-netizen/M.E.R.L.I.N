@@ -61,7 +61,7 @@ function Get-DirectorContext {
         if (Test-Path $inputPath) {
             $content = Get-Content $inputPath -Raw -ErrorAction SilentlyContinue
             if ($content.Length -gt 3000) {
-                $content = $content.Substring(0, 3000) + "`n... (truncated)"
+                $content = (-join $content[0..2999]) + "`n... (truncated)"
             }
             $context += "`n--- $inputFile ---`n$content`n"
             Write-Host "[DIRECTOR]   Input loaded: $inputFile" -ForegroundColor Gray

@@ -129,6 +129,29 @@ Source de verite: `~/.claude/project_registry.json` (detection projet, keywords,
 
 > Pour les projets Orange (Data, Cours): ajouter `[AI-assisted]` en suffixe.
 
+### 4. AUTODEV v3 Escalation Protocol (OBLIGATOIRE)
+
+**Quand le pipeline AUTODEV est actif et le Game Director ESCALATE:**
+
+```
+1. DETECTER l'escalation: Lire tools/autodev/status/control_state.json
+   Si state == "waiting_human" -> escalation en cours
+2. LIRE les questions: tools/autodev/status/director_questions.json
+3. PRESENTER via AskUserQuestion (pas de terminal, pas de control.ps1)
+4. ECRIRE la reponse: tools/autodev/status/human_response.json
+   Format: { "decision": "custom", "details": "Q1=A ...", "responded_by": "human_via_claude_code", "timestamp": "...", "answers": { "Q1": "A", ... } }
+5. CONFIRMER: Le pipeline detecte la reponse en < 30s et reprend
+```
+
+**REGLE**: L'utilisateur repond TOUJOURS via Claude Code. JAMAIS via control.ps1 en terminal.
+
+**Detection automatique**: Si l'utilisateur demande le statut AUTODEV ou dit "on m'attend ?",
+lire `control_state.json` et presenter les questions si `waiting_human`.
+
+**Lancement**: `.\tools\autodev\control.ps1 -Action Start -Wave [-MaxCycles N] [-DryRun]`
+**Arret**: `.\tools\autodev\control.ps1 -Action Stop` (ou creer fichier VETO)
+**Statut**: Lire `tools/autodev/status/control_state.json` + `director_decision.json`
+
 ---
 
 ## Project Overview

@@ -80,29 +80,16 @@ switch ($Action) {
         Write-Host "[CONTROL] Launching AUTODEV pipeline..." -ForegroundColor Green
         Write-Host "[CONTROL] Command: $fullCmd" -ForegroundColor Gray
 
-        # Log file for Tee-Object (both visible AND logged)
+        # Log file
         $logFile = Join-Path (Join-Path $scriptDir "logs") "orchestrator_$(Get-Date -Format 'yyyyMMdd_HHmmss').log"
+        $dashboardFile = Join-Path $statusDir "live_dashboard.md"
 
-        # Launch in VISIBLE window (dashboard) with Tee-Object for logging
-        $dashboardTitle = "[AUTODEV] Dashboard - Cycle Runner"
-        $dashboardCmd = @(
-            "`$host.UI.RawUI.WindowTitle = '$dashboardTitle'",
-            "Write-Host '' -ForegroundColor Cyan",
-            "Write-Host '[==================================================]' -ForegroundColor Cyan",
-            "Write-Host '|  M.E.R.L.I.N. AUTODEV v2 -- Dashboard            |' -ForegroundColor Cyan",
-            "Write-Host '|  Workers will open in separate windows            |' -ForegroundColor Cyan",
-            "Write-Host '|  Drop VETO file in tools/autodev/ to stop all     |' -ForegroundColor Cyan",
-            "Write-Host '[==================================================]' -ForegroundColor Cyan",
-            "Write-Host ''",
-            "& powershell -NoProfile -ExecutionPolicy Bypass -File `"$orchScript`" $argString 2>&1 | Tee-Object -FilePath '$logFile'",
-            "Write-Host ''",
-            "Write-Host '[AUTODEV] Pipeline finished. Window closes in 120s...' -ForegroundColor Yellow",
-            "Start-Sleep -Seconds 120"
-        ) -join "; "
+        # Launch HIDDEN (zero external windows, dashboard via live_dashboard.md)
+        $hiddenCmd = "& powershell -NoProfile -ExecutionPolicy Bypass -File `"$orchScript`" $argString 2>&1 | Tee-Object -FilePath '$logFile'"
 
         $proc = Start-Process -FilePath "powershell" `
-            -ArgumentList @("-ExecutionPolicy", "Bypass", "-NoProfile", "-Command", $dashboardCmd) `
-            -PassThru
+            -ArgumentList @("-ExecutionPolicy", "Bypass", "-NoProfile", "-WindowStyle", "Hidden", "-Command", $hiddenCmd) `
+            -WindowStyle Hidden -PassThru
 
         # Save PID
         $proc.Id | Set-Content $pidFile -Encoding UTF8
@@ -113,8 +100,8 @@ switch ($Action) {
             started  = (Get-Date -Format "o")
         }
 
-        Write-Host "[CONTROL] AUTODEV started (PID $($proc.Id))" -ForegroundColor Green
-        Write-Host "[CONTROL] Dashboard window: '$dashboardTitle'" -ForegroundColor Cyan
+        Write-Host "[CONTROL] AUTODEV started (PID $($proc.Id)) -- SILENT MODE" -ForegroundColor Green
+        Write-Host "[CONTROL] Dashboard: $dashboardFile (ouvrir dans VS Code)" -ForegroundColor Cyan
         Write-Host "[CONTROL] Log: $logFile" -ForegroundColor Gray
         Write-Host "[CONTROL] Stop: .\control.ps1 -Action Stop" -ForegroundColor Gray
     }
@@ -260,7 +247,7 @@ switch ($Action) {
                     if ($questions.questions) {
                         foreach ($q in $questions.questions) { Write-Host "    ? $q" -ForegroundColor White }
                     }
-                    Write-Host "`n  Respond: .\control.ps1 -Action Respond -Decision <proceed|rollback|custom>" -ForegroundColor Cyan
+                    Write-Host "`n  Respond via Claude Code (human_response.json auto-detect)" -ForegroundColor Cyan
                 }
             }
         }

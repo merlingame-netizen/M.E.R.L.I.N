@@ -62,7 +62,7 @@ function Get-InputContext {
             $content = Get-Content $inputPath -Raw
             # Truncate large files to 5000 chars
             if ($content.Length -gt 5000) {
-                $content = $content.Substring(0, 5000) + "`n... (truncated, $($content.Length) chars total)"
+                $content = (-join $content[0..4999]) + "`n... (truncated, $($content.Length) chars total)"
             }
             $context += "`n=== INPUT: $inputFile ===`n$content`n"
             Write-Host "[REVIEW]   Input loaded: $inputFile ($($content.Length) chars)" -ForegroundColor Gray

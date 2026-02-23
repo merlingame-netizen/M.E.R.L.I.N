@@ -35,7 +35,7 @@ if ($Scenes -eq "all") {
     foreach ($s in ($Scenes -split ",")) {
         $s = $s.Trim()
         # Accept both "IntroCeltOS" and "res://scenes/IntroCeltOS.tscn"
-        if (-not $s.StartsWith("res://")) {
+        if ($s -notlike "res://*") {
             $s = "res://scenes/$s.tscn"
         }
         $sceneList += $s
@@ -89,7 +89,7 @@ Acquire-Mutex
 try {
     foreach ($scenePath in $sceneList) {
         # Extract scene name from path
-        $sceneName = [System.IO.Path]::GetFileNameWithoutExtension($scenePath)
+        $sceneName = (Split-Path $scenePath -Leaf) -replace '\.[^.]+$', ''
         $timestamp = Get-Date -Format "HHmmss"
         $outputFile = Join-Path $OutputDir "${sceneName}_c${Cycle}_${timestamp}.png"
 
@@ -132,7 +132,7 @@ try {
             status   = "failed"
             error    = ""
             output   = ""
-            seconds  = [math]::Round($elapsed, 1)
+            seconds  = [int]($elapsed * 10) / 10
         }
 
         if (Test-Path $resultFile) {

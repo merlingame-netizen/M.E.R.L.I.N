@@ -124,7 +124,7 @@ try {
             run_number = $runNum
             strategy   = $strategy
             status     = "failed"
-            elapsed_s  = [math]::Round($runElapsed, 1)
+            elapsed_s  = [int]($runElapsed * 10) / 10
         }
 
         if (Test-Path $resultsFile) {
@@ -175,7 +175,7 @@ if ($successCount -gt 0) {
 
     # Write batch config
     $batchConfig = @{
-        results_dir = $cycleResultsDir.Replace("\", "/")
+        results_dir = $cycleResultsDir -replace '\\', '/'
         output_path = "user://batch_autoplay_results.json"
     } | ConvertTo-Json
     $batchConfigPath = Join-Path $godotUserDir "batch_autoplay_config.json"
@@ -206,7 +206,8 @@ if ($successCount -gt 0) {
             $aggData = Get-Content $aggResultsFile -Raw | ConvertFrom-Json
             Write-Host "`n[STATS] === AGGREGATE RESULTS ===" -ForegroundColor Cyan
             Write-Host "  Total runs:     $($aggData.total_runs)" -ForegroundColor Gray
-            Write-Host "  Survival rate:  $([math]::Round($aggData.survival_rate * 100, 1))%" -ForegroundColor Gray
+            $survivalPct = [int]($aggData.survival_rate * 1000) / 10
+            Write-Host "  Survival rate:  ${survivalPct}%" -ForegroundColor Gray
             Write-Host "  Avg cards:      $($aggData.avg_cards_played)" -ForegroundColor Gray
             Write-Host "  Balance score:  $($aggData.balance_score)/100" -ForegroundColor $(if($aggData.balance_score -ge 60){"Green"}else{"Yellow"})
             Write-Host "  Fun score:      $($aggData.fun_score)/100" -ForegroundColor $(if($aggData.fun_score -ge 60){"Green"}else{"Yellow"})
@@ -229,7 +230,7 @@ $statsReport = @{
     total_runs    = $NumRuns
     successful    = $successCount
     failed        = $NumRuns - $successCount
-    elapsed_s     = [math]::Round($totalElapsed, 1)
+    elapsed_s     = [int]($totalElapsed * 10) / 10
     results_dir   = $cycleResultsDir
     runs          = $runResults
 } | ConvertTo-Json -Depth 5

@@ -81,8 +81,9 @@ function Get-GridDimensions {
         8 { return @{ rows = 2; cols = 4 } }
         9 { return @{ rows = 3; cols = 3 } }
         default {
-            $rows = [math]::Ceiling([math]::Sqrt($Count))
-            $cols = [math]::Ceiling($Count / $rows)
+            $rows = 1
+            while ($rows * $rows -lt $Count) { $rows++ }
+            $cols = [int](($Count + $rows - 1) / $rows)
             return @{ rows = $rows; cols = $cols }
         }
     }
@@ -130,7 +131,7 @@ $wtArgs += "new-tab --title `"$($panes[0].title)`" $cmd0"
 for ($r = 1; $r -lt $rows; $r++) {
     $paneIdx = $r * $cols
     if ($paneIdx -lt $N) {
-        $size = [math]::Round(($rows - $r) / ($rows - $r + 1), 4)
+        $size = [int](10000 * ($rows - $r) / ($rows - $r + 1)) / 10000
         $cmd = Get-PaneCommand -Pane $panes[$paneIdx]
         $wtArgs += "split-pane -H -s $size --title `"$($panes[$paneIdx].title)`" $cmd"
     }
@@ -147,7 +148,7 @@ for ($r = $rows - 1; $r -ge 0; $r--) {
     for ($c = 1; $c -lt $cols; $c++) {
         $paneIdx = $r * $cols + $c
         if ($paneIdx -lt $N) {
-            $size = [math]::Round(($cols - $c) / ($cols - $c + 1), 4)
+            $size = [int](10000 * ($cols - $c) / ($cols - $c + 1)) / 10000
             $cmd = Get-PaneCommand -Pane $panes[$paneIdx]
             $wtArgs += "split-pane -V -s $size --title `"$($panes[$paneIdx].title)`" $cmd"
         }

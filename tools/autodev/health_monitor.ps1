@@ -40,7 +40,7 @@ function Check-ScopeCompliance {
         $isAllowed = $false
         foreach ($scope in $allowedPaths) {
             # Check if scope is a directory (ends with /)
-            if ($scope.EndsWith("/") -and $file.StartsWith($scope)) {
+            if ($scope -like "*/" -and $file -like "$scope*") {
                 $isAllowed = $true
                 break
             }
@@ -51,14 +51,14 @@ function Check-ScopeCompliance {
             }
             # Check if file is under a directory scope
             $scopeDir = Split-Path $scope -Parent
-            if ($scopeDir -and $file.StartsWith("$scopeDir/")) {
+            if ($scopeDir -and $file -like "$scopeDir/*") {
                 # More permissive: allow files in the same directory
                 $isAllowed = $true
                 break
             }
         }
         # Always allow status/log files
-        if ($file.StartsWith("tools/autodev/")) { $isAllowed = $true }
+        if ($file -like "tools/autodev/*") { $isAllowed = $true }
 
         if (-not $isAllowed) {
             $violations += @{ domain = $domain; file = $file; scope = ($allowedPaths -join ", ") }
@@ -107,7 +107,7 @@ function Check-ValidationMutex {
                 Remove-Item $mutexFile -Force
                 return @{ stale = $true; domain = $mutexContent.domain }
             }
-            return @{ active = $true; domain = $mutexContent.domain; age_minutes = [math]::Round($age.TotalMinutes, 1) }
+            return @{ active = $true; domain = $mutexContent.domain; age_minutes = [int]($age.TotalMinutes * 10) / 10 }
         }
     }
     return @{ active = $false }

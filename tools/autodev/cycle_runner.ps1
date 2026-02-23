@@ -101,35 +101,17 @@ function Start-HiddenWorker {
     return $proc
 }
 
-# ── Aggregated View Launcher ─────────────────────────────────────────
+# ── Live Dashboard Writer (replaces aggregated view windows) ─────────
 
-function Start-AggregatedView {
-    param(
-        [array]$PaneSpecs,    # Array of @{title; logFile; statusFile}
-        [string]$WaveLabel
-    )
-
-    $aggrScript = Join-Path $scriptDir "aggregated_view.ps1"
-    if (-not (Test-Path $aggrScript)) {
-        Write-Host "[CYCLE] aggregated_view.ps1 not found, skipping aggregator" -ForegroundColor Yellow
-        return $null
+function Update-LiveDashboard {
+    param([int]$CycleNum = 0, [string]$Wave = "", [string]$Detail = "")
+    $dashScript = Join-Path $scriptDir "write_dashboard.ps1"
+    if (Test-Path $dashScript) {
+        $dashArgs = @("-CycleNum", $CycleNum)
+        if ($Wave) { $dashArgs += @("-Wave", $Wave) }
+        if ($Detail) { $dashArgs += @("-Detail", $Detail) }
+        & powershell -NoProfile -File $dashScript @dashArgs | Out-Null
     }
-
-    # Write pane specs to a temp JSON file
-    $specFile = Join-Path $statusDir "pane_specs_${WaveLabel}.json"
-    $PaneSpecs | ConvertTo-Json -Depth 3 | Set-Content $specFile -Encoding UTF8
-
-    $windowTitle = "AUTODEV - Cycle $currentCycle - $WaveLabel ($($PaneSpecs.Count) workers)"
-
-    $proc = Start-Process powershell -ArgumentList @(
-        "-ExecutionPolicy", "Bypass", "-NoProfile",
-        "-File", $aggrScript,
-        "-PaneSpecsFile", $specFile,
-        "-WindowTitle", $windowTitle
-    ) -PassThru
-
-    Write-Host "[CYCLE] Aggregated view launched: $windowTitle ($($PaneSpecs.Count) panes)" -ForegroundColor Cyan
-    return $proc
 }
 
 # ── Wait for visible processes ────────────────────────────────────────
@@ -196,6 +178,9 @@ function Wait-ForProcesses {
             Write-Host "    $icon $name (status: $($s.file_status))" -ForegroundColor $color
         }
 
+        # Update live dashboard file (VS Code auto-refreshes)
+        Update-LiveDashboard -CycleNum $currentCycle -Wave $Label
+
         if ($runningCount -eq 0) { break }
         Start-Sleep -Seconds $tickSeconds
     }
@@ -249,16 +234,8 @@ function Invoke-BuildWave {
         $paneSpecs += @{ title = "$($d.name) BUILD"; logFile = $workerLog; statusFile = $statusFile }
     }
 
-    # Launch aggregated view (single WT window with all worker logs)
-    $aggrProc = Start-AggregatedView -PaneSpecs $paneSpecs -WaveLabel "BUILD"
-
-    # Monitor build processes via status files
+    # Monitor build processes via status files (dashboard updated at each tick)
     $statusSummary = Wait-ForProcesses -Processes $procs -Label "BUILD"
-
-    # Close aggregated view when wave completes
-    if ($aggrProc -and -not $aggrProc.HasExited) {
-        Stop-Process -Id $aggrProc.Id -Force -ErrorAction SilentlyContinue
-    }
 
     # Identify failed domains
     foreach ($name in $statusSummary.Keys) {
@@ -380,15 +357,8 @@ function Invoke-ReviewWave {
         $paneSpecs += @{ title = "$($d.name) REVIEW"; logFile = $workerLog; statusFile = $statusFile }
     }
 
-    # Launch aggregated view for review wave
-    $aggrProc = Start-AggregatedView -PaneSpecs $paneSpecs -WaveLabel "REVIEW"
-
-    # Monitor review processes via status files
+    # Monitor review processes via status files (dashboard updated at each tick)
     $statusSummary = Wait-ForProcesses -Processes $procs -Label "REVIEW"
-
-    if ($aggrProc -and -not $aggrProc.HasExited) {
-        Stop-Process -Id $aggrProc.Id -Force -ErrorAction SilentlyContinue
-    }
 
     & powershell -File (Join-Path $scriptDir "notify.ps1") -Event "review_done" -Message "REVIEW done (cycle $CycleNum)"
 
@@ -444,7 +414,8 @@ function Invoke-DirectorWave {
         return @{ decision = "PROCEED"; reason = "parse_error" }
     }
 
-    $dec = $decision.decision.ToUpper()
+    # ConstrainedLanguage safe: PowerShell switch/eq are case-insensitive
+    $dec = $decision.decision
     Write-Host "[CYCLE] Director decision: $dec (quality=$($decision.quality_score), confidence=$($decision.confidence))" -ForegroundColor Cyan
 
     & powershell -NoProfile -File (Join-Path $scriptDir "notify.ps1") -Event "wave_complete" -Message "DIRECTOR: $dec (Q=$($decision.quality_score) C=$($decision.confidence))"
@@ -503,8 +474,22 @@ function Invoke-DirectorDecisionRoute {
 
         Write-Host "[CYCLE] Entering escalation wait (timeout: ${timeoutHours}h)..." -ForegroundColor Yellow
         $escArgs = @("-Action", "Wait", "-Cycle", $CycleNum, "-TimeoutHours", $timeoutHours)
-        $escResultJson = & powershell -NoProfile -File $escalationScript @escArgs
-        $escResult = $escResultJson | ConvertFrom-Json -ErrorAction SilentlyContinue
+        $escRawOutput = & powershell -NoProfile -File $escalationScript @escArgs
+        # Filter: keep only lines that look like JSON (ConstrainedLanguage may mix error text)
+        $escJsonLines = @()
+        if ($escRawOutput) {
+            foreach ($line in $escRawOutput) {
+                $trimmed = "$line".Trim()
+                if ($trimmed -match '^\{' -or $trimmed -match '^\}' -or $trimmed -match '^"' -or $trimmed -match '^\[') {
+                    $escJsonLines += $trimmed
+                }
+            }
+        }
+        $escResultJson = $escJsonLines -join "`n"
+        $escResult = $null
+        if ($escResultJson) {
+            $escResult = $escResultJson | ConvertFrom-Json -ErrorAction SilentlyContinue
+        }
 
         if (-not $escResult) {
             Write-Host "[CYCLE] Escalation returned no result --defaulting to PROCEED" -ForegroundColor Yellow
@@ -573,17 +558,8 @@ function Invoke-FixWave {
         $paneSpecs += @{ title = "$domainName FIX"; logFile = $workerLog; statusFile = $statusFile }
     }
 
-    # Launch aggregated view for fix wave
-    $aggrProc = $null
-    if ($paneSpecs.Count -gt 0) {
-        $aggrProc = Start-AggregatedView -PaneSpecs $paneSpecs -WaveLabel "FIX"
-    }
-
+    # Monitor fix processes via status files (dashboard updated at each tick)
     $statusSummary = Wait-ForProcesses -Processes $procs -Label "FIX"
-
-    if ($aggrProc -and -not $aggrProc.HasExited) {
-        Stop-Process -Id $aggrProc.Id -Force -ErrorAction SilentlyContinue
-    }
 
     & powershell -File (Join-Path $scriptDir "notify.ps1") -Event "fix_done" -Message "FIX done (cycle $CycleNum)"
 
@@ -666,16 +642,9 @@ if (-not $DryRun) {
     Write-Host "[CYCLE] Health monitor started (Job $($healthJob.Id))" -ForegroundColor Gray
 }
 
-# Launch live monitor dashboard in its own visible window
-$monitorScript = Join-Path $scriptDir "monitor_dashboard.ps1"
-$monitorProc = $null
-if (Test-Path $monitorScript) {
-    $monitorProc = Start-Process powershell -ArgumentList @(
-        "-ExecutionPolicy", "Bypass", "-NoProfile",
-        "-File", $monitorScript, "-RefreshSeconds", "5"
-    ) -PassThru
-    Write-Host "[CYCLE] Live monitor dashboard opened (PID $($monitorProc.Id))" -ForegroundColor Gray
-}
+# Dashboard: live_dashboard.md (VS Code auto-refresh, no external window)
+Update-LiveDashboard -CycleNum $Cycle -Wave "starting" -Detail "Pipeline initializing"
+Write-Host "[CYCLE] Live dashboard: tools/autodev/status/live_dashboard.md" -ForegroundColor Cyan
 
 $currentCycle = $Cycle
 
@@ -766,10 +735,7 @@ if ($healthJob) {
     Remove-Job -Job $healthJob -ErrorAction SilentlyContinue
 }
 
-# Close monitor dashboard
-if ($monitorProc -and -not $monitorProc.HasExited) {
-    Stop-Process -Id $monitorProc.Id -Force -ErrorAction SilentlyContinue
-    Write-Host "[CYCLE] Monitor dashboard closed" -ForegroundColor Gray
-}
+# Final dashboard update
+Update-LiveDashboard -CycleNum ($currentCycle - 1) -Wave "complete" -Detail "Pipeline finished"
 
 Write-Host "`n[CYCLE] AUTODEV v3 pipeline complete." -ForegroundColor Green

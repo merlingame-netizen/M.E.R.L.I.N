@@ -48,7 +48,7 @@ function Show-Dashboard {
                 "stopped" { "Red" }
                 default   { "Gray" }
             }
-            Write-Host "  Pipeline:  $($ctrl.state.ToUpper())" -ForegroundColor $stateColor
+            Write-Host "  Pipeline:  $($ctrl.state)" -ForegroundColor $stateColor
             Write-Host "  Cycle:     $($ctrl.cycle) / $($ctrl.max_cycles)" -ForegroundColor White
             Write-Host "  Wave:      [$waveIcon] $($ctrl.wave)" -ForegroundColor Cyan
             Write-Host "  Detail:    $($ctrl.detail)" -ForegroundColor Gray
@@ -154,7 +154,7 @@ function Show-Dashboard {
         Write-Host "  --- Latest Log: $($recentLogs.Name) ---" -ForegroundColor Cyan
         $lastLines = Get-Content $recentLogs.FullName -Tail 5 -ErrorAction SilentlyContinue
         foreach ($line in $lastLines) {
-            $trimmed = if ($line.Length -gt 80) { $line.Substring(0, 77) + "..." } else { $line }
+            $trimmed = if ($line.Length -gt 80) { (-join $line[0..76]) + "..." } else { $line }
             Write-Host "    $trimmed" -ForegroundColor DarkGray
         }
     }

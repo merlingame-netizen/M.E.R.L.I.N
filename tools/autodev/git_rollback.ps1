@@ -140,7 +140,7 @@ function Invoke-DomainRollback {
             return $false
         }
 
-        $shortCommit = $mergeCommit.Substring(0, 7)
+        $shortCommit = -join $mergeCommit[0..6]
         Write-RollbackLog "Found merge commit for $DomainName : $shortCommit" "INFO"
 
         if ($DryRun) {
