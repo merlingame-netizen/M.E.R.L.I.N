@@ -269,8 +269,12 @@ try {
 
         if (Test-Path $validateScript) {
             Push-Location $worktreePath
+            # Lower ErrorActionPreference so stderr from child PS doesn't throw
+            $savedEAP2 = $ErrorActionPreference
+            $ErrorActionPreference = "Continue"
             $validateOutput = & powershell -ExecutionPolicy Bypass -File $validateScript -OutputFile $testResultsFile 2>&1
             $validateExitCode = $LASTEXITCODE
+            $ErrorActionPreference = $savedEAP2
             Pop-Location
 
             if ($validateExitCode -ne 0) {

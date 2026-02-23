@@ -230,11 +230,14 @@ try {
     Write-Host "[REVIEW] Launching Claude CLI..." -ForegroundColor Green
     $env:CLAUDECODE = ""
 
+    # Temporarily lower ErrorActionPreference so stderr from Claude CLI doesn't throw
+    $savedEAP = $ErrorActionPreference
+    $ErrorActionPreference = "Continue"
     $output = Get-Content $promptFile -Raw |
         & $claudeExe -p --allowed-tools $reviewTools --model $model --output-format text --permission-mode bypassPermissions 2>&1 |
         Tee-Object -FilePath $logFile
-
     $exitCode = $LASTEXITCODE
+    $ErrorActionPreference = $savedEAP
 
     if ($exitCode -eq 0) {
         Write-Status -Status "done" -Completed $taskIds -Remaining @()

@@ -234,11 +234,14 @@ try {
     Write-Host "[DIRECTOR] Launching Claude CLI (model: $model)..." -ForegroundColor Green
     $env:CLAUDECODE = ""
 
+    # Temporarily lower ErrorActionPreference so stderr from Claude CLI doesn't throw
+    $savedEAP = $ErrorActionPreference
+    $ErrorActionPreference = "Continue"
     $output = Get-Content $promptFile -Raw |
         & $claudeExe -p --allowed-tools $directorTools --model $model --output-format text --permission-mode bypassPermissions 2>&1 |
         Tee-Object -FilePath $logFile
-
     $exitCode = $LASTEXITCODE
+    $ErrorActionPreference = $savedEAP
 
     if ($exitCode -ne 0) {
         Write-Host "[DIRECTOR] Claude CLI exited with code $exitCode" -ForegroundColor Red

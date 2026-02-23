@@ -51,26 +51,25 @@
       "name": "ui-ux",
       "branch": "autodev/ui-ux",
       "type": "build",
-      "description": "UI/UX: Arbre de Vie, Calendar, Bestiole wheel",
+      "description": "INFRA: validate.bat integration + test_results.json aggregator",
       "file_scope": [
-        "scripts/ui/arbre_de_vie_ui.gd",
-        "scripts/ui/bestiole_wheel_system.gd",
-        "scripts/ui/map_ui.gd",
-        "scripts/Calendar.gd",
-        "scripts/ui/biome_radial.gd"
+        "tools/autodev/",
+        "tools/validate_editor_parse.ps1",
+        "tools/validate_flow_order.ps1",
+        "tools/smoke_test_scenes.ps1"
       ],
       "tasks": [
         {
-          "id": "B.2",
-          "title": "UI Arbre de Vie (page 4 Hub)",
-          "description": "Implementer l'arbre de progression visuel sur la page 4 du Hub. Affiche les noeuds debloques, les connexions, et les bonus actifs du joueur.",
-          "priority": "high"
+          "id": "INFRA.1",
+          "title": "Create test_results.json aggregator",
+          "description": "Create tools/autodev/generate_test_results.ps1 that: 1) runs validate.bat Step 0 (Editor Parse Check), 2) parses output for errors/warnings, 3) writes tools/autodev/status/test_results.json with {total_errors, total_warnings, files_checked, errors:[], warnings:[], timestamp}. Must work in ConstrainedLanguage mode (no [math]::, no .Substring(), use -like/-replace operators).",
+          "priority": "critical"
         },
         {
-          "id": "C.4",
-          "title": "Refonte calendrier UI",
-          "description": "Refactorer l'interface du calendrier pour integrer les saisons, les evenements et la timeline visuelle.",
-          "priority": "medium"
+          "id": "INFRA.2",
+          "title": "Integrate validate.bat Step 0 into cycle completion",
+          "description": "Modify the build worker completion flow: after Claude CLI finishes, run validate.bat Step 0 automatically. If errors found, set worker status to 'error' instead of 'done'. Write results to test_results.json. Workers CANNOT be 'done' if validate fails.",
+          "priority": "critical"
         }
       ],
       "agents": [
@@ -87,41 +86,35 @@
       "name": "gameplay",
       "branch": "autodev/gameplay",
       "type": "build",
-      "description": "Gameplay core: Souffle perks, Archetype, Aspects, progression",
+      "description": "INFRA: Install GUT framework + unit tests MerlinStore",
       "file_scope": [
         "scripts/merlin/merlin_store.gd",
         "scripts/merlin/merlin_card_system.gd",
         "scripts/merlin/merlin_effect_engine.gd",
-        "scripts/merlin/merlin_constants.gd"
+        "scripts/test/",
+        "addons/gut/"
       ],
       "exclusive_files": [
-        "scripts/merlin/merlin_store.gd",
-        "scripts/merlin/merlin_constants.gd"
+        "scripts/merlin/merlin_store.gd"
       ],
       "tasks": [
         {
-          "id": "B.1",
-          "title": "Souffle d'Ogham -> Perk personnalisable",
-          "description": "Transformer le Souffle en systeme de perks. Le joueur choisit des bonus passifs lies aux Oghams debloques. Chaque perk coute du Souffle et offre un avantage contextuel.",
-          "priority": "high"
+          "id": "INFRA.3",
+          "title": "Install GUT testing framework",
+          "description": "Install GUT (Godot Unit Testing) v9.x in addons/gut/. Download from GitHub (bitwes/Gut), copy to addons/gut/, enable in project.godot. Verify it works: create a minimal test script scripts/test/test_example.gd that extends GutTest with one test_pass() method. Run with: godot --headless -s addons/gut/gut_cmdln.gd -gdir=res://scripts/test/ -gexit. MUST compile without errors in Godot 4.5.",
+          "priority": "critical"
         },
         {
-          "id": "B.3",
-          "title": "Archetype -> bonus DC + contexte RAG",
-          "description": "L'archetype du joueur (determine par le quiz) modifie le DC des jets et injecte du contexte specifique dans le RAG pour personnaliser la narration.",
-          "priority": "high"
+          "id": "INFRA.4",
+          "title": "Unit tests for MerlinStore (3 tests minimum)",
+          "description": "Write scripts/test/test_merlin_store.gd extending GutTest. Test: 1) initial state (3 aspects at equilibre, souffle=3, karma=0), 2) apply_effect SHIFT_ASPECT changes aspect correctly and clamps, 3) game_over detection when 2+ aspects at extreme. Read merlin_store.gd first. Use gut_assert methods (assert_eq, assert_true, assert_between). Tests must PASS.",
+          "priority": "critical"
         },
         {
-          "id": "B.4",
-          "title": "Aspects -> impact narratif + bonus/malus",
-          "description": "Les etats des 3 aspects (Bas/Equilibre/Haut) doivent influencer la narration LLM et appliquer des bonus/malus mecaniques (ex: Corps Epuise = DC+2).",
-          "priority": "medium"
-        },
-        {
-          "id": "B.5",
-          "title": "Premiere run skip Hub",
-          "description": "A la toute premiere partie, permettre au joueur de sauter le Hub et aller directement en jeu pour une onboarding plus fluide.",
-          "priority": "low"
+          "id": "INFRA.5",
+          "title": "Unit tests for CardSystem + EffectEngine (2 tests minimum)",
+          "description": "Write scripts/test/test_card_system.gd and scripts/test/test_effect_engine.gd extending GutTest. CardSystem: test card generation returns 3 options, test fallback pool works. EffectEngine: test SHIFT_ASPECT effect, test SOUFFLE effect. Read the source files first. Tests must PASS.",
+          "priority": "critical"
         }
       ],
       "agents": [
@@ -139,28 +132,25 @@
       "name": "llm-lora",
       "branch": "autodev/llm-lora",
       "type": "build",
-      "description": "LLM integration: LoRA v2, RAG archetype, prompt quality",
+      "description": "INFRA: stats_summary aggregator + LLM adapter smoke tests",
       "file_scope": [
+        "tools/autodev/",
+        "tools/autodev/status/",
         "addons/merlin_ai/ollama_backend.gd",
-        "addons/merlin_ai/merlin_ai.gd",
-        "addons/merlin_ai/merlin_omniscient.gd",
-        "addons/merlin_ai/rag_manager.gd",
-        "scripts/merlin/merlin_llm_adapter.gd",
-        "data/ai/training/",
-        "tools/lora/"
+        "scripts/merlin/merlin_llm_adapter.gd"
       ],
       "tasks": [
         {
-          "id": "LLM.1",
-          "title": "LoRA v2 adapter integration",
-          "description": "Integrer l'adapter LoRA v2 dans le pipeline Ollama. Ajouter le chargement conditionnel de l'adapter et le benchmark automatique.",
-          "priority": "high"
+          "id": "INFRA.6",
+          "title": "Create stats_summary.json aggregator",
+          "description": "Create tools/autodev/generate_stats_summary.ps1 (if missing or incomplete): 1) reads batch_autoplay_results.json from stats_runner output, 2) computes survival_rate, avg_turns, aspect distribution, ending distribution, 3) writes tools/autodev/status/stats_summary.json with {total_runs, survival_rate, avg_turns, aspect_distribution:{}, ending_distribution:{}, timestamp}. Must work in ConstrainedLanguage mode (no [math]::, no .Substring(), use -like/-replace and integer arithmetic for rounding).",
+          "priority": "critical"
         },
         {
-          "id": "LLM.2",
-          "title": "RAG archetype injection",
-          "description": "Enrichir le RAG v2.0 pour injecter le contexte d'archetype du joueur dans les prompts, personalisant la narration selon le profil.",
-          "priority": "medium"
+          "id": "INFRA.7",
+          "title": "LLM adapter connection smoke test",
+          "description": "Create scripts/test/test_llm_smoke.gd: a minimal GDScript that 1) instantiates OllamaBackend, 2) sends a trivial prompt ('Say hello'), 3) verifies response is non-empty string, 4) checks response time < 30s. Run via: godot --headless -s scripts/test/test_llm_smoke.gd. Print PASS/FAIL to stdout. This validates the LLM pipeline works without full game context.",
+          "priority": "critical"
         }
       ],
       "agents": [
@@ -180,32 +170,24 @@
       "name": "world-structure",
       "branch": "autodev/world",
       "type": "build",
-      "description": "World structure: Bestiole refactor, semi-linear map, inter-run consequences",
+      "description": "INFRA: save system tests + autoplay scaffold",
       "file_scope": [
-        "scripts/merlin/merlin_biome_system.gd",
-        "scripts/TransitionBiome.gd",
-        "scripts/HubAntre.gd",
         "scripts/merlin/merlin_save_system.gd",
-        "scripts/Collection.gd"
+        "scripts/test/",
+        "tools/autodev/"
       ],
       "tasks": [
         {
-          "id": "C.1",
-          "title": "Refonte Bestiole (runes, sauveur)",
-          "description": "Refactorer le systeme Bestiole: option de remplacement de compagnon, systeme de runes liees aux Oghams, role de sauveur lors des chutes critiques.",
-          "priority": "high"
+          "id": "INFRA.8",
+          "title": "Unit tests for SaveSystem (3 tests minimum)",
+          "description": "Write scripts/test/test_save_system.gd extending GutTest. Test: 1) save creates valid JSON file in user://, 2) load restores exact state (3 aspects, souffle, karma, bestiole), 3) slot selection (3 slots, overwrite works). Read merlin_save_system.gd first. Use gut_assert methods. Tests must PASS with GUT framework (depends on INFRA.3).",
+          "priority": "critical"
         },
         {
-          "id": "C.2",
-          "title": "Structure semi-lineaire (carte noeuds)",
-          "description": "Remplacer la progression lineaire par une carte a noeuds (style Slay the Spire) avec choix de chemin entre biomes.",
-          "priority": "medium"
-        },
-        {
-          "id": "C.3",
-          "title": "Consequences long terme inter-runs",
-          "description": "Implementer la persistance inter-runs: standing des factions, memoire du monde, deblocages permanents qui affectent les futures parties.",
-          "priority": "medium"
+          "id": "INFRA.9",
+          "title": "Autoplay scaffold for stats collection",
+          "description": "Create tools/autodev/autoplay_runner.ps1: launches Godot headless with a test scene that plays N automated games (random choices). Collects per-run stats: {turns, ending, aspects_final, souffle_final, duration_ms}. Writes batch_autoplay_results.json. Start with N=5 for testing. Must handle Godot timeout (kill after 60s per run). ConstrainedLanguage safe.",
+          "priority": "critical"
         }
       ],
       "agents": [
@@ -222,26 +204,25 @@
       "name": "visual-polish",
       "branch": "autodev/visual",
       "type": "build",
-      "description": "Visual polish: seasonal effects, portraits, shaders",
+      "description": "INFRA: screenshot runner fixes + validate.bat automation",
       "file_scope": [
-        "shaders/",
-        "scripts/autoload/merlin_visual.gd",
-        "scripts/merlin_backdrop.gd",
-        "scripts/test/pixel_art_showcase.gd",
-        "themes/merlin_theme.tres"
+        "tools/autodev/screenshot_capture.ps1",
+        "tools/autodev/stats_runner.ps1",
+        "tools/validate_editor_parse.ps1",
+        "tools/validate_affected_scenes.ps1"
       ],
       "tasks": [
         {
-          "id": "D.1",
-          "title": "Effets saisonniers menu",
-          "description": "Ajouter des effets visuels saisonniers (particules neige/feuilles/fleurs/chaleur) au menu principal, pilotes par le calendrier in-game.",
-          "priority": "low"
+          "id": "INFRA.10",
+          "title": "Fix screenshot_capture.ps1 for headless reliability",
+          "description": "Review and fix tools/autodev/screenshot_capture.ps1: 1) ensure Godot --headless screenshots work without display server, 2) add timeout per scene (kill after screenshot_settle_seconds + 10s), 3) generate screenshots_report.json with {scene, status, file_path, error} per scene. All code must be ConstrainedLanguage safe (no [math]::, no .Substring(), no [System.IO.Path]::).",
+          "priority": "critical"
         },
         {
-          "id": "D.2",
-          "title": "Art Kingdom Two Crowns (portraits)",
-          "description": "Integrer les portraits style Kingdom Two Crowns pour les PNJ et Merlin. Pipeline: pixel art reference + shader + palette GBC.",
-          "priority": "low"
+          "id": "INFRA.11",
+          "title": "Validate.bat Step 0 wrapper for CI",
+          "description": "Create tools/autodev/run_validate_step0.ps1: a thin wrapper that 1) runs validate_editor_parse.ps1, 2) captures stdout/stderr, 3) parses for ERROR/WARNING lines, 4) writes structured JSON to tools/autodev/status/validate_step0_results.json with {exit_code, errors:[], warnings:[], files_checked, timestamp}. This enables the pipeline to programmatically check validation results. ConstrainedLanguage safe.",
+          "priority": "critical"
         }
       ],
       "agents": [
