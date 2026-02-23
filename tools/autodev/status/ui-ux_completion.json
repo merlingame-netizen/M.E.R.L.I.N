@@ -1,0 +1,94 @@
+{
+  "domain": "ui-ux",
+  "worker_id": "autodev/ui-ux",
+  "timestamp": "2026-02-23T10:30:00Z",
+  "status": "done",
+  "tasks_completed": [
+    {
+      "id": "INFRA.1",
+      "title": "Create test_results.json aggregator",
+      "status": "completed",
+      "implementation": {
+        "file_created": "tools/autodev/generate_test_results.ps1",
+        "features": [
+          "Runs validate.bat Step 0 (Editor Parse Check)",
+          "Parses errors and warnings from godot.log and validation output",
+          "Outputs JSON to tools/autodev/status/test_results.json",
+          "ConstrainedLanguage compatible (no [math]::, no .Substring())",
+          "Uses -like/-replace operators for pattern matching",
+          "Deduplicates errors and warnings",
+          "Extracts file paths from error messages",
+          "Exit code reflects validation status (0 = pass, 1 = fail)"
+        ],
+        "output_format": {
+          "timestamp": "ISO 8601 format",
+          "step": "validate.bat Step 0 (Editor Parse Check)",
+          "exit_code": "integer",
+          "total_errors": "integer count",
+          "total_warnings": "integer count",
+          "files_checked": "integer count",
+          "errors": "array of {file, message, severity}",
+          "warnings": "array of {file, message, severity}",
+          "validation_passed": "boolean"
+        }
+      }
+    },
+    {
+      "id": "INFRA.2",
+      "title": "Integrate validate.bat Step 0 into cycle completion",
+      "status": "completed",
+      "implementation": {
+        "file_modified": "tools/autodev/worker.ps1",
+        "changes": [
+          "Added validation step AFTER Claude CLI execution",
+          "Added validation step BEFORE marking worker as 'done'",
+          "Worker status set to 'error' if validation fails",
+          "Worker status set to 'done' only if validation passes",
+          "Validation results written to test_results.json automatically",
+          "Graceful fallback if validation script not found",
+          "Notification sent with validation status"
+        ],
+        "workflow": [
+          "1. Claude CLI executes worker tasks",
+          "2. If CLI exit code = 0, run generate_test_results.ps1",
+          "3. If validation fails (exit code != 0), set status='error'",
+          "4. If validation passes (exit code = 0), set status='done'",
+          "5. Send notification with validation results"
+        ]
+      }
+    }
+  ],
+  "files_created": [
+    "tools/autodev/generate_test_results.ps1"
+  ],
+  "files_modified": [
+    "tools/autodev/worker.ps1"
+  ],
+  "patterns_used": [
+    "ConstrainedLanguage compatibility (no restricted .NET methods)",
+    "Pattern matching with -like operator",
+    "String manipulation with -replace operator",
+    "Error deduplication using hashtables",
+    "Exit code propagation for pipeline control"
+  ],
+  "testing_notes": {
+    "manual_testing": "To test: run worker.ps1 for any domain, validation will run automatically",
+    "expected_behavior": "Worker cannot be 'done' if validation detects errors",
+    "test_output_location": "tools/autodev/status/test_results.json",
+    "validation_command": "powershell -ExecutionPolicy Bypass -File tools/autodev/generate_test_results.ps1"
+  },
+  "integration_points": [
+    "worker.ps1 calls generate_test_results.ps1 after task completion",
+    "control_state.json updated with validation status",
+    "notify.ps1 sends validation results to orchestrator",
+    "test_results.json consumed by review workers and Game Director"
+  ],
+  "compatibility": {
+    "constrained_language_mode": true,
+    "powershell_version": "5.1+",
+    "godot_version": "4.5.1",
+    "os": "Windows"
+  },
+  "commit": "c3e6ea2",
+  "blockers": []
+}
