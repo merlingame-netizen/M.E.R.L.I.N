@@ -1,39 +1,167 @@
 ﻿{
-    "merge_conflicts":  [
-
-                        ],
     "worker_statuses":  {
+                            "llm-lora":  {
+                                             "domain":  "llm-lora",
+                                             "blockers":  [
+                                                              "Le fichier ouvert n\u0027est plus valide car le volume qui le contient a été endommagé de manière externe"
+                                                          ],
+                                             "timestamp":  "2026-02-23T10:36:24.7226147+01:00",
+                                             "current_task":  "",
+                                             "status":  "error",
+                                             "files_modified":  [
+
+                                                                ],
+                                             "tasks_completed":  [
+
+                                                                 ],
+                                             "tasks_remaining":  [
+
+                                                                 ]
+                                         },
+                            "ui-ux":  {
+                                          "domain":  "ui-ux",
+                                          "blockers":  [
+                                                           "Le fichier ouvert n\u0027est plus valide car le volume qui le contient a été endommagé de manière externe"
+                                                       ],
+                                          "timestamp":  "2026-02-23T10:33:35.0173422+01:00",
+                                          "current_task":  "",
+                                          "status":  "error",
+                                          "files_modified":  [
+
+                                                             ],
+                                          "tasks_completed":  [
+
+                                                              ],
+                                          "tasks_remaining":  [
+
+                                                              ]
+                                      },
+                            "game-director":  {
+                                                  "detail":  "Decision: ESCALATE",
+                                                  "domain":  "game-director",
+                                                  "timestamp":  "2026-02-23T10:27:08.6941423+01:00",
+                                                  "type":  "director",
+                                                  "cycle":  1,
+                                                  "status":  "done"
+                                              },
+                            "gameplay":  {
+                                             "domain":  "gameplay",
+                                             "blockers":  [
+
+                                                          ],
+                                             "timestamp":  "2026-02-23T10:30:07.6935088+01:00",
+                                             "current_task":  "INFRA.3",
+                                             "status":  "in_progress",
+                                             "files_modified":  [
+
+                                                                ],
+                                             "tasks_completed":  [
+
+                                                                 ],
+                                             "tasks_remaining":  [
+                                                                     "INFRA.3",
+                                                                     "INFRA.4",
+                                                                     "INFRA.5"
+                                                                 ]
+                                         },
+                            "world-structure":  {
+                                                    "domain":  "world-structure",
+                                                    "blockers":  [
+                                                                     "Le fichier ouvert n\u0027est plus valide car le volume qui le contient a été endommagé de manière externe"
+                                                                 ],
+                                                    "timestamp":  "2026-02-23T10:34:50.0569054+01:00",
+                                                    "current_task":  "",
+                                                    "status":  "error",
+                                                    "files_modified":  [
+
+                                                                       ],
+                                                    "tasks_completed":  [
+
+                                                                        ],
+                                                    "tasks_remaining":  [
+
+                                                                        ]
+                                                },
                             "visual-polish":  {
                                                   "domain":  "visual-polish",
                                                   "blockers":  [
-
+                                                                   "Le fichier ouvert n\u0027est plus valide car le volume qui le contient a été endommagé de manière externe"
                                                                ],
-                                                  "timestamp":  "2026-02-22T21:31:57.9399145+01:00",
+                                                  "timestamp":  "2026-02-23T10:34:13.4118104+01:00",
                                                   "current_task":  "",
-                                                  "status":  "done",
+                                                  "status":  "error",
                                                   "files_modified":  [
 
                                                                      ],
                                                   "tasks_completed":  [
-                                                                          "D.1",
-                                                                          "D.2"
+
                                                                       ],
                                                   "tasks_remaining":  [
 
                                                                       ]
                                               }
                         },
-    "scope_violations":  [
-
-                         ],
-    "timestamp":  "2026-02-22T21:32:54.6777285+01:00",
-    "alerts":  [
-
-               ],
     "validation_mutex":  {
                              "active":  false
                          },
+    "timestamp":  "2026-02-23T15:21:07.7156291+01:00",
+    "review_domains":  [
+                           "game-design",
+                           "lore",
+                           "testing"
+                       ],
+    "wave_state":  {
+                       "wave":  "fix",
+                       "cycle":  1,
+                       "state":  "running"
+                   },
+    "merge_conflicts":  [
+                            {
+                                "files":  [
+                                              "tools/autodev/status/ui-ux.json",
+                                              "tools/autodev/status/ui-ux_completion.json"
+                                          ],
+                                "branch":  "autodev/ui-ux"
+                            },
+                            {
+                                "files":  [
+                                              "tools/autodev/status/gameplay.json",
+                                              "tools/autodev/status/patches/gameplay.json"
+                                          ],
+                                "branch":  "autodev/gameplay"
+                            },
+                            {
+                                "files":  "tools/autodev/generate_stats_summary.ps1",
+                                "branch":  "autodev/llm-lora"
+                            },
+                            {
+                                "files":  [
+                                              "tools/autodev/screenshot_capture.ps1",
+                                              "tools/autodev/stats_runner.ps1"
+                                          ],
+                                "branch":  "autodev/visual"
+                            }
+                        ],
     "active_workers":  [
+                           "ui-ux",
+                           "gameplay",
+                           "llm-lora",
+                           "world-structure",
                            "visual-polish"
-                       ]
+                       ],
+    "scope_violations":  [
+
+                         ],
+    "screenshots":  {
+                        "total":  14,
+                        "captured":  0,
+                        "failed":  14
+                    },
+    "alerts":  [
+                   "MERGE CONFLICT RISK: autodev/ui-ux --tools/autodev/status/ui-ux.json, tools/autodev/status/ui-ux_completion.json",
+                   "MERGE CONFLICT RISK: autodev/gameplay --tools/autodev/status/gameplay.json, tools/autodev/status/patches/gameplay.json",
+                   "MERGE CONFLICT RISK: autodev/llm-lora --tools/autodev/generate_stats_summary.ps1",
+                   "MERGE CONFLICT RISK: autodev/visual --tools/autodev/screenshot_capture.ps1, tools/autodev/stats_runner.ps1",
+                   "SCREENSHOTS: 14/14 captures failed"
+               ]
 }

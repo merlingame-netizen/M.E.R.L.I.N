@@ -1,0 +1,17 @@
+﻿[
+    {
+        "title":  "testing REVIEW",
+        "statusFile":  "C:\\Users\\PGNK2128\\Godot-MCP\\tools\\autodev\\status\\testing.json",
+        "logFile":  "C:\\Users\\PGNK2128\\Godot-MCP\\tools\\autodev\\logs\\testing_REVIEW_20260223_092557.log"
+    },
+    {
+        "title":  "game-design REVIEW",
+        "statusFile":  "C:\\Users\\PGNK2128\\Godot-MCP\\tools\\autodev\\status\\game-design.json",
+        "logFile":  "C:\\Users\\PGNK2128\\Godot-MCP\\tools\\autodev\\logs\\game-design_REVIEW_20260223_092557.log"
+    },
+    {
+        "title":  "lore REVIEW",
+        "statusFile":  "C:\\Users\\PGNK2128\\Godot-MCP\\tools\\autodev\\status\\lore.json",
+        "logFile":  "C:\\Users\\PGNK2128\\Godot-MCP\\tools\\autodev\\logs\\lore_REVIEW_20260223_092557.log"
+    }
+]

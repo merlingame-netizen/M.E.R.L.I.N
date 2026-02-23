@@ -1,8 +1,10 @@
 ﻿{
+    "pid":  106096,
+    "max_cycles":  3,
+    "timestamp":  "2026-02-23T10:29:17.6635855+01:00",
+    "state":  "running",
+    "cycle":  1,
+    "wave":  "fix",
     "wave_mode":  true,
-    "timestamp":  "2026-02-22T23:02:24.1590235+01:00",
-    "dry_run":  true,
-    "state":  "idle",
-    "max_cycles":  1,
-    "pid":  4028
+    "detail":  "Fixing 5 failed domains"
 }

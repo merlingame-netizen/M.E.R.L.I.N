@@ -1,0 +1,27 @@
+﻿[
+    {
+        "title":  "llm-lora FIX",
+        "statusFile":  "C:\\Users\\PGNK2128\\Godot-MCP\\tools\\autodev\\status\\llm-lora.json",
+        "logFile":  "C:\\Users\\PGNK2128\\Godot-MCP\\tools\\autodev\\logs\\llm-lora_FIX_20260223_090449.log"
+    },
+    {
+        "title":  "ui-ux FIX",
+        "statusFile":  "C:\\Users\\PGNK2128\\Godot-MCP\\tools\\autodev\\status\\ui-ux.json",
+        "logFile":  "C:\\Users\\PGNK2128\\Godot-MCP\\tools\\autodev\\logs\\ui-ux_FIX_20260223_090449.log"
+    },
+    {
+        "title":  "gameplay FIX",
+        "statusFile":  "C:\\Users\\PGNK2128\\Godot-MCP\\tools\\autodev\\status\\gameplay.json",
+        "logFile":  "C:\\Users\\PGNK2128\\Godot-MCP\\tools\\autodev\\logs\\gameplay_FIX_20260223_090449.log"
+    },
+    {
+        "title":  "world-structure FIX",
+        "statusFile":  "C:\\Users\\PGNK2128\\Godot-MCP\\tools\\autodev\\status\\world-structure.json",
+        "logFile":  "C:\\Users\\PGNK2128\\Godot-MCP\\tools\\autodev\\logs\\world-structure_FIX_20260223_090449.log"
+    },
+    {
+        "title":  "visual-polish FIX",
+        "statusFile":  "C:\\Users\\PGNK2128\\Godot-MCP\\tools\\autodev\\status\\visual-polish.json",
+        "logFile":  "C:\\Users\\PGNK2128\\Godot-MCP\\tools\\autodev\\logs\\visual-polish_FIX_20260223_090449.log"
+    }
+]

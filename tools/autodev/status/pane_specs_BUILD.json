@@ -1,0 +1,27 @@
+﻿[
+    {
+        "title":  "ui-ux BUILD",
+        "statusFile":  "C:\\Users\\PGNK2128\\Godot-MCP\\tools\\autodev\\status\\ui-ux.json",
+        "logFile":  "C:\\Users\\PGNK2128\\Godot-MCP\\tools\\autodev\\logs\\ui-ux_BUILD_20260223_091357.log"
+    },
+    {
+        "title":  "gameplay BUILD",
+        "statusFile":  "C:\\Users\\PGNK2128\\Godot-MCP\\tools\\autodev\\status\\gameplay.json",
+        "logFile":  "C:\\Users\\PGNK2128\\Godot-MCP\\tools\\autodev\\logs\\gameplay_BUILD_20260223_091357.log"
+    },
+    {
+        "title":  "llm-lora BUILD",
+        "statusFile":  "C:\\Users\\PGNK2128\\Godot-MCP\\tools\\autodev\\status\\llm-lora.json",
+        "logFile":  "C:\\Users\\PGNK2128\\Godot-MCP\\tools\\autodev\\logs\\llm-lora_BUILD_20260223_091357.log"
+    },
+    {
+        "title":  "world-structure BUILD",
+        "statusFile":  "C:\\Users\\PGNK2128\\Godot-MCP\\tools\\autodev\\status\\world-structure.json",
+        "logFile":  "C:\\Users\\PGNK2128\\Godot-MCP\\tools\\autodev\\logs\\world-structure_BUILD_20260223_091357.log"
+    },
+    {
+        "title":  "visual-polish BUILD",
+        "statusFile":  "C:\\Users\\PGNK2128\\Godot-MCP\\tools\\autodev\\status\\visual-polish.json",
+        "logFile":  "C:\\Users\\PGNK2128\\Godot-MCP\\tools\\autodev\\logs\\visual-polish_BUILD_20260223_091357.log"
+    }
+]

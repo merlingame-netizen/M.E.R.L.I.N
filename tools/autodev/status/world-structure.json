@@ -1,9 +1,9 @@
 ﻿{
-    "domain":  "visual-polish",
+    "domain":  "world-structure",
     "blockers":  [
                      "Le fichier ouvert n\u0027est plus valide car le volume qui le contient a été endommagé de manière externe"
                  ],
-    "timestamp":  "2026-02-23T10:34:13.4118104+01:00",
+    "timestamp":  "2026-02-23T10:34:50.0569054+01:00",
     "current_task":  "",
     "status":  "error",
     "files_modified":  [

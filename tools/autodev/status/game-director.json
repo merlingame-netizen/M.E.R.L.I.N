@@ -1,0 +1,8 @@
+﻿{
+    "detail":  "Decision: ESCALATE",
+    "domain":  "game-director",
+    "timestamp":  "2026-02-23T10:27:08.6941423+01:00",
+    "type":  "director",
+    "cycle":  1,
+    "status":  "done"
+}
