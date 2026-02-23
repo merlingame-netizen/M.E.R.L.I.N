@@ -1,0 +1,46 @@
+{
+  "name": "autodev-monitor",
+  "displayName": "AUTODEV Monitor",
+  "description": "Real-time terminal-style dashboard for AUTODEV pipeline monitoring",
+  "version": "2.0.0",
+  "publisher": "merlin-local",
+  "engines": {
+    "vscode": "^1.80.0"
+  },
+  "categories": ["Other"],
+  "activationEvents": [],
+  "main": "./extension.js",
+  "contributes": {
+    "viewsContainers": {
+      "activitybar": [
+        {
+          "id": "autodev-sidebar",
+          "title": "AUTODEV Monitor",
+          "icon": "media/autodev-icon.svg"
+        }
+      ]
+    },
+    "views": {
+      "autodev-sidebar": [
+        {
+          "type": "webview",
+          "id": "autodev-monitor.sidebarView",
+          "name": "Dashboard"
+        }
+      ]
+    },
+    "commands": [
+      {
+        "command": "autodev-monitor.open",
+        "title": "AUTODEV: Open Full Dashboard (Panel)"
+      }
+    ],
+    "keybindings": [
+      {
+        "command": "autodev-monitor.open",
+        "key": "ctrl+alt+m",
+        "mac": "cmd+alt+m"
+      }
+    ]
+  }
+}

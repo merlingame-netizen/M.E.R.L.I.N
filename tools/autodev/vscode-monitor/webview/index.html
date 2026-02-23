@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src {{cspSource}} 'unsafe-inline'; script-src {{cspSource}} 'unsafe-inline'; font-src {{cspSource}};">
+  <link rel="stylesheet" href="{{styleUri}}">
+  <title>AUTODEV Monitor</title>
+</head>
+<body>
+  <!-- Header -->
+  <div class="header">
+    <div class="header-title glitch" data-text="&gt;&gt;&gt;&gt; AUTODEV MONITOR v1.0 &lt;&lt;&lt;&lt;">
+      &gt;&gt;&gt;&gt; AUTODEV MONITOR v1.0 &lt;&lt;&lt;&lt;
+    </div>
+    <div class="header-status">
+      <div>Cycle <span id="h-cycle">-</span></div>
+      <div>Wave <span id="h-wave">-</span></div>
+      <div>State <span id="h-state">-</span></div>
+      <div id="h-time">--:--:--</div>
+    </div>
+  </div>
+
+  <!-- Project Tabs -->
+  <div class="tabs">
+    <div class="tab active" data-project="merlin">M.E.R.L.I.N.</div>
+    <div class="tab" data-project="data">DATA/ORANGE</div>
+    <div class="tab" data-project="cours">COURS</div>
+  </div>
+
+  <!-- Main Content -->
+  <div id="project-merlin" class="project-view">
+    <div class="grid">
+      <!-- Panel 1: Workers -->
+      <div class="panel" id="panel-workers">
+        <div class="panel-title">WORKERS <span class="count" id="worker-count">(0/5)</span></div>
+        <div id="workers-list"></div>
+      </div>
+
+      <!-- Panel 2: Agent Roster -->
+      <div class="panel" id="panel-agents">
+        <div class="panel-title">AGENT ROSTER <span class="count" id="agent-count">(0)</span></div>
+        <div id="agents-list"></div>
+      </div>
+
+      <!-- Panel 3: Director -->
+      <div class="panel" id="panel-director">
+        <div class="panel-title">GAME DIRECTOR</div>
+        <div id="director-content"></div>
+      </div>
+
+      <!-- Panel 4: Logs -->
+      <div class="panel" id="panel-logs">
+        <div class="panel-title">LIVE LOGS <span class="count" id="log-count">(0)</span></div>
+        <div class="log-container">
+          <div class="log-entries" id="log-entries"></div>
+          <div class="log-cursor">_</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Data/Orange placeholder -->
+  <div id="project-data" class="project-view" style="display:none">
+    <div class="grid" style="grid-template-columns:1fr; grid-template-rows:auto 1fr">
+      <div class="panel">
+        <div class="panel-title">DATA/ORANGE PIPELINE</div>
+        <div class="placeholder">
+          <div class="placeholder-icon">[ ]</div>
+          <div class="placeholder-text">NO ACTIVE PIPELINE</div>
+        </div>
+      </div>
+      <div class="panel">
+        <div class="panel-title">AGENT ROSTER <span class="count" id="data-agent-count">(0)</span></div>
+        <div id="data-agents-list"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Cours placeholder -->
+  <div id="project-cours" class="project-view" style="display:none">
+    <div class="grid" style="grid-template-columns:1fr; grid-template-rows:auto 1fr">
+      <div class="panel">
+        <div class="panel-title">COURS PIPELINE</div>
+        <div class="placeholder">
+          <div class="placeholder-icon">[ ]</div>
+          <div class="placeholder-text">NO ACTIVE PIPELINE</div>
+        </div>
+      </div>
+      <div class="panel">
+        <div class="panel-title">AGENT ROSTER <span class="count" id="cours-agent-count">(0)</span></div>
+        <div id="cours-agents-list"></div>
+      </div>
+    </div>
+  </div>
+
+  <script src="{{scriptUri}}"></script>
+</body>
+</html>
