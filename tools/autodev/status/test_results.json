@@ -1,0 +1,15 @@
+﻿{
+    "files_checked":  1,
+    "total_warnings":  0,
+    "step":  "validate.bat Step 0 (Editor Parse Check)",
+    "warnings":  [
+
+                 ],
+    "validation_passed":  true,
+    "errors":  [
+
+               ],
+    "timestamp":  "2026-02-23T10:14:44+01:00",
+    "exit_code":  0,
+    "total_errors":  0
+}

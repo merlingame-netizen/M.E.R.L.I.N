@@ -247,9 +247,13 @@ try {
 
     # Pipe prompt via stdin to claude -p (avoids argument length limits)
     # Note: no .NET calls -- Constrained Language Mode safe
+    # IMPORTANT: Temporarily lower ErrorActionPreference to Continue so stderr
+    # from Claude CLI (OneDrive profile corruption, banners) doesn't throw
+    $savedEAP = $ErrorActionPreference
+    $ErrorActionPreference = "Continue"
     $output = Get-Content $promptFile -Raw | & $claudeExe -p --allowed-tools $allowedTools --model $model --output-format text --permission-mode bypassPermissions 2>&1 | Tee-Object -FilePath $logFile
-
     $exitCode = $LASTEXITCODE
+    $ErrorActionPreference = $savedEAP
 
     # Update status based on exit code
     if ($exitCode -eq 0) {
