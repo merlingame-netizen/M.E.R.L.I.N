@@ -46,7 +46,14 @@ Write-Host "[========================================]" -ForegroundColor Cyan
 
 # --- Write status helper ---
 function Write-Status {
-    param([string]$Status, [string]$CurrentTask = "", [array]$Completed = @(), [array]$Remaining = @(), [array]$Blockers = @())
+    param(
+        [string]$Status,
+        [string]$CurrentTask = "",
+        [array]$Completed = @(),
+        [array]$Remaining = @(),
+        [array]$Blockers = @(),
+        [hashtable]$ErrorContext = @{}
+    )
     $statusObj = @{
         domain          = $Domain
         status          = $Status
@@ -57,7 +64,35 @@ function Write-Status {
         blockers        = $Blockers
         timestamp       = (Get-Date -Format "o")
     }
-    $statusObj | ConvertTo-Json -Depth 3 | Set-Content (Join-Path $statusDir "$Domain.json") -Encoding UTF8
+    if ($ErrorContext.Count -gt 0) {
+        $statusObj.error_context = $ErrorContext
+    }
+    $statusObj | ConvertTo-Json -Depth 4 | Set-Content (Join-Path $statusDir "$Domain.json") -Encoding UTF8
+}
+
+# --- Pre-flight health check ---
+function Test-PreFlight {
+    $issues = @()
+    $claudeConfig = Join-Path $env:USERPROFILE ".claude.json"
+    if (-not (Test-Path $claudeConfig)) {
+        $issues += "MISSING: $claudeConfig"
+    } else {
+        try { Get-Content $claudeConfig -Raw -ErrorAction Stop | Out-Null }
+        catch { $issues += "UNREADABLE: $claudeConfig — $($_.Exception.Message)" }
+    }
+    if (-not (Test-Path $claudeExe)) {
+        $issues += "MISSING: Claude CLI at $claudeExe"
+    }
+    if ($issues.Count -gt 0) {
+        Write-Host "[WORKER] PRE-FLIGHT FAILED:" -ForegroundColor Red
+        $issues | ForEach-Object { Write-Host "  - $_" -ForegroundColor Red }
+        Write-Status -Status "error" -Blockers $issues -ErrorContext @{
+            stage = "pre-flight"
+            checks_failed = $issues
+        }
+        exit 1
+    }
+    Write-Host "[WORKER] Pre-flight OK" -ForegroundColor Green
 }
 
 $taskIds = @($domainConfig.tasks | ForEach-Object { $_.id })
@@ -206,14 +241,13 @@ function Build-WorkerPrompt {
     $lines += "IMPORTANT: Tu es AUTONOME. Commence IMMEDIATEMENT. Pas de questions."
     $lines += "Traite les taches dans l'ordre de priorite (high puis medium puis low)."
 
-    $dummy = $lines  # Force array evaluation
-
     return ($lines -join "`n")
 }
 
 # --- Execute ---
 try {
     if (-not $DryRun) {
+        Test-PreFlight
         Setup-Worktree
     }
 
@@ -236,6 +270,7 @@ try {
 
     # Launch Claude CLI in non-interactive mode
     Write-Host "[WORKER] Launching Claude CLI..." -ForegroundColor Green
+    # Clear CLAUDECODE env var to prevent Claude CLI from detecting nested context
     $env:CLAUDECODE = ""
 
     $logFile = Join-Path $logDir "$Domain-$(Get-Date -Format 'yyyyMMdd-HHmmss').log"
@@ -280,7 +315,12 @@ try {
             if ($validateExitCode -ne 0) {
                 # Validation failed - set status to error
                 Write-Host "[WORKER] Validation FAILED - setting status to 'error'" -ForegroundColor Red
-                Write-Status -Status "error" -Remaining $taskIds -Blockers @("Validation failed: $($validateExitCode) errors found")
+                $validateSummary = ($validateOutput | Select-Object -Last 5) -join ' | '
+                Write-Status -Status "error" -Remaining $taskIds -Blockers @("Validation failed (exit $validateExitCode): $validateSummary") -ErrorContext @{
+                    stage = "validation"
+                    exit_code = $validateExitCode
+                    output_tail = ($validateOutput | Select-Object -Last 10) -join "`n"
+                }
                 & powershell -File (Join-Path $scriptDir "notify.ps1") -Event "worker_error" -Domain $Domain -Message "Validation failed - worker cannot complete" -Details ($validateOutput | Select-Object -Last 20 | Out-String)
             } else {
                 # Validation passed - mark as done
@@ -295,16 +335,33 @@ try {
             & powershell -File (Join-Path $scriptDir "notify.ps1") -Event "worker_done" -Domain $Domain -Message "Termine: $($modifiedFiles.Count + $stagedFiles.Count) fichiers modifies (no validation)"
         }
     } else {
-        Write-Status -Status "error" -Remaining $taskIds -Blockers @("Exit code: $exitCode")
-        $lastLines = ($output | Select-Object -Last 10) -join "`n"
+        $lastLines = ($output | Select-Object -Last 20) -join "`n"
+        Write-Status -Status "error" -Remaining $taskIds -Blockers @("Claude CLI exit code: $exitCode") -ErrorContext @{
+            stage = "claude-execution"
+            command = "$claudeExe -p --model $model"
+            exit_code = $exitCode
+            stderr_tail = $lastLines
+            log_file = $logFile
+        }
         & powershell -File (Join-Path $scriptDir "notify.ps1") -Event "worker_error" -Domain $Domain -Message "Erreur exit code $exitCode" -Details $lastLines
     }
 
 } catch {
     $errorMsg = $_.Exception.Message
-    Write-Host "[WORKER] FATAL: $errorMsg" -ForegroundColor Red
-    Write-Status -Status "error" -Blockers @($errorMsg)
-    & powershell -File (Join-Path $scriptDir "notify.ps1") -Event "worker_error" -Domain $Domain -Message "Exception: $errorMsg"
+    $errorStack = $_.ScriptStackTrace
+    $errorLine = $_.InvocationInfo.ScriptLineNumber
+    $errorCmd = $_.InvocationInfo.Line.Trim()
+    Write-Host "[WORKER] FATAL at line $errorLine : $errorMsg" -ForegroundColor Red
+    Write-Host "[WORKER] Command: $errorCmd" -ForegroundColor Red
+    Write-Host "[WORKER] Stack: $errorStack" -ForegroundColor DarkRed
+    Write-Status -Status "error" -Blockers @("FATAL line $errorLine : $errorMsg") -ErrorContext @{
+        stage = "unknown"
+        exception = $errorMsg
+        line = $errorLine
+        command = $errorCmd
+        stack_trace = $errorStack
+    }
+    & powershell -File (Join-Path $scriptDir "notify.ps1") -Event "worker_error" -Domain $Domain -Message "Exception line $errorLine : $errorMsg"
     exit 1
 }
 

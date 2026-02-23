@@ -41,7 +41,7 @@ $detailDisplay = if ($Detail) { $Detail } elseif ($control -and $control.detail)
 
 # ── Build domain table ────────────────────────────────────────────────
 
-$domains = @("ui-ux", "gameplay", "llm-lora", "world-structure", "visual-polish")
+$domains = @("ui-ux", "gameplay", "llm-lora", "world-structure", "visual-polish", "ui-components", "scene-scripts", "autoloads-visual")
 $domainRows = @()
 $doneCount = 0
 $errorCount = 0

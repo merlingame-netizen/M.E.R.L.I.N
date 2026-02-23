@@ -1,7 +1,7 @@
 {
   "version": "2.0.0",
   "project": "merlin",
-  "max_workers": 8,
+  "max_workers": 10,
   "cycle_tick_seconds": 60,
   "veto_delay_seconds": 120,
   "worktree_base": "C:/Users/PGNK2128/Godot-MCP-worktrees",
@@ -26,7 +26,7 @@
   "screenshot_settle_seconds": 3,
   "stats_runs_per_cycle": 3,
 
-  "merge_order": ["gameplay", "llm-lora", "ui-ux", "world-structure", "visual-polish"],
+  "merge_order": ["gameplay", "llm-lora", "ui-ux", "world-structure", "visual-polish", "ui-components", "scene-scripts", "autoloads-visual"],
   "review_order": ["testing", "game-design", "lore"],
 
   "screenshot_scenes": [
@@ -232,6 +232,130 @@
       "review_agents": [
         ".claude/agents/debug_qa.md",
         ".claude/agents/ui_impl.md"
+      ]
+    },
+    {
+      "name": "ui-components",
+      "branch": "autodev/ui-comp",
+      "type": "build",
+      "description": "INFRA: UI component validation + consistency audit (scripts/ui/)",
+      "file_scope": [
+        "scripts/ui/merlin_bubble.gd",
+        "scripts/ui/hub_hotspot.gd",
+        "scripts/ui/map_ui.gd",
+        "scripts/ui/biome_radial.gd",
+        "scripts/ui/merlin_game_ui.gd",
+        "scripts/ui/merlin_game_controller.gd",
+        "scripts/ui/arbre_de_vie_ui.gd",
+        "scripts/ui/bestiole_wheel_system.gd",
+        "scripts/ui/llm_source_badge.gd",
+        "scripts/ui/llm_warmup_overlay.gd",
+        "scripts/ui/menu_return_button.gd",
+        "scripts/ui/merlin_reward_badge.gd",
+        "scripts/ui/screen_dither_layer.gd"
+      ],
+      "tasks": [
+        {
+          "id": "INFRA.12",
+          "title": "UI component instantiation test",
+          "description": "Create scripts/test/test_ui_components.gd: headless script that instantiates each UI component from scripts/ui/ via load()+new(), checks for null, checks no errors on _ready(). Print PASS/FAIL per component. Run via: godot --headless -s scripts/test/test_ui_components.gd. Must handle missing autoloads gracefully (try/catch pattern).",
+          "priority": "critical"
+        },
+        {
+          "id": "INFRA.13",
+          "title": "UI palette consistency audit",
+          "description": "Create scripts/test/test_ui_consistency.gd: scan all scripts/ui/*.gd files for hardcoded Color() literals (not from MerlinVisual.PALETTE) and hardcoded font sizes (not from MerlinVisual.get_font()). Report violations. This enforces the UI/UX Bible rule: ALL colors from PALETTE, ALL fonts from get_font().",
+          "priority": "high"
+        }
+      ],
+      "agents": [
+        ".claude/agents/ui_impl.md",
+        ".claude/agents/ux_research.md",
+        ".claude/agents/motion_designer.md",
+        ".claude/agents/accessibility.md"
+      ],
+      "review_agents": [
+        ".claude/agents/debug_qa.md",
+        ".claude/agents/lead_godot.md"
+      ]
+    },
+    {
+      "name": "scene-scripts",
+      "branch": "autodev/scenes",
+      "type": "build",
+      "description": "INFRA: Scene loading tests + signal connection validation",
+      "file_scope": [
+        "scripts/HubAntre.gd",
+        "scripts/IntroCeltOS.gd",
+        "scripts/IntroPersonalityQuiz.gd",
+        "scripts/MenuPrincipalMerlin.gd",
+        "scripts/SceneRencontreMerlin.gd",
+        "scripts/TransitionBiome.gd",
+        "scripts/Calendar.gd",
+        "scripts/Collection.gd",
+        "scripts/merlin_backdrop.gd",
+        "scripts/llm_status_bar.gd",
+        "scripts/minigames/minigame_base.gd",
+        "scenes/"
+      ],
+      "tasks": [
+        {
+          "id": "INFRA.14",
+          "title": "Scene headless loading test",
+          "description": "Create scripts/test/test_scene_loading.gd: headless script that loads each scene via PackedScene, instantiates it, and checks for errors. Tests all 14 scenes in screenshot_scenes list. Print PASS/FAIL per scene. Run via: godot --headless -s scripts/test/test_scene_loading.gd. Must handle scenes that require autoloads by checking if singletons exist first.",
+          "priority": "critical"
+        },
+        {
+          "id": "INFRA.15",
+          "title": "Signal connection validator",
+          "description": "Create scripts/test/test_signal_connections.gd: parse all .tscn files in scenes/, extract [connection] entries, verify each method exists in the attached script. Report broken connections. Run via: godot --headless -s scripts/test/test_signal_connections.gd. This catches signal rot (renamed methods leaving broken .tscn connections).",
+          "priority": "high"
+        }
+      ],
+      "agents": [
+        ".claude/agents/lead_godot.md",
+        ".claude/agents/godot_expert.md",
+        ".claude/agents/narrative_writer.md"
+      ],
+      "review_agents": [
+        ".claude/agents/debug_qa.md",
+        ".claude/agents/game_designer.md"
+      ]
+    },
+    {
+      "name": "autoloads-visual",
+      "branch": "autodev/autoloads",
+      "type": "build",
+      "description": "INFRA: Visual system validation + shader compilation tests",
+      "file_scope": [
+        "scripts/autoload/ScreenEffects.gd",
+        "scripts/autoload/merlin_visual.gd",
+        "scripts/autoload/pixel_transition_config.gd",
+        "themes/merlin_theme.tres",
+        "shaders/"
+      ],
+      "tasks": [
+        {
+          "id": "INFRA.16",
+          "title": "MerlinVisual constants validation",
+          "description": "Create scripts/test/test_visual_system.gd: verify MerlinVisual singleton loads, PALETTE dict has all required keys (bg, text, accent, etc.), GBC dict has all required keys, get_font() returns valid Font objects. Print PASS/FAIL per check. Run via: godot --headless -s scripts/test/test_visual_system.gd.",
+          "priority": "critical"
+        },
+        {
+          "id": "INFRA.17",
+          "title": "Shader compilation test",
+          "description": "Create scripts/test/test_shaders.gd: load all .gdshader files from shaders/ directory, create ShaderMaterial with each, verify no compilation errors. Also verify merlin_theme.tres loads without errors. Run via: godot --headless -s scripts/test/test_shaders.gd.",
+          "priority": "high"
+        }
+      ],
+      "agents": [
+        ".claude/agents/shader_specialist.md",
+        ".claude/agents/art_direction.md",
+        ".claude/agents/motion_designer.md"
+      ],
+      "review_agents": [
+        ".claude/agents/debug_qa.md",
+        ".claude/agents/optimizer.md"
       ]
     },
     {

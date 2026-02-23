@@ -95,7 +95,7 @@ foreach ($fix in $testingFixes) {
 }
 
 # Build domains list
-$buildDomains = @("ui-ux", "gameplay", "llm-lora", "world-structure", "visual-polish")
+$buildDomains = @("ui-ux", "gameplay", "llm-lora", "world-structure", "visual-polish", "ui-components", "scene-scripts", "autoloads-visual")
 
 foreach ($domain in $buildDomains) {
     $feedback = @{
