@@ -13,6 +13,7 @@ signal skill_activated(skill_id: String)
 signal pause_requested
 signal souffle_activated
 signal merlin_dialogue_requested(player_input: String)
+signal journal_requested
 
 # Explicit preloads — required when scripts created outside editor (UID cache stale)
 const PixelSceneCompositor = preload("res://scripts/ui/pixel_scene_compositor.gd")
@@ -363,7 +364,7 @@ func _configure_ui() -> void:
 		wif_lbl.name = "WhatIfLabel%s" % ["A", "B", "C"][i3]
 		if body_font:
 			wif_lbl.add_theme_font_override("font", body_font)
-		wif_lbl.add_theme_font_size_override("font_size", 9)
+		wif_lbl.add_theme_font_size_override("font_size", MerlinVisual.CAPTION_TINY)
 		wif_lbl.add_theme_color_override("font_color", whatif_color)
 		wif_lbl.custom_minimum_size = Vector2(0, 0)
 		wif_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
@@ -535,7 +536,7 @@ func _apply_label_theming() -> void:
 	_card_title_label.autowrap_mode = TextServer.AUTOWRAP_WORD
 	if title_font:
 		_card_title_label.add_theme_font_override("font", title_font)
-	_card_title_label.add_theme_font_size_override("font_size", 14)
+	_card_title_label.add_theme_font_size_override("font_size", MerlinVisual.CAPTION_LARGE)
 	_card_title_label.add_theme_color_override("font_color", MerlinVisual.CRT_PALETTE.phosphor_dim)
 	_card_title_label.visible = false
 	if _card_body_vbox and is_instance_valid(_card_body_vbox):
@@ -3405,7 +3406,7 @@ func show_dream_overlay(dream_text: String) -> void:
 	var dream_bg := ColorRect.new()
 	dream_bg.name = "DreamOverlay"
 	dream_bg.set_anchors_preset(Control.PRESET_FULL_RECT)
-	dream_bg.color = Color(0.08, 0.04, 0.15, 0.0)  # Deep indigo
+	dream_bg.color = Color(MerlinVisual.CRT_PALETTE.bg_deep.r, MerlinVisual.CRT_PALETTE.bg_deep.g, MerlinVisual.CRT_PALETTE.bg_deep.b, 0.0)
 	dream_bg.mouse_filter = Control.MOUSE_FILTER_STOP
 	add_child(dream_bg)
 
@@ -3421,7 +3422,7 @@ func show_dream_overlay(dream_text: String) -> void:
 	if title_font:
 		header.add_theme_font_override("font", title_font)
 	header.add_theme_font_size_override("font_size", 20)
-	header.add_theme_color_override("font_color", Color(0.6, 0.5, 0.8, 0.0))
+	header.add_theme_color_override("font_color", Color(MerlinVisual.CRT_PALETTE.cyan.r, MerlinVisual.CRT_PALETTE.cyan.g, MerlinVisual.CRT_PALETTE.cyan.b, 0.0))
 	dream_bg.add_child(header)
 
 	# Dream text (center of screen)
@@ -3437,7 +3438,7 @@ func show_dream_overlay(dream_text: String) -> void:
 	if dream_body_font:
 		lbl.add_theme_font_override("normal_font", dream_body_font)
 	lbl.add_theme_font_size_override("normal_font_size", 15)
-	lbl.add_theme_color_override("default_color", Color(0.7, 0.65, 0.85, 1.0))
+	lbl.add_theme_color_override("default_color", MerlinVisual.CRT_PALETTE.cyan_bright)
 	lbl.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	lbl.modulate.a = 0.0
 	dream_bg.add_child(lbl)
@@ -3467,6 +3468,12 @@ func show_dream_overlay(dream_text: String) -> void:
 		await get_tree().create_timer(read_time).timeout
 
 	pulse_tw.kill()
+
+	# Guard: abort if node left the tree during read wait
+	if not is_inside_tree():
+		if is_instance_valid(dream_bg):
+			dream_bg.queue_free()
+		return
 
 	# Fade out
 	var tw_out := create_tween()
@@ -3786,7 +3793,9 @@ const DIALOGUE_PRESETS: Array[String] = [
 	"Qui es-tu vraiment, Merlin ?",
 	"Que me conseilles-tu ?",
 	"Parle-moi de cet endroit.",
+	"Journal des Vies",
 ]
+const JOURNAL_PRESET_INDEX := 3  # Index of the journal action in DIALOGUE_PRESETS
 
 func _on_dialogue_btn_pressed() -> void:
 	if _is_dialogue_open:
@@ -3809,7 +3818,8 @@ func _show_dialogue_popup() -> void:
 	# Dim background
 	var dim := ColorRect.new()
 	dim.set_anchors_preset(Control.PRESET_FULL_RECT)
-	dim.color = Color(0, 0, 0, 0.5)
+	var shadow_c: Color = MerlinVisual.CRT_PALETTE.shadow
+	dim.color = Color(shadow_c.r, shadow_c.g, shadow_c.b, 0.5)
 	dim.mouse_filter = Control.MOUSE_FILTER_STOP
 	dim.gui_input.connect(func(event: InputEvent):
 		if event is InputEventMouseButton and event.pressed:
@@ -3862,7 +3872,7 @@ func _show_dialogue_popup() -> void:
 		var btn := Button.new()
 		btn.text = DIALOGUE_PRESETS[i]
 		btn.custom_minimum_size = Vector2(300, 36)
-		MerlinVisual.apply_celtic_option_theme(btn, MerlinVisual.CRT_PALETTE.get("phosphor", Color(0.6, 0.9, 0.4)))
+		MerlinVisual.apply_celtic_option_theme(btn, MerlinVisual.CRT_PALETTE.get("phosphor", Color(0.20, 1.00, 0.40)))
 		btn.pressed.connect(_on_dialogue_preset_chosen.bind(i))
 		btn.mouse_entered.connect(func(): SFXManager.play("hover"))
 		vbox.add_child(btn)
@@ -3889,7 +3899,8 @@ func _show_dialogue_popup() -> void:
 
 	var send_btn := Button.new()
 	send_btn.text = ">"
-	send_btn.custom_minimum_size = Vector2(40, 32)
+	send_btn.custom_minimum_size = Vector2(48, 48)
+	MerlinVisual.apply_button_theme(send_btn)
 	send_btn.pressed.connect(func():
 		var text: String = line_edit.text.strip_edges()
 		if text.length() > 0:
@@ -3919,9 +3930,13 @@ func _close_dialogue_popup() -> void:
 func _on_dialogue_preset_chosen(index: int) -> void:
 	if index < 0 or index >= DIALOGUE_PRESETS.size():
 		return
-	var question: String = DIALOGUE_PRESETS[index]
 	_close_dialogue_popup()
 	SFXManager.play("card_draw")
+	# Journal action — special handling (P3.20.3)
+	if index == JOURNAL_PRESET_INDEX:
+		journal_requested.emit()
+		return
+	var question: String = DIALOGUE_PRESETS[index]
 	merlin_dialogue_requested.emit(question)
 
 
@@ -3974,7 +3989,7 @@ func show_journal_popup(run_summaries: Array[Dictionary]) -> void:
 	var popup := ColorRect.new()
 	popup.name = "JournalPopup"
 	popup.set_anchors_preset(Control.PRESET_FULL_RECT)
-	popup.color = Color(0.06, 0.05, 0.1, 0.92)
+	popup.color = Color(MerlinVisual.CRT_PALETTE.bg_deep.r, MerlinVisual.CRT_PALETTE.bg_deep.g, MerlinVisual.CRT_PALETTE.bg_deep.b, 0.92)
 	popup.mouse_filter = Control.MOUSE_FILTER_STOP
 	add_child(popup)
 
@@ -4059,7 +4074,9 @@ func show_journal_popup(run_summaries: Array[Dictionary]) -> void:
 	close_btn.offset_right = 60.0
 	if title_font_res:
 		close_btn.add_theme_font_override("font", title_font_res)
-	close_btn.add_theme_font_size_override("font_size", 16)
+	close_btn.add_theme_font_size_override("font_size", MerlinVisual.CAPTION_SIZE)
+	close_btn.custom_minimum_size = Vector2(120, 48)
+	MerlinVisual.apply_button_theme(close_btn)
 	popup.add_child(close_btn)
 
 	# Fade in

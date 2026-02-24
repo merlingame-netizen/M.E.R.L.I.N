@@ -161,6 +161,8 @@ func _connect_signals() -> void:
 			ui.souffle_activated.connect(func(): print("[TRIADE] Souffle d'Ogham activated by player"))
 		if ui.has_signal("merlin_dialogue_requested"):
 			ui.merlin_dialogue_requested.connect(_on_merlin_dialogue_requested)
+		if ui.has_signal("journal_requested"):
+			ui.journal_requested.connect(_on_journal_requested)
 
 	# Bestiole wheel signals
 	if ui and ui.bestiole_wheel:
@@ -1862,6 +1864,7 @@ func _on_merlin_dialogue_requested(player_input: String) -> void:
 	## Player talks to Merlin — generate LLM response, display in bubble, log to RAG.
 	if is_processing:
 		return
+	is_processing = true
 	print("[TRIADE] Dialogue: player asks '%s'" % player_input)
 
 	# Show thinking state
@@ -1897,6 +1900,24 @@ func _on_merlin_dialogue_requested(player_input: String) -> void:
 
 	# Log to RAG context
 	_write_context_entry("Dialogue: %s -> %s" % [player_input, response.left(80)])
+	is_processing = false
+
+
+func _on_journal_requested() -> void:
+	## Open the visual journal of past lives (P3.20.3).
+	if not store or not is_instance_valid(store):
+		return
+	var mos: MerlinOmniscient = store.get_merlin() if store.has_method("get_merlin") else null
+	var run_summaries: Array[Dictionary] = []
+	if mos and mos.rag_manager and mos.rag_manager.has_method("get_run_summaries_for_journal"):
+		run_summaries = mos.rag_manager.get_run_summaries_for_journal()
+	if run_summaries.is_empty():
+		# No past runs — show a message via bubble
+		if ui and is_instance_valid(ui) and ui.has_method("show_merlin_dialogue_response"):
+			ui.show_merlin_dialogue_response("Tu n'as pas encore vecu de vies anterieures, voyageur. Ton histoire commence ici.")
+		return
+	if ui and is_instance_valid(ui) and ui.has_method("show_journal_popup"):
+		ui.show_journal_popup(run_summaries)
 
 
 # ═══════════════════════════════════════════════════════════════════════════════

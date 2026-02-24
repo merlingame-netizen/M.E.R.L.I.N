@@ -2096,13 +2096,14 @@ Sois poetique mais concret. Francais uniquement. Pas de guillemets.""" % [
 		relationship.get_trust_tier_name(),
 	]
 
-	var result: Dictionary
+	var _raw_result = null
 	if llm_interface.has_method("generate_with_router"):
-		result = await llm_interface.generate_with_router(system, context, {"max_tokens": 150, "temperature": 0.75})
+		_raw_result = await llm_interface.generate_with_router(system, context, {"max_tokens": 150, "temperature": 0.75})
 	elif llm_interface.has_method("generate_with_system"):
-		result = await llm_interface.generate_with_system(system, context, {"max_tokens": 150, "temperature": 0.75})
+		_raw_result = await llm_interface.generate_with_system(system, context, {"max_tokens": 150, "temperature": 0.75})
 	else:
 		return _get_fallback_dialogue(tone)
+	var result: Dictionary = _raw_result if _raw_result is Dictionary else {}
 
 	if result.has("text") and not str(result.text).strip_edges().is_empty():
 		return str(result.text).strip_edges()
@@ -2156,11 +2157,12 @@ Reponds uniquement avec le commentaire, sans guillemets.""" % [
 			return comment_done.text
 
 	# Fallback: direct generation (legacy path)
-	var result: Dictionary
+	var _raw_legacy = null
 	if llm_interface.has_method("generate_voice"):
-		result = await llm_interface.generate_voice(system, "")
+		_raw_legacy = await llm_interface.generate_voice(system, "")
 	else:
-		result = await llm_interface.generate_with_router(system, "", {"max_tokens": 64})
+		_raw_legacy = await llm_interface.generate_with_router(system, "", {"max_tokens": 64})
+	var result: Dictionary = _raw_legacy if _raw_legacy is Dictionary else {}
 	if result.has("text"):
 		return str(result.text).strip_edges()
 
@@ -2224,13 +2226,14 @@ func _generate_card_title(card: Dictionary) -> String:
 
 	var system := "Genere UN titre poetique en francais (3-6 mots) pour cette scene. Vocabulaire celtique. Reponds UNIQUEMENT avec le titre, rien d'autre."
 
-	var result: Dictionary
+	var _raw_result = null
 	if llm_interface.has_method("generate_with_router"):
-		result = await llm_interface.generate_with_router(system, card_text, {"max_tokens": 20, "temperature": 0.8})
+		_raw_result = await llm_interface.generate_with_router(system, card_text, {"max_tokens": 20, "temperature": 0.8})
 	elif llm_interface.has_method("generate_with_system"):
-		result = await llm_interface.generate_with_system(system, card_text, {"max_tokens": 20, "temperature": 0.8})
+		_raw_result = await llm_interface.generate_with_system(system, card_text, {"max_tokens": 20, "temperature": 0.8})
 	else:
 		return _get_fallback_title()
+	var result: Dictionary = _raw_result if _raw_result is Dictionary else {}
 
 	var title: String = str(result.get("text", "")).strip_edges()
 	# Clean: remove quotes, trailing dots, limit length
@@ -2289,13 +2292,14 @@ func _generate_single_what_if(card_context: String, option_label: String) -> Str
 	var system := "En 1-2 phrases poetiques (francais, ton celtique), decris brievement ce qui AURAIT PU se passer si le voyageur avait choisi cette option. Reponds UNIQUEMENT avec le texte narratif."
 	var user_msg := "Scene: %s\nOption non choisie: %s\nQu'aurait-il pu se passer ?" % [card_context, option_label]
 
-	var result: Dictionary
+	var _raw_result = null
 	if llm_interface.has_method("generate_with_router"):
-		result = await llm_interface.generate_with_router(system, user_msg, {"max_tokens": 40, "temperature": 0.85})
+		_raw_result = await llm_interface.generate_with_router(system, user_msg, {"max_tokens": 40, "temperature": 0.85})
 	elif llm_interface.has_method("generate_with_system"):
-		result = await llm_interface.generate_with_system(system, user_msg, {"max_tokens": 40, "temperature": 0.85})
+		_raw_result = await llm_interface.generate_with_system(system, user_msg, {"max_tokens": 40, "temperature": 0.85})
 	else:
 		return FALLBACK_WHATIFS[randi() % FALLBACK_WHATIFS.size()]
+	var result: Dictionary = _raw_result if _raw_result is Dictionary else {}
 
 	var text: String = str(result.get("text", "")).strip_edges()
 	if text.length() < 10 or text.length() > 200:
@@ -2340,13 +2344,14 @@ func generate_dream(game_state: Dictionary) -> String:
 		(" Profil: " + profile_hint) if not profile_hint.is_empty() else "",
 	]
 
-	var result: Dictionary
+	var _raw_result = null
 	if llm_interface.has_method("generate_with_router"):
-		result = await llm_interface.generate_with_router(system, user_msg, {"max_tokens": 80, "temperature": 0.9})
+		_raw_result = await llm_interface.generate_with_router(system, user_msg, {"max_tokens": 80, "temperature": 0.9})
 	elif llm_interface.has_method("generate_with_system"):
-		result = await llm_interface.generate_with_system(system, user_msg, {"max_tokens": 80, "temperature": 0.9})
+		_raw_result = await llm_interface.generate_with_system(system, user_msg, {"max_tokens": 80, "temperature": 0.9})
 	else:
 		return FALLBACK_DREAMS[randi() % FALLBACK_DREAMS.size()]
+	var result: Dictionary = _raw_result if _raw_result is Dictionary else {}
 
 	var text: String = str(result.get("text", "")).strip_edges()
 	if text.length() < 20 or text.length() > 400:
