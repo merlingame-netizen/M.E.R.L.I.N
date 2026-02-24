@@ -812,6 +812,7 @@ static var BIOME_DEFAULT_TAGS := {
 	"cercles_pierres": ["pierres", "cercle", "sacre"],
 	"marais_korrigans": ["marais", "brume", "eau"],
 	"collines_dolmens": ["foret", "dolmen", "sentier"],
+	"iles_mystiques": ["ile", "mer", "brume", "lumiere"],
 }
 
 # Modifier tag → scene tags mapping (from card_modifiers.json categories)

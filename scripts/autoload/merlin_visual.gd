@@ -497,6 +497,7 @@ const BIOME_ART_PROFILES := {
 	"cercles": {"sky": Color(0.23, 0.24, 0.27), "mist": Color(0.36, 0.38, 0.41), "mid": Color(0.28, 0.29, 0.30), "accent": Color(0.66, 0.70, 0.76), "foreground": Color(0.18, 0.18, 0.20), "feature_density": 0.42},
 	"marais": {"sky": Color(0.17, 0.24, 0.22), "mist": Color(0.26, 0.36, 0.33), "mid": Color(0.20, 0.30, 0.25), "accent": Color(0.52, 0.66, 0.50), "foreground": Color(0.10, 0.17, 0.15), "feature_density": 0.60},
 	"collines": {"sky": Color(0.26, 0.29, 0.19), "mist": Color(0.42, 0.45, 0.30), "mid": Color(0.34, 0.39, 0.22), "accent": Color(0.70, 0.56, 0.34), "foreground": Color(0.20, 0.22, 0.13), "feature_density": 0.52},
+	"iles": {"sky": Color(0.14, 0.22, 0.34), "mist": Color(0.30, 0.42, 0.56), "mid": Color(0.18, 0.30, 0.42), "accent": Color(0.50, 0.72, 0.88), "foreground": Color(0.08, 0.14, 0.22), "feature_density": 0.38},
 }
 
 const BIOME_COLORS := {
@@ -507,6 +508,7 @@ const BIOME_COLORS := {
 	"cercles": {"primary": Color(0.50, 0.48, 0.46), "secondary": Color(0.38, 0.35, 0.32), "accent": Color(0.72, 0.78, 0.88)},
 	"marais": {"primary": Color(0.28, 0.38, 0.25), "secondary": Color(0.22, 0.30, 0.35), "accent": Color(0.55, 0.72, 0.48)},
 	"collines": {"primary": Color(0.42, 0.48, 0.30), "secondary": Color(0.55, 0.50, 0.35), "accent": Color(0.70, 0.56, 0.34)},
+	"iles": {"primary": Color(0.25, 0.42, 0.60), "secondary": Color(0.38, 0.55, 0.72), "accent": Color(0.55, 0.78, 0.92)},
 }
 
 const BIOME_VISUALS := {
@@ -517,6 +519,7 @@ const BIOME_VISUALS := {
 	"cercles_pierres": {"name": "Cercles de Pierres", "subtitle": "Branche sud-est", "symbol": "O", "color": Color(0.50, 0.50, 0.55)},
 	"marais_korrigans": {"name": "Marais des Korrigans", "subtitle": "Branche haute", "symbol": "x", "color": Color(0.30, 0.42, 0.30)},
 	"collines_dolmens": {"name": "Collines aux Dolmens", "subtitle": "Branche haute", "symbol": "A", "color": Color(0.48, 0.55, 0.40)},
+	"iles_mystiques": {"name": "Iles Mystiques", "subtitle": "Au-dela des brumes", "symbol": "~", "color": Color(0.30, 0.50, 0.70)},
 }
 
 
@@ -568,6 +571,12 @@ const BIOME_CRT_PALETTES := {
 		Color(0.45, 0.50, 0.24),  Color(0.60, 0.65, 0.32),
 		Color(0.75, 0.78, 0.42),  Color(0.90, 0.92, 0.55),
 	],
+	"iles": [
+		Color(0.02, 0.04, 0.08),  Color(0.06, 0.10, 0.18),
+		Color(0.10, 0.18, 0.30),  Color(0.18, 0.30, 0.46),
+		Color(0.28, 0.44, 0.60),  Color(0.42, 0.60, 0.75),
+		Color(0.60, 0.78, 0.88),  Color(0.78, 0.92, 1.00),
+	],
 }
 
 # Per-biome CRT distortion profiles (noise, scanlines, glitch intensity)
@@ -579,6 +588,7 @@ const BIOME_CRT_PROFILES := {
 	"cercles":     {"noise": 0.045, "scanline_opacity": 0.18, "glitch_probability": 0.009, "tint_blend": 0.07},
 	"marais":      {"noise": 0.052, "scanline_opacity": 0.14, "glitch_probability": 0.012, "tint_blend": 0.06},
 	"collines":    {"noise": 0.022, "scanline_opacity": 0.11, "glitch_probability": 0.003, "tint_blend": 0.04},
+	"iles":        {"noise": 0.035, "scanline_opacity": 0.12, "glitch_probability": 0.007, "tint_blend": 0.05},
 }
 
 
@@ -701,6 +711,16 @@ const CARD_3D_SCALE_HOVER := 1.055    # Noticeable enlargement on hover
 const CARD_3D_SHADOW_SHIFT := 10.0    # Dynamic shadow offset shift (px)
 const CARD_3D_TILT_SPEED := 8.0       # Interpolation speed (slightly smoother)
 const CARD_3D_SHINE_ALPHA := 0.10     # Visible highlight overlay
+
+# Layered sprite system (feature flag — set true to use CardSceneCompositor)
+const USE_LAYERED_SPRITES := true
+const LAYER_REVEAL_STAGGER := 0.08    # Delay between each layer fade-in
+const LAYER_REVEAL_SLIDE := 10.0      # Slide-up offset in pixels
+const LAYER_REVEAL_DURATION := 0.30   # Per-layer reveal duration
+const PARALLAX_MAX_SHIFT := 8.0       # Max parallax offset in pixels on hover
+const SELECTION_STAMP_SCALE := 1.03   # Card scale on option selection
+const EFFECT_REVEAL_DURATION := 0.50  # Triade aspect pulse duration
+const LAYER_ILLUSTRATION_SIZE := Vector2(440.0, 220.0)
 
 # Option button animation
 const OPTION_STAGGER_DELAY := 0.12
