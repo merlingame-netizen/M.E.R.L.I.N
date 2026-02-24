@@ -369,17 +369,12 @@ layout_mode = 2
 theme_override_constants/separation = 20
 alignment = 1
 
-[node name="BtnAppliquer" type="Button" parent="MainLayout/VBox/ButtonsContainer"]
-custom_minimum_size = Vector2(150, 40)
-layout_mode = 2
-text = "Appliquer"
-
 [node name="BtnReinitialiser" type="Button" parent="MainLayout/VBox/ButtonsContainer"]
 custom_minimum_size = Vector2(150, 40)
 layout_mode = 2
 text = "Reinitialiser"
 
 [node name="BtnRetour" type="Button" parent="MainLayout/VBox/ButtonsContainer"]
-custom_minimum_size = Vector2(150, 40)
+custom_minimum_size = Vector2(180, 48)
 layout_mode = 2
-text = "Retour"
+text = "Sauvegarder et Quitter"

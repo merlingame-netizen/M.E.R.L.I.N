@@ -9,10 +9,9 @@ extends Control
 const TITLE_TEXT := "M  E  R  L  I  N"
 
 const MAIN_MENU_ITEMS := [
-	{"text": "Nouvelle Partie", "scene": "res://scenes/IntroPersonalityQuiz.tscn"},
-	{"text": "Continuer", "scene": "res://scenes/SelectionSauvegarde.tscn"},
-	{"text": "Options", "scene": "res://scenes/MenuOptions.tscn"},
-	{"text": "Quitter", "scene": "__quit__"},
+	{"text": "Nouvelle Partie", "scene": "res://scenes/IntroPersonalityQuiz.tscn", "priority": "primary"},
+	{"text": "Continuer", "scene": "res://scenes/SelectionSauvegarde.tscn", "priority": "secondary"},
+	{"text": "Options", "scene": "res://scenes/MenuOptions.tscn", "priority": "tertiary"},
 ]
 
 # Ornements celtiques (ASCII-safe — TextServerFallback compatible)
@@ -111,17 +110,7 @@ var current_season := "HIVER"
 # TIME-OF-DAY LIGHTING
 # =============================================================================
 
-# Tint profiles: each hour range has a target color overlay
-# Using custom colors for atmospheric time-of-day effects
-const TIME_TINTS := {
-	"night":   Color(0.10, 0.12, 0.25, 0.35),   # Deep night blue
-	"dawn":    Color(0.45, 0.28, 0.15, 0.20),   # Golden rose dawn
-	"morning": Color(0.95, 0.90, 0.80, 0.05),   # Soft morning light
-	"midday":  Color(1.0, 1.0, 0.95, 0.0),      # Neutral, nearly invisible
-	"afternoon": Color(0.90, 0.82, 0.65, 0.08), # Warm afternoon light
-	"dusk":    Color(0.55, 0.25, 0.10, 0.25),   # Amber twilight
-	"evening": Color(0.20, 0.15, 0.28, 0.30),   # Violet evening
-}
+# Tint profiles: see MerlinVisual.TIME_OF_DAY_COLORS
 
 var time_tint_layer: ColorRect
 var _time_tint_tween: Tween
@@ -656,7 +645,9 @@ func _configure_main_ui() -> void:
 
 	# Populate menu buttons (data-driven from MAIN_MENU_ITEMS)
 	for item in MAIN_MENU_ITEMS:
-		var btn := _create_button(item.text, item.scene, true)
+		var is_primary: bool = item.get("priority", "") == "primary"
+		var btn := _create_button(item.text, item.scene, is_primary)
+		btn.set_meta("priority", item.get("priority", "secondary"))
 		main_buttons.add_child(btn)
 
 
@@ -746,13 +737,32 @@ func _apply_theme() -> void:
 		title_label.add_theme_font_size_override("font_size", 52)
 		title_label.add_theme_color_override("font_color", MerlinVisual.CRT_PALETTE.phosphor)
 
-	# Style boutons menu
+	# Style boutons menu — visual hierarchy (Hick's law: fewer, clearer choices)
 	for btn in main_buttons.get_children():
-		if btn is Button and body_font:
-			btn.add_theme_font_override("font", body_font)
-			btn.add_theme_font_size_override("font_size", 22)
-			btn.add_theme_color_override("font_color", MerlinVisual.CRT_PALETTE.phosphor)
+		if btn is Button:
 			btn.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
+			var priority: String = btn.get_meta("priority", "secondary")
+			match priority:
+				"primary":
+					# CTA: largest, cyan accent, title font
+					if title_font:
+						btn.add_theme_font_override("font", title_font)
+					btn.add_theme_font_size_override("font_size", 26)
+					btn.add_theme_color_override("font_color", MerlinVisual.CRT_PALETTE.cyan)
+					btn.add_theme_color_override("font_hover_color", MerlinVisual.CRT_PALETTE.cyan_bright)
+					btn.add_theme_color_override("font_pressed_color", MerlinVisual.CRT_PALETTE.amber)
+				"secondary":
+					# Standard: body font, phosphor
+					if body_font:
+						btn.add_theme_font_override("font", body_font)
+					btn.add_theme_font_size_override("font_size", 20)
+					btn.add_theme_color_override("font_color", MerlinVisual.CRT_PALETTE.phosphor)
+				"tertiary":
+					# Subtle: smaller, dimmer
+					if body_font:
+						btn.add_theme_font_override("font", body_font)
+					btn.add_theme_font_size_override("font_size", 17)
+					btn.add_theme_color_override("font_color", MerlinVisual.CRT_PALETTE.phosphor_dim)
 
 	# Style boutons coins
 	_apply_corner_button_style(calendar_button)
@@ -845,11 +855,14 @@ func _animate_buttons_entry() -> void:
 			delay += 0.05
 
 
-func _create_button(label: String, scene: String, _is_primary: bool) -> Button:
+func _create_button(label: String, scene: String, is_primary: bool) -> Button:
 	var btn := Button.new()
 	btn.text = label
 	btn.focus_mode = Control.FOCUS_NONE
 	btn.flat = false
+	# Fitts' law: primary button is larger target area (48px+ touch target)
+	if is_primary:
+		btn.custom_minimum_size = Vector2(0, 56)
 	btn.pressed.connect(func(): _on_menu_action(scene))
 	btn.mouse_entered.connect(func(): _on_button_hover(btn, true))
 	btn.mouse_exited.connect(func(): _on_button_hover(btn, false))
@@ -1127,7 +1140,7 @@ func _update_time_tint() -> void:
 	var time_dict := Time.get_time_dict_from_system()
 	var hour: int = time_dict.hour
 	var period := _get_time_period(hour)
-	var target_color: Color = TIME_TINTS[period]
+	var target_color: Color = MerlinVisual.TIME_OF_DAY_COLORS[period]
 
 	if _time_tint_tween:
 		_time_tint_tween.kill()

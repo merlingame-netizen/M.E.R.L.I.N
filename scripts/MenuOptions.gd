@@ -13,7 +13,6 @@ extends Control
 @onready var sfx_slider = $MainLayout/VBox/ScrollContainer/OptionsContainer/SFXVolumeRow/SFXVolumeSlider
 @onready var sfx_value = $MainLayout/VBox/ScrollContainer/OptionsContainer/SFXVolumeRow/SFXVolumeValue
 
-@onready var btn_apply = $MainLayout/VBox/ButtonsContainer/BtnAppliquer
 @onready var btn_reset = $MainLayout/VBox/ButtonsContainer/BtnReinitialiser
 @onready var btn_back = $MainLayout/VBox/ButtonsContainer/BtnRetour
 
@@ -204,7 +203,7 @@ func _configure_ia_options() -> void:
 
 	# Configure info label styling
 	brain_info_label.add_theme_font_size_override("font_size", 14)
-	brain_info_label.add_theme_color_override("font_color", Color(0.5, 0.45, 0.4, 0.8))
+	brain_info_label.add_theme_color_override("font_color", MerlinVisual.CRT_PALETTE.phosphor_dim)
 	brain_info_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	_update_brain_info_label()
 
@@ -266,7 +265,6 @@ func connect_signals():
 	sfx_slider.value_changed.connect(_on_sfx_volume_changed)
 	
 	# Boutons
-	btn_apply.pressed.connect(_on_apply_pressed)
 	btn_reset.pressed.connect(_on_reset_pressed)
 	btn_back.pressed.connect(_on_back_pressed)
 	
@@ -472,13 +470,6 @@ func _on_fps_changed(index):
 	current_config.fps_limit = index
 
 # Callbacks pour les boutons
-func _on_apply_pressed():
-	apply_settings()
-	save_settings()
-	_apply_brain_count()
-	print("Parametres appliques et sauvegardes")
-
-
 func _apply_brain_count() -> void:
 	var mai = get_node_or_null("/root/MerlinAI")
 	if mai == null:
@@ -501,6 +492,10 @@ func _on_reset_pressed():
 	print("✓ Paramètres réinitialisés")
 
 func _on_back_pressed():
+	# Auto-apply + save on exit (modern UX: no separate "Apply" button)
+	apply_settings()
+	save_settings()
+	_apply_brain_count()
 	var se := get_node_or_null("/root/ScreenEffects")
 	var target: String = se.return_scene if se and se.return_scene != "" else "res://scenes/HubAntre.tscn"
 	PixelTransition.transition_to(target)

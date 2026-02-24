@@ -342,6 +342,7 @@ func _create_hotspots() -> void:
 		var hs := HubHotspot.new()
 		var icon_type: int = def["icon"]
 		hs.setup(icon_type, def["name"], def["label"], MerlinVisual.CRT_PALETTE[def["palette_key"]])
+		hs.tooltip_text = def["label"]
 		hs.position = vp * Vector2(def["ratio"])
 		add_child(hs)
 		hs.hotspot_hovered.connect(_on_hotspot_hovered)
