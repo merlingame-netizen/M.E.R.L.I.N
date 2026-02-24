@@ -1,0 +1,686 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>M.E.R.L.I.N. - LLM Capabilities Matrix (27 capacites)</title>
+<style>
+:root{--bg:#1a1a2e;--bg2:#16213e;--bg3:#0f3460;--text:#e0e0e0;--text2:#a0a0a0;--accent:#00d4ff;--accent2:#00ff88;--warn:#ffaa00;--danger:#ff4444;--ok:#00ff88;--moyen:#ffaa00;--faible:#ff4444;--partiel:#ff88ff;--sidebar-w:280px;--font:"Segoe UI",system-ui,-apple-system,sans-serif;--mono:"Cascadia Code","Fira Code","Consolas",monospace}
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:var(--font);background:var(--bg);color:var(--text);line-height:1.7;display:flex;min-height:100vh}
+.sidebar{position:fixed;top:0;left:0;width:var(--sidebar-w);height:100vh;background:var(--bg2);border-right:1px solid rgba(0,212,255,.15);overflow-y:auto;padding:24px 16px;z-index:100}
+.sidebar h2{color:var(--accent);font-size:14px;text-transform:uppercase;letter-spacing:2px;margin-bottom:20px;padding-bottom:10px;border-bottom:1px solid rgba(0,212,255,.2)}
+.sidebar a{display:block;color:var(--text2);text-decoration:none;padding:6px 10px;font-size:13px;border-radius:4px;transition:all .2s}
+.sidebar a:hover{color:var(--accent);background:rgba(0,212,255,.08)}
+.sidebar a.sub{padding-left:24px;font-size:12px}
+.main{margin-left:var(--sidebar-w);padding:40px 60px;max-width:1100px;flex:1}
+h1{font-size:2.2em;color:var(--accent);margin-bottom:8px;letter-spacing:-0.5px}
+.subtitle{color:var(--text2);font-size:1.1em;margin-bottom:32px}
+h2{font-size:1.6em;color:var(--accent);margin:40px 0 16px;padding-bottom:8px;border-bottom:2px solid rgba(0,212,255,.2)}
+h3{font-size:1.2em;color:var(--accent2);margin:24px 0 12px}
+h4{font-size:1em;color:var(--warn);margin:16px 0 8px}
+p{margin-bottom:14px}
+ul,ol{margin:0 0 16px 24px}
+li{margin-bottom:6px}
+table{width:100%;border-collapse:collapse;margin:16px 0 24px;background:var(--bg2);border-radius:8px;overflow:hidden}
+th{background:var(--bg3);color:var(--accent);padding:12px 16px;text-align:left;font-size:12px;text-transform:uppercase;letter-spacing:1px}
+td{padding:10px 16px;border-top:1px solid rgba(255,255,255,.05);font-size:13px;vertical-align:top}
+tr:hover{background:rgba(0,212,255,.04)}
+details{background:var(--bg2);border:1px solid rgba(0,212,255,.1);border-radius:8px;margin:16px 0;overflow:hidden}
+summary{padding:14px 20px;cursor:pointer;font-weight:600;color:var(--accent);font-size:15px;user-select:none}
+summary:hover{background:rgba(0,212,255,.05)}
+details>div{padding:0 20px 20px}
+.badge{display:inline-block;padding:2px 10px;border-radius:12px;font-size:11px;font-weight:700;text-transform:uppercase;white-space:nowrap}
+.badge.ok{background:rgba(0,255,136,.15);color:var(--ok)}
+.badge.moyen{background:rgba(255,170,0,.15);color:var(--moyen)}
+.badge.faible{background:rgba(255,68,68,.15);color:var(--faible)}
+.badge.partiel{background:rgba(255,136,255,.15);color:var(--partiel)}
+.badge.nouveau{background:rgba(0,212,255,.2);color:var(--accent);border:1px solid rgba(0,212,255,.3)}
+.badge.p0{background:rgba(255,68,68,.2);color:#ff6666}
+.badge.p1{background:rgba(255,170,0,.2);color:#ffaa00}
+.badge.p2{background:rgba(0,212,255,.2);color:#00d4ff}
+.badge.p3{background:rgba(0,255,136,.2);color:#00ff88}
+.badge.narrator{background:rgba(0,212,255,.15);color:var(--accent);border:1px solid rgba(0,212,255,.3)}
+.badge.gm{background:rgba(0,255,136,.15);color:var(--accent2);border:1px solid rgba(0,255,136,.3)}
+.badge.code{background:rgba(160,160,160,.15);color:var(--text2);border:1px solid rgba(160,160,160,.3)}
+.badge.lora-yes{background:rgba(138,43,226,.2);color:#bb86fc}
+.badge.lora-no{background:rgba(100,100,100,.2);color:#888}
+.callout{padding:16px 20px;border-radius:8px;margin:16px 0;border-left:4px solid}
+.callout.info{background:rgba(0,212,255,.08);border-color:var(--accent)}
+.callout.warn{background:rgba(255,170,0,.08);border-color:var(--warn)}
+.callout.danger{background:rgba(255,68,68,.08);border-color:var(--danger)}
+.callout.success{background:rgba(0,255,136,.08);border-color:var(--accent2)}
+.callout strong{display:block;margin-bottom:6px}
+pre{background:var(--bg3);border:1px solid rgba(0,212,255,.15);border-radius:8px;padding:16px 20px;overflow-x:auto;margin:12px 0 20px;font-family:var(--mono);font-size:13px;line-height:1.6;color:var(--text)}
+code{font-family:var(--mono);background:rgba(0,212,255,.1);padding:2px 6px;border-radius:3px;font-size:13px}
+pre code{background:none;padding:0}
+.principle-box{background:var(--bg3);border:2px solid var(--accent);border-radius:12px;padding:24px;margin:24px 0;text-align:center}
+.principle-box .big{font-size:1.4em;color:var(--accent);font-weight:700;margin-bottom:8px}
+.principle-box .desc{color:var(--text2);font-size:1em}
+.token-budget{display:flex;gap:8px;flex-wrap:wrap;margin:16px 0}
+.token-budget .item{flex:1;min-width:120px;background:var(--bg2);border-radius:8px;padding:12px;text-align:center;border:1px solid rgba(0,212,255,.1)}
+.token-budget .item .val{font-size:1.6em;font-weight:700;color:var(--accent)}
+.token-budget .item .label{font-size:11px;color:var(--text2);text-transform:uppercase;letter-spacing:1px;margin-top:4px}
+.token-budget .item.total{border-color:var(--accent);background:var(--bg3)}
+.token-budget .item.total .val{color:var(--accent2)}
+.phase-timeline{position:relative;padding-left:40px;margin:24px 0}
+.phase-timeline::before{content:"";position:absolute;left:14px;top:0;bottom:0;width:2px;background:linear-gradient(to bottom,var(--danger),var(--warn),var(--accent),var(--accent2))}
+.phase-item{position:relative;margin-bottom:24px}
+.phase-item::before{content:"";position:absolute;left:-33px;top:4px;width:14px;height:14px;border-radius:50%;border:2px solid}
+.phase-item.p0::before{border-color:var(--danger);background:rgba(255,68,68,.3)}
+.phase-item.p1::before{border-color:var(--warn);background:rgba(255,170,0,.3)}
+.phase-item.p2::before{border-color:var(--accent);background:rgba(0,212,255,.3)}
+.phase-item.p3::before{border-color:var(--accent2);background:rgba(0,255,136,.3)}
+.phase-title{font-weight:700;font-size:15px;margin-bottom:4px}
+.phase-desc{color:var(--text2);font-size:13px}
+.limits-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px;margin:16px 0}
+.limits-card{background:var(--bg2);border-radius:8px;padding:16px;border:1px solid rgba(255,255,255,.05)}
+.limits-card h4{margin-top:0;font-size:14px}
+.limits-card.bien{border-left:4px solid var(--ok)}
+.limits-card.bien h4{color:var(--ok)}
+.limits-card.moyen-card{border-left:4px solid var(--warn)}
+.limits-card.moyen-card h4{color:var(--warn)}
+.limits-card.impossible{border-left:4px solid var(--danger)}
+.limits-card.impossible h4{color:var(--danger)}
+.limits-card ul{margin:8px 0 0 16px;font-size:13px}
+.limits-card li{margin-bottom:4px}
+@media(max-width:900px){.sidebar{display:none}.main{margin-left:0;padding:20px}.limits-grid{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<nav class="sidebar">
+<h2>Capabilities Matrix</h2>
+<a href="#principe">Principe</a>
+<a href="#narrator-matrix">Matrice Narrator (7)</a>
+<a href="#b1-1" class="sub">B1.1 Narration immersive</a>
+<a href="#b1-2" class="sub">B1.2 Choix significatifs</a>
+<a href="#b1-3" class="sub">B1.3 Adaptation joueur</a>
+<a href="#b1-4" class="sub">B1.4 Narration evolutive</a>
+<a href="#b1-5" class="sub">B1.5 Personnalite Merlin</a>
+<a href="#b1-6" class="sub">B1.6 Atmosphere biome</a>
+<a href="#b1-7" class="sub">B1.7 Conscience temporelle</a>
+<a href="#gm-matrix">Matrice Game Master (4)</a>
+<a href="#unique-matrix">Matrice Unique (9)</a>
+<a href="#innovant-matrix">Matrice Innovants (7)</a>
+<a href="#limites">Limites du 1.5B</a>
+<a href="#budget">Budget Tokens</a>
+<a href="#priorites">Priorites P0-P3</a>
+</nav>
+
+<main class="main">
+<h1>M.E.R.L.I.N. &mdash; LLM Capabilities Matrix</h1>
+<p class="subtitle">27 capacites LLM &mdash; Narration, Game Master, Unique, Innovants<br>
+Derniere mise a jour : 24 fevrier 2026</p>
+
+<!-- ============================================================ -->
+<h2 id="principe">Principe Architectural</h2>
+
+<div class="principle-box">
+<div class="big">LLM = peau expressive &nbsp;&nbsp;|&nbsp;&nbsp; Code = cerveau logique</div>
+<div class="desc">Le LLM genere le texte narratif et les choix. Le code GDScript gere la logique (effets, equilibrage, economie, detection).
+Toute decision mecanique est dans le code. Toute expression creative est dans le LLM.</div>
+</div>
+
+<div class="callout info">
+<strong>Repartition des 27 capacites</strong>
+<span class="badge narrator">Narrator : 7</span>
+<span class="badge gm">Game Master : 4</span>
+<span class="badge" style="background:rgba(255,170,0,.15);color:var(--warn)">Unique : 9</span>
+<span class="badge" style="background:rgba(138,43,226,.15);color:#bb86fc">Innovants : 7</span>
+</div>
+
+<!-- ============================================================ -->
+<h2 id="narrator-matrix">Matrice Narrator (7 capacites)</h2>
+
+<table>
+<tr>
+<th>ID</th>
+<th>Feature</th>
+<th>Status</th>
+<th>Cerveau</th>
+<th>Tokens</th>
+<th>Latence</th>
+<th>LoRA?</th>
+<th>Phase</th>
+<th>Fichier Code</th>
+</tr>
+<tr id="b1-1">
+<td><strong>B1.1</strong></td>
+<td>Narration immersive</td>
+<td><span class="badge moyen">A AMELIORER</span></td>
+<td><span class="badge narrator">Narrator</span></td>
+<td>150</td>
+<td>~6s</td>
+<td><span class="badge lora-yes">Oui</span></td>
+<td><span class="badge p0">P0-P2</span></td>
+<td><code>merlin_llm_adapter.gd</code></td>
+</tr>
+<tr id="b1-2">
+<td><strong>B1.2</strong></td>
+<td>Choix significatifs</td>
+<td><span class="badge moyen">A AMELIORER</span></td>
+<td><span class="badge narrator">Narrator</span></td>
+<td>inclus</td>
+<td>inclus</td>
+<td><span class="badge lora-yes">Oui</span></td>
+<td><span class="badge p0">P0</span></td>
+<td><code>merlin_llm_adapter.gd</code></td>
+</tr>
+<tr id="b1-3">
+<td><strong>B1.3</strong></td>
+<td>Adaptation joueur</td>
+<td><span class="badge nouveau">NOUVEAU</span></td>
+<td><span class="badge code">Code+Narrator</span></td>
+<td>inclus</td>
+<td>0</td>
+<td><span class="badge lora-no">Non</span></td>
+<td><span class="badge p1">P1</span></td>
+<td><code>rag_manager.gd</code></td>
+</tr>
+<tr id="b1-4">
+<td><strong>B1.4</strong></td>
+<td>Narration evolutive</td>
+<td><span class="badge nouveau">NOUVEAU</span></td>
+<td><span class="badge code">Code+Narrator</span></td>
+<td>inclus</td>
+<td>0</td>
+<td><span class="badge lora-yes">Oui</span></td>
+<td><span class="badge p2">P2</span></td>
+<td><code>rag_manager.gd</code></td>
+</tr>
+<tr id="b1-5">
+<td><strong>B1.5</strong></td>
+<td>Personnalite Merlin</td>
+<td><span class="badge nouveau">NOUVEAU</span></td>
+<td><span class="badge narrator">Narrator</span></td>
+<td>inclus</td>
+<td>0</td>
+<td><span class="badge lora-yes">Oui</span></td>
+<td><span class="badge p2">P2</span></td>
+<td><code>merlin_persona.json</code></td>
+</tr>
+<tr id="b1-6">
+<td><strong>B1.6</strong></td>
+<td>Atmosphere biome</td>
+<td><span class="badge partiel">PARTIEL</span></td>
+<td><span class="badge narrator">Narrator</span></td>
+<td>inclus</td>
+<td>0</td>
+<td><span class="badge lora-no">Non</span></td>
+<td><span class="badge p1">P1</span></td>
+<td><code>scenario_prompts.json</code></td>
+</tr>
+<tr id="b1-7">
+<td><strong>B1.7</strong></td>
+<td>Conscience temporelle</td>
+<td><span class="badge partiel">PARTIEL</span></td>
+<td><span class="badge code">Code+Narrator</span></td>
+<td>inclus</td>
+<td>0</td>
+<td><span class="badge lora-no">Non</span></td>
+<td><span class="badge p1">P1</span></td>
+<td><code>prompt_templates.json</code></td>
+</tr>
+</table>
+
+<!-- ============================================================ -->
+<h2 id="gm-matrix">Matrice Game Master (4 capacites)</h2>
+
+<table>
+<tr>
+<th>ID</th>
+<th>Feature</th>
+<th>Status</th>
+<th>Cerveau</th>
+<th>Tokens</th>
+<th>Latence</th>
+<th>LoRA?</th>
+<th>Phase</th>
+<th>Fichier Code</th>
+</tr>
+<tr>
+<td><strong>B2.1</strong></td>
+<td>Equilibrage intelligent</td>
+<td><span class="badge partiel">PARTIEL</span></td>
+<td><span class="badge gm">Game Master</span></td>
+<td>80</td>
+<td>~4s</td>
+<td><span class="badge lora-no">Non</span></td>
+<td><span class="badge p0">P0</span></td>
+<td><code>merlin_effect_engine.gd</code></td>
+</tr>
+<tr>
+<td><strong>B2.2</strong></td>
+<td>Detection danger</td>
+<td><span class="badge ok">OK</span></td>
+<td><span class="badge code">Code</span></td>
+<td>0</td>
+<td>0</td>
+<td><span class="badge lora-no">Non</span></td>
+<td><span class="badge p0">P0</span></td>
+<td><code>merlin_card_system.gd</code></td>
+</tr>
+<tr>
+<td><strong>B2.3</strong></td>
+<td>Economie Souffle</td>
+<td><span class="badge ok">OK</span></td>
+<td><span class="badge code">Code</span></td>
+<td>0</td>
+<td>0</td>
+<td><span class="badge lora-no">Non</span></td>
+<td><span class="badge p0">P0</span></td>
+<td><code>merlin_store.gd</code></td>
+</tr>
+<tr>
+<td><strong>B2.4</strong></td>
+<td>Minigames (effets speciaux)</td>
+<td><span class="badge nouveau">NOUVEAU</span></td>
+<td><span class="badge gm">Game Master</span></td>
+<td>+30</td>
+<td>~2s</td>
+<td><span class="badge lora-no">Non</span></td>
+<td><span class="badge p3">P3</span></td>
+<td><code>merlin_effect_engine.gd</code></td>
+</tr>
+</table>
+
+<!-- ============================================================ -->
+<h2 id="unique-matrix">Matrice Unique (9 capacites)</h2>
+
+<table>
+<tr>
+<th>ID</th>
+<th>Feature</th>
+<th>Status</th>
+<th>Cerveau</th>
+<th>Tokens</th>
+<th>Latence</th>
+<th>LoRA?</th>
+<th>Phase</th>
+<th>Fichier Code</th>
+</tr>
+<tr>
+<td><strong>B3.1</strong></td>
+<td>Zero Fallback (aucune carte statique)</td>
+<td><span class="badge ok">OK</span></td>
+<td><span class="badge code">Code</span></td>
+<td>0</td>
+<td>0</td>
+<td><span class="badge lora-no">Non</span></td>
+<td><span class="badge p0">P0</span></td>
+<td><code>merlin_omniscient.gd</code></td>
+</tr>
+<tr>
+<td><strong>B3.2</strong></td>
+<td>Brisure 4e mur (~1/15 cartes)</td>
+<td><span class="badge nouveau">NOUVEAU</span></td>
+<td><span class="badge narrator">Narrator</span></td>
+<td>150</td>
+<td>~6s</td>
+<td><span class="badge lora-no">Non</span></td>
+<td><span class="badge p1">P1</span></td>
+<td><code>merlin_omniscient.gd</code></td>
+</tr>
+<tr>
+<td><strong>B3.3</strong></td>
+<td>Cross-run references</td>
+<td><span class="badge nouveau">NOUVEAU</span></td>
+<td><span class="badge code">Code+Narrator</span></td>
+<td>+20</td>
+<td>0</td>
+<td><span class="badge lora-no">Non</span></td>
+<td><span class="badge p2">P2</span></td>
+<td><code>rag_manager.gd</code></td>
+</tr>
+<tr>
+<td><strong>B3.4</strong></td>
+<td>Sequences de reve</td>
+<td><span class="badge nouveau">NOUVEAU</span></td>
+<td><span class="badge narrator">Narrator</span></td>
+<td>180</td>
+<td>~8s</td>
+<td><span class="badge lora-no">Non</span></td>
+<td><span class="badge p2">P2</span></td>
+<td><code>merlin_omniscient.gd</code></td>
+</tr>
+<tr>
+<td><strong>B3.5</strong></td>
+<td>Promesses de Merlin</td>
+<td><span class="badge partiel">PARTIEL</span></td>
+<td><span class="badge code">Code</span></td>
+<td>0</td>
+<td>0</td>
+<td><span class="badge lora-no">Non</span></td>
+<td><span class="badge p1">P1</span></td>
+<td><code>merlin_effect_engine.gd</code></td>
+</tr>
+<tr>
+<td><strong>B3.6</strong></td>
+<td>Bestiole reactions</td>
+<td><span class="badge nouveau">NOUVEAU</span></td>
+<td><span class="badge narrator">Narrator</span></td>
+<td>+30</td>
+<td>~2s</td>
+<td><span class="badge lora-no">Non</span></td>
+<td><span class="badge p2">P2</span></td>
+<td><code>merlin_omniscient.gd</code></td>
+</tr>
+<tr>
+<td><strong>B3.7</strong></td>
+<td>Fins narratives (12 chutes + 3 victoires)</td>
+<td><span class="badge partiel">PARTIEL</span></td>
+<td><span class="badge narrator">Narrator</span></td>
+<td>200</td>
+<td>~8s</td>
+<td><span class="badge lora-yes">Oui</span></td>
+<td><span class="badge p1">P1</span></td>
+<td><code>merlin_constants.gd</code></td>
+</tr>
+<tr>
+<td><strong>B3.8</strong></td>
+<td>Evenements saisonniers</td>
+<td><span class="badge partiel">PARTIEL</span></td>
+<td><span class="badge code">Code+Narrator</span></td>
+<td>inclus</td>
+<td>0</td>
+<td><span class="badge lora-no">Non</span></td>
+<td><span class="badge p1">P1</span></td>
+<td><code>merlin_card_system.gd</code></td>
+</tr>
+<tr>
+<td><strong>B3.9</strong></td>
+<td>Dialogue interactif</td>
+<td><span class="badge nouveau">NOUVEAU</span></td>
+<td><span class="badge narrator">Narrator</span></td>
+<td>60</td>
+<td>~3s</td>
+<td><span class="badge lora-no">Non</span></td>
+<td><span class="badge p3">P3</span></td>
+<td><code>merlin_ai.gd</code></td>
+</tr>
+</table>
+
+<!-- ============================================================ -->
+<h2 id="innovant-matrix">Matrice Innovants (7 capacites)</h2>
+
+<table>
+<tr>
+<th>ID</th>
+<th>Feature</th>
+<th>Status</th>
+<th>Cerveau</th>
+<th>Tokens</th>
+<th>Latence</th>
+<th>LoRA?</th>
+<th>Phase</th>
+<th>Fichier Code</th>
+</tr>
+<tr>
+<td><strong>B4.1</strong></td>
+<td>Visual tags (atmosphere visuelle)</td>
+<td><span class="badge nouveau">NOUVEAU</span></td>
+<td><span class="badge gm">Game Master</span></td>
+<td>+20</td>
+<td>inclus</td>
+<td><span class="badge lora-no">Non</span></td>
+<td><span class="badge p2">P2</span></td>
+<td><code>merlin_visual.gd</code></td>
+</tr>
+<tr>
+<td><strong>B4.2</strong></td>
+<td>Audio tags (ambiance sonore)</td>
+<td><span class="badge nouveau">NOUVEAU</span></td>
+<td><span class="badge gm">Game Master</span></td>
+<td>+15</td>
+<td>inclus</td>
+<td><span class="badge lora-no">Non</span></td>
+<td><span class="badge p2">P2</span></td>
+<td><code>sfx_manager.gd</code></td>
+</tr>
+<tr>
+<td><strong>B4.3</strong></td>
+<td>Chemins non-pris (regrets narratifs)</td>
+<td><span class="badge nouveau">NOUVEAU</span></td>
+<td><span class="badge code">Code+Narrator</span></td>
+<td>+20</td>
+<td>0</td>
+<td><span class="badge lora-no">Non</span></td>
+<td><span class="badge p3">P3</span></td>
+<td><code>rag_manager.gd</code></td>
+</tr>
+<tr>
+<td><strong>B4.4</strong></td>
+<td>Titres de carte dynamiques</td>
+<td><span class="badge nouveau">NOUVEAU</span></td>
+<td><span class="badge narrator">Narrator</span></td>
+<td>+10</td>
+<td>inclus</td>
+<td><span class="badge lora-no">Non</span></td>
+<td><span class="badge p2">P2</span></td>
+<td><code>merlin_llm_adapter.gd</code></td>
+</tr>
+<tr>
+<td><strong>B4.5</strong></td>
+<td>Recaps de session (fin de run)</td>
+<td><span class="badge nouveau">NOUVEAU</span></td>
+<td><span class="badge narrator">Narrator</span></td>
+<td>200</td>
+<td>~10s</td>
+<td><span class="badge lora-no">Non</span></td>
+<td><span class="badge p3">P3</span></td>
+<td><code>merlin_omniscient.gd</code></td>
+</tr>
+<tr>
+<td><strong>B4.6</strong></td>
+<td>Sequences de reve dirigees</td>
+<td><span class="badge nouveau">NOUVEAU</span></td>
+<td><span class="badge narrator">Narrator</span></td>
+<td>180</td>
+<td>~8s</td>
+<td><span class="badge lora-no">Non</span></td>
+<td><span class="badge p3">P3</span></td>
+<td><code>merlin_omniscient.gd</code></td>
+</tr>
+<tr>
+<td><strong>B4.7</strong></td>
+<td>Tutoriel narratif (premieres cartes)</td>
+<td><span class="badge nouveau">NOUVEAU</span></td>
+<td><span class="badge code">Code+Narrator</span></td>
+<td>inclus</td>
+<td>0</td>
+<td><span class="badge lora-no">Non</span></td>
+<td><span class="badge p1">P1</span></td>
+<td><code>merlin_omniscient.gd</code></td>
+</tr>
+</table>
+
+<!-- ============================================================ -->
+<h2 id="limites">Limites du 1.5B</h2>
+
+<p>Inventaire realiste de ce que Qwen 2.5-1.5B fait bien, moyennement, et ne peut pas faire pour M.E.R.L.I.N.</p>
+
+<div class="limits-grid">
+<div class="limits-card bien">
+<h4>BIEN (fiable en prod)</h4>
+<ul>
+<li>Generation de texte narratif court (2-4 phrases)</li>
+<li>Francais courant (80%+ natif)</li>
+<li>Suivi de format avec GBNF grammar</li>
+<li>Imitation de style via few-shot</li>
+<li>JSON simple (3 cles, valeurs numeriques)</li>
+<li>Reponse a un prompt structure</li>
+<li>Variete lexicale avec vocabulaire injecte</li>
+<li>Latence acceptable (7-11s, 17.8 tok/s)</li>
+</ul>
+</div>
+
+<div class="limits-card moyen-card">
+<h4>MOYEN (avec tuning)</h4>
+<ul>
+<li>Coherence sur 5+ cartes consecutives</li>
+<li>Vocabulaire celtique spontane (sans injection)</li>
+<li>Personnalite stable (derive apres 10 cartes)</li>
+<li>Adaptation au contexte des etats Triade</li>
+<li>Creativite des choix (tendance a la repetition)</li>
+<li>Ton humoristique / 4e mur</li>
+<li>Sequences de reve (parfois trop generique)</li>
+</ul>
+</div>
+
+<div class="limits-card impossible">
+<h4>IMPOSSIBLE (ne pas essayer)</h4>
+<ul>
+<li>Raisonnement multi-step (planification)</li>
+<li>Memoire longue (&gt; 4096 tokens contexte)</li>
+<li>Auto-correction de ses erreurs</li>
+<li>JSON complexe / nested objects</li>
+<li>Calculs numeriques (equilibrage precis)</li>
+<li>Comprehension de regles de jeu abstraites</li>
+<li>Generation de code ou de formats techniques</li>
+<li>Dialogues multi-tours sans reset contexte</li>
+</ul>
+</div>
+</div>
+
+<!-- ============================================================ -->
+<h2 id="budget">Budget Tokens par Carte</h2>
+
+<h3>Mode DUAL Standard (~265 tokens, ~10s)</h3>
+
+<div class="token-budget">
+<div class="item">
+<div class="val">150</div>
+<div class="label">Narration + Choix</div>
+</div>
+<div class="item">
+<div class="val">80</div>
+<div class="label">Effets JSON</div>
+</div>
+<div class="item">
+<div class="val">20</div>
+<div class="label">Visual Tags</div>
+</div>
+<div class="item">
+<div class="val">15</div>
+<div class="label">Audio Tags</div>
+</div>
+<div class="item total">
+<div class="val">~265</div>
+<div class="label">Total / Carte</div>
+</div>
+</div>
+
+<h3>Mode Optimal P1 (~185 tokens, ~8s)</h3>
+
+<div class="token-budget">
+<div class="item">
+<div class="val">120</div>
+<div class="label">Narration + Choix</div>
+</div>
+<div class="item">
+<div class="val">60</div>
+<div class="label">Effets JSON</div>
+</div>
+<div class="item">
+<div class="val">5</div>
+<div class="label">Visual (code-gen)</div>
+</div>
+<div class="item">
+<div class="val">0</div>
+<div class="label">Audio (code-gen)</div>
+</div>
+<div class="item total">
+<div class="val">~185</div>
+<div class="label">Total / Carte</div>
+</div>
+</div>
+
+<div class="callout info">
+<strong>Optimisation P1</strong>
+En phase P1, les visual/audio tags sont generes par le code (regles biome + etat) au lieu du LLM. Cela economise ~35 tokens et ~2s par carte. Le LLM ne genere les tags que si le code ne peut pas inferer l'ambiance (situation ambigue).
+</div>
+
+<h3>Breakdown detaille</h3>
+<table>
+<tr><th>Composant</th><th>Cerveau</th><th>Tokens (Dual)</th><th>Tokens (Optimal)</th><th>Notes</th></tr>
+<tr><td>Narration (2-3 phrases)</td><td><span class="badge narrator">Narrator</span></td><td>100-120</td><td>80-100</td><td>Prompt contraint a 3 phrases max</td></tr>
+<tr><td>3 Choix (A/B/C)</td><td><span class="badge narrator">Narrator</span></td><td>30-50</td><td>30-40</td><td>Inclus dans generation Narrator</td></tr>
+<tr><td>Effets JSON</td><td><span class="badge gm">Game Master</span></td><td>60-80</td><td>50-60</td><td>GBNF grammar active, compact</td></tr>
+<tr><td>Visual tags</td><td><span class="badge gm">Game Master</span></td><td>15-20</td><td>0-5</td><td>Code-gen en P1, LLM si ambigu</td></tr>
+<tr><td>Audio tags</td><td><span class="badge gm">Game Master</span></td><td>10-15</td><td>0</td><td>Toujours code-gen en P1</td></tr>
+</table>
+
+<!-- ============================================================ -->
+<h2 id="priorites">Priorites (P0 &rarr; P3)</h2>
+
+<table>
+<tr><th>Phase</th><th>Capacites</th><th>Effort</th><th>Impact</th><th>Description</th></tr>
+<tr>
+<td><span class="badge p0">P0 &mdash; Core</span></td>
+<td>B1.1, B1.2, B2.1, B2.2, B2.3, B3.1</td>
+<td>2-3 semaines</td>
+<td>Critique</td>
+<td>Narration de base, equilibrage, zero fallback. Le jeu DOIT tourner avec ces capacites.</td>
+</tr>
+<tr>
+<td><span class="badge p1">P1 &mdash; Polish</span></td>
+<td>B1.3, B1.6, B1.7, B3.2, B3.5, B3.7, B3.8, B4.7</td>
+<td>3-4 semaines</td>
+<td>Eleve</td>
+<td>Adaptation joueur, atmosphere biome, 4e mur, fins narratives, tutoriel. L'experience devient riche.</td>
+</tr>
+<tr>
+<td><span class="badge p2">P2 &mdash; Depth</span></td>
+<td>B1.4, B1.5, B3.3, B3.4, B3.6, B4.1, B4.2, B4.4</td>
+<td>4-6 semaines</td>
+<td>Moyen-Eleve</td>
+<td>Narration evolutive, personnalite Merlin, cross-run, reves, visual/audio tags, titres dynamiques. Le jeu se distingue.</td>
+</tr>
+<tr>
+<td><span class="badge p3">P3 &mdash; Innovation</span></td>
+<td>B2.4, B3.9, B4.3, B4.5, B4.6</td>
+<td>6+ semaines</td>
+<td>Moyen</td>
+<td>Minigames, dialogue interactif, chemins non-pris, recaps, reves diriges. Features bonus pour la v2.</td>
+</tr>
+</table>
+
+<h3>Timeline visuelle</h3>
+
+<div class="phase-timeline">
+<div class="phase-item p0">
+<div class="phase-title"><span class="badge p0">P0</span> Core &mdash; Semaines 1-3</div>
+<div class="phase-desc">6 capacites critiques. Narration + equilibrage + zero fallback. Le jeu tourne et est jouable.</div>
+</div>
+<div class="phase-item p1">
+<div class="phase-title"><span class="badge p1">P1</span> Polish &mdash; Semaines 4-7</div>
+<div class="phase-desc">8 capacites de polish. Adaptation, atmosphere, 4e mur, fins. L'experience devient memorable.</div>
+</div>
+<div class="phase-item p2">
+<div class="phase-title"><span class="badge p2">P2</span> Depth &mdash; Semaines 8-13</div>
+<div class="phase-desc">8 capacites de profondeur. Personnalite, cross-run, reves, visual/audio. Le jeu se distingue des autres.</div>
+</div>
+<div class="phase-item p3">
+<div class="phase-title"><span class="badge p3">P3</span> Innovation &mdash; Semaines 14+</div>
+<div class="phase-desc">5 capacites innovantes. Minigames, dialogue, recaps. Features bonus pour une v2 ambitieuse.</div>
+</div>
+</div>
+
+<!-- ============================================================ -->
+<div class="callout info" style="margin-top:40px">
+<strong>Fichiers de reference</strong>
+<code>merlin_llm_adapter.gd</code> &mdash; Parser narratif, format [NARRATION]/[CHOIX]<br>
+<code>merlin_ai.gd</code> &mdash; DUAL Brain params, appels Ollama<br>
+<code>merlin_effect_engine.gd</code> &mdash; Effets SHIFT_ASPECT, SOUFFLE, KARMA<br>
+<code>merlin_card_system.gd</code> &mdash; Generation cartes, detection danger<br>
+<code>merlin_omniscient.gd</code> &mdash; Orchestrateur IA, zero fallback, guardrails<br>
+<code>rag_manager.gd</code> &mdash; RAG v2.0, contexte biome, journal<br>
+<code>merlin_store.gd</code> &mdash; Etat central, Triade, Souffle<br>
+<code>merlin_visual.gd</code> &mdash; Visual system, palette, animations<br>
+<code>sfx_manager.gd</code> &mdash; Audio procedural, 30+ sons<br>
+<code>docs/VISION_LLM_BI_CERVEAUX.html</code> &mdash; Document de vision parent
+</div>
+
+</main>
+</body>
+</html>

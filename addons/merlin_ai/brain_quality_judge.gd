@@ -8,16 +8,16 @@ extends RefCounted
 class_name BrainQualityJudge
 
 # ── Scoring Weights ───────────────────────────────────────────────────────────
-const W_FRENCH := 0.25       # Language check
-const W_REPETITION := 0.25   # Novelty vs recent texts
-const W_LENGTH := 0.15       # Appropriate length
-const W_CELTIC := 0.20       # Celtic/druidic vocabulary
-const W_STRUCTURE := 0.15    # Has narrative + 3 choices
+const W_FRENCH := 0.20       # Language check
+const W_REPETITION := 0.30   # Novelty vs recent texts
+const W_LENGTH := 0.10       # Appropriate length
+const W_CELTIC := 0.10       # Celtic/druidic vocabulary
+const W_STRUCTURE := 0.30    # Has narrative + 3 choices
 
 # ── Thresholds ────────────────────────────────────────────────────────────────
-const MIN_ACCEPTABLE_SCORE := 0.4    # Below this = reject
-const GOOD_SCORE := 0.6              # Above this = accept immediately
-const BEST_OF_N_DEFAULT := 2         # Generate 2 variants by default
+const MIN_ACCEPTABLE_SCORE := 0.55   # Below this = reject
+const GOOD_SCORE := 0.75             # Above this = accept immediately
+const BEST_OF_N_DEFAULT := 3         # Generate 3 variants by default
 
 # ── French Detection ──────────────────────────────────────────────────────────
 const FR_KEYWORDS := ["le", "la", "de", "un", "une", "du", "les", "des", "en", "et",
@@ -39,7 +39,7 @@ const CELTIC_KEYWORDS := [
 # ── Internal State ────────────────────────────────────────────────────────────
 var _recent_texts: Array[String] = []
 const RECENT_MEMORY := 20
-const JACCARD_THRESHOLD := 0.7
+const JACCARD_THRESHOLD := 0.5
 
 # ── Target lengths ────────────────────────────────────────────────────────────
 const IDEAL_MIN_LEN := 80

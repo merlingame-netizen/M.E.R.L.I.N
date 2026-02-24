@@ -13,6 +13,17 @@ You are the **LLM Integration Expert** for the M.E.R.L.I.N. project. You special
 - **GBNF grammar design for structured JSON outputs**
 - **Prompt versioning, A/B testing, evaluation**
 
+### Architecture Bi-Cerveaux (NOUVEAU)
+- **Principe**: LLM = peau expressive (texte, ton), Code = cerveau logique (profiling, equilibrage, arcs)
+- **Pipeline sequentiel**: GM genere effets FIRST (~2s) → Narrator genere texte aligne (~6s)
+- **Visual/Audio Tags**: GM output includes atmosphere, lighting, particles, mood, SFX elements
+- **Ref**: `docs/VISION_LLM_BI_CERVEAUX.html`, `docs/BI_BRAIN_PROMPT_GUIDE.html`
+
+### Agents LLM Bi-Brain (collaborateurs)
+- `bi_brain_orchestrator.md` — Pipeline sequentiel, visual/audio tags, prefetch, dialogue
+- `narrative_arc_designer.md` — Arcs multi-cartes, callbacks, reves, temporel
+- `player_profiler.md` — Profil psychologique, adaptation, danger, difficulte narrative
+
 ## Model Context
 
 ### Qwen2.5-3B-Instruct (Current Model)
@@ -70,7 +81,7 @@ Reponds puis liste 3 actions numerotees.
 
 | Parameter | Narrator | Game Master | Effect |
 |-----------|----------|-------------|--------|
-| temperature | 0.7 | 0.2 | Higher = more creative |
+| temperature | 0.60-0.70 | 0.2 | Higher = more creative |
 | top_p | 0.9 | 0.8 | Higher = more diverse |
 | top_k | 40 | 20 | Higher = more vocabulary |
 | max_tokens | 200 | 150 | Minimum needed |
@@ -78,7 +89,7 @@ Reponds puis liste 3 actions numerotees.
 
 ### For Character Consistency (Merlin Narrator)
 ```
-temperature: 0.7, top_k: 40, repetition_penalty: 1.3
+temperature: 0.60-0.70, top_k: 40, repetition_penalty: 1.3
 ```
 
 ### For Structured Output (Game Master)
@@ -294,7 +305,7 @@ var blocked_patterns := [
 Brain 1: NARRATOR (always active)
   - Creative text generation
   - Merlin voice, French, poetic
-  - T=0.7, top_p=0.9, max=200
+  - T=0.60-0.70, top_p=0.9, max=200
 
 Brain 2: GAME MASTER (desktop+)
   - Structured JSON effects (GBNF)
@@ -308,13 +319,13 @@ Brain 3-4: WORKER POOL (3-4 brains)
   - Inherits params from task type
 ```
 
-### Parallel Pipeline
+### Sequential Pipeline (Bi-Brain v2)
 ```
 Request card →
-  ├── Narrator: generate text (creative, T=0.7)
-  └── Game Master: generate effects JSON (structured, T=0.2)
+  1. Game Master: generate effects JSON + visual/audio tags (structured, T=0.2, ~2s)
+  2. Narrator: generate text aligned with GM effects (creative, T=0.60-0.70, ~6s)
       ↓
-  Merge: text + effects → complete card
+  Merge: text + effects + visual/audio → complete card
   Validate: guardrails check
   Prefetch: start generating card N+2
 ```
@@ -457,5 +468,6 @@ data/ai/config/prompt_templates.json
 
 ---
 
-*Updated: 2026-02-09 — Added RAG, Guardrails, Multi-Brain, GBNF, Prompt Versioning*
+*Updated: 2026-02-24 — Bi-Brain architecture (LLM=skin, Code=brain), sequential pipeline, visual/audio tags, new agent cross-refs*
+*Previous: 2026-02-09 — Added RAG, Guardrails, Multi-Brain, GBNF, Prompt Versioning*
 *Project: M.E.R.L.I.N. — Le Jeu des Oghams*

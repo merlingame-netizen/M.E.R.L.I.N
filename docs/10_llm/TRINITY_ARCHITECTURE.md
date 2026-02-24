@@ -28,8 +28,8 @@ Gameplay (TriadeGameController, BUFFER_SIZE=5)
 
 MerlinAI (autoload, Multi-Brain)
   ├→ Backend primaire: Ollama HTTP (<3s/carte)
-  │    ├→ Brain 1 (Narrateur): T=0.7, top_p=0.9, max=200
-  │    └→ Brain 2 (Game Master): T=0.2, top_p=0.8, max=150
+  │    ├→ Brain 1 (Narrateur): T=0.60-0.70, top_p=0.90, max=180, rep_penalty=1.45
+  │    └→ Brain 2 (Game Master): T=0.15, top_p=0.8, max=80, GBNF obligatoire
   ├→ Backend secondaire: MerlinLLM C++ (si pas Ollama, single brain)
   ├→ RAGManager v2.0 (journal + cross-run + world state + budget 400)
   └→ Detection auto: Ollama → MerlinLLM → erreur
@@ -338,6 +338,129 @@ Joueur fait un choix → TRIADE_RESOLVE_CHOICE
   ├→ [LLM GENERATION] → ~1-3s → hide_thinking() → display_card()
   │
   └→ prefetch_next_card() ← pre-generation carte N+2
+```
+
+---
+
+## 6d. Pipeline Sequentiel (v2 — remplace parallele)
+
+Le GM genere les effets AVANT le Narrator. Le Narrator recoit les effets comme contexte.
+
+**Avantages**:
+- Texte aligne aux effets (+40% coherence)
+- Visual/audio tags coherents avec narration
+- GM contraint par GBNF = fiable
+
+**Cout**: +1s latence (~8s total vs ~7s parallele)
+
+**Schema**:
+```
+GM (T=0.15, 2s) → effects + visual + audio JSON
+                 ↓ inject dans prompt Narrator
+Narrator (T=0.60-0.70, 6s) → scenario + A/B/C
+                 ↓
+CODE: Quality Judge → validation → display_card()
+```
+
+**Pipeline detaille**:
+```
+1. CODE: Calcul etat (profil joueur, danger_level, arc_position, biome, jour/saison)
+   └→ Registres MOS: PPR + DHR + RR + NR + SR → contexte deterministe (~0ms)
+
+2. GM: Genere effets JSON + visual_tags + audio_tags
+   └→ ~2s, 80 tok, T=0.15, top_p=0.8, GBNF obligatoire
+   └→ Input: etat calcule (60 tok user prompt)
+   └→ Output: {"effects":[...], "visual":{...}, "audio":{...}}
+
+3. Narrator: Genere texte ALIGNE aux effets
+   └→ ~6s, 180 tok, T=0.60-0.70, top_p=0.90, rep_penalty=1.45
+   └→ Input: etat + effets GM injectes (100 tok user prompt)
+   └→ Output: scenario texte + A)/B)/C) labels
+
+4. CODE: Guardrails (Quality Judge) + validation + display_card()
+   └→ AWAIT obligatoire
+   └→ FR check, repetition Jaccard < 0.7, length 10-500 chars
+```
+
+**Exceptions (Narrator-only, pas d'appel GM)**:
+- Intros de run (texte d'ambiance, pas d'effets)
+- Dialogues Merlin (carte Merlin Direct, 4e mur)
+- Sequences de reve (ton surreal, foreshadowing)
+- Recaps fin de run (resume poetique, chemins non-pris)
+
+**Fallback si GM echoue (timeout > 5s ou JSON invalide)**:
+- Effets generiques calcules par DifficultyAdapter (CODE)
+- Le Narrator continue normalement avec les effets par defaut
+
+---
+
+## 6e. Nouveaux Outputs Game Master
+
+### Visual Tags (GBNF contraint)
+
+Le GM genere des tags visuels qui pilotent les shaders et particules Godot en temps reel.
+
+```json
+{
+  "atmosphere": "brumeux|lumineux|sombre|orageux|sacre",
+  "light": "aube|crepuscule|nuit|plein_jour",
+  "particles": "lucioles|pluie|neige|brume|sparkles|none",
+  "color_tint": "froid|chaud|rouge|dore|neutre"
+}
+```
+
+| Tag | Mapping Godot | Exemple |
+|-----|---------------|---------|
+| `atmosphere: "brumeux"` | Shader fog density + ColorRect overlay | Foret brumeuse au crepuscule |
+| `light: "aube"` | DirectionalLight2D color + energy lerp | Lumiere doree progressive |
+| `particles: "lucioles"` | GPUParticles2D preset lucioles | Points lumineux flottants |
+| `particles: "pluie"` | GPUParticles2D preset pluie + splash | Pluie fine sur la clairiere |
+| `color_tint: "froid"` | CanvasModulate blue shift | Ambiance glaciale |
+| `color_tint: "dore"` | CanvasModulate warm gold | Lumiere sacree du nemeton |
+
+### Audio Tags (GBNF contraint)
+
+Le GM genere des tags audio qui declenchent les sons proceduraux du SFXManager.
+
+```json
+{
+  "mood": "calme|tension|danger|mystere|sacre|combat|tristesse",
+  "intensity": 0.0-1.0,
+  "elements": ["wind_low", "whisper", "heartbeat_slow", "chime_crystal", "thunder_distant", "rain_soft", "birds_distant", "drum_war", "harp_arpeggio", "bell_deep", "wolf_howl", "choir_distant"]
+}
+```
+
+| Mood | Elements type | Intensite |
+|------|--------------|-----------|
+| `calme` | wind_low, birds_distant, water_stream | 0.2 - 0.4 |
+| `tension` | heartbeat_slow, wind_rising, creak_wood | 0.4 - 0.7 |
+| `danger` | heartbeat_fast, thunder_distant, wolf_howl | 0.7 - 1.0 |
+| `mystere` | whisper, chime_crystal, wind_ethereal | 0.3 - 0.6 |
+| `sacre` | choir_distant, bell_deep, harp_arpeggio | 0.5 - 0.8 |
+| `combat` | drum_war, metal_clash, breath_heavy | 0.8 - 1.0 |
+| `tristesse` | rain_soft, sigh_wind, harp_minor | 0.2 - 0.5 |
+
+### Output JSON Complet GM (exemple)
+
+```json
+{
+  "effects": [
+    {"option": "A", "aspect": "Corps", "dir": "up"},
+    {"option": "B", "aspect": "Ame", "dir": "down", "cost_souffle": 1},
+    {"option": "C", "aspect": "Monde", "dir": "up"}
+  ],
+  "visual": {
+    "atmosphere": "brumeux",
+    "light": "crepuscule",
+    "particles": "lucioles",
+    "color_tint": "froid"
+  },
+  "audio": {
+    "mood": "mystere",
+    "intensity": 0.5,
+    "elements": ["whisper", "chime_crystal", "wind_low"]
+  }
+}
 ```
 
 ---

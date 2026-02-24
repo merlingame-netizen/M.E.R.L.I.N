@@ -93,6 +93,20 @@ TONE_KEYWORDS = {
 
 ---
 
+## Benchmarks GO/NO-GO (Vision Bi-Cerveaux)
+
+| Metrique | Base (sans LoRA) | Seuil GO | Methode |
+|----------|-----------------|----------|---------|
+| Celtic vocab density | ~2 mots/carte | > 5 mots/carte | Count dans lexique 100 mots celtiques |
+| Format compliance | ~70% | > 95% | % cartes parsees sans fallback statique |
+| Self-BLEU (diversite) | ~0.55 | < 0.40 | Self-BLEU sur 100 cartes consecutives |
+| French-only | ~80% | > 95% | % cartes sans mot anglais |
+| Latence delta | baseline | < +5% | p50 warm en secondes |
+| Persona consistency | ~50% | > 80% | % cartes ou Merlin est reconnaissable |
+| Dilemme ambiguity | ~30% | > 60% | 3 juges humains scorent ambiguite 0-1 |
+
+---
+
 ## Script de Benchmark
 
 ```bash
@@ -298,5 +312,6 @@ UNE des conditions suivantes:
 
 ---
 
+*Updated: 2026-02-24 — Added Bi-Brain benchmark targets (7 metriques, seuils GO/NO-GO)*
 *Created: 2026-02-11*
 *Project: M.E.R.L.I.N. — Le Jeu des Oghams*

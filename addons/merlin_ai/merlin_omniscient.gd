@@ -67,13 +67,13 @@ const LLM_TIMEOUT_MS := 300000  # 300s — CPU-only Qwen 3B, generous for cold s
 const MAX_RETRIES := 2
 
 # Guardrails
-const GUARDRAIL_MIN_TEXT_LEN := 10
-const GUARDRAIL_MAX_TEXT_LEN := 1200  # LLM with 200 max_tokens can produce up to ~1000 chars
+const GUARDRAIL_MIN_TEXT_LEN := 30
+const GUARDRAIL_MAX_TEXT_LEN := 800   # LLM with 200 max_tokens can produce up to ~1000 chars
 const GUARDRAIL_LANG_KEYWORDS := ["le", "la", "de", "un", "une", "du", "les", "des", "en", "et"]
 const GUARDRAIL_LANG_THRESHOLD := 2  # min French keywords to pass
 var _recent_card_texts: Array[String] = []
-const RECENT_CARDS_MEMORY := 10
-const REPETITION_SIMILARITY_THRESHOLD := 0.7
+const RECENT_CARDS_MEMORY := 15
+const REPETITION_SIMILARITY_THRESHOLD := 0.5
 
 # Persona guardrails — forbidden words loaded from merlin_persona.json via MerlinAI
 var _persona_forbidden_words: PackedStringArray = []

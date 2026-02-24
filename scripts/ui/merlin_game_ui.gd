@@ -1339,8 +1339,9 @@ func display_card(card: Dictionary) -> void:
 	if _reward_badge and is_instance_valid(_reward_badge):
 		_reward_badge.hide_badge()
 
-	# Safety: ensure thinking overlay is hidden before showing card
+	# Safety: ensure ALL thinking animations are hidden before showing card (P0.1.2)
 	hide_merlin_thinking_overlay()
+	hide_thinking()
 
 	# Reset button states completely for new card (undo all tween effects)
 	for btn in option_buttons:

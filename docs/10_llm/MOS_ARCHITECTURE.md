@@ -743,6 +743,51 @@ func _apply_weights(cards: Array, context: Dictionary) -> Array:
 
 ---
 
+## 3b. Pipeline Sequentiel GM→Narrator (v2)
+
+### Pipeline Sequentiel GM→Narrator (v2)
+
+**Remplace le pipeline parallele precedent**. Gain: +40% coherence texte-effets, cout: +1s latence.
+
+```
+Requete carte
+  │
+  ├─[0] Prefetch Check (buffer 5 cartes, ~0ms si hit)
+  │
+  ├─[1] CODE: Calcul etat deterministe
+  │     profil joueur, danger_level, arc_position, biome, jour/saison
+  │     Registres: PPR + DHR + RR + NR + SR → contexte
+  │
+  ├─[2] GM: Genere effets JSON + visual_tags + audio_tags
+  │     ~2s, 80 tok, T=0.15, GBNF obligatoire
+  │     Input: etat calcule (60 tok prompt user)
+  │     Output: {"effects":[...], "visual":{...}, "audio":{...}}
+  │
+  ├─[3] Narrator: Genere texte ALIGNE aux effets
+  │     ~6s, 150 tok, T=0.60-0.70
+  │     Input: etat + effets GM injectes (100 tok prompt user)
+  │     Output: scenario + A)/B)/C) labels
+  │
+  └─[4] CODE: Guardrails (Quality Judge) + validation + display_card()
+        AWAIT obligatoire sur le resultat Narrator
+        Verification: FR check, repetition Jaccard, length bounds
+```
+
+**Exceptions (Narrator-only, pas de GM):**
+- Intros de run (pas d'effets mecaniques)
+- Dialogues Merlin (carte Merlin Direct)
+- Sequences de reve (ton surreal, pas d'effets)
+- Recaps fin de run (resume poetique)
+
+**Fallback si GM echoue:**
+- Effets par defaut calcules par DifficultyAdapter (CODE)
+- Option A: +1 aspect le plus bas
+- Option B: equilibre (cout souffle)
+- Option C: -1 aspect le plus haut
+- Le Narrator continue normalement avec les effets par defaut
+
+---
+
 ## 4. Adaptive Processors
 
 ### 4.1 Difficulty Adapter
@@ -845,6 +890,213 @@ func get_features(tier: Tier) -> Dictionary:
             "lore_frequency": 0.12,
         },
     }[tier]
+```
+
+### 4.3 Profilage Psychologique Joueur
+
+**Calcul DETERMINISTE** (jamais LLM):
+- 4 axes: risque (% choix prudents), curiosite (% exploratoires), empathie (% altruistes), impulsivite
+- Fenetre glissante: 20 derniers choix
+- 5 archetypes: prudent, audacieux, mystique, equilibre, chaotique
+- Injection: 1 ligne dans prompt system Narrator ("Le voyageur est PRUDENT — tons subtils")
+- Agent: `player_profiler.md`
+
+```gdscript
+class_name PlayerProfiler
+extends RefCounted
+
+const WINDOW_SIZE := 20
+
+enum Archetype { PRUDENT, AUDACIEUX, MYSTIQUE, EQUILIBRE, CHAOTIQUE }
+
+var risk_score := 0.5      # 0=prudent, 1=risque
+var curiosity_score := 0.5 # 0=pragmatique, 1=explorateur
+var empathy_score := 0.5   # 0=egoiste, 1=altruiste
+var impulsivity_score := 0.5 # 0=reflechi, 1=impulsif
+
+var recent_choices: Array[Dictionary] = []
+
+func record_choice(choice: Dictionary) -> void:
+    recent_choices.append(choice)
+    if recent_choices.size() > WINDOW_SIZE:
+        recent_choices.pop_front()
+    _recalculate()
+
+func _recalculate() -> void:
+    if recent_choices.is_empty():
+        return
+    var n := float(recent_choices.size())
+    risk_score = recent_choices.filter(func(c): return c.get("risky", false)).size() / n
+    curiosity_score = recent_choices.filter(func(c): return c.get("exploratory", false)).size() / n
+    empathy_score = recent_choices.filter(func(c): return c.get("altruistic", false)).size() / n
+    impulsivity_score = recent_choices.filter(func(c): return c.get("decision_ms", 5000) < 2000).size() / n
+
+func get_archetype() -> Archetype:
+    if risk_score > 0.7:
+        return Archetype.AUDACIEUX
+    if curiosity_score > 0.7:
+        return Archetype.MYSTIQUE
+    if risk_score < 0.3 and impulsivity_score < 0.3:
+        return Archetype.PRUDENT
+    if absf(risk_score - 0.5) < 0.15 and absf(curiosity_score - 0.5) < 0.15:
+        return Archetype.EQUILIBRE
+    return Archetype.CHAOTIQUE
+
+func get_prompt_injection() -> String:
+    match get_archetype():
+        Archetype.PRUDENT:
+            return "Le voyageur est PRUDENT — tons subtils, indices caches, recompense l'observation."
+        Archetype.AUDACIEUX:
+            return "Le voyageur est AUDACIEUX — defis directs, enjeux eleves, recompense le courage."
+        Archetype.MYSTIQUE:
+            return "Le voyageur est MYSTIQUE — mysteres, savoir cache, recompense la curiosite."
+        Archetype.EQUILIBRE:
+            return "Le voyageur est EQUILIBRE — choix nuances, dilemmes moraux, pas de reponse facile."
+        Archetype.CHAOTIQUE:
+            return "Le voyageur est IMPREVISIBLE — surprises, retournements, destabiliser ses attentes."
+    return ""
+```
+
+### 4.4 Machine d'Etat Narratif (Arcs Multi-Cartes)
+
+**Etat gere en CODE** (pas LLM):
+- SETUP (1-2 cartes) → RISING (2-3) → CLIMAX (1) → RESOLUTION (1)
+- Max 2 arcs simultanes (1 court + 1 long)
+- Callbacks via RAG journal (pas memoire LLM)
+- Injection: position d'arc dans prompt ("C'est le CLIMAX de l'arc")
+- Agent: `narrative_arc_designer.md`
+
+```gdscript
+class_name NarrativeArcMachine
+extends RefCounted
+
+enum ArcPhase { SETUP, RISING, CLIMAX, RESOLUTION, COMPLETE }
+
+const MAX_CONCURRENT_ARCS := 2
+
+var active_arcs: Array[Dictionary] = []
+# Structure: {id: String, phase: ArcPhase, cards_in_phase: int, total_cards: int, theme: String}
+
+func can_start_arc() -> bool:
+    return active_arcs.size() < MAX_CONCURRENT_ARCS
+
+func start_arc(arc_id: String, theme: String) -> void:
+    if not can_start_arc():
+        return
+    active_arcs.append({
+        "id": arc_id,
+        "phase": ArcPhase.SETUP,
+        "cards_in_phase": 0,
+        "total_cards": 0,
+        "theme": theme,
+    })
+
+func advance(arc_id: String) -> void:
+    for arc in active_arcs:
+        if arc.id == arc_id:
+            arc.cards_in_phase += 1
+            arc.total_cards += 1
+            _check_phase_transition(arc)
+            return
+
+func _check_phase_transition(arc: Dictionary) -> void:
+    match arc.phase:
+        ArcPhase.SETUP:
+            if arc.cards_in_phase >= 2:
+                arc.phase = ArcPhase.RISING
+                arc.cards_in_phase = 0
+        ArcPhase.RISING:
+            if arc.cards_in_phase >= 3:
+                arc.phase = ArcPhase.CLIMAX
+                arc.cards_in_phase = 0
+        ArcPhase.CLIMAX:
+            if arc.cards_in_phase >= 1:
+                arc.phase = ArcPhase.RESOLUTION
+                arc.cards_in_phase = 0
+        ArcPhase.RESOLUTION:
+            if arc.cards_in_phase >= 1:
+                arc.phase = ArcPhase.COMPLETE
+
+func get_prompt_injection(arc_id: String) -> String:
+    for arc in active_arcs:
+        if arc.id == arc_id:
+            match arc.phase:
+                ArcPhase.SETUP:
+                    return "Debut de l'arc '%s'. Planter le decor et les enjeux." % arc.theme
+                ArcPhase.RISING:
+                    return "L'arc '%s' monte en tension. Complications et obstacles." % arc.theme
+                ArcPhase.CLIMAX:
+                    return "C'est le CLIMAX de l'arc '%s'. Tension maximale, consequences irreversibles." % arc.theme
+                ArcPhase.RESOLUTION:
+                    return "Resolution de l'arc '%s'. Consequences des choix, retour au calme." % arc.theme
+    return ""
+
+func cleanup_completed() -> void:
+    active_arcs = active_arcs.filter(func(a): return a.phase != ArcPhase.COMPLETE)
+```
+
+### 4.5 Detection de Danger (Pre-LLM)
+
+**Regles deterministes** executees AVANT appel LLM:
+- Level 1: 2+ aspects a BAS → inject "carte de sauvetage" dans prompt
+- Level 2: Souffle = 0 → inject "Merlin propose un pacte (Promise)"
+- Level 3: 5+ cartes sans changement → inject "evenement perturbateur"
+- Agent: `player_profiler.md`
+
+```gdscript
+class_name DangerDetector
+extends RefCounted
+
+enum DangerLevel { NONE, LOW, MEDIUM, HIGH, CRITICAL }
+
+var cards_without_change := 0
+
+func assess(game_state: Dictionary) -> Dictionary:
+    var aspects := game_state.get("aspects", {})
+    var souffle := game_state.get("souffle", 3)
+
+    var bas_count := 0
+    var haut_count := 0
+    for aspect_name in aspects:
+        var state: String = aspects[aspect_name]
+        if state in ["Epuise", "Perdue", "Exile"]:
+            bas_count += 1
+        elif state in ["Surmene", "Possedee", "Tyran"]:
+            haut_count += 1
+
+    var extreme_count := bas_count + haut_count
+    var level := DangerLevel.NONE
+    var injections: Array[String] = []
+
+    # Level 1: 2+ aspects extremes
+    if extreme_count >= 2:
+        level = DangerLevel.HIGH
+        injections.append("DANGER: Le voyageur a %d aspects extremes. Proposer au moins 1 option stabilisante." % extreme_count)
+
+    # Level 2: Souffle epuise
+    if souffle <= 0:
+        level = DangerLevel.CRITICAL if level == DangerLevel.HIGH else DangerLevel.MEDIUM
+        injections.append("Le souffle est epuise. Merlin propose un pacte (Promise) pour en regagner.")
+
+    # Level 3: Stagnation
+    if cards_without_change >= 5:
+        if level == DangerLevel.NONE:
+            level = DangerLevel.LOW
+        injections.append("Stagnation detectee (%d cartes). Injecter un evenement perturbateur." % cards_without_change)
+
+    return {
+        "level": level,
+        "extreme_count": extreme_count,
+        "souffle": souffle,
+        "stagnation": cards_without_change,
+        "prompt_injections": injections,
+    }
+
+func record_card_outcome(aspects_changed: bool) -> void:
+    if aspects_changed:
+        cards_without_change = 0
+    else:
+        cards_without_change += 1
 ```
 
 ---

@@ -123,18 +123,29 @@ Task tool:
 |------|------|-----------|
 | **CI/CD Release** | `ci_cd_release.md` | **GitHub Actions, multi-platform export, Steam, mobile stores** |
 
-### LoRA Fine-Tuning Agents (4) — NEW
+### LLM Bi-Brain Agents (3) — NEW
+
+| Role | File | Specialty |
+|------|------|-----------|
+| **Bi-Brain Orchestrator** | `bi_brain_orchestrator.md` | **Pipeline sequentiel GM→Narrator, visual/audio tags, prefetch, dialogue Merlin** |
+| **Narrative Arc Designer** | `narrative_arc_designer.md` | **Arcs multi-cartes, state machine SETUP→CLIMAX→RESOLUTION, callbacks, reves** |
+| **Player Profiler** | `player_profiler.md` | **Profil psychologique, adaptation ton, detection danger, difficulte narrative** |
+
+> Ces 3 agents implementent l'architecture "LLM = peau expressive, Code = cerveau logique".
+> Le **Bi-Brain Orchestrator** gere le pipeline technique, l'**Arc Designer** la coherence narrative,
+> le **Player Profiler** l'adaptation au joueur. Ref: `docs/VISION_LLM_BI_CERVEAUX.html`
+
+### LoRA Fine-Tuning Agents (4)
 
 | Role | File | Specialty |
 |------|------|-----------|
 | **LoRA Gameplay Translator** | `lora_gameplay_translator.md` | **Point d'entree: traduit demande gameplay → plan d'entrainement LoRA** |
-| **LoRA Data Curator** | `lora_data_curator.md` | **Extraction, curation, augmentation datasets d'entrainement** |
-| **LoRA Training Architect** | `lora_training_architect.md` | **Hyperparametres, architecture adapter, pilotage training** |
-| **LoRA Evaluator** | `lora_evaluator.md` | **Benchmark, metriques, GO/NO-GO, A/B testing** |
+| **LoRA Data Curator** | `lora_data_curator.md` | **Extraction, curation, augmentation datasets (5 competences, ~1000 exemples)** |
+| **LoRA Training Architect** | `lora_training_architect.md` | **QLoRA r=16, Qwen 2.5-1.5B, architecture adapter, pilotage training** |
+| **LoRA Evaluator** | `lora_evaluator.md` | **Benchmark Celtic/format/diversity, GO/NO-GO, A/B testing in-game** |
 
-> Ces 4 agents forment un pipeline complet de fine-tuning. Le **Gameplay Translator**
-> est le point d'entree auto-active quand l'utilisateur demande une adaptation du LLM.
-> Il orchestre les 3 autres agents dans l'ordre: Data → Training → Evaluation.
+> Pipeline de fine-tuning. Le **Gameplay Translator** est le point d'entree auto-active
+> quand l'utilisateur demande une adaptation du LLM. Ref: `docs/LORA_TRAINING_SPEC.html`
 
 ### Shared Resources
 
@@ -147,7 +158,7 @@ Task tool:
 ## Summary Count
 
 ```
-Total: 34 agents + 1 knowledge base
+Total: 37 agents + 1 knowledge base
 
 By category:
   Direction:                  1 (game_director)
@@ -161,6 +172,7 @@ By category:
   Security & Quality:         3 (accessibility_specialist, security_hardening, prompt_curator)
   Progression & Economy:      1 (meta_progression_designer)
   CI/CD & Release:            1 (ci_cd_release)
+  LLM Bi-Brain:               3 (bi_brain_orchestrator, narrative_arc_designer, player_profiler)
   LoRA Fine-Tuning:           4 (lora_gameplay_translator, lora_data_curator, lora_training_architect, lora_evaluator)
   Knowledge Base:             1 (gdscript_knowledge_base)
 ```

@@ -79,8 +79,11 @@ func _ready() -> void:
 		return
 
 	var game_instance: Node = game_scene.instantiate()
+	# Set headless_mode BEFORE add_child — _ready() → start_run() triggers during add_child
+	game_instance.headless_mode = true
+	game_instance.minigame_chance = 0.0
 	add_child(game_instance)
-	_log("MerlinGame instantiated")
+	_log("MerlinGame instantiated (headless_mode set pre-ready)")
 
 	await get_tree().process_frame
 	await get_tree().process_frame
@@ -97,9 +100,7 @@ func _ready() -> void:
 
 	_log("controller=OK ui=OK store=%s" % ("OK" if _store else "MISSING"))
 
-	# Enable headless mode (skips minigame UI, uses dice fallback)
-	_controller.headless_mode = true
-	_controller.minigame_chance = 0.0
+	# headless_mode already set pre-ready (before add_child)
 	_log("headless_mode=true (minigames skipped, dice fallback used)")
 
 	# Connect signals

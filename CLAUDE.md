@@ -272,66 +272,82 @@ rag_manager.gd           <- RAG v2.0, biome cache, token budget 400, journal
 
 ---
 
-## LLM Integration Rules (Qwen 2.5-1.5B + Ollama + DUAL Brain)
+## LLM Bi-Cerveaux Architecture (Qwen 2.5-1.5B + Ollama)
+
+### Principe fondamental
+- **LLM = peau expressive** (texte, ton, ambiance, poetique)
+- **Code = cerveau logique** (profiling joueur, equilibrage Triade, arcs, danger)
+- Le LLM n'a pas besoin d'etre intelligent — il doit etre EXPRESSIF
+- Tout raisonnement (calcul, state, decisions) est fait en GDScript
 
 ### Model & Backend
 - **Model**: Qwen 2.5-1.5B (~1.0 GB via Ollama, 17.8 tok/s)
-- **Backend primaire**: Ollama HTTP API (`/api/generate`, raw=true, ~8s/carte avec 150 tokens)
-- **Backend secondaire**: MerlinLLM C++ GDExtension (Qwen 3B GGUF, fallback si pas Ollama)
-- **Ollama**: `ollama pull qwen2.5:1.5b`
-- **Chat template**: ChatML (`<|im_start|>/<|im_end|>`)
-- **Context window**: 4096 tokens (Ollama), 2048 (MerlinLLM)
-- **Prompt format**: Plain text (pas de JSON) — scene + A)/B)/C) choices
+- **Backend primaire**: Ollama HTTP API (`/api/generate`, raw=true)
+- **Backend secondaire**: MerlinLLM C++ GDExtension (fallback)
+- **Chat template**: ChatML | **Context**: 4096 tokens | **Ollama**: `ollama pull qwen2.5:1.5b`
+- **LoRA**: QLoRA r=16 adapter "narrateur celtique" (voir `docs/LORA_TRAINING_SPEC.html`)
 
-### DUAL Brain (default, CPU >= 6 threads)
-| Brain | Role | Params |
-|-------|------|--------|
-| Narrator (always) | Texte creatif, dialogues | T=0.75, top_p=0.92, max=150 |
-| Game Master (dual+) | Effets JSON, equilibrage, prefetch | T=0.15, top_p=0.8, max=80 |
+### Pipeline Sequentiel (GM-first)
+```
+1. CODE decide QUOI (profil joueur, danger, arc, biome, jour/saison)
+2. GM genere effets JSON + visual_tags + audio_tags (~2s, 80 tok, T=0.15)
+3. Narrator genere texte ALIGNE aux effets (~6s, 150 tok, T=0.60-0.70)
+4. CODE valide (guardrails + Quality Judge) + display
+```
+
+### Bi-Cerveaux (default, CPU >= 6 threads)
+| Brain | Role | Params | Outputs |
+|-------|------|--------|---------|
+| Narrator | Texte creatif, atmosphere, choix | T=0.60-0.70, top_p=0.90, max=180, rep=1.45 | Scenario + A/B/C |
+| Game Master | Effets JSON, equilibrage, tags | T=0.15, top_p=0.8, max=80, GBNF | effects + visual + audio |
+
+### 27 Capacites LLM (3 categories)
+**Narrator (7)**: Narration immersive, choix significatifs (GBNF), adaptation au joueur, arcs multi-cartes, personnalite Merlin, atmosphere biome, conscience temporelle
+**Game Master (4)**: Equilibrage intelligent, detection danger, economie Souffle, minigames
+**Unique/Differenciateurs (9)**: Profilage psychologique, emergent storytelling, memoire cross-run, Bestiole personnalite, ambiguite morale, Merlin 4e mur, difficulte narrative, generation lore, dialogue interactif
+**Innovants (7)**: Visual tags proceduraux, audio tags adaptatifs, chemins non-pris, titres joueur, recaps fin de run, reves inter-runs, tutoriel narratif
+**Ref**: `docs/VISION_LLM_BI_CERVEAUX.html`, `docs/LLM_CAPABILITIES_MATRIX.html`
 
 ### Zero Fallback Policy
-- **Aucune carte statique** n'est jamais servie au joueur
-- Toutes les cartes proviennent du LLM (Ollama ou MerlinLLM)
-- Echec LLM: retry backoff + "Merlin medite..." overlay + retour hub en dernier recours
-- Labels generiques: `["Avancer prudemment", "Observer en silence", "Agir sans hesiter"]` (si LLM omet les labels)
-- Parsers permissifs: gere A), **A)**, A:, Action A:, - **B**: etc.
+- **Aucune carte statique** — toutes proviennent du LLM
+- Echec: retry backoff + "Merlin medite..." overlay + hub en dernier recours
+- GBNF grammar force le format (remplace parsing regex fragile)
 
 ### Performance KPIs
-| Metrique | Seuil | Actuel (1.5B, 150tok) | Benchmark |
-|----------|-------|-----------------------|-----------|
-| p50 latence (warm) | < 10s | **~7s** | `--mode perf` |
-| p90 latence (warm) | < 15s | **~11s** | `--mode perf` |
-| Fallback rate | 0% | 0% | Zero Fallback test |
-| Text variety (Jaccard) | < 0.7 | OK | Zero Fallback test |
-| Throughput | > 10 tok/s | **17.8 tok/s** | `--mode perf` |
-| French output | > 80% | **80%** | Quality test |
+| Metrique | Seuil | Actuel | Cible post-LoRA |
+|----------|-------|--------|-----------------|
+| p50 latence (warm) | < 10s | ~7s | ~8s (sequentiel) |
+| Fallback statique | 0% | ~30% | 0% (GBNF) |
+| Celtic vocab density | > 5 mots/carte | ~2 | > 5 (LoRA) |
+| French output | > 95% | 80% | > 95% (LoRA) |
+| Format compliance | > 95% | ~70% | > 95% (GBNF) |
+| Throughput | > 10 tok/s | 17.8 | 17.8 |
 
 ### Benchmarks
 - **CLI**: `python tools/test_merlin_chat.py --mode perf --perf-runs 20`
-- **In-engine**: Scene `TestTriadeLLMBenchmark.gd` (Perf + Zero Fallback buttons)
-- **Resultats**: `tmp/perf_results.json`
+- **In-engine**: Scene `TestTriadeLLMBenchmark.gd`
+- **LoRA**: `python tools/lora/benchmark_lora.py`
 
 ### Prompt Engineering
-- Qwen 2.5 uses ChatML format — supports structured system prompts
-- Supports French natively
-- RAG v2.0: token budget 400, biome cache, priority-based context
-- Scene context: version-tracked cache (deduplique refresh 4x → 1x)
-- Anti-hallucination guardrails: FR check, repetition detection (Jaccard), length bounds
-- Buffer: 5 cartes pre-generees, prefetch Brain 2 si dual
+- Prompts COURTS (<200 tokens system) — petit modele perd le fil au-dela
+- EXEMPLES > INSTRUCTIONS — 2-3 few-shot valent mieux que 10 regles
+- GBNF grammar pour Narrator (format) ET GM (JSON)
+- RAG v2.0: 400 tokens, 12 sections prioritisees (CRITICAL→OPTIONAL)
+- Ref complete: `docs/BI_BRAIN_PROMPT_GUIDE.html`
 
-### Current Parameters (in merlin_ai.gd)
-```gdscript
-# Narrator — creative text generation
-var narrator_params := {
-    "temperature": 0.75, "top_p": 0.92, "max_tokens": 150,
-    "top_k": 40, "repetition_penalty": 1.35
-}
-# Game Master — structured JSON effects
-var gamemaster_params := {
-    "temperature": 0.15, "top_p": 0.8, "max_tokens": 80,
-    "top_k": 15, "repetition_penalty": 1.0
-}
-```
+### LoRA Strategy (CPU-friendly)
+- **Config**: QLoRA r=16, alpha=32, 3-5 epochs, Qwen 2.5-1.5B
+- **5 competences**: ton celtique (200ex), format (500ex), arcs (250ex), dilemmes (100ex), Merlin (150ex)
+- **NE PAS LoRA**: adaptation joueur, danger, temporel, profiling, cross-run (prompt/code suffit)
+- **Pipeline**: `tools/lora/` (export → augment → train → convert → benchmark)
+- **Ref**: `docs/LORA_TRAINING_SPEC.html`
+
+### Agents LLM (7 + 3 nouveaux)
+- `llm_expert.md` — Prompt engineering, RAG, guardrails, Multi-Brain, GBNF
+- `bi_brain_orchestrator.md` — **Pipeline sequentiel, visual/audio tags, prefetch, dialogue Merlin**
+- `narrative_arc_designer.md` — **Arcs multi-cartes, state machine, callbacks, reves**
+- `player_profiler.md` — **Profil psychologique, adaptation, danger, difficulte narrative**
+- `lora_gameplay_translator.md` → `lora_data_curator.md` → `lora_training_architect.md` → `lora_evaluator.md`
 
 ---
 
@@ -389,7 +405,7 @@ Continuer:
 
 ---
 
-## 33 Agents + 1 Knowledge Base
+## 37 Agents + 1 Knowledge Base
 
 Voir `.claude/agents/AGENTS.md` pour la liste complète et les instructions d'invocation.
 

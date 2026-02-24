@@ -1,0 +1,535 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>M.E.R.L.I.N. - LoRA Training Specification</title>
+<style>
+:root{--bg:#1a1a2e;--bg2:#16213e;--bg3:#0f3460;--text:#e0e0e0;--text2:#a0a0a0;--accent:#00d4ff;--accent2:#00ff88;--warn:#ffaa00;--danger:#ff4444;--ok:#00ff88;--moyen:#ffaa00;--faible:#ff4444;--partiel:#ff88ff;--sidebar-w:280px;--font:"Segoe UI",system-ui,-apple-system,sans-serif;--mono:"Cascadia Code","Fira Code","Consolas",monospace}
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:var(--font);background:var(--bg);color:var(--text);line-height:1.7;display:flex;min-height:100vh}
+.sidebar{position:fixed;top:0;left:0;width:var(--sidebar-w);height:100vh;background:var(--bg2);border-right:1px solid rgba(0,212,255,.15);overflow-y:auto;padding:24px 16px;z-index:100}
+.sidebar h2{color:var(--accent);font-size:14px;text-transform:uppercase;letter-spacing:2px;margin-bottom:20px;padding-bottom:10px;border-bottom:1px solid rgba(0,212,255,.2)}
+.sidebar a{display:block;color:var(--text2);text-decoration:none;padding:6px 10px;font-size:13px;border-radius:4px;transition:all .2s}
+.sidebar a:hover{color:var(--accent);background:rgba(0,212,255,.08)}
+.sidebar a.sub{padding-left:24px;font-size:12px}
+.main{margin-left:var(--sidebar-w);padding:40px 60px;max-width:1000px;flex:1}
+h1{font-size:2.2em;color:var(--accent);margin-bottom:8px;letter-spacing:-0.5px}
+.subtitle{color:var(--text2);font-size:1.1em;margin-bottom:32px}
+h2{font-size:1.6em;color:var(--accent);margin:40px 0 16px;padding-bottom:8px;border-bottom:2px solid rgba(0,212,255,.2)}
+h3{font-size:1.2em;color:var(--accent2);margin:24px 0 12px}
+h4{font-size:1em;color:var(--warn);margin:16px 0 8px}
+p{margin-bottom:14px}
+ul,ol{margin:0 0 16px 24px}
+li{margin-bottom:6px}
+table{width:100%;border-collapse:collapse;margin:16px 0 24px;background:var(--bg2);border-radius:8px;overflow:hidden}
+th{background:var(--bg3);color:var(--accent);padding:12px 16px;text-align:left;font-size:13px;text-transform:uppercase;letter-spacing:1px}
+td{padding:10px 16px;border-top:1px solid rgba(255,255,255,.05);font-size:14px;vertical-align:top}
+tr:hover{background:rgba(0,212,255,.04)}
+details{background:var(--bg2);border:1px solid rgba(0,212,255,.1);border-radius:8px;margin:16px 0;overflow:hidden}
+summary{padding:14px 20px;cursor:pointer;font-weight:600;color:var(--accent);font-size:15px;user-select:none}
+summary:hover{background:rgba(0,212,255,.05)}
+details>div{padding:0 20px 20px}
+.badge{display:inline-block;padding:2px 10px;border-radius:12px;font-size:11px;font-weight:700;text-transform:uppercase}
+.badge.ok{background:rgba(0,255,136,.15);color:var(--ok)}
+.badge.moyen{background:rgba(255,170,0,.15);color:var(--moyen)}
+.badge.faible{background:rgba(255,68,68,.15);color:var(--faible)}
+.badge.partiel{background:rgba(255,136,255,.15);color:var(--partiel)}
+.badge.p0{background:rgba(255,68,68,.2);color:#ff6666}
+.badge.p1{background:rgba(255,170,0,.2);color:#ffaa00}
+.badge.p2{background:rgba(0,212,255,.2);color:#00d4ff}
+.badge.lora{background:rgba(138,43,226,.2);color:#bb86fc;border:1px solid rgba(138,43,226,.3)}
+.badge.code{background:rgba(0,212,255,.15);color:var(--accent);border:1px solid rgba(0,212,255,.3)}
+.badge.prompt{background:rgba(255,170,0,.15);color:var(--warn);border:1px solid rgba(255,170,0,.3)}
+.callout{padding:16px 20px;border-radius:8px;margin:16px 0;border-left:4px solid}
+.callout.info{background:rgba(0,212,255,.08);border-color:var(--accent)}
+.callout.warn{background:rgba(255,170,0,.08);border-color:var(--warn)}
+.callout.danger{background:rgba(255,68,68,.08);border-color:var(--danger)}
+.callout.success{background:rgba(0,255,136,.08);border-color:var(--accent2)}
+.callout strong{display:block;margin-bottom:6px}
+pre{background:var(--bg3);border:1px solid rgba(0,212,255,.15);border-radius:8px;padding:16px 20px;overflow-x:auto;margin:12px 0 20px;font-family:var(--mono);font-size:13px;line-height:1.6;color:var(--text)}
+code{font-family:var(--mono);background:rgba(0,212,255,.1);padding:2px 6px;border-radius:3px;font-size:13px}
+pre code{background:none;padding:0}
+.pipeline-step{display:flex;align-items:flex-start;gap:16px;margin:16px 0;padding:16px;background:var(--bg2);border-radius:8px;border-left:4px solid var(--accent)}
+.pipeline-step .step-num{min-width:36px;height:36px;display:flex;align-items:center;justify-content:center;background:var(--bg3);border-radius:50%;color:var(--accent);font-weight:700;font-size:16px;border:2px solid var(--accent)}
+.pipeline-step .step-content{flex:1}
+.pipeline-step .step-content h4{margin-top:0;color:var(--accent)}
+.pipeline-step .step-content code{font-size:12px}
+.phase-timeline{position:relative;padding-left:40px;margin:24px 0}
+.phase-timeline::before{content:"";position:absolute;left:14px;top:0;bottom:0;width:2px;background:linear-gradient(to bottom,var(--danger),var(--warn),var(--accent),var(--accent2))}
+.phase-item{position:relative;margin-bottom:24px}
+.phase-item::before{content:"";position:absolute;left:-33px;top:4px;width:14px;height:14px;border-radius:50%;border:2px solid}
+.phase-item.p0::before{border-color:var(--danger);background:rgba(255,68,68,.3)}
+.phase-item.p1::before{border-color:var(--warn);background:rgba(255,170,0,.3)}
+.phase-item.p2::before{border-color:var(--accent);background:rgba(0,212,255,.3)}
+.phase-item.p3::before{border-color:var(--accent2);background:rgba(0,255,136,.3)}
+.agent-flow{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin:16px 0}
+.agent-flow .agent{padding:8px 16px;border-radius:8px;font-size:13px;font-weight:600;text-align:center}
+.agent-flow .arrow{color:var(--text2);font-size:20px}
+.agent-flow .agent.translator{background:rgba(0,212,255,.15);color:var(--accent);border:1px solid rgba(0,212,255,.3)}
+.agent-flow .agent.curator{background:rgba(0,255,136,.15);color:var(--accent2);border:1px solid rgba(0,255,136,.3)}
+.agent-flow .agent.architect{background:rgba(255,170,0,.15);color:var(--warn);border:1px solid rgba(255,170,0,.3)}
+.agent-flow .agent.evaluator{background:rgba(138,43,226,.15);color:#bb86fc;border:1px solid rgba(138,43,226,.3)}
+@media(max-width:900px){.sidebar{display:none}.main{margin-left:0;padding:20px}}
+</style>
+</head>
+<body>
+<nav class="sidebar">
+<h2>LoRA Training</h2>
+<a href="#objectif">Objectif</a>
+<a href="#competences">Competences Ciblees</a>
+<a href="#doit" class="sub">Ce que LoRA DOIT</a>
+<a href="#doit-pas" class="sub">Ce que LoRA NE DOIT PAS</a>
+<a href="#architecture">Architecture Adapter</a>
+<a href="#qlora" class="sub">QLoRA Config</a>
+<a href="#hyperparams" class="sub">Hyperparametres</a>
+<a href="#pipeline">Pipeline Complet</a>
+<a href="#step1" class="sub">1. Preparer dataset</a>
+<a href="#step2" class="sub">2. Valider</a>
+<a href="#step3" class="sub">3. Entrainer</a>
+<a href="#step4" class="sub">4. Convertir GGUF</a>
+<a href="#step5" class="sub">5. Modelfile Ollama</a>
+<a href="#step6" class="sub">6. Benchmark</a>
+<a href="#step7" class="sub">7. Deployer</a>
+<a href="#benchmarks">Benchmarks GO/NO-GO</a>
+<a href="#timeline">Timeline</a>
+<a href="#agents">Agents LoRA</a>
+</nav>
+
+<main class="main">
+<h1>M.E.R.L.I.N. &mdash; LoRA Training Specification</h1>
+<p class="subtitle">Fine-tuning Qwen 2.5-1.5B pour la narration celtique &mdash; QLoRA 4-bit<br>
+Derniere mise a jour : 24 fevrier 2026</p>
+
+<div class="callout info">
+<strong>Objectif de ce document</strong>
+Specification detaillee du fine-tuning LoRA pour ameliorer 5 competences specifiques du modele Qwen 2.5-1.5B dans le contexte de M.E.R.L.I.N. Ce document couvre l'architecture adapter, le pipeline complet avec scripts, et les criteres GO/NO-GO.
+</div>
+
+<!-- ============================================================ -->
+<h2 id="objectif">Objectif</h2>
+
+<p>Ameliorer <strong>5 competences specifiques</strong> du Qwen 2.5-1.5B pour M.E.R.L.I.N., sans degrader les capacites generales du modele. Le LoRA cible exclusivement les taches ou le prompt engineering seul ne suffit pas.</p>
+
+<div class="callout warn">
+<strong>Principe fondamental</strong>
+Le LoRA ne remplace PAS le prompt engineering. Il le <strong>complete</strong> pour les cas ou le modele base echoue malgre des prompts optimaux. Voir la section &laquo;Ce que LoRA NE DOIT PAS faire&raquo;.
+</div>
+
+<!-- ============================================================ -->
+<h2 id="competences">Competences Ciblees</h2>
+
+<details open id="doit">
+<summary>Ce que LoRA DOIT ameliorer (5 competences)</summary>
+<div>
+<table>
+<tr><th>#</th><th>Competence</th><th>Nb Examples</th><th>Justification</th><th>Dataset Source</th></tr>
+<tr>
+<td><span class="badge lora">L1</span></td>
+<td><strong>Ton celtique Merlin</strong><br>Vocabulaire druidique, poetique, referents culturels bretons</td>
+<td>200</td>
+<td>Le modele base produit du francais generique. Le vocabulaire specifique (dolmen, nemeton, ogham, aubepine) n'apparait que si explicitement injecte dans le prompt.</td>
+<td>Gold examples manuels + augmentation GPT-4</td>
+</tr>
+<tr>
+<td><span class="badge lora">L2</span></td>
+<td><strong>Format [NARRATION]/[CHOIX]</strong><br>Structure stricte avec delimiteurs</td>
+<td>150</td>
+<td>Le modele base oublie les delimiteurs ~15% du temps. Un fine-tuning sur la structure reduit le taux d'erreur de parsing a &lt;2%.</td>
+<td>Cartes generees filtrées (100% conformes) + synthese</td>
+</tr>
+<tr>
+<td><span class="badge lora">L3</span></td>
+<td><strong>Choix significatifs (verbes precis)</strong><br>Actions concretes, pas de choix generiques</td>
+<td>180</td>
+<td>"Avancer" / "Rester" / "Partir" reviennent trop souvent. Les choix doivent etre des verbes specifiques lies au contexte (fouiller, invoquer, ecouter, trancher).</td>
+<td>Gold examples + corrections manuelles des sorties faibles</td>
+</tr>
+<tr>
+<td><span class="badge lora">L4</span></td>
+<td><strong>Personnalite coherente</strong><br>Merlin garde son ton entre les cartes</td>
+<td>120</td>
+<td>Sur 10+ cartes, le modele derive vers un ton neutre. Le LoRA ancre la personnalite (humour noir, sagesse cryptique, malice).</td>
+<td>Sequences de 5-10 cartes avec continuity scoring</td>
+</tr>
+<tr>
+<td><span class="badge lora">L5</span></td>
+<td><strong>Conscience des 3 etats Triade</strong><br>Narration adaptee a Corps/Ame/Monde</td>
+<td>100</td>
+<td>Le modele ignore souvent les etats fournis. Un "Corps Epuise" devrait generer des descriptions de fatigue physique, pas des scenes heroiques.</td>
+<td>Paires etat-narration annotees + tests de regression</td>
+</tr>
+</table>
+
+<p><strong>Total dataset</strong> : ~750 examples (ChatML format). Apres augmentation et deduplication : ~1000-1200 examples.</p>
+</div>
+</details>
+
+<details open id="doit-pas">
+<summary>Ce que LoRA NE DOIT PAS faire (6 exclusions)</summary>
+<div>
+<table>
+<tr><th>#</th><th>Capacite exclue</th><th>Methode actuelle</th><th>Pourquoi PAS LoRA</th></tr>
+<tr>
+<td><span class="badge prompt">P1</span></td>
+<td>Adaptation biome (vocabulaire)</td>
+<td>Injection <code>{biome_words}</code> dans le prompt</td>
+<td>Le prompt injecte deja les mots cles. Le LoRA sur-specialiserait le modele a un sous-ensemble de biomes.</td>
+</tr>
+<tr>
+<td><span class="badge prompt">P2</span></td>
+<td>Conscience temporelle (saison, jour)</td>
+<td>Variable <code>{season}</code> + <code>{day}/{max}</code></td>
+<td>Le modele comprend deja les saisons via le prompt. Pas de gain mesurable.</td>
+</tr>
+<tr>
+<td><span class="badge code">C1</span></td>
+<td>Equilibrage des effets (GM)</td>
+<td>GBNF grammar + validation code</td>
+<td>Les effets sont des valeurs numeriques. La grammaire GBNF + validation <code>merlin_effect_engine.gd</code> garantissent 99.5% de conformite.</td>
+</tr>
+<tr>
+<td><span class="badge code">C2</span></td>
+<td>Detection danger / guerison</td>
+<td>Logique dans <code>merlin_card_system.gd</code></td>
+<td>Le code detecte quand un aspect est &laquo;Bas&raquo; et injecte la contrainte dans le prompt GM. Pas besoin d'apprendre ca au modele.</td>
+</tr>
+<tr>
+<td><span class="badge code">C3</span></td>
+<td>Economie du Souffle</td>
+<td>Logique dans <code>merlin_store.gd</code></td>
+<td>Le systeme de Souffle est entierement gere par le code. Le LLM n'a pas besoin de &laquo;comprendre&raquo; l'economie.</td>
+</tr>
+<tr>
+<td><span class="badge code">C4</span></td>
+<td>Cross-run references</td>
+<td>RAG v2.0 dans <code>rag_manager.gd</code></td>
+<td>Les references cross-run sont injectees via le systeme RAG. Le LoRA ne peut pas memoriser les runs precedents.</td>
+</tr>
+</table>
+
+<div class="callout success">
+<strong>Regle de decision</strong>
+Si le prompt engineering OU le code peuvent resoudre le probleme &rarr; pas de LoRA.<br>
+LoRA uniquement quand le modele echoue malgre un prompt optimal.
+</div>
+</div>
+</details>
+
+<!-- ============================================================ -->
+<h2 id="architecture">Architecture Adapter</h2>
+
+<details open id="qlora">
+<summary>Configuration QLoRA</summary>
+<div>
+<table>
+<tr><th>Parametre</th><th>Valeur</th><th>Justification</th></tr>
+<tr><td>Method</td><td><strong>QLoRA</strong> (4-bit NormalFloat)</td><td>Reduit la VRAM de ~6 GB a ~2 GB. Compatible CPU training (plus lent).</td></tr>
+<tr><td>Rank (r)</td><td><strong>16</strong></td><td>Bon compromis qualite/taille. r=8 trop faible pour le style, r=32 overfitting sur 1000 examples.</td></tr>
+<tr><td>Alpha</td><td><strong>32</strong></td><td>Ratio alpha/r = 2 (standard). Controle l'amplitude des modifications.</td></tr>
+<tr><td>Target modules</td><td><code>q_proj, k_proj, v_proj, o_proj, gate_proj, up_proj, down_proj</code></td><td>Tous les modules lineaires. Attention heads + FFN pour style + structure.</td></tr>
+<tr><td>Dropout</td><td><strong>0.05</strong></td><td>Regularisation legere. 0.1 trop agressif sur petit dataset.</td></tr>
+<tr><td>Adapter size (disk)</td><td><strong>~15 MB</strong> (safetensors) &rarr; <strong>~12 MB</strong> (GGUF)</td><td>Negligeable vs modele base (1.0 GB). Chargement instantane.</td></tr>
+</table>
+</div>
+</details>
+
+<details open id="hyperparams">
+<summary>Hyperparametres d'entrainement</summary>
+<div>
+<table>
+<tr><th>Parametre</th><th>Valeur</th><th>Notes</th></tr>
+<tr><td>Learning Rate</td><td><code>2e-4</code></td><td>Standard QLoRA. Cosine schedule.</td></tr>
+<tr><td>Warmup</td><td>10% des steps</td><td>~30 steps sur 300 totaux</td></tr>
+<tr><td>Batch Size</td><td>4</td><td>Per-device batch</td></tr>
+<tr><td>Gradient Accumulation</td><td>4</td><td>Effective batch = 16</td></tr>
+<tr><td>Epochs</td><td>3</td><td>2 = sous-entraine, 4 = overfitting sur petit dataset</td></tr>
+<tr><td>Max Seq Length</td><td>512</td><td>Suffisant pour system + user + output (max ~300 tokens)</td></tr>
+<tr><td>Optimizer</td><td>AdamW (paged_adamw_8bit)</td><td>Reduit VRAM pour l'optimiseur</td></tr>
+<tr><td>Weight Decay</td><td>0.01</td><td>Regularisation standard</td></tr>
+<tr><td>FP16 / BF16</td><td>BF16 (si GPU), FP16 sinon</td><td>BF16 plus stable pour les gradients</td></tr>
+<tr><td>Seed</td><td>42</td><td>Reproductibilite</td></tr>
+</table>
+</div>
+</details>
+
+<!-- ============================================================ -->
+<h2 id="pipeline">Pipeline Complet (7 etapes)</h2>
+
+<div class="pipeline-step" id="step1">
+<div class="step-num">1</div>
+<div class="step-content">
+<h4>Preparer le dataset</h4>
+<p>Assembler les examples ChatML dans un fichier JSONL. Chaque ligne = un example avec <code>system</code>, <code>user</code>, <code>assistant</code>.</p>
+<pre><code># Format ChatML JSONL (une ligne par example)
+{"messages": [
+  {"role": "system", "content": "Tu es Merlin, druide FOU..."},
+  {"role": "user", "content": "Jour 5/30. Saison: Beltane..."},
+  {"role": "assistant", "content": "[NARRATION]\nLes flammes..."}
+]}
+
+# Fichier de sortie
+data/ai/training/merlin_lora_v8.jsonl</code></pre>
+<p><strong>Sources</strong> : gold examples manuels, sorties LLM filtrées (score &gt; 8/10), augmentation GPT-4 pour diversite.</p>
+</div>
+</div>
+
+<div class="pipeline-step" id="step2">
+<div class="step-num">2</div>
+<div class="step-content">
+<h4>Valider le dataset</h4>
+<p>Verifier la conformite (format, longueur, doublons, qualite).</p>
+<pre><code>python tools/lora/validate_dataset.py \
+  --input data/ai/training/merlin_lora_v8.jsonl \
+  --check-format chatml \
+  --check-duplicates \
+  --min-length 50 \
+  --max-length 512 \
+  --check-french-ratio 0.8 \
+  --report data/ai/training/validation_report.json</code></pre>
+<p><strong>Criteres</strong> : 0 doublons, 100% format valide, 80%+ francais, longueur moyenne 200-350 tokens.</p>
+</div>
+</div>
+
+<div class="pipeline-step" id="step3">
+<div class="step-num">3</div>
+<div class="step-content">
+<h4>Entrainer le LoRA</h4>
+<p>Lancer l'entrainement QLoRA avec tous les hyperparametres.</p>
+<pre><code>python tools/lora/train_narrator_lora.py \
+  --model_name "Qwen/Qwen2.5-1.5B" \
+  --dataset data/ai/training/merlin_lora_v8.jsonl \
+  --output_dir data/ai/adapters/narrator_v8/ \
+  --lora_r 16 \
+  --lora_alpha 32 \
+  --lora_dropout 0.05 \
+  --target_modules "q_proj,k_proj,v_proj,o_proj,gate_proj,up_proj,down_proj" \
+  --learning_rate 2e-4 \
+  --warmup_ratio 0.1 \
+  --per_device_train_batch_size 4 \
+  --gradient_accumulation_steps 4 \
+  --num_train_epochs 3 \
+  --max_seq_length 512 \
+  --bf16 \
+  --logging_steps 10 \
+  --save_strategy "epoch" \
+  --seed 42</code></pre>
+</div>
+</div>
+
+<div class="pipeline-step" id="step4">
+<div class="step-num">4</div>
+<div class="step-content">
+<h4>Convertir en GGUF</h4>
+<p>Merger l'adapter avec le modele base et convertir au format GGUF pour Ollama.</p>
+<pre><code>python tools/lora/convert_to_gguf.py \
+  --base_model "Qwen/Qwen2.5-1.5B" \
+  --adapter_path data/ai/adapters/narrator_v8/ \
+  --output_path addons/merlin_llm/adapters/merlin-narrator-v8.gguf \
+  --quantization Q4_K_M</code></pre>
+<p><strong>Taille attendue</strong> : ~1.0 GB (modele merge) ou ~12 MB (adapter seul, si Ollama supporte le chargement separe).</p>
+</div>
+</div>
+
+<div class="pipeline-step" id="step5">
+<div class="step-num">5</div>
+<div class="step-content">
+<h4>Creer Modelfile Ollama</h4>
+<p>Creer le fichier de configuration Ollama pour le modele fine-tune.</p>
+<pre><code># Modelfile
+FROM qwen2.5:1.5b
+ADAPTER ./addons/merlin_llm/adapters/merlin-narrator-v8.gguf
+
+PARAMETER temperature 0.75
+PARAMETER top_p 0.92
+PARAMETER top_k 40
+PARAMETER repeat_penalty 1.35
+PARAMETER num_predict 150
+
+TEMPLATE """&lt;|im_start|&gt;system
+{{ .System }}&lt;|im_end|&gt;
+&lt;|im_start|&gt;user
+{{ .Prompt }}&lt;|im_end|&gt;
+&lt;|im_start|&gt;assistant
+"""
+
+SYSTEM "Tu es Merlin, druide FOU de Broceliande."</code></pre>
+</div>
+</div>
+
+<div class="pipeline-step" id="step6">
+<div class="step-num">6</div>
+<div class="step-content">
+<h4>Benchmark (50 runs)</h4>
+<p>Comparer modele base vs modele LoRA sur 50 prompts standardises.</p>
+<pre><code>python tools/lora/benchmark_lora.py \
+  --base_model "qwen2.5:1.5b" \
+  --lora_model "merlin-narrator" \
+  --prompts data/ai/training/benchmark_prompts.jsonl \
+  --num_runs 50 \
+  --metrics "french_ratio,format_compliance,jaccard_diversity,celtic_vocab,latency_p50,latency_p90,personality_consistency" \
+  --output data/ai/training/benchmark_results.json \
+  --go_nogo_thresholds data/ai/training/thresholds.json</code></pre>
+</div>
+</div>
+
+<div class="pipeline-step" id="step7">
+<div class="step-num">7</div>
+<div class="step-content">
+<h4>Deployer</h4>
+<p>Creer le modele Ollama et mettre a jour le code.</p>
+<pre><code># Creer le modele dans Ollama
+ollama create merlin-narrator -f Modelfile
+
+# Tester
+ollama run merlin-narrator "Jour 1/30. Biome: Broceliande."
+
+# Mettre a jour merlin_ai.gd
+# Changer: model_name = "merlin-narrator" (au lieu de "qwen2.5:1.5b")
+# Pour le Narrator uniquement. Le GM reste sur qwen2.5:1.5b.</code></pre>
+</div>
+</div>
+
+<!-- ============================================================ -->
+<h2 id="benchmarks">Benchmarks GO/NO-GO</h2>
+
+<div class="callout danger">
+<strong>Criteres bloquants</strong>
+Si UNE metrique est en dessous du seuil GO, le deploiement est REFUSE. Corriger le dataset ou les hyperparametres et relancer.
+</div>
+
+<table>
+<tr><th>Metrique</th><th>Base (Qwen 2.5-1.5B)</th><th>Seuil GO</th><th>Methode de mesure</th></tr>
+<tr>
+<td><strong>French ratio</strong></td>
+<td>80%</td>
+<td><span class="badge ok">&ge; 85%</span></td>
+<td>Detecteur langue (langdetect) sur output complet</td>
+</tr>
+<tr>
+<td><strong>Format compliance</strong></td>
+<td>85%</td>
+<td><span class="badge ok">&ge; 95%</span></td>
+<td>Regex parser [NARRATION]+[CHOIX]+A/B/C</td>
+</tr>
+<tr>
+<td><strong>Jaccard diversity</strong></td>
+<td>&lt; 0.7</td>
+<td><span class="badge ok">&lt; 0.65</span></td>
+<td>Score Jaccard moyen entre toutes paires de 50 sorties</td>
+</tr>
+<tr>
+<td><strong>Celtic vocab density</strong></td>
+<td>~0.5 mots/carte</td>
+<td><span class="badge ok">&ge; 1.5 mots/carte</span></td>
+<td>Compteur de mots celtiques (liste de 50 termes) par sortie</td>
+</tr>
+<tr>
+<td><strong>Latence p50 (warm)</strong></td>
+<td>~7s</td>
+<td><span class="badge ok">&lt; 10s</span></td>
+<td>Chrono sur 50 appels Ollama (warm cache)</td>
+</tr>
+<tr>
+<td><strong>Latence p90 (warm)</strong></td>
+<td>~11s</td>
+<td><span class="badge ok">&lt; 15s</span></td>
+<td>Percentile 90 sur 50 appels</td>
+</tr>
+<tr>
+<td><strong>Personality consistency</strong></td>
+<td>~60%</td>
+<td><span class="badge ok">&ge; 80%</span></td>
+<td>Score humain (5 reviewers) sur coherence Merlin dans 10 sequences de 5 cartes</td>
+</tr>
+</table>
+
+<h3>Matrice de decision</h3>
+<table>
+<tr><th>Resultat</th><th>Action</th></tr>
+<tr><td><span class="badge ok">7/7 GO</span></td><td>Deployer immediatement. Mettre a jour <code>merlin_ai.gd</code>.</td></tr>
+<tr><td><span class="badge moyen">5-6/7 GO</span></td><td>Analyser les metriques en echec. Si latence seule : accepter. Si qualite : iterer dataset.</td></tr>
+<tr><td><span class="badge faible">&lt; 5/7 GO</span></td><td>NO-GO. Revoir le dataset, les hyperparametres ou l'approche. Consulter l'agent <code>lora_evaluator</code>.</td></tr>
+</table>
+
+<!-- ============================================================ -->
+<h2 id="timeline">Timeline</h2>
+
+<table>
+<tr><th>Phase</th><th>Duree estimee (CPU i7)</th><th>Duree estimee (GPU)</th><th>Notes</th></tr>
+<tr><td>1. Preparation dataset</td><td>2-4h (manuel)</td><td>2-4h (manuel)</td><td>Curation + augmentation</td></tr>
+<tr><td>2. Validation</td><td>~5 min</td><td>~5 min</td><td>Automatise</td></tr>
+<tr><td>3. Entrainement</td><td><strong>2-4h</strong></td><td><strong>~30 min</strong></td><td>3 epochs, 1000 examples, batch 16</td></tr>
+<tr><td>4. Conversion GGUF</td><td>~10 min</td><td>~10 min</td><td>Merge + quantize</td></tr>
+<tr><td>5. Modelfile</td><td>&lt; 5 min</td><td>&lt; 5 min</td><td>Manuel</td></tr>
+<tr><td>6. Benchmark</td><td>~30 min</td><td>~15 min</td><td>50 runs * ~7s chacun + analyse</td></tr>
+<tr><td>7. Deploiement</td><td>&lt; 5 min</td><td>&lt; 5 min</td><td>ollama create + test</td></tr>
+<tr><td><strong>Total</strong></td><td><strong>~5-9h</strong></td><td><strong>~3-5h</strong></td><td>Premiere iteration. Iterations suivantes plus rapides.</td></tr>
+</table>
+
+<!-- ============================================================ -->
+<h2 id="agents">Agents LoRA</h2>
+
+<p>Le pipeline LoRA est orchestre par <strong>4 agents specialises</strong> qui forment une chaine de responsabilite.</p>
+
+<div class="agent-flow">
+<div class="agent translator">LoRA Gameplay<br>Translator</div>
+<div class="arrow">&rarr;</div>
+<div class="agent curator">LoRA Data<br>Curator</div>
+<div class="arrow">&rarr;</div>
+<div class="agent architect">LoRA Training<br>Architect</div>
+<div class="arrow">&rarr;</div>
+<div class="agent evaluator">LoRA<br>Evaluator</div>
+</div>
+
+<table>
+<tr><th>Agent</th><th>Fichier</th><th>Role</th><th>Input</th><th>Output</th></tr>
+<tr>
+<td><strong>LoRA Gameplay Translator</strong></td>
+<td><code>.claude/agents/lora_gameplay_translator.md</code></td>
+<td><span class="badge lora">POINT D'ENTREE</span> Traduit une demande gameplay ("plus poetique", "adapte le modele") en specification d'entrainement.</td>
+<td>Demande utilisateur en langage naturel</td>
+<td>Spec technique : competences ciblees, nb examples, metriques</td>
+</tr>
+<tr>
+<td><strong>LoRA Data Curator</strong></td>
+<td><code>.claude/agents/lora_data_curator.md</code></td>
+<td>Extraction, curation, augmentation des datasets ChatML.</td>
+<td>Spec du Translator + sources de donnees</td>
+<td>Dataset JSONL valide + rapport de qualite</td>
+</tr>
+<tr>
+<td><strong>LoRA Training Architect</strong></td>
+<td><code>.claude/agents/lora_training_architect.md</code></td>
+<td>Configure les hyperparametres, lance l'entrainement, monitore la loss.</td>
+<td>Dataset valide + config adapter</td>
+<td>Adapter safetensors/GGUF + training logs</td>
+</tr>
+<tr>
+<td><strong>LoRA Evaluator</strong></td>
+<td><code>.claude/agents/lora_evaluator.md</code></td>
+<td>Benchmark 50 runs, metriques auto + humaines, decision GO/NO-GO.</td>
+<td>Adapter + benchmark prompts + thresholds</td>
+<td>Rapport GO/NO-GO + recommandations</td>
+</tr>
+</table>
+
+<div class="callout info">
+<strong>Auto-activation</strong>
+Quand l'utilisateur demande &laquo;entraine le modele&raquo;, &laquo;le LLM doit etre plus poetique&raquo;, &laquo;fine-tune pour le celtique&raquo;, le <strong>LoRA Gameplay Translator</strong> s'active automatiquement et orchestre la chaine.
+</div>
+
+<!-- ============================================================ -->
+<div class="callout info" style="margin-top:40px">
+<strong>Fichiers de reference</strong>
+<code>tools/lora/train_narrator_lora.py</code> &mdash; Script d'entrainement (a creer)<br>
+<code>tools/lora/validate_dataset.py</code> &mdash; Validation dataset (a creer)<br>
+<code>tools/lora/convert_to_gguf.py</code> &mdash; Conversion GGUF (a creer)<br>
+<code>tools/lora/benchmark_lora.py</code> &mdash; Benchmark GO/NO-GO (a creer)<br>
+<code>data/ai/training/merlin_lora_v8.jsonl</code> &mdash; Dataset ChatML<br>
+<code>addons/merlin_llm/adapters/</code> &mdash; Adapters GGUF deployes
+</div>
+
+</main>
+</body>
+</html>

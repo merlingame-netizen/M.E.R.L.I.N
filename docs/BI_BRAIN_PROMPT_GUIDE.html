@@ -1,0 +1,444 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>M.E.R.L.I.N. - Bi-Brain Prompt Engineering Guide</title>
+<style>
+:root{--bg:#1a1a2e;--bg2:#16213e;--bg3:#0f3460;--text:#e0e0e0;--text2:#a0a0a0;--accent:#00d4ff;--accent2:#00ff88;--warn:#ffaa00;--danger:#ff4444;--ok:#00ff88;--moyen:#ffaa00;--faible:#ff4444;--partiel:#ff88ff;--sidebar-w:280px;--font:"Segoe UI",system-ui,-apple-system,sans-serif;--mono:"Cascadia Code","Fira Code","Consolas",monospace}
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:var(--font);background:var(--bg);color:var(--text);line-height:1.7;display:flex;min-height:100vh}
+.sidebar{position:fixed;top:0;left:0;width:var(--sidebar-w);height:100vh;background:var(--bg2);border-right:1px solid rgba(0,212,255,.15);overflow-y:auto;padding:24px 16px;z-index:100}
+.sidebar h2{color:var(--accent);font-size:14px;text-transform:uppercase;letter-spacing:2px;margin-bottom:20px;padding-bottom:10px;border-bottom:1px solid rgba(0,212,255,.2)}
+.sidebar a{display:block;color:var(--text2);text-decoration:none;padding:6px 10px;font-size:13px;border-radius:4px;transition:all .2s}
+.sidebar a:hover{color:var(--accent);background:rgba(0,212,255,.08)}
+.sidebar a.sub{padding-left:24px;font-size:12px}
+.main{margin-left:var(--sidebar-w);padding:40px 60px;max-width:1000px;flex:1}
+h1{font-size:2.2em;color:var(--accent);margin-bottom:8px;letter-spacing:-0.5px}
+.subtitle{color:var(--text2);font-size:1.1em;margin-bottom:32px}
+h2{font-size:1.6em;color:var(--accent);margin:40px 0 16px;padding-bottom:8px;border-bottom:2px solid rgba(0,212,255,.2)}
+h3{font-size:1.2em;color:var(--accent2);margin:24px 0 12px}
+h4{font-size:1em;color:var(--warn);margin:16px 0 8px}
+p{margin-bottom:14px}
+ul,ol{margin:0 0 16px 24px}
+li{margin-bottom:6px}
+table{width:100%;border-collapse:collapse;margin:16px 0 24px;background:var(--bg2);border-radius:8px;overflow:hidden}
+th{background:var(--bg3);color:var(--accent);padding:12px 16px;text-align:left;font-size:13px;text-transform:uppercase;letter-spacing:1px}
+td{padding:10px 16px;border-top:1px solid rgba(255,255,255,.05);font-size:14px;vertical-align:top}
+tr:hover{background:rgba(0,212,255,.04)}
+details{background:var(--bg2);border:1px solid rgba(0,212,255,.1);border-radius:8px;margin:16px 0;overflow:hidden}
+summary{padding:14px 20px;cursor:pointer;font-weight:600;color:var(--accent);font-size:15px;user-select:none}
+summary:hover{background:rgba(0,212,255,.05)}
+details>div{padding:0 20px 20px}
+.badge{display:inline-block;padding:2px 10px;border-radius:12px;font-size:11px;font-weight:700;text-transform:uppercase}
+.badge.ok{background:rgba(0,255,136,.15);color:var(--ok)}
+.badge.moyen{background:rgba(255,170,0,.15);color:var(--moyen)}
+.badge.faible{background:rgba(255,68,68,.15);color:var(--faible)}
+.badge.partiel{background:rgba(255,136,255,.15);color:var(--partiel)}
+.badge.narrator{background:rgba(0,212,255,.15);color:var(--accent);border:1px solid rgba(0,212,255,.3)}
+.badge.gm{background:rgba(0,255,136,.15);color:var(--accent2);border:1px solid rgba(0,255,136,.3)}
+.callout{padding:16px 20px;border-radius:8px;margin:16px 0;border-left:4px solid}
+.callout.info{background:rgba(0,212,255,.08);border-color:var(--accent)}
+.callout.warn{background:rgba(255,170,0,.08);border-color:var(--warn)}
+.callout.danger{background:rgba(255,68,68,.08);border-color:var(--danger)}
+.callout.success{background:rgba(0,255,136,.08);border-color:var(--accent2)}
+.callout strong{display:block;margin-bottom:6px}
+pre{background:var(--bg3);border:1px solid rgba(0,212,255,.15);border-radius:8px;padding:16px 20px;overflow-x:auto;margin:12px 0 20px;font-family:var(--mono);font-size:13px;line-height:1.6;color:var(--text)}
+code{font-family:var(--mono);background:rgba(0,212,255,.1);padding:2px 6px;border-radius:3px;font-size:13px}
+pre code{background:none;padding:0}
+.prompt-block{background:var(--bg3);border-left:4px solid var(--accent);border-radius:0 8px 8px 0;padding:16px 20px;margin:12px 0 20px;font-family:var(--mono);font-size:13px;line-height:1.6;white-space:pre-wrap;word-break:break-word}
+.prompt-block.gm{border-left-color:var(--accent2)}
+.prompt-block.situation{border-left-color:var(--warn)}
+.token-count{float:right;color:var(--text2);font-size:11px;background:rgba(0,0,0,.3);padding:2px 8px;border-radius:10px}
+.grammar-block{background:#0d1117;border:1px solid rgba(0,212,255,.2);border-radius:8px;padding:16px 20px;margin:12px 0 20px;font-family:var(--mono);font-size:12px;line-height:1.7;color:#c9d1d9;white-space:pre-wrap}
+.example-card{background:var(--bg2);border:1px solid rgba(0,255,136,.15);border-radius:8px;padding:20px;margin:16px 0}
+.example-card .label{color:var(--accent2);font-size:12px;text-transform:uppercase;letter-spacing:1px;margin-bottom:8px}
+.example-card .content{font-family:var(--mono);font-size:13px;line-height:1.7;white-space:pre-wrap;color:var(--text)}
+.arch-box{display:inline-block;padding:6px 14px;border-radius:6px;margin:4px;font-size:13px;font-weight:600}
+.arch-box.narrator{background:rgba(0,212,255,.15);color:var(--accent);border:1px solid rgba(0,212,255,.3)}
+.arch-box.gm{background:rgba(0,255,136,.15);color:var(--accent2);border:1px solid rgba(0,255,136,.3)}
+@media(max-width:900px){.sidebar{display:none}.main{margin-left:0;padding:20px}}
+</style>
+</head>
+<body>
+<nav class="sidebar">
+<h2>Prompt Guide</h2>
+<a href="#principes">Principes pour 1.5B</a>
+<a href="#narrator" class="sub">Prompt Narrator</a>
+<a href="#gm" class="sub">Prompt Game Master</a>
+<a href="#situations">Prompts par Situation</a>
+<a href="#sit-prudent" class="sub">Joueur prudent</a>
+<a href="#sit-audacieux" class="sub">Joueur audacieux</a>
+<a href="#sit-climax" class="sub">Arc CLIMAX</a>
+<a href="#sit-inquiet" class="sub">Merlin inquiet</a>
+<a href="#sit-4emur" class="sub">4e mur</a>
+<a href="#sit-crossrun" class="sub">Cross-run</a>
+<a href="#sit-reve" class="sub">Reve</a>
+<a href="#sit-dialogue" class="sub">Dialogue</a>
+<a href="#fewshot">5 Few-Shot Examples</a>
+<a href="#grammars">GBNF Grammars</a>
+<a href="#grammar-narrator" class="sub">Narrator Grammar</a>
+<a href="#grammar-gm" class="sub">GM Effects Grammar</a>
+</nav>
+
+<main class="main">
+<h1>M.E.R.L.I.N. &mdash; Bi-Brain Prompt Engineering Guide</h1>
+<p class="subtitle">Prompts optimises pour Qwen 2.5-1.5B &mdash; Architecture DUAL Brain via Ollama<br>
+Derniere mise a jour : 24 fevrier 2026</p>
+
+<div class="callout info">
+<strong>Objectif de ce document</strong>
+Guide complet de prompt engineering pour le systeme bi-cerveaux de M.E.R.L.I.N. Chaque prompt est <strong>code-ready</strong> : copier-coller directement dans <code>merlin_llm_adapter.gd</code>, <code>merlin_ai.gd</code> ou les fichiers JSON de configuration.
+</div>
+
+<!-- ============================================================ -->
+<h2 id="principes">Principes de Prompt Engineering pour 1.5B</h2>
+
+<div class="callout warn">
+<strong>Regle d'or : un modele 1.5B n'est PAS un modele 70B</strong>
+Les petits modeles necessitent des prompts radicalement differents. Chaque token compte. Privilegier la demonstration a l'instruction.
+</div>
+
+<table>
+<tr><th>Principe</th><th>Explication</th><th>Exemple</th></tr>
+<tr>
+<td><strong>COURT</strong><br><span class="badge narrator">&lt;200 tok system</span></td>
+<td>Le system prompt du Narrator doit rester sous 200 tokens. Le GM sous 100. Au-dela, le modele perd le fil et la qualite chute.</td>
+<td><code>System: 150 tok</code> au lieu de 400+ sur GPT-4</td>
+</tr>
+<tr>
+<td><strong>EXEMPLES &gt; INSTRUCTIONS</strong></td>
+<td>Un seul few-shot example vaut 10 lignes d'instructions. Le 1.5B imite tres bien mais comprend mal les meta-instructions abstraites.</td>
+<td>Montrer <code>A) Traverser la foret</code> plutot que &laquo;genere 3 choix avec des verbes d'action&raquo;</td>
+</tr>
+<tr>
+<td><strong>CONTRAINTES NEGATIVES</strong></td>
+<td>Dire ce qu'il ne doit PAS faire est plus efficace que decrire le comportement souhaite. Le 1.5B respecte mieux les interdictions.</td>
+<td><code>JAMAIS de liste a puces. JAMAIS d'anglais. PAS de narration 1ere personne.</code></td>
+</tr>
+<tr>
+<td><strong>VOCABULAIRE INJECTE</strong></td>
+<td>Injecter les mots exacts a utiliser dans le prompt. Le modele les reprendra naturellement dans sa generation.</td>
+<td><code>Vocabulaire: brume, dolmen, aubepine, triskel</code> &rarr; apparaissent dans la sortie</td>
+</tr>
+<tr>
+<td><strong>STRUCTURE FIXE</strong></td>
+<td>Imposer un format de sortie rigide avec delimiteurs clairs. Utiliser GBNF grammar quand possible.</td>
+<td><code>[NARRATION]...[CHOIX]A)...B)...C)...</code></td>
+</tr>
+<tr>
+<td><strong>PERSONA SIMPLE</strong></td>
+<td>Definir le personnage en une phrase, pas un paragraphe. Ajouter 2-3 traits max.</td>
+<td><code>Tu es Merlin, druide FOU de Broceliande.</code></td>
+</tr>
+</table>
+
+<!-- ============================================================ -->
+<h2 id="narrator">Prompt Narrator Optimise</h2>
+
+<h3>System Prompt <span class="token-count">~150 tokens</span></h3>
+<div class="prompt-block">Tu es Merlin, druide FOU de Broceliande. Ton: {tone}.
+Ecris 2-3 phrases immersives en francais.
+Vocabulaire: {biome_words} + {celtic_words}.
+Puis 3 choix avec verbes PRECIS (A/B/C).
+
+JAMAIS de liste a puces.
+JAMAIS d'anglais.
+JAMAIS plus de 4 phrases de narration.
+Le choix C coute 1 Souffle.
+
+Format:
+[NARRATION]
+(2-3 phrases)
+[CHOIX]
+A) verbe + action
+B) verbe + action
+C) verbe + action (Souffle)</div>
+
+<h3>User Prompt <span class="token-count">~100 tokens</span></h3>
+<div class="prompt-block">Jour {day}/{max}. Saison: {season}. Biome: {biome}.
+Corps={state_corps}, Ame={state_ame}, Monde={state_monde}.
+Souffle={n}/{max}. {arc_context}.
+Dernier choix: {last_choice}.</div>
+
+<h3>Variables d'injection</h3>
+<table>
+<tr><th>Variable</th><th>Source</th><th>Exemple</th></tr>
+<tr><td><code>{tone}</code></td><td><code>merlin_persona.json</code></td><td><code>mystique et moqueur</code></td></tr>
+<tr><td><code>{biome_words}</code></td><td><code>scenario_prompts.json</code></td><td><code>brume, mousse, chene ancien, lucioles</code></td></tr>
+<tr><td><code>{celtic_words}</code></td><td><code>merlin_constants.gd</code></td><td><code>dolmen, triskel, nemeton, ogham</code></td></tr>
+<tr><td><code>{season}</code></td><td><code>merlin_store.gd</code></td><td><code>Samhain (automne)</code></td></tr>
+<tr><td><code>{state_corps}</code></td><td><code>merlin_store.gd</code></td><td><code>Robuste</code> / <code>Epuise</code> / <code>Surmene</code></td></tr>
+<tr><td><code>{arc_context}</code></td><td><code>rag_manager.gd</code></td><td><code>Quete du Chaudron, etape 3/5</code></td></tr>
+<tr><td><code>{last_choice}</code></td><td><code>merlin_store.gd</code></td><td><code>A traverse la riviere a gue</code></td></tr>
+</table>
+
+<h3>Exemple de sortie attendue</h3>
+<div class="example-card">
+<div class="label">Narrator Output &mdash; Gold Example</div>
+<div class="content">[NARRATION]
+La brume s'epaissit autour du dolmen. Merlin gratte sa barbe, l'oeil petillant. "Voyageur, le nemeton pulse sous tes pieds... sens-tu l'appel des anciens ?"
+
+[CHOIX]
+A) Poser la main sur le dolmen et ecouter
+B) Contourner le nemeton avec prudence
+C) Invoquer l'ogham de Beith pour reveler le chemin (Souffle)</div>
+</div>
+
+<!-- ============================================================ -->
+<h2 id="gm">Prompt Game Master Optimise</h2>
+
+<h3>System Prompt <span class="token-count">~80 tokens</span></h3>
+<div class="prompt-block gm">Genere 3 effets JSON pour les choix A/B/C.
+Tout choix a un COUT (au moins un aspect baisse).
+Si danger (aspect Bas): une option DOIT soigner.
+Valeurs: -2, -1, 0, +1, +2. Somme totale par choix entre -1 et +1.
+
+Format strict JSON:
+{"A":{"corps":N,"ame":N,"monde":N},"B":{...},"C":{...}}</div>
+
+<h3>User Prompt <span class="token-count">~60 tokens</span></h3>
+<div class="prompt-block gm">Corps={val} ({state}) Ame={val} ({state}) Monde={val} ({state}).
+Souffle={n}/{max}. Scenario: {summary}.
+Choix A={label_a}. B={label_b}. C={label_c}.</div>
+
+<h3>Parametres GM</h3>
+<table>
+<tr><th>Parametre</th><th>Valeur</th><th>Raison</th></tr>
+<tr><td>temperature</td><td><code>0.15</code></td><td>Determinisme maximal pour JSON valide</td></tr>
+<tr><td>top_p</td><td><code>0.8</code></td><td>Distribution resserree</td></tr>
+<tr><td>max_tokens</td><td><code>80</code></td><td>JSON compact, pas de texte superflu</td></tr>
+<tr><td>top_k</td><td><code>15</code></td><td>Vocabulaire restreint (chiffres, accolades, guillemets)</td></tr>
+<tr><td>repetition_penalty</td><td><code>1.0</code></td><td>Pas de penalite (JSON repetitif par nature)</td></tr>
+</table>
+
+<h3>Exemple de sortie GM</h3>
+<div class="example-card">
+<div class="label">Game Master Output &mdash; Gold Example</div>
+<div class="content">{"A":{"corps":0,"ame":+1,"monde":-1},"B":{"corps":+1,"ame":0,"monde":-1},"C":{"corps":-1,"ame":+1,"monde":+1}}</div>
+</div>
+
+<h3>GBNF Grammar GM (preview)</h3>
+<div class="grammar-block">root   ::= "{" ws choices ws "}"
+choices ::= "\"A\":" ws effect "," ws "\"B\":" ws effect "," ws "\"C\":" ws effect
+effect ::= "{" ws "\"corps\":" ws val "," ws "\"ame\":" ws val "," ws "\"monde\":" ws val ws "}"
+val    ::= "-2" | "-1" | "0" | "+1" | "+2" | "1" | "2"
+ws     ::= [ \t\n]*</div>
+
+<!-- ============================================================ -->
+<h2 id="situations">Prompts par Situation</h2>
+
+<p>Chaque situation ajoute une <strong>ligne d'injection</strong> au system prompt du Narrator. Ces lignes remplacent la variable <code>{tone}</code> ou s'ajoutent apres.</p>
+
+<table>
+<tr><th>Situation</th><th>Injection System</th><th>Params Override</th><th>Frequence</th></tr>
+<tr id="sit-prudent"><td><strong>Joueur prudent</strong></td><td><code>Le voyageur est PRUDENT &mdash; propose des choix subtils, diplomatiques, d'observation.</code></td><td>T=0.70</td><td>Adaptatif</td></tr>
+<tr id="sit-audacieux"><td><strong>Joueur audacieux</strong></td><td><code>Le voyageur est TEMERAIRE &mdash; propose des defis physiques, des combats, des risques.</code></td><td>T=0.80</td><td>Adaptatif</td></tr>
+<tr id="sit-climax"><td><strong>Arc CLIMAX</strong></td><td><code>C'est le MOMENT DECISIF de la quete. Tension maximale. Un choix changera TOUT.</code></td><td>T=0.80, max=180</td><td>1 par arc</td></tr>
+<tr id="sit-inquiet"><td><strong>Merlin inquiet</strong></td><td><code>Merlin est INQUIET &mdash; sa voix tremble, il hesite, il evoque un danger imminent.</code></td><td>T=0.65</td><td>Aspect Bas</td></tr>
+<tr id="sit-4emur"><td><strong>4e mur</strong></td><td><code>Merlin BRISE le 4e mur. Il parle directement au JOUEUR (pas au voyageur). Ton: complice et malicieux.</code></td><td>T=0.85, rep_pen=1.5</td><td>~1/15 cartes</td></tr>
+<tr id="sit-crossrun"><td><strong>Cross-run</strong></td><td><code>Le voyageur est DEJA VENU dans cette foret. Reference subtile: {previous_run_summary}.</code></td><td>T=0.75</td><td>Run 2+</td></tr>
+<tr id="sit-reve"><td><strong>Reve</strong></td><td><em>(Pas de contrainte)</em> <code>Ecris un reve etrange et poetique. Pas de logique.</code></td><td>T=0.85, top_p=0.95</td><td>~1/20 cartes</td></tr>
+<tr id="sit-dialogue"><td><strong>Dialogue direct</strong></td><td><code>Tu es Merlin. Reponds EN UNE PHRASE. Ton: {humeur}. Pas de narration, juste le dialogue.</code></td><td>T=0.60, max=60</td><td>Sur demande</td></tr>
+</table>
+
+<details id="sit-details">
+<summary>Details des injections par situation</summary>
+<div>
+
+<h4>Joueur prudent &mdash; Detection</h4>
+<p>Active quand les 3 derniers choix du joueur sont tous A) ou B) (pas C/Souffle). Le code dans <code>rag_manager.gd</code> analyse <code>choice_history</code> et injecte le modificateur de ton.</p>
+<pre><code># rag_manager.gd
+func _detect_player_style() -&gt; String:
+    var recent = store.choice_history.slice(-3)
+    var cautious = recent.filter(func(c): return c in ["A", "B"]).size()
+    if cautious &gt;= 3:
+        return "Le voyageur est PRUDENT -- propose des choix subtils."
+    elif recent.filter(func(c): return c == "C").size() &gt;= 2:
+        return "Le voyageur est TEMERAIRE -- propose des defis physiques."
+    return ""</code></pre>
+
+<h4>Arc CLIMAX &mdash; Detection</h4>
+<p>Active quand <code>arc_progress &gt;= 0.8</code> (80% de l'arc narratif). Le <code>merlin_omniscient.gd</code> calcule la progression et envoie le signal <code>arc_climax_reached</code>.</p>
+
+<h4>4e mur &mdash; Probabilite</h4>
+<p>Tire aleatoirement avec <code>randf() &lt; 0.067</code> (~1/15). Desactive si <code>last_4th_wall_card</code> est a moins de 5 cartes. Jamais pendant un arc CLIMAX.</p>
+
+<h4>Reve &mdash; Conditions</h4>
+<p>Active uniquement pendant la saison <code>Samhain</code> ou quand <code>Ame == Possedee</code>. Temperature elevee (0.85) et pas de contraintes de format strictes pour laisser le modele generer du contenu onirique.</p>
+
+</div>
+</details>
+
+<!-- ============================================================ -->
+<h2 id="fewshot">5 Few-Shot Examples (Gold)</h2>
+
+<p>Ces exemples sont les references de qualite pour le Narrator. Ils peuvent etre injectes directement dans le system prompt (1 a la fois, en rotation) ou utilises pour l'evaluation LoRA.</p>
+
+<div class="example-card">
+<div class="label">Example 1 &mdash; Foret de Broceliande, debut de partie</div>
+<div class="content">[NARRATION]
+Les chenes millennaires murmurent ton nom dans la brume matinale. Merlin surgit d'un buisson d'aubepine, une luciole sur l'epaule. "Ah, te voila enfin ! La foret t'attendait... mais elle n'est pas seule."
+
+[CHOIX]
+A) Suivre Merlin entre les dolmens moussus
+B) Observer les lucioles pour comprendre leur message
+C) Tracer l'ogham de Luis dans l'air pour dissiper la brume (Souffle)</div>
+</div>
+
+<div class="example-card">
+<div class="label">Example 2 &mdash; Marais de Morrigane, milieu de partie, Corps Epuise</div>
+<div class="content">[NARRATION]
+L'eau noire clapote contre tes chevilles engourdies. Merlin te lance un regard sombre depuis la rive. "Tes jambes faiblissent, voyageur. Le marais sent ta fatigue... et il a faim."
+
+[CHOIX]
+A) Se reposer sur la souche seche malgre le danger
+B) Avancer coute que coute vers la lumiere lointaine
+C) Implorer le Sanglier de preter sa force (Souffle)</div>
+</div>
+
+<div class="example-card">
+<div class="label">Example 3 &mdash; Lande de Carnac, saison Imbolc, Monde Tyran</div>
+<div class="content">[NARRATION]
+Les menhirs s'inclinent a ton passage comme des sujets devant leur roi. Merlin fronce les sourcils. "Ils te craignent, voyageur. Quand la pierre se courbe, c'est que l'orgueil pese trop lourd."
+
+[CHOIX]
+A) Ignorer les menhirs et poursuivre vers le cercle sacre
+B) Toucher un menhir pour tenter de restaurer l'equilibre
+C) Graver un ogham d'humilite sur la pierre centrale (Souffle)</div>
+</div>
+
+<div class="example-card">
+<div class="label">Example 4 &mdash; 4e mur, Merlin malicieux</div>
+<div class="content">[NARRATION]
+Merlin s'assied sur un rocher et regarde... droit vers toi. Pas le voyageur. TOI. "Dis-moi, la-bas derriere ton ecran... tu crois vraiment que tes choix sont les tiens ?"
+
+[CHOIX]
+A) Rire et continuer l'aventure
+B) Reflechir serieusement a la question de Merlin
+C) Demander a Merlin qui tire VRAIMENT les ficelles (Souffle)</div>
+</div>
+
+<div class="example-card">
+<div class="label">Example 5 &mdash; Reve onirique, Ame Possedee, Samhain</div>
+<div class="content">[NARRATION]
+Les arbres marchent a l'envers. Le ciel est un lac et les poissons volent entre les etoiles. Merlin flotte, translucide, ses mots tombent comme des feuilles mortes. "Dans le reve, toute verite est un mensonge... et tout mensonge, une porte."
+
+[CHOIX]
+A) Plonger dans le ciel-lac
+B) Suivre les poissons-etoiles
+C) Ouvrir la porte de mensonge (Souffle)</div>
+</div>
+
+<!-- ============================================================ -->
+<h2 id="grammars">GBNF Grammars (Annotated)</h2>
+
+<div class="callout info">
+<strong>Qu'est-ce que GBNF ?</strong>
+GBNF (GGML BNF) est un format de grammaire supporte par <code>llama.cpp</code> et Ollama. Il contraint la sortie du LLM a respecter une structure syntaxique stricte. C'est essentiel pour le Game Master qui doit produire du JSON valide a 100%.
+</div>
+
+<details open id="grammar-narrator">
+<summary>Narrator Output Grammar</summary>
+<div>
+<p>Cette grammaire assure que le Narrator produit toujours le format <code>[NARRATION]...[CHOIX]A)...B)...C)...</code>.</p>
+<div class="grammar-block"># Narrator GBNF Grammar v1.0
+# Contraint la sortie a : narration (2-4 phrases) + 3 choix A/B/C
+
+root        ::= narration choix
+
+# Narration block: 2-4 sentences in French
+narration   ::= "[NARRATION]\n" sentence sentence sentence? sentence? "\n"
+
+# Each sentence: French text ending with punctuation
+sentence    ::= [A-Z\xC0-\xFF] [^\n]+ [.!?] ( "\"" )? "\n"
+
+# Choices block: exactly 3 options
+choix       ::= "[CHOIX]\n" option-a "\n" option-b "\n" option-c "\n"?
+
+# Each option starts with letter + ) and contains action text
+option-a    ::= "A) " action-text
+option-b    ::= "B) " action-text
+option-c    ::= "C) " action-text souffle?
+
+# Action text: starts with a verb, one line
+action-text ::= [A-Z\xC0-\xFF] [^\n]+
+
+# Optional Souffle cost marker
+souffle     ::= " (Souffle)"</div>
+
+<div class="callout warn">
+<strong>Limitations</strong>
+La grammaire Narrator est un guide, pas une contrainte dure. Ollama ne supporte GBNF que pour les modeles GGUF via <code>llama.cpp</code>. En pratique, on valide la sortie cote code avec le parser permissif de <code>merlin_llm_adapter.gd</code>.
+</div>
+</div>
+</details>
+
+<details open id="grammar-gm">
+<summary>GM Effects Grammar (Enforced)</summary>
+<div>
+<p>Cette grammaire est <strong>strictement appliquee</strong> pour garantir du JSON valide. Le GM ne doit produire QUE du JSON.</p>
+<div class="grammar-block"># Game Master GBNF Grammar v1.0
+# Contraint la sortie a un objet JSON avec exactement 3 cles A/B/C
+# Chaque cle contient corps, ame, monde avec valeurs entieres [-2, +2]
+
+root    ::= "{" ws choices ws "}"
+
+choices ::= pair-a "," ws pair-b "," ws pair-c
+
+pair-a  ::= "\"A\":" ws effect
+pair-b  ::= "\"B\":" ws effect
+pair-c  ::= "\"C\":" ws effect
+
+# Each effect has exactly 3 aspect modifiers
+effect  ::= "{" ws
+            "\"corps\":" ws val "," ws
+            "\"ame\":"   ws val "," ws
+            "\"monde\":" ws val
+            ws "}"
+
+# Allowed integer values: -2 to +2
+# Note: accepts both "+1" and "1" formats
+val     ::= "-2" | "-1" | "0" | "+1" | "+2" | "1" | "2"
+
+# Whitespace (optional)
+ws      ::= [ \t\n]*</div>
+
+<h4>Integration Ollama</h4>
+<pre><code># Dans merlin_ai.gd - appel Ollama avec grammar
+var gm_request := {
+    "model": "qwen2.5:1.5b",
+    "prompt": gm_user_prompt,
+    "system": gm_system_prompt,
+    "raw": true,
+    "options": {
+        "temperature": 0.15,
+        "top_p": 0.8,
+        "top_k": 15,
+        "num_predict": 80
+    },
+    "grammar": gm_gbnf_grammar  # String loaded from file
+}</code></pre>
+
+<div class="callout success">
+<strong>Fiabilite</strong>
+Avec la grammaire GBNF, le taux de JSON valide passe de ~85% (sans grammar) a ~99.5% (avec grammar). Les 0.5% restants sont geres par le JSON repair dans <code>merlin_llm_adapter.gd</code>.
+</div>
+
+</div>
+</details>
+
+<!-- ============================================================ -->
+<div class="callout info" style="margin-top:40px">
+<strong>Fichiers de reference</strong>
+<code>merlin_llm_adapter.gd</code> &mdash; Prompts actuels + parser permissif<br>
+<code>merlin_ai.gd</code> &mdash; Parametres DUAL Brain + appels Ollama<br>
+<code>rag_manager.gd</code> &mdash; Injection contexte RAG + detection style joueur<br>
+<code>scenario_prompts.json</code> &mdash; Vocabulaire par biome (a creer)<br>
+<code>merlin_persona.json</code> &mdash; Personnalite Merlin par situation (a creer)<br>
+<code>prompt_templates.json</code> &mdash; Templates par situation (a creer)
+</div>
+
+</main>
+</body>
+</html>

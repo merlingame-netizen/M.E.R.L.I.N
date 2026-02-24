@@ -1127,15 +1127,46 @@ func _extract_labels_from_text(text: String) -> Array[Dictionary]:
 					"C'EST", "EST", "SONT", "ETRE", "AVOIR", "FAIT", "VA"]:
 				print("[MerlinLlmAdapter] Rejected determinant as verb: '%s'" % v)
 				continue
-			# Reject overused generic verbs — force fallback to pool for variety
-			if v_upper in ["AVANCER", "OBSERVER", "FUIR", "SUIVRE", "CHERCHER",
-					"REGARDER", "ECOUTER", "CONTINUER", "ALLER", "MARCHER",
-					"ATTENDRE", "RESTER", "PARTIR"]:
-				print("[MerlinLlmAdapter] Rejected generic verb: '%s'" % v)
+			# Reject only the 3 most overused verbs from Qwen 1.5B (cause 30%+ repetition).
+			# All other verbs are accepted — LLM creativity over pool conformity.
+			# FUIR, SUIVRE, CHERCHER, REGARDER etc. removed: used with enough variety.
+			if v_upper in ["AVANCER", "OBSERVER", "CONTINUER"]:
+				print("[MerlinLlmAdapter] Rejected overused verb (top-3 Qwen 1.5B): '%s'" % v)
 				continue
 			labels.append({"verb": v_upper, "desc": str(split_data.get("desc", ""))})
 		else:
 			print("[MerlinLlmAdapter] Rejected verb (empty or too long): '%s'" % v)
+
+	# Fallback patterns when main regex finds fewer than 3 labels.
+	# Handles Qwen 1.5B output formats not covered by the primary pattern.
+	if labels.size() < 3:
+		var rx_fallback := RegEx.new()
+		# Pattern 1: markdown bold headers — **Choix A**: text | **Option 1**: text
+		rx_fallback.compile("(?m)^\\s*\\*{1,2}(?:Choix|Option|Action)\\s*[A-D1-4]\\*{0,2}[:\\s]+\\*{0,2}(.*?)\\*{0,2}$")
+		for m in rx_fallback.search_all(text):
+			if labels.size() >= 3:
+				break
+			var raw: String = m.get_string(1).strip_edges().replace("**", "").replace("*", "").strip_edges()
+			if raw.length() >= 2 and raw.length() <= 200:
+				var sd := _split_verb_desc(raw)
+				var fv: String = str(sd.get("verb", "")).strip_edges()
+				if not fv.is_empty() and fv.length() <= 20:
+					labels.append({"verb": fv.to_upper(), "desc": str(sd.get("desc", ""))})
+					print("[MerlinLlmAdapter] Fallback bold-header label: '%s'" % fv)
+		# Pattern 2: bullet lines — lines starting with - / * / > followed by content
+		if labels.size() < 3:
+			var rx_bullet := RegEx.new()
+			rx_bullet.compile("(?m)^\\s*[-*>]\\s+(\\S[^\\n]{1,198})")
+			for m in rx_bullet.search_all(text):
+				if labels.size() >= 3:
+					break
+				var raw: String = m.get_string(1).strip_edges().replace("**", "").replace("*", "").strip_edges()
+				if raw.length() >= 2:
+					var sd := _split_verb_desc(raw)
+					var fv: String = str(sd.get("verb", "")).strip_edges()
+					if not fv.is_empty() and fv.length() <= 20:
+						labels.append({"verb": fv.to_upper(), "desc": str(sd.get("desc", ""))})
+						print("[MerlinLlmAdapter] Fallback bullet label: '%s'" % fv)
 
 	# Limit to 3 labels (game uses 3 choices: Left/Center/Right)
 	if labels.size() > 3:
@@ -1180,8 +1211,11 @@ func _get_all_pool_verbs() -> Array[String]:
 	return all_verbs
 
 
-## Validate that a label is a single verb from the pools.
-## Returns true if the first word (uppercased) is in any verb pool.
+## Check whether a label verb is in a pre-defined pool (analytics only).
+## PRINCIPLE: LLM creativity over pool conformity.
+## This function must NOT be used to gate label acceptance.
+## Use it only for logging/metrics to track how often LLM stays within pools.
+## A label is accepted if its verb passes the blocklist in _extract_labels_from_text().
 func _validate_single_verb(label: Dictionary) -> bool:
 	var verb: String = str(label.get("verb", "")).strip_edges().to_upper()
 	if verb.is_empty():
@@ -1191,7 +1225,11 @@ func _validate_single_verb(label: Dictionary) -> bool:
 	if space_idx > 0:
 		verb = verb.substr(0, space_idx)
 	var all_verbs := _get_all_pool_verbs()
-	return verb in all_verbs
+	var in_pool: bool = verb in all_verbs
+	# Analytics log only — never use the return value to reject a label
+	if not in_pool:
+		print("[MerlinLlmAdapter] Analytics: verb not in pools (creative): '%s'" % verb)
+	return in_pool
 
 
 ## Map card position to a scenario arc phase template key.

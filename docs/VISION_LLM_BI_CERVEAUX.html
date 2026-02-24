@@ -1,0 +1,637 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>M.E.R.L.I.N. - Vision LLM Bi-Cerveaux</title>
+<style>
+:root{--bg:#1a1a2e;--bg2:#16213e;--bg3:#0f3460;--text:#e0e0e0;--text2:#a0a0a0;--accent:#00d4ff;--accent2:#00ff88;--warn:#ffaa00;--danger:#ff4444;--ok:#00ff88;--moyen:#ffaa00;--faible:#ff4444;--partiel:#ff88ff;--sidebar-w:260px;--font:"Segoe UI",system-ui,-apple-system,sans-serif;--mono:"Cascadia Code","Fira Code","Consolas",monospace}
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:var(--font);background:var(--bg);color:var(--text);line-height:1.7;display:flex;min-height:100vh}
+.sidebar{position:fixed;top:0;left:0;width:var(--sidebar-w);height:100vh;background:var(--bg2);border-right:1px solid rgba(0,212,255,.15);overflow-y:auto;padding:24px 16px;z-index:100}
+.sidebar h2{color:var(--accent);font-size:14px;text-transform:uppercase;letter-spacing:2px;margin-bottom:20px;padding-bottom:10px;border-bottom:1px solid rgba(0,212,255,.2)}
+.sidebar a{display:block;color:var(--text2);text-decoration:none;padding:6px 10px;font-size:13px;border-radius:4px;transition:all .2s}
+.sidebar a:hover{color:var(--accent);background:rgba(0,212,255,.08)}
+.sidebar a.sub{padding-left:24px;font-size:12px}
+.main{margin-left:var(--sidebar-w);padding:40px 60px;max-width:1000px;flex:1}
+h1{font-size:2.2em;color:var(--accent);margin-bottom:8px;letter-spacing:-0.5px}
+.subtitle{color:var(--text2);font-size:1.1em;margin-bottom:32px}
+h2{font-size:1.6em;color:var(--accent);margin:40px 0 16px;padding-bottom:8px;border-bottom:2px solid rgba(0,212,255,.2)}
+h3{font-size:1.2em;color:var(--accent2);margin:24px 0 12px}
+p{margin-bottom:14px}
+table{width:100%;border-collapse:collapse;margin:16px 0 24px;background:var(--bg2);border-radius:8px;overflow:hidden}
+th{background:var(--bg3);color:var(--accent);padding:12px 16px;text-align:left;font-size:13px;text-transform:uppercase;letter-spacing:1px}
+td{padding:10px 16px;border-top:1px solid rgba(255,255,255,.05);font-size:14px}
+tr:hover{background:rgba(0,212,255,.04)}
+details{background:var(--bg2);border:1px solid rgba(0,212,255,.1);border-radius:8px;margin:16px 0;overflow:hidden}
+summary{padding:14px 20px;cursor:pointer;font-weight:600;color:var(--accent);font-size:15px;user-select:none}
+summary:hover{background:rgba(0,212,255,.05)}
+details>div{padding:0 20px 20px}
+.badge{display:inline-block;padding:2px 10px;border-radius:12px;font-size:11px;font-weight:700;text-transform:uppercase}
+.badge.ok{background:rgba(0,255,136,.15);color:var(--ok)}
+.badge.moyen{background:rgba(255,170,0,.15);color:var(--moyen)}
+.badge.faible{background:rgba(255,68,68,.15);color:var(--faible)}
+.badge.partiel{background:rgba(255,136,255,.15);color:var(--partiel)}
+.badge.critique{background:rgba(255,68,68,.25);color:#ff6666;border:1px solid rgba(255,68,68,.3)}
+.badge.p0{background:rgba(255,68,68,.2);color:#ff6666}.badge.p1{background:rgba(255,170,0,.2);color:#ffaa00}.badge.p2{background:rgba(0,212,255,.2);color:#00d4ff}.badge.p3{background:rgba(0,255,136,.2);color:#00ff88}.badge.p4{background:rgba(160,160,160,.2);color:#a0a0a0}
+.callout{padding:16px 20px;border-radius:8px;margin:16px 0;border-left:4px solid}
+.callout.info{background:rgba(0,212,255,.08);border-color:var(--accent)}
+.callout.warn{background:rgba(255,170,0,.08);border-color:var(--warn)}
+.callout.danger{background:rgba(255,68,68,.08);border-color:var(--danger)}
+.callout strong{display:block;margin-bottom:6px}
+.phase-timeline{position:relative;padding-left:40px;margin:24px 0}
+.phase-timeline::before{content:"";position:absolute;left:14px;top:0;bottom:0;width:2px;background:linear-gradient(to bottom,var(--danger),var(--warn),var(--accent),var(--accent2),var(--text2))}
+.phase-item{position:relative;margin-bottom:24px}
+.phase-item::before{content:"";position:absolute;left:-33px;top:4px;width:14px;height:14px;border-radius:50%;border:2px solid}
+.phase-item.p0::before{border-color:var(--danger);background:rgba(255,68,68,.3)}
+.phase-item.p1::before{border-color:var(--warn);background:rgba(255,170,0,.3)}
+.phase-item.p2::before{border-color:var(--accent);background:rgba(0,212,255,.3)}
+.phase-item.p3::before{border-color:var(--accent2);background:rgba(0,255,136,.3)}
+.phase-item.p4::before{border-color:var(--text2);background:rgba(160,160,160,.3)}
+.phase-title{font-weight:700;font-size:15px;margin-bottom:4px}
+.phase-desc{color:var(--text2);font-size:13px}
+.arch-box{display:inline-block;padding:6px 14px;border-radius:6px;margin:4px;font-size:13px;font-weight:600}
+.arch-box.narrator{background:rgba(0,212,255,.15);color:var(--accent);border:1px solid rgba(0,212,255,.3)}
+.arch-box.gm{background:rgba(0,255,136,.15);color:var(--accent2);border:1px solid rgba(0,255,136,.3)}
+.arch-box.shared{background:rgba(255,170,0,.15);color:var(--warn);border:1px solid rgba(255,170,0,.3)}
+.arch-box.infra{background:rgba(160,160,160,.15);color:var(--text2);border:1px solid rgba(160,160,160,.3)}
+code{font-family:var(--mono);background:rgba(0,212,255,.1);padding:2px 6px;border-radius:3px;font-size:13px}
+.file-list{list-style:none}
+.file-list li{padding:8px 12px;border-left:3px solid var(--accent);margin-bottom:8px;background:var(--bg2);border-radius:0 6px 6px 0}
+.file-list li code{color:var(--accent)}
+.file-list li span{color:var(--text2);font-size:13px}
+@media(max-width:900px){.sidebar{display:none}.main{margin-left:0;padding:20px}}
+</style>
+</head>
+<body>
+<nav class="sidebar">
+<h2>Table des Matieres</h2>
+<a href="#section-a">A. Audit Actuel</a>
+<a href="#a1" class="sub">A1. Narrator Brain</a>
+<a href="#a2" class="sub">A2. Game Master Brain</a>
+<a href="#a3" class="sub">A3. Systemes Support</a>
+<a href="#a4" class="sub">A4. Bugs Critiques</a>
+<a href="#section-b">B. Cible Bi-Cerveaux</a>
+<a href="#b1" class="sub">B1. Narrator Creatif</a>
+<a href="#b2" class="sub">B2. Game Master</a>
+<a href="#b3" class="sub">B3. Capacites UNIQUES</a>
+<a href="#b4" class="sub">B4. Cas d'Usage Innovants</a>
+<a href="#b5" class="sub">B5. Limites Realistes 1.5B</a>
+<a href="#section-c">C. Matrice Priorites</a>
+<a href="#section-d">D. Strategie LoRA</a>
+<a href="#d1" class="sub">D1. LoRA Datasets</a>
+<a href="#d2-prompt" class="sub">D2. Prompt Engineering Avance</a>
+<a href="#d3-arch" class="sub">D3. Architecture Bi-Cerveaux</a>
+<a href="#d4" class="sub">D4. LoRA Metrics</a>
+<a href="#d5" class="sub">D5. LoRA Pipeline</a>
+<a href="#section-e">E. Roadmap Phases</a>
+<a href="#section-f">F. Fichiers Reference</a>
+</nav>
+
+<main class="main">
+<h1>M.E.R.L.I.N. - Vision LLM Bi-Cerveaux</h1>
+<p class="subtitle">Document de vision technique - Architecture DUAL Brain Qwen 2.5-1.5B via Ollama<br>
+Derniere mise a jour : 24 fevrier 2026</p>
+
+<div class="callout info">
+<strong>Objectif de ce document</strong>
+Definir la vision cible du systeme LLM bi-cerveaux de M.E.R.L.I.N., auditer l&#x27;etat actuel, et planifier les phases d&#x27;evolution vers un systeme IA narratif de reference pour les jeux indie Godot 4.
+</div>
+<h2 id="section-a">A. Audit du Systeme Actuel</h2>
+<p>Etat des lieux complet des deux cerveaux et systemes support, avec notation qualitative.</p>
+
+<details open id="a1">
+<summary>A1. Narrator Brain (Cerveau Creatif)</summary>
+<div>
+<table>
+<tr><th>Capacite</th><th>Etat</th><th>Details</th></tr>
+<tr><td>Generation texte francais</td><td><span class="badge ok">OK</span></td><td>80% francais natif, ChatML Qwen 2.5</td></tr>
+<tr><td>Format A)/B)/C) options</td><td><span class="badge ok">OK</span></td><td>Parser permissif (A:, **A)**, - **B**: etc.)</td></tr>
+<tr><td>Variete narrative (Jaccard)</td><td><span class="badge ok">OK</span></td><td>Score &lt; 0.7, diversite suffisante</td></tr>
+<tr><td>Latence p50 warm</td><td><span class="badge ok">OK</span></td><td>~7s (seuil &lt; 10s), 17.8 tok/s</td></tr>
+<tr><td>Latence p90 warm</td><td><span class="badge ok">OK</span></td><td>~11s (seuil &lt; 15s)</td></tr>
+<tr><td>Coherence contextuelle</td><td><span class="badge moyen">MOYEN</span></td><td>RAG v2.0 aide, mais context window 4096 limite</td></tr>
+<tr><td>Ton Merlin (style celtique)</td><td><span class="badge moyen">MOYEN</span></td><td>Prompt engineering seul, pas de fine-tuning</td></tr>
+<tr><td>Memoire narrative longue</td><td><span class="badge faible">FAIBLE</span></td><td>Pas de journal structure, RAG token budget 400</td></tr>
+<tr><td>Adaptation au biome</td><td><span class="badge partiel">PARTIEL</span></td><td>Biome cache present, mais vocabulaire generique</td></tr>
+</table>
+</div>
+</details>
+
+<details id="a2">
+<summary>A2. Game Master Brain (Cerveau Strategique)</summary>
+<div>
+<table>
+<tr><th>Capacite</th><th>Etat</th><th>Details</th></tr>
+<tr><td>Generation effets JSON</td><td><span class="badge ok">OK</span></td><td>SHIFT_ASPECT, SOUFFLE, KARMA, PROMISE</td></tr>
+<tr><td>Equilibrage Triade</td><td><span class="badge moyen">MOYEN</span></td><td>Tendance aux effets symetriques, peu de risque</td></tr>
+<tr><td>Prefetch Brain 2</td><td><span class="badge ok">OK</span></td><td>Buffer 5 cartes pre-generees en dual mode</td></tr>
+<tr><td>Respect des contraintes</td><td><span class="badge moyen">MOYEN</span></td><td>Depasse parfois les bornes aspect [-2,+2]</td></tr>
+<tr><td>Adaptation difficulte</td><td><span class="badge faible">FAIBLE</span></td><td>Pas de courbe dynamique, parametres fixes</td></tr>
+<tr><td>Detection fins proches</td><td><span class="badge faible">FAIBLE</span></td><td>Ne detecte pas quand 2 aspects sont extremes</td></tr>
+<tr><td>Tension narrative</td><td><span class="badge faible">FAIBLE</span></td><td>Pas de montee progressive de la tension</td></tr>
+</table>
+</div>
+</details>
+<details id="a3">
+<summary>A3. Systemes Support</summary>
+<div>
+<table>
+<tr><th>Systeme</th><th>Etat</th><th>Details</th></tr>
+<tr><td>RAG v2.0</td><td><span class="badge ok">OK</span></td><td>Token budget 400, biome cache, priority-based context</td></tr>
+<tr><td>Ollama Backend</td><td><span class="badge ok">OK</span></td><td>HTTP API /api/generate, raw=true, ~8s/carte</td></tr>
+<tr><td>MerlinLLM Fallback</td><td><span class="badge ok">OK</span></td><td>C++ GDExtension, Qwen 3B GGUF, backup si pas Ollama</td></tr>
+<tr><td>Zero Fallback Policy</td><td><span class="badge ok">OK</span></td><td>Aucune carte statique, retry backoff, overlay patience</td></tr>
+<tr><td>JSON Repair</td><td><span class="badge ok">OK</span></td><td>Parser permissif dans merlin_llm_adapter.gd</td></tr>
+<tr><td>Scene Cache</td><td><span class="badge moyen">MOYEN</span></td><td>Version-tracked, deduplique refresh 4x vers 1x</td></tr>
+<tr><td>Anti-hallucination</td><td><span class="badge moyen">MOYEN</span></td><td>FR check + repetition Jaccard + length bounds</td></tr>
+<tr><td>Worker Pool</td><td><span class="badge partiel">PARTIEL</span></td><td>Architecture presente mais pas pleinement utilisee</td></tr>
+</table>
+</div>
+</details>
+
+<details id="a4">
+<summary>A4. Bugs Critiques Connus</summary>
+<div>
+<div class="callout danger">
+<strong>Bugs bloquants identifies</strong>
+Ces problemes doivent etre resolus en priorite P0 avant toute evolution.
+</div>
+<table>
+<tr><th>Bug</th><th>Severite</th><th>Impact</th></tr>
+<tr><td>MenuPrincipal crash (regex PCRE2)</td><td><span class="badge critique">CRITIQUE</span></td><td>Crash au lancement si regex mal compilee</td></tr>
+<tr><td>Store null en standalone MerlinGame</td><td><span class="badge critique">CRITIQUE</span></td><td>Scene non testable isolement</td></tr>
+<tr><td>Ollama timeout sans feedback</td><td><span class="badge moyen">MOYEN</span></td><td>Joueur voit ecran fige &gt; 15s sans explication</td></tr>
+<tr><td>Labels generiques non traduits</td><td><span class="badge moyen">MOYEN</span></td><td>Options en anglais si LLM omet les labels</td></tr>
+</table>
+</div>
+</details>
+<h2 id="section-b">B. Vision Cible Bi-Cerveaux</h2>
+<p>La cible est un systeme ou les deux cerveaux collaborent de maniere transparente pour creer une experience narrative emergente unique a chaque partie.</p>
+
+<div style="text-align:center;margin:24px 0">
+<span class="arch-box narrator">Narrator Brain</span>
+<span style="color:var(--text2);margin:0 8px">&#8596;</span>
+<span class="arch-box shared">Orchestrator (merlin_ai.gd)</span>
+<span style="color:var(--text2);margin:0 8px">&#8596;</span>
+<span class="arch-box gm">Game Master Brain</span>
+<br><br>
+<span class="arch-box infra">Ollama Backend</span>
+<span class="arch-box infra">RAG v2.0</span>
+<span class="arch-box infra">Scene Cache</span>
+<span class="arch-box infra">Worker Pool</span>
+<span class="arch-box infra">LoRA Adapters</span>
+</div>
+
+<details open id="b1">
+<summary>B1. Narrator Creatif - Vision Cible</summary>
+<div>
+<table>
+<tr><th>Feature</th><th>Priorite</th><th>Description</th></tr>
+<tr><td>Ton Merlin authentique</td><td><span class="badge p0">P0</span></td><td>LoRA fine-tune sur corpus celtique/druidique, vocabulaire Ogham, proverbes bretons</td></tr>
+<tr><td>Memoire narrative structuree</td><td><span class="badge p1">P1</span></td><td>Journal persistant des evenements cles, references aux choix passes du joueur</td></tr>
+<tr><td>Adaptation biome profonde</td><td><span class="badge p1">P1</span></td><td>Vocabulaire, ambiance et metaphores specifiques par biome (foret, grotte, mer, montagne)</td></tr>
+<tr><td>Voix narrative evoluant</td><td><span class="badge p2">P2</span></td><td>Ton qui change selon la progression: bienveillant au debut, grave vers les fins</td></tr>
+<tr><td>Dialogues Bestiole</td><td><span class="badge p2">P2</span></td><td>Interactions contextuelles entre Merlin et la Bestiole, humour et complicite</td></tr>
+<tr><td>Descriptions sensorielles</td><td><span class="badge p3">P3</span></td><td>Sons, odeurs, textures - immersion multi-sensorielle dans le texte</td></tr>
+</table>
+</div>
+</details>
+
+<details id="b2">
+<summary>B2. Game Master Strategique - Vision Cible</summary>
+<div>
+<table>
+<tr><th>Feature</th><th>Priorite</th><th>Description</th></tr>
+<tr><td>Courbe de difficulte dynamique</td><td><span class="badge p0">P0</span></td><td>Ajustement des effets selon la position actuelle des 3 aspects et le nombre de cartes jouees</td></tr>
+<tr><td>Detection de fin imminente</td><td><span class="badge p0">P0</span></td><td>Quand 2 aspects sont a 1 pas de l&#x27;extreme, proposer un dilemme cornellien</td></tr>
+<tr><td>Tension narrative progressive</td><td><span class="badge p1">P1</span></td><td>Escalade des enjeux: cartes 1-10 douces, 11-20 moyennes, 21-30 intenses</td></tr>
+<tr><td>Equilibrage anti-frustration</td><td><span class="badge p1">P1</span></td><td>Garantir qu&#x27;au moins 1 option sur 3 stabilise un aspect critique</td></tr>
+<tr><td>Coherence effets-narration</td><td><span class="badge p2">P2</span></td><td>Les effets mecaniques doivent correspondre au texte narratif (pas de +Corps sur une meditation)</td></tr>
+<tr><td>Evenements saisonniers</td><td><span class="badge p3">P3</span></td><td>Samhain, Imbolc, Beltane, Lughnasadh - cartes speciales liees au calendrier celtique</td></tr>
+</table>
+</div>
+</details>
+<details id="b3">
+<summary>B3. Capacites UNIQUES du Bi-Cerveaux</summary>
+<div>
+<div class="callout info">
+<strong>Synergie Narrator + Game Master</strong>
+Le vrai pouvoir du systeme bi-cerveaux reside dans la collaboration : le Game Master informe le Narrator des contraintes mecaniques, et le Narrator rend ces contraintes narrativement interessantes.
+</div>
+<table>
+<tr><th>Capacite</th><th>Cerveau</th><th>Description</th></tr>
+<tr><td>Dilemmes moraux generes</td><td><span class="arch-box gm" style="font-size:11px">GM</span></td><td>Creer des choix ou chaque option a un cout significatif sur un aspect different</td></tr>
+<tr><td>Foreshadowing narratif</td><td><span class="arch-box narrator" style="font-size:11px">NAR</span></td><td>Placer des indices subtils dans le texte sur les fins possibles selon l&#x27;etat actuel</td></tr>
+<tr><td>Callback aux choix passes</td><td><span class="arch-box narrator" style="font-size:11px">NAR</span></td><td>Referencer les decisions precedentes du joueur pour creer une continuite narrative</td></tr>
+<tr><td>Equilibrage invisible</td><td><span class="arch-box gm" style="font-size:11px">GM</span></td><td>Ajuster la difficulte sans que le joueur ne percoive la main du game designer</td></tr>
+<tr><td>Arcs narratifs emergents</td><td><span class="arch-box shared" style="font-size:11px">BOTH</span></td><td>Construire des mini-arcs (3-5 cartes) avec introduction, complication, resolution</td></tr>
+<tr><td>Personnalisation Bestiole</td><td><span class="arch-box narrator" style="font-size:11px">NAR</span></td><td>Adapter les reactions de la Bestiole selon son Ogham actif et le lien avec le joueur</td></tr>
+</table>
+</div>
+</details>
+
+<details id="b4">
+<summary>B4. Cas d'Usage Innovants</summary>
+<div>
+<div class="callout info">
+<strong>Au-dela des cartes narratives</strong>
+Le systeme bi-cerveaux ouvre des possibilites d'interaction LLM-engine qui depassent la simple generation de texte. Chaque cas d'usage ci-dessous exploite la synergie GM (structure) + Narrator (creativite).
+</div>
+
+<h3>Visual Tags Proceduraux (LLM &rarr; Godot Shaders/Particles)</h3>
+<p>Le Game Master genere des <code>visual_tags</code> JSON qui pilotent directement les shaders et systemes de particules Godot.</p>
+<table>
+<tr><th>Tag LLM</th><th>Mapping Godot</th><th>Exemple</th></tr>
+<tr><td><code>atmosphere: "brumeux"</code></td><td>Shader fog density + ColorRect overlay</td><td>Foret brumeuse au crepuscule</td></tr>
+<tr><td><code>light: "aube"</code></td><td>DirectionalLight2D color + energy lerp</td><td>Lumiere doree progressive</td></tr>
+<tr><td><code>particles: "lucioles"</code></td><td>GPUParticles2D preset lucioles</td><td>Points lumineux flottants</td></tr>
+<tr><td><code>particles: "pluie"</code></td><td>GPUParticles2D preset pluie + splash</td><td>Pluie fine sur la clairiere</td></tr>
+<tr><td><code>color_tint: "froid"</code></td><td>CanvasModulate blue shift</td><td>Ambiance glaciale hivernale</td></tr>
+<tr><td><code>color_tint: "dore"</code></td><td>CanvasModulate warm gold</td><td>Lumiere sacree du nemeton</td></tr>
+</table>
+
+<h3>Audio Tags Adaptatifs (LLM &rarr; SFXManager)</h3>
+<p>Le GM genere des <code>audio_tags</code> qui declenchent les sons proceduraux du SFXManager existant.</p>
+<table>
+<tr><th>Mood LLM</th><th>Sons declenches</th><th>Intensite</th></tr>
+<tr><td><code>calme</code></td><td>wind_low, birds_distant, water_stream</td><td>0.2 - 0.4</td></tr>
+<tr><td><code>tension</code></td><td>heartbeat_slow, wind_rising, creak_wood</td><td>0.4 - 0.7</td></tr>
+<tr><td><code>danger</code></td><td>heartbeat_fast, thunder_distant, wolf_howl</td><td>0.7 - 1.0</td></tr>
+<tr><td><code>mystere</code></td><td>whisper, chime_crystal, wind_ethereal</td><td>0.3 - 0.6</td></tr>
+<tr><td><code>sacre</code></td><td>choir_distant, bell_deep, harp_arpeggio</td><td>0.5 - 0.8</td></tr>
+<tr><td><code>combat</code></td><td>drum_war, metal_clash, breath_heavy</td><td>0.8 - 1.0</td></tr>
+<tr><td><code>tristesse</code></td><td>rain_soft, sigh_wind, harp_minor</td><td>0.2 - 0.5</td></tr>
+</table>
+
+<h3>Dialogue Interactif Merlin</h3>
+<p>Au lieu des 3 options classiques, certaines cartes speciales permettent un echange direct avec Merlin.</p>
+<table>
+<tr><th>Fonctionnalite</th><th>Description</th><th>Contrainte</th></tr>
+<tr><td>3 options + texte libre</td><td>Le joueur peut choisir A/B/C OU taper une reponse libre</td><td>Max 50 caracteres, sanitisation anti-injection</td></tr>
+<tr><td>Max 2 echanges</td><td>Merlin repond au texte libre, puis force un choix A/B/C</td><td>Evite la derive conversationnelle du 1.5B</td></tr>
+<tr><td>Narrator-only</td><td>Le GM ne genere pas d'effets pour les echanges libres</td><td>Effets uniquement sur le choix final A/B/C</td></tr>
+</table>
+
+<h3>Autres Cas d'Usage</h3>
+<table>
+<tr><th>Cas d'Usage</th><th>Cerveau</th><th>Description</th></tr>
+<tr><td>Chemins non-pris</td><td><span class="arch-box narrator" style="font-size:11px">NAR</span></td><td>"Si tu avais choisi B, tu aurais..." — revele lors de recap fin de run</td></tr>
+<tr><td>Titres du joueur</td><td><span class="arch-box gm" style="font-size:11px">GM</span></td><td>Titres gagnes selon le style de jeu : "Le Prudent", "L'Audacieux", "Le Mystique"</td></tr>
+<tr><td>Recaps narratifs</td><td><span class="arch-box narrator" style="font-size:11px">NAR</span></td><td>Resume poetique de la run en 3-5 phrases, mentionne les moments cles</td></tr>
+<tr><td>Sequences de reve</td><td><span class="arch-box narrator" style="font-size:11px">NAR</span></td><td>Cartes oniriques entre les biomes, ton surreal, foreshadowing</td></tr>
+<tr><td>Tutoriel narratif</td><td><span class="arch-box shared" style="font-size:11px">BOTH</span></td><td>Merlin guide le joueur naturellement dans ses premieres cartes sans didactisme</td></tr>
+</table>
+</div>
+</details>
+
+<details id="b5">
+<summary>B5. Limites Realistes du 1.5B</summary>
+<div>
+<div class="callout warn">
+<strong>Honnetete technique</strong>
+Qwen 2.5-1.5B est un nano-modele. Il excelle dans un cadre contraint mais a des limites fondamentales qu'aucun prompt engineering ne peut resoudre. Le code et le LoRA compensent.
+</div>
+
+<h3>Ce qu'il fait <span class="badge ok">BIEN</span></h3>
+<table>
+<tr><th>Capacite</th><th>Condition</th><th>Qualite</th></tr>
+<tr><td>Texte court en francais (50-150 tok)</td><td>Prompt system &lt; 150 tokens</td><td><span class="badge ok">90%+</span></td></tr>
+<tr><td>Format structure (A/B/C options)</td><td>1 seul exemple dans le prompt</td><td><span class="badge ok">85%+</span></td></tr>
+<tr><td>JSON simple (GBNF contraint)</td><td>Grammaire GBNF activee</td><td><span class="badge ok">95%+</span></td></tr>
+<tr><td>Vocabulaire injecte (biome, Ogham)</td><td>Mots-cles dans le prompt user</td><td><span class="badge ok">80%+</span></td></tr>
+<tr><td>Variation narrative (Jaccard &lt; 0.7)</td><td>repetition_penalty &ge; 1.35</td><td><span class="badge ok">OK</span></td></tr>
+<tr><td>Reponse rapide (&lt; 8s warm)</td><td>max_tokens &le; 150, Ollama</td><td><span class="badge ok">17.8 tok/s</span></td></tr>
+</table>
+
+<h3>Ce qu'il fait <span class="badge moyen">MOYENNEMENT</span> &rarr; Ameliorable par LoRA</h3>
+<table>
+<tr><th>Capacite</th><th>Probleme</th><th>Solution LoRA</th></tr>
+<tr><td>Vocabulaire celtique/druidique</td><td>Connait les mots mais ne les utilise pas spontanement</td><td>Fine-tune sur corpus mythologique (500+ textes)</td></tr>
+<tr><td>Persona Merlin coherent</td><td>Derive vers un ton generique apres 3-4 cartes</td><td>Fine-tune sur dialogues Merlin rediges (300+ echanges)</td></tr>
+<tr><td>Dilemmes moraux nuances</td><td>Options trop symetriques (bon/neutre/mauvais)</td><td>Fine-tune sur dilemmes avec couts reels sur chaque option</td></tr>
+<tr><td>Descriptions sensorielles</td><td>Texte generique ("une foret sombre")</td><td>Fine-tune sur descriptions biome (50+ textes par biome)</td></tr>
+<tr><td>Adaptation au profil joueur</td><td>Ignore le contexte profil dans le prompt</td><td>Fine-tune avec exemples prompt+profil &rarr; texte adapte</td></tr>
+</table>
+
+<h3>Ce qu'il <span class="badge faible">NE PEUT PAS</span> faire &rarr; Compense par CODE</h3>
+<table>
+<tr><th>Limitation</th><th>Raison fondamentale</th><th>Compensation CODE</th></tr>
+<tr><td>Planifier sur plusieurs cartes</td><td>Pas de memoire inter-appels, context 4096 tok</td><td>Arc State Machine (CODE gere SETUP &rarr; CLIMAX &rarr; RESOLUTION)</td></tr>
+<tr><td>Se souvenir des choix passes</td><td>Chaque appel est stateless</td><td>RAG v2.0 injecte les choix pertinents dans le prompt</td></tr>
+<tr><td>Auto-evaluer sa qualite</td><td>Pas de capacite meta-cognitive a 1.5B</td><td>Quality Judge (CODE) verifie post-generation</td></tr>
+<tr><td>Equilibrer les aspects Triade</td><td>Ne comprend pas les regles de jeu</td><td>GM + DifficultyAdapter (CODE) calcule les effets</td></tr>
+<tr><td>Detecter la frustration joueur</td><td>Pas d'acces aux metriques de session</td><td>SessionRegistry (CODE) detecte et injecte dans prompt</td></tr>
+<tr><td>Gerer la tension narrative</td><td>Pas de notion de progression dramatique</td><td>NarrativeRegistry.global_tension (CODE) controle l'escalade</td></tr>
+</table>
+
+<div class="callout info">
+<strong>Philosophie : LLM = Plume, CODE = Cerveau</strong>
+Le 1.5B est un excellent generateur de texte contraint. Toute logique de jeu, equilibrage, memoire et planification est geree en GDScript deterministe. Le LLM n'est jamais responsable de decisions strategiques.
+</div>
+</div>
+</details>
+
+<h2 id="section-c">C. Matrice de Priorites</h2>
+<p>Vue consolidee de toutes les features cibles avec leur impact et leur priorite de realisation.</p>
+
+<div class="callout warn">
+<strong>Regle de priorisation</strong>
+P0 = bloquant pour la boucle de jeu minimale. P1 = necessaire pour une experience correcte. P2 = amelioration significative. P3 = polish et extras.
+</div>
+
+<table>
+<tr><th>Feature</th><th>Brain</th><th>Impact</th><th>Effort</th><th>Priorite</th></tr>
+<tr><td>Fix bugs critiques (A4)</td><td>Both</td><td><span class="badge critique">CRITIQUE</span></td><td>Moyen</td><td><span class="badge p0">P0</span></td></tr>
+<tr><td>Ton Merlin LoRA</td><td>Narrator</td><td><span class="badge ok">HAUT</span></td><td>Eleve</td><td><span class="badge p0">P0</span></td></tr>
+<tr><td>Courbe difficulte dynamique</td><td>GM</td><td><span class="badge ok">HAUT</span></td><td>Moyen</td><td><span class="badge p0">P0</span></td></tr>
+<tr><td>Detection fin imminente</td><td>GM</td><td><span class="badge ok">HAUT</span></td><td>Moyen</td><td><span class="badge p0">P0</span></td></tr>
+<tr><td>Memoire narrative structuree</td><td>Narrator</td><td><span class="badge ok">HAUT</span></td><td>Eleve</td><td><span class="badge p1">P1</span></td></tr>
+<tr><td>Adaptation biome profonde</td><td>Narrator</td><td><span class="badge moyen">MOYEN</span></td><td>Moyen</td><td><span class="badge p1">P1</span></td></tr>
+<tr><td>Tension narrative progressive</td><td>GM</td><td><span class="badge ok">HAUT</span></td><td>Moyen</td><td><span class="badge p1">P1</span></td></tr>
+<tr><td>Anti-frustration garanti</td><td>GM</td><td><span class="badge moyen">MOYEN</span></td><td>Faible</td><td><span class="badge p1">P1</span></td></tr>
+<tr><td>Voix narrative evoluant</td><td>Narrator</td><td><span class="badge moyen">MOYEN</span></td><td>Moyen</td><td><span class="badge p2">P2</span></td></tr>
+<tr><td>Dialogues Bestiole</td><td>Narrator</td><td><span class="badge moyen">MOYEN</span></td><td>Moyen</td><td><span class="badge p2">P2</span></td></tr>
+<tr><td>Coherence effets-narration</td><td>Both</td><td><span class="badge moyen">MOYEN</span></td><td>Eleve</td><td><span class="badge p2">P2</span></td></tr>
+<tr><td>Arcs narratifs emergents</td><td>Both</td><td><span class="badge ok">HAUT</span></td><td>Eleve</td><td><span class="badge p2">P2</span></td></tr>
+<tr><td>Descriptions sensorielles</td><td>Narrator</td><td><span class="badge faible">FAIBLE</span></td><td>Faible</td><td><span class="badge p3">P3</span></td></tr>
+<tr><td>Evenements saisonniers</td><td>GM</td><td><span class="badge moyen">MOYEN</span></td><td>Moyen</td><td><span class="badge p3">P3</span></td></tr>
+<tr><td>Personnalisation Bestiole</td><td>Narrator</td><td><span class="badge faible">FAIBLE</span></td><td>Moyen</td><td><span class="badge p3">P3</span></td></tr>
+</table>
+<h2 id="section-d">D. Strategie LoRA Fine-Tuning</h2>
+<p>Le fine-tuning LoRA est le levier principal pour transformer Qwen 2.5-1.5B generique en un Merlin narrateur authentique.</p>
+
+<details open id="d1">
+<summary>D1. Datasets et Sources</summary>
+<div>
+<table>
+<tr><th>Dataset</th><th>Volume</th><th>Format</th><th>Usage</th></tr>
+<tr><td>Corpus mythologie celtique</td><td>~500 textes</td><td>ChatML</td><td>Ton, vocabulaire, references culturelles</td></tr>
+<tr><td>Proverbes bretons/irlandais</td><td>~200 entrees</td><td>ChatML</td><td>Sagesse druidique, aphorismes de Merlin</td></tr>
+<tr><td>Gameplay sessions enregistrees</td><td>~1000 cartes</td><td>ChatML</td><td>Format attendu, structure A/B/C, effets JSON</td></tr>
+<tr><td>Descriptions biomes (redige)</td><td>~50 textes</td><td>ChatML</td><td>Vocabulaire sensoriel par environnement</td></tr>
+<tr><td>Dialogues Merlin-Joueur</td><td>~300 echanges</td><td>ChatML</td><td>Personnalite, humour, bienveillance</td></tr>
+</table>
+<p style="margin-top:12px"><strong>Repertoire:</strong> <code>data/ai/training/</code> (brut + augmente, format ChatML)</p>
+<p><strong>Pipeline export:</strong> <code>tools/lora/</code> (export, augment, train, convert, benchmark)</p>
+</div>
+</details>
+
+<details id="d2-prompt">
+<summary>D2. Prompt Engineering Avance</summary>
+<div>
+<div class="callout info">
+<strong>Optimisation des prompts pour Qwen 2.5-1.5B</strong>
+Chaque token compte. Les prompts ci-dessous sont calibres pour maximiser la qualite de sortie dans le budget token du nano-modele.
+</div>
+
+<h3>Prompt Narrator Optimise</h3>
+<table>
+<tr><th>Composant</th><th>Budget</th><th>Contenu</th></tr>
+<tr><td>System prompt</td><td>~150 tokens</td><td>Role Merlin, ton druidique, format A/B/C, regles de longueur, 1 exemple JSON</td></tr>
+<tr><td>User prompt</td><td>~100 tokens</td><td>Etat Triade, biome, jour, profil joueur (1 ligne), effets GM (injectes), arc position</td></tr>
+<tr><td>Params</td><td>-</td><td>T=0.60-0.70, top_p=0.90, max=180, rep_penalty=1.45, top_k=40</td></tr>
+</table>
+<p><strong>Template System Narrator:</strong></p>
+<code style="display:block;padding:12px;background:var(--bg3);border-radius:6px;white-space:pre-wrap;font-size:12px;line-height:1.6">Tu es Merlin, druide ancien. Raconte une scene en francais (80-150 mots).
+Ton: sage, poetique, avec humour subtil. Vocabulaire celtique bienvenu.
+Le voyageur fait face a un choix. Propose 3 options : A) B) C).
+Option B coute 1 souffle. Les effets mecaniques sont: {gm_effects}
+Biome: {biome}. Ambiance: {visual_tags.atmosphere}.</code>
+
+<h3>Prompt Game Master Optimise</h3>
+<table>
+<tr><th>Composant</th><th>Budget</th><th>Contenu</th></tr>
+<tr><td>System prompt</td><td>~80 tokens</td><td>Role GM, format JSON strict, effets SHIFT_ASPECT, visual_tags, audio_tags, 1 exemple</td></tr>
+<tr><td>User prompt</td><td>~60 tokens</td><td>Etat Triade (3 aspects + valeurs), souffle, carte N, danger_level, arc_position</td></tr>
+<tr><td>Params</td><td>-</td><td>T=0.15, top_p=0.8, max=80, rep_penalty=1.0, top_k=15, GBNF obligatoire</td></tr>
+</table>
+<p><strong>Template System GM:</strong></p>
+<code style="display:block;padding:12px;background:var(--bg3);border-radius:6px;white-space:pre-wrap;font-size:12px;line-height:1.6">Game Master. Genere JSON effets pour 3 options.
+Format: {"effects":[{"aspect":"Corps|Ame|Monde","dir":"up|down"},...],
+"visual":{"atmosphere":"...","light":"...","particles":"...","color_tint":"..."},
+"audio":{"mood":"...","intensity":0.0-1.0,"elements":[...]}}</code>
+
+<h3>Prompts par Situation</h3>
+<table>
+<tr><th>Situation</th><th>Injection dans prompt Narrator</th><th>Injection dans prompt GM</th></tr>
+<tr><td><span class="badge ok">Prudent</span></td><td>"Le voyageur est PRUDENT. Tons subtils, indices caches, recompense l'observation."</td><td>danger_level=low, bias: options equilibrees</td></tr>
+<tr><td><span class="badge moyen">Audacieux</span></td><td>"Le voyageur est AUDACIEUX. Defis directs, enjeux eleves, recompense le courage."</td><td>danger_level=medium, bias: options risquees</td></tr>
+<tr><td><span class="badge critique">Climax</span></td><td>"C'est le CLIMAX de l'arc. Tension maximale, consequences irreversibles, ton grave."</td><td>danger_level=high, effets amplifies x1.5</td></tr>
+<tr><td><span class="badge faible">Danger</span></td><td>"Le voyageur est en DANGER (2+ aspects extremes). Urgence, carte de sauvetage possible."</td><td>danger_level=critical, 1 option stabilisante garantie</td></tr>
+<tr><td><span class="badge partiel">4e Mur</span></td><td>"Merlin s'adresse au joueur directement. Briser le 4e mur subtilement. Humour et complicite."</td><td>Pas d'effets mecaniques (carte Merlin Direct)</td></tr>
+</table>
+</div>
+</details>
+
+<details id="d3-arch">
+<summary>D3. Architecture Bi-Cerveaux Detaillee</summary>
+<div>
+
+<h3>Pipeline Sequentiel (GM First &rarr; Narrator Aligned)</h3>
+<div class="callout info">
+<strong>Remplace le pipeline parallele precedent</strong>
+Gain: +40% coherence texte-effets. Cout: +1s latence (~8s total vs ~7s parallele).
+</div>
+<table>
+<tr><th>Etape</th><th>Cerveau</th><th>Input</th><th>Output</th><th>Duree</th></tr>
+<tr><td>1. Calcul etat</td><td><span class="arch-box infra" style="font-size:11px">CODE</span></td><td>MerlinStore, registres, session</td><td>profil joueur, danger_level, arc_position, biome, jour/saison</td><td>~0ms</td></tr>
+<tr><td>2. GM genere</td><td><span class="arch-box gm" style="font-size:11px">GM</span></td><td>Etat calcule</td><td>effects JSON + visual_tags + audio_tags</td><td>~2s</td></tr>
+<tr><td>3. Narrator genere</td><td><span class="arch-box narrator" style="font-size:11px">NAR</span></td><td>Etat + effets GM injectes</td><td>Scenario texte + A/B/C labels alignes</td><td>~6s</td></tr>
+<tr><td>4. Quality Judge</td><td><span class="arch-box infra" style="font-size:11px">CODE</span></td><td>Carte assemblee</td><td>Validation guardrails + display_card()</td><td>~0ms</td></tr>
+</table>
+
+<h3>Communication Inter-Cerveaux</h3>
+<table>
+<tr><th>Direction</th><th>Donnees transmises</th><th>Mecanisme</th></tr>
+<tr><td>CODE &rarr; GM</td><td>Etat Triade, souffle, danger_level, carte N, arc_position</td><td>Prompt user GM (60 tok)</td></tr>
+<tr><td>GM &rarr; Narrator</td><td>effects[], visual_tags{}, audio_tags{}</td><td>Injection dans prompt user Narrator</td></tr>
+<tr><td>CODE &rarr; Narrator</td><td>Profil joueur (1 ligne), biome, ambiance</td><td>Prompt user Narrator (100 tok)</td></tr>
+<tr><td>Narrator &rarr; CODE</td><td>Texte brut + labels A/B/C</td><td>Parser permissif (4 strategies)</td></tr>
+<tr><td>GM &rarr; CODE</td><td>JSON effets structure</td><td>GBNF contraint (95%+ valide)</td></tr>
+</table>
+
+<h3>Cas Limites</h3>
+<table>
+<tr><th>Cas Limite</th><th>Detection</th><th>Resolution</th></tr>
+<tr><td><span class="badge faible">GM Timeout (&gt;5s)</span></td><td>Timer async</td><td>Effets generiques calcules par DifficultyAdapter (CODE). Narrator continue normalement.</td></tr>
+<tr><td><span class="badge faible">Narrator Timeout (&gt;10s)</span></td><td>Timer async</td><td>Retry 1x. Si echec: "Merlin medite..." overlay, retry backoff, retour hub en dernier recours.</td></tr>
+<tr><td><span class="badge moyen">GM Empty Response</span></td><td>JSON vide ou invalide</td><td>Effets par defaut: option A=+1 aspect bas, B=equilibre (cout souffle), C=-1 aspect haut.</td></tr>
+<tr><td><span class="badge moyen">Narrator Empty Response</span></td><td>Texte &lt; 10 chars</td><td>Retry avec temperature +0.1. Si 2e echec: texte generique contextuel.</td></tr>
+<tr><td><span class="badge faible">Deadlock (les 2 timeout)</span></td><td>Les deux cerveaux echouent</td><td>Carte d'urgence: "Le brouillard se leve..." + effets neutres. Log pour diagnostic.</td></tr>
+<tr><td><span class="badge moyen">Incoherence texte-effets</span></td><td>Quality Judge post-generation</td><td>Log l'incoherence, affiche quand meme (le joueur ne voit pas les effets avant choix).</td></tr>
+</table>
+
+<h3>Quand Quel Cerveau ?</h3>
+<table>
+<tr><th>Situation</th><th>GM</th><th>Narrator</th><th>Notes</th></tr>
+<tr><td>Carte narrative standard</td><td><span class="badge ok">OUI</span></td><td><span class="badge ok">OUI</span></td><td>Pipeline sequentiel complet</td></tr>
+<tr><td>Intro de run</td><td><span class="badge faible">NON</span></td><td><span class="badge ok">OUI</span></td><td>Narrator-only, pas d'effets</td></tr>
+<tr><td>Dialogue Merlin</td><td><span class="badge faible">NON</span></td><td><span class="badge ok">OUI</span></td><td>Narrator-only, carte Merlin Direct</td></tr>
+<tr><td>Sequence de reve</td><td><span class="badge faible">NON</span></td><td><span class="badge ok">OUI</span></td><td>Narrator-only, ton surreal</td></tr>
+<tr><td>Recap fin de run</td><td><span class="badge faible">NON</span></td><td><span class="badge ok">OUI</span></td><td>Narrator-only, resume poetique</td></tr>
+<tr><td>Carte Promise (pacte)</td><td><span class="badge ok">OUI</span></td><td><span class="badge ok">OUI</span></td><td>GM: effets du pacte. Narrator: mise en scene</td></tr>
+<tr><td>Carte Event (saison)</td><td><span class="badge ok">OUI</span></td><td><span class="badge ok">OUI</span></td><td>GM: effets saisonniers. Narrator: description</td></tr>
+<tr><td>Carte Danger critique</td><td><span class="badge ok">OUI</span></td><td><span class="badge ok">OUI</span></td><td>GM: 1 option stabilisante. Narrator: urgence</td></tr>
+<tr><td>Prefetch (buffer)</td><td><span class="badge ok">OUI</span></td><td><span class="badge ok">OUI</span></td><td>Pipeline complet en arriere-plan (Brain 2)</td></tr>
+</table>
+</div>
+</details>
+
+<details id="d4">
+<summary>D4. Metriques d&#x27;Evaluation LoRA</summary>
+<div>
+<table>
+<tr><th>Metrique</th><th>Seuil cible</th><th>Outil</th></tr>
+<tr><td>Perplexite (francais)</td><td>&lt; 15.0</td><td>lm-eval-harness</td></tr>
+<tr><td>BLEU score (reference)</td><td>&gt; 0.25</td><td>sacrebleu</td></tr>
+<tr><td>Coherence celtique (humain)</td><td>&gt; 7/10</td><td>Evaluation manuelle</td></tr>
+<tr><td>Respect format A/B/C</td><td>&gt; 95%</td><td>Test automatique (100 cartes)</td></tr>
+<tr><td>Francais output rate</td><td>&gt; 90%</td><td>Detection langue auto</td></tr>
+<tr><td>Latence impact</td><td>&lt; +20%</td><td>Benchmark in-engine</td></tr>
+<tr><td>Diversite Jaccard</td><td>&lt; 0.65</td><td>Comparaison paires</td></tr>
+</table>
+<div class="callout warn">
+<strong>Decision GO/NO-GO</strong>
+Le LoRA Evaluator agent decide du deploiement. Criteres: perplexite + format + latence doivent TOUS passer. Un echec sur un critere = NO-GO.
+</div>
+</div>
+</details>
+
+<details id="d5">
+<summary>D5. Pipeline LoRA</summary>
+<div>
+<table>
+<tr><th>Etape</th><th>Script</th><th>Agent</th><th>Output</th></tr>
+<tr><td>1. Export donnees brutes</td><td><code>tools/lora/export.py</code></td><td>LoRA Data Curator</td><td>data/ai/training/raw/</td></tr>
+<tr><td>2. Augmentation</td><td><code>tools/lora/augment.py</code></td><td>LoRA Data Curator</td><td>data/ai/training/augmented/</td></tr>
+<tr><td>3. Entrainement</td><td><code>tools/lora/train.py</code></td><td>LoRA Training Architect</td><td>checkpoints/</td></tr>
+<tr><td>4. Conversion GGUF</td><td><code>tools/lora/convert.py</code></td><td>LoRA Training Architect</td><td>addons/merlin_llm/adapters/*.gguf</td></tr>
+<tr><td>5. Benchmark</td><td><code>tools/lora/benchmark.py</code></td><td>LoRA Evaluator</td><td>tmp/lora_eval_results.json</td></tr>
+</table>
+</div>
+</details>
+<h2 id="section-e">E. Roadmap par Phases</h2>
+<p>Implementation progressive en 5 phases, chacune livrant une version jouable amelioree.</p>
+
+<div class="phase-timeline">
+
+<div class="phase-item p0">
+<div class="phase-title" style="color:var(--danger)">Phase 0 - Stabilisation (2-3 semaines)</div>
+<div class="phase-desc">
+Fix bugs critiques A4 (MenuPrincipal crash, Store null).<br>
+Ameliorer feedback timeout Ollama (overlay "Merlin medite...").<br>
+Traduire labels generiques fallback en francais.<br>
+Valider 100% des scenes avec validate.bat Step 0-6.
+</div>
+</div>
+
+<div class="phase-item p1">
+<div class="phase-title" style="color:var(--warn)">Phase 1 - Game Master Intelligent (3-4 semaines)</div>
+<div class="phase-desc">
+Courbe de difficulte dynamique basee sur position Triade + carte count.<br>
+Detection de fin imminente: dilemme cornellien quand 2 aspects proches de l&#x27;extreme.<br>
+Anti-frustration: garantir 1 option stabilisante sur 3.<br>
+Tension narrative progressive: effets leger/moyen/intense selon progression.
+</div>
+</div>
+
+<div class="phase-item p2">
+<div class="phase-title" style="color:var(--accent)">Phase 2 - Narrator LoRA (4-6 semaines)</div>
+<div class="phase-desc">
+Constitution des datasets (corpus celtique + proverbes + sessions).<br>
+Fine-tuning LoRA Qwen 2.5-1.5B sur ton Merlin.<br>
+Benchmark GO/NO-GO par LoRA Evaluator agent.<br>
+Integration adapter GGUF dans Ollama.<br>
+Memoire narrative structuree (journal persistant).
+</div>
+</div>
+
+<div class="phase-item p3">
+<div class="phase-title" style="color:var(--accent2)">Phase 3 - Synergie Bi-Cerveaux (3-4 semaines)</div>
+<div class="phase-desc">
+Protocole de communication Narrator-GM structure.<br>
+Coherence effets-narration verifiee par post-processing.<br>
+Arcs narratifs emergents (mini-arcs 3-5 cartes).<br>
+Adaptation biome profonde (vocabulaire specifique par environnement).<br>
+Dialogues Bestiole contextuels.
+</div>
+</div>
+
+<div class="phase-item p4">
+<div class="phase-title" style="color:var(--text2)">Phase 4 - Polish et Extras (2-3 semaines)</div>
+<div class="phase-desc">
+Voix narrative qui evolue avec la progression.<br>
+Descriptions sensorielles enrichies.<br>
+Evenements saisonniers celtiques.<br>
+Personnalisation Bestiole avancee.<br>
+Optimisation performances et tests de charge.
+</div>
+</div>
+
+</div>
+
+<details>
+<summary>Vue tabulaire des phases</summary>
+<div>
+<table>
+<tr><th>Phase</th><th>Duree</th><th>Features cles</th><th>KPI de validation</th></tr>
+<tr><td><span class="badge p0">P0</span></td><td>2-3 sem.</td><td>Fix bugs, feedback timeout, labels FR</td><td>0 crash, 100% scenes valides</td></tr>
+<tr><td><span class="badge p1">P1</span></td><td>3-4 sem.</td><td>Difficulte dynamique, detection fin, anti-frustration</td><td>Survie moyenne +20%, fins variees</td></tr>
+<tr><td><span class="badge p2">P2</span></td><td>4-6 sem.</td><td>LoRA Merlin, memoire narrative, biomes</td><td>Perplexite &lt;15, coherence celtique &gt;7/10</td></tr>
+<tr><td><span class="badge p3">P3</span></td><td>3-4 sem.</td><td>Synergie NAR-GM, arcs emergents, Bestiole</td><td>Coherence effets-texte &gt;90%</td></tr>
+<tr><td><span class="badge p4">P4</span></td><td>2-3 sem.</td><td>Voix evolutive, sensoriel, saisonniers</td><td>Score immersion playtest &gt;8/10</td></tr>
+</table>
+</div>
+</details>
+<h2 id="section-f">F. Fichiers de Reference</h2>
+<p>Architecture code et documents cles du systeme LLM bi-cerveaux.</p>
+
+<h3>Core AI Scripts</h3>
+<ul class="file-list">
+<li><code>addons/merlin_ai/merlin_ai.gd</code> <span>Orchestrateur multi-brain, routing Ollama/MerlinLLM, parametres Narrator+GM</span></li>
+<li><code>addons/merlin_ai/ollama_backend.gd</code> <span>Backend Ollama HTTP API, /api/generate, raw=true</span></li>
+<li><code>addons/merlin_ai/merlin_omniscient.gd</code> <span>Orchestrateur IA global, zero fallback, scene cache, guardrails</span></li>
+<li><code>addons/merlin_ai/rag_manager.gd</code> <span>RAG v2.0, biome cache, token budget 400, journal</span></li>
+</ul>
+
+<h3>Game Systems</h3>
+<ul class="file-list">
+<li><code>scripts/merlin/merlin_store.gd</code> <span>Store central Redux-like, systeme Triade, 3 aspects x 3 etats</span></li>
+<li><code>scripts/merlin/merlin_card_system.gd</code> <span>Moteur de cartes, fallback pool, generation TRIADE</span></li>
+<li><code>scripts/merlin/merlin_effect_engine.gd</code> <span>SHIFT_ASPECT, SOUFFLE, KARMA, PROMISE</span></li>
+<li><code>scripts/merlin/merlin_llm_adapter.gd</code> <span>Contrat LLM, format TRIADE, JSON repair permissif</span></li>
+<li><code>scripts/merlin/merlin_constants.gd</code> <span>18 Oghams, 12 endings, 3 victoires</span></li>
+</ul>
+
+<h3>UI Layer</h3>
+<ul class="file-list">
+<li><code>scripts/ui/triade_game_ui.gd</code> <span>Interface jeu: 3 aspects, 3 options, souffle, typewriter</span></li>
+<li><code>scripts/ui/triade_game_controller.gd</code> <span>Pont Store-UI, flow de jeu, cablage LLM</span></li>
+<li><code>scripts/autoload/merlin_visual.gd</code> <span>Constantes visuelles centralisees (PALETTE, GBC, fonts, animations)</span></li>
+</ul>
+
+<h3>LoRA Pipeline</h3>
+<ul class="file-list">
+<li><code>tools/lora/</code> <span>Pipeline complet: export, augment, train, convert, benchmark</span></li>
+<li><code>data/ai/training/</code> <span>Datasets bruts et augmentes, format ChatML</span></li>
+<li><code>addons/merlin_llm/adapters/</code> <span>Fichiers LoRA adapter .gguf deployes</span></li>
+</ul>
+
+<h3>Documentation</h3>
+<ul class="file-list">
+<li><code>docs/MASTER_DOCUMENT.md</code> <span>Vue d&#x27;ensemble du projet (v4.0)</span></li>
+<li><code>docs/20_card_system/DOC_12_Triade_Gameplay_System.md</code> <span>Systeme Triade complet</span></li>
+<li><code>docs/20_card_system/DOC_11_Card_System.md</code> <span>Systeme de cartes</span></li>
+<li><code>docs/70_graphic/UI_UX_BIBLE.md</code> <span>Specification visuelle complete</span></li>
+<li><code>.claude/agents/AGENTS.md</code> <span>Roster des 33 agents + knowledge base</span></li>
+</ul>
+
+<div class="callout info" style="margin-top:32px">
+<strong>Note de maintenance</strong>
+Ce document est genere et maintenu dans le cadre du projet M.E.R.L.I.N. Il doit etre mis a jour a chaque changement majeur du systeme LLM bi-cerveaux. Derniere revision : 24 fevrier 2026.
+</div>
+
+</main>
+</body>
+</html>

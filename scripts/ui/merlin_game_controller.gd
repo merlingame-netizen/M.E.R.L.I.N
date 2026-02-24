@@ -21,7 +21,7 @@ var current_card: Dictionary = {}
 var is_processing := false
 var _intro_shown := false
 var _cards_this_run := 0
-var _dispatch_result: Array = [false, {}]  # [done, result] — shared with async dispatch
+## _dispatch_result removed — P0.1.1: direct await replaces polling pattern
 const LLM_TIMEOUT_SEC := 360.0  # CPU-only Qwen 3B: Strategy B (120s) + C (120s) + overhead
 
 # ═══════════════════════════════════════════════════════════════════════════════
@@ -133,7 +133,7 @@ func _ready() -> void:
 
 	# Auto-start run after a frame so UI is fully ready
 	await get_tree().process_frame
-	start_run()
+	await start_run()
 
 
 func _connect_signals() -> void:
@@ -171,7 +171,8 @@ func _connect_signals() -> void:
 
 func start_run(seed_value: int = -1) -> void:
 	## Start a new TRIADE run with Merlin narrator intro.
-	print("[TRIADE] start_run() called")
+	var _t0 := Time.get_ticks_msec()
+	print("[TRIADE] start_run() called at t=%d" % _t0)
 	if seed_value < 0:
 		seed_value = int(Time.get_unix_time_from_system())
 
@@ -222,7 +223,7 @@ func start_run(seed_value: int = -1) -> void:
 	if music_mgr and music_mgr.has_method("play_biome_music"):
 		music_mgr.play_biome_music(biome_key)
 
-	print("[TRIADE] dispatching TRIADE_START_RUN biome=%s" % biome_key)
+	print("[TRIADE] dispatching TRIADE_START_RUN biome=%s (dt=%dms)" % [biome_key, Time.get_ticks_msec() - _t0])
 	var result = await store.dispatch({
 		"type": "TRIADE_START_RUN",
 		"seed": seed_value,
@@ -235,8 +236,9 @@ func start_run(seed_value: int = -1) -> void:
 	if ui and is_instance_valid(ui) and ui.has_method("reset_run_visuals"):
 		ui.reset_run_visuals()
 
-	# Opening sequence then narrator intro before first card (always, even if store failed).
-	if ui and is_instance_valid(ui):
+	# Opening sequence then narrator intro before first card.
+	# In headless mode (autoplay), skip all blocking UI sequences (click-to-continue, typewriter, etc.)
+	if ui and is_instance_valid(ui) and not headless_mode:
 		if ui.has_method("show_opening_sequence"):
 			await ui.show_opening_sequence(biome_key, season_hint, hour_hint)
 		await ui.show_narrator_intro(biome_key)
@@ -256,7 +258,6 @@ func start_run(seed_value: int = -1) -> void:
 		if not merlin_speech.is_empty() and ui.has_method("show_narrator_text"):
 			await ui.show_narrator_text(merlin_speech)
 		elif not merlin_speech.is_empty():
-			# Fallback: print speech for logging even if UI method missing
 			print("[TRIADE] Merlin speech: %s" % merlin_speech)
 
 		# Progressive reveal of aspect/souffle indicators
@@ -265,7 +266,10 @@ func start_run(seed_value: int = -1) -> void:
 		# Start biome ambient VFX
 		if ui.has_method("start_ambient_vfx"):
 			ui.start_ambient_vfx(biome_key)
-		print("[TRIADE] narrator intro finished, requesting first card")
+		print("[TRIADE] narrator intro finished, requesting first card (dt=%dms)" % (Time.get_ticks_msec() - _t0))
+	elif headless_mode:
+		_intro_shown = true
+		print("[TRIADE] headless mode — skipped narrator intro (dt=%dms)" % (Time.get_ticks_msec() - _t0))
 
 	# --- Verify card buffer before first card ---
 	var buffer_ready: bool = await _ensure_card_buffer_ready()
@@ -282,14 +286,17 @@ func start_run(seed_value: int = -1) -> void:
 			if ui and is_instance_valid(ui) and ui.has_method("hide_merlin_thinking_overlay"):
 				ui.hide_merlin_thinking_overlay()
 
-	# Then get first card
-	_request_next_card()
+	# Then get first card (P0.1.3: await ensures intro finishes before card appears)
+	print("[TRIADE] start_run() about to await _request_next_card (dt=%dms)" % (Time.get_ticks_msec() - _t0))
+	await _request_next_card()
+	print("[TRIADE] start_run() _request_next_card complete (dt=%dms)" % (Time.get_ticks_msec() - _t0))
 
 
 func _request_next_card() -> void:
 	## Get and display the next card (LLM or fallback).
 	## Shows thinking animation while generating, with timeout protection.
-	print("[TRIADE] _request_next_card() called, is_processing=%s" % str(is_processing))
+	var _rnc_t0 := Time.get_ticks_msec()
+	print("[TRIADE] _request_next_card() called at t=%d, is_processing=%s" % [_rnc_t0, str(is_processing)])
 	if is_processing:
 		return
 	if not is_inside_tree():
@@ -345,38 +352,44 @@ func _request_next_card() -> void:
 				return
 
 	# Show thinking animation while LLM generates
+	print("[TRIADE] show_thinking (dt=%dms)" % (Time.get_ticks_msec() - _rnc_t0))
 	if ui and is_instance_valid(ui):
 		ui.show_thinking()
 
-	# Launch dispatch asynchronously (runs in its own coroutine)
-	_dispatch_result = [false, {}]
-	_async_card_dispatch()
-
-	# Wait for completion — frame-accurate polling (responds within 1 frame when LLM finishes)
-	var deadline := Time.get_ticks_msec() + int(LLM_TIMEOUT_SEC * 1000.0)
-	while not _dispatch_result[0] and Time.get_ticks_msec() < deadline:
-		if not is_inside_tree():
-			print("[TRIADE] removed from tree during card poll, aborting")
-			is_processing = false
-			return
-		await get_tree().process_frame
+	# Direct await dispatch (store.dispatch has internal timeouts via Ollama backend)
+	print("[TRIADE] awaiting store.dispatch TRIADE_GET_CARD (dt=%dms)" % (Time.get_ticks_msec() - _rnc_t0))
+	var result: Dictionary = {}
+	if store and is_instance_valid(store):
+		result = await store.dispatch({"type": "TRIADE_GET_CARD"})
+		if result == null:
+			result = {"ok": false, "error": "null_result"}
+	else:
+		push_error("[TRIADE] store invalid during card dispatch")
+		result = {"ok": false, "error": "store_null"}
 
 	# Hide thinking animation
+	var dispatch_elapsed := Time.get_ticks_msec() - _rnc_t0
+	print("[TRIADE] dispatch complete (dt=%dms)" % dispatch_elapsed)
 	if ui and is_instance_valid(ui):
 		ui.hide_thinking()
 
-	if not _dispatch_result[0]:
-		push_warning("[MerlinController] Card generation timed out after %.0fs, retrying LLM" % LLM_TIMEOUT_SEC)
+	if not is_inside_tree():
+		print("[TRIADE] removed from tree after dispatch, aborting")
+		is_processing = false
+		return
+
+	if not result.get("ok", false) or result.get("card", {}).is_empty():
+		# Dispatch failed or empty — retry via direct LLM
+		print("[TRIADE] dispatch failed or empty, retrying LLM (dt=%dms)" % dispatch_elapsed)
 		var retry_card := await _retry_llm_generation(3)
 		if retry_card.is_empty():
-			# Show thinking overlay and wait for prefetch
 			if ui and is_instance_valid(ui):
 				ui.show_merlin_thinking_overlay()
 			await get_tree().create_timer(5.0).timeout
 			if ui and is_instance_valid(ui):
 				ui.hide_merlin_thinking_overlay()
 			is_processing = false
-			_request_next_card()
+			await _request_next_card()
 			return
 		current_card = retry_card
 		_detect_critical_choice()
@@ -385,8 +398,7 @@ func _request_next_card() -> void:
 		is_processing = false
 		return
 
-	var result: Dictionary = _dispatch_result[1]
-	print("[TRIADE] card dispatch result ok=%s" % str(result.get("ok", false)))
+	print("[TRIADE] card dispatch result ok=%s (dt=%dms)" % [str(result.get("ok", false)), Time.get_ticks_msec() - _rnc_t0])
 	if result.get("ok", false):
 		current_card = result.get("card", {})
 		# Validate card has valid options array (size 3)
@@ -399,7 +411,7 @@ func _request_next_card() -> void:
 			else:
 				# Wait and re-request
 				is_processing = false
-				_request_next_card()
+				await _request_next_card()
 				return
 		# NPC encounter: 15% chance after card 5
 		if _cards_this_run > 5 and randf() < 0.15:
@@ -424,28 +436,18 @@ func _request_next_card() -> void:
 			if ui and is_instance_valid(ui):
 				ui.hide_merlin_thinking_overlay()
 			is_processing = false
-			_request_next_card()
+			await _request_next_card()
 			return
 		current_card = llm_card
 		_detect_critical_choice()
 		if ui and is_instance_valid(ui):
 			ui.display_card(current_card)
 
+	print("[TRIADE] _request_next_card() done (dt=%dms)" % (Time.get_ticks_msec() - _rnc_t0))
 	is_processing = false
 
 
-func _async_card_dispatch() -> void:
-	## Runs store dispatch in a separate coroutine for timeout safety.
-	if not store or not is_instance_valid(store):
-		push_error("[TRIADE] store invalid in _async_card_dispatch")
-		_dispatch_result = [true, {"ok": false, "error": "store_null"}]
-		return
-	print("[TRIADE] _async_card_dispatch: dispatching TRIADE_GET_CARD")
-	var result: Dictionary = await store.dispatch({"type": "TRIADE_GET_CARD"})
-	if result == null:
-		result = {"ok": false, "error": "null_result"}
-	print("[TRIADE] _async_card_dispatch: got result, card=%s" % ("yes" if result.get("card", {}).size() > 0 else "empty"))
-	_dispatch_result = [true, result]
+## _async_card_dispatch() removed — P0.1.1: direct await in _request_next_card() replaces this
 
 
 func _retry_llm_generation(max_retries: int) -> Dictionary:
@@ -761,7 +763,15 @@ func _resolve_choice(option: int) -> void:
 
 	SFXManager.play("card_draw")
 
-	if use_minigame:
+	if headless_mode:
+		# Headless: instant dice roll, no UI animations
+		dice_result = randi_range(1, 20)
+		if ui and is_instance_valid(ui) and ui.is_souffle_active():
+			dice_result = mini(dice_result + 4, 20)
+			ui.consume_souffle_active()
+			if store and store.has_method("use_souffle"):
+				store.use_souffle()
+	elif use_minigame:
 		dice_result = await _run_minigame(direction, dc, chance_minigame)
 	else:
 		dice_result = await _run_dice_roll(dc)
@@ -775,14 +785,15 @@ func _resolve_choice(option: int) -> void:
 	print("[TRIADE] D20=%d vs DC=%d → %s" % [dice_result, dc, outcome])
 
 	# --- 5. SFX for outcome ---
-	_play_outcome_sfx(outcome)
+	if not headless_mode:
+		_play_outcome_sfx(outcome)
 
 	# --- 6. Dramatic pause before result reveal ---
-	if is_inside_tree():
+	if not headless_mode and is_inside_tree():
 		await get_tree().create_timer(0.5).timeout
 
 	# --- 6b. Show dice result in UI ---
-	if ui and is_instance_valid(ui):
+	if not headless_mode and ui and is_instance_valid(ui):
 		ui.show_dice_result(dice_result, dc, outcome)
 
 	# --- 7. Compute modulated effects ---
@@ -864,7 +875,7 @@ func _resolve_choice(option: int) -> void:
 
 	# --- 14. Narrative result text (per-option first, then card-level, then reaction) ---
 	var _result_shown := false
-	if ui and is_instance_valid(ui) and current_card.size() > 0:
+	if not headless_mode and ui and is_instance_valid(ui) and current_card.size() > 0:
 		var result_key: String = "result_success" if outcome.contains("success") else "result_failure"
 		# Try per-option result text first (richer, contextual)
 		var result_text := ""
@@ -878,13 +889,13 @@ func _resolve_choice(option: int) -> void:
 		if not result_text.is_empty():
 			await ui.show_result_text_transition(result_text, outcome)
 			_result_shown = true
-	if not _result_shown and ui and is_instance_valid(ui):
+	if not headless_mode and not _result_shown and ui and is_instance_valid(ui):
 		var reaction_text: String = _get_reaction_text(outcome, choice_label)
 		if not reaction_text.is_empty():
 			ui.show_reaction_text(reaction_text, outcome)
 
 	# --- 15. Card outcome animation ---
-	if ui and is_instance_valid(ui):
+	if not headless_mode and ui and is_instance_valid(ui):
 		ui.animate_card_outcome(outcome)
 
 	# --- 15b. Show life delta flash ---
@@ -895,14 +906,15 @@ func _resolve_choice(option: int) -> void:
 				life_delta -= abs(int(eff.get("amount", 0)))
 			elif str(eff.get("type", "")) == "HEAL_LIFE":
 				life_delta += int(eff.get("amount", 0))
-	if ui and is_instance_valid(ui) and ui.has_method("show_life_delta"):
+	if not headless_mode and ui and is_instance_valid(ui) and ui.has_method("show_life_delta"):
 		ui.show_life_delta(life_delta)
 
-	# Wait for player to see reaction
-	if not is_inside_tree():
-		is_processing = false
-		return
-	await get_tree().create_timer(3.0).timeout  # Extended for LLM prefetch
+	# Wait for player to see reaction (skip in headless)
+	if not headless_mode:
+		if not is_inside_tree():
+			is_processing = false
+			return
+		await get_tree().create_timer(3.0).timeout  # Extended for LLM prefetch
 
 	# --- 16. Check run end ---
 	if result.get("ok", false) and result.get("run_ended", false):
@@ -913,7 +925,7 @@ func _resolve_choice(option: int) -> void:
 		_apply_run_rewards(ending)
 		if ui and is_instance_valid(ui) and ui.has_method("mark_card_completed"):
 			ui.mark_card_completed()
-		if ui and is_instance_valid(ui):
+		if not headless_mode and ui and is_instance_valid(ui):
 			ui.show_end_screen(ending)
 		is_processing = false
 		return
@@ -923,10 +935,10 @@ func _resolve_choice(option: int) -> void:
 	if ui and is_instance_valid(ui) and ui.has_method("mark_card_completed"):
 		ui.mark_card_completed()
 	current_card = {}
-	if ui and is_instance_valid(ui):
+	if not headless_mode and ui and is_instance_valid(ui):
 		var travel_text: String = _pick_travel_text(outcome)
 		await ui.show_travel_animation(travel_text)
-	elif is_inside_tree():
+	elif not headless_mode and is_inside_tree():
 		await get_tree().create_timer(0.5).timeout
 
 	# --- 18. Write RAG context ---

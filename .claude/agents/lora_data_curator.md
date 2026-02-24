@@ -78,6 +78,20 @@ tools/lora/augment_dataset.py         — Augmentation synthetique
 
 ---
 
+## Categories de dataset (Vision Bi-Cerveaux)
+
+| Categorie | Taille cible | Format | Source |
+|-----------|-------------|--------|--------|
+| Narration celtique | 200 exemples | ChatML (system/user/assistant) | Ecriture manuelle + augmentation biome/saison |
+| Format A/B/C | 300 exemples | Scenario + 3 choix formates | Sessions de test + gold examples |
+| Arcs narratifs | 250 (50 seq x 5 cartes) | Sequences multi-turn | 50 arcs complets (setup→resolution) |
+| Dilemmes moraux | 100 exemples | Trilemmes sans bonne reponse | Ecriture + augmentation contexte |
+| Personnalite Merlin | 150 exemples | Reactions + proverbes + 4e mur | Archetypes de reaction |
+
+**Validation**: Chaque exemple doit passer: format ChatML, longueur 50-500 chars, FR only, pas de leak meta.
+
+---
+
 ## Operations de Curation
 
 ### 1. Extraction (export_training_data.py)
@@ -251,5 +265,6 @@ Quand le `lora_gameplay_translator.md` identifie un manque :
 
 ---
 
+*Updated: 2026-02-24 — Added Bi-Brain dataset categories (5 categories, ~1000 exemples total)*
 *Created: 2026-02-11*
 *Project: M.E.R.L.I.N. — Le Jeu des Oghams*

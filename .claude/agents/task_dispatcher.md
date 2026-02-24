@@ -84,6 +84,26 @@
 | **CI/CD** | build, pipeline, deploy, release, export, GitHub Actions, Steam, fastlane, APK, IPA | `ci_cd_release.md` | `producer.md`, `debug_qa.md` |
 | **Meta-Progression** | talent tree, arbre de vie, essence, bestiole bond, evolution, unlock, pacing, synergy, run reward | `meta_progression_designer.md` | `game_designer.md`, `data_analyst.md` |
 
+### LLM Bi-Brain Architecture (NOUVEAU)
+
+| Type | Mots-cles de detection | Agents primaires | Agents review |
+|------|------------------------|-----------------|---------------|
+| **Pipeline LLM Bi-Brain** | pipeline LLM, visual tags, audio tags, bi-brain, bi-cerveaux, sequentiel GM→Narrator | `bi_brain_orchestrator.md` | `llm_expert.md` |
+| **Arcs Narratifs** | arc narratif, coherence cartes, multi-cartes, callback, reve, temporel | `narrative_arc_designer.md` | `llm_expert.md`, `narrative_writer.md` |
+| **Profil Joueur** | profil joueur, adaptation, danger, difficulte narrative, player pattern, psychologique | `player_profiler.md` | `game_designer.md`, `llm_expert.md` |
+
+### Routing LLM Bi-Brain (NOUVEAU)
+
+| Trigger | Agent(s) | Ordre |
+|---------|----------|-------|
+| Modification merlin_ai.gd, ollama_backend.gd | bi_brain_orchestrator | Avant llm_expert |
+| Modification rag_manager.gd (arcs, journal) | narrative_arc_designer | Apres llm_expert |
+| Modification difficulty, player_pattern | player_profiler | Apres game_designer |
+| "pipeline LLM", "visual tags", "audio tags" | bi_brain_orchestrator | Seul ou + llm_expert |
+| "arc narratif", "coherence cartes" | narrative_arc_designer | Seul |
+| "profil joueur", "adaptation", "danger" | player_profiler | Seul |
+| "entrainement", "LoRA", "fine-tune" | lora_gameplay_translator | Pipeline LoRA complet |
+
 ### LoRA Fine-Tuning (NOUVEAU)
 
 | Type | Mots-cles de detection | Agents primaires | Agents review |
@@ -108,7 +128,7 @@ Quand la tache mentionne des chemins specifiques:
 |-------------------|---------------------|
 | `scripts/merlin/*.gd` | `lead_godot.md`, `optimizer.md` (systemes core) |
 | `scripts/ui/*.gd` | `ui_impl.md`, `ux_research.md` |
-| `addons/merlin_ai/*.gd` | `llm_expert.md`, `godot_expert.md` |
+| `addons/merlin_ai/*.gd` | `bi_brain_orchestrator.md`, `llm_expert.md`, `godot_expert.md` |
 | `scenes/*.tscn` | `ui_impl.md` (scene UI) ou `game_designer.md` (scene jeu) |
 | `data/ai/*.gbnf` | `llm_expert.md` |
 | `data/ai/*.json` | `llm_expert.md`, `game_designer.md` |
@@ -172,7 +192,10 @@ Quand un agent primaire travaille, ces agents doivent REVIEW:
 | `ui_impl.md` | ux_research, debug_qa | Qualite UX + tests interaction |
 | `motion_designer.md` | ux_research | Animation n'altere pas l'UX |
 | `shader_specialist.md` | godot_expert | Impact performance shaders |
-| `llm_expert.md` | lead_godot, godot_expert | Integration affecte l'architecture |
+| `llm_expert.md` | lead_godot, godot_expert, bi_brain_orchestrator | Integration affecte l'architecture |
+| `bi_brain_orchestrator.md` | llm_expert, lead_godot | Pipeline sequentiel + visual/audio tags |
+| `narrative_arc_designer.md` | llm_expert, narrative_writer, game_designer | Arcs multi-cartes + coherence |
+| `player_profiler.md` | game_designer, llm_expert, data_analyst | Profil psychologique + adaptation |
 | `narrative_writer.md` | game_designer, merlin_guardian, **game_director** | Contenu conforme au design + voix + **vision** |
 | `game_designer.md` | data_analyst, **game_director** | Decisions de balance besoin data + **coherence vision** |
 | `audio_designer.md` | ui_impl | Timing audio synchronise UI |
@@ -334,7 +357,8 @@ Regles M.E.R.L.I.N. specifiques:
 
 ---
 
-*Task Dispatcher v2.0 (overlay)*
+*Task Dispatcher v2.1 (overlay)*
 *Base: `~/.claude/agents/common/dispatcher_base.md`*
-*Created: 2026-02-09 | Updated: 2026-02-22 — Added Game Director (Direction Creative category, cross-review)*
+*Created: 2026-02-09 | Updated: 2026-02-24 — Added LLM Bi-Brain routing (3 new agents: bi_brain_orchestrator, narrative_arc_designer, player_profiler)*
+*Previous: 2026-02-22 — Added Game Director (Direction Creative category, cross-review)*
 *Project: M.E.R.L.I.N. — Le Jeu des Oghams*

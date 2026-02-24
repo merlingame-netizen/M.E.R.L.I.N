@@ -180,6 +180,24 @@ Plan:
 
 ---
 
+## Strategie LoRA alignee (Vision Bi-Cerveaux)
+
+**5 competences cibles LoRA** (~1000 exemples total):
+| Competence | Nb exemples | Pourquoi LoRA (pas prompt) |
+|------------|-------------|---------------------------|
+| Ton celtique/druidique | 200 | Corpus celtique absent du modele de base |
+| Format sortie (scenario+A/B/C) | 300 | Format inconsistant sans fine-tune |
+| Arcs narratifs coherents | 250 (50 seq x 5) | Pas de notion d'arc dans le base |
+| Dilemmes moraux ambigus | 100 | Tendance au bon/mauvais evident |
+| Personnalite Merlin | 150 | Personnage absent du base |
+
+**NE PAS LoRA** (prompt/code suffit): adaptation joueur, detection danger, conscience temporelle, profilage psychologique, memoire cross-run, difficulte narrative.
+
+**Config recommandee**: QLoRA r=16, alpha=32, 3-5 epochs, Qwen 2.5-1.5B
+**Ref**: `docs/LORA_TRAINING_SPEC.html`, `docs/VISION_LLM_BI_CERVEAUX.html`
+
+---
+
 ## Regles
 
 1. **TOUJOURS game-wide** — Le modele ne doit JAMAIS dependre de scenes specifiques
@@ -236,5 +254,6 @@ Plan:
 
 ---
 
+*Updated: 2026-02-24 — Added Bi-Brain LoRA strategy (5 competences, config QLoRA)*
 *Created: 2026-02-11*
 *Project: M.E.R.L.I.N. — Le Jeu des Oghams*
