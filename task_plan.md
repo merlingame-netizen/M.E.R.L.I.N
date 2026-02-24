@@ -4,7 +4,7 @@
 Developper un JDR Parlant roguelite avec LLM local (Qwen 2.5-3B-Instruct Multi-Brain), systeme Triade (3 aspects x 3 etats), et narration procedurale.
 
 ## Current Phase
-Phase P1 — Intelligence sans LoRA (Plan Bi-Cerveaux)
+Phase P2 — LoRA Training (Plan Bi-Cerveaux)
 
 ## Phase P0 — Fix Gameplay — COMPLETE (commit `0bd08f6`, 2026-02-24)
 - [x] P0.0.1 Audit async flow timestamps
@@ -47,6 +47,29 @@ Phase P1 — Intelligence sans LoRA (Plan Bi-Cerveaux)
 ### WAVE 11: Integration P1
 - [x] P1.11.1 | Wire tous systemes MOS (run_start/end, sync, tags)
 - [ ] P1.11.2 | Validation P1
+
+---
+
+## Phase P2 — LoRA Training (~15h)
+
+### WAVE 12: Data Prep
+- [x] P2.12.1 | Export game logs + Tier 5 generators (sequential, danger, arcs, gm_effects) | generate_full_dataset_v7.py
+- [x] P2.12.2 | 200+ gold x 5 competences → v8 dataset (724 samples, 455 gold) | merlin_full_v8.jsonl
+- [x] P2.12.3 | Augmentation x3 (6 strategies, built-in pipeline) | generate_full_dataset_v7.py
+
+### WAVE 13: Config
+- [x] P2.13.1 | QLoRA config (v8 dataset auto-detect, r=16 alpha=32) | train_qwen_cpu.py
+- [x] P2.13.2 | Benchmark script (5 P1 competences: sequential, danger, arcs, GM JSON, celtic) | benchmark_lora.py
+
+### WAVE 14: Training
+- [ ] P2.14.1 | QLoRA CPU ~8-12h (3 epochs, 724 samples)
+- [ ] P2.14.2 | Convert GGUF
+- [ ] P2.14.3 | Deploy Ollama
+
+### WAVE 15: GO/NO-GO
+- [ ] P2.15.1 | Benchmark 5 competences
+- [ ] P2.15.2 | Decision GO/NO-GO (Format >95%, Coherence 4+/5, Latency <+15%, French >90%)
+- [ ] P2.15.3 | Wire adapter si GO
 
 ---
 

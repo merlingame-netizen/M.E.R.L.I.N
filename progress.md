@@ -2,6 +2,32 @@
 
 > **Note**: Sessions anterieures archivees dans `archive/progress_archive_2026-02-05_to_2026-02-08.md`
 
+## Session: 2026-02-24 (Phase P2 — LoRA Data Prep, Waves 12-13)
+
+### Phase P2 — LoRA Training (Waves 12-13 COMPLETE)
+
+**Wave 12: Data Prep**
+- Added TIER5_GENERATORS (4 P1-specific generators) to `generate_full_dataset_v7.py`:
+  - `gen_sequential_pipeline()` — 6 gold samples (narrator+labels format)
+  - `gen_danger_scenarios()` — 4 gold samples (survie + agonie)
+  - `gen_narrative_arcs()` — 4 gold samples (1 per arc phase)
+  - `gen_gm_effects()` — 4 gold samples (GM effects JSON)
+- Generated v8 dataset: **724 total samples** (455 gold, 269 augmented)
+- Identity primer injected into 95.3% of samples
+- P1 features density: 2.9% (21/724)
+
+**Wave 13: Config**
+- `train_qwen_cpu.py`: Added v8 dataset auto-detection (priority over v7)
+- `benchmark_lora.py`: Added 4 P1 competence metrics:
+  - `sequential_format_rate` (target 85%) — A/B/C label extraction
+  - `danger_awareness_rate` (target 80%) — life-aware language
+  - `gm_effects_validity` (target 90%) — JSON format compliance
+  - `arc_phase_count` — narrative phase variety
+
+**Commits**: `1ca8a06` (P1.5 sequential), `9525df1` (P1 waves 9-11)
+
+---
+
 ## Session: 2026-02-24 (Phase P0 Complete + Good Practices + P1 Start)
 
 ### Phase P0 — Fix Gameplay (COMPLETE, commit `0bd08f6`)

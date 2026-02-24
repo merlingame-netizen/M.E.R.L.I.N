@@ -29,6 +29,9 @@ from pathlib import Path
 def find_dataset() -> str:
     """Auto-detect dataset location."""
     candidates = [
+        # v8 identity + P1 features (34 generators, 640+ gold samples)
+        Path(__file__).parent.parent.parent / "data" / "ai" / "training" / "merlin_full_v8.jsonl",
+        Path("data/ai/training/merlin_full_v8.jsonl"),
         # v7 identity anchoring (30 generators, 700+ samples)
         Path(__file__).parent.parent.parent / "data" / "ai" / "training" / "merlin_full_v7.jsonl",
         Path("data/ai/training/merlin_full_v7.jsonl"),

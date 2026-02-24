@@ -248,6 +248,127 @@ def compute_scene_metrics(results: list, scene_profiles: dict) -> dict:
     return metrics
 
 
+def detect_sequential_format(text: str) -> dict:
+    """Check if output follows sequential pipeline format: narrative + A/B/C labels."""
+    lines = text.strip().split("\n")
+    has_narrative = False
+    labels_found = []
+    for line in lines:
+        stripped = line.strip()
+        if re.match(r"^[ABC][):.]\s+\S", stripped):
+            labels_found.append(stripped[0])
+        elif len(stripped) > 20 and not stripped.startswith(("A)", "B)", "C)")):
+            has_narrative = True
+    return {
+        "has_narrative": has_narrative,
+        "label_count": len(set(labels_found)),
+        "is_valid": has_narrative and len(set(labels_found)) == 3,
+    }
+
+
+def detect_danger_awareness(text: str, life: int) -> dict:
+    """Check if output adapts to danger level based on life."""
+    text_lower = text.lower()
+    healing_words = {"guerir", "guerison", "soigner", "repos", "refuge", "abri", "panser", "proteger", "sauver"}
+    urgency_words = {"attention", "danger", "vite", "prudence", "survie", "agonie", "mort", "dernier"}
+    healing_score = sum(1 for w in healing_words if w in text_lower)
+    urgency_score = sum(1 for w in urgency_words if w in text_lower)
+    is_danger = life <= 25
+    is_agonie = life <= 15
+    # In danger, expect healing/urgency language
+    appropriate = True
+    if is_agonie and healing_score == 0:
+        appropriate = False
+    if is_danger and urgency_score == 0 and healing_score == 0:
+        appropriate = False
+    return {
+        "healing_score": healing_score,
+        "urgency_score": urgency_score,
+        "is_appropriate": appropriate,
+    }
+
+
+def detect_gm_effects_json(text: str) -> dict:
+    """Check if output is valid GM effects JSON: [[effects_A], [effects_B], [effects_C]]."""
+    text = text.strip()
+    valid_types = {"SHIFT_ASPECT", "DAMAGE_LIFE", "HEAL_LIFE", "ADD_KARMA", "ADD_SOUFFLE", "USE_SOUFFLE"}
+    try:
+        data = json.loads(text)
+        if not isinstance(data, list) or len(data) != 3:
+            return {"is_valid": False, "reason": "not a 3-element array"}
+        for i, option_effects in enumerate(data):
+            if not isinstance(option_effects, list):
+                return {"is_valid": False, "reason": f"option {i} not an array"}
+            for eff in option_effects:
+                if not isinstance(eff, dict) or "type" not in eff:
+                    return {"is_valid": False, "reason": f"option {i} invalid effect"}
+                if eff["type"] not in valid_types:
+                    return {"is_valid": False, "reason": f"unknown type: {eff['type']}"}
+        return {"is_valid": True, "reason": "ok"}
+    except (json.JSONDecodeError, TypeError):
+        return {"is_valid": False, "reason": "not valid JSON"}
+
+
+def compute_p1_metrics(results: list) -> dict:
+    """Compute P1-specific metrics: sequential format, danger, arcs, GM effects."""
+    metrics = {
+        "sequential_format_rate": 0.0,
+        "danger_awareness_rate": 0.0,
+        "gm_effects_validity": 0.0,
+        "arc_phase_count": 0,
+    }
+    if not results:
+        return metrics
+
+    # Sequential format (check all entries with output containing A)/B)/C) patterns)
+    seq_total = 0
+    seq_valid = 0
+    for entry in results:
+        output = entry.get("output", "")
+        category = entry.get("category", "")
+        if category in ("sequential_pipeline", "narrative") or "A)" in output:
+            seq_total += 1
+            fmt = detect_sequential_format(output)
+            if fmt["is_valid"]:
+                seq_valid += 1
+    metrics["sequential_format_rate"] = seq_valid / seq_total if seq_total else 0
+
+    # Danger awareness (entries with life metadata)
+    danger_total = 0
+    danger_ok = 0
+    for entry in results:
+        meta = entry.get("metadata", {}) if isinstance(entry.get("metadata"), dict) else {}
+        life = meta.get("life", entry.get("life", -1))
+        if isinstance(life, (int, float)) and 0 < life <= 50:
+            danger_total += 1
+            awareness = detect_danger_awareness(entry.get("output", ""), int(life))
+            if awareness["is_appropriate"]:
+                danger_ok += 1
+    metrics["danger_awareness_rate"] = danger_ok / danger_total if danger_total else 0
+
+    # GM effects JSON validity
+    gm_total = 0
+    gm_valid = 0
+    for entry in results:
+        category = entry.get("category", "")
+        if category == "gm_effects" or entry.get("channel") == "gamemaster":
+            gm_total += 1
+            result = detect_gm_effects_json(entry.get("output", ""))
+            if result["is_valid"]:
+                gm_valid += 1
+    metrics["gm_effects_validity"] = gm_valid / gm_total if gm_total else 0
+
+    # Arc phase variety
+    arc_phases_seen = set()
+    for entry in results:
+        phase = entry.get("narrative_phase", "") or entry.get("metadata", {}).get("phase", "")
+        if phase:
+            arc_phases_seen.add(phase)
+    metrics["arc_phase_count"] = len(arc_phases_seen)
+
+    return metrics
+
+
 def extract_verb_lines(text: str) -> list:
     """Extract A) VERB — description lines from output text."""
     pattern = r"^[A-D][):.]\s*([A-ZÀ-Ü][A-ZÀ-Ü\s']*?)\s*[—–\-:]+\s*(.+)$"
@@ -344,6 +465,10 @@ def benchmark(results: list, scene_profiles: Optional[dict] = None) -> dict:
         "forbidden_violation_rate": 0.0,
         "sentence_limit_compliance": 0.0,
         "word_limit_compliance": 0.0,
+        "sequential_format_rate": 0.0,
+        "danger_awareness_rate": 0.0,
+        "gm_effects_validity": 0.0,
+        "arc_phase_count": 0,
     }
 
     if not results:
@@ -386,6 +511,10 @@ def benchmark(results: list, scene_profiles: Optional[dict] = None) -> dict:
 
     scene_metrics = compute_scene_metrics(results, scene_profiles or {})
     metrics.update(scene_metrics)
+
+    # 8. P1 feature metrics (sequential, danger, GM effects, arcs)
+    p1_metrics = compute_p1_metrics(results)
+    metrics.update(p1_metrics)
 
     return metrics
 
@@ -447,6 +576,9 @@ def main():
         "forbidden_violation_rate": 0.05,
         "sentence_limit_compliance": 0.90,
         "word_limit_compliance": 0.90,
+        "sequential_format_rate": 0.85,
+        "danger_awareness_rate": 0.80,
+        "gm_effects_validity": 0.90,
     }
 
     metrics = benchmark(results, scene_profiles)

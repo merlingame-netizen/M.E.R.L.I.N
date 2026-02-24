@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
 """
-generate_full_dataset_v7.py — Dataset identitaire pour LoRA M.E.R.L.I.N.
-30 generateurs: 22 existants (v6) + 8 identitaires.
-~620 gold samples + Identity Primer + augmentation → ~2000+ samples.
-Le modele apprend a ETRE Merlin, pas juste a generer du texte.
+generate_full_dataset_v7.py — Dataset identitaire + P1 features pour LoRA M.E.R.L.I.N.
+34 generateurs: 22 (v6) + 8 identitaires (v7) + 4 P1 features (v8).
+~640 gold samples + Identity Primer + augmentation → ~2000+ samples.
+Le modele apprend a ETRE Merlin + sequential pipeline, danger, arcs, GM effects.
 CPU only, tout hand-crafted + augmentation combinatoire.
 """
 
@@ -22,7 +22,7 @@ from typing import Any
 PROJECT_ROOT = Path(__file__).resolve().parent.parent.parent
 CONFIG_DIR = PROJECT_ROOT / "data" / "ai" / "config"
 TRAINING_DIR = PROJECT_ROOT / "data" / "ai" / "training"
-OUTPUT_FILE = TRAINING_DIR / "merlin_full_v7.jsonl"
+OUTPUT_FILE = TRAINING_DIR / "merlin_full_v8.jsonl"
 V5_FILE = TRAINING_DIR / "merlin_verbs_v5_augmented.jsonl"
 
 # ═══════════════════════════════════════════════════════════════════════════════
@@ -1922,7 +1922,202 @@ TIER4_GENERATORS = [
     ("identity_monologues", gen_identity_monologues),
 ]
 
-ALL_GENERATORS = ALL_V6_GENERATORS + TIER4_GENERATORS
+# ═══════════════════════════════════════════════════════════════════════════════
+# TIER 5 — P1 Pipeline Competences (sequential, danger, narrative arcs, GM effects)
+# ═══════════════════════════════════════════════════════════════════════════════
+
+ARC_PHASES = {
+    "Mise en place": "Introduction calme, decouverte du biome, premiers indices.",
+    "Montee dramatique": "Les enjeux grandissent, tensions, alliances fragiles.",
+    "Climax": "Moment decisif, choix lourd, confrontation ou revelation.",
+    "Resolution": "Consequences, bilan, transition vers la suite.",
+}
+
+DANGER_LEVELS = {
+    0: ("safe", "Le voyageur est en securite."),
+    1: ("blesse", "Le voyageur porte des blessures."),
+    2: ("danger", "La vie du voyageur est menacee."),
+    3: ("agonie", "La mort rode. Chaque choix peut etre le dernier."),
+}
+
+
+def gen_sequential_pipeline() -> list[dict]:
+    """Sequential pipeline card format: narrative + A/B/C labels in one response."""
+    sys = ("Tu es Merlin l'Enchanteur. Genere une carte COMPLETE en une seule reponse. "
+           "D'abord 2-3 phrases poetiques en francais (vocabulaire celtique: nemeton, ogham, sidhe, dolmen, korrigans, brume). "
+           "Puis EXACTEMENT 3 choix:\nA) VERBE — description courte\nB) VERBE — description courte\nC) VERBE — description courte\n"
+           "Le verbe est a l'infinitif, la description en 3-6 mots.")
+    samples = []
+    gold = [
+        (("foret_broceliande", 5, "Equilibre", "Equilibre", "Equilibre", 3, 80, "Mise en place"),
+         "La brume s'enroule autour des menhirs comme un serpent de lait. Un dolmen fracture revele une inscription ogham que le vent semble vouloir effacer.\n"
+         "A) Observer — dechiffrer l'inscription ancienne\n"
+         "B) Mediter — ecouter la voix des pierres\n"
+         "C) Traverser — franchir le cercle sans hesiter"),
+        (("marais_korrigans", 12, "Bas", "Haut", "Equilibre", 1, 45, "Montee dramatique"),
+         "Les eaux noires du marais clapotent sous un ciel de plomb. Des lueurs dansent entre les joncs — les korrigans preparent quelque chose.\n"
+         "A) Contourner — eviter la zone piege des feux\n"
+         "B) Invoquer — appeler la protection du sidhe\n"
+         "C) Plonger — nager vers la lumiere la plus vive"),
+        (("cercles_pierres", 20, "Haut", "Bas", "Haut", 5, 90, "Climax"),
+         "Le nemeton tremble. Les pierres dressees bourdonnent d'une frequence ancienne. Au centre, un portail de lumiere bleue s'ouvre — et se referme, lentement.\n"
+         "A) Attendre — observer le cycle du portail\n"
+         "B) Sacrifier — offrir du souffle au nemeton\n"
+         "C) Bondir — traverser avant la fermeture"),
+        (("collines_dolmens", 25, "Equilibre", "Equilibre", "Bas", 2, 60, "Resolution"),
+         "Le soleil perce enfin les nuages. Sur la colline, un dolmen couvert de mousse abrite les restes d'un feu ancien. Les cendres sont encore tiedes.\n"
+         "A) Fouiller — chercher des indices dans les cendres\n"
+         "B) Ranimer — souffler sur les braises mourantes\n"
+         "C) Continuer — laisser le passe en paix"),
+        (("landes_bruyere", 8, "Equilibre", "Haut", "Equilibre", 4, 100, "Mise en place"),
+         "La bruyere violette ondule sous le vent des landes. Un cairn solitaire se dresse, orne de rubans decolores par les saisons.\n"
+         "A) Examiner — inspecter les rubans du cairn\n"
+         "B) Prier — deposer une offrande au cairn\n"
+         "C) Escalader — grimper pour voir au loin"),
+        (("cotes_sauvages", 18, "Bas", "Equilibre", "Haut", 0, 30, "Climax"),
+         "La tempete rugit sur les falaises. Les vagues frappent la roche avec la fureur de mille guerriers. Un phare ancien clignote faiblement.\n"
+         "A) S'abriter — trouver refuge dans les rochers\n"
+         "B) Crier — lancer un appel vers le phare\n"
+         "C) Affronter — marcher face au vent"),
+    ]
+    for (biome, day, corps, ame, monde, souffle, life, phase), resp in gold:
+        biome_name = BIOME_NAMES.get(biome, (biome, ""))[0]
+        user = (f"Biome: {biome_name}. Jour {day}. Corps={corps} Ame={ame} Monde={monde}. "
+                f"Souffle={souffle}. Vie={life}. Phase: {phase}. Genere la carte.")
+        samples.append(make_sample(sys, user, resp, "sequential_pipeline", ["p1", "sequential"]))
+    return samples
+
+
+def gen_danger_scenarios() -> list[dict]:
+    """Danger-aware scenarios: survie (life<=25) and agonie (life<=15)."""
+    samples = []
+    # Survie scenarios (protective options)
+    survie_sys = ("Tu es Merlin. Le voyageur est blesse. Ecris une scene de SURVIE (2-3 phrases). "
+                  "Les options doivent offrir des chances de survie. Vocabulaire celtique.")
+    survie_gold = [
+        ("Vie=22. Corps=Bas Ame=Equilibre Monde=Equilibre. Foret de Broceliande.",
+         "Le sang perle sur l'ecorce du chene sacre. La foret elle-meme semble retenir son souffle, attendant que tu trouves la force de continuer.\n"
+         "A) Se reposer — panser ses blessures avec de la mousse\n"
+         "B) Invoquer — demander l'aide des esprits sylvestres\n"
+         "C) Avancer — marcher vers la clairiere de guerison"),
+        ("Vie=18. Corps=Equilibre Ame=Bas Monde=Haut. Marais des Korrigans.",
+         "Ton reflet dans l'eau noire du marais te montre un visage que tu ne reconnais plus. Les korrigans chuchotent des remedes entre les roseaux.\n"
+         "A) Ecouter — suivre les chuchotements guerisseurs\n"
+         "B) Boire — gouter l'eau du puits ancien\n"
+         "C) Dormir — s'allonger sur la mousse seche"),
+    ]
+    for user, resp in survie_gold:
+        samples.append(make_sample(survie_sys, user, resp, "danger_survie", ["p1", "danger", "survie"]))
+
+    # Agonie scenarios (all options heal, oniric grace)
+    agonie_sys = ("Tu es Merlin. Le voyageur est a l'agonie. Ecris une scene de GRACE onirique (2-3 phrases). "
+                  "Ton doux et protecteur. TOUTES les options doivent aider a guerir. Vocabulaire celtique.")
+    agonie_gold = [
+        ("Vie=8. Corps=Bas Ame=Bas Monde=Equilibre. Cercles de Pierres.",
+         "Le monde s'efface dans un brouillard dore. Les menhirs chantent une berceuse ancienne, et tu sens la terre elle-meme te porter.\n"
+         "A) S'abandonner — laisser les pierres guerir ton corps\n"
+         "B) Rever — suivre la lumiere doree vers le repos\n"
+         "C) Murmurer — confier tes douleurs aux etoiles"),
+        ("Vie=5. Corps=Bas Ame=Equilibre Monde=Bas. Landes de Bruyere.",
+         "Les bruyeres se transforment en un tapis de lumiere violette. Une main invisible — la mienne — se pose sur ton front brulant.\n"
+         "A) Accepter — recevoir le souffle de guerison\n"
+         "B) Sourire — remercier la terre qui te berce\n"
+         "C) Respirer — inspirer l'essence des landes"),
+    ]
+    for user, resp in agonie_gold:
+        samples.append(make_sample(agonie_sys, user, resp, "danger_agonie", ["p1", "danger", "agonie"]))
+    return samples
+
+
+def gen_narrative_arcs() -> list[dict]:
+    """Narrative arc phase-aware generation: tone shifts across SETUP→RISING→CLIMAX→RESOLUTION."""
+    sys_base = "Tu es Merlin. Ecris un scenario adapte a la PHASE NARRATIVE actuelle. "
+    samples = []
+    phase_gold = {
+        "Mise en place": [
+            ("Jour 3. Foret de Broceliande. Corps=Equilibre Ame=Equilibre Monde=Equilibre.",
+             "Les premiers rayons percent la canopee de Broceliande. Un sentier de mousse s'ouvre devant toi, borde de champignons luminescents.\n"
+             "A) Explorer — suivre le sentier de lumiere\n"
+             "B) Cueillir — ramasser les champignons phosphorescents\n"
+             "C) Ecouter — tendre l'oreille aux murmures"),
+        ],
+        "Montee dramatique": [
+            ("Jour 10. Marais des Korrigans. Corps=Haut Ame=Bas Monde=Equilibre.",
+             "Les brumes du marais s'epaississent d'heure en heure. Des formes sombres se meuvent sous la surface — les korrigans sont agites. Quelque chose approche.\n"
+             "A) Se preparer — fortifier sa position\n"
+             "B) Negocier — offrir un present aux korrigans\n"
+             "C) Fuir — quitter le marais avant la nuit"),
+        ],
+        "Climax": [
+            ("Jour 20. Cercles de Pierres. Corps=Bas Ame=Haut Monde=Haut.",
+             "Le nemeton pulse d'une lumiere aveuglante. Les lignes oghams s'enflamment sur chaque menhir. C'est maintenant — le choix qui definira tout.\n"
+             "A) Resister — refuser l'appel du pouvoir\n"
+             "B) Canaliser — diriger l'energie vers la guerison\n"
+             "C) Embrasser — accepter la transformation totale"),
+        ],
+        "Resolution": [
+            ("Jour 27. Collines aux Dolmens. Corps=Equilibre Ame=Equilibre Monde=Bas.",
+             "La poussiere retombe lentement. Les dolmens temoignent en silence de ce qui s'est passe. Le vent porte une odeur de terre mouillée — un nouveau depart.\n"
+             "A) Honorer — deposer une pierre sur le cairn\n"
+             "B) Contempler — mediter sur le chemin parcouru\n"
+             "C) Partir — tourner le dos aux collines"),
+        ],
+    }
+    for phase, examples in phase_gold.items():
+        sys = sys_base + f"Phase: {phase}. {ARC_PHASES[phase]}"
+        for user, resp in examples:
+            full_user = f"Phase: {phase}. {user}"
+            samples.append(make_sample(sys, full_user, resp, "narrative_arc", ["p1", "arc", phase.lower().replace(" ", "_")]))
+    return samples
+
+
+def gen_gm_effects() -> list[dict]:
+    """GM effects JSON format: [[effets_A], [effets_B], [effets_C]]."""
+    sys = ("Tu es le Maitre du Jeu. Pour le scenario ci-dessous, genere les effets mecaniques des 3 options. "
+           "Reponds UNIQUEMENT en JSON: [[effets_A], [effets_B], [effets_C]]. "
+           "Effets autorises: SHIFT_ASPECT (aspect=Corps/Ame/Monde, direction=up/down), "
+           "DAMAGE_LIFE (amount 1-10), HEAL_LIFE (amount 1-10), ADD_KARMA (amount), "
+           "ADD_SOUFFLE (amount 1), USE_SOUFFLE (amount 1).")
+    samples = []
+    gold = [
+        ("Scenario: La brume s'enroule autour des menhirs.\n"
+         "Choix: A) Observer — dechiffrer l'inscription B) Mediter — ecouter les pierres C) Traverser — franchir le cercle\n"
+         "Etat: Corps=Equilibre Ame=Equilibre Monde=Equilibre. Souffle=3. Vie=80. Danger=0.",
+         '[[{"type":"SHIFT_ASPECT","aspect":"Ame","direction":"up"},{"type":"ADD_KARMA","amount":2}],'
+         '[{"type":"HEAL_LIFE","amount":5},{"type":"SHIFT_ASPECT","aspect":"Ame","direction":"up"}],'
+         '[{"type":"SHIFT_ASPECT","aspect":"Corps","direction":"up"},{"type":"DAMAGE_LIFE","amount":3}]]'),
+        ("Scenario: Les eaux noires du marais clapotent.\n"
+         "Choix: A) Contourner — eviter les feux B) Invoquer — appeler le sidhe C) Plonger — nager vers la lumiere\n"
+         "Etat: Corps=Bas Ame=Haut Monde=Equilibre. Souffle=1. Vie=45. Danger=1.",
+         '[[{"type":"HEAL_LIFE","amount":3}],'
+         '[{"type":"USE_SOUFFLE","amount":1},{"type":"HEAL_LIFE","amount":8}],'
+         '[{"type":"DAMAGE_LIFE","amount":5},{"type":"SHIFT_ASPECT","aspect":"Corps","direction":"up"}]]'),
+        ("Scenario: Le nemeton tremble et pulse.\n"
+         "Choix: A) Attendre — observer le cycle B) Sacrifier — offrir du souffle C) Bondir — traverser le portail\n"
+         "Etat: Corps=Haut Ame=Bas Monde=Haut. Souffle=5. Vie=90. Danger=0.",
+         '[[{"type":"ADD_KARMA","amount":1},{"type":"SHIFT_ASPECT","aspect":"Ame","direction":"up"}],'
+         '[{"type":"USE_SOUFFLE","amount":1},{"type":"HEAL_LIFE","amount":10},{"type":"SHIFT_ASPECT","aspect":"Ame","direction":"up"}],'
+         '[{"type":"DAMAGE_LIFE","amount":8},{"type":"SHIFT_ASPECT","aspect":"Monde","direction":"up"},{"type":"ADD_KARMA","amount":5}]]'),
+        ("Scenario: La tempete rugit sur les falaises.\n"
+         "Choix: A) S'abriter — refuge dans les rochers B) Crier — appel vers le phare C) Affronter — marcher face au vent\n"
+         "Etat: Corps=Bas Ame=Equilibre Monde=Haut. Souffle=0. Vie=30. Danger=2.",
+         '[[{"type":"HEAL_LIFE","amount":5}],'
+         '[{"type":"SHIFT_ASPECT","aspect":"Monde","direction":"down"},{"type":"HEAL_LIFE","amount":3}],'
+         '[{"type":"DAMAGE_LIFE","amount":7},{"type":"SHIFT_ASPECT","aspect":"Corps","direction":"up"},{"type":"ADD_SOUFFLE","amount":1}]]'),
+    ]
+    for user, resp in gold:
+        samples.append(make_sample(sys, user, resp, "gm_effects", ["p1", "gamemaster", "json"]))
+    return samples
+
+
+TIER5_GENERATORS = [
+    ("sequential_pipeline", gen_sequential_pipeline),
+    ("danger_scenarios", gen_danger_scenarios),
+    ("narrative_arcs", gen_narrative_arcs),
+    ("gm_effects", gen_gm_effects),
+]
+
+ALL_GENERATORS = ALL_V6_GENERATORS + TIER4_GENERATORS + TIER5_GENERATORS
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
@@ -2233,7 +2428,7 @@ if __name__ == "__main__":
     all_gold: list[dict] = []
 
     print("=" * 60)
-    print("DATASET v7 — M.E.R.L.I.N. Identity Anchoring")
+    print("DATASET v8 — M.E.R.L.I.N. Identity + P1 Features")
     print("=" * 60)
 
     # --- TIER 1 ---
@@ -2264,16 +2459,20 @@ if __name__ == "__main__":
         all_gold.extend(samples)
         print(f"  {name}: {len(samples)} gold")
 
-    print(f"\nTotal gold (v6+v7): {len(all_gold)}")
+    # --- TIER 5 (v8 NEW — P1 features) ---
+    print("\n=== TIER 5: P1 features (4 generators) — v8 NEW ===")
+    for name, gen_fn in TIER5_GENERATORS:
+        samples = gen_fn()
+        all_gold.extend(samples)
+        print(f"  {name}: {len(samples)} gold")
 
-    # --- INJECT IDENTITY PRIMER into Tier 1-3 system prompts ---
-    print("\n=== Identity Primer injection (Tiers 1-3) ===")
+    print(f"\nTotal gold (v6+v7+v8): {len(all_gold)}")
+
+    # --- INJECT IDENTITY PRIMER into Tier 1-3 + Tier 5 system prompts ---
+    print("\n=== Identity Primer injection (Tiers 1-3 + 5) ===")
     # Tier 4 already has the primer via make_identity_system()
-    # Tier 1-3 need the primer prepended
+    # Tier 1-3 and Tier 5 need the primer prepended
     tier123_count = sum(len(gen_fn()) for _, gen_fn in ALL_V6_GENERATORS)
-    # Split gold into tiers: first tier123_count are v6, rest are v7
-    v6_gold = all_gold[:tier123_count]
-    v7_gold = all_gold[tier123_count:]
     # Re-generate to avoid count mismatch (seed was set)
     random.seed(42)
     v6_gold_regen: list[dict] = []
@@ -2284,9 +2483,15 @@ if __name__ == "__main__":
     v7_gold_regen: list[dict] = []
     for name, gen_fn in TIER4_GENERATORS:
         v7_gold_regen.extend(gen_fn())
-    all_gold = v6_with_primer + v7_gold_regen
+    # Re-generate tier 5 and inject primer (P1 features use make_sample, not make_identity_system)
+    v8_gold_regen: list[dict] = []
+    for name, gen_fn in TIER5_GENERATORS:
+        v8_gold_regen.extend(gen_fn())
+    v8_with_primer = inject_identity_primer(v8_gold_regen)
+    all_gold = v6_with_primer + v7_gold_regen + v8_with_primer
     print(f"  Primer injected into {len(v6_with_primer)} Tier 1-3 samples")
     print(f"  Tier 4 identity samples: {len(v7_gold_regen)}")
+    print(f"  Primer injected into {len(v8_with_primer)} Tier 5 (P1) samples")
     print(f"  Total with primer: {len(all_gold)}")
 
     # --- VALIDATE ---
@@ -2366,6 +2571,13 @@ if __name__ == "__main__":
     glitch_pct = glitch_count * 100 / len(balanced) if balanced else 0
     print(f"Glitch density: {glitch_pct:.1f}% ({glitch_count}/{len(balanced)})")
 
+    # P1 features density (v8 metric)
+    p1_cats = {"sequential_pipeline", "danger_survie", "danger_agonie",
+               "narrative_arc", "gm_effects"}
+    p1_count = sum(1 for s in balanced if s.get("category", "") in p1_cats)
+    p1_pct = p1_count * 100 / len(balanced) if balanced else 0
+    print(f"P1 features density: {p1_pct:.1f}% ({p1_count}/{len(balanced)})")
+
     # --- WRITE ---
     print(f"\n=== Writing {len(balanced)} samples ===")
     TRAINING_DIR.mkdir(parents=True, exist_ok=True)
@@ -2376,7 +2588,7 @@ if __name__ == "__main__":
     print(f"  Written to: {OUTPUT_FILE}")
 
     # Also write gold-only for reference
-    gold_file = TRAINING_DIR / "merlin_v7_gold_only.jsonl"
+    gold_file = TRAINING_DIR / "merlin_v8_gold_only.jsonl"
     with open(gold_file, "w", encoding="utf-8") as f:
         for s in valid_gold:
             out = {"messages": s["messages"]}
@@ -2384,5 +2596,5 @@ if __name__ == "__main__":
     print(f"  Gold-only: {gold_file} ({len(valid_gold)} samples)")
 
     print(f"\n{'=' * 60}")
-    print(f"DONE — {len(balanced)} total samples for LoRA training (v7)")
+    print(f"DONE — {len(balanced)} total samples for LoRA training (v8)")
     print(f"{'=' * 60}")
