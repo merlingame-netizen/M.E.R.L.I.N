@@ -681,7 +681,7 @@ func _wrap_text_as_card(raw_text: String, context: Dictionary) -> Dictionary:
 	# Catches residual titles like "Champs d'Environnement" after bold stripping
 	var narrative_lines: Array[String] = []
 	var header_rx := RegEx.new()
-	header_rx.compile("^[A-Z\\u00C0-\\u00FF][a-z\\u00E0-\\u00FF']+(?:\\s+[a-zA-Z\\u00C0-\\u00FF\\u00E0-\\u00FF']+){0,2}\\s*:?$")
+	header_rx.compile("^[\\p{Lu}][\\p{Ll}']+(?:\\s+[\\p{L}']+){0,2}\\s*:?$")
 	for nl in text.split("\n"):
 		var nt := nl.strip_edges()
 		if not nt.is_empty() and nt.length() < 40 and header_rx.search(nt):

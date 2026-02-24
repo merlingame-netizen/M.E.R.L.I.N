@@ -41,6 +41,7 @@ const CRT_PALETTE := {
 
 	# Celtic mystic (tertiary — magic/special)
 	"cyan":           Color(0.30, 0.85, 0.80),
+	"cyan_bright":    Color(0.50, 1.00, 0.95),
 	"cyan_dim":       Color(0.15, 0.42, 0.40),
 
 	# Status colors (terminal-style)
