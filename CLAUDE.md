@@ -129,28 +129,51 @@ Source de verite: `~/.claude/project_registry.json` (detection projet, keywords,
 
 > Pour les projets Orange (Data, Cours): ajouter `[AI-assisted]` en suffixe.
 
-### 4. AUTODEV v3 Escalation Protocol (OBLIGATOIRE)
+### 4. AUTODEV v4 — Subagents + VS Code Sidebar
 
-**Quand le pipeline AUTODEV est actif et le Game Director ESCALATE:**
+**Architecture**: Les workers sont des **subagents Claude Code** (Task tool) lances depuis la conversation VS Code.
+Un **sidebar panel VS Code** (`vscode-monitor-v4/`) affiche la progression en temps reel.
+
+#### 4a. Lancement via Claude Code (mot-cle `autodev:`)
 
 ```
-1. DETECTER l'escalation: Lire tools/autodev/status/control_state.json
-   Si state == "waiting_human" -> escalation en cours
-2. LIRE les questions: tools/autodev/status/director_questions.json
-3. PRESENTER via AskUserQuestion (pas de terminal, pas de control.ps1)
-4. ECRIRE la reponse: tools/autodev/status/human_response.json
-   Format: { "decision": "custom", "details": "Q1=A ...", "responded_by": "human_via_claude_code", "timestamp": "...", "answers": { "Q1": "A", ... } }
-5. CONFIRMER: Le pipeline detecte la reponse en < 30s et reprend
+1. DETECTER "autodev:" au debut du message
+2. PARSER l'objectif → identifier les domaines concernes
+3. ECRIRE status/session.json { state: "running", objective, workers: [...] }
+4. ECRIRE status/worker_{domain}.json { status: "pending" } pour chaque worker
+5. LANCER Task tool subagents EN PARALLELE (run_in_background: true)
+6. ATTENDRE les resultats (TaskOutput)
+7. CHECKPOINT: resumer les resultats a l'utilisateur
+8. LANCER subagent validation (validate.bat Step 0)
+9. CHECKPOINT: afficher resultats validation
+10. Si erreurs → lancer subagent fix
+11. ECRIRE status/session.json { state: "done" }
 ```
 
-**REGLE**: L'utilisateur repond TOUJOURS via Claude Code. JAMAIS via control.ps1 en terminal.
+#### 4b. Status Protocol (3 fichiers JSON)
 
-**Detection automatique**: Si l'utilisateur demande le statut AUTODEV ou dit "on m'attend ?",
-lire `control_state.json` et presenter les questions si `waiting_human`.
+| Fichier | Contenu |
+|---------|---------|
+| `status/session.json` | Etat global: state, objective, workers[], checkpoint |
+| `status/worker_{name}.json` | Par subagent: status, current_task, progress, log[], error |
+| `status/validation.json` | Resultats validate.bat: status, errors, warnings, details[] |
 
-**Lancement**: `.\tools\autodev\control.ps1 -Action Start -Wave [-MaxCycles N] [-DryRun]`
-**Arret**: `.\tools\autodev\control.ps1 -Action Stop` (ou creer fichier VETO)
-**Statut**: Lire `tools/autodev/status/control_state.json` + `director_decision.json`
+#### 4c. Subagent Worker Prompt Template
+
+```
+Tu es un worker AUTODEV pour le domaine "{domain}" du projet M.E.R.L.I.N. (Godot 4).
+OBJECTIF: {objective}
+TACHES: {tasks_list}
+SCOPE: {file_scope}
+PROTOCOLE: Ecris status/worker_{domain}.json apres CHAQUE tache.
+```
+
+#### 4d. VS Code Sidebar
+
+- Extension: `tools/autodev/vscode-monitor-v4/`
+- Symlink: `~/.vscode/extensions/autodev-monitor-v4/`
+- Read-only: affiche session + workers + validation + logs
+- Refresh: fs.watch + fallback poll 5s
 
 ---
 
