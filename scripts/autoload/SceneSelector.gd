@@ -22,6 +22,8 @@ const SCENES: Array[Dictionary] = [
 	{"label": "Calendar", "path": "res://scenes/Calendar.tscn"},
 	{"label": "Collection", "path": "res://scenes/Collection.tscn"},
 	{"label": "ArbreDeVie", "path": "res://scenes/ArbreDeVie.tscn"},
+	# — Test —
+	{"label": "TestCardLayers", "path": "res://scenes/test/TestCardLayers.tscn"},
 ]
 
 # === NODES ===
