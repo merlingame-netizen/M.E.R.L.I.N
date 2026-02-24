@@ -1,8 +1,8 @@
 ## ═══════════════════════════════════════════════════════════════════════════════
 ## SceneRencontreMerlin — Merged Eveil + Antre in one scene
 ## ═══════════════════════════════════════════════════════════════════════════════
-## 4-phase state machine: Intro Context → Bestiole Reveal → Mission Briefing → Transition
-## Pixel Merlin portrait assembled from falling cascade. No PNG assets.
+## 2-phase flow: LLM_INTRO (greeting + bestiole/ogham + mission) → Transition
+## Central dialogue card with LLM-driven text. No portrait sprite.
 ## ═══════════════════════════════════════════════════════════════════════════════
 
 extends Control
@@ -20,8 +20,6 @@ const LLM_STEP_TIMEOUT := 3.2
 const LLM_POLL_INTERVAL := 0.12
 const RESPONSE_CONFIRM_DELAY := 0.22
 
-# PALETTE constant removed — using MerlinVisual.CRT_PALETTE autoload
-
 const CARD_MAX_WIDTH := 720.0
 const CARD_MAX_HEIGHT := 800.0
 
@@ -30,10 +28,6 @@ const STARTER_OGHAMS := [
 	{"name": "Luis", "symbol": "\u1682", "meaning": "Sorbier — Protection", "gameplay": "Annule un changement negatif"},
 	{"name": "Quert", "symbol": "\u168A", "meaning": "Pommier — Guerison", "gameplay": "Ramene un aspect vers l'equilibre"},
 ]
-
-# Biome data — sourced from MerlinVisual.BIOME_VISUALS (single source of truth)
-# Initialized at runtime since MerlinVisual is an autoload singleton
-var BIOME_DATA: Dictionary = MerlinVisual.BIOME_VISUALS
 
 const CLASS_TO_BIOME := {
 	"druide": "cercles_pierres",
@@ -47,9 +41,7 @@ const CLASS_TO_BIOME := {
 # ═══════════════════════════════════════════════════════════════════════════════
 
 enum Phase {
-	INTRO_CONTEXT,      # Merlin presents the world + Triade system
-	BESTIOLE_REVEAL,    # Bestiole appears + Ogham reveal
-	MISSION_BRIEFING,   # Mission + Hub tour
+	LLM_INTRO,          # Merged: Intro + Bestiole/Ogham + Mission (single flow)
 	TRANSITIONING,      # Exit to HubAntre
 }
 
@@ -63,35 +55,29 @@ enum Phase {
 @onready var celtic_bottom: Label = $CelticBottom
 @onready var card: PanelContainer = $Card
 @onready var card_vbox: VBoxContainer = $Card/CardVBox
-@onready var portrait_container: CenterContainer = $Card/CardVBox/PortraitContainer
 @onready var merlin_text: RichTextLabel = $Card/CardVBox/MerlinText
 @onready var skip_hint: Label = $Card/CardVBox/SkipHint
 @onready var response_container: VBoxContainer = $ResponseContainer
 @onready var audio_player: AudioStreamPlayer = $AudioPlayer
 
 # Dynamic nodes (created at runtime)
-var merlin_portrait: Control  # PixelMerlinPortrait (loaded dynamically)
 var ogham_panel: PanelContainer
-var biome_panel: PanelContainer
-var biome_buttons: Dictionary = {}
 var response_buttons: Array[Button] = []
 var _dialogue_source_badge: PanelContainer
 var _response_source_badge: PanelContainer
 var _last_response_source: String = "static"
-var _last_rephrase_source: String = "static"
 
 # ═══════════════════════════════════════════════════════════════════════════════
 # STATE
 # ═══════════════════════════════════════════════════════════════════════════════
 
-var current_phase: Phase = Phase.INTRO_CONTEXT
+var current_phase: Phase = Phase.LLM_INTRO
 var scene_finished: bool = false
 var typing_active: bool = false
 var typing_abort: bool = false
 var _advance_requested: bool = false
 var _mist_tween: Tween
 var _entry_tween: Tween
-var _biome_pulse_tween: Tween
 var _llm_wait_tween: Tween
 var _skip_hint_tween: Tween
 var card_target_pos := Vector2.ZERO
@@ -104,8 +90,6 @@ var _response_chosen: int = -1
 # Game state
 var player_class: String = "druide"
 var suggested_biome: String = "foret_broceliande"
-var selected_biome: String = ""
-var _biome_layout: bool = false
 
 # Fonts
 var title_font: Font
@@ -113,8 +97,6 @@ var body_font: Font
 
 # LLM
 var merlin_ai: Node = null
-var _prefetched_rephrase: Dictionary = {}  # {line_index: String}
-var _prefetched_rephrase_sources: Dictionary = {}  # {line_index: "llm"|"fallback"}
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
@@ -140,17 +122,12 @@ func _ready() -> void:
 	if not is_inside_tree():
 		return
 
-	# Assemble Merlin from falling pixels
-	await merlin_portrait.assemble()
-	if not is_inside_tree():
-		return
-
 	_play_entry_animation()
 	if not is_inside_tree():
 		return
 
 	# Start phase machine
-	_run_phase(Phase.INTRO_CONTEXT)
+	_run_phase(Phase.LLM_INTRO)
 
 
 func _exit_tree() -> void:
@@ -186,13 +163,11 @@ func _load_data() -> void:
 	file.close()
 
 	var data: Dictionary = json.data
-	# Load eveil lines
 	eveil_lines = data.get("scene_eveil", {}).get("lines", [])
 	if eveil_lines.is_empty():
 		_set_fallback_data()
 		return
 
-	# Load antre data
 	dialogue_data = data.get("scene_antre_merlin", {})
 
 
@@ -249,11 +224,10 @@ func _configure_ui() -> void:
 	# Style central card
 	_apply_card_style()
 
-	# Create Pixel Merlin portrait (dynamic class)
-	var PixelMerlinClass = load("res://scripts/ui/pixel_merlin_portrait.gd")
-	merlin_portrait = PixelMerlinClass.new()
-	portrait_container.add_child(merlin_portrait)
-	merlin_portrait.call("setup", 192.0)
+	# Hide portrait container (no longer used)
+	var portrait_node := get_node_or_null("Card/CardVBox/PortraitContainer")
+	if portrait_node:
+		portrait_node.visible = false
 
 	# Style separator
 	var sep_left: ColorRect = $Card/CardVBox/SeparatorContainer/SepLeft
@@ -283,8 +257,6 @@ func _configure_ui() -> void:
 	_build_response_buttons()
 	# Ogham panel (dynamic)
 	_build_ogham_panel()
-	# Biome panel (dynamic)
-	_build_biome_panel()
 
 	_layout_ui()
 
@@ -420,70 +392,6 @@ func _build_ogham_panel() -> void:
 	add_child(ogham_panel)
 
 
-func _build_biome_panel() -> void:
-	biome_panel = PanelContainer.new()
-	biome_panel.visible = false
-	biome_panel.modulate.a = 0.0
-	var style := StyleBoxFlat.new()
-	style.bg_color = MerlinVisual.CRT_PALETTE.bg_dark
-	style.border_color = MerlinVisual.CRT_PALETTE.amber_dim
-	style.set_border_width_all(1)
-	style.set_corner_radius_all(6)
-	style.content_margin_left = 16
-	style.content_margin_right = 16
-	style.content_margin_top = 16
-	style.content_margin_bottom = 16
-	biome_panel.add_theme_stylebox_override("panel", style)
-
-	var vbox := VBoxContainer.new()
-	vbox.add_theme_constant_override("separation", 6)
-	biome_panel.add_child(vbox)
-
-	var title := Label.new()
-	title.text = "Les Sept Sanctuaires"
-	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	if title_font:
-		title.add_theme_font_override("font", title_font)
-	title.add_theme_font_size_override("font_size", 18)
-	title.add_theme_color_override("font_color", MerlinVisual.CRT_PALETTE.amber)
-	vbox.add_child(title)
-
-	var sep := ColorRect.new()
-	sep.color = MerlinVisual.CRT_PALETTE.line
-	sep.custom_minimum_size = Vector2(0, 1)
-	vbox.add_child(sep)
-
-	for key in BIOME_DATA:
-		var biome: Dictionary = BIOME_DATA[key]
-		var btn := Button.new()
-		btn.text = biome.name
-		btn.custom_minimum_size = Vector2(280, 34)
-		btn.pressed.connect(_on_biome_selected.bind(key))
-		btn.mouse_entered.connect(func(): SFXManager.play("hover"))
-		btn.disabled = true
-
-		var btn_style := StyleBoxFlat.new()
-		btn_style.bg_color = MerlinVisual.CRT_PALETTE.bg_panel
-		btn_style.border_color = MerlinVisual.CRT_PALETTE.border
-		btn_style.set_border_width_all(1)
-		btn_style.set_corner_radius_all(3)
-		btn_style.content_margin_left = 10
-		btn_style.content_margin_right = 10
-		btn.add_theme_stylebox_override("normal", btn_style)
-		var btn_hover := btn_style.duplicate()
-		btn_hover.bg_color = MerlinVisual.CRT_PALETTE.bg_dark
-		btn_hover.border_color = biome.color
-		btn_hover.set_border_width_all(2)
-		btn.add_theme_stylebox_override("hover", btn_hover)
-		if body_font:
-			btn.add_theme_font_override("font", body_font)
-		btn.add_theme_font_size_override("font_size", 14)
-		btn.add_theme_color_override("font_color", MerlinVisual.CRT_PALETTE.phosphor)
-		vbox.add_child(btn)
-		biome_buttons[key] = btn
-	add_child(biome_panel)
-
-
 # ═══════════════════════════════════════════════════════════════════════════════
 # LAYOUT
 # ═══════════════════════════════════════════════════════════════════════════════
@@ -491,15 +399,9 @@ func _build_biome_panel() -> void:
 func _layout_ui() -> void:
 	var vp := get_viewport().get_visible_rect().size
 	var card_w := minf(CARD_MAX_WIDTH, vp.x * 0.85)
-	var card_h: float
-	if _biome_layout:
-		card_h = minf(CARD_MAX_HEIGHT * 0.45, vp.y * 0.35)
-	else:
-		card_h = minf(CARD_MAX_HEIGHT, vp.y * 0.62)
+	var card_h := minf(CARD_MAX_HEIGHT, vp.y * 0.62)
 	card.size = Vector2(card_w, card_h)
 	card.position = Vector2((vp.x - card_w) * 0.5, (vp.y - card_h) * 0.5)
-	if _biome_layout:
-		card.position.y = vp.y * 0.05
 	card.pivot_offset = card.size * 0.5
 	card_target_pos = card.position
 
@@ -515,12 +417,6 @@ func _layout_ui() -> void:
 		var ow := minf(500, vp.x * 0.85)
 		ogham_panel.size.x = ow
 		ogham_panel.position = Vector2((vp.x - ow) * 0.5, card.position.y + card_h + 20)
-
-	# Position biome panel below card
-	if biome_panel and _biome_layout:
-		var bw := minf(350, vp.x * 0.8)
-		biome_panel.size.x = bw
-		biome_panel.position = Vector2((vp.x - bw) * 0.5, card.position.y + card_h + 16)
 
 
 func _on_resized() -> void:
@@ -563,39 +459,16 @@ func _run_phase(phase: Phase) -> void:
 	if scene_finished or not is_inside_tree():
 		return
 	current_phase = phase
-	_apply_scene_profile_for_phase(phase)
 
 	match phase:
-		Phase.INTRO_CONTEXT:
-			await _phase_intro_context()
-		Phase.BESTIOLE_REVEAL:
-			await _phase_bestiole_reveal()
-		Phase.MISSION_BRIEFING:
-			await _phase_mission_briefing()
+		Phase.LLM_INTRO:
+			_set_merlin_scene_context("scene_rencontre_merlin", {
+				"phase": "llm_intro",
+				"must_reference": ["Triade (Corps/Ame/Monde)", "Bestiole", "Oghams"]
+			})
+			await _phase_llm_intro()
 		Phase.TRANSITIONING:
 			await _transition_out()
-
-
-func _apply_scene_profile_for_phase(phase: Phase) -> void:
-	match phase:
-		Phase.INTRO_CONTEXT:
-			_set_merlin_scene_context("scene_rencontre_merlin_intro", {
-				"phase": "intro_context",
-				"must_reference": ["Triade (Corps/Ame/Monde)"]
-			})
-		Phase.BESTIOLE_REVEAL:
-			_set_merlin_scene_context("scene_rencontre_merlin_bestiole", {
-				"phase": "bestiole_reveal",
-				"must_reference": ["Bestiole", "Oghams"]
-			})
-		Phase.MISSION_BRIEFING:
-			_set_merlin_scene_context("scene_rencontre_merlin_mission", {
-				"phase": "mission_briefing",
-				"must_reference": ["Carte du Monde", "Hub", "Oghams"]
-			})
-		Phase.TRANSITIONING:
-			# Keep current profile until scene switch, then clear in _transition_out.
-			pass
 
 
 ## RAG system prompts for LLM-guided intro phases
@@ -604,8 +477,8 @@ const RAG_BESTIOLE := "Tu es Merlin. La Bestiole du voyageur apparait avec 3 Ogh
 const RAG_MISSION_HUB := "Tu es Merlin. Explique au voyageur: Carte du Monde, Oghams, sauvegardes. 2 phrases maximum, ton encourageant. Francais."
 
 
-## Phase 1: Intro Context — Merlin presents the world + Triade system
-func _phase_intro_context() -> void:
+## Merged LLM_INTRO: greeting → bestiole/ogham reveal → mission briefing
+func _phase_llm_intro() -> void:
 	# Wait for LLM readiness (short cap to keep pacing snappy)
 	if merlin_ai and not merlin_ai.is_ready:
 		var wait_elapsed: float = 0.0
@@ -617,132 +490,68 @@ func _phase_intro_context() -> void:
 
 	_set_mood("pensif")
 
-	# Get archetype for RAG prompt
+	# --- Part 1: Welcome + Triade ---
 	var archetype: String = "druide"
 	var gm := get_node_or_null("/root/GameManager")
 	if gm and gm.get("archetype_title") is String:
 		archetype = str(gm.get("archetype_title"))
 
-	# Try LLM with RAG context
-	var llm_text := await _llm_generate_from_rag(RAG_INTRO_CONTEXT % archetype)
+	var intro_text := await _llm_generate_from_rag(RAG_INTRO_CONTEXT % archetype)
 
-	if llm_text != "":
+	if intro_text != "":
 		_update_dialogue_badge("llm")
-		await _show_text(llm_text)
-		if not is_inside_tree():
-			return
-		await get_tree().create_timer(_scaled_delay(0.1)).timeout
-		_set_skip_hint(true)
-		_advance_requested = false
-		await _wait_for_advance(30.0)
-		_set_skip_hint(false)
+		await _show_text(intro_text)
 	else:
-		# Fallback: scripted lines with LLM rephrase
-		var lines: Array = eveil_lines if not eveil_lines.is_empty() else [
-			{"text": "Bienvenue a Broceliande, voyageur.", "emotion": "warm"},
-			{"text": "Corps, Ame, Monde — equilibre-les. Chaque choix pese.", "emotion": "serieux"},
-		]
-		_prefetched_rephrase.clear()
-		_prefetched_rephrase_sources.clear()
-		_prefetch_rephrase(lines, 0)
-		for i in range(lines.size()):
-			if scene_finished or not is_inside_tree():
-				return
-			var line: Dictionary = lines[i] if lines[i] is Dictionary else {"text": str(lines[i])}
-			_set_mood(line.get("emotion", "pensif"))
-			var text: String = await _get_rephrased_line(lines, i)
-			_update_dialogue_badge(_last_rephrase_source)
-			if i + 1 < lines.size():
-				_prefetch_rephrase(lines, i + 1)
-			await _show_text(text)
-			if not is_inside_tree():
-				return
-			await get_tree().create_timer(_scaled_delay(0.18)).timeout
-			_set_skip_hint(true)
-			_advance_requested = false
-			await _wait_for_advance(20.0)
-			_set_skip_hint(false)
-			if i < lines.size() - 1:
-				var fade := create_tween()
-				fade.tween_property(merlin_text, "modulate:a", 0.0, _scaled_delay(0.12))
-				await fade.finished
-				merlin_text.modulate.a = 1.0
-
+		_update_dialogue_badge("static")
+		await _show_text("Bienvenue a Broceliande, voyageur. Corps, Ame, Monde — la Triade guide chaque choix.")
 	if not is_inside_tree():
 		return
 
-	# Interactive response after intro context
-	var fade2 := create_tween()
-	fade2.tween_property(merlin_text, "modulate:a", 0.0, _scaled_delay(0.12))
-	await fade2.finished
+	await get_tree().create_timer(_scaled_delay(0.1)).timeout
+	_set_skip_hint(true)
+	_advance_requested = false
+	await _wait_for_advance(30.0)
+	_set_skip_hint(false)
+
+	# Interactive response
+	var fade1 := create_tween()
+	fade1.tween_property(merlin_text, "modulate:a", 0.0, _scaled_delay(0.12))
+	await fade1.finished
 	merlin_text.modulate.a = 1.0
 	await _show_response_blocks(1, "Merlin t'a presente le monde et la Triade.")
 
-	# Save eveil flag
 	if gm and gm.has_method("set"):
 		gm.set("eveil_seen", true)
-
-	_run_phase(Phase.BESTIOLE_REVEAL)
-
-
-## Phase 2: Bestiole Reveal — Bestiole appears + Ogham reveal (merged)
-func _phase_bestiole_reveal() -> void:
-	_set_mood("amuse")
-
-	# Try LLM for bestiole narration
-	var llm_text: String = await _llm_generate_from_rag(RAG_BESTIOLE)
-
-	if llm_text != "":
-		_update_dialogue_badge("llm")
-		await _show_text(llm_text)
-		if not is_inside_tree():
-			return
-		await get_tree().create_timer(_scaled_delay(0.1)).timeout
-		_set_skip_hint(true)
-		_advance_requested = false
-		await _wait_for_advance(15.0)
-		_set_skip_hint(false)
-	else:
-		# Fallback
-		var lines: Array = dialogue_data.get("bestiole_apparition", {}).get("lines", [])
-		if lines.is_empty():
-			lines = [
-				{"text": "Ta Bestiole apparait dans la brume, timide et lumineuse."},
-			]
-		_prefetched_rephrase.clear()
-		_prefetched_rephrase_sources.clear()
-		_prefetch_rephrase(lines, 0)
-		for i in range(lines.size()):
-			if not is_inside_tree():
-				return
-			var text: String = await _get_rephrased_line(lines, i)
-			_update_dialogue_badge(_last_rephrase_source)
-			if i + 1 < lines.size():
-				_prefetch_rephrase(lines, i + 1)
-			await _show_text(text)
-			if not is_inside_tree():
-				return
-			await get_tree().create_timer(_scaled_delay(0.18)).timeout
-			_set_skip_hint(true)
-			_advance_requested = false
-			await _wait_for_advance(15.0)
-			_set_skip_hint(false)
-			if i < lines.size() - 1:
-				var fade := create_tween()
-				fade.tween_property(merlin_text, "modulate:a", 0.0, _scaled_delay(0.12))
-				await fade.finished
-				merlin_text.modulate.a = 1.0
 
 	if not is_inside_tree():
 		return
 
-	# Ogham reveal — static text from JSON
+	# --- Part 2: Bestiole + Oghams ---
+	_set_mood("amuse")
+
+	var bestiole_text := await _llm_generate_from_rag(RAG_BESTIOLE)
+	if bestiole_text != "":
+		_update_dialogue_badge("llm")
+		await _show_text(bestiole_text)
+	else:
+		_update_dialogue_badge("static")
+		await _show_text("Ta Bestiole apparait dans la brume, timide et lumineuse.")
+	if not is_inside_tree():
+		return
+
+	await get_tree().create_timer(_scaled_delay(0.1)).timeout
+	_set_skip_hint(true)
+	_advance_requested = false
+	await _wait_for_advance(15.0)
+	_set_skip_hint(false)
+
+	# Ogham reveal
 	_update_dialogue_badge("static")
 	_set_mood("sage")
 	var ogham_line: String = dialogue_data.get("ogham_reveal", {}).get("line", {}).get("text", "Trois Oghams pour commencer ton chemin.")
-	var fade_pre := create_tween()
-	fade_pre.tween_property(merlin_text, "modulate:a", 0.0, _scaled_delay(0.12))
-	await fade_pre.finished
+	var fade_ogham := create_tween()
+	fade_ogham.tween_property(merlin_text, "modulate:a", 0.0, _scaled_delay(0.12))
+	await fade_ogham.finished
 	merlin_text.modulate.a = 1.0
 
 	await _show_text(ogham_line)
@@ -764,14 +573,14 @@ func _phase_bestiole_reveal() -> void:
 		tw.tween_property(ogham_panel, "modulate:a", 1.0, _scaled_delay(0.6)).set_trans(Tween.TRANS_SINE)
 		await tw.finished
 
-	# Store oghams
-	var gm := get_node_or_null("/root/GameManager")
-	if gm:
-		var bestiole_data: Dictionary = gm.get("bestiole") if gm.get("bestiole") is Dictionary else {}
+	# Store oghams in GameManager
+	var gm2 := get_node_or_null("/root/GameManager")
+	if gm2:
+		var bestiole_data: Dictionary = gm2.get("bestiole") if gm2.get("bestiole") is Dictionary else {}
 		if not bestiole_data.has("known_oghams"):
 			bestiole_data["known_oghams"] = ["beith", "luis", "quert"]
 			bestiole_data["equipped_oghams"] = ["beith", "luis", "quert", ""]
-			gm.set("bestiole", bestiole_data)
+			gm2.set("bestiole", bestiole_data)
 
 	if not is_inside_tree():
 		return
@@ -791,7 +600,33 @@ func _phase_bestiole_reveal() -> void:
 		await hide_tw.finished
 	ogham_panel.visible = false
 
-	_run_phase(Phase.MISSION_BRIEFING)
+	if not is_inside_tree():
+		return
+
+	# --- Part 3: Mission briefing ---
+	_set_mood("serieux")
+	var mission_text := await _llm_generate_from_rag(RAG_MISSION_HUB)
+	if mission_text != "":
+		_update_dialogue_badge("llm")
+		await _show_text(mission_text)
+	else:
+		_update_dialogue_badge("static")
+		await _show_text("Carte, Oghams, sauvegardes — tout t'attend dans l'Antre. Tu n'es pas seul.")
+	if not is_inside_tree():
+		return
+
+	await get_tree().create_timer(_scaled_delay(0.1)).timeout
+	_set_skip_hint(true)
+	_advance_requested = false
+	await _wait_for_advance(20.0)
+	_set_skip_hint(false)
+
+	# Set default biome
+	var gm3 := get_node_or_null("/root/GameManager")
+	if gm3 and gm3.has_method("set"):
+		gm3.set("selected_biome", "foret_broceliande")
+
+	_run_phase(Phase.TRANSITIONING)
 
 
 ## LLM generate from RAG prompt — returns full narrative text or "" on failure
@@ -810,46 +645,6 @@ func _llm_generate_from_rag(rag_prompt: String) -> String:
 	var text: String = str(result.get("text", "")).strip_edges()
 	if text.length() < 15:
 		return ""
-	return text
-
-
-## LLM rephrase — rewrite scripted text with same meaning but LLM voice
-func _llm_rephrase(scripted_text: String, emotion: String = "", _context: String = "") -> String:
-	if merlin_ai == null or not merlin_ai.is_ready:
-		_last_rephrase_source = "fallback"
-		return scripted_text
-
-	var system := "Tu es Merlin le druide. Reformule cette phrase en gardant exactement le meme sens et la meme intention."
-	if emotion != "":
-		system += " Emotion: %s." % emotion
-	system += " 1-2 phrases maximum. Francais uniquement. Ne dis rien d'autre que la reformulation."
-	var user_input := scripted_text
-
-	# Use Dictionary (reference type) — lambdas capture locals by value in GDScript 4
-	var state := {"done": false, "result": {}}
-	var _do := func():
-		state["result"] = await merlin_ai.generate_voice(system, user_input, {"max_tokens": 40, "temperature": 0.7})
-		state["done"] = true
-	_do.call()
-
-	var elapsed := 0.0
-	while not state["done"] and elapsed < LLM_STEP_TIMEOUT:
-		if not is_inside_tree():
-			_last_rephrase_source = "fallback"
-			return scripted_text
-		await get_tree().create_timer(LLM_POLL_INTERVAL).timeout
-		elapsed += LLM_POLL_INTERVAL
-
-	if not state["done"] or state["result"].has("error"):
-		_last_rephrase_source = "fallback"
-		return scripted_text
-
-	var text: String = str(state["result"].get("text", "")).strip_edges()
-	# Guardrails: minimum length, no empty
-	if text.length() < 10:
-		_last_rephrase_source = "fallback"
-		return scripted_text
-	_last_rephrase_source = "llm"
 	return text
 
 
@@ -908,177 +703,6 @@ func _llm_generate_responses(context_line: String, line_index: int) -> Array[Str
 
 	_last_response_source = "fallback"
 	return _get_fallback_responses(line_index)
-
-
-## Prefetch rephrase for next line (non-blocking, stores result for later)
-func _prefetch_rephrase(lines: Array, next_idx: int) -> void:
-	if next_idx >= lines.size():
-		return
-	if _prefetched_rephrase.has(next_idx):
-		return
-	var line: Dictionary = lines[next_idx] if lines[next_idx] is Dictionary else {"text": str(lines[next_idx])}
-	var text: String = line.get("text", "")
-	var emotion: String = line.get("emotion", "")
-	# Fire and forget — result stored in dict
-	var rephrased := await _llm_rephrase(text, emotion)
-	_prefetched_rephrase[next_idx] = rephrased
-	_prefetched_rephrase_sources[next_idx] = _last_rephrase_source
-
-
-## Get rephrased text (use prefetch if available, else rephrase now)
-func _get_rephrased_line(lines: Array, idx: int) -> String:
-	if _prefetched_rephrase.has(idx):
-		var result: String = _prefetched_rephrase[idx]
-		_prefetched_rephrase.erase(idx)
-		# Restore source from prefetch
-		_last_rephrase_source = _prefetched_rephrase_sources.get(idx, "fallback")
-		_prefetched_rephrase_sources.erase(idx)
-		return result
-	var line: Dictionary = lines[idx] if lines[idx] is Dictionary else {"text": str(lines[idx])}
-	return await _llm_rephrase(line.get("text", ""), line.get("emotion", ""))
-
-
-## Phase 3: Mission Briefing — Mission + Hub tour (RAG-guided)
-func _phase_mission_briefing() -> void:
-	_set_mood("serieux")
-
-	# Try LLM with RAG hub tour context
-	var llm_text: String = await _llm_generate_from_rag(RAG_MISSION_HUB)
-
-	if llm_text != "":
-		_update_dialogue_badge("llm")
-		await _show_text(llm_text)
-		if not is_inside_tree():
-			return
-		await get_tree().create_timer(_scaled_delay(0.1)).timeout
-		_set_skip_hint(true)
-		_advance_requested = false
-		await _wait_for_advance(30.0)
-		_set_skip_hint(false)
-	else:
-		# Fallback: scripted mission lines + hub explanation
-		var lines: Array = dialogue_data.get("mission_briefing", {}).get("lines", [])
-		if lines.is_empty():
-			lines = [
-				{"text": "Carte, Oghams, sauvegardes — tout t'attend dans l'Antre."},
-				{"text": "Tu n'es pas seul. Je serai la."},
-			]
-		_prefetched_rephrase.clear()
-		_prefetched_rephrase_sources.clear()
-		_prefetch_rephrase(lines, 0)
-
-		for i in range(lines.size()):
-			if not is_inside_tree():
-				return
-			var text: String = await _get_rephrased_line(lines, i)
-			_update_dialogue_badge(_last_rephrase_source)
-			if i + 1 < lines.size():
-				_prefetch_rephrase(lines, i + 1)
-			await _show_text(text)
-			if not is_inside_tree():
-				return
-			await get_tree().create_timer(_scaled_delay(0.18)).timeout
-			_set_skip_hint(true)
-			_advance_requested = false
-			await _wait_for_advance(20.0)
-			_set_skip_hint(false)
-			if i < lines.size() - 1:
-				var fade := create_tween()
-				fade.tween_property(merlin_text, "modulate:a", 0.0, _scaled_delay(0.12))
-				await fade.finished
-				merlin_text.modulate.a = 1.0
-
-	if not is_inside_tree():
-		return
-
-	# Interactive response after mission briefing
-	var fade2 := create_tween()
-	fade2.tween_property(merlin_text, "modulate:a", 0.0, _scaled_delay(0.12))
-	await fade2.finished
-	merlin_text.modulate.a = 1.0
-	await _show_response_blocks(3, "Merlin t'a explique la mission et le Hub.")
-
-	# Default biome = foret_broceliande (biome selection moved to HubAntre)
-	var gm2 := get_node_or_null("/root/GameManager")
-	if gm2 and gm2.has_method("set"):
-		gm2.set("selected_biome", "foret_broceliande")
-
-	_run_phase(Phase.TRANSITIONING)
-
-
-## Phase 4: Biome selection
-func _phase_biome_selection() -> void:
-	_set_mood("warm")
-
-	# Switch to compact layout
-	portrait_container.visible = false
-	_biome_layout = true
-	_layout_ui()
-
-	var text := "Par ou veux-tu commencer ton voyage?"
-	await _show_text(text)
-	if not is_inside_tree():
-		return
-
-	# Show biome panel (pixel reveal)
-	biome_panel.visible = true
-	biome_panel.modulate.a = 0.0
-	_layout_ui()
-	var pca_bp: Node = get_node_or_null("/root/PixelContentAnimator")
-	if pca_bp:
-		await get_tree().process_frame
-		pca_bp.reveal(biome_panel, {"duration": 0.4, "block_size": 8})
-		await get_tree().create_timer(0.45).timeout
-	else:
-		var tw := create_tween()
-		tw.tween_property(biome_panel, "modulate:a", 1.0, _scaled_delay(0.45)).set_trans(Tween.TRANS_SINE)
-		await tw.finished
-
-	# Enable buttons
-	for key in biome_buttons:
-		biome_buttons[key].disabled = false
-
-	# Pulse suggested biome
-	if biome_buttons.has(suggested_biome):
-		var sbtn: Button = biome_buttons[suggested_biome]
-		if _biome_pulse_tween:
-			_biome_pulse_tween.kill()
-		_biome_pulse_tween = create_tween().set_loops()
-		_biome_pulse_tween.tween_property(sbtn, "modulate", Color(1.15, 1.10, 1.0), 1.0).set_trans(Tween.TRANS_SINE)
-		_biome_pulse_tween.tween_property(sbtn, "modulate", Color.WHITE, 1.0).set_trans(Tween.TRANS_SINE)
-
-	_set_skip_hint(true, "Choisis un sanctuaire")
-
-	# Wait for biome selection
-	while selected_biome.is_empty() and not scene_finished:
-		if not is_inside_tree():
-			return
-		await get_tree().process_frame
-
-	_set_skip_hint(false, "Appuie pour continuer")
-	if _biome_pulse_tween:
-		_biome_pulse_tween.kill()
-
-	# Save biome
-	var gm := get_node_or_null("/root/GameManager")
-	if gm and gm.has_method("set"):
-		gm.set("selected_biome", selected_biome)
-
-	if not is_inside_tree():
-		return
-	await get_tree().create_timer(_scaled_delay(0.35)).timeout
-	_run_phase(Phase.TRANSITIONING)
-
-
-func _on_biome_selected(key: String) -> void:
-	SFXManager.play("choice_select")
-	selected_biome = key
-	# Visual feedback
-	for k in biome_buttons:
-		if k == key:
-			biome_buttons[k].add_theme_color_override("font_color", MerlinVisual.CRT_PALETTE.amber)
-		else:
-			biome_buttons[k].modulate.a = 0.4
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
@@ -1244,12 +868,12 @@ func _scaled_delay(seconds: float) -> float:
 	return maxf(0.01, seconds / UI_SPEED_FACTOR)
 
 
-func _set_skip_hint(show: bool, custom_text: String = "") -> void:
+func _set_skip_hint(show_hint: bool, custom_text: String = "") -> void:
 	if not skip_hint or not is_instance_valid(skip_hint):
 		return
 	if custom_text != "":
 		skip_hint.text = custom_text
-	if show:
+	if show_hint:
 		skip_hint.visible = true
 		skip_hint.modulate.a = 1.0
 		if _skip_hint_tween:
@@ -1329,7 +953,6 @@ func _set_mood(emotion: String) -> void:
 		mood = "warm"
 	elif "serieux" in emotion or "gravite" in emotion or "sage" in emotion:
 		mood = "serieux"
-	merlin_portrait.set_mood(mood)
 	var screen_fx := get_node_or_null("/root/ScreenEffects")
 	if screen_fx and screen_fx.has_method("set_merlin_mood"):
 		screen_fx.set_merlin_mood(mood)
@@ -1346,8 +969,6 @@ func _transition_out() -> void:
 	tween.parallel().tween_property(celtic_top, "modulate:a", 0.0, _scaled_delay(0.28))
 	tween.parallel().tween_property(celtic_bottom, "modulate:a", 0.0, _scaled_delay(0.28))
 	tween.parallel().tween_property(mist_layer, "modulate:a", 0.6, _scaled_delay(0.55))
-	if biome_panel and biome_panel.visible:
-		tween.parallel().tween_property(biome_panel, "modulate:a", 0.0, _scaled_delay(0.28))
 	tween.tween_interval(_scaled_delay(0.18))
 	tween.tween_callback(func():
 		_clear_merlin_scene_context()
