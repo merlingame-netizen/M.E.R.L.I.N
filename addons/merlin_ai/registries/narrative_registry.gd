@@ -26,14 +26,44 @@ const SAVE_PATH := "user://merlin_narrative.json"
 const MAX_ACTIVE_ARCS := 2
 const ARC_AUTO_CLOSE_CARDS := 30  # Ferme auto si pas de resolution
 
+## Phase narrative nommee (FSM a 4 etats)
+enum ArcPhase { SETUP = 1, RISING = 2, CLIMAX = 3, RESOLUTION = 4 }
+
+const ARC_PHASE_NAMES := {
+	ArcPhase.SETUP: "Mise en place",
+	ArcPhase.RISING: "Montee dramatique",
+	ArcPhase.CLIMAX: "Climax",
+	ArcPhase.RESOLUTION: "Resolution",
+}
+
+## Seuils de progression automatique (en nombre de cartes dans l'arc)
+const ARC_AUTO_PROGRESS := {
+	ArcPhase.SETUP: 3,    # Apres 3 cartes dans l'arc → RISING
+	ArcPhase.RISING: 6,   # Apres 6 cartes → CLIMAX
+	ArcPhase.CLIMAX: 2,   # Apres 2 cartes climax → RESOLUTION
+}
+
+## Run-level arc: phase narrative de la run entiere (independant des arcs individuels)
+var run_phase: int = ArcPhase.SETUP
+var _run_phase_card_count := 0
+
+## Seuils de progression de run_phase (en cards_played total)
+const RUN_PHASE_THRESHOLDS := {
+	ArcPhase.SETUP: 5,      # 5 premieres cartes = mise en place
+	ArcPhase.RISING: 15,    # cartes 6-20 = montee dramatique
+	ArcPhase.CLIMAX: 25,    # cartes 21-45 = climax
+	# Au-dela = RESOLUTION
+}
+
 var active_arcs: Array[Dictionary] = []
 # Structure: {
 #   id: String,
-#   stage: int,  # 1=intro, 2=development, 3=climax, 4=resolution
+#   stage: int,  # ArcPhase enum (1=SETUP, 2=RISING, 3=CLIMAX, 4=RESOLUTION)
 #   cards_in_arc: Array[String],
 #   flags: Dictionary,
 #   started_at_card: int,
-#   deadline_card: int
+#   deadline_card: int,
+#   stage_card_count: int  # cards since last stage change
 # }
 
 var completed_arcs: Array[Dictionary] = []  # Cross-run
@@ -142,6 +172,8 @@ func reset_run() -> void:
 	recent_themes.clear()
 	theme_fatigue.clear()
 	_current_card_number = 0
+	run_phase = ArcPhase.SETUP
+	_run_phase_card_count = 0
 
 	world = {
 		"biome": "broceliande",
@@ -179,6 +211,15 @@ func process_card(card: Dictionary) -> void:
 	var arc_id: String = card.get("arc_id", "")
 	if arc_id != "":
 		_progress_arc(arc_id, card)
+
+	# Auto-progress arc stages based on cards_in_arc count
+	_auto_progress_arc_stages()
+
+	# Auto-start arc if none active and enough cards played
+	_auto_start_arc_if_needed()
+
+	# Progress run-level narrative phase
+	_progress_run_phase()
 
 	# Check foreshadowing reveals
 	_check_foreshadowing_reveals()
@@ -238,6 +279,62 @@ func _update_world_state(card: Dictionary) -> void:
 		world.global_tension = minf(1.0, world.global_tension + 0.02)  # Slowly build
 
 # ═══════════════════════════════════════════════════════════════════════════════
+# RUN PHASE PROGRESSION (FSM globale de la run)
+# ═══════════════════════════════════════════════════════════════════════════════
+
+func _progress_run_phase() -> void:
+	## Avance la phase narrative de la run basee sur le nombre de cartes jouees.
+	var old_phase: int = run_phase
+	if _current_card_number <= RUN_PHASE_THRESHOLDS[ArcPhase.SETUP]:
+		run_phase = ArcPhase.SETUP
+	elif _current_card_number <= RUN_PHASE_THRESHOLDS[ArcPhase.RISING]:
+		run_phase = ArcPhase.RISING
+	elif _current_card_number <= RUN_PHASE_THRESHOLDS[ArcPhase.CLIMAX]:
+		run_phase = ArcPhase.CLIMAX
+	else:
+		run_phase = ArcPhase.RESOLUTION
+
+	if run_phase != old_phase:
+		_run_phase_card_count = 0
+
+
+func _auto_progress_arc_stages() -> void:
+	## Avance automatiquement les stages des arcs actifs selon le nombre de cartes.
+	for arc in active_arcs:
+		var stage: int = arc.get("stage", ArcPhase.SETUP)
+		var stage_cards: int = arc.get("stage_card_count", 0) + 1
+		arc["stage_card_count"] = stage_cards
+
+		var threshold: int = ARC_AUTO_PROGRESS.get(stage, 999)
+		if stage_cards >= threshold and stage < ArcPhase.RESOLUTION:
+			var new_stage: int = stage + 1
+			arc["stage"] = new_stage
+			arc["stage_card_count"] = 0
+			arc_progressed.emit(arc.get("id", ""), new_stage)
+
+			if new_stage >= ArcPhase.RESOLUTION:
+				_complete_arc(arc, "auto_resolved")
+
+
+func _auto_start_arc_if_needed() -> void:
+	## Demarre un arc automatiquement si aucun n'est actif et assez de cartes jouees.
+	if active_arcs.size() >= MAX_ACTIVE_ARCS:
+		return
+	if _current_card_number < 3:
+		return  # Trop tot
+
+	# Generer un arc_id base sur le biome + card number
+	var biome: String = world.get("biome", "broceliande")
+	var arc_id := "arc_%s_%d" % [biome, _current_card_number]
+	start_arc(arc_id)
+
+
+func get_run_phase_name() -> String:
+	## Retourne le nom de la phase narrative actuelle de la run.
+	return ARC_PHASE_NAMES.get(run_phase, "Inconnu")
+
+
+# ═══════════════════════════════════════════════════════════════════════════════
 # ARC MANAGEMENT
 # ═══════════════════════════════════════════════════════════════════════════════
 
@@ -253,11 +350,12 @@ func start_arc(arc_id: String, initial_flags: Dictionary = {}) -> bool:
 
 	var arc := {
 		"id": arc_id,
-		"stage": 1,
+		"stage": ArcPhase.SETUP,
 		"cards_in_arc": [],
 		"flags": initial_flags,
 		"started_at_card": _current_card_number,
 		"deadline_card": _current_card_number + ARC_AUTO_CLOSE_CARDS,
+		"stage_card_count": 0,
 	}
 
 	active_arcs.append(arc)
@@ -531,7 +629,14 @@ func decrease_tension(amount: float = 0.1) -> void:
 
 func get_context_for_llm() -> Dictionary:
 	return {
-		"active_arcs": active_arcs.map(func(a): return {"id": a.id, "stage": a.stage}),
+		"run_phase": run_phase,
+		"run_phase_name": get_run_phase_name(),
+		"active_arcs": active_arcs.map(func(a): return {
+			"id": a.get("id", ""),
+			"stage": a.get("stage", 1),
+			"stage_name": ARC_PHASE_NAMES.get(a.get("stage", 1), "?"),
+			"cards_in_arc": a.get("cards_in_arc", []).size(),
+		}),
 		"active_foreshadowing": foreshadowing.filter(func(f): return not f.revealed).size(),
 		"revealable_twists": get_revealable_foreshadowing().size(),
 		"recent_themes": recent_themes.duplicate(),
@@ -548,14 +653,22 @@ func get_summary_for_prompt() -> String:
 	## Resume textuel pour le prompt LLM.
 	var lines := []
 
+	# Run phase (FSM globale)
+	lines.append("Phase narrative: %s (carte %d)" % [get_run_phase_name(), _current_card_number])
+
 	# World state
 	lines.append("Jour %d, %s, %s" % [world.day, world.time_of_day, world.season])
 	lines.append("Lieu: %s, Meteo: %s" % [world.biome, world.weather])
 
-	# Active arcs
+	# Active arcs with named stages
 	if active_arcs.size() > 0:
-		var arc_names := active_arcs.map(func(a): return "%s (etape %d)" % [a.id, a.stage])
-		lines.append("Arcs actifs: " + ", ".join(arc_names))
+		var arc_parts := []
+		for a in active_arcs:
+			var stage_name: String = ARC_PHASE_NAMES.get(a.get("stage", 1), "?")
+			arc_parts.append("%s (%s, %d cartes)" % [
+				a.get("id", "?"), stage_name, a.get("cards_in_arc", []).size()
+			])
+		lines.append("Arcs actifs: " + ", ".join(arc_parts))
 
 	# Tension
 	if world.global_tension > 0.7:

@@ -839,5 +839,260 @@ _(Section vide — sera alimentee automatiquement au fil des dispatches)_
 
 ---
 
-*Last Updated: 2026-02-19 (17 corrections + LLM Intelligence Pipeline tests + Section 7 Dispatcher)*
+## SECTION 8: Good Practices Operationnelles — Test & LLM Pipeline (2026-02-24)
+
+> **OBLIGATOIRE** — Ces regles sont issues d'erreurs reelles en session. Les violer cause des blocages,
+> des tests qui ne terminent jamais, ou des resultats faux.
+
+### 8.1 Lancer une Scene Godot depuis Claude Code
+
+**Commande de base:**
+```bash
+timeout 300 "C:/Users/PGNK2128/Godot/Godot_v4.5.1-stable_win64_console.exe" \
+  --path "c:/Users/PGNK2128/Godot-MCP" scenes/MaScene.tscn > /dev/null 2>&1
+```
+
+**REGLES CRITIQUES:**
+
+| Regle | Erreur si viole | Fix |
+|-------|-----------------|-----|
+| **JAMAIS `\| head` ou `\| tail`** | SIGPIPE tue Godot apres N lignes stdout | `> /dev/null 2>&1` et lire le log file |
+| **Toujours `timeout N`** | Process zombie infini | `timeout 300` (5 min max) |
+| **Lire les logs via fichier** | stdout Godot est tronque/pipe-sensitive | `$APPDATA/Godot/app_userdata/DRU/logs/godot.log` |
+| **Vider le log AVANT** | Melange avec logs precedents | `echo "" > "$LOG_PATH"` avant lancement |
+| **Background si long** | Bash tool timeout a 120s | `> /dev/null 2>&1 &` + sleep + read log |
+
+**Pattern recommande (background + polling log):**
+```bash
+# Lancer en background
+echo "" > "C:/Users/PGNK2128/AppData/Roaming/Godot/app_userdata/DRU/logs/godot.log"
+timeout 300 "C:/.../Godot_v4.5.1-stable_win64_console.exe" \
+  --path "c:/Users/PGNK2128/Godot-MCP" scenes/TestAutoPlay.tscn > /dev/null 2>&1 &
+
+# Attendre et verifier
+sleep 90
+wc -l "$LOG_PATH"
+grep -c "=== CARD" "$LOG_PATH"
+tail -20 "$LOG_PATH"
+```
+
+---
+
+### 8.2 Scene Standalone vs Scene en Contexte de Jeu
+
+**REGLE FONDAMENTALE:** MerlinGame.tscn ne peut PAS tourner seul (store = null).
+
+| Mode de test | Scene | Usage | Prerequis |
+|-------------|-------|-------|-----------|
+| **E2E Autoplay** | `scenes/TestAutoPlay.tscn` | Test pipeline LLM complet | Ollama running, 75-90s/carte |
+| **Game context** | Full game flow | Test en condition reelle | User input requis |
+| **LLM standalone** | Script Python/CLI | Test modele seul | `python tools/test_merlin_chat.py` |
+| **Validation statique** | `validate.bat` | Syntaxe + parse | Aucun (headless) |
+
+**Architecture du flux de production des cartes:**
+```
+HubAntre → TransitionBiome (LLM pre-genere buffer 5 cartes) → MerlinGame (consomme buffer + genere on-demand)
+```
+
+**Quand on teste le LLM en mode autoplay:**
+- Le buffer TransitionBiome est VIDE (pas de transition)
+- Toutes les cartes sont generees on-demand (plus lent)
+- C'est normal et attendu — le test mesure la generation, pas le prefetch
+
+**Quand on teste en condition de jeu:**
+- TransitionBiome pre-genere 5 cartes pendant l'animation
+- Cartes 1-5 sont servies en ~2ms (buffer)
+- Cartes 6+ sont generees on-demand ou par prefetch
+- C'est le scenario reel joueur
+
+---
+
+### 8.3 Mode Headless — Regles Obligatoires
+
+**Probleme:** Les scenes UI ont des animations bloquantes (tweens, typewriter, click-to-continue)
+qui ne completent JAMAIS en headless car personne ne clique et certains tweens ne se resolvent pas.
+
+**Points de blocage decouverts (2026-02-24):**
+
+| Fonction | Blocage | Temps mort |
+|----------|---------|------------|
+| `show_narrator_intro()` | `_waiting_narrator_click` + 30s timeout/page | 30-90s |
+| `show_dice_roll()` | Tween animation 3s + bounce | Hang infini |
+| `show_result_text_transition()` | Tween fade + typewriter | Hang infini |
+| `show_travel_animation()` | Fog overlay + tween fade | Hang infini |
+| `show_opening_sequence()` | Layout + pixel animations | Variable |
+| `show_scenario_intro()` | Click-to-continue 30s timeout | 30s |
+| `show_progressive_indicators()` | Tween sequence | Variable |
+
+**Solution implementee dans `merlin_game_controller.gd`:**
+```gdscript
+# Dans start_run():
+if ui and is_instance_valid(ui) and not headless_mode:
+    # ... toutes les animations UI bloquantes
+elif headless_mode:
+    _intro_shown = true
+    print("[TRIADE] headless mode — skipped narrator intro")
+
+# Dans _resolve_choice():
+if headless_mode:
+    dice_result = randi_range(1, 20)  # Instant dice, pas d'animation
+# Skip: show_result_text_transition, show_travel_animation, timers 3s
+```
+
+**Race condition critique (decouverte 2026-02-24):**
+```gdscript
+# WRONG — _ready() → start_run() s'execute pendant add_child(), AVANT la ligne suivante
+var game_instance = game_scene.instantiate()
+add_child(game_instance)       # ← _ready() EXECUTE ICI
+_controller.headless_mode = true  # TROP TARD
+
+# CORRECT — set headless_mode AVANT add_child
+var game_instance = game_scene.instantiate()
+game_instance.headless_mode = true  # ← AVANT _ready()
+game_instance.minigame_chance = 0.0
+add_child(game_instance)
+```
+
+**Regle:** Toute propriete qui affecte `_ready()` ou `start_run()` doit etre definie
+AVANT `add_child()`. L'ordre Godot est: `instantiate()` → proprietes → `add_child()` → `_ready()`.
+
+---
+
+### 8.4 Gestion CPU / Ollama / CPU Guardian
+
+**Le hook `cpu_guardian.py` bloque les commandes Bash si CPU >= 90%.**
+
+| Situation | Cause | Solution |
+|-----------|-------|----------|
+| CPU 100% apres test | Ollama genere encore | `taskkill //F //IM "ollama_llama_server.exe"` |
+| CPU 100% pendant test | LLM generation active | Attendre ou kill Godot + Ollama |
+| CPU bloque validation | Ollama en background | Kill Ollama, wait 10s, puis valider |
+| CPU bloque apres kill | Windows lag de release | `sleep 20` puis reessayer |
+
+**Sequence de cleanup:**
+```bash
+taskkill //F //IM "Godot_v4.5.1-stable_win64_console.exe" 2>/dev/null
+taskkill //F //IM "ollama_llama_server.exe" 2>/dev/null
+sleep 10  # Attendre release CPU
+# Puis valider/relancer
+```
+
+**JAMAIS tuer `ollama.exe` (le serveur)** — seulement `ollama_llama_server.exe` (le worker LLM).
+Ollama relancera le worker au prochain appel.
+
+---
+
+### 8.5 Validation Pipeline — Ordre Obligatoire
+
+```
+1. Editer le code
+2. Kill Ollama worker si CPU > 80%
+3. validate.bat (ou powershell -File tools/validate_editor_parse.ps1)
+4. Corriger erreurs/warnings
+5. Re-valider (0 errors, 0 warnings)
+6. PUIS tester dans Godot (scene ou autoplay)
+7. Analyser les logs (fichier, pas stdout)
+8. Commit si OK
+```
+
+**Validation specifique aux fichiers .gd crees hors editeur:**
+Godot ne genere pas les `.uid` ni le cache de types pour les fichiers crees par Claude Code.
+L'Editor Parse Check (`--editor --headless --quit`) est OBLIGATOIRE apres creation de nouveaux scripts.
+
+---
+
+### 8.6 LLM Pipeline — Metriques et Seuils
+
+**Metriques actuelles (Qwen 2.5-1.5B, CPU-only, 2026-02-24):**
+
+| Metrique | Valeur observee | Seuil acceptable |
+|----------|-----------------|------------------|
+| gen_time/carte (warm) | 75-87s | < 10s (GPU) / < 90s (CPU) |
+| Narrator text gen | 21-40s | — |
+| GM effects gen | 7-11s | — |
+| GM consequences gen | 4-7s | — |
+| Quality judge rewrite | 20-25s | — |
+| Fallback rate | 0% | 0% (zero fallback) |
+| Labels extraits | 1-3/3 | 3/3 ideal |
+| Labels fallback "VERBE" | 50% des cartes | < 20% |
+| Text length | 236-306 chars | 30-800 chars |
+| French output | ~80% | > 80% |
+
+**Pipeline two-stage par carte:**
+```
+1. Narrator: free text (2400-3200 chars prompt, 120-160 max_tokens) → 21-40s
+2. Label extraction: regex A)/B)/C) dans le texte → <1ms
+3. GM effects: JSON structured (540-578 chars prompt, 80 max_tokens) → 7-11s
+4. GM consequences: result_success/failure (430-620 chars, 40 max_tokens) → 4-7s
+5. Quality judge: rewrite si score < 0.55 (1039-1100 chars, 200 max_tokens) → 20-25s
+Total: ~75-87s/carte (CPU)
+```
+
+**Points de defaillance observes:**
+- "Only 0 labels extracted" → Le Narrator n'inclut pas A)/B)/C) dans son texte → padding "VERBE"
+- "Smart effects: GM failed" → Le GM genere du JSON invalide → heuristique fallback
+- "Unreferenced static string" → Bug Godot interne (memory), pas notre code → ignore
+
+---
+
+### 8.7 Test LLM Standalone (hors Godot)
+
+**Pour tester le modele sans lancer Godot:**
+```bash
+python tools/test_merlin_chat.py --mode perf --perf-runs 5
+# Resultat: tmp/perf_results.json
+```
+
+**Pour tester un prompt specifique:**
+```bash
+python tools/test_merlin_chat.py --prompt "Tu es Merlin. Decris une foret celtique en 3 phrases."
+```
+
+**Verifier qu'Ollama tourne:**
+```bash
+curl -s http://localhost:11434/api/tags | head -5
+# Ou: ollama list
+```
+
+---
+
+### 8.8 Patterns de Debugging — Grep Logs
+
+**Chercher les cartes:**
+```bash
+grep "=== CARD" "$LOG"           # Compter les cartes
+grep "CHOSEN=" "$LOG"            # Choix effectues
+grep "source=" "$LOG"            # Source (llm_native, fallback, etc.)
+grep "D20=" "$LOG"               # Resultats de des
+grep "text=" "$LOG"              # Textes generes
+grep "ERROR\|SCRIPT ERROR" "$LOG"  # Erreurs runtime
+```
+
+**Diagnostiquer un blocage:**
+```bash
+tail -30 "$LOG"    # Voir ou c'est bloque
+tasklist | grep -i Godot   # Verifier si le process tourne
+wc -l "$LOG"       # Si le nombre de lignes ne bouge plus = bloque
+```
+
+---
+
+### 8.9 Architecture de Test — 3 Niveaux
+
+| Niveau | Quoi | Comment | Quand |
+|--------|------|---------|-------|
+| **Statique** | Syntaxe, types, parse | `validate.bat` / `validate_editor_parse.ps1` | Apres CHAQUE edit .gd |
+| **LLM Standalone** | Qualite texte, latence | `test_merlin_chat.py --mode perf` | Apres changements prompts/params |
+| **E2E Autoplay** | Pipeline complet in-engine | `scenes/TestAutoPlay.tscn` (headless) | Apres changements controller/UI/MOS |
+| **Game context** | Experience joueur reelle | Full game (Manual play) | Avant release/milestone |
+
+**Le test en condition de jeu (HubAntre → TransitionBiome → MerlinGame) est le seul qui teste:**
+- Le buffer de cartes pre-generees (TransitionBiome)
+- Le prefetch pendant la resolution joueur
+- Les animations UI reelles
+- L'experience timing percue par le joueur
+
+---
+
+*Last Updated: 2026-02-24 (Section 8: Good Practices Operationnelles — 9 sous-sections)*
 *Maintained by: Debug Agent, Optimizer Agent & Task Dispatcher*

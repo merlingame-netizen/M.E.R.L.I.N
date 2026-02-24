@@ -254,15 +254,22 @@ func _get_active_arcs_context() -> String:
 	for arc in arcs:
 		if arc is Dictionary:
 			var arc_id: String = str(arc.get("id", "?"))
-			var progress: int = int(arc.get("progress", 0))
-			var total: int = int(arc.get("total", 0))
-			if total > 0:
-				parts.append("%s (%d/%d)" % [arc_id, progress, total])
+			var stage_name: String = str(arc.get("stage_name", ""))
+			var cards_count: int = int(arc.get("cards_in_arc", 0))
+			if stage_name != "":
+				parts.append("%s (%s, %d cartes)" % [arc_id, stage_name, cards_count])
 			else:
-				parts.append(arc_id)
+				# Fallback: use stage number
+				var stage: int = int(arc.get("stage", 1))
+				parts.append("%s (etape %d)" % [arc_id, stage])
 	if parts.is_empty():
 		return ""
-	return "Arcs: " + ", ".join(parts)
+	# Include run-level phase if available
+	var run_phase_name: String = str(world_state.get("run_phase_name", ""))
+	var prefix := ""
+	if run_phase_name != "":
+		prefix = "Phase: %s | " % run_phase_name
+	return prefix + "Arcs: " + ", ".join(parts)
 
 
 func _get_player_pattern_context() -> String:

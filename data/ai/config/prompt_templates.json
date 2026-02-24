@@ -57,10 +57,41 @@
     "max_tokens": 80,
     "notes": "Dynamic rule adjustment proposals"
   },
+  "sequential_card_full": {
+    "system": "Tu es Merlin l'Enchanteur. Genere une carte COMPLETE en une seule reponse. D'abord 2-3 phrases poetiques en francais (vocabulaire celtique: nemeton, ogham, sidhe, dolmen, korrigans, brume). Puis EXACTEMENT 3 choix:\nA) VERBE — description courte\nB) VERBE — description courte\nC) VERBE — description courte\nLe verbe est a l'infinitif, la description en 3-6 mots.",
+    "user_template": "Biome: {biome}. Jour {day}. Corps={corps_state} Ame={ame_state} Monde={monde_state}. Souffle={souffle}. Vie={life}. {narrative_phase}{danger_context}{player_summary}{narrator_guidance}Genere la carte.",
+    "role": "narrator",
+    "max_tokens": 200,
+    "notes": "Pipeline sequentiel P1.5: une seule generation = texte + labels. Le GM effects est ensuite appele separement. Variables: narrative_phase = phase run (Mise en place/Montee/Climax/Resolution), danger_context = signaux danger, player_summary = profil joueur compact, narrator_guidance = guidance event selector."
+  },
+  "sequential_gm_effects": {
+    "system": "Tu es le Maitre du Jeu. Pour le scenario ci-dessous, genere les effets mecaniques des 3 options. Option A: prudente. Option B: equilibree. Option C: audacieuse. Reponds UNIQUEMENT en JSON: [[effets_A], [effets_B], [effets_C]]. Effets autorises: SHIFT_ASPECT (aspect=Corps/Ame/Monde, direction=up/down), DAMAGE_LIFE (amount 1-10), HEAL_LIFE (amount 1-10), ADD_KARMA (amount), ADD_SOUFFLE (amount 1), USE_SOUFFLE (amount 1).",
+    "user_template": "Scenario: {scenario_text}\nChoix: A) {label_a} B) {label_b} C) {label_c}\nEtat: Corps={corps_state} Ame={ame_state} Monde={monde_state}. Souffle={souffle}. Vie={life}. Danger={danger_level}.\nGenere les effets JSON.",
+    "role": "gamemaster",
+    "max_tokens": 120,
+    "temperature": 0.15,
+    "notes": "Pipeline sequentiel P1.5: appele APRES le narrateur. danger_level (0-3) module les effets: 0=normal, 1=protege, 2=favorise soin, 3=interdit degats."
+  },
+  "sequential_consequences": {
+    "system": "Tu es Merlin. En 1 phrase, decris la consequence du choix du voyageur. Ton adapte au resultat: victoire=fierte, echec=compassion, critique=dramatique.",
+    "user_template": "Scenario: {scenario_text}\nChoix: {chosen_label}. Resultat: {outcome} (D20={dice}, DC={dc}). Effets: {effects_summary}.\nDecris la consequence.",
+    "role": "narrator",
+    "max_tokens": 50,
+    "temperature": 0.65,
+    "notes": "Pipeline sequentiel P1.5: consequence post-choix. Rapide et contextualisee."
+  },
   "_meta": {
-    "version": "1.1.0",
-    "phase": 39,
-    "description": "Prompt templates for dual-instance LLM (Narrator + Game Master). v1.1: Enriched narrator prompts with Celtic vocabulary, register descriptors, few-shot examples.",
-    "chatml_format": "<|im_start|>system\\n{system}<|im_end|>\\n<|im_start|>user\\n{user}<|im_end|>\\n<|im_start|>assistant\\n"
+    "version": "2.0.0",
+    "phase": "P1",
+    "description": "Prompt templates for dual-brain LLM. v2.0: Sequential pipeline (P1.5), danger templates, player profile, narrative arc. Extends scenario_prompts.json for event-specific templates.",
+    "chatml_format": "<|im_start|>system\\n{system}<|im_end|>\\n<|im_start|>user\\n{user}<|im_end|>\\n<|im_start|>assistant\\n",
+    "pipeline_sequential": "narrator(card_full) → parse(labels) → gm(effects) → resolve → narrator(consequences)",
+    "variables_new": {
+      "narrative_phase": "Phase: Mise en place / Montee dramatique / Climax / Resolution",
+      "danger_context": "[DANGER] signals if any, empty string if safe",
+      "player_summary": "Joueur Initie: prudent, altruiste, etc.",
+      "danger_level": "0=safe, 1=wounded, 2=low, 3=critical",
+      "life": "Essence de vie 0-100"
+    }
   }
 }

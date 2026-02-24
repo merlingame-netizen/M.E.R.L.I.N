@@ -37,6 +37,7 @@ func build_full_context(game_state: Dictionary) -> Dictionary:
 		"gauges": run.get("gauges", {}),
 		"aspects": run.get("aspects", {}),
 		"souffle": int(run.get("souffle", 0)),
+		"life_essence": int(run.get("life_essence", 100)),
 		"day": int(run.get("day", 1)),
 		"cards_played": int(run.get("cards_played", 0)),
 		"active_promises": run.get("active_promises", []),
@@ -139,23 +140,26 @@ func build_llm_prompt_context(full_context: Dictionary) -> String:
 	if souffle <= 1:
 		lines.append("SOUFFLE FAIBLE: %d" % souffle)
 
+	# Life essence — danger level
+	var life: int = int(full_context.get("life_essence", 100))
+	if life <= 15:
+		lines.append("VIE CRITIQUE: %d/100 — mort imminente" % life)
+	elif life <= 25:
+		lines.append("VIE BASSE: %d/100 — danger" % life)
+	elif life <= 50:
+		lines.append("Vie: %d/100" % life)
+
 	# Jour et progression
 	lines.append("Jour %d, %d cartes jouees" % [
 		full_context.get("day", 1),
 		full_context.get("cards_played", 0)
 	])
 
-	# Profil joueur (resume)
-	var player = full_context.get("player", {})
-	var style = player.get("style", {})
-
-	if float(style.get("aggression", 0.5)) > 0.7:
-		lines.append("Joueur: audacieux")
-	elif float(style.get("aggression", 0.5)) < 0.3:
-		lines.append("Joueur: prudent")
-
-	if float(style.get("altruism", 0.5)) > 0.7:
-		lines.append("Joueur: altruiste")
+	# Profil joueur (resume compact via le registry)
+	if player_profile:
+		var profile_summary: String = player_profile.get_summary_for_prompt()
+		if profile_summary != "":
+			lines.append(profile_summary)
 
 	# Patterns detectes
 	var patterns: String = full_context.get("patterns", "")

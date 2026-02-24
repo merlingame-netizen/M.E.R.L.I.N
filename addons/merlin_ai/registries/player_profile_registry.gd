@@ -412,38 +412,74 @@ func get_context_for_llm() -> Dictionary:
 
 
 func get_summary_for_prompt() -> String:
-	## Retourne un resume textuel pour le prompt LLM.
-	var lines := []
+	## Retourne un resume textuel compact pour le prompt LLM (tous les 6 axes).
+	var traits := []
 
-	# Style dominant
-	if play_style["aggression"] > 0.7:
-		lines.append("Joueur audacieux, prend des risques")
-	elif play_style["aggression"] < 0.3:
-		lines.append("Joueur prudent, evite les conflits")
+	# 6 axes play_style — chacun avec seuil haut/bas
+	var _axis_labels := {
+		"aggression":     ["prudent", "audacieux"],
+		"altruism":       ["pragmatique", "altruiste"],
+		"curiosity":      ["pragmatique", "explorateur"],
+		"patience":       ["impulsif", "methodique"],
+		"trust_merlin":   ["mefiant envers Merlin", "confiant envers Merlin"],
+		"risk_tolerance": ["prudent face au risque", "preneur de risques"],
+	}
+	for axis in _axis_labels:
+		var val: float = play_style.get(axis, 0.5)
+		var labels: Array = _axis_labels[axis]
+		if val < 0.3:
+			traits.append(labels[0])
+		elif val > 0.7:
+			traits.append(labels[1])
 
-	if play_style["altruism"] > 0.7:
-		lines.append("Altruiste, aide les autres")
-	elif play_style["altruism"] < 0.3:
-		lines.append("Pragmatique, privilegie ses interets")
-
-	if play_style["curiosity"] > 0.7:
-		lines.append("Explorateur, cherche les mysteres")
-
-	# Skill level
+	# Skill level compact
 	var avg_skill: float = 0.0
 	for s in skill_assessment.values():
 		avg_skill += s
-	avg_skill /= skill_assessment.size()
+	avg_skill /= maxf(skill_assessment.size(), 1.0)
 
+	var skill_tag := ""
 	if avg_skill > 0.7:
-		lines.append("Joueur experimente")
+		skill_tag = "experimente"
 	elif avg_skill < 0.3:
-		lines.append("Joueur debutant")
+		skill_tag = "debutant"
 
-	# Experience
-	lines.append("Experience: %s (%d runs)" % [get_experience_tier_name(), meta["runs_completed"]])
+	# Assemble
+	var line := "Joueur %s" % get_experience_tier_name()
+	if skill_tag != "":
+		line += " (%s)" % skill_tag
+	if traits.size() > 0:
+		line += ": " + ", ".join(traits)
+	return line
 
-	return "\n".join(lines)
+
+func seed_from_quiz(quiz_result: Dictionary) -> void:
+	## Initialise le profil a partir des resultats du quiz de personnalite.
+	## quiz_result: {axis_positions: {approche, relation, esprit, coeur}, archetype_id, ...}
+	var axes: Dictionary = quiz_result.get("axis_positions", {})
+
+	# Mapping quiz axes (-1..+1) → play_style (0..1)
+	# approche: prudent(-1) ↔ audacieux(+1) → aggression + risk_tolerance
+	var approche: float = float(axes.get("approche", 0.0))
+	play_style["aggression"] = clampf((approche + 1.0) / 2.0, 0.0, 1.0)
+	play_style["risk_tolerance"] = clampf((approche + 1.0) / 2.0, 0.0, 1.0)
+
+	# relation: solitaire(-1) ↔ social(+1) → altruism + trust_merlin
+	var relation: float = float(axes.get("relation", 0.0))
+	play_style["altruism"] = clampf((relation + 1.0) / 2.0, 0.0, 1.0)
+	play_style["trust_merlin"] = clampf((relation * 0.5 + 1.0) / 2.0, 0.0, 1.0)
+
+	# esprit: analytique(-1) ↔ intuitif(+1) → patience (inverse: analytique=methodique)
+	var esprit: float = float(axes.get("esprit", 0.0))
+	play_style["patience"] = clampf((-esprit + 1.0) / 2.0, 0.0, 1.0)
+
+	# coeur: pragmatique(-1) ↔ compassionnel(+1) → curiosity (sensibilite ≈ ouverture)
+	var coeur: float = float(axes.get("coeur", 0.0))
+	play_style["curiosity"] = clampf((coeur + 1.0) / 2.0, 0.0, 1.0)
+
+	# Store archetype for reference
+	preferences["archetype_id"] = quiz_result.get("archetype_id", "")
+	preferences["dominant_traits"] = quiz_result.get("dominant_traits", [])
 
 # ═══════════════════════════════════════════════════════════════════════════════
 # PERSISTENCE

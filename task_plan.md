@@ -4,7 +4,49 @@
 Developper un JDR Parlant roguelite avec LLM local (Qwen 2.5-3B-Instruct Multi-Brain), systeme Triade (3 aspects x 3 etats), et narration procedurale.
 
 ## Current Phase
-Phase 43 — Refonte Gameplay (Plan consolide Phase 42 walkthrough)
+Phase P1 — Intelligence sans LoRA (Plan Bi-Cerveaux)
+
+## Phase P0 — Fix Gameplay — COMPLETE (commit `0bd08f6`, 2026-02-24)
+- [x] P0.0.1 Audit async flow timestamps
+- [x] P0.1.1-P0.1.3 Fix timing (async, show_thinking, await start_run)
+- [x] P0.2.1-P0.2.3 Fix labels (blocklist, validate_verb, regex)
+- [x] P0.3.1-P0.3.3 Tune quality (seuils, poids, guardrails)
+- [x] P0.4.1 E2E validation (3 cartes LLM native, 0% fallback)
+
+---
+
+## Phase P1 — Intelligence sans LoRA (~22h)
+
+### WAVE 5: Sequential Pipeline
+- [ ] P1.5.1 | Contrat pipeline + GBNF | prompt_templates.json, gamemaster_sequential.gbnf
+- [ ] P1.5.2 | generate_sequential() | merlin_ai.gd
+- [ ] P1.5.3 | Strategy SEQ dans MOS | merlin_omniscient.gd
+
+### WAVE 6: Player Profiling (parallele avec 7+8)
+- [x] P1.6.1 | Calcul profil 6 axes + seed_from_quiz | player_profile_registry.gd
+- [ ] P1.6.2 | Wire dans choix | merlin_game_controller.gd
+- [x] P1.6.3 | Injecter dans prompts (summary compact) | context_builder.gd
+
+### WAVE 7: Narrative Arc (parallele avec 6+8)
+- [x] P1.7.1 | FSM ArcPhase enum + run_phase auto-progress | narrative_registry.gd
+- [x] P1.7.2 | Wire arc dans prompts + RAG fix | merlin_omniscient.gd, rag_manager.gd
+- [ ] P1.7.3 | Temperature + events par phase | merlin_omniscient.gd
+
+### WAVE 8: Danger Detection (parallele avec 6+7)
+- [x] P1.8.1 | 5 regles danger pre-LLM + life in prompt | merlin_omniscient.gd
+- [ ] P1.8.2 | Templates danger | scenario_prompts.json
+
+### WAVE 9: Tags (after W5)
+- [ ] P1.9.1 | visual_tags -> shaders/particles | merlin_game_ui.gd, merlin_visual.gd
+- [ ] P1.9.2 | audio_tags -> SFXManager | SFXManager.gd
+
+### WAVE 10: RAG v2.1 (after W6+W7+W8)
+- [ ] P1.10.1 | RAG profil+arc+danger | rag_manager.gd
+- [ ] P1.10.2 | Cross-run memory | rag_manager.gd
+
+### WAVE 11: Integration P1
+- [ ] P1.11.1 | Wire tous systemes MOS
+- [ ] P1.11.2 | Validation P1
 
 ---
 

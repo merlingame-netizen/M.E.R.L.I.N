@@ -2,6 +2,40 @@
 
 > **Note**: Sessions anterieures archivees dans `archive/progress_archive_2026-02-05_to_2026-02-08.md`
 
+## Session: 2026-02-24 (Phase P0 Complete + Good Practices + P1 Start)
+
+### Phase P0 — Fix Gameplay (COMPLETE, commit `0bd08f6`)
+
+**Waves executees:**
+- P0.0.1: Audit async flow timestamps
+- P0.1.1-P0.1.3: Fix timing (refactor _request_next_card, show_thinking, await start_run)
+- P0.2.1-P0.2.3: Fix labels (blocklist 102→20, relacher _validate_single_verb, regex fallback)
+- P0.3.1-P0.3.3: Tune quality (seuils MIN/JACCARD, poids REPETITION/STRUCTURE, guardrails MOS)
+- P0.4.1: E2E Validation — autoplay 3 cartes LLM native, 0% fallback
+
+**Fixes headless mode (auto_play_runner.gd + merlin_game_controller.gd):**
+- Skip narrator intro, dice roll animation, result transitions, travel animation en headless
+- Race condition fix: `headless_mode = true` AVANT `add_child()` (_ready triggers during add_child)
+- SIGPIPE fix: redirect `> /dev/null 2>&1` au lieu de pipe `| head`
+
+**Good Practices**: Section 8 ajoutee dans `gdscript_knowledge_base.md` (9 sous-sections)
+
+**Metriques E2E:**
+| Metrique | Resultat |
+|----------|----------|
+| Cards generated | 3/3 LLM native |
+| Fallback rate | 0% |
+| Headless intro | 232ms (was 95s) |
+| Resolve time | 0ms (UI skipped) |
+| Gen time/card | 75-87s (CPU normal) |
+
+### Problemes connus (non bloquants)
+- Label extraction ~50% fallback generiques
+- GM effects fail sur certaines cartes → heuristic fallback
+- Hang apres 3-4 cartes (suspicion memoire/Ollama)
+
+---
+
 ## Session: 2026-02-22 (Architecture LLM — LoRA v2 + Pipeline Enrichi)
 
 ### Objectif

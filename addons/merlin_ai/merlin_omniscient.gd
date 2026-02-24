@@ -78,6 +78,13 @@ const REPETITION_SIMILARITY_THRESHOLD := 0.5
 # Persona guardrails — forbidden words loaded from merlin_persona.json via MerlinAI
 var _persona_forbidden_words: PackedStringArray = []
 
+# Danger detection thresholds (P1.8.1)
+const DANGER_LIFE_CRITICAL := 15     # Mort imminente
+const DANGER_LIFE_LOW := 25          # Danger — baisser la difficulte
+const DANGER_LIFE_WOUNDED := 50      # Blesse — signaler au LLM
+const DANGER_ASPECTS_CRISIS := 2     # N aspects non-equilibres = crise
+const DANGER_BLOCK_CATASTROPHE_AT := 15  # Bloquer event_catastrophe en-dessous
+
 # Cache
 var _response_cache := {}
 const CACHE_LIMIT := 300
@@ -257,6 +264,9 @@ func generate_card(game_state: Dictionary) -> Dictionary:
 		push_warning("[MOS] context_builder is null, using empty context")
 		_current_context = {}
 	_refresh_scene_context()
+
+	# Danger rules: inject danger signals into context BEFORE generation
+	_apply_danger_rules(game_state)
 
 	# Scenario system: inject anchor/theme into context
 	if _store and _store.has_method("get_scenario_manager"):
@@ -847,7 +857,7 @@ func _try_llm_generation() -> Dictionary:
 		var result: Dictionary = await llm_interface.generate_with_system(
 			system_prompt,
 			user_prompt,
-			{"max_tokens": 200, "temperature": 0.6}
+			{"max_tokens": 200, "temperature": _get_temperature_for_context()}
 		)
 		var c_elapsed := Time.get_ticks_msec() - c_start
 
@@ -888,7 +898,7 @@ func _try_swarm_generation() -> Dictionary:
 		var result: Dictionary = await llm_interface.generate_with_system(
 			system_prompt,
 			user_prompt,
-			{"max_tokens": 200, "temperature": 0.65 + i * 0.1}  # Slight temp variation
+			{"max_tokens": 200, "temperature": _get_temperature_for_context() + i * 0.1}  # Phase-based + variation
 		)
 		if result.has("text") and result.text.strip_edges().length() > 10:
 			candidates.append(result.text)
@@ -913,7 +923,7 @@ func _try_swarm_generation() -> Dictionary:
 			var refined: Dictionary = await llm_interface.generate_with_system(
 				system_prompt,
 				refinement_prompt,
-				{"max_tokens": 200, "temperature": 0.6}
+				{"max_tokens": 200, "temperature": _get_temperature_for_context()}
 			)
 			if refined.has("text"):
 				var refined_score: Dictionary = _quality_judge.score_text(refined.text)
@@ -1287,6 +1297,90 @@ func _build_scene_contract_block() -> String:
 	return "[CONTRAT_SCENE] " + " | ".join(parts)
 
 
+func _get_temperature_for_context() -> float:
+	## Temperature dynamique basee sur run_phase et danger_level.
+	## SETUP=calme, RISING=creatif, CLIMAX=intense, RESOLUTION=apaise.
+	var base_temp := 0.6
+	if narrative:
+		# ArcPhase: SETUP=1, RISING=2, CLIMAX=3, RESOLUTION=4
+		match narrative.run_phase:
+			1:  # SETUP
+				base_temp = 0.55  # Etablir le monde, modere
+			2:  # RISING
+				base_temp = 0.7   # Montee dramatique, plus creatif
+			3:  # CLIMAX
+				base_temp = 0.75  # Climax, maximum de creativite
+			4:  # RESOLUTION
+				base_temp = 0.5   # Resolution, calme et coherent
+
+	# Override danger (toujours prioritaire)
+	var danger_override: float = float(_current_context.get("temperature_override", 0.0))
+	if danger_override > 0.0:
+		return danger_override
+
+	return base_temp
+
+
+func _apply_danger_rules(game_state: Dictionary) -> void:
+	## 5 regles danger pre-LLM: injecte des signaux dans _current_context
+	## pour que le LLM adapte le ton et la difficulte de la carte.
+	var run: Dictionary = game_state.get("run", {})
+	var life: int = int(run.get("life_essence", 100))
+	var aspects: Dictionary = run.get("aspects", {})
+	var danger_signals: Array[String] = []
+	var danger_level := 0  # 0=safe, 1=wounded, 2=low, 3=critical
+
+	# REGLE 1: Vie critique (<= 15) — mort imminente
+	if life <= DANGER_LIFE_CRITICAL:
+		danger_level = 3
+		danger_signals.append("VIE CRITIQUE (%d) — genere une situation de SURVIE, pas de degats supplementaires" % life)
+
+	# REGLE 2: Vie basse (<= 25) — danger, favoriser repos/soin
+	elif life <= DANGER_LIFE_LOW:
+		danger_level = 2
+		danger_signals.append("VIE BASSE (%d) — favorise options de soin ou repos" % life)
+
+	# REGLE 3: Blesse (<= 50) — signaler au LLM
+	elif life <= DANGER_LIFE_WOUNDED:
+		danger_level = 1
+		danger_signals.append("Joueur blesse (%d vie)" % life)
+
+	# REGLE 4: Crise d'aspects (2+ non-equilibres)
+	var extreme_count := 0
+	for aspect_name in aspects:
+		var state: int = int(aspects[aspect_name])
+		if state != 0:
+			extreme_count += 1
+	if extreme_count >= DANGER_ASPECTS_CRISIS:
+		danger_level = maxi(danger_level, 2)
+		danger_signals.append("CRISE ASPECTS: %d/3 non-equilibres — propose des choix de reequilibrage" % extreme_count)
+
+	# REGLE 5: Bloquer event_catastrophe + forcer template danger si vie < seuil
+	if life < DANGER_BLOCK_CATASTROPHE_AT:
+		var event_cat: String = str(_current_context.get("event_category", ""))
+		if event_cat == "event_catastrophe" or event_cat == "event_conflit":
+			_current_context["event_category"] = "event_agonie"
+			_current_context["narrator_guidance"] = "Le voyageur est entre la vie et la mort. Scene onirique de grace."
+			danger_signals.append("event redirige vers event_agonie (vie=%d)" % life)
+	elif life <= DANGER_LIFE_LOW:
+		var event_cat: String = str(_current_context.get("event_category", ""))
+		if event_cat == "event_catastrophe":
+			_current_context["event_category"] = "event_survie"
+			_current_context["narrator_guidance"] = "Le voyageur est affaibli. Scene de survie protectrice."
+			danger_signals.append("event_catastrophe redirige vers event_survie (vie=%d)" % life)
+
+	# Injecter dans le contexte
+	if danger_signals.size() > 0:
+		_current_context["danger_signals"] = danger_signals
+		_current_context["danger_level"] = danger_level
+
+		# Temperature adjustment: higher danger → lower creativity (safer cards)
+		if danger_level >= 2:
+			_current_context["temperature_override"] = 0.4
+		elif danger_level >= 1:
+			_current_context["temperature_override"] = 0.5
+
+
 func _sync_mos_to_rag() -> void:
 	## Sync MOS registries into RAG v2.0 world state for priority-based retrieval.
 	if rag_manager == null:
@@ -1302,7 +1396,9 @@ func _sync_mos_to_rag() -> void:
 				player_patterns[str(p_name)] = p_data
 		registry_data["player_patterns"] = player_patterns
 	if narrative:
-		registry_data["active_arcs"] = narrative.active_arcs if narrative.active_arcs else []
+		var ctx: Dictionary = narrative.get_context_for_llm()
+		registry_data["active_arcs"] = ctx.get("active_arcs", [])
+		registry_data["run_phase_name"] = ctx.get("run_phase_name", "")
 	if relationship:
 		registry_data["trust_tier"] = relationship.trust_tier
 		registry_data["trust_tier_name"] = relationship.get_trust_tier_name()
@@ -1333,6 +1429,17 @@ func _build_system_prompt() -> String:
 		if not tone_guidance.is_empty():
 			base += "\n" + tone_guidance
 
+	# Danger signals (P1.8.1): injected with high priority
+	var danger_signals: Array = _current_context.get("danger_signals", [])
+	if danger_signals.size() > 0:
+		base += "\n[DANGER] " + " | ".join(danger_signals)
+
+	# Narrative context (P1.7.1): run phase + arcs
+	if narrative:
+		var narr_summary: String = narrative.get_summary_for_prompt()
+		if not narr_summary.is_empty():
+			base += "\n" + narr_summary
+
 	# RAG v2.0: priority-based dynamic context within token budget
 	var rag_context := ""
 	if rag_manager:
@@ -1358,11 +1465,13 @@ func _build_user_prompt() -> String:
 		aspect_parts.append("%s=%s" % [aspect, state_name])
 	parts.append("Aspects: " + " ".join(aspect_parts))
 
-	# Souffle + Day
-	parts.append("Souffle:%d Jour:%d Carte:%d" % [
+	# Souffle + Day + Life
+	var life_val: int = int(_current_context.get("life_essence", 100))
+	parts.append("Souffle:%d Jour:%d Carte:%d Vie:%d" % [
 		_current_context.get("souffle", 0),
 		_current_context.get("day", 1),
-		_current_context.get("cards_played", 0)
+		_current_context.get("cards_played", 0),
+		life_val,
 	])
 	if not _scene_context.is_empty():
 		var scene_id := str(_scene_context.get("scene_id", ""))
@@ -1816,6 +1925,15 @@ func on_run_start() -> void:
 	session.record_run_start()
 	decision_history.reset_run()
 	narrative.reset_run()
+
+	# Bridge quiz → player profile (first run only)
+	if player_profile and player_profile.meta.get("runs_completed", 0) == 0:
+		var gm = get_node_or_null("/root/GameManager")
+		if gm:
+			var quiz_traits = gm.get("player_traits")
+			if quiz_traits is Dictionary and not quiz_traits.is_empty():
+				player_profile.seed_from_quiz(quiz_traits)
+				print("[MOS] Player profile seeded from quiz: archetype=%s" % str(quiz_traits.get("archetype_id", "?")))
 
 
 func on_run_end(run_data: Dictionary) -> void:
