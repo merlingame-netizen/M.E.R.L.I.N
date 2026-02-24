@@ -64,6 +64,13 @@ const BUFFER_SIZE := 5  # Ollama backend: <3s/card, 5 cards = ~15s at biome load
 # Prerun choice tracking for sequel cards
 var _prerun_choices: Array[Dictionary] = []
 
+# Dream system: track biome for inter-biome dream trigger (P3.18.3)
+var _last_biome: String = ""
+
+# Tutorial system: diegetic narrative hints (P3.19)
+var _tutorial_shown: Dictionary = {}  # { "trigger_key": true }
+var _tutorial_data: Dictionary = {}   # Loaded from tutorial_narratives.json
+
 # Signal emitted when the card deck is ready (buffer loaded or first LLM card available)
 signal deck_ready(card_count: int)
 
@@ -130,6 +137,7 @@ func _ready() -> void:
 		push_warning("[MerlinController] MerlinAI not found — LLM unavailable")
 
 	_connect_signals()
+	_load_tutorial_data()
 
 	# Auto-start run after a frame so UI is fully ready
 	await get_tree().process_frame
@@ -193,6 +201,7 @@ func start_run(seed_value: int = -1) -> void:
 	_cards_since_rule_check = 0
 	_card_buffer.clear()
 	_prerun_choices.clear()
+	_last_biome = ""
 	_load_prerun_cards()
 
 	if not store:
@@ -310,6 +319,10 @@ func _request_next_card() -> void:
 
 	is_processing = true
 	_cards_this_run += 1
+
+	# Tutorial: first card ever (P3.19)
+	if _cards_this_run == 1:
+		_try_tutorial("first_card_ever")
 
 	# Check power milestones (player gets stronger every 5 cards)
 	_check_power_milestone()
@@ -951,6 +964,19 @@ func _resolve_choice(option: int) -> void:
 	elif not headless_mode and is_inside_tree():
 		await get_tree().create_timer(0.5).timeout
 
+	# --- 17b. Dream sequence on biome change (P3.18.3) ---
+	if not headless_mode and store and is_instance_valid(store):
+		var current_biome: String = str(store.state.get("run", {}).get("current_biome", ""))
+		if not current_biome.is_empty() and not _last_biome.is_empty() and current_biome != _last_biome:
+			_try_tutorial("first_biome_change")
+			var mos: MerlinOmniscient = store.get_merlin() if store.has_method("get_merlin") else null
+			if mos and mos.has_method("generate_dream"):
+				var dream_text: String = await mos.generate_dream(store.state)
+				if not dream_text.is_empty() and ui and is_instance_valid(ui) and ui.has_method("show_dream_overlay"):
+					await ui.show_dream_overlay(dream_text)
+					_write_context_entry("Reve: %s" % dream_text.left(80))
+		_last_biome = current_biome
+
 	# --- 18. Write RAG context ---
 	_write_context_entry("Choix: %s (%s, D20=%d vs DC%d)" % [choice_label, outcome, dice_result, dc])
 
@@ -1022,6 +1048,7 @@ func _update_dynamic_difficulty() -> void:
 
 func _run_dice_roll(dc: int) -> int:
 	## Animate D20 dice roll. Returns final value (1-20).
+	_try_tutorial("first_dice_roll")
 	var target: int = randi_range(1, 20)
 
 	# Souffle d'Ogham bonus: +4 if active
@@ -1031,6 +1058,7 @@ func _run_dice_roll(dc: int) -> int:
 		if store and store.has_method("use_souffle"):
 			store.use_souffle()
 		print("[TRIADE] Souffle bonus applied: +4 → D20=%d" % target)
+		_try_tutorial("first_souffle_spent")
 
 	SFXManager.play("dice_shake")
 	if is_inside_tree():
@@ -1742,6 +1770,17 @@ func _sync_ui_with_state() -> void:
 
 func _on_state_changed(_state: Dictionary) -> void:
 	_sync_ui_with_state()
+	# Tutorial triggers for aspect changes (P3.19)
+	if store and is_instance_valid(store):
+		var aspects: Dictionary = _state.get("triade_aspects", {})
+		for aspect_key in aspects:
+			var asp: Dictionary = aspects[aspect_key]
+			if asp is Dictionary:
+				var state_val: int = int(asp.get("state", 1))
+				if state_val != 1:  # Not EQUILIBRE
+					_try_tutorial("first_aspect_change")
+				if state_val == 0 or state_val == 2:  # BAS or HAUT
+					_try_tutorial("first_extreme_reached")
 
 
 
@@ -1887,6 +1926,7 @@ func _use_ogham(skill_id: String) -> void:
 	"""Activate a Bestiole Ogham skill via the store."""
 	if skill_id.strip_edges().is_empty():
 		return
+	_try_tutorial("first_ogham_used")
 	if not store or not is_instance_valid(store):
 		return
 
@@ -2113,6 +2153,53 @@ func _confirm_evolution(path: String, overlay: Control) -> void:
 	# Remove overlay
 	if overlay and is_instance_valid(overlay):
 		overlay.queue_free()
+
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# TUTORIAL SYSTEM — Diegetic narrative hints (P3.19)
+# ═══════════════════════════════════════════════════════════════════════════════
+
+func _load_tutorial_data() -> void:
+	## Load tutorial narratives from JSON. Silent fail if missing.
+	var path := "res://data/ai/tutorial_narratives.json"
+	if not FileAccess.file_exists(path):
+		return
+	var file := FileAccess.open(path, FileAccess.READ)
+	if not file:
+		return
+	var json := JSON.new()
+	if json.parse(file.get_as_text()) == OK and json.data is Dictionary:
+		_tutorial_data = json.data.get("mechanics", {})
+	file.close()
+
+
+func _try_tutorial(trigger_key: String) -> void:
+	## Show a diegetic tutorial hint via Merlin bubble if not already shown.
+	## Non-blocking — shows as a brief overlay and returns immediately.
+	if _tutorial_shown.get(trigger_key, false):
+		return
+	if _tutorial_data.is_empty():
+		return
+
+	# Find matching mechanic by trigger key
+	var entry: Dictionary = {}
+	for key in _tutorial_data:
+		var mech: Dictionary = _tutorial_data[key]
+		if mech is Dictionary and str(mech.get("trigger", "")) == trigger_key:
+			entry = mech
+			break
+	if entry.is_empty():
+		return
+
+	_tutorial_shown[trigger_key] = true
+	var text: String = str(entry.get("text", ""))
+	if text.is_empty():
+		return
+
+	print("[TUTORIAL] Showing hint: %s" % trigger_key)
+	# Show via Merlin bubble (non-blocking, auto-dismiss)
+	if ui and is_instance_valid(ui) and ui.has_method("show_merlin_dialogue_response"):
+		ui.show_merlin_dialogue_response(text)
 
 
 func _exit_tree() -> void:

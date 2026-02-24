@@ -656,6 +656,45 @@ func get_last_ending() -> String:
 	return str(cross_run_memory[-1].get("ending", ""))
 
 
+func get_past_lives_for_prompt() -> String:
+	## P3.20.2: Format past run summaries for Merlin to reference past lives.
+	## Returns a prompt-friendly string describing previous runs.
+	if cross_run_memory.is_empty():
+		return ""
+	var lines: Array[String] = []
+	var start_idx: int = maxi(0, cross_run_memory.size() - 3)
+	for i in range(start_idx, cross_run_memory.size()):
+		var run: Dictionary = cross_run_memory[i]
+		var ending: String = str(run.get("ending", "inconnu"))
+		var cards: int = int(run.get("cards_played", 0))
+		var dom: String = str(run.get("dominant_aspect", ""))
+		var style: String = str(run.get("player_style", ""))
+		var life: int = int(run.get("life_final", 0))
+		var events: String = str(run.get("notable_events", ""))
+		var parts: Array[String] = ["Vie %d" % (i + 1)]
+		if not ending.is_empty():
+			parts.append("fin: %s" % ending)
+		if cards > 0:
+			parts.append("%d cartes" % cards)
+		if not dom.is_empty():
+			parts.append("dominant: %s" % dom)
+		if not style.is_empty():
+			parts.append("style: %s" % style)
+		if life > 0:
+			parts.append("vie restante: %d" % life)
+		if not events.is_empty() and events.length() < 80:
+			parts.append(events)
+		lines.append(", ".join(parts))
+	if lines.is_empty():
+		return ""
+	return "Vies passees du voyageur: " + " | ".join(lines)
+
+
+func get_run_summaries_for_journal() -> Array[Dictionary]:
+	## P3.20.3: Return all run summaries for the visual journal UI.
+	return cross_run_memory.duplicate()
+
+
 # ═══════════════════════════════════════════════════════════════════════════════
 # PERSISTENCE
 # ═══════════════════════════════════════════════════════════════════════════════

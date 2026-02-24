@@ -3396,6 +3396,90 @@ func show_travel_animation(text: String) -> void:
 		fog.queue_free()
 
 
+func show_dream_overlay(dream_text: String) -> void:
+	## Full-screen dream overlay with deep purple tint, pulsing, typewriter text (P3.18.2).
+	## Awaitable — holds for reading time proportional to text length.
+	SFXManager.play("mist_breath")
+
+	# Deep dream background
+	var dream_bg := ColorRect.new()
+	dream_bg.name = "DreamOverlay"
+	dream_bg.set_anchors_preset(Control.PRESET_FULL_RECT)
+	dream_bg.color = Color(0.08, 0.04, 0.15, 0.0)  # Deep indigo
+	dream_bg.mouse_filter = Control.MOUSE_FILTER_STOP
+	add_child(dream_bg)
+
+	# Dream header
+	var header := Label.new()
+	header.text = "~ Reve ~"
+	header.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	header.set_anchors_preset(Control.PRESET_CENTER_TOP)
+	header.offset_top = 60.0
+	header.offset_left = -200.0
+	header.offset_right = 200.0
+	var title_font: Font = MerlinVisual.get_font("title")
+	if title_font:
+		header.add_theme_font_override("font", title_font)
+	header.add_theme_font_size_override("font_size", 20)
+	header.add_theme_color_override("font_color", Color(0.6, 0.5, 0.8, 0.0))
+	dream_bg.add_child(header)
+
+	# Dream text (center of screen)
+	var lbl := RichTextLabel.new()
+	lbl.text = ""
+	lbl.set_anchors_preset(Control.PRESET_CENTER)
+	lbl.offset_left = -260.0
+	lbl.offset_right = 260.0
+	lbl.offset_top = -80.0
+	lbl.offset_bottom = 80.0
+	lbl.autowrap_mode = TextServer.AUTOWRAP_WORD
+	var dream_body_font: Font = MerlinVisual.get_font("body")
+	if dream_body_font:
+		lbl.add_theme_font_override("normal_font", dream_body_font)
+	lbl.add_theme_font_size_override("normal_font_size", 15)
+	lbl.add_theme_color_override("default_color", Color(0.7, 0.65, 0.85, 1.0))
+	lbl.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	lbl.modulate.a = 0.0
+	dream_bg.add_child(lbl)
+
+	# Fade in background + header
+	var tw_in := create_tween()
+	tw_in.set_parallel(true)
+	tw_in.tween_property(dream_bg, "color:a", 0.92, 1.0).set_trans(Tween.TRANS_SINE)
+	tw_in.tween_property(header, "theme_override_colors/font_color:a", 0.8, 1.2)
+	tw_in.tween_property(lbl, "modulate:a", 1.0, 1.0)
+	await tw_in.finished
+
+	# Typewriter dream text
+	for i in range(dream_text.length()):
+		lbl.text = dream_text.left(i + 1)
+		if is_inside_tree():
+			await get_tree().create_timer(0.03).timeout
+
+	# Gentle pulse on background while reading
+	var read_time: float = clampf(dream_text.length() * 0.04, 2.0, 6.0)
+	var pulse_tw := create_tween()
+	pulse_tw.set_loops(int(read_time / 1.6))
+	pulse_tw.tween_property(dream_bg, "color:a", 0.85, 0.8).set_trans(Tween.TRANS_SINE)
+	pulse_tw.tween_property(dream_bg, "color:a", 0.92, 0.8).set_trans(Tween.TRANS_SINE)
+
+	if is_inside_tree():
+		await get_tree().create_timer(read_time).timeout
+
+	pulse_tw.kill()
+
+	# Fade out
+	var tw_out := create_tween()
+	tw_out.set_parallel(true)
+	tw_out.tween_property(dream_bg, "color:a", 0.0, 1.2).set_trans(Tween.TRANS_SINE)
+	tw_out.tween_property(header, "theme_override_colors/font_color:a", 0.0, 0.8)
+	tw_out.tween_property(lbl, "modulate:a", 0.0, 1.0)
+	await tw_out.finished
+
+	if is_instance_valid(dream_bg):
+		dream_bg.queue_free()
+
+
 # ═══════════════════════════════════════════════════════════════════════════════
 # REACTION TEXT + CRITICAL BADGE + BIOME PASSIVE
 # ═══════════════════════════════════════════════════════════════════════════════
@@ -3880,6 +3964,115 @@ func hide_what_if_labels() -> void:
 		if lbl and is_instance_valid(lbl):
 			lbl.visible = false
 			lbl.text = ""
+
+
+func show_journal_popup(run_summaries: Array[Dictionary]) -> void:
+	## P3.20.3: Display a visual journal of past lives as a scrollable popup.
+	if run_summaries.is_empty():
+		return
+
+	var popup := ColorRect.new()
+	popup.name = "JournalPopup"
+	popup.set_anchors_preset(Control.PRESET_FULL_RECT)
+	popup.color = Color(0.06, 0.05, 0.1, 0.92)
+	popup.mouse_filter = Control.MOUSE_FILTER_STOP
+	add_child(popup)
+
+	# Title
+	var title := Label.new()
+	title.text = "Journal des Vies"
+	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	title.set_anchors_preset(Control.PRESET_CENTER_TOP)
+	title.offset_top = 30.0
+	title.offset_left = -200.0
+	title.offset_right = 200.0
+	var title_font_res: Font = MerlinVisual.get_font("title")
+	if title_font_res:
+		title.add_theme_font_override("font", title_font_res)
+	title.add_theme_font_size_override("font_size", 22)
+	title.add_theme_color_override("font_color", MerlinVisual.CRT_PALETTE.amber)
+	popup.add_child(title)
+
+	# Scroll container for entries
+	var scroll := ScrollContainer.new()
+	scroll.set_anchors_preset(Control.PRESET_FULL_RECT)
+	scroll.offset_top = 70.0
+	scroll.offset_bottom = -60.0
+	scroll.offset_left = 40.0
+	scroll.offset_right = -40.0
+	popup.add_child(scroll)
+
+	var vbox := VBoxContainer.new()
+	vbox.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	scroll.add_child(vbox)
+
+	var body_font_res: Font = MerlinVisual.get_font("body")
+	var entry_color: Color = MerlinVisual.CRT_PALETTE.phosphor
+	var dim_color: Color = MerlinVisual.CRT_PALETTE.phosphor_dim
+
+	for i in range(run_summaries.size()):
+		var run: Dictionary = run_summaries[i]
+		var entry := RichTextLabel.new()
+		entry.bbcode_enabled = true
+		entry.fit_content = true
+		entry.scroll_active = false
+		if body_font_res:
+			entry.add_theme_font_override("normal_font", body_font_res)
+		entry.add_theme_font_size_override("normal_font_size", 13)
+		entry.add_theme_color_override("default_color", entry_color)
+		entry.mouse_filter = Control.MOUSE_FILTER_IGNORE
+
+		var ending: String = str(run.get("ending", "inconnu"))
+		var cards: int = int(run.get("cards_played", 0))
+		var dom: String = str(run.get("dominant_aspect", ""))
+		var style: String = str(run.get("player_style", ""))
+		var life: int = int(run.get("life_final", 0))
+		var events: String = str(run.get("notable_events", ""))
+
+		var text := "[b]Vie %d[/b] -- %s\n" % [i + 1, ending]
+		if cards > 0:
+			text += "Cartes: %d | " % cards
+		if not dom.is_empty():
+			text += "Aspect: %s | " % dom
+		if not style.is_empty():
+			text += "Style: %s | " % style
+		if life > 0:
+			text += "Vie: %d" % life
+		if not events.is_empty():
+			text += "\n%s" % events
+		entry.text = text
+		vbox.add_child(entry)
+
+		# Separator
+		if i < run_summaries.size() - 1:
+			var sep := HSeparator.new()
+			sep.add_theme_color_override("separator", dim_color)
+			vbox.add_child(sep)
+
+	# Close button
+	var close_btn := Button.new()
+	close_btn.text = "Fermer"
+	close_btn.set_anchors_preset(Control.PRESET_CENTER_BOTTOM)
+	close_btn.offset_bottom = -20.0
+	close_btn.offset_top = -50.0
+	close_btn.offset_left = -60.0
+	close_btn.offset_right = 60.0
+	if title_font_res:
+		close_btn.add_theme_font_override("font", title_font_res)
+	close_btn.add_theme_font_size_override("font_size", 16)
+	popup.add_child(close_btn)
+
+	# Fade in
+	popup.modulate.a = 0.0
+	var tw := create_tween()
+	tw.tween_property(popup, "modulate:a", 1.0, 0.3)
+
+	# Close handler
+	close_btn.pressed.connect(func():
+		var tw_out := create_tween()
+		tw_out.tween_property(popup, "modulate:a", 0.0, 0.2)
+		tw_out.tween_callback(popup.queue_free)
+	)
 
 
 func _exit_tree() -> void:

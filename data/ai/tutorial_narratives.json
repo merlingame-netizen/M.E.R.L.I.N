@@ -1,0 +1,40 @@
+{
+  "_doc": "Tutorial narratives — diegetic hints from Merlin, triggered on first encounter of each mechanic (P3.19.2)",
+  "mechanics": {
+    "first_card": {
+      "trigger": "first_card_ever",
+      "text": "Trois chemins s'offrent a toi, voyageur. Gauche, centre, droite -- chaque choix faconne ton destin. Le centre coute un Souffle, mais ouvre des voies plus rares.",
+      "merlin_tone": "sage"
+    },
+    "aspect_shift": {
+      "trigger": "first_aspect_change",
+      "text": "Sens-tu la Triade fremir ? Corps, Ame, Monde -- trois piliers en equilibre fragile. Quand l'un penche trop, le monde reagit. Maintiens l'harmonie, ou affronte les consequences.",
+      "merlin_tone": "avertissement"
+    },
+    "souffle_use": {
+      "trigger": "first_souffle_spent",
+      "text": "Le Souffle d'Ogham est un don precieux. Il amplifie tes choix, mais ne se regenere que dans l'equilibre. Depense-le avec sagesse, car les moments critiques viendront.",
+      "merlin_tone": "protecteur"
+    },
+    "extreme_state": {
+      "trigger": "first_extreme_reached",
+      "text": "Attention, voyageur ! Un aspect atteint les extremes. Si deux aspects basculent ensemble, une Chute te guette -- l'une des douze fins sombres de ce monde.",
+      "merlin_tone": "urgent"
+    },
+    "dice_roll": {
+      "trigger": "first_dice_roll",
+      "text": "Le D20 du destin tourne ! Ton jet determine l'issue de ton choix. Plus le jet est haut, meilleure est l'issue. Un Souffle actif ajoute un bonus au resultat.",
+      "merlin_tone": "narrateur"
+    },
+    "bestiole_skill": {
+      "trigger": "first_ogham_used",
+      "text": "La Bestiole eveille un Ogham ! Ces pouvoirs anciens te protegent et te guident. Plus votre lien grandit, plus d'Oghams se revelent. Nourris cette amitie.",
+      "merlin_tone": "emerveille"
+    },
+    "biome_travel": {
+      "trigger": "first_biome_change",
+      "text": "Le paysage change autour de toi. Chaque biome de Bretagne porte ses propres mysteres et dangers. Adapte-toi au terrain -- les esprits locaux ont leurs humeurs.",
+      "merlin_tone": "guide"
+    }
+  }
+}

@@ -1120,6 +1120,12 @@ func _build_narrator_prompt() -> String:
 		if not rag_ctx.is_empty():
 			base += "\n" + rag_ctx
 
+	# Past lives for cross-run continuity (P3.20.2)
+	if rag_manager and rag_manager.has_method("get_past_lives_for_prompt"):
+		var past_lives: String = rag_manager.get_past_lives_for_prompt()
+		if not past_lives.is_empty():
+			base += "\n" + past_lives
+
 	# Scenario theme injection (ambient context for all cards in a scenario run)
 	var scenario_theme: String = str(_current_context.get("scenario_theme", ""))
 	if not scenario_theme.is_empty():
@@ -2294,6 +2300,57 @@ func _generate_single_what_if(card_context: String, option_label: String) -> Str
 	var text: String = str(result.get("text", "")).strip_edges()
 	if text.length() < 10 or text.length() > 200:
 		return FALLBACK_WHATIFS[randi() % FALLBACK_WHATIFS.size()]
+	return text
+
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# DREAM GENERATION (P3.18.1)
+# ═══════════════════════════════════════════════════════════════════════════════
+
+const FALLBACK_DREAMS: Array[String] = [
+	"Tu marches dans une foret de cristal. Les arbres chantent en ogham. Un cerf blanc te regarde, puis s'efface dans la brume.",
+	"L'eau d'un lac noir reflete trois lunes. Chacune porte le visage d'un choix que tu as fait. Les rides troublent les images.",
+	"Des pierres levees dansent en cercle lent. Le sol vibre sous tes pieds. Une voix ancienne murmure ton nom vrai.",
+	"Tu voles au-dessus de Broceliande. Les sentiers forment un ogham geant. Le message s'efface avant que tu ne le comprennes.",
+	"Le Sanglier, le Corbeau et le Cerf parlent ensemble. Ils debattent de ton avenir. Tu ne comprends que les silences.",
+	"Un chaudron deborde de lumiere. Chaque goutte qui tombe cree un monde. Tu bois, et oublies ce que tu as vu.",
+]
+
+func generate_dream(game_state: Dictionary) -> String:
+	## Generate a dream sequence (50-80 tokens) reflecting the player's journey.
+	## Triggered during biome transitions. Uses player profile and aspects for context.
+	if llm_interface == null or not llm_interface.is_ready:
+		return FALLBACK_DREAMS[randi() % FALLBACK_DREAMS.size()]
+
+	# Build dream context from game state
+	var aspects: Dictionary = game_state.get("triade_aspects", {})
+	var corps_state: String = str(aspects.get("Corps", {}).get("state_name", "Robuste"))
+	var ame_state: String = str(aspects.get("Ame", {}).get("state_name", "Centree"))
+	var monde_state: String = str(aspects.get("Monde", {}).get("state_name", "Integre"))
+	var biome: String = str(game_state.get("run", {}).get("current_biome", "foret_broceliande"))
+	var cards_played: int = int(game_state.get("run", {}).get("cards_this_run", 0))
+
+	var profile_hint := ""
+	if player_profile:
+		profile_hint = player_profile.get_summary_for_prompt()
+
+	var system := "Tu es un generateur de reves celtiques. Ecris un reve court (3-5 phrases), onirique et symbolique. Le reve reflète l'etat du voyageur. Vocabulaire mythologique breton/celtique. Reponds UNIQUEMENT avec le texte du reve."
+	var user_msg := "Voyageur: Corps=%s, Ame=%s, Monde=%s. Biome=%s. Cartes jouees=%d.%s\nGenere un reve." % [
+		corps_state, ame_state, monde_state, biome, cards_played,
+		(" Profil: " + profile_hint) if not profile_hint.is_empty() else "",
+	]
+
+	var result: Dictionary
+	if llm_interface.has_method("generate_with_router"):
+		result = await llm_interface.generate_with_router(system, user_msg, {"max_tokens": 80, "temperature": 0.9})
+	elif llm_interface.has_method("generate_with_system"):
+		result = await llm_interface.generate_with_system(system, user_msg, {"max_tokens": 80, "temperature": 0.9})
+	else:
+		return FALLBACK_DREAMS[randi() % FALLBACK_DREAMS.size()]
+
+	var text: String = str(result.get("text", "")).strip_edges()
+	if text.length() < 20 or text.length() > 400:
+		return FALLBACK_DREAMS[randi() % FALLBACK_DREAMS.size()]
 	return text
 
 
