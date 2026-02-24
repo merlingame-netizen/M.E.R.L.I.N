@@ -1482,6 +1482,8 @@ func _sync_mos_to_rag() -> void:
 			if p_data is Dictionary:
 				player_patterns[str(p_name)] = p_data
 		registry_data["player_patterns"] = player_patterns
+		# P1.10.1: Sync player profile summary for RAG context
+		registry_data["player_profile_summary"] = player_profile.get_summary_for_prompt()
 	if narrative:
 		var ctx: Dictionary = narrative.get_context_for_llm()
 		registry_data["active_arcs"] = ctx.get("active_arcs", [])
@@ -2012,6 +2014,9 @@ func on_run_start() -> void:
 	session.record_run_start()
 	decision_history.reset_run()
 	narrative.reset_run()
+	# P1.10.2: Reset journal for the new run
+	if rag_manager:
+		rag_manager.reset_for_new_run()
 
 	# Bridge quiz → player profile (first run only)
 	if player_profile and player_profile.meta.get("runs_completed", 0) == 0:

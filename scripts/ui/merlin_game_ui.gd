@@ -1448,6 +1448,12 @@ func display_card(card: Dictionary) -> void:
 		_scene_compositor.compose_scene(vtags, biome, season)
 		_scene_compositor.assemble(true)
 
+	# Apply card-level visual FX from visual_tags (P1.9.1)
+	_apply_card_visual_tags(card)
+
+	# Play ambient SFX from audio_tags (P1.9.2)
+	_apply_card_audio_tags(card)
+
 	# Update options — always show all 3 buttons in action-verb style.
 	var options: Array = card.get("options", [])
 	for i in range(3):
@@ -1587,6 +1593,103 @@ func _detect_card_source(card: Dictionary) -> String:
 	if card.has("_omniscient"):
 		return "llm"
 	return "fallback"
+
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# CARD VISUAL & AUDIO TAGS (P1.9) — Ambient FX driven by LLM tags
+# ═══════════════════════════════════════════════════════════════════════════════
+
+## Tag-to-visual mapping: card panel color modulation per mood tag.
+const VISUAL_TAG_TINTS := {
+	"danger": Color(1.0, 0.7, 0.7, 1.0),
+	"combat": Color(1.0, 0.75, 0.75, 1.0),
+	"mort": Color(0.85, 0.75, 0.85, 1.0),
+	"magie": Color(0.85, 0.85, 1.0, 1.0),
+	"sacre": Color(0.9, 0.9, 1.0, 1.0),
+	"mystere": Color(0.8, 0.85, 0.95, 1.0),
+	"nuit": Color(0.75, 0.78, 0.9, 1.0),
+	"brume": Color(0.88, 0.9, 0.92, 1.0),
+	"orage": Color(0.8, 0.8, 0.88, 1.0),
+	"feu": Color(1.0, 0.85, 0.7, 1.0),
+	"eau": Color(0.8, 0.9, 1.0, 1.0),
+	"terre": Color(0.92, 0.88, 0.78, 1.0),
+	"lumiere": Color(1.0, 1.0, 0.9, 1.0),
+	"soin": Color(0.8, 1.0, 0.85, 1.0),
+}
+
+## Tag-to-sound mapping: ambient SFX per mood tag.
+const AUDIO_TAG_SOUNDS := {
+	"danger": "critical_alert",
+	"combat": "dice_shake",
+	"magie": "magic_reveal",
+	"sacre": "ogham_chime",
+	"mystere": "mist_breath",
+	"brume": "mist_breath",
+	"orage": "flash_boom",
+	"feu": "flash_boom",
+	"soin": "bestiole_shimmer",
+	"ogham": "ogham_chime",
+	"nuit": "mist_breath",
+}
+
+var _card_visual_tween: Tween = null
+
+
+func _apply_card_visual_tags(card: Dictionary) -> void:
+	## Apply card-level visual modulation based on visual_tags (P1.9.1).
+	## Subtle color tint on card panel + pulse for danger tags.
+	if not card_panel or not is_instance_valid(card_panel):
+		return
+
+	var vtags: Array = card.get("visual_tags", [])
+	var tags: Array = card.get("tags", [])
+	var all_tags: Array = vtags + tags
+
+	# Find first matching visual tag
+	var tint: Color = Color.WHITE
+	var has_danger := false
+	for tag in all_tags:
+		var tag_str: String = str(tag).to_lower()
+		if VISUAL_TAG_TINTS.has(tag_str):
+			tint = VISUAL_TAG_TINTS[tag_str]
+		if tag_str == "danger" or tag_str == "combat" or tag_str == "mort":
+			has_danger = true
+
+	# Kill previous visual tag tween
+	if _card_visual_tween and _card_visual_tween.is_valid():
+		_card_visual_tween.kill()
+
+	if tint != Color.WHITE:
+		# Smooth tint transition
+		_card_visual_tween = create_tween()
+		_card_visual_tween.tween_property(card_panel, "self_modulate", tint, 0.6)
+		# Danger pulse: subtle oscillation
+		if has_danger:
+			var dim_tint: Color = tint.darkened(0.1)
+			_card_visual_tween.set_loops(0)
+			_card_visual_tween.tween_property(card_panel, "self_modulate", dim_tint, 1.2)
+			_card_visual_tween.tween_property(card_panel, "self_modulate", tint, 1.2)
+	else:
+		card_panel.self_modulate = Color.WHITE
+
+
+func _apply_card_audio_tags(card: Dictionary) -> void:
+	## Play ambient SFX based on audio_tags from the card (P1.9.2).
+	## Plays at most 1 ambient sound per card to avoid cacophony.
+	var atags: Array = card.get("audio_tags", [])
+	var vtags: Array = card.get("visual_tags", [])
+	var all_tags: Array = atags + vtags
+
+	for tag in all_tags:
+		var tag_str: String = str(tag).to_lower()
+		if AUDIO_TAG_SOUNDS.has(tag_str):
+			# Delayed playback: after card_draw sound finishes
+			var sound_name: String = AUDIO_TAG_SOUNDS[tag_str]
+			get_tree().create_timer(0.4).timeout.connect(
+				func() -> void: SFXManager.play_varied(sound_name, 0.15),
+				CONNECT_ONE_SHOT
+			)
+			return  # Only 1 ambient sound per card
 
 
 # ═══════════════════════════════════════════════════════════════════════════════

@@ -37,15 +37,15 @@ Phase P1 — Intelligence sans LoRA (Plan Bi-Cerveaux)
 - [x] P1.8.2 | Templates danger | scenario_prompts.json
 
 ### WAVE 9: Tags (after W5)
-- [ ] P1.9.1 | visual_tags -> shaders/particles | merlin_game_ui.gd, merlin_visual.gd
-- [ ] P1.9.2 | audio_tags -> SFXManager | SFXManager.gd
+- [x] P1.9.1 | visual_tags -> card ambient FX (tints, pulse) | merlin_game_ui.gd
+- [x] P1.9.2 | audio_tags -> SFXManager (tag-to-sound mapping) | merlin_game_ui.gd
 
 ### WAVE 10: RAG v2.1 (after W6+W7+W8)
-- [ ] P1.10.1 | RAG profil+arc+danger | rag_manager.gd
-- [ ] P1.10.2 | Cross-run memory | rag_manager.gd
+- [x] P1.10.1 | RAG profil+arc+danger (3 new context sections) | rag_manager.gd, merlin_omniscient.gd
+- [x] P1.10.2 | Cross-run memory (enhanced archive + reset_for_new_run) | rag_manager.gd, merlin_omniscient.gd
 
 ### WAVE 11: Integration P1
-- [ ] P1.11.1 | Wire tous systemes MOS
+- [x] P1.11.1 | Wire tous systemes MOS (run_start/end, sync, tags)
 - [ ] P1.11.2 | Validation P1
 
 ---

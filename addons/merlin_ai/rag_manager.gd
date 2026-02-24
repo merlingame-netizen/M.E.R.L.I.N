@@ -151,6 +151,17 @@ func get_prioritized_context(game_state: Dictionary) -> String:
 	if not event_ctx.is_empty():
 		sections.append({"text": event_ctx, "priority": Priority.MEDIUM})
 
+	# P1.10.1: Player profile context (compact summary from registry)
+	var profile_ctx := _get_player_profile_context()
+	if not profile_ctx.is_empty():
+		sections.append({"text": profile_ctx, "priority": Priority.MEDIUM})
+
+	# P1.10.1: Danger level context (life-based urgency)
+	var danger_ctx := _get_danger_context(game_state)
+	if not danger_ctx.is_empty():
+		sections.append({"text": danger_ctx, "priority": Priority.CRITICAL})
+
+	# P1.10.2: Cross-run memory (past run summaries)
 	var callbacks := _get_cross_run_callbacks()
 	if not callbacks.is_empty():
 		sections.append({"text": callbacks, "priority": Priority.LOW})
@@ -298,6 +309,27 @@ func _get_bestiole_context(game_state: Dictionary) -> String:
 	return ""
 
 
+func _get_player_profile_context() -> String:
+	## P1.10.1: Inject player profile summary from world_state (synced from MOS).
+	var profile_summary: String = str(world_state.get("player_profile_summary", ""))
+	if profile_summary.is_empty():
+		return ""
+	return profile_summary
+
+
+func _get_danger_context(game_state: Dictionary) -> String:
+	## P1.10.1: Inject danger level based on life essence.
+	var run: Dictionary = game_state.get("run", {})
+	var life: int = int(run.get("life_essence", 100))
+	if life <= 15:
+		return "DANGER CRITIQUE: Vie=%d — mort imminente, proteger le voyageur" % life
+	elif life <= 25:
+		return "DANGER: Vie=%d — favoriser options de soin" % life
+	elif life <= 50:
+		return "Vie basse: %d/100" % life
+	return ""
+
+
 var _biome_cache_key: String = ""
 var _biome_cache_text: String = ""
 
@@ -424,11 +456,32 @@ func get_tag_info(tag_name: String) -> Dictionary:
 func _get_cross_run_callbacks() -> String:
 	if cross_run_memory.is_empty():
 		return ""
-	var last_run: Dictionary = cross_run_memory[-1]
-	var ending: String = str(last_run.get("ending", ""))
-	if not ending.is_empty():
-		return "Run precedent: " + ending
-	return ""
+	# P1.10.2: Include last 2 runs for richer cross-run context
+	var summaries: Array[String] = []
+	var start_idx: int = maxi(0, cross_run_memory.size() - 2)
+	for i in range(start_idx, cross_run_memory.size()):
+		var run_mem: Dictionary = cross_run_memory[i]
+		var ending: String = str(run_mem.get("ending", ""))
+		var cards: int = int(run_mem.get("cards_played", 0))
+		var style: String = str(run_mem.get("player_style", ""))
+		var parts: Array[String] = []
+		if not ending.is_empty():
+			parts.append(ending)
+		if cards > 0:
+			parts.append("%d cartes" % cards)
+		if not style.is_empty():
+			parts.append(style)
+		if not parts.is_empty():
+			summaries.append("Run %d: %s" % [i + 1, ", ".join(parts)])
+	if summaries.is_empty():
+		return ""
+	return "Memoire: " + " | ".join(summaries)
+
+
+## Reset journal for a new run (called at run start).
+func reset_for_new_run() -> void:
+	journal.clear()
+	save_journal()
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
@@ -479,6 +532,7 @@ func _add_journal_entry(type: String, card_num: int, day: int, data: Dictionary)
 # ═══════════════════════════════════════════════════════════════════════════════
 
 func summarize_and_archive_run(ending: String, final_state: Dictionary) -> void:
+	## P1.10.2: Enhanced with life_final and timestamp for cross-run context.
 	cross_run_memory.append({
 		"run_id": cross_run_memory.size() + 1,
 		"ending": ending,
@@ -487,6 +541,8 @@ func summarize_and_archive_run(ending: String, final_state: Dictionary) -> void:
 		"notable_events": _extract_notable_events(),
 		"player_style": _classify_player_style(),
 		"score": int(final_state.get("score", 0)),
+		"life_final": int(final_state.get("run", {}).get("life_essence", 0)),
+		"timestamp": Time.get_unix_time_from_system(),
 	})
 	if cross_run_memory.size() > MAX_CROSS_RUN_SUMMARIES:
 		cross_run_memory = cross_run_memory.slice(-MAX_CROSS_RUN_SUMMARIES)
