@@ -115,13 +115,6 @@ const SCENE_PROFILES := {
 		"cascade_order": CascadeOrder.RANDOM,
 	},
 
-	# --- Test scenes ---
-	"res://scenes/TestLLMScene.tscn": {
-		"block_size": 14,
-		"exit_duration": 0.3,
-		"enter_duration": 0.3,
-		"cascade_order": CascadeOrder.RANDOM,
-	},
 }
 
 

@@ -22,8 +22,6 @@ const SCENES: Array[Dictionary] = [
 	{"label": "Calendar", "path": "res://scenes/Calendar.tscn"},
 	{"label": "Collection", "path": "res://scenes/Collection.tscn"},
 	{"label": "ArbreDeVie", "path": "res://scenes/ArbreDeVie.tscn"},
-	# — Test —
-	{"label": "TestMerlinLLMBenchmark", "path": "res://scenes/TestMerlinLLMBenchmark.tscn"},
 ]
 
 # === NODES ===
@@ -47,10 +45,10 @@ func _build_ui() -> void:
 	_toggle_btn.custom_minimum_size = Vector2(70, 28)
 	_toggle_btn.pressed.connect(_toggle_dropdown)
 
-	# Style the toggle button
+	# Style the toggle button (debug UI — using MerlinVisual palette)
 	var btn_style := StyleBoxFlat.new()
-	btn_style.bg_color = Color(0.15, 0.15, 0.15, 0.85)
-	btn_style.border_color = Color(0.4, 0.4, 0.4, 0.6)
+	btn_style.bg_color = Color(MerlinVisual.CRT_PALETTE["bg_dark"].r, MerlinVisual.CRT_PALETTE["bg_dark"].g, MerlinVisual.CRT_PALETTE["bg_dark"].b, 0.85)
+	btn_style.border_color = MerlinVisual.CRT_PALETTE["inactive"]
 	btn_style.set_border_width_all(1)
 	btn_style.set_corner_radius_all(4)
 	btn_style.content_margin_left = 8
@@ -60,15 +58,15 @@ func _build_ui() -> void:
 	_toggle_btn.add_theme_stylebox_override("normal", btn_style)
 
 	var btn_hover := btn_style.duplicate()
-	btn_hover.bg_color = Color(0.25, 0.25, 0.25, 0.9)
+	btn_hover.bg_color = Color(MerlinVisual.CRT_PALETTE["bg_panel"].r, MerlinVisual.CRT_PALETTE["bg_panel"].g, MerlinVisual.CRT_PALETTE["bg_panel"].b, 0.9)
 	_toggle_btn.add_theme_stylebox_override("hover", btn_hover)
 
 	var btn_pressed := btn_style.duplicate()
-	btn_pressed.bg_color = Color(0.3, 0.3, 0.3, 0.95)
+	btn_pressed.bg_color = Color(MerlinVisual.CRT_PALETTE["bg_panel"].r, MerlinVisual.CRT_PALETTE["bg_panel"].g, MerlinVisual.CRT_PALETTE["bg_panel"].b, 0.95)
 	_toggle_btn.add_theme_stylebox_override("pressed", btn_pressed)
 
 	_toggle_btn.add_theme_font_size_override("font_size", 12)
-	_toggle_btn.add_theme_color_override("font_color", Color(0.85, 0.85, 0.85))
+	_toggle_btn.add_theme_color_override("font_color", MerlinVisual.CRT_PALETTE["phosphor"])
 
 	# Position: top-right with margin
 	var btn_container := Control.new()
@@ -87,8 +85,8 @@ func _build_ui() -> void:
 	_dropdown.visible = false
 
 	var panel_style := StyleBoxFlat.new()
-	panel_style.bg_color = Color(0.1, 0.1, 0.1, 0.92)
-	panel_style.border_color = Color(0.35, 0.35, 0.35, 0.7)
+	panel_style.bg_color = Color(MerlinVisual.CRT_PALETTE["bg_deep"].r, MerlinVisual.CRT_PALETTE["bg_deep"].g, MerlinVisual.CRT_PALETTE["bg_deep"].b, 0.92)
+	panel_style.border_color = MerlinVisual.CRT_PALETTE["border"]
 	panel_style.set_border_width_all(1)
 	panel_style.set_corner_radius_all(6)
 	panel_style.content_margin_left = 4
@@ -117,7 +115,7 @@ func _build_ui() -> void:
 
 		# Style each scene button
 		var item_style := StyleBoxFlat.new()
-		item_style.bg_color = Color(0.0, 0.0, 0.0, 0.0)
+		item_style.bg_color = Color.TRANSPARENT
 		item_style.content_margin_left = 6
 		item_style.content_margin_right = 6
 		item_style.content_margin_top = 2
@@ -126,19 +124,19 @@ func _build_ui() -> void:
 		btn.add_theme_stylebox_override("normal", item_style)
 
 		var item_hover := item_style.duplicate()
-		item_hover.bg_color = Color(0.3, 0.3, 0.3, 0.5)
+		item_hover.bg_color = Color(MerlinVisual.CRT_PALETTE["inactive"].r, MerlinVisual.CRT_PALETTE["inactive"].g, MerlinVisual.CRT_PALETTE["inactive"].b, 0.5)
 		btn.add_theme_stylebox_override("hover", item_hover)
 
 		var item_pressed := item_style.duplicate()
-		item_pressed.bg_color = Color(0.4, 0.4, 0.4, 0.6)
+		item_pressed.bg_color = Color(MerlinVisual.CRT_PALETTE["inactive"].r, MerlinVisual.CRT_PALETTE["inactive"].g, MerlinVisual.CRT_PALETTE["inactive"].b, 0.6)
 		btn.add_theme_stylebox_override("pressed", item_pressed)
 
 		btn.add_theme_font_size_override("font_size", 11)
-		btn.add_theme_color_override("font_color", Color(0.78, 0.78, 0.78))
+		btn.add_theme_color_override("font_color", MerlinVisual.CRT_PALETTE["phosphor_dim"])
 
 		# Highlight current scene
 		if scene_data["path"] == current_path:
-			btn.add_theme_color_override("font_color", Color(0.4, 0.85, 0.4))
+			btn.add_theme_color_override("font_color", MerlinVisual.CRT_PALETTE["cyan"])
 			btn.text = "> " + btn.text
 
 		_list.add_child(btn)
@@ -182,10 +180,10 @@ func _refresh_current_highlight() -> void:
 		var btn: Button = _list.get_child(i) as Button
 		var scene_data: Dictionary = SCENES[i]
 		if scene_data["path"] == current_path:
-			btn.add_theme_color_override("font_color", Color(0.4, 0.85, 0.4))
+			btn.add_theme_color_override("font_color", MerlinVisual.CRT_PALETTE["cyan"])
 			btn.text = "> " + scene_data["label"]
 		else:
-			btn.add_theme_color_override("font_color", Color(0.78, 0.78, 0.78))
+			btn.add_theme_color_override("font_color", MerlinVisual.CRT_PALETTE["phosphor_dim"])
 			btn.text = scene_data["label"]
 
 

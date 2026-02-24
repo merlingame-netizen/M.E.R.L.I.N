@@ -47,7 +47,7 @@ static func create(source: String = "static") -> PanelContainer:
 	var label := Label.new()
 	label.name = "BadgeLabel"
 	label.add_theme_font_size_override("font_size", FONT_SIZE)
-	label.add_theme_color_override("font_color", Color.WHITE)
+	label.add_theme_color_override("font_color", MerlinVisual.CRT_PALETTE["phosphor_bright"])
 	label.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	panel.add_child(label)
 

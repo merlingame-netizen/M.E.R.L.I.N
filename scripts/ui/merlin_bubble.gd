@@ -26,7 +26,7 @@ var _full_text: String = ""
 var _current_index: int = 0
 
 # Colors
-var _bg_color: Color = Color(0.20, 0.20, 0.18, 0.88)
+var _bg_color: Color = Color(MerlinVisual.CRT_PALETTE["bg_dark"].r, MerlinVisual.CRT_PALETTE["bg_dark"].g, MerlinVisual.CRT_PALETTE["bg_dark"].b, 0.88)
 var _border_color: Color
 var _text_color: Color
 
@@ -59,7 +59,7 @@ func _ready() -> void:
 	style.corner_radius_bottom_left = CORNER_RADIUS
 	style.corner_radius_bottom_right = CORNER_RADIUS
 	style.shadow_size = 8
-	style.shadow_color = Color(0, 0, 0, 0.5)
+	style.shadow_color = MerlinVisual.CRT_PALETTE["shadow"]
 	style.content_margin_left = 16
 	style.content_margin_right = 16
 	style.content_margin_top = 12
@@ -69,7 +69,7 @@ func _ready() -> void:
 	# Create label
 	_label = Label.new()
 	_label.add_theme_font_override("font", MerlinVisual.get_font("body"))
-	_label.add_theme_font_size_override("font_size", 15)
+	_label.add_theme_font_size_override("font_size", MerlinVisual.BODY_SMALL)
 	_label.add_theme_color_override("font_color", _text_color)
 	_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER

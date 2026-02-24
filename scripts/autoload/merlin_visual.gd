@@ -374,6 +374,31 @@ const CRT_ASPECT_COLORS_DARK := {
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
+# TIME-OF-DAY COLORS (for MenuPrincipal ambient overlays)
+# ═══════════════════════════════════════════════════════════════════════════════
+
+const TIME_OF_DAY_COLORS := {
+	"night":     Color(0.10, 0.12, 0.25, 0.35),
+	"dawn":      Color(0.45, 0.28, 0.15, 0.20),
+	"morning":   Color(0.95, 0.90, 0.80, 0.05),
+	"midday":    Color(1.0, 1.0, 0.95, 0.0),
+	"afternoon": Color(0.90, 0.82, 0.65, 0.08),
+	"dusk":      Color(0.55, 0.25, 0.10, 0.25),
+	"evening":   Color(0.20, 0.15, 0.28, 0.30),
+}
+
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# MODULATE ANIMATION CONSTANTS
+# ═══════════════════════════════════════════════════════════════════════════════
+
+const MODULATE_PULSE := Color(1.06, 1.06, 1.06)
+const MODULATE_GLOW := Color(1.3, 1.3, 1.3)
+const MODULATE_GLOW_DIM := Color(1.15, 1.15, 1.15)
+const MODULATE_HIGHLIGHT := Color(1.5, 1.5, 1.5)
+
+
+# ═══════════════════════════════════════════════════════════════════════════════
 # LLM STATUS COLORS (for llm_status_bar.gd)
 # ═══════════════════════════════════════════════════════════════════════════════
 
@@ -600,8 +625,11 @@ const TITLE_SIZE := 52
 const TITLE_SMALL := 38
 const BODY_SIZE := 22
 const BODY_LARGE := 26
+const BODY_SMALL := 17
 const CAPTION_SIZE := 16
+const CAPTION_LARGE := 14
 const CAPTION_SMALL := 13
+const CAPTION_TINY := 10
 const BUTTON_SIZE := 22
 
 # Outline defaults for CRT readability (phosphor on dark CRT + scanlines)

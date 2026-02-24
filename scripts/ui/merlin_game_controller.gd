@@ -1902,7 +1902,7 @@ func _show_evolution_choice(evo_data: Dictionary) -> void:
 	var overlay := ColorRect.new()
 	overlay.name = "EvolutionOverlay"
 	overlay.set_anchors_preset(Control.PRESET_FULL_RECT)
-	overlay.color = Color(0.0, 0.0, 0.0, 0.75)
+	overlay.color = Color(MerlinVisual.CRT_PALETTE["bg_deep"].r, MerlinVisual.CRT_PALETTE["bg_deep"].g, MerlinVisual.CRT_PALETTE["bg_deep"].b, 0.75)
 	overlay.mouse_filter = Control.MOUSE_FILTER_STOP
 	ui.add_child(overlay)
 
@@ -1918,15 +1918,15 @@ func _show_evolution_choice(evo_data: Dictionary) -> void:
 	var title := Label.new()
 	title.text = "Evolution de Bestiole"
 	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	title.add_theme_font_size_override("font_size", 24)
-	title.add_theme_color_override("font_color", Color(0.68, 0.55, 0.32))
+	title.add_theme_font_size_override("font_size", MerlinVisual.BODY_LARGE)
+	title.add_theme_color_override("font_color", MerlinVisual.CRT_PALETTE["amber"])
 	center.add_child(title)
 
 	var subtitle := Label.new()
 	subtitle.text = "Stade %d: %s — Choisissez une voie" % [next_stage, stage_name]
 	subtitle.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	subtitle.add_theme_font_size_override("font_size", 14)
-	subtitle.add_theme_color_override("font_color", Color(0.8, 0.75, 0.65))
+	subtitle.add_theme_font_size_override("font_size", MerlinVisual.CAPTION_LARGE)
+	subtitle.add_theme_color_override("font_color", MerlinVisual.CRT_PALETTE["phosphor"])
 	center.add_child(subtitle)
 
 	# Path cards row
@@ -1935,12 +1935,8 @@ func _show_evolution_choice(evo_data: Dictionary) -> void:
 	row.add_theme_constant_override("separation", 12)
 	center.add_child(row)
 
-	# Colors per aspect
-	var aspect_colors := {
-		"Corps": Color(0.55, 0.40, 0.25),
-		"Ame": Color(0.40, 0.45, 0.70),
-		"Monde": Color(0.35, 0.55, 0.35),
-	}
+	# Colors per aspect (centralized in MerlinVisual)
+	var aspect_colors: Dictionary = MerlinVisual.ASPECT_COLORS
 
 	for path_id in MerlinConstants.BESTIOLE_EVOLUTION_PATHS:
 		var path_data: Dictionary = MerlinConstants.BESTIOLE_EVOLUTION_PATHS[path_id]
@@ -1954,8 +1950,8 @@ func _show_evolution_choice(evo_data: Dictionary) -> void:
 		var card := PanelContainer.new()
 		card.custom_minimum_size = Vector2(150, 200)
 		var card_style := StyleBoxFlat.new()
-		card_style.bg_color = Color(0.12, 0.10, 0.08)
-		card_style.border_color = aspect_color if can_afford else Color(0.3, 0.3, 0.3, 0.5)
+		card_style.bg_color = MerlinVisual.CRT_PALETTE["bg_deep"]
+		card_style.border_color = aspect_color if can_afford else MerlinVisual.CRT_PALETTE["inactive"]
 		card_style.set_border_width_all(2)
 		card_style.corner_radius_top_left = 8
 		card_style.corner_radius_top_right = 8
@@ -1976,7 +1972,7 @@ func _show_evolution_choice(evo_data: Dictionary) -> void:
 		var name_lbl := Label.new()
 		name_lbl.text = path_name
 		name_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-		name_lbl.add_theme_font_size_override("font_size", 18)
+		name_lbl.add_theme_font_size_override("font_size", MerlinVisual.BODY_SMALL)
 		name_lbl.add_theme_color_override("font_color", aspect_color)
 		vbox.add_child(name_lbl)
 
@@ -1984,8 +1980,8 @@ func _show_evolution_choice(evo_data: Dictionary) -> void:
 		var aspect_lbl := Label.new()
 		aspect_lbl.text = "(%s)" % aspect
 		aspect_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-		aspect_lbl.add_theme_font_size_override("font_size", 12)
-		aspect_lbl.add_theme_color_override("font_color", Color(0.6, 0.55, 0.5))
+		aspect_lbl.add_theme_font_size_override("font_size", MerlinVisual.CAPTION_SMALL)
+		aspect_lbl.add_theme_color_override("font_color", MerlinVisual.CRT_PALETTE["phosphor_dim"])
 		vbox.add_child(aspect_lbl)
 
 		# Bonus
@@ -1993,8 +1989,8 @@ func _show_evolution_choice(evo_data: Dictionary) -> void:
 		bonus_lbl.text = bonus.replace("_", " ").capitalize()
 		bonus_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 		bonus_lbl.autowrap_mode = TextServer.AUTOWRAP_WORD
-		bonus_lbl.add_theme_font_size_override("font_size", 11)
-		bonus_lbl.add_theme_color_override("font_color", Color(0.75, 0.70, 0.60))
+		bonus_lbl.add_theme_font_size_override("font_size", MerlinVisual.CAPTION_SMALL)
+		bonus_lbl.add_theme_color_override("font_color", MerlinVisual.CRT_PALETTE["phosphor"])
 		vbox.add_child(bonus_lbl)
 
 		# Cost
@@ -2004,8 +2000,8 @@ func _show_evolution_choice(evo_data: Dictionary) -> void:
 		var cost_lbl := Label.new()
 		cost_lbl.text = ", ".join(cost_parts)
 		cost_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-		cost_lbl.add_theme_font_size_override("font_size", 10)
-		cost_lbl.add_theme_color_override("font_color", Color(0.35, 0.55, 0.35) if can_afford else Color(0.7, 0.3, 0.3))
+		cost_lbl.add_theme_font_size_override("font_size", MerlinVisual.CAPTION_TINY)
+		cost_lbl.add_theme_color_override("font_color", MerlinVisual.CRT_ASPECT_COLORS["Monde"] if can_afford else MerlinVisual.CRT_PALETTE["danger"])
 		vbox.add_child(cost_lbl)
 
 		# Choose button
