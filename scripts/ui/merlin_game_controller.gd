@@ -151,6 +151,8 @@ func _connect_signals() -> void:
 		ui.pause_requested.connect(_on_pause_requested)
 		if ui.has_signal("souffle_activated"):
 			ui.souffle_activated.connect(func(): print("[TRIADE] Souffle d'Ogham activated by player"))
+		if ui.has_signal("merlin_dialogue_requested"):
+			ui.merlin_dialogue_requested.connect(_on_merlin_dialogue_requested)
 
 	# Bestiole wheel signals
 	if ui and ui.bestiole_wheel:
@@ -908,6 +910,14 @@ func _resolve_choice(option: int) -> void:
 				life_delta += int(eff.get("amount", 0))
 	if not headless_mode and ui and is_instance_valid(ui) and ui.has_method("show_life_delta"):
 		ui.show_life_delta(life_delta)
+
+	# --- 15c. Generate what-if for unchosen options (P3.17.3) ---
+	if not headless_mode and current_card.size() > 0:
+		var mos: MerlinOmniscient = store.get_merlin() if store and store.has_method("get_merlin") else null
+		if mos and mos.has_method("generate_what_if"):
+			var what_ifs: Array[String] = await mos.generate_what_if(current_card, option)
+			if ui and is_instance_valid(ui) and ui.has_method("show_what_if_reveal"):
+				ui.show_what_if_reveal(what_ifs, option)
 
 	# Wait for player to see reaction (skip in headless)
 	if not headless_mode:
@@ -1807,6 +1817,47 @@ func _on_skill_activated(skill_id: String) -> void:
 func _on_pause_requested() -> void:
 	# TODO: Show pause menu
 	get_tree().paused = not get_tree().paused
+
+
+func _on_merlin_dialogue_requested(player_input: String) -> void:
+	## Player talks to Merlin — generate LLM response, display in bubble, log to RAG.
+	if is_processing:
+		return
+	print("[TRIADE] Dialogue: player asks '%s'" % player_input)
+
+	# Show thinking state
+	if ui:
+		ui.show_merlin_thinking_overlay()
+
+	# Build context from current game state
+	var context := player_input
+	if store:
+		var state: Dictionary = store.get_state()
+		var life: int = state.get("life_essence", 100)
+		var aspects: Dictionary = state.get("triade_aspects", {})
+		context = "Le voyageur demande: %s\n(Vie=%d, Corps=%s, Ame=%s, Monde=%s)" % [
+			player_input, life,
+			aspects.get("Corps", {}).get("state_name", "?"),
+			aspects.get("Ame", {}).get("state_name", "?"),
+			aspects.get("Monde", {}).get("state_name", "?"),
+		]
+
+	# Generate response via MerlinOmniscient
+	var response: String = ""
+	var mos: MerlinOmniscient = store.get_merlin() if store else null
+	if mos and mos.has_method("get_merlin_comment"):
+		response = await mos.get_merlin_comment(context)
+
+	if response.is_empty():
+		response = "Les pierres murmurent... mais je n'entends pas clairement. Repose ta question, voyageur."
+
+	# Hide thinking, show response
+	if ui:
+		ui.hide_merlin_thinking_overlay()
+		ui.show_merlin_dialogue_response(response)
+
+	# Log to RAG context
+	_write_context_entry("Dialogue: %s -> %s" % [player_input, response.left(80)])
 
 
 # ═══════════════════════════════════════════════════════════════════════════════

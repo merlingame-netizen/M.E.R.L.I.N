@@ -781,6 +781,8 @@ func _generate_with_strategy() -> Dictionary:
 		var llm_card := await _try_llm_generation()
 		if not llm_card.is_empty():
 			stats.llm_successes += 1
+			# P3.17.1: Generate poetic title (non-blocking, use fallback if slow)
+			llm_card["title"] = await _generate_card_title(llm_card)
 			return llm_card
 		else:
 			stats.llm_failures += 1
@@ -2060,13 +2062,57 @@ func on_run_end(run_data: Dictionary) -> void:
 func get_merlin_comment(context: String) -> String:
 	## Genere un commentaire de Merlin adapte au contexte.
 	var tone := tone_controller.get_current_tone()
-	var trust_tier := relationship.trust_tier
 
-	# Get appropriate comment
+	# For dialogue (player explicitly talks to Merlin), use richer generation
+	if context.begins_with("Le voyageur demande:"):
+		var response := await _generate_dialogue_response(context, tone)
+		merlin_speaks.emit(response, tone)
+		return response
+
+	# Get appropriate comment (short, 1-2 sentences)
 	var comment := await _generate_merlin_comment(context, tone)
 
 	merlin_speaks.emit(comment, tone)
 	return comment
+
+
+func _generate_dialogue_response(context: String, tone: String) -> String:
+	## Genere une reponse de dialogue riche (3-4 phrases, 150 tokens).
+	if llm_interface == null or not llm_interface.is_ready:
+		return _get_fallback_dialogue(tone)
+
+	var system := """Tu es Merlin l'Enchanteur, druide immortel de Broceliande.
+Le voyageur te parle directement. Reponds en 3-4 phrases, ton %s.
+Vocabulaire celtique (ogham, nemeton, sidhe, brume, pierre, souffle).
+Niveau de confiance: %s
+Sois poetique mais concret. Francais uniquement. Pas de guillemets.""" % [
+		tone,
+		relationship.get_trust_tier_name(),
+	]
+
+	var result: Dictionary
+	if llm_interface.has_method("generate_with_router"):
+		result = await llm_interface.generate_with_router(system, context, {"max_tokens": 150, "temperature": 0.75})
+	elif llm_interface.has_method("generate_with_system"):
+		result = await llm_interface.generate_with_system(system, context, {"max_tokens": 150, "temperature": 0.75})
+	else:
+		return _get_fallback_dialogue(tone)
+
+	if result.has("text") and not str(result.text).strip_edges().is_empty():
+		return str(result.text).strip_edges()
+
+	return _get_fallback_dialogue(tone)
+
+
+func _get_fallback_dialogue(tone: String) -> String:
+	## Fallback dialogue responses when LLM is unavailable.
+	var responses := {
+		"playful": "Ah, tu veux parler ? Les pierres ont des oreilles ici, voyageur. Mais entre nous, la brume cache plus de secrets que tu ne crois. Pose bien tes questions.",
+		"mysterious": "Les fils du destin tremblent quand tu parles. Je vois des chemins qui se croisent dans la brume du nemeton. Certaines reponses ne viennent qu'a ceux qui savent attendre.",
+		"warning": "Ecoute bien, voyageur. Les ombres s'allongent et le vent porte des murmures inquietants. Chaque mot que tu prononces ici a un poids. Choisis-les avec soin.",
+		"melancholy": "Tant de voyageurs sont passes avant toi. Leurs voix resonnent encore dans les pierres de ce cercle ancien. Parfois, je me demande si les mots suffisent.",
+	}
+	return responses.get(tone, responses["mysterious"])
 
 
 func _generate_merlin_comment(context: String, tone: String) -> String:
@@ -2142,6 +2188,114 @@ func _get_fallback_comment(context: String, tone: String) -> String:
 
 	var tone_comments: Array = comments.get(tone, comments.playful)
 	return tone_comments[randi() % tone_comments.size()]
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# CARD TITLE GENERATION (P3.17.1)
+# ═══════════════════════════════════════════════════════════════════════════════
+
+const FALLBACK_TITLES: Array[String] = [
+	"Le Murmure des Pierres",
+	"L'Ombre du Nemeton",
+	"Le Souffle des Anciens",
+	"La Brume Parle",
+	"Le Chemin des Oghams",
+	"Sous le Chene Sacre",
+	"L'Appel du Sidhe",
+	"Entre Brume et Pierre",
+	"La Voix du Cairn",
+	"Le Seuil du Crépuscule",
+]
+
+func _generate_card_title(card: Dictionary) -> String:
+	## Generate a short poetic title (3-6 words) for the card via GM brain.
+	## Uses a tight 20-token budget. Falls back instantly if LLM unavailable.
+	if llm_interface == null or not llm_interface.is_ready:
+		return _get_fallback_title()
+
+	var card_text: String = str(card.get("text", "")).left(120)
+	if card_text.is_empty():
+		return _get_fallback_title()
+
+	var system := "Genere UN titre poetique en francais (3-6 mots) pour cette scene. Vocabulaire celtique. Reponds UNIQUEMENT avec le titre, rien d'autre."
+
+	var result: Dictionary
+	if llm_interface.has_method("generate_with_router"):
+		result = await llm_interface.generate_with_router(system, card_text, {"max_tokens": 20, "temperature": 0.8})
+	elif llm_interface.has_method("generate_with_system"):
+		result = await llm_interface.generate_with_system(system, card_text, {"max_tokens": 20, "temperature": 0.8})
+	else:
+		return _get_fallback_title()
+
+	var title: String = str(result.get("text", "")).strip_edges()
+	# Clean: remove quotes, trailing dots, limit length
+	title = title.trim_prefix('"').trim_suffix('"').trim_prefix("*").trim_suffix("*").strip_edges()
+	if title.length() < 3 or title.length() > 60:
+		return _get_fallback_title()
+	return title
+
+
+func _get_fallback_title() -> String:
+	return FALLBACK_TITLES[randi() % FALLBACK_TITLES.size()]
+
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# WHAT-IF GENERATION (P3.17.3)
+# ═══════════════════════════════════════════════════════════════════════════════
+
+const FALLBACK_WHATIFS: Array[String] = [
+	"Le destin aurait pris un autre chemin...",
+	"Les esprits du Sidhe auraient murmure autrement.",
+	"La brume aurait revele un tout autre visage.",
+	"L'Ogham aurait trace d'autres runes dans la pierre.",
+]
+
+func generate_what_if(card: Dictionary, chosen_index: int) -> Array[String]:
+	## Generate short what-if texts for unchosen options (P3.17.3).
+	## Returns an array of size 3 where chosen_index is empty and others have text.
+	## Each what-if is 1-2 sentences (max 40 tokens).
+	var results: Array[String] = ["", "", ""]
+	var options: Array = card.get("options", [])
+	if options.size() < 2:
+		return results
+
+	var card_text: String = str(card.get("text", "")).left(100)
+	if card_text.is_empty():
+		return results
+
+	for i in range(mini(options.size(), 3)):
+		if i == chosen_index:
+			continue
+		var option_label: String = str(options[i].get("label", "")) if i < options.size() and options[i] is Dictionary else ""
+		if option_label.is_empty():
+			results[i] = FALLBACK_WHATIFS[randi() % FALLBACK_WHATIFS.size()]
+			continue
+
+		var what_if_text := await _generate_single_what_if(card_text, option_label)
+		results[i] = what_if_text
+	return results
+
+
+func _generate_single_what_if(card_context: String, option_label: String) -> String:
+	## Generate a single what-if hint for one unchosen option (40 tokens max).
+	if llm_interface == null or not llm_interface.is_ready:
+		return FALLBACK_WHATIFS[randi() % FALLBACK_WHATIFS.size()]
+
+	var system := "En 1-2 phrases poetiques (francais, ton celtique), decris brievement ce qui AURAIT PU se passer si le voyageur avait choisi cette option. Reponds UNIQUEMENT avec le texte narratif."
+	var user_msg := "Scene: %s\nOption non choisie: %s\nQu'aurait-il pu se passer ?" % [card_context, option_label]
+
+	var result: Dictionary
+	if llm_interface.has_method("generate_with_router"):
+		result = await llm_interface.generate_with_router(system, user_msg, {"max_tokens": 40, "temperature": 0.85})
+	elif llm_interface.has_method("generate_with_system"):
+		result = await llm_interface.generate_with_system(system, user_msg, {"max_tokens": 40, "temperature": 0.85})
+	else:
+		return FALLBACK_WHATIFS[randi() % FALLBACK_WHATIFS.size()]
+
+	var text: String = str(result.get("text", "")).strip_edges()
+	if text.length() < 10 or text.length() > 200:
+		return FALLBACK_WHATIFS[randi() % FALLBACK_WHATIFS.size()]
+	return text
+
 
 # ═══════════════════════════════════════════════════════════════════════════════
 # SIGNAL HANDLERS
