@@ -1600,6 +1600,253 @@ func generate_parallel(narrator_system: String, narrator_input: String,
 	_dispatch_from_queue()
 	return {"narrative": narrative_result, "structured": gm_result, "parallel": true, "time_ms": total_time}
 
+# ═══════════════════════════════════════════════════════════════════════════════
+# SEQUENTIAL PIPELINE (P1.5) — narrator(card_full) → parse → gm(effects)
+# ═══════════════════════════════════════════════════════════════════════════════
+
+## Generate a complete card via the sequential pipeline.
+## Step 1: Narrator generates scenario text + A/B/C labels in one call.
+## Step 2: Parse the labels from the narrator output.
+## Step 3: Game Master generates JSON effects for the 3 options.
+## Returns a card dictionary: {text, options: [{label, effects}], tags, ...}
+func generate_sequential(context: Dictionary) -> Dictionary:
+	if not is_ready or narrator_llm == null:
+		return {"error": "LLM non pret"}
+
+	var start_time := Time.get_ticks_msec()
+
+	# ── Step 1: Narrator generates full card (text + labels) ────────────
+	var card_template: Dictionary = prompt_templates.get("sequential_card_full", {})
+	if card_template.is_empty():
+		return {"error": "Template sequential_card_full introuvable"}
+
+	var system_prompt: String = str(card_template.get("system", ""))
+	var user_template: String = str(card_template.get("user_template", ""))
+	var narrator_max_tokens: int = int(card_template.get("max_tokens", 200))
+
+	# Fill user template with context variables
+	var user_prompt := _fill_sequential_template(user_template, context)
+
+	_primary_narrator_busy = true
+	_narrator_busy_since = Time.get_ticks_msec()
+
+	var narrator_result: Dictionary = await generate_with_system(
+		system_prompt, user_prompt,
+		{"max_tokens": narrator_max_tokens, "temperature": float(context.get("temperature", 0.7))}
+	)
+
+	_primary_narrator_busy = false
+	_narrator_busy_since = 0
+
+	if narrator_result.has("error"):
+		print("[MerlinAI] SEQ Step 1 (narrator): error — %s" % str(narrator_result.error))
+		return {"error": "SEQ narrator failed: %s" % str(narrator_result.error)}
+
+	var narrator_text: String = str(narrator_result.get("text", ""))
+	if narrator_text.strip_edges().length() < 15:
+		print("[MerlinAI] SEQ Step 1: narrator text too short (%d chars)" % narrator_text.length())
+		return {"error": "SEQ narrator text too short"}
+
+	var step1_ms := Time.get_ticks_msec() - start_time
+	print("[MerlinAI] SEQ Step 1 (narrator): %d chars in %dms" % [narrator_text.length(), step1_ms])
+
+	# ── Step 2: Parse labels from narrator output ───────────────────────
+	var parsed := _parse_sequential_labels(narrator_text)
+	var narrative: String = parsed.get("narrative", narrator_text)
+	var labels: Array = parsed.get("labels", [])
+
+	# Pad to 3 labels with fallbacks if narrator missed some
+	var fallback_labels := ["Avancer prudemment", "Observer en silence", "Agir sans hesiter"]
+	while labels.size() < 3:
+		labels.append(fallback_labels[labels.size()])
+
+	print("[MerlinAI] SEQ Step 2 (parse): %d labels extracted" % parsed.get("labels", []).size())
+
+	# ── Step 3: Game Master generates effects JSON ──────────────────────
+	var effects_template: Dictionary = prompt_templates.get("sequential_gm_effects", {})
+	var effects_per_option: Array = [[], [], []]
+
+	if not effects_template.is_empty() and gamemaster_llm != null:
+		var gm_system: String = str(effects_template.get("system", ""))
+		var gm_user_template: String = str(effects_template.get("user_template", ""))
+		var gm_max_tokens: int = int(effects_template.get("max_tokens", 120))
+		var gm_temp: float = float(effects_template.get("temperature", 0.15))
+
+		# Fill GM template
+		var gm_context := context.duplicate(true)
+		gm_context["scenario_text"] = narrative
+		gm_context["label_a"] = labels[0]
+		gm_context["label_b"] = labels[1]
+		gm_context["label_c"] = labels[2]
+		var gm_user := _fill_sequential_template(gm_user_template, gm_context)
+
+		_primary_gm_busy = true
+		_gm_busy_since = Time.get_ticks_msec()
+
+		var gm_result: Dictionary = await generate_with_system(
+			gm_system, gm_user,
+			{"max_tokens": gm_max_tokens, "temperature": gm_temp}
+		)
+
+		_primary_gm_busy = false
+		_gm_busy_since = 0
+
+		var gm_ms := Time.get_ticks_msec() - start_time - step1_ms
+		if not gm_result.has("error"):
+			var gm_text: String = str(gm_result.get("text", ""))
+			effects_per_option = _parse_sequential_effects(gm_text)
+			print("[MerlinAI] SEQ Step 3 (GM effects): parsed in %dms" % gm_ms)
+		else:
+			print("[MerlinAI] SEQ Step 3 (GM effects): error — %s (using defaults)" % str(gm_result.error))
+	else:
+		print("[MerlinAI] SEQ Step 3: no GM template or LLM, using default effects")
+
+	# ── Step 4: Assemble card ───────────────────────────────────────────
+	var options: Array = []
+	var default_effects := [
+		[{"type": "HEAL_LIFE", "amount": 5}],
+		[{"type": "ADD_KARMA", "amount": 3}],
+		[{"type": "DAMAGE_LIFE", "amount": 3}],
+	]
+	for i in range(3):
+		var effects: Array = effects_per_option[i] if i < effects_per_option.size() and not effects_per_option[i].is_empty() else default_effects[i]
+		var opt: Dictionary = {
+			"label": labels[i],
+			"effects": effects,
+		}
+		if i == 1:
+			opt["cost"] = 1  # Centre costs Souffle
+		options.append(opt)
+
+	var total_ms := Time.get_ticks_msec() - start_time
+	print("[MerlinAI] SEQ pipeline complete: %dms total" % total_ms)
+
+	return {
+		"text": narrative,
+		"speaker": "merlin",
+		"options": options,
+		"tags": ["llm_generated", "sequential_pipeline"],
+		"_generated_by": "sequential_pipeline",
+		"_strategy": "sequential",
+		"_generation_time_ms": total_ms,
+	}
+
+
+## Generate a consequence text after the player's choice (P1.5 Step 4).
+func generate_sequential_consequence(context: Dictionary) -> Dictionary:
+	if not is_ready or narrator_llm == null:
+		return {"error": "LLM non pret"}
+
+	var cons_template: Dictionary = prompt_templates.get("sequential_consequences", {})
+	if cons_template.is_empty():
+		return {"error": "Template sequential_consequences introuvable"}
+
+	var system_prompt: String = str(cons_template.get("system", ""))
+	var user_template: String = str(cons_template.get("user_template", ""))
+	var max_tokens: int = int(cons_template.get("max_tokens", 50))
+	var temp: float = float(cons_template.get("temperature", 0.65))
+
+	var user_prompt := _fill_sequential_template(user_template, context)
+
+	var result: Dictionary = await generate_with_system(
+		system_prompt, user_prompt,
+		{"max_tokens": max_tokens, "temperature": temp}
+	)
+
+	if result.has("error"):
+		return result
+
+	return {"text": str(result.get("text", "")), "source": "sequential_consequence"}
+
+
+## Fill a template string with context variables. Unresolved placeholders become empty.
+func _fill_sequential_template(template: String, context: Dictionary) -> String:
+	var result := template
+	for key in context.keys():
+		var value = context[key]
+		var placeholder := "{%s}" % key
+		if result.find(placeholder) != -1:
+			result = result.replace(placeholder, str(value))
+	# Clean remaining unresolved placeholders (optional context vars)
+	var rx := RegEx.new()
+	rx.compile("\\{[a-z_]+\\}")
+	result = rx.sub(result, "", true)
+	return result
+
+
+## Parse narrator output to extract narrative text and A/B/C labels.
+func _parse_sequential_labels(text: String) -> Dictionary:
+	# Permissive regex: A), **A)**, A:, Action A:, - **B**:, 1), etc.
+	var rx := RegEx.new()
+	rx.compile("(?m)^\\s*(?:[-*]\\s*)?\\*{0,2}(?:(?:Action\\s+)?[A-C][):.\\]]|[1-3][.)])\\*{0,2}[:\\s]+(.+)")
+	var matches := rx.search_all(text)
+
+	var labels: Array = []
+	for m in matches:
+		var label := m.get_string(1).strip_edges().replace("**", "").replace("*", "")
+		# Strip sequel hooks (e.g. " -> consequence")
+		var arrow_pos := label.find(" -> ")
+		if arrow_pos > 0:
+			label = label.substr(0, arrow_pos).strip_edges()
+		if label.length() > 2 and label.length() < 120:
+			labels.append(label)
+
+	# Extract narrative = everything before first choice
+	var rx2 := RegEx.new()
+	rx2.compile("(?m)^\\s*(?:[-*]\\s*)?\\*{0,2}(?:(?:Action\\s+)?[A-C][):.\\]]|[1-3][.)])\\*{0,2}[:\\s]+")
+	var first_choice := rx2.search(text)
+	var narrative := text.strip_edges()
+	if first_choice:
+		narrative = text.substr(0, first_choice.get_start()).strip_edges()
+	narrative = narrative.replace("**", "").replace("*", "")
+
+	return {"narrative": narrative, "labels": labels}
+
+
+## Parse GM effects JSON: [[effets_A], [effets_B], [effets_C]]
+func _parse_sequential_effects(text: String) -> Array:
+	var default_effects: Array = [[], [], []]
+
+	# Try to find JSON array in the text
+	var json_start := text.find("[")
+	var json_end := text.rfind("]")
+	if json_start == -1 or json_end <= json_start:
+		print("[MerlinAI] SEQ effects parse: no JSON array found")
+		return default_effects
+
+	var json_text := text.substr(json_start, json_end - json_start + 1)
+	var parsed = JSON.parse_string(json_text)
+
+	if not parsed is Array or parsed.size() < 3:
+		print("[MerlinAI] SEQ effects parse: invalid structure (expected array of 3)")
+		return default_effects
+
+	var result: Array = [[], [], []]
+	for i in range(3):
+		if i >= parsed.size():
+			break
+		var option_effects = parsed[i]
+		if not option_effects is Array:
+			continue
+		for eff in option_effects:
+			if not eff is Dictionary:
+				continue
+			var effect_type: String = str(eff.get("type", ""))
+			if effect_type.is_empty():
+				continue
+			var normalized: Dictionary = {"type": effect_type}
+			# Copy known fields
+			if eff.has("aspect"):
+				normalized["aspect"] = str(eff.aspect)
+			if eff.has("direction"):
+				normalized["direction"] = str(eff.direction)
+			if eff.has("amount"):
+				normalized["amount"] = int(eff.amount)
+			result[i].append(normalized)
+
+	return result
+
+
 ## Generate a card using the worker pool (await-based).
 ## Uses pool worker if available, else falls back to idle primary brain.
 func generate_prefetch(system_prompt: String, user_input: String, params_override: Dictionary = {}) -> Dictionary:

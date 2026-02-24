@@ -847,6 +847,15 @@ func _try_llm_generation() -> Dictionary:
 		else:
 			print("[MOS] Strategy B: FAILED in %dms — %s" % [b_elapsed, str(adapter_result.get("error", "unknown"))])
 
+	# Strategy SEQ: Sequential pipeline (P1.5) — narrator(card_full) → parse → gm(effects)
+	if llm_interface.has_method("generate_sequential") and not llm_interface.prompt_templates.get("sequential_card_full", {}).is_empty():
+		var seq_card := await _try_sequential_generation()
+		if not seq_card.is_empty():
+			seq_card["_strategy"] = "sequential"
+			print("[MOS] Strategy SEQ: SUCCESS in %dms" % (Time.get_ticks_msec() - start_time))
+			return seq_card
+		print("[MOS] Strategy SEQ: failed, falling through to C")
+
 	# Strategy C: Direct LLM call (fallback)
 	var system_prompt := _build_system_prompt()
 	var user_prompt := _build_user_prompt()
@@ -996,6 +1005,84 @@ func _try_parallel_generation() -> Dictionary:
 
 	card["_parallel"] = result.get("parallel", false)
 	card["_generation_time_ms"] = result.get("time_ms", 0)
+	return card
+
+
+func _try_sequential_generation() -> Dictionary:
+	## Strategy SEQ: Sequential pipeline (P1.5).
+	## narrator(card_full) → parse(labels) → gm(effects) → assemble card.
+	## Builds context dict from _current_context for template variable filling.
+
+	# Map _current_context to template variables
+	var aspects: Dictionary = _current_context.get("aspects", {})
+	var aspect_names := {"Corps": "bas", "Ame": "bas", "Monde": "bas"}
+	for aspect_key in aspects:
+		var s: int = int(aspects[aspect_key])
+		aspect_names[aspect_key] = "Equilibre" if s == 0 else ("Haut" if s > 0 else "Bas")
+
+	var life_val: int = int(_current_context.get("life_essence", 100))
+	var danger_level: int = int(_current_context.get("danger_level", 0))
+
+	# Narrative phase name
+	var phase_text := ""
+	if narrative:
+		var phase_names: Dictionary = {1: "Mise en place", 2: "Montee dramatique", 3: "Climax", 4: "Resolution"}
+		phase_text = "Phase: %s. " % phase_names.get(narrative.run_phase, "Mise en place")
+
+	# Danger context string
+	var danger_text := ""
+	var danger_signals: Array = _current_context.get("danger_signals", [])
+	if danger_signals.size() > 0:
+		danger_text = "[DANGER] %s. " % " | ".join(danger_signals)
+
+	# Player summary
+	var player_text := ""
+	if player_profile:
+		var summary: String = player_profile.get_summary_for_prompt()
+		if not summary.is_empty():
+			player_text = summary + " "
+
+	# Narrator guidance from event selector
+	var guidance_text: String = str(_current_context.get("narrator_guidance", ""))
+	if not guidance_text.is_empty():
+		guidance_text = guidance_text + " "
+
+	# Biome
+	var biome: String = str(_current_context.get("biome", "foret"))
+
+	var seq_context: Dictionary = {
+		"biome": biome,
+		"day": _current_context.get("day", 1),
+		"corps_state": aspect_names.get("Corps", "Equilibre"),
+		"ame_state": aspect_names.get("Ame", "Equilibre"),
+		"monde_state": aspect_names.get("Monde", "Equilibre"),
+		"souffle": _current_context.get("souffle", 0),
+		"life": life_val,
+		"narrative_phase": phase_text,
+		"danger_context": danger_text,
+		"player_summary": player_text,
+		"narrator_guidance": guidance_text,
+		"danger_level": danger_level,
+		"temperature": _get_temperature_for_context(),
+	}
+
+	var card: Dictionary = await llm_interface.generate_sequential(seq_context)
+
+	if card.has("error"):
+		print("[MOS] Strategy SEQ: error — %s" % str(card.error))
+		return {}
+
+	# Validate minimum card structure
+	var card_text: String = str(card.get("text", ""))
+	var card_options: Array = card.get("options", [])
+	if card_text.length() < 10 or card_options.size() < 3:
+		print("[MOS] Strategy SEQ: invalid card (text=%d chars, options=%d)" % [card_text.length(), card_options.size()])
+		return {}
+
+	# Register with quality judge for repetition tracking
+	if _quality_judge:
+		_quality_judge.register_text(card_text)
+
 	return card
 
 

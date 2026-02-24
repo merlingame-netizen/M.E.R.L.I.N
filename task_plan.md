@@ -18,23 +18,23 @@ Phase P1 — Intelligence sans LoRA (Plan Bi-Cerveaux)
 ## Phase P1 — Intelligence sans LoRA (~22h)
 
 ### WAVE 5: Sequential Pipeline
-- [ ] P1.5.1 | Contrat pipeline + GBNF | prompt_templates.json, gamemaster_sequential.gbnf
-- [ ] P1.5.2 | generate_sequential() | merlin_ai.gd
-- [ ] P1.5.3 | Strategy SEQ dans MOS | merlin_omniscient.gd
+- [x] P1.5.1 | Contrat pipeline + templates | prompt_templates.json (sequential_card_full, gm_effects, consequences)
+- [x] P1.5.2 | generate_sequential() | merlin_ai.gd
+- [x] P1.5.3 | Strategy SEQ dans MOS | merlin_omniscient.gd
 
 ### WAVE 6: Player Profiling (parallele avec 7+8)
 - [x] P1.6.1 | Calcul profil 6 axes + seed_from_quiz | player_profile_registry.gd
-- [ ] P1.6.2 | Wire dans choix | merlin_game_controller.gd
+- [x] P1.6.2 | Wire dans choix | merlin_game_controller.gd
 - [x] P1.6.3 | Injecter dans prompts (summary compact) | context_builder.gd
 
 ### WAVE 7: Narrative Arc (parallele avec 6+8)
 - [x] P1.7.1 | FSM ArcPhase enum + run_phase auto-progress | narrative_registry.gd
 - [x] P1.7.2 | Wire arc dans prompts + RAG fix | merlin_omniscient.gd, rag_manager.gd
-- [ ] P1.7.3 | Temperature + events par phase | merlin_omniscient.gd
+- [x] P1.7.3 | Temperature + events par phase | merlin_omniscient.gd
 
 ### WAVE 8: Danger Detection (parallele avec 6+7)
 - [x] P1.8.1 | 5 regles danger pre-LLM + life in prompt | merlin_omniscient.gd
-- [ ] P1.8.2 | Templates danger | scenario_prompts.json
+- [x] P1.8.2 | Templates danger | scenario_prompts.json
 
 ### WAVE 9: Tags (after W5)
 - [ ] P1.9.1 | visual_tags -> shaders/particles | merlin_game_ui.gd, merlin_visual.gd
