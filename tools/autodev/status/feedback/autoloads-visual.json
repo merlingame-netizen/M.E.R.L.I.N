@@ -1,5 +1,5 @@
 ﻿{
-    "timestamp":  "2026-02-23T22:57:16.2856610+01:00",
+    "timestamp":  "2026-02-23T22:57:16.3097513+01:00",
     "balance_suggestions":  {
 
                             },
@@ -24,5 +24,5 @@
     "lore_notes":  [
 
                    ],
-    "domain":  "world-structure"
+    "domain":  "autoloads-visual"
 }

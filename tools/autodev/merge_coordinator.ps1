@@ -27,6 +27,95 @@ Write-Host "[======================================================]" -Foregroun
 Write-Host "|  AUTODEV Merge Coordinator" -ForegroundColor Magenta
 Write-Host "[======================================================]" -ForegroundColor Magenta
 
+# ── Topological sort based on merge_dependencies ─────────────────────
+function Get-TopologicalOrder {
+    param([array]$DomainNames)
+
+    # Build adjacency map from config
+    $deps = @{}
+    foreach ($d in $config.domains) {
+        if ($d.type -eq "build") {
+            $deps[$d.name] = @()
+            if ($d.merge_dependencies) {
+                $deps[$d.name] = @($d.merge_dependencies)
+            }
+        }
+    }
+
+    # Kahn's algorithm: topological sort
+    $inDegree = @{}
+    $nameSet = @{}
+    foreach ($name in $DomainNames) {
+        $nameSet[$name] = $true
+        $inDegree[$name] = 0
+    }
+
+    # Count in-degrees (only within the set of domains to merge)
+    foreach ($name in $DomainNames) {
+        if ($deps[$name]) {
+            foreach ($dep in $deps[$name]) {
+                if ($nameSet.ContainsKey($dep)) {
+                    $inDegree[$name] = $inDegree[$name] + 1
+                }
+            }
+        }
+    }
+
+    # Start with zero in-degree nodes
+    $queue = [System.Collections.ArrayList]@()
+    foreach ($name in $DomainNames) {
+        if ($inDegree[$name] -eq 0) {
+            $null = $queue.Add($name)
+        }
+    }
+
+    $sorted = @()
+    while ($queue.Count -gt 0) {
+        # Pick first from queue (stable order: config.merge_order priority)
+        $current = $queue[0]
+        $queue.RemoveAt(0)
+        $sorted += $current
+
+        # Reduce in-degree of dependents
+        foreach ($name in $DomainNames) {
+            if ($deps[$name] -and $deps[$name] -contains $current) {
+                $inDegree[$name] = $inDegree[$name] - 1
+                if ($inDegree[$name] -eq 0) {
+                    $null = $queue.Add($name)
+                }
+            }
+        }
+    }
+
+    # If sorted.Count < input, there's a cycle (should not happen)
+    if ($sorted.Count -lt $DomainNames.Count) {
+        $missing = @($DomainNames | Where-Object { $_ -notin $sorted })
+        Write-Host "[MERGE] WARNING: Dependency cycle detected for: $($missing -join ', '). Appending at end." -ForegroundColor Red
+        $sorted += $missing
+    }
+
+    return $sorted
+}
+
+# ── Check if a domain's dependencies are all merged ──────────────────
+function Test-DependenciesMerged {
+    param([string]$DomainName, [hashtable]$MergedSoFar)
+
+    $domainConfig = $config.domains | Where-Object { $_.name -eq $DomainName }
+    if (-not $domainConfig -or -not $domainConfig.merge_dependencies) {
+        return @{ ok = $true; missing = @() }
+    }
+
+    $missing = @()
+    foreach ($dep in $domainConfig.merge_dependencies) {
+        if (-not $MergedSoFar.ContainsKey($dep) -or $MergedSoFar[$dep] -ne $true) {
+            $missing += $dep
+        }
+    }
+
+    return @{ ok = ($missing.Count -eq 0); missing = $missing }
+}
+
 # ── Determine which domains to merge ─────────────────────────────────
 function Get-DomainsToMerge {
     $domainsToMerge = @()
@@ -46,6 +135,12 @@ function Get-DomainsToMerge {
             }
         }
     }
+
+    # Apply topological sort based on merge_dependencies
+    if ($domainsToMerge.Count -gt 1) {
+        $domainsToMerge = Get-TopologicalOrder -DomainNames $domainsToMerge
+    }
+
     return $domainsToMerge
 }
 
@@ -207,9 +302,22 @@ if ($domainsToMerge.Count -eq 0) {
 Write-Host "[MERGE] Domains to merge (in order): $($domainsToMerge -join ' -> ')" -ForegroundColor Cyan
 
 $results = @{}
+$mergedOk = @{}
+$skipped = @{}
+
 foreach ($d in $domainsToMerge) {
+    # Check dependencies before merging
+    $depCheck = Test-DependenciesMerged -DomainName $d -MergedSoFar $mergedOk
+    if (-not $depCheck.ok) {
+        Write-Host "[MERGE] SKIPPING $d : unmet dependencies: $($depCheck.missing -join ', ')" -ForegroundColor Yellow
+        $results[$d] = $false
+        $skipped[$d] = $depCheck.missing
+        continue
+    }
+
     $success = Merge-Domain -DomainName $d
     $results[$d] = $success
+    if ($success) { $mergedOk[$d] = $true }
 
     if (-not $success -and -not $All) {
         Write-Host "[MERGE] Stopping due to failure on $d" -ForegroundColor Red
@@ -217,14 +325,51 @@ foreach ($d in $domainsToMerge) {
     }
 }
 
+# ── Write merge report ────────────────────────────────────────────────
+$domainDetails = @{}
+foreach ($d in $domainsToMerge) {
+    $detail = @{
+        merged = if ($results[$d]) { $true } else { $false }
+    }
+    if ($skipped.ContainsKey($d)) {
+        $detail["status"] = "skipped_deps"
+        $detail["unmet_dependencies"] = $skipped[$d]
+    } elseif ($results[$d]) {
+        $detail["status"] = "merged"
+    } else {
+        $detail["status"] = "failed"
+    }
+    $domainDetails[$d] = $detail
+}
+
+$mergeReport = @{
+    cycle          = $Cycle
+    timestamp      = (Get-Date -Format "o")
+    total          = $domainsToMerge.Count
+    merged_ok      = @($results.Values | Where-Object { $_ -eq $true }).Count
+    failed         = @($results.Values | Where-Object { $_ -eq $false }).Count
+    skipped_deps   = $skipped.Count
+    merge_order    = $domainsToMerge
+    domains        = $domainDetails
+}
+
+# Atomic write
+$reportTarget = Join-Path $statusDir "merge_report.json"
+$reportTmp = "$reportTarget.tmp"
+$mergeReport | ConvertTo-Json -Depth 5 | Set-Content $reportTmp -Encoding UTF8
+Move-Item -Path $reportTmp -Destination $reportTarget -Force
+Write-Host "[MERGE] Report written: $reportTarget" -ForegroundColor Gray
+
 # Summary
 Write-Host "`n[MERGE] ==========================================" -ForegroundColor Cyan
 Write-Host "[MERGE] Results:" -ForegroundColor Cyan
 $anySuccess = $false
-foreach ($d in $results.Keys) {
-    $icon = if ($results[$d]) { "OK" } else { "FAIL" }
-    $color = if ($results[$d]) { "Green" } else { "Red" }
-    Write-Host "  [$icon] $d" -ForegroundColor $color
+foreach ($d in $domainsToMerge) {
+    if (-not $results.ContainsKey($d)) { continue }
+    $icon = if ($results[$d]) { "OK" } elseif ($skipped.ContainsKey($d)) { "SKIP" } else { "FAIL" }
+    $color = if ($results[$d]) { "Green" } elseif ($skipped.ContainsKey($d)) { "Yellow" } else { "Red" }
+    $depNote = if ($skipped.ContainsKey($d)) { " (deps: $($skipped[$d] -join ', '))" } else { "" }
+    Write-Host "  [$icon] $d$depNote" -ForegroundColor $color
     if ($results[$d]) { $anySuccess = $true }
 }
 

@@ -57,7 +57,11 @@ function Write-ControlState {
         timestamp     = (Get-Date -Format "o")
         pid           = $PID
     }
-    $controlState | ConvertTo-Json -Depth 3 | Set-Content (Join-Path $statusDir "control_state.json") -Encoding UTF8
+    # Atomic write: temp file + rename to prevent race conditions
+    $targetFile = Join-Path $statusDir "control_state.json"
+    $tmpFile = "$targetFile.tmp"
+    $controlState | ConvertTo-Json -Depth 3 | Set-Content $tmpFile -Encoding UTF8
+    Move-Item -Path $tmpFile -Destination $targetFile -Force
 }
 
 function Show-WaveBanner {
@@ -461,6 +465,18 @@ function Invoke-DirectorDecisionRoute {
     }
 
     if ($dec -eq "ESCALATE") {
+        # ── Progressive escalation: check auto_diagnosis before blocking ──
+        $diagFile = Join-Path $statusDir "auto_diagnosis.json"
+        if (Test-Path $diagFile) {
+            $diag = Get-Content $diagFile -Raw | ConvertFrom-Json -ErrorAction SilentlyContinue
+            if ($diag -and $diag.summary -and $diag.summary.needs_human -eq $false) {
+                Write-Host "[CYCLE] Director: ESCALATE overridden --auto_diagnosis says needs_human=false" -ForegroundColor Green
+                Write-Host "[CYCLE]   Reason: $($diag.summary.reason) (transient=$($diag.summary.transient), permanent=$($diag.summary.permanent))" -ForegroundColor Gray
+                & powershell -NoProfile -File (Join-Path $scriptDir "notify.ps1") -Event "escalation_overridden" -Message "ESCALATE overridden by auto-diagnosis (all errors auto-resolvable)"
+                return "continue"
+            }
+        }
+
         Write-Host "[CYCLE] Director: ESCALATE --waiting for human input" -ForegroundColor Yellow
         $escalationScript = Join-Path $scriptDir "human_escalation.ps1"
 
@@ -670,6 +686,14 @@ while ($currentCycle -le ($Cycle + $MaxCycles - 1)) {
 
     # Feedback aggregation (between REVIEW and DIRECTOR, feeds both)
     Invoke-FeedbackAggregation -CycleNum $currentCycle
+    if (Test-Veto) { break }
+
+    # AUTO-DIAGNOSIS (between FEEDBACK and DIRECTOR — classifies errors, provides context)
+    $diagScript = Join-Path $scriptDir "auto_diagnosis.ps1"
+    if (Test-Path $diagScript) {
+        Write-Host "`n[CYCLE] Running auto-diagnosis..." -ForegroundColor Cyan
+        & powershell -NoProfile -ExecutionPolicy Bypass -File $diagScript -Cycle $currentCycle
+    }
     if (Test-Veto) { break }
 
     # WAVE 3.5: DIRECTOR

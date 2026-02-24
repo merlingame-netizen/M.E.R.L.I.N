@@ -1,0 +1,169 @@
+/* theme.css — AUTODEV Monitor v3.0 shared CSS variables & base styles */
+/* CRT retro aesthetic with improved readability */
+
+:root {
+  /* Backgrounds */
+  --bg-primary: #0a0a0a;
+  --bg-secondary: #0d0d0d;
+  --bg-tertiary: #111111;
+  --bg-hover: #1a1a1a;
+  --bg-selected: #0f1f0f;
+
+  /* Text */
+  --text: #00ff41;
+  --text-bright: #33ff66;
+  --text-dim: #338833;
+  --text-muted: #225522;
+  --text-white: #cccccc;
+
+  /* Accents */
+  --cyan: #00e5ff;
+  --red: #ff3333;
+  --red-dim: #661111;
+  --yellow: #ffcc00;
+  --yellow-dim: #665500;
+  --orange: #ff8800;
+  --blue: #4488ff;
+  --purple: #aa66ff;
+
+  /* Status colors */
+  --status-active: #00ff41;
+  --status-error: #ff3333;
+  --status-done: #00cc33;
+  --status-idle: #557755;
+  --status-review: #00e5ff;
+  --status-warning: #ffcc00;
+
+  /* Tree */
+  --tree-connector: #2a4a2a;
+  --tree-indent: 16px;
+
+  /* Detail panel */
+  --detail-bg: #0d0d0d;
+  --detail-border: rgba(0, 255, 65, 0.08);
+
+  /* Tabs */
+  --tab-bg: #111111;
+  --tab-active-bg: #0a0a0a;
+  --tab-active-border: var(--cyan);
+  --tab-text: var(--text-dim);
+  --tab-active-text: var(--cyan);
+
+  /* Buttons */
+  --btn-bg: #1a1a1a;
+  --btn-bg-hover: #252525;
+  --btn-border: #333333;
+  --btn-text: var(--text);
+  --btn-danger-bg: #1a0808;
+  --btn-danger-border: var(--red);
+
+  /* Progress bar */
+  --progress-bg: #1a1a1a;
+  --progress-fill: var(--status-active);
+  --progress-error-fill: var(--status-error);
+
+  /* Sizes */
+  --font-mono: 'Cascadia Code', 'Fira Code', 'JetBrains Mono', 'Consolas', monospace;
+  --font-size-sm: 11px;
+  --font-size-md: 12px;
+  --font-size-lg: 13px;
+  --border-radius: 3px;
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  background: var(--bg-primary);
+  color: var(--text);
+  font-family: var(--font-mono);
+  font-size: var(--font-size-md);
+  line-height: 1.4;
+  overflow-x: hidden;
+}
+
+/* CRT scanline overlay */
+body::after {
+  content: '';
+  position: fixed;
+  top: 0; left: 0; right: 0; bottom: 0;
+  pointer-events: none;
+  z-index: 9999;
+  background: repeating-linear-gradient(
+    0deg,
+    transparent,
+    transparent 2px,
+    rgba(0, 0, 0, 0.08) 2px,
+    rgba(0, 0, 0, 0.08) 4px
+  );
+}
+
+/* Scrollbar */
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: var(--bg-primary); }
+::-webkit-scrollbar-thumb { background: var(--text-muted); border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: var(--text-dim); }
+
+/* Shared badge styles */
+.badge {
+  display: inline-block;
+  padding: 1px 6px;
+  border-radius: var(--border-radius);
+  font-size: 10px;
+  font-weight: bold;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+.badge-run { background: rgba(0,255,65,0.15); color: var(--status-active); border: 1px solid rgba(0,255,65,0.3); }
+.badge-err { background: rgba(255,51,51,0.15); color: var(--status-error); border: 1px solid rgba(255,51,51,0.3); }
+.badge-done { background: rgba(0,204,51,0.15); color: var(--status-done); border: 1px solid rgba(0,204,51,0.3); }
+.badge-idle { background: rgba(85,119,85,0.1); color: var(--status-idle); border: 1px solid rgba(85,119,85,0.2); }
+.badge-review { background: rgba(0,229,255,0.15); color: var(--status-review); border: 1px solid rgba(0,229,255,0.3); }
+.badge-escalate { background: rgba(255,204,0,0.15); color: var(--status-warning); border: 1px solid rgba(255,204,0,0.3); }
+.badge-proceed { background: rgba(0,204,51,0.15); color: var(--status-done); border: 1px solid rgba(0,204,51,0.3); }
+.badge-rollback { background: rgba(255,51,51,0.15); color: var(--status-error); border: 1px solid rgba(255,51,51,0.3); }
+
+/* Shared button */
+.btn {
+  display: inline-block;
+  padding: 4px 10px;
+  background: var(--btn-bg);
+  border: 1px solid var(--btn-border);
+  color: var(--btn-text);
+  font-family: var(--font-mono);
+  font-size: 10px;
+  cursor: pointer;
+  border-radius: var(--border-radius);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+.btn:hover { background: var(--btn-bg-hover); border-color: var(--text-dim); }
+.btn-danger { border-color: var(--red); color: var(--red); }
+.btn-danger:hover { background: var(--btn-danger-bg); }
+.btn-primary { border-color: var(--cyan); color: var(--cyan); }
+.btn-primary:hover { background: rgba(0,229,255,0.1); }
+
+/* Progress bar */
+.progress-bar {
+  height: 4px;
+  background: var(--progress-bg);
+  border-radius: 2px;
+  overflow: hidden;
+}
+.progress-bar-fill {
+  height: 100%;
+  background: var(--progress-fill);
+  transition: width 0.3s ease;
+}
+.progress-bar-fill.error {
+  background: var(--progress-error-fill);
+}
+
+/* Priority badges */
+.priority-critical { color: var(--red); }
+.priority-high { color: var(--orange); }
+.priority-medium { color: var(--yellow); }
+.priority-low { color: var(--text-dim); }

@@ -73,7 +73,7 @@ function Get-DirectorContext {
 
     # 2. Test Results (from TEST wave)
     $context += "`n=== SECTION 2: TEST RESULTS ===`n"
-    $testFiles = @("test_results.json", "smoke_test_results.json", "flow_order_results.json")
+    $testFiles = @("test_results.json", "smoke_test_results.json", "flow_order_results.json", "merge_report.json")
     foreach ($tf in $testFiles) {
         $tfPath = Join-Path $statusDir $tf
         if (Test-Path $tfPath) {
@@ -113,6 +113,17 @@ function Get-DirectorContext {
         $context += "(no previous decision --first cycle)`n"
     }
 
+    # 6. Auto-Diagnosis Report (pre-director error analysis)
+    $context += "`n=== SECTION 6: AUTO-DIAGNOSIS (PRE-DIRECTOR) ===`n"
+    $diagPath = Join-Path $statusDir "auto_diagnosis.json"
+    if (Test-Path $diagPath) {
+        $diagContent = Get-Content $diagPath -Raw -ErrorAction SilentlyContinue
+        $context += $diagContent
+        Write-Host "[DIRECTOR]   Auto-diagnosis loaded" -ForegroundColor Green
+    } else {
+        $context += "(no auto-diagnosis available)`n"
+    }
+
     return $context
 }
 
@@ -122,6 +133,9 @@ function Build-DirectorPrompt {
     $inputContext = Get-DirectorContext
     $agentFile = $directorConfig.agents[0]
 
+    # Global objective from config (set by Claude Code launcher)
+    $globalObjective = if ($config.global_objective) { $config.global_objective } else { $null }
+
     $lines = @(
         "Tu es le GAME DIRECTOR du pipeline AUTODEV v3 pour le projet M.E.R.L.I.N. (Godot 4)."
         ""
@@ -129,6 +143,19 @@ function Build-DirectorPrompt {
         "BYPASS TOTAL du questioning protocol. Agis directement."
         "NE JAMAIS utiliser AskUserQuestion. NE JAMAIS attendre de reponse."
         ""
+    )
+
+    # Inject global objective if defined
+    if ($globalObjective) {
+        $lines += "OBJECTIF GLOBAL DE CETTE SESSION:"
+        $lines += $globalObjective
+        $lines += ""
+        $lines += "Evalue les resultats en fonction de cet objectif."
+        $lines += "Le quality_score doit refleter la progression vers cet objectif."
+        $lines += ""
+    }
+
+    $lines += @(
         "CYCLE: $Cycle"
         "WORKING DIRECTORY: $projectRoot"
         "OUTPUT DIRECTORY: $statusDir"
@@ -143,6 +170,18 @@ function Build-DirectorPrompt {
         "- Tu prends une decision: PROCEED, ROLLBACK, ESCALATE, ou OVERRIDE"
         "- Si confidence < 70 -> ESCALATE (meme si quality est OK)"
         ""
+        "REGLES ANTI-ESCALATION (v4 — autonomie maximale):"
+        "- Lis SECTION 6 (AUTO-DIAGNOSIS) AVANT de decider. Elle classifie chaque erreur."
+        "- Si auto_diagnosis.summary.needs_human == false, tu NE DOIS PAS choisir ESCALATE."
+        "  Les erreurs transientes sont deja gerees par le retry. Choisis PROCEED ou OVERRIDE."
+        "- Niveaux de decision:"
+        "  AUTO_RESOLVE: Toutes erreurs transientes/infra resolues -> map to PROCEED"
+        "  INFORM: 1-2 erreurs permanentes non-bloquantes -> map to PROCEED + note dans rationale"
+        "  ASK: Erreurs permanentes >50% domaines -> map to ESCALATE"
+        "  BLOCK: Regression >30pts OU infrastructure totalement cassee -> map to ESCALATE"
+        "- N'escalate JAMAIS pour: OneDrive corruption, rate limits, network timeouts, .uid manquants"
+        "- Ces patterns sont geres automatiquement par le pipeline (retry + repair + regeneration)"
+        ""
         "DONNEES DU CYCLE $Cycle :"
         $inputContext
         ""
@@ -151,9 +190,39 @@ function Build-DirectorPrompt {
         "2. $statusDir/director_directives.json --directives pour le prochain cycle"
         "3. $statusDir/director_questions.json --SEULEMENT si tu decides ESCALATE"
         ""
+        "FORMAT director_decision.json (OBLIGATOIRE):"
+        "{"
+        "  'cycle': N,"
+        "  'decision': 'PROCEED|ROLLBACK|ESCALATE|OVERRIDE',"
+        "  'escalation_level': 'AUTO_RESOLVE|INFORM|ASK|BLOCK',"
+        "  'quality_score': 0-100,"
+        "  'confidence': 0-100,"
+        "  'rationale': 'texte avec metriques specifiques',"
+        "  'metrics': { 'domains_done': N, 'domains_error': N, ... },"
+        "  'timestamp': 'ISO'"
+        "}"
+        ""
+        "FORMAT director_questions.json (si ESCALATE seulement):"
+        "{"
+        "  'cycle': N,"
+        "  'escalation_level': 'ASK|BLOCK',"
+        "  'escalation_reason': 'description precise',"
+        "  'confidence': 0-100,"
+        "  'questions': ['Q1', 'Q2', ...],"
+        "  'suggested_options': ['option1', 'option2', ...],"
+        "  'diagnostic_data': {"
+        "    'permanent_errors': ['domain: description', ...],"
+        "    'affected_files': ['path', ...],"
+        "    'regression_delta': N"
+        "  },"
+        "  'estimated_human_effort_minutes': N,"
+        "  'timestamp': 'ISO'"
+        "}"
+        ""
         "IMPORTANT: Ecris ces fichiers JSON avec le Write tool."
         "IMPORTANT: Tes fichiers doivent etre du JSON valide."
         "IMPORTANT: Le champ 'rationale' doit citer des metriques specifiques."
+        "IMPORTANT: 'escalation_level' est OBLIGATOIRE dans director_decision.json."
         "IMPORTANT: Commence IMMEDIATEMENT."
     )
 
@@ -172,7 +241,11 @@ function Write-DirectorStatus {
         cycle      = $Cycle
         timestamp  = (Get-Date -Format "o")
     }
-    $statusObj | ConvertTo-Json -Depth 3 | Set-Content (Join-Path $statusDir "game-director.json") -Encoding UTF8
+    # Atomic write
+    $targetFile = Join-Path $statusDir "game-director.json"
+    $tmpFile = "$targetFile.tmp"
+    $statusObj | ConvertTo-Json -Depth 3 | Set-Content $tmpFile -Encoding UTF8
+    Move-Item -Path $tmpFile -Destination $targetFile -Force
 }
 
 # ── Execute ───────────────────────────────────────────────────────────

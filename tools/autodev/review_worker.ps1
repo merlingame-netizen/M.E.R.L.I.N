@@ -138,6 +138,9 @@ function Build-ReviewPrompt {
     $tasksJson = ($domainConfig.tasks | ConvertTo-Json -Depth 3)
     $agentFiles = ($domainConfig.agents | ForEach-Object { "- $_" }) -join "`n"
 
+    # Global objective from config (set by Claude Code launcher)
+    $globalObjective = if ($config.global_objective) { $config.global_objective } else { $null }
+
     $lines = @(
         "Tu es un worker REVIEW autonome du systeme AUTODEV pour le projet M.E.R.L.I.N. (Godot 4)."
         ""
@@ -145,6 +148,18 @@ function Build-ReviewPrompt {
         "BYPASS TOTAL du questioning protocol. Agis directement."
         "NE JAMAIS utiliser AskUserQuestion. NE JAMAIS attendre de reponse."
         ""
+    )
+
+    # Inject global objective if defined
+    if ($globalObjective) {
+        $lines += "OBJECTIF GLOBAL DE CETTE SESSION:"
+        $lines += $globalObjective
+        $lines += ""
+        $lines += "Evalue les resultats en fonction de cet objectif."
+        $lines += ""
+    }
+
+    $lines += @(
         "IDENTITE: Reviewer $Domain -- $($domainConfig.description)"
         "WORKING DIRECTORY: $projectRoot"
         "OUTPUT DIRECTORY: $reviewsDir"
@@ -161,6 +176,11 @@ function Build-ReviewPrompt {
         "SCOPE D'ECRITURE (output uniquement dans):"
         $fileScope
         "ET: $reviewsDir"
+        ""
+        "DEGRADATION GRACIEUSE: Si un fichier d'input est manquant (stats_summary.json,"
+        "batch_autoplay_results.json, screenshots_report.json), SKIP cette partie."
+        "N'echoue PAS. Note simplement 'DATA_MISSING: {fichier}' dans ton rapport."
+        "Continue avec les donnees disponibles. Un rapport partiel vaut mieux qu'un echec."
         ""
         "DONNEES A ANALYSER:"
         $inputContext
@@ -198,7 +218,11 @@ function Write-Status {
         tasks_remaining = $Remaining
         timestamp       = (Get-Date -Format "o")
     }
-    $statusObj | ConvertTo-Json -Depth 3 | Set-Content (Join-Path $statusDir "$Domain.json") -Encoding UTF8
+    # Atomic write
+    $targetFile = Join-Path $statusDir "$Domain.json"
+    $tmpFile = "$targetFile.tmp"
+    $statusObj | ConvertTo-Json -Depth 3 | Set-Content $tmpFile -Encoding UTF8
+    Move-Item -Path $tmpFile -Destination $targetFile -Force
 }
 
 # ── Execute ───────────────────────────────────────────────────────────

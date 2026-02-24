@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src {{cspSource}} 'unsafe-inline'; script-src {{cspSource}} 'unsafe-inline'; font-src {{cspSource}};">
+  <link rel="stylesheet" href="{{themeUri}}">
+  <link rel="stylesheet" href="{{styleUri}}">
+  <title>AUTODEV Monitor</title>
+</head>
+<body>
+  <div class="panel-header">
+    <span class="panel-title">AUTODEV MONITOR</span>
+    <span class="panel-info">
+      <span id="h-pipeline">C- W-</span>
+      <span id="h-state" class="badge badge-idle">--</span>
+      <span id="h-clock" class="clock"></span>
+    </span>
+    <button class="btn btn-primary" onclick="postMessage({command:'refresh'})" title="Refresh">&#8635;</button>
+  </div>
+
+  <div class="layout">
+    <!-- Column 1: Pipeline Tree -->
+    <div class="col-tree" id="col-tree">
+      <div class="tree-section">
+        <div class="tree-header">DIRECTOR</div>
+        <div id="tree-director"><div style="color:var(--text-muted);font-size:10px;padding:4px 0">Loading...</div></div>
+      </div>
+      <div class="tree-section">
+        <div class="tree-header">WORKERS <span id="worker-count" class="count"></span></div>
+        <div id="tree-workers"><div style="color:var(--text-muted);font-size:10px;padding:4px 0">Loading...</div></div>
+      </div>
+      <div class="tree-section">
+        <div class="tree-header">REVIEWS <span id="review-count" class="count"></span></div>
+        <div id="tree-reviews"><div style="color:var(--text-muted);font-size:10px;padding:4px 0">Loading...</div></div>
+      </div>
+      <div class="tree-section collapsed" id="agents-section">
+        <div class="tree-header collapsible" onclick="toggleSection('agents-section')">AGENTS <span id="agent-count" class="count"></span></div>
+        <div id="tree-agents" class="section-body"></div>
+      </div>
+    </div>
+
+    <!-- Column 2: Detail Panel -->
+    <div class="col-detail" id="col-detail">
+      <div class="detail-header" id="detail-header">
+        <span id="detail-title">Select a worker</span>
+        <div class="detail-tabs" id="detail-tabs" style="display:none">
+          <button class="dtab active" data-tab="task" onclick="switchTab('task')">TACHE</button>
+          <button class="dtab" data-tab="logs" onclick="switchTab('logs')">LOGS</button>
+          <button class="dtab" data-tab="files" onclick="switchTab('files')">FICHIERS</button>
+          <button class="dtab" data-tab="metrics" onclick="switchTab('metrics')">METRIQUES</button>
+        </div>
+      </div>
+      <div class="detail-body" id="detail-body">
+        <div id="pane-task" class="detail-pane active"></div>
+        <div id="pane-logs" class="detail-pane" style="display:none"></div>
+        <div id="pane-files" class="detail-pane" style="display:none"></div>
+        <div id="pane-metrics" class="detail-pane" style="display:none"></div>
+        <div id="pane-placeholder" class="detail-pane">
+          <div class="placeholder-msg">Cliquer sur un worker dans l'arbre pour voir les details</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Column 3: Director + Health -->
+    <div class="col-status" id="col-status">
+      <div class="status-section" id="director-panel">
+        <div class="status-title">DIRECTOR</div>
+        <div id="director-content"><div style="color:var(--text-muted);font-size:10px">Loading...</div></div>
+      </div>
+      <div class="status-section" id="escalation-panel" style="display:none">
+        <div class="status-title">ESCALATION</div>
+        <div id="escalation-content"></div>
+      </div>
+      <div class="status-section" id="health-panel">
+        <div class="status-title">SANTE</div>
+        <div id="health-content"><div style="color:var(--text-muted);font-size:10px">Loading...</div></div>
+      </div>
+    </div>
+  </div>
+
+  <script src="{{utilsUri}}"></script>
+  <script src="{{scriptUri}}"></script>
+</body>
+</html>

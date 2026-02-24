@@ -1,14 +1,17 @@
 {
   "name": "autodev-monitor",
   "displayName": "AUTODEV Monitor",
-  "description": "Real-time terminal-style dashboard for AUTODEV pipeline monitoring",
-  "version": "2.0.0",
+  "description": "Real-time hierarchical dashboard for AUTODEV pipeline monitoring — file-watch driven, task-enriched, with action buttons",
+  "version": "4.0.0",
   "publisher": "merlin-local",
   "engines": {
     "vscode": "^1.80.0"
   },
   "categories": ["Other"],
-  "activationEvents": [],
+  "activationEvents": [
+    "onView:autodev-monitor.sidebarView",
+    "workspaceContains:tools/autodev/status/control_state.json"
+  ],
   "main": "./extension.js",
   "contributes": {
     "viewsContainers": {
@@ -33,6 +36,26 @@
       {
         "command": "autodev-monitor.open",
         "title": "AUTODEV: Open Full Dashboard (Panel)"
+      },
+      {
+        "command": "autodev-monitor.refresh",
+        "title": "AUTODEV: Refresh Dashboard"
+      },
+      {
+        "command": "autodev-monitor.startPipeline",
+        "title": "AUTODEV: Start Pipeline"
+      },
+      {
+        "command": "autodev-monitor.stopPipeline",
+        "title": "AUTODEV: Stop Pipeline"
+      },
+      {
+        "command": "autodev-monitor.openLogs",
+        "title": "AUTODEV: Open Logs Folder"
+      },
+      {
+        "command": "autodev-monitor.openConfig",
+        "title": "AUTODEV: Open Configuration"
       }
     ],
     "keybindings": [
@@ -40,6 +63,11 @@
         "command": "autodev-monitor.open",
         "key": "ctrl+alt+m",
         "mac": "cmd+alt+m"
+      },
+      {
+        "command": "autodev-monitor.refresh",
+        "key": "ctrl+alt+r",
+        "mac": "cmd+alt+r"
       }
     ]
   }

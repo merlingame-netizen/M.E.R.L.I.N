@@ -14,6 +14,7 @@ param(
     [string]$Domains = "",
     [int]$MaxCycles = 0,
     [switch]$DryRun,
+    [string]$Objective = "",
     [string]$Decision = "",
     [string]$Details = ""
 )
@@ -34,11 +35,15 @@ function Write-ControlState {
     param([string]$State, [hashtable]$Extra = @{})
     $obj = @{
         state       = $State
+        cycle       = 0
+        wave        = "-"
+        detail      = ""
         timestamp   = (Get-Date -Format "o")
         wave_mode   = $Wave.IsPresent
         domains     = $Domains
         max_cycles  = $MaxCycles
         dry_run     = $DryRun.IsPresent
+        objective   = $Objective
     }
     foreach ($k in $Extra.Keys) { $obj[$k] = $Extra[$k] }
     $obj | ConvertTo-Json -Depth 3 | Set-Content $controlFile -Encoding UTF8
@@ -64,6 +69,17 @@ switch ($Action) {
         if (Test-Path $vetoFile) {
             Remove-Item $vetoFile -Force
             Write-Host "[CONTROL] Removed stale VETO file" -ForegroundColor Gray
+        }
+
+        # Inject global objective into config if provided
+        if ($Objective) {
+            $configPath = Join-Path $scriptDir "config/work_units_v2.json"
+            if (Test-Path $configPath) {
+                $configObj = Get-Content $configPath -Raw | ConvertFrom-Json
+                $configObj | Add-Member -NotePropertyName "global_objective" -NotePropertyValue $Objective -Force
+                $configObj | ConvertTo-Json -Depth 10 | Set-Content $configPath -Encoding UTF8
+                Write-Host "[CONTROL] Global objective set: $Objective" -ForegroundColor Cyan
+            }
         }
 
         # Build orchestrator arguments
@@ -108,6 +124,17 @@ switch ($Action) {
 
     "Stop" {
         Write-Host "[CONTROL] Stopping AUTODEV..." -ForegroundColor Yellow
+
+        # Clear global objective from config
+        $configPath = Join-Path $scriptDir "config/work_units_v2.json"
+        if (Test-Path $configPath) {
+            $configObj = Get-Content $configPath -Raw | ConvertFrom-Json
+            if ($configObj.global_objective) {
+                $configObj.PSObject.Properties.Remove("global_objective")
+                $configObj | ConvertTo-Json -Depth 10 | Set-Content $configPath -Encoding UTF8
+                Write-Host "[CONTROL] Global objective cleared" -ForegroundColor Gray
+            }
+        }
 
         # Create VETO file (universal stop signal)
         "VETO from conversation control at $(Get-Date -Format 'o')" | Set-Content $vetoFile -Encoding UTF8
@@ -203,6 +230,9 @@ switch ($Action) {
         Write-Host "  Wave Mode:  $($state.wave_mode)" -ForegroundColor Gray
         Write-Host "  Domains:    $($state.domains)" -ForegroundColor Gray
         Write-Host "  Max Cycles: $($state.max_cycles)" -ForegroundColor Gray
+        if ($state.objective) {
+            Write-Host "  Objective:  $($state.objective)" -ForegroundColor Cyan
+        }
         Write-Host "  Started:    $($state.started)" -ForegroundColor Gray
 
         # Show health report if available

@@ -1,0 +1,42 @@
+{
+  "name": "autodev-monitor-v4",
+  "displayName": "AUTODEV Monitor v4",
+  "description": "Real-time sidebar dashboard for AUTODEV subagent pipeline",
+  "version": "4.0.0",
+  "publisher": "merlin-local",
+  "engines": {
+    "vscode": "^1.80.0"
+  },
+  "categories": ["Other"],
+  "activationEvents": [
+    "onView:autodev-v4.sidebarView",
+    "workspaceContains:tools/autodev/status/session.json"
+  ],
+  "main": "./extension.js",
+  "contributes": {
+    "viewsContainers": {
+      "activitybar": [
+        {
+          "id": "autodev-v4-sidebar",
+          "title": "AUTODEV",
+          "icon": "media/autodev-icon.svg"
+        }
+      ]
+    },
+    "views": {
+      "autodev-v4-sidebar": [
+        {
+          "type": "webview",
+          "id": "autodev-v4.sidebarView",
+          "name": "Dashboard"
+        }
+      ]
+    },
+    "commands": [
+      {
+        "command": "autodev-v4.refresh",
+        "title": "AUTODEV v4: Refresh"
+      }
+    ]
+  }
+}

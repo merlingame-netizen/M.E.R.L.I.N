@@ -101,7 +101,7 @@ try {
             "--path", $projectRoot,
             "--headless",
             "--quit-after", "600",
-            "res://scenes/TestAutoPlay.tscn"
+            "res://scenes/TestLLMFullRun.tscn"
         )
 
         $proc = Start-Process -FilePath $godotExe -ArgumentList $godotArgs `

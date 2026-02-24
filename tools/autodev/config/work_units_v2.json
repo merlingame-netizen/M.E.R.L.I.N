@@ -1,489 +1,535 @@
-{
-  "version": "2.0.0",
-  "project": "merlin",
-  "max_workers": 10,
-  "cycle_tick_seconds": 60,
-  "veto_delay_seconds": 120,
-  "worktree_base": "C:/Users/PGNK2128/Godot-MCP-worktrees",
-  "validate_command": ".\\validate.bat",
-  "godot_exe": "C:/Users/PGNK2128/Godot/Godot_v4.5.1-stable_win64_console.exe",
-  "claude_exe": "C:/Users/PGNK2128/.local/bin/claude.exe",
-  "claude_model": "sonnet",
-  "claude_allowed_tools": "Edit,Write,Bash,Read,Glob,Grep,Task,TodoWrite",
-  "claude_review_tools": "Read,Glob,Grep,Write,TodoWrite",
-  "claude_permission_mode": "bypassPermissions",
+﻿{
+    "version":  "2.0.0",
+    "project":  "merlin",
+    "max_workers":  10,
+    "cycle_tick_seconds":  60,
+    "veto_delay_seconds":  120,
+    "worktree_base":  "C:/Users/PGNK2128/Godot-MCP-worktrees",
+    "validate_command":  ".\\validate.bat",
+    "godot_exe":  "C:/Users/PGNK2128/Godot/Godot_v4.5.1-stable_win64_console.exe",
+    "claude_exe":  "C:/Users/PGNK2128/.local/bin/claude.exe",
+    "claude_model":  "sonnet",
+    "claude_allowed_tools":  "Edit,Write,Bash,Read,Glob,Grep,Task,TodoWrite",
+    "claude_review_tools":  "Read,Glob,Grep,Write,TodoWrite",
+    "claude_permission_mode":  "bypassPermissions",
+    "wave_mode":  true,
+    "director_model":  "sonnet",
+    "director_tools":  "Read,Glob,Grep,Write,TodoWrite",
+    "escalation_timeout_hours":  24,
+    "cross_inspection":  true,
+    "tag_on_merge":  true,
+    "stats_frequency":  2,
+    "screenshot_frequency":  1,
+    "max_fix_attempts":  2,
+    "screenshot_resolution":  "800x600",
+    "screenshot_settle_seconds":  3,
+    "stats_runs_per_cycle":  3,
+    "merge_order":  [
+                        "gameplay",
+                        "llm-lora",
+                        "ui-ux",
+                        "world-structure",
+                        "visual-polish",
+                        "ui-components",
+                        "scene-scripts",
+                        "autoloads-visual"
+                    ],
+    "review_order":  [
+                         "testing",
+                         "game-design",
+                         "lore"
+                     ],
+    "screenshot_scenes":  [
+                              "res://scenes/IntroCeltOS.tscn",
+                              "res://scenes/MenuPrincipal.tscn",
+                              "res://scenes/IntroPersonalityQuiz.tscn",
+                              "res://scenes/SceneRencontreMerlin.tscn",
+                              "res://scenes/SelectionSauvegarde.tscn",
+                              "res://scenes/HubAntre.tscn",
+                              "res://scenes/TransitionBiome.tscn",
+                              "res://scenes/MerlinGame.tscn",
+                              "res://scenes/Calendar.tscn",
+                              "res://scenes/Collection.tscn",
+                              "res://scenes/ArbreDeVie.tscn",
+                              "res://scenes/MapMonde.tscn",
+                              "res://scenes/MenuOptions.tscn",
+                              "res://scenes/PixelArtShowcase.tscn"
+                          ],
+    "domains":  [
+                    {
+                        "name":  "ui-ux",
+                        "branch":  "autodev/ui-ux",
+                        "type":  "build",
+                        "description":  "INFRA: validate.bat integration + test_results.json aggregator",
+                        "merge_dependencies":  [
 
-  "wave_mode": true,
-  "director_model": "sonnet",
-  "director_tools": "Read,Glob,Grep,Write,TodoWrite",
-  "escalation_timeout_hours": 24,
-  "cross_inspection": true,
-  "tag_on_merge": true,
-  "stats_frequency": 2,
-  "screenshot_frequency": 1,
-  "max_fix_attempts": 2,
-  "screenshot_resolution": "800x600",
-  "screenshot_settle_seconds": 3,
-  "stats_runs_per_cycle": 3,
+                                               ],
+                        "file_scope":  [
+                                           "tools/autodev/generate_test_results.ps1",
+                                           "tools/autodev/run_validate_step0.ps1",
+                                           "tools/validate_editor_parse.ps1",
+                                           "tools/validate_flow_order.ps1",
+                                           "tools/smoke_test_scenes.ps1"
+                                       ],
+                        "tasks":  [
+                                      {
+                                          "id":  "INFRA.1",
+                                          "title":  "Create test_results.json aggregator",
+                                          "description":  "Create tools/autodev/generate_test_results.ps1 that: 1) runs validate.bat Step 0 (Editor Parse Check), 2) parses output for errors/warnings, 3) writes tools/autodev/status/test_results.json with {total_errors, total_warnings, files_checked, errors:[], warnings:[], timestamp}. Must work in ConstrainedLanguage mode (no [math]::, no .Substring(), use -like/-replace operators).",
+                                          "priority":  "critical"
+                                      },
+                                      {
+                                          "id":  "INFRA.2",
+                                          "title":  "Integrate validate.bat Step 0 into cycle completion",
+                                          "description":  "Modify the build worker completion flow: after Claude CLI finishes, run validate.bat Step 0 automatically. If errors found, set worker status to \u0027error\u0027 instead of \u0027done\u0027. Write results to test_results.json. Workers CANNOT be \u0027done\u0027 if validate fails.",
+                                          "priority":  "critical"
+                                      }
+                                  ],
+                        "agents":  [
+                                       ".claude/agents/ui_impl.md",
+                                       ".claude/agents/ux_research.md",
+                                       ".claude/agents/motion_designer.md"
+                                   ],
+                        "review_agents":  [
+                                              ".claude/agents/debug_qa.md",
+                                              ".claude/agents/optimizer.md"
+                                          ]
+                    },
+                    {
+                        "name":  "gameplay",
+                        "branch":  "autodev/gameplay",
+                        "type":  "build",
+                        "description":  "INFRA: Install GUT framework + unit tests MerlinStore",
+                        "merge_dependencies":  [
 
-  "merge_order": ["gameplay", "llm-lora", "ui-ux", "world-structure", "visual-polish", "ui-components", "scene-scripts", "autoloads-visual"],
-  "review_order": ["testing", "game-design", "lore"],
+                                               ],
+                        "file_scope":  [
+                                           "scripts/merlin/merlin_store.gd",
+                                           "scripts/merlin/merlin_card_system.gd",
+                                           "scripts/merlin/merlin_effect_engine.gd",
+                                           "scripts/test/",
+                                           "addons/gut/"
+                                       ],
+                        "exclusive_files":  [
+                                                "scripts/merlin/merlin_store.gd"
+                                            ],
+                        "tasks":  [
+                                      {
+                                          "id":  "INFRA.3",
+                                          "title":  "Install GUT testing framework",
+                                          "description":  "Install GUT (Godot Unit Testing) v9.x in addons/gut/. Download from GitHub (bitwes/Gut), copy to addons/gut/, enable in project.godot. Verify it works: create a minimal test script scripts/test/test_example.gd that extends GutTest with one test_pass() method. Run with: godot --headless -s addons/gut/gut_cmdln.gd -gdir=res://scripts/test/ -gexit. MUST compile without errors in Godot 4.5.",
+                                          "priority":  "critical"
+                                      },
+                                      {
+                                          "id":  "INFRA.4",
+                                          "title":  "Unit tests for MerlinStore (3 tests minimum)",
+                                          "description":  "Write scripts/test/test_merlin_store.gd extending GutTest. Test: 1) initial state (3 aspects at equilibre, souffle=3, karma=0), 2) apply_effect SHIFT_ASPECT changes aspect correctly and clamps, 3) game_over detection when 2+ aspects at extreme. Read merlin_store.gd first. Use gut_assert methods (assert_eq, assert_true, assert_between). Tests must PASS.",
+                                          "priority":  "critical"
+                                      },
+                                      {
+                                          "id":  "INFRA.5",
+                                          "title":  "Unit tests for CardSystem + EffectEngine (2 tests minimum)",
+                                          "description":  "Write scripts/test/test_card_system.gd and scripts/test/test_effect_engine.gd extending GutTest. CardSystem: test card generation returns 3 options, test fallback pool works. EffectEngine: test SHIFT_ASPECT effect, test SOUFFLE effect. Read the source files first. Tests must PASS.",
+                                          "priority":  "critical"
+                                      }
+                                  ],
+                        "agents":  [
+                                       ".claude/agents/game_designer.md",
+                                       ".claude/agents/meta_progression_designer.md",
+                                       ".claude/agents/narrative_writer.md"
+                                   ],
+                        "review_agents":  [
+                                              ".claude/agents/debug_qa.md",
+                                              ".claude/agents/optimizer.md",
+                                              ".claude/agents/lead_godot.md"
+                                          ]
+                    },
+                    {
+                        "name":  "llm-lora",
+                        "branch":  "autodev/llm-lora",
+                        "type":  "build",
+                        "description":  "INFRA: stats_summary aggregator + LLM adapter smoke tests",
+                        "merge_dependencies":  [
+                                                   "gameplay"
+                                               ],
+                        "file_scope":  [
+                                           "tools/autodev/generate_stats_summary.ps1",
+                                           "tools/autodev/autoplay_runner.ps1",
+                                           "addons/merlin_ai/ollama_backend.gd",
+                                           "scripts/merlin/merlin_llm_adapter.gd"
+                                       ],
+                        "tasks":  [
+                                      {
+                                          "id":  "INFRA.6",
+                                          "title":  "Create stats_summary.json aggregator",
+                                          "description":  "Create tools/autodev/generate_stats_summary.ps1 (if missing or incomplete): 1) reads batch_autoplay_results.json from stats_runner output, 2) computes survival_rate, avg_turns, aspect distribution, ending distribution, 3) writes tools/autodev/status/stats_summary.json with {total_runs, survival_rate, avg_turns, aspect_distribution:{}, ending_distribution:{}, timestamp}. Must work in ConstrainedLanguage mode (no [math]::, no .Substring(), use -like/-replace and integer arithmetic for rounding).",
+                                          "priority":  "critical"
+                                      },
+                                      {
+                                          "id":  "INFRA.7",
+                                          "title":  "LLM adapter connection smoke test",
+                                          "description":  "Create scripts/test/test_llm_smoke.gd: a minimal GDScript that 1) instantiates OllamaBackend, 2) sends a trivial prompt (\u0027Say hello\u0027), 3) verifies response is non-empty string, 4) checks response time \u003c 30s. Run via: godot --headless -s scripts/test/test_llm_smoke.gd. Print PASS/FAIL to stdout. This validates the LLM pipeline works without full game context.",
+                                          "priority":  "critical"
+                                      }
+                                  ],
+                        "agents":  [
+                                       ".claude/agents/llm_expert.md",
+                                       ".claude/agents/lora_gameplay_translator.md",
+                                       ".claude/agents/lora_data_curator.md",
+                                       ".claude/agents/lora_training_architect.md",
+                                       ".claude/agents/lora_evaluator.md",
+                                       ".claude/agents/prompt_curator.md"
+                                   ],
+                        "review_agents":  [
+                                              ".claude/agents/debug_qa.md",
+                                              ".claude/agents/lead_godot.md"
+                                          ]
+                    },
+                    {
+                        "name":  "world-structure",
+                        "branch":  "autodev/world",
+                        "type":  "build",
+                        "description":  "INFRA: save system tests + autoplay scaffold",
+                        "merge_dependencies":  [
+                                                   "gameplay"
+                                               ],
+                        "file_scope":  [
+                                           "scripts/merlin/merlin_save_system.gd",
+                                           "scripts/test/",
+                                           "tools/autodev/autoplay_runner.ps1"
+                                       ],
+                        "tasks":  [
+                                      {
+                                          "id":  "INFRA.8",
+                                          "title":  "Unit tests for SaveSystem (3 tests minimum)",
+                                          "description":  "Write scripts/test/test_save_system.gd extending GutTest. Test: 1) save creates valid JSON file in user://, 2) load restores exact state (3 aspects, souffle, karma, bestiole), 3) slot selection (3 slots, overwrite works). Read merlin_save_system.gd first. Use gut_assert methods. Tests must PASS with GUT framework (depends on INFRA.3).",
+                                          "priority":  "critical"
+                                      },
+                                      {
+                                          "id":  "INFRA.9",
+                                          "title":  "Autoplay scaffold for stats collection",
+                                          "description":  "Create tools/autodev/autoplay_runner.ps1: launches Godot headless with a test scene that plays N automated games (random choices). Collects per-run stats: {turns, ending, aspects_final, souffle_final, duration_ms}. Writes batch_autoplay_results.json. Start with N=5 for testing. Must handle Godot timeout (kill after 60s per run). ConstrainedLanguage safe.",
+                                          "priority":  "critical"
+                                      }
+                                  ],
+                        "agents":  [
+                                       ".claude/agents/game_designer.md",
+                                       ".claude/agents/lore_writer.md",
+                                       ".claude/agents/merlin_guardian.md"
+                                   ],
+                        "review_agents":  [
+                                              ".claude/agents/debug_qa.md",
+                                              ".claude/agents/lead_godot.md"
+                                          ]
+                    },
+                    {
+                        "name":  "visual-polish",
+                        "branch":  "autodev/visual",
+                        "type":  "build",
+                        "description":  "INFRA: screenshot runner fixes + validate.bat automation",
+                        "merge_dependencies":  [
 
-  "screenshot_scenes": [
-    "res://scenes/IntroCeltOS.tscn",
-    "res://scenes/MenuPrincipal.tscn",
-    "res://scenes/IntroPersonalityQuiz.tscn",
-    "res://scenes/SceneRencontreMerlin.tscn",
-    "res://scenes/SelectionSauvegarde.tscn",
-    "res://scenes/HubAntre.tscn",
-    "res://scenes/TransitionBiome.tscn",
-    "res://scenes/MerlinGame.tscn",
-    "res://scenes/Calendar.tscn",
-    "res://scenes/Collection.tscn",
-    "res://scenes/ArbreDeVie.tscn",
-    "res://scenes/MapMonde.tscn",
-    "res://scenes/MenuOptions.tscn",
-    "res://scenes/PixelArtShowcase.tscn"
-  ],
+                                               ],
+                        "file_scope":  [
+                                           "tools/autodev/screenshot_capture.ps1",
+                                           "tools/autodev/stats_runner.ps1",
+                                           "tools/validate_editor_parse.ps1",
+                                           "tools/validate_affected_scenes.ps1"
+                                       ],
+                        "tasks":  [
+                                      {
+                                          "id":  "INFRA.10",
+                                          "title":  "Fix screenshot_capture.ps1 for headless reliability",
+                                          "description":  "Review and fix tools/autodev/screenshot_capture.ps1: 1) ensure Godot --headless screenshots work without display server, 2) add timeout per scene (kill after screenshot_settle_seconds + 10s), 3) generate screenshots_report.json with {scene, status, file_path, error} per scene. All code must be ConstrainedLanguage safe (no [math]::, no .Substring(), no [System.IO.Path]::).",
+                                          "priority":  "critical"
+                                      },
+                                      {
+                                          "id":  "INFRA.11",
+                                          "title":  "Validate.bat Step 0 wrapper for CI",
+                                          "description":  "Create tools/autodev/run_validate_step0.ps1: a thin wrapper that 1) runs validate_editor_parse.ps1, 2) captures stdout/stderr, 3) parses for ERROR/WARNING lines, 4) writes structured JSON to tools/autodev/status/validate_step0_results.json with {exit_code, errors:[], warnings:[], files_checked, timestamp}. This enables the pipeline to programmatically check validation results. ConstrainedLanguage safe.",
+                                          "priority":  "critical"
+                                      }
+                                  ],
+                        "agents":  [
+                                       ".claude/agents/art_direction.md",
+                                       ".claude/agents/shader_specialist.md"
+                                   ],
+                        "review_agents":  [
+                                              ".claude/agents/debug_qa.md",
+                                              ".claude/agents/ui_impl.md"
+                                          ]
+                    },
+                    {
+                        "name":  "ui-components",
+                        "branch":  "autodev/ui-comp",
+                        "type":  "build",
+                        "description":  "INFRA: UI component validation + consistency audit (scripts/ui/)",
+                        "merge_dependencies":  [
+                                                   "autoloads-visual"
+                                               ],
+                        "file_scope":  [
+                                           "scripts/ui/merlin_bubble.gd",
+                                           "scripts/ui/hub_hotspot.gd",
+                                           "scripts/ui/map_ui.gd",
+                                           "scripts/ui/biome_radial.gd",
+                                           "scripts/ui/merlin_game_ui.gd",
+                                           "scripts/ui/merlin_game_controller.gd",
+                                           "scripts/ui/arbre_de_vie_ui.gd",
+                                           "scripts/ui/bestiole_wheel_system.gd",
+                                           "scripts/ui/llm_source_badge.gd",
+                                           "scripts/ui/llm_warmup_overlay.gd",
+                                           "scripts/ui/menu_return_button.gd",
+                                           "scripts/ui/merlin_reward_badge.gd",
+                                           "scripts/ui/screen_dither_layer.gd"
+                                       ],
+                        "tasks":  [
+                                      {
+                                          "id":  "INFRA.12",
+                                          "title":  "UI component instantiation test",
+                                          "description":  "Create scripts/test/test_ui_components.gd: headless script that instantiates each UI component from scripts/ui/ via load()+new(), checks for null, checks no errors on _ready(). Print PASS/FAIL per component. Run via: godot --headless -s scripts/test/test_ui_components.gd. Must handle missing autoloads gracefully (try/catch pattern).",
+                                          "priority":  "critical"
+                                      },
+                                      {
+                                          "id":  "INFRA.13",
+                                          "title":  "UI palette consistency audit",
+                                          "description":  "Create scripts/test/test_ui_consistency.gd: scan all scripts/ui/*.gd files for hardcoded Color() literals (not from MerlinVisual.PALETTE) and hardcoded font sizes (not from MerlinVisual.get_font()). Report violations. This enforces the UI/UX Bible rule: ALL colors from PALETTE, ALL fonts from get_font().",
+                                          "priority":  "high"
+                                      }
+                                  ],
+                        "agents":  [
+                                       ".claude/agents/ui_impl.md",
+                                       ".claude/agents/ux_research.md",
+                                       ".claude/agents/motion_designer.md",
+                                       ".claude/agents/accessibility.md"
+                                   ],
+                        "review_agents":  [
+                                              ".claude/agents/debug_qa.md",
+                                              ".claude/agents/lead_godot.md"
+                                          ]
+                    },
+                    {
+                        "name":  "scene-scripts",
+                        "branch":  "autodev/scenes",
+                        "type":  "build",
+                        "description":  "INFRA: Scene loading tests + signal connection validation",
+                        "merge_dependencies":  [
+                                                   "gameplay",
+                                                   "ui-components"
+                                               ],
+                        "file_scope":  [
+                                           "scripts/HubAntre.gd",
+                                           "scripts/IntroCeltOS.gd",
+                                           "scripts/IntroPersonalityQuiz.gd",
+                                           "scripts/MenuPrincipalMerlin.gd",
+                                           "scripts/SceneRencontreMerlin.gd",
+                                           "scripts/TransitionBiome.gd",
+                                           "scripts/Calendar.gd",
+                                           "scripts/Collection.gd",
+                                           "scripts/merlin_backdrop.gd",
+                                           "scripts/llm_status_bar.gd",
+                                           "scripts/minigames/minigame_base.gd",
+                                           "scenes/"
+                                       ],
+                        "tasks":  [
+                                      {
+                                          "id":  "INFRA.14",
+                                          "title":  "Scene headless loading test",
+                                          "description":  "Create scripts/test/test_scene_loading.gd: headless script that loads each scene via PackedScene, instantiates it, and checks for errors. Tests all 14 scenes in screenshot_scenes list. Print PASS/FAIL per scene. Run via: godot --headless -s scripts/test/test_scene_loading.gd. Must handle scenes that require autoloads by checking if singletons exist first.",
+                                          "priority":  "critical"
+                                      },
+                                      {
+                                          "id":  "INFRA.15",
+                                          "title":  "Signal connection validator",
+                                          "description":  "Create scripts/test/test_signal_connections.gd: parse all .tscn files in scenes/, extract [connection] entries, verify each method exists in the attached script. Report broken connections. Run via: godot --headless -s scripts/test/test_signal_connections.gd. This catches signal rot (renamed methods leaving broken .tscn connections).",
+                                          "priority":  "high"
+                                      }
+                                  ],
+                        "agents":  [
+                                       ".claude/agents/lead_godot.md",
+                                       ".claude/agents/godot_expert.md",
+                                       ".claude/agents/narrative_writer.md"
+                                   ],
+                        "review_agents":  [
+                                              ".claude/agents/debug_qa.md",
+                                              ".claude/agents/game_designer.md"
+                                          ]
+                    },
+                    {
+                        "name":  "autoloads-visual",
+                        "branch":  "autodev/autoloads",
+                        "type":  "build",
+                        "description":  "INFRA: Visual system validation + shader compilation tests",
+                        "merge_dependencies":  [
 
-  "domains": [
-    {
-      "name": "ui-ux",
-      "branch": "autodev/ui-ux",
-      "type": "build",
-      "description": "INFRA: validate.bat integration + test_results.json aggregator",
-      "file_scope": [
-        "tools/autodev/",
-        "tools/validate_editor_parse.ps1",
-        "tools/validate_flow_order.ps1",
-        "tools/smoke_test_scenes.ps1"
-      ],
-      "tasks": [
-        {
-          "id": "INFRA.1",
-          "title": "Create test_results.json aggregator",
-          "description": "Create tools/autodev/generate_test_results.ps1 that: 1) runs validate.bat Step 0 (Editor Parse Check), 2) parses output for errors/warnings, 3) writes tools/autodev/status/test_results.json with {total_errors, total_warnings, files_checked, errors:[], warnings:[], timestamp}. Must work in ConstrainedLanguage mode (no [math]::, no .Substring(), use -like/-replace operators).",
-          "priority": "critical"
-        },
-        {
-          "id": "INFRA.2",
-          "title": "Integrate validate.bat Step 0 into cycle completion",
-          "description": "Modify the build worker completion flow: after Claude CLI finishes, run validate.bat Step 0 automatically. If errors found, set worker status to 'error' instead of 'done'. Write results to test_results.json. Workers CANNOT be 'done' if validate fails.",
-          "priority": "critical"
-        }
-      ],
-      "agents": [
-        ".claude/agents/ui_impl.md",
-        ".claude/agents/ux_research.md",
-        ".claude/agents/motion_designer.md"
-      ],
-      "review_agents": [
-        ".claude/agents/debug_qa.md",
-        ".claude/agents/optimizer.md"
-      ]
-    },
-    {
-      "name": "gameplay",
-      "branch": "autodev/gameplay",
-      "type": "build",
-      "description": "INFRA: Install GUT framework + unit tests MerlinStore",
-      "file_scope": [
-        "scripts/merlin/merlin_store.gd",
-        "scripts/merlin/merlin_card_system.gd",
-        "scripts/merlin/merlin_effect_engine.gd",
-        "scripts/test/",
-        "addons/gut/"
-      ],
-      "exclusive_files": [
-        "scripts/merlin/merlin_store.gd"
-      ],
-      "tasks": [
-        {
-          "id": "INFRA.3",
-          "title": "Install GUT testing framework",
-          "description": "Install GUT (Godot Unit Testing) v9.x in addons/gut/. Download from GitHub (bitwes/Gut), copy to addons/gut/, enable in project.godot. Verify it works: create a minimal test script scripts/test/test_example.gd that extends GutTest with one test_pass() method. Run with: godot --headless -s addons/gut/gut_cmdln.gd -gdir=res://scripts/test/ -gexit. MUST compile without errors in Godot 4.5.",
-          "priority": "critical"
-        },
-        {
-          "id": "INFRA.4",
-          "title": "Unit tests for MerlinStore (3 tests minimum)",
-          "description": "Write scripts/test/test_merlin_store.gd extending GutTest. Test: 1) initial state (3 aspects at equilibre, souffle=3, karma=0), 2) apply_effect SHIFT_ASPECT changes aspect correctly and clamps, 3) game_over detection when 2+ aspects at extreme. Read merlin_store.gd first. Use gut_assert methods (assert_eq, assert_true, assert_between). Tests must PASS.",
-          "priority": "critical"
-        },
-        {
-          "id": "INFRA.5",
-          "title": "Unit tests for CardSystem + EffectEngine (2 tests minimum)",
-          "description": "Write scripts/test/test_card_system.gd and scripts/test/test_effect_engine.gd extending GutTest. CardSystem: test card generation returns 3 options, test fallback pool works. EffectEngine: test SHIFT_ASPECT effect, test SOUFFLE effect. Read the source files first. Tests must PASS.",
-          "priority": "critical"
-        }
-      ],
-      "agents": [
-        ".claude/agents/game_designer.md",
-        ".claude/agents/meta_progression_designer.md",
-        ".claude/agents/narrative_writer.md"
-      ],
-      "review_agents": [
-        ".claude/agents/debug_qa.md",
-        ".claude/agents/optimizer.md",
-        ".claude/agents/lead_godot.md"
-      ]
-    },
-    {
-      "name": "llm-lora",
-      "branch": "autodev/llm-lora",
-      "type": "build",
-      "description": "INFRA: stats_summary aggregator + LLM adapter smoke tests",
-      "file_scope": [
-        "tools/autodev/",
-        "tools/autodev/status/",
-        "addons/merlin_ai/ollama_backend.gd",
-        "scripts/merlin/merlin_llm_adapter.gd"
-      ],
-      "tasks": [
-        {
-          "id": "INFRA.6",
-          "title": "Create stats_summary.json aggregator",
-          "description": "Create tools/autodev/generate_stats_summary.ps1 (if missing or incomplete): 1) reads batch_autoplay_results.json from stats_runner output, 2) computes survival_rate, avg_turns, aspect distribution, ending distribution, 3) writes tools/autodev/status/stats_summary.json with {total_runs, survival_rate, avg_turns, aspect_distribution:{}, ending_distribution:{}, timestamp}. Must work in ConstrainedLanguage mode (no [math]::, no .Substring(), use -like/-replace and integer arithmetic for rounding).",
-          "priority": "critical"
-        },
-        {
-          "id": "INFRA.7",
-          "title": "LLM adapter connection smoke test",
-          "description": "Create scripts/test/test_llm_smoke.gd: a minimal GDScript that 1) instantiates OllamaBackend, 2) sends a trivial prompt ('Say hello'), 3) verifies response is non-empty string, 4) checks response time < 30s. Run via: godot --headless -s scripts/test/test_llm_smoke.gd. Print PASS/FAIL to stdout. This validates the LLM pipeline works without full game context.",
-          "priority": "critical"
-        }
-      ],
-      "agents": [
-        ".claude/agents/llm_expert.md",
-        ".claude/agents/lora_gameplay_translator.md",
-        ".claude/agents/lora_data_curator.md",
-        ".claude/agents/lora_training_architect.md",
-        ".claude/agents/lora_evaluator.md",
-        ".claude/agents/prompt_curator.md"
-      ],
-      "review_agents": [
-        ".claude/agents/debug_qa.md",
-        ".claude/agents/lead_godot.md"
-      ]
-    },
-    {
-      "name": "world-structure",
-      "branch": "autodev/world",
-      "type": "build",
-      "description": "INFRA: save system tests + autoplay scaffold",
-      "file_scope": [
-        "scripts/merlin/merlin_save_system.gd",
-        "scripts/test/",
-        "tools/autodev/"
-      ],
-      "tasks": [
-        {
-          "id": "INFRA.8",
-          "title": "Unit tests for SaveSystem (3 tests minimum)",
-          "description": "Write scripts/test/test_save_system.gd extending GutTest. Test: 1) save creates valid JSON file in user://, 2) load restores exact state (3 aspects, souffle, karma, bestiole), 3) slot selection (3 slots, overwrite works). Read merlin_save_system.gd first. Use gut_assert methods. Tests must PASS with GUT framework (depends on INFRA.3).",
-          "priority": "critical"
-        },
-        {
-          "id": "INFRA.9",
-          "title": "Autoplay scaffold for stats collection",
-          "description": "Create tools/autodev/autoplay_runner.ps1: launches Godot headless with a test scene that plays N automated games (random choices). Collects per-run stats: {turns, ending, aspects_final, souffle_final, duration_ms}. Writes batch_autoplay_results.json. Start with N=5 for testing. Must handle Godot timeout (kill after 60s per run). ConstrainedLanguage safe.",
-          "priority": "critical"
-        }
-      ],
-      "agents": [
-        ".claude/agents/game_designer.md",
-        ".claude/agents/lore_writer.md",
-        ".claude/agents/merlin_guardian.md"
-      ],
-      "review_agents": [
-        ".claude/agents/debug_qa.md",
-        ".claude/agents/lead_godot.md"
-      ]
-    },
-    {
-      "name": "visual-polish",
-      "branch": "autodev/visual",
-      "type": "build",
-      "description": "INFRA: screenshot runner fixes + validate.bat automation",
-      "file_scope": [
-        "tools/autodev/screenshot_capture.ps1",
-        "tools/autodev/stats_runner.ps1",
-        "tools/validate_editor_parse.ps1",
-        "tools/validate_affected_scenes.ps1"
-      ],
-      "tasks": [
-        {
-          "id": "INFRA.10",
-          "title": "Fix screenshot_capture.ps1 for headless reliability",
-          "description": "Review and fix tools/autodev/screenshot_capture.ps1: 1) ensure Godot --headless screenshots work without display server, 2) add timeout per scene (kill after screenshot_settle_seconds + 10s), 3) generate screenshots_report.json with {scene, status, file_path, error} per scene. All code must be ConstrainedLanguage safe (no [math]::, no .Substring(), no [System.IO.Path]::).",
-          "priority": "critical"
-        },
-        {
-          "id": "INFRA.11",
-          "title": "Validate.bat Step 0 wrapper for CI",
-          "description": "Create tools/autodev/run_validate_step0.ps1: a thin wrapper that 1) runs validate_editor_parse.ps1, 2) captures stdout/stderr, 3) parses for ERROR/WARNING lines, 4) writes structured JSON to tools/autodev/status/validate_step0_results.json with {exit_code, errors:[], warnings:[], files_checked, timestamp}. This enables the pipeline to programmatically check validation results. ConstrainedLanguage safe.",
-          "priority": "critical"
-        }
-      ],
-      "agents": [
-        ".claude/agents/art_direction.md",
-        ".claude/agents/shader_specialist.md"
-      ],
-      "review_agents": [
-        ".claude/agents/debug_qa.md",
-        ".claude/agents/ui_impl.md"
-      ]
-    },
-    {
-      "name": "ui-components",
-      "branch": "autodev/ui-comp",
-      "type": "build",
-      "description": "INFRA: UI component validation + consistency audit (scripts/ui/)",
-      "file_scope": [
-        "scripts/ui/merlin_bubble.gd",
-        "scripts/ui/hub_hotspot.gd",
-        "scripts/ui/map_ui.gd",
-        "scripts/ui/biome_radial.gd",
-        "scripts/ui/merlin_game_ui.gd",
-        "scripts/ui/merlin_game_controller.gd",
-        "scripts/ui/arbre_de_vie_ui.gd",
-        "scripts/ui/bestiole_wheel_system.gd",
-        "scripts/ui/llm_source_badge.gd",
-        "scripts/ui/llm_warmup_overlay.gd",
-        "scripts/ui/menu_return_button.gd",
-        "scripts/ui/merlin_reward_badge.gd",
-        "scripts/ui/screen_dither_layer.gd"
-      ],
-      "tasks": [
-        {
-          "id": "INFRA.12",
-          "title": "UI component instantiation test",
-          "description": "Create scripts/test/test_ui_components.gd: headless script that instantiates each UI component from scripts/ui/ via load()+new(), checks for null, checks no errors on _ready(). Print PASS/FAIL per component. Run via: godot --headless -s scripts/test/test_ui_components.gd. Must handle missing autoloads gracefully (try/catch pattern).",
-          "priority": "critical"
-        },
-        {
-          "id": "INFRA.13",
-          "title": "UI palette consistency audit",
-          "description": "Create scripts/test/test_ui_consistency.gd: scan all scripts/ui/*.gd files for hardcoded Color() literals (not from MerlinVisual.PALETTE) and hardcoded font sizes (not from MerlinVisual.get_font()). Report violations. This enforces the UI/UX Bible rule: ALL colors from PALETTE, ALL fonts from get_font().",
-          "priority": "high"
-        }
-      ],
-      "agents": [
-        ".claude/agents/ui_impl.md",
-        ".claude/agents/ux_research.md",
-        ".claude/agents/motion_designer.md",
-        ".claude/agents/accessibility.md"
-      ],
-      "review_agents": [
-        ".claude/agents/debug_qa.md",
-        ".claude/agents/lead_godot.md"
-      ]
-    },
-    {
-      "name": "scene-scripts",
-      "branch": "autodev/scenes",
-      "type": "build",
-      "description": "INFRA: Scene loading tests + signal connection validation",
-      "file_scope": [
-        "scripts/HubAntre.gd",
-        "scripts/IntroCeltOS.gd",
-        "scripts/IntroPersonalityQuiz.gd",
-        "scripts/MenuPrincipalMerlin.gd",
-        "scripts/SceneRencontreMerlin.gd",
-        "scripts/TransitionBiome.gd",
-        "scripts/Calendar.gd",
-        "scripts/Collection.gd",
-        "scripts/merlin_backdrop.gd",
-        "scripts/llm_status_bar.gd",
-        "scripts/minigames/minigame_base.gd",
-        "scenes/"
-      ],
-      "tasks": [
-        {
-          "id": "INFRA.14",
-          "title": "Scene headless loading test",
-          "description": "Create scripts/test/test_scene_loading.gd: headless script that loads each scene via PackedScene, instantiates it, and checks for errors. Tests all 14 scenes in screenshot_scenes list. Print PASS/FAIL per scene. Run via: godot --headless -s scripts/test/test_scene_loading.gd. Must handle scenes that require autoloads by checking if singletons exist first.",
-          "priority": "critical"
-        },
-        {
-          "id": "INFRA.15",
-          "title": "Signal connection validator",
-          "description": "Create scripts/test/test_signal_connections.gd: parse all .tscn files in scenes/, extract [connection] entries, verify each method exists in the attached script. Report broken connections. Run via: godot --headless -s scripts/test/test_signal_connections.gd. This catches signal rot (renamed methods leaving broken .tscn connections).",
-          "priority": "high"
-        }
-      ],
-      "agents": [
-        ".claude/agents/lead_godot.md",
-        ".claude/agents/godot_expert.md",
-        ".claude/agents/narrative_writer.md"
-      ],
-      "review_agents": [
-        ".claude/agents/debug_qa.md",
-        ".claude/agents/game_designer.md"
-      ]
-    },
-    {
-      "name": "autoloads-visual",
-      "branch": "autodev/autoloads",
-      "type": "build",
-      "description": "INFRA: Visual system validation + shader compilation tests",
-      "file_scope": [
-        "scripts/autoload/ScreenEffects.gd",
-        "scripts/autoload/merlin_visual.gd",
-        "scripts/autoload/pixel_transition_config.gd",
-        "themes/merlin_theme.tres",
-        "shaders/"
-      ],
-      "tasks": [
-        {
-          "id": "INFRA.16",
-          "title": "MerlinVisual constants validation",
-          "description": "Create scripts/test/test_visual_system.gd: verify MerlinVisual singleton loads, PALETTE dict has all required keys (bg, text, accent, etc.), GBC dict has all required keys, get_font() returns valid Font objects. Print PASS/FAIL per check. Run via: godot --headless -s scripts/test/test_visual_system.gd.",
-          "priority": "critical"
-        },
-        {
-          "id": "INFRA.17",
-          "title": "Shader compilation test",
-          "description": "Create scripts/test/test_shaders.gd: load all .gdshader files from shaders/ directory, create ShaderMaterial with each, verify no compilation errors. Also verify merlin_theme.tres loads without errors. Run via: godot --headless -s scripts/test/test_shaders.gd.",
-          "priority": "high"
-        }
-      ],
-      "agents": [
-        ".claude/agents/shader_specialist.md",
-        ".claude/agents/art_direction.md",
-        ".claude/agents/motion_designer.md"
-      ],
-      "review_agents": [
-        ".claude/agents/debug_qa.md",
-        ".claude/agents/optimizer.md"
-      ]
-    },
-    {
-      "name": "testing",
-      "branch": "autodev/testing",
-      "type": "review",
-      "description": "Test analysis: failures, regressions, coverage improvements",
-      "file_scope": [
-        "scripts/test/",
-        "tools/validate_flow_order.ps1",
-        "tools/smoke_test_scenes.ps1",
-        "tools/validate_editor_parse.ps1",
-        "tools/validate_affected_scenes.ps1"
-      ],
-      "tasks": [
-        {
-          "id": "TEST.1",
-          "title": "Analyze test failures",
-          "description": "Read test_results.json and screenshots_report.json. Identify regressions, new failures, and flaky tests. Write fix_priorities.json with actionable items for each failing domain.",
-          "priority": "high"
-        },
-        {
-          "id": "TEST.2",
-          "title": "Improve test coverage",
-          "description": "Add new test cases for untested edge cases discovered in this cycle's auto-play runs. Focus on aspect state transitions and ending triggers.",
-          "priority": "medium"
-        }
-      ],
-      "agents": [
-        ".claude/agents/debug_qa.md",
-        ".claude/agents/lead_godot.md"
-      ],
-      "inputs": ["test_results.json", "screenshots_report.json", "stats_summary.json"]
-    },
-    {
-      "name": "game-design",
-      "branch": "autodev/game-design",
-      "type": "review",
-      "description": "Game balance, fun factor, tone analysis from stats",
-      "file_scope": [
-        "docs/20_card_system/",
-        "data/ai/scenarios/"
-      ],
-      "tasks": [
-        {
-          "id": "GD.1",
-          "title": "Balance analysis from auto-play stats",
-          "description": "Read stats_summary.json. Evaluate: Are endings diverse? Is life drain balanced? Are DC ranges producing 40-60% success? Is the Triade balanced? Write balance_report.md with specific constant adjustments.",
-          "priority": "high"
-        },
-        {
-          "id": "GD.2",
-          "title": "Fun factor and tone evaluation",
-          "description": "Read card texts from auto-play logs. Evaluate: Is the tone 'quirky & mysterious'? Are choices meaningful? Is there enough variety? Are the 3 options distinct? Write tone_report.md.",
-          "priority": "high"
-        },
-        {
-          "id": "GD.3",
-          "title": "Propose balance adjustments",
-          "description": "Based on GD.1 and GD.2, propose specific changes to merlin_constants.gd (DC ranges, life drain, souffle economy). Write proposed_changes.json for gameplay domain to apply next cycle.",
-          "priority": "medium"
-        }
-      ],
-      "agents": [
-        ".claude/agents/game_designer.md",
-        ".claude/agents/meta_progression_designer.md"
-      ],
-      "inputs": ["stats_summary.json", "batch_autoplay_results.json"]
-    },
-    {
-      "name": "lore",
-      "branch": "autodev/lore",
-      "type": "review",
-      "description": "Lore development: narrative coherence, expansion, scenarios",
-      "file_scope": [
-        "docs/50_lore/",
-        "data/ai/scenarios/",
-        "data/ai/training/"
-      ],
-      "tasks": [
-        {
-          "id": "LORE.1",
-          "title": "Narrative coherence review",
-          "description": "Read card texts from auto-play logs. Check: Does LLM output match established lore? Are there anachronisms? Does Merlin's voice stay consistent? Write lore_coherence_report.md.",
-          "priority": "high"
-        },
-        {
-          "id": "LORE.2",
-          "title": "Lore expansion from gameplay",
-          "description": "Based on scenarios explored this cycle, expand relevant lore documents in docs/50_lore/. Add new NPC backstories, biome details, or Ogham secrets.",
-          "priority": "medium"
-        },
-        {
-          "id": "LORE.3",
-          "title": "Scenario catalogue enrichment",
-          "description": "Create new scenario entries in data/ai/scenarios/ inspired by narrative patterns observed. Each scenario needs: title, theme, 4 anchor contexts, act structure.",
-          "priority": "low"
-        }
-      ],
-      "agents": [
-        ".claude/agents/lore_writer.md",
-        ".claude/agents/merlin_guardian.md",
-        ".claude/agents/historien_bretagne.md",
-        ".claude/agents/narrative_writer.md"
-      ],
-      "inputs": ["batch_autoplay_results.json", "stats_summary.json"]
-    },
-    {
-      "name": "game-director",
-      "type": "director",
-      "description": "Game Director: autonomous decision-maker for pipeline flow control",
-      "agents": [
-        ".claude/agents/game_director.md"
-      ],
-      "inputs": [
-        "reviews/testing/fix_priorities.json",
-        "reviews/testing/executive_summary.json",
-        "reviews/game-design/proposed_changes.json",
-        "reviews/game-design/EXECUTIVE_SUMMARY.json",
-        "reviews/lore/cycle_1_summary.json",
-        "test_results.json",
-        "stats_summary.json"
-      ],
-      "outputs": [
-        "director_decision.json",
-        "director_directives.json",
-        "director_questions.json"
-      ]
-    }
-  ]
+                                               ],
+                        "file_scope":  [
+                                           "scripts/autoload/ScreenEffects.gd",
+                                           "scripts/autoload/merlin_visual.gd",
+                                           "scripts/autoload/pixel_transition_config.gd",
+                                           "themes/merlin_theme.tres",
+                                           "shaders/"
+                                       ],
+                        "tasks":  [
+                                      {
+                                          "id":  "INFRA.16",
+                                          "title":  "MerlinVisual constants validation",
+                                          "description":  "Create scripts/test/test_visual_system.gd: verify MerlinVisual singleton loads, PALETTE dict has all required keys (bg, text, accent, etc.), GBC dict has all required keys, get_font() returns valid Font objects. Print PASS/FAIL per check. Run via: godot --headless -s scripts/test/test_visual_system.gd.",
+                                          "priority":  "critical"
+                                      },
+                                      {
+                                          "id":  "INFRA.17",
+                                          "title":  "Shader compilation test",
+                                          "description":  "Create scripts/test/test_shaders.gd: load all .gdshader files from shaders/ directory, create ShaderMaterial with each, verify no compilation errors. Also verify merlin_theme.tres loads without errors. Run via: godot --headless -s scripts/test/test_shaders.gd.",
+                                          "priority":  "high"
+                                      }
+                                  ],
+                        "agents":  [
+                                       ".claude/agents/shader_specialist.md",
+                                       ".claude/agents/art_direction.md",
+                                       ".claude/agents/motion_designer.md"
+                                   ],
+                        "review_agents":  [
+                                              ".claude/agents/debug_qa.md",
+                                              ".claude/agents/optimizer.md"
+                                          ]
+                    },
+                    {
+                        "name":  "testing",
+                        "branch":  "autodev/testing",
+                        "type":  "review",
+                        "description":  "Test analysis: failures, regressions, coverage improvements",
+                        "file_scope":  [
+                                           "scripts/test/",
+                                           "tools/validate_flow_order.ps1",
+                                           "tools/smoke_test_scenes.ps1",
+                                           "tools/validate_editor_parse.ps1",
+                                           "tools/validate_affected_scenes.ps1"
+                                       ],
+                        "tasks":  [
+                                      {
+                                          "id":  "TEST.1",
+                                          "title":  "Analyze test failures",
+                                          "description":  "Read test_results.json and screenshots_report.json. Identify regressions, new failures, and flaky tests. Write fix_priorities.json with actionable items for each failing domain.",
+                                          "priority":  "high"
+                                      },
+                                      {
+                                          "id":  "TEST.2",
+                                          "title":  "Improve test coverage",
+                                          "description":  "Add new test cases for untested edge cases discovered in this cycle\u0027s auto-play runs. Focus on aspect state transitions and ending triggers.",
+                                          "priority":  "medium"
+                                      }
+                                  ],
+                        "agents":  [
+                                       ".claude/agents/debug_qa.md",
+                                       ".claude/agents/lead_godot.md"
+                                   ],
+                        "inputs":  [
+                                       "test_results.json",
+                                       "screenshots_report.json",
+                                       "stats_summary.json"
+                                   ]
+                    },
+                    {
+                        "name":  "game-design",
+                        "branch":  "autodev/game-design",
+                        "type":  "review",
+                        "description":  "Game balance, fun factor, tone analysis from stats",
+                        "file_scope":  [
+                                           "docs/20_card_system/",
+                                           "data/ai/scenarios/"
+                                       ],
+                        "tasks":  [
+                                      {
+                                          "id":  "GD.1",
+                                          "title":  "Balance analysis from auto-play stats",
+                                          "description":  "Read stats_summary.json. Evaluate: Are endings diverse? Is life drain balanced? Are DC ranges producing 40-60% success? Is the Triade balanced? Write balance_report.md with specific constant adjustments.",
+                                          "priority":  "high"
+                                      },
+                                      {
+                                          "id":  "GD.2",
+                                          "title":  "Fun factor and tone evaluation",
+                                          "description":  "Read card texts from auto-play logs. Evaluate: Is the tone \u0027quirky \u0026 mysterious\u0027? Are choices meaningful? Is there enough variety? Are the 3 options distinct? Write tone_report.md.",
+                                          "priority":  "high"
+                                      },
+                                      {
+                                          "id":  "GD.3",
+                                          "title":  "Propose balance adjustments",
+                                          "description":  "Based on GD.1 and GD.2, propose specific changes to merlin_constants.gd (DC ranges, life drain, souffle economy). Write proposed_changes.json for gameplay domain to apply next cycle.",
+                                          "priority":  "medium"
+                                      }
+                                  ],
+                        "agents":  [
+                                       ".claude/agents/game_designer.md",
+                                       ".claude/agents/meta_progression_designer.md"
+                                   ],
+                        "inputs":  [
+                                       "stats_summary.json",
+                                       "batch_autoplay_results.json"
+                                   ]
+                    },
+                    {
+                        "name":  "lore",
+                        "branch":  "autodev/lore",
+                        "type":  "review",
+                        "description":  "Lore development: narrative coherence, expansion, scenarios",
+                        "file_scope":  [
+                                           "docs/50_lore/",
+                                           "data/ai/scenarios/",
+                                           "data/ai/training/"
+                                       ],
+                        "tasks":  [
+                                      {
+                                          "id":  "LORE.1",
+                                          "title":  "Narrative coherence review",
+                                          "description":  "Read card texts from auto-play logs. Check: Does LLM output match established lore? Are there anachronisms? Does Merlin\u0027s voice stay consistent? Write lore_coherence_report.md.",
+                                          "priority":  "high"
+                                      },
+                                      {
+                                          "id":  "LORE.2",
+                                          "title":  "Lore expansion from gameplay",
+                                          "description":  "Based on scenarios explored this cycle, expand relevant lore documents in docs/50_lore/. Add new NPC backstories, biome details, or Ogham secrets.",
+                                          "priority":  "medium"
+                                      },
+                                      {
+                                          "id":  "LORE.3",
+                                          "title":  "Scenario catalogue enrichment",
+                                          "description":  "Create new scenario entries in data/ai/scenarios/ inspired by narrative patterns observed. Each scenario needs: title, theme, 4 anchor contexts, act structure.",
+                                          "priority":  "low"
+                                      }
+                                  ],
+                        "agents":  [
+                                       ".claude/agents/lore_writer.md",
+                                       ".claude/agents/merlin_guardian.md",
+                                       ".claude/agents/historien_bretagne.md",
+                                       ".claude/agents/narrative_writer.md"
+                                   ],
+                        "inputs":  [
+                                       "batch_autoplay_results.json",
+                                       "stats_summary.json"
+                                   ]
+                    },
+                    {
+                        "name":  "game-director",
+                        "type":  "director",
+                        "description":  "Game Director: autonomous decision-maker for pipeline flow control",
+                        "agents":  [
+                                       ".claude/agents/game_director.md"
+                                   ],
+                        "inputs":  [
+                                       "reviews/testing/fix_priorities.json",
+                                       "reviews/testing/executive_summary.json",
+                                       "reviews/game-design/proposed_changes.json",
+                                       "reviews/game-design/EXECUTIVE_SUMMARY.json",
+                                       "reviews/lore/cycle_1_summary.json",
+                                       "test_results.json",
+                                       "stats_summary.json"
+                                   ],
+                        "outputs":  [
+                                        "director_decision.json",
+                                        "director_directives.json",
+                                        "director_questions.json"
+                                    ]
+                    }
+                ],
+    "global_objective":  "CRITICAL BUG: Toutes les scenes du jeu sont entierement blanches - rien nest visible. Diagnostiquer et corriger le probleme de rendu (MerlinVisual, backgrounds, CanvasLayer, modulate, shaders, theme). Verifier chaque scene apres correction."
 }

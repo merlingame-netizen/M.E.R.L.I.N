@@ -1,15 +1,15 @@
 ﻿# AUTODEV v3 -- Live Dashboard
 
-> Cycle **1** | Wave **FIX** | Etat **running** | 15:22:36
+> Cycle **1** | Wave **complete** | Etat **idle** | 22:59:03
 
 ---
 
-## Workers (0/8 done, 1 en cours, 4 erreurs)
+## Workers (0/8 done, 0 en cours, 5 erreurs)
 
 | | Domaine | Statut | Detail |
 |---|---------|--------|--------|
 | x | ui-ux | error |  |
-| ~ | gameplay | in_progress |  |
+| x | gameplay | error |  |
 | x | llm-lora | error |  |
 | x | world-structure | error |  |
 | x | visual-polish | error |  |

@@ -47,11 +47,11 @@
                             "gameplay":  {
                                              "domain":  "gameplay",
                                              "blockers":  [
-
+                                                              "Exit code: -1"
                                                           ],
-                                             "timestamp":  "2026-02-23T10:30:07.6935088+01:00",
-                                             "current_task":  "INFRA.3",
-                                             "status":  "in_progress",
+                                             "timestamp":  "2026-02-23T20:16:01.9332063+01:00",
+                                             "current_task":  "",
+                                             "status":  "error",
                                              "files_modified":  [
 
                                                                 ],
@@ -104,7 +104,7 @@
     "validation_mutex":  {
                              "active":  false
                          },
-    "timestamp":  "2026-02-23T15:21:07.7156291+01:00",
+    "timestamp":  "2026-02-23T22:57:09.8182408+01:00",
     "review_domains":  [
                            "game-design",
                            "lore",
@@ -125,19 +125,31 @@
                             },
                             {
                                 "files":  [
+                                              "scripts/test/test_merlin_store.gd",
                                               "tools/autodev/status/gameplay.json",
                                               "tools/autodev/status/patches/gameplay.json"
                                           ],
                                 "branch":  "autodev/gameplay"
                             },
                             {
-                                "files":  "tools/autodev/generate_stats_summary.ps1",
+                                "files":  [
+                                              "tools/autodev/generate_stats_summary.ps1",
+                                              "tools/autodev/status/llm-lora.json"
+                                          ],
                                 "branch":  "autodev/llm-lora"
                             },
                             {
+                                "files":  "tools/autodev/status/world-structure.json",
+                                "branch":  "autodev/world"
+                            },
+                            {
                                 "files":  [
+                                              "scripts/autoload/seasonal_effects.gd.uid",
+                                              "shaders/palette_swap.gdshader",
+                                              "shaders/seasonal_particles.gdshader.uid",
                                               "tools/autodev/screenshot_capture.ps1",
-                                              "tools/autodev/stats_runner.ps1"
+                                              "tools/autodev/stats_runner.ps1",
+                                              "tools/autodev/status/visual-polish.json"
                                           ],
                                 "branch":  "autodev/visual"
                             }
@@ -147,11 +159,19 @@
                            "gameplay",
                            "llm-lora",
                            "world-structure",
-                           "visual-polish"
+                           "visual-polish",
+                           "ui-components",
+                           "scene-scripts",
+                           "autoloads-visual"
                        ],
     "scope_violations":  [
 
                          ],
+    "stats":  {
+                  "total":  3,
+                  "successful":  0,
+                  "failed":  3
+              },
     "screenshots":  {
                         "total":  14,
                         "captured":  0,
@@ -159,9 +179,11 @@
                     },
     "alerts":  [
                    "MERGE CONFLICT RISK: autodev/ui-ux --tools/autodev/status/ui-ux.json, tools/autodev/status/ui-ux_completion.json",
-                   "MERGE CONFLICT RISK: autodev/gameplay --tools/autodev/status/gameplay.json, tools/autodev/status/patches/gameplay.json",
-                   "MERGE CONFLICT RISK: autodev/llm-lora --tools/autodev/generate_stats_summary.ps1",
-                   "MERGE CONFLICT RISK: autodev/visual --tools/autodev/screenshot_capture.ps1, tools/autodev/stats_runner.ps1",
-                   "SCREENSHOTS: 14/14 captures failed"
+                   "MERGE CONFLICT RISK: autodev/gameplay --scripts/test/test_merlin_store.gd, tools/autodev/status/gameplay.json, tools/autodev/status/patches/gameplay.json",
+                   "MERGE CONFLICT RISK: autodev/llm-lora --tools/autodev/generate_stats_summary.ps1, tools/autodev/status/llm-lora.json",
+                   "MERGE CONFLICT RISK: autodev/world --tools/autodev/status/world-structure.json",
+                   "MERGE CONFLICT RISK: autodev/visual --scripts/autoload/seasonal_effects.gd.uid, shaders/palette_swap.gdshader, shaders/seasonal_particles.gdshader.uid, tools/autodev/screenshot_capture.ps1, tools/autodev/stats_runner.ps1, tools/autodev/status/visual-polish.json",
+                   "SCREENSHOTS: 14/14 captures failed",
+                   "STATS: 3/3 auto-play runs failed"
                ]
 }

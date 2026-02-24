@@ -1,1 +1,12 @@
-﻿
+﻿{
+    "results_dir":  "C:\\Users\\PGNK2128\\Godot-MCP\\tools\\autodev\\stats\\cycle_2",
+    "timestamp":  "2026-02-23T20:27:26.7019298+01:00",
+    "total_runs":  3,
+    "elapsed_s":  0.2,
+    "cycle":  2,
+    "runs":  [
+
+             ],
+    "successful":  0,
+    "failed":  3
+}

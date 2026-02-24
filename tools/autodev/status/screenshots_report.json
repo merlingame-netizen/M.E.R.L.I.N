@@ -7,7 +7,7 @@
                        "error":  "Godot exited without producing result",
                        "path":  "res://scenes/IntroCeltOS.tscn",
                        "status":  "failed",
-                       "seconds":  9.3
+                       "seconds":  10.3
                    },
                    {
                        "output":  "",
@@ -15,7 +15,7 @@
                        "error":  "Godot exited without producing result",
                        "path":  "res://scenes/MenuPrincipal.tscn",
                        "status":  "failed",
-                       "seconds":  8.1
+                       "seconds":  6.1
                    },
                    {
                        "output":  "",
@@ -23,7 +23,7 @@
                        "error":  "Godot exited without producing result",
                        "path":  "res://scenes/IntroPersonalityQuiz.tscn",
                        "status":  "failed",
-                       "seconds":  8.1
+                       "seconds":  6.1
                    },
                    {
                        "output":  "",
@@ -31,7 +31,7 @@
                        "error":  "Godot exited without producing result",
                        "path":  "res://scenes/SceneRencontreMerlin.tscn",
                        "status":  "failed",
-                       "seconds":  7.1
+                       "seconds":  6.1
                    },
                    {
                        "output":  "",
@@ -39,7 +39,7 @@
                        "error":  "Godot exited without producing result",
                        "path":  "res://scenes/SelectionSauvegarde.tscn",
                        "status":  "failed",
-                       "seconds":  7.1
+                       "seconds":  6.1
                    },
                    {
                        "output":  "",
@@ -47,7 +47,7 @@
                        "error":  "Godot exited without producing result",
                        "path":  "res://scenes/HubAntre.tscn",
                        "status":  "failed",
-                       "seconds":  9.1
+                       "seconds":  7.1
                    },
                    {
                        "output":  "",
@@ -55,7 +55,7 @@
                        "error":  "Godot exited without producing result",
                        "path":  "res://scenes/TransitionBiome.tscn",
                        "status":  "failed",
-                       "seconds":  12.9
+                       "seconds":  7.1
                    },
                    {
                        "output":  "",
@@ -63,7 +63,7 @@
                        "error":  "Godot exited without producing result",
                        "path":  "res://scenes/MerlinGame.tscn",
                        "status":  "failed",
-                       "seconds":  8.1
+                       "seconds":  7.1
                    },
                    {
                        "output":  "",
@@ -71,7 +71,7 @@
                        "error":  "Godot exited without producing result",
                        "path":  "res://scenes/Calendar.tscn",
                        "status":  "failed",
-                       "seconds":  7.1
+                       "seconds":  6.1
                    },
                    {
                        "output":  "",
@@ -111,10 +111,10 @@
                        "error":  "Godot exited without producing result",
                        "path":  "res://scenes/PixelArtShowcase.tscn",
                        "status":  "failed",
-                       "seconds":  6.1
+                       "seconds":  7.1
                    }
                ],
-    "timestamp":  "2026-02-23T10:19:07.3144220+01:00",
+    "timestamp":  "2026-02-23T22:53:42.4372760+01:00",
     "total":  14,
     "cycle":  1,
     "captured":  0
