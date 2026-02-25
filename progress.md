@@ -2,6 +2,31 @@
 
 > **Note**: Sessions anterieures archivees dans `archive/progress_archive_2026-02-05_to_2026-02-08.md`
 
+## Session: 2026-02-25 — SFX Rework + UX Enrichissement Hub/Transition
+
+### SFX System — 9 sons + méthode ajoutés (commit `4415047`)
+
+**SFXManager.gd** — 9 nouveaux sons procéduraux + méthode `play_ui_click()`:
+- `play_ui_click()` — alias typewriter blip (fix MerlinBubble silent fail — `has_method` ne trouvait pas)
+- `camera_focus` — clic obturateur + shimmer cristallin (Phase 3 TransitionBiome)
+- `souffle_regen` / `souffle_full` — sons Souffle (fix merlin_game_ui calls silencieux)
+- `error` — buzz dissonant doux (fix merlin_game_ui calls silencieux)
+- `hub_enter` — souffle atmosphérique chaud (entrée Hub Antre)
+- `perk_confirm` — accord pentatonique ogham (confirmation perk B.1)
+- `biome_reveal` — révélation atmosphérique profonde (Phase 4 horloge solaire)
+- `partir_fanfare` — arpège majeur ascendant (bouton PARTIR)
+
+**HubAntre.gd** — UX contextuelle:
+- Entrée: `hub_enter` + `scene_transition` superposés
+- Hotspot souffle: `ogham_chime` (au lieu de `whoosh` générique)
+- Bouton PARTIR: `partir_fanfare`
+- Biome sélectionné: `choice_select` + `ogham_chime` (confirmation rituelle)
+- Perk confirmé: `perk_confirm`
+
+**TransitionBiome.gd** — Phase 4 Sentier: `biome_reveal` distinct (au lieu de `magic_reveal` dupliqué)
+
+---
+
 ## Session: 2026-02-25 (Phase B COMPLETE — B.1 + B.2 + B.3 + B.4 + B.5)
 
 ### Backlog B — Progression (3 items livrés)
