@@ -2,7 +2,7 @@
 
 > **Note**: Sessions anterieures archivees dans `archive/progress_archive_2026-02-05_to_2026-02-08.md`
 
-## Session: 2026-02-25 (Phase B Partielle — B.2 + B.3 + B.5 COMPLETE)
+## Session: 2026-02-25 (Phase B COMPLETE — B.1 + B.2 + B.3 + B.4 + B.5)
 
 ### Backlog B — Progression (3 items livrés)
 
@@ -57,6 +57,17 @@
 
 **Validation**: 0 errors, 0 warnings (validate_editor_parse.ps1)
 **Commit**: `7d795e4` (feat(progression): B.1 Souffle Perk UI)
+
+---
+
+**B.4 — Aspects → DC modifiers + contexte RAG** (commit `e4682dd`)
+- `merlin_constants.gd`: ASPECT_DC_PENALTY_BAS=+2, PENALTY_HAUT=+1, BONUS_FULL_EQUILIBRE=-1
+- Labels narratifs ASPECT_STATE_NARRATIVE (6 descriptions, 1 par état extrême par aspect)
+- `merlin_game_controller.gd`: aspect_modifier cumulatif dans `_get_dc_for_direction()`
+- `rag_manager.gd`: `_get_aspects_state_context()` (Priority HIGH) — injecte états extrêmes
+  sous forme "ETAT: Corps Épuisé | Âme Possédée" pour guider le LLM
+
+**Phase B COMPLETE** — B.1 + B.2 + B.3 + B.4 + B.5 tous livrés.
 
 ---
 
