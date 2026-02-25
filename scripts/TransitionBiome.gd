@@ -862,6 +862,7 @@ func _phase_brume() -> void:
 	_apply_weather_for_hour(int(now.get("hour", 12)), false)
 	_update_solar_clock(true)
 	SFXManager.play("mist_breath")
+	SFXManager.play_biome_ambient(biome_key)
 
 	var vs := get_viewport_rect().size
 	var colors: Dictionary = MerlinVisual.BIOME_COLORS.get(biome_key, MerlinVisual.BIOME_COLORS.broceliande)
@@ -981,6 +982,16 @@ func _phase_revelation() -> void:
 	tw.tween_property(biome_title, "modulate:a", 1.0, 0.8)
 	tw.tween_property(biome_subtitle, "modulate:a", 1.0, 0.6)
 	await tw.finished
+
+	# Biome-tinted title pulse — flash in biome primary color then return to white
+	var bcolors: Dictionary = MerlinVisual.BIOME_COLORS.get(biome_key, MerlinVisual.BIOME_COLORS.broceliande)
+	var tint: Color = bcolors.primary
+	tint.a = 1.0
+	var tc: Tween = create_tween()
+	tc.tween_property(biome_title, "modulate", tint, 0.25).set_ease(Tween.EASE_OUT)
+	tc.tween_property(biome_title, "modulate", Color.WHITE, 0.30).set_ease(Tween.EASE_IN)
+	# Don't await — runs concurrently with the safe_wait below
+
 	await _safe_wait(0.3)
 
 	# Camera zoom into landscape using Control.scale
@@ -1531,6 +1542,7 @@ func _generate_run_intro() -> void:
 
 func _phase_dissolution() -> void:
 	SFXManager.play("scene_transition")
+	SFXManager.play("pixel_scatter")
 	scene_finished = true
 
 	# Reset zoom before dissolving
@@ -1553,6 +1565,7 @@ func _phase_dissolution() -> void:
 	await text_tw.finished
 
 	# Dissolve landscape — pixels fall away with gravity
+	SFXManager.play("whoosh")
 	_landscape_pixels.shuffle()
 	for i in range(_landscape_pixels.size()):
 		var px: ColorRect = _landscape_pixels[i]

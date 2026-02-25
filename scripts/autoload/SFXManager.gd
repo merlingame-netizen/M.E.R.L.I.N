@@ -79,6 +79,11 @@ func play_ui_click() -> void:
 	play("click", 1.3)
 
 
+## Play biome-specific ambient sound (Phase 1 TransitionBiome — one per biome).
+func play_biome_ambient(biome_key: String) -> void:
+	play("amb_" + biome_key)
+
+
 ## Set master volume (0.0 to 1.0).
 func set_master_volume(vol: float) -> void:
 	_master_volume = clampf(vol, 0.0, 1.0)
@@ -111,6 +116,8 @@ func _get_volume_for(sound_name: String) -> float:
 			"dice_crit_success", "dice_crit_fail", "critical_alert"]:
 		return VOLUME.magic
 	if sound_name in ["path_scratch", "landmark_pop", "mist_breath", "aspect_shift", "hub_enter"]:
+		return VOLUME.ambient
+	if sound_name.begins_with("amb_"):
 		return VOLUME.ambient
 	if sound_name in ["dice_shake", "minigame_tick", "error"]:
 		return VOLUME.ui
@@ -200,6 +207,15 @@ func _generate_all_sounds() -> void:
 	_sounds["perk_confirm"] = _gen_perk_confirm()
 	_sounds["biome_reveal"] = _gen_biome_reveal()
 	_sounds["partir_fanfare"] = _gen_partir_fanfare()
+
+	# --- Biome Ambient Sounds (Phase 1 TransitionBiome) ---
+	_sounds["amb_broceliande"] = _gen_amb_broceliande()
+	_sounds["amb_landes"] = _gen_amb_landes()
+	_sounds["amb_cotes"] = _gen_amb_cotes()
+	_sounds["amb_cercles"] = _gen_amb_cercles()
+	_sounds["amb_marais"] = _gen_amb_marais()
+	_sounds["amb_collines"] = _gen_amb_collines()
+	_sounds["amb_villages"] = _gen_amb_villages()
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
@@ -1144,4 +1160,118 @@ func _gen_partir_fanfare() -> AudioStreamWAV:
 		# Square sparkle on final note
 		var shimmer := _sq(1568.0, t) * 0.012 * clampf((t - 0.25) * 10.0, 0.0, 1.0) * env
 		_write_sample(buf, i, (n1 + n2 + n3 + n4) * env + shimmer)
+	return _make_stream(buf)
+
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# BIOME AMBIENT SOUNDS — Procedural identity per biome (Phase 1 TransitionBiome)
+# Celtic D Dorian anchoring: D4=294 E4=330 F4=349 G4=392 A4=440 B4=494 D5=587
+# ═══════════════════════════════════════════════════════════════════════════════
+
+func _gen_amb_broceliande() -> AudioStreamWAV:
+	## Broceliande forest — triangle D4+G4 soft 4th chord, slow breath modulation
+	var dur := 1.20
+	var buf := _alloc_buffer(dur)
+	var count := _sample_count(dur)
+	for i in range(count):
+		var t := float(i) / SAMPLE_RATE
+		var env := sin(t / dur * PI)                        # Full bell envelope
+		var breath := 0.7 + 0.3 * sin(TAU * 0.9 * t)      # Slow forest sway 0.9Hz
+		var val := _tri(294.0, t) * 0.07 * env * breath    # D4 root
+		val += _tri(392.0, t) * 0.05 * env * breath        # G4 perfect 4th
+		val += (_rng.randf() * 2.0 - 1.0) * 0.008 * env   # Very soft leaf rustle
+		_write_sample(buf, i, val)
+	return _make_stream(buf)
+
+
+func _gen_amb_landes() -> AudioStreamWAV:
+	## Landes wind — filtered noise with slow 0.7Hz amplitude swell
+	var dur := 1.50
+	var buf := _alloc_buffer(dur)
+	var count := _sample_count(dur)
+	for i in range(count):
+		var t := float(i) / SAMPLE_RATE
+		var swell := 0.4 + 0.6 * sin(TAU * 0.7 * t)       # Wind gust 0.7Hz
+		var edge_fade := sin(t / dur * PI)
+		var noise := (_rng.randf() * 2.0 - 1.0) * 0.10 * swell * edge_fade
+		# Low D drone under the wind (barely audible)
+		noise += _tri(147.0, t) * 0.015 * edge_fade
+		_write_sample(buf, i, noise)
+	return _make_stream(buf)
+
+
+func _gen_amb_cotes() -> AudioStreamWAV:
+	## Cotes sauvages — wave rhythm: sine 55Hz with 0.4Hz amplitude LFO (ocean swell)
+	var dur := 1.50
+	var buf := _alloc_buffer(dur)
+	var count := _sample_count(dur)
+	for i in range(count):
+		var t := float(i) / SAMPLE_RATE
+		var wave_lfo := 0.3 + 0.7 * pow(sin(TAU * 0.4 * t) * 0.5 + 0.5, 2.0)  # Cresting wave
+		var edge_fade := sin(t / dur * PI)
+		var val := sin(TAU * 55.0 * t) * 0.06 * wave_lfo * edge_fade  # Deep wave rumble
+		val += (_rng.randf() * 2.0 - 1.0) * 0.03 * wave_lfo * edge_fade  # Foam hiss
+		_write_sample(buf, i, val)
+	return _make_stream(buf)
+
+
+func _gen_amb_cercles() -> AudioStreamWAV:
+	## Cercles de pierres — square D2 drone (73.4Hz), stone resonance, slow attack
+	var dur := 1.20
+	var buf := _alloc_buffer(dur)
+	var count := _sample_count(dur)
+	for i in range(count):
+		var t := float(i) / SAMPLE_RATE
+		var attack := minf(t / 0.6, 1.0)                   # Stone slow resonance attack 0.6s
+		var decay := 1.0 - maxf(0.0, (t - 0.6) / 0.6)     # Decay over last 0.6s
+		var env := attack * decay
+		var val := _sq(73.4, t) * 0.055 * env              # D2 square stone
+		val += _tri(220.0, t) * 0.020 * env                # A3 overtone (Celtic 5th)
+		_write_sample(buf, i, val)
+	return _make_stream(buf)
+
+
+func _gen_amb_marais() -> AudioStreamWAV:
+	## Marais des korrigans — F3 triangle croak burst + soft hiss ambience
+	var dur := 0.80
+	var buf := _alloc_buffer(dur)
+	var count := _sample_count(dur)
+	for i in range(count):
+		var t := float(i) / SAMPLE_RATE
+		var croak_env := exp(-t * 5.5) * sin(minf(t / 0.025, 1.0) * PI * 0.5)  # Frog attack
+		var val := _tri(174.6, t) * 0.08 * croak_env       # F3 frog croak (Dorian minor 3rd)
+		val += _tri(220.0, t) * 0.025 * croak_env          # A3 (5th) harmonic
+		val += (_rng.randf() * 2.0 - 1.0) * 0.015 * (1.0 - t / dur)  # Water hiss
+		_write_sample(buf, i, val)
+	return _make_stream(buf)
+
+
+func _gen_amb_collines() -> AudioStreamWAV:
+	## Collines aux dolmens — triangle G3→D4 wind glide (ascending 5th), hill breeze
+	var dur := 1.00
+	var buf := _alloc_buffer(dur)
+	var count := _sample_count(dur)
+	for i in range(count):
+		var t := float(i) / SAMPLE_RATE
+		var env := sin(t / dur * PI)
+		var freq := lerpf(196.0, 294.0, minf(t / 0.7, 1.0))  # G3→D4 over 0.7s
+		var val := _tri(freq, t) * 0.07 * env               # Wind pitch rise
+		val += (_rng.randf() * 2.0 - 1.0) * 0.010 * env    # Grass rustle
+		_write_sample(buf, i, val)
+	return _make_stream(buf)
+
+
+func _gen_amb_villages() -> AudioStreamWAV:
+	## Villages celtes — narrow pulse crackle (hearth fire), 5% duty cycle
+	var dur := 0.70
+	var buf := _alloc_buffer(dur)
+	var count := _sample_count(dur)
+	for i in range(count):
+		var t := float(i) / SAMPLE_RATE
+		var env := sin(t / dur * PI) * 0.8
+		# Random walk frequency for crackle texture (wood popping)
+		var freq := 120.0 + _rng.randf_range(-30.0, 50.0)
+		var val := _pulse(freq, t, 0.05) * 0.04 * env      # Narrow pulse = sharp crackle
+		val += (_rng.randf() * 2.0 - 1.0) * 0.020 * env   # Soft smoke hiss
+		_write_sample(buf, i, val)
 	return _make_stream(buf)
