@@ -246,6 +246,31 @@ const ARCHETYPE_DC_BONUS := {
 	"guide":       -1,   # Bienveillant: contexte social facilite
 }
 
+# B.4 — Aspect State DC modifiers
+# Chaque etat d'aspect hors EQUILIBRE ajoute une penalite au DC.
+# BAS = souffrance → actions plus difficiles.
+# HAUT = debordement → risque accru, instabilite.
+# Logique: nb_bas * PENALTY_BAS + nb_haut * PENALTY_HAUT (cumulatif par aspect).
+const ASPECT_DC_PENALTY_BAS := 2    # Par aspect en etat BAS
+const ASPECT_DC_PENALTY_HAUT := 1   # Par aspect en etat HAUT (surmenage)
+const ASPECT_DC_BONUS_FULL_EQUILIBRE := -1  # Bonus si TOUS les aspects sont EQUILIBRE
+
+# Labels narratifs pour les etats extremes (utilises dans le contexte RAG)
+const ASPECT_STATE_NARRATIVE := {
+	"Corps": {
+		AspectState.BAS:  "Corps Epuise — tes forces te font defaut.",
+		AspectState.HAUT: "Corps Surmene — tu te depenses au-dela du raisonnable.",
+	},
+	"Ame": {
+		AspectState.BAS:  "Ame Perdue — tu doutes, la magie te fuit.",
+		AspectState.HAUT: "Ame Possedee — les forces obscures te guidant avec trop de zele.",
+	},
+	"Monde": {
+		AspectState.BAS:  "Monde: Tu es exile, les liens sociaux s'effritent.",
+		AspectState.HAUT: "Monde: Tu rules en tyran, la resistance monte.",
+	},
+}
+
 # Souffle Perk types (Phase B — stub for now)
 const SOUFFLE_PERK_TYPES := {
 	"bouclier": {

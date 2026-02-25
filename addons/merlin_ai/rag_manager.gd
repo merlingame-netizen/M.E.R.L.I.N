@@ -161,6 +161,11 @@ func get_prioritized_context(game_state: Dictionary) -> String:
 	if not archetype_ctx.is_empty():
 		sections.append({"text": archetype_ctx, "priority": Priority.MEDIUM})
 
+	# B.4: Aspect states context — informs LLM of extreme states for narrative coherence
+	var aspects_ctx := _get_aspects_state_context(game_state)
+	if not aspects_ctx.is_empty():
+		sections.append({"text": aspects_ctx, "priority": Priority.HIGH})
+
 	# P1.10.1: Danger level context (life-based urgency)
 	var danger_ctx := _get_danger_context(game_state)
 	if not danger_ctx.is_empty():
@@ -332,6 +337,29 @@ func _get_archetype_context() -> String:
 	if arch_title.is_empty():
 		arch_title = arch_id.capitalize()
 	return "Archetype: %s — guide les enjeux vers le style %s" % [arch_title, arch_id]
+
+
+func _get_aspects_state_context(game_state: Dictionary) -> String:
+	## B.4: Inject extreme aspect states (BAS/HAUT) into RAG.
+	## Only non-EQUILIBRE states are mentioned — keeps tokens minimal.
+	## Priority HIGH so LLM colours narrative around the player's current struggle.
+	var run: Dictionary = game_state.get("run", {})
+	var aspects: Dictionary = run.get("aspects", {})
+	if aspects.is_empty():
+		return ""
+
+	var lines: Array = []
+	for asp_key in MerlinConstants.TRIADE_ASPECTS:
+		var asp_state: int = int(aspects.get(asp_key, MerlinConstants.AspectState.EQUILIBRE))
+		if asp_state == MerlinConstants.AspectState.BAS or asp_state == MerlinConstants.AspectState.HAUT:
+			var narrative_map: Dictionary = MerlinConstants.ASPECT_STATE_NARRATIVE.get(asp_key, {})
+			var line: String = str(narrative_map.get(asp_state, ""))
+			if not line.is_empty():
+				lines.append(line)
+
+	if lines.is_empty():
+		return ""
+	return "ETAT: " + " | ".join(lines)
 
 
 func _get_danger_context(game_state: Dictionary) -> String:

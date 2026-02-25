@@ -1284,7 +1284,23 @@ func _get_dc_for_direction(direction: String) -> int:
 			if MerlinConstants.ARCHETYPE_DC_BONUS.has(arch_id):
 				archetype_modifier = int(MerlinConstants.ARCHETYPE_DC_BONUS[arch_id])
 
-	return clampi(base_dc + modifier + _dynamic_modifier - dc_bonus + archetype_modifier, 2, 19)
+	# B.4 — Aspect state DC modifier (BAS = souffrance, HAUT = surmenage)
+	var aspect_modifier: int = 0
+	if store:
+		var aspects: Dictionary = store.state.get("run", {}).get("aspects", {})
+		var all_equilibre: bool = true
+		for asp_key in MerlinConstants.TRIADE_ASPECTS:
+			var asp_state: int = int(aspects.get(asp_key, MerlinConstants.AspectState.EQUILIBRE))
+			if asp_state == MerlinConstants.AspectState.BAS:
+				aspect_modifier += MerlinConstants.ASPECT_DC_PENALTY_BAS
+				all_equilibre = false
+			elif asp_state == MerlinConstants.AspectState.HAUT:
+				aspect_modifier += MerlinConstants.ASPECT_DC_PENALTY_HAUT
+				all_equilibre = false
+		if all_equilibre:
+			aspect_modifier = MerlinConstants.ASPECT_DC_BONUS_FULL_EQUILIBRE
+
+	return clampi(base_dc + modifier + _dynamic_modifier - dc_bonus + archetype_modifier + aspect_modifier, 2, 19)
 
 
 func _get_choice_label(option: int) -> String:
