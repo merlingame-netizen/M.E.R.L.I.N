@@ -185,6 +185,16 @@ Plan: `.claude/plans/majestic-sprouting-pond.md`
 | B.4 | Aspects → impact narratif + bonus/malus | FAIT (2026-02-25) |
 | B.5 | Premiere run direct (skip Hub) | FAIT (2026-02-25) |
 
+### Phase E — SFX + UX TransitionBiome
+| # | Item | Statut |
+|---|------|--------|
+| E.1 | SFX Rework v1 — 9 sons manquants + UX contextuel Hub/Transition | FAIT (2026-02-25, commit `4415047`) |
+| E.2 | SFX Rework v2 — Waveforms pixel/celtique, D Dorian, 12 generators | FAIT (2026-02-25, commit `4592ebc`) |
+| T.1 | TransitionBiome Phase 1 — Scout pixels biome-colorés | A FAIRE |
+| T.2 | TransitionBiome Phase 1 — Sons ambiants par biome (7 generators) | A FAIRE |
+| T.3 | TransitionBiome Phase 3 — Titre biome-teinté (pulse couleur) | A FAIRE |
+| T.4 | TransitionBiome Phase 6 — Dissolution SFX burst (pixel_scatter + whoosh) | A FAIRE |
+
 ### Phase C — Bestiole & Structure
 | # | Item | Statut |
 |---|------|--------|
@@ -202,4 +212,4 @@ Plan: `.claude/plans/majestic-sprouting-pond.md`
 | D.4 | Equilibrage global | A FAIRE |
 | D.5 | ~~Fix gui_embed_subviewports~~ | FAIT |
 
-*Updated: 2026-02-17 — Migration Scene-Based COMPLETE, Phase 43A+Migration done*
+*Updated: 2026-02-25 — Phase B COMPLETE (B.1-B.5), SFX Rework v1+v2, TransitionBiome UX T.1-T.4 planifiés*

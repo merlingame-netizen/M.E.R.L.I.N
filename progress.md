@@ -25,6 +25,30 @@
 
 **TransitionBiome.gd** — Phase 4 Sentier: `biome_reveal` distinct (au lieu de `magic_reveal` dupliqué)
 
+### SFX Rework v2 — Waveforms Pixel Celtic (commit `4592ebc`)
+
+**Objectif** : Remplacer les sines génériques par des waveforms pixel/chiptune + échelle D Dorian celtique.
+
+**SFXManager.gd** — 3 helpers de waveform + 12 générateurs retravaillés :
+- `_sq(freq, t)` — onde carrée adoucie (sin * 8.0 clampé -1..1), style Game Boy
+- `_tri(freq, t)` — triangle NES (`2/PI * asin(sin(...))`)
+- `_pulse(freq, t, duty)` — duty cycle variable (25% par défaut), style SID chip
+- **Échelle D Dorian (référence)** : D4=294Hz E4=330Hz F4=349Hz G4=392Hz A4=440Hz B4=494Hz C5=523Hz D5=587Hz
+
+12 générateurs reworked vers pixel/celtique :
+- `hover` → G5 square blip (5ème celtique au-dessus de D)
+- `click` → pulse 25% + noise burst
+- `ogham_chime` → triangle E4+B4 (harpe plucked)
+- `ogham_unlock` → arpège Dorian D4-F4-A4-D5 triangle
+- `bestiole_shimmer` → NES triangle A4-E5-A5 + pulse sparkle
+- `magic_reveal` → balayage pentatonique D→G→A→D triangle
+- `skill_activate` → square zap D5→G4 descente Dorian
+- `scene_transition` → square glide D3→A3 (5ème celtique grave)
+- `eye_open` → square profond D1→D2 + drone A (cornemuse awakening)
+- `hub_enter` → drone D+A désaccordé (2 voix 147.0+147.8 Hz → beating naturel, chaleur pipe)
+- `souffle_regen` → glide triangle D4→A4 + sparkle square
+- `souffle_full` → arpège pentatonique D4-G4-A4-D5 triangle
+
 ---
 
 ## Session: 2026-02-25 (Phase B COMPLETE — B.1 + B.2 + B.3 + B.4 + B.5)
