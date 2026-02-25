@@ -477,12 +477,12 @@ func _on_hotspot_pressed(hotspot_name: String) -> void:
 			SFXManager.play("whoosh")
 			PixelTransition.transition_to(SCENE_COLLECTION)
 		"souffle":
-			SFXManager.play("whoosh")
+			SFXManager.play("ogham_chime")
 			_show_perk_overlay()
 
 
 func _on_partir_pressed() -> void:
-	SFXManager.play("click")
+	SFXManager.play("partir_fanfare")
 	if _radial.is_open():
 		return
 	var center := _partir_btn.position + Vector2(_partir_btn.custom_minimum_size.x * 0.5, 0)
@@ -491,6 +491,7 @@ func _on_partir_pressed() -> void:
 
 func _on_radial_biome_selected(biome_key: String) -> void:
 	SFXManager.play("choice_select")
+	SFXManager.play("ogham_chime")
 	var wms: Node = get_node_or_null("/root/WorldMapSystem")
 	if wms and wms.has_method("is_biome_accessible"):
 		if not wms.is_biome_accessible(biome_key):
@@ -657,6 +658,7 @@ func _start_mist_animation() -> void:
 
 
 func _play_entry_animation() -> void:
+	SFXManager.play("hub_enter")
 	SFXManager.play("scene_transition")
 
 	# Start everything invisible
@@ -844,7 +846,7 @@ func _on_perk_card_selected(perk_id: String) -> void:
 
 func _on_perk_confirmed() -> void:
 	## Dispatch SELECT_PERK with the pending selection and close overlay.
-	SFXManager.play("click")
+	SFXManager.play("perk_confirm")
 	if _perk_overlay == null or not is_instance_valid(_perk_overlay):
 		return
 	var perk_id: String = str(_perk_overlay.get_meta("pending_perk", ""))

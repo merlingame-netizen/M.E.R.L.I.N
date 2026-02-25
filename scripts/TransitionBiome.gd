@@ -1007,7 +1007,7 @@ func _zoom_into_landscape() -> void:
 # — Phase 4: Sentier ———————————————————————————————————————————————————————
 
 func _phase_sentier() -> void:
-	SFXManager.play("magic_reveal")
+	SFXManager.play("biome_reveal")
 	_update_solar_clock(true)
 
 	if _clock_panel and is_instance_valid(_clock_panel):

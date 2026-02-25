@@ -74,6 +74,11 @@ func play_varied(sound_name: String, variation: float = 0.1) -> void:
 	play(sound_name, pitch)
 
 
+## Typewriter blip — very soft high click (used by MerlinBubble).
+func play_ui_click() -> void:
+	play("click", 1.3)
+
+
 ## Set master volume (0.0 to 1.0).
 func set_master_volume(vol: float) -> void:
 	_master_volume = clampf(vol, 0.0, 1.0)
@@ -105,12 +110,15 @@ func _get_volume_for(sound_name: String) -> float:
 			"flash_boom", "magic_reveal", "skill_activate",
 			"dice_crit_success", "dice_crit_fail", "critical_alert"]:
 		return VOLUME.magic
-	if sound_name in ["path_scratch", "landmark_pop", "mist_breath", "aspect_shift"]:
+	if sound_name in ["path_scratch", "landmark_pop", "mist_breath", "aspect_shift", "hub_enter"]:
 		return VOLUME.ambient
-	if sound_name in ["dice_shake", "minigame_tick"]:
+	if sound_name in ["dice_shake", "minigame_tick", "error"]:
 		return VOLUME.ui
-	if sound_name in ["minigame_start", "minigame_success", "minigame_fail"]:
+	if sound_name in ["minigame_start", "minigame_success", "minigame_fail",
+			"biome_reveal", "partir_fanfare"]:
 		return VOLUME.transition
+	if sound_name in ["camera_focus", "souffle_regen", "souffle_full", "perk_confirm"]:
+		return VOLUME.magic
 	return VOLUME.ui
 
 
@@ -180,6 +188,18 @@ func _generate_all_sounds() -> void:
 	_sounds["minigame_fail"] = _gen_minigame_fail()
 	_sounds["minigame_tick"] = _gen_minigame_tick()
 	_sounds["critical_alert"] = _gen_critical_alert()
+
+	# --- Souffle / Perk Sounds ---
+	_sounds["souffle_regen"] = _gen_souffle_regen()
+	_sounds["souffle_full"] = _gen_souffle_full()
+
+	# --- UX / Scene Atmospheric Sounds ---
+	_sounds["camera_focus"] = _gen_camera_focus()
+	_sounds["error"] = _gen_error()
+	_sounds["hub_enter"] = _gen_hub_enter()
+	_sounds["perk_confirm"] = _gen_perk_confirm()
+	_sounds["biome_reveal"] = _gen_biome_reveal()
+	_sounds["partir_fanfare"] = _gen_partir_fanfare()
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
@@ -931,4 +951,162 @@ func _gen_critical_alert() -> AudioStreamWAV:
 		# Tremolo effect
 		val *= 1.0 + sin(TAU * 6.0 * t) * 0.3
 		_write_sample(buf, i, val)
+	return _make_stream(buf)
+
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# SOUFFLE / PERK SOUNDS
+# ═══════════════════════════════════════════════════════════════════════════════
+
+func _gen_souffle_regen() -> AudioStreamWAV:
+	## Souffle regenerating — misty breath + crystalline sparkle
+	var dur := 0.60
+	var buf := _alloc_buffer(dur)
+	var count := _sample_count(dur)
+	for i in range(count):
+		var t := float(i) / SAMPLE_RATE
+		var env := sin(t / dur * PI) * 0.5
+		var freq := lerpf(300.0, 600.0, t / dur)
+		var val := sin(TAU * freq * t) * 0.08 * env
+		val += sin(TAU * freq * 1.5 * t) * 0.04 * env
+		# Soft mist noise
+		val += (_rng.randf() * 2.0 - 1.0) * 0.02 * env
+		# Sparkle at peak
+		var spark_env := exp(-abs(t - 0.30) * 14.0)
+		val += sin(TAU * 2400.0 * t) * 0.03 * spark_env
+		_write_sample(buf, i, val)
+	return _make_stream(buf)
+
+
+func _gen_souffle_full() -> AudioStreamWAV:
+	## Souffle at maximum — triumphant crystalline arpeggio
+	var dur := 0.50
+	var buf := _alloc_buffer(dur)
+	var count := _sample_count(dur)
+	for i in range(count):
+		var t := float(i) / SAMPLE_RATE
+		# G4 → B4 → D5 ascending, each note fading in
+		var n1 := sin(TAU * 392.0 * t) * 0.09 * exp(-t * 4.5) * clampf(t * 18.0, 0.0, 1.0)
+		var n2 := sin(TAU * 494.0 * t) * 0.10 * exp(-t * 3.8) * clampf((t - 0.07) * 14.0, 0.0, 1.0)
+		var n3 := sin(TAU * 587.0 * t) * 0.11 * exp(-t * 3.2) * clampf((t - 0.15) * 11.0, 0.0, 1.0)
+		# High shimmer
+		var shimmer := sin(TAU * 2100.0 * t) * 0.02 * exp(-t * 6.0)
+		_write_sample(buf, i, n1 + n2 + n3 + shimmer)
+	return _make_stream(buf)
+
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# UX / SCENE ATMOSPHERIC SOUNDS
+# ═══════════════════════════════════════════════════════════════════════════════
+
+func _gen_camera_focus() -> AudioStreamWAV:
+	## Camera cinematic zoom — crisp shutter click + crystalline shimmer tail
+	var dur := 0.35
+	var buf := _alloc_buffer(dur)
+	var count := _sample_count(dur)
+	for i in range(count):
+		var t := float(i) / SAMPLE_RATE
+		# Sharp shutter click at t=0
+		var click := sin(TAU * 3000.0 * t) * 0.18 * exp(-t * 80.0)
+		click += (_rng.randf() * 2.0 - 1.0) * 0.08 * exp(-t * 150.0)
+		# Shimmer tail (lens crystallizing into focus)
+		var shimmer_env := exp(-t * 5.0) * clampf(1.0 - t * 3.0, 0.0, 1.0)
+		var shimmer := sin(TAU * 4800.0 * t) * 0.05 * shimmer_env
+		shimmer += sin(TAU * 6400.0 * t) * 0.02 * exp(-t * 9.0)
+		_write_sample(buf, i, click + shimmer)
+	return _make_stream(buf)
+
+
+func _gen_error() -> AudioStreamWAV:
+	## Error / denied — soft dissonant buzz (minor 2nd interval)
+	var dur := 0.20
+	var buf := _alloc_buffer(dur)
+	var count := _sample_count(dur)
+	for i in range(count):
+		var t := float(i) / SAMPLE_RATE
+		var env := exp(-t * 12.0) * sin(minf(t / 0.02, 1.0) * PI * 0.5)
+		# Dissonant minor 2nd: A2 + Bb2
+		var val := sin(TAU * 110.0 * t) * 0.20 * env
+		val += sin(TAU * 116.5 * t) * 0.15 * env
+		val += sin(TAU * 220.0 * t) * 0.06 * env
+		_write_sample(buf, i, val)
+	return _make_stream(buf)
+
+
+func _gen_hub_enter() -> AudioStreamWAV:
+	## Hub entry — warm ancient hearth breath (enchanted space ambiance)
+	var dur := 1.50
+	var buf := _alloc_buffer(dur)
+	var count := _sample_count(dur)
+	for i in range(count):
+		var t := float(i) / SAMPLE_RATE
+		var env := sin(t / dur * PI) * 0.35
+		# Low warm harmonics (fire, stone)
+		var val := sin(TAU * 80.0 * t) * 0.08 * env
+		val += sin(TAU * 120.0 * t) * 0.05 * env
+		val += sin(TAU * 160.0 * t) * 0.03 * env
+		# Soft breath noise
+		val += (_rng.randf() * 2.0 - 1.0) * 0.04 * env
+		# Magic shimmer rising in the second half
+		var shimmer_t := clampf((t - 0.5) / 0.8, 0.0, 1.0)
+		val += sin(TAU * 1200.0 * t) * 0.015 * shimmer_t * (1.0 - shimmer_t) * 4.0
+		_write_sample(buf, i, val)
+	return _make_stream(buf)
+
+
+func _gen_perk_confirm() -> AudioStreamWAV:
+	## Souffle Perk confirmed — warm ogham bell chord (pentatonic)
+	var dur := 0.45
+	var buf := _alloc_buffer(dur)
+	var count := _sample_count(dur)
+	for i in range(count):
+		var t := float(i) / SAMPLE_RATE
+		var env := exp(-t * 4.0) * sin(minf(t / 0.01, 1.0) * PI * 0.5)
+		# Pentatonic flavour: D4, A4, D5
+		var val := sin(TAU * 294.0 * t) * 0.09 * env
+		val += sin(TAU * 440.0 * t) * 0.08 * env
+		val += sin(TAU * 587.0 * t) * 0.06 * env
+		# Ogham shimmer (crystalline high harmonics)
+		val += sin(TAU * 1320.0 * t) * 0.025 * exp(-t * 7.0)
+		val += sin(TAU * 1760.0 * t) * 0.015 * exp(-t * 9.0)
+		_write_sample(buf, i, val)
+	return _make_stream(buf)
+
+
+func _gen_biome_reveal() -> AudioStreamWAV:
+	## Biome clock/solar reveal — deep atmospheric sweep, mysterious
+	var dur := 0.80
+	var buf := _alloc_buffer(dur)
+	var count := _sample_count(dur)
+	for i in range(count):
+		var t := float(i) / SAMPLE_RATE
+		var env := sin(t / dur * PI) * 0.6
+		var freq := lerpf(180.0, 500.0, t / dur)
+		var val := sin(TAU * freq * t) * 0.07 * env
+		val += sin(TAU * freq * 1.33 * t) * 0.04 * env  # Minor third texture
+		val += sin(TAU * freq * 2.0 * t) * 0.02 * env
+		# Subtle low rumble fading in at start
+		val += sin(TAU * 60.0 * t) * 0.03 * exp(-t * 3.0)
+		# Airy breath
+		val += (_rng.randf() * 2.0 - 1.0) * 0.03 * env
+		_write_sample(buf, i, val)
+	return _make_stream(buf)
+
+
+func _gen_partir_fanfare() -> AudioStreamWAV:
+	## PARTIR departure — hopeful ascending G major arpeggio fragment
+	var dur := 0.60
+	var buf := _alloc_buffer(dur)
+	var count := _sample_count(dur)
+	for i in range(count):
+		var t := float(i) / SAMPLE_RATE
+		var env := exp(-t * 2.5) * sin(minf(t / 0.02, 1.0) * PI * 0.5)
+		# G4, B4, D5, G5 — ascending major arpeggio
+		var n1 := sin(TAU * 392.0 * t) * 0.09 * clampf(1.0 - abs(t - 0.00) * 14.0, 0.0, 1.0)
+		var n2 := sin(TAU * 494.0 * t) * 0.09 * clampf(1.0 - abs(t - 0.09) * 12.0, 0.0, 1.0)
+		var n3 := sin(TAU * 587.0 * t) * 0.11 * clampf(1.0 - abs(t - 0.18) * 10.0, 0.0, 1.0)
+		var n4 := sin(TAU * 784.0 * t) * 0.12 * clampf(1.0 - abs(t - 0.27) * 8.0, 0.0, 1.0)
+		# Shimmer overlay
+		var shimmer := sin(TAU * 3200.0 * t) * 0.02 * env
+		_write_sample(buf, i, n1 + n2 + n3 + n4 + shimmer)
 	return _make_stream(buf)
