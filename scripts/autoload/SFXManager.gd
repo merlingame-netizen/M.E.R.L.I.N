@@ -235,34 +235,58 @@ func _sample_count(duration: float) -> int:
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
+# WAVEFORM HELPERS — Pixel/chiptune aesthetic
+# ═══════════════════════════════════════════════════════════════════════════════
+
+func _sq(freq: float, t: float) -> float:
+	## Soft square wave — chiptune/pixel retro aesthetic.
+	return clampf(sin(TAU * freq * t) * 8.0, -1.0, 1.0)
+
+
+func _tri(freq: float, t: float) -> float:
+	## Triangle wave — NES-style smooth chiptune tone.
+	return 2.0 / PI * asin(clampf(sin(TAU * freq * t), -1.0, 1.0))
+
+
+func _pulse(freq: float, t: float, duty: float = 0.25) -> float:
+	## Pulse wave with configurable duty cycle — classic chiptune character.
+	return 1.0 if fposmod(freq * t, 1.0) < duty else -1.0
+
+
+# Celtic scale reference (D Dorian = D E F G A B C D):
+# D3=147  E3=165  F3=175  G3=196  A3=220  B3=247  C4=262
+# D4=294  E4=330  F4=349  G4=392  A4=440  B4=494  C5=523  D5=587  G5=784
+
+
+# ═══════════════════════════════════════════════════════════════════════════════
 # UI SOUNDS
 # ═══════════════════════════════════════════════════════════════════════════════
 
 func _gen_hover() -> AudioStreamWAV:
-	## Soft high-pitched tick — like a feather touching glass
-	var dur := 0.035
+	## Pixel hover blip — G5 square wave (Celtic 5th, retro)
+	var dur := 0.038
 	var buf := _alloc_buffer(dur)
 	var count := _sample_count(dur)
 	for i in range(count):
 		var t := float(i) / SAMPLE_RATE
-		var env := exp(-t * 180.0)
-		var val := sin(TAU * 2800.0 * t) * 0.15 * env
-		val += sin(TAU * 4200.0 * t) * 0.08 * env
+		var env := exp(-t * 160.0)
+		var val := _sq(784.0, t) * 0.07 * env  # G5 — Celtic 5th above D
+		val += _sq(392.0, t) * 0.03 * env      # G4 sub-octave body
 		_write_sample(buf, i, val)
 	return _make_stream(buf)
 
 
 func _gen_click() -> AudioStreamWAV:
-	## Crisp parchment click — paper + wood character
+	## Pixel click — pulse wave snap + noise burst (chiptune parchment)
 	var dur := 0.06
 	var buf := _alloc_buffer(dur)
 	var count := _sample_count(dur)
 	for i in range(count):
 		var t := float(i) / SAMPLE_RATE
-		var env := exp(-t * 120.0)
-		var val := sin(TAU * 1200.0 * t) * 0.25 * env
-		val += sin(TAU * 680.0 * t) * 0.15 * env
-		val += (_rng.randf() * 2.0 - 1.0) * 0.08 * exp(-t * 200.0)
+		var env := exp(-t * 100.0)
+		var val := _pulse(1200.0, t, 0.25) * 0.18 * env  # Pulse D5 area
+		val += _sq(600.0, t) * 0.08 * env                # Sub body D4-ish
+		val += (_rng.randf() * 2.0 - 1.0) * 0.06 * exp(-t * 220.0)
 		_write_sample(buf, i, val)
 	return _make_stream(buf)
 
@@ -347,17 +371,18 @@ func _gen_card_swipe() -> AudioStreamWAV:
 
 
 func _gen_scene_transition() -> AudioStreamWAV:
-	## Longer atmospheric transition — rising then fading
+	## Scene transition — chiptune D3→A3 glide (Celtic 5th, square wave)
 	var dur := 0.50
 	var buf := _alloc_buffer(dur)
 	var count := _sample_count(dur)
 	for i in range(count):
 		var t := float(i) / SAMPLE_RATE
 		var env := sin(t / dur * PI)
-		var freq := lerpf(120.0, 350.0, t / dur)
-		var val := sin(TAU * freq * t) * 0.06 * env
-		val += sin(TAU * freq * 2.01 * t) * 0.03 * env
-		val += (_rng.randf() * 2.0 - 1.0) * 0.08 * env
+		var freq := lerpf(147.0, 220.0, t / dur)  # D3→A3 (Celtic perfect 5th)
+		var val := _sq(freq, t) * 0.05 * env
+		val += _sq(freq * 2.0, t) * 0.025 * env   # Octave above
+		val += _tri(freq * 3.0, t) * 0.015 * env  # 5th harmonic, triangle soft
+		val += (_rng.randf() * 2.0 - 1.0) * 0.05 * env
 		_write_sample(buf, i, val)
 	return _make_stream(buf)
 
@@ -446,70 +471,74 @@ func _gen_accum_explode() -> AudioStreamWAV:
 # ═══════════════════════════════════════════════════════════════════════════════
 
 func _gen_ogham_chime() -> AudioStreamWAV:
-	## Single ogham reveal — crystalline bell tone
-	var dur := 0.40
+	## Celtic harp pluck — triangle E4 + 5th B4 (Dorian tone, pixel decay)
+	var dur := 0.55
 	var buf := _alloc_buffer(dur)
 	var count := _sample_count(dur)
 	for i in range(count):
 		var t := float(i) / SAMPLE_RATE
-		var env := exp(-t * 5.0) * sin(minf(t / 0.01, 1.0) * PI * 0.5)
-		var val := sin(TAU * 1320.0 * t) * 0.12 * env
-		val += sin(TAU * 1980.0 * t) * 0.06 * env
-		val += sin(TAU * 2640.0 * t) * 0.03 * env
-		val += sin(TAU * 660.0 * t) * 0.04 * env
+		var env := exp(-t * 5.5) * sin(minf(t / 0.005, 1.0) * PI * 0.5)
+		# E4 = 330Hz (D Dorian 2nd — Celtic pentatonic tone)
+		var val := _tri(330.0, t) * 0.11 * env
+		# B4 = 494Hz (perfect 5th above E4 — Celtic harmony)
+		val += _tri(494.0, t) * 0.05 * exp(-t * 8.0)
+		# E5 octave shimmer (pixel square)
+		val += _sq(659.0, t) * 0.015 * exp(-t * 14.0)
 		_write_sample(buf, i, val)
 	return _make_stream(buf)
 
 
 func _gen_ogham_unlock() -> AudioStreamWAV:
-	## Ogham panel appearing — ascending mystical arpeggio
-	var dur := 0.60
+	## Ogham unlock — D Dorian arpeggio ascending (D4 F4 A4 D5 triangle wave)
+	var dur := 0.70
 	var buf := _alloc_buffer(dur)
 	var count := _sample_count(dur)
 	for i in range(count):
 		var t := float(i) / SAMPLE_RATE
-		var env := sin(t / dur * PI) * 0.8
-		# Ascending notes: C5, E5, G5
-		var note1 := sin(TAU * 523.0 * t) * 0.08 * clampf(1.0 - abs(t - 0.1) * 8.0, 0.0, 1.0)
-		var note2 := sin(TAU * 659.0 * t) * 0.08 * clampf(1.0 - abs(t - 0.25) * 8.0, 0.0, 1.0)
-		var note3 := sin(TAU * 784.0 * t) * 0.10 * clampf(1.0 - abs(t - 0.40) * 6.0, 0.0, 1.0)
-		var shimmer := sin(TAU * 2400.0 * t) * 0.02 * env
-		_write_sample(buf, i, note1 + note2 + note3 + shimmer)
+		var env := sin(t / dur * PI) * 0.75
+		# D Dorian: D4(294) F4(349) A4(440) D5(587) — triangle, staggered entry
+		var n1 := _tri(294.0, t) * 0.09 * clampf(1.0 - abs(t - 0.08) * 9.0, 0.0, 1.0)
+		var n2 := _tri(349.0, t) * 0.09 * clampf(1.0 - abs(t - 0.22) * 9.0, 0.0, 1.0)
+		var n3 := _tri(440.0, t) * 0.10 * clampf(1.0 - abs(t - 0.36) * 8.0, 0.0, 1.0)
+		var n4 := _tri(587.0, t) * 0.11 * clampf(1.0 - abs(t - 0.50) * 7.0, 0.0, 1.0)
+		# Square sparkle on D5 arrival
+		var shimmer := _sq(587.0, t) * 0.015 * clampf((t - 0.44) * 12.0, 0.0, 1.0) * exp(-(t - 0.44) * 5.0)
+		_write_sample(buf, i, (n1 + n2 + n3 + n4 + shimmer) * env)
 	return _make_stream(buf)
 
 
 func _gen_bestiole_shimmer() -> AudioStreamWAV:
-	## Bestiole ethereal appearance — shimmering fairy dust
+	## Bestiole — NES-style triangle shimmer (A pentatonic: A4 E5 A5)
 	var dur := 0.80
 	var buf := _alloc_buffer(dur)
 	var count := _sample_count(dur)
 	for i in range(count):
 		var t := float(i) / SAMPLE_RATE
 		var env := sin(t / dur * PI) * 0.5
-		# Shimmering harmonics with slight detuning
-		var val := sin(TAU * 880.0 * t) * 0.06 * env
-		val += sin(TAU * 1322.0 * t) * 0.04 * env  # slightly detuned 5th
-		val += sin(TAU * 1762.0 * t) * 0.03 * env
-		# Sparkling high noise
-		val += (_rng.randf() * 2.0 - 1.0) * 0.02 * env * sin(t * 30.0) * 0.5 + 0.5
+		# A4=440 pentatonic shimmer (Celtic root)
+		var val := _tri(440.0, t) * 0.07 * env
+		val += _tri(659.0, t) * 0.04 * env   # E5 (5th above A4)
+		val += _tri(880.0, t) * 0.025 * env  # A5 (octave)
+		# Pixel pulse sparkle — short bursts
+		val += _pulse(1320.0, t, 0.125) * 0.015 * env * (sin(t * 22.0) * 0.5 + 0.5)
 		_write_sample(buf, i, val)
 	return _make_stream(buf)
 
 
 func _gen_eye_open() -> AudioStreamWAV:
-	## Eyes opening — deep rising ambient drone
+	## Eyes open — Celtic drone awakening: D1→D2 octave rise (deep square)
 	var dur := 2.0
 	var buf := _alloc_buffer(dur)
 	var count := _sample_count(dur)
 	for i in range(count):
 		var t := float(i) / SAMPLE_RATE
 		var env := sin(t / dur * PI) * 0.4
-		var freq := lerpf(60.0, 280.0, t / dur)
-		var val := sin(TAU * freq * t) * 0.10 * env
-		val += sin(TAU * freq * 1.5 * t) * 0.04 * env
-		val += sin(TAU * freq * 2.0 * t) * 0.02 * env
-		# Subtle rumble
-		val += (_rng.randf() * 2.0 - 1.0) * 0.03 * env
+		var freq := lerpf(36.7, 73.4, t / dur)  # D1→D2 (deep Celtic root)
+		var val := _sq(freq, t) * 0.09 * env
+		val += _sq(freq * 1.5, t) * 0.04 * env  # A drone (5th — bagpipe)
+		# D3 triangle melody emerging in second half
+		val += _tri(146.8, t) * 0.025 * clampf((t - 0.9) / 0.8, 0.0, 1.0) * env
+		val += (_rng.randf() * 2.0 - 1.0) * 0.025 * env
 		_write_sample(buf, i, val)
 	return _make_stream(buf)
 
@@ -533,33 +562,42 @@ func _gen_flash_boom() -> AudioStreamWAV:
 
 
 func _gen_magic_reveal() -> AudioStreamWAV:
-	## Result/archetype reveal — dramatic ascending shimmer
+	## Magic reveal — D pentatonic ascending sweep (D4→G4→A4→D5, triangle)
 	var dur := 0.70
 	var buf := _alloc_buffer(dur)
 	var count := _sample_count(dur)
 	for i in range(count):
 		var t := float(i) / SAMPLE_RATE
 		var env := sin(t / dur * PI)
-		var freq := lerpf(400.0, 1200.0, t / dur)
-		var val := sin(TAU * freq * t) * 0.10 * env
-		val += sin(TAU * freq * 1.5 * t) * 0.05 * env
-		val += sin(TAU * freq * 2.01 * t) * 0.03 * env
+		var nt := t / dur
+		# Step through D pentatonic (D4 G4 A4 D5)
+		var freq: float
+		if nt < 0.25:
+			freq = 294.0   # D4
+		elif nt < 0.50:
+			freq = 392.0   # G4
+		elif nt < 0.75:
+			freq = 440.0   # A4
+		else:
+			freq = 587.0   # D5
+		var val := _tri(freq, t) * 0.10 * env
+		val += _sq(freq * 2.0, t) * 0.02 * env  # Pixel octave shimmer
 		_write_sample(buf, i, val)
 	return _make_stream(buf)
 
 
 func _gen_skill_activate() -> AudioStreamWAV:
-	## Ogham skill activation — sharp magical zap
+	## Skill activate — Celtic square zap: D5→G4 descent (pixel sweep)
 	var dur := 0.25
 	var buf := _alloc_buffer(dur)
 	var count := _sample_count(dur)
 	for i in range(count):
 		var t := float(i) / SAMPLE_RATE
 		var env := exp(-t * 12.0) * sin(minf(t / 0.005, 1.0) * PI * 0.5)
-		var freq := lerpf(2000.0, 800.0, t / dur)
-		var val := sin(TAU * freq * t) * 0.15 * env
-		val += sin(TAU * freq * 0.5 * t) * 0.08 * env
-		val += (_rng.randf() * 2.0 - 1.0) * 0.06 * exp(-t * 25.0)
+		var freq := lerpf(587.0, 392.0, t / dur)  # D5→G4 (Dorian descent)
+		var val := _sq(freq, t) * 0.12 * env
+		val += _tri(freq * 0.5, t) * 0.06 * env   # Sub-octave body
+		val += (_rng.randf() * 2.0 - 1.0) * 0.04 * exp(-t * 30.0)
 		_write_sample(buf, i, val)
 	return _make_stream(buf)
 
@@ -959,39 +997,38 @@ func _gen_critical_alert() -> AudioStreamWAV:
 # ═══════════════════════════════════════════════════════════════════════════════
 
 func _gen_souffle_regen() -> AudioStreamWAV:
-	## Souffle regenerating — misty breath + crystalline sparkle
+	## Souffle regen — D Dorian glide D4→A4 (triangle), pixel sparkle peak
 	var dur := 0.60
 	var buf := _alloc_buffer(dur)
 	var count := _sample_count(dur)
 	for i in range(count):
 		var t := float(i) / SAMPLE_RATE
 		var env := sin(t / dur * PI) * 0.5
-		var freq := lerpf(300.0, 600.0, t / dur)
-		var val := sin(TAU * freq * t) * 0.08 * env
-		val += sin(TAU * freq * 1.5 * t) * 0.04 * env
-		# Soft mist noise
-		val += (_rng.randf() * 2.0 - 1.0) * 0.02 * env
-		# Sparkle at peak
-		var spark_env := exp(-abs(t - 0.30) * 14.0)
-		val += sin(TAU * 2400.0 * t) * 0.03 * spark_env
+		var freq := lerpf(294.0, 440.0, t / dur)  # D4→A4 (Dorian 5th)
+		var val := _tri(freq, t) * 0.08 * env
+		val += _tri(freq * 2.0, t) * 0.025 * env  # Octave above
+		# Square pixel sparkle at peak (t≈0.35)
+		val += _sq(freq * 4.0, t) * 0.012 * exp(-abs(t - 0.30) * 16.0)
+		val += (_rng.randf() * 2.0 - 1.0) * 0.015 * env
 		_write_sample(buf, i, val)
 	return _make_stream(buf)
 
 
 func _gen_souffle_full() -> AudioStreamWAV:
-	## Souffle at maximum — triumphant crystalline arpeggio
-	var dur := 0.50
+	## Souffle full — D pentatonic arpeggio (D4 G4 A4 D5 triangle + square shimmer)
+	var dur := 0.55
 	var buf := _alloc_buffer(dur)
 	var count := _sample_count(dur)
 	for i in range(count):
 		var t := float(i) / SAMPLE_RATE
-		# G4 → B4 → D5 ascending, each note fading in
-		var n1 := sin(TAU * 392.0 * t) * 0.09 * exp(-t * 4.5) * clampf(t * 18.0, 0.0, 1.0)
-		var n2 := sin(TAU * 494.0 * t) * 0.10 * exp(-t * 3.8) * clampf((t - 0.07) * 14.0, 0.0, 1.0)
-		var n3 := sin(TAU * 587.0 * t) * 0.11 * exp(-t * 3.2) * clampf((t - 0.15) * 11.0, 0.0, 1.0)
-		# High shimmer
-		var shimmer := sin(TAU * 2100.0 * t) * 0.02 * exp(-t * 6.0)
-		_write_sample(buf, i, n1 + n2 + n3 + shimmer)
+		# D4(294) G4(392) A4(440) D5(587) — ascending triangle
+		var n1 := _tri(294.0, t) * 0.08 * exp(-t * 5.5) * clampf(t * 20.0, 0.0, 1.0)
+		var n2 := _tri(392.0, t) * 0.09 * exp(-t * 5.0) * clampf((t - 0.07) * 16.0, 0.0, 1.0)
+		var n3 := _tri(440.0, t) * 0.10 * exp(-t * 4.5) * clampf((t - 0.14) * 13.0, 0.0, 1.0)
+		var n4 := _tri(587.0, t) * 0.11 * exp(-t * 4.0) * clampf((t - 0.22) * 11.0, 0.0, 1.0)
+		# Pixel square D6 shimmer at end
+		var shimmer := _sq(1174.0, t) * 0.012 * clampf((t - 0.30) * 9.0, 0.0, 1.0) * exp(-(t - 0.30) * 5.0)
+		_write_sample(buf, i, n1 + n2 + n3 + n4 + shimmer)
 	return _make_stream(buf)
 
 
@@ -1034,79 +1071,77 @@ func _gen_error() -> AudioStreamWAV:
 
 
 func _gen_hub_enter() -> AudioStreamWAV:
-	## Hub entry — warm ancient hearth breath (enchanted space ambiance)
+	## Hub entry — Celtic D+A drone (bagpipe tonic+5th, detuned for warmth)
 	var dur := 1.50
 	var buf := _alloc_buffer(dur)
 	var count := _sample_count(dur)
 	for i in range(count):
 		var t := float(i) / SAMPLE_RATE
 		var env := sin(t / dur * PI) * 0.35
-		# Low warm harmonics (fire, stone)
-		var val := sin(TAU * 80.0 * t) * 0.08 * env
-		val += sin(TAU * 120.0 * t) * 0.05 * env
-		val += sin(TAU * 160.0 * t) * 0.03 * env
-		# Soft breath noise
-		val += (_rng.randf() * 2.0 - 1.0) * 0.04 * env
-		# Magic shimmer rising in the second half
-		var shimmer_t := clampf((t - 0.5) / 0.8, 0.0, 1.0)
-		val += sin(TAU * 1200.0 * t) * 0.015 * shimmer_t * (1.0 - shimmer_t) * 4.0
+		# D3 + A3 drone, two detuned voices each (beating = warmth)
+		var val := _sq(147.0, t) * 0.07 * env       # D3 main drone
+		val += _sq(147.8, t) * 0.025 * env          # D3 +9 cents (beating)
+		val += _sq(220.0, t) * 0.05 * env           # A3 (5th — bagpipe)
+		val += _sq(220.7, t) * 0.018 * env          # A3 detuned
+		# D4 triangle melody rising in second half
+		val += _tri(294.0, t) * 0.035 * clampf((t - 0.55) / 0.7, 0.0, 1.0) * env
+		# Soft noise breath
+		val += (_rng.randf() * 2.0 - 1.0) * 0.02 * env
 		_write_sample(buf, i, val)
 	return _make_stream(buf)
 
 
 func _gen_perk_confirm() -> AudioStreamWAV:
-	## Souffle Perk confirmed — warm ogham bell chord (pentatonic)
-	var dur := 0.45
+	## Perk confirmed — D pentatonic triangle chord (D4 A4 D5) + pixel shimmer
+	var dur := 0.50
 	var buf := _alloc_buffer(dur)
 	var count := _sample_count(dur)
 	for i in range(count):
 		var t := float(i) / SAMPLE_RATE
-		var env := exp(-t * 4.0) * sin(minf(t / 0.01, 1.0) * PI * 0.5)
-		# Pentatonic flavour: D4, A4, D5
-		var val := sin(TAU * 294.0 * t) * 0.09 * env
-		val += sin(TAU * 440.0 * t) * 0.08 * env
-		val += sin(TAU * 587.0 * t) * 0.06 * env
-		# Ogham shimmer (crystalline high harmonics)
-		val += sin(TAU * 1320.0 * t) * 0.025 * exp(-t * 7.0)
-		val += sin(TAU * 1760.0 * t) * 0.015 * exp(-t * 9.0)
+		var env := exp(-t * 3.5) * sin(minf(t / 0.01, 1.0) * PI * 0.5)
+		# D pentatonic harp chord: D4, A4, D5 (triangle — Celtic warmth)
+		var val := _tri(294.0, t) * 0.09 * env   # D4 root
+		val += _tri(440.0, t) * 0.08 * env        # A4 (5th — Celtic)
+		val += _tri(587.0, t) * 0.06 * env        # D5 octave
+		# Pixel square shimmer on D6
+		val += _sq(1174.0, t) * 0.015 * exp(-t * 9.0)
 		_write_sample(buf, i, val)
 	return _make_stream(buf)
 
 
 func _gen_biome_reveal() -> AudioStreamWAV:
-	## Biome clock/solar reveal — deep atmospheric sweep, mysterious
+	## Biome clock reveal — Celtic sweep A2→D3 (4th), soft square + breath
 	var dur := 0.80
 	var buf := _alloc_buffer(dur)
 	var count := _sample_count(dur)
 	for i in range(count):
 		var t := float(i) / SAMPLE_RATE
 		var env := sin(t / dur * PI) * 0.6
-		var freq := lerpf(180.0, 500.0, t / dur)
-		var val := sin(TAU * freq * t) * 0.07 * env
-		val += sin(TAU * freq * 1.33 * t) * 0.04 * env  # Minor third texture
-		val += sin(TAU * freq * 2.0 * t) * 0.02 * env
-		# Subtle low rumble fading in at start
-		val += sin(TAU * 60.0 * t) * 0.03 * exp(-t * 3.0)
-		# Airy breath
-		val += (_rng.randf() * 2.0 - 1.0) * 0.03 * env
+		var freq := lerpf(110.0, 147.0, t / dur)  # A2→D3 (Celtic perfect 4th)
+		var val := _sq(freq, t) * 0.06 * env
+		val += _sq(freq * 1.5, t) * 0.03 * env    # 5th above (E3/A3 area)
+		val += _tri(freq * 2.0, t) * 0.025 * env  # Octave, triangle for warmth
+		# Low D rumble at start
+		val += _sq(73.4, t) * 0.025 * exp(-t * 3.5)
+		val += (_rng.randf() * 2.0 - 1.0) * 0.02 * env
 		_write_sample(buf, i, val)
 	return _make_stream(buf)
 
 
 func _gen_partir_fanfare() -> AudioStreamWAV:
-	## PARTIR departure — hopeful ascending G major arpeggio fragment
-	var dur := 0.60
+	## PARTIR — Celtic G Mixolydian arpeggio ascending (G4 A4 D5 G5 triangle)
+	var dur := 0.65
 	var buf := _alloc_buffer(dur)
 	var count := _sample_count(dur)
 	for i in range(count):
 		var t := float(i) / SAMPLE_RATE
-		var env := exp(-t * 2.5) * sin(minf(t / 0.02, 1.0) * PI * 0.5)
-		# G4, B4, D5, G5 — ascending major arpeggio
-		var n1 := sin(TAU * 392.0 * t) * 0.09 * clampf(1.0 - abs(t - 0.00) * 14.0, 0.0, 1.0)
-		var n2 := sin(TAU * 494.0 * t) * 0.09 * clampf(1.0 - abs(t - 0.09) * 12.0, 0.0, 1.0)
-		var n3 := sin(TAU * 587.0 * t) * 0.11 * clampf(1.0 - abs(t - 0.18) * 10.0, 0.0, 1.0)
-		var n4 := sin(TAU * 784.0 * t) * 0.12 * clampf(1.0 - abs(t - 0.27) * 8.0, 0.0, 1.0)
-		# Shimmer overlay
-		var shimmer := sin(TAU * 3200.0 * t) * 0.02 * env
-		_write_sample(buf, i, n1 + n2 + n3 + n4 + shimmer)
+		var env := exp(-t * 2.2) * sin(minf(t / 0.02, 1.0) * PI * 0.5)
+		# G Mixolydian ascending: G4(392) A4(440) D5(587) G5(784) — triangle
+		var n1 := _tri(392.0, t) * 0.09 * clampf(1.0 - abs(t - 0.00) * 14.0, 0.0, 1.0)
+		var n2 := _tri(440.0, t) * 0.09 * clampf(1.0 - abs(t - 0.09) * 12.0, 0.0, 1.0)
+		var n3 := _tri(587.0, t) * 0.11 * clampf(1.0 - abs(t - 0.19) * 10.0, 0.0, 1.0)
+		var n4 := _tri(784.0, t) * 0.12 * clampf(1.0 - abs(t - 0.30) * 8.0, 0.0, 1.0)
+		# Square sparkle on final note
+		var shimmer := _sq(1568.0, t) * 0.012 * clampf((t - 0.25) * 10.0, 0.0, 1.0) * env
+		_write_sample(buf, i, (n1 + n2 + n3 + n4) * env + shimmer)
 	return _make_stream(buf)
