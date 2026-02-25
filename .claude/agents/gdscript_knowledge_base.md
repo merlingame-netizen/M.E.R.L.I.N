@@ -1094,5 +1094,68 @@ wc -l "$LOG"       # Si le nombre de lignes ne bouge plus = bloque
 
 ---
 
-*Last Updated: 2026-02-24 (Section 8: Good Practices Operationnelles — 9 sous-sections)*
+---
+
+## SECTION 9: Patterns UI Overlay Procédurale (2026-02-25)
+
+### 9.1 Overlay Modal dans HubAntre (Pattern B.1)
+
+**Contexte**: Ajouter une UI de sélection modale dans HubAntre sans créer de .tscn.
+
+```gdscript
+## Pattern: overlay Control créé à la demande, caché plutôt que supprimé
+var _perk_overlay: Control = null
+
+func _show_perk_overlay() -> void:
+    if _perk_overlay != null and is_instance_valid(_perk_overlay):
+        _perk_overlay.visible = true  # Réafficher sans recréer
+        return
+    # Créer l'overlay...
+    _perk_overlay = Control.new()
+    _perk_overlay.set_anchors_preset(Control.PRESET_FULL_RECT)
+    add_child(_perk_overlay)
+
+func _on_confirmed() -> void:
+    _perk_overlay.visible = false  # Masquer, pas queue_free()
+```
+
+**Règles**:
+- `visible = false` pour fermer (réutilisable), jamais `queue_free()` si on veut rouvrir
+- `PRESET_FULL_RECT` sur l'overlay = couvre toute la scène parente
+- `set_meta("pending_perk", value)` pour passer des données via le noeud sans variables globales
+
+### 9.2 Store State Extension — Champs Persistants vs Run
+
+**Contexte**: B.1 — selected_perk doit persister entre runs, perk_used reset à chaque run.
+
+```gdscript
+# CORRECT: dans _init_triade_run() — preservation sélective
+var prev_perks: Dictionary = run.get("perks", {})
+run["perks"] = {
+    "selected_perk": str(prev_perks.get("selected_perk", "")),  # persistant
+    "perk_used": false,  # reset
+}
+
+# WRONG: reset complet qui efface la sélection inter-runs
+run["perks"] = {"selected_perk": "", "perk_used": false}
+```
+
+**Règle**: Toujours vérifier quelles données doivent survivre au reset de run avant d'écraser.
+
+### 9.3 Dispatch SELECT_PERK Pattern
+
+**Validation dans le dispatch**:
+```gdscript
+"SELECT_PERK":
+    var perk_id: String = str(action.get("perk_id", ""))
+    if not perk_id.is_empty() and not MerlinConstants.SOUFFLE_PERK_TYPES.has(perk_id):
+        return {"ok": false, "error": "unknown_perk: " + perk_id}
+    # ... update state
+```
+
+**Règle**: Valider le `perk_id` contre `SOUFFLE_PERK_TYPES` AVANT d'écrire dans le state. Retourner `{"ok": false}` avec message d'erreur explicite.
+
+---
+
+*Last Updated: 2026-02-25 (Section 9: UI Overlay + Store State Patterns — B.1 Souffle Perk)*
 *Maintained by: Debug Agent, Optimizer Agent & Task Dispatcher*

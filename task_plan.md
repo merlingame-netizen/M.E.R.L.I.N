@@ -179,7 +179,7 @@ Plan: `.claude/plans/majestic-sprouting-pond.md`
 ### Phase B — Progression
 | # | Item | Statut |
 |---|------|--------|
-| B.1 | Souffle d'Ogham → Perk personnalisable | A FAIRE |
+| B.1 | Souffle d'Ogham → Perk personnalisable | FAIT (2026-02-25) |
 | B.2 | UI Arbre de Vie (page 4 Hub) | FAIT (HubAntre hotspot + scene deja impl.) |
 | B.3 | Archetype → bonus DC + contexte RAG | FAIT (2026-02-25) |
 | B.4 | Aspects → impact narratif + bonus/malus | A FAIRE |

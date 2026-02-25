@@ -24,7 +24,39 @@
 - `merlin_omniscient.gd`: sync `archetype_id` + `archetype_title` dans registry_data → RAG world_state
 - `rag_manager.gd`: `_get_archetype_context()` (MEDIUM priority, ~40 tokens)
 
-**Commit pending (après validate.bat)**
+**Commits**: `3e37e54` (chore: triage Step 0), `941eccc` (feat: B.2/B.3/B.5)
+
+---
+
+## Session: 2026-02-25 (Phase B Suite — B.1 COMPLETE)
+
+### B.1 — Souffle Perk UI (sélection Hub + activation en jeu)
+
+**`scripts/HubAntre.gd`**
+- 5e hotspot "Souffle" (icon=COMPASS, ratio=0.06,0.80) — bottom-left
+- `_show_perk_overlay()`: overlay modal 2×2 avec 4 cartes perk (Bouclier/Surge/Vision/Canalisation)
+- `_on_perk_card_selected()`: mise à jour visuelle des cartes (selected/unselected)
+- `_on_perk_confirmed()` → `store.dispatch({SELECT_PERK, perk_id})`
+- `_on_perk_cancelled()`: ferme sans sauvegarder
+
+**`scripts/merlin/merlin_store.gd`**
+- `state.run.perks`: `{selected_perk: "", perk_used: false}`
+- `_init_triade_run()`: preserve selected_perk, reset perk_used uniquement
+- `SELECT_PERK` dispatch: valide perk_id vs SOUFFLE_PERK_TYPES, met à jour run.perks
+
+**`scripts/ui/merlin_game_controller.gd`**
+- `_get_souffle_perk_dc_bonus()`: bouclier=+2, surge=+6, vision=+2, canalisation=+4 (fallback=+4)
+- `_apply_souffle_perk_side_effect()`: shield_active (bouclier), vision_active (vision), auto-ogham (canalisation)
+- Headless path + normal dice roll path câblés sur les nouveaux helpers
+- `_on_state_changed()` → `ui.update_selected_perk(perk_id)` pour sync badge
+
+**`scripts/ui/merlin_game_ui.gd`**
+- `_perk_badge: Label` créé au-dessus du bouton Souffle
+- `update_selected_perk(perk_id)`: affiche `[NomPerk]` ou masque le badge
+- Positionné à `(vp_size.x - 76, vp_size.y - 84)`, 72×14px
+
+**Validation**: 0 errors, 0 warnings (validate_editor_parse.ps1)
+**Commit**: `7d795e4` (feat(progression): B.1 Souffle Perk UI)
 
 ---
 
