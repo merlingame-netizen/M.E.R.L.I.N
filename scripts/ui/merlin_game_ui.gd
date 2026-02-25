@@ -218,6 +218,7 @@ var _card_3d_active := false   # Only tilt when card is displayed and idle
 # Souffle d'Ogham button (bottom-right)
 var _souffle_btn: Button
 var _souffle_active := false
+var _perk_badge: Label = null  # B.1 — shows selected perk name near Souffle button
 
 # Bestiole companion (bottom-left, permanent)
 var _bestiole_mini: Label
@@ -403,7 +404,7 @@ func _configure_ui() -> void:
 	_souffle_btn.name = "SouffleBtn"
 	_souffle_btn.text = SOUFFLE_ICON
 	_souffle_btn.custom_minimum_size = Vector2(56, 56)
-	_souffle_btn.tooltip_text = "Souffle d'Ogham: +4 au prochain jet (usage unique)"
+	_souffle_btn.tooltip_text = "Souffle d'Ogham: bonus au prochain jet (usage unique)"
 	MerlinVisual.apply_celtic_option_theme(_souffle_btn, MerlinVisual.CRT_PALETTE.souffle)
 	_souffle_btn.z_index = 20
 	_souffle_btn.mouse_filter = Control.MOUSE_FILTER_STOP
@@ -411,6 +412,17 @@ func _configure_ui() -> void:
 	_souffle_btn.mouse_entered.connect(func(): SFXManager.play("hover"))
 	add_child(_souffle_btn)
 	_update_souffle_btn_state()
+
+	# B.1 — Perk badge: shows selected perk name above Souffle button
+	_perk_badge = Label.new()
+	_perk_badge.name = "PerkBadge"
+	_perk_badge.text = ""
+	_perk_badge.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	_perk_badge.add_theme_font_size_override("font_size", 9)
+	_perk_badge.add_theme_color_override("font_color", MerlinVisual.CRT_PALETTE.amber_bright)
+	_perk_badge.visible = false
+	_perk_badge.z_index = 20
+	add_child(_perk_badge)
 
 	# "Talk to Merlin" button (bottom-right, above Souffle)
 	_dialogue_btn = Button.new()
@@ -827,6 +839,11 @@ func _layout_run_zones() -> void:
 	if _souffle_btn and is_instance_valid(_souffle_btn):
 		_souffle_btn.position = Vector2(vp_size.x - 68.0, vp_size.y - 68.0)
 
+	# B.1 — Position perk badge above Souffle button
+	if _perk_badge and is_instance_valid(_perk_badge):
+		_perk_badge.position = Vector2(vp_size.x - 76.0, vp_size.y - 84.0)
+		_perk_badge.custom_minimum_size = Vector2(72.0, 14.0)
+
 	# Position Dialogue button above Souffle
 	if _dialogue_btn and is_instance_valid(_dialogue_btn):
 		_dialogue_btn.position = Vector2(vp_size.x - 84.0, vp_size.y - 112.0)
@@ -1233,6 +1250,19 @@ func update_aspects(_aspects: Dictionary) -> void:
 
 func update_souffle(souffle: int) -> void:
 	_update_souffle(souffle)
+
+
+func update_selected_perk(perk_id: String) -> void:
+	## B.1 — Called by controller/store to show selected perk badge near Souffle.
+	if _perk_badge == null or not is_instance_valid(_perk_badge):
+		return
+	if perk_id.is_empty():
+		_perk_badge.visible = false
+		return
+	var pdata: Dictionary = MerlinConstants.SOUFFLE_PERK_TYPES.get(perk_id, {})
+	var pname: String = str(pdata.get("name", perk_id.capitalize()))
+	_perk_badge.text = "[%s]" % pname
+	_perk_badge.visible = true
 
 
 func _update_souffle(souffle: int) -> void:

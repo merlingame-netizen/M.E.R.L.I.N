@@ -168,6 +168,8 @@ const HOTSPOT_DEFS := [
 	{"name": "options", "icon": 3, "label": "Options", "palette_key": "phosphor_dim", "ratio": Vector2(0.86, 0.10)},
 	{"name": "arbre", "icon": 1, "label": "Arbre", "palette_key": "phosphor_dim", "ratio": Vector2(0.06, 0.45)},
 	{"name": "collection", "icon": 2, "label": "Collection", "palette_key": "amber_dim", "ratio": Vector2(0.88, 0.45)},
+	# B.1 — Souffle Perk selection (bottom-left, before departure)
+	{"name": "souffle", "icon": 4, "label": "Souffle", "palette_key": "phosphor", "ratio": Vector2(0.06, 0.80)},
 ]
 
 # =============================================================================
@@ -186,6 +188,7 @@ var _bubble: MerlinBubble = null
 var _radial: BiomeRadial = null
 var _partir_btn: Button = null
 var _hotspots: Array = []
+var _perk_overlay: Control = null  # B.1 — Souffle Perk selection overlay
 
 # =============================================================================
 # STATE
@@ -473,6 +476,9 @@ func _on_hotspot_pressed(hotspot_name: String) -> void:
 		"collection":
 			SFXManager.play("whoosh")
 			PixelTransition.transition_to(SCENE_COLLECTION)
+		"souffle":
+			SFXManager.play("whoosh")
+			_show_perk_overlay()
 
 
 func _on_partir_pressed() -> void:
@@ -680,3 +686,176 @@ func _play_entry_animation() -> void:
 		var tw := create_tween().set_parallel(true)
 		tw.tween_property(_partir_btn, "modulate:a", 1.0, 0.4).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
 		tw.tween_property(_partir_btn, "scale", Vector2(1.0, 1.0), 0.4).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
+
+
+# =============================================================================
+# B.1 — SOUFFLE PERK OVERLAY
+# =============================================================================
+
+func _show_perk_overlay() -> void:
+	## Show Souffle Perk selection overlay (modal, 4 perk cards).
+	if _perk_overlay != null and is_instance_valid(_perk_overlay):
+		_perk_overlay.visible = true
+		return
+
+	var current_perk: String = ""
+	if store:
+		current_perk = str(store.state.get("run", {}).get("perks", {}).get("selected_perk", ""))
+
+	# Backdrop
+	_perk_overlay = Control.new()
+	_perk_overlay.set_anchors_preset(Control.PRESET_FULL_RECT)
+	var bg := ColorRect.new()
+	bg.set_anchors_preset(Control.PRESET_FULL_RECT)
+	bg.color = Color(0.0, 0.0, 0.0, 0.78)
+	_perk_overlay.add_child(bg)
+
+	# Panel
+	var vp: Vector2 = get_viewport_rect().size
+	var panel := PanelContainer.new()
+	panel.custom_minimum_size = Vector2(540, 380)
+	panel.position = (vp - Vector2(540, 380)) * 0.5
+	var panel_style := StyleBoxFlat.new()
+	panel_style.bg_color = MerlinVisual.CRT_PALETTE.bg_panel
+	panel_style.border_color = MerlinVisual.CRT_PALETTE.amber
+	panel_style.set_border_width_all(2)
+	panel_style.set_corner_radius_all(8)
+	panel_style.content_margin_left = 24
+	panel_style.content_margin_right = 24
+	panel_style.content_margin_top = 20
+	panel_style.content_margin_bottom = 20
+	panel.add_theme_stylebox_override("panel", panel_style)
+	_perk_overlay.add_child(panel)
+
+	var vbox := VBoxContainer.new()
+	vbox.add_theme_constant_override("separation", 14)
+	panel.add_child(vbox)
+
+	# Title
+	var title := Label.new()
+	title.text = "Choisir ton Souffle d'Ogham"
+	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	title.add_theme_color_override("font_color", MerlinVisual.CRT_PALETTE.amber_bright)
+	var title_font: Font = MerlinVisual.get_font("title")
+	if title_font:
+		title.add_theme_font_override("font", title_font)
+	title.add_theme_font_size_override("font_size", 18)
+	vbox.add_child(title)
+
+	# 4 perk cards in 2×2 grid
+	var grid := GridContainer.new()
+	grid.columns = 2
+	grid.add_theme_constant_override("h_separation", 12)
+	grid.add_theme_constant_override("v_separation", 12)
+	vbox.add_child(grid)
+
+	var perk_keys: Array = MerlinConstants.SOUFFLE_PERK_TYPES.keys()
+	var _selected_in_overlay: String = current_perk
+	var perk_buttons: Array = []
+
+	for pk in perk_keys:
+		var pdata: Dictionary = MerlinConstants.SOUFFLE_PERK_TYPES.get(pk, {})
+		var card_btn := Button.new()
+		card_btn.custom_minimum_size = Vector2(230, 90)
+		card_btn.text = "[%s]\n%s" % [str(pdata.get("name", pk)), str(pdata.get("description", ""))]
+		card_btn.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+		var is_selected: bool = pk == current_perk
+
+		var style_normal := StyleBoxFlat.new()
+		style_normal.set_corner_radius_all(6)
+		style_normal.set_border_width_all(2 if is_selected else 1)
+		style_normal.bg_color = MerlinVisual.CRT_PALETTE.bg_panel if not is_selected else MerlinVisual.CRT_PALETTE.bg_dark
+		style_normal.border_color = MerlinVisual.CRT_PALETTE.amber if is_selected else MerlinVisual.CRT_PALETTE.phosphor_dim
+		card_btn.add_theme_stylebox_override("normal", style_normal)
+		card_btn.add_theme_color_override("font_color", MerlinVisual.CRT_PALETTE.phosphor if not is_selected else MerlinVisual.CRT_PALETTE.amber_bright)
+		card_btn.add_theme_font_size_override("font_size", 11)
+
+		# Capture pk for the lambda
+		var captured_pk: String = pk
+		card_btn.pressed.connect(func(): _on_perk_card_selected(captured_pk))
+		card_btn.mouse_entered.connect(func(): SFXManager.play("hover"))
+		grid.add_child(card_btn)
+		perk_buttons.append({"key": pk, "btn": card_btn})
+
+	# Confirm + Cancel row
+	var btn_row := HBoxContainer.new()
+	btn_row.alignment = BoxContainer.ALIGNMENT_CENTER
+	btn_row.add_theme_constant_override("separation", 20)
+	vbox.add_child(btn_row)
+
+	var confirm_btn := Button.new()
+	confirm_btn.text = "Confirmer"
+	confirm_btn.custom_minimum_size = Vector2(140, 44)
+	var cs := StyleBoxFlat.new()
+	cs.bg_color = MerlinVisual.CRT_PALETTE.amber
+	cs.set_border_width_all(2)
+	cs.border_color = MerlinVisual.CRT_PALETTE.amber_bright
+	cs.set_corner_radius_all(6)
+	confirm_btn.add_theme_stylebox_override("normal", cs)
+	confirm_btn.add_theme_color_override("font_color", MerlinVisual.CRT_PALETTE.bg_panel)
+	confirm_btn.pressed.connect(_on_perk_confirmed)
+	confirm_btn.mouse_entered.connect(func(): SFXManager.play("hover"))
+	btn_row.add_child(confirm_btn)
+
+	var cancel_btn := Button.new()
+	cancel_btn.text = "Annuler"
+	cancel_btn.custom_minimum_size = Vector2(110, 44)
+	cancel_btn.pressed.connect(_on_perk_cancelled)
+	cancel_btn.mouse_entered.connect(func(): SFXManager.play("hover"))
+	btn_row.add_child(cancel_btn)
+
+	add_child(_perk_overlay)
+	SFXManager.play("card_draw")
+
+
+func _on_perk_card_selected(perk_id: String) -> void:
+	## Called when a perk card button is pressed — store tentative selection.
+	SFXManager.play("click")
+	if _perk_overlay == null or not is_instance_valid(_perk_overlay):
+		return
+	# Find the panel → vbox → grid and update button styles
+	var panel: Node = _perk_overlay.get_child(1)  # index 1 = PanelContainer
+	if panel == null:
+		return
+	var vbox: Node = panel.get_child(0) if panel.get_child_count() > 0 else null
+	if vbox == null:
+		return
+	var grid: Node = vbox.get_child(1) if vbox.get_child_count() > 1 else null
+	if grid == null:
+		return
+	var perk_keys: Array = MerlinConstants.SOUFFLE_PERK_TYPES.keys()
+	for i in perk_keys.size():
+		if i >= grid.get_child_count():
+			break
+		var btn: Button = grid.get_child(i) as Button
+		if btn == null:
+			continue
+		var is_sel: bool = perk_keys[i] == perk_id
+		var style_upd := StyleBoxFlat.new()
+		style_upd.set_corner_radius_all(6)
+		style_upd.set_border_width_all(2 if is_sel else 1)
+		style_upd.bg_color = MerlinVisual.CRT_PALETTE.bg_dark if is_sel else MerlinVisual.CRT_PALETTE.bg_panel
+		style_upd.border_color = MerlinVisual.CRT_PALETTE.amber if is_sel else MerlinVisual.CRT_PALETTE.phosphor_dim
+		btn.add_theme_stylebox_override("normal", style_upd)
+		btn.add_theme_color_override("font_color", MerlinVisual.CRT_PALETTE.amber_bright if is_sel else MerlinVisual.CRT_PALETTE.phosphor)
+	# Store tentative selection on the overlay node as metadata
+	_perk_overlay.set_meta("pending_perk", perk_id)
+
+
+func _on_perk_confirmed() -> void:
+	## Dispatch SELECT_PERK with the pending selection and close overlay.
+	SFXManager.play("click")
+	if _perk_overlay == null or not is_instance_valid(_perk_overlay):
+		return
+	var perk_id: String = str(_perk_overlay.get_meta("pending_perk", ""))
+	if store and not perk_id.is_empty():
+		store.dispatch({"type": "SELECT_PERK", "perk_id": perk_id})
+		print("[HubAntre] Souffle Perk selected: %s" % perk_id)
+	_perk_overlay.visible = false
+
+
+func _on_perk_cancelled() -> void:
+	## Close overlay without saving.
+	SFXManager.play("click")
+	if _perk_overlay and is_instance_valid(_perk_overlay):
+		_perk_overlay.visible = false

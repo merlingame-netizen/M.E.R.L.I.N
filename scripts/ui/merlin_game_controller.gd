@@ -784,7 +784,7 @@ func _resolve_choice(option: int) -> void:
 		# Headless: instant dice roll, no UI animations
 		dice_result = randi_range(1, 20)
 		if ui and is_instance_valid(ui) and ui.is_souffle_active():
-			dice_result = mini(dice_result + 4, 20)
+			dice_result = mini(dice_result + _get_souffle_perk_dc_bonus(), 20)
 			ui.consume_souffle_active()
 			if store and store.has_method("use_souffle"):
 				store.use_souffle()
@@ -1053,13 +1053,15 @@ func _run_dice_roll(dc: int) -> int:
 	_try_tutorial("first_dice_roll")
 	var target: int = randi_range(1, 20)
 
-	# Souffle d'Ogham bonus: +4 if active
+	# Souffle d'Ogham bonus: perk-dependent (B.1)
 	if ui and is_instance_valid(ui) and ui.is_souffle_active():
-		target = mini(target + 4, 20)
+		var perk_bonus: int = _get_souffle_perk_dc_bonus()
+		target = mini(target + perk_bonus, 20)
 		ui.consume_souffle_active()
 		if store and store.has_method("use_souffle"):
 			store.use_souffle()
-		print("[TRIADE] Souffle bonus applied: +4 → D20=%d" % target)
+		_apply_souffle_perk_side_effect()
+		print("[TRIADE] Souffle bonus applied: +%d → D20=%d" % [perk_bonus, target])
 		_try_tutorial("first_souffle_spent")
 
 	SFXManager.play("dice_shake")
@@ -1794,6 +1796,11 @@ func _on_state_changed(_state: Dictionary) -> void:
 				if state_val == 0 or state_val == 2:  # BAS or HAUT
 					_try_tutorial("first_extreme_reached")
 
+	# B.1 — Sync perk badge when state changes
+	if ui and is_instance_valid(ui) and ui.has_method("update_selected_perk") and store:
+		var selected_perk: String = str(store.state.get("run", {}).get("perks", {}).get("selected_perk", ""))
+		ui.update_selected_perk(selected_perk)
+
 
 
 
@@ -2231,6 +2238,61 @@ func _try_tutorial(trigger_key: String) -> void:
 	# Show via Merlin bubble (non-blocking, auto-dismiss)
 	if ui and is_instance_valid(ui) and ui.has_method("show_merlin_dialogue_response"):
 		ui.show_merlin_dialogue_response(text)
+
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# B.1 — SOUFFLE PERK HELPERS
+# ═══════════════════════════════════════════════════════════════════════════════
+
+func _get_souffle_perk_dc_bonus() -> int:
+	## Returns DC dice bonus for the selected Souffle Perk.
+	## Fallback: +4 (same as pre-B.1 hardcoded value).
+	if store == null:
+		return 4
+	var perk_id: String = str(store.state.get("run", {}).get("perks", {}).get("selected_perk", ""))
+	match perk_id:
+		"bouclier":     return 2   # Protection: smaller bonus, shield side-effect
+		"surge":        return 6   # Power: large dice bonus
+		"vision":       return 2   # Reveal: smaller bonus, reveal side-effect
+		"canalisation": return 4   # Balanced: same as legacy +4
+		_:              return 4   # No perk selected → legacy behavior
+
+
+func _apply_souffle_perk_side_effect() -> void:
+	## Apply the non-DC side effect of the selected perk when Souffle is used.
+	if store == null:
+		return
+	var perk_id: String = str(store.state.get("run", {}).get("perks", {}).get("selected_perk", ""))
+	match perk_id:
+		"bouclier":
+			# Shield: set flag — next negative aspect shift is ignored
+			var run: Dictionary = store.state.get("run", {})
+			run["souffle_shield_active"] = true
+			store.state["run"] = run
+			print("[TRIADE] Souffle perk BOUCLIER: shield active for next negative effect")
+		"vision":
+			# Vision: set flag — next card's hidden effects will be revealed in UI
+			var run: Dictionary = store.state.get("run", {})
+			run["souffle_vision_active"] = true
+			store.state["run"] = run
+			print("[TRIADE] Souffle perk VISION: next hidden effects will be revealed")
+		"surge":
+			# Surge: handled by DC bonus alone (+6), no extra side-effect for MVP
+			print("[TRIADE] Souffle perk SURGE: +6 DC bonus applied")
+		"canalisation":
+			# Canalisation: activate equipped Ogham skill if available
+			if store and store.biomes:
+				var run: Dictionary = store.state.get("run", {})
+				var biome_key: String = str(run.get("current_biome", ""))
+				if not biome_key.is_empty():
+					var biome_ogham: String = ""
+					if store.biomes.has_method("get_biome_ogham"):
+						biome_ogham = str(store.biomes.get_biome_ogham(biome_key))
+					if not biome_ogham.is_empty() and store.has_method("dispatch"):
+						store.dispatch({"type": "TRIADE_USE_SKILL", "skill_id": biome_ogham, "card": current_card})
+					print("[TRIADE] Souffle perk CANALISATION: activated ogham '%s'" % biome_ogham)
+		_:
+			pass  # No perk selected or unrecognized
 
 
 func _exit_tree() -> void:

@@ -172,6 +172,11 @@ func build_default_state() -> Dictionary:
 			"aspects": aspects,
 			"souffle": MerlinConstants.SOUFFLE_START,
 			"souffle_used_once": false,
+			# B.1 — Souffle Perk (selected in Hub, applied when Souffle is used)
+			"perks": {
+				"selected_perk": "",  # "" | "bouclier" | "surge" | "vision" | "canalisation"
+				"perk_used": false,
+			},
 			"life_essence": MerlinConstants.LIFE_ESSENCE_START,
 			"mission": {
 				"type": "",
@@ -381,6 +386,19 @@ func _reduce(action: Dictionary) -> Dictionary:
 		"TRIADE_PROGRESS_MISSION":
 			var step: int = int(action.get("step", 1))
 			return _progress_mission(step)
+
+		# B.1 — Souffle Perk selection (Hub → persists across run start)
+		"SELECT_PERK":
+			var perk_id: String = str(action.get("perk_id", ""))
+			if not perk_id.is_empty() and not MerlinConstants.SOUFFLE_PERK_TYPES.has(perk_id):
+				return {"ok": false, "error": "unknown_perk: " + perk_id}
+			var run: Dictionary = state.get("run", {})
+			var perks: Dictionary = run.get("perks", {})
+			perks["selected_perk"] = perk_id
+			perks["perk_used"] = false
+			run["perks"] = perks
+			state["run"] = run
+			return {"ok": true, "selected_perk": perk_id}
 
 		"TRIADE_USE_SKILL":
 			var skill_id = action.get("skill_id", "")
@@ -645,6 +663,12 @@ func _init_triade_run() -> void:
 	}
 	run["souffle"] = MerlinConstants.SOUFFLE_START
 	run["souffle_used_once"] = false
+	# B.1 — preserve selected_perk across run start, reset perk_used only
+	var prev_perks: Dictionary = run.get("perks", {})
+	run["perks"] = {
+		"selected_perk": str(prev_perks.get("selected_perk", "")),
+		"perk_used": false,
+	}
 	run["life_essence"] = MerlinConstants.LIFE_ESSENCE_START
 	# Generate a mission from templates
 	run["mission"] = _generate_mission()
