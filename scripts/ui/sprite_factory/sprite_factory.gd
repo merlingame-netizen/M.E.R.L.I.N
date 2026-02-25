@@ -15,12 +15,16 @@ const UPSCALE_FACTOR := 4  ## 32 → 128px displayed
 ## Format: tag → { "category": str, "generator": str, "is_character": bool }
 
 static var TAG_REGISTRY := {
-	# Trees / Plants (category 1)
-	"chene": {"gen": "tree"}, "sapin": {"gen": "tree"}, "saule": {"gen": "tree"},
-	"arbre": {"gen": "tree"}, "arbres": {"gen": "tree"}, "bois": {"gen": "tree"},
-	"foret": {"gen": "tree"}, "fougere": {"gen": "bush"}, "bruyere": {"gen": "bush"},
-	"gui": {"gen": "bush"}, "mousse": {"gen": "bush"}, "champignon": {"gen": "mushroom"},
-	"nature": {"gen": "tree"}, "vegetal": {"gen": "bush"},
+	# Trees / Plants (category 1) — split: oak, pine, willow, undergrowth, bush, mushroom
+	"chene": {"gen": "oak"}, "arbre": {"gen": "oak"}, "arbres": {"gen": "oak"},
+	"bois": {"gen": "oak"}, "foret": {"gen": "oak"},
+	"sapin": {"gen": "pine"},
+	"saule": {"gen": "willow"}, "nemeton": {"gen": "willow"},
+	"fougere": {"gen": "undergrowth"}, "gui": {"gen": "undergrowth"},
+	"mousse": {"gen": "undergrowth"},
+	"bruyere": {"gen": "bush"},
+	"champignon": {"gen": "mushroom"},
+	"nature": {"gen": "oak"}, "vegetal": {"gen": "undergrowth"},
 
 	# Stones / Minerals (category 2)
 	"menhir": {"gen": "standing_stone"}, "pierre": {"gen": "standing_stone"},
@@ -29,10 +33,12 @@ static var TAG_REGISTRY := {
 	"cristal": {"gen": "standing_stone"}, "galet": {"gen": "cairn"},
 	"cercle": {"gen": "cairn"}, "sacre": {"gen": "standing_stone"},
 
-	# Weapons / Combat (category 3)
+	# Weapons / Combat (category 3) — split: sword, axe, shield, spear, dagger
 	"epee": {"gen": "sword"}, "lame": {"gen": "sword"},
-	"hache": {"gen": "axe"}, "lance": {"gen": "sword"},
-	"arc": {"gen": "axe"}, "bouclier": {"gen": "shield"},
+	"hache": {"gen": "axe"}, "arc": {"gen": "axe"},
+	"lance": {"gen": "spear"},
+	"dague": {"gen": "dagger"}, "poignard": {"gen": "dagger"},
+	"bouclier": {"gen": "shield"},
 	"combat": {"gen": "sword"}, "danger": {"gen": "axe"},
 	"arme": {"gen": "sword"},
 
@@ -60,9 +66,8 @@ static var TAG_REGISTRY := {
 	# Sacred / Ritual (category 8)
 	"rituel": {"gen": "altar"}, "calice": {"gen": "potion"},
 	"couronne": {"gen": "crown"}, "torc": {"gen": "crown"},
-	"nemeton": {"gen": "tree"},
 
-	# Characters — Humanoids (category 9)
+	# Characters — Humanoids (category 9) — split: bard separate from druid
 	"druide": {"gen": "druid", "is_char": true},
 	"merlin": {"gen": "druid", "is_char": true},
 	"guerrier": {"gen": "warrior", "is_char": true},
@@ -76,20 +81,22 @@ static var TAG_REGISTRY := {
 	"reine": {"gen": "noble", "is_char": true},
 	"seigneur": {"gen": "noble", "is_char": true},
 	"rencontre": {"gen": "villager", "is_char": true},
-	"barde": {"gen": "druid", "is_char": true},
+	"barde": {"gen": "bard", "is_char": true},
 
-	# Characters — Beasts (category 10)
+	# Characters — Beasts (category 10) — split: wolf, boar, fox, bear, deer, raven, raptor, owl
 	"loup": {"gen": "wolf", "is_char": true},
 	"predateur": {"gen": "wolf", "is_char": true},
-	"sanglier": {"gen": "wolf", "is_char": true},
+	"sanglier": {"gen": "boar", "is_char": true},
 	"cerf": {"gen": "deer", "is_char": true},
 	"biche": {"gen": "deer", "is_char": true},
 	"cheval": {"gen": "deer", "is_char": true},
-	"corbeau": {"gen": "bird", "is_char": true},
-	"aigle": {"gen": "bird", "is_char": true},
-	"hibou": {"gen": "bird", "is_char": true},
-	"faucon": {"gen": "bird", "is_char": true},
-	"chouette": {"gen": "bird", "is_char": true},
+	"renard": {"gen": "fox", "is_char": true},
+	"ours": {"gen": "bear", "is_char": true},
+	"corbeau": {"gen": "raven", "is_char": true},
+	"aigle": {"gen": "raptor", "is_char": true},
+	"faucon": {"gen": "raptor", "is_char": true},
+	"hibou": {"gen": "owl", "is_char": true},
+	"chouette": {"gen": "owl", "is_char": true},
 
 	# Characters — Fae / Mythical (category 11)
 	"korrigan": {"gen": "korrigan", "is_char": true},
@@ -122,8 +129,8 @@ static var TAG_REGISTRY := {
 	"neige": {"gen": "generic"}, "vent": {"gen": "generic"},
 
 	# Misc
-	"sentier": {"gen": "bush"}, "chemin": {"gen": "bush"},
-	"repos": {"gen": "tent"}, "monde": {"gen": "tree"},
+	"sentier": {"gen": "undergrowth"}, "chemin": {"gen": "undergrowth"},
+	"repos": {"gen": "tent"}, "monde": {"gen": "oak"},
 	"presage": {"gen": "standing_stone"}, "danse": {"gen": "fae"},
 	"malice": {"gen": "korrigan"},
 }
@@ -134,18 +141,23 @@ static var TAG_REGISTRY := {
 # ═══════════════════════════════════════════════════════════════════════════════
 
 static var _GENERATORS := {
-	# Category 1: Trees / Plants
-	"tree": SpriteTemplates.gen_tree,
+	# Category 1: Trees / Plants (split: oak, pine, willow, undergrowth)
+	"oak": SpriteTemplates.gen_oak,
+	"pine": SpriteTemplates.gen_pine,
+	"willow": SpriteTemplates.gen_willow,
+	"undergrowth": SpriteTemplates.gen_undergrowth,
 	"bush": SpriteTemplates.gen_bush,
 	"mushroom": SpriteTemplates.gen_mushroom,
 	# Category 2: Stones / Minerals
 	"standing_stone": SpriteTemplates.gen_standing_stone,
 	"dolmen": SpriteTemplates.gen_dolmen,
 	"cairn": SpriteTemplates.gen_cairn,
-	# Category 3: Weapons / Combat
+	# Category 3: Weapons / Combat (split: +spear, +dagger)
 	"sword": SpriteTemplates.gen_sword,
 	"axe": SpriteTemplates.gen_axe,
 	"shield": SpriteTemplates.gen_shield,
+	"spear": SpriteTemplates.gen_spear,
+	"dagger": SpriteTemplates.gen_dagger,
 	# Category 4: Fire / Light
 	"fire": SpriteTemplates.gen_fire,
 	"lantern": SpriteTemplates.gen_lantern,
@@ -161,15 +173,22 @@ static var _GENERATORS := {
 	# Category 8: Sacred / Ritual
 	"altar": SpriteTemplates.gen_altar,
 	"crown": SpriteTemplates.gen_crown,
-	# Category 9: Humanoid Characters
+	# Category 9: Humanoid Characters (split: +bard)
 	"druid": SpriteTemplates.gen_druid,
+	"bard": SpriteTemplates.gen_bard,
 	"warrior": SpriteTemplates.gen_warrior,
 	"villager": SpriteTemplates.gen_villager,
 	"noble": SpriteTemplates.gen_noble,
-	# Category 10: Beasts
+	# Category 10: Beasts (split: +boar, +fox, +bear, birds split below)
 	"wolf": SpriteTemplates.gen_wolf,
 	"deer": SpriteTemplates.gen_deer,
-	"bird": SpriteTemplates.gen_bird,
+	"boar": SpriteTemplates.gen_boar,
+	"fox": SpriteTemplates.gen_fox,
+	"bear": SpriteTemplates.gen_bear,
+	# Category 10b: Birds (split: raven, raptor, owl)
+	"raven": SpriteTemplates.gen_raven,
+	"raptor": SpriteTemplates.gen_raptor,
+	"owl": SpriteTemplates.gen_owl,
 	# Category 11: Fae / Mythical
 	"korrigan": SpriteTemplates.gen_korrigan,
 	"spirit": SpriteTemplates.gen_spirit,

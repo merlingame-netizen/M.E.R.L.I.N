@@ -144,3 +144,51 @@ static func scatter_pixels(img: Image, cx: float, cy: float, radius: float,
 		var px: int = int(cx + cos(angle) * dist)
 		var py: int = int(cy + sin(angle) * dist)
 		set_px(img, px, py, color)
+
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# EXTENDED DRAWING PRIMITIVES
+# ═══════════════════════════════════════════════════════════════════════════════
+
+static func draw_line(img: Image, x0: int, y0: int, x1: int, y1: int, color: Color) -> void:
+	## Bresenham line between any two points (diagonal support).
+	var dx: int = absi(x1 - x0)
+	var dy: int = -absi(y1 - y0)
+	var sx: int = 1 if x0 < x1 else -1
+	var sy: int = 1 if y0 < y1 else -1
+	var err: int = dx + dy
+	var cx: int = x0
+	var cy: int = y0
+	for _step in range(256):
+		set_px(img, cx, cy, color)
+		if cx == x1 and cy == y1:
+			break
+		var e2: int = 2 * err
+		if e2 >= dy:
+			err += dy
+			cx += sx
+		if e2 <= dx:
+			err += dx
+			cy += sy
+
+
+static func draw_arc(img: Image, cx: float, cy: float, r: float,
+		angle_start: float, angle_end: float, color: Color, steps: int = 16) -> void:
+	## Draw arc outline between two angles (radians).
+	for i in range(steps + 1):
+		var t: float = float(i) / float(steps)
+		var angle: float = lerpf(angle_start, angle_end, t)
+		set_px(img, int(cx + cos(angle) * r), int(cy + sin(angle) * r), color)
+
+
+static func dither_rect(img: Image, rx: int, ry: int, rw: int, rh: int,
+		c1: Color, c2: Color, density: float = 0.5) -> void:
+	## Fill rectangle with checkerboard dither between two colors.
+	for py in range(maxi(0, ry), mini(img.get_height(), ry + rh)):
+		for px in range(maxi(0, rx), mini(img.get_width(), rx + rw)):
+			var checker: bool = (px + py) % 2 == 0
+			var noise: float = hash_2d(px * 7 + 3, py * 13 + 7)
+			if checker or noise < density:
+				img.set_pixel(px, py, c1)
+			else:
+				img.set_pixel(px, py, c2)
