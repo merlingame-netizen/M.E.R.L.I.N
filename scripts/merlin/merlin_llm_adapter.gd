@@ -2490,22 +2490,22 @@ FORMAT DE REPONSE (JSON strict):
   "type": "narrative",
   "options": [
     {
-      "direction": "left",
-      "label": "Texte court du bouton",
-      "effects": [
-        {"type": "ADD_GAUGE", "target": "Vigueur", "value": 10},
-        {"type": "REMOVE_GAUGE", "target": "Ressources", "value": 5}
+	  "direction": "left",
+	  "label": "Texte court du bouton",
+	  "effects": [
+		{"type": "ADD_GAUGE", "target": "Vigueur", "value": 10},
+		{"type": "REMOVE_GAUGE", "target": "Ressources", "value": 5}
       ],
-      "preview_hint": "[+Vigueur, -Ressources]"
+	  "preview_hint": "[+Vigueur, -Ressources]"
     },
     {
-      "direction": "right",
-      "label": "Autre choix",
-      "effects": [
-        {"type": "REMOVE_GAUGE", "target": "Vigueur", "value": 5},
-        {"type": "ADD_GAUGE", "target": "Faveur", "value": 15}
+	  "direction": "right",
+	  "label": "Autre choix",
+	  "effects": [
+		{"type": "REMOVE_GAUGE", "target": "Vigueur", "value": 5},
+		{"type": "ADD_GAUGE", "target": "Faveur", "value": 15}
       ],
-      "preview_hint": "[-Vigueur, +Faveur]"
+	  "preview_hint": "[-Vigueur, +Faveur]"
     }
   ],
   "tags": ["tag1", "tag2"]

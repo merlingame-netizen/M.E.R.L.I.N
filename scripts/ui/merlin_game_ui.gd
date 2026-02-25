@@ -18,6 +18,7 @@ signal journal_requested
 # Explicit preloads — required when scripts created outside editor (UID cache stale)
 const PixelSceneCompositor = preload("res://scripts/ui/pixel_scene_compositor.gd")
 const PixelSceneData = preload("res://scripts/ui/pixel_scene_data.gd")
+const CardSceneCompositorClass = preload("res://scripts/ui/card_scene_compositor.gd")
 
 # ═══════════════════════════════════════════════════════════════════════════════
 # CONFIGURATION
@@ -147,6 +148,7 @@ const BIOME_DEFAULT_SEASON := {
 # Dynamic nodes (created in _configure_ui)
 var _card_source_badge: PanelContainer
 var _scene_compositor: PixelSceneCompositor
+var _scene_compositor_v2: Control = null  ## CardSceneCompositor — layered sprite system (feature flag)
 var _pixel_portrait: PixelCharacterPortrait
 var _npc_portrait: PixelNpcPortrait
 var bestiole_wheel: BestioleWheelSystem
@@ -293,10 +295,16 @@ func _configure_ui() -> void:
 	_illo_bg.color = Color(ink_bg.r, ink_bg.g, ink_bg.b, 0.95)
 
 	# Dynamic nodes: scene compositor + portrait
-	_scene_compositor = PixelSceneCompositor.new()
-	_scene_compositor.name = "SceneCompositor"
-	_scene_compositor.setup(220.0)
-	_tile_center.add_child(_scene_compositor)
+	if MerlinVisual.USE_LAYERED_SPRITES:
+		_scene_compositor_v2 = CardSceneCompositorClass.new()
+		_scene_compositor_v2.name = "LayeredCompositor"
+		_scene_compositor_v2.setup(MerlinVisual.LAYER_ILLUSTRATION_SIZE)
+		_tile_center.add_child(_scene_compositor_v2)
+	else:
+		_scene_compositor = PixelSceneCompositor.new()
+		_scene_compositor.name = "SceneCompositor"
+		_scene_compositor.setup(220.0)
+		_tile_center.add_child(_scene_compositor)
 
 	_pixel_portrait = PixelCharacterPortrait.new()
 	_pixel_portrait.name = "PixelPortrait"
@@ -1073,6 +1081,10 @@ func _apply_card_3d_transform() -> void:
 		var shine_margin_y: float = tilt.y * 15.0
 		_card_3d_shine.position = Vector2(shine_margin_x, shine_margin_y)
 
+	# Layered compositor parallax — depth effect per layer on hover
+	if _scene_compositor_v2 and is_instance_valid(_scene_compositor_v2):
+		_scene_compositor_v2.apply_parallax(tilt)
+
 
 func _enable_card_3d() -> void:
 	## Enable 3D tilt tracking (call after card entry animation settles).
@@ -1512,13 +1524,17 @@ func display_card(card: Dictionary) -> void:
 		LLMSourceBadge.update_badge(_card_source_badge, card_source)
 		_card_source_badge.visible = true
 
-	# Update scene compositor (dynamic pixel art per card context)
-	if _scene_compositor and is_instance_valid(_scene_compositor):
-		var vtags: Array = card.get("visual_tags", [])
-		var biome: String = str(card.get("biome", "foret_broceliande"))
-		var season: String = str(card.get("season", "automne"))
-		if vtags.is_empty():
-			vtags = _derive_card_fallback_tags(card)
+	# Update scene compositor (dynamic illustration per card context)
+	var vtags: Array = card.get("visual_tags", [])
+	var biome: String = str(card.get("biome", "foret_broceliande"))
+	var season: String = str(card.get("season", "automne"))
+	if vtags.is_empty():
+		vtags = _derive_card_fallback_tags(card)
+	if _scene_compositor_v2 and is_instance_valid(_scene_compositor_v2):
+		var card_type: String = str(card.get("type", "narrative"))
+		_scene_compositor_v2.compose_layers(vtags, biome, season, card_type)
+		_scene_compositor_v2.build_scene(true)
+	elif _scene_compositor and is_instance_valid(_scene_compositor):
 		_scene_compositor.compose_scene(vtags, biome, season)
 		_scene_compositor.assemble(true)
 
