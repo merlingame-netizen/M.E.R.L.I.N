@@ -156,6 +156,11 @@ func get_prioritized_context(game_state: Dictionary) -> String:
 	if not profile_ctx.is_empty():
 		sections.append({"text": profile_ctx, "priority": Priority.MEDIUM})
 
+	# B.3: Archetype context (~40 tokens, helps narrator align tone with archetype)
+	var archetype_ctx := _get_archetype_context()
+	if not archetype_ctx.is_empty():
+		sections.append({"text": archetype_ctx, "priority": Priority.MEDIUM})
+
 	# P1.10.1: Danger level context (life-based urgency)
 	var danger_ctx := _get_danger_context(game_state)
 	if not danger_ctx.is_empty():
@@ -315,6 +320,18 @@ func _get_player_profile_context() -> String:
 	if profile_summary.is_empty():
 		return ""
 	return profile_summary
+
+
+func _get_archetype_context() -> String:
+	## B.3: Inject archetype label + dominant traits into RAG context (~40 tokens).
+	## Helps narrator align tone and challenges with the player's archetype.
+	var arch_id: String = str(world_state.get("archetype_id", ""))
+	var arch_title: String = str(world_state.get("archetype_title", ""))
+	if arch_id.is_empty():
+		return ""
+	if arch_title.is_empty():
+		arch_title = arch_id.capitalize()
+	return "Archetype: %s — guide les enjeux vers le style %s" % [arch_title, arch_id]
 
 
 func _get_danger_context(game_state: Dictionary) -> String:

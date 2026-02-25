@@ -73,6 +73,41 @@ Phase P2 — LoRA Training (Plan Bi-Cerveaux)
 
 ---
 
+## Phase P3 — Features Avancees (~25h) — COMPLETE (2026-02-24)
+
+### WAVE 16: Dialogue Merlin
+- [x] P3.16.1 | UI dialogue 3 presets + libre + journal | merlin_game_ui.gd
+- [x] P3.16.2 | Generation reponse LLM | merlin_omniscient.gd
+- [x] P3.16.3 | Impact game state + is_processing guard | merlin_game_controller.gd
+
+### WAVE 17: Titres + What-If
+- [x] P3.17.1 | Titres poetiques GM brain | merlin_omniscient.gd
+- [x] P3.17.2 | Affichage titre UI (CAPTION_LARGE) | merlin_game_ui.gd
+- [x] P3.17.3 | What-if choix non-pris generation | merlin_omniscient.gd
+- [x] P3.17.4 | UI reveal post-choix staggered fade | merlin_game_ui.gd
+
+### WAVE 18: Reves
+- [x] P3.18.1 | Generation reves 80 tok T=0.9 | merlin_omniscient.gd
+- [x] P3.18.2 | Dream overlay (CRT_PALETTE colors) | merlin_game_ui.gd
+- [x] P3.18.3 | Trigger inter-biome | merlin_game_controller.gd
+
+### WAVE 19: Tutoriel Narratif
+- [x] P3.19.1 | Triggers 7 mecaniques | merlin_game_controller.gd
+- [x] P3.19.2 | Textes tutoriel | tutorial_narratives.json
+- [x] P3.19.3 | Integration diegetique via MerlinBubble | merlin_game_controller.gd
+
+### WAVE 20: Cross-Run Memory
+- [x] P3.20.1 | Summariser runs (past lives for prompt) | rag_manager.gd
+- [x] P3.20.2 | Merlin reference vies dans narrator prompt | merlin_omniscient.gd
+- [x] P3.20.3 | Journal visuel popup | merlin_game_ui.gd
+
+### WAVE 21: Integration P3
+- [x] P3.21.1 | E2E code review + 4 HIGH fixes (null safety, tree guard, journal wire, is_processing)
+- [x] P3.21.2 | UI/UX Bible conformity (5 colors, font sizes, button themes, touch targets)
+- [x] P3.21.3 | Validation + commit | `24cd876`
+
+---
+
 ## Phase 43: Refonte Gameplay — Phase A (Fondations)
 
 ### Plan consolide: `.claude/plans/playful-yawning-tarjan.md`
@@ -145,10 +180,10 @@ Plan: `.claude/plans/majestic-sprouting-pond.md`
 | # | Item | Statut |
 |---|------|--------|
 | B.1 | Souffle d'Ogham → Perk personnalisable | A FAIRE |
-| B.2 | UI Arbre de Vie (page 4 Hub) | A FAIRE |
-| B.3 | Archetype → bonus DC + contexte RAG | A FAIRE |
+| B.2 | UI Arbre de Vie (page 4 Hub) | FAIT (HubAntre hotspot + scene deja impl.) |
+| B.3 | Archetype → bonus DC + contexte RAG | FAIT (2026-02-25) |
 | B.4 | Aspects → impact narratif + bonus/malus | A FAIRE |
-| B.5 | Premiere run direct (skip Hub) | A FAIRE |
+| B.5 | Premiere run direct (skip Hub) | FAIT (2026-02-25) |
 
 ### Phase C — Bestiole & Structure
 | # | Item | Statut |

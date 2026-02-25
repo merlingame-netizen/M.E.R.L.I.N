@@ -382,6 +382,16 @@ func get_experience_tier() -> ExperienceTier:
 		return ExperienceTier.MASTER
 
 
+func get_archetype_id() -> String:
+	## B.3 — Returns archetype_id from quiz (empty string if not set).
+	return str(preferences.get("archetype_id", ""))
+
+
+func get_archetype_title() -> String:
+	## B.3 — Returns the archetype human-readable title (e.g. "Le Gardien").
+	return str(preferences.get("archetype_title", ""))
+
+
 func get_experience_tier_name() -> String:
 	match get_experience_tier():
 		ExperienceTier.INITIATE: return "Initie"
@@ -444,9 +454,12 @@ func get_summary_for_prompt() -> String:
 	elif avg_skill < 0.3:
 		skill_tag = "debutant"
 
-	# Assemble
+	# Assemble — include archetype if set (B.3)
+	var arch_title: String = get_archetype_title()
 	var line := "Joueur %s" % get_experience_tier_name()
-	if skill_tag != "":
+	if not arch_title.is_empty():
+		line += " (%s)" % arch_title
+	elif skill_tag != "":
 		line += " (%s)" % skill_tag
 	if traits.size() > 0:
 		line += ": " + ", ".join(traits)
@@ -479,6 +492,7 @@ func seed_from_quiz(quiz_result: Dictionary) -> void:
 
 	# Store archetype for reference
 	preferences["archetype_id"] = quiz_result.get("archetype_id", "")
+	preferences["archetype_title"] = quiz_result.get("archetype_title", "")
 	preferences["dominant_traits"] = quiz_result.get("dominant_traits", [])
 
 # ═══════════════════════════════════════════════════════════════════════════════

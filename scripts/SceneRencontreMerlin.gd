@@ -7,8 +7,10 @@
 
 extends Control
 
-const NEXT_SCENE := "res://scenes/HubAntre.tscn"
+const SCENE_HUB := "res://scenes/HubAntre.tscn"
+const SCENE_BIOME := "res://scenes/TransitionBiome.tscn"
 const DATA_PATH := "res://data/dialogues/scene_dialogues.json"
+var _next_scene: String = SCENE_HUB
 
 const UI_SPEED_FACTOR := 1.45
 const TYPEWRITER_DELAY := 0.011
@@ -626,7 +628,74 @@ func _phase_llm_intro() -> void:
 	if gm3 and gm3.has_method("set"):
 		gm3.set("selected_biome", "foret_broceliande")
 
+	# B.5 — First-run destination choice: Hub or direct adventure
+	if not is_inside_tree():
+		return
+	await _show_destination_choice()
+
 	_run_phase(Phase.TRANSITIONING)
+
+
+## B.5 — First-run destination choice: Hub exploration or direct adventure
+## Displays Merlin's question + 2 response buttons. Sets _next_scene based on choice.
+func _show_destination_choice() -> void:
+	if not is_inside_tree():
+		return
+
+	# Merlin asks the player
+	var fade := create_tween()
+	fade.tween_property(merlin_text, "modulate:a", 0.0, _scaled_delay(0.15))
+	await fade.finished
+	if not is_inside_tree():
+		return
+	merlin_text.modulate.a = 1.0
+	_update_dialogue_badge("static")
+	await _show_text("Veux-tu explorer l'Antre avant de partir... ou t'elancer directement dans l'aventure ?")
+	if not is_inside_tree():
+		return
+
+	# Show 2 choice buttons
+	_response_chosen = -1
+	response_buttons[0].text = "[1] Explorer le Refuge"
+	response_buttons[1].text = "[2] Commencer l'Aventure"
+	response_buttons[0].visible = true
+	response_buttons[1].visible = true
+	response_buttons[2].visible = false
+
+	var vp := get_viewport().get_visible_rect().size
+	var rc_width := minf(380.0, vp.x * 0.75)
+	var btn_area_top := card.position.y + card.size.y + 16.0
+	var total_h := 2.0 * 44.0 + 10.0
+	var btn_y := btn_area_top + ((vp.y - 24.0 - btn_area_top - total_h) * 0.5)
+	response_container.position = Vector2((vp.x - rc_width) * 0.5, btn_y)
+	response_container.size.x = rc_width
+	response_container.visible = true
+	for i in range(2):
+		response_buttons[i].modulate.a = 1.0
+	_update_response_badge("static")
+
+	while _response_chosen < 0 and not scene_finished:
+		if not is_inside_tree():
+			return
+		await get_tree().process_frame
+
+	# Apply destination based on choice
+	if _response_chosen == 1:
+		_next_scene = SCENE_BIOME
+		# Pre-set biome in GameManager so TransitionBiome has something to work with
+		var gm4 := get_node_or_null("/root/GameManager")
+		if gm4 and gm4.has_method("set"):
+			gm4.set("selected_biome", suggested_biome)
+			gm4.set("skipped_hub", true)
+	else:
+		_next_scene = SCENE_HUB
+
+	# Hide response buttons
+	response_container.visible = false
+	response_container.modulate.a = 1.0
+	for btn in response_buttons:
+		btn.modulate.a = 1.0
+		btn.visible = false
 
 
 ## LLM generate from RAG prompt — returns full narrative text or "" on failure
@@ -973,7 +1042,7 @@ func _transition_out() -> void:
 	tween.tween_callback(func():
 		_clear_merlin_scene_context()
 		if is_inside_tree():
-			PixelTransition.transition_to(NEXT_SCENE)
+			PixelTransition.transition_to(_next_scene)
 	)
 	await tween.finished
 

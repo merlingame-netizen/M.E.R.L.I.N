@@ -2,6 +2,68 @@
 
 > **Note**: Sessions anterieures archivees dans `archive/progress_archive_2026-02-05_to_2026-02-08.md`
 
+## Session: 2026-02-25 (Phase B Partielle — B.2 + B.3 + B.5 COMPLETE)
+
+### Backlog B — Progression (3 items livrés)
+
+**B.2 — Arbre de Vie (déjà implémenté, confirmé)**
+- Constat: HubAntre.gd avait déjà le hotspot "arbre" + navigation vers ArbreDeVie.tscn
+- ArbreDeVie.tscn + arbre_de_vie_ui.gd (494 L) entièrement implémentés avec bouton Retour
+- Marqué FAIT (aucune modification nécessaire)
+
+**B.5 — Première Run Directe** (`scripts/SceneRencontreMerlin.gd`)
+- Après la Rencontre Merlin, propose 2 boutons: "Explorer le Refuge" / "Commencer l'Aventure"
+- "Commencer l'Aventure" → TransitionBiome directement (skip Hub), pre-set biome = suggested_biome
+- "Explorer le Refuge" → HubAntre (comportement normal)
+- Architecture: `var _next_scene` + `_show_destination_choice()`, routing dynamique en `_transition_out()`
+
+**B.3 — Archétype → Bonus DC + Contexte RAG**
+- `merlin_constants.gd`: `ARCHETYPE_DC_BONUS` dict (8 archétypes, valeurs -1/0/+1)
+- `merlin_game_controller.gd`: applique `archetype_modifier` dans `_get_dc_for_direction()`
+- `player_profile_registry.gd`: `get_archetype_id()`, `get_archetype_title()`, archetype_title dans save + get_summary_for_prompt()
+- `merlin_omniscient.gd`: sync `archetype_id` + `archetype_title` dans registry_data → RAG world_state
+- `rag_manager.gd`: `_get_archetype_context()` (MEDIUM priority, ~40 tokens)
+
+**Commit pending (après validate.bat)**
+
+---
+
+## Session: 2026-02-24 (Phase P3 — Features Avancees, Waves 16-21 COMPLETE)
+
+### Phase P3 — Features Avancees (COMPLETE)
+
+**Wave 16-17: Merlin Dialogue + Titles + What-If** (commit `66cbb3d`)
+- Dialogue UI: 3 presets + free text + journal action (4th preset)
+- LLM response generation via MOS with tone-aware prompts
+- Card title: GM brain, 20 tokens, FALLBACK_TITLES (10 celtic)
+- What-if: generate 3 alternatives, staggered fade-in reveal on unchosen options
+
+**Wave 18: Dreams** (commit `c41fc13`)
+- Dream overlay: fullscreen bg_deep, typewriter text, gentle pulse
+- LLM dream generation: 80 tokens, T=0.9, 6 FALLBACK_DREAMS
+- Trigger: biome change detection in `_resolve_choice()`
+
+**Wave 19: Tutorial Narratif** (commit `c41fc13`)
+- 7 diegetic mechanic hints in `tutorial_narratives.json`
+- Triggers: first_card, dice_roll, souffle, ogham, biome, aspect, extreme
+- Displayed via MerlinBubble, each shown once per run
+
+**Wave 20: Cross-Run Memory** (commit `c41fc13`)
+- RAG: `get_past_lives_for_prompt()` — last 3 runs
+- Narrator prompt injection for continuity
+- Journal popup: scrollable past lives with BBCode
+
+**Wave 21: Integration P3** (commit `24cd876`)
+- LLM null safety: Variant intermediate pattern (5 MOS sites)
+- Dream overlay `is_inside_tree()` guard
+- Journal popup wiring (signal + controller handler)
+- Dialogue `is_processing` guard
+- UI/UX Bible: 5 hardcoded colors → CRT_PALETTE, named font sizes, button themes, 48px touch targets
+
+**Commits**: `66cbb3d` (W16-17), `c41fc13` (W18-20), `24cd876` (W21)
+
+---
+
 ## Session: 2026-02-24 (Phase P2 — LoRA Data Prep, Waves 12-13)
 
 ### Phase P2 — LoRA Training (Waves 12-13 COMPLETE)

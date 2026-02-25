@@ -1492,6 +1492,9 @@ func _sync_mos_to_rag() -> void:
 		registry_data["player_patterns"] = player_patterns
 		# P1.10.1: Sync player profile summary for RAG context
 		registry_data["player_profile_summary"] = player_profile.get_summary_for_prompt()
+		# B.3: Sync archetype for RAG context injection
+		registry_data["archetype_id"] = player_profile.get_archetype_id()
+		registry_data["archetype_title"] = player_profile.get_archetype_title()
 	if narrative:
 		var ctx: Dictionary = narrative.get_context_for_llm()
 		registry_data["active_arcs"] = ctx.get("active_arcs", [])

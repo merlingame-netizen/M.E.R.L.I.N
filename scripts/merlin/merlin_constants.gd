@@ -233,6 +233,19 @@ const DC_DIFFICULTY_LABELS := {
 	"hard": {"label": "Difficile", "color": Color(0.85, 0.30, 0.25), "max_dc": 20},
 }
 
+# B.3 — Archetype DC bonus: valeur negative = DC plus facile pour ce profil
+# "default" s'applique a tous les choix; "biome" et "social" peuvent etre ajoutes
+const ARCHETYPE_DC_BONUS := {
+	"gardien":     -1,   # Defenseur: plus facile d'agir avec prudence
+	"explorateur": +1,   # Aventureux: prend des risques, DC globalement plus eleve
+	"sage":         0,   # Equilibre
+	"heros":       -1,   # Heroique: facilite les actions directes
+	"guerisseur":   0,   # Equilibre
+	"stratege":    -1,   # Analytique: reduit les erreurs
+	"mystique":     0,   # Equilibre intuitif
+	"guide":       -1,   # Bienveillant: contexte social facilite
+}
+
 # Souffle Perk types (Phase B — stub for now)
 const SOUFFLE_PERK_TYPES := {
 	"bouclier": {

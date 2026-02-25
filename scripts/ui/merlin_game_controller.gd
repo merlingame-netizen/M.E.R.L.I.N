@@ -1272,7 +1272,17 @@ func _get_dc_for_direction(direction: String) -> int:
 	if store:
 		dc_bonus = int(store.state.get("run", {}).get("power_bonuses", {}).get("dc_reduction", 0))
 
-	return clampi(base_dc + modifier + _dynamic_modifier - dc_bonus, 2, 19)
+	# B.3 — Archetype DC bonus (read from GameManager.player_traits)
+	var archetype_modifier: int = 0
+	var gm_arch := get_node_or_null("/root/GameManager")
+	if gm_arch:
+		var traits = gm_arch.get("player_traits")
+		if traits is Dictionary:
+			var arch_id: String = str(traits.get("archetype_id", ""))
+			if MerlinConstants.ARCHETYPE_DC_BONUS.has(arch_id):
+				archetype_modifier = int(MerlinConstants.ARCHETYPE_DC_BONUS[arch_id])
+
+	return clampi(base_dc + modifier + _dynamic_modifier - dc_bonus + archetype_modifier, 2, 19)
 
 
 func _get_choice_label(option: int) -> String:
