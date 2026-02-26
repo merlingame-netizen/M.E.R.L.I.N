@@ -15,11 +15,12 @@ const SCREENSHOT_PATH := "user://debug/latest_screenshot.png"
 const STATE_PATH := "user://debug/latest_state.json"
 const LOG_PATH := "user://debug/log_buffer.json"
 const LOG_CAPACITY := 100
-const SCREENSHOT_INTERVAL := 30.0  ## Secondes entre screenshots auto (ambiant)
+const SCREENSHOT_INTERVAL := 0.1   ## Secondes entre screenshots auto (animation QA — 10fps)
 
 var _log_buffer: Array = []
 var _screenshot_timer: float = 0.0
 var _active: bool = false
+var _capturing: bool = false  ## Guard anti-overlap (await frame_post_draw)
 
 
 func _ready() -> void:
@@ -48,7 +49,7 @@ func _process(delta: float) -> void:
 	_screenshot_timer += delta
 	if _screenshot_timer >= SCREENSHOT_INTERVAL:
 		_screenshot_timer = 0.0
-		_capture_screenshot("timer")
+		_capture_screenshot("timer", false)  ## Pas d'historique pour timer (évite saturation disque)
 
 
 func _input(event: InputEvent) -> void:
@@ -114,32 +115,42 @@ func _on_souffle_changed(_old: int, _new_val: int) -> void:
 # Capture screenshot
 # ---------------------------------------------------------------------------
 
-func _capture_screenshot(trigger: String) -> void:
+func _capture_screenshot(trigger: String, save_history: bool = true) -> void:
 	## Capture le viewport courant. Ne fonctionne pas en mode headless.
+	## save_history=false pour les captures timer (10fps) — évite saturation disque.
+	if _capturing:
+		return  ## Guard anti-overlap : ignore si une capture est déjà en cours
+	_capturing = true
 	await RenderingServer.frame_post_draw
 
 	var vp: Viewport = get_viewport()
 	if not vp:
+		_capturing = false
 		return
 
 	var tex: ViewportTexture = vp.get_texture()
 	if not tex:
+		_capturing = false
 		return
 
 	var img: Image = tex.get_image()
 	if not img or img.is_empty():
+		_capturing = false
 		return
 
-	# Screenshot courant (écrase)
+	# Screenshot courant (écrase toujours — Live View panel)
 	var err: int = img.save_png(SCREENSHOT_PATH)
 	if err != OK:
+		_capturing = false
 		return
 
-	# Screenshot historique (horodaté)
-	var ts: String = str(int(Time.get_unix_time_from_system()))
-	img.save_png("user://debug/snap_%s_%s.png" % [ts, trigger])
+	# Screenshot historique (horodaté) — seulement pour les events significatifs
+	if save_history:
+		var ts: String = str(int(Time.get_unix_time_from_system()))
+		img.save_png("user://debug/snap_%s_%s.png" % [ts, trigger])
+		_append_log("[GameDebugServer] Screenshot: %s (%s)" % [trigger, ts])
 
-	_append_log("[GameDebugServer] Screenshot: %s (%s)" % [trigger, ts])
+	_capturing = false
 
 
 # ---------------------------------------------------------------------------
