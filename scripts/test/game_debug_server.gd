@@ -28,6 +28,12 @@ func _ready() -> void:
 		set_process_input(false)
 		return
 
+	# Pas de screenshots en mode headless (pas de display server = pas de viewport texture)
+	if DisplayServer.get_name() == "headless":
+		set_process(false)
+		set_process_input(false)
+		return
+
 	_active = true
 	DirAccess.make_dir_recursive_absolute(ProjectSettings.globalize_path(DEBUG_DIR))
 	_append_log("[GameDebugServer] Démarré — user://debug/ actif")
