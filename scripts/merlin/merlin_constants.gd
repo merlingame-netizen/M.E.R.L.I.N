@@ -1122,3 +1122,120 @@ const EXPEDITION_MERLIN_REACTIONS := {
 	"compagnon": "Un compagnon ! Le Monde sourit aux liens.",
 	"leger": "Voyager leger... rapide, mais tu sacrifies la preparation.",
 }
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# SYSTEME D'ALIGNEMENT — 5 Factions avec réputations pondérées
+# Scores -100 à +100, persistance cross-run (state["meta"]["faction_rep"])
+# Ref : docs/20_card_system/DOC_15_Faction_Alignment_System.md
+# ═══════════════════════════════════════════════════════════════════════════════
+
+const FACTIONS := ["druides", "korrigans", "humains", "anciens", "ankou"]
+
+const FACTION_INFO := {
+	"druides":   {"name": "Druides de Bretagne", "symbol": "chene",      "aspect_affinity": "Ame"},
+	"korrigans": {"name": "Korrigans des Marais", "symbol": "champignon", "aspect_affinity": "Monde"},
+	"humains":   {"name": "Clans Humains",         "symbol": "epee",      "aspect_affinity": "Corps"},
+	"anciens":   {"name": "Les Anciens",            "symbol": "menhir",    "aspect_affinity": "Ame"},
+	"ankou":     {"name": "L'Ankou",                "symbol": "faux",      "aspect_affinity": "Corps"},
+}
+
+const FACTION_SCORE_MIN := -100
+const FACTION_SCORE_MAX := 100
+const FACTION_SCORE_START := 0
+
+# Bandes de seuil — évalués du plus haut (honore) au plus bas (hostile)
+const FACTION_TIERS := {
+	"honore":       {"min": 60,   "label": "Honore"},
+	"sympathisant": {"min": 20,   "label": "Sympathisant"},
+	"neutre":       {"min": -19,  "label": "Neutre"},
+	"mefiant":      {"min": -59,  "label": "Mefiant"},
+	"hostile":      {"min": -100, "label": "Hostile"},
+}
+
+# Bonus/malus de début de run selon tier × faction
+# Tiers sans entrée = pas d'effet de début de run
+const FACTION_RUN_BONUSES := {
+	"druides":   {
+		"honore":       {"type": "ADD_SOUFFLE", "amount": 2},
+		"sympathisant": {"type": "ADD_KARMA",   "amount": 5},
+		"hostile":      {"type": "ADD_TENSION", "amount": 25},
+	},
+	"korrigans": {
+		"honore":       {"type": "HEAL_LIFE",   "amount": 20},
+		"sympathisant": {"type": "ADD_SOUFFLE", "amount": 1},
+		"hostile":      {"type": "DAMAGE_LIFE", "amount": 10},
+	},
+	"humains":   {
+		"honore":       {"type": "HEAL_LIFE",   "amount": 15},
+		"hostile":      {"type": "ADD_TENSION", "amount": 15},
+	},
+	"anciens":   {
+		"honore":       {"type": "ADD_SOUFFLE", "amount": 1},
+		"hostile":      {"type": "ADD_KARMA",   "amount": -10},
+	},
+	"ankou":     {
+		"honore":       {"type": "HEAL_LIFE",   "amount": 10},
+		"hostile":      {"type": "DAMAGE_LIFE", "amount": 15},
+	},
+}
+
+# Valeurs de delta pour ADD_REPUTATION
+const FACTION_DELTA_MINOR   := 5    # Auto-tag keyword, geste mineur
+const FACTION_DELTA_MAJOR   := 15   # Choix narratif significatif
+const FACTION_DELTA_EXTREME := 30   # Acte héroïque ou trahison majeure
+const FACTION_DECAY_RATE    := 0.08 # 8% de valeur absolue oublié par run
+
+# Keywords pour auto-tag Path B (merlin_llm_adapter._wrap_text_as_card)
+const FACTION_KEYWORDS := {
+	"druides":   ["druide", "ogham", "nemeton", "chene", "barde"],
+	"korrigans": ["korrigan", "farfadet", "marais", "lutin", "fee"],
+	"humains":   ["clan", "village", "guerrier", "humain", "paysan"],
+	"anciens":   ["ancien", "menhir", "dolmen", "eternite", "primordial"],
+	"ankou":     ["ankou", "mort", "faucheuse", "ame", "trepas"],
+}
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# TYPOLOGIES DE RUN — Couche modificatrice orthogonale à la Triade
+# Réf : docs/20_card_system/DOC_16_Run_Typologies.md
+# ═══════════════════════════════════════════════════════════════════════════════
+
+const RUN_TYPOLOGIES := {
+	"classique": {
+		"name": "Classique", "icon": "-",
+		"timer_enabled": false, "d20_modifier": 0, "dc_modifier": 0,
+		"card_bias": {}, "souffle_bonus": 0, "life_bonus": 0,
+		"llm_hint": "",
+	},
+	"urgence": {
+		"name": "Urgence", "icon": "!",
+		"timer_enabled": true, "timer_seconds": 10,
+		"d20_modifier": 0, "dc_modifier": 2,
+		"card_bias": {"event": 0.15, "narrative": 0.75},
+		"souffle_bonus": 1, "life_bonus": 0,
+		"timeout_effect": "ADD_TENSION:15",
+		"llm_hint": "URGENCE: crise immediate, options breves.",
+	},
+	"parieur": {
+		"name": "Parieur", "icon": "?",
+		"timer_enabled": false, "d20_modifier": 0, "dc_modifier": 0,
+		"card_bias": {}, "d20_outcome_modifier": true,
+		"crit_threshold": 17, "fumble_threshold": 4,
+		"souffle_bonus": 0, "life_bonus": 10,
+		"llm_hint": "PARIEUR: hasard capricieux, consequences imprevues.",
+	},
+	"diplomate": {
+		"name": "Diplomate", "icon": "O",
+		"timer_enabled": false, "d20_modifier": 2, "dc_modifier": -1,
+		"card_bias": {"narrative": 0.90}, "faction_delta_mult": 2.0,
+		"souffle_bonus": 0, "life_bonus": 0,
+		"llm_hint": "DIPLOMATE: alliances, factions, negociation.",
+	},
+	"chasseur": {
+		"name": "Chasseur", "icon": ">",
+		"timer_enabled": false, "d20_modifier": 0, "dc_modifier": 0,
+		"card_bias": {"event": 0.20, "narrative": 0.65},
+		"minigame_chance_bonus": 0.25, "awen_regen_bonus": 1,
+		"souffle_bonus": 0, "life_bonus": 0,
+		"llm_hint": "CHASSEUR: traque, Bestiole, nature, instinct.",
+	},
+}

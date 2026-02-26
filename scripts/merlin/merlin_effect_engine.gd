@@ -91,6 +91,11 @@ const VALID_CODES := {
 	"GRANT_PITY": 1,
 	"REDUCE_DIFFICULTY_NEXT": 1,
 	"FORCE_SOFT_SUCCESS": 1,
+	# ═══════════════════════════════════════════════════════════════════════════
+	# FACTION ALIGNMENT SYSTEM
+	# ADD_REPUTATION:faction_id:delta  (ex: ADD_REPUTATION:druides:15)
+	# ═══════════════════════════════════════════════════════════════════════════
+	"ADD_REPUTATION": 2,
 }
 
 
@@ -292,6 +297,11 @@ func _apply_parsed(state: Dictionary, parsed: Dictionary) -> bool:
 			return _apply_difficulty_mod(state, _to_int(args[0]))
 		"FORCE_SOFT_SUCCESS":
 			return _apply_force_soft_success(state, args[0])
+		# ═══════════════════════════════════════════════════════════════════════
+		# FACTION ALIGNMENT
+		# ═══════════════════════════════════════════════════════════════════════
+		"ADD_REPUTATION":
+			return _apply_faction_reputation(state, args[0], _to_int(args[1]))
 		_:
 			return false
 
@@ -927,3 +937,70 @@ func get_unresolved_debts(state: Dictionary) -> Array:
 		if debt is Dictionary and not debt.get("resolved", false):
 			unresolved.append(debt)
 	return unresolved
+
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# FACTION ALIGNMENT HELPERS
+# ═══════════════════════════════════════════════════════════════════════════════
+
+## Convertit un score faction en tier string.
+## Parcours du haut (honore) vers le bas (hostile).
+func _score_to_tier(score: int) -> String:
+	if score >= 60:
+		return "honore"
+	elif score >= 20:
+		return "sympathisant"
+	elif score >= -19:
+		return "neutre"
+	elif score >= -59:
+		return "mefiant"
+	else:
+		return "hostile"
+
+
+## Construit le dictionnaire faction_context depuis faction_rep.
+func _build_faction_context(rep_dict: Dictionary) -> Dictionary:
+	var tiers: Dictionary = {}
+	var active_effects: Array = []
+	var dominant: String = ""
+	var dominant_score: int = 0
+	for faction in MerlinConstants.FACTIONS:
+		var score: int = int(rep_dict.get(faction, 0))
+		var tier: String = _score_to_tier(score)
+		tiers[faction] = tier
+		if tier != "neutre":
+			active_effects.append({"faction": faction, "tier": tier, "score": score})
+		if abs(score) > abs(dominant_score):
+			dominant = faction
+			dominant_score = score
+	return {
+		"dominant": dominant,
+		"tiers": tiers,
+		"active_effects": active_effects,
+	}
+
+
+## Applique un delta de réputation à une faction.
+## Gère le multiplicateur Diplomate si la typology du run l'exige.
+func _apply_faction_reputation(state: Dictionary, faction: String, delta: int) -> bool:
+	if not MerlinConstants.FACTIONS.has(faction):
+		return false
+	# Multiplicateur Diplomate
+	var run: Dictionary = state.get("run", {})
+	var typology: String = str(run.get("typology", "classique"))
+	if typology == "diplomate":
+		var mult: float = float(MerlinConstants.RUN_TYPOLOGIES.get("diplomate", {}).get("faction_delta_mult", 1.0))
+		delta = int(float(delta) * mult)
+	# Clamp et mise à jour
+	var meta: Dictionary = state.get("meta", {})
+	var faction_rep: Dictionary = meta.get("faction_rep", {})
+	var current: int = int(faction_rep.get(faction, MerlinConstants.FACTION_SCORE_START))
+	var new_score: int = clampi(current + delta, MerlinConstants.FACTION_SCORE_MIN, MerlinConstants.FACTION_SCORE_MAX)
+	faction_rep[faction] = new_score
+	meta["faction_rep"] = faction_rep
+	state["meta"] = meta
+	# Recompute faction_context si run actif
+	if not run.is_empty():
+		run["faction_context"] = _build_faction_context(faction_rep)
+		state["run"] = run
+	return true

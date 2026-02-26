@@ -189,6 +189,7 @@ var _radial: BiomeRadial = null
 var _partir_btn: Button = null
 var _hotspots: Array = []
 var _perk_overlay: Control = null  # B.1 — Souffle Perk selection overlay
+var _typology_panel: Control = null  # Typology selection panel (before run launch)
 
 # =============================================================================
 # STATE
@@ -504,6 +505,61 @@ func _on_radial_biome_selected(biome_key: String) -> void:
 	var biome_name: String = BIOME_DATA.get(biome_key, {}).get("name", biome_key)
 	_request_merlin_passive_comment("destination: %s" % biome_name)
 
+	# Afficher le panel de sélection de typology avant le lancement
+	_show_typology_panel()
+
+
+func _show_typology_panel() -> void:
+	var vs: Vector2 = get_viewport_rect().size
+	var panel := PanelContainer.new()
+	panel.custom_minimum_size = Vector2(280.0, 300.0)
+	panel.position = (vs - Vector2(280.0, 300.0)) / 2.0
+	_typology_panel = panel
+	add_child(panel)
+
+	var vbox := VBoxContainer.new()
+	vbox.add_theme_constant_override("separation", 8)
+	panel.add_child(vbox)
+
+	var title := Label.new()
+	title.text = "Mode de Run"
+	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	title.add_theme_font_size_override("font_size", 14)
+	vbox.add_child(title)
+
+	# Bouton Skip = Classique
+	var skip_btn := Button.new()
+	skip_btn.text = "- Classique (Standard)"
+	skip_btn.pressed.connect(func(): _on_typology_selected("classique"))
+	vbox.add_child(skip_btn)
+
+	# 4 typologies non-classiques
+	for typology_id in ["urgence", "parieur", "diplomate", "chasseur"]:
+		var tdata: Dictionary = MerlinConstants.RUN_TYPOLOGIES.get(typology_id, {})
+		var icon: String = str(tdata.get("icon", ""))
+		var name_str: String = str(tdata.get("name", typology_id))
+		var btn := Button.new()
+		btn.text = "%s %s" % [icon, name_str]
+		var tid: String = typology_id  # Capture for lambda
+		btn.pressed.connect(func(): _on_typology_selected(tid))
+		vbox.add_child(btn)
+
+	# Fade in
+	panel.modulate.a = 0.0
+	var tw := create_tween()
+	tw.tween_property(panel, "modulate:a", 1.0, 0.25)
+
+
+func _on_typology_selected(typology: String) -> void:
+	# Fermer le panel
+	if _typology_panel and is_instance_valid(_typology_panel):
+		var tw := create_tween()
+		tw.tween_property(_typology_panel, "modulate:a", 0.0, 0.2)
+		tw.tween_callback(_typology_panel.queue_free)
+		_typology_panel = null
+	# Enregistrer la typology dans le store
+	if store and is_instance_valid(store):
+		store.dispatch({"type": "SET_TYPOLOGY", "typology": typology})
 	_launch_adventure()
 
 

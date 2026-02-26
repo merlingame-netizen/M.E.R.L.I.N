@@ -206,6 +206,21 @@ func build_default_state() -> Dictionary:
 				"resonances_active": [],
 				"narrative_debt": [],
 			},
+			# Run typology (couche orthogonale Triade)
+			"typology": "classique",
+			"typology_state": {
+				"timer_remaining": 0.0,
+				"timeouts": 0,
+				"d20_last": 0,
+				"crits": 0,
+				"fumbles": 0,
+			},
+			# Faction context (snapshot meta.faction_rep en début de run)
+			"faction_context": {
+				"dominant": "",
+				"tiers": {},
+				"active_effects": [],
+			},
 		},
 		"bestiole": {
 			"name": "Bestiole",
@@ -226,6 +241,14 @@ func build_default_state() -> Dictionary:
 			"essence": essence,
 			"ogham_fragments": 0,
 			"liens": 0,
+			# Faction alignment — réputation cross-run (-100 à +100 par faction)
+			"faction_rep": {
+				"druides": MerlinConstants.FACTION_SCORE_START,
+				"korrigans": MerlinConstants.FACTION_SCORE_START,
+				"humains": MerlinConstants.FACTION_SCORE_START,
+				"anciens": MerlinConstants.FACTION_SCORE_START,
+				"ankou": MerlinConstants.FACTION_SCORE_START,
+			},
 			"achievements": {},
 			"ach_unlocked": [],
 			"unlocks": [],
@@ -525,6 +548,18 @@ func _reduce(action: Dictionary) -> Dictionary:
 			return _add_faveur(amount)
 
 		# ═══════════════════════════════════════════════════════════════════════
+		# RUN TYPOLOGY ACTIONS
+		# ═══════════════════════════════════════════════════════════════════════
+		"SET_TYPOLOGY":
+			var typology: String = str(action.get("typology", "classique"))
+			if not MerlinConstants.RUN_TYPOLOGIES.has(typology):
+				return {"ok": false, "error": "Unknown typology: %s" % typology}
+			var run: Dictionary = state.get("run", {})
+			run["typology"] = typology
+			state["run"] = run
+			return {"ok": true, "typology": typology}
+
+		# ═══════════════════════════════════════════════════════════════════════
 		# WORLD MAP PROGRESSION ACTIONS
 		# ═══════════════════════════════════════════════════════════════════════
 		"MAP_UPDATE_GAUGES":
@@ -624,6 +659,82 @@ func _add_faveur(amount: int) -> Dictionary:
 	return {"ok": true, "old": old_val, "new": new_val, "added": amount}
 
 
+# ─── Faction Alignment ───────────────────────────────────────────────────────
+
+## Applique la décroissance 8% des réputations vers 0 (début de run).
+func _decay_faction_rep() -> void:
+	var meta: Dictionary = state.get("meta", {})
+	var faction_rep: Dictionary = meta.get("faction_rep", {})
+	for faction in MerlinConstants.FACTIONS:
+		var score: int = int(faction_rep.get(faction, 0))
+		if score == 0:
+			continue
+		var decayed: int = int(float(score) * (1.0 - MerlinConstants.FACTION_DECAY_RATE))
+		faction_rep[faction] = decayed
+	meta["faction_rep"] = faction_rep
+	state["meta"] = meta
+
+
+## Snapshot faction_rep (meta) → run["faction_context"].
+func _build_and_store_faction_context() -> void:
+	var meta: Dictionary = state.get("meta", {})
+	var faction_rep: Dictionary = meta.get("faction_rep", {})
+	var run: Dictionary = state.get("run", {})
+	var context: Dictionary = {"dominant": "", "tiers": {}, "active_effects": []}
+	var dominant_score: int = 0
+	for faction in MerlinConstants.FACTIONS:
+		var score: int = int(faction_rep.get(faction, 0))
+		var tier: String = _faction_score_to_tier(score)
+		context["tiers"][faction] = tier
+		if tier != "neutre":
+			context["active_effects"].append({"faction": faction, "tier": tier, "score": score})
+		if abs(score) > abs(dominant_score):
+			context["dominant"] = faction
+			dominant_score = score
+	run["faction_context"] = context
+	state["run"] = run
+
+
+## Convertit un score faction en tier string.
+func _faction_score_to_tier(score: int) -> String:
+	if score >= 60:    return "honore"
+	elif score >= 20:  return "sympathisant"
+	elif score >= -19: return "neutre"
+	elif score >= -59: return "mefiant"
+	else:              return "hostile"
+
+
+## Applique les bonus/malus de début de run selon les tiers actuels.
+func _apply_faction_run_bonuses() -> void:
+	var run: Dictionary = state.get("run", {})
+	var faction_context: Dictionary = run.get("faction_context", {})
+	var tiers: Dictionary = faction_context.get("tiers", {})
+	for faction in MerlinConstants.FACTIONS:
+		var tier: String = str(tiers.get(faction, "neutre"))
+		var bonuses: Dictionary = MerlinConstants.FACTION_RUN_BONUSES.get(faction, {})
+		var bonus: Dictionary = bonuses.get(tier, {})
+		if bonus.is_empty():
+			continue
+		var bonus_type: String = str(bonus.get("type", ""))
+		var amount: int = int(bonus.get("amount", 0))
+		match bonus_type:
+			"ADD_SOUFFLE":
+				run["souffle"] = mini(int(run.get("souffle", 0)) + amount, MerlinConstants.SOUFFLE_MAX)
+			"ADD_KARMA":
+				var hidden: Dictionary = run.get("hidden", {})
+				hidden["karma"] = int(hidden.get("karma", 0)) + amount
+				run["hidden"] = hidden
+			"ADD_TENSION":
+				var hidden: Dictionary = run.get("hidden", {})
+				hidden["tension"] = clampi(int(hidden.get("tension", 0)) + amount, 0, 100)
+				run["hidden"] = hidden
+			"HEAL_LIFE":
+				run["life_essence"] = mini(int(run.get("life_essence", 0)) + amount, MerlinConstants.LIFE_ESSENCE_MAX)
+			"DAMAGE_LIFE":
+				run["life_essence"] = maxi(int(run.get("life_essence", 0)) - abs(amount), 0)
+	state["run"] = run
+
+
 func _generate_mission() -> Dictionary:
 	var templates: Dictionary = MerlinConstants.MISSION_TEMPLATES
 	# Weighted random pick
@@ -703,7 +814,20 @@ func _init_triade_run() -> void:
 		"narrative_debt": [],
 	}
 	run["power_bonuses"] = {"dc_reduction": 0}
+	# Reset typology state (typology lui-même est préservé — set par HubAntre avant le run)
+	run["typology_state"] = {
+		"timer_remaining": 0.0,
+		"timeouts": 0,
+		"d20_last": 0,
+		"crits": 0,
+		"fumbles": 0,
+	}
 	state["run"] = run
+
+	# Faction alignment — decay + context + bonuses (dans l'ordre)
+	_decay_faction_rep()
+	_build_and_store_faction_context()
+	_apply_faction_run_bonuses()
 
 	# Select scenario for this run (Hand of Fate 2-style quest)
 	var biome_for_scenario: String = str(run.get("current_biome", ""))

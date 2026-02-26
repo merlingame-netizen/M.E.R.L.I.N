@@ -4142,6 +4142,87 @@ func show_journal_popup(run_summaries: Array[Dictionary]) -> void:
 	)
 
 
+# ═══════════════════════════════════════════════════════════════════════════════
+# TYPOLOGY UI — Timer Urgence + Badge + Event feedback
+# ═══════════════════════════════════════════════════════════════════════════════
+
+var _typology_timer_bar: ProgressBar = null
+var _typology_badge: Label = null
+var _typology_timer_max: float = 10.0
+
+
+func show_typology_timer(total_seconds: float) -> void:
+	_typology_timer_max = total_seconds
+	if _typology_timer_bar == null or not is_instance_valid(_typology_timer_bar):
+		_typology_timer_bar = ProgressBar.new()
+		_typology_timer_bar.custom_minimum_size = Vector2(120.0, 14.0)
+		_typology_timer_bar.min_value = 0.0
+		_typology_timer_bar.max_value = total_seconds
+		_typology_timer_bar.value = total_seconds
+		_typology_timer_bar.show_percentage = false
+		_typology_timer_bar.modulate = Color(1.0, 0.4, 0.1, 1.0)  # Orange Urgence
+		if is_instance_valid(_top_status_bar):
+			_top_status_bar.add_child(_typology_timer_bar)
+	_typology_timer_bar.max_value = total_seconds
+	_typology_timer_bar.value = total_seconds
+	_typology_timer_bar.visible = true
+
+
+func update_typology_timer(remaining: float) -> void:
+	if _typology_timer_bar and is_instance_valid(_typology_timer_bar):
+		_typology_timer_bar.value = maxf(remaining, 0.0)
+		# Flash rouge dans les 3 dernières secondes
+		var alpha: float = 1.0 if remaining > 3.0 else 0.6 + 0.4 * sin(remaining * 6.0)
+		_typology_timer_bar.modulate = Color(1.0, 0.2 + (remaining / _typology_timer_max) * 0.4, 0.1, alpha)
+
+
+func hide_typology_timer() -> void:
+	if _typology_timer_bar and is_instance_valid(_typology_timer_bar):
+		_typology_timer_bar.visible = false
+
+
+func show_typology_badge(typology: String) -> void:
+	if typology == "classique":
+		hide_typology_badge()
+		return
+	var tdata: Dictionary = MerlinConstants.RUN_TYPOLOGIES.get(typology, {})
+	var icon: String = str(tdata.get("icon", ""))
+	var name_str: String = str(tdata.get("name", typology))
+	if _typology_badge == null or not is_instance_valid(_typology_badge):
+		_typology_badge = Label.new()
+		_typology_badge.add_theme_font_size_override("font_size", 11)
+		_typology_badge.modulate = Color(0.9, 0.8, 0.3, 1.0)  # Or
+		if is_instance_valid(_top_status_bar):
+			_top_status_bar.add_child(_typology_badge)
+	_typology_badge.text = "%s %s" % [icon, name_str]
+	_typology_badge.visible = true
+
+
+func hide_typology_badge() -> void:
+	if _typology_badge and is_instance_valid(_typology_badge):
+		_typology_badge.visible = false
+
+
+func show_typology_event(event: String) -> void:
+	## Feedback visuel rapide pour crit/fumble Parieur.
+	var label := Label.new()
+	var vs: Vector2 = get_viewport_rect().size
+	label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	label.custom_minimum_size = Vector2(200.0, 40.0)
+	label.position = Vector2((vs.x - 200.0) / 2.0, vs.y * 0.35)
+	label.add_theme_font_size_override("font_size", 20)
+	if event == "critique":
+		label.text = "CRITIQUE !"
+		label.modulate = Color(0.3, 1.0, 0.3, 1.0)
+	else:
+		label.text = "FUMBLE..."
+		label.modulate = Color(1.0, 0.2, 0.2, 1.0)
+	add_child(label)
+	var tw := create_tween()
+	tw.tween_property(label, "modulate:a", 0.0, 1.2)
+	tw.tween_callback(label.queue_free)
+
+
 func _exit_tree() -> void:
 	## Cleanup to prevent orphaned nodes and dangling signals.
 	_typewriter_abort = true

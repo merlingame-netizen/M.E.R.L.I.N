@@ -456,6 +456,12 @@ func _generate_card_two_stage(context: Dictionary) -> Dictionary:
 		if not karma_tone.is_empty():
 			user_prompt += "\nKARMA=%d: Ton %s. %s" % [karma, karma_tone, karma_hint]
 
+	# Typology hint — suffixe court (~10 tokens) pour adapter le ton selon la typology de run
+	var typology: String = str(context.get("typology", "classique"))
+	var typology_hint: String = str(MerlinConstants.RUN_TYPOLOGIES.get(typology, {}).get("llm_hint", ""))
+	if not typology_hint.is_empty():
+		user_prompt += "\n" + typology_hint
+
 	# No grammar for free text generation — budget tokens for rich narrative
 	var free_params := TRIADE_LLM_PARAMS.duplicate()
 	free_params.erase("grammar")
@@ -1872,7 +1878,32 @@ func build_triade_context(state: Dictionary) -> Dictionary:
 			"bond": int(bestiole.get("bond", 50)),
 		},
 		"flags": state.get("flags", {}),
+		# Faction alignment — peuple le placeholder {faction_status} (ligne 236 et 1304)
+		"faction_status": _build_faction_status_string(state),
+		# Run typology — injecté dans _generate_card_two_stage via typology_hint
+		"typology": str(run.get("typology", "classique")),
 	}
+
+
+## Construit la chaîne faction_status pour l'injection LLM.
+## N'inclut que les factions hors-neutre (~12 tokens).
+func _build_faction_status_string(state: Dictionary) -> String:
+	var run: Dictionary = state.get("run", {})
+	var faction_context: Dictionary = run.get("faction_context", {})
+	var tiers: Dictionary = faction_context.get("tiers", {})
+	if tiers.is_empty():
+		return ""
+	var parts: Array[String] = []
+	for faction in MerlinConstants.FACTIONS:
+		var tier: String = str(tiers.get(faction, "neutre"))
+		if tier == "neutre":
+			continue
+		var info: Dictionary = MerlinConstants.FACTION_INFO.get(faction, {})
+		var name: String = str(info.get("name", faction)).split(" ")[0]  # "Druides" from "Druides de Bretagne"
+		parts.append("%s:%s" % [name, tier])
+	if parts.is_empty():
+		return ""
+	return "Relations: %s." % ", ".join(parts)
 
 
 func _get_player_tendency(hidden: Dictionary) -> String:

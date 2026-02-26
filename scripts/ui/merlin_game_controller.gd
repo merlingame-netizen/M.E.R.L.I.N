@@ -49,6 +49,10 @@ var _free_center_remaining: int = 0
 var _shield_corps_used := false
 var _shield_monde_used := false
 
+# Typology timer (Urgence run type — delta-process, headless-safe)
+var _typology_timer_remaining: float = 0.0
+var _typology_timer_active: bool = false
+
 # Dynamic difficulty (balance-driven, Phase 5 LLM Intelligence Pipeline)
 var _dynamic_modifier: int = 0
 var _cards_since_rule_check: int = 0
@@ -459,6 +463,7 @@ func _request_next_card() -> void:
 		_detect_critical_choice()
 		if ui and is_instance_valid(ui):
 			ui.display_card(current_card)
+		_start_typology_timer()
 
 	print("[TRIADE] _request_next_card() done (dt=%dms)" % (Time.get_ticks_msec() - _rnc_t0))
 	is_processing = false
@@ -821,6 +826,13 @@ func _resolve_choice(option: int) -> void:
 	# --- 7b. Chance modifier: double positive on success, add penalty on failure ---
 	if not chance_minigame.is_empty():
 		modulated = _apply_chance_modifier_effects(modulated, outcome)
+
+	# --- 7c. Parieur typology modifier (crit >=17 bonus, fumble <=4 malus) ---
+	var parieur_result: Dictionary = _apply_parieur_modifier(dice_result, modulated)
+	modulated = parieur_result.get("effects", modulated)
+	var parieur_event: String = str(parieur_result.get("event", ""))
+	if not parieur_event.is_empty() and ui and is_instance_valid(ui) and ui.has_method("show_typology_event"):
+		ui.show_typology_event(parieur_event)
 
 	# --- 8. Apply talent shields & blessings ---
 	modulated = _apply_talent_shields(modulated)
@@ -1880,7 +1892,94 @@ func _on_mission_progress(step: int, total: int) -> void:
 # SIGNAL HANDLERS — UI
 # ═══════════════════════════════════════════════════════════════════════════════
 
+# ═══════════════════════════════════════════════════════════════════════════════
+# TYPOLOGY TIMER (Urgence run type — headless-safe)
+# ═══════════════════════════════════════════════════════════════════════════════
+
+func _process(delta: float) -> void:
+	if headless_mode or not _typology_timer_active:
+		return
+	_typology_timer_remaining -= delta
+	if ui and is_instance_valid(ui) and ui.has_method("update_typology_timer"):
+		ui.update_typology_timer(_typology_timer_remaining)
+	if _typology_timer_remaining <= 0.0:
+		_on_typology_timer_timeout()
+
+
+func _start_typology_timer() -> void:
+	if headless_mode or not store or not is_instance_valid(store):
+		return
+	var state: Dictionary = store.get_state() if store.has_method("get_state") else {}
+	var run: Dictionary = state.get("run", {})
+	var typology: String = str(run.get("typology", "classique"))
+	var tdata: Dictionary = MerlinConstants.RUN_TYPOLOGIES.get(typology, {})
+	if not tdata.get("timer_enabled", false):
+		return
+	_typology_timer_remaining = float(tdata.get("timer_seconds", 10))
+	_typology_timer_active = true
+	if ui and is_instance_valid(ui) and ui.has_method("show_typology_timer"):
+		ui.show_typology_timer(_typology_timer_remaining)
+
+
+func _stop_typology_timer() -> void:
+	_typology_timer_active = false
+	if ui and is_instance_valid(ui) and ui.has_method("hide_typology_timer"):
+		ui.hide_typology_timer()
+
+
+func _on_typology_timer_timeout() -> void:
+	_typology_timer_active = false
+	if ui and is_instance_valid(ui) and ui.has_method("hide_typology_timer"):
+		ui.hide_typology_timer()
+	# Appliquer effet timeout (ADD_TENSION:15)
+	var effect: String = str(MerlinConstants.RUN_TYPOLOGIES.get("urgence", {}).get("timeout_effect", ""))
+	if not effect.is_empty() and store and is_instance_valid(store):
+		store.dispatch({"type": "TRIADE_APPLY_EFFECTS", "effects": [effect], "source": "typology_timeout"})
+	# Forcer le choix gauche (option 0 = le plus sûr)
+	_on_option_chosen(0)
+
+
+## Retourne la typology de run active depuis le store.
+func _run_typology() -> String:
+	if not store or not is_instance_valid(store):
+		return "classique"
+	var state: Dictionary = store.get_state() if store.has_method("get_state") else {}
+	return str(state.get("run", {}).get("typology", "classique"))
+
+
+## Applique le modificateur D20 Parieur (crit >=17, fumble <=4).
+func _apply_parieur_modifier(roll: int, effects: Array) -> Dictionary:
+	if _run_typology() != "parieur":
+		return {"effects": effects, "event": ""}
+	var tdata: Dictionary = MerlinConstants.RUN_TYPOLOGIES.get("parieur", {})
+	var new_effects: Array = effects.duplicate()
+	var event: String = ""
+	if roll >= int(tdata.get("crit_threshold", 17)):
+		new_effects.append_array(["ADD_SOUFFLE:1", "ADD_KARMA:3"])
+		event = "critique"
+	elif roll <= int(tdata.get("fumble_threshold", 4)):
+		new_effects.append_array(["DAMAGE_LIFE:5", "ADD_TENSION:10"])
+		event = "fumble"
+	if not event.is_empty() and store and is_instance_valid(store):
+		var ts_update: Dictionary = {"crits": 0, "fumbles": 0}
+		if event == "critique":
+			ts_update = {"crits": 1, "fumbles": 0}
+		else:
+			ts_update = {"crits": 0, "fumbles": 1}
+		# Update typology_state dans le store
+		var state: Dictionary = store.get_state() if store.has_method("get_state") else {}
+		var run: Dictionary = state.get("run", {})
+		var ts: Dictionary = run.get("typology_state", {})
+		ts["crits"] = int(ts.get("crits", 0)) + ts_update["crits"]
+		ts["fumbles"] = int(ts.get("fumbles", 0)) + ts_update["fumbles"]
+		ts["d20_last"] = roll
+		run["typology_state"] = ts
+		state["run"] = run
+	return {"effects": new_effects, "event": event}
+
+
 func _on_option_chosen(option: int) -> void:
+	_stop_typology_timer()
 	_resolve_choice(option)
 
 
