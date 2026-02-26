@@ -828,6 +828,19 @@ func _wrap_text_as_card(raw_text: String, context: Dictionary) -> Dictionary:
 
 	var final_text: String = text if text.length() > 15 else NARRATIVE_FALLBACKS[randi() % NARRATIVE_FALLBACKS.size()]
 
+	# Path B auto-tag: scan final_text for faction keywords → ADD_REPUTATION on right option
+	var scan_text: String = final_text.to_lower()
+	for faction_id in MerlinConstants.FACTION_KEYWORDS:
+		var keywords: Array = MerlinConstants.FACTION_KEYWORDS[faction_id]
+		for kw in keywords:
+			if scan_text.find(str(kw)) >= 0:
+				options_out[2]["effects"].append({
+					"type": "ADD_REPUTATION",
+					"faction": faction_id,
+					"amount": MerlinConstants.FACTION_DELTA_MINOR,
+				})
+				break  # one match per faction is enough
+
 	# Detect minigame from narrative text and option verbs
 	var all_verbs: Array[String] = []
 	for ld in labels:

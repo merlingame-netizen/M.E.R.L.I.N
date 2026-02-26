@@ -253,6 +253,11 @@ func start_run(seed_value: int = -1) -> void:
 	if ui and is_instance_valid(ui) and ui.has_method("reset_run_visuals"):
 		ui.reset_run_visuals()
 
+	# Show typology badge if not Classique
+	var active_typology: String = _run_typology()
+	if active_typology != "classique" and ui and is_instance_valid(ui) and ui.has_method("show_typology_badge"):
+		ui.show_typology_badge(active_typology)
+
 	# Opening sequence then narrator intro before first card.
 	# In headless mode (autoplay), skip all blocking UI sequences (click-to-continue, typewriter, etc.)
 	if ui and is_instance_valid(ui) and not headless_mode:

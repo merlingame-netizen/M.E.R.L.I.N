@@ -1379,6 +1379,10 @@ func _apply_triade_effect(effect: Dictionary) -> void:
 			var hidden = state["run"].get("hidden", {})
 			hidden["tension"] = clampi(int(hidden.get("tension", 0)) + amount, 0, 100)
 			state["run"]["hidden"] = hidden
+		"ADD_REPUTATION":
+			var faction: String = str(effect.get("faction", ""))
+			var rep_delta: int = int(effect.get("amount", MerlinConstants.FACTION_DELTA_MINOR))
+			effects._apply_faction_reputation(state, faction, rep_delta)
 
 
 func _update_player_profile(option: int) -> void:
