@@ -96,6 +96,16 @@ const VALID_CODES := {
 	# ADD_REPUTATION:faction_id:delta  (ex: ADD_REPUTATION:druides:15)
 	# ═══════════════════════════════════════════════════════════════════════════
 	"ADD_REPUTATION": 2,
+	# ═══════════════════════════════════════════════════════════════════════════
+	# ESSENCES — Monnaie principale inter-run
+	# ADD_ESSENCES:5  (run + meta)
+	# ═══════════════════════════════════════════════════════════════════════════
+	"ADD_ESSENCES": 1,
+	# ═══════════════════════════════════════════════════════════════════════════
+	# ALIGNEMENT — Score continu Corps/Ame/Monde (-100 à +100)
+	# ADD_ASPECT_ALIGNMENT:Corps:25  (meta cross-run)
+	# ═══════════════════════════════════════════════════════════════════════════
+	"ADD_ASPECT_ALIGNMENT": 2,
 }
 
 
@@ -302,6 +312,16 @@ func _apply_parsed(state: Dictionary, parsed: Dictionary) -> bool:
 		# ═══════════════════════════════════════════════════════════════════════
 		"ADD_REPUTATION":
 			return _apply_faction_reputation(state, args[0], _to_int(args[1]))
+		# ═══════════════════════════════════════════════════════════════════════
+		# ESSENCES
+		# ═══════════════════════════════════════════════════════════════════════
+		"ADD_ESSENCES":
+			return _apply_add_essences(state, _to_int(args[0]))
+		# ═══════════════════════════════════════════════════════════════════════
+		# ALIGNEMENT ASPECTS
+		# ═══════════════════════════════════════════════════════════════════════
+		"ADD_ASPECT_ALIGNMENT":
+			return _apply_add_aspect_alignment(state, args[0], _to_int(args[1]))
 		_:
 			return false
 
@@ -1003,4 +1023,37 @@ func _apply_faction_reputation(state: Dictionary, faction: String, delta: int) -
 	if not run.is_empty():
 		run["faction_context"] = _build_faction_context(faction_rep)
 		state["run"] = run
+	return true
+
+
+## Ajoute des Essences au run courant ET au meta (cross-run).
+## ADD_ESSENCES:5  →  run.essences += 5, meta.essences += 5
+func _apply_add_essences(state: Dictionary, amount: int) -> bool:
+	if amount == 0:
+		return false
+	# Run (session courante)
+	var run: Dictionary = state.get("run", {})
+	var run_essences: int = int(run.get("essences", 0))
+	run["essences"] = run_essences + amount
+	state["run"] = run
+	# Meta (cross-run, sans décroissance)
+	var meta: Dictionary = state.get("meta", {})
+	var meta_essences: int = int(meta.get("essences", 0))
+	meta["essences"] = meta_essences + amount
+	state["meta"] = meta
+	return true
+
+
+## Ajoute un delta au score d'alignement d'un aspect (cross-run, clamped).
+## ADD_ASPECT_ALIGNMENT:Corps:25  →  meta.aspects_alignment.Corps += 25 (clamped -100/+100)
+func _apply_add_aspect_alignment(state: Dictionary, aspect: String, delta: int) -> bool:
+	if not ["Corps", "Ame", "Monde"].has(aspect):
+		return false
+	var meta: Dictionary = state.get("meta", {})
+	var alignment: Dictionary = meta.get("aspects_alignment", {"Corps": 0, "Ame": 0, "Monde": 0})
+	var current: int = int(alignment.get(aspect, 0))
+	var new_score: int = clampi(current + delta, MerlinConstants.ASPECT_MIN, MerlinConstants.ASPECT_MAX)
+	alignment[aspect] = new_score
+	meta["aspects_alignment"] = alignment
+	state["meta"] = meta
 	return true

@@ -179,6 +179,7 @@ func build_default_state() -> Dictionary:
 				"perk_used": false,
 			},
 			"life_essence": MerlinConstants.LIFE_ESSENCE_START,
+			"essences": MerlinConstants.ESSENCE_START,
 			"faveurs": MerlinConstants.FAVEURS_START,
 			"mission": {
 				"type": "",
@@ -239,6 +240,13 @@ func build_default_state() -> Dictionary:
 		},
 		"meta": {
 			"essence": essence,
+			"essences": 0,
+			# Alignement Corps/Ame/Monde — score continu cross-run (-100 à +100)
+			"aspects_alignment": {
+				"Corps": 0,
+				"Ame": 0,
+				"Monde": 0,
+			},
 			"ogham_fragments": 0,
 			"liens": 0,
 			# Faction alignment — réputation cross-run (-100 à +100 par faction)
@@ -675,6 +683,20 @@ func _decay_faction_rep() -> void:
 	state["meta"] = meta
 
 
+## Décroissance aspects_alignment cross-run (8% vers 0 par run, comme factions).
+func _decay_aspects_alignment() -> void:
+	var meta: Dictionary = state.get("meta", {})
+	var alignment: Dictionary = meta.get("aspects_alignment", {})
+	for aspect in ["Corps", "Ame", "Monde"]:
+		var score: int = int(alignment.get(aspect, 0))
+		if score == 0:
+			continue
+		var decayed: int = int(float(score) * (1.0 - MerlinConstants.ASPECT_DECAY_RATE))
+		alignment[aspect] = decayed
+	meta["aspects_alignment"] = alignment
+	state["meta"] = meta
+
+
 ## Snapshot faction_rep (meta) → run["faction_context"].
 func _build_and_store_faction_context() -> void:
 	var meta: Dictionary = state.get("meta", {})
@@ -797,6 +819,7 @@ func _init_triade_run() -> void:
 		"perk_used": false,
 	}
 	run["life_essence"] = MerlinConstants.LIFE_ESSENCE_START
+	run["essences"] = MerlinConstants.ESSENCE_START
 	# Generate a mission from templates
 	run["mission"] = _generate_mission()
 	run["cards_played"] = 0
@@ -828,6 +851,9 @@ func _init_triade_run() -> void:
 	_decay_faction_rep()
 	_build_and_store_faction_context()
 	_apply_faction_run_bonuses()
+
+	# Alignement aspects — décroissance cross-run
+	_decay_aspects_alignment()
 
 	# Select scenario for this run (Hand of Fate 2-style quest)
 	var biome_for_scenario: String = str(run.get("current_biome", ""))
@@ -1383,6 +1409,13 @@ func _apply_triade_effect(effect: Dictionary) -> void:
 			var faction: String = str(effect.get("faction", ""))
 			var rep_delta: int = int(effect.get("amount", MerlinConstants.FACTION_DELTA_MINOR))
 			effects._apply_faction_reputation(state, faction, rep_delta)
+		"ADD_ESSENCES":
+			var essence_amount: int = int(effect.get("amount", MerlinConstants.ESSENCE_BASE_REWARD))
+			effects._apply_add_essences(state, essence_amount)
+		"ADD_ASPECT_ALIGNMENT":
+			var aspect_name: String = str(effect.get("aspect", ""))
+			var aspect_delta: int = int(effect.get("amount", 0))
+			effects._apply_add_aspect_alignment(state, aspect_name, aspect_delta)
 
 
 func _update_player_profile(option: int) -> void:

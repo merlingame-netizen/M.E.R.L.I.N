@@ -1239,3 +1239,28 @@ const RUN_TYPOLOGIES := {
 		"llm_hint": "CHASSEUR: traque, Bestiole, nature, instinct.",
 	},
 }
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# ESSENCES — Monnaie principale inter-run
+# Réf : docs/20_card_system/DOC_17_Run_Rules_Officiel.md
+# ═══════════════════════════════════════════════════════════════════════════════
+
+const ESSENCE_BASE_REWARD := 1       # +1 essence par carte résolue (base)
+const ESSENCE_TREASURE_REWARD := 15  # +15 essences pour une carte trésor
+const ESSENCE_START := 0             # Essences au démarrage d'un run (elles viennent du meta)
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# ALIGNEMENT Corps/Ame/Monde — Score continu cross-run
+# Réf : docs/20_card_system/DOC_17_Run_Rules_Officiel.md
+# ═══════════════════════════════════════════════════════════════════════════════
+
+const ASPECT_MIN := -100             # Score minimum Corps/Ame/Monde
+const ASPECT_MAX := 100              # Score maximum Corps/Ame/Monde
+const ASPECT_DECAY_RATE := 0.08     # 8% de décroissance vers 0 par run (comme factions)
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# VIE — Affichage segmenté
+# Réf : docs/20_card_system/DOC_17_Run_Rules_Officiel.md
+# ═══════════════════════════════════════════════════════════════════════════════
+
+const LIFE_BAR_SEGMENTS := 10       # 10 barres pixelisées de 10 PV chacune

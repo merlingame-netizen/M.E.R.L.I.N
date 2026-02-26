@@ -215,6 +215,9 @@ var _card_tilt_current: Vector2 = Vector2.ZERO
 var _card_3d_shine: ColorRect  # Subtle highlight overlay for 3D effect
 var _card_3d_active := false   # Only tilt when card is displayed and idle
 
+# Life essence — 10 barres pixelisées de 10 PV chacune (DOC_17)
+var _life_segment_bars: Array = []    # Array[ProgressBar], créés dynamiquement
+
 # Souffle d'Ogham button (bottom-right)
 var _souffle_btn: Button
 var _souffle_active := false
@@ -277,6 +280,22 @@ func _configure_ui() -> void:
 	_life_bar.max_value = MerlinConstants.LIFE_ESSENCE_MAX
 	_life_bar.value = MerlinConstants.LIFE_ESSENCE_START
 	MerlinVisual.apply_bar_theme(_life_bar, "danger")
+	# 10 barres pixelisées de 10 PV (DOC_17 — remplace la barre unique visuellement)
+	_life_bar.visible = false  # Cachée — remplacée par les segments
+	_life_segment_bars.clear()
+	var seg_hbox := HBoxContainer.new()
+	seg_hbox.name = "LifeSegmentsHBox"
+	seg_hbox.add_theme_constant_override("separation", 2)
+	life_panel.add_child(seg_hbox)
+	for _i in range(MerlinConstants.LIFE_BAR_SEGMENTS):
+		var seg := ProgressBar.new()
+		seg.max_value = 10
+		seg.value = 10
+		seg.show_percentage = false
+		seg.custom_minimum_size = Vector2(14, 10)
+		MerlinVisual.apply_bar_theme(seg, "danger")
+		seg_hbox.add_child(seg)
+		_life_segment_bars.append(seg)
 
 	# Clock panel styling
 	_status_clock_panel.add_theme_stylebox_override("panel", MerlinVisual.make_clock_panel_style())
@@ -1400,7 +1419,7 @@ func _toggle_bestiole_wheel() -> void:
 
 
 func update_life_essence(life: int) -> void:
-	## Update the life essence display (Phase 43).
+	## Update the life essence display — 10 barres pixelisées de 10 PV (DOC_17).
 	if _life_counter and is_instance_valid(_life_counter):
 		_life_counter.text = "%d/%d" % [life, MerlinConstants.LIFE_ESSENCE_MAX]
 		if life <= 0:
@@ -1409,13 +1428,33 @@ func update_life_essence(life: int) -> void:
 			_life_counter.add_theme_color_override("font_color", MerlinVisual.CRT_PALETTE.warning)
 		else:
 			_life_counter.add_theme_color_override("font_color", MerlinVisual.CRT_PALETTE.danger)
-	if _life_bar and is_instance_valid(_life_bar):
+	# Mise à jour des 10 segments pixelisés (10 PV chacun)
+	if _life_segment_bars.size() == MerlinConstants.LIFE_BAR_SEGMENTS:
+		var remaining: int = clampi(life, 0, MerlinConstants.LIFE_ESSENCE_MAX)
+		for seg_i in range(MerlinConstants.LIFE_BAR_SEGMENTS):
+			var seg: ProgressBar = _life_segment_bars[seg_i]
+			if not seg or not is_instance_valid(seg):
+				continue
+			var seg_max: int = 10
+			var seg_filled: int = clampi(remaining - seg_i * seg_max, 0, seg_max)
+			seg.value = float(seg_filled)
+			# Couleur : rouge si dernier segment critique
+			var bar_pct: float = float(life) / float(MerlinConstants.LIFE_ESSENCE_MAX)
+			if bar_pct <= 0.2:
+				MerlinVisual.apply_bar_theme(seg, "danger")
+			elif bar_pct <= 0.5:
+				MerlinVisual.apply_bar_theme(seg, "warning")
+		if life <= MerlinConstants.LIFE_ESSENCE_LOW_THRESHOLD and _life_segment_bars.size() > 0:
+			var last_full_seg: int = maxi(0, int(life / 10) - 1)
+			var last_seg: ProgressBar = _life_segment_bars[last_full_seg]
+			if last_seg and is_instance_valid(last_seg):
+				var tw := create_tween()
+				tw.set_loops(2)
+				tw.tween_property(last_seg, "modulate:a", 0.5, 0.3)
+				tw.tween_property(last_seg, "modulate:a", 1.0, 0.3)
+	elif _life_bar and is_instance_valid(_life_bar):
+		# Fallback : barre unique si segments non créés
 		_life_bar.value = life
-		if life <= MerlinConstants.LIFE_ESSENCE_LOW_THRESHOLD:
-			var tw := create_tween()
-			tw.set_loops(2)
-			tw.tween_property(_life_bar, "modulate:a", 0.5, 0.3)
-			tw.tween_property(_life_bar, "modulate:a", 1.0, 0.3)
 
 
 func update_essences_collected(value: int) -> void:
