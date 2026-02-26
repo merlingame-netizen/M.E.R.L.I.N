@@ -31,6 +31,7 @@ PixelContentAnimator="*res://scripts/autoload/pixel_content_animator.gd"
 WorldMapSystem="*res://scripts/autoload/world_map_system.gd"
 MusicManager="*res://scripts/autoload/music_manager.gd"
 ScreenDither="*res://scripts/ui/screen_dither_layer.gd"
+GameDebugServer="*res://scripts/test/game_debug_server.gd"
 
 [display]
 

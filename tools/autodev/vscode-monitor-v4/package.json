@@ -31,8 +31,18 @@
         },
         {
           "type": "webview",
+          "id": "autodev-v4.liveView",
+          "name": "Live View"
+        },
+        {
+          "type": "webview",
           "id": "autodev-v4.sidebarView",
           "name": "AUTODEV"
+        },
+        {
+          "type": "webview",
+          "id": "autodev-v4.trainingView",
+          "name": "Training"
         }
       ]
     },

@@ -155,6 +155,169 @@ async function discoverScenes(root) {
 }
 
 // ============================================================
+// LIVE VIEW — Godot debug dir reader
+// ============================================================
+
+const GODOT_USER = path.join(process.env.APPDATA || '', 'Godot', 'app_userdata', 'DRU');
+const GODOT_DEBUG_DIR = path.join(GODOT_USER, 'debug');
+const LIVE_SCREENSHOT = path.join(GODOT_DEBUG_DIR, 'latest_screenshot.png');
+const LIVE_STATE = path.join(GODOT_DEBUG_DIR, 'latest_state.json');
+const LIVE_LOG = path.join(GODOT_DEBUG_DIR, 'log_buffer.json');
+
+function readScreenshotBase64() {
+  try {
+    if (!fs.existsSync(LIVE_SCREENSHOT)) return null;
+    const stat = fs.statSync(LIVE_SCREENSHOT);
+    // Ignorer si vieux de plus de 5 minutes
+    if (Date.now() - stat.mtimeMs > 5 * 60 * 1000) return null;
+    const buf = fs.readFileSync(LIVE_SCREENSHOT);
+    return 'data:image/png;base64,' + buf.toString('base64');
+  } catch { return null; }
+}
+
+function buildLiveViewHtml(screenshot, state, logLines) {
+  const running = isGodotRunning();
+  const hasDebug = fs.existsSync(GODOT_DEBUG_DIR);
+  const statusColor = running ? CRT.green : CRT.gray;
+  const statusIcon = running ? '●' : '○';
+
+  // State table
+  let stateHtml = '';
+  const run = state ? state.run : null;
+  if (run) {
+    const rows = [
+      ['Phase', escapeHtml(run.phase || '—')],
+      ['Vie', `${run.life ?? '—'}/100`],
+      ['Souffle', String(run.souffle ?? '—')],
+      ['Essences', String(run.essences ?? '—')],
+      ['Carte #', String(run.cards_played ?? '—')],
+      ['Biome', escapeHtml((run.biome || '—').replace('foret_', ''))],
+      ['Typology', escapeHtml(run.typology || '—')],
+      ['Karma', String(run.karma ?? '—')],
+      ['Mission', run.mission_type ? `${run.mission_progress}/${run.mission_total} ${escapeHtml(run.mission_type)}` : '—'],
+    ];
+    stateHtml = `<table class="state-table">
+      ${rows.map(([k, v]) => `<tr><td class="key">${k}</td><td class="val">${v}</td></tr>`).join('')}
+    </table>`;
+    if (state.datetime) {
+      stateHtml += `<div class="ts">Snapshot: ${escapeHtml(state.datetime)}</div>`;
+    }
+  } else {
+    stateHtml = `<div class="empty">Aucun état — lance le jeu depuis [Godot Scenes]</div>`;
+  }
+
+  // Log
+  const logHtml = logLines.length > 0
+    ? logLines.map(l => {
+        const colored = String(l)
+          .replace(/\[GameDebug[^\]]*\]/g, m => `<span style="color:${CRT.cyan}">${escapeHtml(m)}</span>`)
+          .replace(/\[TRIADE\]/g, `<span style="color:${CRT.amber}">[TRIADE]</span>`)
+          .replace(/\[MerlinStore\]/g, `<span style="color:${CRT.green}">[MerlinStore]</span>`)
+          .replace(/\[MerlinUI\]/g, `<span style="color:${CRT.greenDim}">[MerlinUI]</span>`);
+        return `<div class="log-line">${colored}</div>`;
+      }).join('')
+    : `<div class="empty">Aucun log — GameDebugServer actif si is_debug_build()</div>`;
+
+  return `<!DOCTYPE html>
+<html><head><style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: 'Cascadia Code', Consolas, monospace; font-size: 11px; background: ${CRT.bg}; color: ${CRT.text}; padding: 8px; line-height: 1.5; }
+  .header { display: flex; justify-content: space-between; align-items: center; padding-bottom: 6px; border-bottom: 1px solid ${CRT.border}; margin-bottom: 8px; }
+  .title { font-size: 12px; font-weight: bold; color: ${CRT.green}; letter-spacing: 1px; }
+  .status { font-size: 11px; font-weight: bold; color: ${statusColor}; }
+  .screenshot { width: 100%; border: 1px solid ${CRT.border}; display: block; margin-bottom: 8px; image-rendering: pixelated; }
+  .no-screenshot { background: ${CRT.panel}; border: 1px dashed ${CRT.border}; color: ${CRT.gray}; text-align: center; padding: 24px 8px; font-size: 10px; margin-bottom: 8px; }
+  .section-label { font-size: 9px; color: ${CRT.gray}; letter-spacing: 1px; text-transform: uppercase; padding: 4px 0 2px 0; }
+  .state-table { width: 100%; border-collapse: collapse; margin-bottom: 6px; }
+  .state-table td { padding: 1px 4px; font-size: 10px; }
+  .key { color: ${CRT.gray}; width: 52px; }
+  .val { color: ${CRT.text}; }
+  .ts { font-size: 9px; color: ${CRT.gray}; margin-bottom: 8px; }
+  .log-section { border-top: 1px solid ${CRT.border}; margin-top: 6px; padding-top: 6px; }
+  .log-line { font-size: 9px; color: ${CRT.gray}; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin: 1px 0; }
+  .empty { color: ${CRT.gray}; font-size: 10px; font-style: italic; padding: 4px 0; }
+  .footer { margin-top: 8px; padding-top: 6px; border-top: 1px solid ${CRT.border}; display: flex; gap: 6px; }
+  button { font-family: inherit; font-size: 10px; border: 1px solid ${CRT.border}; background: ${CRT.panel}; color: ${CRT.greenDim}; cursor: pointer; padding: 3px 7px; border-radius: 2px; flex: 1; }
+  button:hover { border-color: ${CRT.green}; color: ${CRT.green}; }
+  .btn-capture { color: ${CRT.amber}; border-color: #553300; }
+  ::-webkit-scrollbar { width: 4px; }
+  ::-webkit-scrollbar-thumb { background: ${CRT.border}; }
+</style></head><body>
+  <div class="header">
+    <span class="title">LIVE VIEW</span>
+    <span class="status">${statusIcon} ${running ? 'RUNNING' : 'IDLE'}</span>
+  </div>
+
+  ${screenshot
+    ? `<img class="screenshot" src="${screenshot}" title="Dernier screenshot Godot (F11 = manuel)">`
+    : `<div class="no-screenshot">📷 Aucun screenshot<br>Lance le jeu → F11 ou attends 30s</div>`}
+
+  <div class="section-label">État Run</div>
+  ${stateHtml}
+
+  <div class="log-section">
+    <div class="section-label">Log GameDebugServer</div>
+    ${logHtml}
+  </div>
+
+  <div class="footer">
+    <button class="btn-capture" onclick="capture()" title="Envoie F11 à Godot (capture manuelle)">📷 F11</button>
+    <button onclick="refresh()" title="Refresh immédiat">⟳ Refresh</button>
+  </div>
+
+  <script>
+    const vscode = acquireVsCodeApi();
+    function capture() { vscode.postMessage({ type: 'capture' }); }
+    function refresh() { vscode.postMessage({ type: 'refresh' }); }
+  </script>
+</body></html>`;
+}
+
+class LiveViewProvider {
+  constructor() {
+    this._view = null;
+    this._interval = null;
+  }
+
+  async resolveWebviewView(webviewView) {
+    this._view = webviewView;
+    webviewView.webview.options = { enableScripts: true };
+
+    webviewView.webview.onDidReceiveMessage(async (msg) => {
+      if (msg.type === 'capture') this._sendF11ToGodot();
+      if (msg.type === 'refresh') await this._update();
+    });
+
+    // Auto-refresh every 3s
+    this._interval = setInterval(() => this._update(), 3000);
+    await this._update();
+  }
+
+  async _update() {
+    if (!this._view) return;
+    const screenshot = readScreenshotBase64();
+    const state = readJsonSafe(LIVE_STATE);
+    const logLines = readJsonSafe(LIVE_LOG) || [];
+    this._view.webview.html = buildLiveViewHtml(screenshot, state, logLines.slice(-10));
+  }
+
+  _sendF11ToGodot() {
+    // Envoie F11 à la fenêtre Godot via PowerShell SendKeys
+    cp.exec(
+      'powershell -Command "Add-Type -AN System.Windows.Forms; [System.Windows.Forms.SendKeys]::SendWait(\'{F11}\')"',
+      () => {}
+    );
+  }
+
+  dispose() {
+    if (this._interval) {
+      clearInterval(this._interval);
+      this._interval = null;
+    }
+  }
+}
+
+// ============================================================
 // GODOT SCENES HTML
 // ============================================================
 
@@ -564,12 +727,229 @@ class AutodevSidebarProvider {
 }
 
 // ============================================================
+// TRAINING CONTROL PANEL
+// ============================================================
+
+function buildTrainingHtml(trainingState, progress, root) {
+  const state   = (trainingState && trainingState.state) || 'idle';
+  const stopAt  = (trainingState && trainingState.stop_at) || '08:00';
+  const pid     = (trainingState && trainingState.pid) || 0;
+
+  // Progress metrics (from progress.json written by train_qwen_cpu.py)
+  const epoch    = (progress && progress.epoch)       || 0;
+  const totEp    = (progress && progress.total_epochs)|| 3;
+  const step     = (progress && progress.step)        || 0;
+  const totStep  = (progress && progress.total_steps) || 1;
+  const loss     = (progress && progress.loss)        || '--';
+  const pct      = (progress && progress.pct)         || 0;
+  const etaSec   = (progress && progress.eta_sec)     || 0;
+  const ts       = (progress && progress.timestamp)   || '';
+  const reason   = (progress && progress.reason)      || '';
+
+  const stateColors = { running: '#00ff41', paused: '#ffb300', stopped: '#ff3333',
+                        error: '#ff3333', starting: '#00e5ff', idle: '#557755' };
+  const stateIcons  = { running: '▶', paused: '⏸', stopped: '■', error: '✗', starting: '…', idle: '○' };
+  const color = stateColors[state] || '#557755';
+  const icon  = stateIcons[state]  || '○';
+
+  // Progress bar (20 chars)
+  const filled = Math.min(20, Math.round(pct / 5));
+  const bar    = '█'.repeat(filled) + '░'.repeat(20 - filled);
+
+  // ETA formatter
+  function fmtEta(s) {
+    if (!s || s <= 0) return '--';
+    const h = Math.floor(s / 3600), m = Math.floor((s % 3600) / 60);
+    return h > 0 ? `${h}h${String(m).padStart(2,'0')}min` : `${m}min`;
+  }
+
+  // Disable buttons based on state
+  const isRunning = (state === 'running' || state === 'starting');
+  const startDis  = isRunning  ? 'disabled' : '';
+  const stopDis   = !isRunning ? 'disabled' : '';
+  const pauseDis  = !isRunning ? 'disabled' : '';
+  const resumeDis = state !== 'paused' ? 'disabled' : '';
+
+  function psCmd(action) {
+    if (!root) return '';
+    const script = path.join(root, 'tools', 'lora', 'train_control.ps1').replace(/\\/g, '\\\\');
+    return `powershell -ExecutionPolicy Bypass -File "${script}" -Action ${action} -StopAt ${stopAt}`;
+  }
+
+  return `<!DOCTYPE html><html><head><style>
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body { font-family:'Cascadia Code','Fira Code',Consolas,monospace; font-size:11px;
+         background:#050a05; color:#c0c0c0; padding:8px; line-height:1.5; }
+  .header { display:flex; justify-content:space-between; align-items:center;
+            border-bottom:1px solid #1a2a1a; padding-bottom:6px; margin-bottom:8px; }
+  .title  { font-size:13px; font-weight:bold; color:#00ff41; }
+  .state  { font-size:11px; font-weight:bold; color:${color}; }
+  .metric { display:flex; justify-content:space-between; margin:2px 0; }
+  .label  { color:#557755; }
+  .value  { color:#c0c0c0; }
+  .bar    { color:#00ff41; letter-spacing:-0.5px; margin:4px 0; font-size:10px; }
+  .pct    { color:#00e5ff; }
+  .btns   { display:flex; gap:4px; margin-top:10px; flex-wrap:wrap; }
+  button  { background:#0d150d; border:1px solid #1a3a1a; color:#00ff41;
+            font-family:inherit; font-size:10px; padding:4px 8px; cursor:pointer;
+            border-radius:2px; }
+  button:hover:not(:disabled) { background:#1a3a1a; border-color:#00ff41; }
+  button:disabled { opacity:0.3; cursor:not-allowed; }
+  .stop-btn { color:#ff5555; border-color:#3a1a1a; }
+  .stop-btn:hover:not(:disabled) { background:#3a1a1a; border-color:#ff5555; }
+  .stop-at { margin-top:8px; display:flex; align-items:center; gap:6px; }
+  .stop-at label { color:#557755; font-size:10px; }
+  .stop-at input { background:#0d0d0d; border:1px solid #1a3a1a; color:#c0c0c0;
+                   font-family:inherit; font-size:11px; padding:2px 4px; width:60px; }
+  .hint { color:#333; font-size:9px; margin-top:6px; }
+  .sched { margin-top:8px; font-size:9px; color:#557755; border-top:1px solid #1a2a1a; padding-top:6px;}
+  .reason { color:#ffb300; font-size:9px; margin-top:4px; }
+</style></head><body>
+<div class="header">
+  <span class="title">TRAINING</span>
+  <span class="state">${icon} ${state.toUpperCase()}${pid ? ' [' + pid + ']' : ''}</span>
+</div>
+<div class="metric"><span class="label">Epoch</span><span class="value">${epoch}/${totEp}</span></div>
+<div class="metric"><span class="label">Step</span><span class="value">${step}/${totStep}</span></div>
+<div class="bar">${bar} <span class="pct">${pct.toFixed(1)}%</span></div>
+<div class="metric"><span class="label">Loss</span><span class="value">${loss}</span></div>
+<div class="metric"><span class="label">ETA</span><span class="value">${fmtEta(etaSec)}</span></div>
+${ts ? `<div class="metric"><span class="label">Updated</span><span class="value" style="color:#444">${ts.slice(11)}</span></div>` : ''}
+${reason ? `<div class="reason">↳ ${escapeHtml(reason)}</div>` : ''}
+
+<div class="btns">
+  <button id="btnStart" ${startDis} onclick="send('start')">▶ Start</button>
+  <button id="btnPause" ${pauseDis} onclick="send('pause')">⏸ Pause</button>
+  <button id="btnResume" ${resumeDis} onclick="send('resume')">▶ Resume</button>
+  <button class="stop-btn" id="btnStop" ${stopDis} onclick="send('stop')">■ Stop</button>
+</div>
+<div class="stop-at">
+  <label>Stop-at:</label>
+  <input id="stopAt" type="text" value="${escapeHtml(stopAt)}" placeholder="08:00"
+         onchange="send('set_stop_at', this.value)" />
+  <button onclick="send('schedule')" title="Installer scheduler 00h00 nightly">📅</button>
+  <button onclick="send('status')" title="Voir status complet">ℹ</button>
+</div>
+<div class="hint">Creer training_stop.flag pour arreter proprement</div>
+<div class="sched">📅 Scheduler: <span id="schedState">Verif...</span></div>
+
+<script>
+  const vscode = acquireVsCodeApi();
+  function send(action, value) { vscode.postMessage({ type: action, value: value || '' }); }
+  // Check scheduler periodically via message reply
+  vscode.postMessage({ type: 'check_scheduler' });
+  window.addEventListener('message', e => {
+    const msg = e.data;
+    if (msg.type === 'scheduler_state') {
+      document.getElementById('schedState').textContent = msg.active ? 'ACTIF (00h00 daily)' : 'inactif';
+      document.getElementById('schedState').style.color = msg.active ? '#00ff41' : '#555';
+    }
+  });
+</script>
+</body></html>`;
+}
+
+class TrainingWebviewProvider {
+  constructor(root) {
+    this._root       = root;
+    this._view       = null;
+    this._stopAt     = '08:00';
+    this._schedTimer = null;
+  }
+
+  resolveWebviewView(webviewView) {
+    this._view = webviewView;
+    webviewView.webview.options = { enableScripts: true };
+
+    webviewView.webview.onDidReceiveMessage((msg) => {
+      switch (msg.type) {
+        case 'start':
+          this._runPS1(`-Action Start -StopAt ${this._stopAt} -Resume`);
+          setTimeout(() => this._update(), 3000);
+          break;
+        case 'stop':
+          this._runPS1('-Action Stop');
+          setTimeout(() => this._update(), 2000);
+          break;
+        case 'pause':
+          this._runPS1('-Action Pause');
+          setTimeout(() => this._update(), 1000);
+          break;
+        case 'resume':
+          this._runPS1('-Action Resume');
+          setTimeout(() => this._update(), 1000);
+          break;
+        case 'schedule':
+          this._runPS1(`-Action Schedule -StopAt ${this._stopAt}`);
+          vscode.window.showInformationMessage('MERLIN Training: scheduler 00h00 installe!');
+          break;
+        case 'status':
+          const terminal = vscode.window.createTerminal('Training Status');
+          terminal.sendText(`cd "${this._root}" && powershell -ExecutionPolicy Bypass -File tools\\lora\\train_control.ps1 -Action Status`);
+          terminal.show();
+          break;
+        case 'set_stop_at':
+          if (msg.value && /^\d{2}:\d{2}$/.test(msg.value)) {
+            this._stopAt = msg.value;
+          }
+          break;
+        case 'check_scheduler':
+          this._checkScheduler();
+          break;
+      }
+    });
+
+    this._update();
+  }
+
+  _runPS1(args) {
+    if (!this._root) return;
+    const script = path.join(this._root, 'tools', 'lora', 'train_control.ps1');
+    const cmd = `powershell -ExecutionPolicy Bypass -File "${script}" ${args}`;
+    cp.exec(cmd, { cwd: this._root }, (err) => {
+      if (err && err.code !== 0) {
+        vscode.window.showErrorMessage(`Training control error: ${err.message.slice(0, 100)}`);
+      }
+    });
+  }
+
+  _checkScheduler() {
+    cp.exec('powershell -Command "if (Get-ScheduledTask -TaskName MERLIN_Training_Nightly -EA SilentlyContinue) { exit 0 } else { exit 1 }"',
+      (err) => {
+        if (this._view) {
+          this._view.webview.postMessage({ type: 'scheduler_state', active: !err || err.code === 0 });
+        }
+      }
+    );
+  }
+
+  _update() {
+    if (!this._view || !this._root) return;
+    const stateFile    = path.join(this._root, 'tools', 'lora', 'status', 'training_state.json');
+    const progressFile = path.join(this._root, 'merlin-lora-cpu-output', 'progress.json');
+    const ts = readJsonSafe(stateFile);
+    const pr = readJsonSafe(progressFile);
+    this._view.webview.html = buildTrainingHtml(ts, pr, this._root);
+    this._checkScheduler();
+  }
+
+  refresh() { this._update(); }
+}
+
+// ============================================================
 // ACTIVATE
 // ============================================================
 
 function activate(context) {
   const root = findProjectRoot();
   const statusDir = findStatusDir();
+
+  // --- Live View panel ---
+  const liveProvider = new LiveViewProvider();
+  context.subscriptions.push(
+    vscode.window.registerWebviewViewProvider('autodev-v4.liveView', liveProvider)
+  );
+  context.subscriptions.push({ dispose: () => liveProvider.dispose() });
 
   // --- Godot Scenes panel ---
   if (root) {

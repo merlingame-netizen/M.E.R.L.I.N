@@ -424,6 +424,113 @@ func validate_card_narrative(card: Dictionary, context: Dictionary) -> Dictionar
 
 ---
 
+## Observation Runtime (NOUVEAU — GameDebugServer)
+
+> Utiliser quand le jeu est en cours d'exécution (fenêtre Godot ouverte) pour observer
+> visuellement ce qui se passe : lisibilité, layout, couleurs, animations, bugs d'affichage.
+
+### Fichiers Debug Disponibles
+
+| Fichier | Chemin | Contenu |
+|---------|--------|---------|
+| `latest_screenshot.png` | `%APPDATA%\Godot\app_userdata\DRU\debug\latest_screenshot.png` | Dernier frame capturé |
+| `latest_state.json` | `%APPDATA%\Godot\app_userdata\DRU\debug\latest_state.json` | État MerlinStore complet |
+| `log_buffer.json` | `%APPDATA%\Godot\app_userdata\DRU\debug\log_buffer.json` | Buffer circulaire 100 lignes |
+| `snap_{ts}_{event}.png` | `%APPDATA%\Godot\app_userdata\DRU\debug\snap_*.png` | Historique snapshots par event |
+| `live_log.json` | `tools/autodev/status/live_log.json` | Tail godot.log filtré (watch_live_game.ps1) |
+
+> `%APPDATA%` = `C:\Users\PGNK2128\AppData\Roaming`
+
+### Capture Manuelle (F11)
+
+```powershell
+# Depuis Claude / terminal — envoie F11 à la fenêtre Godot active
+powershell -Command "Add-Type -AN System.Windows.Forms; [System.Windows.Forms.SendKeys]::SendWait('{F11}')"
+```
+
+> La capture est prise par `GameDebugServer` (autoload GDScript) :
+> - Attend `RenderingServer.frame_post_draw` (synchronisation GPU)
+> - Écrase `latest_screenshot.png` + crée `snap_{ts}_manual.png`
+
+### Captures Automatiques (GameDebugServer)
+
+| Trigger | Fichier snap créé |
+|---------|------------------|
+| Signal `card_resolved` | `snap_{ts}_card_resolved.png` |
+| Signal `life_changed` | `snap_{ts}_life_changed.png` |
+| Signal `run_ended` | `snap_{ts}_run_ended.png` |
+| Signal `phase_changed` | `snap_{ts}_phase_changed.png` |
+| Signal `souffle_changed` | `snap_{ts}_souffle_changed.png` |
+| Timer 30s | `snap_{ts}_ambient.png` |
+| Démarrage (ready) | `snap_{ts}_startup.png` |
+
+### Workflow "Bug Visuel" (Reproduire → Observer → Corriger)
+
+```
+1. LANCER le jeu : VS Code F5 (ou launch_debug.ps1)
+2. REPRODUIRE le comportement suspect (naviguer jusqu'à la scène, jouer une carte, etc.)
+3. CAPTURER : appuyer F11 dans Godot (ou attendre trigger automatique)
+4. LIRE latest_screenshot.png → vision Claude (Read tool sur chemin absolu)
+5. LIRE latest_state.json → confirmer l'état au moment du bug
+6. LIRE live_log.json → voir les erreurs/warnings récents
+7. DIAGNOSTIQUER (via vision + état + logs)
+8. CORRIGER (fichier:ligne identifié dans le state ou les logs)
+9. REVALIDER : validate.bat Step 0 → re-tester dans Godot → F11 → comparer
+```
+
+### Tableau Fichiers d'Inspection par Type de Bug
+
+| Type de Bug | Fichier Principal | Fichier Secondaire |
+|------------|------------------|-------------------|
+| Lisibilité texte | `latest_screenshot.png` | `latest_state.json` (biome, phase) |
+| Overflow UI / clipping | `latest_screenshot.png` | — |
+| Valeur incorrecte (vie, souffle) | `latest_state.json` | `snap_*_life_changed.png` |
+| Transition manquée / scène bloquée | `log_buffer.json` | `snap_*_phase_changed.png` |
+| Carte résolue mais effet non appliqué | `snap_*_card_resolved.png` | `latest_state.json` |
+| Animation/tween figée | `live_log.json` | `latest_screenshot.png` |
+| Crash / SCRIPT ERROR | `log_buffer.json` | — |
+| Biome CRT trop intense | `latest_screenshot.png` | `latest_state.json` (biome) |
+
+### Lancer le Jeu en Mode Debug
+
+```powershell
+# Lance Godot + watch_live_game.ps1 en background
+powershell -File tools/autodev/launch_debug.ps1
+
+# Lance une scène spécifique (ex: MerlinGame directement)
+powershell -File tools/autodev/launch_debug.ps1 -Scene "scenes/MerlinGame.tscn"
+
+# Sans watcher (Godot seul)
+powershell -File tools/autodev/launch_debug.ps1 -NoWatch
+```
+
+### Analyse Visuelle — Critères QA
+
+Quand Claude lit `latest_screenshot.png` via Read tool, vérifier :
+
+```
+LISIBILITÉ :
+□ Texte carte > 10pt, contraste phosphore sur fond sombre
+□ Labels boutons A/B/C lisibles (pas de crop)
+□ TopStatusBar : Vie, Souffle, Essences visibles et distincts
+
+LAYOUT :
+□ Aucun débordement hors viewport
+□ CardPanel centré, PiocheColumn/CimetiereColumn en flanc
+□ BottomZone 3 boutons non superposés
+
+AMBIANCE :
+□ Forêt pixel visible mais discrète (breathing 0.80/0.95)
+□ CRT scanlines subtiles (tint_blend < 0.03)
+□ Backdrop sombre mais non opaque (texte lisible sur forêt)
+
+STATUT :
+□ Valeurs État (state.json) concordent avec affichage screenshot
+□ Phase correcte, biome correct
+```
+
+---
+
 ## KNOWLEDGE BASE PROTOCOL (OBLIGATOIRE)
 
 ### Quand Documenter
@@ -495,5 +602,5 @@ Le Debug Agent et l'Optimizer Agent partagent la meme knowledge base:
 
 ---
 
-*Updated: 2026-02-09 — Added GUT, LLM QA, Triade coverage, performance testing*
+*Updated: 2026-02-26 — Added Observation Runtime section (GameDebugServer, screenshots, F11, Bug Visuel workflow)*
 *Project: M.E.R.L.I.N. — Le Jeu des Oghams*

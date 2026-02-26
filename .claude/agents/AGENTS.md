@@ -3,7 +3,7 @@
 ## Overview
 
 This document defines the team of specialized Claude Code agents for the M.E.R.L.I.N. project.
-**34 agents + 1 knowledge base** organized by domain.
+**38 agents + 1 knowledge base** organized by domain.
 
 ## Usage with Claude Code
 
@@ -147,6 +147,84 @@ Task tool:
 > Pipeline de fine-tuning. Le **Gameplay Translator** est le point d'entree auto-active
 > quand l'utilisateur demande une adaptation du LLM. Ref: `docs/LORA_TRAINING_SPEC.html`
 
+### Runtime Observation (1) — NEW
+
+| Role | Specialty |
+|------|-----------|
+| **Game Observer** | **Vision via screenshots runtime, état jeu en direct, analyse design/lisibilité via Read tool + vision Claude** |
+
+> **Game Observer** est un workflow inline (pas de fichier .md séparé) : Claude lit directement
+> les fichiers produits par `GameDebugServer` (autoload GDScript actif en debug build) pour
+> "voir" le jeu en cours d'exécution. L'agent analyse screenshots, état runtime et logs en temps réel.
+
+#### Fichiers Debug (Godot user dir → accessible directement)
+
+| Fichier | Chemin Windows | Contenu |
+|---------|----------------|---------|
+| `latest_screenshot.png` | `%APPDATA%\Godot\app_userdata\DRU\debug\latest_screenshot.png` | Dernier frame capturé (écrasé à chaque capture) |
+| `latest_state.json` | `%APPDATA%\Godot\app_userdata\DRU\debug\latest_state.json` | État complet MerlinStore (phase, vie, souffle, biome, cartes, karma) |
+| `log_buffer.json` | `%APPDATA%\Godot\app_userdata\DRU\debug\log_buffer.json` | Buffer circulaire 100 lignes filtrées |
+| `snap_{ts}_{event}.png` | `%APPDATA%\Godot\app_userdata\DRU\debug\snap_*.png` | Historique snapshots horodatés par event |
+| `live_log.json` | `tools/autodev/status/live_log.json` | Tail filtré godot.log (watch_live_game.ps1) |
+
+#### Triggers Capture Automatique (GameDebugServer)
+
+| Event | Fichier snap |
+|-------|-------------|
+| `card_resolved` | `snap_{ts}_card_resolved.png` |
+| `life_changed` | `snap_{ts}_life_changed.png` |
+| `run_ended` | `snap_{ts}_run_ended.png` |
+| `phase_changed` | `snap_{ts}_phase_changed.png` |
+| `souffle_changed` | `snap_{ts}_souffle_changed.png` |
+| Timer 30s ambiant | `snap_{ts}_ambient.png` |
+| F11 manuel | `snap_{ts}_manual.png` |
+
+#### Workflow Game Observer
+
+```
+1. CAPTURER (si jeu ouvert, appuyer F11 ou attendre event automatique)
+   powershell -Command "Add-Type -AN System.Windows.Forms; [System.Windows.Forms.SendKeys]::SendWait('{F11}')"
+
+2. READ latest_screenshot.png → Claude voit l'image via vision native
+   Read tool: C:\Users\PGNK2128\AppData\Roaming\Godot\app_userdata\DRU\debug\latest_screenshot.png
+
+3. READ latest_state.json → contexte état jeu au moment de la capture
+   Read tool: C:\Users\PGNK2128\AppData\Roaming\Godot\app_userdata\DRU\debug\latest_state.json
+
+4. READ live_log.json → activité récente
+   Read tool: c:\Users\PGNK2128\Godot-MCP\tools\autodev\status\live_log.json
+
+5. ANALYSER (via vision Claude):
+   - Lisibilité texte (contraste, taille, fond)
+   - Visibilité (forêt vs UI, superpositions)
+   - Layout (boutons, statut, carte centrale)
+   - Couleurs (CRT, phosphore, cohérence palette)
+   - Artefacts visuels (overflow, clipping, z-order)
+
+6. RAPPORT → tools/autodev/status/design_analysis.json (optionnel)
+
+7. FIX → Identifier fichier + ligne → modifier → validate.bat
+```
+
+#### Auto-Activation
+
+**Invoquer Game Observer quand:**
+- "comment ça s'affiche" / "je vois encore" / "l'écran est sombre"
+- "le texte est illisible" / "la forêt est trop visible"
+- Review design/UX d'une scène en cours d'exécution
+- Bug visuel sans reproduction headless possible
+- Validation post-implémentation d'un changement graphique
+
+#### Intégration VS Code Live View
+
+Le panneau **"Live View"** de l'extension `autodev-monitor-v4` affiche en temps réel (refresh 3s) :
+- Screenshot inline (base64)
+- État : Phase / Vie / Souffle / Cartes / Biome / Karma
+- Log tail (10 dernières lignes filtrées)
+- Bouton `[📷 Capture]` → envoie F11 au process Godot
+
+Lancer le jeu en debug : `powershell -File tools/autodev/launch_debug.ps1`
+
 ### Shared Resources
 
 | Resource | File | Purpose |
@@ -158,7 +236,7 @@ Task tool:
 ## Summary Count
 
 ```
-Total: 37 agents + 1 knowledge base
+Total: 38 agents + 1 knowledge base
 
 By category:
   Direction:                  1 (game_director)
@@ -174,6 +252,7 @@ By category:
   CI/CD & Release:            1 (ci_cd_release)
   LLM Bi-Brain:               3 (bi_brain_orchestrator, narrative_arc_designer, player_profiler)
   LoRA Fine-Tuning:           4 (lora_gameplay_translator, lora_data_curator, lora_training_architect, lora_evaluator)
+  Runtime Observation:        1 (game_observer — inline workflow)
   Knowledge Base:             1 (gdscript_knowledge_base)
 ```
 
@@ -240,6 +319,7 @@ Le dispatcher retourne un plan structure avec:
 | **Training data changes** | **LoRA Data Curator**, Prompt Curator |
 | **LoRA training/hyperparams** | **LoRA Training Architect**, LLM Expert |
 | **Model benchmark/evaluation** | **LoRA Evaluator**, LLM Expert |
+| **Bug visuel, lisibilité, layout runtime** | **Game Observer** (inline), UI Impl, UX Research |
 
 ---
 
@@ -287,6 +367,7 @@ When an agent completes work and needs handoff:
 | **`lora_gameplay_translator.md`** | **"entraine le modele", "le LLM doit", "adapte le modele", "fine-tune", adaptation gameplay LLM** | **Traduit demande → plan d'entrainement, orchestre pipeline LoRA** |
 | `lora_data_curator.md` | Modification JSON contenu narratif, ajout nouveau gameplay | Re-export + augmentation dataset |
 | `lora_evaluator.md` | Apres training LoRA complet | Benchmark automatique, decision GO/NO-GO |
+| **Game Observer (inline)** | **"comment ça s'affiche", "je vois encore", "l'écran est sombre", "le texte est illisible", bug visuel, review design en cours d'exécution** | **Read latest_screenshot.png → vision Claude → analyse lisibilité/layout/couleurs → rapport** |
 
 ---
 
@@ -360,6 +441,18 @@ claude "Use Task to read .claude/agents/lora_evaluator.md and benchmark the new 
 
 ---
 
+```bash
+# NEW — Game Observer (inline workflow — vision runtime)
+# 1. Capturer F11 (si jeu ouvert)
+#    powershell -Command "Add-Type -AN System.Windows.Forms; [System.Windows.Forms.SendKeys]::SendWait('{F11}')"
+# 2. Read C:\Users\PGNK2128\AppData\Roaming\Godot\app_userdata\DRU\debug\latest_screenshot.png
+# 3. Read C:\Users\PGNK2128\AppData\Roaming\Godot\app_userdata\DRU\debug\latest_state.json
+# 4. Read tools/autodev/status/live_log.json
+# → Claude analyse visuellement l'interface, lisibilité, layout, couleurs
+```
+
+---
+
 *Created: 2026-02-06*
-*Updated: 2026-02-22 — 34 agents + 1 knowledge base (new: game_director — creative vision oracle)*
+*Updated: 2026-02-26 — 38 agents + 1 KB (new: game_observer inline workflow — vision runtime via GameDebugServer)*
 *Project: M.E.R.L.I.N. — Le Jeu des Oghams*
