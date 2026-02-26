@@ -1,19 +1,6 @@
 extends Control
-## ArbreDeVie — Talent Tree full-screen UI (Phase 37)
-## Visual tree layout: Racines (bottom) → Tronc → Ramures → Feuillage (top)
-## Each node shows state (locked/available/unlocked), cost, and lore.
-
-const FONT_REGULAR_PATH_LEGACY := "res://resources/fonts/morris/MorrisRomanBlackAlt.ttf"  # Legacy
-const FONT_BOLD_PATH_LEGACY := "res://resources/fonts/morris/MorrisRomanBlack.ttf"  # Legacy
-
-# Layout: branches organized by section, bottom to top
-const BRANCH_ORDER := ["Corps", "Universel", "Ame", "Monde"]
-const BRANCH_LABELS := {
-	"Corps": "Racines (Sanglier)",
-	"Universel": "Tronc (Universel)",
-	"Ame": "Ramures (Corbeau)",
-	"Monde": "Feuillage (Cerf)",
-}
+## ArbreDeVie — Talent Tree UI avec pixel art procédural (Phase 38)
+## ArbrePixelArt dessine l'arbre dynamiquement, ce script gère store + detail panel.
 
 var store: Node
 var font_regular: Font
@@ -27,14 +14,11 @@ var compact_mode := false
 @onready var title_label: Label = $MainMargin/RootVBox/HeaderBar/TitleLabel
 @onready var currency_label: Label = $MainMargin/RootVBox/HeaderBar/CurrencyLabel
 @onready var separator: ColorRect = $MainMargin/RootVBox/Separator
-@onready var scroll: ScrollContainer = $MainMargin/RootVBox/HSplit/TreeScroll
-@onready var tree_vbox: VBoxContainer = $MainMargin/RootVBox/HSplit/TreeScroll/TreeVBox
+@onready var pixel_tree: Control = $MainMargin/RootVBox/HSplit/ArbrePixelArt
 @onready var detail_panel: PanelContainer = $MainMargin/RootVBox/HSplit/DetailPanel
 @onready var detail_vbox: VBoxContainer = $MainMargin/RootVBox/HSplit/DetailPanel/DetailVBox
 @onready var back_button: Button = $MainMargin/RootVBox/BottomBar/BackButton
 
-# Node buttons map for refresh
-var _node_buttons: Dictionary = {}
 var _selected_node_id: String = ""
 
 
@@ -42,6 +26,9 @@ func _ready() -> void:
 	store = get_node_or_null("/root/MerlinStore")
 	_load_fonts()
 	_configure_ui()
+	# Connecter le signal du pixel tree pour la sélection de nœud
+	if pixel_tree and pixel_tree.has_signal("node_selected"):
+		pixel_tree.node_selected.connect(_on_talent_clicked)
 	_refresh_tree()
 	get_viewport().size_changed.connect(_on_viewport_resized)
 
@@ -110,10 +97,22 @@ func _configure_ui() -> void:
 
 
 func _refresh_tree() -> void:
-	"""Rebuild the tree nodes and update currency display."""
 	_update_currency_label()
-	_build_tree_nodes()
+	_update_pixel_tree()
 	_update_detail_panel()
+
+
+func _update_pixel_tree() -> void:
+	if pixel_tree == null or not pixel_tree.has_method("setup"):
+		return
+	var unlocked: Array = []
+	var available: Array = []
+	for nid: String in MerlinConstants.TALENT_NODES:
+		if store and store.is_talent_active(nid):
+			unlocked.append(nid)
+		elif store and store.can_unlock_talent(nid):
+			available.append(nid)
+	pixel_tree.call("setup", unlocked, available)
 
 
 func _update_currency_label() -> void:
@@ -136,136 +135,6 @@ func _update_currency_label() -> void:
 	currency_label.text = "Fragments: %d | Talents: %d/28\n%s" % [fragments, unlocked, ess_text]
 
 
-func _build_tree_nodes() -> void:
-	"""Build the visual tree organized by branch (bottom to top)."""
-	# Clear existing
-	for child in tree_vbox.get_children():
-		child.queue_free()
-	_node_buttons.clear()
-
-	# Build from bottom (Racines) to top (Feuillage)
-	for branch in BRANCH_ORDER:
-		var branch_label_text: String = BRANCH_LABELS.get(branch, branch)
-		var branch_color: Color = MerlinConstants.TALENT_BRANCH_COLORS.get(branch, MerlinVisual.CRT_PALETTE.phosphor)
-
-		# Branch header
-		var header := Label.new()
-		header.text = branch_label_text
-		if font_bold:
-			header.add_theme_font_override("font", font_bold)
-		header.add_theme_font_size_override("font_size", 16)
-		header.add_theme_color_override("font_color", branch_color)
-		tree_vbox.add_child(header)
-
-		# Collect nodes for this branch, grouped by tier
-		var tiers: Dictionary = {}
-		for node_id in MerlinConstants.TALENT_NODES:
-			var node: Dictionary = MerlinConstants.TALENT_NODES[node_id]
-			if str(node.get("branch", "")) != branch:
-				continue
-			var tier: int = int(node.get("tier", 1))
-			if not tiers.has(tier):
-				tiers[tier] = []
-			tiers[tier].append(node_id)
-
-		# Sort tiers ascending
-		var tier_keys: Array = tiers.keys()
-		tier_keys.sort()
-
-		for tier in tier_keys:
-			var tier_name: String = str(MerlinConstants.TALENT_TIER_NAMES.get(tier, "Tier %d" % tier))
-
-			# Tier label
-			var tier_lbl := Label.new()
-			tier_lbl.text = "  %s (Tier %d)" % [tier_name, tier]
-			if font_regular:
-				tier_lbl.add_theme_font_override("font", font_regular)
-			tier_lbl.add_theme_font_size_override("font_size", 11)
-			tier_lbl.add_theme_color_override("font_color", MerlinVisual.CRT_PALETTE.border)
-			tree_vbox.add_child(tier_lbl)
-
-			# Nodes row
-			var row := HBoxContainer.new()
-			row.alignment = BoxContainer.ALIGNMENT_CENTER
-			row.add_theme_constant_override("separation", 8)
-			tree_vbox.add_child(row)
-
-			var node_ids: Array = tiers[tier]
-			for node_id in node_ids:
-				var btn := _create_talent_button(node_id, branch_color)
-				row.add_child(btn)
-				_node_buttons[node_id] = btn
-
-		# Separator between branches
-		var sep := ColorRect.new()
-		sep.custom_minimum_size = Vector2(0, 1)
-		sep.color = MerlinVisual.CRT_PALETTE.line
-		tree_vbox.add_child(sep)
-
-
-func _create_talent_button(node_id: String, branch_color: Color) -> Button:
-	"""Create a styled button for a single talent node."""
-	var node: Dictionary = MerlinConstants.TALENT_NODES.get(node_id, {})
-	var name_val: String = str(node.get("name", node_id))
-	var is_unlocked: bool = store.is_talent_active(node_id) if store else false
-	var is_available: bool = store.can_unlock_talent(node_id) if store else false
-
-	var btn := Button.new()
-	btn.custom_minimum_size = Vector2(100 if compact_mode else 120, 52)
-	btn.clip_text = true
-	btn.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
-
-	if is_unlocked:
-		btn.text = "\u2713 %s" % name_val  # Checkmark
-	else:
-		btn.text = name_val
-
-	if font_regular:
-		btn.add_theme_font_override("font", font_regular)
-	btn.add_theme_font_size_override("font_size", 11)
-
-	# Styling based on state
-	var normal := StyleBoxFlat.new()
-	normal.corner_radius_top_left = 6
-	normal.corner_radius_top_right = 6
-	normal.corner_radius_bottom_left = 6
-	normal.corner_radius_bottom_right = 6
-	normal.content_margin_left = 6
-	normal.content_margin_right = 6
-	normal.content_margin_top = 4
-	normal.content_margin_bottom = 4
-
-	if is_unlocked:
-		normal.bg_color = branch_color.lerp(MerlinVisual.CRT_PALETTE.bg_panel, 0.5)
-		normal.border_color = branch_color
-		normal.set_border_width_all(2)
-		btn.add_theme_color_override("font_color", MerlinVisual.CRT_PALETTE.phosphor)
-	elif is_available:
-		normal.bg_color = MerlinVisual.CRT_PALETTE.bg_panel
-		normal.border_color = MerlinVisual.CRT_PALETTE.phosphor_glow
-		normal.set_border_width_all(2)
-		btn.add_theme_color_override("font_color", MerlinVisual.CRT_PALETTE.amber)
-	else:
-		normal.bg_color = MerlinVisual.CRT_PALETTE.bg_dark
-		normal.border_color = MerlinVisual.CRT_PALETTE.locked
-		normal.set_border_width_all(1)
-		btn.add_theme_color_override("font_color", MerlinVisual.CRT_PALETTE.border)
-
-	var hover := normal.duplicate()
-	hover.bg_color = normal.bg_color.lightened(0.08)
-	hover.border_color = MerlinVisual.CRT_PALETTE.amber
-
-	btn.add_theme_stylebox_override("normal", normal)
-	btn.add_theme_stylebox_override("hover", hover)
-	btn.add_theme_stylebox_override("pressed", hover)
-
-	# Tooltip
-	btn.tooltip_text = _get_talent_tooltip(node_id)
-
-	# Click handler
-	btn.pressed.connect(_on_talent_clicked.bind(node_id))
-
-	return btn
 
 
 func _get_talent_tooltip(node_id: String) -> String:
@@ -451,7 +320,6 @@ func _update_detail_panel() -> void:
 
 
 func _on_unlock_pressed(node_id: String) -> void:
-	"""Unlock a talent node via the store."""
 	if not store:
 		return
 
@@ -459,9 +327,9 @@ func _on_unlock_pressed(node_id: String) -> void:
 	if result.get("ok", false):
 		var name_val: String = str(result.get("name", node_id))
 		print("[ARBRE] Talent debloque: %s" % name_val)
-		var sfx: Node = get_node_or_null("/root/SFXManager")
-		if sfx and sfx.has_method("play"):
-			sfx.play("skill_unlock")
+		# Animer le pixel tree avant refresh (SFX inclus dans animate_unlock)
+		if pixel_tree and pixel_tree.has_method("animate_unlock"):
+			pixel_tree.call("animate_unlock", node_id)
 		_refresh_tree()
 	else:
 		print("[ARBRE] Echec: %s" % str(result.get("error", "")))

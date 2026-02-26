@@ -1,7 +1,8 @@
-[gd_scene load_steps=3 format=3 uid="uid://bd6djtasj0svx"]
+[gd_scene load_steps=4 format=3 uid="uid://bd6djtasj0svx"]
 
 [ext_resource type="Script" uid="uid://bqf1ogmt5tgwk" path="res://scripts/ui/arbre_de_vie_ui.gd" id="1"]
 [ext_resource type="Theme" uid="uid://pixj7s1gkmxd" path="res://themes/merlin_theme.tres" id="2_theme"]
+[ext_resource type="Script" path="res://scripts/ui/arbre_pixel_art.gd" id="3_pixel_art"]
 
 [node name="ArbreDeVie" type="Control"]
 layout_mode = 3
@@ -63,16 +64,11 @@ layout_mode = 2
 size_flags_vertical = 3
 theme_override_constants/separation = 10
 
-[node name="TreeScroll" type="ScrollContainer" parent="MainMargin/RootVBox/HSplit"]
+[node name="ArbrePixelArt" type="Control" parent="MainMargin/RootVBox/HSplit"]
 layout_mode = 2
 size_flags_horizontal = 3
 size_flags_vertical = 3
-horizontal_scroll_mode = 0
-
-[node name="TreeVBox" type="VBoxContainer" parent="MainMargin/RootVBox/HSplit/TreeScroll"]
-layout_mode = 2
-size_flags_horizontal = 3
-theme_override_constants/separation = 14
+script = ExtResource("3_pixel_art")
 
 [node name="DetailPanel" type="PanelContainer" parent="MainMargin/RootVBox/HSplit"]
 visible = false
