@@ -202,6 +202,8 @@ var _ui_blocks_for_intro: Array[Control] = []
 var _biome_art_pixels: Array[ColorRect] = []
 var _card_float_tween: Tween
 var _card_entry_tween: Tween
+var _critical_badge_tween: Tween   ## BUG-04 fix — badge pulse, infinite, killed on next display_card
+var _biome_breath_tween: Tween     ## BUG-05 fix — biome breathing loop, killed on re-entry
 var _card_base_pos: Vector2 = Vector2.ZERO
 var _remaining_deck_cards: Array[Panel] = []
 var _remaining_deck_estimate: int = RUN_DECK_ESTIMATE
@@ -1415,7 +1417,7 @@ func update_life_essence(life: int) -> void:
 		elif life <= MerlinConstants.LIFE_ESSENCE_LOW_THRESHOLD:
 			_life_counter.add_theme_color_override("font_color", MerlinVisual.CRT_PALETTE.warning)
 		else:
-			_life_counter.add_theme_color_override("font_color", MerlinVisual.CRT_PALETTE.danger)
+			_life_counter.add_theme_color_override("font_color", MerlinVisual.CRT_PALETTE.phosphor)  ## BUG-01 fix: healthy = phosphor not danger
 	# Mise à jour des 10 segments pixelisés (10 PV chacun)
 	if _life_segment_bars.size() == MerlinConstants.LIFE_BAR_SEGMENTS:
 		var remaining: int = clampi(life, 0, MerlinConstants.LIFE_ESSENCE_MAX)
@@ -1475,6 +1477,12 @@ func display_card(card: Dictionary) -> void:
 	_highlighted_option = -1  # Reset arrow-key highlight for new card
 	if _reward_badge and is_instance_valid(_reward_badge):
 		_reward_badge.hide_badge()
+	## BUG-04 fix: kill critical badge pulse before new card (avoids persistent glow)
+	if _critical_badge_tween:
+		_critical_badge_tween.kill()
+		_critical_badge_tween = null
+	if card_panel and is_instance_valid(card_panel):
+		card_panel.modulate = Color.WHITE
 
 	# Safety: ensure ALL thinking animations are hidden before showing card (P0.1.2)
 	hide_merlin_thinking_overlay()
@@ -1701,6 +1709,8 @@ func _animate_option_entrance() -> void:
 		# Stagger: wait then pixel-reveal each button
 		if delay > 0.0:
 			await get_tree().create_timer(delay).timeout
+			if not is_inside_tree():  ## BUG-07 fix: scene may have changed during await
+				return
 		PixelContentAnimator.reveal(btn, pixel_btn_config)
 		# Subtle scale settle alongside pixel reveal
 		var settle_tw := create_tween().set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
@@ -2153,8 +2163,7 @@ func _build_biome_artwork(biome_key: String, season_key: String, hour: int) -> v
 	# if ResourceLoader.exists(texture_path):
 	#     _load_biome_texture(texture_path, season_key, hour)
 	#     return
-	# Procedural pixel art disabled — waiting for 2D assets
-	return
+	## BUG-02 fix: removed early return — procedural pixel art now active
 
 	var profile: Dictionary = MerlinVisual.BIOME_ART_PROFILES.get(biome_key, MerlinVisual.BIOME_ART_PROFILES.broceliande)
 	var season_tint: Color = MerlinVisual.SEASON_TINTS.get(season_key, Color.WHITE)
@@ -2305,10 +2314,12 @@ func _start_biome_breathing() -> void:
 	## Breathing animation on the biome background layer — forest fully visible.
 	if not biome_art_layer or not is_instance_valid(biome_art_layer):
 		return
-	var breath := create_tween().set_loops()
-	breath.tween_property(biome_art_layer, "modulate:a", 0.95, 4.0) \
+	if _biome_breath_tween:  ## BUG-05 fix: kill previous loop before creating new one
+		_biome_breath_tween.kill()
+	_biome_breath_tween = create_tween().set_loops()
+	_biome_breath_tween.tween_property(biome_art_layer, "modulate:a", 0.95, 4.0) \
 		.set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
-	breath.tween_property(biome_art_layer, "modulate:a", 0.80, 4.0) \
+	_biome_breath_tween.tween_property(biome_art_layer, "modulate:a", 0.80, 4.0) \
 		.set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
 
 
@@ -3661,10 +3672,10 @@ func show_critical_badge() -> void:
 		style.border_color = MerlinVisual.CRT_PALETTE.souffle_full
 		style.set_border_width_all(3)
 		card_panel.add_theme_stylebox_override("panel", style)
-	# Pulse animation (infinite, stop on next card display)
-	var tw := create_tween().set_loops(0)
-	tw.tween_property(card_panel, "modulate", Color(1.15, 1.1, 0.9), 0.3)
-	tw.tween_property(card_panel, "modulate", Color.WHITE, 0.3)
+	# Pulse animation (infinite, killed in display_card())
+	_critical_badge_tween = create_tween().set_loops(0)  ## BUG-04 fix: stored in class var
+	_critical_badge_tween.tween_property(card_panel, "modulate", Color(1.15, 1.1, 0.9), 0.3)
+	_critical_badge_tween.tween_property(card_panel, "modulate", Color.WHITE, 0.3)
 
 
 func show_biome_passive(passive: Dictionary) -> void:
@@ -3707,19 +3718,21 @@ func animate_card_outcome(outcome: String) -> void:
 			tw.tween_property(card_panel, "scale", Vector2(1.04, 1.04), 0.15)
 			tw.tween_property(card_panel, "scale", Vector2(1.0, 1.0), 0.2)
 		"failure":
-			# Shake horizontal x3
+			# Shake horizontal x3 — BUG-06 fix: capture origin_x once to ensure correct oscillation
+			var origin_x: float = _card_base_pos.x if _card_base_pos != Vector2.ZERO else card_panel.position.x
 			var tw := create_tween()
-			for i in range(3):
-				tw.tween_property(card_panel, "position:x", card_panel.position.x + 8, 0.05).set_trans(Tween.TRANS_SINE)
-				tw.tween_property(card_panel, "position:x", card_panel.position.x - 8, 0.05).set_trans(Tween.TRANS_SINE)
-			tw.tween_property(card_panel, "position:x", card_panel.position.x, 0.05)
+			for _i in range(3):
+				tw.tween_property(card_panel, "position:x", origin_x + 8, 0.05).set_trans(Tween.TRANS_SINE)
+				tw.tween_property(card_panel, "position:x", origin_x - 8, 0.05).set_trans(Tween.TRANS_SINE)
+			tw.tween_property(card_panel, "position:x", origin_x, 0.05)
 		"critical_failure":
-			# Violent shake x5 + shrink
+			# Violent shake x5 + shrink — BUG-06 fix: same as failure
+			var origin_x: float = _card_base_pos.x if _card_base_pos != Vector2.ZERO else card_panel.position.x
 			var tw := create_tween()
-			for i in range(5):
-				tw.tween_property(card_panel, "position:x", card_panel.position.x + 14, 0.04).set_trans(Tween.TRANS_SINE)
-				tw.tween_property(card_panel, "position:x", card_panel.position.x - 14, 0.04).set_trans(Tween.TRANS_SINE)
-			tw.tween_property(card_panel, "position:x", card_panel.position.x, 0.04)
+			for _i in range(5):
+				tw.tween_property(card_panel, "position:x", origin_x + 14, 0.04).set_trans(Tween.TRANS_SINE)
+				tw.tween_property(card_panel, "position:x", origin_x - 14, 0.04).set_trans(Tween.TRANS_SINE)
+			tw.tween_property(card_panel, "position:x", origin_x, 0.04)
 			tw.tween_property(card_panel, "scale", Vector2(0.97, 0.97), 0.1)
 			tw.tween_property(card_panel, "scale", Vector2(1.0, 1.0), 0.15)
 
@@ -4184,7 +4197,7 @@ func show_typology_timer(total_seconds: float) -> void:
 		_typology_timer_bar.max_value = total_seconds
 		_typology_timer_bar.value = total_seconds
 		_typology_timer_bar.show_percentage = false
-		_typology_timer_bar.modulate = Color(1.0, 0.4, 0.1, 1.0)  # Orange Urgence
+		_typology_timer_bar.modulate = MerlinVisual.CRT_PALETTE.warning  ## BUG-09 fix: palette ref
 		if is_instance_valid(_top_status_bar):
 			_top_status_bar.add_child(_typology_timer_bar)
 	_typology_timer_bar.max_value = total_seconds
@@ -4197,7 +4210,9 @@ func update_typology_timer(remaining: float) -> void:
 		_typology_timer_bar.value = maxf(remaining, 0.0)
 		# Flash rouge dans les 3 dernières secondes
 		var alpha: float = 1.0 if remaining > 3.0 else 0.6 + 0.4 * sin(remaining * 6.0)
-		_typology_timer_bar.modulate = Color(1.0, 0.2 + (remaining / _typology_timer_max) * 0.4, 0.1, alpha)
+		var warn: Color = MerlinVisual.CRT_PALETTE.warning  ## BUG-09 fix
+		warn.a = alpha
+		_typology_timer_bar.modulate = warn
 
 
 func hide_typology_timer() -> void:
@@ -4215,7 +4230,7 @@ func show_typology_badge(typology: String) -> void:
 	if _typology_badge == null or not is_instance_valid(_typology_badge):
 		_typology_badge = Label.new()
 		_typology_badge.add_theme_font_size_override("font_size", 11)
-		_typology_badge.modulate = Color(0.9, 0.8, 0.3, 1.0)  # Or
+		_typology_badge.modulate = MerlinVisual.CRT_PALETTE.amber  ## BUG-09 fix: palette ref
 		if is_instance_valid(_top_status_bar):
 			_top_status_bar.add_child(_typology_badge)
 	_typology_badge.text = "%s %s" % [icon, name_str]
@@ -4237,10 +4252,10 @@ func show_typology_event(event: String) -> void:
 	label.add_theme_font_size_override("font_size", 20)
 	if event == "critique":
 		label.text = "CRITIQUE !"
-		label.modulate = Color(0.3, 1.0, 0.3, 1.0)
+		label.modulate = MerlinVisual.CRT_PALETTE.success  ## BUG-09 fix: palette ref
 	else:
 		label.text = "FUMBLE..."
-		label.modulate = Color(1.0, 0.2, 0.2, 1.0)
+		label.modulate = MerlinVisual.CRT_PALETTE.danger  ## BUG-09 fix: palette ref
 	add_child(label)
 	var tw := create_tween()
 	tw.tween_property(label, "modulate:a", 0.0, 1.2)

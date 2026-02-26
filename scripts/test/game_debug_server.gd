@@ -21,6 +21,8 @@ var _log_buffer: Array = []
 var _screenshot_timer: float = 0.0
 var _active: bool = false
 var _capturing: bool = false  ## Guard anti-overlap (await frame_post_draw)
+var _connect_retries: int = 0  ## Guard anti-infinite-retry pour _connect_store_signals
+const CONNECT_MAX_RETRIES := 120  ## 120 frames (~2s à 60fps) puis abandon
 
 
 func _ready() -> void:
@@ -65,14 +67,15 @@ func _input(event: InputEvent) -> void:
 # ---------------------------------------------------------------------------
 
 func _connect_store_signals() -> void:
-	## Attend que MerlinStore soit disponible (singleton autoload).
-	if not Engine.has_singleton("MerlinStore"):
-		# Retry via call_deferred si pas encore prêt
-		call_deferred("_connect_store_signals")
-		return
-
-	var store: Node = Engine.get_singleton("MerlinStore")
+	## Attend que MerlinStore soit disponible à /root/MerlinStore.
+	## MerlinStore n'est PAS un Engine.singleton — c'est un nœud enfant de /root.
+	var store: Node = get_node_or_null("/root/MerlinStore")
 	if not store:
+		_connect_retries += 1
+		if _connect_retries >= CONNECT_MAX_RETRIES:
+			_append_log("[GameDebugServer] MerlinStore introuvable après %d frames — signaux désactivés" % CONNECT_MAX_RETRIES)
+			return
+		call_deferred("_connect_store_signals")
 		return
 
 	_safe_connect(store, "card_resolved", _on_card_resolved)
@@ -161,30 +164,29 @@ func _write_state() -> void:
 	## Sérialise l'état run courant depuis MerlinStore dans latest_state.json.
 	var run: Dictionary = {}
 
-	if Engine.has_singleton("MerlinStore"):
-		var store: Node = Engine.get_singleton("MerlinStore")
-		if store and store.get("state") != null:
-			var s: Dictionary = store.state
-			var run_data: Dictionary = s.get("run", {})
-			var hidden: Dictionary = run_data.get("hidden", {})
-			var mission: Dictionary = run_data.get("mission", {})
-			var map_prog: Dictionary = s.get("map_progression", {})
+	var store: Node = get_node_or_null("/root/MerlinStore")
+	if store and store.get("state") != null:
+		var s: Dictionary = store.state
+		var run_data: Dictionary = s.get("run", {})
+		var hidden: Dictionary = run_data.get("hidden", {})
+		var mission: Dictionary = run_data.get("mission", {})
+		var map_prog: Dictionary = s.get("map_progression", {})
 
-			run = {
-				"phase": s.get("phase", ""),
-				"life": run_data.get("life_essence", 0),
-				"souffle": run_data.get("souffle", 0),
-				"essences": run_data.get("essences", 0),
-				"cards_played": run_data.get("cards_played", 0),
-				"biome": map_prog.get("current_biome", ""),
-				"typology": run_data.get("typology", "classique"),
-				"aspects": run_data.get("aspects", {}),
-				"karma": hidden.get("karma", 0),
-				"tension": hidden.get("tension", 0),
-				"mission_progress": mission.get("progress", 0),
-				"mission_total": mission.get("total", 0),
-				"mission_type": mission.get("type", ""),
-			}
+		run = {
+			"phase": s.get("phase", ""),
+			"life": run_data.get("life_essence", 0),
+			"souffle": run_data.get("souffle", 0),
+			"essences": run_data.get("essences", 0),
+			"cards_played": run_data.get("cards_played", 0),
+			"biome": map_prog.get("current_biome", ""),
+			"typology": run_data.get("typology", "classique"),
+			"aspects": run_data.get("aspects", {}),
+			"karma": hidden.get("karma", 0),
+			"tension": hidden.get("tension", 0),
+			"mission_progress": mission.get("progress", 0),
+			"mission_total": mission.get("total", 0),
+			"mission_type": mission.get("type", ""),
+		}
 
 	var data: Dictionary = {
 		"timestamp": int(Time.get_unix_time_from_system()),
