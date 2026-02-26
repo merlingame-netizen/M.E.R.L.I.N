@@ -1,16 +1,15 @@
 {
   "name": "autodev-monitor-v4",
   "displayName": "AUTODEV Monitor v4",
-  "description": "Real-time sidebar dashboard for AUTODEV subagent pipeline",
-  "version": "4.0.0",
+  "description": "Real-time sidebar: AUTODEV pipeline + Godot scene controller",
+  "version": "4.1.0",
   "publisher": "merlin-local",
   "engines": {
     "vscode": "^1.80.0"
   },
   "categories": ["Other"],
   "activationEvents": [
-    "onView:autodev-v4.sidebarView",
-    "workspaceContains:tools/autodev/status/session.json"
+    "workspaceContains:project.godot"
   ],
   "main": "./extension.js",
   "contributes": {
@@ -18,7 +17,7 @@
       "activitybar": [
         {
           "id": "autodev-v4-sidebar",
-          "title": "AUTODEV",
+          "title": "MERLIN Dev",
           "icon": "media/autodev-icon.svg"
         }
       ]
@@ -27,8 +26,13 @@
       "autodev-v4-sidebar": [
         {
           "type": "webview",
+          "id": "autodev-v4.godotView",
+          "name": "Godot Scenes"
+        },
+        {
+          "type": "webview",
           "id": "autodev-v4.sidebarView",
-          "name": "Dashboard"
+          "name": "AUTODEV"
         }
       ]
     },
@@ -36,6 +40,29 @@
       {
         "command": "autodev-v4.refresh",
         "title": "AUTODEV v4: Refresh"
+      },
+      {
+        "command": "autodev-v4.launchGame",
+        "title": "Godot: Launch Game"
+      },
+      {
+        "command": "autodev-v4.killGodot",
+        "title": "Godot: Kill Process"
+      },
+      {
+        "command": "autodev-v4.validate",
+        "title": "Godot: Run validate.bat"
+      }
+    ],
+    "keybindings": [
+      {
+        "command": "autodev-v4.launchGame",
+        "key": "f5",
+        "when": "resourceExtname == .gd || resourceExtname == .tscn"
+      },
+      {
+        "command": "autodev-v4.killGodot",
+        "key": "shift+f5"
       }
     ]
   }

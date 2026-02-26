@@ -15,6 +15,9 @@ export_presets.cfg
 # IDE & Editors
 # -------------------------------------------
 .vscode/
+!.vscode/extensions.json
+!.vscode/launch.json
+!.vscode/settings.json
 *.code-workspace
 .idea/
 *.sublime-project

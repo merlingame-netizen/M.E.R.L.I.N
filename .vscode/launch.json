@@ -1,0 +1,40 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "Launch Game",
+            "type": "godot",
+            "request": "launch",
+            "project": "${workspaceFolder}",
+            "scene": "main"
+        },
+        {
+            "name": "Launch Current Scene",
+            "type": "godot",
+            "request": "launch",
+            "project": "${workspaceFolder}",
+            "scene": "current"
+        },
+        {
+            "name": "Launch MerlinGame",
+            "type": "godot",
+            "request": "launch",
+            "project": "${workspaceFolder}",
+            "scene": "${workspaceFolder}/scenes/MerlinGame.tscn"
+        },
+        {
+            "name": "Launch HubAntre",
+            "type": "godot",
+            "request": "launch",
+            "project": "${workspaceFolder}",
+            "scene": "${workspaceFolder}/scenes/HubAntre.tscn"
+        },
+        {
+            "name": "Launch TransitionBiome",
+            "type": "godot",
+            "request": "launch",
+            "project": "${workspaceFolder}",
+            "scene": "${workspaceFolder}/scenes/TransitionBiome.tscn"
+        }
+    ]
+}
