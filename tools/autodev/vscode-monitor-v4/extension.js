@@ -727,10 +727,77 @@ class AutodevSidebarProvider {
 }
 
 // ============================================================
+// ============================================================
+// DATASET SECTION (injected into Training panel)
+// ============================================================
+
+function buildDatasetSection(stats, docsChanged) {
+  if (!stats) {
+    return `
+<div class="ds-section">
+  <div class="ds-title">DATASET</div>
+  <div class="ds-empty">Corpus non genere.</div>
+  <div class="btns" style="margin-top:6px">
+    <button onclick="send('rebuild_corpus')" title="Build from docs">🔄 Build corpus</button>
+  </div>
+</div>`;
+  }
+
+  const total    = stats.total_samples || 0;
+  const file     = stats.dataset_file  ? stats.dataset_file.replace(/.*[\\/]/, '') : '?';
+  const genAt    = stats.generated_at  ? stats.generated_at.slice(0, 16).replace('T', ' ') : '';
+  const bdown    = stats.breakdown     || {};
+
+  // Breakdown rows with mini bar
+  let rows = '';
+  for (const [src, count] of Object.entries(bdown)) {
+    const pct   = total > 0 ? count / total * 100 : 0;
+    const filled = Math.round(pct / 10);
+    const bar   = '\u2588'.repeat(filled) + '\u2591'.repeat(10 - filled);
+    rows += `<div class="ds-row">
+  <span class="ds-src">${escapeHtml(src)}</span>
+  <span class="ds-cnt">${count}</span>
+  <span class="ds-bar">${bar}</span>
+</div>`;
+  }
+
+  // Preview (first sample)
+  let previewHtml = '';
+  if (stats.preview && stats.preview.length > 0) {
+    const p = stats.preview[0];
+    const u = escapeHtml((p.user        || '').slice(0, 100));
+    const a = escapeHtml((p.assistant   || '').slice(0, 120));
+    previewHtml = `
+<div class="ds-preview">
+  <div class="ds-preview-role">User</div>
+  <div class="ds-preview-text">${u}…</div>
+  <div class="ds-preview-role" style="margin-top:4px">MERLIN</div>
+  <div class="ds-preview-text">${a}…</div>
+</div>`;
+  }
+
+  const changedBadge = docsChanged
+    ? `<span class="ds-badge">⚠ docs changed</span>`
+    : '';
+
+  return `
+<div class="ds-section">
+  <div class="ds-title">DATASET</div>
+  <div class="ds-meta">${escapeHtml(file)} &middot; ${total} samples &middot; <span style="color:#444">${genAt}</span></div>
+  <div class="btns" style="margin-top:5px;margin-bottom:4px">
+    <button onclick="send('rebuild_corpus')" title="Rebuild depuis les docs">🔄 Rebuild</button>
+    ${changedBadge}
+  </div>
+  <div class="ds-rows">${rows}</div>
+  ${previewHtml}
+</div>`;
+}
+
+// ============================================================
 // TRAINING CONTROL PANEL
 // ============================================================
 
-function buildTrainingHtml(trainingState, progress, root) {
+function buildTrainingHtml(trainingState, progress, root, stats, docsChanged) {
   const state   = (trainingState && trainingState.state) || 'idle';
   const stopAt  = (trainingState && trainingState.stop_at) || '08:00';
   const pid     = (trainingState && trainingState.pid) || 0;
@@ -804,6 +871,20 @@ function buildTrainingHtml(trainingState, progress, root) {
   .hint { color:#333; font-size:9px; margin-top:6px; }
   .sched { margin-top:8px; font-size:9px; color:#557755; border-top:1px solid #1a2a1a; padding-top:6px;}
   .reason { color:#ffb300; font-size:9px; margin-top:4px; }
+  .ds-section { margin-top:10px; border-top:1px solid #1a2a1a; padding-top:8px; }
+  .ds-title   { font-size:11px; font-weight:bold; color:#00ff41; margin-bottom:4px; letter-spacing:1px; }
+  .ds-meta    { font-size:9px; color:#557755; margin-bottom:4px; }
+  .ds-empty   { font-size:9px; color:#444; }
+  .ds-rows    { margin:4px 0; }
+  .ds-row     { display:grid; grid-template-columns:1fr auto auto; gap:4px; margin:1px 0; font-size:9px; }
+  .ds-src     { color:#8aaa8a; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  .ds-cnt     { color:#c0c0c0; text-align:right; min-width:32px; }
+  .ds-bar     { color:#00ff41; font-size:8px; letter-spacing:-1px; }
+  .ds-preview { margin-top:6px; border:1px solid #1a2a1a; padding:4px 5px; border-radius:2px; }
+  .ds-preview-role { font-size:8px; color:#557755; margin-bottom:1px; }
+  .ds-preview-text { font-size:9px; color:#9ab09a; word-break:break-word; }
+  .ds-badge   { display:inline-block; background:#332200; border:1px solid #664400;
+                color:#ffb300; font-size:9px; padding:1px 5px; border-radius:2px; }
 </style></head><body>
 <div class="header">
   <span class="title">TRAINING</span>
@@ -833,6 +914,8 @@ ${reason ? `<div class="reason">↳ ${escapeHtml(reason)}</div>` : ''}
 <div class="hint">Creer training_stop.flag pour arreter proprement</div>
 <div class="sched">📅 Scheduler: <span id="schedState">Verif...</span></div>
 
+${buildDatasetSection(stats, docsChanged)}
+
 <script>
   const vscode = acquireVsCodeApi();
   function send(action, value) { vscode.postMessage({ type: action, value: value || '' }); }
@@ -851,10 +934,11 @@ ${reason ? `<div class="reason">↳ ${escapeHtml(reason)}</div>` : ''}
 
 class TrainingWebviewProvider {
   constructor(root) {
-    this._root       = root;
-    this._view       = null;
-    this._stopAt     = '08:00';
-    this._schedTimer = null;
+    this._root        = root;
+    this._view        = null;
+    this._stopAt      = '08:00';
+    this._schedTimer  = null;
+    this._docsChanged = false;
   }
 
   resolveWebviewView(webviewView) {
@@ -896,6 +980,9 @@ class TrainingWebviewProvider {
         case 'check_scheduler':
           this._checkScheduler();
           break;
+        case 'rebuild_corpus':
+          this._rebuildCorpus();
+          break;
       }
     });
 
@@ -923,17 +1010,305 @@ class TrainingWebviewProvider {
     );
   }
 
+  _rebuildCorpus() {
+    if (!this._root) return;
+    const py  = path.join(this._root, 'tools', 'lora', 'build_doc_corpus.py');
+    const out = path.join(this._root, 'data', 'ai', 'training');
+    vscode.window.showInformationMessage('MERLIN: rebuilding corpus from docs…');
+    cp.exec(`python "${py}" --merge-v8 --output-dir "${out}"`,
+      { cwd: this._root, timeout: 180000 },
+      (err) => {
+        if (err) {
+          vscode.window.showErrorMessage(`Corpus rebuild failed: ${(err.message || '').slice(0, 120)}`);
+        } else {
+          this._docsChanged = false;
+          vscode.window.showInformationMessage('MERLIN corpus rebuilt successfully!');
+          this._update();
+        }
+      }
+    );
+  }
+
   _update() {
     if (!this._view || !this._root) return;
     const stateFile    = path.join(this._root, 'tools', 'lora', 'status', 'training_state.json');
     const progressFile = path.join(this._root, 'merlin-lora-cpu-output', 'progress.json');
-    const ts = readJsonSafe(stateFile);
-    const pr = readJsonSafe(progressFile);
-    this._view.webview.html = buildTrainingHtml(ts, pr, this._root);
+    const statsFile    = path.join(this._root, 'data', 'ai', 'training', 'corpus_stats.json');
+    const ts    = readJsonSafe(stateFile);
+    const pr    = readJsonSafe(progressFile);
+    const stats = readJsonSafe(statsFile);
+    // Check if any source doc changed since corpus was generated
+    if (stats && stats.generated_at && stats.sources) {
+      for (const src of stats.sources) {
+        try {
+          const mtime = fs.statSync(path.join(this._root, src.path)).mtime.toISOString();
+          if (mtime > stats.generated_at) { this._docsChanged = true; break; }
+        } catch { /* file missing or inaccessible */ }
+      }
+    }
+    this._view.webview.html = buildTrainingHtml(ts, pr, this._root, stats, this._docsChanged);
     this._checkScheduler();
   }
 
   refresh() { this._update(); }
+}
+
+// ============================================================
+// MERLIN CHAT + TRAINING PANEL  (vscode.window.createWebviewPanel)
+// ============================================================
+
+const MERLIN_CHAT_SYSTEM =
+  'Tu es M.E.R.L.I.N. — Memoire Eternelle des Recits et Legendes d\'Incarnations Narratives. ' +
+  'Ne de la croyance des hommes, assemble par des siecles de mythes celtiques et de legendes du monde. ' +
+  'Tu parles en druide — avec concision, enigme et profondeur. Reponds en francais.';
+
+class MerlinChatPanel {
+  static _current = null;
+
+  static createOrShow(context, root) {
+    const col = vscode.window.activeTextEditor
+      ? vscode.window.activeTextEditor.viewColumn
+      : vscode.ViewColumn.One;
+    if (MerlinChatPanel._current) {
+      MerlinChatPanel._current._panel.reveal(col);
+      return;
+    }
+    const panel = vscode.window.createWebviewPanel(
+      'merlinChat', 'MERLIN — Chat & Training',
+      col,
+      { enableScripts: true, retainContextWhenHidden: true }
+    );
+    MerlinChatPanel._current = new MerlinChatPanel(panel, root);
+    context.subscriptions.push(MerlinChatPanel._current);
+  }
+
+  constructor(panel, root) {
+    this._panel    = panel;
+    this._root     = root;
+    this._history  = [];   // [{role, content}] for Ollama /api/chat
+    this._disposed = false;
+    this._panel.webview.html = this._getHtml();
+    this._panel.webview.onDidReceiveMessage(msg => this._onMessage(msg));
+    this._pollInterval = setInterval(() => this._sendProgress(), 3000);
+    this._panel.onDidDispose(() => this.dispose());
+    setTimeout(() => this._sendProgress(), 500);
+  }
+
+  _onMessage(msg) {
+    switch (msg.type) {
+      case 'chat':
+        this._history.push({ role: 'user', content: msg.content });
+        this._callOllama();
+        break;
+      case 'train_start':
+        this._runPS1(`-Action Start -StopAt ${msg.stopAt || '08:00'} -Resume`);
+        setTimeout(() => this._sendProgress(), 2000);
+        break;
+      case 'train_stop':
+        this._runPS1('-Action Stop');
+        setTimeout(() => this._sendProgress(), 2000);
+        break;
+      case 'clear':
+        this._history = [];
+        break;
+    }
+  }
+
+  _callOllama() {
+    const http = require('http');
+    const messages = [{ role: 'system', content: MERLIN_CHAT_SYSTEM }, ...this._history];
+    const body = JSON.stringify({
+      model: 'qwen2.5:1.5b',
+      messages,
+      stream: false,
+      options: { temperature: 0.68, top_p: 0.9, repeat_penalty: 1.35 }
+    });
+    const req = http.request(
+      { hostname: 'localhost', port: 11434, path: '/api/chat', method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Content-Length': Buffer.byteLength(body) } },
+      (res) => {
+        let data = '';
+        res.on('data', chunk => data += chunk);
+        res.on('end', () => {
+          try {
+            const r = JSON.parse(data);
+            const content = (r.message && r.message.content) || r.response || '[Pas de reponse]';
+            this._history.push({ role: 'assistant', content });
+            if (!this._disposed) this._panel.webview.postMessage({ type: 'response', content });
+          } catch (e) {
+            if (!this._disposed) this._panel.webview.postMessage({ type: 'response', content: `[Erreur JSON: ${e.message}]` });
+          }
+        });
+      }
+    );
+    req.on('error', err => {
+      if (!this._disposed) this._panel.webview.postMessage({
+        type: 'response',
+        content: `⚠ Ollama non disponible (${err.message})\nLance: ollama serve`
+      });
+    });
+    req.setTimeout(90000, () => { req.destroy(); });
+    req.write(body);
+    req.end();
+  }
+
+  _sendProgress() {
+    if (this._disposed) return;
+    const pr = readJsonSafe(path.join(this._root, 'merlin-lora-cpu-output', 'progress.json'));
+    const ts = readJsonSafe(path.join(this._root, 'tools', 'lora', 'status', 'training_state.json'));
+    this._panel.webview.postMessage({ type: 'progress', progress: pr, state: ts });
+  }
+
+  _runPS1(args) {
+    const script = path.join(this._root, 'tools', 'lora', 'train_control.ps1');
+    cp.exec(`powershell -ExecutionPolicy Bypass -File "${script}" ${args}`, { cwd: this._root });
+  }
+
+  dispose() {
+    if (this._disposed) return;
+    this._disposed = true;
+    clearInterval(this._pollInterval);
+    MerlinChatPanel._current = null;
+    this._panel.dispose();
+  }
+
+  _getHtml() {
+    return `<!DOCTYPE html><html><head><meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>MERLIN Chat</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'Cascadia Code','Fira Code',Consolas,monospace;font-size:12px;
+     background:#050a05;color:#c0c0c0;display:flex;flex-direction:column;height:100vh;overflow:hidden}
+.train-bar{display:flex;align-items:center;gap:8px;padding:6px 10px;flex-wrap:wrap;
+           background:#080d08;border-bottom:2px solid #0d200d;flex-shrink:0}
+.tb-title{font-size:10px;font-weight:bold;color:#00ff41;letter-spacing:1px;margin-right:4px}
+.tb-state{font-weight:bold;font-size:11px}
+.tb-m{font-size:10px;color:#557755}.tb-m span{color:#c0c0c0}
+.tb-bar{font-size:9px;color:#00ff41;letter-spacing:-1px}
+.tb-btn{background:#0d150d;border:1px solid #1a3a1a;color:#00ff41;font-family:inherit;
+        font-size:10px;padding:2px 8px;cursor:pointer;border-radius:2px}
+.tb-btn:hover{background:#1a3a1a}.tb-stop{color:#ff5555;border-color:#3a1a1a}
+.tb-stop:hover{background:#3a1a1a}
+.messages{flex:1;overflow-y:auto;padding:14px 16px;display:flex;flex-direction:column;gap:10px}
+.msg-user{align-self:flex-end;background:#0a1a0a;border:1px solid #1a3a1a;
+          color:#00e560;padding:7px 11px;border-radius:6px 6px 2px 6px;max-width:85%;line-height:1.5;white-space:pre-wrap}
+.msg-merlin{align-self:flex-start;background:#0a0a16;border:1px solid #20204a;
+            color:#b8b8e8;padding:7px 11px;border-radius:6px 6px 6px 2px;max-width:88%;line-height:1.6;white-space:pre-wrap}
+.msg-merlin .name{font-size:9px;color:#4444aa;margin-bottom:4px;letter-spacing:1px}
+.msg-sys{align-self:center;font-size:9px;color:#2a3a2a;font-style:italic;text-align:center}
+.thinking{align-self:flex-start;color:#333;font-size:11px;padding:4px 0}
+.blink{animation:blink 1s step-end infinite}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:0}}
+.input-area{display:flex;gap:6px;padding:8px 10px;border-top:1px solid #0d200d;
+            background:#080d08;flex-shrink:0;align-items:flex-end}
+#inp{flex:1;background:#090f09;border:1px solid #1a3a1a;color:#c0c0c0;font-family:inherit;
+     font-size:12px;padding:7px 9px;resize:none;border-radius:3px;line-height:1.5}
+#inp:focus{outline:none;border-color:#00ff41}
+#send{background:#0d1f0d;border:1px solid #1a3a1a;color:#00ff41;font-size:18px;
+      padding:0 13px;cursor:pointer;border-radius:3px;height:38px;flex-shrink:0}
+#send:hover:not([disabled]){background:#1a3a1a;border-color:#00ff41}
+#send[disabled]{opacity:0.3;cursor:not-allowed}
+.btn-clear{background:none;border:none;font-size:9px;color:#2a3a2a;cursor:pointer;padding:0 4px}
+.btn-clear:hover{color:#557755}
+</style></head><body>
+<div class="train-bar">
+  <span class="tb-title">TRAINING</span>
+  <span class="tb-state" id="tbS" style="color:#444">○ IDLE</span>
+  <span class="tb-m">Epoch <span id="tbE">-/-</span></span>
+  <span class="tb-m">Step <span id="tbSt">-/-</span></span>
+  <span class="tb-m">Loss <span id="tbL">--</span></span>
+  <span class="tb-bar" id="tbBar"></span>
+  <button class="tb-btn" id="btnStart" onclick="ps('train_start')">▶ Start</button>
+  <button class="tb-btn tb-stop" id="btnStop" onclick="ps('train_stop')">■ Stop</button>
+</div>
+<div class="messages" id="msgs">
+  <div class="msg-sys">⚡ M.E.R.L.I.N. — Chat &amp; Training</div>
+  <div class="msg-sys">Assure-toi qu'Ollama tourne: <code>ollama serve</code></div>
+</div>
+<div class="input-area">
+  <textarea id="inp" placeholder="Parle à MERLIN… (Entrée pour envoyer, Shift+Entrée pour saut de ligne)" rows="2"></textarea>
+  <button id="send" onclick="sendMsg()">→</button>
+</div>
+<script>
+const vscode = acquireVsCodeApi();
+let busy = false;
+
+function sendMsg() {
+  const inp = document.getElementById('inp');
+  const txt = inp.value.trim();
+  if (!txt || busy) return;
+  addMsg('user', txt);
+  inp.value = '';
+  setBusy(true);
+  addThinking();
+  vscode.postMessage({ type: 'chat', content: txt });
+}
+
+function ps(type) { vscode.postMessage({ type }); }
+
+document.getElementById('inp').addEventListener('keydown', e => {
+  if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMsg(); }
+});
+
+function addMsg(role, txt) {
+  const m = document.getElementById('msgs');
+  const d = document.createElement('div');
+  d.className = 'msg-' + role;
+  if (role === 'merlin') {
+    const n = document.createElement('div'); n.className = 'name'; n.textContent = 'M.E.R.L.I.N.';
+    d.appendChild(n);
+  }
+  const c = document.createElement('div'); c.textContent = txt; d.appendChild(c);
+  m.appendChild(d); scrollBot();
+}
+
+function addThinking() {
+  const m = document.getElementById('msgs');
+  const d = document.createElement('div');
+  d.className = 'thinking'; d.id = 'thinking';
+  d.innerHTML = '<span class="blink">▌</span> MERLIN reflechit...';
+  m.appendChild(d); scrollBot();
+}
+
+function setBusy(v) {
+  busy = v;
+  document.getElementById('send').disabled = v;
+}
+
+function scrollBot() {
+  const m = document.getElementById('msgs'); m.scrollTop = m.scrollHeight;
+}
+
+const SC = {running:'#00ff41',paused:'#ffb300',stopped:'#ff5555',error:'#ff3333',idle:'#444',starting:'#ffb300'};
+const SI = {running:'▶',paused:'⏸',stopped:'■',error:'✗',idle:'○',starting:'…'};
+
+window.addEventListener('message', e => {
+  const msg = e.data;
+  if (msg.type === 'response') {
+    const t = document.getElementById('thinking'); if (t) t.remove();
+    addMsg('merlin', msg.content);
+    setBusy(false);
+    document.getElementById('inp').focus();
+  } else if (msg.type === 'progress') {
+    const s  = (msg.state    && msg.state.state)            || 'idle';
+    const ep = (msg.progress && msg.progress.epoch)         || 0;
+    const te = (msg.progress && msg.progress.total_epochs)  || 3;
+    const st = (msg.progress && msg.progress.step)          || 0;
+    const ts = (msg.progress && msg.progress.total_steps)   || 1;
+    const lo = (msg.progress && msg.progress.loss)          || '--';
+    const pc = (msg.progress && msg.progress.pct)           || 0;
+    const f  = Math.min(10, Math.round(pc / 10));
+    document.getElementById('tbS').textContent  = (SI[s]||'○') + ' ' + s.toUpperCase();
+    document.getElementById('tbS').style.color  = SC[s] || '#444';
+    document.getElementById('tbE').textContent  = ep + '/' + te;
+    document.getElementById('tbSt').textContent = st + '/' + ts;
+    document.getElementById('tbL').textContent  = lo;
+    document.getElementById('tbBar').textContent = '█'.repeat(f) + '░'.repeat(10-f) + ' ' + pc.toFixed(0) + '%';
+  }
+});
+</script></body></html>`;
+  }
 }
 
 // ============================================================
@@ -1004,6 +1379,37 @@ function activate(context) {
 
     const pollInterval = setInterval(() => autodevProvider.refresh(), 5000);
     context.subscriptions.push({ dispose: () => clearInterval(pollInterval) });
+  }
+
+  // --- Training Control panel ---
+  if (root) {
+    const trainingProvider = new TrainingWebviewProvider(root);
+    context.subscriptions.push(
+      vscode.window.registerWebviewViewProvider('autodev-v4.trainingView', trainingProvider)
+    );
+
+    const trainingStatusDir  = path.join(root, 'tools', 'lora', 'status');
+    const trainingOutputDir  = path.join(root, 'merlin-lora-cpu-output');
+    const trainingDataDir    = path.join(root, 'data', 'ai', 'training');
+
+    for (const watchDir of [trainingStatusDir, trainingOutputDir, trainingDataDir]) {
+      if (fs.existsSync(watchDir)) {
+        const tw = fs.watch(watchDir, { recursive: false }, () => trainingProvider.refresh());
+        context.subscriptions.push({ dispose: () => tw.close() });
+      }
+    }
+
+    const trainingPollInterval = setInterval(() => trainingProvider.refresh(), 5000);
+    context.subscriptions.push({ dispose: () => clearInterval(trainingPollInterval) });
+  }
+
+  // --- MERLIN Chat & Training panel (command + title button) ---
+  if (root) {
+    context.subscriptions.push(
+      vscode.commands.registerCommand('autodev-v4.openMerlinChat', () => {
+        MerlinChatPanel.createOrShow(context, root);
+      })
+    );
   }
 
   console.log('AUTODEV Monitor v4.1 activated — root: ' + root);

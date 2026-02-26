@@ -62,8 +62,22 @@
       {
         "command": "autodev-v4.validate",
         "title": "Godot: Run validate.bat"
+      },
+      {
+        "command": "autodev-v4.openMerlinChat",
+        "title": "MERLIN: Ouvrir Chat & Training",
+        "icon": "$(comment-discussion)"
       }
     ],
+    "menus": {
+      "view/title": [
+        {
+          "command": "autodev-v4.openMerlinChat",
+          "when": "view == autodev-v4.trainingView",
+          "group": "navigation"
+        }
+      ]
+    },
     "keybindings": [
       {
         "command": "autodev-v4.launchGame",
