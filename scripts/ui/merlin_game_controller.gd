@@ -38,6 +38,11 @@ const BLESSINGS_MAX := 2
 var minigame_chance := 0.3  # 30% mini-game, 70% dice (settable for headless testing)
 var headless_mode := false   # Disables all minigames (set by auto_play_runner)
 
+## DEV — override biome pour test direct (sans passer par Hub/BiomeRadial)
+## Valeurs: "broceliande" | "landes" | "cotes" | "villages" | "cercles" | "marais" | "collines"
+## Laisser vide ("") pour utiliser GameManager ou BIOME_DEFAULT (foret_broceliande)
+@export var dev_biome_override: String = ""
+
 # Run-local state (reset each start_run)
 var _karma: int = 0
 var _blessings: int = 0
@@ -218,6 +223,7 @@ func start_run(seed_value: int = -1) -> void:
 	_apply_talent_bonuses()
 
 	# Read biome from GameManager run data
+	# Fallback chain: GameManager.run → dev_biome_override → BIOME_DEFAULT (broceliande)
 	var biome_key: String = MerlinConstants.BIOME_DEFAULT
 	var season_hint := ""
 	var hour_hint := -1
@@ -231,6 +237,10 @@ func start_run(seed_value: int = -1) -> void:
 				hour_hint = int(run_data.get("hour", -1))
 			elif run_data.has("heure"):
 				hour_hint = int(run_data.get("heure", -1))
+	elif not dev_biome_override.is_empty():
+		# Lancement direct (sans Hub) avec override éditeur — idéal pour tests rapides
+		biome_key = dev_biome_override
+		print("[TRIADE] dev_biome_override actif: %s" % biome_key)
 
 	# Apply biome CRT profile (phosphor tint + distortion)
 	MerlinVisual.apply_biome_crt(biome_key)
