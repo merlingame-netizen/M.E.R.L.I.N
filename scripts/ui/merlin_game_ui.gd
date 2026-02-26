@@ -1366,6 +1366,22 @@ func _update_souffle(souffle: int) -> void:
 
 	# Center is now free (Phase 43) — no risk indicator needed
 	_update_souffle_btn_state()
+	# Glow pulsant sur l'icône souffle quand disponible, dim statique sinon
+	if souffle_display and is_instance_valid(souffle_display):
+		var icon: Label = souffle_display.get_child(0) as Label
+		if icon and is_instance_valid(icon):
+			if _souffle_glow_tween and _souffle_glow_tween.is_valid():
+				_souffle_glow_tween.kill()
+			if souffle > 0:
+				# Glow pulsant : luminosité oscillante  (disponible)
+				icon.add_theme_color_override("font_color", MerlinVisual.CRT_PALETTE.souffle)
+				_souffle_glow_tween = create_tween().set_loops()
+				_souffle_glow_tween.tween_property(icon, "modulate:a", 0.55, 1.2).set_trans(Tween.TRANS_SINE)
+				_souffle_glow_tween.tween_property(icon, "modulate:a", 1.0, 1.2).set_trans(Tween.TRANS_SINE)
+			else:
+				# Dim statique (utilisé)
+				icon.modulate.a = 0.35
+				icon.add_theme_color_override("font_color", MerlinVisual.CRT_PALETTE.inactive_dark)
 
 
 func _on_souffle_btn_pressed() -> void:
@@ -1504,9 +1520,9 @@ func display_card(card: Dictionary) -> void:
 		if is_instance_valid(btn):
 			btn.set_pressed_no_signal(false)
 			btn.release_focus()
-			btn.disabled = false
+			btn.disabled = true      # Locked until typewriter completes
 			btn.scale = Vector2.ONE
-			btn.modulate = Color.WHITE
+			btn.modulate = Color(1, 1, 1, 0.0)  # Hidden until typewriter completes
 			var parent_c: Control = btn.get_parent()
 			if parent_c and is_instance_valid(parent_c) and parent_c is Container:
 				(parent_c as Container).queue_sort()
@@ -1582,7 +1598,7 @@ func display_card(card: Dictionary) -> void:
 		_card_entry_tween = create_tween()
 		_card_entry_tween.tween_interval(MerlinVisual.CARD_ENTRY_DURATION + 0.15)
 		_card_entry_tween.tween_callback(_start_card_float_and_3d)
-		_card_entry_tween.tween_callback(_animate_option_entrance)
+		# Options are revealed after typewriter (not after card entry) — see _typewriter_card_text()
 
 	# Update card title (poetic GM title — P3.17.2)
 	if _card_title_label and is_instance_valid(_card_title_label):
@@ -1633,8 +1649,8 @@ func display_card(card: Dictionary) -> void:
 		if i < option_buttons.size() and is_instance_valid(option_buttons[i]):
 			var key: String = OPTION_KEYS.get(i, "?")
 			option_buttons[i].text = action_label if has_option else "—"
-			option_buttons[i].disabled = not has_option
-			option_buttons[i].modulate.a = 1.0 if has_option else 0.35
+			option_buttons[i].disabled = true  # Locked until typewriter ends
+			option_buttons[i].modulate.a = 0.0 if has_option else 0.35  # Hidden (has_opt) or dim (no_opt)
 		# Action description — shown as subtitle label above button on hover
 		if i < _option_desc_labels.size() and is_instance_valid(_option_desc_labels[i]):
 			var action_desc: String = str(option.get("action_desc", ""))
@@ -2472,6 +2488,7 @@ var _narrator_active := false
 var _waiting_narrator_click := false
 var _typewriter_active := false
 var _typewriter_abort := false
+var _souffle_glow_tween: Tween = null  # Persistent glow when souffle available
 var _highlighted_option: int = -1  # Arrow key highlight without confirm (-1 = none)
 
 
@@ -2710,6 +2727,11 @@ func _typewriter_card_text(full_text: String) -> void:
 		card_text.modulate.a = 1.0
 
 	_typewriter_active = false
+	# Unlock buttons that have actual options (text != "—") then animate entrance
+	for btn in option_buttons:
+		if is_instance_valid(btn) and btn.text != "—":
+			btn.disabled = false
+	_animate_option_entrance()
 
 
 func _spawn_text_pixel_drop(progress_ratio: float) -> void:
@@ -2891,6 +2913,19 @@ func _on_option_pressed(option: int) -> void:
 # ═══════════════════════════════════════════════════════════════════════════════
 
 func show_end_screen(ending: Dictionary) -> void:
+	# Phase 0 : forêt réagit dramatiquement avant l'overlay
+	var is_victory: bool = ending.get("victory", false)
+	if biome_art_layer and is_instance_valid(biome_art_layer):
+		var tw_forest := create_tween().set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
+		if is_victory:
+			# Victoire : forêt s'illumine → blanc doré
+			tw_forest.tween_property(biome_art_layer, "modulate", Color(1.4, 1.3, 0.8), 1.2)
+			tw_forest.tween_property(biome_art_layer, "modulate", Color(1.1, 1.1, 0.9), 0.6)
+		else:
+			# Mort : forêt s'assombrit lentement → presque noire
+			tw_forest.tween_property(biome_art_layer, "modulate:a", 0.06, 1.5)
+		await tw_forest.finished
+
 	# Hide main UI
 	if card_container:
 		card_container.visible = false
@@ -3592,6 +3627,7 @@ func show_reaction_text(text: String, outcome: String) -> void:
 	## Show narrative reaction on the card text area.
 	if not card_text or not is_instance_valid(card_text):
 		return
+	_flash_biome_for_outcome(outcome)
 	# Restore card text VBox (may be hidden after dice/minigame)
 	switch_body_to_text()
 	var color: Color = MerlinVisual.CRT_PALETTE.success if outcome.contains("success") else MerlinVisual.CRT_PALETTE.danger
@@ -3604,6 +3640,7 @@ func show_result_text_transition(result_text: String, outcome: String) -> void:
 	## Replace card text with a narrative result using fade + typewriter.
 	if not card_text or not is_instance_valid(card_text):
 		return
+	_flash_biome_for_outcome(outcome)
 	# Switch body back to text mode (dice/minigame hid the card text VBox)
 	switch_body_to_text()
 	# Fade out current text
@@ -3634,6 +3671,19 @@ func show_result_text_transition(result_text: String, outcome: String) -> void:
 	var bbcode_text := "[color=#%s]%s[/color]" % [color.to_html(false), result_text]
 	card_text.modulate.a = 1.0
 	_typewriter_card_text(bbcode_text)
+
+
+func _flash_biome_for_outcome(outcome: String) -> void:
+	## Flash the biome background to match the choice outcome.
+	## success/critical_success → green shimmer | failure/critical_failure → red pulse.
+	if not biome_art_layer or not is_instance_valid(biome_art_layer):
+		return
+	var is_success: bool = outcome.contains("success")
+	var intensity: float = 1.6 if outcome.contains("critical") else 1.3
+	var tint: Color = Color(0.7, intensity, 0.7) if is_success else Color(intensity, 0.7, 0.7)
+	var tw := create_tween().set_trans(Tween.TRANS_SINE)
+	tw.tween_property(biome_art_layer, "modulate", tint, 0.12)
+	tw.tween_property(biome_art_layer, "modulate", Color.WHITE, 0.25)
 
 
 func show_critical_badge() -> void:
@@ -3712,52 +3762,30 @@ func animate_card_outcome(outcome: String) -> void:
 
 
 func show_milestone_popup(title_text: String, desc_text: String) -> void:
-	## Power milestone popup — gold panel, fade in → 2.5s → fade out.
-	var popup := PanelContainer.new()
-	var style := StyleBoxFlat.new()
-	var gold: Color = MerlinVisual.CRT_PALETTE.get("amber_bright", Color(0.85, 0.65, 0.13))
-	style.bg_color = Color(gold.r, gold.g, gold.b, 0.92)
-	style.corner_radius_top_left = 8
-	style.corner_radius_top_right = 8
-	style.corner_radius_bottom_left = 8
-	style.corner_radius_bottom_right = 8
-	style.content_margin_left = 16
-	style.content_margin_right = 16
-	style.content_margin_top = 12
-	style.content_margin_bottom = 12
-	popup.add_theme_stylebox_override("panel", style)
-	var lbl := Label.new()
-	lbl.text = "%s\n%s" % [title_text, desc_text]
-	lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	if title_font:
-		lbl.add_theme_font_override("font", title_font)
-	lbl.add_theme_font_size_override("font_size", 18)
-	var paper_color: Color = MerlinVisual.CRT_PALETTE.get("bg_panel", Color.WHITE)
-	lbl.add_theme_color_override("font_color", paper_color)
-	popup.add_child(lbl)
-	add_child(popup)
-	popup.custom_minimum_size = Vector2(260, 60)
-	popup.position = Vector2(size.x / 2.0 - 130, size.y * 0.35)
-	popup.modulate.a = 0.0
-	popup.z_index = 30
-	var tw := create_tween()
-	tw.tween_property(popup, "modulate:a", 1.0, 0.3)
-	tw.tween_interval(2.5)
-	tw.tween_property(popup, "modulate:a", 0.0, 0.5)
-	tw.tween_callback(popup.queue_free)
+	## Milestone intégré : forêt pulse doré + texte dans la carte (pas de popup séparé).
+	# Forêt : pulse ambré 3 fois (milestone = moment magique)
+	if biome_art_layer and is_instance_valid(biome_art_layer):
+		var gold_tint := Color(1.4, 1.1, 0.6)
+		var tw_forest := create_tween()
+		for _i in range(3):
+			tw_forest.tween_property(biome_art_layer, "modulate", gold_tint, 0.2).set_trans(Tween.TRANS_SINE)
+			tw_forest.tween_property(biome_art_layer, "modulate", Color.WHITE, 0.35).set_trans(Tween.TRANS_SINE)
+	# Texte dans la carte (speaker = titre milestone, corps = desc)
+	if card_speaker and is_instance_valid(card_speaker):
+		card_speaker.text = title_text
+		var amber: Color = MerlinVisual.CRT_PALETTE.get("amber_bright", Color(0.85, 0.65, 0.13))
+		card_speaker.add_theme_color_override("font_color", amber)
+		card_speaker.visible = true
+	if card_text and is_instance_valid(card_text):
+		var amber: Color = MerlinVisual.CRT_PALETTE.get("amber_bright", Color(0.85, 0.65, 0.13))
+		var bbcode := "[color=#%s]✦ %s[/color]" % [amber.to_html(false), desc_text]
+		card_text.text = bbcode
+		card_text.modulate.a = 1.0
 
 
-func show_bestiole_emote(emote: String) -> void:
-	## Show a brief emote above the bestiole companion. Fade in, bounce, fade out.
-	if not _bestiole_emote or not is_instance_valid(_bestiole_emote):
-		return
-	_bestiole_emote.text = emote
-	var tw := create_tween()
-	tw.tween_property(_bestiole_emote, "modulate:a", 1.0, 0.15)
-	tw.tween_property(_bestiole_emote, "position:y", _bestiole_emote.position.y - 6, 0.12)
-	tw.tween_property(_bestiole_emote, "position:y", _bestiole_emote.position.y, 0.12)
-	tw.tween_interval(1.8)
-	tw.tween_property(_bestiole_emote, "modulate:a", 0.0, 0.4)
+func show_bestiole_emote(_emote: String) -> void:
+	## Désactivé — la bestiole est uniquement dans le Hub (design decision 2026-02-26).
+	pass
 
 
 func show_life_delta(delta: int) -> void:
@@ -4051,23 +4079,9 @@ func show_merlin_dialogue_response(text: String) -> void:
 		_dialogue_bubble.show_message(text, 6.0)
 
 
-func show_what_if_reveal(what_ifs: Array[String], chosen_index: int) -> void:
-	## Show what-if hints below unchosen option buttons (P3.17.4).
-	## Fades in with italic styling to distinguish from normal text.
-	for i in range(mini(what_ifs.size(), _what_if_labels.size())):
-		var lbl: Label = _what_if_labels[i]
-		if not lbl or not is_instance_valid(lbl):
-			continue
-		if i == chosen_index or what_ifs[i].is_empty():
-			lbl.visible = false
-			continue
-		lbl.text = what_ifs[i]
-		lbl.modulate.a = 0.0
-		lbl.visible = true
-		# Staggered fade-in
-		var tw := create_tween()
-		tw.tween_interval(0.3 + i * 0.2)
-		tw.tween_property(lbl, "modulate:a", 0.7, 0.6).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_OUT)
+func show_what_if_reveal(_what_ifs: Array[String], _chosen_index: int) -> void:
+	## Désactivé — trop complexe visuellement (design decision 2026-02-26).
+	pass
 
 
 func hide_what_if_labels() -> void:
