@@ -30,7 +30,7 @@ static var PERIOD_MODS := {
 	"aube":        {"tint": Color(1.15, 0.90, 0.75), "brightness": 0.80, "mid_shift": 0.05},
 	"jour":        {"tint": Color(1.00, 1.00, 1.00), "brightness": 1.00, "mid_shift": 0.00},
 	"crepuscule":  {"tint": Color(1.20, 0.80, 0.65), "brightness": 0.70, "mid_shift": 0.03},
-	"nuit":        {"tint": Color(0.50, 0.55, 0.80), "brightness": 0.35, "mid_shift": -0.05},
+	"nuit":        {"tint": Color(0.85, 0.90, 1.00), "brightness": 0.65, "mid_shift": -0.02},
 }
 
 

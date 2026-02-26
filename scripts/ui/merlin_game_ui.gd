@@ -280,7 +280,7 @@ func _configure_ui() -> void:
 	# Absorbe le fond résiduel de la forêt et garantit le contraste des panels UI
 	var ui_backdrop := ColorRect.new()
 	ui_backdrop.name = "UIBackdrop"
-	ui_backdrop.color = Color(0.01, 0.03, 0.01, 0.65)
+	ui_backdrop.color = Color(0.01, 0.03, 0.01, 0.35)
 	ui_backdrop.set_anchors_preset(Control.PRESET_FULL_RECT)
 	ui_backdrop.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	add_child(ui_backdrop)
@@ -445,6 +445,7 @@ func _configure_ui() -> void:
 	_souffle_btn.pressed.connect(_on_souffle_btn_pressed)
 	_souffle_btn.mouse_entered.connect(func(): SFXManager.play("hover"))
 	add_child(_souffle_btn)
+	_souffle_btn.visible = false  # Retiré de l'UI — pas de bouton souffle en bas à droite
 	_update_souffle_btn_state()
 
 	# B.1 — Perk badge: shows selected perk name above Souffle button
@@ -470,6 +471,7 @@ func _configure_ui() -> void:
 	_dialogue_btn.pressed.connect(_on_dialogue_btn_pressed)
 	_dialogue_btn.mouse_entered.connect(func(): SFXManager.play("hover"))
 	add_child(_dialogue_btn)
+	_dialogue_btn.visible = false  # Retiré de l'UI — pas de bouton dialogue en bas à droite
 
 	# Merlin response bubble (reusable)
 	_dialogue_bubble = MerlinBubble.new()
@@ -537,12 +539,8 @@ func _apply_label_theming() -> void:
 	_life_counter.add_theme_font_size_override("font_size", 16)
 	_life_counter.add_theme_color_override("font_color", MerlinVisual.CRT_PALETTE.danger)
 
-	# Souffle counter — 14pt, cyan_bright pour meilleure lisibilité
-	_souffle_counter.text = "%d/%d" % [MerlinConstants.SOUFFLE_START, MerlinConstants.SOUFFLE_MAX]
-	if body_font:
-		_souffle_counter.add_theme_font_override("font", body_font)
-	_souffle_counter.add_theme_font_size_override("font_size", 14)
-	_souffle_counter.add_theme_color_override("font_color", MerlinVisual.CRT_PALETTE.cyan_bright)
+	# Souffle counter — masqué, le logo seul suffit (SOUFFLE_MAX=1, usage unique)
+	_souffle_counter.visible = false
 
 	# Essence counter — 16pt (réduit, Essences secondaires vs Vie)
 	if body_font:
@@ -1467,7 +1465,7 @@ func update_life_essence(life: int) -> void:
 
 func update_essences_collected(value: int) -> void:
 	if _essence_counter and is_instance_valid(_essence_counter):
-		_essence_counter.text = str(maxi(value, 0))
+		_essence_counter.text = "%d ◆" % maxi(value, 0)
 
 
 func update_resource_bar(tool_id: String, day: int, mission_current: int, mission_total: int, essences_collected: int = 0) -> void:
@@ -2316,19 +2314,19 @@ func _dim_biome_background() -> void:
 		return
 	biome_art_layer.visible = true
 	var tw := create_tween()
-	tw.tween_property(biome_art_layer, "modulate:a", 0.18, 0.8) \
+	tw.tween_property(biome_art_layer, "modulate:a", 0.55, 0.8) \
 		.set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
 	_start_biome_breathing()
 
 
 func _start_biome_breathing() -> void:
-	## Subtle breathing animation on the biome background layer.
+	## Breathing animation on the biome background layer — forest fully visible.
 	if not biome_art_layer or not is_instance_valid(biome_art_layer):
 		return
 	var breath := create_tween().set_loops()
-	breath.tween_property(biome_art_layer, "modulate:a", 0.30, 4.0) \
+	breath.tween_property(biome_art_layer, "modulate:a", 0.72, 4.0) \
 		.set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
-	breath.tween_property(biome_art_layer, "modulate:a", 0.20, 4.0) \
+	breath.tween_property(biome_art_layer, "modulate:a", 0.55, 4.0) \
 		.set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
 
 
@@ -2738,6 +2736,8 @@ func _spawn_text_pixel_drop(progress_ratio: float) -> void:
 
 
 func _play_blip() -> void:
+	## Désactivé — pas de SFX texte sur MerlinGame.
+	return
 	## Procedural keyboard click sound (pooled — no node leak).
 	if _blip_pool.is_empty():
 		return
