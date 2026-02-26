@@ -960,13 +960,13 @@ static func make_clock_panel_style(unique: bool = false) -> StyleBoxFlat:
 	, unique)
 
 
-## Card panel — terminal card frame with phosphor border
+## Card panel — terminal card frame with amber border (visibilité maximale vs biome)
 static func make_card_panel_style(unique: bool = false) -> StyleBoxFlat:
 	return _get_or_create("card_panel", func() -> StyleBoxFlat:
 		var s := StyleBoxFlat.new()
-		s.bg_color = CRT_PALETTE.bg_dark
-		s.border_color = CRT_PALETTE.border_bright
-		s.set_border_width_all(2)
+		s.bg_color = CRT_PALETTE.bg_deep          # Plus sombre, pleine opacité
+		s.border_color = CRT_PALETTE.amber        # Ambre chaud = contraste fort
+		s.set_border_width_all(3)                 # 2→3px, plus lisible
 		s.set_corner_radius_all(0)
 		s.shadow_size = 0
 		return s
@@ -977,7 +977,7 @@ static func make_card_panel_style(unique: bool = false) -> StyleBoxFlat:
 static func make_card_illustration_style(unique: bool = false) -> StyleBoxFlat:
 	return _get_or_create("card_illo", func() -> StyleBoxFlat:
 		var s := StyleBoxFlat.new()
-		s.bg_color = Color(CRT_PALETTE.bg_deep.r, CRT_PALETTE.bg_deep.g, CRT_PALETTE.bg_deep.b, 0.90)
+		s.bg_color = Color(CRT_PALETTE.bg_deep.r, CRT_PALETTE.bg_deep.g, CRT_PALETTE.bg_deep.b, 0.99)
 		s.border_color = Color(CRT_PALETTE.border.r, CRT_PALETTE.border.g, CRT_PALETTE.border.b, 0.5)
 		s.set_border_width_all(1)
 		s.set_corner_radius_all(0)
@@ -986,13 +986,13 @@ static func make_card_illustration_style(unique: bool = false) -> StyleBoxFlat:
 	, unique)
 
 
-## Card body — terminal reading area with dim border
+## Card body — terminal reading area with amber-dim border
 static func make_card_body_style(unique: bool = false) -> StyleBoxFlat:
 	return _get_or_create("card_body", func() -> StyleBoxFlat:
 		var s := StyleBoxFlat.new()
-		s.bg_color = Color(CRT_PALETTE.bg_panel.r, CRT_PALETTE.bg_panel.g, CRT_PALETTE.bg_panel.b, 0.96)
-		s.border_color = Color(CRT_PALETTE.border.r, CRT_PALETTE.border.g, CRT_PALETTE.border.b, 0.40)
-		s.set_border_width_all(1)
+		s.bg_color = Color(CRT_PALETTE.bg_deep.r, CRT_PALETTE.bg_deep.g, CRT_PALETTE.bg_deep.b, 0.99)
+		s.border_color = Color(CRT_PALETTE.amber_dim.r, CRT_PALETTE.amber_dim.g, CRT_PALETTE.amber_dim.b, 0.75)
+		s.set_border_width_all(2)                 # 1→2px, plus visible
 		s.set_corner_radius_all(0)
 		s.content_margin_left = 18
 		s.content_margin_right = 18
@@ -1104,15 +1104,15 @@ static func apply_option_button_theme(btn: Button, accent_color: Color) -> void:
 	btn.custom_minimum_size.y = MIN_TOUCH_TARGET
 
 
-## CRT terminal option style — thick left border accent, sharp corners
+## CRT terminal option style — thick left border accent, sharp corners, fully opaque
 static func make_celtic_option_style(accent_color: Color) -> StyleBoxFlat:
 	var s := StyleBoxFlat.new()
-	s.bg_color = Color(CRT_PALETTE.bg_dark.r, CRT_PALETTE.bg_dark.g, CRT_PALETTE.bg_dark.b, 0.95)
+	s.bg_color = Color(CRT_PALETTE.bg_deep.r, CRT_PALETTE.bg_deep.g, CRT_PALETTE.bg_deep.b, 0.97)
 	s.border_color = accent_color
-	s.border_width_left = 5
-	s.border_width_right = 1
-	s.border_width_top = 1
-	s.border_width_bottom = 1
+	s.border_width_left = 6   # 5→6px : accent dominant gauche
+	s.border_width_right = 2  # 1→2px : cadre visible
+	s.border_width_top = 2    # 1→2px
+	s.border_width_bottom = 2 # 1→2px
 	s.set_corner_radius_all(0)
 	s.shadow_size = 0
 	s.content_margin_left = 18

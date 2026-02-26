@@ -272,9 +272,20 @@ func _configure_ui() -> void:
 	if body_font == null:
 		body_font = title_font
 
-	# CRT terminal background
+	# CRT terminal background — base near-black pour contraste maximal vs BiomeArtLayer
 	parchment_bg.material = null
-	parchment_bg.color = MerlinVisual.CRT_PALETTE.bg_panel
+	parchment_bg.color = Color(0.01, 0.02, 0.01)
+
+	# UIBackdrop : couche semi-opaque entre BiomeArtLayer et MainVBox
+	# Absorbe le fond résiduel de la forêt et garantit le contraste des panels UI
+	var ui_backdrop := ColorRect.new()
+	ui_backdrop.name = "UIBackdrop"
+	ui_backdrop.color = Color(0.01, 0.03, 0.01, 0.65)
+	ui_backdrop.set_anchors_preset(Control.PRESET_FULL_RECT)
+	ui_backdrop.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	add_child(ui_backdrop)
+	# Positionner entre BiomeArtLayer (index 1) et MainVBox
+	move_child(ui_backdrop, biome_art_layer.get_index() + 1)
 
 	# Life bar theming
 	_life_bar.max_value = MerlinConstants.LIFE_ESSENCE_MAX
@@ -519,19 +530,19 @@ func _apply_label_theming() -> void:
 	]:
 		lbl.visible = false  # DOC_17 UX review: labels redondants masqués
 
-	# Life counter — 14pt (dominant, Vie est la ressource principale)
+	# Life counter — 16pt (dominant, Vie est la ressource principale)
 	_life_counter.text = "%d/%d" % [MerlinConstants.LIFE_ESSENCE_START, MerlinConstants.LIFE_ESSENCE_MAX]
 	if body_font:
 		_life_counter.add_theme_font_override("font", body_font)
-	_life_counter.add_theme_font_size_override("font_size", 14)
+	_life_counter.add_theme_font_size_override("font_size", 16)
 	_life_counter.add_theme_color_override("font_color", MerlinVisual.CRT_PALETTE.danger)
 
-	# Souffle counter — 12pt
+	# Souffle counter — 14pt, cyan_bright pour meilleure lisibilité
 	_souffle_counter.text = "%d/%d" % [MerlinConstants.SOUFFLE_START, MerlinConstants.SOUFFLE_MAX]
 	if body_font:
 		_souffle_counter.add_theme_font_override("font", body_font)
-	_souffle_counter.add_theme_font_size_override("font_size", 12)
-	_souffle_counter.add_theme_color_override("font_color", MerlinVisual.CRT_PALETTE.souffle)
+	_souffle_counter.add_theme_font_size_override("font_size", 14)
+	_souffle_counter.add_theme_color_override("font_color", MerlinVisual.CRT_PALETTE.cyan_bright)
 
 	# Essence counter — 16pt (réduit, Essences secondaires vs Vie)
 	if body_font:
@@ -577,7 +588,7 @@ func _apply_label_theming() -> void:
 	if title_font:
 		_card_title_label.add_theme_font_override("font", title_font)
 	_card_title_label.add_theme_font_size_override("font_size", MerlinVisual.CAPTION_LARGE)
-	_card_title_label.add_theme_color_override("font_color", MerlinVisual.CRT_PALETTE.phosphor_dim)
+	_card_title_label.add_theme_color_override("font_color", MerlinVisual.CRT_PALETTE.phosphor)
 	_card_title_label.visible = false
 	if _card_body_vbox and is_instance_valid(_card_body_vbox):
 		_card_body_vbox.add_child(_card_title_label)
@@ -2305,7 +2316,7 @@ func _dim_biome_background() -> void:
 		return
 	biome_art_layer.visible = true
 	var tw := create_tween()
-	tw.tween_property(biome_art_layer, "modulate:a", 0.25, 0.8) \
+	tw.tween_property(biome_art_layer, "modulate:a", 0.18, 0.8) \
 		.set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
 	_start_biome_breathing()
 
