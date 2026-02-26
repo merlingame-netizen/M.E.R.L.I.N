@@ -272,20 +272,12 @@ func _configure_ui() -> void:
 	if body_font == null:
 		body_font = title_font
 
-	# CRT terminal background — base near-black pour contraste maximal vs BiomeArtLayer
+	# Fond transparent — la forêt Brocéliande est le fond visuel principal
 	parchment_bg.material = null
-	parchment_bg.color = Color(0.01, 0.02, 0.01)
+	parchment_bg.color = Color(0.0, 0.0, 0.0, 0.0)  # Transparent — forêt visible derrière
 
-	# UIBackdrop : couche semi-opaque entre BiomeArtLayer et MainVBox
-	# Absorbe le fond résiduel de la forêt et garantit le contraste des panels UI
-	var ui_backdrop := ColorRect.new()
-	ui_backdrop.name = "UIBackdrop"
-	ui_backdrop.color = Color(0.01, 0.03, 0.01, 0.35)
-	ui_backdrop.set_anchors_preset(Control.PRESET_FULL_RECT)
-	ui_backdrop.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	add_child(ui_backdrop)
-	# Positionner entre BiomeArtLayer (index 1) et MainVBox
-	move_child(ui_backdrop, biome_art_layer.get_index() + 1)
+	# UIBackdrop : supprimé — les panels UI ont leur propre fond opaque (bg_deep)
+	# La lisibilité est assurée par les StyleBoxFlat des cartes et boutons, pas par un overlay global
 
 	# Life bar theming
 	_life_bar.max_value = MerlinConstants.LIFE_ESSENCE_MAX
@@ -541,6 +533,15 @@ func _apply_label_theming() -> void:
 
 	# Souffle counter — masqué, le logo seul suffit (SOUFFLE_MAX=1, usage unique)
 	_souffle_counter.visible = false
+
+	# Souffle icons — MerlinGameUI.tscn contient 7 Labels (Icon0-Icon6) mais SOUFFLE_MAX=1.
+	# Masquer les Labels 1-6 supplémentaires pour n'afficher qu'un seul logo.
+	if souffle_display and is_instance_valid(souffle_display):
+		var n: int = souffle_display.get_child_count()
+		for i: int in range(1, n):
+			var extra: Control = souffle_display.get_child(i) as Control
+			if extra and is_instance_valid(extra):
+				extra.visible = false
 
 	# Essence counter — 16pt (réduit, Essences secondaires vs Vie)
 	if body_font:
@@ -920,6 +921,8 @@ func _get_deck_draw_origin() -> Vector2:
 
 
 func _animate_remaining_deck_draw() -> void:
+	## Mise à jour visuelle du deck seulement — ghost panel supprimé (2026-02-26).
+	## La carte se matérialise en pixels via PixelContentAnimator dans display_card().
 	if _remaining_deck_cards.is_empty():
 		return
 	var top_card: Panel = _remaining_deck_cards.pop_front()
@@ -927,43 +930,6 @@ func _animate_remaining_deck_draw() -> void:
 		return
 	_remaining_deck_cards.append(top_card)
 	_update_remaining_deck_visual()
-
-	if not _deck_fx_layer or not is_instance_valid(_deck_fx_layer):
-		return
-	var draw_target := card_container.global_position + _card_base_pos + Vector2(card_panel.size.x * 0.22, card_panel.size.y * 0.24)
-	var to_fx := _deck_fx_layer.get_global_transform().affine_inverse()
-	var start_fx: Vector2 = to_fx * top_card.global_position
-	var target_fx: Vector2 = to_fx * draw_target
-
-	var ghost := Panel.new()
-	ghost.size = top_card.size
-	ghost.position = start_fx
-	ghost.rotation_degrees = top_card.rotation_degrees
-	ghost.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	ghost.z_index = 14
-	var base_style := top_card.get_theme_stylebox("panel")
-	if base_style:
-		ghost.add_theme_stylebox_override("panel", base_style.duplicate())
-	_deck_fx_layer.add_child(ghost)
-	_deck_fx_layer.visible = true
-
-	var tw := create_tween()
-	# Arc path: rise then descend (more dramatic)
-	var mid_y := minf(start_fx.y, target_fx.y) - MerlinVisual.CARD_DEAL_ARC_HEIGHT
-	var mid_pos := Vector2((start_fx.x + target_fx.x) * 0.5, mid_y)
-	var half_dur: float = MerlinVisual.CARD_DEAL_DURATION * 0.5
-	tw.tween_property(ghost, "position", mid_pos, half_dur).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_OUT)
-	tw.tween_property(ghost, "position", target_fx, half_dur).set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_IN)
-	tw.parallel().tween_property(ghost, "rotation_degrees", randf_range(-20.0, 20.0), MerlinVisual.CARD_DEAL_DURATION)
-	tw.parallel().tween_property(ghost, "scale", Vector2(1.15, 1.15), MerlinVisual.CARD_DEAL_DURATION * 0.4)
-	tw.tween_property(ghost, "scale:x", 0.02, 0.12).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN)
-	tw.parallel().tween_property(ghost, "modulate:a", 0.0, 0.10)
-	tw.tween_callback(func():
-		if is_instance_valid(ghost):
-			ghost.queue_free()
-		if _deck_fx_layer and is_instance_valid(_deck_fx_layer) and _deck_fx_layer.get_child_count() == 0:
-			_deck_fx_layer.visible = false
-	)
 
 
 func _start_card_float_motion() -> void:
@@ -2330,7 +2296,7 @@ func _dim_biome_background() -> void:
 		return
 	biome_art_layer.visible = true
 	var tw := create_tween()
-	tw.tween_property(biome_art_layer, "modulate:a", 0.55, 0.8) \
+	tw.tween_property(biome_art_layer, "modulate:a", 0.80, 0.8) \
 		.set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
 	_start_biome_breathing()
 
@@ -2340,20 +2306,17 @@ func _start_biome_breathing() -> void:
 	if not biome_art_layer or not is_instance_valid(biome_art_layer):
 		return
 	var breath := create_tween().set_loops()
-	breath.tween_property(biome_art_layer, "modulate:a", 0.72, 4.0) \
+	breath.tween_property(biome_art_layer, "modulate:a", 0.95, 4.0) \
 		.set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
-	breath.tween_property(biome_art_layer, "modulate:a", 0.55, 4.0) \
+	breath.tween_property(biome_art_layer, "modulate:a", 0.80, 4.0) \
 		.set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
 
 
-func _animate_deck_assembly(biome_key: String) -> void:
-	if not _deck_fx_layer or not is_instance_valid(_deck_fx_layer):
-		return
-	for child in _deck_fx_layer.get_children():
-		child.queue_free()
-	_deck_fx_layer.visible = true
-
-	var profile: Dictionary = MerlinVisual.BIOME_ART_PROFILES.get(biome_key, MerlinVisual.BIOME_ART_PROFILES.broceliande)
+func _animate_deck_assembly(_biome_key: String) -> void:
+	## Désactivé — suppression de l'animation de shuffle (2026-02-26).
+	## Les cartes se matérialisent en pixels directement via PixelContentAnimator.
+	return
+	var profile: Dictionary = MerlinVisual.BIOME_ART_PROFILES.get(_biome_key, MerlinVisual.BIOME_ART_PROFILES.broceliande)
 	var edge_color: Color = Color(profile.accent)
 	var vp := get_viewport_rect().size
 	var center := Vector2(vp.x * 0.5, vp.y * 0.60)
