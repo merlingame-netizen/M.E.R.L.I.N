@@ -307,16 +307,11 @@ func _configure_ui() -> void:
 		_scene_compositor.setup(220.0)
 		_tile_center.add_child(_scene_compositor)
 
-	_pixel_portrait = PixelCharacterPortrait.new()
-	_pixel_portrait.name = "PixelPortrait"
-	_pixel_portrait.setup("merlin", 5.8)
-	_portrait_center.add_child(_pixel_portrait)
-
-	# NPC portrait (32x32) — shown when speaker is an NPC archetype
-	_npc_portrait = PixelNpcPortrait.new()
-	_npc_portrait.name = "NpcPortrait"
-	_npc_portrait.visible = false
-	_portrait_center.add_child(_npc_portrait)
+	# Portraits supprimés — libère l'espace card pour le texte
+	_pixel_portrait = null
+	_npc_portrait = null
+	if _portrait_center and is_instance_valid(_portrait_center):
+		_portrait_center.visible = false
 
 	# LLM source badge
 	_card_source_badge = LLMSourceBadge.create("static")
@@ -338,6 +333,15 @@ func _configure_ui() -> void:
 		btn.mouse_exited.connect(_on_option_hover_exit)
 		btn.mouse_filter = Control.MOUSE_FILTER_STOP
 		btn.get_parent().mouse_filter = Control.MOUSE_FILTER_PASS
+		# Boutons occupent toute la largeur disponible, hauteur minimum garantie
+		btn.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		btn.custom_minimum_size = Vector2(0, 72)
+		btn.get_parent().size_flags_horizontal = Control.SIZE_EXPAND_FILL
+
+	# OptionsBar : expansion horizontale + séparation lisible
+	if options_container and is_instance_valid(options_container):
+		options_container.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		options_container.add_theme_constant_override("separation", 14)
 
 	# Ensure parent containers don't block mouse events on buttons
 	if _bottom_zone and is_instance_valid(_bottom_zone):
@@ -822,7 +826,7 @@ func _layout_run_zones() -> void:
 		return
 	var top_h := maxf(52.0, vp_size.y * TOP_ZONE_RATIO)
 	var middle_h := maxf(260.0, vp_size.y * CARD_ZONE_RATIO)
-	var bottom_h := maxf(80.0, vp_size.y * BOTTOM_ZONE_RATIO)
+	var bottom_h := maxf(180.0, vp_size.y * BOTTOM_ZONE_RATIO)
 	var total := top_h + middle_h + bottom_h
 	if total > vp_size.y:
 		var overflow := total - vp_size.y

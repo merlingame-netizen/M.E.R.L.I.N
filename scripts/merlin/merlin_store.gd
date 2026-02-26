@@ -22,6 +22,7 @@ signal bond_tier_changed(old_tier: String, new_tier: String)
 signal gauges_changed(gauges: Dictionary)
 signal season_changed(new_season: String)
 signal event_available(event_id: String, event_data: Dictionary)
+signal faveurs_changed(old_val: int, new_val: int)
 
 const VERSION := "0.4.0"  # Updated for World Map gauge system
 
@@ -178,6 +179,7 @@ func build_default_state() -> Dictionary:
 				"perk_used": false,
 			},
 			"life_essence": MerlinConstants.LIFE_ESSENCE_START,
+			"faveurs": MerlinConstants.FAVEURS_START,
 			"mission": {
 				"type": "",
 				"target": "",
@@ -518,6 +520,10 @@ func _reduce(action: Dictionary) -> Dictionary:
 			var amount: int = int(action.get("amount", 1))
 			return _heal_life(amount)
 
+		"FAVEUR_ADD":
+			var amount: int = int(action.get("amount", MerlinConstants.FAVEURS_PER_MINIGAME_PLAY))
+			return _add_faveur(amount)
+
 		# ═══════════════════════════════════════════════════════════════════════
 		# WORLD MAP PROGRESSION ACTIONS
 		# ═══════════════════════════════════════════════════════════════════════
@@ -606,6 +612,16 @@ func _heal_life(amount: int) -> Dictionary:
 	state["run"] = run
 	life_changed.emit(old_life, new_life)
 	return {"ok": true, "old": old_life, "new": new_life, "healed": new_life - old_life}
+
+
+func _add_faveur(amount: int) -> Dictionary:
+	var run: Dictionary = state.get("run", {})
+	var old_val: int = int(run.get("faveurs", MerlinConstants.FAVEURS_START))
+	var new_val: int = old_val + amount
+	run["faveurs"] = new_val
+	state["run"] = run
+	faveurs_changed.emit(old_val, new_val)
+	return {"ok": true, "old": old_val, "new": new_val, "added": amount}
 
 
 func _generate_mission() -> Dictionary:

@@ -111,6 +111,7 @@ var _quest_tree_container: Control = null
 var _quest_tree_pixel_nodes: Array = []
 var _quest_progress_label: Label = null
 var _prerun_cards: Array = []
+var _cards_generated: bool = false
 
 
 func _exit_tree() -> void:
@@ -363,11 +364,18 @@ func _is_moon_hour(time_float: float) -> bool:
 	return hour >= 22 or hour < 6
 
 
+func _get_time_of_day_label(hour: int) -> String:
+	if hour >= 6 and hour < 12:   return "Matin"
+	if hour >= 12 and hour < 18:  return "Après-midi"
+	if hour >= 18 and hour < 22:  return "Soir"
+	return "Nuit"
+
+
 func _update_solar_clock(_instant: bool) -> void:
 	_layout_solar_arc_geometry()
 	var now: Dictionary = Time.get_datetime_dict_from_system()
 	if _clock_label and is_instance_valid(_clock_label):
-		_clock_label.text = "%02d:%02d" % [int(now.get("hour", 0)), int(now.get("minute", 0))]
+		_clock_label.text = _get_time_of_day_label(int(now.get("hour", 12)))
 
 
 func _weather_mode_for_hour(hour: int) -> String:
@@ -539,14 +547,33 @@ func _generate_landscape(biome: String) -> Array:
 
 
 func _gen_broceliande(g: Array) -> void:
-	## Dense ancient forest — populated from stages for consistent grid.
-	var stages := _get_broceliande_stages()
-	for stage in stages:
-		for pixel in stage:
-			var col: int = int(pixel[0])
-			var row: int = int(pixel[1])
-			var ck: String = str(pixel[2])
-			var c: int = {"p": 1, "s": 2, "a": 3}.get(ck, 1)
+	## Dense ancient forest — 100% pixel density, entire 32×16 grid filled.
+	## Layout: canopy tips (0-1), dense canopy (2-5), body+trunks (6-9),
+	##         understory (10-11), ground (12-13), earth (14-15)
+	for row in range(GRID_H):
+		for col in range(GRID_W):
+			var c: int
+			if row <= 1:
+				# Canopy tips — primary with accent highlights
+				c = 3 if (col * 3 + row * 7) % 11 == 0 else 1
+			elif row <= 5:
+				# Dense canopy — primary dominant, accent sparse
+				c = 3 if (col + row * 2) % 9 == 0 else 1
+			elif row <= 9:
+				# Body — primary + secondary trunk columns
+				if col in [5, 12, 13, 17, 22, 23, 29]:
+					c = 2  # trunk/bark
+				else:
+					c = 1 if (col * 2 + row) % 7 != 0 else 3
+			elif row <= 11:
+				# Understory — secondary/bark + primary mix
+				c = 2 if col % 3 == 0 else 1
+			elif row <= 13:
+				# Ground — secondary (dark moss/soil) + accent stones
+				c = 3 if (col * 2 + row * 5) % 13 == 0 else 2
+			else:
+				# Earth — pure secondary
+				c = 2
 			_grid_set(g, col, row, c)
 
 
@@ -808,47 +835,30 @@ func _play_transition() -> void:
 	if screen_fx and screen_fx.has_method("set_merlin_mood"):
 		screen_fx.set_merlin_mood("mystique")
 
-	# Start LLM dealer monologue prefetch — runs in parallel with animations
+	# LLM prefetch lancé en background (utilisé pour les cartes)
 	_prefetch_monologue = {"done": false, "text": "", "source": "pending"}
 	_start_llm_prefetch()
 
-	# Phase 1: Brume — mist + scout pixels
-	await _phase_brume()
+	# Appliquer météo + masquer les éléments texte superflus
+	var _now_setup := Time.get_datetime_dict_from_system()
+	_apply_weather_for_hour(int(_now_setup.get("hour", 12)), false)
+	if biome_subtitle and is_instance_valid(biome_subtitle):
+		biome_subtitle.visible = false
+	if arrival_text and is_instance_valid(arrival_text):
+		arrival_text.visible = false
+	if merlin_comment and is_instance_valid(merlin_comment):
+		merlin_comment.visible = false
 
 	# Phase 2: Emergence — pixel cascade builds landscape
 	await _phase_emergence()
 
-	# Phase 3: Revelation — title + subtitle appear
+	# Phase 3: Revelation — titre biome seul (pas de sous-titre, pas de zoom)
 	await _phase_revelation()
 
-	# Phase 4: Cadran — solar arc + blue sun + clock reveal
+	# Phase 4: Tranche de journée (remplace l'horloge HH:MM)
 	await _phase_sentier()
 
-	# Phase 5: Voix — dealer monologue (Hand of Fate 2 style)
-	if screen_fx and screen_fx.has_method("set_merlin_mood"):
-		screen_fx.set_merlin_mood("sage")
-
-	SFXManager.play("convergence")
-	var monologue_result: Dictionary = await _consume_prefetch(_prefetch_monologue, "monologue")
-	var monologue_text: String = str(monologue_result.get("text", ""))
-	_last_monologue_text = monologue_text
-
-	# Resize arrival_text for full monologue display
-	if arrival_text and is_instance_valid(arrival_text):
-		arrival_text.size = Vector2(650, 200)
-		arrival_text.modulate.a = 1.0
-
-	# Display monologue via typewriter with voice
-	if not monologue_text.is_empty() and arrival_text and is_instance_valid(arrival_text):
-		await _show_typewriter(arrival_text, monologue_text)
-		await _safe_wait(1.5)
-
-	# Hide merlin comment (replaced by monologue)
-	if merlin_comment and is_instance_valid(merlin_comment):
-		merlin_comment.text = ""
-		merlin_comment.visible = false
-
-	# Phase 5.5: Quest Preparation — generate cards with tree animation
+	# Phase 5.5: Génération cartes en background + mini-jeu Faveurs
 	await _phase_quest_preparation()
 
 	# Phase 6: Dissolution — pixels fall away, transition to game
@@ -912,53 +922,47 @@ func _phase_emergence() -> void:
 
 	_landscape_pixels.clear()
 
-	# Broceliande: progressive 5-stage forest growth
-	if biome_key == "broceliande" or biome_key == "":
-		var stages := _get_broceliande_stages()
-		for stage in stages:
-			await _cascade_landscape_stage(stage)
-	else:
-		# Other biomes: classic full cascade
-		var targets: Array[Dictionary] = []
-		for row in range(GRID_H):
-			for col in range(GRID_W):
-				var c: int = _current_grid[row][col]
-				if c > 0 and color_map.has(c):
-					targets.append({
-						"row": row, "col": col,
-						"pos": _landscape_origin + Vector2(col * _pixel_size, row * _pixel_size),
-						"color": color_map[c],
-					})
+	# All biomes: cascade uniforme — pixels tombent du haut (512 pour Brocéliande)
+	var targets: Array[Dictionary] = []
+	for row in range(GRID_H):
+		for col in range(GRID_W):
+			var c: int = _current_grid[row][col]
+			if c > 0 and color_map.has(c):
+				targets.append({
+					"row": row, "col": col,
+					"pos": _landscape_origin + Vector2(col * _pixel_size, row * _pixel_size),
+					"color": color_map[c],
+				})
 
-		targets.sort_custom(func(a: Dictionary, b: Dictionary) -> bool:
-			if a.col != b.col:
-				return a.col < b.col
-			return a.row > b.row
-		)
+	targets.sort_custom(func(a: Dictionary, b: Dictionary) -> bool:
+		if a.col != b.col:
+			return a.col < b.col
+		return a.row > b.row
+	)
 
-		for i in range(targets.size()):
-			var t: Dictionary = targets[i]
-			var target_pos: Vector2 = t.pos
-			var spawn_x := target_pos.x + randf_range(-25.0, 25.0)
-			var spawn_y := -20.0 - randf_range(0.0, 100.0)
+	for i in range(targets.size()):
+		var t: Dictionary = targets[i]
+		var target_pos: Vector2 = t.pos
+		var spawn_x := target_pos.x + randf_range(-25.0, 25.0)
+		var spawn_y := -20.0 - randf_range(0.0, 100.0)
 
-			var px := ColorRect.new()
-			px.size = Vector2(_pixel_size, _pixel_size)
-			px.position = Vector2(spawn_x, spawn_y)
-			px.color = t.color
-			px.modulate.a = 0.0
-			px.mouse_filter = Control.MOUSE_FILTER_IGNORE
-			pixel_container.add_child(px)
-			_landscape_pixels.append(px)
+		var px := ColorRect.new()
+		px.size = Vector2(_pixel_size, _pixel_size)
+		px.position = Vector2(spawn_x, spawn_y)
+		px.color = t.color
+		px.modulate.a = 0.0
+		px.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		pixel_container.add_child(px)
+		_landscape_pixels.append(px)
 
-			var tw := create_tween()
-			tw.tween_property(px, "modulate:a", 1.0, 0.05)
-			tw.parallel().tween_property(px, "position", target_pos, randf_range(0.3, 0.55)) \
-				.set_trans(Tween.TRANS_BOUNCE).set_ease(Tween.EASE_OUT)
+		var tw := create_tween()
+		tw.tween_property(px, "modulate:a", 1.0, 0.05)
+		tw.parallel().tween_property(px, "position", target_pos, randf_range(0.3, 0.55)) \
+			.set_trans(Tween.TRANS_BOUNCE).set_ease(Tween.EASE_OUT)
 
-			if i % 4 == 3:
-				SFXManager.play_varied("pixel_land", 0.2)
-				await _safe_wait(0.025)
+		if i % 4 == 3:
+			SFXManager.play_varied("pixel_land", 0.2)
+			await _safe_wait(0.025)
 
 	# Settle
 	await _safe_wait(0.4)
@@ -977,25 +981,22 @@ func _phase_emergence() -> void:
 
 func _phase_revelation() -> void:
 	SFXManager.play("magic_reveal")
+	# Titre seul — sous-titre masqué, pas de zoom
 	var tw := create_tween()
 	tw.set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
 	tw.tween_property(biome_title, "modulate:a", 1.0, 0.8)
-	tw.tween_property(biome_subtitle, "modulate:a", 1.0, 0.6)
 	await tw.finished
 
-	# Biome-tinted title pulse — flash in biome primary color then return to white
+	# Pulse couleur biome sur le titre
 	var bcolors: Dictionary = MerlinVisual.BIOME_COLORS.get(biome_key, MerlinVisual.BIOME_COLORS.broceliande)
 	var tint: Color = bcolors.primary
 	tint.a = 1.0
 	var tc: Tween = create_tween()
 	tc.tween_property(biome_title, "modulate", tint, 0.25).set_ease(Tween.EASE_OUT)
 	tc.tween_property(biome_title, "modulate", Color.WHITE, 0.30).set_ease(Tween.EASE_IN)
-	# Don't await — runs concurrently with the safe_wait below
+	# Pas d'await — concurrent avec safe_wait
 
 	await _safe_wait(0.3)
-
-	# Camera zoom into landscape using Control.scale
-	await _zoom_into_landscape()
 
 
 func _zoom_into_landscape() -> void:
@@ -1050,143 +1051,74 @@ func _make_diamond(pos: Vector2, color: Color) -> ColorRect:
 # ═══════════════════════════════════════════════════════════════════════════════
 
 func _phase_quest_preparation() -> void:
-	## Show "Partir en quete" button, then pre-generate cards with tree animation.
+	## AUTO : lance la génération des cartes en arrière-plan + mini-jeu Dé du Destin.
 	var vs := get_viewport_rect().size
+	_cards_generated = false
 
-	# Create and show button
-	_quest_button = _create_quest_button(vs)
-	add_child(_quest_button)
-
-	# Fade in with bounce
-	var btn_tw := create_tween()
-	btn_tw.tween_property(_quest_button, "modulate:a", 1.0, 0.4)
-	btn_tw.tween_property(_quest_button, "scale", Vector2(1.06, 1.06), 0.15)
-	btn_tw.tween_property(_quest_button, "scale", Vector2.ONE, 0.1)
-	await btn_tw.finished
-
-	# Wait for click (Array container for lambda capture)
-	var clicked: Array = [false]
-	_quest_button.pressed.connect(func(): clicked[0] = true, CONNECT_ONE_SHOT)
-	while not clicked[0] and not scene_finished:
-		if not is_inside_tree():
-			return
-		await get_tree().process_frame
-
-	SFXManager.play("card_draw")
-
-	# Fade out button
-	var hide_tw := create_tween()
-	hide_tw.tween_property(_quest_button, "modulate:a", 0.0, 0.2)
-	await hide_tw.finished
-	_quest_button.queue_free()
-	_quest_button = null
-
-	# Reset landscape zoom
-	if pixel_container and pixel_container.scale != Vector2.ONE:
-		var zoom_tw := create_tween()
-		zoom_tw.tween_property(pixel_container, "scale", Vector2.ONE, 0.4) \
-			.set_trans(Tween.TRANS_CUBIC)
-		await zoom_tw.finished
-
-	# Fade out existing text elements
-	var text_fade := create_tween().set_parallel(true)
-	if arrival_text and is_instance_valid(arrival_text):
-		text_fade.tween_property(arrival_text, "modulate:a", 0.0, 0.3)
-	if merlin_comment and is_instance_valid(merlin_comment):
-		text_fade.tween_property(merlin_comment, "modulate:a", 0.0, 0.3)
+	# Atténuer le titre (reste lisible)
 	if biome_title and is_instance_valid(biome_title):
-		text_fade.tween_property(biome_title, "modulate:a", 0.3, 0.3)
-	if biome_subtitle and is_instance_valid(biome_subtitle):
-		text_fade.tween_property(biome_subtitle, "modulate:a", 0.0, 0.3)
-	await text_fade.finished
+		var title_tw := create_tween()
+		title_tw.tween_property(biome_title, "modulate:a", 0.25, 0.4)
+		await title_tw.finished
 
-	# Create tree container
-	_quest_tree_container = Control.new()
-	_quest_tree_container.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	add_child(_quest_tree_container)
-
-	# Progress label
+	# Progress label — status de la génération en arrière-plan
 	_quest_progress_label = Label.new()
 	_quest_progress_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	_quest_progress_label.position = Vector2(vs.x / 2.0 - 200, vs.y * 0.82)
-	_quest_progress_label.size = Vector2(400, 30)
+	_quest_progress_label.position = Vector2(vs.x / 2.0 - 200, vs.y * 0.88)
+	_quest_progress_label.size = Vector2(400, 28)
 	_quest_progress_label.add_theme_color_override("font_color", MerlinVisual.CRT_PALETTE.phosphor_dim)
 	_quest_progress_label.add_theme_font_size_override("font_size", MerlinVisual.CAPTION_SIZE)
 	var progress_font: Font = MerlinVisual.get_font("body")
 	if progress_font:
 		_quest_progress_label.add_theme_font_override("font", progress_font)
 	_quest_progress_label.modulate.a = 0.0
+	_quest_progress_label.text = "Merlin tisse le destin..."
 	add_child(_quest_progress_label)
 	var plbl_tw := create_tween()
 	plbl_tw.tween_property(_quest_progress_label, "modulate:a", 1.0, 0.3)
 	await plbl_tw.finished
 
-	# Wait for MerlinAI to be ready (model loading) — trigger warmup if needed
-	_quest_progress_label.text = "Invocation de Merlin..."
+	# Trigger warmup si pas encore prêt (non-bloquant)
 	if merlin_ai and not merlin_ai.get("is_ready"):
-		# Trigger warmup if not already started
 		if merlin_ai.has_method("ensure_ready"):
-			print("[TransitionBiome] Triggering MerlinAI.ensure_ready()")
 			merlin_ai.ensure_ready()
 		elif merlin_ai.has_method("start_warmup"):
 			merlin_ai.start_warmup()
-		var wait_start := Time.get_ticks_msec()
-		const MAX_WAIT_MS := 30000  # 30s max (Ollama cold start can take 15s+)
-		while merlin_ai and not merlin_ai.get("is_ready"):
-			if scene_finished or not is_inside_tree():
-				break
-			var elapsed := Time.get_ticks_msec() - wait_start
-			if elapsed >= MAX_WAIT_MS:
-				print("[TransitionBiome] MerlinAI warmup timeout after 30s")
-				break
-			_quest_progress_label.text = "Invocation de Merlin... %ds" % int(elapsed / 1000.0)
-			await get_tree().process_frame
-		if merlin_ai and merlin_ai.get("is_ready"):
-			print("[TransitionBiome] MerlinAI ready after %dms" % (Time.get_ticks_msec() - wait_start))
 
-	# Generate cards with tree animation (LLM only, no fallback)
+	# Lancer génération EN ARRIÈRE-PLAN (coroutine non-awaited)
 	_prerun_cards.clear()
-	var tree_stages := _get_quest_tree_stages()
-	for i in range(PRERUN_CARD_COUNT):
+	_generate_cards_background()
+
+	# Afficher le mini-jeu pendant la génération
+	var mg_result: Dictionary = await _show_de_du_destin_minigame(vs)
+	var faveurs_earned: int = mg_result.get("faveurs", MerlinConstants.FAVEURS_PER_MINIGAME_PLAY)
+
+	# Dispatch FAVEUR_ADD
+	var store: Node = get_node_or_null("/root/MerlinStore")
+	if store and store.has_method("dispatch"):
+		store.dispatch({"type": "FAVEUR_ADD", "amount": faveurs_earned})
+
+	# Notification visuelle récompense
+	await _show_faveur_reward(vs, faveurs_earned)
+
+	# Attendre la fin de la génération si pas encore terminée
+	var wait_time: float = 0.0
+	while not _cards_generated and wait_time < 30.0:
 		if scene_finished or not is_inside_tree():
 			break
-		_quest_progress_label.text = "Tissage du destin... %d/%d" % [i + 1, PRERUN_CARD_COUNT]
+		if _quest_progress_label and is_instance_valid(_quest_progress_label):
+			_quest_progress_label.text = "Merlin tisse le destin..."
+		await _safe_wait(0.5)
+		wait_time += 0.5
 
-		# Generate card via LLM (skip if empty)
-		var card: Dictionary = await _generate_prerun_card(i)
-		if card.is_empty():
-			continue
-		_prerun_cards.append(card)
-
-		# Animate tree stage
-		if i < tree_stages.size():
-			await _cascade_tree_stage(tree_stages[i], vs)
-
-		SFXManager.play_varied("pixel_land", 0.3)
-		await _safe_wait(0.15)
-
-	# Tree complete — glow pulse
-	_quest_progress_label.text = "Le destin est tisse."
+	# Confirmation fin
+	if _quest_progress_label and is_instance_valid(_quest_progress_label):
+		_quest_progress_label.text = "Le destin est tisse."
 	SFXManager.play("magic_reveal")
-	if _quest_tree_container and is_instance_valid(_quest_tree_container):
-		var glow_tw := create_tween()
-		glow_tw.tween_property(_quest_tree_container, "modulate", Color(1.4, 1.4, 1.2), 0.3)
-		glow_tw.tween_property(_quest_tree_container, "modulate", Color.WHITE, 0.3)
-		await glow_tw.finished
-
 	await _safe_wait(0.5)
 
-	# Save pre-generated cards
-	_save_prerun_cards()
-
-	# Generate narrator intro for MerlinGame (short, async)
+	# Générer l'intro du run pour MerlinGame
 	await _generate_run_intro()
-
-	# Merge tree pixels into landscape for unified dissolution
-	for px in _quest_tree_pixel_nodes:
-		if is_instance_valid(px):
-			_landscape_pixels.append(px)
-	_quest_tree_pixel_nodes.clear()
 
 	# Fade progress label
 	var fade_tw := create_tween()
@@ -1195,6 +1127,184 @@ func _phase_quest_preparation() -> void:
 	if _quest_progress_label and is_instance_valid(_quest_progress_label):
 		_quest_progress_label.queue_free()
 		_quest_progress_label = null
+
+
+func _generate_cards_background() -> void:
+	## Génère PRERUN_CARD_COUNT cartes en arrière-plan via LLM.
+	## Appelée sans await = coroutine background indépendante.
+	if merlin_ai and not merlin_ai.get("is_ready"):
+		var wait_start := Time.get_ticks_msec()
+		const MAX_WAIT_BG_MS := 30000
+		while merlin_ai and not merlin_ai.get("is_ready"):
+			if scene_finished or not is_inside_tree():
+				_cards_generated = true
+				return
+			if Time.get_ticks_msec() - wait_start >= MAX_WAIT_BG_MS:
+				print("[TransitionBiome] BG: MerlinAI timeout")
+				break
+			await get_tree().process_frame
+
+	for i in range(PRERUN_CARD_COUNT):
+		if scene_finished or not is_inside_tree():
+			break
+		if _quest_progress_label and is_instance_valid(_quest_progress_label):
+			_quest_progress_label.text = "Tissage %d/%d..." % [i + 1, PRERUN_CARD_COUNT]
+		var card: Dictionary = await _generate_prerun_card(i)
+		if not card.is_empty():
+			_prerun_cards.append(card)
+		SFXManager.play_varied("pixel_land", 0.3)
+
+	_save_prerun_cards()
+	_cards_generated = true
+	print("[TransitionBiome] BG: %d cartes générées." % _prerun_cards.size())
+
+
+func _show_de_du_destin_minigame(vs: Vector2) -> Dictionary:
+	## Mini-jeu inline "Dé du Destin" : lancer un D20 pour gagner des Faveurs.
+	const PANEL_W := 300.0
+	const PANEL_H := 220.0
+
+	var panel := PanelContainer.new()
+	panel.custom_minimum_size = Vector2(PANEL_W, PANEL_H)
+	panel.position = (vs - Vector2(PANEL_W, PANEL_H)) / 2.0
+	panel.modulate.a = 0.0
+	panel.mouse_filter = Control.MOUSE_FILTER_STOP
+
+	var panel_style := StyleBoxFlat.new()
+	panel_style.bg_color = MerlinVisual.CRT_PALETTE.bg_panel
+	panel_style.border_color = MerlinVisual.CRT_PALETTE.amber
+	panel_style.set_border_width_all(2)
+	panel_style.set_corner_radius_all(6)
+	panel_style.set_content_margin_all(14)
+	panel.add_theme_stylebox_override("panel", panel_style)
+	add_child(panel)
+
+	var vbox := VBoxContainer.new()
+	vbox.add_theme_constant_override("separation", 10)
+	panel.add_child(vbox)
+
+	# Titre
+	var title_lbl := Label.new()
+	title_lbl.text = "Le De du Destin"
+	title_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	title_lbl.add_theme_color_override("font_color", MerlinVisual.CRT_PALETTE.amber)
+	title_lbl.add_theme_font_size_override("font_size", 18)
+	var title_font: Font = MerlinVisual.get_font("title")
+	if title_font:
+		title_lbl.add_theme_font_override("font", title_font)
+	vbox.add_child(title_lbl)
+
+	# Sous-titre
+	var sub_lbl := Label.new()
+	sub_lbl.text = "Lancez en attendant que Merlin\ntisse votre scenario..."
+	sub_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	sub_lbl.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	sub_lbl.add_theme_color_override("font_color", MerlinVisual.CRT_PALETTE.phosphor_dim)
+	sub_lbl.add_theme_font_size_override("font_size", 12)
+	vbox.add_child(sub_lbl)
+
+	# Affichage dé (grand nombre)
+	var die_lbl := Label.new()
+	die_lbl.text = "[ ? ]"
+	die_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	die_lbl.add_theme_color_override("font_color", MerlinVisual.CRT_PALETTE.phosphor)
+	die_lbl.add_theme_font_size_override("font_size", 44)
+	vbox.add_child(die_lbl)
+
+	# Bouton Lancer
+	var roll_btn := Button.new()
+	roll_btn.text = "Lancer le De"
+	roll_btn.custom_minimum_size = Vector2(180, 40)
+	roll_btn.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
+	var btn_style := StyleBoxFlat.new()
+	btn_style.bg_color = MerlinVisual.CRT_PALETTE.amber
+	btn_style.set_corner_radius_all(5)
+	btn_style.set_content_margin_all(10)
+	roll_btn.add_theme_stylebox_override("normal", btn_style)
+	var btn_hover: StyleBoxFlat = btn_style.duplicate()
+	btn_hover.bg_color = MerlinVisual.CRT_PALETTE.amber.lightened(0.15)
+	roll_btn.add_theme_stylebox_override("hover", btn_hover)
+	roll_btn.add_theme_color_override("font_color", MerlinVisual.CRT_PALETTE.bg_panel)
+	roll_btn.add_theme_font_size_override("font_size", 15)
+	vbox.add_child(roll_btn)
+
+	# Fade in
+	var fade_in := create_tween()
+	fade_in.tween_property(panel, "modulate:a", 1.0, 0.3)
+	await fade_in.finished
+
+	# Attendre clic (ou fin génération si ultra-rapide)
+	var clicked: Array = [false]
+	roll_btn.pressed.connect(func(): clicked[0] = true, CONNECT_ONE_SHOT)
+	while not clicked[0] and not scene_finished and not _cards_generated:
+		if not is_inside_tree():
+			break
+		await get_tree().process_frame
+
+	roll_btn.disabled = true
+
+	# Animation spin — décélération progressive
+	var die_rng := RandomNumberGenerator.new()
+	die_rng.randomize()
+	var final_roll: int = die_rng.randi_range(1, 20)
+	for spin_i in range(16):
+		die_lbl.text = "[ %d ]" % die_rng.randi_range(1, 20)
+		var delay: float = 0.04 + spin_i * 0.012
+		await _safe_wait(delay)
+	die_lbl.text = "[ %d ]" % final_roll
+
+	# Couleur résultat
+	var result_color: Color = MerlinVisual.CRT_PALETTE.amber if final_roll >= 10 else MerlinVisual.CRT_PALETTE.phosphor_dim
+	die_lbl.add_theme_color_override("font_color", result_color)
+	SFXManager.play("magic_reveal")
+
+	# Calcul Faveurs
+	var faveurs: int
+	var result_text: String
+	if final_roll >= 17:
+		faveurs = MerlinConstants.FAVEURS_PER_MINIGAME_WIN
+		result_text = "Reussite Critique !"
+	elif final_roll >= 10:
+		faveurs = 2
+		result_text = "Succes !"
+	else:
+		faveurs = MerlinConstants.FAVEURS_PER_MINIGAME_PLAY
+		result_text = "Le destin s'eveille..."
+	sub_lbl.text = result_text
+	sub_lbl.add_theme_color_override("font_color", result_color)
+
+	await _safe_wait(1.0)
+
+	# Fade out
+	var fade_out := create_tween()
+	fade_out.tween_property(panel, "modulate:a", 0.0, 0.3)
+	await fade_out.finished
+	panel.queue_free()
+
+	return {"roll": final_roll, "faveurs": faveurs}
+
+
+func _show_faveur_reward(vs: Vector2, amount: int) -> void:
+	## Affiche "+N Faveur(s)" en feedback visuel centré, fade-in/out 1.2s.
+	var lbl := Label.new()
+	lbl.text = "+%d Faveur%s" % [amount, "s" if amount > 1 else ""]
+	lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	lbl.add_theme_color_override("font_color", MerlinVisual.CRT_PALETTE.amber)
+	lbl.add_theme_font_size_override("font_size", 26)
+	var reward_font: Font = MerlinVisual.get_font("title")
+	if reward_font:
+		lbl.add_theme_font_override("font", reward_font)
+	lbl.modulate.a = 0.0
+	lbl.size = Vector2(280, 50)
+	lbl.position = Vector2((vs.x - 280.0) / 2.0, vs.y * 0.38)
+	add_child(lbl)
+
+	var tw := create_tween()
+	tw.tween_property(lbl, "modulate:a", 1.0, 0.35)
+	tw.tween_property(lbl, "position:y", lbl.position.y - 18.0, 0.8).set_ease(Tween.EASE_OUT)
+	tw.parallel().tween_property(lbl, "modulate:a", 0.0, 0.35).set_delay(0.7)
+	await tw.finished
+	lbl.queue_free()
 
 
 func _create_quest_button(vs: Vector2) -> Button:

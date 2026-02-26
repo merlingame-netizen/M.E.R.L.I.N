@@ -581,14 +581,14 @@ const BIOME_CRT_PALETTES := {
 
 # Per-biome CRT distortion profiles (noise, scanlines, glitch intensity)
 const BIOME_CRT_PROFILES := {
-	"broceliande": {"noise": 0.03, "scanline_opacity": 0.15, "glitch_probability": 0.005, "tint_blend": 0.06},
-	"landes":      {"noise": 0.022, "scanline_opacity": 0.13, "glitch_probability": 0.004, "tint_blend": 0.05},
-	"cotes":       {"noise": 0.038, "scanline_opacity": 0.11, "glitch_probability": 0.006, "tint_blend": 0.04},
-	"villages":    {"noise": 0.015, "scanline_opacity": 0.10, "glitch_probability": 0.002, "tint_blend": 0.035},
-	"cercles":     {"noise": 0.045, "scanline_opacity": 0.18, "glitch_probability": 0.009, "tint_blend": 0.07},
-	"marais":      {"noise": 0.052, "scanline_opacity": 0.14, "glitch_probability": 0.012, "tint_blend": 0.06},
-	"collines":    {"noise": 0.022, "scanline_opacity": 0.11, "glitch_probability": 0.003, "tint_blend": 0.04},
-	"iles":        {"noise": 0.035, "scanline_opacity": 0.12, "glitch_probability": 0.007, "tint_blend": 0.05},
+	"broceliande": {"noise": 0.015, "scanline_opacity": 0.08, "glitch_probability": 0.003, "tint_blend": 0.025},
+	"landes":      {"noise": 0.012, "scanline_opacity": 0.07, "glitch_probability": 0.002, "tint_blend": 0.020},
+	"cotes":       {"noise": 0.018, "scanline_opacity": 0.06, "glitch_probability": 0.003, "tint_blend": 0.015},
+	"villages":    {"noise": 0.008, "scanline_opacity": 0.05, "glitch_probability": 0.001, "tint_blend": 0.012},
+	"cercles":     {"noise": 0.022, "scanline_opacity": 0.09, "glitch_probability": 0.005, "tint_blend": 0.028},
+	"marais":      {"noise": 0.025, "scanline_opacity": 0.07, "glitch_probability": 0.006, "tint_blend": 0.024},
+	"collines":    {"noise": 0.012, "scanline_opacity": 0.06, "glitch_probability": 0.002, "tint_blend": 0.016},
+	"iles":        {"noise": 0.018, "scanline_opacity": 0.06, "glitch_probability": 0.004, "tint_blend": 0.020},
 }
 
 

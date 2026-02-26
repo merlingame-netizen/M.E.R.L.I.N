@@ -219,6 +219,15 @@ const LIFE_ESSENCE_CRIT_SUCCESS_HEAL := 5   # Heal on critical success
 const LIFE_ESSENCE_HEAL_PER_REST := 18      # Heal at REST nodes
 const LIFE_ESSENCE_LOW_THRESHOLD := 25      # UI warning threshold
 
+# ═══════════════════════════════════════════════════════════════════════════════
+# FAVEURS — Récompenses du mini-jeu de chargement (TransitionBiome)
+# Accumulées en jouant pendant la génération de cartes LLM.
+# ═══════════════════════════════════════════════════════════════════════════════
+
+const FAVEURS_START := 0
+const FAVEURS_PER_MINIGAME_WIN := 3    # Score >= 80
+const FAVEURS_PER_MINIGAME_PLAY := 1  # Score < 80
+
 # DC base ranges for variable DC system (replaces fixed 6/10/14)
 const DC_BASE := {
 	"left": {"min": 4, "max": 8, "default": 6},
