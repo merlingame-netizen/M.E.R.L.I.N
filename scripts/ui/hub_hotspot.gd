@@ -84,7 +84,7 @@ func _process(delta: float) -> void:
 		_label_offset = lerpf(_label_offset, -4.0, delta * 10.0)
 	else:
 		_glow_alpha = lerpf(_glow_alpha, 0.0, delta * 8.0)
-		_label_alpha = lerpf(_label_alpha, 0.0, delta * 10.0)
+		_label_alpha = lerpf(_label_alpha, 0.6, delta * 10.0)  # Label permanent (60% alpha au repos)
 		_label_offset = lerpf(_label_offset, 0.0, delta * 10.0)
 
 	# Update particles

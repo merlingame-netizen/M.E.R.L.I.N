@@ -43,8 +43,8 @@ const BIOME_PROFILE_KEYS := {
 
 # === VISUAL CONSTANTS ===
 
-const ARC_RADIUS := 120.0
-const ICON_RADIUS := 18.0
+const ARC_RADIUS := 150.0
+const ICON_RADIUS := 26.0
 const ICON_SIZE := 12.0
 const STAGGER_DELAY := 0.06
 const OPEN_DURATION := 0.3
@@ -257,9 +257,8 @@ func _draw_biome_icon(index: int) -> void:
 	# Draw procedural icon
 	_draw_procedural_icon(pos, profile_key, scale)
 
-	# Draw label if hovered
-	if index == _hovered_index:
-		_draw_biome_label(pos, biome_key)
+	# Label permanent (toujours visible, plus lumineux si hovered)
+	_draw_biome_label(pos, biome_key, index == _hovered_index)
 
 func _draw_procedural_icon(pos: Vector2, profile_key: String, scale: float) -> void:
 	var icon_size := ICON_SIZE * scale
@@ -364,18 +363,18 @@ func _draw_triangle(pos: Vector2, size: float, color: Color) -> void:
 	])
 	draw_colored_polygon(points, color)
 
-func _draw_biome_label(pos: Vector2, biome_key: String) -> void:
+func _draw_biome_label(pos: Vector2, biome_key: String, is_hovered: bool = false) -> void:
 	var label_text: String = BIOME_SHORT_NAMES[biome_key]
 	var font := MerlinVisual.get_font("body")
-	var font_size := 10
+	var font_size := 11
 
 	var text_size := font.get_string_size(label_text, HORIZONTAL_ALIGNMENT_CENTER, -1, font_size)
-	var label_pos := pos + Vector2(-text_size.x * 0.5, ICON_RADIUS + 16.0)
+	var label_pos := pos + Vector2(-text_size.x * 0.5, ICON_RADIUS + 14.0)
 
 	# Shadow
 	var c_shadow: Color = MerlinVisual.GBC["black"]
 	draw_string(font, label_pos + Vector2(1, 1), label_text, HORIZONTAL_ALIGNMENT_CENTER, -1, font_size, c_shadow)
 
-	# Text
-	var c_text: Color = MerlinVisual.GBC["white"]
+	# Texte : blanc brillant si hovered, blanc atténué sinon (label permanent)
+	var c_text: Color = MerlinVisual.GBC["white"] if is_hovered else Color(1.0, 1.0, 1.0, 0.65)
 	draw_string(font, label_pos, label_text, HORIZONTAL_ALIGNMENT_CENTER, -1, font_size, c_text)

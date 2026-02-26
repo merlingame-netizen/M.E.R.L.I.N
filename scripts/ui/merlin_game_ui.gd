@@ -47,8 +47,8 @@ const INTRO_DECK_COUNT := 12
 const LIVE_DECK_VISIBLE_COUNT := 5
 const DISCARD_VISIBLE_COUNT := 5
 const RUN_DECK_ESTIMATE := 24
-const TOP_ZONE_RATIO := 0.10
-const CARD_ZONE_RATIO := 0.72
+const TOP_ZONE_RATIO := 0.12     # DOC_17 UX: augmenté 0.10→0.12 pour barres vie lisibles
+const CARD_ZONE_RATIO := 0.70    # Réduit légèrement pour compenser TOP_ZONE
 const BOTTOM_ZONE_RATIO := 0.18
 # Use MerlinVisual constants for card animation
 # const CARD_FLOAT_OFFSET := MerlinVisual.CARD_FLOAT_OFFSET
@@ -285,14 +285,14 @@ func _configure_ui() -> void:
 	_life_segment_bars.clear()
 	var seg_hbox := HBoxContainer.new()
 	seg_hbox.name = "LifeSegmentsHBox"
-	seg_hbox.add_theme_constant_override("separation", 2)
+	seg_hbox.add_theme_constant_override("separation", 3)
 	life_panel.add_child(seg_hbox)
 	for _i in range(MerlinConstants.LIFE_BAR_SEGMENTS):
 		var seg := ProgressBar.new()
 		seg.max_value = 10
 		seg.value = 10
 		seg.show_percentage = false
-		seg.custom_minimum_size = Vector2(14, 10)
+		seg.custom_minimum_size = Vector2(20, 14)  # DOC_17 UX: 20×14px lisibles
 		MerlinVisual.apply_bar_theme(seg, "danger")
 		seg_hbox.add_child(seg)
 		_life_segment_bars.append(seg)
@@ -354,13 +354,13 @@ func _configure_ui() -> void:
 		btn.get_parent().mouse_filter = Control.MOUSE_FILTER_PASS
 		# Boutons occupent toute la largeur disponible, hauteur minimum garantie
 		btn.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-		btn.custom_minimum_size = Vector2(0, 72)
+		btn.custom_minimum_size = Vector2(0, 80)  # DOC_17 UX: 72→80px, mieux lisible mobile
 		btn.get_parent().size_flags_horizontal = Control.SIZE_EXPAND_FILL
 
 	# OptionsBar : expansion horizontale + séparation lisible
 	if options_container and is_instance_valid(options_container):
 		options_container.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-		options_container.add_theme_constant_override("separation", 14)
+		options_container.add_theme_constant_override("separation", 10)  # 14→10px, espace gagné
 
 	# Ensure parent containers don't block mouse events on buttons
 	if _bottom_zone and is_instance_valid(_bottom_zone):
@@ -369,15 +369,15 @@ func _configure_ui() -> void:
 		options_container.mouse_filter = Control.MOUSE_FILTER_PASS
 
 	# Action description labels — ABOVE each option button (shown on hover)
-	var desc_color: Color = MerlinVisual.CRT_PALETTE.get("phosphor_dim", Color(0.45, 0.4, 0.35))
+	var desc_color: Color = MerlinVisual.CRT_PALETTE.get("phosphor", Color(0.20, 1.00, 0.40))
 	_option_desc_labels.clear()
 	for i2 in range(3):
 		var desc_lbl := Label.new()
 		desc_lbl.name = "DescLabel%s" % ["A", "B", "C"][i2]
 		if body_font:
 			desc_lbl.add_theme_font_override("font", body_font)
-		desc_lbl.add_theme_font_size_override("font_size", 10)
-		desc_lbl.add_theme_color_override("font_color", desc_color)
+		desc_lbl.add_theme_font_size_override("font_size", 11)  # 10→11pt, + lisible
+		desc_lbl.add_theme_color_override("font_color", desc_color)  # phosphor_dim→phosphor
 		desc_lbl.custom_minimum_size = Vector2(0, 18)
 		desc_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 		desc_lbl.autowrap_mode = TextServer.AUTOWRAP_WORD
@@ -511,35 +511,32 @@ func _configure_ui() -> void:
 
 func _apply_label_theming() -> void:
 	## Apply MerlinVisual fonts and colors to scene labels.
-	# Title-style labels
+	# Titres TopStatusBar — masqués (redondants avec les barres visuelles, gagnent de l'espace)
 	for lbl: Label in [
 		$MainVBox/TopStatusBar/LifePanel/LifeTitle,
 		$MainVBox/TopStatusBar/SoufflePanel/SouffleTitle,
 		$MainVBox/TopStatusBar/EssencePanel/EssenceTitle,
 	]:
-		if title_font:
-			lbl.add_theme_font_override("font", title_font)
-		lbl.add_theme_font_size_override("font_size", 13)
-		lbl.add_theme_color_override("font_color", MerlinVisual.CRT_PALETTE.phosphor_dim)
+		lbl.visible = false  # DOC_17 UX review: labels redondants masqués
 
-	# Life counter
+	# Life counter — 14pt (dominant, Vie est la ressource principale)
 	_life_counter.text = "%d/%d" % [MerlinConstants.LIFE_ESSENCE_START, MerlinConstants.LIFE_ESSENCE_MAX]
 	if body_font:
 		_life_counter.add_theme_font_override("font", body_font)
-	_life_counter.add_theme_font_size_override("font_size", 12)
+	_life_counter.add_theme_font_size_override("font_size", 14)
 	_life_counter.add_theme_color_override("font_color", MerlinVisual.CRT_PALETTE.danger)
 
-	# Souffle counter
+	# Souffle counter — 12pt
 	_souffle_counter.text = "%d/%d" % [MerlinConstants.SOUFFLE_START, MerlinConstants.SOUFFLE_MAX]
 	if body_font:
 		_souffle_counter.add_theme_font_override("font", body_font)
 	_souffle_counter.add_theme_font_size_override("font_size", 12)
 	_souffle_counter.add_theme_color_override("font_color", MerlinVisual.CRT_PALETTE.souffle)
 
-	# Essence counter
+	# Essence counter — 16pt (réduit, Essences secondaires vs Vie)
 	if body_font:
 		_essence_counter.add_theme_font_override("font", body_font)
-	_essence_counter.add_theme_font_size_override("font_size", 22)
+	_essence_counter.add_theme_font_size_override("font_size", 16)
 	_essence_counter.add_theme_color_override("font_color", MerlinVisual.CRT_PALETTE.amber_bright)
 
 	# Essence caption

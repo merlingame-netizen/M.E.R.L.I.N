@@ -164,12 +164,13 @@ const MERLIN_GREETINGS := {
 # =============================================================================
 
 const HOTSPOT_DEFS := [
-	{"name": "calendar", "icon": 0, "label": "Calendrier", "palette_key": "amber_bright", "ratio": Vector2(0.08, 0.10)},
-	{"name": "options", "icon": 3, "label": "Options", "palette_key": "phosphor_dim", "ratio": Vector2(0.86, 0.10)},
-	{"name": "arbre", "icon": 1, "label": "Arbre", "palette_key": "phosphor_dim", "ratio": Vector2(0.06, 0.45)},
-	{"name": "collection", "icon": 2, "label": "Collection", "palette_key": "amber_dim", "ratio": Vector2(0.88, 0.45)},
-	# B.1 — Souffle Perk selection (bottom-left, before departure)
-	{"name": "souffle", "icon": 4, "label": "Souffle", "palette_key": "phosphor", "ratio": Vector2(0.06, 0.80)},
+	# 2 coins : Calendar (haut-gauche) + Options (haut-droite)
+	{"name": "calendar",   "icon": 0, "label": "Calendrier",  "palette_key": "amber_bright", "ratio": Vector2(0.04, 0.06)},
+	{"name": "options",    "icon": 3, "label": "Options",      "palette_key": "phosphor_dim", "ratio": Vector2(0.88, 0.06)},
+	# 3 centraux : Arbre de Vie | Alignement (futur) | Collection
+	{"name": "arbre",      "icon": 1, "label": "Arbre de Vie", "palette_key": "phosphor_dim", "ratio": Vector2(0.22, 0.38)},
+	{"name": "alignement", "icon": 4, "label": "Alignement",   "palette_key": "amber_dim",    "ratio": Vector2(0.46, 0.38)},
+	{"name": "collection", "icon": 2, "label": "Collection",   "palette_key": "amber_dim",    "ratio": Vector2(0.70, 0.38)},
 ]
 
 # =============================================================================
@@ -333,11 +334,14 @@ func _create_bestiole() -> void:
 		return
 	_bestiole = Control.new()
 	_bestiole.set_script(BestioleClass)
-	_bestiole.call("setup", 200.0)
+	# Taille réduite pour coin bas-gauche (scale×0.6 effective via smaller setup)
+	_bestiole.call("setup", 120.0)
+	_bestiole.custom_minimum_size = Vector2(160, 160)
+	_bestiole.size = Vector2(160, 160)
 	add_child(_bestiole)
 	move_child(_bestiole, mist_layer.get_index() + 1)
-	_bestiole.set_anchors_preset(Control.PRESET_FULL_RECT)
 	_bestiole.call_deferred("assemble")
+	_layout_bestiole()
 
 
 func _create_hotspots() -> void:
@@ -356,13 +360,14 @@ func _create_hotspots() -> void:
 
 func _create_partir_button() -> void:
 	_partir_btn = Button.new()
-	_partir_btn.text = "PARTIR"
-	_partir_btn.custom_minimum_size = Vector2(180, 52)
+	_partir_btn.text = "PARTIR EN AVENTURE"
+	# La taille réelle est définie dans _layout_partir() (80% viewport)
+	_partir_btn.custom_minimum_size = Vector2(300, 60)
 
 	var font: Font = MerlinVisual.get_font("title")
 	if font:
 		_partir_btn.add_theme_font_override("font", font)
-	_partir_btn.add_theme_font_size_override("font_size", MerlinVisual.BUTTON_SIZE)
+	_partir_btn.add_theme_font_size_override("font_size", 18)
 	_style_partir_button()
 
 	add_child(_partir_btn)
@@ -408,8 +413,7 @@ func _style_partir_button() -> void:
 	_partir_btn.add_theme_color_override("font_color", MerlinVisual.CRT_PALETTE["bg_panel"])
 	_partir_btn.add_theme_color_override("font_hover_color", MerlinVisual.CRT_PALETTE["bg_panel"])
 	_partir_btn.add_theme_color_override("font_pressed_color", MerlinVisual.CRT_PALETTE["phosphor"])
-
-	_partir_btn.pivot_offset = Vector2(90, 26)
+	# pivot_offset mis à jour dans _layout_partir() selon la largeur réelle
 
 
 func _create_bubble() -> void:
@@ -434,16 +438,31 @@ func _layout_all() -> void:
 		var def: Dictionary = HOTSPOT_DEFS[i]
 		_hotspots[i].position = vp * Vector2(def["ratio"])
 	_layout_partir()
+	_layout_bestiole()
 
 
 func _layout_partir() -> void:
 	if _partir_btn == null:
 		return
 	var vp := get_viewport_rect().size
+	var btn_w: float = vp.x * 0.80
+	var btn_h: float = 60.0
+	_partir_btn.custom_minimum_size = Vector2(btn_w, btn_h)
+	_partir_btn.pivot_offset = Vector2(btn_w * 0.5, btn_h * 0.5)
 	_partir_btn.position = Vector2(
-		(vp.x - _partir_btn.custom_minimum_size.x) * 0.5,
-		vp.y - 110
+		(vp.x - btn_w) * 0.5,
+		vp.y - btn_h - 20.0
 	)
+
+
+func _layout_bestiole() -> void:
+	if _bestiole == null:
+		return
+	var vp := get_viewport_rect().size
+	var bsize: float = 160.0
+	_bestiole.size = Vector2(bsize, bsize)
+	# Coin bas-gauche, au-dessus du bouton PARTIR (60px + 20px marge)
+	_bestiole.position = Vector2(16.0, vp.y - bsize - 60.0 - 20.0 - 20.0)
 
 
 # =============================================================================
@@ -477,9 +496,9 @@ func _on_hotspot_pressed(hotspot_name: String) -> void:
 		"collection":
 			SFXManager.play("whoosh")
 			PixelTransition.transition_to(SCENE_COLLECTION)
-		"souffle":
-			SFXManager.play("ogham_chime")
-			_show_perk_overlay()
+		"alignement":
+			# FUTUR — Menu Favorabilité par biome × saison × factions (DOC_17)
+			SFXManager.play("hover")
 
 
 func _on_partir_pressed() -> void:
