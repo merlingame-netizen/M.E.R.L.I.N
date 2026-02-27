@@ -80,9 +80,6 @@ var _last_biome: String = ""
 var _tutorial_shown: Dictionary = {}  # { "trigger_key": true }
 var _tutorial_data: Dictionary = {}   # Loaded from tutorial_narratives.json
 
-# Signal emitted when the card deck is ready (buffer loaded or first LLM card available)
-signal deck_ready(card_count: int)
-
 # ═══════════════════════════════════════════════════════════════════════════════
 # MERLIN INTRO SPEECH TEMPLATES (contextual biome + season)
 # ═══════════════════════════════════════════════════════════════════════════════
@@ -306,7 +303,6 @@ func start_run(seed_value: int = -1) -> void:
 	# --- Verify card buffer before first card ---
 	var buffer_ready: bool = await _ensure_card_buffer_ready()
 	if buffer_ready:
-		deck_ready.emit(_card_buffer.size())
 		print("[TRIADE] Deck ready: %d cards buffered" % _card_buffer.size())
 	else:
 		print("[TRIADE] Card buffer empty, LLM will generate on demand")
@@ -353,7 +349,6 @@ func _request_next_card() -> void:
 		current_card = _card_buffer.pop_front()
 		var remaining: int = _card_buffer.size()
 		print("[TRIADE] Using pre-generated card (%d remaining)" % remaining)
-		deck_ready.emit(remaining)
 		_detect_critical_choice()
 		# Prefetch moved to _resolve_choice() — state must be updated first
 		if ui and is_instance_valid(ui):
@@ -937,11 +932,6 @@ func _resolve_choice(option: int) -> void:
 		if not result_text.is_empty():
 			await ui.show_result_text_transition(result_text, outcome)
 			_result_shown = true
-	if not headless_mode and not _result_shown and ui and is_instance_valid(ui):
-		var reaction_text: String = _get_reaction_text(outcome, choice_label)
-		if not reaction_text.is_empty():
-			ui.show_reaction_text(reaction_text, outcome)
-
 	# --- 15. Card outcome animation ---
 	if not headless_mode and ui and is_instance_valid(ui):
 		ui.animate_card_outcome(outcome)
@@ -984,8 +974,7 @@ func _resolve_choice(option: int) -> void:
 		ui.mark_card_completed()
 	current_card = {}
 	if not headless_mode and ui and is_instance_valid(ui):
-		var travel_text: String = _pick_travel_text(outcome)
-		await ui.show_travel_animation(travel_text)
+		await ui.show_travel_animation("Le sentier continue...")
 	elif not headless_mode and is_inside_tree():
 		await get_tree().create_timer(0.5).timeout
 
@@ -1682,16 +1671,6 @@ func _apply_gauge_deltas(effects: Array) -> void:
 # NARRATIVE REACTIONS
 # ═══════════════════════════════════════════════════════════════════════════════
 
-func _get_reaction_text(_outcome: String, _choice_label: String) -> String:
-	## LLM cards include result_success / result_failure. No static pool needed.
-	return ""
-
-
-func _pick_travel_text(_outcome: String) -> String:
-	## Minimal inline text — no static pool.
-	return "Le sentier continue..."
-
-
 func _play_outcome_sfx(outcome: String) -> void:
 	match outcome:
 		"critical_success": SFXManager.play("dice_crit_success")
@@ -2007,10 +1986,6 @@ func _on_option_chosen(option: int) -> void:
 	_resolve_choice(option)
 
 
-func _on_skill_activated(skill_id: String) -> void:
-	_use_skill(skill_id)
-
-
 func _on_pause_requested() -> void:
 	if get_tree().paused:
 		if ui and is_instance_valid(ui) and ui.has_method("hide_pause_menu"):
@@ -2139,20 +2114,9 @@ func _unhandled_input(event: InputEvent) -> void:
 # CONVENIENCE
 # ═══════════════════════════════════════════════════════════════════════════════
 
-func get_aspect_state(aspect: String) -> int:
-	return store.get_aspect_state(aspect) if store else 0
-
-
-func get_aspect_name(aspect: String) -> String:
-	return store.get_aspect_name(aspect) if store else "???"
-
-
 func get_souffle() -> int:
 	return store.get_souffle() if store else 0
 
-
-func is_run_active() -> bool:
-	return store.is_run_active() if store else false
 
 
 # ═══════════════════════════════════════════════════════════════════════════════

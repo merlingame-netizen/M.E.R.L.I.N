@@ -261,15 +261,6 @@ func _load_fonts() -> void:
 		celtic_font = body_font
 
 
-func _load_font(path: String) -> Font:
-	if not ResourceLoader.exists(path):
-		return null
-	var f: Resource = load(path)
-	if f is Font:
-		return f
-	return ThemeDB.fallback_font
-
-
 
 # =============================================================================
 # FOND PARCHEMIN MYSTIQUE

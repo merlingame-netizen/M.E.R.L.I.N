@@ -187,7 +187,6 @@ const QUESTIONS := [
 # =============================================================================
 
 var current_question_index := 0
-var collected_traits: Array[String] = []  # Legacy, kept for compatibility
 var axis_scores := {"approche": 0, "relation": 0, "esprit": 0, "coeur": 0}
 var is_transitioning := false
 
@@ -577,12 +576,6 @@ func _on_choice_selected(choice_index: int) -> void:
 		for axis in choice.axes:
 			if axis_scores.has(axis):
 				axis_scores[axis] += choice.axes[axis]
-
-	# Legacy trait collection for backward compatibility
-	if choice.has("traits"):
-		for t in choice.traits:
-			if not collected_traits.has(t):
-				collected_traits.append(t)
 
 	# Flash selected button
 	var selected_btn: Button = choice_buttons[choice_index]

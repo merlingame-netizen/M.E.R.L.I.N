@@ -5,8 +5,6 @@ extends Control
 ## Phase 2: CeltOS logo (Tetris blocks falling)
 ## Phase 3: Loading bar + transition to MenuPrincipal
 
-signal boot_complete
-
 const BOOT_LINES := [
 	"BIOS POST check...",
 	"Memory: 4096 MB",
@@ -293,5 +291,4 @@ func _wait_then_complete(bar_width: float) -> void:
 
 
 func _transition_to_menu() -> void:
-	boot_complete.emit()
 	PixelTransition.transition_to("res://scenes/MenuPrincipal.tscn")

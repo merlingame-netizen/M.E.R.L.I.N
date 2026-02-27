@@ -206,7 +206,6 @@ var _passive_llm_pending: bool = false
 var _mist_tween: Tween
 
 # Audio
-var audio_player: AudioStreamPlayer = null
 var voicebox: Node = null
 var voice_ready: bool = false
 
@@ -227,7 +226,6 @@ func _ready() -> void:
 	_create_partir_button()
 	_create_bubble()
 	_create_radial()
-	_setup_audio()
 	_setup_voicebox()
 	_apply_aspect_aura()
 	_sync_from_state()
@@ -271,12 +269,6 @@ func _configure_background() -> void:
 	parchment_bg.material = null
 	parchment_bg.color = MerlinVisual.CRT_PALETTE.bg_dark
 	mist_layer.color = MerlinVisual.CRT_PALETTE.mist
-
-
-func _setup_audio() -> void:
-	audio_player = AudioStreamPlayer.new()
-	audio_player.bus = "Master"
-	add_child(audio_player)
 
 
 func _setup_voicebox() -> void:
