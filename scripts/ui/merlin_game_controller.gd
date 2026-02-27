@@ -358,6 +358,7 @@ func _request_next_card() -> void:
 		# Prefetch moved to _resolve_choice() — state must be updated first
 		if ui and is_instance_valid(ui):
 			ui.display_card(current_card)
+		_check_vision_perk_auto_reveal()
 		is_processing = false
 		return
 
@@ -370,6 +371,7 @@ func _request_next_card() -> void:
 			_detect_critical_choice()
 			if ui and is_instance_valid(ui):
 				ui.display_card(current_card)
+			_check_vision_perk_auto_reveal()
 			is_processing = false
 			return
 
@@ -384,6 +386,7 @@ func _request_next_card() -> void:
 				_detect_critical_choice()
 				if ui and is_instance_valid(ui):
 					ui.display_card(current_card)
+				_check_vision_perk_auto_reveal()
 				is_processing = false
 				return
 
@@ -478,6 +481,7 @@ func _request_next_card() -> void:
 		_detect_critical_choice()
 		if ui and is_instance_valid(ui):
 			ui.display_card(current_card)
+		_check_vision_perk_auto_reveal()
 		_start_typology_timer()
 
 	print("[TRIADE] _request_next_card() done (dt=%dms)" % (Time.get_ticks_msec() - _rnc_t0))
@@ -1435,9 +1439,12 @@ func _modulate_effects(base_effects: Array, outcome: String, _direction: String)
 
 
 func _apply_talent_shields(effects: Array) -> Array:
-	## Apply talent shields (cancel first damage, 1/run).
+	## Apply talent shields (cancel first damage, 1/run) + Souffle bouclier perk.
 	if not store or not store.has_method("is_talent_active"):
 		return effects
+
+	var run: Dictionary = store.state.get("run", {})
+	var shield_active: bool = bool(run.get("souffle_shield_active", false))
 
 	var result: Array = []
 	for e in effects:
@@ -1450,6 +1457,19 @@ func _apply_talent_shields(effects: Array) -> Array:
 				print("[TRIADE] Talent: Endurance Naturelle absorbe les degats!")
 				SFXManager.play("skill_activate")
 				continue  # Skip this effect
+
+		# Souffle perk BOUCLIER: absorb first negative SHIFT_ASPECT (one-shot)
+		if shield_active and etype == "SHIFT_ASPECT":
+			var amount: int = int(e.get("amount", 0))
+			if amount < 0:
+				shield_active = false
+				run["souffle_shield_active"] = false
+				store.state["run"] = run
+				print("[TRIADE] Souffle BOUCLIER absorbe: %s %d" % [str(e.get("aspect", "")), amount])
+				SFXManager.play("skill_activate")
+				if ui and is_instance_valid(ui) and ui.has_method("show_milestone_popup"):
+					ui.show_milestone_popup("Bouclier!", "Effet negatif absorbe")
+				continue  # Skip this negative effect
 
 		result.append(e)
 	return result
@@ -2385,6 +2405,21 @@ func _try_tutorial(trigger_key: String) -> void:
 # ═══════════════════════════════════════════════════════════════════════════════
 # B.1 — SOUFFLE PERK HELPERS
 # ═══════════════════════════════════════════════════════════════════════════════
+
+func _check_vision_perk_auto_reveal() -> void:
+	## If Souffle vision perk is active, auto-reveal all option effects on the current card.
+	if store == null:
+		return
+	var run: Dictionary = store.state.get("run", {})
+	if not bool(run.get("souffle_vision_active", false)):
+		return
+	# Consume the flag (one-shot)
+	run["souffle_vision_active"] = false
+	store.state["run"] = run
+	print("[TRIADE] Souffle VISION: auto-revealing all effects")
+	var options: Array = current_card.get("options", [])
+	if ui and is_instance_valid(ui) and ui.has_method("show_reveal_effects"):
+		ui.show_reveal_effects(options, -1)  # -1 = reveal all
 
 func _get_souffle_perk_dc_bonus() -> int:
 	## Returns DC dice bonus for the selected Souffle Perk.
