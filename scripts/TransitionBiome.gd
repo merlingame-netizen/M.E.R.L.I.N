@@ -994,7 +994,11 @@ func _phase_revelation() -> void:
 	var tc: Tween = create_tween()
 	tc.tween_property(biome_title, "modulate", tint, 0.25).set_ease(Tween.EASE_OUT)
 	tc.tween_property(biome_title, "modulate", Color.WHITE, 0.30).set_ease(Tween.EASE_IN)
-	# Pas d'await — concurrent avec safe_wait
+	# Scale pulse concurrent (T.3 — subtle breathe)
+	biome_title.pivot_offset = biome_title.size / 2.0
+	var sp: Tween = create_tween()
+	sp.tween_property(biome_title, "scale", Vector2(1.05, 1.05), 0.35).set_ease(Tween.EASE_OUT)
+	sp.tween_property(biome_title, "scale", Vector2(1.0, 1.0), 0.45).set_ease(Tween.EASE_IN_OUT)
 
 	await _safe_wait(0.3)
 
@@ -1653,6 +1657,7 @@ func _generate_run_intro() -> void:
 func _phase_dissolution() -> void:
 	SFXManager.play("scene_transition")
 	SFXManager.play("pixel_scatter")
+	SFXManager.play("biome_dissolve")
 	scene_finished = true
 
 	# Reset zoom before dissolving

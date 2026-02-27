@@ -208,6 +208,9 @@ func _generate_all_sounds() -> void:
 	_sounds["biome_reveal"] = _gen_biome_reveal()
 	_sounds["partir_fanfare"] = _gen_partir_fanfare()
 
+	# --- Biome Dissolve (T.4 — TransitionBiome dissolution burst) ---
+	_sounds["biome_dissolve"] = _gen_biome_dissolve()
+
 	# --- Biome Ambient Sounds (Phase 1 TransitionBiome) ---
 	_sounds["amb_broceliande"] = _gen_amb_broceliande()
 	_sounds["amb_landes"] = _gen_amb_landes()
@@ -1273,5 +1276,27 @@ func _gen_amb_villages() -> AudioStreamWAV:
 		var freq := 120.0 + _rng.randf_range(-30.0, 50.0)
 		var val := _pulse(freq, t, 0.05) * 0.04 * env      # Narrow pulse = sharp crackle
 		val += (_rng.randf() * 2.0 - 1.0) * 0.020 * env   # Soft smoke hiss
+		_write_sample(buf, i, val)
+	return _make_stream(buf)
+
+
+func _gen_biome_dissolve() -> AudioStreamWAV:
+	## T.4 Dissolution burst — noise burst decaying + 5 random pixel plucks (D Dorian)
+	var dur := 0.45
+	var buf := _alloc_buffer(dur)
+	var count := _sample_count(dur)
+	var pluck_freqs: Array[float] = [294.0, 330.0, 392.0, 440.0, 587.0]  # D4 E4 G4 A4 D5
+	for i in range(count):
+		var t := float(i) / SAMPLE_RATE
+		# Noise burst — fast decay
+		var noise_env := maxf(0.0, 1.0 - t / 0.15) * 0.12
+		var val := (_rng.randf() * 2.0 - 1.0) * noise_env
+		# 5 pluck tones — each starts at a staggered time
+		for p_idx in range(pluck_freqs.size()):
+			var onset := float(p_idx) * 0.06
+			var pt := t - onset
+			if pt > 0.0 and pt < 0.25:
+				var p_env := maxf(0.0, 1.0 - pt / 0.25)
+				val += _tri(pluck_freqs[p_idx], pt) * 0.06 * p_env * p_env
 		_write_sample(buf, i, val)
 	return _make_stream(buf)
