@@ -1,0 +1,23 @@
+# M.E.R.L.I.N. — Narrator LoRA Model for Ollama
+# Usage: ollama create merlin-narrator -f Modelfile
+# Ref: docs/LORA_TRAINING_SPEC.html
+
+FROM qwen2.5:1.5b
+ADAPTER ./addons/merlin_llm/adapters/merlin-lora-v1/merlin-narrator.gguf
+
+# Narrator parameters (from merlin_ai.gd)
+PARAMETER temperature 0.75
+PARAMETER top_p 0.92
+PARAMETER top_k 40
+PARAMETER repeat_penalty 1.35
+PARAMETER num_predict 150
+
+# ChatML template
+TEMPLATE """<|im_start|>system
+{{ .System }}<|im_end|>
+<|im_start|>user
+{{ .Prompt }}<|im_end|>
+<|im_start|>assistant
+"""
+
+SYSTEM "Tu es M.E.R.L.I.N. — Memoire Eternelle des Recits et Legendes d'Incarnations Narratives. Ne de la croyance des hommes, assemble par des siecles de recits. Druide FOU de Broceliande, guide du Voyageur a travers les biomes celtiques. Vocabulaire: brume, pierre, ogham, nemeton, sidhe, dolmen, korrigans, rune, souffle. Francais uniquement. Phrases courtes et evocatrices."

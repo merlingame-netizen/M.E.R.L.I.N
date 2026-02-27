@@ -25,6 +25,70 @@ import sys
 import time
 from pathlib import Path
 
+# ── CPU Throttle (Windows) ──────────────────────────────────────────────────
+PROGRESS_FILE = None  # Set in main() based on output_dir
+STOP_FLAG_FILE = None  # Set in main() — create this file to stop training gracefully
+
+
+def apply_cpu_throttle(cores: int, low_priority: bool) -> dict:
+    """Limit CPU affinity + priority. Returns applied settings dict."""
+    settings = {"cores": cores, "low_priority": low_priority, "pid": os.getpid()}
+    try:
+        import psutil
+        proc = psutil.Process()
+        all_cpus = list(range(psutil.cpu_count(logical=True)))
+        if cores > 0 and cores < len(all_cpus):
+            proc.cpu_affinity(all_cpus[:cores])
+            settings["affinity"] = all_cpus[:cores]
+            print(f"  CPU affinity: {cores}/{len(all_cpus)} cores ({all_cpus[:cores]})")
+        else:
+            settings["affinity"] = all_cpus
+            print(f"  CPU affinity: all {len(all_cpus)} cores")
+        if low_priority:
+            proc.nice(psutil.BELOW_NORMAL_PRIORITY_CLASS)
+            settings["priority"] = "BELOW_NORMAL"
+            print(f"  Process priority: BELOW_NORMAL")
+        else:
+            settings["priority"] = "NORMAL"
+    except ImportError:
+        print("  psutil not installed — skipping CPU throttle (pip install psutil)")
+    except Exception as e:
+        print(f"  CPU throttle warning: {e}")
+    return settings
+
+
+def write_progress(step: int, total_steps: int, epoch: int, total_epochs: int,
+                   loss: float = 0.0, elapsed_sec: float = 0.0, status: str = "training",
+                   reason: str = ""):
+    """Write progress JSON for the watcher to read."""
+    if not PROGRESS_FILE:
+        return
+    eta_sec = 0
+    if step > 0 and elapsed_sec > 0:
+        eta_sec = (total_steps - step) * (elapsed_sec / step)
+    data = {
+        "pid": os.getpid(),
+        "status": status,
+        "step": step,
+        "total_steps": total_steps,
+        "epoch": epoch,
+        "total_epochs": total_epochs,
+        "loss": round(loss, 4),
+        "elapsed_sec": round(elapsed_sec),
+        "eta_sec": round(eta_sec),
+        "timestamp": time.strftime("%Y-%m-%d %H:%M:%S"),
+        "pct": round(100 * step / max(total_steps, 1), 1),
+        "stop_flag": STOP_FLAG_FILE or "",
+        "reason": reason,
+    }
+    try:
+        tmp = PROGRESS_FILE + ".tmp"
+        with open(tmp, "w", encoding="utf-8") as f:
+            json.dump(data, f, indent=2)
+        os.replace(tmp, PROGRESS_FILE)
+    except Exception:
+        pass  # Non-critical
+
 
 def find_dataset() -> str:
     """Auto-detect dataset location."""
@@ -87,18 +151,39 @@ def main():
     parser.add_argument("--export-gguf", action="store_true", help="Export to GGUF after training")
     parser.add_argument("--threads", type=int, default=0, help="CPU threads (0=auto)")
     parser.add_argument("--grad-ckpt", action="store_true", help="Enable gradient checkpointing (slower but saves ~2 GB RAM)")
+    parser.add_argument("--cores", type=int, default=0, help="Limit CPU affinity to N cores (0=all)")
+    parser.add_argument("--low-priority", action="store_true", help="Set process to BELOW_NORMAL priority (recommended)")
+    parser.add_argument("--stop-at", type=str, default="", metavar="HH:MM",
+                        help="Heure d'arret automatique ex: 08:00. S'arrete proprement apres le prochain step.")
     args = parser.parse_args()
+
+    # === Progress + stop flag files ===
+    global PROGRESS_FILE, STOP_FLAG_FILE
+    os.makedirs(args.output_dir, exist_ok=True)
+    PROGRESS_FILE = os.path.join(args.output_dir, "progress.json")
+    STOP_FLAG_FILE = os.path.join(args.output_dir, "training_stop.flag")
+
+    # === CPU throttle ===
+    print(f"\n{'=' * 60}")
+    print(f"  CPU THROTTLE CONFIG")
+    print(f"{'=' * 60}")
+    throttle_info = apply_cpu_throttle(args.cores, args.low_priority)
 
     # === CPU thread config ===
     import torch
-    if args.threads > 0:
-        torch.set_num_threads(args.threads)
-    print(f"PyTorch {torch.__version__} | CPU threads: {torch.get_num_threads()}")
-    print(f"RAM disponible: {os.sysconf('SC_PAGE_SIZE') * os.sysconf('SC_PHYS_PAGES') / 1e9:.1f} GB"
-          if hasattr(os, 'sysconf') else "RAM: (check task manager)")
+    effective_threads = args.threads if args.threads > 0 else (args.cores if args.cores > 0 else 0)
+    if effective_threads > 0:
+        torch.set_num_threads(effective_threads)
+    print(f"  PyTorch {torch.__version__} | threads: {torch.get_num_threads()}")
+    try:
+        import psutil
+        mem = psutil.virtual_memory()
+        print(f"  RAM: {mem.available / 1e9:.1f} GB free / {mem.total / 1e9:.1f} GB total")
+    except ImportError:
+        print(f"  RAM: (check task manager)")
 
     if torch.cuda.is_available():
-        print("INFO: GPU CUDA detecte -- utilise plutot train_qwen_local.py pour 10x plus rapide")
+        print("  INFO: GPU CUDA detecte -- utilise plutot train_qwen_local.py pour 10x plus rapide")
 
     # === 1. Dataset ===
     dataset_path = args.dataset or find_dataset()
@@ -240,8 +325,89 @@ def main():
         args=sft_config,
     )
 
+    # === Progress callback ===
+    from transformers import TrainerCallback
+
+    class ProgressCallback(TrainerCallback):
+        def __init__(self, total_steps, total_epochs):
+            self._total_steps = total_steps
+            self._total_epochs = total_epochs
+            self._t0 = time.time()
+
+        def on_log(self, _args, state, control, logs=None, **kwargs):
+            loss = (logs or {}).get("loss", 0.0)
+            epoch = int(state.epoch) if state.epoch else 0
+            write_progress(
+                step=state.global_step,
+                total_steps=self._total_steps,
+                epoch=epoch,
+                total_epochs=self._total_epochs,
+                loss=loss,
+                elapsed_sec=time.time() - self._t0,
+                status="training",
+            )
+
+        def on_train_end(self, _args, state, control, **kwargs):
+            write_progress(
+                step=state.global_step,
+                total_steps=self._total_steps,
+                epoch=self._total_epochs,
+                total_epochs=self._total_epochs,
+                elapsed_sec=time.time() - self._t0,
+                status="done",
+            )
+
+    class StopCallback(TrainerCallback):
+        """Arrete l'entrainement proprement a une heure donnee ou sur signal fichier.
+        Cree le fichier training_stop.flag dans output_dir pour arreter manuellement.
+        """
+        def __init__(self, stop_at: str, stop_flag: str, total_steps: int, total_epochs: int):
+            self.stop_at = stop_at        # "HH:MM" ou "" pour desactiver
+            self.stop_flag = stop_flag    # chemin vers training_stop.flag
+            self._total_steps = total_steps
+            self._total_epochs = total_epochs
+            self._t0 = time.time()
+
+        def on_step_end(self, _args, state, control, **kwargs):
+            reason = None
+            if self.stop_at and time.strftime("%H:%M") >= self.stop_at:
+                reason = f"stop_at_{self.stop_at}"
+            elif os.path.exists(self.stop_flag):
+                reason = "manual_stop"
+                try:
+                    os.remove(self.stop_flag)
+                except Exception:
+                    pass
+            if reason:
+                print(f"\n  [STOP] {reason} — checkpoint sauvegarde, arret propre...")
+                write_progress(
+                    step=state.global_step,
+                    total_steps=self._total_steps,
+                    epoch=int(state.epoch or 0),
+                    total_epochs=self._total_epochs,
+                    elapsed_sec=time.time() - self._t0,
+                    status="stopped",
+                    reason=reason,
+                )
+                control.should_training_stop = True
+                control.should_save = True
+            return control
+
+    trainer.add_callback(ProgressCallback(total_steps, args.epochs))
+    trainer.add_callback(StopCallback(args.stop_at, STOP_FLAG_FILE, total_steps, args.epochs))
+    write_progress(0, total_steps, 0, args.epochs, status="starting")
+
     print(f"\n{'=' * 60}")
     print(f"  ENTRAINEMENT CPU -- CTRL+C pour interrompre (resume avec --resume)")
+    if args.low_priority:
+        print(f"  Mode economique: BELOW_NORMAL priority, {torch.get_num_threads()} threads")
+    if args.stop_at:
+        print(f"  Arret automatique: {args.stop_at} (ou creer {STOP_FLAG_FILE})")
+    else:
+        print(f"  Arret manuel: creer {STOP_FLAG_FILE}")
+    print(f"  Progress: {PROGRESS_FILE}")
+    print(f"  Watcher:  python train_watcher.py --output-dir {args.output_dir}")
+    print(f"  Control:  powershell tools/lora/train_control.ps1 -Action Stop")
     print(f"{'=' * 60}\n")
 
     t0 = time.time()

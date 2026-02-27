@@ -73,15 +73,15 @@ const ORANGE_FONTS = {
 // ============================================
 const POS = {
     title:    { x: 0.344, y: 0.294, w: 9.315, h: 0.811 },
-    body:     { x: 0.344, y: 1.292, w: 9.312, h: 3.686 },
+    body:     { x: 0.344, y: 1.292, w: 9.312, h: 3.158 },
     titleBig: { x: 0.344, y: 0.293, w: 5.282, h: 2.52 },
     subtitle: { x: 0.344, y: 3.25,  w: 5.282, h: 0.85 },
     sideText: { x: 6.343, y: 0.292, w: 3.313, h: 3.723 },
     section:  { x: 0.343, y: 0.294, w: 6.668, h: 4.686 },
     logo:     { x: 0.343, y: 4.63,  w: 0.67,  h: 0.67 },
-    slideNum: { x: 9.35,  y: 4.96,  w: 0.301, h: 0.366 },
-    colLeft:  { x: 0.343, y: 1.292, w: 4.34,  h: 3.686 },
-    colRight: { x: 5.321, y: 1.292, w: 4.336, h: 3.686 }
+    slideNum: { x: 9.15,  y: 4.96,  w: 0.5,   h: 0.366 },
+    colLeft:  { x: 0.343, y: 1.292, w: 4.34,  h: 3.158 },
+    colRight: { x: 5.321, y: 1.292, w: 4.336, h: 3.158 }
 };
 
 // Zone de securite: aucun element ne doit depasser ce Y
@@ -691,7 +691,7 @@ function addCardGridSlide(pres, title, cards, theme, opts = {}) {
     const startY = 1.3;
     const gap = VISUAL.gap;
     const cardW = (totalW - gap * (cols - 1)) / cols;
-    const cardH = 2.8;
+    const cardH = opts.cardH || 2.8;
 
     cards.forEach((card, i) => {
         const col = i % cols;
@@ -849,6 +849,70 @@ function addEndSlide(pres, message, theme) {
 }
 
 // ============================================
+// SLIDE IMAGE / DIAGRAMME (pour intégration Mermaid PNG ou toute image)
+// ============================================
+
+/**
+ * Slide avec titre + image pleine largeur (pour diagrammes Mermaid générés en PNG)
+ *
+ * @param {object} pres        - Présentation pptxgenjs
+ * @param {string} title       - Titre de la slide (20pt orange)
+ * @param {string} imagePath   - Chemin absolu vers le PNG
+ * @param {object} theme       - Thème Orange (noir/blanc)
+ * @param {object} [opts]      - Options optionnelles
+ * @param {string} [opts.caption]   - Légende sous l'image (11pt gris)
+ * @param {number} [opts.slideNum]  - Numéro de slide
+ * @param {number} [opts.imgY]      - Offset Y de l'image (défaut: 1.1)
+ * @param {number} [opts.imgH]      - Hauteur image (défaut: 3.3 — LOGO_SAFE_Y respecté)
+ */
+function addImageSlide(pres, title, imagePath, theme, opts = {}) {
+    const slide = pres.addSlide();
+    slide.background = { color: theme.bg };
+
+    // Titre 20pt orange
+    slide.addText(title, {
+        x: POS.title.x, y: POS.title.y,
+        w: POS.title.w, h: POS.title.h,
+        ...STYLES.contentTitle,
+        color: ORANGE_COLORS.primary.orange
+    });
+
+    // Image centrée sous le titre
+    const imgY = opts.imgY != null ? opts.imgY : 1.1;
+    const imgH = opts.imgH != null ? opts.imgH : 3.3;     // Max safe: 4.4 - 1.1 = 3.3
+
+    slide.addImage({
+        path: imagePath,
+        x: POS.body.x,
+        y: imgY,
+        w: POS.body.w,
+        h: imgH,
+        sizing: { type: 'contain', w: POS.body.w, h: imgH }
+    });
+
+    // Légende optionnelle (juste au-dessus du logo, dans la safe zone)
+    if (opts.caption) {
+        slide.addText(opts.caption, {
+            x: POS.body.x,
+            y: imgY + imgH + 0.02,
+            w: POS.body.w,
+            h: 0.25,
+            fontFace: ORANGE_FONTS.title,
+            fontSize: 9,
+            bold: true,
+            color: ORANGE_COLORS.primary.grayMedium,
+            align: 'center',
+            shrinkText: true,
+            bullet: false
+        });
+    }
+
+    addOrangeLogo(slide);
+    addSlideNumber(slide, opts.slideNum, theme);
+    return slide;
+}
+
+// ============================================
 // EXPORT
 // ============================================
 module.exports = {
@@ -874,6 +938,8 @@ module.exports = {
     addCardGridSlide,
     addBadgeSlide,
     addColorPaletteSlide,
+    // Slide image / diagramme (Mermaid PNG)
+    addImageSlide,
     // Composants unitaires
     addCard,
     addInfoBox,
