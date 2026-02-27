@@ -1050,11 +1050,6 @@ func _add_souffle(amount: int) -> Dictionary:
 	return {"ok": true, "added": new_souffle - old_souffle, "souffle": new_souffle}
 
 
-func _check_souffle_regen() -> void:
-	# Aspect system removed — souffle regen handled by controller
-	pass
-
-
 # ═══════════════════════════════════════════════════════════════════════════════
 # AWEN / OGHAM SYSTEM
 # ═══════════════════════════════════════════════════════════════════════════════
@@ -1672,15 +1667,6 @@ func count_extreme_aspects() -> int:
 
 func get_hidden_data() -> Dictionary:
 	return state.get("run", {}).get("hidden", {}).duplicate()
-
-
-# Legacy getters (deprecated but kept for compatibility)
-func get_gauge(gauge_name: String) -> int:
-	return int(state.get("run", {}).get("gauges", {}).get(gauge_name, 50))
-
-
-func get_all_gauges() -> Dictionary:
-	return state.get("run", {}).get("gauges", {}).duplicate()
 
 
 # Common getters

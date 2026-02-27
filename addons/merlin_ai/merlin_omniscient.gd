@@ -636,35 +636,6 @@ func _submit_deep_prefetch(game_state: Dictionary, card_index: int) -> void:
 	)
 
 
-func _prefetch_via_pool() -> Dictionary:
-	## Use the worker pool for background card pre-generation.
-	## Leases the best available brain (pool worker > idle primary).
-	if llm_interface == null:
-		return {}
-
-	var system_prompt := _build_system_prompt()
-	var user_prompt := _build_user_prompt()
-
-	var result: Dictionary = await llm_interface.generate_prefetch(
-		system_prompt,
-		user_prompt,
-		{"max_tokens": 200, "temperature": 0.5}
-	)
-
-	if result.has("error"):
-		return {}
-
-	var text: String = result.get("text", "")
-	var parsed := _parse_llm_response(text)
-
-	if not parsed.is_empty():
-		parsed["_prefetched"] = true
-		parsed["_pool_brain"] = result.get("_pool_brain", false)
-		return parsed
-
-	return {}
-
-
 func _try_use_prefetch(game_state: Dictionary) -> Dictionary:
 	## Check if prefetched card is available and relevant to current state.
 	## Uses tolerance-based matching: accepts prefetch if aspects shifted by at most 1 step.
@@ -823,14 +794,6 @@ func _try_llm_generation() -> Dictionary:
 			return swarm_card
 		print("[MOS] Strategy S: failed, falling through to B/C")
 
-	# Strategy A: Parallel generation DISABLED — segfault in NobodyWho GDExtension
-	if false and llm_interface.has_method("generate_parallel") and llm_interface.brain_count >= 2:
-		var parallel_card := await _try_parallel_generation()
-		if not parallel_card.is_empty():
-			parallel_card["_strategy"] = "parallel"
-			print("[MOS] Strategy A (parallel): SUCCESS in %dms" % (Time.get_ticks_msec() - start_time))
-			return parallel_card
-
 	# Strategy B: Use MerlinLlmAdapter if available (TRIADE-validated, single-instance)
 	if _store and _store.llm and _store.llm.is_llm_ready():
 		var adapter: MerlinLlmAdapter = _store.llm
@@ -960,54 +923,6 @@ func _try_swarm_generation() -> Dictionary:
 	_quality_judge.register_text(best_text)
 	parsed["_quality_score"] = best_score
 	return parsed
-
-
-func _try_parallel_generation() -> Dictionary:
-	## Phase 32: Generate narrative text + effects in parallel using dual instances.
-	## Narrator generates the story text, Game Master generates the effects JSON.
-
-	# Switch LoRA adapter to match current tone (Multi-LoRA mode)
-	if llm_interface and llm_interface.has_method("set_narrator_tone") and tone_controller:
-		llm_interface.set_narrator_tone(tone_controller.get_current_tone())
-
-	# Build prompts for both instances
-	var narrator_system := _build_narrator_prompt()
-	var narrator_input := _build_narrator_input()
-	var gm_system := _build_gm_prompt()
-	var gm_input := _build_gm_input()
-
-	# Load Game Master grammar
-	var gm_grammar := ""
-	var gm_grammar_path := "res://data/ai/gamemaster_effects.gbnf"
-	if FileAccess.file_exists(gm_grammar_path):
-		var f := FileAccess.open(gm_grammar_path, FileAccess.READ)
-		gm_grammar = f.get_as_text()
-		f.close()
-
-	# Launch parallel generation
-	var result: Dictionary = await llm_interface.generate_parallel(
-		narrator_system, narrator_input,
-		gm_system, gm_input,
-		gm_grammar
-	)
-
-	if result.has("error"):
-		return {}
-
-	# Merge narrative text + structured effects into a TRIADE card
-	var narrative: Dictionary = result.get("narrative", {})
-	var structured: Dictionary = result.get("structured", {})
-
-	if narrative.has("error") or structured.has("error"):
-		return {}
-
-	var card := _merge_parallel_results(narrative, structured)
-	if card.is_empty():
-		return {}
-
-	card["_parallel"] = result.get("parallel", false)
-	card["_generation_time_ms"] = result.get("time_ms", 0)
-	return card
 
 
 func _try_sequential_generation() -> Dictionary:
@@ -1250,85 +1165,6 @@ func _build_gm_input() -> String:
 	parts.append("\n{\"options\":[{\"label\":\"...\",\"effects\":[{\"type\":\"SHIFT_ASPECT\",\"aspect\":\"Corps\",\"direction\":\"up\"}]},{\"label\":\"...\",\"cost\":1,\"effects\":[{\"type\":\"SHIFT_ASPECT\",\"aspect\":\"Ame\",\"direction\":\"up\"}]},{\"label\":\"...\",\"effects\":[{\"type\":\"SHIFT_ASPECT\",\"aspect\":\"Monde\",\"direction\":\"down\"}]}]}")
 
 	return " ".join(parts)
-
-
-func _merge_parallel_results(narrative: Dictionary, structured: Dictionary) -> Dictionary:
-	## Merge Narrator text + Game Master effects into a valid TRIADE card.
-	var narrative_text: String = str(narrative.get("text", ""))
-	var gm_text: String = str(structured.get("text", ""))
-
-	if narrative_text.length() < 10:
-		return {}
-
-	# Extract scenario text and choice labels from narrator output
-	var scenario_text := narrative_text
-	var narrator_labels: Array[String] = []
-
-	# Extract A) B) C) labels — permissive for 1.5B markdown/format variants
-	var rx := RegEx.new()
-	rx.compile("(?m)^\\s*(?:[-*]\\s*)?\\*{0,2}(?:(?:Action\\s+)?[A-C][):.\\]]|[1-3][.)]|[-*])\\*{0,2}[:\\s]+(.+)")
-	var matches := rx.search_all(narrative_text)
-	for m in matches:
-		var label := m.get_string(1).strip_edges().replace("**", "").replace("*", "")
-		if label.length() > 2 and label.length() < 120:
-			narrator_labels.append(label)
-
-	# Remove choice lines from scenario text
-	if narrator_labels.size() >= 2:
-		rx.compile("(?m)^\\s*(?:[-*]\\s*)?\\*{0,2}(?:(?:Action\\s+)?[A-C][):.\\]]|[1-3][.)]|[-*])\\*{0,2}[:\\s]+")
-		var first_choice := rx.search(scenario_text)
-		if first_choice:
-			scenario_text = scenario_text.substr(0, first_choice.get_start()).strip_edges()
-	scenario_text = scenario_text.replace("**", "").replace("*", "")
-
-	# Parse Game Master JSON effects
-	var gm_effects: Dictionary = {}
-	if not gm_text.is_empty():
-		var json_start := gm_text.find("{")
-		var json_end := gm_text.rfind("}")
-		if json_start >= 0 and json_end > json_start:
-			var json_str := gm_text.substr(json_start, json_end - json_start + 1)
-			var parsed = JSON.parse_string(json_str)
-			if typeof(parsed) == TYPE_DICTIONARY:
-				gm_effects = parsed
-
-	# Build merged card
-	var gm_options: Array = gm_effects.get("options", [])
-
-	# Merge: use narrator labels + GM effects
-	var merged_options: Array = []
-	for i in range(3):
-		var opt: Dictionary = {}
-
-		# Label: prefer narrator, fallback to GM
-		if i < narrator_labels.size():
-			opt["label"] = narrator_labels[i]
-		elif i < gm_options.size() and gm_options[i] is Dictionary:
-			opt["label"] = str(gm_options[i].get("label", "..."))
-		else:
-			var defaults := ["Agir avec prudence", "Mediter en silence", "Foncer tete baissee"]
-			opt["label"] = defaults[i]
-
-		# Cost: center option (index 1)
-		if i == 1:
-			opt["cost"] = 1
-
-		# Effects: from GM output
-		if i < gm_options.size() and gm_options[i] is Dictionary:
-			opt["effects"] = gm_options[i].get("effects", [])
-		else:
-			# Fallback effects
-			var aspects_list := ["Corps", "Ame", "Monde"]
-			opt["effects"] = [{"type": "SHIFT_ASPECT", "aspect": aspects_list[i], "direction": "up" if i < 2 else "down"}]
-
-		merged_options.append(opt)
-
-	return {
-		"text": scenario_text if scenario_text.length() > 5 else narrative_text.substr(0, mini(narrative_text.length(), 200)),
-		"speaker": "merlin",
-		"options": merged_options,
-		"tags": ["llm_generated", "parallel"],
-	}
 
 
 func _get_live_scene_context() -> Dictionary:

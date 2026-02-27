@@ -184,79 +184,6 @@ const REWARD_BADGE := {
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
-# JUGDRAL21 — Medieval pixel art palette (Lospec, 21 colors)
-# ═══════════════════════════════════════════════════════════════════════════════
-# Source: https://lospec.com/palette-list/jugdral21
-# "Medieval theme with focus on midtones, greens through browns.
-#  Highlights muted, dark tones saturated for colorful shadows."
-# Tags: fantasy, earthy, dim, nature, medieval, restrained, dusty
-
-const JUGDRAL21 := {
-	"deep_bark":    Color("#1a120e"),  # Darkest brown-black
-	"shadow_plum":  Color("#2c1c22"),  # Dark plum shadow
-	"slate":        Color("#363339"),  # Cool dark gray
-	"stone":        Color("#4c4651"),  # Medium gray-purple
-	"blood":        Color("#552320"),  # Dark red-brown
-	"rust":         Color("#764535"),  # Warm rust
-	"bronze":       Color("#785f39"),  # Warm bronze
-	"ember":        Color("#944a42"),  # Warm red
-	"deep_blue":    Color("#212a64"),  # Deep royal blue
-	"storm":        Color("#374351"),  # Blue-gray
-	"moss":         Color("#3d5c52"),  # Dark teal-green
-	"jade":         Color("#5c947c"),  # Bright jade green
-	"forest":       Color("#3f6f46"),  # Forest green
-	"leaf":         Color("#53693d"),  # Leaf green
-	"sage":         Color("#768148"),  # Sage/olive
-	"sky_wash":     Color("#98aad8"),  # Muted sky blue
-	"honey":        Color("#c49256"),  # Warm honey gold
-	"sand":         Color("#a88d7b"),  # Sandy warm gray
-	"parchment":    Color("#c0b8ad"),  # Light warm gray
-	"cloud":        Color("#e3dbe0"),  # Near-white warm
-	"wheat":        Color("#d8ce98"),  # Warm wheat yellow
-}
-
-# Mapping: Jugdral21 -> M.E.R.L.I.N. semantic roles
-# Used by Parchemin+ style for unified pixel art across all scenes
-const PARCHMENT_PLUS := {
-	# Backgrounds
-	"bg_light": Color("#e3dbe0"),     # cloud — lightest bg
-	"bg_warm": Color("#c0b8ad"),      # parchment — standard paper
-	"bg_mid": Color("#a88d7b"),       # sand — darker panels
-
-	# Inks & outlines
-	"ink_deep": Color("#1a120e"),     # deep_bark — darkest outlines
-	"ink_warm": Color("#2c1c22"),     # shadow_plum — warm dark
-	"ink_mid": Color("#4c4651"),      # stone — medium text
-
-	# Accents & metals
-	"gold": Color("#c49256"),         # honey — celtic gold equivalent
-	"bronze": Color("#785f39"),       # bronze — secondary metal
-	"wheat": Color("#d8ce98"),        # wheat — highlight, glow
-
-	# Nature (biomes)
-	"forest": Color("#3f6f46"),       # forest — Broceliande
-	"moss": Color("#3d5c52"),         # moss — Marais
-	"jade": Color("#5c947c"),         # jade — highlight nature
-	"sage": Color("#768148"),         # sage — Collines, Landes
-	"leaf": Color("#53693d"),         # leaf — mid nature
-
-	# Warmth (Corps, fire, villages)
-	"rust": Color("#764535"),         # rust — Corps aspect
-	"ember": Color("#944a42"),        # ember — danger, fire
-	"blood": Color("#552320"),        # blood — dark danger
-
-	# Cool (Ame, mystery, circles)
-	"deep_blue": Color("#212a64"),    # deep_blue — Ame aspect
-	"storm": Color("#374351"),        # storm — mystery, night
-	"sky_wash": Color("#98aad8"),     # sky_wash — light magic
-
-	# Neutral structure
-	"slate": Color("#363339"),        # slate — UI borders
-	"stone": Color("#4c4651"),        # stone — disabled states
-}
-
-
-# ═══════════════════════════════════════════════════════════════════════════════
 # GBC PALETTE — Game Boy Color inspired (from game_manager.gd)
 # ═══════════════════════════════════════════════════════════════════════════════
 
@@ -844,30 +771,6 @@ static func celtic_ornament() -> String:
 	return "\u27C2\u2022\u27C2\u27C2#\u27C2\u27C2\u2022\u27C2"
 
 
-## Terminal panel — dark bg with phosphor border, CRT aesthetic
-static func make_parchment_style() -> StyleBoxFlat:
-	var style := StyleBoxFlat.new()
-	style.bg_color = CRT_PALETTE["bg_panel"]
-	style.border_color = CRT_PALETTE["border"]
-	style.set_border_width_all(CARD_BORDER_WIDTH)
-	style.set_corner_radius_all(CARD_CORNER_RADIUS)
-	style.shadow_size = CARD_SHADOW_SIZE
-	style.set_content_margin_all(CARD_PADDING)
-	return style
-
-
-## Deep terminal panel — darkest bg for cave/grotte scenes
-static func make_grotte_style() -> StyleBoxFlat:
-	var style := StyleBoxFlat.new()
-	style.bg_color = CRT_PALETTE["bg_deep"]
-	style.border_color = CRT_PALETTE["border"]
-	style.set_border_width_all(CARD_BORDER_WIDTH)
-	style.set_corner_radius_all(CARD_CORNER_RADIUS)
-	style.shadow_size = CARD_SHADOW_SIZE
-	style.set_content_margin_all(CARD_PADDING)
-	return style
-
-
 ## Button normal — dark bg with dim border
 static func make_button_normal() -> StyleBoxFlat:
 	var style := StyleBoxFlat.new()
@@ -910,21 +813,6 @@ static func apply_button_theme(button: Button) -> void:
 	button.add_theme_color_override("font_hover_color", CRT_PALETTE["phosphor_bright"])
 	button.add_theme_color_override("font_pressed_color", CRT_PALETTE["amber"])
 	button.custom_minimum_size.y = MIN_TOUCH_TARGET
-
-
-## Apply CRT label style — default phosphor text on dark terminal with outline for readability.
-## The subtle outline (bg_deep color) ensures phosphor text stays readable on
-## intermediate CRT backgrounds and through scanline overlay.
-static func apply_label_style(label: Label, font_type: String, font_size: int, color_key: String = "phosphor", outline: bool = true) -> void:
-	var font: Font = MerlinVisual.new().get_font(font_type)
-	if font != null:
-		label.add_theme_font_override("font", font)
-	label.add_theme_font_size_override("font_size", font_size)
-	var palette: Dictionary = CRT_PALETTE if CRT_PALETTE.has(color_key) else PALETTE
-	label.add_theme_color_override("font_color", palette[color_key])
-	if outline:
-		label.add_theme_constant_override("outline_size", OUTLINE_SIZE)
-		label.add_theme_color_override("font_outline_color", OUTLINE_COLOR)
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
