@@ -957,14 +957,6 @@ func _resolve_choice(option: int) -> void:
 	if not headless_mode and ui and is_instance_valid(ui) and ui.has_method("show_life_delta"):
 		ui.show_life_delta(life_delta)
 
-	# --- 15c. Generate what-if for unchosen options (P3.17.3) ---
-	if not headless_mode and current_card.size() > 0:
-		var mos: MerlinOmniscient = store.get_merlin() if store and store.has_method("get_merlin") else null
-		if mos and mos.has_method("generate_what_if"):
-			var what_ifs: Array[String] = await mos.generate_what_if(current_card, option)
-			if ui and is_instance_valid(ui) and ui.has_method("show_what_if_reveal"):
-				ui.show_what_if_reveal(what_ifs, option)
-
 	# Wait for player to see reaction (skip in headless)
 	if not headless_mode:
 		if not is_inside_tree():
@@ -1706,13 +1698,6 @@ func _play_outcome_sfx(outcome: String) -> void:
 		"success": SFXManager.play("aspect_up")
 		"failure": SFXManager.play("aspect_down")
 		"critical_failure": SFXManager.play("dice_crit_fail")
-	# Bestiole emotes
-	if ui and is_instance_valid(ui) and ui.has_method("show_bestiole_emote"):
-		match outcome:
-			"critical_success": ui.show_bestiole_emote("!!!")
-			"success": ui.show_bestiole_emote("^_^")
-			"failure": ui.show_bestiole_emote("T_T")
-			"critical_failure": ui.show_bestiole_emote(">_<")
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
@@ -1881,8 +1866,6 @@ func _on_souffle_changed(old_value: int, new_value: int) -> void:
 	if new_value > old_value:
 		SFXManager.play("ogham_chime")
 		print("[TRIADE] Souffle regenerated: +%d" % (new_value - old_value))
-		if ui and is_instance_valid(ui) and ui.has_method("show_bestiole_emote"):
-			ui.show_bestiole_emote("*")
 	elif new_value < old_value:
 		SFXManager.play("aspect_down")
 

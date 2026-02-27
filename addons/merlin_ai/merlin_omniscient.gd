@@ -2251,66 +2251,6 @@ func _get_fallback_title() -> String:
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
-# WHAT-IF GENERATION (P3.17.3)
-# ═══════════════════════════════════════════════════════════════════════════════
-
-const FALLBACK_WHATIFS: Array[String] = [
-	"Le destin aurait pris un autre chemin...",
-	"Les esprits du Sidhe auraient murmure autrement.",
-	"La brume aurait revele un tout autre visage.",
-	"L'Ogham aurait trace d'autres runes dans la pierre.",
-]
-
-func generate_what_if(card: Dictionary, chosen_index: int) -> Array[String]:
-	## Generate short what-if texts for unchosen options (P3.17.3).
-	## Returns an array of size 3 where chosen_index is empty and others have text.
-	## Each what-if is 1-2 sentences (max 40 tokens).
-	var results: Array[String] = ["", "", ""]
-	var options: Array = card.get("options", [])
-	if options.size() < 2:
-		return results
-
-	var card_text: String = str(card.get("text", "")).left(100)
-	if card_text.is_empty():
-		return results
-
-	for i in range(mini(options.size(), 3)):
-		if i == chosen_index:
-			continue
-		var option_label: String = str(options[i].get("label", "")) if i < options.size() and options[i] is Dictionary else ""
-		if option_label.is_empty():
-			results[i] = FALLBACK_WHATIFS[randi() % FALLBACK_WHATIFS.size()]
-			continue
-
-		var what_if_text := await _generate_single_what_if(card_text, option_label)
-		results[i] = what_if_text
-	return results
-
-
-func _generate_single_what_if(card_context: String, option_label: String) -> String:
-	## Generate a single what-if hint for one unchosen option (40 tokens max).
-	if llm_interface == null or not llm_interface.is_ready:
-		return FALLBACK_WHATIFS[randi() % FALLBACK_WHATIFS.size()]
-
-	var system := "En 1-2 phrases poetiques (francais, ton celtique), decris brievement ce qui AURAIT PU se passer si le voyageur avait choisi cette option. Reponds UNIQUEMENT avec le texte narratif."
-	var user_msg := "Scene: %s\nOption non choisie: %s\nQu'aurait-il pu se passer ?" % [card_context, option_label]
-
-	var _raw_result = null
-	if llm_interface.has_method("generate_with_router"):
-		_raw_result = await llm_interface.generate_with_router(system, user_msg, {"max_tokens": 40, "temperature": 0.85})
-	elif llm_interface.has_method("generate_with_system"):
-		_raw_result = await llm_interface.generate_with_system(system, user_msg, {"max_tokens": 40, "temperature": 0.85})
-	else:
-		return FALLBACK_WHATIFS[randi() % FALLBACK_WHATIFS.size()]
-	var result: Dictionary = _raw_result if _raw_result is Dictionary else {}
-
-	var text: String = str(result.get("text", "")).strip_edges()
-	if text.length() < 10 or text.length() > 200:
-		return FALLBACK_WHATIFS[randi() % FALLBACK_WHATIFS.size()]
-	return text
-
-
-# ═══════════════════════════════════════════════════════════════════════════════
 # DREAM GENERATION (P3.18.1)
 # ═══════════════════════════════════════════════════════════════════════════════
 

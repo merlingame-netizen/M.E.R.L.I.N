@@ -3759,10 +3759,6 @@ func show_milestone_popup(title_text: String, desc_text: String) -> void:
 		card_text.modulate.a = 1.0
 
 
-func show_bestiole_emote(_emote: String) -> void:
-	## Désactivé — la bestiole est uniquement dans le Hub (design decision 2026-02-26).
-	pass
-
 
 func show_life_delta(delta: int) -> void:
 	## Dramatic life change: screen flash, camera shake, zoom bar, smooth tween, BIG number.
@@ -4055,9 +4051,6 @@ func show_merlin_dialogue_response(text: String) -> void:
 		_dialogue_bubble.show_message(text, 6.0)
 
 
-func show_what_if_reveal(_what_ifs: Array[String], _chosen_index: int) -> void:
-	## Désactivé — trop complexe visuellement (design decision 2026-02-26).
-	pass
 
 
 func hide_what_if_labels() -> void:
