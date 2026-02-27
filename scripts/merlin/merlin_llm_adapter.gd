@@ -113,6 +113,10 @@ const SCENARIO_PROMPTS_PATH := "res://data/ai/config/scenario_prompts.json"
 var _scenario_prompts: Dictionary = {}
 var _scenario_prompts_loaded := false
 
+# Track last used indices to avoid repeats across consecutive cards
+var _last_verb_pool_idx: int = -1
+var _last_narrative_fallback_idx: int = -1
+
 # ═══════════════════════════════════════════════════════════════════════════════
 # LEGACY WHITELIST (kept for backward compatibility)
 # ═══════════════════════════════════════════════════════════════════════════════
@@ -614,7 +618,11 @@ func _wrap_text_as_card(raw_text: String, context: Dictionary) -> Dictionary:
 		# Phase 47: additional meta-text patterns observed in test runs
 		"voici mes choix", "mes choix :", "voici mes", "mes options",
 		"voici tes choix", "tes choix :", "voici tes options",
-		"les choix sont", "les options sont", "tu peux choisir"]
+		"les choix sont", "les options sont", "tu peux choisir",
+		# Phase 48: observed in MEGA-CYCLE 7-8 test runs
+		"decrochez le choix", "decrocher le choix", "choisir entre",
+		"(a)", "(b)", "(c)", "chaudron de",
+		"tendres choix", "(a/b/c)", "a/b/c"]
 	var cleaned_lines: Array[String] = []
 	for line in text.split("\n"):
 		var lower := line.strip_edges().to_lower()
@@ -812,7 +820,7 @@ func _wrap_text_as_card(raw_text: String, context: Dictionary) -> Dictionary:
 
 	# Generate context-appropriate effects (dynamic based on game state)
 	var effects := _generate_contextual_effects(context)
-	print("[LLM-Adapter] _generate_contextual_effects returned: %s" % str(effects))
+
 
 	# DC hints: dramatic balance-adaptive difficulty (0ms heuristic)
 	var balance := _evaluate_balance_heuristic(context)
@@ -853,6 +861,11 @@ func _wrap_text_as_card(raw_text: String, context: Dictionary) -> Dictionary:
 	for i in range(3):
 		var label_data: Dictionary = labels[i]
 		var verb_str: String = str(label_data.get("verb", "AGIR"))
+		# Safety net: reject verbs that slipped through (< 3 chars, articles, punctuation)
+		var v_check: String = verb_str.replace(")", "").replace("(", "").strip_edges()
+		if v_check.length() < 3 or v_check.to_upper() in ["LA", "LE", "LES", "UN", "UNE", "DES", "VOTRE", "NOTRE"]:
+			var fb_pool: Array = _get_phase_verb_pool(b_score)
+			verb_str = str(fb_pool[clampi(i, 0, fb_pool.size() - 1)])
 		var desc_str: String = str(label_data.get("desc", ""))
 		var has_llm_desc: bool = not desc_str.is_empty()
 		var opt: Dictionary = {
@@ -880,7 +893,11 @@ func _wrap_text_as_card(raw_text: String, context: Dictionary) -> Dictionary:
 		var prev_text: String = str(story_log_check[-1].get("text", ""))
 		if not prev_text.is_empty() and _jaccard_similarity(text, prev_text) > 0.7:
 			print("[MerlinLlmAdapter] Jaccard > 0.7 — using narrative fallback")
-			text = NARRATIVE_FALLBACKS[randi() % NARRATIVE_FALLBACKS.size()]
+			var fb_idx: int = randi() % NARRATIVE_FALLBACKS.size()
+			if NARRATIVE_FALLBACKS.size() > 1 and fb_idx == _last_narrative_fallback_idx:
+				fb_idx = (fb_idx + 1) % NARRATIVE_FALLBACKS.size()
+			_last_narrative_fallback_idx = fb_idx
+			text = NARRATIVE_FALLBACKS[fb_idx]
 
 	# Cap text length: 3-5 lines max (~250 chars). Always finish the current sentence.
 	if text.length() > 250:
@@ -892,7 +909,13 @@ func _wrap_text_as_card(raw_text: String, context: Dictionary) -> Dictionary:
 			if cut_fwd > 0:
 				text = text.substr(0, cut_fwd + 1)
 
-	var final_text: String = text if text.length() > 15 else NARRATIVE_FALLBACKS[randi() % NARRATIVE_FALLBACKS.size()]
+	var final_text: String = text
+	if text.length() <= 15:
+		var fb_idx2: int = randi() % NARRATIVE_FALLBACKS.size()
+		if NARRATIVE_FALLBACKS.size() > 1 and fb_idx2 == _last_narrative_fallback_idx:
+			fb_idx2 = (fb_idx2 + 1) % NARRATIVE_FALLBACKS.size()
+		_last_narrative_fallback_idx = fb_idx2
+		final_text = NARRATIVE_FALLBACKS[fb_idx2]
 
 	# Path B auto-tag: scan final_text for faction keywords → ADD_REPUTATION on right option
 	var scan_text: String = final_text.to_lower()
@@ -1662,7 +1685,12 @@ func _get_phase_verb_pool(balance_score: int) -> Array:
 		pool = VERB_POOL_FRAGILE
 	else:
 		pool = VERB_POOL_CRITICAL
-	return pool[randi() % pool.size()]
+	# Avoid repeating the same triplet as the previous card
+	var idx: int = randi() % pool.size()
+	if pool.size() > 1 and idx == _last_verb_pool_idx:
+		idx = (idx + 1) % pool.size()
+	_last_verb_pool_idx = idx
+	return pool[idx]
 
 
 ## Generate effects that vary based on game state and quest position.
@@ -1847,11 +1875,12 @@ func calculate_smart_effects(context: Dictionary, scenario_text: String, labels:
 	var life: int = int(context.get("life_essence", 100))
 	var souffle: int = int(context.get("souffle", 1))
 
-	var system := "Maitre du Jeu. Reponds UNIQUEMENT en JSON, rien d'autre.\n"
-	system += "Effets: DAMAGE_LIFE, HEAL_LIFE, ADD_KARMA, ADD_SOUFFLE, SHIFT_ASPECT.\n"
-	system += "SHIFT_ASPECT: {\"type\":\"SHIFT_ASPECT\",\"aspect\":\"Corps|Ame|Monde\",\"direction\":\"up|down\"}\n"
-	system += "Format exact: {\"effects\":[[{\"type\":\"X\",\"amount\":N}],[{\"type\":\"Y\",\"amount\":M}],[{\"type\":\"Z\",\"amount\":P}]]}\n"
-	system += "3 tableaux = 3 choix. 1 effet par choix. amount entre 1 et 8."
+	# GM system prompt: example-driven (Qwen 2.5-1.5B responds better to examples than instructions)
+	var system := "JSON only. Example:\n"
+	system += "{\"effects\":[[{\"type\":\"HEAL_LIFE\",\"amount\":5}],[{\"type\":\"DAMAGE_LIFE\",\"amount\":3}],[{\"type\":\"ADD_SOUFFLE\",\"amount\":1}]]}\n"
+	system += "Types: DAMAGE_LIFE, HEAL_LIFE, ADD_KARMA, ADD_SOUFFLE, SHIFT_ASPECT.\n"
+	system += "SHIFT_ASPECT: {\"type\":\"SHIFT_ASPECT\",\"aspect\":\"Corps\",\"direction\":\"up\"}\n"
+	system += "3 arrays = 3 choices. 1 effect each. amount 1-8."
 
 	var balance_hint := ""
 	if score < 30:
@@ -1868,16 +1897,16 @@ func calculate_smart_effects(context: Dictionary, scenario_text: String, labels:
 	]
 
 	# GM brain, low temp, no grammar (Ollama-compatible)
-	var gm_params := {"max_tokens": 80, "temperature": 0.15}
+	# max_tokens 150: valid 3-effect JSON needs ~120 chars, 80 truncated too often
+	var gm_params := {"max_tokens": 150, "temperature": 0.15}
 	var result: Dictionary = await _merlin_ai.generate_structured(system, user_input, "", gm_params)
 
 	if result.has("text"):
 		var parsed_effects := _parse_smart_effects_json(str(result.text))
 		if parsed_effects.size() == 3:
-			print("[LLM-Adapter] Smart effects from GM: %s" % str(parsed_effects))
 			return parsed_effects
 
-	print("[LLM-Adapter] Smart effects: GM failed, caller will use heuristic")
+
 	return []
 
 
@@ -1887,9 +1916,34 @@ func _parse_smart_effects_json(raw: String) -> Array:
 	var json_start := raw.find("{")
 	var json_end := raw.rfind("}")
 	if json_start < 0 or json_end <= json_start:
+		# Try repair: maybe truncated without closing brace
+		if json_start >= 0:
+			var repaired := raw.substr(json_start) + "]}]}"
+			return _try_parse_effects_dict(repaired)
 		return []
 
 	var json_str := raw.substr(json_start, json_end - json_start + 1)
+	var result := _try_parse_effects_dict(json_str)
+	if result.size() == 3:
+		return result
+
+	# Repair pass: fix common Qwen 2.5-1.5B JSON issues
+	var repaired := json_str
+	# Single quotes → double quotes
+	repaired = repaired.replace("'", "\"")
+	# Trailing commas before ] or }
+	var rx := RegEx.new()
+	rx.compile(",\\s*([\\]\\}])")
+	repaired = rx.sub(repaired, "$1", true)
+	result = _try_parse_effects_dict(repaired)
+	if result.size() == 3:
+		return result
+
+	return []
+
+
+## Internal: attempt to parse a JSON string as effects dict, validate, return 3-array or empty.
+func _try_parse_effects_dict(json_str: String) -> Array:
 	var parsed = JSON.parse_string(json_str)
 	if typeof(parsed) != TYPE_DICTIONARY or not parsed.has("effects"):
 		return []
