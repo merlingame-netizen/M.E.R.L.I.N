@@ -1,6 +1,13 @@
 <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-  <rect x="2" y="3" width="20" height="18" rx="2" stroke="currentColor" stroke-width="1.5" fill="none"/>
-  <path d="M6 9 L10 12.5 L6 16" stroke="currentColor" stroke-width="1.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
-  <line x1="12" y1="16" x2="18" y2="16" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
-  <circle cx="18" cy="7" r="1.5" fill="currentColor"/>
+  <!-- eye outline (orchestrator watching) -->
+  <path d="M12 5C6.5 5 2 12 2 12s4.5 7 10 7 10-7 10-7-4.5-7-10-7z" stroke="currentColor" stroke-width="1.5" fill="none"/>
+  <!-- iris -->
+  <circle cx="12" cy="12" r="3.5" stroke="currentColor" stroke-width="1.5" fill="none"/>
+  <!-- pupil -->
+  <circle cx="12" cy="12" r="1.5" fill="currentColor"/>
+  <!-- scan lines (diagnostic) -->
+  <line x1="1" y1="8" x2="5" y2="8" stroke="currentColor" stroke-width="0.8" opacity="0.5"/>
+  <line x1="19" y1="8" x2="23" y2="8" stroke="currentColor" stroke-width="0.8" opacity="0.5"/>
+  <line x1="1" y1="16" x2="5" y2="16" stroke="currentColor" stroke-width="0.8" opacity="0.5"/>
+  <line x1="19" y1="16" x2="23" y2="16" stroke="currentColor" stroke-width="0.8" opacity="0.5"/>
 </svg>

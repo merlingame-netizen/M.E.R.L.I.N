@@ -118,6 +118,26 @@
 > automatiquement les 3 autres agents (data → training → eval).
 > NE PAS invoquer les agents LoRA individuellement sauf demande explicite.
 
+### Autonomous Studio (NOUVEAU)
+
+| Type | Mots-cles de detection | Agents primaires | Agents review |
+|------|------------------------|-----------------|---------------|
+| **Studio Mode** | lance le studio, overnight, deep test, quick qa, content sprint, polish pass, mode studio, full QA | `studio_orchestrator.md` | Tous selon mode |
+| **Playtest intelligent** | joue au jeu, playtest, teste le gameplay, simule un joueur, lance une partie | `playtester_ai.md` | `balance_analyst.md`, `game_designer.md` |
+| **Equilibrage** | equilibrage, balance du jeu, statistiques, distribution des fins, desequilibre, trop de morts | `balance_analyst.md` | `game_designer.md`, `playtester_ai.md` |
+| **Stress testing** | stress test, spam click, AFK test, crash test, comportement extreme, robustesse | `player_simulator.md` | `debug_qa.md`, `regression_guardian.md` |
+| **Generation contenu** | genere du contenu, nouvelles cartes, nouveaux events, enrichis le jeu, manque de contenu | `content_factory.md` | `merlin_guardian.md`, `visual_qa.md` |
+| **Construction monde** | nouveau biome, nouveau lieu, construction de monde, environnement | `world_builder.md` | `content_factory.md`, `merlin_guardian.md` |
+| **QA visuelle** | regression visuelle, compare screenshots, baseline, le rendu a change | `visual_qa.md` | `art_direction.md`, `ui_impl.md` |
+| **Regression** | regression, avant/apres, la perf a baisse, ca marchait avant | `regression_guardian.md` | `perf_profiler.md`, `debug_qa.md` |
+| **Pre-release** | pre-release, checklist qualite, GO/NO-GO, pret a livrer | `release_quality.md` | `studio_orchestrator.md` |
+| **Performance runtime** | profile performance, FPS drop, memory leak, le jeu rame, latence | `perf_profiler.md` | `optimizer.md`, `godot_expert.md` |
+
+> **IMPORTANT — Studio Orchestrator**: Pour les modes complets (Overnight, Deep Test, etc.),
+> le `studio_orchestrator.md` est le point d'entree. Il coordonne automatiquement les autres
+> agents du studio. Pour des taches isolees (juste le playtest, juste la QA visuelle), invoquer
+> l'agent specifique directement.
+
 ---
 
 ## Patterns de Fichiers → Agents Additionnels
@@ -142,6 +162,13 @@ Quand la tache mentionne des chemins specifiques:
 | `tools/lora/*.py` | `lora_training_architect.md`, `lora_data_curator.md` (pipeline LoRA) |
 | `data/ai/training/*.json` | `lora_data_curator.md`, `lora_evaluator.md` (datasets) |
 | `addons/merlin_llm/adapters/*.gguf` | `lora_evaluator.md` (validation adapter) |
+| `tools/autodev/captures/playtest_log.json` | `balance_analyst.md` (analyse stats) |
+| `tools/autodev/captures/balance_report.json` | `game_designer.md`, `balance_analyst.md` |
+| `tools/autodev/captures/baseline/*.png` | `visual_qa.md` (regression visuelle) |
+| `tools/autodev/captures/regression_log.json` | `regression_guardian.md` |
+| `tools/autodev/captures/release_quality_report.json` | `release_quality.md` |
+| `data/ai/fallback_cards.json` | `content_factory.md`, `narrative_writer.md` |
+| `scripts/merlin/merlin_biome_system.gd` | `world_builder.md`, `game_designer.md` |
 
 ---
 

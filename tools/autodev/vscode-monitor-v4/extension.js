@@ -1,9 +1,18 @@
-// AUTODEV Monitor v4.1 — AUTODEV pipeline + Godot Scene Controller
-// Panels: "Godot Scenes" (top) + "AUTODEV" (bottom)
+// M.E.R.L.I.N. Orchestrator v6.0 — Autonomous Game Studio (48 agents, 5 modes)
+// Panels: Game Control | Live View | Commands | Diagnostics | Overnight | Studio
 const vscode = require('vscode');
 const fs = require('fs');
 const path = require('path');
 const cp = require('child_process');
+
+// ============================================================
+// CRT PALETTE
+// ============================================================
+const CRT = {
+  bg: '#050a05', panel: '#080e08', green: '#00ff41', greenDim: '#00aa2a',
+  amber: '#ffb300', cyan: '#00e5ff', red: '#ff3333', gray: '#555',
+  text: '#b0c8b0', border: '#1a2a1a', magenta: '#cc66ff',
+};
 
 // ============================================================
 // SHARED UTILS
@@ -18,14 +27,8 @@ function findProjectRoot() {
   return folders[0].uri.fsPath;
 }
 
-function findStatusDir() {
-  const folders = vscode.workspace.workspaceFolders;
-  if (!folders) return null;
-  for (const f of folders) {
-    const candidate = path.join(f.uri.fsPath, 'tools', 'autodev', 'status');
-    if (fs.existsSync(candidate)) return candidate;
-  }
-  return null;
+function capturesDir(root) {
+  return path.join(root, 'tools', 'autodev', 'captures');
 }
 
 function readJsonSafe(filePath) {
@@ -37,8 +40,65 @@ function readJsonSafe(filePath) {
 
 function escapeHtml(str) {
   if (!str) return '';
-  return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+  return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
 }
+
+function timeAgo(isoOrMs) {
+  if (!isoOrMs) return '';
+  const ms = typeof isoOrMs === 'number' ? isoOrMs : new Date(isoOrMs).getTime();
+  const diff = Date.now() - ms;
+  if (diff < 0) return 'now';
+  const secs = Math.floor(diff / 1000);
+  if (secs < 60) return secs + 's ago';
+  const mins = Math.floor(secs / 60);
+  if (mins < 60) return mins + 'min ago';
+  return Math.floor(mins / 60) + 'h ago';
+}
+
+function progressBar(pct, width = 15) {
+  const filled = Math.min(width, Math.round(pct * width / 100));
+  return '\u2588'.repeat(filled) + '\u2591'.repeat(width - filled);
+}
+
+function fileAge(filePath) {
+  try {
+    const stat = fs.statSync(filePath);
+    return Date.now() - stat.mtimeMs;
+  } catch { return Infinity; }
+}
+
+const CSS_BASE = `
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body { font-family:'Cascadia Code','Fira Code',Consolas,monospace; font-size:11px;
+         background:${CRT.bg}; color:${CRT.text}; padding:8px; line-height:1.5; user-select:none; }
+  .header { display:flex; justify-content:space-between; align-items:center;
+            padding-bottom:6px; border-bottom:1px solid ${CRT.border}; margin-bottom:8px; }
+  .title { font-size:12px; font-weight:bold; color:${CRT.green}; letter-spacing:1px; }
+  .status { font-size:11px; font-weight:bold; }
+  .section { margin-bottom:10px; }
+  .section-label { font-size:9px; color:${CRT.gray}; letter-spacing:1px; text-transform:uppercase; padding:4px 0 2px; }
+  .empty { color:${CRT.gray}; font-size:10px; font-style:italic; padding:4px 0; }
+  .sep { border-top:1px solid ${CRT.border}; margin:8px 0; }
+  button { font-family:inherit; font-size:10px; border:1px solid ${CRT.border}; background:${CRT.panel};
+           color:${CRT.greenDim}; cursor:pointer; padding:3px 7px; border-radius:2px; }
+  button:hover { border-color:${CRT.green}; color:${CRT.green}; background:#0a1a0a; }
+  button:active { background:#0d2a0d; }
+  button:disabled { opacity:0.3; cursor:not-allowed; }
+  .btn-row { display:flex; gap:4px; flex-wrap:wrap; margin:4px 0; }
+  .btn-danger { color:${CRT.red}; border-color:#551111; }
+  .btn-amber { color:${CRT.amber}; border-color:#553300; }
+  .btn-cyan { color:${CRT.cyan}; border-color:#115555; }
+  .btn-magenta { color:${CRT.magenta}; border-color:#441155; }
+  table { width:100%; border-collapse:collapse; }
+  td { padding:1px 4px; font-size:10px; }
+  .k { color:${CRT.gray}; width:70px; }
+  .v { color:${CRT.text}; }
+  .v-good { color:${CRT.green}; }
+  .v-warn { color:${CRT.amber}; }
+  .v-bad { color:${CRT.red}; }
+  ::-webkit-scrollbar { width:4px; }
+  ::-webkit-scrollbar-thumb { background:${CRT.border}; }
+`;
 
 // ============================================================
 // GODOT PROCESS MANAGER
@@ -47,59 +107,37 @@ function escapeHtml(str) {
 let _godotProcess = null;
 
 function getGodotExe() {
-  const cfg = vscode.workspace.getConfiguration('godotTools');
-  const fromCfg = cfg.get('editorPath.godot4');
-  if (fromCfg && fs.existsSync(fromCfg)) return fromCfg;
-  // Fallback: search common locations
   const candidates = [
-    'C:\\Users\\PGNK2128\\Godot\\Godot_v4.5.1-stable_win64.exe',
     'C:\\Users\\PGNK2128\\Godot\\Godot_v4.5.1-stable_win64_console.exe',
+    'C:\\Users\\PGNK2128\\Godot\\Godot_v4.5.1-stable_win64.exe',
   ];
-  for (const c of candidates) {
-    if (fs.existsSync(c)) return c;
-  }
-  return 'godot'; // fallback to PATH
+  for (const c of candidates) { if (fs.existsSync(c)) return c; }
+  return 'godot';
 }
 
-function isGodotRunning() {
-  return _godotProcess !== null && !_godotProcess.killed;
+function isGodotRunning() { return _godotProcess !== null && !_godotProcess.killed; }
+
+function launchGameBootstrap(root, onExit) {
+  killGodot();
+  const exe = getGodotExe();
+  _godotProcess = cp.spawn(exe, [
+    '--path', root,
+    'scenes/BootstrapMerlinGame.tscn',
+    '--rendering-driver', 'opengl3',
+    '--resolution', '800x600',
+  ], { detached: false, stdio: ['ignore', 'ignore', 'ignore'], windowsHide: false });
+  _godotProcess.on('exit', () => { _godotProcess = null; if (onExit) onExit(); });
+  _godotProcess.on('error', () => { _godotProcess = null; if (onExit) onExit(); });
 }
 
 function launchScene(scenePath, root, onExit) {
   killGodot();
   const exe = getGodotExe();
   const rel = path.relative(root, scenePath).replace(/\\/g, '/');
-  _godotProcess = cp.spawn(exe, ['--path', root, rel], {
-    detached: false,
-    stdio: ['ignore', 'ignore', 'ignore'],
-    windowsHide: false,
-  });
-  _godotProcess.on('exit', () => {
-    _godotProcess = null;
-    if (onExit) onExit();
-  });
-  _godotProcess.on('error', () => {
-    _godotProcess = null;
-    if (onExit) onExit();
-  });
-}
-
-function launchGame(root, onExit) {
-  killGodot();
-  const exe = getGodotExe();
-  _godotProcess = cp.spawn(exe, ['--path', root], {
-    detached: false,
-    stdio: ['ignore', 'ignore', 'ignore'],
-    windowsHide: false,
-  });
-  _godotProcess.on('exit', () => {
-    _godotProcess = null;
-    if (onExit) onExit();
-  });
-  _godotProcess.on('error', () => {
-    _godotProcess = null;
-    if (onExit) onExit();
-  });
+  _godotProcess = cp.spawn(exe, ['--path', root, rel, '--rendering-driver', 'opengl3'], {
+    detached: false, stdio: ['ignore', 'ignore', 'ignore'], windowsHide: false });
+  _godotProcess.on('exit', () => { _godotProcess = null; if (onExit) onExit(); });
+  _godotProcess.on('error', () => { _godotProcess = null; if (onExit) onExit(); });
 }
 
 function killGodot() {
@@ -107,9 +145,7 @@ function killGodot() {
   try {
     if (process.platform === 'win32') {
       cp.exec(`taskkill /F /PID ${_godotProcess.pid} /T`);
-    } else {
-      _godotProcess.kill('SIGTERM');
-    }
+    } else { _godotProcess.kill('SIGTERM'); }
   } catch { /* ignore */ }
   _godotProcess = null;
 }
@@ -122,391 +158,61 @@ function findScriptInScene(tscnPath) {
   try {
     const content = fs.readFileSync(tscnPath, 'utf8');
     const match = content.match(/\[ext_resource type="Script" path="res:\/\/([^"]+)"/);
-    if (match) return match[1]; // relative to project root e.g. scripts/ui/foo.gd
-  } catch { /* ignore */ }
-  return null;
+    return match ? match[1] : null;
+  } catch { return null; }
 }
 
 async function discoverScenes(root) {
-  const scenesDir = path.join(root, 'scenes');
-  if (!fs.existsSync(scenesDir)) return {};
-
   const uris = await vscode.workspace.findFiles('scenes/**/*.tscn', null, 200);
   const groups = {};
-
   for (const uri of uris) {
     const full = uri.fsPath;
     const rel = path.relative(root, full).replace(/\\/g, '/');
     const name = path.basename(full, '.tscn');
     const folder = path.relative(root, path.dirname(full)).replace(/\\/g, '/');
     const scriptRel = findScriptInScene(full);
-
-    const entry = { name, full, rel, scriptRel };
     if (!groups[folder]) groups[folder] = [];
-    groups[folder].push(entry);
+    groups[folder].push({ name, full, rel, scriptRel });
   }
-
-  // Sort scenes within each group
-  for (const grp of Object.values(groups)) {
-    grp.sort((a, b) => a.name.localeCompare(b.name));
-  }
-
+  for (const grp of Object.values(groups)) grp.sort((a, b) => a.name.localeCompare(b.name));
   return groups;
 }
 
 // ============================================================
-// LIVE VIEW — Godot debug dir reader
+// COMMAND SENDER
 // ============================================================
 
-const GODOT_USER = path.join(process.env.APPDATA || '', 'Godot', 'app_userdata', 'DRU');
-const GODOT_DEBUG_DIR = path.join(GODOT_USER, 'debug');
-const LIVE_SCREENSHOT = path.join(GODOT_DEBUG_DIR, 'latest_screenshot.png');
-const LIVE_STATE = path.join(GODOT_DEBUG_DIR, 'latest_state.json');
-const LIVE_LOG = path.join(GODOT_DEBUG_DIR, 'log_buffer.json');
-
-function readScreenshotBase64() {
-  try {
-    if (!fs.existsSync(LIVE_SCREENSHOT)) return null;
-    const stat = fs.statSync(LIVE_SCREENSHOT);
-    // Ignorer si vieux de plus de 5 minutes
-    if (Date.now() - stat.mtimeMs > 5 * 60 * 1000) return null;
-    const buf = fs.readFileSync(LIVE_SCREENSHOT);
-    return 'data:image/png;base64,' + buf.toString('base64');
-  } catch { return null; }
+function sendGameCommand(root, action, params = {}) {
+  const dir = capturesDir(root);
+  if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
+  const cmd = { action, params, id: 'vsc_' + Date.now() };
+  fs.writeFileSync(path.join(dir, 'command.json'), JSON.stringify(cmd, null, 2), 'utf8');
+  return cmd.id;
 }
 
-function buildLiveViewHtml(screenshot, state, logLines) {
-  const running = isGodotRunning();
-  const hasDebug = fs.existsSync(GODOT_DEBUG_DIR);
-  const statusColor = running ? CRT.green : CRT.gray;
-  const statusIcon = running ? '●' : '○';
-
-  // State table
-  let stateHtml = '';
-  const run = state ? state.run : null;
-  if (run) {
-    const rows = [
-      ['Phase', escapeHtml(run.phase || '—')],
-      ['Vie', `${run.life ?? '—'}/100`],
-      ['Souffle', String(run.souffle ?? '—')],
-      ['Essences', String(run.essences ?? '—')],
-      ['Carte #', String(run.cards_played ?? '—')],
-      ['Biome', escapeHtml((run.biome || '—').replace('foret_', ''))],
-      ['Typology', escapeHtml(run.typology || '—')],
-      ['Karma', String(run.karma ?? '—')],
-      ['Mission', run.mission_type ? `${run.mission_progress}/${run.mission_total} ${escapeHtml(run.mission_type)}` : '—'],
-    ];
-    stateHtml = `<table class="state-table">
-      ${rows.map(([k, v]) => `<tr><td class="key">${k}</td><td class="val">${v}</td></tr>`).join('')}
-    </table>`;
-    if (state.datetime) {
-      stateHtml += `<div class="ts">Snapshot: ${escapeHtml(state.datetime)}</div>`;
-    }
-  } else {
-    stateHtml = `<div class="empty">Aucun état — lance le jeu depuis [Godot Scenes]</div>`;
-  }
-
-  // Log
-  const logHtml = logLines.length > 0
-    ? logLines.map(l => {
-        const colored = String(l)
-          .replace(/\[GameDebug[^\]]*\]/g, m => `<span style="color:${CRT.cyan}">${escapeHtml(m)}</span>`)
-          .replace(/\[TRIADE\]/g, `<span style="color:${CRT.amber}">[TRIADE]</span>`)
-          .replace(/\[MerlinStore\]/g, `<span style="color:${CRT.green}">[MerlinStore]</span>`)
-          .replace(/\[MerlinUI\]/g, `<span style="color:${CRT.greenDim}">[MerlinUI]</span>`);
-        return `<div class="log-line">${colored}</div>`;
-      }).join('')
-    : `<div class="empty">Aucun log — GameDebugServer actif si is_debug_build()</div>`;
-
-  return `<!DOCTYPE html>
-<html><head><style>
-  * { margin: 0; padding: 0; box-sizing: border-box; }
-  body { font-family: 'Cascadia Code', Consolas, monospace; font-size: 11px; background: ${CRT.bg}; color: ${CRT.text}; padding: 8px; line-height: 1.5; }
-  .header { display: flex; justify-content: space-between; align-items: center; padding-bottom: 6px; border-bottom: 1px solid ${CRT.border}; margin-bottom: 8px; }
-  .title { font-size: 12px; font-weight: bold; color: ${CRT.green}; letter-spacing: 1px; }
-  .status { font-size: 11px; font-weight: bold; color: ${statusColor}; }
-  .screenshot { width: 100%; border: 1px solid ${CRT.border}; display: block; margin-bottom: 8px; image-rendering: pixelated; }
-  .no-screenshot { background: ${CRT.panel}; border: 1px dashed ${CRT.border}; color: ${CRT.gray}; text-align: center; padding: 24px 8px; font-size: 10px; margin-bottom: 8px; }
-  .section-label { font-size: 9px; color: ${CRT.gray}; letter-spacing: 1px; text-transform: uppercase; padding: 4px 0 2px 0; }
-  .state-table { width: 100%; border-collapse: collapse; margin-bottom: 6px; }
-  .state-table td { padding: 1px 4px; font-size: 10px; }
-  .key { color: ${CRT.gray}; width: 52px; }
-  .val { color: ${CRT.text}; }
-  .ts { font-size: 9px; color: ${CRT.gray}; margin-bottom: 8px; }
-  .log-section { border-top: 1px solid ${CRT.border}; margin-top: 6px; padding-top: 6px; }
-  .log-line { font-size: 9px; color: ${CRT.gray}; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin: 1px 0; }
-  .empty { color: ${CRT.gray}; font-size: 10px; font-style: italic; padding: 4px 0; }
-  .footer { margin-top: 8px; padding-top: 6px; border-top: 1px solid ${CRT.border}; display: flex; gap: 6px; }
-  button { font-family: inherit; font-size: 10px; border: 1px solid ${CRT.border}; background: ${CRT.panel}; color: ${CRT.greenDim}; cursor: pointer; padding: 3px 7px; border-radius: 2px; flex: 1; }
-  button:hover { border-color: ${CRT.green}; color: ${CRT.green}; }
-  .btn-capture { color: ${CRT.amber}; border-color: #553300; }
-  ::-webkit-scrollbar { width: 4px; }
-  ::-webkit-scrollbar-thumb { background: ${CRT.border}; }
-</style></head><body>
-  <div class="header">
-    <span class="title">LIVE VIEW</span>
-    <span class="status">${statusIcon} ${running ? 'RUNNING' : 'IDLE'}</span>
-  </div>
-
-  ${screenshot
-    ? `<img class="screenshot" src="${screenshot}" title="Dernier screenshot Godot (F11 = manuel)">`
-    : `<div class="no-screenshot">📷 Aucun screenshot<br>Lance le jeu → F11 ou attends 30s</div>`}
-
-  <div class="section-label">État Run</div>
-  ${stateHtml}
-
-  <div class="log-section">
-    <div class="section-label">Log GameDebugServer</div>
-    ${logHtml}
-  </div>
-
-  <div class="footer">
-    <button class="btn-capture" onclick="capture()" title="Envoie F11 à Godot (capture manuelle)">📷 F11</button>
-    <button onclick="refresh()" title="Refresh immédiat">⟳ Refresh</button>
-  </div>
-
-  <script>
-    const vscode = acquireVsCodeApi();
-    function capture() { vscode.postMessage({ type: 'capture' }); }
-    function refresh() { vscode.postMessage({ type: 'refresh' }); }
-  </script>
-</body></html>`;
+function readCommandResult(root) {
+  return readJsonSafe(path.join(capturesDir(root), 'command_result.json'));
 }
 
-class LiveViewProvider {
-  constructor() {
-    this._view = null;
-    this._interval = null;
-  }
+// ============================================================
+// PANEL 1 — GAME CONTROL
+// ============================================================
+
+class GameControlProvider {
+  constructor(root) { this._root = root; this._view = null; this._groups = {}; }
 
   async resolveWebviewView(webviewView) {
     this._view = webviewView;
     webviewView.webview.options = { enableScripts: true };
-
-    webviewView.webview.onDidReceiveMessage(async (msg) => {
-      if (msg.type === 'capture') this._sendF11ToGodot();
-      if (msg.type === 'refresh') await this._update();
-    });
-
-    // Auto-refresh every 3s
-    this._interval = setInterval(() => this._update(), 3000);
-    await this._update();
-  }
-
-  async _update() {
-    if (!this._view) return;
-    const screenshot = readScreenshotBase64();
-    const state = readJsonSafe(LIVE_STATE);
-    const logLines = readJsonSafe(LIVE_LOG) || [];
-    this._view.webview.html = buildLiveViewHtml(screenshot, state, logLines.slice(-10));
-  }
-
-  _sendF11ToGodot() {
-    // Envoie F11 à la fenêtre Godot via PowerShell SendKeys
-    cp.exec(
-      'powershell -Command "Add-Type -AN System.Windows.Forms; [System.Windows.Forms.SendKeys]::SendWait(\'{F11}\')"',
-      () => {}
-    );
-  }
-
-  dispose() {
-    if (this._interval) {
-      clearInterval(this._interval);
-      this._interval = null;
-    }
-  }
-}
-
-// ============================================================
-// GODOT SCENES HTML
-// ============================================================
-
-const CRT = {
-  bg: '#050a05',
-  panel: '#080e08',
-  green: '#00ff41',
-  greenDim: '#00aa2a',
-  amber: '#ffb300',
-  cyan: '#00e5ff',
-  red: '#ff3333',
-  gray: '#555',
-  text: '#b0c8b0',
-  border: '#1a2a1a',
-};
-
-function buildScenesHtml(groups, running) {
-  const statusColor = running ? CRT.green : CRT.gray;
-  const statusIcon = running ? '●' : '○';
-  const statusText = running ? 'RUNNING' : 'IDLE';
-
-  let scenesHtml = '';
-  const sortedFolders = Object.keys(groups).sort();
-
-  if (sortedFolders.length === 0) {
-    scenesHtml = `<div class="empty">No .tscn files found in scenes/</div>`;
-  } else {
-    for (const folder of sortedFolders) {
-      const label = folder === 'scenes' ? 'scenes/' : folder + '/';
-      const items = groups[folder].map(s => {
-        const scriptBtn = s.scriptRel
-          ? `<button class="btn-script" onclick="openScript('${escapeHtml(s.scriptRel)}')" title="Open ${s.scriptRel}">{}</button>`
-          : `<button class="btn-script disabled" disabled title="No script found">{}</button>`;
-        return `<div class="scene-row">
-          <button class="btn-launch" onclick="launch('${escapeHtml(s.full)}')" title="Launch ${s.rel}">▶</button>
-          ${scriptBtn}
-          <span class="scene-name" title="${escapeHtml(s.rel)}">${escapeHtml(s.name)}</span>
-        </div>`;
-      }).join('');
-      scenesHtml += `<div class="group">
-        <div class="group-label">${escapeHtml(label)}</div>
-        ${items}
-      </div>`;
-    }
-  }
-
-  return `<!DOCTYPE html>
-<html><head><style>
-  * { margin: 0; padding: 0; box-sizing: border-box; }
-  body {
-    font-family: 'Cascadia Code', 'Fira Code', Consolas, monospace;
-    font-size: 11px;
-    background: ${CRT.bg};
-    color: ${CRT.text};
-    padding: 8px;
-    line-height: 1.5;
-    user-select: none;
-  }
-  .header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding-bottom: 6px;
-    border-bottom: 1px solid ${CRT.border};
-    margin-bottom: 8px;
-  }
-  .title { font-size: 12px; font-weight: bold; color: ${CRT.green}; letter-spacing: 1px; }
-  .status { font-size: 11px; font-weight: bold; color: ${statusColor}; }
-  .group { margin-bottom: 10px; }
-  .group-label {
-    font-size: 9px;
-    color: ${CRT.gray};
-    letter-spacing: 1px;
-    padding: 2px 0 4px 0;
-    text-transform: uppercase;
-  }
-  .scene-row {
-    display: flex;
-    align-items: center;
-    gap: 4px;
-    padding: 3px 4px;
-    border-radius: 2px;
-    cursor: default;
-  }
-  .scene-row:hover { background: ${CRT.panel}; }
-  .scene-name { flex: 1; font-size: 11px; color: ${CRT.text}; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; cursor: pointer; }
-  .scene-name:hover { color: ${CRT.cyan}; }
-  button {
-    font-family: inherit;
-    font-size: 10px;
-    border: 1px solid ${CRT.border};
-    background: ${CRT.panel};
-    color: ${CRT.greenDim};
-    cursor: pointer;
-    padding: 1px 5px;
-    border-radius: 2px;
-    flex-shrink: 0;
-  }
-  button:hover { border-color: ${CRT.green}; color: ${CRT.green}; background: #0a1a0a; }
-  button:active { background: #0d2a0d; }
-  .btn-launch { color: ${CRT.green}; min-width: 22px; }
-  .btn-script { color: ${CRT.amber}; min-width: 22px; font-size: 9px; }
-  .btn-script.disabled { color: ${CRT.gray}; cursor: not-allowed; border-color: #111; }
-  .footer {
-    margin-top: 10px;
-    padding-top: 8px;
-    border-top: 1px solid ${CRT.border};
-    display: flex;
-    gap: 6px;
-    flex-wrap: wrap;
-  }
-  .btn-main {
-    flex: 1;
-    padding: 5px 8px;
-    font-size: 11px;
-    font-weight: bold;
-    text-align: center;
-    color: ${CRT.green};
-    border-color: ${CRT.greenDim};
-  }
-  .btn-kill {
-    flex: 1;
-    padding: 5px 8px;
-    font-size: 11px;
-    font-weight: bold;
-    color: ${CRT.red};
-    border-color: #551111;
-  }
-  .btn-validate {
-    flex: 1;
-    padding: 5px 8px;
-    font-size: 11px;
-    font-weight: bold;
-    color: ${CRT.cyan};
-    border-color: #115555;
-  }
-  .empty { color: ${CRT.gray}; text-align: center; margin: 20px 0; font-size: 10px; }
-  ::-webkit-scrollbar { width: 4px; }
-  ::-webkit-scrollbar-track { background: ${CRT.bg}; }
-  ::-webkit-scrollbar-thumb { background: ${CRT.border}; }
-</style></head><body>
-  <div class="header">
-    <span class="title">GODOT SCENES</span>
-    <span class="status">${statusIcon} ${statusText}</span>
-  </div>
-
-  ${scenesHtml}
-
-  <div class="footer">
-    <button class="btn-main" onclick="launchGame()" title="Launch full game from main scene">▶ Game</button>
-    <button class="btn-kill" onclick="kill()" title="Kill Godot process (Shift+F5)">■ Kill</button>
-    <button class="btn-validate" onclick="validate()" title="Run validate.bat (parse check)">✓ Validate</button>
-  </div>
-
-  <script>
-    const vscode = acquireVsCodeApi();
-    function launch(p) { vscode.postMessage({ type: 'launch', scenePath: p }); }
-    function launchGame() { vscode.postMessage({ type: 'launch-game' }); }
-    function kill() { vscode.postMessage({ type: 'kill' }); }
-    function validate() { vscode.postMessage({ type: 'validate' }); }
-    function openScript(rel) { vscode.postMessage({ type: 'open-script', scriptRel: rel }); }
-  </script>
-</body></html>`;
-}
-
-// ============================================================
-// GODOT SCENES PROVIDER
-// ============================================================
-
-class GodotScenesProvider {
-  constructor(root) {
-    this._root = root;
-    this._view = null;
-    this._groups = {};
-  }
-
-  async resolveWebviewView(webviewView) {
-    this._view = webviewView;
-    webviewView.webview.options = { enableScripts: true };
-
     webviewView.webview.onDidReceiveMessage(async (msg) => {
       switch (msg.type) {
-        case 'launch':
-          launchScene(msg.scenePath, this._root, () => this._update());
-          this._update();
+        case 'launch-bootstrap':
+          launchGameBootstrap(this._root, () => this._update());
+          setTimeout(() => this._update(), 1000);
           break;
-        case 'launch-game':
-          launchGame(this._root, () => this._update());
-          this._update();
+        case 'launch-scene':
+          launchScene(msg.scenePath, this._root, () => this._update());
+          setTimeout(() => this._update(), 1000);
           break;
         case 'kill':
           killGodot();
@@ -520,24 +226,62 @@ class GodotScenesProvider {
           break;
       }
     });
-
     await this._update();
   }
 
   async _update() {
     if (!this._view) return;
     this._groups = await discoverScenes(this._root);
-    this._view.webview.html = buildScenesHtml(this._groups, isGodotRunning());
+    const running = isGodotRunning();
+    const statusColor = running ? CRT.green : CRT.gray;
+    const statusIcon = running ? '\u25CF' : '\u25CB';
+
+    let scenesHtml = '';
+    const sorted = Object.keys(this._groups).sort();
+    for (const folder of sorted) {
+      const label = folder === 'scenes' ? 'scenes/' : folder + '/';
+      const items = this._groups[folder].map(s => {
+        const scriptBtn = s.scriptRel
+          ? `<button class="btn-amber" style="min-width:22px;font-size:9px;padding:1px 5px" onclick="openScript('${escapeHtml(s.scriptRel)}')" title="${escapeHtml(s.scriptRel)}">{}</button>`
+          : '';
+        return `<div style="display:flex;align-items:center;gap:4px;padding:2px 4px;border-radius:2px" onmouseover="this.style.background='${CRT.panel}'" onmouseout="this.style.background='none'">
+          <button style="min-width:22px;padding:1px 5px;color:${CRT.green}" onclick="launchScene('${escapeHtml(s.full)}')">\u25B6</button>
+          ${scriptBtn}
+          <span style="flex:1;font-size:11px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;cursor:pointer" title="${escapeHtml(s.rel)}">${escapeHtml(s.name)}</span>
+        </div>`;
+      }).join('');
+      scenesHtml += `<div class="section-label">${escapeHtml(label)}</div>${items}`;
+    }
+
+    this._view.webview.html = `<!DOCTYPE html><html><head><style>${CSS_BASE}</style></head><body>
+      <div class="header">
+        <span class="title">GAME CONTROL</span>
+        <span class="status" style="color:${statusColor}">${statusIcon} ${running ? 'RUNNING' : 'IDLE'}</span>
+      </div>
+      <div class="btn-row">
+        <button style="flex:1;padding:5px 8px;font-size:11px;font-weight:bold;color:${CRT.green};border-color:${CRT.greenDim}" onclick="launchBootstrap()">\u25B6 Bootstrap</button>
+        <button class="btn-danger" style="flex:1;padding:5px 8px;font-size:11px;font-weight:bold" onclick="kill()">\u25A0 Kill</button>
+        <button class="btn-cyan" style="flex:1;padding:5px 8px;font-size:11px;font-weight:bold" onclick="validate()">\u2713 Validate</button>
+      </div>
+      <div class="sep"></div>
+      ${scenesHtml || '<div class="empty">No scenes found</div>'}
+      <script>
+        const vscode = acquireVsCodeApi();
+        function launchBootstrap() { vscode.postMessage({type:'launch-bootstrap'}); }
+        function launchScene(p) { vscode.postMessage({type:'launch-scene', scenePath:p}); }
+        function kill() { vscode.postMessage({type:'kill'}); }
+        function validate() { vscode.postMessage({type:'validate'}); }
+        function openScript(r) { vscode.postMessage({type:'open-script', scriptRel:r}); }
+      </script>
+    </body></html>`;
   }
 
   async _openScript(scriptRel) {
     const full = path.join(this._root, scriptRel);
-    if (!fs.existsSync(full)) {
-      vscode.window.showWarningMessage(`Script not found: ${scriptRel}`);
-      return;
+    if (fs.existsSync(full)) {
+      const doc = await vscode.workspace.openTextDocument(full);
+      await vscode.window.showTextDocument(doc);
     }
-    const doc = await vscode.workspace.openTextDocument(full);
-    await vscode.window.showTextDocument(doc);
   }
 
   _runValidate() {
@@ -546,877 +290,661 @@ class GodotScenesProvider {
     terminal.show();
   }
 
-  refresh() {
-    this._update();
-  }
-}
-
-// ============================================================
-// AUTODEV DASHBOARD (unchanged from v4.0)
-// ============================================================
-
-function readAllStatus(statusDir) {
-  const session = readJsonSafe(path.join(statusDir, 'session.json'));
-  const validation = readJsonSafe(path.join(statusDir, 'validation.json'));
-  const workers = [];
-  try {
-    for (const f of fs.readdirSync(statusDir)) {
-      if (f.startsWith('worker_') && f.endsWith('.json')) {
-        const data = readJsonSafe(path.join(statusDir, f));
-        if (data) workers.push(data);
-      }
-    }
-  } catch { /* ignore */ }
-  workers.sort((a, b) => (a.name || '').localeCompare(b.name || ''));
-  return { session, workers, validation };
-}
-
-function timeAgo(isoString) {
-  if (!isoString) return '';
-  const diff = Date.now() - new Date(isoString).getTime();
-  if (diff < 0) return 'now';
-  const secs = Math.floor(diff / 1000);
-  if (secs < 60) return secs + 's';
-  const mins = Math.floor(secs / 60);
-  if (mins < 60) return mins + 'm';
-  return Math.floor(mins / 60) + 'h';
-}
-
-function stateColor(state) {
-  const map = { running: '#00ff41', done: '#00cc33', error: '#ff3333', paused: '#ffaa00', idle: '#557755', pending: '#888888' };
-  return map[state] || '#557755';
-}
-
-function stateIcon(state) {
-  const map = { running: '▶', done: '✓', error: '✗', paused: '⏸', idle: '○', pending: '○' };
-  return map[state] || '○';
-}
-
-function progressBar(done, total) {
-  if (!total || total <= 0) return '';
-  const filled = Math.round((done / total) * 10);
-  return '█'.repeat(filled) + '░'.repeat(10 - filled) + ' ' + done + '/' + total;
-}
-
-function renderSession(session) {
-  if (!session) {
-    return `<div class="section header">
-      <span class="title">AUTODEV</span>
-      <span class="state" style="color:${stateColor('idle')}">${stateIcon('idle')} IDLE</span>
-    </div>`;
-  }
-  const state = session.state || 'idle';
-  const obj = session.objective ? `<div class="objective">"${escapeHtml(session.objective)}"</div>` : '';
-  const cp2 = session.checkpoint ? `<div class="checkpoint">${escapeHtml(session.checkpoint)}</div>` : '';
-  return `<div class="section header">
-    <span class="title">AUTODEV</span>
-    <span class="state" style="color:${stateColor(state)}">${stateIcon(state)} ${state.toUpperCase()}</span>
-  </div>${obj}${cp2}`;
-}
-
-function renderWorker(w) {
-  const status = w.status || 'pending';
-  const done = w.progress ? (w.progress.done || 0) : 0;
-  const total = w.progress ? (w.progress.total || 0) : 0;
-  const bar = progressBar(done, total);
-  const task = w.current_task ? `<div class="task">→ ${escapeHtml(w.current_task)}</div>` : '';
-  const err = (status === 'error' && w.error) ? `<div class="error">⚠ ${escapeHtml(w.error)}</div>` : '';
-  const ago = w.updated_at ? `<span class="ago">${timeAgo(w.updated_at)}</span>` : '';
-  return `<div class="worker">
-    <div class="worker-header">
-      <span class="worker-name" style="color:${stateColor(status)}">${stateIcon(status)} ${escapeHtml(w.name || '?')}</span>
-      ${ago}
-    </div>
-    ${bar ? `<div class="progress">${bar}</div>` : ''}
-    ${task}${err}
-  </div>`;
-}
-
-function renderValidation(v) {
-  if (!v) return '';
-  const status = v.status || 'unknown';
-  const color = status === 'pass' ? '#00cc33' : status === 'fail' ? '#ff3333' : '#ffaa00';
-  const icon = status === 'pass' ? '✓' : status === 'fail' ? '✗' : '▶';
-  const details = (v.details && v.details.length > 0)
-    ? v.details.slice(0, 5).map(d => `<div class="val-detail">${escapeHtml(d)}</div>`).join('')
-    : '';
-  return `<div class="section validation">
-    <div class="val-header">
-      <span class="val-title">VALIDATION</span>
-      <span style="color:${color}">${icon} ${status.toUpperCase()}</span>
-    </div>
-    <div class="val-summary">${v.errors || 0} errors, ${v.warnings || 0} warnings</div>
-    ${details}
-  </div>`;
-}
-
-function renderLogs(workers) {
-  const allLogs = [];
-  for (const w of workers) {
-    if (w.log && Array.isArray(w.log)) {
-      for (const entry of w.log.slice(-10)) {
-        allLogs.push({ name: w.name, text: entry });
-      }
-    }
-  }
-  const recent = allLogs.slice(-15);
-  if (recent.length === 0) return '';
-  const lines = recent.map(l =>
-    `<div class="log-line"><span class="log-name">${escapeHtml(l.name)}</span> ${escapeHtml(l.text)}</div>`
-  ).join('');
-  return `<div class="section logs">
-    <div class="log-title">LOG</div>${lines}
-  </div>`;
-}
-
-function buildAutodevHtml(data) {
-  const { session, workers, validation } = data;
-  return `<!DOCTYPE html>
-<html><head><style>
-  * { margin: 0; padding: 0; box-sizing: border-box; }
-  body { font-family: 'Cascadia Code', 'Fira Code', Consolas, monospace; font-size: 11px; background: #0a0a0a; color: #c0c0c0; padding: 8px; line-height: 1.4; }
-  .section { margin-bottom: 10px; padding-bottom: 8px; border-bottom: 1px solid #1a2a1a; }
-  .header { display: flex; justify-content: space-between; align-items: center; }
-  .title { font-size: 13px; font-weight: bold; color: #00ff41; }
-  .state { font-size: 11px; font-weight: bold; }
-  .objective { color: #888; font-style: italic; margin: 4px 0; font-size: 10px; }
-  .checkpoint { color: #00e5ff; margin: 2px 0; font-size: 10px; }
-  .worker { margin: 6px 0; padding: 6px; background: #0d0d0d; border: 1px solid #1a2a1a; border-radius: 3px; }
-  .worker-header { display: flex; justify-content: space-between; align-items: center; }
-  .worker-name { font-weight: bold; font-size: 11px; }
-  .ago { color: #555; font-size: 9px; }
-  .progress { color: #00ff41; font-size: 10px; margin: 2px 0; letter-spacing: -1px; }
-  .task { color: #aaa; font-size: 10px; margin: 2px 0; }
-  .error { color: #ff3333; font-size: 10px; margin: 2px 0; }
-  .val-header { display: flex; justify-content: space-between; align-items: center; }
-  .val-title { font-weight: bold; color: #00e5ff; }
-  .val-summary { color: #aaa; font-size: 10px; margin: 2px 0; }
-  .val-detail { color: #888; font-size: 9px; margin: 1px 0; padding-left: 8px; }
-  .log-title { font-weight: bold; color: #555; margin-bottom: 4px; }
-  .log-line { font-size: 9px; color: #666; margin: 1px 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-  .log-name { color: #00ff41; font-weight: bold; }
-  .empty { color: #333; text-align: center; margin: 20px 0; font-size: 10px; }
-</style></head><body>
-  ${renderSession(session)}
-  ${workers.length > 0
-    ? `<div class="section">${workers.map(renderWorker).join('')}</div>`
-    : '<div class="empty">No workers active</div>'}
-  ${renderValidation(validation)}
-  ${renderLogs(workers)}
-</body></html>`;
-}
-
-class AutodevSidebarProvider {
-  constructor(statusDir) {
-    this._statusDir = statusDir;
-    this._view = null;
-  }
-
-  resolveWebviewView(webviewView) {
-    this._view = webviewView;
-    webviewView.webview.options = { enableScripts: false };
-    this._update();
-  }
-
-  _update() {
-    if (!this._view || !this._statusDir) return;
-    this._view.webview.html = buildAutodevHtml(readAllStatus(this._statusDir));
-  }
-
   refresh() { this._update(); }
 }
 
 // ============================================================
-// ============================================================
-// DATASET SECTION (injected into Training panel)
-// ============================================================
-
-function buildDatasetSection(stats, docsChanged) {
-  if (!stats) {
-    return `
-<div class="ds-section">
-  <div class="ds-title">DATASET</div>
-  <div class="ds-empty">Corpus non genere.</div>
-  <div class="btns" style="margin-top:6px">
-    <button onclick="send('rebuild_corpus')" title="Build from docs">🔄 Build corpus</button>
-  </div>
-</div>`;
-  }
-
-  const total    = stats.total_samples || 0;
-  const file     = stats.dataset_file  ? stats.dataset_file.replace(/.*[\\/]/, '') : '?';
-  const genAt    = stats.generated_at  ? stats.generated_at.slice(0, 16).replace('T', ' ') : '';
-  const bdown    = stats.breakdown     || {};
-
-  // Breakdown rows with mini bar
-  let rows = '';
-  for (const [src, count] of Object.entries(bdown)) {
-    const pct   = total > 0 ? count / total * 100 : 0;
-    const filled = Math.round(pct / 10);
-    const bar   = '\u2588'.repeat(filled) + '\u2591'.repeat(10 - filled);
-    rows += `<div class="ds-row">
-  <span class="ds-src">${escapeHtml(src)}</span>
-  <span class="ds-cnt">${count}</span>
-  <span class="ds-bar">${bar}</span>
-</div>`;
-  }
-
-  // Preview (first sample)
-  let previewHtml = '';
-  if (stats.preview && stats.preview.length > 0) {
-    const p = stats.preview[0];
-    const u = escapeHtml((p.user        || '').slice(0, 100));
-    const a = escapeHtml((p.assistant   || '').slice(0, 120));
-    previewHtml = `
-<div class="ds-preview">
-  <div class="ds-preview-role">User</div>
-  <div class="ds-preview-text">${u}…</div>
-  <div class="ds-preview-role" style="margin-top:4px">MERLIN</div>
-  <div class="ds-preview-text">${a}…</div>
-</div>`;
-  }
-
-  const changedBadge = docsChanged
-    ? `<span class="ds-badge">⚠ docs changed</span>`
-    : '';
-
-  return `
-<div class="ds-section">
-  <div class="ds-title">DATASET</div>
-  <div class="ds-meta">${escapeHtml(file)} &middot; ${total} samples &middot; <span style="color:#444">${genAt}</span></div>
-  <div class="btns" style="margin-top:5px;margin-bottom:4px">
-    <button onclick="send('rebuild_corpus')" title="Rebuild depuis les docs">🔄 Rebuild</button>
-    ${changedBadge}
-  </div>
-  <div class="ds-rows">${rows}</div>
-  ${previewHtml}
-</div>`;
-}
-
-// ============================================================
-// TRAINING CONTROL PANEL
+// PANEL 2 — LIVE VIEW
 // ============================================================
 
-function buildTrainingHtml(trainingState, progress, root, stats, docsChanged) {
-  const state   = (trainingState && trainingState.state) || 'idle';
-  const stopAt  = (trainingState && trainingState.stop_at) || '08:00';
-  const pid     = (trainingState && trainingState.pid) || 0;
-
-  // Progress metrics (from progress.json written by train_qwen_cpu.py)
-  const epoch    = (progress && progress.epoch)       || 0;
-  const totEp    = (progress && progress.total_epochs)|| 3;
-  const step     = (progress && progress.step)        || 0;
-  const totStep  = (progress && progress.total_steps) || 1;
-  const loss     = (progress && progress.loss)        || '--';
-  const pct      = (progress && progress.pct)         || 0;
-  const etaSec   = (progress && progress.eta_sec)     || 0;
-  const ts       = (progress && progress.timestamp)   || '';
-  const reason   = (progress && progress.reason)      || '';
-
-  const stateColors = { running: '#00ff41', paused: '#ffb300', stopped: '#ff3333',
-                        error: '#ff3333', starting: '#00e5ff', idle: '#557755' };
-  const stateIcons  = { running: '▶', paused: '⏸', stopped: '■', error: '✗', starting: '…', idle: '○' };
-  const color = stateColors[state] || '#557755';
-  const icon  = stateIcons[state]  || '○';
-
-  // Progress bar (20 chars)
-  const filled = Math.min(20, Math.round(pct / 5));
-  const bar    = '█'.repeat(filled) + '░'.repeat(20 - filled);
-
-  // ETA formatter
-  function fmtEta(s) {
-    if (!s || s <= 0) return '--';
-    const h = Math.floor(s / 3600), m = Math.floor((s % 3600) / 60);
-    return h > 0 ? `${h}h${String(m).padStart(2,'0')}min` : `${m}min`;
-  }
-
-  // Disable buttons based on state
-  const isRunning = (state === 'running' || state === 'starting');
-  const startDis  = isRunning  ? 'disabled' : '';
-  const stopDis   = !isRunning ? 'disabled' : '';
-  const pauseDis  = !isRunning ? 'disabled' : '';
-  const resumeDis = state !== 'paused' ? 'disabled' : '';
-
-  function psCmd(action) {
-    if (!root) return '';
-    const script = path.join(root, 'tools', 'lora', 'train_control.ps1').replace(/\\/g, '\\\\');
-    return `powershell -ExecutionPolicy Bypass -File "${script}" -Action ${action} -StopAt ${stopAt}`;
-  }
-
-  return `<!DOCTYPE html><html><head><style>
-  * { margin:0; padding:0; box-sizing:border-box; }
-  body { font-family:'Cascadia Code','Fira Code',Consolas,monospace; font-size:11px;
-         background:#050a05; color:#c0c0c0; padding:8px; line-height:1.5; }
-  .header { display:flex; justify-content:space-between; align-items:center;
-            border-bottom:1px solid #1a2a1a; padding-bottom:6px; margin-bottom:8px; }
-  .title  { font-size:13px; font-weight:bold; color:#00ff41; }
-  .state  { font-size:11px; font-weight:bold; color:${color}; }
-  .metric { display:flex; justify-content:space-between; margin:2px 0; }
-  .label  { color:#557755; }
-  .value  { color:#c0c0c0; }
-  .bar    { color:#00ff41; letter-spacing:-0.5px; margin:4px 0; font-size:10px; }
-  .pct    { color:#00e5ff; }
-  .btns   { display:flex; gap:4px; margin-top:10px; flex-wrap:wrap; }
-  button  { background:#0d150d; border:1px solid #1a3a1a; color:#00ff41;
-            font-family:inherit; font-size:10px; padding:4px 8px; cursor:pointer;
-            border-radius:2px; }
-  button:hover:not(:disabled) { background:#1a3a1a; border-color:#00ff41; }
-  button:disabled { opacity:0.3; cursor:not-allowed; }
-  .stop-btn { color:#ff5555; border-color:#3a1a1a; }
-  .stop-btn:hover:not(:disabled) { background:#3a1a1a; border-color:#ff5555; }
-  .stop-at { margin-top:8px; display:flex; align-items:center; gap:6px; }
-  .stop-at label { color:#557755; font-size:10px; }
-  .stop-at input { background:#0d0d0d; border:1px solid #1a3a1a; color:#c0c0c0;
-                   font-family:inherit; font-size:11px; padding:2px 4px; width:60px; }
-  .hint { color:#333; font-size:9px; margin-top:6px; }
-  .sched { margin-top:8px; font-size:9px; color:#557755; border-top:1px solid #1a2a1a; padding-top:6px;}
-  .reason { color:#ffb300; font-size:9px; margin-top:4px; }
-  .ds-section { margin-top:10px; border-top:1px solid #1a2a1a; padding-top:8px; }
-  .ds-title   { font-size:11px; font-weight:bold; color:#00ff41; margin-bottom:4px; letter-spacing:1px; }
-  .ds-meta    { font-size:9px; color:#557755; margin-bottom:4px; }
-  .ds-empty   { font-size:9px; color:#444; }
-  .ds-rows    { margin:4px 0; }
-  .ds-row     { display:grid; grid-template-columns:1fr auto auto; gap:4px; margin:1px 0; font-size:9px; }
-  .ds-src     { color:#8aaa8a; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
-  .ds-cnt     { color:#c0c0c0; text-align:right; min-width:32px; }
-  .ds-bar     { color:#00ff41; font-size:8px; letter-spacing:-1px; }
-  .ds-preview { margin-top:6px; border:1px solid #1a2a1a; padding:4px 5px; border-radius:2px; }
-  .ds-preview-role { font-size:8px; color:#557755; margin-bottom:1px; }
-  .ds-preview-text { font-size:9px; color:#9ab09a; word-break:break-word; }
-  .ds-badge   { display:inline-block; background:#332200; border:1px solid #664400;
-                color:#ffb300; font-size:9px; padding:1px 5px; border-radius:2px; }
-</style></head><body>
-<div class="header">
-  <span class="title">TRAINING</span>
-  <span class="state">${icon} ${state.toUpperCase()}${pid ? ' [' + pid + ']' : ''}</span>
-</div>
-<div class="metric"><span class="label">Epoch</span><span class="value">${epoch}/${totEp}</span></div>
-<div class="metric"><span class="label">Step</span><span class="value">${step}/${totStep}</span></div>
-<div class="bar">${bar} <span class="pct">${pct.toFixed(1)}%</span></div>
-<div class="metric"><span class="label">Loss</span><span class="value">${loss}</span></div>
-<div class="metric"><span class="label">ETA</span><span class="value">${fmtEta(etaSec)}</span></div>
-${ts ? `<div class="metric"><span class="label">Updated</span><span class="value" style="color:#444">${ts.slice(11)}</span></div>` : ''}
-${reason ? `<div class="reason">↳ ${escapeHtml(reason)}</div>` : ''}
-
-<div class="btns">
-  <button id="btnStart" ${startDis} onclick="send('start')">▶ Start</button>
-  <button id="btnPause" ${pauseDis} onclick="send('pause')">⏸ Pause</button>
-  <button id="btnResume" ${resumeDis} onclick="send('resume')">▶ Resume</button>
-  <button class="stop-btn" id="btnStop" ${stopDis} onclick="send('stop')">■ Stop</button>
-</div>
-<div class="stop-at">
-  <label>Stop-at:</label>
-  <input id="stopAt" type="text" value="${escapeHtml(stopAt)}" placeholder="08:00"
-         onchange="send('set_stop_at', this.value)" />
-  <button onclick="send('schedule')" title="Installer scheduler 00h00 nightly">📅</button>
-  <button onclick="send('status')" title="Voir status complet">ℹ</button>
-</div>
-<div class="hint">Creer training_stop.flag pour arreter proprement</div>
-<div class="sched">📅 Scheduler: <span id="schedState">Verif...</span></div>
-
-${buildDatasetSection(stats, docsChanged)}
-
-<script>
-  const vscode = acquireVsCodeApi();
-  function send(action, value) { vscode.postMessage({ type: action, value: value || '' }); }
-  // Check scheduler periodically via message reply
-  vscode.postMessage({ type: 'check_scheduler' });
-  window.addEventListener('message', e => {
-    const msg = e.data;
-    if (msg.type === 'scheduler_state') {
-      document.getElementById('schedState').textContent = msg.active ? 'ACTIF (00h00 daily)' : 'inactif';
-      document.getElementById('schedState').style.color = msg.active ? '#00ff41' : '#555';
-    }
-  });
-</script>
-</body></html>`;
-}
-
-class TrainingWebviewProvider {
-  constructor(root) {
-    this._root        = root;
-    this._view        = null;
-    this._stopAt      = '08:00';
-    this._schedTimer  = null;
-    this._docsChanged = false;
-  }
+class LiveViewProvider {
+  constructor(root) { this._root = root; this._view = null; this._interval = null; }
 
   resolveWebviewView(webviewView) {
     this._view = webviewView;
     webviewView.webview.options = { enableScripts: true };
-
     webviewView.webview.onDidReceiveMessage((msg) => {
-      switch (msg.type) {
-        case 'start':
-          this._runPS1(`-Action Start -StopAt ${this._stopAt} -Resume`);
-          setTimeout(() => this._update(), 3000);
-          break;
-        case 'stop':
-          this._runPS1('-Action Stop');
-          setTimeout(() => this._update(), 2000);
-          break;
-        case 'pause':
-          this._runPS1('-Action Pause');
-          setTimeout(() => this._update(), 1000);
-          break;
-        case 'resume':
-          this._runPS1('-Action Resume');
-          setTimeout(() => this._update(), 1000);
-          break;
-        case 'schedule':
-          this._runPS1(`-Action Schedule -StopAt ${this._stopAt}`);
-          vscode.window.showInformationMessage('MERLIN Training: scheduler 00h00 installe!');
-          break;
-        case 'status':
-          const terminal = vscode.window.createTerminal('Training Status');
-          terminal.sendText(`cd "${this._root}" && powershell -ExecutionPolicy Bypass -File tools\\lora\\train_control.ps1 -Action Status`);
-          terminal.show();
-          break;
-        case 'set_stop_at':
-          if (msg.value && /^\d{2}:\d{2}$/.test(msg.value)) {
-            this._stopAt = msg.value;
-          }
-          break;
-        case 'check_scheduler':
-          this._checkScheduler();
-          break;
-        case 'rebuild_corpus':
-          this._rebuildCorpus();
-          break;
-      }
+      if (msg.type === 'screenshot') sendGameCommand(this._root, 'screenshot');
+      if (msg.type === 'refresh') this._update();
     });
-
+    this._interval = setInterval(() => this._update(), 3000);
     this._update();
   }
 
-  _runPS1(args) {
-    if (!this._root) return;
-    const script = path.join(this._root, 'tools', 'lora', 'train_control.ps1');
-    const cmd = `powershell -ExecutionPolicy Bypass -File "${script}" ${args}`;
-    cp.exec(cmd, { cwd: this._root }, (err) => {
-      if (err && err.code !== 0) {
-        vscode.window.showErrorMessage(`Training control error: ${err.message.slice(0, 100)}`);
+  _update() {
+    if (!this._view) return;
+    const dir = capturesDir(this._root);
+    const screenshotPath = path.join(dir, 'latest.png');
+    const state = readJsonSafe(path.join(dir, 'state.json'));
+    const perf = readJsonSafe(path.join(dir, 'perf.json'));
+    const log = readJsonSafe(path.join(dir, 'log.json')) || [];
+
+    // Screenshot base64
+    let screenshotSrc = '';
+    const age = fileAge(screenshotPath);
+    if (age < 300000) { // 5 min max
+      try {
+        const buf = fs.readFileSync(screenshotPath);
+        screenshotSrc = 'data:image/png;base64,' + buf.toString('base64');
+      } catch { /* ignore */ }
+    }
+
+    const running = isGodotRunning();
+    const stateAge = state ? timeAgo(state.datetime || state.timestamp * 1000) : '';
+
+    // State table
+    const run = state ? state.run : null;
+    let stateRows = '';
+    if (run) {
+      const lifeColor = (run.life || 0) < 30 ? CRT.red : (run.life || 0) < 60 ? CRT.amber : CRT.green;
+      const aspects = run.aspects || {};
+      const aspStr = `C:${aspects.Corps || 0} A:${aspects.Ame || 0} M:${aspects.Monde || 0}`;
+      stateRows = [
+        ['Phase', run.phase || '-', ''],
+        ['Biome', (run.biome || '-').replace('foret_', ''), ''],
+        ['Life', `${run.life || 0}/100`, lifeColor],
+        ['Souffle', `${run.souffle || 0}/7`, ''],
+        ['Aspects', aspStr, ''],
+        ['Card #', String(run.cards_played || 0), ''],
+        ['Mission', run.mission_type ? `${run.mission_progress}/${run.mission_total}` : '-', ''],
+      ].map(([k, v, c]) => `<tr><td class="k">${k}</td><td class="${c ? '' : 'v'}" style="${c ? 'color:' + c : ''}">${escapeHtml(v)}</td></tr>`).join('');
+    }
+
+    // Perf row
+    let perfHtml = '';
+    if (perf) {
+      const fpsColor = (perf.fps_avg || 0) < 30 ? CRT.red : (perf.fps_avg || 0) < 50 ? CRT.amber : CRT.green;
+      const genMs = perf.card_gen_p50_ms || 0;
+      const genColor = genMs > 15000 ? CRT.red : genMs > 10000 ? CRT.amber : CRT.green;
+      perfHtml = `<div class="section-label">Performance</div><table>
+        <tr><td class="k">FPS</td><td style="color:${fpsColor}">${(perf.fps_avg || 0).toFixed(0)}</td></tr>
+        <tr><td class="k">Card gen p50</td><td style="color:${genColor}">${genMs > 0 ? (genMs / 1000).toFixed(1) + 's' : '-'}</td></tr>
+        <tr><td class="k">Cards gen</td><td class="v">${perf.cards_generated || 0}</td></tr>
+        <tr><td class="k">Fallback</td><td class="v">${((perf.fallback_rate || 0) * 100).toFixed(0)}%</td></tr>
+      </table>`;
+    }
+
+    // Log tail
+    const logLines = (Array.isArray(log) ? log : []).slice(-8);
+    const logHtml = logLines.length > 0
+      ? logLines.map(l => {
+          let colored = escapeHtml(String(l));
+          colored = colored.replace(/\[GameObserver\]/g, `<span style="color:${CRT.cyan}">[GameObserver]</span>`);
+          colored = colored.replace(/\[TRIADE\]/g, `<span style="color:${CRT.amber}">[TRIADE]</span>`);
+          colored = colored.replace(/\[MerlinStore\]/g, `<span style="color:${CRT.green}">[MerlinStore]</span>`);
+          return `<div style="font-size:9px;color:${CRT.gray};white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin:1px 0">${colored}</div>`;
+        }).join('')
+      : '<div class="empty">No logs yet</div>';
+
+    this._view.webview.html = `<!DOCTYPE html><html><head><style>${CSS_BASE}
+      .screenshot { width:100%; border:1px solid ${CRT.border}; display:block; margin-bottom:8px; image-rendering:pixelated; }
+      .no-screenshot { background:${CRT.panel}; border:1px dashed ${CRT.border}; color:${CRT.gray};
+                       text-align:center; padding:20px 8px; font-size:10px; margin-bottom:8px; }
+    </style></head><body>
+      <div class="header">
+        <span class="title">LIVE VIEW</span>
+        <span class="status" style="color:${running ? CRT.green : CRT.gray}">${running ? '\u25CF LIVE' : '\u25CB IDLE'}</span>
+      </div>
+      ${screenshotSrc
+        ? `<img class="screenshot" src="${screenshotSrc}" title="Game screenshot">`
+        : `<div class="no-screenshot">No screenshot available</div>`}
+      ${stateAge ? `<div style="font-size:9px;color:${CRT.gray};margin-bottom:4px">State: ${stateAge}</div>` : ''}
+      ${stateRows ? `<div class="section-label">Run State</div><table>${stateRows}</table>` : ''}
+      ${perfHtml}
+      <div class="sep"></div>
+      <div class="section-label">Log</div>
+      ${logHtml}
+      <div class="btn-row" style="margin-top:6px">
+        <button class="btn-amber" onclick="capture()">Capture</button>
+        <button onclick="refresh()">Refresh</button>
+      </div>
+      <script>
+        const vscode = acquireVsCodeApi();
+        function capture() { vscode.postMessage({type:'screenshot'}); }
+        function refresh() { vscode.postMessage({type:'refresh'}); }
+      </script>
+    </body></html>`;
+  }
+
+  dispose() { if (this._interval) { clearInterval(this._interval); this._interval = null; } }
+}
+
+// ============================================================
+// PANEL 3 — COMMANDS
+// ============================================================
+
+class CommandsProvider {
+  constructor(root) { this._root = root; this._view = null; this._interval = null; }
+
+  resolveWebviewView(webviewView) {
+    this._view = webviewView;
+    webviewView.webview.options = { enableScripts: true };
+    webviewView.webview.onDidReceiveMessage((msg) => {
+      if (msg.type === 'cmd') {
+        sendGameCommand(this._root, msg.action, msg.params || {});
+        vscode.window.setStatusBarMessage(`Sent: ${msg.action}`, 2000);
       }
     });
-  }
-
-  _checkScheduler() {
-    cp.exec('powershell -Command "if (Get-ScheduledTask -TaskName MERLIN_Training_Nightly -EA SilentlyContinue) { exit 0 } else { exit 1 }"',
-      (err) => {
-        if (this._view) {
-          this._view.webview.postMessage({ type: 'scheduler_state', active: !err || err.code === 0 });
-        }
-      }
-    );
-  }
-
-  _rebuildCorpus() {
-    if (!this._root) return;
-    const py  = path.join(this._root, 'tools', 'lora', 'build_doc_corpus.py');
-    const out = path.join(this._root, 'data', 'ai', 'training');
-    vscode.window.showInformationMessage('MERLIN: rebuilding corpus from docs…');
-    cp.exec(`python "${py}" --merge-v8 --output-dir "${out}"`,
-      { cwd: this._root, timeout: 180000 },
-      (err) => {
-        if (err) {
-          vscode.window.showErrorMessage(`Corpus rebuild failed: ${(err.message || '').slice(0, 120)}`);
-        } else {
-          this._docsChanged = false;
-          vscode.window.showInformationMessage('MERLIN corpus rebuilt successfully!');
-          this._update();
-        }
-      }
-    );
+    this._interval = setInterval(() => this._update(), 5000);
+    this._update();
   }
 
   _update() {
-    if (!this._view || !this._root) return;
-    const stateFile    = path.join(this._root, 'tools', 'lora', 'status', 'training_state.json');
-    const progressFile = path.join(this._root, 'merlin-lora-cpu-output', 'progress.json');
-    const statsFile    = path.join(this._root, 'data', 'ai', 'training', 'corpus_stats.json');
-    const ts    = readJsonSafe(stateFile);
-    const pr    = readJsonSafe(progressFile);
-    const stats = readJsonSafe(statsFile);
-    // Check if any source doc changed since corpus was generated
-    if (stats && stats.generated_at && stats.sources) {
-      for (const src of stats.sources) {
-        try {
-          const mtime = fs.statSync(path.join(this._root, src.path)).mtime.toISOString();
-          if (mtime > stats.generated_at) { this._docsChanged = true; break; }
-        } catch { /* file missing or inaccessible */ }
+    if (!this._view) return;
+    const result = readCommandResult(this._root);
+    const resultHtml = result
+      ? `<div style="font-size:9px;color:${result.status === 'ok' ? CRT.green : CRT.red};margin-top:4px">
+           Last: ${escapeHtml(result.id)} = ${result.status}</div>`
+      : '';
+
+    this._view.webview.html = `<!DOCTYPE html><html><head><style>${CSS_BASE}
+      .cmd-grid { display:grid; grid-template-columns:1fr 1fr; gap:4px; }
+      .cmd-btn { padding:6px 4px; font-size:10px; text-align:center; width:100%; }
+    </style></head><body>
+      <div class="header">
+        <span class="title">COMMANDS</span>
+        <span class="status" style="color:${CRT.cyan}">GameObserver</span>
+      </div>
+
+      <div class="section-label">Capture</div>
+      <div class="cmd-grid">
+        <button class="cmd-btn btn-amber" onclick="cmd('screenshot')">Screenshot</button>
+        <button class="cmd-btn btn-magenta" onclick="cmd('burst_screenshot',{count:15,interval:0.12})">Burst x15</button>
+      </div>
+
+      <div class="section-label" style="margin-top:8px">Play</div>
+      <div class="cmd-grid">
+        <button class="cmd-btn" onclick="cmd('click_option',{option:1})">Option 1 (L)</button>
+        <button class="cmd-btn" onclick="cmd('click_option',{option:2})">Option 2 (C)</button>
+        <button class="cmd-btn" onclick="cmd('click_option',{option:3})">Option 3 (R)</button>
+        <button class="cmd-btn btn-cyan" onclick="cmd('simulate_click',{x:400,y:300})">Click Center</button>
+      </div>
+
+      <div class="section-label" style="margin-top:8px">Keys</div>
+      <div class="cmd-grid">
+        <button class="cmd-btn" onclick="cmd('simulate_key',{key:'enter'})">Enter</button>
+        <button class="cmd-btn" onclick="cmd('simulate_key',{key:'escape'})">Escape</button>
+        <button class="cmd-btn" onclick="cmd('simulate_key',{key:'space'})">Space</button>
+        <button class="cmd-btn" onclick="cmd('simulate_click',{x:400,y:500})">Click Bottom</button>
+      </div>
+
+      <div class="section-label" style="margin-top:8px">Inspect</div>
+      <div class="cmd-grid">
+        <button class="cmd-btn btn-cyan" onclick="cmd('list_buttons')">List Buttons</button>
+        <button class="cmd-btn btn-cyan" onclick="cmd('get_tree_snapshot')">Scene Tree</button>
+        <button class="cmd-btn" onclick="cmd('get_state')">Force State</button>
+        <button class="cmd-btn" onclick="cmd('mark_card_gen_start')">Mark Gen Start</button>
+      </div>
+
+      ${resultHtml}
+      <script>
+        const vscode = acquireVsCodeApi();
+        function cmd(action, params) { vscode.postMessage({type:'cmd', action, params: params||{}}); }
+      </script>
+    </body></html>`;
+  }
+
+  dispose() { if (this._interval) { clearInterval(this._interval); this._interval = null; } }
+}
+
+// ============================================================
+// PANEL 4 — DIAGNOSTICS
+// ============================================================
+
+class DiagnosticsProvider {
+  constructor(root) { this._root = root; this._view = null; this._interval = null; }
+
+  resolveWebviewView(webviewView) {
+    this._view = webviewView;
+    webviewView.webview.options = { enableScripts: false };
+    this._interval = setInterval(() => this._update(), 5000);
+    this._update();
+  }
+
+  _update() {
+    if (!this._view) return;
+    const dir = capturesDir(this._root);
+    const state = readJsonSafe(path.join(dir, 'state.json'));
+    const perf = readJsonSafe(path.join(dir, 'perf.json'));
+    const screenshotExists = fs.existsSync(path.join(dir, 'latest.png')) && fileAge(path.join(dir, 'latest.png')) < 60000;
+
+    const run = state ? state.run : null;
+
+    // Build checklist evaluations from live data
+    const checks = [];
+
+    // Visual (auto-evaluate what we can)
+    checks.push({ cat: 'VISUAL', name: 'Screenshot recent', pass: screenshotExists });
+    checks.push({ cat: 'VISUAL', name: 'Game running', pass: isGodotRunning() });
+
+    // Gameplay
+    if (run) {
+      checks.push({ cat: 'GAMEPLAY', name: 'Aspects changing', pass: run.aspects && (run.aspects.Corps !== 0 || run.aspects.Ame !== 0 || run.aspects.Monde !== 0) });
+      checks.push({ cat: 'GAMEPLAY', name: 'Life < 100', pass: (run.life || 100) < 100 || (run.cards_played || 0) === 0 });
+      checks.push({ cat: 'GAMEPLAY', name: 'Cards played > 0', pass: (run.cards_played || 0) > 0 });
+      checks.push({ cat: 'GAMEPLAY', name: 'Souffle tracking', pass: run.souffle !== undefined });
+      checks.push({ cat: 'GAMEPLAY', name: 'Phase valid', pass: ['card', 'minigame', 'narrator', 'hub', 'transition', 'intro'].includes(run.phase) });
+    }
+
+    // Performance
+    if (perf) {
+      checks.push({ cat: 'PERF', name: 'FPS > 30', pass: (perf.fps_avg || 0) > 30 });
+      const p50 = perf.card_gen_p50_ms || 0;
+      checks.push({ cat: 'PERF', name: 'Card gen p50 < 10s', pass: p50 === 0 || p50 < 10000 });
+      checks.push({ cat: 'PERF', name: 'Fallback < 10%', pass: (perf.fallback_rate || 0) < 0.1 });
+    }
+
+    // Group by category
+    const cats = {};
+    for (const c of checks) {
+      if (!cats[c.cat]) cats[c.cat] = [];
+      cats[c.cat].push(c);
+    }
+
+    let checksHtml = '';
+    for (const [cat, items] of Object.entries(cats)) {
+      const passed = items.filter(i => i.pass).length;
+      const total = items.length;
+      const pct = Math.round(passed / total * 100);
+      const color = pct === 100 ? CRT.green : pct >= 60 ? CRT.amber : CRT.red;
+      checksHtml += `<div class="section-label">${cat} <span style="color:${color}">${passed}/${total}</span></div>`;
+      for (const item of items) {
+        const icon = item.pass ? `<span style="color:${CRT.green}">\u2713</span>` : `<span style="color:${CRT.red}">\u2717</span>`;
+        checksHtml += `<div style="font-size:10px;margin:2px 0;display:flex;gap:6px">${icon} <span>${escapeHtml(item.name)}</span></div>`;
       }
     }
-    this._view.webview.html = buildTrainingHtml(ts, pr, this._root, stats, this._docsChanged);
-    this._checkScheduler();
+
+    // Known issues
+    const issues = [];
+    if (run && run.cards_played > 2 && run.aspects && run.aspects.Corps === 0 && run.aspects.Ame === 0 && run.aspects.Monde === 0) {
+      issues.push({ sev: 'HIGH', text: 'Aspects stuck at 0/0/0 after ' + run.cards_played + ' cards' });
+    }
+    if (perf && perf.card_gen_p50_ms > 15000) {
+      issues.push({ sev: 'HIGH', text: 'Card gen > 15s (p50: ' + (perf.card_gen_p50_ms / 1000).toFixed(1) + 's)' });
+    }
+    if (perf && perf.fps_avg && perf.fps_avg < 20) {
+      issues.push({ sev: 'MEDIUM', text: 'Low FPS: ' + perf.fps_avg.toFixed(0) });
+    }
+
+    const issuesHtml = issues.length > 0
+      ? issues.map(i => {
+          const sevColor = i.sev === 'CRITICAL' ? CRT.red : i.sev === 'HIGH' ? CRT.amber : CRT.cyan;
+          return `<div style="font-size:10px;margin:2px 0"><span style="color:${sevColor};font-weight:bold">[${i.sev}]</span> ${escapeHtml(i.text)}</div>`;
+        }).join('')
+      : '<div class="empty">No active issues</div>';
+
+    // Overall score
+    const totalPassed = checks.filter(c => c.pass).length;
+    const totalChecks = checks.length;
+    const overallPct = totalChecks > 0 ? Math.round(totalPassed / totalChecks * 100) : 0;
+    const overallColor = overallPct === 100 ? CRT.green : overallPct >= 70 ? CRT.amber : CRT.red;
+
+    this._view.webview.html = `<!DOCTYPE html><html><head><style>${CSS_BASE}</style></head><body>
+      <div class="header">
+        <span class="title">DIAGNOSTICS</span>
+        <span class="status" style="color:${overallColor}">${overallPct}%</span>
+      </div>
+      <div style="margin-bottom:8px;color:${overallColor};font-size:10px;letter-spacing:-0.5px">${progressBar(overallPct, 20)} ${totalPassed}/${totalChecks}</div>
+      ${checksHtml}
+      <div class="sep"></div>
+      <div class="section-label">Active Issues</div>
+      ${issuesHtml}
+    </body></html>`;
+  }
+
+  dispose() { if (this._interval) { clearInterval(this._interval); this._interval = null; } }
+}
+
+// ============================================================
+// PANEL 5 — OVERNIGHT
+// ============================================================
+
+class OvernightProvider {
+  constructor(root) { this._root = root; this._view = null; this._interval = null; }
+
+  resolveWebviewView(webviewView) {
+    this._view = webviewView;
+    webviewView.webview.options = { enableScripts: true };
+    webviewView.webview.onDidReceiveMessage((msg) => {
+      if (msg.type === 'open-report') this._openReport();
+    });
+    this._interval = setInterval(() => this._update(), 10000);
+    this._update();
+  }
+
+  _update() {
+    if (!this._view) return;
+    const dir = capturesDir(this._root);
+    const reportPath = path.join(dir, 'overnight_report.json');
+    const report = readJsonSafe(reportPath);
+
+    if (!report || !report.cycles || report.cycles.length === 0) {
+      this._view.webview.html = `<!DOCTYPE html><html><head><style>${CSS_BASE}</style></head><body>
+        <div class="header">
+          <span class="title">OVERNIGHT</span>
+          <span class="status" style="color:${CRT.gray}">\u25CB STANDBY</span>
+        </div>
+        <div class="empty" style="margin-top:20px">No overnight session active.<br><br>
+          Trigger overnight mode in Claude Code:<br>
+          <span style="color:${CRT.cyan}">"overnight"</span> or <span style="color:${CRT.cyan}">"mode nuit"</span>
+        </div>
+        <div style="margin-top:12px;font-size:9px;color:${CRT.gray}">
+          Parameters: 12 cycles, 8 cards/cycle, ~7h max<br>
+          Report: overnight_report.json
+        </div>
+      </body></html>`;
+      return;
+    }
+
+    const cycles = report.cycles;
+    const latest = cycles[cycles.length - 1];
+    const totalCards = cycles.reduce((s, c) => s + (c.cards_played || 0), 0);
+    const totalIssues = cycles.reduce((s, c) => {
+      const f = c.issues_found || {};
+      return s + (f.critical || 0) + (f.high || 0) + (f.medium || 0) + (f.low || 0);
+    }, 0);
+    const totalFixed = cycles.reduce((s, c) => s + (c.issues_fixed || []).length, 0);
+
+    const isActive = latest && !['time_limit', 'all_pass', 'crash_unrecoverable', 'context_limit'].includes(report.exit_reason);
+    const statusColor = isActive ? CRT.green : CRT.amber;
+    const statusText = isActive ? 'RUNNING' : (report.exit_reason || 'DONE');
+
+    // Cycle progress
+    const cyclePct = Math.round(cycles.length / (report.cycle_target || 12) * 100);
+
+    // Checklist progression table
+    let progressTable = '';
+    if (cycles.length > 0) {
+      progressTable = '<div class="section-label" style="margin-top:8px">Checklist Progression</div>';
+      progressTable += '<table><tr><td class="k">Cycle</td><td class="k">Visual</td><td class="k">UX</td><td class="k">Game</td><td class="k">Perf</td></tr>';
+      for (const c of cycles.slice(-6)) {
+        const sc = c.checklist_scores || {};
+        progressTable += `<tr>
+          <td class="v">#${c.cycle || '?'}</td>
+          <td class="v">${sc.visual || '-'}</td>
+          <td class="v">${sc.ux || '-'}</td>
+          <td class="v">${sc.gameplay || '-'}</td>
+          <td class="v">${sc.perf || '-'}</td>
+        </tr>`;
+      }
+      progressTable += '</table>';
+    }
+
+    // Recent fixes
+    let fixesHtml = '';
+    const allFixes = cycles.flatMap(c => (c.issues_fixed || []).map(f => ({ ...f, cycle: c.cycle })));
+    if (allFixes.length > 0) {
+      fixesHtml = '<div class="section-label" style="margin-top:8px">Fixes Applied</div>';
+      for (const f of allFixes.slice(-5)) {
+        const color = f.status === 'VERIFIED' ? CRT.green : CRT.amber;
+        fixesHtml += `<div style="font-size:9px;margin:2px 0">
+          <span style="color:${color}">\u2713</span> #${f.cycle} ${escapeHtml(f.description || f.file || '?')}
+        </div>`;
+      }
+    }
+
+    this._view.webview.html = `<!DOCTYPE html><html><head><style>${CSS_BASE}</style></head><body>
+      <div class="header">
+        <span class="title">OVERNIGHT</span>
+        <span class="status" style="color:${statusColor}">${statusText}</span>
+      </div>
+
+      <div style="margin-bottom:6px;color:${CRT.green};font-size:10px;letter-spacing:-0.5px">${progressBar(cyclePct, 20)} Cycle ${cycles.length}/${report.cycle_target || 12}</div>
+
+      <table>
+        <tr><td class="k">Cards played</td><td class="v">${totalCards}</td></tr>
+        <tr><td class="k">Issues found</td><td class="v">${totalIssues}</td></tr>
+        <tr><td class="k">Issues fixed</td><td style="color:${CRT.green}">${totalFixed}</td></tr>
+        <tr><td class="k">Duration</td><td class="v">${report.duration || '-'}</td></tr>
+      </table>
+
+      ${progressTable}
+      ${fixesHtml}
+
+      <div class="sep"></div>
+      <button onclick="openReport()" style="width:100%;padding:5px;font-size:10px">Open Full Report</button>
+      <script>
+        const vscode = acquireVsCodeApi();
+        function openReport() { vscode.postMessage({type:'open-report'}); }
+      </script>
+    </body></html>`;
+  }
+
+  async _openReport() {
+    const mdPath = path.join(capturesDir(this._root), 'overnight_report.md');
+    const jsonPath = path.join(capturesDir(this._root), 'overnight_report.json');
+    const target = fs.existsSync(mdPath) ? mdPath : jsonPath;
+    if (fs.existsSync(target)) {
+      const doc = await vscode.workspace.openTextDocument(target);
+      await vscode.window.showTextDocument(doc);
+    } else {
+      vscode.window.showWarningMessage('No overnight report found');
+    }
+  }
+
+  dispose() { if (this._interval) { clearInterval(this._interval); this._interval = null; } }
+}
+
+// ============================================================
+// PANEL 6: STUDIO (Autonomous Game Studio dashboard)
+// ============================================================
+
+class StudioProvider {
+  constructor(root) { this._root = root; this._view = null; this._interval = null; }
+  resolveWebviewView(view) {
+    this._view = view;
+    view.webview.options = { enableScripts: true };
+    view.webview.onDidReceiveMessage(msg => {
+      if (msg.type === 'open-report' && msg.file) {
+        const fp = path.join(capturesDir(this._root), msg.file);
+        if (fs.existsSync(fp)) {
+          vscode.workspace.openTextDocument(fp).then(d => vscode.window.showTextDocument(d));
+        }
+      }
+    });
+    this._update();
+    this._interval = setInterval(() => this._update(), 10000);
+    view.onDidDispose(() => { if (this._interval) clearInterval(this._interval); });
+  }
+
+  _update() {
+    if (!this._view) return;
+    const dir = capturesDir(this._root);
+
+    // Read all studio agent reports
+    const reports = [
+      { key: 'playtest', file: 'playtest_log.json', label: 'Playtest Log', icon: '\u{1F3AE}' },
+      { key: 'balance', file: 'balance_report.json', label: 'Balance Report', icon: '\u2696' },
+      { key: 'stress', file: 'stress_test_report.json', label: 'Stress Test', icon: '\u26A1' },
+      { key: 'visual_qa', file: 'visual_qa_report.json', label: 'Visual QA', icon: '\u{1F441}' },
+      { key: 'regression', file: 'regression_log.json', label: 'Regression Log', icon: '\u{1F4C9}' },
+      { key: 'release', file: 'release_quality_report.json', label: 'Release Quality', icon: '\u2705' },
+    ];
+
+    let cardsHtml = '';
+    let activeCount = 0;
+
+    for (const r of reports) {
+      const fp = path.join(dir, r.file);
+      let status = 'NO DATA';
+      let statusColor = CRT.gray;
+      let detail = '';
+      let age = '';
+
+      if (fs.existsSync(fp)) {
+        try {
+          const data = JSON.parse(fs.readFileSync(fp, 'utf8'));
+          age = fileAge(fp);
+          activeCount++;
+
+          if (r.key === 'playtest') {
+            const runs = data.runs || [];
+            status = `${runs.length} runs`;
+            statusColor = runs.length >= 5 ? CRT.green : CRT.amber;
+            const lastRun = runs[runs.length - 1];
+            if (lastRun) detail = `Last: ${lastRun.archetype || '?'} (${lastRun.cards_played || '?'} cards)`;
+          } else if (r.key === 'balance') {
+            const anomalies = (data.anomalies || []).filter(a => a.severity === 'HIGH').length;
+            status = anomalies > 0 ? `${anomalies} HIGH` : 'BALANCED';
+            statusColor = anomalies > 0 ? CRT.red : CRT.green;
+          } else if (r.key === 'stress') {
+            const scenarios = data.scenarios || {};
+            const fails = Object.values(scenarios).filter(s => s.status === 'FAIL').length;
+            status = fails > 0 ? `${fails} FAIL` : 'ALL PASS';
+            statusColor = fails > 0 ? CRT.red : CRT.green;
+          } else if (r.key === 'visual_qa') {
+            const summary = data.summary || {};
+            const regressions = (summary.regression || 0) + (summary.breaking || 0);
+            status = regressions > 0 ? `${regressions} REGRESS` : 'CLEAN';
+            statusColor = regressions > 0 ? CRT.red : CRT.green;
+            detail = `${summary.pass || 0} pass, ${summary.minor || 0} minor`;
+          } else if (r.key === 'regression') {
+            const entries = data.entries || [];
+            const lastAlert = entries.filter(e => (e.regressions || []).length > 0);
+            status = lastAlert.length > 0 ? `${lastAlert.length} alerts` : 'STABLE';
+            statusColor = lastAlert.length > 0 ? CRT.amber : CRT.green;
+          } else if (r.key === 'release') {
+            status = data.verdict || 'UNKNOWN';
+            statusColor = status === 'GO' ? CRT.green : status === 'NO-GO' ? CRT.red : CRT.amber;
+            const score = data.score || {};
+            detail = `${score.pass || 0}/${score.total || 62} pass`;
+          }
+        } catch (e) {
+          status = 'PARSE ERROR';
+          statusColor = CRT.red;
+        }
+      }
+
+      cardsHtml += `<div style="background:${CRT.panel};border:1px solid ${CRT.border};padding:4px 6px;margin:3px 0;border-radius:2px">
+        <div style="display:flex;justify-content:space-between;align-items:center">
+          <span style="font-size:10px">${r.icon} ${r.label}</span>
+          <span style="font-size:9px;color:${statusColor};font-weight:bold">${status}</span>
+        </div>
+        ${detail ? `<div style="font-size:8px;color:${CRT.greenDim};margin-top:1px">${escapeHtml(detail)}</div>` : ''}
+        ${age ? `<div style="font-size:8px;color:${CRT.gray};margin-top:1px">${age}</div>` : ''}
+        ${fs.existsSync(path.join(dir, r.file)) ? `<div style="text-align:right"><a href="#" onclick="openFile('${r.file}')" style="font-size:8px;color:${CRT.cyan};text-decoration:none">[open]</a></div>` : ''}
+      </div>`;
+    }
+
+    // Baseline status
+    const baselineDir = path.join(dir, 'baseline');
+    let baselineCount = 0;
+    if (fs.existsSync(baselineDir)) {
+      try { baselineCount = fs.readdirSync(baselineDir).filter(f => f.endsWith('.png')).length; } catch (e) {}
+    }
+
+    this._view.webview.html = `<!DOCTYPE html><html><head><style>${CSS_BASE}</style></head><body>
+      <div class="header">
+        <span class="title">STUDIO</span>
+        <span class="status" style="color:${activeCount >= 4 ? CRT.green : activeCount > 0 ? CRT.amber : CRT.gray}">${activeCount}/${reports.length} active</span>
+      </div>
+
+      <div style="font-size:9px;color:${CRT.greenDim};margin-bottom:6px">48 agents | 10 studio agents | 5 modes</div>
+
+      ${cardsHtml}
+
+      <div class="sep"></div>
+      <table>
+        <tr><td class="k">Baseline screenshots</td><td class="v">${baselineCount}</td></tr>
+      </table>
+
+      <script>
+        const vscode = acquireVsCodeApi();
+        function openFile(f) { vscode.postMessage({type:'open-report', file: f}); }
+      </script>
+    </body></html>`;
   }
 
   refresh() { this._update(); }
+  dispose() { if (this._interval) { clearInterval(this._interval); this._interval = null; } }
 }
 
 // ============================================================
-// MERLIN CHAT + TRAINING PANEL  (vscode.window.createWebviewPanel)
-// ============================================================
-
-const MERLIN_CHAT_SYSTEM =
-  'Tu es M.E.R.L.I.N. — Memoire Eternelle des Recits et Legendes d\'Incarnations Narratives. ' +
-  'Ne de la croyance des hommes, assemble par des siecles de mythes celtiques et de legendes du monde. ' +
-  'Tu parles en druide — avec concision, enigme et profondeur. Reponds en francais.';
-
-class MerlinChatPanel {
-  static _current = null;
-
-  static createOrShow(context, root) {
-    const col = vscode.window.activeTextEditor
-      ? vscode.window.activeTextEditor.viewColumn
-      : vscode.ViewColumn.One;
-    if (MerlinChatPanel._current) {
-      MerlinChatPanel._current._panel.reveal(col);
-      return;
-    }
-    const panel = vscode.window.createWebviewPanel(
-      'merlinChat', 'MERLIN — Chat & Training',
-      col,
-      { enableScripts: true, retainContextWhenHidden: true }
-    );
-    MerlinChatPanel._current = new MerlinChatPanel(panel, root);
-    context.subscriptions.push(MerlinChatPanel._current);
-  }
-
-  constructor(panel, root) {
-    this._panel    = panel;
-    this._root     = root;
-    this._history  = [];   // [{role, content}] for Ollama /api/chat
-    this._disposed = false;
-    this._panel.webview.html = this._getHtml();
-    this._panel.webview.onDidReceiveMessage(msg => this._onMessage(msg));
-    this._pollInterval = setInterval(() => this._sendProgress(), 3000);
-    this._panel.onDidDispose(() => this.dispose());
-    setTimeout(() => this._sendProgress(), 500);
-  }
-
-  _onMessage(msg) {
-    switch (msg.type) {
-      case 'chat':
-        this._history.push({ role: 'user', content: msg.content });
-        this._callOllama();
-        break;
-      case 'train_start':
-        this._runPS1(`-Action Start -StopAt ${msg.stopAt || '08:00'} -Resume`);
-        setTimeout(() => this._sendProgress(), 2000);
-        break;
-      case 'train_stop':
-        this._runPS1('-Action Stop');
-        setTimeout(() => this._sendProgress(), 2000);
-        break;
-      case 'clear':
-        this._history = [];
-        break;
-    }
-  }
-
-  _callOllama() {
-    const http = require('http');
-    const messages = [{ role: 'system', content: MERLIN_CHAT_SYSTEM }, ...this._history];
-    const body = JSON.stringify({
-      model: 'qwen2.5:1.5b',
-      messages,
-      stream: false,
-      options: { temperature: 0.68, top_p: 0.9, repeat_penalty: 1.35 }
-    });
-    const req = http.request(
-      { hostname: 'localhost', port: 11434, path: '/api/chat', method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'Content-Length': Buffer.byteLength(body) } },
-      (res) => {
-        let data = '';
-        res.on('data', chunk => data += chunk);
-        res.on('end', () => {
-          try {
-            const r = JSON.parse(data);
-            const content = (r.message && r.message.content) || r.response || '[Pas de reponse]';
-            this._history.push({ role: 'assistant', content });
-            if (!this._disposed) this._panel.webview.postMessage({ type: 'response', content });
-          } catch (e) {
-            if (!this._disposed) this._panel.webview.postMessage({ type: 'response', content: `[Erreur JSON: ${e.message}]` });
-          }
-        });
-      }
-    );
-    req.on('error', err => {
-      if (!this._disposed) this._panel.webview.postMessage({
-        type: 'response',
-        content: `⚠ Ollama non disponible (${err.message})\nLance: ollama serve`
-      });
-    });
-    req.setTimeout(90000, () => { req.destroy(); });
-    req.write(body);
-    req.end();
-  }
-
-  _sendProgress() {
-    if (this._disposed) return;
-    const pr = readJsonSafe(path.join(this._root, 'merlin-lora-cpu-output', 'progress.json'));
-    const ts = readJsonSafe(path.join(this._root, 'tools', 'lora', 'status', 'training_state.json'));
-    this._panel.webview.postMessage({ type: 'progress', progress: pr, state: ts });
-  }
-
-  _runPS1(args) {
-    const script = path.join(this._root, 'tools', 'lora', 'train_control.ps1');
-    cp.exec(`powershell -ExecutionPolicy Bypass -File "${script}" ${args}`, { cwd: this._root });
-  }
-
-  dispose() {
-    if (this._disposed) return;
-    this._disposed = true;
-    clearInterval(this._pollInterval);
-    MerlinChatPanel._current = null;
-    this._panel.dispose();
-  }
-
-  _getHtml() {
-    return `<!DOCTYPE html><html><head><meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
-<title>MERLIN Chat</title>
-<style>
-*{margin:0;padding:0;box-sizing:border-box}
-body{font-family:'Cascadia Code','Fira Code',Consolas,monospace;font-size:12px;
-     background:#050a05;color:#c0c0c0;display:flex;flex-direction:column;height:100vh;overflow:hidden}
-.train-bar{display:flex;align-items:center;gap:8px;padding:6px 10px;flex-wrap:wrap;
-           background:#080d08;border-bottom:2px solid #0d200d;flex-shrink:0}
-.tb-title{font-size:10px;font-weight:bold;color:#00ff41;letter-spacing:1px;margin-right:4px}
-.tb-state{font-weight:bold;font-size:11px}
-.tb-m{font-size:10px;color:#557755}.tb-m span{color:#c0c0c0}
-.tb-bar{font-size:9px;color:#00ff41;letter-spacing:-1px}
-.tb-btn{background:#0d150d;border:1px solid #1a3a1a;color:#00ff41;font-family:inherit;
-        font-size:10px;padding:2px 8px;cursor:pointer;border-radius:2px}
-.tb-btn:hover{background:#1a3a1a}.tb-stop{color:#ff5555;border-color:#3a1a1a}
-.tb-stop:hover{background:#3a1a1a}
-.messages{flex:1;overflow-y:auto;padding:14px 16px;display:flex;flex-direction:column;gap:10px}
-.msg-user{align-self:flex-end;background:#0a1a0a;border:1px solid #1a3a1a;
-          color:#00e560;padding:7px 11px;border-radius:6px 6px 2px 6px;max-width:85%;line-height:1.5;white-space:pre-wrap}
-.msg-merlin{align-self:flex-start;background:#0a0a16;border:1px solid #20204a;
-            color:#b8b8e8;padding:7px 11px;border-radius:6px 6px 6px 2px;max-width:88%;line-height:1.6;white-space:pre-wrap}
-.msg-merlin .name{font-size:9px;color:#4444aa;margin-bottom:4px;letter-spacing:1px}
-.msg-sys{align-self:center;font-size:9px;color:#2a3a2a;font-style:italic;text-align:center}
-.thinking{align-self:flex-start;color:#333;font-size:11px;padding:4px 0}
-.blink{animation:blink 1s step-end infinite}
-@keyframes blink{0%,100%{opacity:1}50%{opacity:0}}
-.input-area{display:flex;gap:6px;padding:8px 10px;border-top:1px solid #0d200d;
-            background:#080d08;flex-shrink:0;align-items:flex-end}
-#inp{flex:1;background:#090f09;border:1px solid #1a3a1a;color:#c0c0c0;font-family:inherit;
-     font-size:12px;padding:7px 9px;resize:none;border-radius:3px;line-height:1.5}
-#inp:focus{outline:none;border-color:#00ff41}
-#send{background:#0d1f0d;border:1px solid #1a3a1a;color:#00ff41;font-size:18px;
-      padding:0 13px;cursor:pointer;border-radius:3px;height:38px;flex-shrink:0}
-#send:hover:not([disabled]){background:#1a3a1a;border-color:#00ff41}
-#send[disabled]{opacity:0.3;cursor:not-allowed}
-.btn-clear{background:none;border:none;font-size:9px;color:#2a3a2a;cursor:pointer;padding:0 4px}
-.btn-clear:hover{color:#557755}
-</style></head><body>
-<div class="train-bar">
-  <span class="tb-title">TRAINING</span>
-  <span class="tb-state" id="tbS" style="color:#444">○ IDLE</span>
-  <span class="tb-m">Epoch <span id="tbE">-/-</span></span>
-  <span class="tb-m">Step <span id="tbSt">-/-</span></span>
-  <span class="tb-m">Loss <span id="tbL">--</span></span>
-  <span class="tb-bar" id="tbBar"></span>
-  <button class="tb-btn" id="btnStart" onclick="ps('train_start')">▶ Start</button>
-  <button class="tb-btn tb-stop" id="btnStop" onclick="ps('train_stop')">■ Stop</button>
-</div>
-<div class="messages" id="msgs">
-  <div class="msg-sys">⚡ M.E.R.L.I.N. — Chat &amp; Training</div>
-  <div class="msg-sys">Assure-toi qu'Ollama tourne: <code>ollama serve</code></div>
-</div>
-<div class="input-area">
-  <textarea id="inp" placeholder="Parle à MERLIN… (Entrée pour envoyer, Shift+Entrée pour saut de ligne)" rows="2"></textarea>
-  <button id="send" onclick="sendMsg()">→</button>
-</div>
-<script>
-const vscode = acquireVsCodeApi();
-let busy = false;
-
-function sendMsg() {
-  const inp = document.getElementById('inp');
-  const txt = inp.value.trim();
-  if (!txt || busy) return;
-  addMsg('user', txt);
-  inp.value = '';
-  setBusy(true);
-  addThinking();
-  vscode.postMessage({ type: 'chat', content: txt });
-}
-
-function ps(type) { vscode.postMessage({ type }); }
-
-document.getElementById('inp').addEventListener('keydown', e => {
-  if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMsg(); }
-});
-
-function addMsg(role, txt) {
-  const m = document.getElementById('msgs');
-  const d = document.createElement('div');
-  d.className = 'msg-' + role;
-  if (role === 'merlin') {
-    const n = document.createElement('div'); n.className = 'name'; n.textContent = 'M.E.R.L.I.N.';
-    d.appendChild(n);
-  }
-  const c = document.createElement('div'); c.textContent = txt; d.appendChild(c);
-  m.appendChild(d); scrollBot();
-}
-
-function addThinking() {
-  const m = document.getElementById('msgs');
-  const d = document.createElement('div');
-  d.className = 'thinking'; d.id = 'thinking';
-  d.innerHTML = '<span class="blink">▌</span> MERLIN reflechit...';
-  m.appendChild(d); scrollBot();
-}
-
-function setBusy(v) {
-  busy = v;
-  document.getElementById('send').disabled = v;
-}
-
-function scrollBot() {
-  const m = document.getElementById('msgs'); m.scrollTop = m.scrollHeight;
-}
-
-const SC = {running:'#00ff41',paused:'#ffb300',stopped:'#ff5555',error:'#ff3333',idle:'#444',starting:'#ffb300'};
-const SI = {running:'▶',paused:'⏸',stopped:'■',error:'✗',idle:'○',starting:'…'};
-
-window.addEventListener('message', e => {
-  const msg = e.data;
-  if (msg.type === 'response') {
-    const t = document.getElementById('thinking'); if (t) t.remove();
-    addMsg('merlin', msg.content);
-    setBusy(false);
-    document.getElementById('inp').focus();
-  } else if (msg.type === 'progress') {
-    const s  = (msg.state    && msg.state.state)            || 'idle';
-    const ep = (msg.progress && msg.progress.epoch)         || 0;
-    const te = (msg.progress && msg.progress.total_epochs)  || 3;
-    const st = (msg.progress && msg.progress.step)          || 0;
-    const ts = (msg.progress && msg.progress.total_steps)   || 1;
-    const lo = (msg.progress && msg.progress.loss)          || '--';
-    const pc = (msg.progress && msg.progress.pct)           || 0;
-    const f  = Math.min(10, Math.round(pc / 10));
-    document.getElementById('tbS').textContent  = (SI[s]||'○') + ' ' + s.toUpperCase();
-    document.getElementById('tbS').style.color  = SC[s] || '#444';
-    document.getElementById('tbE').textContent  = ep + '/' + te;
-    document.getElementById('tbSt').textContent = st + '/' + ts;
-    document.getElementById('tbL').textContent  = lo;
-    document.getElementById('tbBar').textContent = '█'.repeat(f) + '░'.repeat(10-f) + ' ' + pc.toFixed(0) + '%';
-  }
-});
-</script></body></html>`;
-  }
-}
-
-// ============================================================
-// ACTIVATE
+// EXTENSION LIFECYCLE
 // ============================================================
 
 function activate(context) {
   const root = findProjectRoot();
-  const statusDir = findStatusDir();
+  if (!root) {
+    vscode.window.showWarningMessage('M.E.R.L.I.N. Orchestrator: No project.godot found');
+    return;
+  }
 
-  // --- Live View panel ---
-  const liveProvider = new LiveViewProvider();
+  // Ensure captures dir exists
+  const dir = capturesDir(root);
+  if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
+
+  // Register all 6 providers
+  const gameControl = new GameControlProvider(root);
+  const liveView = new LiveViewProvider(root);
+  const commands = new CommandsProvider(root);
+  const diagnostics = new DiagnosticsProvider(root);
+  const overnight = new OvernightProvider(root);
+  const studio = new StudioProvider(root);
+
   context.subscriptions.push(
-    vscode.window.registerWebviewViewProvider('autodev-v4.liveView', liveProvider)
+    vscode.window.registerWebviewViewProvider('autodev-v4.gameControl', gameControl),
+    vscode.window.registerWebviewViewProvider('autodev-v4.liveView', liveView),
+    vscode.window.registerWebviewViewProvider('autodev-v4.commands', commands),
+    vscode.window.registerWebviewViewProvider('autodev-v4.diagnostics', diagnostics),
+    vscode.window.registerWebviewViewProvider('autodev-v4.overnight', overnight),
+    vscode.window.registerWebviewViewProvider('autodev-v4.studio', studio),
   );
-  context.subscriptions.push({ dispose: () => liveProvider.dispose() });
 
-  // --- Godot Scenes panel ---
-  if (root) {
-    const scenesProvider = new GodotScenesProvider(root);
-    context.subscriptions.push(
-      vscode.window.registerWebviewViewProvider('autodev-v4.godotView', scenesProvider)
-    );
-
-    context.subscriptions.push(
-      vscode.commands.registerCommand('autodev-v4.launchGame', () => {
-        launchGame(root, () => scenesProvider.refresh());
-        scenesProvider.refresh();
-      })
-    );
-
-    context.subscriptions.push(
-      vscode.commands.registerCommand('autodev-v4.killGodot', () => {
-        killGodot();
-        scenesProvider.refresh();
-      })
-    );
-
-    context.subscriptions.push(
-      vscode.commands.registerCommand('autodev-v4.validate', () => {
-        const terminal = vscode.window.createTerminal('Validate');
-        terminal.sendText(`cd "${root}" && .\\validate.bat`);
-        terminal.show();
-      })
-    );
-
-    // Kill Godot on extension deactivate
-    context.subscriptions.push({ dispose: () => killGodot() });
-  }
-
-  // --- AUTODEV Dashboard panel ---
-  if (statusDir) {
-    const autodevProvider = new AutodevSidebarProvider(statusDir);
-    context.subscriptions.push(
-      vscode.window.registerWebviewViewProvider('autodev-v4.sidebarView', autodevProvider)
-    );
-
-    context.subscriptions.push(
-      vscode.commands.registerCommand('autodev-v4.refresh', () => autodevProvider.refresh())
-    );
-
-    let debounceTimer = null;
-    const watcher = fs.watch(statusDir, { recursive: false }, () => {
-      if (debounceTimer) clearTimeout(debounceTimer);
-      debounceTimer = setTimeout(() => autodevProvider.refresh(), 500);
-    });
-    context.subscriptions.push({ dispose: () => watcher.close() });
-
-    const pollInterval = setInterval(() => autodevProvider.refresh(), 5000);
-    context.subscriptions.push({ dispose: () => clearInterval(pollInterval) });
-  }
-
-  // --- Training Control panel ---
-  if (root) {
-    const trainingProvider = new TrainingWebviewProvider(root);
-    context.subscriptions.push(
-      vscode.window.registerWebviewViewProvider('autodev-v4.trainingView', trainingProvider)
-    );
-
-    const trainingStatusDir  = path.join(root, 'tools', 'lora', 'status');
-    const trainingOutputDir  = path.join(root, 'merlin-lora-cpu-output');
-    const trainingDataDir    = path.join(root, 'data', 'ai', 'training');
-
-    for (const watchDir of [trainingStatusDir, trainingOutputDir, trainingDataDir]) {
-      if (fs.existsSync(watchDir)) {
-        const tw = fs.watch(watchDir, { recursive: false }, () => trainingProvider.refresh());
-        context.subscriptions.push({ dispose: () => tw.close() });
+  // Commands
+  context.subscriptions.push(
+    vscode.commands.registerCommand('autodev-v4.refresh', () => {
+      gameControl.refresh();
+      liveView._update();
+      commands._update();
+      diagnostics._update();
+      overnight._update();
+      studio._update();
+    }),
+    vscode.commands.registerCommand('autodev-v4.launchGame', () => {
+      launchGameBootstrap(root, () => gameControl.refresh());
+      setTimeout(() => gameControl.refresh(), 1000);
+    }),
+    vscode.commands.registerCommand('autodev-v4.killGodot', () => {
+      killGodot();
+      gameControl.refresh();
+    }),
+    vscode.commands.registerCommand('autodev-v4.validate', () => {
+      const terminal = vscode.window.createTerminal('Validate');
+      terminal.sendText(`cd "${root}" && .\\validate.bat`);
+      terminal.show();
+    }),
+    vscode.commands.registerCommand('autodev-v4.sendCommand', async () => {
+      const action = await vscode.window.showQuickPick(
+        ['screenshot', 'burst_screenshot', 'click_option', 'list_buttons', 'get_tree_snapshot', 'get_state', 'simulate_click', 'simulate_key'],
+        { placeHolder: 'Select command to send to game' }
+      );
+      if (action) {
+        sendGameCommand(root, action);
+        vscode.window.setStatusBarMessage(`Sent: ${action}`, 2000);
       }
-    }
+    }),
+  );
 
-    const trainingPollInterval = setInterval(() => trainingProvider.refresh(), 5000);
-    context.subscriptions.push({ dispose: () => clearInterval(trainingPollInterval) });
-  }
+  // File watcher for captures dir
+  const watcher = vscode.workspace.createFileSystemWatcher(
+    new vscode.RelativePattern(dir, '*.{json,png}')
+  );
+  watcher.onDidChange(() => {
+    liveView._update();
+    diagnostics._update();
+  });
+  watcher.onDidCreate(() => {
+    liveView._update();
+    diagnostics._update();
+  });
+  context.subscriptions.push(watcher);
 
-  // --- MERLIN Chat & Training panel (command + title button) ---
-  if (root) {
-    context.subscriptions.push(
-      vscode.commands.registerCommand('autodev-v4.openMerlinChat', () => {
-        MerlinChatPanel.createOrShow(context, root);
-      })
-    );
-  }
-
-  console.log('AUTODEV Monitor v4.1 activated — root: ' + root);
+  console.log('M.E.R.L.I.N. Orchestrator v6.0 activated');
 }
 
 function deactivate() {
-  killGodot();
+  // Cleanup handled by VS Code disposing subscriptions
 }
 
 module.exports = { activate, deactivate };

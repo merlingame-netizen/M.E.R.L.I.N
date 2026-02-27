@@ -1,8 +1,8 @@
 {
   "name": "autodev-monitor-v4",
-  "displayName": "AUTODEV Monitor v4",
-  "description": "Real-time sidebar: AUTODEV pipeline + Godot scene controller",
-  "version": "4.1.0",
+  "displayName": "M.E.R.L.I.N. Orchestrator",
+  "description": "Godot Orchestrator — Autonomous Game Studio (48 agents, 5 studio modes)",
+  "version": "6.0.0",
   "publisher": "merlin-local",
   "engines": {
     "vscode": "^1.80.0"
@@ -17,7 +17,7 @@
       "activitybar": [
         {
           "id": "autodev-v4-sidebar",
-          "title": "MERLIN Dev",
+          "title": "MERLIN Orchestrator",
           "icon": "media/autodev-icon.svg"
         }
       ]
@@ -26,8 +26,8 @@
       "autodev-v4-sidebar": [
         {
           "type": "webview",
-          "id": "autodev-v4.godotView",
-          "name": "Godot Scenes"
+          "id": "autodev-v4.gameControl",
+          "name": "Game Control"
         },
         {
           "type": "webview",
@@ -36,24 +36,34 @@
         },
         {
           "type": "webview",
-          "id": "autodev-v4.sidebarView",
-          "name": "AUTODEV"
+          "id": "autodev-v4.commands",
+          "name": "Commands"
         },
         {
           "type": "webview",
-          "id": "autodev-v4.trainingView",
-          "name": "Training"
+          "id": "autodev-v4.diagnostics",
+          "name": "Diagnostics"
+        },
+        {
+          "type": "webview",
+          "id": "autodev-v4.overnight",
+          "name": "Overnight"
+        },
+        {
+          "type": "webview",
+          "id": "autodev-v4.studio",
+          "name": "Studio"
         }
       ]
     },
     "commands": [
       {
         "command": "autodev-v4.refresh",
-        "title": "AUTODEV v4: Refresh"
+        "title": "Orchestrator: Refresh All Panels"
       },
       {
         "command": "autodev-v4.launchGame",
-        "title": "Godot: Launch Game"
+        "title": "Godot: Launch Game (Bootstrap)"
       },
       {
         "command": "autodev-v4.killGodot",
@@ -64,20 +74,10 @@
         "title": "Godot: Run validate.bat"
       },
       {
-        "command": "autodev-v4.openMerlinChat",
-        "title": "MERLIN: Ouvrir Chat & Training",
-        "icon": "$(comment-discussion)"
+        "command": "autodev-v4.sendCommand",
+        "title": "Orchestrator: Send Command to Game"
       }
     ],
-    "menus": {
-      "view/title": [
-        {
-          "command": "autodev-v4.openMerlinChat",
-          "when": "view == autodev-v4.trainingView",
-          "group": "navigation"
-        }
-      ]
-    },
     "keybindings": [
       {
         "command": "autodev-v4.launchGame",

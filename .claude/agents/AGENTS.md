@@ -147,6 +147,25 @@ Task tool:
 > Pipeline de fine-tuning. Le **Gameplay Translator** est le point d'entree auto-active
 > quand l'utilisateur demande une adaptation du LLM. Ref: `docs/LORA_TRAINING_SPEC.html`
 
+### Autonomous Studio Agents (10) — NEW
+
+| Role | File | Specialty |
+|------|------|-----------|
+| **Studio Orchestrator** | `studio_orchestrator.md` | **Meta-orchestration: 5 modes (Quick QA/Deep Test/Content Sprint/Overnight/Polish Pass), coordination multi-agent en boucle fermee** |
+| **Playtester AI** | `playtester_ai.md` | **5 archetypes joueur (Prudent/Agressif/Explorateur/Min-maxer/Destructeur), choix motives via state.json** |
+| **Balance Analyst** | `balance_analyst.md` | **Statistiques multi-run: distribution fins, difficulte, Souffle economy, aspects balance, fallback rate** |
+| **Player Simulator** | `player_simulator.md` | **Stress testing: Speed run, AFK, Spam click, Back-and-forth, Long session (100+ cartes)** |
+| **Content Factory** | `content_factory.md` | **Generation autonome: fallback cards, events, prompts, RAG sections, Bestiole skills** |
+| **World Builder** | `world_builder.md` | **Nouveaux biomes: palette, ambiance, creatures, shader, cartes specifiques, integration complete** |
+| **Visual QA** | `visual_qa.md` | **Regression visuelle: baseline screenshots, comparaison vision Claude, scoring PASS/REGRESSION/BREAKING** |
+| **Regression Guardian** | `regression_guardian.md` | **Suivi long terme: snapshot avant/apres, metriques FPS/gen/fallback, historique append-only** |
+| **Release Quality** | `release_quality.md` | **Checklist pre-release 60+ items (8 categories), verdict GO/NO-GO** |
+| **Perf Profiler** | `perf_profiler.md` | **Profiling runtime: frame time, LLM latency, memory, auto-optimisation quick wins** |
+
+> Ces 10 agents forment le **Studio Autonome** — un systeme en boucle fermee capable de
+> jouer, analyser, corriger, generer du contenu et valider le jeu sans intervention humaine.
+> Le **Studio Orchestrator** coordonne les autres agents selon 5 modes d'operation.
+
 ### Runtime Observation (1) — NEW
 
 | Role | Specialty |
@@ -236,7 +255,7 @@ Lancer le jeu en debug : `powershell -File tools/autodev/launch_debug.ps1`
 ## Summary Count
 
 ```
-Total: 38 agents + 1 knowledge base
+Total: 48 agents + 1 knowledge base
 
 By category:
   Direction:                  1 (game_director)
@@ -252,6 +271,7 @@ By category:
   CI/CD & Release:            1 (ci_cd_release)
   LLM Bi-Brain:               3 (bi_brain_orchestrator, narrative_arc_designer, player_profiler)
   LoRA Fine-Tuning:           4 (lora_gameplay_translator, lora_data_curator, lora_training_architect, lora_evaluator)
+  Autonomous Studio:         10 (studio_orchestrator, playtester_ai, balance_analyst, player_simulator, content_factory, world_builder, visual_qa, regression_guardian, release_quality, perf_profiler)
   Runtime Observation:        1 (game_observer — inline workflow)
   Knowledge Base:             1 (gdscript_knowledge_base)
 ```
@@ -368,6 +388,31 @@ When an agent completes work and needs handoff:
 | `lora_data_curator.md` | Modification JSON contenu narratif, ajout nouveau gameplay | Re-export + augmentation dataset |
 | `lora_evaluator.md` | Apres training LoRA complet | Benchmark automatique, decision GO/NO-GO |
 | **Game Observer (inline)** | **"comment ça s'affiche", "je vois encore", "l'écran est sombre", "le texte est illisible", bug visuel, review design en cours d'exécution** | **Read latest_screenshot.png → vision Claude → analyse lisibilité/layout/couleurs → rapport** |
+| **`studio_orchestrator.md`** | **"lance le studio", "overnight enhanced", "deep test", "quick qa", "content sprint", "polish pass", "mode studio"** | **Coordonne tous les agents en boucle fermee autonome** |
+| **`playtester_ai.md`** | **"joue au jeu", "playtest", "teste le gameplay", "simule un joueur"** | **Joue avec 5 archetypes, choix motives, log dans playtest_log.json** |
+| **`balance_analyst.md`** | **"equilibrage", "balance du jeu", "statistiques", "distribution des fins"** | **Analyse multi-run, detecte desequilibres, recommande ajustements** |
+| **`visual_qa.md`** | **"regression visuelle", "compare screenshots", "baseline visuel"** | **Compare captures avec baseline, score PASS/REGRESSION/BREAKING** |
+| **`content_factory.md`** | **"genere du contenu", "nouvelles cartes", "enrichis le jeu"** | **Genere cartes, events, prompts, RAG sections autonomement** |
+| **`regression_guardian.md`** | **"regression", "avant/apres", "la perf a baisse"** | **Snapshot metriques avant/apres, alerte si delta hors seuils** |
+| **`release_quality.md`** | **"pre-release", "GO/NO-GO", "pret a livrer", "checklist qualite"** | **Checklist 60+ items, verdict GO/NO-GO** |
+| **`player_simulator.md`** | **"stress test", "spam click", "AFK test", "crash test"** | **Simule comportements extremes, detecte crashes et leaks** |
+| **`world_builder.md`** | **"nouveau biome", "nouveau lieu", "construction de monde"** | **Cree biomes complets (palette, cartes, shader, lore)** |
+| **`perf_profiler.md`** | **"profile performance", "FPS drop", "memory leak", "le jeu rame"** | **Profile runtime, correle avec code, auto-optimise** |
+
+---
+
+## Cross-Functional Reviews (Studio Agents)
+
+| Change Type | Required Review |
+|-------------|-----------------|
+| **Playtest results** | **Balance Analyst**, Game Designer |
+| **Balance changes** | **Playtester AI** (re-test), **Regression Guardian** |
+| **New content** | **Content Factory** validation, **Visual QA**, Merlin Guardian |
+| **New biome** | **World Builder**, Content Factory, Shader Specialist |
+| **Visual change** | **Visual QA**, Art Direction |
+| **Performance fix** | **Perf Profiler** (re-profile), **Regression Guardian** |
+| **Pre-release** | **Release Quality** (full checklist) |
+| **Studio mode session** | **Studio Orchestrator** (coordonne tous) |
 
 ---
 
@@ -437,6 +482,38 @@ claude "Use Task to read .claude/agents/lora_training_architect.md and configure
 
 # LoRA Evaluator (auto-active apres training)
 claude "Use Task to read .claude/agents/lora_evaluator.md and benchmark the new narrator adapter"
+
+# STUDIO — Studio Orchestrator (5 modes autonomes)
+claude "Use Task to read .claude/agents/studio_orchestrator.md and run Quick QA mode"
+claude "Use Task to read .claude/agents/studio_orchestrator.md and run Deep Test (1h, all archetypes)"
+claude "Use Task to read .claude/agents/studio_orchestrator.md and run Overnight mode (7h)"
+
+# STUDIO — Playtester AI (5 archetypes)
+claude "Use Task to read .claude/agents/playtester_ai.md and play 3 runs as CAUTIOUS archetype"
+
+# STUDIO — Balance Analyst
+claude "Use Task to read .claude/agents/balance_analyst.md and analyze playtest data for imbalances"
+
+# STUDIO — Visual QA
+claude "Use Task to read .claude/agents/visual_qa.md and compare current screenshots with baseline"
+
+# STUDIO — Content Factory
+claude "Use Task to read .claude/agents/content_factory.md and generate 5 fallback cards for missing biomes"
+
+# STUDIO — World Builder
+claude "Use Task to read .claude/agents/world_builder.md and create a new biome"
+
+# STUDIO — Player Simulator (stress testing)
+claude "Use Task to read .claude/agents/player_simulator.md and run all 5 stress scenarios"
+
+# STUDIO — Regression Guardian
+claude "Use Task to read .claude/agents/regression_guardian.md and snapshot metrics before changes"
+
+# STUDIO — Release Quality
+claude "Use Task to read .claude/agents/release_quality.md and run full pre-release checklist"
+
+# STUDIO — Perf Profiler
+claude "Use Task to read .claude/agents/perf_profiler.md and profile runtime performance"
 ```
 
 ---
@@ -454,5 +531,5 @@ claude "Use Task to read .claude/agents/lora_evaluator.md and benchmark the new 
 ---
 
 *Created: 2026-02-06*
-*Updated: 2026-02-26 — 38 agents + 1 KB (new: game_observer inline workflow — vision runtime via GameDebugServer)*
+*Updated: 2026-02-27 — 48 agents + 1 KB (new: 10 Autonomous Studio agents — studio_orchestrator, playtester_ai, balance_analyst, player_simulator, content_factory, world_builder, visual_qa, regression_guardian, release_quality, perf_profiler)*
 *Project: M.E.R.L.I.N. — Le Jeu des Oghams*
