@@ -4068,6 +4068,55 @@ func hide_what_if_labels() -> void:
 			lbl.text = ""
 
 
+func show_reveal_effects(options: Array, target_index: int) -> void:
+	## Show hidden effects on option buttons as temporary overlay labels.
+	## target_index = -1 → reveal all, 0/1/2 → reveal specific option.
+	var reveal_color: Color = MerlinVisual.CRT_PALETTE.get("ogham_gold", Color(0.85, 0.75, 0.4))
+	for i in range(mini(options.size(), 3)):
+		if target_index >= 0 and i != target_index:
+			continue
+		var opt: Dictionary = options[i] if i < options.size() else {}
+		var effects: Array = opt.get("effects", [])
+		if effects.is_empty():
+			continue
+		# Build compact effect summary
+		var parts: Array[String] = []
+		for eff in effects:
+			var eff_dict: Dictionary = eff if eff is Dictionary else {}
+			var etype: String = str(eff_dict.get("type", ""))
+			var amount: int = int(eff_dict.get("amount", eff_dict.get("intensity", 0)))
+			if etype == "SHIFT_ASPECT":
+				var asp: String = str(eff_dict.get("aspect", "?"))
+				parts.append("%s %+d" % [asp.left(4), amount])
+			elif etype == "ADD_SOUFFLE" or etype == "SOUFFLE":
+				parts.append("Souffle %+d" % amount)
+			elif etype == "ADD_KARMA" or etype == "KARMA":
+				parts.append("Karma %+d" % amount)
+			elif etype == "DAMAGE_LIFE":
+				parts.append("Vie -%d" % absi(amount))
+			elif etype == "HEAL_LIFE":
+				parts.append("Vie +%d" % absi(amount))
+			else:
+				parts.append(etype.to_lower())
+		if parts.is_empty():
+			continue
+		var summary: String = " | ".join(parts)
+		# Display on the what-if label (reuse existing labels)
+		if i < _what_if_labels.size():
+			var lbl: Label = _what_if_labels[i]
+			if lbl and is_instance_valid(lbl):
+				lbl.text = summary
+				lbl.add_theme_color_override("font_color", reveal_color)
+				lbl.visible = true
+				# Auto-hide after 4 seconds
+				var tw := create_tween()
+				tw.tween_interval(4.0)
+				tw.tween_callback(func():
+					if lbl and is_instance_valid(lbl):
+						lbl.visible = false
+						lbl.text = "")
+
+
 func show_journal_popup(run_summaries: Array[Dictionary]) -> void:
 	## P3.20.3: Display a visual journal of past lives as a scrollable popup.
 	if run_summaries.is_empty():
@@ -4260,6 +4309,72 @@ func show_typology_event(event: String) -> void:
 	var tw := create_tween()
 	tw.tween_property(label, "modulate:a", 0.0, 1.2)
 	tw.tween_callback(label.queue_free)
+
+
+var _pause_overlay: Control = null
+
+
+func show_pause_menu() -> void:
+	## Display a CRT-styled pause overlay with Resume/Quit buttons.
+	if _pause_overlay and is_instance_valid(_pause_overlay):
+		_pause_overlay.visible = true
+		return
+
+	_pause_overlay = ColorRect.new()
+	_pause_overlay.name = "PauseOverlay"
+	_pause_overlay.set_anchors_preset(Control.PRESET_FULL_RECT)
+	_pause_overlay.color = Color(0.0, 0.0, 0.0, 0.75)
+	_pause_overlay.mouse_filter = Control.MOUSE_FILTER_STOP
+	# Process mode: always so it works while paused
+	_pause_overlay.process_mode = Node.PROCESS_MODE_ALWAYS
+	add_child(_pause_overlay)
+
+	var vbox := VBoxContainer.new()
+	vbox.set_anchors_preset(Control.PRESET_CENTER)
+	vbox.offset_left = -120.0
+	vbox.offset_right = 120.0
+	vbox.offset_top = -80.0
+	vbox.offset_bottom = 80.0
+	vbox.add_theme_constant_override("separation", 16)
+	_pause_overlay.add_child(vbox)
+
+	# Title
+	var title_lbl := Label.new()
+	title_lbl.text = "PAUSE"
+	title_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	var pause_font: Font = MerlinVisual.get_font("title")
+	if pause_font:
+		title_lbl.add_theme_font_override("font", pause_font)
+	title_lbl.add_theme_font_size_override("font_size", 28)
+	title_lbl.add_theme_color_override("font_color", MerlinVisual.CRT_PALETTE.get("amber", Color(1.0, 0.75, 0.0)))
+	vbox.add_child(title_lbl)
+
+	# Resume button
+	var btn_resume := Button.new()
+	btn_resume.text = "Reprendre"
+	btn_resume.process_mode = Node.PROCESS_MODE_ALWAYS
+	@warning_ignore("static_called_on_instance")
+	MerlinVisual.apply_button_theme(btn_resume)
+	btn_resume.pressed.connect(func():
+		pause_requested.emit())
+	vbox.add_child(btn_resume)
+
+	# Quit button
+	var btn_quit := Button.new()
+	btn_quit.text = "Quitter la Partie"
+	btn_quit.process_mode = Node.PROCESS_MODE_ALWAYS
+	@warning_ignore("static_called_on_instance")
+	MerlinVisual.apply_button_theme(btn_quit)
+	btn_quit.pressed.connect(func():
+		get_tree().paused = false
+		get_tree().change_scene_to_file("res://scenes/MenuPrincipal.tscn"))
+	vbox.add_child(btn_quit)
+
+
+func hide_pause_menu() -> void:
+	## Hide the pause overlay.
+	if _pause_overlay and is_instance_valid(_pause_overlay):
+		_pause_overlay.visible = false
 
 
 func _exit_tree() -> void:

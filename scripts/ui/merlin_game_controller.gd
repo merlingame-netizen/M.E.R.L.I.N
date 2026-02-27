@@ -1761,8 +1761,14 @@ func _use_skill(skill_id: String) -> void:
 	var skill_type := str(result.get("type", ""))
 	match skill_type:
 		"reveal_one", "reveal_all":
-			# TODO: Show revealed effects in UI
-			pass
+			# Show hidden effects on option buttons
+			var options: Array = current_card.get("options", [])
+			if ui and is_instance_valid(ui) and ui.has_method("show_reveal_effects"):
+				if skill_type == "reveal_all":
+					ui.show_reveal_effects(options, -1)
+				else:
+					# Reveal center option (most valuable info)
+					ui.show_reveal_effects(options, 1)
 		"reroll_card", "full_reroll":
 			if not is_processing:
 				_request_next_card()
@@ -2003,8 +2009,14 @@ func _on_skill_activated(skill_id: String) -> void:
 
 
 func _on_pause_requested() -> void:
-	# TODO: Show pause menu
-	get_tree().paused = not get_tree().paused
+	if get_tree().paused:
+		if ui and is_instance_valid(ui) and ui.has_method("hide_pause_menu"):
+			ui.hide_pause_menu()
+		get_tree().paused = false
+	else:
+		get_tree().paused = true
+		if ui and is_instance_valid(ui) and ui.has_method("show_pause_menu"):
+			ui.show_pause_menu()
 
 
 func _on_merlin_dialogue_requested(player_input: String) -> void:

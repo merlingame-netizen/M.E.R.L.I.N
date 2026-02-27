@@ -482,7 +482,7 @@ func _build_event_context(game_state: Dictionary) -> Dictionary:
 		"tension": int(hidden.get("tension", 0)),
 		"flags": game_state.get("flags", {}),
 		"bestiole_bond": int(game_state.get("bestiole", {}).get("bond", 0)),
-		"trust_merlin": 0,  # TODO: wire from relationship registry
+		"trust_merlin": relationship.trust_points if relationship else 0,
 		"endings_seen_count": int(meta.get("endings_seen", []).size()),
 		"calendrier_des_brumes": meta.get("talent_tree", {}).get("unlocked", []).has("calendrier_des_brumes"),
 		"life_essence": int(run.get("life_essence", 100)),
