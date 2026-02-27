@@ -2,6 +2,59 @@
 
 > **Note**: Sessions anterieures archivees dans `archive/progress_archive_2026-02-05_to_2026-02-08.md`
 
+## Session: 2026-02-27 (Night) — Overnight LLM QA: SHIFT_ASPECT + Minigame + Repair
+
+### Fixes Applied (commits `5ef39e4`, `78a4cba`)
+
+**FIX 6c** — `_validate_triade_effect` converted SHIFT_ASPECT to HEAL_LIFE. Added SHIFT_ASPECT/SET_ASPECT to TRIADE_EFFECT_TYPES whitelist. Fixed validation to pass through.
+
+**FIX 6d** — GM brain effects (HEAL_LIFE/ADD_KARMA/ADD_SOUFFLE) completely overwrote SHIFT_ASPECT at line 506. Changed to MERGE: keep SHIFT_ASPECT from contextual effects, add GM balance effects alongside. Added SHIFT_ASPECT to GM prompt vocabulary and parser.
+
+**FIX 7** — Minigame triggered on EVERY card (30s timeout). Two bugs: (1) `_detect_minigame` threshold too low (1 keyword hit), raised to 2; (2) `str(Dict)` check always non-empty, fixed type check for Dict vs String.
+
+**FIX 8** — Verb repair prompt produced meta-text ("Bien sur! Voici..."). Changed to pure completion format with 2 few-shot examples. T 0.3→0.2, max_tokens 30→20.
+
+### Verified Results (MEGA-CYCLES 5-7, 13 cards played)
+- **SHIFT_ASPECT**: Working end-to-end. Aspects shift 0/0/0 → 1/1/1 → rebalancing confirmed
+- **Balance-aware direction**: Corps=1 → "down", Corps=0 → "up" (adaptive)
+- **GM merge**: SHIFT_ASPECT + GM effects coexist on each option
+- **No minigame timeouts**: Card resolution 35s → 2s
+- **Card gen time**: ~50s standalone (no buffer)
+
+### Remaining Issues (for next session)
+- **Repair call** still produces meta-text ~50% of time (Qwen 2.5-1.5B limitation)
+- **Fallback verbs** (21 triplets) used when repair fails — acceptable quality
+- **Card gen latency** ~50s standalone — acceptable (3-5s with TransitionBiome prerun)
+- **Titles**: sometimes over-creative ("Forest Poem: Evasion Au Coeur D'un Vieux Larsen") — cosmetic
+- **Text truncation**: occasional mid-sentence cut ("pour ce que cette") — length cap issue
+
+## Session: 2026-02-27 (Night cont.) — GM JSON + Dedup + Label Safety
+
+### Fixes Applied (commit `52fe5e8`)
+
+**FIX 9** — Removed 3 leftover debug prints ([LLM-Adapter] prefix) from merlin_llm_adapter.gd
+
+**FIX 10** — GM brain JSON parse failures (was ~30%):
+- max_tokens 80→150 (valid 3-effect JSON needs ~120 chars, was truncating)
+- JSON repair: single quotes → double quotes, trailing commas, truncated JSON recovery
+- Example-driven system prompt (Qwen 2.5-1.5B responds better to examples than instructions)
+
+**FIX 12** — New meta-text strip patterns: "décrochez le choix", "tendres choix", "(a/b/c)"
+
+**FIX 13** — Verb pool and narrative fallback dedup: avoid consecutive repeats across cards. Track `_last_verb_pool_idx` and `_last_narrative_fallback_idx`.
+
+**FIX 14** — Label safety net at option builder level: reject verbs <3 chars, articles ("La"), possessives ("Votre") that slip through extraction — fallback to verb pool.
+
+### Verified Results (MEGA-CYCLES 7-8, 8 cards played)
+- **GM JSON parse**: 0 errors across 8 cards (was ~30% failure rate)
+- **SHIFT_ASPECT**: Still working — Ame 0→1, Monde 0→1 confirmed
+- **Verb variety**: No consecutive repeats (Préciser/Escalader/Déchiffrer, then Chercher/Lire/Désarmer)
+- **No minigame timeouts**: All cards resolve in <5s
+- **FPS**: 44-57 range (stable)
+- **Balance-aware GM**: HEAL_LIFE when player low, DAMAGE_LIFE when stable
+
+---
+
 ## Session: 2026-02-27 — 7h Polish + Integration + P1 Validation
 
 ### MC1: Housekeeping (commits `1753be6`, `abf3222`)
