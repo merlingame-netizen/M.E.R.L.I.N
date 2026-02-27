@@ -15,6 +15,8 @@ const VERSION := "3.0.0"
 # ═══════════════════════════════════════════════════════════════════════════════
 
 const TRIADE_EFFECT_TYPES := [
+	"SHIFT_ASPECT",
+	"SET_ASPECT",
 	"USE_SOUFFLE",
 	"ADD_SOUFFLE",
 	"PROGRESS_MISSION",
@@ -488,7 +490,7 @@ func _generate_card_two_stage(context: Dictionary) -> Dictionary:
 		return {"ok": false, "card": {}, "error": "Two-stage: text too short"}
 
 	# Stage 2: Programmatic JSON wrapping
-	var card := _wrap_text_as_card(raw_text, context)
+	var card := await _wrap_text_as_card(raw_text, context)
 
 	# Stage 2.5: Smart effects from Game Master (dual brain only, +3-5s)
 	var has_dual: bool = _merlin_ai != null and _merlin_ai.brain_count >= 2
@@ -501,8 +503,14 @@ func _generate_card_two_stage(context: Dictionary) -> Dictionary:
 			var options: Array = card.get("options", [])
 			for i in range(mini(3, options.size())):
 				if i < smart.size():
-					options[i]["effects"] = smart[i]
-					options[i]["reward_type"] = MerlinConstants.infer_reward_type(smart[i])
+					# FIX 6d: MERGE — keep SHIFT_ASPECT from contextual effects, add GM balance effects
+					var orig_effects: Array = options[i].get("effects", [])
+					var shift_effects: Array = []
+					for orig_e in orig_effects:
+						if orig_e is Dictionary and str(orig_e.get("type", "")) in ["SHIFT_ASPECT", "SET_ASPECT"]:
+							shift_effects.append(orig_e)
+					options[i]["effects"] = shift_effects + smart[i]
+					options[i]["reward_type"] = MerlinConstants.infer_reward_type(options[i]["effects"])
 			if not card.has("tags"):
 				card["tags"] = []
 			card["tags"].append("smart_effects")
@@ -659,13 +667,16 @@ func _wrap_text_as_card(raw_text: String, context: Dictionary) -> Dictionary:
 	choice_rx.compile("(?m)^\\s*(?:[-*]\\s*)?\\*{0,2}(?:(?:Le\\s+choix\\s+|Action\\s+|Choix\\s+)?[A-D][):.\\]]|[1-3]\\s*[-.]\\s*[A-D]?[):.\\s]|[1-3][.):]|[-*]\\s+\\*{0,2}[A-D][):.\\]]).*$")
 	text = choice_rx.sub(text, "", true)
 
-	# Step 3.5: Strip "Scenario:" echo from first 2 lines (prompt leak, not narrative)
+	# Step 3.5: Strip "Scenario:" / "Situation:" echo from first 2 lines (prompt leak, not narrative)
 	var raw_lines := text.split("\n")
 	if raw_lines.size() > 0:
 		for si in mini(raw_lines.size(), 2):
 			var sl := raw_lines[si].strip_edges().to_lower()
-			if sl.begins_with("scenario") and (sl.find(":") >= 0 or sl.find(" :") >= 0):
-				raw_lines[si] = ""
+			if (sl.begins_with("scenario") or sl.begins_with("situation")) and (sl.find(":") >= 0 or sl.find(" :") >= 0):
+				# Strip the prefix but keep the content after the colon
+				var colon_pos: int = sl.find(":")
+				var after_colon: String = raw_lines[si].substr(colon_pos + 1).strip_edges()
+				raw_lines[si] = after_colon
 		text = "\n".join(raw_lines)
 
 	# Step 4: Strip markdown artifacts
@@ -706,15 +717,69 @@ func _wrap_text_as_card(raw_text: String, context: Dictionary) -> Dictionary:
 				break
 		text = text.substr(0, cut_pos).strip_edges()
 
-	# Step 6: Pronoun enforcement — replace "nous/notre/nos" with "tu/ton/tes"
+	# Step 6: Pronoun enforcement — replace wrong person with "tu" (2nd person)
 	var pronoun_fixes := [
+		# nous/notre/nos → tu/ton/tes
 		["nos pieds", "tes pieds"], ["nos yeux", "tes yeux"], ["nos mains", "tes mains"],
 		["notre chemin", "ton chemin"], ["notre route", "ta route"], ["notre quete", "ta quete"],
 		[" nos ", " tes "], [" notre ", " ton "],
 		[" nous ", " tu "], ["Nous ", "Tu "],
+		# 3rd person il/elle → tu (sentence-start patterns)
+		["Il tourne ", "Tu tournes "], ["Il marche ", "Tu marches "],
+		["Il entre ", "Tu entres "], ["Il avance ", "Tu avances "],
+		["Il decouvre ", "Tu decouvres "], ["Il entend ", "Tu entends "],
+		["Il sent ", "Tu sens "], ["Il voit ", "Tu vois "],
+		["Il aperçoit ", "Tu aperçois "], ["Il s'approche ", "Tu t'approches "],
+		["Il se retrouve ", "Tu te retrouves "], ["Il se penche ", "Tu te penches "],
+		["Il fut ", "Tu fus "], ["Il était ", "Tu étais "],
+		# "Le voyageur" → "Tu" (common 3rd person pattern)
+		["Le voyageur ", "Tu "], ["le voyageur ", "tu "],
+		# 1st person je → tu
+		["Je suis ", "Tu es "], ["Je vois ", "Tu vois "],
+		["Je sens ", "Tu sens "], ["Je marche ", "Tu marches "],
+		["J'entends ", "Tu entends "], ["J'aperçois ", "Tu aperçois "],
+		["Je decouvre ", "Tu decouvres "], ["Je m'approche ", "Tu t'approches "],
 	]
 	for fix in pronoun_fixes:
 		text = text.replace(str(fix[0]), str(fix[1]))
+	# Also strip "Il était une fois" fairy tale opening
+	if text.begins_with("Il était une fois"):
+		text = text.substr(text.find(".") + 1).strip_edges()
+		if not text.begins_with("Tu"):
+			text = "Tu " + text.substr(0, 1).to_lower() + text.substr(1)
+
+	# REPAIR: If < 2 labels extracted, try a short focused LLM call for verb options
+	if labels.size() < 2 and _merlin_ai and text.length() >= 20:
+		print("[MerlinLlmAdapter] %d labels — attempting repair call for verbs..." % labels.size())
+		# Strategy: ask ONLY for 3 infinitive verbs, one per line — simplest possible format
+		var situation_excerpt: String = text.substr(0, 120).replace("\n", " ")
+		var repair_prompt := "%s\n\n3 verbes d'action pour reagir:" % situation_excerpt
+		var repair_params := {"max_tokens": 30, "temperature": 0.3, "top_p": 0.80, "repeat_penalty": 1.5}
+		var repair_result: Dictionary = await _merlin_ai.generate_with_system(
+			"Liste 3 verbes a l'infinitif. Un par ligne. Rien d'autre.\n\nExemple:\nPlonger\nGraver\nSiffler", repair_prompt, repair_params
+		)
+		if not repair_result.has("error"):
+			var repair_text: String = str(repair_result.get("text", ""))
+			print("[MerlinLlmAdapter] Repair raw: '%s'" % repair_text.substr(0, 200))
+			if repair_text.length() >= 3:
+				# Try structured extraction first
+				var repair_labels: Array[Dictionary] = _extract_labels_from_text(repair_text)
+				# Then relaxed verb extraction
+				if repair_labels.size() < 2:
+					repair_labels = _extract_verbs_relaxed(repair_text)
+				# Merge with existing labels (avoid duplicates)
+				var existing_verbs: Array[String] = []
+				for lbl in labels:
+					existing_verbs.append(str(lbl["verb"]))
+				for rl in repair_labels:
+					if labels.size() >= 3:
+						break
+					if str(rl["verb"]) not in existing_verbs:
+						labels.append(rl)
+						existing_verbs.append(str(rl["verb"]))
+				print("[MerlinLlmAdapter] After repair: %d labels total" % labels.size())
+		else:
+			print("[MerlinLlmAdapter] Repair call failed: %s" % str(repair_result.get("error", "")))
 
 	# Pad to 3 labels with phase-aware verb fallbacks if LLM didn't produce enough
 	if labels.size() < 3:
@@ -747,6 +812,7 @@ func _wrap_text_as_card(raw_text: String, context: Dictionary) -> Dictionary:
 
 	# Generate context-appropriate effects (dynamic based on game state)
 	var effects := _generate_contextual_effects(context)
+	print("[LLM-Adapter] _generate_contextual_effects returned: %s" % str(effects))
 
 	# DC hints: dramatic balance-adaptive difficulty (0ms heuristic)
 	var balance := _evaluate_balance_heuristic(context)
@@ -895,7 +961,7 @@ func _detect_minigame(text: String, verbs: Array[String]) -> Dictionary:
 			best_hits = hits
 			best_id = mg_id
 
-	if best_hits >= 1 and not best_id.is_empty():
+	if best_hits >= 2 and not best_id.is_empty():
 		var mg: Dictionary = MerlinConstants.MINIGAME_CATALOGUE[best_id]
 		return {"id": best_id, "name": str(mg.get("name", "")), "desc": str(mg.get("desc", ""))}
 	return {}
@@ -1129,6 +1195,14 @@ func _extract_labels_from_text(text: String) -> Array[Dictionary]:
 				v = v.substr(0, sp)
 			# Reject determinants/prepositions (not verbs — indicates paragraph start, not choice)
 			var v_upper := v.to_upper()
+			# Also reject very short strings and strings with punctuation (garbage)
+			if v_upper.length() < 3:
+				print("[MerlinLlmAdapter] Rejected too-short verb: '%s'" % v)
+				continue
+			# Reject quoted/punctuation-heavy strings
+			if v.begins_with("\"") or v.begins_with("'") or v.begins_with("("):
+				print("[MerlinLlmAdapter] Rejected punctuation verb: '%s'" % v)
+				continue
 			if v_upper in ["LE", "LA", "LES", "UN", "UNE", "DES", "AU", "AUX",
 					"DU", "DANS", "SUR", "SOUS", "PAR", "POUR", "VERS", "AVEC",
 					"CE", "CET", "CETTE", "CES", "MON", "TON", "SON", "IL", "ELLE",
@@ -1143,7 +1217,15 @@ func _extract_labels_from_text(text: String) -> Array[Dictionary]:
 					"CHAQUE", "NOTRE", "VOTRE", "LEUR", "LEURS",
 					"NOS", "VOS", "MES", "TES", "SES",
 					# Non-action verbs / copulas
-					"C'EST", "EST", "SONT", "ETRE", "AVOIR", "FAIT", "VA"]:
+					"C'EST", "EST", "SONT", "ETRE", "AVOIR", "FAIT", "VA",
+					# Question words (observed: "comment" extracted as verb)
+					"COMMENT", "POURQUOI", "COMBIEN", "QUOI",
+					# Proper nouns from game context
+					"MERLIN", "ARTHUR", "MORGANE", "VIVIANE", "NIMUE",
+					"BROCELIANDE", "CARNAC", "BRETAGNE",
+					# Common non-verb nouns frequently extracted
+					"TORCHE", "AUDACIEUX", "SOMBRE", "ANCIEN",
+					"SITUATION", "SCENARIO", "DESCRIPTION"]:
 				print("[MerlinLlmAdapter] Rejected determinant as verb: '%s'" % v)
 				continue
 			# Reject only the 3 most overused verbs from Qwen 1.5B (cause 30%+ repetition).
@@ -1191,6 +1273,51 @@ func _extract_labels_from_text(text: String) -> Array[Dictionary]:
 	if labels.size() > 3:
 		labels.resize(3)
 
+	return labels
+
+
+## Relaxed verb extraction: find French infinitive verbs from unstructured text.
+## Used as last-resort fallback when _extract_labels_from_text finds nothing.
+## Looks for words ending in -er, -ir, -re that are likely infinitive verbs.
+func _extract_verbs_relaxed(text: String) -> Array[Dictionary]:
+	var labels: Array[Dictionary] = []
+	var rx := RegEx.new()
+	# Match words that look like French infinitive verbs (capitalized or not)
+	# Exclude common non-verb -er words: dernier, premier, cahier, etc.
+	rx.compile("(?i)\\b([A-ZÀ-Ÿa-zà-ÿ]{3,15}(?:er|ir|re))\\b")
+	var seen: Dictionary = {}
+	for m in rx.search_all(text):
+		var word: String = m.get_string(1).strip_edges()
+		var upper: String = word.to_upper()
+		# Skip common non-verb words ending in -er/-ir/-re
+		if upper in ["DERNIER", "PREMIER", "ENTIER", "CAHIER", "SENTIER",
+				"DERRIERE", "PIERRE", "LUMIERE", "MATIERE", "RIVIERE",
+				"PRIERE", "MANIERE", "SORCIERE", "CLAIRIERE", "POUSSIERE",
+				"FIER", "CHER", "CHAIR", "HIER", "HIVER",
+				"PLAISIR", "DESIR", "AVENIR", "SOUVENIR",
+				"DIRE", "FAIRE", "ETRE", "AVOIR", "OUTRE", "ENTRE", "CONTRE"]:
+			continue
+		if upper in seen:
+			continue
+		seen[upper] = true
+		var desc := ""
+		# Try to grab text after the verb on the same line
+		var verb_pos: int = text.findn(word)
+		if verb_pos >= 0:
+			var line_end: int = text.find("\n", verb_pos)
+			if line_end < 0:
+				line_end = text.length()
+			var after: String = text.substr(verb_pos + word.length(), line_end - verb_pos - word.length()).strip_edges()
+			# Strip leading separators
+			if after.begins_with("—") or after.begins_with("-") or after.begins_with(":"):
+				after = after.substr(1).strip_edges()
+			if after.length() >= 3 and after.length() <= 150:
+				desc = after
+		labels.append({"verb": upper, "desc": desc})
+		if labels.size() >= 3:
+			break
+	if labels.size() > 0:
+		print("[MerlinLlmAdapter] Relaxed extraction found %d verbs" % labels.size())
 	return labels
 
 
@@ -1284,6 +1411,27 @@ func _build_balance_hint(context: Dictionary) -> String:
 	return ""
 
 
+## Build compact format instructions with rotating example.
+## Keeps format as the LAST thing the model sees (recency bias for small models).
+func _format_instructions(cards_played: int) -> String:
+	# RULE: "Tu" MUST be the first word and most prominent instruction.
+	# Qwen 1.5B ignores buried instructions — front-load the perspective constraint.
+	var s := "\n\nREGLE: Utilise TU (2eme personne). JAMAIS Je, Il, Elle, Nous, On."
+	s += "\nPhrases courtes, poetiques, sensorielles. Vocabulaire celtique breton."
+	s += "\nDecris ce que TU vis, puis 3 choix (A/B/C)."
+	s += "\n\nFormat:\nTu [scene 3-5 phrases]\nA) VERBE — action en 1 phrase\nB) VERBE — action differente\nC) VERBE — action differente"
+	# Rotate examples to prevent model from copying same verbs every time
+	match cards_played % 3:
+		0:
+			s += "\n\nExemple:\nTu decouvres une source bouillonnante entre les racines. L'eau noircit et une voix chante depuis les profondeurs.\nA) PLONGER — Tu enfonces les mains dans l'eau sombre pour saisir ce qui appelle.\nB) ECOUTER — Tu te penches et tentes de comprendre les mots de la voix.\nC) BLOQUER — Tu empiles des pierres pour sceller la source."
+		1:
+			s += "\n\nExemple:\nTu atteins un cercle de pierres dressees. Au centre, un feu bleu brule sans bois. Des ombres dansent sur les menhirs.\nA) TRAVERSER — Tu franchis le cercle et tends les mains vers la flamme bleue.\nB) GRAVER — Tu traces un ogham sur le menhir avec ta lame.\nC) SIFFLER — Tu imites le chant du merle pour troubler les ombres."
+		2:
+			s += "\n\nExemple:\nTu fais face a un pont de mousse au-dessus d'un ravin. Une creature bloque le passage et tend une main griffue.\nA) NEGOCIER — Tu offres une baie de ta besace en echange du passage.\nB) BONDIR — Tu sautes par-dessus la creature et cours vers l'autre rive.\nC) CARESSER — Tu poses la main sur sa tete moussue pour l'apaiser."
+	s += "\nTu [scene] puis A) B) C). Rien d'autre."
+	return s
+
+
 ## Build scenario injection block appended to ALL system prompts.
 ## Ensures scenario context always reaches the LLM regardless of template.
 func _build_scenario_injection(context: Dictionary) -> String:
@@ -1355,24 +1503,8 @@ func _build_arc_system_prompt(cards_played: int, theme_word: String, context: Di
 		sys = sys.replace("{arc_name}", str(context.get("scenario_title", "")))
 		# Balance intelligence: adapt narrative tone to player state
 		sys += _build_balance_hint(context)
-		# Append format instructions with ONE-SHOT EXAMPLE (small models follow examples better)
-		sys += "\n\nTON: Druide FOU mais BRILLANT. Moque-toi du voyageur. Digressions courtes. Poetique et sensoriel."
-		sys += "\nSCENARIO: Decris une SITUATION que le voyageur VIT (danger, decouverte, rencontre, enigme). PAS ce que Merlin fait. Le texte raconte ce qui ARRIVE au voyageur."
-		sys += "\nCHOIX: Les 3 options sont les REACTIONS du voyageur a cette situation. Verbes VARIES et SPECIFIQUES (jamais 'avancer', 'observer', 'fuir', 'suivre', 'chercher')."
-		sys += "\nREGLES: Utilise TU. Phrases courtes. Pas de 'Voici'. Pas de meta."
-		sys += "\n\nFormat EXACT:"
-		sys += "\n[situation en 4-5 phrases]"
-		sys += "\nA) VERBE — Ce que le voyageur fait concretement en 1 phrase"
-		sys += "\nB) VERBE — Action differente en 1 phrase"
-		sys += "\nC) VERBE — Action differente en 1 phrase"
-		sys += "\n\nExemple:"
-		sys += "\nHa! Un dolmen fissure bloque le sentier... la brume... oui. Des runes anciennes pulsent sur la pierre. Quelque chose gratte de l'autre cote, voyageur. Les korrigans chuchotent que c'est un piege... ou un tresor."
-		sys += "\nA) ESCALADER — Tu grimpes la paroi moussue, les doigts dans les fissures, et tu decouvres ce qui attend de l'autre cote."
-		sys += "\nB) DECHIFFRER — Tu poses les doigts sur les runes et lis leur logique avant que le dolmen ne se referme."
-		sys += "\nC) CONTOURNER — Tu longes la roche par le ravin, quitte a perdre du temps et des forces."
-		sys += "\nLe verbe en MAJUSCULES suivi de — puis description concrete. PAS de numerotation. PAS de titre. PAS de 'Voici'. PAS de meta. Juste la situation puis A) B) C)."
-		# Inject scenario context (always, regardless of template)
-		sys += _build_scenario_injection(context)
+		# Compact format instructions with rotating example (avoids model copying same verbs)
+		sys += _format_instructions(cards_played)
 		return sys
 
 	# Fallback: enriched default prompt
@@ -1396,22 +1528,7 @@ func _build_arc_system_prompt(cards_played: int, theme_word: String, context: Di
 		+ "ETAT: Vie=%d/100, Souffle=%d/1, Karma=%d\n" % [life, souffle, karma]
 		+ convergence_hint
 		+ balance_hint
-		+ "\n\nTON: Druide FOU mais BRILLANT. Moque-toi du voyageur. Digressions courtes. Poetique et sensoriel."
-		+ "\nSCENARIO: Decris une SITUATION que le voyageur VIT (danger, decouverte, rencontre, enigme). PAS ce que Merlin fait. Le texte raconte ce qui ARRIVE au voyageur."
-		+ "\nCHOIX: Les 3 options sont les REACTIONS du voyageur a cette situation. Verbes VARIES et SPECIFIQUES (jamais 'avancer', 'observer', 'fuir', 'suivre', 'chercher')."
-		+ "\nREGLES: Utilise TU. Phrases courtes. Pas de 'Voici'. Pas de meta."
-		+ "\n\nFormat EXACT:"
-		+ "\n[situation en 4-5 phrases]"
-		+ "\nA) VERBE — Ce que le voyageur fait concretement en 1 phrase"
-		+ "\nB) VERBE — Action differente en 1 phrase"
-		+ "\nC) VERBE — Action differente en 1 phrase"
-		+ "\n\nExemple:"
-		+ "\nHa! Un dolmen fissure bloque le sentier... la brume... oui. Des runes anciennes pulsent sur la pierre. Quelque chose gratte de l'autre cote, voyageur. Les korrigans chuchotent que c'est un piege... ou un tresor."
-		+ "\nA) ESCALADER — Tu grimpes la paroi moussue, les doigts dans les fissures, et tu decouvres ce qui attend de l'autre cote."
-		+ "\nB) DECHIFFRER — Tu poses les doigts sur les runes et lis leur logique avant que le dolmen ne se referme."
-		+ "\nC) CONTOURNER — Tu longes la roche par le ravin, quitte a perdre du temps et des forces."
-		+ "\nLe verbe en MAJUSCULES suivi de — puis description concrete. PAS de numerotation. PAS de titre. PAS de 'Voici'. PAS de meta. Juste la situation puis A) B) C)."
-		+ _build_scenario_injection(context)
+		+ _format_instructions(cards_played)
 	)
 
 
@@ -1572,31 +1689,37 @@ func _generate_contextual_effects(context_or_aspects: Dictionary) -> Array:
 
 	var effects: Array = []
 
-	# RISK-REWARD SCALING: All options use positive effects (HEAL_LIFE).
-	# _modulate_effects reverses them on failure → bigger effect = bigger risk AND bigger reward.
-	# Left=prudent (small), Center=equilibre (medium), Right=audacieux (big).
+	# TRIADE SYSTEM: Each option MUST shift an aspect (core gameplay mechanic).
+	# Without SHIFT_ASPECT, the triade is non-functional and aspects stay at 0/0/0.
+	# Left=Corps, Center=Ame (costs Souffle), Right=Monde.
+	# Direction adapts to current balance (push toward equilibre when at risk).
 
-	# Option 1 (left): Prudent — low risk, low reward
-	var left_amount: int = base_amount
-	if life < 40 or balance_score < 30:
-		left_amount = base_amount + 2  # Critical state: safer choice heals more
-	effects.append({"type": "HEAL_LIFE", "amount": left_amount})
+	var aspect_names: Array = ["Corps", "Ame", "Monde"]
+	var corps_val: int = int(aspects.get("Corps", 0))
+	var ame_val: int = int(aspects.get("Ame", 0))
+	var monde_val: int = int(aspects.get("Monde", 0))
+	var aspect_vals: Array = [corps_val, ame_val, monde_val]
 
-	# Option 2 (center): Balanced — medium risk, medium reward (costs Souffle)
-	var center_amount: int = base_amount + 2
-	if balance_score > 80:
-		center_amount = base_amount + 3  # Comfortable: higher stakes
-	effects.append({"type": "HEAL_LIFE", "amount": center_amount})
+	# Option 1 (left): Corps — physical, prudent
+	# Direction adapts: push toward equilibre when at risk, else alternate
+	var left_dir: String = "up" if corps_val <= 0 else "down"
+	if risk_aspect == "Corps":
+		left_dir = "down" if corps_val > 0 else "up"
+	effects.append({"type": "SHIFT_ASPECT", "aspect": "Corps", "direction": left_dir})
 
-	# Option 3 (right): Audacious — high risk, high reward
-	var right_amount: int = base_amount + 4
-	if cards_played >= 8:
-		right_amount = base_amount + 6  # Late game: even bigger stakes
-	elif balance_score < 30:
-		right_amount = base_amount + 3  # In danger: slightly reduced stakes
-	effects.append({"type": "HEAL_LIFE", "amount": right_amount})
+	# Option 2 (center): Ame — spiritual, balanced (costs Souffle)
+	var center_dir: String = "up" if ame_val <= 0 else "down"
+	if risk_aspect == "Ame":
+		center_dir = "down" if ame_val > 0 else "up"
+	effects.append({"type": "SHIFT_ASPECT", "aspect": "Ame", "direction": center_dir})
 
-	# Late game: add PROGRESS_MISSION to right option for convergence
+	# Option 3 (right): Monde — worldly, audacious
+	var right_dir: String = "up" if monde_val <= 0 else "down"
+	if risk_aspect == "Monde":
+		right_dir = "down" if monde_val > 0 else "up"
+	effects.append({"type": "SHIFT_ASPECT", "aspect": "Monde", "direction": right_dir})
+
+	# Late game: replace right option with PROGRESS_MISSION for convergence
 	if cards_played >= 10:
 		effects[2] = {"type": "PROGRESS_MISSION", "step": 1}
 
@@ -1725,7 +1848,8 @@ func calculate_smart_effects(context: Dictionary, scenario_text: String, labels:
 	var souffle: int = int(context.get("souffle", 1))
 
 	var system := "Maitre du Jeu. Reponds UNIQUEMENT en JSON, rien d'autre.\n"
-	system += "Effets: DAMAGE_LIFE, HEAL_LIFE, ADD_KARMA, ADD_SOUFFLE.\n"
+	system += "Effets: DAMAGE_LIFE, HEAL_LIFE, ADD_KARMA, ADD_SOUFFLE, SHIFT_ASPECT.\n"
+	system += "SHIFT_ASPECT: {\"type\":\"SHIFT_ASPECT\",\"aspect\":\"Corps|Ame|Monde\",\"direction\":\"up|down\"}\n"
 	system += "Format exact: {\"effects\":[[{\"type\":\"X\",\"amount\":N}],[{\"type\":\"Y\",\"amount\":M}],[{\"type\":\"Z\",\"amount\":P}]]}\n"
 	system += "3 tableaux = 3 choix. 1 effet par choix. amount entre 1 et 8."
 
@@ -1774,18 +1898,24 @@ func _parse_smart_effects_json(raw: String) -> Array:
 	if not effects_raw is Array or effects_raw.size() != 3:
 		return []
 
-	var valid_types := ["DAMAGE_LIFE", "HEAL_LIFE", "ADD_KARMA", "ADD_SOUFFLE"]
+	var valid_types := ["DAMAGE_LIFE", "HEAL_LIFE", "ADD_KARMA", "ADD_SOUFFLE", "SHIFT_ASPECT"]
 	var result: Array = []
 	for option_effects in effects_raw:
 		if not option_effects is Array:
 			return []
 		var validated: Array = []
 		for eff in option_effects:
-			if eff is Dictionary and eff.has("type") and eff.has("amount"):
-				var eff_type: String = str(eff["type"])
+			if not eff is Dictionary or not eff.has("type"):
+				continue
+			var eff_type: String = str(eff["type"])
+			if eff_type == "SHIFT_ASPECT":
+				var aspect: String = str(eff.get("aspect", ""))
+				var direction: String = str(eff.get("direction", "up"))
+				if aspect in ["Corps", "Ame", "Monde"] and direction in ["up", "down"]:
+					validated.append({"type": "SHIFT_ASPECT", "aspect": aspect, "direction": direction})
+			elif eff_type in valid_types and eff.has("amount"):
 				var eff_amount: int = clampi(int(eff["amount"]), 1, 10)
-				if eff_type in valid_types:
-					validated.append({"type": eff_type, "amount": eff_amount})
+				validated.append({"type": eff_type, "amount": eff_amount})
 		if validated.is_empty():
 			validated.append({"type": "HEAL_LIFE", "amount": 3})
 		result.append(validated)
@@ -2199,8 +2329,12 @@ func _validate_triade_effect(effect: Dictionary) -> Dictionary:
 
 	match effect_type:
 		"SHIFT_ASPECT", "SET_ASPECT":
-			# Aspect system removed — convert to HEAL_LIFE
-			return {"type": "HEAL_LIFE", "amount": 5}
+			# Triade core mechanic — validate and pass through
+			var aspect: String = str(effect.get("aspect", ""))
+			var direction: String = str(effect.get("direction", "up"))
+			if aspect in ["Corps", "Ame", "Monde"] and direction in ["up", "down"]:
+				return {"type": effect_type, "aspect": aspect, "direction": direction}
+			return {}
 
 		"DAMAGE_LIFE", "HEAL_LIFE":
 			var amount := clampi(int(effect.get("amount", 5)), 1, 20)

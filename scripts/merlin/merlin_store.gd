@@ -1372,9 +1372,17 @@ func _resolve_triade_choice(card: Dictionary, option: int, modulated_effects: Ar
 func _apply_triade_effect(effect: Dictionary) -> void:
 	var effect_type: String = str(effect.get("type", ""))
 	match effect_type:
-		"SHIFT_ASPECT", "SET_ASPECT":
-			# Aspect system removed — no-op
-			pass
+		"SHIFT_ASPECT":
+			var aspect: String = str(effect.get("aspect", ""))
+			var direction: String = str(effect.get("direction", ""))
+			if not aspect.is_empty() and not direction.is_empty():
+				_shift_aspect(aspect, direction)
+		"SET_ASPECT":
+			# Direct set (legacy) — treat as shift
+			var aspect: String = str(effect.get("aspect", ""))
+			var direction: String = str(effect.get("direction", "up"))
+			if not aspect.is_empty():
+				_shift_aspect(aspect, direction)
 		"DAMAGE_LIFE":
 			var amount: int = int(effect.get("amount", 0))
 			_damage_life(amount)

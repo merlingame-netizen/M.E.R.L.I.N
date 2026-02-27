@@ -793,7 +793,13 @@ func _resolve_choice(option: int) -> void:
 		use_minigame = true
 
 	# Chance modifier: force minigame with specific type from card
-	var chance_minigame: String = str(current_card.get("minigame", ""))
+	# "minigame" can be a Dict (from _detect_minigame) or empty string
+	var mg_field_raw = current_card.get("minigame", "")
+	var chance_minigame: String = ""
+	if mg_field_raw is Dictionary:
+		chance_minigame = str(mg_field_raw.get("id", ""))
+	elif mg_field_raw is String:
+		chance_minigame = mg_field_raw
 	if not chance_minigame.is_empty() and not headless_mode:
 		use_minigame = true
 
