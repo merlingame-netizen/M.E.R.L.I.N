@@ -1842,12 +1842,6 @@ func _call_llm(user_prompt: String) -> String:
 		_update_llm_test_badge("llm")
 		return _clean_llm_response(str(result.get("text", "")))
 
-	# Fallback: debug_execute_input
-	if merlin_ai.has_method("debug_execute_input"):
-		var result: Dictionary = await merlin_ai.debug_execute_input(user_prompt)
-		_update_llm_test_badge("llm")
-		return _clean_llm_response(str(result.get("response", result.get("text", ""))))
-
 	return "LLM: aucune methode disponible."
 
 

@@ -27,7 +27,6 @@ var _swarm_scheduler: BrainSwarmScheduler = null          # Smart allocation (Ph
 
 const PROMPTS_PATH := "res://data/ai/config/prompts.json"
 const PROMPT_TEMPLATES_PATH := "res://data/ai/config/prompt_templates.json"
-const ACTIONS_PATH := "res://data/ai/config/actions.json"
 const SCENE_PROFILES_PATH := "res://data/ai/config/scene_profiles.json"
 const PERSONA_CONFIG_PATH := "res://data/ai/config/merlin_persona.json"
 
@@ -52,8 +51,6 @@ var brain_count: int = 0  # Actual loaded count (set by _init_local_models)
 var _target_brain_count: int = 0  # Requested count (0 = auto-detect)
 
 var rag_manager: RAGManager
-var action_validator: ActionValidator
-var game_state_sync: GameStateSync
 
 # ── Primary Brain Instances (always dedicated to their role) ───────────────
 var narrator_llm: Object = null      # Brain 1: Creative (toujours present)
@@ -133,10 +130,6 @@ const SESSION_PERSIST_LIMIT := 50
 const STREAM_CHUNK_TOKENS := 32
 const STREAM_MAX_ROUNDS := 4
 var stats := {
-	"fast_route_hits": 0,
-	"fast_route_suggests": 0,
-	"llm_route_calls": 0,
-	"total_requests": 0,
 	"last_ttft_ms": 0,
 	"last_total_ms": 0,
 	"avg_ttft_ms": 0.0,
@@ -150,11 +143,7 @@ var _warmup_attempt_time := 0
 func _ready() -> void:
 	set_process(false)  # Enabled when background tasks are active
 	rag_manager = RAGManager.new()
-	action_validator = ActionValidator.new()
-	game_state_sync = GameStateSync.new()
 	add_child(rag_manager)
-	add_child(action_validator)
-	add_child(game_state_sync)
 	_load_prompts()
 	_load_prompt_templates()
 	_load_scene_profiles()
@@ -202,82 +191,6 @@ func _exit_tree() -> void:
 		_brain_process_manager = null
 
 
-func process_player_input(input_text: String) -> void:
-	stats.total_requests += 1
-	if not is_ready:
-		_set_status("Connexion: OFF", "Modeles non charges", 0.0)
-		error_occurred.emit("Modeles non charges")
-		return
-	var fast_result := FastRoute.classify(input_text)
-	var category: String
-	if fast_result.confidence >= 0.6:
-		category = fast_result.category
-		stats.fast_route_hits += 1
-		_log("FastRoute: '%s' -> %s (%.0f%%)" % [input_text.substr(0, 30), category, fast_result.confidence * 100.0])
-	elif fast_result.confidence >= 0.3:
-		category = fast_result.category
-		stats.fast_route_suggests += 1
-		_log("FastRoute suggest: '%s' -> %s (%.0f%%)" % [input_text.substr(0, 30), category, fast_result.confidence * 100.0])
-	else:
-		category = await _route_input(input_text)
-		stats.llm_route_calls += 1
-		_log("LLM Route: '%s' -> %s" % [input_text.substr(0, 30), category])
-	var context = await rag_manager.get_relevant_context(input_text, category)
-	var result = await _execute_with_context(input_text, context, category)
-	if result.has("action") and result.action != null:
-		var validated = action_validator.validate(result.action)
-		if validated.valid:
-			game_state_sync.apply_action(result.action)
-			action_executed.emit(result.action)
-		else:
-			_log("Action invalide: " + JSON.stringify(validated.errors))
-	rag_manager.add_to_history(input_text, str(result.get("response", "")))
-	response_received.emit(result)
-
-func debug_route_input(input_text: String) -> String:
-	if not is_ready:
-		return "LLM non pret"
-	return await _route_input(input_text)
-
-func debug_execute_input(input_text: String) -> Dictionary:
-	if not is_ready:
-		return {"response": "LLM non pret", "action": null}
-	var category = await _route_input(input_text)
-	var context = await rag_manager.get_relevant_context(input_text, category)
-	return await _execute_with_context(input_text, context, category)
-
-func get_routing_stats() -> Dictionary:
-	var total = stats.total_requests
-	if total == 0:
-		return stats.duplicate(true)
-	var result = stats.duplicate(true)
-	result["fast_route_rate"] = "%.1f%%" % ((stats.fast_route_hits + stats.fast_route_suggests) / float(total) * 100.0)
-	result["llm_route_rate"] = "%.1f%%" % (stats.llm_route_calls / float(total) * 100.0)
-	return result
-
-func reset_routing_stats() -> void:
-	stats = {
-		"fast_route_hits": 0,
-		"fast_route_suggests": 0,
-		"llm_route_calls": 0,
-		"total_requests": 0,
-		"last_ttft_ms": 0,
-		"last_total_ms": 0,
-		"avg_ttft_ms": 0.0,
-		"avg_total_ms": 0.0,
-		"llm_calls": 0
-	}
-
-func get_performance_stats() -> Dictionary:
-	return {
-		"last_ttft_ms": stats.last_ttft_ms,
-		"last_total_ms": stats.last_total_ms,
-		"avg_ttft_ms": "%.1f" % stats.avg_ttft_ms,
-		"avg_total_ms": "%.1f" % stats.avg_total_ms,
-		"llm_calls": stats.llm_calls,
-		"tokens_per_sec": "%.1f" % (1000.0 / stats.avg_total_ms) if stats.avg_total_ms > 0 else "N/A"
-	}
-
 func cancel_current_generation() -> void:
 	## Cancel any in-progress LLM generation (prefetch or otherwise).
 	## Called by MOS when generate_card() needs to reclaim the LLM.
@@ -291,39 +204,6 @@ func is_llm_busy() -> bool:
 	if narrator_llm and narrator_llm.has_method("is_generating_now"):
 		return narrator_llm.is_generating_now()
 	return false
-
-func _route_input(input_text: String) -> String:
-	var system = prompts.get("router_system", "")
-	var template = prompts.get("router_template", "{input}")
-	var prompt = template.format({"system": system, "input": input_text})
-	var result = await _run_llm(narrator_llm, prompt, narrator_params)
-	if result.has("error"):
-		_log("Routeur erreur: " + str(result.error))
-		return "dialogue"
-	return _parse_category(str(result.get("text", "")))
-
-func _execute_with_context(input_text: String, context: Dictionary, category: String) -> Dictionary:
-	# Prompt simplifie pour les petits modeles — persona enrichie + few-shots
-	var system = prompts.get("executor_system", "Tu es Merlin, un sage druide. Reponds brievement.")
-	system = _augment_system_prompt_with_scene(system, "legacy")
-	var few_shot_block := _build_few_shot_chatml()
-	var template = prompts.get("executor_template", "<|im_start|>system\n{system}<|im_end|>\n<|im_start|>user\n{input}<|im_end|>\n<|im_start|>assistant\n")
-	var prompt: String
-	if few_shot_block != "":
-		prompt = "<|im_start|>system\n%s<|im_end|>\n%s\n<|im_start|>user\n%s<|im_end|>\n<|im_start|>assistant\n" % [system, few_shot_block, input_text]
-	else:
-		prompt = template.format({"system": system, "input": input_text})
-	_log("Prompt envoye: " + prompt.substr(0, 100) + "...")
-	var result = await _run_llm(narrator_llm, prompt, narrator_params)
-	if result.has("error"):
-		return {"response": "Erreur executeur: " + str(result.error), "action": null}
-	var text := clean_response(str(result.get("text", "")))
-	# Persona compliance check
-	var compliance := check_persona_compliance(text)
-	if not compliance.valid:
-		_log("Persona violation: %s" % str(compliance.violations))
-	_log("Reponse brute: " + text.substr(0, 100) + "...")
-	return {"response": text, "action": null}
 
 func _run_llm(llm: Object, prompt: String, params: Dictionary) -> Dictionary:
 	if llm == null:
@@ -412,29 +292,6 @@ func _run_llm(llm: Object, prompt: String, params: Dictionary) -> Dictionary:
 		return {"error": "LLM returned empty result"}
 
 	return state.result
-
-func _parse_category(response: String) -> String:
-	var clean = response.strip_edges().to_lower()
-	var allowed = ["combat", "dialogue", "exploration", "inventaire", "magie", "quete"]
-	for c in allowed:
-		if clean.find(c) != -1:
-			return c
-	return "dialogue"
-
-func _parse_executor_response(response: String) -> Dictionary:
-	var json = JSON.new()
-	if json.parse(response) == OK and json.data is Dictionary:
-		return json.data
-	return {"response": response, "action": null}
-
-func _get_actions_blob(category: String) -> String:
-	if FileAccess.file_exists(ACTIONS_PATH):
-		var file = FileAccess.open(ACTIONS_PATH, FileAccess.READ)
-		var data = JSON.parse_string(file.get_as_text())
-		file.close()
-		if typeof(data) == TYPE_DICTIONARY and data.has("categories") and data.categories.has(category):
-			return JSON.stringify(data.categories[category])
-	return "{}"
 
 func _load_prompts() -> void:
 	if FileAccess.file_exists(PROMPTS_PATH):
