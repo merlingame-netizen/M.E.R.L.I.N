@@ -46,7 +46,7 @@ Phase P2 — LoRA Training (Plan Bi-Cerveaux)
 
 ### WAVE 11: Integration P1
 - [x] P1.11.1 | Wire tous systemes MOS (run_start/end, sync, tags)
-- [ ] P1.11.2 | Validation P1
+- [x] P1.11.2 | Validation P1 (5/6 systemes wired, visual/audio tags design-only)
 
 ---
 
@@ -190,10 +190,10 @@ Plan: `.claude/plans/majestic-sprouting-pond.md`
 |---|------|--------|
 | E.1 | SFX Rework v1 — 9 sons manquants + UX contextuel Hub/Transition | FAIT (2026-02-25, commit `4415047`) |
 | E.2 | SFX Rework v2 — Waveforms pixel/celtique, D Dorian, 12 generators | FAIT (2026-02-25, commit `4592ebc`) |
-| T.1 | TransitionBiome Phase 1 — Scout pixels biome-colorés | A FAIRE |
-| T.2 | TransitionBiome Phase 1 — Sons ambiants par biome (7 generators) | A FAIRE |
-| T.3 | TransitionBiome Phase 3 — Titre biome-teinté (pulse couleur) | A FAIRE |
-| T.4 | TransitionBiome Phase 6 — Dissolution SFX burst (pixel_scatter + whoosh) | A FAIRE |
+| T.1 | TransitionBiome Phase 1 — Scout pixels biome-colorés | FAIT (deja impl.) |
+| T.2 | TransitionBiome Phase 1 — Sons ambiants par biome (7 generators) | FAIT (deja impl.) |
+| T.3 | TransitionBiome Phase 3 — Titre biome-teinté (pulse scale) | FAIT (2026-02-27, `e82b9d7`) |
+| T.4 | TransitionBiome Phase 6 — Dissolution SFX burst (biome_dissolve) | FAIT (2026-02-27, `e82b9d7`) |
 
 ### Phase C — Bestiole & Structure
 | # | Item | Statut |
@@ -212,4 +212,4 @@ Plan: `.claude/plans/majestic-sprouting-pond.md`
 | D.4 | Equilibrage global | A FAIRE |
 | D.5 | ~~Fix gui_embed_subviewports~~ | FAIT |
 
-*Updated: 2026-02-25 — Phase B COMPLETE (B.1-B.5), SFX Rework v1+v2, TransitionBiome UX T.1-T.4 planifiés*
+*Updated: 2026-02-27 — P1.11.2 VALIDE, T.1-T.4 FAIT, Perks wired, trust_merlin live, 10 studio agents*

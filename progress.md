@@ -2,6 +2,48 @@
 
 > **Note**: Sessions anterieures archivees dans `archive/progress_archive_2026-02-05_to_2026-02-08.md`
 
+## Session: 2026-02-27 — 7h Polish + Integration + P1 Validation
+
+### MC1: Housekeeping (commits `1753be6`, `abf3222`)
+- 10 studio agents committed (playtester_ai, balance_analyst, visual_qa, etc.)
+- VS Code extension v6.0 (6 sidebar panels)
+- LoRA training pipeline + game control scripts
+
+### MC2: Quick Wins (commit `1db1b61`)
+- **trust_merlin wired**: RelationshipRegistry.trust_points injecte dans context LLM (etait hardcode a 0)
+- **reveal_one/reveal_all skills**: affiche effets des options en overlay (etait `pass`)
+- **pause menu**: overlay CRT-styled avec Resume/Quitter (process_mode ALWAYS)
+
+### MC3: TransitionBiome T.3-T.4 (commit `e82b9d7`)
+- T.1 (scouts biome-colores) et T.2 (SFX ambiant) deja implementes
+- **T.3**: scale pulse titre biome (1.0-1.05-1.0 via Tween)
+- **T.4**: biome_dissolve SFX burst (noise + D Dorian plucks)
+
+### MC4: Souffle Perks (commit `719e06c`)
+- **bouclier**: absorbe premier SHIFT_ASPECT negatif (flag souffle_shield_active consomme)
+- **vision**: auto-reveal effets options sur la prochaine carte (flag souffle_vision_active consomme)
+- **surge/canalisation**: deja fonctionnels (DC bonus seul / activation ogham)
+- Script capture_baselines.ps1 pour Visual QA
+
+### MC5: P1.11.2 Validation E2E
+- 5/6 systemes P1 valides (pipeline, profiling, arcs, danger, RAG v2.1)
+- Visual/Audio tags: design only — future Phase C/D
+- Flow order: 8/8 scenes PASS
+- Smoke test: 20/20 scenes PASS
+- Editor Parse Check: 0 errors, 0 warnings
+
+### MC6: Data Bootstrap
+- `playtest_log.json` (1 session baseline EXPLORER)
+- `balance_report.json` (initial metrics, INSUFFICIENT_DATA)
+- `regression_log.json` (snapshot post-MC5: FPS 46.2, 0 errors, 20/20 scenes)
+
+### MC7: Final Validation
+- validate.bat Step 0: PASS (0 errors, 0 warnings)
+- 4 commits this session (1753be6, abf3222, 1db1b61, e82b9d7, 719e06c)
+- Git clean: all tracked changes committed
+
+---
+
 ## Session: 2026-02-25 — SFX Rework + UX Enrichissement Hub/Transition
 
 ### SFX System — 9 sons + méthode ajoutés (commit `4415047`)
