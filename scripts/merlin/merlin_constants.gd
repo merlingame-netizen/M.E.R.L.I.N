@@ -5,43 +5,10 @@ class_name MerlinConstants
 # SHARED ENUMS & ELEMENT LIST
 # ═══════════════════════════════════════════════════════════════════════════════
 
-const MERLIN_TONES := ["Protecteur", "Aventureux", "Pragmatique", "Sombre", "Pedagogue"]
-
 const ELEMENTS := [
 	"NATURE", "FEU", "EAU", "TERRE", "AIR", "FOUDRE", "GLACE", "POISON",
 	"METAL", "BETE", "ESPRIT", "OMBRE", "LUMIERE", "ARCANE"
 ]
-
-# ═══════════════════════════════════════════════════════════════════════════════
-# OGHAMS AS BESTIOLE SKILLS
-# ═══════════════════════════════════════════════════════════════════════════════
-
-const OGHAM_SKILLS := {
-	# REVEAL category
-	"beith": {"name": "Bouleau", "category": "reveal", "cooldown": 3, "effect": "reveal_one"},
-	"coll": {"name": "Noisetier", "category": "reveal", "cooldown": 5, "effect": "reveal_all"},
-	"ailm": {"name": "Sapin", "category": "reveal", "cooldown": 4, "effect": "predict_next"},
-	# PROTECTION category
-	"luis": {"name": "Sorbier", "category": "protection", "cooldown": 4, "effect": "reduce_30"},
-	"gort": {"name": "Lierre", "category": "protection", "cooldown": 6, "effect": "absorb_one"},
-	"eadhadh": {"name": "Tremble", "category": "protection", "cooldown": 8, "effect": "skip_negative"},
-	# BOOST category
-	"duir": {"name": "Chene", "category": "boost", "cooldown": 4, "effect": "boost_50"},
-	"tinne": {"name": "Houx", "category": "boost", "cooldown": 5, "effect": "double_gain"},
-	"onn": {"name": "Ajonc", "category": "boost", "cooldown": 7, "effect": "boost_20_3turns"},
-	# NARRATIVE category
-	"nuin": {"name": "Frene", "category": "narrative", "cooldown": 6, "effect": "add_option"},
-	"huath": {"name": "Aubepine", "category": "narrative", "cooldown": 5, "effect": "change_card"},
-	"straif": {"name": "Prunellier", "category": "narrative", "cooldown": 10, "effect": "force_rare"},
-	# RECOVERY category
-	"quert": {"name": "Pommier", "category": "recovery", "cooldown": 4, "effect": "heal_lowest_15"},
-	"ruis": {"name": "Sureau", "category": "recovery", "cooldown": 8, "effect": "balance_gauges"},
-	"saille": {"name": "Saule", "category": "recovery", "cooldown": 6, "effect": "regen_5_3turns"},
-	# SPECIAL category
-	"muin": {"name": "Vigne", "category": "special", "cooldown": 7, "effect": "invert_effects"},
-	"ioho": {"name": "If", "category": "special", "cooldown": 12, "effect": "full_reroll"},
-	"ur": {"name": "Bruyere", "category": "special", "cooldown": 10, "effect": "sacrifice_trade"},
-}
 
 const OGHAM_STARTER_SKILLS := ["beith", "luis", "quert"]
 
@@ -139,14 +106,6 @@ static func infer_reward_type(effects: Array) -> String:
 # ESSENCE COLLECTIBLES — Fragments magiques lies aux categories Ogham
 # ═══════════════════════════════════════════════════════════════════════════════
 
-const ESSENCE_TYPES := {
-	"eclat_bouleau": {"name": "Eclat de Bouleau", "category": "reveal", "rarity": "common", "icon": "<>"},
-	"seve_sorbier": {"name": "Seve de Sorbier", "category": "protection", "rarity": "common", "icon": "^"},
-	"coeur_chene": {"name": "Coeur de Chene", "category": "boost", "rarity": "uncommon", "icon": "\u2666"},
-	"larme_saule": {"name": "Larme de Saule", "category": "recovery", "rarity": "uncommon", "icon": "\u2728"},
-	"braise_prunellier": {"name": "Braise de Prunellier", "category": "narrative", "rarity": "rare", "icon": "\u2736"},
-	"racine_if": {"name": "Racine d'If", "category": "special", "rarity": "rare", "icon": "\u2742"},
-}
 
 const ESSENCE_DROP_CHANCE := 0.2  # 20% on non-anchor SUCCESS
 const ESSENCE_ANCHOR_DROP := 2    # Guaranteed +2 at anchor positions
@@ -366,18 +325,6 @@ const MISSION_TEMPLATES := {
 	},
 }
 
-# Hidden depth systems (for tracking)
-const HIDDEN_DEPTH_LAYERS := [
-	"resonances",
-	"player_profile",
-	"inter_run_echoes",
-	"ogham_synergies",
-	"hidden_quests",
-	"lunar_cycles",
-	"bestiole_personality",
-	"narrative_debt"
-]
-
 # ═══════════════════════════════════════════════════════════════════════════════
 # POWER MILESTONES — Player gets stronger every 5 cards during a run
 # ═══════════════════════════════════════════════════════════════════════════════
@@ -401,26 +348,6 @@ const AWEN_REGEN_EQUILIBRE_BONUS := 1  # +1 extra if all 3 aspects balanced
 # ═══════════════════════════════════════════════════════════════════════════════
 # OGHAM FULL SPECS — Complete Ogham definitions for Triade system
 # ═══════════════════════════════════════════════════════════════════════════════
-
-const OGHAM_CATEGORIES := ["reveal", "protection", "boost", "narrative", "recovery", "special"]
-
-const OGHAM_CATEGORY_COLORS := {
-	"reveal": Color(0.294, 0.706, 0.902),
-	"protection": Color(0.314, 0.745, 0.529),
-	"boost": Color(1.0, 0.824, 0.0),
-	"narrative": Color(0.659, 0.529, 0.847),
-	"recovery": Color(1.0, 0.706, 0.902),
-	"special": Color(0.733, 0.290, 0.251),
-}
-
-const OGHAM_CATEGORY_LABELS := {
-	"reveal": "Revelation",
-	"protection": "Protection",
-	"boost": "Force",
-	"narrative": "Recit",
-	"recovery": "Guerison",
-	"special": "Secret",
-}
 
 const OGHAM_FULL_SPECS := {
 	# ── REVEAL ──
@@ -923,15 +850,6 @@ const TALENT_NODES := {
 	},
 }
 
-# Achievement for unlocking Calendrier des Brumes
-const ACHIEVEMENT_PELERIN_DES_DATES := {
-	"id": "pelerin_des_dates",
-	"name": "Pelerin des Dates",
-	"description": "Participe a 8 evenements calendaires.",
-	"condition": {"events_participated": 8},
-	"reward": "calendrier_des_brumes",
-}
-
 # Talent branch colors for UI
 const TALENT_BRANCH_COLORS := {
 	"Corps": Color(0.55, 0.40, 0.25),     # Earthy brown
@@ -1081,36 +999,6 @@ const EXPEDITION_TOOLS := {
 	},
 }
 
-const DEPARTURE_CONDITIONS := {
-	"jour": {
-		"name": "Partir de jour",
-		"icon": "\u2600",  # Sun
-		"description": "Le chemin est clair",
-		"effect_label": "Normal",
-		"initial_effects": [],
-	},
-	"nuit": {
-		"name": "Partir de nuit",
-		"icon": "\u263D",  # Moon
-		"description": "Plus risque, plus de karma",
-		"effect_label": "+karma, DCs +2",
-		"initial_effects": [{"type": "KARMA", "amount": 3}, {"type": "DC_OFFSET", "amount": 2}],
-	},
-	"compagnon": {
-		"name": "Avec compagnon",
-		"icon": "\u2660",  # Spade (companion)
-		"description": "Le Monde repond mieux",
-		"effect_label": "Monde +1",
-		"initial_effects": [{"type": "HEAL_LIFE", "amount": 10}],
-	},
-	"leger": {
-		"name": "Voyager leger",
-		"icon": "\u2192",  # Arrow right
-		"description": "Mission plus courte",
-		"effect_label": "-2 cartes mission",
-		"initial_effects": [{"type": "MISSION_REDUCTION", "amount": 2}],
-	},
-}
 
 const EXPEDITION_MERLIN_REACTIONS := {
 	"baton_marche": "Le Baton de Marche... un classique. Il ne te trahira pas.",
