@@ -594,20 +594,27 @@ func _load_prerun_cards() -> void:
 	## Load pre-generated cards from TransitionBiome temp file into buffer.
 	var prerun_path := "user://temp_run_cards.json"
 	if not FileAccess.file_exists(prerun_path):
+		print("[TRIADE] No prerun cards file found at %s" % prerun_path)
+		print("[TRIADE] Card buffer empty, LLM will generate on demand")
 		return
 	var file := FileAccess.open(prerun_path, FileAccess.READ)
 	if not file:
+		print("[TRIADE] Failed to open prerun cards file")
 		return
-	var data = JSON.parse_string(file.get_as_text())
+	var raw_text: String = file.get_as_text()
 	file.close()
 	DirAccess.remove_absolute(prerun_path)
+	var data = JSON.parse_string(raw_text)
 	if not data is Array:
+		print("[TRIADE] Prerun cards file invalid (not Array): %s" % raw_text.left(100))
 		return
 	for card in data:
 		if card is Dictionary and card.has("text") and card.has("options"):
 			_card_buffer.append(card)
 	if not _card_buffer.is_empty():
 		print("[TRIADE] Loaded %d pre-generated cards from TransitionBiome" % _card_buffer.size())
+	else:
+		print("[TRIADE] Prerun file had %d entries but none valid" % data.size())
 
 
 func _build_merlin_intro_speech(biome_key: String, season_hint: String) -> String:

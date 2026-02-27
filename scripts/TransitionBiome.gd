@@ -371,6 +371,14 @@ func _get_time_of_day_label(hour: int) -> String:
 	return "Nuit"
 
 
+func _get_current_season() -> String:
+	var month: int = Time.get_datetime_dict_from_system().get("month", 1)
+	if month >= 3 and month <= 5: return "printemps"
+	if month >= 6 and month <= 8: return "ete"
+	if month >= 9 and month <= 11: return "automne"
+	return "hiver"
+
+
 func _update_solar_clock(_instant: bool) -> void:
 	_layout_solar_arc_geometry()
 	var now: Dictionary = Time.get_datetime_dict_from_system()
@@ -1105,9 +1113,9 @@ func _phase_quest_preparation() -> void:
 	# Notification visuelle récompense
 	await _show_faveur_reward(vs, faveurs_earned)
 
-	# Attendre la fin de la génération si pas encore terminée
+	# Attendre la fin de la génération si pas encore terminée (120s max — cards take ~10-20s each)
 	var wait_time: float = 0.0
-	while not _cards_generated and wait_time < 30.0:
+	while not _cards_generated and wait_time < 120.0:
 		if scene_finished or not is_inside_tree():
 			break
 		if _quest_progress_label and is_instance_valid(_quest_progress_label):
@@ -1149,18 +1157,23 @@ func _generate_cards_background() -> void:
 			await get_tree().process_frame
 
 	for i in range(PRERUN_CARD_COUNT):
-		if scene_finished or not is_inside_tree():
+		# Don't break on scene_finished — keep generating even during dissolution
+		# Only break if node is freed (is_inside_tree check for await safety)
+		if not is_inside_tree():
 			break
 		if _quest_progress_label and is_instance_valid(_quest_progress_label):
 			_quest_progress_label.text = "Tissage %d/%d..." % [i + 1, PRERUN_CARD_COUNT]
 		var card: Dictionary = await _generate_prerun_card(i)
 		if not card.is_empty():
 			_prerun_cards.append(card)
-		SFXManager.play_varied("pixel_land", 0.3)
+			# Save incrementally — even if scene transitions, partial cards are available
+			_save_prerun_cards()
+			print("[TransitionBiome] BG: card %d/%d saved (%d total)" % [i + 1, PRERUN_CARD_COUNT, _prerun_cards.size()])
+		if is_inside_tree() and not scene_finished:
+			SFXManager.play_varied("pixel_land", 0.3)
 
-	_save_prerun_cards()
 	_cards_generated = true
-	print("[TransitionBiome] BG: %d cartes générées." % _prerun_cards.size())
+	print("[TransitionBiome] BG: generation complete, %d cartes saved." % _prerun_cards.size())
 
 
 func _show_de_du_destin_minigame(vs: Vector2) -> Dictionary:
@@ -1454,6 +1467,54 @@ func _cascade_landscape_stage(stage_pixels: Array) -> void:
 	await _safe_wait(0.25)
 
 
+func _strip_meta_text(text: String) -> String:
+	## Remove meta-commentary, prompt leaks, and instruction fragments from LLM output.
+	# FIX 23+26a: Expanded meta-words list — catches self-intro, option meta-text, stage directions
+	var meta_words: Array[String] = [
+		"decrochez le choix", "decrocher le choix", "choisir entre",
+		"(a)", "(b)", "(c)", "chaudron de", "tendres choix", "(a/b/c)", "a/b/c",
+		"regle stricte", "meta-commentaire", "vocabulaire celtique",
+		"ecris une scene", "3 choix", "biome:", "carte:", "role:",
+		"action a)", "action b)", "action c)",
+		"scene narrative", "phrases)", "villageois]",
+		"trois options", "trois choix", "je vais te donner",
+		"je suis merlin", "je suis le druide", "je suis un druide",
+		"je suis une voix", "je suis un ancien", "je suis le gardien",
+		"voici les choix", "voici trois", "voici les options",
+		"reprendre la scene", "scene precedente",
+		"voici une introduction", "introduction detaillee",
+		"voici ta reponse", "voici la reponse", "voici le resultat",
+		"je suis pret", "je suis prete",
+		"merlin est un", "merlin est le",
+		"tu as choisi", "tu choisis", "ta reponse",
+		"avec une voix", "d'une voix",
+		"ensemble nous formons", "formons un arc",
+		"c'est une situation", "situation difficile",
+		"narration:", "narrateur:", "scenario:",
+		"la roche tremble", "un grondement sourd", "escalader la paroi",
+		"invoquer la pierre", "fuir vers le vallon",
+	]
+	var result := text
+	# Strip markdown bold markers and their meta content
+	var rx_md := RegEx.new()
+	rx_md.compile("\\*\\*[^*]{0,60}\\*\\*:?")
+	result = rx_md.sub(result, "", true)
+	# Strip lines with meta-words
+	for mw in meta_words:
+		var pos := result.to_lower().find(mw)
+		while pos >= 0:
+			var line_start := result.rfind("\n", pos)
+			var line_end := result.find("\n", pos)
+			if line_start < 0: line_start = 0
+			if line_end < 0: line_end = result.length()
+			result = result.substr(0, line_start) + result.substr(line_end)
+			pos = result.to_lower().find(mw)
+	# Clean multiple blank lines
+	while result.contains("\n\n\n"):
+		result = result.replace("\n\n\n", "\n\n")
+	return result.strip_edges()
+
+
 func _generate_prerun_card(index: int) -> Dictionary:
 	## Generate one pre-run card via LLM only. Returns {} if LLM unavailable.
 	if not merlin_ai or not merlin_ai.get("is_ready") or not merlin_ai.has_method("generate_with_system"):
@@ -1481,17 +1542,14 @@ func _try_llm_prerun_card(index: int) -> Dictionary:
 	]
 	var arc_role: String = arc_roles[mini(index, arc_roles.size() - 1)]
 
+	# FIX 21+26d+27: Prompt — 2e personne, example from DIFFERENT biome to prevent copying
 	var system_prompt := (
-		"Tu es Merlin l'Enchanteur, druide de Broceliande. Conte au present en francais.\n"
-		+ "BIOME: %s | CARTE: %d/5 | ROLE: %s\n" % [biome_name, index + 1, arc_role]
-		+ "\nREGLE STRICTE:\n"
-		+ "1. Ecris UNE scene narrative (3-5 phrases, vocabulaire celtique)\n"
-		+ "2. Puis EXACTEMENT 3 choix:\nA) [verbe a l'infinitif + complement]\nB) [verbe + complement]\nC) [verbe + complement]\n"
-		+ "3. JAMAIS de meta-commentaire, JAMAIS d'anglais\n\n"
-		+ "EXEMPLE:\nLa brume s'epaissit entre les menhirs. Un corbeau croasse depuis le chene mort.\n"
-		+ "A) Toucher la rune pulsante\nB) Suivre le corbeau\nC) Contourner le menhir"
+		"Narration 2e personne (tu). Present. Francais. %s.\n" % biome_name
+		+ "INTERDIT: 'je suis', 'je me', meta-commentaire, repeter l'exemple.\n"
+		+ "La roche tremble sous tes pieds. Un grondement sourd monte des profondeurs.\n"
+		+ "A) Escalader la paroi\nB) Invoquer la pierre\nC) Fuir vers le vallon"
 	)
-	var user_prompt := "Carte %d/5. Biome: %s. %s" % [index + 1, biome_name, arc_role.split(":")[0]]
+	var user_prompt := "%s. Decris le lieu (tu), 3 phrases, puis A) B) C)." % arc_role.split(":")[0]
 
 	var params := {"max_tokens": 200, "temperature": 0.7 + index * 0.02}
 	var result: Dictionary = await merlin_ai.generate_with_system(system_prompt, user_prompt, params)
@@ -1501,11 +1559,15 @@ func _try_llm_prerun_card(index: int) -> Dictionary:
 
 	var raw_text: String = str(result.get("text", ""))
 
-	# Try to extract labels and sequel hooks from text
+	# Strip meta-text / prompt leak (same patterns as merlin_llm_adapter FIX 12)
+	raw_text = _strip_meta_text(raw_text)
+
+	# FIX 22: Extract labels with permissive regex — captures A)/B)/C), A-/B-/C-, 1//2//3/, 1./2./3.
 	var labels: Array[String] = []
 	var sequel_hooks: Array[String] = []
 	var rx := RegEx.new()
-	rx.compile("(?m)^\\s*(?:[-*]\\s*)?\\*{0,2}(?:(?:Action\\s+)?[A-C][):.\\]]|[1-3][.)]|[-*])\\*{0,2}[:\\s]+(.+)")
+	# Captures: A-D) a-d), A-D-, 1-4/, 1-4., -/*, §, Action A)
+	rx.compile("(?m)^\\s*(?:[§\\-*]\\s*)?\\*{0,2}(?:(?:Action\\s+)?[A-Da-d]\\s*[):.\\]\\-/]|[1-4]\\s*[.)/])\\*{0,2}[:\\s]*(.+)")
 	var matches := rx.search_all(raw_text)
 	for m in matches:
 		var full_label := m.get_string(1).strip_edges().replace("**", "").replace("*", "")
@@ -1519,29 +1581,114 @@ func _try_llm_prerun_card(index: int) -> Dictionary:
 				labels.append(full_label)
 				sequel_hooks.append("")
 
-	# Remove choices from narrative text
+	# FIX 22+25+26b+27: Strip ALL inline options from narrative text (line-start AND paragraph-inline)
 	var narrative := raw_text
-	if labels.size() >= 2:
-		var rx2 := RegEx.new()
-		rx2.compile("(?m)^\\s*(?:[-*]\\s*)?\\*{0,2}(?:(?:Action\\s+)?[A-C][):.\\]]|[1-3][.)]|[-*])\\*{0,2}[:\\s]+")
-		var first_choice := rx2.search(raw_text)
-		if first_choice:
-			narrative = raw_text.substr(0, first_choice.get_start()).strip_edges()
+	var rx_strip := RegEx.new()
+	# Strip any line starting with A)/B)/C), a-c, 1-9 (any digit), §, or dash/star option markers
+	rx_strip.compile("(?m)^\\s*(?:[§\\-*]\\s*)?\\*{0,2}(?:(?:Action\\s+)?[A-Da-d]\\s*[):.\\]\\-/]|[1-9]\\s*[.)/\\-]).*$")
+	narrative = rx_strip.sub(narrative, "", true).strip_edges()
+	# FIX 27: Strip "(tu)" instruction fragment and standalone § markers
+	narrative = narrative.replace("(tu)", "").replace("§", "")
+	# Also strip lines that start with just "A " or "B " or "C " followed by text (common LLM pattern)
+	var rx_bare := RegEx.new()
+	rx_bare.compile("(?m)^\\s*[A-C]\\s{1,3}[A-Z].*$")
+	narrative = rx_bare.sub(narrative, "", true).strip_edges()
+	# FIX 26b: Strip paragraph-inline options like "1/ text 2/ text 3/ text" on a single line
+	var rx_inline := RegEx.new()
+	rx_inline.compile("\\s[1-3]\\s*[/)]\\s*[A-Z][^.!?]{3,60}(?=[\\s.!?]|$)")
+	narrative = rx_inline.sub(narrative, "", true).strip_edges()
+	# Also strip "A) text" mid-sentence
+	var rx_inline_abc := RegEx.new()
+	rx_inline_abc.compile("\\s[A-C]\\)\\s*[A-Z][^.!?]{3,60}(?=[\\s.!?]|$)")
+	narrative = rx_inline_abc.sub(narrative, "", true).strip_edges()
+	# Strip lines that are ONLY a dash followed by dialogue (not narrative dashes mid-sentence)
+	var rx_dash_dialogue := RegEx.new()
+	rx_dash_dialogue.compile("(?m)^\\s*-\\s*[\"'].*$")
+	narrative = rx_dash_dialogue.sub(narrative, "", true).strip_edges()
+	# Clean multiple blank lines
+	while narrative.contains("\n\n\n"):
+		narrative = narrative.replace("\n\n\n", "\n\n")
+	while narrative.contains("\n\n"):
+		narrative = narrative.replace("\n\n", "\n")
 
-	if labels.size() < 3:
-		labels = ["Avancer prudemment", "Observer en silence", "Agir sans hesiter"]
-		sequel_hooks = ["La prudence sera recompensee", "Le silence revele des secrets", "L'audace attire l'attention"]
-
-	# Dynamic effects scaling with card position
-	var base_amt: int = 3 + index  # 3 for card 0, up to 7 for card 4
-	var effect_pool: Array = [
-		[{"type": "HEAL_LIFE", "amount": base_amt}],           # left: prudent
-		[{"type": "ADD_KARMA", "amount": clampi(base_amt / 2, 1, 3)}],  # center: balanced
-		[{"type": "DAMAGE_LIFE", "amount": base_amt}],         # right: risky
+	# FIX 22b+26c: Label safety net — reject non-verb labels, pronouns, articles, quoted text, meta-text
+	var safe_labels: Array[String] = []
+	var reject_words: Array[String] = [
+		"LA", "LE", "LES", "UN", "UNE", "DES", "VOTRE", "NOTRE", "SON", "SA", "SES",
+		"JE", "TU", "IL", "ELLE", "NOUS", "VOUS", "ILS", "ELLES", "MON", "MA", "MES",
+		"CE", "CET", "CETTE", "CES", "QUI", "QUE", "QUOI", "MERLIN",
+		"CEST", "AVEC", "DANS", "POUR", "VERS", "ENTRE", "MAIS", "DONC",
+		"CONTINUE", "CHOISI", "CHOISIS", "JUSQUAU", "JUSQUA",
 	]
-	# Late arc: add PROGRESS_MISSION to option C
+	for lbl in labels:
+		var clean_lbl := lbl.replace("\"", "").replace("'", "").strip_edges()
+		# FIX 26c: Split on apostrophe too (C'est -> C, est -> first_word = C = rejected)
+		var fw_raw: String = clean_lbl.split(" ", false)[0] if not clean_lbl.is_empty() else ""
+		# Handle French apostrophe contractions: split on ' to get real first word
+		var first_word: String = fw_raw.split("'")[0] if "'" in fw_raw else fw_raw
+		first_word = first_word.replace(")", "").replace("(", "").replace("-", "").strip_edges()
+		# Also check the full first token without apostrophe split
+		var fw_full: String = fw_raw.replace(")", "").replace("(", "").replace("-", "").replace("'", "").strip_edges()
+		# Reject: too short, articles/pronouns, starts with quote, or contains meta-text
+		var is_bad: bool = (
+			first_word.length() < 3
+			or first_word.to_upper() in reject_words
+			or fw_full.to_upper() in reject_words
+			or clean_lbl.begins_with("\"")
+			or clean_lbl.begins_with("'")
+			or "je suis" in clean_lbl.to_lower()
+			or "merlin" in clean_lbl.to_lower()
+			or "option" in clean_lbl.to_lower()
+			or "tu as choisi" in clean_lbl.to_lower()
+			or "tu choisis" in clean_lbl.to_lower()
+		)
+		if is_bad:
+			safe_labels.append("")  # Will be replaced by fallback
+		else:
+			# Truncate long labels to first meaningful part (max ~40 chars)
+			if clean_lbl.length() > 45:
+				var truncate_pos := clean_lbl.find(".", 5)
+				if truncate_pos < 0 or truncate_pos > 45:
+					truncate_pos = clean_lbl.find(",", 5)
+				if truncate_pos > 5 and truncate_pos <= 45:
+					clean_lbl = clean_lbl.substr(0, truncate_pos).strip_edges()
+				else:
+					clean_lbl = clean_lbl.substr(0, 40).strip_edges()
+			safe_labels.append(clean_lbl)
+	labels = safe_labels
+
+	if labels.size() < 3 or labels.count("") > 0:
+		# Rotate fallback triplets per card index to avoid repetition
+		var fallback_pool: Array = [
+			["Avancer prudemment", "Observer en silence", "Agir sans hesiter"],
+			["Chercher un indice", "Attendre patiemment", "Invoquer les esprits"],
+			["Escalader le rocher", "Contourner l'obstacle", "Briser le sceau"],
+			["Negocier avec l'ombre", "Defier le gardien", "Fuir vers la clairiere"],
+			["Toucher la rune", "Ecouter le vent", "Suivre le corbeau"],
+		]
+		var fb_triplet: Array = fallback_pool[mini(index, fallback_pool.size() - 1)]
+		for fi in range(3):
+			if fi >= labels.size():
+				labels.append(fb_triplet[fi])
+			elif labels[fi].is_empty():
+				labels[fi] = fb_triplet[fi]
+		if sequel_hooks.size() < 3:
+			sequel_hooks = ["La prudence sera recompensee", "Le silence revele des secrets", "L'audace attire l'attention"]
+
+	# Dynamic effects scaling with card position + SHIFT_ASPECT for Triade progression
+	var base_amt: int = 3 + index  # 3 for card 0, up to 7 for card 4
+	# Rotate aspects across cards so all 3 get shifted during the prerun buffer
+	var aspects: Array[String] = ["Corps", "Ame", "Monde"]
+	var primary_aspect: String = aspects[index % 3]
+	var secondary_aspect: String = aspects[(index + 1) % 3]
+	var effect_pool: Array = [
+		[{"type": "HEAL_LIFE", "amount": base_amt}, {"type": "SHIFT_ASPECT", "aspect": primary_aspect, "direction": "up"}],
+		[{"type": "ADD_KARMA", "amount": clampi(base_amt / 2, 1, 3)}, {"type": "SHIFT_ASPECT", "aspect": secondary_aspect, "direction": "up"}],
+		[{"type": "DAMAGE_LIFE", "amount": base_amt}, {"type": "SHIFT_ASPECT", "aspect": primary_aspect, "direction": "down"}],
+	]
+	# Late arc: add PROGRESS_MISSION to option C (keep SHIFT_ASPECT too)
 	if index >= 3:
-		effect_pool[2] = [{"type": "PROGRESS_MISSION", "step": 1}]
+		effect_pool[2] = [{"type": "PROGRESS_MISSION", "step": 1}, {"type": "SHIFT_ASPECT", "aspect": secondary_aspect, "direction": "down"}]
 
 	var dc_hints: Array = [
 		{"min": 4, "max": 8},
@@ -1567,14 +1714,46 @@ func _try_llm_prerun_card(index: int) -> Dictionary:
 			opt["cost"] = 1
 		options.append(opt)
 
+	# FIX 23: Always use evocative arc titles — narrative sentences are too long/generic as titles
+	var arc_phase: String = ["intro", "exploration", "complication", "climax", "twist"][mini(index, 4)]
+	var arc_titles: Array[String] = ["L'Eveil du Sentier", "Echos dans la Brume", "Le Seuil de l'Ombre", "L'Heure du Choix", "Retournement du Destin"]
+	var title: String = arc_titles[mini(index, 4)]
+
+	# Biome-appropriate visual and audio tags
+	var biome_vtags: Dictionary = {
+		"broceliande": ["foret", "arbre", "mousse", "lumiere_filtree"],
+		"landes": ["bruyere", "menhir", "vent", "horizon"],
+		"cotes": ["falaise", "vague", "goeland", "embruns"],
+		"villages": ["chaumiere", "chemin", "fumee", "pierre"],
+		"cercles": ["menhir", "rune", "brume", "lune"],
+		"marais": ["eau_sombre", "jonc", "brume", "luciole"],
+		"collines": ["colline", "dolmen", "vent", "ciel"],
+	}
+	var biome_atags: Dictionary = {
+		"broceliande": ["vent_feuillage", "oiseau"],
+		"landes": ["vent_fort", "grillon"],
+		"cotes": ["vagues", "vent_marin"],
+		"villages": ["feu_craquement", "cloche"],
+		"cercles": ["silence", "bourdonnement"],
+		"marais": ["eau_clapotis", "grenouille"],
+		"collines": ["vent_doux", "aigle"],
+	}
+	var vtags: Array = biome_vtags.get(biome_key, ["foret", "sentier"])
+	var atags: Array = biome_atags.get(biome_key, ["vent_feuillage"])
+
 	return {
 		"id": "prerun_%d" % index,
+		"title": title,
 		"text": narrative if narrative.length() > 20 else raw_text.substr(0, mini(raw_text.length(), 300)),
 		"speaker": "Merlin",
 		"type": "narrative",
+		"biome": biome_key,
+		"season": _get_current_season(),
 		"options": options,
+		"visual_tags": vtags,
+		"audio_tags": atags,
 		"card_position": index + 1,
-		"arc_phase": ["intro", "exploration", "complication", "climax", "twist"][mini(index, 4)],
+		"arc_phase": arc_phase,
 		"result_success": "Le choix porte ses fruits, la foret repond a ton audace.",
 		"result_failure": "Le sentier se referme, les ombres grondent autour de toi.",
 		"tags": ["prerun", "llm_generated"],

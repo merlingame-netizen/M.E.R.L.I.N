@@ -2,6 +2,72 @@
 
 > **Note**: Sessions anterieures archivees dans `archive/progress_archive_2026-02-05_to_2026-02-08.md`
 
+## Session: 2026-02-28 (Night) — Overnight QA: TransitionBiome Prerun Pipeline (FIX 15-27)
+
+### Context
+Continued overnight QA focusing on TransitionBiome → MerlinGame prerun card pipeline.
+5 MEGA-CYCLES (MC10-14), 25+ cards played through TransitionBiome flow.
+
+### Fixes Applied
+
+**FIX 15** — Prerun cards now include SHIFT_ASPECT effects rotating across Corps/Ame/Monde.
+Added title, biome, season, visual_tags, audio_tags to card structure.
+
+**FIX 16** — TransitionBiome cards generated via `_generate_prerun_card()` → `_try_llm_prerun_card()`.
+Arc-based prompts (intro/exploration/complication/climax/twist).
+
+**FIX 17** — Incremental save to `user://temp_run_cards.json` after each card (not all 5 at end).
+Controller loads cards progressively. Added debug logging.
+
+**FIX 18** — Markdown bold `**...**` stripping in narrative text.
+
+**FIX 19** — Wait timeout for card buffer increased. Simplified LLM prompt.
+
+**FIX 20** — 5 rotating fallback label triplets to avoid repetition across cards.
+
+**FIX 21** — Prompt rewritten: 2e personne (tu), no "Je suis Merlin" self-introduction.
+
+**FIX 22** — Label extraction regex: captures A)/B)/C), A-/B-/C-, 1//2//3/, §, Action A).
+Inline option stripping from narrative. Label safety net: reject articles, pronouns, meta-text.
+
+**FIX 23** — Always use arc titles ("L'Eveil du Sentier", "Echos dans la Brume", etc.).
+Expanded meta_words list (30+ patterns: "je suis merlin", "trois options", etc.).
+
+**FIX 24** — Added "voici une introduction", "voici ta reponse", "je suis pret" to meta_words.
+
+**FIX 25** — Extended option stripping regex from [1-3] to [1-9]. Added dash-dialogue stripping.
+
+**FIX 26** — Added "tu as choisi", "avec une voix", "ensemble nous formons" to meta_words.
+Paragraph-inline option stripping (not just line-start). Apostrophe handling in label safety.
+Prompt hardened with explicit "INTERDIT: je suis, meta-commentaire".
+
+**FIX 27** — Changed system prompt example to different biome (prevents LLM copying it verbatim).
+Added § marker stripping, (tu) fragment removal. Label regex extended to A-D, 1-4.
+
+### Verified Results (MEGA-CYCLES 10-14, 25+ cards)
+- **"Je suis Merlin"**: ELIMINATED — 0/5 in MC13, 0/3 in MC14 (was 3/5 in MC10)
+- **Arc titles**: 5/5 consistent across all cycles
+- **SHIFT_ASPECT**: Working — Ame/Corps shift confirmed every cycle
+- **PROGRESS_MISSION**: Working — increments each card
+- **Inline options in text**: Mostly stripped (line-start 100%, paragraph-inline ~80%)
+- **Prompt example copying**: ELIMINATED (FIX 27 — different biome example)
+- **Meta-text stripping**: 30+ patterns caught, ~80% effective
+- **FPS**: 52-58 stable during gameplay
+- **Prerun pipeline**: 5 cards generated in ~60-70s during TransitionBiome
+
+### Remaining Issues (model-level, need LoRA)
+- **Content quality**: LLM produces encyclopedic/meta descriptions instead of immersive fantasy narration
+- **Geography errors**: "Nord-Ouest d'Angleterre", "Pays-Bas" (wrong — Brocéliande is in Brittany)
+- **Mixed register**: tu/vous inconsistency in same card
+- **Label quality**: LLM sometimes outputs non-verb labels ("Prise", "Voyageant", "Lhisterique")
+- **Self-help text**: Card 3 sometimes produces therapeutic advice instead of fantasy
+
+### Files Modified
+- `scripts/TransitionBiome.gd` — FIX 15-27 (prerun pipeline, prompt, stripping, labels)
+- `scripts/ui/merlin_game_controller.gd` — FIX 17 (prerun loading debug logs)
+
+---
+
 ## Session: 2026-02-27 (Night) — Overnight LLM QA: SHIFT_ASPECT + Minigame + Repair
 
 ### Fixes Applied (commits `5ef39e4`, `78a4cba`)
