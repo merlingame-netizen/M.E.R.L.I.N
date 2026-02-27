@@ -751,12 +751,12 @@ func _wrap_text_as_card(raw_text: String, context: Dictionary) -> Dictionary:
 	# REPAIR: If < 2 labels extracted, try a short focused LLM call for verb options
 	if labels.size() < 2 and _merlin_ai and text.length() >= 20:
 		print("[MerlinLlmAdapter] %d labels — attempting repair call for verbs..." % labels.size())
-		# Strategy: ask ONLY for 3 infinitive verbs, one per line — simplest possible format
-		var situation_excerpt: String = text.substr(0, 120).replace("\n", " ")
-		var repair_prompt := "%s\n\n3 verbes d'action pour reagir:" % situation_excerpt
-		var repair_params := {"max_tokens": 30, "temperature": 0.3, "top_p": 0.80, "repeat_penalty": 1.5}
+		# Strategy: pure completion — 2 few-shots then start of answer forces verb list
+		var situation_excerpt: String = text.substr(0, 100).replace("\n", " ")
+		var repair_prompt := "Un loup hurle.\n1) Fuir\n2) Combattre\n3) Observer\n\nLe vent souffle.\n1) Resister\n2) S'abriter\n3) Avancer\n\n%s\n1)" % situation_excerpt
+		var repair_params := {"max_tokens": 20, "temperature": 0.2, "top_p": 0.80, "repeat_penalty": 1.5}
 		var repair_result: Dictionary = await _merlin_ai.generate_with_system(
-			"Liste 3 verbes a l'infinitif. Un par ligne. Rien d'autre.\n\nExemple:\nPlonger\nGraver\nSiffler", repair_prompt, repair_params
+			"3 verbes infinitifs. Rien d'autre.", repair_prompt, repair_params
 		)
 		if not repair_result.has("error"):
 			var repair_text: String = str(repair_result.get("text", ""))
