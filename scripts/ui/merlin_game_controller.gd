@@ -1557,6 +1557,9 @@ func _post_process_card_text() -> void:
 		"la suite de l'histoire", "dans cette scene", "cette carte",
 		"cette situation sert", "voici une complication", "voici un",
 		"ce passage montre", "ce moment revele", "cela introduit",
+		# FIX 41: Prompt structure leaks (VERBE:, B/C, FORCE label)
+		"verbe :", "verbe:", "b/c)", "a/b)", "a) ", "b) ", "c) ",
+		"force:", "force :", "option a", "option b", "option c",
 	]
 	var result := text
 	# Strip "Etape N:" / "Scene N -" / "Acte N:" prefixes
@@ -1617,6 +1620,13 @@ func _post_process_card_text() -> void:
 	rx.compile("(?i)\\bma\\b")
 	result = rx.sub(result, "ta", true)
 
+	# FIX 42: Fix avoir conjugation after "je"→"tu" conversion
+	# "je n'ai" becomes "tu n'ai" (wrong) → fix to "tu n'as"
+	rx.compile("(?i)\\btu n'ai\\b")
+	result = rx.sub(result, "tu n'as", true)
+	rx.compile("(?i)\\btu ai\\b")
+	result = rx.sub(result, "tu as", true)
+
 	# --- Capitalize "tu" at sentence start ---
 	rx.compile("(?m)^tu\\b")
 	result = rx.sub(result, "Tu", true)
@@ -1660,7 +1670,10 @@ func _post_process_card_text() -> void:
 			elif lbl_lower in ["l'air", "merveille", "chute", "parcours",
 					"situation", "ombre", "lumiere", "silence", "nature",
 					"foret", "chemin", "route", "pierre", "eau", "feu",
-					"terre", "ciel", "nuit", "jour", "lune", "soleil"]:
+					"terre", "ciel", "nuit", "jour", "lune", "soleil",
+					# FIX 41: Prompt structure words + invented suffixes
+					"verbe", "force", "option", "choix", "action",
+					"travaux", "travail"]:
 				needs_replace = true
 			if needs_replace:
 				while fb_idx < fallback_verbs.size():

@@ -1508,6 +1508,9 @@ func _strip_meta_text(text: String) -> String:
 		"la suite de l'histoire", "dans cette scene", "cette carte",
 		"cette situation sert", "voici une complication", "voici un",
 		"ce passage montre", "ce moment revele", "cela introduit",
+		# FIX 41: Prompt structure leaks (VERBE:, B/C, FORCE label)
+		"verbe :", "verbe:", "b/c)", "a/b)", "a) ", "b) ", "c) ",
+		"force:", "force :", "option a", "option b", "option c",
 	]
 	var result := text
 	# FIX 32: Strip "Etape N :" and "Scene N -" prefix patterns (instruction format leak)
@@ -1612,6 +1615,12 @@ func _convert_first_to_second_person(text: String) -> String:
 	# "ma " -> "ta " (ma main -> ta main)
 	rx.compile("(?i)\\bma\\b")
 	result = rx.sub(result, "ta", true)
+
+	# FIX 42: Fix avoir conjugation after "je"→"tu" conversion
+	rx.compile("(?i)\\btu n'ai\\b")
+	result = rx.sub(result, "tu n'as", true)
+	rx.compile("(?i)\\btu ai\\b")
+	result = rx.sub(result, "tu as", true)
 
 	# --- Fix case at sentence start ---
 	# After conversion, "tu" at sentence start should be capitalized: "Tu"
