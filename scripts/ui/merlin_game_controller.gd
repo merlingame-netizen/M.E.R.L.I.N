@@ -1567,6 +1567,9 @@ func _post_process_card_text() -> void:
 		"voici ta carte", "entierement generee", "informations fournies",
 		"premiere scene", "deuxieme scene", "troisieme scene",
 		"point de depart", "genere en fonction",
+		# FIX 45: Prompt instruction leaks (raw template output)
+		"titre poetique", "action en 1 phrase", "vers de complication",
+		"action differente", "tu puis ai", "equipe principale",
 	]
 	var result := text
 	# Strip "Etape N:" / "Scene N -" / "Acte N:" prefixes
@@ -1685,7 +1688,11 @@ func _post_process_card_text() -> void:
 					"terre", "ciel", "nuit", "jour", "lune", "soleil",
 					# FIX 41: Prompt structure words + invented suffixes
 					"verbe", "force", "option", "choix", "action",
-					"travaux", "travail"]:
+					"travaux", "travail",
+					# FIX 45: Common nouns used as labels instead of verbs
+					"vue", "lumieres", "lumières", "scene", "scène",
+					"valuer", "titre", "merveille", "paradis",
+					"complication", "introduction", "exploration"]:
 				needs_replace = true
 			if needs_replace:
 				while fb_idx < fallback_verbs.size():

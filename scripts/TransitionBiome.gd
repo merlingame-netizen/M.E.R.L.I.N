@@ -1518,6 +1518,9 @@ func _strip_meta_text(text: String) -> String:
 		"voici ta carte", "entierement generee", "informations fournies",
 		"premiere scene", "deuxieme scene", "troisieme scene",
 		"point de depart", "genere en fonction",
+		# FIX 45: Prompt instruction leaks (raw template output)
+		"titre poetique", "action en 1 phrase", "vers de complication",
+		"action differente", "tu puis ai", "equipe principale",
 	]
 	var result := text
 	# FIX 32: Strip "Etape N :" and "Scene N -" prefix patterns (instruction format leak)
