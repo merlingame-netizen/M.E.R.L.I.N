@@ -1547,8 +1547,17 @@ func _convert_first_to_second_person(text: String) -> String:
 
 	# --- Pronoun conversions (order matters: longer patterns first) ---
 
-	# "j'" before vowel -> "t'" (j'ai -> t'ai, j'entends -> t'entends)
+	# FIX 40: Handle j'ai/j'avais/j'étais BEFORE generic j'→t' (prevents "t'ai")
 	var rx := RegEx.new()
+	rx.compile("(?i)\\bj'ai\\b")
+	result = rx.sub(result, "tu as", true)
+	rx.compile("(?i)\\bj'avais\\b")
+	result = rx.sub(result, "tu avais", true)
+	rx.compile("(?i)\\bj'[eé]tais\\b")
+	result = rx.sub(result, "tu étais", true)
+	rx.compile("(?i)\\bj'aurai\\b")
+	result = rx.sub(result, "tu auras", true)
+	# "j'" before vowel -> "t'" (j'entends -> t'entends, etc.)
 	rx.compile("(?i)\\bj'")
 	result = rx.sub(result, "t'", true)
 

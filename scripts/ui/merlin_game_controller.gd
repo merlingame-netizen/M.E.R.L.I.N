@@ -1581,6 +1581,15 @@ func _post_process_card_text() -> void:
 			pos = result.to_lower().find(mw)
 
 	# --- Person conversion: 1st→2nd (je→tu), vous→tu ---
+	# FIX 40: Handle j'ai/j'avais/j'étais BEFORE generic j'→t' (prevents "t'ai")
+	rx.compile("(?i)\\bj'ai\\b")
+	result = rx.sub(result, "tu as", true)
+	rx.compile("(?i)\\bj'avais\\b")
+	result = rx.sub(result, "tu avais", true)
+	rx.compile("(?i)\\bj'[eé]tais\\b")
+	result = rx.sub(result, "tu étais", true)
+	rx.compile("(?i)\\bj'aurai\\b")
+	result = rx.sub(result, "tu auras", true)
 	rx.compile("(?i)\\bj'")
 	result = rx.sub(result, "t'", true)
 	rx.compile("(?i)\\bje\\b")
