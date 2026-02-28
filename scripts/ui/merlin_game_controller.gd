@@ -1759,7 +1759,11 @@ func _post_process_card_text() -> void:
 					# FIX 53: Nouns seen in MC35
 					"danger", "courage", "combat", "fuite",
 					"secret", "enigme", "énigme", "tresor",
-					"trésor", "refuge", "passage", "sentier"]:
+					"trésor", "refuge", "passage", "sentier",
+					# FIX 54: Character/role nouns seen in MC36
+					"guerrier", "guerriere", "guerrière",
+					"druide", "chasseur", "voyageur",
+					"gardien", "sorcier", "esprit"]:
 				needs_replace = true
 			if needs_replace:
 				while fb_idx < fallback_verbs.size():
