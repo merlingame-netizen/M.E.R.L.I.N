@@ -350,6 +350,7 @@ func _request_next_card() -> void:
 		var remaining: int = _card_buffer.size()
 		print("[TRIADE] Using pre-generated card (%d remaining)" % remaining)
 		_detect_critical_choice()
+		_post_process_card_text()
 		# Prefetch moved to _resolve_choice() — state must be updated first
 		if ui and is_instance_valid(ui):
 			ui.display_card(current_card)
@@ -364,6 +365,7 @@ func _request_next_card() -> void:
 			current_card = sequel_card
 			print("[TRIADE] Sequel card generated from prerun choice")
 			_detect_critical_choice()
+			_post_process_card_text()
 			if ui and is_instance_valid(ui):
 				ui.display_card(current_card)
 			_check_vision_perk_auto_reveal()
@@ -379,6 +381,7 @@ func _request_next_card() -> void:
 				print("[TRIADE] Using prefetched card (fast path)")
 				current_card = prefetched
 				_detect_critical_choice()
+				_post_process_card_text()
 				if ui and is_instance_valid(ui):
 					ui.display_card(current_card)
 				_check_vision_perk_auto_reveal()
@@ -427,6 +430,7 @@ func _request_next_card() -> void:
 			return
 		current_card = retry_card
 		_detect_critical_choice()
+		_post_process_card_text()
 		if ui and is_instance_valid(ui):
 			ui.display_card(current_card)
 		is_processing = false
@@ -455,6 +459,7 @@ func _request_next_card() -> void:
 				print("[TRIADE] NPC encounter triggered: %s" % npc_card.get("speaker", "?"))
 		# Detect critical choice before displaying
 		_detect_critical_choice()
+		_post_process_card_text()
 		# Prefetch moved to _resolve_choice() — triggers after state update
 		if ui and is_instance_valid(ui):
 			ui.display_card(current_card)
@@ -474,6 +479,7 @@ func _request_next_card() -> void:
 			return
 		current_card = llm_card
 		_detect_critical_choice()
+		_post_process_card_text()
 		if ui and is_instance_valid(ui):
 			ui.display_card(current_card)
 		_check_vision_perk_auto_reveal()
@@ -1513,6 +1519,98 @@ func _apply_talent_bonuses() -> void:
 	# Starting blessings (racines_3)
 	if store.is_talent_active("racines_3"):
 		_blessings = 1
+
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# CARD TEXT POST-PROCESSING (FIX 33)
+# ═══════════════════════════════════════════════════════════════════════════════
+
+func _post_process_card_text() -> void:
+	## FIX 33: Post-process current_card text before display.
+	## Applies meta stripping, person conversion, label cleanup.
+	## Mirrors TransitionBiome._strip_meta_text() + _convert_first_to_second_person().
+	if current_card.is_empty():
+		return
+	var text: String = str(current_card.get("text", ""))
+	if text.is_empty():
+		return
+
+	# --- Meta-text stripping (strip entire lines containing meta patterns) ---
+	var meta_words: Array[String] = [
+		"decrochez le choix", "choisir entre", "(a)", "(b)", "(c)", "a/b/c",
+		"regle stricte", "meta-commentaire", "vocabulaire celtique",
+		"ecris une scene", "3 choix", "biome:", "carte:", "role:",
+		"scene narrative", "trois options", "trois choix",
+		"je suis merlin", "je suis le druide", "je suis un druide",
+		"je suis une voix", "je suis un ancien", "je suis le gardien",
+		"voici les choix", "voici trois", "voici les options",
+		"voici une introduction", "voici ta reponse", "voici la reponse",
+		"je suis pret", "merlin est un", "merlin est le",
+		"tu as choisi", "avec une voix", "d'une voix",
+		"ensemble nous formons", "c'est une situation",
+		"narration:", "narrateur:", "scenario:",
+		"voici une description", "description ambiante", "basee sur le scenario",
+		"bienvenue dans", "bienvenue en", "ce voyageur est",
+		"le lieu est", "le parc national", "heures de train",
+	]
+	var result := text
+	# Strip "Etape N:" / "Scene N -" / "Acte N:" prefixes
+	var rx := RegEx.new()
+	rx.compile("(?im)^\\s*(?:[eé]tape|scene|sc[eè]ne|acte|chapitre)\\s*\\d+\\s*[:\\-]\\s*(?:[A-Z][^\\n]{0,40}\\n)?")
+	result = rx.sub(result, "", true)
+	# Strip markdown bold
+	rx.compile("\\*\\*[^*]{0,60}\\*\\*:?")
+	result = rx.sub(result, "", true)
+	# Strip lines containing meta-words
+	for mw in meta_words:
+		var pos := result.to_lower().find(mw)
+		while pos >= 0:
+			var line_start := result.rfind("\n", pos)
+			var line_end := result.find("\n", pos)
+			if line_start < 0: line_start = 0
+			if line_end < 0: line_end = result.length()
+			result = result.substr(0, line_start) + result.substr(line_end)
+			pos = result.to_lower().find(mw)
+
+	# --- Person conversion: 1st→2nd (je→tu), vous→tu ---
+	rx.compile("(?i)\\bj'")
+	result = rx.sub(result, "t'", true)
+	rx.compile("(?i)\\bje\\b")
+	result = rx.sub(result, "tu", true)
+	rx.compile("(?i)\\bm'")
+	result = rx.sub(result, "t'", true)
+	rx.compile("(?i)\\bme\\b")
+	result = rx.sub(result, "te", true)
+	rx.compile("(?i)\\bmoi\\b")
+	result = rx.sub(result, "toi", true)
+	rx.compile("(?i)\\bvous avez\\b")
+	result = rx.sub(result, "tu as", true)
+	rx.compile("(?i)\\bvous [eê]tes\\b")
+	result = rx.sub(result, "tu es", true)
+	rx.compile("(?i)\\bvous\\b")
+	result = rx.sub(result, "tu", true)
+	rx.compile("(?i)\\bvotre\\b")
+	result = rx.sub(result, "ton", true)
+	rx.compile("(?i)\\bvos\\b")
+	result = rx.sub(result, "tes", true)
+	rx.compile("(?i)\\bmes\\b")
+	result = rx.sub(result, "tes", true)
+	rx.compile("(?i)\\bmon\\b")
+	result = rx.sub(result, "ton", true)
+	rx.compile("(?i)\\bma\\b")
+	result = rx.sub(result, "ta", true)
+
+	# --- Capitalize "tu" at sentence start ---
+	rx.compile("(?m)^tu\\b")
+	result = rx.sub(result, "Tu", true)
+
+	# Clean multiple blank lines
+	while result.contains("\n\n\n"):
+		result = result.replace("\n\n\n", "\n\n")
+	result = result.strip_edges()
+
+	if result.length() >= 10:
+		current_card["text"] = result
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
