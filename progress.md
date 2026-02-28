@@ -2,6 +2,67 @@
 
 > **Note**: Sessions anterieures archivees dans `archive/progress_archive_2026-02-05_to_2026-02-08.md`
 
+## Session: 2026-02-28 — Cible IPSOS: PowerBI model.bim Alignment (10 fixes)
+
+### Context
+Comparison of `model.bim` M expressions vs `run_full_pipeline.py` (aligned with notebook reference). 10 critical divergences identified and corrected in model.bim.
+
+### Fixes Applied to model.bim
+
+**HIGH PRIORITY (affect row count):**
+1. **Q8 VAGUE threshold**: `> 202003` → `> 202203` (match notebook Cell 149)
+2. **T3→T4 BDD ordering**: Moved BDD exclusion from T3 (before ciblage) to T4 (after ciblage, match notebook)
+3. **T2 role filter**: Added `Decid=1 OR Admin=1 OR repprod=1 OR repsav=1` (match notebook Cell 65)
+4. **T2 phone filter**: Added `Telephone <> null OR Mobile <> null` (match notebook Cell 79)
+5. **T4 Direction filter**: Changed `<> null` to `Contains("Dir") OR AE CARAIBES/REUNION` (match notebook Cell 118)
+6. **T4 sort removed**: Removed `Table.Sort(Date_maj_contact DESC)` — notebook uses plain drop_duplicates
+
+**MEDIUM PRIORITY (affect column values):**
+7. **T7 Code Marche**: Replaced `StartsWith("HdM")/Contains("HDM")` with MdM list lookup (SPES → HAUT now correct)
+8. **T8 Perimetre**: `"DEF"` → `"DEF PRO PME"` (PP Car/Reu, match notebook + Volume PP KPI)
+9. **T8 Code Marche**: `"MILIEU DE MARCHE"` → `"BAS DE MARCHE"` (match notebook)
+10. **T6 Segment**: `"MdM Marchand"` → `PROPME CARAIBES/REUNION` by direction (match notebook)
+
+### Verification
+- JSON validation: OK (23 tables, valid structure)
+- All 12 automated checks: PASS
+- model.bim now aligned with run_full_pipeline.py and notebook reference
+
+### Files Modified
+- `Cible_IPSOS_V1_Files.SemanticModel/definition/model.bim` — 10 M expression corrections
+
+---
+
+## Session: 2026-02-27 — Cible IPSOS T4 2025: BDD Quarterly Blacklist Fix
+
+### Context
+Pipeline `run_full_pipeline.py` produced +2,149 rows vs reference (52,348 vs 50,205). Root cause identified and fixed in Q8 BDD blacklist loading.
+
+### Root Cause Identified
+The notebook's `Prepa_cible.ipynb` (Cell 142-155) loads TWO BDD sources:
+1. **BDD_Full.xlsx** filtered to Definitive + VAGUE > 202203 → 6,326 unique contacts
+2. **Quarterly consolidated BDD** (`BDD_FIN_TERRAIN_T2_2025.xlsx` at root) → ALL Definitive, no VAGUE filter → 9,061 entries
+3. Combined: 29,873 rows (exclu) → unique Contact IDs used for exclusion
+
+The pipeline was only loading BDD_Full.xlsx (6,326 contacts). The quarterly consolidated file at root level had 308k rows spanning all historical vagues — it's no longer at root level (reorganized into subdirectories).
+
+### Fix Applied
+Modified Q8 to load quarterly BDD files from subdirectories (up to T3 2025) + BDD_Full. T3 2025 file serves as proxy for old-vague contacts from the gone consolidated file.
+
+### Results
+| Config | DEF gap | Total gap |
+|--------|---------|-----------|
+| BDD_Full only (before) | +2,143 | +2,149 |
+| + All 36 quarterly files | -1,122 | -1,122 |
+| + Quarterly up to T3 2025 | **-351** | **-351** |
+
+- PP segments: 19,300 = 19,300 (exact match)
+- ID overlap: 91.7% (ENT only, PP fully matched)
+- Remaining -351 gap (0.7%) due to T3 2025 proxy not exactly matching old-vague contacts
+
+### Files Modified
+- `App_Cible_IPSOS_v2/scripts/run_full_pipeline.py` — Q8 rewritten with Q8a (BDD_Full) + Q8b (quarterly files), diagnostic pre-dedup save removed
+
 ## Session: 2026-02-28 (Night) — Overnight QA: TransitionBiome Prerun Pipeline (FIX 15-27)
 
 ### Context

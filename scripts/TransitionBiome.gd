@@ -1493,6 +1493,14 @@ func _strip_meta_text(text: String) -> String:
 		"narration:", "narrateur:", "scenario:",
 		"la roche tremble", "un grondement sourd", "escalader la paroi",
 		"invoquer la pierre", "fuir vers le vallon",
+		"la mousse craque", "odeur de terre humide", "envahit tes narines",
+		"avancer vers la lumiere", "ecouter le murmure", "reculer dans l'ombre",
+		"voulez!", "croyez!", "devez!", "pouvez!",
+		"le lieu est", "le parc national", "il y a environ",
+		"heures de train", "nord-ouest", "nord-est", "pays-bas",
+		"les aventures d'", "se deroulent les",
+		"voici une description", "description ambiante", "description contextuelle",
+		"basee sur le scenario", "que vous avez", "scenario detaille",
 	]
 	var result := text
 	# Strip markdown bold markers and their meta content
@@ -1513,6 +1521,88 @@ func _strip_meta_text(text: String) -> String:
 	while result.contains("\n\n\n"):
 		result = result.replace("\n\n\n", "\n\n")
 	return result.strip_edges()
+
+
+func _convert_first_to_second_person(text: String) -> String:
+	## FIX 30: Post-process LLM output to convert 1st person (je/me/mon/ma/mes)
+	## to 2nd person (tu/te/ton/ta/tes). The small LLM often ignores the "tu" instruction.
+	## Uses word-boundary-aware regex to avoid breaking words like "jeter", "montagne".
+
+	var result := text
+
+	# --- Pronoun conversions (order matters: longer patterns first) ---
+
+	# "j'" before vowel -> "t'" (j'ai -> t'ai, j'entends -> t'entends)
+	var rx := RegEx.new()
+	rx.compile("(?i)\\bj'")
+	result = rx.sub(result, "t'", true)
+
+	# "je " -> "tu " (standalone subject pronoun)
+	rx.compile("(?i)\\bje\\b")
+	result = rx.sub(result, "tu", true)
+
+	# "m'" before vowel -> "t'" (m'appelle -> t'appelle, m'envahit -> t'envahit)
+	rx.compile("(?i)\\bm'")
+	result = rx.sub(result, "t'", true)
+
+	# " me " -> " te " (reflexive/object pronoun, avoid word-start "me" in "mesure")
+	rx.compile("(?i)\\bme\\b")
+	result = rx.sub(result, "te", true)
+
+	# "moi" -> "toi" (stressed pronoun: "devant moi", "pour moi")
+	rx.compile("(?i)\\bmoi\\b")
+	result = rx.sub(result, "toi", true)
+
+	# --- "vous" -> "tu" (formal/plural -> informal 2nd person) ---
+
+	# "vous avez" -> "tu as"
+	rx.compile("(?i)\\bvous avez\\b")
+	result = rx.sub(result, "tu as", true)
+
+	# "vous etes" / "vous êtes" -> "tu es"
+	rx.compile("(?i)\\bvous [eê]tes\\b")
+	result = rx.sub(result, "tu es", true)
+
+	# "vous" standalone -> "tu" (generic fallback)
+	rx.compile("(?i)\\bvous\\b")
+	result = rx.sub(result, "tu", true)
+
+	# "votre" -> "ton/ta" (default to "ton")
+	rx.compile("(?i)\\bvotre\\b")
+	result = rx.sub(result, "ton", true)
+
+	# "vos" -> "tes"
+	rx.compile("(?i)\\bvos\\b")
+	result = rx.sub(result, "tes", true)
+
+	# --- Possessive adjectives ---
+
+	# "mes " -> "tes " (mes cheveux -> tes cheveux)
+	rx.compile("(?i)\\bmes\\b")
+	result = rx.sub(result, "tes", true)
+
+	# "mon " -> "ton " (mon coeur -> ton coeur)
+	rx.compile("(?i)\\bmon\\b")
+	result = rx.sub(result, "ton", true)
+
+	# "ma " -> "ta " (ma main -> ta main)
+	rx.compile("(?i)\\bma\\b")
+	result = rx.sub(result, "ta", true)
+
+	# --- Fix case at sentence start ---
+	# After conversion, "tu" at sentence start should be capitalized: "Tu"
+	rx.compile("(?m)^tu\\b")
+	result = rx.sub(result, "Tu", true)
+	rx.compile("\\.\\s+tu\\b")
+	# For mid-sentence after period: ". tu" -> ". Tu"
+	var matches := rx.search_all(result)
+	for i in range(matches.size() - 1, -1, -1):
+		var m := matches[i]
+		var matched_text: String = m.get_string()
+		var capitalized: String = matched_text.substr(0, matched_text.length() - 2) + "Tu"
+		result = result.substr(0, m.get_start()) + capitalized + result.substr(m.get_end())
+
+	return result
 
 
 func _generate_prerun_card(index: int) -> Dictionary:
@@ -1542,14 +1632,15 @@ func _try_llm_prerun_card(index: int) -> Dictionary:
 	]
 	var arc_role: String = arc_roles[mini(index, arc_roles.size() - 1)]
 
-	# FIX 21+26d+27: Prompt — 2e personne, example from DIFFERENT biome to prevent copying
+	# FIX 21+26d+27+29b: Prompt — sensory 2e personne, different biome example
 	var system_prompt := (
-		"Narration 2e personne (tu). Present. Francais. %s.\n" % biome_name
-		+ "INTERDIT: 'je suis', 'je me', meta-commentaire, repeter l'exemple.\n"
-		+ "La roche tremble sous tes pieds. Un grondement sourd monte des profondeurs.\n"
-		+ "A) Escalader la paroi\nB) Invoquer la pierre\nC) Fuir vers le vallon"
+		"Narration 2e personne (tu). Present. Francais. Foret celtique.\n"
+		+ "INTERDIT: 'je suis', description du lieu, geographie, meta-commentaire.\n"
+		+ "Decris ce que tu SENS: odeurs, sons, toucher, lumiere.\n"
+		+ "La mousse craque sous tes pas. L'odeur de terre humide envahit tes narines.\n"
+		+ "A) Avancer vers la lumiere\nB) Ecouter le murmure\nC) Reculer dans l'ombre"
 	)
-	var user_prompt := "%s. Decris le lieu (tu), 3 phrases, puis A) B) C)." % arc_role.split(":")[0]
+	var user_prompt := "%s en %s. Sensations (tu), 3-4 phrases, puis A) B) C) verbe." % [arc_role.split(":")[0], biome_name]
 
 	var params := {"max_tokens": 200, "temperature": 0.7 + index * 0.02}
 	var result: Dictionary = await merlin_ai.generate_with_system(system_prompt, user_prompt, params)
@@ -1611,7 +1702,10 @@ func _try_llm_prerun_card(index: int) -> Dictionary:
 	while narrative.contains("\n\n"):
 		narrative = narrative.replace("\n\n", "\n")
 
-	# FIX 22b+26c: Label safety net — reject non-verb labels, pronouns, articles, quoted text, meta-text
+	# FIX 30: Convert 1st person to 2nd person (tu) — LLM often writes "je" despite prompt
+	narrative = _convert_first_to_second_person(narrative)
+
+	# FIX 22b+26c+28: Label safety net — reject non-action labels
 	var safe_labels: Array[String] = []
 	var reject_words: Array[String] = [
 		"LA", "LE", "LES", "UN", "UNE", "DES", "VOTRE", "NOTRE", "SON", "SA", "SES",
@@ -1619,6 +1713,17 @@ func _try_llm_prerun_card(index: int) -> Dictionary:
 		"CE", "CET", "CETTE", "CES", "QUI", "QUE", "QUOI", "MERLIN",
 		"CEST", "AVEC", "DANS", "POUR", "VERS", "ENTRE", "MAIS", "DONC",
 		"CONTINUE", "CHOISI", "CHOISIS", "JUSQUAU", "JUSQUA",
+		"PRISE", "VUE", "PLACE", "FIN", "LIEU", "VOIX",
+		"VOULEZ", "CROYEZ", "DEVEZ", "POUVEZ", "SAVEZ",
+	]
+	# FIX 28: Reject suffixes that indicate non-action words
+	var reject_suffixes: Array[String] = [
+		"ANT", "ANTE", "ANTS",  # present participle (voyageant, marchant)
+		"IQUE", "IQUES",  # adjective (historique, mystique)
+		"TION", "TIONS",  # noun (exploration, situation)
+		"MENT", "MENTS",  # adverb/noun (mouvement, rapidement)
+		"ENCE", "ENCES",  # noun (prudence, violence)
+		"ISTE", "ISTES",  # noun (druide → but this doesn't end in iste)
 	]
 	for lbl in labels:
 		var clean_lbl := lbl.replace("\"", "").replace("'", "").strip_edges()
@@ -1629,11 +1734,21 @@ func _try_llm_prerun_card(index: int) -> Dictionary:
 		first_word = first_word.replace(")", "").replace("(", "").replace("-", "").strip_edges()
 		# Also check the full first token without apostrophe split
 		var fw_full: String = fw_raw.replace(")", "").replace("(", "").replace("-", "").replace("'", "").strip_edges()
+		# FIX 28: Check for merged apostrophe (Lhisterique = L' + hystérique)
+		var looks_merged: bool = fw_full.length() > 5 and (fw_full.begins_with("L") or fw_full.begins_with("D")) and not " " in clean_lbl.substr(0, 4)
+		# FIX 28: Check for non-action suffixes on first word
+		var has_bad_suffix: bool = false
+		for suf in reject_suffixes:
+			if fw_full.to_upper().ends_with(suf) and fw_full.length() > suf.length() + 2:
+				has_bad_suffix = true
+				break
 		# Reject: too short, articles/pronouns, starts with quote, or contains meta-text
 		var is_bad: bool = (
 			first_word.length() < 3
 			or first_word.to_upper() in reject_words
 			or fw_full.to_upper() in reject_words
+			or looks_merged
+			or has_bad_suffix
 			or clean_lbl.begins_with("\"")
 			or clean_lbl.begins_with("'")
 			or "je suis" in clean_lbl.to_lower()
@@ -1641,6 +1756,8 @@ func _try_llm_prerun_card(index: int) -> Dictionary:
 			or "option" in clean_lbl.to_lower()
 			or "tu as choisi" in clean_lbl.to_lower()
 			or "tu choisis" in clean_lbl.to_lower()
+			or " est " in clean_lbl.to_lower()
+			or " sont " in clean_lbl.to_lower()
 		)
 		if is_bad:
 			safe_labels.append("")  # Will be replaced by fallback
