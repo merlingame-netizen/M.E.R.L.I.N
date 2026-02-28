@@ -2,11 +2,11 @@
 
 > **Note**: Sessions anterieures archivees dans `archive/progress_archive_2026-02-05_to_2026-02-08.md`
 
-## Session: 2026-02-28 (night cont.) — Overnight QA: FIX 28-32 (TransitionBiome)
+## Session: 2026-02-28 (night cont.) — Overnight QA: FIX 28-33 (TransitionBiome + Controller)
 
 ### Context
 Continuation of overnight QA mode. Previous session committed FIX 15-27 (commit 4168188).
-This session implements FIX 28-32 and runs MEGA-CYCLES 16-18 (13 cards total).
+This session implements FIX 28-33 and runs MEGA-CYCLES 16-19 (18 cards total).
 
 ### Fixes Applied
 - **FIX 28**: Label suffix validation (ANT/IQUE/TION/MENT/ENCE/ISTE), merged apostrophe detection
@@ -14,25 +14,33 @@ This session implements FIX 28-32 and runs MEGA-CYCLES 16-18 (13 cards total).
 - **FIX 30**: 1st→2nd person conversion (je→tu, mes→tes, mon→ton, m'→t', moi→toi)
 - **FIX 31**: vous→tu conversion (vous avez→tu as, votre→ton, vos→tes), meta "Voici une description"
 - **FIX 32**: Strip "Etape N:", "Scene N -", "Bienvenue dans", "ce voyageur" patterns
+- **FIX 33**: Live card post-processing in merlin_game_controller.gd — mirrors TransitionBiome pipeline, ALL 6 display paths
 
-### Results (MC16-18, 13 cards)
-| Metric | Before (MC12) | After (MC16-18) |
-|--------|-------------|-----------------|
-| 2nd person "tu" | 0/5 (0%) | 8/13 (62%) |
-| Action verb labels | 3/5 (60%) | 13/13 (100%) |
-| No "je suis Merlin" | 1/5 (20%) | 13/13 (100%) |
-| Sensory content | 0/5 (0%) | 10/13 (77%) |
-| Meta-text leaks | 3/5 (60%) | 2/13 (15%) |
+### Results (MC16-19, 18 cards)
+| Metric | Before (MC12) | MC16-18 (prerun) | MC19 (live, FIX 33) |
+|--------|-------------|-----------------|---------------------|
+| 2nd person "tu" | 0/5 (0%) | 8/13 (62%) | **5/5 (100%)** |
+| Action verb labels | 3/5 (60%) | 13/13 (100%) | 5/5 (100%) |
+| No "je suis Merlin" | 1/5 (20%) | 13/13 (100%) | 5/5 (100%) |
+| Sensory content | 0/5 (0%) | 10/13 (77%) | 4/5 (80%) |
+| Meta-text leaks | 3/5 (60%) | 2/13 (15%) | **0/5 (0%)** |
 
-### Key Insight
-TransitionBiome post-processing only applies to PRERUN cards (TransitionBiome flow).
-Standalone mode (BootstrapMerlinGame) bypasses post-processing entirely — cards show
-raw LLM output. To get consistent quality, post-processing should move to
-merlin_game_controller.gd or merlin_llm_adapter.gd.
+### Key Insight (RESOLVED)
+TransitionBiome post-processing only applied to PRERUN cards. FIX 33 adds
+_post_process_card_text() to merlin_game_controller.gd with the same pipeline
+(meta strip + person convert), applied before ALL 6 ui.display_card() call sites.
+MC19 confirmed 100% "tu" form and 0% meta leaks on live-generated cards.
+
+### Remaining Issues (LoRA-level)
+- LLM repetition: 3/5 MC19 cards use near-identical template ("Tu marches dans la foret...")
+- Invented words: "soleilier", "Celtaux", "Gelelcir" (Qwen 2.5-1.5B limitations)
+- Gender mismatch: "ton mission" instead of "ta mission" (regex can't detect gender)
+- Duplicate labels: Card 2 MC19 had "Secourir/Secourir/Marchander"
 
 ### Commits
 - `77d2a46` — fix(prerun): FIX 28-31
 - `56c7ba2` — fix(prerun): FIX 32
+- `0d9951e` — fix(controller): FIX 33 — live card post-processing
 
 ---
 
