@@ -2,6 +2,40 @@
 
 > **Note**: Sessions anterieures archivees dans `archive/progress_archive_2026-02-05_to_2026-02-08.md`
 
+## Session: 2026-02-28 (night cont.) — Overnight QA: FIX 28-32 (TransitionBiome)
+
+### Context
+Continuation of overnight QA mode. Previous session committed FIX 15-27 (commit 4168188).
+This session implements FIX 28-32 and runs MEGA-CYCLES 16-18 (13 cards total).
+
+### Fixes Applied
+- **FIX 28**: Label suffix validation (ANT/IQUE/TION/MENT/ENCE/ISTE), merged apostrophe detection
+- **FIX 29**: Sensory prompt rewrite ("Decris ce que tu SENS: odeurs, sons, toucher, lumiere") — BIGGEST breakthrough
+- **FIX 30**: 1st→2nd person conversion (je→tu, mes→tes, mon→ton, m'→t', moi→toi)
+- **FIX 31**: vous→tu conversion (vous avez→tu as, votre→ton, vos→tes), meta "Voici une description"
+- **FIX 32**: Strip "Etape N:", "Scene N -", "Bienvenue dans", "ce voyageur" patterns
+
+### Results (MC16-18, 13 cards)
+| Metric | Before (MC12) | After (MC16-18) |
+|--------|-------------|-----------------|
+| 2nd person "tu" | 0/5 (0%) | 8/13 (62%) |
+| Action verb labels | 3/5 (60%) | 13/13 (100%) |
+| No "je suis Merlin" | 1/5 (20%) | 13/13 (100%) |
+| Sensory content | 0/5 (0%) | 10/13 (77%) |
+| Meta-text leaks | 3/5 (60%) | 2/13 (15%) |
+
+### Key Insight
+TransitionBiome post-processing only applies to PRERUN cards (TransitionBiome flow).
+Standalone mode (BootstrapMerlinGame) bypasses post-processing entirely — cards show
+raw LLM output. To get consistent quality, post-processing should move to
+merlin_game_controller.gd or merlin_llm_adapter.gd.
+
+### Commits
+- `77d2a46` — fix(prerun): FIX 28-31
+- `56c7ba2` — fix(prerun): FIX 32
+
+---
+
 ## Session: 2026-02-28 — Cible IPSOS: PowerBI model.bim Alignment (10 fixes)
 
 ### Context
