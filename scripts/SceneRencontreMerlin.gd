@@ -9,6 +9,7 @@ extends Control
 
 const SCENE_HUB := "res://scenes/HubAntre.tscn"
 const SCENE_BIOME := "res://scenes/TransitionBiome.tscn"
+const SCENE_TUTORIAL := "res://scenes/IntroTutorial.tscn"
 const DATA_PATH := "res://data/dialogues/scene_dialogues.json"
 var _next_scene: String = SCENE_HUB
 
@@ -688,7 +689,12 @@ func _show_destination_choice() -> void:
 			gm4.set("selected_biome", suggested_biome)
 			gm4.set("skipped_hub", true)
 	else:
-		_next_scene = SCENE_HUB
+		# Route first-time players through the tutorial
+		var gm_tut := get_node_or_null("/root/GameManager")
+		if gm_tut and not gm_tut.flags.get("tutorial_done", false):
+			_next_scene = SCENE_TUTORIAL
+		else:
+			_next_scene = SCENE_HUB
 
 	# Hide response buttons
 	response_container.visible = false

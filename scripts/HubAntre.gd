@@ -253,6 +253,11 @@ func _ready() -> void:
 	await get_tree().create_timer(1.2).timeout
 	_show_greeting()
 
+	# Hub guided tour for first-time players (after IntroTutorial)
+	var gm_tour := get_node_or_null("/root/GameManager")
+	if gm_tour and gm_tour.flags.get("hub_tour_pending", false):
+		_run_hub_tour.call_deferred()
+
 
 # =============================================================================
 # SETUP
@@ -1152,3 +1157,146 @@ func _on_perk_cancelled() -> void:
 	SFXManager.play("click")
 	if _perk_overlay and is_instance_valid(_perk_overlay):
 		_perk_overlay.visible = false
+
+
+# =============================================================================
+# HUB GUIDED TOUR (first-time players)
+# =============================================================================
+
+const HUB_TOUR_STEPS: Array[Dictionary] = [
+	{"target": "overview", "text": "Bienvenue dans l'Antre. Ton refuge entre les runs."},
+	{"target": "calendar", "text": "Le Calendrier. Saisons et fetes celtiques.", "hotspot_idx": 0},
+	{"target": "arbre", "text": "L'Arbre de Vie. Ta progression, run apres run.", "hotspot_idx": 2},
+	{"target": "collection", "text": "La Collection. Cartes, Oghams, lore — tout ici.", "hotspot_idx": 4},
+	{"target": "alignement", "text": "L'Alignement des biomes. Bientot disponible.", "hotspot_idx": 3},
+	{"target": "bestiole", "text": "Ta Bestiole. Elle veille sur toi."},
+	{"target": "partir", "text": "PARTIR. Choisis un biome et lance l'aventure."},
+	{"target": "end", "text": "Tu connais l'essentiel. Le reste se decouvre en marchant."},
+]
+
+
+func _run_hub_tour() -> void:
+	if not is_inside_tree():
+		return
+
+	# Wait for entry animation to finish
+	await get_tree().create_timer(1.5).timeout
+	if not is_inside_tree():
+		return
+
+	# Disable hotspot interaction during tour
+	for hs: Control in _hotspots:
+		if hs.has_method("set_disabled"):
+			hs.set_disabled(true)
+		else:
+			hs.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	if _partir_btn:
+		_partir_btn.disabled = true
+
+	# Create highlight overlay
+	var highlight := _TourHighlight.new()
+	add_child(highlight)
+
+	for step: Dictionary in HUB_TOUR_STEPS:
+		if not is_inside_tree():
+			break
+
+		var target_name: String = str(step.get("target", ""))
+		var tour_text: String = str(step.get("text", ""))
+
+		# Position highlight on target
+		var target_pos: Vector2 = _get_tour_target_pos(step)
+		if target_name == "overview" or target_name == "end":
+			highlight.visible = false
+		else:
+			highlight.target_pos = target_pos
+			highlight.visible = true
+
+		# Show Merlin bubble with tour text
+		if _bubble and is_instance_valid(_bubble):
+			_bubble.show_message(tour_text, 30.0)
+
+		SFXManager.play("boot_line")
+
+		# Wait for player advance (click/space)
+		await _wait_tour_advance()
+
+	# Cleanup
+	if is_instance_valid(highlight):
+		highlight.queue_free()
+
+	# Re-enable hotspot interaction
+	for hs: Control in _hotspots:
+		if hs.has_method("set_disabled"):
+			hs.set_disabled(false)
+		else:
+			hs.mouse_filter = Control.MOUSE_FILTER_PASS
+	if _partir_btn:
+		_partir_btn.disabled = false
+
+	# Clear tour flag
+	var gm := get_node_or_null("/root/GameManager")
+	if gm:
+		gm.flags["hub_tour_pending"] = false
+		gm.flags["hub_tour_done"] = true
+
+	# Show final greeting
+	if _bubble and is_instance_valid(_bubble):
+		_bubble.show_message("A toi de jouer, %s." % chronicle_name, 4.0)
+
+
+func _get_tour_target_pos(step: Dictionary) -> Vector2:
+	var target_name: String = str(step.get("target", ""))
+	var vp: Vector2 = get_viewport_rect().size
+
+	if step.has("hotspot_idx"):
+		var idx: int = int(step["hotspot_idx"])
+		if idx >= 0 and idx < _hotspots.size():
+			var hs: Control = _hotspots[idx]
+			return hs.position + Vector2(32.0, 32.0)
+
+	if target_name == "bestiole" and _bestiole and is_instance_valid(_bestiole):
+		return _bestiole.position + Vector2(80.0, 80.0)
+
+	if target_name == "partir" and _partir_btn and is_instance_valid(_partir_btn):
+		return _partir_btn.position + _partir_btn.size * 0.5
+
+	return vp * 0.5
+
+
+func _wait_tour_advance() -> void:
+	while is_inside_tree():
+		if Input.is_action_just_pressed("ui_accept") or Input.is_mouse_button_pressed(MOUSE_BUTTON_LEFT):
+			break
+		await get_tree().process_frame
+	# Debounce
+	if is_inside_tree():
+		await get_tree().process_frame
+		await get_tree().process_frame
+
+
+## Inner class: pulsing amber circle highlight overlay
+class _TourHighlight extends Control:
+	var target_pos: Vector2 = Vector2.ZERO
+	var _t: float = 0.0
+	const RADIUS := 50.0
+	const PULSE_SPEED := 4.0
+
+	func _ready() -> void:
+		mouse_filter = Control.MOUSE_FILTER_IGNORE
+		set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+		z_index = 5
+
+	func _process(delta: float) -> void:
+		_t += delta * PULSE_SPEED
+		queue_redraw()
+
+	func _draw() -> void:
+		var alpha: float = 0.12 + sin(_t) * 0.08
+		var c: Color = MerlinVisual.CRT_PALETTE["amber"]
+		c.a = alpha
+		draw_circle(target_pos, RADIUS, c)
+		# Inner ring
+		var ring_c: Color = MerlinVisual.CRT_PALETTE["amber_bright"]
+		ring_c.a = alpha * 1.5
+		draw_arc(target_pos, RADIUS * 0.7, 0.0, TAU, 24, ring_c, 1.5)

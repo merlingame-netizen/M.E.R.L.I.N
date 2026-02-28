@@ -430,6 +430,9 @@ var meta := {
 # Flags
 var flags := {
 	"intro_seen": false,
+	"tutorial_done": false,
+	"hub_tour_pending": false,
+	"hub_tour_done": false,
 	"events_encountered": [],
 }
 
