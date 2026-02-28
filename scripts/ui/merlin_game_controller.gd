@@ -1552,6 +1552,11 @@ func _post_process_card_text() -> void:
 		"voici une description", "description ambiante", "basee sur le scenario",
 		"bienvenue dans", "bienvenue en", "ce voyageur est",
 		"le lieu est", "le parc national", "heures de train",
+		# FIX 38: Meta-text describing narrative structure
+		"sert de catalyseur", "met l'accent sur", "complication suivante",
+		"la suite de l'histoire", "dans cette scene", "cette carte",
+		"cette situation sert", "voici une complication", "voici un",
+		"ce passage montre", "ce moment revele", "cela introduit",
 	]
 	var result := text
 	# Strip "Etape N:" / "Scene N -" / "Acte N:" prefixes
@@ -1615,20 +1620,40 @@ func _post_process_card_text() -> void:
 	if result.length() >= 10:
 		current_card["text"] = result
 
-	# --- FIX 34: Deduplicate option labels ---
+	# --- FIX 34+37: Deduplicate + sanitize option labels ---
 	var options: Array = current_card.get("options", [])
 	if options.size() >= 2:
 		var seen: Dictionary = {}
 		var fallback_verbs: Array[String] = [
-			"Explorer", "Fuir", "Observer", "Grimper", "Creuser",
+			"Explorer", "Fuir", "Grimper", "Creuser",
 			"Soigner", "Briser", "Chanter", "Mediter", "Nager",
+			"Siffler", "Gravir", "Plonger", "Negocier", "Traquer",
 		]
 		var fb_idx := 0
 		for i in range(options.size()):
-			var lbl: String = str(options[i].get("label", ""))
-			var lbl_lower: String = lbl.to_lower().strip_edges()
-			if lbl_lower in seen:
-				# Duplicate found — replace with fallback verb
+			var lbl: String = str(options[i].get("label", "")).strip_edges()
+			var lbl_lower: String = lbl.to_lower()
+			var needs_replace := false
+			# FIX 37: Reject malformed labels
+			if lbl.length() < 3:
+				needs_replace = true
+			elif lbl.contains(")") or lbl.contains("(") or lbl.contains(":"):
+				needs_replace = true
+			# FIX 39: Reject pronoun-suffixed labels (e.g. "Apaisét-tu")
+			elif lbl.to_lower().ends_with("-tu") or lbl.to_lower().ends_with("-moi") \
+					or lbl.to_lower().ends_with("-toi") or lbl.to_lower().ends_with("-nous") \
+					or lbl.to_lower().ends_with("-vous") or lbl.to_lower().ends_with("-les") \
+					or lbl.to_lower().ends_with("-la") or lbl.to_lower().ends_with("-le"):
+				needs_replace = true
+			elif lbl_lower in seen:
+				needs_replace = true
+			# Reject common nouns that aren't action verbs
+			elif lbl_lower in ["l'air", "merveille", "chute", "parcours",
+					"situation", "ombre", "lumiere", "silence", "nature",
+					"foret", "chemin", "route", "pierre", "eau", "feu",
+					"terre", "ciel", "nuit", "jour", "lune", "soleil"]:
+				needs_replace = true
+			if needs_replace:
 				while fb_idx < fallback_verbs.size():
 					var fb_lower: String = fallback_verbs[fb_idx].to_lower()
 					fb_idx += 1

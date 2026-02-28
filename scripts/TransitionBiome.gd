@@ -1503,6 +1503,11 @@ func _strip_meta_text(text: String) -> String:
 		"basee sur le scenario", "que vous avez", "scenario detaille",
 		"bienvenue dans", "bienvenue en", "bienvenu a",
 		"le pays du nord", "ce voyageur est", "ce voyageur",
+		# FIX 38: Meta-text describing narrative structure
+		"sert de catalyseur", "met l'accent sur", "complication suivante",
+		"la suite de l'histoire", "dans cette scene", "cette carte",
+		"cette situation sert", "voici une complication", "voici un",
+		"ce passage montre", "ce moment revele", "cela introduit",
 	]
 	var result := text
 	# FIX 32: Strip "Etape N :" and "Scene N -" prefix patterns (instruction format leak)
