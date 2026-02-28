@@ -1510,6 +1510,7 @@ func _strip_meta_text(text: String) -> String:
 		"ce passage montre", "ce moment revele", "cela introduit",
 		# FIX 41: Prompt structure leaks (VERBE:, B/C, FORCE label)
 		"verbe :", "verbe:", "b/c)", "a/b)", "a) ", "b) ", "c) ",
+		"a/ ", "b/ ", "c/ ", "a/'", "b/'", "c/'",
 		"force:", "force :", "option a", "option b", "option c",
 		# FIX 43: Identity leaks (LLM assigns Merlin identity to player)
 		"tu es merlin", "tu es le druide", "tu es un druide",
@@ -1529,6 +1530,8 @@ func _strip_meta_text(text: String) -> String:
 		"theme ambiant", "thème ambiant", "tags appropries", "tags appropriés",
 		"pour le biome", "carte ambiante pour",
 		"jour 1 de ce voyage", "jour 2 de ce voyage", "jour 3 de ce voyage",
+		# FIX 48: Option labeling leaks + "phrase finale"
+		"phrase finale", "phrase initiale", "phrase de transition",
 	]
 	var result := text
 	# FIX 32: Strip "Etape N :" and "Scene N -" prefix patterns (instruction format leak)
