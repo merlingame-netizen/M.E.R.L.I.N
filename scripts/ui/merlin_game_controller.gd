@@ -1570,6 +1570,9 @@ func _post_process_card_text() -> void:
 		# FIX 45: Prompt instruction leaks (raw template output)
 		"titre poetique", "action en 1 phrase", "vers de complication",
 		"action differente", "tu puis ai", "equipe principale",
+		# FIX 46: Narrative structure leaks ("la complication est causée par...")
+		"la complication est", "causee par", "causée par",
+		"est causee par", "est causée par",
 	]
 	var result := text
 	# Strip "Etape N:" / "Scene N -" / "Acte N:" prefixes
@@ -1581,6 +1584,9 @@ func _post_process_card_text() -> void:
 	result = rx.sub(result, "", true)
 	# Strip markdown bold
 	rx.compile("\\*\\*[^*]{0,60}\\*\\*:?")
+	result = rx.sub(result, "", true)
+	# FIX 46: Strip lines starting with backslash (raw markup leak)
+	rx.compile("(?m)^\\s*\\\\\\s*.+$")
 	result = rx.sub(result, "", true)
 	# Strip lines containing meta-words
 	for mw in meta_words:

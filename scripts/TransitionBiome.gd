@@ -1521,6 +1521,9 @@ func _strip_meta_text(text: String) -> String:
 		# FIX 45: Prompt instruction leaks (raw template output)
 		"titre poetique", "action en 1 phrase", "vers de complication",
 		"action differente", "tu puis ai", "equipe principale",
+		# FIX 46: Narrative structure leaks ("la complication est causée par...")
+		"la complication est", "causee par", "causée par",
+		"est causee par", "est causée par",
 	]
 	var result := text
 	# FIX 32: Strip "Etape N :" and "Scene N -" prefix patterns (instruction format leak)
@@ -1535,6 +1538,10 @@ func _strip_meta_text(text: String) -> String:
 	var rx_md := RegEx.new()
 	rx_md.compile("\\*\\*[^*]{0,60}\\*\\*:?")
 	result = rx_md.sub(result, "", true)
+	# FIX 46: Strip lines starting with backslash (raw markup leak)
+	var rx_bs := RegEx.new()
+	rx_bs.compile("(?m)^\\s*\\\\\\s*.+$")
+	result = rx_bs.sub(result, "", true)
 	# Strip lines with meta-words
 	for mw in meta_words:
 		var pos := result.to_lower().find(mw)
