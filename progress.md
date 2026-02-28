@@ -2,6 +2,44 @@
 
 > **Note**: Sessions anterieures archivees dans `archive/progress_archive_2026-02-05_to_2026-02-08.md`
 
+## Session: 2026-02-28 (night cont.5) — Overnight QA: FIX 44-45 (Meta-text + Noun Labels)
+
+### Context
+Continuation of overnight QA. Previous session committed FIX 43 (commit b627918).
+This session runs MC25-26 (10 cards) and implements FIX 44-45.
+
+### Fixes Applied
+- **FIX 44**: Normalize Unicode dashes in labels (U+2010-2014→ASCII); add "voici ta carte", "premiere scene" meta patterns
+- **FIX 45**: Add "titre poetique", "action en 1 phrase", "vers de complication" prompt leak patterns; block noun labels (vue, lumieres, scene, valuer, complication)
+
+### Results (MC25-26, 10 cards)
+| Metric | MC25 (FIX 43) | MC26 (FIX 44) |
+|--------|--------------|---------------|
+| 2nd person "tu" | 3/5 (60%) | 4/5 (80%) |
+| Action verb labels | 12/15 (80%) | 7/15 (47%) |
+| No meta-text leaks | 4/5 (80%) | 4/5 (80%) |
+
+### Key Findings
+- **MC25 Card 3**: "Voici ta carte ambiante, entièrement générée" — new meta pattern → FIX 44
+- **MC25 Card 5**: "Énigme-tu" label not caught — likely Unicode dash → FIX 44 normalizes
+- **MC26 Card 2**: All 3 labels are nouns (Vue/Lumières/Scene) → FIX 45 blocks
+- **MC26 Card 4**: **Catastrophic prompt leak** — raw instruction template output → FIX 45 patterns
+- **FIX 40 confirmed x3**: "Tu as rejoint", "Tu as laissé" (correct j'ai→tu as conversion)
+- **Mission system working**: explore 3/6 in MC26
+
+### Cumulative Quality Trend (MC19-MC26, 40 cards)
+| Metric | MC19 | MC20 | MC21 | MC22 | MC23 | MC24 | MC25 | MC26 |
+|--------|------|------|------|------|------|------|------|------|
+| 2nd person | 100% | 60% | 40% | 80% | 60% | 80% | 60% | 80% |
+| Valid labels | 100% | 80% | 93% | **100%** | 87% | 93% | 80% | 47% |
+| No meta-leaks | 100% | 80% | 60% | **100%** | 60% | 80% | 80% | 80% |
+
+### Commits
+- `eb6d5b3` — fix(cards): FIX 44 — Unicode dashes + "voici ta carte"
+- `0c2abdf` — fix(cards): FIX 45 — prompt instruction leaks + noun blocklist
+
+---
+
 ## Session: 2026-02-28 (night cont.4) — Overnight QA: FIX 43 (Identity Leak + Truncated Labels)
 
 ### Context
