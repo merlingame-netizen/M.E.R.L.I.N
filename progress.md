@@ -2,6 +2,41 @@
 
 > **Note**: Sessions anterieures archivees dans `archive/progress_archive_2026-02-05_to_2026-02-08.md`
 
+## Session: 2026-02-28 (night cont.2) — Overnight QA: FIX 34-39 (Labels + Meta-text + Hooks)
+
+### Context
+Continuation of overnight QA. Previous session committed FIX 28-33 (commit 0d9951e).
+This session implements FIX 34-39 and runs MEGA-CYCLES 20-21 (10 cards total).
+
+### Fixes Applied
+- **FIX 34**: Label dedup — seen dictionary + fallback verb pool (14 verbs)
+- **FIX 35**: Opening hook rotation — 10 hooks ("Tu decouvres/entends/sens/...") indexed by cards_played
+- **FIX 36**: Arc prefix strip — "Complication:", "Climax:", "Resolution:", etc. structural markers
+- **FIX 37**: Label sanitization — reject nouns, too-short, punctuation artifacts, common nouns blocklist
+- **FIX 38**: Meta-text patterns — "sert de catalyseur", "complication suivante", narrative structure leaks
+- **FIX 39**: Pronoun-suffixed labels — reject "-tu", "-moi", "-toi", "-nous", "-vous" suffixes
+
+### Results (MC19-21, 15 cards)
+| Metric | MC19 (FIX 33) | MC20 (FIX 34-36) | MC21 (FIX 37) |
+|--------|--------------|-----------------|---------------|
+| 2nd person "tu" | 5/5 (100%) | 3/5 (60%) | 2/5 (40%) |
+| Action verb labels | 5/5 (100%) | 12/15 (80%) | 14/15 (93%) |
+| No meta-text leaks | 5/5 (100%) | 4/5 (80%) | 3/5 (60%) |
+| Opening variety | 2/5 (40%) | 5/5 (100%) | 5/5 (100%) |
+
+### Key Findings
+- **FIX 35 confirmed**: Opening variety went from 40% to 100% — no more "Tu marches" repetition
+- **FIX 37 confirmed**: Label quality improved — MC21 had 14/15 valid verbs vs MC20's 12/15
+- **3rd person issue**: 40-60% of cards still use 3rd person impersonal (model-level, needs LoRA)
+- **New meta-text pattern**: "sert de catalyseur a la complication suivante" — fixed by FIX 38
+- **Pronoun labels**: "Apaiset-tu" corruption — fixed by FIX 39
+
+### Commits
+- `b9011fb` — fix(cards): FIX 34-36 — label dedup, opening hooks, arc prefix strip
+- `314d540` — fix(cards): FIX 37-39 — label sanitization, meta-text patterns, pronoun labels
+
+---
+
 ## Session: 2026-02-28 (night cont.) — Overnight QA: FIX 28-33 (TransitionBiome + Controller)
 
 ### Context
