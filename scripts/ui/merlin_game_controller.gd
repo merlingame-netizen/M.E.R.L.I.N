@@ -1586,6 +1586,8 @@ func _post_process_card_text() -> void:
 		"saison :", "séance:", "seance:", "séance :",
 		# FIX 50: Screenplay format + "cette scène"
 		"cette scene", "cette scène", "the scene is",
+		# FIX 51: Dash-prefixed arc names
+		"- voyage en", "- exploration de", "- complication",
 	]
 	var result := text
 	# Strip "Etape N:" / "Scene N -" / "Acte N:" / "Scene :" prefixes (FIX 49: \d+ now optional)
@@ -1740,7 +1742,11 @@ func _post_process_card_text() -> void:
 					"complication", "introduction", "exploration",
 					# FIX 48: More nouns seen in MC29
 					"facette", "amour", "l'amour", "silence",
-					"lumiere", "lumière", "ombre", "sentier"]:
+					"lumiere", "lumière", "ombre", "sentier",
+					# FIX 51: Nouns seen in MC33
+					"voyage", "recherche", "aventure", "mystere",
+					"mystère", "destin", "histoire", "legende",
+					"légende", "vision", "memoire", "mémoire"]:
 				needs_replace = true
 			if needs_replace:
 				while fb_idx < fallback_verbs.size():

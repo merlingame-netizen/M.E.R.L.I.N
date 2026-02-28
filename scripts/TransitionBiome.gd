@@ -1537,6 +1537,8 @@ func _strip_meta_text(text: String) -> String:
 		"saison :", "séance:", "seance:", "séance :",
 		# FIX 50: Screenplay format + "cette scène"
 		"cette scene", "cette scène", "the scene is",
+		# FIX 51: Dash-prefixed arc names
+		"- voyage en", "- exploration de", "- complication",
 	]
 	var result := text
 	# FIX 32+49: Strip "Etape N:" / "Scene :" / "Séance:" prefixes (\d+ now optional)
