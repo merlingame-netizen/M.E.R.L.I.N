@@ -1588,11 +1588,15 @@ func _post_process_card_text() -> void:
 		"cette scene", "cette scène", "the scene is",
 		# FIX 51: Dash-prefixed arc names
 		"- voyage en", "- exploration de", "- complication",
+		# FIX 52: "Scene N" without separator + "in the" English intro
+		"scene 1", "scene 2", "scene 3", "scene 4", "scene 5",
+		"in the forest", "in the mist", "in the cave",
 	]
 	var result := text
-	# Strip "Etape N:" / "Scene N -" / "Acte N:" / "Scene :" prefixes (FIX 49: \d+ now optional)
+	# Strip "Etape N:" / "Scene N -" / "Acte N:" / "Scene :" / "Scene 1" prefixes
+	# FIX 52: require digits OR separator (not neither) to avoid stripping legit "Scene" text
 	var rx := RegEx.new()
-	rx.compile("(?im)^\\s*(?:[eé]tape|scene|sc[eè]ne|acte|chapitre|séance)\\s*\\d*\\s*[:\\-]\\s*(?:[A-Z][^\\n]{0,40}\\n)?")
+	rx.compile("(?im)^\\s*(?:[eé]tape|scene|sc[eè]ne|acte|chapitre|séance)\\s*(?:\\d+\\s*[:\\-]?|[:\\-])\\s*(?:[A-Z][^\\n]{0,40}\\n)?")
 	result = rx.sub(result, "", true)
 	# FIX 36: Strip arc phase prefixes (Complication:, Climax:, Resolution:, etc.)
 	rx.compile("(?im)^\\s*(?:complication|climax|resolution|introduction|exploration|twist|epilogue|prologue|transition|aurore druidique)\\s*:?\\s*(?:[A-Z][^\\n]{0,40}\\n)?")

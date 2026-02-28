@@ -1539,11 +1539,14 @@ func _strip_meta_text(text: String) -> String:
 		"cette scene", "cette scène", "the scene is",
 		# FIX 51: Dash-prefixed arc names
 		"- voyage en", "- exploration de", "- complication",
+		# FIX 52: "Scene N" without separator + "in the" English intro
+		"scene 1", "scene 2", "scene 3", "scene 4", "scene 5",
+		"in the forest", "in the mist", "in the cave",
 	]
 	var result := text
-	# FIX 32+49: Strip "Etape N:" / "Scene :" / "Séance:" prefixes (\d+ now optional)
+	# FIX 52: Strip "Etape N:" / "Scene :" / "Scene 1" prefixes (digits OR separator required)
 	var rx_etape := RegEx.new()
-	rx_etape.compile("(?im)^\\s*(?:[eé]tape|scene|sc[eè]ne|acte|chapitre|séance)\\s*\\d*\\s*[:\\-]\\s*(?:[A-Z][^\\n]{0,40}\\n)?")
+	rx_etape.compile("(?im)^\\s*(?:[eé]tape|scene|sc[eè]ne|acte|chapitre|séance)\\s*(?:\\d+\\s*[:\\-]?|[:\\-])\\s*(?:[A-Z][^\\n]{0,40}\\n)?")
 	result = rx_etape.sub(result, "", true)
 	# FIX 36: Strip arc phase prefixes (Complication:, Climax:, etc.)
 	var rx_arc := RegEx.new()
