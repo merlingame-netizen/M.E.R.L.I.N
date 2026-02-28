@@ -1563,6 +1563,10 @@ func _post_process_card_text() -> void:
 		# FIX 43: Identity leaks (LLM assigns Merlin identity to player)
 		"tu es merlin", "tu es le druide", "tu es un druide",
 		"tu es l'enchanteur", "merlin l'enchanteur",
+		# FIX 44: Card generation meta-text + scene structure
+		"voici ta carte", "entierement generee", "informations fournies",
+		"premiere scene", "deuxieme scene", "troisieme scene",
+		"point de depart", "genere en fonction",
 	]
 	var result := text
 	# Strip "Etape N:" / "Scene N -" / "Acte N:" prefixes
@@ -1654,6 +1658,8 @@ func _post_process_card_text() -> void:
 		var fb_idx := 0
 		for i in range(options.size()):
 			var lbl: String = str(options[i].get("label", "")).strip_edges()
+			# FIX 44: Normalize Unicode dashes to ASCII hyphen before checks
+			lbl = lbl.replace("\u2010", "-").replace("\u2011", "-").replace("\u2012", "-").replace("\u2013", "-").replace("\u2014", "-")
 			var lbl_lower: String = lbl.to_lower()
 			var needs_replace := false
 			# FIX 37: Reject malformed labels

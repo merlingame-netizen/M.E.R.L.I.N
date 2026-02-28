@@ -1514,6 +1514,10 @@ func _strip_meta_text(text: String) -> String:
 		# FIX 43: Identity leaks (LLM assigns Merlin identity to player)
 		"tu es merlin", "tu es le druide", "tu es un druide",
 		"tu es l'enchanteur", "merlin l'enchanteur",
+		# FIX 44: Card generation meta-text + scene structure
+		"voici ta carte", "entierement generee", "informations fournies",
+		"premiere scene", "deuxieme scene", "troisieme scene",
+		"point de depart", "genere en fonction",
 	]
 	var result := text
 	# FIX 32: Strip "Etape N :" and "Scene N -" prefix patterns (instruction format leak)
