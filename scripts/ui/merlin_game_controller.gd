@@ -1714,6 +1714,11 @@ func _post_process_card_text() -> void:
 			var lbl: String = str(options[i].get("label", "")).strip_edges()
 			# FIX 44: Normalize Unicode dashes to ASCII hyphen before checks
 			lbl = lbl.replace("\u2010", "-").replace("\u2011", "-").replace("\u2012", "-").replace("\u2013", "-").replace("\u2014", "-")
+			# FIX 53: Strip parentheses and brackets from labels, then re-strip edges
+			lbl = lbl.replace("(", "").replace(")", "").replace("[", "").replace("]", "").strip_edges()
+			if lbl.length() > 0:
+				lbl = lbl[0].to_upper() + lbl.substr(1)
+			options[i]["label"] = lbl
 			var lbl_lower: String = lbl.to_lower()
 			var needs_replace := false
 			# FIX 37: Reject malformed labels
@@ -1750,7 +1755,11 @@ func _post_process_card_text() -> void:
 					# FIX 51: Nouns seen in MC33
 					"voyage", "recherche", "aventure", "mystere",
 					"mystère", "destin", "histoire", "legende",
-					"légende", "vision", "memoire", "mémoire"]:
+					"légende", "vision", "memoire", "mémoire",
+					# FIX 53: Nouns seen in MC35
+					"danger", "courage", "combat", "fuite",
+					"secret", "enigme", "énigme", "tresor",
+					"trésor", "refuge", "passage", "sentier"]:
 				needs_replace = true
 			if needs_replace:
 				while fb_idx < fallback_verbs.size():
