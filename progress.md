@@ -2,6 +2,44 @@
 
 > **Note**: Sessions anterieures archivees dans `archive/progress_archive_2026-02-05_to_2026-02-08.md`
 
+## Session: 2026-02-28 (night cont.7) — Overnight QA: FIX 49-50 (Arc Prefix + Screenplay Strip)
+
+### Context
+Continuation of overnight QA. Previous session committed FIX 46-48.
+This session runs MC30-32 (15 cards) and implements FIX 49-50.
+
+### Fixes Applied
+- **FIX 49**: Arc prefix regex `\d+` now `\d*` (optional) to catch "Scene :" without number; added "séance" to prefix keywords; "saison spring/summer/autumn/winter" + "séance:" meta_words
+- **FIX 50**: Strip screenplay format headers (`INT./EXT. LOCATION - TIME`); added "cette scène", "the scene is" meta_words
+
+### Results (MC30-32, 15 cards)
+| Metric | MC30 (FIX 48) | MC31 (FIX 49) | MC32 (FIX 49) |
+|--------|--------------|---------------|---------------|
+| 2nd person "tu" | 4/5 (80%) | **5/5 (100%)** | 3/5 (60%) |
+| Action verb labels | **15/15 (100%)** | 14/15 (93%) | 14/15 (93%) |
+| No meta-text leaks | 4/5 (80%) | **5/5 (100%)** | 3/5 (60%) |
+
+### Key Findings
+- **MC30 Card 2**: "Scene : Le Jardin de Brocéliande - Saison Spring Séance: 1" — arc prefix regex required `\d+` → FIX 49 makes `\d*` optional
+- **MC31**: PERFECT CYCLE — 0 meta leaks, 100% 2nd person, 93% valid labels. FIX 47-49 combination highly effective
+- **MC32 Cards 2-3**: NEW issue — **Screenplay format** "INT. FORET BROCELIANDE - LE MATIN" + **full English text**. LLM fell into screenplay/English mode → FIX 50 strips INT./EXT. headers
+- **English text**: Cannot fix by post-processing (would need translation). This is a prompt-level/LoRA issue
+- **Invented words persistent**: "Reniser", "Rendesteur", "s'enchevient", "heliophoniques" — model-level
+- FPS 41-58, lower on MC32 (LLM CPU load)
+
+### Cumulative Quality Trend (MC19-MC32, 70 cards)
+| Metric | MC19 | MC20 | MC21 | MC22 | MC23 | MC24 | MC25 | MC26 | MC27 | MC28 | MC29 | MC30 | MC31 | MC32 |
+|--------|------|------|------|------|------|------|------|------|------|------|------|------|------|------|
+| 2nd person | 100% | 60% | 40% | 80% | 60% | 80% | 60% | 80% | 80% | 80% | 80% | 80% | **100%** | 60% |
+| Valid labels | 100% | 80% | 93% | **100%** | 87% | 93% | 80% | 47% | 87% | **100%** | 87% | **100%** | 93% | 93% |
+| No meta-leaks | 100% | 80% | 60% | **100%** | 60% | 80% | 80% | 80% | 80% | **40%** | 80% | 80% | **100%** | 60% |
+
+### Commits
+- `21280fb` — fix(cards): FIX 49 — arc prefix regex handles "Scene :" without number
+- `2fc9a91` — fix(cards): FIX 50 — strip screenplay headers (INT./EXT.)
+
+---
+
 ## Session: 2026-02-28 (night cont.6) — Overnight QA: FIX 46-48 (Sentence-Strip + Meta Patterns)
 
 ### Context
