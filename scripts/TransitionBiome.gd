@@ -1501,8 +1501,14 @@ func _strip_meta_text(text: String) -> String:
 		"les aventures d'", "se deroulent les",
 		"voici une description", "description ambiante", "description contextuelle",
 		"basee sur le scenario", "que vous avez", "scenario detaille",
+		"bienvenue dans", "bienvenue en", "bienvenu a",
+		"le pays du nord", "ce voyageur est", "ce voyageur",
 	]
 	var result := text
+	# FIX 32: Strip "Etape N :" and "Scene N -" prefix patterns (instruction format leak)
+	var rx_etape := RegEx.new()
+	rx_etape.compile("(?im)^\\s*(?:[eé]tape|scene|sc[eè]ne|acte|chapitre)\\s*\\d+\\s*[:\\-]\\s*(?:[A-Z][^\\n]{0,40}\\n)?")
+	result = rx_etape.sub(result, "", true)
 	# Strip markdown bold markers and their meta content
 	var rx_md := RegEx.new()
 	rx_md.compile("\\*\\*[^*]{0,60}\\*\\*:?")
