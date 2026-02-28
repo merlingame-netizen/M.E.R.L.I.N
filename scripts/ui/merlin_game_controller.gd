@@ -1584,6 +1584,8 @@ func _post_process_card_text() -> void:
 		# FIX 49: Arc prefix + season/session labels
 		"saison spring", "saison summer", "saison autumn", "saison winter",
 		"saison :", "séance:", "seance:", "séance :",
+		# FIX 50: Screenplay format + "cette scène"
+		"cette scene", "cette scène", "the scene is",
 	]
 	var result := text
 	# Strip "Etape N:" / "Scene N -" / "Acte N:" / "Scene :" prefixes (FIX 49: \d+ now optional)
@@ -1595,6 +1597,9 @@ func _post_process_card_text() -> void:
 	result = rx.sub(result, "", true)
 	# Strip markdown bold
 	rx.compile("\\*\\*[^*]{0,60}\\*\\*:?")
+	result = rx.sub(result, "", true)
+	# FIX 50: Strip screenplay format headers (INT./EXT. LOCATION - TIME)
+	rx.compile("(?im)^\\s*(?:INT|EXT|int|ext)\\.\\s*[A-ZÀ-Ü ]{2,50}\\s*[-–—]\\s*[A-ZÀ-Ü ]{2,20}\\s*\\n?")
 	result = rx.sub(result, "", true)
 	# FIX 46: Strip lines starting with backslash (raw markup leak)
 	rx.compile("(?m)^\\s*\\\\\\s*.+$")

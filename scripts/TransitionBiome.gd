@@ -1535,6 +1535,8 @@ func _strip_meta_text(text: String) -> String:
 		# FIX 49: Arc prefix + season/session labels
 		"saison spring", "saison summer", "saison autumn", "saison winter",
 		"saison :", "séance:", "seance:", "séance :",
+		# FIX 50: Screenplay format + "cette scène"
+		"cette scene", "cette scène", "the scene is",
 	]
 	var result := text
 	# FIX 32+49: Strip "Etape N:" / "Scene :" / "Séance:" prefixes (\d+ now optional)
@@ -1549,6 +1551,10 @@ func _strip_meta_text(text: String) -> String:
 	var rx_md := RegEx.new()
 	rx_md.compile("\\*\\*[^*]{0,60}\\*\\*:?")
 	result = rx_md.sub(result, "", true)
+	# FIX 50: Strip screenplay format headers (INT./EXT. LOCATION - TIME)
+	var rx_sp := RegEx.new()
+	rx_sp.compile("(?im)^\\s*(?:INT|EXT|int|ext)\\.\\s*[A-ZÀ-Ü ]{2,50}\\s*[-–—]\\s*[A-ZÀ-Ü ]{2,20}\\s*\\n?")
+	result = rx_sp.sub(result, "", true)
 	# FIX 46: Strip lines starting with backslash (raw markup leak)
 	var rx_bs := RegEx.new()
 	rx_bs.compile("(?m)^\\s*\\\\\\s*.+$")
