@@ -1560,6 +1560,9 @@ func _post_process_card_text() -> void:
 		# FIX 41: Prompt structure leaks (VERBE:, B/C, FORCE label)
 		"verbe :", "verbe:", "b/c)", "a/b)", "a) ", "b) ", "c) ",
 		"force:", "force :", "option a", "option b", "option c",
+		# FIX 43: Identity leaks (LLM assigns Merlin identity to player)
+		"tu es merlin", "tu es le druide", "tu es un druide",
+		"tu es l'enchanteur", "merlin l'enchanteur",
 	]
 	var result := text
 	# Strip "Etape N:" / "Scene N -" / "Acte N:" prefixes
@@ -1663,6 +1666,9 @@ func _post_process_card_text() -> void:
 					or lbl.to_lower().ends_with("-toi") or lbl.to_lower().ends_with("-nous") \
 					or lbl.to_lower().ends_with("-vous") or lbl.to_lower().ends_with("-les") \
 					or lbl.to_lower().ends_with("-la") or lbl.to_lower().ends_with("-le"):
+				needs_replace = true
+			# FIX 43: Reject truncated labels ending with dash (e.g. "Vise-")
+			elif lbl.ends_with("-"):
 				needs_replace = true
 			elif lbl_lower in seen:
 				needs_replace = true
