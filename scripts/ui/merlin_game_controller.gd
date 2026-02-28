@@ -1591,6 +1591,10 @@ func _post_process_card_text() -> void:
 		# FIX 52: "Scene N" without separator + "in the" English intro
 		"scene 1", "scene 2", "scene 3", "scene 4", "scene 5",
 		"in the forest", "in the mist", "in the cave",
+		# FIX 55: Card type labels leaked from prompt
+		"carte ambiante", "carte narrative", "carte ambiance",
+		"carte événement", "carte evenement", "carte merlin",
+		"carte promesse", "ambient card", "narrative card",
 	]
 	var result := text
 	# Strip "Etape N:" / "Scene N -" / "Acte N:" / "Scene :" / "Scene 1" prefixes
@@ -1763,7 +1767,11 @@ func _post_process_card_text() -> void:
 					# FIX 54: Character/role nouns seen in MC36
 					"guerrier", "guerriere", "guerrière",
 					"druide", "chasseur", "voyageur",
-					"gardien", "sorcier", "esprit"]:
+					"gardien", "sorcier", "esprit",
+					# FIX 55: English words + adjectives as labels
+					"run", "fight", "hide", "go",
+					"première", "premier", "dernière", "dernier",
+					"ancienne", "ancien"]:
 				needs_replace = true
 			if needs_replace:
 				while fb_idx < fallback_verbs.size():

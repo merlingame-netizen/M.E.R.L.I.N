@@ -1542,6 +1542,10 @@ func _strip_meta_text(text: String) -> String:
 		# FIX 52: "Scene N" without separator + "in the" English intro
 		"scene 1", "scene 2", "scene 3", "scene 4", "scene 5",
 		"in the forest", "in the mist", "in the cave",
+		# FIX 55: Card type labels leaked from prompt
+		"carte ambiante", "carte narrative", "carte ambiance",
+		"carte événement", "carte evenement", "carte merlin",
+		"carte promesse", "ambient card", "narrative card",
 	]
 	var result := text
 	# FIX 52: Strip "Etape N:" / "Scene :" / "Scene 1" prefixes (digits OR separator required)
