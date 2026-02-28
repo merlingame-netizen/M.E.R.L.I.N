@@ -1532,11 +1532,14 @@ func _strip_meta_text(text: String) -> String:
 		"jour 1 de ce voyage", "jour 2 de ce voyage", "jour 3 de ce voyage",
 		# FIX 48: Option labeling leaks + "phrase finale"
 		"phrase finale", "phrase initiale", "phrase de transition",
+		# FIX 49: Arc prefix + season/session labels
+		"saison spring", "saison summer", "saison autumn", "saison winter",
+		"saison :", "séance:", "seance:", "séance :",
 	]
 	var result := text
-	# FIX 32: Strip "Etape N :" and "Scene N -" prefix patterns (instruction format leak)
+	# FIX 32+49: Strip "Etape N:" / "Scene :" / "Séance:" prefixes (\d+ now optional)
 	var rx_etape := RegEx.new()
-	rx_etape.compile("(?im)^\\s*(?:[eé]tape|scene|sc[eè]ne|acte|chapitre)\\s*\\d+\\s*[:\\-]\\s*(?:[A-Z][^\\n]{0,40}\\n)?")
+	rx_etape.compile("(?im)^\\s*(?:[eé]tape|scene|sc[eè]ne|acte|chapitre|séance)\\s*\\d*\\s*[:\\-]\\s*(?:[A-Z][^\\n]{0,40}\\n)?")
 	result = rx_etape.sub(result, "", true)
 	# FIX 36: Strip arc phase prefixes (Complication:, Climax:, etc.)
 	var rx_arc := RegEx.new()

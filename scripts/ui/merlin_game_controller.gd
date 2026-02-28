@@ -1581,11 +1581,14 @@ func _post_process_card_text() -> void:
 		"jour 1 de ce voyage", "jour 2 de ce voyage", "jour 3 de ce voyage",
 		# FIX 48: Option labeling leaks + "phrase finale"
 		"phrase finale", "phrase initiale", "phrase de transition",
+		# FIX 49: Arc prefix + season/session labels
+		"saison spring", "saison summer", "saison autumn", "saison winter",
+		"saison :", "séance:", "seance:", "séance :",
 	]
 	var result := text
-	# Strip "Etape N:" / "Scene N -" / "Acte N:" prefixes
+	# Strip "Etape N:" / "Scene N -" / "Acte N:" / "Scene :" prefixes (FIX 49: \d+ now optional)
 	var rx := RegEx.new()
-	rx.compile("(?im)^\\s*(?:[eé]tape|scene|sc[eè]ne|acte|chapitre)\\s*\\d+\\s*[:\\-]\\s*(?:[A-Z][^\\n]{0,40}\\n)?")
+	rx.compile("(?im)^\\s*(?:[eé]tape|scene|sc[eè]ne|acte|chapitre|séance)\\s*\\d*\\s*[:\\-]\\s*(?:[A-Z][^\\n]{0,40}\\n)?")
 	result = rx.sub(result, "", true)
 	# FIX 36: Strip arc phase prefixes (Complication:, Climax:, Resolution:, etc.)
 	rx.compile("(?im)^\\s*(?:complication|climax|resolution|introduction|exploration|twist|epilogue|prologue|transition|aurore druidique)\\s*:?\\s*(?:[A-Z][^\\n]{0,40}\\n)?")
