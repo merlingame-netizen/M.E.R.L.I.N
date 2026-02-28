@@ -2,41 +2,43 @@
 
 > **Note**: Sessions anterieures archivees dans `archive/progress_archive_2026-02-05_to_2026-02-08.md`
 
-## Session: 2026-02-28 (night cont.5) — Overnight QA: FIX 44-45 (Meta-text + Noun Labels)
+## Session: 2026-02-28 (night cont.6) — Overnight QA: FIX 46-48 (Sentence-Strip + Meta Patterns)
 
 ### Context
-Continuation of overnight QA. Previous session committed FIX 43 (commit b627918).
-This session runs MC25-26 (10 cards) and implements FIX 44-45.
+Continuation of overnight QA. Previous session committed FIX 43-45.
+This session runs MC27-29 (15 cards) and implements FIX 46-48.
 
 ### Fixes Applied
-- **FIX 44**: Normalize Unicode dashes in labels (U+2010-2014→ASCII); add "voici ta carte", "premiere scene" meta patterns
-- **FIX 45**: Add "titre poetique", "action en 1 phrase", "vers de complication" prompt leak patterns; block noun labels (vue, lumieres, scene, valuer, complication)
+- **FIX 46**: Add "la complication est", "causée par" meta patterns; strip backslash-prefixed lines
+- **FIX 47** (MAJOR): **Sentence-level fallback stripping** — root cause of persistent meta leaks found: when meta text + narrative on ONE line (no \n), line-stripper removes everything, result < 10 chars, guard falls back to original text. Now falls back to sentence-level strip. Also adds "voici la suggestion", "→ choix:" arrow template strip
+- **FIX 48**: Add "phrase finale", "a/", "b/", "c/" meta patterns; expand noun blocklist (facette, amour, silence, ombre, sentier)
 
-### Results (MC25-26, 10 cards)
-| Metric | MC25 (FIX 43) | MC26 (FIX 44) |
-|--------|--------------|---------------|
-| 2nd person "tu" | 3/5 (60%) | 4/5 (80%) |
-| Action verb labels | 12/15 (80%) | 7/15 (47%) |
-| No meta-text leaks | 4/5 (80%) | 4/5 (80%) |
+### Results (MC27-29, 15 cards)
+| Metric | MC27 (FIX 45) | MC28 (FIX 46) | MC29 (FIX 47) |
+|--------|--------------|---------------|---------------|
+| 2nd person "tu" | 4/5 (80%) | 4/5 (80%) | 4/5 (80%) |
+| Action verb labels | 13/15 (87%) | 15/15 (**100%**) | 13/15 (87%) |
+| No meta-text leaks | 4/5 (80%) | 2/5 (**40%**) | 4/5 (80%) |
 
 ### Key Findings
-- **MC25 Card 3**: "Voici ta carte ambiante, entièrement générée" — new meta pattern → FIX 44
-- **MC25 Card 5**: "Énigme-tu" label not caught — likely Unicode dash → FIX 44 normalizes
-- **MC26 Card 2**: All 3 labels are nouns (Vue/Lumières/Scene) → FIX 45 blocks
-- **MC26 Card 4**: **Catastrophic prompt leak** — raw instruction template output → FIX 45 patterns
-- **FIX 40 confirmed x3**: "Tu as rejoint", "Tu as laissé" (correct j'ai→tu as conversion)
-- **Mission system working**: explore 3/6 in MC26
+- **MC27 Card 5**: "\ La complication est causée par" — backslash + narrative structure leak → FIX 46
+- **MC28 Cards 2,3,5**: 3 meta leaks including "Voici la suggestion du scenario" and "Voici ta carte ambiante pour le jour 1" — FIX 44 patterns matched but line-strip removed ALL text (single-line), guard fell back to original → **ROOT CAUSE found** → FIX 47 sentence-strip
+- **MC28 Card 5**: "→ choix: DECHIFFRER" template arrow leaked → FIX 47 regex strip
+- **MC29 Card 2**: "Phrase finale: A/" option labeling leaked → FIX 48
+- **MC29 Cards 3,5**: Noun labels "Facette" and "L'amour" → FIX 48 blocklist expansion
+- FPS stable 46-58 throughout
 
-### Cumulative Quality Trend (MC19-MC26, 40 cards)
-| Metric | MC19 | MC20 | MC21 | MC22 | MC23 | MC24 | MC25 | MC26 |
-|--------|------|------|------|------|------|------|------|------|
-| 2nd person | 100% | 60% | 40% | 80% | 60% | 80% | 60% | 80% |
-| Valid labels | 100% | 80% | 93% | **100%** | 87% | 93% | 80% | 47% |
-| No meta-leaks | 100% | 80% | 60% | **100%** | 60% | 80% | 80% | 80% |
+### Cumulative Quality Trend (MC19-MC29, 55 cards)
+| Metric | MC19 | MC20 | MC21 | MC22 | MC23 | MC24 | MC25 | MC26 | MC27 | MC28 | MC29 |
+|--------|------|------|------|------|------|------|------|------|------|------|------|
+| 2nd person | 100% | 60% | 40% | 80% | 60% | 80% | 60% | 80% | 80% | 80% | 80% |
+| Valid labels | 100% | 80% | 93% | **100%** | 87% | 93% | 80% | 47% | 87% | **100%** | 87% |
+| No meta-leaks | 100% | 80% | 60% | **100%** | 60% | 80% | 80% | 80% | 80% | **40%** | 80% |
 
 ### Commits
-- `eb6d5b3` — fix(cards): FIX 44 — Unicode dashes + "voici ta carte"
-- `0c2abdf` — fix(cards): FIX 45 — prompt instruction leaks + noun blocklist
+- `c00cfa7` — fix(cards): FIX 46 — narrative structure leak + backslash strip
+- `c84b9ef` — fix(cards): FIX 47 — sentence-level fallback strip + new meta patterns
+- `34184a5` — fix(cards): FIX 48 — "phrase finale" meta + noun blocklist expansion
 
 ---
 
