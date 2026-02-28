@@ -1524,6 +1524,11 @@ func _strip_meta_text(text: String) -> String:
 		# FIX 46: Narrative structure leaks ("la complication est causée par...")
 		"la complication est", "causee par", "causée par",
 		"est causee par", "est causée par",
+		# FIX 47: Scenario suggestion + tag description leaks
+		"voici la suggestion", "suggestion du scenario",
+		"theme ambiant", "thème ambiant", "tags appropries", "tags appropriés",
+		"pour le biome", "carte ambiante pour",
+		"jour 1 de ce voyage", "jour 2 de ce voyage", "jour 3 de ce voyage",
 	]
 	var result := text
 	# FIX 32: Strip "Etape N :" and "Scene N -" prefix patterns (instruction format leak)
@@ -1550,8 +1555,30 @@ func _strip_meta_text(text: String) -> String:
 			var line_end := result.find("\n", pos)
 			if line_start < 0: line_start = 0
 			if line_end < 0: line_end = result.length()
-			result = result.substr(0, line_start) + result.substr(line_end)
+			var candidate: String = result.substr(0, line_start) + result.substr(line_end)
+			# FIX 47: If line-strip would destroy all text, use sentence-strip instead
+			if candidate.strip_edges().length() < 10:
+				var sent_start := pos
+				for ch in [".", ":", ";", "!"]:
+					var ss := result.rfind(ch, pos)
+					if ss >= 0 and ss > line_start:
+						sent_start = ss + 1
+						break
+				if sent_start == pos:
+					sent_start = line_start
+				var sent_end := result.length()
+				for ch in [".", ":", ";", "!"]:
+					var se := result.find(ch, pos + mw.length())
+					if se >= 0 and se < sent_end:
+						sent_end = se + 1
+				result = result.substr(0, sent_start) + result.substr(sent_end)
+			else:
+				result = candidate
 			pos = result.to_lower().find(mw)
+	# FIX 47: Strip "→ choix:" template arrows and ALL-CAPS option labels
+	var rx_arrow := RegEx.new()
+	rx_arrow.compile("(?m)→\\s*choix\\s*:\\s*[A-ZÀ-Ü]+")
+	result = rx_arrow.sub(result, "", true)
 	# Clean multiple blank lines
 	while result.contains("\n\n\n"):
 		result = result.replace("\n\n\n", "\n\n")
