@@ -1509,6 +1509,10 @@ func _strip_meta_text(text: String) -> String:
 	var rx_etape := RegEx.new()
 	rx_etape.compile("(?im)^\\s*(?:[eé]tape|scene|sc[eè]ne|acte|chapitre)\\s*\\d+\\s*[:\\-]\\s*(?:[A-Z][^\\n]{0,40}\\n)?")
 	result = rx_etape.sub(result, "", true)
+	# FIX 36: Strip arc phase prefixes (Complication:, Climax:, etc.)
+	var rx_arc := RegEx.new()
+	rx_arc.compile("(?im)^\\s*(?:complication|climax|resolution|introduction|exploration|twist|epilogue|prologue|transition|aurore druidique)\\s*:?\\s*(?:[A-Z][^\\n]{0,40}\\n)?")
+	result = rx_arc.sub(result, "", true)
 	# Strip markdown bold markers and their meta content
 	var rx_md := RegEx.new()
 	rx_md.compile("\\*\\*[^*]{0,60}\\*\\*:?")

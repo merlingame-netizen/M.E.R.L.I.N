@@ -1568,8 +1568,15 @@ func _build_arc_user_prompt(cards_played: int, biome: String, theme_word: String
 		# Fallback: concise prompt — small models follow short instructions better
 		var balance_ctx := _evaluate_balance_heuristic(context)
 		var verbs: Array = _get_phase_verb_pool(int(balance_ctx.get("balance_score", 100)))
-		base_prompt = "Carte %d. Biome: %s. Theme: %s.\nDecris une SITUATION que le voyageur vit (danger, enigme, rencontre). Puis A) B) C) = ses REACTIONS a cette situation. Verbes SPECIFIQUES lies a la scene (pas 'avancer'/'observer'/'fuir').\nInspiration verbes: %s, %s, %s." % [
-			cards_played + 1, biome, theme_word, str(verbs[0]), str(verbs[1]), str(verbs[2])]
+		# FIX 35: Rotate opening hooks to prevent "Tu marches" repetition
+		var opening_hooks: Array[String] = [
+			"Tu decouvres", "Tu entends", "Tu sens", "Tu apercois",
+			"Tu te reveilles", "Tu tombes sur", "Tu fais face a",
+			"Tu trebuches sur", "Tu reconnais", "Tu touches",
+		]
+		var hook: String = opening_hooks[cards_played % opening_hooks.size()]
+		base_prompt = "Carte %d. Biome: %s. Theme: %s.\nCOMMENCE PAR: \"%s...\"\nDecris une SITUATION (danger, enigme, rencontre). Puis A) B) C) = ses REACTIONS. Verbes SPECIFIQUES (pas 'avancer'/'observer'/'fuir').\nInspiration verbes: %s, %s, %s." % [
+			cards_played + 1, biome, theme_word, hook, str(verbs[0]), str(verbs[1]), str(verbs[2])]
 
 	# Inject scenario context into user prompt (always)
 	var scenario_title: String = str(context.get("scenario_title", ""))

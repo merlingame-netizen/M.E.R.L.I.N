@@ -1558,6 +1558,9 @@ func _post_process_card_text() -> void:
 	var rx := RegEx.new()
 	rx.compile("(?im)^\\s*(?:[eé]tape|scene|sc[eè]ne|acte|chapitre)\\s*\\d+\\s*[:\\-]\\s*(?:[A-Z][^\\n]{0,40}\\n)?")
 	result = rx.sub(result, "", true)
+	# FIX 36: Strip arc phase prefixes (Complication:, Climax:, Resolution:, etc.)
+	rx.compile("(?im)^\\s*(?:complication|climax|resolution|introduction|exploration|twist|epilogue|prologue|transition|aurore druidique)\\s*:?\\s*(?:[A-Z][^\\n]{0,40}\\n)?")
+	result = rx.sub(result, "", true)
 	# Strip markdown bold
 	rx.compile("\\*\\*[^*]{0,60}\\*\\*:?")
 	result = rx.sub(result, "", true)
@@ -1611,6 +1614,30 @@ func _post_process_card_text() -> void:
 
 	if result.length() >= 10:
 		current_card["text"] = result
+
+	# --- FIX 34: Deduplicate option labels ---
+	var options: Array = current_card.get("options", [])
+	if options.size() >= 2:
+		var seen: Dictionary = {}
+		var fallback_verbs: Array[String] = [
+			"Explorer", "Fuir", "Observer", "Grimper", "Creuser",
+			"Soigner", "Briser", "Chanter", "Mediter", "Nager",
+		]
+		var fb_idx := 0
+		for i in range(options.size()):
+			var lbl: String = str(options[i].get("label", ""))
+			var lbl_lower: String = lbl.to_lower().strip_edges()
+			if lbl_lower in seen:
+				# Duplicate found — replace with fallback verb
+				while fb_idx < fallback_verbs.size():
+					var fb_lower: String = fallback_verbs[fb_idx].to_lower()
+					fb_idx += 1
+					if fb_lower not in seen:
+						options[i]["label"] = fallback_verbs[fb_idx - 1]
+						seen[fb_lower] = true
+						break
+			else:
+				seen[lbl_lower] = true
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
