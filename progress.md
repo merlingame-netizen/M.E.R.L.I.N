@@ -2,6 +2,53 @@
 
 > **Note**: Sessions anterieures archivees dans `archive/progress_archive_2026-02-05_to_2026-02-08.md`
 
+## Session: 2026-02-28 (night cont.4) — Overnight QA: FIX 43 (Identity Leak + Truncated Labels)
+
+### Context
+Continuation of overnight QA. Previous session committed FIX 40-42 (commit 58ff95c).
+This session runs MEGA-CYCLE 24 (5 cards) and implements FIX 43.
+
+### Fixes Applied
+- **FIX 43**: Identity leak "tu es merlin" added to meta_words (both files); reject labels ending with dash ("Vise-")
+
+### Results (MC24, 5 cards — FIX 41-42 active)
+| Metric | MC24 |
+|--------|------|
+| 2nd person "tu" | 4/5 (80%) |
+| Action verb labels | 14/15 (93%) — "Vise-" truncated |
+| No meta-text leaks | 4/5 (80%) — identity leak Card 2 |
+| Opening variety | 5/5 (100%) |
+| FPS avg | 45-57 |
+
+### MC24 Card-by-Card
+| Card | Title | Person | Labels | Issues |
+|------|-------|--------|--------|--------|
+| 1 | Le Désespoir au Rêve-Dieu Crissant | 2nd | Répondre/Grimper/Renifler | Clean |
+| 2 | Voyage nocturne dans la Forêt du Ciel | 2nd | Secourir/Marchander/Forcer | Identity leak "Tu es Merlin", "tu traversons" |
+| 3 | Clairveine: L'Ombres Échappent à la Merveilleinte | 3rd | Enraciner/Déchiffrer/Frapper | Hallucinated words |
+| 4 | Le Serpent Pierré: Source de Passeurs Celts | 2nd | Plonger/**Vise-**/Secourir | Truncated label |
+| 5 | Tombée du char des voix lointaines | 2nd | Frapper/Pardonner/Aider | Clean, FIX 40 confirmed |
+
+### Key Findings
+- **FIX 40 re-confirmed**: Card 5 "Tu as entendu" (correct conversion)
+- **FIX 41-42 working**: No VERBE/FORCE leaks, no "n'ai" errors
+- **New identity leak**: "Tu es Merlin l'Enchanteur" — LLM assigns Merlin identity to player → FIX 43
+- **Truncated label "Vise-"**: Dash-ending label not caught → FIX 43
+- **Aspects moving**: Ame 0→1→0, Monde 0→1 (effects engine working)
+- **Remaining model-level issues**: "tu traversons" conjugation, hallucinated words, 3rd person (20%)
+
+### Cumulative Quality Trend (MC19-MC24, 30 cards)
+| Metric | MC19 | MC20 | MC21 | MC22 | MC23 | MC24 |
+|--------|------|------|------|------|------|------|
+| 2nd person | 100% | 60% | 40% | 80% | 60% | 80% |
+| Valid labels | 100% | 80% | 93% | **100%** | 87% | 93% |
+| No meta-leaks | 100% | 80% | 60% | **100%** | 60% | 80% |
+
+### Commits
+- `b627918` — fix(cards): FIX 43 — identity leak + truncated label
+
+---
+
 ## Session: 2026-02-28 (night cont.3) — Overnight QA: FIX 40-42 (Conjugation + Meta-text)
 
 ### Context
