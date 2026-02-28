@@ -2,6 +2,38 @@
 
 > **Note**: Sessions anterieures archivees dans `archive/progress_archive_2026-02-05_to_2026-02-08.md`
 
+## Session: 2026-02-28 (night cont.3) — Overnight QA: FIX 40-42 (Conjugation + Meta-text)
+
+### Context
+Continuation of overnight QA. Previous session committed FIX 34-39 (commit 314d540).
+This session implements FIX 40-42 and runs MEGA-CYCLES 22-23 (10 cards total).
+
+### Fixes Applied
+- **FIX 40**: j'ai→tu as conversion (prevents broken "t'ai" artifact). Also j'avais/j'étais/j'aurai
+- **FIX 41**: Strip "VERBE:", "B/C)", "FORCE" prompt structure leaks; block "verbe","force","option" labels
+- **FIX 42**: Fix avoir conjugation after je→tu: "tu n'ai" → "tu n'as"
+
+### Results (MC22-23, 10 cards)
+| Metric | MC22 (FIX 38-39) | MC23 (FIX 40) |
+|--------|-----------------|---------------|
+| 2nd person "tu" | 4/5 (80%) | 3/5 (60%) |
+| Action verb labels | **15/15 (100%)** | 13/15 (87%) |
+| No meta-text leaks | **5/5 (100%)** | 3/5 (60%) |
+| Opening variety | 5/5 (100%) | 5/5 (100%) |
+
+### Key Findings
+- **FIX 40 confirmed**: MC23 Card 1 "Tu as entendu" (was broken "t'ai entendu" in MC22)
+- **Labels near-perfect**: MC22 achieved 100% valid verb labels
+- **New meta-text patterns**: "VERBE : DÉGAINER", "B/C)", "FORCE" — fixed by FIX 41
+- **Conjugation gap**: "je n'ai" → "tu n'ai" (not "tu n'as") — fixed by FIX 42
+- **Remaining model-level issues**: 3rd person (40%), invented words, grammar errors
+
+### Commits
+- `50afd57` — fix(cards): FIX 40 — j'ai→tu as
+- `58ff95c` — fix(cards): FIX 41-42 — VERBE: meta-text + n'ai→n'as
+
+---
+
 ## Session: 2026-02-28 (night cont.2) — Overnight QA: FIX 34-39 (Labels + Meta-text + Hooks)
 
 ### Context
