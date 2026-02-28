@@ -191,6 +191,13 @@ var _partir_btn: Button = null
 var _hotspots: Array = []
 var _perk_overlay: Control = null  # B.1 — Souffle Perk selection overlay
 var _typology_panel: Control = null  # Typology selection panel (before run launch)
+var _triade_hud: HubTriadeHud = null
+var _souffle_bar: HubSouffleBar = null
+var _chronicle_label: Label = null
+var _meta_label: Label = null
+var _scanline_overlay: ColorRect = null
+var _ambient_particles: Array = []
+var _ambient_t: float = 0.0
 
 # =============================================================================
 # STATE
@@ -221,6 +228,10 @@ func _ready() -> void:
 	_connect_store()
 	_load_player_data()
 	_configure_background()
+	_create_scanline_overlay()
+	_create_chronicle_header()
+	_create_triade_hud()
+	_create_souffle_bar()
 	_create_bestiole()
 	_create_hotspots()
 	_create_partir_button()
@@ -229,6 +240,7 @@ func _ready() -> void:
 	_setup_voicebox()
 	_apply_aspect_aura()
 	_sync_from_state()
+	_update_hud_data()
 
 	var screen_fx := get_node_or_null("/root/ScreenEffects")
 	if screen_fx and screen_fx.has_method("set_merlin_mood"):
@@ -294,6 +306,77 @@ func _sync_from_state() -> void:
 	store.state["flags"]["hub_visited"] = true
 
 
+func _update_hud_data() -> void:
+	if store == null:
+		return
+	var aspects: Dictionary = store.state.get("aspects", {})
+	if _triade_hud:
+		_triade_hud.update_aspects(aspects)
+	var run: Dictionary = store.state.get("run", {})
+	var souffle: int = int(run.get("souffle", MerlinConstants.SOUFFLE_START))
+	if _souffle_bar:
+		_souffle_bar.update_souffle(souffle, MerlinConstants.SOUFFLE_MAX)
+
+
+func _process(delta: float) -> void:
+	_ambient_t += delta
+	# Spawn ambient particles
+	if randf() < 0.08:
+		_spawn_ambient_particle()
+	# Update ambient particles
+	var i: int = _ambient_particles.size() - 1
+	while i >= 0:
+		var p: Dictionary = _ambient_particles[i]
+		p["y"] = p["y"] - p["speed"] * delta
+		p["x"] = p["x"] + sin(_ambient_t * p["freq"] + p["phase"]) * 8.0 * delta
+		p["life"] = p["life"] - delta
+		if p["life"] <= 0.0:
+			_ambient_particles.remove_at(i)
+		i -= 1
+	queue_redraw()
+
+
+func _draw() -> void:
+	# Ambient floating particles (drawn on top of bg, below UI)
+	for p: Dictionary in _ambient_particles:
+		var alpha: float = clampf(p["life"] * 0.5, 0.0, 0.12)
+		var c: Color = p["color"]
+		c.a = alpha
+		draw_rect(Rect2(p["x"], p["y"], 2.0, 2.0), c)
+
+	# Scanline effect (CRT horizontal lines)
+	if _scanline_overlay == null:
+		var vp: Vector2 = get_viewport_rect().size
+		for sy in range(0, int(vp.y), 3):
+			draw_line(
+				Vector2(0.0, float(sy)),
+				Vector2(vp.x, float(sy)),
+				MerlinVisual.CRT_PALETTE["scanline"],
+				1.0
+			)
+
+
+func _spawn_ambient_particle() -> void:
+	var vp: Vector2 = get_viewport_rect().size
+	var colors: Array = [
+		MerlinVisual.CRT_PALETTE["phosphor_glow"],
+		MerlinVisual.CRT_PALETTE["cyan_dim"],
+		MerlinVisual.CRT_PALETTE["amber_dim"],
+	]
+	_ambient_particles.append({
+		"x": randf() * vp.x,
+		"y": vp.y + 4.0,
+		"speed": randf_range(12.0, 30.0),
+		"life": randf_range(4.0, 10.0),
+		"freq": randf_range(0.5, 2.0),
+		"phase": randf() * TAU,
+		"color": colors[randi() % colors.size()],
+	})
+	# Cap particles
+	if _ambient_particles.size() > 30:
+		_ambient_particles.remove_at(0)
+
+
 func _apply_aspect_aura() -> void:
 	if _bestiole == null or store == null:
 		return
@@ -317,7 +400,67 @@ func _apply_aspect_aura() -> void:
 
 
 # =============================================================================
-# CREATE COMPONENTS
+# CREATE COMPONENTS — HUD & Overlays
+# =============================================================================
+
+func _create_scanline_overlay() -> void:
+	_scanline_overlay = ColorRect.new()
+	_scanline_overlay.set_anchors_preset(Control.PRESET_FULL_RECT)
+	_scanline_overlay.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_scanline_overlay.color = Color.TRANSPARENT
+	add_child(_scanline_overlay)
+
+
+func _create_chronicle_header() -> void:
+	var vp: Vector2 = get_viewport_rect().size
+	var font: Font = MerlinVisual.get_font("title")
+
+	# Chronicle name (player name)
+	_chronicle_label = Label.new()
+	_chronicle_label.text = chronicle_name
+	_chronicle_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	if font:
+		_chronicle_label.add_theme_font_override("font", font)
+	_chronicle_label.add_theme_font_size_override("font_size", MerlinVisual.TITLE_SMALL)
+	_chronicle_label.add_theme_color_override("font_color", MerlinVisual.CRT_PALETTE["amber"])
+	_chronicle_label.position = Vector2(0.0, 12.0)
+	_chronicle_label.size = Vector2(vp.x, 40.0)
+	add_child(_chronicle_label)
+
+	# Meta info (runs, class)
+	_meta_label = Label.new()
+	var total_runs: int = 0
+	if store:
+		total_runs = int(store.state.get("meta", {}).get("total_runs", 0))
+	var class_label: String = player_class.capitalize()
+	_meta_label.text = "%s  |  Runs: %d" % [class_label, total_runs]
+	_meta_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	var body_font: Font = MerlinVisual.get_font("body")
+	if body_font:
+		_meta_label.add_theme_font_override("font", body_font)
+	_meta_label.add_theme_font_size_override("font_size", MerlinVisual.CAPTION_SIZE)
+	_meta_label.add_theme_color_override("font_color", MerlinVisual.CRT_PALETTE["phosphor_dim"])
+	_meta_label.position = Vector2(0.0, 48.0)
+	_meta_label.size = Vector2(vp.x, 20.0)
+	add_child(_meta_label)
+
+
+func _create_triade_hud() -> void:
+	_triade_hud = HubTriadeHud.new()
+	_triade_hud.position = Vector2(0.0, 72.0)
+	_triade_hud.size = Vector2(get_viewport_rect().size.x, 48.0)
+	add_child(_triade_hud)
+
+
+func _create_souffle_bar() -> void:
+	_souffle_bar = HubSouffleBar.new()
+	_souffle_bar.position = Vector2(0.0, 120.0)
+	_souffle_bar.size = Vector2(get_viewport_rect().size.x, 28.0)
+	add_child(_souffle_bar)
+
+
+# =============================================================================
+# CREATE COMPONENTS — Scene Elements
 # =============================================================================
 
 func _create_bestiole() -> void:
@@ -382,30 +525,30 @@ func _style_partir_button() -> void:
 	style.bg_color = MerlinVisual.CRT_PALETTE["amber"]
 	style.border_color = MerlinVisual.CRT_PALETTE["amber_bright"]
 	style.set_border_width_all(2)
-	style.set_corner_radius_all(6)
+	style.set_corner_radius_all(0)  # CRT: sharp terminal corners
 	style.content_margin_left = 28
 	style.content_margin_right = 28
 	style.content_margin_top = 12
 	style.content_margin_bottom = 12
 	style.shadow_color = MerlinVisual.CRT_PALETTE["shadow"]
-	style.shadow_size = 10
-	style.shadow_offset = Vector2(0, 4)
+	style.shadow_size = 6
+	style.shadow_offset = Vector2(0, 3)
 	_partir_btn.add_theme_stylebox_override("normal", style)
 
 	var hover := style.duplicate()
 	hover.bg_color = MerlinVisual.CRT_PALETTE["amber_dim"]
-	hover.shadow_size = 14
+	hover.border_color = MerlinVisual.CRT_PALETTE["phosphor"]
+	hover.shadow_size = 10
 	_partir_btn.add_theme_stylebox_override("hover", hover)
 
 	var pressed := style.duplicate()
 	pressed.bg_color = MerlinVisual.CRT_PALETTE["amber_bright"]
-	pressed.shadow_size = 4
+	pressed.shadow_size = 2
 	_partir_btn.add_theme_stylebox_override("pressed", pressed)
 
-	_partir_btn.add_theme_color_override("font_color", MerlinVisual.CRT_PALETTE["bg_panel"])
-	_partir_btn.add_theme_color_override("font_hover_color", MerlinVisual.CRT_PALETTE["bg_panel"])
-	_partir_btn.add_theme_color_override("font_pressed_color", MerlinVisual.CRT_PALETTE["phosphor"])
-	# pivot_offset mis à jour dans _layout_partir() selon la largeur réelle
+	_partir_btn.add_theme_color_override("font_color", MerlinVisual.CRT_PALETTE["bg_deep"])
+	_partir_btn.add_theme_color_override("font_hover_color", MerlinVisual.CRT_PALETTE["bg_deep"])
+	_partir_btn.add_theme_color_override("font_pressed_color", MerlinVisual.CRT_PALETTE["bg_deep"])
 
 
 func _create_bubble() -> void:
@@ -431,6 +574,15 @@ func _layout_all() -> void:
 		_hotspots[i].position = vp * Vector2(def["ratio"])
 	_layout_partir()
 	_layout_bestiole()
+	# Relayout HUD elements
+	if _chronicle_label:
+		_chronicle_label.size.x = vp.x
+	if _meta_label:
+		_meta_label.size.x = vp.x
+	if _triade_hud:
+		_triade_hud.size.x = vp.x
+	if _souffle_bar:
+		_souffle_bar.size.x = vp.x
 
 
 func _layout_partir() -> void:
@@ -522,43 +674,89 @@ func _on_radial_biome_selected(biome_key: String) -> void:
 
 func _show_typology_panel() -> void:
 	var vs: Vector2 = get_viewport_rect().size
+
+	# Backdrop overlay
+	var backdrop := ColorRect.new()
+	backdrop.set_anchors_preset(Control.PRESET_FULL_RECT)
+	backdrop.color = Color(0.0, 0.0, 0.0, 0.65)
+
+	# Panel with CRT terminal styling
 	var panel := PanelContainer.new()
-	panel.custom_minimum_size = Vector2(280.0, 300.0)
-	panel.position = (vs - Vector2(280.0, 300.0)) / 2.0
-	_typology_panel = panel
-	add_child(panel)
+	var pw: float = 320.0
+	var ph: float = 340.0
+	panel.custom_minimum_size = Vector2(pw, ph)
+	panel.position = (vs - Vector2(pw, ph)) * 0.5
+	var panel_style: StyleBoxFlat = MerlinVisual.make_modal_style(true)
+	panel.add_theme_stylebox_override("panel", panel_style)
+
+	var container := Control.new()
+	container.set_anchors_preset(Control.PRESET_FULL_RECT)
+	container.add_child(backdrop)
+	container.add_child(panel)
+	_typology_panel = container
+	add_child(container)
 
 	var vbox := VBoxContainer.new()
-	vbox.add_theme_constant_override("separation", 8)
+	vbox.add_theme_constant_override("separation", 10)
 	panel.add_child(vbox)
 
+	# Title
 	var title := Label.new()
-	title.text = "Mode de Run"
+	title.text = "> MODE DE RUN"
 	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	title.add_theme_font_size_override("font_size", 14)
+	var title_font: Font = MerlinVisual.get_font("title")
+	if title_font:
+		title.add_theme_font_override("font", title_font)
+	title.add_theme_font_size_override("font_size", MerlinVisual.BODY_SIZE)
+	title.add_theme_color_override("font_color", MerlinVisual.CRT_PALETTE["amber"])
 	vbox.add_child(title)
 
-	# Bouton Skip = Classique
+	# Separator
+	var sep := HSeparator.new()
+	sep.add_theme_constant_override("separation", 4)
+	sep.add_theme_stylebox_override("separator", _make_separator_style())
+	vbox.add_child(sep)
+
+	# Classique button (default, emphasized)
 	var skip_btn := Button.new()
-	skip_btn.text = "- Classique (Standard)"
+	skip_btn.text = "[ Classique ]  Standard"
+	MerlinVisual.apply_celtic_option_theme(skip_btn, MerlinVisual.CRT_PALETTE["phosphor"])
 	skip_btn.pressed.connect(func(): _on_typology_selected("classique"))
+	skip_btn.mouse_entered.connect(func(): SFXManager.play("hover"))
 	vbox.add_child(skip_btn)
 
-	# 4 typologies non-classiques
+	# 4 typologies
+	var accent_colors: Dictionary = {
+		"urgence": MerlinVisual.CRT_PALETTE["danger"],
+		"parieur": MerlinVisual.CRT_PALETTE["amber"],
+		"diplomate": MerlinVisual.CRT_PALETTE["cyan"],
+		"chasseur": MerlinVisual.CRT_ASPECT_COLORS["Corps"],
+	}
 	for typology_id in ["urgence", "parieur", "diplomate", "chasseur"]:
 		var tdata: Dictionary = MerlinConstants.RUN_TYPOLOGIES.get(typology_id, {})
 		var icon: String = str(tdata.get("icon", ""))
 		var name_str: String = str(tdata.get("name", typology_id))
 		var btn := Button.new()
 		btn.text = "%s %s" % [icon, name_str]
-		var tid: String = typology_id  # Capture for lambda
+		var accent: Color = accent_colors.get(typology_id, MerlinVisual.CRT_PALETTE["phosphor_dim"])
+		MerlinVisual.apply_celtic_option_theme(btn, accent)
+		var tid: String = typology_id
 		btn.pressed.connect(func(): _on_typology_selected(tid))
+		btn.mouse_entered.connect(func(): SFXManager.play("hover"))
 		vbox.add_child(btn)
 
 	# Fade in
-	panel.modulate.a = 0.0
+	container.modulate.a = 0.0
 	var tw := create_tween()
-	tw.tween_property(panel, "modulate:a", 1.0, 0.25)
+	tw.tween_property(container, "modulate:a", 1.0, 0.25)
+
+
+func _make_separator_style() -> StyleBoxFlat:
+	var s := StyleBoxFlat.new()
+	s.bg_color = MerlinVisual.CRT_PALETTE["border"]
+	s.content_margin_top = 1
+	s.content_margin_bottom = 1
+	return s
 
 
 func _on_typology_selected(typology: String) -> void:
@@ -734,10 +932,36 @@ func _play_entry_animation() -> void:
 	if _partir_btn:
 		_partir_btn.modulate.a = 0.0
 		_partir_btn.scale = Vector2(0.5, 0.5)
+	if _chronicle_label:
+		_chronicle_label.modulate.a = 0.0
+	if _meta_label:
+		_meta_label.modulate.a = 0.0
+	if _triade_hud:
+		_triade_hud.modulate.a = 0.0
+	if _souffle_bar:
+		_souffle_bar.modulate.a = 0.0
 
 	await get_tree().process_frame
 
 	var pca: Node = get_node_or_null("/root/PixelContentAnimator")
+
+	# Chronicle header fade-in (first element to appear)
+	if _chronicle_label:
+		MerlinVisual.phosphor_reveal(_chronicle_label, 0.5)
+	await get_tree().create_timer(0.15).timeout
+	if _meta_label:
+		var tw := create_tween()
+		tw.tween_property(_meta_label, "modulate:a", 1.0, 0.3)
+
+	# HUD elements staggered reveal
+	await get_tree().create_timer(0.1).timeout
+	if _triade_hud:
+		var tw := create_tween()
+		tw.tween_property(_triade_hud, "modulate:a", 1.0, 0.4).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
+	await get_tree().create_timer(0.1).timeout
+	if _souffle_bar:
+		var tw := create_tween()
+		tw.tween_property(_souffle_bar, "modulate:a", 1.0, 0.4).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
 
 	# Stagger hotspots reveal
 	for i in _hotspots.size():
