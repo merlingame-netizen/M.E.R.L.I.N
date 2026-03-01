@@ -860,6 +860,113 @@
 					}
 				]
 			}
+		},
+		"iles": {
+			"name": "Iles Mystiques",
+			"subtitle": "Au-Dela des Brumes",
+			"gardien": "Morgane",
+			"ogham": "Ailm",
+			"saison": "Samhain",
+			"arrival_text": "La brume s'ouvre sur une etendue d'eau sans fin. Puis l'ile apparait — tour en ruines, falaises d'argent, lumiere qui n'a pas de source. L'air vibre d'un chant que tu n'entends qu'a moitie.",
+			"merlin_comment": "Avalon. Ou ce qu'il en reste. Meme moi, je n'ose pas dire son vrai nom a voix haute.",
+			"map_position": [0.86, 0.12],
+			"color": "#406899",
+			"atmosphere": {
+				"sounds": "ressac lointain, chant etheree, vent marin, cloches submergees",
+				"smell": "sel, algues, fleurs inconnues, ozone",
+				"light": "argentee, phosphorescente, changeante, irreelle",
+				"mood": "sacre, melancolique, transcendant, liminal"
+			},
+			"variants": {
+				"balanced": [
+					{
+						"arrival": "La brume s'ouvre sur une etendue d'eau sans fin. Puis l'ile apparait — tour en ruines, falaises d'argent, lumiere qui n'a pas de source.",
+						"merlin": "Avalon. Ou ce qu'il en reste. Meme moi, je n'ose pas dire son vrai nom a voix haute."
+					},
+					{
+						"arrival": "L'ile flotte entre deux eaux, entre deux mondes. Ses contours changent a chaque battement de coeur.",
+						"merlin": "Morgane veille. Elle ne juge pas. Elle observe. C'est pire."
+					},
+					{
+						"arrival": "Des vagues phosphorescentes lecher les rochers d'argent. L'ile chante une melodie que tu connais sans l'avoir jamais entendue.",
+						"merlin": "Ce lieu existait avant la Bretagne. Avant les noms. Avant les histoires."
+					},
+					{
+						"arrival": "La tour en ruines perce la brume comme un doigt leve vers les etoiles. Des lumieres dansent a ses fenetres vides.",
+						"merlin": "La tour n'est pas en ruines. Elle est entre deux etats. Comme tout ici."
+					},
+					{
+						"arrival": "Le sable de l'ile est noir et chaud sous tes pieds. La mer autour est d'un bleu impossible, presque violet.",
+						"merlin": "Les iles n'apparaissent que pour ceux qui sont prets. Ou desesperes. Parfois c'est la meme chose."
+					}
+				],
+				"corps_extreme": [
+					{
+						"arrival": "L'eau glaciale te mord les chevilles. Nager jusqu'a l'ile t'a coute chaque once de force.",
+						"merlin": "Le Corps epuise atteint les rives d'Avalon. C'est souvent comme ca. On arrive brise."
+					},
+					{
+						"arrival": "Tes muscles tremblent sur le sable noir. La traversee a failli te prendre. L'ile t'observe, indifferente.",
+						"merlin": "Morgane ne soigne pas. Elle transforme. C'est different. Et plus douloureux."
+					},
+					{
+						"arrival": "L'air de l'ile te brule les poumons comme du givre. Chaque respiration est un combat.",
+						"merlin": "L'ile teste le Corps. Pas sa force — sa volonte de continuer."
+					},
+					{
+						"arrival": "Une vigueur surhumaine te porte sur les rochers. Tu escalades comme si l'ile elle-meme te tirait vers le haut.",
+						"merlin": "Le Corps surmene touche a quelque chose ici. Un seuil. Attention a ne pas le franchir."
+					},
+					{
+						"arrival": "La houle te projette sur les rochers et tu te releves sans une egratignure. L'ile amortit les chocs.",
+						"merlin": "Meme la douleur fonctionne differemment ici. Ne t'y habitue pas."
+					}
+				],
+				"ame_extreme": [
+					{
+						"arrival": "Des voix anciennes te submergent des que tu poses le pied sur l'ile. Mille vies, mille morts, toutes simultanees.",
+						"merlin": "L'Ame ouverte sur les iles, c'est une porte sans serrure. Tout entre. Tout."
+					},
+					{
+						"arrival": "Tu vois l'ile telle qu'elle etait, telle qu'elle sera. Le temps n'a pas de prise ici, et ton ame le sait.",
+						"merlin": "Morgane sent l'Ame possedee. Elle s'en approche. Ce n'est pas bon signe."
+					},
+					{
+						"arrival": "Le chant de l'ile te traverse comme un courant electrique. Chaque note est un souvenir qui n'est pas le tien.",
+						"merlin": "L'Ame perdue trouve toujours son chemin jusqu'ici. Les iles sont une boussole pour les egares."
+					},
+					{
+						"arrival": "Les esprits de l'ile dansent autour de toi comme des feux follets. Ils te connaissent. Ils t'attendaient.",
+						"merlin": "Quand les esprits t'attendent, c'est que tu es deja a moitie de l'autre cote."
+					},
+					{
+						"arrival": "Tu comprends le chant des vagues. Chaque vague raconte une histoire. Tu ne peux plus t'arreter d'ecouter.",
+						"merlin": "L'Ame ici ne se perd pas. Elle se dissout. Dans la beaute. C'est le piege."
+					}
+				],
+				"monde_extreme": [
+					{
+						"arrival": "L'ile s'efface a chaque fois que tu la regardes directement. Tu dois avancer en biais, en peripherie.",
+						"merlin": "Exile meme ici. L'ile se cache de ceux que le monde rejette."
+					},
+					{
+						"arrival": "La brume te suit comme une ombre. L'ile te tolere, mais ne t'accueille pas.",
+						"merlin": "Morgane fronce les sourcils. Elle n'aime pas les ames coupees du monde."
+					},
+					{
+						"arrival": "L'ile s'incline devant toi. Les vagues s'ecartent. Meme Avalon reconnait ta souverainete.",
+						"merlin": "Tyran des iles. C'est un titre que personne n'a jamais porte. Et pour cause."
+					},
+					{
+						"arrival": "Tu marches sur l'eau comme sur la terre. L'ile n'est qu'un rocher de plus dans ton royaume.",
+						"merlin": "Le Monde se plie. Mais les iles ont une volonte propre. Ne la sous-estime pas."
+					},
+					{
+						"arrival": "Le sable noir se fige sous tes pas. L'ile entiere retient son souffle en ta presence.",
+						"merlin": "Quand Avalon se tait, c'est que quelque chose de terrible ou de magnifique approche."
+					}
+				]
+			}
 		}
 	},
 

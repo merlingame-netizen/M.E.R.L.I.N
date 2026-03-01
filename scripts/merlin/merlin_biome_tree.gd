@@ -25,6 +25,7 @@ const BIOME_KEYS: Array = [
 	"marais_korrigans",
 	"cercles_pierres",
 	"collines_dolmens",
+	"iles_mystiques",
 ]
 
 
@@ -40,6 +41,7 @@ const BIOME_TIERS: Dictionary = {
 	"marais_korrigans": 3,
 	"cercles_pierres": 3,
 	"collines_dolmens": 4,
+	"iles_mystiques": 5,
 }
 
 
@@ -56,6 +58,7 @@ const BIOME_TREE_EDGES: Array = [
 	{"from": "landes_bruyere", "to": "collines_dolmens"},
 	{"from": "marais_korrigans", "to": "collines_dolmens"},
 	{"from": "cercles_pierres", "to": "collines_dolmens"},
+	{"from": "collines_dolmens", "to": "iles_mystiques"},
 ]
 
 
@@ -133,6 +136,16 @@ const BIOME_UNLOCK_CONDITIONS: Dictionary = {
 		],
 		"hint": "Completer un biome de palier 3 et avoir un karma positif",
 	},
+
+	"iles_mystiques": {
+		"logic": "and",
+		"requires_from": "collines_dolmens",
+		"conditions": [
+			{"completed_tier3": 3},
+			{"aspect": "Ame", "state": "equilibre"},
+		],
+		"hint": "Completer les 3 biomes de palier 3 et avoir l'Ame en equilibre",
+	},
 }
 
 
@@ -148,6 +161,7 @@ const BIOME_NAMES: Dictionary = {
 	"marais_korrigans": "Marais des Korrigans",
 	"cercles_pierres": "Cercles de Pierres",
 	"collines_dolmens": "Collines aux Dolmens",
+	"iles_mystiques": "Iles Mystiques",
 }
 
 const BIOME_COLORS: Dictionary = {
@@ -158,6 +172,7 @@ const BIOME_COLORS: Dictionary = {
 	"marais_korrigans": Color(0.30, 0.42, 0.28),
 	"cercles_pierres": Color(0.60, 0.55, 0.65),
 	"collines_dolmens": Color(0.50, 0.52, 0.38),
+	"iles_mystiques": Color(0.25, 0.42, 0.60),
 }
 
 ## Map positions for UI — tier-based layout (bottom = start, top = final)
@@ -169,6 +184,7 @@ const BIOME_POSITIONS: Dictionary = {
 	"marais_korrigans": Vector2(0.42, 0.34),
 	"cercles_pierres": Vector2(0.72, 0.34),
 	"collines_dolmens": Vector2(0.50, 0.12),
+	"iles_mystiques": Vector2(0.86, 0.12),
 }
 
 

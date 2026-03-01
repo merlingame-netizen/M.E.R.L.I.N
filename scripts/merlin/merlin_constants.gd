@@ -867,7 +867,8 @@ const TALENT_TIER_NAMES := {1: "Germe", 2: "Pousse", 3: "Branche", 4: "Cime"}
 
 const BIOME_KEYS := [
 	"foret_broceliande", "landes_bruyere", "cotes_sauvages",
-	"villages_celtes", "cercles_pierres", "marais_korrigans", "collines_dolmens"
+	"villages_celtes", "cercles_pierres", "marais_korrigans", "collines_dolmens",
+	"iles_mystiques"
 ]
 
 const BIOME_DEFAULT := "foret_broceliande"
@@ -890,6 +891,8 @@ static func get_mission_template(biome_key: String) -> Dictionary:
 			return {"title": "Le Tertre du Silence", "text": "Le chef des korrigans ne rit plus. Descends dans le tertre et affronte le Vide.", "name": "Marais des Korrigans"}
 		"collines", "collines_dolmens":
 			return {"title": "La Voix de l'If", "text": "L'if millenaire perd ses branches. Ecoute ses dernieres paroles avant qu'il ne se taise.", "name": "Collines aux Dolmens"}
+		"iles", "iles_mystiques":
+			return {"title": "Le Passage d'Avalon", "text": "Au-dela des brumes, une ile apparait puis s'efface. Trouve le passage avant que la maree ne le scelle.", "name": "Iles Mystiques"}
 	return {}
 
 # Card type distribution weights (TRIADE mode)

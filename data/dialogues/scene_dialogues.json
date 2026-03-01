@@ -558,6 +558,39 @@
           "emotion": "melancolie_percante",
           "tags": ["transition", "collines", "merlin", "memoire", "perte"]
         }
+      },
+      "iles_mystiques": {
+        "nom": "Les Iles Mystiques",
+        "sous_titre": "Au-Dela des Brumes",
+        "arrival_text": {
+          "id": "arrive_iles",
+          "speaker": "NARRATION",
+          "text": "La brume s'ouvre comme un rideau. L'ocean est d'un bleu impossible, presque noir. L'ile apparait — falaises d'argent, tour en ruines dont le sommet se perd dans les nuages. L'air vibre d'un chant que tu n'entends qu'a moitie. Les vagues sont phosphorescentes.",
+          "direction": "Ton sacre, liminal. L'ile est Avalon — le dernier biome, au-dela du monde connu. Morgane y attend. Le chant 'a moitie entendu' est la membrane entre les mondes. Les vagues phosphorescentes sont les ames des anciens voyageurs.",
+          "timing": {
+            "display_duration_s": 8.0,
+            "pause_after_s": 3.0
+          },
+          "ambiance": {
+            "palette": "bleu_profond_argent_phosphorescent",
+            "son": "ressac_chant_etheree_cloches_submergees",
+            "lumiere": "argentee_sans_source_changeante"
+          },
+          "tags": ["transition", "iles", "arrivee", "atmosphere", "avalon"]
+        },
+        "merlin_comment": {
+          "id": "merlin_iles",
+          "speaker": "MERLIN",
+          "text": "Avalon. [long_pause] Ou ce qu'il en reste. [beat] Meme moi, je n'ose pas dire son vrai nom a voix haute. [pause] Morgane veille. Elle ne juge pas. Elle observe. [beat] C'est pire.",
+          "direction": "Le ton de Merlin change completement. Plus de blagues. La pause longue apres 'Avalon' est un silence sacre. Le 'c'est pire' final est murmure — c'est la premiere fois que Merlin exprime une crainte reelle.",
+          "timing": {
+            "delay_before_s": 1.0,
+            "display_duration_s": 8.0,
+            "pause_after_s": 2.5
+          },
+          "emotion": "crainte_sacree",
+          "tags": ["transition", "iles", "merlin", "avalon", "morgane", "sacre"]
+        }
       }
     }
   }

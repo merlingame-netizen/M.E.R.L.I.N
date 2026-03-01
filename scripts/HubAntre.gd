@@ -96,6 +96,16 @@ const BIOME_DATA := {
 		"aspect_hint": "Equilibre",
 		"difficulty_label": "Normal",
 	},
+	"iles_mystiques": {
+		"name": "Iles Mystiques",
+		"subtitle": "Au-dela des brumes",
+		"color": Color(0.25, 0.42, 0.60),
+		"ogham": "ailm",
+		"guardian": "Morgane",
+		"season": "samhain",
+		"aspect_hint": "Ame +40%",
+		"difficulty_label": "Legendaire",
+	},
 }
 
 # =============================================================================
@@ -130,6 +140,10 @@ const BIOME_MISSIONS := {
 	"collines_dolmens": [
 		{"type": "recovery", "target": "Apaiser les ancetres d'Elouan", "total": 9},
 		{"type": "alliance", "target": "Restaurer les liens ancestraux", "total": 7},
+	],
+	"iles_mystiques": [
+		{"type": "discovery", "target": "Trouver le passage vers Avalon", "total": 12},
+		{"type": "survival", "target": "Resister aux chants des selkies", "total": 10},
 	],
 }
 

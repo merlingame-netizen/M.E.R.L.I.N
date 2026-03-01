@@ -149,6 +149,22 @@ const BIOMES: Dictionary = {
 		"creatures": "esprits d'anciens rois, sages, animaux paisibles",
 		"atmosphere": "collines douces, dolmens et tumulus, air paisible et lourd de memoire",
 	},
+	"iles_mystiques": {
+		"name": "Iles Mystiques",
+		"subtitle": "Au-dela des brumes",
+		"theme": "Transcendance, passage, monde invisible, liminalite absolue",
+		"color": Color(0.25, 0.42, 0.60),
+		"aspect_bias": {"Corps": 0.8, "Ame": 1.4, "Monde": 1.0},
+		"passive": {"every_n": 4, "aspect": "random", "direction": "random"},
+		"difficulty": 3,
+		"ogham_bonus": ["ailm", "ruis", "ioho"],
+		"ogham_cooldown_reduction": 2,
+		"flux_offset": {"terre": -5, "esprit": 15, "lien": 10},
+		"favored_season": "samhain",
+		"unlock": {"min_runs": 20, "min_endings": 5, "required_ending": "transcendance"},
+		"creatures": "selkies, banshees, fees des vagues, esprits anciens, gardienne Morgane",
+		"atmosphere": "brume eternelle, vagues phosphorescentes, chants lointains, tour en ruines",
+	},
 }
 
 

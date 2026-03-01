@@ -49,6 +49,7 @@ func _get_fog_config() -> Dictionary:
 			"cercles": {"tint": MerlinVisual.CRT_PALETTE.bg_panel.darkened(0.05), "direction": Vector3(0, 0, 0), "speed": 0.3},
 			"marais": {"tint": MerlinVisual.CRT_PALETTE.mist.lightened(0.02), "direction": Vector3(-0.3, 0.5, 0), "speed": 0.6},
 			"collines": {"tint": MerlinVisual.CRT_PALETTE.bg_panel.lightened(0.02), "direction": Vector3(-0.7, -0.2, 0), "speed": 0.9},
+			"iles": {"tint": MerlinVisual.CRT_PALETTE.mist.lightened(0.10), "direction": Vector3(-0.6, 0.2, 0), "speed": 1.1},
 		}
 	return _fog_config
 
@@ -175,6 +176,7 @@ const BIOME_KEY_MAP := {
 	"cercles_pierres": "cercles",
 	"marais_korrigans": "marais",
 	"collines_dolmens": "collines",
+	"iles_mystiques": "iles",
 }
 
 
@@ -549,6 +551,8 @@ func _generate_landscape(biome: String) -> Array:
 			_gen_marais(g)
 		"collines":
 			_gen_collines(g)
+		"iles":
+			_gen_iles(g)
 		_:
 			_gen_broceliande(g)
 	return g
@@ -850,6 +854,7 @@ func _get_biome_stages(biome: String) -> Array:
 		"cercles": return _get_cercles_stages()
 		"marais": return _get_marais_stages()
 		"collines": return _get_collines_stages()
+		"iles": return _get_iles_stages()
 		_: return _get_broceliande_stages()
 	return []
 
@@ -1398,6 +1403,122 @@ func _collines_stage_details() -> Array:
 	# Path leading to dolmen
 	for pos in [[10, 12], [11, 12], [15, 12], [16, 12], [20, 12], [21, 12]]:
 		px.append([pos[0], pos[1], "a"])
+	return px
+
+
+# ── ILES ── Mystical island beyond the mists, Avalon-like ───────────────────
+
+func _gen_iles(g: Array) -> void:
+	# Mystical island — central rocky mass surrounded by endless ocean
+	# Ocean (full width)
+	_grid_rect(g, 0, 10, GRID_W, 6, 2)
+	# Island mass (center)
+	_grid_rect(g, 10, 6, 12, 4, 1)
+	_grid_rect(g, 12, 4, 8, 2, 1)
+	_grid_rect(g, 14, 3, 4, 1, 1)
+	# Tower
+	_grid_rect(g, 15, 0, 2, 3, 1)
+	# Waves
+	_grid_dots(g, [[4, 9], [5, 9], [8, 10], [24, 9], [25, 9], [28, 10]], 3)
+	# Stars/lights
+	_grid_dots(g, [[2, 0], [6, 1], [10, 0], [22, 0], [28, 1]], 3)
+
+
+func _get_iles_stages() -> Array:
+	return [
+		_iles_stage_ocean(),
+		_iles_stage_island(),
+		_iles_stage_tower(),
+		_iles_stage_aurora(),
+		_iles_stage_details(),
+	]
+
+
+func _iles_stage_ocean() -> Array:
+	var px: Array = []
+	# Vast ocean surrounding the island (rows 10-15)
+	for x in range(GRID_W):
+		for y in range(10, 16):
+			px.append([x, y, "s"])
+	# Distant horizon line (row 9, sparse)
+	for x in range(0, GRID_W, 2):
+		px.append([x, 9, "s"])
+	return px
+
+
+func _iles_stage_island() -> Array:
+	var px: Array = []
+	# Central rocky island mass rising from waves
+	# Base (widest)
+	for x in range(10, 22):
+		px.append([x, 9, "p"])
+	for x in range(9, 23):
+		px.append([x, 8, "p"])
+	# Mid section
+	for x in range(11, 21):
+		px.append([x, 7, "p"])
+	for x in range(12, 20):
+		px.append([x, 6, "p"])
+	# Upper slope
+	for x in range(13, 19):
+		px.append([x, 5, "p"])
+	for x in range(14, 18):
+		px.append([x, 4, "p"])
+	return px
+
+
+func _iles_stage_tower() -> Array:
+	var px: Array = []
+	# Ancient round tower on the island peak
+	for y in range(1, 4):
+		px.append([15, y, "p"])
+		px.append([16, y, "p"])
+	# Tower top (pointed)
+	px.append([15, 0, "p"])
+	px.append([16, 0, "p"])
+	# Ruins beside tower (left)
+	for pos in [[12, 5], [13, 5], [11, 6], [12, 6]]:
+		px.append([pos[0], pos[1], "p"])
+	# Ruins beside tower (right)
+	for pos in [[19, 5], [20, 5], [19, 6], [20, 6]]:
+		px.append([pos[0], pos[1], "p"])
+	# Archway / entrance
+	px.append([15, 3, "a"])
+	px.append([16, 3, "a"])
+	return px
+
+
+func _iles_stage_aurora() -> Array:
+	var px: Array = []
+	# Ethereal aurora / mist wrapping the island
+	# Upper aurora bands
+	for pos in [[3, 0], [4, 0], [5, 0], [7, 1], [8, 1],
+		[24, 0], [25, 0], [26, 0], [28, 1], [29, 1],
+		[1, 2], [2, 2], [29, 2], [30, 2]]:
+		px.append([pos[0], pos[1], "a"])
+	# Mist ring around island base
+	for pos in [[7, 8], [8, 8], [23, 8], [24, 8],
+		[6, 9], [7, 9], [24, 9], [25, 9]]:
+		px.append([pos[0], pos[1], "a"])
+	return px
+
+
+func _iles_stage_details() -> Array:
+	var px: Array = []
+	# Phosphorescent waves
+	for pos in [[3, 11], [4, 11], [9, 12], [10, 12],
+		[22, 11], [23, 11], [27, 12], [28, 12],
+		[1, 13], [14, 14], [18, 14], [30, 13]]:
+		px.append([pos[0], pos[1], "a"])
+	# Stars reflected in water
+	for pos in [[2, 14], [6, 15], [12, 15], [20, 15], [26, 14]]:
+		px.append([pos[0], pos[1], "a"])
+	# Spirit lights near tower
+	for pos in [[14, 2], [17, 1], [13, 3]]:
+		px.append([pos[0], pos[1], "a"])
+	# Distant shoreline hint (far left)
+	for pos in [[0, 8], [1, 8], [0, 9]]:
+		px.append([pos[0], pos[1], "p"])
 	return px
 
 
