@@ -72,7 +72,7 @@ const SCENE_PROFILES := {
 		"exit_duration": 0.5,
 		"skip_enter": true,
 	},
-	"res://scenes/TriadeGame.tscn": {
+	"res://scenes/MerlinGame.tscn": {
 		"block_size": 8,
 		"exit_duration": 0.5,
 		"enter_duration": 0.7,

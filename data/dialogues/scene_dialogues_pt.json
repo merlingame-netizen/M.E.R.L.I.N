@@ -560,6 +560,39 @@
           "emotion": "melancolie_percante",
           "tags": ["transition", "collines", "merlin", "memoire", "perte"]
         }
+      },
+      "iles_mystiques": {
+        "nom": "As Ilhas Misticas",
+        "sous_titre": "Para La das Brumas",
+        "arrival_text": {
+          "id": "arrive_iles",
+          "speaker": "NARRATION",
+          "text": "A bruma abre-se como uma cortina. O oceano e de um azul impossivel, quase negro. A ilha aparece — falesias de prata, uma torre em ruinas cujo topo se perde nas nuvens. O ar vibra com um canto que so ouves pela metade. As ondas sao fosforescentes.",
+          "direction": "Tom sacro, liminal. A ilha e Avalon — o ultimo bioma, para la do mundo conhecido. Morgane espera la. O canto 'pela metade' e a membrana entre os mundos. As ondas fosforescentes sao as almas dos antigos viajantes.",
+          "timing": {
+            "display_duration_s": 8.0,
+            "pause_after_s": 3.0
+          },
+          "ambiance": {
+            "palette": "bleu_profond_argent_phosphorescent",
+            "son": "ressac_chant_etheree_cloches_submergees",
+            "lumiere": "argentee_sans_source_changeante"
+          },
+          "tags": ["transition", "iles", "arrivee", "atmosphere", "avalon"]
+        },
+        "merlin_comment": {
+          "id": "merlin_iles",
+          "speaker": "MERLIN",
+          "text": "Avalon. [long_pause] Ou o que resta dela. [beat] Nem eu ouso dizer o seu verdadeiro nome em voz alta. [pause] Morgane vigia. Nao julga. Observa. [beat] E pior.",
+          "direction": "O tom de Merlin muda completamente. Acabaram-se as piadas. A pausa longa apos 'Avalon' e um silencio sagrado. O 'e pior' final e murmurado — a primeira vez que Merlin expressa um medo genuino.",
+          "timing": {
+            "delay_before_s": 1.0,
+            "display_duration_s": 8.0,
+            "pause_after_s": 2.5
+          },
+          "emotion": "crainte_sacree",
+          "tags": ["transition", "iles", "merlin", "avalon", "morgane", "sacre"]
+        }
       }
     }
   }

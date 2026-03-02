@@ -559,6 +559,39 @@
           "emotion": "melancolie_percante",
           "tags": ["transition", "collines", "merlin", "memoire", "perte"]
         }
+      },
+      "iles_mystiques": {
+        "nom": "The Mystic Isles",
+        "sous_titre": "Beyond the Mists",
+        "arrival_text": {
+          "id": "arrive_iles",
+          "speaker": "NARRATION",
+          "text": "The mist parts like a curtain. The ocean is an impossible blue, almost black. The island appears — silver cliffs, a ruined tower whose summit is lost in the clouds. The air hums with a song you only half hear. The waves are phosphorescent.",
+          "direction": "Sacred, liminal tone. The island is Avalon — the final biome, beyond the known world. Morgane awaits there. The 'half-heard' song is the membrane between worlds. The phosphorescent waves are the souls of ancient travelers.",
+          "timing": {
+            "display_duration_s": 8.0,
+            "pause_after_s": 3.0
+          },
+          "ambiance": {
+            "palette": "bleu_profond_argent_phosphorescent",
+            "son": "ressac_chant_etheree_cloches_submergees",
+            "lumiere": "argentee_sans_source_changeante"
+          },
+          "tags": ["transition", "iles", "arrivee", "atmosphere", "avalon"]
+        },
+        "merlin_comment": {
+          "id": "merlin_iles",
+          "speaker": "MERLIN",
+          "text": "Avalon. [long_pause] Or what remains of it. [beat] Even I dare not say its true name aloud. [pause] Morgane watches. She does not judge. She observes. [beat] That's worse.",
+          "direction": "Merlin's tone changes completely. No more jokes. The long pause after 'Avalon' is a sacred silence. The final 'that's worse' is whispered — the first time Merlin expresses genuine fear.",
+          "timing": {
+            "delay_before_s": 1.0,
+            "display_duration_s": 8.0,
+            "pause_after_s": 2.5
+          },
+          "emotion": "crainte_sacree",
+          "tags": ["transition", "iles", "merlin", "avalon", "morgane", "sacre"]
+        }
       }
     }
   }

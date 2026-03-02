@@ -563,6 +563,39 @@
           "emotion": "melancolie_percante",
           "tags": ["transition", "collines", "merlin", "memoire", "perte"]
         }
+      },
+      "iles_mystiques": {
+        "nom": "神秘の島々",
+        "sous_titre": "霧の彼方へ",
+        "arrival_text": {
+          "id": "arrive_iles",
+          "speaker": "NARRATION",
+          "text": "霧がカーテンのように開く。海はあり得ないほどの青、ほとんど黒だ。島が現れる——銀の断崖、雲の中に頂が消える廃墟の塔。空気は半分しか聞こえない歌で震えている。波は燐光を放っている。",
+          "direction": "神聖で閾的な語調。島はアヴァロン——最後のバイオーム、既知の世界の向こう。モルガンがそこで待つ。「半分しか聞こえない」歌は世界と世界の間の膜。燐光の波は古の旅人の魂。",
+          "timing": {
+            "display_duration_s": 8.0,
+            "pause_after_s": 3.0
+          },
+          "ambiance": {
+            "palette": "bleu_profond_argent_phosphorescent",
+            "son": "ressac_chant_etheree_cloches_submergees",
+            "lumiere": "argentee_sans_source_changeante"
+          },
+          "tags": ["transition", "iles", "arrivee", "atmosphere", "avalon"]
+        },
+        "merlin_comment": {
+          "id": "merlin_iles",
+          "speaker": "MERLIN",
+          "text": "アヴァロン。 [long_pause] あるいは、その残骸か。 [beat] 俺でさえ、その本当の名を声に出す勇気はない。 [pause] モルガンが見守る。裁かない。観察する。 [beat] そのほうがまずい。",
+          "direction": "マーリンの語調が完全に変わる。もう冗談はない。「アヴァロン」の後の長い沈黙は神聖な静寂。最後の「そのほうがまずい」は囁き——マーリンが初めて本物の恐れを表す瞬間。",
+          "timing": {
+            "delay_before_s": 1.0,
+            "display_duration_s": 8.0,
+            "pause_after_s": 2.5
+          },
+          "emotion": "crainte_sacree",
+          "tags": ["transition", "iles", "merlin", "avalon", "morgane", "sacre"]
+        }
       }
     }
   }

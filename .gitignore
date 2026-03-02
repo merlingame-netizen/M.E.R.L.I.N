@@ -189,6 +189,21 @@ tools/.sharp/
 tests/output/
 *.test.tmp
 
+# LoRA training outputs (ephemeral, multi-GB)
+merlin-lora-cpu-output*/
+
+# Generated outputs (benchmarks, GIFs, evaluations)
+output/
+
+# Godot UID files (auto-generated outside editor)
+*.uid
+
+# Binary documents (test reports)
+docs/**/*.docx
+
+# LoRA training data (large base64 datasets)
+tools/lora/dataset_b64.txt
+
 # ===========================================
 # END
 # ===========================================

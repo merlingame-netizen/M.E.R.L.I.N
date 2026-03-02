@@ -1,13 +1,13 @@
 # Systeme de Biomes — DRU: Le JDR Parlant
 
 *Document cree: 2026-02-08*
-*Status: DESIGN - En attente implementation*
+*Status: IMPLEMENTED — 8 biomes actifs (Broceliande, Landes, Cotes, Villages, Cercles, Marais, Collines, Iles Mystiques)*
 
 ---
 
 ## But
 
-Definir les 7 biomes/environnements de la Bretagne celtique mystique, leurs specificites de gameplay, et les systemes de ressources cachees, retournements de situation, et rejouabilite qui transforment DRU en un veritable "JDR Parlant" avec une profondeur quasi-illimitee.
+Definir les 8 biomes/environnements de la Bretagne celtique mystique, leurs specificites de gameplay, et les systemes de ressources cachees, retournements de situation, et rejouabilite qui transforment DRU en un veritable "JDR Parlant" avec une profondeur quasi-illimitee.
 
 ---
 

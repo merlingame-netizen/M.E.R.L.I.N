@@ -1,6 +1,6 @@
 # MASTER DOCUMENT (Living Doc)
 
-Derniere MAJ: 2026-02-09
+Derniere MAJ: 2026-03-01
 
 ---
 
@@ -12,7 +12,7 @@ Derniere MAJ: 2026-02-09
 - **Core duo**: Merlin (narrateur/juge IA) + Bestiole (compagnon support)
 - **Experience**: Choix simples (3 options), consequences complexes, verite progressive
 - **Engine**: Godot 4.x + GDExtension MerlinLLM (llama.cpp)
-- **LLM**: Qwen 2.5-3B-Instruct Q4_K_M (2.0 GB) — Multi-Brain (1-4 cerveaux)
+- **LLM**: Qwen 2.5-1.5B-Instruct (1.0 GB via Ollama, 17.8 tok/s) — Bi-Cerveaux (Narrator + Game Master)
 
 ---
 
@@ -27,7 +27,7 @@ Le jeu evolue vers un **JDR Parlant** (RPG Oral) avec narration dynamique LLM.
 
 ### Philosophie
 - **Ultra-simple a jouer** (3 choix par carte) mais **profondeur cachee**
-- **Rejouabilite quasi-illimitee** via 7 biomes + generation procedurale
+- **Rejouabilite quasi-illimitee** via 8 biomes + generation procedurale
 - **Merlin joyeux/loufoque** qui taunt le joueur avec humour
 - **Secrets sombres** sur un avenir de l'humanite: "il est deja trop tard"
 
@@ -160,17 +160,18 @@ Chaque aspect a 3 etats discrets (pas de jauges 0-100).
 
 ---
 
-## 7 Biomes
+## 8 Biomes
 
-| Biome | Ambiance | Modificateur Principal |
-|-------|----------|------------------------|
-| **Broceliande** | Foret mystique | +Ame, Druides dominants |
-| **Landes Sauvages** | Solitude hostile | +Corps, survie |
-| **Cotes Armoricaines** | Mer et tempetes | +Monde, commerce |
-| **Villages** | Vie quotidienne | +Monde, politique |
-| **Cercles de Pierres** | Sacre ancien | +Ame, Anciens |
-| **Marais de l'Ankou** | Mort et transition | Fin proche, Ankou |
-| **Collines Brunes** | Equilibre | Neutre, repos |
+| Biome | Tier | Ambiance | Modificateur Principal |
+|-------|------|----------|------------------------|
+| **Broceliande** | 1 | Foret mystique | +Ame, Druides dominants |
+| **Landes Sauvages** | 2 | Solitude hostile | +Corps, survie |
+| **Cotes Armoricaines** | 2 | Mer et tempetes | +Monde, commerce |
+| **Villages** | 3 | Vie quotidienne | +Monde, politique |
+| **Cercles de Pierres** | 3 | Sacre ancien | +Ame, Anciens |
+| **Marais de l'Ankou** | 4 | Mort et transition | Fin proche, Ankou |
+| **Collines Brunes** | 4 | Equilibre | Neutre, repos |
+| **Iles Mystiques** | 5 | Archipel endgame | Morgane gardienne, Samhain, unlock 20 runs |
 
 ---
 
@@ -300,7 +301,7 @@ MerlinAI
         Desktop ultra:    4 cerveaux (~8.8 GB)
 ```
 
-### LLM Parameters (Qwen2.5-3B-Instruct)
+### LLM Parameters (Qwen2.5-1.5B-Instruct)
 
 | Role | temperature | top_p | max_tokens | top_k | repetition_penalty |
 |------|-------------|-------|------------|-------|-------------------|
@@ -331,9 +332,16 @@ SFXManager     <- 30+ sons proceduraux, synthese, pool audio
 
 ### Scenes (Flow du jeu)
 ```
-IntroBoot -> IntroCeltOS -> IntroPersonalityQuiz -> IntroMerlinDialogue
-    -> SceneEveil -> SceneAntreMerlin -> HubAntre
+Premiere partie:
+  IntroCeltOS -> MenuPrincipal -> IntroTutorial -> IntroPersonalityQuiz
+    -> SceneRencontreMerlin -> HubAntre
     -> TransitionBiome -> MerlinGame -> [Fin de Run] -> HubAntre
+
+Boucle roguelite:
+  HubAntre -> TransitionBiome -> MerlinGame -> [Fin de Run] -> HubAntre
+
+Continuer:
+  MenuPrincipal -> SelectionSauvegarde -> HubAntre
 ```
 
 | Scene | Description |
@@ -345,11 +353,13 @@ IntroBoot -> IntroCeltOS -> IntroPersonalityQuiz -> IntroMerlinDialogue
 | SceneEveil | Eveil du joueur, narration |
 | SceneAntreMerlin | Antre du druide, briefing |
 | HubAntre | HUB central (biome, bestiole, grimoire, save) |
-| TransitionBiome | Paysage pixel procedural (7 biomes) |
+| IntroTutorial | Tutoriel narratif (lore + express playthrough + hub discovery) |
+| TransitionBiome | Paysage pixel procedural (8 biomes, 5-stage growth) |
 | MerlinGame | Gameplay principal (cartes, aspects, LLM) |
 | SceneRencontreMerlin | Rencontre narrative |
 | TestBrainPool | Test Multi-Brain interactif |
 | TestTriadeLLMBenchmark | Benchmark LLM TRIADE |
+| TestLLMBenchmarkRun | Benchmark bi-cerveaux end-to-end (run complet, coherence judge) |
 
 ### Audio
 - **SFXManager**: 30+ sons proceduraux (synthese AudioStreamGenerator)
@@ -391,18 +401,23 @@ IntroBoot -> IntroCeltOS -> IntroPersonalityQuiz -> IntroMerlinDialogue
 
 ---
 
-## 23 Agents + 1 Knowledge Base
+## 37 Agents + 1 Knowledge Base
 
 Voir `.claude/agents/AGENTS.md` pour details.
 
 | Categorie | Agents |
 |-----------|--------|
-| Core Tech | Lead Godot, Godot Expert, LLM Expert, Debug/QA, Optimizer, Shader |
-| UI/UX | UI Impl, UX Research, Motion, Mobile/Touch |
-| Content | Game Designer, Narrative, Art Direction, Audio |
-| Lore | Merlin Guardian, Lore Writer, Historien Bretagne |
-| Ops | Producer, Localisation, Technical Writer, Data Analyst |
-| Project | Git Commit, Project Curator |
+| Orchestration | Task Dispatcher |
+| Core Tech (6) | Lead Godot, Godot Expert, LLM Expert, Debug/QA, Optimizer, Shader |
+| UI/UX & Animation (4) | UI Impl, UX Research, Motion, Mobile/Touch |
+| Content & Creative (4) | Game Designer, Narrative, Art Direction, Audio |
+| Lore & World-Building (3) | Merlin Guardian, Lore Writer, Historien Bretagne |
+| Ops & Docs (4) | Producer, Localisation, Technical Writer, Data Analyst |
+| Project Management (2) | Git Commit, Project Curator |
+| Security & Quality (3) | Accessibility, Security Hardening, Prompt Curator |
+| Progression & Economy (1) | Meta-Progression Designer |
+| CI/CD & Release (1) | CI/CD Release |
+| LoRA Fine-Tuning (4) | LoRA Gameplay Translator, Data Curator, Training Architect, Evaluator |
 | Knowledge | gdscript_knowledge_base.md (ressource partagee) |
 
 ---
@@ -429,6 +444,12 @@ Voir `.claude/agents/AGENTS.md` pour details.
 - [x] D20 dice roll system (DC par direction)
 - [x] Card buffer system (prefetch 3 cartes)
 - [x] Anti-hallucination guardrails (FR check, repetition, length)
+- [x] Iles Mystiques — 8e biome tier 5 endgame (Morgane, Samhain, unlock 20 runs)
+- [x] 5-stage pixel growth (TransitionBiome: seedling → young → growing → mature → ancient)
+- [x] IntroTutorial scene (lore + express playthrough + hub guided tour)
+- [x] LoRA v1 QLoRA r=16 Qwen 2.5-1.5B — NO-GO (overfitting, loss=0.0)
+- [x] TestLLMBenchmarkRun — benchmark bi-cerveaux end-to-end avec coherence judge
+- [x] Bi-Cerveaux pipeline sequentiel (GM-first: effets JSON → Narrator aligne)
 
 ## Decisions Ouvertes
 
@@ -440,5 +461,5 @@ Voir `.claude/agents/AGENTS.md` pour details.
 
 ---
 
-*Document version: 4.0 (Triade + Multi-Brain + Architecture Complete)*
-*Last updated: 2026-02-09*
+*Document version: 5.0 (Triade + Bi-Cerveaux + 8 Biomes + IntroTutorial + LoRA)*
+*Last updated: 2026-03-01*

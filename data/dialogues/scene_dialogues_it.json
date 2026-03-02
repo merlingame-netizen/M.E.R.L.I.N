@@ -561,6 +561,39 @@
           "emotion": "melancolie_percante",
           "tags": ["transition", "collines", "merlin", "memoire", "perte"]
         }
+      },
+      "iles_mystiques": {
+        "nom": "Le Isole Mistiche",
+        "sous_titre": "Oltre le Nebbie",
+        "arrival_text": {
+          "id": "arrive_iles",
+          "speaker": "NARRATION",
+          "text": "La nebbia si apre come un sipario. L'oceano e di un blu impossibile, quasi nero. L'isola appare — scogliere d'argento, una torre in rovina la cui cima si perde tra le nubi. L'aria vibra di un canto che senti solo a meta. Le onde sono fosforescenti.",
+          "direction": "Tono sacro, liminale. L'isola e Avalon — l'ultimo bioma, oltre il mondo conosciuto. Morgane attende la. Il canto 'a meta' e la membrana tra i mondi. Le onde fosforescenti sono le anime degli antichi viaggiatori.",
+          "timing": {
+            "display_duration_s": 8.0,
+            "pause_after_s": 3.0
+          },
+          "ambiance": {
+            "palette": "bleu_profond_argent_phosphorescent",
+            "son": "ressac_chant_etheree_cloches_submergees",
+            "lumiere": "argentee_sans_source_changeante"
+          },
+          "tags": ["transition", "iles", "arrivee", "atmosphere", "avalon"]
+        },
+        "merlin_comment": {
+          "id": "merlin_iles",
+          "speaker": "MERLIN",
+          "text": "Avalon. [long_pause] O quel che ne resta. [beat] Nemmeno io oso pronunciare il suo vero nome ad alta voce. [pause] Morgane veglia. Non giudica. Osserva. [beat] E peggio.",
+          "direction": "Il tono di Merlin cambia completamente. Niente piu battute. La pausa lunga dopo 'Avalon' e un silenzio sacro. Il 'e peggio' finale e sussurrato — la prima volta che Merlin esprime una paura genuina.",
+          "timing": {
+            "delay_before_s": 1.0,
+            "display_duration_s": 8.0,
+            "pause_after_s": 2.5
+          },
+          "emotion": "crainte_sacree",
+          "tags": ["transition", "iles", "merlin", "avalon", "morgane", "sacre"]
+        }
       }
     }
   }
