@@ -62,14 +62,18 @@ Phase P2 — LoRA Training (Plan Bi-Cerveaux)
 - [x] P2.13.2 | Benchmark script (5 P1 competences: sequential, danger, arcs, GM JSON, celtic) | benchmark_lora.py
 
 ### WAVE 14: Training
-- [ ] P2.14.1 | QLoRA CPU ~8-12h (3 epochs, 724 samples)
-- [ ] P2.14.2 | Convert GGUF
-- [ ] P2.14.3 | Deploy Ollama
+- [x] P2.14.1a | QLoRA CPU v1 — 21.5h, 3 epochs, 724 samples, checkpoint-225 | **FAILED: 95% truncated**
+- [x] P2.14.1b | Root cause: max_seq_len=384 truncates 95% of samples (sys=353 tokens)
+- [x] P2.14.1c | Dataset v9: 752 samples, shorter sys prompts, 0% truncated at 512
+- [ ] P2.14.1d | QLoRA CPU v2 — 1 epoch, 85 steps, max_seq=512, 4 LoRA targets | **IN PROGRESS**
+- [ ] P2.14.2 | Merge LoRA → GGUF | post_training_v2.ps1
+- [ ] P2.14.3 | Deploy Ollama (merlin-narrator) | post_training_v2.ps1
 
 ### WAVE 15: GO/NO-GO
-- [ ] P2.15.1 | Benchmark 5 competences
-- [ ] P2.15.2 | Decision GO/NO-GO (Format >95%, Coherence 4+/5, Latency <+15%, French >90%)
-- [ ] P2.15.3 | Wire adapter si GO
+- [x] P2.15.0 | Eval v1: Format 0%, French 83%, Celtic 0.3, GM JSON 0% | **NO-GO → v2 needed**
+- [ ] P2.15.1 | Benchmark v2 (merlin-narrator vs qwen2.5:1.5b base)
+- [ ] P2.15.2 | Decision GO/NO-GO (Format >70%, French >90%, Tu >60%)
+- [ ] P2.15.3 | Wire adapter in merlin_omniscient.gd si GO
 
 ---
 

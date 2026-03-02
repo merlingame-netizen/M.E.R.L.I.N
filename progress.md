@@ -2,6 +2,59 @@
 
 > **Note**: Sessions anterieures archivees dans `archive/progress_archive_2026-02-05_to_2026-02-08.md`
 
+## Session: 2026-02-28 (overnight LoRA v2) — Training Pipeline Overhaul
+
+### Context
+LoRA v1 training completed (21.5h, 3 epochs, 724 samples, checkpoint-225) but NEVER deployed.
+Evaluation revealed CRITICAL issue: **95% of training samples were truncated at max_seq_len=384**.
+System prompts alone consumed 353 tokens (median), leaving no room for assistant responses.
+The model learned the IDENTITY but NEVER the RESPONSE FORMAT.
+
+### Root Cause Analysis
+| Issue | v1 Value | Impact |
+|-------|----------|--------|
+| max_seq_len | 384 | 95% samples truncated — model never sees correct outputs |
+| System prompts | 353 tokens median | Eat entire token budget before response |
+| LoRA targets | q_proj, v_proj only | Conservative — limited adapter capacity |
+| Format compliance | **0%** | Model generates free text, no A)/B)/C) structure |
+| Celtic vocab | 0.3 terms/card | Almost no Celtic vocabulary retained |
+| GM JSON | **0%** | No valid JSON effects generated |
+
+### v2 Training Improvements
+1. **Dataset v9**: 752 samples, system prompts shortened (~160 tokens median vs 353)
+   - Added 15 format gold samples (A) VERBE — description)
+   - Added 5 Celtic vocabulary gold samples
+   - Added 8 GM effects JSON gold samples
+   - **Truncated at 512: 0%** (vs 95% at 384 in v8!)
+   - Token median: 258 (vs 441 in v8)
+2. **max_seq_len=512**: Zero truncation, model sees COMPLETE responses
+3. **4 LoRA targets**: q_proj + k_proj + v_proj + o_proj (vs 2 in v1)
+4. **lora_dropout=0.05**: Regularization against overfitting
+5. **lr=1.5e-4**: Slightly lower for stability (vs 2e-4 in v1)
+6. **Auto-epoch adjustment**: 3 → 1 (budget constraint)
+
+### Training v2 Status
+- **Started**: 2026-02-28 21:55
+- **Config**: 752 samples, 1 epoch, 85 steps, ~4h estimated
+- **Checkpoint**: every 25 steps (checkpoint-25, 50, 75)
+- **Progress**: merlin-lora-cpu-output-v2/progress.json
+- **Stop**: 06:55 or training_stop.flag
+
+### Post-Training Script
+```powershell
+# After training completes, run:
+powershell -ExecutionPolicy Bypass -File tools/lora/post_training_v2.ps1
+# This handles: merge → convert → deploy Ollama → benchmark
+```
+
+### New Files
+- `tools/lora/overnight_v2.py` — Orchestrator (5 phases: eval → dataset → train → convert → benchmark)
+- `tools/lora/post_training_v2.ps1` — Post-training deployment script
+- `data/ai/training/merlin_full_v9.jsonl` — Optimized dataset (752 samples)
+- `output/lora_reports/eval_v1.json` — v1 adapter evaluation results
+
+---
+
 ## Session: 2026-02-28 (night cont.8) — Overnight QA: FIX 51-53 (Nouns + Scene Regex + Parens)
 
 ### Context
