@@ -1,0 +1,1 @@
+Low-poly isometric {creature_type}, flat-shaded polygonal style, {color_description} color palette, approximately 25-30 flat polygon facets, strong directional lighting from upper-right, {pose_description}, transparent background, game sprite, 256x256 pixels, no outlines, color contrast defines edges between facets, cute stylized proportions, isometric 3/4 view angle

@@ -1,0 +1,58 @@
+{
+  "_meta": {
+    "description": "Prompt templates for ChatGPT/DALL-E character generation",
+    "style_base": "style_base.txt",
+    "usage": "Fill {placeholders} from character entry, combine with style_base"
+  },
+  "characters": {
+    "merlin": {
+      "creature_type": "dark hooded sorcerer figure",
+      "color_description": "dark grayscale charcoal-to-silver",
+      "pose_description": "standing upright, arms hidden in robes",
+      "extra": "glowing amber slit eyes, tech cables on shoulders, bell-shaped hooded silhouette",
+      "anatomy": "humanoid"
+    },
+    "bestiole": {
+      "creature_type": "small fox companion creature",
+      "color_description": "deep purple to lavender with white belly",
+      "pose_description": "sitting, looking slightly to the right",
+      "extra": "pointed fox ears, fluffy fan tail, small glowing cyan eyes, cute compact body",
+      "anatomy": "quadruped"
+    },
+    "shadow_knight": {
+      "creature_type": "armored dark knight warrior",
+      "color_description": "cold steel blue-gray metallic",
+      "pose_description": "standing imposing, broad shoulders",
+      "extra": "flat-top helmet with red glowing visor slit, heavy shoulder plates, menacing pose",
+      "anatomy": "humanoid"
+    },
+    "forest_guardian": {
+      "creature_type": "deer-fox hybrid forest spirit",
+      "color_description": "earth-tone brown and forest green",
+      "pose_description": "standing alert, head turned slightly",
+      "extra": "small antlers, green glowing eyes, leafy texture on body, gentle expression",
+      "anatomy": "quadruped"
+    },
+    "fire_imp": {
+      "creature_type": "small fire elemental imp",
+      "color_description": "dark red to bright orange flame gradient",
+      "pose_description": "hovering slightly above ground",
+      "extra": "flickering flame crown, glowing orange eyes, small wings, mischievous expression",
+      "anatomy": "creature"
+    },
+    "crystal_golem": {
+      "creature_type": "crystalline rock golem construct",
+      "color_description": "deep blue to cyan crystal facets",
+      "pose_description": "standing sturdy, arms at sides",
+      "extra": "geometric crystal body, glowing core visible through cracks, angular silhouette",
+      "anatomy": "humanoid"
+    },
+    "owl_sage": {
+      "creature_type": "wise owl scholar bird",
+      "color_description": "warm brown to cream feather tones",
+      "pose_description": "perched, looking forward with large eyes",
+      "extra": "large round amber eyes, small spectacles, ruffled chest feathers, tiny book",
+      "anatomy": "bird"
+    }
+  }
+}

@@ -1,0 +1,56 @@
+{
+  "name": "pixel-art-preview",
+  "displayName": "Pixel Art Preview",
+  "description": "Merlin Pixel Forge — Sprite preview sidebar with animation, palette, and grid view",
+  "version": "1.0.0",
+  "publisher": "merlin-local",
+  "engines": {
+    "vscode": "^1.80.0"
+  },
+  "categories": ["Other"],
+  "activationEvents": [
+    "workspaceContains:project.godot",
+    "workspaceContains:tools/pixel_art"
+  ],
+  "main": "./extension.js",
+  "contributes": {
+    "viewsContainers": {
+      "activitybar": [
+        {
+          "id": "pixel-art-sidebar",
+          "title": "Pixel Art",
+          "icon": "media/pixel-icon.svg"
+        }
+      ]
+    },
+    "views": {
+      "pixel-art-sidebar": [
+        {
+          "type": "webview",
+          "id": "pixelArt.preview",
+          "name": "Sprite Preview"
+        },
+        {
+          "type": "webview",
+          "id": "pixelArt.palette",
+          "name": "Palette"
+        },
+        {
+          "type": "webview",
+          "id": "pixelArt.gallery",
+          "name": "Gallery"
+        }
+      ]
+    },
+    "commands": [
+      {
+        "command": "pixelArt.refresh",
+        "title": "Pixel Art: Refresh Preview"
+      },
+      {
+        "command": "pixelArt.openInLibreSprite",
+        "title": "Pixel Art: Open in LibreSprite"
+      }
+    ]
+  }
+}
