@@ -1,0 +1,8 @@
+[gd_scene load_steps=2 format=3]
+
+[ext_resource type="SpriteFrames" path="res://sprites/pixel_art/bestiole/bestiole_blink_frames.tres" id="1"]
+
+[node name="bestiole_blink" type="AnimatedSprite2D"]
+sprite_frames = ExtResource("1")
+animation = &"blink"
+autoplay = "blink"
