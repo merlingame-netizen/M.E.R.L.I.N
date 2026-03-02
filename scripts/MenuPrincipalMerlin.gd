@@ -95,13 +95,12 @@ var _custom_cursor: Control
 # LLM status indicator
 var _ai_status_label: Label
 
-# Pixel art landscape
-var _pixel_bg_layer: Control
-var _pixel_bg_pixels: Array[Dictionary] = []  # {node, target_pos, is_window}
-var _tower_windows: Array[ColorRect] = []
-var _tower_rays: Array[ColorRect] = []
-var _assembly_done := false
-var _tower_glow_tween: Tween
+# Pixel matrix background
+var _matrix_bg: Control
+
+# Ambient fireflies
+var _fireflies: Array[Dictionary] = []  # {node, phase, speed, drift_x, drift_y, base_pos}
+const FIREFLY_COUNT := 12
 
 # Season for atmosphere
 var current_season := "HIVER"
@@ -135,12 +134,12 @@ var _accum_container: Control              # parent node for accumulation visual
 # Season-specific tuning - custom atmospheric colors
 const SEASON_CONFIG := {
 	"HIVER": {
-		"spawn_interval": 0.25,     # slow, contemplative snowfall
-		"max_particles": 80,
-		"size_min": 2.0, "size_max": 5.0,
+		"spawn_interval": 0.22,     # slightly denser snowfall
+		"max_particles": 90,
+		"size_min": 3.0, "size_max": 7.0,
 		"speed_min": 12.0, "speed_max": 35.0,  # very slow fall
 		"drift": 10.0,
-		"color_base": Color(0.95, 0.96, 1.0, 0.8),  # Snow white with blue tint
+		"color_base": Color(0.95, 0.96, 1.0, 0.92),  # Snow white, brighter
 		"color_var": 0.05,
 		"accum_color": Color(0.94, 0.95, 1.0, 0.9),  # Snow accumulation
 		"accum_grow": 0.12,    # very slow pile growth
@@ -182,7 +181,7 @@ func _ready() -> void:
 	_load_calendar_settings()
 	_determine_season()
 	_load_fonts()
-	_build_pixel_landscape()
+	_build_matrix_bg()
 	_configure_background()
 	_configure_celtic_ornaments()
 	_configure_clock()
@@ -279,246 +278,21 @@ func _configure_background() -> void:
 # PIXEL ART LANDSCAPE — Broceliande with Merlin's Tower
 # =============================================================================
 
-const PX_GRID_W := 32
-const PX_GRID_H := 16
-
-func _px_grid_set(g: Array, x: int, y: int, c: int) -> void:
-	if y >= 0 and y < PX_GRID_H and x >= 0 and x < PX_GRID_W:
-		g[y][x] = c
-
-
-func _px_grid_rect(g: Array, x0: int, y0: int, w: int, h: int, c: int) -> void:
-	for dy in range(h):
-		for dx in range(w):
-			_px_grid_set(g, x0 + dx, y0 + dy, c)
-
-
-func _px_grid_triangle(g: Array, cx: int, top_y: int, base_y: int, max_w: int, c: int) -> void:
-	if base_y <= top_y:
+func _build_matrix_bg() -> void:
+	## Animated pixel matrix background — undulating grid + ogham symbol illumination.
+	var matrix_script: GDScript = load("res://scripts/ui/pixel_matrix_bg.gd")
+	if not matrix_script:
 		return
-	var height := base_y - top_y
-	for dy in range(height + 1):
-		var y := top_y + dy
-		var t := float(dy) / float(height)
-		var half := int(t * float(max_w) / 2.0)
-		for dx in range(-half, half + 1):
-			_px_grid_set(g, cx + dx, y, c)
-
-
-func _px_grid_dots(g: Array, positions: Array, c: int) -> void:
-	for pos in positions:
-		_px_grid_set(g, pos[0], pos[1], c)
-
-
-func _generate_menu_landscape() -> Array:
-	## Generate 32x16 pixel art grid: Broceliande forest with Merlin's tower center.
-	var g: Array = []
-	for y in range(PX_GRID_H):
-		var row: Array = []
-		for x in range(PX_GRID_W):
-			row.append(0)
-		g.append(row)
-
-	# --- TOWER (center, cols 14-17) ---
-	# Spire (accent color)
-	_px_grid_rect(g, 15, 1, 2, 2, 3)
-	# Roof (triangular, primary color)
-	_px_grid_rect(g, 13, 3, 6, 2, 1)
-	_px_grid_rect(g, 14, 2, 4, 1, 1)
-	# Tower body (secondary color)
-	_px_grid_rect(g, 14, 5, 4, 5, 2)
-	# Windows (color 4 = golden glow)
-	_px_grid_set(g, 14, 6, 4)
-	_px_grid_set(g, 17, 6, 4)
-	_px_grid_set(g, 14, 8, 4)
-	_px_grid_set(g, 17, 8, 4)
-	# Tower base (wider, primary)
-	_px_grid_rect(g, 13, 10, 6, 2, 1)
-
-	# --- FOREST (left and right of tower) ---
-	# Left trees
-	_px_grid_triangle(g, 4, 4, 9, 8, 1)
-	_px_grid_rect(g, 3, 10, 2, 2, 2)
-	_px_grid_triangle(g, 9, 5, 9, 6, 1)
-	_px_grid_rect(g, 8, 10, 2, 2, 2)
-	# Right trees
-	_px_grid_triangle(g, 22, 5, 9, 6, 1)
-	_px_grid_rect(g, 21, 10, 2, 2, 2)
-	_px_grid_triangle(g, 27, 4, 9, 8, 1)
-	_px_grid_rect(g, 26, 10, 2, 2, 2)
-
-	# --- GROUND ---
-	_px_grid_rect(g, 0, 12, PX_GRID_W, 2, 2)
-
-	# --- DETAILS (mushrooms, flowers) ---
-	_px_grid_dots(g, [[1, 14], [6, 14], [11, 14], [20, 14], [25, 14], [30, 14]], 3)
-
-	return g
-
-
-func _build_pixel_landscape() -> void:
-	## Build pixel art landscape layer with falling assembly animation.
-	_pixel_bg_layer = Control.new()
-	_pixel_bg_layer.set_anchors_preset(Control.PRESET_FULL_RECT)
-	_pixel_bg_layer.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	_pixel_bg_layer.z_index = -1
-	add_child(_pixel_bg_layer)
-
-	var grid: Array = _generate_menu_landscape()
-
-	var colors: Dictionary = MerlinVisual.BIOME_COLORS.get("broceliande", {})
-	var primary_color: Color = colors.get("primary", Color(0.18, 0.42, 0.22))
-	var secondary_color: Color = colors.get("secondary", Color(0.35, 0.55, 0.28))
-	var accent_color: Color = colors.get("accent", Color(0.62, 0.78, 0.42))
-	var window_color: Color = MerlinVisual.CRT_PALETTE.get("amber_bright", Color(0.68, 0.55, 0.32))
-
-	var color_map := {
-		1: primary_color,
-		2: secondary_color,
-		3: accent_color,
-		4: window_color,
-	}
-
-	# Calculate pixel size (fill ~70% of viewport width)
-	var vs := get_viewport_rect().size
-	if vs.x < 1.0:
-		vs = Vector2(1152, 648)
-	var pixel_size: float = floor(vs.x * 0.70 / float(PX_GRID_W))
-	pixel_size = clampf(pixel_size, 8.0, 18.0)
-
-	var total_w: float = float(PX_GRID_W) * pixel_size
-	var total_h: float = float(PX_GRID_H) * pixel_size
-	var origin := Vector2(
-		(vs.x - total_w) / 2.0,
-		vs.y - total_h - 20.0  # Anchored near bottom
-	)
-
-	_pixel_bg_pixels.clear()
-	_tower_windows.clear()
-
-	for row in range(PX_GRID_H):
-		for col in range(PX_GRID_W):
-			var c: int = grid[row][col]
-			if c <= 0 or not color_map.has(c):
-				continue
-			var target_pos := origin + Vector2(col * pixel_size, row * pixel_size)
-			var spawn_y := -20.0 - randf_range(0.0, vs.y * 0.6)
-			var spawn_x := target_pos.x + randf_range(-20.0, 20.0)
-
-			var px := ColorRect.new()
-			px.size = Vector2(pixel_size, pixel_size)
-			px.position = Vector2(spawn_x, spawn_y)
-			px.color = color_map[c]
-			px.modulate.a = 0.0
-			px.mouse_filter = Control.MOUSE_FILTER_IGNORE
-			_pixel_bg_layer.add_child(px)
-
-			var is_window := c == 4
-			_pixel_bg_pixels.append({"node": px, "target_pos": target_pos, "is_window": is_window})
-			if is_window:
-				_tower_windows.append(px)
-
-
-
-func _animate_pixel_assembly() -> void:
-	## Animate pixels falling from sky and assembling into landscape.
-	if _assembly_done:
-		return
-	_assembly_done = true
-
-	# Sort by column for wave cascade effect
-	var sorted: Array = _pixel_bg_pixels.duplicate()
-	sorted.sort_custom(func(a: Dictionary, b: Dictionary) -> bool:
-		var ac: float = a.target_pos.x
-		var bc: float = b.target_pos.x
-		if absf(ac - bc) > 1.0:
-			return ac < bc
-		return a.target_pos.y > b.target_pos.y
-	)
-
-	var sfx := get_node_or_null("/root/SFXManager")
-
-	for i in range(sorted.size()):
-		var entry: Dictionary = sorted[i]
-		var px: ColorRect = entry.node
-		if not is_instance_valid(px):
-			continue
-		var target: Vector2 = entry.target_pos
-
-		var tw := create_tween()
-		tw.tween_property(px, "modulate:a", 1.0, 0.08)
-		tw.parallel().tween_property(px, "position", target, randf_range(0.30, 0.55)) \
-			.set_trans(Tween.TRANS_BOUNCE).set_ease(Tween.EASE_OUT)
-
-		if i % 5 == 4:
-			if sfx and sfx.has_method("play_varied"):
-				sfx.play_varied("blip", 0.12)
-			await get_tree().create_timer(0.025).timeout
-
-	# Brief flash pulse when assembled
-	await get_tree().create_timer(0.3).timeout
-	if is_instance_valid(_pixel_bg_layer):
-		var pulse := create_tween()
-		pulse.tween_property(_pixel_bg_layer, "modulate", Color(1.15, 1.15, 1.15), 0.15)
-		pulse.tween_property(_pixel_bg_layer, "modulate", Color.WHITE, 0.15)
-		await pulse.finished
-
-	_start_tower_glow()
-
-
-func _start_tower_glow() -> void:
-	## Create light rays above tower and pulse window glow.
-	if not is_instance_valid(_pixel_bg_layer):
-		return
-
-	var vs := get_viewport_rect().size
-	if vs.x < 1.0:
-		vs = Vector2(1152, 648)
-	var pixel_size: float = floor(vs.x * 0.70 / float(PX_GRID_W))
-	pixel_size = clampf(pixel_size, 8.0, 18.0)
-	var total_h: float = float(PX_GRID_H) * pixel_size
-	var origin_y: float = vs.y - total_h - 20.0
-	var tower_cx: float = (vs.x - float(PX_GRID_W) * pixel_size) / 2.0 + 16.0 * pixel_size
-	var tower_top_y: float = origin_y
-
-	# 3 volumetric light rays fanning upward
-	var ray_color: Color = MerlinVisual.CRT_PALETTE.get("amber_bright", Color(0.68, 0.55, 0.32))
-	for i in range(3):
-		var ray := ColorRect.new()
-		ray.size = Vector2(3.0, 70.0)
-		ray.position = Vector2(tower_cx - 8.0 + float(i) * 8.0, tower_top_y - 70.0)
-		ray.color = Color(ray_color.r, ray_color.g, ray_color.b, 0.15)
-		ray.rotation = -0.08 + float(i) * 0.08
-		ray.mouse_filter = Control.MOUSE_FILTER_IGNORE
-		_pixel_bg_layer.add_child(ray)
-		_tower_rays.append(ray)
-
-	# Pulse tweens
-	if _tower_glow_tween:
-		_tower_glow_tween.kill()
-	_tower_glow_tween = create_tween().set_loops()
-
-	# Window brightness pulse
-	for win in _tower_windows:
-		if is_instance_valid(win):
-			_tower_glow_tween.parallel().tween_property(win, "modulate", Color(1.5, 1.4, 1.1), 2.0) \
-				.set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
-	# Ray opacity pulse
-	for ray in _tower_rays:
-		if is_instance_valid(ray):
-			_tower_glow_tween.parallel().tween_property(ray, "modulate:a", 0.35, 2.0) \
-				.set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
-
-	_tower_glow_tween.tween_interval(0.0)
-
-	for win in _tower_windows:
-		if is_instance_valid(win):
-			_tower_glow_tween.parallel().tween_property(win, "modulate", Color.WHITE, 2.0) \
-				.set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
-	for ray in _tower_rays:
-		if is_instance_valid(ray):
-			_tower_glow_tween.parallel().tween_property(ray, "modulate:a", 0.12, 2.0) \
-				.set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
+	_matrix_bg = Control.new()
+	_matrix_bg.set_script(matrix_script)
+	# Configure palette from CRT theme
+	var dark: Color = MerlinVisual.CRT_PALETTE.get("bg_deep", Color(0.02, 0.04, 0.02))
+	var mid: Color = Color(dark.r * 2.5, dark.g * 2.5, dark.b * 2.5)
+	var glow: Color = MerlinVisual.CRT_PALETTE.get("phosphor", Color(0.2, 1.0, 0.4))
+	_matrix_bg.set_palette(dark, mid, glow)
+	_matrix_bg.modulate.a = 0.0  # Start invisible for fade-in
+	add_child(_matrix_bg)
+	move_child(_matrix_bg, 0)  # Behind everything
 
 
 # NOTE: mist_layer color is applied in _configure_background()
@@ -594,6 +368,16 @@ func _process(delta: float) -> void:
 	# Seasonal particle systems
 	_process_seasonal_effects(delta)
 
+	# Mouse parallax on matrix background — subtle depth effect
+	if is_instance_valid(_matrix_bg):
+		var vs := get_viewport().get_visible_rect().size
+		var mouse := get_viewport().get_mouse_position()
+		var offset_x: float = (mouse.x / vs.x - 0.5) * -8.0
+		var offset_y: float = (mouse.y / vs.y - 0.5) * -4.0
+		_matrix_bg.position = _matrix_bg.position.lerp(
+			Vector2(offset_x, offset_y), clampf(3.0 * delta, 0.0, 1.0)
+		)
+
 
 func _update_clock_text() -> void:
 	if not clock_label:
@@ -639,6 +423,7 @@ func _configure_main_ui() -> void:
 		var is_primary: bool = item.get("priority", "") == "primary"
 		var btn := _create_button(item.text, item.scene, is_primary)
 		btn.set_meta("priority", item.get("priority", "secondary"))
+		btn.pivot_offset = Vector2(200, 28)  # Pivot center for scale animations
 		main_buttons.add_child(btn)
 
 
@@ -679,33 +464,48 @@ func _apply_theme() -> void:
 	card_style.content_margin_bottom = 32
 	menu_theme.set_stylebox("panel", "PanelContainer", card_style)
 
-	# Style boutons - minimaliste, élégant
+	# Style boutons — visible glow borders, CRT terminal feel
+	var phosphor: Color = MerlinVisual.CRT_PALETTE.phosphor
 	var btn_normal := StyleBoxFlat.new()
-	var white_base: Color = MerlinVisual.GBC.white
-	var black_base: Color = MerlinVisual.GBC.black
-	btn_normal.bg_color = Color(white_base.r, white_base.g, white_base.b, 0.0)
-	btn_normal.border_color = Color(black_base.r, black_base.g, black_base.b, 0.0)
-	btn_normal.content_margin_left = 16
-	btn_normal.content_margin_top = 14
-	btn_normal.content_margin_right = 16
-	btn_normal.content_margin_bottom = 14
+	btn_normal.bg_color = Color(phosphor.r, phosphor.g, phosphor.b, 0.03)
+	btn_normal.border_color = Color(phosphor.r, phosphor.g, phosphor.b, 0.25)
+	btn_normal.border_width_left = 1
+	btn_normal.border_width_right = 1
+	btn_normal.border_width_top = 1
+	btn_normal.border_width_bottom = 1
+	btn_normal.corner_radius_top_left = 3
+	btn_normal.corner_radius_top_right = 3
+	btn_normal.corner_radius_bottom_left = 3
+	btn_normal.corner_radius_bottom_right = 3
+	btn_normal.content_margin_left = 24
+	btn_normal.content_margin_top = 16
+	btn_normal.content_margin_right = 24
+	btn_normal.content_margin_bottom = 16
 
+	var cyan_c: Color = MerlinVisual.CRT_PALETTE.cyan
 	var btn_hover := StyleBoxFlat.new()
-	btn_hover.bg_color = MerlinVisual.CRT_PALETTE.phosphor_glow
-	btn_hover.border_color = MerlinVisual.CRT_PALETTE.amber
-	btn_hover.border_width_bottom = 1
-	btn_hover.corner_radius_top_left = 2
-	btn_hover.corner_radius_top_right = 2
-	btn_hover.corner_radius_bottom_left = 2
-	btn_hover.corner_radius_bottom_right = 2
-	btn_hover.content_margin_left = 16
-	btn_hover.content_margin_top = 14
-	btn_hover.content_margin_right = 16
-	btn_hover.content_margin_bottom = 14
+	btn_hover.bg_color = Color(cyan_c.r, cyan_c.g, cyan_c.b, 0.08)
+	btn_hover.border_color = MerlinVisual.CRT_PALETTE.cyan
+	btn_hover.border_width_left = 2
+	btn_hover.border_width_right = 2
+	btn_hover.border_width_top = 2
+	btn_hover.border_width_bottom = 2
+	btn_hover.corner_radius_top_left = 3
+	btn_hover.corner_radius_top_right = 3
+	btn_hover.corner_radius_bottom_left = 3
+	btn_hover.corner_radius_bottom_right = 3
+	btn_hover.shadow_color = Color(cyan_c.r, cyan_c.g, cyan_c.b, 0.2)
+	btn_hover.shadow_size = 8
+	btn_hover.content_margin_left = 24
+	btn_hover.content_margin_top = 16
+	btn_hover.content_margin_right = 24
+	btn_hover.content_margin_bottom = 16
 
+	var amber_c: Color = MerlinVisual.CRT_PALETTE.amber
 	var btn_pressed := btn_hover.duplicate()
-	var accent_color: Color = MerlinVisual.CRT_PALETTE.amber
-	btn_pressed.bg_color = Color(accent_color.r, accent_color.g, accent_color.b, 0.15)
+	btn_pressed.bg_color = Color(amber_c.r, amber_c.g, amber_c.b, 0.12)
+	btn_pressed.border_color = MerlinVisual.CRT_PALETTE.amber
+	btn_pressed.shadow_color = Color(amber_c.r, amber_c.g, amber_c.b, 0.25)
 
 	menu_theme.set_stylebox("normal", "Button", btn_normal)
 	menu_theme.set_stylebox("hover", "Button", btn_hover)
@@ -728,31 +528,49 @@ func _apply_theme() -> void:
 		title_label.add_theme_font_size_override("font_size", 52)
 		title_label.add_theme_color_override("font_color", MerlinVisual.CRT_PALETTE.phosphor)
 
-	# Style boutons menu — visual hierarchy (Hick's law: fewer, clearer choices)
+	# Style boutons menu — bold visual hierarchy
 	for btn in main_buttons.get_children():
 		if btn is Button:
 			btn.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
 			var priority: String = btn.get_meta("priority", "secondary")
 			match priority:
 				"primary":
-					# CTA: largest, cyan accent, title font
+					# CTA: imposant, cyan glow, title font
 					if title_font:
 						btn.add_theme_font_override("font", title_font)
-					btn.add_theme_font_size_override("font_size", 26)
+					btn.add_theme_font_size_override("font_size", 30)
 					btn.add_theme_color_override("font_color", MerlinVisual.CRT_PALETTE.cyan)
 					btn.add_theme_color_override("font_hover_color", MerlinVisual.CRT_PALETTE.cyan_bright)
 					btn.add_theme_color_override("font_pressed_color", MerlinVisual.CRT_PALETTE.amber)
+					# Dedicated primary style with cyan border
+					var pri_style := StyleBoxFlat.new()
+					var pri_cyan: Color = MerlinVisual.CRT_PALETTE.cyan
+					pri_style.bg_color = Color(pri_cyan.r, pri_cyan.g, pri_cyan.b, 0.06)
+					pri_style.border_color = Color(pri_cyan.r, pri_cyan.g, pri_cyan.b, 0.5)
+					pri_style.border_width_left = 2
+					pri_style.border_width_right = 2
+					pri_style.border_width_top = 2
+					pri_style.border_width_bottom = 2
+					pri_style.corner_radius_top_left = 4
+					pri_style.corner_radius_top_right = 4
+					pri_style.corner_radius_bottom_left = 4
+					pri_style.corner_radius_bottom_right = 4
+					pri_style.shadow_color = Color(pri_cyan.r, pri_cyan.g, pri_cyan.b, 0.15)
+					pri_style.shadow_size = 12
+					pri_style.content_margin_left = 32
+					pri_style.content_margin_top = 18
+					pri_style.content_margin_right = 32
+					pri_style.content_margin_bottom = 18
+					btn.add_theme_stylebox_override("normal", pri_style)
 				"secondary":
-					# Standard: body font, phosphor
 					if body_font:
 						btn.add_theme_font_override("font", body_font)
-					btn.add_theme_font_size_override("font_size", 20)
+					btn.add_theme_font_size_override("font_size", 22)
 					btn.add_theme_color_override("font_color", MerlinVisual.CRT_PALETTE.phosphor)
 				"tertiary":
-					# Subtle: smaller, dimmer
 					if body_font:
 						btn.add_theme_font_override("font", body_font)
-					btn.add_theme_font_size_override("font_size", 17)
+					btn.add_theme_font_size_override("font_size", 18)
 					btn.add_theme_color_override("font_color", MerlinVisual.CRT_PALETTE.phosphor_dim)
 
 	# Style boutons coins
@@ -792,58 +610,129 @@ func _play_entry_animation() -> void:
 	if not card:
 		return
 
-	# Start pixel assembly in parallel
-	_animate_pixel_assembly()
+	# Fade in matrix background
+	if is_instance_valid(_matrix_bg):
+		var matrix_tween := create_tween()
+		matrix_tween.tween_property(_matrix_bg, "modulate:a", 1.0, 1.2).set_trans(Tween.TRANS_SINE)
 
 	var sfx := get_node_or_null("/root/SFXManager")
 	if sfx:
 		sfx.play("scene_transition")
 
-	# État initial: carte invisible, légèrement en bas
-	card.position.y = card_target_pos.y + 40
+	# État initial: carte invisible, below + slightly scaled down
+	card.position.y = card_target_pos.y + 80
 	card.modulate.a = 0.0
+	card.scale = Vector2(0.9, 0.9)
+
+	# Title invisible for letter reveal
+	if title_label:
+		title_label.modulate.a = 0.0
+		title_label.scale = Vector2(0.7, 0.7)
+		title_label.pivot_offset = title_label.size * 0.5
 
 	# Ornements invisibles
 	if celtic_ornament_top:
 		celtic_ornament_top.modulate.a = 0.0
+		celtic_ornament_top.position.y -= 20
 	if celtic_ornament_bottom:
 		celtic_ornament_bottom.modulate.a = 0.0
+		celtic_ornament_bottom.position.y += 20
 
-	# Boutons invisibles
+	# Boutons hidden (will be revealed by _animate_buttons_entry)
 	for btn in main_buttons.get_children():
 		if btn is Button:
 			btn.modulate.a = 0.0
 
-	# Animation d'entrée douce et élégante
+	# Animation sequence
 	if _entry_tween:
 		_entry_tween.kill()
 	_entry_tween = create_tween()
 
-	# Fade in des ornements
+	# Phase 1: Ornements slide in + fade (0.0 - 0.8s)
+	var orn_top_target_y: float = celtic_ornament_top.position.y + 20 if celtic_ornament_top else 0.0
+	var orn_bot_target_y: float = celtic_ornament_bottom.position.y - 20 if celtic_ornament_bottom else 0.0
 	_entry_tween.tween_property(celtic_ornament_top, "modulate:a", 1.0, 0.8).set_trans(Tween.TRANS_SINE)
+	_entry_tween.parallel().tween_property(celtic_ornament_top, "position:y", orn_top_target_y, 0.8) \
+		.set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_OUT)
 	_entry_tween.parallel().tween_property(celtic_ornament_bottom, "modulate:a", 1.0, 0.8).set_trans(Tween.TRANS_SINE)
+	_entry_tween.parallel().tween_property(celtic_ornament_bottom, "position:y", orn_bot_target_y, 0.8) \
+		.set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_OUT)
 
-	# Entrée de la carte
-	_entry_tween.tween_property(card, "position:y", card_target_pos.y, 0.7).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_OUT)
-	_entry_tween.parallel().tween_property(card, "modulate:a", 1.0, 0.5).set_trans(Tween.TRANS_SINE)
+	# Phase 2: Card rises + fades in + scales to full (0.3 - 1.0s)
+	_entry_tween.parallel().tween_property(card, "position:y", card_target_pos.y, 0.9) \
+		.set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT).set_delay(0.15)
+	_entry_tween.parallel().tween_property(card, "modulate:a", 1.0, 0.6) \
+		.set_trans(Tween.TRANS_SINE).set_delay(0.15)
+	_entry_tween.parallel().tween_property(card, "scale", Vector2(1.0, 1.0), 0.8) \
+		.set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT).set_delay(0.15)
 
-	# Apparition des boutons en cascade
+	# Phase 3: Title dramatic scale-in with overshoot (0.6 - 1.2s)
+	_entry_tween.parallel().tween_property(title_label, "modulate:a", 1.0, 0.5) \
+		.set_trans(Tween.TRANS_SINE).set_delay(0.5)
+	_entry_tween.parallel().tween_property(title_label, "scale", Vector2(1.0, 1.0), 0.7) \
+		.set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT).set_delay(0.5)
+
+	# Phase 4: Buttons cascade entry (after card is visible)
 	_entry_tween.tween_callback(func(): _animate_buttons_entry())
+	# Phase 5: Start floating bob on card
+	_entry_tween.tween_callback(func(): _start_card_float())
+
+
+func _start_card_float() -> void:
+	## Gentle floating bob on the card — hypnotic idle animation
+	var float_tween := create_tween().set_loops()
+	var base_y: float = card.position.y
+	float_tween.tween_property(card, "position:y", base_y - 4.0, 2.0) \
+		.set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
+	float_tween.tween_property(card, "position:y", base_y + 4.0, 2.0) \
+		.set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
 
 
 func _animate_buttons_entry() -> void:
 	var sfx := get_node_or_null("/root/SFXManager")
 	var delay := 0.0
+	var primary_btn: Button = null
+	var idx := 0
 	for btn in main_buttons.get_children():
 		if btn is Button:
-			var tween := create_tween().set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_OUT)
+			# Initial state: offset left + invisible + slightly small
+			btn.modulate.a = 0.0
+			btn.scale = Vector2(0.85, 0.85)
+			var slide_offset := -60.0 - idx * 15.0
+			var base_x: float = btn.position.x
+			btn.position.x = base_x + slide_offset
+
+			var tween := create_tween()
 			tween.tween_interval(delay)
 			tween.tween_callback(func():
 				if sfx and sfx.has_method("play_varied"):
 					sfx.play_varied("button_appear", 0.15)
 			)
-			tween.tween_property(btn, "modulate:a", 1.0, 0.3)
-			delay += 0.05
+			# Slide in + fade + scale bounce (all parallel)
+			tween.tween_property(btn, "position:x", base_x, 0.45) \
+				.set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
+			tween.parallel().tween_property(btn, "modulate:a", 1.0, 0.35) \
+				.set_trans(Tween.TRANS_SINE)
+			tween.parallel().tween_property(btn, "scale", Vector2(1.0, 1.0), 0.5) \
+				.set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
+
+			if btn.get_meta("priority", "") == "primary":
+				primary_btn = btn
+			delay += 0.12
+			idx += 1
+
+	# CTA pulse on primary button — breathing border glow
+	if primary_btn:
+		_start_cta_pulse.call_deferred(primary_btn)
+
+
+func _start_cta_pulse(btn: Button) -> void:
+	# Gentle scale breathing on CTA
+	var pulse := create_tween().set_loops()
+	pulse.tween_property(btn, "scale", Vector2(1.03, 1.03), 1.5) \
+		.set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
+	pulse.tween_property(btn, "scale", Vector2(1.0, 1.0), 1.5) \
+		.set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
 
 
 func _create_button(label: String, scene: String, is_primary: bool) -> Button:
@@ -863,11 +752,18 @@ func _create_button(label: String, scene: String, is_primary: bool) -> Button:
 func _on_button_hover(btn: Button, hovering: bool) -> void:
 	if hovering:
 		_play_ui_sound("hover")
-		var tween := create_tween().set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_OUT)
-		tween.tween_property(btn, "scale", Vector2(1.02, 1.02), 0.15)
+		# Scale up with overshoot + slight vertical lift
+		var tween := create_tween().set_parallel(true)
+		tween.tween_property(btn, "scale", Vector2(1.06, 1.06), 0.2) \
+			.set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
+		tween.tween_property(btn, "position:y", btn.position.y - 2.0, 0.2) \
+			.set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_OUT)
 	else:
-		var tween := create_tween().set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_OUT)
-		tween.tween_property(btn, "scale", Vector2(1.0, 1.0), 0.1)
+		var tween := create_tween().set_parallel(true)
+		tween.tween_property(btn, "scale", Vector2(1.0, 1.0), 0.15) \
+			.set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_OUT)
+		tween.tween_property(btn, "position:y", btn.position.y + 2.0, 0.15) \
+			.set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_OUT)
 
 
 func _on_corner_button_hover(btn: Button, hovering: bool) -> void:
@@ -1144,6 +1040,7 @@ func _update_time_tint() -> void:
 # =============================================================================
 
 func _build_seasonal_effects() -> void:
+	_build_fireflies()
 	if current_season == "ETE":
 		_build_sun_rays()
 		return
@@ -1151,13 +1048,57 @@ func _build_seasonal_effects() -> void:
 	_build_accum_grid()
 
 
+func _build_fireflies() -> void:
+	var vs := get_viewport_rect().size
+	if vs.x < 1.0:
+		vs = Vector2(1152, 648)
+	var glow_color: Color = MerlinVisual.CRT_PALETTE.get("phosphor", Color(0.2, 1.0, 0.4))
+	for i in range(FIREFLY_COUNT):
+		var dot := ColorRect.new()
+		var sz := randf_range(2.0, 4.0)
+		dot.size = Vector2(sz, sz)
+		var base_pos := Vector2(randf_range(40, vs.x - 40), randf_range(40, vs.y - 40))
+		dot.position = base_pos
+		dot.color = Color(glow_color.r, glow_color.g, glow_color.b, 0.0)
+		dot.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		dot.z_index = 0
+		add_child(dot)
+		if card:
+			move_child(dot, card.get_index())
+		_fireflies.append({
+			"node": dot, "phase": randf_range(0, TAU),
+			"speed": randf_range(0.3, 0.8),
+			"drift_x": randf_range(15.0, 40.0), "drift_y": randf_range(10.0, 25.0),
+			"base_pos": base_pos,
+		})
+
+
 func _process_seasonal_effects(delta: float) -> void:
+	# Ambient fireflies (all seasons)
+	_process_fireflies(delta)
 	if current_season == "ETE":
 		_process_sun_rays(delta)
 		return
 	if not SEASON_CONFIG.has(current_season):
 		return
 	_process_falling_particles(delta)
+
+
+func _process_fireflies(delta: float) -> void:
+	for ff in _fireflies:
+		var node: ColorRect = ff.node
+		if not is_instance_valid(node):
+			continue
+		ff.phase += delta * ff.speed
+		var t: float = ff.phase
+		# Gentle wandering motion
+		node.position = ff.base_pos + Vector2(
+			sin(t * 1.3) * ff.drift_x,
+			cos(t * 0.9) * ff.drift_y
+		)
+		# Pulsing glow (fade in/out smoothly)
+		var alpha: float = maxf(0.0, sin(t) * 0.5 + 0.1)
+		node.color.a = alpha
 
 
 # =============================================================================

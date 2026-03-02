@@ -199,6 +199,8 @@ const HOTSPOT_DEFS := [
 # =============================================================================
 
 var _bestiole: Control = null
+## true = pixel art AnimatedSprite2D, false = procedural blob
+var _use_sprite_bestiole: bool = true
 var _bubble: MerlinBubble = null
 var _radial: BiomeRadial = null
 var _partir_btn: Button = null
@@ -483,12 +485,20 @@ func _create_souffle_bar() -> void:
 # =============================================================================
 
 func _create_bestiole() -> void:
-	var BestioleClass = load("res://scripts/ui/bestiole_creature.gd")
+	var script_path: String
+	if _use_sprite_bestiole:
+		script_path = "res://scripts/ui/bestiole_sprite.gd"
+	else:
+		script_path = "res://scripts/ui/bestiole_creature.gd"
+	var BestioleClass = load(script_path)
 	if BestioleClass == null:
-		return
+		# Fallback to procedural if sprite script fails to load
+		if _use_sprite_bestiole:
+			BestioleClass = load("res://scripts/ui/bestiole_creature.gd")
+		if BestioleClass == null:
+			return
 	_bestiole = Control.new()
 	_bestiole.set_script(BestioleClass)
-	# Taille réduite pour coin bas-gauche (scale×0.6 effective via smaller setup)
 	_bestiole.call("setup", 120.0)
 	_bestiole.custom_minimum_size = Vector2(160, 160)
 	_bestiole.size = Vector2(160, 160)
