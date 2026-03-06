@@ -1,22 +1,30 @@
 ## ═══════════════════════════════════════════════════════════════════════════════
-## RAG Manager v2.0 — Retrieval Augmented Generation for Qwen 2.5-3B-Instruct
+## RAG Manager v3.0 — Retrieval Augmented Generation for Qwen 3.5 Multi-Brain
 ## ═══════════════════════════════════════════════════════════════════════════════
-## Structured retrieval with token budget, game journal, and cross-run memory.
-## Optimized for nano models (~2048 token context window).
+## Structured retrieval with per-brain token budget, game journal, cross-run memory.
+## v3.0: Budget scales per brain role (4B=800, 2B=400, 0.8B=200 tokens).
 ## ═══════════════════════════════════════════════════════════════════════════════
 
 extends Node
 class_name RAGManager
 
-const VERSION := "2.1.0"
+const VERSION := "3.0.0"
 
 # ═══════════════════════════════════════════════════════════════════════════════
-# TOKEN BUDGET — Critical for nano models
+# TOKEN BUDGET — Per-brain, scaled to model context capacity
 # ═══════════════════════════════════════════════════════════════════════════════
 
 ## Approximate tokens: 1 token ~= 4 chars (rough heuristic for multilingual)
 const CHARS_PER_TOKEN := 4
-const CONTEXT_BUDGET := 400  # max tokens for dynamic context (v2.5: 600→400, Ollama backend fast enough)
+const CONTEXT_BUDGET := 400  # Default budget (backward compat)
+
+## Per-brain budgets: larger models get richer context
+const BRAIN_BUDGETS := {
+	"narrator": 800,     # 4B model, 8192 context — rich narrative history
+	"gamemaster": 400,   # 2B model, 4096 context — game state focused
+	"judge": 200,        # 0.8B model, 2048 context — minimal, just text to score
+	"worker": 200,       # 0.8B model, 2048 context — fast tasks
+}
 
 # Priority levels for context sections (higher = more important, kept first)
 enum Priority { CRITICAL = 4, HIGH = 3, MEDIUM = 2, LOW = 1, OPTIONAL = 0 }
@@ -102,8 +110,9 @@ func trim_to_budget(text: String, max_tokens: int) -> String:
 # STRUCTURED CONTEXT RETRIEVAL — Priority-based for nano models
 # ═══════════════════════════════════════════════════════════════════════════════
 
-func get_prioritized_context(game_state: Dictionary) -> String:
+func get_prioritized_context(game_state: Dictionary, brain_role: String = "") -> String:
 	## Build context string within token budget, prioritized by importance.
+	## brain_role: "narrator", "gamemaster", "judge", "worker" — scales budget per brain.
 	var sections: Array[Dictionary] = []
 
 	var crisis := _get_crisis_context(game_state)
@@ -178,15 +187,20 @@ func get_prioritized_context(game_state: Dictionary) -> String:
 
 	sections.sort_custom(func(a, b): return int(a.priority) > int(b.priority))
 
+	# Resolve budget for this brain role
+	var budget: int = CONTEXT_BUDGET
+	if brain_role != "" and brain_role in BRAIN_BUDGETS:
+		budget = int(BRAIN_BUDGETS[brain_role])
+
 	var result := ""
 	var tokens_used := 0
 	for section in sections:
 		var section_tokens := estimate_tokens(section.text)
-		if tokens_used + section_tokens <= CONTEXT_BUDGET:
+		if tokens_used + section_tokens <= budget:
 			result += section.text + "\n"
 			tokens_used += section_tokens
 		else:
-			var remaining := maxi(CONTEXT_BUDGET - tokens_used, 0)
+			var remaining := maxi(budget - tokens_used, 0)
 			if remaining > 10:
 				result += trim_to_budget(section.text, remaining) + "\n"
 			break

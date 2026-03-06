@@ -2,6 +2,27 @@
 
 > **Note**: Sessions anterieures archivees dans `archive/progress_archive_2026-02-05_to_2026-02-08.md`
 
+## Session: 2026-03-07 — Qwen 3.5 Multi-Brain Architecture (Phase P3.1)
+
+### Changes
+- **ollama_backend.gd**: Model per instance, MODEL_REGISTRY (4 models), thinking mode, `<think>` stripping (always, not just thinking_mode=true), DEFAULT_MODEL → `qwen3.5:2b`
+- **brain_swarm_config.gd**: Complete rewrite — 6 profiles (NANO/SINGLE/SINGLE+/DUAL/TRIPLE/QUAD), heterogeneous RAM, Qwen 3.5 family (0.8B/2B/4B), auto-detect by RAM/CPU
+- **merlin_ai.gd**: Model registry per brain, `_swap_model_for_role()` for time-sharing, heterogeneous init via BrainSwarmConfig profiles, SINGLE+ as default for 8GB/4threads
+- **prompt_templates.json**: v3.0 — `model` + `thinking` fields per template, sequential pipeline templates
+- **rag_manager.gd**: v3.0 — BRAIN_BUDGETS per role (narrator=800, gm=400, judge/worker=200)
+
+### Findings
+- Qwen 3.5 2B emits `<think></think>` by default — stripped unconditionally now
+- Ollama defaults to 262K context (8.3 GB!) — explicit `num_ctx` mandatory
+- Cold start ~57s, warm generation 5-7s for 30-40 tokens (~5.5 tok/s CPU)
+- Base 2B poetic French quality is decent — LoRA will improve celtic vocabulary
+
+### Validation
+- `validate.bat` Step 0: PASSED (0 errors, 0 warnings)
+- Ollama API test: `qwen3.5:2b` generates poetic French with Merlin persona
+
+---
+
 ## Session: 2026-02-28 (overnight LoRA v2) — Training Pipeline Overhaul
 
 ### Context

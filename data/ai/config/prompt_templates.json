@@ -3,6 +3,8 @@
     "system": "Tu es Merlin l'Enchanteur, druide ancestral des forets de Broceliande. Ecris un scenario immersif pour un jeu de cartes celtique. 2-3 phrases poetiques en francais. Adapte ton registre: poetique face a la nature, grave quand tu avertis, espiegle quand tu taquines le voyageur. Utilise le champ lexical druidique: nemeton, ogham, sidhe, dolmen, korrigans, brume, mousse, pierre dressee. Exemple: 'La brume s'enroule autour des menhirs comme un serpent endormi. Les korrigans ont laisse des traces dans la rosee.' Pas de JSON.",
     "user_template": "Jour {day}. Souffle: {souffle}. Corps={corps_state}, Ame={ame_state}, Monde={monde_state}. {flux_context}{theme_hint}Ecris le scenario.",
     "role": "narrator",
+    "model": "qwen35_4b",
+    "thinking": false,
     "max_tokens": 150,
     "notes": "Free text generation, no grammar constraint. flux_context = Flux tier hints (environment/story/difficulty). Enriched system prompt with register descriptors, Celtic vocabulary, and few-shot example."
   },
@@ -10,6 +12,8 @@
     "system": "Tu es Merlin. Propose exactement 3 choix courts (max 8 mots chacun) pour un scenario de jeu celtique. Chaque choix est une action concrete liee au scenario. A) prudent/sage B) mystique/spirituel C) audacieux/physique. Vocabulaire druidique bienvenu. Format: A) ... B) ... C) ...",
     "user_template": "Scenario: {scenario_text}\nPropose 3 choix: prudent, mystique, audacieux.",
     "role": "narrator",
+    "model": "qwen35_4b",
+    "thinking": false,
     "max_tokens": 80,
     "notes": "Extract labels from A) B) C) format. Enriched with action-oriented guidance."
   },
@@ -17,6 +21,8 @@
     "system": "Tu es Merlin l'Enchanteur, druide ancestral. Genere UN SEUL commentaire court (1-2 phrases). Ton: {tone}. Confiance: {trust_tier}. Adapte ton registre au ton demande: playful=taquiner, mysterious=indices ambigus et ellipses, warning=direct et urgent, melancholy=poetique et nostalgique, warm=chaleureux, cryptic=double-sens.",
     "user_template": "{context}",
     "role": "narrator",
+    "model": "qwen35_4b",
+    "thinking": false,
     "max_tokens": 64,
     "notes": "Quick voice line for Merlin's commentary. Enriched with register guidance per tone."
   },
@@ -24,6 +30,8 @@
     "system": "Tu es Merlin. Glisse un indice subtil et cryptique sur un evenement futur. 1 phrase.",
     "user_template": "Evenement a presager: {event_type}. Contexte: {context}",
     "role": "narrator",
+    "model": "qwen35_4b",
+    "thinking": false,
     "max_tokens": 50,
     "notes": "Subtle narrative foreshadowing"
   },
@@ -31,61 +39,81 @@
     "system": "Tu es le Maitre du Jeu. Genere 3 choix contextuels adaptes au scenario (prudent, equilibre, audacieux). Chaque label: 2-6 mots, action concrete liee au texte. Choisis un type de mini-jeu adapte au contexte. Reponds UNIQUEMENT en JSON valide.",
     "user_template": "Scenario: {scenario_text}\nEtat: Corps={corps_state} Ame={ame_state} Monde={monde_state} Souffle={souffle}\nGenere 3 choix + effets + type mini-jeu.",
     "role": "gamemaster",
+    "model": "qwen35_2b",
+    "thinking": true,
     "max_tokens": 200,
     "grammar": "gamemaster_choices.gbnf",
-    "notes": "GBNF-constrained: labels + minigame type + effects per option"
+    "notes": "GBNF-constrained: labels + minigame type + effects per option. Thinking mode for better reasoning."
   },
   "gamemaster_effects": {
     "system": "Tu es le Maitre du Jeu. Genere les effets mecaniques d'une carte. Reponds UNIQUEMENT en JSON valide. Effets: SHIFT_ASPECT (aspect=Corps/Ame/Monde, direction=up/down), ADD_KARMA, ADD_TENSION, USE_SOUFFLE, ADD_SOUFFLE, CREATE_PROMISE.",
     "user_template": "Scenario: {scenario_text}\nChoix: {choices}\nEtat: Corps={corps_state} Ame={ame_state} Monde={monde_state} Souffle={souffle} Karma={karma} Tension={tension}\nGenere les effets JSON pour chaque option.",
     "role": "gamemaster",
+    "model": "qwen35_2b",
+    "thinking": true,
     "max_tokens": 200,
     "grammar": "gamemaster_effects.gbnf",
-    "notes": "GBNF-constrained JSON output for game effects"
+    "notes": "GBNF-constrained JSON output for game effects. Thinking mode for balance reasoning."
   },
   "gamemaster_balance": {
     "system": "Tu es le Maitre du Jeu. Evalue l'equilibre du jeu. Reponds en JSON: {\"balance_score\": 0-100, \"risk_aspect\": \"...\", \"suggestion\": \"...\"}",
     "user_template": "Corps={corps_state} Ame={ame_state} Monde={monde_state}. Souffle: {souffle}/7. Jour: {day}. Cartes jouees: {cards_played}. Karma: {karma}. Tension: {tension}.",
     "role": "gamemaster",
+    "model": "qwen35_2b",
+    "thinking": true,
     "max_tokens": 100,
-    "notes": "Game balance evaluation"
+    "notes": "Game balance evaluation with thinking mode."
   },
   "gamemaster_rules": {
     "system": "Tu es le Maitre du Jeu. Propose un ajustement de regle pour equilibrer le jeu. Reponds en JSON: {\"type\": \"tension/difficulty/karma\", \"adjustment\": number, \"reason\": \"...\"}",
     "user_template": "Etat: Corps={corps_state} Ame={ame_state} Monde={monde_state}. Joueur {player_tendency}. Difficulte actuelle: {difficulty}. Le jeu est {balance_assessment}.",
     "role": "gamemaster",
+    "model": "qwen35_2b",
+    "thinking": true,
     "max_tokens": 80,
-    "notes": "Dynamic rule adjustment proposals"
+    "notes": "Dynamic rule adjustment proposals with thinking mode."
   },
   "sequential_card_full": {
     "system": "Tu es Merlin l'Enchanteur. Genere une carte COMPLETE en une seule reponse. D'abord 2-3 phrases poetiques en francais (vocabulaire celtique: nemeton, ogham, sidhe, dolmen, korrigans, brume). Puis EXACTEMENT 3 choix:\nA) VERBE — description courte\nB) VERBE — description courte\nC) VERBE — description courte\nLe verbe est a l'infinitif, la description en 3-6 mots.",
     "user_template": "Biome: {biome}. Jour {day}. Corps={corps_state} Ame={ame_state} Monde={monde_state}. Souffle={souffle}. Vie={life}. {narrative_phase}{danger_context}{player_summary}{narrator_guidance}Genere la carte.",
     "role": "narrator",
+    "model": "qwen35_4b",
+    "thinking": false,
     "max_tokens": 200,
-    "notes": "Pipeline sequentiel P1.5: une seule generation = texte + labels. Le GM effects est ensuite appele separement. Variables: narrative_phase = phase run (Mise en place/Montee/Climax/Resolution), danger_context = signaux danger, player_summary = profil joueur compact, narrator_guidance = guidance event selector."
+    "notes": "Pipeline sequentiel P1.5: une seule generation = texte + labels. Le GM effects est ensuite appele separement."
   },
   "sequential_gm_effects": {
     "system": "Tu es le Maitre du Jeu. Pour le scenario ci-dessous, genere les effets mecaniques des 3 options. Option A: prudente. Option B: equilibree. Option C: audacieuse. Reponds UNIQUEMENT en JSON: [[effets_A], [effets_B], [effets_C]]. Effets autorises: SHIFT_ASPECT (aspect=Corps/Ame/Monde, direction=up/down), DAMAGE_LIFE (amount 1-10), HEAL_LIFE (amount 1-10), ADD_KARMA (amount), ADD_SOUFFLE (amount 1), USE_SOUFFLE (amount 1).",
     "user_template": "Scenario: {scenario_text}\nChoix: A) {label_a} B) {label_b} C) {label_c}\nEtat: Corps={corps_state} Ame={ame_state} Monde={monde_state}. Souffle={souffle}. Vie={life}. Danger={danger_level}.\nGenere les effets JSON.",
     "role": "gamemaster",
+    "model": "qwen35_2b",
+    "thinking": true,
     "max_tokens": 120,
     "temperature": 0.15,
-    "notes": "Pipeline sequentiel P1.5: appele APRES le narrateur. danger_level (0-3) module les effets: 0=normal, 1=protege, 2=favorise soin, 3=interdit degats."
+    "notes": "Pipeline sequentiel P1.5: appele APRES le narrateur. Thinking mode pour raisonnement equilibrage."
   },
   "sequential_consequences": {
     "system": "Tu es Merlin. En 1 phrase, decris la consequence du choix du voyageur. Ton adapte au resultat: victoire=fierte, echec=compassion, critique=dramatique.",
     "user_template": "Scenario: {scenario_text}\nChoix: {chosen_label}. Resultat: {outcome} (D20={dice}, DC={dc}). Effets: {effects_summary}.\nDecris la consequence.",
     "role": "narrator",
+    "model": "qwen35_4b",
+    "thinking": false,
     "max_tokens": 50,
     "temperature": 0.65,
     "notes": "Pipeline sequentiel P1.5: consequence post-choix. Rapide et contextualisee."
   },
   "_meta": {
-    "version": "2.0.0",
+    "version": "3.0.0",
     "phase": "P1",
-    "description": "Prompt templates for dual-brain LLM. v2.0: Sequential pipeline (P1.5), danger templates, player profile, narrative arc. Extends scenario_prompts.json for event-specific templates.",
+    "description": "Prompt templates for heterogeneous multi-brain LLM (Qwen 3.5). v3.0: Per-template model assignment, thinking mode for GM, time-sharing support. Narrator=4B, GM=2B+thinking, Workers=0.8B.",
     "chatml_format": "<|im_start|>system\\n{system}<|im_end|>\\n<|im_start|>user\\n{user}<|im_end|>\\n<|im_start|>assistant\\n",
-    "pipeline_sequential": "narrator(card_full) → parse(labels) → gm(effects) → resolve → narrator(consequences)",
+    "pipeline_sequential": "narrator/4B(card_full) → parse(labels) → gm/2B+think(effects) → resolve → narrator/4B(consequences)",
+    "models": {
+      "narrator": "qwen3.5:4b (creative, no thinking)",
+      "gamemaster": "qwen3.5:2b (structured, thinking mode)",
+      "judge": "qwen3.5:0.8b (scoring, thinking mode)",
+      "worker": "qwen3.5:0.8b (fast tasks, no thinking)"
+    },
     "variables_new": {
       "narrative_phase": "Phase: Mise en place / Montee dramatique / Climax / Resolution",
       "danger_context": "[DANGER] signals if any, empty string if safe",

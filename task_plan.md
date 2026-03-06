@@ -1,10 +1,45 @@
 # Task Plan: M.E.R.L.I.N. — Le Jeu des Oghams
 
 ## Goal
-Developper un JDR Parlant roguelite avec LLM local (Qwen 2.5-3B-Instruct Multi-Brain), systeme Triade (3 aspects x 3 etats), et narration procedurale.
+Developper un JDR Parlant roguelite avec LLM local (Qwen 3.5 Multi-Brain heterogene), systeme Triade (3 aspects x 3 etats), et narration procedurale.
 
 ## Current Phase
-Phase P2 — LoRA Training (Plan Bi-Cerveaux)
+Phase P3 — Architecture Multi-Cerveaux Qwen 3.5 (heterogene)
+
+---
+
+## Phase P3 — Qwen 3.5 Multi-Brain Architecture
+
+### P3.1 Foundation (Code refactor) — COMPLETE
+- [x] P3.1.1 | Refactor `ollama_backend.gd`: model per instance, thinking mode, `<think>` stripping
+- [x] P3.1.2 | Rewrite `brain_swarm_config.gd`: NANO/SINGLE/SINGLE+/DUAL/TRIPLE/QUAD profiles, heterogeneous RAM
+- [x] P3.1.3 | Refactor `merlin_ai.gd`: model registry, heterogeneous init, SINGLE+ time-sharing, `_swap_model_for_role()`
+- [x] P3.1.4 | Update `prompt_templates.json`: add `model` and `thinking` fields per template (v3.0)
+- [x] P3.1.5 | Update `rag_manager.gd`: per-brain context budget (narrator=800, gm=400, judge/worker=200)
+- [x] P3.1.6 | Validation: `validate.bat` Step 0 passed (0 errors, 0 warnings)
+- [x] P3.1.7 | Pull Qwen 3.5 2B (Q8_0, 2.7 GB). 4B/0.8B deferred to P3.2 (need LoRA first)
+- [x] P3.1.8 | Smoke test: Qwen 3.5 2B via Ollama API — works. Findings:
+  - Qwen 3.5 emits `<think></think>` by default (even without thinking_mode) — fixed stripping to always run
+  - Cold start: ~57s (model load from disk). Warm: 5-7s for 30-40 tokens (~5.5 tok/s CPU)
+  - CRITICAL: Ollama defaults to 262K context (8.3 GB RAM!) — must always send explicit `num_ctx`
+  - Poetic French quality decent from base 2B — LoRA will improve further
+
+### P3.2 LoRA Per-Brain — PLANNED
+- [ ] P3.2.1 | Update `train_narrator_lora.py` for Qwen 3.5-4B base
+- [ ] P3.2.2 | Create GM training dataset (effects JSON)
+- [ ] P3.2.3 | New `train_gm_lora.py` for Qwen 3.5-2B
+- [ ] P3.2.4 | Create Ollama Modelfiles with embedded adapters
+- [ ] P3.2.5 | Benchmark: with/without LoRA quality metrics
+
+### P3.3 Thinking + Judge — PLANNED
+- [ ] P3.3.1 | Test thinking mode with GM effects
+- [ ] P3.3.2 | Implement LLM Quality Judge (0.8B brain, QUAD+ tier)
+- [ ] P3.3.3 | Train Judge LoRA
+- [ ] P3.3.4 | A/B test: heuristic vs LLM judge
+
+### P3.4 Advanced — PLANNED
+- [ ] P3.4.1 | Tool calling natif pour GM (Qwen 3.5 function schemas)
+- [ ] P3.4.2 | Multimodal support (Vision Worker, experimental)
 
 ## Phase P0 — Fix Gameplay — COMPLETE (commit `0bd08f6`, 2026-02-24)
 - [x] P0.0.1 Audit async flow timestamps

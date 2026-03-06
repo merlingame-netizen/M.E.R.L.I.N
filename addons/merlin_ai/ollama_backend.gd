@@ -3,19 +3,30 @@
 ## Utilise /api/generate avec raw=true pour envoyer les prompts ChatML pre-formates.
 ## Interface 100% compatible _run_llm (generate_async/poll_result/cancel/sampling).
 ## Multi-instance safe: chaque OllamaBackend est independant (Ollama gere le multi-slot).
+## Supporte modeles heterogenes: chaque instance peut utiliser un modele different.
+## Supporte le thinking mode (Qwen 3.5): strip automatique des tags <think>.
 extends RefCounted
 class_name OllamaBackend
 
 const DEFAULT_HOST := "127.0.0.1"
 const DEFAULT_PORT := 11434
-const DEFAULT_MODEL := "qwen2.5:1.5b"
+const DEFAULT_MODEL := "qwen3.5:2b"
 const CONNECT_TIMEOUT_MS := 5000
 const READ_TIMEOUT_MS := 60000
+
+# ── Model Registry (Qwen 3.5 family) ─────────────────────────────────────────
+const MODEL_REGISTRY := {
+	"qwen35_4b": {"tag": "qwen3.5:4b", "ram_mb": 3200, "context_default": 8192},
+	"qwen35_2b": {"tag": "qwen3.5:2b", "ram_mb": 1800, "context_default": 4096},
+	"qwen35_0.8b": {"tag": "qwen3.5:0.8b", "ram_mb": 800, "context_default": 2048},
+	"qwen25_1.5b": {"tag": "qwen2.5:1.5b", "ram_mb": 1200, "context_default": 4096},
+}
 
 # ── Config ────────────────────────────────────────────────────────────────────
 var host: String = DEFAULT_HOST
 var port: int = DEFAULT_PORT
 var model: String = DEFAULT_MODEL
+var thinking_mode: bool = false  # Qwen 3.5: enable <think> reasoning (stripped from output)
 
 # ── Sampling params (set via set_sampling_params / set_advanced_sampling) ─────
 var _temperature: float = 0.7
@@ -213,7 +224,17 @@ func clear_grammar() -> void:
 
 ## Configure la taille du contexte (passee a Ollama via options.num_ctx).
 func set_context_size(p_n_ctx: int) -> void:
-	_num_ctx = clampi(p_n_ctx, 512, 32768)
+	_num_ctx = clampi(p_n_ctx, 512, 131072)  # Qwen 3.5 supports up to 256K
+
+
+## Resolve a model registry key to an Ollama tag and configure defaults.
+func configure_from_registry(model_key: String) -> bool:
+	if model_key not in MODEL_REGISTRY:
+		return false
+	var entry: Dictionary = MODEL_REGISTRY[model_key]
+	model = str(entry.tag)
+	_num_ctx = int(entry.context_default)
+	return true
 
 
 ## No-op: Ollama gere les threads en interne.
@@ -250,20 +271,24 @@ func _blocking_generate(prompt: String) -> void:
 	var start_ms := Time.get_ticks_msec()
 	var result := {}
 
+	var options := {
+		"temperature": _temperature,
+		"top_p": _top_p,
+		"top_k": _top_k,
+		"repeat_penalty": _repetition_penalty,
+		"num_predict": _max_tokens,
+		"num_ctx": _num_ctx,
+	}
 	var payload := {
 		"model": model,
 		"prompt": prompt,
 		"raw": true,
 		"stream": false,
-		"options": {
-			"temperature": _temperature,
-			"top_p": _top_p,
-			"top_k": _top_k,
-			"repeat_penalty": _repetition_penalty,
-			"num_predict": _max_tokens,
-			"num_ctx": _num_ctx,
-		},
+		"options": options,
 	}
+	# Qwen 3.5 thinking mode: enable chain-of-thought reasoning
+	if thinking_mode:
+		payload["think"] = true
 	var body_str := JSON.stringify(payload)
 
 	# Connect
@@ -353,6 +378,10 @@ func _blocking_generate(prompt: String) -> void:
 	var data: Dictionary = json.data if json.data is Dictionary else {}
 	var text: String = str(data.get("response", "")).strip_edges()
 
+	# Strip <think>...</think> tags — Qwen 3.5 emits them even without thinking_mode
+	if "<think>" in text:
+		text = _strip_thinking_tags(text)
+
 	if text == "":
 		result = {"error": "Ollama empty response"}
 		_store_result(result, start_ms)
@@ -390,3 +419,16 @@ func _update_stats(total_ms: int, eval_count: int, tok_per_sec: float) -> void:
 		var n: float = float(stats.llm_calls)
 		stats.avg_total_ms = (stats.avg_total_ms * (n - 1.0) + float(total_ms)) / n
 		stats.avg_tok_per_sec = (stats.avg_tok_per_sec * (n - 1.0) + tok_per_sec) / n
+
+
+## Strip <think>...</think> reasoning tags from Qwen 3.5 thinking mode output.
+## Preserves the actual response text after the closing </think> tag.
+static func _strip_thinking_tags(text: String) -> String:
+	var think_end := text.find("</think>")
+	if think_end >= 0:
+		return text.substr(think_end + 8).strip_edges()
+	# Unclosed <think> tag — strip everything from <think> onward
+	var think_start := text.find("<think>")
+	if think_start >= 0:
+		return text.substr(0, think_start).strip_edges()
+	return text

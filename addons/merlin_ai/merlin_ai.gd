@@ -7,10 +7,11 @@ signal status_changed(status_text: String, detail_text: String, progress_value: 
 signal ready_changed(is_ready: bool)
 signal log_updated(log_text: String)
 
-# ARCHITECTURE MULTI-BRAIN + WORKER POOL — Qwen 2.5-1.5B (1 a 4 cerveaux)
-# Phase 32: Instances specialisees, meme modele, configs differentes
-# Brain 1 = Narrator (creatif), Brain 2 = Game Master (logique)
-# Brain 3-4 = Worker Pool (prefetch, voice, balance — taches de fond)
+# ARCHITECTURE MULTI-BRAIN HETEROGENE — Qwen 3.5 family (0.8B/2B/4B)
+# Phase 33: Chaque cerveau utilise un modele different, optimise pour son role
+# Brain 1 = Narrator (4B creatif), Brain 2 = Game Master (2B logique + thinking)
+# Brain 3-4 = Worker Pool / Judge (0.8B — taches de fond / evaluation)
+# SINGLE+ mode: time-sharing (un seul modele en RAM, swap Ollama)
 const MODEL_FILE := "res://addons/merlin_llm/models/qwen2.5-3b-instruct-q4_k_m.gguf"
 const MODEL_CANDIDATES := [MODEL_FILE]
 const FastRoute = preload("res://addons/merlin_ai/fast_route.gd")
@@ -31,21 +32,24 @@ const SCENE_PROFILES_PATH := "res://data/ai/config/scene_profiles.json"
 const PERSONA_CONFIG_PATH := "res://data/ai/config/merlin_persona.json"
 
 # ═══════════════════════════════════════════════════════════════════════════════
-# BRAIN CONFIGURATION — Adaptatif selon plateforme
+# BRAIN CONFIGURATION — Adaptatif selon plateforme (Qwen 3.5 heterogene)
 # ═══════════════════════════════════════════════════════════════════════════════
-# 1 cerveau:  Mobile/Web (4-8 GB RAM)   — tout sequentiel
-# 2 cerveaux: Desktop (16+ GB RAM)      — Narrator + GM parallele, pool sur idle
-# 3 cerveaux: Desktop+ (32+ GB RAM)     — + 1 Worker dedie
-# 4 cerveaux: Desktop Ultra (32+ GB RAM, 16+ threads) — + 2 Workers dedies
+# NANO:        0.8B all roles (ultra-low, 4 GB RAM)
+# SINGLE:      2B all roles (6 GB RAM)
+# SINGLE+:     4B Narrator + 2B GM, time-sharing (7 GB RAM, 4 threads)
+# DUAL:        4B + 2B parallel (12 GB RAM, 6 threads)
+# TRIPLE:      4B + 2B + 0.8B Worker (14 GB RAM, 8 threads)
+# QUAD:        4B + 2B + 0.8B Judge + 0.8B Worker (16 GB RAM, 8 threads)
 
-const BRAIN_SINGLE := 1   # ~1.2 GB RAM
-const BRAIN_DUAL := 2     # ~2.4 GB RAM
-const BRAIN_TRIPLE := 3   # ~3.6 GB RAM
-const BRAIN_QUAD := 4     # ~4.8 GB RAM
+const BRAIN_SINGLE := 1   # Legacy compat
+const BRAIN_DUAL := 2
+const BRAIN_TRIPLE := 3
+const BRAIN_QUAD := 4
 const BRAIN_MAX := BRAIN_QUAD
 
-# RAM par instance Qwen 2.5-1.5B (~1.0 GB Ollama + KV cache)
-const RAM_PER_BRAIN_MB := 1200  # ~1.2 GB modele + KV cache
+# Profile auto-detected from BrainSwarmConfig
+var _active_profile_id: int = BrainSwarmConfig.Profile.SINGLE
+var _is_time_sharing: bool = false  # True for SINGLE+ (one model at a time)
 
 var brain_count: int = 0  # Actual loaded count (set by _init_local_models)
 var _target_brain_count: int = 0  # Requested count (0 = auto-detect)
@@ -205,11 +209,34 @@ func is_llm_busy() -> bool:
 		return narrator_llm.is_generating_now()
 	return false
 
+## Swap Ollama model for time-sharing mode (SINGLE+).
+## Changes the model tag and context size on the shared LLM instance.
+func _swap_model_for_role(llm: Object, role: String) -> void:
+	if not _is_time_sharing or not (llm is OllamaBackend):
+		return
+	var brain_cfg: Dictionary = BrainSwarmConfig.get_brain_config(_active_profile_id, role)
+	if brain_cfg.is_empty():
+		return
+	var target_tag: String = str(brain_cfg.get("ollama_tag", ""))
+	var target_ctx: int = int(brain_cfg.get("n_ctx", 4096))
+	var target_thinking: bool = bool(brain_cfg.get("thinking", false))
+	if target_tag != "" and llm.model != target_tag:
+		_log("Time-sharing: swapping model %s -> %s" % [llm.model, target_tag])
+		llm.model = target_tag
+		llm.set_context_size(target_ctx)
+		llm.thinking_mode = target_thinking
+
+
 func _run_llm(llm: Object, prompt: String, params: Dictionary) -> Dictionary:
 	if llm == null:
 		return {"error": "LLM manquant"}
 	if not llm.has_method("generate_async") or not llm.has_method("poll_result"):
 		return {"error": "LLM interface incomplete (missing generate_async/poll_result)"}
+
+	# Time-sharing: swap model based on role hint in params
+	var role_hint: String = str(params.get("_brain_role", ""))
+	if role_hint != "":
+		_swap_model_for_role(llm, role_hint)
 
 	# Pre-flight: if LLM is stuck generating from a previous call, wait or cancel
 	if llm.has_method("is_generating_now") and llm.is_generating_now():
@@ -505,39 +532,91 @@ func _try_init_ollama(target: int) -> bool:
 	if not ollama_test.check_available():
 		_log("Ollama: non disponible (ollama serve non lance?)")
 		return false
-	if not ollama_test.check_model_available():
-		_log("Ollama: modele '%s' non trouve" % OllamaBackendScript.DEFAULT_MODEL)
-		return false
-	_log("Ollama: detecte et modele disponible")
+
+	# ── Detect optimal profile from hardware ──────────────────────────────
+	var available_ram := _estimate_available_ram_mb()
+	var cpu_threads := OS.get_processor_count()
+	_active_profile_id = BrainSwarmConfig.detect_profile(available_ram, cpu_threads)
+	_is_time_sharing = BrainSwarmConfig.is_time_sharing(_active_profile_id)
+	var profile: Dictionary = BrainSwarmConfig.get_profile(_active_profile_id)
+	var profile_name: String = str(profile.get("name", "Unknown"))
+	_log("Ollama: detected profile '%s' (RAM: %d MB, CPU: %d threads)" % [profile_name, available_ram, cpu_threads])
+
+	# ── Verify required models are available ──────────────────────────────
+	var required_models: Array = BrainSwarmConfig.get_required_models(_active_profile_id)
+	for model_tag in required_models:
+		ollama_test.model = model_tag
+		if not ollama_test.check_model_available():
+			_log("Ollama: modele '%s' non trouve — run: ollama pull %s" % [model_tag, model_tag])
+			# Fallback: try smaller profile
+			if _active_profile_id > BrainSwarmConfig.Profile.NANO:
+				_active_profile_id = BrainSwarmConfig.Profile.SINGLE
+				_is_time_sharing = false
+				_log("Ollama: fallback to SINGLE profile")
+				required_models = BrainSwarmConfig.get_required_models(_active_profile_id)
+				var fallback_ok := true
+				for ft in required_models:
+					ollama_test.model = ft
+					if not ollama_test.check_model_available():
+						fallback_ok = false
+						break
+				if not fallback_ok:
+					_log("Ollama: aucun modele disponible")
+					return false
+			else:
+				return false
+	_log("Ollama: tous les modeles requis sont disponibles")
 
 	brain_count = 0
 
-	# ── Brain 1: Narrator via Ollama ───────────────────────────────────────
-	_set_status("Connexion: ...", "Ollama Brain 1/Narrator", 30.0)
+	# ── Brain 1: Narrator via Ollama ──────────────────────────────────────
+	var narrator_cfg: Dictionary = BrainSwarmConfig.get_brain_config(_active_profile_id, "narrator")
+	var narrator_tag: String = str(narrator_cfg.get("ollama_tag", OllamaBackendScript.DEFAULT_MODEL))
+	var narrator_ctx: int = int(narrator_cfg.get("n_ctx", 4096))
+	_set_status("Connexion: ...", "Ollama Brain 1/Narrator (%s)" % narrator_tag, 30.0)
 	narrator_llm = OllamaBackendScript.new()
+	narrator_llm.model = narrator_tag
+	narrator_llm.set_context_size(narrator_ctx)
 	brain_count = 1
-	gamemaster_llm = narrator_llm
-	_log("Brain 1 (Narrator) -> Ollama")
+	gamemaster_llm = narrator_llm  # Default: shared (NANO/SINGLE)
+	_log("Brain 1 (Narrator) -> Ollama %s (ctx=%d)" % [narrator_tag, narrator_ctx])
 
-	# ── Brain 2: Game Master via Ollama (separate instance, parallel safe) ─
-	if target >= BRAIN_DUAL:
-		_set_status("Connexion: ...", "Ollama Brain 2/Game Master", 50.0)
-		gamemaster_llm = OllamaBackendScript.new()
+	# ── Brain 2: Game Master via Ollama (separate model if SINGLE+/DUAL+) ─
+	var gm_cfg: Dictionary = BrainSwarmConfig.get_brain_config(_active_profile_id, "gamemaster")
+	if not gm_cfg.is_empty():
+		var gm_tag: String = str(gm_cfg.get("ollama_tag", narrator_tag))
+		var gm_ctx: int = int(gm_cfg.get("n_ctx", 4096))
+		var gm_thinking: bool = bool(gm_cfg.get("thinking", false))
+		_set_status("Connexion: ...", "Ollama Brain 2/GM (%s)" % gm_tag, 50.0)
+
+		if _is_time_sharing:
+			# SINGLE+ mode: reuse same OllamaBackend instance, swap model per call
+			# GM uses the same instance but we store the config for runtime swap
+			gamemaster_llm = narrator_llm  # Same instance, model swapped at generation time
+			_log("Brain 2 (GM) -> time-sharing, will swap to %s (thinking=%s)" % [gm_tag, str(gm_thinking)])
+		else:
+			# DUAL+ mode: separate instance for parallel generation
+			gamemaster_llm = OllamaBackendScript.new()
+			gamemaster_llm.model = gm_tag
+			gamemaster_llm.set_context_size(gm_ctx)
+			gamemaster_llm.thinking_mode = gm_thinking
+			_log("Brain 2 (GM) -> Ollama %s (ctx=%d, thinking=%s)" % [gm_tag, gm_ctx, str(gm_thinking)])
 		brain_count = 2
-		_log("Brain 2 (Game Master) -> Ollama (instance separee)")
 
 	active_backend = BackendType.OLLAMA
 	var mode_name := _get_brain_mode_name()
 
 	# Warmup: primes Ollama model (loads into RAM if cold)
-	_set_status("Connexion: ...", "Warmup Ollama (chargement modele)", 90.0)
-	_log("Starting warmup generation (Ollama)...")
+	_set_status("Connexion: ...", "Warmup Ollama (chargement modele %s)" % narrator_tag, 90.0)
+	_log("Starting warmup generation (Ollama, %s)..." % narrator_tag)
 	await _warmup_generate()
 
-	_set_status("Connexion: OK", "Ollama %s (%d cerveaux)" % [mode_name, brain_count], 100.0)
+	var ram_peak: int = BrainSwarmConfig.get_peak_ram_mb(_active_profile_id)
+	var ts_label := " [time-sharing]" if _is_time_sharing else ""
+	_set_status("Connexion: OK", "Ollama %s (%d cerveaux, ~%d MB)%s" % [mode_name, brain_count, ram_peak, ts_label], 100.0)
 	is_ready = true
 	ready_changed.emit(true)
-	_log("Backend: Ollama | %d brains | %s" % [brain_count, mode_name])
+	_log("Backend: Ollama | %d brains | %s | ~%d MB RAM%s" % [brain_count, mode_name, ram_peak, ts_label])
 	return true
 
 
@@ -825,7 +904,7 @@ func _try_init_merlin_llm(target: int) -> void:
 	_pool_busy.clear()
 
 	active_backend = BackendType.MERLIN_LLM
-	var ram_estimate: int = brain_count * RAM_PER_BRAIN_MB
+	var ram_estimate: int = brain_count * 1200  # MerlinLLM: ~1.2 GB per brain (legacy)
 	var mode_name := _get_brain_mode_name()
 	_set_status("Connexion: ...", "Warmup generation (CPU cache prime)", 95.0)
 	_log("Starting warmup generation (MerlinLLM C++)...")
@@ -837,13 +916,32 @@ func _try_init_merlin_llm(target: int) -> void:
 
 
 func _detect_optimal_brains() -> int:
+	# Legacy compat: map profile to brain count
+	var available_ram := _estimate_available_ram_mb()
+	var cpu_threads := OS.get_processor_count()
+	var profile_id: int = BrainSwarmConfig.detect_profile(available_ram, cpu_threads)
+	var profile: Dictionary = BrainSwarmConfig.get_profile(profile_id)
+	var brain_list: Array = profile.get("brains", [])
+	return maxi(brain_list.size(), 1)
+
+
+## Estimate available RAM in MB (total system RAM minus OS/Godot overhead).
+func _estimate_available_ram_mb() -> int:
+	# OS.get_static_memory_usage() gives Godot process memory
+	# For total system RAM, use a conservative estimate
+	# Godot 4 doesn't expose total system RAM directly
+	# Use a heuristic: check processor count as proxy for machine class
 	var cpu_count: int = OS.get_processor_count()
-	# Qwen 2.5-1.5B: ~1.3 GB/brain via Ollama
-	# DUAL (Narrator + GM) = 2.6 GB — any desktop with 6+ threads
-	# SINGLE = fallback for very low-end hardware
-	if cpu_count >= 6:
-		return BRAIN_DUAL
-	return BRAIN_SINGLE
+	# Conservative estimates based on typical hardware
+	if cpu_count >= 16:
+		return 32000  # Likely 32+ GB machine
+	elif cpu_count >= 8:
+		return 16000  # Likely 16 GB machine
+	elif cpu_count >= 6:
+		return 12000  # Likely 12-16 GB machine
+	elif cpu_count >= 4:
+		return 8000   # Likely 8 GB machine
+	return 4000       # Ultra-low-end
 
 
 func _warmup_generate() -> void:
@@ -988,6 +1086,10 @@ func set_brain_count(count: int) -> void:
 
 
 func _get_brain_mode_name() -> String:
+	# Use profile name if available (Qwen 3.5 architecture)
+	if active_backend == BackendType.OLLAMA:
+		return BrainSwarmConfig.get_profile_name(_active_profile_id)
+	# Legacy fallback for BitNet/MerlinLLM
 	match brain_count:
 		1: return "Single (Narrator seul)"
 		2: return "Dual (Narrator + GM)"
@@ -1329,6 +1431,7 @@ func generate_narrative(system_prompt: String, user_input: String, params_overri
 		params[key] = params_override[key]
 	params.erase("grammar")
 	params.erase("skip_scene_contract")
+	params["_brain_role"] = "narrator"
 	var result: Dictionary = await _run_llm(narrator_llm, prompt, params)
 	if result.has("text"):
 		result["text"] = clean_response(str(result.text))
@@ -1350,6 +1453,7 @@ func generate_structured(system_prompt: String, user_input: String, grammar: Str
 	for key in params_override.keys():
 		params[key] = params_override[key]
 	params.erase("skip_scene_contract")
+	params["_brain_role"] = "gamemaster"
 	# Apply GBNF grammar if provided
 	if grammar != "" and gamemaster_llm.has_method("set_grammar"):
 		gamemaster_llm.set_grammar(grammar, "root")

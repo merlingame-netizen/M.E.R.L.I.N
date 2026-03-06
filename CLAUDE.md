@@ -237,10 +237,11 @@ merlin_visual.gd            <- Centralized visual constants (PALETTE, GBC, fonts
 
 ### AI Layer (addons/merlin_ai/)
 ```
-ollama_backend.gd        <- Backend Ollama HTTP API (drop-in MerlinLLM)
-merlin_ai.gd             <- Multi-Brain (1-2 cerveaux), routing Ollama/MerlinLLM
+ollama_backend.gd        <- Backend Ollama HTTP API, model per instance, thinking mode
+merlin_ai.gd             <- Multi-Brain heterogene (Qwen 3.5), time-sharing, routing
+brain_swarm_config.gd    <- Hardware profiles NANO/SINGLE/SINGLE+/DUAL/TRIPLE/QUAD
 merlin_omniscient.gd     <- Orchestrateur IA, zero fallback, scene cache, guardrails
-rag_manager.gd           <- RAG v2.0, biome cache, token budget 400, journal
+rag_manager.gd           <- RAG v3.0, per-brain context budget, journal
 ```
 
 ### Key Documents
@@ -272,34 +273,50 @@ rag_manager.gd           <- RAG v2.0, biome cache, token budget 400, journal
 
 ---
 
-## LLM Bi-Cerveaux Architecture (Qwen 2.5-1.5B + Ollama)
+## LLM Multi-Cerveaux Heterogene (Qwen 3.5 + Ollama)
 
 ### Principe fondamental
 - **LLM = peau expressive** (texte, ton, ambiance, poetique)
 - **Code = cerveau logique** (profiling joueur, equilibrage Triade, arcs, danger)
 - Le LLM n'a pas besoin d'etre intelligent — il doit etre EXPRESSIF
 - Tout raisonnement (calcul, state, decisions) est fait en GDScript
+- **Chaque cerveau utilise un modele different**, optimise pour son role
 
 ### Model & Backend
-- **Model**: Qwen 2.5-1.5B (~1.0 GB via Ollama, 17.8 tok/s)
+- **Narrator**: Qwen 3.5-4B (~3.2 GB via Ollama) — creatif, vocabulaire riche
+- **Game Master**: Qwen 3.5-2B (~1.8 GB) + thinking mode — precision JSON
+- **Judge/Workers**: Qwen 3.5-0.8B (~0.8 GB) — taches rapides
 - **Backend primaire**: Ollama HTTP API (`/api/generate`, raw=true)
-- **Backend secondaire**: MerlinLLM C++ GDExtension (fallback)
-- **Chat template**: ChatML | **Context**: 4096 tokens | **Ollama**: `ollama pull qwen2.5:1.5b`
-- **LoRA**: QLoRA r=16 adapter "narrateur celtique" (voir `docs/LORA_TRAINING_SPEC.html`)
+- **Backend secondaire**: MerlinLLM C++ GDExtension (fallback, legacy)
+- **Chat template**: ChatML | **Context**: 8192 (narrator), 4096 (GM), 2048 (workers)
+- **Ollama**: `ollama pull qwen3.5:4b qwen3.5:2b qwen3.5:0.8b`
+- **LoRA**: Per-brain QLoRA adapters (voir `docs/LORA_TRAINING_SPEC.html`)
 
-### Pipeline Sequentiel (GM-first)
+### Pipeline Sequentiel (Narrator-first, time-sharing sur 8GB RAM)
 ```
 1. CODE decide QUOI (profil joueur, danger, arc, biome, jour/saison)
-2. GM genere effets JSON + visual_tags + audio_tags (~2s, 80 tok, T=0.15)
-3. Narrator genere texte ALIGNE aux effets (~6s, 150 tok, T=0.60-0.70)
+2. Narrator/4B genere texte + 3 choix (~6-8s, 200 tok, T=0.70)
+3. GM/2B+think genere effets JSON (~2-3s, 120 tok, T=0.15)
 4. CODE valide (guardrails + Quality Judge) + display
+5. SINGLE+ mode: swap modele entre etapes 2 et 3 (~2s penalty)
 ```
 
-### Bi-Cerveaux (default, CPU >= 6 threads)
-| Brain | Role | Params | Outputs |
-|-------|------|--------|---------|
-| Narrator | Texte creatif, atmosphere, choix | T=0.60-0.70, top_p=0.90, max=180, rep=1.45 | Scenario + A/B/C |
-| Game Master | Effets JSON, equilibrage, tags | T=0.15, top_p=0.8, max=80, GBNF | effects + visual + audio |
+### Multi-Cerveaux (tiers adaptatifs)
+| Brain | Model | Role | Params | Thinking |
+|-------|-------|------|--------|----------|
+| Narrator | qwen3.5:4b | Texte creatif, choix | T=0.70, top_p=0.90, max=180 | OFF |
+| Game Master | qwen3.5:2b | Effets JSON, equilibrage | T=0.15, top_p=0.8, max=80 | ON |
+| Judge | qwen3.5:0.8b | Scoring qualite (QUAD+) | T=0.1, max=100 | ON |
+| Workers | qwen3.5:0.8b | Prefetch, voix, balance | T=0.3, max=50 | OFF |
+
+### Hardware Tiers (auto-detection)
+| Tier | RAM | Mode | Latence/carte |
+|------|-----|------|---------------|
+| NANO (0.8B) | 4 GB | Resident | ~12s |
+| SINGLE (2B) | 6 GB | Resident | ~10s |
+| **SINGLE+ (4B/2B)** | **7 GB** | **Time-sharing** | **~12-15s** |
+| DUAL (4B+2B) | 12 GB | Parallele | ~8s |
+| QUAD (4B+2B+2x0.8B) | 16 GB | Parallele | ~7s |
 
 ### 27 Capacites LLM (3 categories)
 **Narrator (7)**: Narration immersive, choix significatifs (GBNF), adaptation au joueur, arcs multi-cartes, personnalite Merlin, atmosphere biome, conscience temporelle
