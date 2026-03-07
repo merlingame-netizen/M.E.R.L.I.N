@@ -1,15 +1,12 @@
-## ═══════════════════════════════════════════════════════════════════════════════
 ## LocaleManager — Gestionnaire de Langue (Autoload Singleton)
-## ═══════════════════════════════════════════════════════════════════════════════
-## Charge/sauvegarde la langue choisie, fournit le chemin de donnees localise.
-## ═══════════════════════════════════════════════════════════════════════════════
-
+## Integre TranslationServer pour l'UI et fournit les directives LLM.
 extends Node
 
 signal language_changed(lang_code: String)
 
 const CONFIG_PATH := "user://settings.cfg"
 const DEFAULT_LANGUAGE := "fr"
+const DIRECTIVES_PATH := "res://data/ai/config/language_directives.json"
 
 const SUPPORTED_LANGUAGES := {
 	"fr": "Francais",
@@ -22,10 +19,13 @@ const SUPPORTED_LANGUAGES := {
 }
 
 var _current_language := DEFAULT_LANGUAGE
+var _directives: Dictionary = {}
 
 
 func _ready() -> void:
 	_load_language()
+	_load_directives()
+	TranslationServer.set_locale(_current_language)
 
 
 func get_language() -> String:
@@ -40,6 +40,7 @@ func set_language(code: String) -> void:
 		return
 	_current_language = code
 	_save_language()
+	TranslationServer.set_locale(code)
 	language_changed.emit(code)
 
 
@@ -76,6 +77,24 @@ func get_data_path(base_path: String) -> String:
 	return base_path
 
 
+## Returns the LLM language directive for the current language.
+## Injected into system prompts as {language_directive}.
+func get_llm_directive() -> String:
+	var lang_data: Dictionary = _directives.get(_current_language, _directives.get("_default", {}))
+	var directive: String = str(lang_data.get("directive", ""))
+	var gloss: String = str(lang_data.get("celtic_gloss", ""))
+	if directive.is_empty() and gloss.is_empty():
+		return ""
+	# Replace {language_name} placeholder for _default template
+	directive = directive.replace("{language_name}", get_language_name())
+	var parts: Array = []
+	if not directive.is_empty():
+		parts.append(directive)
+	if not gloss.is_empty():
+		parts.append(gloss)
+	return " ".join(parts)
+
+
 func _load_language() -> void:
 	var config := ConfigFile.new()
 	if config.load(CONFIG_PATH) == OK:
@@ -89,3 +108,15 @@ func _save_language() -> void:
 	config.load(CONFIG_PATH)
 	config.set_value("language", "code", _current_language)
 	config.save(CONFIG_PATH)
+
+
+func _load_directives() -> void:
+	if not FileAccess.file_exists(DIRECTIVES_PATH):
+		push_warning("[LocaleManager] Language directives file not found: %s" % DIRECTIVES_PATH)
+		return
+	var file := FileAccess.open(DIRECTIVES_PATH, FileAccess.READ)
+	if file == null:
+		return
+	var json := JSON.new()
+	if json.parse(file.get_as_text()) == OK and json.data is Dictionary:
+		_directives = json.data

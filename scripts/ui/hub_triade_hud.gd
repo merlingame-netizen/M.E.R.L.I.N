@@ -16,10 +16,10 @@ const ASPECT_SYMBOLS := {
 	"Monde": "+",   # Croix celtique → cross
 }
 
-const ASPECT_ANIMALS := {
-	"Corps": "Sanglier",
-	"Ame": "Corbeau",
-	"Monde": "Cerf",
+const ASPECT_ANIMAL_KEYS := {
+	"Corps": "ANIMAL_BOAR",
+	"Ame": "ANIMAL_RAVEN",
+	"Monde": "ANIMAL_STAG",
 }
 
 const HUD_HEIGHT := 48.0
@@ -90,9 +90,11 @@ func _draw_aspect_indicator(font: Font, aspect_name: String, pos: Vector2, index
 	var symbol_color: Color = Color(c_aspect.r, c_aspect.g, c_aspect.b, breath)
 	draw_string(font, Vector2(pos.x, pos.y + 5.0), symbol, HORIZONTAL_ALIGNMENT_LEFT, -1, MerlinVisual.BODY_SMALL, symbol_color)
 
-	# Aspect name
+	# Aspect name (translated)
 	var name_x: float = pos.x + 14.0
-	draw_string(font, Vector2(name_x, pos.y - 4.0), aspect_name, HORIZONTAL_ALIGNMENT_LEFT, -1, MerlinVisual.CAPTION_SIZE, c_aspect)
+	var info: Dictionary = MerlinConstants.TRIADE_ASPECT_INFO.get(aspect_name, {})
+	var display_name: String = tr(str(info.get("name_key", aspect_name)))
+	draw_string(font, Vector2(name_x, pos.y - 4.0), display_name, HORIZONTAL_ALIGNMENT_LEFT, -1, MerlinVisual.CAPTION_SIZE, c_aspect)
 
 	# Bar background
 	var bar_x: float = name_x + 50.0
@@ -133,7 +135,8 @@ func _get_aspect_state(value: int) -> int:
 func _get_state_label(aspect_name: String, state: int) -> String:
 	var info: Dictionary = MerlinConstants.TRIADE_ASPECT_INFO.get(aspect_name, {})
 	var states: Dictionary = info.get("states", {})
-	return str(states.get(state, "???"))
+	var key: String = str(states.get(state, "???"))
+	return tr(key)
 
 
 func _gui_input(event: InputEvent) -> void:

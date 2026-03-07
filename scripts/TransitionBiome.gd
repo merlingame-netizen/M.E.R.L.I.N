@@ -2526,7 +2526,7 @@ func _try_llm_prerun_card(index: int) -> Dictionary:
 	if labels.size() < 3 or labels.count("") > 0:
 		# Rotate fallback triplets per card index to avoid repetition
 		var fallback_pool: Array = [
-			["Avancer prudemment", "Observer en silence", "Agir sans hesiter"],
+			[tr("FALLBACK_CAUTIOUS"), tr("FALLBACK_OBSERVE"), tr("FALLBACK_ACT")],
 			["Chercher un indice", "Attendre patiemment", "Invoquer les esprits"],
 			["Escalader le rocher", "Contourner l'obstacle", "Briser le sceau"],
 			["Negocier avec l'ombre", "Defier le gardien", "Fuir vers la clairiere"],

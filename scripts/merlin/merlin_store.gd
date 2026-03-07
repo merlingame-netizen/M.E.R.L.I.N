@@ -1636,7 +1636,7 @@ func get_aspect_name(aspect: String) -> String:
 	var aspect_state: int = get_aspect_state(aspect)
 	var info = MerlinConstants.TRIADE_ASPECT_INFO.get(aspect, {})
 	var states = info.get("states", {})
-	return str(states.get(aspect_state, "Inconnu"))
+	return tr(str(states.get(aspect_state, "BALANCE")))
 
 
 func get_all_aspects() -> Dictionary:

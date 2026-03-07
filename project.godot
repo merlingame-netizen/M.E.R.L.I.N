@@ -54,6 +54,11 @@ allow_native_in_editor=true
 require_native=true
 low_spec_mode=true
 
+[internationalization]
+
+locale/translations=PackedStringArray("res://data/i18n/translations.csv")
+locale/fallback="fr"
+
 [rendering]
 
 renderer/rendering_method="gl_compatibility"

@@ -1,0 +1,46 @@
+{
+  "fr": {
+    "directive": "",
+    "celtic_strategy": "native",
+    "notes": "French is the default language. Celtic terms are used naturally."
+  },
+  "en": {
+    "directive": "Respond in English.",
+    "celtic_gloss": "Keep Celtic terms (nemeton, ogham, sidhe, dolmen, korrigans, brume, menhir, cairn) in their original form but add a brief English gloss the first time each appears in a run (e.g., 'the nemeton — a sacred grove'). After the first mention, use the Celtic term alone.",
+    "celtic_strategy": "gloss_first"
+  },
+  "es": {
+    "directive": "Responde en espanol.",
+    "celtic_gloss": "Mantiene los terminos celtas (nemeton, ogham, sidhe, dolmen, korrigans) en su forma original pero anade una breve glosa en espanol la primera vez (ej: 'el nemeton — bosque sagrado').",
+    "celtic_strategy": "gloss_first"
+  },
+  "it": {
+    "directive": "Rispondi in italiano.",
+    "celtic_gloss": "Mantieni i termini celtici nella loro forma originale ma aggiungi una breve glossa in italiano la prima volta.",
+    "celtic_strategy": "gloss_first"
+  },
+  "pt": {
+    "directive": "Responda em portugues.",
+    "celtic_gloss": "Mantenha os termos celtas na forma original mas adicione uma breve glosa em portugues na primeira vez.",
+    "celtic_strategy": "gloss_first"
+  },
+  "zh": {
+    "directive": "Please respond in Chinese (Simplified).",
+    "celtic_gloss": "Keep Celtic terms in their original form but add a brief Chinese translation in parentheses the first time.",
+    "celtic_strategy": "gloss_first"
+  },
+  "ja": {
+    "directive": "Please respond in Japanese.",
+    "celtic_gloss": "Keep Celtic terms in their original form but add a brief Japanese translation in parentheses the first time.",
+    "celtic_strategy": "gloss_first"
+  },
+  "_default": {
+    "directive": "Respond in {language_name}.",
+    "celtic_gloss": "Keep Celtic terms (nemeton, ogham, sidhe, dolmen, korrigans) in their original form but add a brief translation the first time each appears.",
+    "celtic_strategy": "gloss_first"
+  },
+  "_meta": {
+    "version": "1.0.0",
+    "description": "Language directives injected into LLM system prompts. Celtic vocabulary strategy: native (keep as-is) or gloss_first (add translation on first use)."
+  }
+}

@@ -36,32 +36,35 @@ const TRIADE_ASPECTS := ["Corps", "Ame", "Monde"]
 const TRIADE_ASPECT_INFO := {
 	"Corps": {
 		"symbol": "spirale",
-		"animal": "sanglier",
+		"animal_key": "ANIMAL_BOAR",
+		"name_key": "ASPECT_BODY",
 		"theme": "Force physique, endurance, sante",
 		"states": {
-			AspectState.BAS: "Epuise",
-			AspectState.EQUILIBRE: "Robuste",
-			AspectState.HAUT: "Surmene"
+			AspectState.BAS: "STATE_EXHAUSTED",
+			AspectState.EQUILIBRE: "STATE_ROBUST",
+			AspectState.HAUT: "STATE_OVERWORKED"
 		}
 	},
 	"Ame": {
 		"symbol": "triskell",
-		"animal": "corbeau",
+		"animal_key": "ANIMAL_RAVEN",
+		"name_key": "ASPECT_SOUL",
 		"theme": "Esprit, magie, equilibre mental",
 		"states": {
-			AspectState.BAS: "Perdue",
-			AspectState.EQUILIBRE: "Centree",
-			AspectState.HAUT: "Possedee"
+			AspectState.BAS: "STATE_LOST",
+			AspectState.EQUILIBRE: "STATE_CENTERED",
+			AspectState.HAUT: "STATE_POSSESSED"
 		}
 	},
 	"Monde": {
 		"symbol": "croix_celtique",
-		"animal": "cerf",
+		"animal_key": "ANIMAL_STAG",
+		"name_key": "ASPECT_WORLD",
 		"theme": "Relations, reputation, harmonie sociale",
 		"states": {
-			AspectState.BAS: "Exile",
-			AspectState.EQUILIBRE: "Integre",
-			AspectState.HAUT: "Tyran"
+			AspectState.BAS: "STATE_EXILED",
+			AspectState.EQUILIBRE: "STATE_INTEGRATED",
+			AspectState.HAUT: "STATE_TYRANT"
 		}
 	}
 }

@@ -3105,8 +3105,9 @@ func show_end_screen(ending: Dictionary) -> void:
 		var state_val: int = current_aspects.get(aspect, 0)
 		var info = MerlinConstants.TRIADE_ASPECT_INFO.get(aspect, {})
 		var states = info.get("states", {})
-		var animal: Dictionary = {"Corps": "Sanglier", "Ame": "Corbeau", "Monde": "Cerf"}
-		aspects_text += "%s %s (%s) | " % [animal.get(aspect, "?"), aspect, states.get(state_val, "?")]
+		var animal_key: String = str(info.get("animal_key", aspect))
+		var name_key: String = str(info.get("name_key", aspect))
+		aspects_text += "%s %s (%s) | " % [tr(animal_key), tr(name_key), tr(str(states.get(state_val, "?")))]
 	aspects_label.text = aspects_text.trim_suffix(" | ")
 	aspects_label.add_theme_font_size_override("font_size", 12)
 	aspects_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER

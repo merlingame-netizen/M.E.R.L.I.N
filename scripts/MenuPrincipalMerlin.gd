@@ -9,9 +9,9 @@ extends Control
 const TITLE_TEXT := "M  E  R  L  I  N"
 
 const MAIN_MENU_ITEMS := [
-	{"text": "Nouvelle Partie", "scene": "res://scenes/IntroPersonalityQuiz.tscn", "priority": "primary"},
-	{"text": "Continuer", "scene": "res://scenes/SelectionSauvegarde.tscn", "priority": "secondary"},
-	{"text": "Options", "scene": "res://scenes/MenuOptions.tscn", "priority": "tertiary"},
+	{"text_key": "MENU_NEW_GAME", "scene": "res://scenes/IntroPersonalityQuiz.tscn", "priority": "primary"},
+	{"text_key": "MENU_CONTINUE", "scene": "res://scenes/SelectionSauvegarde.tscn", "priority": "secondary"},
+	{"text_key": "MENU_OPTIONS", "scene": "res://scenes/MenuOptions.tscn", "priority": "tertiary"},
 ]
 
 # Ornements celtiques (ASCII-safe — TextServerFallback compatible)
@@ -421,7 +421,7 @@ func _configure_main_ui() -> void:
 	# Populate menu buttons (data-driven from MAIN_MENU_ITEMS)
 	for item in MAIN_MENU_ITEMS:
 		var is_primary: bool = item.get("priority", "") == "primary"
-		var btn := _create_button(item.text, item.scene, is_primary)
+		var btn := _create_button(tr(item.text_key), item.scene, is_primary)
 		btn.set_meta("priority", item.get("priority", "secondary"))
 		btn.pivot_offset = Vector2(200, 28)  # Pivot center for scale animations
 		main_buttons.add_child(btn)

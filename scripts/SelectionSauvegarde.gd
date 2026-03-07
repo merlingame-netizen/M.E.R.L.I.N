@@ -135,7 +135,7 @@ func _build_slots() -> void:
 
 func _slot_text(slot: int, info: Dictionary) -> String:
 	if info.is_empty():
-		return "Chronique %d - vide" % slot
+		return tr("SAVE_EMPTY") % slot
 	# TRIADE format
 	if info.has("mode") and str(info.get("mode", "")) == "triade":
 		var cards: int = int(info.get("cards_played", 0))
@@ -144,7 +144,7 @@ func _slot_text(slot: int, info: Dictionary) -> String:
 		if ts > 0:
 			var dt := Time.get_datetime_dict_from_unix_time(ts)
 			date_str = " (%02d/%02d)" % [int(dt.get("day", 0)), int(dt.get("month", 0))]
-		return "Chronique %d - %d cartes%s" % [slot, cards, date_str]
+		return tr("SAVE_FILLED") % [slot, cards, date_str]
 	# Legacy format
 	var chronicle := str(info.get("chronicle_name", ""))
 	if chronicle == "":

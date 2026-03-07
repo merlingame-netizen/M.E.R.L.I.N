@@ -1118,6 +1118,7 @@ func ensure_ready() -> void:
 func generate_with_system(system_prompt: String, user_input: String, params_override: Dictionary = {}) -> Dictionary:
 	if not is_ready:
 		return {"error": "LLM non pret"}
+	system_prompt = _inject_language_directive(system_prompt)
 	var scoped_system_prompt := _augment_system_prompt_with_scene(system_prompt, "general", params_override)
 	# Inject few-shots for narrator (non-grammar) calls to reinforce persona
 	var has_grammar: bool = params_override.has("grammar") and str(params_override.get("grammar", "")) != ""
@@ -1157,6 +1158,7 @@ func generate_with_system(system_prompt: String, user_input: String, params_over
 func generate_with_system_stream(system_prompt: String, user_input: String, params_override: Dictionary = {}, on_chunk: Callable = Callable()) -> Dictionary:
 	if not is_ready:
 		return {"error": "LLM non pret"}
+	system_prompt = _inject_language_directive(system_prompt)
 	var scoped_system_prompt := _augment_system_prompt_with_scene(system_prompt, "stream", params_override)
 	var template = prompts.get("executor_template", "{system}\n{input}")
 	var base_prompt = template.format({"system": scoped_system_prompt, "input": user_input})
@@ -1346,6 +1348,17 @@ func _resolve_model_file(candidates: Array) -> String:
 			return path
 	return ""
 
+func _inject_language_directive(prompt: String) -> String:
+	## Replace {language_directive} placeholder with locale-aware LLM directive.
+	if "{language_directive}" not in prompt:
+		return prompt
+	var locale_mgr = get_node_or_null("/root/LocaleManager")
+	var directive: String = ""
+	if locale_mgr and locale_mgr.has_method("get_llm_directive"):
+		directive = locale_mgr.get_llm_directive()
+	return prompt.replace("{language_directive}", directive)
+
+
 func _make_cache_key(system_prompt: String, user_input: String, params: Dictionary) -> String:
 	var base = system_prompt + "\n" + user_input + "\n" + JSON.stringify(params)
 	return str(base.hash())
@@ -1423,6 +1436,7 @@ func generate_narrative(system_prompt: String, user_input: String, params_overri
 		return {"error": "Narrator LLM non pret"}
 	_primary_narrator_busy = true
 	_narrator_busy_since = Time.get_ticks_msec()
+	system_prompt = _inject_language_directive(system_prompt)
 	var scoped_system_prompt := _augment_system_prompt_with_scene(system_prompt, "narrative", params_override)
 	var template: String = prompts.get("executor_template", "{system}\n{input}")
 	var prompt: String = template.format({"system": scoped_system_prompt, "input": user_input})
@@ -1617,7 +1631,7 @@ func generate_sequential(context: Dictionary) -> Dictionary:
 	var labels: Array = parsed.get("labels", [])
 
 	# Pad to 3 labels with fallbacks if narrator missed some
-	var fallback_labels := ["Avancer prudemment", "Observer en silence", "Agir sans hesiter"]
+	var fallback_labels := [tr("FALLBACK_CAUTIOUS"), tr("FALLBACK_OBSERVE"), tr("FALLBACK_ACT")]
 	while labels.size() < 3:
 		labels.append(fallback_labels[labels.size()])
 

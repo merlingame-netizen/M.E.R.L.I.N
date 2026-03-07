@@ -1353,7 +1353,15 @@ func _build_system_prompt() -> String:
 	## Enriched system prompt for Qwen 2.5-3B-Instruct.
 	## JSON template moved to user prompt to reduce hallucination.
 	## RAG context + tone guidance injected via priority budget.
-	var base := "Narrateur celtique de Broceliande. Ecris en francais une scene courte (2-3 phrases) avec vocabulaire druidique (nemeton, ogham, sidhe, dolmen, korrigans). Puis donne EXACTEMENT 3 choix:\nA) [verbe action]\nB) [verbe action]\nC) [verbe action]"
+	var base := "Narrateur celtique de Broceliande. Ecris une scene courte (2-3 phrases) avec vocabulaire druidique (nemeton, ogham, sidhe, dolmen, korrigans). Puis donne EXACTEMENT 3 choix:\nA) [verbe action]\nB) [verbe action]\nC) [verbe action]"
+	# Inject language directive from LocaleManager
+	var locale_mgr = Engine.get_singleton("LocaleManager") if Engine.has_singleton("LocaleManager") else null
+	if locale_mgr == null:
+		locale_mgr = get_node_or_null("/root/LocaleManager")
+	if locale_mgr and locale_mgr.has_method("get_llm_directive"):
+		var directive: String = locale_mgr.get_llm_directive()
+		if not directive.is_empty():
+			base += "\n" + directive
 	_refresh_scene_context()
 	var scene_block := _build_scene_contract_block()
 	if not scene_block.is_empty():
@@ -1505,7 +1513,7 @@ func _parse_plain_text_response(text: String) -> Dictionary:
 
 	# Pad to 3 labels if needed
 	while labels.size() < 3:
-		var fallback_labels := ["Avancer prudemment", "Observer en silence", "Agir sans hesiter"]
+		var fallback_labels := [tr("FALLBACK_CAUTIOUS"), tr("FALLBACK_OBSERVE"), tr("FALLBACK_ACT")]
 		labels.append(fallback_labels[labels.size()])
 
 	# Build card with default effects

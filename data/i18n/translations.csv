@@ -1,0 +1,131 @@
+keys,fr,en,es,it,pt,zh,ja
+MENU_NEW_GAME,Nouvelle Partie,New Game,Nueva Partida,Nuova Partita,Novo Jogo,新游戏,ニューゲーム
+MENU_CONTINUE,Continuer,Continue,Continuar,Continuare,Continuar,继续,つづきから
+MENU_OPTIONS,Options,Options,Opciones,Opzioni,Opcoes,选项,オプション
+MENU_RESET,Reinitialiser,Reset,Reiniciar,Ripristina,Reiniciar,重置,リセット
+MENU_SAVE_QUIT,Sauvegarder et Quitter,Save and Quit,Guardar y Salir,Salva e Esci,Salvar e Sair,保存并退出,保存して終了
+OPT_VIDEO,VIDEO,VIDEO,VIDEO,VIDEO,VIDEO,视频,ビデオ
+OPT_AUDIO,AUDIO,AUDIO,AUDIO,AUDIO,AUDIO,音频,オーディオ
+OPT_CALENDAR,CALENDRIER,CALENDAR,CALENDARIO,CALENDARIO,CALENDARIO,日历,カレンダー
+OPT_LANGUAGE,LANGUE / Language,LANGUAGE,IDIOMA,LINGUA,IDIOMA,语言,言語
+OPT_VOICE,VOIX / Voice,VOICE,VOZ,VOCE,VOZ,语音,ボイス
+OPT_AI,INTELLIGENCE ARTIFICIELLE,ARTIFICIAL INTELLIGENCE,INTELIGENCIA ARTIFICIAL,INTELLIGENZA ARTIFICIALE,INTELIGENCIA ARTIFICIAL,人工智能,人工知能
+RESOLUTION,Resolution :,Resolution:,Resolucion:,Risoluzione:,Resolucao:,分辨率:,解像度:
+DISPLAY_MODE,Mode d'affichage :,Display Mode:,Modo de pantalla:,Modalita display:,Modo de exibicao:,显示模式:,表示モード:
+DISPLAY_FULLSCREEN,Plein ecran,Fullscreen,Pantalla completa,Schermo intero,Tela cheia,全屏,フルスクリーン
+DISPLAY_WINDOWED,Fenetre,Windowed,Ventana,Finestra,Janela,窗口,ウィンドウ
+DISPLAY_BORDERLESS,Sans bordure,Borderless,Sin bordes,Senza bordi,Sem bordas,无边框,ボーダーレス
+VSYNC,VSync :,VSync:,VSync:,VSync:,VSync:,垂直同步:,垂直同期:
+FPS_LIMIT,Limite FPS :,FPS Limit:,Limite FPS:,Limite FPS:,Limite FPS:,FPS限制:,FPS制限:
+MASTER_VOL,Volume Principal :,Master Volume:,Volumen Principal:,Volume Principale:,Volume Principal:,主音量:,マスター音量:
+MUSIC_VOL,Volume Musique :,Music Volume:,Volumen Musica:,Volume Musica:,Volume Musica:,音乐音量:,音楽音量:
+SFX_VOL,Volume Effets Sonores :,SFX Volume:,Volumen Efectos:,Volume Effetti:,Volume Efeitos:,音效音量:,効果音音量:
+DATE_OVERRIDE,Date personnalisee :,Custom Date:,Fecha personalizada:,Data personalizzata:,Data personalizada:,自定义日期:,カスタム日付:
+DATE_DAY,Jour:,Day:,Dia:,Giorno:,Dia:,日:,日:
+DATE_MONTH,Mois:,Month:,Mes:,Mese:,Mes:,月:,月:
+DATE_YEAR,Annee:,Year:,Ano:,Anno:,Ano:,年:,年:
+LANG_LABEL,Langue / Language :,Language:,Idioma:,Lingua:,Idioma:,语言:,言語:
+VOICE_MODE,Mode de voix :,Voice Mode:,Modo de voz:,Modalita voce:,Modo de voz:,语音模式:,ボイスモード:
+VOICE_BANK_LABEL,Banque de sons :,Sound Bank:,Banco de sonidos:,Banco suoni:,Banco de sons:,声音库:,サウンドバンク:
+VOICE_PRESET_LABEL,Preset voix :,Voice Preset:,Preset de voz:,Preset voce:,Preset de voz:,语音预设:,ボイスプリセット:
+BRAIN_LABEL,Cerveaux IA :,AI Brains:,Cerebros IA:,Cervelli IA:,Cerebros IA:,AI大脑:,AIブレイン:
+VOICE_SPOKEN,Voix Parlee,Spoken Voice,Voz Hablada,Voce Parlata,Voz Falada,语音,音声
+VOICE_ROBOT,Voix Robot,Robot Voice,Voz Robot,Voce Robot,Voz Robo,机器人语音,ロボット音声
+VOICE_DISABLED,Desactivee,Disabled,Desactivada,Disattivata,Desativada,禁用,無効
+VOICE_BANK_CLASSIC,Classique,Classic,Clasico,Classico,Classico,经典,クラシック
+VOICE_BANK_HIGH,"Aigu (Peppy)","High (Peppy)","Agudo (Peppy)","Acuto (Peppy)","Agudo (Peppy)",高音（活泼）,ハイ（ペッピー）
+VOICE_BANK_LOW,"Grave (Cranky)","Low (Cranky)","Grave (Cranky)","Grave (Cranky)","Grave (Cranky)",低音（暴躁）,ロー（クランキー）
+VOICE_BANK_VERY_LOW,Tres grave,Very Low,Muy grave,Molto grave,Muito grave,极低音,ベリーロー
+VOICE_BANK_MEDIUM,Medium,Medium,Medio,Medio,Medio,中音,ミディアム
+VOICE_BANK_ROBOT_BEEP,Robot Beep,Robot Beep,Robot Beep,Robot Beep,Robot Beep,机器人蜂鸣,ロボットビープ
+VOICE_BANK_GLITCH,Glitch Bot,Glitch Bot,Glitch Bot,Glitch Bot,Glitch Bot,故障机器人,グリッチボット
+VOICE_BANK_WHISPER,Synth Whisper,Synth Whisper,Synth Whisper,Synth Whisper,Synth Whisper,合成耳语,シンセウィスパー
+VOICE_BANK_DROID,"Droid (R2D2)","Droid (R2D2)","Droid (R2D2)","Droid (R2D2)","Droid (R2D2)",机器人（R2D2）,ドロイド（R2D2）
+VOICE_PRESET_SOFT,Doux,Soft,Suave,Dolce,Suave,柔和,ソフト
+VOICE_PRESET_QUILL,Plume,Quill,Pluma,Piuma,Pluma,羽毛,クイル
+VOICE_PRESET_CRYSTAL,Cristal,Crystal,Cristal,Cristallo,Cristal,水晶,クリスタル
+VOICE_PRESET_ANCIENT,Ancien,Ancient,Anciano,Antico,Antigo,古老,エンシェント
+VOICE_PRESET_NORMAL,Normal,Normal,Normal,Normale,Normal,正常,ノーマル
+VOICE_PRESET_HIGH,Aigu,High,Agudo,Acuto,Agudo,高音,ハイ
+VOICE_PRESET_LOW,Grave,Low,Grave,Grave,Grave,低音,ロー
+VOICE_PRESET_CHILD,Enfant,Child,Nino,Bambino,Crianca,儿童,子ども
+VOICE_PRESET_WISE,Sage,Wise,Sabio,Saggio,Sabio,智者,ワイズ
+VOICE_PRESET_JOYFUL,Joyeux,Joyful,Alegre,Gioioso,Alegre,欢乐,ジョイフル
+VOICE_PRESET_MYSTERIOUS,Mysterieux,Mysterious,Misterioso,Misterioso,Misterioso,神秘,ミステリアス
+BRAIN_AUTO,"Auto (recommande)","Auto (Recommended)","Auto (recomendado)","Auto (raccomandato)","Auto (recomendado)",自动（推荐）,自動（推奨）
+BRAIN_AUTO_INFO,Detection automatique selon votre machine,Automatic detection based on your system,Deteccion automatica segun tu maquina,Rilevamento automatico basato sul sistema,Detecao automatica baseada no sistema,根据您的系统自动检测,システムに基づく自動検出
+BRAIN_DUAL,"2 cerveaux (Narrateur + Maitre du Jeu)","2 Brains (Narrator + Game Master)","2 cerebros (Narrador + Director)","2 cervelli (Narratore + Game Master)","2 cerebros (Narrador + Mestre)",2个大脑（叙述者+游戏大师）,2ブレイン（ナレーター+GM）
+BRAIN_DUAL_INFO,"~4.4 GB RAM — Generation parallele narrative + effets","~4.4 GB RAM — Parallel narrative + effects generation","~4.4 GB RAM — Generacion paralela narrativa + efectos","~4.4 GB RAM — Generazione parallela narrativa + effetti","~4.4 GB RAM — Geracao paralela narrativa + efeitos",~4.4 GB RAM — 并行叙事+效果生成,~4.4 GB RAM — 並列ナラティブ+エフェクト生成
+BRAIN_TRIPLE,"3 cerveaux (+ Worker prefetch)","3 Brains (+ Worker Prefetch)","3 cerebros (+ Worker prefetch)","3 cervelli (+ Worker prefetch)","3 cerebros (+ Worker prefetch)",3个大脑（+Worker预取）,3ブレイン（+Worker先読み）
+BRAIN_TRIPLE_INFO,"~6.6 GB RAM — Prefetch cartes en arriere-plan, zero latence","~6.6 GB RAM — Prefetch cards in background, zero latency","~6.6 GB RAM — Precarga en segundo plano, latencia cero","~6.6 GB RAM — Prefetch carte in background, zero latenza","~6.6 GB RAM — Prefetch cartas em segundo plano, latencia zero",~6.6 GB RAM — 后台预取卡牌，零延迟,~6.6 GB RAM — バックグラウンド先読み、ゼロレイテンシー
+MSG_SETTINGS_RESET,Parametres reinitialises,Settings Reset,Ajustes reiniciados,Impostazioni ripristinate,Configuracoes reiniciadas,设置已重置,設定がリセットされました
+ASPECT_BODY,Corps,Body,Cuerpo,Corpo,Corpo,身体,体
+ASPECT_SOUL,Ame,Soul,Alma,Anima,Alma,灵魂,魂
+ASPECT_WORLD,Monde,World,Mundo,Mondo,Mundo,世界,世界
+STATE_EXHAUSTED,Epuise,Exhausted,Agotado,Esausto,Esgotado,疲惫,疲弊
+STATE_ROBUST,Robuste,Robust,Robusto,Robusto,Robusto,强壮,頑健
+STATE_OVERWORKED,Surmene,Overworked,Sobrecargado,Sovraccarico,Sobrecarregado,过劳,過労
+STATE_LOST,Perdue,Lost,Perdida,Perduta,Perdida,迷失,迷い
+STATE_CENTERED,Centree,Centered,Centrada,Centrata,Centrada,居中,中心
+STATE_POSSESSED,Possedee,Possessed,Poseida,Posseduta,Possuida,附身,憑依
+STATE_EXILED,Exile,Exiled,Exiliado,Esiliato,Exilado,流放,追放
+STATE_INTEGRATED,Integre,Integrated,Integrado,Integrato,Integrado,融合,統合
+STATE_TYRANT,Tyran,Tyrant,Tirano,Tiranno,Tirano,暴君,暴君
+ANIMAL_BOAR,sanglier,boar,jabali,cinghiale,javali,野猪,猪
+ANIMAL_RAVEN,corbeau,raven,cuervo,corvo,corvo,乌鸦,大鴉
+ANIMAL_STAG,cerf,stag,ciervo,cervo,cervo,雄鹿,雄鹿
+SOUFFLE,Souffle,Breath,Aliento,Soffio,Sopro,气息,息吹
+KARMA,Karma,Karma,Karma,Karma,Karma,因果,カルマ
+LIFE,Vie,Life,Vida,Vita,Vida,生命,命
+DIFFICULTY_EASY,Facile,Easy,Facil,Facile,Facil,简单,簡単
+DIFFICULTY_NORMAL,Normal,Normal,Normal,Normale,Normal,普通,普通
+DIFFICULTY_HARD,Difficile,Hard,Dificil,Difficile,Dificil,困难,難しい
+DIFFICULTY_VERY_HARD,Tres difficile,Very Hard,Muy dificil,Molto difficile,Muito dificil,非常困难,非常に難しい
+DIFFICULTY_LEGENDARY,Legendaire,Legendary,Legendario,Leggendario,Legendario,传奇,伝説
+MONTH_JANUARY,Janvier,January,Enero,Gennaio,Janeiro,一月,1月
+MONTH_FEBRUARY,Fevrier,February,Febrero,Febbraio,Fevereiro,二月,2月
+MONTH_MARCH,Mars,March,Marzo,Marzo,Marco,三月,3月
+MONTH_APRIL,Avril,April,Abril,Aprile,Abril,四月,4月
+MONTH_MAY,Mai,May,Mayo,Maggio,Maio,五月,5月
+MONTH_JUNE,Juin,June,Junio,Giugno,Junho,六月,6月
+MONTH_JULY,Juillet,July,Julio,Luglio,Julho,七月,7月
+MONTH_AUGUST,Aout,August,Agosto,Agosto,Agosto,八月,8月
+MONTH_SEPTEMBER,Septembre,September,Septiembre,Settembre,Setembro,九月,9月
+MONTH_OCTOBER,Octobre,October,Octubre,Ottobre,Outubro,十月,10月
+MONTH_NOVEMBER,Novembre,November,Noviembre,Novembre,Novembro,十一月,11月
+MONTH_DECEMBER,Decembre,December,Diciembre,Dicembre,Dezembro,十二月,12月
+SEASON_SPRING,Printemps,Spring,Primavera,Primavera,Primavera,春天,春
+SEASON_SUMMER,Ete,Summer,Verano,Estate,Verao,夏天,夏
+SEASON_AUTUMN,Automne,Autumn,Otono,Autunno,Outono,秋天,秋
+SEASON_WINTER,Hiver,Winter,Invierno,Inverno,Inverno,冬天,冬
+MOON_NEW,Nouvelle Lune,New Moon,Luna Nueva,Luna Nuova,Lua Nova,新月,新月
+MOON_WAXING_CRESCENT,Premier Croissant,Waxing Crescent,Cuarto Creciente,Primo Quarto Crescente,Quarto Crescente,上弦月,三日月
+MOON_FIRST_QUARTER,Premier Quartier,First Quarter,Primer Cuarto,Primo Quarto,Primeiro Quarto,上弦,上弦
+MOON_WAXING_GIBBOUS,Lune Gibbeuse,Waxing Gibbous,Luna Gibosa Creciente,Gibbosa Crescente,Lua Gibosa Crescente,凸月,十三夜
+MOON_FULL,Pleine Lune,Full Moon,Luna Llena,Luna Piena,Lua Cheia,满月,満月
+MOON_WANING_GIBBOUS,Lune Decroissante,Waning Gibbous,Luna Gibosa Menguante,Gibbosa Calante,Lua Gibosa Minguante,亏凸月,十八夜
+MOON_LAST_QUARTER,Dernier Quartier,Last Quarter,Ultimo Cuarto,Ultimo Quarto,Ultimo Quarto,下弦,下弦
+MOON_WANING_CRESCENT,Dernier Croissant,Waning Crescent,Cuarto Menguante,Ultimo Quarto Calante,Quarto Minguante,残月,二十六夜
+BIOME_BROCELIANDE,Foret de Broceliande,Broceliande Forest,Bosque de Broceliande,Foresta di Broceliande,Floresta de Broceliande,布罗塞利昂德森林,ブロセリアンドの森
+BIOME_BROCELIANDE_SUB,Mystere et magie ancestrale,Mystery and ancestral magic,Misterio y magia ancestral,Mistero e magia ancestrale,Misterio e magia ancestral,神秘与古老魔法,神秘と古代の魔法
+BIOME_LANDES,Landes de Bruyere,Heather Moors,Paramos de Brezo,Lande di Erica,Charnecas de Urze,石楠荒原,ヒースの荒野
+BIOME_LANDES_SUB,Solitude et endurance,Solitude and endurance,Soledad y resistencia,Solitudine e resistenza,Solidao e resistencia,孤独与坚韧,孤独と忍耐
+BIOME_COTES,Cotes Sauvages,Wild Coasts,Costas Salvajes,Coste Selvagge,Costas Selvagens,狂野海岸,荒々しい海岸
+BIOME_COTES_SUB,L'ocean murmurant,The murmuring ocean,El oceano murmurante,L'oceano mormorante,O oceano murmurant,低语的海洋,ささやく海
+BIOME_VILLAGES,Villages Celtes,Celtic Villages,Aldeas Celtas,Villaggi Celtici,Aldeias Celtas,凯尔特村庄,ケルトの村々
+BIOME_VILLAGES_SUB,Flammes obstinees de l'humanite,Stubborn flames of humanity,Llamas obstinadas de la humanidad,Fiamme ostinate dell'umanita,Chamas obstinadas da humanidade,人类顽强的火焰,人類の頑強な炎
+BIOME_CERCLES,Cercles de Pierres,Stone Circles,Circulos de Piedras,Cerchi di Pietre,Circulos de Pedras,石圈,ストーンサークル
+BIOME_CERCLES_SUB,Ou le temps hesite,Where time hesitates,Donde el tiempo duda,Dove il tempo esita,Onde o tempo hesita,时间犹豫之处,時が躊躇う場所
+BIOME_MARAIS,Marais des Korrigans,Korrigan Marshes,Pantanos de Korrigans,Paludi dei Korrigan,Pantanos dos Korrigans,克里根沼泽,コリガンの沼
+BIOME_MARAIS_SUB,Deception et feux follets,Deception and will-o'-wisps,Engano y fuegos fatuos,Inganno e fuochi fatui,Engano e fogos-fatuos,欺骗与鬼火,欺瞞と鬼火
+BIOME_COLLINES,Collines aux Dolmens,Dolmen Hills,Colinas de Dolmenes,Colline dei Dolmen,Colinas dos Dolmens,支石墓丘陵,ドルメンの丘
+BIOME_COLLINES_SUB,Les os de la terre,The bones of the earth,Los huesos de la tierra,Le ossa della terra,Os ossos da terra,大地之骨,大地の骨
+BIOME_ILES,Iles Mystiques,Mystical Islands,Islas Misticas,Isole Mistiche,Ilhas Misticas,神秘岛屿,神秘の島々
+BIOME_ILES_SUB,Au-dela des brumes,Beyond the mists,Mas alla de las brumas,Oltre le brume,Alem das brumas,雾之彼方,霧の彼方
+FALLBACK_CAUTIOUS,Avancer prudemment,Advance carefully,Avanzar con cautela,Avanzare con cautela,Avancar com cautela,小心前进,慎重に進む
+FALLBACK_OBSERVE,Observer en silence,Observe silently,Observar en silencio,Osservare in silenzio,Observar em silencio,静静观察,静かに観察する
+FALLBACK_ACT,Agir sans hesiter,Act without hesitation,Actuar sin dudar,Agire senza esitare,Agir sem hesitar,毫不犹豫地行动,迷わず行動する
+SAVE_EMPTY,"Chronique %d - vide","Chronicle %d - Empty","Cronica %d - vacia","Cronaca %d - vuota","Cronica %d - vazia",编年史 %d - 空,クロニクル %d - 空
+SAVE_FILLED,"Chronique %d - %d cartes%s","Chronicle %d - %d cards%s","Cronica %d - %d cartas%s","Cronaca %d - %d carte%s","Cronica %d - %d cartas%s",编年史 %d - %d 张卡牌%s,クロニクル %d - %d 枚のカード%s
+FPS_UNLIMITED,Illimite,Unlimited,Ilimitado,Illimitato,Ilimitado,无限制,無制限
+BALANCE,Equilibre,Balance,Equilibrio,Equilibrio,Equilibrio,平衡,バランス

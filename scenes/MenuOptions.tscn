@@ -39,7 +39,7 @@ theme_override_constants/separation = 10
 [node name="TitleLabel" type="Label" parent="MainLayout/VBox"]
 layout_mode = 2
 theme_override_font_sizes/font_size = 32
-text = "Options"
+text = "MENU_OPTIONS"
 horizontal_alignment = 1
 
 [node name="ScrollContainer" type="ScrollContainer" parent="MainLayout/VBox"]
@@ -55,7 +55,7 @@ theme_override_constants/separation = 15
 [node name="VideoTitle" type="Label" parent="MainLayout/VBox/ScrollContainer/OptionsContainer"]
 layout_mode = 2
 theme_override_font_sizes/font_size = 22
-text = "VIDEO"
+text = "OPT_VIDEO"
 
 [node name="HSep1" type="HSeparator" parent="MainLayout/VBox/ScrollContainer/OptionsContainer"]
 layout_mode = 2
@@ -68,7 +68,7 @@ theme_override_constants/separation = 20
 custom_minimum_size = Vector2(250, 0)
 layout_mode = 2
 size_flags_horizontal = 3
-text = "Resolution :"
+text = "RESOLUTION"
 
 [node name="ResolutionOption" type="OptionButton" parent="MainLayout/VBox/ScrollContainer/OptionsContainer/ResolutionRow"]
 custom_minimum_size = Vector2(200, 0)
@@ -94,18 +94,18 @@ theme_override_constants/separation = 20
 custom_minimum_size = Vector2(250, 0)
 layout_mode = 2
 size_flags_horizontal = 3
-text = "Mode d'affichage :"
+text = "DISPLAY_MODE"
 
 [node name="DisplayModeOption" type="OptionButton" parent="MainLayout/VBox/ScrollContainer/OptionsContainer/DisplayModeRow"]
 custom_minimum_size = Vector2(200, 0)
 layout_mode = 2
 selected = 1
 item_count = 3
-popup/item_0/text = "Plein ecran"
+popup/item_0/text = "DISPLAY_FULLSCREEN"
 popup/item_0/id = 0
-popup/item_1/text = "Fenetre"
+popup/item_1/text = "DISPLAY_WINDOWED"
 popup/item_1/id = 1
-popup/item_2/text = "Borderless"
+popup/item_2/text = "DISPLAY_BORDERLESS"
 popup/item_2/id = 2
 
 [node name="VSyncRow" type="HBoxContainer" parent="MainLayout/VBox/ScrollContainer/OptionsContainer"]
@@ -116,7 +116,7 @@ theme_override_constants/separation = 20
 custom_minimum_size = Vector2(250, 0)
 layout_mode = 2
 size_flags_horizontal = 3
-text = "VSync :"
+text = "VSYNC"
 
 [node name="VSyncCheck" type="CheckBox" parent="MainLayout/VBox/ScrollContainer/OptionsContainer/VSyncRow"]
 layout_mode = 2
@@ -130,7 +130,7 @@ theme_override_constants/separation = 20
 custom_minimum_size = Vector2(250, 0)
 layout_mode = 2
 size_flags_horizontal = 3
-text = "Limite FPS :"
+text = "FPS_LIMIT"
 
 [node name="FPSOption" type="OptionButton" parent="MainLayout/VBox/ScrollContainer/OptionsContainer/FPSRow"]
 custom_minimum_size = Vector2(200, 0)
@@ -143,7 +143,7 @@ popup/item_1/text = "60 FPS"
 popup/item_1/id = 1
 popup/item_2/text = "120 FPS"
 popup/item_2/id = 2
-popup/item_3/text = "Illimite"
+popup/item_3/text = "FPS_UNLIMITED"
 popup/item_3/id = 3
 
 [node name="Spacer1" type="Control" parent="MainLayout/VBox/ScrollContainer/OptionsContainer"]
@@ -153,7 +153,7 @@ layout_mode = 2
 [node name="AudioTitle" type="Label" parent="MainLayout/VBox/ScrollContainer/OptionsContainer"]
 layout_mode = 2
 theme_override_font_sizes/font_size = 22
-text = "AUDIO"
+text = "OPT_AUDIO"
 
 [node name="HSep2" type="HSeparator" parent="MainLayout/VBox/ScrollContainer/OptionsContainer"]
 layout_mode = 2
@@ -166,7 +166,7 @@ theme_override_constants/separation = 20
 custom_minimum_size = Vector2(250, 0)
 layout_mode = 2
 size_flags_horizontal = 3
-text = "Volume Principal :"
+text = "MASTER_VOL"
 
 [node name="MasterVolumeSlider" type="HSlider" parent="MainLayout/VBox/ScrollContainer/OptionsContainer/MasterVolumeRow"]
 custom_minimum_size = Vector2(300, 0)
@@ -187,7 +187,7 @@ theme_override_constants/separation = 20
 custom_minimum_size = Vector2(250, 0)
 layout_mode = 2
 size_flags_horizontal = 3
-text = "Volume Musique :"
+text = "MUSIC_VOL"
 
 [node name="MusicVolumeSlider" type="HSlider" parent="MainLayout/VBox/ScrollContainer/OptionsContainer/MusicVolumeRow"]
 custom_minimum_size = Vector2(300, 0)
@@ -208,7 +208,7 @@ theme_override_constants/separation = 20
 custom_minimum_size = Vector2(250, 0)
 layout_mode = 2
 size_flags_horizontal = 3
-text = "Volume Effets Sonores :"
+text = "SFX_VOL"
 
 [node name="SFXVolumeSlider" type="HSlider" parent="MainLayout/VBox/ScrollContainer/OptionsContainer/SFXVolumeRow"]
 custom_minimum_size = Vector2(300, 0)
@@ -233,7 +233,7 @@ layout_mode = 2
 
 [node name="CalendarTitle" type="Label" parent="MainLayout/VBox/ScrollContainer/OptionsContainer/CalendarSection"]
 layout_mode = 2
-text = "CALENDRIER"
+text = "OPT_CALENDAR"
 
 [node name="HSep3" type="HSeparator" parent="MainLayout/VBox/ScrollContainer/OptionsContainer/CalendarSection"]
 layout_mode = 2
@@ -243,7 +243,7 @@ layout_mode = 2
 
 [node name="OverrideLabel" type="Label" parent="MainLayout/VBox/ScrollContainer/OptionsContainer/CalendarSection/OverrideRow"]
 layout_mode = 2
-text = "Date personnalisee :"
+text = "DATE_OVERRIDE"
 
 [node name="CalendarOverrideCheck" type="CheckBox" parent="MainLayout/VBox/ScrollContainer/OptionsContainer/CalendarSection/OverrideRow"]
 layout_mode = 2
@@ -253,21 +253,21 @@ layout_mode = 2
 
 [node name="DayLabel" type="Label" parent="MainLayout/VBox/ScrollContainer/OptionsContainer/CalendarSection/DateRow"]
 layout_mode = 2
-text = "Jour:"
+text = "DATE_DAY"
 
 [node name="CalendarDaySpin" type="SpinBox" parent="MainLayout/VBox/ScrollContainer/OptionsContainer/CalendarSection/DateRow"]
 layout_mode = 2
 
 [node name="MonthLabel" type="Label" parent="MainLayout/VBox/ScrollContainer/OptionsContainer/CalendarSection/DateRow"]
 layout_mode = 2
-text = "Mois:"
+text = "DATE_MONTH"
 
 [node name="CalendarMonthSpin" type="SpinBox" parent="MainLayout/VBox/ScrollContainer/OptionsContainer/CalendarSection/DateRow"]
 layout_mode = 2
 
 [node name="YearLabel" type="Label" parent="MainLayout/VBox/ScrollContainer/OptionsContainer/CalendarSection/DateRow"]
 layout_mode = 2
-text = "Annee:"
+text = "DATE_YEAR"
 
 [node name="CalendarYearSpin" type="SpinBox" parent="MainLayout/VBox/ScrollContainer/OptionsContainer/CalendarSection/DateRow"]
 layout_mode = 2
@@ -280,7 +280,7 @@ layout_mode = 2
 
 [node name="LanguageTitle" type="Label" parent="MainLayout/VBox/ScrollContainer/OptionsContainer/LanguageSection"]
 layout_mode = 2
-text = "LANGUE"
+text = "OPT_LANGUAGE"
 
 [node name="HSep4" type="HSeparator" parent="MainLayout/VBox/ScrollContainer/OptionsContainer/LanguageSection"]
 layout_mode = 2
@@ -290,7 +290,7 @@ layout_mode = 2
 
 [node name="LanguageLabel" type="Label" parent="MainLayout/VBox/ScrollContainer/OptionsContainer/LanguageSection/LanguageRow"]
 layout_mode = 2
-text = "Langue / Language :"
+text = "LANG_LABEL"
 
 [node name="LanguageOption" type="OptionButton" parent="MainLayout/VBox/ScrollContainer/OptionsContainer/LanguageSection/LanguageRow"]
 layout_mode = 2
@@ -303,7 +303,7 @@ layout_mode = 2
 
 [node name="VoiceTitle" type="Label" parent="MainLayout/VBox/ScrollContainer/OptionsContainer/VoiceSection"]
 layout_mode = 2
-text = "VOIX"
+text = "OPT_VOICE"
 
 [node name="HSep5" type="HSeparator" parent="MainLayout/VBox/ScrollContainer/OptionsContainer/VoiceSection"]
 layout_mode = 2
@@ -313,7 +313,7 @@ layout_mode = 2
 
 [node name="ModeLabel" type="Label" parent="MainLayout/VBox/ScrollContainer/OptionsContainer/VoiceSection/VoiceModeRow"]
 layout_mode = 2
-text = "Mode de voix :"
+text = "VOICE_MODE"
 
 [node name="VoiceModeOption" type="OptionButton" parent="MainLayout/VBox/ScrollContainer/OptionsContainer/VoiceSection/VoiceModeRow"]
 layout_mode = 2
@@ -323,7 +323,7 @@ layout_mode = 2
 
 [node name="BankLabel" type="Label" parent="MainLayout/VBox/ScrollContainer/OptionsContainer/VoiceSection/VoiceBankRow"]
 layout_mode = 2
-text = "Banque de sons :"
+text = "VOICE_BANK_LABEL"
 
 [node name="VoiceBankOption" type="OptionButton" parent="MainLayout/VBox/ScrollContainer/OptionsContainer/VoiceSection/VoiceBankRow"]
 layout_mode = 2
@@ -333,7 +333,7 @@ layout_mode = 2
 
 [node name="PresetLabel" type="Label" parent="MainLayout/VBox/ScrollContainer/OptionsContainer/VoiceSection/VoicePresetRow"]
 layout_mode = 2
-text = "Preset voix :"
+text = "VOICE_PRESET_LABEL"
 
 [node name="VoicePresetOption" type="OptionButton" parent="MainLayout/VBox/ScrollContainer/OptionsContainer/VoiceSection/VoicePresetRow"]
 layout_mode = 2
@@ -346,7 +346,7 @@ layout_mode = 2
 
 [node name="IATitle" type="Label" parent="MainLayout/VBox/ScrollContainer/OptionsContainer/IASection"]
 layout_mode = 2
-text = "INTELLIGENCE ARTIFICIELLE"
+text = "OPT_AI"
 
 [node name="HSep6" type="HSeparator" parent="MainLayout/VBox/ScrollContainer/OptionsContainer/IASection"]
 layout_mode = 2
@@ -356,7 +356,7 @@ layout_mode = 2
 
 [node name="BrainLabel" type="Label" parent="MainLayout/VBox/ScrollContainer/OptionsContainer/IASection/BrainRow"]
 layout_mode = 2
-text = "Cerveaux IA :"
+text = "BRAIN_LABEL"
 
 [node name="BrainCountOption" type="OptionButton" parent="MainLayout/VBox/ScrollContainer/OptionsContainer/IASection/BrainRow"]
 layout_mode = 2
@@ -372,9 +372,9 @@ alignment = 1
 [node name="BtnReinitialiser" type="Button" parent="MainLayout/VBox/ButtonsContainer"]
 custom_minimum_size = Vector2(150, 40)
 layout_mode = 2
-text = "Reinitialiser"
+text = "MENU_RESET"
 
 [node name="BtnRetour" type="Button" parent="MainLayout/VBox/ButtonsContainer"]
 custom_minimum_size = Vector2(180, 48)
 layout_mode = 2
-text = "Sauvegarder et Quitter"
+text = "MENU_SAVE_QUIT"

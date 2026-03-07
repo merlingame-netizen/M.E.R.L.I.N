@@ -122,21 +122,21 @@ func _configure_language_options() -> void:
 
 func _configure_voice_options() -> void:
 	# Populate voice mode (3 items, node already in scene)
-	voice_mode_option.add_item("Voix Parlee")    # 0
-	voice_mode_option.add_item("Voix Robot")      # 1
-	voice_mode_option.add_item("Desactivee")      # 2
+	voice_mode_option.add_item(tr("VOICE_SPOKEN"))    # 0
+	voice_mode_option.add_item(tr("VOICE_ROBOT"))    # 1
+	voice_mode_option.add_item(tr("VOICE_DISABLED")) # 2
 	voice_mode_option.selected = current_config.get("voice_mode", 0)
 	voice_mode_option.item_selected.connect(_on_voice_mode_changed)
 
 	# Populate sound banks (9 banks with metadata)
 	var bank_names := ["default", "high", "low", "lowest", "med", "robot", "glitch", "whisper", "droid"]
-	var bank_labels := {
-		"default": "Classique", "high": "Aigu (Peppy)", "low": "Grave (Cranky)",
-		"lowest": "Tres grave", "med": "Medium", "robot": "Robot Beep",
-		"glitch": "Glitch Bot", "whisper": "Synth Whisper", "droid": "Droid (R2D2)",
+	var bank_keys := {
+		"default": "VOICE_BANK_CLASSIC", "high": "VOICE_BANK_HIGH", "low": "VOICE_BANK_LOW",
+		"lowest": "VOICE_BANK_VERY_LOW", "med": "VOICE_BANK_MEDIUM", "robot": "VOICE_BANK_ROBOT_BEEP",
+		"glitch": "VOICE_BANK_GLITCH", "whisper": "VOICE_BANK_WHISPER", "droid": "VOICE_BANK_DROID",
 	}
 	for bname in bank_names:
-		voice_bank_option.add_item(bank_labels.get(bname, bname))
+		voice_bank_option.add_item(tr(bank_keys.get(bname, bname)))
 		voice_bank_option.set_item_metadata(voice_bank_option.item_count - 1, bname)
 	var cur_bank: String = current_config.get("voice_bank", "default")
 	for i in range(voice_bank_option.item_count):
@@ -146,9 +146,9 @@ func _configure_voice_options() -> void:
 	voice_bank_option.item_selected.connect(_on_voice_bank_changed)
 
 	# Populate voice presets (12 items)
-	var presets := ["Merlin", "Doux", "Plume", "Cristal", "Ancien", "Normal", "Aigu", "Grave", "Enfant", "Sage", "Joyeux", "Mysterieux"]
-	for pname in presets:
-		voice_preset_option.add_item(pname)
+	var preset_keys := ["Merlin", "VOICE_PRESET_SOFT", "VOICE_PRESET_QUILL", "VOICE_PRESET_CRYSTAL", "VOICE_PRESET_ANCIENT", "VOICE_PRESET_NORMAL", "VOICE_PRESET_HIGH", "VOICE_PRESET_LOW", "VOICE_PRESET_CHILD", "VOICE_PRESET_WISE", "VOICE_PRESET_JOYFUL", "VOICE_PRESET_MYSTERIOUS"]
+	for pkey in preset_keys:
+		voice_preset_option.add_item(tr(pkey))
 	var cur_preset: String = current_config.get("voice_preset", "Merlin")
 	for i in range(voice_preset_option.item_count):
 		if voice_preset_option.get_item_text(i) == cur_preset:
@@ -183,16 +183,16 @@ func _on_voice_preset_changed(index: int) -> void:
 
 
 const BRAIN_OPTIONS := [
-	{"value": 0, "label": "Auto (recommande)", "info": "Detection automatique selon votre machine"},
-	{"value": 2, "label": "2 cerveaux (Narrateur + Maitre du Jeu)", "info": "~4.4 GB RAM — Generation parallele narrative + effets"},
-	{"value": 3, "label": "3 cerveaux (+ Worker prefetch)", "info": "~6.6 GB RAM — Prefetch cartes en arriere-plan, zero latence"},
+	{"value": 0, "label_key": "BRAIN_AUTO", "info_key": "BRAIN_AUTO_INFO"},
+	{"value": 2, "label_key": "BRAIN_DUAL", "info_key": "BRAIN_DUAL_INFO"},
+	{"value": 3, "label_key": "BRAIN_TRIPLE", "info_key": "BRAIN_TRIPLE_INFO"},
 ]
 
 
 func _configure_ia_options() -> void:
 	# Populate brain count options (node already in scene)
 	for opt in BRAIN_OPTIONS:
-		brain_count_option.add_item(opt["label"])
+		brain_count_option.add_item(tr(opt["label_key"]))
 		brain_count_option.set_item_metadata(brain_count_option.item_count - 1, opt["value"])
 	var cur_brain: int = current_config.get("brain_count", 0)
 	for i in range(brain_count_option.item_count):
@@ -220,7 +220,7 @@ func _update_brain_info_label() -> void:
 	var cur_brain: int = current_config.get("brain_count", 0)
 	for opt in BRAIN_OPTIONS:
 		if int(opt["value"]) == cur_brain:
-			brain_info_label.text = str(opt["info"])
+			brain_info_label.text = tr(opt["info_key"])
 			return
 	brain_info_label.text = ""
 
@@ -230,6 +230,49 @@ func _on_language_changed(index: int) -> void:
 	var locale_mgr = get_node_or_null("/root/LocaleManager")
 	if locale_mgr:
 		locale_mgr.set_language(code)
+	# Refresh dynamically populated option buttons with new translations
+	_refresh_translated_options()
+
+
+func _refresh_translated_options() -> void:
+	# Re-populate voice mode
+	var vm_sel: int = voice_mode_option.selected
+	voice_mode_option.clear()
+	voice_mode_option.add_item(tr("VOICE_SPOKEN"))
+	voice_mode_option.add_item(tr("VOICE_ROBOT"))
+	voice_mode_option.add_item(tr("VOICE_DISABLED"))
+	voice_mode_option.selected = vm_sel
+
+	# Re-populate voice banks
+	var vb_sel: int = voice_bank_option.selected
+	var bank_names := ["default", "high", "low", "lowest", "med", "robot", "glitch", "whisper", "droid"]
+	var bank_keys := {
+		"default": "VOICE_BANK_CLASSIC", "high": "VOICE_BANK_HIGH", "low": "VOICE_BANK_LOW",
+		"lowest": "VOICE_BANK_VERY_LOW", "med": "VOICE_BANK_MEDIUM", "robot": "VOICE_BANK_ROBOT_BEEP",
+		"glitch": "VOICE_BANK_GLITCH", "whisper": "VOICE_BANK_WHISPER", "droid": "VOICE_BANK_DROID",
+	}
+	voice_bank_option.clear()
+	for bname in bank_names:
+		voice_bank_option.add_item(tr(bank_keys.get(bname, bname)))
+		voice_bank_option.set_item_metadata(voice_bank_option.item_count - 1, bname)
+	voice_bank_option.selected = vb_sel
+
+	# Re-populate voice presets
+	var vp_sel: int = voice_preset_option.selected
+	var preset_keys := ["Merlin", "VOICE_PRESET_SOFT", "VOICE_PRESET_QUILL", "VOICE_PRESET_CRYSTAL", "VOICE_PRESET_ANCIENT", "VOICE_PRESET_NORMAL", "VOICE_PRESET_HIGH", "VOICE_PRESET_LOW", "VOICE_PRESET_CHILD", "VOICE_PRESET_WISE", "VOICE_PRESET_JOYFUL", "VOICE_PRESET_MYSTERIOUS"]
+	voice_preset_option.clear()
+	for pkey in preset_keys:
+		voice_preset_option.add_item(tr(pkey))
+	voice_preset_option.selected = vp_sel
+
+	# Re-populate brain options
+	var bc_sel: int = brain_count_option.selected
+	brain_count_option.clear()
+	for opt in BRAIN_OPTIONS:
+		brain_count_option.add_item(tr(opt["label_key"]))
+		brain_count_option.set_item_metadata(brain_count_option.item_count - 1, opt["value"])
+	brain_count_option.selected = bc_sel
+	_update_brain_info_label()
 
 
 func _update_calendar_ui_enabled() -> void:

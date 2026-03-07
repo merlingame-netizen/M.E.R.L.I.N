@@ -550,7 +550,7 @@ func _retry_llm_generation(max_retries: int) -> Dictionary:
 			continue
 
 		# Pad labels to 3 if needed
-		var fallback_labels := ["Avancer prudemment", "Observer en silence", "Agir sans hesiter"]
+		var fallback_labels := [tr("FALLBACK_CAUTIOUS"), tr("FALLBACK_OBSERVE"), tr("FALLBACK_ACT")]
 		while labels.size() < 3:
 			labels.append(fallback_labels[labels.size()])
 		print("[TRIADE] LLM retry %d: %d labels extracted" % [i + 1, matches.size()])
