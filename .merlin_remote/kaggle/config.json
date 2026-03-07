@@ -4,22 +4,22 @@
   "title": "MERLIN Remote Lora Training",
   "dataset": "C:\\Users\\PGNK2128\\Godot-MCP\\data\\ai\\training\\merlin_full_v9.jsonl",
   "job_dir": "C:\\Users\\PGNK2128\\Godot-MCP\\.merlin_remote\\kaggle\\job",
-  "updated_at": "2026-03-07T00:34:44Z",
+  "updated_at": "2026-03-07T17:46:41Z",
   "brains": {
     "narrator": {
-      "slug": "merlin-lora-narrator",
+      "slug": "merlin-lora-narrator-4b",
       "title": "MERLIN LoRA Narrator (4B)",
       "dataset": "C:\\Users\\PGNK2128\\Godot-MCP\\data\\ai\\training\\brains\\narrator_v1.jsonl",
       "job_dir": "C:\\Users\\PGNK2128\\Godot-MCP\\.merlin_remote\\kaggle\\jobs\\narrator"
     },
     "gamemaster": {
-      "slug": "merlin-lora-gamemaster",
+      "slug": "merlin-lora-game-master-2b",
       "title": "MERLIN LoRA Game Master (2B)",
       "dataset": "C:\\Users\\PGNK2128\\Godot-MCP\\data\\ai\\training\\brains\\gamemaster_v1.jsonl",
       "job_dir": "C:\\Users\\PGNK2128\\Godot-MCP\\.merlin_remote\\kaggle\\jobs\\gamemaster"
     },
     "worker": {
-      "slug": "merlin-lora-worker",
+      "slug": "merlin-lora-worker-0-8b",
       "title": "MERLIN LoRA Worker (0.8B)",
       "dataset": "C:\\Users\\PGNK2128\\Godot-MCP\\data\\ai\\training\\brains\\worker_v1.jsonl",
       "job_dir": "C:\\Users\\PGNK2128\\Godot-MCP\\.merlin_remote\\kaggle\\jobs\\worker"

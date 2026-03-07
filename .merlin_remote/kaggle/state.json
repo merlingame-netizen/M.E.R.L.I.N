@@ -1,7 +1,7 @@
 {
-  "updated_at": "2026-03-07T00:34:44Z",
-  "last_action": "setup:worker",
-  "last_status": "ready",
+  "updated_at": "2026-03-07T17:48:29Z",
+  "last_action": "status:narrator",
+  "last_status": "running",
   "chat_mode": "remote_endpoint",
   "chat_model": "qwen2.5:1.5b",
   "doctor_missing": [],
@@ -12,12 +12,15 @@
   "output_dir": "C:\\Users\\PGNK2128\\Godot-MCP\\output\\remote_kaggle",
   "brains": {
     "narrator": {
-      "status": "ready",
-      "last_action": "setup",
-      "updated_at": "2026-03-07T00:34:44Z",
+      "status": "running",
+      "last_action": "status",
+      "updated_at": "2026-03-07T17:48:29Z",
       "doctor_missing": [],
-      "job": "maximebabonneau/merlin-lora-narrator",
-      "dataset": "C:\\Users\\PGNK2128\\Godot-MCP\\data\\ai\\training\\brains\\narrator_v1.jsonl"
+      "job": "maximebabonneau/merlin-lora-narrator-4b",
+      "dataset": "C:\\Users\\PGNK2128\\Godot-MCP\\data\\ai\\training\\brains\\narrator_v1.jsonl",
+      "url": "https://www.kaggle.com/code/maximebabonneau/merlin-lora-narrator-4b",
+      "submitted_at": "2026-03-07T17:47:00Z",
+      "raw_status": "maximebabonneau/merlin-lora-narrator-4b has status \"KernelWorkerStatus.RUNNING\""
     },
     "gamemaster": {
       "status": "ready",

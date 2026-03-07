@@ -92,7 +92,7 @@ VALID_BRAINS = ("narrator", "gamemaster", "worker")
 
 BRAIN_DEFAULTS: dict[str, dict] = {
     "narrator": {
-        "slug": "merlin-lora-narrator",
+        "slug": "merlin-lora-narrator-4b",
         "title": "MERLIN LoRA Narrator (4B)",
         "base_model": "Qwen/Qwen2.5-3B-Instruct",
         "lora_r": 16,
@@ -104,7 +104,7 @@ BRAIN_DEFAULTS: dict[str, dict] = {
         "learning_rate": 1e-4,
     },
     "gamemaster": {
-        "slug": "merlin-lora-gamemaster",
+        "slug": "merlin-lora-game-master-2b",
         "title": "MERLIN LoRA Game Master (2B)",
         "base_model": "Qwen/Qwen2.5-1.5B-Instruct",
         "lora_r": 8,
@@ -116,7 +116,7 @@ BRAIN_DEFAULTS: dict[str, dict] = {
         "learning_rate": 2e-4,
     },
     "worker": {
-        "slug": "merlin-lora-worker",
+        "slug": "merlin-lora-worker-0-8b",
         "title": "MERLIN LoRA Worker (0.8B)",
         "base_model": "Qwen/Qwen2.5-0.5B-Instruct",
         "lora_r": 8,
