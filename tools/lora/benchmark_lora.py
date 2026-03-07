@@ -544,25 +544,10 @@ def print_report(metrics: dict, targets: dict):
     print("=" * 60)
 
 
-def main():
-    parser = argparse.ArgumentParser(description="Benchmark M.E.R.L.I.N. LoRA adapter")
-    parser.add_argument("--results", required=True, help="Path to generation log JSON")
-    args = parser.parse_args()
+# ── Per-Brain Benchmark Profiles ──────────────────────────────────────────────
 
-    print(f"[benchmark] Loading results: {args.results}")
-    with open(args.results, "r", encoding="utf-8") as f:
-        results = json.load(f)
-
-    if isinstance(results, dict):
-        results = results.get("entries", results.get("samples", []))
-
-    scene_profiles = load_scene_profiles()
-    if scene_profiles:
-        print(f"[benchmark] Scene profiles loaded: {len(scene_profiles)}")
-    else:
-        print("[benchmark] Scene profiles not found or invalid. Scene metrics will remain 0.")
-
-    targets = {
+BRAIN_TARGETS = {
+    "narrator": {
         "tone_accuracy": 0.85,
         "celtic_vocab_density": 0.5,
         "french_rate": 0.95,
@@ -578,16 +563,115 @@ def main():
         "word_limit_compliance": 0.90,
         "sequential_format_rate": 0.85,
         "danger_awareness_rate": 0.80,
+    },
+    "gamemaster": {
         "gm_effects_validity": 0.90,
-    }
+        "french_rate": 0.90,
+        "length_compliance": 0.85,
+    },
+    "worker": {
+        "french_rate": 0.90,
+        "length_compliance": 0.85,
+    },
+}
+
+
+def go_no_go(metrics: dict, targets: dict) -> tuple[bool, list]:
+    """Determine GO/NO-GO based on metrics vs targets. Returns (is_go, failures)."""
+    lower_is_better = {"self_bleu", "forbidden_violation_rate", "verb_diversity_jaccard"}
+    failures = []
+    for metric, target in targets.items():
+        value = metrics.get(metric)
+        if value is None or not isinstance(value, (int, float)):
+            continue
+        if metric in lower_is_better:
+            if value > target:
+                failures.append(f"{metric}: {value:.3f} > {target} (lower is better)")
+        else:
+            if value < target:
+                failures.append(f"{metric}: {value:.3f} < {target}")
+    return len(failures) == 0, failures
+
+
+def main():
+    parser = argparse.ArgumentParser(description="Benchmark M.E.R.L.I.N. LoRA adapter (multi-brain)")
+    parser.add_argument("--results", required=True, help="Path to generation log JSON")
+    parser.add_argument("--brain", default="", choices=["", "narrator", "gamemaster", "worker"],
+                        help="Brain profile for targets (narrator/gamemaster/worker). Empty=all targets.")
+    parser.add_argument("--output-dir", default="", help="Directory for benchmark results (default: alongside results)")
+    args = parser.parse_args()
+
+    brain = args.brain.strip()
+    print(f"[benchmark] Loading results: {args.results}")
+    if brain:
+        print(f"[benchmark] Brain profile: {brain}")
+
+    with open(args.results, "r", encoding="utf-8") as f:
+        results = json.load(f)
+
+    if isinstance(results, dict):
+        results = results.get("entries", results.get("samples", []))
+
+    scene_profiles = load_scene_profiles()
+    if scene_profiles:
+        print(f"[benchmark] Scene profiles loaded: {len(scene_profiles)}")
+    else:
+        print("[benchmark] Scene profiles not found or invalid. Scene metrics will remain 0.")
+
+    # Select targets based on brain
+    if brain and brain in BRAIN_TARGETS:
+        targets = BRAIN_TARGETS[brain]
+    else:
+        targets = {
+            "tone_accuracy": 0.85,
+            "celtic_vocab_density": 0.5,
+            "french_rate": 0.95,
+            "self_bleu": 0.4,
+            "length_compliance": 0.90,
+            "verb_extraction_rate": 0.80,
+            "format_compliance": 0.90,
+            "verb_diversity_jaccard": 0.5,
+            "scene_contract_compliance": 0.90,
+            "must_reference_rate": 0.85,
+            "forbidden_violation_rate": 0.05,
+            "sentence_limit_compliance": 0.90,
+            "word_limit_compliance": 0.90,
+            "sequential_format_rate": 0.85,
+            "danger_awareness_rate": 0.80,
+            "gm_effects_validity": 0.90,
+        }
 
     metrics = benchmark(results, scene_profiles)
     print_report(metrics, targets)
 
+    # GO/NO-GO verdict
+    is_go, failures = go_no_go(metrics, targets)
+    verdict = "GO" if is_go else "NO-GO"
+    verdict_color = "" if is_go else " *** "
+    print(f"\n  {verdict_color}VERDICT: {verdict}{verdict_color}")
+    if failures:
+        print(f"  Failed metrics ({len(failures)}):")
+        for f_msg in failures:
+            print(f"    - {f_msg}")
+
     # Save metrics
-    output_path = args.results.replace(".json", "_metrics.json")
+    if args.output_dir:
+        output_dir = args.output_dir
+        os.makedirs(output_dir, exist_ok=True)
+        suffix = f"_{brain}" if brain else ""
+        output_path = os.path.join(output_dir, f"benchmark_results{suffix}.json")
+    else:
+        output_path = args.results.replace(".json", "_metrics.json")
+
+    result_data = {
+        "brain": brain or "all",
+        "verdict": verdict,
+        "metrics": metrics,
+        "targets": targets,
+        "failures": failures,
+    }
     with open(output_path, "w", encoding="utf-8") as f:
-        json.dump({"metrics": metrics, "targets": targets}, f, indent=2)
+        json.dump(result_data, f, indent=2)
     print(f"\n  Metrics saved to: {output_path}")
 
 

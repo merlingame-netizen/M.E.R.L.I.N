@@ -1,950 +1,1027 @@
-// M.E.R.L.I.N. Orchestrator v6.0 — Autonomous Game Studio (48 agents, 5 modes)
-// Panels: Game Control | Live View | Commands | Diagnostics | Overnight | Studio
 const vscode = require('vscode');
 const fs = require('fs');
 const path = require('path');
 const cp = require('child_process');
+const http = require('http');
+const https = require('https');
 
-// ============================================================
-// CRT PALETTE
-// ============================================================
 const CRT = {
-  bg: '#050a05', panel: '#080e08', green: '#00ff41', greenDim: '#00aa2a',
-  amber: '#ffb300', cyan: '#00e5ff', red: '#ff3333', gray: '#555',
-  text: '#b0c8b0', border: '#1a2a1a', magenta: '#cc66ff',
+  bg: '#050a05',
+  panel: '#080e08',
+  green: '#00ff41',
+  greenDim: '#00aa2a',
+  amber: '#ffb300',
+  cyan: '#00e5ff',
+  red: '#ff3333',
+  gray: '#6d7b6d',
+  text: '#b0c8b0',
+  border: '#1a2a1a',
 };
 
-// ============================================================
-// SHARED UTILS
-// ============================================================
+const INFERENCE_PRESETS = {
+  together: {
+    label: 'Together',
+    endpoint: 'https://api.together.xyz/v1/chat/completions',
+    model: 'meta-llama/Meta-Llama-3.1-8B-Instruct-Turbo',
+  },
+  groq: {
+    label: 'Groq',
+    endpoint: 'https://api.groq.com/openai/v1/chat/completions',
+    model: 'llama-3.1-8b-instant',
+  },
+};
+
+const CSS = `
+* { box-sizing:border-box; }
+body { margin:0; padding:10px; background:${CRT.bg}; color:${CRT.text}; font-family:'Cascadia Code','Fira Code',Consolas,monospace; font-size:11px; }
+.header { display:flex; justify-content:space-between; align-items:center; margin-bottom:8px; padding-bottom:6px; border-bottom:1px solid ${CRT.border}; }
+.title { color:${CRT.green}; font-weight:700; letter-spacing:.8px; font-size:12px; }
+.status { font-size:10px; font-weight:700; }
+.block { border:1px solid ${CRT.border}; border-radius:4px; background:${CRT.panel}; padding:8px; margin-bottom:8px; }
+.blockTitle { color:${CRT.greenDim}; text-transform:uppercase; font-size:9px; letter-spacing:.9px; margin-bottom:6px; }
+table { width:100%; border-collapse:collapse; }
+td { padding:2px 0; vertical-align:top; }
+.k { color:${CRT.gray}; width:95px; }
+.v { color:${CRT.text}; word-break:break-word; }
+.btnRow { display:flex; gap:6px; flex-wrap:wrap; margin-top:6px; }
+button { border:1px solid ${CRT.border}; background:#0a140a; color:${CRT.green}; padding:4px 7px; border-radius:3px; font:inherit; font-size:10px; cursor:pointer; }
+button:hover { border-color:${CRT.green}; }
+button:disabled { opacity:.45; cursor:not-allowed; }
+.btnAmber { color:${CRT.amber}; border-color:#554000; }
+.btnCyan { color:${CRT.cyan}; border-color:#114955; }
+.chatWrap { display:flex; flex-direction:column; gap:6px; }
+.chatLog { border:1px solid ${CRT.border}; border-radius:3px; min-height:220px; max-height:320px; overflow:auto; padding:6px; background:#071007; }
+.msg { margin-bottom:6px; padding:5px 6px; border-radius:3px; white-space:pre-wrap; word-break:break-word; }
+.msgUser { border:1px solid #1d3a1d; background:#0c1e0c; }
+.msgAssistant { border:1px solid #133f4a; background:#071a1f; }
+.msgHead { font-size:9px; margin-bottom:3px; text-transform:uppercase; letter-spacing:.8px; }
+.msgHead.user { color:${CRT.amber}; }
+.msgHead.assistant { color:${CRT.cyan}; }
+textarea { width:100%; min-height:64px; resize:vertical; background:#051105; color:${CRT.text}; border:1px solid ${CRT.border}; border-radius:3px; padding:6px; font:inherit; font-size:11px; }
+.hint { color:${CRT.gray}; font-size:9px; margin-top:3px; }
+`;
+
+function escapeHtml(value) {
+  if (value === null || value === undefined) return '';
+  return String(value)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;');
+}
 
 function findProjectRoot() {
   const folders = vscode.workspace.workspaceFolders;
-  if (!folders) return null;
+  if (!folders || folders.length === 0) return null;
+
+  const hasRemoteScript = (root) =>
+    fs.existsSync(path.join(root, 'tools', 'lora', 'remote_kaggle_train.py'));
+
   for (const f of folders) {
-    if (fs.existsSync(path.join(f.uri.fsPath, 'project.godot'))) return f.uri.fsPath;
+    const root = f.uri.fsPath;
+    if (fs.existsSync(path.join(root, 'project.godot')) && hasRemoteScript(root)) return root;
   }
-  return folders[0].uri.fsPath;
+  for (const f of folders) {
+    const root = f.uri.fsPath;
+    if (hasRemoteScript(root)) return root;
+  }
+  return null;
 }
 
-function capturesDir(root) {
-  return path.join(root, 'tools', 'autodev', 'captures');
+function getConfig() {
+  const c = vscode.workspace.getConfiguration('autodev-v4.remoteTrain');
+  const py = vscode.workspace.getConfiguration('python');
+  return {
+    pythonPath: c.get('pythonPath', ''),
+    pythonDefaultInterpreterPath: py.get('defaultInterpreterPath', ''),
+    kaggleUsername: c.get('kaggleUsername', ''),
+    kernelSlug: c.get('kernelSlug', 'merlin-remote-train'),
+    kernelTitle: c.get('kernelTitle', 'MERLIN Remote LoRA Training'),
+    testModel: c.get('testModel', 'meta-llama/Meta-Llama-3.1-8B-Instruct-Turbo'),
+    testEndpoint: c.get('testEndpoint', 'https://api.together.xyz/v1/chat/completions'),
+    testApiKey: c.get('testApiKey', ''),
+  };
 }
 
-function readJsonSafe(filePath) {
+function pushCandidate(candidates, cmd, args = []) {
+  if (!cmd) return;
+  const key = `${cmd}:::${args.join(' ')}`;
+  if (candidates.some((c) => c.key === key)) return;
+  candidates.push({ key, cmd, args });
+}
+
+function resolvePythonRuntime(root, output) {
+  const cfg = getConfig();
+  const candidates = [];
+
+  pushCandidate(candidates, cfg.pythonPath || '');
+  pushCandidate(candidates, cfg.pythonDefaultInterpreterPath || '');
+  pushCandidate(candidates, process.env.PYTHON || '');
+
+  if (process.platform === 'win32') {
+    const localApp = process.env.LOCALAPPDATA || '';
+    if (localApp) {
+      pushCandidate(candidates, path.join(localApp, 'Programs', 'Python', 'Python312', 'python.exe'));
+      pushCandidate(candidates, path.join(localApp, 'Programs', 'Python', 'Python311', 'python.exe'));
+      pushCandidate(candidates, path.join(localApp, 'Programs', 'Python', 'Python310', 'python.exe'));
+    }
+    pushCandidate(candidates, 'py', ['-3']);
+    pushCandidate(candidates, 'py');
+  } else {
+    pushCandidate(candidates, 'python3');
+  }
+  pushCandidate(candidates, 'python');
+
+  for (const candidate of candidates) {
+    try {
+      const probe = cp.spawnSync(candidate.cmd, [...candidate.args, '--version'], {
+        cwd: root,
+        shell: false,
+        encoding: 'utf8',
+      });
+      if (probe && probe.status === 0) return candidate;
+    } catch {
+      // Probe next candidate.
+    }
+  }
+
+  const tried = candidates.map((c) => `${c.cmd} ${c.args.join(' ')}`.trim()).join(', ');
+  const hint = process.platform === 'win32'
+    ? 'Set autodev-v4.remoteTrain.pythonPath to a valid python.exe path.'
+    : 'Set autodev-v4.remoteTrain.pythonPath to a valid Python executable.';
+  throw new Error(`Python runtime not found. Tried: ${tried}. ${hint}`);
+}
+
+function readJson(filePath) {
   try {
-    if (!fs.existsSync(filePath)) return null;
+    if (!fs.existsSync(filePath)) return {};
     return JSON.parse(fs.readFileSync(filePath, 'utf8'));
-  } catch { return null; }
-}
-
-function escapeHtml(str) {
-  if (!str) return '';
-  return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
-}
-
-function timeAgo(isoOrMs) {
-  if (!isoOrMs) return '';
-  const ms = typeof isoOrMs === 'number' ? isoOrMs : new Date(isoOrMs).getTime();
-  const diff = Date.now() - ms;
-  if (diff < 0) return 'now';
-  const secs = Math.floor(diff / 1000);
-  if (secs < 60) return secs + 's ago';
-  const mins = Math.floor(secs / 60);
-  if (mins < 60) return mins + 'min ago';
-  return Math.floor(mins / 60) + 'h ago';
-}
-
-function progressBar(pct, width = 15) {
-  const filled = Math.min(width, Math.round(pct * width / 100));
-  return '\u2588'.repeat(filled) + '\u2591'.repeat(width - filled);
-}
-
-function fileAge(filePath) {
-  try {
-    const stat = fs.statSync(filePath);
-    return Date.now() - stat.mtimeMs;
-  } catch { return Infinity; }
-}
-
-const CSS_BASE = `
-  * { margin:0; padding:0; box-sizing:border-box; }
-  body { font-family:'Cascadia Code','Fira Code',Consolas,monospace; font-size:11px;
-         background:${CRT.bg}; color:${CRT.text}; padding:8px; line-height:1.5; user-select:none; }
-  .header { display:flex; justify-content:space-between; align-items:center;
-            padding-bottom:6px; border-bottom:1px solid ${CRT.border}; margin-bottom:8px; }
-  .title { font-size:12px; font-weight:bold; color:${CRT.green}; letter-spacing:1px; }
-  .status { font-size:11px; font-weight:bold; }
-  .section { margin-bottom:10px; }
-  .section-label { font-size:9px; color:${CRT.gray}; letter-spacing:1px; text-transform:uppercase; padding:4px 0 2px; }
-  .empty { color:${CRT.gray}; font-size:10px; font-style:italic; padding:4px 0; }
-  .sep { border-top:1px solid ${CRT.border}; margin:8px 0; }
-  button { font-family:inherit; font-size:10px; border:1px solid ${CRT.border}; background:${CRT.panel};
-           color:${CRT.greenDim}; cursor:pointer; padding:3px 7px; border-radius:2px; }
-  button:hover { border-color:${CRT.green}; color:${CRT.green}; background:#0a1a0a; }
-  button:active { background:#0d2a0d; }
-  button:disabled { opacity:0.3; cursor:not-allowed; }
-  .btn-row { display:flex; gap:4px; flex-wrap:wrap; margin:4px 0; }
-  .btn-danger { color:${CRT.red}; border-color:#551111; }
-  .btn-amber { color:${CRT.amber}; border-color:#553300; }
-  .btn-cyan { color:${CRT.cyan}; border-color:#115555; }
-  .btn-magenta { color:${CRT.magenta}; border-color:#441155; }
-  table { width:100%; border-collapse:collapse; }
-  td { padding:1px 4px; font-size:10px; }
-  .k { color:${CRT.gray}; width:70px; }
-  .v { color:${CRT.text}; }
-  .v-good { color:${CRT.green}; }
-  .v-warn { color:${CRT.amber}; }
-  .v-bad { color:${CRT.red}; }
-  ::-webkit-scrollbar { width:4px; }
-  ::-webkit-scrollbar-thumb { background:${CRT.border}; }
-`;
-
-// ============================================================
-// GODOT PROCESS MANAGER
-// ============================================================
-
-let _godotProcess = null;
-
-function getGodotExe() {
-  const candidates = [
-    'C:\\Users\\PGNK2128\\Godot\\Godot_v4.5.1-stable_win64_console.exe',
-    'C:\\Users\\PGNK2128\\Godot\\Godot_v4.5.1-stable_win64.exe',
-  ];
-  for (const c of candidates) { if (fs.existsSync(c)) return c; }
-  return 'godot';
-}
-
-function isGodotRunning() { return _godotProcess !== null && !_godotProcess.killed; }
-
-function launchGameBootstrap(root, onExit) {
-  killGodot();
-  const exe = getGodotExe();
-  _godotProcess = cp.spawn(exe, [
-    '--path', root,
-    'scenes/BootstrapMerlinGame.tscn',
-    '--rendering-driver', 'opengl3',
-    '--resolution', '800x600',
-  ], { detached: false, stdio: ['ignore', 'ignore', 'ignore'], windowsHide: false });
-  _godotProcess.on('exit', () => { _godotProcess = null; if (onExit) onExit(); });
-  _godotProcess.on('error', () => { _godotProcess = null; if (onExit) onExit(); });
-}
-
-function launchScene(scenePath, root, onExit) {
-  killGodot();
-  const exe = getGodotExe();
-  const rel = path.relative(root, scenePath).replace(/\\/g, '/');
-  _godotProcess = cp.spawn(exe, ['--path', root, rel, '--rendering-driver', 'opengl3'], {
-    detached: false, stdio: ['ignore', 'ignore', 'ignore'], windowsHide: false });
-  _godotProcess.on('exit', () => { _godotProcess = null; if (onExit) onExit(); });
-  _godotProcess.on('error', () => { _godotProcess = null; if (onExit) onExit(); });
-}
-
-function killGodot() {
-  if (!_godotProcess) return;
-  try {
-    if (process.platform === 'win32') {
-      cp.exec(`taskkill /F /PID ${_godotProcess.pid} /T`);
-    } else { _godotProcess.kill('SIGTERM'); }
-  } catch { /* ignore */ }
-  _godotProcess = null;
-}
-
-// ============================================================
-// SCENE DISCOVERY
-// ============================================================
-
-function findScriptInScene(tscnPath) {
-  try {
-    const content = fs.readFileSync(tscnPath, 'utf8');
-    const match = content.match(/\[ext_resource type="Script" path="res:\/\/([^"]+)"/);
-    return match ? match[1] : null;
-  } catch { return null; }
-}
-
-async function discoverScenes(root) {
-  const uris = await vscode.workspace.findFiles('scenes/**/*.tscn', null, 200);
-  const groups = {};
-  for (const uri of uris) {
-    const full = uri.fsPath;
-    const rel = path.relative(root, full).replace(/\\/g, '/');
-    const name = path.basename(full, '.tscn');
-    const folder = path.relative(root, path.dirname(full)).replace(/\\/g, '/');
-    const scriptRel = findScriptInScene(full);
-    if (!groups[folder]) groups[folder] = [];
-    groups[folder].push({ name, full, rel, scriptRel });
+  } catch {
+    return {};
   }
-  for (const grp of Object.values(groups)) grp.sort((a, b) => a.name.localeCompare(b.name));
-  return groups;
 }
 
-// ============================================================
-// COMMAND SENDER
-// ============================================================
-
-function sendGameCommand(root, action, params = {}) {
-  const dir = capturesDir(root);
-  if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
-  const cmd = { action, params, id: 'vsc_' + Date.now() };
-  fs.writeFileSync(path.join(dir, 'command.json'), JSON.stringify(cmd, null, 2), 'utf8');
-  return cmd.id;
+function remoteScript(root) {
+  return path.join(root, 'tools', 'lora', 'remote_kaggle_train.py');
 }
 
-function readCommandResult(root) {
-  return readJsonSafe(path.join(capturesDir(root), 'command_result.json'));
+function remoteState(root) {
+  return path.join(root, '.merlin_remote', 'kaggle', 'state.json');
 }
 
-// ============================================================
-// PANEL 1 — GAME CONTROL
-// ============================================================
+function runPython(root, args, output) {
+  return new Promise((resolve, reject) => {
+    const runtime = resolvePythonRuntime(root, output);
+    const script = remoteScript(root);
+    if (!fs.existsSync(script)) {
+      reject(new Error(`Missing script: ${script}`));
+      return;
+    }
+    const fullArgs = [...runtime.args, script, ...args];
+    output.appendLine(`$ ${runtime.cmd} ${fullArgs.join(' ')}`);
 
-class GameControlProvider {
-  constructor(root) { this._root = root; this._view = null; this._groups = {}; }
+    const proc = cp.spawn(runtime.cmd, fullArgs, { cwd: root, shell: false });
+    let stdout = '';
+    let stderr = '';
+    proc.stdout.on('data', (d) => {
+      const text = d.toString();
+      stdout += text;
+      output.append(text);
+    });
+    proc.stderr.on('data', (d) => {
+      const text = d.toString();
+      stderr += text;
+      output.append(text);
+    });
+    proc.on('error', reject);
+    proc.on('close', (code) => {
+      if (code === 0) resolve({ stdout, stderr, code });
+      else reject(new Error(`Command failed (${code})`));
+    });
+  });
+}
 
-  async resolveWebviewView(webviewView) {
-    this._view = webviewView;
-    webviewView.webview.options = { enableScripts: true };
-    webviewView.webview.onDidReceiveMessage(async (msg) => {
+function normalizeChatEndpoint(endpoint) {
+  const clean = String(endpoint || '').trim().replace(/\/+$/, '');
+  if (!clean) return '';
+  if (clean.endsWith('/chat/completions')) return clean;
+  if (clean.endsWith('/v1') || clean.endsWith('/openai/v1')) return `${clean}/chat/completions`;
+  return clean;
+}
+
+function resolveApiKey(endpoint, explicitKey) {
+  if (explicitKey) return explicitKey;
+  const lowered = String(endpoint || '').toLowerCase();
+  if (lowered.includes('together.xyz')) return process.env.TOGETHER_API_KEY || '';
+  if (lowered.includes('groq.com')) return process.env.GROQ_API_KEY || '';
+  if (lowered.includes('runpod.ai')) return process.env.RUNPOD_API_KEY || '';
+  return process.env.OPENAI_API_KEY || '';
+}
+
+function postJson(url, payload, headers = {}) {
+  return new Promise((resolve, reject) => {
+    let parsed;
+    try {
+      parsed = new URL(url);
+    } catch (err) {
+      reject(new Error(`Invalid endpoint URL: ${url}`));
+      return;
+    }
+    const data = JSON.stringify(payload);
+    const options = {
+      method: 'POST',
+      hostname: parsed.hostname,
+      port: parsed.port || (parsed.protocol === 'https:' ? 443 : 80),
+      path: `${parsed.pathname}${parsed.search}`,
+      headers: {
+        'Content-Type': 'application/json',
+        'Content-Length': Buffer.byteLength(data),
+        ...headers,
+      },
+      timeout: 180000,
+    };
+    const client = parsed.protocol === 'https:' ? https : http;
+    const req = client.request(options, (res) => {
+      let body = '';
+      res.on('data', (chunk) => { body += chunk; });
+      res.on('end', () => {
+        if (res.statusCode && res.statusCode >= 400) {
+          reject(new Error(`HTTP ${res.statusCode}: ${body.slice(0, 300)}`));
+          return;
+        }
+        try {
+          resolve(JSON.parse(body));
+        } catch (err) {
+          reject(new Error(`Invalid JSON response: ${body.slice(0, 300)}`));
+        }
+      });
+    });
+    req.on('timeout', () => req.destroy(new Error('Request timeout')));
+    req.on('error', reject);
+    req.write(data);
+    req.end();
+  });
+}
+
+async function directChat(prompt, cfg) {
+  const endpoint = normalizeChatEndpoint(cfg.testEndpoint);
+  if (endpoint) {
+    const apiKey = resolveApiKey(endpoint, cfg.testApiKey);
+    const headers = apiKey ? { Authorization: `Bearer ${apiKey}` } : {};
+    const payload = {
+      model: cfg.testModel,
+      messages: [{ role: 'user', content: prompt }],
+      temperature: 0.7,
+      max_tokens: 350,
+    };
+    const data = await postJson(endpoint, payload, headers);
+    const reply = data?.choices?.[0]?.message?.content;
+    return String(reply || '').trim() || '(reponse vide)';
+  }
+
+  const payload = {
+    model: cfg.testModel,
+    messages: [{ role: 'user', content: prompt }],
+    stream: false,
+    options: { temperature: 0.7, num_predict: 350 },
+  };
+  const data = await postJson('http://127.0.0.1:11434/api/chat', payload);
+  const reply = data?.message?.content;
+  return String(reply || '').trim() || '(reponse vide)';
+}
+
+const BRAIN_LIST = ['narrator', 'gamemaster', 'worker'];
+const BRAIN_LABELS = { narrator: 'Narrator (4B)', gamemaster: 'Game Master (2B)', worker: 'Worker (0.8B)' };
+const BRAIN_ICONS = { running: '\u25CF', complete: '\u2713', failed: '\u2717', ready: '\u25CB', pending: '\u25CB' };
+
+class RemoteTrainProvider {
+  constructor(root) {
+    this.root = root;
+    this.view = null;
+    this.output = vscode.window.createOutputChannel('MERLIN Remote Trainer');
+    this.chat = [
+      {
+        role: 'assistant',
+        content: 'Panel pret. Clique Bonjour ou ecris ton message pour chatter avec Merlin.',
+      },
+    ];
+    this.isBusy = false;
+    this.selectedBrain = 'narrator';
+  }
+
+  resolveRoot() {
+    this.root = findProjectRoot();
+    return this.root;
+  }
+
+  resolveWebviewView(view) {
+    this.view = view;
+    view.webview.options = { enableScripts: true };
+    view.webview.onDidReceiveMessage(async (msg) => {
+      if (!msg || !msg.type) return;
       switch (msg.type) {
-        case 'launch-bootstrap':
-          launchGameBootstrap(this._root, () => this._update());
-          setTimeout(() => this._update(), 1000);
+        case 'refresh':
+          this.update();
           break;
-        case 'launch-scene':
-          launchScene(msg.scenePath, this._root, () => this._update());
-          setTimeout(() => this._update(), 1000);
+        case 'configure':
+          await this.configure();
           break;
-        case 'kill':
-          killGodot();
-          this._update();
+        case 'presetTogether':
+          await this.applyInferencePreset('together');
           break;
-        case 'validate':
-          this._runValidate();
+        case 'presetGroq':
+          await this.applyInferencePreset('groq');
           break;
-        case 'open-script':
-          await this._openScript(msg.scriptRel);
+        case 'presetRunpod':
+          await this.configureRunpodPreset();
+          break;
+        case 'selectBrain':
+          this.selectedBrain = msg.brain || 'narrator';
+          this.update();
+          break;
+        case 'setup':
+        case 'submit':
+        case 'status':
+        case 'download':
+        case 'doctor':
+          await this.runRemote(msg.type, msg.brain || this.selectedBrain);
+          break;
+        case 'trainAll':
+          await this.trainAll();
+          break;
+        case 'openKaggle':
+          this.openKaggle();
+          break;
+        case 'chat':
+          await this.chatSend(String(msg.prompt || '').trim());
           break;
       }
     });
-    await this._update();
+    this.update();
   }
 
-  async _update() {
-    if (!this._view) return;
-    this._groups = await discoverScenes(this._root);
-    const running = isGodotRunning();
-    const statusColor = running ? CRT.green : CRT.gray;
-    const statusIcon = running ? '\u25CF' : '\u25CB';
-
-    let scenesHtml = '';
-    const sorted = Object.keys(this._groups).sort();
-    for (const folder of sorted) {
-      const label = folder === 'scenes' ? 'scenes/' : folder + '/';
-      const items = this._groups[folder].map(s => {
-        const scriptBtn = s.scriptRel
-          ? `<button class="btn-amber" style="min-width:22px;font-size:9px;padding:1px 5px" onclick="openScript('${escapeHtml(s.scriptRel)}')" title="${escapeHtml(s.scriptRel)}">{}</button>`
-          : '';
-        return `<div style="display:flex;align-items:center;gap:4px;padding:2px 4px;border-radius:2px" onmouseover="this.style.background='${CRT.panel}'" onmouseout="this.style.background='none'">
-          <button style="min-width:22px;padding:1px 5px;color:${CRT.green}" onclick="launchScene('${escapeHtml(s.full)}')">\u25B6</button>
-          ${scriptBtn}
-          <span style="flex:1;font-size:11px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;cursor:pointer" title="${escapeHtml(s.rel)}">${escapeHtml(s.name)}</span>
-        </div>`;
-      }).join('');
-      scenesHtml += `<div class="section-label">${escapeHtml(label)}</div>${items}`;
-    }
-
-    this._view.webview.html = `<!DOCTYPE html><html><head><style>${CSS_BASE}</style></head><body>
-      <div class="header">
-        <span class="title">GAME CONTROL</span>
-        <span class="status" style="color:${statusColor}">${statusIcon} ${running ? 'RUNNING' : 'IDLE'}</span>
-      </div>
-      <div class="btn-row">
-        <button style="flex:1;padding:5px 8px;font-size:11px;font-weight:bold;color:${CRT.green};border-color:${CRT.greenDim}" onclick="launchBootstrap()">\u25B6 Bootstrap</button>
-        <button class="btn-danger" style="flex:1;padding:5px 8px;font-size:11px;font-weight:bold" onclick="kill()">\u25A0 Kill</button>
-        <button class="btn-cyan" style="flex:1;padding:5px 8px;font-size:11px;font-weight:bold" onclick="validate()">\u2713 Validate</button>
-      </div>
-      <div class="sep"></div>
-      ${scenesHtml || '<div class="empty">No scenes found</div>'}
-      <script>
-        const vscode = acquireVsCodeApi();
-        function launchBootstrap() { vscode.postMessage({type:'launch-bootstrap'}); }
-        function launchScene(p) { vscode.postMessage({type:'launch-scene', scenePath:p}); }
-        function kill() { vscode.postMessage({type:'kill'}); }
-        function validate() { vscode.postMessage({type:'validate'}); }
-        function openScript(r) { vscode.postMessage({type:'open-script', scriptRel:r}); }
-      </script>
-    </body></html>`;
-  }
-
-  async _openScript(scriptRel) {
-    const full = path.join(this._root, scriptRel);
-    if (fs.existsSync(full)) {
-      const doc = await vscode.workspace.openTextDocument(full);
-      await vscode.window.showTextDocument(doc);
-    }
-  }
-
-  _runValidate() {
-    const terminal = vscode.window.createTerminal('Validate');
-    terminal.sendText(`cd "${this._root}" && .\\validate.bat`);
-    terminal.show();
-  }
-
-  refresh() { this._update(); }
-}
-
-// ============================================================
-// PANEL 2 — LIVE VIEW
-// ============================================================
-
-class LiveViewProvider {
-  constructor(root) { this._root = root; this._view = null; this._interval = null; }
-
-  resolveWebviewView(webviewView) {
-    this._view = webviewView;
-    webviewView.webview.options = { enableScripts: true };
-    webviewView.webview.onDidReceiveMessage((msg) => {
-      if (msg.type === 'screenshot') sendGameCommand(this._root, 'screenshot');
-      if (msg.type === 'refresh') this._update();
+  async configure() {
+    const cfg = getConfig();
+    const pythonPath = await vscode.window.showInputBox({
+      prompt: 'Python executable (optional if auto-detect works)',
+      value: cfg.pythonPath || cfg.pythonDefaultInterpreterPath || '',
+      ignoreFocusOut: true,
     });
-    this._interval = setInterval(() => this._update(), 3000);
-    this._update();
+    if (pythonPath === undefined) return;
+    const username = await vscode.window.showInputBox({
+      prompt: 'Kaggle username',
+      value: cfg.kaggleUsername || '',
+      ignoreFocusOut: true,
+    });
+    if (username === undefined) return;
+    const slug = await vscode.window.showInputBox({
+      prompt: 'Kernel slug',
+      value: cfg.kernelSlug || 'merlin-remote-train',
+      ignoreFocusOut: true,
+    });
+    if (slug === undefined) return;
+    const title = await vscode.window.showInputBox({
+      prompt: 'Kernel title',
+      value: cfg.kernelTitle || 'MERLIN Remote LoRA Training',
+      ignoreFocusOut: true,
+    });
+    if (title === undefined) return;
+    const model = await vscode.window.showInputBox({
+      prompt: 'Test model',
+      value: cfg.testModel || 'meta-llama/Meta-Llama-3.1-8B-Instruct-Turbo',
+      ignoreFocusOut: true,
+    });
+    if (model === undefined) return;
+    const endpoint = await vscode.window.showInputBox({
+      prompt: 'Optional test endpoint URL (OpenAI-compatible). Leave empty for local Ollama.',
+      value: cfg.testEndpoint || 'https://api.together.xyz/v1/chat/completions',
+      ignoreFocusOut: true,
+    });
+    if (endpoint === undefined) return;
+    const apiKey = await vscode.window.showInputBox({
+      prompt: 'Optional endpoint API key (leave empty to keep current)',
+      value: cfg.testApiKey || '',
+      password: true,
+      ignoreFocusOut: true,
+    });
+    if (apiKey === undefined) return;
+
+    const usernameValue = username.trim();
+    const slugValue = slug.trim() || 'merlin-remote-train';
+    const titleValue = title.trim() || 'MERLIN Remote LoRA Training';
+    const modelValue = model.trim() || 'meta-llama/Meta-Llama-3.1-8B-Instruct-Turbo';
+
+    const ws = vscode.workspace.getConfiguration('autodev-v4.remoteTrain');
+    await ws.update('pythonPath', pythonPath.trim(), vscode.ConfigurationTarget.Workspace);
+    await ws.update('kaggleUsername', usernameValue, vscode.ConfigurationTarget.Workspace);
+    await ws.update('kernelSlug', slugValue, vscode.ConfigurationTarget.Workspace);
+    await ws.update('kernelTitle', titleValue, vscode.ConfigurationTarget.Workspace);
+    await ws.update('testModel', modelValue, vscode.ConfigurationTarget.Workspace);
+    await ws.update('testEndpoint', endpoint.trim(), vscode.ConfigurationTarget.Workspace);
+    await ws.update('testApiKey', apiKey.trim(), vscode.ConfigurationTarget.Workspace);
+    vscode.window.showInformationMessage('MERLIN Remote Trainer config updated');
+    this.update();
   }
 
-  _update() {
-    if (!this._view) return;
-    const dir = capturesDir(this._root);
-    const screenshotPath = path.join(dir, 'latest.png');
-    const state = readJsonSafe(path.join(dir, 'state.json'));
-    const perf = readJsonSafe(path.join(dir, 'perf.json'));
-    const log = readJsonSafe(path.join(dir, 'log.json')) || [];
+  async applyInferencePreset(name) {
+    const preset = INFERENCE_PRESETS[name];
+    if (!preset) return;
+    const ws = vscode.workspace.getConfiguration('autodev-v4.remoteTrain');
+    await ws.update('testEndpoint', preset.endpoint, vscode.ConfigurationTarget.Workspace);
+    await ws.update('testModel', preset.model, vscode.ConfigurationTarget.Workspace);
+    const key = await vscode.window.showInputBox({
+      prompt: `${preset.label} API key (optional now, required for remote chat)`,
+      value: '',
+      password: true,
+      ignoreFocusOut: true,
+    });
+    if (key !== undefined && key.trim()) {
+      await ws.update('testApiKey', key.trim(), vscode.ConfigurationTarget.Workspace);
+    }
+    vscode.window.showInformationMessage(`Preset ${preset.label} applique`);
+    this.update();
+  }
 
-    // Screenshot base64
-    let screenshotSrc = '';
-    const age = fileAge(screenshotPath);
-    if (age < 300000) { // 5 min max
+  async configureRunpodPreset() {
+    const endpointOrId = await vscode.window.showInputBox({
+      prompt: 'RunPod endpoint URL ou endpoint ID',
+      value: '',
+      ignoreFocusOut: true,
+    });
+    if (endpointOrId === undefined || !endpointOrId.trim()) return;
+    const normalized = endpointOrId.trim().startsWith('http')
+      ? endpointOrId.trim()
+      : `https://api.runpod.ai/v2/${endpointOrId.trim()}/openai/v1/chat/completions`;
+    const model = await vscode.window.showInputBox({
+      prompt: 'RunPod model name',
+      value: 'meta-llama/Meta-Llama-3.1-8B-Instruct',
+      ignoreFocusOut: true,
+    });
+    if (model === undefined || !model.trim()) return;
+    const key = await vscode.window.showInputBox({
+      prompt: 'RunPod API key (optional now, required for remote chat)',
+      value: '',
+      password: true,
+      ignoreFocusOut: true,
+    });
+    if (key === undefined) return;
+
+    const ws = vscode.workspace.getConfiguration('autodev-v4.remoteTrain');
+    await ws.update('testEndpoint', normalized, vscode.ConfigurationTarget.Workspace);
+    await ws.update('testModel', model.trim(), vscode.ConfigurationTarget.Workspace);
+    await ws.update('testApiKey', key.trim(), vscode.ConfigurationTarget.Workspace);
+    vscode.window.showInformationMessage('Preset RunPod applique');
+    this.update();
+  }
+
+  async runRemote(action, brain) {
+    if (this.isBusy) return;
+    const root = this.resolveRoot();
+    if (!root) {
+      vscode.window.showWarningMessage('Ouvre le workspace du projet (tools/lora/remote_kaggle_train.py) pour les actions Kaggle.');
+      this.update();
+      return;
+    }
+    const cfg = getConfig();
+    const effectiveBrain = brain || this.selectedBrain || '';
+    const args = [action, '--workspace', root];
+    if (effectiveBrain) args.push('--brain', effectiveBrain);
+    if (cfg.kaggleUsername) args.push('--username', cfg.kaggleUsername);
+    if (cfg.kernelSlug && !effectiveBrain) args.push('--slug', cfg.kernelSlug);
+    if (action === 'setup' && cfg.kernelTitle && !effectiveBrain) args.push('--title', cfg.kernelTitle);
+    if (action === 'download') args.push('--output', path.join(root, 'output', 'remote_kaggle'));
+
+    const label = effectiveBrain ? `${action} [${effectiveBrain}]` : action;
+    this.isBusy = true;
+    this.update();
+    this.output.show(true);
+    await vscode.window.withProgress(
+      { location: vscode.ProgressLocation.Notification, title: `MERLIN Remote: ${label}` },
+      async () => {
+        await runPython(root, args, this.output);
+      }
+    ).then(
+      () => vscode.window.showInformationMessage(`Action '${label}' terminee`),
+      (err) => vscode.window.showErrorMessage(`Action '${label}' en erreur: ${err.message}`)
+    );
+    this.isBusy = false;
+    this.update();
+  }
+
+  async trainAll() {
+    if (this.isBusy) return;
+    const root = this.resolveRoot();
+    if (!root) return;
+
+    this.isBusy = true;
+    this.update();
+    this.output.show(true);
+
+    for (const brain of BRAIN_LIST) {
       try {
-        const buf = fs.readFileSync(screenshotPath);
-        screenshotSrc = 'data:image/png;base64,' + buf.toString('base64');
-      } catch { /* ignore */ }
-    }
-
-    const running = isGodotRunning();
-    const stateAge = state ? timeAgo(state.datetime || state.timestamp * 1000) : '';
-
-    // State table
-    const run = state ? state.run : null;
-    let stateRows = '';
-    if (run) {
-      const lifeColor = (run.life || 0) < 30 ? CRT.red : (run.life || 0) < 60 ? CRT.amber : CRT.green;
-      const aspects = run.aspects || {};
-      const aspStr = `C:${aspects.Corps || 0} A:${aspects.Ame || 0} M:${aspects.Monde || 0}`;
-      stateRows = [
-        ['Phase', run.phase || '-', ''],
-        ['Biome', (run.biome || '-').replace('foret_', ''), ''],
-        ['Life', `${run.life || 0}/100`, lifeColor],
-        ['Souffle', `${run.souffle || 0}/7`, ''],
-        ['Aspects', aspStr, ''],
-        ['Card #', String(run.cards_played || 0), ''],
-        ['Mission', run.mission_type ? `${run.mission_progress}/${run.mission_total}` : '-', ''],
-      ].map(([k, v, c]) => `<tr><td class="k">${k}</td><td class="${c ? '' : 'v'}" style="${c ? 'color:' + c : ''}">${escapeHtml(v)}</td></tr>`).join('');
-    }
-
-    // Perf row
-    let perfHtml = '';
-    if (perf) {
-      const fpsColor = (perf.fps_avg || 0) < 30 ? CRT.red : (perf.fps_avg || 0) < 50 ? CRT.amber : CRT.green;
-      const genMs = perf.card_gen_p50_ms || 0;
-      const genColor = genMs > 15000 ? CRT.red : genMs > 10000 ? CRT.amber : CRT.green;
-      perfHtml = `<div class="section-label">Performance</div><table>
-        <tr><td class="k">FPS</td><td style="color:${fpsColor}">${(perf.fps_avg || 0).toFixed(0)}</td></tr>
-        <tr><td class="k">Card gen p50</td><td style="color:${genColor}">${genMs > 0 ? (genMs / 1000).toFixed(1) + 's' : '-'}</td></tr>
-        <tr><td class="k">Cards gen</td><td class="v">${perf.cards_generated || 0}</td></tr>
-        <tr><td class="k">Fallback</td><td class="v">${((perf.fallback_rate || 0) * 100).toFixed(0)}%</td></tr>
-      </table>`;
-    }
-
-    // Log tail
-    const logLines = (Array.isArray(log) ? log : []).slice(-8);
-    const logHtml = logLines.length > 0
-      ? logLines.map(l => {
-          let colored = escapeHtml(String(l));
-          colored = colored.replace(/\[GameObserver\]/g, `<span style="color:${CRT.cyan}">[GameObserver]</span>`);
-          colored = colored.replace(/\[TRIADE\]/g, `<span style="color:${CRT.amber}">[TRIADE]</span>`);
-          colored = colored.replace(/\[MerlinStore\]/g, `<span style="color:${CRT.green}">[MerlinStore]</span>`);
-          return `<div style="font-size:9px;color:${CRT.gray};white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin:1px 0">${colored}</div>`;
-        }).join('')
-      : '<div class="empty">No logs yet</div>';
-
-    this._view.webview.html = `<!DOCTYPE html><html><head><style>${CSS_BASE}
-      .screenshot { width:100%; border:1px solid ${CRT.border}; display:block; margin-bottom:8px; image-rendering:pixelated; }
-      .no-screenshot { background:${CRT.panel}; border:1px dashed ${CRT.border}; color:${CRT.gray};
-                       text-align:center; padding:20px 8px; font-size:10px; margin-bottom:8px; }
-    </style></head><body>
-      <div class="header">
-        <span class="title">LIVE VIEW</span>
-        <span class="status" style="color:${running ? CRT.green : CRT.gray}">${running ? '\u25CF LIVE' : '\u25CB IDLE'}</span>
-      </div>
-      ${screenshotSrc
-        ? `<img class="screenshot" src="${screenshotSrc}" title="Game screenshot">`
-        : `<div class="no-screenshot">No screenshot available</div>`}
-      ${stateAge ? `<div style="font-size:9px;color:${CRT.gray};margin-bottom:4px">State: ${stateAge}</div>` : ''}
-      ${stateRows ? `<div class="section-label">Run State</div><table>${stateRows}</table>` : ''}
-      ${perfHtml}
-      <div class="sep"></div>
-      <div class="section-label">Log</div>
-      ${logHtml}
-      <div class="btn-row" style="margin-top:6px">
-        <button class="btn-amber" onclick="capture()">Capture</button>
-        <button onclick="refresh()">Refresh</button>
-      </div>
-      <script>
-        const vscode = acquireVsCodeApi();
-        function capture() { vscode.postMessage({type:'screenshot'}); }
-        function refresh() { vscode.postMessage({type:'refresh'}); }
-      </script>
-    </body></html>`;
-  }
-
-  dispose() { if (this._interval) { clearInterval(this._interval); this._interval = null; } }
-}
-
-// ============================================================
-// PANEL 3 — COMMANDS
-// ============================================================
-
-class CommandsProvider {
-  constructor(root) { this._root = root; this._view = null; this._interval = null; }
-
-  resolveWebviewView(webviewView) {
-    this._view = webviewView;
-    webviewView.webview.options = { enableScripts: true };
-    webviewView.webview.onDidReceiveMessage((msg) => {
-      if (msg.type === 'cmd') {
-        sendGameCommand(this._root, msg.action, msg.params || {});
-        vscode.window.setStatusBarMessage(`Sent: ${msg.action}`, 2000);
-      }
-    });
-    this._interval = setInterval(() => this._update(), 5000);
-    this._update();
-  }
-
-  _update() {
-    if (!this._view) return;
-    const result = readCommandResult(this._root);
-    const resultHtml = result
-      ? `<div style="font-size:9px;color:${result.status === 'ok' ? CRT.green : CRT.red};margin-top:4px">
-           Last: ${escapeHtml(result.id)} = ${result.status}</div>`
-      : '';
-
-    this._view.webview.html = `<!DOCTYPE html><html><head><style>${CSS_BASE}
-      .cmd-grid { display:grid; grid-template-columns:1fr 1fr; gap:4px; }
-      .cmd-btn { padding:6px 4px; font-size:10px; text-align:center; width:100%; }
-    </style></head><body>
-      <div class="header">
-        <span class="title">COMMANDS</span>
-        <span class="status" style="color:${CRT.cyan}">GameObserver</span>
-      </div>
-
-      <div class="section-label">Capture</div>
-      <div class="cmd-grid">
-        <button class="cmd-btn btn-amber" onclick="cmd('screenshot')">Screenshot</button>
-        <button class="cmd-btn btn-magenta" onclick="cmd('burst_screenshot',{count:15,interval:0.12})">Burst x15</button>
-      </div>
-
-      <div class="section-label" style="margin-top:8px">Play</div>
-      <div class="cmd-grid">
-        <button class="cmd-btn" onclick="cmd('click_option',{option:1})">Option 1 (L)</button>
-        <button class="cmd-btn" onclick="cmd('click_option',{option:2})">Option 2 (C)</button>
-        <button class="cmd-btn" onclick="cmd('click_option',{option:3})">Option 3 (R)</button>
-        <button class="cmd-btn btn-cyan" onclick="cmd('simulate_click',{x:400,y:300})">Click Center</button>
-      </div>
-
-      <div class="section-label" style="margin-top:8px">Keys</div>
-      <div class="cmd-grid">
-        <button class="cmd-btn" onclick="cmd('simulate_key',{key:'enter'})">Enter</button>
-        <button class="cmd-btn" onclick="cmd('simulate_key',{key:'escape'})">Escape</button>
-        <button class="cmd-btn" onclick="cmd('simulate_key',{key:'space'})">Space</button>
-        <button class="cmd-btn" onclick="cmd('simulate_click',{x:400,y:500})">Click Bottom</button>
-      </div>
-
-      <div class="section-label" style="margin-top:8px">Inspect</div>
-      <div class="cmd-grid">
-        <button class="cmd-btn btn-cyan" onclick="cmd('list_buttons')">List Buttons</button>
-        <button class="cmd-btn btn-cyan" onclick="cmd('get_tree_snapshot')">Scene Tree</button>
-        <button class="cmd-btn" onclick="cmd('get_state')">Force State</button>
-        <button class="cmd-btn" onclick="cmd('mark_card_gen_start')">Mark Gen Start</button>
-      </div>
-
-      ${resultHtml}
-      <script>
-        const vscode = acquireVsCodeApi();
-        function cmd(action, params) { vscode.postMessage({type:'cmd', action, params: params||{}}); }
-      </script>
-    </body></html>`;
-  }
-
-  dispose() { if (this._interval) { clearInterval(this._interval); this._interval = null; } }
-}
-
-// ============================================================
-// PANEL 4 — DIAGNOSTICS
-// ============================================================
-
-class DiagnosticsProvider {
-  constructor(root) { this._root = root; this._view = null; this._interval = null; }
-
-  resolveWebviewView(webviewView) {
-    this._view = webviewView;
-    webviewView.webview.options = { enableScripts: false };
-    this._interval = setInterval(() => this._update(), 5000);
-    this._update();
-  }
-
-  _update() {
-    if (!this._view) return;
-    const dir = capturesDir(this._root);
-    const state = readJsonSafe(path.join(dir, 'state.json'));
-    const perf = readJsonSafe(path.join(dir, 'perf.json'));
-    const screenshotExists = fs.existsSync(path.join(dir, 'latest.png')) && fileAge(path.join(dir, 'latest.png')) < 60000;
-
-    const run = state ? state.run : null;
-
-    // Build checklist evaluations from live data
-    const checks = [];
-
-    // Visual (auto-evaluate what we can)
-    checks.push({ cat: 'VISUAL', name: 'Screenshot recent', pass: screenshotExists });
-    checks.push({ cat: 'VISUAL', name: 'Game running', pass: isGodotRunning() });
-
-    // Gameplay
-    if (run) {
-      checks.push({ cat: 'GAMEPLAY', name: 'Aspects changing', pass: run.aspects && (run.aspects.Corps !== 0 || run.aspects.Ame !== 0 || run.aspects.Monde !== 0) });
-      checks.push({ cat: 'GAMEPLAY', name: 'Life < 100', pass: (run.life || 100) < 100 || (run.cards_played || 0) === 0 });
-      checks.push({ cat: 'GAMEPLAY', name: 'Cards played > 0', pass: (run.cards_played || 0) > 0 });
-      checks.push({ cat: 'GAMEPLAY', name: 'Souffle tracking', pass: run.souffle !== undefined });
-      checks.push({ cat: 'GAMEPLAY', name: 'Phase valid', pass: ['card', 'minigame', 'narrator', 'hub', 'transition', 'intro'].includes(run.phase) });
-    }
-
-    // Performance
-    if (perf) {
-      checks.push({ cat: 'PERF', name: 'FPS > 30', pass: (perf.fps_avg || 0) > 30 });
-      const p50 = perf.card_gen_p50_ms || 0;
-      checks.push({ cat: 'PERF', name: 'Card gen p50 < 10s', pass: p50 === 0 || p50 < 10000 });
-      checks.push({ cat: 'PERF', name: 'Fallback < 10%', pass: (perf.fallback_rate || 0) < 0.1 });
-    }
-
-    // Group by category
-    const cats = {};
-    for (const c of checks) {
-      if (!cats[c.cat]) cats[c.cat] = [];
-      cats[c.cat].push(c);
-    }
-
-    let checksHtml = '';
-    for (const [cat, items] of Object.entries(cats)) {
-      const passed = items.filter(i => i.pass).length;
-      const total = items.length;
-      const pct = Math.round(passed / total * 100);
-      const color = pct === 100 ? CRT.green : pct >= 60 ? CRT.amber : CRT.red;
-      checksHtml += `<div class="section-label">${cat} <span style="color:${color}">${passed}/${total}</span></div>`;
-      for (const item of items) {
-        const icon = item.pass ? `<span style="color:${CRT.green}">\u2713</span>` : `<span style="color:${CRT.red}">\u2717</span>`;
-        checksHtml += `<div style="font-size:10px;margin:2px 0;display:flex;gap:6px">${icon} <span>${escapeHtml(item.name)}</span></div>`;
+        this.output.appendLine(`\n=== Setup + Submit: ${brain} ===`);
+        await runPython(root, ['setup', '--workspace', root, '--brain', brain], this.output);
+        await runPython(root, ['submit', '--workspace', root, '--brain', brain], this.output);
+        this.update();
+      } catch (err) {
+        this.output.appendLine(`[ERROR] ${brain}: ${err.message}`);
+        vscode.window.showErrorMessage(`Train All: ${brain} failed — ${err.message}`);
       }
     }
 
-    // Known issues
-    const issues = [];
-    if (run && run.cards_played > 2 && run.aspects && run.aspects.Corps === 0 && run.aspects.Ame === 0 && run.aspects.Monde === 0) {
-      issues.push({ sev: 'HIGH', text: 'Aspects stuck at 0/0/0 after ' + run.cards_played + ' cards' });
-    }
-    if (perf && perf.card_gen_p50_ms > 15000) {
-      issues.push({ sev: 'HIGH', text: 'Card gen > 15s (p50: ' + (perf.card_gen_p50_ms / 1000).toFixed(1) + 's)' });
-    }
-    if (perf && perf.fps_avg && perf.fps_avg < 20) {
-      issues.push({ sev: 'MEDIUM', text: 'Low FPS: ' + perf.fps_avg.toFixed(0) });
-    }
-
-    const issuesHtml = issues.length > 0
-      ? issues.map(i => {
-          const sevColor = i.sev === 'CRITICAL' ? CRT.red : i.sev === 'HIGH' ? CRT.amber : CRT.cyan;
-          return `<div style="font-size:10px;margin:2px 0"><span style="color:${sevColor};font-weight:bold">[${i.sev}]</span> ${escapeHtml(i.text)}</div>`;
-        }).join('')
-      : '<div class="empty">No active issues</div>';
-
-    // Overall score
-    const totalPassed = checks.filter(c => c.pass).length;
-    const totalChecks = checks.length;
-    const overallPct = totalChecks > 0 ? Math.round(totalPassed / totalChecks * 100) : 0;
-    const overallColor = overallPct === 100 ? CRT.green : overallPct >= 70 ? CRT.amber : CRT.red;
-
-    this._view.webview.html = `<!DOCTYPE html><html><head><style>${CSS_BASE}</style></head><body>
-      <div class="header">
-        <span class="title">DIAGNOSTICS</span>
-        <span class="status" style="color:${overallColor}">${overallPct}%</span>
-      </div>
-      <div style="margin-bottom:8px;color:${overallColor};font-size:10px;letter-spacing:-0.5px">${progressBar(overallPct, 20)} ${totalPassed}/${totalChecks}</div>
-      ${checksHtml}
-      <div class="sep"></div>
-      <div class="section-label">Active Issues</div>
-      ${issuesHtml}
-    </body></html>`;
+    this.isBusy = false;
+    this.update();
+    vscode.window.showInformationMessage('Train All: all brains submitted');
   }
 
-  dispose() { if (this._interval) { clearInterval(this._interval); this._interval = null; } }
-}
-
-// ============================================================
-// PANEL 5 — OVERNIGHT
-// ============================================================
-
-class OvernightProvider {
-  constructor(root) { this._root = root; this._view = null; this._interval = null; }
-
-  resolveWebviewView(webviewView) {
-    this._view = webviewView;
-    webviewView.webview.options = { enableScripts: true };
-    webviewView.webview.onDidReceiveMessage((msg) => {
-      if (msg.type === 'open-report') this._openReport();
-    });
-    this._interval = setInterval(() => this._update(), 10000);
-    this._update();
+  async openPanel() {
+    await vscode.commands.executeCommand('workbench.view.extension.autodev-v4-sidebar');
+    try {
+      await vscode.commands.executeCommand('autodev-v4.remoteTrain.focus');
+    } catch {
+      // Focus command can be unavailable on some VS Code builds.
+    }
+    this.update();
   }
 
-  _update() {
-    if (!this._view) return;
-    const dir = capturesDir(this._root);
-    const reportPath = path.join(dir, 'overnight_report.json');
-    const report = readJsonSafe(reportPath);
-
-    if (!report || !report.cycles || report.cycles.length === 0) {
-      this._view.webview.html = `<!DOCTYPE html><html><head><style>${CSS_BASE}</style></head><body>
-        <div class="header">
-          <span class="title">OVERNIGHT</span>
-          <span class="status" style="color:${CRT.gray}">\u25CB STANDBY</span>
-        </div>
-        <div class="empty" style="margin-top:20px">No overnight session active.<br><br>
-          Trigger overnight mode in Claude Code:<br>
-          <span style="color:${CRT.cyan}">"overnight"</span> or <span style="color:${CRT.cyan}">"mode nuit"</span>
-        </div>
-        <div style="margin-top:12px;font-size:9px;color:${CRT.gray}">
-          Parameters: 12 cycles, 8 cards/cycle, ~7h max<br>
-          Report: overnight_report.json
-        </div>
-      </body></html>`;
+  openKaggle() {
+    const root = this.resolveRoot();
+    const state = root ? readJson(remoteState(root)) : {};
+    const stateUrl = typeof state.url === 'string' ? state.url.trim() : '';
+    if (stateUrl) {
+      vscode.env.openExternal(vscode.Uri.parse(stateUrl));
       return;
     }
 
-    const cycles = report.cycles;
-    const latest = cycles[cycles.length - 1];
-    const totalCards = cycles.reduce((s, c) => s + (c.cards_played || 0), 0);
-    const totalIssues = cycles.reduce((s, c) => {
-      const f = c.issues_found || {};
-      return s + (f.critical || 0) + (f.high || 0) + (f.medium || 0) + (f.low || 0);
-    }, 0);
-    const totalFixed = cycles.reduce((s, c) => s + (c.issues_fixed || []).length, 0);
+    const cfg = getConfig();
+    let username = String(cfg.kaggleUsername || '').trim();
+    let slug = String(cfg.kernelSlug || '').trim();
 
-    const isActive = latest && !['time_limit', 'all_pass', 'crash_unrecoverable', 'context_limit'].includes(report.exit_reason);
-    const statusColor = isActive ? CRT.green : CRT.amber;
-    const statusText = isActive ? 'RUNNING' : (report.exit_reason || 'DONE');
-
-    // Cycle progress
-    const cyclePct = Math.round(cycles.length / (report.cycle_target || 12) * 100);
-
-    // Checklist progression table
-    let progressTable = '';
-    if (cycles.length > 0) {
-      progressTable = '<div class="section-label" style="margin-top:8px">Checklist Progression</div>';
-      progressTable += '<table><tr><td class="k">Cycle</td><td class="k">Visual</td><td class="k">UX</td><td class="k">Game</td><td class="k">Perf</td></tr>';
-      for (const c of cycles.slice(-6)) {
-        const sc = c.checklist_scores || {};
-        progressTable += `<tr>
-          <td class="v">#${c.cycle || '?'}</td>
-          <td class="v">${sc.visual || '-'}</td>
-          <td class="v">${sc.ux || '-'}</td>
-          <td class="v">${sc.gameplay || '-'}</td>
-          <td class="v">${sc.perf || '-'}</td>
-        </tr>`;
-      }
-      progressTable += '</table>';
+    const stateJob = String(state.job || '').trim();
+    const slashIndex = stateJob.indexOf('/');
+    if (slashIndex > 0) {
+      if (!username) username = stateJob.slice(0, slashIndex).trim();
+      if (!slug) slug = stateJob.slice(slashIndex + 1).trim();
     }
 
-    // Recent fixes
-    let fixesHtml = '';
-    const allFixes = cycles.flatMap(c => (c.issues_fixed || []).map(f => ({ ...f, cycle: c.cycle })));
-    if (allFixes.length > 0) {
-      fixesHtml = '<div class="section-label" style="margin-top:8px">Fixes Applied</div>';
-      for (const f of allFixes.slice(-5)) {
-        const color = f.status === 'VERIFIED' ? CRT.green : CRT.amber;
-        fixesHtml += `<div style="font-size:9px;margin:2px 0">
-          <span style="color:${color}">\u2713</span> #${f.cycle} ${escapeHtml(f.description || f.file || '?')}
-        </div>`;
-      }
+    if (!username || !slug) {
+      vscode.window.showWarningMessage('Impossible de construire le lien Kaggle. Renseigne username/slug ou lance setup.');
+      return;
     }
 
-    this._view.webview.html = `<!DOCTYPE html><html><head><style>${CSS_BASE}</style></head><body>
-      <div class="header">
-        <span class="title">OVERNIGHT</span>
-        <span class="status" style="color:${statusColor}">${statusText}</span>
-      </div>
-
-      <div style="margin-bottom:6px;color:${CRT.green};font-size:10px;letter-spacing:-0.5px">${progressBar(cyclePct, 20)} Cycle ${cycles.length}/${report.cycle_target || 12}</div>
-
-      <table>
-        <tr><td class="k">Cards played</td><td class="v">${totalCards}</td></tr>
-        <tr><td class="k">Issues found</td><td class="v">${totalIssues}</td></tr>
-        <tr><td class="k">Issues fixed</td><td style="color:${CRT.green}">${totalFixed}</td></tr>
-        <tr><td class="k">Duration</td><td class="v">${report.duration || '-'}</td></tr>
-      </table>
-
-      ${progressTable}
-      ${fixesHtml}
-
-      <div class="sep"></div>
-      <button onclick="openReport()" style="width:100%;padding:5px;font-size:10px">Open Full Report</button>
-      <script>
-        const vscode = acquireVsCodeApi();
-        function openReport() { vscode.postMessage({type:'open-report'}); }
-      </script>
-    </body></html>`;
+    const url = `https://www.kaggle.com/code/${username}/${slug}`;
+    vscode.env.openExternal(vscode.Uri.parse(url));
   }
 
-  async _openReport() {
-    const mdPath = path.join(capturesDir(this._root), 'overnight_report.md');
-    const jsonPath = path.join(capturesDir(this._root), 'overnight_report.json');
-    const target = fs.existsSync(mdPath) ? mdPath : jsonPath;
-    if (fs.existsSync(target)) {
-      const doc = await vscode.workspace.openTextDocument(target);
-      await vscode.window.showTextDocument(doc);
-    } else {
-      vscode.window.showWarningMessage('No overnight report found');
-    }
-  }
+  async chatSend(prompt) {
+    if (!prompt || this.isBusy) return;
+    const root = this.resolveRoot();
+    const cfg = getConfig();
+    this.chat.push({ role: 'user', content: prompt });
+    this.isBusy = true;
+    this.update();
 
-  dispose() { if (this._interval) { clearInterval(this._interval); this._interval = null; } }
-}
-
-// ============================================================
-// PANEL 6: STUDIO (Autonomous Game Studio dashboard)
-// ============================================================
-
-class StudioProvider {
-  constructor(root) { this._root = root; this._view = null; this._interval = null; }
-  resolveWebviewView(view) {
-    this._view = view;
-    view.webview.options = { enableScripts: true };
-    view.webview.onDidReceiveMessage(msg => {
-      if (msg.type === 'open-report' && msg.file) {
-        const fp = path.join(capturesDir(this._root), msg.file);
-        if (fs.existsSync(fp)) {
-          vscode.workspace.openTextDocument(fp).then(d => vscode.window.showTextDocument(d));
-        }
-      }
-    });
-    this._update();
-    this._interval = setInterval(() => this._update(), 10000);
-    view.onDidDispose(() => { if (this._interval) clearInterval(this._interval); });
-  }
-
-  _update() {
-    if (!this._view) return;
-    const dir = capturesDir(this._root);
-
-    // Read all studio agent reports
-    const reports = [
-      { key: 'playtest', file: 'playtest_log.json', label: 'Playtest Log', icon: '\u{1F3AE}' },
-      { key: 'balance', file: 'balance_report.json', label: 'Balance Report', icon: '\u2696' },
-      { key: 'stress', file: 'stress_test_report.json', label: 'Stress Test', icon: '\u26A1' },
-      { key: 'visual_qa', file: 'visual_qa_report.json', label: 'Visual QA', icon: '\u{1F441}' },
-      { key: 'regression', file: 'regression_log.json', label: 'Regression Log', icon: '\u{1F4C9}' },
-      { key: 'release', file: 'release_quality_report.json', label: 'Release Quality', icon: '\u2705' },
-    ];
-
-    let cardsHtml = '';
-    let activeCount = 0;
-
-    for (const r of reports) {
-      const fp = path.join(dir, r.file);
-      let status = 'NO DATA';
-      let statusColor = CRT.gray;
-      let detail = '';
-      let age = '';
-
-      if (fs.existsSync(fp)) {
+    this.output.show(true);
+    try {
+      let reply = '';
+      if (root) {
+        const args = ['chat', '--workspace', root, '--prompt', prompt, '--model', cfg.testModel];
+        if (cfg.testEndpoint) args.push('--endpoint', cfg.testEndpoint);
+        if (cfg.testApiKey) args.push('--api-key', cfg.testApiKey);
+        const result = await runPython(root, args, this.output);
+        reply = result.stdout.trim();
+        const lastLine = reply.split(/\r?\n/).filter(Boolean).slice(-1)[0] || '';
         try {
-          const data = JSON.parse(fs.readFileSync(fp, 'utf8'));
-          age = fileAge(fp);
-          activeCount++;
-
-          if (r.key === 'playtest') {
-            const runs = data.runs || [];
-            status = `${runs.length} runs`;
-            statusColor = runs.length >= 5 ? CRT.green : CRT.amber;
-            const lastRun = runs[runs.length - 1];
-            if (lastRun) detail = `Last: ${lastRun.archetype || '?'} (${lastRun.cards_played || '?'} cards)`;
-          } else if (r.key === 'balance') {
-            const anomalies = (data.anomalies || []).filter(a => a.severity === 'HIGH').length;
-            status = anomalies > 0 ? `${anomalies} HIGH` : 'BALANCED';
-            statusColor = anomalies > 0 ? CRT.red : CRT.green;
-          } else if (r.key === 'stress') {
-            const scenarios = data.scenarios || {};
-            const fails = Object.values(scenarios).filter(s => s.status === 'FAIL').length;
-            status = fails > 0 ? `${fails} FAIL` : 'ALL PASS';
-            statusColor = fails > 0 ? CRT.red : CRT.green;
-          } else if (r.key === 'visual_qa') {
-            const summary = data.summary || {};
-            const regressions = (summary.regression || 0) + (summary.breaking || 0);
-            status = regressions > 0 ? `${regressions} REGRESS` : 'CLEAN';
-            statusColor = regressions > 0 ? CRT.red : CRT.green;
-            detail = `${summary.pass || 0} pass, ${summary.minor || 0} minor`;
-          } else if (r.key === 'regression') {
-            const entries = data.entries || [];
-            const lastAlert = entries.filter(e => (e.regressions || []).length > 0);
-            status = lastAlert.length > 0 ? `${lastAlert.length} alerts` : 'STABLE';
-            statusColor = lastAlert.length > 0 ? CRT.amber : CRT.green;
-          } else if (r.key === 'release') {
-            status = data.verdict || 'UNKNOWN';
-            statusColor = status === 'GO' ? CRT.green : status === 'NO-GO' ? CRT.red : CRT.amber;
-            const score = data.score || {};
-            detail = `${score.pass || 0}/${score.total || 62} pass`;
-          }
-        } catch (e) {
-          status = 'PARSE ERROR';
-          statusColor = CRT.red;
+          const parsed = JSON.parse(lastLine);
+          if (parsed && parsed.reply) reply = String(parsed.reply);
+        } catch {
+          // Keep raw output if parser fails.
         }
+      } else {
+        this.output.appendLine('[MERLIN] Chat en mode direct (sans script Python du projet)');
+        reply = await directChat(prompt, cfg);
       }
+      if (!reply) reply = '(reponse vide)';
+      this.chat.push({ role: 'assistant', content: reply });
+    } catch (err) {
+      this.chat.push({ role: 'assistant', content: `Erreur chat: ${err.message}` });
+    }
 
-      cardsHtml += `<div style="background:${CRT.panel};border:1px solid ${CRT.border};padding:4px 6px;margin:3px 0;border-radius:2px">
-        <div style="display:flex;justify-content:space-between;align-items:center">
-          <span style="font-size:10px">${r.icon} ${r.label}</span>
-          <span style="font-size:9px;color:${statusColor};font-weight:bold">${status}</span>
-        </div>
-        ${detail ? `<div style="font-size:8px;color:${CRT.greenDim};margin-top:1px">${escapeHtml(detail)}</div>` : ''}
-        ${age ? `<div style="font-size:8px;color:${CRT.gray};margin-top:1px">${age}</div>` : ''}
-        ${fs.existsSync(path.join(dir, r.file)) ? `<div style="text-align:right"><a href="#" onclick="openFile('${r.file}')" style="font-size:8px;color:${CRT.cyan};text-decoration:none">[open]</a></div>` : ''}
+    this.isBusy = false;
+    this.update();
+  }
+  chatHtml() {
+    const lines = this.chat
+      .slice(-30)
+      .map((m) => {
+        const user = m.role === 'user';
+        return `<div class="msg ${user ? 'msgUser' : 'msgAssistant'}">
+          <div class="msgHead ${user ? 'user' : 'assistant'}">${user ? 'toi' : 'merlin'}</div>
+          ${escapeHtml(m.content)}
+        </div>`;
+      })
+      .join('');
+    return lines || `<div class="hint">Pas encore de message.</div>`;
+  }
+
+  brainStatusHtml(state) {
+    const brainsState = (state && state.brains) || {};
+    return BRAIN_LIST.map((b) => {
+      const bs = brainsState[b] || {};
+      const status = bs.status || 'pending';
+      const icon = BRAIN_ICONS[status] || BRAIN_ICONS.pending;
+      const label = BRAIN_LABELS[b];
+      const selected = b === this.selectedBrain;
+      const statusColor = status === 'running' ? CRT.cyan
+        : status === 'complete' || status === 'ready' ? CRT.green
+        : status === 'failed' ? CRT.red
+        : CRT.gray;
+      const bg = selected ? '#0c1e0c' : 'transparent';
+      const border = selected ? `1px solid ${CRT.greenDim}` : '1px solid transparent';
+      const time = bs.updated_at ? bs.updated_at.slice(11, 16) : '';
+      return `<div style="display:flex;justify-content:space-between;align-items:center;padding:3px 6px;cursor:pointer;background:${bg};border:${border};border-radius:3px;margin-bottom:2px" onclick="selectBrain('${b}')">
+        <span><span style="color:${statusColor}">${icon}</span> ${escapeHtml(label)}</span>
+        <span style="color:${CRT.gray};font-size:9px">${escapeHtml(status)}${time ? ' ' + time : ''}</span>
       </div>`;
-    }
+    }).join('');
+  }
 
-    // Baseline status
-    const baselineDir = path.join(dir, 'baseline');
-    let baselineCount = 0;
-    if (fs.existsSync(baselineDir)) {
-      try { baselineCount = fs.readdirSync(baselineDir).filter(f => f.endsWith('.png')).length; } catch (e) {}
-    }
+  update() {
+    if (!this.view) return;
+    const root = this.resolveRoot();
+    const cfg = getConfig();
+    const state = root ? readJson(remoteState(root)) : {};
+    const rawStatus = String(root ? (state.last_status || 'idle') : 'chat_only');
+    const color = this.isBusy
+      ? CRT.cyan
+      : /success|ready|submitted|running|complete|checked/i.test(rawStatus)
+      ? CRT.green
+      : /fail|error/i.test(rawStatus)
+      ? CRT.red
+      : root
+      ? CRT.amber
+      : CRT.cyan;
+    const statusLabel = this.isBusy ? 'BUSY' : (root ? rawStatus.toUpperCase() : 'CHAT ONLY');
+    const trainDisabled = (this.isBusy || !root) ? 'disabled' : '';
+    const openDisabled = this.isBusy ? 'disabled' : '';
+    const chatDisabled = this.isBusy ? 'disabled' : '';
+    const endpointLabel = cfg.testEndpoint ? cfg.testEndpoint : 'local Ollama';
 
-    this._view.webview.html = `<!DOCTYPE html><html><head><style>${CSS_BASE}</style></head><body>
+    // Count trained brains
+    const brainsState = (state && state.brains) || {};
+    const trainedCount = BRAIN_LIST.filter((b) => (brainsState[b] || {}).status === 'complete').length;
+    const brainSummary = `${trainedCount}/${BRAIN_LIST.length} trained`;
+
+    // Selected brain info
+    const selBrainState = brainsState[this.selectedBrain] || {};
+    const selJob = selBrainState.job || '';
+
+    this.view.webview.html = `<!DOCTYPE html><html><head><style>${CSS}
+      .brainBoard { border:1px solid ${CRT.border}; border-radius:3px; padding:4px; margin:6px 0; background:#061006; }
+    </style></head><body>
       <div class="header">
-        <span class="title">STUDIO</span>
-        <span class="status" style="color:${activeCount >= 4 ? CRT.green : activeCount > 0 ? CRT.amber : CRT.gray}">${activeCount}/${reports.length} active</span>
+        <span class="title">MERLIN MULTI-BRAIN</span>
+        <span class="status" style="color:${color}">${escapeHtml(statusLabel)}</span>
       </div>
 
-      <div style="font-size:9px;color:${CRT.greenDim};margin-bottom:6px">48 agents | 10 studio agents | 5 modes</div>
+      <div class="block">
+        <div class="blockTitle">Brain Status Board &mdash; ${escapeHtml(brainSummary)}</div>
+        <div class="brainBoard">${this.brainStatusHtml(state)}</div>
+        <div class="btnRow">
+          <button class="btnAmber" ${trainDisabled} onclick="send('trainAll')">Train All</button>
+          <button class="btnCyan" ${trainDisabled} onclick="send('configure')">Configure</button>
+          <button onclick="send('refresh')">Refresh</button>
+        </div>
+      </div>
 
-      ${cardsHtml}
+      <div class="block">
+        <div class="blockTitle">Actions &mdash; ${escapeHtml(BRAIN_LABELS[this.selectedBrain] || this.selectedBrain)}</div>
+        <table>
+          <tr><td class="k">Brain</td><td class="v">${escapeHtml(this.selectedBrain)}</td></tr>
+          <tr><td class="k">Kernel</td><td class="v">${escapeHtml(selJob || 'non configure')}</td></tr>
+          <tr><td class="k">Status</td><td class="v">${escapeHtml(selBrainState.status || 'pending')}</td></tr>
+        </table>
+        <div class="btnRow">
+          <button ${trainDisabled} onclick="sendBrain('doctor')">Doctor</button>
+          <button ${trainDisabled} onclick="sendBrain('setup')">Setup</button>
+          <button ${trainDisabled} onclick="sendBrain('submit')">Submit</button>
+          <button ${trainDisabled} onclick="sendBrain('status')">Status</button>
+          <button ${trainDisabled} onclick="sendBrain('download')">Download</button>
+        </div>
+        <div class="btnRow">
+          <button class="btnAmber" ${openDisabled} onclick="send('openKaggle')">Open Kaggle</button>
+        </div>
+        <div class="hint">Click a brain above to select it, then use actions.</div>
+      </div>
 
-      <div class="sep"></div>
-      <table>
-        <tr><td class="k">Baseline screenshots</td><td class="v">${baselineCount}</td></tr>
-      </table>
+      <div class="block">
+        <div class="blockTitle">Chat Merlin</div>
+        <table>
+          <tr><td class="k">Model</td><td class="v">${escapeHtml(cfg.testModel)}</td></tr>
+          <tr><td class="k">Endpoint</td><td class="v">${escapeHtml(endpointLabel)}</td></tr>
+        </table>
+        <div class="btnRow">
+          <button ${chatDisabled} onclick="send('presetTogether')">Preset Together</button>
+          <button ${chatDisabled} onclick="send('presetGroq')">Preset Groq</button>
+          <button ${chatDisabled} onclick="send('presetRunpod')">Preset RunPod</button>
+        </div>
+        <div class="chatWrap">
+          <div class="chatLog">${this.chatHtml()}</div>
+          <textarea id="prompt" placeholder="Parle a Merlin ici..."></textarea>
+          <div class="btnRow">
+            <button class="btnCyan" ${chatDisabled} onclick="chat()">Send</button>
+            <button ${chatDisabled} onclick="quickHello()">Bonjour</button>
+            <button ${chatDisabled} onclick="clearBox()">Clear</button>
+          </div>
+        </div>
+      </div>
 
       <script>
         const vscode = acquireVsCodeApi();
-        function openFile(f) { vscode.postMessage({type:'open-report', file: f}); }
+        function send(type) { vscode.postMessage({ type }); }
+        function selectBrain(brain) { vscode.postMessage({ type: 'selectBrain', brain }); }
+        function sendBrain(action) { vscode.postMessage({ type: action, brain: '${this.selectedBrain}' }); }
+        function clearBox() { document.getElementById('prompt').value = ''; }
+        function chat() {
+          const el = document.getElementById('prompt');
+          const prompt = (el.value || '').trim();
+          if (!prompt) return;
+          vscode.postMessage({ type: 'chat', prompt });
+          el.value = '';
+        }
+        function quickHello() { vscode.postMessage({ type: 'chat', prompt: 'Bonjour Merlin' }); }
       </script>
     </body></html>`;
   }
-
-  refresh() { this._update(); }
-  dispose() { if (this._interval) { clearInterval(this._interval); this._interval = null; } }
+  refresh() {
+    this.update();
+  }
 }
 
-// ============================================================
-// EXTENSION LIFECYCLE
-// ============================================================
+// ── STATUS READER ──
+// Reads tools/autodev/status/*.json and normalizes to a unified data model
+class StatusReader {
+  constructor(statusDir) {
+    this.statusDir = statusDir;
+    this.listeners = [];
+    this.watcher = null;
+    this.pollInterval = null;
+    this.debounceTimer = null;
+    this.lastData = null;
+  }
+
+  start() {
+    if (!fs.existsSync(this.statusDir)) {
+      // Poll until directory appears
+      this.pollInterval = setInterval(() => {
+        if (fs.existsSync(this.statusDir)) {
+          clearInterval(this.pollInterval);
+          this._startWatching();
+        }
+      }, 3000);
+      return;
+    }
+    this._startWatching();
+  }
+
+  _startWatching() {
+    // fs.watch
+    try {
+      this.watcher = fs.watch(this.statusDir, { persistent: false }, () => {
+        this._debouncedRead();
+      });
+    } catch {
+      // fs.watch can fail on some setups
+    }
+    // Polling fallback (2s)
+    this.pollInterval = setInterval(() => this._readAll(), 2000);
+    // Initial read
+    this._readAll();
+  }
+
+  _debouncedRead() {
+    if (this.debounceTimer) clearTimeout(this.debounceTimer);
+    this.debounceTimer = setTimeout(() => this._readAll(), 500);
+  }
+
+  _readAll() {
+    const data = this._buildNormalized();
+    const json = JSON.stringify(data);
+    if (json !== JSON.stringify(this.lastData)) {
+      this.lastData = data;
+      for (const fn of this.listeners) fn(data);
+    }
+  }
+
+  _buildNormalized() {
+    const controlState = readJson(path.join(this.statusDir, 'control_state.json'));
+    const session = readJson(path.join(this.statusDir, 'session.json'));
+    const healthReport = readJson(path.join(this.statusDir, 'health_report.json'));
+
+    // Determine global state
+    const state = controlState.state || session.state || 'idle';
+    const objective = controlState.objective || session.objective || '';
+    const checkpoint = session.checkpoint || '';
+
+    // Collect workers from multiple sources
+    const workers = [];
+    const seen = new Set();
+
+    // From session.json workers array
+    if (Array.isArray(session.workers)) {
+      for (const w of session.workers) {
+        const domain = w.name || w.domain || 'unknown';
+        if (seen.has(domain)) continue;
+        seen.add(domain);
+        workers.push({
+          domain,
+          status: w.status || 'pending',
+          current_task: w.current_task || '',
+          progress: w.progress || 0,
+          files_modified: w.files_modified || [],
+          error: w.error || '',
+          blockers: w.blockers || [],
+        });
+      }
+    }
+
+    // From health_report.json worker_statuses
+    if (healthReport.worker_statuses) {
+      for (const [domain, ws] of Object.entries(healthReport.worker_statuses)) {
+        if (seen.has(domain)) continue;
+        seen.add(domain);
+        workers.push({
+          domain,
+          status: ws.status || 'pending',
+          current_task: ws.current_task || '',
+          progress: ws.progress || 0,
+          files_modified: ws.files_modified || [],
+          error: ws.error || '',
+          blockers: ws.blockers || [],
+        });
+      }
+    }
+
+    // From individual domain JSON files
+    const domainFiles = ['gameplay', 'ui-ux', 'llm-lora', 'world-structure', 'visual-polish', 'game-director'];
+    for (const d of domainFiles) {
+      if (seen.has(d)) continue;
+      const fp = path.join(this.statusDir, `${d}.json`);
+      if (!fs.existsSync(fp)) continue;
+      const ws = readJson(fp);
+      if (!ws.domain) continue;
+      seen.add(d);
+      workers.push({
+        domain: ws.domain,
+        status: ws.status || 'pending',
+        current_task: ws.current_task || '',
+        progress: ws.progress || 0,
+        files_modified: ws.files_modified || [],
+        error: ws.error || '',
+        blockers: ws.blockers || [],
+      });
+    }
+
+    return { state, objective, checkpoint, workers };
+  }
+
+  onUpdate(fn) {
+    this.listeners.push(fn);
+  }
+
+  stop() {
+    if (this.watcher) { try { this.watcher.close(); } catch {} }
+    if (this.pollInterval) clearInterval(this.pollInterval);
+    if (this.debounceTimer) clearTimeout(this.debounceTimer);
+  }
+}
+
+// ── PROJECT DETECTION ──
+function detectProject() {
+  // 1. Explicit config override
+  const cfgProject = vscode.workspace.getConfiguration('autodev-v4.robotMonitor').get('project', 'auto');
+  if (cfgProject && cfgProject !== 'auto') return cfgProject;
+
+  // 2. Heuristic from workspace
+  const folders = vscode.workspace.workspaceFolders;
+  if (folders) {
+    for (const f of folders) {
+      const root = f.uri.fsPath;
+      if (fs.existsSync(path.join(root, 'project.godot'))) return 'merlin';
+      if (/partage.voc|data|orange/i.test(root)) return 'data';
+      if (/cours|teaching|ecole/i.test(root)) return 'cours';
+    }
+  }
+
+  // 3. Default
+  return 'merlin';
+}
+
+const THEME_BG = { merlin: '#050a05', data: '#0a0500', cours: '#050508' };
+
+// ── ROBOT MONITOR PROVIDER ──
+class RobotMonitorProvider {
+  constructor(statusDir, extensionUri) {
+    this.statusDir = statusDir;
+    this.extensionUri = extensionUri;
+    this.view = null;
+    this.statusReader = new StatusReader(statusDir);
+    this.statusReader.onUpdate((data) => this._sendUpdate(data));
+    this.statusReader.start();
+  }
+
+  resolveWebviewView(view) {
+    this.view = view;
+    view.webview.options = { enableScripts: true };
+
+    const projectId = detectProject();
+    const bodyBg = THEME_BG[projectId] || '#050a05';
+
+    // Read core and webview scripts
+    const extPath = this.extensionUri.fsPath || path.dirname(__filename);
+    const coreJs = fs.readFileSync(path.join(extPath, 'robot-monitor-core.js'), 'utf8');
+    const webviewJs = fs.readFileSync(path.join(extPath, 'robot-monitor-webview.js'), 'utf8');
+
+    view.webview.html = `<!DOCTYPE html>
+<html>
+<head>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { background: ${bodyBg}; overflow: hidden; font-family: 'Cascadia Code', 'Fira Code', Consolas, monospace; }
+#robotContainer { width: 100%; height: 100vh; display: flex; flex-direction: column; }
+#robotCanvas { display: block; flex: 1 1 auto; image-rendering: pixelated; image-rendering: crisp-edges; }
+#taskPanel { flex: 0 0 auto; max-height: 35%; overflow-y: auto; }
+</style>
+</head>
+<body>
+<div id="robotContainer">
+  <canvas id="robotCanvas"></canvas>
+  <div id="taskPanel"></div>
+</div>
+<script>window.__ROBOT_PROJECT = '${projectId}';</script>
+<script>${coreJs}</script>
+<script>${webviewJs}</script>
+</body>
+</html>`;
+
+    // Send initial data if available
+    if (this.statusReader.lastData) {
+      this._sendUpdate(this.statusReader.lastData);
+    }
+
+    view.onDidDispose(() => { this.view = null; });
+  }
+
+  _sendUpdate(data) {
+    if (this.view && this.view.webview) {
+      this.view.webview.postMessage({ type: 'statusUpdate', data });
+    }
+  }
+
+  dispose() {
+    this.statusReader.stop();
+  }
+}
 
 function activate(context) {
   const root = findProjectRoot();
-  if (!root) {
-    vscode.window.showWarningMessage('M.E.R.L.I.N. Orchestrator: No project.godot found');
-    return;
-  }
+  const provider = new RemoteTrainProvider(root);
 
-  // Ensure captures dir exists
-  const dir = capturesDir(root);
-  if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
-
-  // Register all 6 providers
-  const gameControl = new GameControlProvider(root);
-  const liveView = new LiveViewProvider(root);
-  const commands = new CommandsProvider(root);
-  const diagnostics = new DiagnosticsProvider(root);
-  const overnight = new OvernightProvider(root);
-  const studio = new StudioProvider(root);
+  // Robot Monitor
+  const statusDir = root
+    ? path.join(root, 'tools', 'autodev', 'status')
+    : path.join(process.cwd(), 'tools', 'autodev', 'status');
+  const robotProvider = new RobotMonitorProvider(statusDir, context.extensionUri);
 
   context.subscriptions.push(
-    vscode.window.registerWebviewViewProvider('autodev-v4.gameControl', gameControl),
-    vscode.window.registerWebviewViewProvider('autodev-v4.liveView', liveView),
-    vscode.window.registerWebviewViewProvider('autodev-v4.commands', commands),
-    vscode.window.registerWebviewViewProvider('autodev-v4.diagnostics', diagnostics),
-    vscode.window.registerWebviewViewProvider('autodev-v4.overnight', overnight),
-    vscode.window.registerWebviewViewProvider('autodev-v4.studio', studio),
+    vscode.window.registerWebviewViewProvider('autodev-v4.remoteTrain', provider),
+    vscode.window.registerWebviewViewProvider('autodev-v4.robotMonitor', robotProvider),
+    vscode.commands.registerCommand('autodev-v4.remoteTrain.open', async () => provider.openPanel()),
+    vscode.commands.registerCommand('autodev-v4.remoteTrain.refresh', () => provider.refresh()),
+    vscode.commands.registerCommand('autodev-v4.remoteTrain.configure', async () => provider.configure()),
+    vscode.commands.registerCommand('autodev-v4.remoteTrain.doctor', async () => provider.runRemote('doctor')),
+    vscode.commands.registerCommand('autodev-v4.remoteTrain.setup', async () => provider.runRemote('setup')),
+    vscode.commands.registerCommand('autodev-v4.remoteTrain.submit', async () => provider.runRemote('submit')),
+    vscode.commands.registerCommand('autodev-v4.remoteTrain.status', async () => provider.runRemote('status')),
+    vscode.commands.registerCommand('autodev-v4.remoteTrain.download', async () => provider.runRemote('download')),
+    vscode.commands.registerCommand('autodev-v4.remoteTrain.openKaggle', () => provider.openKaggle()),
+    vscode.commands.registerCommand('autodev-v4.robotMonitor.openStandalone', () => {
+      const serverScript = path.join(context.extensionUri.fsPath, 'robot-monitor-server.js');
+      const projectId = detectProject();
+      const proc = cp.spawn('node', [serverScript, '--status-dir', statusDir, '--port', '3847', '--project', projectId], {
+        detached: true, stdio: 'ignore',
+      });
+      proc.unref();
+      setTimeout(() => {
+        vscode.env.openExternal(vscode.Uri.parse('http://localhost:3847'));
+      }, 800);
+    })
   );
 
-  // Commands
-  context.subscriptions.push(
-    vscode.commands.registerCommand('autodev-v4.refresh', () => {
-      gameControl.refresh();
-      liveView._update();
-      commands._update();
-      diagnostics._update();
-      overnight._update();
-      studio._update();
-    }),
-    vscode.commands.registerCommand('autodev-v4.launchGame', () => {
-      launchGameBootstrap(root, () => gameControl.refresh());
-      setTimeout(() => gameControl.refresh(), 1000);
-    }),
-    vscode.commands.registerCommand('autodev-v4.killGodot', () => {
-      killGodot();
-      gameControl.refresh();
-    }),
-    vscode.commands.registerCommand('autodev-v4.validate', () => {
-      const terminal = vscode.window.createTerminal('Validate');
-      terminal.sendText(`cd "${root}" && .\\validate.bat`);
-      terminal.show();
-    }),
-    vscode.commands.registerCommand('autodev-v4.sendCommand', async () => {
-      const action = await vscode.window.showQuickPick(
-        ['screenshot', 'burst_screenshot', 'click_option', 'list_buttons', 'get_tree_snapshot', 'get_state', 'simulate_click', 'simulate_key'],
-        { placeHolder: 'Select command to send to game' }
-      );
-      if (action) {
-        sendGameCommand(root, action);
-        vscode.window.setStatusBarMessage(`Sent: ${action}`, 2000);
-      }
-    }),
-  );
-
-  // File watcher for captures dir
-  const watcher = vscode.workspace.createFileSystemWatcher(
-    new vscode.RelativePattern(dir, '*.{json,png}')
-  );
-  watcher.onDidChange(() => {
-    liveView._update();
-    diagnostics._update();
-  });
-  watcher.onDidCreate(() => {
-    liveView._update();
-    diagnostics._update();
-  });
-  context.subscriptions.push(watcher);
-
-  console.log('M.E.R.L.I.N. Orchestrator v6.0 activated');
+  context.subscriptions.push({ dispose: () => robotProvider.dispose() });
 }
 
-function deactivate() {
-  // Cleanup handled by VS Code disposing subscriptions
-}
+function deactivate() {}
 
 module.exports = { activate, deactivate };
+

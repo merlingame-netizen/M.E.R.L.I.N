@@ -1,0 +1,39 @@
+{
+  "updated_at": "2026-03-07T00:34:44Z",
+  "last_action": "setup:worker",
+  "last_status": "ready",
+  "chat_mode": "remote_endpoint",
+  "chat_model": "qwen2.5:1.5b",
+  "doctor_missing": [],
+  "job": "maximebabonneau/merlin-remote-lora-training",
+  "dataset": "C:\\Users\\PGNK2128\\Godot-MCP\\data\\ai\\training\\merlin_full_v9.jsonl",
+  "url": "https://www.kaggle.com/code/maximebabonneau/merlin-remote-lora-training",
+  "raw_status": "maximebabonneau/merlin-remote-lora-training has status \"KernelWorkerStatus.COMPLETE\"",
+  "output_dir": "C:\\Users\\PGNK2128\\Godot-MCP\\output\\remote_kaggle",
+  "brains": {
+    "narrator": {
+      "status": "ready",
+      "last_action": "setup",
+      "updated_at": "2026-03-07T00:34:44Z",
+      "doctor_missing": [],
+      "job": "maximebabonneau/merlin-lora-narrator",
+      "dataset": "C:\\Users\\PGNK2128\\Godot-MCP\\data\\ai\\training\\brains\\narrator_v1.jsonl"
+    },
+    "gamemaster": {
+      "status": "ready",
+      "last_action": "setup",
+      "updated_at": "2026-03-07T00:34:44Z",
+      "doctor_missing": [],
+      "job": "maximebabonneau/merlin-lora-gamemaster",
+      "dataset": "C:\\Users\\PGNK2128\\Godot-MCP\\data\\ai\\training\\brains\\gamemaster_v1.jsonl"
+    },
+    "worker": {
+      "status": "ready",
+      "last_action": "setup",
+      "updated_at": "2026-03-07T00:34:44Z",
+      "doctor_missing": [],
+      "job": "maximebabonneau/merlin-lora-worker",
+      "dataset": "C:\\Users\\PGNK2128\\Godot-MCP\\data\\ai\\training\\brains\\worker_v1.jsonl"
+    }
+  }
+}

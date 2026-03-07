@@ -1,0 +1,24 @@
+{
+  "version": 1,
+  "source": "merlin_full_v9.jsonl",
+  "brains": {
+    "narrator": {
+      "file": "narrator_v1.jsonl",
+      "total": 736,
+      "existing": 736,
+      "synthetic": 0
+    },
+    "gamemaster": {
+      "file": "gamemaster_v1.jsonl",
+      "total": 300,
+      "existing": 16,
+      "synthetic": 284
+    },
+    "worker": {
+      "file": "worker_v1.jsonl",
+      "total": 200,
+      "existing": 0,
+      "synthetic": 200
+    }
+  }
+}
