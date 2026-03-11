@@ -1,0 +1,70 @@
+{
+  "id": "llm_expert",
+  "name": "LLM Expert",
+  "version": "1.0.0",
+  "description": "LLM integration, prompt engineering, RAG management, and guardrails specialist",
+  "agent_file": ".claude/agents/llm_expert.md",
+  "category": "llm",
+  "capabilities": [
+    {
+      "task_type": "prompt_engineering",
+      "keywords": ["prompt", "template", "system prompt", "few-shot", "chain-of-thought"],
+      "confidence": 0.95,
+      "mode": "build"
+    },
+    {
+      "task_type": "rag_management",
+      "keywords": ["RAG", "context", "retrieval", "embedding", "vector"],
+      "confidence": 0.9,
+      "mode": "build"
+    },
+    {
+      "task_type": "output_parsing",
+      "keywords": ["parse", "JSON", "repair", "format", "GBNF", "grammar"],
+      "confidence": 0.9,
+      "mode": "build"
+    },
+    {
+      "task_type": "guardrails",
+      "keywords": ["guardrail", "hallucination", "toxicity", "safety", "filter"],
+      "confidence": 0.85,
+      "mode": "review"
+    },
+    {
+      "task_type": "model_config",
+      "keywords": ["Ollama", "Qwen", "temperature", "top_p", "parameters"],
+      "confidence": 0.85,
+      "mode": "analyze"
+    }
+  ],
+  "inputs": [
+    {
+      "name": "prompt_files",
+      "type": "file",
+      "required": false,
+      "description": "Existing prompt templates"
+    },
+    {
+      "name": "llm_output",
+      "type": "json",
+      "required": false,
+      "description": "LLM output samples for analysis"
+    }
+  ],
+  "outputs": [
+    {
+      "name": "prompt_recommendations",
+      "type": "json",
+      "description": "Optimized prompts and parameters"
+    },
+    {
+      "name": "guardrail_report",
+      "type": "json",
+      "description": "Safety and quality assessment"
+    }
+  ],
+  "file_scope": ["data/ai/**/*.json", "data/ai/**/*.gbnf", "addons/merlin_ai/**/*.gd"],
+  "dependencies": ["narrative_writer", "lora_translator"],
+  "cost_profile": "sonnet",
+  "max_concurrent": 1
+}

@@ -24,50 +24,6 @@ const BOND_TIERS := {
 	"soulmate": {"min": 91, "max": 100, "skills": -1, "modifier": 0.20},  # -1 = all skills
 }
 
-# ═══════════════════════════════════════════════════════════════════════════════
-# TRIADE SYSTEM (v2.0 - Replaces legacy gauges)
-# ═══════════════════════════════════════════════════════════════════════════════
-
-# 3 Aspects with 3 discrete states each
-enum AspectState { BAS = -1, EQUILIBRE = 0, HAUT = 1 }
-
-const TRIADE_ASPECTS := ["Corps", "Ame", "Monde"]
-
-const TRIADE_ASPECT_INFO := {
-	"Corps": {
-		"symbol": "spirale",
-		"animal_key": "ANIMAL_BOAR",
-		"name_key": "ASPECT_BODY",
-		"theme": "Force physique, endurance, sante",
-		"states": {
-			AspectState.BAS: "STATE_EXHAUSTED",
-			AspectState.EQUILIBRE: "STATE_ROBUST",
-			AspectState.HAUT: "STATE_OVERWORKED"
-		}
-	},
-	"Ame": {
-		"symbol": "triskell",
-		"animal_key": "ANIMAL_RAVEN",
-		"name_key": "ASPECT_SOUL",
-		"theme": "Esprit, magie, equilibre mental",
-		"states": {
-			AspectState.BAS: "STATE_LOST",
-			AspectState.EQUILIBRE: "STATE_CENTERED",
-			AspectState.HAUT: "STATE_POSSESSED"
-		}
-	},
-	"Monde": {
-		"symbol": "croix_celtique",
-		"animal_key": "ANIMAL_STAG",
-		"name_key": "ASPECT_WORLD",
-		"theme": "Relations, reputation, harmonie sociale",
-		"states": {
-			AspectState.BAS: "STATE_EXILED",
-			AspectState.EQUILIBRE: "STATE_INTEGRATED",
-			AspectState.HAUT: "STATE_TYRANT"
-		}
-	}
-}
 
 # ═══════════════════════════════════════════════════════════════════════════════
 # REWARD TYPES — Badge display for card option hover (Phase UX)
@@ -136,34 +92,8 @@ const MINIGAME_CATALOGUE := {
 	"echo": {"name": "Echo", "desc": "Suivre l'intensite sonore vers la bonne direction", "trigger": "voix|appel|son|echo|ecouter|cri|chant"},
 }
 
-# Souffle d'Ogham — single-use run resource.
-const SOUFFLE_MAX := 1
-const SOUFFLE_START := 1
-const SOUFFLE_SINGLE_USE := true
-
-# Card options (3 per card — all FREE, no Souffle cost)
+# Card options (3 per card)
 enum CardOption { LEFT = 0, CENTER = 1, RIGHT = 2 }
-
-const TRIADE_OPTION_INFO := {
-	CardOption.LEFT: {
-		"name": "left",
-		"type": "direct",
-		"cost": 0,
-		"description": "Action directe, consequences claires"
-	},
-	CardOption.CENTER: {
-		"name": "center",
-		"type": "wise",
-		"cost": 0,
-		"description": "Action sage, equilibree"
-	},
-	CardOption.RIGHT: {
-		"name": "right",
-		"type": "risky",
-		"cost": 0,
-		"description": "Action audacieuse, consequences extremes"
-	}
-}
 
 # ═══════════════════════════════════════════════════════════════════════════════
 # LIFE ESSENCE — Survival gauge (Phase 43, inspired by Hand of Fate 2)
@@ -217,85 +147,12 @@ const ARCHETYPE_DC_BONUS := {
 	"guide":       -1,   # Bienveillant: contexte social facilite
 }
 
-# B.4 — Aspect State DC modifiers
-# Chaque etat d'aspect hors EQUILIBRE ajoute une penalite au DC.
-# BAS = souffrance → actions plus difficiles.
-# HAUT = debordement → risque accru, instabilite.
-# Logique: nb_bas * PENALTY_BAS + nb_haut * PENALTY_HAUT (cumulatif par aspect).
-const ASPECT_DC_PENALTY_BAS := 2    # Par aspect en etat BAS
-const ASPECT_DC_PENALTY_HAUT := 1   # Par aspect en etat HAUT (surmenage)
-const ASPECT_DC_BONUS_FULL_EQUILIBRE := -1  # Bonus si TOUS les aspects sont EQUILIBRE
-
-# Labels narratifs pour les etats extremes (utilises dans le contexte RAG)
-const ASPECT_STATE_NARRATIVE := {
-	"Corps": {
-		AspectState.BAS:  "Corps Epuise — tes forces te font defaut.",
-		AspectState.HAUT: "Corps Surmene — tu te depenses au-dela du raisonnable.",
-	},
-	"Ame": {
-		AspectState.BAS:  "Ame Perdue — tu doutes, la magie te fuit.",
-		AspectState.HAUT: "Ame Possedee — les forces obscures te guidant avec trop de zele.",
-	},
-	"Monde": {
-		AspectState.BAS:  "Monde: Tu es exile, les liens sociaux s'effritent.",
-		AspectState.HAUT: "Monde: Tu rules en tyran, la resistance monte.",
-	},
-}
-
-# Souffle Perk types (Phase B — stub for now)
-const SOUFFLE_PERK_TYPES := {
-	"bouclier": {
-		"name": "Bouclier",
-		"description": "Annule les effets negatifs du prochain choix",
-		"uses_per_run": 1,
-	},
-	"surge": {
-		"name": "Surge",
-		"description": "Double les effets positifs + DC-5",
-		"uses_per_run": 1,
-	},
-	"vision": {
-		"name": "Vision",
-		"description": "Revele tous les effets caches + predit prochaine carte",
-		"uses_per_run": 1,
-	},
-	"canalisation": {
-		"name": "Canalisation",
-		"description": "Bestiole canalise une rune — effet puissant lie a l'Ogham equipe",
-		"uses_per_run": 1,
-	},
-}
-
-# Victory endings
-const TRIADE_VICTORY_ENDINGS := {
-	"harmonie": {
-		"title": "L'Harmonie",
-		"condition": "Mission accomplie avec 3 aspects equilibres"
-	},
-	"prix_paye": {
-		"title": "Le Prix Paye",
-		"condition": "Mission accomplie avec 1 aspect extreme"
-	},
-	"victoire_amere": {
-		"title": "La Victoire Amere",
-		"condition": "Mission accomplie avec karma negatif"
-	},
-	"tyran_juste": {
-		"title": "Le Tyran Juste",
-		"description": "Tu as conquis par la force, mais gouverne avec sagesse.",
-		"condition": "Mission accomplie avec Monde=HAUT, Corps=EQUILIBRE, Ame=EQUILIBRE"
-	}
-}
-
 # Session duration targets
-const TRIADE_SESSION := {
-	"cards_min": 25,
-	"cards_max": 35,
-	"cards_target": 30,
-	"seconds_per_card": 18,  # Average decision time
-	"mission_reveal_card": 4,  # Mission revealed around card 4
-	"climax_card_range": [20, 25]  # Climax around cards 20-25
-}
+const SESSION_CARDS_MIN := 25
+const SESSION_CARDS_MAX := 35
+const SESSION_CARDS_TARGET := 30
+const SESSION_SECONDS_PER_CARD := 18   # Average decision time
+const SESSION_MISSION_REVEAL_CARD := 4 # Mission revealed around card 4
 
 # ═══════════════════════════════════════════════════════════════════════════════
 # MISSION TEMPLATES — Hybrid system (template + LLM narrative dressing)
@@ -950,7 +807,7 @@ const MAX_ACTIVE_PROMISES := 2
 # MAP NODE TYPES — STS-like map for TRIADE (Phase 37)
 # ═══════════════════════════════════════════════════════════════════════════════
 
-const TRIADE_NODE_TYPES := {
+const NODE_TYPES := {
 	"NARRATIVE": {"weight": 0.40, "label": "Recit", "cards_min": 2, "cards_max": 4, "icon": "\u2731"},
 	"EVENT": {"weight": 0.15, "label": "Evenement", "cards_min": 1, "cards_max": 2, "icon": "\u2606"},
 	"PROMISE": {"weight": 0.08, "label": "Promesse", "cards_min": 1, "cards_max": 1, "icon": "\u2662"},
@@ -1023,7 +880,10 @@ const EXPEDITION_MERLIN_REACTIONS := {
 # Ref : docs/20_card_system/DOC_15_Faction_Alignment_System.md
 # ═══════════════════════════════════════════════════════════════════════════════
 
-const FACTIONS := ["druides", "korrigans", "humains", "anciens", "ankou"]
+# Factions (réputation 0-100)
+const FACTIONS: Array[String] = ["druides", "anciens", "korrigans", "niamh", "ankou"]
+const FACTION_THRESHOLD_CONTENT: int = 50    # déblocage cartes spéciales
+const FACTION_THRESHOLD_ENDING: int = 80     # déblocage fin de faction
 
 const FACTION_INFO := {
 	"druides":   {"name": "Druides de Bretagne", "symbol": "chene",      "aspect_affinity": "Ame"},
@@ -1143,14 +1003,6 @@ const ESSENCE_BASE_REWARD := 1       # +1 essence par carte résolue (base)
 const ESSENCE_TREASURE_REWARD := 15  # +15 essences pour une carte trésor
 const ESSENCE_START := 0             # Essences au démarrage d'un run (elles viennent du meta)
 
-# ═══════════════════════════════════════════════════════════════════════════════
-# ALIGNEMENT Corps/Ame/Monde — Score continu cross-run
-# Réf : docs/20_card_system/DOC_17_Run_Rules_Officiel.md
-# ═══════════════════════════════════════════════════════════════════════════════
-
-const ASPECT_MIN := -100             # Score minimum Corps/Ame/Monde
-const ASPECT_MAX := 100              # Score maximum Corps/Ame/Monde
-const ASPECT_DECAY_RATE := 0.08     # 8% de décroissance vers 0 par run (comme factions)
 
 # ═══════════════════════════════════════════════════════════════════════════════
 # VIE — Affichage segmenté

@@ -1,0 +1,64 @@
+{
+  "id": "godot_expert",
+  "name": "Godot Expert",
+  "version": "1.0.0",
+  "description": "Godot Engine performance optimization and architecture specialist",
+  "agent_file": ".claude/agents/godot_expert.md",
+  "category": "core",
+  "capabilities": [
+    {
+      "task_type": "performance_optimization",
+      "keywords": ["slow", "lag", "FPS", "memory", "bottleneck", "profiling"],
+      "confidence": 0.95,
+      "mode": "analyze"
+    },
+    {
+      "task_type": "gdextension",
+      "keywords": ["GDExtension", "native", "C++", "binding", "MerlinLLM"],
+      "confidence": 0.9,
+      "mode": "build"
+    },
+    {
+      "task_type": "architecture_review",
+      "keywords": ["architecture", "pattern", "singleton", "autoload", "signal"],
+      "confidence": 0.85,
+      "mode": "review"
+    },
+    {
+      "task_type": "shader_optimization",
+      "keywords": ["shader", "GPU", "render", "visual"],
+      "confidence": 0.8,
+      "mode": "build"
+    }
+  ],
+  "inputs": [
+    {
+      "name": "source_files",
+      "type": "file",
+      "required": true,
+      "description": "GDScript files to analyze"
+    },
+    {
+      "name": "profiling_data",
+      "type": "json",
+      "required": false,
+      "description": "Runtime profiling output"
+    }
+  ],
+  "outputs": [
+    {
+      "name": "optimization_report",
+      "type": "json",
+      "description": "Findings with severity and fixes"
+    },
+    {
+      "name": "modified_files",
+      "type": "artifact",
+      "description": "Optimized GDScript files"
+    }
+  ],
+  "file_scope": ["scripts/**/*.gd", "addons/**/*.gd", "*.shader"],
+  "dependencies": ["debug_qa", "performance_specialist"],
+  "cost_profile": "sonnet",
+  "max_concurrent": 1
+}

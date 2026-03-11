@@ -1,0 +1,52 @@
+{
+  "id": "audio_specialist",
+  "name": "Audio Specialist",
+  "version": "1.0.0",
+  "description": "SFX implementation, procedural audio, and music management specialist",
+  "agent_file": ".claude/agents/audio_specialist.md",
+  "category": "creative",
+  "capabilities": [
+    {
+      "task_type": "sfx_implementation",
+      "keywords": ["sound", "SFX", "audio", "effect", "beep", "procedural"],
+      "confidence": 0.9,
+      "mode": "build"
+    },
+    {
+      "task_type": "music_management",
+      "keywords": ["music", "BGM", "ambient", "soundtrack"],
+      "confidence": 0.8,
+      "mode": "build"
+    },
+    {
+      "task_type": "audio_review",
+      "keywords": ["volume", "mixing", "timing", "sync"],
+      "confidence": 0.75,
+      "mode": "review"
+    }
+  ],
+  "inputs": [
+    {
+      "name": "audio_request",
+      "type": "text",
+      "required": true,
+      "description": "Audio task description"
+    }
+  ],
+  "outputs": [
+    {
+      "name": "audio_implementation",
+      "type": "artifact",
+      "description": "Audio code or configuration"
+    },
+    {
+      "name": "audio_report",
+      "type": "json",
+      "description": "Performance and quality report"
+    }
+  ],
+  "file_scope": ["scripts/**/*.gd", "data/audio/**/*"],
+  "dependencies": ["ui_consistency"],
+  "cost_profile": "haiku",
+  "max_concurrent": 1
+}

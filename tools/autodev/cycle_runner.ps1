@@ -30,7 +30,7 @@ $statusDir = Join-Path $scriptDir "status"
 $logDir = Join-Path $scriptDir "logs"
 
 # Ensure directories exist
-@($statusDir, $logDir, (Join-Path $statusDir "patches"), (Join-Path $statusDir "feedback"), (Join-Path $statusDir "reviews")) | ForEach-Object {
+@($statusDir, $logDir, (Join-Path $statusDir "patches"), (Join-Path $statusDir "feedback"), (Join-Path $statusDir "reviews"), (Join-Path $statusDir "messages")) | ForEach-Object {
     if (-not (Test-Path $_)) { New-Item -ItemType Directory -Path $_ -Force | Out-Null }
 }
 
@@ -608,6 +608,108 @@ function Invoke-FeedbackAggregation {
     }
 }
 
+# ── A2A: Delegation Mini-Wave ─────────────────────────────────────────
+
+function Invoke-DelegationWave {
+    param([int]$CycleNum)
+
+    $messagesDir = Join-Path $statusDir "messages"
+    if (-not (Test-Path $messagesDir)) { return }
+
+    # Scan all inboxes for unprocessed delegation messages
+    $delegations = @()
+    $inboxFiles = Get-ChildItem $messagesDir -Filter "inbox_*.jsonl" -ErrorAction SilentlyContinue
+
+    foreach ($file in $inboxFiles) {
+        $lines = Get-Content $file.FullName -Encoding UTF8 -ErrorAction SilentlyContinue
+        foreach ($line in $lines) {
+            if (-not $line.Trim()) { continue }
+            try {
+                $msg = $line | ConvertFrom-Json
+                if ($msg.type -eq "delegation" -and -not $msg.processed) {
+                    $delegations += $msg
+                }
+            } catch {}
+        }
+    }
+
+    if ($delegations.Count -eq 0) {
+        Write-Host "[CYCLE] A2A: No pending delegations" -ForegroundColor Gray
+        return
+    }
+
+    Write-Host "[CYCLE] A2A: $($delegations.Count) pending delegation(s)" -ForegroundColor Magenta
+    Write-ControlState -State "running" -CycleNum $CycleNum -Wave "delegation" -Detail "Processing $($delegations.Count) A2A delegations"
+
+    foreach ($deleg in $delegations) {
+        Write-Host "[CYCLE] A2A: $($deleg.from_agent) -> $($deleg.to_agent): $($deleg.payload.action)" -ForegroundColor Magenta
+
+        # Archive the processed delegation
+        $archiveDir = Join-Path $messagesDir "_archive"
+        if (-not (Test-Path $archiveDir)) {
+            New-Item -ItemType Directory -Path $archiveDir -Force | Out-Null
+        }
+        $archiveFile = Join-Path $archiveDir "cycle_${CycleNum}_delegations.jsonl"
+        $deleg | ConvertTo-Json -Depth 5 -Compress | Add-Content $archiveFile -Encoding UTF8
+    }
+
+    # Process task_response messages: write feedback to requesting agent
+    foreach ($file in $inboxFiles) {
+        $lines = Get-Content $file.FullName -Encoding UTF8 -ErrorAction SilentlyContinue
+        foreach ($line in $lines) {
+            if (-not $line.Trim()) { continue }
+            try {
+                $msg = $line | ConvertFrom-Json
+                if ($msg.type -eq "task_response" -and $msg.reply_to) {
+                    Write-Host "[CYCLE] A2A: Response from $($msg.from_agent) to $($msg.to_agent) (re: $($msg.reply_to))" -ForegroundColor Green
+
+                    # Inject response into target agent's feedback file
+                    $feedbackFile = Join-Path $statusDir "feedback/$($msg.to_agent).json"
+                    $existingFeedback = @{}
+                    if (Test-Path $feedbackFile) {
+                        try { $existingFeedback = Get-Content $feedbackFile -Raw | ConvertFrom-Json -AsHashtable } catch {}
+                    }
+                    if (-not $existingFeedback.a2a_responses) {
+                        $existingFeedback["a2a_responses"] = @()
+                    }
+                    $existingFeedback["a2a_responses"] += @{
+                        from = $msg.from_agent
+                        reply_to = $msg.reply_to
+                        payload = $msg.payload
+                        timestamp = $msg.timestamp
+                    }
+                    $existingFeedback | ConvertTo-Json -Depth 5 | Set-Content $feedbackFile -Encoding UTF8
+
+                    # Archive the response
+                    $msg | ConvertTo-Json -Depth 5 -Compress | Add-Content $archiveFile -Encoding UTF8
+                }
+            } catch {}
+        }
+    }
+
+    # Clear processed inboxes
+    foreach ($file in $inboxFiles) {
+        $remaining = @()
+        $lines = Get-Content $file.FullName -Encoding UTF8 -ErrorAction SilentlyContinue
+        foreach ($line in $lines) {
+            if (-not $line.Trim()) { continue }
+            try {
+                $msg = $line | ConvertFrom-Json
+                if ($msg.type -ne "delegation" -and $msg.type -ne "task_response") {
+                    $remaining += $line
+                }
+            } catch {
+                $remaining += $line
+            }
+        }
+        if ($remaining.Count -gt 0) {
+            $remaining | Set-Content $file.FullName -Encoding UTF8
+        } else {
+            Remove-Item $file.FullName -ErrorAction SilentlyContinue
+        }
+    }
+}
+
 # (Wait-ForJobs replaced by Wait-ForProcesses above --visible windows)
 
 # ── Cycle Report ───────────────────────────────────────────────────────
@@ -697,6 +799,10 @@ while ($currentCycle -le ($Cycle + $MaxCycles - 1)) {
 
     # Feedback aggregation (between REVIEW and DIRECTOR, feeds both)
     Invoke-FeedbackAggregation -CycleNum $currentCycle
+    if (Test-Veto) { break }
+
+    # A2A: Process delegation messages between waves
+    Invoke-DelegationWave -CycleNum $currentCycle
     if (Test-Veto) { break }
 
     # AUTO-DIAGNOSIS (between FEEDBACK and DIRECTOR — classifies errors, provides context)

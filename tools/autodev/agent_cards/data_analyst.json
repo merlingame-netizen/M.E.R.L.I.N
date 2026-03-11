@@ -1,0 +1,58 @@
+{
+  "id": "data_analyst",
+  "name": "Data Analysis Specialist",
+  "version": "1.0.0",
+  "description": "Gameplay data analysis, metrics tracking, and balance insights",
+  "agent_file": ".claude/agents/data_analysis_specialist.md",
+  "category": "ops",
+  "capabilities": [
+    {
+      "task_type": "gameplay_analysis",
+      "keywords": ["data", "metrics", "analytics", "statistics", "distribution"],
+      "confidence": 0.9,
+      "mode": "analyze"
+    },
+    {
+      "task_type": "balance_analysis",
+      "keywords": ["balance", "difficulty", "curve", "tuning", "fairness"],
+      "confidence": 0.85,
+      "mode": "analyze"
+    },
+    {
+      "task_type": "report_generation",
+      "keywords": ["report", "summary", "dashboard", "visualization"],
+      "confidence": 0.8,
+      "mode": "generate"
+    }
+  ],
+  "inputs": [
+    {
+      "name": "gameplay_data",
+      "type": "json",
+      "required": true,
+      "description": "Captured gameplay sessions or metrics"
+    },
+    {
+      "name": "analysis_request",
+      "type": "text",
+      "required": false,
+      "description": "Specific analysis question"
+    }
+  ],
+  "outputs": [
+    {
+      "name": "analysis_report",
+      "type": "json",
+      "description": "Statistical analysis with insights"
+    },
+    {
+      "name": "visualizations",
+      "type": "artifact",
+      "description": "Charts and data visualizations"
+    }
+  ],
+  "file_scope": ["tools/autodev/captures/**/*.json", "data/**/*.json"],
+  "dependencies": ["debug_qa"],
+  "cost_profile": "haiku",
+  "max_concurrent": 1
+}

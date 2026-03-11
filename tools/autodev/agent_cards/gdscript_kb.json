@@ -1,0 +1,58 @@
+{
+  "id": "gdscript_kb",
+  "name": "GDScript Knowledge Base",
+  "version": "1.0.0",
+  "description": "Living document of GDScript errors, corrections, best practices, and patterns",
+  "agent_file": ".claude/agents/gdscript_knowledge_base.md",
+  "category": "knowledge",
+  "capabilities": [
+    {
+      "task_type": "error_documentation",
+      "keywords": ["error", "fix", "pattern", "correction", "workaround"],
+      "confidence": 0.95,
+      "mode": "reference"
+    },
+    {
+      "task_type": "best_practices",
+      "keywords": ["best practice", "idiom", "convention", "anti-pattern", "style"],
+      "confidence": 0.9,
+      "mode": "reference"
+    },
+    {
+      "task_type": "learning_integration",
+      "keywords": ["learn", "feedback", "update KB", "new pattern"],
+      "confidence": 0.85,
+      "mode": "build"
+    }
+  ],
+  "inputs": [
+    {
+      "name": "error_context",
+      "type": "json",
+      "required": false,
+      "description": "Error details and context"
+    },
+    {
+      "name": "correction",
+      "type": "text",
+      "required": false,
+      "description": "User-provided correction to document"
+    }
+  ],
+  "outputs": [
+    {
+      "name": "kb_entry",
+      "type": "json",
+      "description": "Knowledge base entry with problem/solution"
+    },
+    {
+      "name": "pattern_doc",
+      "type": "text",
+      "description": "Documented pattern or best practice"
+    }
+  ],
+  "file_scope": [".claude/agents/gdscript_knowledge_base.md"],
+  "dependencies": ["debug_qa", "godot_expert"],
+  "cost_profile": "haiku",
+  "max_concurrent": 1
+}

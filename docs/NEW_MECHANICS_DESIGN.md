@@ -29,17 +29,18 @@
 ## 2. Questions Ouvertes (À Trancher)
 
 ### Q1 — Structure des options par carte
-> **Statut : OUVERT**
+> **Statut : DÉCIDÉ ✅ (2026-03-11)**
 
-Les cartes auront-elles toujours 3 options (Gauche / Centre / Droite) ?
-- Option A : Conserver 3 options, effets libres sur réputation/oghams
-- Option B : Nombre variable d'options (1-4) selon le type de carte
-- Option C : Refonte complète du système de choix
-
-**Réponse attendue de l'utilisateur** (questions_pending.json Q1)
+**Nombre variable d'options : 1 à 4 selon la situation narrative.**
+- Carte narrative simple → 2-3 options
+- Carte de crise / dilemme → 2 options (choix binaire fort)
+- Carte à opportunités multiples → jusqu'à 4 options
+- Carte narrative "inévitable" → 1 option (événement subi, pas de choix)
+- Plus de distinction Gauche/Centre/Droite codée en dur — les options sont libres dans leur forme et leurs effets.
 
 ### Q2 — Conditions de Victoire/Défaite
-> **Statut : OUVERT**
+> **Statut : CO-DESIGN EN COURS 🔄**
+> Les agents proposeront des systèmes de conditions à chaque cycle, l'utilisateur tranche.
 
 Sans la Triade, par quoi sont définies les fins ?
 - Idée A : Réputation faction dominante → fin thématique liée à cette faction

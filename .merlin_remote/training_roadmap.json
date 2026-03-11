@@ -1,0 +1,42 @@
+{
+  "version": 1,
+  "updated_at": "2026-03-11",
+  "sessions": [
+    {
+      "id": "narrator-v2",
+      "brain": "narrator",
+      "priority": "HIGH",
+      "focus": "Persona Merlin — réponses identitaires + narration par Ogham",
+      "why": "Le modèle répond comme un LLM générique à 'Qui es-tu ?'. Besoin de 50+ exemples persona + 150 narrations par Ogham.",
+      "target_samples": 200,
+      "status": "planned"
+    },
+    {
+      "id": "gamemaster-v2",
+      "brain": "gamemaster",
+      "priority": "HIGH",
+      "focus": "Transitions Triade — 3 états x 3 Aspects + déclenchement fins",
+      "why": "284 samples synthétiques. Besoin de vrais exemples de changement d'état Corps/Âme/Monde avec les 12 fins narratives.",
+      "target_samples": 150,
+      "status": "planned"
+    },
+    {
+      "id": "worker-v2",
+      "brain": "worker",
+      "priority": "MEDIUM",
+      "focus": "Classification d'intentions réelles — routing cartes/actions",
+      "why": "200 samples 100% synthétiques. Besoin d'exemples réels de routing depuis les parties de test.",
+      "target_samples": 100,
+      "status": "planned"
+    },
+    {
+      "id": "narrator-v3",
+      "brain": "narrator",
+      "priority": "MEDIUM",
+      "focus": "Variations émotionnelles — Souffle d'Ogham critique (0, 1, 2)",
+      "why": "Enrichir la richesse poétique pour les moments-clés : Souffle = 0 (fin proche), choix décisif, Ogham révélé.",
+      "target_samples": 150,
+      "status": "future"
+    }
+  ]
+}

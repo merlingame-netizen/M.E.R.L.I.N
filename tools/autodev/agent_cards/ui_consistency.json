@@ -1,0 +1,47 @@
+{
+  "id": "ui_consistency",
+  "name": "UI Consistency Rules",
+  "version": "1.0.0",
+  "description": "CRT terminal aesthetic enforcement and MerlinVisual color system validator",
+  "agent_file": ".claude/agents/ui_consistency_rules.md",
+  "category": "ui-ux",
+  "capabilities": [
+    {
+      "task_type": "ui_validation",
+      "keywords": ["UI", "interface", "layout", "component", "theme"],
+      "confidence": 0.95,
+      "mode": "validate"
+    },
+    {
+      "task_type": "color_enforcement",
+      "keywords": ["color", "palette", "CRT_PALETTE", "GBC", "MerlinVisual"],
+      "confidence": 0.9,
+      "mode": "validate"
+    },
+    {
+      "task_type": "font_management",
+      "keywords": ["font", "VT323", "typography", "text"],
+      "confidence": 0.85,
+      "mode": "review"
+    }
+  ],
+  "inputs": [
+    {
+      "name": "ui_code",
+      "type": "file",
+      "required": true,
+      "description": "UI-related GDScript or theme files"
+    }
+  ],
+  "outputs": [
+    {
+      "name": "violation_report",
+      "type": "json",
+      "description": "Consistency violations with fixes"
+    }
+  ],
+  "file_scope": ["scripts/ui/**/*.gd", "themes/**/*.tres", "scripts/autoload/merlin_visual.gd"],
+  "dependencies": ["art_direction"],
+  "cost_profile": "haiku",
+  "max_concurrent": 1
+}

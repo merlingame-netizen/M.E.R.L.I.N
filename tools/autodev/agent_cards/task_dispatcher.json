@@ -1,0 +1,58 @@
+{
+  "id": "task_dispatcher",
+  "name": "Task Dispatcher",
+  "version": "1.0.0",
+  "description": "Route-and-dispatch engine for task classification and multi-agent orchestration",
+  "agent_file": ".claude/agents/task_dispatcher.md",
+  "category": "orchestration",
+  "capabilities": [
+    {
+      "task_type": "task_routing",
+      "keywords": ["dispatch", "route", "assign", "delegate", "classify"],
+      "confidence": 0.95,
+      "mode": "orchestrate"
+    },
+    {
+      "task_type": "complexity_analysis",
+      "keywords": ["complexity", "scope", "estimate", "decompose"],
+      "confidence": 0.9,
+      "mode": "analyze"
+    },
+    {
+      "task_type": "workflow_design",
+      "keywords": ["workflow", "pipeline", "sequence", "parallel", "wave"],
+      "confidence": 0.85,
+      "mode": "orchestrate"
+    }
+  ],
+  "inputs": [
+    {
+      "name": "user_request",
+      "type": "text",
+      "required": true,
+      "description": "User prompt or task description"
+    },
+    {
+      "name": "context",
+      "type": "json",
+      "required": false,
+      "description": "Project context and complexity signals"
+    }
+  ],
+  "outputs": [
+    {
+      "name": "dispatch_plan",
+      "type": "json",
+      "description": "Ordered agent sequence with tasks"
+    },
+    {
+      "name": "skill_recommendations",
+      "type": "json",
+      "description": "Recommended skills to invoke"
+    }
+  ],
+  "file_scope": [],
+  "dependencies": ["studio_orchestrator"],
+  "cost_profile": "haiku",
+  "max_concurrent": 1
+}

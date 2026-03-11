@@ -1,0 +1,64 @@
+{
+  "id": "narrative_writer",
+  "name": "Narrative Writer",
+  "version": "1.0.0",
+  "description": "Card writing, scenario creation, story arcs, and Merlin voice specialist",
+  "agent_file": ".claude/agents/narrative_writer.md",
+  "category": "narrative",
+  "capabilities": [
+    {
+      "task_type": "card_writing",
+      "keywords": ["card", "story", "narrative", "scenario", "dialogue", "choice"],
+      "confidence": 0.95,
+      "mode": "generate"
+    },
+    {
+      "task_type": "arc_design",
+      "keywords": ["arc", "quest", "journey", "progression", "ending"],
+      "confidence": 0.9,
+      "mode": "generate"
+    },
+    {
+      "task_type": "lore_creation",
+      "keywords": ["lore", "Celtic", "mythology", "Ogham", "Broceliande"],
+      "confidence": 0.85,
+      "mode": "generate"
+    },
+    {
+      "task_type": "narrative_qa",
+      "keywords": ["tone", "voice", "coherence", "consistency"],
+      "confidence": 0.85,
+      "mode": "review"
+    }
+  ],
+  "inputs": [
+    {
+      "name": "card_request",
+      "type": "json",
+      "required": false,
+      "description": "Card specification with context"
+    },
+    {
+      "name": "existing_content",
+      "type": "file",
+      "required": false,
+      "description": "Existing narrative files for context"
+    }
+  ],
+  "outputs": [
+    {
+      "name": "card_json",
+      "type": "json",
+      "description": "Generated card data"
+    },
+    {
+      "name": "narrative_report",
+      "type": "json",
+      "description": "QA checklist and consistency findings"
+    }
+  ],
+  "file_scope": ["data/ai/*.json", "data/**/*.json", "data/ai/config/**/*.json"],
+  "dependencies": ["llm_expert", "merlin_guardian"],
+  "cost_profile": "sonnet",
+  "max_concurrent": 1
+}

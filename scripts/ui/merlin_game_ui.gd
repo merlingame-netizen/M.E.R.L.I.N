@@ -25,9 +25,9 @@ const CardSceneCompositorClass = preload("res://scripts/ui/card_scene_compositor
 # ═══════════════════════════════════════════════════════════════════════════════
 
 const STATE_LABELS := {
-	MerlinConstants.AspectState.BAS: "v",       # Was U+25BC (TextServerFallback incompatible)
-	MerlinConstants.AspectState.EQUILIBRE: "=",  # Was U+25CF
-	MerlinConstants.AspectState.HAUT: "^",       # Was U+25B2
+	-1: "v",  # BAS       — Was U+25BC (TextServerFallback incompatible)
+	 0: "=",  # EQUILIBRE — Was U+25CF
+	 1: "^",  # HAUT      — Was U+25B2
 }
 
 const SOUFFLE_ICON := "*"   # Was U+0DA7 (TextServerFallback incompatible)
@@ -182,7 +182,7 @@ var biome_indicator: Label
 var current_card: Dictionary = {}
 var current_aspects: Dictionary = {}
 var _previous_aspects: Dictionary = {}
-var current_souffle: int = MerlinConstants.SOUFFLE_START
+var current_souffle: int = 0
 var _previous_souffle: int = -1
 var _blip_pool: Array[AudioStreamPlayer] = []
 var _blip_idx: int = 0
@@ -236,7 +236,7 @@ var _bestiole_emote: Label
 func _ready() -> void:
 	_configure_ui()
 	_init_blip_pool()
-	_update_souffle(MerlinConstants.SOUFFLE_START)
+	_update_souffle(0)
 	update_life_essence(MerlinConstants.LIFE_ESSENCE_START)
 	update_essences_collected(0)
 	reset_run_visuals()
@@ -1262,6 +1262,8 @@ func update_selected_perk(perk_id: String) -> void:
 	_perk_badge.visible = true
 
 
+const SOUFFLE_MAX := 1  # TRIADE-UI-2: MerlinConstants.SOUFFLE_MAX removed (was 1), local fallback
+
 func _update_souffle(souffle: int) -> void:
 	var old_souffle := _previous_souffle
 	_previous_souffle = souffle
@@ -1269,7 +1271,7 @@ func _update_souffle(souffle: int) -> void:
 
 	# Update numeric counter
 	if _souffle_counter and is_instance_valid(_souffle_counter):
-		_souffle_counter.text = "%d/%d" % [souffle, MerlinConstants.SOUFFLE_MAX]
+		_souffle_counter.text = "%d/%d" % [souffle, SOUFFLE_MAX]
 		if souffle == 0:
 			_souffle_counter.add_theme_color_override("font_color", MerlinVisual.CRT_PALETTE.danger)
 		elif souffle <= 2:
@@ -1280,7 +1282,7 @@ func _update_souffle(souffle: int) -> void:
 	if not souffle_display:
 		return
 
-	for i in range(MerlinConstants.SOUFFLE_MAX):
+	for i in range(SOUFFLE_MAX):
 		var icon: Label = souffle_display.get_child(i) as Label
 		if icon:
 			if i < souffle:
@@ -1292,7 +1294,7 @@ func _update_souffle(souffle: int) -> void:
 
 	# VFX: Regen animation (gained souffle)
 	if old_souffle >= 0 and souffle > old_souffle:
-		for i in range(old_souffle, mini(souffle, MerlinConstants.SOUFFLE_MAX)):
+		for i in range(old_souffle, mini(souffle, SOUFFLE_MAX)):
 			var icon: Label = souffle_display.get_child(i) as Label
 			if icon:
 				icon.scale = Vector2(0.3, 0.3)
@@ -1305,7 +1307,7 @@ func _update_souffle(souffle: int) -> void:
 
 	# VFX: Consumption animation (lost souffle)
 	if old_souffle >= 0 and souffle < old_souffle:
-		for i in range(souffle, mini(old_souffle, MerlinConstants.SOUFFLE_MAX)):
+		for i in range(souffle, mini(old_souffle, SOUFFLE_MAX)):
 			var icon: Label = souffle_display.get_child(i) as Label
 			if icon:
 				var tw := create_tween()
@@ -1314,17 +1316,17 @@ func _update_souffle(souffle: int) -> void:
 				tw.tween_property(icon, "scale", Vector2(1.0, 1.0), 0.1)
 
 	# VFX: Full souffle glow (7/7)
-	if souffle >= MerlinConstants.SOUFFLE_MAX:
-		for i in range(MerlinConstants.SOUFFLE_MAX):
+	if souffle >= SOUFFLE_MAX:
+		for i in range(SOUFFLE_MAX):
 			var icon: Label = souffle_display.get_child(i) as Label
 			if icon:
 				icon.add_theme_color_override("font_color", MerlinVisual.CRT_PALETTE.souffle_full)
-		if old_souffle >= 0 and old_souffle < MerlinConstants.SOUFFLE_MAX:
+		if old_souffle >= 0 and old_souffle < SOUFFLE_MAX:
 			SFXManager.play("souffle_full")
 
 	# VFX: Empty souffle blink (0/7)
 	if souffle <= 0:
-		for i in range(MerlinConstants.SOUFFLE_MAX):
+		for i in range(SOUFFLE_MAX):
 			var icon: Label = souffle_display.get_child(i) as Label
 			if icon:
 				var tw := create_tween()
@@ -3101,7 +3103,7 @@ func show_end_screen(ending: Dictionary) -> void:
 	# Aspects final state
 	var aspects_label := Label.new()
 	var aspects_text := "Aspects finaux: "
-	for aspect in MerlinConstants.TRIADE_ASPECTS:
+	for aspect in ["Corps", "Ame", "Monde"]:
 		var state_val: int = current_aspects.get(aspect, 0)
 		var info = MerlinConstants.TRIADE_ASPECT_INFO.get(aspect, {})
 		var states = info.get("states", {})

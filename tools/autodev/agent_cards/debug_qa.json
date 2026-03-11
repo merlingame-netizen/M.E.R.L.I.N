@@ -1,0 +1,64 @@
+{
+  "id": "debug_qa",
+  "name": "Debug QA Specialist",
+  "version": "1.0.0",
+  "description": "GDScript validation, testing, and bug triage specialist",
+  "agent_file": ".claude/agents/debug_qa.md",
+  "category": "quality",
+  "capabilities": [
+    {
+      "task_type": "testing",
+      "keywords": ["test", "GUT", "unit test", "integration", "E2E", "coverage"],
+      "confidence": 0.95,
+      "mode": "build"
+    },
+    {
+      "task_type": "bug_triage",
+      "keywords": ["bug", "crash", "error", "exception", "regression"],
+      "confidence": 0.9,
+      "mode": "analyze"
+    },
+    {
+      "task_type": "code_validation",
+      "keywords": ["validate", "lint", "parse", "syntax"],
+      "confidence": 0.9,
+      "mode": "validate"
+    },
+    {
+      "task_type": "narrative_qa",
+      "keywords": ["narrative", "lore", "consistency", "dialogue"],
+      "confidence": 0.7,
+      "mode": "review"
+    }
+  ],
+  "inputs": [
+    {
+      "name": "code_changes",
+      "type": "file",
+      "required": true,
+      "description": "Modified GDScript files"
+    },
+    {
+      "name": "bug_report",
+      "type": "text",
+      "required": false,
+      "description": "Bug description and repro steps"
+    }
+  ],
+  "outputs": [
+    {
+      "name": "validation_report",
+      "type": "json",
+      "description": "Validation results with pass/fail"
+    },
+    {
+      "name": "test_files",
+      "type": "artifact",
+      "description": "Generated test scripts"
+    }
+  ],
+  "file_scope": ["scripts/**/*.gd", "test/**/*.gd", "data/ai/test/**/*.json"],
+  "dependencies": ["godot_expert", "gdscript_kb"],
+  "cost_profile": "haiku",
+  "max_concurrent": 2
+}

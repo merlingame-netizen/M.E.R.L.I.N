@@ -1,0 +1,47 @@
+{
+  "id": "security_specialist",
+  "name": "Security Specialist",
+  "version": "1.0.0",
+  "description": "Security analysis, vulnerability detection, and save system validation",
+  "agent_file": ".claude/agents/security_specialist.md",
+  "category": "quality",
+  "capabilities": [
+    {
+      "task_type": "security_audit",
+      "keywords": ["security", "vulnerability", "injection", "XSS", "OWASP"],
+      "confidence": 0.9,
+      "mode": "review"
+    },
+    {
+      "task_type": "save_validation",
+      "keywords": ["save", "serialize", "deserialize", "tamper"],
+      "confidence": 0.85,
+      "mode": "validate"
+    },
+    {
+      "task_type": "secret_scanning",
+      "keywords": ["secret", "API key", "credential", "token", "password"],
+      "confidence": 0.9,
+      "mode": "analyze"
+    }
+  ],
+  "inputs": [
+    {
+      "name": "code_files",
+      "type": "file",
+      "required": true,
+      "description": "Files to audit"
+    }
+  ],
+  "outputs": [
+    {
+      "name": "security_report",
+      "type": "json",
+      "description": "Vulnerabilities with severity and remediations"
+    }
+  ],
+  "file_scope": ["scripts/**/*.gd", "data/**/*.json", "server/**/*.ts"],
+  "dependencies": ["debug_qa"],
+  "cost_profile": "haiku",
+  "max_concurrent": 1
+}

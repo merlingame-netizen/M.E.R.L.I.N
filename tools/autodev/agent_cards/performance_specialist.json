@@ -1,0 +1,58 @@
+{
+  "id": "performance_specialist",
+  "name": "Performance Specialist",
+  "version": "1.0.0",
+  "description": "Runtime performance analysis, profiling, and optimization recommendations",
+  "agent_file": ".claude/agents/performance_specialist.md",
+  "category": "core",
+  "capabilities": [
+    {
+      "task_type": "profiling",
+      "keywords": ["profile", "benchmark", "measure", "timing", "frame"],
+      "confidence": 0.9,
+      "mode": "analyze"
+    },
+    {
+      "task_type": "optimization",
+      "keywords": ["optimize", "cache", "pool", "batch", "lazy"],
+      "confidence": 0.85,
+      "mode": "build"
+    },
+    {
+      "task_type": "memory_analysis",
+      "keywords": ["memory", "leak", "allocation", "GC", "reference"],
+      "confidence": 0.8,
+      "mode": "analyze"
+    }
+  ],
+  "inputs": [
+    {
+      "name": "target_files",
+      "type": "file",
+      "required": true,
+      "description": "Files to profile"
+    },
+    {
+      "name": "benchmarks",
+      "type": "json",
+      "required": false,
+      "description": "Baseline performance data"
+    }
+  ],
+  "outputs": [
+    {
+      "name": "performance_report",
+      "type": "json",
+      "description": "Profiling results with hotspots"
+    },
+    {
+      "name": "optimized_files",
+      "type": "artifact",
+      "description": "Optimized code"
+    }
+  ],
+  "file_scope": ["scripts/**/*.gd", "addons/**/*.gd"],
+  "dependencies": ["godot_expert"],
+  "cost_profile": "haiku",
+  "max_concurrent": 1
+}

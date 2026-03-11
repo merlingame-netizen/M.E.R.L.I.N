@@ -1,0 +1,99 @@
+{
+  "name": "task-slayer",
+  "displayName": "Task Slayer",
+  "description": "Tueur de processus Windows — liste triée par CPU% avec noms traduits en français",
+  "version": "1.0.0",
+  "publisher": "merlin-local",
+  "engines": {
+    "vscode": "^1.80.0"
+  },
+  "categories": ["Other"],
+  "activationEvents": ["onStartupFinished"],
+  "main": "./extension.js",
+  "contributes": {
+    "viewsContainers": {
+      "activitybar": [
+        {
+          "id": "task-slayer-sidebar",
+          "title": "Task Slayer",
+          "icon": "media/task-slayer-icon.svg"
+        }
+      ]
+    },
+    "views": {
+      "task-slayer-sidebar": [
+        {
+          "id": "taskSlayer.processList",
+          "name": "Processus"
+        }
+      ]
+    },
+    "commands": [
+      {
+        "command": "taskSlayer.refresh",
+        "title": "Task Slayer: Rafraîchir",
+        "icon": "$(refresh)"
+      },
+      {
+        "command": "taskSlayer.kill",
+        "title": "Task Slayer: Tuer le processus",
+        "icon": "$(close)"
+      },
+      {
+        "command": "taskSlayer.toggleAutoRefresh",
+        "title": "Task Slayer: Auto-refresh ON/OFF",
+        "icon": "$(sync)"
+      }
+    ],
+    "menus": {
+      "view/title": [
+        {
+          "command": "taskSlayer.refresh",
+          "when": "view == taskSlayer.processList",
+          "group": "navigation@1"
+        },
+        {
+          "command": "taskSlayer.toggleAutoRefresh",
+          "when": "view == taskSlayer.processList",
+          "group": "navigation@2"
+        }
+      ],
+      "view/item/context": [
+        {
+          "command": "taskSlayer.kill",
+          "when": "view == taskSlayer.processList && viewItem == process",
+          "group": "inline"
+        }
+      ]
+    },
+    "configuration": {
+      "title": "Task Slayer",
+      "properties": {
+        "taskSlayer.refreshInterval": {
+          "type": "number",
+          "default": 5,
+          "minimum": 1,
+          "maximum": 60,
+          "description": "Intervalle de rafraîchissement automatique (secondes)"
+        },
+        "taskSlayer.autoRefresh": {
+          "type": "boolean",
+          "default": true,
+          "description": "Activer le rafraîchissement automatique"
+        },
+        "taskSlayer.maxProcesses": {
+          "type": "number",
+          "default": 50,
+          "minimum": 10,
+          "maximum": 200,
+          "description": "Nombre maximum de processus affichés"
+        },
+        "taskSlayer.confirmKill": {
+          "type": "boolean",
+          "default": true,
+          "description": "Demander confirmation avant de tuer un processus"
+        }
+      }
+    }
+  }
+}

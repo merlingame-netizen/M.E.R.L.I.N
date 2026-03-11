@@ -1,8 +1,8 @@
 ## ═══════════════════════════════════════════════════════════════════════════════
-## Merlin Card System — TRIADE Gameplay Engine (v0.3.0)
+## Merlin Card System — Gameplay Engine (v0.4.0)
 ## ═══════════════════════════════════════════════════════════════════════════════
-## Handles card generation, selection, and resolution for TRIADE system.
-## 3 Aspects (Corps/Ame/Monde), 3 States, 3 Options per card.
+## Handles card generation, selection, and resolution.
+## 4 Gauges (Vigueur/Esprit/Faveur/Ressources), 1-4 options per card.
 ## ═══════════════════════════════════════════════════════════════════════════════
 
 extends RefCounted
@@ -13,9 +13,7 @@ signal card_displayed(card: Dictionary)
 @warning_ignore("unused_signal")
 signal choice_made(option: int, effects: Array)
 @warning_ignore("unused_signal")
-signal aspect_warning(aspect: String, state: int)
-@warning_ignore("unused_signal")
-signal gauge_critical(gauge: String, value: int, direction: String)  # Legacy
+signal gauge_critical(gauge: String, value: int, direction: String)
 @warning_ignore("unused_signal")
 signal run_ended(ending: Dictionary)
 

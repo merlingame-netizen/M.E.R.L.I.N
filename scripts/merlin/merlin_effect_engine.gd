@@ -3,10 +3,8 @@ class_name MerlinEffectEngine
 
 const VALID_CODES := {
 	# ═══════════════════════════════════════════════════════════════════════════
-	# TRIADE SYSTEM (v0.3.0)
+	# MISSION & NARRATIVE
 	# ═══════════════════════════════════════════════════════════════════════════
-	"USE_SOUFFLE": 1,      # USE_SOUFFLE:1
-	"ADD_SOUFFLE": 1,      # ADD_SOUFFLE:2
 	"PROGRESS_MISSION": 1, # PROGRESS_MISSION:1
 	"ADD_KARMA": 1,        # ADD_KARMA:10 (hidden)
 	"ADD_TENSION": 1,      # ADD_TENSION:15 (hidden)
@@ -47,9 +45,9 @@ const VALID_CODES := {
 	# ═══════════════════════════════════════════════════════════════════════════
 	"ADD_ESSENCES": 1,     # ADD_ESSENCES:5
 	# ═══════════════════════════════════════════════════════════════════════════
-	# ALIGNEMENT — Score continu Corps/Ame/Monde (-100 a +100)
+	# OGHAMS
 	# ═══════════════════════════════════════════════════════════════════════════
-	"ADD_ASPECT_ALIGNMENT": 2, # ADD_ASPECT_ALIGNMENT:Corps:25
+	"UNLOCK_OGHAM": 1,     # UNLOCK_OGHAM:beith
 }
 
 
@@ -106,12 +104,8 @@ func _apply_parsed(state: Dictionary, parsed: Dictionary) -> bool:
 	var args: Array = parsed["args"]
 	match code:
 		# ═══════════════════════════════════════════════════════════════════════
-		# TRIADE SYSTEM (v0.3.0)
+		# MISSION & NARRATIVE
 		# ═══════════════════════════════════════════════════════════════════════
-		"USE_SOUFFLE":
-			return _apply_use_souffle(state, _to_int(args[0]))
-		"ADD_SOUFFLE":
-			return _apply_add_souffle(state, _to_int(args[0]))
 		"PROGRESS_MISSION":
 			return _apply_progress_mission(state, _to_int(args[0]))
 		"ADD_KARMA":
@@ -173,10 +167,10 @@ func _apply_parsed(state: Dictionary, parsed: Dictionary) -> bool:
 		"ADD_ESSENCES":
 			return _apply_add_essences(state, _to_int(args[0]))
 		# ═══════════════════════════════════════════════════════════════════════
-		# ALIGNEMENT ASPECTS
+		# OGHAMS
 		# ═══════════════════════════════════════════════════════════════════════
-		"ADD_ASPECT_ALIGNMENT":
-			return _apply_add_aspect_alignment(state, args[0], _to_int(args[1]))
+		"UNLOCK_OGHAM":
+			return _apply_unlock_ogham(state, args[0])
 		_:
 			return false
 
@@ -334,24 +328,8 @@ func _set_skill_cooldown(state: Dictionary, skill_id: String, turns: int) -> boo
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
-# TRIADE SYSTEM FUNCTIONS (v0.3.0)
+# MISSION & NARRATIVE FUNCTIONS
 # ═══════════════════════════════════════════════════════════════════════════════
-
-func _apply_use_souffle(state: Dictionary, amount: int) -> bool:
-	var run = state.get("run", {})
-	var current = int(run.get("souffle", MerlinConstants.SOUFFLE_START))
-	run["souffle"] = maxi(current - amount, 0)
-	state["run"] = run
-	return true
-
-
-func _apply_add_souffle(state: Dictionary, amount: int) -> bool:
-	var run = state.get("run", {})
-	var current = int(run.get("souffle", MerlinConstants.SOUFFLE_START))
-	run["souffle"] = mini(current + amount, MerlinConstants.SOUFFLE_MAX)
-	state["run"] = run
-	return true
-
 
 func _apply_progress_mission(state: Dictionary, step: int) -> bool:
 	var run = state.get("run", {})
@@ -479,14 +457,17 @@ func _apply_add_essences(state: Dictionary, amount: int) -> bool:
 	return true
 
 
-func _apply_add_aspect_alignment(state: Dictionary, aspect: String, delta: int) -> bool:
-	if not ["Corps", "Ame", "Monde"].has(aspect):
+# ═══════════════════════════════════════════════════════════════════════════════
+# OGHAM FUNCTIONS
+# ═══════════════════════════════════════════════════════════════════════════════
+
+func _apply_unlock_ogham(state: Dictionary, ogham_name: String) -> bool:
+	if not MerlinConstants.OGHAM_FULL_SPECS.has(ogham_name):
 		return false
-	var meta: Dictionary = state.get("meta", {})
-	var alignment: Dictionary = meta.get("aspects_alignment", {"Corps": 0, "Ame": 0, "Monde": 0})
-	var current: int = int(alignment.get(aspect, 0))
-	var new_score: int = clampi(current + delta, MerlinConstants.ASPECT_MIN, MerlinConstants.ASPECT_MAX)
-	alignment[aspect] = new_score
-	meta["aspects_alignment"] = alignment
-	state["meta"] = meta
+	var run: Dictionary = state.get("run", {})
+	var unlocked: Array = run.get("unlocked_oghams", [])
+	if not unlocked.has(ogham_name):
+		unlocked.append(ogham_name)
+	run["unlocked_oghams"] = unlocked
+	state["run"] = run
 	return true

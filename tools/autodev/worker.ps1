@@ -52,8 +52,25 @@ function Write-Status {
         [array]$Completed = @(),
         [array]$Remaining = @(),
         [array]$Blockers = @(),
-        [hashtable]$ErrorContext = @{}
+        [hashtable]$ErrorContext = @{},
+        # A2A Protocol extensions
+        [string]$TaskId = "",
+        [string]$AgentId = "",
+        [int]$ProgressPct = -1,
+        [array]$Artifacts = @()
     )
+
+    # Map legacy status to A2A lifecycle
+    $a2aStatus = switch ($Status) {
+        "starting"    { "accepted" }
+        "in_progress" { "working" }
+        "done"        { "completed" }
+        "error"       { "failed" }
+        "retrying"    { "working" }
+        "dry_run"     { "accepted" }
+        default       { $Status }
+    }
+
     $statusObj = @{
         domain          = $Domain
         status          = $Status
@@ -63,10 +80,16 @@ function Write-Status {
         files_modified  = @()
         blockers        = $Blockers
         timestamp       = (Get-Date -Format "o")
+        # A2A Protocol extensions
+        a2a_status      = $a2aStatus
+        agent_id        = if ($AgentId) { $AgentId } else { $Domain }
     }
-    if ($ErrorContext.Count -gt 0) {
-        $statusObj.error_context = $ErrorContext
-    }
+
+    if ($TaskId) { $statusObj.task_id = $TaskId }
+    if ($ProgressPct -ge 0) { $statusObj.progress_pct = $ProgressPct }
+    if ($Artifacts.Count -gt 0) { $statusObj.artifacts = $Artifacts }
+    if ($ErrorContext.Count -gt 0) { $statusObj.error_context = $ErrorContext }
+
     # Atomic write: temp file + rename to prevent race conditions with merge/dashboard
     $targetFile = Join-Path $statusDir "$Domain.json"
     $tmpFile = "$targetFile.tmp"
@@ -100,6 +123,65 @@ function Write-SwarmResult {
     $result | ConvertTo-Json -Depth 5 | Set-Content $tmpPath -Encoding UTF8
     Move-Item $tmpPath $resultPath -Force
     Write-Host "[WORKER] Swarm result written: $resultPath" -ForegroundColor Gray
+}
+
+# --- A2A Protocol: Message helpers ---
+function Send-A2AMessage {
+    param(
+        [string]$ToAgent,
+        [string]$Type = "delegation",
+        [string]$TaskId = "",
+        [hashtable]$Payload = @{},
+        [string]$ReplyTo = "",
+        [int]$TtlMinutes = 30
+    )
+    $messagesDir = Join-Path $statusDir "messages"
+    if (-not (Test-Path $messagesDir)) {
+        New-Item -ItemType Directory -Path $messagesDir -Force | Out-Null
+    }
+    $msgId = "msg_$(Get-Date -Format 'yyyyMMdd_HHmmss')_${Domain}_${ToAgent}"
+    $message = @{
+        message_id = $msgId
+        type       = $Type
+        from_agent = $Domain
+        to_agent   = $ToAgent
+        task_id    = $TaskId
+        timestamp  = (Get-Date -Format "o")
+        payload    = $Payload
+        reply_to   = $ReplyTo
+        ttl_minutes = $TtlMinutes
+    }
+    $inboxFile = Join-Path $messagesDir "inbox_$ToAgent.jsonl"
+    $line = ($message | ConvertTo-Json -Depth 5 -Compress)
+    Add-Content -Path $inboxFile -Value $line -Encoding UTF8
+    Write-Host "[A2A] Message sent: $msgId -> $ToAgent ($Type)" -ForegroundColor Magenta
+    return $msgId
+}
+
+function Read-A2AInbox {
+    $messagesDir = Join-Path $statusDir "messages"
+    $inboxFile = Join-Path $messagesDir "inbox_$Domain.jsonl"
+    if (-not (Test-Path $inboxFile)) { return @() }
+    $messages = @()
+    $lines = Get-Content $inboxFile -Encoding UTF8
+    foreach ($line in $lines) {
+        if ($line.Trim()) {
+            try {
+                $msg = $line | ConvertFrom-Json
+                $messages += $msg
+            } catch {}
+        }
+    }
+    return $messages
+}
+
+function Reply-A2AMessage {
+    param(
+        [string]$OriginalMessageId,
+        [string]$OriginalSender,
+        [hashtable]$Payload = @{}
+    )
+    Send-A2AMessage -ToAgent $OriginalSender -Type "task_response" -Payload $Payload -ReplyTo $OriginalMessageId
 }
 
 # --- Pre-flight health check ---
@@ -186,7 +268,7 @@ function Repair-ClaudeConfig {
 }
 
 $taskIds = @($domainConfig.tasks | ForEach-Object { $_.id })
-Write-Status -Status "starting" -Remaining $taskIds
+Write-Status -Status "starting" -Remaining $taskIds -AgentId $Domain
 
 # --- Create or reset worktree ---
 function Setup-Worktree {
@@ -357,6 +439,50 @@ function Build-WorkerPrompt {
         $lines += "Ne fais PAS de nouvelles fonctionnalites."
     }
 
+    # A2A Protocol: contextual delegation instructions
+    $registryPath = Join-Path $projectRoot "tools/autodev/agent_cards/_registry.json"
+    $delegationRules = @()
+    if (Test-Path $registryPath) {
+        try {
+            $a2aRegistry = Get-Content $registryPath -Raw | ConvertFrom-Json
+            $myCard = $a2aRegistry.agents.PSObject.Properties | Where-Object { $_.Value.id -eq $Domain -or $_.Name -eq $Domain } | Select-Object -First 1
+            if ($myCard) {
+                $deps = $myCard.Value.dependencies
+                if ($deps -and $deps.Count -gt 0) {
+                    foreach ($depId in $deps) {
+                        $depCard = $a2aRegistry.agents.$depId
+                        if ($depCard) {
+                            $capList = ($depCard.capabilities | ForEach-Object { $_.task_type }) -join ", "
+                            $delegationRules += "  - $depId ($($depCard.name)): $capList"
+                        }
+                    }
+                }
+            }
+        } catch {}
+    }
+
+    $lines += ""
+    $lines += "=== A2A PROTOCOL (delegation peer-to-peer) ==="
+    $lines += "Tu peux deleguer des sous-taches a d'autres agents via le systeme de messages."
+    $lines += ""
+    $lines += "QUAND DELEGUER:"
+    $lines += "  - Tu trouves un bug de securite → delegue a security_specialist"
+    $lines += "  - Tu as besoin d'un code review → delegue a debug_qa"
+    $lines += "  - Tu modifies du code UI → delegue la verification a ui_consistency"
+    $lines += "  - Tu changes des prompts LLM → delegue la review a llm_expert"
+    $lines += ""
+    $lines += "COMMENT DELEGUER:"
+    $lines += "Ecrire UNE ligne JSON dans tools/autodev/status/messages/inbox_{agent_id}.jsonl"
+    $lines += "Format: {`"message_id`":`"msg_001`",`"type`":`"delegation`",`"from_agent`":`"$Domain`",`"to_agent`":`"TARGET`",`"task_id`":`"TASK`",`"timestamp`":`"ISO`",`"payload`":{`"action`":`"review`",`"files`":[`"path`"]},`"reply_to`":null,`"ttl_minutes`":30}"
+    $lines += ""
+    if ($delegationRules.Count -gt 0) {
+        $lines += "TES COLLABORATEURS PREFERES (depuis A2A registry):"
+        $delegationRules | ForEach-Object { $lines += $_ }
+        $lines += ""
+    }
+    $lines += "VERIFIER TA BOITE: Lis tools/autodev/status/messages/inbox_$Domain.jsonl pour les reponses."
+    $lines += "=== FIN A2A PROTOCOL ==="
+
     $lines += ""
     $lines += "IMPORTANT: Tu es AUTONOME. Commence IMMEDIATEMENT. Pas de questions."
     $lines += "Traite les taches dans l'ordre de priorite (high puis medium puis low)."
@@ -386,7 +512,7 @@ try {
     # Notify start
     & powershell -File (Join-Path $scriptDir "notify.ps1") -Event "worker_done" -Domain $Domain -Message "Worker demarre avec $($domainConfig.tasks.Count) taches"
 
-    Write-Status -Status "in_progress" -CurrentTask $taskIds[0] -Remaining $taskIds
+    Write-Status -Status "in_progress" -CurrentTask $taskIds[0] -Remaining $taskIds -AgentId $Domain -ProgressPct 0
 
     # Clear CLAUDECODE env var to prevent Claude CLI from detecting nested context
     $env:CLAUDECODE = ""
@@ -473,13 +599,13 @@ try {
                 & powershell -File (Join-Path $scriptDir "notify.ps1") -Event "worker_error" -Domain $Domain -Message "Validation failed - worker cannot complete" -Details ($validateOutput | Select-Object -Last 20 | Out-String)
             } else {
                 Write-Host "[WORKER] Validation PASSED" -ForegroundColor Green
-                Write-Status -Status "done" -Completed $taskIds -Remaining @()
+                Write-Status -Status "done" -Completed $taskIds -Remaining @() -AgentId $Domain -ProgressPct 100
                 Write-SwarmResult -TaskIds $taskIds -Status "done" -FilesModified ($modifiedFiles + $stagedFiles)
                 & powershell -File (Join-Path $scriptDir "notify.ps1") -Event "worker_done" -Domain $Domain -Message "Termine: $($modifiedFiles.Count + $stagedFiles.Count) fichiers modifies, validation OK"
             }
         } else {
             Write-Host "[WORKER] Validation script not found, skipping validation" -ForegroundColor Yellow
-            Write-Status -Status "done" -Completed $taskIds -Remaining @()
+            Write-Status -Status "done" -Completed $taskIds -Remaining @() -AgentId $Domain -ProgressPct 100
             Write-SwarmResult -TaskIds $taskIds -Status "done" -FilesModified ($modifiedFiles + $stagedFiles)
             & powershell -File (Join-Path $scriptDir "notify.ps1") -Event "worker_done" -Domain $Domain -Message "Termine: $($modifiedFiles.Count + $stagedFiles.Count) fichiers modifies (no validation)"
         }

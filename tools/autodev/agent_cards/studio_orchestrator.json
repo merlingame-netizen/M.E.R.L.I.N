@@ -1,0 +1,58 @@
+{
+  "id": "studio_orchestrator",
+  "name": "Studio Orchestrator",
+  "version": "1.0.0",
+  "description": "Autonomous multi-agent orchestration for extended dev modes (Quick QA, Deep Test, Overnight)",
+  "agent_file": ".claude/agents/studio_orchestrator.md",
+  "category": "orchestration",
+  "capabilities": [
+    {
+      "task_type": "studio_orchestration",
+      "keywords": ["studio", "overnight", "deep test", "content sprint", "polish"],
+      "confidence": 0.95,
+      "mode": "orchestrate"
+    },
+    {
+      "task_type": "agent_coordination",
+      "keywords": ["coordinate", "wave", "cycle", "parallel", "sequential"],
+      "confidence": 0.9,
+      "mode": "orchestrate"
+    },
+    {
+      "task_type": "metrics_aggregation",
+      "keywords": ["metrics", "report", "aggregate", "summary", "dashboard"],
+      "confidence": 0.8,
+      "mode": "analyze"
+    }
+  ],
+  "inputs": [
+    {
+      "name": "mode_request",
+      "type": "text",
+      "required": true,
+      "description": "Studio mode to execute"
+    },
+    {
+      "name": "config",
+      "type": "json",
+      "required": false,
+      "description": "Studio configuration overrides"
+    }
+  ],
+  "outputs": [
+    {
+      "name": "studio_report",
+      "type": "json",
+      "description": "Aggregated metrics and findings"
+    },
+    {
+      "name": "agent_logs",
+      "type": "artifact",
+      "description": "Per-agent execution logs"
+    }
+  ],
+  "file_scope": ["tools/autodev/**/*"],
+  "dependencies": ["task_dispatcher", "debug_qa"],
+  "cost_profile": "haiku",
+  "max_concurrent": 1
+}

@@ -58,6 +58,24 @@
 
 Algorithme detaille: `~/.claude/rules/common/gate-algorithm.md`
 
+### 6. Plan Mode Gate (MANDATORY)
+
+En Plan Mode, `gate_enforcer` ne bloque pas (pas d'Edit/Write de code). La discipline est **manuelle** :
+
+```
+Phase 1 (Explore)  : Lire progress.md + task_plan.md + memory files
+Phase 2 (Design)   : Executer TOUTES les ACTION N: du [AUTO-ROUTE] AVANT d'ecrire le plan file
+                     → "Invoke Skill X"  → utiliser Skill tool avec ce skill
+                     → "Invoke Agent Y"  → lancer Agent tool avec ce type
+Phase 3 (Review)   : Verifier alignement plan vs ACTIONs executees
+Phase 4 (Plan)     : Ecrire le plan file (declenche plan_mode dans Neural Monitor)
+```
+
+**Neural Monitor** (sidebar VS Code) affiche en direct :
+- Badge `PLAN MODE` ou `INTERACTIVE`
+- Objectif courant + derniers skills/agents invoques
+- Gate compliance : `N/M actions completes (X%)`
+
 ### 7. Apprentissage Continu (OBLIGATOIRE)
 
 **REGLE** : En fin de session MODERATE+, invoquer `everything-claude-code:learn-eval` pour extraire les patterns.

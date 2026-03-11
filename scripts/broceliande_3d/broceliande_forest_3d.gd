@@ -714,8 +714,8 @@ func _setup_player() -> void:
 		var look: Vector3 = _path_points[1]
 		look.y = player.position.y
 		player.look_at(look, Vector3.UP)
-	# Explicit make_current() required for Camera3D inside SubViewport
-	player_camera.make_current()
+	# Explicit make_current() deferred — SubViewport must be fully ready before camera activates
+	player_camera.make_current.call_deferred()
 
 
 # ============================================================

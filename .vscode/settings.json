@@ -5,7 +5,7 @@
     "autodev-v4.remoteTrain.kaggleUsername": "maximebabonneau",
     "autodev-v4.remoteTrain.kernelSlug": "merlin-remote-lora-training",
     "autodev-v4.remoteTrain.kernelTitle": "MERLIN Remote LoRA Training",
-    "autodev-v4.remoteTrain.testModel": "meta-llama/Meta-Llama-3.1-8B-Instruct-Turbo",
-    "autodev-v4.remoteTrain.testEndpoint": "https://api.together.xyz/v1/chat/completions",
-    "autodev-v4.remoteTrain.testApiKey": ""
+    "autodev-v4.remoteTrain.testModel": "llama-3.1-8b-instant",
+    "autodev-v4.remoteTrain.testEndpoint": "https://api.groq.com/openai/v1/chat/completions",
+    "autodev-v4.remoteTrain.testApiKey": "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"
 }

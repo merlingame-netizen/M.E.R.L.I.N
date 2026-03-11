@@ -1,0 +1,58 @@
+{
+  "id": "merlin_guardian",
+  "name": "Merlin Behavioral Guardian",
+  "version": "1.0.0",
+  "description": "Merlin personality consistency enforcer across all content",
+  "agent_file": ".claude/agents/merlin_guardian.md",
+  "category": "narrative",
+  "capabilities": [
+    {
+      "task_type": "personality_enforcement",
+      "keywords": ["Merlin", "persona", "character", "voice", "personality"],
+      "confidence": 0.95,
+      "mode": "validate"
+    },
+    {
+      "task_type": "lore_consistency",
+      "keywords": ["lore", "canon", "continuity", "coherence"],
+      "confidence": 0.9,
+      "mode": "review"
+    },
+    {
+      "task_type": "prompt_validation",
+      "keywords": ["system prompt", "instruction", "tone"],
+      "confidence": 0.8,
+      "mode": "validate"
+    }
+  ],
+  "inputs": [
+    {
+      "name": "content",
+      "type": "text",
+      "required": true,
+      "description": "Dialogue or narrative to validate"
+    },
+    {
+      "name": "lore_reference",
+      "type": "file",
+      "required": false,
+      "description": "Lore documents for context"
+    }
+  ],
+  "outputs": [
+    {
+      "name": "consistency_report",
+      "type": "json",
+      "description": "Violations and alignment score"
+    },
+    {
+      "name": "voice_feedback",
+      "type": "text",
+      "description": "Suggestions for better Merlin voice"
+    }
+  ],
+  "file_scope": ["docs/50_lore/**/*.md", "data/**/*.json"],
+  "dependencies": ["narrative_writer"],
+  "cost_profile": "haiku",
+  "max_concurrent": 1
+}

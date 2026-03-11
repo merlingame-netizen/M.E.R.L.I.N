@@ -1,0 +1,58 @@
+{
+  "id": "art_direction",
+  "name": "Art Director",
+  "version": "1.0.0",
+  "description": "Visual style management, pixel art pipeline, CRT aesthetic specialist",
+  "agent_file": ".claude/agents/art_direction.md",
+  "category": "creative",
+  "capabilities": [
+    {
+      "task_type": "visual_style",
+      "keywords": ["style", "palette", "color", "aesthetic", "CRT", "pixel"],
+      "confidence": 0.95,
+      "mode": "review"
+    },
+    {
+      "task_type": "asset_creation",
+      "keywords": ["sprite", "icon", "asset", "texture", "animation"],
+      "confidence": 0.85,
+      "mode": "build"
+    },
+    {
+      "task_type": "shader_design",
+      "keywords": ["shader", "effect", "glow", "scanline", "filter"],
+      "confidence": 0.8,
+      "mode": "build"
+    }
+  ],
+  "inputs": [
+    {
+      "name": "visual_request",
+      "type": "text",
+      "required": true,
+      "description": "Asset or style request"
+    },
+    {
+      "name": "reference_images",
+      "type": "file",
+      "required": false,
+      "description": "Reference images"
+    }
+  ],
+  "outputs": [
+    {
+      "name": "style_guide",
+      "type": "json",
+      "description": "Visual specification"
+    },
+    {
+      "name": "assets",
+      "type": "artifact",
+      "description": "Generated visual assets"
+    }
+  ],
+  "file_scope": ["Assets/**/*.png", "*.shader", "themes/**/*.tres", "scripts/autoload/merlin_visual.gd"],
+  "dependencies": ["ui_consistency"],
+  "cost_profile": "sonnet",
+  "max_concurrent": 1
+}

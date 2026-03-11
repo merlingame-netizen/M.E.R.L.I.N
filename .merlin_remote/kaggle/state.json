@@ -1,9 +1,9 @@
 {
-  "updated_at": "2026-03-10T22:01:33Z",
-  "last_action": "submit:worker",
-  "last_status": "submitted",
+  "updated_at": "2026-03-11T19:13:34Z",
+  "last_action": "chat",
+  "last_status": "ok",
   "chat_mode": "remote_endpoint",
-  "chat_model": "meta-llama/Meta-Llama-3.1-8B-Instruct-Turbo",
+  "chat_model": "llama-3.1-8b-instant",
   "doctor_missing": [],
   "job": "maximebabonneau/merlin-remote-lora-training",
   "dataset": "C:\\Users\\PGNK2128\\Godot-MCP\\data\\ai\\training\\merlin_full_v9.jsonl",

@@ -9,6 +9,10 @@ This script is designed to be called by the VS Code panel:
 
 from __future__ import annotations
 
+import sys
+sys.stdout.reconfigure(encoding='utf-8')
+sys.stderr.reconfigure(encoding='utf-8')
+
 import argparse
 import base64
 import datetime as dt
@@ -799,7 +803,8 @@ def _download_single(root: Path, username: str, slug: str, output_dir: Path, bra
 
 def http_post_json(url: str, payload: dict, headers: Optional[dict] = None, timeout: int = 120) -> dict:
     raw = json.dumps(payload).encode("utf-8")
-    req_headers = {"Content-Type": "application/json"}
+    # Cloudflare WAF blocks "Python-urllib/3.x"; curl UA bypasses error 1010
+    req_headers = {"Content-Type": "application/json", "User-Agent": "curl/7.88.1"}
     if headers:
         req_headers.update(headers)
     req = urllib.request.Request(url=url, data=raw, headers=req_headers, method="POST")
@@ -832,7 +837,7 @@ def resolve_api_key(endpoint: str, explicit_key: str) -> str:
     return os.environ.get("OPENAI_API_KEY", "")
 
 
-def cmd_chat(root: Path, prompt: str, model: str, endpoint: str, api_key: str) -> None:
+def cmd_chat(root: Path, prompt: str, model: str, endpoint: str, api_key: str, system_prompt: str = "") -> None:
     if not prompt:
         fail("--prompt is required for chat")
 
@@ -840,11 +845,16 @@ def cmd_chat(root: Path, prompt: str, model: str, endpoint: str, api_key: str) -
     mode = "ollama"
     try:
         endpoint_url = normalize_chat_endpoint(endpoint)
+        messages = []
+        if system_prompt:
+            messages.append({"role": "system", "content": system_prompt})
+        messages.append({"role": "user", "content": prompt})
+
         if endpoint_url:
             mode = "remote_endpoint"
             payload = {
                 "model": model,
-                "messages": [{"role": "user", "content": prompt}],
+                "messages": messages,
                 "temperature": 0.7,
                 "max_tokens": 350,
             }
@@ -859,7 +869,7 @@ def cmd_chat(root: Path, prompt: str, model: str, endpoint: str, api_key: str) -
             url = "http://127.0.0.1:11434/api/chat"
             payload = {
                 "model": model,
-                "messages": [{"role": "user", "content": prompt}],
+                "messages": messages,
                 "stream": False,
                 "options": {"temperature": 0.7, "num_predict": 350},
             }
@@ -890,6 +900,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--prompt", default="", help="Prompt text for chat")
     parser.add_argument("--endpoint", default="", help="Optional OpenAI-compatible endpoint URL (base /v1 or full /chat/completions)")
     parser.add_argument("--api-key", default="", help="Optional API key for --endpoint")
+    parser.add_argument("--system-prompt", default="", help="System prompt for chat (persona or dev mode)")
     return parser.parse_args()
 
 
@@ -926,6 +937,7 @@ def main() -> None:
             model=args.model.strip(),
             endpoint=args.endpoint.strip(),
             api_key=args.api_key.strip(),
+            system_prompt=args.system_prompt.strip(),
         )
         return
 

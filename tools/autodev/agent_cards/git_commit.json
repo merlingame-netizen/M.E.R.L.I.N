@@ -1,0 +1,52 @@
+{
+  "id": "git_commit",
+  "name": "Git Commit Agent",
+  "version": "1.0.0",
+  "description": "Change analysis, conventional commits, branch management, and changelog generation",
+  "agent_file": ".claude/agents/git_commit.md",
+  "category": "ops",
+  "capabilities": [
+    {
+      "task_type": "commit_creation",
+      "keywords": ["commit", "stage", "diff", "changelog", "conventional"],
+      "confidence": 0.95,
+      "mode": "build"
+    },
+    {
+      "task_type": "branch_management",
+      "keywords": ["branch", "merge", "rebase", "tag", "version"],
+      "confidence": 0.85,
+      "mode": "build"
+    },
+    {
+      "task_type": "change_analysis",
+      "keywords": ["changes", "diff", "impact", "scope"],
+      "confidence": 0.8,
+      "mode": "analyze"
+    }
+  ],
+  "inputs": [
+    {
+      "name": "work_summary",
+      "type": "text",
+      "required": true,
+      "description": "Description of completed work"
+    }
+  ],
+  "outputs": [
+    {
+      "name": "commit_message",
+      "type": "text",
+      "description": "Formatted conventional commit message"
+    },
+    {
+      "name": "changelog_entry",
+      "type": "text",
+      "description": "Changelog section for the changes"
+    }
+  ],
+  "file_scope": [],
+  "dependencies": ["security_specialist"],
+  "cost_profile": "haiku",
+  "max_concurrent": 1
+}

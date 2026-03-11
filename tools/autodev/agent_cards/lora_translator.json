@@ -1,0 +1,58 @@
+{
+  "id": "lora_translator",
+  "name": "LoRA Gameplay Translator",
+  "version": "1.0.0",
+  "description": "Bridge between gameplay needs and LoRA fine-tuning pipeline",
+  "agent_file": ".claude/agents/lora_gameplay_translator.md",
+  "category": "llm",
+  "capabilities": [
+    {
+      "task_type": "training_translation",
+      "keywords": ["LoRA", "fine-tune", "training", "dataset", "adapter"],
+      "confidence": 0.95,
+      "mode": "build"
+    },
+    {
+      "task_type": "dataset_design",
+      "keywords": ["dataset", "examples", "golden", "training data"],
+      "confidence": 0.9,
+      "mode": "generate"
+    },
+    {
+      "task_type": "pipeline_orchestration",
+      "keywords": ["pipeline", "Kaggle", "training run", "hyperparameter"],
+      "confidence": 0.85,
+      "mode": "orchestrate"
+    }
+  ],
+  "inputs": [
+    {
+      "name": "gameplay_request",
+      "type": "text",
+      "required": true,
+      "description": "Gameplay adaptation need"
+    },
+    {
+      "name": "existing_data",
+      "type": "json",
+      "required": false,
+      "description": "Existing training datasets"
+    }
+  ],
+  "outputs": [
+    {
+      "name": "training_spec",
+      "type": "json",
+      "description": "LoRA training specification"
+    },
+    {
+      "name": "dataset",
+      "type": "artifact",
+      "description": "Generated training data"
+    }
+  ],
+  "file_scope": ["data/ai/training/**/*.json", "tools/lora/**/*.py"],
+  "dependencies": ["llm_expert", "narrative_writer"],
+  "cost_profile": "sonnet",
+  "max_concurrent": 1
+}

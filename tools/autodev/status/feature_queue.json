@@ -41,21 +41,25 @@
       "id": "TRIADE-CORE-4",
       "phase": 1,
       "priority": 4,
-      "status": "pending",
+      "status": "completed",
       "title": "Nettoyer merlin_card_system.gd — options liées aux aspects",
       "agent": "godot_expert",
       "files": ["scripts/merlin/merlin_card_system.gd"],
-      "description": "Supprimer la logique qui génère des effets liés aux 3 aspects dans les options de cartes. Les 3 options (G/C/D) restent mais leurs effets ne sont plus des SHIFT_ASPECT. Simplifier la validation d'effets pour accepter les nouveaux types seulement."
+      "description": "Supprimer la logique qui génère des effets liés aux 3 aspects dans les options de cartes. Les 3 options (G/C/D) restent mais leurs effets ne sont plus des SHIFT_ASPECT. Simplifier la validation d'effets pour accepter les nouveaux types seulement.",
+      "completed_at": "2026-03-11",
+      "notes": "Signal aspect_warning(aspect, state) supprimé (vestige Triade). Commentaires d'en-tête mis à jour (v0.4.0, 4 jauges, 1-4 options). Le fichier ne contenait plus aucun effet SHIFT_ASPECT/ADD_ASPECT_ALIGNMENT/USE_SOUFFLE ni référence à AspectState/TRIADE_ASPECTS/TRIADE_OPTION_INFO (déjà nettoyés par Vague 1). validate.bat : 0 erreur dans merlin_card_system.gd — les 9 erreurs signalées sont dans game_manager.gd et merlin_ai.gd (pré-existantes, hors scope CORE-4)."
     },
     {
       "id": "TRIADE-UI-1",
       "phase": 1,
       "priority": 5,
-      "status": "pending",
+      "status": "completed",
       "title": "Remplacer hub_triade_hud.gd par reputation_hud.gd",
       "agent": "godot_expert",
-      "files": ["scripts/ui/hub_triade_hud.gd", "scripts/ui/hub_souffle_bar.gd"],
-      "description": "Vider hub_triade_hud.gd (laisser fichier vide avec class_name pour éviter erreurs de référence). Supprimer hub_souffle_bar.gd (créer fichier stub). Créer scripts/ui/reputation_hud.gd : affiche 5 factions avec leur niveau (Label simple pour l'instant, pas de design final). Garder la logique fonctionnelle, pas besoin d'UI polie."
+      "files": ["scripts/ui/hub_triade_hud.gd", "scripts/ui/hub_souffle_bar.gd", "scripts/ui/reputation_hud.gd"],
+      "description": "Vider hub_triade_hud.gd (laisser fichier vide avec class_name pour éviter erreurs de référence). Supprimer hub_souffle_bar.gd (créer fichier stub). Créer scripts/ui/reputation_hud.gd : affiche 5 factions avec leur niveau (Label simple pour l'instant, pas de design final). Garder la logique fonctionnelle, pas besoin d'UI polie.",
+      "completed_at": "2026-03-11",
+      "notes": "hub_triade_hud.gd → stub minimal (hide()). hub_souffle_bar.gd → stub minimal (hide()). reputation_hud.gd créé : VBoxContainer + 5 Labels (druides/anciens/korrigans/niamh/ankou), connexion signal reputation_changed sur /root/MerlinStore. Les 9 erreurs validate.bat (TRIADE_ASPECTS, SOUFFLE_START, AspectState, ASPECT_STATE_NARRATIVE, TRIADE_NODE_TYPES) sont pré-existantes de TRIADE-CORE-1/2, hors scope TRIADE-UI-1, à traiter dans TRIADE-UI-2, TRIADE-AI-1/2, TRIADE-SCENES."
     },
     {
       "id": "TRIADE-UI-2",
