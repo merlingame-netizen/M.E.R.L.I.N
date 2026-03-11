@@ -1,0 +1,16 @@
+{
+  "name": "M.E.R.L.I.N. Godot Dev",
+  "image": "barichello/godot-ci:4.4.1",
+  "features": {
+    "ghcr.io/devcontainers/features/node:1": {}
+  },
+  "postCreateCommand": "cd server && npm install",
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "geequlim.godot-tools"
+      ]
+    }
+  },
+  "forwardPorts": [6008]
+}
