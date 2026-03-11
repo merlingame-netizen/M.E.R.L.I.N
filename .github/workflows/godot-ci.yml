@@ -30,6 +30,19 @@ jobs:
           fi
           echo "No script errors found"
 
+  server-build:
+    name: Server TypeScript Check
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - name: Install dependencies
+        run: cd server && npm ci
+      - name: TypeScript build check
+        run: cd server && npm run build
+
   scene-smoke:
     name: Scene Smoke Tests
     runs-on: ubuntu-latest
@@ -39,6 +52,12 @@ jobs:
       matrix:
         scene:
           - res://scenes/IntroCeltOS.tscn
+          - res://scenes/MenuPrincipal.tscn
+          - res://scenes/IntroPersonalityQuiz.tscn
+          - res://scenes/SceneRencontreMerlin.tscn
+          - res://scenes/SelectionSauvegarde.tscn
+          - res://scenes/HubAntre.tscn
+          - res://scenes/TransitionBiome.tscn
           - res://scenes/MerlinGame.tscn
     steps:
       - uses: actions/checkout@v4
@@ -58,3 +77,11 @@ jobs:
             exit 1
           fi
           echo "Scene ${{ matrix.scene }} passed"
+
+      - name: Upload Godot logs
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: godot-logs-${{ matrix.scene }}
+          path: ~/.local/share/godot/
+          retention-days: 7
