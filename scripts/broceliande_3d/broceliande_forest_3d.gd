@@ -196,6 +196,7 @@ var _creature_spawner: RefCounted  # BrocCreatureSpawner
 var _narrative_director: RefCounted  # BrocNarrativeDirector
 var _gameplay_active: bool = false  # true when LLM event system is wired
 var _saved_crt_preset: String = "medium"
+var _crt_was_visible: bool = true
 
 # Particle refs for day/night modulation
 var _pollen_node: GPUParticles3D
@@ -216,8 +217,11 @@ func _ready() -> void:
 	# Hide CRT post-process entirely (screen_texture incompatible with SubViewport in GL Compat)
 	var crt_layer: Node = get_node_or_null("/root/ScreenDither")
 	if crt_layer:
+		_crt_was_visible = crt_layer.visible
 		if crt_layer.has_method("get_crt_preset"):
 			_saved_crt_preset = crt_layer.get_crt_preset()
+		if crt_layer.has_method("set_crt_preset"):
+			crt_layer.set_crt_preset("off")
 		if crt_layer.has_method("set_enabled"):
 			crt_layer.set_enabled(false)
 	_load_assets()
@@ -276,6 +280,9 @@ func _init_helpers() -> void:
 	# Billboard creatures
 	_creature_spawner = BrocCreatureSpawnerClass.new(forest_root)
 
+	# VFX system (keyword → 3D effects) — must be created before NarrativeDirector
+	_event_vfx = BrocEventVfxClass.new(forest_root, world_env, sun_light)
+
 	# LLM Narrative Director (orchestration layer)
 	_narrative_director = BrocNarrativeDirectorClass.new()
 	_narrative_director.setup(_atmosphere, _creature_spawner, _screen_vfx, _event_vfx, _chunk_manager)
@@ -295,9 +302,6 @@ func _init_gameplay_systems() -> void:
 	# Event overlay (darkened bg + typewriter + 3 choices)
 	_walk_event_overlay = WalkEventOverlayClass.new()
 	add_child(_walk_event_overlay)
-
-	# VFX system (keyword → 3D effects)
-	_event_vfx = BrocEventVfxClass.new(forest_root, world_env, sun_light)
 
 	# Event controller (LLM bridge, triggers, prefetch)
 	_walk_event_controller = WalkEventControllerClass.new()
@@ -336,10 +340,10 @@ func _exit_tree() -> void:
 	# Restore CRT post-process for other scenes
 	var crt_layer: Node = get_node_or_null("/root/ScreenDither")
 	if crt_layer:
-		if crt_layer.has_method("set_enabled"):
-			crt_layer.set_enabled(true)
 		if crt_layer.has_method("set_crt_preset"):
 			crt_layer.set_crt_preset(_saved_crt_preset)
+		if crt_layer.has_method("set_enabled"):
+			crt_layer.set_enabled(_crt_was_visible)
 
 
 # ============================================================
@@ -637,7 +641,8 @@ func _update_pixel_shrink() -> void:
 func _setup_environment() -> void:
 	var env: Environment = Environment.new()
 
-	# Sky — procedural sky with forest atmosphere
+	# Sky — BG_COLOR in GL Compat (ProceduralSkyMaterial renders white in GL Compat)
+	# Keep sky resource for ambient/sun contribution but use BG_COLOR for background
 	var sky_mat: ProceduralSkyMaterial = ProceduralSkyMaterial.new()
 	sky_mat.sky_top_color = Color(0.35, 0.55, 0.75)
 	sky_mat.sky_horizon_color = Color(0.55, 0.65, 0.55)
@@ -648,8 +653,8 @@ func _setup_environment() -> void:
 	var sky: Sky = Sky.new()
 	sky.sky_material = sky_mat
 	env.sky = sky
-	env.background_mode = Environment.BG_SKY
-	env.background_color = Color(0.12, 0.18, 0.14)
+	env.background_mode = Environment.BG_COLOR
+	env.background_color = Color(0.20, 0.30, 0.22)  # Deep forest canopy green
 
 	# Ambient — brighter, warmer
 	env.ambient_light_source = Environment.AMBIENT_SOURCE_COLOR
@@ -709,6 +714,8 @@ func _setup_player() -> void:
 		var look: Vector3 = _path_points[1]
 		look.y = player.position.y
 		player.look_at(look, Vector3.UP)
+	# Explicit make_current() required for Camera3D inside SubViewport
+	player_camera.make_current()
 
 
 # ============================================================

@@ -272,7 +272,7 @@ func _process_build_queues() -> void:
 			chunk["node_count"] += 1
 			built_this_frame += 1
 
-		if pending.size() == 0:
+		if pending.is_empty():
 			chunk["state"] = ChunkState.ACTIVE
 			chunk.erase("transforms")
 			chunk.erase("pending_keys")
