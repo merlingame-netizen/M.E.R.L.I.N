@@ -18,7 +18,8 @@
       "focus": "Transitions Triade — 3 états x 3 Aspects + déclenchement fins",
       "why": "284 samples synthétiques. Besoin de vrais exemples de changement d'état Corps/Âme/Monde avec les 12 fins narratives.",
       "target_samples": 150,
-      "status": "planned"
+      "status": "OBSOLETE",
+      "obsolete_reason": "Entraîné sur Triade (Corps/Âme/Monde) — système supprimé 2026-03-11. À réentraîner post-suppression complète sur : factions x5, oghams x18, conditions victoire co-design. NE PAS supprimer les checkpoints existants."
     },
     {
       "id": "worker-v2",
@@ -36,7 +37,8 @@
       "focus": "Variations émotionnelles — Souffle d'Ogham critique (0, 1, 2)",
       "why": "Enrichir la richesse poétique pour les moments-clés : Souffle = 0 (fin proche), choix décisif, Ogham révélé.",
       "target_samples": 150,
-      "status": "future"
+      "status": "OBSOLETE",
+      "obsolete_reason": "Référence au Souffle d'Ogham — ressource supprimée 2026-03-11. À redéfinir autour du cycle jour/nuit et des seuils de réputation factions."
     }
   ]
 }

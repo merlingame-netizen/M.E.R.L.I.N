@@ -29,21 +29,19 @@ const BIOME_DATA := {
 	"foret_broceliande": {
 		"name": "Foret de Broceliande",
 		"subtitle": "Mystere et magie ancestrale",
-		"color": MerlinVisual.ASPECT_COLORS["Monde"],
+		"color": MerlinVisual.GBC.forest,
 		"ogham": "duir",
 		"guardian": "Maelgwn",
 		"season": "automne",
-		"aspect_hint": "Corps +20%",
 		"difficulty_label": "Normal",
 	},
 	"landes_bruyere": {
 		"name": "Landes de Bruyere",
 		"subtitle": "Solitude et endurance",
-		"color": MerlinVisual.ASPECT_COLORS["Ame"],
+		"color": MerlinVisual.CRT_PALETTE.phosphor_dim,
 		"ogham": "onn",
 		"guardian": "Talwen",
 		"season": "hiver",
-		"aspect_hint": "Ame +20%",
 		"difficulty_label": "Difficile",
 	},
 	"cotes_sauvages": {
@@ -53,7 +51,6 @@ const BIOME_DATA := {
 		"ogham": "nuin",
 		"guardian": "Bran",
 		"season": "ete",
-		"aspect_hint": "Monde +20%",
 		"difficulty_label": "Normal",
 	},
 	"villages_celtes": {
@@ -63,7 +60,6 @@ const BIOME_DATA := {
 		"ogham": "gort",
 		"guardian": "Azenor",
 		"season": "printemps",
-		"aspect_hint": "Monde +20%",
 		"difficulty_label": "Facile",
 	},
 	"cercles_pierres": {
@@ -73,7 +69,6 @@ const BIOME_DATA := {
 		"ogham": "huath",
 		"guardian": "Keridwen",
 		"season": "samhain",
-		"aspect_hint": "Ame +40%",
 		"difficulty_label": "Difficile",
 	},
 	"marais_korrigans": {
@@ -83,17 +78,15 @@ const BIOME_DATA := {
 		"ogham": "muin",
 		"guardian": "Gwydion",
 		"season": "lughnasadh",
-		"aspect_hint": "Corps +20%",
 		"difficulty_label": "Tres difficile",
 	},
 	"collines_dolmens": {
 		"name": "Collines aux Dolmens",
 		"subtitle": "Les os de la terre",
-		"color": MerlinVisual.ASPECT_COLORS_LIGHT["Monde"],
+		"color": MerlinVisual.CRT_PALETTE.border_bright,
 		"ogham": "ioho",
 		"guardian": "Elouan",
 		"season": "yule",
-		"aspect_hint": "Equilibre",
 		"difficulty_label": "Normal",
 	},
 	"iles_mystiques": {
@@ -103,7 +96,6 @@ const BIOME_DATA := {
 		"ogham": "ailm",
 		"guardian": "Morgane",
 		"season": "samhain",
-		"aspect_hint": "Ame +40%",
 		"difficulty_label": "Legendaire",
 	},
 }
@@ -205,10 +197,7 @@ var _bubble: MerlinBubble = null
 var _radial: BiomeRadial = null
 var _partir_btn: Button = null
 var _hotspots: Array = []
-var _perk_overlay: Control = null  # B.1 — Souffle Perk selection overlay
 var _typology_panel: Control = null  # Typology selection panel (before run launch)
-var _triade_hud: HubTriadeHud = null
-var _souffle_bar: HubSouffleBar = null
 var _chronicle_label: Label = null
 var _meta_label: Label = null
 var _scanline_overlay: ColorRect = null
@@ -246,17 +235,13 @@ func _ready() -> void:
 	_configure_background()
 	_create_scanline_overlay()
 	_create_chronicle_header()
-	_create_triade_hud()
-	_create_souffle_bar()
 	_create_bestiole()
 	_create_hotspots()
 	_create_partir_button()
 	_create_bubble()
 	_create_radial()
 	_setup_voicebox()
-	_apply_aspect_aura()
 	_sync_from_state()
-	_update_hud_data()
 
 	var screen_fx := get_node_or_null("/root/ScreenEffects")
 	if screen_fx and screen_fx.has_method("set_merlin_mood"):
@@ -327,17 +312,6 @@ func _sync_from_state() -> void:
 	store.state["flags"]["hub_visited"] = true
 
 
-func _update_hud_data() -> void:
-	if store == null:
-		return
-	var aspects: Dictionary = store.state.get("aspects", {})
-	if _triade_hud:
-		_triade_hud.update_aspects(aspects)
-	var run: Dictionary = store.state.get("run", {})
-	var souffle: int = int(run.get("souffle", MerlinConstants.SOUFFLE_START))
-	if _souffle_bar:
-		_souffle_bar.update_souffle(souffle, MerlinConstants.SOUFFLE_MAX)
-
 
 func _process(delta: float) -> void:
 	_ambient_t += delta
@@ -398,27 +372,6 @@ func _spawn_ambient_particle() -> void:
 		_ambient_particles.remove_at(0)
 
 
-func _apply_aspect_aura() -> void:
-	if _bestiole == null or store == null:
-		return
-	var aspects: Dictionary = store.state.get("aspects", {})
-	var corps: int = aspects.get("Corps", 50)
-	var ame: int = aspects.get("Ame", 50)
-	var monde: int = aspects.get("Monde", 50)
-
-	var dominant: String = "Corps"
-	var max_val: int = corps
-	if ame > max_val:
-		dominant = "Ame"
-		max_val = ame
-	if monde > max_val:
-		dominant = "Monde"
-
-	var tint: Color = MerlinVisual.ASPECT_COLORS[dominant]
-	tint = tint.lightened(0.6)
-	tint.a = 1.0
-	_bestiole.call("set_aura_tint", tint)
-
 
 # =============================================================================
 # CREATE COMPONENTS — HUD & Overlays
@@ -465,19 +418,6 @@ func _create_chronicle_header() -> void:
 	_meta_label.size = Vector2(vp.x, 20.0)
 	add_child(_meta_label)
 
-
-func _create_triade_hud() -> void:
-	_triade_hud = HubTriadeHud.new()
-	_triade_hud.position = Vector2(0.0, 72.0)
-	_triade_hud.size = Vector2(get_viewport_rect().size.x, 48.0)
-	add_child(_triade_hud)
-
-
-func _create_souffle_bar() -> void:
-	_souffle_bar = HubSouffleBar.new()
-	_souffle_bar.position = Vector2(0.0, 120.0)
-	_souffle_bar.size = Vector2(get_viewport_rect().size.x, 28.0)
-	add_child(_souffle_bar)
 
 
 # =============================================================================
@@ -608,10 +548,6 @@ func _layout_all() -> void:
 		_chronicle_label.size.x = vp.x
 	if _meta_label:
 		_meta_label.size.x = vp.x
-	if _triade_hud:
-		_triade_hud.size.x = vp.x
-	if _souffle_bar:
-		_souffle_bar.size.x = vp.x
 
 
 func _layout_partir() -> void:
@@ -759,7 +695,7 @@ func _show_typology_panel() -> void:
 		"urgence": MerlinVisual.CRT_PALETTE["danger"],
 		"parieur": MerlinVisual.CRT_PALETTE["amber"],
 		"diplomate": MerlinVisual.CRT_PALETTE["cyan"],
-		"chasseur": MerlinVisual.CRT_ASPECT_COLORS["Corps"],
+		"chasseur": MerlinVisual.CRT_PALETTE["phosphor"],
 	}
 	for typology_id in ["urgence", "parieur", "diplomate", "chasseur"]:
 		var tdata: Dictionary = MerlinConstants.RUN_TYPOLOGIES.get(typology_id, {})
@@ -965,10 +901,6 @@ func _play_entry_animation() -> void:
 		_chronicle_label.modulate.a = 0.0
 	if _meta_label:
 		_meta_label.modulate.a = 0.0
-	if _triade_hud:
-		_triade_hud.modulate.a = 0.0
-	if _souffle_bar:
-		_souffle_bar.modulate.a = 0.0
 
 	await get_tree().process_frame
 
@@ -981,16 +913,6 @@ func _play_entry_animation() -> void:
 	if _meta_label:
 		var tw := create_tween()
 		tw.tween_property(_meta_label, "modulate:a", 1.0, 0.3)
-
-	# HUD elements staggered reveal
-	await get_tree().create_timer(0.1).timeout
-	if _triade_hud:
-		var tw := create_tween()
-		tw.tween_property(_triade_hud, "modulate:a", 1.0, 0.4).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
-	await get_tree().create_timer(0.1).timeout
-	if _souffle_bar:
-		var tw := create_tween()
-		tw.tween_property(_souffle_bar, "modulate:a", 1.0, 0.4).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
 
 	# Stagger hotspots reveal
 	for i in _hotspots.size():
@@ -1008,179 +930,6 @@ func _play_entry_animation() -> void:
 		var tw := create_tween().set_parallel(true)
 		tw.tween_property(_partir_btn, "modulate:a", 1.0, 0.4).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
 		tw.tween_property(_partir_btn, "scale", Vector2(1.0, 1.0), 0.4).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
-
-
-# =============================================================================
-# B.1 — SOUFFLE PERK OVERLAY
-# =============================================================================
-
-func _show_perk_overlay() -> void:
-	## Show Souffle Perk selection overlay (modal, 4 perk cards).
-	if _perk_overlay != null and is_instance_valid(_perk_overlay):
-		_perk_overlay.visible = true
-		return
-
-	var current_perk: String = ""
-	if store:
-		current_perk = str(store.state.get("run", {}).get("perks", {}).get("selected_perk", ""))
-
-	# Backdrop
-	_perk_overlay = Control.new()
-	_perk_overlay.set_anchors_preset(Control.PRESET_FULL_RECT)
-	var bg := ColorRect.new()
-	bg.set_anchors_preset(Control.PRESET_FULL_RECT)
-	bg.color = Color(0.0, 0.0, 0.0, 0.78)
-	_perk_overlay.add_child(bg)
-
-	# Panel
-	var vp: Vector2 = get_viewport_rect().size
-	var panel := PanelContainer.new()
-	panel.custom_minimum_size = Vector2(540, 380)
-	panel.position = (vp - Vector2(540, 380)) * 0.5
-	var panel_style := StyleBoxFlat.new()
-	panel_style.bg_color = MerlinVisual.CRT_PALETTE.bg_panel
-	panel_style.border_color = MerlinVisual.CRT_PALETTE.amber
-	panel_style.set_border_width_all(2)
-	panel_style.set_corner_radius_all(8)
-	panel_style.content_margin_left = 24
-	panel_style.content_margin_right = 24
-	panel_style.content_margin_top = 20
-	panel_style.content_margin_bottom = 20
-	panel.add_theme_stylebox_override("panel", panel_style)
-	_perk_overlay.add_child(panel)
-
-	var vbox := VBoxContainer.new()
-	vbox.add_theme_constant_override("separation", 14)
-	panel.add_child(vbox)
-
-	# Title
-	var title := Label.new()
-	title.text = "Choisir ton Souffle d'Ogham"
-	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	title.add_theme_color_override("font_color", MerlinVisual.CRT_PALETTE.amber_bright)
-	var title_font: Font = MerlinVisual.get_font("title")
-	if title_font:
-		title.add_theme_font_override("font", title_font)
-	title.add_theme_font_size_override("font_size", 18)
-	vbox.add_child(title)
-
-	# 4 perk cards in 2×2 grid
-	var grid := GridContainer.new()
-	grid.columns = 2
-	grid.add_theme_constant_override("h_separation", 12)
-	grid.add_theme_constant_override("v_separation", 12)
-	vbox.add_child(grid)
-
-	var perk_keys: Array = MerlinConstants.SOUFFLE_PERK_TYPES.keys()
-	var _selected_in_overlay: String = current_perk
-	var perk_buttons: Array = []
-
-	for pk in perk_keys:
-		var pdata: Dictionary = MerlinConstants.SOUFFLE_PERK_TYPES.get(pk, {})
-		var card_btn := Button.new()
-		card_btn.custom_minimum_size = Vector2(230, 90)
-		card_btn.text = "[%s]\n%s" % [str(pdata.get("name", pk)), str(pdata.get("description", ""))]
-		card_btn.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-		var is_selected: bool = pk == current_perk
-
-		var style_normal := StyleBoxFlat.new()
-		style_normal.set_corner_radius_all(6)
-		style_normal.set_border_width_all(2 if is_selected else 1)
-		style_normal.bg_color = MerlinVisual.CRT_PALETTE.bg_panel if not is_selected else MerlinVisual.CRT_PALETTE.bg_dark
-		style_normal.border_color = MerlinVisual.CRT_PALETTE.amber if is_selected else MerlinVisual.CRT_PALETTE.phosphor_dim
-		card_btn.add_theme_stylebox_override("normal", style_normal)
-		card_btn.add_theme_color_override("font_color", MerlinVisual.CRT_PALETTE.phosphor if not is_selected else MerlinVisual.CRT_PALETTE.amber_bright)
-		card_btn.add_theme_font_size_override("font_size", 11)
-
-		# Capture pk for the lambda
-		var captured_pk: String = pk
-		card_btn.pressed.connect(func(): _on_perk_card_selected(captured_pk))
-		card_btn.mouse_entered.connect(func(): SFXManager.play("hover"))
-		grid.add_child(card_btn)
-		perk_buttons.append({"key": pk, "btn": card_btn})
-
-	# Confirm + Cancel row
-	var btn_row := HBoxContainer.new()
-	btn_row.alignment = BoxContainer.ALIGNMENT_CENTER
-	btn_row.add_theme_constant_override("separation", 20)
-	vbox.add_child(btn_row)
-
-	var confirm_btn := Button.new()
-	confirm_btn.text = "Confirmer"
-	confirm_btn.custom_minimum_size = Vector2(140, 44)
-	var cs := StyleBoxFlat.new()
-	cs.bg_color = MerlinVisual.CRT_PALETTE.amber
-	cs.set_border_width_all(2)
-	cs.border_color = MerlinVisual.CRT_PALETTE.amber_bright
-	cs.set_corner_radius_all(6)
-	confirm_btn.add_theme_stylebox_override("normal", cs)
-	confirm_btn.add_theme_color_override("font_color", MerlinVisual.CRT_PALETTE.bg_panel)
-	confirm_btn.pressed.connect(_on_perk_confirmed)
-	confirm_btn.mouse_entered.connect(func(): SFXManager.play("hover"))
-	btn_row.add_child(confirm_btn)
-
-	var cancel_btn := Button.new()
-	cancel_btn.text = "Annuler"
-	cancel_btn.custom_minimum_size = Vector2(110, 44)
-	cancel_btn.pressed.connect(_on_perk_cancelled)
-	cancel_btn.mouse_entered.connect(func(): SFXManager.play("hover"))
-	btn_row.add_child(cancel_btn)
-
-	add_child(_perk_overlay)
-	SFXManager.play("card_draw")
-
-
-func _on_perk_card_selected(perk_id: String) -> void:
-	## Called when a perk card button is pressed — store tentative selection.
-	SFXManager.play("click")
-	if _perk_overlay == null or not is_instance_valid(_perk_overlay):
-		return
-	# Find the panel → vbox → grid and update button styles
-	var panel: Node = _perk_overlay.get_child(1)  # index 1 = PanelContainer
-	if panel == null:
-		return
-	var vbox: Node = panel.get_child(0) if panel.get_child_count() > 0 else null
-	if vbox == null:
-		return
-	var grid: Node = vbox.get_child(1) if vbox.get_child_count() > 1 else null
-	if grid == null:
-		return
-	var perk_keys: Array = MerlinConstants.SOUFFLE_PERK_TYPES.keys()
-	for i in perk_keys.size():
-		if i >= grid.get_child_count():
-			break
-		var btn: Button = grid.get_child(i) as Button
-		if btn == null:
-			continue
-		var is_sel: bool = perk_keys[i] == perk_id
-		var style_upd := StyleBoxFlat.new()
-		style_upd.set_corner_radius_all(6)
-		style_upd.set_border_width_all(2 if is_sel else 1)
-		style_upd.bg_color = MerlinVisual.CRT_PALETTE.bg_dark if is_sel else MerlinVisual.CRT_PALETTE.bg_panel
-		style_upd.border_color = MerlinVisual.CRT_PALETTE.amber if is_sel else MerlinVisual.CRT_PALETTE.phosphor_dim
-		btn.add_theme_stylebox_override("normal", style_upd)
-		btn.add_theme_color_override("font_color", MerlinVisual.CRT_PALETTE.amber_bright if is_sel else MerlinVisual.CRT_PALETTE.phosphor)
-	# Store tentative selection on the overlay node as metadata
-	_perk_overlay.set_meta("pending_perk", perk_id)
-
-
-func _on_perk_confirmed() -> void:
-	## Dispatch SELECT_PERK with the pending selection and close overlay.
-	SFXManager.play("perk_confirm")
-	if _perk_overlay == null or not is_instance_valid(_perk_overlay):
-		return
-	var perk_id: String = str(_perk_overlay.get_meta("pending_perk", ""))
-	if store and not perk_id.is_empty():
-		store.dispatch({"type": "SELECT_PERK", "perk_id": perk_id})
-		print("[HubAntre] Souffle Perk selected: %s" % perk_id)
-	_perk_overlay.visible = false
-
-
-func _on_perk_cancelled() -> void:
-	## Close overlay without saving.
-	SFXManager.play("click")
-	if _perk_overlay and is_instance_valid(_perk_overlay):
-		_perk_overlay.visible = false
 
 
 # =============================================================================

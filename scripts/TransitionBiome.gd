@@ -317,7 +317,7 @@ func _configure_weather_system() -> void:
 	# Style clock panel
 	var clock_style := StyleBoxFlat.new()
 	var clock_bg: Color = MerlinVisual.CRT_PALETTE.bg_dark
-	var clock_border: Color = MerlinVisual.CRT_PALETTE.souffle
+	var clock_border: Color = MerlinVisual.CRT_PALETTE.border
 	clock_style.bg_color = Color(clock_bg.r, clock_bg.g, clock_bg.b, 0.9)
 	clock_style.border_color = Color(clock_border.r, clock_border.g, clock_border.b, 0.85)
 	clock_style.set_border_width_all(1)
@@ -2541,20 +2541,16 @@ func _try_llm_prerun_card(index: int) -> Dictionary:
 		if sequel_hooks.size() < 3:
 			sequel_hooks = ["La prudence sera recompensee", "Le silence revele des secrets", "L'audace attire l'attention"]
 
-	# Dynamic effects scaling with card position + SHIFT_ASPECT for Triade progression
+	# Dynamic effects scaling with card position
 	var base_amt: int = 3 + index  # 3 for card 0, up to 7 for card 4
-	# Rotate aspects across cards so all 3 get shifted during the prerun buffer
-	var aspects: Array[String] = ["Corps", "Ame", "Monde"]
-	var primary_aspect: String = aspects[index % 3]
-	var secondary_aspect: String = aspects[(index + 1) % 3]
 	var effect_pool: Array = [
-		[{"type": "HEAL_LIFE", "amount": base_amt}, {"type": "SHIFT_ASPECT", "aspect": primary_aspect, "direction": "up"}],
-		[{"type": "ADD_KARMA", "amount": clampi(base_amt / 2, 1, 3)}, {"type": "SHIFT_ASPECT", "aspect": secondary_aspect, "direction": "up"}],
-		[{"type": "DAMAGE_LIFE", "amount": base_amt}, {"type": "SHIFT_ASPECT", "aspect": primary_aspect, "direction": "down"}],
+		[{"type": "HEAL_LIFE", "amount": base_amt}],
+		[{"type": "ADD_KARMA", "amount": clampi(base_amt / 2, 1, 3)}],
+		[{"type": "DAMAGE_LIFE", "amount": base_amt}],
 	]
-	# Late arc: add PROGRESS_MISSION to option C (keep SHIFT_ASPECT too)
+	# Late arc: add PROGRESS_MISSION to option C
 	if index >= 3:
-		effect_pool[2] = [{"type": "PROGRESS_MISSION", "step": 1}, {"type": "SHIFT_ASPECT", "aspect": secondary_aspect, "direction": "down"}]
+		effect_pool[2] = [{"type": "PROGRESS_MISSION", "step": 1}]
 
 	var dc_hints: Array = [
 		{"min": 4, "max": 8},
@@ -2778,18 +2774,6 @@ func _build_llm_biome_context() -> String:
 	if not atmo.is_empty():
 		parts.append("Ambiance: sons=%s, odeurs=%s, lumiere=%s, mood=%s." % [
 			atmo.get("sounds", ""), atmo.get("smell", ""), atmo.get("light", ""), atmo.get("mood", "")])
-	# Player aspect states
-	var store: Node = get_node_or_null("/root/MerlinStore")
-	if store and store.has_method("get_all_aspects"):
-		var aspects: Dictionary = store.get_all_aspects()
-		var aspect_labels: PackedStringArray = []
-		for a in MerlinConstants.TRIADE_ASPECTS:
-			var st: int = int(aspects.get(a, 0))
-			var info: Dictionary = MerlinConstants.TRIADE_ASPECT_INFO.get(a, {})
-			var states_dict: Dictionary = info.get("states", {})
-			var state_name: String = str(states_dict.get(st, "?"))
-			aspect_labels.append("%s=%s" % [a, state_name])
-		parts.append("Etat du voyageur: %s." % ", ".join(aspect_labels))
 	# Day context
 	var gm: Node = get_node_or_null("/root/GameManager")
 	if gm and "run" in gm:
@@ -2805,18 +2789,6 @@ func _build_merlin_comment_context() -> String:
 	var parts: PackedStringArray = []
 	parts.append("Tu es Merlin le druide, guide amuse et un peu cynique.")
 	parts.append("Biome: %s. Gardien: %s." % [biome_data.get("name", ""), biome_data.get("gardien", "")])
-	# Player aspect states
-	var store: Node = get_node_or_null("/root/MerlinStore")
-	if store and store.has_method("get_all_aspects"):
-		var aspects: Dictionary = store.get_all_aspects()
-		var aspect_labels: PackedStringArray = []
-		for a in MerlinConstants.TRIADE_ASPECTS:
-			var st: int = int(aspects.get(a, 0))
-			var info: Dictionary = MerlinConstants.TRIADE_ASPECT_INFO.get(a, {})
-			var states_dict: Dictionary = info.get("states", {})
-			var state_name: String = str(states_dict.get(st, "?"))
-			aspect_labels.append("%s=%s" % [a, state_name])
-		parts.append("Le voyageur est %s." % ", ".join(aspect_labels))
 	# Day context
 	var gm: Node = get_node_or_null("/root/GameManager")
 	if gm and "run" in gm:
@@ -2842,7 +2814,7 @@ func _build_dealer_monologue_prompt() -> Dictionary:
 	if system_prompt.is_empty():
 		system_prompt = "Tu es Merlin l'Enchanteur, conteur et maitre des cartes. Decris le biome avec tes sens de druide. 4-6 phrases en francais, ton grave et theatral. Pas de guillemets."
 	if user_template.is_empty():
-		user_template = "Biome: {biome_name}. Gardien: {guardian}. Saison: {season}. Jour {day}. Etat: Corps={corps_state}, Ame={ame_state}, Monde={monde_state}. Souffle={souffle}/7. Genere le monologue du dealer."
+		user_template = "Biome: {biome_name}. Gardien: {guardian}. Saison: {season}. Jour {day}. Genere le monologue du dealer."
 
 	# Collect template variables
 	var vars := {}
@@ -2859,26 +2831,6 @@ func _build_dealer_monologue_prompt() -> Dictionary:
 		vars["day"] = str(int(run.get("day", 1)))
 	else:
 		vars["day"] = "1"
-
-	# Player aspects (reuse store from above)
-	vars["corps_state"] = "Equilibre"
-	vars["ame_state"] = "Equilibre"
-	vars["monde_state"] = "Equilibre"
-	vars["souffle"] = "3"
-	if store and store.has_method("get_all_aspects"):
-		var aspects: Dictionary = store.get_all_aspects()
-		for a in MerlinConstants.TRIADE_ASPECTS:
-			var st: int = int(aspects.get(a, 0))
-			var info: Dictionary = MerlinConstants.TRIADE_ASPECT_INFO.get(a, {})
-			var states_dict: Dictionary = info.get("states", {})
-			var state_name: String = str(states_dict.get(st, "Equilibre"))
-			match a:
-				"Corps": vars["corps_state"] = state_name
-				"Ame": vars["ame_state"] = state_name
-				"Monde": vars["monde_state"] = state_name
-	if store and store.has_method("get_state"):
-		var state: Dictionary = store.get_state()
-		vars["souffle"] = str(int(state.get("souffle", 3)))
 
 	# Replace template variables
 	var user_prompt := user_template
@@ -2943,14 +2895,7 @@ func _get_fallback_text(bkey: String) -> Dictionary:
 
 
 func _detect_aspect_category() -> String:
-	## Returns "balanced", "corps_extreme", "ame_extreme", or "monde_extreme".
-	var store: Node = get_node_or_null("/root/MerlinStore")
-	if not store or not store.has_method("get_aspect_state"):
-		return "balanced"
-	for a in ["Corps", "Ame", "Monde"]:
-		var st: int = store.get_aspect_state(a)
-		if st != MerlinConstants.AspectState.EQUILIBRE:
-			return a.to_lower() + "_extreme"
+	## Aspect system removed — always returns balanced.
 	return "balanced"
 
 

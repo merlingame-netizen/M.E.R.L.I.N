@@ -387,13 +387,15 @@ func generate_npc_card(game_state: Dictionary) -> Dictionary:
 
 	# Try LLM generation
 	if llm_interface and llm_interface.is_ready and llm_interface.has_method("generate_with_system"):
-		var aspects_str := ""
-		if _current_context.has("aspects"):
-			var asp: Dictionary = _current_context.get("aspects", {})
-			aspects_str = "Corps=%s, Ame=%s, Monde=%s" % [str(asp.get("Corps", 0)), str(asp.get("Ame", 0)), str(asp.get("Monde", 0))]
+		var factions: Dictionary = _current_context.get("factions", {})
+		var factions_str := "Druides=%d, Anciens=%d, Korrigans=%d" % [
+			int(factions.get("druides", 0)),
+			int(factions.get("anciens", 0)),
+			int(factions.get("korrigans", 0))
+		]
 
 		var system_prompt := "Tu es %s, un PNJ celtique. Parle en 1-2 phrases, ton mysterieux. Reponds en francais." % npc_name
-		var user_prompt := "Le voyageur te croise en Broceliande. Aspects: %s. Dis une replique immersive." % aspects_str
+		var user_prompt := "Le voyageur te croise en Broceliande. Reputation: %s. Dis une replique immersive." % factions_str
 
 		var result: Dictionary = await llm_interface.generate_with_system(
 			system_prompt, user_prompt,
@@ -408,15 +410,12 @@ func generate_npc_card(game_state: Dictionary) -> Dictionary:
 				"speaker": npc_name,
 				"type": "npc_encounter",
 				"options": [
-					{"direction": "left", "label": "Ecouter", "effects": [
-						{"type": "SHIFT_ASPECT", "aspect": "Ame", "direction": "up"}
-					], "preview": "+Ame"},
-					{"direction": "center", "label": "Mediter", "effects": [
-						{"type": "ADD_SOUFFLE", "amount": 1}
-					], "preview": "+Souffle", "cost": 1},
-					{"direction": "right", "label": "Continuer", "effects": [
-						{"type": "SHIFT_ASPECT", "aspect": "Corps", "direction": "up"}
-					], "preview": "+Corps"},
+					{"label": "Ecouter", "effects": [
+						{"type": "ADD_REPUTATION", "faction": "druides", "amount": 3}
+					], "preview": "+Druides"},
+					{"label": "Continuer", "effects": [
+						{"type": "ADD_KARMA", "amount": 2}
+					], "preview": "+Karma"},
 				],
 				"tags": ["npc", "llm_generated"],
 				"source": "llm",
@@ -462,7 +461,7 @@ func _try_calendar_event(game_state: Dictionary) -> Dictionary:
 
 	print("[MOS] Calendar event injected: %s" % ev_id)
 
-	# Convert to TRIADE card format
+	# Convert to card format
 	return _calendar_event_to_card(selected)
 
 
@@ -473,7 +472,7 @@ func _build_event_context(game_state: Dictionary) -> Dictionary:
 	var hidden: Dictionary = run.get("hidden", {})
 
 	return {
-		"aspects": run.get("aspects", {}),
+		"factions": run.get("factions", {}),
 		"cards_played": int(run.get("cards_played", 0)),
 		"total_runs": int(meta.get("total_runs", 0)),
 		"karma": int(hidden.get("karma", 0)),
@@ -488,7 +487,7 @@ func _build_event_context(game_state: Dictionary) -> Dictionary:
 
 
 func _calendar_event_to_card(ev: Dictionary) -> Dictionary:
-	## Convert a calendar event from JSON to TRIADE card format (3 options).
+	## Convert a calendar event from JSON to card format (variable options).
 	var ev_id: String = str(ev.get("id", ""))
 	var text: String = str(ev.get("text", ""))
 	var effects: Array = ev.get("effects", [])
@@ -496,12 +495,11 @@ func _calendar_event_to_card(ev: Dictionary) -> Dictionary:
 	var tags: Array = ev.get("tags", [])
 	var category: String = str(ev.get("category", ""))
 
-	# Build 3 options: Accept / Meditate (Souffle) / Observe
+	# Build options: Accept / Observe
 	# Left: primary effects from event
-	# Center: spiritual engagement (costs Souffle)
 	# Right: cautious observation (minor karma)
 	var left_effects: Array = effects.duplicate()
-	var center_effects: Array = [{"type": "ADD_SOUFFLE", "amount": 1}]
+	var center_effects: Array = []
 	if effects.size() > 0:
 		center_effects.append(effects[0].duplicate())
 	var right_effects: Array = [{"type": "ADD_KARMA", "amount": 3}]
@@ -632,7 +630,7 @@ func _submit_deep_prefetch(game_state: Dictionary, card_index: int) -> void:
 
 func _try_use_prefetch(game_state: Dictionary) -> Dictionary:
 	## Check if prefetched card is available and relevant to current state.
-	## Uses tolerance-based matching: accepts prefetch if aspects shifted by at most 1 step.
+	## Uses biome + context hash matching for prefetch validation.
 	## Phase 5: Also checks deep prefetch buffer.
 
 	# Try primary prefetch first
@@ -661,22 +659,14 @@ func _try_use_prefetch(game_state: Dictionary) -> Dictionary:
 	return {}
 
 
-func _is_prefetch_valid(game_state: Dictionary, context_hash: int, prefetch_aspects: Dictionary, prefetch_biome: String) -> bool:
+func _is_prefetch_valid(game_state: Dictionary, context_hash: int, prefetch_biome: String) -> bool:
 	## Validate a prefetched card against current game state.
 	var current_hash := _compute_context_hash(game_state)
 	if current_hash == context_hash:
 		return true
 	var run: Dictionary = game_state.get("run", {})
 	var current_biome: String = str(run.get("current_biome", ""))
-	if current_biome != prefetch_biome:
-		return false
-	var aspects: Dictionary = run.get("aspects", {})
-	for aspect in ["Corps", "Ame", "Monde"]:
-		var current_val: int = int(aspects.get(aspect, 0))
-		var prefetch_val: int = int(prefetch_aspects.get(aspect, 0))
-		if absi(current_val - prefetch_val) > 1:
-			return false
-	return true
+	return current_biome == prefetch_biome
 
 
 func try_consume_prefetch(game_state: Dictionary) -> Dictionary:
@@ -689,13 +679,12 @@ func try_consume_prefetch(game_state: Dictionary) -> Dictionary:
 
 func _compute_context_hash(game_state: Dictionary) -> int:
 	## Compute a hash of the game state for prefetch validation.
-	## Includes cards_played and life_essence to detect state changes from choice resolution.
+	## Includes factions, cards_played and life_essence to detect state changes.
 	var run: Dictionary = game_state.get("run", {})
-	var aspects: Dictionary = run.get("aspects", {})
+	var factions: Dictionary = run.get("factions", {})
 	var hash_val: int = 0
-	for aspect in ["Corps", "Ame", "Monde"]:
-		hash_val = hash_val * 7 + int(aspects.get(aspect, 0)) + 2
-	hash_val = hash_val * 13 + int(run.get("souffle", 0))
+	for faction in ["druides", "anciens", "korrigans", "niamh", "ankou"]:
+		hash_val = hash_val * 7 + int(factions.get(faction, 0)) + 2
 	hash_val = hash_val * 17 + int(run.get("cards_played", 0))
 	hash_val = hash_val * 23 + int(run.get("life_essence", 100))
 	return hash_val
@@ -924,11 +913,8 @@ func _try_sequential_generation() -> Dictionary:
 	## Builds context dict from _current_context for template variable filling.
 
 	# Map _current_context to template variables
-	var aspects: Dictionary = _current_context.get("aspects", {})
-	var aspect_names := {"Corps": "bas", "Ame": "bas", "Monde": "bas"}
-	for aspect_key in aspects:
-		var s: int = int(aspects[aspect_key])
-		aspect_names[aspect_key] = "Equilibre" if s == 0 else ("Haut" if s > 0 else "Bas")
+	var factions: Dictionary = _current_context.get("factions", {})
+	var ogham_actif: String = str(_current_context.get("ogham_actif", ""))
 
 	var life_val: int = int(_current_context.get("life_essence", 100))
 	var danger_level: int = int(_current_context.get("danger_level", 0))
@@ -963,10 +949,8 @@ func _try_sequential_generation() -> Dictionary:
 	var seq_context: Dictionary = {
 		"biome": biome,
 		"day": _current_context.get("day", 1),
-		"corps_state": aspect_names.get("Corps", "Equilibre"),
-		"ame_state": aspect_names.get("Ame", "Equilibre"),
-		"monde_state": aspect_names.get("Monde", "Equilibre"),
-		"souffle": _current_context.get("souffle", 0),
+		"ogham_actif": ogham_actif,
+		"factions": factions,
 		"life": life_val,
 		"narrative_phase": phase_text,
 		"danger_context": danger_text,
@@ -1045,18 +1029,22 @@ func _build_narrator_prompt() -> String:
 func _build_narrator_input() -> String:
 	## User prompt for Narrator — game state in natural language.
 	## If a scenario anchor is active, its prompt_override takes priority.
-	var aspects: Dictionary = _current_context.get("aspects", {})
+	var factions: Dictionary = _current_context.get("factions", {})
+	var ogham: String = str(_current_context.get("ogham_actif", ""))
 	var parts: Array[String] = []
 
-	for aspect in aspects:
-		var s: int = int(aspects[aspect])
-		var state_name := "equilibre" if s == 0 else ("haut" if s > 0 else "bas")
-		parts.append("%s est %s" % [aspect, state_name])
+	if ogham != "":
+		parts.append("Ogham actif: %s." % ogham)
 
-	parts.append("Jour %d. Souffle: %d." % [
-		_current_context.get("day", 1),
-		_current_context.get("souffle", 0)
-	])
+	var faction_parts: Array[String] = []
+	for faction in factions:
+		var val: int = int(factions[faction])
+		if val > 0:
+			faction_parts.append("%s=%d" % [faction, val])
+	if faction_parts.size() > 0:
+		parts.append("Réputation: %s." % ", ".join(faction_parts))
+
+	parts.append("Jour %d." % _current_context.get("day", 1))
 
 	var biome: String = str(_current_context.get("biome", "foret"))
 	parts.append("Biome: %s." % biome)
@@ -1109,7 +1097,7 @@ func _build_narrator_input() -> String:
 func _build_gm_prompt() -> String:
 	## System prompt for Game Master — logic, effects, balance.
 	_refresh_scene_context()
-	var base := "Tu es le Maitre du Jeu. Genere les effets mecaniques pour 3 options de carte. Reponds UNIQUEMENT en JSON valide. Effets: SHIFT_ASPECT (aspect=Corps/Ame/Monde, direction=up/down), ADD_KARMA (amount), ADD_TENSION (amount)."
+	var base := "Tu es le Maitre du Jeu. Genere les effets mecaniques pour les options de carte. Reponds UNIQUEMENT en JSON valide. Effets: ADD_REPUTATION (faction=druides/anciens/korrigans/niamh/ankou, amount), ADD_KARMA (amount), ADD_TENSION (amount), UNLOCK_OGHAM (ogham_name)."
 	var scene_block := _build_scene_contract_block()
 	if not scene_block.is_empty():
 		base += "\n" + scene_block + "\nNe genere aucun effet hors contrat de scene."
@@ -1136,14 +1124,12 @@ func _build_gm_prompt() -> String:
 
 func _build_gm_input() -> String:
 	## User prompt for Game Master — structured game state.
-	var aspects: Dictionary = _current_context.get("aspects", {})
+	var factions: Dictionary = _current_context.get("factions", {})
 	var parts: Array[String] = []
 
-	for aspect in ["Corps", "Ame", "Monde"]:
-		var s: int = int(aspects.get(aspect, 0))
-		parts.append("%s=%d" % [aspect, s])
+	for faction in ["druides", "anciens", "korrigans", "niamh", "ankou"]:
+		parts.append("%s=%d" % [faction, int(factions.get(faction, 0))])
 
-	parts.append("Souffle=%d" % int(_current_context.get("souffle", 0)))
 	parts.append("Jour=%d" % int(_current_context.get("day", 1)))
 	parts.append("Carte=%d" % int(_current_context.get("cards_played", 0)))
 	if not _scene_context.is_empty():
@@ -1155,7 +1141,7 @@ func _build_gm_input() -> String:
 			parts.append("Phase=%s" % phase)
 
 	# Template to guide output format
-	parts.append("\n{\"options\":[{\"label\":\"...\",\"effects\":[{\"type\":\"SHIFT_ASPECT\",\"aspect\":\"Corps\",\"direction\":\"up\"}]},{\"label\":\"...\",\"cost\":1,\"effects\":[{\"type\":\"SHIFT_ASPECT\",\"aspect\":\"Ame\",\"direction\":\"up\"}]},{\"label\":\"...\",\"effects\":[{\"type\":\"SHIFT_ASPECT\",\"aspect\":\"Monde\",\"direction\":\"down\"}]}]}")
+	parts.append("\n{\"options\":[{\"label\":\"...\",\"effects\":[{\"type\":\"ADD_REPUTATION\",\"faction\":\"druides\",\"amount\":5}]},{\"label\":\"...\",\"effects\":[{\"type\":\"ADD_KARMA\",\"amount\":3}]}]}")
 
 	return " ".join(parts)
 
@@ -1250,7 +1236,6 @@ func _apply_danger_rules(game_state: Dictionary) -> void:
 	## pour que le LLM adapte le ton et la difficulte de la carte.
 	var run: Dictionary = game_state.get("run", {})
 	var life: int = int(run.get("life_essence", 100))
-	var aspects: Dictionary = run.get("aspects", {})
 	var danger_signals: Array[String] = []
 	var danger_level := 0  # 0=safe, 1=wounded, 2=low, 3=critical
 
@@ -1269,17 +1254,7 @@ func _apply_danger_rules(game_state: Dictionary) -> void:
 		danger_level = 1
 		danger_signals.append("Joueur blesse (%d vie)" % life)
 
-	# REGLE 4: Crise d'aspects (2+ non-equilibres)
-	var extreme_count := 0
-	for aspect_name in aspects:
-		var state: int = int(aspects[aspect_name])
-		if state != 0:
-			extreme_count += 1
-	if extreme_count >= DANGER_ASPECTS_CRISIS:
-		danger_level = maxi(danger_level, 2)
-		danger_signals.append("CRISE ASPECTS: %d/3 non-equilibres — propose des choix de reequilibrage" % extreme_count)
-
-	# REGLE 5: Bloquer event_catastrophe + forcer template danger si vie < seuil
+	# REGLE 4: Bloquer event_catastrophe + forcer template danger si vie < seuil
 	if life < DANGER_BLOCK_CATASTROPHE_AT:
 		var event_cat: String = str(_current_context.get("event_category", ""))
 		if event_cat == "event_catastrophe" or event_cat == "event_conflit":
@@ -1391,21 +1366,18 @@ func _build_system_prompt() -> String:
 func _build_user_prompt() -> String:
 	## User prompt with game state AND JSON template (anti-hallucination).
 	## Moving the template here forces the model to see it right before generation.
-	var aspects: Dictionary = _current_context.get("aspects", {})
+	var factions: Dictionary = _current_context.get("factions", {})
 	var parts: Array[String] = []
 
-	# Aspects (compact)
-	var aspect_parts: Array[String] = []
-	for aspect in aspects:
-		var s: int = int(aspects[aspect])
-		var state_name := "eq" if s == 0 else ("haut" if s > 0 else "bas")
-		aspect_parts.append("%s=%s" % [aspect, state_name])
-	parts.append("Aspects: " + " ".join(aspect_parts))
+	# Factions (compact)
+	var faction_parts: Array[String] = []
+	for faction in ["druides", "anciens", "korrigans", "niamh", "ankou"]:
+		faction_parts.append("%s=%d" % [faction, int(factions.get(faction, 0))])
+	parts.append("Factions: " + " ".join(faction_parts))
 
-	# Souffle + Day + Life
+	# Day + Life
 	var life_val: int = int(_current_context.get("life_essence", 100))
-	parts.append("Souffle:%d Jour:%d Carte:%d Vie:%d" % [
-		_current_context.get("souffle", 0),
+	parts.append("Jour:%d Carte:%d Vie:%d" % [
 		_current_context.get("day", 1),
 		_current_context.get("cards_played", 0),
 		life_val,
@@ -1672,7 +1644,7 @@ func _validate_card(card: Dictionary) -> Dictionary:
 		return {}
 
 	# Pad to 3 options if LLM only returned 2
-	_pad_options_to_three(card)
+	_pad_options_to_minimum(card)
 
 	# Validate each option
 	for i in range(card.options.size()):
@@ -1713,51 +1685,25 @@ func _validate_option(option: Dictionary) -> Dictionary:
 	return option
 
 
-func _pad_options_to_three(card: Dictionary) -> void:
-	## Ensure every card has exactly 3 options (left, center, right).
-	## If LLM returned only 2, insert a generic center option.
+func _pad_options_to_minimum(card: Dictionary) -> void:
+	## Ensure every card has at least 1 option (1-4 options supported).
+	## If LLM returned empty options, insert a generic fallback.
 	var opts: Array = card.get("options", [])
-	if opts.size() >= 3:
+	if opts.size() >= 1:
 		return
 
-	# Determine card context for thematic center option
+	# Determine thematic fallback based on tags
 	var tags: Array = card.get("tags", [])
-	var center_label := "Mediter"
-	var center_preview := "+Souffle"
-	var center_effects: Array = [{"type": "ADD_SOUFFLE", "amount": 1}]
+	var fallback_effects: Array = []
 
 	if "combat" in tags or "danger" in tags:
-		center_label = "Ruser"
-		center_preview = "Equilibre"
-		center_effects = [{"type": "SHIFT_ASPECT", "aspect": "Corps", "direction": "up"}]
+		fallback_effects = [{"type": "ADD_KARMA", "amount": 2}]
 	elif "stranger" in tags or "social" in tags:
-		center_label = "Parlementer"
-		center_preview = "+Monde"
-		center_effects = [{"type": "SHIFT_ASPECT", "aspect": "Monde", "direction": "up"}]
+		fallback_effects = [{"type": "ADD_REPUTATION", "faction": "druides", "amount": 3}]
 	elif "magic" in tags or "lore" in tags or "mystery" in tags:
-		center_label = "Observer"
-		center_preview = "+Ame"
-		center_effects = [{"type": "SHIFT_ASPECT", "aspect": "Ame", "direction": "up"}]
+		fallback_effects = [{"type": "ADD_REPUTATION", "faction": "anciens", "amount": 3}]
 
-	var center_option := {
-		"direction": "center",
-		"label": center_label,
-		"effects": center_effects,
-		"preview": center_preview,
-		"cost": 1,
-	}
-
-	# Insert center at position 1 (between left and right)
-	if opts.size() == 2:
-		opts.insert(1, center_option)
-	elif opts.size() == 1:
-		opts.append(center_option)
-		opts.append({"direction": "right", "label": "Continuer", "effects": [], "preview": ""})
-	elif opts.size() == 0:
-		opts.append({"direction": "left", "label": "Agir", "effects": [{"type": "SHIFT_ASPECT", "aspect": "Corps", "direction": "up"}], "preview": "+Corps"})
-		opts.append(center_option)
-		opts.append({"direction": "right", "label": "Continuer", "effects": [], "preview": ""})
-
+	opts.append({"label": "Continuer", "effects": fallback_effects, "preview": ""})
 	card["options"] = opts
 
 
@@ -1847,14 +1793,14 @@ func record_choice(card: Dictionary, option: int, outcome: Dictionary) -> void:
 		var options_arr: Array = card.get("options", [])
 		if option >= 0 and option < options_arr.size():
 			rag_manager.log_choice_made(options_arr[option], cards_played, day)
-		# Log aspect shifts from outcome
-		var aspects_before: Dictionary = outcome.get("aspects_before", {})
-		var aspects_after: Dictionary = outcome.get("aspects_after", {})
-		for aspect in aspects_after:
-			var old_val: int = int(aspects_before.get(aspect, 0))
-			var new_val: int = int(aspects_after[aspect])
-			if old_val != new_val:
-				rag_manager.log_aspect_shifted(str(aspect), old_val, new_val, cards_played, day)
+		# Log reputation changes from outcome
+		var rep_before: Dictionary = outcome.get("factions_before", {})
+		var rep_after: Dictionary = outcome.get("factions_after", {})
+		for faction in rep_after:
+			var old_val: int = int(rep_before.get(faction, 0))
+			var new_val: int = int(rep_after[faction])
+			if old_val != new_val and rag_manager.has_method("log_reputation_changed"):
+				rag_manager.log_reputation_changed(str(faction), old_val, new_val, cards_played, day)
 
 
 func on_run_start() -> void:
@@ -2107,20 +2053,28 @@ func generate_dream(game_state: Dictionary) -> String:
 		return FALLBACK_DREAMS[randi() % FALLBACK_DREAMS.size()]
 
 	# Build dream context from game state
-	var aspects: Dictionary = game_state.get("triade_aspects", {})
-	var corps_state: String = str(aspects.get("Corps", {}).get("state_name", "Robuste"))
-	var ame_state: String = str(aspects.get("Ame", {}).get("state_name", "Centree"))
-	var monde_state: String = str(aspects.get("Monde", {}).get("state_name", "Integre"))
-	var biome: String = str(game_state.get("run", {}).get("current_biome", "foret_broceliande"))
-	var cards_played: int = int(game_state.get("run", {}).get("cards_this_run", 0))
+	var run: Dictionary = game_state.get("run", {})
+	var factions: Dictionary = run.get("factions", {})
+	var ogham: String = str(run.get("ogham_actif", ""))
+	var biome: String = str(run.get("current_biome", "foret_broceliande"))
+	var cards_played: int = int(run.get("cards_this_run", 0))
+
+	var dominant_faction := ""
+	var dominant_val := 0
+	for f in factions:
+		if int(factions[f]) > dominant_val:
+			dominant_val = int(factions[f])
+			dominant_faction = f
 
 	var profile_hint := ""
 	if player_profile:
 		profile_hint = player_profile.get_summary_for_prompt()
 
-	var system := "Tu es un generateur de reves celtiques. Ecris un reve court (3-5 phrases), onirique et symbolique. Le reve reflète l'etat du voyageur. Vocabulaire mythologique breton/celtique. Reponds UNIQUEMENT avec le texte du reve."
-	var user_msg := "Voyageur: Corps=%s, Ame=%s, Monde=%s. Biome=%s. Cartes jouees=%d.%s\nGenere un reve." % [
-		corps_state, ame_state, monde_state, biome, cards_played,
+	var system := "Tu es un generateur de reves celtiques. Ecris un reve court (3-5 phrases), onirique et symbolique. Le reve reflète le voyage du joueur. Vocabulaire mythologique breton/celtique. Reponds UNIQUEMENT avec le texte du reve."
+	var faction_hint: String = ("Affinite: %s." % dominant_faction) if dominant_faction != "" else ""
+	var ogham_hint: String = ("Ogham: %s." % ogham) if ogham != "" else ""
+	var user_msg := "Voyageur: Biome=%s. Cartes jouees=%d. %s%s%s\nGenere un reve." % [
+		biome, cards_played, faction_hint, ogham_hint,
 		(" Profil: " + profile_hint) if not profile_hint.is_empty() else "",
 	]
 

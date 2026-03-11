@@ -29,7 +29,7 @@ const CARD_MAX_HEIGHT := 800.0
 const STARTER_OGHAMS := [
 	{"name": "Beith", "symbol": "\u1681", "meaning": "Bouleau — Nouveau depart", "gameplay": "Revele les effets d'un choix"},
 	{"name": "Luis", "symbol": "\u1682", "meaning": "Sorbier — Protection", "gameplay": "Annule un changement negatif"},
-	{"name": "Quert", "symbol": "\u168A", "meaning": "Pommier — Guerison", "gameplay": "Ramene un aspect vers l'equilibre"},
+	{"name": "Quert", "symbol": "\u168A", "meaning": "Pommier — Guerison", "gameplay": "Ramene vers l'equilibre"},
 ]
 
 const CLASS_TO_BIOME := {
@@ -467,7 +467,7 @@ func _run_phase(phase: Phase) -> void:
 		Phase.LLM_INTRO:
 			_set_merlin_scene_context("scene_rencontre_merlin", {
 				"phase": "llm_intro",
-				"must_reference": ["Triade (Corps/Ame/Monde)", "Bestiole", "Oghams"]
+				"must_reference": ["Bestiole", "Oghams"]
 			})
 			await _phase_llm_intro()
 		Phase.TRANSITIONING:
@@ -475,7 +475,7 @@ func _run_phase(phase: Phase) -> void:
 
 
 ## RAG system prompts for LLM-guided intro phases
-const RAG_INTRO_CONTEXT := "Tu es Merlin le druide. Un voyageur (%s) arrive a Broceliande. 2 phrases maximum: accueille-le et mentionne la Triade (Corps/Ame/Monde). Ton bienveillant. Francais."
+const RAG_INTRO_CONTEXT := "Tu es Merlin le druide. Un voyageur (%s) arrive a Broceliande. 2 phrases maximum: accueille-le. Ton bienveillant. Francais."
 const RAG_BESTIOLE := "Tu es Merlin. La Bestiole du voyageur apparait avec 3 Oghams. 2 phrases maximum, ton amuse. Francais."
 const RAG_MISSION_HUB := "Tu es Merlin. Explique au voyageur: Carte du Monde, Oghams, sauvegardes. 2 phrases maximum, ton encourageant. Francais."
 
@@ -493,7 +493,7 @@ func _phase_llm_intro() -> void:
 
 	_set_mood("pensif")
 
-	# --- Part 1: Welcome + Triade ---
+	# --- Part 1: Welcome ---
 	var archetype: String = "druide"
 	var gm := get_node_or_null("/root/GameManager")
 	if gm and gm.get("archetype_title") is String:
@@ -506,7 +506,7 @@ func _phase_llm_intro() -> void:
 		await _show_text(intro_text)
 	else:
 		_update_dialogue_badge("static")
-		await _show_text("Bienvenue a Broceliande, voyageur. Corps, Ame, Monde — la Triade guide chaque choix.")
+		await _show_text("Bienvenue a Broceliande, voyageur. Oghams, Bestiole et aventure t'attendent.")
 	if not is_inside_tree():
 		return
 
@@ -521,7 +521,7 @@ func _phase_llm_intro() -> void:
 	fade1.tween_property(merlin_text, "modulate:a", 0.0, _scaled_delay(0.12))
 	await fade1.finished
 	merlin_text.modulate.a = 1.0
-	await _show_response_blocks(1, "Merlin t'a presente le monde et la Triade.")
+	await _show_response_blocks(1, "Merlin t'a presente le monde.")
 
 	if gm and gm.has_method("set"):
 		gm.set("eveil_seen", true)

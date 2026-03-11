@@ -44,31 +44,15 @@ const LORE_BEATS: Array[Dictionary] = [
 		"lines": [
 			"Tu es le Voyageur. Tu n'as pas de nom. Pas encore.",
 			"Tu traverses les biomes, tu fais des choix.",
-			"Chaque choix modifie l'equilibre de ta Triade.",
 			"La brume t'observe. Les arbres se souviennent.",
 		],
 	},
 	{
-		"header": "LA TRIADE",
-		"lines": [
-			"Trois forces t'habitent. Elles definissent ton etat.",
-			"",
-			"CORPS  (Sanglier)  —  Epuise / Robuste / Surmene",
-			"AME    (Corbeau)   —  Perdue  / Centree / Possedee",
-			"MONDE  (Cerf)      —  Exile   / Integre / Tyran",
-			"",
-			"Si deux aspects atteignent un extreme en meme temps...",
-			"c'est la fin du run.",
-		],
-		"show_triade_demo": true,
-	},
-	{
-		"header": "L'AWEN",
+		"header": "LES OGHAMS",
 		"lines": [
 			"Ta Bestiole possede des Oghams — des runes anciennes.",
-			"Chaque Ogham consomme du Souffle d'Awen.",
-			"Tu commences avec 3 Souffles. Maximum : 7.",
-			"Depense sagrement. L'Awen ne se regenere pas seul.",
+			"Chaque Ogham debloqu\u00e9 ouvre de nouvelles possibilites.",
+			"Les 18 Oghams sont des clefs. Tu les trouveras.",
 		],
 	},
 ]
@@ -91,8 +75,6 @@ var _header_label: Label
 var _body_labels: Array[Label] = []
 var _continue_hint: Label
 var _skip_button: Button
-var _triade_hud: HubTriadeHud
-var _triade_demo_active: bool = false
 var _card_layer: TutorialCardLayer
 
 # Ambient particles
@@ -272,12 +254,6 @@ func _present_lore_beat(beat: Dictionary) -> void:
 			lbl.queue_free()
 	_body_labels.clear()
 
-	# Remove previous triade demo if any
-	if _triade_hud and is_instance_valid(_triade_hud):
-		_triade_hud.queue_free()
-		_triade_hud = null
-	_triade_demo_active = false
-
 	# Header reveal
 	_header_label.text = str(beat.get("header", ""))
 	_header_label.modulate.a = 0.0
@@ -300,15 +276,7 @@ func _present_lore_beat(beat: Dictionary) -> void:
 		lbl.add_theme_font_override("font", MerlinVisual.get_font("body"))
 		lbl.add_theme_font_size_override("font_size", BEAT_BODY_SIZE)
 
-		# Aspect lines get special coloring
-		if line_text.begins_with("CORPS"):
-			lbl.add_theme_color_override("font_color", MerlinVisual.CRT_ASPECT_COLORS["Corps"])
-		elif line_text.begins_with("AME"):
-			lbl.add_theme_color_override("font_color", MerlinVisual.CRT_ASPECT_COLORS["Ame"])
-		elif line_text.begins_with("MONDE"):
-			lbl.add_theme_color_override("font_color", MerlinVisual.CRT_ASPECT_COLORS["Monde"])
-		else:
-			lbl.add_theme_color_override("font_color", MerlinVisual.CRT_PALETTE.phosphor)
+		lbl.add_theme_color_override("font_color", MerlinVisual.CRT_PALETTE.phosphor)
 
 		_content_box.add_child(lbl)
 		_body_labels.append(lbl)
@@ -322,10 +290,6 @@ func _present_lore_beat(beat: Dictionary) -> void:
 
 		if not is_inside_tree():
 			return
-
-	# Triade demo for beat 4
-	if beat.get("show_triade_demo", false) and not _skip_all:
-		await _run_triade_demo()
 
 	if not is_inside_tree():
 		return
@@ -355,48 +319,6 @@ func _present_lore_beat(beat: Dictionary) -> void:
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
-# TRIADE DEMO (Beat 4)
-# ═══════════════════════════════════════════════════════════════════════════════
-
-func _run_triade_demo() -> void:
-	if not is_inside_tree():
-		return
-
-	_triade_demo_active = true
-	var vp: Vector2 = get_viewport().get_visible_rect().size
-
-	# Create HubTriadeHud below content
-	_triade_hud = HubTriadeHud.new()
-	add_child(_triade_hud)
-	_triade_hud.position = Vector2(0, _content_box.position.y + _content_box.size.y + 20.0)
-	_triade_hud.size = Vector2(vp.x, 48.0)
-	_triade_hud.modulate.a = 0.0
-	_triade_hud.update_aspects({"Corps": 50, "Ame": 50, "Monde": 50})
-
-	# Fade in
-	var ftw := create_tween()
-	ftw.tween_property(_triade_hud, "modulate:a", 1.0, 0.4)
-	await ftw.finished
-	if not is_inside_tree():
-		return
-
-	# Animate: equilibre → bas → equilibre → haut → equilibre
-	var demo_steps: Array[Dictionary] = [
-		{"Corps": 50, "Ame": 50, "Monde": 50},  # Equilibre
-		{"Corps": 15, "Ame": 50, "Monde": 50},  # Corps Bas
-		{"Corps": 50, "Ame": 50, "Monde": 50},  # Recovery
-		{"Corps": 50, "Ame": 85, "Monde": 50},  # Ame Haut
-		{"Corps": 50, "Ame": 50, "Monde": 50},  # Equilibre
-	]
-
-	for step: Dictionary in demo_steps:
-		if _skip_all or _advance_requested or not is_inside_tree():
-			break
-		_triade_hud.update_aspects(step)
-		await get_tree().create_timer(1.0).timeout
-
-
-# ═══════════════════════════════════════════════════════════════════════════════
 # EXPRESS PLAYTHROUGH (Phase 2)
 # ═══════════════════════════════════════════════════════════════════════════════
 
@@ -410,9 +332,6 @@ func _run_express_playthrough() -> void:
 			lbl.queue_free()
 	_body_labels.clear()
 	_header_label.text = ""
-	if _triade_hud and is_instance_valid(_triade_hud):
-		_triade_hud.queue_free()
-		_triade_hud = null
 
 	# Show transition text
 	_header_label.text = "PARTIE EXPRESS"
