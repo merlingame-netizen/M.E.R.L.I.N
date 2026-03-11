@@ -628,6 +628,11 @@ func _setup_viewport() -> void:
 	viewport_container.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
 	game_viewport.render_target_update_mode = SubViewport.UPDATE_ALWAYS
 	game_viewport.msaa_3d = Viewport.MSAA_DISABLED
+	# Give SubViewport its own World3D — without this, it shares the root viewport's world,
+	# meaning a camera active in a previously-loaded scene becomes the rendering camera here.
+	game_viewport.use_own_world_3d = true
+	# Explicit opaque background — avoids white bleed-through on transparent SubViewport
+	game_viewport.transparent_bg = false
 	_update_pixel_shrink()
 
 
@@ -665,20 +670,14 @@ func _setup_environment() -> void:
 	env.fog_enabled = true
 	env.fog_light_color = Color(0.35, 0.45, 0.32)
 	env.fog_density = 0.025
-	env.fog_aerial_perspective = 0.8
+	# fog_aerial_perspective not supported in GL Compatibility — skip
 
 	# Tonemap
-	env.tonemap_mode = 2  # Filmic (ACES removed in Godot 4.5)
+	env.tonemap_mode = Environment.TONE_MAPPER_FILMIC
 	env.tonemap_white = 8.0
 	env.tonemap_exposure = 1.2
 
-	# Glow — for magic
-	env.glow_enabled = true
-	env.glow_intensity = 0.4
-	env.glow_bloom = 0.2
-	env.glow_blend_mode = Environment.GLOW_BLEND_MODE_SOFTLIGHT
-
-	# SSAO — only available in Forward+/Mobile, skip on GL Compatibility
+	# Glow, SSAO — not supported in GL Compatibility, omitted
 	# env.ssao_enabled = true
 
 	world_env.environment = env
