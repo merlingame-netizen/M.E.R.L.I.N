@@ -13,19 +13,27 @@ var _backdrop_active: bool = false
 
 func _ready() -> void:
 	layer = -100
+	# Container Control fills viewport (needed: direct CanvasLayer children
+	# don't resolve FULL_RECT anchors correctly in GL Compatibility mode)
+	var container := Control.new()
+	container.name = "BackdropContainer"
+	container.set_anchors_preset(Control.PRESET_FULL_RECT)
+	container.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	add_child(container)
+
 	# CRT black fallback (always present underneath)
 	background = ColorRect.new()
 	background.name = "MerlinBackdrop"
 	background.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	background.set_anchors_preset(Control.PRESET_FULL_RECT)
 	background.color = MerlinVisual.CRT_PALETTE.bg_deep
-	add_child(background)
+	container.add_child(background)
 
 	# Pixel biome backdrop (initially hidden, activated via set_biome)
 	_pixel_backdrop = _PixelBiomeBackdropScene.new()
 	_pixel_backdrop.name = "PixelBiomeBackdrop"
 	_pixel_backdrop.visible = false
-	add_child(_pixel_backdrop)
+	container.add_child(_pixel_backdrop)
 
 
 ## Activate biome backdrop with the given biome key.

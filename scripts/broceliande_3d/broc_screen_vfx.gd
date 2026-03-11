@@ -29,7 +29,7 @@ var _burst_nodes: Array[Node3D] = []
 const SHADER_PATH: String = "res://shaders/screen_vfx.gdshader"
 
 
-func setup(viewport_container: SubViewportContainer, parent: Control, forest_root: Node3D) -> void:
+func setup(viewport_container: SubViewportContainer, parent: Node, forest_root: Node3D) -> void:
 	_viewport_container = viewport_container
 	_forest_root = forest_root
 	_rng.randomize()
@@ -42,18 +42,9 @@ func setup(viewport_container: SubViewportContainer, parent: Control, forest_roo
 	_overlay_rect = ColorRect.new()
 	_overlay_rect.set_anchors_preset(Control.PRESET_FULL_RECT)
 	_overlay_rect.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	_overlay_rect.color = Color(0, 0, 0, 0)  # Transparent base — shader reads TEXTURE from this
-
-	# Load shader
-	var shader: Shader = null
-	if ResourceLoader.exists(SHADER_PATH):
-		shader = load(SHADER_PATH) as Shader
-	if shader:
-		_shader_mat = ShaderMaterial.new()
-		_shader_mat.shader = shader
-		_overlay_rect.material = _shader_mat
-	else:
-		push_warning("[BrocScreenVfx] Shader not found: %s" % SHADER_PATH)
+	_overlay_rect.color = Color(0, 0, 0, 0)  # Transparent — used for flash/vignette effects only
+	# NOTE: shader removed — screen_vfx.gdshader reads TEXTURE which defaults to white
+	# on a plain ColorRect without a SubViewport texture source. Effects use color modulation only.
 
 	_overlay_layer.add_child(_overlay_rect)
 	print("[BrocScreenVfx] Screen effects ready")

@@ -1,4 +1,4 @@
-extends Control
+extends Node
 ## BroceliandeForest3D v3
 ## Marche contemplative FPS — Foret de Broceliande.
 ## 7 zones, assets GLB reels, effets volumetriques, cycle jour/nuit, saisons.
@@ -132,17 +132,15 @@ const MERLIN_COLORS: Dictionary = {
 @export var head_bob_speed: float = 8.0
 
 # --- Scene refs ---
-@onready var viewport_container: SubViewportContainer = $ViewportContainer
-@onready var game_viewport: SubViewport = $ViewportContainer/GameViewport
-@onready var world_root: Node3D = $ViewportContainer/GameViewport/World3D
-@onready var world_env: WorldEnvironment = $ViewportContainer/GameViewport/World3D/WorldEnvironment
-@onready var sun_light: DirectionalLight3D = $ViewportContainer/GameViewport/World3D/SunLight
-@onready var forest_root: Node3D = $ViewportContainer/GameViewport/World3D/ForestRoot
-@onready var merlin_node: Node3D = $ViewportContainer/GameViewport/World3D/Merlin
-@onready var player: CharacterBody3D = $ViewportContainer/GameViewport/World3D/Player
-@onready var player_collision: CollisionShape3D = $ViewportContainer/GameViewport/World3D/Player/CollisionShape3D
-@onready var player_head: Node3D = $ViewportContainer/GameViewport/World3D/Player/Head
-@onready var player_camera: Camera3D = $ViewportContainer/GameViewport/World3D/Player/Head/Camera3D
+@onready var world_root: Node3D = $World3D
+@onready var world_env: WorldEnvironment = $World3D/WorldEnvironment
+@onready var sun_light: DirectionalLight3D = $World3D/SunLight
+@onready var forest_root: Node3D = $World3D/ForestRoot
+@onready var merlin_node: Node3D = $World3D/Merlin
+@onready var player: CharacterBody3D = $World3D/Player
+@onready var player_collision: CollisionShape3D = $World3D/Player/CollisionShape3D
+@onready var player_head: Node3D = $World3D/Player/Head
+@onready var player_camera: Camera3D = $World3D/Player/Head/Camera3D
 @onready var zone_label: Label = $HUD/Margin/InfoPanel/VBox/ZoneLabel
 @onready var objective_label: Label = $HUD/Margin/InfoPanel/VBox/ObjectiveLabel
 @onready var status_label: Label = $HUD/Margin/InfoPanel/VBox/StatusLabel
@@ -275,7 +273,7 @@ func _init_helpers() -> void:
 
 	# Screen VFX (shake, flash, glitch, vignette)
 	_screen_vfx = BrocScreenVfxClass.new()
-	_screen_vfx.setup(viewport_container, self, forest_root)
+	_screen_vfx.setup(null, self, forest_root)
 
 	# Billboard creatures
 	_creature_spawner = BrocCreatureSpawnerClass.new(forest_root)
@@ -330,9 +328,12 @@ func _find_store() -> Node:
 	return null
 
 
-func _notification(what: int) -> void:
-	if what == NOTIFICATION_RESIZED and is_node_ready():
-		_update_pixel_shrink()
+func _spawn_diag_box() -> void:
+	pass  # Diagnostic removed
+
+
+func _notification(_what: int) -> void:
+	pass  # NOTIFICATION_RESIZED no longer needed — no SubViewport pixel shrink
 
 
 func _exit_tree() -> void:
@@ -625,41 +626,16 @@ func _physics_process(delta: float) -> void:
 # ============================================================
 
 func _setup_viewport() -> void:
-	viewport_container.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
-	game_viewport.render_target_update_mode = SubViewport.UPDATE_ALWAYS
-	game_viewport.msaa_3d = Viewport.MSAA_DISABLED
-	# Give SubViewport its own World3D — without this, it shares the root viewport's world,
-	# meaning a camera active in a previously-loaded scene becomes the rendering camera here.
-	game_viewport.use_own_world_3d = true
-	# Explicit opaque background — avoids white bleed-through on transparent SubViewport
-	game_viewport.transparent_bg = false
-	_update_pixel_shrink()
-
-
-func _update_pixel_shrink() -> void:
-	var sy: float = get_viewport_rect().size.y
-	if sy < 1.0:
-		return
-	viewport_container.stretch_shrink = max(int(round(sy / max(1.0, float(low_pixel_height)))), 1)
+	pass  # No SubViewport — Camera3D renders directly to main viewport
 
 
 func _setup_environment() -> void:
 	var env: Environment = Environment.new()
 
-	# Sky — BG_COLOR in GL Compat (ProceduralSkyMaterial renders white in GL Compat)
-	# Keep sky resource for ambient/sun contribution but use BG_COLOR for background
-	var sky_mat: ProceduralSkyMaterial = ProceduralSkyMaterial.new()
-	sky_mat.sky_top_color = Color(0.35, 0.55, 0.75)
-	sky_mat.sky_horizon_color = Color(0.55, 0.65, 0.55)
-	sky_mat.ground_bottom_color = Color(0.12, 0.18, 0.10)
-	sky_mat.ground_horizon_color = Color(0.30, 0.38, 0.25)
-	sky_mat.sun_angle_max = 30.0
-	sky_mat.sun_curve = 0.1
-	var sky: Sky = Sky.new()
-	sky.sky_material = sky_mat
-	env.sky = sky
+	# GL Compatibility: ProceduralSkyMaterial renders white regardless of BG_COLOR mode.
+	# Remove sky entirely — ambient light comes from AMBIENT_SOURCE_COLOR below.
 	env.background_mode = Environment.BG_COLOR
-	env.background_color = Color(0.20, 0.30, 0.22)  # Deep forest canopy green
+	env.background_color = Color(0.05, 0.12, 0.05)  # Deep forest canopy — near-black green
 
 	# Ambient — brighter, warmer
 	env.ambient_light_source = Environment.AMBIENT_SOURCE_COLOR
@@ -713,8 +689,10 @@ func _setup_player() -> void:
 		var look: Vector3 = _path_points[1]
 		look.y = player.position.y
 		player.look_at(look, Vector3.UP)
-	# Explicit make_current() deferred — SubViewport must be fully ready before camera activates
-	player_camera.make_current.call_deferred()
+	# Camera3D has current = true in .tscn — renders directly to main viewport
+	# DIAGNOSTIC: bright unshaded box 2m in front — if visible, camera IS rendering
+	call_deferred("_spawn_diag_box")
+
 
 
 # ============================================================
