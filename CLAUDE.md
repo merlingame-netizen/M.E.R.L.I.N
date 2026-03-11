@@ -143,10 +143,56 @@ python tools/cli.py outlook send --to "x@y.com" --subject "S" --body "B"
 python tools/cli.py outlook reply --index 0 --body "Merci"
 python tools/cli.py outlook forward --index 0 --to "x@y.com" --body "FYI"
 
+# DBeaver / EDH Hive
+python tools/cli.py dbeaver list-connections
+python tools/cli.py dbeaver list-tables --connection EDH_PRODv2 --database prod_app_bcv_vm_v
+python tools/cli.py dbeaver describe --connection EDH_PRODv2 --table schema.table_name
+python tools/cli.py dbeaver query --connection EDH_PRODv2 --sql "SELECT col FROM schema.t LIMIT 10"
+python tools/cli.py dbeaver profile --connection EDH_PRODv2 --table schema.table_name
+
+# BigQuery
+python tools/cli.py bigquery list-datasets --project ofr-ppx-propme-1-prd
+python tools/cli.py bigquery list-tables --project ofr-ppx-propme-1-prd --dataset my_dataset
+python tools/cli.py bigquery describe --project ofr-ppx-propme-1-prd --dataset ds --table t
+python tools/cli.py bigquery query --sql "SELECT * FROM \`proj.ds.table\` LIMIT 10"
+python tools/cli.py bigquery dry-run --sql "SELECT * FROM \`proj.ds.table\`"
+
+# Ollama / LLM local
+python tools/cli.py ollama list                 # Modeles installes (qwen3.5:2b, merlin-narrator, ...)
+python tools/cli.py ollama ps                   # Modeles en cours d'execution
+python tools/cli.py ollama generate --model qwen2.5:7b --prompt "Hello"
+python tools/cli.py ollama chat --model qwen2.5:7b --prompt "Bonjour !"
+python tools/cli.py ollama pull --model qwen2.5:7b
+python tools/cli.py ollama show --model merlin-narrator-lora:latest
+
+# Git / GitHub
+python tools/cli.py git status
+python tools/cli.py git diff
+python tools/cli.py git log
+python tools/cli.py git commit --message "feat: ..." --files tools/cli.py
+python tools/cli.py git push
+python tools/cli.py git pr-list
+python tools/cli.py git pr-create --title "Mon PR" --body "Description"
+
+# Office (PowerPoint / OneNote / Teams)
+python tools/cli.py office ppt-open --pbix "C:/path/to/rapport.pptx"
+python tools/cli.py office ppt-info --pbix "C:/path/to/rapport.pptx"
+python tools/cli.py office ppt-export-pdf --pbix "C:/path/to/rapport.pptx"
+python tools/cli.py office onenote-notebooks
+python tools/cli.py office onenote-sections --query "Mon Notebook"
+python tools/cli.py office teams-status
+python tools/cli.py office teams-chat --to "colleague@orange.com"
+
+# Browser (Playwright / Edge)
+python tools/cli.py browser status              # Verifier Playwright installe
+python tools/cli.py browser search --query "Claude Code documentation"
+python tools/cli.py browser open --query "https://example.com"
+python tools/cli.py browser screenshot --query "https://example.com" --out "screen.png"
+python tools/cli.py browser scrape --query "https://example.com"
+python tools/cli.py browser pdf --query "https://example.com" --out "page.pdf"
+
 # Help
-python tools/cli.py godot                       # Liste actions Godot
-python tools/cli.py powerbi                     # Liste actions PowerBI
-python tools/cli.py outlook                     # Liste actions Outlook
+python tools/cli.py <tool>                      # Liste actions (godot/powerbi/outlook/dbeaver/...)
 ```
 
 ---

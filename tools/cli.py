@@ -19,6 +19,17 @@ Usage:
     python tools/cli.py outlook search --query "rapport"
     python tools/cli.py outlook read --index 0
     python tools/cli.py outlook send --to "x@y.com" --subject "S" --body "B"
+    python tools/cli.py dbeaver list-connections
+    python tools/cli.py dbeaver list-tables --database prod_app_bcv_vm_v
+    python tools/cli.py dbeaver describe --table prod_app_bcv_vm_v.v_org_r_compte_client_c
+    python tools/cli.py dbeaver query --sql "SELECT * FROM prod_app_bcv_vm_v.v_org_r_compte_client_c" --limit 20
+    python tools/cli.py dbeaver profile --table prod_app_bcv_vm_v.v_org_r_compte_client_c
+    python tools/cli.py bigquery list-datasets
+    python tools/cli.py bigquery list-tables --dataset my_dataset
+    python tools/cli.py bigquery describe --dataset my_dataset --table my_table
+    python tools/cli.py bigquery query --sql "SELECT * FROM proj.ds.t" --limit 50
+    python tools/cli.py bigquery dry-run --sql "SELECT * FROM proj.ds.t"
+    python tools/cli.py bigquery storage-info --dataset my_dataset --table my_table
 
 Output: JSON by default. Use --human for pretty-printed output.
 Exit code: 0 = success, 1 = error (for CI/AUTODEV integration).
@@ -40,7 +51,7 @@ for _p in (_ROOT, _HERE):
     if _s not in sys.path:
         sys.path.insert(0, _s)
 
-TOOLS = ["godot", "powerbi", "outlook"]
+TOOLS = ["godot", "powerbi", "outlook", "dbeaver", "ollama", "git", "bigquery", "office", "browser"]
 
 
 # ── Tool loader (lazy import to avoid cross-tool dependencies) ────────────────
@@ -55,6 +66,24 @@ def _load_adapter(tool: str):
     if tool == "outlook":
         from adapters.outlook_adapter import OutlookAdapter
         return OutlookAdapter()
+    if tool == "dbeaver":
+        from adapters.dbeaver_adapter import DBeaverAdapter
+        return DBeaverAdapter()
+    if tool == "bigquery":
+        from adapters.bigquery_adapter import BigQueryAdapter
+        return BigQueryAdapter()
+    if tool == "office":
+        from adapters.office_adapter import OfficeAdapter
+        return OfficeAdapter()
+    if tool == "ollama":
+        from adapters.ollama_adapter import OllamaAdapter
+        return OllamaAdapter()
+    if tool == "git":
+        from adapters.git_adapter import GitAdapter
+        return GitAdapter()
+    if tool == "browser":
+        from adapters.browser_adapter import BrowserAdapter
+        return BrowserAdapter()
     raise ValueError(f"Unknown tool: {tool!r}. Available: {TOOLS}")
 
 
@@ -94,6 +123,24 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--index", type=int, default=0, help="[outlook read/reply/forward] Mail index")
     parser.add_argument("--reply-all", action="store_true", help="[outlook reply] Reply all")
     parser.add_argument("--attachments", nargs="*", default=None, help="[outlook send] Attachment paths")
+    # DBeaver args
+    parser.add_argument("--connection", default=None, help="[dbeaver] Connection ID (default: EDH_PRODv2)")
+    parser.add_argument("--database", default=None, help="[dbeaver list-tables] Database/schema name")
+    parser.add_argument("--table", default=None, help="[dbeaver describe/profile] Table name (schema.table)")
+    parser.add_argument("--sql", default=None, help="[dbeaver query] SQL SELECT statement")
+    # Office args
+    parser.add_argument("--path", default=None, help="[office ppt-*] Path to .pptx file")
+    parser.add_argument("--title", default=None, help="[office ppt-create/onenote-*] Title")
+    parser.add_argument("--bullets", nargs="*", default=None, help="[office ppt-create] Bullet points")
+    parser.add_argument("--notebook", default=None, help="[office onenote-sections] Notebook name or ID")
+    parser.add_argument("--section", default=None, help="[office onenote-pages/create] Section name or ID")
+    parser.add_argument("--page-id", default=None, help="[office onenote-read] Page ID")
+    parser.add_argument("--body-html", default=None, help="[office onenote-create] HTML body content")
+    # BigQuery args
+    parser.add_argument("--project", default=None,
+                        help="[bigquery] GCP project ID (default: ofr-ppx-propme-1-prd)")
+    parser.add_argument("--dry-run", dest="dry_run", action="store_true", default=False,
+                        help="[bigquery query] Estimate bytes scanned without executing")
     # Positional id (for powerbi refresh/export with positional dataset/report id)
     parser.add_argument("id", nargs="?", default=None, help="[powerbi] Resource ID (positional)")
     return parser
@@ -173,6 +220,22 @@ def main(argv: list[str] | None = None) -> int:
         "index": args.index,
         "reply_all": args.reply_all,
         "attachments": args.attachments,
+        # DBeaver
+        "connection": args.connection,
+        "database": args.database,
+        "table": args.table,
+        "sql": args.sql,
+        # Office
+        "path": args.path,
+        "title": args.title,
+        "bullets": args.bullets,
+        "notebook": args.notebook,
+        "section": args.section,
+        "page_id": getattr(args, "page_id", None),
+        "body_html": getattr(args, "body_html", None),
+        # BigQuery
+        "project": getattr(args, "project", None),
+        "dry_run": getattr(args, "dry_run", False) or None,
     }
     # Remove None values to keep adapter signatures clean
     kwargs = {k: v for k, v in kwargs.items() if v is not None}

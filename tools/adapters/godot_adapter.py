@@ -17,6 +17,7 @@ from tools.adapters.base_adapter import BaseAdapter
 PROJECT_ROOT = Path(r"C:\Users\PGNK2128\Godot-MCP")
 
 _GODOT_CANDIDATES = [
+    Path(r"C:\Users\PGNK2128\Godot\Godot_v4.5.1-stable_win64_console.exe"),
     Path(r"C:\Users\PGNK2128\AppData\Local\Programs\Godot\Godot.exe"),
     Path(r"C:\Users\PGNK2128\AppData\Local\Programs\Godot\godot.exe"),
     "godot4",
@@ -217,7 +218,7 @@ class GodotAdapter(BaseAdapter):
         try:
             stdout, stderr, code = _run(
                 [godot, "--editor", "--headless", "--quit"],
-                timeout=120,
+                timeout=300,
             )
         except subprocess.TimeoutExpired:
             return self.error("Editor parse check timed out after 120s")
@@ -456,9 +457,9 @@ class GodotAdapter(BaseAdapter):
         if self._godot_bin is None:
             self._godot_bin = _find_godot()
         if self._godot_bin is None:
+            searched = ", ".join(str(c) for c in _GODOT_CANDIDATES)
             return self.error(
-                "Godot binary not found. Searched PATH and "
-                r"C:\Users\PGNK2128\AppData\Local\Programs\Godot\. "
+                f"Godot binary not found. Searched: {searched}. "
                 "Install Godot 4 and ensure it is in PATH."
             )
         return self._godot_bin
