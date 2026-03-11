@@ -1,0 +1,21 @@
+{
+  "_template": true,
+  "agent": "AGENT_NAME",
+  "version": "2.0",
+  "created_at": null,
+  "last_updated": null,
+  "decisions": [],
+  "patterns_learned": [],
+  "avoided_patterns": [],
+  "project_knowledge": {
+    "core_systems": [],
+    "known_dependencies": {},
+    "scene_flow": "IntroCeltOS → Menu → Quiz → Hub → MerlinGame"
+  },
+  "confidence_weights": {
+    "decay_factor": 0.8,
+    "success_boost": 0.2,
+    "failure_penalty": 0.3,
+    "new_pattern_baseline": 0.5
+  }
+}

@@ -1,0 +1,18 @@
+{
+  "version": "2.0",
+  "last_updated": "2026-03-11T00:00:00.000Z",
+  "agents": {
+    "orchestrator": { "state": "idle", "current_task": null, "cycle": 0, "last_active": null },
+    "playtest_qa": { "state": "idle", "run_count": 0, "last_result": null, "last_active": null },
+    "lora_trainer": { "state": "idle", "job_id": null, "brain": null, "progress": 0, "last_active": null },
+    "asset_generator": { "state": "idle", "current_asset": null, "strategy_level": null, "last_active": null },
+    "debugger": { "state": "idle", "iteration": 0, "max_iterations": 10, "issue_signature": null, "last_active": null },
+    "knowledge_keeper": { "state": "idle", "entries_today": 0, "last_active": null },
+    "godot_expert": { "state": "idle", "current_file": null, "last_active": null },
+    "narrative_writer": { "state": "idle", "cards_generated_session": 0, "last_active": null },
+    "art_direction": { "state": "idle", "current_asset": null, "last_active": null }
+  },
+  "active_loops": [],
+  "blocked_reason": null,
+  "parallel_slots": { "max": 3, "used": 0, "agents_in_parallel": [] }
+}

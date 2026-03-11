@@ -1,0 +1,1 @@
+{"_schema": "kb_entry", "version": "2.0", "types": ["best_practice", "anti_pattern", "fix_recipe", "design_decision", "debug_solution"], "fields": ["id", "timestamp", "agent", "type", "title", "pattern", "context", "outcome", "confidence", "tags"]}

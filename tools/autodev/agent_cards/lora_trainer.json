@@ -1,0 +1,107 @@
+{
+  "id": "lora_trainer",
+  "name": "LoRA Training Specialist",
+  "version": "2.0.0",
+  "description": "Decides when LoRA training is needed, prepares datasets, orchestrates Kaggle GPU training, validates metrics, and deploys adapters. Manages multi-brain model lifecycle.",
+  "agent_file": ".claude/agents/lora_trainer.md",
+  "category": "llm",
+  "supersedes": "lora_translator",
+  "capabilities": [
+    {
+      "task_type": "training_decision",
+      "keywords": ["lora", "fine-tune", "training", "underperform", "adapter"],
+      "confidence": 0.92,
+      "mode": "analyze"
+    },
+    {
+      "task_type": "dataset_preparation",
+      "keywords": ["dataset", "augment", "samples", "training data"],
+      "confidence": 0.88,
+      "mode": "build"
+    },
+    {
+      "task_type": "kaggle_orchestration",
+      "keywords": ["kaggle", "gpu", "kernel", "remote"],
+      "confidence": 0.95,
+      "mode": "execute"
+    },
+    {
+      "task_type": "model_deployment",
+      "keywords": ["deploy", "adapter", "gguf", "install", "replace"],
+      "confidence": 0.90,
+      "mode": "execute"
+    },
+    {
+      "task_type": "metrics_validation",
+      "keywords": ["metrics", "tone_consistency", "eval_loss", "diversity", "french"],
+      "confidence": 0.87,
+      "mode": "validate"
+    }
+  ],
+  "inputs": [
+    {
+      "name": "issue_report:llm_performance",
+      "type": "json",
+      "required": true,
+      "description": "LLM performance issue report from playtest_qa"
+    },
+    {
+      "name": ".merlin_remote/training_roadmap.json",
+      "type": "file",
+      "required": false,
+      "description": "Training roadmap configuration"
+    },
+    {
+      "name": "data/ai/training/*.json",
+      "type": "file",
+      "required": false,
+      "description": "Existing training data samples"
+    }
+  ],
+  "outputs": [
+    {
+      "name": "agent_messages.json:model_ready",
+      "type": "artifact",
+      "description": "Model ready notification posted to agent message bus"
+    },
+    {
+      "name": "addons/merlin_llm/adapters/*.gguf",
+      "type": "artifact",
+      "description": "Deployed LoRA adapter files"
+    }
+  ],
+  "file_scope": [
+    "tools/lora/**",
+    ".merlin_remote/**",
+    "addons/merlin_llm/adapters/**",
+    "data/ai/training/**"
+  ],
+  "training_scripts": [
+    "tools/lora/remote_kaggle_train.py",
+    "tools/lora/generate_brain_datasets.py",
+    "tools/lora/benchmark_lora.py"
+  ],
+  "brain_configs": {
+    "narrator": {
+      "slug": "merlin-lora-narrator-4b",
+      "adapter": "merlin_narrator_lora.gguf"
+    },
+    "gamemaster": {
+      "slug": "merlin-lora-gamemaster-2b",
+      "adapter": "merlin_gamemaster_lora.gguf"
+    },
+    "worker": {
+      "slug": "merlin-lora-worker-0.8b",
+      "adapter": "merlin_worker_lora.gguf"
+    }
+  },
+  "quality_thresholds": {
+    "tone_consistency": 0.85,
+    "json_validity": 0.90,
+    "diversity_self_bleu": 0.40,
+    "french_quality": 0.95
+  },
+  "dependencies": ["task_dispatcher"],
+  "cost_profile": "sonnet",
+  "max_concurrent": 1
+}

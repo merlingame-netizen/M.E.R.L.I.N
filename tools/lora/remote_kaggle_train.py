@@ -768,6 +768,7 @@ def _download_single(root: Path, username: str, slug: str, output_dir: Path, bra
             update_brain_state(root, brain, "download", "failed", {"job": f"{user}/{kernel_slug}"})
         else:
             update_state(root, "download", "failed", {"job": f"{user}/{kernel_slug}"})
+        notify_agent_bus(brain or "legacy", "failed", error=f"Download failed for {user}/{kernel_slug}")
         fail(f"Download failed for {brain or 'legacy'}.")
 
     # Mirror CWD artifacts
@@ -796,6 +797,8 @@ def _download_single(root: Path, username: str, slug: str, output_dir: Path, bra
         update_brain_state(root, brain, "download", "success", extra)
     else:
         update_state(root, "download", "success", extra)
+
+    notify_agent_bus(brain or "legacy", "completed")
 
     label = f" [{brain}]" if brain else ""
     log(f"Artifacts downloaded{label}: {effective_output.resolve()}")
@@ -942,6 +945,79 @@ def main() -> None:
         return
 
     fail(f"Unsupported action: {args.action}")
+
+
+def notify_agent_bus(brain: str, status: str, metrics: dict = None, error: str = None):
+    """
+    Notify orchestrator_v2 agent bus when training completes or fails.
+    Called at the end of training to enable LORA_WAIT → TEST transition.
+
+    status: "completed" | "failed"
+    """
+    import json
+    from datetime import datetime, timezone
+    from pathlib import Path
+    import random
+
+    # Find project root (2 levels up from tools/lora/)
+    project_root = Path(__file__).parent.parent.parent
+    messages_file = project_root / "tools" / "autodev" / "status" / "agent_messages.json"
+
+    if not messages_file.exists():
+        print(f"[LoRA] Warning: agent_messages.json not found at {messages_file}")
+        return
+
+    try:
+        with open(messages_file, "r", encoding="utf-8") as f:
+            bus = json.load(f)
+
+        msg_id = f"msg_{datetime.now().strftime('%Y%m%d_%H%M%S')}_{random.randint(0, 999):03d}"
+
+        if status == "completed":
+            msg_type = "model_ready"
+            priority = "HIGH"
+            payload = {
+                "brain": brain,
+                "adapter_path": f"addons/merlin_llm/adapters/merlin_{brain}_lora.gguf",
+                "metrics_after": metrics or {},
+                "status": "completed"
+            }
+        else:
+            msg_type = "issue_report"
+            priority = "CRITICAL"
+            payload = {
+                "issue_type": "lora_training_failed",
+                "brain": brain,
+                "error": error or "Unknown training failure",
+                "suggested_action": "check_kaggle_logs"
+            }
+
+        message = {
+            "id": msg_id,
+            "timestamp": datetime.now(timezone.utc).isoformat(),
+            "from_agent": "lora_trainer",
+            "to_agent": "orchestrator",
+            "type": msg_type,
+            "priority": priority,
+            "payload": payload,
+            "status": "pending",
+            "handled_at": None
+        }
+
+        bus["messages"].append(message)
+        bus["stats"]["total_sent"] = bus["stats"].get("total_sent", 0) + 1
+        bus["stats"]["last_message_id"] = msg_id
+
+        # Atomic write
+        temp_file = str(messages_file) + ".tmp"
+        with open(temp_file, "w", encoding="utf-8") as f:
+            json.dump(bus, f, indent=2, ensure_ascii=False)
+        Path(temp_file).replace(messages_file)
+
+        print(f"[LoRA] Notified agent bus: {msg_type} for {brain}")
+
+    except Exception as e:
+        print(f"[LoRA] Warning: Could not write to agent bus: {e}")
 
 
 if __name__ == "__main__":

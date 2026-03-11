@@ -1,0 +1,102 @@
+{
+  "id": "asset_generator",
+  "name": "Asset Generator Specialist",
+  "version": "2.0.0",
+  "description": "Generates game assets using nano-banana (image generation) and Trellis.2 (image-to-3D GLB). Implements 3-level fallback: Trellis 3D -> PNG sprite -> existing library.",
+  "agent_file": ".claude/agents/asset_generator.md",
+  "category": "creative",
+  "capabilities": [
+    {
+      "task_type": "image_generation",
+      "keywords": ["generate", "image", "sprite", "nano-banana", "gemini", "visual"],
+      "confidence": 0.93,
+      "mode": "build"
+    },
+    {
+      "task_type": "3d_generation",
+      "keywords": ["3d", "glb", "trellis", "model", "mesh", "broceliande"],
+      "confidence": 0.90,
+      "mode": "build"
+    },
+    {
+      "task_type": "asset_integration",
+      "keywords": ["integrate", "import", "scene", "godot", "assets"],
+      "confidence": 0.88,
+      "mode": "execute"
+    },
+    {
+      "task_type": "style_guidance",
+      "keywords": ["style", "pixel", "low-poly", "celtic", "crt", "aesthetic"],
+      "confidence": 0.85,
+      "mode": "review"
+    }
+  ],
+  "inputs": [
+    {
+      "name": "asset_request",
+      "type": "json",
+      "required": true,
+      "description": "Asset generation request with type, style, and context"
+    },
+    {
+      "name": "docs/70_graphic/BROCELIANDE_3D_ASSET_PLAN.md",
+      "type": "file",
+      "required": false,
+      "description": "3D asset plan for Broceliande scene"
+    },
+    {
+      "name": "docs/70_graphic/UI_UX_BIBLE.md",
+      "type": "file",
+      "required": false,
+      "description": "Visual style specification"
+    }
+  ],
+  "outputs": [
+    {
+      "name": "assets/3d/generated/*.glb",
+      "type": "artifact",
+      "description": "Generated 3D GLB assets"
+    },
+    {
+      "name": "assets/sprites/generated/*.png",
+      "type": "artifact",
+      "description": "Generated PNG sprite assets"
+    },
+    {
+      "name": "agent_messages.json:asset_ready",
+      "type": "artifact",
+      "description": "Asset ready notification posted to agent message bus"
+    }
+  ],
+  "file_scope": [
+    "assets/**",
+    "server-trellis/**",
+    "docs/70_graphic/**"
+  ],
+  "strategy_levels": [
+    {
+      "level": 1,
+      "name": "Trellis 3D",
+      "requires": ["server-trellis/dist/index.js", ".merlin_remote/kaggle/config.json"]
+    },
+    {
+      "level": 2,
+      "name": "PNG sprite",
+      "requires": ["nano-banana MCP"]
+    },
+    {
+      "level": 3,
+      "name": "existing library",
+      "requires": []
+    }
+  ],
+  "style_constraints": {
+    "default_style": "low-poly celtic broceliande",
+    "pixel_art_size": "32x32 or 64x64",
+    "background_for_trellis": "pure white isolated",
+    "color_palette": "MerlinVisual.PALETTE"
+  },
+  "dependencies": ["art_direction", "task_dispatcher"],
+  "cost_profile": "sonnet",
+  "max_concurrent": 1
+}

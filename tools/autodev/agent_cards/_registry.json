@@ -1,8 +1,8 @@
 {
   "version": "1.0.0",
   "protocol": "a2a-file-based",
-  "generated_at": "2026-03-11T13:46:41.902Z",
-  "agent_count": 16,
+  "generated_at": "2026-03-11T00:00:00.000Z",
+  "agent_count": 20,
   "agents": {
     "art_direction": {
       "id": "art_direction",
@@ -1318,6 +1318,511 @@
       ],
       "dependencies": [
         "art_direction"
+      ],
+      "cost_profile": "haiku",
+      "max_concurrent": 1
+    },
+    "playtest_qa": {
+      "id": "playtest_qa",
+      "name": "Playtest QA Specialist",
+      "version": "2.0.0",
+      "description": "Automated playtesting, metrics analysis, and issue detection. Triggers LLM/visual pipelines when metrics fall below thresholds.",
+      "agent_file": ".claude/agents/playtest_qa.md",
+      "category": "quality",
+      "capabilities": [
+        {
+          "task_type": "playtest_execution",
+          "keywords": [
+            "playtest",
+            "test",
+            "simulate",
+            "run game"
+          ],
+          "confidence": 0.95,
+          "mode": "execute"
+        },
+        {
+          "task_type": "metric_analysis",
+          "keywords": [
+            "metrics",
+            "performance",
+            "fps",
+            "crash",
+            "tone",
+            "consistency"
+          ],
+          "confidence": 0.9,
+          "mode": "analyze"
+        },
+        {
+          "task_type": "issue_detection",
+          "keywords": [
+            "detect",
+            "anomaly",
+            "threshold",
+            "below",
+            "underperform"
+          ],
+          "confidence": 0.92,
+          "mode": "detect"
+        },
+        {
+          "task_type": "trigger_routing",
+          "keywords": [
+            "trigger",
+            "lora",
+            "asset",
+            "escalate",
+            "route"
+          ],
+          "confidence": 0.88,
+          "mode": "route"
+        }
+      ],
+      "inputs": [
+        {
+          "name": "game_state",
+          "type": "json",
+          "required": true,
+          "description": "Current game state snapshot"
+        },
+        {
+          "name": "metrics_latest.json",
+          "type": "file",
+          "required": true,
+          "description": "Latest metrics data file"
+        },
+        {
+          "name": "playtest_simulator.ps1",
+          "type": "file",
+          "required": false,
+          "description": "Playtest automation script"
+        }
+      ],
+      "outputs": [
+        {
+          "name": "issue_report",
+          "type": "json",
+          "description": "Detected issues with severity and routing"
+        },
+        {
+          "name": "agent_messages.json:issue_report",
+          "type": "artifact",
+          "description": "Issue report posted to agent message bus"
+        }
+      ],
+      "file_scope": [
+        "tools/autodev/playtest_simulator.ps1",
+        "captures/*",
+        "tools/autodev/status/metrics_*.json"
+      ],
+      "triggers": [
+        "tone_consistency < 0.85",
+        "fps < 30",
+        "crash_rate > 0.10",
+        "json_validity < 0.90"
+      ],
+      "thresholds": {
+        "tone_consistency": 0.85,
+        "fps_minimum": 30,
+        "crash_rate_maximum": 0.10,
+        "json_validity": 0.90
+      },
+      "escalation_routes": {
+        "llm_performance": "lora_trainer",
+        "visual_issue": "asset_generator",
+        "code_bug": "debugger",
+        "design_issue": "orchestrator"
+      },
+      "dependencies": [
+        "task_dispatcher",
+        "studio_orchestrator"
+      ],
+      "cost_profile": "haiku",
+      "max_concurrent": 1
+    },
+    "lora_trainer": {
+      "id": "lora_trainer",
+      "name": "LoRA Training Specialist",
+      "version": "2.0.0",
+      "description": "Decides when LoRA training is needed, prepares datasets, orchestrates Kaggle GPU training, validates metrics, and deploys adapters. Manages multi-brain model lifecycle.",
+      "agent_file": ".claude/agents/lora_trainer.md",
+      "category": "llm",
+      "supersedes": "lora_translator",
+      "capabilities": [
+        {
+          "task_type": "training_decision",
+          "keywords": [
+            "lora",
+            "fine-tune",
+            "training",
+            "underperform",
+            "adapter"
+          ],
+          "confidence": 0.92,
+          "mode": "analyze"
+        },
+        {
+          "task_type": "dataset_preparation",
+          "keywords": [
+            "dataset",
+            "augment",
+            "samples",
+            "training data"
+          ],
+          "confidence": 0.88,
+          "mode": "build"
+        },
+        {
+          "task_type": "kaggle_orchestration",
+          "keywords": [
+            "kaggle",
+            "gpu",
+            "kernel",
+            "remote"
+          ],
+          "confidence": 0.95,
+          "mode": "execute"
+        },
+        {
+          "task_type": "model_deployment",
+          "keywords": [
+            "deploy",
+            "adapter",
+            "gguf",
+            "install",
+            "replace"
+          ],
+          "confidence": 0.9,
+          "mode": "execute"
+        },
+        {
+          "task_type": "metrics_validation",
+          "keywords": [
+            "metrics",
+            "tone_consistency",
+            "eval_loss",
+            "diversity",
+            "french"
+          ],
+          "confidence": 0.87,
+          "mode": "validate"
+        }
+      ],
+      "inputs": [
+        {
+          "name": "issue_report:llm_performance",
+          "type": "json",
+          "required": true,
+          "description": "LLM performance issue report from playtest_qa"
+        },
+        {
+          "name": ".merlin_remote/training_roadmap.json",
+          "type": "file",
+          "required": false,
+          "description": "Training roadmap configuration"
+        },
+        {
+          "name": "data/ai/training/*.json",
+          "type": "file",
+          "required": false,
+          "description": "Existing training data samples"
+        }
+      ],
+      "outputs": [
+        {
+          "name": "agent_messages.json:model_ready",
+          "type": "artifact",
+          "description": "Model ready notification posted to agent message bus"
+        },
+        {
+          "name": "addons/merlin_llm/adapters/*.gguf",
+          "type": "artifact",
+          "description": "Deployed LoRA adapter files"
+        }
+      ],
+      "file_scope": [
+        "tools/lora/**",
+        ".merlin_remote/**",
+        "addons/merlin_llm/adapters/**",
+        "data/ai/training/**"
+      ],
+      "training_scripts": [
+        "tools/lora/remote_kaggle_train.py",
+        "tools/lora/generate_brain_datasets.py",
+        "tools/lora/benchmark_lora.py"
+      ],
+      "brain_configs": {
+        "narrator": {
+          "slug": "merlin-lora-narrator-4b",
+          "adapter": "merlin_narrator_lora.gguf"
+        },
+        "gamemaster": {
+          "slug": "merlin-lora-gamemaster-2b",
+          "adapter": "merlin_gamemaster_lora.gguf"
+        },
+        "worker": {
+          "slug": "merlin-lora-worker-0.8b",
+          "adapter": "merlin_worker_lora.gguf"
+        }
+      },
+      "quality_thresholds": {
+        "tone_consistency": 0.85,
+        "json_validity": 0.90,
+        "diversity_self_bleu": 0.40,
+        "french_quality": 0.95
+      },
+      "dependencies": [
+        "task_dispatcher"
+      ],
+      "cost_profile": "sonnet",
+      "max_concurrent": 1
+    },
+    "asset_generator": {
+      "id": "asset_generator",
+      "name": "Asset Generator Specialist",
+      "version": "2.0.0",
+      "description": "Generates game assets using nano-banana (image generation) and Trellis.2 (image-to-3D GLB). Implements 3-level fallback: Trellis 3D -> PNG sprite -> existing library.",
+      "agent_file": ".claude/agents/asset_generator.md",
+      "category": "creative",
+      "capabilities": [
+        {
+          "task_type": "image_generation",
+          "keywords": [
+            "generate",
+            "image",
+            "sprite",
+            "nano-banana",
+            "gemini",
+            "visual"
+          ],
+          "confidence": 0.93,
+          "mode": "build"
+        },
+        {
+          "task_type": "3d_generation",
+          "keywords": [
+            "3d",
+            "glb",
+            "trellis",
+            "model",
+            "mesh",
+            "broceliande"
+          ],
+          "confidence": 0.9,
+          "mode": "build"
+        },
+        {
+          "task_type": "asset_integration",
+          "keywords": [
+            "integrate",
+            "import",
+            "scene",
+            "godot",
+            "assets"
+          ],
+          "confidence": 0.88,
+          "mode": "execute"
+        },
+        {
+          "task_type": "style_guidance",
+          "keywords": [
+            "style",
+            "pixel",
+            "low-poly",
+            "celtic",
+            "crt",
+            "aesthetic"
+          ],
+          "confidence": 0.85,
+          "mode": "review"
+        }
+      ],
+      "inputs": [
+        {
+          "name": "asset_request",
+          "type": "json",
+          "required": true,
+          "description": "Asset generation request with type, style, and context"
+        },
+        {
+          "name": "docs/70_graphic/BROCELIANDE_3D_ASSET_PLAN.md",
+          "type": "file",
+          "required": false,
+          "description": "3D asset plan for Broceliande scene"
+        },
+        {
+          "name": "docs/70_graphic/UI_UX_BIBLE.md",
+          "type": "file",
+          "required": false,
+          "description": "Visual style specification"
+        }
+      ],
+      "outputs": [
+        {
+          "name": "assets/3d/generated/*.glb",
+          "type": "artifact",
+          "description": "Generated 3D GLB assets"
+        },
+        {
+          "name": "assets/sprites/generated/*.png",
+          "type": "artifact",
+          "description": "Generated PNG sprite assets"
+        },
+        {
+          "name": "agent_messages.json:asset_ready",
+          "type": "artifact",
+          "description": "Asset ready notification posted to agent message bus"
+        }
+      ],
+      "file_scope": [
+        "assets/**",
+        "server-trellis/**",
+        "docs/70_graphic/**"
+      ],
+      "strategy_levels": [
+        {
+          "level": 1,
+          "name": "Trellis 3D",
+          "requires": [
+            "server-trellis/dist/index.js",
+            ".merlin_remote/kaggle/config.json"
+          ]
+        },
+        {
+          "level": 2,
+          "name": "PNG sprite",
+          "requires": [
+            "nano-banana MCP"
+          ]
+        },
+        {
+          "level": 3,
+          "name": "existing library",
+          "requires": []
+        }
+      ],
+      "style_constraints": {
+        "default_style": "low-poly celtic broceliande",
+        "pixel_art_size": "32x32 or 64x64",
+        "background_for_trellis": "pure white isolated",
+        "color_palette": "MerlinVisual.PALETTE"
+      },
+      "dependencies": [
+        "art_direction",
+        "task_dispatcher"
+      ],
+      "cost_profile": "sonnet",
+      "max_concurrent": 1
+    },
+    "knowledge_keeper": {
+      "id": "knowledge_keeper",
+      "name": "Knowledge Keeper",
+      "version": "2.0.0",
+      "description": "Records best practices and anti-patterns from each development cycle. Updates project_map.json (living project comprehension), maintains BEST_PRACTICES.md, and updates per-agent confidence weights.",
+      "agent_file": ".claude/agents/knowledge_keeper.md",
+      "category": "ops",
+      "capabilities": [
+        {
+          "task_type": "kb_harvesting",
+          "keywords": [
+            "record",
+            "kb",
+            "best practice",
+            "lesson",
+            "pattern"
+          ],
+          "confidence": 0.95,
+          "mode": "analyze"
+        },
+        {
+          "task_type": "project_mapping",
+          "keywords": [
+            "project map",
+            "dependencies",
+            "system",
+            "architecture"
+          ],
+          "confidence": 0.88,
+          "mode": "build"
+        },
+        {
+          "task_type": "confidence_tracking",
+          "keywords": [
+            "confidence",
+            "memory",
+            "weight",
+            "decay",
+            "learning"
+          ],
+          "confidence": 0.9,
+          "mode": "analyze"
+        },
+        {
+          "task_type": "documentation",
+          "keywords": [
+            "document",
+            "update",
+            "best practices",
+            "anti-pattern",
+            "recipe"
+          ],
+          "confidence": 0.92,
+          "mode": "build"
+        }
+      ],
+      "inputs": [
+        {
+          "name": "agent_messages.json:kb_entry",
+          "type": "json",
+          "required": true,
+          "description": "KB entry posted to agent message bus"
+        },
+        {
+          "name": "tools/autodev/status/kb_entries.jsonl",
+          "type": "file",
+          "required": false,
+          "description": "Accumulated knowledge base entries"
+        },
+        {
+          "name": "tools/autodev/project_map.json",
+          "type": "file",
+          "required": false,
+          "description": "Living project comprehension map"
+        }
+      ],
+      "outputs": [
+        {
+          "name": "docs/BEST_PRACTICES.md",
+          "type": "artifact",
+          "description": "Updated best practices documentation"
+        },
+        {
+          "name": "tools/autodev/project_map.json",
+          "type": "json",
+          "description": "Updated project comprehension map"
+        },
+        {
+          "name": "tools/autodev/memory/*.json",
+          "type": "artifact",
+          "description": "Per-agent memory and confidence weight files"
+        }
+      ],
+      "file_scope": [
+        "tools/autodev/status/kb_entries.jsonl",
+        "tools/autodev/project_map.json",
+        "tools/autodev/memory/**",
+        "docs/BEST_PRACTICES.md"
+      ],
+      "knowledge_types": [
+        "best_practice",
+        "anti_pattern",
+        "fix_recipe",
+        "design_decision",
+        "debug_solution"
+      ],
+      "dependencies": [
+        "studio_orchestrator"
       ],
       "cost_profile": "haiku",
       "max_concurrent": 1
@@ -3417,14 +3922,17 @@
   "category_index": {
     "creative": [
       "art_direction",
+      "asset_generator",
       "audio_specialist"
     ],
     "ops": [
       "data_analyst",
-      "git_commit"
+      "git_commit",
+      "knowledge_keeper"
     ],
     "quality": [
       "debug_qa",
+      "playtest_qa",
       "security_specialist"
     ],
     "knowledge": [
@@ -3436,6 +3944,7 @@
     ],
     "llm": [
       "llm_expert",
+      "lora_trainer",
       "lora_translator"
     ],
     "narrative": [
@@ -3505,6 +4014,20 @@
     ],
     "ui_consistency": [
       "art_direction"
+    ],
+    "playtest_qa": [
+      "task_dispatcher",
+      "studio_orchestrator"
+    ],
+    "lora_trainer": [
+      "task_dispatcher"
+    ],
+    "asset_generator": [
+      "art_direction",
+      "task_dispatcher"
+    ],
+    "knowledge_keeper": [
+      "studio_orchestrator"
     ]
   }
 }

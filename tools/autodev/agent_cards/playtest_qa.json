@@ -1,0 +1,92 @@
+{
+  "id": "playtest_qa",
+  "name": "Playtest QA Specialist",
+  "version": "2.0.0",
+  "description": "Automated playtesting, metrics analysis, and issue detection. Triggers LLM/visual pipelines when metrics fall below thresholds.",
+  "agent_file": ".claude/agents/playtest_qa.md",
+  "category": "quality",
+  "capabilities": [
+    {
+      "task_type": "playtest_execution",
+      "keywords": ["playtest", "test", "simulate", "run game"],
+      "confidence": 0.95,
+      "mode": "execute"
+    },
+    {
+      "task_type": "metric_analysis",
+      "keywords": ["metrics", "performance", "fps", "crash", "tone", "consistency"],
+      "confidence": 0.90,
+      "mode": "analyze"
+    },
+    {
+      "task_type": "issue_detection",
+      "keywords": ["detect", "anomaly", "threshold", "below", "underperform"],
+      "confidence": 0.92,
+      "mode": "detect"
+    },
+    {
+      "task_type": "trigger_routing",
+      "keywords": ["trigger", "lora", "asset", "escalate", "route"],
+      "confidence": 0.88,
+      "mode": "route"
+    }
+  ],
+  "inputs": [
+    {
+      "name": "game_state",
+      "type": "json",
+      "required": true,
+      "description": "Current game state snapshot"
+    },
+    {
+      "name": "metrics_latest.json",
+      "type": "file",
+      "required": true,
+      "description": "Latest metrics data file"
+    },
+    {
+      "name": "playtest_simulator.ps1",
+      "type": "file",
+      "required": false,
+      "description": "Playtest automation script"
+    }
+  ],
+  "outputs": [
+    {
+      "name": "issue_report",
+      "type": "json",
+      "description": "Detected issues with severity and routing"
+    },
+    {
+      "name": "agent_messages.json:issue_report",
+      "type": "artifact",
+      "description": "Issue report posted to agent message bus"
+    }
+  ],
+  "file_scope": [
+    "tools/autodev/playtest_simulator.ps1",
+    "captures/*",
+    "tools/autodev/status/metrics_*.json"
+  ],
+  "triggers": [
+    "tone_consistency < 0.85",
+    "fps < 30",
+    "crash_rate > 0.10",
+    "json_validity < 0.90"
+  ],
+  "thresholds": {
+    "tone_consistency": 0.85,
+    "fps_minimum": 30,
+    "crash_rate_maximum": 0.10,
+    "json_validity": 0.90
+  },
+  "escalation_routes": {
+    "llm_performance": "lora_trainer",
+    "visual_issue": "asset_generator",
+    "code_bug": "debugger",
+    "design_issue": "orchestrator"
+  },
+  "dependencies": ["task_dispatcher", "studio_orchestrator"],
+  "cost_profile": "haiku",
+  "max_concurrent": 1
+}

@@ -86,7 +86,37 @@ textarea { width:100%; min-height:64px; resize:vertical; background:#051105; col
 .caSkillRow { font-size:9px;padding:1px 0;color:#8aaa8a;display:flex;justify-content:space-between; }
 .caSkillRow .caTs { color:#444; }
 .caDim { color:#444;font-size:9px; }
+.agentsList { margin-top:4px; }
+.agentRow { display:flex;align-items:baseline;gap:4px;padding:2px 0;border-bottom:1px solid ${CRT.border};font-size:9px; }
+.agentRow.running { border-left:2px solid ${CRT.cyan};padding-left:4px; }
+.agentRow.done { border-left:2px solid ${CRT.border};padding-left:4px;opacity:.65; }
+.agentPrj { display:inline-block;padding:0 3px;border-radius:2px;font-size:8px;font-weight:700;flex-shrink:0; }
+.agentPrj-merlin { background:#1a1a0d;color:${CRT.amber};border:1px solid #554000; }
+.agentPrj-data   { background:#0d1a2e;color:${CRT.cyan};border:1px solid #114955; }
+.agentPrj-cours  { background:#1a0d1a;color:#cc88ff;border:1px solid #442244; }
+.agentPrj-unknown{ background:#111;color:${CRT.gray};border:1px solid ${CRT.border}; }
+.agentName { color:${CRT.text};font-weight:600;flex-shrink:0; }
+.agentTask { color:${CRT.gray};flex:1;overflow:hidden;white-space:nowrap;text-overflow:ellipsis; }
+.agentDur  { color:#444;flex-shrink:0;margin-left:4px; }
+.busMsg { padding:3px 0; border-bottom:1px solid ${CRT.border}; font-size:10px; }
+.busMsg:last-child { border-bottom:none; }
+.busTs { color:${CRT.gray}; font-size:9px; margin-right:4px; }
+.busRoute { color:${CRT.greenDim}; }
+.busRoute.high { color:${CRT.amber}; }
+.busRoute.critical { color:${CRT.red}; }
+.busBody { color:${CRT.text}; font-size:9px; padding-left:4px; }
+.agentGrid { display:grid; grid-template-columns:1fr 1fr; gap:3px; }
+.agentBadge { display:flex; align-items:center; gap:4px; font-size:9px; padding:2px 3px; }
+.agentBadgeDot { font-size:10px; flex-shrink:0; }
+.agentBadgeName { color:${CRT.text}; font-weight:600; flex-shrink:0; white-space:nowrap; }
+.agentBadgeState { color:${CRT.gray}; overflow:hidden; white-space:nowrap; text-overflow:ellipsis; }
+.debugBar { font-family:inherit; font-size:9px; color:${CRT.green}; letter-spacing:0; }
+.debugInfo { color:${CRT.text}; font-size:9px; margin-top:2px; }
+.stateIndicator { display:flex; align-items:center; gap:8px; padding:4px 0; }
+.stateName { font-size:13px; font-weight:700; letter-spacing:1px; }
+.stateCycle { color:${CRT.gray}; font-size:10px; }
 `;
+
 
 function escapeHtml(value) {
   if (value === null || value === undefined) return '';
@@ -361,6 +391,9 @@ class RemoteTrainProvider {
     this.roadmap = null;
     this._sessionState = null;
     this._sessionPoll = null;
+    this._activeAgents = null;
+    this._agentMessages = null;
+    this._agentStatus = null;
   }
 
   resolveRoot() {
@@ -417,13 +450,19 @@ class RemoteTrainProvider {
     });
     this.resolveRoot();
     this._loadSessionState();
+    this._loadActiveAgents();
+    this._loadAgentMessages();
+    this._loadAgentStatus();
     this.update();
 
-    // Poll session.json every 3s for live Claude Code activity display
+    // Poll session.json + active_agents.json + agent_messages.json + agent_status.json every 3s
     if (this._sessionPoll) clearInterval(this._sessionPoll);
     this._sessionPoll = setInterval(() => {
       this.resolveRoot();
       this._loadSessionState();
+      this._loadActiveAgents();
+      this._loadAgentMessages();
+      this._loadAgentStatus();
       if (this.view) this.update();
     }, 3000);
 
@@ -793,6 +832,64 @@ class RemoteTrainProvider {
     this.update();
   }
 
+  _loadActiveAgents() {
+    const agentsPath = path.join(os.homedir(), '.claude', 'metrics', 'active_agents.json');
+    fs.readFile(agentsPath, 'utf8', (err, data) => {
+      if (err) {
+        // ENOENT = file doesn't exist yet → clear state
+        // Other errors (transient I/O) → keep previous value to avoid flicker
+        if (err.code === 'ENOENT') this._activeAgents = null;
+        return;
+      }
+      try { this._activeAgents = JSON.parse(data); }
+      catch { this._activeAgents = null; }
+    });
+  }
+
+  activeAgentsHtml() {
+    const data = this._activeAgents;
+    const agents = data && Array.isArray(data.agents) ? data.agents : [];
+
+    const running = agents.filter(a => a.status === 'in_progress');
+    const done = agents.filter(a => a.status !== 'in_progress')
+      .sort((a, b) => (b.end_ts || '').localeCompare(a.end_ts || '')).slice(0, 5);
+    const displayed = [...running, ...done];
+
+    if (displayed.length === 0) {
+      return `<div class="agentsList"><span class="caDim">Aucun agent actif</span></div>`;
+    }
+
+    const now = Date.now();
+    const rows = displayed.map(a => {
+      const isRunning = a.status === 'in_progress';
+      const icon = isRunning ? `<span style="color:${CRT.cyan}">&#9679;</span>` : `<span style="color:${CRT.greenDim}">&#10003;</span>`;
+      const prjClass = `agentPrj-${(a.project || 'unknown').toLowerCase()}`;
+      let dur = '';
+      try {
+        // Truncate Python microseconds (6 digits) to ms (3 digits) before parsing
+        const parseTs = (ts) => ts ? new Date(String(ts).replace(/(\.\d{3})\d+/, '$1')).getTime() : NaN;
+        const start = parseTs(a.start_ts);
+        const end = isRunning ? now : parseTs(a.end_ts);
+        const secs = Math.round((end - start) / 1000);
+        if (!isNaN(secs) && secs >= 0) dur = secs < 60 ? `${secs}s` : `${Math.round(secs / 60)}m`;
+      } catch { /* ignore */ }
+      return `<div class="agentRow ${isRunning ? 'running' : 'done'}">
+        ${icon}
+        <span class="agentPrj ${prjClass}">${escapeHtml(a.project || '?')}</span>
+        <span class="agentName">${escapeHtml(a.name || '?')}</span>
+        <span class="agentTask">${escapeHtml(a.task || '')}</span>
+        <span class="agentDur">${dur}</span>
+      </div>`;
+    }).join('');
+
+    const runningCount = running.length;
+    const header = runningCount > 0
+      ? `<span style="color:${CRT.cyan}">&#9679; ${runningCount} actif${runningCount > 1 ? 's' : ''}</span>`
+      : `<span class="caDim">aucun actif</span>`;
+
+    return `<div class="agentsList">${header}${rows}</div>`;
+  }
+
   _loadSessionState() {
     const root = this.root;
     if (!root) { this._sessionState = null; return; }
@@ -805,6 +902,108 @@ class RemoteTrainProvider {
         catch { this._sessionState = null; }
       }
     });
+  }
+
+  _loadAgentMessages() {
+    const root = this.root;
+    if (!root) { this._agentMessages = null; return; }
+    const p = path.join(root, 'tools', 'autodev', 'status', 'agent_messages.json');
+    fs.readFile(p, 'utf8', (err, data) => {
+      if (err) { if (err.code === 'ENOENT') this._agentMessages = null; return; }
+      try { this._agentMessages = JSON.parse(data); } catch { this._agentMessages = null; }
+    });
+  }
+
+  _loadAgentStatus() {
+    const root = this.root;
+    if (!root) { this._agentStatus = null; return; }
+    const p = path.join(root, 'tools', 'autodev', 'status', 'agent_status.json');
+    fs.readFile(p, 'utf8', (err, data) => {
+      if (err) { if (err.code === 'ENOENT') this._agentStatus = null; return; }
+      try { this._agentStatus = JSON.parse(data); } catch { this._agentStatus = null; }
+    });
+  }
+
+  agentBusHtml() {
+    const data = this._agentMessages;
+    const messages = (data && Array.isArray(data.messages)) ? data.messages : [];
+    // Show last 5 messages (pending or recent)
+    const recent = messages.slice(-5);
+    if (recent.length === 0) {
+      return `<span class="caDim">Aucun message</span>`;
+    }
+    return recent.map(m => {
+      const ts = m.timestamp ? String(m.timestamp).slice(11, 16) : '??:??';
+      const from = escapeHtml(m.from || '?');
+      const to = escapeHtml(m.to || '?');
+      const priority = String(m.priority || 'NORMAL').toUpperCase();
+      const priorityCls = priority === 'CRITICAL' ? 'critical' : priority === 'HIGH' ? 'high' : '';
+      const type = escapeHtml(m.type || '');
+      const payload = m.payload ? escapeHtml(JSON.stringify(m.payload).slice(0, 60)) : '';
+      return `<div class="busMsg">
+        <span class="busTs">[${ts}]</span><span class="busRoute ${priorityCls}">${from} &#8594; ${to}</span>${priority !== 'NORMAL' ? ` <span class="badge badge-${priority}">${priority}</span>` : ''}
+        <div class="busBody">${type}${payload ? ': ' + payload : ''}</div>
+      </div>`;
+    }).join('');
+  }
+
+  agentStatusBadgesHtml() {
+    const data = this._agentStatus;
+    const agents = (data && data.agents) ? data.agents : {};
+    const entries = Object.entries(agents);
+    if (entries.length === 0) {
+      return `<span class="caDim">agent_status.json non disponible</span>`;
+    }
+    const rows = entries.map(([name, info]) => {
+      const state = String(info.state || 'idle').toLowerCase();
+      let dotColor = CRT.gray;
+      let dotChar = '&#9675;'; // hollow circle = idle
+      if (state === 'running' || state === 'done') { dotColor = CRT.green; dotChar = '&#9679;'; }
+      else if (state === 'waiting' || state === 'build') { dotColor = CRT.amber; dotChar = '&#9679;'; }
+      else if (state === 'error' || state === 'blocked') { dotColor = CRT.red; dotChar = '&#9679;'; }
+      return `<div class="agentBadge">
+        <span class="agentBadgeDot" style="color:${dotColor}">${dotChar}</span>
+        <span class="agentBadgeName">${escapeHtml(name.replace('_', ' '))}</span>
+        <span class="agentBadgeState">${escapeHtml(state)}</span>
+      </div>`;
+    });
+    return `<div class="agentGrid">${rows.join('')}</div>`;
+  }
+
+  debugLoopHtml() {
+    const data = this._agentStatus;
+    const debugger_ = (data && data.agents && data.agents.debugger) ? data.agents.debugger : null;
+    if (!debugger_ || debugger_.state !== 'running') return '';
+    const iter = debugger_.iteration || 0;
+    const maxIter = debugger_.max_iterations || 10;
+    const pct = Math.min(100, Math.round((iter / maxIter) * 100));
+    const filledBars = Math.round(pct / 5); // 20 chars total
+    const bar = '\u2588'.repeat(filledBars) + '\u2591'.repeat(20 - filledBars);
+    const issue = debugger_.issue_signature ? escapeHtml(debugger_.issue_signature) : '';
+    return `<div class="block">
+      <div class="blockTitle">&#128030; DEBUG LOOP</div>
+      <div class="debugBar">Iteration: ${iter}/${maxIter}  ${bar}  ${pct}%</div>
+      ${issue ? `<div class="debugInfo">Issue: ${issue}</div>` : ''}
+    </div>`;
+  }
+
+  stateMachineHtml() {
+    const agentData = this._agentStatus;
+    const sessionData = this._sessionState;
+    // Try orchestrator state first, fall back to session state
+    const orch = (agentData && agentData.agents && agentData.agents.orchestrator) ? agentData.agents.orchestrator : null;
+    const state = orch ? String(orch.state || 'idle').toUpperCase()
+      : sessionData ? String(sessionData.state || 'idle').toUpperCase()
+      : 'IDLE';
+    const cycle = orch ? (orch.cycle || 0) : (sessionData ? (sessionData.cycle || 0) : 0);
+    const stateColor = state === 'RUNNING' || state === 'BUILD' ? CRT.cyan
+      : state === 'WAITING' ? CRT.amber
+      : state === 'ERROR' || state === 'BLOCKED' ? CRT.red
+      : CRT.green;
+    return `<div class="stateIndicator">
+      <span class="stateName" style="color:${stateColor}">${escapeHtml(state)}</span>
+      <span class="stateCycle">cycle: ${cycle}</span>
+    </div>`;
   }
 
   claudeActivityHtml() {
@@ -899,6 +1098,25 @@ class RemoteTrainProvider {
       <div class="header">
         <span class="title">M.E.R.L.I.N. REMOTE</span>
         <span class="status" style="color:${color}">${escapeHtml(statusLabel)}</span>
+      </div>
+
+      <div class="block">
+        <div class="blockTitle">&#9889; STATE &mdash; ORCHESTRATOR</div>
+        ${this.stateMachineHtml()}
+        <div class="blockTitle" style="margin-top:6px">AGENTS</div>
+        ${this.agentStatusBadgesHtml()}
+      </div>
+
+      <div class="block">
+        <div class="blockTitle">&#128241; AGENT BUS</div>
+        ${this.agentBusHtml()}
+      </div>
+
+      ${this.debugLoopHtml()}
+
+      <div class="block">
+        <div class="blockTitle">&#9889; Agents Actifs (Claude)</div>
+        ${this.activeAgentsHtml()}
       </div>
 
       <div class="block">

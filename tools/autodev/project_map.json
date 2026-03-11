@@ -1,0 +1,66 @@
+{
+  "version": "2.0",
+  "last_updated": "2026-03-11T00:00:00.000Z",
+  "cycle_count": 0,
+  "project": {
+    "name": "M.E.R.L.I.N.",
+    "engine": "Godot 4.x",
+    "language": "GDScript",
+    "scene_flow": "IntroCeltOS → Menu → Quiz → Rencontre → Hub → Transition → MerlinGame → [Fin] → Hub"
+  },
+  "systems": {
+    "merlin_store.gd": {
+      "path": "scripts/merlin/merlin_store.gd",
+      "status": "active_migration",
+      "role": "Central state (Redux-like)",
+      "dependencies": ["merlin_card_system", "merlin_effect_engine"],
+      "known_issues": [],
+      "last_modified": null
+    },
+    "merlin_omniscient.gd": {
+      "path": "addons/merlin_ai/merlin_omniscient.gd",
+      "status": "stable",
+      "role": "AI orchestrator — context builder, prefetch, guardrails",
+      "dependencies": ["merlin_ai", "rag_manager", "brain_swarm_scheduler"],
+      "known_issues": [],
+      "last_modified": null
+    },
+    "merlin_llm_adapter.gd": {
+      "path": "scripts/merlin/merlin_llm_adapter.gd",
+      "status": "active_migration",
+      "role": "LLM ↔ Game contract, JSON repair pipeline",
+      "dependencies": ["merlin_store", "merlin_effect_engine"],
+      "known_issues": [],
+      "last_modified": null
+    }
+  },
+  "active_migrations": ["Triade → Aspects v2 (Vague 1-4 completed)"],
+  "design_decisions": [
+    {
+      "id": "dd_001",
+      "decision": "Suppression complète du système Triade",
+      "rationale": "Simplification du système de jeu, remplacement par Aspects v2",
+      "locked": true,
+      "date": "2026-03-08"
+    }
+  ],
+  "ai_models": {
+    "narrator": { "current_adapter": null, "last_trained": null, "tone_consistency": null },
+    "gamemaster": { "current_adapter": null, "last_trained": null, "json_validity": null },
+    "worker": { "current_adapter": null, "last_trained": null, "routing_accuracy": null }
+  },
+  "agent_specializations": {
+    "debugger": ["GDScript type errors", "Triade migration issues", "validate.bat failures"],
+    "lora_trainer": ["narrator brain underperformance", "gamemaster JSON failures"],
+    "asset_generator": ["Broceliande 3D assets", "pixel art sprites"],
+    "playtest_qa": ["playtesting", "perf metrics", "crash detection"]
+  },
+  "thresholds": {
+    "lora_trigger_tone_consistency": 0.85,
+    "lora_trigger_json_validity": 0.90,
+    "asset_gen_visual_diff_threshold": 0.15,
+    "debug_max_iterations": 10,
+    "fps_minimum": 30,
+    "crash_rate_maximum": 0.10
+  }
+}

@@ -1,0 +1,10 @@
+{
+  "version": "2.0",
+  "description": "Inter-agent message bus FIFO — orchestrator_v2 protocol",
+  "messages": [],
+  "stats": {
+    "total_sent": 0,
+    "total_handled": 0,
+    "last_message_id": null
+  }
+}

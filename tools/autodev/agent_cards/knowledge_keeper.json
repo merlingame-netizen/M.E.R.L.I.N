@@ -1,0 +1,87 @@
+{
+  "id": "knowledge_keeper",
+  "name": "Knowledge Keeper",
+  "version": "2.0.0",
+  "description": "Records best practices and anti-patterns from each development cycle. Updates project_map.json (living project comprehension), maintains BEST_PRACTICES.md, and updates per-agent confidence weights.",
+  "agent_file": ".claude/agents/knowledge_keeper.md",
+  "category": "ops",
+  "capabilities": [
+    {
+      "task_type": "kb_harvesting",
+      "keywords": ["record", "kb", "best practice", "lesson", "pattern"],
+      "confidence": 0.95,
+      "mode": "analyze"
+    },
+    {
+      "task_type": "project_mapping",
+      "keywords": ["project map", "dependencies", "system", "architecture"],
+      "confidence": 0.88,
+      "mode": "build"
+    },
+    {
+      "task_type": "confidence_tracking",
+      "keywords": ["confidence", "memory", "weight", "decay", "learning"],
+      "confidence": 0.90,
+      "mode": "analyze"
+    },
+    {
+      "task_type": "documentation",
+      "keywords": ["document", "update", "best practices", "anti-pattern", "recipe"],
+      "confidence": 0.92,
+      "mode": "build"
+    }
+  ],
+  "inputs": [
+    {
+      "name": "agent_messages.json:kb_entry",
+      "type": "json",
+      "required": true,
+      "description": "KB entry posted to agent message bus"
+    },
+    {
+      "name": "tools/autodev/status/kb_entries.jsonl",
+      "type": "file",
+      "required": false,
+      "description": "Accumulated knowledge base entries"
+    },
+    {
+      "name": "tools/autodev/project_map.json",
+      "type": "file",
+      "required": false,
+      "description": "Living project comprehension map"
+    }
+  ],
+  "outputs": [
+    {
+      "name": "docs/BEST_PRACTICES.md",
+      "type": "artifact",
+      "description": "Updated best practices documentation"
+    },
+    {
+      "name": "tools/autodev/project_map.json",
+      "type": "json",
+      "description": "Updated project comprehension map"
+    },
+    {
+      "name": "tools/autodev/memory/*.json",
+      "type": "artifact",
+      "description": "Per-agent memory and confidence weight files"
+    }
+  ],
+  "file_scope": [
+    "tools/autodev/status/kb_entries.jsonl",
+    "tools/autodev/project_map.json",
+    "tools/autodev/memory/**",
+    "docs/BEST_PRACTICES.md"
+  ],
+  "knowledge_types": [
+    "best_practice",
+    "anti_pattern",
+    "fix_recipe",
+    "design_decision",
+    "debug_solution"
+  ],
+  "dependencies": ["studio_orchestrator"],
+  "cost_profile": "haiku",
+  "max_concurrent": 1
+}
