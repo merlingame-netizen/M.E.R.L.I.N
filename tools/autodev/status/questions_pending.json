@@ -1,0 +1,29 @@
+{
+  "cycle": 0,
+  "generated": "2026-03-11T00:00:00Z",
+  "answered": false,
+  "note": "Questions initiales — avant le premier cycle studio_loop",
+  "questions": [
+    {
+      "id": 1,
+      "agent": "game_designer",
+      "priority": "HIGH",
+      "question": "La structure à 3 options par carte (Gauche / Centre / Droite) est-elle conservée dans le nouveau design, ou veux-tu repenser ce choix fondamental ?",
+      "context": "Actuellement chaque carte propose 3 options avec effets différents. Le 'Centre' coûtait du Souffle (supprimé). Sans Triade, les 3 options peuvent avoir des effets libres sur réputation/oghams/narration."
+    },
+    {
+      "id": 2,
+      "agent": "game_director",
+      "priority": "HIGH",
+      "question": "Par quoi la condition de victoire est-elle remplacée ? Les 3 victoires actuelles étaient liées à des états Triade spécifiques.",
+      "context": "12 fins de défaite + 3 fins de victoire + 1 secrète. Toutes reposaient sur des états Corps/Âme/Monde. Avec la Triade supprimée, les conditions doivent être redéfinies (réputation factions ? oghams débloqués ? calendrier ?)"
+    },
+    {
+      "id": 3,
+      "agent": "game_director",
+      "priority": "MEDIUM",
+      "question": "On commence Phase 1 maintenant (suppression Triade du code) — tu valides qu'on peut lancer les agents en autonomie sur merlin_constants.gd, merlin_store.gd, merlin_effect_engine.gd ?",
+      "context": "Phase 1 est bloquante pour tout le reste. 3-4 cycles autonomes de 30 min suffisent. Les agents commitent après chaque vague validée."
+    }
+  ]
+}

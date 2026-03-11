@@ -1,0 +1,137 @@
+{
+  "version": "1.0",
+  "updated": "2026-03-11T00:00:00Z",
+  "description": "Feature queue M.E.R.L.I.N. — géré par studio_loop.ps1. Phases 1-5.",
+  "tasks": [
+    {
+      "id": "TRIADE-CORE-1",
+      "phase": 1,
+      "priority": 1,
+      "status": "pending",
+      "title": "Supprimer Triade de merlin_constants.gd",
+      "agent": "godot_expert",
+      "files": ["scripts/merlin/merlin_constants.gd"],
+      "description": "Supprimer : AspectState enum, TRIADE_ASPECTS array, TRIADE_ASPECT_INFO dict, SOUFFLE_MAX, SOUFFLE_START, TRIADE_OPTION_INFO. Conserver : 18 Oghams (OGHAM_*), 5 factions (FACTION_*), constantes narratives. Valider avec validate.bat après."
+    },
+    {
+      "id": "TRIADE-CORE-2",
+      "phase": 1,
+      "priority": 2,
+      "status": "pending",
+      "title": "Nettoyer merlin_store.gd — état Triade",
+      "agent": "godot_expert",
+      "files": ["scripts/merlin/merlin_store.gd"],
+      "description": "Supprimer build_default_state() avec corps/ame/monde. Reconstruire état minimal : { tour: int, ogham_actif: String, factions: {druides:0, anciens:0, korrigans:0, niamh:0, ankou:0}, cartes_jouees: Array, run_active: bool }. Supprimer tous les signals liés aux aspects."
+    },
+    {
+      "id": "TRIADE-CORE-3",
+      "phase": 1,
+      "priority": 3,
+      "status": "pending",
+      "title": "Nettoyer merlin_effect_engine.gd — SHIFT_ASPECT/SOUFFLE",
+      "agent": "godot_expert",
+      "files": ["scripts/merlin/merlin_effect_engine.gd"],
+      "description": "Supprimer : SHIFT_ASPECT, ADD_ASPECT_ALIGNMENT, USE_SOUFFLE, ADD_SOUFFLE, validation des états BAS/EQUILIBRE/HAUT. Garder : ADD_REPUTATION:faction:amount (déjà présent), effets narratifs (PLAY_SFX, SHOW_DIALOG, etc.). Les effets de cartes ne doivent plus référencer les aspects."
+    },
+    {
+      "id": "TRIADE-CORE-4",
+      "phase": 1,
+      "priority": 4,
+      "status": "pending",
+      "title": "Nettoyer merlin_card_system.gd — options liées aux aspects",
+      "agent": "godot_expert",
+      "files": ["scripts/merlin/merlin_card_system.gd"],
+      "description": "Supprimer la logique qui génère des effets liés aux 3 aspects dans les options de cartes. Les 3 options (G/C/D) restent mais leurs effets ne sont plus des SHIFT_ASPECT. Simplifier la validation d'effets pour accepter les nouveaux types seulement."
+    },
+    {
+      "id": "TRIADE-UI-1",
+      "phase": 1,
+      "priority": 5,
+      "status": "pending",
+      "title": "Remplacer hub_triade_hud.gd par reputation_hud.gd",
+      "agent": "godot_expert",
+      "files": ["scripts/ui/hub_triade_hud.gd", "scripts/ui/hub_souffle_bar.gd"],
+      "description": "Vider hub_triade_hud.gd (laisser fichier vide avec class_name pour éviter erreurs de référence). Supprimer hub_souffle_bar.gd (créer fichier stub). Créer scripts/ui/reputation_hud.gd : affiche 5 factions avec leur niveau (Label simple pour l'instant, pas de design final). Garder la logique fonctionnelle, pas besoin d'UI polie."
+    },
+    {
+      "id": "TRIADE-UI-2",
+      "phase": 1,
+      "priority": 6,
+      "status": "pending",
+      "title": "Rewire merlin_game_ui.gd et merlin_game_controller.gd",
+      "agent": "godot_expert",
+      "files": ["scripts/ui/merlin_game_ui.gd", "scripts/ui/merlin_game_controller.gd"],
+      "description": "Supprimer les connexions aux signaux d'aspects Triade. Brancher reputation_hud.gd à la place de hub_triade_hud. Le jeu doit pouvoir démarrer sans crash — l'objectif minimal est un jeu fonctionnel sans affichage de Triade."
+    },
+    {
+      "id": "TRIADE-AI-1",
+      "phase": 1,
+      "priority": 7,
+      "status": "pending",
+      "title": "Nettoyer context_builder.gd — prompt LLM sans Triade",
+      "agent": "godot_expert",
+      "files": ["addons/merlin_ai/context_builder.gd"],
+      "description": "Supprimer la section du prompt qui inclut l'état Corps/Âme/Monde. Le contexte LLM doit maintenant inclure : tour actuel, ogham actif, niveaux de réputation des 5 factions. Mettre à jour le format JSON attendu en retour du LLM."
+    },
+    {
+      "id": "TRIADE-AI-2",
+      "phase": 1,
+      "priority": 8,
+      "status": "pending",
+      "title": "Nettoyer merlin_omniscient.gd + fallback_pool.gd + brain_quality_judge.gd",
+      "agent": "godot_expert",
+      "files": ["addons/merlin_ai/merlin_omniscient.gd", "addons/merlin_ai/generators/fallback_pool.gd", "addons/merlin_ai/brain_quality_judge.gd"],
+      "description": "merlin_omniscient : supprimer guardrails Triade, supprimer validation d'équilibre des aspects. fallback_pool : générer des cartes sans référence aux aspects. brain_quality_judge : supprimer score 'Triade balance' du critère de qualité."
+    },
+    {
+      "id": "TRIADE-SCENES",
+      "phase": 1,
+      "priority": 9,
+      "status": "pending",
+      "title": "Nettoyer les scènes contrôleurs (4 fichiers)",
+      "agent": "godot_expert",
+      "files": ["scripts/HubAntre.gd", "scripts/IntroTutorial.gd", "scripts/SceneRencontreMerlin.gd", "scripts/TransitionBiome.gd"],
+      "description": "Supprimer toutes les références à la Triade dans ces 4 controllers de scène. IntroTutorial : supprimer le tutoriel sur Corps/Âme/Monde. HubAntre : supprimer l'affichage de l'état des aspects. TransitionBiome : supprimer les transitions conditionnées aux aspects."
+    },
+    {
+      "id": "TRIADE-TRAINING",
+      "phase": 1,
+      "priority": 10,
+      "status": "pending",
+      "title": "Invalider training_roadmap.json (modèles entraînés sur Triade)",
+      "agent": "godot_expert",
+      "files": [".merlin_remote/kaggle/training_roadmap.json"],
+      "description": "Marquer gamemaster-v2 et narrator-v* comme OBSOLETE dans training_roadmap.json. Ajouter note : 'Entraîné sur Triade — à réentraîner après suppression complète'. Ne pas supprimer les checkpoints existants."
+    },
+    {
+      "id": "MECANIQUE-DESIGN",
+      "phase": 2,
+      "priority": 11,
+      "status": "pending",
+      "title": "Mettre à jour NEW_MECHANICS_DESIGN.md avec décisions session",
+      "agent": "game_designer",
+      "files": ["docs/NEW_MECHANICS_DESIGN.md"],
+      "description": "Documenter les décisions de game design validées. Poser 3 questions clés pour le prochain cycle. Mettre à jour les mécaniques confirmées (Réputation, Oghams, Calendrier) et noter les open questions."
+    },
+    {
+      "id": "REPUTATION-IMPL",
+      "phase": 4,
+      "priority": 12,
+      "status": "pending",
+      "title": "Implémenter merlin_reputation_system.gd",
+      "agent": "godot_expert",
+      "files": ["scripts/merlin/merlin_reputation_system.gd"],
+      "description": "Créer le système de réputation : 5 factions (druides/anciens/korrigans/niamh/ankou), valeurs 0-100, seuils 50 et 80, signaux reputation_changed(faction, value, delta). Intégrer dans merlin_store.gd. Basé sur DOC_15_Faction_Alignment_System.md."
+    },
+    {
+      "id": "DAYTIME-GLOBAL",
+      "phase": 3,
+      "priority": 13,
+      "status": "pending",
+      "title": "Créer game_time_manager.gd (singleton cycle jour/nuit global)",
+      "agent": "godot_expert",
+      "files": ["scripts/autoload/game_time_manager.gd"],
+      "description": "Singleton qui expose : current_time_normalized (0.0-1.0), current_season (printemps/été/automne/hiver), moon_phase (string), active_festival (string ou vide). Synchronisé avec l'heure système réelle. Branché sur Calendar.gd existant. Signal time_updated(normalized)."
+    }
+  ]
+}
