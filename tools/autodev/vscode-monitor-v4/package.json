@@ -1,8 +1,8 @@
 {
   "name": "autodev-monitor-v4",
-  "displayName": "M.E.R.L.I.N. Remote Trainer",
-  "description": "Panel unique VS Code pour entrainement GPU distant et chat test MERLIN",
-  "version": "9.0.0",
+  "displayName": "M.E.R.L.I.N. Remote",
+  "description": "VS Code panel for remote GPU training and chat test MERLIN",
+  "version": "11.0.0",
   "publisher": "merlin-local",
   "engines": {
     "vscode": "^1.80.0"
@@ -19,18 +19,13 @@
       "activitybar": [
         {
           "id": "autodev-v4-sidebar",
-          "title": "MERLIN Remote",
+          "title": "M.E.R.L.I.N. Remote",
           "icon": "media/autodev-icon.svg"
         }
       ]
     },
     "views": {
       "autodev-v4-sidebar": [
-        {
-          "type": "webview",
-          "id": "autodev-v4.robotMonitor",
-          "name": "Robot Monitor"
-        },
         {
           "type": "webview",
           "id": "autodev-v4.remoteTrain",
@@ -41,47 +36,43 @@
     "commands": [
       {
         "command": "autodev-v4.remoteTrain.open",
-        "title": "MERLIN Remote Trainer: Open Left Panel"
+        "title": "MERLIN Remote: Open Left Panel"
       },
       {
         "command": "autodev-v4.remoteTrain.refresh",
-        "title": "MERLIN Remote Trainer: Refresh"
+        "title": "MERLIN Remote: Refresh"
       },
       {
         "command": "autodev-v4.remoteTrain.configure",
-        "title": "MERLIN Remote Trainer: Configure"
+        "title": "MERLIN Remote: Configure"
       },
       {
         "command": "autodev-v4.remoteTrain.doctor",
-        "title": "MERLIN Remote Trainer: Doctor"
+        "title": "MERLIN Remote: Doctor"
       },
       {
         "command": "autodev-v4.remoteTrain.setup",
-        "title": "MERLIN Remote Trainer: Setup"
+        "title": "MERLIN Remote: Setup"
       },
       {
         "command": "autodev-v4.remoteTrain.submit",
-        "title": "MERLIN Remote Trainer: Submit"
+        "title": "MERLIN Remote: Submit"
       },
       {
         "command": "autodev-v4.remoteTrain.status",
-        "title": "MERLIN Remote Trainer: Status"
+        "title": "MERLIN Remote: Status"
       },
       {
         "command": "autodev-v4.remoteTrain.download",
-        "title": "MERLIN Remote Trainer: Download"
+        "title": "MERLIN Remote: Download"
       },
       {
         "command": "autodev-v4.remoteTrain.openKaggle",
-        "title": "MERLIN Remote Trainer: Open Kaggle"
-      },
-      {
-        "command": "autodev-v4.robotMonitor.openStandalone",
-        "title": "Robot Monitor: Open in Browser"
+        "title": "MERLIN Remote: Open Kaggle"
       }
     ],
     "configuration": {
-      "title": "MERLIN Remote Trainer",
+      "title": "M.E.R.L.I.N. Remote",
       "properties": {
         "autodev-v4.remoteTrain.pythonPath": {
           "type": "string",
@@ -117,12 +108,6 @@
           "type": "string",
           "default": "",
           "description": "Optional API key for testEndpoint."
-        },
-        "autodev-v4.robotMonitor.project": {
-          "type": "string",
-          "default": "auto",
-          "enum": ["auto", "merlin", "data", "cours"],
-          "description": "Robot Monitor theme. auto = detect from workspace (project.godot → merlin, orange/data → data, cours → cours)."
         }
       }
     }

@@ -433,12 +433,12 @@ function createCoverSection(opts) {
 
     // Metadata table
     children.push(createMetadataTable([
-        ['Auteur', opts.author || '[A remplir]'],
+        ['Auteur', opts.author || '[À remplir]'],
         ['Date', opts.date || new Date().toLocaleDateString('fr-FR')],
         ['Version', opts.version || '0.1'],
         ['Statut', opts.status || 'Brouillon'],
-        ['Projet', opts.project || '[A remplir]'],
-        ['Direction', opts.direction || '[A remplir]']
+        ['Projet', opts.project || '[À remplir]'],
+        ['Direction', opts.direction || '[À remplir]']
     ]));
 
     return {
@@ -480,8 +480,8 @@ function createTocSection(docTitle) {
 function createVersionHistorySection(docTitle, versions) {
     const defaultVersions = versions || [
         ['0.1', new Date().toLocaleDateString('fr-FR'), '[Auteur]', 'Creation initiale'],
-        ['0.2', '[Date]', '[Auteur]', '[A remplir]'],
-        ['1.0', '[Date]', '[Auteur]', '[A remplir]']
+        ['0.2', '[Date]', '[Auteur]', '[À remplir]'],
+        ['1.0', '[Date]', '[Auteur]', '[À remplir]']
     ];
 
     return {
@@ -503,6 +503,107 @@ function createVersionHistorySection(docTitle, versions) {
             )
         ]
     };
+}
+
+// ============================================
+// RICH BODY RENDERER — multi-line, bold, bullets
+// ============================================
+
+/**
+ * Parse **bold** markers in a line and return TextRun[].
+ */
+function parseRichText(line, baseColor) {
+    const runs = [];
+    const regex = /\*\*(.+?)\*\*/g;
+    let lastIndex = 0;
+    let match;
+    while ((match = regex.exec(line)) !== null) {
+        if (match.index > lastIndex) {
+            runs.push(new TextRun({
+                text: line.slice(lastIndex, match.index),
+                font: FONT, size: 22, color: baseColor
+            }));
+        }
+        runs.push(new TextRun({
+            text: match[1],
+            font: FONT, size: 22, color: baseColor, bold: true
+        }));
+        lastIndex = regex.lastIndex;
+    }
+    if (lastIndex < line.length) {
+        runs.push(new TextRun({
+            text: line.slice(lastIndex),
+            font: FONT, size: 22, color: baseColor
+        }));
+    }
+    if (runs.length === 0) {
+        runs.push(new TextRun({ text: ' ', font: FONT, size: 22, color: baseColor }));
+    }
+    return runs;
+}
+
+/**
+ * Render body text into Paragraph[].
+ * Supports: multi-line (\n), bullets (- ), bold (**text**), empty line spacers.
+ */
+function renderBody(text, isPlaceholder) {
+    if (isPlaceholder) {
+        return [new Paragraph({
+            children: [new TextRun({
+                text: text,
+                font: FONT, size: 22,
+                color: ORANGE_COLORS.primary.grayMedium
+            })],
+            spacing: { after: 120 }
+        })];
+    }
+
+    const paragraphs = [];
+    const color = ORANGE_COLORS.primary.black;
+    const lines = text.split('\n');
+
+    for (const line of lines) {
+        if (line.trim() === '') {
+            paragraphs.push(new Paragraph({ spacing: { after: 60 } }));
+        } else if (line.startsWith('- ')) {
+            // Bullet point
+            paragraphs.push(new Paragraph({
+                children: parseRichText('\u2013 ' + line.slice(2), color),
+                indent: { left: 720 },
+                spacing: { after: 40 }
+            }));
+        } else {
+            paragraphs.push(new Paragraph({
+                children: parseRichText(line, color),
+                spacing: { after: 80 }
+            }));
+        }
+    }
+
+    if (paragraphs.length > 0) {
+        // Extra spacing after last paragraph
+        paragraphs.push(new Paragraph({ spacing: { after: 40 } }));
+    }
+
+    return paragraphs;
+}
+
+/**
+ * Render code/diagram block in monospace (Courier New, grey background).
+ */
+function renderCodeBlock(codeText) {
+    const lines = codeText.split('\n');
+    const paragraphs = lines.map(line => new Paragraph({
+        children: [new TextRun({
+            text: line || ' ',
+            font: 'Courier New',
+            size: 16,       // 8pt
+            color: '333333'
+        })],
+        spacing: { after: 0, line: 240 },
+        shading: { fill: 'F5F5F5', type: ShadingType.CLEAR }
+    }));
+    return paragraphs;
 }
 
 // ============================================
@@ -529,15 +630,15 @@ function buildContentChildren(sectionNum, sectionTitle, subsections) {
                 })]
             }));
 
-            // Body text / placeholder
-            const bodyText = sub.body || '[A remplir]';
-            children.push(new Paragraph({
-                children: [new TextRun({
-                    text: bodyText,
-                    color: sub.body ? ORANGE_COLORS.primary.black : ORANGE_COLORS.primary.grayMedium
-                })],
-                spacing: { after: 120 }
-            }));
+            // Body text (multi-line, bold, bullets)
+            const bodyText = sub.body || '[À remplir]';
+            children.push(...renderBody(bodyText, !sub.body));
+
+            // Code/diagram block (monospace)
+            if (sub.code) {
+                children.push(...renderCodeBlock(sub.code));
+                children.push(new Paragraph({ spacing: { after: 120 } }));
+            }
 
             // Optional table
             if (sub.table) {
@@ -556,20 +657,30 @@ function buildContentChildren(sectionNum, sectionTitle, subsections) {
                             text: `${sectionNum}.${i + 1}.${j + 1} ${sub3.title}`
                         })]
                     }));
-                    children.push(new Paragraph({
-                        children: [new TextRun({
-                            text: sub3.body || '[A remplir]',
-                            color: sub3.body ? ORANGE_COLORS.primary.black : ORANGE_COLORS.primary.grayMedium
-                        })],
-                        spacing: { after: 120 }
-                    }));
+
+                    // H3 body (multi-line, bold, bullets)
+                    const body3 = sub3.body || '[À remplir]';
+                    children.push(...renderBody(body3, !sub3.body));
+
+                    // H3 code block
+                    if (sub3.code) {
+                        children.push(...renderCodeBlock(sub3.code));
+                        children.push(new Paragraph({ spacing: { after: 120 } }));
+                    }
+
+                    // H3 table
+                    if (sub3.table) {
+                        children.push(new Paragraph({ spacing: { after: 80 } }));
+                        children.push(createOrangeTable(sub3.table.headers, sub3.table.rows));
+                        children.push(new Paragraph({ spacing: { after: 120 } }));
+                    }
                 }
             }
         }
     } else {
         children.push(new Paragraph({
             children: [new TextRun({
-                text: '[A remplir]',
+                text: '[À remplir]',
                 color: ORANGE_COLORS.primary.grayMedium
             })]
         }));
@@ -661,6 +772,8 @@ module.exports = {
     createTocSection,
     createVersionHistorySection,
     buildContentChildren,
+    renderBody,
+    renderCodeBlock,
     createOrangeTable,
     createMetadataTable,
     createHeader,

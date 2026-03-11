@@ -74,6 +74,34 @@ function Write-Status {
     Move-Item -Path $tmpFile -Destination $targetFile -Force
 }
 
+# --- Swarm integration: write results to .swarm/results/ ---
+function Write-SwarmResult {
+    param(
+        [array]$TaskIds,
+        [string]$Status,
+        [array]$FilesModified = @()
+    )
+    $swarmResultsDir = Join-Path $projectRoot ".swarm" "results"
+    if (-not (Test-Path $swarmResultsDir)) { return }
+    $result = @{
+        task_id = "$Domain"
+        tool = "claude"
+        status = $Status
+        completed_at = (Get-Date -Format "o")
+        domain = $Domain
+        tasks_completed = $TaskIds
+        files_modified = $FilesModified
+        summary = "AUTODEV worker $Domain completed $($TaskIds.Count) tasks"
+        errors = @()
+        learnings = @()
+    }
+    $resultPath = Join-Path $swarmResultsDir "$Domain.json"
+    $tmpPath = "$resultPath.tmp"
+    $result | ConvertTo-Json -Depth 5 | Set-Content $tmpPath -Encoding UTF8
+    Move-Item $tmpPath $resultPath -Force
+    Write-Host "[WORKER] Swarm result written: $resultPath" -ForegroundColor Gray
+}
+
 # --- Pre-flight health check ---
 function Test-PreFlight {
     $issues = @()
@@ -446,11 +474,13 @@ try {
             } else {
                 Write-Host "[WORKER] Validation PASSED" -ForegroundColor Green
                 Write-Status -Status "done" -Completed $taskIds -Remaining @()
+                Write-SwarmResult -TaskIds $taskIds -Status "done" -FilesModified ($modifiedFiles + $stagedFiles)
                 & powershell -File (Join-Path $scriptDir "notify.ps1") -Event "worker_done" -Domain $Domain -Message "Termine: $($modifiedFiles.Count + $stagedFiles.Count) fichiers modifies, validation OK"
             }
         } else {
             Write-Host "[WORKER] Validation script not found, skipping validation" -ForegroundColor Yellow
             Write-Status -Status "done" -Completed $taskIds -Remaining @()
+            Write-SwarmResult -TaskIds $taskIds -Status "done" -FilesModified ($modifiedFiles + $stagedFiles)
             & powershell -File (Join-Path $scriptDir "notify.ps1") -Event "worker_done" -Domain $Domain -Message "Termine: $($modifiedFiles.Count + $stagedFiles.Count) fichiers modifies (no validation)"
         }
     } else {

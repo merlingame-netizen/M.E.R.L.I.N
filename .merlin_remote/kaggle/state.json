@@ -1,9 +1,9 @@
 {
-  "updated_at": "2026-03-07T17:48:29Z",
-  "last_action": "status:narrator",
-  "last_status": "running",
+  "updated_at": "2026-03-10T22:01:33Z",
+  "last_action": "submit:worker",
+  "last_status": "submitted",
   "chat_mode": "remote_endpoint",
-  "chat_model": "qwen2.5:1.5b",
+  "chat_model": "meta-llama/Meta-Llama-3.1-8B-Instruct-Turbo",
   "doctor_missing": [],
   "job": "maximebabonneau/merlin-remote-lora-training",
   "dataset": "C:\\Users\\PGNK2128\\Godot-MCP\\data\\ai\\training\\merlin_full_v9.jsonl",
@@ -12,31 +12,35 @@
   "output_dir": "C:\\Users\\PGNK2128\\Godot-MCP\\output\\remote_kaggle",
   "brains": {
     "narrator": {
-      "status": "running",
-      "last_action": "status",
-      "updated_at": "2026-03-07T17:48:29Z",
+      "status": "submitted",
+      "last_action": "submit",
+      "updated_at": "2026-03-10T22:01:12Z",
       "doctor_missing": [],
       "job": "maximebabonneau/merlin-lora-narrator-4b",
       "dataset": "C:\\Users\\PGNK2128\\Godot-MCP\\data\\ai\\training\\brains\\narrator_v1.jsonl",
       "url": "https://www.kaggle.com/code/maximebabonneau/merlin-lora-narrator-4b",
-      "submitted_at": "2026-03-07T17:47:00Z",
-      "raw_status": "maximebabonneau/merlin-lora-narrator-4b has status \"KernelWorkerStatus.RUNNING\""
+      "submitted_at": "2026-03-10T22:01:12Z",
+      "raw_status": "maximebabonneau/merlin-lora-narrator-4b has status \"KernelWorkerStatus.COMPLETE\""
     },
     "gamemaster": {
-      "status": "ready",
-      "last_action": "setup",
-      "updated_at": "2026-03-07T00:34:44Z",
+      "status": "submitted",
+      "last_action": "submit",
+      "updated_at": "2026-03-10T22:01:24Z",
       "doctor_missing": [],
-      "job": "maximebabonneau/merlin-lora-gamemaster",
-      "dataset": "C:\\Users\\PGNK2128\\Godot-MCP\\data\\ai\\training\\brains\\gamemaster_v1.jsonl"
+      "job": "maximebabonneau/merlin-lora-game-master-2b",
+      "dataset": "C:\\Users\\PGNK2128\\Godot-MCP\\data\\ai\\training\\brains\\gamemaster_v1.jsonl",
+      "url": "https://www.kaggle.com/code/maximebabonneau/merlin-lora-game-master-2b",
+      "submitted_at": "2026-03-10T22:01:24Z"
     },
     "worker": {
-      "status": "ready",
-      "last_action": "setup",
-      "updated_at": "2026-03-07T00:34:44Z",
+      "status": "submitted",
+      "last_action": "submit",
+      "updated_at": "2026-03-10T22:01:33Z",
       "doctor_missing": [],
-      "job": "maximebabonneau/merlin-lora-worker",
-      "dataset": "C:\\Users\\PGNK2128\\Godot-MCP\\data\\ai\\training\\brains\\worker_v1.jsonl"
+      "job": "maximebabonneau/merlin-lora-worker-0-8b",
+      "dataset": "C:\\Users\\PGNK2128\\Godot-MCP\\data\\ai\\training\\brains\\worker_v1.jsonl",
+      "url": "https://www.kaggle.com/code/maximebabonneau/merlin-lora-worker-0-8b",
+      "submitted_at": "2026-03-10T22:01:33Z"
     }
   }
 }

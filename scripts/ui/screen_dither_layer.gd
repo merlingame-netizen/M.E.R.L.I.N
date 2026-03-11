@@ -83,6 +83,8 @@ func set_intensity(value: float) -> void:
 
 func set_enabled(enabled: bool) -> void:
 	visible = enabled
+	if _rect:
+		_rect.visible = enabled
 
 
 # === NEW CRT API ===

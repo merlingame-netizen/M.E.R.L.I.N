@@ -60,6 +60,7 @@
                         "name":  "ui-ux",
                         "branch":  "autodev/ui-ux",
                         "type":  "build",
+                        "tool":  "claude",
                         "description":  "INFRA: validate.bat integration + test_results.json aggregator",
                         "merge_dependencies":  [
 
@@ -99,6 +100,7 @@
                         "name":  "gameplay",
                         "branch":  "autodev/gameplay",
                         "type":  "build",
+                        "tool":  "claude",
                         "description":  "INFRA: Install GUT framework + unit tests MerlinStore",
                         "merge_dependencies":  [
 
@@ -148,6 +150,7 @@
                         "name":  "llm-lora",
                         "branch":  "autodev/llm-lora",
                         "type":  "build",
+                        "tool":  "claude",
                         "description":  "INFRA: stats_summary aggregator + LLM adapter smoke tests",
                         "merge_dependencies":  [
                                                    "gameplay"
@@ -189,6 +192,7 @@
                         "name":  "world-structure",
                         "branch":  "autodev/world",
                         "type":  "build",
+                        "tool":  "claude",
                         "description":  "INFRA: save system tests + autoplay scaffold",
                         "merge_dependencies":  [
                                                    "gameplay"
@@ -226,6 +230,7 @@
                         "name":  "visual-polish",
                         "branch":  "autodev/visual",
                         "type":  "build",
+                        "tool":  "claude",
                         "description":  "INFRA: screenshot runner fixes + validate.bat automation",
                         "merge_dependencies":  [
 
@@ -263,6 +268,7 @@
                         "name":  "ui-components",
                         "branch":  "autodev/ui-comp",
                         "type":  "build",
+                        "tool":  "claude",
                         "description":  "INFRA: UI component validation + consistency audit (scripts/ui/)",
                         "merge_dependencies":  [
                                                    "autoloads-visual"
@@ -311,6 +317,7 @@
                         "name":  "scene-scripts",
                         "branch":  "autodev/scenes",
                         "type":  "build",
+                        "tool":  "claude",
                         "description":  "INFRA: Scene loading tests + signal connection validation",
                         "merge_dependencies":  [
                                                    "gameplay",
@@ -358,6 +365,7 @@
                         "name":  "autoloads-visual",
                         "branch":  "autodev/autoloads",
                         "type":  "build",
+                        "tool":  "claude",
                         "description":  "INFRA: Visual system validation + shader compilation tests",
                         "merge_dependencies":  [
 

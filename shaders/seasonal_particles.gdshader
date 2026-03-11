@@ -109,28 +109,13 @@ void fragment() {
         }
     }
 
-    // Summer: heat shimmer (distortion only, no particles)
+    // Summer: subtle heat haze tint (no particles)
     else if (season_type == 1) {
-        float shimmer_strength = 0.003 * particle_density;
-        float wave1 = sin(uv.y * 40.0 + time * 3.0) * shimmer_strength;
-        float wave2 = sin(uv.y * 60.0 - time * 2.0) * shimmer_strength * 0.5;
-        vec2 distorted_uv = uv + vec2(wave1 + wave2, 0.0);
-
-        // Sample original texture with distortion
-        vec4 tex = texture(TEXTURE, distorted_uv);
-        result = tex;
-
-        // Add subtle heat haze overlay
         float haze = noise(uv * 10.0 + time * 0.5) * 0.05 * particle_density;
-        result.rgb += particle_color.rgb * haze;
+        result.rgb = particle_color.rgb;
+        result.a = haze;
     }
 
-    // Blend with original texture (except summer which replaces)
-    if (season_type != 1) {
-        vec4 tex = texture(TEXTURE, uv);
-        result.rgb = mix(tex.rgb, result.rgb, result.a);
-        result.a = max(tex.a, result.a);
-    }
-
+    // Output as transparent overlay — only particles are visible
     COLOR = result;
 }

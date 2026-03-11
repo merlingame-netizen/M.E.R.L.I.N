@@ -4,7 +4,7 @@
   "title": "MERLIN Remote Lora Training",
   "dataset": "C:\\Users\\PGNK2128\\Godot-MCP\\data\\ai\\training\\merlin_full_v9.jsonl",
   "job_dir": "C:\\Users\\PGNK2128\\Godot-MCP\\.merlin_remote\\kaggle\\job",
-  "updated_at": "2026-03-07T17:46:41Z",
+  "updated_at": "2026-03-10T22:01:24Z",
   "brains": {
     "narrator": {
       "slug": "merlin-lora-narrator-4b",

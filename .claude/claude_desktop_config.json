@@ -9,6 +9,51 @@
 	  "env": {
 		"MCP_TRANSPORT": "stdio"
 	  }
+	},
+	"pageindex": {
+	  "url": "https://api.pageindex.ai/mcp",
+	  "transport": "http",
+	  "headers": {
+		"Authorization": "Bearer ${PAGEINDEX_API_KEY}"
+	  }
+	},
+	"excalidraw": {
+	  "command": "node",
+	  "args": [
+		"--input-type=module",
+		"-e",
+		"import('file:///C:/Users/PGNK2128/AppData/Roaming/npm/node_modules/mcp-excalidraw-server/src/index.js').then(m=>m.default())"
+	  ],
+	  "env": {
+		"ENABLE_CANVAS_SYNC": "false"
+	  }
+	},
+	"stitch": {
+	  "command": "node",
+	  "args": [
+		"C:\\Users\\PGNK2128\\AppData\\Roaming\\npm\\node_modules\\stitch-mcp\\index.js"
+	  ],
+	  "env": {
+		"GOOGLE_CLOUD_PROJECT": "ofr-ppx-propme-1-prd"
+	  }
+	},
+	"nano-banana": {
+	  "command": "node",
+	  "args": [
+		"C:\\Users\\PGNK2128\\AppData\\Roaming\\npm\\node_modules\\nano-banana-mcp\\dist\\index.js"
+	  ],
+	  "env": {
+		"GEMINI_API_KEY": "${GEMINI_API_KEY}"
+	  }
+	},
+	"magic": {
+	  "command": "node",
+	  "args": [
+		"C:\\Users\\PGNK2128\\AppData\\Roaming\\npm\\node_modules\\@21st-dev\\magic\\dist\\index.js"
+	  ],
+	  "env": {
+		"API_KEY": "${TWENTYFIRST_API_KEY}"
+	  }
 	}
   }
 }

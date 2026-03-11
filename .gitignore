@@ -138,6 +138,11 @@ UsersPGNK2128*
 $OUT
 
 # -------------------------------------------
+# VSIX packages (build artifacts)
+# -------------------------------------------
+*.vsix
+
+# -------------------------------------------
 # Logs
 # -------------------------------------------
 *.log
@@ -194,6 +199,12 @@ merlin-lora-cpu-output*/
 
 # Generated outputs (benchmarks, GIFs, evaluations)
 output/
+.codex/
+
+# Swarm coordination (ephemeral state)
+.swarm/results/
+.swarm/locks/
+.swarm/*.tmp
 
 # Godot UID files (auto-generated outside editor)
 *.uid
@@ -203,6 +214,138 @@ docs/**/*.docx
 
 # LoRA training data (large base64 datasets)
 tools/lora/dataset_b64.txt
+
+# -------------------------------------------
+# Large binary files (GitHub 100MB limit)
+# -------------------------------------------
+merlin_artifacts.zip
+merlin_artifacts/
+*.pptx
+*.tgz
+merlin_train.jsonl
+
+# -------------------------------------------
+# Untracked project files — IGNORE ALL
+# Cloud migration 2026-03-11: only tracked code is pushed
+# -------------------------------------------
+
+# Claude agents/skills (local config, not code)
+.claude/agents/CHANGELOG.md
+.claude/agents/_archived/
+.claude/agents/audio_specialist.md
+.claude/agents/data_analysis_specialist.md
+.claude/agents/performance_specialist.md
+.claude/agents/security_specialist.md
+.claude/scheduled_tasks.lock
+.claude/skills/
+
+# Merlin remote training
+.merlin_remote/kaggle/job/
+.merlin_remote/kaggle/jobs/
+
+# Swarm coordination
+.swarm/
+
+# Temp QVF processing
+.tmp-qvf/
+
+# Root-level misc files
+AGENTS.md
+add_admissions.mjs
+fix_admissions.mjs
+gen_email.mjs
+gen_email_v2.mjs
+patch_idrac.mjs
+patch_idrac_v2.mjs
+litellm-deployment-synthese-fr.md
+litellm-docs-compiled.md
+litellm-local/
+litellm-vscode-equipe-rollout-fr.md
+DATE_SUB*
+
+# 3D assets (large, not tracked)
+Assets/3d_models/
+
+# Biome data (generated)
+data/biomes/
+
+# Translation binaries (generated from CSV)
+data/i18n/*.translation
+
+# Documentation (untracked new docs)
+docs/00_overview/GUIDE_NIVEAU_B_*.md
+docs/00_overview/MODOP_REPLICATION_*.md
+docs/10_llm/MERLIN_MCP_TRAINING_DEPLOY_*.md
+docs/10_llm/ONENOTE_MCP_LOCAL_SETUP_FR.md
+docs/10_llm/REMOTE_GPU_TRAINING_VSCODE_KAGGLE.md
+docs/70_graphic/BROCELIANDE_3D_ASSET_PLAN.md
+docs/90_ppt/
+docs/LLM_ARCHITECTURE.md
+docs/notebooklm_mindmap.json
+docs/qlik/
+docs/qlik_regles_regroupements_decideurs.md
+docs/theo-bro-site/
+
+# Scene (3D - large)
+scenes/BroceliandeForest3D.tscn
+
+# Scripts (untracked new — test/QA only)
+scripts/test/auto_screenshot.gd
+scripts/test/auto_walk_qa.gd
+scripts/test/run_qa_loop.sh
+scripts/ui/walk_event_overlay.gd
+scripts/ui/walk_hud.gd
+
+# Shaders (untracked new)
+shaders/grass_wind_sway.gdshader
+
+# Server extras
+server-trellis/
+server/desktop/
+server/src/onenote_mcp.ts
+
+# Temp schema/view dumps
+tmp_qd_*
+tmp_requete_ob.sql
+tmp_schema_*.json
+tmp_view_*.json
+tmp_view_*.sql
+
+# QVF tools
+qvf-tools/
+
+# Tools (untracked new scripts/dirs)
+tools/asset-forge/
+tools/autodev/claude-agents-monitor/
+tools/autodev/status/portail_badge.json
+tools/autodev/status/session_backup.json
+tools/autodev/vscode-monitor-v4/.vscodeignore
+tools/autodev/vscode-monitor-v4/README.md
+tools/autodev/vscode-monitor-v4/neural-renderer.js
+tools/autodev/vscode-monitor-v4/robot-monitor-core.js
+tools/autodev/vscode-monitor-v4/robot-monitor-server.js
+tools/autodev/vscode-monitor-v4/robot-monitor-webview.js
+tools/build_qvd_local_model.js
+tools/cible_ipsos/
+tools/cible_sondage/
+tools/excalidraw-viewer/
+tools/generate
+tools/generate_*.js
+tools/generate_*.ps1
+tools/mcp-skill-deployment/
+tools/modop/
+tools/n8n-mcp-server/
+tools/notebooklm_*.py
+tools/onenote_backup_inventory.js
+tools/outlook_*.py
+tools/overnight/
+tools/portail-llm/
+tools/ppt_image_library.js
+tools/qvd_indicators.js
+tools/qvd_kpi_control.js
+tools/refine_migration_ultra.js
+tools/setup_niveau_b/
+tools/swarm/
 
 # ===========================================
 # END

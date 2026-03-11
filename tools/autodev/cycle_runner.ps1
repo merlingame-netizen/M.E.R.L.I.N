@@ -202,7 +202,9 @@ function Invoke-BuildWave {
 
     & powershell -File (Join-Path $scriptDir "notify.ps1") -Event "wave_start" -Message "Cycle $CycleNum Wave 1 BUILD: $($buildDomains.Count) workers"
 
-    $workerScript = Join-Path $scriptDir "worker.ps1"
+    $defaultWorkerScript = Join-Path $scriptDir "worker.ps1"
+    $swarmDir = Join-Path (Split-Path -Parent (Split-Path -Parent $scriptDir)) "tools" "swarm"
+    $codexWorkerScript = Join-Path $swarmDir "codex_worker.ps1"
     $procs = @{}
     $failedDomains = @()
     $paneSpecs = @()
@@ -226,10 +228,19 @@ function Invoke-BuildWave {
             }
         }
 
+        # Swarm routing: select worker based on domain.tool field
+        $domainTool = if ($d.PSObject.Properties['tool']) { $d.tool } else { "claude" }
+        $workerScript = if ($domainTool -eq "codex" -and (Test-Path $codexWorkerScript)) {
+            $codexWorkerScript
+        } else {
+            $defaultWorkerScript
+        }
+        $toolBadge = if ($domainTool -eq "codex") { "[CODEX]" } else { "[CLAUDE]" }
+
         $workerLog = Join-Path $logDir "$($d.name)_BUILD_$(Get-Date -Format 'yyyyMMdd_HHmmss').log"
         $statusFile = Join-Path $statusDir "$($d.name).json"
 
-        Write-Host "[CYCLE] Launching: $($d.name) (mode=$mode, $($d.tasks.Count) tasks)" -ForegroundColor Green
+        Write-Host "[CYCLE] Launching: $toolBadge $($d.name) (mode=$mode, $($d.tasks.Count) tasks)" -ForegroundColor Green
 
         # Pre-create empty log so tail_log can find it quickly
         "" | Set-Content $workerLog -Encoding UTF8

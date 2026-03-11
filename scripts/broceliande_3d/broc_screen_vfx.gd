@@ -42,6 +42,7 @@ func setup(viewport_container: SubViewportContainer, parent: Control, forest_roo
 	_overlay_rect = ColorRect.new()
 	_overlay_rect.set_anchors_preset(Control.PRESET_FULL_RECT)
 	_overlay_rect.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_overlay_rect.color = Color(0, 0, 0, 0)  # Transparent base — shader reads TEXTURE from this
 
 	# Load shader
 	var shader: Shader = null
@@ -53,7 +54,6 @@ func setup(viewport_container: SubViewportContainer, parent: Control, forest_roo
 		_overlay_rect.material = _shader_mat
 	else:
 		push_warning("[BrocScreenVfx] Shader not found: %s" % SHADER_PATH)
-		_overlay_rect.color = Color(0, 0, 0, 0)
 
 	_overlay_layer.add_child(_overlay_rect)
 	print("[BrocScreenVfx] Screen effects ready")

@@ -37,13 +37,82 @@
         "C:\\Users\\PGNK2128\\OneDrive - orange.com\\Partage VOC\\Data\\Travaux cible IPSOS\\App_Cible_IPSOS_v2\\pbi-workflow-mcp\\dist\\index.js"
       ]
     },
-    "pixellab": {
-      "url": "https://api.pixellab.ai/mcp",
+    "pageindex": {
+      "url": "https://api.pageindex.ai/mcp",
       "transport": "http",
       "headers": {
-        "Authorization": "Bearer PIXELLAB_API_TOKEN_HERE"
-      },
-      "_comment": "PixelLab AI pixel art generator — get token at https://www.pixellab.ai/pixellab-api"
+        "Authorization": "Bearer ${PAGEINDEX_API_KEY}"
+      }
+    },
+    "mermaid": {
+      "command": "npx",
+      "args": ["@peng-shawn/mermaid-mcp-server"],
+      "description": "Text-to-diagram: flowcharts, sequences, ERD, state machines -> SVG/PNG. Compatible Claude + Codex (MCP stdio)."
+    },
+    "excalidraw": {
+      "command": "node",
+      "args": [
+        "--input-type=module",
+        "-e",
+        "import('file:///C:/Users/PGNK2128/AppData/Roaming/npm/node_modules/mcp-excalidraw-server/src/index.js').then(m=>m.default())"
+      ],
+      "env": {
+        "ENABLE_CANVAS_SYNC": "false"
+      }
+    },
+    "stitch": {
+      "command": "node",
+      "args": [
+        "C:\\Users\\PGNK2128\\AppData\\Roaming\\npm\\node_modules\\stitch-mcp\\index.js"
+      ],
+      "env": {
+        "GOOGLE_CLOUD_PROJECT": "ofr-ppx-propme-1-prd"
+      }
+    },
+    "nano-banana": {
+      "command": "node",
+      "args": [
+        "C:\\Users\\PGNK2128\\AppData\\Roaming\\npm\\node_modules\\nano-banana-mcp\\dist\\index.js"
+      ],
+      "env": {
+        "GEMINI_API_KEY": "${GEMINI_API_KEY}"
+      }
+    },
+    "magic": {
+      "command": "node",
+      "args": [
+        "C:\\Users\\PGNK2128\\AppData\\Roaming\\npm\\node_modules\\@21st-dev\\magic\\dist\\index.js"
+      ],
+      "env": {
+        "API_KEY": "${TWENTYFIRST_API_KEY}"
+      }
+    },
+    "figma": {
+      "url": "https://mcp.figma.com/mcp",
+      "transport": "http",
+      "headers": {
+        "Authorization": "Bearer ${FIGMA_ACCESS_TOKEN}"
+      }
+    },
+    "n8n": {
+      "command": "node",
+      "args": [
+        "C:\\Users\\PGNK2128\\Godot-MCP\\tools\\n8n-mcp-server\\dist\\index.js"
+      ],
+      "env": {
+        "N8N_BASE_URL": "http://localhost:5678",
+        "N8N_API_KEY": "${N8N_API_KEY}"
+      }
+    },
+    "trellis": {
+      "command": "node",
+      "args": [
+        "c:\\Users\\PGNK2128\\Godot-MCP\\server-trellis\\dist\\index.js"
+      ]
+    },
+    "datagouv": {
+      "url": "https://mcp.data.gouv.fr/mcp",
+      "transport": "http"
     }
   }
 }

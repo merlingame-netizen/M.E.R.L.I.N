@@ -1,4 +1,11 @@
 {
     "godotTools.editorPath.godot4": "c:\\Users\\PGNK2128\\Godot\\Godot_v4.5.1-stable_win64.exe",
-    "gemini-cli.debug.logging.enabled": true
+    "gemini-cli.debug.logging.enabled": true,
+    "autodev-v4.remoteTrain.pythonPath": "c:\\Users\\PGNK2128\\AppData\\Local\\Programs\\Python\\Python312\\python.exe",
+    "autodev-v4.remoteTrain.kaggleUsername": "maximebabonneau",
+    "autodev-v4.remoteTrain.kernelSlug": "merlin-remote-lora-training",
+    "autodev-v4.remoteTrain.kernelTitle": "MERLIN Remote LoRA Training",
+    "autodev-v4.remoteTrain.testModel": "meta-llama/Meta-Llama-3.1-8B-Instruct-Turbo",
+    "autodev-v4.remoteTrain.testEndpoint": "https://api.together.xyz/v1/chat/completions",
+    "autodev-v4.remoteTrain.testApiKey": ""
 }

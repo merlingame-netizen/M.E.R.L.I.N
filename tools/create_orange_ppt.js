@@ -913,6 +913,290 @@ function addImageSlide(pres, title, imagePath, theme, opts = {}) {
 }
 
 // ============================================
+// SLIDE MOSAIQUE IMAGES (grille multi-images + credits)
+// ============================================
+
+/**
+ * Slide avec plusieurs images (2 a 6) et credits optionnels.
+ *
+ * @param {object} pres - Presentation pptxgenjs
+ * @param {string} title - Titre de la slide
+ * @param {Array<{path?: string, data?: string, caption?: string, credit?: string}>} images
+ * @param {object} theme - Theme Orange (noir/blanc)
+ * @param {object} [opts] - { slideNum, cols, showCaptions, creditsLine, maxTiles, introText, introFontSize }
+ */
+function addImageMosaicSlide(pres, title, images, theme, opts = {}) {
+    const slide = pres.addSlide();
+    slide.background = { color: theme.bg };
+
+    // Titre
+    slide.addText(title, {
+        x: POS.title.x, y: POS.title.y,
+        w: POS.title.w, h: POS.title.h,
+        ...STYLES.contentTitle,
+        color: ORANGE_COLORS.primary.orange
+    });
+
+    const list = Array.isArray(images) ? images.filter(Boolean) : [];
+    const maxTiles = opts.maxTiles || 6;
+    const tiles = list.slice(0, maxTiles);
+
+    if (tiles.length === 0) {
+        addInfoBox(slide, { x: 0.5, y: 1.7, w: 9.0, h: 0.7 },
+            'Aucune image disponible: ajoutez un dossier local ou configurez une API image.');
+        addOrangeLogo(slide);
+        addSlideNumber(slide, opts.slideNum, theme);
+        return slide;
+    }
+
+    const cols = Math.max(1, Math.min(opts.cols || (tiles.length >= 4 ? 3 : 2), 3));
+    const rows = Math.ceil(tiles.length / cols);
+    const gap = 0.12;
+    const hasIntro = Boolean(opts.introText);
+    const area = {
+        x: 0.36,
+        y: hasIntro ? 1.62 : 1.12,
+        w: 9.28,
+        h: hasIntro ? 2.7 : 3.2
+    };
+    const tileW = (area.w - gap * (cols - 1)) / cols;
+    const tileH = (area.h - gap * (rows - 1)) / rows;
+    const showCaptions = opts.showCaptions !== false;
+    const captionH = showCaptions ? 0.24 : 0;
+
+    if (hasIntro) {
+        addInfoBox(slide, { x: 0.36, y: 1.05, w: 9.28, h: 0.48 }, opts.introText, {
+            fontSize: opts.introFontSize || 9
+        });
+    }
+
+    tiles.forEach((img, idx) => {
+        const c = idx % cols;
+        const r = Math.floor(idx / cols);
+        const x = area.x + c * (tileW + gap);
+        const y = area.y + r * (tileH + gap);
+        const imageH = Math.max(0.4, tileH - captionH);
+
+        // Cadre de tile
+        slide.addShape('roundRect', {
+            x, y, w: tileW, h: tileH,
+            fill: { color: ORANGE_COLORS.bg.card },
+            line: { color: ORANGE_COLORS.primary.grayLight, width: 1 },
+            rectRadius: VISUAL.cardRadius
+        });
+
+        if (img && (img.path || img.data)) {
+            const imageProps = {
+                x: x + 0.03,
+                y: y + 0.03,
+                w: tileW - 0.06,
+                h: imageH - 0.06,
+                sizing: { type: 'contain', w: tileW - 0.06, h: imageH - 0.06 }
+            };
+            if (img.path) imageProps.path = img.path;
+            if (img.data) imageProps.data = img.data;
+            slide.addImage(imageProps);
+        } else {
+            slide.addShape('rect', {
+                x: x + 0.03, y: y + 0.03, w: tileW - 0.06, h: imageH - 0.06,
+                fill: { color: ORANGE_COLORS.primary.grayLight },
+                line: { type: 'none' }
+            });
+            slide.addText('Image manquante', {
+                x: x + 0.06, y: y + (imageH / 2) - 0.08, w: tileW - 0.12, h: 0.16,
+                fontFace: ORANGE_FONTS.title,
+                fontSize: 8,
+                bold: true,
+                color: ORANGE_COLORS.primary.grayDark,
+                align: 'center',
+                valign: 'middle',
+                shrinkText: true,
+                bullet: false
+            });
+        }
+
+        if (showCaptions) {
+            const caption = (img && img.caption) ? img.caption : '';
+            if (caption) {
+                slide.addText(caption, {
+                    x: x + 0.05,
+                    y: y + tileH - captionH + 0.02,
+                    w: tileW - 0.1,
+                    h: captionH - 0.03,
+                    fontFace: ORANGE_FONTS.title,
+                    fontSize: 8,
+                    bold: true,
+                    color: ORANGE_COLORS.primary.grayDark,
+                    align: 'left',
+                    valign: 'middle',
+                    lineSpacingPercent: 90,
+                    shrinkText: true,
+                    bullet: false
+                });
+            }
+        }
+    });
+
+    // Credits (ligne unique)
+    const creditsLine = opts.creditsLine || '';
+    if (creditsLine) {
+        slide.addText(creditsLine, {
+            x: 0.36, y: 4.37, w: 8.8, h: 0.18,
+            fontFace: ORANGE_FONTS.title,
+            fontSize: 7,
+            bold: true,
+            color: ORANGE_COLORS.primary.grayMedium,
+            align: 'left',
+            shrinkText: true,
+            bullet: false
+        });
+    }
+
+    addOrangeLogo(slide);
+    addSlideNumber(slide, opts.slideNum, theme);
+    return slide;
+}
+
+// ============================================
+// SLIDE PROCESS FLOW (schema en formes vectorielles)
+// ============================================
+
+/**
+ * Slide schema processus (formes + fleches), sans image externe.
+ *
+ * @param {object} pres - Presentation pptxgenjs
+ * @param {string} title - Titre
+ * @param {Array<{title: string, detail?: string}>} steps - 3 a 6 etapes
+ * @param {object} theme - Theme Orange (noir/blanc)
+ * @param {object} [opts] - { slideNum, subtitle, bottomNote }
+ */
+function addProcessFlowSlide(pres, title, steps, theme, opts = {}) {
+    const slide = pres.addSlide();
+    slide.background = { color: theme.bg };
+
+    slide.addText(title, {
+        x: POS.title.x, y: POS.title.y,
+        w: POS.title.w, h: POS.title.h,
+        ...STYLES.contentTitle,
+        color: ORANGE_COLORS.primary.orange
+    });
+
+    if (opts.subtitle) {
+        slide.addText(opts.subtitle, {
+            x: 0.36, y: 1.0, w: 9.2, h: 0.25,
+            fontFace: ORANGE_FONTS.title,
+            fontSize: 10,
+            bold: true,
+            color: theme.body,
+            align: 'left',
+            valign: 'middle',
+            shrinkText: true,
+            bullet: false
+        });
+    }
+
+    const list = Array.isArray(steps) ? steps.filter(Boolean) : [];
+    if (list.length < 2) {
+        addInfoBox(slide, { x: 0.5, y: 1.7, w: 9.0, h: 0.7 },
+            'Ajoutez au moins 2 etapes pour dessiner un schema processus.');
+        addOrangeLogo(slide);
+        addSlideNumber(slide, opts.slideNum, theme);
+        return slide;
+    }
+
+    const count = Math.min(list.length, 6);
+    const startX = 0.42;
+    const y = 1.55;
+    const totalW = 9.16;
+    const boxGap = 0.18;
+    const boxW = (totalW - boxGap * (count - 1)) / count;
+    const boxH = 2.2;
+
+    for (let i = 0; i < count; i++) {
+        const x = startX + i * (boxW + boxGap);
+        const step = list[i];
+
+        slide.addShape('roundRect', {
+            x, y, w: boxW, h: boxH,
+            fill: { color: ORANGE_COLORS.bg.card },
+            line: { color: ORANGE_COLORS.primary.grayLight, width: 1.2 },
+            rectRadius: VISUAL.cardRadius
+        });
+
+        // Bande orange haute
+        slide.addShape('rect', {
+            x, y, w: boxW, h: 0.07,
+            fill: { color: ORANGE_COLORS.primary.orange },
+            line: { type: 'none' }
+        });
+
+        // Numero etape
+        slide.addShape('ellipse', {
+            x: x + 0.08, y: y + 0.11, w: 0.3, h: 0.3,
+            fill: { color: ORANGE_COLORS.primary.orange },
+            line: { type: 'none' }
+        });
+        slide.addText(String(i + 1), {
+            x: x + 0.08, y: y + 0.11, w: 0.3, h: 0.3,
+            fontFace: ORANGE_FONTS.title,
+            fontSize: 10,
+            bold: true,
+            color: ORANGE_COLORS.primary.white,
+            align: 'center',
+            valign: 'middle',
+            shrinkText: true,
+            bullet: false
+        });
+
+        slide.addText(step.title || `Etape ${i + 1}`, {
+            x: x + 0.43, y: y + 0.1, w: boxW - 0.5, h: 0.34,
+            ...STYLES.cardTitle,
+            fontSize: 11,
+            color: ORANGE_COLORS.primary.orange,
+            align: 'left',
+            valign: 'middle'
+        });
+
+        if (step.detail) {
+            slide.addText(step.detail, {
+                x: x + 0.12, y: y + 0.5, w: boxW - 0.24, h: boxH - 0.64,
+                ...STYLES.cardBody,
+                fontSize: 9,
+                color: ORANGE_COLORS.primary.grayDark,
+                align: 'left',
+                valign: 'top'
+            });
+        }
+
+        // Fleche vers etape suivante
+        if (i < count - 1) {
+            slide.addShape('line', {
+                x: x + boxW + 0.02,
+                y: y + boxH / 2,
+                w: boxGap - 0.04,
+                h: 0,
+                line: {
+                    color: ORANGE_COLORS.primary.grayMedium,
+                    width: 1.4,
+                    beginArrowType: 'none',
+                    endArrowType: 'triangle'
+                }
+            });
+        }
+    }
+
+    if (opts.bottomNote) {
+        addInfoBox(slide, { x: 0.42, y: 4.0, w: 9.16, h: 0.44 }, opts.bottomNote, {
+            fontSize: 9
+        });
+    }
+
+    addOrangeLogo(slide);
+    addSlideNumber(slide, opts.slideNum, theme);
+    return slide;
+}
+
+// ============================================
 // EXPORT
 // ============================================
 module.exports = {
@@ -940,6 +1224,8 @@ module.exports = {
     addColorPaletteSlide,
     // Slide image / diagramme (Mermaid PNG)
     addImageSlide,
+    addImageMosaicSlide,
+    addProcessFlowSlide,
     // Composants unitaires
     addCard,
     addInfoBox,

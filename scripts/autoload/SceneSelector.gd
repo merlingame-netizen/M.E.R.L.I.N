@@ -23,6 +23,7 @@ const SCENES: Array[Dictionary] = [
 	{"label": "Collection", "path": "res://scenes/Collection.tscn"},
 	{"label": "ArbreDeVie", "path": "res://scenes/ArbreDeVie.tscn"},
 	# — Test —
+	{"label": "BroceliandeForest3D", "path": "res://scenes/BroceliandeForest3D.tscn"},
 	{"label": "TestCardLayers", "path": "res://scenes/test/TestCardLayers.tscn"},
 ]
 

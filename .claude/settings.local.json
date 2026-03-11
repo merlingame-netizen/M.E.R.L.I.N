@@ -33,7 +33,9 @@
       "Bash(wsl --list:*)",
       "Bash(wsl --install:*)",
       "Bash(wsl:*)",
-      "Bash(powershell -Command:*)"
+      "Bash(powershell -Command:*)",
+      "Bash(npm run build)",
+      "Bash(npx vercel --prod)"
     ],
     "additionalDirectories": [
       "C:\\Users\\PGNK2128\\OneDrive - orange.com\\Partage VOC\\Data\\Travaux cible IPSOS\\App_Cible_IPSOS_v2"

@@ -195,6 +195,7 @@ var _screen_vfx: RefCounted  # BrocScreenVfx
 var _creature_spawner: RefCounted  # BrocCreatureSpawner
 var _narrative_director: RefCounted  # BrocNarrativeDirector
 var _gameplay_active: bool = false  # true when LLM event system is wired
+var _saved_crt_preset: String = "medium"
 
 # Particle refs for day/night modulation
 var _pollen_node: GPUParticles3D
@@ -212,6 +213,13 @@ var _zone_names: Array[String] = [
 func _ready() -> void:
 	_rng.randomize()
 	_gravity = float(ProjectSettings.get_setting("physics/3d/default_gravity", 9.8))
+	# Hide CRT post-process entirely (screen_texture incompatible with SubViewport in GL Compat)
+	var crt_layer: Node = get_node_or_null("/root/ScreenDither")
+	if crt_layer:
+		if crt_layer.has_method("get_crt_preset"):
+			_saved_crt_preset = crt_layer.get_crt_preset()
+		if crt_layer.has_method("set_enabled"):
+			crt_layer.set_enabled(false)
 	_load_assets()
 	_ensure_actions()
 	_setup_viewport()
@@ -325,6 +333,13 @@ func _notification(what: int) -> void:
 
 func _exit_tree() -> void:
 	Input.set_mouse_mode(Input.MOUSE_MODE_VISIBLE)
+	# Restore CRT post-process for other scenes
+	var crt_layer: Node = get_node_or_null("/root/ScreenDither")
+	if crt_layer:
+		if crt_layer.has_method("set_enabled"):
+			crt_layer.set_enabled(true)
+		if crt_layer.has_method("set_crt_preset"):
+			crt_layer.set_crt_preset(_saved_crt_preset)
 
 
 # ============================================================

@@ -1,6 +1,7 @@
 const vscode = require('vscode');
 const fs = require('fs');
 const path = require('path');
+const os = require('os');
 const cp = require('child_process');
 const http = require('http');
 const https = require('https');
@@ -667,12 +668,10 @@ class RemoteTrainProvider {
     const chatDisabled = this.isBusy ? 'disabled' : '';
     const endpointLabel = cfg.testEndpoint ? cfg.testEndpoint : 'local Ollama';
 
-    // Count trained brains
     const brainsState = (state && state.brains) || {};
     const trainedCount = BRAIN_LIST.filter((b) => (brainsState[b] || {}).status === 'complete').length;
     const brainSummary = `${trainedCount}/${BRAIN_LIST.length} trained`;
 
-    // Selected brain info
     const selBrainState = brainsState[this.selectedBrain] || {};
     const selJob = selBrainState.job || '';
 
@@ -680,7 +679,7 @@ class RemoteTrainProvider {
       .brainBoard { border:1px solid ${CRT.border}; border-radius:3px; padding:4px; margin:6px 0; background:#061006; }
     </style></head><body>
       <div class="header">
-        <span class="title">MERLIN MULTI-BRAIN</span>
+        <span class="title">M.E.R.L.I.N. REMOTE</span>
         <span class="status" style="color:${color}">${escapeHtml(statusLabel)}</span>
       </div>
 
@@ -758,244 +757,13 @@ class RemoteTrainProvider {
   }
 }
 
-// ── STATUS READER ──
-// Reads tools/autodev/status/*.json and normalizes to a unified data model
-class StatusReader {
-  constructor(statusDir) {
-    this.statusDir = statusDir;
-    this.listeners = [];
-    this.watcher = null;
-    this.pollInterval = null;
-    this.debounceTimer = null;
-    this.lastData = null;
-  }
-
-  start() {
-    if (!fs.existsSync(this.statusDir)) {
-      // Poll until directory appears
-      this.pollInterval = setInterval(() => {
-        if (fs.existsSync(this.statusDir)) {
-          clearInterval(this.pollInterval);
-          this._startWatching();
-        }
-      }, 3000);
-      return;
-    }
-    this._startWatching();
-  }
-
-  _startWatching() {
-    // fs.watch
-    try {
-      this.watcher = fs.watch(this.statusDir, { persistent: false }, () => {
-        this._debouncedRead();
-      });
-    } catch {
-      // fs.watch can fail on some setups
-    }
-    // Polling fallback (2s)
-    this.pollInterval = setInterval(() => this._readAll(), 2000);
-    // Initial read
-    this._readAll();
-  }
-
-  _debouncedRead() {
-    if (this.debounceTimer) clearTimeout(this.debounceTimer);
-    this.debounceTimer = setTimeout(() => this._readAll(), 500);
-  }
-
-  _readAll() {
-    const data = this._buildNormalized();
-    const json = JSON.stringify(data);
-    if (json !== JSON.stringify(this.lastData)) {
-      this.lastData = data;
-      for (const fn of this.listeners) fn(data);
-    }
-  }
-
-  _buildNormalized() {
-    const controlState = readJson(path.join(this.statusDir, 'control_state.json'));
-    const session = readJson(path.join(this.statusDir, 'session.json'));
-    const healthReport = readJson(path.join(this.statusDir, 'health_report.json'));
-
-    // Determine global state
-    const state = controlState.state || session.state || 'idle';
-    const objective = controlState.objective || session.objective || '';
-    const checkpoint = session.checkpoint || '';
-
-    // Collect workers from multiple sources
-    const workers = [];
-    const seen = new Set();
-
-    // From session.json workers array
-    if (Array.isArray(session.workers)) {
-      for (const w of session.workers) {
-        const domain = w.name || w.domain || 'unknown';
-        if (seen.has(domain)) continue;
-        seen.add(domain);
-        workers.push({
-          domain,
-          status: w.status || 'pending',
-          current_task: w.current_task || '',
-          progress: w.progress || 0,
-          files_modified: w.files_modified || [],
-          error: w.error || '',
-          blockers: w.blockers || [],
-        });
-      }
-    }
-
-    // From health_report.json worker_statuses
-    if (healthReport.worker_statuses) {
-      for (const [domain, ws] of Object.entries(healthReport.worker_statuses)) {
-        if (seen.has(domain)) continue;
-        seen.add(domain);
-        workers.push({
-          domain,
-          status: ws.status || 'pending',
-          current_task: ws.current_task || '',
-          progress: ws.progress || 0,
-          files_modified: ws.files_modified || [],
-          error: ws.error || '',
-          blockers: ws.blockers || [],
-        });
-      }
-    }
-
-    // From individual domain JSON files
-    const domainFiles = ['gameplay', 'ui-ux', 'llm-lora', 'world-structure', 'visual-polish', 'game-director'];
-    for (const d of domainFiles) {
-      if (seen.has(d)) continue;
-      const fp = path.join(this.statusDir, `${d}.json`);
-      if (!fs.existsSync(fp)) continue;
-      const ws = readJson(fp);
-      if (!ws.domain) continue;
-      seen.add(d);
-      workers.push({
-        domain: ws.domain,
-        status: ws.status || 'pending',
-        current_task: ws.current_task || '',
-        progress: ws.progress || 0,
-        files_modified: ws.files_modified || [],
-        error: ws.error || '',
-        blockers: ws.blockers || [],
-      });
-    }
-
-    return { state, objective, checkpoint, workers };
-  }
-
-  onUpdate(fn) {
-    this.listeners.push(fn);
-  }
-
-  stop() {
-    if (this.watcher) { try { this.watcher.close(); } catch {} }
-    if (this.pollInterval) clearInterval(this.pollInterval);
-    if (this.debounceTimer) clearTimeout(this.debounceTimer);
-  }
-}
-
-// ── PROJECT DETECTION ──
-function detectProject() {
-  // 1. Explicit config override
-  const cfgProject = vscode.workspace.getConfiguration('autodev-v4.robotMonitor').get('project', 'auto');
-  if (cfgProject && cfgProject !== 'auto') return cfgProject;
-
-  // 2. Heuristic from workspace
-  const folders = vscode.workspace.workspaceFolders;
-  if (folders) {
-    for (const f of folders) {
-      const root = f.uri.fsPath;
-      if (fs.existsSync(path.join(root, 'project.godot'))) return 'merlin';
-      if (/partage.voc|data|orange/i.test(root)) return 'data';
-      if (/cours|teaching|ecole/i.test(root)) return 'cours';
-    }
-  }
-
-  // 3. Default
-  return 'merlin';
-}
-
-const THEME_BG = { merlin: '#050a05', data: '#0a0500', cours: '#050508' };
-
-// ── ROBOT MONITOR PROVIDER ──
-class RobotMonitorProvider {
-  constructor(statusDir, extensionUri) {
-    this.statusDir = statusDir;
-    this.extensionUri = extensionUri;
-    this.view = null;
-    this.statusReader = new StatusReader(statusDir);
-    this.statusReader.onUpdate((data) => this._sendUpdate(data));
-    this.statusReader.start();
-  }
-
-  resolveWebviewView(view) {
-    this.view = view;
-    view.webview.options = { enableScripts: true };
-
-    const projectId = detectProject();
-    const bodyBg = THEME_BG[projectId] || '#050a05';
-
-    // Read core and webview scripts
-    const extPath = this.extensionUri.fsPath || path.dirname(__filename);
-    const coreJs = fs.readFileSync(path.join(extPath, 'robot-monitor-core.js'), 'utf8');
-    const webviewJs = fs.readFileSync(path.join(extPath, 'robot-monitor-webview.js'), 'utf8');
-
-    view.webview.html = `<!DOCTYPE html>
-<html>
-<head>
-<style>
-* { margin: 0; padding: 0; box-sizing: border-box; }
-body { background: ${bodyBg}; overflow: hidden; font-family: 'Cascadia Code', 'Fira Code', Consolas, monospace; }
-#robotContainer { width: 100%; height: 100vh; display: flex; flex-direction: column; }
-#robotCanvas { display: block; flex: 1 1 auto; image-rendering: pixelated; image-rendering: crisp-edges; }
-#taskPanel { flex: 0 0 auto; max-height: 35%; overflow-y: auto; }
-</style>
-</head>
-<body>
-<div id="robotContainer">
-  <canvas id="robotCanvas"></canvas>
-  <div id="taskPanel"></div>
-</div>
-<script>window.__ROBOT_PROJECT = '${projectId}';</script>
-<script>${coreJs}</script>
-<script>${webviewJs}</script>
-</body>
-</html>`;
-
-    // Send initial data if available
-    if (this.statusReader.lastData) {
-      this._sendUpdate(this.statusReader.lastData);
-    }
-
-    view.onDidDispose(() => { this.view = null; });
-  }
-
-  _sendUpdate(data) {
-    if (this.view && this.view.webview) {
-      this.view.webview.postMessage({ type: 'statusUpdate', data });
-    }
-  }
-
-  dispose() {
-    this.statusReader.stop();
-  }
-}
-
+// ── ACTIVATE ──
 function activate(context) {
   const root = findProjectRoot();
   const provider = new RemoteTrainProvider(root);
 
-  // Robot Monitor
-  const statusDir = root
-    ? path.join(root, 'tools', 'autodev', 'status')
-    : path.join(process.cwd(), 'tools', 'autodev', 'status');
-  const robotProvider = new RobotMonitorProvider(statusDir, context.extensionUri);
-
   context.subscriptions.push(
     vscode.window.registerWebviewViewProvider('autodev-v4.remoteTrain', provider),
-    vscode.window.registerWebviewViewProvider('autodev-v4.robotMonitor', robotProvider),
     vscode.commands.registerCommand('autodev-v4.remoteTrain.open', async () => provider.openPanel()),
     vscode.commands.registerCommand('autodev-v4.remoteTrain.refresh', () => provider.refresh()),
     vscode.commands.registerCommand('autodev-v4.remoteTrain.configure', async () => provider.configure()),
@@ -1004,24 +772,10 @@ function activate(context) {
     vscode.commands.registerCommand('autodev-v4.remoteTrain.submit', async () => provider.runRemote('submit')),
     vscode.commands.registerCommand('autodev-v4.remoteTrain.status', async () => provider.runRemote('status')),
     vscode.commands.registerCommand('autodev-v4.remoteTrain.download', async () => provider.runRemote('download')),
-    vscode.commands.registerCommand('autodev-v4.remoteTrain.openKaggle', () => provider.openKaggle()),
-    vscode.commands.registerCommand('autodev-v4.robotMonitor.openStandalone', () => {
-      const serverScript = path.join(context.extensionUri.fsPath, 'robot-monitor-server.js');
-      const projectId = detectProject();
-      const proc = cp.spawn('node', [serverScript, '--status-dir', statusDir, '--port', '3847', '--project', projectId], {
-        detached: true, stdio: 'ignore',
-      });
-      proc.unref();
-      setTimeout(() => {
-        vscode.env.openExternal(vscode.Uri.parse('http://localhost:3847'));
-      }, 800);
-    })
+    vscode.commands.registerCommand('autodev-v4.remoteTrain.openKaggle', () => provider.openKaggle())
   );
-
-  context.subscriptions.push({ dispose: () => robotProvider.dispose() });
 }
 
 function deactivate() {}
 
 module.exports = { activate, deactivate };
-

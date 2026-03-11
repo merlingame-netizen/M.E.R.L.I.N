@@ -45,6 +45,11 @@ enabled=PackedStringArray("res://addons/error_clipboard_dock/plugin.cfg", "res:/
 
 theme/custom="res://themes/merlin_theme.tres"
 
+[internationalization]
+
+locale/translations=PackedStringArray("res://data/i18n/translations.csv")
+locale/fallback="fr"
+
 [merlin_llm]
 
 log_enabled=true
@@ -53,11 +58,6 @@ log_path="user://merlin_llm/merlin.log"
 allow_native_in_editor=true
 require_native=true
 low_spec_mode=true
-
-[internationalization]
-
-locale/translations=PackedStringArray("res://data/i18n/translations.csv")
-locale/fallback="fr"
 
 [rendering]
 
