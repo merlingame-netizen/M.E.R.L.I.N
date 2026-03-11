@@ -10,7 +10,7 @@ jobs:
   editor-parse:
     name: Editor Parse Check
     runs-on: ubuntu-latest
-    container: barichello/godot-ci:4.4.1
+    container: barichello/godot-ci:4.5
     steps:
       - uses: actions/checkout@v4
 
@@ -33,7 +33,7 @@ jobs:
   scene-smoke:
     name: Scene Smoke Tests
     runs-on: ubuntu-latest
-    container: barichello/godot-ci:4.4.1
+    container: barichello/godot-ci:4.5
     needs: editor-parse
     strategy:
       matrix:
