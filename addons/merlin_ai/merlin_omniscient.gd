@@ -82,7 +82,6 @@ var _persona_forbidden_words: PackedStringArray = []
 const DANGER_LIFE_CRITICAL := 15     # Mort imminente
 const DANGER_LIFE_LOW := 25          # Danger — baisser la difficulte
 const DANGER_LIFE_WOUNDED := 50      # Blesse — signaler au LLM
-const DANGER_ASPECTS_CRISIS := 2     # N aspects non-equilibres = crise
 const DANGER_BLOCK_CATASTROPHE_AT := 15  # Bloquer event_catastrophe en-dessous
 
 # Cache
@@ -93,12 +92,11 @@ const CACHE_LIMIT := 300
 var _prefetched_card: Dictionary = {}
 var _prefetch_in_progress := false
 var _prefetch_context_hash: int = 0  # Hash of game state when prefetch started
-var _prefetch_aspects: Dictionary = {}  # Aspect values when prefetch started
 var _prefetch_biome: String = ""  # Biome when prefetch started
 signal prefetch_ready
 
 # Deep prefetch buffer (Phase 5 — BitNet swarm)
-var _prefetch_buffer: Array = []  # Array of {card, context_hash, aspects, biome}
+var _prefetch_buffer: Array = []  # Array of {card, context_hash, biome}
 const PREFETCH_BUFFER_MAX := 3     # Max pre-generated cards
 var _prefetch_depth: int = 1       # Current depth (1 = legacy, 2-3 = swarm)
 
@@ -572,7 +570,6 @@ func prefetch_next_card(game_state: Dictionary) -> void:
 	_prefetch_context_hash = _compute_context_hash(game_state)
 	_prefetched_card = {}
 	var run: Dictionary = game_state.get("run", {})
-	_prefetch_aspects = run.get("aspects", {}).duplicate()
 	_prefetch_biome = str(run.get("current_biome", ""))
 
 	# Build context for next card (simulate state after a neutral choice)
@@ -595,7 +592,6 @@ func prefetch_next_card(game_state: Dictionary) -> void:
 			_prefetch_buffer.append({
 				"card": card,
 				"context_hash": _prefetch_context_hash,
-				"aspects": _prefetch_aspects.duplicate(),
 				"biome": _prefetch_biome,
 			})
 			# Generate additional cards via background tasks (non-blocking)
@@ -615,7 +611,6 @@ func _submit_deep_prefetch(game_state: Dictionary, card_index: int) -> void:
 	# Slight temperature variation for diversity
 	var temp: float = 0.55 + card_index * 0.08
 	var biome: String = _prefetch_biome
-	var aspects: Dictionary = _prefetch_aspects.duplicate()
 
 	llm_interface.submit_background_task("prefetch", system_prompt, user_prompt,
 		{"max_tokens": 200, "temperature": temp},
@@ -629,7 +624,6 @@ func _submit_deep_prefetch(game_state: Dictionary, card_index: int) -> void:
 						_prefetch_buffer.append({
 							"card": parsed,
 							"context_hash": _prefetch_context_hash,
-							"aspects": aspects,
 							"biome": biome,
 						})
 					print("[MOS] Deep prefetch card %d buffered (buffer=%d)" % [card_index, _prefetch_buffer.size()])
@@ -645,7 +639,7 @@ func _try_use_prefetch(game_state: Dictionary) -> Dictionary:
 	if not _prefetched_card.is_empty():
 		var card := _prefetched_card
 		_prefetched_card = {}
-		if _is_prefetch_valid(game_state, _prefetch_context_hash, _prefetch_aspects, _prefetch_biome):
+		if _is_prefetch_valid(game_state, _prefetch_context_hash, _prefetch_biome):
 			# Promote next buffer entry to primary slot
 			if not _prefetch_buffer.is_empty():
 				var next: Dictionary = _prefetch_buffer.pop_front()
@@ -657,9 +651,8 @@ func _try_use_prefetch(game_state: Dictionary) -> Dictionary:
 	for i in range(_prefetch_buffer.size()):
 		var entry: Dictionary = _prefetch_buffer[i]
 		var buf_hash: int = int(entry.get("context_hash", 0))
-		var buf_aspects: Dictionary = entry.get("aspects", {})
 		var buf_biome: String = str(entry.get("biome", ""))
-		if _is_prefetch_valid(game_state, buf_hash, buf_aspects, buf_biome):
+		if _is_prefetch_valid(game_state, buf_hash, buf_biome):
 			var card: Dictionary = entry.get("card", {})
 			_prefetch_buffer.remove_at(i)
 			stats.prefetch_hits += 1

@@ -35,8 +35,13 @@ func build_full_context(game_state: Dictionary) -> Dictionary:
 	return {
 		# === GAME STATE ===
 		"gauges": run.get("gauges", {}),
-		"aspects": run.get("aspects", {}),
-		"souffle": int(run.get("souffle", 0)),
+		"tour": int(run.get("tour", 1)),
+		"ogham_actif": str(run.get("ogham_actif", "")),
+		"oghams_decouverts": run.get("oghams_decouverts", []),
+		"factions": run.get("factions", {
+			"druides": 0, "anciens": 0, "korrigans": 0, "niamh": 0, "ankou": 0
+		}),
+		"heure_normalisee": float(run.get("heure_normalisee", 0.0)),
 		"life_essence": int(run.get("life_essence", 100)),
 		"day": int(run.get("day", 1)),
 		"cards_played": int(run.get("cards_played", 0)),
@@ -123,22 +128,39 @@ func build_llm_prompt_context(full_context: Dictionary) -> String:
 	## Transforme le contexte en texte pour le prompt LLM.
 	var lines := []
 
-	# Jauges critiques (pour TRIADE)
-	var aspects = full_context.get("aspects", {})
-	var critical := []
-	for aspect in aspects:
-		var state: int = int(aspects[aspect])
-		if state != 0:  # Not balanced
-			var state_name := "HAUT" if state > 0 else "BAS"
-			critical.append("%s %s" % [aspect, state_name])
+	# Tour, Ogham actif, Oghams découverts
+	var tour: int = int(full_context.get("tour", 1))
+	var ogham_actif: String = str(full_context.get("ogham_actif", ""))
+	var oghams_decouverts: Array = full_context.get("oghams_decouverts", [])
+	lines.append("Tour: %d" % tour)
+	if ogham_actif != "":
+		lines.append("Ogham actif: %s" % ogham_actif)
+	if oghams_decouverts.size() > 0:
+		var ogham_strs: Array[String] = []
+		for og in oghams_decouverts:
+			ogham_strs.append(str(og))
+		lines.append("Oghams découverts: %s" % ", ".join(ogham_strs))
 
-	if critical.size() > 0:
-		lines.append("ATTENTION: " + ", ".join(critical))
+	# Réputation des 5 factions
+	var factions: Dictionary = full_context.get("factions", {})
+	lines.append("Réputation — Druides: %d, Anciens: %d, Korrigans: %d, Niamh: %d, Ankou: %d" % [
+		int(factions.get("druides", 0)),
+		int(factions.get("anciens", 0)),
+		int(factions.get("korrigans", 0)),
+		int(factions.get("niamh", 0)),
+		int(factions.get("ankou", 0)),
+	])
 
-	# Souffle
-	var souffle: int = int(full_context.get("souffle", 0))
-	if souffle <= 1:
-		lines.append("SOUFFLE FAIBLE: %d" % souffle)
+	# Heure normalisée et période
+	var heure: float = float(full_context.get("heure_normalisee", 0.0))
+	var periode := "nuit"
+	if heure < 0.25:
+		periode = "aube"
+	elif heure < 0.5:
+		periode = "jour"
+	elif heure < 0.75:
+		periode = "crépuscule"
+	lines.append("Heure: %.2f (période: %s)" % [heure, periode])
 
 	# Life essence — danger level
 	var life: int = int(full_context.get("life_essence", 100))

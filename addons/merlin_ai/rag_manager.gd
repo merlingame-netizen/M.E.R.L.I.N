@@ -56,7 +56,7 @@ var journal: Array[Dictionary] = []
 const MAX_CROSS_RUN_SUMMARIES := 20
 
 var cross_run_memory: Array[Dictionary] = []
-## Each: { run_id, ending, cards_played, dominant_aspect, notable_events, player_style, score }
+## Each: { run_id, ending, cards_played, dominant_faction, notable_events, player_style, score }
 
 # ═══════════════════════════════════════════════════════════════════════════════
 # WORLD STATE — Synced from MOS registries
@@ -251,17 +251,17 @@ func _get_scene_contract_context() -> String:
 
 func _get_crisis_context(game_state: Dictionary) -> String:
 	var run: Dictionary = game_state.get("run", {})
-	var aspects: Dictionary = run.get("aspects", {})
-	var souffle: int = int(run.get("souffle", 3))
+	var factions: Dictionary = run.get("factions", {})
+	var oghams: Array = run.get("oghams_decouverts", [])
 	var crises: Array[String] = []
-	for aspect in aspects:
-		var val: int = int(aspects[aspect])
-		if val <= -1:
-			crises.append("%s=BAS" % aspect)
-		elif val >= 1:
-			crises.append("%s=HAUT" % aspect)
-	if souffle <= 1:
-		crises.append("Souffle=%d" % souffle)
+	for faction in factions:
+		var val: float = float(factions[faction])
+		if val <= 10.0:
+			crises.append("%s=HOSTILE" % faction)
+		elif val >= 90.0:
+			crises.append("%s=DOMINANT" % faction)
+	if oghams.size() >= 5:
+		crises.append("Oghams=%d (avance)" % oghams.size())
 	if crises.is_empty():
 		return ""
 	return "CRISE: " + ", ".join(crises)
@@ -354,26 +354,25 @@ func _get_archetype_context() -> String:
 
 
 func _get_aspects_state_context(game_state: Dictionary) -> String:
-	## B.4: Inject extreme aspect states (BAS/HAUT) into RAG.
-	## Only non-EQUILIBRE states are mentioned — keeps tokens minimal.
-	## Priority HIGH so LLM colours narrative around the player's current struggle.
+	## B.4: Inject faction reputation states into RAG.
+	## Only factions with extreme reputation (low/high) are mentioned — keeps tokens minimal.
+	## Priority HIGH so LLM colours narrative around the player's current alliances.
 	var run: Dictionary = game_state.get("run", {})
-	var aspects: Dictionary = run.get("aspects", {})
-	if aspects.is_empty():
+	var factions: Dictionary = run.get("factions", {})
+	if factions.is_empty():
 		return ""
 
 	var lines: Array = []
-	for asp_key in MerlinConstants.TRIADE_ASPECTS:
-		var asp_state: int = int(aspects.get(asp_key, MerlinConstants.AspectState.EQUILIBRE))
-		if asp_state == MerlinConstants.AspectState.BAS or asp_state == MerlinConstants.AspectState.HAUT:
-			var narrative_map: Dictionary = MerlinConstants.ASPECT_STATE_NARRATIVE.get(asp_key, {})
-			var line: String = str(narrative_map.get(asp_state, ""))
-			if not line.is_empty():
-				lines.append(line)
+	for faction in factions:
+		var val: float = float(factions[faction])
+		if val <= 20.0:
+			lines.append("%s: hostile (%.0f)" % [faction, val])
+		elif val >= 80.0:
+			lines.append("%s: allie (%.0f)" % [faction, val])
 
 	if lines.is_empty():
 		return ""
-	return "ETAT: " + " | ".join(lines)
+	return "FACTIONS: " + " | ".join(lines)
 
 
 func _get_danger_context(game_state: Dictionary) -> String:
@@ -596,7 +595,7 @@ func summarize_and_archive_run(ending: String, final_state: Dictionary) -> void:
 		"run_id": cross_run_memory.size() + 1,
 		"ending": ending,
 		"cards_played": journal.size(),
-		"dominant_aspect": _find_dominant_aspect(final_state),
+		"dominant_faction": _find_dominant_faction(final_state),
 		"notable_events": _extract_notable_events(),
 		"player_style": _classify_player_style(),
 		"score": int(final_state.get("score", 0)),
@@ -610,14 +609,15 @@ func summarize_and_archive_run(ending: String, final_state: Dictionary) -> void:
 	save_journal()
 
 
-func _find_dominant_aspect(final_state: Dictionary) -> String:
-	var aspects: Dictionary = final_state.get("run", {}).get("aspects", {})
-	var max_abs := 0
-	var dominant := "equilibre"
-	for aspect in aspects:
-		if absi(int(aspects[aspect])) > max_abs:
-			max_abs = absi(int(aspects[aspect]))
-			dominant = str(aspect)
+func _find_dominant_faction(final_state: Dictionary) -> String:
+	var factions: Dictionary = final_state.get("run", {}).get("factions", {})
+	var max_val := 0.0
+	var dominant := "neutre"
+	for faction in factions:
+		var val: float = absf(float(factions[faction]) - 50.0)
+		if val > max_val:
+			max_val = val
+			dominant = str(faction)
 	return dominant
 
 
@@ -726,7 +726,7 @@ func get_past_lives_for_prompt() -> String:
 		var run: Dictionary = cross_run_memory[i]
 		var ending: String = str(run.get("ending", "inconnu"))
 		var cards: int = int(run.get("cards_played", 0))
-		var dom: String = str(run.get("dominant_aspect", ""))
+		var dom: String = str(run.get("dominant_faction", ""))
 		var style: String = str(run.get("player_style", ""))
 		var life: int = int(run.get("life_final", 0))
 		var events: String = str(run.get("notable_events", ""))

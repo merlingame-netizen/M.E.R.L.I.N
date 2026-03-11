@@ -130,11 +130,12 @@ func _select_pools(context: Dictionary) -> Array:
 		elif value > 85:
 			pools.append_array(cards_by_context.crisis_high)
 
-	# Par aspects (TRIADE)
-	var aspects: Dictionary = context.get("aspects", {})
+	# Par factions (reputation extremes)
+	var factions: Dictionary = context.get("factions", {})
 	var any_extreme := false
-	for aspect in aspects:
-		if int(aspects[aspect]) != 0:
+	for faction in factions:
+		var val: float = float(factions[faction])
+		if val <= 20.0 or val >= 80.0:
 			any_extreme = true
 			break
 	if any_extreme:
@@ -227,21 +228,16 @@ func _weighted_random(weighted_cards: Array) -> Dictionary:
 
 func _generate_emergency_card(context: Dictionary) -> Dictionary:
 	## Genere une carte minimale en cas d'urgence.
-	var aspects: Dictionary = context.get("aspects", {})
+	var factions: Dictionary = context.get("factions", {})
 
-	# Find most critical aspect
-	var worst_aspect := "Corps"
-	var worst_state := 0
-
-	for aspect in aspects:
-		var state: int = int(aspects[aspect])
-		if abs(state) > abs(worst_state):
-			worst_state = state
-			worst_aspect = aspect
-
-	# Generate balancing card
-	var direction := "down" if worst_state > 0 else "up"
-	var opposite_direction := "up" if direction == "down" else "down"
+	# Find most hostile faction to offer a reconciliation opportunity
+	var worst_faction := "druides"
+	var worst_val := 50.0
+	for faction in factions:
+		var val: float = float(factions[faction])
+		if val < worst_val:
+			worst_val = val
+			worst_faction = str(faction)
 
 	return {
 		"id": "emergency_%d" % Time.get_ticks_msec(),
@@ -250,28 +246,26 @@ func _generate_emergency_card(context: Dictionary) -> Dictionary:
 		"options": [
 			{
 				"direction": "left",
-				"label": "Se reposer",
+				"label": "Tendre la main",
 				"effects": [
-					{"type": "SHIFT_ASPECT", "aspect": worst_aspect, "direction": direction}
+					{"type": "ADD_REPUTATION", "faction": worst_faction, "amount": 10}
 				],
-				"preview": "Equilibrer"
+				"preview": "+Rep"
 			},
 			{
 				"direction": "center",
-				"label": "Mediter",
+				"label": "Mediter sur les oghams",
 				"effects": [
-					{"type": "ADD_SOUFFLE", "amount": 1}
+					{"type": "ADD_REPUTATION", "faction": worst_faction, "amount": 5}
 				],
-				"preview": "+Souffle",
+				"preview": "+Rep",
 				"cost": 1,
 			},
 			{
 				"direction": "right",
-				"label": "Continuer",
-				"effects": [
-					{"type": "SHIFT_ASPECT", "aspect": worst_aspect, "direction": opposite_direction}
-				],
-				"preview": "Risque"
+				"label": "Continuer sans s'arreter",
+				"effects": [],
+				"preview": "Neutre"
 			}
 		],
 		"tags": ["recovery", "emergency"],
