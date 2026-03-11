@@ -1056,7 +1056,7 @@ func _check_power_milestone() -> void:
 func _update_dynamic_difficulty() -> void:
 	if not store or not store.llm:
 		return
-	var ctx: Dictionary = store.llm.build_triade_context(store.state)
+	var ctx: Dictionary = store.state.get("run", {}).duplicate()
 	var tendency: String = str(ctx.get("player_tendency", "neutre"))
 	var rule_change: Dictionary = store.llm._suggest_rule_heuristic(ctx, tendency)
 

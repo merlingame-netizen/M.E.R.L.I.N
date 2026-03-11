@@ -360,7 +360,7 @@ func _reduce(action: Dictionary) -> Dictionary:
 			elif llm != null and llm.is_llm_ready():
 				# Direct adapter path (no MOS)
 				print("[MerlinStore] TRIADE_GET_CARD: using direct LLM")
-				var ctx: Dictionary = llm.build_triade_context(state)
+				var ctx: Dictionary = state.get("run", {}).duplicate()
 				var llm_result: Dictionary = await llm.generate_card(ctx)
 				if llm_result.get("ok", false) and llm_result.has("card"):
 					card = llm_result["card"]

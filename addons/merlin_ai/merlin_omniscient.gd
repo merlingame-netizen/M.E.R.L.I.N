@@ -539,8 +539,7 @@ func _calendar_event_to_card(ev: Dictionary) -> Dictionary:
 				"direction": "center",
 				"label": center_label,
 				"effects": center_effects,
-				"preview": "+Souffle",
-				"cost": 1,
+				"preview": "+Ogham",
 			},
 			{
 				"direction": "right",
@@ -776,10 +775,10 @@ func _try_llm_generation() -> Dictionary:
 			return swarm_card
 		print("[MOS] Strategy S: failed, falling through to B/C")
 
-	# Strategy B: Use MerlinLlmAdapter if available (TRIADE-validated, single-instance)
+	# Strategy B: Use MerlinLlmAdapter if available (single-instance)
 	if _store and _store.llm and _store.llm.is_llm_ready():
 		var adapter: MerlinLlmAdapter = _store.llm
-		var ctx: Dictionary = adapter.build_triade_context(_store.state)
+		var ctx: Dictionary = _current_context.duplicate()
 		if not _scene_context.is_empty():
 			ctx["scene_context"] = _scene_context
 		print("[MOS] Strategy B: starting adapter.generate_card()...")
@@ -1411,17 +1410,19 @@ func _build_user_prompt() -> String:
 
 
 func _parse_llm_response(text: String) -> Dictionary:
-	## Parse la reponse LLM en carte TRIADE valide.
-	## Supports both JSON and plain text format (A/B/C choices).
+	## Parse la reponse LLM en carte valide (factions/oghams).
+	## Supports both JSON and plain text format.
 
 	# Strategy 1: Try JSON extraction via adapter
 	if _store and _store.llm:
 		var adapter: MerlinLlmAdapter = _store.llm
 		var extracted: Dictionary = adapter._extract_json_from_response(text)
 		if not extracted.is_empty():
-			var validated: Dictionary = adapter.validate_triade_card(extracted)
-			if validated.get("ok", false):
-				return validated.get("card", {})
+			# Validate new card schema: requires "text" + at least 1 option
+			var card_text: String = str(extracted.get("text", ""))
+			var card_opts: Array = extracted.get("options", [])
+			if card_text.length() >= 10 and card_opts.size() >= 1:
+				return extracted
 
 	# Strategy 2: Plain text extraction (A/B/C choices)
 	var plain_card := _parse_plain_text_response(text)
