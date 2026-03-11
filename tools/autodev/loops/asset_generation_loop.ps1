@@ -44,8 +44,10 @@ if (-not $AssetDescription) {
 }
 
 # Resolve default output dirs
+# Level 1 (3D): assets/3d_models/broceliande/{category}/ (computed dynamically per asset)
+# Level 2 (sprite): assets/sprites/generated/
 if (-not $OutputDir) {
-    $OutputDir = if ($AssetType -eq "3d_model") { "assets/3d/generated" } else { "assets/sprites/generated" }
+    $OutputDir = if ($AssetType -eq "3d_model") { "assets/3d_models/broceliande" } else { "assets/sprites/generated" }
 }
 $outputDirFull = Join-Path $projectRoot ($OutputDir.Replace("/", "\"))
 
@@ -229,12 +231,17 @@ $assetFormat = "placeholder"
 # STEP 2: Image Generation (Levels 1 and 2)
 # ---------------------------------------------------------------------------
 
-$tempImagePath = Join-Path $env:TEMP "merlin_asset_${AssetName}_$(Get-Date -Format 'yyyyMMdd_HHmmss').png"
+# nano-banana saves to ~/Documents/nano-banana-images/ (not $env:TEMP)
+$nanoBananaOutputDir = Join-Path $HOME "Documents\nano-banana-images"
+$tempImagePath = Join-Path $nanoBananaOutputDir "generated-${AssetName}-$(Get-Date -Format 'yyyyMMdd_HHmmss').png"
 $imageGenerated = $false
 $imagePrompt    = ""
 
+# asset-forge base prefix (from .claude/skills/asset-forge/SKILL.md)
+$assetForgeBasePrefix = "low-poly 3D game asset, faceted flat-shading, celtic druidic style, dark forest green and moss brown palette, isolated on pure white background, game-ready prop, no textures, solid color faces, single object centered"
+
 if ($strategyLevel -le 2) {
-    $imagePrompt = "$AssetDescription, isolated on pure white background, no shadows, $StyleGuide style, clean edges, suitable for 3D reconstruction"
+    $imagePrompt = "$assetForgeBasePrefix, $AssetDescription"
 
     if ($AssetType -eq "sprite") {
         $imagePrompt += ", pixel art, 32x32 or 64x64, limited color palette, CRT aesthetic"
@@ -242,11 +249,23 @@ if ($strategyLevel -le 2) {
 
     Write-Host "[AssetGen] Level $strategyLevel`: Generating image via nano-banana..."
 
+    # Use asset-forge skill pipeline (cascade 4 tiers: Gemini → Pollinations → HuggingFace → Kaggle SDXL)
+    # See .claude/skills/asset-forge/SKILL.md for full spec
     $agentPrompt = @"
-Generate an image for a Godot game asset using the nano-banana MCP tool.
-Image prompt: "$imagePrompt"
-Save the result to: $tempImagePath
-After generation, confirm the file exists and describe what was generated.
+Use the Skill 'asset-forge' to generate a game asset for M.E.R.L.I.N. Broceliande.
+
+Asset name: $AssetName
+Asset type: $AssetType
+Full image prompt: "$imagePrompt"
+
+Follow the asset-forge pipeline:
+1. generate_image (nano-banana MCP) with the prompt above
+2. get_last_image_info to confirm the PNG path (~/Documents/nano-banana-images/)
+3. If background is not white: edit_image to fix it
+4. Run QA checks (file > 10KB, white background, not blank)
+5. Report the confirmed PNG path
+
+DO NOT generate Trellis 3D — this script handles that separately.
 "@
 
     if (-not $DryRun) {
@@ -255,11 +274,21 @@ After generation, confirm the file exists and describe what was generated.
         Write-Host "[AssetGen] [DRY-RUN] Image prompt: $imagePrompt"
     }
 
+    # nano-banana names files autonomously — scan dir for most recently written generated-*.png
+    if (-not $DryRun -and (Test-Path $nanoBananaOutputDir)) {
+        $latestPng = Get-ChildItem -Path $nanoBananaOutputDir -Filter "generated-*.png" -ErrorAction SilentlyContinue |
+                     Sort-Object LastWriteTime -Descending | Select-Object -First 1
+        if ($latestPng -and ($latestPng.LastWriteTime -gt $startTime)) {
+            $tempImagePath = $latestPng.FullName
+            Write-Host "[AssetGen] Detected nano-banana output: $tempImagePath"
+        }
+    }
+
     $imageGenerated = (Test-Path $tempImagePath) -or $DryRun
     if ($imageGenerated) {
         Write-Host "[AssetGen] Image generation: OK — $tempImagePath"
     } else {
-        Write-Warning "[AssetGen] Image generation: file not found — $tempImagePath"
+        Write-Warning "[AssetGen] Image generation: file not found in $nanoBananaOutputDir"
     }
 }
 
@@ -276,15 +305,30 @@ if ($strategyLevel -eq 1) {
         Write-Warning "[AssetGen] FALLBACK — Image not suitable for Trellis (too small or missing). Moving to level 2."
         $strategyLevel = 2
     } else {
-        $glbOutputPath = Join-Path $outputDirFull "${AssetName}.glb"
-        if (-not (Test-Path $outputDirFull)) { New-Item -ItemType Directory -Path $outputDirFull -Force | Out-Null }
+        # Deploy path follows asset-forge convention: assets/3d_models/broceliande/{category}/
+        # Category auto-detected from AssetName (megaliths/structures/poi/creatures/decor)
+        # Category derived from asset name — matches asset-forge catalog naming convention
+        $broceliandeCategory = if ($AssetName -match "dolmen|menhir|stone_circle") { "megaliths" }
+                               elseif ($AssetName -match "bridge_wood|root_arch|fairy_lantern|druid_altar") { "structures" }
+                               elseif ($AssetName -match "fountain_barenton|merlin_tomb|merlin_oak") { "poi" }
+                               elseif ($AssetName -match "korrigan|white_doe|mist_wolf|giant_raven") { "creatures" }
+                               else { "decor" }  # fallen_trunk, giant_mushroom, root_network, spider_web, giant_stump
+        $broceliandeDir = Join-Path $projectRoot "assets\3d_models\broceliande\$broceliandeCategory"
+        $glbOutputPath = Join-Path $broceliandeDir "${AssetName}.glb"
+        if (-not (Test-Path $broceliandeDir)) { New-Item -ItemType Directory -Path $broceliandeDir -Force | Out-Null }
 
         $trellisAgentPrompt = @"
 Use the trellis_generate_3d MCP tool to convert this image to a 3D GLB model.
 Image path: $tempImagePath
 Resolution: 512
-Save GLB to: $glbOutputPath
-Report the job ID and when complete, confirm the GLB file exists.
+Asset name: $AssetName
+Deploy GLB to: $glbOutputPath
+
+Steps:
+1. trellis_generate_3d(image_path=..., resolution="512", name="$AssetName")
+2. Poll trellis_job_status every 30s until status=complete
+3. Copy output GLB to: $glbOutputPath
+4. Confirm glbValid=true and glbSize > 50KB
 "@
 
         if (-not $DryRun) {
@@ -295,7 +339,7 @@ Report the job ID and when complete, confirm the GLB file exists.
 
         $glbExists = (Test-Path $glbOutputPath) -or $DryRun
         if ($glbExists) {
-            $assetPath   = "$OutputDir/${AssetName}.glb"
+            $assetPath   = "assets/3d_models/broceliande/$broceliandeCategory/${AssetName}.glb"
             $assetFormat = "glb"
             Write-Host "[AssetGen] Level 1: GLB generated — $assetPath"
         } else {
@@ -358,11 +402,13 @@ if ($strategyLevel -eq 3 -or (-not $assetPath)) {
         $assetFormat = "existing_library"
         Write-Host "[AssetGen] Level 3: Using existing asset — $assetPath"
     } else {
-        $placeholderPath = Join-Path $projectRoot "assets\3d\placeholder.glb"
-        if (-not (Test-Path $placeholderPath) -and -not $DryRun) {
-            Write-Warning "[AssetGen] No placeholder found at assets/3d/placeholder.glb — recording as missing"
+        # Search for any existing placeholder GLB in the 3D models tree
+        $placeholderPath = Get-ChildItem -Path (Join-Path $projectRoot "assets\3d_models") -Recurse -Filter "placeholder*.glb" -ErrorAction SilentlyContinue |
+                           Select-Object -First 1 -ExpandProperty FullName
+        if (-not $placeholderPath -and -not $DryRun) {
+            Write-Warning "[AssetGen] No placeholder GLB found in assets/3d_models/ — asset_path will be null"
         }
-        $assetPath   = "assets/3d/placeholder.glb"
+        $assetPath   = if ($placeholderPath) { $placeholderPath.Replace($projectRoot, "").TrimStart("\").Replace("\", "/") } else { "" }
         $assetFormat = "placeholder"
         Write-Warning "[AssetGen] Level 3: No match found — using placeholder"
     }
