@@ -1,35 +1,24 @@
 #!/usr/bin/env python3
 """
-CLI-Anything — Unified CLI dispatcher for Godot, PowerBI, Outlook.
+CLI-Anything — Game-focused CLI dispatcher (Godot, Ollama, Git).
 
 Usage:
     python tools/cli.py <tool> <action> [options]
     python tools/cli.py --help
     python tools/cli.py godot --help
     python tools/cli.py godot validate
+    python tools/cli.py godot validate_step0
     python tools/cli.py godot export web
     python tools/cli.py godot test
     python tools/cli.py godot telemetry
-    python tools/cli.py powerbi list-reports
-    python tools/cli.py powerbi refresh <dataset_id>
-    python tools/cli.py powerbi query --dax "EVALUATE {1}" --dataset <id>
-    python tools/cli.py powerbi export <report_id> --format pdf
-    python tools/cli.py powerbi open <pbix_path>
-    python tools/cli.py outlook inbox --limit 10
-    python tools/cli.py outlook search --query "rapport"
-    python tools/cli.py outlook read --index 0
-    python tools/cli.py outlook send --to "x@y.com" --subject "S" --body "B"
-    python tools/cli.py dbeaver list-connections
-    python tools/cli.py dbeaver list-tables --database prod_app_bcv_vm_v
-    python tools/cli.py dbeaver describe --table prod_app_bcv_vm_v.v_org_r_compte_client_c
-    python tools/cli.py dbeaver query --sql "SELECT * FROM prod_app_bcv_vm_v.v_org_r_compte_client_c" --limit 20
-    python tools/cli.py dbeaver profile --table prod_app_bcv_vm_v.v_org_r_compte_client_c
-    python tools/cli.py bigquery list-datasets
-    python tools/cli.py bigquery list-tables --dataset my_dataset
-    python tools/cli.py bigquery describe --dataset my_dataset --table my_table
-    python tools/cli.py bigquery query --sql "SELECT * FROM proj.ds.t" --limit 50
-    python tools/cli.py bigquery dry-run --sql "SELECT * FROM proj.ds.t"
-    python tools/cli.py bigquery storage-info --dataset my_dataset --table my_table
+    python tools/cli.py godot smoke --scene res://scenes/MerlinGame.tscn
+    python tools/cli.py ollama list
+    python tools/cli.py ollama generate --model qwen2.5:7b --prompt "Hello"
+    python tools/cli.py git status
+    python tools/cli.py git commit --message "feat: ..."
+
+Note: Orange/data adapters (powerbi, dbeaver, bigquery, outlook, office, browser)
+      have been moved to ~/.claude/tools/adapters/ — use cli.py from that context.
 
 Output: JSON by default. Use --human for pretty-printed output.
 Exit code: 0 = success, 1 = error (for CI/AUTODEV integration).
@@ -38,10 +27,17 @@ Exit code: 0 = success, 1 = error (for CI/AUTODEV integration).
 from __future__ import annotations
 
 import argparse
+import io
 import json
 import sys
 from pathlib import Path
 from typing import Any
+
+# Fix Windows stdout encoding (cp1252 → utf-8) to prevent UnicodeEncodeError
+if hasattr(sys.stdout, "buffer"):
+    sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding="utf-8", errors="replace")
+if hasattr(sys.stderr, "buffer"):
+    sys.stderr = io.TextIOWrapper(sys.stderr.buffer, encoding="utf-8", errors="replace")
 
 # Ensure project root is in sys.path regardless of invocation directory
 _HERE = Path(__file__).resolve().parent        # tools/
@@ -51,7 +47,8 @@ for _p in (_ROOT, _HERE):
     if _s not in sys.path:
         sys.path.insert(0, _s)
 
-TOOLS = ["godot", "powerbi", "outlook", "dbeaver", "ollama", "git", "bigquery", "office", "browser"]
+TOOLS = ["godot", "ollama", "git"]
+SPECIAL_COMMANDS = ["health", "pipeline"]
 
 
 # ── Tool loader (lazy import to avoid cross-tool dependencies) ────────────────
@@ -60,30 +57,12 @@ def _load_adapter(tool: str):
     if tool == "godot":
         from adapters.godot_adapter import GodotAdapter
         return GodotAdapter()
-    if tool == "powerbi":
-        from adapters.powerbi_adapter import PowerBIAdapter
-        return PowerBIAdapter()
-    if tool == "outlook":
-        from adapters.outlook_adapter import OutlookAdapter
-        return OutlookAdapter()
-    if tool == "dbeaver":
-        from adapters.dbeaver_adapter import DBeaverAdapter
-        return DBeaverAdapter()
-    if tool == "bigquery":
-        from adapters.bigquery_adapter import BigQueryAdapter
-        return BigQueryAdapter()
-    if tool == "office":
-        from adapters.office_adapter import OfficeAdapter
-        return OfficeAdapter()
     if tool == "ollama":
         from adapters.ollama_adapter import OllamaAdapter
         return OllamaAdapter()
     if tool == "git":
         from adapters.git_adapter import GitAdapter
         return GitAdapter()
-    if tool == "browser":
-        from adapters.browser_adapter import BrowserAdapter
-        return BrowserAdapter()
     raise ValueError(f"Unknown tool: {tool!r}. Available: {TOOLS}")
 
 
@@ -106,43 +85,15 @@ def build_parser() -> argparse.ArgumentParser:
                         help="[godot export] Export preset name (e.g. 'web', 'windows')")
     parser.add_argument("--step", type=int, default=None, help="[godot validate] Step number (0-5)")
     parser.add_argument("--scene", default=None, help="[godot smoke] Scene path to test")
-    # PowerBI args
-    parser.add_argument("--dataset", default=None, help="[powerbi] Dataset ID")
-    parser.add_argument("--report", default=None, help="[powerbi] Report ID")
-    parser.add_argument("--dax", default=None, help="[powerbi query] DAX query string")
-    parser.add_argument("--format", default="PDF", help="[powerbi export] Format: PDF, XLSX, PNG")
-    parser.add_argument("--workspace", default=None, help="[powerbi] Workspace/group ID")
-    parser.add_argument("--pbix", default=None, help="[powerbi open/extract] .pbix file path")
-    parser.add_argument("--out", default=None, help="[powerbi extract] Output directory")
-    # Outlook args
-    parser.add_argument("--to", default=None, help="[outlook send] Recipient(s)")
-    parser.add_argument("--subject", default=None, help="[outlook send/new] Subject")
-    parser.add_argument("--body", default=None, help="[outlook send/new/reply/forward] Body")
-    parser.add_argument("--limit", type=int, default=10, help="[outlook inbox/search] Item count")
-    parser.add_argument("--query", default=None, help="[outlook search] Search query")
-    parser.add_argument("--index", type=int, default=0, help="[outlook read/reply/forward] Mail index")
-    parser.add_argument("--reply-all", action="store_true", help="[outlook reply] Reply all")
-    parser.add_argument("--attachments", nargs="*", default=None, help="[outlook send] Attachment paths")
-    # DBeaver args
-    parser.add_argument("--connection", default=None, help="[dbeaver] Connection ID (default: EDH_PRODv2)")
-    parser.add_argument("--database", default=None, help="[dbeaver list-tables] Database/schema name")
-    parser.add_argument("--table", default=None, help="[dbeaver describe/profile] Table name (schema.table)")
-    parser.add_argument("--sql", default=None, help="[dbeaver query] SQL SELECT statement")
-    # Office args
-    parser.add_argument("--path", default=None, help="[office ppt-*] Path to .pptx file")
-    parser.add_argument("--title", default=None, help="[office ppt-create/onenote-*] Title")
-    parser.add_argument("--bullets", nargs="*", default=None, help="[office ppt-create] Bullet points")
-    parser.add_argument("--notebook", default=None, help="[office onenote-sections] Notebook name or ID")
-    parser.add_argument("--section", default=None, help="[office onenote-pages/create] Section name or ID")
-    parser.add_argument("--page-id", default=None, help="[office onenote-read] Page ID")
-    parser.add_argument("--body-html", default=None, help="[office onenote-create] HTML body content")
-    # BigQuery args
-    parser.add_argument("--project", default=None,
-                        help="[bigquery] GCP project ID (default: ofr-ppx-propme-1-prd)")
-    parser.add_argument("--dry-run", dest="dry_run", action="store_true", default=False,
-                        help="[bigquery query] Estimate bytes scanned without executing")
-    # Positional id (for powerbi refresh/export with positional dataset/report id)
-    parser.add_argument("id", nargs="?", default=None, help="[powerbi] Resource ID (positional)")
+    # Ollama args
+    parser.add_argument("--model", default=None, help="[ollama] Model name (default: qwen2.5:7b)")
+    parser.add_argument("--prompt", default=None, help="[ollama generate/chat] Text prompt")
+    parser.add_argument("--system", default=None, help="[ollama] System prompt")
+    # Git args
+    parser.add_argument("--message", default=None, help="[git commit] Commit message")
+    parser.add_argument("--files", nargs="*", default=None, help="[git commit] Files to stage")
+    parser.add_argument("--staged", action="store_true", help="[git diff] Show staged changes only")
+    parser.add_argument("--number", type=int, default=None, help="[git pr-view] PR number")
     return parser
 
 
@@ -182,14 +133,108 @@ def print_tool_help(tool: str) -> None:
         print(f"Could not load {tool} adapter: {exc}")
 
 
+# ── Health check ─────────────────────────────────────────────────────────────
+
+_HEALTH_PROBES: dict[str, tuple[str, dict]] = {
+    "godot":  ("list_presets", {}),
+    "ollama": ("list",         {}),
+    "git":    ("status",       {}),
+}
+
+
+def run_health(human: bool) -> int:
+    """Smoke-test every adapter with a lightweight probe action."""
+    import time
+    results = {}
+    for tool in TOOLS:
+        probe_action, probe_kwargs = _HEALTH_PROBES.get(tool, ("help", {}))
+        t0 = time.monotonic()
+        try:
+            adapter = _load_adapter(tool)
+            result = adapter.execute(probe_action, **probe_kwargs)
+            status = result.get("status", "error")
+        except Exception as exc:
+            status = "error"
+            result = {"status": "error", "error": str(exc)}
+        elapsed = int((time.monotonic() - t0) * 1000)
+        results[tool] = {"status": status, "probe": probe_action, "ms": elapsed,
+                         "error": result.get("error")}
+
+    all_ok = all(r["status"] == "ok" for r in results.values())
+    envelope = {
+        "status": "ok" if all_ok else "degraded",
+        "tools": results,
+        "passed": sum(1 for r in results.values() if r["status"] == "ok"),
+        "total": len(results),
+    }
+    if human:
+        icon = "✓" if all_ok else "⚠"
+        print(f"{icon} Health: {envelope['passed']}/{envelope['total']} tools OK\n")
+        for tool, r in results.items():
+            sym = "✓" if r["status"] == "ok" else "✗"
+            err = f"  [{r['error']}]" if r.get("error") else ""
+            print(f"  {sym} {tool:<12} {r['probe']:<20} {r['ms']}ms{err}")
+        print()
+    else:
+        print(json.dumps(envelope, ensure_ascii=False, indent=2))
+    return 0 if all_ok else 1
+
+
+# ── Pipeline ──────────────────────────────────────────────────────────────────
+
+def run_pipeline(steps: list[str], human: bool, stop_on_error: bool = True) -> int:
+    """
+    Execute a sequence of CLI steps.
+    Each step is a string like 'godot validate' or 'git status'.
+    Steps are split on whitespace and dispatched through the normal main() path.
+    """
+    import time
+    results = []
+    overall_ok = True
+    for step in steps:
+        parts = step.strip().split()
+        if not parts:
+            continue
+        t0 = time.monotonic()
+        exit_code = main(parts)
+        elapsed = int((time.monotonic() - t0) * 1000)
+        ok = exit_code == 0
+        overall_ok = overall_ok and ok
+        results.append({"step": step, "exit_code": exit_code, "ms": elapsed})
+        if not ok and stop_on_error:
+            if human:
+                print(f"\n✗ Pipeline aborted at step: {step!r}\n")
+            break
+
+    if human:
+        sym = "✓" if overall_ok else "✗"
+        print(f"\n{sym} Pipeline finished — {sum(1 for r in results if r['exit_code']==0)}/{len(results)} steps OK")
+    else:
+        print(json.dumps({"status": "ok" if overall_ok else "error",
+                          "steps": results, "passed": sum(1 for r in results if r["exit_code"]==0),
+                          "total": len(results)}, ensure_ascii=False, indent=2))
+    return 0 if overall_ok else 1
+
+
 # ── Main ──────────────────────────────────────────────────────────────────────
 
 def main(argv: list[str] | None = None) -> int:
     parser = build_parser()
 
-    # Support: cli.py godot --help (no action)
     if argv is None:
         argv = sys.argv[1:]
+
+    # Special top-level commands: health, pipeline
+    if argv and argv[0] == "health":
+        human = "--human" in argv
+        return run_health(human)
+    if argv and argv[0] == "pipeline":
+        human = "--human" in argv
+        stop = "--no-stop" not in argv
+        steps = [a for a in argv[1:] if not a.startswith("--")]
+        return run_pipeline(steps, human, stop_on_error=stop)
+
+    # Support: cli.py godot --help (no action)
     if len(argv) >= 1 and argv[0] in TOOLS and (len(argv) == 1 or argv[1] in ("--help", "-h")):
         print_tool_help(argv[0])
         return 0
@@ -200,42 +245,21 @@ def main(argv: list[str] | None = None) -> int:
         print_tool_help(args.tool)
         return 0
 
-    # Build kwargs from parsed args
+    # Build kwargs from parsed args (game tools only: godot, ollama, git)
     kwargs: dict[str, Any] = {
-        "preset": args.preset,
-        "step": args.step,
-        "scene": args.scene,
-        "dataset": args.dataset or args.id,
-        "report": args.report or args.id,
-        "dax": args.dax,
-        "format": args.format,
-        "workspace": args.workspace,
-        "pbix": args.pbix or args.id,
-        "out": args.out,
-        "to": args.to,
-        "subject": args.subject,
-        "body": args.body,
-        "limit": args.limit,
-        "query": args.query,
-        "index": args.index,
-        "reply_all": args.reply_all,
-        "attachments": args.attachments,
-        # DBeaver
-        "connection": args.connection,
-        "database": args.database,
-        "table": args.table,
-        "sql": args.sql,
-        # Office
-        "path": args.path,
-        "title": args.title,
-        "bullets": args.bullets,
-        "notebook": args.notebook,
-        "section": args.section,
-        "page_id": getattr(args, "page_id", None),
-        "body_html": getattr(args, "body_html", None),
-        # BigQuery
-        "project": getattr(args, "project", None),
-        "dry_run": getattr(args, "dry_run", False) or None,
+        # Godot
+        "preset": getattr(args, "preset", None),
+        "step":   getattr(args, "step",   None),
+        "scene":  getattr(args, "scene",  None),
+        # Ollama
+        "model":  getattr(args, "model",  None),
+        "prompt": getattr(args, "prompt", None),
+        "system": getattr(args, "system", None),
+        # Git
+        "message": getattr(args, "message", None),
+        "files":   getattr(args, "files",   None),
+        "staged":  getattr(args, "staged",  False) or None,
+        "number":  getattr(args, "number",  None),
     }
     # Remove None values to keep adapter signatures clean
     kwargs = {k: v for k, v in kwargs.items() if v is not None}

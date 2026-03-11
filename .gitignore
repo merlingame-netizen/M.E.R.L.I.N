@@ -206,6 +206,31 @@ output/
 .swarm/locks/
 .swarm/*.tmp
 
+# -------------------------------------------
+# Build / Package artifacts
+# -------------------------------------------
+package/
+packages/
+*.tgz
+*.tar.gz
+!archive/
+
+# -------------------------------------------
+# Orange/data temp files (should not be in this repo)
+# -------------------------------------------
+tmp_*/
+tmp_schema_*.json
+tmp_view_*.json
+tmp_view_*.sql
+tmp_qd_*
+.tmp/
+
+# -------------------------------------------
+# Portail-llm / n8n (Orange infra, not game)
+# -------------------------------------------
+tools/portail-llm/
+tools/n8n-mcp-server/
+
 # Godot UID files (auto-generated outside editor)
 *.uid
 
