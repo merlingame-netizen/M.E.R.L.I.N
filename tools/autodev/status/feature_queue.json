@@ -7,27 +7,31 @@
       "id": "TRIADE-CORE-1",
       "phase": 1,
       "priority": 1,
-      "status": "pending",
+      "status": "completed",
       "title": "Supprimer Triade de merlin_constants.gd",
       "agent": "godot_expert",
       "files": ["scripts/merlin/merlin_constants.gd"],
-      "description": "Supprimer : AspectState enum, TRIADE_ASPECTS array, TRIADE_ASPECT_INFO dict, SOUFFLE_MAX, SOUFFLE_START, TRIADE_OPTION_INFO. Conserver : 18 Oghams (OGHAM_*), 5 factions (FACTION_*), constantes narratives. Valider avec validate.bat après."
+      "description": "Supprimer : AspectState enum, TRIADE_ASPECTS array, TRIADE_ASPECT_INFO dict, SOUFFLE_MAX, SOUFFLE_START, TRIADE_OPTION_INFO. Conserver : 18 Oghams (OGHAM_*), 5 factions (FACTION_*), constantes narratives. Valider avec validate.bat après.",
+      "completed_at": "2026-03-11",
+      "notes": "Validé 0 erreurs 0 warnings. Supprimés : AspectState, TRIADE_ASPECTS, TRIADE_ASPECT_INFO, SOUFFLE_MAX/START/SINGLE_USE, TRIADE_OPTION_INFO, ASPECT_DC_PENALTY_*, ASPECT_STATE_NARRATIVE, SOUFFLE_PERK_TYPES, TRIADE_VICTORY_ENDINGS, TRIADE_SESSION, ASPECT_MIN/MAX/DECAY_RATE. TRIADE_NODE_TYPES renommé NODE_TYPES. FACTIONS mis à jour (Array[String], 5 factions canoniques dont niamh). Ajout FACTION_THRESHOLD_CONTENT/ENDING. ATTENTION : callers downstream (merlin_store, merlin_game_ui, merlin_game_controller, rag_manager, HubAntre, TransitionBiome, Collection) référencent encore les symboles supprimés — à traiter dans TRIADE-CORE-2, TRIADE-UI-1/2, TRIADE-SCENES."
     },
     {
       "id": "TRIADE-CORE-2",
       "phase": 1,
       "priority": 2,
-      "status": "pending",
+      "status": "completed",
       "title": "Nettoyer merlin_store.gd — état Triade",
       "agent": "godot_expert",
       "files": ["scripts/merlin/merlin_store.gd"],
-      "description": "Supprimer build_default_state() avec corps/ame/monde. Reconstruire état minimal : { tour: int, ogham_actif: String, factions: {druides:0, anciens:0, korrigans:0, niamh:0, ankou:0}, cartes_jouees: Array, run_active: bool }. Supprimer tous les signals liés aux aspects."
+      "description": "Supprimer build_default_state() avec corps/ame/monde. Reconstruire état minimal : { tour: int, ogham_actif: String, factions: {druides:0, anciens:0, korrigans:0, niamh:0, ankou:0}, cartes_jouees: Array, run_active: bool }. Supprimer tous les signals liés aux aspects.",
+      "completed_at": "2026-03-11",
+      "notes": "Supprimés: signal souffle_changed, aspects/souffle/perks dans build_default_state(), actions TRIADE_SHIFT_ASPECT/USE_SOUFFLE/ADD_SOUFFLE/SELECT_PERK dans _reduce(), _shift_aspect()/_use_souffle()/_add_souffle() fonctions, _decay_aspects_alignment(), aspects_alignment dans meta, getters get_aspect_state/get_aspect_name/get_all_aspects/get_souffle/is_all_aspects_balanced/count_extreme_aspects. Ajoutés: signal reputation_changed(faction,value,delta), champs factions/tour/run_active/ogham_actif/oghams_decouverts/cartes_jouees/heure_debut_run dans run state. TRIADE_VICTORY_ENDINGS remplacé par dict inline. Erreurs Godot restantes dans d'autres fichiers (rag_manager, game_manager, etc.) — pré-existantes, hors scope CORE-2, à traiter dans TRIADE-UI-1/2, TRIADE-AI-1/2, TRIADE-SCENES."
     },
     {
       "id": "TRIADE-CORE-3",
       "phase": 1,
       "priority": 3,
-      "status": "pending",
+      "status": "completed",
       "title": "Nettoyer merlin_effect_engine.gd — SHIFT_ASPECT/SOUFFLE",
       "agent": "godot_expert",
       "files": ["scripts/merlin/merlin_effect_engine.gd"],

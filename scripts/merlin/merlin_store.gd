@@ -2,7 +2,7 @@
 ## Merlin Store — Central State Management
 ## ═══════════════════════════════════════════════════════════════════════════════
 ## Redux-like state management for Merlin game.
-## Updated 2026-02-08 for TRIADE system (3 aspects, 3 states, 3 options).
+## Updated 2026-03-11 — TRIADE-CORE-2: removed Triade aspect/souffle state.
 ## ═══════════════════════════════════════════════════════════════════════════════
 
 extends Node
@@ -11,8 +11,8 @@ class_name MerlinStore
 signal state_changed(state: Dictionary)
 signal phase_changed(phase: String)
 signal transition_logged(entry: Dictionary)
-signal souffle_changed(old_value: int, new_value: int)
 signal life_changed(old_value: int, new_value: int)
+signal reputation_changed(faction: String, value: float, delta: float)
 signal run_ended(ending: Dictionary)
 signal card_resolved(card_id: String, option: int)
 signal mission_progress(step: int, total: int)
@@ -147,13 +147,6 @@ func _deferred_wire_merlin_ai() -> void:
 # ═══════════════════════════════════════════════════════════════════════════════
 
 func build_default_state() -> Dictionary:
-	# TRIADE system - 3 Aspects with 3 discrete states
-	var aspects: Dictionary = {
-		"Corps": MerlinConstants.AspectState.EQUILIBRE,
-		"Ame": MerlinConstants.AspectState.EQUILIBRE,
-		"Monde": MerlinConstants.AspectState.EQUILIBRE,
-	}
-
 	var essence: Dictionary = {}
 	for element in MerlinConstants.ELEMENTS:
 		essence[element] = 0
@@ -169,15 +162,6 @@ func build_default_state() -> Dictionary:
 			"map_seed": 0,
 			"map": [],
 			"path": [],
-			# TRIADE fields
-			"aspects": aspects,
-			"souffle": MerlinConstants.SOUFFLE_START,
-			"souffle_used_once": false,
-			# B.1 — Souffle Perk (selected in Hub, applied when Souffle is used)
-			"perks": {
-				"selected_perk": "",  # "" | "bouclier" | "surge" | "vision" | "canalisation"
-				"perk_used": false,
-			},
 			"life_essence": MerlinConstants.LIFE_ESSENCE_START,
 			"essences": MerlinConstants.ESSENCE_START,
 			"faveurs": MerlinConstants.FAVEURS_START,
@@ -207,7 +191,7 @@ func build_default_state() -> Dictionary:
 				"resonances_active": [],
 				"narrative_debt": [],
 			},
-			# Run typology (couche orthogonale Triade)
+			# Run typology
 			"typology": "classique",
 			"typology_state": {
 				"timer_remaining": 0.0,
@@ -222,6 +206,20 @@ func build_default_state() -> Dictionary:
 				"tiers": {},
 				"active_effects": [],
 			},
+			# Faction reputation per run
+			"factions": {
+				"druides": 0.0,
+				"anciens": 0.0,
+				"korrigans": 0.0,
+				"niamh": 0.0,
+				"ankou": 0.0,
+			},
+			"tour": 0,
+			"run_active": false,
+			"ogham_actif": "",
+			"oghams_decouverts": [],
+			"cartes_jouees": [],
+			"heure_debut_run": 0,
 		},
 		"bestiole": {
 			"name": "Bestiole",
@@ -241,12 +239,6 @@ func build_default_state() -> Dictionary:
 		"meta": {
 			"essence": essence,
 			"essences": 0,
-			# Alignement Corps/Ame/Monde — score continu cross-run (-100 à +100)
-			"aspects_alignment": {
-				"Corps": 0,
-				"Ame": 0,
-				"Monde": 0,
-			},
 			"ogham_fragments": 0,
 			"liens": 0,
 			# Faction alignment — réputation cross-run (-100 à +100 par faction)
@@ -403,35 +395,10 @@ func _reduce(action: Dictionary) -> Dictionary:
 					return {"ok": true, "run_ended": true, "ending": end_check}
 			return result
 
-		"TRIADE_SHIFT_ASPECT":
-			var aspect: String = action.get("aspect", "")
-			var direction: String = action.get("direction", "")  # "up" or "down"
-			return _shift_aspect(aspect, direction)
-
-		"TRIADE_USE_SOUFFLE":
-			var amount: int = int(action.get("amount", 1))
-			return _use_souffle(amount)
-
-		"TRIADE_ADD_SOUFFLE":
-			var amount: int = int(action.get("amount", 1))
-			return _add_souffle(amount)
-
 		"TRIADE_PROGRESS_MISSION":
 			var step: int = int(action.get("step", 1))
 			return _progress_mission(step)
 
-		# B.1 — Souffle Perk selection (Hub → persists across run start)
-		"SELECT_PERK":
-			var perk_id: String = str(action.get("perk_id", ""))
-			if not perk_id.is_empty() and not MerlinConstants.SOUFFLE_PERK_TYPES.has(perk_id):
-				return {"ok": false, "error": "unknown_perk: " + perk_id}
-			var run: Dictionary = state.get("run", {})
-			var perks: Dictionary = run.get("perks", {})
-			perks["selected_perk"] = perk_id
-			perks["perk_used"] = false
-			run["perks"] = perks
-			state["run"] = run
-			return {"ok": true, "selected_perk": perk_id}
 
 		"TRIADE_USE_SKILL":
 			var skill_id = action.get("skill_id", "")
@@ -683,20 +650,6 @@ func _decay_faction_rep() -> void:
 	state["meta"] = meta
 
 
-## Décroissance aspects_alignment cross-run (8% vers 0 par run, comme factions).
-func _decay_aspects_alignment() -> void:
-	var meta: Dictionary = state.get("meta", {})
-	var alignment: Dictionary = meta.get("aspects_alignment", {})
-	for aspect in ["Corps", "Ame", "Monde"]:
-		var score: int = int(alignment.get(aspect, 0))
-		if score == 0:
-			continue
-		var decayed: int = int(float(score) * (1.0 - MerlinConstants.ASPECT_DECAY_RATE))
-		alignment[aspect] = decayed
-	meta["aspects_alignment"] = alignment
-	state["meta"] = meta
-
-
 ## Snapshot faction_rep (meta) → run["faction_context"].
 func _build_and_store_faction_context() -> void:
 	var meta: Dictionary = state.get("meta", {})
@@ -740,8 +693,6 @@ func _apply_faction_run_bonuses() -> void:
 		var bonus_type: String = str(bonus.get("type", ""))
 		var amount: int = int(bonus.get("amount", 0))
 		match bonus_type:
-			"ADD_SOUFFLE":
-				run["souffle"] = mini(int(run.get("souffle", 0)) + amount, MerlinConstants.SOUFFLE_MAX)
 			"ADD_KARMA":
 				var hidden: Dictionary = run.get("hidden", {})
 				hidden["karma"] = int(hidden.get("karma", 0)) + amount
@@ -805,19 +756,6 @@ func _on_run_ended(ending: Dictionary) -> void:
 func _init_triade_run() -> void:
 	var run = state.get("run", {})
 	run["active"] = true
-	run["aspects"] = {
-		"Corps": MerlinConstants.AspectState.EQUILIBRE,
-		"Ame": MerlinConstants.AspectState.EQUILIBRE,
-		"Monde": MerlinConstants.AspectState.EQUILIBRE,
-	}
-	run["souffle"] = MerlinConstants.SOUFFLE_START
-	run["souffle_used_once"] = false
-	# B.1 — preserve selected_perk across run start, reset perk_used only
-	var prev_perks: Dictionary = run.get("perks", {})
-	run["perks"] = {
-		"selected_perk": str(prev_perks.get("selected_perk", "")),
-		"perk_used": false,
-	}
 	run["life_essence"] = MerlinConstants.LIFE_ESSENCE_START
 	run["essences"] = MerlinConstants.ESSENCE_START
 	# Generate a mission from templates
@@ -851,9 +789,6 @@ func _init_triade_run() -> void:
 	_decay_faction_rep()
 	_build_and_store_faction_context()
 	_apply_faction_run_bonuses()
-
-	# Alignement aspects — décroissance cross-run
-	_decay_aspects_alignment()
 
 	# Select scenario for this run (Hand of Fate 2-style quest)
 	var biome_for_scenario: String = str(run.get("current_biome", ""))
@@ -927,30 +862,16 @@ func _apply_talent_effects_for_run() -> void:
 				var target: String = str(effect.get("target", ""))
 				var value: int = int(effect.get("value", 0))
 				match target:
-					"souffle":
-						run["souffle"] = clampi(
-							int(run.get("souffle", MerlinConstants.SOUFFLE_START)) + value,
-							0,
-							MerlinConstants.SOUFFLE_MAX
-						)
 					"blessings":
 						modifiers["extra_blessings"] = int(modifiers.get("extra_blessings", 0)) + value
 					"awen":
 						var bestiole: Dictionary = state.get("bestiole", {})
 						bestiole["awen"] = mini(int(bestiole.get("awen", 0)) + value, MerlinConstants.AWEN_MAX)
 						state["bestiole"] = bestiole
-					"souffle_max":
-						modifiers["souffle_max_bonus"] = int(modifiers.get("souffle_max_bonus", 0)) + value
 					"bond":
 						var bestiole: Dictionary = state.get("bestiole", {})
 						bestiole["bond"] = maxi(int(bestiole.get("bond", 0)), value)
 						state["bestiole"] = bestiole
-
-			"cancel_first_shift":
-				var aspect: String = str(effect.get("aspect", ""))
-				var direction: String = str(effect.get("direction", ""))
-				var key: String = "cancel_%s_%s" % [aspect.to_lower(), direction]
-				modifiers[key] = true
 
 			"special_rule":
 				var rule_id: String = str(effect.get("id", ""))
@@ -981,74 +902,6 @@ func _consume_talent_modifier(key: String) -> bool:
 		state["run"] = run
 		return true
 	return false
-
-
-func _shift_aspect(aspect: String, direction: String) -> Dictionary:
-	if aspect not in MerlinConstants.TRIADE_ASPECTS:
-		return {"ok": false, "error": "Invalid aspect: " + aspect}
-
-	# Talent: cancel_first_shift (one-shot per run)
-	var cancel_key: String = "cancel_%s_%s" % [aspect.to_lower(), direction]
-	if _consume_talent_modifier(cancel_key):
-		var cur_state: int = int(state.get("run", {}).get("aspects", {}).get(aspect, 0))
-		return {"ok": true, "aspect": aspect, "cancelled": true, "old_state": cur_state, "new_state": cur_state}
-
-	var run = state.get("run", {})
-	var aspects = run.get("aspects", {})
-	var old_state: int = int(aspects.get(aspect, MerlinConstants.AspectState.EQUILIBRE))
-	var new_state: int = old_state
-
-	if direction == "up":
-		new_state = mini(old_state + 1, MerlinConstants.AspectState.HAUT)
-	elif direction == "down":
-		new_state = maxi(old_state - 1, MerlinConstants.AspectState.BAS)
-	else:
-		return {"ok": false, "error": "Invalid direction: " + direction}
-
-	if new_state != old_state:
-		aspects[aspect] = new_state
-		run["aspects"] = aspects
-		state["run"] = run
-		_log_transition("aspect_shift", {"aspect": aspect, "from": old_state, "to": new_state})
-
-	return {"ok": true, "aspect": aspect, "old_state": old_state, "new_state": new_state}
-
-
-func _use_souffle(amount: int) -> Dictionary:
-	# Talent: free_center_once (one free center per run)
-	if amount > 0 and _consume_talent_modifier("free_center_once"):
-		var cur_souffle: int = int(state.get("run", {}).get("souffle", 0))
-		return {"ok": true, "used": 0, "risk": false, "souffle": cur_souffle, "free": true}
-
-	var run = state.get("run", {})
-	var old_souffle: int = int(run.get("souffle", 0))
-	if MerlinConstants.SOUFFLE_SINGLE_USE and bool(run.get("souffle_used_once", false)):
-		return {"ok": true, "used": 0, "risk": true, "souffle": old_souffle, "single_use_locked": true}
-
-	if old_souffle < amount:
-		# Allow use but with risk
-		return {"ok": true, "used": 0, "risk": true, "souffle": old_souffle}
-
-	var new_souffle: int = old_souffle - amount
-	run["souffle"] = new_souffle
-	if MerlinConstants.SOUFFLE_SINGLE_USE and amount > 0:
-		run["souffle_used_once"] = true
-	state["run"] = run
-	souffle_changed.emit(old_souffle, new_souffle)
-	return {"ok": true, "used": amount, "risk": false, "souffle": new_souffle}
-
-
-func _add_souffle(amount: int) -> Dictionary:
-	var run = state.get("run", {})
-	var old_souffle: int = int(run.get("souffle", 0))
-	if MerlinConstants.SOUFFLE_SINGLE_USE and bool(run.get("souffle_used_once", false)):
-		return {"ok": true, "added": 0, "souffle": old_souffle, "single_use_locked": true}
-	var new_souffle: int = mini(old_souffle + amount, MerlinConstants.SOUFFLE_MAX)
-	run["souffle"] = new_souffle
-	state["run"] = run
-	souffle_changed.emit(old_souffle, new_souffle)
-	return {"ok": true, "added": new_souffle - old_souffle, "souffle": new_souffle}
-
 
 # ═══════════════════════════════════════════════════════════════════════════════
 # AWEN / OGHAM SYSTEM
@@ -1089,8 +942,6 @@ func _tick_awen_regen() -> void:
 	if counter >= regen_interval:
 		counter = 0
 		var regen: int = 1
-		if is_all_aspects_balanced():
-			regen += MerlinConstants.AWEN_REGEN_EQUILIBRE_BONUS
 		_add_awen(regen)
 
 	bestiole["awen_regen_counter"] = counter
@@ -1168,24 +1019,14 @@ func _apply_ogham_effect(_skill_id: String, spec: Dictionary) -> void:
 			# Handled by UI (controller reads the result)
 			pass
 		"force_equilibre":
-			# Duir: Force any one aspect to Equilibre (best = worst extreme)
-			var aspects: Dictionary = get_all_aspects()
-			var worst_aspect: String = ""
-			var worst_distance: int = 0
-			for aspect in MerlinConstants.TRIADE_ASPECTS:
-				var s: int = int(aspects.get(aspect, 0))
-				if absi(s) > worst_distance:
-					worst_distance = absi(s)
-					worst_aspect = aspect
-			if not worst_aspect.is_empty():
-				# Aspect system removed — heal life instead
-				_heal_life(15)
+			# Duir: Aspect system removed — heal life instead
+			_heal_life(15)
 		"balance_all":
 			# Ruis: Aspect system removed — heal life instead
 			_heal_life(20)
 		"souffle_boost":
-			# Onn: Regenerate Souffle d'Ogham
-			_add_souffle(2)
+			# Onn: No-op (Souffle removed)
+			pass
 		"regen_awen":
 			# Saille: Regenerate Awen
 			_add_awen(2)
@@ -1372,29 +1213,12 @@ func _resolve_triade_choice(card: Dictionary, option: int, modulated_effects: Ar
 func _apply_triade_effect(effect: Dictionary) -> void:
 	var effect_type: String = str(effect.get("type", ""))
 	match effect_type:
-		"SHIFT_ASPECT":
-			var aspect: String = str(effect.get("aspect", ""))
-			var direction: String = str(effect.get("direction", ""))
-			if not aspect.is_empty() and not direction.is_empty():
-				_shift_aspect(aspect, direction)
-		"SET_ASPECT":
-			# Direct set (legacy) — treat as shift
-			var aspect: String = str(effect.get("aspect", ""))
-			var direction: String = str(effect.get("direction", "up"))
-			if not aspect.is_empty():
-				_shift_aspect(aspect, direction)
 		"DAMAGE_LIFE":
 			var amount: int = int(effect.get("amount", 0))
 			_damage_life(amount)
 		"HEAL_LIFE":
 			var amount: int = int(effect.get("amount", 0))
 			_heal_life(amount)
-		"USE_SOUFFLE":
-			var amount: int = int(effect.get("amount", 1))
-			_use_souffle(amount)
-		"ADD_SOUFFLE":
-			var amount: int = int(effect.get("amount", 1))
-			_add_souffle(amount)
 		"PROGRESS_MISSION":
 			var step: int = int(effect.get("step", 1))
 			_progress_mission(step)
@@ -1415,10 +1239,6 @@ func _apply_triade_effect(effect: Dictionary) -> void:
 		"ADD_ESSENCES":
 			var essence_amount: int = int(effect.get("amount", MerlinConstants.ESSENCE_BASE_REWARD))
 			effects._apply_add_essences(state, essence_amount)
-		"ADD_ASPECT_ALIGNMENT":
-			var aspect_name: String = str(effect.get("aspect", ""))
-			var aspect_delta: int = int(effect.get("amount", 0))
-			effects._apply_add_aspect_alignment(state, aspect_name, aspect_delta)
 
 
 func _update_player_profile(option: int) -> void:
@@ -1440,9 +1260,8 @@ func _update_player_profile(option: int) -> void:
 
 func _check_triade_run_end() -> Dictionary:
 	var run = state.get("run", {})
-	var aspects = run.get("aspects", {})
 
-	# Life essence = 0 → premature run end (replaces 2-extreme game over)
+	# Life essence = 0 → premature run end
 	var life: int = int(run.get("life_essence", MerlinConstants.LIFE_ESSENCE_START))
 	if life <= 0:
 		return {
@@ -1458,10 +1277,15 @@ func _check_triade_run_end() -> Dictionary:
 	var mission = run.get("mission", {})
 	var cards_played: int = int(run.get("cards_played", 0))
 	if int(mission.get("progress", 0)) >= int(mission.get("total", 0)) and int(mission.get("total", 0)) > 0 and cards_played >= MerlinConstants.MIN_CARDS_FOR_VICTORY:
-		var victory_type = _get_victory_type(aspects)
+		var victory_type: String = _get_victory_type()
+		var victory_endings: Dictionary = {
+			"harmonie": {"title": "Harmonie Retrouvee", "text": "Tu as accompli ta quete avec sagesse et bienveillance."},
+			"victoire_amere": {"title": "Victoire Amere", "text": "Ta quete est accomplie, mais a quel prix..."},
+			"prix_paye": {"title": "Le Prix Paye", "text": "Tu as reussi, mais la foret se souviendra de tes choix."},
+		}
 		return {
 			"ended": true,
-			"ending": MerlinConstants.TRIADE_VICTORY_ENDINGS.get(victory_type, {"title": "Victoire"}),
+			"ending": victory_endings.get(victory_type, {"title": "Victoire"}),
 			"victory": true,
 			"score": int(run.get("cards_played", 0)) * 20,
 			"cards_played": run.get("cards_played", 0),
@@ -1471,7 +1295,7 @@ func _check_triade_run_end() -> Dictionary:
 	return {"ended": false}
 
 
-func _get_victory_type(_aspects: Dictionary) -> String:
+func _get_victory_type() -> String:
 	# Aspect system removed — victory type based on life/karma
 	var hidden: Dictionary = state.get("run", {}).get("hidden", {})
 	var karma: int = int(hidden.get("karma", 0))
@@ -1627,26 +1451,8 @@ func _emit_state_changed() -> void:
 # CONVENIENCE GETTERS
 # ═══════════════════════════════════════════════════════════════════════════════
 
-# TRIADE getters
-func get_aspect_state(aspect: String) -> int:
-	return int(state.get("run", {}).get("aspects", {}).get(aspect, MerlinConstants.AspectState.EQUILIBRE))
 
-
-func get_aspect_name(aspect: String) -> String:
-	var aspect_state: int = get_aspect_state(aspect)
-	var info = MerlinConstants.TRIADE_ASPECT_INFO.get(aspect, {})
-	var states = info.get("states", {})
-	return tr(str(states.get(aspect_state, "BALANCE")))
-
-
-func get_all_aspects() -> Dictionary:
-	return state.get("run", {}).get("aspects", {}).duplicate()
-
-
-func get_souffle() -> int:
-	return int(state.get("run", {}).get("souffle", MerlinConstants.SOUFFLE_START))
-
-
+# Common getters
 func get_life_essence() -> int:
 	return int(state.get("run", {}).get("life_essence", MerlinConstants.LIFE_ESSENCE_START))
 
@@ -1655,29 +1461,10 @@ func get_mission() -> Dictionary:
 	return state.get("run", {}).get("mission", {}).duplicate()
 
 
-func is_all_aspects_balanced() -> bool:
-	var aspects = get_all_aspects()
-	for aspect in MerlinConstants.TRIADE_ASPECTS:
-		if int(aspects.get(aspect, 0)) != MerlinConstants.AspectState.EQUILIBRE:
-			return false
-	return true
-
-
-func count_extreme_aspects() -> int:
-	var count: int = 0
-	var aspects = get_all_aspects()
-	for aspect in MerlinConstants.TRIADE_ASPECTS:
-		var aspect_state: int = int(aspects.get(aspect, 0))
-		if aspect_state != MerlinConstants.AspectState.EQUILIBRE:
-			count += 1
-	return count
-
-
 func get_hidden_data() -> Dictionary:
 	return state.get("run", {}).get("hidden", {}).duplicate()
 
 
-# Common getters
 func get_bestiole_bond() -> int:
 	return int(state.get("bestiole", {}).get("bond", 50))
 
