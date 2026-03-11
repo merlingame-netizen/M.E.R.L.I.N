@@ -113,6 +113,42 @@ cd server && npm run build              # Build MCP server
 /loop 5m <prompt>                       # Tache recurrente
 ```
 
+### CLI-Anything (agent-native, CLI-first)
+
+```bash
+# Godot
+python tools/cli.py godot validate              # validate.bat (toutes etapes)
+python tools/cli.py godot validate_step0        # Parse check headless uniquement
+python tools/cli.py godot test                  # GDScript test runner headless
+python tools/cli.py godot smoke --scene res://scenes/MerlinGame.tscn
+python tools/cli.py godot export web            # Export preset "web"
+python tools/cli.py godot list_presets          # Lister les presets disponibles
+python tools/cli.py godot telemetry             # Aggreger les stats gameplay JSON
+
+# PowerBI
+python tools/cli.py powerbi workspaces          # Lister workspaces
+python tools/cli.py powerbi list-reports        # Lister rapports
+python tools/cli.py powerbi list-datasets       # Lister datasets
+python tools/cli.py powerbi refresh <id>        # Refresh dataset (poll status)
+python tools/cli.py powerbi query --dax "EVALUATE {1}" --dataset <id>
+python tools/cli.py powerbi export <report_id> --format PDF
+python tools/cli.py powerbi open --pbix <path>  # Inspecter .pbix offline
+python tools/cli.py powerbi extract --pbix <p>  # Extraire TMDL (pbi-tools)
+
+# Outlook
+python tools/cli.py outlook inbox --limit 10
+python tools/cli.py outlook search --query "rapport"
+python tools/cli.py outlook read --index 0
+python tools/cli.py outlook send --to "x@y.com" --subject "S" --body "B"
+python tools/cli.py outlook reply --index 0 --body "Merci"
+python tools/cli.py outlook forward --index 0 --to "x@y.com" --body "FYI"
+
+# Help
+python tools/cli.py godot                       # Liste actions Godot
+python tools/cli.py powerbi                     # Liste actions PowerBI
+python tools/cli.py outlook                     # Liste actions Outlook
+```
+
 ---
 
 ## Architecture

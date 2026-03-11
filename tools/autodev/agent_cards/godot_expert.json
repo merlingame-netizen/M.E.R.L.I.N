@@ -29,6 +29,19 @@
       "keywords": ["shader", "GPU", "render", "visual"],
       "confidence": 0.8,
       "mode": "build"
+    },
+    {
+      "task_type": "cli_validation",
+      "keywords": ["validate", "headless", "test runner", "cli.py", "export", "telemetry"],
+      "confidence": 0.95,
+      "mode": "validate",
+      "cli_commands": [
+        "python tools/cli.py godot validate",
+        "python tools/cli.py godot validate_step0",
+        "python tools/cli.py godot test",
+        "python tools/cli.py godot export",
+        "python tools/cli.py godot telemetry"
+      ]
     }
   ],
   "inputs": [
