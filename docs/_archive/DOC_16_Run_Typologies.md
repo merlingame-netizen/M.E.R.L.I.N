@@ -1,6 +1,3 @@
-> **[ARCHIVED — superseded by docs/GAME_DESIGN_BIBLE.md (2026-03-12)]**
-> Ce document n'est plus la source de verite. Voir GAME_DESIGN_BIBLE.md.
-
 # DOC_16 - Typologies de Run
 
 **Version**: 1.0 | **Date**: 2026-02-26

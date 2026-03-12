@@ -1,6 +1,3 @@
-> **[ARCHIVED — superseded by docs/GAME_DESIGN_BIBLE.md (2026-03-12)]**
-> Ce document n'est plus la source de verite. Voir GAME_DESIGN_BIBLE.md.
-
 # DOC 08 — MVP profond (checklist livrable)
 
 ## MVP technique

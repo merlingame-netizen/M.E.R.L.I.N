@@ -1,6 +1,3 @@
-> **[ARCHIVED — superseded by docs/GAME_DESIGN_BIBLE.md (2026-03-12)]**
-> Ce document n'est plus la source de verite. Voir GAME_DESIGN_BIBLE.md.
-
 # NEW_MECHANICS_DESIGN.md — M.E.R.L.I.N. Nouveau Socle Mécanique
 
 > **Document vivant** — mis à jour à chaque cycle studio_loop par l'agent `game_designer`.

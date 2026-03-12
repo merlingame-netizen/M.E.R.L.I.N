@@ -96,10 +96,11 @@ Ce projet est personnel — PAS de tag `[AI-assisted]`.
 ## Project Overview
 
 Narrative card game built with Godot 4.x.
-- **Core Loop**: 3 options/carte, balance 3 Aspects (Corps/Ame/Monde), survive
-- **Game System**: Triade — 3 Aspects x 3 etats discrets, Souffle d'Ogham
+- **Core Loop**: Choix narratif → minigame lie au verbe → effets proportionnels
+- **Game System**: 5 Factions, 18 Oghams, 1 barre de vie, minigames systematiques
 - **LLM**: Multi-Brain heterogene (Qwen 3.5) via Ollama — voir `docs/LLM_ARCHITECTURE.md`
 - **Audio**: SFXManager (30+ sons proceduraux)
+- **Design Ref**: `docs/GAME_DESIGN_BIBLE.md` (source de verite unique)
 
 ---
 
@@ -201,18 +202,18 @@ python tools/cli.py <tool>                      # Liste actions (godot/powerbi/o
 
 ### Core Systems (scripts/merlin/)
 ```
-merlin_store.gd          <- Central state (Redux-like), Triade
-merlin_card_system.gd    <- Card engine, fallback pool, TRIADE generation
-merlin_effect_engine.gd  <- SHIFT_ASPECT, SOUFFLE, KARMA, PROMISE
-merlin_llm_adapter.gd    <- LLM contract, format TRIADE, JSON repair
-merlin_constants.gd      <- 18 Oghams, 12 endings, 3 victoires
-merlin_save_system.gd    <- 3 slots JSON
+merlin_store.gd              <- Central state (Redux-like), Factions
+merlin_card_system.gd        <- Card engine, fallback pool, LLM generation
+merlin_effect_engine.gd      <- ADD_REPUTATION, HEAL_LIFE, DAMAGE_LIFE, PROMISE
+merlin_llm_adapter.gd        <- LLM contract, Faction-based, JSON repair
+merlin_constants.gd          <- 18 Oghams, biomes, minigames, factions
+merlin_reputation_system.gd  <- 5 factions, 0-100, thresholds 50/80
+merlin_save_system.gd        <- 3 slots JSON
 ```
 
 ### UI Layer (scripts/ui/)
 ```
-triade_game_ui.gd           <- 3 aspects, 3 options, souffle, typewriter
-triade_game_controller.gd   <- Store-UI bridge, run flow, LLM wiring
+merlin_game_controller.gd   <- Store-UI bridge, run flow, LLM wiring
 ```
 
 ### Visual System
@@ -232,10 +233,10 @@ rag_manager.gd           <- RAG v3.0, per-brain context budget
 ```
 
 ### Key Documents
-- `docs/MASTER_DOCUMENT.md` — Project overview
+- `docs/GAME_DESIGN_BIBLE.md` — **Source de verite unique** pour le game design v2.0
 - `docs/LLM_ARCHITECTURE.md` — Multi-cerveaux, LoRA, prompts
 - `docs/70_graphic/UI_UX_BIBLE.md` — Visual system specification
-- `docs/20_card_system/DOC_12_Triade_Gameplay_System.md` — Triade system
+- `docs/20_card_system/DOC_15_Faction_Alignment_System.md` — Detail factions
 - `.claude/agents/AGENTS.md` — Agent roster
 
 ---
@@ -254,24 +255,30 @@ rag_manager.gd           <- RAG v3.0, per-brain context budget
 
 ---
 
-## Game Design (Quick Ref)
+## Game Design (Quick Ref) — v2.0
 
-### Triade — 3 Aspects x 3 etats
-| Aspect | Animal | Bas | Equilibre | Haut |
-|--------|--------|-----|-----------|------|
-| Corps | Sanglier | Epuise | Robuste | Surmene |
-| Ame | Corbeau | Perdue | Centree | Possedee |
-| Monde | Cerf | Exile | Integre | Tyran |
+> **Source de verite** : `docs/GAME_DESIGN_BIBLE.md`
 
-- **Choix**: 3 options/carte (G/C/D), Centre payant (Souffle)
-- **Souffle d'Ogham**: Max 7, depart 3, +1 si 3 equilibres
-- **Fins**: 12 chutes + 3 victoires + 1 secrete
-- **Cards**: Narrative 80%, Event 10%, Promise 5%, Merlin Direct 5%
-- **Ref**: `docs/20_card_system/DOC_12_Triade_Gameplay_System.md`
+### Core Loop
+```
+Carte → Joueur choisit un VERBE D'ACTION → MINIGAME lie au verbe → Resultat 0-100 → Effets
+```
+
+### Systemes actifs
+- **Vie** : 1 barre unique (0-100), drain -1/carte
+- **5 Factions** : Druides/Anciens/Korrigans/Niamh/Ankou (0-100 chacune, cross-run)
+- **18 Oghams** : Pouvoirs hybrides (actifs + narratifs), 1 equipe a la fois
+- **Minigames** : Chaque choix = 1 minigame (40+ verbes, 15+ types)
+- **Monnaies** : Essences (cross-run, arbre de talents) + Monnaie biome (per-run)
+- **8 Biomes** : Broceliande (starter) + 7 a debloquer
+- **Fins** : ~10-15 cataloguees + LLM personnalise le texte
+
+### Systemes SUPPRIMES
+~~Triade (Corps/Ame/Monde)~~, ~~Souffle d'Ogham~~, ~~4 Jauges~~, ~~Bestiole~~, ~~Awen~~, ~~D20~~
 
 ### Scene Flow
 ```
-IntroCeltOS -> Menu -> Quiz -> Rencontre -> Hub -> Transition -> MerlinGame -> [Fin] -> Hub
+IntroCeltOS -> Menu -> Quiz -> Rencontre -> Hub -> Transition/Balade3D -> MerlinGame -> [Fin] -> Hub
 ```
 
 ---

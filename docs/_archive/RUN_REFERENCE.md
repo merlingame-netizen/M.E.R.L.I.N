@@ -1,6 +1,3 @@
-> **[ARCHIVED — superseded by docs/GAME_DESIGN_BIBLE.md (2026-03-12)]**
-> Ce document n'est plus la source de verite. Voir GAME_DESIGN_BIBLE.md.
-
 # Card System — Reference Run (20 cartes)
 
 > Source: MERLIN_LLM_Pipeline_Test_Report_v3_REWRITE_actions_tree_v3.docx
