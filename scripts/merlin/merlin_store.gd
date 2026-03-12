@@ -16,10 +16,7 @@ signal reputation_changed(faction: String, value: float, delta: float)
 signal run_ended(ending: Dictionary)
 signal card_resolved(card_id: String, option: int)
 signal mission_progress(step: int, total: int)
-signal awen_changed(old_value: int, new_value: int)
 signal ogham_activated(skill_id: String, effect: String)
-signal bond_tier_changed(old_tier: String, new_tier: String)
-signal gauges_changed(gauges: Dictionary)
 signal season_changed(new_season: String)
 signal event_available(event_id: String, event_data: Dictionary)
 signal faveurs_changed(old_val: int, new_val: int)
@@ -63,7 +60,6 @@ func _ready() -> void:
 	cards.setup(effects, llm, rng)
 
 	# Connect card system signals
-	cards.gauge_critical.connect(_on_gauge_critical)
 	cards.run_ended.connect(_on_run_ended)
 
 	# Wire MerlinAI autoload to the LLM adapter
@@ -191,15 +187,6 @@ func build_default_state() -> Dictionary:
 				"resonances_active": [],
 				"narrative_debt": [],
 			},
-			# Run typology
-			"typology": "classique",
-			"typology_state": {
-				"timer_remaining": 0.0,
-				"timeouts": 0,
-				"d20_last": 0,
-				"crits": 0,
-				"fumbles": 0,
-			},
 			# Faction context (snapshot meta.faction_rep en début de run)
 			"faction_context": {
 				"dominant": "",
@@ -221,31 +208,22 @@ func build_default_state() -> Dictionary:
 			"cartes_jouees": [],
 			"heure_debut_run": 0,
 		},
-		"bestiole": {
-			"name": "Bestiole",
-			"tendency": {"Wild": 0, "Light": 0, "Discipline": 0},
-			"xp": 0,
-			"bond_xp": 0,
-			"evolve_ready": false,
-			# Bond & Skills
-			"bond": 50,
+		# Ogham skills state (formerly on bestiole)
+		"oghams": {
 			"skills_unlocked": MerlinConstants.OGHAM_STARTER_SKILLS.duplicate(),
 			"skills_equipped": MerlinConstants.OGHAM_STARTER_SKILLS.duplicate(),
 			"skill_cooldowns": {},
-			# Souffle d'Awen (Ogham activation resource)
-			"awen": MerlinConstants.AWEN_START,
-			"awen_regen_counter": 0,  # Cards since last regen
 		},
 		"meta": {
 			"essence": essence,
-			"essences": 0,
+			"anam": 0,
 			"ogham_fragments": 0,
 			"liens": 0,
-			# Faction alignment — réputation cross-run (-100 à +100 par faction)
+			# Faction alignment — réputation cross-run (0-100 par faction)
 			"faction_rep": {
 				"druides": MerlinConstants.FACTION_SCORE_START,
 				"korrigans": MerlinConstants.FACTION_SCORE_START,
-				"humains": MerlinConstants.FACTION_SCORE_START,
+				"niamh": MerlinConstants.FACTION_SCORE_START,
 				"anciens": MerlinConstants.FACTION_SCORE_START,
 				"ankou": MerlinConstants.FACTION_SCORE_START,
 			},
@@ -262,11 +240,6 @@ func build_default_state() -> Dictionary:
 			# Arbre de Vie — Talent Tree (Phase 35)
 			"talent_tree": {
 				"unlocked": [],  # Array of talent node IDs
-			},
-			# Bestiole Evolution (Phase 35)
-			"bestiole_evolution": {
-				"stage": 1,      # 1=Enfant, 2=Compagnon, 3=Gardien
-				"path": "",      # "" | "protecteur" | "oracle" | "diplomate"
 			},
 		},
 		# World Map progression — persistent across runs
@@ -328,12 +301,6 @@ func _reduce(action: Dictionary) -> Dictionary:
 			# Set biome from action (default: Broceliande)
 			var biome_key: String = str(action.get("biome", MerlinConstants.BIOME_DEFAULT))
 			state["run"]["current_biome"] = biome_key
-			# Apply biome flux offset
-			var flux_offset: Dictionary = biomes.get_flux_offset(biome_key)
-			var flux: Dictionary = state["run"].get("flux", MerlinConstants.FLUX_START.duplicate())
-			for axis in flux_offset:
-				flux[axis] = clampi(int(flux.get(axis, 50)) + int(flux_offset.get(axis, 0)), MerlinConstants.FLUX_MIN, MerlinConstants.FLUX_MAX)
-			state["run"]["flux"] = flux
 			state["phase"] = "card"
 			state["mode"] = "triade"
 			# Initialize calendar context for this run (real date)
@@ -400,31 +367,9 @@ func _reduce(action: Dictionary) -> Dictionary:
 			return _progress_mission(step)
 
 
-		"TRIADE_USE_SKILL":
-			var skill_id = action.get("skill_id", "")
-			var card = action.get("card", {})
-			var result = cards.use_bestiole_skill(state, skill_id, card)
-			return result
-
 		"TRIADE_USE_OGHAM":
 			var skill_id: String = str(action.get("skill_id", ""))
 			return _use_ogham(skill_id)
-
-		"TRIADE_ADD_AWEN":
-			var amount: int = int(action.get("amount", 1))
-			return _add_awen(amount)
-
-		"TRIADE_USE_AWEN":
-			var amount: int = int(action.get("amount", 1))
-			return _use_awen(amount)
-
-		"TRIADE_UPDATE_FLUX":
-			var delta: Dictionary = action.get("delta", {})
-			var flux: Dictionary = state["run"].get("flux", MerlinConstants.FLUX_START.duplicate())
-			for axis in delta:
-				flux[axis] = clampi(int(flux.get(axis, 50)) + int(delta.get(axis, 0)), MerlinConstants.FLUX_MIN, MerlinConstants.FLUX_MAX)
-			state["run"]["flux"] = flux
-			return {"ok": true, "flux": flux}
 
 		"TRIADE_END_RUN":
 			var end_check = _check_triade_run_end()
@@ -521,18 +466,6 @@ func _reduce(action: Dictionary) -> Dictionary:
 		"FAVEUR_ADD":
 			var amount: int = int(action.get("amount", MerlinConstants.FAVEURS_PER_MINIGAME_PLAY))
 			return _add_faveur(amount)
-
-		# ═══════════════════════════════════════════════════════════════════════
-		# RUN TYPOLOGY ACTIONS
-		# ═══════════════════════════════════════════════════════════════════════
-		"SET_TYPOLOGY":
-			var typology: String = str(action.get("typology", "classique"))
-			if not MerlinConstants.RUN_TYPOLOGIES.has(typology):
-				return {"ok": false, "error": "Unknown typology: %s" % typology}
-			var run: Dictionary = state.get("run", {})
-			run["typology"] = typology
-			state["run"] = run
-			return {"ok": true, "typology": typology}
 
 		# ═══════════════════════════════════════════════════════════════════════
 		# WORLD MAP PROGRESSION ACTIONS
@@ -663,7 +596,7 @@ func _build_and_store_faction_context() -> void:
 		context["tiers"][faction] = tier
 		if tier != "neutre":
 			context["active_effects"].append({"faction": faction, "tier": tier, "score": score})
-		if abs(score) > abs(dominant_score):
+		if score > dominant_score:
 			context["dominant"] = faction
 			dominant_score = score
 	run["faction_context"] = context
@@ -672,10 +605,10 @@ func _build_and_store_faction_context() -> void:
 
 ## Convertit un score faction en tier string.
 func _faction_score_to_tier(score: int) -> String:
-	if score >= 60:    return "honore"
-	elif score >= 20:  return "sympathisant"
-	elif score >= -19: return "neutre"
-	elif score >= -59: return "mefiant"
+	if score >= 80:    return "honore"
+	elif score >= 50:  return "sympathisant"
+	elif score >= 20:  return "neutre"
+	elif score >= 5:   return "mefiant"
 	else:              return "hostile"
 
 
@@ -741,10 +674,6 @@ func _generate_mission() -> Dictionary:
 	}
 
 
-func _on_gauge_critical(gauge: String, value: int, direction: String) -> void:
-	pass  # Deprecated for TRIADE system
-
-
 func _on_run_ended(ending: Dictionary) -> void:
 	pass  # Handled in TRIADE_RESOLVE_CHOICE
 
@@ -757,7 +686,7 @@ func _init_triade_run() -> void:
 	var run = state.get("run", {})
 	run["active"] = true
 	run["life_essence"] = MerlinConstants.LIFE_ESSENCE_START
-	run["essences"] = MerlinConstants.ESSENCE_START
+	run["anam"] = 0
 	# Generate a mission from templates
 	run["mission"] = _generate_mission()
 	run["cards_played"] = 0
@@ -774,15 +703,7 @@ func _init_triade_run() -> void:
 		"resonances_active": [],
 		"narrative_debt": [],
 	}
-	run["power_bonuses"] = {"dc_reduction": 0}
-	# Reset typology state (typology lui-même est préservé — set par HubAntre avant le run)
-	run["typology_state"] = {
-		"timer_remaining": 0.0,
-		"timeouts": 0,
-		"d20_last": 0,
-		"crits": 0,
-		"fumbles": 0,
-	}
+	run["power_bonuses"] = {}
 	state["run"] = run
 
 	# Faction alignment — decay + context + bonuses (dans l'ordre)
@@ -864,24 +785,12 @@ func _apply_talent_effects_for_run() -> void:
 				match target:
 					"blessings":
 						modifiers["extra_blessings"] = int(modifiers.get("extra_blessings", 0)) + value
-					"awen":
-						var bestiole: Dictionary = state.get("bestiole", {})
-						bestiole["awen"] = mini(int(bestiole.get("awen", 0)) + value, MerlinConstants.AWEN_MAX)
-						state["bestiole"] = bestiole
-					"bond":
-						var bestiole: Dictionary = state.get("bestiole", {})
-						bestiole["bond"] = maxi(int(bestiole.get("bond", 0)), value)
-						state["bestiole"] = bestiole
+					"life":
+						run["life_essence"] = mini(int(run.get("life_essence", 0)) + value, MerlinConstants.LIFE_ESSENCE_MAX)
 
 			"special_rule":
 				var rule_id: String = str(effect.get("id", ""))
 				modifiers[rule_id] = true
-
-	# Apply flux_start_balanced if unlocked
-	if modifiers.get("flux_start_balanced", false):
-		run["flux"] = {"terre": 50, "esprit": 50, "lien": 50}
-	elif not run.has("flux"):
-		run["flux"] = MerlinConstants.FLUX_START.duplicate()
 
 	run["talent_modifiers"] = modifiers
 	state["run"] = run
@@ -904,85 +813,32 @@ func _consume_talent_modifier(key: String) -> bool:
 	return false
 
 # ═══════════════════════════════════════════════════════════════════════════════
-# AWEN / OGHAM SYSTEM
+# OGHAM SYSTEM
 # ═══════════════════════════════════════════════════════════════════════════════
 
-func _use_awen(amount: int) -> Dictionary:
-	var bestiole: Dictionary = state.get("bestiole", {})
-	var old_awen: int = int(bestiole.get("awen", 0))
-	if old_awen < amount:
-		return {"ok": false, "error": "Not enough Awen", "awen": old_awen}
-	var new_awen: int = old_awen - amount
-	bestiole["awen"] = new_awen
-	state["bestiole"] = bestiole
-	awen_changed.emit(old_awen, new_awen)
-	return {"ok": true, "used": amount, "awen": new_awen}
-
-
-func _add_awen(amount: int) -> Dictionary:
-	var bestiole: Dictionary = state.get("bestiole", {})
-	var old_awen: int = int(bestiole.get("awen", 0))
-	var new_awen: int = mini(old_awen + amount, MerlinConstants.AWEN_MAX)
-	bestiole["awen"] = new_awen
-	state["bestiole"] = bestiole
-	awen_changed.emit(old_awen, new_awen)
-	return {"ok": true, "added": new_awen - old_awen, "awen": new_awen}
-
-
-func _tick_awen_regen() -> void:
-	"""Called after each card resolved. Regenerates Awen every N cards."""
-	var bestiole: Dictionary = state.get("bestiole", {})
-	var counter: int = int(bestiole.get("awen_regen_counter", 0)) + 1
-
-	# Talent: awen_regen_faster → interval 4 instead of 5
-	var regen_interval: int = MerlinConstants.AWEN_REGEN_INTERVAL
-	if _get_talent_modifier("awen_regen_faster"):
-		regen_interval = maxi(regen_interval - 1, 1)
-
-	if counter >= regen_interval:
-		counter = 0
-		var regen: int = 1
-		_add_awen(regen)
-
-	bestiole["awen_regen_counter"] = counter
-	state["bestiole"] = bestiole
-
-
 func _use_ogham(skill_id: String) -> Dictionary:
-	"""Activate an Ogham skill, spending Awen and applying cooldown."""
+	"""Activate an Ogham skill and apply cooldown."""
 	var spec: Dictionary = MerlinConstants.OGHAM_FULL_SPECS.get(skill_id, {})
 	if spec.is_empty():
 		return {"ok": false, "error": "Unknown ogham: " + skill_id}
 
-	# Check bond requirement
-	var bond: int = get_bestiole_bond()
-	var bond_required: int = int(spec.get("bond_required", 0))
-	if bond < bond_required:
-		return {"ok": false, "error": "Bond too low", "bond": bond, "required": bond_required}
-
 	# Check cooldown
-	var bestiole: Dictionary = state.get("bestiole", {})
-	var cooldowns: Dictionary = bestiole.get("skill_cooldowns", {})
+	var oghams: Dictionary = state.get("oghams", {})
+	var cooldowns: Dictionary = oghams.get("skill_cooldowns", {})
 	var remaining: int = int(cooldowns.get(skill_id, 0))
 	if remaining > 0:
 		return {"ok": false, "error": "On cooldown", "remaining": remaining}
 
 	# Check unlocked
-	var unlocked: Array = bestiole.get("skills_unlocked", [])
+	var unlocked: Array = oghams.get("skills_unlocked", [])
 	var is_starter: bool = bool(spec.get("starter", false))
 	if not is_starter and not unlocked.has(skill_id):
 		return {"ok": false, "error": "Skill not unlocked"}
 
-	# Spend Awen
-	var awen_cost: int = int(spec.get("awen_cost", 1))
-	var awen_result: Dictionary = _use_awen(awen_cost)
-	if not awen_result.get("ok", false):
-		return awen_result
-
 	# Set cooldown
 	cooldowns[skill_id] = int(spec.get("cooldown", 3))
-	bestiole["skill_cooldowns"] = cooldowns
-	state["bestiole"] = bestiole
+	oghams["skill_cooldowns"] = cooldowns
+	state["oghams"] = oghams
 
 	# Emit signal
 	ogham_activated.emit(skill_id, str(spec.get("effect", "")))
@@ -990,14 +846,10 @@ func _use_ogham(skill_id: String) -> Dictionary:
 	# Apply effect
 	_apply_ogham_effect(skill_id, spec)
 
-	# Bond gain from using ogham
-	_modify_bond(2)
-
 	return {
 		"ok": true,
 		"skill_id": skill_id,
 		"effect": spec.get("effect", ""),
-		"awen": int(state.get("bestiole", {}).get("awen", 0)),
 	}
 
 
@@ -1024,12 +876,12 @@ func _apply_ogham_effect(_skill_id: String, spec: Dictionary) -> void:
 		"balance_all":
 			# Ruis: Aspect system removed — heal life instead
 			_heal_life(20)
-		"souffle_boost":
-			# Onn: No-op (Souffle removed)
-			pass
-		"regen_awen":
-			# Saille: Regenerate Awen
-			_add_awen(2)
+		"heal_life":
+			# Onn: Heal life
+			_heal_life(5)
+		"reduce_cooldowns":
+			# Saille: Reduce all cooldowns by 1
+			tick_cooldowns()
 		"skip_negative":
 			# Eadhadh: Flag to cancel negatives on next choice
 			var run: Dictionary = state.get("run", {})
@@ -1063,32 +915,10 @@ func _apply_ogham_effect(_skill_id: String, spec: Dictionary) -> void:
 			pass
 
 
-func _modify_bond(amount: int) -> void:
-	"""Modify Bestiole bond, checking for tier changes."""
-	var bestiole: Dictionary = state.get("bestiole", {})
-	var old_bond: int = int(bestiole.get("bond", 50))
-	var new_bond: int = clampi(old_bond + amount, 0, 100)
-	bestiole["bond"] = new_bond
-	state["bestiole"] = bestiole
-
-	var old_tier: String = _get_bond_tier(old_bond)
-	var new_tier: String = _get_bond_tier(new_bond)
-	if old_tier != new_tier:
-		bond_tier_changed.emit(old_tier, new_tier)
-
-
-func _get_bond_tier(bond: int) -> String:
-	for tier_name in MerlinConstants.BOND_TIERS:
-		var tier: Dictionary = MerlinConstants.BOND_TIERS[tier_name]
-		if bond >= int(tier.get("min", 0)) and bond <= int(tier.get("max", 100)):
-			return tier_name
-	return "distant"
-
-
 func tick_cooldowns() -> void:
 	"""Decrement all Ogham cooldowns by 1. Call after each card resolved."""
-	var bestiole: Dictionary = state.get("bestiole", {})
-	var cooldowns: Dictionary = bestiole.get("skill_cooldowns", {})
+	var oghams: Dictionary = state.get("oghams", {})
+	var cooldowns: Dictionary = oghams.get("skill_cooldowns", {})
 	var to_remove: Array = []
 	for skill_id in cooldowns:
 		cooldowns[skill_id] = maxi(int(cooldowns[skill_id]) - 1, 0)
@@ -1096,8 +926,8 @@ func tick_cooldowns() -> void:
 			to_remove.append(skill_id)
 	for skill_id in to_remove:
 		cooldowns.erase(skill_id)
-	bestiole["skill_cooldowns"] = cooldowns
-	state["bestiole"] = bestiole
+	oghams["skill_cooldowns"] = cooldowns
+	state["oghams"] = oghams
 
 
 func can_use_ogham(skill_id: String) -> bool:
@@ -1105,19 +935,13 @@ func can_use_ogham(skill_id: String) -> bool:
 	var spec: Dictionary = MerlinConstants.OGHAM_FULL_SPECS.get(skill_id, {})
 	if spec.is_empty():
 		return false
-	var bestiole: Dictionary = state.get("bestiole", {})
-	var bond: int = int(bestiole.get("bond", 0))
-	if bond < int(spec.get("bond_required", 0)):
-		return false
-	var cooldowns: Dictionary = bestiole.get("skill_cooldowns", {})
+	var oghams: Dictionary = state.get("oghams", {})
+	var cooldowns: Dictionary = oghams.get("skill_cooldowns", {})
 	if int(cooldowns.get(skill_id, 0)) > 0:
-		return false
-	var awen: int = int(bestiole.get("awen", 0))
-	if awen < int(spec.get("awen_cost", 1)):
 		return false
 	var is_starter: bool = bool(spec.get("starter", false))
 	if not is_starter:
-		var unlocked: Array = bestiole.get("skills_unlocked", [])
+		var unlocked: Array = oghams.get("skills_unlocked", [])
 		if not unlocked.has(skill_id):
 			return false
 	return true
@@ -1130,14 +954,6 @@ func get_available_oghams() -> Array:
 		if can_use_ogham(skill_id):
 			available.append(skill_id)
 	return available
-
-
-func get_awen() -> int:
-	return int(state.get("bestiole", {}).get("awen", MerlinConstants.AWEN_START))
-
-
-func get_awen_max() -> int:
-	return MerlinConstants.AWEN_MAX
 
 
 func _progress_mission(step: int) -> Dictionary:
@@ -1192,9 +1008,8 @@ func _resolve_triade_choice(card: Dictionary, option: int, modulated_effects: Ar
 	# Update player profile based on choice
 	_update_player_profile(option)
 
-	# Tick Ogham cooldowns and Awen regen
+	# Tick Ogham cooldowns
 	tick_cooldowns()
-	_tick_awen_regen()
 
 	# Biome passive only in legacy path (controller handles it in new path)
 	if modulated_effects.is_empty():
@@ -1236,9 +1051,9 @@ func _apply_triade_effect(effect: Dictionary) -> void:
 			var faction: String = str(effect.get("faction", ""))
 			var rep_delta: int = int(effect.get("amount", MerlinConstants.FACTION_DELTA_MINOR))
 			effects._apply_faction_reputation(state, faction, rep_delta)
-		"ADD_ESSENCES":
-			var essence_amount: int = int(effect.get("amount", MerlinConstants.ESSENCE_BASE_REWARD))
-			effects._apply_add_essences(state, essence_amount)
+		"ADD_ANAM":
+			var anam_amount: int = int(effect.get("amount", MerlinConstants.ESSENCE_BASE_REWARD))
+			effects._apply_add_anam(state, anam_amount)
 
 
 func _update_player_profile(option: int) -> void:
@@ -1465,14 +1280,6 @@ func get_hidden_data() -> Dictionary:
 	return state.get("run", {}).get("hidden", {}).duplicate()
 
 
-func get_bestiole_bond() -> int:
-	return int(state.get("bestiole", {}).get("bond", 50))
-
-
-func get_bestiole_modifier() -> float:
-	return cards.get_bestiole_modifier(state)
-
-
 func is_run_active() -> bool:
 	return bool(state.get("run", {}).get("active", false))
 
@@ -1599,36 +1406,6 @@ func calculate_run_rewards(run_data: Dictionary) -> Dictionary:
 		for elem in MerlinConstants.ESSENCE_CHUTE_BONUS:
 			rewards.essence[elem] += int(MerlinConstants.ESSENCE_CHUTE_BONUS[elem])
 
-	# Flux-based rewards
-	var flux: Dictionary = run_data.get("flux", {})
-	if int(flux.get("terre", 50)) >= 70:
-		var r: Dictionary = MerlinConstants.FLUX_ESSENCE_REWARDS.get("terre_high", {}).get("rewards", {})
-		for elem in r:
-			rewards.essence[elem] += int(r[elem])
-	if int(flux.get("terre", 50)) <= 30:
-		var r: Dictionary = MerlinConstants.FLUX_ESSENCE_REWARDS.get("terre_low", {}).get("rewards", {})
-		for elem in r:
-			rewards.essence[elem] += int(r[elem])
-	if int(flux.get("esprit", 30)) >= 70:
-		var r: Dictionary = MerlinConstants.FLUX_ESSENCE_REWARDS.get("esprit_high", {}).get("rewards", {})
-		for elem in r:
-			rewards.essence[elem] += int(r[elem])
-	if int(flux.get("lien", 40)) >= 70:
-		var r: Dictionary = MerlinConstants.FLUX_ESSENCE_REWARDS.get("lien_high", {}).get("rewards", {})
-		for elem in r:
-			rewards.essence[elem] += int(r[elem])
-
-	# Balanced aspects bonus
-	var all_balanced: bool = bool(run_data.get("all_balanced", false))
-	if all_balanced:
-		for elem in MerlinConstants.ESSENCE_BALANCED_BONUS:
-			rewards.essence[elem] += int(MerlinConstants.ESSENCE_BALANCED_BONUS[elem])
-
-	# Bond bonus
-	if int(run_data.get("bond", 0)) > 70:
-		for elem in MerlinConstants.ESSENCE_BOND_BONUS:
-			rewards.essence[elem] += int(MerlinConstants.ESSENCE_BOND_BONUS[elem])
-
 	# Mini-game bonus
 	if int(run_data.get("minigames_won", 0)) >= 5:
 		for elem in MerlinConstants.ESSENCE_MINIGAME_BONUS:
@@ -1639,9 +1416,9 @@ func calculate_run_rewards(run_data: Dictionary) -> Dictionary:
 		for elem in MerlinConstants.ESSENCE_OGHAM_BONUS:
 			rewards.essence[elem] += int(MerlinConstants.ESSENCE_OGHAM_BONUS[elem])
 
-	# Fragments: 1 + floor(awen_spent / 3), max 3
-	var awen_spent: int = int(run_data.get("awen_spent", 0))
-	rewards.fragments = mini(1 + int(awen_spent / 3.0), 3)
+	# Fragments: 1 + floor(oghams_used / 3), max 3
+	var oghams_used: int = int(run_data.get("oghams_used", 0))
+	rewards.fragments = mini(1 + int(oghams_used / 3.0), 3)
 
 	# Liens: 2 + mission bonus
 	rewards.liens = 2 + (5 if is_victory else 0)
@@ -1685,84 +1462,3 @@ func apply_run_rewards(rewards: Dictionary) -> void:
 	state_changed.emit(state)
 
 
-# ═══════════════════════════════════════════════════════════════════════════════
-# BESTIOLE EVOLUTION (Phase 35)
-# ═══════════════════════════════════════════════════════════════════════════════
-
-func get_bestiole_evolution_stage() -> int:
-	return int(state.get("meta", {}).get("bestiole_evolution", {}).get("stage", 1))
-
-
-func get_bestiole_evolution_path() -> String:
-	return str(state.get("meta", {}).get("bestiole_evolution", {}).get("path", ""))
-
-
-func check_bestiole_evolution() -> Dictionary:
-	var current_stage: int = get_bestiole_evolution_stage()
-	if current_stage >= 3:
-		return {"can_evolve": false}
-
-	var next_stage: int = current_stage + 1
-	var stage_data: Dictionary = MerlinConstants.BESTIOLE_EVOLUTION_STAGES.get(next_stage, {})
-	var runs_required: int = int(stage_data.get("runs_required", 999))
-	var essence_cost: Dictionary = stage_data.get("essence_cost", {})
-
-	if int(state.meta.total_runs) < runs_required:
-		return {"can_evolve": false, "reason": "runs", "need": runs_required, "have": state.meta.total_runs}
-
-	for elem in essence_cost:
-		if int(state.meta.essence.get(elem, 0)) < int(essence_cost[elem]):
-			return {"can_evolve": false, "reason": "essence", "need_elem": elem, "need": essence_cost[elem]}
-
-	return {"can_evolve": true, "next_stage": next_stage, "name": stage_data.get("name", "")}
-
-
-func evolve_bestiole(path: String = "") -> Dictionary:
-	var check: Dictionary = check_bestiole_evolution()
-	if not check.get("can_evolve", false):
-		return {"ok": false}
-
-	var next_stage: int = int(check.get("next_stage", 2))
-	var stage_data: Dictionary = MerlinConstants.BESTIOLE_EVOLUTION_STAGES.get(next_stage, {})
-
-	# Spend stage essence cost
-	for elem in stage_data.get("essence_cost", {}):
-		state.meta.essence[elem] -= int(stage_data.essence_cost[elem])
-
-	# Apply evolution path if provided (typically for stage 2 → 3)
-	if path != "":
-		var path_data: Dictionary = MerlinConstants.BESTIOLE_EVOLUTION_PATHS.get(path, {})
-		if path_data.is_empty():
-			return {"ok": false, "error": "Invalid evolution path: " + path}
-		# Check and spend path cost
-		var path_cost: Dictionary = path_data.get("cost", {})
-		for elem in path_cost:
-			if int(state.meta.essence.get(elem, 0)) < int(path_cost[elem]):
-				return {"ok": false, "error": "Cannot afford path cost"}
-		for elem in path_cost:
-			state.meta.essence[elem] -= int(path_cost[elem])
-		state.meta.bestiole_evolution.path = path
-
-	state.meta.bestiole_evolution.stage = next_stage
-	state_changed.emit(state)
-	return {"ok": true, "stage": next_stage, "name": stage_data.get("name", ""), "path": path}
-
-
-func can_afford_evolution_path(path_id: String) -> bool:
-	"""Check if player can afford a specific evolution path cost."""
-	var path_data: Dictionary = MerlinConstants.BESTIOLE_EVOLUTION_PATHS.get(path_id, {})
-	if path_data.is_empty():
-		return false
-	var cost: Dictionary = path_data.get("cost", {})
-	for elem in cost:
-		if int(state.meta.essence.get(elem, 0)) < int(cost[elem]):
-			return false
-	return true
-
-
-func get_bestiole_bond_start() -> int:
-	var stage: int = get_bestiole_evolution_stage()
-	var stage_data: Dictionary = MerlinConstants.BESTIOLE_EVOLUTION_STAGES.get(stage, {})
-	var base_bond: int = int(stage_data.get("bond_base", 10))
-	var previous_bond: int = int(state.get("bestiole", {}).get("bond", 50))
-	return maxi(int(previous_bond * MerlinConstants.BESTIOLE_BOND_RETENTION), base_bond)

@@ -96,11 +96,11 @@ Ce projet est personnel — PAS de tag `[AI-assisted]`.
 ## Project Overview
 
 Narrative card game built with Godot 4.x.
-- **Core Loop**: Choix narratif → minigame lie au verbe → effets proportionnels
-- **Game System**: 5 Factions, 18 Oghams, 1 barre de vie, minigames systematiques
+- **Core Loop**: Choix narratif → minigame (champ lexical) → effets proportionnels
+- **Game System**: 5 Factions, 18 Oghams, 1 barre de vie, 8 champs lexicaux, MOS
 - **LLM**: Multi-Brain heterogene (Qwen 3.5) via Ollama — voir `docs/LLM_ARCHITECTURE.md`
 - **Audio**: SFXManager (30+ sons proceduraux)
-- **Design Ref**: `docs/GAME_DESIGN_BIBLE.md` (source de verite unique)
+- **Design Ref**: `docs/GAME_DESIGN_BIBLE.md` v2.1 (source de verite unique)
 
 ---
 
@@ -233,7 +233,7 @@ rag_manager.gd           <- RAG v3.0, per-brain context budget
 ```
 
 ### Key Documents
-- `docs/GAME_DESIGN_BIBLE.md` — **Source de verite unique** pour le game design v2.0
+- `docs/GAME_DESIGN_BIBLE.md` — **Source de verite unique** pour le game design v2.1
 - `docs/LLM_ARCHITECTURE.md` — Multi-cerveaux, LoRA, prompts
 - `docs/70_graphic/UI_UX_BIBLE.md` — Visual system specification
 - `docs/20_card_system/DOC_15_Faction_Alignment_System.md` — Detail factions
@@ -255,26 +255,29 @@ rag_manager.gd           <- RAG v3.0, per-brain context budget
 
 ---
 
-## Game Design (Quick Ref) — v2.0
+## Game Design (Quick Ref) — v2.1
 
-> **Source de verite** : `docs/GAME_DESIGN_BIBLE.md`
+> **Source de verite** : `docs/GAME_DESIGN_BIBLE.md` v2.1
 
 ### Core Loop
 ```
-Carte → Joueur choisit un VERBE D'ACTION → MINIGAME lie au verbe → Resultat 0-100 → Effets
+Carte → Choix narratif → Detection champ lexical → MINIGAME adapte → Resultat 0-100 → Effets proportionnels
 ```
 
 ### Systemes actifs
 - **Vie** : 1 barre unique (0-100), drain -1/carte
 - **5 Factions** : Druides/Anciens/Korrigans/Niamh/Ankou (0-100 chacune, cross-run)
-- **18 Oghams** : Pouvoirs hybrides (actifs + narratifs), 1 equipe a la fois
-- **Minigames** : Chaque choix = 1 minigame (40+ verbes, 15+ types)
-- **Monnaies** : Essences (cross-run, arbre de talents) + Monnaie biome (per-run)
+- **18 Oghams** : Pouvoirs hybrides (actifs + narratifs), cooldown-based
+- **8 Champs lexicaux** : chance, bluff, observation, logique, finesse, vigueur, esprit, perception
+- **Monnaie** : Anam (cross-run, arbre de talents) — du gaelique "ame"
 - **8 Biomes** : Broceliande (starter) + 7 a debloquer
+- **Difficulte** : Semi-adaptive (contexte narratif, PAS performance joueur)
+- **MOS** : Merlin Omniscient System — orchestrateur LLM + directeur + guardrails
+- **Save** : Profils joueur (meta-progression seule, pas de save mid-run)
 - **Fins** : ~10-15 cataloguees + LLM personnalise le texte
 
 ### Systemes SUPPRIMES
-~~Triade (Corps/Ame/Monde)~~, ~~Souffle d'Ogham~~, ~~4 Jauges~~, ~~Bestiole~~, ~~Awen~~, ~~D20~~
+~~Triade (Corps/Ame/Monde)~~, ~~Souffle d'Ogham~~, ~~4 Jauges~~, ~~Bestiole~~, ~~Awen~~, ~~D20~~, ~~Flux System~~, ~~Run Typologies~~
 
 ### Scene Flow
 ```
@@ -291,4 +294,4 @@ Status protocol: `status/session.json`, `status/worker_{name}.json`
 
 ---
 
-*Updated: 2026-03-08 — CLAUDE.md v3.0 (lean core, LLM externalized to docs/LLM_ARCHITECTURE.md)*
+*Updated: 2026-03-12 — CLAUDE.md v3.1 (game design v2.1: Anam, 8 champs lexicaux, MOS, profils)*

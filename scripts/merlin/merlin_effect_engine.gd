@@ -12,12 +12,6 @@ const VALID_CODES := {
 	"DAMAGE_LIFE": 1,      # DAMAGE_LIFE:2 (reduce life essence)
 	"HEAL_LIFE": 1,        # HEAL_LIFE:1 (restore life essence)
 	# ═══════════════════════════════════════════════════════════════════════════
-	# GAUGES (used by LLM adapter pipeline)
-	# ═══════════════════════════════════════════════════════════════════════════
-	"ADD_GAUGE": 2,        # ADD_GAUGE:Vigueur:10
-	"REMOVE_GAUGE": 2,     # REMOVE_GAUGE:Esprit:15
-	"SET_GAUGE": 2,        # SET_GAUGE:Faveur:50
-	# ═══════════════════════════════════════════════════════════════════════════
 	# FLAGS & NARRATIVE
 	# ═══════════════════════════════════════════════════════════════════════════
 	"SET_FLAG": 2,         # SET_FLAG:met_druide:true
@@ -32,18 +26,13 @@ const VALID_CODES := {
 	"FULFILL_PROMISE": 1,  # FULFILL_PROMISE:oath_001
 	"BREAK_PROMISE": 1,    # BREAK_PROMISE:oath_001
 	# ═══════════════════════════════════════════════════════════════════════════
-	# BESTIOLE BOND
-	# ═══════════════════════════════════════════════════════════════════════════
-	"MODIFY_BOND": 1,      # MODIFY_BOND:5
-	"SET_SKILL_COOLDOWN": 2,  # SET_SKILL_COOLDOWN:beith:3
-	# ═══════════════════════════════════════════════════════════════════════════
 	# FACTION ALIGNMENT
 	# ═══════════════════════════════════════════════════════════════════════════
 	"ADD_REPUTATION": 2,   # ADD_REPUTATION:druides:15
 	# ═══════════════════════════════════════════════════════════════════════════
-	# ESSENCES — Monnaie principale inter-run
+	# ANAM — Monnaie principale inter-run
 	# ═══════════════════════════════════════════════════════════════════════════
-	"ADD_ESSENCES": 1,     # ADD_ESSENCES:5
+	"ADD_ANAM": 1,         # ADD_ANAM:5
 	# ═══════════════════════════════════════════════════════════════════════════
 	# OGHAMS
 	# ═══════════════════════════════════════════════════════════════════════════
@@ -119,15 +108,6 @@ func _apply_parsed(state: Dictionary, parsed: Dictionary) -> bool:
 		"HEAL_LIFE":
 			return _apply_life_delta(state, abs(_to_int(args[0])))
 		# ═══════════════════════════════════════════════════════════════════════
-		# GAUGES
-		# ═══════════════════════════════════════════════════════════════════════
-		"ADD_GAUGE":
-			return _apply_gauge_delta(state, args[0], _to_int(args[1]))
-		"REMOVE_GAUGE":
-			return _apply_gauge_delta(state, args[0], -abs(_to_int(args[1])))
-		"SET_GAUGE":
-			return _apply_gauge_set(state, args[0], _to_int(args[1]))
-		# ═══════════════════════════════════════════════════════════════════════
 		# FLAGS & NARRATIVE
 		# ═══════════════════════════════════════════════════════════════════════
 		"SET_FLAG":
@@ -150,22 +130,15 @@ func _apply_parsed(state: Dictionary, parsed: Dictionary) -> bool:
 		"BREAK_PROMISE":
 			return _break_promise(state, args[0])
 		# ═══════════════════════════════════════════════════════════════════════
-		# BESTIOLE BOND
-		# ═══════════════════════════════════════════════════════════════════════
-		"MODIFY_BOND":
-			return _apply_bond_delta(state, _to_int(args[0]))
-		"SET_SKILL_COOLDOWN":
-			return _set_skill_cooldown(state, args[0], _to_int(args[1]))
-		# ═══════════════════════════════════════════════════════════════════════
 		# FACTION ALIGNMENT
 		# ═══════════════════════════════════════════════════════════════════════
 		"ADD_REPUTATION":
 			return _apply_faction_reputation(state, args[0], _to_int(args[1]))
 		# ═══════════════════════════════════════════════════════════════════════
-		# ESSENCES
+		# ANAM
 		# ═══════════════════════════════════════════════════════════════════════
-		"ADD_ESSENCES":
-			return _apply_add_essences(state, _to_int(args[0]))
+		"ADD_ANAM":
+			return _apply_add_anam(state, _to_int(args[0]))
 		# ═══════════════════════════════════════════════════════════════════════
 		# OGHAMS
 		# ═══════════════════════════════════════════════════════════════════════
@@ -196,29 +169,6 @@ func _to_int(value: Variant) -> int:
 	if typeof(value) == TYPE_FLOAT:
 		return int(value)
 	return int(str(value))
-
-
-# ═══════════════════════════════════════════════════════════════════════════════
-# GAUGE FUNCTIONS
-# ═══════════════════════════════════════════════════════════════════════════════
-
-func _apply_gauge_delta(state: Dictionary, gauge: String, delta: int) -> bool:
-	var run = state.get("run", {})
-	var gauges = run.get("gauges", {})
-	var current = int(gauges.get(gauge, 50))
-	gauges[gauge] = clampi(current + delta, 0, 100)
-	run["gauges"] = gauges
-	state["run"] = run
-	return true
-
-
-func _apply_gauge_set(state: Dictionary, gauge: String, value: int) -> bool:
-	var run = state.get("run", {})
-	var gauges = run.get("gauges", {})
-	gauges[gauge] = clampi(value, 0, 100)
-	run["gauges"] = gauges
-	state["run"] = run
-	return true
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
@@ -307,27 +257,6 @@ func _break_promise(state: Dictionary, promise_id: String) -> bool:
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
-# BESTIOLE BOND FUNCTIONS
-# ═══════════════════════════════════════════════════════════════════════════════
-
-func _apply_bond_delta(state: Dictionary, delta: int) -> bool:
-	var bestiole = state.get("bestiole", {})
-	var current = int(bestiole.get("bond", 50))
-	bestiole["bond"] = clampi(current + delta, 0, 100)
-	state["bestiole"] = bestiole
-	return true
-
-
-func _set_skill_cooldown(state: Dictionary, skill_id: String, turns: int) -> bool:
-	var bestiole = state.get("bestiole", {})
-	var cooldowns = bestiole.get("skill_cooldowns", {})
-	cooldowns[skill_id] = max(0, turns)
-	bestiole["skill_cooldowns"] = cooldowns
-	state["bestiole"] = bestiole
-	return true
-
-
-# ═══════════════════════════════════════════════════════════════════════════════
 # MISSION & NARRATIVE FUNCTIONS
 # ═══════════════════════════════════════════════════════════════════════════════
 
@@ -389,13 +318,13 @@ func _apply_narrative_debt(state: Dictionary, debt_type: String, description: St
 # ═══════════════════════════════════════════════════════════════════════════════
 
 func _score_to_tier(score: int) -> String:
-	if score >= 60:
+	if score >= 80:
 		return "honore"
-	elif score >= 20:
+	elif score >= 50:
 		return "sympathisant"
-	elif score >= -19:
+	elif score >= 20:
 		return "neutre"
-	elif score >= -59:
+	elif score >= 5:
 		return "mefiant"
 	else:
 		return "hostile"
@@ -412,7 +341,7 @@ func _build_faction_context(rep_dict: Dictionary) -> Dictionary:
 		tiers[faction] = tier
 		if tier != "neutre":
 			active_effects.append({"faction": faction, "tier": tier, "score": score})
-		if abs(score) > abs(dominant_score):
+		if score > dominant_score:
 			dominant = faction
 			dominant_score = score
 	return {
@@ -425,11 +354,6 @@ func _build_faction_context(rep_dict: Dictionary) -> Dictionary:
 func _apply_faction_reputation(state: Dictionary, faction: String, delta: int) -> bool:
 	if not MerlinConstants.FACTIONS.has(faction):
 		return false
-	var run: Dictionary = state.get("run", {})
-	var typology: String = str(run.get("typology", "classique"))
-	if typology == "diplomate":
-		var mult: float = float(MerlinConstants.RUN_TYPOLOGIES.get("diplomate", {}).get("faction_delta_mult", 1.0))
-		delta = int(float(delta) * mult)
 	var meta: Dictionary = state.get("meta", {})
 	var faction_rep: Dictionary = meta.get("faction_rep", {})
 	var current: int = int(faction_rep.get(faction, MerlinConstants.FACTION_SCORE_START))
@@ -437,22 +361,23 @@ func _apply_faction_reputation(state: Dictionary, faction: String, delta: int) -
 	faction_rep[faction] = new_score
 	meta["faction_rep"] = faction_rep
 	state["meta"] = meta
+	var run: Dictionary = state.get("run", {})
 	if not run.is_empty():
 		run["faction_context"] = _build_faction_context(faction_rep)
 		state["run"] = run
 	return true
 
 
-func _apply_add_essences(state: Dictionary, amount: int) -> bool:
+func _apply_add_anam(state: Dictionary, amount: int) -> bool:
 	if amount == 0:
 		return false
 	var run: Dictionary = state.get("run", {})
-	var run_essences: int = int(run.get("essences", 0))
-	run["essences"] = run_essences + amount
+	var run_anam: int = int(run.get("anam", 0))
+	run["anam"] = run_anam + amount
 	state["run"] = run
 	var meta: Dictionary = state.get("meta", {})
-	var meta_essences: int = int(meta.get("essences", 0))
-	meta["essences"] = meta_essences + amount
+	var meta_anam: int = int(meta.get("anam", 0))
+	meta["anam"] = meta_anam + amount
 	state["meta"] = meta
 	return true
 

@@ -13,16 +13,8 @@ const ELEMENTS := [
 const OGHAM_STARTER_SKILLS := ["beith", "luis", "quert"]
 
 # ═══════════════════════════════════════════════════════════════════════════════
-# BESTIOLE BOND THRESHOLDS
+# OGHAM STARTER SET — 3 Oghams debloques au depart
 # ═══════════════════════════════════════════════════════════════════════════════
-
-const BOND_TIERS := {
-	"distant": {"min": 0, "max": 30, "skills": 0, "modifier": 0.0},
-	"friendly": {"min": 31, "max": 50, "skills": 1, "modifier": 0.05},
-	"close": {"min": 51, "max": 70, "skills": 2, "modifier": 0.10},
-	"bonded": {"min": 71, "max": 90, "skills": 3, "modifier": 0.15},
-	"soulmate": {"min": 91, "max": 100, "skills": -1, "modifier": 0.20},  # -1 = all skills
-}
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
@@ -31,9 +23,8 @@ const BOND_TIERS := {
 
 const REWARD_TYPES := {
 	"vie": {"icon": "\u2764", "label": "Vie", "color_key": "danger"},
-	"essence": {"icon": "#", "label": "Essence", "color_key": "bestiole"},
-	"souffle": {"icon": "*", "label": "Souffle", "color_key": "souffle"},
-	"karma": {"icon": "\u2726", "label": "Karma", "color_key": "amber_bright"},
+	"essence": {"icon": "#", "label": "Essence", "color_key": "amber_bright"},
+	"reputation": {"icon": "\u2726", "label": "Reputation", "color_key": "amber_bright"},
 	"mystere": {"icon": "?", "label": "Mystere", "color_key": "amber"},
 }
 
@@ -50,12 +41,8 @@ static func infer_reward_type(effects: Array) -> String:
 				return "vie"
 			"DAMAGE_LIFE":
 				return "vie"
-			"ADD_SOUFFLE":
-				return "souffle"
-			"USE_SOUFFLE":
-				return "souffle"
-			"ADD_KARMA":
-				return "karma"
+			"ADD_REPUTATION":
+				return "reputation"
 			"ADD_ESSENCE":
 				return "essence"
 	return "mystere"
@@ -96,7 +83,7 @@ const MINIGAME_CATALOGUE := {
 enum CardOption { LEFT = 0, CENTER = 1, RIGHT = 2 }
 
 # ═══════════════════════════════════════════════════════════════════════════════
-# LIFE ESSENCE — Survival gauge (Phase 43, inspired by Hand of Fate 2)
+# VIE — Barre de vie unique (Phase 43)
 # At 0 = premature run end. Drains on critical failures, failed events, etc.
 # ═══════════════════════════════════════════════════════════════════════════════
 
@@ -120,31 +107,11 @@ const FAVEURS_START := 0
 const FAVEURS_PER_MINIGAME_WIN := 3    # Score >= 80
 const FAVEURS_PER_MINIGAME_PLAY := 1  # Score < 80
 
-# DC base ranges for variable DC system (replaces fixed 6/10/14)
-const DC_BASE := {
-	"left": {"min": 4, "max": 8, "default": 6},
-	"center": {"min": 7, "max": 12, "default": 9},
-	"right": {"min": 10, "max": 16, "default": 13},
-}
-
-# DC difficulty labels for UI display
-const DC_DIFFICULTY_LABELS := {
-	"easy": {"label": "Facile", "color": Color(0.35, 0.75, 0.35), "max_dc": 8},
-	"normal": {"label": "Normal", "color": Color(0.85, 0.75, 0.25), "max_dc": 13},
-	"hard": {"label": "Difficile", "color": Color(0.85, 0.30, 0.25), "max_dc": 20},
-}
-
-# B.3 — Archetype DC bonus: valeur negative = DC plus facile pour ce profil
-# "default" s'applique a tous les choix; "biome" et "social" peuvent etre ajoutes
-const ARCHETYPE_DC_BONUS := {
-	"gardien":     -1,   # Defenseur: plus facile d'agir avec prudence
-	"explorateur": +1,   # Aventureux: prend des risques, DC globalement plus eleve
-	"sage":         0,   # Equilibre
-	"heros":       -1,   # Heroique: facilite les actions directes
-	"guerisseur":   0,   # Equilibre
-	"stratege":    -1,   # Analytique: reduit les erreurs
-	"mystique":     0,   # Equilibre intuitif
-	"guide":       -1,   # Bienveillant: contexte social facilite
+# Minigame difficulty labels for UI display
+const MINIGAME_DIFFICULTY_LABELS := {
+	"easy": {"label": "Facile", "color": Color(0.35, 0.75, 0.35), "max_score": 40},
+	"normal": {"label": "Normal", "color": Color(0.85, 0.75, 0.25), "max_score": 70},
+	"hard": {"label": "Difficile", "color": Color(0.85, 0.30, 0.25), "max_score": 100},
 }
 
 # Session duration targets
@@ -191,219 +158,131 @@ const MISSION_TEMPLATES := {
 
 const POWER_MILESTONES := {
 	5: {"type": "HEAL", "value": 15, "label": "Vigueur retrouvee", "desc": "+15 Vie"},
-	10: {"type": "DC_REDUCTION", "value": 2, "label": "Instinct aiguise", "desc": "DCs -2"},
-	15: {"type": "SOUFFLE_RECOVER", "value": 1, "label": "Souffle du druide", "desc": "+1 Souffle"},
+	10: {"type": "MINIGAME_BONUS", "value": 5, "label": "Instinct aiguise", "desc": "+5% minigame"},
+	15: {"type": "HEAL", "value": 10, "label": "Souffle du druide", "desc": "+10 Vie"},
 	20: {"type": "HEAL", "value": 20, "label": "Benediction ancienne", "desc": "+20 Vie"},
 }
 
 # ═══════════════════════════════════════════════════════════════════════════════
-# SOUFFLE D'AWEN — Bestiole Ogham Resource (separate from Souffle d'Ogham)
 # ═══════════════════════════════════════════════════════════════════════════════
-
-const AWEN_MAX := 5
-const AWEN_START := 2
-const AWEN_REGEN_INTERVAL := 5  # +1 every N cards played
-const AWEN_REGEN_EQUILIBRE_BONUS := 1  # +1 extra if all 3 aspects balanced
-
-# ═══════════════════════════════════════════════════════════════════════════════
-# OGHAM FULL SPECS — Complete Ogham definitions for Triade system
+# OGHAM FULL SPECS — Complete Ogham definitions (18 Oghams, hybrid active+narrative)
 # ═══════════════════════════════════════════════════════════════════════════════
 
 const OGHAM_FULL_SPECS := {
 	# ── REVEAL ──
 	"beith": {
 		"name": "Bouleau", "tree": "Betula", "unicode": "\u1681",
-		"category": "reveal", "awen_cost": 1, "cooldown": 3, "starter": true,
+		"category": "reveal", "cooldown": 3, "starter": true,
 		"effect": "reveal_one",
 		"description": "Revele l'effet d'une option au choix",
-		"bond_required": 0,
 	},
 	"coll": {
 		"name": "Noisetier", "tree": "Corylus", "unicode": "\u1685",
-		"category": "reveal", "awen_cost": 2, "cooldown": 5, "starter": false,
+		"category": "reveal", "cooldown": 5, "starter": false,
 		"effect": "reveal_all",
 		"description": "Revele les effets de toutes les options",
-		"bond_required": 21,
 	},
 	"ailm": {
 		"name": "Sapin", "tree": "Abies", "unicode": "\u168f",
-		"category": "reveal", "awen_cost": 2, "cooldown": 4, "starter": false,
+		"category": "reveal", "cooldown": 4, "starter": false,
 		"effect": "predict_next",
 		"description": "Predit le theme de la prochaine carte",
-		"bond_required": 41,
 	},
 	# ── PROTECTION ──
 	"luis": {
 		"name": "Sorbier", "tree": "Sorbus", "unicode": "\u1682",
-		"category": "protection", "awen_cost": 1, "cooldown": 4, "starter": true,
+		"category": "protection", "cooldown": 4, "starter": true,
 		"effect": "shield_shift",
 		"description": "Empeche le prochain shift negatif d'aspect",
-		"bond_required": 0,
 	},
 	"gort": {
 		"name": "Lierre", "tree": "Hedera", "unicode": "\u168c",
-		"category": "protection", "awen_cost": 2, "cooldown": 6, "starter": false,
+		"category": "protection", "cooldown": 6, "starter": false,
 		"effect": "absorb_extreme",
 		"description": "Si un aspect atteint un extreme, le ramene a equilibre",
-		"bond_required": 41,
 	},
 	"eadhadh": {
 		"name": "Tremble", "tree": "Populus", "unicode": "\u1690",
-		"category": "protection", "awen_cost": 3, "cooldown": 8, "starter": false,
+		"category": "protection", "cooldown": 8, "starter": false,
 		"effect": "skip_negative",
 		"description": "Annule tous les effets negatifs de la carte choisie",
-		"bond_required": 61,
 	},
 	# ── BOOST ──
 	"duir": {
 		"name": "Chene", "tree": "Quercus", "unicode": "\u1687",
-		"category": "boost", "awen_cost": 2, "cooldown": 4, "starter": false,
+		"category": "boost", "cooldown": 4, "starter": false,
 		"effect": "force_equilibre",
 		"description": "Force un aspect au choix vers Equilibre",
-		"bond_required": 21,
 	},
 	"tinne": {
 		"name": "Houx", "tree": "Ilex", "unicode": "\u1688",
-		"category": "boost", "awen_cost": 2, "cooldown": 5, "starter": false,
+		"category": "boost", "cooldown": 5, "starter": false,
 		"effect": "double_positive",
 		"description": "Double les effets positifs de la prochaine carte",
-		"bond_required": 41,
 	},
 	"onn": {
 		"name": "Ajonc", "tree": "Ulex", "unicode": "\u1689",
-		"category": "boost", "awen_cost": 3, "cooldown": 7, "starter": false,
-		"effect": "souffle_boost",
-		"description": "Regenere 2 Souffle d'Ogham",
-		"bond_required": 61,
+		"category": "boost", "cooldown": 7, "starter": false,
+		"effect": "heal_life",
+		"description": "Restaure 15 points de vie",
 	},
 	# ── NARRATIVE ──
 	"nuin": {
 		"name": "Frene", "tree": "Fraxinus", "unicode": "\u1684",
-		"category": "narrative", "awen_cost": 2, "cooldown": 6, "starter": false,
+		"category": "narrative", "cooldown": 6, "starter": false,
 		"effect": "add_option",
 		"description": "Ajoute une 4eme option a la carte actuelle",
-		"bond_required": 41,
 	},
 	"huath": {
 		"name": "Aubepine", "tree": "Crataegus", "unicode": "\u1686",
-		"category": "narrative", "awen_cost": 2, "cooldown": 5, "starter": false,
+		"category": "narrative", "cooldown": 5, "starter": false,
 		"effect": "change_card",
 		"description": "Remplace la carte actuelle par une autre",
-		"bond_required": 21,
 	},
 	"straif": {
 		"name": "Prunellier", "tree": "Prunus", "unicode": "\u1693",
-		"category": "narrative", "awen_cost": 3, "cooldown": 10, "starter": false,
+		"category": "narrative", "cooldown": 10, "starter": false,
 		"effect": "force_twist",
 		"description": "Force un retournement de situation",
-		"bond_required": 81,
 	},
 	# ── RECOVERY ──
 	"quert": {
 		"name": "Pommier", "tree": "Malus", "unicode": "\u168a",
-		"category": "recovery", "awen_cost": 1, "cooldown": 4, "starter": true,
+		"category": "recovery", "cooldown": 4, "starter": true,
 		"effect": "heal_worst",
 		"description": "Ramene l'aspect le plus extreme vers Equilibre",
-		"bond_required": 0,
 	},
 	"ruis": {
 		"name": "Sureau", "tree": "Sambucus", "unicode": "\u1694",
-		"category": "recovery", "awen_cost": 3, "cooldown": 8, "starter": false,
+		"category": "recovery", "cooldown": 8, "starter": false,
 		"effect": "balance_all",
 		"description": "Ramene tous les aspects vers Equilibre",
-		"bond_required": 61,
 	},
 	"saille": {
 		"name": "Saule", "tree": "Salix", "unicode": "\u1691",
-		"category": "recovery", "awen_cost": 2, "cooldown": 6, "starter": false,
-		"effect": "regen_awen",
-		"description": "Regenere 2 Souffle d'Awen",
-		"bond_required": 41,
+		"category": "recovery", "cooldown": 6, "starter": false,
+		"effect": "reduce_cooldowns",
+		"description": "Reduit le cooldown de tous les Oghams de 1",
 	},
 	# ── SPECIAL ──
 	"muin": {
 		"name": "Vigne", "tree": "Vitis", "unicode": "\u168d",
-		"category": "special", "awen_cost": 2, "cooldown": 7, "starter": false,
+		"category": "special", "cooldown": 7, "starter": false,
 		"effect": "invert_effects",
 		"description": "Inverse les effets positifs et negatifs de la carte",
-		"bond_required": 41,
 	},
 	"ioho": {
 		"name": "If", "tree": "Taxus", "unicode": "\u1695",
-		"category": "special", "awen_cost": 3, "cooldown": 12, "starter": false,
+		"category": "special", "cooldown": 12, "starter": false,
 		"effect": "full_reroll",
 		"description": "Regenere une carte completement nouvelle",
-		"bond_required": 81,
 	},
 	"ur": {
 		"name": "Bruyere", "tree": "Calluna", "unicode": "\u1692",
-		"category": "special", "awen_cost": 3, "cooldown": 10, "starter": false,
+		"category": "special", "cooldown": 10, "starter": false,
 		"effect": "sacrifice_trade",
 		"description": "Sacrifie 1 aspect extreme pour booster les 2 autres",
-		"bond_required": 61,
 	},
-}
-
-# ═══════════════════════════════════════════════════════════════════════════════
-# FLUX SYSTEM — Hidden energy balance (Phase 35)
-# 3 axes: Terre (Environment), Esprit (Narrative), Lien (Difficulty)
-# ═══════════════════════════════════════════════════════════════════════════════
-
-const FLUX_START := {"terre": 50, "esprit": 30, "lien": 40}
-const FLUX_MIN := 0
-const FLUX_MAX := 100
-
-# Choice → Flux modification
-const FLUX_CHOICE_DELTA := {
-	"left": {"terre": 5, "esprit": 2, "lien": -3},
-	"center": {"terre": 3, "esprit": 8, "lien": -2},
-	"right": {"terre": -5, "esprit": 3, "lien": 8},
-}
-
-# Tier thresholds for each Flux axis
-const FLUX_TIERS := {
-	"terre": {
-		"hostile": {"min": 0, "max": 30, "label": "Hostile", "dc_mod": 0},
-		"neutre": {"min": 31, "max": 69, "label": "Neutre", "dc_mod": 0},
-		"harmonieux": {"min": 70, "max": 100, "label": "Harmonieux", "dc_mod": 0},
-	},
-	"esprit": {
-		"stagnant": {"min": 0, "max": 30, "label": "Stagnant", "dc_mod": 0},
-		"montee": {"min": 31, "max": 69, "label": "Montee", "dc_mod": 0},
-		"climax": {"min": 70, "max": 100, "label": "Climax", "dc_mod": 0},
-	},
-	"lien": {
-		"calme": {"min": 0, "max": 30, "label": "Calme", "dc_mod": -2},
-		"modere": {"min": 31, "max": 69, "label": "Modere", "dc_mod": 0},
-		"brutal": {"min": 70, "max": 100, "label": "Brutal", "dc_mod": 3},
-	},
-}
-
-# Flux tier → LLM context hints
-const FLUX_HINTS := {
-	"terre": {
-		"hostile": "Le monde est hostile, la nature se retourne.",
-		"neutre": "",
-		"harmonieux": "La nature murmure en ta faveur.",
-	},
-	"esprit": {
-		"stagnant": "",
-		"montee": "Le recit s'intensifie.",
-		"climax": "Le destin se cristallise, chaque choix est decisif.",
-	},
-	"lien": {
-		"calme": "Le chemin est calme.",
-		"modere": "",
-		"brutal": "Le danger rode, chaque pas est un defi.",
-	},
-}
-
-# Flux → Essence rewards at run end
-const FLUX_ESSENCE_REWARDS := {
-	"terre_high": {"threshold": 70, "rewards": {"NATURE": 5, "EAU": 3}},
-	"terre_low": {"threshold_below": 30, "rewards": {"METAL": 5, "POISON": 3}},
-	"esprit_high": {"threshold": 70, "rewards": {"ESPRIT": 8, "ARCANE": 5}},
-	"lien_high": {"threshold": 70, "rewards": {"FEU": 5, "FOUDRE": 3}},
 }
 
 # ═══════════════════════════════════════════════════════════════════════════════
@@ -413,32 +292,15 @@ const FLUX_ESSENCE_REWARDS := {
 const ESSENCE_BASE_REWARDS := {"TERRE": 5, "NATURE": 3}  # Always earned
 const ESSENCE_VICTORY_BONUS := {"LUMIERE": 8, "FOUDRE": 5}
 const ESSENCE_CHUTE_BONUS := {"OMBRE": 5, "GLACE": 3}
-const ESSENCE_BALANCED_BONUS := {"LUMIERE": 10}  # All 3 aspects at EQUILIBRE
-const ESSENCE_BOND_BONUS := {"BETE": 5, "NATURE": 3}  # Bond > 70
 const ESSENCE_MINIGAME_BONUS := {"AIR": 4}  # 5+ mini-games won
 const ESSENCE_OGHAM_BONUS := {"ARCANE": 5}  # 3+ Oghams used
-
-# ═══════════════════════════════════════════════════════════════════════════════
-# BESTIOLE EVOLUTION — Persistent across runs (Phase 35)
-# ═══════════════════════════════════════════════════════════════════════════════
-
-const BESTIOLE_EVOLUTION_STAGES := {
-	1: {"name": "Enfant", "bond_base": 10, "awen_bonus": 0, "runs_required": 0, "essence_cost": {}},
-	2: {"name": "Compagnon", "bond_base": 30, "awen_bonus": 1, "runs_required": 15, "essence_cost": {}},
-	3: {"name": "Gardien", "bond_base": 50, "awen_bonus": 2, "runs_required": 40, "essence_cost": {"BETE": 200}},
-}
-
-const BESTIOLE_EVOLUTION_PATHS := {
-	"protecteur": {"name": "Protecteur", "aspect": "Corps", "runs_focused": 25, "cost": {"BETE": 150, "TERRE": 80}, "bonus": "negative_effects_minus_15"},
-	"oracle": {"name": "Oracle", "aspect": "Ame", "runs_focused": 25, "cost": {"BETE": 150, "ESPRIT": 80}, "bonus": "card_preview_1"},
-	"diplomate": {"name": "Diplomate", "aspect": "Monde", "runs_focused": 25, "cost": {"BETE": 150, "EAU": 80}, "bonus": "liens_plus_5"},
-}
-
-const BESTIOLE_BOND_RETENTION := 0.4  # Keep 40% of bond between runs
+const ESSENCE_FACTION_BONUS := {"LUMIERE": 10}  # Any faction >= 80
 
 # ═══════════════════════════════════════════════════════════════════════════════
 # ARBRE DE VIE — Talent Tree (Phase 35)
-# 28 nodes: 8 Racines (Corps) + 8 Ramures (Ame) + 8 Feuillage (Monde) + 4 Tronc
+# TODO(v2.0): Redesign branches from Corps/Ame/Monde to faction-based
+#   (Druides, Anciens, Korrigans, Niamh, Ankou) + Tronc universel
+#   See docs/GAME_DESIGN_BIBLE.md §5.1
 # ═══════════════════════════════════════════════════════════════════════════════
 
 const TALENT_NODES := {
@@ -712,17 +574,19 @@ const TALENT_NODES := {
 
 # Talent branch colors for UI
 const TALENT_BRANCH_COLORS := {
-	"Corps": Color(0.55, 0.40, 0.25),     # Earthy brown
-	"Ame": Color(0.40, 0.45, 0.70),       # Ethereal blue
-	"Monde": Color(0.35, 0.55, 0.35),     # Forest green
-	"Universel": Color(0.65, 0.45, 0.20), # Amber
+	"druides": Color(0.35, 0.55, 0.35),    # Forest green
+	"anciens": Color(0.55, 0.50, 0.40),    # Stone grey-brown
+	"korrigans": Color(0.45, 0.30, 0.55),  # Purple mischief
+	"niamh": Color(0.40, 0.55, 0.70),      # Lake blue
+	"ankou": Color(0.30, 0.30, 0.35),      # Dark shadow
+	"central": Color(0.65, 0.45, 0.20),    # Amber
 }
 
 # Talent tier names
 const TALENT_TIER_NAMES := {1: "Germe", 2: "Pousse", 3: "Branche", 4: "Cime"}
 
 # ═══════════════════════════════════════════════════════════════════════════════
-# BIOME SYSTEM — 7 Celtic Biomes for TRIADE (Phase 37)
+# BIOME SYSTEM — 8 Celtic Biomes (Phase 37)
 # ═══════════════════════════════════════════════════════════════════════════════
 
 const BIOME_KEYS := [
@@ -755,7 +619,7 @@ static func get_mission_template(biome_key: String) -> Dictionary:
 			return {"title": "Le Passage d'Avalon", "text": "Au-dela des brumes, une ile apparait puis s'efface. Trouve le passage avant que la maree ne le scelle.", "name": "Iles Mystiques"}
 	return {}
 
-# Card type distribution weights (TRIADE mode)
+# Card type distribution weights
 const CARD_TYPE_WEIGHTS := {
 	"narrative": 0.80,
 	"event": 0.10,
@@ -770,28 +634,28 @@ const EVENT_CARD_PROBABILITY := 0.15
 const SEASONAL_EFFECTS := {
 	"spring": {
 		"label": "Printemps",
-		"aspect_bias": "Corps",
+		"faction_bias": "druides",
 		"bias_direction": "up",
 		"narrative_tone": "renouveau",
 		"event_weight_mod": 1.1,
 	},
 	"summer": {
 		"label": "Ete",
-		"aspect_bias": "Monde",
+		"faction_bias": "anciens",
 		"bias_direction": "up",
 		"narrative_tone": "aventure",
 		"event_weight_mod": 1.0,
 	},
 	"autumn": {
 		"label": "Automne",
-		"aspect_bias": "Ame",
+		"faction_bias": "korrigans",
 		"bias_direction": "up",
 		"narrative_tone": "reflexion",
 		"event_weight_mod": 1.15,
 	},
 	"winter": {
 		"label": "Hiver",
-		"aspect_bias": "Ame",
+		"faction_bias": "ankou",
 		"bias_direction": "down",
 		"narrative_tone": "survie",
 		"event_weight_mod": 1.2,
@@ -804,7 +668,7 @@ const MIN_CARDS_BEFORE_PROMISE := 5
 const MAX_ACTIVE_PROMISES := 2
 
 # ═══════════════════════════════════════════════════════════════════════════════
-# MAP NODE TYPES — STS-like map for TRIADE (Phase 37)
+# MAP NODE TYPES — STS-like map (Phase 37)
 # ═══════════════════════════════════════════════════════════════════════════════
 
 const NODE_TYPES := {
@@ -837,10 +701,10 @@ const EXPEDITION_TOOLS := {
 		"name": "Besace du Druide",
 		"icon": "<>",  # Diamond
 		"description": "Provisions et herbes medicinales",
-		"bonus": "+1 Souffle au depart",
+		"bonus": "+10 Vie au depart",
 		"bonus_field": "",
 		"dc_bonus": 0,
-		"initial_effect": {"type": "ADD_SOUFFLE", "amount": 1},
+		"initial_effect": {"type": "HEAL_LIFE", "amount": 10},
 	},
 	"lanterne": {
 		"name": "Lanterne d'Ogham",
@@ -870,7 +734,7 @@ const EXPEDITION_MERLIN_REACTIONS := {
 	"talisman": "Le Talisman vibre deja. Il sent le voyage.",
 	"jour": "De jour. La lumiere protege... mais attire aussi.",
 	"nuit": "De nuit ? Courageux. Les ombres seront plus bavard.",
-	"compagnon": "Un compagnon ! Le Monde sourit aux liens.",
+	"compagnon": "Un compagnon ! Les esprits sourient aux liens.",
 	"leger": "Voyager leger... rapide, mais tu sacrifies la preparation.",
 }
 
@@ -886,46 +750,44 @@ const FACTION_THRESHOLD_CONTENT: int = 50    # déblocage cartes spéciales
 const FACTION_THRESHOLD_ENDING: int = 80     # déblocage fin de faction
 
 const FACTION_INFO := {
-	"druides":   {"name": "Druides de Bretagne", "symbol": "chene",      "aspect_affinity": "Ame"},
-	"korrigans": {"name": "Korrigans des Marais", "symbol": "champignon", "aspect_affinity": "Monde"},
-	"humains":   {"name": "Clans Humains",         "symbol": "epee",      "aspect_affinity": "Corps"},
-	"anciens":   {"name": "Les Anciens",            "symbol": "menhir",    "aspect_affinity": "Ame"},
-	"ankou":     {"name": "L'Ankou",                "symbol": "faux",      "aspect_affinity": "Corps"},
+	"druides":   {"name": "Druides de Bretagne", "symbol": "chene"},
+	"anciens":   {"name": "Les Anciens",          "symbol": "menhir"},
+	"korrigans": {"name": "Korrigans des Marais", "symbol": "champignon"},
+	"niamh":     {"name": "Niamh et Tir na nOg",  "symbol": "lac"},
+	"ankou":     {"name": "L'Ankou",               "symbol": "faux"},
 }
 
-const FACTION_SCORE_MIN := -100
+const FACTION_SCORE_MIN := 0
 const FACTION_SCORE_MAX := 100
-const FACTION_SCORE_START := 0
+const FACTION_SCORE_START := 10
 
 # Bandes de seuil — évalués du plus haut (honore) au plus bas (hostile)
 const FACTION_TIERS := {
-	"honore":       {"min": 60,   "label": "Honore"},
-	"sympathisant": {"min": 20,   "label": "Sympathisant"},
-	"neutre":       {"min": -19,  "label": "Neutre"},
-	"mefiant":      {"min": -59,  "label": "Mefiant"},
-	"hostile":      {"min": -100, "label": "Hostile"},
+	"honore":       {"min": 80,  "label": "Honore"},
+	"sympathisant": {"min": 50,  "label": "Sympathisant"},
+	"neutre":       {"min": 20,  "label": "Neutre"},
+	"mefiant":      {"min": 5,   "label": "Mefiant"},
+	"hostile":      {"min": 0,   "label": "Hostile"},
 }
 
 # Bonus/malus de début de run selon tier × faction
 # Tiers sans entrée = pas d'effet de début de run
 const FACTION_RUN_BONUSES := {
 	"druides":   {
-		"honore":       {"type": "ADD_SOUFFLE", "amount": 2},
-		"sympathisant": {"type": "ADD_KARMA",   "amount": 5},
-		"hostile":      {"type": "ADD_TENSION", "amount": 25},
+		"honore":       {"type": "HEAL_LIFE",   "amount": 15},
+		"hostile":      {"type": "DAMAGE_LIFE", "amount": 10},
+	},
+	"anciens":   {
+		"honore":       {"type": "HEAL_LIFE",   "amount": 10},
+		"hostile":      {"type": "DAMAGE_LIFE", "amount": 5},
 	},
 	"korrigans": {
 		"honore":       {"type": "HEAL_LIFE",   "amount": 20},
-		"sympathisant": {"type": "ADD_SOUFFLE", "amount": 1},
 		"hostile":      {"type": "DAMAGE_LIFE", "amount": 10},
 	},
-	"humains":   {
+	"niamh":     {
 		"honore":       {"type": "HEAL_LIFE",   "amount": 15},
-		"hostile":      {"type": "ADD_TENSION", "amount": 15},
-	},
-	"anciens":   {
-		"honore":       {"type": "ADD_SOUFFLE", "amount": 1},
-		"hostile":      {"type": "ADD_KARMA",   "amount": -10},
+		"hostile":      {"type": "DAMAGE_LIFE", "amount": 5},
 	},
 	"ankou":     {
 		"honore":       {"type": "HEAL_LIFE",   "amount": 10},
@@ -943,59 +805,13 @@ const FACTION_DECAY_RATE    := 0.08 # 8% de valeur absolue oublié par run
 const FACTION_KEYWORDS := {
 	"druides":   ["druide", "ogham", "nemeton", "chene", "barde"],
 	"korrigans": ["korrigan", "farfadet", "marais", "lutin", "fee"],
-	"humains":   ["clan", "village", "guerrier", "humain", "paysan"],
+	"niamh":     ["niamh", "eau", "lac", "amour", "nostalgie"],
 	"anciens":   ["ancien", "menhir", "dolmen", "eternite", "primordial"],
 	"ankou":     ["ankou", "mort", "faucheuse", "ame", "trepas"],
 }
 
 # ═══════════════════════════════════════════════════════════════════════════════
-# TYPOLOGIES DE RUN — Couche modificatrice orthogonale à la Triade
-# Réf : docs/20_card_system/DOC_16_Run_Typologies.md
-# ═══════════════════════════════════════════════════════════════════════════════
-
-const RUN_TYPOLOGIES := {
-	"classique": {
-		"name": "Classique", "icon": "-",
-		"timer_enabled": false, "d20_modifier": 0, "dc_modifier": 0,
-		"card_bias": {}, "souffle_bonus": 0, "life_bonus": 0,
-		"llm_hint": "",
-	},
-	"urgence": {
-		"name": "Urgence", "icon": "!",
-		"timer_enabled": true, "timer_seconds": 10,
-		"d20_modifier": 0, "dc_modifier": 2,
-		"card_bias": {"event": 0.15, "narrative": 0.75},
-		"souffle_bonus": 1, "life_bonus": 0,
-		"timeout_effect": "ADD_TENSION:15",
-		"llm_hint": "URGENCE: crise immediate, options breves.",
-	},
-	"parieur": {
-		"name": "Parieur", "icon": "?",
-		"timer_enabled": false, "d20_modifier": 0, "dc_modifier": 0,
-		"card_bias": {}, "d20_outcome_modifier": true,
-		"crit_threshold": 17, "fumble_threshold": 4,
-		"souffle_bonus": 0, "life_bonus": 10,
-		"llm_hint": "PARIEUR: hasard capricieux, consequences imprevues.",
-	},
-	"diplomate": {
-		"name": "Diplomate", "icon": "O",
-		"timer_enabled": false, "d20_modifier": 2, "dc_modifier": -1,
-		"card_bias": {"narrative": 0.90}, "faction_delta_mult": 2.0,
-		"souffle_bonus": 0, "life_bonus": 0,
-		"llm_hint": "DIPLOMATE: alliances, factions, negociation.",
-	},
-	"chasseur": {
-		"name": "Chasseur", "icon": ">",
-		"timer_enabled": false, "d20_modifier": 0, "dc_modifier": 0,
-		"card_bias": {"event": 0.20, "narrative": 0.65},
-		"minigame_chance_bonus": 0.25, "awen_regen_bonus": 1,
-		"souffle_bonus": 0, "life_bonus": 0,
-		"llm_hint": "CHASSEUR: traque, Bestiole, nature, instinct.",
-	},
-}
-
-# ═══════════════════════════════════════════════════════════════════════════════
-# ESSENCES — Monnaie principale inter-run
+# ANAM — Monnaie principale inter-run (cross-run currency)
 # Réf : docs/20_card_system/DOC_17_Run_Rules_Officiel.md
 # ═══════════════════════════════════════════════════════════════════════════════
 

@@ -454,12 +454,6 @@ func _generate_card_two_stage(context: Dictionary) -> Dictionary:
 		if not karma_tone.is_empty():
 			user_prompt += "\nKARMA=%d: Ton %s. %s" % [karma, karma_tone, karma_hint]
 
-	# Typology hint — suffixe court (~10 tokens) pour adapter le ton selon la typology de run
-	var typology: String = str(context.get("typology", "classique"))
-	var typology_hint: String = str(MerlinConstants.RUN_TYPOLOGIES.get(typology, {}).get("llm_hint", ""))
-	if not typology_hint.is_empty():
-		user_prompt += "\n" + typology_hint
-
 	# No grammar for free text generation — budget tokens for rich narrative
 	var free_params := TRIADE_LLM_PARAMS.duplicate()
 	free_params.erase("grammar")

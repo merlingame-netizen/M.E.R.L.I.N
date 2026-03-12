@@ -2,7 +2,7 @@
 
 > **Source de verite unique** pour le game design de M.E.R.L.I.N.
 > Remplace et supersede : MASTER_DOCUMENT.md, DOC_12, DOC_13, DOC_11, NEW_MECHANICS_DESIGN.md
-> Date de creation : 2026-03-12 | Derniere mise a jour : 2026-03-12
+> Date de creation : 2026-03-12 | Derniere mise a jour : 2026-03-12 (v2.1)
 
 ---
 
@@ -134,11 +134,13 @@ Le joueur commence avec 3 Oghams debloques : `beith`, `luis`, `quert` (1 reveal,
 
 ### 2.4 Monnaies
 
-#### Essences magiques (cross-run)
+#### Anam — monnaie cross-run
+
+> Du gaelique "anam" = ame. Monnaie permanente entre les runs.
 
 | Propriete | Detail |
 |-----------|--------|
-| Nom | A definir (celtique court : "Nwyvre" ? "Anam" ? "Bri" ?) |
+| Nom | **Anam** |
 | Persistance | Cross-run (permanente) |
 | Sources | Fin de run (base + bonus), recompenses speciales |
 | Usage | Arbre de talents : debloquer Oghams + bonus passifs |
@@ -154,47 +156,76 @@ Le joueur commence avec 3 Oghams debloques : `beith`, `luis`, `quert` (1 reveal,
 
 ### 2.5 Minigames — Le coeur du gameplay
 
-**Regle fondamentale** : Chaque choix narratif declenche un minigame lie au champ lexical du verbe d'action choisi.
+**Regle fondamentale** : Chaque choix narratif declenche un minigame. Le type est determine par **detection de champ lexical** dans le texte narratif et les tags de la carte.
 
 #### Flow
 
 ```
 Joueur choisit option "Escalader la falaise"
        ↓
-Code detecte le verbe "escalader" dans la liste fermee
+Code analyse le texte : detecte mots-cles "escalader", "falaise", "vertige"
        ↓
-Mapping deterministe : "escalader" → minigame "equilibre"
+Champ lexical detecte : "finesse" (mots: vertige, pont, equilibre...)
        ↓
-Minigame "equilibre" se lance (difficulte = contexte narratif)
+Minigame associe : "equilibre" (champ finesse → equilibre ou ombres)
+       ↓
+Difficulte = contexte narratif (biome, carte, faction) — semi-adaptatif
        ↓
 Score 0-100 → effets proportionnels
 ```
 
+#### 8 champs lexicaux
+
+Le code detecte des mots-cles dans le texte narratif et les tags pour determiner le champ lexical dominant. Chaque champ est associe a 1-2 minigames.
+
+| Champ | Minigames | Keywords (detection) |
+|-------|-----------|----------------------|
+| **chance** | herboristerie | cueillir, potion, hasard, plante, herbe, champignon, racine |
+| **bluff** | negociation | marchander, convaincre, mentir, negocier, esprit, fae, korrigan |
+| **observation** | fouille, regard | chercher, voir, fixer, memoriser, indice, vision, forme, apparition |
+| **logique** | runes | dechiffrer, symbole, inscription, rune, ogham, gravure |
+| **finesse** | ombres, equilibre | discret, cacher, pont, vertige, gouffre, ombre, embuscade |
+| **vigueur** | combat_rituel, course | combattre, courir, fuir, duel, guerrier, lame, epee, sprint |
+| **esprit** | apaisement, volonte, sang_froid | calmer, resister, apaiser, courage, murmure, doute, piege, danger |
+| **perception** | traces, echo | piste, ecouter, suivre, son, empreinte, voix, appel, echo, cri, chant |
+
 #### Catalogue des minigames (14 types, objectif 15+)
 
-| Minigame | Description | Verbes déclencheurs |
-|----------|-------------|---------------------|
-| **Traces** | Suivre des empreintes sans quitter le chemin | piste, trace, empreinte, pas, sentier |
-| **Runes** | Dechiffrer un ogham dans la pierre | rune, ogham, symbole, gravure, inscription |
-| **Equilibre** | Maintenir l'equilibre sur un passage instable | pont, equilibre, vertige, gouffre, precipice |
-| **Herboristerie** | Identifier la bonne plante parmi les toxiques | plante, herbe, champignon, racine, cueillir, potion |
-| **Negociation** | Convaincre un esprit par les mots justes | esprit, fae, parler, negocier, korrigan, convaincre, marchander |
-| **Combat Rituel** | Esquiver dans un cercle sacre | combat, defi, guerrier, lame, epee, duel |
-| **Apaisement** | Calmer un gardien par le rythme | apaiser, calmer, respir, gardien, rage, colere |
-| **Sang-froid** | Curseur stable malgre les pulsations | piege, danger, froid, sang, approcher, appat |
-| **Course** | QTE pour maintenir la poursuite ou fuir | courir, pourchasser, fuir, sprint, trouee, course |
-| **Fouille** | Trouver l'indice cache en temps limite | fouille, chercher, indice, recueillir, ruban, preuve |
-| **Ombres** | Se deplacer entre couvertures sans etre vu | cacher, ombre, discret, invisible, embuscade |
-| **Volonte** | Tenir le focus malgre les murmures | douter, murmure, resister, volonte, doute, hesiter |
-| **Regard** | Memoriser puis reproduire une sequence | vision, forme, memoriser, fixer, apparition, spectr |
-| **Echo** | Suivre l'intensite sonore vers la bonne direction | voix, appel, son, echo, ecouter, cri, chant |
+| Minigame | Champ | Description |
+|----------|-------|-------------|
+| **Traces** | perception | Suivre des empreintes sans quitter le chemin |
+| **Runes** | logique | Dechiffrer un ogham dans la pierre |
+| **Equilibre** | finesse | Maintenir l'equilibre sur un passage instable |
+| **Herboristerie** | chance | Identifier la bonne plante parmi les toxiques |
+| **Negociation** | bluff | Convaincre un esprit par les mots justes |
+| **Combat Rituel** | vigueur | Esquiver dans un cercle sacre |
+| **Apaisement** | esprit | Calmer un gardien par le rythme |
+| **Sang-froid** | esprit | Curseur stable malgre les pulsations |
+| **Course** | vigueur | QTE pour maintenir la poursuite ou fuir |
+| **Fouille** | observation | Trouver l'indice cache en temps limite |
+| **Ombres** | finesse | Se deplacer entre couvertures sans etre vu |
+| **Volonte** | esprit | Tenir le focus malgre les murmures |
+| **Regard** | observation | Memoriser puis reproduire une sequence |
+| **Echo** | perception | Suivre l'intensite sonore vers la bonne direction |
 
-**Objectif** : 40+ verbes dans la liste fermee, 15+ types de minigames.
+#### Difficulte semi-adaptive
+
+La difficulte des minigames depend du **contexte narratif**, PAS de la performance du joueur :
+
+| Facteur | Impact |
+|---------|--------|
+| Biome | Modificateur fixe par biome (-1 a +3) |
+| Type de carte | Event = +1, Merlin Direct = +2 |
+| Faction dominante | Bonus +10% score si Ogham actif correspond |
+| Progression (nb cartes) | Difficulte augmente legerement au fil du run |
+
+Le joueur ne percoit pas d'ajustement lie a sa performance — le jeu reste consistant.
 
 **Responsabilite** :
-- Le **LLM** choisit un verbe dans la liste fermee (dans son texte narratif + les labels d'options)
-- Le **code** mappe le verbe vers le minigame (deterministe, pas le LLM)
-- Le **code** determine la difficulte (selon contexte narratif, biome, progression)
+- Le **LLM** ecrit le texte narratif librement (pas de liste fermee de verbes)
+- Le **code** detecte le champ lexical dans le texte + tags
+- Le **code** choisit le minigame associe au champ dominant
+- Le **code** determine la difficulte (contexte narratif, biome, faction)
 
 #### Resultat du minigame
 
@@ -233,7 +264,7 @@ Score 0-100 → effets proportionnels
   "speaker": String,           // "Merlin" ou NPC
   "options": [
     {
-      "label": String,         // Verbe d'action (de la liste fermee)
+      "label": String,         // Texte d'action (le code detecte le champ lexical)
       "effects": [Dictionary], // Effets suggeres par LLM GM, valides par code
     },
     // ... 1 a 4 options
@@ -351,7 +382,7 @@ Chaque biome a une **scene 3D explorable** (style FPS contemplatif). Le joueur s
 
 ### 5.1 Arbre de talents
 
-Debloque avec les **Essences magiques** (cross-run).
+Debloque avec les **Anam** (cross-run).
 
 **Structure** : Branches thematiques par faction + branche centrale.
 
@@ -365,10 +396,13 @@ Debloque avec les **Essences magiques** (cross-run).
                     [ANKOU]
 ```
 
+**~28 noeuds** redistribues sur 5 branches factions + branche centrale (meme volume que l'ancien systeme Corps/Ame/Monde).
+
 **Contenu des branches** :
 - **Oghams** (actifs + narratifs) — chaque branche contient 3-4 Oghams thematiques
 - **Bonus passifs** — ex: +10% reputation Druides, -5% difficulte minigames nature, +vie max
 - **Prerequis** — certains Oghams necessitent d'en avoir deja debloques d'autres
+- **Cout** : en Anam (monnaie cross-run)
 
 ### 5.2 Fins — catalogue + LLM
 
@@ -391,11 +425,31 @@ Debloque avec les **Essences magiques** (cross-run).
 
 **Pas de hierarchie** : Toute fin est narrativement valide. Finir tot n'est pas un echec.
 
-### 5.3 Ce qui persiste entre les runs
+### 5.3 Profils joueur (save system)
+
+Le jeu utilise un systeme de **profils** (pas de slots de sauvegarde classiques).
+
+| Propriete | Detail |
+|-----------|--------|
+| Type | Profils joueur (plusieurs joueurs peuvent partager le meme PC) |
+| Contenu | Meta-progression uniquement (pas de save mid-run) |
+| Mid-run | Pas de sauvegarde en cours de run — le run se termine ou s'interrompt |
+| Autosave | La meta-progression est sauvegardee automatiquement en fin de run |
+
+**Contenu d'un profil** :
+- Anam (monnaie cross-run)
+- Reputation des 5 factions
+- Oghams debloques
+- Arbre de talents (noeuds actives)
+- Fins vues / debloquees
+- Nombre de runs, biomes decouverts
+- Statistiques (temps de jeu, minigames joues, etc.)
+
+### 5.4 Ce qui persiste entre les runs
 
 | Persiste | Perdu |
 |----------|-------|
-| Essences magiques | Vie |
+| Anam | Vie |
 | Reputation factions (x0.92 decay) | Monnaie biome |
 | Oghams debloques | Cartes jouees |
 | Arbre de talents | Scenario/trame |
@@ -506,6 +560,41 @@ Priorite des sections de contexte :
 
 Si le LLM echoue ou timeout : **FastRoute** — pool de cartes pre-calculees adapte au biome. Objectif : reduire le taux de fallback de ~30% a <5%.
 
+### 6.8 MOS — Merlin Omniscient System
+
+Le MOS est le **cerveau central** qui orchestre les 3 cerveaux LLM, dirige le jeu, et applique les guardrails. Il fait de Merlin un personnage vivant qui evolue avec le joueur.
+
+#### 3 roles du MOS
+
+| Role | Description |
+|------|-------------|
+| **Orchestrateur LLM** | Route les cartes via FastRoute (70% hit rate) ou LLM. Valide les outputs, gere les fallbacks, coordonne Narrator/GM/Judge. |
+| **Directeur de jeu** | Gere le pacing (tension narrative 0-0.8), la difficulte (rubber-banding), les arcs narratifs (max 2 actifs, 7 cartes/arc), les rebondissements. |
+| **Guardrails** | Valide l'equilibre des cartes (total effet <50, 90% tradeoff), previent la mort instantanee, filtre le contenu (pas de mots modernes, pas de meta-references). |
+
+#### Mecanismes cles
+
+| Mecanisme | Detail |
+|-----------|--------|
+| **Pacing** | Applique 20% mercy (-scaling) apres 3 morts consecutives. Force carte de recuperation si vie <20. |
+| **Tension** | Pression narrative (0-0.8) drive la probabilite de twist. Systeme de fatigue thematique pour eviter repetition. |
+| **Difficulte** | Semi-adaptive : depend du contexte narratif (biome, carte, faction), PAS de la performance joueur. Rubber-banding sur morts consecutives. |
+| **Confiance** | 4 tiers (T0-T3, seuils 25/50/75). Promesse tenue = +10, brisee = -15. Plus le joueur est fiable, plus Merlin revele. |
+| **Voix de Merlin** | 5 modes : neutre, mysterieux, avertissement, moquerie, melancolie. Le MOS choisit selon le contexte. |
+
+#### Registres persistants
+
+Le MOS maintient 6 registres pour tracker l'etat du jeu :
+1. **Player Registry** — comportement, preferences, tendances
+2. **Narrative Registry** — arcs actifs, PNJ rencontres, twist resolus
+3. **Faction Registry** — reputation, interactions, alignements
+4. **Card Registry** — cartes jouees, themes vus, fatigue
+5. **Promise Registry** — promesses actives, delais, resolutions
+6. **Trust Registry** — confiance Merlin/joueur (T0-T3)
+
+> Ref technique : `docs/20_card_system/GDD_MERLIN_OMNISCIENT_SYSTEM.md`
+> Code : `addons/merlin_ai/merlin_omniscient.gd`
+
 ---
 
 ## 7. Calendrier & temps
@@ -558,10 +647,11 @@ Si le LLM echoue ou timeout : **FastRoute** — pool de cartes pre-calculees ada
 
 ### 8.2 Ecrans separés
 
-- **Stats** : 5 factions (jauges de reputation), Essences, nombre de runs
+- **Stats** : 5 factions (jauges de reputation), Anam, nombre de runs
 - **Oghams** : Collection des 18, equiper l'Ogham actif
-- **Arbre de talents** : Depenser les Essences
+- **Arbre de talents** : Depenser les Anam
 - **Journal** : Fins debloquees, biomes decouverts
+- **Profil** : Gestion des profils joueur
 
 ---
 
@@ -578,6 +668,8 @@ Si le LLM echoue ou timeout : **FastRoute** — pool de cartes pre-calculees ada
 | **Awen** (0-5, ressource bestiole) | Supprime avec la bestiole | 2026-03-12 |
 | **D20 / dice roll** | Remplace par minigames systematiques | 2026-03-12 |
 | **3 options fixes (G/C/D)** | Remplace par 1-4 options variables | 2026-03-11 |
+| **Flux System** (terre/esprit/lien) | Complexite inutile, factions suffisent | 2026-03-12 |
+| **Run Typologies** (classique/urgence/parieur/diplomate/chasseur) | Trop pour MVP, biomes suffisent | 2026-03-12 |
 
 ---
 
@@ -587,12 +679,14 @@ Si le LLM echoue ou timeout : **FastRoute** — pool de cartes pre-calculees ada
 |-------|------------|
 | **Ogham** | Pouvoir du joueur (18 au total), lie a un arbre celtique |
 | **Faction** | L'un des 5 groupes de reputation (Druides, Anciens, Korrigans, Niamh, Ankou) |
-| **Essence** | Monnaie cross-run pour l'arbre de talents |
+| **Anam** | Monnaie cross-run (du gaelique "ame") pour l'arbre de talents |
 | **Monnaie biome** | Ressource per-run, specifique au biome, collectible en 3D |
 | **Run** | Une partie complete (depart → fin narrative) |
 | **Trame** | Scenario narratif genere par le LLM au debut du run |
-| **Verbe d'action** | Mot de la liste fermee choisi par le LLM pour les options de carte |
-| **Minigame** | Epreuve ludique declenchee par le verbe d'action choisi |
+| **Champ lexical** | L'un des 8 champs (chance, bluff, observation, logique, finesse, vigueur, esprit, perception) |
+| **Minigame** | Epreuve ludique declenchee par detection de champ lexical |
+| **MOS** | Merlin Omniscient System — cerveau central (orchestrateur + directeur + guardrails) |
+| **Profil** | Sauvegarde joueur contenant la meta-progression (pas de save mid-run) |
 | **Hub / Antre** | Menu principal entre les runs (arbre de talents, choix de biome) |
 | **FastRoute** | Pool de cartes de secours si le LLM echoue |
 | **Narrator** | Cerveau LLM 4B qui genere le texte narratif |
@@ -613,13 +707,17 @@ Si le LLM echoue ou timeout : **FastRoute** — pool de cartes pre-calculees ada
 | D20 / DC system | merlin_constants.gd (DC_BASE, DC_DIFFICULTY_LABELS, ARCHETYPE_DC_BONUS) | Remplacer par minigame difficulty |
 | Souffle refs | merlin_constants.gd (REWARD_TYPES), merlin_effect_engine.gd | Supprimer |
 | TRIADE_LLM_PARAMS, TRIADE_GRAMMAR_PATH | merlin_llm_adapter.gd | Renommer |
-| Flux system (terre/esprit/lien) | merlin_constants.gd (FLUX_*) | Evaluer : garder comme systeme cache ? |
-| Awen references | merlin_constants.gd (awen_cost dans OGHAM_FULL_SPECS) | Remplacer par cooldown seul |
-| bond_required dans Oghams | merlin_constants.gd | Remplacer par prerequis dans arbre de talents |
+| Flux system (terre/esprit/lien) | merlin_constants.gd (FLUX_*) | **SUPPRIMER** entierement |
+| Run Typologies (5 types) | merlin_constants.gd (RUN_TYPOLOGIES) | **SUPPRIMER** entierement |
+| ~~Awen references~~ | ~~merlin_constants.gd~~ | ✅ Nettoye (awen_cost supprime) |
+| ~~bond_required dans Oghams~~ | ~~merlin_constants.gd~~ | ✅ Nettoye (bond_required supprime) |
 | left/center/right options | merlin_constants.gd (CardOption enum, FLUX_CHOICE_DELTA) | Remplacer par options variables 1-4 |
+| 3 slots save → profils | merlin_save_system.gd | Refactorer en systeme de profils |
+| Champs lexicaux manquants | minigame_registry.gd | Ajouter vigueur, esprit, perception |
+| TALENT_NODES (Corps/Ame/Monde) | merlin_constants.gd | Redesign en branches factions (~28 noeuds) |
 
 ---
 
-*Ce document est la source de verite unique pour le game design de M.E.R.L.I.N. v2.0.*
+*Ce document est la source de verite unique pour le game design de M.E.R.L.I.N. v2.1.*
 *Toute divergence entre ce document et le code doit etre resolue en faveur de ce document.*
 *Co-ecrit entre l'utilisateur (vision) et Claude Code (structuration).*

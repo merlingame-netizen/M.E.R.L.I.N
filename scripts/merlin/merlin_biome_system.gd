@@ -1,10 +1,8 @@
 ## ═══════════════════════════════════════════════════════════════════════════════
-## Merlin Biome System — 7 Celtic Biomes for TRIADE
+## Merlin Biome System — 8 Celtic Biomes
 ## ═══════════════════════════════════════════════════════════════════════════════
-## Manages biome definitions, aspect biases, passive effects, ogham bonuses,
+## Manages biome definitions, faction affinities, passive effects, ogham bonuses,
 ## unlock conditions, and LLM context generation.
-## Adapts the documented percentage-based modifiers to TRIADE discrete states
-## via probability weights (aspect_bias) and periodic passive effects.
 ## ═══════════════════════════════════════════════════════════════════════════════
 
 extends RefCounted
@@ -20,11 +18,11 @@ var _tuning_loaded: bool = false
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
-# BIOME DATA — 7 biomes adapted for TRIADE (3 aspects, discrete states)
+# BIOME DATA — 8 biomes
 # ═══════════════════════════════════════════════════════════════════════════════
 #
-# aspect_bias: Probability weights for card generation.
-#   1.0 = neutral, >1.0 = more cards affecting that aspect, <1.0 = fewer.
+# faction_affinity: Probability weights for card generation per faction.
+#   1.0 = neutral, >1.0 = more cards from that faction, <1.0 = fewer.
 #   Used by LLM (via RAG context) and fallback pool (weighted selection).
 #
 # passive: Automatic effect applied every N cards played in this biome.
@@ -42,12 +40,11 @@ const BIOMES: Dictionary = {
 		"subtitle": "Ou les arbres ont des yeux",
 		"theme": "Nature ancienne, mystere vegetal, brume enchantee, korrigans",
 		"color": Color(0.30, 0.50, 0.28),
-		"aspect_bias": {"Corps": 1.2, "Ame": 1.0, "Monde": 0.8},
+		"faction_affinity": {"korrigans": 1.2, "druides": 1.0, "anciens": 0.8},
 		"passive": {"every_n": 5, "aspect": "Ame", "direction": "up"},
 		"difficulty": 0,
 		"ogham_bonus": ["quert", "huath", "coll"],
 		"ogham_cooldown_reduction": 1,
-		"flux_offset": {"terre": 10, "esprit": 0, "lien": -5},
 		"favored_season": "spring",
 		"unlock": null,
 		"creatures": "fees, korrigans, loups anciens, arbres animes",
@@ -58,12 +55,11 @@ const BIOMES: Dictionary = {
 		"subtitle": "L'horizon sans fin",
 		"theme": "Survie, solitude, endurance, vent hurlant",
 		"color": Color(0.55, 0.40, 0.55),
-		"aspect_bias": {"Corps": 0.8, "Ame": 1.2, "Monde": 1.0},
+		"faction_affinity": {"anciens": 1.2, "ankou": 1.0, "druides": 0.8},
 		"passive": {"every_n": 6, "aspect": "Corps", "direction": "down"},
 		"difficulty": 1,
 		"ogham_bonus": ["luis", "onn", "saille"],
 		"ogham_cooldown_reduction": 1,
-		"flux_offset": {"terre": 5, "esprit": 5, "lien": 5},
 		"favored_season": "autumn",
 		"unlock": {"min_runs": 2},
 		"creatures": "rapaces, lievres, ermites, esprits du vent",
@@ -74,12 +70,11 @@ const BIOMES: Dictionary = {
 		"subtitle": "L'ocean murmurant",
 		"theme": "Commerce, exploration, danger maritime, tempetes",
 		"color": Color(0.35, 0.50, 0.65),
-		"aspect_bias": {"Corps": 1.0, "Ame": 0.8, "Monde": 1.2},
+		"faction_affinity": {"niamh": 1.2, "korrigans": 1.0, "druides": 0.8},
 		"passive": {"every_n": 5, "aspect": "Monde", "direction": "up"},
 		"difficulty": 0,
 		"ogham_bonus": ["muin", "nuin", "tinne"],
 		"ogham_cooldown_reduction": 1,
-		"flux_offset": {"terre": -5, "esprit": 0, "lien": 10},
 		"favored_season": "summer",
 		"unlock": {"min_runs": 3},
 		"creatures": "phoques, mouettes, marchands etrangers, sirenes",
@@ -90,12 +85,11 @@ const BIOMES: Dictionary = {
 		"subtitle": "Flammes obstinees de l'humanite",
 		"theme": "Politique, social, intrigues, assemblee tribale",
 		"color": Color(0.60, 0.45, 0.30),
-		"aspect_bias": {"Corps": 0.8, "Ame": 1.0, "Monde": 1.2},
+		"faction_affinity": {"niamh": 1.0, "druides": 1.2, "anciens": 0.8},
 		"passive": {"every_n": 4, "aspect": "Monde", "direction": "up"},
 		"difficulty": -1,
 		"ogham_bonus": ["duir", "coll", "beith"],
 		"ogham_cooldown_reduction": 1,
-		"flux_offset": {"terre": 0, "esprit": -5, "lien": 0},
 		"favored_season": "summer",
 		"unlock": {"min_runs": 5},
 		"creatures": "villageois, chefs de clan, druides, forgerons",
@@ -106,12 +100,11 @@ const BIOMES: Dictionary = {
 		"subtitle": "Ou le temps hesite",
 		"theme": "Magie, spirituel, liminal, rituels druidiques",
 		"color": Color(0.50, 0.50, 0.55),
-		"aspect_bias": {"Corps": 1.0, "Ame": 1.4, "Monde": 0.8},
+		"faction_affinity": {"druides": 1.4, "anciens": 1.0, "korrigans": 0.8},
 		"passive": {"every_n": 4, "aspect": "Ame", "direction": "up"},
 		"difficulty": 1,
 		"ogham_bonus": ["ioho", "straif", "ruis"],
 		"ogham_cooldown_reduction": 2,
-		"flux_offset": {"terre": 0, "esprit": 15, "lien": 5},
 		"favored_season": "winter",
 		"unlock": {"min_runs": 8, "min_endings": 2},
 		"creatures": "esprits ancestraux, druides anciens, ombres du passe",
@@ -122,12 +115,11 @@ const BIOMES: Dictionary = {
 		"subtitle": "Deception et feux follets",
 		"theme": "Danger, mystere, tentation, tresors caches",
 		"color": Color(0.30, 0.42, 0.30),
-		"aspect_bias": {"Corps": 1.2, "Ame": 1.0, "Monde": 0.8},
+		"faction_affinity": {"korrigans": 1.4, "ankou": 1.0, "druides": 0.8},
 		"passive": {"every_n": 5, "aspect": "Corps", "direction": "down"},
 		"difficulty": 2,
 		"ogham_bonus": ["gort", "eadhadh", "luis"],
 		"ogham_cooldown_reduction": 1,
-		"flux_offset": {"terre": -10, "esprit": 5, "lien": 15},
 		"favored_season": "autumn",
 		"unlock": {"min_runs": 10, "required_ending": "harmonie"},
 		"creatures": "korrigans, feux follets, creatures des tourbieres, morts-vivants",
@@ -138,12 +130,11 @@ const BIOMES: Dictionary = {
 		"subtitle": "Les os de la terre",
 		"theme": "Sagesse, ancestral, memoire, paix profonde",
 		"color": Color(0.48, 0.55, 0.40),
-		"aspect_bias": {"Corps": 1.0, "Ame": 1.0, "Monde": 1.0},
+		"faction_affinity": {"druides": 1.0, "anciens": 1.0, "korrigans": 1.0},
 		"passive": {"every_n": 7, "aspect": "random", "direction": "random"},
 		"difficulty": 0,
 		"ogham_bonus": ["quert", "ailm", "coll"],
 		"ogham_cooldown_reduction": 1,
-		"flux_offset": {"terre": 5, "esprit": 5, "lien": -5},
 		"favored_season": "spring",
 		"unlock": {"min_runs": 15, "min_endings": 5},
 		"creatures": "esprits d'anciens rois, sages, animaux paisibles",
@@ -154,12 +145,11 @@ const BIOMES: Dictionary = {
 		"subtitle": "Au-dela des brumes",
 		"theme": "Transcendance, passage, monde invisible, liminalite absolue",
 		"color": Color(0.25, 0.42, 0.60),
-		"aspect_bias": {"Corps": 0.8, "Ame": 1.4, "Monde": 1.0},
+		"faction_affinity": {"niamh": 1.4, "anciens": 1.0, "ankou": 0.8},
 		"passive": {"every_n": 4, "aspect": "random", "direction": "random"},
 		"difficulty": 3,
 		"ogham_bonus": ["ailm", "ruis", "ioho"],
 		"ogham_cooldown_reduction": 2,
-		"flux_offset": {"terre": -5, "esprit": 15, "lien": 10},
 		"favored_season": "samhain",
 		"unlock": {"min_runs": 20, "min_endings": 5, "required_ending": "transcendance"},
 		"creatures": "selkies, banshees, fees des vagues, esprits anciens, gardienne Morgane",
@@ -194,12 +184,12 @@ func get_biome_color(biome_key: String) -> Color:
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
-# ASPECT BIAS — Influences card generation probabilities
+# FACTION AFFINITY — Influences card generation probabilities
 # ═══════════════════════════════════════════════════════════════════════════════
 
-func get_aspect_bias(biome_key: String) -> Dictionary:
+func get_faction_affinity(biome_key: String) -> Dictionary:
 	var biome: Dictionary = get_biome(biome_key)
-	return biome.get("aspect_bias", {"Corps": 1.0, "Ame": 1.0, "Monde": 1.0})
+	return biome.get("faction_affinity", {"korrigans": 1.0, "druides": 1.0, "anciens": 1.0})
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
@@ -255,15 +245,6 @@ func get_ogham_cooldown_bonus(biome_key: String, ogham_id: String) -> int:
 func get_difficulty_modifier(biome_key: String) -> int:
 	var biome: Dictionary = get_biome(biome_key)
 	return int(biome.get("difficulty", 0))
-
-
-# ═══════════════════════════════════════════════════════════════════════════════
-# FLUX OFFSET — Starting flux adjustment
-# ═══════════════════════════════════════════════════════════════════════════════
-
-func get_flux_offset(biome_key: String) -> Dictionary:
-	var biome: Dictionary = get_biome(biome_key)
-	return biome.get("flux_offset", {"terre": 0, "esprit": 0, "lien": 0})
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
@@ -333,30 +314,6 @@ func get_unlock_hint(biome_key: String) -> String:
 	if hints.is_empty():
 		return ""
 	return "Requiert: " + ", ".join(hints)
-
-
-# ═══════════════════════════════════════════════════════════════════════════════
-# GAUGE MODIFIER BRIDGE — Delegates to MerlinGaugeSystem
-# ═══════════════════════════════════════════════════════════════════════════════
-
-## Get gauge modifier for a biome (bridges to MerlinGaugeSystem constants).
-## Returns multiplicator (1.0 = neutral, >1.0 = boost, <1.0 = penalty).
-func get_gauge_modifier(biome_key: String, gauge_key: String, weather: String = "clear") -> float:
-	var gauge_sys := MerlinGaugeSystem.new()
-	return gauge_sys.get_biome_modifier(biome_key, gauge_key, weather)
-
-
-## Check biome accessibility via WorldMapSystem (gauge-based tree) with legacy fallback.
-## Prefers WorldMapSystem if available, otherwise falls back to legacy is_unlocked().
-func is_unlocked_v2(biome_key: String, meta: Dictionary, tree_root: Node = null) -> bool:
-	# Try WorldMapSystem first (gauge-based tree navigation)
-	var wms: Node = null
-	if tree_root:
-		wms = tree_root.get_node_or_null("/root/WorldMapSystem")
-	if wms and wms.has_method("is_biome_accessible"):
-		return wms.is_biome_accessible(biome_key)
-	# Fallback to legacy unlock conditions (min_runs, min_endings)
-	return is_unlocked(biome_key, meta)
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
