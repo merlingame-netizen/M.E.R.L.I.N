@@ -1315,23 +1315,20 @@ func _get_dc_for_direction(direction: String) -> int:
 			if MerlinConstants.ARCHETYPE_DC_BONUS.has(arch_id):
 				archetype_modifier = int(MerlinConstants.ARCHETYPE_DC_BONUS[arch_id])
 
-	# B.4 — Aspect state DC modifier (BAS = souffrance, HAUT = surmenage)
-	var aspect_modifier: int = 0
+	# B.4 — Faction reputation DC modifier (extreme rep = harder)
+	var faction_modifier: int = 0
 	if store:
-		var aspects: Dictionary = store.state.get("run", {}).get("aspects", {})
-		var all_equilibre: bool = true
-		for asp_key in MerlinConstants.TRIADE_ASPECTS:
-			var asp_state: int = int(aspects.get(asp_key, MerlinConstants.AspectState.EQUILIBRE))
-			if asp_state == MerlinConstants.AspectState.BAS:
-				aspect_modifier += MerlinConstants.ASPECT_DC_PENALTY_BAS
-				all_equilibre = false
-			elif asp_state == MerlinConstants.AspectState.HAUT:
-				aspect_modifier += MerlinConstants.ASPECT_DC_PENALTY_HAUT
-				all_equilibre = false
-		if all_equilibre:
-			aspect_modifier = MerlinConstants.ASPECT_DC_BONUS_FULL_EQUILIBRE
+		var factions: Dictionary = store.state.get("run", {}).get("factions", {})
+		var extremes: int = 0
+		for faction_key in MerlinReputationSystem.FACTIONS:
+			var rep: float = float(factions.get(faction_key, 0.0))
+			if rep < 20.0 or rep > 80.0:
+				extremes += 1
+				faction_modifier += 1
+		if extremes == 0:
+			faction_modifier = -2  # All factions neutral = easier
 
-	return clampi(base_dc + modifier + _dynamic_modifier - dc_bonus + archetype_modifier + aspect_modifier, 2, 19)
+	return clampi(base_dc + modifier + _dynamic_modifier - dc_bonus + archetype_modifier + faction_modifier, 2, 19)
 
 
 func _get_choice_label(option: int) -> String:
@@ -2053,8 +2050,8 @@ func _sync_ui_with_state() -> void:
 	if not ui or not is_instance_valid(ui) or not store or not is_instance_valid(store):
 		return
 
-	# Souffle
-	var souffle: int = store.get_souffle() if store.has_method("get_souffle") else MerlinConstants.SOUFFLE_START
+	# Souffle (legacy — kept for UI compatibility, default 3)
+	var souffle: int = store.get_souffle() if store.has_method("get_souffle") else 3
 	ui.update_souffle(souffle)
 
 	# Life essence (Phase 43)

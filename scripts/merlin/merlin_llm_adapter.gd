@@ -1,24 +1,21 @@
 ## ═══════════════════════════════════════════════════════════════════════════════
-## Merlin LLM Adapter — Card Contract (TRIADE + Legacy)
+## Merlin LLM Adapter — Card Contract (Faction-based)
 ## ═══════════════════════════════════════════════════════════════════════════════
 ## Handles communication with LLM for generating narrative cards.
-## v3.0.0 — TRIADE system wired to MerlinAI autoload.
+## v3.1.0 — Faction reputation system, Triade removed.
 ## ═══════════════════════════════════════════════════════════════════════════════
 
 extends RefCounted
 class_name MerlinLlmAdapter
 
-const VERSION := "3.0.0"
+const VERSION := "3.1.0"
 
 # ═══════════════════════════════════════════════════════════════════════════════
-# TRIADE WHITELIST — Effects allowed from LLM in TRIADE mode
+# EFFECT WHITELIST — Effects allowed from LLM card generation
 # ═══════════════════════════════════════════════════════════════════════════════
 
-const TRIADE_EFFECT_TYPES := [
-	"SHIFT_ASPECT",
-	"SET_ASPECT",
-	"USE_SOUFFLE",
-	"ADD_SOUFFLE",
+const ALLOWED_EFFECT_TYPES := [
+	"ADD_REPUTATION",
 	"PROGRESS_MISSION",
 	"ADD_KARMA",
 	"ADD_TENSION",
@@ -31,11 +28,10 @@ const TRIADE_EFFECT_TYPES := [
 	"FULFILL_PROMISE",
 	"BREAK_PROMISE",
 	"ADD_ESSENCE",
+	"UNLOCK_OGHAM",
 ]
 
-const TRIADE_ASPECTS := ["Corps", "Ame", "Monde"]
-const TRIADE_DIRECTIONS := ["up", "down"]
-const TRIADE_STATES := [-1, 0, 1]
+const FACTIONS := ["druides", "anciens", "korrigans", "niamh", "ankou"]
 
 # LLM generation params tuned for Qwen 2.5-3B-Instruct
 const TRIADE_LLM_PARAMS := {
@@ -118,18 +114,14 @@ var _last_verb_pool_idx: int = -1
 var _last_narrative_fallback_idx: int = -1
 
 # ═══════════════════════════════════════════════════════════════════════════════
-# LEGACY WHITELIST (kept for backward compatibility)
+# LEGACY EFFECT TYPES (merged into ALLOWED_EFFECT_TYPES above)
 # ═══════════════════════════════════════════════════════════════════════════════
 
-const ALLOWED_EFFECT_TYPES := [
+const LEGACY_GAUGE_EFFECTS := [
 	"ADD_GAUGE",
 	"REMOVE_GAUGE",
-	"SET_FLAG",
-	"ADD_TAG",
-	"REMOVE_TAG",
 	"QUEUE_CARD",
 	"TRIGGER_ARC",
-	"CREATE_PROMISE",
 	"MODIFY_BOND",
 ]
 
@@ -507,13 +499,13 @@ func _generate_card_two_stage(context: Dictionary) -> Dictionary:
 			var options: Array = card.get("options", [])
 			for i in range(mini(3, options.size())):
 				if i < smart.size():
-					# FIX 6d: MERGE — keep SHIFT_ASPECT from contextual effects, add GM balance effects
+					# MERGE — keep ADD_REPUTATION from contextual effects, add GM balance effects
 					var orig_effects: Array = options[i].get("effects", [])
-					var shift_effects: Array = []
+					var rep_effects: Array = []
 					for orig_e in orig_effects:
-						if orig_e is Dictionary and str(orig_e.get("type", "")) in ["SHIFT_ASPECT", "SET_ASPECT"]:
-							shift_effects.append(orig_e)
-					options[i]["effects"] = shift_effects + smart[i]
+						if orig_e is Dictionary and str(orig_e.get("type", "")) == "ADD_REPUTATION":
+							rep_effects.append(orig_e)
+					options[i]["effects"] = rep_effects + smart[i]
 					options[i]["reward_type"] = MerlinConstants.infer_reward_type(options[i]["effects"])
 			if not card.has("tags"):
 				card["tags"] = []
@@ -837,19 +829,20 @@ func _wrap_text_as_card(raw_text: String, context: Dictionary) -> Dictionary:
 	elif b_score > 70:
 		balance_offset = 1   # Slightly harder when comfortable
 
-	# Component 2: Aspect-specific modifiers (extremes = easier to help player)
-	var aspect_offset: int = 0
-	var aspects: Dictionary = context.get("aspects", {})
+	# Component 2: Faction-based modifiers (extreme reputation = easier to help player)
+	var faction_offset: int = 0
+	var factions: Dictionary = context.get("factions", {})
 	var extremes_count: int = 0
-	for aspect in TRIADE_ASPECTS:
-		if int(aspects.get(aspect, 0)) != 0:
+	for faction in FACTIONS:
+		var rep: float = float(factions.get(faction, 50.0))
+		if rep < 20.0 or rep > 80.0:
 			extremes_count += 1
 	if extremes_count >= 3:
-		aspect_offset = -3
+		faction_offset = -3
 	elif extremes_count >= 2:
-		aspect_offset = -1
+		faction_offset = -1
 
-	var dc_offset: int = clampi(balance_offset + aspect_offset, -6, 4)
+	var dc_offset: int = clampi(balance_offset + faction_offset, -6, 4)
 	var dc_hints: Array = [
 		{"min": maxi(4 + dc_offset, 2), "max": maxi(8 + dc_offset, 4)},
 		{"min": maxi(7 + dc_offset, 4), "max": maxi(12 + dc_offset, 6)},
@@ -1422,7 +1415,7 @@ func _get_arc_phase(cards_played: int) -> String:
 func _build_balance_hint(context: Dictionary) -> String:
 	var balance := _evaluate_balance_heuristic(context)
 	var score: int = int(balance.get("balance_score", 100))
-	var risk: String = str(balance.get("risk_aspect", "none"))
+	var risk: String = str(balance.get("risk_faction", "none"))
 	if score < 30:
 		if risk != "none":
 			return "\nURGENCE: Le voyageur est en peril (%s critique). Au moins un choix doit offrir du repos ou de la guerison." % risk
@@ -1701,62 +1694,58 @@ func _get_phase_verb_pool(balance_score: int) -> Array:
 
 
 ## Generate effects that vary based on game state and quest position.
+## Each option affects a different faction's reputation (1-4 options, variable).
 func _generate_contextual_effects(context_or_aspects: Dictionary) -> Array:
-	# Accept either full context dict or just aspects dict
-	var aspects: Dictionary = context_or_aspects
+	var factions: Dictionary = {}
 	var life: int = 100
 	var cards_played: int = 0
 
 	if context_or_aspects.has("life_essence"):
 		life = int(context_or_aspects.get("life_essence", 100))
 		cards_played = int(context_or_aspects.get("cards_played", 0))
-		aspects = context_or_aspects.get("aspects", {})
-	elif context_or_aspects.has("aspects"):
-		aspects = context_or_aspects.get("aspects", {})
+		factions = context_or_aspects.get("factions", {})
+	elif context_or_aspects.has("factions"):
+		factions = context_or_aspects.get("factions", {})
 
 	# Balance intelligence: adapt effects to player state (0ms heuristic)
 	var balance := _evaluate_balance_heuristic(context_or_aspects)
 	var balance_score: int = int(balance.get("balance_score", 100))
-	var risk_aspect: String = str(balance.get("risk_aspect", "none"))
+	var risk_faction: String = str(balance.get("risk_faction", "none"))
 
 	# Scale amounts based on quest position
-	var base_amount: int = 3 + mini(cards_played / 2, 5)  # 3 early, up to 8 late
+	var base_amount: float = 5.0 + minf(float(cards_played) / 2.0, 10.0)
 
 	var effects: Array = []
 
-	# TRIADE SYSTEM: Each option MUST shift an aspect (core gameplay mechanic).
-	# Without SHIFT_ASPECT, the triade is non-functional and aspects stay at 0/0/0.
-	# Left=Corps, Center=Ame (costs Souffle), Right=Monde.
-	# Direction adapts to current balance (push toward equilibre when at risk).
+	# FACTION SYSTEM: Each option shifts a faction's reputation.
+	# Pick 3 factions for the 3 options, prioritizing the risk faction.
+	var option_factions: Array[String] = []
+	if risk_faction != "none" and risk_faction in FACTIONS:
+		option_factions.append(risk_faction)
 
-	var aspect_names: Array = ["Corps", "Ame", "Monde"]
-	var corps_val: int = int(aspects.get("Corps", 0))
-	var ame_val: int = int(aspects.get("Ame", 0))
-	var monde_val: int = int(aspects.get("Monde", 0))
-	var aspect_vals: Array = [corps_val, ame_val, monde_val]
+	for f in FACTIONS:
+		if option_factions.size() >= 3:
+			break
+		if f not in option_factions:
+			option_factions.append(f)
 
-	# Option 1 (left): Corps — physical, prudent
-	# Direction adapts: push toward equilibre when at risk, else alternate
-	var left_dir: String = "up" if corps_val <= 0 else "down"
-	if risk_aspect == "Corps":
-		left_dir = "down" if corps_val > 0 else "up"
-	effects.append({"type": "SHIFT_ASPECT", "aspect": "Corps", "direction": left_dir})
+	# Option 1: positive rep toward first faction
+	var f1_rep: float = float(factions.get(option_factions[0], 0.0))
+	var f1_amount: float = base_amount if f1_rep < 50.0 else -base_amount * 0.5
+	effects.append({"type": "ADD_REPUTATION", "faction": option_factions[0], "amount": f1_amount})
 
-	# Option 2 (center): Ame — spiritual, balanced (costs Souffle)
-	var center_dir: String = "up" if ame_val <= 0 else "down"
-	if risk_aspect == "Ame":
-		center_dir = "down" if ame_val > 0 else "up"
-	effects.append({"type": "SHIFT_ASPECT", "aspect": "Ame", "direction": center_dir})
+	# Option 2: positive rep toward second faction
+	var f2_rep: float = float(factions.get(option_factions[1], 0.0))
+	var f2_amount: float = base_amount if f2_rep < 50.0 else -base_amount * 0.5
+	effects.append({"type": "ADD_REPUTATION", "faction": option_factions[1], "amount": f2_amount})
 
-	# Option 3 (right): Monde — worldly, audacious
-	var right_dir: String = "up" if monde_val <= 0 else "down"
-	if risk_aspect == "Monde":
-		right_dir = "down" if monde_val > 0 else "up"
-	effects.append({"type": "SHIFT_ASPECT", "aspect": "Monde", "direction": right_dir})
-
-	# Late game: replace right option with PROGRESS_MISSION for convergence
+	# Option 3: positive rep toward third faction (or PROGRESS_MISSION late game)
 	if cards_played >= 10:
-		effects[2] = {"type": "PROGRESS_MISSION", "step": 1}
+		effects.append({"type": "PROGRESS_MISSION", "step": 1})
+	else:
+		var f3_rep: float = float(factions.get(option_factions[2], 0.0))
+		var f3_amount: float = base_amount if f3_rep < 50.0 else -base_amount * 0.5
+		effects.append({"type": "ADD_REPUTATION", "faction": option_factions[2], "amount": f3_amount})
 
 	return effects
 
@@ -1775,7 +1764,7 @@ func _load_gm_grammar() -> void:
 		file.close()
 
 ## Evaluate game balance using Game Master instance.
-## Returns {"balance_score": 0-100, "risk_aspect": String, "suggestion": String}
+## Returns {"balance_score": 0-100, "risk_faction": String, "suggestion": String}
 func evaluate_balance(context: Dictionary) -> Dictionary:
 	if not is_llm_ready():
 		return _evaluate_balance_heuristic(context)
@@ -1783,11 +1772,13 @@ func evaluate_balance(context: Dictionary) -> Dictionary:
 	if _merlin_ai == null or not _merlin_ai.has_method("generate_structured"):
 		return _evaluate_balance_heuristic(context)
 
-	var aspects: Dictionary = context.get("aspects", {})
-	var system := "Tu es le Maitre du Jeu. Evalue l'equilibre. Reponds en JSON: {\"balance_score\": 0-100, \"risk_aspect\": \"Corps/Ame/Monde/none\", \"suggestion\": \"...\"}"
-	var user_input := "Corps=%d Ame=%d Monde=%d Souffle=%d Jour=%d Cartes=%d" % [
-		int(aspects.get("Corps", 0)), int(aspects.get("Ame", 0)), int(aspects.get("Monde", 0)),
-		int(context.get("souffle", 3)), int(context.get("day", 1)), int(context.get("cards_played", 0))
+	var factions: Dictionary = context.get("factions", {})
+	var system := "Tu es le Maitre du Jeu. Evalue l'equilibre des factions. Reponds en JSON: {\"balance_score\": 0-100, \"risk_faction\": \"druides/anciens/korrigans/niamh/ankou/none\", \"suggestion\": \"...\"}"
+	var faction_parts: Array[String] = []
+	for f in FACTIONS:
+		faction_parts.append("%s=%.0f" % [f, float(factions.get(f, 0.0))])
+	var user_input := "%s Jour=%d Cartes=%d" % [
+		", ".join(faction_parts), int(context.get("day", 1)), int(context.get("cards_played", 0))
 	]
 
 	var result: Dictionary = await _merlin_ai.generate_structured(system, user_input)
@@ -1802,31 +1793,31 @@ func evaluate_balance(context: Dictionary) -> Dictionary:
 	return _evaluate_balance_heuristic(context)
 
 
-## Heuristic balance evaluation (no LLM needed).
+## Heuristic balance evaluation based on faction reputation (no LLM needed).
 func _evaluate_balance_heuristic(context: Dictionary) -> Dictionary:
-	var aspects: Dictionary = context.get("aspects", {})
+	var factions: Dictionary = context.get("factions", {})
 	var extremes := 0
-	var risk_aspect := "none"
-	var lowest_val := 0
-	for aspect in TRIADE_ASPECTS:
-		var v: int = int(aspects.get(aspect, 0))
-		if v != 0:
+	var risk_faction := "none"
+	var most_extreme_val: float = 50.0
+	for faction in FACTIONS:
+		var rep: float = float(factions.get(faction, 50.0))
+		if rep < 20.0 or rep > 80.0:
 			extremes += 1
-		if abs(v) > abs(lowest_val):
-			lowest_val = v
-			risk_aspect = aspect
+		var dist: float = absf(rep - 50.0)
+		if dist > absf(most_extreme_val - 50.0):
+			most_extreme_val = rep
+			risk_faction = faction
 
-	var souffle: int = int(context.get("souffle", 1))
-	var score: int = 100 - (extremes * 25) - (max(0, 1 - souffle) * 10)
+	var score: int = 100 - (extremes * 20)
 	score = clampi(score, 0, 100)
 
 	var suggestion := "Equilibre stable"
-	if extremes >= 2:
-		suggestion = "Danger: %d aspects extremes, proposer des cartes equilibrantes" % extremes
-	elif souffle <= 1:
-		suggestion = "Souffle critique, proposer des cartes ADD_SOUFFLE"
+	if extremes >= 3:
+		suggestion = "Danger: %d factions extremes, proposer des cartes equilibrantes" % extremes
+	elif extremes >= 2:
+		suggestion = "Attention: %d factions en zone extreme" % extremes
 
-	return {"balance_score": score, "risk_aspect": risk_aspect, "suggestion": suggestion}
+	return {"balance_score": score, "risk_faction": risk_faction, "suggestion": suggestion}
 
 
 ## Suggest a dynamic rule change based on game state.
@@ -1835,13 +1826,15 @@ func suggest_rule_change(context: Dictionary, player_tendency: String = "neutral
 	if not is_llm_ready() or _merlin_ai == null or not _merlin_ai.has_method("generate_structured"):
 		return _suggest_rule_heuristic(context, player_tendency)
 
-	var aspects: Dictionary = context.get("aspects", {})
+	var factions: Dictionary = context.get("factions", {})
 	var balance: Dictionary = await evaluate_balance(context)
 	var system := "Tu es le Maitre du Jeu. Propose un ajustement. Reponds en JSON: {\"type\": \"tension/difficulty/karma\", \"adjustment\": number, \"reason\": \"...\"}"
 	var balance_text := "equilibre" if balance.balance_score > 60 else ("desequilibre" if balance.balance_score > 30 else "critique")
-	var user_input := "Corps=%d Ame=%d Monde=%d. Joueur %s. Equilibre: %s." % [
-		int(aspects.get("Corps", 0)), int(aspects.get("Ame", 0)), int(aspects.get("Monde", 0)),
-		player_tendency, balance_text
+	var faction_parts: Array[String] = []
+	for f in FACTIONS:
+		faction_parts.append("%s=%.0f" % [f, float(factions.get(f, 0.0))])
+	var user_input := "%s. Joueur %s. Equilibre: %s." % [
+		", ".join(faction_parts), player_tendency, balance_text
 	]
 
 	var result: Dictionary = await _merlin_ai.generate_structured(system, user_input)
@@ -1878,29 +1871,29 @@ func calculate_smart_effects(context: Dictionary, scenario_text: String, labels:
 	# Build GM prompt with balance awareness (no GBNF — Ollama-compatible)
 	var balance := _evaluate_balance_heuristic(context)
 	var score: int = int(balance.get("balance_score", 100))
-	var risk: String = str(balance.get("risk_aspect", "none"))
+	var risk: String = str(balance.get("risk_faction", "none"))
 	var life: int = int(context.get("life_essence", 100))
-	var souffle: int = int(context.get("souffle", 1))
 
 	# GM system prompt: example-driven (Qwen 2.5-1.5B responds better to examples than instructions)
 	var system := "JSON only. Example:\n"
-	system += "{\"effects\":[[{\"type\":\"HEAL_LIFE\",\"amount\":5}],[{\"type\":\"DAMAGE_LIFE\",\"amount\":3}],[{\"type\":\"ADD_SOUFFLE\",\"amount\":1}]]}\n"
-	system += "Types: DAMAGE_LIFE, HEAL_LIFE, ADD_KARMA, ADD_SOUFFLE, SHIFT_ASPECT.\n"
-	system += "SHIFT_ASPECT: {\"type\":\"SHIFT_ASPECT\",\"aspect\":\"Corps\",\"direction\":\"up\"}\n"
-	system += "3 arrays = 3 choices. 1 effect each. amount 1-8."
+	system += "{\"effects\":[[{\"type\":\"HEAL_LIFE\",\"amount\":5}],[{\"type\":\"DAMAGE_LIFE\",\"amount\":3}],[{\"type\":\"ADD_REPUTATION\",\"faction\":\"druides\",\"amount\":10}]]}\n"
+	system += "Types: DAMAGE_LIFE, HEAL_LIFE, ADD_KARMA, ADD_REPUTATION, ADD_ESSENCE.\n"
+	system += "ADD_REPUTATION: {\"type\":\"ADD_REPUTATION\",\"faction\":\"druides\",\"amount\":10}\n"
+	system += "Factions: druides, anciens, korrigans, niamh, ankou.\n"
+	system += "3 arrays = 3 choices. 1 effect each. amount 1-15."
 
 	var balance_hint := ""
 	if score < 30:
 		balance_hint = " URGENCE: Vie=%d. Choix 1 DOIT etre HEAL_LIFE." % life
 	elif score < 50 and risk != "none":
-		balance_hint = " %s en danger. Favorise guerison." % risk
+		balance_hint = " Faction %s en danger. Favorise guerison." % risk
 	elif score > 80:
 		balance_hint = " Joueur stable. Plus de risques."
 
-	var user_input := "Scene: %s\nChoix: %s\nVie=%d Souffle=%d%s" % [
+	var user_input := "Scene: %s\nChoix: %s\nVie=%d%s" % [
 		scenario_text.substr(0, 120),
 		", ".join(labels),
-		life, souffle, balance_hint
+		life, balance_hint
 	]
 
 	# GM brain, low temp, no grammar (Ollama-compatible)
@@ -1959,7 +1952,6 @@ func _try_parse_effects_dict(json_str: String) -> Array:
 	if not effects_raw is Array or effects_raw.size() != 3:
 		return []
 
-	var valid_types := ["DAMAGE_LIFE", "HEAL_LIFE", "ADD_KARMA", "ADD_SOUFFLE", "SHIFT_ASPECT"]
 	var result: Array = []
 	for option_effects in effects_raw:
 		if not option_effects is Array:
@@ -1969,12 +1961,12 @@ func _try_parse_effects_dict(json_str: String) -> Array:
 			if not eff is Dictionary or not eff.has("type"):
 				continue
 			var eff_type: String = str(eff["type"])
-			if eff_type == "SHIFT_ASPECT":
-				var aspect: String = str(eff.get("aspect", ""))
-				var direction: String = str(eff.get("direction", "up"))
-				if aspect in ["Corps", "Ame", "Monde"] and direction in ["up", "down"]:
-					validated.append({"type": "SHIFT_ASPECT", "aspect": aspect, "direction": direction})
-			elif eff_type in valid_types and eff.has("amount"):
+			if eff_type == "ADD_REPUTATION":
+				var faction: String = str(eff.get("faction", ""))
+				var amount: float = clampf(float(eff.get("amount", 0.0)), -30.0, 30.0)
+				if faction in FACTIONS:
+					validated.append({"type": "ADD_REPUTATION", "faction": faction, "amount": amount})
+			elif eff_type in ALLOWED_EFFECT_TYPES and eff.has("amount"):
 				var eff_amount: int = clampi(int(eff["amount"]), 1, 10)
 				validated.append({"type": eff_type, "amount": eff_amount})
 		if validated.is_empty():
@@ -1989,16 +1981,20 @@ func _try_parse_effects_dict(json_str: String) -> Array:
 # ═══════════════════════════════════════════════════════════════════════════════
 
 func _build_triade_system_prompt() -> String:
-	return "Merlin druide. 1 carte JSON: texte court (2-3 phrases), 3 options (1 verbe). Ton celtique.\n{\"text\":\"...\",\"speaker\":\"merlin\",\"options\":[{\"label\":\"...\",\"effects\":[{\"type\":\"SHIFT_ASPECT\",\"aspect\":\"Corps\",\"direction\":\"up\"}]},{\"label\":\"...\",\"cost\":1,\"effects\":[]},{\"label\":\"...\",\"effects\":[{\"type\":\"SHIFT_ASPECT\",\"aspect\":\"Monde\",\"direction\":\"down\"}]}],\"tags\":[\"tag\"]}"
+	return "Merlin druide. 1 carte JSON: texte court (2-3 phrases), 2-4 options (1 verbe). Ton celtique. Factions: druides, anciens, korrigans, niamh, ankou.\n{\"text\":\"...\",\"speaker\":\"merlin\",\"options\":[{\"label\":\"...\",\"effects\":[{\"type\":\"ADD_REPUTATION\",\"faction\":\"druides\",\"amount\":10}]},{\"label\":\"...\",\"effects\":[{\"type\":\"HEAL_LIFE\",\"amount\":5}]},{\"label\":\"...\",\"effects\":[{\"type\":\"ADD_REPUTATION\",\"faction\":\"ankou\",\"amount\":8}]}],\"tags\":[\"tag\"]}"
 
 
 func _build_triade_user_prompt(context: Dictionary) -> String:
-	var souffle: int = int(context.get("souffle", 3))
 	var cards_played: int = int(context.get("cards_played", 0))
 	var day: int = int(context.get("day", 1))
 	var tags: Array = context.get("active_tags", [])
 
-	var prompt := "Souffle:%d. Jour:%d. Carte:%d." % [souffle, day, cards_played]
+	var prompt := "Jour:%d. Carte:%d." % [day, cards_played]
+
+	# Faction status
+	var faction_status: String = str(context.get("faction_status", ""))
+	if not faction_status.is_empty():
+		prompt += " Factions:%s." % faction_status
 
 	var biome: String = str(context.get("biome", "foret_broceliande"))
 	prompt += " Biome:%s." % biome
@@ -2063,8 +2059,7 @@ func build_triade_context(state: Dictionary) -> Dictionary:
 	var player_tendency := _get_player_tendency(hidden)
 
 	return {
-		"aspects": run.get("aspects", {}).duplicate(),
-		"souffle": int(run.get("souffle", MerlinConstants.SOUFFLE_START)),
+		"factions": run.get("factions", {}).duplicate(),
 		"cards_played": int(run.get("cards_played", 0)),
 		"day": int(run.get("day", 1)),
 		"active_tags": run.get("active_tags", []),
@@ -2385,25 +2380,26 @@ func _validate_triade_option(option) -> Dictionary:
 
 func _validate_triade_effect(effect: Dictionary) -> Dictionary:
 	var effect_type := str(effect.get("type", ""))
-	if not effect_type in TRIADE_EFFECT_TYPES:
+	if not effect_type in ALLOWED_EFFECT_TYPES:
 		return {}
 
 	match effect_type:
-		"SHIFT_ASPECT", "SET_ASPECT":
-			# Triade core mechanic — validate and pass through
-			var aspect: String = str(effect.get("aspect", ""))
-			var direction: String = str(effect.get("direction", "up"))
-			if aspect in ["Corps", "Ame", "Monde"] and direction in ["up", "down"]:
-				return {"type": effect_type, "aspect": aspect, "direction": direction}
+		"ADD_REPUTATION":
+			var faction: String = str(effect.get("faction", ""))
+			var amount: float = clampf(float(effect.get("amount", 0.0)), -30.0, 30.0)
+			if faction in FACTIONS:
+				return {"type": "ADD_REPUTATION", "faction": faction, "amount": amount}
 			return {}
 
 		"DAMAGE_LIFE", "HEAL_LIFE":
 			var amount := clampi(int(effect.get("amount", 5)), 1, 20)
 			return {"type": effect_type, "amount": amount}
 
-		"USE_SOUFFLE", "ADD_SOUFFLE":
-			var amount := clampi(int(effect.get("amount", 1)), 1, 3)
-			return {"type": effect_type, "amount": amount}
+		"UNLOCK_OGHAM":
+			var ogham := str(effect.get("ogham", ""))
+			if not ogham.is_empty():
+				return {"type": "UNLOCK_OGHAM", "ogham": ogham}
+			return {}
 
 		"PROGRESS_MISSION":
 			return {"type": "PROGRESS_MISSION", "step": clampi(int(effect.get("step", 1)), 0, 3)}
@@ -2429,6 +2425,16 @@ func _validate_triade_effect(effect: Dictionary) -> Dictionary:
 			if tag.is_empty():
 				return {}
 			return {"type": "ADD_TAG", "tag": tag}
+
+		"CREATE_PROMISE", "FULFILL_PROMISE", "BREAK_PROMISE":
+			var promise_id := str(effect.get("promise_id", ""))
+			if not promise_id.is_empty():
+				return {"type": effect_type, "promise_id": promise_id}
+			return {}
+
+		"ADD_ESSENCE":
+			var amount := clampi(int(effect.get("amount", 1)), 1, 10)
+			return {"type": "ADD_ESSENCE", "amount": amount}
 
 	return {}
 

@@ -221,17 +221,13 @@ func get_passive_effect(biome_key: String, cards_played: int) -> Dictionary:
 
 	var biome: Dictionary = get_biome(biome_key)
 	var passive: Dictionary = biome.get("passive", {})
-	var aspect: String = str(passive.get("aspect", ""))
 	var direction: String = str(passive.get("direction", ""))
 
-	# Handle "random" aspect/direction for Collines aux Dolmens
-	if aspect == "random":
-		var aspects := MerlinConstants.TRIADE_ASPECTS
-		aspect = aspects[randi() % aspects.size()]
+	# Handle "random" direction for Collines aux Dolmens
 	if direction == "random":
 		direction = ["up", "down"][randi() % 2]
 
-	if aspect.is_empty() or direction.is_empty():
+	if direction.is_empty():
 		return {}
 
 	if direction == "up":

@@ -197,7 +197,7 @@ func _migrate_0_1_to_0_2(data: Dictionary) -> Dictionary:
 	if not run.has("aspects"):
 		run["aspects"] = {"Corps": 0, "Ame": 0, "Monde": 0}
 	if not run.has("souffle"):
-		run["souffle"] = MerlinConstants.SOUFFLE_START
+		run["souffle"] = 3  # Legacy default (Souffle removed in v0.4)
 	if not run.has("souffle_used_once"):
 		run["souffle_used_once"] = false
 	if not run.has("cards_played"):

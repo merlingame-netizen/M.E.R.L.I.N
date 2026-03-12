@@ -8,6 +8,17 @@
 extends RefCounted
 class_name MerlinMapSystem
 
+## Node types for map generation (weights + card ranges).
+const NODE_TYPES: Dictionary = {
+	"NARRATIVE": {"weight": 5.0, "cards_min": 2, "cards_max": 4},
+	"EVENT":     {"weight": 2.0, "cards_min": 1, "cards_max": 2},
+	"PROMISE":   {"weight": 1.0, "cards_min": 1, "cards_max": 3},
+	"REST":      {"weight": 1.5, "cards_min": 0, "cards_max": 0},
+	"MERCHANT":  {"weight": 1.0, "cards_min": 0, "cards_max": 0},
+	"MYSTERY":   {"weight": 1.0, "cards_min": 1, "cards_max": 2},
+	"MERLIN":    {"weight": 0.0, "cards_min": 1, "cards_max": 1},
+}
+
 
 func generate_map(floors: int, rng: MerlinRng, config: Dictionary = {}) -> Array:
 	var total: int = maxi(3, floors)
@@ -61,7 +72,7 @@ func _pick_node_type(floor_idx: int, total: int, rng: MerlinRng, _config: Dictio
 		return "REST" if rng.randf() > 0.5 else "MERCHANT"
 
 	# Weighted random selection from TRIADE node types
-	var types: Dictionary = MerlinConstants.TRIADE_NODE_TYPES
+	var types: Dictionary = NODE_TYPES
 	var total_weight: float = 0.0
 	for type_key in types:
 		# Don't randomly place MERLIN nodes (only at end)
@@ -82,7 +93,7 @@ func _pick_node_type(floor_idx: int, total: int, rng: MerlinRng, _config: Dictio
 
 
 func _cards_for_node_type(node_type: String, rng: MerlinRng) -> int:
-	var type_data: Dictionary = MerlinConstants.TRIADE_NODE_TYPES.get(node_type, {})
+	var type_data: Dictionary = NODE_TYPES.get(node_type, {})
 	var cards_min: int = int(type_data.get("cards_min", 1))
 	var cards_max: int = int(type_data.get("cards_max", 3))
 	if cards_min <= 0 and cards_max <= 0:

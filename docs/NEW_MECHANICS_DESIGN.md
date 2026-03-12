@@ -39,34 +39,34 @@
 - Plus de distinction Gauche/Centre/Droite codée en dur — les options sont libres dans leur forme et leurs effets.
 
 ### Q2 — Conditions de Victoire/Défaite
-> **Statut : CO-DESIGN EN COURS 🔄**
-> Les agents proposeront des systèmes de conditions à chaque cycle, l'utilisateur tranche.
+> **Statut : DÉCIDÉ ✅ (2026-03-11 — Cycle 2)**
 
-Sans la Triade, par quoi sont définies les fins ?
-- Idée A : Réputation faction dominante → fin thématique liée à cette faction
-- Idée B : Oghams débloqués → progression vers une fin "connaissance complète"
-- Idée C : Calendrier + réputation → fin déterminée par l'alignement temporel
-- Idée D : À définir entièrement avec l'utilisateur
+**Principe fondamental** : Il n'existe pas de "mauvaise fin". Toute fin de run est valide et porteuse de sens narratif. Finir tôt n'est pas un échec — c'est un autre chemin.
 
-**Réponse attendue de l'utilisateur** (questions_pending.json Q2)
+**Architecture des fins :**
+- **Multiple endings** : chaque run peut se terminer de nombreuses façons différentes
+- **Toujours progression** : quel que soit le dénouement, le joueur progresse (Oghams conservés ? Roguelite ?)
+- **Fins par faction** : si réputation ≥ 80 avec une faction → fin thématique de cette faction disponible
+- **Fins narratives inattendues** : certaines cartes/combinaisons déclenchent des fins uniques
+- **Fin "naturelle"** : le run peut aussi s'achever simplement quand le cycle de cartes s'épuise
+
+**Ce que ça implique techniquement :**
+- `merlin_constants.gd` : les 12 "chutes" + 3 "victoires" + 1 secrète → **reclassées comme 16 fins distinctes sans hiérarchie**
+- Chaque fin a un poids narratif propre, pas de score
+- La réputation faction ≥ 80 = fin de faction disponible (déclenchée en fin de run selon contexte)
 
 ### Q3 — Ressource "coût" de l'option Centre
-> **Statut : OUVERT**
+> **Statut : DÉCIDÉ ✅ (2026-03-12)**
 
-Le Souffle (coût de l'option neutre) est supprimé. Quel mécanisme le remplace ?
-- Option A : L'option Centre est gratuite (plus de coût)
-- Option B : Coût en réputation faction neutre
-- Option C : Coût en "énergie oghamique" (nouvelle ressource simple)
-- Option D : Plus d'option Centre — seulement 2 options par carte
+**Options gratuites — plus de coût.** Le Souffle est supprimé sans remplacement.
+Les 1-4 options variables + la réputation factions fournissent assez de profondeur stratégique.
+Il n'y a plus de distinction Gauche/Centre/Droite — donc plus de "centre" à facturer.
 
 ### Q4 — Système de Réputation : affichage et poids
-> **Statut : OUVERT**
+> **Statut : DÉCIDÉ ✅ (2026-03-12)**
 
-Comment les 5 factions sont-elles présentées au joueur ?
-- Option A : Toujours visibles (5 barres dans le HUD)
-- Option B : Cachées jusqu'au seuil 25 (découverte progressive)
-- Option C : Une seule faction affichée à la fois (la plus haute)
-- Option D : Visible uniquement dans un écran de stats dédié
+**Écran stats dédié.** Les factions ne sont pas affichées dans le HUD principal.
+Le joueur consulte sa réputation via un menu/écran dédié. Le HUD reste clean et narratif.
 
 ---
 
@@ -180,6 +180,11 @@ Chaque Ogham débloqué ouvre de nouvelles options de cartes et dialogues de Mer
 | Date | Cycle | Changement |
 |---|---|---|
 | 2026-03-11 | Init | Création du document — suppression Triade validée |
+| 2026-03-11 | Cycle 2 | Q2 décidée : fins multiples sans hiérarchie win/lose, toujours progression |
+| 2026-03-11 | Cycle 2 | Impl parallèle : merlin_reputation_system.gd + game_time_manager.gd |
+| 2026-03-12 | Cycle 3 | Q3 décidée : options gratuites (pas de coût Souffle) |
+| 2026-03-12 | Cycle 3 | Q4 décidée : factions dans écran stats dédié (pas dans HUD) |
+| 2026-03-12 | Cycle 3 | Nettoyage refs Triade : SOUFFLE_START, TRIADE_NODE_TYPES, TRIADE_ASPECTS |
 
 ---
 
