@@ -120,19 +120,10 @@ func _update_currency_label() -> void:
 		currency_label.text = "Store non disponible"
 		return
 	var meta: Dictionary = store.state.get("meta", {})
-	var fragments: int = int(meta.get("ogham_fragments", 0))
+	var anam: int = int(meta.get("anam", 0))
 	var unlocked: int = meta.get("talent_tree", {}).get("unlocked", []).size()
-
-	# Show top essences
-	var essence: Dictionary = meta.get("essence", {})
-	var top_essences: Array = []
-	for elem in ["TERRE", "NATURE", "ESPRIT", "LUMIERE", "FEU", "OMBRE"]:
-		var val: int = int(essence.get(elem, 0))
-		if val > 0:
-			top_essences.append("%s:%d" % [elem.left(3), val])
-
-	var ess_text: String = " | ".join(top_essences) if not top_essences.is_empty() else "Aucune essence"
-	currency_label.text = "Fragments: %d | Talents: %d/28\n%s" % [fragments, unlocked, ess_text]
+	var total: int = MerlinConstants.TALENT_NODES.size()
+	currency_label.text = "Anam: %d | Talents: %d/%d" % [anam, unlocked, total]
 
 
 
@@ -141,17 +132,14 @@ func _get_talent_tooltip(node_id: String) -> String:
 	var node: Dictionary = MerlinConstants.TALENT_NODES.get(node_id, {})
 	var name_val: String = str(node.get("name", node_id))
 	var desc: String = str(node.get("description", ""))
-	var cost: Dictionary = node.get("cost", {})
+	var cost: int = int(node.get("cost", 0))
 	var prereqs: Array = node.get("prerequisites", [])
 
 	var lines: Array = [name_val, desc]
 
 	# Cost
-	var cost_parts: Array = []
-	for c in cost:
-		cost_parts.append("%s: %d" % [c, int(cost[c])])
-	if not cost_parts.is_empty():
-		lines.append("Cout: %s" % ", ".join(cost_parts))
+	if cost > 0:
+		lines.append("Cout: %d Anam" % cost)
 
 	# Prerequisites
 	if not prereqs.is_empty():
@@ -189,7 +177,7 @@ func _update_detail_panel() -> void:
 	var branch: String = str(node.get("branch", ""))
 	var desc: String = str(node.get("description", ""))
 	var lore: String = str(node.get("lore", ""))
-	var cost: Dictionary = node.get("cost", {})
+	var cost: int = int(node.get("cost", 0))
 	var prereqs: Array = node.get("prerequisites", [])
 	var is_unlocked: bool = store.is_talent_active(_selected_node_id) if store else false
 	var is_available: bool = store.can_unlock_talent(_selected_node_id) if store else false
@@ -236,35 +224,18 @@ func _update_detail_panel() -> void:
 		lore_lbl.autowrap_mode = TextServer.AUTOWRAP_WORD
 		detail_vbox.add_child(lore_lbl)
 
-	# Cost breakdown
-	var cost_header := Label.new()
-	cost_header.text = "Cout:"
-	if font_bold:
-		cost_header.add_theme_font_override("font", font_bold)
-	cost_header.add_theme_font_size_override("font_size", 12)
-	cost_header.add_theme_color_override("font_color", MerlinVisual.CRT_PALETTE.amber)
-	detail_vbox.add_child(cost_header)
-
+	# Cost display
 	var meta: Dictionary = store.state.get("meta", {}) if store else {}
-	var essence: Dictionary = meta.get("essence", {})
-	var fragments: int = int(meta.get("ogham_fragments", 0))
-
-	for c in cost:
-		var needed: int = int(cost[c])
-		var have: int = 0
-		if c == "fragments":
-			have = fragments
-		else:
-			have = int(essence.get(c, 0))
-		var enough: bool = have >= needed
-		var cost_line := Label.new()
-		cost_line.text = "  %s: %d / %d" % [c, have, needed]
-		if font_regular:
-			cost_line.add_theme_font_override("font", font_regular)
-		cost_line.add_theme_font_size_override("font_size", 11)
-		var cost_color: Color = MerlinVisual.CRT_PALETTE["success"] if enough else MerlinVisual.CRT_PALETTE["danger"]
-		cost_line.add_theme_color_override("font_color", cost_color)
-		detail_vbox.add_child(cost_line)
+	var have_anam: int = int(meta.get("anam", 0))
+	var enough: bool = have_anam >= cost
+	var cost_lbl := Label.new()
+	cost_lbl.text = "Cout: %d Anam (vous avez %d)" % [cost, have_anam]
+	if font_bold:
+		cost_lbl.add_theme_font_override("font", font_bold)
+	cost_lbl.add_theme_font_size_override("font_size", 12)
+	var cost_color: Color = MerlinVisual.CRT_PALETTE["success"] if enough else MerlinVisual.CRT_PALETTE["danger"]
+	cost_lbl.add_theme_color_override("font_color", cost_color)
+	detail_vbox.add_child(cost_lbl)
 
 	# Prerequisites
 	if not prereqs.is_empty():

@@ -1,6 +1,5 @@
 extends Control
 
-const SLOT_COUNT := 3
 const MENU_SCENE_FALLBACK := "res://scenes/HubAntre.tscn"
 const GAME_SCENE := "res://scenes/HubAntre.tscn"
 
@@ -10,18 +9,16 @@ const GAME_SCENE := "res://scenes/HubAntre.tscn"
 @onready var slots_vbox: VBoxContainer = $RootPanel/RootVBox/Slots
 @onready var back_button: Button = $RootPanel/RootVBox/BackButton
 
-var game_manager: Node = null
-var _merlin_save := MerlinSaveSystem.new()
+var _save := MerlinSaveSystem.new()
 var font_title: Font
 var font_body: Font
 
 func _ready() -> void:
 	set_anchors_preset(Control.PRESET_FULL_RECT)
 	Input.set_mouse_mode(Input.MOUSE_MODE_VISIBLE)
-	game_manager = get_node_or_null("/root/GameManager")
 	_load_fonts()
 	_apply_theme()
-	_build_slots()
+	_build_profile_ui()
 	back_button.pressed.connect(_on_back_pressed)
 
 
@@ -35,7 +32,6 @@ func _load_fonts() -> void:
 
 
 func _apply_theme() -> void:
-	# CRT terminal background
 	var bg := get_node_or_null("Background")
 	if bg is ColorRect:
 		bg.color = MerlinVisual.CRT_PALETTE["bg_dark"]
@@ -97,101 +93,82 @@ func _style_button(btn: Button) -> void:
 	btn.add_theme_font_size_override("font_size", 16)
 
 
-func _build_slots() -> void:
+func _build_profile_ui() -> void:
 	for child in slots_vbox.get_children():
 		child.queue_free()
 
-	for slot in range(1, SLOT_COUNT + 1):
-		var info := {}
-		# Try MerlinSaveSystem first (TRIADE saves)
-		if _merlin_save.slot_exists(slot):
-			info = _merlin_save.get_slot_info(slot)
-		elif game_manager and game_manager.has_method("get_save_slot_info"):
-			info = game_manager.get_save_slot_info(slot)
-		var btn := Button.new()
-		btn.name = "Slot%d" % slot
-		btn.custom_minimum_size = Vector2(420, 38)
-		btn.text = _slot_text(slot, info)
-		btn.disabled = info.is_empty()
-		btn.focus_mode = Control.FOCUS_ALL
-		_style_button(btn)
-		if not btn.disabled:
-			btn.pressed.connect(_on_slot_pressed.bind(slot))
-		slots_vbox.add_child(btn)
+	if _save.profile_exists():
+		var info: Dictionary = _save.get_profile_info()
 
-	# Autosave slot
-	if _merlin_save.autosave_exists():
-		var auto_info := _merlin_save.get_autosave_info()
-		if not auto_info.is_empty():
-			var btn := Button.new()
-			btn.name = "SlotAutosave"
-			btn.custom_minimum_size = Vector2(420, 38)
-			btn.text = _slot_text_autosave(auto_info)
-			btn.focus_mode = Control.FOCUS_ALL
-			_style_button(btn)
-			btn.pressed.connect(_on_autosave_pressed)
-			slots_vbox.add_child(btn)
+		# Profile stats label
+		var stats_lbl := Label.new()
+		var anam: int = int(info.get("anam", 0))
+		var runs: int = int(info.get("total_runs", 0))
+		var talents: int = int(info.get("talents_unlocked", 0))
+		var endings: int = int(info.get("endings_seen", 0))
+		stats_lbl.text = "Anam: %d | Runs: %d | Talents: %d | Fins: %d" % [anam, runs, talents, endings]
+		stats_lbl.add_theme_font_override("font", font_body)
+		stats_lbl.add_theme_font_size_override("font_size", 14)
+		stats_lbl.add_theme_color_override("font_color", MerlinVisual.CRT_PALETTE["phosphor_dim"])
+		stats_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		slots_vbox.add_child(stats_lbl)
 
+		# Continue button
+		var continue_btn := Button.new()
+		continue_btn.name = "ContinueBtn"
+		continue_btn.text = "Continuer"
+		continue_btn.custom_minimum_size = Vector2(420, 42)
+		continue_btn.focus_mode = Control.FOCUS_ALL
+		_style_button(continue_btn)
+		continue_btn.pressed.connect(_on_continue_pressed)
+		slots_vbox.add_child(continue_btn)
 
-func _slot_text(slot: int, info: Dictionary) -> String:
-	if info.is_empty():
-		return tr("SAVE_EMPTY") % slot
-	# TRIADE format
-	if info.has("mode") and str(info.get("mode", "")) == "triade":
-		var cards: int = int(info.get("cards_played", 0))
-		var ts: int = int(info.get("timestamp", 0))
-		var date_str := ""
-		if ts > 0:
-			var dt := Time.get_datetime_dict_from_unix_time(ts)
-			date_str = " (%02d/%02d)" % [int(dt.get("day", 0)), int(dt.get("month", 0))]
-		return tr("SAVE_FILLED") % [slot, cards, date_str]
-	# Legacy format
-	var chronicle := str(info.get("chronicle_name", ""))
-	if chronicle == "":
-		chronicle = str(info.get("name", "Chronique %d" % slot))
-	var floor_val = int(info.get("floor", 0))
-	return "Chronique %d - %s (etage %d)" % [slot, chronicle, floor_val]
+		# Reset button
+		var reset_btn := Button.new()
+		reset_btn.name = "ResetBtn"
+		reset_btn.text = "Reinitialiser le profil"
+		reset_btn.custom_minimum_size = Vector2(420, 38)
+		_style_button(reset_btn)
+		reset_btn.pressed.connect(_on_reset_pressed)
+		slots_vbox.add_child(reset_btn)
+	else:
+		# New game button
+		var new_btn := Button.new()
+		new_btn.name = "NewGameBtn"
+		new_btn.text = "Nouvelle partie"
+		new_btn.custom_minimum_size = Vector2(420, 42)
+		new_btn.focus_mode = Control.FOCUS_ALL
+		_style_button(new_btn)
+		new_btn.pressed.connect(_on_new_game_pressed)
+		slots_vbox.add_child(new_btn)
 
 
-func _slot_text_autosave(info: Dictionary) -> String:
-	var cards: int = int(info.get("cards_played", 0))
-	var ts: int = int(info.get("timestamp", 0))
-	var date_str := ""
-	if ts > 0:
-		var dt := Time.get_datetime_dict_from_unix_time(ts)
-		date_str = " (%02d/%02d %02d:%02d)" % [int(dt.get("day", 0)), int(dt.get("month", 0)), int(dt.get("hour", 0)), int(dt.get("minute", 0))]
-	return "Sauvegarde auto - %d cartes%s" % [cards, date_str]
-
-
-func _on_slot_pressed(slot: int) -> void:
-	# Try MerlinStore first (TRIADE system)
-	var store := _find_merlin_store()
+func _on_continue_pressed() -> void:
+	var store: Node = get_node_or_null("/root/MerlinStore")
 	if store and store.has_method("dispatch"):
-		var result = await store.dispatch({"type": "LOAD_SLOT", "slot": slot})
+		var result = await store.dispatch({"type": "LOAD_PROFILE"})
 		if result is Dictionary and result.get("ok", false):
 			_go_to_scene(GAME_SCENE)
 			return
-	# Fall back to legacy GameManager
-	if game_manager and game_manager.has_method("load_from_slot"):
-		var ok: bool = game_manager.load_from_slot(slot)
-		if ok:
-			_go_to_scene(GAME_SCENE)
-			return
-	_show_message("Chronique introuvable.")
+	_show_message("Profil introuvable.")
 
 
-func _on_autosave_pressed() -> void:
-	var store := _find_merlin_store()
-	if store and store.has_method("dispatch"):
-		var result = await store.dispatch({"type": "LOAD_AUTOSAVE"})
-		if result is Dictionary and result.get("ok", false):
-			_go_to_scene(GAME_SCENE)
-			return
-	_show_message("Sauvegarde auto introuvable.")
+func _on_new_game_pressed() -> void:
+	_go_to_scene(GAME_SCENE)
 
 
-func _find_merlin_store() -> Node:
-	return get_node_or_null("/root/MerlinStore")
+func _on_reset_pressed() -> void:
+	# Confirmation: build a simple confirm dialog
+	var confirm := ConfirmationDialog.new()
+	confirm.dialog_text = "Reinitialiser le profil ?\nToute la progression sera perdue."
+	confirm.ok_button_text = "Confirmer"
+	confirm.cancel_button_text = "Annuler"
+	confirm.confirmed.connect(func():
+		_save.reset_profile()
+		_build_profile_ui()
+	)
+	add_child(confirm)
+	confirm.popup_centered()
 
 
 func _on_back_pressed() -> void:
@@ -230,7 +207,7 @@ func _show_message(text: String) -> void:
 		await get_tree().create_timer(0.3).timeout
 		msg.queue_free()
 	else:
-		var tween = create_tween()
+		var tween := create_tween()
 		tween.tween_property(msg, "modulate:a", 1.0, 0.2)
 		tween.tween_interval(1.2)
 		tween.tween_property(msg, "modulate:a", 0.0, 0.2)

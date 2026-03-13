@@ -126,15 +126,40 @@ python tools/cli.py godot export web            # Export preset "web"
 python tools/cli.py godot list_presets          # Lister les presets disponibles
 python tools/cli.py godot telemetry             # Aggreger les stats gameplay JSON
 
-# PowerBI
-python tools/cli.py powerbi workspaces          # Lister workspaces
-python tools/cli.py powerbi list-reports        # Lister rapports
-python tools/cli.py powerbi list-datasets       # Lister datasets
-python tools/cli.py powerbi refresh <id>        # Refresh dataset (poll status)
+# PowerBI — Local XMLA (PBI Desktop — pythonnet/ADOMD.NET/TOM)
+python tools/cli.py powerbi connect-local                     # Detect PBI Desktop port
+python tools/cli.py powerbi validate-model                    # Full model validation
+python tools/cli.py powerbi list-tables-local                 # Tables + row counts
+python tools/cli.py powerbi row-count --table "MyTable"       # Single table row count
+python tools/cli.py powerbi query-local --dax "EVALUATE {1}"  # Execute DAX locally
+python tools/cli.py powerbi refresh-local --table "MyTable"   # Refresh table (or all)
+python tools/cli.py powerbi export-table --table T --format csv --out ~/Downloads/t.csv
+python tools/cli.py powerbi model-info                        # Model metadata
+python tools/cli.py powerbi create-table --name T --columns '[{"name":"id","type":"int64"}]'
+python tools/cli.py powerbi delete-table --table "OldTable"   # rename-table, list-columns
+python tools/cli.py powerbi add-column --table T --name Col --expr "DAX" --type String
+python tools/cli.py powerbi remove-column --table T --column Col
+python tools/cli.py powerbi list-measures                     # set-measure, delete-measure
+python tools/cli.py powerbi list-relationships                # create-relationship, delete-relationship
+python tools/cli.py powerbi list-partitions --table T         # create-partition, delete-partition
+python tools/cli.py powerbi get-m-expression --table T        # set-m-expression
+python tools/cli.py powerbi list-hierarchies                  # list-roles, create-role
+python tools/cli.py powerbi list-data-sources                 # list-expressions, set-property, list-kpis
+# PowerBI — REST API (Power BI Service)
+python tools/cli.py powerbi workspaces                        # list-workspaces
+python tools/cli.py powerbi list-reports --workspace <id>     # list-datasets
+python tools/cli.py powerbi refresh --dataset <id>            # refresh-status
 python tools/cli.py powerbi query --dax "EVALUATE {1}" --dataset <id>
-python tools/cli.py powerbi export <report_id> --format PDF
-python tools/cli.py powerbi open --pbix <path>  # Inspecter .pbix offline
-python tools/cli.py powerbi extract --pbix <p>  # Extraire TMDL (pbi-tools)
+python tools/cli.py powerbi export --report <id> --format PDF
+python tools/cli.py powerbi list-dashboards --workspace <id>  # list-tiles, list-pages
+python tools/cli.py powerbi clone-report --report <id> --name "Clone"
+python tools/cli.py powerbi rebind-report --report <id> --dataset <target_id>
+python tools/cli.py powerbi take-ownership --dataset <id>     # list-datasources, list-gateways
+python tools/cli.py powerbi dataset-params --dataset <id>     # update-params
+python tools/cli.py powerbi list-capacities                   # list-apps, get-dataset-info
+# PowerBI — Offline (pbi-tools)
+python tools/cli.py powerbi open --pbix <path>                # Inspecter .pbix offline
+python tools/cli.py powerbi extract --pbix <p>                # Extraire TMDL (pbi-tools)
 
 # Outlook
 python tools/cli.py outlook inbox --limit 10

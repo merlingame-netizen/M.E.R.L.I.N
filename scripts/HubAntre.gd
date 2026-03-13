@@ -866,11 +866,7 @@ func _request_merlin_passive_comment(context: String) -> void:
 func _quick_save() -> void:
 	if store == null:
 		return
-	var save_data := store.state.duplicate(true)
-	save_data["timestamp"] = int(Time.get_unix_time_from_system())
-	save_data["phase"] = "hub"
-	save_data["selected_biome"] = selected_biome
-	store.save_system.save_slot(1, save_data)
+	store.save_system.save_profile(store.state.get("meta", {}))
 
 
 # =============================================================================

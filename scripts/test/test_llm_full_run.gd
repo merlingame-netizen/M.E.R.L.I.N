@@ -243,25 +243,19 @@ func _test_full_run() -> void:
 		_apply_effects(state, chosen_effects, outcome)
 		var post_life: int = int(state.life)
 
-		# Essence drop logic (stackable currency)
-		var essence_gained: int = 0
-		var is_anchor: bool = card_idx in MerlinConstants.ESSENCE_ANCHOR_CARDS
+		# Anam gain on success
+		var anam_gained: int = 0
 		var is_success: bool = outcome == "SUCCESS" or outcome == "CRITICAL_SUCCESS"
-		if is_anchor:
-			essence_gained = MerlinConstants.ESSENCE_ANCHOR_DROP
-			state.essences += essence_gained
-		elif is_success and randf() < MerlinConstants.ESSENCE_DROP_CHANCE:
-			essence_gained = MerlinConstants.ESSENCE_NORMAL_DROP
-			state.essences += essence_gained
+		if is_success:
+			anam_gained = MerlinConstants.ANAM_PER_MINIGAME
+			state.anam += anam_gained
 
 		_log("  │   ├── CHOICE: %s (%s) → D20=%d vs DC=%d → %s" % [
 			["A", "B", "C"][choice_idx], direction, d20, dc, outcome])
-		_log("  │   ├── RESOLUTION: life %d→%d (%+d) souffle=%d" % [
-			pre_life, post_life, post_life - pre_life, state.souffle])
-		if essence_gained > 0:
-			var src: String = "ANCHOR" if is_anchor else "SUCCESS"
-			_log("  │   ├── ESSENCE: +%d (%s) — total: %d" % [
-				essence_gained, src, state.essences])
+		_log("  │   ├── RESOLUTION: life %d→%d (%+d)" % [
+			pre_life, post_life, post_life - pre_life])
+		if anam_gained > 0:
+			_log("  │   ├── ANAM: +%d — total: %d" % [anam_gained, state.anam])
 		# Log minigame if detected
 		var minigame: Dictionary = card.get("minigame", {})
 		if not minigame.is_empty():
@@ -314,7 +308,7 @@ func _test_full_run() -> void:
 			"aspects": state.aspects.duplicate(),
 			"souffle": state.souffle,
 			"dynamic_mod": state.dynamic_mod,
-			"essence_gained": essence_gained,
+			"anam_gained": anam_gained,
 			"essences_total": state.essences,
 			"arc_phase": arc_phase,
 			"is_anchor": is_anchor_ctx,

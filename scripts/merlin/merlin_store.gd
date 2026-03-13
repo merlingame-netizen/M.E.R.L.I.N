@@ -73,6 +73,12 @@ func _ready() -> void:
 	_init_merlin_omniscient()
 
 	state = build_default_state()
+
+	# Load saved profile (meta-progression)
+	var saved_meta: Dictionary = save_system.load_profile()
+	if not saved_meta.is_empty():
+		state["meta"] = saved_meta
+
 	_emit_state_changed()
 
 	# Setup autosave timer
@@ -143,10 +149,6 @@ func _deferred_wire_merlin_ai() -> void:
 # ═══════════════════════════════════════════════════════════════════════════════
 
 func build_default_state() -> Dictionary:
-	var essence: Dictionary = {}
-	for element in MerlinConstants.ELEMENTS:
-		essence[element] = 0
-
 	return {
 		"version": VERSION,
 		"phase": "title",
@@ -159,7 +161,7 @@ func build_default_state() -> Dictionary:
 			"map": [],
 			"path": [],
 			"life_essence": MerlinConstants.LIFE_ESSENCE_START,
-			"essences": MerlinConstants.ESSENCE_START,
+			"anam_run": 0,
 			"faveurs": MerlinConstants.FAVEURS_START,
 			"mission": {
 				"type": "",
@@ -215,11 +217,8 @@ func build_default_state() -> Dictionary:
 			"skill_cooldowns": {},
 		},
 		"meta": {
-			"essence": essence,
 			"anam": 0,
-			"ogham_fragments": 0,
-			"liens": 0,
-			# Faction alignment — réputation cross-run (0-100 par faction)
+			# Faction alignment — reputation cross-run (0-100 par faction)
 			"faction_rep": {
 				"druides": MerlinConstants.FACTION_SCORE_START,
 				"korrigans": MerlinConstants.FACTION_SCORE_START,
@@ -232,12 +231,10 @@ func build_default_state() -> Dictionary:
 			"unlocks": [],
 			"packages": [],
 			"active_package": "",
-			"unlocked_evolutions": [],
 			"total_runs": 0,
 			"total_cards_played": 0,
 			"endings_seen": [],
-			"gloire_points": 0,
-			# Arbre de Vie — Talent Tree (Phase 35)
+			# Arbre de Vie — Talent Tree v2.1 (faction-based, cout Anam)
 			"talent_tree": {
 				"unlocked": [],  # Array of talent node IDs
 			},
@@ -430,26 +427,15 @@ func _reduce(action: Dictionary) -> Dictionary:
 		# ═══════════════════════════════════════════════════════════════════════
 		# SAVE/LOAD
 		# ═══════════════════════════════════════════════════════════════════════
-		"SAVE_SLOT":
-			var slot: int = int(action.get("slot", 1))
-			var ok: bool = save_system.save_slot(slot, snapshot_for_save())
+		"SAVE_PROFILE":
+			var ok: bool = save_system.save_profile(state.get("meta", {}))
 			return {"ok": ok}
 
-		"LOAD_SLOT":
-			var slot: int = int(action.get("slot", 1))
-			var loaded: Dictionary = save_system.load_slot(slot, build_default_state())
-			if loaded.is_empty():
+		"LOAD_PROFILE":
+			var meta: Dictionary = save_system.load_profile()
+			if meta.is_empty():
 				return {"ok": false}
-			state = loaded
-			_restore_ai_state()
-			return {"ok": true}
-
-		"LOAD_AUTOSAVE":
-			var loaded: Dictionary = save_system.load_autosave(build_default_state())
-			if loaded.is_empty():
-				return {"ok": false}
-			state = loaded
-			_restore_ai_state()
+			state["meta"] = meta
 			return {"ok": true}
 
 		# ═══════════════════════════════════════════════════════════════════════
@@ -512,8 +498,7 @@ func _do_autosave() -> void:
 	if not _autosave_pending:
 		return
 	_autosave_pending = false
-	var payload := snapshot_for_save()
-	save_system.save_autosave(payload)
+	save_system.save_profile(state.get("meta", {}))
 	if merlin:
 		merlin.save_all()
 
@@ -770,6 +755,7 @@ func _apply_talent_effects_for_run() -> void:
 
 	var run: Dictionary = state.get("run", {})
 	var modifiers: Dictionary = {}
+	var life_max: int = MerlinConstants.LIFE_ESSENCE_MAX
 
 	for node_id in unlocked:
 		var node: Dictionary = MerlinConstants.TALENT_NODES.get(node_id, {})
@@ -783,10 +769,46 @@ func _apply_talent_effects_for_run() -> void:
 				var target: String = str(effect.get("target", ""))
 				var value: int = int(effect.get("value", 0))
 				match target:
-					"blessings":
-						modifiers["extra_blessings"] = int(modifiers.get("extra_blessings", 0)) + value
 					"life":
-						run["life_essence"] = mini(int(run.get("life_essence", 0)) + value, MerlinConstants.LIFE_ESSENCE_MAX)
+						run["life_essence"] = mini(int(run.get("life_essence", 0)) + value, life_max)
+					"life_max":
+						life_max += value
+						run["life_max"] = life_max
+						run["life_essence"] = mini(int(run.get("life_essence", 0)) + value, life_max)
+
+			"cooldown_reduction":
+				var category: Variant = effect.get("category", null)
+				var value: int = int(effect.get("value", 0))
+				if category == null:
+					modifiers["cooldown_reduction_global"] = int(modifiers.get("cooldown_reduction_global", 0)) + value
+				else:
+					var key: String = "cooldown_reduction_" + str(category)
+					modifiers[key] = int(modifiers.get(key, 0)) + value
+
+			"minigame_bonus":
+				var field: Variant = effect.get("field", null)
+				var value: float = float(effect.get("value", 0.0))
+				if field == null:
+					modifiers["minigame_bonus_all"] = float(modifiers.get("minigame_bonus_all", 0.0)) + value
+				else:
+					var key: String = "minigame_bonus_" + str(field)
+					modifiers[key] = float(modifiers.get(key, 0.0)) + value
+
+			"score_global_bonus":
+				var value: float = float(effect.get("value", 0.0))
+				modifiers["score_global_bonus"] = float(modifiers.get("score_global_bonus", 0.0)) + value
+
+			"drain_reduction":
+				var value: int = int(effect.get("value", 0))
+				modifiers["drain_reduction"] = int(modifiers.get("drain_reduction", 0)) + value
+
+			"heal_bonus":
+				var value: float = float(effect.get("value", 0.0))
+				modifiers["heal_multiplier"] = float(modifiers.get("heal_multiplier", 0.0)) + value
+
+			"rep_bonus":
+				var value: float = float(effect.get("value", 0.0))
+				modifiers["rep_gain_multiplier"] = float(modifiers.get("rep_gain_multiplier", 0.0)) + value
 
 			"special_rule":
 				var rule_id: String = str(effect.get("id", ""))
@@ -1052,7 +1074,7 @@ func _apply_triade_effect(effect: Dictionary) -> void:
 			var rep_delta: int = int(effect.get("amount", MerlinConstants.FACTION_DELTA_MINOR))
 			effects._apply_faction_reputation(state, faction, rep_delta)
 		"ADD_ANAM":
-			var anam_amount: int = int(effect.get("amount", MerlinConstants.ESSENCE_BASE_REWARD))
+			var anam_amount: int = int(effect.get("amount", MerlinConstants.ANAM_BASE_REWARD))
 			effects._apply_add_anam(state, anam_amount)
 
 
@@ -1133,11 +1155,9 @@ func _handle_triade_run_end(end_check: Dictionary) -> void:
 	if not endings_seen.has(ending_title):
 		endings_seen.append(ending_title)
 	meta["endings_seen"] = endings_seen
-	meta["gloire_points"] = int(meta.get("gloire_points", 0)) + int(end_check.get("score", 0) / 100.0)
-
 	state["meta"] = meta
 
-	# Calculate and apply run rewards (essences, fragments, liens, gloire)
+	# Calculate and apply run rewards (Anam)
 	var rewards: Dictionary = calculate_run_rewards(end_check)
 	apply_run_rewards(rewards)
 	end_check["rewards"] = rewards
@@ -1335,17 +1355,11 @@ func can_unlock_talent(node_id: String) -> bool:
 		if not is_talent_active(prereq):
 			return false
 
-	# Check cost
-	var cost: Dictionary = node.get("cost", {})
-	var meta: Dictionary = state.get("meta", {})
-	for currency in cost:
-		if currency == "fragments":
-			if int(meta.get("ogham_fragments", 0)) < int(cost[currency]):
-				return false
-		else:
-			var essence_val: int = int(meta.get("essence", {}).get(currency, 0))
-			if essence_val < int(cost[currency]):
-				return false
+	# Check Anam cost
+	var cost: int = int(node.get("cost", 0))
+	var anam: int = int(state.get("meta", {}).get("anam", 0))
+	if anam < cost:
+		return false
 	return true
 
 
@@ -1354,17 +1368,16 @@ func unlock_talent(node_id: String) -> Dictionary:
 		return {"ok": false, "error": "Cannot unlock"}
 
 	var node: Dictionary = MerlinConstants.TALENT_NODES[node_id]
-	var cost: Dictionary = node.get("cost", {})
+	var cost: int = int(node.get("cost", 0))
 
-	# Spend currency
-	for currency in cost:
-		if currency == "fragments":
-			state.meta.ogham_fragments -= int(cost[currency])
-		else:
-			state.meta.essence[currency] -= int(cost[currency])
+	# Spend Anam
+	state["meta"]["anam"] = int(state.get("meta", {}).get("anam", 0)) - cost
 
 	# Add to unlocked list
-	state.meta.talent_tree.unlocked.append(node_id)
+	state["meta"]["talent_tree"]["unlocked"].append(node_id)
+
+	# Auto-save profile
+	save_system.save_profile(state.get("meta", {}))
 
 	state_changed.emit(state)
 	return {"ok": true, "node_id": node_id, "name": node.get("name", "")}
@@ -1383,82 +1396,51 @@ func get_affordable_talents() -> Array:
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
-# RUN REWARDS — Essence + Fragments + Liens + Gloire (Phase 35)
+# RUN REWARDS — Anam (monnaie unique cross-run)
 # ═══════════════════════════════════════════════════════════════════════════════
 
 func calculate_run_rewards(run_data: Dictionary) -> Dictionary:
-	var rewards: Dictionary = {"essence": {}, "fragments": 0, "liens": 0, "gloire": 0}
+	var anam: int = MerlinConstants.ANAM_BASE_REWARD
 
-	# Initialize all essences to 0
-	for element in MerlinConstants.ELEMENTS:
-		rewards.essence[element] = 0
-
-	# Base rewards (always)
-	for elem in MerlinConstants.ESSENCE_BASE_REWARDS:
-		rewards.essence[elem] += int(MerlinConstants.ESSENCE_BASE_REWARDS[elem])
-
-	# Victory vs Chute
 	var is_victory: bool = bool(run_data.get("victory", false))
 	if is_victory:
-		for elem in MerlinConstants.ESSENCE_VICTORY_BONUS:
-			rewards.essence[elem] += int(MerlinConstants.ESSENCE_VICTORY_BONUS[elem])
-	else:
-		for elem in MerlinConstants.ESSENCE_CHUTE_BONUS:
-			rewards.essence[elem] += int(MerlinConstants.ESSENCE_CHUTE_BONUS[elem])
+		anam += MerlinConstants.ANAM_VICTORY_BONUS
 
-	# Mini-game bonus
-	if int(run_data.get("minigames_won", 0)) >= 5:
-		for elem in MerlinConstants.ESSENCE_MINIGAME_BONUS:
-			rewards.essence[elem] += int(MerlinConstants.ESSENCE_MINIGAME_BONUS[elem])
+	# Per minigame won
+	anam += int(run_data.get("minigames_won", 0)) * MerlinConstants.ANAM_PER_MINIGAME
 
-	# Ogham bonus
-	if int(run_data.get("oghams_used", 0)) >= 3:
-		for elem in MerlinConstants.ESSENCE_OGHAM_BONUS:
-			rewards.essence[elem] += int(MerlinConstants.ESSENCE_OGHAM_BONUS[elem])
+	# Per ogham used
+	anam += int(run_data.get("oghams_used", 0)) * MerlinConstants.ANAM_PER_OGHAM
 
-	# Fragments: 1 + floor(oghams_used / 3), max 3
-	var oghams_used: int = int(run_data.get("oghams_used", 0))
-	rewards.fragments = mini(1 + int(oghams_used / 3.0), 3)
+	# Faction honore bonus (+5 per faction >= 80)
+	var faction_rep: Dictionary = state.get("meta", {}).get("faction_rep", {})
+	for faction in faction_rep:
+		if float(faction_rep[faction]) >= 80.0:
+			anam += MerlinConstants.ANAM_FACTION_HONORE
 
-	# Liens: 2 + mission bonus
-	rewards.liens = 2 + (5 if is_victory else 0)
-
-	# Gloire: score/50 + first ending bonus
-	var score: int = int(run_data.get("score", 0))
-	rewards.gloire = int(score / 50.0)
-	var ending_title: String = str(run_data.get("ending_title", ""))
-	if ending_title != "" and not state.meta.endings_seen.has(ending_title):
-		rewards.gloire += 20
-
-	# Partial rewards: death before 25 cards = all rewards /4
+	# Partial: death before 25 cards = /4
 	var cards_played: int = int(run_data.get("cards_played", 0))
 	if not is_victory and cards_played < MerlinConstants.MIN_CARDS_FOR_VICTORY:
-		for elem in rewards.essence:
-			rewards.essence[elem] = int(rewards.essence[elem] / 4.0)
-		rewards.fragments = int(rewards.fragments / 4.0)
-		rewards.liens = int(rewards.liens / 4.0)
-		rewards.gloire = int(rewards.gloire / 4.0)
-		rewards["partial"] = true
+		anam = int(anam / 4.0)
 
-	return rewards
+	# Talent modifiers
+	if _get_talent_modifier("double_anam_rewards"):
+		anam *= 2
+	if _get_talent_modifier("bonus_anam_per_run"):
+		anam += 3
+	if _get_talent_modifier("low_life_bonus") and int(run_data.get("life_at_end", 100)) <= 25:
+		anam = int(anam * 1.5)
+	if _get_talent_modifier("new_game_plus"):
+		anam = int(anam * 1.5)
+
+	return {"anam": anam}
 
 
 func apply_run_rewards(rewards: Dictionary) -> void:
-	# Apply essences
-	var ess: Dictionary = rewards.get("essence", {})
-	for elem in ess:
-		if state.meta.essence.has(elem):
-			state.meta.essence[elem] += int(ess[elem])
-
-	# Apply fragments
-	state.meta.ogham_fragments += int(rewards.get("fragments", 0))
-
-	# Apply liens
-	state.meta.liens += int(rewards.get("liens", 0))
-
-	# Apply gloire
-	state.meta.gloire_points += int(rewards.get("gloire", 0))
-
+	var meta: Dictionary = state.get("meta", {})
+	meta["anam"] = int(meta.get("anam", 0)) + int(rewards.get("anam", 0))
+	state["meta"] = meta
+	save_system.save_profile(meta)
 	state_changed.emit(state)
 
 

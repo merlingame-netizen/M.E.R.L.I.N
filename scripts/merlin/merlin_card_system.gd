@@ -2,7 +2,6 @@
 ## Merlin Card System — Gameplay Engine (v0.4.0)
 ## ═══════════════════════════════════════════════════════════════════════════════
 ## Handles card generation, selection, and resolution.
-## 4 Gauges (Vigueur/Esprit/Faveur/Ressources), 1-4 options per card.
 ## ═══════════════════════════════════════════════════════════════════════════════
 
 extends RefCounted
@@ -13,33 +12,9 @@ signal card_displayed(card: Dictionary)
 @warning_ignore("unused_signal")
 signal choice_made(option: int, effects: Array)
 @warning_ignore("unused_signal")
-signal gauge_critical(gauge: String, value: int, direction: String)
-@warning_ignore("unused_signal")
 signal run_ended(ending: Dictionary)
 
-# ═══════════════════════════════════════════════════════════════════════════════
-# CONSTANTS (Legacy - kept for compatibility)
-# ═══════════════════════════════════════════════════════════════════════════════
-
-const GAUGES := ["Vigueur", "Esprit", "Faveur", "Ressources"]
-const GAUGE_MIN := 0
-const GAUGE_MAX := 100
-const GAUGE_START := 50
-const GAUGE_CRITICAL_LOW := 15
-const GAUGE_CRITICAL_HIGH := 85
-
 const CARD_TYPES := ["narrative", "event", "promise", "merlin_direct"]
-
-const ENDINGS := {
-	"vigueur_low": {"gauge": "Vigueur", "direction": "low", "title": "L'Epuisement", "text": "Ton corps a cede sous le poids des epreuves..."},
-	"vigueur_high": {"gauge": "Vigueur", "direction": "high", "title": "Le Surmenage", "text": "Tu t'es consume dans l'action sans jamais te reposer..."},
-	"esprit_low": {"gauge": "Esprit", "direction": "low", "title": "La Folie", "text": "Ton esprit s'est perdu dans les brumes..."},
-	"esprit_high": {"gauge": "Esprit", "direction": "high", "title": "La Possession", "text": "Les esprits anciens ont pris le controle..."},
-	"faveur_low": {"gauge": "Faveur", "direction": "low", "title": "L'Exile", "text": "Banni par tous, tu erres seul dans les landes..."},
-	"faveur_high": {"gauge": "Faveur", "direction": "high", "title": "La Tyrannie", "text": "Le pouvoir t'a corrompu, tu regnes par la peur..."},
-	"ressources_low": {"gauge": "Ressources", "direction": "low", "title": "La Famine", "text": "Sans provisions, tu succombes au denument..."},
-	"ressources_high": {"gauge": "Ressources", "direction": "high", "title": "Le Pillage", "text": "Ta cupidite a seme le chaos..."},
-}
 
 # ═══════════════════════════════════════════════════════════════════════════════
 # DEPENDENCIES
@@ -91,11 +66,8 @@ func get_event_category(state: Dictionary) -> Dictionary:
 # ═══════════════════════════════════════════════════════════════════════════════
 
 func init_run(state: Dictionary) -> void:
-	"""Initialize a new run with starting gauges."""
+	"""Initialize a new run."""
 	var run = state.get("run", {})
-	run["gauges"] = {}
-	for gauge in GAUGES:
-		run["gauges"][gauge] = GAUGE_START
 	run["cards_played"] = 0
 	run["day"] = 1
 	run["active"] = true
@@ -105,39 +77,9 @@ func init_run(state: Dictionary) -> void:
 	state["run"] = run
 
 
-func check_run_end(state: Dictionary) -> Dictionary:
-	"""Check if any gauge has hit 0 or 100, ending the run."""
-	var run = state.get("run", {})
-	var gauges = run.get("gauges", {})
-
-	for gauge in GAUGES:
-		var value = int(gauges.get(gauge, GAUGE_START))
-		if value <= GAUGE_MIN:
-			var ending_key = gauge.to_lower() + "_low"
-			return _get_ending(ending_key, state)
-		if value >= GAUGE_MAX:
-			var ending_key = gauge.to_lower() + "_high"
-			return _get_ending(ending_key, state)
-
+func check_run_end(_state: Dictionary) -> Dictionary:
+	"""Run end is now handled by life essence in MerlinStore."""
 	return {"ended": false}
-
-
-func _get_ending(ending_key: String, state: Dictionary) -> Dictionary:
-	var ending = ENDINGS.get(ending_key, ENDINGS["vigueur_low"])
-	var run = state.get("run", {})
-	return {
-		"ended": true,
-		"ending": ending,
-		"score": _calculate_score(run),
-		"cards_played": run.get("cards_played", 0),
-		"days_survived": run.get("day", 1),
-	}
-
-
-func _calculate_score(run: Dictionary) -> int:
-	var cards = int(run.get("cards_played", 0))
-	var days = int(run.get("day", 1))
-	return cards * 10 + days * 50
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
@@ -163,53 +105,14 @@ func get_next_card(state: Dictionary) -> Dictionary:
 func _build_llm_context(state: Dictionary) -> Dictionary:
 	"""Build context dictionary to send to LLM."""
 	var run = state.get("run", {})
-	var bestiole = state.get("bestiole", {})
 
 	return {
-		"gauges": run.get("gauges", {}),
-		"bestiole": {
-			"mood": _get_mood_label(bestiole),
-			"bond": bestiole.get("bond", 50),
-			"skills_ready": _get_ready_skills(bestiole),
-		},
 		"day": run.get("day", 1),
 		"cards_played": run.get("cards_played", 0),
 		"story_log": run.get("story_log", []).slice(-10),  # Last 10 entries
 		"active_tags": run.get("active_tags", []),
 		"active_promises": run.get("active_promises", []),
-		"critical_gauges": _get_critical_gauges(run),
 	}
-
-
-func _get_mood_label(bestiole: Dictionary) -> String:
-	var mood = int(bestiole.get("needs", {}).get("Mood", 50))
-	if mood >= 80: return "ecstatic"
-	if mood >= 60: return "happy"
-	if mood >= 40: return "content"
-	if mood >= 20: return "sad"
-	return "depressed"
-
-
-func _get_ready_skills(bestiole: Dictionary) -> Array:
-	var ready = []
-	var cooldowns = bestiole.get("skill_cooldowns", {})
-	var equipped = bestiole.get("skills_equipped", [])
-	for skill in equipped:
-		if int(cooldowns.get(skill, 0)) <= 0:
-			ready.append(skill)
-	return ready
-
-
-func _get_critical_gauges(run: Dictionary) -> Array:
-	var critical = []
-	var gauges = run.get("gauges", {})
-	for gauge in GAUGES:
-		var value = int(gauges.get(gauge, GAUGE_START))
-		if value <= GAUGE_CRITICAL_LOW:
-			critical.append({"gauge": gauge, "direction": "low", "value": value})
-		elif value >= GAUGE_CRITICAL_HIGH:
-			critical.append({"gauge": gauge, "direction": "high", "value": value})
-	return critical
 
 
 func _select_fallback_card(_state: Dictionary) -> Dictionary:
@@ -511,22 +414,15 @@ func _validate_card(card: Dictionary) -> Dictionary:
 
 
 func _validate_effect(effect: String) -> bool:
-	"""Check if effect uses valid gauge codes."""
+	"""Check if effect uses valid codes."""
 	var parts = effect.split(":")
 	if parts.size() < 2:
 		return false
 
 	var code = parts[0]
-	if not ["ADD_GAUGE", "REMOVE_GAUGE", "SET_GAUGE", "ADD_TAG", "REMOVE_TAG", "SET_FLAG"].has(code):
+	if not ["ADD_TAG", "REMOVE_TAG", "SET_FLAG"].has(code):
 		# Fallback to MerlinEffectEngine validation
 		return _effects.validate_effect(effect) if _effects else false
-
-	# Validate gauge name
-	if code in ["ADD_GAUGE", "REMOVE_GAUGE", "SET_GAUGE"]:
-		if parts.size() < 3:
-			return false
-		if not GAUGES.has(parts[1]):
-			return false
 
 	return true
 
@@ -576,11 +472,6 @@ func resolve_choice(state: Dictionary, card: Dictionary, direction: String) -> D
 
 	state["run"] = run
 
-	# Update bestiole cooldowns
-	_tick_bestiole_cooldowns(state)
-
-	# Check for critical gauges
-	_check_critical_warnings(state)
 
 	return {
 		"ok": true,
@@ -611,33 +502,6 @@ func _apply_card_effects(state: Dictionary, effects: Array) -> Dictionary:
 		var code = parts[0]
 
 		match code:
-			"ADD_GAUGE":
-				if parts.size() >= 3 and GAUGES.has(parts[1]):
-					var gauge = parts[1]
-					var delta = int(parts[2])
-					gauges[gauge] = clampi(int(gauges.get(gauge, GAUGE_START)) + delta, GAUGE_MIN, GAUGE_MAX)
-					applied.append(effect)
-				else:
-					rejected.append(effect)
-
-			"REMOVE_GAUGE":
-				if parts.size() >= 3 and GAUGES.has(parts[1]):
-					var gauge = parts[1]
-					var delta = int(parts[2])
-					gauges[gauge] = clampi(int(gauges.get(gauge, GAUGE_START)) - delta, GAUGE_MIN, GAUGE_MAX)
-					applied.append(effect)
-				else:
-					rejected.append(effect)
-
-			"SET_GAUGE":
-				if parts.size() >= 3 and GAUGES.has(parts[1]):
-					var gauge = parts[1]
-					var value = int(parts[2])
-					gauges[gauge] = clampi(value, GAUGE_MIN, GAUGE_MAX)
-					applied.append(effect)
-				else:
-					rejected.append(effect)
-
 			"ADD_TAG":
 				if parts.size() >= 2:
 					var tags = run.get("active_tags", [])
@@ -683,192 +547,3 @@ func _apply_card_effects(state: Dictionary, effects: Array) -> Dictionary:
 	return {"applied": applied, "rejected": rejected}
 
 
-func _tick_bestiole_cooldowns(state: Dictionary) -> void:
-	"""Decrease all bestiole skill cooldowns by 1."""
-	var bestiole = state.get("bestiole", {})
-	var cooldowns = bestiole.get("skill_cooldowns", {})
-
-	for skill in cooldowns:
-		cooldowns[skill] = max(0, int(cooldowns[skill]) - 1)
-
-	bestiole["skill_cooldowns"] = cooldowns
-	state["bestiole"] = bestiole
-
-
-func _check_critical_warnings(state: Dictionary) -> void:
-	"""Emit signals for critical gauge levels."""
-	var run = state.get("run", {})
-	var gauges = run.get("gauges", {})
-
-	for gauge in GAUGES:
-		var value = int(gauges.get(gauge, GAUGE_START))
-		if value <= GAUGE_CRITICAL_LOW:
-			gauge_critical.emit(gauge, value, "low")
-		elif value >= GAUGE_CRITICAL_HIGH:
-			gauge_critical.emit(gauge, value, "high")
-
-
-# ═══════════════════════════════════════════════════════════════════════════════
-# BESTIOLE SKILL USAGE
-# ═══════════════════════════════════════════════════════════════════════════════
-
-func use_bestiole_skill(state: Dictionary, skill_id: String, card: Dictionary) -> Dictionary:
-	"""Use a bestiole skill on the current card."""
-	var bestiole = state.get("bestiole", {})
-	var cooldowns = bestiole.get("skill_cooldowns", {})
-	var equipped = bestiole.get("skills_equipped", [])
-
-	# Check if skill is equipped
-	if not equipped.has(skill_id):
-		return {"ok": false, "error": "Skill not equipped"}
-
-	# Check cooldown
-	if int(cooldowns.get(skill_id, 0)) > 0:
-		return {"ok": false, "error": "Skill on cooldown", "cooldown": cooldowns[skill_id]}
-
-	# Check needs
-	var needs = bestiole.get("needs", {})
-	if int(needs.get("Hunger", 50)) < 30:
-		return {"ok": false, "error": "Bestiole too hungry"}
-	if int(needs.get("Energy", 50)) < 20:
-		return {"ok": false, "error": "Bestiole too tired"}
-
-	# Apply skill effect
-	var result = _apply_skill(state, skill_id, card)
-
-	if result["ok"]:
-		# Set cooldown
-		cooldowns[skill_id] = result.get("cooldown", 5)
-		bestiole["skill_cooldowns"] = cooldowns
-		state["bestiole"] = bestiole
-
-	return result
-
-
-func _apply_skill(state: Dictionary, skill_id: String, card: Dictionary) -> Dictionary:
-	"""Apply a specific skill's effect."""
-	match skill_id:
-		# REVEAL skills
-		"beith":
-			# Reveal effects of one option (left by default)
-			var left_option = null
-			for opt in card.get("options", []):
-				if opt.get("direction") == "left":
-					left_option = opt
-					break
-			return {"ok": true, "type": "reveal_one", "revealed": left_option.get("effects", []) if left_option else [], "cooldown": 3}
-
-		"coll":
-			# Reveal both options
-			var all_effects = {}
-			for opt in card.get("options", []):
-				all_effects[opt.get("direction", "")] = opt.get("effects", [])
-			return {"ok": true, "type": "reveal_all", "revealed": all_effects, "cooldown": 5}
-
-		"ailm":
-			# No effect on current card, sets flag for next card prediction
-			var run = state.get("run", {})
-			run["predict_next"] = true
-			state["run"] = run
-			return {"ok": true, "type": "predict_next", "cooldown": 4}
-
-		# PROTECTION skills
-		"luis":
-			# 30% reduction on negative effects
-			var run = state.get("run", {})
-			run["effect_modifier"] = {"type": "reduce_negative", "value": 0.3}
-			state["run"] = run
-			return {"ok": true, "type": "protection", "modifier": 0.3, "cooldown": 4}
-
-		"gort":
-			# Absorb one negative effect
-			var run = state.get("run", {})
-			run["effect_modifier"] = {"type": "absorb_one_negative", "count": 1}
-			state["run"] = run
-			return {"ok": true, "type": "absorb", "cooldown": 6}
-
-		# RECOVERY skills
-		"quert":
-			# +15 to lowest gauge
-			var run = state.get("run", {})
-			var gauges = run.get("gauges", {})
-			var lowest_gauge = ""
-			var lowest_value = GAUGE_MAX + 1
-			for gauge in GAUGES:
-				var val = int(gauges.get(gauge, GAUGE_START))
-				if val < lowest_value:
-					lowest_value = val
-					lowest_gauge = gauge
-			if not lowest_gauge.is_empty():
-				gauges[lowest_gauge] = clampi(lowest_value + 15, GAUGE_MIN, GAUGE_MAX)
-				run["gauges"] = gauges
-				state["run"] = run
-			return {"ok": true, "type": "heal_lowest", "gauge": lowest_gauge, "amount": 15, "cooldown": 4}
-
-		"ruis":
-			# Balance gauges toward 50
-			var run = state.get("run", {})
-			var gauges = run.get("gauges", {})
-			for gauge in GAUGES:
-				var val = int(gauges.get(gauge, GAUGE_START))
-				if val < 50:
-					gauges[gauge] = mini(val + 10, 50)
-				elif val > 50:
-					gauges[gauge] = maxi(val - 10, 50)
-			run["gauges"] = gauges
-			state["run"] = run
-			return {"ok": true, "type": "balance", "cooldown": 8}
-
-		# NARRATIVE skills
-		"huath":
-			# Reroll the card
-			return {"ok": true, "type": "reroll_card", "cooldown": 5}
-
-		"ioho":
-			# Full reroll with new context
-			return {"ok": true, "type": "full_reroll", "cooldown": 12}
-
-		_:
-			return {"ok": false, "error": "Unknown skill"}
-
-
-# ═══════════════════════════════════════════════════════════════════════════════
-# BESTIOLE PASSIVE MODIFIERS
-# ═══════════════════════════════════════════════════════════════════════════════
-
-func get_bestiole_modifier(state: Dictionary) -> float:
-	"""Calculate the passive modifier from bestiole state."""
-	var bestiole = state.get("bestiole", {})
-	var needs = bestiole.get("needs", {})
-	var bond = int(bestiole.get("bond", 50))
-
-	var modifier = 1.0
-
-	# Bond bonus
-	if bond >= 91:
-		modifier += 0.20
-	elif bond >= 71:
-		modifier += 0.15
-	elif bond >= 51:
-		modifier += 0.10
-	elif bond >= 31:
-		modifier += 0.05
-
-	# Mood modifier
-	var mood = int(needs.get("Mood", 50))
-	if mood >= 80:
-		modifier += 0.15
-	elif mood >= 60:
-		modifier += 0.10
-	elif mood >= 40:
-		modifier += 0.05
-	elif mood < 25:
-		modifier -= 0.10
-
-	# Penalties for low needs
-	if int(needs.get("Hunger", 50)) < 30:
-		modifier -= 0.10
-	if int(needs.get("Energy", 50)) < 20:
-		modifier -= 0.10
-
-	return maxf(modifier, 0.5)  # Never go below 50%

@@ -2,7 +2,7 @@ class_name ArbrePixelArt
 extends Control
 
 ## Arbre de Vie — Pixel art procédural dynamique
-## Dessine l'arbre celtique avec 28 noeuds de talent positionnés dans l'espace
+## Dessine l'arbre celtique avec 34 noeuds de talent positionnés dans l'espace
 ## Se régénère visuellement à chaque débloquage de talent
 
 signal node_selected(node_id: String)
@@ -13,42 +13,51 @@ const TRUNK_BASE := Vector2(0.50, 0.90)
 const TRUNK_TOP  := Vector2(0.50, 0.55)
 
 const NODE_POSITIONS_RAW := {
-	# Corps (Sanglier) — racines bas-gauche, tier 1-4
-	"racines_1": Vector2(0.20, 0.72),
-	"racines_2": Vector2(0.30, 0.68),
-	"racines_3": Vector2(0.15, 0.65),
-	"racines_4": Vector2(0.18, 0.52),
-	"racines_5": Vector2(0.25, 0.48),
-	"racines_6": Vector2(0.14, 0.36),
-	"racines_7": Vector2(0.22, 0.32),
-	"racines_8": Vector2(0.12, 0.20),
-	# Ame (Corbeau) — ramures haut-gauche, tier 1-4
-	"ramures_1": Vector2(0.35, 0.55),
-	"ramures_2": Vector2(0.28, 0.50),
-	"ramures_3": Vector2(0.32, 0.45),
-	"ramures_4": Vector2(0.25, 0.38),
-	"ramures_5": Vector2(0.33, 0.34),
-	"ramures_6": Vector2(0.22, 0.24),
-	"ramures_7": Vector2(0.30, 0.20),
-	"ramures_8": Vector2(0.20, 0.12),
-	# Monde (Cerf) — feuillage haut-droite, tier 1-4
-	"feuillage_1": Vector2(0.65, 0.55),
-	"feuillage_2": Vector2(0.72, 0.50),
-	"feuillage_3": Vector2(0.68, 0.45),
-	"feuillage_4": Vector2(0.75, 0.38),
-	"feuillage_5": Vector2(0.67, 0.34),
-	"feuillage_6": Vector2(0.78, 0.24),
-	"feuillage_7": Vector2(0.70, 0.20),
-	"feuillage_8": Vector2(0.80, 0.12),
-	# Universel (Tronc) — centre vertical, tier 2-4
-	"tronc_1": Vector2(0.50, 0.60),
-	"tronc_2": Vector2(0.50, 0.42),
-	"tronc_3": Vector2(0.50, 0.30),
-	"tronc_4": Vector2(0.50, 0.16),
-	"calendrier_des_brumes": Vector2(0.42, 0.42),
+	# Druides — bottom-left (racines)
+	"druides_1": Vector2(0.18, 0.78),
+	"druides_2": Vector2(0.14, 0.66),
+	"druides_3": Vector2(0.10, 0.54),
+	"druides_4": Vector2(0.14, 0.42),
+	"druides_5": Vector2(0.10, 0.30),
+	# Anciens — top-left (ramures)
+	"anciens_1": Vector2(0.28, 0.62),
+	"anciens_2": Vector2(0.24, 0.50),
+	"anciens_3": Vector2(0.20, 0.38),
+	"anciens_4": Vector2(0.24, 0.26),
+	"anciens_5": Vector2(0.20, 0.14),
+	# Korrigans — bottom-right (racines droites)
+	"korrigans_1": Vector2(0.82, 0.78),
+	"korrigans_2": Vector2(0.86, 0.66),
+	"korrigans_3": Vector2(0.90, 0.54),
+	"korrigans_4": Vector2(0.86, 0.42),
+	"korrigans_5": Vector2(0.90, 0.30),
+	# Niamh — top-right (feuillage)
+	"niamh_1": Vector2(0.72, 0.62),
+	"niamh_2": Vector2(0.76, 0.50),
+	"niamh_3": Vector2(0.80, 0.38),
+	"niamh_4": Vector2(0.76, 0.26),
+	"niamh_5": Vector2(0.80, 0.14),
+	# Ankou — far-right vertical
+	"ankou_1": Vector2(0.94, 0.78),
+	"ankou_2": Vector2(0.94, 0.62),
+	"ankou_3": Vector2(0.94, 0.46),
+	"ankou_4": Vector2(0.94, 0.30),
+	"ankou_5": Vector2(0.94, 0.14),
+	# Central — vertical center (tronc)
+	"central_1": Vector2(0.50, 0.68),
+	"central_2": Vector2(0.50, 0.50),
+	"central_3": Vector2(0.50, 0.32),
+	"central_4": Vector2(0.50, 0.14),
+	# Special cross-faction nodes
+	"calendrier_des_brumes": Vector2(0.42, 0.50),
+	"harmonie_factions": Vector2(0.50, 0.42),
+	"pacte_ombre_lumiere": Vector2(0.58, 0.50),
+	"eveil_ogham": Vector2(0.38, 0.42),
+	"instinct_sauvage": Vector2(0.62, 0.42),
+	"boucle_eternelle": Vector2(0.50, 0.06),
 }
 
-const TIER_RADIUS := {1: 10.0, 2: 13.0, 3: 16.0, 4: 20.0}
+const TIER_RADIUS := {1: 10.0, 2: 13.0, 3: 16.0, 4: 20.0, 5: 22.0}
 
 # === STATE ===
 
@@ -131,7 +140,7 @@ func _tier_for(node_id: String) -> int:
 
 func _branch_for(node_id: String) -> String:
 	if not MerlinConstants.TALENT_NODES.has(node_id):
-		return "Universel"
+		return "central"
 	return str(MerlinConstants.TALENT_NODES[node_id].get("branch", "Universel"))
 
 func _radius_for(node_id: String) -> float:

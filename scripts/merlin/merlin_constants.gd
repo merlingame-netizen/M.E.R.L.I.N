@@ -2,19 +2,10 @@ extends RefCounted
 class_name MerlinConstants
 
 # ═══════════════════════════════════════════════════════════════════════════════
-# SHARED ENUMS & ELEMENT LIST
-# ═══════════════════════════════════════════════════════════════════════════════
-
-const ELEMENTS := [
-	"NATURE", "FEU", "EAU", "TERRE", "AIR", "FOUDRE", "GLACE", "POISON",
-	"METAL", "BETE", "ESPRIT", "OMBRE", "LUMIERE", "ARCANE"
-]
-
-const OGHAM_STARTER_SKILLS := ["beith", "luis", "quert"]
-
-# ═══════════════════════════════════════════════════════════════════════════════
 # OGHAM STARTER SET — 3 Oghams debloques au depart
 # ═══════════════════════════════════════════════════════════════════════════════
+
+const OGHAM_STARTER_SKILLS := ["beith", "luis", "quert"]
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
@@ -23,7 +14,7 @@ const OGHAM_STARTER_SKILLS := ["beith", "luis", "quert"]
 
 const REWARD_TYPES := {
 	"vie": {"icon": "\u2764", "label": "Vie", "color_key": "danger"},
-	"essence": {"icon": "#", "label": "Essence", "color_key": "amber_bright"},
+	"anam": {"icon": "#", "label": "Anam", "color_key": "amber_bright"},
 	"reputation": {"icon": "\u2726", "label": "Reputation", "color_key": "amber_bright"},
 	"mystere": {"icon": "?", "label": "Mystere", "color_key": "amber"},
 }
@@ -43,20 +34,11 @@ static func infer_reward_type(effects: Array) -> String:
 				return "vie"
 			"ADD_REPUTATION":
 				return "reputation"
-			"ADD_ESSENCE":
-				return "essence"
+			"ADD_ANAM":
+				return "anam"
 	return "mystere"
 
 
-# ═══════════════════════════════════════════════════════════════════════════════
-# ESSENCE COLLECTIBLES — Fragments magiques lies aux categories Ogham
-# ═══════════════════════════════════════════════════════════════════════════════
-
-
-const ESSENCE_DROP_CHANCE := 0.2  # 20% on non-anchor SUCCESS
-const ESSENCE_ANCHOR_DROP := 2    # Guaranteed +2 at anchor positions
-const ESSENCE_NORMAL_DROP := 1    # +1 on SUCCESS (20% chance)
-const ESSENCE_ANCHOR_CARDS: Array[int] = [3, 7, 12, 16]  # Guaranteed drop positions (0-indexed)
 
 # ═══════════════════════════════════════════════════════════════════════════════
 # MINIGAME CATALOGUE — Epreuves detectees par mots-cles dans le texte narratif
@@ -286,289 +268,342 @@ const OGHAM_FULL_SPECS := {
 }
 
 # ═══════════════════════════════════════════════════════════════════════════════
-# ESSENCE REWARDS — Run end rewards (Phase 35)
+# ANAM REWARDS — Run end rewards (Anam = monnaie unique cross-run)
 # ═══════════════════════════════════════════════════════════════════════════════
 
-const ESSENCE_BASE_REWARDS := {"TERRE": 5, "NATURE": 3}  # Always earned
-const ESSENCE_VICTORY_BONUS := {"LUMIERE": 8, "FOUDRE": 5}
-const ESSENCE_CHUTE_BONUS := {"OMBRE": 5, "GLACE": 3}
-const ESSENCE_MINIGAME_BONUS := {"AIR": 4}  # 5+ mini-games won
-const ESSENCE_OGHAM_BONUS := {"ARCANE": 5}  # 3+ Oghams used
-const ESSENCE_FACTION_BONUS := {"LUMIERE": 10}  # Any faction >= 80
+const ANAM_BASE_REWARD := 10        # Always earned
+const ANAM_VICTORY_BONUS := 15      # Victory bonus
+const ANAM_PER_MINIGAME := 2        # Per minigame won
+const ANAM_PER_OGHAM := 1           # Per ogham used
+const ANAM_FACTION_HONORE := 5      # Per faction >= 80
 
 # ═══════════════════════════════════════════════════════════════════════════════
-# ARBRE DE VIE — Talent Tree (Phase 35)
-# TODO(v2.0): Redesign branches from Corps/Ame/Monde to faction-based
-#   (Druides, Anciens, Korrigans, Niamh, Ankou) + Tronc universel
-#   See docs/GAME_DESIGN_BIBLE.md §5.1
+# ARBRE DE VIE — Talent Tree v2.1 (Faction-based, 34 noeuds, cout Anam)
+# 5 branches factions × 5 noeuds + 4 central + 5 speciaux = 34 total
 # ═══════════════════════════════════════════════════════════════════════════════
 
 const TALENT_NODES := {
-	# ── RACINES (Corps / Sanglier) ──────────────────────────────────────────
-	"racines_1": {
-		"branch": "Corps", "tier": 1,
-		"name": "Souffle Fortifie",
-		"cost": {"TERRE": 15, "fragments": 1},
+	# ── DRUIDES (Nature, rituels, guerison) ─────────────────────────────────
+	"druides_1": {
+		"branch": "druides", "tier": 1,
+		"name": "Vigueur du Chene",
+		"cost": 20,
 		"prerequisites": [],
-		"effect": {"type": "modify_start", "target": "souffle", "value": 1},
-		"description": "Commence chaque run avec 1 Souffle supplementaire.",
-		"lore": "Les racines du Sanglier nourrissent le souffle de la terre.",
+		"effect": {"type": "modify_start", "target": "life", "value": 10},
+		"description": "+10 vie au depart de chaque run.",
+		"lore": "Le chene partage sa force avec ceux qui l'ecoutent.",
 	},
-	"racines_2": {
-		"branch": "Corps", "tier": 1,
-		"name": "Endurance Naturelle",
-		"cost": {"NATURE": 20},
-		"prerequisites": [],
-		"effect": {"type": "cancel_first_shift", "aspect": "Corps", "direction": "down"},
-		"description": "Annule le 1er shift Corps BAS de chaque run.",
-		"lore": "La chair du Sanglier ne flanche pas au premier choc.",
+	"druides_2": {
+		"branch": "druides", "tier": 2,
+		"name": "Symbiose Vegetale",
+		"cost": 25,
+		"prerequisites": ["druides_1"],
+		"effect": {"type": "cooldown_reduction", "category": "nature", "value": 1},
+		"description": "Reduit de 1 le cooldown des Oghams de categorie nature.",
+		"lore": "Les racines murmurent les secrets du temps.",
 	},
-	"racines_3": {
-		"branch": "Corps", "tier": 1,
-		"name": "Peau de Chene",
-		"cost": {"METAL": 15},
-		"prerequisites": [],
-		"effect": {"type": "modify_start", "target": "blessings", "value": 1},
-		"description": "Commence chaque run avec 1 Benediction supplementaire.",
-		"lore": "L'ecorce du chene protege ceux qui la meritent.",
+	"druides_3": {
+		"branch": "druides", "tier": 3,
+		"name": "Esprit du Nemeton",
+		"cost": 50,
+		"prerequisites": ["druides_2"],
+		"effect": {"type": "minigame_bonus", "field": "logique", "value": 0.15},
+		"description": "+15% score aux minigames du champ logique.",
+		"lore": "Le nemeton revele l'ordre cache dans le chaos.",
 	},
-	"racines_4": {
-		"branch": "Corps", "tier": 2,
-		"name": "Coeur de Sanglier",
-		"cost": {"TERRE": 50, "GLACE": 20, "fragments": 3},
-		"prerequisites": ["racines_1", "racines_2"],
-		"effect": {"type": "special_rule", "id": "corps_bas_souffle_bonus"},
-		"description": "Quand Corps = BAS, gagne +2 Souffle au lieu de 0.",
-		"lore": "Plus il tombe bas, plus le Sanglier puise dans ses reserves.",
+	"druides_4": {
+		"branch": "druides", "tier": 4,
+		"name": "Guerison Profonde",
+		"cost": 80,
+		"prerequisites": ["druides_3"],
+		"effect": {"type": "heal_bonus", "value": 1.0},
+		"description": "Double l'effet de guerison des Oghams Recovery.",
+		"lore": "La seve de l'arbre-monde coule dans tes veines.",
 	},
-	"racines_5": {
-		"branch": "Corps", "tier": 2,
-		"name": "Racines Profondes",
-		"cost": {"NATURE": 40, "METAL": 20},
-		"prerequisites": ["racines_2", "racines_3"],
-		"effect": {"type": "special_rule", "id": "equilibre_souffle_double"},
-		"description": "Aspects equilibres: +2 Souffle (au lieu de +1).",
-		"lore": "L'equilibre nourrit les racines les plus profondes.",
+	"druides_5": {
+		"branch": "druides", "tier": 5,
+		"name": "Racine Celeste",
+		"cost": 120,
+		"prerequisites": ["druides_4"],
+		"effect": {"type": "drain_reduction", "value": 2},
+		"description": "Le drain de vie par carte passe de 1 a 0 (annule).",
+		"lore": "L'arbre-monde te nourrit a chaque pas.",
 	},
-	"racines_6": {
-		"branch": "Corps", "tier": 3,
-		"name": "Reservoir Vital",
-		"cost": {"TERRE": 80, "NATURE": 30, "fragments": 6},
-		"prerequisites": ["racines_4"],
-		"effect": {"type": "modify_start", "target": "souffle_max", "value": 2},
-		"description": "Souffle MAX +2 (de 5 a 7).",
-		"lore": "Le Sanglier puise dans une source intarissable.",
-	},
-	"racines_7": {
-		"branch": "Corps", "tier": 3,
-		"name": "Os de la Terre",
-		"cost": {"METAL": 60, "GLACE": 40, "fragments": 5},
-		"prerequisites": ["racines_5"],
-		"effect": {"type": "special_rule", "id": "survive_game_over_once"},
-		"description": "Survit a 1 game over par run (consomme benediction).",
-		"lore": "Les os de la terre ne se brisent qu'une fois.",
-	},
-	"racines_8": {
-		"branch": "Corps", "tier": 4,
-		"name": "Sanglier Ancestral",
-		"cost": {"TERRE": 120, "NATURE": 60, "fragments": 10},
-		"prerequisites": ["racines_6", "racines_7"],
-		"effect": {"type": "special_rule", "id": "corps_haut_positive"},
-		"description": "Corps HAUT devient positif (+1 Souffle, pas de game over).",
-		"lore": "Le Sanglier Ancestral transcende ses limites.",
-	},
-	# ── RAMURES (Ame / Corbeau) ─────────────────────────────────────────────
-	"ramures_1": {
-		"branch": "Ame", "tier": 1,
-		"name": "Clarte Interieure",
-		"cost": {"LUMIERE": 15, "fragments": 1},
+	# ── ANCIENS (Sagesse, tradition, connaissance) ──────────────────────────
+	"anciens_1": {
+		"branch": "anciens", "tier": 1,
+		"name": "Clairvoyance",
+		"cost": 20,
 		"prerequisites": [],
 		"effect": {"type": "special_rule", "id": "reveal_one_effect"},
-		"description": "Revele 1 effet de choix par carte.",
-		"lore": "Le Corbeau voit ce que les yeux ne percoivent pas.",
+		"description": "Revele 1 effet cache par carte.",
+		"lore": "Les ancetres guident ton regard au-dela du visible.",
 	},
-	"ramures_2": {
-		"branch": "Ame", "tier": 1,
-		"name": "Flamme Spirituelle",
-		"cost": {"ESPRIT": 20},
-		"prerequisites": [],
-		"effect": {"type": "modify_start", "target": "awen", "value": 1},
-		"description": "Commence chaque run avec +1 Awen.",
-		"lore": "L'esprit brule plus vif chez ceux qui ecoutent.",
+	"anciens_2": {
+		"branch": "anciens", "tier": 2,
+		"name": "Sagesse Accumulee",
+		"cost": 25,
+		"prerequisites": ["anciens_1"],
+		"effect": {"type": "score_global_bonus", "value": 0.05},
+		"description": "+5% score a tous les minigames.",
+		"lore": "Chaque generation transmet un fragment de maitrise.",
 	},
-	"ramures_3": {
-		"branch": "Ame", "tier": 1,
-		"name": "Echo des Runes",
-		"cost": {"ARCANE": 15},
-		"prerequisites": [],
-		"effect": {"type": "special_rule", "id": "show_minigame_type"},
-		"description": "Voir le type de mini-jeu avant de jouer.",
-		"lore": "Les runes chuchotent l'epreuve a venir.",
-	},
-	"ramures_4": {
-		"branch": "Ame", "tier": 2,
-		"name": "Maitrise d'Awen",
-		"cost": {"ESPRIT": 50, "FOUDRE": 20, "fragments": 3},
-		"prerequisites": ["ramures_1", "ramures_2"],
-		"effect": {"type": "special_rule", "id": "awen_regen_faster"},
-		"description": "Awen se regenere toutes les 4 cartes (au lieu de 5).",
-		"lore": "Le flux d'Awen repond a la maitrise interieure.",
-	},
-	"ramures_5": {
-		"branch": "Ame", "tier": 2,
+	"anciens_3": {
+		"branch": "anciens", "tier": 3,
 		"name": "Troisieme Oeil",
-		"cost": {"LUMIERE": 40, "ARCANE": 20},
-		"prerequisites": ["ramures_1", "ramures_3"],
+		"cost": 50,
+		"prerequisites": ["anciens_2"],
 		"effect": {"type": "special_rule", "id": "predict_next_theme"},
 		"description": "Predit le theme de la prochaine carte.",
-		"lore": "Le troisieme oeil du Corbeau perce le voile du temps.",
+		"lore": "Le troisieme oeil perce le voile du temps.",
 	},
-	"ramures_6": {
-		"branch": "Ame", "tier": 3,
-		"name": "Corbeau Omniscient",
-		"cost": {"LUMIERE": 80, "ESPRIT": 30, "fragments": 6},
-		"prerequisites": ["ramures_4"],
-		"effect": {"type": "special_rule", "id": "reveal_oghams_cheaper"},
-		"description": "Oghams 'reveal' coutent -1 Awen.",
-		"lore": "Le Corbeau voit tout sans effort.",
+	"anciens_4": {
+		"branch": "anciens", "tier": 4,
+		"name": "Bouclier Ancestral",
+		"cost": 80,
+		"prerequisites": ["anciens_3"],
+		"effect": {"type": "special_rule", "id": "resist_damage_once"},
+		"description": "Annule 1 source de degats par run (bouclier).",
+		"lore": "L'armure des ancetres absorbe le premier coup.",
 	},
-	"ramures_7": {
-		"branch": "Ame", "tier": 3,
-		"name": "Memoire des Boucles",
-		"cost": {"ARCANE": 60, "FOUDRE": 40, "fragments": 5},
-		"prerequisites": ["ramures_5"],
-		"effect": {"type": "special_rule", "id": "know_ending_condition"},
-		"description": "Connaitre 1 condition de fin aleatoire au debut de run.",
-		"lore": "Merlin murmure: 'Je me souviens de cette boucle...'",
+	"anciens_5": {
+		"branch": "anciens", "tier": 5,
+		"name": "Immortalite du Souvenir",
+		"cost": 120,
+		"prerequisites": ["anciens_4"],
+		"effect": {"type": "special_rule", "id": "survive_death_once"},
+		"description": "Survit a la mort 1 fois par run (revient a 10 vie).",
+		"lore": "Tant que quelqu'un se souvient, tu ne meurs jamais.",
 	},
-	"ramures_8": {
-		"branch": "Ame", "tier": 4,
-		"name": "Fusion Ame-Bestiole",
-		"cost": {"ESPRIT": 120, "LUMIERE": 60, "fragments": 10},
-		"prerequisites": ["ramures_6", "ramures_7"],
-		"effect": {"type": "modify_start", "target": "bond", "value": 60},
-		"description": "Bond demarre a 60 (tier 'close').",
-		"lore": "L'ame et la Bestiole ne font plus qu'un.",
-	},
-	# ── FEUILLAGE (Monde / Cerf) ────────────────────────────────────────────
-	"feuillage_1": {
-		"branch": "Monde", "tier": 1,
-		"name": "Diplomatie Innee",
-		"cost": {"EAU": 15, "fragments": 1},
+	# ── KORRIGANS (Chaos, malice, fortune) ──────────────────────────────────
+	"korrigans_1": {
+		"branch": "korrigans", "tier": 1,
+		"name": "Doigts de Fee",
+		"cost": 20,
 		"prerequisites": [],
-		"effect": {"type": "cancel_first_shift", "aspect": "Monde", "direction": "up"},
-		"description": "Annule le 1er shift Monde HAUT de chaque run.",
-		"lore": "Le Cerf apaise les conflits avant qu'ils n'eclatent.",
+		"effect": {"type": "special_rule", "id": "bonus_anam_per_run"},
+		"description": "+3 Anam bonus par run completee.",
+		"lore": "Les korrigans savent ou se cachent les tresors.",
 	},
-	"feuillage_2": {
-		"branch": "Monde", "tier": 1,
-		"name": "Flux Harmonieux",
-		"cost": {"AIR": 20},
+	"korrigans_2": {
+		"branch": "korrigans", "tier": 2,
+		"name": "Chance du Lutin",
+		"cost": 25,
+		"prerequisites": ["korrigans_1"],
+		"effect": {"type": "minigame_bonus", "field": "chance", "value": 0.10},
+		"description": "+10% score aux minigames du champ chance.",
+		"lore": "La chance sourit aux esprits farceurs.",
+	},
+	"korrigans_3": {
+		"branch": "korrigans", "tier": 3,
+		"name": "Miroir Inverseur",
+		"cost": 50,
+		"prerequisites": ["korrigans_2"],
+		"effect": {"type": "special_rule", "id": "invert_negative_once"},
+		"description": "Inverse 1 effet negatif en positif par run.",
+		"lore": "Le korrigan retourne la malchance comme un gant.",
+	},
+	"korrigans_4": {
+		"branch": "korrigans", "tier": 4,
+		"name": "Rythme du Chaos",
+		"cost": 80,
+		"prerequisites": ["korrigans_3"],
+		"effect": {"type": "cooldown_reduction", "category": null, "value": 1},
+		"description": "-1 cooldown global sur tous les Oghams.",
+		"lore": "Le chaos accelere le cycle des pouvoirs.",
+	},
+	"korrigans_5": {
+		"branch": "korrigans", "tier": 5,
+		"name": "Tresor du Tertre",
+		"cost": 120,
+		"prerequisites": ["korrigans_4"],
+		"effect": {"type": "special_rule", "id": "double_anam_rewards"},
+		"description": "Double les recompenses Anam en fin de run.",
+		"lore": "Le tertre s'ouvre et revele ses richesses infinies.",
+	},
+	# ── NIAMH (Amour, diplomatie, equilibre) ────────────────────────────────
+	"niamh_1": {
+		"branch": "niamh", "tier": 1,
+		"name": "Douceur de Niamh",
+		"cost": 20,
 		"prerequisites": [],
-		"effect": {"type": "special_rule", "id": "free_center_once"},
-		"description": "1 Centre gratuit par run (0 Souffle).",
-		"lore": "L'air porte le souffle sans effort.",
+		"effect": {"type": "special_rule", "id": "crit_success_heal"},
+		"description": "+5 vie sur chaque succes critique.",
+		"lore": "L'amour de Niamh guerit les blessures invisibles.",
 	},
-	"feuillage_3": {
-		"branch": "Monde", "tier": 1,
-		"name": "Instinct Animal",
-		"cost": {"BETE": 15},
+	"niamh_2": {
+		"branch": "niamh", "tier": 2,
+		"name": "Charme Diplomatique",
+		"cost": 25,
+		"prerequisites": ["niamh_1"],
+		"effect": {"type": "rep_bonus", "value": 0.10},
+		"description": "+10% gains de reputation avec toutes les factions.",
+		"lore": "Ta voix porte la douceur des eaux de Tir na nOg.",
+	},
+	"niamh_3": {
+		"branch": "niamh", "tier": 3,
+		"name": "Voile d'Oubli",
+		"cost": 50,
+		"prerequisites": ["niamh_2"],
+		"effect": {"type": "special_rule", "id": "reduce_rep_loss"},
+		"description": "Les pertes de reputation sont reduites de 50%.",
+		"lore": "Les offenses s'effacent comme brume au soleil.",
+	},
+	"niamh_4": {
+		"branch": "niamh", "tier": 4,
+		"name": "Quatrieme Voie",
+		"cost": 80,
+		"prerequisites": ["niamh_3"],
+		"effect": {"type": "special_rule", "id": "extra_card_option"},
+		"description": "+1 option narrative par carte (3 → 4 choix).",
+		"lore": "La ou les autres voient trois chemins, tu en vois quatre.",
+	},
+	"niamh_5": {
+		"branch": "niamh", "tier": 5,
+		"name": "Source Eternelle",
+		"cost": 120,
+		"prerequisites": ["niamh_4"],
+		"effect": {"type": "special_rule", "id": "passive_heal"},
+		"description": "+2 vie toutes les 5 cartes (regeneration passive).",
+		"lore": "La source de Tir na nOg coule en toi sans fin.",
+	},
+	# ── ANKOU (Mort, sacrifice, risque) ─────────────────────────────────────
+	"ankou_1": {
+		"branch": "ankou", "tier": 1,
+		"name": "Marche avec l'Ombre",
+		"cost": 20,
 		"prerequisites": [],
-		"effect": {"type": "special_rule", "id": "minigame_field_bonus"},
-		"description": "Bonus +5% score sur detection du champ lexical mini-jeu.",
-		"lore": "L'instinct du Cerf devine la nature de l'epreuve.",
+		"effect": {"type": "drain_reduction", "value": 1},
+		"description": "Le drain de vie par carte passe de 1 a 0.",
+		"lore": "L'Ankou ralentit ta chute vers le neant.",
 	},
-	"feuillage_4": {
-		"branch": "Monde", "tier": 2,
-		"name": "Ruse du Renard",
-		"cost": {"POISON": 50, "AIR": 20, "fragments": 3},
-		"prerequisites": ["feuillage_1", "feuillage_2"],
-		"effect": {"type": "special_rule", "id": "critical_dc_reduced"},
-		"description": "Choix critique: DC +2 (au lieu de +4).",
-		"lore": "La ruse adoucit les epreuves les plus dures.",
+	"ankou_2": {
+		"branch": "ankou", "tier": 2,
+		"name": "Regard Sombre",
+		"cost": 25,
+		"prerequisites": ["ankou_1"],
+		"effect": {"type": "minigame_bonus", "field": "esprit", "value": 0.15},
+		"description": "+15% score aux minigames du champ esprit.",
+		"lore": "Celui qui a vu la mort ne craint plus les epreuves.",
 	},
-	"feuillage_5": {
-		"branch": "Monde", "tier": 2,
-		"name": "Courant Adaptable",
-		"cost": {"EAU": 40, "BETE": 20},
-		"prerequisites": ["feuillage_2", "feuillage_3"],
-		"effect": {"type": "special_rule", "id": "biome_change_souffle"},
-		"description": "Changement de biome: +2 Souffle.",
-		"lore": "Comme l'eau, le druide s'adapte a chaque terrain.",
+	"ankou_3": {
+		"branch": "ankou", "tier": 3,
+		"name": "Pacte Sanglant",
+		"cost": 50,
+		"prerequisites": ["ankou_2"],
+		"effect": {"type": "special_rule", "id": "sacrifice_life_for_anam"},
+		"description": "Sacrifie 10 vie pour gagner 20 Anam (1 fois par run).",
+		"lore": "Le sang verse nourrit les racines du monde.",
 	},
-	"feuillage_6": {
-		"branch": "Monde", "tier": 3,
-		"name": "Cerf Communaute",
-		"cost": {"AIR": 80, "EAU": 30, "fragments": 6},
-		"prerequisites": ["feuillage_4"],
-		"effect": {"type": "special_rule", "id": "unlock_alliance_missions"},
-		"description": "Debloque les missions 'Alliance' (haute recompense).",
-		"lore": "Le troupeau du Cerf ouvre des chemins nouveaux.",
+	"ankou_4": {
+		"branch": "ankou", "tier": 4,
+		"name": "Prescience Funebre",
+		"cost": 80,
+		"prerequisites": ["ankou_3"],
+		"effect": {"type": "special_rule", "id": "see_next_card_full"},
+		"description": "Voir le theme ET les effets de la prochaine carte.",
+		"lore": "L'Ankou connait le destin de chaque ame.",
 	},
-	"feuillage_7": {
-		"branch": "Monde", "tier": 3,
-		"name": "Venin Bienveillant",
-		"cost": {"POISON": 60, "BETE": 40, "fragments": 5},
-		"prerequisites": ["feuillage_5"],
-		"effect": {"type": "special_rule", "id": "negative_effects_reduced"},
-		"description": "Effets negatifs -30% (arrondis).",
-		"lore": "Le venin, a petite dose, devient remede.",
+	"ankou_5": {
+		"branch": "ankou", "tier": 5,
+		"name": "Recolte Sombre",
+		"cost": 120,
+		"prerequisites": ["ankou_4"],
+		"effect": {"type": "special_rule", "id": "low_life_bonus"},
+		"description": "Recompenses Anam +50% si vie <= 25 en fin de run.",
+		"lore": "Plus tu frolais la mort, plus ta recolte est riche.",
 	},
-	"feuillage_8": {
-		"branch": "Monde", "tier": 4,
-		"name": "Roi sans Couronne",
-		"cost": {"EAU": 120, "AIR": 60, "fragments": 10},
-		"prerequisites": ["feuillage_6", "feuillage_7"],
-		"effect": {"type": "special_rule", "id": "tyran_juste_ending"},
-		"description": "Monde HAUT debloque la fin secrete 'Tyran Juste'.",
-		"lore": "Le Cerf qui guide sans regner atteint la vraie puissance.",
+	# ── CENTRAL (Universel, equilibre, progression) ─────────────────────────
+	"central_1": {
+		"branch": "central", "tier": 1,
+		"name": "Coeur Fortifie",
+		"cost": 20,
+		"prerequisites": [],
+		"effect": {"type": "modify_start", "target": "life_max", "value": 10},
+		"description": "Vie max +10 (100 → 110).",
+		"lore": "Le coeur du druide bat plus fort que la pierre.",
 	},
-	# ── TRONC (Universel) ───────────────────────────────────────────────────
-	"tronc_1": {
-		"branch": "Universel", "tier": 2,
-		"name": "Equilibre des Feux",
-		"cost": {"FEU": 40, "fragments": 3},
-		"prerequisites": ["racines_1", "ramures_1", "feuillage_1"],
-		"effect": {"type": "special_rule", "id": "flux_start_balanced"},
-		"description": "Flux commencent a 50/50/50 (au lieu de 50/30/40).",
-		"lore": "Les trois feux s'alignent a l'aurore.",
+	"central_2": {
+		"branch": "central", "tier": 2,
+		"name": "Flux Accelere",
+		"cost": 25,
+		"prerequisites": ["central_1"],
+		"effect": {"type": "cooldown_reduction", "category": null, "value": 1},
+		"description": "-1 cooldown global sur tous les Oghams.",
+		"lore": "Le flux d'Ogham repond plus vite a ta volonte.",
 	},
-	"tronc_2": {
-		"branch": "Universel", "tier": 3,
-		"name": "Voile Perce",
-		"cost": {"OMBRE": 80, "FEU": 40, "fragments": 6},
-		"prerequisites": ["tronc_1"],
-		"effect": {"type": "special_rule", "id": "show_flux_hints"},
-		"description": "Voir Karma et Flux (indices textuels) pendant la run.",
-		"lore": "Derriere le voile, les courants se revelent.",
+	"central_3": {
+		"branch": "central", "tier": 3,
+		"name": "Oeil de Merlin",
+		"cost": 50,
+		"prerequisites": ["central_2"],
+		"effect": {"type": "special_rule", "id": "show_karma_tension"},
+		"description": "Affiche karma et tension dans le HUD.",
+		"lore": "Merlin te revele les courants invisibles du monde.",
 	},
-	"tronc_3": {
-		"branch": "Universel", "tier": 3,
-		"name": "Triade Parfaite",
-		"cost": {"FEU": 60, "OMBRE": 60, "fragments": 8},
-		"prerequisites": ["racines_4", "ramures_4", "feuillage_4"],
-		"effect": {"type": "special_rule", "id": "triade_parfaite_bonus"},
-		"description": "3 aspects equilibres: +3 Souffle + ignore prochain shift negatif.",
-		"lore": "L'harmonie parfaite accorde un souffle divin.",
+	"central_4": {
+		"branch": "central", "tier": 4,
+		"name": "Maitrise Universelle",
+		"cost": 80,
+		"prerequisites": ["central_3"],
+		"effect": {"type": "score_global_bonus", "value": 0.10},
+		"description": "+10% score a tous les minigames.",
+		"lore": "La maitrise transcende les frontieres du savoir.",
 	},
-	"tronc_4": {
-		"branch": "Universel", "tier": 4,
-		"name": "Boucle Eternelle",
-		"cost": {"FEU": 150, "OMBRE": 150, "fragments": 20},
-		"prerequisites": ["tronc_2", "tronc_3"],
-		"effect": {"type": "special_rule", "id": "new_game_plus"},
-		"description": "New Game+: essences x1.5, fin secrete ultime.",
-		"lore": "La boucle se referme. Et recommence, plus forte.",
-	},
-	# ── CALENDRIER DES BRUMES (CAL-REQ-050) ────────────────────────────────
+	# ── SPECIAUX (Cross-faction, tier 2-3) ──────────────────────────────────
 	"calendrier_des_brumes": {
-		"branch": "Ame", "tier": 2,
+		"branch": "central", "tier": 2,
 		"name": "Calendrier des Brumes",
-		"cost": {"ESPRIT": 40, "OMBRE": 25, "fragments": 3},
-		"prerequisites": ["ramures_1"],
+		"cost": 30,
+		"prerequisites": ["central_1"],
 		"effect": {"type": "special_rule", "id": "calendrier_des_brumes"},
 		"description": "Revele 7 prochains evenements. Primes aux evenements atteints.",
 		"lore": "A travers les brumes, Merlin te montre ce qui vient...",
+	},
+	"harmonie_factions": {
+		"branch": "central", "tier": 3,
+		"name": "Harmonie des Factions",
+		"cost": 60,
+		"prerequisites": ["druides_1", "anciens_1", "korrigans_1"],
+		"effect": {"type": "special_rule", "id": "harmony_anam_bonus"},
+		"description": "+5 Anam/run si toutes les factions sont >= 50.",
+		"lore": "L'harmonie entre les peuples nourrit l'ame du monde.",
+	},
+	"pacte_ombre_lumiere": {
+		"branch": "central", "tier": 3,
+		"name": "Pacte Ombre-Lumiere",
+		"cost": 60,
+		"prerequisites": ["niamh_1", "ankou_1"],
+		"effect": {"type": "special_rule", "id": "invert_heal_damage_once"},
+		"description": "Inverse heal et damage 1 fois par run.",
+		"lore": "Quand l'ombre et la lumiere s'unissent, tout s'inverse.",
+	},
+	"eveil_ogham": {
+		"branch": "central", "tier": 2,
+		"name": "Eveil d'Ogham",
+		"cost": 35,
+		"prerequisites": ["druides_1"],
+		"effect": {"type": "special_rule", "id": "extra_ogham_slot"},
+		"description": "Equipe 1 Ogham supplementaire (1 → 2 actifs).",
+		"lore": "L'eveil ouvre un second canal vers le pouvoir ancien.",
+	},
+	"instinct_sauvage": {
+		"branch": "central", "tier": 2,
+		"name": "Instinct Sauvage",
+		"cost": 35,
+		"prerequisites": ["korrigans_1", "anciens_1"],
+		"effect": {"type": "special_rule", "id": "minigame_retry_once"},
+		"description": "1 retry gratuit de minigame par run.",
+		"lore": "L'instinct sauvage offre une seconde chance.",
+	},
+	"boucle_eternelle": {
+		"branch": "central", "tier": 4,
+		"name": "Boucle Eternelle",
+		"cost": 150,
+		"prerequisites": ["central_4", "harmonie_factions"],
+		"effect": {"type": "special_rule", "id": "new_game_plus"},
+		"description": "New Game+: Anam x1.5 par run.",
+		"lore": "La boucle se referme. Et recommence, plus forte.",
 	},
 }
 
@@ -583,7 +618,7 @@ const TALENT_BRANCH_COLORS := {
 }
 
 # Talent tier names
-const TALENT_TIER_NAMES := {1: "Germe", 2: "Pousse", 3: "Branche", 4: "Cime"}
+const TALENT_TIER_NAMES := {1: "Germe", 2: "Pousse", 3: "Branche", 4: "Cime", 5: "Racine Celeste"}
 
 # ═══════════════════════════════════════════════════════════════════════════════
 # BIOME SYSTEM — 8 Celtic Biomes (Phase 37)
@@ -815,9 +850,7 @@ const FACTION_KEYWORDS := {
 # Réf : docs/20_card_system/DOC_17_Run_Rules_Officiel.md
 # ═══════════════════════════════════════════════════════════════════════════════
 
-const ESSENCE_BASE_REWARD := 1       # +1 essence par carte résolue (base)
-const ESSENCE_TREASURE_REWARD := 15  # +15 essences pour une carte trésor
-const ESSENCE_START := 0             # Essences au démarrage d'un run (elles viennent du meta)
+const ANAM_START := 0                # Anam au démarrage d'un run (cross-run currency)
 
 
 # ═══════════════════════════════════════════════════════════════════════════════

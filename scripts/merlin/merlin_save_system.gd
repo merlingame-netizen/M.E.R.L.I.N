@@ -1,282 +1,206 @@
 extends RefCounted
 class_name MerlinSaveSystem
 
-const CURRENT_VERSION := "0.4.0"
-const SLOT_COUNT := 3
-const SLOT_PATH := "user://merlin_save_slot_%d.json"
-const AUTOSAVE_PATH := "user://merlin_autosave.json"
+const CURRENT_VERSION := "1.0.0"
+const PROFILE_PATH := "user://merlin_profile.json"
 const BACKUP_SUFFIX := ".bak"
 
+# Legacy paths (for migration cleanup)
+const LEGACY_SLOT_PATH := "user://merlin_save_slot_%d.json"
+const LEGACY_AUTOSAVE_PATH := "user://merlin_autosave.json"
+const LEGACY_SLOT_COUNT := 3
+
 
 # ═══════════════════════════════════════════════════════════════════════════════
-# SAVE
+# PUBLIC API
 # ═══════════════════════════════════════════════════════════════════════════════
 
-func save_slot(slot: int, payload: Dictionary) -> bool:
-	if not _is_valid_slot(slot):
-		return false
-	var path := SLOT_PATH % slot
-	return _save_to_path(path, payload)
-
-
-func save_autosave(payload: Dictionary) -> bool:
-	var data := payload.duplicate(true)
-	data["_is_autosave"] = true
-	return _save_to_path(AUTOSAVE_PATH, data)
-
-
-func _save_to_path(path: String, payload: Dictionary) -> bool:
-	_backup_file(path)
-	var data := payload.duplicate(true)
-	data["version"] = CURRENT_VERSION
-	data["timestamp"] = int(Time.get_unix_time_from_system())
-	var json_text := JSON.stringify(data, "\t")
-	var file := FileAccess.open(path, FileAccess.WRITE)
+func save_profile(meta: Dictionary) -> bool:
+	_backup_file(PROFILE_PATH)
+	var data: Dictionary = {
+		"version": CURRENT_VERSION,
+		"timestamp": int(Time.get_unix_time_from_system()),
+		"meta": meta.duplicate(true),
+	}
+	var json_text: String = JSON.stringify(data, "\t")
+	var file: FileAccess = FileAccess.open(PROFILE_PATH, FileAccess.WRITE)
 	if file == null:
-		push_warning("[MerlinSave] Cannot write to %s" % path)
+		push_warning("[MerlinSave] Cannot write to %s" % PROFILE_PATH)
 		return false
 	file.store_string(json_text)
 	file.close()
 	return true
 
 
-# ═══════════════════════════════════════════════════════════════════════════════
-# LOAD
-# ═══════════════════════════════════════════════════════════════════════════════
-
-func load_slot(slot: int, default_state: Dictionary = {}) -> Dictionary:
-	if not _is_valid_slot(slot):
-		return {}
-	return _load_from_path(SLOT_PATH % slot, default_state)
-
-
-func load_autosave(default_state: Dictionary = {}) -> Dictionary:
-	return _load_from_path(AUTOSAVE_PATH, default_state)
-
-
-func _load_from_path(path: String, default_state: Dictionary = {}) -> Dictionary:
-	var data := _try_load_file(path)
+func load_profile() -> Dictionary:
+	var data: Dictionary = _try_load_file(PROFILE_PATH)
 	if data.is_empty():
-		var bak_path := path + BACKUP_SUFFIX
+		# Try backup
+		var bak_path: String = PROFILE_PATH + BACKUP_SUFFIX
 		if FileAccess.file_exists(bak_path):
 			data = _try_load_file(bak_path)
 			if not data.is_empty():
-				push_warning("[MerlinSave] Primary corrupted, loaded from backup: %s" % bak_path)
+				push_warning("[MerlinSave] Primary corrupted, loaded from backup")
+	if data.is_empty():
+		# Try migrating from legacy slot 1
+		data = _try_migrate_from_legacy()
 	if data.is_empty():
 		return {}
-	return migrate(data, default_state)
+	# Migrate if needed
+	var version: String = str(data.get("version", "0.4.0"))
+	if version != CURRENT_VERSION:
+		data = _migrate(data)
+	return data.get("meta", {})
 
+
+func profile_exists() -> bool:
+	return FileAccess.file_exists(PROFILE_PATH)
+
+
+func reset_profile() -> void:
+	if FileAccess.file_exists(PROFILE_PATH):
+		DirAccess.remove_absolute(PROFILE_PATH)
+	var bak_path: String = PROFILE_PATH + BACKUP_SUFFIX
+	if FileAccess.file_exists(bak_path):
+		DirAccess.remove_absolute(bak_path)
+
+
+func get_profile_info() -> Dictionary:
+	var meta: Dictionary = load_profile()
+	if meta.is_empty():
+		return {}
+	return {
+		"anam": int(meta.get("anam", 0)),
+		"total_runs": int(meta.get("total_runs", 0)),
+		"talents_unlocked": meta.get("talent_tree", {}).get("unlocked", []).size(),
+		"endings_seen": meta.get("endings_seen", []).size(),
+		"faction_rep": meta.get("faction_rep", {}),
+	}
+
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# MIGRATION — 0.4.0 → 1.0.0
+# ═══════════════════════════════════════════════════════════════════════════════
+
+func _migrate(data: Dictionary) -> Dictionary:
+	var migrated: Dictionary = data.duplicate(true)
+	var meta: Dictionary = migrated.get("meta", {})
+
+	# Convert essence sum to anam
+	var essence: Dictionary = meta.get("essence", {})
+	var essence_total: int = 0
+	for element in essence:
+		essence_total += int(essence[element])
+	meta["anam"] = int(meta.get("anam", 0)) + essence_total
+
+	# Remove dead currencies
+	meta.erase("essence")
+	meta.erase("ogham_fragments")
+	meta.erase("liens")
+	meta.erase("gloire_points")
+	meta.erase("bestiole_evolution")
+	meta.erase("unlocked_evolutions")
+
+	# Rename humains → niamh in faction_rep (if not already done)
+	var faction_rep: Dictionary = meta.get("faction_rep", {})
+	if faction_rep.has("humains") and not faction_rep.has("niamh"):
+		faction_rep["niamh"] = faction_rep["humains"]
+		faction_rep.erase("humains")
+		meta["faction_rep"] = faction_rep
+
+	# Ensure required keys
+	if not meta.has("talent_tree"):
+		meta["talent_tree"] = {"unlocked": []}
+	if not meta.has("total_runs"):
+		meta["total_runs"] = 0
+	if not meta.has("endings_seen"):
+		meta["endings_seen"] = []
+	if not meta.has("faction_rep"):
+		meta["faction_rep"] = {
+			"druides": 50.0, "anciens": 50.0, "korrigans": 50.0,
+			"niamh": 50.0, "ankou": 50.0,
+		}
+
+	migrated["meta"] = meta
+	migrated["version"] = CURRENT_VERSION
+	return migrated
+
+
+func _try_migrate_from_legacy() -> Dictionary:
+	# Try loading from legacy slot 1, then autosave
+	var legacy_data: Dictionary = {}
+	for slot in range(1, LEGACY_SLOT_COUNT + 1):
+		var path: String = LEGACY_SLOT_PATH % slot
+		if FileAccess.file_exists(path):
+			legacy_data = _try_load_file(path)
+			if not legacy_data.is_empty():
+				break
+	if legacy_data.is_empty() and FileAccess.file_exists(LEGACY_AUTOSAVE_PATH):
+		legacy_data = _try_load_file(LEGACY_AUTOSAVE_PATH)
+	if legacy_data.is_empty():
+		return {}
+	# Wrap in profile format and migrate
+	var profile_data: Dictionary = {
+		"version": str(legacy_data.get("version", "0.4.0")),
+		"meta": legacy_data.get("meta", {}),
+	}
+	var migrated: Dictionary = _migrate(profile_data)
+	# Save as new profile and cleanup legacy
+	save_profile(migrated.get("meta", {}))
+	_cleanup_legacy_files()
+	push_warning("[MerlinSave] Migrated legacy save to profile v1.0.0")
+	return migrated
+
+
+func _cleanup_legacy_files() -> void:
+	for slot in range(1, LEGACY_SLOT_COUNT + 1):
+		var path: String = LEGACY_SLOT_PATH % slot
+		if FileAccess.file_exists(path):
+			DirAccess.remove_absolute(path)
+		var bak: String = path + BACKUP_SUFFIX
+		if FileAccess.file_exists(bak):
+			DirAccess.remove_absolute(bak)
+	if FileAccess.file_exists(LEGACY_AUTOSAVE_PATH):
+		DirAccess.remove_absolute(LEGACY_AUTOSAVE_PATH)
+	var autosave_bak: String = LEGACY_AUTOSAVE_PATH + BACKUP_SUFFIX
+	if FileAccess.file_exists(autosave_bak):
+		DirAccess.remove_absolute(autosave_bak)
+
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# INTERNAL
+# ═══════════════════════════════════════════════════════════════════════════════
 
 func _try_load_file(path: String) -> Dictionary:
 	if not FileAccess.file_exists(path):
 		return {}
-	var file := FileAccess.open(path, FileAccess.READ)
+	var file: FileAccess = FileAccess.open(path, FileAccess.READ)
 	if file == null:
 		return {}
-	var json_text := file.get_as_text()
+	var json_text: String = file.get_as_text()
 	file.close()
 	if json_text.strip_edges().is_empty():
 		return {}
-	var json := JSON.new()
+	var json: JSON = JSON.new()
 	if json.parse(json_text) != OK:
 		push_warning("[MerlinSave] JSON parse error in %s: %s" % [path, json.get_error_message()])
 		return {}
 	var data = json.get_data()
-	if not _validate_save_json(data):
+	if typeof(data) != TYPE_DICTIONARY:
 		push_warning("[MerlinSave] Invalid save structure in %s" % path)
 		return {}
 	return data
 
 
-# ═══════════════════════════════════════════════════════════════════════════════
-# SLOT MANAGEMENT
-# ═══════════════════════════════════════════════════════════════════════════════
-
-func delete_slot(slot: int) -> void:
-	if not _is_valid_slot(slot):
-		return
-	var path := SLOT_PATH % slot
-	if FileAccess.file_exists(path):
-		DirAccess.remove_absolute(path)
-	var bak_path := path + BACKUP_SUFFIX
-	if FileAccess.file_exists(bak_path):
-		DirAccess.remove_absolute(bak_path)
-
-
-func slot_exists(slot: int) -> bool:
-	if not _is_valid_slot(slot):
-		return false
-	return FileAccess.file_exists(SLOT_PATH % slot)
-
-
-func autosave_exists() -> bool:
-	return FileAccess.file_exists(AUTOSAVE_PATH)
-
-
-func get_slot_info(slot: int) -> Dictionary:
-	var data := load_slot(slot)
-	if data.is_empty():
-		return {}
-	return {
-		"version": data.get("version", ""),
-		"timestamp": data.get("timestamp", 0),
-		"phase": data.get("phase", ""),
-		"cards_played": data.get("run", {}).get("cards_played", 0),
-		"mode": data.get("mode", ""),
-	}
-
-
-func get_autosave_info() -> Dictionary:
-	var data := load_autosave()
-	if data.is_empty():
-		return {}
-	return {
-		"version": data.get("version", ""),
-		"timestamp": data.get("timestamp", 0),
-		"phase": data.get("phase", ""),
-		"cards_played": data.get("run", {}).get("cards_played", 0),
-		"mode": data.get("mode", ""),
-		"_is_autosave": true,
-	}
-
-
-# ═══════════════════════════════════════════════════════════════════════════════
-# VALIDATION
-# ═══════════════════════════════════════════════════════════════════════════════
-
-func _validate_save_json(data) -> bool:
-	if typeof(data) != TYPE_DICTIONARY:
-		return false
-	if not data.has("version"):
-		return false
-	if not data.has("run") or typeof(data.get("run")) != TYPE_DICTIONARY:
-		return false
-	return true
-
-
 func _backup_file(path: String) -> void:
 	if not FileAccess.file_exists(path):
 		return
-	var src := FileAccess.open(path, FileAccess.READ)
+	var src: FileAccess = FileAccess.open(path, FileAccess.READ)
 	if src == null:
 		return
-	var content := src.get_as_text()
+	var content: String = src.get_as_text()
 	src.close()
-	var dst := FileAccess.open(path + BACKUP_SUFFIX, FileAccess.WRITE)
+	var dst: FileAccess = FileAccess.open(path + BACKUP_SUFFIX, FileAccess.WRITE)
 	if dst:
 		dst.store_string(content)
 		dst.close()
-
-
-# ═══════════════════════════════════════════════════════════════════════════════
-# MIGRATION
-# ═══════════════════════════════════════════════════════════════════════════════
-
-func migrate(payload: Dictionary, default_state: Dictionary = {}) -> Dictionary:
-	var data := payload.duplicate(true)
-	var version := str(data.get("version", "0.1.0"))
-
-	if version == "0.1.0":
-		data = _migrate_0_1_to_0_2(data)
-		version = "0.2.0"
-	if version == "0.2.0":
-		data = _migrate_0_2_to_0_3(data)
-		version = "0.3.0"
-	if version == "0.3.0":
-		data = _migrate_0_3_to_0_4(data)
-		version = "0.4.0"
-
-	data["version"] = CURRENT_VERSION
-	if not default_state.is_empty():
-		data = _merge_missing(default_state, data)
-	return data
-
-
-func _migrate_0_1_to_0_2(data: Dictionary) -> Dictionary:
-	var run: Dictionary = data.get("run", {})
-	if not run.has("aspects"):
-		run["aspects"] = {"Corps": 0, "Ame": 0, "Monde": 0}
-	if not run.has("souffle"):
-		run["souffle"] = 3  # Legacy default (Souffle removed in v0.4)
-	if not run.has("souffle_used_once"):
-		run["souffle_used_once"] = false
-	if not run.has("cards_played"):
-		run["cards_played"] = 0
-	if not run.has("day"):
-		run["day"] = 1
-	if not run.has("hidden"):
-		run["hidden"] = {"karma": 0, "tension": 0, "player_profile": {}, "resonances_active": [], "narrative_debt": []}
-	data["run"] = run
-	if not data.has("mode"):
-		data["mode"] = "merlin"
-	data["version"] = "0.2.0"
-	return data
-
-
-func _migrate_0_2_to_0_3(data: Dictionary) -> Dictionary:
-	var run: Dictionary = data.get("run", {})
-	if not run.has("mission"):
-		run["mission"] = {"type": "", "target": "", "progress": 0, "total": 0, "revealed": false}
-	if not run.has("active_tags"):
-		run["active_tags"] = []
-	if not run.has("active_promises"):
-		run["active_promises"] = []
-	if not run.has("effect_modifier"):
-		run["effect_modifier"] = {}
-	if not run.has("story_log"):
-		run["story_log"] = []
-	data["run"] = run
-	var bestiole: Dictionary = data.get("bestiole", {})
-	if not bestiole.has("awen"):
-		bestiole["awen"] = 3
-	if not bestiole.has("awen_regen_counter"):
-		bestiole["awen_regen_counter"] = 0
-	if not bestiole.has("skills_unlocked"):
-		bestiole["skills_unlocked"] = ["beith", "luis", "quert"]
-	if not bestiole.has("skills_equipped"):
-		bestiole["skills_equipped"] = bestiole.get("skills_unlocked", []).duplicate()
-	if not bestiole.has("skill_cooldowns"):
-		bestiole["skill_cooldowns"] = {}
-	data["bestiole"] = bestiole
-	var meta: Dictionary = data.get("meta", {})
-	if not meta.has("talent_tree"):
-		meta["talent_tree"] = {"unlocked": []}
-	if not meta.has("bestiole_evolution"):
-		meta["bestiole_evolution"] = {"stage": 1, "path": ""}
-	if not meta.has("total_runs"):
-		meta["total_runs"] = 0
-	if not meta.has("total_cards_played"):
-		meta["total_cards_played"] = 0
-	if not meta.has("endings_seen"):
-		meta["endings_seen"] = []
-	if not meta.has("gloire_points"):
-		meta["gloire_points"] = 0
-	data["meta"] = meta
-	data["version"] = "0.3.0"
-	return data
-
-
-func _migrate_0_3_to_0_4(data: Dictionary) -> Dictionary:
-	if not data.has("map_progression"):
-		data["map_progression"] = {
-			"gauges": {"esprit": 30, "vigueur": 50, "faveur": 40, "logique": 35, "ressources": 45},
-			"current_biome": "foret_broceliande",
-			"completed_biomes": [],
-			"visited_biomes": ["foret_broceliande"],
-			"items_collected": [],
-			"reputations": [],
-			"tier_progress": 1,
-		}
-	data["version"] = "0.4.0"
-	return data
-
-
-func _merge_missing(default_state: Dictionary, data: Dictionary) -> Dictionary:
-	var merged := default_state.duplicate(true)
-	for key in data:
-		merged[key] = data[key]
-	return merged
-
-
-func _is_valid_slot(slot: int) -> bool:
-	return slot >= 1 and slot <= SLOT_COUNT

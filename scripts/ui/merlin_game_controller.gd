@@ -2,7 +2,7 @@
 ## Merlin Game Controller — Store-UI Bridge (v1.0.0 — Fusion Phase 37)
 ## ═══════════════════════════════════════════════════════════════════════════════
 ## Full gameplay controller: D20 dice, 15 minigames, critical choices,
-## flux/talents/biome passives, karma/blessings/adaptive difficulty,
+## talents/biome passives, karma/blessings/adaptive difficulty,
 ## narrative reactions, travel animations, SFX choreography.
 ## ═══════════════════════════════════════════════════════════════════════════════
 
@@ -154,7 +154,6 @@ func _connect_signals() -> void:
 	# Store signals
 	if store:
 		store.state_changed.connect(_on_state_changed)
-		store.souffle_changed.connect(_on_souffle_changed)
 		store.life_changed.connect(_on_life_changed)
 		store.run_ended.connect(_on_run_ended)
 		store.mission_progress.connect(_on_mission_progress)
@@ -163,24 +162,15 @@ func _connect_signals() -> void:
 	if ui:
 		ui.option_chosen.connect(_on_option_chosen)
 		ui.pause_requested.connect(_on_pause_requested)
-		if ui.has_signal("souffle_activated"):
-			ui.souffle_activated.connect(func(): print("[TRIADE] Souffle d'Ogham activated by player"))
 		if ui.has_signal("merlin_dialogue_requested"):
 			ui.merlin_dialogue_requested.connect(_on_merlin_dialogue_requested)
 		if ui.has_signal("journal_requested"):
 			ui.journal_requested.connect(_on_journal_requested)
 
-	# Bestiole wheel signals
-	if ui and ui.bestiole_wheel:
-		ui.bestiole_wheel.wheel_opened.connect(_on_wheel_open_requested)
-		ui.bestiole_wheel.ogham_selected.connect(_on_ogham_selected)
-
-	# Store bestiole signals
-	if store:
-		if store.has_signal("awen_changed"):
-			store.awen_changed.connect(_on_awen_changed)
-		if store.has_signal("bond_tier_changed"):
-			store.bond_tier_changed.connect(_on_bond_tier_changed)
+	# Ogham wheel signals (active system — oghams are independent of bestiole)
+	if ui and ui.has("ogham_wheel") and ui.ogham_wheel:
+		if ui.ogham_wheel.has_signal("ogham_selected"):
+			ui.ogham_wheel.ogham_selected.connect(_on_ogham_selected)
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
@@ -796,10 +786,7 @@ func _resolve_choice(option: int) -> void:
 	# --- 1. Compute DC ---
 	var dc: int = _get_dc_for_direction(direction)
 
-	# --- 2. Update Flux based on choice direction ---
-	_update_flux(direction)
-
-	# --- 3. Determine dice roll or minigame ---
+	# --- 2. Determine dice roll or minigame ---
 	var dice_result: int = 0
 	var use_minigame: bool = not headless_mode and randf() < minigame_chance and _cards_this_run >= 2
 	if _is_critical_choice and not headless_mode:
@@ -821,11 +808,6 @@ func _resolve_choice(option: int) -> void:
 	if headless_mode:
 		# Headless: instant dice roll, no UI animations
 		dice_result = randi_range(1, 20)
-		if ui and is_instance_valid(ui) and ui.is_souffle_active():
-			dice_result = mini(dice_result + _get_souffle_perk_dc_bonus(), 20)
-			ui.consume_souffle_active()
-			if store and store.has_method("use_souffle"):
-				store.use_souffle()
 	elif use_minigame:
 		dice_result = await _run_minigame(direction, dc, chance_minigame)
 	else:
@@ -888,10 +870,7 @@ func _resolve_choice(option: int) -> void:
 	# --- 10. Update karma ---
 	_update_karma(outcome, direction)
 
-	# --- 11. Souffle bonus ---
-	_apply_souffle_bonus(outcome)
-
-	# --- 12. Record quest history ---
+	# --- 11. Record quest history ---
 	_quest_history.append({"card_idx": _cards_this_run, "choice": direction, "outcome": outcome, "d20": dice_result, "dc": dc})
 
 	# --- 12a. Track prerun choices for sequel cards ---
@@ -1043,9 +1022,6 @@ func _check_power_milestone() -> void:
 				var bonuses: Dictionary = run_state.get("power_bonuses", {})
 				bonuses["dc_reduction"] = int(bonuses.get("dc_reduction", 0)) + mval
 				run_state["power_bonuses"] = bonuses
-		"SOUFFLE_RECOVER":
-			if store:
-				store.dispatch({"type": "TRIADE_ADD_SOUFFLE", "amount": mval})
 	# Show popup + sound
 	if ui and is_instance_valid(ui) and ui.has_method("show_milestone_popup"):
 		ui.show_milestone_popup(str(ms.get("label", "")), str(ms.get("desc", "")))
@@ -1083,17 +1059,6 @@ func _run_dice_roll(dc: int) -> int:
 	## Animate D20 dice roll. Returns final value (1-20).
 	_try_tutorial("first_dice_roll")
 	var target: int = randi_range(1, 20)
-
-	# Souffle d'Ogham bonus: perk-dependent (B.1)
-	if ui and is_instance_valid(ui) and ui.is_souffle_active():
-		var perk_bonus: int = _get_souffle_perk_dc_bonus()
-		target = mini(target + perk_bonus, 20)
-		ui.consume_souffle_active()
-		if store and store.has_method("use_souffle"):
-			store.use_souffle()
-		_apply_souffle_perk_side_effect()
-		print("[TRIADE] Souffle bonus applied: +%d → D20=%d" % [perk_bonus, target])
-		_try_tutorial("first_souffle_spent")
 
 	SFXManager.play("dice_shake")
 	if is_inside_tree():
@@ -1266,16 +1231,8 @@ func _get_dc_for_direction(direction: String) -> int:
 				consecutive_wins += 1
 		if consecutive_fails >= 3:
 			modifier = -4  # Pity mode
-			if store:
-				store.dispatch({"type": "TRIADE_ADD_SOUFFLE", "amount": 1})
 		elif consecutive_wins >= 3:
 			modifier = 2  # Challenge mode
-			# Souffle recovery on 3 consecutive successes
-			if store:
-				var cur_souffle: int = int(store.state.get("run", {}).get("souffle", 0))
-				if cur_souffle < MerlinConstants.SOUFFLE_MAX:
-					store.dispatch({"type": "TRIADE_ADD_SOUFFLE", "amount": 1})
-					print("[TRIADE] 3 wins streak! Souffle recovered +1")
 
 	# Critical choice modifier
 	if _is_critical_choice:
@@ -1283,15 +1240,6 @@ func _get_dc_for_direction(direction: String) -> int:
 		if store and store.has_method("is_talent_active") and store.is_talent_active("feuillage_4"):
 			crit_penalty = 2
 		modifier += crit_penalty
-
-	# Flux Lien modifier
-	if store:
-		var flux: Dictionary = store.state.get("run", {}).get("flux", {})
-		var lien_val: int = int(flux.get("lien", 40))
-		if lien_val <= 30:
-			modifier -= 2
-		elif lien_val >= 70:
-			modifier += 3
 
 	# Biome difficulty modifier
 	if store and store.biomes:
@@ -1417,14 +1365,6 @@ func _modulate_effects(base_effects: Array, outcome: String, _direction: String)
 	if outcome == "critical_success" and store:
 		store.dispatch({"type": "TRIADE_HEAL_LIFE", "amount": MerlinConstants.LIFE_ESSENCE_CRIT_SUCCESS_HEAL})
 		print("[TRIADE] Critical success! Life essence +%d" % MerlinConstants.LIFE_ESSENCE_CRIT_SUCCESS_HEAL)
-		# Souffle recovery on nat 20
-		var current_souffle: int = int(store.state.get("run", {}).get("souffle", 0))
-		var max_souffle: int = MerlinConstants.SOUFFLE_MAX
-		if current_souffle < max_souffle:
-			store.dispatch({"type": "TRIADE_ADD_SOUFFLE", "amount": 1})
-			print("[TRIADE] Nat 20! Souffle recovered +1")
-			if ui and is_instance_valid(ui) and ui.has_method("show_milestone_popup"):
-				ui.show_milestone_popup("Souffle retrouve!", "+1 Souffle (nat 20)")
 
 	# Talent: feuillage_7 — Negative effects -30%
 	if store and store.has_method("is_talent_active") and store.is_talent_active("feuillage_7"):
@@ -1857,18 +1797,6 @@ func _apply_chance_modifier_effects(effects: Array, outcome: String) -> Array:
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
-# FLUX SYSTEM
-# ═══════════════════════════════════════════════════════════════════════════════
-
-func _update_flux(direction: String) -> void:
-	if not store:
-		return
-	var delta: Dictionary = MerlinConstants.FLUX_CHOICE_DELTA.get(direction, {})
-	if not delta.is_empty():
-		store.dispatch({"type": "TRIADE_UPDATE_FLUX", "delta": delta})
-
-
-# ═══════════════════════════════════════════════════════════════════════════════
 # BIOME PASSIVES
 # ═══════════════════════════════════════════════════════════════════════════════
 
@@ -1968,9 +1896,6 @@ func _apply_run_rewards(ending: Dictionary) -> void:
 		return
 	var run_data := {
 		"victory": ending.get("victory", false),
-		"flux": store.state.get("run", {}).get("flux", {}).duplicate(),
-		"all_balanced": store.is_all_aspects_balanced() if store.has_method("is_all_aspects_balanced") else false,
-		"bond": store.get_bestiole_bond() if store.has_method("get_bestiole_bond") else 0,
 		"minigames_won": _minigames_won,
 		"score": ending.get("score", 0),
 		"cards_played": _cards_this_run,
