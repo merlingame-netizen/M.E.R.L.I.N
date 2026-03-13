@@ -192,6 +192,53 @@ python tools/cli.py browser screenshot --query "https://example.com" --out "scre
 python tools/cli.py browser scrape --query "https://example.com"
 python tools/cli.py browser pdf --query "https://example.com" --out "page.pdf"
 
+# N8N (workflow automation)
+python tools/cli.py n8n list-workflows
+python tools/cli.py n8n get-workflow --id 123
+python tools/cli.py n8n execute-workflow --id 123
+python tools/cli.py n8n list-executions --workflow_id 123 --limit 10
+
+# Mermaid (diagrammes)
+python tools/cli.py mermaid render --input "flowchart LR; A-->B" --format png
+python tools/cli.py mermaid validate --input "flowchart LR; A-->B"
+
+# Context7 (documentation)
+python tools/cli.py context7 resolve-library --query lodash
+python tools/cli.py context7 query-docs --library_id ID --query "debounce"
+
+# Excalidraw (diagrammes JSON)
+python tools/cli.py excalidraw create-element --file path.excalidraw --type rectangle
+python tools/cli.py excalidraw query-elements --file path.excalidraw
+python tools/cli.py excalidraw batch-create --file path.excalidraw --elements JSON
+
+# Nano-Banana (image generation via Gemini)
+python tools/cli.py nano-banana generate-image --prompt "description"
+python tools/cli.py nano-banana edit-image --image path --prompt "edit"
+
+# PageIndex (documents PDF)
+python tools/cli.py pageindex recent-documents
+python tools/cli.py pageindex find-relevant --query "search terms"
+python tools/cli.py pageindex get-page-content --document_id ID --page_range "1-5"
+
+# Magic (21st.dev components)
+python tools/cli.py magic component-builder --query "description"
+python tools/cli.py magic logo-search --query "react"
+
+# Figma (design handoff)
+python tools/cli.py figma me                                    # Validate token
+python tools/cli.py figma get-file --file_key KEY               # File structure
+python tools/cli.py figma get-images --file_key K --node_ids N  # Export PNG/SVG
+python tools/cli.py figma export-tokens --file_key KEY          # Design tokens
+
+# DataGouv (donnees ouvertes France)
+python tools/cli.py datagouv search-datasets --query "population"
+python tools/cli.py datagouv get-dataset --dataset_id ID
+python tools/cli.py datagouv download --resource_id ID --output ~/Downloads/data.csv
+
+# Stitch / Trellis (MCP bridges)
+python tools/cli.py stitch list-tools
+python tools/cli.py trellis list-tools
+
 # Help
 python tools/cli.py <tool>                      # Liste actions (godot/powerbi/outlook/dbeaver/...)
 ```

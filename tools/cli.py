@@ -1,24 +1,22 @@
 #!/usr/bin/env python3
 """
-CLI-Anything — Game-focused CLI dispatcher (Godot, Ollama, Git).
+CLI-Anything — Unified agent-native CLI dispatcher (16 tools).
 
 Usage:
-    python tools/cli.py <tool> <action> [options]
-    python tools/cli.py --help
-    python tools/cli.py godot --help
-    python tools/cli.py godot validate
-    python tools/cli.py godot validate_step0
-    python tools/cli.py godot export web
-    python tools/cli.py godot test
-    python tools/cli.py godot telemetry
-    python tools/cli.py godot smoke --scene res://scenes/MerlinGame.tscn
-    python tools/cli.py ollama list
-    python tools/cli.py ollama generate --model qwen2.5:7b --prompt "Hello"
-    python tools/cli.py git status
-    python tools/cli.py git commit --message "feat: ..."
+    python tools/cli.py <tool> <action> [--key value ...]
+    python tools/cli.py health [--human]
+    python tools/cli.py <tool>                # list actions
 
-Note: Orange/data adapters (powerbi, dbeaver, bigquery, outlook, office, browser)
-      have been moved to ~/.claude/tools/adapters/ — use cli.py from that context.
+Examples:
+    python tools/cli.py godot validate
+    python tools/cli.py ollama list
+    python tools/cli.py git status
+    python tools/cli.py n8n list-workflows
+    python tools/cli.py figma get-file --file_key abc123
+    python tools/cli.py magic logo-search --query react
+    python tools/cli.py mermaid render --input "flowchart LR; A-->B"
+    python tools/cli.py context7 resolve-library --query lodash
+    python tools/cli.py datagouv search-datasets --query transport
 
 Output: JSON by default. Use --human for pretty-printed output.
 Exit code: 0 = success, 1 = error (for CI/AUTODEV integration).
@@ -26,7 +24,6 @@ Exit code: 0 = success, 1 = error (for CI/AUTODEV integration).
 
 from __future__ import annotations
 
-import argparse
 import io
 import json
 import sys
@@ -47,54 +44,7 @@ for _p in (_ROOT, _HERE):
     if _s not in sys.path:
         sys.path.insert(0, _s)
 
-TOOLS = ["godot", "ollama", "git"]
-SPECIAL_COMMANDS = ["health", "pipeline"]
-
-
-# ── Tool loader (lazy import to avoid cross-tool dependencies) ────────────────
-
-def _load_adapter(tool: str):
-    if tool == "godot":
-        from adapters.godot_adapter import GodotAdapter
-        return GodotAdapter()
-    if tool == "ollama":
-        from adapters.ollama_adapter import OllamaAdapter
-        return OllamaAdapter()
-    if tool == "git":
-        from adapters.git_adapter import GitAdapter
-        return GitAdapter()
-    raise ValueError(f"Unknown tool: {tool!r}. Available: {TOOLS}")
-
-
-# ── CLI parser ────────────────────────────────────────────────────────────────
-
-def build_parser() -> argparse.ArgumentParser:
-    parser = argparse.ArgumentParser(
-        prog="cli.py",
-        description="CLI-Anything — Unified agent-native CLI dispatcher",
-        formatter_class=argparse.RawDescriptionHelpFormatter,
-        epilog="Run `cli.py <tool> --help` for tool-specific actions.",
-    )
-    parser.add_argument("tool", choices=TOOLS, help="Target tool")
-    parser.add_argument("action", nargs="?", default="help", help="Action to execute")
-    parser.add_argument("--human", action="store_true", help="Pretty-print output (default: JSON)")
-    parser.add_argument("--json", dest="json_out", action="store_true", default=True,
-                        help="Machine-readable JSON output (default)")
-    # Godot args
-    parser.add_argument("preset", nargs="?", default=None,
-                        help="[godot export] Export preset name (e.g. 'web', 'windows')")
-    parser.add_argument("--step", type=int, default=None, help="[godot validate] Step number (0-5)")
-    parser.add_argument("--scene", default=None, help="[godot smoke] Scene path to test")
-    # Ollama args
-    parser.add_argument("--model", default=None, help="[ollama] Model name (default: qwen2.5:7b)")
-    parser.add_argument("--prompt", default=None, help="[ollama generate/chat] Text prompt")
-    parser.add_argument("--system", default=None, help="[ollama] System prompt")
-    # Git args
-    parser.add_argument("--message", default=None, help="[git commit] Commit message")
-    parser.add_argument("--files", nargs="*", default=None, help="[git commit] Files to stage")
-    parser.add_argument("--staged", action="store_true", help="[git diff] Show staged changes only")
-    parser.add_argument("--number", type=int, default=None, help="[git pr-view] PR number")
-    return parser
+from adapters import ADAPTER_REGISTRY, load_adapter, list_tools  # noqa: E402
 
 
 # ── Output ────────────────────────────────────────────────────────────────────
@@ -123,7 +73,7 @@ def print_result(result: dict, human: bool) -> None:
 
 def print_tool_help(tool: str) -> None:
     try:
-        adapter = _load_adapter(tool)
+        adapter = load_adapter(tool)
         actions = adapter.list_actions()
         print(f"\n{tool.upper()} — available actions:\n")
         for action, desc in actions.items():
@@ -133,32 +83,44 @@ def print_tool_help(tool: str) -> None:
         print(f"Could not load {tool} adapter: {exc}")
 
 
+def print_global_help() -> None:
+    tools = list_tools()
+    print("\nCLI-Anything — available tools:\n")
+    for t in tools:
+        print(f"  {t}")
+    print(f"\n  Total: {len(tools)} tools")
+    print("\nUsage:")
+    print("  python tools/cli.py <tool>              # list actions")
+    print("  python tools/cli.py <tool> <action> ...  # run action")
+    print("  python tools/cli.py health [--human]     # check all tools")
+    print()
+
+
 # ── Health check ─────────────────────────────────────────────────────────────
 
-_HEALTH_PROBES: dict[str, tuple[str, dict]] = {
-    "godot":  ("list_presets", {}),
-    "ollama": ("list",         {}),
-    "git":    ("status",       {}),
-}
-
-
 def run_health(human: bool) -> int:
-    """Smoke-test every adapter with a lightweight probe action."""
+    """Smoke-test every adapter with its health_probe action."""
     import time
+
+    tools = list_tools()
     results = {}
-    for tool in TOOLS:
-        probe_action, probe_kwargs = _HEALTH_PROBES.get(tool, ("help", {}))
+    for tool in tools:
         t0 = time.monotonic()
         try:
-            adapter = _load_adapter(tool)
+            adapter = load_adapter(tool)
+            probe_action, probe_kwargs = adapter.health_probe()
             result = adapter.execute(probe_action, **probe_kwargs)
             status = result.get("status", "error")
         except Exception as exc:
             status = "error"
             result = {"status": "error", "error": str(exc)}
         elapsed = int((time.monotonic() - t0) * 1000)
-        results[tool] = {"status": status, "probe": probe_action, "ms": elapsed,
-                         "error": result.get("error")}
+        results[tool] = {
+            "status": status,
+            "probe": probe_action if "probe_action" in dir() else "load",
+            "ms": elapsed,
+            "error": result.get("error"),
+        }
 
     all_ok = all(r["status"] == "ok" for r in results.values())
     envelope = {
@@ -173,7 +135,7 @@ def run_health(human: bool) -> int:
         for tool, r in results.items():
             sym = "✓" if r["status"] == "ok" else "✗"
             err = f"  [{r['error']}]" if r.get("error") else ""
-            print(f"  {sym} {tool:<12} {r['probe']:<20} {r['ms']}ms{err}")
+            print(f"  {sym} {tool:<15} {r.get('probe', '?'):<20} {r['ms']}ms{err}")
         print()
     else:
         print(json.dumps(envelope, ensure_ascii=False, indent=2))
@@ -183,11 +145,7 @@ def run_health(human: bool) -> int:
 # ── Pipeline ──────────────────────────────────────────────────────────────────
 
 def run_pipeline(steps: list[str], human: bool, stop_on_error: bool = True) -> int:
-    """
-    Execute a sequence of CLI steps.
-    Each step is a string like 'godot validate' or 'git status'.
-    Steps are split on whitespace and dispatched through the normal main() path.
-    """
+    """Execute a sequence of CLI steps (e.g. 'godot validate', 'git status')."""
     import time
     results = []
     overall_ok = True
@@ -208,70 +166,112 @@ def run_pipeline(steps: list[str], human: bool, stop_on_error: bool = True) -> i
 
     if human:
         sym = "✓" if overall_ok else "✗"
-        print(f"\n{sym} Pipeline finished — {sum(1 for r in results if r['exit_code']==0)}/{len(results)} steps OK")
+        passed = sum(1 for r in results if r["exit_code"] == 0)
+        print(f"\n{sym} Pipeline finished — {passed}/{len(results)} steps OK")
     else:
-        print(json.dumps({"status": "ok" if overall_ok else "error",
-                          "steps": results, "passed": sum(1 for r in results if r["exit_code"]==0),
-                          "total": len(results)}, ensure_ascii=False, indent=2))
+        print(json.dumps({
+            "status": "ok" if overall_ok else "error",
+            "steps": results,
+            "passed": sum(1 for r in results if r["exit_code"] == 0),
+            "total": len(results),
+        }, ensure_ascii=False, indent=2))
     return 0 if overall_ok else 1
+
+
+# ── Arg parsing (dynamic — no hardcoded tool args) ────────────────────────────
+
+def parse_dynamic_args(argv: list[str]) -> tuple[str, str, dict[str, Any], bool]:
+    """Parse: <tool> <action> [--key value ...] [--human]
+
+    Returns (tool, action, kwargs, human).
+    """
+    human = False
+    filtered = []
+    i = 0
+    while i < len(argv):
+        if argv[i] == "--human":
+            human = True
+            i += 1
+        elif argv[i] in ("--json",):
+            i += 1  # skip, JSON is default
+        else:
+            filtered.append(argv[i])
+            i += 1
+
+    if not filtered:
+        return "", "", {}, human
+
+    tool = filtered[0]
+    action = filtered[1] if len(filtered) > 1 else "help"
+
+    # Positional arg after action (for godot export <preset>)
+    kwargs: dict[str, Any] = {}
+    rest = filtered[2:]
+
+    i = 0
+    while i < len(rest):
+        arg = rest[i]
+        if arg.startswith("--"):
+            key = arg[2:].replace("-", "_")
+            # Check if next arg is a value or another flag
+            if i + 1 < len(rest) and not rest[i + 1].startswith("--"):
+                kwargs[key] = rest[i + 1]
+                i += 2
+            else:
+                kwargs[key] = True
+                i += 1
+        else:
+            # Positional: map to 'preset' for backward compat (godot export web)
+            kwargs["preset"] = arg
+            i += 1
+
+    return tool, action, kwargs, human
 
 
 # ── Main ──────────────────────────────────────────────────────────────────────
 
 def main(argv: list[str] | None = None) -> int:
-    parser = build_parser()
-
     if argv is None:
         argv = sys.argv[1:]
 
-    # Special top-level commands: health, pipeline
-    if argv and argv[0] == "health":
-        human = "--human" in argv
-        return run_health(human)
-    if argv and argv[0] == "pipeline":
+    # Special top-level commands
+    if not argv or argv[0] in ("--help", "-h"):
+        print_global_help()
+        return 0
+
+    if argv[0] == "health":
+        return run_health("--human" in argv)
+
+    if argv[0] == "pipeline":
         human = "--human" in argv
         stop = "--no-stop" not in argv
         steps = [a for a in argv[1:] if not a.startswith("--")]
         return run_pipeline(steps, human, stop_on_error=stop)
 
-    # Support: cli.py godot --help (no action)
-    if len(argv) >= 1 and argv[0] in TOOLS and (len(argv) == 1 or argv[1] in ("--help", "-h")):
-        print_tool_help(argv[0])
+    tool, action, kwargs, human = parse_dynamic_args(argv)
+
+    # Validate tool name
+    available = list_tools()
+    if tool not in available:
+        print(json.dumps({
+            "status": "error",
+            "error": f"Unknown tool: {tool!r}. Available: {', '.join(available)}",
+        }))
+        return 1
+
+    # Help: just tool name or explicit help
+    if action in ("help", "--help", "-h"):
+        print_tool_help(tool)
         return 0
-
-    args = parser.parse_args(argv)
-
-    if args.action in ("help", "--help", "-h"):
-        print_tool_help(args.tool)
-        return 0
-
-    # Build kwargs from parsed args (game tools only: godot, ollama, git)
-    kwargs: dict[str, Any] = {
-        # Godot
-        "preset": getattr(args, "preset", None),
-        "step":   getattr(args, "step",   None),
-        "scene":  getattr(args, "scene",  None),
-        # Ollama
-        "model":  getattr(args, "model",  None),
-        "prompt": getattr(args, "prompt", None),
-        "system": getattr(args, "system", None),
-        # Git
-        "message": getattr(args, "message", None),
-        "files":   getattr(args, "files",   None),
-        "staged":  getattr(args, "staged",  False) or None,
-        "number":  getattr(args, "number",  None),
-    }
-    # Remove None values to keep adapter signatures clean
-    kwargs = {k: v for k, v in kwargs.items() if v is not None}
 
     try:
-        adapter = _load_adapter(args.tool)
-    except ValueError as exc:
+        adapter = load_adapter(tool)
+    except Exception as exc:
         print(json.dumps({"status": "error", "error": str(exc)}))
         return 1
 
-    result = adapter.execute(args.action, **kwargs)
-    print_result(result, human=args.human)
+    result = adapter.execute(action, **kwargs)
+    print_result(result, human=human)
     return 0 if result.get("status") == "ok" else 1
 
 

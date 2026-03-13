@@ -71,6 +71,30 @@ class BaseAdapter(ABC):
 
     # ── Internal ────────────────────────────────────────────────────────────
 
+    @staticmethod
+    def resolve_cmd(name: str) -> str:
+        """Resolve a command name to full path (handles Windows PATH gaps).
+
+        On Windows, subprocess may not find commands like npx/node if their
+        directory isn't in Python's PATH. This checks common locations.
+        """
+        import shutil
+        found = shutil.which(name)
+        if found:
+            return found
+        # Common Windows install locations
+        import os
+        candidates = [
+            os.path.join(os.environ.get("ProgramFiles", r"C:\Program Files"), "nodejs", f"{name}.cmd"),
+            os.path.join(os.environ.get("ProgramFiles", r"C:\Program Files"), "nodejs", name),
+            os.path.join(os.environ.get("APPDATA", ""), "npm", f"{name}.cmd"),
+        ]
+        from pathlib import Path
+        for c in candidates:
+            if Path(c).exists():
+                return c
+        return name  # fallback to bare name
+
     def _envelope(self, status: str, data: Any, error_msg: str | None = None) -> dict:
         duration_ms = int((time.monotonic() - self._start) * 1000)
         result: dict = {
