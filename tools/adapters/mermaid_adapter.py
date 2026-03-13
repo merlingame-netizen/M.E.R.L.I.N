@@ -29,6 +29,8 @@ from adapters.base_adapter import BaseAdapter  # noqa: E402
 DEFAULT_OUTPUT_DIR = Path.home() / "Downloads"
 THEME_DIR = Path.home() / ".claude" / "workspace" / "orange"
 MCD_SOURCE_DIR = Path.home() / ".claude" / "workspace" / "orange"
+_ALLOWED_OUTPUT_ROOTS = [Path.home().resolve()]
+_ALLOWED_EXTENSIONS = {".png", ".svg", ".pdf"}
 
 THEME_MAP: dict[str, str] = {
     "orange": "mermaid-orange-theme.json",
@@ -86,16 +88,17 @@ class MermaidAdapter(BaseAdapter):
                 width: int = 0, height: int = 0, **_kw: Any) -> dict:
         if not input:
             return self.error("render requires --input (mermaid code)")
-        if format not in ("png", "svg", "pdf"):
-            return self.error(f"Unsupported format: {format}")
+        fmt = format  # avoid shadowing builtin
+        if fmt not in ("png", "svg", "pdf"):
+            return self.error(f"Unsupported format: {fmt}")
 
         if not output:
-            output = str(DEFAULT_OUTPUT_DIR / f"diagram.{format}")
+            output = str(DEFAULT_OUTPUT_DIR / f"diagram.{fmt}")
 
         # Write mermaid code to temp file
         input_path = self._write_temp_mmd(input)
-        return self._do_render(input_path, output, format, theme, config,
-                               open, width, height, cleanup_input=True)
+        return self._do_render(input_path, output, fmt, theme, config,
+                               bool(open), width, height, cleanup_input=True)
 
     def _render_themed(self, input: str = "", output: str = "", format: str = "png",
                        open: bool = True, width: int = 0, height: int = 0,
@@ -103,6 +106,7 @@ class MermaidAdapter(BaseAdapter):
         """Render with auto-detected project theme."""
         if not input:
             return self.error("render-themed requires --input (mermaid code)")
+        fmt = format
 
         project = self._detect_project()
         theme_name = THEME_MAP.get(project, THEME_MAP["orange"])
@@ -113,12 +117,12 @@ class MermaidAdapter(BaseAdapter):
             config_path = ""
 
         if not output:
-            output = str(DEFAULT_OUTPUT_DIR / f"diagram.{format}")
+            output = str(DEFAULT_OUTPUT_DIR / f"diagram.{fmt}")
 
         input_path = self._write_temp_mmd(input)
         self.log(f"Auto-detected project: {project} -> theme: {theme_name}")
-        return self._do_render(input_path, output, format, "", config_path,
-                               open, width, height, cleanup_input=True)
+        return self._do_render(input_path, output, fmt, "", config_path,
+                               bool(open), width, height, cleanup_input=True)
 
     def _from_file(self, input: str = "", output: str = "", format: str = "png",
                    theme: str = "", config: str = "", open: bool = True,
@@ -126,22 +130,35 @@ class MermaidAdapter(BaseAdapter):
         """Render from an existing .mmd file."""
         if not input:
             return self.error("from-file requires --input (path to .mmd file)")
+        fmt = format
 
-        input_path = Path(input).expanduser()
+        input_path = Path(input).expanduser().resolve()
         if not input_path.exists():
             return self.error(f"File not found: {input_path}")
+        # Input must be under user home
+        if not any(str(input_path).startswith(str(r)) for r in _ALLOWED_OUTPUT_ROOTS):
+            return self.error(f"Input path outside allowed directory: {input_path}")
+        if input_path.suffix != ".mmd":
+            return self.error(f"Input must be a .mmd file, got: {input_path.suffix}")
 
         if not output:
-            output = str(DEFAULT_OUTPUT_DIR / f"{input_path.stem}.{format}")
+            output = str(DEFAULT_OUTPUT_DIR / f"{input_path.stem}.{fmt}")
 
-        return self._do_render(str(input_path), output, format, theme, config,
-                               open, width, height, cleanup_input=False)
+        return self._do_render(str(input_path), output, fmt, theme, config,
+                               bool(open), width, height, cleanup_input=False)
 
-    def _do_render(self, input_path: str, output: str, format: str,
-                   theme: str, config: str, open: bool,
+    def _do_render(self, input_path: str, output: str, fmt: str,
+                   theme: str, config: str, auto_open: bool,
                    width: int, height: int, cleanup_input: bool) -> dict:
         """Internal render engine — shared by all render actions."""
-        out_path = Path(output)
+        out_path = Path(output).expanduser().resolve()
+
+        # Path traversal guard: output must be under user home
+        if not any(str(out_path).startswith(str(r)) for r in _ALLOWED_OUTPUT_ROOTS):
+            return self.error(f"Output path outside allowed directory: {out_path}")
+        if out_path.suffix not in _ALLOWED_EXTENSIONS:
+            return self.error(f"Output must be .png/.svg/.pdf, got: {out_path.suffix}")
+
         out_path.parent.mkdir(parents=True, exist_ok=True)
 
         npx = self.resolve_cmd("npx")
@@ -156,7 +173,7 @@ class MermaidAdapter(BaseAdapter):
         if height > 0:
             cmd.extend(["--height", str(height)])
 
-        self.log(f"Rendering {format} to {out_path}")
+        self.log(f"Rendering {fmt} to {out_path}")
 
         try:
             proc = subprocess.run(cmd, capture_output=True, text=True, timeout=60)
@@ -188,15 +205,18 @@ class MermaidAdapter(BaseAdapter):
         except OSError:
             pass  # Non-critical
 
-        # Auto-open
-        if open:
-            self._auto_open(out_path)
+        # Auto-open (non-critical, never breaks the response)
+        if auto_open:
+            try:
+                self._auto_open(out_path)
+            except Exception as exc:  # noqa: BLE001
+                self.log(f"Auto-open failed (non-critical): {exc}")
 
         return self.ok({
             "output": str(out_path),
-            "format": format,
+            "format": fmt,
             "size_bytes": out_path.stat().st_size,
-            "opened": open,
+            "opened": auto_open,
         })
 
     # ── Validation ────────────────────────────────────────────────────────
@@ -294,10 +314,14 @@ class MermaidAdapter(BaseAdapter):
     def _resolve_theme_args(self, theme: str, config: str) -> list[str]:
         """Return mmdc CLI args for theming."""
         if config:
-            config_path = Path(config).expanduser()
-            if config_path.exists():
+            config_path = Path(config).expanduser().resolve()
+            theme_root = THEME_DIR.resolve()
+            if not str(config_path).startswith(str(theme_root)):
+                self.log(f"Config path outside THEME_DIR, ignoring: {config_path}")
+            elif config_path.exists():
                 return ["--configFile", str(config_path)]
-            self.log(f"Config not found: {config}, falling back")
+            else:
+                self.log(f"Config not found: {config}, falling back")
         if theme in THEME_MAP:
             path = THEME_DIR / THEME_MAP[theme]
             if path.exists():
