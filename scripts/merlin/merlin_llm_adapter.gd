@@ -33,8 +33,8 @@ const ALLOWED_EFFECT_TYPES := [
 
 const FACTIONS := ["druides", "anciens", "korrigans", "niamh", "ankou"]
 
-# LLM generation params tuned for Qwen 2.5-3B-Instruct
-const TRIADE_LLM_PARAMS := {
+# LLM generation params tuned for Qwen 3.5-4B
+const LLM_PARAMS := {
 	"max_tokens": 180,  # 4-5 lines + A) B) C) verbs — ~10s on CPU @ 18tok/s
 	"temperature": 0.65,
 	"top_p": 0.88,
@@ -241,9 +241,9 @@ func get_category_llm_params(event_category: String) -> Dictionary:
 	var template_key := "event_" + event_category
 	var template := get_scenario_template(template_key)
 	if template.is_empty():
-		return TRIADE_LLM_PARAMS.duplicate()
+		return LLM_PARAMS.duplicate()
 
-	var params := TRIADE_LLM_PARAMS.duplicate()
+	var params := LLM_PARAMS.duplicate()
 	if template.has("temperature"):
 		params["temperature"] = float(template["temperature"])
 	if template.has("max_tokens"):
@@ -336,7 +336,7 @@ func generate_epilogue(context: Dictionary, story_log: Array) -> Dictionary:
 		"Tu es Merlin l'Enchanteur. Tu conclus un voyage de %d epreuves. " % cards
 		+ scenario_block
 		+ "Ecris un epilogue de 2 paragraphes, ton %s. " % tone
-		+ "1) Ce que le voyageur a appris de sa quete (lecon liee a l'Equilibre Corps/Ame/Monde). "
+		+ "1) Ce que le voyageur a appris de sa quete (lecon liee aux factions et allegiances). "
 		+ "2) Ce qui reste apres le voyage (une image, un souvenir, un pressentiment lie a la quete). "
 		+ "Deuxieme personne (tu). Vocabulaire celtique. "
 		+ "JAMAIS de meta-commentaire. JAMAIS d'anglais."
@@ -455,7 +455,7 @@ func _generate_card_two_stage(context: Dictionary) -> Dictionary:
 			user_prompt += "\nKARMA=%d: Ton %s. %s" % [karma, karma_tone, karma_hint]
 
 	# No grammar for free text generation — budget tokens for rich narrative
-	var free_params := TRIADE_LLM_PARAMS.duplicate()
+	var free_params := LLM_PARAMS.duplicate()
 	free_params.erase("grammar")
 	free_params["max_tokens"] = 400
 	free_params["temperature"] = 0.72
@@ -1535,7 +1535,7 @@ func _build_arc_system_prompt(cards_played: int, theme_word: String, context: Di
 	return (
 		"Tu es Merlin l'Enchanteur, vieux druide FOU de Broceliande. Tu PERDS LA BOULE mais tu decris brillamment. Moque-toi du voyageur ('mon pauvre ami'). Digressions courtes. TU (jamais nous/je/il). Pas de 'Voici'. Pas de meta.\n"
 		+ "LIEU: %s | CARTE: %d | THEME: %s\n" % [biome_name, cards_played + 1, theme_word]
-		+ "ETAT: Vie=%d/100, Souffle=%d/1, Karma=%d\n" % [life, souffle, karma]
+		+ "ETAT: Vie=%d/100, Karma=%d\n" % [life, karma]
 		+ convergence_hint
 		+ balance_hint
 		+ _format_instructions(cards_played)

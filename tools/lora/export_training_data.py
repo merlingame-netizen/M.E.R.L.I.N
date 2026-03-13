@@ -48,8 +48,9 @@ SCENE_PROFILES = {}
 # Base identity prompt — used for all Merlin dialogue samples
 MERLIN_IDENTITY = (
     "Tu es Merlin l'Enchanteur, druide ancestral des forets de Broceliande. "
-    "Tu guides le Voyageur a travers un monde celtique ou trois Aspects "
-    "(Corps, Ame, Monde) doivent rester en equilibre. "
+    "Tu guides le Voyageur a travers un monde celtique ou 5 factions "
+    "(Druides, Anciens, Korrigans, Niamh, Ankou) se disputent son allegiance. "
+    "Le Voyageur a une barre de vie, collecte des Anam et tient des Promesses. "
     "Vocabulaire: nemeton, ogham, sidhe, dolmen, korrigans, brume, mousse, pierre dressee."
 )
 
@@ -58,22 +59,25 @@ NARRATOR_IDENTITY = (
     "Tu es le narrateur d'un jeu de cartes celtique. "
     "Tu decris des paysages, atmospheres et evenements dans un monde druidique. "
     "Style: poetique, immersif, 2-3 phrases. "
+    "Tu integres les PNJ recurrents du biome et les arcs narratifs. "
     "Vocabulaire: nemeton, ogham, sidhe, dolmen, korrigans, brume, mousse, pierre dressee."
 )
 
-# Aspect state descriptions for game-wide context
-ASPECT_CONTEXTS = {
-    "balanced": "Corps=equilibre Ame=equilibre Monde=equilibre",
-    "corps_extreme": "Corps=extreme (epuise ou surmene)",
-    "ame_extreme": "Ame=extreme (perdue ou possedee)",
-    "monde_extreme": "Monde=extreme (exile ou tyran)",
+# Faction reputation states for game-wide context (replaces old Triade aspects)
+FACTION_CONTEXTS = {
+    "neutral": "Druides=50 Anciens=50 Korrigans=50 Niamh=50 Ankou=50",
+    "druides_high": "Druides=80 Anciens=40 Korrigans=50 Niamh=50 Ankou=30",
+    "korrigans_high": "Druides=40 Korrigans=80 Niamh=50 Anciens=50 Ankou=50",
+    "ankou_high": "Ankou=80 Druides=30 Niamh=40 Anciens=50 Korrigans=30",
+    "niamh_high": "Niamh=80 Druides=50 Anciens=50 Korrigans=40 Ankou=30",
+    "anciens_high": "Anciens=80 Druides=60 Korrigans=40 Niamh=50 Ankou=40",
 }
 
-# Random game states for context variation
+# Random game states for context variation (v2.2: factions, vie, tension)
 GAME_STATE_TEMPLATES = [
-    "Jour {day}. Souffle: {souffle}/7. {aspects}.",
-    "{aspects}. Souffle: {souffle}. Jour {day}. Carte {card}.",
-    "Jour {day}. {aspects}. Tension: {tension}.",
+    "Carte {card}. Vie: {vie}/100. {factions}.",
+    "{factions}. Vie: {vie}. Carte {card}. Tension: {tension}.",
+    "Carte {card}. {factions}. Promesses actives: {promesses}.",
 ]
 
 
@@ -171,18 +175,17 @@ def make_conversation(system: str, user: str, assistant: str, scene_id: str = ""
     return sample
 
 
-def random_game_state(aspects_desc: str = "") -> str:
-    """Generate a random game state context string."""
-    if not aspects_desc:
-        states = ["equilibre", "bas", "haut"]
-        aspects_desc = "Corps=%s Ame=%s Monde=%s" % tuple(random.choice(states) for _ in range(3))
+def random_game_state(factions_desc: str = "") -> str:
+    """Generate a random game state context string (v2.2: factions, vie, tension)."""
+    if not factions_desc:
+        factions_desc = random.choice(list(FACTION_CONTEXTS.values()))
     tmpl = random.choice(GAME_STATE_TEMPLATES)
     return tmpl.format(
-        day=random.randint(1, 25),
-        souffle=random.randint(1, 7),
-        aspects=aspects_desc,
         card=random.randint(1, 50),
+        vie=random.randint(20, 100),
+        factions=factions_desc,
         tension=random.choice(["basse", "moyenne", "haute"]),
+        promesses=random.randint(0, 2),
     )
 
 
@@ -338,7 +341,7 @@ def extract_narration_samples(post_intro: dict, mood_map: dict) -> list:
         if arrival:
             samples.append(make_conversation(
                 narrator_system(biome_name, atmo_str),
-                f"{random_game_state(ASPECT_CONTEXTS['balanced'])} Decris le paysage.",
+                f"{random_game_state(FACTION_CONTEXTS['neutral'])} Decris le paysage.",
                 arrival,
                 scene_id="transition_biome_arrival",
                 channel="narrative",
@@ -349,22 +352,24 @@ def extract_narration_samples(post_intro: dict, mood_map: dict) -> list:
         if merlin_comment:
             samples.append(make_conversation(
                 merlin_system("playful"),
-                f"{random_game_state(ASPECT_CONTEXTS['balanced'])} Commente l'environnement.",
+                f"{random_game_state(FACTION_CONTEXTS['neutral'])} Commente l'environnement.",
                 merlin_comment,
                 scene_id="transition_biome_merlin",
                 channel="voice",
             ))
 
-        # Variants by aspect state — the core of game-state-aware narration
+        # Variants by faction state — the core of game-state-aware narration
         for state_key, variants in biome_data.get("variants", {}).items():
-            aspects_desc = ASPECT_CONTEXTS.get(state_key, state_key)
+            factions_desc = FACTION_CONTEXTS.get(state_key, state_key)
 
             # Determine tone from game state (not scene)
             tone_for_state = {
-                "balanced": "neutral",
-                "corps_extreme": "warning",
-                "ame_extreme": "mysterious",
-                "monde_extreme": "cryptic",
+                "neutral": "neutral",
+                "druides_high": "mysterious",
+                "korrigans_high": "playful",
+                "ankou_high": "warning",
+                "niamh_high": "ethereal",
+                "anciens_high": "solemn",
             }.get(state_key, "neutral")
 
             for variant in variants:
@@ -374,7 +379,7 @@ def extract_narration_samples(post_intro: dict, mood_map: dict) -> list:
                 if v_arrival:
                     samples.append(make_conversation(
                         narrator_system(biome_name, atmo_str),
-                        f"{random_game_state(aspects_desc)} Decris le paysage.",
+                        f"{random_game_state(factions_desc)} Decris le paysage.",
                         v_arrival,
                         scene_id="transition_biome_arrival",
                         channel="narrative",
@@ -382,7 +387,7 @@ def extract_narration_samples(post_intro: dict, mood_map: dict) -> list:
                 if v_merlin:
                     samples.append(make_conversation(
                         merlin_system(tone_for_state),
-                        f"{random_game_state(aspects_desc)} Commente la situation.",
+                        f"{random_game_state(factions_desc)} Commente la situation.",
                         v_merlin,
                         scene_id="transition_biome_merlin",
                         channel="voice",

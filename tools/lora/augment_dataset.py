@@ -38,26 +38,27 @@ CELTIC_VOCAB = {
     "concepts": ["Samhain", "Beltaine", "Imbolc", "Lughnasadh", "gwrac'h"],
 }
 
-ASPECT_STATES = [
-    "Corps=eq Ame=eq Monde=eq",
-    "Corps=bas Ame=eq Monde=eq",
-    "Corps=haut Ame=eq Monde=eq",
-    "Corps=eq Ame=bas Monde=eq",
-    "Corps=eq Ame=haut Monde=eq",
-    "Corps=eq Ame=eq Monde=bas",
-    "Corps=eq Ame=eq Monde=haut",
-    "Corps=bas Ame=bas Monde=eq",
-    "Corps=bas Ame=eq Monde=haut",
+FACTION_STATES = [
+    "Druides=50 Anciens=50 Korrigans=50 Niamh=50 Ankou=50",
+    "Druides=80 Anciens=40 Korrigans=50 Niamh=50 Ankou=30",
+    "Druides=40 Korrigans=80 Niamh=50 Anciens=50 Ankou=50",
+    "Ankou=80 Druides=30 Niamh=40 Anciens=50 Korrigans=30",
+    "Niamh=80 Druides=50 Anciens=50 Korrigans=40 Ankou=30",
+    "Anciens=80 Druides=60 Korrigans=40 Niamh=50 Ankou=40",
+    "Druides=20 Ankou=70 Niamh=60 Korrigans=30 Anciens=40",
+    "Korrigans=70 Niamh=70 Druides=30 Anciens=30 Ankou=50",
+    "Anciens=30 Ankou=80 Druides=20 Niamh=30 Korrigans=60",
 ]
 
 BIOMES = [
-    ("Broceliande", "foret ancienne, chenes millenaires, brume doree"),
-    ("Landes de Carnac", "bruyere, vent, menhirs alignes"),
-    ("Cotes de Granit", "falaises, ecume, granit noir"),
-    ("Villages Celtiques", "pierre grise, toits d'ardoise, feux de tourbe"),
-    ("Cercles de Pierre", "menhirs, alignements, energie tellurique"),
-    ("Marais d'Avalon", "eau stagnante, reflets iridescents, brouillard"),
-    ("Collines des Dolmens", "collines arrondies, dolmens, couronnes de pierre"),
+    ("Foret de Broceliande", "foret ancienne, chenes millenaires, brume doree, PNJ: Gwenn la Cueilleuse"),
+    ("Landes de Bruyere", "bruyere, vent, obstacles naturels, PNJ: Aedan l'Ermite"),
+    ("Cotes Sauvages", "falaises, ecume, vagues, coquillages, PNJ: Bran le Passeur"),
+    ("Villages Celtes", "pierre grise, etals, feux de tourbe, PNJ: Morwenna la Forge"),
+    ("Cercles de Pierres", "menhirs, runes lumineuses, energie tellurique, PNJ: Seren l'Etoilee"),
+    ("Marais des Korrigans", "feux follets, fondrieres, pieges, PNJ: Puck le Lutin"),
+    ("Collines aux Dolmens", "collines arrondies, dolmens, animaux, PNJ: Taliesin le Barde"),
+    ("Iles Mystiques", "spectral, vagues phosphorescentes, brume epaisse, PNJ: Branwen la Spectrale"),
 ]
 
 TONES = ["playful", "mysterious", "warning", "melancholy", "warm", "cryptic", "neutral"]
@@ -87,12 +88,12 @@ def augment_context_permutation(samples: list) -> list:
         sys_msg = sample["conversations"][0]["content"]
         assistant_msg = sample["conversations"][2]["content"]
 
-        # Only permute if the sample references aspect states
-        if any(k in user_msg for k in ["Corps=", "Ame=", "Monde="]):
+        # Only permute if the sample references faction states
+        if any(k in user_msg for k in ["Druides=", "Anciens=", "Korrigans=", "Niamh=", "Ankou="]):
             # Generate 2 random permutations
             for _ in range(2):
-                new_state = random.choice(ASPECT_STATES)
-                new_user = re.sub(r"Corps=\w+ Ame=\w+ Monde=\w+", new_state, user_msg)
+                new_state = random.choice(FACTION_STATES)
+                new_user = re.sub(r"(?:Druides|Anciens|Korrigans|Niamh|Ankou)=\d+(?:\s+(?:Druides|Anciens|Korrigans|Niamh|Ankou)=\d+)*", new_state, user_msg)
                 if new_user != user_msg:
                     augmented.append(make_conversation(sys_msg, new_user, assistant_msg))
 
