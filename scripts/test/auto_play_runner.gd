@@ -200,7 +200,7 @@ func _auto_play_loop() -> void:
 		_cards_played += 1
 		var card: Dictionary = _controller.get("current_card")
 		var pre_life: int = _get_life()
-		var pre_souffle: int = _get_souffle()
+		var pre_souffle: int = 0
 		var pre_karma: int = _controller.get("_karma") if "_karma" in _controller else 0
 
 		# ---- DETAILED CARD LOG ----
@@ -251,7 +251,7 @@ func _auto_play_loop() -> void:
 
 		# Capture post-choice state
 		var post_life: int = _get_life()
-		var post_souffle: int = _get_souffle()
+		var post_souffle: int = 0
 		var post_karma: int = _controller.get("_karma") if "_karma" in _controller else 0
 		var life_delta: int = post_life - pre_life
 		_total_life_drain += life_delta
@@ -448,14 +448,6 @@ func _get_life() -> int:
 	return 100
 
 
-func _get_souffle() -> int:
-	if _store and _store.has_method("get_souffle"):
-		return int(_store.get_souffle())
-	if _store:
-		return int(_store.state.get("run", {}).get("souffle", 1))
-	return 1
-
-
 func _on_run_ended(ending: Dictionary) -> void:
 	_log("=== RUN ENDED (signal) ===")
 	_log("ending=%s" % str(ending))
@@ -492,8 +484,7 @@ func _print_summary() -> void:
 	# Final state
 	var final_life: int = _get_life()
 	var final_karma: int = _controller.get("_karma") if _controller and "_karma" in _controller else 0
-	var final_souffle: int = _get_souffle()
-	_log("final_life=%d final_karma=%d final_souffle=%d" % [final_life, final_karma, final_souffle])
+	_log("final_life=%d final_karma=%d" % [final_life, final_karma])
 
 	# LLM stats
 	_log("llm_cards=%d fallback_cards=%d llm_ratio=%.0f%%" % [

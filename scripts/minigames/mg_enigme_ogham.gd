@@ -181,4 +181,15 @@ func _on_choice_selected(choice: String) -> void:
 		sfx.play("minigame_success" if correct else "minigame_fail")
 
 	await get_tree().create_timer(2.5).timeout
-	_complete(correct, 100 if correct else 0)
+
+	# Proportional scoring: base 60 for correct + time bonus (up to 40)
+	# Wrong answer: partial score based on pattern difficulty (harder = more partial credit)
+	var score: int = 0
+	if correct:
+		var elapsed_s: float = float(Time.get_ticks_msec() - _start_time_ms) / 1000.0
+		var time_bonus: int = clampi(int(40.0 - elapsed_s * 4.0), 0, 40)
+		score = 60 + time_bonus
+	else:
+		# Partial credit for harder patterns (10-30 based on difficulty)
+		score = clampi(int(_difficulty * 3.0), 10, 30)
+	_complete(correct, score)

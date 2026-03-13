@@ -364,7 +364,7 @@ func _reduce(action: Dictionary) -> Dictionary:
 			return _progress_mission(step)
 
 
-		"TRIADE_USE_OGHAM":
+		"USE_OGHAM":
 			var skill_id: String = str(action.get("skill_id", ""))
 			return _use_ogham(skill_id)
 

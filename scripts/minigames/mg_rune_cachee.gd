@@ -7,6 +7,7 @@ const GRID_SIZE: int = 4
 const SYMBOLS := ["\u25ef", "\u25b3", "\u25a1", "\u25c7", "\u2606", "\u2726", "\u2b21", "\u25c8"]
 var _correct_index: int = -1
 var _timer: float = 4.0
+var _max_timer: float = 4.0
 var _buttons: Array[Button] = []
 var _timer_label: Label
 
@@ -16,6 +17,7 @@ func _on_start() -> void:
 
 	# Difficulty affects time
 	_timer = 5.0 - (_difficulty * 0.25)  # 4.75s to 2.5s
+	_max_timer = _timer
 
 	var vbox := VBoxContainer.new()
 	vbox.set_anchors_preset(Control.PRESET_CENTER)
@@ -98,15 +100,18 @@ func _on_rune_clicked(index: int) -> void:
 		return
 
 	if index == _correct_index:
-		# Success
+		# Success — proportional score: base 50 + time bonus (up to 50)
 		_buttons[index].modulate = MG_PALETTE.green
 
 		var sfx := get_node_or_null("/root/SFXManager")
 		if sfx and sfx.has_method("play"):
 			sfx.play("minigame_success")
 
+		var time_ratio: float = clampf(_timer / _max_timer, 0.0, 1.0)
+		var score: int = 50 + int(time_ratio * 50.0)
+
 		await get_tree().create_timer(0.3).timeout
-		_complete(true, 100)
+		_complete(true, score)
 	else:
 		# Wrong
 		_buttons[index].modulate = MG_PALETTE.red
@@ -124,5 +129,8 @@ func _fail_game() -> void:
 	if _correct_index >= 0 and _correct_index < _buttons.size():
 		_buttons[_correct_index].modulate = MG_PALETTE.gold
 
+	# Partial credit based on difficulty (harder = more credit for trying)
+	var partial_score: int = clampi(int(_difficulty * 2.5), 10, 25)
+
 	await get_tree().create_timer(0.5).timeout
-	_complete(false, 0)
+	_complete(false, partial_score)

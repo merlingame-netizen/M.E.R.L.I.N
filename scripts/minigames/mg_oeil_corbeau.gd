@@ -143,8 +143,18 @@ func _game_over(success: bool) -> void:
 	if sfx and sfx.has_method("play"):
 		sfx.play("minigame_success" if success else "minigame_fail")
 
-	timer_label.text = "Trouvé !" if success else "Raté..."
+	# Proportional scoring: base 50 for correct + time bonus (up to 50)
+	# Failure: partial credit based on difficulty (15-30)
+	var score: int = 0
+	if success:
+		var time_ratio: float = clampf(time_left / max_time, 0.0, 1.0)
+		var time_bonus: int = int(time_ratio * 50.0)
+		score = 50 + time_bonus
+	else:
+		score = clampi(int(_difficulty * 2.5), 15, 30)
+
+	timer_label.text = "Trouvé ! (%d pts)" % score if success else "Raté... (%d pts)" % score
 	timer_label.modulate = MG_PALETTE.green if success else MG_PALETTE.red
 
 	await get_tree().create_timer(2.0).timeout
-	_complete(success, 100 if success else 0)
+	_complete(success, score)

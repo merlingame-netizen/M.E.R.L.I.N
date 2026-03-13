@@ -1975,10 +1975,6 @@ func _sync_ui_with_state() -> void:
 	if not ui or not is_instance_valid(ui) or not store or not is_instance_valid(store):
 		return
 
-	# Souffle (legacy — kept for UI compatibility, default 3)
-	var souffle: int = store.get_souffle() if store.has_method("get_souffle") else 3
-	ui.update_souffle(souffle)
-
 	# Life essence (Phase 43)
 	var life: int = store.get_life_essence() if store.has_method("get_life_essence") else MerlinConstants.LIFE_ESSENCE_START
 	if ui.has_method("update_life_essence"):
@@ -2009,11 +2005,6 @@ func _sync_ui_with_state() -> void:
 		ui.update_resource_bar(tool_id, day, m_current, m_total, essences_collected)
 	if ui.has_method("update_essences_collected"):
 		ui.update_essences_collected(essences_collected)
-
-	# Bestiole wheel
-	if ui.bestiole_wheel and is_instance_valid(ui.bestiole_wheel):
-		ui.bestiole_wheel.update_awen(store.get_awen() if store.has_method("get_awen") else 0)
-		ui.bestiole_wheel.update_bond(store.get_bestiole_bond() if store.has_method("get_bestiole_bond") else 0)
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
@@ -2082,9 +2073,6 @@ func _on_run_ended(ending: Dictionary) -> void:
 	# Show end screen
 	if ui and is_instance_valid(ui):
 		ui.show_end_screen(ending)
-
-	# Check bestiole evolution eligibility after run
-	_check_evolution_after_run()
 
 
 func _on_mission_progress(step: int, total: int) -> void:
@@ -2275,18 +2263,9 @@ func _on_ogham_selected(skill_id: String) -> void:
 	_use_ogham(skill_id)
 
 
-func _on_awen_changed(_old_value: int, new_value: int) -> void:
-	if ui and ui.bestiole_wheel:
-		ui.bestiole_wheel.update_awen(new_value)
-
-
-func _on_bond_tier_changed(_old_tier: String, _new_tier: String) -> void:
-	if store and ui and ui.bestiole_wheel:
-		ui.bestiole_wheel.update_bond(store.get_bestiole_bond())
-
 
 func _use_ogham(skill_id: String) -> void:
-	"""Activate a Bestiole Ogham skill via the store."""
+	"""Activate an Ogham skill via the store."""
 	if skill_id.strip_edges().is_empty():
 		return
 	_try_tutorial("first_ogham_used")
@@ -2294,7 +2273,7 @@ func _use_ogham(skill_id: String) -> void:
 		return
 
 	var raw_result: Variant = await store.dispatch({
-		"type": "TRIADE_USE_OGHAM",
+		"type": "USE_OGHAM",
 		"skill_id": skill_id,
 		"card": current_card,
 	})
@@ -2313,198 +2292,6 @@ func _unhandled_input(event: InputEvent) -> void:
 			elif store:
 				ui.bestiole_wheel.open_wheel(store)
 			get_viewport().set_input_as_handled()
-
-
-# ═══════════════════════════════════════════════════════════════════════════════
-# CONVENIENCE
-# ═══════════════════════════════════════════════════════════════════════════════
-
-func get_souffle() -> int:
-	return store.get_souffle() if store else 0
-
-
-
-# ═══════════════════════════════════════════════════════════════════════════════
-# BESTIOLE EVOLUTION — Path choice UI (Phase 37)
-# ═══════════════════════════════════════════════════════════════════════════════
-
-func _check_evolution_after_run() -> void:
-	"""Check if Bestiole can evolve after a run ends."""
-	if not store:
-		return
-	var evo_check: Dictionary = store.check_bestiole_evolution()
-	if not evo_check.get("can_evolve", false):
-		return
-
-	# Show evolution choice after a delay (let end screen settle)
-	if not is_inside_tree():
-		return
-	await get_tree().create_timer(2.5).timeout
-	if not is_inside_tree():
-		return
-	_show_evolution_choice(evo_check)
-
-
-func _show_evolution_choice(evo_data: Dictionary) -> void:
-	"""Display evolution path choice overlay (Protecteur/Oracle/Diplomate)."""
-	if not ui:
-		return
-
-	var next_stage: int = int(evo_data.get("next_stage", 2))
-	var stage_name: String = str(evo_data.get("name", ""))
-
-	# Build overlay
-	var overlay := ColorRect.new()
-	overlay.name = "EvolutionOverlay"
-	overlay.set_anchors_preset(Control.PRESET_FULL_RECT)
-	overlay.color = Color(MerlinVisual.CRT_PALETTE["bg_deep"].r, MerlinVisual.CRT_PALETTE["bg_deep"].g, MerlinVisual.CRT_PALETTE["bg_deep"].b, 0.75)
-	overlay.mouse_filter = Control.MOUSE_FILTER_STOP
-	ui.add_child(overlay)
-
-	var center := VBoxContainer.new()
-	center.set_anchors_preset(Control.PRESET_CENTER)
-	center.grow_horizontal = Control.GROW_DIRECTION_BOTH
-	center.grow_vertical = Control.GROW_DIRECTION_BOTH
-	center.custom_minimum_size = Vector2(500, 400)
-	center.add_theme_constant_override("separation", 16)
-	overlay.add_child(center)
-
-	# Title
-	var title := Label.new()
-	title.text = "Evolution de Bestiole"
-	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	title.add_theme_font_size_override("font_size", MerlinVisual.BODY_LARGE)
-	title.add_theme_color_override("font_color", MerlinVisual.CRT_PALETTE["amber"])
-	center.add_child(title)
-
-	var subtitle := Label.new()
-	subtitle.text = "Stade %d: %s — Choisissez une voie" % [next_stage, stage_name]
-	subtitle.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	subtitle.add_theme_font_size_override("font_size", MerlinVisual.CAPTION_LARGE)
-	subtitle.add_theme_color_override("font_color", MerlinVisual.CRT_PALETTE["phosphor"])
-	center.add_child(subtitle)
-
-	# Path cards row
-	var row := HBoxContainer.new()
-	row.alignment = BoxContainer.ALIGNMENT_CENTER
-	row.add_theme_constant_override("separation", 12)
-	center.add_child(row)
-
-	# Colors per aspect (centralized in MerlinVisual)
-	var aspect_colors: Dictionary = MerlinVisual.ASPECT_COLORS
-
-	for path_id in MerlinConstants.BESTIOLE_EVOLUTION_PATHS:
-		var path_data: Dictionary = MerlinConstants.BESTIOLE_EVOLUTION_PATHS[path_id]
-		var path_name: String = str(path_data.get("name", path_id))
-		var aspect: String = str(path_data.get("aspect", ""))
-		var bonus: String = str(path_data.get("bonus", ""))
-		var cost: Dictionary = path_data.get("cost", {})
-		var can_afford: bool = store.can_afford_evolution_path(path_id)
-		var aspect_color: Color = aspect_colors.get(aspect, Color.WHITE)
-
-		var card := PanelContainer.new()
-		card.custom_minimum_size = Vector2(150, 200)
-		var card_style := StyleBoxFlat.new()
-		card_style.bg_color = MerlinVisual.CRT_PALETTE["bg_deep"]
-		card_style.border_color = aspect_color if can_afford else MerlinVisual.CRT_PALETTE["inactive"]
-		card_style.set_border_width_all(2)
-		card_style.corner_radius_top_left = 8
-		card_style.corner_radius_top_right = 8
-		card_style.corner_radius_bottom_left = 8
-		card_style.corner_radius_bottom_right = 8
-		card_style.content_margin_left = 10
-		card_style.content_margin_top = 10
-		card_style.content_margin_right = 10
-		card_style.content_margin_bottom = 10
-		card.add_theme_stylebox_override("panel", card_style)
-		row.add_child(card)
-
-		var vbox := VBoxContainer.new()
-		vbox.add_theme_constant_override("separation", 8)
-		card.add_child(vbox)
-
-		# Path name
-		var name_lbl := Label.new()
-		name_lbl.text = path_name
-		name_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-		name_lbl.add_theme_font_size_override("font_size", MerlinVisual.BODY_SMALL)
-		name_lbl.add_theme_color_override("font_color", aspect_color)
-		vbox.add_child(name_lbl)
-
-		# Aspect
-		var aspect_lbl := Label.new()
-		aspect_lbl.text = "(%s)" % aspect
-		aspect_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-		aspect_lbl.add_theme_font_size_override("font_size", MerlinVisual.CAPTION_SMALL)
-		aspect_lbl.add_theme_color_override("font_color", MerlinVisual.CRT_PALETTE["phosphor_dim"])
-		vbox.add_child(aspect_lbl)
-
-		# Bonus
-		var bonus_lbl := Label.new()
-		bonus_lbl.text = bonus.replace("_", " ").capitalize()
-		bonus_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-		bonus_lbl.autowrap_mode = TextServer.AUTOWRAP_WORD
-		bonus_lbl.add_theme_font_size_override("font_size", MerlinVisual.CAPTION_SMALL)
-		bonus_lbl.add_theme_color_override("font_color", MerlinVisual.CRT_PALETTE["phosphor"])
-		vbox.add_child(bonus_lbl)
-
-		# Cost
-		var cost_parts: Array = []
-		for elem in cost:
-			cost_parts.append("%s: %d" % [elem, int(cost[elem])])
-		var cost_lbl := Label.new()
-		cost_lbl.text = ", ".join(cost_parts)
-		cost_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-		cost_lbl.add_theme_font_size_override("font_size", MerlinVisual.CAPTION_TINY)
-		cost_lbl.add_theme_color_override("font_color", MerlinVisual.CRT_ASPECT_COLORS["Monde"] if can_afford else MerlinVisual.CRT_PALETTE["danger"])
-		vbox.add_child(cost_lbl)
-
-		# Choose button
-		var btn := Button.new()
-		btn.text = "Choisir" if can_afford else "Insuffisant"
-		btn.disabled = not can_afford
-		btn.custom_minimum_size = Vector2(0, 32)
-		btn.add_theme_font_size_override("font_size", 13)
-		var _path_id: String = path_id  # Capture for closure
-		btn.pressed.connect(func():
-			_confirm_evolution(_path_id, overlay)
-		)
-		vbox.add_child(btn)
-
-	# Skip button (evolve without path — only for stage 1 → 2)
-	if next_stage <= 2:
-		var skip_btn := Button.new()
-		skip_btn.text = "Evoluer sans voie"
-		skip_btn.custom_minimum_size = Vector2(200, 32)
-		skip_btn.add_theme_font_size_override("font_size", 13)
-		skip_btn.pressed.connect(func():
-			_confirm_evolution("", overlay)
-		)
-		center.add_child(skip_btn)
-
-
-func _confirm_evolution(path: String, overlay: Control) -> void:
-	"""Apply evolution and dismiss the overlay."""
-	if not store:
-		return
-	var result: Dictionary = store.evolve_bestiole(path)
-	if result.get("ok", false):
-		var stage_name: String = str(result.get("name", ""))
-		var path_name: String = str(result.get("path", ""))
-		var msg: String = "Bestiole a evolue en %s" % stage_name
-		if path_name != "":
-			msg += " (voie %s)" % path_name.capitalize()
-		print("[EVOLUTION] %s" % msg)
-		# Play SFX
-		var sfx: Node = get_node_or_null("/root/SFXManager")
-		if sfx and sfx.has_method("play"):
-			sfx.play("evolution_confirm")
-	else:
-		print("[EVOLUTION] Failed: %s" % str(result.get("error", "unknown")))
-
-	# Remove overlay
-	if overlay and is_instance_valid(overlay):
-		overlay.queue_free()
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
@@ -2555,7 +2342,7 @@ func _try_tutorial(trigger_key: String) -> void:
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
-# B.1 — SOUFFLE PERK HELPERS
+# VISION PERK HELPERS
 # ═══════════════════════════════════════════════════════════════════════════════
 
 func _check_vision_perk_auto_reveal() -> void:
@@ -2572,56 +2359,6 @@ func _check_vision_perk_auto_reveal() -> void:
 	var options: Array = current_card.get("options", [])
 	if ui and is_instance_valid(ui) and ui.has_method("show_reveal_effects"):
 		ui.show_reveal_effects(options, -1)  # -1 = reveal all
-
-func _get_souffle_perk_dc_bonus() -> int:
-	## Returns DC dice bonus for the selected Souffle Perk.
-	## Fallback: +4 (same as pre-B.1 hardcoded value).
-	if store == null:
-		return 4
-	var perk_id: String = str(store.state.get("run", {}).get("perks", {}).get("selected_perk", ""))
-	match perk_id:
-		"bouclier":     return 2   # Protection: smaller bonus, shield side-effect
-		"surge":        return 6   # Power: large dice bonus
-		"vision":       return 2   # Reveal: smaller bonus, reveal side-effect
-		"canalisation": return 4   # Balanced: same as legacy +4
-		_:              return 4   # No perk selected → legacy behavior
-
-
-func _apply_souffle_perk_side_effect() -> void:
-	## Apply the non-DC side effect of the selected perk when Souffle is used.
-	if store == null:
-		return
-	var perk_id: String = str(store.state.get("run", {}).get("perks", {}).get("selected_perk", ""))
-	match perk_id:
-		"bouclier":
-			# Shield: set flag — next negative aspect shift is ignored
-			var run: Dictionary = store.state.get("run", {})
-			run["souffle_shield_active"] = true
-			store.state["run"] = run
-			print("[TRIADE] Souffle perk BOUCLIER: shield active for next negative effect")
-		"vision":
-			# Vision: set flag — next card's hidden effects will be revealed in UI
-			var run: Dictionary = store.state.get("run", {})
-			run["souffle_vision_active"] = true
-			store.state["run"] = run
-			print("[TRIADE] Souffle perk VISION: next hidden effects will be revealed")
-		"surge":
-			# Surge: handled by DC bonus alone (+6), no extra side-effect for MVP
-			print("[TRIADE] Souffle perk SURGE: +6 DC bonus applied")
-		"canalisation":
-			# Canalisation: activate equipped Ogham skill if available
-			if store and store.biomes:
-				var run: Dictionary = store.state.get("run", {})
-				var biome_key: String = str(run.get("current_biome", ""))
-				if not biome_key.is_empty():
-					var biome_ogham: String = ""
-					if store.biomes.has_method("get_biome_ogham"):
-						biome_ogham = str(store.biomes.get_biome_ogham(biome_key))
-					if not biome_ogham.is_empty() and store.has_method("dispatch"):
-						store.dispatch({"type": "TRIADE_USE_SKILL", "skill_id": biome_ogham, "card": current_card})
-					print("[TRIADE] Souffle perk CANALISATION: activated ogham '%s'" % biome_ogham)
-		_:
-			pass  # No perk selected or unrecognized
 
 
 func _exit_tree() -> void:
