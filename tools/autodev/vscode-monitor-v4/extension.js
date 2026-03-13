@@ -424,9 +424,76 @@ class RemoteTrainProvider {
     return this.root;
   }
 
+  _generateNonce() {
+    const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+    let nonce = '';
+    for (let i = 0; i < 32; i++) nonce += chars.charAt(Math.floor(Math.random() * chars.length));
+    return nonce;
+  }
+
+  _getInitialHtml(webview) {
+    const extUri = vscode.Uri.file(path.join(__dirname));
+    const dataBridgeUri = webview.asWebviewUri(vscode.Uri.joinPath(extUri, 'sidebar-data-bridge.js'));
+    const neuralUri = webview.asWebviewUri(vscode.Uri.joinPath(extUri, 'neural-renderer.js'));
+    const bridgeUri = webview.asWebviewUri(vscode.Uri.joinPath(extUri, 'sidebar-bridge.js'));
+    const nonce = this._generateNonce();
+
+    return `<!DOCTYPE html><html><head>
+      <meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'unsafe-inline'; script-src 'nonce-${nonce}';">
+      <style>${CSS}
+        #galaxyContainer { height: 70vh; position: relative; overflow: hidden; border-bottom: 1px solid ${CRT.border}; }
+        #neuralCanvas { width: 100%; height: 100%; display: block; }
+        #textSection { height: 30vh; overflow-y: auto; padding: 4px 0; }
+        .textBlock { padding: 4px 8px; }
+        .moreToggle { cursor:pointer;color:${CRT.greenDim};font-size:9px;text-transform:uppercase;letter-spacing:.8px;user-select:none;padding:4px 8px; }
+        .moreToggle:hover { color:${CRT.green}; }
+        .moreContent { display:none; }
+        .moreContent.expanded { display:block; }
+      </style>
+    </head><body>
+      <div id="galaxyContainer">
+        <canvas id="neuralCanvas"></canvas>
+      </div>
+      <div id="textSection">
+        <div id="section-activity" class="textBlock"></div>
+        <div id="section-agents" class="textBlock"></div>
+        <div id="section-sessions" class="textBlock"></div>
+        <div class="moreToggle" onclick="toggleMore()">&#9654; More (Brain, Chat, Roster)</div>
+        <div id="section-more" class="moreContent"></div>
+      </div>
+      <script nonce="${nonce}" src="${dataBridgeUri}"></script>
+      <script nonce="${nonce}" src="${neuralUri}"></script>
+      <script nonce="${nonce}" src="${bridgeUri}"></script>
+      <script nonce="${nonce}">
+        function send(type, payload) { window._sidebarSend(type, payload); }
+        function selectBrain(brain) { window._sidebarSend('selectBrain', { brain: brain }); }
+        function sendBrain(action) { window._sidebarSend(action, { brain: '${this.selectedBrain}' }); }
+        function clearBox() { var el = document.getElementById('prompt'); if (el) el.value = ''; }
+        function chat() {
+          var el = document.getElementById('prompt');
+          var prompt = (el && el.value || '').trim();
+          if (!prompt) return;
+          window._sidebarSend('chat', { prompt: prompt });
+          el.value = '';
+        }
+        function quickHello() { window._sidebarSend('chat', { prompt: 'Bonjour Merlin' }); }
+        var _moreExpanded = false;
+        function toggleMore() {
+          _moreExpanded = !_moreExpanded;
+          var el = document.getElementById('section-more');
+          if (el) el.className = _moreExpanded ? 'moreContent expanded' : 'moreContent';
+        }
+      </script>
+    </body></html>`;
+  }
+
   resolveWebviewView(view) {
     this.view = view;
-    view.webview.options = { enableScripts: true };
+    const extUri = vscode.Uri.file(path.join(__dirname));
+    view.webview.options = {
+      enableScripts: true,
+      localResourceRoots: [extUri]
+    };
     view.webview.onDidReceiveMessage(async (msg) => {
       if (!msg || !msg.type) return;
       switch (msg.type) {
@@ -480,15 +547,21 @@ class RemoteTrainProvider {
       }
     });
     this.resolveRoot();
+
+    // Set HTML once (canvas + scripts + text placeholders)
+    view.webview.html = this._getInitialHtml(view.webview);
+
     this._loadSessionState();
     this._loadActiveAgents();
     this._loadAgentMessages();
     this._loadAgentStatus();
     this._loadFullRoster();
     this._loadClaudeSessions();
-    this.update();
 
-    // Multi-frequency polling: 3s base, 10s processes, 30s roster
+    // Initial data push (delayed to let webview scripts load)
+    setTimeout(() => this.update(), 500);
+
+    // Multi-frequency polling: 3s base, 10s processes, 5s roster
     if (this._sessionPoll) clearInterval(this._sessionPoll);
     this._pollTick = 0;
     this._sessionPoll = setInterval(() => {
@@ -502,9 +575,13 @@ class RemoteTrainProvider {
       if (this._pollTick % 3 === 0) {
         this._loadClaudeSessions();
       }
-      // Every 30s (tick 10,20,...): refresh full roster
-      if (this._pollTick % 10 === 0) {
+      // Every 5s (tick 2,4,6,...): refresh roster from registry
+      if (this._pollTick % 2 === 0) {
         this._loadFullRoster();
+      }
+      // Every ~9s (tick 3,6,9...): refresh parent map async (non-blocking)
+      if (this._pollTick % 3 === 0) {
+        this._refreshParentMapAsync();
       }
       if (this.view) this.update();
     }, 3000);
@@ -1053,42 +1130,67 @@ class RemoteTrainProvider {
   _loadFullRoster() {
     const homeDir = os.homedir();
     const roster = { agents: [], skills: [] };
+    const registryPath = path.join(homeDir, '.claude', 'project_registry.json');
+    const seenAgents = new Set();
+    const seenSkills = new Set();
 
-    // 1. Scan agent .md files from ~/.claude/agents/ and project agents_dir
-    const agentDirs = [path.join(homeDir, '.claude', 'agents')];
+    // 1. PRIMARY SOURCE: project_registry.json (source of truth)
     try {
-      const registryPath = path.join(homeDir, '.claude', 'project_registry.json');
       const regData = fs.readFileSync(registryPath, 'utf8');
       const registry = JSON.parse(regData);
+
+      // Extract agents from project agent dirs
       if (registry.projects) {
         for (const [pName, pCfg] of Object.entries(registry.projects)) {
-          if (pCfg.agents_dir && !agentDirs.includes(pCfg.agents_dir)) {
-            agentDirs.push(pCfg.agents_dir);
+          // Scan agents_dir if available
+          if (pCfg.agents_dir) {
+            try {
+              const files = fs.readdirSync(pCfg.agents_dir).filter(f => f.endsWith('.md') && f !== 'AGENTS.md' && f !== 'AGENT_TEMPLATE.md');
+              for (const f of files) {
+                const name = f.replace(/\.md$/, '');
+                if (!seenAgents.has(name)) {
+                  seenAgents.add(name);
+                  roster.agents.push({ name, source: pCfg.agents_dir, project: pName });
+                }
+              }
+            } catch { /* dir not found */ }
+          }
+        }
+      }
+
+      // Extract skills from skill_triggers keys
+      if (registry.skill_triggers) {
+        for (const [trigger, skillNames] of Object.entries(registry.skill_triggers)) {
+          const names = Array.isArray(skillNames) ? skillNames : [skillNames];
+          for (const name of names) {
+            if (name && !seenSkills.has(name)) {
+              seenSkills.add(name);
+              roster.skills.push({ name });
+            }
           }
         }
       }
     } catch { /* registry not available */ }
 
-    const seenAgents = new Set();
-    for (const dir of agentDirs) {
-      try {
-        const files = fs.readdirSync(dir).filter(f => f.endsWith('.md') && f !== 'AGENTS.md' && f !== 'AGENT_TEMPLATE.md');
-        for (const f of files) {
-          const name = f.replace(/\.md$/, '');
-          if (!seenAgents.has(name)) {
-            seenAgents.add(name);
-            roster.agents.push({ name, source: dir });
-          }
+    // 2. FALLBACK: scan global agents dir + skills dir (for items not in registry)
+    const globalAgentsDir = path.join(homeDir, '.claude', 'agents');
+    try {
+      const files = fs.readdirSync(globalAgentsDir).filter(f => f.endsWith('.md') && f !== 'AGENTS.md' && f !== 'AGENT_TEMPLATE.md');
+      for (const f of files) {
+        const name = f.replace(/\.md$/, '');
+        if (!seenAgents.has(name)) {
+          seenAgents.add(name);
+          roster.agents.push({ name, source: globalAgentsDir });
         }
-      } catch { /* dir not found */ }
-    }
+      }
+    } catch { /* dir not found */ }
 
-    // 2. Scan skill directories from ~/.claude/skills/
     const skillsDir = path.join(homeDir, '.claude', 'skills');
     try {
       const entries = fs.readdirSync(skillsDir, { withFileTypes: true });
       for (const e of entries) {
-        if (e.isDirectory()) {
+        if (e.isDirectory() && !seenSkills.has(e.name)) {
+          seenSkills.add(e.name);
           roster.skills.push({ name: e.name });
         }
       }
@@ -1344,6 +1446,102 @@ class RemoteTrainProvider {
     }).join('');
   }
 
+  _detectProjectId() {
+    const root = this.root || '';
+    if (/Godot-MCP/i.test(root)) return 'merlin';
+    if (/Cours/i.test(root)) return 'cours';
+    if (/Data|Partage VOC/i.test(root)) return 'data';
+    return 'merlin';
+  }
+
+  _buildRosterForCanvas() {
+    const r = this._fullRoster;
+    if (!r) return null;
+
+    // Build DataBridge-compatible format: { projects, commonAgents, skills }
+    const projectId = this._detectProjectId();
+    const rosterData = {
+      projects: {},
+      commonAgents: [],
+      skills: []
+    };
+
+    // Group agents by guessed category
+    for (const a of r.agents) {
+      const cat = this._guessAgentCategory(a.name);
+      rosterData.commonAgents.push({
+        name: a.name,
+        category: cat,
+        description: ''
+      });
+    }
+
+    // Skills
+    for (const s of r.skills) {
+      rosterData.skills.push({
+        name: s.name,
+        score: s.count || 0
+      });
+    }
+
+    return rosterData;
+  }
+
+  _guessAgentCategory(name) {
+    const n = String(name).toLowerCase();
+    if (/game|godot|gdscript|scene|sprite|biome/.test(n)) return 'gameplay';
+    if (/ui|ux|visual|css|html|frontend/.test(n)) return 'ui-ux';
+    if (/llm|lora|ai|brain|swarm|ollama/.test(n)) return 'llm-lora';
+    if (/data|query|sql|bigquery|hive|qlik|powerbi|dbeaver/.test(n)) return 'data';
+    if (/test|review|security|build|tdd/.test(n)) return 'review';
+    if (/doc|plan|architect/.test(n)) return 'planning';
+    return 'general';
+  }
+
+  _buildInvocationMetrics() {
+    const r = this._fullRoster;
+    if (!r) return null;
+    const topAgents = r.agents.filter(a => a.count > 0).map(a => ({ name: a.name, count: a.count }));
+    const topSkills = r.skills.filter(s => s.count > 0).map(s => ({ name: s.name, count: s.count }));
+    return { topAgents, topSkills };
+  }
+
+  _buildLiveAgents() {
+    const data = this._activeAgents;
+    if (!data || !Array.isArray(data.agents)) return null;
+    return data.agents
+      .filter(a => a.status === 'in_progress')
+      .map(a => ({
+        name: a.name || '',
+        project: a.project || 'unknown',
+        description: a.task || ''
+      }));
+  }
+
+  _buildParentMap() {
+    // Return cached parent map (refreshed async every 10s)
+    return this._cachedParentMap || {};
+  }
+
+  _refreshParentMapAsync() {
+    const invocPath = path.join(os.homedir(), '.claude', 'metrics', 'agent_invocations.jsonl');
+    fs.readFile(invocPath, 'utf8', (err, content) => {
+      if (err || !content) { this._cachedParentMap = {}; return; }
+      const parentMap = {};
+      const lines = content.trim().split('\n');
+      const recent = lines.slice(-50);
+      for (const line of recent) {
+        try {
+          const entry = JSON.parse(line);
+          const name = entry.agent || entry.skill || '';
+          const parent = entry.parent_agent || '';
+          if (name && parent) parentMap[name] = parent;
+        } catch { /* skip */ }
+      }
+      this._cachedParentMap = parentMap;
+    });
+  }
+
   update() {
     if (!this.view) return;
     const root = this.resolveRoot();
@@ -1352,75 +1550,93 @@ class RemoteTrainProvider {
     const cfg = getConfig();
     const state = root ? readJson(remoteState(root)) : {};
     const rawStatus = String(root ? (state.last_status || 'idle') : 'chat_only');
-    const color = this.isBusy
-      ? CRT.cyan
-      : /success|ready|submitted|running|complete|checked/i.test(rawStatus)
-      ? CRT.green
-      : /fail|error/i.test(rawStatus)
-      ? CRT.red
-      : root
-      ? CRT.amber
-      : CRT.cyan;
-    const statusLabel = this.isBusy ? 'BUSY' : (root ? rawStatus.toUpperCase() : 'CHAT ONLY');
     const trainDisabled = (this.isBusy || !root) ? 'disabled' : '';
-    const openDisabled = this.isBusy ? 'disabled' : '';
     const chatDisabled = this.isBusy ? 'disabled' : '';
     const endpointLabel = cfg.testEndpoint ? cfg.testEndpoint : 'local Ollama';
-
     const brainsState = (state && state.brains) || {};
     const trainedCount = BRAIN_LIST.filter((b) => (brainsState[b] || {}).status === 'complete').length;
     const brainSummary = `${trainedCount}/${BRAIN_LIST.length} trained`;
-
     const selBrainState = brainsState[this.selectedBrain] || {};
     const selJob = selBrainState.job || '';
 
-    this.view.webview.html = `<!DOCTYPE html><html><head><style>${CSS}
-      .brainBoard { border:1px solid ${CRT.border}; border-radius:3px; padding:4px; margin:6px 0; background:#061006; }
-    </style></head><body>
-      <div class="header">
-        <span class="title">M.E.R.L.I.N. REMOTE</span>
-        <span class="status" style="color:${color}">${escapeHtml(statusLabel)}</span>
-      </div>
+    const webview = this.view.webview;
 
+    // 1. Send roster data to canvas (for NeuralRenderer)
+    const rosterData = this._buildRosterForCanvas();
+    if (rosterData) {
+      webview.postMessage({
+        type: 'rosterData',
+        data: rosterData,
+        projectId: this._detectProjectId()
+      });
+    }
+
+    // 2. Send session status data (for DataBridge.applyStatus)
+    const sessionData = this._sessionState || {};
+    webview.postMessage({
+      type: 'statusData',
+      data: sessionData
+    });
+
+    // 3. Send live agents (for DataBridge.applyLiveActivity)
+    const liveAgents = this._buildLiveAgents();
+    if (liveAgents && liveAgents.length > 0) {
+      webview.postMessage({
+        type: 'liveAgents',
+        agents: liveAgents
+      });
+    }
+
+    // 4. Send metrics (for DataBridge.applyMetrics)
+    const metrics = this._buildInvocationMetrics();
+    if (metrics) {
+      webview.postMessage({ type: 'metricsData', data: metrics });
+    }
+
+    // 5. Send parent map (for delegation traces)
+    const parentMap = this._buildParentMap();
+    if (Object.keys(parentMap).length > 0) {
+      webview.postMessage({ type: 'parentData', map: parentMap });
+    }
+
+    // 6. Send text section HTML updates (incremental, no DOM rebuild)
+    webview.postMessage({
+      type: 'htmlUpdate',
+      sections: {
+        activity: this.claudeActivityHtml(),
+        agents: `<div class="block"><div class="blockTitle">&#9889; Agents Actifs</div>${this.activeAgentsHtml()}</div>`,
+        sessions: `<div class="block"><div class="blockTitle">&#128268; SESSIONS</div>${this.claudeSessionsHtml()}</div>`,
+        more: this._moreHtml(state, cfg, trainDisabled, chatDisabled, endpointLabel, brainSummary, selBrainState, selJob)
+      }
+    });
+  }
+
+  _moreHtml(state, cfg, trainDisabled, chatDisabled, endpointLabel, brainSummary, selBrainState, selJob) {
+    return `
       <div class="block">
         <div class="blockTitle">&#9889; STATE &mdash; ORCHESTRATOR</div>
         ${this.stateMachineHtml()}
         <div class="blockTitle" style="margin-top:6px">AGENTS</div>
         ${this.agentStatusBadgesHtml()}
       </div>
-
       <div class="block">
         <div class="blockTitle">&#128241; AGENT BUS</div>
         ${this.agentBusHtml()}
       </div>
-
       ${this.debugLoopHtml()}
-
       <div class="block">
-        <div class="blockTitle">&#9889; Agents Actifs (Claude)</div>
-        ${this.activeAgentsHtml()}
-      </div>
-
-      <div class="block">
-        <div class="blockTitle">&#128268; CLAUDE CODE SESSIONS</div>
-        ${this.claudeSessionsHtml()}
-      </div>
-
-      <div class="block">
-        <div class="blockTitle">&#128218; ROSTER AGENTS &amp; SKILLS</div>
+        <div class="blockTitle">&#128218; ROSTER</div>
         ${this.fullRosterHtml()}
       </div>
-
       <div class="block">
         <div class="blockTitle">Brain Status Board &mdash; ${escapeHtml(brainSummary)}</div>
-        <div class="brainBoard">${this.brainStatusHtml(state)}</div>
+        <div style="border:1px solid ${CRT.border};border-radius:3px;padding:4px;margin:6px 0;background:#061006">${this.brainStatusHtml(state)}</div>
         <div class="btnRow">
           <button class="btnAmber" ${trainDisabled} onclick="send('trainAll')">Train All</button>
           <button class="btnCyan" ${trainDisabled} onclick="send('configure')">Configure</button>
           <button onclick="send('refresh')">Refresh</button>
         </div>
       </div>
-
       <div class="block">
         <div class="blockTitle">Actions &mdash; ${escapeHtml(BRAIN_LABELS[this.selectedBrain] || this.selectedBrain)}</div>
         <table>
@@ -1429,25 +1645,17 @@ class RemoteTrainProvider {
           <tr><td class="k">Status</td><td class="v">${escapeHtml(selBrainState.status || 'pending')}</td></tr>
         </table>
         <div class="btnRow">
-          <button ${trainDisabled} title="${escapeHtml(ACTION_DESCRIPTIONS.doctor)}" onclick="sendBrain('doctor')">Doctor</button>
-          <button ${trainDisabled} title="${escapeHtml(ACTION_DESCRIPTIONS.setup)}" onclick="sendBrain('setup')">Setup</button>
-          <button ${trainDisabled} title="${escapeHtml(ACTION_DESCRIPTIONS.submit)}" onclick="sendBrain('submit')">Submit</button>
-          <button ${trainDisabled} title="${escapeHtml(ACTION_DESCRIPTIONS.status)}" onclick="sendBrain('status')">Status</button>
-          <button ${trainDisabled} title="${escapeHtml(ACTION_DESCRIPTIONS.download)}" onclick="sendBrain('download')">Download</button>
+          <button ${trainDisabled} onclick="sendBrain('doctor')">Doctor</button>
+          <button ${trainDisabled} onclick="sendBrain('setup')">Setup</button>
+          <button ${trainDisabled} onclick="sendBrain('submit')">Submit</button>
+          <button ${trainDisabled} onclick="sendBrain('status')">Status</button>
+          <button ${trainDisabled} onclick="sendBrain('download')">Download</button>
         </div>
-        <div class="btnRow">
-          <button class="btnAmber" ${openDisabled} onclick="send('openKaggle')">Open Kaggle</button>
-        </div>
-        <div class="hint">Survolez un bouton pour voir sa description. Cliquez un brain pour le s\u00e9lectionner.</div>
       </div>
-
       <div class="block">
         <div class="blockTitle">M\u00e9triques Training</div>
         ${this.metricsHtml()}
-        <div class="hint" style="margin-top:4px">Mis \u00e0 jour apr\u00e8s chaque Download.</div>
-        ${this.claudeActivityHtml()}
       </div>
-
       <div class="block">
         <div class="blockTitle">Chat Merlin</div>
         <table>
@@ -1455,17 +1663,12 @@ class RemoteTrainProvider {
           <tr><td class="k">Endpoint</td><td class="v">${escapeHtml(endpointLabel)}</td></tr>
         </table>
         <div class="modeToggle">
-          <div class="modeBtn ${this.chatMode === 'merlin' ? 'active-merlin' : ''}" onclick="send('toggleChatMode')" title="Merlin — persona myst\u00e9rieux, celtique">&#9670; Merlin</div>
-          <div class="modeBtn ${this.chatMode === 'dev' ? 'active-dev' : ''}" onclick="send('toggleChatMode')" title="Dev — assistant technique du projet">&#9654; Dev</div>
-        </div>
-        <div class="btnRow">
-          <button ${chatDisabled} onclick="send('presetTogether')">Preset Together</button>
-          <button ${chatDisabled} onclick="send('presetGroq')">Preset Groq</button>
-          <button ${chatDisabled} onclick="send('presetRunpod')">Preset RunPod</button>
+          <div class="modeBtn ${this.chatMode === 'merlin' ? 'active-merlin' : ''}" onclick="send('toggleChatMode')">&#9670; Merlin</div>
+          <div class="modeBtn ${this.chatMode === 'dev' ? 'active-dev' : ''}" onclick="send('toggleChatMode')">&#9654; Dev</div>
         </div>
         <div class="chatWrap">
           <div class="chatLog">${this.chatHtml()}</div>
-          <textarea id="prompt" placeholder="${this.chatMode === 'merlin' ? 'Parle \u00e0 Merlin...' : 'Question technique sur le projet...'}"></textarea>
+          <textarea id="prompt" placeholder="${this.chatMode === 'merlin' ? 'Parle \u00e0 Merlin...' : 'Question technique...'}"></textarea>
           <div class="btnRow">
             <button class="btnCyan" ${chatDisabled} onclick="chat()">Send</button>
             <button ${chatDisabled} onclick="quickHello()">Bonjour</button>
@@ -1473,29 +1676,10 @@ class RemoteTrainProvider {
           </div>
         </div>
       </div>
-
       <div class="block">
-        <div class="blockTitle">Prochaines Sessions d\u2019Entra\u00eenement</div>
+        <div class="blockTitle">Prochaines Sessions</div>
         ${this.nextSessionsHtml()}
-        <div class="hint" style="margin-top:4px">Fichier\u00a0: .merlin_remote/training_roadmap.json</div>
-      </div>
-
-      <script>
-        const vscode = acquireVsCodeApi();
-        function send(type) { vscode.postMessage({ type }); }
-        function selectBrain(brain) { vscode.postMessage({ type: 'selectBrain', brain }); }
-        function sendBrain(action) { vscode.postMessage({ type: action, brain: '${this.selectedBrain}' }); }
-        function clearBox() { document.getElementById('prompt').value = ''; }
-        function chat() {
-          const el = document.getElementById('prompt');
-          const prompt = (el.value || '').trim();
-          if (!prompt) return;
-          vscode.postMessage({ type: 'chat', prompt });
-          el.value = '';
-        }
-        function quickHello() { vscode.postMessage({ type: 'chat', prompt: 'Bonjour Merlin' }); }
-      </script>
-    </body></html>`;
+      </div>`;
   }
   refresh() {
     this.update();
