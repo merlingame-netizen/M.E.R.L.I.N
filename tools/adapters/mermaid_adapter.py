@@ -11,6 +11,8 @@ Full Orange/MERLIN branded diagram engine with:
 from __future__ import annotations
 
 import json
+import os
+import re
 import subprocess
 import sys
 import tempfile
@@ -31,6 +33,13 @@ THEME_DIR = Path.home() / ".claude" / "workspace" / "orange"
 MCD_SOURCE_DIR = Path.home() / ".claude" / "workspace" / "orange"
 _ALLOWED_OUTPUT_ROOTS = [Path.home().resolve()]
 _ALLOWED_EXTENSIONS = {".png", ".svg", ".pdf"}
+_MAX_INPUT_BYTES = 512 * 1024  # 512 KB
+_MAX_DIMENSION = 16384  # px — browser/GPU canvas limit
+_SAFE_NAME = re.compile(r"^[a-zA-Z0-9_-]{1,64}$")
+_HEX_COLOR = re.compile(r"^#[0-9A-Fa-f]{6}$")
+_SAFE_FONT = re.compile(r"^[a-zA-Z0-9 ,\-_.']{1,256}$")
+_BUILTIN_THEMES = frozenset(("orange", "merlin", "cours"))
+_MMDC_BUILTIN_THEMES = frozenset(("default", "forest", "dark", "neutral", "base"))
 
 THEME_MAP: dict[str, str] = {
     "orange": "mermaid-orange-theme.json",
@@ -88,6 +97,8 @@ class MermaidAdapter(BaseAdapter):
                 width: int = 0, height: int = 0, **_kw: Any) -> dict:
         if not input:
             return self.error("render requires --input (mermaid code)")
+        if len(input.encode("utf-8")) > _MAX_INPUT_BYTES:
+            return self.error(f"Input too large: max {_MAX_INPUT_BYTES // 1024} KB")
         fmt = format  # avoid shadowing builtin
         if fmt not in ("png", "svg", "pdf"):
             return self.error(f"Unsupported format: {fmt}")
@@ -106,6 +117,8 @@ class MermaidAdapter(BaseAdapter):
         """Render with auto-detected project theme."""
         if not input:
             return self.error("render-themed requires --input (mermaid code)")
+        if len(input.encode("utf-8")) > _MAX_INPUT_BYTES:
+            return self.error(f"Input too large: max {_MAX_INPUT_BYTES // 1024} KB")
         fmt = format
 
         project = self._detect_project()
@@ -136,7 +149,7 @@ class MermaidAdapter(BaseAdapter):
         if not input_path.exists():
             return self.error(f"File not found: {input_path}")
         # Input must be under user home
-        if not any(str(input_path).startswith(str(r)) for r in _ALLOWED_OUTPUT_ROOTS):
+        if not any(input_path.is_relative_to(r) for r in _ALLOWED_OUTPUT_ROOTS):
             return self.error(f"Input path outside allowed directory: {input_path}")
         if input_path.suffix != ".mmd":
             return self.error(f"Input must be a .mmd file, got: {input_path.suffix}")
@@ -154,12 +167,18 @@ class MermaidAdapter(BaseAdapter):
         out_path = Path(output).expanduser().resolve()
 
         # Path traversal guard: output must be under user home
-        if not any(str(out_path).startswith(str(r)) for r in _ALLOWED_OUTPUT_ROOTS):
+        if not any(out_path.is_relative_to(r) for r in _ALLOWED_OUTPUT_ROOTS):
             return self.error(f"Output path outside allowed directory: {out_path}")
         if out_path.suffix not in _ALLOWED_EXTENSIONS:
             return self.error(f"Output must be .png/.svg/.pdf, got: {out_path.suffix}")
 
         out_path.parent.mkdir(parents=True, exist_ok=True)
+
+        # Dimension bounds
+        if width < 0 or height < 0:
+            return self.error("Dimensions must be non-negative")
+        if width > _MAX_DIMENSION or height > _MAX_DIMENSION:
+            return self.error(f"Dimensions exceed maximum of {_MAX_DIMENSION}px")
 
         npx = self.resolve_cmd("npx")
         cmd = [npx, "mmdc", "-i", input_path, "-o", str(out_path)]
@@ -224,6 +243,8 @@ class MermaidAdapter(BaseAdapter):
     def _validate(self, input: str = "", **_kw: Any) -> dict:
         if not input:
             return self.error("validate requires --input (mermaid code)")
+        if len(input.encode("utf-8")) > _MAX_INPUT_BYTES:
+            return self.error(f"Input too large: max {_MAX_INPUT_BYTES // 1024} KB")
 
         input_path = self._write_temp_mmd(input)
 
@@ -263,6 +284,18 @@ class MermaidAdapter(BaseAdapter):
                       background: str = "#FFFFFF", **_kw: Any) -> dict:
         if not name:
             return self.error("create-theme requires --name")
+        if not _SAFE_NAME.match(name):
+            return self.error("Theme name must be alphanumeric/dash/underscore, max 64 chars")
+        if name in _BUILTIN_THEMES:
+            return self.error(f"Cannot overwrite built-in theme: {name}")
+
+        # Validate colors
+        for field, value in [("primary_color", primary_color), ("background", background)]:
+            if not _HEX_COLOR.match(value):
+                return self.error(f"{field} must be a 6-digit hex color like #FF7900, got: {value!r}")
+        # Validate font
+        if not _SAFE_FONT.match(font):
+            return self.error("font must contain only safe CSS font-family characters, max 256 chars")
 
         # Derive colors from primary
         border = self._darken_hex(primary_color, 0.2)
@@ -288,14 +321,17 @@ class MermaidAdapter(BaseAdapter):
             },
         }
 
-        out_path = THEME_DIR / f"mermaid-{name}-theme.json"
+        out_path = (THEME_DIR / f"mermaid-{name}-theme.json").resolve()
+        # Defense-in-depth: verify resolved path stays inside THEME_DIR
+        if not out_path.is_relative_to(THEME_DIR.resolve()):
+            return self.error("Resolved theme path escapes THEME_DIR")
         out_path.parent.mkdir(parents=True, exist_ok=True)
         out_path.write_text(json.dumps(theme_data, indent=2, ensure_ascii=False), encoding="utf-8")
 
         # Register in THEME_MAP for runtime use
         THEME_MAP[name] = out_path.name
 
-        self.log(f"Theme created: {out_path}")
+        self.log(f"Theme created: {name}")
         return self.ok({"path": str(out_path), "name": name})
 
     # ── File opener ───────────────────────────────────────────────────────
@@ -303,10 +339,19 @@ class MermaidAdapter(BaseAdapter):
     def _open(self, path: str = "", **_kw: Any) -> dict:
         if not path:
             return self.error("open requires --path")
-        p = Path(path).expanduser()
+        p = Path(path).expanduser().resolve()
+        # Boundary check
+        if not p.is_relative_to(Path.home().resolve()):
+            return self.error(f"Path outside allowed directory: {p}")
+        # Extension allowlist (prevent opening .exe/.bat/.cmd/.ps1)
+        if p.suffix.lower() not in _ALLOWED_EXTENSIONS:
+            return self.error(f"Extension not allowed: {p.suffix}")
         if not p.exists():
             return self.error(f"File not found: {p}")
-        self._auto_open(p)
+        try:
+            self._auto_open(p)
+        except Exception as exc:  # noqa: BLE001
+            self.log(f"Auto-open failed (non-critical): {exc}")
         return self.ok({"opened": str(p)})
 
     # ── Helpers ───────────────────────────────────────────────────────────
@@ -315,8 +360,7 @@ class MermaidAdapter(BaseAdapter):
         """Return mmdc CLI args for theming."""
         if config:
             config_path = Path(config).expanduser().resolve()
-            theme_root = THEME_DIR.resolve()
-            if not str(config_path).startswith(str(theme_root)):
+            if not config_path.is_relative_to(THEME_DIR.resolve()):
                 self.log(f"Config path outside THEME_DIR, ignoring: {config_path}")
             elif config_path.exists():
                 return ["--configFile", str(config_path)]
@@ -326,7 +370,7 @@ class MermaidAdapter(BaseAdapter):
             path = THEME_DIR / THEME_MAP[theme]
             if path.exists():
                 return ["--configFile", str(path)]
-        if theme:
+        if theme in _MMDC_BUILTIN_THEMES:
             return ["--theme", theme]
         return ["--theme", "default"]
 
@@ -340,12 +384,8 @@ class MermaidAdapter(BaseAdapter):
 
     @staticmethod
     def _auto_open(path: Path) -> None:
-        """Open file in default Windows viewer."""
-        try:
-            subprocess.Popen(["cmd", "/c", "start", "", str(path)],
-                             stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
-        except OSError:
-            pass  # Non-critical if open fails
+        """Open file in default Windows viewer (os.startfile — no shell involved)."""
+        os.startfile(str(path))  # noqa: S606 — Windows-only, no shell metachar risk
 
     @staticmethod
     def _write_temp_mmd(code: str) -> str:
