@@ -11,6 +11,9 @@ const FIELDS := {
 	"observation": ["observer", "guetter", "voir", "chercher", "scruter", "regarder", "epier", "decouvrir", "cache"],
 	"logique": ["penser", "resoudre", "comprendre", "enigme", "deduire", "puzzle", "noeud", "rune", "symbole"],
 	"finesse": ["esquiver", "attraper", "lancer", "viser", "combattre", "frapper", "courir", "sauter", "reflexe"],
+	"vigueur": ["force", "endurance", "puissance", "resistance", "muscle", "soulever", "pousser", "tenir", "effort"],
+	"esprit": ["volonte", "mental", "concentration", "mediter", "calme", "serenite", "focus", "respirer", "esprit"],
+	"perception": ["sentir", "entendre", "percevoir", "instinct", "flair", "ombre", "echo", "memoire", "sens"],
 }
 
 # Mini-game scenes per field
@@ -20,6 +23,9 @@ const GAMES := {
 	"observation": ["mg_oeil_corbeau", "mg_trace_cerf", "mg_rune_cachee"],
 	"logique": ["mg_enigme_ogham", "mg_noeud_celtique", "mg_pierre_feuille_racine"],
 	"finesse": ["mg_tir_a_larc", "mg_lame_druide", "mg_pas_renard"],
+	"vigueur": ["mg_combat_rituel", "mg_sang_froid", "mg_course"],
+	"esprit": ["mg_volonte", "mg_apaisement", "mg_meditation"],
+	"perception": ["mg_ombres", "mg_regard", "mg_echo"],
 }
 
 # Ogham category -> field bonus mapping
@@ -29,6 +35,9 @@ const OGHAM_FIELD_BONUS := {
 	"boost": "finesse",
 	"narrative": "bluff",
 	"recovery": "chance",
+	"combat": "vigueur",
+	"focus": "esprit",
+	"sense": "perception",
 }
 
 
@@ -50,6 +59,15 @@ const TAG_FIELD_MAP := {
 	"trade": "bluff",
 	"recovery": "chance",
 	"balance": "logique",
+	"strength": "vigueur",
+	"physical": "vigueur",
+	"endurance": "vigueur",
+	"willpower": "esprit",
+	"meditation": "esprit",
+	"spirit": "esprit",
+	"stealth": "perception",
+	"tracking": "perception",
+	"senses": "perception",
 }
 
 
@@ -66,7 +84,7 @@ static func detect_field(narrative_text: String, gm_hint: String = "", tags: Arr
 
 	# Keyword matching in narrative text
 	var lower := narrative_text.to_lower()
-	var scores := {"chance": 0, "bluff": 0, "observation": 0, "logique": 0, "finesse": 0}
+	var scores := {"chance": 0, "bluff": 0, "observation": 0, "logique": 0, "finesse": 0, "vigueur": 0, "esprit": 0, "perception": 0}
 	for field in FIELDS:
 		for keyword in FIELDS[field]:
 			if lower.find(keyword) >= 0:
@@ -111,6 +129,18 @@ static func create_minigame(field: String, difficulty: int = 5, modifiers: Dicti
 		"mg_noeud_celtique": game = preload("res://scripts/minigames/mg_noeud_celtique.gd").new()
 		"mg_lame_druide": game = preload("res://scripts/minigames/mg_lame_druide.gd").new()
 		"mg_pas_renard": game = preload("res://scripts/minigames/mg_pas_renard.gd").new()
+		# Vigueur
+		"mg_combat_rituel": game = preload("res://scripts/minigames/mg_combat_rituel.gd").new()
+		"mg_sang_froid": game = preload("res://scripts/minigames/mg_sang_froid.gd").new()
+		"mg_course": game = preload("res://scripts/minigames/mg_course.gd").new()
+		# Esprit
+		"mg_volonte": game = preload("res://scripts/minigames/mg_volonte.gd").new()
+		"mg_apaisement": game = preload("res://scripts/minigames/mg_apaisement.gd").new()
+		"mg_meditation": game = preload("res://scripts/minigames/mg_meditation.gd").new()
+		# Perception
+		"mg_ombres": game = preload("res://scripts/minigames/mg_ombres.gd").new()
+		"mg_regard": game = preload("res://scripts/minigames/mg_regard.gd").new()
+		"mg_echo": game = preload("res://scripts/minigames/mg_echo.gd").new()
 
 	if game == null:
 		# Ultimate fallback: De du Destin
