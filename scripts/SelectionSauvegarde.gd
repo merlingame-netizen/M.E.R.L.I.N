@@ -18,8 +18,9 @@ func _ready() -> void:
 	Input.set_mouse_mode(Input.MOUSE_MODE_VISIBLE)
 	_load_fonts()
 	_apply_theme()
-	_build_profile_ui()
 	back_button.pressed.connect(_on_back_pressed)
+	# Auto-continue (Hades-style): skip UI, load profile and go
+	_auto_continue()
 
 
 func _load_fonts() -> void:
@@ -91,6 +92,21 @@ func _style_button(btn: Button) -> void:
 	btn.add_theme_color_override("font_pressed_color", btn_accent_color)
 	btn.add_theme_font_override("font", font_body)
 	btn.add_theme_font_size_override("font_size", 16)
+
+
+func _auto_continue() -> void:
+	if _save.profile_exists():
+		var store: Node = get_node_or_null("/root/MerlinStore")
+		if store and store.has_method("dispatch"):
+			var result = await store.dispatch({"type": "LOAD_PROFILE"})
+			if result is Dictionary and result.get("ok", false):
+				_go_to_scene(GAME_SCENE)
+				return
+		# Fallback: profile exists but load failed — show UI
+		_build_profile_ui()
+	else:
+		# No profile: go directly, store will create default state
+		_go_to_scene(GAME_SCENE)
 
 
 func _build_profile_ui() -> void:
