@@ -1,6 +1,6 @@
 # M.E.R.L.I.N. LoRA Fine-Tuning Pipeline
 
-Pipeline pour specialiser le Narrator brain (Qwen 2.5-3B-Instruct) sur le style narratif celtique de Merlin.
+Pipeline pour specialiser le Narrator brain (Qwen 3.5-4B) sur le style narratif celtique de Merlin.
 
 ## Pipeline
 
@@ -59,7 +59,7 @@ Le jeu detecte et charge automatiquement l'adapter au demarrage.
 | rank (r) | 16 | Augmenter si sous-apprentissage |
 | alpha | 2x rank | Ratio standard |
 | epochs | 3 | Augmenter si loss ne converge pas |
-| learning_rate | 3e-4 | Reduire si loss instable |
+| learning_rate | 2e-4 | Reduire si loss instable |
 | batch_size | 4 x 4 | Effective batch 16 |
 
 ## Metriques cibles

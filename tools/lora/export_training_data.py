@@ -550,7 +550,7 @@ def main():
             "version": "2.1.0",
             "description": "M.E.R.L.I.N. narrator dataset for LoRA fine-tuning (optionally scene-aware).",
             "format": "ChatML conversations (system/user/assistant)",
-            "base_model": "Qwen/Qwen2.5-3B-Instruct",
+            "base_model": "Qwen/Qwen3.5-4B",
             "total_samples": len(all_samples),
             "scene_aware_mode": SCENE_AWARE,
             "design_principle": (

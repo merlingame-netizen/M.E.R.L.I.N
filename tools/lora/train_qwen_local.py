@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-M.E.R.L.I.N. — QLoRA Fine-Tuning (Qwen 2.5-1.5B)
+M.E.R.L.I.N. — QLoRA Fine-Tuning (Qwen 3.5-4B)
 Script standalone — executable depuis VS Code, terminal, Colab, HuggingFace, etc.
 
 Usage:
@@ -99,7 +99,7 @@ def main():
     # === 3. Load model ===
     from unsloth import FastLanguageModel
 
-    MODEL_NAME = "unsloth/Qwen2.5-1.5B-Instruct-bnb-4bit"
+    MODEL_NAME = "unsloth/Qwen3.5-2B-bnb-4bit"
     print(f"\nChargement du modele: {MODEL_NAME}...")
     model, tokenizer = FastLanguageModel.from_pretrained(
         model_name=MODEL_NAME,

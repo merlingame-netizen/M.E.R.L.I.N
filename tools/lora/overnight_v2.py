@@ -172,7 +172,7 @@ def phase_eval_v1(v1_checkpoint: str = None) -> dict:
     import torch
     from transformers import AutoModelForCausalLM, AutoTokenizer
 
-    MODEL_NAME = "Qwen/Qwen2.5-1.5B-Instruct"
+    MODEL_NAME = "Qwen/Qwen3.5-2B"
 
     # Find best checkpoint
     if not v1_checkpoint:
@@ -462,7 +462,7 @@ def phase_optimize_dataset() -> str:
 
     # ── Step 5: Verify token lengths ─────────────────────────────────
     from transformers import AutoTokenizer
-    tokenizer = AutoTokenizer.from_pretrained("Qwen/Qwen2.5-1.5B-Instruct", trust_remote_code=True)
+    tokenizer = AutoTokenizer.from_pretrained("Qwen/Qwen3.5-2B", trust_remote_code=True)
 
     token_counts = []
     for s in v9_samples:
@@ -756,7 +756,7 @@ def phase_train_v2(dataset_path: str, max_hours: float = 10.0, epochs: int = 3,
     from datasets import Dataset as HFDataset
     from trl import SFTTrainer, SFTConfig
 
-    MODEL_NAME = "Qwen/Qwen2.5-1.5B-Instruct"
+    MODEL_NAME = "Qwen/Qwen3.5-2B"
     output_dir = str(V2_OUTPUT)
     os.makedirs(output_dir, exist_ok=True)
 
@@ -800,7 +800,7 @@ def phase_train_v2(dataset_path: str, max_hours: float = 10.0, epochs: int = 3,
     lora_config = LoraConfig(
         r=16,
         lora_alpha=32,
-        target_modules=["q_proj", "k_proj", "v_proj", "o_proj"],  # 4 modules (vs 2 in v1)
+        target_modules=["q_proj", "k_proj", "v_proj", "o_proj"],  # 4 modules intentional (7 would OOM on CPU overnight runs)
         lora_dropout=0.05,  # Small dropout for regularization
         bias="none",
         task_type=TaskType.CAUSAL_LM,
@@ -972,7 +972,7 @@ def phase_merge_convert(adapter_dir: str) -> str:
     from transformers import AutoModelForCausalLM, AutoTokenizer
     from peft import PeftModel
 
-    MODEL_NAME = "Qwen/Qwen2.5-1.5B-Instruct"
+    MODEL_NAME = "Qwen/Qwen3.5-2B"
     merged_dir = str(V2_OUTPUT / "merged-model") if "v2" in adapter_dir else str(V1_OUTPUT / "merged-model")
 
     if not os.path.exists(adapter_dir):
@@ -1290,7 +1290,7 @@ def main():
             # Also benchmark base model for comparison
             try:
                 log("\nBenchmarking base model for comparison...")
-                base_metrics = phase_benchmark("qwen2.5:1.5b")
+                base_metrics = phase_benchmark("qwen3.5:4b")
                 log("\nComparison:")
                 for key in ["format_compliance", "french_rate", "celtic_density", "tu_rate"]:
                     base_val = base_metrics.get(key, 0)

@@ -2,8 +2,8 @@
 # Usage: ollama create merlin-narrator -f Modelfile
 # Ref: docs/LORA_TRAINING_SPEC.html
 
-FROM qwen2.5:1.5b
-ADAPTER ./addons/merlin_llm/adapters/merlin-lora-v1/merlin-narrator.gguf
+FROM qwen3.5:4b
+ADAPTER ./addons/merlin_llm/adapters/merlin_narrator_lora.gguf
 
 # Narrator parameters (from merlin_ai.gd)
 PARAMETER temperature 0.75

@@ -246,7 +246,7 @@ def main():
     # === Model ===
     from transformers import AutoModelForCausalLM, AutoTokenizer
 
-    MODEL_NAME = "Qwen/Qwen2.5-1.5B-Instruct"
+    MODEL_NAME = "Qwen/Qwen3.5-2B"
     print(f"\n  Loading {MODEL_NAME}...")
     t0 = time.time()
 
@@ -458,7 +458,7 @@ def export_gguf(model, tokenizer, output_dir: str):
         merged_model.save_pretrained(merged_dir)
         tokenizer.save_pretrained(merged_dir)
         print(f"  Merged to: {merged_dir}")
-        print(f"  To convert: python -m llama_cpp.convert {merged_dir} --outfile merlin-qwen-1.5b.gguf --outtype q4_k_m")
+        print(f"  To convert: python -m llama_cpp.convert {merged_dir} --outfile merlin-qwen-2b.gguf --outtype q4_k_m")
     except Exception as e:
         print(f"  Export error: {e}")
 

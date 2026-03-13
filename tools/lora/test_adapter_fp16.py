@@ -22,7 +22,7 @@ def main():
 
     print(f"PyTorch {torch.__version__} | CPU threads: {torch.get_num_threads()}")
 
-    MODEL_NAME = "Qwen/Qwen2.5-1.5B-Instruct"
+    MODEL_NAME = "Qwen/Qwen3.5-2B"
     adapter_path = args.adapter
     if not os.path.isabs(adapter_path):
         adapter_path = os.path.join(os.path.dirname(__file__), "..", "..", adapter_path)

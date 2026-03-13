@@ -12,7 +12,7 @@ signal log_updated(log_text: String)
 # Brain 1 = Narrator (4B creatif), Brain 2 = Game Master (2B logique + thinking)
 # Brain 3-4 = Worker Pool / Judge (0.8B — taches de fond / evaluation)
 # SINGLE+ mode: time-sharing (un seul modele en RAM, swap Ollama)
-const MODEL_FILE := "res://addons/merlin_llm/models/qwen2.5-3b-instruct-q4_k_m.gguf"
+const MODEL_FILE := "res://addons/merlin_llm/models/qwen3.5-4b-q4_k_m.gguf"
 const MODEL_CANDIDATES := [MODEL_FILE]
 const FastRoute = preload("res://addons/merlin_ai/fast_route.gd")
 const OllamaBackendScript = preload("res://addons/merlin_ai/ollama_backend.gd")

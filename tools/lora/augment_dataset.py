@@ -297,7 +297,7 @@ def main():
             "version": "1.0.0",
             "description": "Augmented M.E.R.L.I.N. narrator dataset for LoRA fine-tuning",
             "format": "ChatML conversations",
-            "base_model": "Qwen/Qwen2.5-3B-Instruct",
+            "base_model": "Qwen/Qwen3.5-4B",
             "scene_aware_mode": use_scene_aware,
             "total_samples": len(all_augmented),
             "augmentation_strategies": strategies,

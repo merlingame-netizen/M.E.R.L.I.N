@@ -98,7 +98,7 @@ BRAIN_DEFAULTS: dict[str, dict] = {
     "narrator": {
         "slug": "merlin-lora-narrator-4b",
         "title": "MERLIN LoRA Narrator (4B)",
-        "base_model": "Qwen/Qwen2.5-3B-Instruct",
+        "base_model": "Qwen/Qwen3.5-4B",
         "lora_r": 16,
         "lora_alpha": 32,
         "max_seq_len": 768,
@@ -110,7 +110,7 @@ BRAIN_DEFAULTS: dict[str, dict] = {
     "gamemaster": {
         "slug": "merlin-lora-game-master-2b",
         "title": "MERLIN LoRA Game Master (2B)",
-        "base_model": "Qwen/Qwen2.5-1.5B-Instruct",
+        "base_model": "Qwen/Qwen3.5-2B",
         "lora_r": 8,
         "lora_alpha": 16,
         "max_seq_len": 512,
@@ -122,7 +122,7 @@ BRAIN_DEFAULTS: dict[str, dict] = {
     "worker": {
         "slug": "merlin-lora-worker-0-8b",
         "title": "MERLIN LoRA Worker (0.8B)",
-        "base_model": "Qwen/Qwen2.5-0.5B-Instruct",
+        "base_model": "Qwen/Qwen3.5-0.8B",
         "lora_r": 8,
         "lora_alpha": 16,
         "max_seq_len": 256,
@@ -229,7 +229,7 @@ def detect_training_dataset(root: Path) -> Path:
 def training_script_content(dataset_b64: str, brain_cfg: Optional[dict] = None) -> str:
     """Generate Kaggle training script, parameterized by brain config."""
     cfg = brain_cfg or {}
-    base_model = cfg.get("base_model", "Qwen/Qwen2.5-1.5B-Instruct")
+    base_model = cfg.get("base_model", "Qwen/Qwen3.5-2B")
     lora_r = cfg.get("lora_r", 16)
     lora_alpha = cfg.get("lora_alpha", 32)
     max_seq_len = cfg.get("max_seq_len", 768)
@@ -249,23 +249,31 @@ import subprocess
 import sys
 from pathlib import Path
 
-def install(pkgs):
-    subprocess.check_call([sys.executable, "-m", "pip", "install", "-q", *pkgs])
+print("[merlin] Starting pip install (Qwen 3.5 compatible)...", flush=True)
 
-install([
-    "transformers==4.46.3",
-    "datasets==3.1.0",
-    "peft==0.13.2",
-    "trl==0.11.4",
-    "accelerate==0.34.2",
-    "sentencepiece==0.2.0",
-])
+def install(pkgs):
+    subprocess.check_call([sys.executable, "-m", "pip", "install", "-q", "--upgrade", *pkgs])
+
+try:
+    install([
+        "transformers>=5.2.0",
+        "datasets>=3.1.0",
+        "peft>=0.15.0",
+        "trl>=0.15.0",
+        "accelerate>=1.2.0",
+        "sentencepiece>=0.2.0",
+    ])
+    print("[merlin] pip install done.", flush=True)
+except Exception as e:
+    print(f"[merlin] pip install FAILED: {{e}}", flush=True)
+    raise
 
 import torch
 from datasets import load_dataset
 from peft import LoraConfig, get_peft_model
 from transformers import AutoModelForCausalLM, AutoTokenizer, TrainingArguments
 from trl import SFTTrainer
+print(f"[merlin] transformers={{__import__('transformers').__version__}}, peft={{__import__('peft').__version__}}, trl={{__import__('trl').__version__}}", flush=True)
 
 ROOT = Path("/kaggle/working")
 DATA_FILE = ROOT / "merlin_train.jsonl"
@@ -335,7 +343,7 @@ lora = LoraConfig(
     lora_dropout=0.05,
     bias="none",
     task_type="CAUSAL_LM",
-    target_modules=["q_proj", "k_proj", "v_proj", "o_proj"],
+    target_modules=["q_proj", "k_proj", "v_proj", "o_proj", "gate_proj", "up_proj", "down_proj"],
 )
 model = get_peft_model(model, lora)
 

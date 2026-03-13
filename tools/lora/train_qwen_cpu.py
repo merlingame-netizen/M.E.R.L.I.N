@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-M.E.R.L.I.N. — LoRA Fine-Tuning CPU (Qwen 2.5-1.5B)
+M.E.R.L.I.N. — LoRA Fine-Tuning CPU (Qwen 3.5-2B)
 Entrainement LOCAL sans GPU. Plus lent mais fonctionnel.
 
 Usage:
@@ -200,7 +200,7 @@ def main():
     # === 2. Load model (FP32 CPU) ===
     from transformers import AutoModelForCausalLM, AutoTokenizer
 
-    MODEL_NAME = "Qwen/Qwen2.5-1.5B-Instruct"
+    MODEL_NAME = "Qwen/Qwen3.5-2B"
     print(f"\nChargement {MODEL_NAME} en FP32 (CPU)...")
     print("  (Premiere execution: ~3 GB a telecharger)")
     t0 = time.time()
@@ -475,7 +475,7 @@ def export_gguf(model, tokenizer, output_dir: str):
         tokenizer.save_pretrained(merged_dir)
         print(f"  Merge OK. Pour convertir en GGUF:")
         print(f"    1. pip install llama-cpp-python")
-        print(f"    2. python -m llama_cpp.convert {merged_dir} --outfile merlin-qwen-1.5b.gguf --outtype q4_k_m")
+        print(f"    2. python -m llama_cpp.convert {merged_dir} --outfile merlin-qwen-2b.gguf --outtype q4_k_m")
         print(f"    3. ollama create merlin-narrator -f Modelfile")
     except Exception as e:
         print(f"  ERREUR export: {e}")

@@ -20,7 +20,7 @@ PROJECT_ROOT="$(cd "$SCRIPT_DIR/../.." && pwd)"
 
 LORA_DIR="${1:-$PROJECT_ROOT/output/merlin_narrator_lora}"
 OUTPUT_FILE="${2:-$PROJECT_ROOT/addons/merlin_llm/adapters/merlin_narrator_lora.gguf}"
-BASE_MODEL="Qwen/Qwen2.5-3B-Instruct"
+BASE_MODEL="Qwen/Qwen3.5-4B"
 
 # Check llama.cpp path
 LLAMA_CPP="${LLAMA_CPP_PATH:-$HOME/llama.cpp}"

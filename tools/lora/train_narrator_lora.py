@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
 LoRA fine-tuning script for M.E.R.L.I.N. Narrator brain.
-Uses Unsloth + HuggingFace PEFT for efficient training on Qwen 2.5-3B-Instruct.
+Uses Unsloth + HuggingFace PEFT for efficient training on Qwen 3.5-4B.
 
 Prerequisites:
   pip install unsloth peft transformers datasets accelerate bitsandbytes
@@ -26,7 +26,7 @@ PROJECT_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..
 
 DEFAULT_CONFIG = {
     # Model
-    "base_model": "Qwen/Qwen2.5-3B-Instruct",
+    "base_model": "Qwen/Qwen3.5-4B",
     "max_seq_length": 512,
     "load_in_4bit": True,
 
@@ -43,7 +43,7 @@ DEFAULT_CONFIG = {
     "num_epochs": 3,
     "per_device_batch_size": 4,
     "gradient_accumulation_steps": 4,
-    "learning_rate": 3e-4,
+    "learning_rate": 2e-4,
     "weight_decay": 0.01,
     "warmup_ratio": 0.03,
     "lr_scheduler_type": "cosine",
@@ -76,7 +76,7 @@ def load_dataset(path: str) -> list:
         user = convs[1]["content"]
         assistant = convs[2]["content"]
 
-        # ChatML format (Qwen 2.5 native)
+        # ChatML format (Qwen 3.5 native)
         text = (
             f"<|im_start|>system\n{system}<|im_end|>\n"
             f"<|im_start|>user\n{user}<|im_end|>\n"
