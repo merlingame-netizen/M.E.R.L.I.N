@@ -144,11 +144,12 @@ func _unhandled_input(event: InputEvent) -> void:
 		_holding = false
 		return
 
-	if event is InputEventKey and event.pressed and not event.echo:
-		_on_key_pressed(event.keycode)
+	super._unhandled_input(event)
 
 
 func _end_game() -> void:
+	if _finished:
+		return
 	var zone_ratio: float = clampf(_time_in_zone / _max_time, 0.0, 1.0)
 	var score: int = clampi(int(zone_ratio * 100.0), 0, 100)
 	var success: bool = score >= 40

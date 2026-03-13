@@ -162,7 +162,8 @@ func _on_dir_pressed(dir_index: int) -> void:
 		_feedback_label.modulate = MG_PALETTE.red
 
 	await get_tree().create_timer(0.6).timeout
-	_next_round()
+	if not _finished:
+		_next_round()
 
 
 func _on_key_pressed(keycode: int) -> void:
@@ -181,6 +182,8 @@ func _on_key_pressed(keycode: int) -> void:
 
 
 func _finish_game() -> void:
+	if _finished:
+		return
 	var score: int = clampi(int(float(_hits) / float(ROUND_COUNT) * 100.0), 0, 100)
 	var success: bool = _hits >= 3
 

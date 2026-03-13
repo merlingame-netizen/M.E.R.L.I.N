@@ -113,6 +113,8 @@ func _on_key_pressed(keycode: int) -> void:
 
 
 func _end_game() -> void:
+	if _finished:
+		return
 	var progress: float = minf(float(_taps) / float(_required_taps), 1.0)
 	var base_score: int = int(progress * 70.0)
 

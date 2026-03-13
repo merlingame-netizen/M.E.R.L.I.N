@@ -6,7 +6,7 @@ class_name MiniGameRegistry extends RefCounted
 
 # Lexical field keyword mappings
 const FIELDS := {
-	"chance": ["chance", "destin", "sort", "fortune", "hasard", "tirage", "de", "sort", "etoile"],
+	"chance": ["chance", "destin", "sort", "fortune", "hasard", "tirage", "de", "etoile"],
 	"bluff": ["parler", "negocier", "convaincre", "mentir", "persuader", "discuter", "diplomate", "bluff", "ruse"],
 	"observation": ["observer", "guetter", "voir", "chercher", "scruter", "regarder", "epier", "decouvrir", "cache"],
 	"logique": ["penser", "resoudre", "comprendre", "enigme", "deduire", "puzzle", "noeud", "rune", "symbole"],

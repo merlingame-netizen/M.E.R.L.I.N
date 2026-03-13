@@ -135,6 +135,8 @@ func _on_key_pressed(keycode: int) -> void:
 
 
 func _finish_game() -> void:
+	if _finished:
+		return
 	if _scores.is_empty():
 		_complete(false, 10)
 		return

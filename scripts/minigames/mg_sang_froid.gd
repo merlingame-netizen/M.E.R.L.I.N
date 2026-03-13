@@ -118,9 +118,7 @@ func _unhandled_input(event: InputEvent) -> void:
 		_release()
 		return
 
-	# Call parent for key pressed
-	if event is InputEventKey and event.pressed and not event.echo:
-		_on_key_pressed(event.keycode)
+	super._unhandled_input(event)
 
 
 func _release() -> void:

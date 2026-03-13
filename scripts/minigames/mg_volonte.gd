@@ -145,7 +145,8 @@ func _process(delta: float) -> void:
 			_feedback_label.modulate = MG_PALETTE.green
 
 		await get_tree().create_timer(0.5).timeout
-		_next_round()
+		if not _finished:
+			_next_round()
 
 
 func _on_button_pressed(index: int) -> void:
@@ -170,7 +171,8 @@ func _on_button_pressed(index: int) -> void:
 		btn.disabled = true
 
 	await get_tree().create_timer(0.5).timeout
-	_next_round()
+	if not _finished:
+		_next_round()
 
 
 func _on_key_pressed(keycode: int) -> void:
@@ -184,6 +186,8 @@ func _on_key_pressed(keycode: int) -> void:
 
 
 func _finish_game() -> void:
+	if _finished:
+		return
 	var accuracy: float = float(_hits) / float(ROUND_COUNT)
 	var miss_penalty: int = _misses * 8
 	var score: int = clampi(int(accuracy * 100.0) - miss_penalty, 0, 100)

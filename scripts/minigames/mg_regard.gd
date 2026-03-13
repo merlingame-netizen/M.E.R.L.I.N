@@ -145,6 +145,8 @@ func _on_key_pressed(keycode: int) -> void:
 
 
 func _finish_game() -> void:
+	if _finished:
+		return
 	for btn in _symbol_buttons:
 		btn.disabled = true
 

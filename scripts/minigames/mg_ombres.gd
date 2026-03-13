@@ -129,7 +129,8 @@ func _on_quadrant_pressed(index: int) -> void:
 		_feedback_label.modulate = MG_PALETTE.red
 
 	await get_tree().create_timer(0.7).timeout
-	_next_round()
+	if not _finished:
+		_next_round()
 
 
 func _on_key_pressed(keycode: int) -> void:
@@ -149,6 +150,8 @@ func _on_key_pressed(keycode: int) -> void:
 
 
 func _finish_game() -> void:
+	if _finished:
+		return
 	var base_score: int = int(float(_hits) / float(ROUND_COUNT) * 80.0)
 
 	var speed_bonus: int = 0
