@@ -1,8 +1,8 @@
 {
   "name": "autodev-monitor-v4",
   "displayName": "M.E.R.L.I.N. Remote",
-  "description": "VS Code panel for remote GPU training and chat test MERLIN",
-  "version": "12.1.0",
+  "description": "VS Code panel — GPU training, chat, agent roster, Claude sessions monitor",
+  "version": "13.0.0",
   "publisher": "merlin-local",
   "engines": {
     "vscode": "^1.80.0"

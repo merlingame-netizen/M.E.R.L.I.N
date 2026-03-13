@@ -115,6 +115,24 @@ textarea { width:100%; min-height:64px; resize:vertical; background:#051105; col
 .stateIndicator { display:flex; align-items:center; gap:8px; padding:4px 0; }
 .stateName { font-size:13px; font-weight:700; letter-spacing:1px; }
 .stateCycle { color:${CRT.gray}; font-size:10px; }
+.rosterToggle { cursor:pointer;color:${CRT.greenDim};font-size:9px;text-transform:uppercase;letter-spacing:.8px;user-select:none; }
+.rosterToggle:hover { color:${CRT.green}; }
+.rosterList { margin-top:4px; }
+.rosterItem { display:flex;justify-content:space-between;align-items:center;padding:1px 0;font-size:9px;border-bottom:1px solid ${CRT.border}; }
+.rosterName { color:${CRT.text}; }
+.rosterName.active { color:${CRT.green};font-weight:600; }
+.rosterMeta { color:${CRT.gray};font-size:8px; }
+.rosterCount { color:${CRT.amber};font-size:8px;margin-left:4px; }
+.rosterSection { margin-top:4px; }
+.rosterSectionTitle { color:${CRT.greenDim};font-size:8px;text-transform:uppercase;letter-spacing:.6px;margin-bottom:2px; }
+.sessionCard { display:flex;justify-content:space-between;align-items:center;padding:3px 0;border-bottom:1px solid ${CRT.border};font-size:9px; }
+.sessionCard.current { border-left:2px solid ${CRT.cyan};padding-left:4px; }
+.badge-active { display:inline-block;padding:1px 4px;border-radius:2px;font-size:7px;font-weight:700;background:#0c1e0c;color:${CRT.green};border:1px solid ${CRT.greenDim}; }
+.badge-stale { display:inline-block;padding:1px 4px;border-radius:2px;font-size:7px;font-weight:700;background:#1a1200;color:${CRT.amber};border:1px solid #554000; }
+.badge-offline { display:inline-block;padding:1px 4px;border-radius:2px;font-size:7px;font-weight:700;background:#1a0a0a;color:${CRT.red};border:1px solid #440000; }
+.pidRow { display:flex;align-items:center;gap:6px;padding:2px 0;font-size:9px;border-bottom:1px solid ${CRT.border}; }
+.pidLabel { color:${CRT.cyan};font-weight:600; }
+.pidMem { color:${CRT.gray}; }
 `;
 
 
@@ -394,6 +412,11 @@ class RemoteTrainProvider {
     this._activeAgents = null;
     this._agentMessages = null;
     this._agentStatus = null;
+    this._fullRoster = null;
+    this._claudeSessions = null;
+    this._pollTick = 0;
+    this._rosterExpanded = false;
+    this._sessionsExpanded = true;
   }
 
   resolveRoot() {
@@ -443,6 +466,14 @@ class RemoteTrainProvider {
           this.chatMode = this.chatMode === 'merlin' ? 'dev' : 'merlin';
           this.update();
           break;
+        case 'toggleRoster':
+          this._rosterExpanded = !this._rosterExpanded;
+          this.update();
+          break;
+        case 'toggleSessions':
+          this._sessionsExpanded = !this._sessionsExpanded;
+          this.update();
+          break;
         case 'chat':
           await this.chatSend(String(msg.prompt || '').trim());
           break;
@@ -453,16 +484,28 @@ class RemoteTrainProvider {
     this._loadActiveAgents();
     this._loadAgentMessages();
     this._loadAgentStatus();
+    this._loadFullRoster();
+    this._loadClaudeSessions();
     this.update();
 
-    // Poll session.json + active_agents.json + agent_messages.json + agent_status.json every 3s
+    // Multi-frequency polling: 3s base, 10s processes, 30s roster
     if (this._sessionPoll) clearInterval(this._sessionPoll);
+    this._pollTick = 0;
     this._sessionPoll = setInterval(() => {
+      this._pollTick++;
       this.resolveRoot();
       this._loadSessionState();
       this._loadActiveAgents();
       this._loadAgentMessages();
       this._loadAgentStatus();
+      // Every 10s (tick 3,6,9...): refresh Claude processes
+      if (this._pollTick % 3 === 0) {
+        this._loadClaudeSessions();
+      }
+      // Every 30s (tick 10,20,...): refresh full roster
+      if (this._pollTick % 10 === 0) {
+        this._loadFullRoster();
+      }
       if (this.view) this.update();
     }, 3000);
 
@@ -1006,6 +1049,245 @@ class RemoteTrainProvider {
     </div>`;
   }
 
+  // ── ROSTER: scan agents + skills + invocation counts ──
+  _loadFullRoster() {
+    const homeDir = os.homedir();
+    const roster = { agents: [], skills: [] };
+
+    // 1. Scan agent .md files from ~/.claude/agents/ and project agents_dir
+    const agentDirs = [path.join(homeDir, '.claude', 'agents')];
+    try {
+      const registryPath = path.join(homeDir, '.claude', 'project_registry.json');
+      const regData = fs.readFileSync(registryPath, 'utf8');
+      const registry = JSON.parse(regData);
+      if (registry.projects) {
+        for (const [pName, pCfg] of Object.entries(registry.projects)) {
+          if (pCfg.agents_dir && !agentDirs.includes(pCfg.agents_dir)) {
+            agentDirs.push(pCfg.agents_dir);
+          }
+        }
+      }
+    } catch { /* registry not available */ }
+
+    const seenAgents = new Set();
+    for (const dir of agentDirs) {
+      try {
+        const files = fs.readdirSync(dir).filter(f => f.endsWith('.md') && f !== 'AGENTS.md' && f !== 'AGENT_TEMPLATE.md');
+        for (const f of files) {
+          const name = f.replace(/\.md$/, '');
+          if (!seenAgents.has(name)) {
+            seenAgents.add(name);
+            roster.agents.push({ name, source: dir });
+          }
+        }
+      } catch { /* dir not found */ }
+    }
+
+    // 2. Scan skill directories from ~/.claude/skills/
+    const skillsDir = path.join(homeDir, '.claude', 'skills');
+    try {
+      const entries = fs.readdirSync(skillsDir, { withFileTypes: true });
+      for (const e of entries) {
+        if (e.isDirectory()) {
+          roster.skills.push({ name: e.name });
+        }
+      }
+    } catch { /* skills dir not found */ }
+
+    // 3. Cross-reference with invocation log for counts + last usage
+    const invocPath = path.join(homeDir, '.claude', 'metrics', 'agent_invocations.jsonl');
+    const invocCounts = {};
+    const invocLast = {};
+    try {
+      const lines = fs.readFileSync(invocPath, 'utf8').trim().split('\n');
+      for (const line of lines) {
+        try {
+          const entry = JSON.parse(line);
+          const n = entry.name || entry.agent || entry.skill || '';
+          if (!n) continue;
+          invocCounts[n] = (invocCounts[n] || 0) + 1;
+          if (entry.ts && (!invocLast[n] || entry.ts > invocLast[n])) {
+            invocLast[n] = entry.ts;
+          }
+        } catch { /* skip malformed line */ }
+      }
+    } catch { /* no invocations file */ }
+
+    // Enrich agents and skills with counts
+    for (const a of roster.agents) {
+      a.count = invocCounts[a.name] || 0;
+      a.lastUsed = invocLast[a.name] || null;
+    }
+    for (const s of roster.skills) {
+      s.count = invocCounts[s.name] || 0;
+      s.lastUsed = invocLast[s.name] || null;
+    }
+
+    // Sort by last used (desc), then by name
+    const sortByUsage = (a, b) => {
+      if (a.lastUsed && b.lastUsed) return b.lastUsed.localeCompare(a.lastUsed);
+      if (a.lastUsed) return -1;
+      if (b.lastUsed) return 1;
+      return a.name.localeCompare(b.name);
+    };
+    roster.agents.sort(sortByUsage);
+    roster.skills.sort(sortByUsage);
+
+    this._fullRoster = roster;
+  }
+
+  fullRosterHtml() {
+    const r = this._fullRoster;
+    if (!r) return `<span class="caDim">Roster non charge</span>`;
+
+    const arrow = this._rosterExpanded ? '&#9660;' : '&#9654;';
+    const agentCount = r.agents.length;
+    const skillCount = r.skills.length;
+    const header = `<div class="rosterToggle" onclick="send('toggleRoster')">${arrow} ${agentCount} agents, ${skillCount} skills</div>`;
+
+    if (!this._rosterExpanded) return header;
+
+    // Active agent names from current session
+    const activeNames = new Set();
+    const s = this._sessionState;
+    if (s && Array.isArray(s.recent_skills)) {
+      s.recent_skills.forEach(sk => activeNames.add(sk.name));
+    }
+
+    const renderItems = (items, limit) => {
+      const shown = items.slice(0, limit);
+      return shown.map(it => {
+        const isActive = activeNames.has(it.name);
+        const nameCls = isActive ? 'rosterName active' : 'rosterName';
+        const last = it.lastUsed ? escapeHtml(it.lastUsed.slice(0, 10)) : '';
+        const countBadge = it.count > 0 ? `<span class="rosterCount">x${it.count}</span>` : '';
+        return `<div class="rosterItem"><span class="${nameCls}">${escapeHtml(it.name)}</span><span><span class="rosterMeta">${last}</span>${countBadge}</span></div>`;
+      }).join('');
+    };
+
+    const agentsHtml = r.agents.length > 0
+      ? `<div class="rosterSection"><div class="rosterSectionTitle">Agents (${agentCount})</div><div class="rosterList">${renderItems(r.agents, 30)}</div></div>`
+      : '';
+    const skillsHtml = r.skills.length > 0
+      ? `<div class="rosterSection"><div class="rosterSectionTitle">Skills (${skillCount})</div><div class="rosterList">${renderItems(r.skills, 50)}</div></div>`
+      : '';
+
+    return `${header}${agentsHtml}${skillsHtml}`;
+  }
+
+  // ── SESSIONS: OS processes + multi-project session.json ──
+  _loadClaudeSessions() {
+    const sessions = { processes: [], projects: [] };
+
+    // 1. Detect claude OS processes (Windows)
+    try {
+      const result = cp.execSync(
+        'powershell -NoProfile -Command "Get-Process claude -ErrorAction SilentlyContinue | Select-Object Id,WorkingSet64,StartTime | ConvertTo-Json"',
+        { timeout: 5000, encoding: 'utf8', windowsHide: true }
+      );
+      if (result && result.trim()) {
+        let parsed = JSON.parse(result.trim());
+        if (!Array.isArray(parsed)) parsed = [parsed];
+        for (const p of parsed) {
+          sessions.processes.push({
+            pid: p.Id,
+            memMB: p.WorkingSet64 ? Math.round(p.WorkingSet64 / 1024 / 1024) : 0,
+            startTime: p.StartTime ? String(p.StartTime) : '',
+          });
+        }
+      }
+    } catch { /* no claude processes or powershell error */ }
+
+    // 2. Multi-project session.json scan
+    const homeDir = os.homedir();
+    try {
+      const registryPath = path.join(homeDir, '.claude', 'project_registry.json');
+      const regData = fs.readFileSync(registryPath, 'utf8');
+      const registry = JSON.parse(regData);
+      if (registry.projects) {
+        for (const [pName, pCfg] of Object.entries(registry.projects)) {
+          // Derive project root from agents_dir (go up from .claude/agents)
+          let projectRoot = null;
+          if (pCfg.agents_dir) {
+            projectRoot = path.resolve(pCfg.agents_dir, '..', '..');
+          }
+          if (!projectRoot) continue;
+
+          const sessionPath = path.join(projectRoot, 'tools', 'autodev', 'status', 'session.json');
+          try {
+            const data = JSON.parse(fs.readFileSync(sessionPath, 'utf8'));
+            const updatedAt = data.updated_at || '';
+            const ageMs = updatedAt ? Date.now() - new Date(updatedAt).getTime() : Infinity;
+            const ageSec = Math.round(ageMs / 1000);
+            let status = 'offline';
+            if (ageSec < 60) status = 'active';
+            else if (ageSec < 300) status = 'stale';
+
+            sessions.projects.push({
+              name: pCfg.display_name || pName,
+              key: pName,
+              objective: data.objective || '',
+              state: data.state || 'idle',
+              updatedAt,
+              ageSec,
+              status,
+              isCurrent: projectRoot === this.root,
+            });
+          } catch { /* session.json not found for this project */ }
+        }
+      }
+    } catch { /* registry not available */ }
+
+    this._claudeSessions = sessions;
+  }
+
+  claudeSessionsHtml() {
+    const data = this._claudeSessions;
+    if (!data) return `<span class="caDim">Sessions non chargees</span>`;
+
+    const arrow = this._sessionsExpanded ? '&#9660;' : '&#9654;';
+    const procCount = data.processes.length;
+    const projCount = data.projects.length;
+    const header = `<div class="rosterToggle" onclick="send('toggleSessions')">${arrow} ${procCount} process, ${projCount} projets</div>`;
+
+    if (!this._sessionsExpanded) return header;
+
+    // PID section
+    let pidHtml = '';
+    if (data.processes.length > 0) {
+      pidHtml = data.processes.map(p => {
+        const startShort = p.startTime ? String(p.startTime).slice(0, 19) : '';
+        return `<div class="pidRow"><span class="pidLabel">PID ${escapeHtml(String(p.pid))}</span><span class="pidMem">${escapeHtml(String(p.memMB))} MB</span><span class="rosterMeta">${escapeHtml(startShort)}</span></div>`;
+      }).join('');
+    } else {
+      pidHtml = `<span class="caDim">Aucun process claude detecte</span>`;
+    }
+
+    // Projects section
+    let projHtml = '';
+    if (data.projects.length > 0) {
+      projHtml = data.projects.map(p => {
+        const currentCls = p.isCurrent ? 'sessionCard current' : 'sessionCard';
+        const badgeCls = p.status === 'active' ? 'badge-active' : p.status === 'stale' ? 'badge-stale' : 'badge-offline';
+        const badgeLabel = p.status.toUpperCase();
+        const ageLabel = p.ageSec < 60 ? `${p.ageSec}s` : p.ageSec < 3600 ? `${Math.round(p.ageSec / 60)}m` : `${Math.round(p.ageSec / 3600)}h`;
+        const obj = p.objective ? escapeHtml(p.objective.slice(0, 50)) : '';
+        const safeKey = p.key.replace(/[^a-zA-Z0-9_-]/g, '_');
+        const prjCls = `agentPrj agentPrj-${safeKey}`;
+        return `<div class="${currentCls}">
+          <span><span class="${prjCls}">${escapeHtml(p.name)}</span> <span class="${badgeCls}">${badgeLabel}</span> <span class="rosterMeta">${ageLabel} ago</span></span>
+          ${obj ? `<div style="color:${CRT.gray};font-size:8px;margin-top:1px">${obj}</div>` : ''}
+        </div>`;
+      }).join('');
+    } else {
+      projHtml = `<span class="caDim">Aucun projet avec session.json</span>`;
+    }
+
+    return `${header}
+      <div class="rosterSection"><div class="rosterSectionTitle">Processus OS</div>${pidHtml}</div>
+      <div class="rosterSection"><div class="rosterSectionTitle">Projets</div>${projHtml}</div>`;
+  }
+
   claudeActivityHtml() {
     const s = this._sessionState;
     if (!s) return `<div class="claudeActivity"><div class="blockTitle">&#9889; CLAUDE CODE</div><span class="caDim">session.json non disponible</span></div>`;
@@ -1023,7 +1305,7 @@ class RemoteTrainProvider {
       : '';
 
     const skills = Array.isArray(s.recent_skills) && s.recent_skills.length > 0
-      ? s.recent_skills.map(sk =>
+      ? s.recent_skills.slice(0, 15).map(sk =>
           `<div class="caSkillRow"><span>&#10003; ${escapeHtml(sk.name)}</span><span class="caTs">${escapeHtml(sk.ts)}</span></div>`
         ).join('')
       : `<span class="caDim">Aucune action recente</span>`;
@@ -1117,6 +1399,16 @@ class RemoteTrainProvider {
       <div class="block">
         <div class="blockTitle">&#9889; Agents Actifs (Claude)</div>
         ${this.activeAgentsHtml()}
+      </div>
+
+      <div class="block">
+        <div class="blockTitle">&#128268; CLAUDE CODE SESSIONS</div>
+        ${this.claudeSessionsHtml()}
+      </div>
+
+      <div class="block">
+        <div class="blockTitle">&#128218; ROSTER AGENTS &amp; SKILLS</div>
+        ${this.fullRosterHtml()}
       </div>
 
       <div class="block">
