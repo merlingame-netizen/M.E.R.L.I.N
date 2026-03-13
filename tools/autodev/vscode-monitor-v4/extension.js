@@ -557,6 +557,9 @@ class RemoteTrainProvider {
     this._loadAgentStatus();
     this._loadFullRoster();
     this._loadClaudeSessions();
+    this._refreshRecentInvocationsAsync();
+    this._refreshSessionContextAsync();
+    this._refreshParentMapAsync();
 
     // Initial data push (delayed to let webview scripts load)
     setTimeout(() => this.update(), 500);
@@ -571,17 +574,17 @@ class RemoteTrainProvider {
       this._loadActiveAgents();
       this._loadAgentMessages();
       this._loadAgentStatus();
-      // Every 10s (tick 3,6,9...): refresh Claude processes
+      // Every 3s: refresh recent invocations + session context (lightweight, drives bubbles)
+      this._refreshRecentInvocationsAsync();
+      this._refreshSessionContextAsync();
+      // Every 10s (tick 3,6,9...): refresh Claude processes + parent map
       if (this._pollTick % 3 === 0) {
         this._loadClaudeSessions();
+        this._refreshParentMapAsync();
       }
       // Every 5s (tick 2,4,6,...): refresh roster from registry
       if (this._pollTick % 2 === 0) {
         this._loadFullRoster();
-      }
-      // Every ~9s (tick 3,6,9...): refresh parent map async (non-blocking)
-      if (this._pollTick % 3 === 0) {
-        this._refreshParentMapAsync();
       }
       if (this.view) this.update();
     }, 3000);
@@ -1507,20 +1510,84 @@ class RemoteTrainProvider {
   }
 
   _buildLiveAgents() {
+    const live = [];
+    const seen = new Set();
+
+    // Source 1: active_agents.json (Task-based agents still in_progress)
     const data = this._activeAgents;
-    if (!data || !Array.isArray(data.agents)) return null;
-    return data.agents
-      .filter(a => a.status === 'in_progress')
-      .map(a => ({
-        name: a.name || '',
-        project: a.project || 'unknown',
-        description: a.task || ''
-      }));
+    if (data && Array.isArray(data.agents)) {
+      for (const a of data.agents) {
+        if (a.status === 'in_progress' && a.name) {
+          const key = a.name.toLowerCase();
+          if (!seen.has(key)) {
+            seen.add(key);
+            live.push({ name: a.name, project: a.project || 'unknown', description: a.task || '' });
+          }
+        }
+      }
+    }
+
+    // Source 2: recent JSONL invocations (< 90s ago = likely still running)
+    const recentInvocs = this._cachedRecentInvocations || [];
+    const now = Date.now();
+    for (const inv of recentInvocs) {
+      const age = now - inv.tsMs;
+      if (age < 90000) { // 90s window
+        const name = inv.agent || inv.skill || '';
+        const key = name.toLowerCase();
+        if (name && !seen.has(key)) {
+          seen.add(key);
+          live.push({ name, project: inv.project || 'unknown', description: inv.description || '' });
+        }
+      }
+    }
+
+    // Source 3: session_context.json (last active agent, < 60s)
+    const ctx = this._cachedSessionContext;
+    if (ctx && ctx.last_agent) {
+      const ctxAge = ctx.last_agent_ts ? (now - new Date(ctx.last_agent_ts).getTime()) : Infinity;
+      if (ctxAge < 60000) {
+        const key = ctx.last_agent.toLowerCase();
+        if (!seen.has(key)) {
+          seen.add(key);
+          live.push({ name: ctx.last_agent, project: ctx.project || 'unknown', description: 'active (context)' });
+        }
+      }
+    }
+
+    return live.length > 0 ? live : null;
   }
 
   _buildParentMap() {
     // Return cached parent map (refreshed async every 10s)
     return this._cachedParentMap || {};
+  }
+
+  _refreshRecentInvocationsAsync() {
+    const invocPath = path.join(os.homedir(), '.claude', 'metrics', 'agent_invocations.jsonl');
+    fs.readFile(invocPath, 'utf8', (err, content) => {
+      if (err || !content) { this._cachedRecentInvocations = []; return; }
+      const lines = content.trim().split('\n');
+      const recent = lines.slice(-20); // last 20 entries
+      const entries = [];
+      for (const line of recent) {
+        try {
+          const entry = JSON.parse(line);
+          entry.tsMs = new Date(entry.ts).getTime();
+          entries.push(entry);
+        } catch { /* skip */ }
+      }
+      this._cachedRecentInvocations = entries;
+    });
+  }
+
+  _refreshSessionContextAsync() {
+    const ctxPath = path.join(os.homedir(), '.claude', 'metrics', '.session_context.json');
+    fs.readFile(ctxPath, 'utf8', (err, data) => {
+      if (err || !data) { this._cachedSessionContext = null; return; }
+      try { this._cachedSessionContext = JSON.parse(data); }
+      catch { this._cachedSessionContext = null; }
+    });
   }
 
   _refreshParentMapAsync() {
