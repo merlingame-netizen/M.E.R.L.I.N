@@ -1,8 +1,8 @@
-# GAME DESIGN BIBLE — M.E.R.L.I.N. : Le Jeu des Oghams v2.0
+# GAME DESIGN BIBLE — M.E.R.L.I.N. : Le Jeu des Oghams v2.2
 
 > **Source de verite unique** pour le game design de M.E.R.L.I.N.
 > Remplace et supersede : MASTER_DOCUMENT.md, DOC_12, DOC_13, DOC_11, NEW_MECHANICS_DESIGN.md
-> Date de creation : 2026-03-12 | Derniere mise a jour : 2026-03-12 (v2.1)
+> Date de creation : 2026-03-12 | Derniere mise a jour : 2026-03-13 (v2.2)
 
 ---
 
@@ -151,8 +151,15 @@ Le joueur commence avec 3 Oghams debloques : `beith`, `luis`, `quert` (1 reveal,
 |-----------|--------|
 | Type | Different selon le biome (herbes, coquillages, runes, etc.) |
 | Persistance | Per-run uniquement (perdue en fin de run) |
-| Sources | Recompense de minigames, evenements narratifs, **ramassee physiquement au sol dans la balade 3D** (clic) |
-| Usages | Faciliter les minigames, interactions PNJ, bonus temporaires |
+| Sources | Auto-run 3D (clic au sol), recompense de minigames, evenements narratifs |
+| Usages | **Polyvalente** — 3 types de depense (voir ci-dessous) |
+
+**Depenses de la monnaie biome pendant un run** :
+| Usage | Description |
+|-------|-------------|
+| **Marchands/esprits** | Des PNJ apparaissent via cartes evenement. Acheter des soins, buffs, indices. Chaque biome a son marchand thematique. |
+| **Boost minigames** | Depenser X monnaie avant un minigame pour un avantage (temps supplementaire, indice visuel, score minimum garanti). |
+| **Offrandes narratives** | Certaines cartes proposent des offrandes : laisser de la monnaie biome pour gagner de la rep faction, debloquer un chemin, calmer un esprit. |
 
 ### 2.5 Minigames — Le coeur du gameplay
 
@@ -283,7 +290,54 @@ Le joueur ne percoit pas d'ajustement lie a sa performance — le jeu reste cons
 | Promesse | 5% | Quete avec delai (max 2 actives) |
 | Merlin Direct | 5% | Intervention directe de Merlin |
 
-### 3.5 Conditions de fin
+### 3.5 Promesses / Quetes
+
+Les cartes de type "Promesse" creent des quetes avec un **countdown + choix** :
+- La promesse a un delai (**X cartes**, affiche dans le HUD)
+- Avant l'expiration, une carte propose explicitement de **tenir ou briser** la promesse
+- Si le joueur n'agit pas avant le delai → echec automatique (malus reputation)
+- **Max 2 promesses actives** simultanement
+- Resultat : tenir = rep faction +, briser = rep faction -, ignorer = pire malus
+
+### 3.6 Chaines d'evenements (arcs narratifs par biome)
+
+Chaque biome a **1 arc narratif exclusif** (3-5 cartes) + **1 arc cross-biome** (le mystere central).
+
+#### Arcs par biome
+Les arcs se declenchent progressivement sur **plusieurs runs** (pas en un seul run). Le joueur decouvre 1-2 cartes de l'arc par run, selon ses choix et les conditions.
+
+| Biome | Arc | Cartes | Condition declenchement |
+|-------|-----|:---:|--------------------------|
+| Foret de Broceliande | Le Chene Chantant | 3 | Rep Druides ≥ 30 |
+| Landes de Bruyere | L'Ermite du Vent | 4 | 3+ runs dans ce biome |
+| Cotes Sauvages | Le Phoque d'Argent | 3 | Rep Niamh ≥ 30 |
+| Villages Celtes | L'Assemblee Secrete | 5 | Rep Anciens ≥ 40 |
+| Cercles de Pierres | Le Rituel Oublie | 4 | 2+ Oghams debloques |
+| Marais des Korrigans | Le Tresor des Feux | 4 | Rep Korrigans ≥ 40 |
+| Collines aux Dolmens | La Voix des Rois | 3 | 5+ fins vues |
+| Iles Mystiques | Le Passage de Morgane | 5 | Rep Ankou ≥ 50 |
+
+#### Arc cross-biome : "Le Murmure des Oghams"
+Un mystere central qui se deroule sur **plusieurs biomes** (8-12 cartes au total). Le joueur decouvre des fragments dans differents biomes. Completer l'arc debloque la fin "Transcendance".
+
+### 3.7 PNJ recurrents
+
+Chaque biome a **1 PNJ nomme recurrent** que le joueur retrouve d'un run a l'autre. Sa relation evolue selon le contexte du biome.
+
+| Biome | PNJ | Role | Lien |
+|-------|-----|------|------|
+| Foret de Broceliande | Gwenn la Cueilleuse | Guide nature, marchande d'herbes | Druides |
+| Landes de Bruyere | Aedan l'Ermite | Sage solitaire, enigmes | Neutre (guide biome) |
+| Cotes Sauvages | Bran le Passeur | Marchand maritime, informations | Anciens |
+| Villages Celtes | Morwenna la Forge | Forgeronne, politique locale | Neutre (guide biome) |
+| Cercles de Pierres | Seren l'Etoilee | Druidesse mystique, rituels | Druides |
+| Marais des Korrigans | Puck le Lutin | Farceur, marchand de pieges | Korrigans |
+| Collines aux Dolmens | Taliesin le Barde | Conteur, gardien de memoire | Anciens |
+| Iles Mystiques | Branwen la Spectrale | Esprit enigmatique, epreuves | Ankou |
+
+En plus des PNJ recurrents, le LLM genere des **PNJ generiques** (villageois, esprits, marchands ambulants) a chaque run.
+
+### 3.8 Conditions de fin
 
 | Condition | Fin |
 |-----------|-----|
@@ -369,12 +423,36 @@ Le joueur ne percoit pas d'ajustement lie a sa performance — le jeu reste cons
 - **Oghams bonus** : ailm, ruis, ioho
 - **Monnaie biome** : Ecume solidifiee / Larmes de Morgane
 
-### 4.3 Balade 3D dans le biome
+### 4.3 Auto-Run 3D (balade pre-run)
 
-Chaque biome a une **scene 3D explorable** (style FPS contemplatif). Le joueur s'y promene :
-- Avant le run (transition, collecte de monnaie biome)
-- La monnaie biome est **physiquement presente au sol** — le joueur clique dessus pour la ramasser
-- L'ambiance visuelle (lumiere, couleurs) depend de l'heure reelle et de la saison in-game
+Le personnage **avance automatiquement** dans une scene 3D du biome. Le joueur **reagit aux evenements** en cliquant ou appuyant sur des touches au bon moment (style runner interactif).
+
+#### Rythme
+Variable selon le biome :
+| Biome | Rythme | Style |
+|-------|--------|-------|
+| Foret de Broceliande | Calme, espace (12-15s) | Meditatif, lumieres douces |
+| Landes de Bruyere | Modere (8-10s) | Vent, obstacles naturels |
+| Cotes Sauvages | Rythme par les vagues (6-8s) | Vagues, embruns, coquillages |
+| Villages Celtes | Social, modere (8-10s) | PNJ, etals, feux |
+| Cercles de Pierres | Lent, mystique (10-12s) | Runes lumineuses, energies |
+| Marais des Korrigans | Frenetique, piegeux (4-6s) | Feux follets, fondrières |
+| Collines aux Dolmens | Paisible (10-12s) | Animaux, pierres gravees |
+| Iles Mystiques | Imprevisible (3-15s) | Spectral, vagues phospho |
+
+#### Interactions et recompenses
+Chaque evenement a un type et une recompense/consequence :
+| Type d'evenement | Action | Recompense/Consequence |
+|------------------|--------|------------------------|
+| Monnaie au sol | Cliquer au bon moment | +monnaie biome |
+| Plante/Source | Cliquer | +soin (vie) |
+| Piege/Obstacle | Eviter (touche) ou rater | -degat (vie) |
+| Rune/Inscription | Cliquer | +indice narratif (enrichit le contexte LLM du run) |
+| Esprit/Apparition | Cliquer | +buff temporaire (ex: +5% score minigame, -1 cooldown) |
+| Anam rare | Cliquer (fenetre courte) | +Anam (rare, ~5% des events) |
+
+Le joueur qui explore bien a un run enrichi : plus de contexte narratif, plus de monnaie biome, eventuellement des buffs.
+Un bouton **"Commencer le run"** permet de terminer la balade a tout moment.
 
 ---
 
@@ -425,16 +503,39 @@ Debloque avec les **Anam** (cross-run).
 
 **Pas de hierarchie** : Toute fin est narrativement valide. Finir tot n'est pas un echec.
 
-### 5.3 Profils joueur (save system)
+**Fins secretes** : Pas prioritaire pour le MVP. A designer quand le core loop est solide.
 
-Le jeu utilise un systeme de **profils** (pas de slots de sauvegarde classiques).
+### 5.3 Ecran de fin de run
+
+Le flow apres la fin d'un run (mort, fin de scenario, fin de faction) :
+
+```
+1. FONDU NARRATIF — L'ecran s'assombrit, le texte de fin LLM apparait
+   comme un dernier souffle de Merlin. Pas de "Game Over". Juste la
+   narration qui se clot. Le joueur clique pour continuer.
+
+2. CARTE DU VOYAGE — Le parcours du joueur affiche sur une carte
+   stylisee du biome, avec des epingles aux moments cles (choix
+   importants, minigames, evenements, rencontres). Comme une carte
+   au tresor completee. Hover sur les epingles = details.
+
+3. ECRAN DE GAINS — Anam gagnes, reputations factions modifiees,
+   statistiques du run (cartes jouees, minigames gagnes, vie restante,
+   duree). Bouton "Continuer" → retour au Hub.
+```
+
+### 5.5 Profil unique (save system)
+
+Le jeu utilise un **profil unique** avec auto-continue (style Hades).
 
 | Propriete | Detail |
 |-----------|--------|
-| Type | Profils joueur (plusieurs joueurs peuvent partager le meme PC) |
+| Type | Profil unique (1 seul fichier `merlin_profile.json`) |
+| Auto-continue | Au lancement, le profil charge automatiquement — pas d'ecran de selection |
 | Contenu | Meta-progression uniquement (pas de save mid-run) |
 | Mid-run | Pas de sauvegarde en cours de run — le run se termine ou s'interrompt |
 | Autosave | La meta-progression est sauvegardee automatiquement en fin de run |
+| Reset | Option cachee dans le menu Options/Parametres avec confirmation |
 
 **Contenu d'un profil** :
 - Anam (monnaie cross-run)
@@ -445,7 +546,7 @@ Le jeu utilise un systeme de **profils** (pas de slots de sauvegarde classiques)
 - Nombre de runs, biomes decouverts
 - Statistiques (temps de jeu, minigames joues, etc.)
 
-### 5.4 Ce qui persiste entre les runs
+### 5.6 Ce qui persiste entre les runs
 
 | Persiste | Perdu |
 |----------|-------|
@@ -645,17 +746,73 @@ Le MOS maintient 6 registres pour tracker l'etat du jeu :
 └──────────────────────────────────────────┘
 ```
 
-### 8.2 Ecrans separés
+**Dialogue Merlin** : Options predefinies seulement (pas de chat libre). Le joueur interagit via les options de la carte.
 
+### 8.2 Hub / Antre (entre les runs)
+
+Menu stylise 2D avec boutons thematiques :
+- **Arbre de talents** : Depenser les Anam (hexagonal, runes)
+- **Choisir biome** : Carte des biomes debloques
 - **Stats** : 5 factions (jauges de reputation), Anam, nombre de runs
 - **Oghams** : Collection des 18, equiper l'Ogham actif
-- **Arbre de talents** : Depenser les Anam
 - **Journal** : Fins debloquees, biomes decouverts
-- **Profil** : Gestion des profils joueur
+- **Options** : Parametres, reset profil (avec confirmation)
 
 ---
 
-## 9. Systemes SUPPRIMES (reference historique)
+## 9. Audio
+
+### 9.1 Musique dynamique par biome (stems mix)
+
+Chaque biome a un **theme musical decompose en stems** (melodie, percussion, basse, ambiance). La tension narrative (MOS, 0-0.8) controle le mix :
+
+| Tension MOS | Stems actifs | Ambiance |
+|:-----------:|-------------|----------|
+| 0.0 - 0.2 | Ambiance seule | Contemplatif, exploration |
+| 0.2 - 0.4 | + Melodie legere | Curiosite, decouverte |
+| 0.4 - 0.6 | + Basse | Tension narrative, enjeux |
+| 0.6 - 0.8 | + Percussion | Danger, climax, confrontation |
+
+Les stems se **crossfadent progressivement** (2-3 secondes). Le joueur percoit une evolution naturelle, pas de coupure.
+
+### 9.2 SFX feedback
+
+Le SFXManager (30+ sons proceduraux) fournit un feedback pour chaque action :
+- Clic sur option, succes/echec minigame, ogham active, rep faction change
+- Degats vie, soin, mort, transition, monnaie biome collectee
+- Sons specifiques par biome (vagues, vent, feux follets, chants)
+
+### 9.3 Auto-run audio
+
+Pendant l'auto-run 3D, l'ambiance sonore evolue avec le biome et les evenements rencontres.
+
+---
+
+## 10. Tutoriel & Onboarding
+
+### 10.1 Approche : diegetique + tooltips
+
+Le tutoriel est **integre dans la narration** (Merlin explique) + **tooltips discretes** pour les elements UI.
+
+#### Diegetique (Merlin guide)
+- Les 2-3 premieres cartes du **premier run** contiennent des explications de Merlin dans le texte narratif
+- Merlin introduit : la barre de vie, les options de choix, le premier minigame
+- Pas de popup, pas de fleches — tout est dans la voix de Merlin
+- "Ah, voyageur, tu vois cette barre? C'est ta force vitale..."
+
+#### Tooltips progressives
+Des tooltips apparaissent **la premiere fois** que le joueur rencontre chaque mechanique :
+| Declencheur | Tooltip |
+|-------------|---------|
+| 1er minigame | "Chaque action declenche une epreuve. Ton score determine l'intensite des effets." |
+| 1er Ogham disponible | "Clique sur l'icone Ogham pour activer ton pouvoir." |
+| 1ere rep faction change | "Ta reputation aupres des factions evolue. Elle persiste entre les runs." |
+| 1ere monnaie biome | "La monnaie biome peut etre depensee aupres des marchands ou en offrandes." |
+| 1ere promesse | "Les promesses ont un delai. Tiens-les pour gagner en reputation." |
+
+Les tooltips sont stockees dans un flag `tutorial_shown` du profil — jamais reaffichees.
+
+## 11. Systemes SUPPRIMES (reference historique)
 
 > Ces systemes ont ete retires du design. Ils peuvent encore exister dans le code (nettoyage en cours).
 
@@ -673,7 +830,7 @@ Le MOS maintient 6 registres pour tracker l'etat du jeu :
 
 ---
 
-## 10. Glossaire
+## 12. Glossaire
 
 | Terme | Definition |
 |-------|------------|
@@ -687,15 +844,20 @@ Le MOS maintient 6 registres pour tracker l'etat du jeu :
 | **Minigame** | Epreuve ludique declenchee par detection de champ lexical |
 | **MOS** | Merlin Omniscient System — cerveau central (orchestrateur + directeur + guardrails) |
 | **Profil** | Sauvegarde joueur contenant la meta-progression (pas de save mid-run) |
-| **Hub / Antre** | Menu principal entre les runs (arbre de talents, choix de biome) |
+| **Hub / Antre** | Menu stylise 2D entre les runs (arbre de talents, choix de biome, stats, options) |
 | **FastRoute** | Pool de cartes de secours si le LLM echoue |
 | **Narrator** | Cerveau LLM 4B qui genere le texte narratif |
 | **Game Master** | Cerveau LLM 2B qui genere les effets JSON |
 | **Judge** | Cerveau LLM 0.8B qui evalue la qualite des textes |
+| **Auto-run** | Phase pre-run ou le personnage avance automatiquement dans le biome 3D, le joueur reagit aux evenements |
+| **Promesse** | Quete avec countdown (X cartes) + choix explicite de tenir ou briser |
+| **Chaine d'evenements** | Arc narratif de 3-5 cartes specifique a un biome, decouvert sur plusieurs runs |
+| **Stems** | Pistes audio separees (melodie, percussion, basse, ambiance) mixees dynamiquement selon la tension |
+| **Carte du voyage** | Ecran de fin de run : carte stylisee du biome avec epingles aux moments cles |
 
 ---
 
-## 11. Ecarts code vs design (inventaire)
+## 13. Ecarts code vs design (inventaire)
 
 > Liste des systemes presents dans le code qui ne correspondent plus a ce design. A nettoyer.
 
@@ -713,11 +875,15 @@ Le MOS maintient 6 registres pour tracker l'etat du jeu :
 | ~~bond_required dans Oghams~~ | ~~merlin_constants.gd~~ | ✅ Nettoye (bond_required supprime) |
 | left/center/right options | merlin_constants.gd (CardOption enum, FLUX_CHOICE_DELTA) | Remplacer par options variables 1-4 |
 | 3 slots save → profils | merlin_save_system.gd | Refactorer en systeme de profils |
-| Champs lexicaux manquants | minigame_registry.gd | Ajouter vigueur, esprit, perception |
-| TALENT_NODES (Corps/Ame/Monde) | merlin_constants.gd | Redesign en branches factions (~28 noeuds) |
+| ~~Champs lexicaux manquants~~ | ~~minigame_registry.gd~~ | ✅ Ajoute : vigueur (3), esprit (3), perception (3) — 9 minigames |
+| ~~TALENT_NODES (Corps/Ame/Monde)~~ | ~~merlin_constants.gd~~ | ✅ Redesign 34 noeuds, 5 branches factions + central, Anam-only |
+| ~~3 slots save → profils~~ | ~~merlin_save_system.gd~~ | ✅ Profil unique + auto-continue (Hades-style) |
+| ~~Souffle refs~~ | ~~merlin_game_controller.gd~~ | ✅ Nettoye (souffle shield, souffle bonus, souffle signal) |
+| ~~Triade aspects refs~~ | ~~merlin_game_controller.gd~~ | ✅ Nettoye (tutorial triggers, dialogue context) |
+| ~~Gauges in card_system~~ | ~~merlin_card_system.gd~~ | ✅ Nettoye (get_next_triade_card, gauges state) |
 
 ---
 
-*Ce document est la source de verite unique pour le game design de M.E.R.L.I.N. v2.1.*
+*Ce document est la source de verite unique pour le game design de M.E.R.L.I.N. v2.2.*
 *Toute divergence entre ce document et le code doit etre resolue en faveur de ce document.*
 *Co-ecrit entre l'utilisateur (vision) et Claude Code (structuration).*
