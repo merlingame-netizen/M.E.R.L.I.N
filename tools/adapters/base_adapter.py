@@ -47,6 +47,15 @@ class BaseAdapter(ABC):
     def list_actions(self) -> dict[str, str]:
         """Return { action_name: description } for --help output."""
 
+    def health_probe(self) -> tuple[str, dict]:
+        """Return (action, kwargs) for a lightweight health check.
+
+        Override in subclass to customize. Default: first action, no kwargs.
+        """
+        actions = self.list_actions()
+        first_action = next(iter(actions), "help")
+        return first_action, {}
+
     # ── Response helpers ────────────────────────────────────────────────────
 
     def ok(self, data: Any = None) -> dict:

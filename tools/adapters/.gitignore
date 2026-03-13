@@ -1,0 +1,11 @@
+# Auto-generated adapters (created by hooks, backed up in ~/.claude/workspace/)
+*_adapter.py
+_*.py
+_*.mjs
+
+# Keep merlin-related adapters only
+!__init__.py
+!base_adapter.py
+!git_adapter.py
+!godot_adapter.py
+!ollama_adapter.py

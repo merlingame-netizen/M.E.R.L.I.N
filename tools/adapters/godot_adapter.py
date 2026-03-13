@@ -420,7 +420,12 @@ class GodotAdapter(BaseAdapter):
 
         for f in json_files:
             try:
-                data = json.loads(f.read_text(encoding="utf-8"))
+                # Try utf-8-sig first (handles BOM), then utf-8
+                try:
+                    text = f.read_text(encoding="utf-8-sig")
+                except UnicodeDecodeError:
+                    text = f.read_text(encoding="utf-8", errors="replace")
+                data = json.loads(text)
                 stats[f.name] = data
             except (json.JSONDecodeError, OSError) as exc:
                 parse_errors.append(f"{f.name}: {exc}")
