@@ -9,3 +9,4 @@ _*.mjs
 !git_adapter.py
 !godot_adapter.py
 !ollama_adapter.py
+!mermaid_adapter.py

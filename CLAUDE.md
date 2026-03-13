@@ -223,18 +223,18 @@ python tools/cli.py n8n get-workflow --id 123
 python tools/cli.py n8n execute-workflow --id 123
 python tools/cli.py n8n list-executions --workflow_id 123 --limit 10
 
-# Mermaid (diagrammes)
-python tools/cli.py mermaid render --input "flowchart LR; A-->B" --format png
+# Mermaid (diagrammes — mono-engine v3.0)
+python tools/cli.py mermaid render-themed --input "flowchart LR; A-->B" --open
+python tools/cli.py mermaid render --input "..." --theme orange --output ~/Downloads/d.png --open
+python tools/cli.py mermaid from-file --input ~/Downloads/schema.mmd --open
 python tools/cli.py mermaid validate --input "flowchart LR; A-->B"
+python tools/cli.py mermaid list-themes
+python tools/cli.py mermaid create-theme --name custom --primary_color "#336699"
+python tools/cli.py mermaid open --path ~/Downloads/diagram.png
 
 # Context7 (documentation)
 python tools/cli.py context7 resolve-library --query lodash
 python tools/cli.py context7 query-docs --library_id ID --query "debounce"
-
-# Excalidraw (diagrammes JSON)
-python tools/cli.py excalidraw create-element --file path.excalidraw --type rectangle
-python tools/cli.py excalidraw query-elements --file path.excalidraw
-python tools/cli.py excalidraw batch-create --file path.excalidraw --elements JSON
 
 # Nano-Banana (image generation via Gemini)
 python tools/cli.py nano-banana generate-image --prompt "description"

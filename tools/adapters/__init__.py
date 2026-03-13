@@ -20,7 +20,6 @@ ADAPTER_REGISTRY: dict[str, tuple[str, str, str | None]] = {
     "mermaid":     ("adapters.mermaid_adapter",     "MermaidAdapter",     None),
     "context7":    ("adapters.context7_adapter",    "Context7Adapter",    None),
     # ── Wave 2 — Node.js server replacements ──────────────────────────────
-    "excalidraw":  ("adapters.excalidraw_adapter",  "ExcalidrawAdapter",  None),
     "nano-banana": ("adapters.nano_banana_adapter", "NanoBananaAdapter",  None),
     "pageindex":   ("adapters.pageindex_adapter",   "PageIndexAdapter",   None),
     "magic":       ("adapters.magic_adapter",       "MagicAdapter",       None),

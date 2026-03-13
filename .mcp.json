@@ -49,17 +49,6 @@
       "args": ["@peng-shawn/mermaid-mcp-server"],
       "description": "Text-to-diagram: flowcharts, sequences, ERD, state machines -> SVG/PNG. Compatible Claude + Codex (MCP stdio)."
     },
-    "excalidraw": {
-      "command": "node",
-      "args": [
-        "--input-type=module",
-        "-e",
-        "import('file:///C:/Users/PGNK2128/AppData/Roaming/npm/node_modules/mcp-excalidraw-server/src/index.js').then(m=>m.default())"
-      ],
-      "env": {
-        "ENABLE_CANVAS_SYNC": "false"
-      }
-    },
     "stitch": {
       "command": "node",
       "args": [
