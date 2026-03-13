@@ -139,9 +139,7 @@ func _on_cell_clicked(index: int) -> void:
 		_game_over(false)
 
 func _game_over(success: bool) -> void:
-	var sfx: Node = get_node_or_null("/root/SFXManager")
-	if sfx and sfx.has_method("play"):
-		sfx.play("minigame_success" if success else "minigame_fail")
+	# SFX handled by base _complete — no duplicate here
 
 	# Proportional scoring: base 50 for correct + time bonus (up to 50)
 	# Failure: partial credit based on difficulty (15-30)

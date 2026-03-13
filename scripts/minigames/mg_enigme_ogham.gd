@@ -165,6 +165,8 @@ func _on_choice_selected(choice: String) -> void:
 		button.disabled = true
 
 	var correct: bool = choice == correct_answer
+	# Capture answer time BEFORE feedback delay (base _complete handles SFX)
+	var answer_time_ms: int = Time.get_ticks_msec()
 
 	# Visual feedback
 	for button in choice_buttons:
@@ -176,20 +178,15 @@ func _on_choice_selected(choice: String) -> void:
 	question_label.text = "Correct !" if correct else "Raté... La réponse était : " + correct_answer
 	question_label.modulate = MG_PALETTE.green if correct else MG_PALETTE.red
 
-	var sfx: Node = get_node_or_null("/root/SFXManager")
-	if sfx and sfx.has_method("play"):
-		sfx.play("minigame_success" if correct else "minigame_fail")
-
 	await get_tree().create_timer(2.5).timeout
 
-	# Proportional scoring: base 60 for correct + time bonus (up to 40)
-	# Wrong answer: partial score based on pattern difficulty (harder = more partial credit)
+	# Proportional scoring: base 60 for correct + time bonus (up to 40, decays over ~10s)
+	# Wrong answer: partial credit 10-30 based on difficulty
 	var score: int = 0
 	if correct:
-		var elapsed_s: float = float(Time.get_ticks_msec() - _start_time_ms) / 1000.0
+		var elapsed_s: float = float(answer_time_ms - _start_time_ms) / 1000.0
 		var time_bonus: int = clampi(int(40.0 - elapsed_s * 4.0), 0, 40)
 		score = 60 + time_bonus
 	else:
-		# Partial credit for harder patterns (10-30 based on difficulty)
 		score = clampi(int(_difficulty * 3.0), 10, 30)
 	_complete(correct, score)

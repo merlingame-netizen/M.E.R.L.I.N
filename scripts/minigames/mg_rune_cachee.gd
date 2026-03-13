@@ -103,25 +103,17 @@ func _on_rune_clicked(index: int) -> void:
 		# Success — proportional score: base 50 + time bonus (up to 50)
 		_buttons[index].modulate = MG_PALETTE.green
 
-		var sfx := get_node_or_null("/root/SFXManager")
-		if sfx and sfx.has_method("play"):
-			sfx.play("minigame_success")
-
 		var time_ratio: float = clampf(_timer / _max_timer, 0.0, 1.0)
 		var score: int = 50 + int(time_ratio * 50.0)
 
 		await get_tree().create_timer(0.3).timeout
-		_complete(true, score)
+		_complete(true, score)  # SFX handled by base _complete
 	else:
 		# Wrong
 		_buttons[index].modulate = MG_PALETTE.red
 
-		var sfx := get_node_or_null("/root/SFXManager")
-		if sfx and sfx.has_method("play"):
-			sfx.play("minigame_fail")
-
 		await get_tree().create_timer(0.3).timeout
-		_fail_game()
+		_fail_game()  # SFX handled by base _complete via _fail_game
 
 
 func _fail_game() -> void:
