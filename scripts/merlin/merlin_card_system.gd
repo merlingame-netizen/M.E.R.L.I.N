@@ -163,35 +163,6 @@ func _get_emergency_card() -> Dictionary:
 	}
 
 
-# ═══════════════════════════════════════════════════════════════════════════════
-# TRIADE CARD SELECTION — 3-option cards for TRIADE gameplay
-# ═══════════════════════════════════════════════════════════════════════════════
-
-func get_next_triade_card(state: Dictionary) -> Dictionary:
-	"""Get a TRIADE card with type selection (narrative/event/promise/merlin_direct)."""
-	var run: Dictionary = state.get("run", {})
-	var cards_played: int = int(run.get("cards_played", 0))
-	var card_type: String = _pick_card_type(cards_played, run)
-
-	match card_type:
-		"event":
-			var biome_key: String = str(run.get("current_biome", ""))
-			var event_card: Dictionary = _generate_event_card(state, biome_key)
-			if not event_card.is_empty():
-				return event_card
-		"promise":
-			var biome_key: String = str(run.get("current_biome", ""))
-			var promise_card: Dictionary = _generate_promise_card(state, biome_key)
-			if not promise_card.is_empty():
-				return promise_card
-		"merlin_direct":
-			var merlin_card: Dictionary = _select_merlin_direct_card(state)
-			if not merlin_card.is_empty():
-				return merlin_card
-
-	# No fallback — return empty, controller will retry LLM
-	return {}
-
 
 # ═══════════════════════════════════════════════════════════════════════════════
 # CARD TYPE SELECTION — Event / Promise / Merlin Direct
@@ -477,7 +448,6 @@ func resolve_choice(state: Dictionary, card: Dictionary, direction: String) -> D
 		"ok": true,
 		"effects_applied": results["applied"],
 		"effects_rejected": results["rejected"],
-		"new_gauges": run.get("gauges", {}),
 	}
 
 
@@ -487,7 +457,6 @@ func _apply_card_effects(state: Dictionary, effects: Array) -> Dictionary:
 	var rejected = []
 
 	var run = state.get("run", {})
-	var gauges = run.get("gauges", {})
 
 	for effect in effects:
 		if typeof(effect) != TYPE_STRING:
@@ -541,7 +510,6 @@ func _apply_card_effects(state: Dictionary, effects: Array) -> Dictionary:
 				else:
 					rejected.append(effect)
 
-	run["gauges"] = gauges
 	state["run"] = run
 
 	return {"applied": applied, "rejected": rejected}
