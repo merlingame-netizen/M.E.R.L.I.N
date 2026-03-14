@@ -1416,6 +1416,6 @@ A confiance 100, Merlin est T3 maximum. Les gains supplementaires (+10 promesse 
 
 ---
 
-*Ce document est la source de verite unique pour le game design de M.E.R.L.I.N. v2.3.*
+*Ce document est la source de verite unique pour le game design de M.E.R.L.I.N. v2.4.*
 *Toute divergence entre ce document et le code doit etre resolue en faveur de ce document.*
 *Co-ecrit entre l'utilisateur (vision) et Claude Code (structuration).*
