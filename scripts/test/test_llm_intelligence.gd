@@ -395,7 +395,6 @@ func _test_context_enrichment() -> void:
 			},
 			"active_tags": [], "active_promises": [], "story_log": [],
 		},
-		"bestiole": {"bond": 60, "needs": {}},
 		"meta": {"talent_tree": {"unlocked": []}},
 		"flags": {},
 	}

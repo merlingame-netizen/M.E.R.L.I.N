@@ -13,10 +13,7 @@ extends Node
 # ═══════════════════════════════════════════════════════════════════════════════
 
 signal game_state_changed(new_phase: String)
-signal bestiole_updated()
 signal gold_changed(new_amount: int)
-signal hp_changed(current: int, max_hp: int)
-signal type_changed(new_type: String)
 @warning_ignore("unused_signal")
 signal transition_requested(transition_type: String, data: Dictionary)
 
@@ -363,29 +360,6 @@ const ENEMIES := {
 var current_phase: String = "title"
 var save_version: String = "7.0"
 
-# Bestiole state
-var bestiole := {
-	"name": "Bestiole",
-	"type": "nature",
-	"second_type": null,
-	"level": 1,
-	"xp": 0,
-	"xp_to_next": 100,
-	"hp": 80,
-	"max_hp": 80,
-	"atk": 12,
-	"def": 8,
-	"speed": 10,
-	"hunger": 80,
-	"happiness": 70,
-	"energy": 90,
-	"cleanliness": 100,
-	"stress": 0,
-	"affinity": 0,
-	"known_oghams": ["beith", "luis", "saille"],
-	"equipped_oghams": ["beith", "luis", "saille", ""],  # 4 slots
-}
-
 # Run state
 var run := {
 	"active": false,
@@ -498,27 +472,6 @@ func change_phase(new_phase: String) -> void:
 	emit_signal("game_state_changed", new_phase)
 
 func start_new_game() -> void:
-	bestiole = {
-		"name": "Bestiole",
-		"type": "nature",
-		"second_type": null,
-		"level": 1,
-		"xp": 0,
-		"xp_to_next": 100,
-		"hp": 80,
-		"max_hp": 80,
-		"atk": 12,
-		"def": 8,
-		"speed": 10,
-		"hunger": 80,
-		"happiness": 70,
-		"energy": 90,
-		"cleanliness": 100,
-		"stress": 0,
-		"affinity": 0,
-		"known_oghams": ["beith", "luis", "saille"],
-		"equipped_oghams": ["beith", "luis", "saille", ""],
-	}
 	start_run()
 
 func start_run() -> void:
@@ -548,12 +501,7 @@ func start_run() -> void:
 		"answers": [],
 	}
 	run.merlin_memory = []
-	
-	# Reset bestiole for run
-	bestiole.hp = bestiole.max_hp
-	bestiole.hunger = max(50, bestiole.hunger)
-	bestiole.energy = max(50, bestiole.energy)
-	
+
 	emit_signal("game_state_changed", "run_started")
 
 func end_run(victory: bool) -> void:
@@ -637,35 +585,6 @@ func generate_map(floors: int) -> Array:
 	
 	return map
 
-# ═══════════════════════════════════════════════════════════════════════════════
-# BESTIOLE MANAGEMENT
-# ═══════════════════════════════════════════════════════════════════════════════
-
-func heal_bestiole(amount: int) -> void:
-	bestiole.hp = min(bestiole.max_hp, bestiole.hp + amount)
-	emit_signal("hp_changed", bestiole.hp, bestiole.max_hp)
-	emit_signal("bestiole_updated")
-
-func damage_bestiole(amount: int) -> void:
-	bestiole.hp = max(0, bestiole.hp - amount)
-	emit_signal("hp_changed", bestiole.hp, bestiole.max_hp)
-	emit_signal("bestiole_updated")
-
-func change_bestiole_type(new_type: String, cost: int = 0) -> bool:
-	if not is_type_unlocked(new_type):
-		return false
-	if cost > 0 and run.gold < cost:
-		return false
-	
-	if cost > 0:
-		run.gold -= cost
-		emit_signal("gold_changed", run.gold)
-	
-	bestiole.type = new_type
-	emit_signal("type_changed", new_type)
-	emit_signal("bestiole_updated")
-	return true
-
 func add_gold(amount: int) -> void:
 	run.gold += amount
 	emit_signal("gold_changed", run.gold)
@@ -677,21 +596,6 @@ func spend_gold(amount: int) -> bool:
 		return true
 	return false
 
-func level_up() -> void:
-	bestiole.level += 1
-	bestiole.max_hp += 10
-	bestiole.hp += 10
-	bestiole.atk += 2
-	bestiole.def += 1
-	bestiole.xp_to_next = bestiole.level * 100
-	emit_signal("bestiole_updated")
-
-func add_xp(amount: int) -> void:
-	bestiole.xp += amount
-	while bestiole.xp >= bestiole.xp_to_next:
-		bestiole.xp -= bestiole.xp_to_next
-		level_up()
-
 # ═══════════════════════════════════════════════════════════════════════════════
 # SAVE/LOAD SYSTEM
 # ═══════════════════════════════════════════════════════════════════════════════
@@ -699,7 +603,6 @@ func add_xp(amount: int) -> void:
 func save_to_slot(slot: int) -> bool:
 	var save_data := {
 		"version": save_version,
-		"bestiole": bestiole.duplicate(true),
 		"run": run.duplicate(true),
 		"meta": meta.duplicate(true),
 		"flags": flags.duplicate(true),
@@ -729,12 +632,10 @@ func load_from_slot(slot: int) -> bool:
 	
 	var save_data: Dictionary = json.data
 	
-	bestiole = save_data.bestiole
 	run = save_data.run
 	meta = save_data.meta
 	flags = save_data.flags
-	
-	emit_signal("bestiole_updated")
+
 	emit_signal("gold_changed", run.gold)
 	return true
 
@@ -752,13 +653,13 @@ func get_save_slot_info(slot: int) -> Dictionary:
 		return {}
 	
 	var save_data: Dictionary = json.data
+	var run: Dictionary = save_data.get("run", {})
 	return {
-		"name": save_data.bestiole.name,
-		"level": save_data.bestiole.level,
-		"type": save_data.bestiole.type,
-		"floor": save_data.run.floor,
-		"chronicle_name": save_data.run.get("chronicle_name", ""),
-		"timestamp": save_data.timestamp,
+		"biome": run.get("biome", "foret_broceliande"),
+		"life_essence": run.get("life_essence", 0),
+		"card_index": run.get("card_index", 0),
+		"chronicle_name": run.get("chronicle_name", ""),
+		"timestamp": save_data.get("timestamp", ""),
 	}
 
 func delete_save_slot(slot: int) -> void:

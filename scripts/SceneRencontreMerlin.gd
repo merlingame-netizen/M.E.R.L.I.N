@@ -1,7 +1,7 @@
 ## ═══════════════════════════════════════════════════════════════════════════════
 ## SceneRencontreMerlin — Merged Eveil + Antre in one scene
 ## ═══════════════════════════════════════════════════════════════════════════════
-## 2-phase flow: LLM_INTRO (greeting + bestiole/ogham + mission) → Transition
+## 2-phase flow: LLM_INTRO (greeting + ogham reveal + mission) → Transition
 ## Central dialogue card with LLM-driven text. No portrait sprite.
 ## ═══════════════════════════════════════════════════════════════════════════════
 
@@ -476,11 +476,11 @@ func _run_phase(phase: Phase) -> void:
 
 ## RAG system prompts for LLM-guided intro phases
 const RAG_INTRO_CONTEXT := "Tu es Merlin le druide. Un voyageur (%s) arrive a Broceliande. 2 phrases maximum: accueille-le. Ton bienveillant. Francais."
-const RAG_BESTIOLE := "Tu es Merlin. La Bestiole du voyageur apparait avec 3 Oghams. 2 phrases maximum, ton amuse. Francais."
+const RAG_OGHAM_REVEAL := "Tu es Merlin. Tu reveles 3 Oghams sacres au voyageur. 2 phrases maximum, ton amuse. Francais."
 const RAG_MISSION_HUB := "Tu es Merlin. Explique au voyageur: Carte du Monde, Oghams, sauvegardes. 2 phrases maximum, ton encourageant. Francais."
 
 
-## Merged LLM_INTRO: greeting → bestiole/ogham reveal → mission briefing
+## Merged LLM_INTRO: greeting → ogham reveal → mission briefing
 func _phase_llm_intro() -> void:
 	# Wait for LLM readiness (short cap to keep pacing snappy)
 	if merlin_ai and not merlin_ai.is_ready:
@@ -529,16 +529,16 @@ func _phase_llm_intro() -> void:
 	if not is_inside_tree():
 		return
 
-	# --- Part 2: Bestiole + Oghams ---
+	# --- Part 2: Ogham Reveal ---
 	_set_mood("amuse")
 
-	var bestiole_text := await _llm_generate_from_rag(RAG_BESTIOLE)
-	if bestiole_text != "":
+	var ogham_intro_text := await _llm_generate_from_rag(RAG_OGHAM_REVEAL)
+	if ogham_intro_text != "":
 		_update_dialogue_badge("llm")
-		await _show_text(bestiole_text)
+		await _show_text(ogham_intro_text)
 	else:
 		_update_dialogue_badge("static")
-		await _show_text("Ta Bestiole apparait dans la brume, timide et lumineuse.")
+		await _show_text("Trois lettres sacrees brillent dans la brume, attendant ta main.")
 	if not is_inside_tree():
 		return
 
@@ -576,14 +576,14 @@ func _phase_llm_intro() -> void:
 		tw.tween_property(ogham_panel, "modulate:a", 1.0, _scaled_delay(0.6)).set_trans(Tween.TRANS_SINE)
 		await tw.finished
 
-	# Store oghams in GameManager
+	# Store starter oghams in GameManager
 	var gm2 := get_node_or_null("/root/GameManager")
-	if gm2:
-		var bestiole_data: Dictionary = gm2.get("bestiole") if gm2.get("bestiole") is Dictionary else {}
-		if not bestiole_data.has("known_oghams"):
-			bestiole_data["known_oghams"] = ["beith", "luis", "quert"]
-			bestiole_data["equipped_oghams"] = ["beith", "luis", "quert", ""]
-			gm2.set("bestiole", bestiole_data)
+	if gm2 and gm2.has_method("set"):
+		var oghams_data: Dictionary = gm2.get("oghams") if gm2.get("oghams") is Dictionary else {}
+		if not oghams_data.has("known_oghams"):
+			oghams_data["known_oghams"] = ["beith", "luis", "quert"]
+			oghams_data["equipped_oghams"] = ["beith", "luis", "quert", ""]
+			gm2.set("oghams", oghams_data)
 
 	if not is_inside_tree():
 		return

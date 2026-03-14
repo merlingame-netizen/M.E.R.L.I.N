@@ -151,7 +151,6 @@ var _scene_compositor: PixelSceneCompositor
 var _scene_compositor_v2: Control = null  ## CardSceneCompositor — layered sprite system (feature flag)
 var _pixel_portrait: PixelCharacterPortrait
 var _npc_portrait: PixelNpcPortrait
-var bestiole_wheel: Control  # Ogham wheel (will be reimplemented in Phase 7)
 var _reward_badge: MerlinRewardBadge
 var option_buttons: Array[Button] = []
 var option_labels: Array[Label] = []
@@ -225,9 +224,6 @@ var _souffle_btn: Button
 var _souffle_active := false
 var _perk_badge: Label = null  # B.1 — shows selected perk name near Souffle button
 
-# Companion display (bottom-left, permanent) — will be reimplemented Phase 7
-var _bestiole_mini: Label
-var _bestiole_emote: Label
 
 # ═══════════════════════════════════════════════════════════════════════════════
 # INITIALIZATION
@@ -472,34 +468,6 @@ func _configure_ui() -> void:
 	_dialogue_bubble.name = "DialogueBubble"
 	_dialogue_bubble.z_index = 25
 	add_child(_dialogue_bubble)
-
-	# Bestiole wheel: lazy-loaded on Tab press (no permanent button to avoid duplication with SouffleBtn)
-	# bestiole_wheel variable stays null until Tab is pressed — see _input()
-
-	# Bestiole companion mini (bottom-left, permanent)
-	_bestiole_mini = Label.new()
-	_bestiole_mini.name = "BestioleMini"
-	_bestiole_mini.text = "~(o.o)~"
-	if body_font:
-		_bestiole_mini.add_theme_font_override("font", body_font)
-	_bestiole_mini.add_theme_font_size_override("font_size", 18)
-	var bestiole_col: Color = MerlinVisual.CRT_PALETTE.get("green", Color(0.6, 0.8, 0.5))
-	_bestiole_mini.add_theme_color_override("font_color", bestiole_col)
-	_bestiole_mini.position = Vector2(16, get_viewport_rect().size.y - 64)
-	_bestiole_mini.z_index = 15
-	add_child(_bestiole_mini)
-
-	_bestiole_emote = Label.new()
-	_bestiole_emote.name = "BestioleEmote"
-	_bestiole_emote.text = ""
-	if body_font:
-		_bestiole_emote.add_theme_font_override("font", body_font)
-	_bestiole_emote.add_theme_font_size_override("font_size", 14)
-	_bestiole_emote.add_theme_color_override("font_color", MerlinVisual.CRT_PALETTE.get("amber_bright", Color(0.85, 0.65, 0.13)))
-	_bestiole_emote.position = Vector2(16, get_viewport_rect().size.y - 82)
-	_bestiole_emote.z_index = 16
-	_bestiole_emote.modulate.a = 0.0
-	add_child(_bestiole_emote)
 
 	# Biome indicator (orphan label, not in tree)
 	biome_indicator = Label.new()
@@ -1775,7 +1743,7 @@ const AUDIO_TAG_SOUNDS := {
 	"brume": "mist_breath",
 	"orage": "flash_boom",
 	"feu": "flash_boom",
-	"soin": "bestiole_shimmer",
+	"soin": "magic_reveal",
 	"ogham": "ogham_chime",
 	"nuit": "mist_breath",
 }
@@ -4054,12 +4022,7 @@ func show_reveal_effects(options: Array, target_index: int) -> void:
 			var eff_dict: Dictionary = eff if eff is Dictionary else {}
 			var etype: String = str(eff_dict.get("type", ""))
 			var amount: int = int(eff_dict.get("amount", eff_dict.get("intensity", 0)))
-			if etype == "SHIFT_ASPECT":
-				var asp: String = str(eff_dict.get("aspect", "?"))
-				parts.append("%s %+d" % [asp.left(4), amount])
-			elif etype == "ADD_SOUFFLE" or etype == "SOUFFLE":
-				parts.append("Souffle %+d" % amount)
-			elif etype == "ADD_KARMA" or etype == "KARMA":
+			if etype == "ADD_KARMA" or etype == "KARMA":
 				parts.append("Karma %+d" % amount)
 			elif etype == "DAMAGE_LIFE":
 				parts.append("Vie -%d" % absi(amount))

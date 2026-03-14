@@ -2,7 +2,7 @@
 ## HubAntre -- L'Antre Vivant (Spatial Hub)
 ## =============================================================================
 ## Immersive spatial hub with procedural pixel art UI.
-## 4 hotspots, reactive Bestiole, MerlinBubble greeting,
+## 4 hotspots, MerlinBubble greeting,
 ## PARTIR button -> BiomeRadial -> adventure launch.
 ## Zero permanent text. All animated.
 ## =============================================================================
@@ -146,7 +146,7 @@ const BIOME_MISSIONS := {
 const MERLIN_GREETINGS := {
 	"first_hub": [
 		"Bienvenue, %s. Le feu t'attendait.",
-		"Entre, %s. Bestiole aussi.",
+		"Entre, %s. Le feu ronronne.",
 	],
 	"return": [
 		"Te revoila, %s !",
@@ -190,7 +190,6 @@ const HOTSPOT_DEFS := [
 # DYNAMIC NODES
 # =============================================================================
 
-var _bestiole: Control = null
 var _bubble: MerlinBubble = null
 var _radial: BiomeRadial = null
 var _partir_btn: Button = null
@@ -232,7 +231,6 @@ func _ready() -> void:
 	_configure_background()
 	_create_scanline_overlay()
 	_create_chronicle_header()
-	_create_bestiole()
 	_create_hotspots()
 	_create_partir_button()
 	_create_bubble()
@@ -421,22 +419,6 @@ func _create_chronicle_header() -> void:
 # CREATE COMPONENTS — Scene Elements
 # =============================================================================
 
-func _create_bestiole() -> void:
-	var script_path: String = "res://scripts/ui/bestiole_creature.gd"
-	var BestioleClass = load(script_path)
-	if BestioleClass == null:
-		return
-	_bestiole = Control.new()
-	_bestiole.set_script(BestioleClass)
-	_bestiole.call("setup", 120.0)
-	_bestiole.custom_minimum_size = Vector2(160, 160)
-	_bestiole.size = Vector2(160, 160)
-	add_child(_bestiole)
-	move_child(_bestiole, mist_layer.get_index() + 1)
-	_bestiole.call_deferred("assemble")
-	_layout_bestiole()
-
-
 func _create_hotspots() -> void:
 	var vp := get_viewport_rect().size
 	for def in HOTSPOT_DEFS:
@@ -531,7 +513,6 @@ func _layout_all() -> void:
 		var def: Dictionary = HOTSPOT_DEFS[i]
 		_hotspots[i].position = vp * Vector2(def["ratio"])
 	_layout_partir()
-	_layout_bestiole()
 	# Relayout HUD elements
 	if _chronicle_label:
 		_chronicle_label.size.x = vp.x
@@ -553,29 +534,12 @@ func _layout_partir() -> void:
 	)
 
 
-func _layout_bestiole() -> void:
-	if _bestiole == null:
-		return
-	var vp := get_viewport_rect().size
-	var bsize: float = 160.0
-	_bestiole.size = Vector2(bsize, bsize)
-	# Coin bas-gauche, au-dessus du bouton PARTIR (60px + 20px marge)
-	_bestiole.position = Vector2(16.0, vp.y - bsize - 60.0 - 20.0 - 20.0)
-
-
 # =============================================================================
 # INTERACTIONS
 # =============================================================================
 
 func _on_hotspot_hovered(hotspot_name: String) -> void:
 	SFXManager.play("hover")
-	if _bestiole == null:
-		return
-	for hs in _hotspots:
-		if hs.hotspot_name == hotspot_name:
-			var target: Vector2 = hs.position + Vector2(32, 32)
-			_bestiole.call("look_at_position", target)
-			break
 
 
 func _on_hotspot_pressed(hotspot_name: String) -> void:
@@ -826,7 +790,6 @@ const HUB_TOUR_STEPS: Array[Dictionary] = [
 	{"target": "arbre", "text": "L'Arbre de Vie. Ta progression, run apres run.", "hotspot_idx": 2},
 	{"target": "collection", "text": "La Collection. Cartes, Oghams, lore — tout ici.", "hotspot_idx": 4},
 	{"target": "alignement", "text": "L'Alignement des biomes. Bientot disponible.", "hotspot_idx": 3},
-	{"target": "bestiole", "text": "Ta Bestiole. Elle veille sur toi."},
 	{"target": "partir", "text": "PARTIR. Choisis un biome et lance l'aventure."},
 	{"target": "end", "text": "Tu connais l'essentiel. Le reste se decouvre en marchant."},
 ]
@@ -911,9 +874,6 @@ func _get_tour_target_pos(step: Dictionary) -> Vector2:
 		if idx >= 0 and idx < _hotspots.size():
 			var hs: Control = _hotspots[idx]
 			return hs.position + Vector2(32.0, 32.0)
-
-	if target_name == "bestiole" and _bestiole and is_instance_valid(_bestiole):
-		return _bestiole.position + Vector2(80.0, 80.0)
 
 	if target_name == "partir" and _partir_btn and is_instance_valid(_partir_btn):
 		return _partir_btn.position + _partir_btn.size * 0.5
