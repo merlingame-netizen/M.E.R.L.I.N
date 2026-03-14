@@ -85,6 +85,8 @@ func enable_inputs() -> void:
 
 func _fade_out_in(target: String, duration: float) -> void:
 	if _is_fading:
+		# Wait for current fade to finish instead of dropping the request
+		await fade_completed
 		return
 	_is_fading = true
 	disable_inputs()

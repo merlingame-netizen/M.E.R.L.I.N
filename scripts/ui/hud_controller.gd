@@ -113,7 +113,7 @@ func update_ogham(ogham_id: String, cooldown: int) -> void:
 			_ogham_button.disabled = false
 
 
-func update_promises(promises: Array) -> void:
+func update_promises(promises: Array, current_card_index: int = 0) -> void:
 	_promises = promises
 	if _promise_container == null:
 		return
@@ -127,7 +127,7 @@ func update_promises(promises: Array) -> void:
 		var label: Label = Label.new()
 		var desc: String = str(promise.get("description", ""))
 		var deadline: int = int(promise.get("deadline_card", 0))
-		var remaining: int = maxi(deadline - int(promise.get("created_at_card", 0)), 0)
+		var remaining: int = maxi(deadline - current_card_index, 0)
 		label.text = "%s (%d)" % [desc, remaining]
 		label.add_theme_font_size_override("font_size", 12)
 		_promise_container.add_child(label)

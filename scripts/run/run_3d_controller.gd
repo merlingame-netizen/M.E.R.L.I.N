@@ -70,7 +70,7 @@ func setup(store: MerlinStore, card_system: MerlinCardSystem,
 
 func start_run(biome: String, ogham: String) -> void:
 	_run_state = _card_system.init_run(biome, ogham)
-	_run_state["life"] = MerlinConstants.LIFE_ESSENCE_START
+	_run_state["life_essence"] = MerlinConstants.LIFE_ESSENCE_START
 	_run_state["life_max"] = MerlinConstants.LIFE_ESSENCE_MAX
 	_run_state["biome_currency"] = 0
 	_run_state["period"] = "aube"
@@ -81,7 +81,7 @@ func start_run(biome: String, ogham: String) -> void:
 	_card_interval = _next_card_interval()
 
 	# Emit initial state
-	life_changed.emit(_run_state["life"], _run_state["life_max"])
+	life_changed.emit(_run_state["life_essence"], _run_state["life_max"])
 	currency_changed.emit(0)
 	period_changed.emit("aube")
 	ogham_updated.emit(ogham, 0)
@@ -136,9 +136,9 @@ func _trigger_card() -> void:
 	_is_paused = true
 
 	# Life drain
-	var life: int = int(_run_state.get("life", 0))
+	var life: int = int(_run_state.get("life_essence", 0))
 	life = maxi(life - DRAIN_PER_CARD, 0)
-	_run_state["life"] = life
+	_run_state["life_essence"] = life
 	life_changed.emit(life, int(_run_state.get("life_max", 100)))
 
 	# Check run end before card
@@ -237,15 +237,15 @@ func _apply_effects(effects: Array) -> void:
 
 		match etype:
 			"HEAL_LIFE":
-				var life: int = int(_run_state.get("life", 0))
+				var life: int = int(_run_state.get("life_essence", 0))
 				var life_max: int = int(_run_state.get("life_max", 100))
 				life = mini(life + amount, life_max)
-				_run_state["life"] = life
+				_run_state["life_essence"] = life
 				life_changed.emit(life, life_max)
 			"DAMAGE_LIFE":
-				var life: int = int(_run_state.get("life", 0))
+				var life: int = int(_run_state.get("life_essence", 0))
 				life = maxi(life - amount, 0)
-				_run_state["life"] = life
+				_run_state["life_essence"] = life
 				life_changed.emit(life, int(_run_state.get("life_max", 100)))
 				if life <= 0:
 					stop_run("death")
@@ -279,10 +279,10 @@ func on_collectible_picked(type: String, amount: int) -> void:
 			# Rare anam pickup — stored separately
 			_run_state["anam_found"] = int(_run_state.get("anam_found", 0)) + amount
 		"heal":
-			var life: int = int(_run_state.get("life", 0))
+			var life: int = int(_run_state.get("life_essence", 0))
 			var life_max: int = int(_run_state.get("life_max", 100))
 			life = mini(life + amount, life_max)
-			_run_state["life"] = life
+			_run_state["life_essence"] = life
 			life_changed.emit(life, life_max)
 
 

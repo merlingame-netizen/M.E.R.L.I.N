@@ -354,7 +354,7 @@ func _evaluate_promise_condition(promise: Dictionary, run_state: Dictionary, tra
 
 	match ctype:
 		"life_above":
-			return int(run_state.get("life", 0)) >= int(cvalue)
+			return int(run_state.get("life_essence", 0)) >= int(cvalue)
 		"faction_gain":
 			var faction: String = str(promise.get("condition_faction", ""))
 			var gained: Dictionary = track.get("faction_gained", {})
@@ -474,7 +474,7 @@ func _find_worst_option(options: Array) -> int:
 # ═══════════════════════════════════════════════════════════════════════════════
 
 func check_run_end(state: Dictionary) -> Dictionary:
-	var life: int = int(state.get("life", 100))
+	var life: int = int(state.get("life_essence", 100))
 	var card_index: int = int(state.get("card_index", 0))
 	var mos: Dictionary = MerlinConstants.MOS_CONVERGENCE
 
@@ -774,7 +774,7 @@ func _build_llm_context(context: Dictionary) -> Dictionary:
 		"card_index": int(context.get("card_index", 0)),
 		"cards_played": int(context.get("cards_played", 0)),
 		"active_ogham": str(context.get("active_ogham", "beith")),
-		"life": int(context.get("life", 100)),
+		"life_essence": int(context.get("life_essence", 100)),
 		"period": str(context.get("period", "aube")),
 		"story_log": context.get("story_log", []),
 		"active_tags": context.get("active_tags", []),
