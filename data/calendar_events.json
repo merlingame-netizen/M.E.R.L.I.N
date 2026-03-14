@@ -1,9 +1,9 @@
 {
   "_meta": {
-    "version": "1.0.0",
+    "version": "2.0.0",
     "phase": 44,
     "description": "Catalogue des evenements calendaires (32+). 4 categories: transitions saisonnieres, sabbats, consequences narratives, secrets. Consomme par Calendar.gd et EventAdapter.",
-    "references": "event_cards.json pour les cartes TRIADE, event_categories.json pour la taxonomie, merlin_constants.gd pour les aspects",
+    "references": "merlin_effect_engine.gd pour les effets v2.5, event_categories.json pour la taxonomie",
     "spec": "CAL-REQ-040 a CAL-REQ-043"
   },
   "events": [
@@ -17,8 +17,8 @@
       "conditions": {"min_run_index": 0},
       "weight_base": 1.10,
       "effects": [
-        {"type": "SHIFT_ASPECT", "aspect": "Corps", "direction": "up"},
-        {"type": "ADD_KARMA", "amount": 5}
+        {"type": "HEAL_LIFE", "amount": 5},
+        {"type": "ADD_REPUTATION", "faction": "anciens", "amount": 5}
       ],
       "visual": {"icon": "spring", "theme": "green_soft"},
       "repeatable": true
@@ -33,8 +33,8 @@
       "conditions": {"min_run_index": 0},
       "weight_base": 1.10,
       "effects": [
-        {"type": "SHIFT_ASPECT", "aspect": "Corps", "direction": "up"},
-        {"type": "SHIFT_ASPECT", "aspect": "Monde", "direction": "up"}
+        {"type": "HEAL_LIFE", "amount": 5},
+        {"type": "ADD_REPUTATION", "faction": "niamh", "amount": 5}
       ],
       "visual": {"icon": "summer", "theme": "gold_warm"},
       "repeatable": true
@@ -49,7 +49,7 @@
       "conditions": {"min_run_index": 0},
       "weight_base": 1.10,
       "effects": [
-        {"type": "SHIFT_ASPECT", "aspect": "Ame", "direction": "up"},
+        {"type": "ADD_REPUTATION", "faction": "druides", "amount": 5},
         {"type": "ADD_KARMA", "amount": 3}
       ],
       "visual": {"icon": "autumn", "theme": "amber"},
@@ -65,7 +65,7 @@
       "conditions": {"min_run_index": 0},
       "weight_base": 1.10,
       "effects": [
-        {"type": "SHIFT_ASPECT", "aspect": "Ame", "direction": "down"},
+        {"type": "DAMAGE_LIFE", "amount": 5},
         {"type": "ADD_TENSION", "amount": 10}
       ],
       "visual": {"icon": "winter", "theme": "frost"},
@@ -82,8 +82,8 @@
       "conditions": {"min_run_index": 0},
       "weight_base": 1.30,
       "effects": [
-        {"type": "SHIFT_ASPECT", "aspect": "Ame", "direction": "up"},
-        {"type": "ADD_SOUFFLE", "amount": 1},
+        {"type": "ADD_REPUTATION", "faction": "druides", "amount": 10},
+        {"type": "HEAL_LIFE", "amount": 5},
         {"type": "ADD_KARMA", "amount": 10}
       ],
       "visual": {"icon": "samhain", "theme": "dark_purple"},
@@ -99,8 +99,8 @@
       "conditions": {"min_run_index": 0},
       "weight_base": 1.20,
       "effects": [
-        {"type": "SHIFT_ASPECT", "aspect": "Corps", "direction": "up"},
-        {"type": "ADD_SOUFFLE", "amount": 1},
+        {"type": "HEAL_LIFE", "amount": 8},
+        {"type": "ADD_REPUTATION", "faction": "anciens", "amount": 5},
         {"type": "ADD_KARMA", "amount": 5}
       ],
       "visual": {"icon": "yule", "theme": "gold"},
@@ -116,7 +116,7 @@
       "conditions": {"min_run_index": 0},
       "weight_base": 1.20,
       "effects": [
-        {"type": "SHIFT_ASPECT", "aspect": "Corps", "direction": "up"},
+        {"type": "HEAL_LIFE", "amount": 10},
         {"type": "ADD_KARMA", "amount": 5}
       ],
       "visual": {"icon": "imbolc", "theme": "white_gold"},
@@ -132,8 +132,8 @@
       "conditions": {"min_run_index": 0},
       "weight_base": 1.20,
       "effects": [
-        {"type": "SHIFT_ASPECT", "aspect": "Ame", "direction": "up"},
-        {"type": "ADD_SOUFFLE", "amount": 1}
+        {"type": "ADD_REPUTATION", "faction": "druides", "amount": 8},
+        {"type": "HEAL_LIFE", "amount": 5}
       ],
       "visual": {"icon": "ostara", "theme": "green_gold"},
       "repeatable": true
@@ -148,8 +148,8 @@
       "conditions": {"min_run_index": 0},
       "weight_base": 1.25,
       "effects": [
-        {"type": "SHIFT_ASPECT", "aspect": "Corps", "direction": "up"},
-        {"type": "SHIFT_ASPECT", "aspect": "Monde", "direction": "up"},
+        {"type": "HEAL_LIFE", "amount": 8},
+        {"type": "ADD_REPUTATION", "faction": "niamh", "amount": 5},
         {"type": "ADD_KARMA", "amount": 5}
       ],
       "visual": {"icon": "beltane", "theme": "fire_orange"},
@@ -165,7 +165,7 @@
       "conditions": {"min_run_index": 0},
       "weight_base": 1.20,
       "effects": [
-        {"type": "ADD_SOUFFLE", "amount": 2},
+        {"type": "HEAL_LIFE", "amount": 10},
         {"type": "ADD_KARMA", "amount": 5}
       ],
       "visual": {"icon": "litha", "theme": "sun_gold"},
@@ -181,8 +181,8 @@
       "conditions": {"min_run_index": 0},
       "weight_base": 1.20,
       "effects": [
-        {"type": "SHIFT_ASPECT", "aspect": "Corps", "direction": "up"},
-        {"type": "SHIFT_ASPECT", "aspect": "Monde", "direction": "up"}
+        {"type": "HEAL_LIFE", "amount": 5},
+        {"type": "ADD_REPUTATION", "faction": "anciens", "amount": 5}
       ],
       "visual": {"icon": "lughnasadh", "theme": "wheat_gold"},
       "repeatable": true
@@ -197,9 +197,9 @@
       "conditions": {"min_run_index": 0},
       "weight_base": 1.20,
       "effects": [
-        {"type": "SHIFT_ASPECT", "aspect": "Monde", "direction": "up"},
+        {"type": "ADD_REPUTATION", "faction": "niamh", "amount": 5},
         {"type": "ADD_KARMA", "amount": 5},
-        {"type": "ADD_SOUFFLE", "amount": 1}
+        {"type": "HEAL_LIFE", "amount": 5}
       ],
       "visual": {"icon": "mabon", "theme": "amber_gold"},
       "repeatable": true
@@ -215,7 +215,7 @@
       "conditions": {"min_run_index": 0},
       "weight_base": 0.90,
       "effects": [
-        {"type": "SHIFT_ASPECT", "aspect": "Ame", "direction": "up"},
+        {"type": "ADD_REPUTATION", "faction": "druides", "amount": 5},
         {"type": "ADD_KARMA", "amount": 3}
       ],
       "visual": {"icon": "menhir", "theme": "stone_grey"},
@@ -231,7 +231,7 @@
       "conditions": {"min_run_index": 1, "min_cards_played": 5},
       "weight_base": 0.85,
       "effects": [
-        {"type": "SHIFT_ASPECT", "aspect": "Ame", "direction": "down"},
+        {"type": "ADD_REPUTATION", "faction": "ankou", "amount": 5},
         {"type": "ADD_TENSION", "amount": 15}
       ],
       "visual": {"icon": "ankou", "theme": "mist_dark"},
@@ -247,7 +247,7 @@
       "conditions": {"min_run_index": 0},
       "weight_base": 0.90,
       "effects": [
-        {"type": "SHIFT_ASPECT", "aspect": "Ame", "direction": "up"},
+        {"type": "ADD_REPUTATION", "faction": "druides", "amount": 5},
         {"type": "SET_FLAG", "flag": "heard_source_oath"}
       ],
       "visual": {"icon": "source", "theme": "water_blue"},
@@ -263,7 +263,7 @@
       "conditions": {"min_run_index": 0},
       "weight_base": 0.95,
       "effects": [
-        {"type": "ADD_SOUFFLE", "amount": 1},
+        {"type": "HEAL_LIFE", "amount": 8},
         {"type": "ADD_KARMA", "amount": 5}
       ],
       "visual": {"icon": "gui", "theme": "mistletoe_green"},
@@ -276,11 +276,11 @@
       "name": "Aube de Brigid",
       "text": "Brigid marche sur les eaux gelees. La ou elle pose le pied, les fleurs eclosent. La forge de l'ame se rallume.",
       "tags": ["consequence", "spring", "brigid", "healing", "blessing"],
-      "conditions": {"min_run_index": 0, "aspect_condition": {"Ame": ["BAS", "EQUILIBRE"]}},
+      "conditions": {"min_run_index": 0, "life_below": 50},
       "weight_base": 0.85,
       "effects": [
-        {"type": "SHIFT_ASPECT", "aspect": "Corps", "direction": "up"},
-        {"type": "SHIFT_ASPECT", "aspect": "Ame", "direction": "up"}
+        {"type": "HEAL_LIFE", "amount": 15},
+        {"type": "ADD_REPUTATION", "faction": "druides", "amount": 5}
       ],
       "visual": {"icon": "brigid", "theme": "white_flame"},
       "repeatable": true
@@ -295,7 +295,7 @@
       "conditions": {"min_run_index": 1, "min_cards_played": 8},
       "weight_base": 0.80,
       "effects": [
-        {"type": "SHIFT_ASPECT", "aspect": "Corps", "direction": "down"},
+        {"type": "DAMAGE_LIFE", "amount": 10},
         {"type": "ADD_TENSION", "amount": 20},
         {"type": "SET_FLAG", "flag": "survived_wild_hunt"}
       ],
@@ -312,8 +312,8 @@
       "conditions": {"min_run_index": 0, "min_cards_played": 3},
       "weight_base": 0.95,
       "effects": [
-        {"type": "SHIFT_ASPECT", "aspect": "Ame", "direction": "up"},
-        {"type": "ADD_SOUFFLE", "amount": 1},
+        {"type": "ADD_REPUTATION", "faction": "korrigans", "amount": 8},
+        {"type": "HEAL_LIFE", "amount": 5},
         {"type": "SET_FLAG", "flag": "seen_faeries"}
       ],
       "visual": {"icon": "faerie", "theme": "moonlight_blue"},
@@ -330,7 +330,7 @@
       "weight_base": 0.75,
       "effects": [
         {"type": "ADD_TENSION", "amount": 25},
-        {"type": "SHIFT_ASPECT", "aspect": "Monde", "direction": "down"},
+        {"type": "DAMAGE_LIFE", "amount": 8},
         {"type": "SET_FLAG", "flag": "blood_moon_witnessed"}
       ],
       "visual": {"icon": "blood_moon", "theme": "crimson"},
@@ -343,10 +343,10 @@
       "name": "Appel de la Foret",
       "text": "Les arbres murmurent ton nom. Quelque chose dans les bois t'attend — patient, ancien, bienveillant. Ou pas.",
       "tags": ["consequence", "spring", "summer", "nature", "mystere"],
-      "conditions": {"season": ["spring", "summer"], "aspect_condition": {"Ame": ["HAUT"]}, "min_cards_played": 5},
+      "conditions": {"season": ["spring", "summer"], "reputation_above": {"druides": 50}, "min_cards_played": 5},
       "weight_base": 0.80,
       "effects": [
-        {"type": "SHIFT_ASPECT", "aspect": "Ame", "direction": "up"},
+        {"type": "ADD_REPUTATION", "faction": "druides", "amount": 5},
         {"type": "PROGRESS_MISSION", "step": 1}
       ],
       "visual": {"icon": "forest", "theme": "deep_green"},
@@ -359,10 +359,10 @@
       "name": "Retour de l'Exile",
       "text": "Un ancien banni revient au village. Les regards se detournent. Lui pardonner ou le chasser? Le choix definit ta lignee.",
       "tags": ["consequence", "dilemme", "exile", "clan"],
-      "conditions": {"aspect_condition": {"Monde": ["BAS"]}, "min_cards_played": 10},
+      "conditions": {"reputation_below": {"niamh": 30}, "min_cards_played": 10},
       "weight_base": 0.70,
       "effects": [
-        {"type": "SHIFT_ASPECT", "aspect": "Monde", "direction": "up"},
+        {"type": "ADD_REPUTATION", "faction": "niamh", "amount": 10},
         {"type": "ADD_KARMA", "amount": 10},
         {"type": "SET_FLAG", "flag": "exile_returned"}
       ],
@@ -379,7 +379,7 @@
       "conditions": {"season": ["winter", "autumn"], "min_cards_played": 5},
       "weight_base": 0.75,
       "effects": [
-        {"type": "SHIFT_ASPECT", "aspect": "Ame", "direction": "down"},
+        {"type": "ADD_REPUTATION", "faction": "ankou", "amount": 5},
         {"type": "ADD_TENSION", "amount": 10},
         {"type": "SET_FLAG", "flag": "shadow_walk"}
       ],
@@ -396,8 +396,8 @@
       "conditions": {"flags_required": ["has_ally"], "min_cards_played": 8},
       "weight_base": 0.80,
       "effects": [
-        {"type": "SHIFT_ASPECT", "aspect": "Corps", "direction": "up"},
-        {"type": "SHIFT_ASPECT", "aspect": "Monde", "direction": "up"}
+        {"type": "HEAL_LIFE", "amount": 8},
+        {"type": "ADD_REPUTATION", "faction": "anciens", "amount": 5}
       ],
       "visual": {"icon": "forge", "theme": "ember_red"},
       "repeatable": false
@@ -412,9 +412,9 @@
       "conditions": {"season": ["summer"], "biome": ["cotes_sauvages"], "min_cards_played": 5},
       "weight_base": 0.70,
       "effects": [
-        {"type": "SHIFT_ASPECT", "aspect": "Ame", "direction": "up"},
-        {"type": "SHIFT_ASPECT", "aspect": "Corps", "direction": "down"},
-        {"type": "ADD_SOUFFLE", "amount": 1}
+        {"type": "ADD_REPUTATION", "faction": "niamh", "amount": 8},
+        {"type": "DAMAGE_LIFE", "amount": 5},
+        {"type": "HEAL_LIFE", "amount": 3}
       ],
       "visual": {"icon": "siren", "theme": "sea_blue"},
       "repeatable": true
@@ -426,11 +426,11 @@
       "name": "Fievre des Brumes",
       "text": "La fievre te saisit. Le monde se trouble, les voix se melent. Dans le delire, tu vois des choses que nul ne devrait voir.",
       "tags": ["consequence", "autumn", "winter", "illness", "vision"],
-      "conditions": {"season": ["autumn", "winter"], "aspect_condition": {"Corps": ["BAS"]}, "min_cards_played": 5},
+      "conditions": {"season": ["autumn", "winter"], "life_below": 40, "min_cards_played": 5},
       "weight_base": 0.65,
       "effects": [
-        {"type": "SHIFT_ASPECT", "aspect": "Corps", "direction": "down"},
-        {"type": "SHIFT_ASPECT", "aspect": "Ame", "direction": "up"},
+        {"type": "DAMAGE_LIFE", "amount": 8},
+        {"type": "ADD_REPUTATION", "faction": "druides", "amount": 5},
         {"type": "SET_FLAG", "flag": "fever_vision"}
       ],
       "visual": {"icon": "fever", "theme": "haze_purple"},
@@ -443,11 +443,11 @@
       "name": "Rassemblement des Clans",
       "text": "Les chefs de clan convergent vers le nemeton sacre. Des decisions qui façonneront le monde se prennent ici. Ta voix compte.",
       "tags": ["consequence", "politics", "clan", "assembly", "major"],
-      "conditions": {"aspect_condition": {"Monde": ["HAUT"]}, "min_cards_played": 15},
+      "conditions": {"reputation_above": {"niamh": 60}, "min_cards_played": 15},
       "weight_base": 0.75,
       "effects": [
-        {"type": "SHIFT_ASPECT", "aspect": "Monde", "direction": "up"},
-        {"type": "SHIFT_ASPECT", "aspect": "Ame", "direction": "up"},
+        {"type": "ADD_REPUTATION", "faction": "niamh", "amount": 10},
+        {"type": "ADD_REPUTATION", "faction": "druides", "amount": 5},
         {"type": "ADD_KARMA", "amount": 15},
         {"type": "SET_FLAG", "flag": "attended_clan_gathering"}
       ],
@@ -465,8 +465,8 @@
       "conditions": {"karma_above": 30, "min_cards_played": 20, "hidden": true},
       "weight_base": 0.30,
       "effects": [
-        {"type": "ADD_SOUFFLE", "amount": 3},
-        {"type": "SHIFT_ASPECT", "aspect": "Ame", "direction": "up"},
+        {"type": "HEAL_LIFE", "amount": 20},
+        {"type": "ADD_REPUTATION", "faction": "druides", "amount": 15},
         {"type": "ADD_KARMA", "amount": 20},
         {"type": "SET_FLAG", "flag": "found_graal"}
       ],
@@ -480,11 +480,11 @@
       "name": "Voix des Ancetres",
       "text": "Ils parlent tous en meme temps — tes ancetres, les leurs, et ceux d'avant. Un choeur de memoire qui t'enseigne ce que les livres ont oublie.",
       "tags": ["secret", "ancestors", "wisdom", "spiritual", "hidden"],
-      "conditions": {"aspect_condition": {"Ame": ["HAUT"]}, "flags_required": ["promise_fulfilled"], "hidden": true},
+      "conditions": {"reputation_above": {"druides": 70}, "flags_required": ["promise_fulfilled"], "hidden": true},
       "weight_base": 0.25,
       "effects": [
-        {"type": "ADD_SOUFFLE", "amount": 2},
-        {"type": "SHIFT_ASPECT", "aspect": "Ame", "direction": "up"},
+        {"type": "HEAL_LIFE", "amount": 15},
+        {"type": "ADD_REPUTATION", "faction": "anciens", "amount": 10},
         {"type": "PROGRESS_MISSION", "step": 2},
         {"type": "SET_FLAG", "flag": "heard_ancestors"}
       ],
@@ -498,12 +498,11 @@
       "name": "Le Chaudron du Dagda",
       "text": "Le chaudron sans fond apparait dans la brume. Quiconque y goute ne connait plus la faim — ni du corps, ni de l'ame.",
       "tags": ["secret", "dagda", "cauldron", "abundance", "hidden"],
-      "conditions": {"all_aspects_equilibre": true, "min_cards_played": 15, "hidden": true},
+      "conditions": {"life_above": 70, "min_cards_played": 15, "hidden": true},
       "weight_base": 0.25,
       "effects": [
-        {"type": "SHIFT_ASPECT", "aspect": "Corps", "direction": "up"},
-        {"type": "SHIFT_ASPECT", "aspect": "Ame", "direction": "up"},
-        {"type": "ADD_SOUFFLE", "amount": 2},
+        {"type": "HEAL_LIFE", "amount": 20},
+        {"type": "ADD_REPUTATION", "faction": "anciens", "amount": 10},
         {"type": "SET_FLAG", "flag": "found_cauldron"}
       ],
       "visual": {"icon": "cauldron", "theme": "mist_silver"},
@@ -514,12 +513,12 @@
       "category": "secret",
       "date": "floating",
       "name": "L'Arbre-Monde",
-      "text": "Un arbre immense dont les racines plongent dans l'autre monde. Ses branches touchent les etoiles. La Bestiole ronronne a ses pieds.",
-      "tags": ["secret", "tree", "bestiole", "cosmic", "hidden"],
-      "conditions": {"bestiole_bond_above": 80, "min_cards_played": 15, "hidden": true},
+      "text": "Un arbre immense dont les racines plongent dans l'autre monde. Ses branches touchent les etoiles. Les oghams brillent sur son ecorce.",
+      "tags": ["secret", "tree", "ogham", "cosmic", "hidden"],
+      "conditions": {"reputation_above": {"druides": 60, "anciens": 60}, "min_cards_played": 15, "hidden": true},
       "weight_base": 0.20,
       "effects": [
-        {"type": "ADD_SOUFFLE", "amount": 3},
+        {"type": "HEAL_LIFE", "amount": 20},
         {"type": "ADD_KARMA", "amount": 25},
         {"type": "SET_FLAG", "flag": "found_world_tree"}
       ],
@@ -536,9 +535,9 @@
       "conditions": {"trust_merlin_above": 50, "min_endings_seen": 3, "min_cards_played": 20, "hidden": true},
       "weight_base": 0.15,
       "effects": [
-        {"type": "ADD_SOUFFLE", "amount": 2},
+        {"type": "HEAL_LIFE", "amount": 15},
         {"type": "ADD_KARMA", "amount": 30},
-        {"type": "SHIFT_ASPECT", "aspect": "Ame", "direction": "up"},
+        {"type": "ADD_REPUTATION", "faction": "druides", "amount": 10},
         {"type": "SET_FLAG", "flag": "merlin_remembers"}
       ],
       "visual": {"icon": "merlin_eye", "theme": "deep_blue"},

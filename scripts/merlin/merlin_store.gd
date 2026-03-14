@@ -1306,7 +1306,7 @@ func is_run_active() -> bool:
 
 
 func get_mode() -> String:
-	return str(state.get("mode", "triade"))
+	return str(state.get("mode", "narrative"))
 
 
 # World Map getters

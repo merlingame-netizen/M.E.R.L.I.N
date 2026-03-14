@@ -1,11 +1,4 @@
 {
-	"triade": {
-		"souffle_max": 7,
-		"souffle_start": 3,
-		"souffle_regen_all_balanced": 1,
-		"extreme_count_for_chute": 2,
-		"mission_steps_total": 5
-	},
 	"card_distribution": {
 		"narrative": 0.80,
 		"event": 0.10,
@@ -19,38 +12,38 @@
 	},
 	"biomes": {
 		"foret_broceliande": {
-			"aspect_bias": {"Corps": 1.2, "Ame": 1.0, "Monde": 0.8},
-			"passive": {"every_n": 5, "aspect": "Ame", "direction": "up"},
+			"faction_affinity": {"korrigans": 1.2, "druides": 1.0, "anciens": 0.8},
+			"passive": {"every_n": 5, "faction": "korrigans", "direction": "up"},
 			"difficulty": 0
 		},
 		"landes_bruyere": {
-			"aspect_bias": {"Corps": 0.8, "Ame": 1.2, "Monde": 1.0},
-			"passive": {"every_n": 6, "aspect": "Corps", "direction": "down"},
+			"faction_affinity": {"anciens": 1.2, "ankou": 1.0, "druides": 0.8},
+			"passive": {"every_n": 6, "faction": "anciens", "direction": "down"},
 			"difficulty": 1
 		},
 		"cotes_sauvages": {
-			"aspect_bias": {"Corps": 1.0, "Ame": 0.8, "Monde": 1.2},
-			"passive": {"every_n": 5, "aspect": "Monde", "direction": "up"},
+			"faction_affinity": {"niamh": 1.2, "korrigans": 1.0, "druides": 0.8},
+			"passive": {"every_n": 5, "faction": "niamh", "direction": "up"},
 			"difficulty": 0
 		},
 		"villages_celtes": {
-			"aspect_bias": {"Corps": 0.8, "Ame": 1.0, "Monde": 1.2},
-			"passive": {"every_n": 4, "aspect": "Monde", "direction": "up"},
+			"faction_affinity": {"druides": 1.2, "niamh": 1.0, "anciens": 0.8},
+			"passive": {"every_n": 4, "faction": "druides", "direction": "up"},
 			"difficulty": -1
 		},
 		"cercles_pierres": {
-			"aspect_bias": {"Corps": 1.0, "Ame": 1.4, "Monde": 0.8},
-			"passive": {"every_n": 4, "aspect": "Ame", "direction": "up"},
+			"faction_affinity": {"druides": 1.4, "anciens": 1.0, "korrigans": 0.8},
+			"passive": {"every_n": 4, "faction": "druides", "direction": "up"},
 			"difficulty": 1
 		},
 		"marais_korrigans": {
-			"aspect_bias": {"Corps": 1.2, "Ame": 1.0, "Monde": 0.8},
-			"passive": {"every_n": 5, "aspect": "Corps", "direction": "down"},
+			"faction_affinity": {"korrigans": 1.4, "ankou": 1.0, "druides": 0.8},
+			"passive": {"every_n": 5, "faction": "korrigans", "direction": "down"},
 			"difficulty": 2
 		},
 		"collines_dolmens": {
-			"aspect_bias": {"Corps": 1.0, "Ame": 1.0, "Monde": 1.0},
-			"passive": {"every_n": 7, "aspect": "random", "direction": "random"},
+			"faction_affinity": {"druides": 1.0, "anciens": 1.0, "korrigans": 1.0},
+			"passive": {"every_n": 7, "faction": "random", "direction": "random"},
 			"difficulty": 0
 		}
 	},
@@ -70,8 +63,8 @@
 		"extra_connection_chance": 0.45
 	},
 	"promises": {
-		"broken_karma": -15,
 		"broken_tension": 10,
+		"broken_reputation_loss": 15,
 		"max_active": 2
 	},
 	"difficulty_scaling": {
@@ -80,12 +73,12 @@
 		"biome_difficulty_weight": 0.1
 	},
 	"rest_node": {
-		"souffle_gain": 1,
-		"aspect_balance_threshold": 0
+		"life_heal": 10,
+		"tension_reduction": 5
 	},
 	"merchant_node": {
 		"offers_count": 3,
-		"essences_per_souffle": 15,
-		"essences_per_ogham_unlock": 30
+		"anam_per_life_heal": 15,
+		"anam_per_ogham_unlock": 30
 	}
 }
