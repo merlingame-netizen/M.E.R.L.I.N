@@ -30,6 +30,8 @@ ADAPTER_REGISTRY: dict[str, tuple[str, str, str | None]] = {
     "trellis":     ("adapters.trellis_adapter",     "TrellisAdapter",     None),
     # ── Wave 4 — PBI Preview pipeline ────────────────────────────────────
     "pbi-preview": ("adapters.pbi_preview_adapter", "PBIPreviewAdapter",  None),
+    # ── Wave 5 — PBI Visual CLI (pixel-precise PBIR control) ─────────
+    "pbi-visual":  ("adapters.pbi_visual_adapter",  "PBIVisualAdapter",   None),
 }
 
 

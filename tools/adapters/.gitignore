@@ -10,3 +10,9 @@ _*.mjs
 !godot_adapter.py
 !ollama_adapter.py
 !mermaid_adapter.py
+
+# Keep PBI adapters
+!pbi_visual_adapter.py
+!_pbir_engine.py
+!_cockpit_generator.py
+!_pixel_compare.py
