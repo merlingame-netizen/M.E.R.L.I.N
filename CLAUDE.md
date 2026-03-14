@@ -83,6 +83,26 @@ Phase 4 (Plan)     : Ecrire le plan file (declenche plan_mode dans Neural Monito
 **REGLE** : Si aucun agent ne couvre le type de tache → en creer un via `create_agent.py`.
 **AUTO** : Le hook `session_learner.py` (Stop) execute `optimize_agents.py` automatiquement.
 
+### 8. Memory Capture — Maxime (OBLIGATOIRE)
+
+**Convention fichiers**: `projet__categorie.md` dans `memory/` (merlin/data/cours/_shared/_ref)
+**Categories**: `context`, `lessons`, `business_rules`, `decisions`
+
+Quand l'utilisateur corrige une erreur factuelle, precise une regle metier, ou prend une decision:
+1. Identifier le projet (merlin/data/cours/_shared)
+2. Identifier la categorie (context/lessons/business_rules/decisions)
+3. Ecrire immediatement dans le fichier `projet__categorie.md` correspondant
+4. Format decisions: `## YYYY-MM-DD: [titre court]\n- [quoi]\n- [pourquoi]`
+5. Format lessons: ajouter une ligne au tableau `| Date | Erreur | Correction | Source |`
+6. NE PAS attendre la fin de session — capturer en temps reel
+
+En debut de session MODERATE+:
+1. Lire `~/.claude/metrics/pending_consolidation.md` si existant
+2. Integrer les apprentissages dans les fichiers memoire
+3. Supprimer le fichier pending
+
+**Skill**: `/maxime:status` — affiche l'etat complet de la memoire
+
 ---
 
 ## Commits
@@ -327,33 +347,34 @@ rag_manager.gd           <- RAG v3.0, per-brain context budget
 
 ---
 
-## Game Design (Quick Ref) — v2.1
+## Game Design (Quick Ref) — v2.3
 
-> **Source de verite** : `docs/GAME_DESIGN_BIBLE.md` v2.1
+> **Source de verite** : `docs/GAME_DESIGN_BIBLE.md` v2.3
 
 ### Core Loop
 ```
-Carte → Choix narratif → Detection champ lexical → MINIGAME adapte → Resultat 0-100 → Effets proportionnels
+Hub 2D → Biome → Ogham → 3D rail (marche) → [5-15s collecte] → [fondu] → Carte 2D (3 options) → Minigame overlay → Effets (multiplicateur direct) → [fondu] → 3D → [repeter] → Fin → Hub
 ```
 
 ### Systemes actifs
 - **Vie** : 1 barre unique (0-100), drain -1/carte
-- **5 Factions** : Druides/Anciens/Korrigans/Niamh/Ankou (0-100 chacune, cross-run)
-- **18 Oghams** : Pouvoirs hybrides (actifs + narratifs), cooldown-based
+- **5 Factions** : Druides/Anciens/Korrigans/Niamh/Ankou (0-100, cross-run, PAS de decay)
+- **18 Oghams** : 1 equipe + 1-2 trouves en run (temporaires + discount arbre). Switch possible, seul l'actif se recharge
+- **3 options fixes** par carte. Minigames obligatoires (sauf Merlin Direct)
 - **8 Champs lexicaux** : chance, bluff, observation, logique, finesse, vigueur, esprit, perception
-- **Monnaie** : Anam (cross-run, arbre de talents) — du gaelique "ame"
-- **8 Biomes** : Broceliande (starter) + 7 a debloquer
-- **Difficulte** : Semi-adaptive (contexte narratif, PAS performance joueur)
-- **MOS** : Merlin Omniscient System — orchestrateur LLM + directeur + guardrails
-- **Save** : Profils joueur (meta-progression seule, pas de save mid-run)
+- **Anam** : cross-run, progression lente (~10 runs/noeud). Mort = gains proportionnels aux cartes
+- **8 Biomes** : deblocage organique (MOS score de maturite + carte-cle)
+- **MOS** : orchestrateur LLM + directeur + guardrails + confiance T0-T3
+- **Save** : Profil unique, auto-continue (Hades-style)
 - **Fins** : ~10-15 cataloguees + LLM personnalise le texte
+- **Run 3D** : on-rails permanent, cartes via fondu enchaine, minigames overlay 2D
 
 ### Systemes SUPPRIMES
 ~~Triade (Corps/Ame/Monde)~~, ~~Souffle d'Ogham~~, ~~4 Jauges~~, ~~Bestiole~~, ~~Awen~~, ~~D20~~, ~~Flux System~~, ~~Run Typologies~~
 
 ### Scene Flow
 ```
-IntroCeltOS -> Menu -> Quiz -> Rencontre -> Hub -> Transition/Balade3D -> MerlinGame -> [Fin] -> Hub
+IntroCeltOS -> Menu -> Quiz -> Rencontre -> Hub 2D -> [Choix biome + Ogham] -> Run 3D (rail permanent: marche ↔ cartes ↔ minigames) -> [Fin] -> Hub 2D
 ```
 
 ---
@@ -366,4 +387,4 @@ Status protocol: `status/session.json`, `status/worker_{name}.json`
 
 ---
 
-*Updated: 2026-03-12 — CLAUDE.md v3.1 (game design v2.1: Anam, 8 champs lexicaux, MOS, profils)*
+*Updated: 2026-03-14 — CLAUDE.md v3.2 (game design v2.3: run 3D on-rails, economie Anam, oghams mix, MOS organique)*
