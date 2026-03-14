@@ -167,7 +167,7 @@ func _connect_signals() -> void:
 		if ui.has_signal("journal_requested"):
 			ui.journal_requested.connect(_on_journal_requested)
 
-	# Ogham wheel signals (active system — oghams are independent of bestiole)
+	# Ogham wheel signals
 	if ui and ui.has("ogham_wheel") and ui.ogham_wheel:
 		if ui.ogham_wheel.has_signal("ogham_selected"):
 			ui.ogham_wheel.ogham_selected.connect(_on_ogham_selected)
@@ -1722,7 +1722,7 @@ func _detect_critical_choice() -> void:
 
 
 func _show_card_modifier_indicator() -> void:
-	## Show badge for card modifiers (chance, bestiole, ogham, nocturne, saisonnier).
+	## Show badge for card modifiers (chance, ogham, nocturne, saisonnier).
 	if not ui or not is_instance_valid(ui):
 		return
 	var modifier_name: String = str(current_card.get("modifier", ""))
@@ -1733,8 +1733,6 @@ func _show_card_modifier_indicator() -> void:
 	if modifier_name == "chance":
 		SFXManager.play("dice_shake")
 		print("[Merlin] Chance modifier active! Minigame: %s" % str(current_card.get("minigame", "")))
-	elif modifier_name == "bestiole":
-		print("[Merlin] Bestiole modifier active!")
 	elif modifier_name == "nocturne":
 		print("[Merlin] Nocturne modifier active!")
 
@@ -1899,7 +1897,7 @@ func _write_context_entry(entry: String) -> void:
 
 
 func _use_skill(skill_id: String) -> void:
-	"""Activate a Bestiole skill."""
+	"""Activate a skill."""
 	if skill_id.strip_edges().is_empty():
 		return
 	if not store or not is_instance_valid(store):
@@ -2191,17 +2189,11 @@ func _on_journal_requested() -> void:
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
-# SIGNAL HANDLERS — Bestiole Wheel
+# SIGNAL HANDLERS — Ogham Wheel
 # ═══════════════════════════════════════════════════════════════════════════════
-
-func _on_wheel_open_requested() -> void:
-	if store and ui and ui.bestiole_wheel:
-		ui.bestiole_wheel.open_wheel(store)
-
 
 func _on_ogham_selected(skill_id: String) -> void:
 	_use_ogham(skill_id)
-
 
 
 func _use_ogham(skill_id: String) -> void:
@@ -2221,17 +2213,6 @@ func _use_ogham(skill_id: String) -> void:
 
 	if result.get("ok", false):
 		_sync_ui_with_state()
-
-
-func _unhandled_input(event: InputEvent) -> void:
-	# Tab key toggles Bestiole wheel
-	if event is InputEventKey and event.pressed and event.keycode == KEY_TAB:
-		if ui and ui.bestiole_wheel:
-			if ui.bestiole_wheel.is_open:
-				ui.bestiole_wheel.close_wheel()
-			elif store:
-				ui.bestiole_wheel.open_wheel(store)
-			get_viewport().set_input_as_handled()
 
 
 # ═══════════════════════════════════════════════════════════════════════════════

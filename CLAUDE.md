@@ -326,6 +326,7 @@ rag_manager.gd           <- RAG v3.0, per-brain context budget
 
 ### Key Documents
 - `docs/GAME_DESIGN_BIBLE.md` — **Source de verite unique** pour le game design v2.4
+- `docs/DEV_PLAN_V2.5.md` — **Plan de dev strict** (10 phases, specs code, acceptance criteria)
 - `docs/LLM_ARCHITECTURE.md` — Multi-cerveaux, LoRA, prompts
 - `docs/70_graphic/UI_UX_BIBLE.md` — Visual system specification
 - `docs/20_card_system/DOC_15_Faction_Alignment_System.md` — Detail factions

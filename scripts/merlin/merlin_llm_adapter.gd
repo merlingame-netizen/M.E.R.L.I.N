@@ -102,10 +102,6 @@ const NARRATIVE_FALLBACKS: Array[String] = [
 	"Le brouillard se leve, revelant un dolmen que personne n'a vu depuis des siecles.",
 ]
 
-# GBNF Grammar for constrained JSON generation (Phase 30)
-const TRIADE_GRAMMAR_PATH := "res://data/ai/merlin_card.gbnf"
-var _triade_grammar: String = ""
-
 # Scenario prompts — per-category templates (Phase 44)
 const SCENARIO_PROMPTS_PATH := "res://data/ai/config/scenario_prompts.json"
 var _scenario_prompts: Dictionary = {}
@@ -114,18 +110,6 @@ var _scenario_prompts_loaded := false
 # Track last used indices to avoid repeats across consecutive cards
 var _last_verb_pool_idx: int = -1
 var _last_narrative_fallback_idx: int = -1
-
-# ═══════════════════════════════════════════════════════════════════════════════
-# LEGACY EFFECT TYPES (merged into ALLOWED_EFFECT_TYPES above)
-# ═══════════════════════════════════════════════════════════════════════════════
-
-const LEGACY_GAUGE_EFFECTS := [
-	"ADD_GAUGE",
-	"REMOVE_GAUGE",
-	"QUEUE_CARD",
-	"TRIGGER_ARC",
-	"MODIFY_BOND",
-]
 
 const REQUIRED_CARD_KEYS := ["text", "options"]
 const REQUIRED_OPTION_KEYS := ["direction", "label", "effects"]
@@ -146,19 +130,7 @@ func set_merlin_ai(ai_node: Node) -> void:
 	_merlin_ai = ai_node
 	if _merlin_ai:
 		print("[MerlinLlmAdapter] MerlinAI wired (ready=%s)" % str(_merlin_ai.is_ready))
-	_load_triade_grammar()
 	_load_scenario_prompts()
-
-## Load GBNF grammar for constrained JSON decoding (Phase 30).
-func _load_triade_grammar() -> void:
-	if FileAccess.file_exists(TRIADE_GRAMMAR_PATH):
-		var file := FileAccess.open(TRIADE_GRAMMAR_PATH, FileAccess.READ)
-		_triade_grammar = file.get_as_text()
-		file.close()
-		print("[MerlinLlmAdapter] GBNF grammar loaded (%d chars)" % _triade_grammar.length())
-	else:
-		_triade_grammar = ""
-		print("[MerlinLlmAdapter] No GBNF grammar found, using post-processing fallback")
 
 ## Load scenario prompt templates for per-category LLM generation (Phase 44).
 func _load_scenario_prompts() -> void:

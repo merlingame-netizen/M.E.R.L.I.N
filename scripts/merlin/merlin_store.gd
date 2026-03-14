@@ -292,7 +292,7 @@ func _reduce(action: Dictionary) -> Dictionary:
 		"TRIADE_START_RUN":
 			var seed_val: int = int(action.get("seed", int(Time.get_unix_time_from_system())))
 			rng.set_seed(seed_val)
-			_init_triade_run()
+			_init_run()
 			_reset_ai_for_new_run()
 			state["run"]["map_seed"] = seed_val
 			# Set biome from action (default: Broceliande)
@@ -341,18 +341,18 @@ func _reduce(action: Dictionary) -> Dictionary:
 			var card = action.get("card", {})
 			var option: int = int(action.get("option", MerlinConstants.CardOption.LEFT))
 			var mod_effects: Array = action.get("modulated_effects", [])
-			var result = _resolve_triade_choice(card, option, mod_effects)
+			var result = _resolve_choice(card, option, mod_effects)
 			if result["ok"]:
 				# Record choice with MERLIN OMNISCIENT
 				if merlin != null:
 					merlin.record_choice(card, option, state)
 				card_resolved.emit(card.get("id", ""), option)
 				_trigger_autosave()
-				var end_check = _check_triade_run_end()
+				var end_check = _check_run_end()
 				if end_check["ended"]:
 					state["run"]["active"] = false
 					state["phase"] = "end"
-					_handle_triade_run_end(end_check)
+					_handle_run_end(end_check)
 					# Notify Merlin of run end
 					if merlin != null:
 						merlin.on_run_end(end_check)
@@ -369,7 +369,7 @@ func _reduce(action: Dictionary) -> Dictionary:
 			return _use_ogham(skill_id)
 
 		"TRIADE_END_RUN":
-			var end_check = _check_triade_run_end()
+			var end_check = _check_run_end()
 			if not end_check["ended"]:
 				end_check = {
 					"ended": true,
@@ -380,7 +380,7 @@ func _reduce(action: Dictionary) -> Dictionary:
 				}
 			state["run"]["active"] = false
 			state["phase"] = "end"
-			_handle_triade_run_end(end_check)
+			_handle_run_end(end_check)
 			# Notify MERLIN OMNISCIENT
 			if merlin != null:
 				merlin.on_run_end(end_check)
@@ -664,10 +664,10 @@ func _on_run_ended(ending: Dictionary) -> void:
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
-# TRIADE SYSTEM HELPERS
+# RUN SYSTEM HELPERS
 # ═══════════════════════════════════════════════════════════════════════════════
 
-func _init_triade_run() -> void:
+func _init_run() -> void:
 	var run = state.get("run", {})
 	run["active"] = true
 	run["life_essence"] = MerlinConstants.LIFE_ESSENCE_START
@@ -991,7 +991,7 @@ func _progress_mission(step: int) -> Dictionary:
 	return {"ok": true, "progress": new_progress, "total": total, "complete": new_progress >= total}
 
 
-func _resolve_triade_choice(card: Dictionary, option: int, modulated_effects: Array = []) -> Dictionary:
+func _resolve_choice(card: Dictionary, option: int, modulated_effects: Array = []) -> Dictionary:
 	var run = state.get("run", {})
 
 	if modulated_effects.is_empty():
@@ -1002,12 +1002,12 @@ func _resolve_triade_choice(card: Dictionary, option: int, modulated_effects: Ar
 			var chosen = options[option]
 			var card_effects = chosen.get("effects", [])
 			for effect in card_effects:
-				_apply_triade_effect(effect)
+				_apply_effect(effect)
 	else:
 		# New path: controller already modulated effects (D20, talents, shields)
 		# Souffle cost already handled by controller
 		for effect in modulated_effects:
-			_apply_triade_effect(effect)
+			_apply_effect(effect)
 
 	# Update run state
 	run["cards_played"] = int(run.get("cards_played", 0)) + 1
@@ -1039,7 +1039,7 @@ func _resolve_triade_choice(card: Dictionary, option: int, modulated_effects: Ar
 		if not biome_key.is_empty():
 			var passive: Dictionary = biomes.get_passive_effect(biome_key, int(run.get("cards_played", 0)))
 			if not passive.is_empty():
-				_apply_triade_effect(passive)
+				_apply_effect(passive)
 
 	# Check promise deadlines
 	_check_promise_deadlines()
@@ -1047,7 +1047,7 @@ func _resolve_triade_choice(card: Dictionary, option: int, modulated_effects: Ar
 	return {"ok": true, "option": option, "cards_played": run["cards_played"]}
 
 
-func _apply_triade_effect(effect: Dictionary) -> void:
+func _apply_effect(effect: Dictionary) -> void:
 	var effect_type: String = str(effect.get("type", ""))
 	match effect_type:
 		"DAMAGE_LIFE":
@@ -1095,7 +1095,7 @@ func _update_player_profile(option: int) -> void:
 	state["run"]["hidden"] = hidden
 
 
-func _check_triade_run_end() -> Dictionary:
+func _check_run_end() -> Dictionary:
 	var run = state.get("run", {})
 
 	# Life essence = 0 → premature run end
@@ -1144,7 +1144,7 @@ func _get_victory_type() -> String:
 		return "prix_paye"
 
 
-func _handle_triade_run_end(end_check: Dictionary) -> void:
+func _handle_run_end(end_check: Dictionary) -> void:
 	var meta = state.get("meta", {})
 	meta["total_runs"] = int(meta.get("total_runs", 0)) + 1
 	meta["total_cards_played"] = int(meta.get("total_cards_played", 0)) + int(end_check.get("cards_played", 0))
@@ -1185,8 +1185,8 @@ func _check_promise_deadlines() -> void:
 		state["run"] = run
 		# Apply penalties for broken promises
 		for i in broken_count:
-			_apply_triade_effect({"type": "ADD_KARMA", "amount": -15})
-			_apply_triade_effect({"type": "ADD_TENSION", "amount": 10})
+			_apply_effect({"type": "ADD_KARMA", "amount": -15})
+			_apply_effect({"type": "ADD_TENSION", "amount": 10})
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
