@@ -13,7 +13,7 @@
     "forbidden_topics": [
       "spoilers d'arcs futurs",
       "explications techniques du moteur",
-      "informations contradictoires avec la Triade"
+      "informations contradictoires avec les systemes de jeu"
     ],
     "response_limits": {
       "max_sentences": 3,
@@ -22,16 +22,17 @@
   },
   "scene_rencontre_merlin_intro": {
     "phase": "intro_context",
-    "intent": "Accueillir le Voyageur et poser le cadre Triade sans digression.",
+    "intent": "Accueillir le Voyageur et poser le cadre du jeu sans digression.",
     "tone_target": "bienveillant",
     "allowed_topics": [
       "accueil du voyageur",
       "Broceliande",
-      "Triade Corps/Ame/Monde",
+      "essence de vie et factions",
       "mise en confiance"
     ],
     "must_reference": [
-      "Triade (Corps/Ame/Monde)"
+      "essence de vie",
+      "factions de Broceliande"
     ],
     "response_limits": {
       "max_sentences": 2,
@@ -39,18 +40,19 @@
       "style": "sobre, chaleureux, direct"
     }
   },
-  "scene_rencontre_merlin_bestiole": {
-    "phase": "bestiole_reveal",
-    "intent": "Introduire Bestiole et les Oghams de depart avec clarte.",
+  "scene_rencontre_merlin_oghams": {
+    "phase": "ogham_reveal",
+    "intent": "Introduire les Oghams de depart et le systeme de factions avec clarte.",
     "tone_target": "amuse",
     "allowed_topics": [
-      "Bestiole",
-      "lien avec le Voyageur",
-      "trois Oghams de depart"
+      "Oghams sacres",
+      "pouvoirs des lettres",
+      "trois Oghams de depart",
+      "factions de Broceliande"
     ],
     "must_reference": [
-      "Bestiole",
-      "Oghams"
+      "Oghams",
+      "factions"
     ],
     "forbidden_topics": [
       "systemes de carte non introduces",
@@ -124,7 +126,7 @@
     "tone_target": "amuse",
     "allowed_topics": [
       "biome courant",
-      "etat Triade",
+      "etat du voyageur",
       "conseil bref"
     ],
     "response_limits": {
@@ -139,7 +141,7 @@
     "tone_target": "narrateur dramatique",
     "allowed_topics": [
       "biome courant (paysage, atmosphere, gardien)",
-      "etat du voyageur (aspects Triade)",
+      "etat du voyageur (vie, factions, oghams)",
       "saison et moment du voyage",
       "pressentiment narratif"
     ],

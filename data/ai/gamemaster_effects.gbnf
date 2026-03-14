@@ -1,37 +1,35 @@
-# GBNF Grammar for Game Master Effects — M.E.R.L.I.N. Phase 32
+# GBNF Grammar for Game Master Effects — M.E.R.L.I.N. v2.5
 # Extended grammar supporting multiple effect types per option.
 # Used by the Game Master instance for structured JSON generation.
-# Supports: SHIFT_ASPECT, ADD_KARMA, ADD_TENSION, USE_SOUFFLE, ADD_SOUFFLE, CREATE_PROMISE
+# Supports: HEAL_LIFE, DAMAGE_LIFE, ADD_REPUTATION, ADD_ANAM, ADD_TENSION, CREATE_PROMISE
 
 root ::= ws "{" ws options-kv ws "}" ws
 
-options-kv ::= "\"options\"" ws ":" ws "[" ws option-entry "," ws option-center "," ws option-entry ws "]"
+options-kv ::= "\"options\"" ws ":" ws "[" ws option "," ws option "," ws option ws "]"
 
-option-entry  ::= "{" ws label-kv "," ws effects-kv ws "}"
-option-center ::= "{" ws label-kv "," ws cost-kv "," ws effects-kv ws "}"
+option     ::= "{" ws label-kv "," ws effects-kv ws "}"
 
 label-kv   ::= "\"label\"" ws ":" ws string
-cost-kv    ::= "\"cost\"" ws ":" ws [1-3]
 effects-kv ::= "\"effects\"" ws ":" ws "[" ws effect-list ws "]"
 
 effect-list ::= effect | effect "," ws effect | effect "," ws effect "," ws effect
 
-effect ::= shift-effect | karma-effect | tension-effect | souffle-effect
+effect ::= life-effect | reputation-effect | anam-effect | tension-effect | promise-effect
 
-shift-effect   ::= "{" ws "\"type\"" ws ":" ws "\"SHIFT_ASPECT\"" "," ws aspect-kv "," ws direction-kv ws "}"
-karma-effect   ::= "{" ws "\"type\"" ws ":" ws "\"ADD_KARMA\"" "," ws amount-kv ws "}"
-tension-effect ::= "{" ws "\"type\"" ws ":" ws "\"ADD_TENSION\"" "," ws amount-kv ws "}"
-souffle-effect ::= "{" ws "\"type\"" ws ":" ws souffle-type "," ws amount-kv ws "}"
+life-effect       ::= "{" ws "\"type\"" ws ":" ws life-type "," ws amount-kv ws "}"
+reputation-effect ::= "{" ws "\"type\"" ws ":" ws "\"ADD_REPUTATION\"" "," ws faction-kv "," ws amount-kv ws "}"
+anam-effect       ::= "{" ws "\"type\"" ws ":" ws "\"ADD_ANAM\"" "," ws amount-kv ws "}"
+tension-effect    ::= "{" ws "\"type\"" ws ":" ws "\"ADD_TENSION\"" "," ws amount-kv ws "}"
+promise-effect    ::= "{" ws "\"type\"" ws ":" ws "\"CREATE_PROMISE\"" "," ws promise-id-kv "," ws deadline-kv "," ws description-kv ws "}"
 
-souffle-type ::= "\"USE_SOUFFLE\"" | "\"ADD_SOUFFLE\""
-
-aspect-kv    ::= "\"aspect\"" ws ":" ws aspect
-direction-kv ::= "\"direction\"" ws ":" ws direction
-amount-kv    ::= "\"amount\"" ws ":" ws integer
-
-aspect    ::= "\"Corps\"" | "\"Ame\"" | "\"Monde\""
-direction ::= "\"up\"" | "\"down\""
-integer   ::= "-"? [0-9] [0-9]?
+life-type      ::= "\"DAMAGE_LIFE\"" | "\"HEAL_LIFE\""
+faction-kv     ::= "\"faction\"" ws ":" ws faction
+faction        ::= "\"druides\"" | "\"anciens\"" | "\"korrigans\"" | "\"niamh\"" | "\"ankou\""
+amount-kv      ::= "\"amount\"" ws ":" ws integer
+promise-id-kv  ::= "\"promise_id\"" ws ":" ws string
+deadline-kv    ::= "\"deadline_cards\"" ws ":" ws integer
+description-kv ::= "\"description\"" ws ":" ws string
+integer        ::= "-"? [0-9] [0-9]?
 
 string ::= "\"" char* "\""
 char   ::= [^"\\\x00-\x1f] | "\\" ["\\/bfnrt]

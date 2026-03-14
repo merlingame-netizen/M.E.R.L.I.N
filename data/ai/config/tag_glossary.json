@@ -73,7 +73,7 @@
     "imbolc": {
       "category": "temporal",
       "description": "Purification, debut du printemps, Brigid",
-      "system_mapping": ["ADD_SOUFFLE:1"],
+      "system_mapping": ["ADD_ANAM:10"],
       "biome_affinity": ["villages_celtes", "collines_dolmens"]
     },
     "lughnasadh": {
@@ -91,19 +91,19 @@
     "corbeau": {
       "category": "entities",
       "description": "Messager entre mondes, omen, lie a l'Ame",
-      "system_mapping": ["SHIFT_ASPECT:Ame:up"],
+      "system_mapping": ["ADD_REPUTATION:druides:5"],
       "biome_affinity": ["landes_bruyere", "cercles_pierres"]
     },
     "sanglier": {
       "category": "entities",
-      "description": "Force brute, courage, lie au Corps",
-      "system_mapping": ["SHIFT_ASPECT:Corps:up"],
+      "description": "Force brute, courage, vigueur physique",
+      "system_mapping": ["HEAL_LIFE:5"],
       "biome_affinity": ["foret_broceliande", "landes_bruyere"]
     },
     "cerf": {
       "category": "entities",
-      "description": "Sagesse, royaute, Cernunnos, lie au Monde",
-      "system_mapping": ["SHIFT_ASPECT:Monde:up"],
+      "description": "Sagesse, royaute, Cernunnos, harmonie avec le monde",
+      "system_mapping": ["ADD_REPUTATION:anciens:5"],
       "biome_affinity": ["foret_broceliande", "collines_dolmens"]
     },
     "guardian": {
@@ -121,7 +121,7 @@
     "druide": {
       "category": "entities",
       "description": "Sage, gardien du savoir, maitre des rites",
-      "system_mapping": ["ADD_KARMA:5", "SHIFT_ASPECT:Ame:up"],
+      "system_mapping": ["ADD_KARMA:5", "ADD_REPUTATION:druides:5"],
       "biome_affinity": ["foret_broceliande", "cercles_pierres", "collines_dolmens"]
     },
     "ankou": {
@@ -133,13 +133,13 @@
     "sidhe": {
       "category": "entities",
       "description": "Anciens divins, observateurs entre les mondes",
-      "system_mapping": ["ADD_KARMA:10", "ADD_SOUFFLE:1"],
+      "system_mapping": ["ADD_KARMA:10", "ADD_ANAM:10"],
       "biome_affinity": ["cercles_pierres", "foret_broceliande"]
     },
     "loup": {
       "category": "entities",
       "description": "Predateur, meute, instinct, danger naturel",
-      "system_mapping": ["SHIFT_ASPECT:Corps:down", "ADD_TENSION:5"],
+      "system_mapping": ["DAMAGE_LIFE:3", "ADD_TENSION:5"],
       "biome_affinity": ["foret_broceliande", "landes_bruyere"]
     },
     "stranger": {
@@ -151,7 +151,7 @@
     "village": {
       "category": "social",
       "description": "Communaute locale, refuge ou source de conflits",
-      "system_mapping": ["SHIFT_ASPECT:Monde:up"],
+      "system_mapping": ["ADD_REPUTATION:anciens:5"],
       "biome_affinity": ["villages_celtes"]
     },
     "merchant": {
@@ -163,13 +163,13 @@
     "noble": {
       "category": "social",
       "description": "Chef de clan, pouvoir politique, faveurs",
-      "system_mapping": ["SHIFT_ASPECT:Monde:up", "ADD_TENSION:5"],
+      "system_mapping": ["ADD_REPUTATION:anciens:5", "ADD_TENSION:5"],
       "biome_affinity": ["villages_celtes"]
     },
     "barde": {
       "category": "social",
       "description": "Conteur, musicien, gardien de memoire orale",
-      "system_mapping": ["SHIFT_ASPECT:Ame:up", "ADD_KARMA:3"],
+      "system_mapping": ["ADD_REPUTATION:druides:5", "ADD_KARMA:3"],
       "biome_affinity": ["villages_celtes", "foret_broceliande"]
     },
     "clan": {
@@ -181,19 +181,19 @@
     "alliance": {
       "category": "social",
       "description": "Pacte entre groupes, cooperation forcee ou sincere",
-      "system_mapping": ["SHIFT_ASPECT:Monde:up", "ADD_KARMA:5"],
+      "system_mapping": ["ADD_REPUTATION:anciens:5", "ADD_KARMA:5"],
       "biome_affinity": ["villages_celtes"]
     },
     "forest": {
       "category": "nature",
       "description": "Foret ancienne, mysteres naturels, abri",
-      "system_mapping": ["SHIFT_ASPECT:Ame:up"],
+      "system_mapping": ["ADD_REPUTATION:druides:5"],
       "biome_affinity": ["foret_broceliande"]
     },
     "storm": {
       "category": "nature",
       "description": "Tempete, danger naturel, purification violente",
-      "system_mapping": ["SHIFT_ASPECT:Corps:down", "ADD_TENSION:8"],
+      "system_mapping": ["DAMAGE_LIFE:3", "ADD_TENSION:8"],
       "biome_affinity": ["cotes_sauvages", "landes_bruyere"]
     },
     "harvest": {
@@ -211,13 +211,13 @@
     "mer": {
       "category": "nature",
       "description": "Ocean, immensiste, voyages, monde inconnu",
-      "system_mapping": ["SHIFT_ASPECT:Monde:up"],
+      "system_mapping": ["ADD_REPUTATION:anciens:5"],
       "biome_affinity": ["cotes_sauvages"]
     },
     "source": {
       "category": "nature",
       "description": "Source d'eau pure, guerison, lieu sacre",
-      "system_mapping": ["HEAL_LIFE:5", "ADD_SOUFFLE:1"],
+      "system_mapping": ["HEAL_LIFE:5", "ADD_ANAM:10"],
       "biome_affinity": ["foret_broceliande", "collines_dolmens"]
     },
     "clairiere": {
@@ -240,8 +240,8 @@
     },
     "awen": {
       "category": "mystical",
-      "description": "Inspiration divine, souffle poetique, illumination",
-      "system_mapping": ["ADD_SOUFFLE:1", "SHIFT_ASPECT:Ame:up"],
+      "description": "Inspiration divine, energie poetique, illumination",
+      "system_mapping": ["ADD_ANAM:10", "ADD_REPUTATION:druides:5"],
       "biome_affinity": ["foret_broceliande", "cercles_pierres"]
     },
     "ogham": {
@@ -253,7 +253,7 @@
     "menhir": {
       "category": "mystical",
       "description": "Pierre dressee, marqueur de lieu de pouvoir",
-      "system_mapping": ["ADD_SOUFFLE:1"],
+      "system_mapping": ["ADD_ANAM:10"],
       "biome_affinity": ["cercles_pierres", "landes_bruyere"]
     },
     "dolmen": {
@@ -265,7 +265,7 @@
     "nemeton": {
       "category": "mystical",
       "description": "Sanctuaire forestier sacre, lieu de pouvoir druide",
-      "system_mapping": ["ADD_SOUFFLE:2", "ADD_KARMA:5"],
+      "system_mapping": ["ADD_ANAM:20", "ADD_KARMA:5"],
       "biome_affinity": ["foret_broceliande"]
     },
     "mystere": {
@@ -289,7 +289,7 @@
     "vision": {
       "category": "mystical",
       "description": "Reve prophetique, revelation spirituelle",
-      "system_mapping": ["SHIFT_ASPECT:Ame:up", "ADD_TENSION:3"],
+      "system_mapping": ["ADD_REPUTATION:druides:5", "ADD_TENSION:3"],
       "biome_affinity": ["cercles_pierres", "foret_broceliande"]
     },
     "gui": {
@@ -307,13 +307,13 @@
     "raid": {
       "category": "conflict",
       "description": "Attaque surprise, pillage, urgence",
-      "system_mapping": ["ADD_TENSION:10", "DAMAGE_LIFE:3", "SHIFT_ASPECT:Corps:down"],
+      "system_mapping": ["ADD_TENSION:10", "DAMAGE_LIFE:3"],
       "biome_affinity": ["villages_celtes", "cotes_sauvages"]
     },
     "dispute": {
       "category": "conflict",
       "description": "Querelle verbale, desaccord, tension sociale",
-      "system_mapping": ["ADD_TENSION:5", "SHIFT_ASPECT:Monde:down"],
+      "system_mapping": ["ADD_TENSION:10"],
       "biome_affinity": ["villages_celtes"]
     },
     "challenge": {
@@ -325,7 +325,7 @@
     "betrayal": {
       "category": "conflict",
       "description": "Trahison d'un allie, rupture de confiance",
-      "system_mapping": ["ADD_TENSION:15", "ADD_KARMA:-10", "SHIFT_ASPECT:Monde:down"],
+      "system_mapping": ["ADD_TENSION:20", "ADD_KARMA:-10"],
       "biome_affinity": ["villages_celtes"]
     },
     "embuscade": {
@@ -337,7 +337,7 @@
     "dream": {
       "category": "personal",
       "description": "Reve revelateur, message de l'inconscient",
-      "system_mapping": ["SHIFT_ASPECT:Ame:up"],
+      "system_mapping": ["ADD_REPUTATION:druides:5"],
       "biome_affinity": ["foret_broceliande", "cercles_pierres"]
     },
     "memory": {
@@ -360,7 +360,7 @@
     },
     "bond": {
       "category": "personal",
-      "description": "Lien affectif, Bestiole, amitie profonde",
+      "description": "Lien affectif, compagnon, amitie profonde",
       "system_mapping": ["ADD_KARMA:3"],
       "biome_affinity": ["foret_broceliande"]
     },
@@ -373,13 +373,13 @@
     "courage": {
       "category": "personal",
       "description": "Bravoure face au danger, depassement de soi",
-      "system_mapping": ["ADD_KARMA:5", "SHIFT_ASPECT:Corps:up"],
+      "system_mapping": ["ADD_KARMA:5", "HEAL_LIFE:5"],
       "biome_affinity": ["landes_bruyere"]
     },
     "peur": {
       "category": "personal",
       "description": "Terreur, paralysie, confrontation avec l'inconnu",
-      "system_mapping": ["ADD_TENSION:8", "SHIFT_ASPECT:Ame:down"],
+      "system_mapping": ["ADD_TENSION:8", "ADD_REPUTATION:ankou:5"],
       "biome_affinity": ["marais_korrigans"]
     },
     "espoir": {
@@ -415,7 +415,7 @@
     "recovery": {
       "category": "system",
       "description": "Evenement de recuperation post-crise",
-      "system_mapping": ["HEAL_LIFE:5", "ADD_SOUFFLE:1"],
+      "system_mapping": ["HEAL_LIFE:5", "ADD_ANAM:10"],
       "biome_affinity": []
     },
     "danger": {
@@ -439,25 +439,25 @@
     "endurance": {
       "category": "personal",
       "description": "Test de resistance physique, epreuve de force",
-      "system_mapping": ["SHIFT_ASPECT:Corps:up"],
+      "system_mapping": ["HEAL_LIFE:5"],
       "biome_affinity": ["landes_bruyere", "cotes_sauvages"]
     },
     "metamorphose": {
       "category": "mystical",
       "description": "Changement de forme, evolution, transformation magique",
-      "system_mapping": ["SHIFT_ASPECT:Ame:up", "ADD_KARMA:5"],
+      "system_mapping": ["ADD_REPUTATION:druides:5", "ADD_KARMA:5"],
       "biome_affinity": ["foret_broceliande", "cercles_pierres"]
     },
     "portail": {
       "category": "mystical",
       "description": "Passage entre mondes, porte dimensionnelle, chemin sidhe",
-      "system_mapping": ["ADD_TENSION:8", "ADD_SOUFFLE:1"],
+      "system_mapping": ["ADD_TENSION:8", "ADD_ANAM:10"],
       "biome_affinity": ["cercles_pierres", "marais_korrigans"]
     },
     "sidhe_passage": {
       "category": "mystical",
       "description": "Sentier des Sidhe entre les mondes, raccourci enchante",
-      "system_mapping": ["ADD_TENSION:5", "SHIFT_ASPECT:Ame:up"],
+      "system_mapping": ["ADD_TENSION:5", "ADD_REPUTATION:druides:5"],
       "biome_affinity": ["foret_broceliande", "marais_korrigans"]
     },
     "message_quete": {
@@ -481,7 +481,7 @@
     "ogham_activated": {
       "category": "system",
       "description": "Un Ogham du biome s'est active, savoir druidique revele",
-      "system_mapping": ["ADD_SOUFFLE:1"],
+      "system_mapping": ["ADD_ANAM:10"],
       "biome_affinity": []
     },
     "nuit_tombee": {
@@ -499,25 +499,25 @@
     "festin_partage": {
       "category": "social",
       "description": "Repas communautaire, partage, liens sociaux renforces",
-      "system_mapping": ["HEAL_LIFE:3", "SHIFT_ASPECT:Monde:up"],
+      "system_mapping": ["HEAL_LIFE:3", "ADD_REPUTATION:anciens:5"],
       "biome_affinity": ["villages_celtes"]
     },
     "reve_vision": {
       "category": "personal",
       "description": "Reve prophetique ou revelateur pendant le sommeil",
-      "system_mapping": ["SHIFT_ASPECT:Ame:up", "ADD_TENSION:3"],
+      "system_mapping": ["ADD_REPUTATION:druides:5", "ADD_TENSION:3"],
       "biome_affinity": ["cercles_pierres", "foret_broceliande"]
     },
     "meditation_druide": {
       "category": "mystical",
       "description": "Meditation profonde, communion druidique avec la nature",
-      "system_mapping": ["ADD_SOUFFLE:1", "HEAL_LIFE:3"],
+      "system_mapping": ["ADD_ANAM:10", "HEAL_LIFE:3"],
       "biome_affinity": ["cercles_pierres", "foret_broceliande"]
     },
     "epreuve_reussie": {
       "category": "system",
       "description": "Le voyageur a reussi une epreuve, fierete et progression",
-      "system_mapping": ["ADD_KARMA:5", "ADD_SOUFFLE:1"],
+      "system_mapping": ["ADD_KARMA:5", "ADD_ANAM:10"],
       "biome_affinity": []
     }
   },

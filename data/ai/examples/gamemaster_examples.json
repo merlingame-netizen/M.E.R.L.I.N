@@ -1,58 +1,58 @@
 {
   "_meta": {
-    "version": "1.0.0",
-    "description": "Few-shot examples for the Game Master instance — structured effects generation",
+    "version": "2.5.0",
+    "description": "Few-shot examples for the Game Master instance — v2.5 effects (life, factions, anam, promises)",
     "usage": "Inject 2-3 examples into system prompt when context budget allows"
   },
   "effects_examples": [
     {
-      "context": "Corps=bas, Ame=equilibre, Monde=haut. Souffle=3. Scenario: soigner un blesse",
+      "context": "Vie=65/100. Faction dominante: druides (45). Ogham actif: beith. Scenario: soigner un blesse",
       "output": {
         "options": [
-          {"label": "Soigner avec des herbes", "effects": [{"type": "SHIFT_ASPECT", "aspect": "Corps", "direction": "up"}]},
-          {"label": "Prier pour sa guerison", "cost": 1, "effects": [{"type": "SHIFT_ASPECT", "aspect": "Ame", "direction": "up"}]},
-          {"label": "L'abandonner a son sort", "effects": [{"type": "SHIFT_ASPECT", "aspect": "Monde", "direction": "down"}, {"type": "ADD_KARMA", "amount": -5}]}
+          {"label": "Soigner avec des herbes", "effects": [{"type": "HEAL_LIFE", "amount": 8}, {"type": "ADD_REPUTATION", "faction": "druides", "amount": 5}]},
+          {"label": "Prier pour sa guerison", "effects": [{"type": "ADD_REPUTATION", "faction": "anciens", "amount": 10}]},
+          {"label": "L'abandonner a son sort", "effects": [{"type": "DAMAGE_LIFE", "amount": 3}, {"type": "ADD_REPUTATION", "faction": "ankou", "amount": 5}]}
         ]
       }
     },
     {
-      "context": "Corps=haut, Ame=bas, Monde=equilibre. Souffle=5. Scenario: confronter un esprit",
+      "context": "Vie=40/100. Faction dominante: ankou (55). Ogham actif: luis. Scenario: confronter un esprit",
       "output": {
         "options": [
-          {"label": "Combattre l'esprit", "effects": [{"type": "SHIFT_ASPECT", "aspect": "Corps", "direction": "down"}, {"type": "ADD_TENSION", "amount": 10}]},
-          {"label": "Communier avec lui", "cost": 1, "effects": [{"type": "SHIFT_ASPECT", "aspect": "Ame", "direction": "up"}]},
-          {"label": "Fuir la confrontation", "effects": [{"type": "SHIFT_ASPECT", "aspect": "Monde", "direction": "up"}, {"type": "ADD_KARMA", "amount": -3}]}
+          {"label": "Combattre l'esprit", "effects": [{"type": "DAMAGE_LIFE", "amount": 10}, {"type": "ADD_TENSION", "amount": 10}]},
+          {"label": "Communier avec lui", "effects": [{"type": "ADD_REPUTATION", "faction": "niamh", "amount": 10}, {"type": "HEAL_LIFE", "amount": 5}]},
+          {"label": "Fuir la confrontation", "effects": [{"type": "ADD_REPUTATION", "faction": "korrigans", "amount": 5}, {"type": "ADD_ANAM", "amount": 10}]}
         ]
       }
     },
     {
-      "context": "Corps=equilibre, Ame=equilibre, Monde=bas. Souffle=1. Scenario: offrir un sacrifice",
+      "context": "Vie=80/100. Faction dominante: anciens (60). Ogham actif: fearn. Scenario: offrir un sacrifice",
       "output": {
         "options": [
-          {"label": "Offrir ta force vitale", "effects": [{"type": "SHIFT_ASPECT", "aspect": "Corps", "direction": "down"}, {"type": "SHIFT_ASPECT", "aspect": "Monde", "direction": "up"}]},
-          {"label": "Mediter sur le sens", "cost": 1, "effects": [{"type": "SHIFT_ASPECT", "aspect": "Ame", "direction": "up"}, {"type": "ADD_SOUFFLE", "amount": 1}]},
-          {"label": "Refuser le sacrifice", "effects": [{"type": "SHIFT_ASPECT", "aspect": "Monde", "direction": "down"}, {"type": "ADD_TENSION", "amount": 15}]}
+          {"label": "Offrir ta force vitale", "effects": [{"type": "DAMAGE_LIFE", "amount": 15}, {"type": "ADD_REPUTATION", "faction": "anciens", "amount": 15}]},
+          {"label": "Offrir de l'Anam", "effects": [{"type": "ADD_ANAM", "amount": -20}, {"type": "ADD_REPUTATION", "faction": "druides", "amount": 10}]},
+          {"label": "Refuser le sacrifice", "effects": [{"type": "ADD_TENSION", "amount": 15}, {"type": "ADD_REPUTATION", "faction": "ankou", "amount": 5}]}
         ]
       }
     }
   ],
   "balance_examples": [
     {
-      "context": "Corps=-1, Ame=0, Monde=1. Souffle=2. Jour=15. Cartes=30.",
-      "output": {"balance_score": 35, "risk_aspect": "Corps", "suggestion": "Proposer plus de cartes qui renforcent Corps"}
+      "context": "Vie=30/100. Faction dominante: korrigans (70). Jour=15. Cartes=30.",
+      "output": {"balance_score": 35, "risk": "vie_basse", "suggestion": "Proposer plus de cartes avec HEAL_LIFE pour equilibrer"}
     },
     {
-      "context": "Corps=0, Ame=0, Monde=0. Souffle=4. Jour=5. Cartes=10.",
-      "output": {"balance_score": 80, "risk_aspect": "none", "suggestion": "Augmenter la tension pour creer du challenge"}
+      "context": "Vie=85/100. Factions equilibrees (~40 chacune). Jour=5. Cartes=10.",
+      "output": {"balance_score": 80, "risk": "none", "suggestion": "Augmenter la tension pour creer du challenge"}
     }
   ],
   "rule_change_examples": [
     {
-      "context": "Joueur prudent, equilibre trop stable, jour 20",
+      "context": "Joueur prudent, factions trop equilibrees, jour 20",
       "output": {"type": "tension", "adjustment": 10, "reason": "Le joueur evite les risques, augmenter la tension narrative"}
     },
     {
-      "context": "Joueur agressif, 2 aspects extremes, jour 8",
+      "context": "Joueur agressif, vie basse (25), jour 8",
       "output": {"type": "difficulty", "adjustment": -5, "reason": "Le joueur est en danger, reduire legerement la pression"}
     }
   ]

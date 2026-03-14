@@ -30,7 +30,6 @@ func setup(
 func build_full_context(game_state: Dictionary) -> Dictionary:
 	## Construit le contexte complet pour le LLM.
 	var run = game_state.get("run", {})
-	var bestiole = game_state.get("bestiole", {})
 
 	return {
 		# === GAME STATE ===
@@ -47,14 +46,6 @@ func build_full_context(game_state: Dictionary) -> Dictionary:
 		"cards_played": int(run.get("cards_played", 0)),
 		"active_promises": run.get("active_promises", []),
 		"active_tags": run.get("active_tags", []),
-
-		# === BESTIOLE ===
-		"bestiole": {
-			"name": bestiole.get("name", "Bestiole"),
-			"bond": int(bestiole.get("bond", 50)),
-			"mood": _get_bestiole_mood(bestiole),
-			"skills_ready": _get_ready_skills(bestiole),
-		},
 
 		# === PLAYER PROFILE ===
 		"player": player_profile.get_context_for_llm() if player_profile else {},
@@ -78,37 +69,6 @@ func build_full_context(game_state: Dictionary) -> Dictionary:
 			"theme_weights": _calculate_theme_weights(),
 		},
 	}
-
-
-func _get_bestiole_mood(bestiole: Dictionary) -> String:
-	var needs = bestiole.get("needs", {})
-	var avg_needs := (
-		int(needs.get("Hunger", 50)) +
-		int(needs.get("Energy", 50)) +
-		int(needs.get("Mood", 50)) -
-		int(needs.get("Stress", 0))
-	) / 4.0
-
-	if avg_needs >= 70:
-		return "happy"
-	elif avg_needs >= 40:
-		return "content"
-	elif avg_needs >= 20:
-		return "tired"
-	else:
-		return "distressed"
-
-
-func _get_ready_skills(bestiole: Dictionary) -> Array:
-	var skills_ready := []
-	var cooldowns = bestiole.get("skill_cooldowns", {})
-	var equipped = bestiole.get("skills_equipped", [])
-
-	for skill_id in equipped:
-		if int(cooldowns.get(skill_id, 0)) <= 0:
-			skills_ready.append(skill_id)
-
-	return skills_ready
 
 
 func _calculate_theme_weights() -> Dictionary:

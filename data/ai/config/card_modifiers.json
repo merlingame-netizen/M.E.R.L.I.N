@@ -18,14 +18,14 @@
       },
       "category_exclusions": ["repos"]
     },
-    "bestiole": {
-      "label": "Bestiole",
+    "faction": {
+      "label": "Faction",
       "probability": 0.10,
-      "description": "Bestiole intervient directement dans la scene. Modifie une option ou revele un indice.",
-      "trigger": {"bestiole_bond_above": 50},
-      "prompt_injection": "Bestiole (le compagnon animal du voyageur) intervient dans cette scene. Elle reagit, aide ou complique la situation. Mentionne Bestiole dans le texte narratif et dans au moins une option.",
+      "description": "Un emissaire ou symbole de la faction dominante intervient. Influence les choix et leurs consequences.",
+      "trigger": {"dominant_faction_above": 30},
+      "prompt_injection": "Un emissaire ou symbole de la faction dominante ({dominant_faction}) apparait dans cette scene. Il influence les choix — une option favorise cette faction, une autre s'y oppose. Mentionne la faction dans le texte narratif.",
       "effect_modifier": {
-        "add_effect": "MODIFY_BOND:3"
+        "add_effect": "ADD_REPUTATION:{dominant_faction}:5"
       },
       "category_exclusions": []
     },

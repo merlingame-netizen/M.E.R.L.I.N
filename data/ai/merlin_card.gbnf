@@ -1,7 +1,7 @@
-# GBNF Grammar for TRIADE Card JSON — M.E.R.L.I.N. Phase 44
+# GBNF Grammar for Narrative Card JSON — M.E.R.L.I.N. v2.5
 # Forces LLM to produce valid JSON matching the card schema.
-# Effects: DAMAGE_LIFE, HEAL_LIFE, ADD_KARMA, ADD_SOUFFLE
-# Exactly 3 options: left, center, right
+# Effects: DAMAGE_LIFE, HEAL_LIFE, ADD_REPUTATION, ADD_ANAM, CREATE_PROMISE
+# Exactly 3 options
 
 root ::= ws "{" ws text-kv "," ws speaker-kv "," ws options-kv ws "}" ws
 
@@ -12,14 +12,20 @@ options-kv ::= "\"options\"" ws ":" ws "[" ws option "," ws option "," ws option
 option     ::= "{" ws label-kv "," ws effects-kv ws "}"
 
 label-kv   ::= "\"label\"" ws ":" ws string
-effects-kv ::= "\"effects\"" ws ":" ws "[" ws effect ws "]"
+effects-kv ::= "\"effects\"" ws ":" ws "[" ws effect-list ws "]"
 
-effect     ::= "{" ws type-kv "," ws amount-kv ws "}"
-type-kv    ::= "\"type\"" ws ":" ws effect-type
-amount-kv  ::= "\"amount\"" ws ":" ws number
+effect-list ::= effect | effect "," ws effect | effect "," ws effect "," ws effect
 
-effect-type ::= "\"DAMAGE_LIFE\"" | "\"HEAL_LIFE\"" | "\"ADD_KARMA\"" | "\"ADD_SOUFFLE\""
-number      ::= [0-9] [0-9]?
+effect      ::= life-effect | reputation-effect | anam-effect
+life-effect ::= "{" ws "\"type\"" ws ":" ws life-type "," ws amount-kv ws "}"
+reputation-effect ::= "{" ws "\"type\"" ws ":" ws "\"ADD_REPUTATION\"" "," ws faction-kv "," ws amount-kv ws "}"
+anam-effect ::= "{" ws "\"type\"" ws ":" ws "\"ADD_ANAM\"" "," ws amount-kv ws "}"
+
+life-type   ::= "\"DAMAGE_LIFE\"" | "\"HEAL_LIFE\""
+faction-kv  ::= "\"faction\"" ws ":" ws faction
+faction     ::= "\"druides\"" | "\"anciens\"" | "\"korrigans\"" | "\"niamh\"" | "\"ankou\""
+amount-kv   ::= "\"amount\"" ws ":" ws number
+number      ::= "-"? [0-9] [0-9]?
 
 # String: allows any printable character except unescaped quotes/backslashes
 string ::= "\"" char* "\""

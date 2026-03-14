@@ -153,7 +153,7 @@ func build_default_state() -> Dictionary:
 	return {
 		"version": VERSION,
 		"phase": "title",
-		"mode": "triade",
+		"mode": "narrative",
 		"timestamp": int(Time.get_unix_time_from_system()),
 		"run": {
 			"active": false,

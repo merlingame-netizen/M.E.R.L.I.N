@@ -3,7 +3,7 @@
     "version": "2.0.0",
     "phase": 44,
     "description": "Taxonomie des 6 categories d'evenements narratifs avec sous-types, triggers, poids et matrice de frequence dynamique. Consomme par event_category_selector.gd et merlin_card_system.gd.",
-    "references": "tag_glossary.json pour les tags, merlin_constants.gd pour les biomes et aspects"
+    "references": "tag_glossary.json pour les tags, merlin_constants.gd pour les biomes et factions"
   },
   "categories": {
     "rencontre": {
@@ -25,8 +25,7 @@
           "weight": 0.22,
           "tags": ["korrigan", "corbeau", "cerf", "loup", "wisp", "sidhe"],
           "triggers": {
-            "biome": ["foret_broceliande", "marais_korrigans"],
-            "aspect_condition": {"Ame": ["BAS", "HAUT"]}
+            "biome": ["foret_broceliande", "marais_korrigans"]
           }
         },
         "autochtone": {
@@ -34,8 +33,7 @@
           "weight": 0.18,
           "tags": ["village", "noble", "druide", "clan", "forgeron"],
           "triggers": {
-            "biome": ["villages_celtes"],
-            "aspect_condition": {"Monde": ["EQUILIBRE"]}
+            "biome": ["villages_celtes"]
           }
         },
         "revenant": {
@@ -59,7 +57,7 @@
       },
       "narrator_guidance": "Introduis le personnage avec un trait visible et un trait cache. Le joueur doit sentir qu'il y a plus sous la surface.",
       "effect_profile": {
-        "primary": "SHIFT_ASPECT:Monde",
+        "primary": "ADD_REPUTATION:anciens:5",
         "secondary": ["ADD_KARMA", "SET_FLAG"],
         "intensity": "low"
       }
@@ -74,7 +72,6 @@
           "weight": 0.30,
           "tags": ["sacrifice", "choice", "courage"],
           "triggers": {
-            "aspect_condition": {"Corps": ["HAUT"], "Ame": ["BAS"]},
             "min_cards_played": 5
           }
         },
@@ -83,7 +80,6 @@
           "weight": 0.25,
           "tags": ["clan", "alliance", "betrayal", "promise"],
           "triggers": {
-            "aspect_condition": {"Monde": ["HAUT"]},
             "flags_required": ["has_ally"]
           }
         },
@@ -92,7 +88,6 @@
           "weight": 0.25,
           "tags": ["mystere", "choice", "secret"],
           "triggers": {
-            "aspect_condition": {"Ame": ["HAUT"]},
             "min_cards_played": 8
           }
         },
@@ -109,7 +104,7 @@
       "narrator_guidance": "Presente une situation ou les deux options ont un prix. Pas de jugement moral dans le texte. Merlin observe, ne juge pas.",
       "effect_profile": {
         "primary": "ADD_KARMA",
-        "secondary": ["SHIFT_ASPECT", "ADD_TENSION", "SET_FLAG"],
+        "secondary": ["ADD_REPUTATION", "ADD_TENSION", "SET_FLAG"],
         "intensity": "high"
       }
     },
@@ -123,8 +118,7 @@
           "weight": 0.35,
           "tags": ["clairiere", "nemeton", "source", "dolmen"],
           "triggers": {
-            "biome": ["foret_broceliande", "collines_dolmens", "marais_korrigans"],
-            "aspect_condition": {"Corps": ["HAUT", "EQUILIBRE"]}
+            "biome": ["foret_broceliande", "collines_dolmens", "marais_korrigans"]
           }
         },
         "objet": {
@@ -132,8 +126,7 @@
           "weight": 0.30,
           "tags": ["ogham", "rune", "lore_fragment"],
           "triggers": {
-            "biome": ["cercles_pierres", "collines_dolmens"],
-            "aspect_condition": {"Ame": ["HAUT"]}
+            "biome": ["cercles_pierres", "collines_dolmens"]
           }
         },
         "savoir": {
@@ -141,7 +134,6 @@
           "weight": 0.20,
           "tags": ["ritual", "ogham", "mystere", "lore_fragment"],
           "triggers": {
-            "aspect_condition": {"Ame": ["HAUT"]},
             "min_cards_played": 8
           }
         },
@@ -150,15 +142,14 @@
           "weight": 0.15,
           "tags": ["sidhe_passage", "brume", "portail", "mystere"],
           "triggers": {
-            "biome": ["foret_broceliande", "marais_korrigans"],
-            "aspect_condition": {"Ame": ["HAUT"]}
+            "biome": ["foret_broceliande", "marais_korrigans"]
           }
         }
       },
       "narrator_guidance": "Decris la decouverte avec emerveillement contenu. Merlin laisse le voyageur decouvrir par lui-meme, ne mache pas les revelations.",
       "effect_profile": {
         "primary": "ADD_TAG",
-        "secondary": ["PROGRESS_MISSION", "ADD_KARMA", "ADD_SOUFFLE"],
+        "secondary": ["PROGRESS_MISSION", "ADD_KARMA", "ADD_ANAM"],
         "intensity": "medium"
       }
     },
@@ -181,7 +172,6 @@
           "weight": 0.30,
           "tags": ["war", "raid", "clan", "siege"],
           "triggers": {
-            "aspect_condition": {"Monde": ["BAS", "HAUT"]},
             "tension_above": 60
           }
         },
@@ -190,7 +180,6 @@
           "weight": 0.20,
           "tags": ["dream", "peur", "choice", "memory"],
           "triggers": {
-            "aspect_condition": {"Ame": ["BAS", "HAUT"]},
             "tension_above": 40
           }
         }
@@ -198,7 +187,7 @@
       "narrator_guidance": "Le conflit est deja engage. Merlin decrit la situation avec urgence mais sans panique. Les options sont escalader ou apaiser.",
       "effect_profile": {
         "primary": "ADD_TENSION",
-        "secondary": ["SHIFT_ASPECT", "DAMAGE_LIFE", "ADD_KARMA"],
+        "secondary": ["ADD_REPUTATION", "DAMAGE_LIFE", "ADD_KARMA"],
         "intensity": "high"
       }
     },
@@ -212,7 +201,6 @@
           "weight": 0.30,
           "tags": ["vision", "omen", "dream", "prophecy"],
           "triggers": {
-            "aspect_condition": {"Ame": ["BAS", "HAUT"]},
             "min_cards_played": 5
           }
         },
@@ -226,28 +214,26 @@
           }
         },
         "don": {
-          "description": "Cadeau mysterieux, pouvoir revele, Bestiole evolue",
+          "description": "Cadeau mysterieux, pouvoir d'Ogham revele, faveur de faction",
           "weight": 0.25,
-          "tags": ["bond", "ogham", "blessing", "gui"],
+          "tags": ["ogham", "blessing", "gui", "faction"],
           "triggers": {
-            "bestiole_bond_above": 70,
             "karma_above": 20
           }
         },
         "transformation": {
           "description": "Metamorphose, evolution, changement de forme ou de nature",
           "weight": 0.20,
-          "tags": ["metamorphose", "bond", "awen", "blessing"],
+          "tags": ["metamorphose", "ogham", "awen", "blessing"],
           "triggers": {
-            "bestiole_bond_above": 70,
             "min_cards_played": 12
           }
         }
       },
       "narrator_guidance": "Reste mysterieux. Ne nomme pas la magie, decris ses effets sur les sens. Merlin semble a la fois surpris et pas du tout surpris.",
       "effect_profile": {
-        "primary": "ADD_SOUFFLE",
-        "secondary": ["HEAL_LIFE", "ADD_KARMA", "SHIFT_ASPECT"],
+        "primary": "ADD_ANAM:15",
+        "secondary": ["HEAL_LIFE", "ADD_KARMA", "ADD_REPUTATION"],
         "intensity": "medium"
       }
     },
@@ -279,7 +265,6 @@
           "weight": 0.20,
           "tags": ["raid", "betrayal", "war", "embuscade"],
           "triggers": {
-            "aspect_condition": {"Monde": ["BAS", "HAUT"]},
             "tension_above": 60
           }
         }
@@ -287,7 +272,7 @@
       "narrator_guidance": "La catastrophe est soudaine et violente. Merlin est grave, presque triste. Les options sont: proteger soi-meme ou proteger autrui.",
       "effect_profile": {
         "primary": "DAMAGE_LIFE",
-        "secondary": ["SHIFT_ASPECT", "ADD_TENSION", "ADD_KARMA"],
+        "secondary": ["ADD_REPUTATION", "ADD_TENSION", "ADD_KARMA"],
         "intensity": "very_high"
       }
     },
@@ -301,7 +286,6 @@
           "weight": 0.30,
           "tags": ["challenge", "courage", "endurance"],
           "triggers": {
-            "aspect_condition": {"Corps": ["BAS", "HAUT"]},
             "min_cards_played": 3
           }
         },
@@ -310,7 +294,6 @@
           "weight": 0.25,
           "tags": ["enigme", "mystere", "ogham", "rune"],
           "triggers": {
-            "aspect_condition": {"Ame": ["EQUILIBRE", "HAUT"]},
             "min_cards_played": 5
           }
         },
@@ -328,15 +311,14 @@
           "weight": 0.20,
           "tags": ["village", "noble", "clan", "barde"],
           "triggers": {
-            "aspect_condition": {"Monde": ["HAUT"]},
             "biome": ["villages_celtes"]
           }
         }
       },
       "narrator_guidance": "L'epreuve a des regles claires. Decris le defi, les enjeux, puis les 3 approches. Option prudente reussit partiellement, audacieuse peut echouer spectaculairement ou triompher.",
       "effect_profile": {
-        "primary": "SHIFT_ASPECT",
-        "secondary": ["ADD_KARMA", "PROGRESS_MISSION", "ADD_SOUFFLE"],
+        "primary": "ADD_REPUTATION:druides:5",
+        "secondary": ["ADD_KARMA", "PROGRESS_MISSION", "ADD_ANAM"],
         "intensity": "high"
       }
     },
@@ -359,7 +341,6 @@
           "weight": 0.20,
           "tags": ["stranger", "nuit", "secret", "korrigan"],
           "triggers": {
-            "aspect_condition": {"Monde": ["BAS"]},
             "min_cards_played": 10
           }
         },
@@ -368,8 +349,7 @@
           "weight": 0.25,
           "tags": ["promise", "alliance", "druide", "sidhe"],
           "triggers": {
-            "min_cards_played": 8,
-            "aspect_condition": {"Ame": ["BAS", "HAUT"]}
+            "min_cards_played": 8
           }
         },
         "offrande": {
@@ -385,7 +365,7 @@
       "narrator_guidance": "Presente le deal clairement: ce que le voyageur donne, ce qu'il recoit. L'option prudente est un echange equitable, l'audacieuse est un pari. Ne jamais reveler la valeur reelle.",
       "effect_profile": {
         "primary": "SET_FLAG",
-        "secondary": ["ADD_KARMA", "SHIFT_ASPECT", "CREATE_PROMISE"],
+        "secondary": ["ADD_KARMA", "ADD_REPUTATION", "CREATE_PROMISE"],
         "intensity": "medium"
       }
     },
@@ -408,8 +388,7 @@
           "weight": 0.25,
           "tags": ["village", "bond", "barde", "harvest", "festin_partage"],
           "triggers": {
-            "biome": ["villages_celtes"],
-            "aspect_condition": {"Monde": ["EQUILIBRE"]}
+            "biome": ["villages_celtes"]
           }
         },
         "reve_lucide": {
@@ -417,7 +396,6 @@
           "weight": 0.20,
           "tags": ["dream", "vision", "memory", "nuit", "reve_vision"],
           "triggers": {
-            "aspect_condition": {"Ame": ["BAS", "HAUT"]},
             "min_cards_played": 10
           }
         },
@@ -426,15 +404,14 @@
           "weight": 0.20,
           "tags": ["ritual", "nemeton", "ogham", "awen", "meditation_druide"],
           "triggers": {
-            "biome": ["cercles_pierres", "foret_broceliande"],
-            "aspect_condition": {"Ame": ["EQUILIBRE"]}
+            "biome": ["cercles_pierres", "foret_broceliande"]
           }
         }
       },
       "narrator_guidance": "Le repos est une parenthese poetique. Merlin est doux, presque paternel. Les options ne menacent pas — elles offrent differentes formes de reconfort. Le danger est mis en pause.",
       "effect_profile": {
         "primary": "HEAL_LIFE",
-        "secondary": ["ADD_SOUFFLE", "SHIFT_ASPECT", "MODIFY_BOND"],
+        "secondary": ["ADD_ANAM", "ADD_REPUTATION", "ADD_ANAM"],
         "intensity": "low"
       }
     }
@@ -487,8 +464,8 @@
       }
     },
     "jauges_stables": {
-      "description": "Tous les aspects a EQUILIBRE. Jeu calme, exploration favorisee.",
-      "condition": {"all_aspects": "EQUILIBRE"},
+      "description": "Factions equilibrees, vie stable. Jeu calme, exploration favorisee.",
+      "condition": {"life_above": 50},
       "multipliers": {
         "rencontre": 1.00,
         "dilemme": 0.80,
@@ -502,8 +479,8 @@
       }
     },
     "jauges_critiques": {
-      "description": "Au moins 1 aspect a BAS ou HAUT. Tension narrative maximale.",
-      "condition": {"any_aspect": ["BAS", "HAUT"]},
+      "description": "Vie basse ou tension elevee. Tension narrative maximale.",
+      "condition": {"life_below": 30, "tension_above": 50},
       "multipliers": {
         "rencontre": 0.55,
         "dilemme": 1.60,
@@ -518,7 +495,7 @@
     }
   },
   "pity_system": {
-    "_meta": "Ajustements quand le joueur est en difficulte (life < 25 ou 2+ aspects extremes).",
+    "_meta": "Ajustements quand le joueur est en difficulte (life < 25) ou domine (life > 80).",
     "recovery_boost": {
       "description": "Augmente les merveilles et decouvertes, reduit catastrophes et conflits",
       "condition": {"life_below": 25},
@@ -534,7 +511,7 @@
     },
     "challenge_boost": {
       "description": "Augmente conflits et dilemmes quand le joueur domine",
-      "condition": {"life_above": 80, "all_aspects": "EQUILIBRE"},
+      "condition": {"life_above": 80},
       "overrides": {
         "conflit": 2.00,
         "dilemme": 1.50,

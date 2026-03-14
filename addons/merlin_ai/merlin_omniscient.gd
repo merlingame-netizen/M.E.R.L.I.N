@@ -427,7 +427,7 @@ func generate_npc_card(game_state: Dictionary) -> Dictionary:
 
 func _try_calendar_event(game_state: Dictionary) -> Dictionary:
 	## Check if a calendar event should be injected as the next card.
-	## Returns a TRIADE-format card, or empty dict if no event fires.
+	## Returns a narrative card dict, or empty dict if no event fires.
 	if event_adapter == null:
 		return {}
 
@@ -478,12 +478,23 @@ func _build_event_context(game_state: Dictionary) -> Dictionary:
 		"karma": int(hidden.get("karma", 0)),
 		"tension": int(hidden.get("tension", 0)),
 		"flags": game_state.get("flags", {}),
-		"bestiole_bond": int(game_state.get("bestiole", {}).get("bond", 0)),
+		"dominant_faction": _get_dominant_faction(run.get("factions", {})),
 		"trust_merlin": relationship.trust_points if relationship else 0,
 		"endings_seen_count": int(meta.get("endings_seen", []).size()),
 		"calendrier_des_brumes": meta.get("talent_tree", {}).get("unlocked", []).has("calendrier_des_brumes"),
 		"life_essence": int(run.get("life_essence", 100)),
 	}
+
+
+func _get_dominant_faction(factions: Dictionary) -> String:
+	var best_name := ""
+	var best_val := -1.0
+	for faction_name in factions:
+		var val: float = float(factions[faction_name])
+		if val > best_val:
+			best_val = val
+			best_name = str(faction_name)
+	return best_name
 
 
 func _calendar_event_to_card(ev: Dictionary) -> Dictionary:
