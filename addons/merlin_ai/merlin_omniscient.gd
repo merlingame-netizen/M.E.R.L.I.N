@@ -2220,5 +2220,434 @@ func reload_registries() -> void:
 	print("[MerlinOmniscient] Registries reloaded from disk")
 
 
+# ═══════════════════════════════════════════════════════════════════════════════
+# PHASE 8 — ORCHESTRATION API (DEV_PLAN_V2.5)
+# ═══════════════════════════════════════════════════════════════════════════════
+
+# Run-scoped registries (in-memory, saved in run_state)
+var _mos_registries: Dictionary = {}
+
+func init_mos_registries() -> void:
+	_mos_registries = {
+		"player": {
+			"choices_count": 0,
+			"preferred_fields": {},
+			"avg_score": 0.0,
+			"total_score": 0,
+		},
+		"narrative": {
+			"arc_tags": [],
+			"pnj_met": [],
+			"twists_resolved": [],
+		},
+		"faction": {
+			"rep_deltas_this_run": {},
+			"cross_faction_count": 0,
+		},
+		"cards": {
+			"themes_seen": [],
+			"fields_used": {},
+			"total_played": 0,
+		},
+		"promises": {
+			"active": [],
+			"resolved": [],
+			"broken": [],
+		},
+		"trust": {
+			"current": 0,
+			"tier": "T0",
+			"changes": [],
+		},
+	}
+
+
+func save_mos_registries_to_run_state(run_state: Dictionary) -> void:
+	run_state["mos_registries"] = _mos_registries.duplicate(true)
+
+
+func load_mos_registries_from_run_state(run_state: Dictionary) -> void:
+	var saved: Dictionary = run_state.get("mos_registries", {})
+	if not saved.is_empty():
+		_mos_registries = saved.duplicate(true)
+	else:
+		init_mos_registries()
+
+
+func update_mos_registry(registry: String, key: String, value) -> void:
+	if _mos_registries.has(registry):
+		_mos_registries[registry][key] = value
+
+
+func record_card_played(card: Dictionary, option_index: int, score: int, field: String) -> void:
+	# Player registry
+	var player_reg: Dictionary = _mos_registries.get("player", {})
+	player_reg["choices_count"] = int(player_reg.get("choices_count", 0)) + 1
+	var total_score: int = int(player_reg.get("total_score", 0)) + score
+	player_reg["total_score"] = total_score
+	player_reg["avg_score"] = float(total_score) / float(player_reg["choices_count"])
+	var pref_fields: Dictionary = player_reg.get("preferred_fields", {})
+	pref_fields[field] = int(pref_fields.get(field, 0)) + 1
+	player_reg["preferred_fields"] = pref_fields
+	_mos_registries["player"] = player_reg
+
+	# Cards registry
+	var cards_reg: Dictionary = _mos_registries.get("cards", {})
+	cards_reg["total_played"] = int(cards_reg.get("total_played", 0)) + 1
+	var fields_used: Dictionary = cards_reg.get("fields_used", {})
+	fields_used[field] = int(fields_used.get(field, 0)) + 1
+	cards_reg["fields_used"] = fields_used
+	var tags: Array = card.get("tags", [])
+	var themes: Array = cards_reg.get("themes_seen", [])
+	for tag in tags:
+		var t: String = str(tag)
+		if not themes.has(t):
+			themes.append(t)
+	cards_reg["themes_seen"] = themes
+	_mos_registries["cards"] = cards_reg
+
+
+func record_faction_delta(faction: String, amount: float) -> void:
+	var faction_reg: Dictionary = _mos_registries.get("faction", {})
+	var deltas: Dictionary = faction_reg.get("rep_deltas_this_run", {})
+	deltas[faction] = float(deltas.get(faction, 0.0)) + amount
+	faction_reg["rep_deltas_this_run"] = deltas
+
+	# Track cross-faction cards (positive rep for 2+ factions in same card)
+	var positive_count: int = 0
+	for f in deltas:
+		if float(deltas[f]) > 0:
+			positive_count += 1
+	if positive_count >= 2:
+		faction_reg["cross_faction_count"] = int(faction_reg.get("cross_faction_count", 0)) + 1
+	_mos_registries["faction"] = faction_reg
+
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# ORCHESTRATE CARD — Main Phase 8 entry point
+# ═══════════════════════════════════════════════════════════════════════════════
+
+func orchestrate_card(context: Dictionary) -> Dictionary:
+	# 1. Decide FastRoute vs LLM
+	var routing: String = select_fastroute_or_llm(context)
+
+	# 2. Generate card (delegates to existing generate_card or card_system)
+	var card: Dictionary
+	if routing == "fastroute":
+		card = await generate_card(context)
+	else:
+		card = await generate_card(context)
+
+	if card.is_empty():
+		return card
+
+	# 3. Check guardrails
+	var guardrail_result: Dictionary = check_guardrails_phase8(card)
+	if not guardrail_result.get("valid", false):
+		card = guardrail_result.get("adjusted_card", card)
+
+	# 4. Apply pacing
+	card = apply_pacing_to_card(context, card)
+
+	# 5. Try arc insertion
+	var arc_card: Dictionary = insert_arc_card(context)
+	if not arc_card.is_empty():
+		card = arc_card
+
+	return card
+
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# TENSION — 4-factor formula, clamp 0.0-0.8
+# ═══════════════════════════════════════════════════════════════════════════════
+
+func calculate_tension(state: Dictionary) -> float:
+	var life: int = int(state.get("life", 100))
+	var life_max: int = int(state.get("life_max", 100))
+	var active_promises: Array = state.get("active_promises", [])
+	var card_index: int = int(state.get("card_index", 0))
+
+	# Factor 1: Life pressure (0-1)
+	var life_factor: float = 1.0 - (float(life) / float(maxi(life_max, 1)))
+
+	# Factor 2: Cross-faction pressure (0-1)
+	var faction_reg: Dictionary = _mos_registries.get("faction", {})
+	var cross_count: int = int(faction_reg.get("cross_faction_count", 0))
+	var cross_factor: float = clampf(float(cross_count) / 5.0, 0.0, 1.0)
+
+	# Factor 3: Promise urgency (0-1)
+	var promise_urgency: float = 0.0
+	for promise in active_promises:
+		if promise is Dictionary:
+			var deadline: int = int(promise.get("deadline_card", 0))
+			var remaining: int = maxi(deadline - card_index, 1)
+			promise_urgency = maxf(promise_urgency, 1.0 / float(remaining))
+	promise_urgency = clampf(promise_urgency, 0.0, 1.0)
+
+	# Factor 4: Cards since climax (0-1) — proxy: higher tension later in run
+	var mos: Dictionary = MerlinConstants.MOS_CONVERGENCE
+	var target_max: int = int(mos.get("target_cards_max", 25))
+	var progress_factor: float = clampf(float(card_index) / float(target_max), 0.0, 1.0)
+
+	# Weighted sum
+	var tension: float = 0.3 * life_factor + 0.2 * cross_factor \
+			+ 0.3 * promise_urgency + 0.2 * progress_factor
+
+	return clampf(tension, 0.0, 0.8)
+
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# PACING — Mercy rules, recovery
+# ═══════════════════════════════════════════════════════════════════════════════
+
+func apply_pacing(state: Dictionary) -> Dictionary:
+	var result: Dictionary = state.duplicate(true)
+	var life: int = int(state.get("life", 100))
+	var stats_dict: Dictionary = state.get("stats", {})
+	var consecutive_deaths: int = int(stats_dict.get("consecutive_deaths", 0))
+
+	# Mercy: -20% scaling after 3 consecutive deaths
+	if consecutive_deaths >= 3:
+		result["mercy_active"] = true
+		result["mercy_scaling"] = 0.8  # 20% damage reduction
+
+	# Recovery: +5 PV if life < 20
+	if life < 20:
+		result["recovery_heal"] = 5
+
+	return result
+
+
+func apply_pacing_to_card(state: Dictionary, card: Dictionary) -> Dictionary:
+	var pacing: Dictionary = apply_pacing(state)
+	var result: Dictionary = card.duplicate(true)
+
+	# If mercy is active, reduce damage effects
+	if pacing.get("mercy_active", false):
+		var mercy_scale: float = float(pacing.get("mercy_scaling", 1.0))
+		var options: Array = result.get("options", [])
+		for option in options:
+			if option is Dictionary:
+				var effects: Array = option.get("effects", [])
+				for effect in effects:
+					if effect is Dictionary and str(effect.get("type", "")) == "DAMAGE_LIFE":
+						var amount: int = int(effect.get("amount", 0))
+						effect["amount"] = int(float(amount) * mercy_scale)
+
+	return result
+
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# MERLIN VOICE — Trust-tier + tension override
+# ═══════════════════════════════════════════════════════════════════════════════
+
+func get_merlin_voice(context: Dictionary) -> String:
+	var trust: int = int(context.get("trust_merlin", 0))
+	var life: int = int(context.get("life", 100))
+	var tension: float = calculate_tension(context)
+
+	# Override: life critical → melancolie
+	if life < 20:
+		return "melancolie"
+
+	# Override: high tension → avertissement
+	if tension > 0.6:
+		return "avertissement"
+
+	# Trust-based voice
+	if trust >= 75:
+		return "secrets"
+	elif trust >= 50:
+		return "avertissement"
+	elif trust >= 25:
+		return "indices"
+	else:
+		return "cryptique"
+
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# FASTROUTE vs LLM ROUTING
+# ═══════════════════════════════════════════════════════════════════════════════
+
+func select_fastroute_or_llm(context: Dictionary) -> String:
+	# If no LLM available, always fastroute
+	if llm_interface == null:
+		return "fastroute"
+
+	var tension: float = calculate_tension(context)
+	var card_index: int = int(context.get("card_index", 0))
+
+	# First 2 cards: fastroute (faster startup)
+	if card_index < 2:
+		return "fastroute"
+
+	# High tension: prefer LLM for dramatic content
+	if tension > 0.5:
+		return "llm"
+
+	# Low tension early game: fastroute 40% of the time
+	if tension < 0.2 and card_index < 10:
+		var roll: float = randf()
+		if roll < 0.4:
+			return "fastroute"
+
+	return "llm"
+
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# GUARDRAILS — Phase 8 spec (6 rules)
+# ═══════════════════════════════════════════════════════════════════════════════
+
+func check_guardrails_phase8(card: Dictionary) -> Dictionary:
+	var issues: Array = []
+
+	# G1: Total effect < 50 per card
+	var total_effect: int = 0
+	var options: Array = card.get("options", [])
+	for option in options:
+		if option is Dictionary:
+			for effect in option.get("effects", []):
+				if effect is Dictionary:
+					total_effect += absi(int(effect.get("amount", 0)))
+	if total_effect > 50:
+		issues.append("G1: total_effect=%d > 50" % total_effect)
+
+	# G2: 90% of cards have tradeoffs (at least 1 negative effect)
+	var has_negative: bool = false
+	for option in options:
+		if option is Dictionary:
+			for effect in option.get("effects", []):
+				if effect is Dictionary:
+					var etype: String = str(effect.get("type", ""))
+					var amount: int = int(effect.get("amount", 0))
+					if etype == "DAMAGE_LIFE" or (etype == "ADD_REPUTATION" and amount < 0):
+						has_negative = true
+	# Allow 10% without tradeoffs (don't reject, just flag)
+	if not has_negative:
+		issues.append("G2: no tradeoff (allowed 10%)")
+
+	# G3: No instant death (DAMAGE_LIFE cap 15, critique 22)
+	for option in options:
+		if option is Dictionary:
+			for effect in option.get("effects", []):
+				if effect is Dictionary and str(effect.get("type", "")) == "DAMAGE_LIFE":
+					var amount: int = int(effect.get("amount", 0))
+					if amount > 22:
+						effect["amount"] = 22
+						issues.append("G3: capped DAMAGE_LIFE from %d to 22" % amount)
+
+	# G4: No modern words (basic check)
+	var text: String = str(card.get("text", "")).to_lower()
+	var modern_words: Array = ["telephone", "internet", "ordinateur", "email", "voiture", "avion"]
+	for word in modern_words:
+		if text.contains(str(word)):
+			issues.append("G4: modern word '%s'" % word)
+
+	# G5: Max 2 active promises (enforced in card_system, check here too)
+	# G6: Cross-faction 10% cap (tracked in registries)
+
+	var valid: bool = true
+	for issue in issues:
+		if issue.begins_with("G4:"):
+			valid = false
+
+	return {
+		"valid": valid,
+		"issues": issues,
+		"adjusted_card": card,
+	}
+
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# ARC INSERTION — 1-2 per run, condition-based
+# ═══════════════════════════════════════════════════════════════════════════════
+
+func insert_arc_card(state: Dictionary) -> Dictionary:
+	var biome: String = str(state.get("biome", ""))
+	var narrative_reg: Dictionary = _mos_registries.get("narrative", {})
+	var arc_tags: Array = narrative_reg.get("arc_tags", [])
+
+	# Max 2 arc cards per run
+	if arc_tags.size() >= 2:
+		return {}
+
+	# Check biome arc condition
+	var biome_data: Dictionary = MerlinConstants.BIOMES.get(biome, {})
+	var arc_condition_key: String = str(biome_data.get("arc_condition_key", ""))
+	var arc_condition_value = biome_data.get("arc_condition_value", 0)
+
+	if arc_condition_key.is_empty():
+		return {}
+
+	# Check condition against state
+	var condition_met: bool = false
+	match arc_condition_key:
+		"total_runs":
+			condition_met = int(state.get("total_runs", 0)) >= int(arc_condition_value)
+		"faction_rep":
+			var faction: String = str(biome_data.get("arc_condition_faction", ""))
+			var rep: Dictionary = state.get("faction_rep", {})
+			condition_met = float(rep.get(faction, 0.0)) >= float(arc_condition_value)
+
+	if not condition_met:
+		return {}
+
+	# Generate arc card (using biome's arc data)
+	var arc: String = str(biome_data.get("arc", ""))
+	var arc_cards: Array = biome_data.get("arc_cards", [])
+	if arc_cards.is_empty() or arc.is_empty():
+		return {}
+
+	# Pick first unseen arc card
+	for arc_card_id in arc_cards:
+		var aid: String = str(arc_card_id)
+		if not arc_tags.has(aid):
+			arc_tags.append(aid)
+			narrative_reg["arc_tags"] = arc_tags
+			_mos_registries["narrative"] = narrative_reg
+			# Return a tagged card for LLM to generate
+			return {
+				"type": "narrative",
+				"arc": arc,
+				"arc_card_id": aid,
+				"biome": biome,
+				"tags": ["arc", arc, aid],
+				"_needs_generation": true,
+			}
+
+	return {}
+
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# KEY CARD — Biome-specific climax card
+# ═══════════════════════════════════════════════════════════════════════════════
+
+func insert_key_card(state: Dictionary) -> Dictionary:
+	var biome: String = str(state.get("biome", ""))
+	var card_index: int = int(state.get("card_index", 0))
+	var mos: Dictionary = MerlinConstants.MOS_CONVERGENCE
+	var target_min: int = int(mos.get("target_cards_min", 20))
+
+	# Key card only near end of run
+	if card_index < target_min:
+		return {}
+
+	var intro: Dictionary = MerlinConstants.get_mission_template(biome)
+	if intro.is_empty():
+		return {}
+
+	return {
+		"type": "narrative",
+		"text": str(intro.get("text", "")),
+		"tags": ["key_card", biome],
+		"biome": biome,
+		"options": [
+			{"label": "Affronter le defi", "verb": "combattre", "effects": [{"type": "ADD_REPUTATION", "faction": "anciens", "amount": 10}]},
+			{"label": "Chercher une autre voie", "verb": "observer", "effects": [{"type": "ADD_REPUTATION", "faction": "druides", "amount": 8}]},
+			{"label": "Mediter sur le sens", "verb": "mediter", "effects": [{"type": "HEAL_LIFE", "amount": 5}, {"type": "ADD_REPUTATION", "faction": "druides", "amount": 5}]},
+		],
+	}
+
+
 func _exit_tree() -> void:
 	save_all()

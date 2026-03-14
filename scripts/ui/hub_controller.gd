@@ -196,7 +196,7 @@ func show_biome_select() -> Dictionary:
 	for biome_key in biomes:
 		var biome: Dictionary = biomes[biome_key]
 		var threshold: int = int(biome.get("maturity_threshold", 0))
-		var info: Dictionary = MerlinConstants.get_biome_intro(biome_key)
+		var info: Dictionary = MerlinConstants.get_mission_template(biome_key)
 		var entry: Dictionary = {
 			"id": biome_key,
 			"name": str(info.get("name", biome_key)),
