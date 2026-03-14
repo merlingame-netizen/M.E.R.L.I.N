@@ -211,7 +211,7 @@ func build_default_state() -> Dictionary:
 			"cartes_jouees": [],
 			"heure_debut_run": 0,
 		},
-		# Ogham skills state (formerly on bestiole)
+		# Ogham skills state
 		"oghams": {
 			"skills_unlocked": MerlinConstants.OGHAM_STARTER_SKILLS.duplicate(),
 			"skills_equipped": MerlinConstants.OGHAM_STARTER_SKILLS.duplicate(),

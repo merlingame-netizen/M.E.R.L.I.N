@@ -52,7 +52,7 @@ func _attr_for_verb(verb: String) -> String:
 
 
 func _get_attr(_state: Dictionary, _key: String) -> int:
-	return 10  # Base attribute (bestiole stats removed in v2.5)
+	return 10  # Base attribute constant
 
 
 func _get_modifiers(state: Dictionary, verb: String, context: Dictionary) -> int:

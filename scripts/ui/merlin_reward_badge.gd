@@ -129,14 +129,15 @@ func show_for_option(option: Dictionary, above_node: Control) -> void:
 						effect_parts.append("+%d Vie" % amount)
 					"DAMAGE_LIFE":
 						effect_parts.append("-%d Vie" % amount)
-					"ADD_KARMA":
-						effect_parts.append("+%d Karma" % amount)
-					"ADD_SOUFFLE":
-						effect_parts.append("+%d Souffle" % amount)
-					"PROGRESS_MISSION":
-						effect_parts.append("Quete +1")
-					"MODIFY_BOND":
-						effect_parts.append("Lien %+d" % amount)
+					"ADD_REPUTATION":
+						var faction: String = str(eff.get("faction", ""))
+						effect_parts.append("+%d %s" % [amount, faction.capitalize()])
+					"ADD_ANAM":
+						effect_parts.append("+%d Anam" % amount)
+					"ADD_TENSION":
+						effect_parts.append("+%d Tension" % amount)
+					"CREATE_PROMISE":
+						effect_parts.append("Promesse")
 		if not effect_parts.is_empty():
 			_effect_label.text = " | ".join(effect_parts)
 			_effect_label.add_theme_color_override("font_color", badge_color.lerp(Color.WHITE, 0.5))

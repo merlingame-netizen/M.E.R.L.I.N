@@ -237,7 +237,7 @@ func _migrate(data: Dictionary) -> Dictionary:
 	meta.erase("ogham_fragments")
 	meta.erase("liens")
 	meta.erase("gloire_points")
-	meta.erase("bestiole_evolution")
+	meta.erase("bestiole_evolution")  # Legacy cleanup
 	meta.erase("unlocked_evolutions")
 
 	# Rename humains → niamh in faction_rep (if not already done)
