@@ -168,10 +168,11 @@ func _is_crisis_context(context: Dictionary) -> bool:
 		if value < 15 or value > 85:
 			return true
 
-	var aspects: Dictionary = context.get("aspects", {})
+	var factions: Dictionary = context.get("faction_rep_delta", {})
 	var extreme_count := 0
-	for aspect in aspects:
-		if int(aspects[aspect]) != 0:
+	for faction in factions:
+		var val: float = float(factions[faction])
+		if absf(val) > 15.0:
 			extreme_count += 1
 	return extreme_count >= 2
 

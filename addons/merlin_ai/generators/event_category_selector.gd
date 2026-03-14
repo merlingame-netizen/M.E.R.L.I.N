@@ -154,7 +154,7 @@ func _compute_category_weights(run: Dictionary) -> Dictionary:
 func _get_matrix_multipliers(run: Dictionary) -> Dictionary:
 	## Find which frequency matrix states apply and combine multipliers.
 	var cards_played: int = int(run.get("cards_played", 0))
-	var aspects: Dictionary = run.get("aspects", {})
+	var faction_rep_delta: Dictionary = run.get("faction_rep_delta", {})
 	var combined: Dictionary = {}
 
 	for state_key in _frequency_matrix:
@@ -163,7 +163,7 @@ func _get_matrix_multipliers(run: Dictionary) -> Dictionary:
 		var state_data: Dictionary = _frequency_matrix[state_key]
 		var condition: Dictionary = state_data.get("condition", {})
 
-		if not _check_matrix_condition(condition, cards_played, aspects):
+		if not _check_matrix_condition(condition, cards_played, faction_rep_delta):
 			continue
 
 		var multipliers: Dictionary = state_data.get("multipliers", {})
@@ -178,7 +178,7 @@ func _get_matrix_multipliers(run: Dictionary) -> Dictionary:
 	return combined
 
 
-func _check_matrix_condition(condition: Dictionary, cards_played: int, aspects: Dictionary) -> bool:
+func _check_matrix_condition(condition: Dictionary, cards_played: int, faction_rep_delta: Dictionary) -> bool:
 	## Check if a frequency matrix condition is met.
 
 	# cards_played range
@@ -189,21 +189,22 @@ func _check_matrix_condition(condition: Dictionary, cards_played: int, aspects: 
 		if cards_played < int(condition["cards_played_min"]):
 			return false
 
-	# all_aspects condition
+	# all_factions_neutral condition (replaces all_aspects EQUILIBRE)
 	if condition.has("all_aspects"):
 		var required_state: String = str(condition["all_aspects"])
-		for aspect in aspects:
-			var val: int = int(aspects[aspect])
-			if required_state == "EQUILIBRE" and val != 0:
-				return false
+		if required_state == "EQUILIBRE":
+			for faction in faction_rep_delta:
+				var delta: float = float(faction_rep_delta[faction])
+				if absf(delta) > 5.0:
+					return false
 
-	# any_aspect condition
+	# any_faction_extreme condition (replaces any_aspect BAS/HAUT)
 	if condition.has("any_aspect"):
 		var target_states: Array = condition["any_aspect"]
 		var found := false
-		for aspect in aspects:
-			var val: int = int(aspects[aspect])
-			var state_name := _aspect_val_to_state(val)
+		for faction in faction_rep_delta:
+			var delta: float = float(faction_rep_delta[faction])
+			var state_name := _faction_delta_to_state(delta)
 			if state_name in target_states:
 				found = true
 				break
@@ -217,7 +218,7 @@ func _get_pity_overrides(run: Dictionary) -> Dictionary:
 	## Check pity system conditions and return override multipliers.
 	var overrides: Dictionary = {}
 	var life: int = int(run.get("life_essence", 100))
-	var aspects: Dictionary = run.get("aspects", {})
+	var faction_rep_delta: Dictionary = run.get("faction_rep_delta", {})
 
 	for pity_key in _pity_system:
 		if pity_key == "_meta":
@@ -236,13 +237,15 @@ func _get_pity_overrides(run: Dictionary) -> Dictionary:
 			if life <= int(condition["life_above"]):
 				matched = false
 
+		# all_factions_neutral (replaces all_aspects EQUILIBRE)
 		if condition.has("all_aspects"):
 			var required: String = str(condition["all_aspects"])
-			for aspect in aspects:
-				var val: int = int(aspects[aspect])
-				if required == "EQUILIBRE" and val != 0:
-					matched = false
-					break
+			if required == "EQUILIBRE":
+				for faction in faction_rep_delta:
+					var delta: float = float(faction_rep_delta[faction])
+					if absf(delta) > 5.0:
+						matched = false
+						break
 
 		if matched:
 			for cat_key in pity_overrides:
@@ -262,7 +265,7 @@ func _select_sub_type(category: String, run: Dictionary) -> String:
 	if sub_types.is_empty():
 		return ""
 
-	var aspects: Dictionary = run.get("aspects", {})
+	var faction_rep_delta: Dictionary = run.get("faction_rep_delta", {})
 	var cards_played: int = int(run.get("cards_played", 0))
 	var life: int = int(run.get("life_essence", 100))
 	var biome: String = str(run.get("current_biome", ""))
@@ -280,7 +283,7 @@ func _select_sub_type(category: String, run: Dictionary) -> String:
 
 		# Check trigger conditions (boost weight if matched)
 		var factions: Dictionary = run.get("factions", {})
-		var trigger_bonus := _evaluate_triggers(triggers, aspects, cards_played, life, biome, flags, tension, karma, factions)
+		var trigger_bonus := _evaluate_triggers(triggers, faction_rep_delta, cards_played, life, biome, flags, tension, karma, factions)
 		weight *= trigger_bonus
 
 		# Anti-repetition for sub-types
@@ -299,7 +302,7 @@ func _select_sub_type(category: String, run: Dictionary) -> String:
 	return _weighted_select(candidates)
 
 
-func _evaluate_triggers(triggers: Dictionary, aspects: Dictionary, cards_played: int,
+func _evaluate_triggers(triggers: Dictionary, faction_rep_delta: Dictionary, cards_played: int,
 		life: int, biome: String, flags: Dictionary, tension: int, karma: int,
 		factions: Dictionary = {}) -> float:
 	## Evaluate trigger conditions. Returns a multiplier (>1 if conditions met).
@@ -313,14 +316,14 @@ func _evaluate_triggers(triggers: Dictionary, aspects: Dictionary, cards_played:
 		else:
 			bonus *= 0.5
 
-	# Aspect condition
+	# Faction delta condition (replaces aspect_condition)
 	if triggers.has("aspect_condition"):
 		var aspect_cond: Dictionary = triggers["aspect_condition"]
 		var any_matched := false
-		for aspect in aspect_cond:
-			var required_states: Array = aspect_cond[aspect]
-			var val: int = int(aspects.get(aspect, 0))
-			var state_name := _aspect_val_to_state(val)
+		for faction in aspect_cond:
+			var required_states: Array = aspect_cond[faction]
+			var delta: float = float(faction_rep_delta.get(faction, 0.0))
+			var state_name := _faction_delta_to_state(delta)
 			if state_name in required_states:
 				any_matched = true
 				break
@@ -616,10 +619,12 @@ func _weighted_select(weights: Dictionary) -> String:
 	return weights.keys()[-1] if not weights.is_empty() else ""
 
 
-func _aspect_val_to_state(val: int) -> String:
-	if val < 0:
+func _faction_delta_to_state(delta: float) -> String:
+	## Map faction reputation delta to a state name.
+	## Thresholds: |delta| <= 5 = EQUILIBRE, < -5 = BAS, > 5 = HAUT
+	if delta < -5.0:
 		return "BAS"
-	elif val > 0:
+	elif delta > 5.0:
 		return "HAUT"
 	return "EQUILIBRE"
 

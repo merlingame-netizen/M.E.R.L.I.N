@@ -195,12 +195,18 @@ func _f_pity() -> float:
 
 func _f_crisis(ctx: Dictionary) -> float:
 	## CAL-REQ-072: Favor recovery events when gauges are critical.
-	var aspects: Dictionary = ctx.get("aspects", {})
+	## v2.5: Uses faction_rep_delta and life_essence instead of Triade aspects.
+	var faction_rep_delta: Dictionary = ctx.get("faction_rep_delta", {})
 	var extreme_count := 0
-	for aspect in aspects:
-		var st: int = int(aspects[aspect])
-		if st != 0:  # Not EQUILIBRE
+	for faction in faction_rep_delta:
+		var delta: float = float(faction_rep_delta[faction])
+		if absf(delta) > 15.0:
 			extreme_count += 1
+
+	# Low life is also a crisis signal
+	var life: int = int(ctx.get("life_essence", 100))
+	if life < 20:
+		extreme_count += 1
 
 	if extreme_count >= 2:
 		return 1.5  # Boost all events during crisis (recovery ones have higher base weight)
@@ -240,13 +246,13 @@ func _f_conditions(ev: Dictionary, ctx: Dictionary) -> float:
 		if not active_flags.has(flag):
 			return 0.0
 
-	# Check aspect_condition
+	# Check faction delta condition (replaces aspect_condition, v2.5)
 	var aspect_cond: Dictionary = conditions.get("aspect_condition", {})
-	var aspects: Dictionary = ctx.get("aspects", {})
-	for aspect in aspect_cond:
-		var allowed_states: Array = aspect_cond[aspect]
-		var current_state: int = int(aspects.get(aspect, 0))
-		var state_name := _aspect_state_to_name(current_state)
+	var faction_rep_delta: Dictionary = ctx.get("faction_rep_delta", {})
+	for faction in aspect_cond:
+		var allowed_states: Array = aspect_cond[faction]
+		var delta: float = float(faction_rep_delta.get(faction, 0.0))
+		var state_name := _faction_delta_to_state(delta)
 		if state_name not in allowed_states:
 			return 0.0
 
@@ -268,10 +274,11 @@ func _f_conditions(ev: Dictionary, ctx: Dictionary) -> float:
 	if tension_above > -999 and current_tension < tension_above:
 		return 0.0
 
-	# Check all_aspects_equilibre
+	# Check all factions balanced (v2.5 replacement for all_aspects_equilibre)
 	if conditions.get("all_aspects_equilibre", false):
-		for aspect in aspects:
-			if int(aspects[aspect]) != 0:
+		var balance_factions: Dictionary = ctx.get("faction_rep_delta", {})
+		for f_name in balance_factions:
+			if absf(float(balance_factions[f_name])) > 10.0:
 				return 0.0
 
 	# Check dominant_faction_above
@@ -481,6 +488,14 @@ func _get_opposite_season(season: String) -> String:
 		"spring": return "autumn"
 		"autumn": return "spring"
 	return ""
+
+
+func _faction_delta_to_state(delta: float) -> String:
+	if delta < -5.0:
+		return "BAS"
+	elif delta > 5.0:
+		return "HAUT"
+	return "EQUILIBRE"
 
 
 func _get_day_of_year(month: int, day: int) -> int:

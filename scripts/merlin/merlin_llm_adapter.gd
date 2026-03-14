@@ -162,8 +162,8 @@ func build_category_system_prompt(event_category: String) -> String:
 	var template_key := "event_" + event_category
 	var template := get_scenario_template(template_key)
 	if template.is_empty():
-		return _build_triade_system_prompt()
-	return str(template.get("system", _build_triade_system_prompt()))
+		return _build_narrative_system_prompt()
+	return str(template.get("system", _build_narrative_system_prompt()))
 
 
 ## Build a category-specific user prompt, replacing variables from context.
@@ -171,29 +171,28 @@ func build_category_user_prompt(event_category: String, context: Dictionary) -> 
 	var template_key := "event_" + event_category
 	var template := get_scenario_template(template_key)
 	if template.is_empty():
-		return _build_triade_user_prompt(context)
+		return _build_narrative_user_prompt(context)
 
 	var user_tpl: String = str(template.get("user_template", ""))
 	if user_tpl.is_empty():
-		return _build_triade_user_prompt(context)
+		return _build_narrative_user_prompt(context)
 
 	# Replace variables in template
-	var aspects: Dictionary = context.get("aspects", {})
 	user_tpl = user_tpl.replace("{biome}", str(context.get("biome", "foret_broceliande")))
 	user_tpl = user_tpl.replace("{day}", str(context.get("day", 1)))
-	user_tpl = user_tpl.replace("{season}", str(context.get("season", "spring")))
-	user_tpl = user_tpl.replace("{karma}", str(context.get("karma", 0)))
 	user_tpl = user_tpl.replace("{tension}", str(context.get("tension", 40)))
 	user_tpl = user_tpl.replace("{life}", str(context.get("life_essence", 100)))
 
-
-	# Aspect states
-	for aspect in ["Corps", "Ame", "Monde"]:
-		var val: int = int(aspects.get(aspect, 0))
-		var state_name := "equilibre"
-		if val < 0: state_name = "bas"
-		elif val > 0: state_name = "haut"
-		user_tpl = user_tpl.replace("{%s_state}" % aspect.to_lower(), state_name)
+	# Faction context
+	var factions: Dictionary = context.get("factions", {})
+	var dominant_faction := ""
+	var best_val := 0.0
+	for f_name in factions:
+		var val: float = float(factions[f_name])
+		if val > best_val:
+			best_val = val
+			dominant_faction = str(f_name)
+	user_tpl = user_tpl.replace("{dominant_faction}", dominant_faction)
 
 	# Sub-type and arc context (optional)
 	user_tpl = user_tpl.replace("{sub_type}", str(context.get("sub_type", "")))
@@ -1431,13 +1430,10 @@ func _build_scenario_injection(context: Dictionary) -> String:
 	return "\n".join(parts) if not parts.is_empty() else ""
 
 
-## Substitute template variables from context (biome, aspects, scenario, etc.).
+## Substitute template variables from context (biome, factions, scenario, etc.).
 func _substitute_template_vars(tpl: String, context: Dictionary, cards_played: int = 0, theme_word: String = "") -> String:
-	var aspects: Dictionary = context.get("aspects", {})
 	tpl = tpl.replace("{biome}", str(context.get("biome", "foret_broceliande")))
 	tpl = tpl.replace("{day}", str(context.get("day", 1)))
-	tpl = tpl.replace("{season}", str(context.get("season", "spring")))
-	tpl = tpl.replace("{karma}", str(context.get("karma", 0)))
 	tpl = tpl.replace("{tension}", str(context.get("tension", 0)))
 	tpl = tpl.replace("{life}", str(context.get("life_essence", 100)))
 
@@ -1451,13 +1447,16 @@ func _substitute_template_vars(tpl: String, context: Dictionary, cards_played: i
 	tpl = tpl.replace("{sub_type}", str(context.get("sub_type", "")))
 	tpl = tpl.replace("{faction_status}", str(context.get("faction_status", "")))
 	tpl = tpl.replace("{flags}", str(context.get("flags", "")))
-	# Aspect states
-	for aspect in ["Corps", "Ame", "Monde"]:
-		var val: int = int(aspects.get(aspect, 0))
-		var state_name := "equilibre"
-		if val < 0: state_name = "bas"
-		elif val > 0: state_name = "haut"
-		tpl = tpl.replace("{%s_state}" % aspect.to_lower(), state_name)
+	# Faction context
+	var factions: Dictionary = context.get("factions", {})
+	var dominant := ""
+	var best := 0.0
+	for f_name in factions:
+		var val: float = float(factions[f_name])
+		if val > best:
+			best = val
+			dominant = str(f_name)
+	tpl = tpl.replace("{dominant_faction}", dominant)
 	# Arc-specific vars (map to scenario context)
 	tpl = tpl.replace("{arc_theme}", str(context.get("scenario_theme", theme_word)))
 	tpl = tpl.replace("{arc_name}", str(context.get("scenario_title", "")))
@@ -1944,11 +1943,11 @@ func _try_parse_effects_dict(json_str: String) -> Array:
 # TRIADE SYSTEM PROMPT — Compact for Qwen 2.5-3B-Instruct
 # ═══════════════════════════════════════════════════════════════════════════════
 
-func _build_triade_system_prompt() -> String:
+func _build_narrative_system_prompt() -> String:
 	return "Merlin druide. 1 carte JSON: texte court (2-3 phrases), 2-4 options (1 verbe). Ton celtique. Factions: druides, anciens, korrigans, niamh, ankou.\n{\"text\":\"...\",\"speaker\":\"merlin\",\"options\":[{\"label\":\"...\",\"effects\":[{\"type\":\"ADD_REPUTATION\",\"faction\":\"druides\",\"amount\":10}]},{\"label\":\"...\",\"effects\":[{\"type\":\"HEAL_LIFE\",\"amount\":5}]},{\"label\":\"...\",\"effects\":[{\"type\":\"ADD_REPUTATION\",\"faction\":\"ankou\",\"amount\":8}]}],\"tags\":[\"tag\"]}"
 
 
-func _build_triade_user_prompt(context: Dictionary) -> String:
+func _build_narrative_user_prompt(context: Dictionary) -> String:
 	var cards_played: int = int(context.get("cards_played", 0))
 	var day: int = int(context.get("day", 1))
 	var tags: Array = context.get("active_tags", [])
@@ -1989,7 +1988,7 @@ func _build_triade_user_prompt(context: Dictionary) -> String:
 # ═══════════════════════════════════════════════════════════════════════════════
 
 ## Build narrative context from full game state (v2.5).
-func build_triade_context(state: Dictionary) -> Dictionary:
+func build_narrative_context(state: Dictionary) -> Dictionary:
 	var run: Dictionary = state.get("run", {})
 	var hidden: Dictionary = run.get("hidden", {})
 	var meta: Dictionary = state.get("meta", {})
@@ -2568,11 +2567,6 @@ func _validate_effect(effect: Dictionary, _effect_engine: MerlinEffectEngine) ->
 			deadline = clampi(deadline, 1, 30)
 			return {"type": "CREATE_PROMISE", "id": id, "deadline_days": deadline, "description": desc}
 
-		"MODIFY_BOND":
-			var value = int(effect.get("value", 0))
-			value = clampi(value, -20, 20)
-			return {"type": "MODIFY_BOND", "value": value}
-
 	return null
 
 
@@ -2616,9 +2610,6 @@ func _effect_to_code(effect: Dictionary) -> String:
 				effect.get("deadline_days", 5),
 				effect.get("description", "")
 			]
-		"MODIFY_BOND":
-			return "MODIFY_BOND:%d" % effect.get("value", 0)
-
 	return ""
 
 

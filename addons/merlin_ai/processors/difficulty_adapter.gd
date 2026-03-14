@@ -174,14 +174,19 @@ func _is_in_crisis(context: Dictionary) -> bool:
 		if value < 15 or value > 85:
 			return true
 
-	# Check aspects (for TRIADE)
-	var aspects: Dictionary = context.get("aspects", {})
-	var extreme_count := 0
-	for aspect in aspects:
-		var state: int = int(aspects[aspect])
-		if state != 0:  # Not balanced
-			extreme_count += 1
-	if extreme_count >= 2:
+	# Check faction reputation deltas for crisis (v2.5, replaces Triade aspects)
+	var faction_rep_delta: Dictionary = context.get("faction_rep_delta", {})
+	var extreme_faction_count := 0
+	for faction in faction_rep_delta:
+		var delta: float = float(faction_rep_delta[faction])
+		if absf(delta) > 15.0:
+			extreme_faction_count += 1
+	if extreme_faction_count >= 2:
+		return true
+
+	# Check life_essence for crisis
+	var life: int = int(context.get("life_essence", 100))
+	if life < 20:
 		return true
 
 	return false

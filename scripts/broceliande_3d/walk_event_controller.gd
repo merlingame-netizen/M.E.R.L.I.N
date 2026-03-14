@@ -24,45 +24,45 @@ const FALLBACK_EVENTS: Array[Dictionary] = [
 		"text": "Le brouillard se leve soudain entre les arbres millennaires.\nUne silhouette se dessine au loin.",
 		"labels": ["Observer", "Approcher", "Fuir"],
 		"effects": [
-			["SHIFT_ASPECT:Ame:up"],
-			["ADD_SOUFFLE:1"],
-			["SHIFT_ASPECT:Monde:down"],
+			["ADD_REPUTATION:druides:5", "ADD_TENSION:1"],
+			["ADD_REPUTATION:niamh:5", "DAMAGE_LIFE:3"],
+			["HEAL_LIFE:5"],
 		],
 	},
 	{
 		"text": "Une pierre gravee d'oghams pulse d'une lueur bleutee.\nLe sol tremble legerement sous tes pieds.",
 		"labels": ["Toucher", "Dechiffrer", "Contourner"],
 		"effects": [
-			["SHIFT_ASPECT:Corps:up"],
-			["SHIFT_ASPECT:Ame:up", "DAMAGE_LIFE:5"],
-			["ADD_KARMA:2"],
+			["ADD_REPUTATION:anciens:5", "HEAL_LIFE:5"],
+			["ADD_REPUTATION:druides:5", "DAMAGE_LIFE:5"],
+			["ADD_ANAM:3"],
 		],
 	},
 	{
 		"text": "Un korrigan surgit d'entre les racines, riant aux eclats.\nIl brandit un champignon luisant et te fixe du regard.",
 		"labels": ["Negocier", "Attraper", "Ignorer"],
 		"effects": [
-			["ADD_SOUFFLE:1", "SHIFT_ASPECT:Monde:up"],
-			["SHIFT_ASPECT:Corps:down", "ADD_KARMA:-3"],
-			["SHIFT_ASPECT:Ame:down"],
+			["ADD_REPUTATION:korrigans:5", "ADD_ANAM:2"],
+			["DAMAGE_LIFE:5", "ADD_REPUTATION:korrigans:-5"],
+			["ADD_TENSION:2"],
 		],
 	},
 	{
 		"text": "Un cerf blanc traverse le sentier, s'arretant pour te regarder.\nSes bois brillent comme de l'argent sous la lune.",
 		"labels": ["Suivre", "Saluer", "Rester"],
 		"effects": [
-			["SHIFT_ASPECT:Monde:up", "ADD_KARMA:3"],
-			["ADD_SOUFFLE:1"],
-			["SHIFT_ASPECT:Ame:up"],
+			["ADD_REPUTATION:niamh:5", "ADD_TENSION:1"],
+			["ADD_REPUTATION:druides:3", "ADD_ANAM:2"],
+			["HEAL_LIFE:5", "ADD_REPUTATION:anciens:3"],
 		],
 	},
 	{
 		"text": "La fontaine de Barenton bouillonne sans chaleur.\nDes visions du passe et de l'avenir se melent dans ses eaux.",
 		"labels": ["Boire", "Plonger", "Mediter"],
 		"effects": [
-			["SHIFT_ASPECT:Corps:up", "HEAL_LIFE:10"],
-			["SHIFT_ASPECT:Ame:up", "SHIFT_ASPECT:Corps:down"],
-			["ADD_SOUFFLE:1", "ADD_KARMA:2"],
+			["HEAL_LIFE:10", "ADD_REPUTATION:anciens:3"],
+			["ADD_REPUTATION:ankou:5", "DAMAGE_LIFE:5"],
+			["ADD_ANAM:5", "ADD_TENSION:1"],
 		],
 	},
 ]
@@ -268,13 +268,11 @@ func _build_llm_context() -> Dictionary:
 		return {}
 
 	var run: Dictionary = _store.state.get("run", {})
-	var aspects: Dictionary = run.get("aspects", {})
 
 	return {
 		"biome": run.get("biome", "foret_broceliande"),
 		"day": run.get("day", 1),
 		"season": run.get("season", "automne"),
-		"aspects": aspects,
 		"tension": float(run.get("tension", 20)),
 		"life": int(run.get("life_essence", MerlinConstants.LIFE_ESSENCE_START)),
 		"cards_played": _cards_played,
@@ -395,15 +393,3 @@ func _check_run_end() -> void:
 		if _store.has_signal("run_ended"):
 			_store.run_ended.emit({"reason": "life_depleted", "cards_played": _cards_played})
 
-	# Check aspect extremes (2 aspects at extreme = death)
-	var aspects: Dictionary = run.get("aspects", {})
-	var extreme_count: int = 0
-	for aspect_key: String in aspects:
-		var val: int = int(aspects[aspect_key])
-		if val == -1 or val == 1:
-			extreme_count += 1
-	if extreme_count >= 2:
-		_run_active = false
-		print("[WalkEventController] Run ended: %d aspects at extreme" % extreme_count)
-		if _store.has_signal("run_ended"):
-			_store.run_ended.emit({"reason": "aspect_extremes", "cards_played": _cards_played})

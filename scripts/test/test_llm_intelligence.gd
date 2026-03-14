@@ -379,7 +379,7 @@ func _test_player_tendency() -> void:
 	_record("T6", "player_tendency (3 profiles)", all_pass, "3/3 profiles")
 
 
-## T7: build_triade_context() enrichments
+## T7: build_narrative_context() enrichments
 func _test_context_enrichment() -> void:
 	var all_pass := true
 
@@ -400,7 +400,7 @@ func _test_context_enrichment() -> void:
 		"flags": {},
 	}
 
-	var ctx: Dictionary = _adapter.build_triade_context(mock_state)
+	var ctx: Dictionary = _adapter.build_narrative_context(mock_state)
 
 	# Check flux_desc
 	if ctx.has("flux_desc"):
