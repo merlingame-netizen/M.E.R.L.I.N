@@ -151,131 +151,395 @@ const POWER_MILESTONES := {
 # ═══════════════════════════════════════════════════════════════════════════════
 
 const OGHAM_FULL_SPECS := {
-	# ── REVEAL ──
+	# ── REVEAL ──────────────────────────────────────────────────────────────
 	"beith": {
 		"name": "Bouleau", "tree": "Betula", "unicode": "\u1681",
 		"category": "reveal", "cooldown": 3, "starter": true,
-		"effect": "reveal_one",
-		"description": "Revele l'effet d'une option au choix",
+		"cost_anam": 0, "branch": "central", "tier": 0,
+		"effect": "reveal_one_option",
+		"description": "Revele l'effet complet d'1 option au choix",
+		"effect_params": {"target": "single_option"},
 	},
 	"coll": {
 		"name": "Noisetier", "tree": "Corylus", "unicode": "\u1685",
 		"category": "reveal", "cooldown": 5, "starter": false,
-		"effect": "reveal_all",
+		"cost_anam": 80, "branch": "druides", "tier": 1,
+		"effect": "reveal_all_options",
 		"description": "Revele les effets de toutes les options",
+		"effect_params": {"target": "all_options"},
 	},
 	"ailm": {
 		"name": "Sapin", "tree": "Abies", "unicode": "\u168f",
 		"category": "reveal", "cooldown": 4, "starter": false,
+		"cost_anam": 60, "branch": "anciens", "tier": 1,
 		"effect": "predict_next",
-		"description": "Predit le theme de la prochaine carte",
+		"description": "Predit le theme + champ lexical de la prochaine carte",
+		"effect_params": {"target": "next_card"},
 	},
-	# ── PROTECTION ──
+	# ── PROTECTION ──────────────────────────────────────────────────────────
 	"luis": {
 		"name": "Sorbier", "tree": "Sorbus", "unicode": "\u1682",
 		"category": "protection", "cooldown": 4, "starter": true,
-		"effect": "shield_shift",
-		"description": "Empeche le prochain shift negatif d'aspect",
+		"cost_anam": 0, "branch": "central", "tier": 0,
+		"effect": "block_first_negative",
+		"description": "Bloque le prochain effet negatif unique (le premier applique)",
+		"effect_params": {"count": 1},
 	},
 	"gort": {
 		"name": "Lierre", "tree": "Hedera", "unicode": "\u168c",
 		"category": "protection", "cooldown": 6, "starter": false,
-		"effect": "absorb_extreme",
-		"description": "Si un aspect atteint un extreme, le ramene a equilibre",
+		"cost_anam": 100, "branch": "niamh", "tier": 2,
+		"effect": "reduce_high_damage",
+		"description": "Reduit tout degat > 10 PV a 5 PV (1 instance, ce tour)",
+		"effect_params": {"threshold": 10, "reduced_to": 5},
 	},
 	"eadhadh": {
 		"name": "Tremble", "tree": "Populus", "unicode": "\u1690",
 		"category": "protection", "cooldown": 8, "starter": false,
-		"effect": "skip_negative",
-		"description": "Annule tous les effets negatifs de la carte choisie",
+		"cost_anam": 150, "branch": "ankou", "tier": 1,
+		"effect": "cancel_all_negatives",
+		"description": "Annule tous les effets negatifs de la carte courante",
+		"effect_params": {},
 	},
-	# ── BOOST ──
+	# ── BOOST ───────────────────────────────────────────────────────────────
 	"duir": {
 		"name": "Chene", "tree": "Quercus", "unicode": "\u1687",
 		"category": "boost", "cooldown": 4, "starter": false,
-		"effect": "force_equilibre",
-		"description": "Force un aspect au choix vers Equilibre",
+		"cost_anam": 70, "branch": "druides", "tier": 2,
+		"effect": "heal_immediate",
+		"description": "Soin immediat de +12 PV",
+		"effect_params": {"amount": 12},
 	},
 	"tinne": {
 		"name": "Houx", "tree": "Ilex", "unicode": "\u1688",
 		"category": "boost", "cooldown": 5, "starter": false,
-		"effect": "double_positive",
-		"description": "Double les effets positifs de la prochaine carte",
+		"cost_anam": 120, "branch": "anciens", "tier": 2,
+		"effect": "double_positives",
+		"description": "Double les effets positifs de l'option choisie",
+		"effect_params": {"multiplier": 2.0},
 	},
 	"onn": {
 		"name": "Ajonc", "tree": "Ulex", "unicode": "\u1689",
 		"category": "boost", "cooldown": 7, "starter": false,
-		"effect": "heal_life",
-		"description": "Restaure 15 points de vie",
+		"cost_anam": 90, "branch": "korrigans", "tier": 1,
+		"effect": "add_biome_currency",
+		"description": "Genere +10 monnaie biome instantanement",
+		"effect_params": {"amount": 10},
 	},
-	# ── NARRATIVE ──
+	# ── NARRATIF ────────────────────────────────────────────────────────────
 	"nuin": {
 		"name": "Frene", "tree": "Fraxinus", "unicode": "\u1684",
 		"category": "narrative", "cooldown": 6, "starter": false,
-		"effect": "add_option",
-		"description": "Ajoute une 4eme option a la carte actuelle",
+		"cost_anam": 80, "branch": "druides", "tier": 3,
+		"effect": "replace_worst_option",
+		"description": "Remplace la pire option (plus de negatifs) par une nouvelle",
+		"effect_params": {"target": "worst_option"},
 	},
 	"huath": {
 		"name": "Aubepine", "tree": "Crataegus", "unicode": "\u1686",
 		"category": "narrative", "cooldown": 5, "starter": false,
-		"effect": "change_card",
-		"description": "Remplace la carte actuelle par une autre",
+		"cost_anam": 100, "branch": "korrigans", "tier": 3,
+		"effect": "regenerate_all_options",
+		"description": "Regenere les 3 options de la carte (nouveau LLM call ou FastRoute)",
+		"effect_params": {"count": 3},
 	},
 	"straif": {
 		"name": "Prunellier", "tree": "Prunus", "unicode": "\u1693",
 		"category": "narrative", "cooldown": 10, "starter": false,
+		"cost_anam": 140, "branch": "anciens", "tier": 3,
 		"effect": "force_twist",
-		"description": "Force un retournement de situation",
+		"description": "Force un retournement : le MOS insere un twist narratif majeur dans la carte suivante",
+		"effect_params": {"target": "next_card"},
 	},
-	# ── RECOVERY ──
+	# ── RECOVERY ────────────────────────────────────────────────────────────
 	"quert": {
 		"name": "Pommier", "tree": "Malus", "unicode": "\u168a",
 		"category": "recovery", "cooldown": 4, "starter": true,
-		"effect": "heal_worst",
-		"description": "Ramene l'aspect le plus extreme vers Equilibre",
+		"cost_anam": 0, "branch": "central", "tier": 0,
+		"effect": "heal_immediate",
+		"description": "Soin de +8 PV",
+		"effect_params": {"amount": 8},
 	},
 	"ruis": {
 		"name": "Sureau", "tree": "Sambucus", "unicode": "\u1694",
 		"category": "recovery", "cooldown": 8, "starter": false,
-		"effect": "balance_all",
-		"description": "Ramene tous les aspects vers Equilibre",
+		"cost_anam": 130, "branch": "niamh", "tier": 3,
+		"effect": "heal_and_cost",
+		"description": "Soin massif +18 PV mais -5 monnaie biome",
+		"effect_params": {"heal": 18, "currency_cost": 5},
 	},
 	"saille": {
 		"name": "Saule", "tree": "Salix", "unicode": "\u1691",
 		"category": "recovery", "cooldown": 6, "starter": false,
-		"effect": "reduce_cooldowns",
-		"description": "Reduit le cooldown de tous les Oghams de 1",
+		"cost_anam": 90, "branch": "niamh", "tier": 1,
+		"effect": "currency_and_heal",
+		"description": "Regenere +8 monnaie biome + +3 PV",
+		"effect_params": {"currency": 8, "heal": 3},
 	},
-	# ── SPECIAL ──
+	# ── SPECIAL ─────────────────────────────────────────────────────────────
 	"muin": {
 		"name": "Vigne", "tree": "Vitis", "unicode": "\u168d",
 		"category": "special", "cooldown": 7, "starter": false,
+		"cost_anam": 110, "branch": "korrigans", "tier": 2,
 		"effect": "invert_effects",
-		"description": "Inverse les effets positifs et negatifs de la carte",
+		"description": "Inverse positifs/negatifs de l'option choisie. Echec critique = bonus x1.5, succes = malus x1.5",
+		"effect_params": {},
 	},
 	"ioho": {
 		"name": "If", "tree": "Taxus", "unicode": "\u1695",
 		"category": "special", "cooldown": 12, "starter": false,
+		"cost_anam": 160, "branch": "ankou", "tier": 2,
 		"effect": "full_reroll",
-		"description": "Regenere une carte completement nouvelle",
+		"description": "Defausse la carte entiere et en genere une completement nouvelle",
+		"effect_params": {},
 	},
 	"ur": {
 		"name": "Bruyere", "tree": "Calluna", "unicode": "\u1692",
 		"category": "special", "cooldown": 10, "starter": false,
+		"cost_anam": 140, "branch": "ankou", "tier": 3,
 		"effect": "sacrifice_trade",
-		"description": "Sacrifie 1 aspect extreme pour booster les 2 autres",
+		"description": "Sacrifie 15 PV, gagne +20 monnaie biome + buff x1.3 score au prochain minigame",
+		"effect_params": {"life_cost": 15, "currency_gain": 20, "score_buff": 1.3},
 	},
 }
 
 # ═══════════════════════════════════════════════════════════════════════════════
-# ANAM REWARDS — Run end rewards (Anam = monnaie unique cross-run)
+# ACTION VERBS — 45+ verbes mappes aux 8 champs lexicaux (bible v2.4 s.6.1)
+# Utilises par le LLM pour generer les options narratives et detecter le minigame
 # ═══════════════════════════════════════════════════════════════════════════════
 
-const ANAM_BASE_REWARD := 10        # Always earned
-const ANAM_VICTORY_BONUS := 15      # Victory bonus
-const ANAM_PER_MINIGAME := 2        # Per minigame won
-const ANAM_PER_OGHAM := 1           # Per ogham used
-const ANAM_FACTION_HONORE := 5      # Per faction >= 80
+const ACTION_VERBS := {
+	"chance": ["cueillir", "chercher au hasard", "tenter sa chance", "deviner", "fouiller a l'aveugle"],
+	"bluff": ["marchander", "convaincre", "mentir", "negocier", "charmer", "amadouer"],
+	"observation": ["observer", "scruter", "memoriser", "examiner", "fixer", "inspecter"],
+	"logique": ["dechiffrer", "analyser", "resoudre", "decoder", "interpreter", "etudier"],
+	"finesse": ["se faufiler", "esquiver", "contourner", "se cacher", "escalader", "traverser"],
+	"vigueur": ["combattre", "courir", "fuir", "forcer", "pousser", "resister physiquement"],
+	"esprit": ["calmer", "apaiser", "mediter", "resister mentalement", "se concentrer", "endurer",
+			   "parler", "accepter", "refuser", "attendre", "s'approcher"],
+	"perception": ["ecouter", "suivre", "pister", "sentir", "flairer", "tendre l'oreille"],
+}
+
+# Fallback: si le LLM genere un verbe hors des 45, mapper a "esprit"
+const ACTION_VERB_FALLBACK_FIELD := "esprit"
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# FIELD → MINIGAME MAPPING — Champ lexical → minigames possibles (bible v2.4)
+# ═══════════════════════════════════════════════════════════════════════════════
+
+const FIELD_MINIGAMES := {
+	"chance": ["herboristerie"],
+	"bluff": ["negociation"],
+	"observation": ["fouille", "regard"],
+	"logique": ["runes"],
+	"finesse": ["ombres", "equilibre"],
+	"vigueur": ["combat_rituel", "course"],
+	"esprit": ["apaisement", "volonte", "sang_froid"],
+	"perception": ["traces", "echo"],
+}
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# EFFECT CAPS — Limites des effets (bible v2.4 s.6.5)
+# ═══════════════════════════════════════════════════════════════════════════════
+
+const EFFECT_CAPS := {
+	"ADD_REPUTATION": {"max": 20, "min": -20},
+	"HEAL_LIFE": {"max": 18},
+	"HEAL_CRITICAL": {"max": 5},
+	"DAMAGE_LIFE": {"max": 15},
+	"DAMAGE_CRITICAL": {"max": 22},
+	"ADD_BIOME_CURRENCY": {"max": 10},
+	"UNLOCK_OGHAM": {"max_per_card": 1},
+	"LIFE_MAX": 100,
+	"LIFE_MIN": 0,
+	"effects_per_option": 3,
+	"score_bonus_cap": 2.0,
+	"drain_per_card": 1,
+}
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# MULTIPLIER TABLE — Score → multiplicateur d'effets (bible v2.4 s.6.5)
+# ═══════════════════════════════════════════════════════════════════════════════
+
+const MULTIPLIER_TABLE: Array = [
+	{"range_min": 0, "range_max": 20, "label": "echec_critique", "factor": -1.5},
+	{"range_min": 21, "range_max": 50, "label": "echec", "factor": -1.0},
+	{"range_min": 51, "range_max": 79, "label": "reussite_partielle", "factor": 0.5},
+	{"range_min": 80, "range_max": 94, "label": "reussite", "factor": 1.0},
+	{"range_min": 95, "range_max": 100, "label": "reussite_critique", "factor": 1.5},
+]
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# ANAM REWARDS — Run end rewards (bible v2.4 s.2.4)
+# ═══════════════════════════════════════════════════════════════════════════════
+
+const ANAM_REWARDS := {
+	"base": 10,
+	"victory_bonus": 15,
+	"minigame_won": 2,
+	"minigame_threshold": 80,
+	"ogham_used": 1,
+	"faction_honored": 5,
+	"faction_threshold": 80,
+	"death_cap_cards": 30,
+	"ogham_already_owned_bonus": 5,
+}
+
+# Legacy flat consts (kept for backward compat until Phase 4 migration)
+const ANAM_BASE_REWARD := 10
+const ANAM_VICTORY_BONUS := 15
+const ANAM_PER_MINIGAME := 2
+const ANAM_PER_OGHAM := 1
+const ANAM_FACTION_HONORE := 5
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# TALENT TIERS — Cout Anam par tier (bible v2.4 s.2.4)
+# ═══════════════════════════════════════════════════════════════════════════════
+
+const TALENT_TIERS := {
+	1: {"cost_range_min": 50, "cost_range_max": 80},
+	2: {"cost_range_min": 80, "cost_range_max": 120},
+	3: {"cost_range_min": 120, "cost_range_max": 180},
+	4: {"cost_range_min": 180, "cost_range_max": 250},
+	5: {"cost_range_min": 250, "cost_range_max": 350},
+}
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# BIOMES — 8 biomes complets (bible v2.4 s.4.2)
+# ═══════════════════════════════════════════════════════════════════════════════
+
+const BIOMES := {
+	"foret_broceliande": {
+		"name": "Foret de Broceliande", "subtitle": "Ou les arbres ont des yeux",
+		"season": "printemps", "difficulty": 0, "maturity_threshold": 0,
+		"oghams_affinity": ["quert", "huath", "coll"],
+		"currency_name": "Herbes enchantees",
+		"card_interval_range_min": 12, "card_interval_range_max": 15,
+		"pnj": "gwenn", "arc": "le_chene_chantant", "arc_cards": 3,
+		"arc_condition_type": "faction_rep", "arc_condition_faction": "druides", "arc_condition_value": 30,
+	},
+	"landes_bruyere": {
+		"name": "Landes de Bruyere", "subtitle": "Ou le vent raconte des histoires",
+		"season": "automne", "difficulty": 1, "maturity_threshold": 15,
+		"oghams_affinity": ["luis", "onn", "saille"],
+		"currency_name": "Brins de bruyere",
+		"card_interval_range_min": 12, "card_interval_range_max": 15,
+		"pnj": "erwan", "arc": "le_chant_des_cairns", "arc_cards": 3,
+		"arc_condition_type": "faction_rep", "arc_condition_faction": "anciens", "arc_condition_value": 25,
+	},
+	"cotes_sauvages": {
+		"name": "Cotes Sauvages", "subtitle": "Ou la mer defie la terre",
+		"season": "ete", "difficulty": 1, "maturity_threshold": 15,
+		"oghams_affinity": ["muin", "nuin", "tinne"],
+		"currency_name": "Coquillages",
+		"card_interval_range_min": 12, "card_interval_range_max": 15,
+		"pnj": "maelle", "arc": "le_signal_de_sein", "arc_cards": 4,
+		"arc_condition_type": "faction_rep", "arc_condition_faction": "korrigans", "arc_condition_value": 20,
+	},
+	"villages_celtes": {
+		"name": "Villages Celtes", "subtitle": "Ou les hommes forment le destin",
+		"season": "ete", "difficulty": 2, "maturity_threshold": 25,
+		"oghams_affinity": ["duir", "coll", "beith"],
+		"currency_name": "Pieces de cuivre",
+		"card_interval_range_min": 10, "card_interval_range_max": 14,
+		"pnj": "cadogan", "arc": "le_puits_des_souhaits", "arc_cards": 4,
+		"arc_condition_type": "faction_rep", "arc_condition_faction": "anciens", "arc_condition_value": 35,
+	},
+	"cercles_pierres": {
+		"name": "Cercles de Pierres", "subtitle": "Ou le temps se fissure",
+		"season": "printemps", "difficulty": 3, "maturity_threshold": 30,
+		"oghams_affinity": ["ioho", "straif", "ruis"],
+		"currency_name": "Fragments de rune",
+		"card_interval_range_min": 10, "card_interval_range_max": 14,
+		"pnj": "brennos", "arc": "l_alignement_perdu", "arc_cards": 5,
+		"arc_condition_type": "oghams_owned", "arc_condition_faction": "", "arc_condition_value": 5,
+	},
+	"marais_korrigans": {
+		"name": "Marais des Korrigans", "subtitle": "Ou la lumiere ment",
+		"season": "automne", "difficulty": 3, "maturity_threshold": 40,
+		"oghams_affinity": ["gort", "eadhadh", "luis"],
+		"currency_name": "Pierres phosphorescentes",
+		"card_interval_range_min": 10, "card_interval_range_max": 14,
+		"pnj": "gwen_du", "arc": "le_tertre_du_silence", "arc_cards": 5,
+		"arc_condition_type": "faction_rep", "arc_condition_faction": "korrigans", "arc_condition_value": 50,
+	},
+	"collines_dolmens": {
+		"name": "Collines aux Dolmens", "subtitle": "Ou les morts veillent",
+		"season": "hiver", "difficulty": 4, "maturity_threshold": 50,
+		"oghams_affinity": ["quert", "ailm", "coll"],
+		"currency_name": "Os graves",
+		"card_interval_range_min": 8, "card_interval_range_max": 12,
+		"pnj": "ildiko", "arc": "la_voix_de_l_if", "arc_cards": 5,
+		"arc_condition_type": "faction_rep", "arc_condition_faction": "ankou", "arc_condition_value": 40,
+	},
+	"iles_mystiques": {
+		"name": "Iles Mystiques", "subtitle": "Ou le monde visible s'acheve",
+		"season": "hiver", "difficulty": 5, "maturity_threshold": 75,
+		"oghams_affinity": ["ailm", "ruis", "ioho"],
+		"currency_name": "Ecume solidifiee",
+		"card_interval_range_min": 8, "card_interval_range_max": 12,
+		"pnj": "morgane", "arc": "le_passage_d_avalon", "arc_cards": 6,
+		"arc_condition_type": "faction_rep", "arc_condition_faction": "niamh", "arc_condition_value": 60,
+	},
+}
+
+const BIOME_MATURITY_THRESHOLDS := {
+	"foret_broceliande": 0,
+	"landes_bruyere": 15,
+	"cotes_sauvages": 15,
+	"villages_celtes": 25,
+	"cercles_pierres": 30,
+	"marais_korrigans": 40,
+	"collines_dolmens": 50,
+	"iles_mystiques": 75,
+}
+
+const MATURITY_WEIGHTS := {
+	"total_runs": 2,
+	"fins_vues": 5,
+	"oghams_debloques": 3,
+	"max_faction_rep": 1,
+}
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# MOS CONVERGENCE — Duree de run + confiance Merlin (bible v2.4 s.6.2, s.6.3)
+# ═══════════════════════════════════════════════════════════════════════════════
+
+const MOS_CONVERGENCE := {
+	"soft_min_cards": 8,
+	"target_cards_min": 20,
+	"target_cards_max": 25,
+	"soft_max_cards": 40,
+	"hard_max_cards": 50,
+	"max_active_promises": 2,
+}
+
+const TRUST_TIERS := {
+	"T0": {"range_min": 0, "range_max": 24, "label": "cryptique"},
+	"T1": {"range_min": 25, "range_max": 49, "label": "indices"},
+	"T2": {"range_min": 50, "range_max": 74, "label": "avertissements"},
+	"T3": {"range_min": 75, "range_max": 100, "label": "secrets"},
+}
+
+const TRUST_DELTAS := {
+	"promise_kept": 10,
+	"promise_broken": -15,
+	"courageous_choice_min": 3,
+	"courageous_choice_max": 5,
+	"selfish_choice_min": -5,
+	"selfish_choice_max": -3,
+}
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# IN-GAME PERIODS — Periodes du jour avec bonus faction (bible v2.4 s.6.4)
+# ═══════════════════════════════════════════════════════════════════════════════
+
+const IN_GAME_PERIODS := {
+	"aube": {"cards_min": 1, "cards_max": 5, "factions": ["druides"], "bonus": 0.10},
+	"jour": {"cards_min": 6, "cards_max": 10, "factions": ["anciens", "niamh"], "bonus": 0.10},
+	"crepuscule": {"cards_min": 11, "cards_max": 15, "factions": ["korrigans"], "bonus": 0.10},
+	"nuit": {"cards_min": 16, "cards_max": 20, "factions": ["ankou"], "bonus": 0.15},
+}
 
 # ═══════════════════════════════════════════════════════════════════════════════
 # ARBRE DE VIE — Talent Tree v2.1 (Faction-based, 34 noeuds, cout Anam)
@@ -834,7 +1098,7 @@ const FACTION_RUN_BONUSES := {
 const FACTION_DELTA_MINOR   := 5    # Auto-tag keyword, geste mineur
 const FACTION_DELTA_MAJOR   := 15   # Choix narratif significatif
 const FACTION_DELTA_EXTREME := 30   # Acte héroïque ou trahison majeure
-const FACTION_DECAY_RATE    := 0.08 # 8% de valeur absolue oublié par run
+# FACTION_DECAY_RATE removed — bible v2.4 s.5.5: "Reputation factions (pas de decay)"
 
 # Keywords pour auto-tag Path B (merlin_llm_adapter._wrap_text_as_card)
 const FACTION_KEYWORDS := {

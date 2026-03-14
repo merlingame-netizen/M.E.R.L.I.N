@@ -555,17 +555,7 @@ func _add_faveur(amount: int) -> Dictionary:
 # ─── Faction Alignment ───────────────────────────────────────────────────────
 
 ## Applique la décroissance 8% des réputations vers 0 (début de run).
-func _decay_faction_rep() -> void:
-	var meta: Dictionary = state.get("meta", {})
-	var faction_rep: Dictionary = meta.get("faction_rep", {})
-	for faction in MerlinConstants.FACTIONS:
-		var score: int = int(faction_rep.get(faction, 0))
-		if score == 0:
-			continue
-		var decayed: int = int(float(score) * (1.0 - MerlinConstants.FACTION_DECAY_RATE))
-		faction_rep[faction] = decayed
-	meta["faction_rep"] = faction_rep
-	state["meta"] = meta
+# _decay_faction_rep removed — bible v2.4: "Reputation factions (pas de decay)"
 
 
 ## Snapshot faction_rep (meta) → run["faction_context"].
@@ -691,8 +681,7 @@ func _init_run() -> void:
 	run["power_bonuses"] = {}
 	state["run"] = run
 
-	# Faction alignment — decay + context + bonuses (dans l'ordre)
-	_decay_faction_rep()
+	# Faction alignment — context + bonuses (no decay per bible v2.4)
 	_build_and_store_faction_context()
 	_apply_faction_run_bonuses()
 
