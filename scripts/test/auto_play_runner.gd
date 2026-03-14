@@ -142,7 +142,7 @@ func _log_initial_state() -> void:
 	var run: Dictionary = _store.state.get("run", {})
 	var mission: Dictionary = run.get("mission", {})
 	_log("--- INITIAL STATE ---")
-	_log("life=%d souffle=%d" % [int(run.get("life_essence", 100)), int(run.get("souffle", 1))])
+	_log("life_essence=%d" % int(run.get("life_essence", 100)))
 	_log("mission: type=%s total=%d description=\"%s\"" % [
 		str(mission.get("type", "?")),
 		int(mission.get("total", 0)),
@@ -581,13 +581,11 @@ func _print_summary() -> void:
 
 func _export_json_results(outcomes: Dictionary, total_outcomes: int) -> void:
 	var final_life: int = 0
-	var final_souffle: int = 0
-	var final_karma: int = 0
+	var final_factions: Dictionary = {}
 	var ending_type: String = "unknown"
 	if _store:
 		final_life = int(_store.state.get("run", {}).get("life_essence", 0))
-		final_souffle = int(_store.state.get("run", {}).get("souffle", 0))
-		final_karma = int(_store.state.get("run", {}).get("karma", 0))
+		final_factions = _store.state.get("run", {}).get("faction_rep_delta", {})
 		ending_type = str(_store.state.get("run", {}).get("ending", "survived"))
 
 	var p50_gen: int = 0
@@ -603,21 +601,18 @@ func _export_json_results(outcomes: Dictionary, total_outcomes: int) -> void:
 			total_gen += t
 		avg_gen = int(total_gen / sorted.size())
 
-	var aspect_trajectory: Array[Dictionary] = []
+	var life_trajectory: Array[Dictionary] = []
 	for e in _run_log:
-		aspect_trajectory.append({
+		life_trajectory.append({
 			"card": e["card_num"],
-			"corps": e.get("aspect_corps", 0),
-			"ame": e.get("aspect_ame", 0),
-			"monde": e.get("aspect_monde", 0),
+			"life_essence": e.get("life_essence", 0),
 		})
 
 	var result: Dictionary = {
 		"strategy": Strategy.keys()[strategy],
 		"cards_played": _cards_played,
 		"final_life": final_life,
-		"final_souffle": final_souffle,
-		"final_karma": final_karma,
+		"final_factions": final_factions,
 		"ending_type": ending_type,
 		"total_life_drain": _total_life_drain,
 		"llm_count": _llm_count,
@@ -628,7 +623,7 @@ func _export_json_results(outcomes: Dictionary, total_outcomes: int) -> void:
 		"p90_gen_time_ms": p90_gen,
 		"outcome_distribution": outcomes,
 		"total_outcomes": total_outcomes,
-		"aspect_trajectory": aspect_trajectory,
+		"life_trajectory": life_trajectory,
 		"run_duration_ms": Time.get_ticks_msec() - _run_start_ms,
 		"timestamp": Time.get_datetime_string_from_system(),
 	}

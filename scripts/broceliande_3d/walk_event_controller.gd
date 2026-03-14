@@ -376,7 +376,6 @@ func _update_hud() -> void:
 		return
 	var run: Dictionary = _store.state.get("run", {})
 	_hud.update_pv(int(run.get("life_essence", MerlinConstants.LIFE_ESSENCE_START)), int(run.get("life_max", MerlinConstants.LIFE_ESSENCE_MAX)))
-	_hud.update_souffle(int(run.get("souffle", 3)))
 	var meta: Dictionary = _store.state.get("meta", {})
 	_hud.update_essences(int(meta.get("essences", 0)))
 
