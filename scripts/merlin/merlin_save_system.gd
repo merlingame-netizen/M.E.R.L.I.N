@@ -12,6 +12,65 @@ const LEGACY_SLOT_COUNT := 3
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
+# DEFAULT PROFILE — bible 13.4 schema (source of truth)
+# ═══════════════════════════════════════════════════════════════════════════════
+
+static func _get_default_profile() -> Dictionary:
+	return {
+		"anam": 0,
+		"total_runs": 0,
+		"faction_rep": {
+			"druides": 0.0, "anciens": 0.0, "korrigans": 0.0,
+			"niamh": 0.0, "ankou": 0.0,
+		},
+		"trust_merlin": 0,
+		"talent_tree": {"unlocked": []},
+		"oghams": {
+			"owned": ["beith", "luis", "quert"],
+			"equipped": "beith",
+		},
+		"ogham_discounts": {},
+		"endings_seen": [],
+		"arc_tags": [],
+		"biome_runs": {
+			"foret_broceliande": 0, "landes_bruyere": 0,
+			"cotes_sauvages": 0, "villages_celtes": 0,
+			"cercles_pierres": 0, "marais_korrigans": 0,
+			"collines_dolmens": 0, "iles_mystiques": 0,
+		},
+		"stats": {
+			"total_cards": 0, "total_minigames_won": 0,
+			"total_deaths": 0, "consecutive_deaths": 0,
+			"oghams_discovered_in_runs": 0, "total_anam_earned": 0,
+		},
+	}
+
+
+static func _get_default_run_state() -> Dictionary:
+	return {
+		"biome": "foret_broceliande",
+		"card_index": 0,
+		"life": MerlinConstants.LIFE_ESSENCE_START,
+		"life_max": MerlinConstants.LIFE_ESSENCE_MAX,
+		"biome_currency": 0,
+		"equipped_oghams": ["beith"],
+		"active_ogham": "beith",
+		"cooldowns": {},
+		"promises": [],
+		"faction_rep_delta": {
+			"druides": 0.0, "anciens": 0.0, "korrigans": 0.0,
+			"niamh": 0.0, "ankou": 0.0,
+		},
+		"trust_delta": 0,
+		"narrative_summary": "",
+		"arc_tags_this_run": [],
+		"period": "aube",
+		"buffs": [],
+		"events_log": [],
+	}
+
+
+# ═══════════════════════════════════════════════════════════════════════════════
 # PUBLIC API
 # ═══════════════════════════════════════════════════════════════════════════════
 
@@ -21,15 +80,13 @@ func save_profile(meta: Dictionary) -> bool:
 		"version": CURRENT_VERSION,
 		"timestamp": int(Time.get_unix_time_from_system()),
 		"meta": meta.duplicate(true),
+		"run_state": null,
 	}
-	var json_text: String = JSON.stringify(data, "\t")
-	var file: FileAccess = FileAccess.open(PROFILE_PATH, FileAccess.WRITE)
-	if file == null:
-		push_warning("[MerlinSave] Cannot write to %s" % PROFILE_PATH)
-		return false
-	file.store_string(json_text)
-	file.close()
-	return true
+	# Preserve run_state if it exists in current save
+	var existing: Dictionary = _try_load_file(PROFILE_PATH)
+	if not existing.is_empty() and existing.has("run_state") and existing["run_state"] != null:
+		data["run_state"] = existing["run_state"]
+	return _write_file(PROFILE_PATH, data)
 
 
 func load_profile() -> Dictionary:
@@ -50,7 +107,21 @@ func load_profile() -> Dictionary:
 	var version: String = str(data.get("version", "0.4.0"))
 	if version != CURRENT_VERSION:
 		data = _migrate(data)
-	return data.get("meta", {})
+	var meta: Dictionary = data.get("meta", {})
+	# Ensure all default keys exist
+	var defaults: Dictionary = _get_default_profile()
+	for key in defaults:
+		if not meta.has(key):
+			meta[key] = defaults[key]
+	return meta
+
+
+func load_or_create_profile() -> Dictionary:
+	var meta: Dictionary = load_profile()
+	if meta.is_empty():
+		meta = _get_default_profile()
+		save_profile(meta)
+	return meta
 
 
 func profile_exists() -> bool:
@@ -75,7 +146,75 @@ func get_profile_info() -> Dictionary:
 		"talents_unlocked": meta.get("talent_tree", {}).get("unlocked", []).size(),
 		"endings_seen": meta.get("endings_seen", []).size(),
 		"faction_rep": meta.get("faction_rep", {}),
+		"oghams_owned": meta.get("oghams", {}).get("owned", []).size(),
+		"trust_merlin": int(meta.get("trust_merlin", 0)),
 	}
+
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# RUN STATE — Saved alongside profile for mid-run resume
+# ═══════════════════════════════════════════════════════════════════════════════
+
+func save_run_state(run_state: Dictionary) -> void:
+	var data: Dictionary = _try_load_file(PROFILE_PATH)
+	if data.is_empty():
+		push_warning("[MerlinSave] No profile found, cannot save run_state")
+		return
+	data["run_state"] = run_state.duplicate(true)
+	data["timestamp"] = int(Time.get_unix_time_from_system())
+	_backup_file(PROFILE_PATH)
+	_write_file(PROFILE_PATH, data)
+
+
+func load_run_state() -> Dictionary:
+	var data: Dictionary = _try_load_file(PROFILE_PATH)
+	if data.is_empty():
+		return {}
+	var run_state = data.get("run_state")
+	if run_state == null or not (run_state is Dictionary):
+		return {}
+	return run_state as Dictionary
+
+
+func clear_run_state() -> void:
+	var data: Dictionary = _try_load_file(PROFILE_PATH)
+	if data.is_empty():
+		return
+	data["run_state"] = null
+	data["timestamp"] = int(Time.get_unix_time_from_system())
+	_write_file(PROFILE_PATH, data)
+
+
+func has_active_run() -> bool:
+	return not load_run_state().is_empty()
+
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# VALIDATION
+# ═══════════════════════════════════════════════════════════════════════════════
+
+static func _validate(meta: Dictionary) -> bool:
+	var required_keys: Array = [
+		"anam", "total_runs", "faction_rep", "trust_merlin",
+		"talent_tree", "oghams", "endings_seen", "arc_tags",
+		"biome_runs", "stats",
+	]
+	for key in required_keys:
+		if not meta.has(key):
+			push_warning("[MerlinSave] Missing required key: %s" % key)
+			return false
+	# Validate faction_rep has all 5 factions
+	var faction_rep: Dictionary = meta.get("faction_rep", {})
+	for faction in MerlinConstants.FACTIONS:
+		if not faction_rep.has(faction):
+			push_warning("[MerlinSave] Missing faction in faction_rep: %s" % faction)
+			return false
+	# Validate oghams structure
+	var oghams: Dictionary = meta.get("oghams", {})
+	if not oghams.has("owned") or not oghams.has("equipped"):
+		push_warning("[MerlinSave] Invalid oghams structure")
+		return false
+	return true
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
@@ -108,21 +247,25 @@ func _migrate(data: Dictionary) -> Dictionary:
 		faction_rep.erase("humains")
 		meta["faction_rep"] = faction_rep
 
-	# Ensure required keys
-	if not meta.has("talent_tree"):
-		meta["talent_tree"] = {"unlocked": []}
-	if not meta.has("total_runs"):
-		meta["total_runs"] = 0
-	if not meta.has("endings_seen"):
-		meta["endings_seen"] = []
-	if not meta.has("faction_rep"):
-		meta["faction_rep"] = {
-			"druides": 50.0, "anciens": 50.0, "korrigans": 50.0,
-			"niamh": 50.0, "ankou": 50.0,
-		}
+	# Ensure all default keys exist (new in v1.0.0)
+	var defaults: Dictionary = _get_default_profile()
+	for key in defaults:
+		if not meta.has(key):
+			meta[key] = defaults[key]
+
+	# Ensure faction_rep has all 5 factions
+	for faction in MerlinConstants.FACTIONS:
+		if not faction_rep.has(faction):
+			faction_rep[faction] = 0.0
+	meta["faction_rep"] = faction_rep
+
+	# Migrate old oghams format if needed
+	if not meta.has("oghams") or not (meta["oghams"] is Dictionary):
+		meta["oghams"] = defaults["oghams"]
 
 	migrated["meta"] = meta
 	migrated["version"] = CURRENT_VERSION
+	migrated["run_state"] = migrated.get("run_state")
 	return migrated
 
 
@@ -190,6 +333,17 @@ func _try_load_file(path: String) -> Dictionary:
 		push_warning("[MerlinSave] Invalid save structure in %s" % path)
 		return {}
 	return data
+
+
+func _write_file(path: String, data: Dictionary) -> bool:
+	var json_text: String = JSON.stringify(data, "\t")
+	var file: FileAccess = FileAccess.open(path, FileAccess.WRITE)
+	if file == null:
+		push_warning("[MerlinSave] Cannot write to %s" % path)
+		return false
+	file.store_string(json_text)
+	file.close()
+	return true
 
 
 func _backup_file(path: String) -> void:
