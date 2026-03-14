@@ -1,0 +1,204 @@
+{
+	"narrative": [
+		{
+			"id": "fr_broceliande_001",
+			"text": "Un sentier se divise en trois devant un chene noueux. Des murmures viennent de chaque direction.",
+			"biome": "foret_broceliande",
+			"options": [
+				{"label": "Observer les traces au sol", "verb": "observer", "effects": [{"type": "ADD_REPUTATION", "faction": "druides", "amount": 5}]},
+				{"label": "Ecouter les murmures", "verb": "ecouter", "effects": [{"type": "ADD_REPUTATION", "faction": "anciens", "amount": 5}]},
+				{"label": "Avancer au hasard", "verb": "tenter sa chance", "effects": [{"type": "HEAL_LIFE", "amount": 3}]}
+			],
+			"tags": ["foret", "exploration"]
+		},
+		{
+			"id": "fr_broceliande_002",
+			"text": "Une biche argentee te fixe a travers les fougeres. Elle semble attendre quelque chose.",
+			"biome": "foret_broceliande",
+			"options": [
+				{"label": "S'approcher doucement", "verb": "s'approcher", "effects": [{"type": "ADD_REPUTATION", "faction": "druides", "amount": 8}]},
+				{"label": "Suivre la biche", "verb": "suivre", "effects": [{"type": "ADD_REPUTATION", "faction": "niamh", "amount": 5}, {"type": "HEAL_LIFE", "amount": 3}]},
+				{"label": "Rester immobile", "verb": "attendre", "effects": [{"type": "HEAL_LIFE", "amount": 5}]}
+			],
+			"tags": ["foret", "animal", "mystere"]
+		},
+		{
+			"id": "fr_landes_001",
+			"text": "Le vent siffle sur les landes. Un cairn de pierres se dresse au loin, battu par les bourrasques.",
+			"biome": "landes_bruyere",
+			"options": [
+				{"label": "Examiner le cairn", "verb": "examiner", "effects": [{"type": "ADD_REPUTATION", "faction": "anciens", "amount": 5}]},
+				{"label": "Se cacher derriere", "verb": "se cacher", "effects": [{"type": "HEAL_LIFE", "amount": 5}]},
+				{"label": "Resister au vent", "verb": "resister physiquement", "effects": [{"type": "ADD_REPUTATION", "faction": "anciens", "amount": 8}, {"type": "DAMAGE_LIFE", "amount": 3}]}
+			],
+			"tags": ["landes", "survie"]
+		},
+		{
+			"id": "fr_cotes_001",
+			"text": "Les vagues s'ecrasent sur les rochers. Une grotte s'ouvre dans la falaise, a moitie submergee.",
+			"biome": "cotes_sauvages",
+			"options": [
+				{"label": "Explorer la grotte", "verb": "fouiller a l'aveugle", "effects": [{"type": "ADD_REPUTATION", "faction": "korrigans", "amount": 8}]},
+				{"label": "Escalader la falaise", "verb": "escalader", "effects": [{"type": "DAMAGE_LIFE", "amount": 3}, {"type": "ADD_REPUTATION", "faction": "anciens", "amount": 5}]},
+				{"label": "Longer la plage", "verb": "suivre", "effects": [{"type": "HEAL_LIFE", "amount": 3}]}
+			],
+			"tags": ["cotes", "exploration"]
+		},
+		{
+			"id": "fr_villages_001",
+			"text": "Un vieux conteur rassemble les enfants du village. Il te fait signe de t'asseoir.",
+			"biome": "villages_celtes",
+			"options": [
+				{"label": "Ecouter l'histoire", "verb": "ecouter", "effects": [{"type": "ADD_REPUTATION", "faction": "anciens", "amount": 5}, {"type": "HEAL_LIFE", "amount": 3}]},
+				{"label": "Raconter ta propre histoire", "verb": "parler", "effects": [{"type": "ADD_REPUTATION", "faction": "anciens", "amount": 8}]},
+				{"label": "Continuer ton chemin", "verb": "avancer", "effects": [{"type": "HEAL_LIFE", "amount": 3}]}
+			],
+			"tags": ["village", "social"]
+		},
+		{
+			"id": "fr_cercles_001",
+			"text": "Un cercle de pierres vibre sous tes pieds. Le lichen sur les menhirs dessine des spirales impossibles.",
+			"biome": "cercles_pierres",
+			"options": [
+				{"label": "Dechiffrer les spirales", "verb": "dechiffrer", "effects": [{"type": "ADD_REPUTATION", "faction": "druides", "amount": 8}]},
+				{"label": "Mediter au centre", "verb": "mediter", "effects": [{"type": "HEAL_LIFE", "amount": 5}, {"type": "ADD_REPUTATION", "faction": "druides", "amount": 3}]},
+				{"label": "Toucher les pierres", "verb": "s'approcher", "effects": [{"type": "ADD_REPUTATION", "faction": "anciens", "amount": 5}]}
+			],
+			"tags": ["cercles", "rituel"]
+		},
+		{
+			"id": "fr_marais_001",
+			"text": "Des bulles remontent a la surface de l'eau sombre. Un rire lointain resonne entre les roseaux.",
+			"biome": "marais_korrigans",
+			"options": [
+				{"label": "Negocier avec le rieur", "verb": "negocier", "effects": [{"type": "ADD_REPUTATION", "faction": "korrigans", "amount": 8}]},
+				{"label": "Contourner le marais", "verb": "contourner", "effects": [{"type": "HEAL_LIFE", "amount": 3}]},
+				{"label": "Plonger dans l'eau", "verb": "tenter sa chance", "effects": [{"type": "ADD_REPUTATION", "faction": "korrigans", "amount": 12}, {"type": "DAMAGE_LIFE", "amount": 5}]}
+			],
+			"tags": ["marais", "korrigan"]
+		},
+		{
+			"id": "fr_collines_001",
+			"text": "Un dolmen craque sous le poids des siecles. A l'interieur, des os anciens reposent sur un lit de mousse.",
+			"biome": "collines_dolmens",
+			"options": [
+				{"label": "Honorer les morts", "verb": "accepter", "effects": [{"type": "ADD_REPUTATION", "faction": "ankou", "amount": 8}]},
+				{"label": "Etudier les restes", "verb": "analyser", "effects": [{"type": "ADD_REPUTATION", "faction": "anciens", "amount": 5}, {"type": "ADD_REPUTATION", "faction": "ankou", "amount": 3}]},
+				{"label": "Refermer le dolmen", "verb": "refuser", "effects": [{"type": "HEAL_LIFE", "amount": 3}]}
+			],
+			"tags": ["collines", "ancestral"]
+		},
+		{
+			"id": "fr_iles_001",
+			"text": "Les brumes se levent, revelant un rivage de sable blanc. Des coquillages forment un motif complexe.",
+			"biome": "iles_mystiques",
+			"options": [
+				{"label": "Decoder le motif", "verb": "decoder", "effects": [{"type": "ADD_REPUTATION", "faction": "niamh", "amount": 8}]},
+				{"label": "Ramasser les coquillages", "verb": "cueillir", "effects": [{"type": "ADD_REPUTATION", "faction": "niamh", "amount": 5}, {"type": "HEAL_LIFE", "amount": 3}]},
+				{"label": "Marcher vers le large", "verb": "s'approcher", "effects": [{"type": "ADD_REPUTATION", "faction": "ankou", "amount": 5}, {"type": "DAMAGE_LIFE", "amount": 3}]}
+			],
+			"tags": ["iles", "mystere"]
+		},
+		{
+			"id": "fr_generic_001",
+			"text": "La nuit tombe. Un feu de camp brule au loin, gardé par une silhouette solitaire.",
+			"biome": "",
+			"options": [
+				{"label": "S'approcher du feu", "verb": "s'approcher", "effects": [{"type": "HEAL_LIFE", "amount": 5}]},
+				{"label": "Observer de loin", "verb": "observer", "effects": [{"type": "ADD_REPUTATION", "faction": "anciens", "amount": 3}]},
+				{"label": "Contourner le camp", "verb": "se faufiler", "effects": [{"type": "ADD_REPUTATION", "faction": "korrigans", "amount": 3}]}
+			],
+			"tags": ["nuit", "repos"]
+		},
+		{
+			"id": "fr_generic_002",
+			"text": "Un corbeau se pose sur ton epaule. Il tient dans son bec un ruban rouge noue autour d'une plume.",
+			"biome": "",
+			"options": [
+				{"label": "Prendre la plume", "verb": "cueillir", "effects": [{"type": "ADD_REPUTATION", "faction": "ankou", "amount": 5}]},
+				{"label": "Parler au corbeau", "verb": "parler", "effects": [{"type": "ADD_REPUTATION", "faction": "ankou", "amount": 8}]},
+				{"label": "Le chasser doucement", "verb": "apaiser", "effects": [{"type": "HEAL_LIFE", "amount": 3}]}
+			],
+			"tags": ["corbeau", "omen"]
+		},
+		{
+			"id": "fr_generic_003",
+			"text": "Un brouillard epais se leve. Les sons se deforment. Tu entends des pas, mais impossible de savoir d'ou ils viennent.",
+			"biome": "",
+			"options": [
+				{"label": "Tendre l'oreille", "verb": "tendre l'oreille", "effects": [{"type": "ADD_REPUTATION", "faction": "druides", "amount": 5}]},
+				{"label": "Avancer dans le brouillard", "verb": "tenter sa chance", "effects": [{"type": "DAMAGE_LIFE", "amount": 3}, {"type": "ADD_REPUTATION", "faction": "anciens", "amount": 5}]},
+				{"label": "Attendre que ca passe", "verb": "attendre", "effects": [{"type": "HEAL_LIFE", "amount": 3}]}
+			],
+			"tags": ["brouillard", "mystere"]
+		},
+		{
+			"id": "fr_generic_004",
+			"text": "Une source chante entre les pierres. L'eau est fraiche et limpide. Un vieux saule pleureur penche ses branches.",
+			"biome": "",
+			"options": [
+				{"label": "Boire a la source", "verb": "cueillir", "effects": [{"type": "HEAL_LIFE", "amount": 8}]},
+				{"label": "Mediter sous le saule", "verb": "mediter", "effects": [{"type": "HEAL_LIFE", "amount": 5}, {"type": "ADD_REPUTATION", "faction": "druides", "amount": 3}]},
+				{"label": "Examiner les pierres", "verb": "examiner", "effects": [{"type": "ADD_REPUTATION", "faction": "anciens", "amount": 5}]}
+			],
+			"tags": ["source", "repos"]
+		},
+		{
+			"id": "fr_generic_005",
+			"text": "Un renard roux te regarde depuis le bord du chemin. Il gratte le sol avec insistance, comme pour montrer quelque chose.",
+			"biome": "",
+			"options": [
+				{"label": "Fouiller ou il gratte", "verb": "fouiller a l'aveugle", "effects": [{"type": "ADD_REPUTATION", "faction": "korrigans", "amount": 5}, {"type": "HEAL_LIFE", "amount": 3}]},
+				{"label": "Suivre le renard", "verb": "suivre", "effects": [{"type": "ADD_REPUTATION", "faction": "druides", "amount": 5}]},
+				{"label": "Continuer ta route", "verb": "avancer", "effects": [{"type": "HEAL_LIFE", "amount": 3}]}
+			],
+			"tags": ["animal", "exploration"]
+		}
+	],
+	"merlin_direct": [
+		{
+			"id": "md_conseil_001",
+			"text": "Merlin apparait dans un eclat de lumiere bleue. 'Ecoute, jeune druide. Le chemin que tu suis n'est pas le seul.'",
+			"trust_tier_min": "T0",
+			"options": [
+				{"label": "Ecouter son conseil", "effects": [{"type": "HEAL_LIFE", "amount": 5}]},
+				{"label": "Demander des details", "effects": [{"type": "ADD_REPUTATION", "faction": "druides", "amount": 5}]},
+				{"label": "Ignorer Merlin", "effects": [{"type": "DAMAGE_LIFE", "amount": 3}]}
+			],
+			"tags": ["merlin", "conseil"]
+		},
+		{
+			"id": "md_secret_001",
+			"text": "Merlin te regarde longuement. 'J'ai vu quelque chose dans les etoiles. Quelque chose qui te concerne.'",
+			"trust_tier_min": "T1",
+			"options": [
+				{"label": "Ecouter la revelation", "effects": [{"type": "HEAL_LIFE", "amount": 5}, {"type": "ADD_REPUTATION", "faction": "druides", "amount": 5}]},
+				{"label": "Demander le prix", "effects": [{"type": "ADD_REPUTATION", "faction": "korrigans", "amount": 5}]},
+				{"label": "Les etoiles mentent", "effects": [{"type": "ADD_REPUTATION", "faction": "ankou", "amount": 5}]}
+			],
+			"tags": ["merlin", "revelation"]
+		},
+		{
+			"id": "md_warning_001",
+			"text": "'Attention!' Merlin surgit, le regard grave. 'Un danger approche. Prepare-toi ou fuis — mais ne reste pas ici.'",
+			"trust_tier_min": "T0",
+			"options": [
+				{"label": "Se preparer au combat", "effects": [{"type": "ADD_REPUTATION", "faction": "anciens", "amount": 8}]},
+				{"label": "Fuir prudemment", "effects": [{"type": "HEAL_LIFE", "amount": 5}]},
+				{"label": "Ignorer l'avertissement", "effects": [{"type": "DAMAGE_LIFE", "amount": 5}, {"type": "ADD_REPUTATION", "faction": "ankou", "amount": 5}]}
+			],
+			"tags": ["merlin", "danger"]
+		},
+		{
+			"id": "md_gift_001",
+			"text": "Merlin tend la main. Dans sa paume, une lumiere dore pulse doucement. 'Un cadeau. Utilise-le sagement.'",
+			"trust_tier_min": "T2",
+			"options": [
+				{"label": "Accepter le don", "effects": [{"type": "HEAL_LIFE", "amount": 10}]},
+				{"label": "Demander ce que c'est", "effects": [{"type": "ADD_REPUTATION", "faction": "druides", "amount": 8}]},
+				{"label": "Refuser poliment", "effects": [{"type": "ADD_REPUTATION", "faction": "anciens", "amount": 5}]}
+			],
+			"tags": ["merlin", "cadeau"]
+		}
+	]
+}

@@ -1,140 +1,138 @@
 {
 	"promises": [
 		{
-			"id": "promise_equilibre_001",
+			"id": "promise_survive_001",
 			"type": "promise",
-			"promise_id": "maintain_equilibre",
+			"promise_id": "survive_8_cards",
 			"deadline_cards": 8,
-			"description": "Maintenir les 3 aspects en Equilibre pendant 8 cartes",
-			"text": "Merlin te fixe d'un regard profond. 'Je te propose un pacte, jeune druide. Maintiens l'harmonie des trois aspects pendant 8 tours, et je t'offrirai un souffle nouveau.'",
-			"reward": {"type": "ADD_SOUFFLE", "amount": 2},
-			"penalty_karma": -15,
-			"penalty_tension": 10,
+			"description": "Survivre 8 cartes sans tomber sous 25 PV",
+			"text": "Merlin te fixe d'un regard profond. 'Je te propose un pacte, jeune druide. Tiens bon pendant 8 tours sans faiblir, et je t'offrirai ma confiance.'",
+			"reward_trust": 10,
+			"penalty_trust": -15,
+			"condition_type": "life_above",
+			"condition_value": 25,
 			"options": [
-				{"position": "left", "label": "Refuser le pacte", "effects": []},
-				{"position": "center", "label": "Accepter avec prudence", "cost": 1, "effects": [{"type": "CREATE_PROMISE", "promise_id": "maintain_equilibre", "deadline_cards": 8}]},
-				{"position": "right", "label": "Accepter avec ferveur", "effects": [{"type": "CREATE_PROMISE", "promise_id": "maintain_equilibre", "deadline_cards": 8}, {"type": "SHIFT_ASPECT", "aspect": "Ame", "direction": "up"}]}
+				{"label": "Refuser le pacte", "effects": []},
+				{"label": "Accepter avec prudence", "effects": [{"type": "CREATE_PROMISE", "promise_id": "survive_8_cards", "deadline_cards": 8}]},
+				{"label": "Accepter avec ferveur", "effects": [{"type": "CREATE_PROMISE", "promise_id": "survive_8_cards", "deadline_cards": 8}, {"type": "HEAL_LIFE", "amount": 3}]}
 			],
-			"tags": ["promise", "equilibre", "merlin"]
+			"tags": ["promise", "survie", "merlin"],
+			"faction": "druides"
 		},
 		{
-			"id": "promise_no_centre_001",
+			"id": "promise_faction_001",
 			"type": "promise",
-			"promise_id": "avoid_centre",
-			"deadline_cards": 5,
-			"description": "Ne jamais choisir Centre pendant 5 cartes",
-			"text": "Merlin sourit, enigmatique. 'Es-tu pret a renoncer au confort du milieu ? Pendant 5 tours, choisis ton camp. Gauche ou droite, jamais le centre.'",
-			"reward": {"type": "SHIFT_ASPECT", "aspect": "Corps", "direction": "up"},
-			"penalty_karma": -15,
-			"penalty_tension": 10,
-			"options": [
-				{"position": "left", "label": "Non merci", "effects": []},
-				{"position": "center", "label": "Pourquoi pas", "cost": 1, "effects": [{"type": "CREATE_PROMISE", "promise_id": "avoid_centre", "deadline_cards": 5}]},
-				{"position": "right", "label": "Je releve le defi", "effects": [{"type": "CREATE_PROMISE", "promise_id": "avoid_centre", "deadline_cards": 5}, {"type": "ADD_KARMA", "amount": 5}]}
-			],
-			"tags": ["promise", "defi", "merlin"]
-		},
-		{
-			"id": "promise_no_fall_001",
-			"type": "promise",
-			"promise_id": "no_fall",
-			"deadline_cards": 10,
-			"description": "Atteindre le noeud MERLIN sans chute d'aspect",
-			"text": "'Si tu arrives jusqu'a moi sans que tes aspects ne chutent,' murmure Merlin, 'je revelerai un Ogham ancien.'",
-			"reward": {"type": "UNLOCK_OGHAM", "ogham_id": "straif"},
-			"penalty_karma": -15,
-			"penalty_tension": 10,
-			"options": [
-				{"position": "left", "label": "Trop risque", "effects": []},
-				{"position": "center", "label": "Accepter le defi", "cost": 1, "effects": [{"type": "CREATE_PROMISE", "promise_id": "no_fall", "deadline_cards": 10}]},
-				{"position": "right", "label": "Avec joie", "effects": [{"type": "CREATE_PROMISE", "promise_id": "no_fall", "deadline_cards": 10}, {"type": "ADD_SOUFFLE", "amount": 1}]}
-			],
-			"tags": ["promise", "defi", "ogham", "merlin"]
-		},
-		{
-			"id": "promise_corps_haut_001",
-			"type": "promise",
-			"promise_id": "reach_corps_haut",
+			"promise_id": "gain_rep_druides",
 			"deadline_cards": 6,
-			"description": "Porter Corps au niveau HAUT en 6 cartes",
-			"text": "Merlin pointe le sanglier grave sur la pierre. 'Montre ta force. Pousse ton Corps au-dela de l'equilibre en 6 tours.'",
-			"reward": {"type": "ADD_SOUFFLE", "amount": 1},
-			"penalty_karma": -10,
-			"penalty_tension": 8,
+			"description": "Gagner au moins 15 points de reputation Druides en 6 cartes",
+			"text": "Merlin sourit, enigmatique. 'Les forets murmurent ton nom. Prouve ta devotion aux druides en 6 tours.'",
+			"reward_trust": 10,
+			"penalty_trust": -15,
+			"condition_type": "faction_gain",
+			"condition_value": 15,
+			"condition_faction": "druides",
 			"options": [
-				{"position": "left", "label": "Je prefere l'equilibre", "effects": []},
-				{"position": "center", "label": "D'accord", "cost": 1, "effects": [{"type": "CREATE_PROMISE", "promise_id": "reach_corps_haut", "deadline_cards": 6}]},
-				{"position": "right", "label": "Le sanglier m'inspire", "effects": [{"type": "CREATE_PROMISE", "promise_id": "reach_corps_haut", "deadline_cards": 6}, {"type": "SHIFT_ASPECT", "aspect": "Corps", "direction": "up"}]}
+				{"label": "Les druides attendront", "effects": []},
+				{"label": "Pour la foret", "effects": [{"type": "CREATE_PROMISE", "promise_id": "gain_rep_druides", "deadline_cards": 6}]},
+				{"label": "Je suis deja des leurs", "effects": [{"type": "CREATE_PROMISE", "promise_id": "gain_rep_druides", "deadline_cards": 6}, {"type": "ADD_REPUTATION", "faction": "druides", "amount": 3}]}
 			],
-			"tags": ["promise", "corps", "force", "merlin"]
+			"tags": ["promise", "druides", "merlin"],
+			"faction": "druides"
 		},
 		{
-			"id": "promise_ame_equilibre_001",
+			"id": "promise_minigame_001",
 			"type": "promise",
-			"promise_id": "restore_ame",
+			"promise_id": "win_3_minigames",
+			"deadline_cards": 8,
+			"description": "Reussir 3 minigames avec un score >= 60 en 8 cartes",
+			"text": "'Es-tu adroit, voyageur ?' demande Merlin. 'Prouve-le : remporte trois epreuves en 8 tours.'",
+			"reward_trust": 10,
+			"penalty_trust": -15,
+			"condition_type": "minigame_wins",
+			"condition_value": 3,
+			"options": [
+				{"label": "Trop risque", "effects": []},
+				{"label": "Je suis pret", "effects": [{"type": "CREATE_PROMISE", "promise_id": "win_3_minigames", "deadline_cards": 8}]},
+				{"label": "Facile", "effects": [{"type": "CREATE_PROMISE", "promise_id": "win_3_minigames", "deadline_cards": 8}, {"type": "HEAL_LIFE", "amount": 5}]}
+			],
+			"tags": ["promise", "defi", "merlin"],
+			"faction": "anciens"
+		},
+		{
+			"id": "promise_courage_001",
+			"type": "promise",
+			"promise_id": "no_safe_choices",
 			"deadline_cards": 5,
-			"description": "Ramener Ame en Equilibre en 5 cartes",
-			"text": "'Ton ame vacille,' observe Merlin. 'Retrouve ton centre interieur en 5 tours, et le corbeau te guidera.'",
-			"reward": {"type": "ADD_KARMA", "amount": 20},
-			"penalty_karma": -15,
-			"penalty_tension": 10,
+			"description": "Ne jamais choisir l'option la plus sure pendant 5 cartes",
+			"text": "'Le courage n'est pas l'absence de peur,' murmure Merlin. 'Pendant 5 tours, refuse la facilite.'",
+			"reward_trust": 10,
+			"penalty_trust": -15,
+			"condition_type": "no_safe",
+			"condition_value": 5,
 			"options": [
-				{"position": "left", "label": "Mon ame va bien", "effects": []},
-				{"position": "center", "label": "Guide-moi", "cost": 1, "effects": [{"type": "CREATE_PROMISE", "promise_id": "restore_ame", "deadline_cards": 5}, {"type": "ADD_KARMA", "amount": 5}]},
-				{"position": "right", "label": "Je trouverai seul", "effects": [{"type": "CREATE_PROMISE", "promise_id": "restore_ame", "deadline_cards": 5}]}
+				{"label": "Je prefere la prudence", "effects": []},
+				{"label": "Le courage me guidera", "effects": [{"type": "CREATE_PROMISE", "promise_id": "no_safe_choices", "deadline_cards": 5}]},
+				{"label": "Je n'ai peur de rien", "effects": [{"type": "CREATE_PROMISE", "promise_id": "no_safe_choices", "deadline_cards": 5}, {"type": "ADD_REPUTATION", "faction": "anciens", "amount": 5}]}
 			],
-			"tags": ["promise", "ame", "corbeau", "merlin"]
+			"tags": ["promise", "courage", "merlin"],
+			"faction": "anciens"
 		},
 		{
-			"id": "promise_monde_bas_001",
+			"id": "promise_korrigans_001",
 			"type": "promise",
-			"promise_id": "lower_monde",
+			"promise_id": "korrigan_bargain",
 			"deadline_cards": 4,
-			"description": "Faire baisser Monde a BAS en 4 cartes",
-			"text": "'Tu as trop pris au monde,' gronde Merlin. 'Renonce a ton emprise en 4 tours. Deviens humble.'",
-			"reward": {"type": "SHIFT_ASPECT", "aspect": "Ame", "direction": "up"},
-			"penalty_karma": -20,
-			"penalty_tension": 12,
+			"description": "Trouver le tresor du korrigan avant 4 cartes",
+			"text": "Un korrigan surgit: 'Un marche ! Trouve mon tresor en 4 tours et je te revele un secret. Sinon... hehe.'",
+			"reward_trust": 10,
+			"penalty_trust": -15,
+			"condition_type": "tag_acquired",
+			"condition_value": "korrigan_treasure",
 			"options": [
-				{"position": "left", "label": "Jamais", "effects": [{"type": "SHIFT_ASPECT", "aspect": "Monde", "direction": "up"}]},
-				{"position": "center", "label": "Si c'est necessaire", "cost": 1, "effects": [{"type": "CREATE_PROMISE", "promise_id": "lower_monde", "deadline_cards": 4}]},
-				{"position": "right", "label": "Tu as raison", "effects": [{"type": "CREATE_PROMISE", "promise_id": "lower_monde", "deadline_cards": 4}, {"type": "SHIFT_ASPECT", "aspect": "Monde", "direction": "down"}]}
+				{"label": "Pas de marche avec les korrigans", "effects": []},
+				{"label": "Montre-moi le chemin", "effects": [{"type": "CREATE_PROMISE", "promise_id": "korrigan_bargain", "deadline_cards": 4}]},
+				{"label": "Je trouverai sans toi", "effects": [{"type": "CREATE_PROMISE", "promise_id": "korrigan_bargain", "deadline_cards": 4}, {"type": "ADD_REPUTATION", "faction": "korrigans", "amount": 5}]}
 			],
-			"tags": ["promise", "monde", "humilite", "merlin"]
+			"tags": ["promise", "korrigan", "tresor"],
+			"faction": "korrigans"
 		},
 		{
-			"id": "promise_souffle_001",
+			"id": "promise_ankou_001",
 			"type": "promise",
-			"promise_id": "spend_all_souffle",
+			"promise_id": "walk_with_death",
 			"deadline_cards": 6,
-			"description": "Depenser tout ton Souffle en 6 cartes",
-			"text": "'Le Souffle n'est pas fait pour etre thesaurise,' enseigne Merlin. 'Utilise-le entierement en 6 tours et tu en recevras davantage.'",
-			"reward": {"type": "ADD_SOUFFLE", "amount": 3},
-			"penalty_karma": -10,
-			"penalty_tension": 5,
+			"description": "Accepter 3 effets negatifs sans utiliser d'ogham pendant 6 cartes",
+			"text": "'La mort n'est pas une fin,' chuchote l'Ankou. 'Accepte la souffrance 6 tours sans fuir et je te montrerai l'Autre Cote.'",
+			"reward_trust": 10,
+			"penalty_trust": -15,
+			"condition_type": "accept_damage",
+			"condition_value": 3,
 			"options": [
-				{"position": "left", "label": "Je garde mon souffle", "effects": []},
-				{"position": "center", "label": "Marche conclu", "cost": 1, "effects": [{"type": "CREATE_PROMISE", "promise_id": "spend_all_souffle", "deadline_cards": 6}]},
-				{"position": "right", "label": "Facile", "effects": [{"type": "CREATE_PROMISE", "promise_id": "spend_all_souffle", "deadline_cards": 6}]}
+				{"label": "Pas aujourd'hui", "effects": []},
+				{"label": "Je n'ai pas peur de la mort", "effects": [{"type": "CREATE_PROMISE", "promise_id": "walk_with_death", "deadline_cards": 6}]},
+				{"label": "Montre-moi le chemin", "effects": [{"type": "CREATE_PROMISE", "promise_id": "walk_with_death", "deadline_cards": 6}, {"type": "ADD_REPUTATION", "faction": "ankou", "amount": 5}]}
 			],
-			"tags": ["promise", "souffle", "merlin"]
+			"tags": ["promise", "ankou", "mort"],
+			"faction": "ankou"
 		},
 		{
-			"id": "promise_karma_001",
+			"id": "promise_niamh_001",
 			"type": "promise",
-			"promise_id": "earn_karma",
+			"promise_id": "heal_the_land",
 			"deadline_cards": 7,
-			"description": "Accumuler 20 points de karma en 7 cartes",
-			"text": "'Les actes justes laissent des traces,' dit Merlin en traçant des runes. 'Accumule la sagesse du karma en 7 tours.'",
-			"reward": {"type": "UNLOCK_OGHAM", "ogham_id": "duir"},
-			"penalty_karma": -25,
-			"penalty_tension": 15,
+			"description": "Soigner au total 20 PV en 7 cartes",
+			"text": "Niamh apparait dans un halo de lumiere: 'La terre saigne. Soigne 20 points de vie en 7 tours et je te benirai.'",
+			"reward_trust": 10,
+			"penalty_trust": -15,
+			"condition_type": "total_healing",
+			"condition_value": 20,
 			"options": [
-				{"position": "left", "label": "Le karma viendra seul", "effects": []},
-				{"position": "center", "label": "Je serai juste", "cost": 1, "effects": [{"type": "CREATE_PROMISE", "promise_id": "earn_karma", "deadline_cards": 7}, {"type": "ADD_KARMA", "amount": 5}]},
-				{"position": "right", "label": "Pas besoin de promesse", "effects": [{"type": "ADD_KARMA", "amount": 3}]}
+				{"label": "Je ne suis pas guerisseur", "effects": []},
+				{"label": "Pour la terre", "effects": [{"type": "CREATE_PROMISE", "promise_id": "heal_the_land", "deadline_cards": 7}]},
+				{"label": "Ma lumiere est la tienne", "effects": [{"type": "CREATE_PROMISE", "promise_id": "heal_the_land", "deadline_cards": 7}, {"type": "ADD_REPUTATION", "faction": "niamh", "amount": 5}]}
 			],
-			"tags": ["promise", "karma", "sagesse", "merlin"]
+			"tags": ["promise", "niamh", "soin"],
+			"faction": "niamh"
 		}
 	]
 }
