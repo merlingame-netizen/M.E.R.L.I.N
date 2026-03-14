@@ -246,14 +246,36 @@ func _f_conditions(ev: Dictionary, ctx: Dictionary) -> float:
 		if not active_flags.has(flag):
 			return 0.0
 
-	# Check faction delta condition (replaces aspect_condition, v2.5)
-	var aspect_cond: Dictionary = conditions.get("aspect_condition", {})
-	var faction_rep_delta: Dictionary = ctx.get("faction_rep_delta", {})
-	for faction in aspect_cond:
-		var allowed_states: Array = aspect_cond[faction]
-		var delta: float = float(faction_rep_delta.get(faction, 0.0))
-		var state_name := _faction_delta_to_state(delta)
-		if state_name not in allowed_states:
+	# Check reputation thresholds (v2.5)
+	var rep_above: Variant = conditions.get("reputation_above", null)
+	if rep_above is Dictionary:
+		var factions_state: Dictionary = ctx.get("factions", {})
+		for faction in rep_above:
+			var required: int = int(rep_above[faction])
+			var current_rep: int = int(factions_state.get(faction, 0))
+			if current_rep < required:
+				return 0.0
+
+	var rep_below: Variant = conditions.get("reputation_below", null)
+	if rep_below is Dictionary:
+		var factions_state2: Dictionary = ctx.get("factions", {})
+		for faction in rep_below:
+			var threshold: int = int(rep_below[faction])
+			var current_rep: int = int(factions_state2.get(faction, 0))
+			if current_rep >= threshold:
+				return 0.0
+
+	# Check life thresholds (v2.5)
+	var life_below: int = int(conditions.get("life_below", -1))
+	if life_below > -1:
+		var current_life: int = int(ctx.get("life_essence", 100))
+		if current_life >= life_below:
+			return 0.0
+
+	var life_above: int = int(conditions.get("life_above", -1))
+	if life_above > -1:
+		var current_life: int = int(ctx.get("life_essence", 100))
+		if current_life < life_above:
 			return 0.0
 
 	# Check season
@@ -273,13 +295,6 @@ func _f_conditions(ev: Dictionary, ctx: Dictionary) -> float:
 	var current_tension: int = int(ctx.get("tension", 0))
 	if tension_above > -999 and current_tension < tension_above:
 		return 0.0
-
-	# Check all factions balanced (v2.5 replacement for all_aspects_equilibre)
-	if conditions.get("all_aspects_equilibre", false):
-		var balance_factions: Dictionary = ctx.get("faction_rep_delta", {})
-		for f_name in balance_factions:
-			if absf(float(balance_factions[f_name])) > 10.0:
-				return 0.0
 
 	# Check dominant_faction_above
 	var faction_min: int = int(conditions.get("dominant_faction_above", -1))
@@ -473,14 +488,6 @@ func _find_event_by_id(event_id: String) -> Dictionary:
 	return {}
 
 
-func _aspect_state_to_name(state_val: int) -> String:
-	match state_val:
-		-1: return "BAS"
-		0: return "EQUILIBRE"
-		1: return "HAUT"
-	return "EQUILIBRE"
-
-
 func _get_opposite_season(season: String) -> String:
 	match season:
 		"winter": return "summer"
@@ -488,14 +495,6 @@ func _get_opposite_season(season: String) -> String:
 		"spring": return "autumn"
 		"autumn": return "spring"
 	return ""
-
-
-func _faction_delta_to_state(delta: float) -> String:
-	if delta < -5.0:
-		return "BAS"
-	elif delta > 5.0:
-		return "HAUT"
-	return "EQUILIBRE"
 
 
 func _get_day_of_year(month: int, day: int) -> int:
