@@ -20,6 +20,7 @@ signal ogham_activated(skill_id: String, effect: String)
 signal season_changed(new_season: String)
 signal event_available(event_id: String, event_data: Dictionary)
 signal faveurs_changed(old_val: int, new_val: int)
+signal gauges_changed(gauges: Dictionary)
 
 const VERSION := "0.4.0"  # Updated for World Map gauge system
 
@@ -867,48 +868,59 @@ func _use_ogham(skill_id: String) -> Dictionary:
 func _apply_ogham_effect(_skill_id: String, spec: Dictionary) -> void:
 	"""Apply the actual Ogham effect on the game state."""
 	var effect_id: String = str(spec.get("effect", ""))
+	var params: Dictionary = spec.get("effect_params", {})
 	match effect_id:
-		"heal_worst":
-			# Quert: Aspect system removed — heal life instead
-			_heal_life(10)
-		"shield_shift":
-			# Luis: Set a flag that prevents next negative shift
+		"heal_immediate":
+			# Duir (+12) / Quert (+8) — reads amount from effect_params
+			_heal_life(int(params.get("amount", 10)))
+		"block_first_negative":
+			# Luis: Set a flag that prevents next negative effect
 			var run: Dictionary = state.get("run", {})
 			var modifiers: Dictionary = run.get("effect_modifier", {})
 			modifiers["shield_next_negative"] = true
 			run["effect_modifier"] = modifiers
 			state["run"] = run
-		"reveal_one", "reveal_all", "predict_next":
+		"reveal_one_option", "reveal_all_options", "predict_next":
 			# Handled by UI (controller reads the result)
 			pass
-		"force_equilibre":
-			# Duir: Aspect system removed — heal life instead
-			_heal_life(15)
-		"balance_all":
-			# Ruis: Aspect system removed — heal life instead
-			_heal_life(20)
-		"heal_life":
-			# Onn: Heal life
-			_heal_life(5)
-		"reduce_cooldowns":
-			# Saille: Reduce all cooldowns by 1
-			tick_cooldowns()
-		"skip_negative":
-			# Eadhadh: Flag to cancel negatives on next choice
+		"heal_and_cost":
+			# Ruis: Heal +18 PV but costs -5 biome currency
+			_heal_life(int(params.get("heal", 18)))
+			var run: Dictionary = state.get("run", {})
+			var currency: int = int(run.get("biome_currency", 0))
+			run["biome_currency"] = maxi(0, currency - int(params.get("currency_cost", 5)))
+			state["run"] = run
+		"add_biome_currency":
+			# Onn: Generate +10 biome currency
+			var run: Dictionary = state.get("run", {})
+			var currency: int = int(run.get("biome_currency", 0))
+			run["biome_currency"] = currency + int(params.get("amount", 10))
+			state["run"] = run
+		"currency_and_heal":
+			# Saille: +8 currency + +3 PV
+			_heal_life(int(params.get("heal", 3)))
+			var run: Dictionary = state.get("run", {})
+			var currency: int = int(run.get("biome_currency", 0))
+			run["biome_currency"] = currency + int(params.get("currency", 8))
+			state["run"] = run
+		"cancel_all_negatives":
+			# Eadhadh: Flag to cancel all negatives on current card
 			var run: Dictionary = state.get("run", {})
 			var modifiers: Dictionary = run.get("effect_modifier", {})
 			modifiers["skip_all_negative"] = true
 			run["effect_modifier"] = modifiers
 			state["run"] = run
-		"absorb_extreme":
-			# Gort: If an aspect hits extreme after next card, revert it
+		"reduce_high_damage":
+			# Gort: Reduce any damage > threshold to reduced_to value
 			var run: Dictionary = state.get("run", {})
 			var modifiers: Dictionary = run.get("effect_modifier", {})
-			modifiers["absorb_extreme"] = true
+			modifiers["reduce_high_damage"] = true
+			modifiers["damage_threshold"] = int(params.get("threshold", 10))
+			modifiers["damage_reduced_to"] = int(params.get("reduced_to", 5))
 			run["effect_modifier"] = modifiers
 			state["run"] = run
-		"double_positive":
-			# Tinne: Double positives on next card
+		"double_positives":
+			# Tinne: Double positives on current card
 			var run: Dictionary = state.get("run", {})
 			var modifiers: Dictionary = run.get("effect_modifier", {})
 			modifiers["double_positive"] = true
@@ -921,7 +933,7 @@ func _apply_ogham_effect(_skill_id: String, spec: Dictionary) -> void:
 			modifiers["invert_effects"] = true
 			run["effect_modifier"] = modifiers
 			state["run"] = run
-		"change_card", "full_reroll", "add_option", "force_twist", "sacrifice_trade":
+		"replace_worst_option", "regenerate_all_options", "full_reroll", "force_twist", "sacrifice_trade":
 			# These effects require UI/controller cooperation — flagged for controller
 			pass
 
