@@ -1,8 +1,8 @@
-# GAME DESIGN BIBLE — M.E.R.L.I.N. : Le Jeu des Oghams v2.3
+# GAME DESIGN BIBLE — M.E.R.L.I.N. : Le Jeu des Oghams v2.4
 
 > **Source de verite unique** pour le game design de M.E.R.L.I.N.
 > Remplace et supersede : MASTER_DOCUMENT.md, DOC_12, DOC_13, DOC_11, NEW_MECHANICS_DESIGN.md
-> Date de creation : 2026-03-12 | Derniere mise a jour : 2026-03-14 (v2.3)
+> Date de creation : 2026-03-12 | Derniere mise a jour : 2026-03-14 (v2.4)
 
 ---
 
@@ -91,6 +91,9 @@ Une seule barre de vie remplace tous les anciens systemes (4 jauges, Triade, Lif
 | Soin noeud REST | +18 |
 | Seuil alerte UI | 25 |
 | A 0 | Fin de run (avec narration, pas "game over") |
+| Drain timing | Le drain -1 s'applique **au debut** de chaque carte (avant choix et effets) |
+| Vie min | 0 (ne peut pas etre negatif) |
+| Verification mort | Apres application de TOUS les effets de la carte (minigame termine + effets appliques) |
 
 ### 2.2 Oghams — 18 pouvoirs hybrides
 
@@ -107,15 +110,47 @@ Les 18 Oghams sont des pouvoirs du joueur (pas d'un compagnon). Certains sont **
   - Switcher est strategique : il faut planifier les rotations
 - **Le dernier Ogham utilise reste equipe** entre les runs (changeable dans le Hub)
 
+#### Timing d'activation d'un Ogham
+
+L'Ogham actif peut etre active **uniquement pendant l'affichage de la carte** (apres le texte, avant le choix d'option). C'est le moment strategique. Le bouton Ogham est dans le HUD.
+
+| Moment | Activation possible ? |
+|--------|:---:|
+| Marche 3D (entre les cartes) | Non |
+| Affichage de la carte (avant choix) | **Oui** |
+| Pendant le minigame | Non |
+| Apres le minigame (avant effets) | Non |
+
+**Consequence** : le joueur doit decider d'utiliser son Ogham AVANT de choisir une option et de jouer le minigame. Cela force l'anticipation.
+
+#### Switch d'Ogham actif
+
+Le joueur peut changer son Ogham actif **a tout moment pendant la marche 3D** (entre les cartes) ou **pendant l'affichage de la carte** (avant le choix). Le switch est instantane (pas d'animation). L'Ogham precedent arrete de se recharger immediatement.
+
+#### Cooldown — regle
+
+Le cooldown diminue de **1 a chaque carte jouee** (pas en temps reel pendant la marche 3D). Seul l'Ogham **actif** voit son cooldown diminuer. Les Oghams equipes mais inactifs ont leur cooldown en pause.
+
 #### Deblocage des Oghams
 
 **Tous les 18 Oghams** se debloquent dans l'**arbre de talents** (achat avec Anam). Il n'y a pas de deblocage automatique par faction ou autre.
 
-**3 starters** debloques des le debut : `beith` (Reveal), `luis` (Protection), `quert` (Recovery).
+**3 starters** debloques des le debut : `beith` (Reveal), `luis` (Protection), `quert` (Recovery). Ils sont places dans la **branche centrale** de l'arbre (tier 0, cout 0 Anam). Ils servent de racines pour debloquer les branches faction adjacentes.
 
 **Decouverte en run** : pendant un run, le joueur peut **rencontrer** un Ogham non-debloque (evenements, PNJ, arcs, conditions specifiques). Il est alors **utilisable temporairement** pendant ce run. Apres le run, l'Ogham apparait dans l'arbre a **-50% du cout Anam**. Le joueur doit l'acheter pour le garder definitivement.
 
 > La decouverte en run est un moment fort : le joueur essaie un Ogham gratuitement, puis decide s'il vaut l'investissement.
+
+**Conditions de decouverte** : Les 15 Oghams non-starters peuvent tous etre decouverts en run. Le MOS choisit lequel apparait en fonction du **biome** (Oghams d'affinite privilegies) et du **contexte narratif**. Max 1-2 decouvertes par run.
+
+| Trigger de decouverte | Probabilite |
+|----------------------|:-----------:|
+| PNJ marchand propose un Ogham | 40% (1 par run max) |
+| Arc narratif du biome atteint une etape-cle | 30% |
+| Evenement aleatoire 3D (rune/inscription) | 20% |
+| Carte FastRoute avec tag `ogham_discovery` | 10% |
+
+**Si l'Ogham decouvert est deja possede** : le joueur gagne **+5 Anam** a la place (bonus de familiarite). Pas de doublon.
 
 #### Affinite biome
 
@@ -125,26 +160,26 @@ Chaque biome a 3 **Oghams d'affinite**. Les utiliser dans leur biome donne :
 
 #### Catalogue des 18 Oghams
 
-| # | Clé | Nom | Arbre | Categorie | Effet | Cooldown |
-|---|-----|-----|-------|-----------|-------|----------|
-| 1 | `beith` | Bouleau | Betula | Reveal | Revele l'effet d'une option | 3 |
-| 2 | `coll` | Noisetier | Corylus | Reveal | Revele les effets de toutes les options | 5 |
-| 3 | `ailm` | Sapin | Abies | Reveal | Predit le theme de la prochaine carte | 4 |
-| 4 | `luis` | Sorbier | Sorbus | Protection | Bloque le prochain effet negatif | 4 |
-| 5 | `gort` | Lierre | Hedera | Protection | Absorbe un impact extreme | 6 |
-| 6 | `eadhadh` | Tremble | Populus | Protection | Annule tous les negatifs de la carte | 8 |
-| 7 | `duir` | Chene | Quercus | Boost | Bonus de soin immediat | 4 |
-| 8 | `tinne` | Houx | Ilex | Boost | Double les effets positifs | 5 |
-| 9 | `onn` | Ajonc | Ulex | Boost | Regenere de la monnaie biome | 7 |
-| 10 | `nuin` | Frene | Fraxinus | Narratif | Remplace la pire option par une meilleure | 6 |
-| 11 | `huath` | Aubepine | Crataegus | Narratif | Regenere les 3 options de la carte | 5 |
-| 12 | `straif` | Prunellier | Prunus | Narratif | Force un retournement de situation | 10 |
-| 13 | `quert` | Pommier | Malus | Recovery | Soigne la barre de vie | 4 |
-| 14 | `ruis` | Sureau | Sambucus | Recovery | Soin massif (equilibre) | 8 |
-| 15 | `saille` | Saule | Salix | Recovery | Regenere des ressources | 6 |
-| 16 | `muin` | Vigne | Vitis | Special | Inverse les effets positifs/negatifs | 7 |
-| 17 | `ioho` | If | Taxus | Special | Regenere une carte completement nouvelle | 12 |
-| 18 | `ur` | Bruyere | Calluna | Special | Sacrifice vie pour bonus massif | 10 |
+| # | Cle | Nom | Arbre | Cat. | Effet detaille | Cooldown | Cout Anam |
+|---|-----|-----|-------|------|---------------|:---:|:---:|
+| 1 | `beith` | Bouleau | Betula | Reveal | Revele l'effet complet d'**1 option** au choix | 3 | 0 (starter) |
+| 2 | `coll` | Noisetier | Corylus | Reveal | Revele les effets de **toutes les options** | 5 | 80 |
+| 3 | `ailm` | Sapin | Abies | Reveal | Predit le **theme + champ lexical** de la prochaine carte | 4 | 60 |
+| 4 | `luis` | Sorbier | Sorbus | Protection | Bloque le **prochain effet negatif unique** (1 seul, le premier applique) | 4 | 0 (starter) |
+| 5 | `gort` | Lierre | Hedera | Protection | Reduit tout degat **> 10 PV a 5 PV** (1 instance, ce tour) | 6 | 100 |
+| 6 | `eadhadh` | Tremble | Populus | Protection | Annule **tous les effets negatifs** de la carte courante | 8 | 150 |
+| 7 | `duir` | Chene | Quercus | Boost | Soin immediat de **+12 PV** | 4 | 70 |
+| 8 | `tinne` | Houx | Ilex | Boost | Double les effets positifs de **l'option choisie** par le joueur | 5 | 120 |
+| 9 | `onn` | Ajonc | Ulex | Boost | Genere **+10 monnaie biome** instantanement | 7 | 90 |
+| 10 | `nuin` | Frene | Fraxinus | Narratif | Remplace la **pire option** (plus de negatifs) par une nouvelle generee par LLM | 6 | 80 |
+| 11 | `huath` | Aubepine | Crataegus | Narratif | Regenere les **3 options** de la carte (nouveau LLM call ou FastRoute) | 5 | 100 |
+| 12 | `straif` | Prunellier | Prunus | Narratif | Force un **retournement** : le MOS insere un twist narratif majeur dans la carte suivante | 10 | 140 |
+| 13 | `quert` | Pommier | Malus | Recovery | Soin de **+8 PV** | 4 | 0 (starter) |
+| 14 | `ruis` | Sureau | Sambucus | Recovery | Soin massif **+18 PV** mais -5 monnaie biome (equilibre) | 8 | 130 |
+| 15 | `saille` | Saule | Salix | Recovery | Regenere **+8 monnaie biome** + **+3 PV** | 6 | 90 |
+| 16 | `muin` | Vigne | Vitis | Special | **Inverse** positifs/negatifs de l'option choisie. Echec critique → bonus x1.5, succes → malus x1.5 | 7 | 110 |
+| 17 | `ioho` | If | Taxus | Special | **Defausse** la carte entiere et en genere une **completement nouvelle** (nouveau LLM call) | 12 | 160 |
+| 18 | `ur` | Bruyere | Calluna | Special | Sacrifie **15 PV** → gagne **+20 monnaie biome** + buff **x1.3 score** au prochain minigame | 10 | 140 |
 
 > **Note** : Les Oghams narratifs (Nuin, Huath, Straif) ne creent jamais de 4eme option — ils remplacent/regenerent les options existantes (toujours 3).
 
@@ -196,13 +231,15 @@ Chaque biome a 3 **Oghams d'affinite**. Les utiliser dans leur biome donne :
 | Faction honoree (rep ≥ 80) | +5 par faction |
 | Collecte rare en 3D | +1-3 (rare, ~5% des events) |
 
-**Recompense en cas de mort** : proportionnelle aux cartes jouees.
+**Recompense en cas de mort/abandon** : proportionnelle aux cartes jouees, plafonnee a 100%.
 ```
-Anam final = Anam calcule x (cartes_jouees / 30)
+Anam final = Anam calcule x min(cartes_jouees / 30, 1.0)
 ```
 - Mort a 10 cartes = 33% des gains
 - Mort a 25 cartes = 83% des gains
-- Fin narrative (victoire) = 100% + bonus victoire
+- Mort a 30+ cartes = 100% des gains (cap)
+- Fin narrative (victoire) = 100% + bonus victoire (+15 Anam)
+- Abandon (menu pause) = meme formule que mort, sans bonus victoire
 
 **Couts de l'arbre de talents** (fourchette) :
 | Tier | Cout Anam | Runs pour debloquer |
@@ -228,7 +265,7 @@ Anam final = Anam calcule x (cartes_jouees / 30)
 | Usage | Description |
 |-------|-------------|
 | **Marchands/esprits** | PNJ recurrents visibles dans la scene 3D. Cliquer dessus declenche une carte marchand (overlay). Acheter soins, buffs, indices. |
-| **Boost minigames** | Depenser X monnaie avant un minigame pour un avantage (temps supplementaire, indice visuel, score minimum garanti). |
+| **Boost minigames** | Depenser 3-5 monnaie avant un minigame pour un avantage : +10% score minimum garanti (le score ne peut pas descendre en dessous de 40). |
 | **Offrandes narratives** | Certaines cartes proposent des offrandes : laisser de la monnaie biome pour gagner de la rep faction, debloquer un chemin, calmer un esprit. |
 
 **Prix variables par marchand/PNJ** : chaque PNJ recurrent a ses propres tarifs. Le joueur apprend au fil des runs quels marchands sont avantageux.
@@ -240,7 +277,16 @@ Anam final = Anam calcule x (cartes_jouees / 30)
 | Bran le Passeur | Cotes Sauvages | Prix moyens, informations rares |
 | Seren l'Etoilee | Cercles de Pierres | Troc (monnaie biome contre buff mystique) |
 
-> Les valeurs exactes des prix seront definies au playtest. Fourchette indicative : petit achat 2-5, moyen 5-10, gros 10-20 monnaie biome. Le joueur collecte ~15-25 monnaie biome par run (via marche 3D).
+> Les valeurs exactes des prix seront definies au playtest. Fourchette indicative : petit achat 2-5, moyen 5-10, gros 10-20 monnaie biome.
+
+**Taux de collecte monnaie biome (marche 3D)** :
+| Parametre | Valeur |
+|-----------|--------|
+| Frequence d'apparition | 1 event monnaie toutes les 3-5 secondes de marche |
+| Valeur par clic | +1-2 monnaie biome (aleatoire) |
+| Total par run (~20 cartes) | ~15-25 monnaie biome |
+| Fenetre de clic | 1.5 secondes avant disparition |
+| Feedback | Son + particules au clic reussi |
 
 ### 2.5 Minigames — Le coeur du gameplay
 
@@ -303,7 +349,7 @@ La difficulte des minigames depend du **contexte narratif**, PAS de la performan
 | Facteur | Impact |
 |---------|--------|
 | Biome | Modificateur fixe par biome (-1 a +3) |
-| Type de carte | Event = +1, Merlin Direct = +2 |
+| Type de carte | Event = +1 (Merlin Direct : pas de minigame, pas de difficulte) |
 | Faction dominante | Bonus +10% score si Ogham actif correspond |
 | Progression (nb cartes) | Difficulte augmente legerement au fil du run |
 
@@ -324,7 +370,7 @@ Le joueur ne percoit pas d'ajustement lie a sa performance — le jeu reste cons
 | 0-20 | Echec critique | Effets negatifs x1.5 |
 | 21-50 | Echec | Effets negatifs x1.0 |
 | 51-79 | Reussite partielle | Effets positifs x0.5 |
-| 80-100 | Reussite | Effets positifs x1.0 |
+| 80-100 | Reussite | Effets positifs x1.0 (80 inclus — seuil pour bonus Anam +2) |
 | 95-100 | Reussite critique | Effets positifs x1.5 + bonus |
 
 Exemple : une carte donne "+15 rep Druides" sur succes. Score 60 (reussite partielle) = +15 x 0.5 = +7.5 rep.
@@ -359,10 +405,11 @@ Le **tout premier run** est special :
 #### Interruption mid-run (resume)
 
 Si le joueur quitte en plein run :
-- L'etat du run est **sauvegarde** (carte courante, vie, monnaie, oghams, tags, promesses)
+- L'etat du run est **sauvegarde** (carte courante, vie, monnaie, oghams, cooldowns, tags, promesses, factions, confiance)
+- Le **contexte narratif** est sauvegarde comme resume JSON (trame, PNJ rencontres, arcs actifs, derniers choix). Au resume, ce resume est injecte comme contexte "previously on..." au LLM.
 - Au relancement, le jeu **reprend exactement** ou le joueur en etait
 - Pas d'ecran de choix — le run reprend automatiquement
-- Si le joueur veut abandonner : option dans le menu pause → retour au Hub avec Anam proportionnel
+- Si le joueur veut abandonner : option dans le menu pause → retour au Hub avec **Anam proportionnel** (meme formule que la mort : Anam x cartes/30, SANS bonus victoire)
 
 ### 3.2 Scenario hybride
 
@@ -371,6 +418,12 @@ Si le joueur quitte en plein run :
 - Les **choix du joueur** influencent les cartes suivantes (generees dynamiquement)
 - **Longueur tres variable** (10-40+ cartes) — le MOS decide quand la narration converge
 - **Pas de minimum de cartes** impose — le MOS peut declencher une fin quand la narration l'exige
+- **Heuristiques MOS de convergence** :
+  - Soft min : **8 cartes** (en dessous, le MOS ne declenche pas de fin sauf mort)
+  - Target : **20-25 cartes** (duree optimale)
+  - Soft max : **40 cartes** (le MOS force la convergence progressive)
+  - Hard max : **50 cartes** (fin forcee — narration conclut, peu importe le contexte)
+  - La convergence est declenchee par : tension narrative ≥ 0.7, arc resolu, ou faction ≥ 80
 - Le run **se termine** quand la narration converge vers une fin ou quand la vie atteint 0
 
 ### 3.3 Carte — structure
@@ -439,6 +492,14 @@ Les arcs se declenchent progressivement sur **plusieurs runs** (pas en un seul r
 #### Arc cross-biome : "Le Murmure des Oghams"
 Un mystere central qui se deroule sur **plusieurs biomes** (8-12 cartes au total). Le joueur decouvre des fragments dans differents biomes. Completer l'arc debloque la fin "Transcendance".
 
+#### Tracking des arcs (cross-run)
+La progression des arcs est stockee dans le profil joueur via des **tags persistants** :
+- Chaque etape d'un arc = un tag (ex: `arc_chene_1`, `arc_chene_2`, `arc_chene_3`)
+- Les tags sont ajoutes au profil quand le joueur joue la carte d'arc correspondante
+- Au debut de chaque run, le MOS consulte les tags pour savoir quelles etapes inserer
+- **Max 1-2 cartes d'arc par run** (le MOS ne force pas l'arc — il l'insere organiquement quand les conditions sont remplies)
+- Un arc complete ajoute un tag `arc_complete_X` et ne se redeclenche plus
+
 ### 3.7 PNJ recurrents
 
 Chaque biome a **1 PNJ nomme recurrent** que le joueur retrouve d'un run a l'autre. Sa relation evolue selon le contexte du biome.
@@ -466,6 +527,8 @@ En plus des PNJ recurrents, le LLM genere des **PNJ generiques** (villageois, es
 | Conditions speciales (cartes, combinaisons) | Fins secretes |
 
 **Principe** : Il n'y a pas de "mauvaise fin". Toute fin est narrativement valide.
+
+**Fins multiples** : Si plusieurs factions sont ≥ 80 en fin de run, le **joueur choisit** laquelle debloquer via un ecran de choix narratif ("Vers qui vous tournez-vous ?"). Les autres fins restent disponibles pour les runs suivants (la rep ne decay pas).
 
 ---
 
@@ -498,9 +561,25 @@ Les biomes ne se debloquent **pas par compteur** (X runs). Le MOS calcule un **s
 - Oghams debloques
 - Reputation max atteinte (toutes factions)
 
-> Les poids exacts de chaque critere et les seuils par biome seront definis au playtest. L'ordre de deblocage (2→8) reste l'objectif mais le MOS a la liberte du timing.
+**Poids initiaux (ajustables au playtest)** :
+```
+Score = (total_runs x 2) + (fins_vues x 5) + (oghams_debloques x 3) + (max_faction_rep x 1)
+```
 
-**Garde-fou** : le MOS ne peut PAS inserer une carte-cle tant que le score de maturite est en dessous du seuil minimum du biome. Biomes tardifs (Iles Mystiques) ont un seuil eleve.
+**Seuils par biome** :
+| Biome | Seuil | Exemple de profil |
+|-------|:---:|-------------------|
+| Landes de Bruyere | 15 | ~5 runs, 1 fin, 2 oghams |
+| Cotes Sauvages | 15 | ~4 runs, 1 fin, 3 oghams |
+| Villages Celtes | 25 | ~8 runs, 2 fins, 3 oghams |
+| Cercles de Pierres | 30 | ~10 runs, 2 fins, 4 oghams |
+| Marais des Korrigans | 40 | ~12 runs, 3 fins, 5 oghams |
+| Collines aux Dolmens | 50 | ~15 runs, 4 fins, 6 oghams |
+| Iles Mystiques | 75 | ~25 runs, 6 fins, 8 oghams |
+
+> Les seuils seront ajustes au playtest. L'ordre de deblocage reste l'objectif mais le MOS a la liberte du timing au sein de chaque "tier" de seuil.
+
+**Garde-fou** : le MOS ne peut PAS inserer une carte-cle tant que le score de maturite est en dessous du seuil minimum du biome.
 
 ### 4.2 Detail par biome
 
@@ -599,6 +678,8 @@ Entre deux cartes, le joueur peut cliquer sur des elements du decor :
 
 **Pas de bouton skip** — la 3D est le run. Le joueur qui interagit bien avec le decor obtient un run enrichi (plus de contexte, monnaie, buffs).
 
+**Duree des buffs 3D** : Les buffs temporaires obtenus par les evenements 3D (Esprit/Apparition : +5% score, -1 cooldown) durent **jusqu'a la prochaine carte** (1 carte). Ils disparaissent apres que la carte est resolue. Les inputs joueur sont **desactives pendant les fondus** (1-2s de transition).
+
 #### Transitions carte ↔ 3D
 - **3D → Carte** : fondu enchaine (la scene 3D s'assombrit, la carte 2D apparait)
 - **Carte → Minigame** : le minigame s'affiche en **overlay 2D** sur la scene 3D figee
@@ -628,12 +709,21 @@ Debloque avec les **Anam** (cross-run).
 **~30-34 noeuds** redistribues sur 5 branches factions + branche centrale.
 
 **Contenu des branches** :
-- **15 Oghams** repartis dans l'arbre (3 par branche faction) — les 3 starters sont gratuits
-- **~15-19 bonus passifs** — ex: +10% rep Druides, -1 cooldown, +vie max, +score minigame, etc.
+- **3 starters** (branche centrale, tier 0, cout 0) : beith, luis, quert
+- **15 Oghams** repartis dans les 5 branches faction (3 par branche)
+- **~15-19 bonus passifs** — ex: +10% rep, -1 cooldown, +vie max, +score minigame, etc.
 - **Prerequis** — noeuds tier N necessitent ≥1 noeud tier N-1 de la meme branche
 - **Cout** : en Anam (monnaie cross-run, voir section 2.4 pour les fourchettes)
 
-> Les noeuds exacts et leurs effets seront detailles dans la phase d'implementation. Voir le plan de travail pour les 34 noeuds proposes.
+**Repartition des Oghams par branche** :
+| Branche | Oghams (3) | Logique |
+|---------|-----------|---------|
+| **Druides** | coll (Reveal), duir (Boost), nuin (Narratif) | Connaissance + nature |
+| **Anciens** | ailm (Reveal), tinne (Boost), straif (Narratif) | Sagesse + tradition |
+| **Korrigans** | onn (Boost), muin (Special), huath (Narratif) | Chaos + surprises |
+| **Niamh** | saille (Recovery), ruis (Recovery), gort (Protection) | Amour + protection |
+| **Ankou** | eadhadh (Protection), ioho (Special), ur (Special) | Mort + sacrifice |
+| **Central** (starters) | beith (Reveal), luis (Protection), quert (Recovery) | Bases universelles |
 
 ### 5.2 Fins — catalogue + LLM
 
@@ -686,7 +776,7 @@ Le jeu utilise un **profil unique** avec auto-continue (style Hades).
 | Type | Profil unique (1 seul fichier `merlin_profile.json`) |
 | Auto-continue | Au lancement, le profil charge automatiquement — pas d'ecran de selection |
 | Contenu | Meta-progression uniquement (pas de save mid-run) |
-| Mid-run | Pas de sauvegarde en cours de run — le run se termine ou s'interrompt |
+| Mid-run | Pas de save **manuelle**. Si le joueur quitte, l'etat du run est sauvegarde automatiquement (voir section 3.1 Interruption). |
 | Autosave | La meta-progression est sauvegardee automatiquement en fin de run |
 | Reset | Option cachee dans le menu Options/Parametres avec confirmation |
 
@@ -776,6 +866,8 @@ Le Narrator genere un JSON contenant :
 
 > Le LLM doit utiliser UNIQUEMENT ces verbes dans les labels d'option. Le code les mappe aux champs lexicaux pour choisir le minigame.
 
+**Verbes neutres et minigames** : Les verbes de la categorie "neutre" (parler, accepter, refuser, attendre, s'approcher) sont mappes au champ **esprit** par defaut. Le minigame associe sera "apaisement" ou "volonte" selon le contexte narratif. Ainsi, meme un choix "passif" implique une epreuve mentale.
+
 ### 6.5 Contrat LLM — ce que le Game Master doit produire
 
 Le GM produit un JSON d'effets par option :
@@ -809,6 +901,17 @@ Le GM produit un JSON d'effets par option :
 | `SHOW_DIALOG` | dialog_id | Afficher un dialogue |
 
 Le CODE valide, ajuste (caps), et peut rejeter des effets proposes par le GM.
+
+**Caps par effet (guardrails code)** :
+| Effet | Cap par carte | Note |
+|-------|:---:|------|
+| ADD_REPUTATION | ±20 par faction par carte | Empeche les swings excessifs |
+| HEAL_LIFE | +18 max | Ruis est le soin max (18 PV) |
+| DAMAGE_LIFE | -15 max (sauf echec critique) | Echec critique peut aller a -15 x 1.5 = -22 |
+| ADD_BIOME_CURRENCY | +10 max | Onn est le max (10) |
+| UNLOCK_OGHAM | 1 max par carte | Pas de double deblocage |
+| Total effets par option | 3 max | Le GM ne peut pas empiler plus de 3 effets par option |
+| Score minigame bonus | Additifs entre eux, cap global a **x2.0** | Affinite biome + talents + buffs 3D |
 
 ### 6.6 RAG — contexte injecte
 
@@ -885,6 +988,7 @@ Le MOS maintient 6 registres pour tracker l'etat du jeu :
 | **T3** | 75-100 | Complice, secrets | Revele des chemins caches, des fins secretes, des raccourcis |
 
 **Persistance** : cross-run (permanente). La confiance se construit au fil des runs. Depart a 0 (T0).
+**Bornes** : min 0, max 100. Ne peut pas etre negative. Le changement de tier est **immediat** (mid-run si la confiance passe un seuil, le comportement de Merlin change pour les cartes suivantes).
 
 La confiance evolue par les actions du joueur :
 - Promesse tenue : +10
@@ -909,12 +1013,16 @@ La confiance evolue par les actions du joueur :
 
 ### 7.2 Periodes (cycle in-game)
 
-| Periode | Effet |
-|---------|-------|
-| Aube | Druides actifs (+10% reputation) |
-| Jour | Cartes equilibrees |
-| Crepuscule | Korrigans actifs (+10%) |
-| Nuit | Ankou actif (+15% reputation) |
+Le cycle in-game avance avec les cartes. **1 periode = 5 cartes**. L'ordre est fixe : Aube → Jour → Crepuscule → Nuit → (boucle). Un run de 20 cartes traverse 4 periodes.
+
+| Periode | Cartes | Faction active | Effet |
+|---------|:---:|----------------|-------|
+| Aube | 1-5 | Druides | +10% gains rep Druides |
+| Jour | 6-10 | Anciens / Niamh | +10% gains rep Anciens ET Niamh |
+| Crepuscule | 11-15 | Korrigans | +10% gains rep Korrigans |
+| Nuit | 16-20 | Ankou | +15% gains rep Ankou (plus genereux car plus dangereux) |
+
+> Le cycle boucle : carte 21 = retour a l'Aube. Le bonus s'applique aux gains de reputation de la faction indiquee (pas aux pertes).
 
 ### 7.3 Saisons & festivals
 
@@ -936,14 +1044,19 @@ HUD **minimaliste** : indicateurs discrets pour ne pas casser l'immersion.
 ```
 ┌──────────────────────────────────────────┐
 │ [♥ ████████░░]              [🌿 x12]    │  ← Vie + Monnaie biome
-│                              [⚬ Beith]   │  ← Ogham actif (cliquable)
+│ [📜 1/2]                     [⚬ Beith]   │  ← Promesses actives + Ogham actif (cliquable pour switch)
 │                                           │
 │           [SCENE 3D du biome]             │
 │        (personnage avance sur rail)       │
 │                                           │
-│                                           │
+│                              [☀ Jour]     │  ← Periode in-game (discret)
 └──────────────────────────────────────────┘
 ```
+
+**Interactions HUD 3D** :
+- Clic sur l'Ogham : ouvre le menu de switch (si 2+ Oghams equipes)
+- Clic sur les promesses : affiche le detail (countdown, faction)
+- Tous les autres clics : interaction avec le decor 3D
 
 #### Pendant une carte (overlay)
 L'UI de carte apparait via fondu enchaine :
@@ -1000,9 +1113,9 @@ Le SFXManager (30+ sons proceduraux) fournit un feedback pour chaque action :
 - Degats vie, soin, mort, transition, monnaie biome collectee
 - Sons specifiques par biome (vagues, vent, feux follets, chants)
 
-### 9.3 Auto-run audio
+### 9.3 Audio pendant la marche 3D
 
-Pendant l'auto-run 3D, l'ambiance sonore evolue avec le biome et les evenements rencontres.
+Pendant la marche 3D (entre les cartes), l'ambiance sonore evolue avec le biome et les evenements rencontres. Les stems se crossfadent selon la tension MOS (voir 9.1).
 
 ---
 
@@ -1081,7 +1194,202 @@ Les tooltips sont stockees dans un flag `tutorial_shown` du profil — jamais re
 
 ---
 
-## 13. Ecarts code vs design (inventaire)
+## 13. Regles detaillees, interactions & edge cases
+
+> Cette section couvre TOUS les cas limites et interactions entre systemes. Chaque regle est une **decision finale** — pas de "a definir au playtest" sauf mention explicite.
+
+### 13.1 Interactions entre systemes
+
+#### Ogham Protection + effets multiples
+- `luis` (Protection) bloque **1 seul effet negatif** — le premier dans l'ordre d'application. Les effets negatifs suivants passent normalement.
+- `eadhadh` (Tremble) bloque **tous les negatifs** de la carte. Plus puissant mais cooldown 8.
+- `gort` (Lierre) ne bloque pas — il **reduit** un gros degat (>10 → 5). Ne s'applique qu'aux degats PV, pas aux pertes de rep.
+
+#### Cross-faction + promesse
+- Les penalites s'empilent : une promesse brisee (-rep, -confiance) PLUS un choix cross-faction hostile dans la meme carte = double penalite. C'est **voulu** (les consequences comptent).
+- Le MOS evite de generer des cartes cross-faction pendant le countdown d'une promesse pour ne pas pieger le joueur involontairement.
+
+#### FastRoute + continuite narrative
+- Chaque carte FastRoute est indexee avec des **tags de contexte** (biome, faction, champ lexical, tension).
+- Quand une carte FR est utilisee, le code genere un **resume JSON** de cette carte et l'injecte dans le contexte du prochain appel LLM comme "evenement precedent".
+- Les cartes FR ont des variantes par **tier de confiance** (T0/T1/T2/T3). Le code selectionne la variante appropriee.
+
+#### Ogham Huath + Nuin (double activation)
+- L'ordre est : **premier active = premier resolu**.
+- Si Huath (regenere 3 options) est active d'abord → les 3 options sont nouvelles → Nuin n'a plus d'effet utile (les 3 sont deja "neuves").
+- Si Nuin (remplace la pire) est active d'abord → 1 option est remplacee → Huath regenere les 3 → le remplacement de Nuin est ecrase.
+- **Regle** : un seul Ogham peut etre active par carte. Le bouton Ogham se desactive apres usage.
+
+#### Multiplicateur + bonus cumulatifs
+- Tous les bonus de score sont **additifs** entre eux, puis appliques comme multiplicateur unique.
+- Exemple : affinite biome (+10%) + talent tree (+5%) + buff 3D (+5%) = +20% → score final = score_brut x 1.20
+- **Cap global** : x2.0. Au-dela, le score est plafonne.
+
+#### Fin de run + marchand visible
+- Le MOS ne declenche PAS la convergence narrative pendant une interaction marchand.
+- Si le joueur est en ecran marchand, la convergence attend la carte suivante.
+- En revanche, les evenements 3D (monnaie au sol, plantes) ne bloquent pas la convergence — le fondu peut couper une collecte en cours.
+
+### 13.2 Edge cases — resolutions
+
+#### E1. Vie = 0 pendant un minigame
+Le minigame se termine toujours (le joueur joue jusqu'au bout). Ensuite, TOUS les effets de la carte sont appliques (y compris les soins eventuels). La verification vie = 0 se fait **apres** l'application complete des effets. Si la vie est toujours a 0 apres les soins, la fin de run se declenche.
+
+#### E2. Formule mort — cap a 100%
+```
+Anam final = Anam calcule x min(cartes_jouees / 30, 1.0)
+```
+Le ratio est **plafonne a 1.0** (100%). Jouer plus de 30 cartes ne donne pas plus que le maximum. La formule recompense la survie, pas la longueur.
+
+#### E3. Promesse expire pendant une carte Merlin Direct
+Si une promesse expire pile pendant une carte Merlin Direct :
+- Le MOS **insere une carte de resolution de promesse** comme prochaine carte (type "Promesse", avec minigame).
+- La carte Merlin Direct se deroule normalement (effets a 100%).
+- A la carte suivante, le joueur doit tenir ou briser la promesse.
+
+#### E4. 0 Ogham equipable
+Impossible en conditions normales (3 starters gratuits des le depart). En cas de bug/corruption de profil, le systeme **force beith** comme Ogham par defaut. Un profil sans les 3 starters = profil corrompu → reset automatique des starters.
+
+#### E5. Faction a 80 + choix hostile
+La verification du seuil de fin se fait **en fin de run** (pas en temps reel). Si le joueur est a 80 et fait un choix hostile (-5 rep → 75), la fin de faction n'est **plus disponible** pour ce run. Il devra remonter a 80 dans un run futur (la rep ne decay pas, donc c'est faisable).
+
+#### E6. Ogham deja possede trouve en run
+Le joueur gagne **+5 Anam** a la place (bonus de familiarite). Le message affiche : "Cet Ogham vous est deja familier. Vous percevez son essence. (+5 Anam)".
+
+#### E7. Max 2 promesses actives + 3eme proposee
+Le MOS a un **guardrail** : il ne genere PAS de carte de type "Promesse" tant que 2 promesses sont actives. Si une carte FastRoute avec tag `promise` est selectionnee, le code **degrade** le type en "narrative" (les effets restent, mais sans countdown ni engagement).
+
+#### E8. Fondu enchaine + inputs
+Les inputs joueur sont **desactives** pendant toute la duree du fondu (1-2 secondes). Pas de clic possible sur la monnaie au sol ou les evenements 3D. Le fondu est un moment de transition, pas de gameplay.
+
+#### E9. Muin (inverse effets) + echec critique
+Oui : Muin inverse positifs et negatifs. Sur un echec critique (negatifs x1.5), ils deviennent **positifs x1.5**. C'est le risque/recompense de Muin — l'Ogham est puissant en cas d'echec mais dangereux en cas de succes. Avec un cooldown de 7 et une activation avant le choix, le joueur prend un pari.
+
+#### E10. Changement de tier confiance mid-run
+Le tier de confiance est recalcule **a chaque carte**. Si la confiance passe de 74 a 76 (T2 → T3) mid-run, Merlin change immediatement de comportement pour les cartes suivantes. Pas de transition graduelle — le tier est binaire.
+
+#### E11. Abandon vs Mort (recompenses)
+| Scenario | Formule Anam | Bonus victoire |
+|----------|:---:|:---:|
+| Victoire (fin narrative) | 100% | +15 |
+| Mort (vie = 0) | cartes/30 (cap 100%) | 0 |
+| Abandon (menu pause) | cartes/30 (cap 100%) | 0 |
+
+L'abandon et la mort donnent les memes recompenses. Le joueur n'est pas penalise pour abandonner (c'est un choix narratif en soi).
+
+#### E12. Ogham narratif + LLM timeout
+Si Nuin/Huath/Ioho est active et necessite un appel LLM pour generer de nouvelles options/carte :
+- Si le LLM repond dans les 3 secondes → options generees normalement
+- Si timeout → le code utilise une **carte FastRoute** correspondant au contexte actuel
+- Le joueur ne percoit pas de difference (les deux sources produisent des options valides)
+
+#### E13. Mort au drain initial (vie = 1, drain -1)
+Si la vie est a 1 au debut d'une carte, le drain -1 met la vie a 0. La carte s'affiche quand meme (le joueur choisit et joue le minigame). Les effets sont appliques. Si un soin ramene la vie > 0, le run continue. Sinon, fin de run.
+
+#### E14. Score minigame = 0 exactement
+Score 0 = echec critique (tranche 0-20). Effets negatifs x1.5. C'est le pire resultat possible mais reste jouable.
+
+#### E15. Confiance Merlin a 100 (max)
+A confiance 100, Merlin est T3 maximum. Les gains supplementaires (+10 promesse tenue) sont ignores (cap a 100). Le joueur ne peut pas "gaspiller" de confiance.
+
+### 13.3 Ordre d'application des effets (pipeline)
+
+```
+1. DRAIN VIE : -1 PV (debut de carte)
+2. AFFICHAGE CARTE : texte + 3 options
+3. ACTIVATION OGHAM (optionnel) : le joueur clique sur l'Ogham actif
+4. CHOIX OPTION : le joueur choisit 1 des 3 options
+5. MINIGAME : le joueur joue le minigame (sauf Merlin Direct)
+6. SCORE : 0-100, multiplicateur calcule
+7. APPLICATION EFFETS : les effets de l'option choisie, multiplies par le score
+8. OGHAM POST-EFFECT : les Oghams de protection (luis, gort, eadhadh) filtrent les effets negatifs APRES le calcul
+9. VERIFICATION VIE : si vie = 0, fin de run
+10. VERIFICATION PROMESSES : countdown -1, si expire → carte de resolution inseree comme prochaine
+11. COOLDOWN : -1 sur l'Ogham actif
+12. RETOUR 3D : fondu, marche reprend
+```
+
+> Ce pipeline est la **reference absolue** pour le code. Toute implementation doit suivre cet ordre exact.
+
+### 13.4 Structure de donnees — Profil joueur
+
+```json
+{
+  "version": "1.0.0",
+  "meta": {
+    "anam": 0,
+    "faction_rep": {
+      "druides": 0.0, "anciens": 0.0, "korrigans": 0.0,
+      "niamh": 0.0, "ankou": 0.0
+    },
+    "trust_merlin": 0,
+    "oghams_unlocked": ["beith", "luis", "quert"],
+    "oghams_equipped": "beith",
+    "talent_tree": { "unlocked": [] },
+    "total_runs": 0,
+    "endings_seen": [],
+    "biomes_unlocked": ["foret_broceliande"],
+    "tutorial_flags": {},
+    "arc_tags": [],
+    "biome_runs": {
+      "foret_broceliande": 0, "landes_bruyere": 0, "cotes_sauvages": 0,
+      "villages_celtes": 0, "cercles_pierres": 0, "marais_korrigans": 0,
+      "collines_dolmens": 0, "iles_mystiques": 0
+    },
+    "ogham_discounts": {},
+    "stats": {
+      "total_play_time_seconds": 0,
+      "total_minigames_played": 0,
+      "total_cards_played": 0,
+      "total_deaths": 0,
+      "oghams_discovered_in_run": []
+    }
+  },
+  "run_state": null
+}
+```
+
+`run_state` est `null` si pas de run en cours. Si un run est interrompu :
+```json
+{
+  "run_state": {
+    "biome": "foret_broceliande",
+    "card_index": 12,
+    "life": 67,
+    "biome_currency": 14,
+    "oghams_active": "beith",
+    "oghams_found": ["duir"],
+    "cooldowns": {"beith": 0, "duir": 3},
+    "tags": ["rencontre_gwenn", "chene_trouve"],
+    "promises": [
+      {"id": "promesse_druides", "countdown": 4, "faction": "druides"}
+    ],
+    "narrative_summary": "Le joueur a aide Gwenn a trouver des herbes...",
+    "faction_rep_delta": {"druides": 12.0},
+    "cards_played": 12,
+    "minigames_won": 8,
+    "oghams_used": 3,
+    "buffs": []
+  }
+}
+```
+
+### 13.5 Formules de calcul — reference
+
+| Formule | Expression | Notes |
+|---------|-----------|-------|
+| **Anam fin de run** | `base(10) + victoire(15) + minigames(n×2) + oghams(n×1) + factions(n×5) + collecte` | Victoire = 0 si mort/abandon |
+| **Anam mort/abandon** | `anam_calcule × min(cartes/30, 1.0)` | Cap a 100% |
+| **Score maturite** | `runs×2 + fins×5 + oghams×3 + max_rep×1` | Poids ajustables playtest |
+| **Multiplicateur minigame** | `table(score)` : 0-20=neg×1.5, 21-50=neg×1.0, 51-79=pos×0.5, 80-100=pos×1.0, 95-100=pos×1.5 | |
+| **Bonus score cumule** | `min(1 + sum(bonus%), 2.0)` | Additifs, cap x2.0 |
+| **Drain vie** | `-1 par carte` (modifiable par talents : drain_reduction) | |
+| **Confiance Merlin** | `clamp(confiance + delta, 0, 100)` | Promesse tenue +10, brisee -15, choix +/-3-5 |
+| **Discount Ogham post-run** | `cout_normal × 0.5` | Si decouvert en run, arrondi inferieur |
+
+---
+
+## 14. Ecarts code vs design (inventaire)
 
 > Liste des systemes presents dans le code qui ne correspondent plus a ce design. A nettoyer.
 

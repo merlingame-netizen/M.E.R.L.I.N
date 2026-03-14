@@ -120,7 +120,7 @@ Narrative card game built with Godot 4.x.
 - **Game System**: 5 Factions, 18 Oghams, 1 barre de vie, 8 champs lexicaux, MOS
 - **LLM**: Multi-Brain heterogene (Qwen 3.5) via Ollama — voir `docs/LLM_ARCHITECTURE.md`
 - **Audio**: SFXManager (30+ sons proceduraux)
-- **Design Ref**: `docs/GAME_DESIGN_BIBLE.md` v2.1 (source de verite unique)
+- **Design Ref**: `docs/GAME_DESIGN_BIBLE.md` v2.4 (source de verite unique)
 
 ---
 
@@ -300,7 +300,7 @@ merlin_effect_engine.gd      <- ADD_REPUTATION, HEAL_LIFE, DAMAGE_LIFE, PROMISE
 merlin_llm_adapter.gd        <- LLM contract, Faction-based, JSON repair
 merlin_constants.gd          <- 18 Oghams, biomes, minigames, factions
 merlin_reputation_system.gd  <- 5 factions, 0-100, thresholds 50/80
-merlin_save_system.gd        <- 3 slots JSON
+merlin_save_system.gd        <- Profil unique JSON + run_state
 ```
 
 ### UI Layer (scripts/ui/)
@@ -325,7 +325,7 @@ rag_manager.gd           <- RAG v3.0, per-brain context budget
 ```
 
 ### Key Documents
-- `docs/GAME_DESIGN_BIBLE.md` — **Source de verite unique** pour le game design v2.1
+- `docs/GAME_DESIGN_BIBLE.md` — **Source de verite unique** pour le game design v2.4
 - `docs/LLM_ARCHITECTURE.md` — Multi-cerveaux, LoRA, prompts
 - `docs/70_graphic/UI_UX_BIBLE.md` — Visual system specification
 - `docs/20_card_system/DOC_15_Faction_Alignment_System.md` — Detail factions
@@ -347,30 +347,36 @@ rag_manager.gd           <- RAG v3.0, per-brain context budget
 
 ---
 
-## Game Design (Quick Ref) — v2.3
+## Game Design (Quick Ref) — v2.4
 
-> **Source de verite** : `docs/GAME_DESIGN_BIBLE.md` v2.3
+> **Source de verite** : `docs/GAME_DESIGN_BIBLE.md` v2.4
 
 ### Core Loop
 ```
-Hub 2D → Biome → Ogham → 3D rail (marche) → [5-15s collecte] → [fondu] → Carte 2D (3 options) → Minigame overlay → Effets (multiplicateur direct) → [fondu] → 3D → [repeter] → Fin → Hub
+Hub 2D → Biome → Ogham → 3D rail (marche) → [5-15s collecte] → [fondu] → Carte 2D (3 options) → Ogham? → Choix → Minigame overlay → Score → Effets → [fondu] → 3D → [repeter] → Fin → Hub
+```
+
+### Pipeline effets (reference code — bible section 13.3)
+```
+1.DRAIN -1  2.CARTE  3.OGHAM?  4.CHOIX  5.MINIGAME  6.SCORE  7.EFFETS  8.PROTECTION  9.VIE=0?  10.PROMESSES  11.COOLDOWN  12.RETOUR 3D
 ```
 
 ### Systemes actifs
-- **Vie** : 1 barre unique (0-100), drain -1/carte
-- **5 Factions** : Druides/Anciens/Korrigans/Niamh/Ankou (0-100, cross-run, PAS de decay)
-- **18 Oghams** : 1 equipe + 1-2 trouves en run (temporaires + discount arbre). Switch possible, seul l'actif se recharge
-- **3 options fixes** par carte. Minigames obligatoires (sauf Merlin Direct)
-- **8 Champs lexicaux** : chance, bluff, observation, logique, finesse, vigueur, esprit, perception
-- **Anam** : cross-run, progression lente (~10 runs/noeud). Mort = gains proportionnels aux cartes
-- **8 Biomes** : deblocage organique (MOS score de maturite + carte-cle)
-- **MOS** : orchestrateur LLM + directeur + guardrails + confiance T0-T3
-- **Save** : Profil unique, auto-continue (Hades-style)
-- **Fins** : ~10-15 cataloguees + LLM personnalise le texte
-- **Run 3D** : on-rails permanent, cartes via fondu enchaine, minigames overlay 2D
+- **Vie** : 0-100, drain -1/carte AU DEBUT, verification mort APRES effets
+- **5 Factions** : 0-100, cross-run, PAS de decay. Caps: ±20/carte
+- **18 Oghams** : chiffres (PV/monnaie/cooldown/cout). 3 starters gratuits. Activation avant choix uniquement. 1 Ogham/carte max.
+- **3 options fixes**. Minigames obligatoires. Verbes neutres → esprit.
+- **8 Champs lexicaux** + neutre. 45 verbes liste fermee.
+- **Anam** : cross-run, ~10 runs/noeud. Mort = Anam × min(cartes/30, 1.0)
+- **8 Biomes** : score maturite (runs×2 + fins×5 + oghams×3 + max_rep×1)
+- **MOS** : convergence soft min 8, target 20-25, soft max 40, hard max 50
+- **Confiance Merlin** : 0-100 clamp, T0-T3, changement immediat mid-run
+- **Save** : Profil unique + run_state si interruption
+- **FastRoute** : 500+ cartes, variantes par tier confiance, resume JSON pour continuite LLM
+- **Multiplicateur** : score bonus additifs, cap global x2.0. Effets/option: 3 max.
 
 ### Systemes SUPPRIMES
-~~Triade (Corps/Ame/Monde)~~, ~~Souffle d'Ogham~~, ~~4 Jauges~~, ~~Bestiole~~, ~~Awen~~, ~~D20~~, ~~Flux System~~, ~~Run Typologies~~
+~~Triade~~, ~~Souffle~~, ~~4 Jauges~~, ~~Bestiole~~, ~~Awen~~, ~~D20~~, ~~Flux~~, ~~Run Typologies~~, ~~Decay rep~~, ~~Auto-run pre-run~~
 
 ### Scene Flow
 ```
@@ -387,4 +393,4 @@ Status protocol: `status/session.json`, `status/worker_{name}.json`
 
 ---
 
-*Updated: 2026-03-14 — CLAUDE.md v3.2 (game design v2.3: run 3D on-rails, economie Anam, oghams mix, MOS organique)*
+*Updated: 2026-03-14 — CLAUDE.md v3.3 (game design v2.4: audit robustesse, pipeline effets, caps, edge cases resolus, Oghams chiffres)*
