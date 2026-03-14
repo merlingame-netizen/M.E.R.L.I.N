@@ -30,14 +30,24 @@ const VALID_CODES := {
 	# ═══════════════════════════════════════════════════════════════════════════
 	"ADD_REPUTATION": 2,   # ADD_REPUTATION:druides:15
 	# ═══════════════════════════════════════════════════════════════════════════
-	# ANAM — Monnaie principale inter-run
+	# ANAM & BIOME CURRENCY
 	# ═══════════════════════════════════════════════════════════════════════════
 	"ADD_ANAM": 1,         # ADD_ANAM:5
+	"ADD_BIOME_CURRENCY": 1, # ADD_BIOME_CURRENCY:10
 	# ═══════════════════════════════════════════════════════════════════════════
 	# OGHAMS
 	# ═══════════════════════════════════════════════════════════════════════════
 	"UNLOCK_OGHAM": 1,     # UNLOCK_OGHAM:beith
+	# ═══════════════════════════════════════════════════════════════════════════
+	# UI / AUDIO (fire-and-forget, applied by controller)
+	# ═══════════════════════════════════════════════════════════════════════════
+	"PLAY_SFX": 1,         # PLAY_SFX:heal_chime
+	"SHOW_DIALOG": 1,      # SHOW_DIALOG:merlin_warns
+	"TRIGGER_EVENT": 1,    # TRIGGER_EVENT:merchant_appears
 }
+
+# Negative effect codes (used by ogham protection filtering)
+const NEGATIVE_EFFECT_CODES: Array[String] = ["DAMAGE_LIFE"]
 
 
 func validate_effect(effect_code: String) -> bool:
@@ -144,6 +154,11 @@ func _apply_parsed(state: Dictionary, parsed: Dictionary) -> bool:
 		# ═══════════════════════════════════════════════════════════════════════
 		"UNLOCK_OGHAM":
 			return _apply_unlock_ogham(state, args[0])
+		"ADD_BIOME_CURRENCY":
+			return _apply_biome_currency(state, _to_int(args[0]))
+		"PLAY_SFX", "SHOW_DIALOG", "TRIGGER_EVENT":
+			# Fire-and-forget: recorded in effect_log, handled by controller
+			return true
 		_:
 			return false
 
@@ -396,3 +411,226 @@ func _apply_unlock_ogham(state: Dictionary, ogham_name: String) -> bool:
 	run["unlocked_oghams"] = unlocked
 	state["run"] = run
 	return true
+
+
+func _apply_biome_currency(state: Dictionary, amount: int) -> bool:
+	var run: Dictionary = state.get("run", {})
+	var current: int = int(run.get("biome_currency", 0))
+	run["biome_currency"] = maxi(current + amount, 0)
+	state["run"] = run
+	return true
+
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# MULTIPLIER TABLE — Score → factor (bible v2.4 s.6.5)
+# ═══════════════════════════════════════════════════════════════════════════════
+
+static func get_multiplier(score: int) -> float:
+	for entry in MerlinConstants.MULTIPLIER_TABLE:
+		if score >= int(entry["range_min"]) and score <= int(entry["range_max"]):
+			return float(entry["factor"])
+	return 1.0
+
+
+static func get_multiplier_label(score: int) -> String:
+	for entry in MerlinConstants.MULTIPLIER_TABLE:
+		if score >= int(entry["range_min"]) and score <= int(entry["range_max"]):
+			return str(entry["label"])
+	return "reussite"
+
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# EFFECT CAPPING — Enforce bible v2.4 caps on effect amounts
+# ═══════════════════════════════════════════════════════════════════════════════
+
+static func cap_effect(effect_code: String, amount: int) -> int:
+	var caps: Dictionary = MerlinConstants.EFFECT_CAPS
+	match effect_code:
+		"ADD_REPUTATION":
+			var cap_data: Dictionary = caps.get("ADD_REPUTATION", {})
+			return clampi(amount, int(cap_data.get("min", -20)), int(cap_data.get("max", 20)))
+		"HEAL_LIFE":
+			return mini(amount, int(caps.get("HEAL_LIFE", {}).get("max", 18)))
+		"DAMAGE_LIFE":
+			return mini(amount, int(caps.get("DAMAGE_LIFE", {}).get("max", 15)))
+		"ADD_BIOME_CURRENCY":
+			return mini(amount, int(caps.get("ADD_BIOME_CURRENCY", {}).get("max", 10)))
+	return amount
+
+
+## Apply multiplier to a raw effect amount, then cap it.
+static func scale_and_cap(effect_code: String, raw_amount: int, multiplier: float) -> int:
+	var scaled: int = int(float(raw_amount) * absf(multiplier))
+	if multiplier < 0:
+		scaled = -scaled
+	return cap_effect(effect_code, scaled)
+
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# OGHAM PROTECTION — Step 8 filter (luis → gort → eadhadh)
+# ═══════════════════════════════════════════════════════════════════════════════
+
+## Filters applied effects through active ogham protections.
+## Returns the filtered effects array (new array, does not mutate input).
+## active_ogham: the currently active ogham key (e.g. "luis")
+## applied_effects: array of {"code": String, "amount": int, ...} dicts
+static func apply_ogham_protection(applied_effects: Array, active_ogham: String) -> Array:
+	if active_ogham.is_empty():
+		return applied_effects.duplicate()
+	var ogham_spec: Dictionary = MerlinConstants.OGHAM_FULL_SPECS.get(active_ogham, {})
+	var effect_name: String = str(ogham_spec.get("effect", ""))
+	var result: Array = applied_effects.duplicate(true)
+
+	match effect_name:
+		"block_first_negative":
+			# luis: remove the first negative effect
+			for i in range(result.size()):
+				if _is_negative_effect(result[i]):
+					result.remove_at(i)
+					break
+		"reduce_high_damage":
+			# gort: reduce any DAMAGE_LIFE > threshold to reduced_to
+			var params: Dictionary = ogham_spec.get("effect_params", {})
+			var threshold: int = int(params.get("threshold", 10))
+			var reduced_to: int = int(params.get("reduced_to", 5))
+			for i in range(result.size()):
+				var eff: Dictionary = result[i]
+				if str(eff.get("code", "")) == "DAMAGE_LIFE" and int(eff.get("amount", 0)) > threshold:
+					var updated: Dictionary = eff.duplicate()
+					updated["amount"] = reduced_to
+					result[i] = updated
+					break  # 1 instance only
+		"cancel_all_negatives":
+			# eadhadh: remove ALL negative effects
+			var filtered: Array = []
+			for eff in result:
+				if not _is_negative_effect(eff):
+					filtered.append(eff)
+			result = filtered
+
+	return result
+
+
+static func _is_negative_effect(effect: Dictionary) -> bool:
+	var code: String = str(effect.get("code", ""))
+	if code == "DAMAGE_LIFE":
+		return true
+	if code == "ADD_REPUTATION" and int(effect.get("amount", 0)) < 0:
+		return true
+	return false
+
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# OGHAM ACTIVATION — Step 3 dispatcher (before choice)
+# Returns a result dict with what happened
+# ═══════════════════════════════════════════════════════════════════════════════
+
+func activate_ogham(ogham_key: String, state: Dictionary, card: Dictionary) -> Dictionary:
+	var spec: Dictionary = MerlinConstants.OGHAM_FULL_SPECS.get(ogham_key, {})
+	if spec.is_empty():
+		return {"ok": false, "reason": "unknown_ogham"}
+	var effect_name: String = str(spec.get("effect", ""))
+	var params: Dictionary = spec.get("effect_params", {})
+	var result: Dictionary = {"ok": true, "ogham": ogham_key, "effect": effect_name}
+
+	match effect_name:
+		# ── REVEAL (step 3, before choice) ──
+		"reveal_one_option":
+			result["action"] = "reveal"
+			result["reveal_count"] = 1
+		"reveal_all_options":
+			result["action"] = "reveal"
+			result["reveal_count"] = 3
+		"predict_next":
+			result["action"] = "predict"
+
+		# ── BOOST (step 3, immediate) ──
+		"heal_immediate":
+			var amount: int = int(params.get("amount", 0))
+			amount = cap_effect("HEAL_LIFE", amount)
+			_apply_life_delta(state, amount)
+			result["action"] = "heal"
+			result["healed"] = amount
+		"double_positives":
+			result["action"] = "flag"
+			result["flag"] = "double_positives"
+		"add_biome_currency":
+			var amount: int = int(params.get("amount", 0))
+			amount = cap_effect("ADD_BIOME_CURRENCY", amount)
+			_apply_biome_currency(state, amount)
+			result["action"] = "currency"
+			result["amount"] = amount
+
+		# ── NARRATIF (step 3, modifies card) ──
+		"replace_worst_option":
+			result["action"] = "replace_worst"
+		"regenerate_all_options":
+			result["action"] = "regenerate_all"
+		"force_twist":
+			result["action"] = "flag"
+			result["flag"] = "twist_next_card"
+
+		# ── RECOVERY (step 3, immediate) ──
+		"heal_and_cost":
+			var heal: int = cap_effect("HEAL_LIFE", int(params.get("heal", 0)))
+			var cost: int = int(params.get("currency_cost", 0))
+			_apply_life_delta(state, heal)
+			_apply_biome_currency(state, -cost)
+			result["action"] = "heal_and_cost"
+			result["healed"] = heal
+			result["currency_spent"] = cost
+		"currency_and_heal":
+			var currency: int = cap_effect("ADD_BIOME_CURRENCY", int(params.get("currency", 0)))
+			var heal: int = int(params.get("heal", 0))
+			_apply_biome_currency(state, currency)
+			_apply_life_delta(state, heal)
+			result["action"] = "currency_and_heal"
+			result["currency_gained"] = currency
+			result["healed"] = heal
+
+		# ── SPECIAL ──
+		"invert_effects":
+			result["action"] = "flag"
+			result["flag"] = "invert_effects"
+		"full_reroll":
+			result["action"] = "reroll_card"
+		"sacrifice_trade":
+			var life_cost: int = int(params.get("life_cost", 15))
+			var currency_gain: int = int(params.get("currency_gain", 20))
+			_apply_life_delta(state, -life_cost)
+			_apply_biome_currency(state, currency_gain)
+			result["action"] = "sacrifice"
+			result["life_spent"] = life_cost
+			result["currency_gained"] = currency_gain
+			result["flag"] = "score_buff_1.3"
+
+		# ── PROTECTION (handled in step 8, not step 3) ──
+		"block_first_negative", "reduce_high_damage", "cancel_all_negatives":
+			result["action"] = "protection_active"
+
+		_:
+			result["ok"] = false
+			result["reason"] = "unhandled_effect: %s" % effect_name
+
+	return result
+
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# VERB DETECTION — Map narrative verb to champ lexical
+# ═══════════════════════════════════════════════════════════════════════════════
+
+static func detect_field_from_verb(verb: String) -> String:
+	var lower_verb: String = verb.to_lower().strip_edges()
+	for field in MerlinConstants.ACTION_VERBS:
+		var verbs: Array = MerlinConstants.ACTION_VERBS[field]
+		for v in verbs:
+			if lower_verb.contains(str(v)):
+				return field
+	return MerlinConstants.ACTION_VERB_FALLBACK_FIELD
+
+
+static func pick_minigame_for_field(field: String) -> String:
+	var minigames: Array = MerlinConstants.FIELD_MINIGAMES.get(field, [])
+	if minigames.is_empty():
+		return "apaisement"  # safe fallback
+	return str(minigames[randi() % minigames.size()])
