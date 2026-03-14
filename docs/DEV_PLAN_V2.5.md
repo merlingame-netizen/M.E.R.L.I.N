@@ -21,6 +21,43 @@
 | `scripts/merlin/merlin_effect_engine.gd` | LEGACY_GAUGE_EFFECTS const (l.122-128): ADD_GAUGE, REMOVE_GAUGE, MODIFY_BOND | Supprimer dead entries, keep QUEUE_CARD/TRIGGER_ARC in VALID_CODES |
 | `scripts/merlin/merlin_llm_adapter.gd` | TRIADE_GRAMMAR_PATH (l.106), VALID_GAUGES (l.133), MAX_GAUGE_DELTA/MIN_GAUGE_DELTA (l.135-136), bestiole_bond in prompt (l.220) | Supprimer |
 | `scripts/merlin/merlin_biome_system.gd` | aspect refs "Corps"/"Ame"/"Monde" in passive effects (l.44, 59, 74, 89) | Remplacer par faction_bias |
+| `scripts/game_manager.gd` | signal bestiole_updated, var bestiole dict, heal_bestiole(), damage_bestiole(), change_bestiole_type(), bestiole reset in run start | Supprimer |
+| `scripts/autoload/merlin_visual.gd` | Palette entries "souffle", "souffle_full", "bestiole". GBC dead entries. CRT_ASPECT_COLORS Triade section | Supprimer |
+| `scripts/Calendar.gd` | REROLL_AWEN_COST, awen references | Supprimer ou remplacer par monnaie biome |
+| `scripts/Collection.gd` | bestiole refs, TRIADE_VICTORY_ENDINGS | Remplacer par fins bible v2.4 |
+| `scripts/HubAntre.gd` | _typology_panel, _show_typology_panel(), _on_typology_selected() | Supprimer typology UI |
+| `scripts/ui/merlin_game_ui.gd` | _typology_timer_bar, _typology_badge, typology functions | Supprimer |
+
+### Fichiers a supprimer entierement (dead system files)
+
+| Fichier | Systeme | Lignes |
+|---------|---------|:---:|
+| `scripts/ui/hub_souffle_bar.gd` | Souffle | ~80 |
+| `scripts/ui/hub_triade_hud.gd` | Triade HUD | ~100 |
+| `scripts/ui/bestiole_sprite.gd` | Bestiole | ~60 |
+| `scripts/ui/bestiole_wheel_system.gd` | Bestiole | ~150 |
+| `scripts/ui/bestiole_creature.gd` | Bestiole | ~80 |
+| `scripts/ui/pixel_bestiole_fox.gd` | Bestiole | ~60 |
+| `scripts/minigames/mg_de_du_destin.gd` | D20 dice | ~100 |
+
+> Note: verifier l'existence de ces fichiers avant suppression — certains ont pu etre supprimes dans des sessions anterieures.
+
+### TRIADE_ action dispatch rename (store + tous callers)
+
+Renommer dans `merlin_store.gd` et TOUS les fichiers appelants :
+- `TRIADE_START_RUN` → `START_RUN`
+- `TRIADE_GET_CARD` → `GET_CARD`
+- `TRIADE_RESOLVE_CHOICE` → `RESOLVE_CHOICE`
+- `TRIADE_END_RUN` → `END_RUN`
+- `TRIADE_DAMAGE_LIFE` → `DAMAGE_LIFE`
+- `TRIADE_HEAL_LIFE` → `HEAL_LIFE`
+- `TRIADE_GENERATE_MAP` → `GENERATE_MAP`
+- `TRIADE_SELECT_NODE` → `SELECT_NODE`
+- `TRIADE_PROGRESS_MISSION` → `PROGRESS_MISSION`
+- `TRIADE_USE_SKILL` → `USE_SKILL`
+- `TRIADE_APPLY_EFFECTS` → `APPLY_EFFECTS`
+
+Fichiers callers : `merlin_game_controller.gd`, `test_merlin_store.gd`, `test_llm_full_run.gd`, `test_llm_benchmark_run.gd`, `test_llm_intelligence.gd`, `auto_play_runner.gd`, `game_debug_server.gd`
 
 ### Acceptance Criteria
 - [ ] `.\validate.bat` : 0 errors, 0 warnings
@@ -37,7 +74,22 @@
 
 **Objectif** : Toutes les constantes du jeu alignees sur la bible v2.4. Source de verite code.
 
-### 1A. Oghams (18)
+### 1A. Oghams (18) — CRITICAL: effet specs code ≠ bible
+
+> **ATTENTION** : Le code actuel (`OGHAM_FULL_SPECS`) a des effets qui ne correspondent PAS a la bible v2.4.
+> La Phase 1 DOIT corriger ces divergences.
+
+| Ogham | Effet ACTUEL (code) | Effet BIBLE v2.4 | Action |
+|-------|-------------------|------------------|--------|
+| `duir` | `force_equilibre` | **Soin immediat +12 PV** | Changer → `heal_immediate`, amount: 12 |
+| `onn` | `heal_life` (15 PV) | **+10 monnaie biome** | Changer → `add_biome_currency`, amount: 10 |
+| `nuin` | `add_option` (4e) | **Remplace la pire option** | Changer → `replace_worst_option` |
+| `quert` | `heal_worst` | **Soin +8 PV** | Changer → `heal_immediate`, amount: 8 |
+| `ruis` | `balance_all` | **+18 PV, -5 monnaie biome** | Changer → `heal_and_cost` |
+| `saille` | `reduce_cooldowns` | **+8 monnaie, +3 PV** | Changer → `currency_and_heal` |
+| `ur` | `sacrifice_trade` | **-15 PV, +20 monnaie, buff x1.3** | Verifier params |
+
+Les autres Oghams (beith, coll, ailm, luis, gort, eadhadh, tinne, huath, straif, muin, ioho) ont des effets conceptuellement corrects mais les noms d'effet doivent etre standardises.
 
 ```gdscript
 const OGHAMS: Dictionary = {
