@@ -476,7 +476,72 @@ Le texte de chaque carte est analyse pour detecter des **verbes d'action** (45 v
 | 80-94 | Reussite | x1.0 (+2 Anam bonus) | x0 |
 | 95-100 | Reussite critique | x1.5 + bonus special | x0 |
 
-### 25 implementations de minigames
+### Minigames — Mecaniques exactes
+
+#### Pile ou Face (Chance)
+- **Tours**: 3 + (difficulte-1)/3 = 3-6 tours
+- **Controles**: Bouton "PILE" ou "FACE"
+- **Score**: (predictions correctes / total tours) x 100
+
+#### Apaisement (Esprit)
+- **Beats**: 5 beats
+- **Intervalle**: 1.8 - (difficulte x 0.08), min 0.9s
+- **Controles**: ESPACE quand le pouls est au pic (onde sinusoidale, phase 0.5)
+- **Score**: (beats touches / 5) x 100
+
+#### Meditation (Esprit)
+- **Duree**: 7.0 - (difficulte x 0.15), min 4.0s
+- **Arene**: 250x250 px, zone centre rayon 20%
+- **Curseur**: 16x16 px, derive aleatoirement, maintenir ESPACE pour recentrer
+- **Derive**: Vitesse 0.1 + (difficulte x 0.025)
+- **Score**: (temps dans zone / temps max) x 100
+
+#### Oeil du Corbeau (Observation)
+- **Grille**: 3x3 (9 symboles Unicode: triangle, rond, carre, etoile...)
+- **Temps**: 5.0 - (difficulte x 0.3), min 2.0s
+- **Tache**: Cliquer le symbole different
+- **Score**: (temps restant / temps max) x 100
+
+#### Pierre Feuille Racine (Logique)
+- **Tours**: 3
+- **Regles**: Pierre > Racine > Feuille > Pierre
+- **Controles**: Q=Pierre, W=Feuille, E=Racine
+- **IA**: Aleatoire (faible diff), strategique (haute diff)
+- **Score**: (victoires joueur / 3) x 100
+
+#### Negociation (Bluff)
+- **Sweet spot**: Aleatoire 30-70
+- **Tentatives**: 2
+- **Controles**: Slider 0-100 + bouton confirmer
+- **Score**: 100 - (|valeur - sweet_spot| x 1.5), clamp 0-100. Meilleur des 2.
+
+#### Course Druidique (Vigueur)
+- **Taps requis**: 15 + (difficulte x 3)
+- **Temps**: 6.0 - (difficulte x 0.2), min 3.0s
+- **Controles**: Spam ESPACE
+- **Score**: (taps / requis) x 100
+
+#### Enigme d'Ogham (Logique)
+- **Patterns**: Repeter, Alterner, Ascendant, Descendant (gate par difficulte)
+- **Controles**: QCM (3 options)
+- **Score**: 100 si correct, 0 sinon
+
+#### Roue de Fortune (Chance)
+- **Segments**: 8 avec scores [100, 100, 75, 75, 50, 50, 20, 0]
+- **Mauvais segments**: 1 + (difficulte/3) ajoutes en difficulte haute
+- **Controles**: Bouton/ESPACE pour arreter
+- **Score**: Valeur du segment d'arret
+
+### Formule difficulte minigame
+```
+base_threshold = 0.5 + (5 - difficulty) x 0.05
+  Diff 1: 0.70 (facile)
+  Diff 5: 0.50
+  Diff 10: 0.25 (tres dur)
+threshold = clamp(base_threshold + bonus, 0.05, 0.95)
+```
+
+### 25 fichiers d'implementation
 `mg_apaisement.gd`, `mg_bluff_druide.gd`, `mg_combat_rituel.gd`, `mg_course.gd`, `mg_echo.gd`, `mg_enigme_ogham.gd`, `mg_joute_verbale.gd`, `mg_lame_druide.gd`, `mg_meditation.gd`, `mg_negociation.gd`, `mg_noeud_celtique.gd`, `mg_oeil_corbeau.gd`, `mg_ombres.gd`, `mg_pas_renard.gd`, `mg_pierre_feuille_racine.gd`, `mg_pile_ou_face.gd`, `mg_traces.gd`, `mg_runes.gd`, `mg_herboristerie.gd`, `mg_fouille.gd`, `mg_volonte.gd`, `mg_regard.gd`, `mg_sang_froid.gd`, + variantes
 
 ---
@@ -1067,6 +1132,13 @@ La difficulte depend du **contexte narratif**, PAS de la performance du joueur.
 - Modele: Qwen 3.5 (via LoRA fine-tune)
 - Timeout: 300s (genereux pour inference CPU)
 - Max retries: 2
+
+### Contrat LLM (parametres generation)
+- max_tokens: 180
+- temperature: 0.65
+- top_p: 0.88
+- top_k: 35
+- repetition_penalty: 1.4
 
 ### RAG v3.0 — Contexte prioritise
 1. 5-10 dernières cartes
