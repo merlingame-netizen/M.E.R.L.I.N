@@ -274,7 +274,7 @@ func _build_llm_context() -> Dictionary:
 		"day": run.get("day", 1),
 		"season": run.get("season", "automne"),
 		"tension": float(run.get("tension", 20)),
-		"life": int(run.get("life_essence", MerlinConstants.LIFE_ESSENCE_START)),
+		"life_essence": int(run.get("life_essence", MerlinConstants.LIFE_ESSENCE_START)),
 		"cards_played": _cards_played,
 		"story_log": _story_log,
 		"tags": run.get("tags", []),
