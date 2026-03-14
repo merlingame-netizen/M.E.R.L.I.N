@@ -275,10 +275,8 @@ func _build_llm_context() -> Dictionary:
 		"day": run.get("day", 1),
 		"season": run.get("season", "automne"),
 		"aspects": aspects,
-		"souffle": run.get("souffle", 3),
-		"karma": run.get("karma", 0),
-		"tension": run.get("tension", 20),
-		"life": run.get("life", 100),
+		"tension": float(run.get("tension", 20)),
+		"life": int(run.get("life_essence", MerlinConstants.LIFE_ESSENCE_START)),
 		"cards_played": _cards_played,
 		"story_log": _story_log,
 		"tags": run.get("tags", []),
@@ -368,8 +366,7 @@ func _init_hud() -> void:
 	if not _hud or not _store:
 		return
 	var run: Dictionary = _store.state.get("run", {})
-	_hud.update_pv(int(run.get("life", 100)), 100)
-	_hud.update_souffle(int(run.get("souffle", 3)))
+	_hud.update_pv(int(run.get("life_essence", MerlinConstants.LIFE_ESSENCE_START)), int(run.get("life_max", MerlinConstants.LIFE_ESSENCE_MAX)))
 	var meta: Dictionary = _store.state.get("meta", {})
 	_hud.update_essences(int(meta.get("essences", 0)))
 
@@ -378,7 +375,7 @@ func _update_hud() -> void:
 	if not _hud or not _store:
 		return
 	var run: Dictionary = _store.state.get("run", {})
-	_hud.update_pv(int(run.get("life", 100)), 100)
+	_hud.update_pv(int(run.get("life_essence", MerlinConstants.LIFE_ESSENCE_START)), int(run.get("life_max", MerlinConstants.LIFE_ESSENCE_MAX)))
 	_hud.update_souffle(int(run.get("souffle", 3)))
 	var meta: Dictionary = _store.state.get("meta", {})
 	_hud.update_essences(int(meta.get("essences", 0)))
@@ -392,7 +389,7 @@ func _check_run_end() -> void:
 	if not _store:
 		return
 	var run: Dictionary = _store.state.get("run", {})
-	var life: int = int(run.get("life", 100))
+	var life: int = int(run.get("life_essence", MerlinConstants.LIFE_ESSENCE_START))
 	if life <= 0:
 		_run_active = false
 		print("[WalkEventController] Run ended: life depleted")

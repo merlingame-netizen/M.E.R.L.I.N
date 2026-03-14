@@ -100,7 +100,7 @@ func stop_run(reason: String) -> void:
 
 	var data: Dictionary = {
 		"card_index": int(_run_state.get("card_index", 0)),
-		"life": int(_run_state.get("life", 0)),
+		"life_essence": int(_run_state.get("life_essence", 0)),
 		"biome": str(_run_state.get("biome", "")),
 		"biome_currency": int(_run_state.get("biome_currency", 0)),
 		"promises": _run_state.get("active_promises", []),

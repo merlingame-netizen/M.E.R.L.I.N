@@ -2373,7 +2373,7 @@ func orchestrate_card(context: Dictionary) -> Dictionary:
 # ═══════════════════════════════════════════════════════════════════════════════
 
 func calculate_tension(state: Dictionary) -> float:
-	var life: int = int(state.get("life", 100))
+	var life: int = int(state.get("life_essence", 100))
 	var life_max: int = int(state.get("life_max", 100))
 	var active_promises: Array = state.get("active_promises", [])
 	var card_index: int = int(state.get("card_index", 0))
@@ -2413,7 +2413,7 @@ func calculate_tension(state: Dictionary) -> float:
 
 func apply_pacing(state: Dictionary) -> Dictionary:
 	var result: Dictionary = state.duplicate(true)
-	var life: int = int(state.get("life", 100))
+	var life: int = int(state.get("life_essence", 100))
 	var stats_dict: Dictionary = state.get("stats", {})
 	var consecutive_deaths: int = int(stats_dict.get("consecutive_deaths", 0))
 
@@ -2454,7 +2454,7 @@ func apply_pacing_to_card(state: Dictionary, card: Dictionary) -> Dictionary:
 
 func get_merlin_voice(context: Dictionary) -> String:
 	var trust: int = int(context.get("trust_merlin", 0))
-	var life: int = int(context.get("life", 100))
+	var life: int = int(context.get("life_essence", 100))
 	var tension: float = calculate_tension(context)
 
 	# Override: life critical → melancolie

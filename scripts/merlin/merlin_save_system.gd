@@ -50,7 +50,7 @@ static func _get_default_run_state() -> Dictionary:
 	return {
 		"biome": "foret_broceliande",
 		"card_index": 0,
-		"life": MerlinConstants.LIFE_ESSENCE_START,
+		"life_essence": MerlinConstants.LIFE_ESSENCE_START,
 		"life_max": MerlinConstants.LIFE_ESSENCE_MAX,
 		"biome_currency": 0,
 		"equipped_oghams": ["beith"],

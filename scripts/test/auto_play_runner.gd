@@ -585,7 +585,7 @@ func _export_json_results(outcomes: Dictionary, total_outcomes: int) -> void:
 	var final_karma: int = 0
 	var ending_type: String = "unknown"
 	if _store:
-		final_life = int(_store.state.get("run", {}).get("life", 0))
+		final_life = int(_store.state.get("run", {}).get("life_essence", 0))
 		final_souffle = int(_store.state.get("run", {}).get("souffle", 0))
 		final_karma = int(_store.state.get("run", {}).get("karma", 0))
 		ending_type = str(_store.state.get("run", {}).get("ending", "survived"))
