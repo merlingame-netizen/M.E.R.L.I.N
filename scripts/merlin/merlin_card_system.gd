@@ -104,15 +104,21 @@ func generate_card(context: Dictionary) -> Dictionary:
 		"event":
 			var event_card: Dictionary = _generate_event_card(context)
 			if not event_card.is_empty():
-				return _ensure_3_options(event_card)
+				var final: Dictionary = _ensure_3_options(event_card)
+				_annotate_fields(final)
+				return final
 		"promise":
 			var promise_card: Dictionary = _generate_promise_card(context)
 			if not promise_card.is_empty():
-				return _ensure_3_options(promise_card)
+				var final: Dictionary = _ensure_3_options(promise_card)
+				_annotate_fields(final)
+				return final
 		"merlin_direct":
 			var md_card: Dictionary = _generate_merlin_direct_card(context)
 			if not md_card.is_empty():
-				return _ensure_3_options(md_card)
+				var final: Dictionary = _ensure_3_options(md_card)
+				_annotate_fields(final)
+				return final
 
 	# Narrative: try LLM first
 	if _llm != null:
@@ -530,9 +536,12 @@ func resolve_card(run_state: Dictionary, card: Dictionary, option_index: int, sc
 	# Process CREATE_PROMISE effects
 	for eff in applied:
 		if str(eff.get("type", "")) == "CREATE_PROMISE":
-			var promise_data: Dictionary = _find_promise_data(str(eff.get("promise_id", "")))
+			var pid: String = str(eff.get("promise_id", ""))
+			var promise_data: Dictionary = _find_promise_data(pid)
 			if not promise_data.is_empty():
 				create_promise(run_state, promise_data)
+			else:
+				rejected.append({"type": "CREATE_PROMISE", "promise_id": pid, "reason": "promise_not_found"})
 
 	# Update card tracking
 	run_state["card_index"] = int(run_state.get("card_index", 0)) + 1
@@ -856,4 +865,5 @@ func _randf() -> float:
 func _randi_range(from: int, to: int) -> int:
 	if _rng:
 		return _rng.randi_range(from, to)
-	return randi() % (to - from + 1) + from
+	# Fallback: use randf to avoid modulo bias
+	return from + int(randf() * float(to - from + 1)) % (to - from + 1)
