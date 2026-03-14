@@ -1407,10 +1407,12 @@ func calculate_run_rewards(run_data: Dictionary) -> Dictionary:
 		if float(faction_rep[faction]) >= 80.0:
 			anam += MerlinConstants.ANAM_FACTION_HONORE
 
-	# Partial: death before 25 cards = /4
+	# Death/abandon: Anam × min(cards/30, 1.0) — bible v2.4 s.2.4
 	var cards_played: int = int(run_data.get("cards_played", 0))
-	if not is_victory and cards_played < MerlinConstants.MIN_CARDS_FOR_VICTORY:
-		anam = int(anam / 4.0)
+	if not is_victory:
+		var death_cap: int = int(MerlinConstants.ANAM_REWARDS.get("death_cap_cards", 30))
+		var ratio: float = minf(float(cards_played) / float(death_cap), 1.0)
+		anam = int(float(anam) * ratio)
 
 	# Talent modifiers
 	if _get_talent_modifier("double_anam_rewards"):
@@ -1427,9 +1429,158 @@ func calculate_run_rewards(run_data: Dictionary) -> Dictionary:
 
 func apply_run_rewards(rewards: Dictionary) -> void:
 	var meta: Dictionary = state.get("meta", {})
-	meta["anam"] = int(meta.get("anam", 0)) + int(rewards.get("anam", 0))
+	var anam_earned: int = int(rewards.get("anam", 0))
+	meta["anam"] = int(meta.get("anam", 0)) + anam_earned
+	meta["total_runs"] = int(meta.get("total_runs", 0)) + 1
+	# Update stats
+	var stats: Dictionary = meta.get("stats", {})
+	stats["total_anam_earned"] = int(stats.get("total_anam_earned", 0)) + anam_earned
+	stats["total_cards"] = int(stats.get("total_cards", 0)) + int(rewards.get("cards_played", 0))
+	stats["total_minigames_won"] = int(stats.get("total_minigames_won", 0)) + int(rewards.get("minigames_won", 0))
+	if not bool(rewards.get("victory", false)):
+		stats["total_deaths"] = int(stats.get("total_deaths", 0)) + 1
+		stats["consecutive_deaths"] = int(stats.get("consecutive_deaths", 0)) + 1
+	else:
+		stats["consecutive_deaths"] = 0
+	meta["stats"] = stats
+	# Update biome_runs
+	var biome: String = str(rewards.get("biome", ""))
+	if not biome.is_empty():
+		var biome_runs: Dictionary = meta.get("biome_runs", {})
+		biome_runs[biome] = int(biome_runs.get(biome, 0)) + 1
+		meta["biome_runs"] = biome_runs
 	state["meta"] = meta
 	save_system.save_profile(meta)
 	state_changed.emit(state)
+
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# MATURITY SCORE — Biome unlock progression (bible v2.4 s.5.1)
+# ═══════════════════════════════════════════════════════════════════════════════
+
+func calculate_maturity_score() -> int:
+	var meta: Dictionary = state.get("meta", {})
+	var weights: Dictionary = MerlinConstants.MATURITY_WEIGHTS
+	var score: int = 0
+	score += int(meta.get("total_runs", 0)) * int(weights.get("total_runs", 2))
+	score += meta.get("endings_seen", []).size() * int(weights.get("fins_vues", 5))
+	score += meta.get("oghams", {}).get("owned", []).size() * int(weights.get("oghams_debloques", 3))
+	# max_faction_rep = MAX across all 5 factions (single highest, not sum)
+	var faction_rep: Dictionary = meta.get("faction_rep", {})
+	var max_rep: float = 0.0
+	for faction in faction_rep:
+		max_rep = maxf(max_rep, float(faction_rep[faction]))
+	score += int(max_rep) * int(weights.get("max_faction_rep", 1))
+	return score
+
+
+func can_unlock_biome(biome_id: String) -> bool:
+	var threshold: int = int(MerlinConstants.BIOME_MATURITY_THRESHOLDS.get(biome_id, 999))
+	return calculate_maturity_score() >= threshold
+
+
+func get_unlockable_biomes() -> Array:
+	var result: Array = []
+	for biome_id in MerlinConstants.BIOME_MATURITY_THRESHOLDS:
+		if can_unlock_biome(biome_id):
+			result.append(biome_id)
+	return result
+
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# TRUST MERLIN — Confiance joueur ↔ Merlin (bible v2.4 s.6.3)
+# ═══════════════════════════════════════════════════════════════════════════════
+
+func update_trust_merlin(delta: int) -> void:
+	var meta: Dictionary = state.get("meta", {})
+	var current: int = int(meta.get("trust_merlin", 0))
+	meta["trust_merlin"] = clampi(current + delta, 0, 100)
+	state["meta"] = meta
+	state_changed.emit(state)
+
+
+func get_trust_tier() -> String:
+	var trust: int = int(state.get("meta", {}).get("trust_merlin", 0))
+	for tier_key in MerlinConstants.TRUST_TIERS:
+		var tier: Dictionary = MerlinConstants.TRUST_TIERS[tier_key]
+		if trust >= int(tier.get("range_min", 0)) and trust <= int(tier.get("range_max", 100)):
+			return tier_key
+	return "T0"
+
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# OGHAM ECONOMY — Cost with discovery discount (bible v2.4 s.2.2)
+# ═══════════════════════════════════════════════════════════════════════════════
+
+func get_ogham_cost(ogham_id: String) -> int:
+	var spec: Dictionary = MerlinConstants.OGHAM_FULL_SPECS.get(ogham_id, {})
+	var base_cost: int = int(spec.get("cost_anam", 0))
+	var discounts: Dictionary = state.get("meta", {}).get("ogham_discounts", {})
+	if discounts.has(ogham_id):
+		return int(discounts[ogham_id])
+	return base_cost
+
+
+func apply_ogham_discount(ogham_id: String) -> void:
+	var spec: Dictionary = MerlinConstants.OGHAM_FULL_SPECS.get(ogham_id, {})
+	var base_cost: int = int(spec.get("cost_anam", 0))
+	var meta: Dictionary = state.get("meta", {})
+	var discounts: Dictionary = meta.get("ogham_discounts", {})
+	discounts[ogham_id] = int(float(base_cost) * 0.5)
+	meta["ogham_discounts"] = discounts
+	state["meta"] = meta
+
+
+func buy_ogham(ogham_id: String) -> Dictionary:
+	var meta: Dictionary = state.get("meta", {})
+	var oghams: Dictionary = meta.get("oghams", {})
+	var owned: Array = oghams.get("owned", [])
+	if owned.has(ogham_id):
+		return {"ok": false, "error": "already_owned"}
+	var cost: int = get_ogham_cost(ogham_id)
+	var anam: int = int(meta.get("anam", 0))
+	if anam < cost:
+		return {"ok": false, "error": "insufficient_anam"}
+	meta["anam"] = anam - cost
+	owned.append(ogham_id)
+	oghams["owned"] = owned
+	meta["oghams"] = oghams
+	state["meta"] = meta
+	save_system.save_profile(meta)
+	state_changed.emit(state)
+	return {"ok": true, "ogham_id": ogham_id, "cost": cost}
+
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# IN-GAME PERIODS — Time-of-day faction bonus (bible v2.4 s.6.4)
+# ═══════════════════════════════════════════════════════════════════════════════
+
+static func get_period(card_index: int) -> String:
+	for period_key in MerlinConstants.IN_GAME_PERIODS:
+		var period: Dictionary = MerlinConstants.IN_GAME_PERIODS[period_key]
+		if card_index >= int(period.get("cards_min", 0)) and card_index <= int(period.get("cards_max", 0)):
+			return period_key
+	return "nuit"  # beyond card 20 = nuit
+
+
+static func get_period_bonus(card_index: int, faction: String) -> float:
+	var period_key: String = get_period(card_index)
+	var period: Dictionary = MerlinConstants.IN_GAME_PERIODS.get(period_key, {})
+	var factions: Array = period.get("factions", [])
+	if factions.has(faction):
+		return float(period.get("bonus", 0.0))
+	return 0.0
+
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# BIOME AFFINITY — Ogham bonus in matching biome (bible v2.4 s.2.2)
+# ═══════════════════════════════════════════════════════════════════════════════
+
+static func get_biome_affinity_bonus(biome_id: String, ogham_id: String) -> Dictionary:
+	var biome: Dictionary = MerlinConstants.BIOMES.get(biome_id, {})
+	var affinity_list: Array = biome.get("oghams_affinity", [])
+	if affinity_list.has(ogham_id):
+		return {"score_bonus": 0.10, "cooldown_reduction": 1}
+	return {"score_bonus": 0.0, "cooldown_reduction": 0}
 
 
