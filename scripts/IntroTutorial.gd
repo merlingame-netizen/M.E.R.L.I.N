@@ -50,7 +50,7 @@ const LORE_BEATS: Array[Dictionary] = [
 	{
 		"header": "LES OGHAMS",
 		"lines": [
-			"Ta Bestiole possede des Oghams — des runes anciennes.",
+			"Tu decouvriras des Oghams — des runes anciennes aux pouvoirs oublies.",
 			"Chaque Ogham debloqu\u00e9 ouvre de nouvelles possibilites.",
 			"Les 18 Oghams sont des clefs. Tu les trouveras.",
 		],
