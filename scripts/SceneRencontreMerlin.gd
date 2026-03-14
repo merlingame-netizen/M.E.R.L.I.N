@@ -44,7 +44,7 @@ const CLASS_TO_BIOME := {
 # ═══════════════════════════════════════════════════════════════════════════════
 
 enum Phase {
-	LLM_INTRO,          # Merged: Intro + Bestiole/Ogham + Mission (single flow)
+	LLM_INTRO,          # Merged: Intro + Ogham reveal + Mission (single flow)
 	TRANSITIONING,      # Exit to HubAntre
 }
 
@@ -467,7 +467,7 @@ func _run_phase(phase: Phase) -> void:
 		Phase.LLM_INTRO:
 			_set_merlin_scene_context("scene_rencontre_merlin", {
 				"phase": "llm_intro",
-				"must_reference": ["Bestiole", "Oghams"]
+				"must_reference": ["Oghams", "Factions"]
 			})
 			await _phase_llm_intro()
 		Phase.TRANSITIONING:
@@ -506,7 +506,7 @@ func _phase_llm_intro() -> void:
 		await _show_text(intro_text)
 	else:
 		_update_dialogue_badge("static")
-		await _show_text("Bienvenue a Broceliande, voyageur. Oghams, Bestiole et aventure t'attendent.")
+		await _show_text("Bienvenue a Broceliande, voyageur. Oghams, factions et aventure t'attendent.")
 	if not is_inside_tree():
 		return
 
