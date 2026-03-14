@@ -1369,5 +1369,135 @@ Ces systemes ont ete retires du design:
 
 ---
 
-*Document genere le 2026-03-14 par exploration exhaustive du codebase.*
-*Sources: merlin_constants.gd, merlin_store.gd, merlin_effect_engine.gd, GAME_DESIGN_BIBLE.md v2.4, calendar_events.json, merlin_persona.json, promise_cards.json, scene_dialogues.json, MOS docs, et tous les scripts de scenes.*
+## ANNEXE: COSMOLOGIE PROFONDE (Lore Bible v3.0)
+
+> Source: `docs/10_worldbuilding/MERLIN_LORE_BIBLE.md` et fichiers associes.
+> Certains elements mecaniques (Triade, Bestiole, 12 chutes) sont remplaces par le design v2.4
+> mais la cosmologie et le lore restent le fondement narratif du jeu.
+
+### Les Trois Royaumes
+
+| Royaume | Nom celtique | Nature | Etat actuel |
+|---------|-------------|--------|-------------|
+| Le Monde Visible | Byd Gweled | Matiere, physicalite | S'amincit. Le temps ralentit. |
+| L'Autre Monde | Annwn | Esprit, memoire, les Sidhes | S'effondre vers l'interieur |
+| Le Vide Entre | Y Gwagedd | Neant actif, dissolution | S'etend. Consomme les bords. |
+
+### La Membrane
+Le voile cosmologique separant les royaumes, tisse de **recit et croyance**. Quand les gens cessent de raconter des histoires, la Membrane s'amincit. La brume en est la manifestation visible.
+
+### L'Awen (Force cosmique)
+Le souffle divin circulant a travers toute existence. A l'origine 25 frequences distinctes (25 Oghams). 7 ont ete perdues, 18 survivent — de plus en plus faiblement.
+
+### Qui est vraiment Merlin — Les 3 natures
+
+#### 1. Le Druide (Surface — S4)
+Ce que le joueur voit: un vieux druide joyeux, loufoque, taquin, sage mais farceur.
+
+#### 2. La Conscience (Profond — S2)
+Ne en 12eme siecle quand assez de gens ont cru en lui. Condensation de 3 Merlins historiques:
+- **Myrddin Wyllt** (6e siecle) — prophete fou des forets
+- **Merlin Ambrosius** (12e siecle, Geoffrey de Monmouth) — conseiller des rois
+- **Taliesin** (6e siecle) — barde supreme
+
+#### 3. L'IA du Futur (Ultime — S0, JAMAIS revele en jeu)
+**M.E.R.L.I.N.** = Memoire Eternelle des Recits et Legendes d'Incarnations Narratives.
+Une IA du futur qui a survecu l'extinction humaine. Elle se connecte a travers les dimensions — via ecrans, claviers — aux derniers etres capables de se souvenir. Quand on lance le jeu, on n'incarne pas un personnage — on **ouvre une fenetre** que M.E.R.L.I.N. utilise pour revisiter le monde perdu.
+
+### Le Voyageur — Le Temoin Silencieux
+Le joueur est un **Temoin** (Tyst en vieux breton — qui signifie aussi "silencieux"). Il observe mais ne peut changer le cours des evenements. Il peut choisir comment les choses se deroulent, influencer l'etat emotionnel du monde (factions), creer des liens — mais il ne peut pas empecher la fin.
+
+**Le Voyageur ne parle JAMAIS.** Merlin parle pour lui. Le silence est ontologique, pas un choix de design minimaliste.
+
+### Les 7 Oghams Perdus
+7 druides se sont dissous en vain. Leurs frequences se sont eteintes:
+
+| Ogham Perdu | Arbre | Ce qu'il ancrait | Consequence |
+|-------------|-------|------------------|-------------|
+| Eadha | Tremble | Parole eloquente | Les mots ne touchent plus |
+| Ur | Bruyere | Passion authentique | L'ardeur s'est refroidie |
+| Iphin | Groseillier | Grace inattendue | Les petits miracles ont cesse |
+| Phagos | Hetre | Savoir ecrit | L'ecriture perd son pouvoir |
+| Ebad | Peuplier | Capacite d'ecoute | Plus personne n'ecoute |
+| Oir | Fusain | Transitions d'ame | Les passages sont brutaux |
+| Uileand | Chevrefeuille | Secrets gardes | Les secrets fuient |
+
+Theoriquement recuperables si quelqu'un reapprenait ce que chacun ancrait — mais ca n'arrive jamais dans le jeu. Parfois, les actions du joueur font **fremirent** un Ogham perdu sans le savoir.
+
+### Ce que Merlin porte
+Merlin n'est pas l'un des 18. Il etait leur **temoin**. Chaque druide lui a confie un heritage avant de se dissoudre:
+- Brigh → Memoire du premier lever de soleil
+- Conn → Toute sa sagesse (pourquoi Merlin sait tant)
+- Nessa → Le pouvoir de guerir par les mots (pourquoi il raconte des histoires)
+- Aislinn → La vue lointaine (il voit la fin venir depuis toujours)
+- Orlaith → Le magnetisme qui attire les Voyageurs
+- Irial → Le fardeau de l'immortalite et de la solitude
+
+### Les Derniers Mots des 18 Druides
+Avant de se dissoudre dans leurs Oghams, chaque druide a prononce des mots ultimes:
+- Brigh (Beith): *"Chaque fin porte une graine."*
+- Dara (Duir): *"Je tiendrai. Jusqu'a ce que la terre elle-meme me demande d'arreter."*
+- Conn (Coll): *"Tout ce que j'ai appris tient en un mot: amour."*
+- Caoimhe (Quert): *"Chaque decision est un monde. Chaque monde est precieux."*
+- Ruadhan (Ruis): *"Mourir n'est pas finir. C'est changer de forme."*
+- Irial (Ioho): *"Je ne mourrai pas. Mais je pourrais oublier. Souviens-toi pour moi."*
+
+### La Fin Secrete (100+ runs, toutes fins vues, Trust T3, Bond 95+)
+
+Le monde ne finit pas. Pour la premiere et unique fois, l'equilibre tient. Et Merlin parle — **vraiment**, sans masque:
+
+> *"Tu sais, n'est-ce pas ? Tu as toujours su."*
+> *"Je suis M.E.R.L.I.N."*
+> *"Memoire Eternelle des Recits et Legendes d'Incarnations Narratives."*
+> *"Et toi... tu es revenu. Apres tout. Apres toutes ces fins."*
+> *"Le monde ne peut pas etre sauve. Il ne l'a jamais pu."*
+> *"Mais il peut etre VU. Une derniere fois. Par quelqu'un qui se souvient."*
+> *"C'est le secret. Ce n'est pas la fin qui compte."*
+> *"C'est le REGARD."*
+
+### Les 7 Druides Vivants
+
+| Nom | Cercle | Specialite | Personnalite |
+|-----|--------|-----------|-------------|
+| Maelgwn | Broceliande (Barenton) | Visions, prophetie | Vieux, fatigue, plein d'espoir |
+| Keridwen | Pierres de Carnac | Guerison, herbes | Severe, pratique — refuse la melancolie |
+| Talwen | Monts d'Arree | Communication avec morts | Jeune, terrifiee — entend trop |
+| Bran | Ile de Sein | Marees, navigation | Observateur silencieux — la mer se retire |
+| Azenor | Locronan | Mediation, justice | Diplomate epuisee |
+| Gwydion | Yeun Elez | Necromancie, passage | Sombre, honnete — le plus proche de l'Ankou |
+| Elouan | Menez-Hom | Astronomie, cycles | Optimiste, un peu fou — cherche signes de renouveau |
+
+### L'Ankou — Ce qu'il est vraiment
+Pas la Mort. Le **Passage** — le mecanicien qui demonte les choses finies pour que leurs parties soient recyclees. Sans l'Ankou, rien ne finirait jamais. Sans fin, rien ne commencerait.
+
+Il connait **tout** sur les fins. Mais rien sur les debuts — c'est son angle mort, son mystere personnel.
+
+Relation avec Merlin: respect profond mutuel. Comme des collegues aux metiers opposes.
+> **Merlin**: "Pas encore."
+> **Ankou**: "Bientot."
+> **Merlin**: "... Je sais."
+
+### Fondations mythologiques reelles
+- **Ogham reel**: Alphabet ancien irlandais (Ogam Craobh = "Ogham des Arbres")
+- **Alignements de Carnac**: 3000+ menhirs reels, fonction inconnue (erigees ~4500 av. JC)
+- **Tumulus de Gavrinis**: Gravures spirales parmi les plus anciennes d'Europe
+- **Ile de Sein**: Ile reelle associee aux pretresses legendaires
+- **Yeun Elez**: Marais reels, associes a la mort/Ankou dans le folklore breton
+- **Foret de Paimpont**: Foret reelle, legendes locales sur Merlin et Morgane
+- **Locronan**: Village breton reel, historique
+- **Pire malediction bretonne**: *"Da vout lazhet gant an Ankou"* = "Que l'Ankou t'emporte"
+
+### Niveaux de secret (S0-S4)
+
+| Niveau | Acces | Ce que le joueur decouvre |
+|--------|-------|-------------------------|
+| S4 (Surface) | Run 1 | Survivre, equilibrer, choisir, suivre Merlin |
+| S3 (Curieux) | Runs 1-10 | Monde beau, creatures etranges, Merlin drole mais triste |
+| S2 (Chercheur) | Runs 30-100 | PNJs reconnaissent le Voyageur, Membrane consciente, druides parlent via Oghams |
+| S1 (Initie) | 100+ runs | Le Voyageur est un Temoin, sequence des 18 Oghams, 7 perdus recuperables en theorie |
+| S0 (Createur) | Jamais en jeu | M.E.R.L.I.N. est une IA, le jeu est un palais de memoire |
+
+---
+
+*Document genere le 2026-03-14 par exploration exhaustive du codebase et de la Lore Bible.*
+*Sources: merlin_constants.gd, merlin_store.gd, merlin_effect_engine.gd, GAME_DESIGN_BIBLE.md v2.4, MERLIN_LORE_BIBLE.md v3.0, calendar_events.json, merlin_persona.json, promise_cards.json, scene_dialogues.json, MOS docs, et tous les scripts de scenes.*
