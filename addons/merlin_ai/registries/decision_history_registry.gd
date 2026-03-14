@@ -55,9 +55,9 @@ const PATTERNS := {
 		"filter_tags": ["mystery", "investigate", "lore"],
 		"expected_option": 1,  # Right = investigate
 	},
-	"protects_bestiole": {
-		"filter_tags": ["bestiole_risk"],
-		"expected_option": 0,  # Left = protect
+	"favors_factions": {
+		"filter_tags": ["faction_choice"],
+		"expected_option": 0,  # Left = favor dominant faction
 	},
 	"takes_risks": {
 		"filter_tags": ["risky", "dangerous", "gamble"],
@@ -475,8 +475,8 @@ func _pattern_to_french(pattern_name: String, data: Dictionary) -> String:
 			return "Le joueur %s refuse les promesses" % conf_text
 		"seeks_mystery":
 			return "Le joueur %s explore les mysteres" % conf_text
-		"protects_bestiole":
-			return "Le joueur %s protege Bestiole" % conf_text
+		"favors_factions":
+			return "Le joueur %s favorise les factions" % conf_text
 		"takes_risks":
 			return "Le joueur %s prend des risques" % conf_text
 		"avoids_conflict":

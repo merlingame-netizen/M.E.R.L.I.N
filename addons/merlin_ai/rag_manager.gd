@@ -151,9 +151,9 @@ func get_prioritized_context(game_state: Dictionary, brain_role: String = "") ->
 	if not pattern.is_empty():
 		sections.append({"text": pattern, "priority": Priority.MEDIUM})
 
-	var bestiole := _get_bestiole_context(game_state)
-	if not bestiole.is_empty():
-		sections.append({"text": bestiole, "priority": Priority.MEDIUM})
+	var faction_ctx := _get_faction_context(game_state)
+	if not faction_ctx.is_empty():
+		sections.append({"text": faction_ctx, "priority": Priority.MEDIUM})
 
 	# Phase 44: Event category context from tag glossary
 	var event_ctx := _get_event_category_context(game_state)
@@ -323,13 +323,22 @@ func _get_player_pattern_context() -> String:
 	return "Style: " + best_pattern
 
 
-func _get_bestiole_context(game_state: Dictionary) -> String:
-	var bestiole: Dictionary = game_state.get("bestiole", {})
-	var bond: int = int(bestiole.get("bond", 50))
-	if bond >= 80:
-		return "Bestiole: lien fort"
-	elif bond <= 20:
-		return "Bestiole: lien faible"
+func _get_faction_context(game_state: Dictionary) -> String:
+	var run: Dictionary = game_state.get("run", {})
+	var factions: Dictionary = run.get("factions", {})
+	if factions.is_empty():
+		return ""
+	var best_name := ""
+	var best_val := 0.0
+	for f_name in factions:
+		var val: float = float(factions[f_name])
+		if val > best_val:
+			best_val = val
+			best_name = str(f_name)
+	if best_val >= 60:
+		return "Faction dominante: %s (alliance forte)" % best_name
+	elif best_val >= 30:
+		return "Faction dominante: %s" % best_name
 	return ""
 
 

@@ -30,7 +30,7 @@ var current := {
 	"rushed_decisions": 0,       # < 1 seconde
 	"contemplated_decisions": 0, # > 10 secondes
 	"skill_uses": 0,
-	"bestiole_interactions": 0,
+	"faction_interactions": 0,
 }
 
 # Computed metrics
@@ -62,7 +62,7 @@ enum EngagementLevel { LOW, MEDIUM, HIGH, VERY_HIGH }
 var engagement := {
 	"current_level": EngagementLevel.MEDIUM,
 	"card_reading_speed": "normal",  # "fast", "normal", "slow", "variable"
-	"bestiole_care_frequency": 0.5,  # 0-1
+	"faction_interaction_rate": 0.5,  # 0-1
 	"skill_usage_rate": 0.3,         # 0-1
 	"menu_time_ratio": 0.15,         # Temps en menu vs gameplay
 	"dialogue_skip_rate": 0.0,       # 0-1
@@ -131,7 +131,7 @@ func start_new_session() -> void:
 		"rushed_decisions": 0,
 		"contemplated_decisions": 0,
 		"skill_uses": 0,
-		"bestiole_interactions": 0,
+		"faction_interactions": 0,
 	}
 
 	# Reset wellness flags
@@ -241,8 +241,8 @@ func _update_engagement() -> void:
 	# Skill usage = engagement
 	score += engagement.skill_usage_rate * 0.2
 
-	# Bestiole care = engagement
-	score += engagement.bestiole_care_frequency * 0.1
+	# Faction interaction = engagement
+	score += engagement.faction_interaction_rate * 0.1
 
 	# Dialogue skipping = low engagement
 	score -= engagement.dialogue_skip_rate * 0.3
@@ -382,9 +382,9 @@ func record_skill_use() -> void:
 	engagement.skill_usage_rate = current.skill_uses / maxf(1.0, current.cards_this_session)
 
 
-func record_bestiole_interaction() -> void:
-	current.bestiole_interactions += 1
-	engagement.bestiole_care_frequency = minf(1.0, current.bestiole_interactions / maxf(1.0, current.runs_this_session * 5))
+func record_faction_interaction() -> void:
+	current.faction_interactions += 1
+	engagement.faction_interaction_rate = minf(1.0, current.faction_interactions / maxf(1.0, current.runs_this_session * 5))
 
 
 func record_dialogue_skip() -> void:

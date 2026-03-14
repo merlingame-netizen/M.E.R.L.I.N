@@ -1,4 +1,4 @@
-﻿## ═══════════════════════════════════════════════════════════════════════════════
+## ═══════════════════════════════════════════════════════════════════════════════
 ## Merlin Fallback Pool — Cartes de Secours
 ## ═══════════════════════════════════════════════════════════════════════════════
 ## Pool de cartes pre-ecrites avec matching contextuel.
@@ -259,7 +259,6 @@ func _generate_emergency_card(context: Dictionary) -> Dictionary:
 					{"type": "ADD_REPUTATION", "faction": worst_faction, "amount": 5}
 				],
 				"preview": "+Rep",
-				"cost": 1,
 			},
 			{
 				"direction": "right",
@@ -287,13 +286,13 @@ func _generate_default_cards() -> void:
 			"type": "narrative",
 			"options": [
 				{"direction": "left", "label": "L'eviter", "effects": [
-					{"type": "SHIFT_ASPECT", "aspect": "Monde", "direction": "down"}
+					{"type": "ADD_TENSION", "amount": 5}
 				], "preview": "Prudent"},
 				{"direction": "center", "label": "Observer", "effects": [
-					{"type": "SHIFT_ASPECT", "aspect": "Ame", "direction": "up"}
-				], "preview": "+Ame", "cost": 1},
+					{"type": "ADD_REPUTATION", "faction": "druides", "amount": 5}
+				], "preview": "+Druides"},
 				{"direction": "right", "label": "Approcher", "effects": [
-					{"type": "SHIFT_ASPECT", "aspect": "Monde", "direction": "up"}
+					{"type": "ADD_REPUTATION", "faction": "anciens", "amount": 5}
 				], "preview": "Social"}
 			],
 			"tags": ["exploration", "stranger"],
@@ -305,13 +304,13 @@ func _generate_default_cards() -> void:
 			"type": "narrative",
 			"options": [
 				{"direction": "left", "label": "Vers la lumiere", "effects": [
-					{"type": "SHIFT_ASPECT", "aspect": "Ame", "direction": "up"}
+					{"type": "ADD_REPUTATION", "faction": "druides", "amount": 5}
 				], "preview": "Spirituel"},
 				{"direction": "center", "label": "Mediter", "effects": [
-					{"type": "ADD_SOUFFLE", "amount": 1}
-				], "preview": "+Souffle", "cost": 1},
+					{"type": "ADD_ANAM", "amount": 10}
+				], "preview": "+Anam"},
 				{"direction": "right", "label": "Vers l'ombre", "effects": [
-					{"type": "SHIFT_ASPECT", "aspect": "Ame", "direction": "down"}
+					{"type": "ADD_REPUTATION", "faction": "ankou", "amount": 5}
 				], "preview": "Mystere"}
 			],
 			"tags": ["exploration", "choice"],
@@ -323,14 +322,14 @@ func _generate_default_cards() -> void:
 			"type": "narrative",
 			"options": [
 				{"direction": "left", "label": "Se reposer", "effects": [
-					{"type": "SHIFT_ASPECT", "aspect": "Corps", "direction": "up"},
-					{"type": "ADD_SOUFFLE", "amount": 1}
-				], "preview": "+Corps"},
+					{"type": "HEAL_LIFE", "amount": 5},
+					{"type": "ADD_ANAM", "amount": 10}
+				], "preview": "+Vie"},
 				{"direction": "center", "label": "Observer", "effects": [
-					{"type": "SHIFT_ASPECT", "aspect": "Ame", "direction": "up"}
-				], "preview": "+Ame", "cost": 1},
+					{"type": "ADD_REPUTATION", "faction": "druides", "amount": 5}
+				], "preview": "+Druides"},
 				{"direction": "right", "label": "Continuer", "effects": [
-					{"type": "SHIFT_ASPECT", "aspect": "Corps", "direction": "down"}
+					{"type": "DAMAGE_LIFE", "amount": 3}
 				], "preview": "Fatigue"}
 			],
 			"tags": ["nature", "rest"],
@@ -346,13 +345,13 @@ func _generate_default_cards() -> void:
 			"type": "narrative",
 			"options": [
 				{"direction": "left", "label": "Se mefier", "effects": [
-					{"type": "SHIFT_ASPECT", "aspect": "Monde", "direction": "down"}
+					{"type": "ADD_TENSION", "amount": 5}
 				], "preview": "Prudent"},
 				{"direction": "center", "label": "Parlementer", "effects": [
-					{"type": "SHIFT_ASPECT", "aspect": "Ame", "direction": "up"}
-				], "preview": "+Ame", "cost": 1},
+					{"type": "ADD_REPUTATION", "faction": "druides", "amount": 5}
+				], "preview": "+Druides"},
 				{"direction": "right", "label": "Ecouter", "effects": [
-					{"type": "SHIFT_ASPECT", "aspect": "Monde", "direction": "up"}
+					{"type": "ADD_REPUTATION", "faction": "anciens", "amount": 5}
 				], "preview": "Ouvert"}
 			],
 			"tags": ["stranger", "mystery"],
@@ -368,14 +367,14 @@ func _generate_default_cards() -> void:
 			"type": "narrative",
 			"options": [
 				{"direction": "left", "label": "Les dechiffrer", "effects": [
-					{"type": "SHIFT_ASPECT", "aspect": "Ame", "direction": "up"},
-					{"type": "USE_SOUFFLE", "amount": 1}
+					{"type": "ADD_REPUTATION", "faction": "druides", "amount": 5},
+					{"type": "ADD_ANAM", "amount": 15}
 				], "preview": "Magie"},
 				{"direction": "center", "label": "Observer", "effects": [
-					{"type": "ADD_SOUFFLE", "amount": 1}
-				], "preview": "+Souffle", "cost": 1},
+					{"type": "ADD_ANAM", "amount": 10}
+				], "preview": "+Anam"},
 				{"direction": "right", "label": "Les ignorer", "effects": [
-					{"type": "SHIFT_ASPECT", "aspect": "Ame", "direction": "down"}
+					{"type": "ADD_REPUTATION", "faction": "ankou", "amount": 5}
 				], "preview": "Pratique"}
 			],
 			"tags": ["magic", "lore"],
@@ -391,15 +390,15 @@ func _generate_default_cards() -> void:
 			"type": "narrative",
 			"options": [
 				{"direction": "left", "label": "Se reposer", "effects": [
-					{"type": "SHIFT_ASPECT", "aspect": "Corps", "direction": "up"},
-					{"type": "ADD_SOUFFLE", "amount": 1}
+					{"type": "HEAL_LIFE", "amount": 5},
+					{"type": "ADD_ANAM", "amount": 10}
 				], "preview": "Recuperation"},
 				{"direction": "center", "label": "Mediter", "effects": [
-					{"type": "SHIFT_ASPECT", "aspect": "Ame", "direction": "up"}
-				], "preview": "+Ame", "cost": 1},
+					{"type": "ADD_REPUTATION", "faction": "druides", "amount": 5}
+				], "preview": "+Druides"},
 				{"direction": "right", "label": "Boire vite et partir", "effects": [
-					{"type": "ADD_SOUFFLE", "amount": 1}
-				], "preview": "+Souffle"}
+					{"type": "ADD_ANAM", "amount": 10}
+				], "preview": "+Anam"}
 			],
 			"tags": ["recovery", "nature"],
 			"priority": "high"
@@ -410,14 +409,14 @@ func _generate_default_cards() -> void:
 			"type": "narrative",
 			"options": [
 				{"direction": "left", "label": "S'abriter", "effects": [
-					{"type": "SHIFT_ASPECT", "aspect": "Corps", "direction": "up"}
+					{"type": "HEAL_LIFE", "amount": 5}
 				], "preview": "Repos"},
 				{"direction": "center", "label": "Mediter", "effects": [
-					{"type": "ADD_SOUFFLE", "amount": 1}
-				], "preview": "+Souffle", "cost": 1},
+					{"type": "ADD_ANAM", "amount": 10}
+				], "preview": "+Anam"},
 				{"direction": "right", "label": "Pousser encore", "effects": [
-					{"type": "SHIFT_ASPECT", "aspect": "Corps", "direction": "down"},
-					{"type": "SHIFT_ASPECT", "aspect": "Monde", "direction": "up"}
+					{"type": "DAMAGE_LIFE", "amount": 3},
+					{"type": "ADD_REPUTATION", "faction": "anciens", "amount": 5}
 				], "preview": "Risque"}
 			],
 			"tags": ["recovery", "choice"],
@@ -433,14 +432,14 @@ func _generate_default_cards() -> void:
 			"type": "narrative",
 			"options": [
 				{"direction": "left", "label": "Lacher prise", "effects": [
-					{"type": "SHIFT_ASPECT", "aspect": "Corps", "direction": "down"}
+					{"type": "DAMAGE_LIFE", "amount": 3}
 				], "preview": "Calme"},
 				{"direction": "center", "label": "Mediter", "effects": [
-					{"type": "ADD_SOUFFLE", "amount": 1}
-				], "preview": "+Souffle", "cost": 1},
+					{"type": "ADD_ANAM", "amount": 10}
+				], "preview": "+Anam"},
 				{"direction": "right", "label": "Tenir bon", "effects": [
-					{"type": "USE_SOUFFLE", "amount": 1}
-				], "preview": "-Souffle"}
+					{"type": "ADD_ANAM", "amount": 15}
+				], "preview": "+Anam"}
 			],
 			"tags": ["balance", "tension"],
 			"priority": "high"
@@ -455,14 +454,14 @@ func _generate_default_cards() -> void:
 			"type": "narrative",
 			"options": [
 				{"direction": "left", "label": "Mediter", "effects": [
-					{"type": "ADD_SOUFFLE", "amount": 1}
-				], "preview": "+Souffle"},
+					{"type": "ADD_ANAM", "amount": 10}
+				], "preview": "+Anam"},
 				{"direction": "center", "label": "Observer", "effects": [
-					{"type": "SHIFT_ASPECT", "aspect": "Ame", "direction": "up"}
-				], "preview": "+Ame", "cost": 1},
+					{"type": "ADD_REPUTATION", "faction": "druides", "amount": 5}
+				], "preview": "+Druides"},
 				{"direction": "right", "label": "Agir", "effects": [
-					{"type": "SHIFT_ASPECT", "aspect": "Monde", "direction": "up"}
-				], "preview": "+Monde"}
+					{"type": "ADD_REPUTATION", "faction": "anciens", "amount": 5}
+				], "preview": "+Anciens"}
 			],
 			"tags": ["balance", "spiritual"]
 		},
@@ -476,14 +475,14 @@ func _generate_default_cards() -> void:
 			"type": "narrative",
 			"options": [
 				{"direction": "left", "label": "Ecouter", "effects": [
-					{"type": "SHIFT_ASPECT", "aspect": "Ame", "direction": "up"}
-				], "preview": "+Ame"},
+					{"type": "ADD_REPUTATION", "faction": "druides", "amount": 5}
+				], "preview": "+Druides"},
 				{"direction": "center", "label": "Mediter", "effects": [
-					{"type": "ADD_SOUFFLE", "amount": 1}
-				], "preview": "+Souffle", "cost": 1},
+					{"type": "ADD_ANAM", "amount": 10}
+				], "preview": "+Anam"},
 				{"direction": "right", "label": "Ignorer", "effects": [
-					{"type": "SHIFT_ASPECT", "aspect": "Ame", "direction": "down"}
-				], "preview": "-Ame"}
+					{"type": "ADD_REPUTATION", "faction": "ankou", "amount": 5}
+				], "preview": "+Ankou"}
 			],
 			"tags": ["nature", "mystery"]
 		},
@@ -493,13 +492,13 @@ func _generate_default_cards() -> void:
 			"type": "narrative",
 			"options": [
 				{"direction": "left", "label": "Prudemment", "effects": [
-					{"type": "SHIFT_ASPECT", "aspect": "Corps", "direction": "up"}
+					{"type": "HEAL_LIFE", "amount": 5}
 				], "preview": "Prudent"},
 				{"direction": "center", "label": "Observer", "effects": [
-					{"type": "SHIFT_ASPECT", "aspect": "Ame", "direction": "up"}
-				], "preview": "+Ame", "cost": 1},
+					{"type": "ADD_REPUTATION", "faction": "druides", "amount": 5}
+				], "preview": "+Druides"},
 				{"direction": "right", "label": "Rapidement", "effects": [
-					{"type": "SHIFT_ASPECT", "aspect": "Corps", "direction": "down"}
+					{"type": "DAMAGE_LIFE", "amount": 3}
 				], "preview": "Rapide"}
 			],
 			"tags": ["travel", "choice"]
@@ -510,14 +509,14 @@ func _generate_default_cards() -> void:
 			"type": "narrative",
 			"options": [
 				{"direction": "left", "label": "La voie sage", "effects": [
-					{"type": "ADD_SOUFFLE", "amount": 1}
-				], "preview": "+Souffle"},
+					{"type": "ADD_ANAM", "amount": 10}
+				], "preview": "+Anam"},
 				{"direction": "center", "label": "Mediter", "effects": [
-					{"type": "SHIFT_ASPECT", "aspect": "Ame", "direction": "up"}
-				], "preview": "+Ame", "cost": 1},
+					{"type": "ADD_REPUTATION", "faction": "druides", "amount": 5}
+				], "preview": "+Druides"},
 				{"direction": "right", "label": "La voie audacieuse", "effects": [
-					{"type": "SHIFT_ASPECT", "aspect": "Monde", "direction": "up"}
-				], "preview": "+Monde"}
+					{"type": "ADD_REPUTATION", "faction": "anciens", "amount": 5}
+				], "preview": "+Anciens"}
 			],
 			"tags": ["choice"]
 		},
@@ -533,8 +532,8 @@ func _generate_default_cards() -> void:
 			"options": [
 				{"direction": "left", "label": "Merci", "effects": [], "preview": ""},
 				{"direction": "center", "label": "Mediter", "effects": [
-					{"type": "ADD_SOUFFLE", "amount": 1}
-				], "preview": "+Souffle", "cost": 1},
+					{"type": "ADD_ANAM", "amount": 10}
+				], "preview": "+Anam"},
 				{"direction": "right", "label": "Je sais", "effects": [], "preview": ""}
 			],
 			"tags": ["merlin", "encouragement"]
@@ -550,14 +549,14 @@ func _generate_default_cards() -> void:
 			"type": "npc_encounter",
 			"options": [
 				{"direction": "left", "label": "Demander conseil", "effects": [
-					{"type": "SHIFT_ASPECT", "aspect": "Ame", "direction": "up"}
-				], "preview": "+Ame"},
-				{"direction": "center", "label": "Offrir du Souffle", "effects": [
-					{"type": "ADD_SOUFFLE", "amount": 1}
-				], "preview": "+Souffle", "cost": 1},
+					{"type": "ADD_REPUTATION", "faction": "druides", "amount": 5}
+				], "preview": "+Druides"},
+				{"direction": "center", "label": "Offrir de l'Anam", "effects": [
+					{"type": "ADD_ANAM", "amount": 10}
+				], "preview": "+Anam"},
 				{"direction": "right", "label": "Passer son chemin", "effects": [
-					{"type": "SHIFT_ASPECT", "aspect": "Corps", "direction": "up"}
-				], "preview": "+Corps"},
+					{"type": "HEAL_LIFE", "amount": 5}
+				], "preview": "+Vie"},
 			],
 			"tags": ["npc", "magic", "lore"]
 		},
@@ -568,14 +567,14 @@ func _generate_default_cards() -> void:
 			"type": "npc_encounter",
 			"options": [
 				{"direction": "left", "label": "Proposer de l'aide", "effects": [
-					{"type": "SHIFT_ASPECT", "aspect": "Monde", "direction": "up"}
-				], "preview": "+Monde"},
+					{"type": "ADD_REPUTATION", "faction": "anciens", "amount": 5}
+				], "preview": "+Anciens"},
 				{"direction": "center", "label": "Ecouter attentivement", "effects": [
-					{"type": "SHIFT_ASPECT", "aspect": "Ame", "direction": "up"}
-				], "preview": "+Ame", "cost": 1},
+					{"type": "ADD_REPUTATION", "faction": "druides", "amount": 5}
+				], "preview": "+Druides"},
 				{"direction": "right", "label": "Ignorer l'appel", "effects": [
-					{"type": "SHIFT_ASPECT", "aspect": "Monde", "direction": "down"}
-				], "preview": "-Monde"},
+					{"type": "ADD_TENSION", "amount": 5}
+				], "preview": "+Tension"},
 			],
 			"tags": ["npc", "social", "danger"]
 		},
@@ -586,14 +585,14 @@ func _generate_default_cards() -> void:
 			"type": "npc_encounter",
 			"options": [
 				{"direction": "left", "label": "L'histoire du heros", "effects": [
-					{"type": "SHIFT_ASPECT", "aspect": "Corps", "direction": "up"}
-				], "preview": "+Corps"},
+					{"type": "HEAL_LIFE", "amount": 5}
+				], "preview": "+Vie"},
 				{"direction": "center", "label": "L'histoire du sage", "effects": [
-					{"type": "SHIFT_ASPECT", "aspect": "Ame", "direction": "up"}
-				], "preview": "+Ame", "cost": 1},
+					{"type": "ADD_REPUTATION", "faction": "druides", "amount": 5}
+				], "preview": "+Druides"},
 				{"direction": "right", "label": "L'histoire du roi", "effects": [
-					{"type": "SHIFT_ASPECT", "aspect": "Monde", "direction": "up"}
-				], "preview": "+Monde"},
+					{"type": "ADD_REPUTATION", "faction": "anciens", "amount": 5}
+				], "preview": "+Anciens"},
 			],
 			"tags": ["npc", "social", "lore"]
 		},
@@ -604,14 +603,14 @@ func _generate_default_cards() -> void:
 			"type": "npc_encounter",
 			"options": [
 				{"direction": "left", "label": "Affronter le defi", "effects": [
-					{"type": "SHIFT_ASPECT", "aspect": "Corps", "direction": "up"}
-				], "preview": "+Corps"},
+					{"type": "HEAL_LIFE", "amount": 5}
+				], "preview": "+Vie"},
 				{"direction": "center", "label": "Ruser pour passer", "effects": [
-					{"type": "SHIFT_ASPECT", "aspect": "Ame", "direction": "up"}
-				], "preview": "+Ame", "cost": 1},
+					{"type": "ADD_REPUTATION", "faction": "druides", "amount": 5}
+				], "preview": "+Druides"},
 				{"direction": "right", "label": "Contourner le gue", "effects": [
-					{"type": "SHIFT_ASPECT", "aspect": "Corps", "direction": "down"}
-				], "preview": "-Corps"},
+					{"type": "DAMAGE_LIFE", "amount": 3}
+				], "preview": "-Vie"},
 			],
 			"tags": ["npc", "combat", "danger"]
 		},
@@ -622,14 +621,14 @@ func _generate_default_cards() -> void:
 			"type": "npc_encounter",
 			"options": [
 				{"direction": "left", "label": "Troquer un souvenir", "effects": [
-					{"type": "SHIFT_ASPECT", "aspect": "Ame", "direction": "down"}
-				], "preview": "-Ame"},
+					{"type": "ADD_REPUTATION", "faction": "ankou", "amount": 5}
+				], "preview": "+Ankou"},
 				{"direction": "center", "label": "Observer ses merveilles", "effects": [
-					{"type": "ADD_SOUFFLE", "amount": 1}
-				], "preview": "+Souffle", "cost": 1},
+					{"type": "ADD_ANAM", "amount": 10}
+				], "preview": "+Anam"},
 				{"direction": "right", "label": "Marchander dur", "effects": [
-					{"type": "SHIFT_ASPECT", "aspect": "Monde", "direction": "up"}
-				], "preview": "+Monde"},
+					{"type": "ADD_REPUTATION", "faction": "anciens", "amount": 5}
+				], "preview": "+Anciens"},
 			],
 			"tags": ["npc", "merchant", "trade"]
 		},

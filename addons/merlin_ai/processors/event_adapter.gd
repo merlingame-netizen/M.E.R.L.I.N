@@ -274,11 +274,15 @@ func _f_conditions(ev: Dictionary, ctx: Dictionary) -> float:
 			if int(aspects[aspect]) != 0:
 				return 0.0
 
-	# Check bestiole_bond_above
-	var bond_min: int = int(conditions.get("bestiole_bond_above", -1))
-	var current_bond: int = int(ctx.get("bestiole_bond", 0))
-	if bond_min > -1 and current_bond < bond_min:
-		return 0.0
+	# Check dominant_faction_above
+	var faction_min: int = int(conditions.get("dominant_faction_above", -1))
+	if faction_min > -1:
+		var factions: Dictionary = ctx.get("factions", {})
+		var max_rep := 0.0
+		for f_name in factions:
+			max_rep = maxf(max_rep, float(factions[f_name]))
+		if max_rep < faction_min:
+			return 0.0
 
 	# Check trust_merlin_above
 	var trust_min: int = int(conditions.get("trust_merlin_above", -1))

@@ -1985,13 +1985,12 @@ func _build_triade_user_prompt(context: Dictionary) -> String:
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
-# TRIADE CONTEXT BUILDING — From game state to LLM context
+# NARRATIVE CONTEXT BUILDING — From game state to LLM context
 # ═══════════════════════════════════════════════════════════════════════════════
 
-## Build TRIADE context from full game state.
+## Build narrative context from full game state (v2.5).
 func build_triade_context(state: Dictionary) -> Dictionary:
 	var run: Dictionary = state.get("run", {})
-	var bestiole: Dictionary = state.get("bestiole", {})
 	var hidden: Dictionary = run.get("hidden", {})
 	var meta: Dictionary = state.get("meta", {})
 
@@ -2036,10 +2035,6 @@ func build_triade_context(state: Dictionary) -> Dictionary:
 		"flux_desc": flux_desc,
 		"talent_names": talent_names,
 		"player_tendency": player_tendency,
-		"bestiole": {
-			"mood": _get_bestiole_mood(bestiole),
-			"bond": int(bestiole.get("bond", 50)),
-		},
 		"flags": state.get("flags", {}),
 		# Faction alignment — peuple le placeholder {faction_status} (ligne 236 et 1304)
 		"faction_status": _build_faction_status_string(state),
@@ -2078,19 +2073,6 @@ func _get_player_tendency(hidden: Dictionary) -> String:
 	elif prudence > audace + 3:
 		return "prudent"
 	return "neutre"
-
-
-func _get_bestiole_mood(bestiole: Dictionary) -> String:
-	var needs: Dictionary = bestiole.get("needs", {})
-	var avg_needs := (int(needs.get("Hunger", 50)) + int(needs.get("Energy", 50))
-		+ int(needs.get("Mood", 50)) - int(needs.get("Stress", 0))) / 4.0
-	if avg_needs >= 70:
-		return "happy"
-	elif avg_needs >= 40:
-		return "content"
-	elif avg_needs >= 20:
-		return "tired"
-	return "distressed"
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
@@ -2409,24 +2391,9 @@ func _validate_triade_effect(effect: Dictionary) -> Dictionary:
 
 func build_context(state: Dictionary) -> Dictionary:
 	var run = state.get("run", {})
-	var bestiole = state.get("bestiole", {})
-
-	var skills_ready := []
-	var cooldowns = bestiole.get("skill_cooldowns", {})
-	var equipped = bestiole.get("skills_equipped", [])
-	for skill_id in equipped:
-		if int(cooldowns.get(skill_id, 0)) <= 0:
-			skills_ready.append(skill_id)
-
-	var mood := _get_bestiole_mood(bestiole)
-
 	return {
-		"bestiole": {
-			"name": bestiole.get("name", "Bestiole"),
-			"mood": mood,
-			"bond": int(bestiole.get("bond", 50)),
-			"skills_ready": skills_ready,
-		},
+		"life_essence": int(run.get("life_essence", 100)),
+		"factions": run.get("factions", {}),
 		"day": int(run.get("day", 1)),
 		"cards_played": int(run.get("cards_played", 0)),
 		"active_promises": run.get("active_promises", []),

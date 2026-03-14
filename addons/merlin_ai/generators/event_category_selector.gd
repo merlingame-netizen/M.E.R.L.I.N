@@ -279,7 +279,8 @@ func _select_sub_type(category: String, run: Dictionary) -> String:
 		var triggers: Dictionary = sub.get("triggers", {})
 
 		# Check trigger conditions (boost weight if matched)
-		var trigger_bonus := _evaluate_triggers(triggers, aspects, cards_played, life, biome, flags, tension, karma)
+		var factions: Dictionary = run.get("factions", {})
+		var trigger_bonus := _evaluate_triggers(triggers, aspects, cards_played, life, biome, flags, tension, karma, factions)
 		weight *= trigger_bonus
 
 		# Anti-repetition for sub-types
@@ -299,7 +300,8 @@ func _select_sub_type(category: String, run: Dictionary) -> String:
 
 
 func _evaluate_triggers(triggers: Dictionary, aspects: Dictionary, cards_played: int,
-		life: int, biome: String, flags: Dictionary, tension: int, karma: int) -> float:
+		life: int, biome: String, flags: Dictionary, tension: int, karma: int,
+		factions: Dictionary = {}) -> float:
 	## Evaluate trigger conditions. Returns a multiplier (>1 if conditions met).
 	var bonus: float = 1.0
 
@@ -357,10 +359,15 @@ func _evaluate_triggers(triggers: Dictionary, aspects: Dictionary, cards_played:
 		else:
 			bonus *= 0.5
 
-	# Bestiole bond
-	if triggers.has("bestiole_bond_above"):
-		# Simplified: assume bond is available in flags
-		bonus *= 1.2
+	# Dominant faction bonus
+	if triggers.has("dominant_faction_above"):
+		var max_rep := 0.0
+		for f_name in factions:
+			max_rep = maxf(max_rep, float(factions[f_name]))
+		if max_rep >= float(triggers["dominant_faction_above"]):
+			bonus *= 1.5
+		else:
+			bonus *= 0.5
 
 	# Karma threshold
 	if triggers.has("karma_above"):
@@ -523,10 +530,13 @@ func _check_modifier_trigger(trigger: Dictionary, run: Dictionary) -> bool:
 
 	var hidden: Dictionary = run.get("hidden", {})
 
-	# bestiole_bond_above
-	if trigger.has("bestiole_bond_above"):
-		var bond: int = int(run.get("bestiole_bond", 50))
-		if bond < int(trigger["bestiole_bond_above"]):
+	# dominant_faction_above
+	if trigger.has("dominant_faction_above"):
+		var factions: Dictionary = run.get("factions", {})
+		var max_rep := 0.0
+		for f_name in factions:
+			max_rep = maxf(max_rep, float(factions[f_name]))
+		if max_rep < float(trigger["dominant_faction_above"]):
 			return false
 
 	# cards_played_min

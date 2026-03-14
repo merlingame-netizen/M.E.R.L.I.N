@@ -51,10 +51,8 @@ func _attr_for_verb(verb: String) -> String:
 			return "power"
 
 
-func _get_attr(state: Dictionary, key: String) -> int:
-	var bestiole = state.get("bestiole", {})
-	var stats = bestiole.get("stats", {})
-	return int(stats.get(key, 10))
+func _get_attr(_state: Dictionary, _key: String) -> int:
+	return 10  # Base attribute (bestiole stats removed in v2.5)
 
 
 func _get_modifiers(state: Dictionary, verb: String, context: Dictionary) -> int:
@@ -70,24 +68,6 @@ func _get_modifiers(state: Dictionary, verb: String, context: Dictionary) -> int
 	var style = str(context.get("merlin_style", "")).to_upper()
 	if STYLE_MODS.has(style):
 		total += int(STYLE_MODS[style].get(verb, 0))
-
-	var needs = state.get("bestiole", {}).get("needs", {})
-	var stress = int(needs.get("Stress", 0))
-	var energy = int(needs.get("Energy", 50))
-	var hunger = int(needs.get("Hunger", 50))
-	var hygiene = int(needs.get("Hygiene", 50))
-	var mood = int(needs.get("Mood", 50))
-
-	if stress > 70 and (verb == "LOGIQUE" or verb == "FINESSE"):
-		total -= 3
-	if energy < 30 and verb == "FORCE":
-		total -= 3
-	if hunger > 70:
-		total -= 1
-	if hygiene < 30:
-		total -= 1
-	if mood > 70:
-		total += 1
 
 	var fail_streak = int(run.get("fail_streak", 0))
 	total += fail_streak * 5
