@@ -287,9 +287,9 @@ func _reduce(action: Dictionary) -> Dictionary:
 			return {"ok": true, "seed": seed}
 
 		# ═══════════════════════════════════════════════════════════════════════
-		# TRIADE SYSTEM ACTIONS (v0.3.0)
+		# RUN ACTIONS
 		# ═══════════════════════════════════════════════════════════════════════
-		"TRIADE_START_RUN":
+		"START_RUN":
 			var seed_val: int = int(action.get("seed", int(Time.get_unix_time_from_system())))
 			rng.set_seed(seed_val)
 			_init_run()
@@ -299,10 +299,10 @@ func _reduce(action: Dictionary) -> Dictionary:
 			var biome_key: String = str(action.get("biome", MerlinConstants.BIOME_DEFAULT))
 			state["run"]["current_biome"] = biome_key
 			state["phase"] = "card"
-			state["mode"] = "triade"
+			state["mode"] = "run"
 			# Initialize calendar context for this run (real date)
 			_init_calendar_context()
-			_log_transition("triade_run_start", {"seed": seed_val, "biome": biome_key})
+			_log_transition("run_start", {"seed": seed_val, "biome": biome_key})
 			# Notify MERLIN OMNISCIENT
 			if merlin != null:
 				merlin.on_run_start()
@@ -311,11 +311,11 @@ func _reduce(action: Dictionary) -> Dictionary:
 					merlin.event_adapter.reset_for_new_run()
 			return {"ok": true, "biome": biome_key}
 
-		"TRIADE_GET_CARD":
+		"GET_CARD":
 			var card: Dictionary = {}
 			# LLM-only: use MERLIN OMNISCIENT or direct LLM, no static fallback
 			if merlin != null and is_instance_valid(merlin):
-				print("[MerlinStore] TRIADE_GET_CARD: using MerlinOmniscient")
+				print("[MerlinStore] GET_CARD: using MerlinOmniscient")
 				var mos_card = await merlin.generate_card(state)
 				if mos_card is Dictionary and not mos_card.is_empty():
 					card = mos_card
@@ -323,7 +323,7 @@ func _reduce(action: Dictionary) -> Dictionary:
 					print("[MerlinStore] MOS returned empty, controller will retry LLM")
 			elif llm != null and llm.is_llm_ready():
 				# Direct adapter path (no MOS)
-				print("[MerlinStore] TRIADE_GET_CARD: using direct LLM")
+				print("[MerlinStore] GET_CARD: using direct LLM")
 				var ctx: Dictionary = state.get("run", {}).duplicate()
 				var llm_result: Dictionary = await llm.generate_card(ctx)
 				if llm_result.get("ok", false) and llm_result.has("card"):
@@ -331,13 +331,13 @@ func _reduce(action: Dictionary) -> Dictionary:
 				else:
 					print("[MerlinStore] Direct LLM failed, controller will retry")
 			else:
-				push_warning("[MerlinStore] TRIADE_GET_CARD: no LLM available — controller must retry")
+				push_warning("[MerlinStore] GET_CARD: no LLM available — controller must retry")
 			# Validate card has usable options (LLM-only: no emergency fallback)
 			if card.is_empty() or not card.has("options") or card.get("options", []).size() < 2:
 				return {"ok": false, "error": "llm_no_card"}
 			return {"ok": true, "card": card}
 
-		"TRIADE_RESOLVE_CHOICE":
+		"RESOLVE_CHOICE":
 			var card = action.get("card", {})
 			var option: int = int(action.get("option", MerlinConstants.CardOption.LEFT))
 			var mod_effects: Array = action.get("modulated_effects", [])
@@ -359,7 +359,7 @@ func _reduce(action: Dictionary) -> Dictionary:
 					return {"ok": true, "run_ended": true, "ending": end_check}
 			return result
 
-		"TRIADE_PROGRESS_MISSION":
+		"PROGRESS_MISSION":
 			var step: int = int(action.get("step", 1))
 			return _progress_mission(step)
 
@@ -368,7 +368,7 @@ func _reduce(action: Dictionary) -> Dictionary:
 			var skill_id: String = str(action.get("skill_id", ""))
 			return _use_ogham(skill_id)
 
-		"TRIADE_END_RUN":
+		"END_RUN":
 			var end_check = _check_run_end()
 			if not end_check["ended"]:
 				end_check = {
@@ -389,7 +389,7 @@ func _reduce(action: Dictionary) -> Dictionary:
 		# ═══════════════════════════════════════════════════════════════════════
 		# MAP ACTIONS (Phase 37 — STS-like world map)
 		# ═══════════════════════════════════════════════════════════════════════
-		"TRIADE_GENERATE_MAP":
+		"GENERATE_MAP":
 			var floors: int = int(action.get("floors", MerlinConstants.DEFAULT_MAP_FLOORS))
 			var config: Dictionary = {}
 			var biome_key_map: String = str(state.get("run", {}).get("current_biome", ""))
@@ -402,7 +402,7 @@ func _reduce(action: Dictionary) -> Dictionary:
 			state["run"]["current_node_id"] = ""
 			return {"ok": true, "map": map_data}
 
-		"TRIADE_SELECT_NODE":
+		"SELECT_NODE":
 			var node_id: String = str(action.get("node_id", ""))
 			var map_data: Array = state["run"].get("map", [])
 			for floor_nodes in map_data:
@@ -441,11 +441,11 @@ func _reduce(action: Dictionary) -> Dictionary:
 		# ═══════════════════════════════════════════════════════════════════════
 		# LIFE ESSENCE ACTIONS (Phase 43)
 		# ═══════════════════════════════════════════════════════════════════════
-		"TRIADE_DAMAGE_LIFE":
+		"DAMAGE_LIFE":
 			var amount: int = int(action.get("amount", 1))
 			return _damage_life(amount)
 
-		"TRIADE_HEAL_LIFE":
+		"HEAL_LIFE":
 			var amount: int = int(action.get("amount", 1))
 			return _heal_life(amount)
 
@@ -660,7 +660,7 @@ func _generate_mission() -> Dictionary:
 
 
 func _on_run_ended(ending: Dictionary) -> void:
-	pass  # Handled in TRIADE_RESOLVE_CHOICE
+	pass  # Handled in RESOLVE_CHOICE
 
 
 # ═══════════════════════════════════════════════════════════════════════════════

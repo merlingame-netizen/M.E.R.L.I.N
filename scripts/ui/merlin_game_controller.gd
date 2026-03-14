@@ -54,10 +54,6 @@ var _free_center_remaining: int = 0
 var _shield_corps_used := false
 var _shield_monde_used := false
 
-# Typology timer (Urgence run type — delta-process, headless-safe)
-var _typology_timer_remaining: float = 0.0
-var _typology_timer_active: bool = false
-
 # Dynamic difficulty (balance-driven, Phase 5 LLM Intelligence Pipeline)
 var _dynamic_modifier: int = 0
 var _cards_since_rule_check: int = 0
@@ -237,23 +233,18 @@ func start_run(seed_value: int = -1) -> void:
 	if music_mgr and music_mgr.has_method("play_biome_music"):
 		music_mgr.play_biome_music(biome_key)
 
-	print("[Merlin] dispatching TRIADE_START_RUN biome=%s (dt=%dms)" % [biome_key, Time.get_ticks_msec() - _t0])
+	print("[Merlin] dispatching START_RUN biome=%s (dt=%dms)" % [biome_key, Time.get_ticks_msec() - _t0])
 	var result = await store.dispatch({
-		"type": "TRIADE_START_RUN",
+		"type": "START_RUN",
 		"seed": seed_value,
 		"biome": biome_key,
 	})
-	print("[Merlin] TRIADE_START_RUN result: %s" % str(result))
+	print("[Merlin] START_RUN result: %s" % str(result))
 
 	if result.get("ok", false):
 		_sync_ui_with_state()
 	if ui and is_instance_valid(ui) and ui.has_method("reset_run_visuals"):
 		ui.reset_run_visuals()
-
-	# Show typology badge if not Classique
-	var active_typology: String = _run_typology()
-	if active_typology != "classique" and ui and is_instance_valid(ui) and ui.has_method("show_typology_badge"):
-		ui.show_typology_badge(active_typology)
 
 	# Opening sequence then narrator intro before first card.
 	# In headless mode (autoplay), skip all blocking UI sequences (click-to-continue, typewriter, etc.)
@@ -384,10 +375,10 @@ func _request_next_card() -> void:
 		ui.show_thinking()
 
 	# Direct await dispatch (store.dispatch has internal timeouts via Ollama backend)
-	print("[Merlin] awaiting store.dispatch TRIADE_GET_CARD (dt=%dms)" % (Time.get_ticks_msec() - _rnc_t0))
+	print("[Merlin] awaiting store.dispatch GET_CARD (dt=%dms)" % (Time.get_ticks_msec() - _rnc_t0))
 	var result: Dictionary = {}
 	if store and is_instance_valid(store):
-		result = await store.dispatch({"type": "TRIADE_GET_CARD"})
+		result = await store.dispatch({"type": "GET_CARD"})
 		if result == null:
 			result = {"ok": false, "error": "null_result"}
 	else:
@@ -473,7 +464,6 @@ func _request_next_card() -> void:
 		if ui and is_instance_valid(ui):
 			ui.display_card(current_card)
 		_check_vision_perk_auto_reveal()
-		_start_typology_timer()
 
 	print("[Merlin] _request_next_card() done (dt=%dms)" % (Time.get_ticks_msec() - _rnc_t0))
 	is_processing = false
@@ -545,7 +535,7 @@ func _retry_llm_generation(max_retries: int) -> Dictionary:
 			labels.append(fallback_labels[labels.size()])
 		print("[Merlin] LLM retry %d: %d labels extracted" % [i + 1, matches.size()])
 
-		# Build card with Vie/Karma/Souffle effects (no SHIFT_ASPECT)
+		# Build card with Vie/Reputation effects
 		var effect_sets: Array = [
 			[{"type": "HEAL_LIFE", "amount": 5}],
 			[{"type": "ADD_KARMA", "amount": 1}],
@@ -842,19 +832,12 @@ func _resolve_choice(option: int) -> void:
 	if not chance_minigame.is_empty():
 		modulated = _apply_chance_modifier_effects(modulated, outcome)
 
-	# --- 7c. Parieur typology modifier (crit >=17 bonus, fumble <=4 malus) ---
-	var parieur_result: Dictionary = _apply_parieur_modifier(dice_result, modulated)
-	modulated = parieur_result.get("effects", modulated)
-	var parieur_event: String = str(parieur_result.get("event", ""))
-	if not parieur_event.is_empty() and ui and is_instance_valid(ui) and ui.has_method("show_typology_event"):
-		ui.show_typology_event(parieur_event)
-
 	# --- 8. Apply talent shields & blessings ---
 	modulated = _apply_talent_shields(modulated)
 
 	# --- 9. Dispatch to store (applies effects, checks run end) ---
 	var result = await store.dispatch({
-		"type": "TRIADE_RESOLVE_CHOICE",
+		"type": "RESOLVE_CHOICE",
 		"card": current_card,
 		"option": option,
 		"modulated_effects": modulated,
@@ -865,7 +848,7 @@ func _resolve_choice(option: int) -> void:
 
 	# --- 9b. Base life drain per card (survival pressure) ---
 	if store and is_instance_valid(store):
-		store.dispatch({"type": "TRIADE_DAMAGE_LIFE", "amount": MerlinConstants.LIFE_ESSENCE_DRAIN_PER_CARD})
+		store.dispatch({"type": "DAMAGE_LIFE", "amount": MerlinConstants.LIFE_ESSENCE_DRAIN_PER_CARD})
 
 	# --- 10. Update karma ---
 	_update_karma(outcome, direction)
@@ -903,9 +886,6 @@ func _resolve_choice(option: int) -> void:
 
 	# --- 12c. Auto-progress mission (Phase 43) ---
 	_auto_progress_mission(outcome)
-
-	# --- 12d. Apply GAUGE_DELTA effects to WorldMapSystem ---
-	_apply_gauge_deltas(modulated)
 
 	# --- 13. Biome passive check ---
 	_check_biome_passive()
@@ -1015,7 +995,7 @@ func _check_power_milestone() -> void:
 	match mtype:
 		"HEAL":
 			if store:
-				store.dispatch({"type": "TRIADE_HEAL_LIFE", "amount": mval})
+				store.dispatch({"type": "HEAL_LIFE", "amount": mval})
 		"DC_REDUCTION":
 			if store:
 				var run_state: Dictionary = store.state.get("run", {})
@@ -1291,8 +1271,8 @@ func _get_choice_label(option: int) -> String:
 # ═══════════════════════════════════════════════════════════════════════════════
 
 func _modulate_effects(base_effects: Array, outcome: String, _direction: String) -> Array:
-	## Modulate card effects based on D20 outcome.
-	## Effects: DAMAGE_LIFE, HEAL_LIFE, ADD_KARMA, ADD_SOUFFLE, GAUGE_DELTA.
+	## Modulate card effects based on minigame outcome.
+	## Effects: DAMAGE_LIFE, HEAL_LIFE, ADD_REPUTATION.
 	var result: Array = []
 	for effect in base_effects:
 		var e: Dictionary = effect.duplicate() if effect is Dictionary else {}
@@ -1300,21 +1280,13 @@ func _modulate_effects(base_effects: Array, outcome: String, _direction: String)
 		match outcome:
 			"critical_success":
 				# Double positive effects
-				if etype == "HEAL_LIFE" or etype == "ADD_KARMA" or etype == "ADD_SOUFFLE":
+				if etype == "HEAL_LIFE" or etype == "ADD_REPUTATION":
 					var boosted: Dictionary = e.duplicate()
 					boosted["amount"] = int(e.get("amount", 0)) * 2
 					result.append(boosted)
 				elif etype == "DAMAGE_LIFE":
 					# Cancel damage on crit success
 					pass
-				elif etype == "GAUGE_DELTA":
-					var boosted: Dictionary = e.duplicate()
-					var delta: Dictionary = boosted.get("delta", {})
-					var doubled: Dictionary = {}
-					for k in delta:
-						doubled[k] = int(delta[k]) * 2
-					boosted["delta"] = doubled
-					result.append(boosted)
 				else:
 					result.append(e)
 			"success":
@@ -1325,16 +1297,6 @@ func _modulate_effects(base_effects: Array, outcome: String, _direction: String)
 					result.append({"type": "DAMAGE_LIFE", "amount": int(e.get("amount", 0))})
 				elif etype == "DAMAGE_LIFE":
 					result.append({"type": "HEAL_LIFE", "amount": int(e.get("amount", 0))})
-				elif etype == "ADD_KARMA":
-					result.append({"type": "ADD_KARMA", "amount": -int(e.get("amount", 0))})
-				elif etype == "GAUGE_DELTA":
-					var reversed_g: Dictionary = e.duplicate()
-					var delta: Dictionary = reversed_g.get("delta", {})
-					var negated: Dictionary = {}
-					for k in delta:
-						negated[k] = -int(delta[k])
-					reversed_g["delta"] = negated
-					result.append(reversed_g)
 				else:
 					result.append(e)
 			"critical_failure":
@@ -1343,27 +1305,17 @@ func _modulate_effects(base_effects: Array, outcome: String, _direction: String)
 					result.append({"type": "DAMAGE_LIFE", "amount": int(e.get("amount", 0))})
 				elif etype == "DAMAGE_LIFE":
 					result.append(e)
-				elif etype == "ADD_KARMA":
-					result.append({"type": "ADD_KARMA", "amount": -int(e.get("amount", 0)) * 2})
-				elif etype == "GAUGE_DELTA":
-					var reversed_g: Dictionary = e.duplicate()
-					var delta: Dictionary = reversed_g.get("delta", {})
-					var negated_x2: Dictionary = {}
-					for k in delta:
-						negated_x2[k] = -int(delta[k]) * 2
-					reversed_g["delta"] = negated_x2
-					result.append(reversed_g)
 				else:
 					result.append(e)
 
 	# Life damage on critical failure (bonus penalty)
 	if outcome == "critical_failure" and store:
-		store.dispatch({"type": "TRIADE_DAMAGE_LIFE", "amount": MerlinConstants.LIFE_ESSENCE_CRIT_FAIL_DAMAGE})
+		store.dispatch({"type": "DAMAGE_LIFE", "amount": MerlinConstants.LIFE_ESSENCE_CRIT_FAIL_DAMAGE})
 		print("[Merlin] Critical failure! Life essence -%d" % MerlinConstants.LIFE_ESSENCE_CRIT_FAIL_DAMAGE)
 
 	# Life heal on critical success (bonus heal)
 	if outcome == "critical_success" and store:
-		store.dispatch({"type": "TRIADE_HEAL_LIFE", "amount": MerlinConstants.LIFE_ESSENCE_CRIT_SUCCESS_HEAL})
+		store.dispatch({"type": "HEAL_LIFE", "amount": MerlinConstants.LIFE_ESSENCE_CRIT_SUCCESS_HEAL})
 		print("[Merlin] Critical success! Life essence +%d" % MerlinConstants.LIFE_ESSENCE_CRIT_SUCCESS_HEAL)
 
 	# Talent: feuillage_7 — Negative effects -30%
@@ -1376,7 +1328,7 @@ func _modulate_effects(base_effects: Array, outcome: String, _direction: String)
 
 
 func _apply_talent_shields(effects: Array) -> Array:
-	## Apply talent shields (cancel first damage, 1/run) + Souffle bouclier perk.
+	## Apply talent shields (cancel first damage, 1/run).
 	if not store or not store.has_method("is_talent_active"):
 		return effects
 
@@ -1745,14 +1697,8 @@ func _apply_chance_modifier_effects(effects: Array, outcome: String) -> Array:
 		for e in effects:
 			var eff: Dictionary = e.duplicate() if e is Dictionary else {}
 			var etype: String = str(eff.get("type", ""))
-			if etype == "HEAL_LIFE" or etype == "ADD_KARMA" or etype == "ADD_SOUFFLE":
+			if etype == "HEAL_LIFE" or etype == "ADD_REPUTATION":
 				eff["amount"] = int(eff.get("amount", 0)) * 2
-			elif etype == "GAUGE_DELTA":
-				var delta: Dictionary = eff.get("delta", {})
-				var doubled: Dictionary = {}
-				for k in delta:
-					doubled[k] = int(delta[k]) * 2
-				eff["delta"] = doubled
 			result.append(eff)
 		print("[Merlin] Chance modifier: doubled positive effects (success)")
 		return result
@@ -1795,7 +1741,7 @@ func _auto_progress_mission(outcome: String) -> void:
 				step = 1
 
 	if step > 0:
-		store.dispatch({"type": "TRIADE_PROGRESS_MISSION", "step": step})
+		store.dispatch({"type": "PROGRESS_MISSION", "step": step})
 
 
 func _check_biome_passive() -> void:
@@ -1810,36 +1756,12 @@ func _check_biome_passive() -> void:
 			print("[Merlin] Biome passive triggered: %s" % str(passive))
 			var passive_type: String = str(passive.get("type", ""))
 			if passive_type.contains("HEAL"):
-				store.dispatch({"type": "TRIADE_HEAL_LIFE", "amount": int(passive.get("amount", 5))})
+				store.dispatch({"type": "HEAL_LIFE", "amount": int(passive.get("amount", 5))})
 			else:
-				store.dispatch({"type": "TRIADE_DAMAGE_LIFE", "amount": int(passive.get("amount", 5))})
+				store.dispatch({"type": "DAMAGE_LIFE", "amount": int(passive.get("amount", 5))})
 			if ui and is_instance_valid(ui):
 				ui.show_biome_passive(passive)
 
-
-## Apply GAUGE_DELTA effects to WorldMapSystem (5 continuous gauges).
-## Effect format: {"type": "GAUGE_DELTA", "delta": {"esprit": 10, "vigueur": -5}}
-func _apply_gauge_deltas(effects: Array) -> void:
-	var wms: Node = get_node_or_null("/root/WorldMapSystem")
-	if wms == null or not wms.has_method("update_gauges"):
-		return
-
-	# Merge all GAUGE_DELTA effects into a single delta
-	var merged_delta: Dictionary = {}
-	for e in effects:
-		if not e is Dictionary:
-			continue
-		if str(e.get("type", "")) != "GAUGE_DELTA":
-			continue
-		var delta: Dictionary = e.get("delta", {})
-		for key in delta:
-			merged_delta[key] = int(merged_delta.get(key, 0)) + int(delta[key])
-
-	if merged_delta.is_empty():
-		return
-
-	print("[Merlin] Applying gauge delta: %s" % str(merged_delta))
-	wms.update_gauges(merged_delta)
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
@@ -1904,7 +1826,7 @@ func _use_skill(skill_id: String) -> void:
 		return
 
 	var raw_result: Variant = await store.dispatch({
-		"type": "TRIADE_USE_SKILL",
+		"type": "USE_SKILL",
 		"skill_id": skill_id,
 		"card": current_card,
 	})
@@ -2032,94 +1954,7 @@ func _on_mission_progress(step: int, total: int) -> void:
 # SIGNAL HANDLERS — UI
 # ═══════════════════════════════════════════════════════════════════════════════
 
-# ═══════════════════════════════════════════════════════════════════════════════
-# TYPOLOGY TIMER (Urgence run type — headless-safe)
-# ═══════════════════════════════════════════════════════════════════════════════
-
-func _process(delta: float) -> void:
-	if headless_mode or not _typology_timer_active:
-		return
-	_typology_timer_remaining -= delta
-	if ui and is_instance_valid(ui) and ui.has_method("update_typology_timer"):
-		ui.update_typology_timer(_typology_timer_remaining)
-	if _typology_timer_remaining <= 0.0:
-		_on_typology_timer_timeout()
-
-
-func _start_typology_timer() -> void:
-	if headless_mode or not store or not is_instance_valid(store):
-		return
-	var state: Dictionary = store.get_state() if store.has_method("get_state") else {}
-	var run: Dictionary = state.get("run", {})
-	var typology: String = str(run.get("typology", "classique"))
-	var tdata: Dictionary = MerlinConstants.RUN_TYPOLOGIES.get(typology, {})
-	if not tdata.get("timer_enabled", false):
-		return
-	_typology_timer_remaining = float(tdata.get("timer_seconds", 10))
-	_typology_timer_active = true
-	if ui and is_instance_valid(ui) and ui.has_method("show_typology_timer"):
-		ui.show_typology_timer(_typology_timer_remaining)
-
-
-func _stop_typology_timer() -> void:
-	_typology_timer_active = false
-	if ui and is_instance_valid(ui) and ui.has_method("hide_typology_timer"):
-		ui.hide_typology_timer()
-
-
-func _on_typology_timer_timeout() -> void:
-	_typology_timer_active = false
-	if ui and is_instance_valid(ui) and ui.has_method("hide_typology_timer"):
-		ui.hide_typology_timer()
-	# Appliquer effet timeout (ADD_TENSION:15)
-	var effect: String = str(MerlinConstants.RUN_TYPOLOGIES.get("urgence", {}).get("timeout_effect", ""))
-	if not effect.is_empty() and store and is_instance_valid(store):
-		store.dispatch({"type": "TRIADE_APPLY_EFFECTS", "effects": [effect], "source": "typology_timeout"})
-	# Forcer le choix gauche (option 0 = le plus sûr)
-	_on_option_chosen(0)
-
-
-## Retourne la typology de run active depuis le store.
-func _run_typology() -> String:
-	if not store or not is_instance_valid(store):
-		return "classique"
-	var state: Dictionary = store.get_state() if store.has_method("get_state") else {}
-	return str(state.get("run", {}).get("typology", "classique"))
-
-
-## Applique le modificateur D20 Parieur (crit >=17, fumble <=4).
-func _apply_parieur_modifier(roll: int, effects: Array) -> Dictionary:
-	if _run_typology() != "parieur":
-		return {"effects": effects, "event": ""}
-	var tdata: Dictionary = MerlinConstants.RUN_TYPOLOGIES.get("parieur", {})
-	var new_effects: Array = effects.duplicate()
-	var event: String = ""
-	if roll >= int(tdata.get("crit_threshold", 17)):
-		new_effects.append_array(["ADD_SOUFFLE:1", "ADD_KARMA:3"])
-		event = "critique"
-	elif roll <= int(tdata.get("fumble_threshold", 4)):
-		new_effects.append_array(["DAMAGE_LIFE:5", "ADD_TENSION:10"])
-		event = "fumble"
-	if not event.is_empty() and store and is_instance_valid(store):
-		var ts_update: Dictionary = {"crits": 0, "fumbles": 0}
-		if event == "critique":
-			ts_update = {"crits": 1, "fumbles": 0}
-		else:
-			ts_update = {"crits": 0, "fumbles": 1}
-		# Update typology_state dans le store
-		var state: Dictionary = store.get_state() if store.has_method("get_state") else {}
-		var run: Dictionary = state.get("run", {})
-		var ts: Dictionary = run.get("typology_state", {})
-		ts["crits"] = int(ts.get("crits", 0)) + ts_update["crits"]
-		ts["fumbles"] = int(ts.get("fumbles", 0)) + ts_update["fumbles"]
-		ts["d20_last"] = roll
-		run["typology_state"] = ts
-		state["run"] = run
-	return {"effects": new_effects, "event": event}
-
-
 func _on_option_chosen(option: int) -> void:
-	_stop_typology_timer()
 	_resolve_choice(option)
 
 

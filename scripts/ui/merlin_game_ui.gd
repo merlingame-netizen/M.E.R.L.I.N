@@ -151,7 +151,7 @@ var _scene_compositor: PixelSceneCompositor
 var _scene_compositor_v2: Control = null  ## CardSceneCompositor — layered sprite system (feature flag)
 var _pixel_portrait: PixelCharacterPortrait
 var _npc_portrait: PixelNpcPortrait
-var bestiole_wheel: BestioleWheelSystem
+var bestiole_wheel: Control  # Ogham wheel (will be reimplemented in Phase 7)
 var _reward_badge: MerlinRewardBadge
 var option_buttons: Array[Button] = []
 var option_labels: Array[Label] = []
@@ -225,7 +225,7 @@ var _souffle_btn: Button
 var _souffle_active := false
 var _perk_badge: Label = null  # B.1 — shows selected perk name near Souffle button
 
-# Bestiole companion (bottom-left, permanent)
+# Companion display (bottom-left, permanent) — will be reimplemented Phase 7
 var _bestiole_mini: Label
 var _bestiole_emote: Label
 
@@ -483,7 +483,7 @@ func _configure_ui() -> void:
 	if body_font:
 		_bestiole_mini.add_theme_font_override("font", body_font)
 	_bestiole_mini.add_theme_font_size_override("font_size", 18)
-	var bestiole_col: Color = MerlinVisual.CRT_PALETTE.get("bestiole", Color(0.6, 0.8, 0.5))
+	var bestiole_col: Color = MerlinVisual.CRT_PALETTE.get("green", Color(0.6, 0.8, 0.5))
 	_bestiole_mini.add_theme_color_override("font_color", bestiole_col)
 	_bestiole_mini.position = Vector2(16, get_viewport_rect().size.y - 64)
 	_bestiole_mini.z_index = 15
@@ -747,8 +747,8 @@ func _build_remaining_deck_stack() -> void:
 		var deck_style := StyleBoxFlat.new()
 		var ink_deck: Color = MerlinVisual.CRT_PALETTE.phosphor
 		deck_style.bg_color = Color(ink_deck.r, ink_deck.g, ink_deck.b, 0.96)
-		var bestiole: Color = MerlinVisual.CRT_PALETTE.bestiole
-		deck_style.border_color = Color(bestiole.r, bestiole.g, bestiole.b, 0.72)
+		var border_col: Color = MerlinVisual.CRT_PALETTE.get("green", Color(0.6, 0.8, 0.5))
+		deck_style.border_color = Color(border_col.r, border_col.g, border_col.b, 0.72)
 		deck_style.set_border_width_all(2)
 		deck_style.set_corner_radius_all(7)
 		deck_style.shadow_color = Color(0, 0, 0, 0.3)
@@ -1390,24 +1390,9 @@ func consume_souffle_active() -> void:
 	_update_souffle_btn_state()
 
 
-func _toggle_bestiole_wheel() -> void:
-	## Lazy-load and toggle Bestiole Ogham wheel (Tab key).
-	if not bestiole_wheel or not is_instance_valid(bestiole_wheel):
-		var wheel_scene := preload("res://scenes/ui/BestioleWheel.tscn")
-		bestiole_wheel = wheel_scene.instantiate() as BestioleWheelSystem
-		add_child(bestiole_wheel)
-		bestiole_wheel.z_index = 25
-		bestiole_wheel.ogham_selected.connect(func(_skill_id: String):
-			SFXManager.play("skill_activate")
-		)
-	if bestiole_wheel.is_open:
-		bestiole_wheel.close_wheel()
-	else:
-		var store_node: Node = get_node_or_null("/root/MerlinStore")
-		if store_node and store_node is MerlinStore:
-			bestiole_wheel.open_wheel(store_node as MerlinStore)
-		else:
-			SFXManager.play("error")
+func _toggle_ogham_wheel() -> void:
+	## Toggle Ogham selection wheel (Tab key) — will be reimplemented in Phase 7.
+	pass
 
 
 func update_life_essence(life: int) -> void:
@@ -2817,7 +2802,7 @@ func _input(event: InputEvent) -> void:
 				if _highlighted_option >= 0:
 					_on_option_pressed(_highlighted_option)
 			KEY_TAB:
-				_toggle_bestiole_wheel()
+				_toggle_ogham_wheel()
 
 
 func _highlight_option(option: int) -> void:
@@ -3100,20 +3085,8 @@ func show_end_screen(ending: Dictionary) -> void:
 	orn_bot.add_theme_color_override("font_color", MerlinVisual.CRT_PALETTE.amber)
 	vbox.add_child(orn_bot)
 
-	# Aspects final state
-	var aspects_label := Label.new()
-	var aspects_text := "Aspects finaux: "
-	for aspect in ["Corps", "Ame", "Monde"]:
-		var state_val: int = current_aspects.get(aspect, 0)
-		var info = MerlinConstants.TRIADE_ASPECT_INFO.get(aspect, {})
-		var states = info.get("states", {})
-		var animal_key: String = str(info.get("animal_key", aspect))
-		var name_key: String = str(info.get("name_key", aspect))
-		aspects_text += "%s %s (%s) | " % [tr(animal_key), tr(name_key), tr(str(states.get(state_val, "?")))]
-	aspects_label.text = aspects_text.trim_suffix(" | ")
-	aspects_label.add_theme_font_size_override("font_size", 12)
-	aspects_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	vbox.add_child(aspects_label)
+	# End-of-run summary (faction rep will be shown here in Phase 7)
+
 
 	# Action buttons
 	var spacer := Control.new()
@@ -3449,7 +3422,7 @@ func show_score_to_d20(score: int, d20: int, tool_bonus: int) -> void:
 	if tool_bonus != 0:
 		bonus_text = " (bonus %d)" % tool_bonus
 	_dice_dc_label.text = "Score: %d \u2192 D20: %d%s" % [score, d20, bonus_text]
-	_dice_dc_label.add_theme_color_override("font_color", MerlinVisual.CRT_PALETTE.bestiole)
+	_dice_dc_label.add_theme_color_override("font_color", MerlinVisual.CRT_PALETTE.get("green", Color(0.6, 0.8, 0.5)))
 	_dice_display.text = str(d20)
 	_dice_result_label.text = ""
 

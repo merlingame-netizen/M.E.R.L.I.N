@@ -877,7 +877,6 @@ func _create_brumes_event_row(event: Dictionary) -> PanelContainer:
 
 const MAX_EVENT_REROLLS := 3
 const MAX_EVENT_LOCKS := 3
-const REROLL_AWEN_COST := 1
 
 func _build_event_tooltip(event: Dictionary) -> String:
 	var parts: Array = []
@@ -937,7 +936,7 @@ func _add_brumes_actions(parent: VBoxContainer, event: Dictionary) -> void:
 	# Reroll button
 	var rerolls_used: int = run.get("event_rerolls_used", 0)
 	var reroll_btn := Button.new()
-	reroll_btn.text = "Reroll (1 Awen)"
+	reroll_btn.text = "Reroll"
 	reroll_btn.disabled = rerolls_used >= MAX_EVENT_REROLLS or is_locked
 	reroll_btn.focus_mode = Control.FOCUS_NONE
 	reroll_btn.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
@@ -982,11 +981,6 @@ func _on_reroll_event(_event_id: String) -> void:
 	var rerolls: int = run.get("event_rerolls_used", 0)
 	if rerolls >= MAX_EVENT_REROLLS:
 		return
-	# Check Awen cost
-	var awen: int = run.get("awen", 0)
-	if awen < REROLL_AWEN_COST:
-		return
-	run["awen"] = awen - REROLL_AWEN_COST
 	run["event_rerolls_used"] = rerolls + 1
 	merlin_store.state["run"] = run
 	SFXManager.play("click")

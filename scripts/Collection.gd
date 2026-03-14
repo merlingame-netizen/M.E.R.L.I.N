@@ -182,7 +182,7 @@ func _get_real_progression_stats() -> Array:
 	var meta: Dictionary = store.state.get("meta", {})
 	var endings_seen: Array = meta.get("endings_seen", [])
 	var unlocked_talents: Array = meta.get("talent_tree", {}).get("unlocked", [])
-	var skills_unlocked: Array = store.state.get("bestiole", {}).get("skills_unlocked", [])
+	var skills_unlocked: Array = store.state.get("meta", {}).get("skills_unlocked", [])
 	var total_runs: int = int(meta.get("total_runs", 0))
 	var total_cards: int = int(meta.get("total_cards_played", 0))
 	var total_essence: int = _count_total_essence()
@@ -223,11 +223,7 @@ func _get_real_achievements() -> Array:
 
 func _get_ending_desc(ending_title: String) -> String:
 	"""Find the description/condition for an ending by title."""
-	# Victory endings
-	for key in MerlinConstants.TRIADE_VICTORY_ENDINGS:
-		if MerlinConstants.TRIADE_VICTORY_ENDINGS[key].get("title", "") == ending_title:
-			return str(MerlinConstants.TRIADE_VICTORY_ENDINGS[key].get("condition", "Victoire"))
-	# Life essence depletion
+	# Victory endings — will be populated in Phase 1 (VICTORY_ENDINGS constant)
 	if ending_title == "Essences Epuisees":
 		return "Essences de vie taries"
 	return "Fin decouverte"
@@ -240,19 +236,16 @@ func _get_real_collection() -> Array:
 	var skills_unlocked: Array = []
 	if store:
 		endings_seen = store.state.get("meta", {}).get("endings_seen", [])
-		skills_unlocked = store.state.get("bestiole", {}).get("skills_unlocked", [])
+		skills_unlocked = store.state.get("meta", {}).get("skills_unlocked", [])
 
-	# Victory endings (no more 12 chute endings — Phase 43)
-	for key in MerlinConstants.TRIADE_VICTORY_ENDINGS:
-		var ending: Dictionary = MerlinConstants.TRIADE_VICTORY_ENDINGS[key]
-		var title: String = str(ending.get("title", ""))
-		var discovered: bool = endings_seen.has(title)
+	# Victory endings — will be populated from VICTORY_ENDINGS constant (Phase 1)
+	for title in endings_seen:
 		items.append({
-			"icon": title.left(1) if discovered else "?",
-			"name": title if discovered else "???",
-			"req": str(ending.get("condition", "")) if discovered else "???",
-			"locked": not discovered,
-			"hidden": not discovered,
+			"icon": str(title).left(1),
+			"name": str(title),
+			"req": _get_ending_desc(str(title)),
+			"locked": false,
+			"hidden": false,
 		})
 
 	# Secret ending placeholder

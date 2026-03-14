@@ -191,13 +191,10 @@ const HOTSPOT_DEFS := [
 # =============================================================================
 
 var _bestiole: Control = null
-## true = pixel art AnimatedSprite2D, false = procedural blob
-var _use_sprite_bestiole: bool = true
 var _bubble: MerlinBubble = null
 var _radial: BiomeRadial = null
 var _partir_btn: Button = null
 var _hotspots: Array = []
-var _typology_panel: Control = null  # Typology selection panel (before run launch)
 var _chronicle_label: Label = null
 var _meta_label: Label = null
 var _scanline_overlay: ColorRect = null
@@ -425,18 +422,10 @@ func _create_chronicle_header() -> void:
 # =============================================================================
 
 func _create_bestiole() -> void:
-	var script_path: String
-	if _use_sprite_bestiole:
-		script_path = "res://scripts/ui/bestiole_sprite.gd"
-	else:
-		script_path = "res://scripts/ui/bestiole_creature.gd"
+	var script_path: String = "res://scripts/ui/bestiole_creature.gd"
 	var BestioleClass = load(script_path)
 	if BestioleClass == null:
-		# Fallback to procedural if sprite script fails to load
-		if _use_sprite_bestiole:
-			BestioleClass = load("res://scripts/ui/bestiole_creature.gd")
-		if BestioleClass == null:
-			return
+		return
 	_bestiole = Control.new()
 	_bestiole.set_script(BestioleClass)
 	_bestiole.call("setup", 120.0)
@@ -633,107 +622,6 @@ func _on_radial_biome_selected(biome_key: String) -> void:
 	var biome_name: String = BIOME_DATA.get(biome_key, {}).get("name", biome_key)
 	_request_merlin_passive_comment("destination: %s" % biome_name)
 
-	# Afficher le panel de sélection de typology avant le lancement
-	_show_typology_panel()
-
-
-func _show_typology_panel() -> void:
-	var vs: Vector2 = get_viewport_rect().size
-
-	# Backdrop overlay
-	var backdrop := ColorRect.new()
-	backdrop.set_anchors_preset(Control.PRESET_FULL_RECT)
-	backdrop.color = Color(0.0, 0.0, 0.0, 0.65)
-
-	# Panel with CRT terminal styling
-	var panel := PanelContainer.new()
-	var pw: float = 320.0
-	var ph: float = 340.0
-	panel.custom_minimum_size = Vector2(pw, ph)
-	panel.position = (vs - Vector2(pw, ph)) * 0.5
-	var panel_style: StyleBoxFlat = MerlinVisual.make_modal_style(true)
-	panel.add_theme_stylebox_override("panel", panel_style)
-
-	var container := Control.new()
-	container.set_anchors_preset(Control.PRESET_FULL_RECT)
-	container.add_child(backdrop)
-	container.add_child(panel)
-	_typology_panel = container
-	add_child(container)
-
-	var vbox := VBoxContainer.new()
-	vbox.add_theme_constant_override("separation", 10)
-	panel.add_child(vbox)
-
-	# Title
-	var title := Label.new()
-	title.text = "> MODE DE RUN"
-	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	var title_font: Font = MerlinVisual.get_font("title")
-	if title_font:
-		title.add_theme_font_override("font", title_font)
-	title.add_theme_font_size_override("font_size", MerlinVisual.BODY_SIZE)
-	title.add_theme_color_override("font_color", MerlinVisual.CRT_PALETTE["amber"])
-	vbox.add_child(title)
-
-	# Separator
-	var sep := HSeparator.new()
-	sep.add_theme_constant_override("separation", 4)
-	sep.add_theme_stylebox_override("separator", _make_separator_style())
-	vbox.add_child(sep)
-
-	# Classique button (default, emphasized)
-	var skip_btn := Button.new()
-	skip_btn.text = "[ Classique ]  Standard"
-	MerlinVisual.apply_celtic_option_theme(skip_btn, MerlinVisual.CRT_PALETTE["phosphor"])
-	skip_btn.pressed.connect(func(): _on_typology_selected("classique"))
-	skip_btn.mouse_entered.connect(func(): SFXManager.play("hover"))
-	vbox.add_child(skip_btn)
-
-	# 4 typologies
-	var accent_colors: Dictionary = {
-		"urgence": MerlinVisual.CRT_PALETTE["danger"],
-		"parieur": MerlinVisual.CRT_PALETTE["amber"],
-		"diplomate": MerlinVisual.CRT_PALETTE["cyan"],
-		"chasseur": MerlinVisual.CRT_PALETTE["phosphor"],
-	}
-	for typology_id in ["urgence", "parieur", "diplomate", "chasseur"]:
-		var tdata: Dictionary = MerlinConstants.RUN_TYPOLOGIES.get(typology_id, {})
-		var icon: String = str(tdata.get("icon", ""))
-		var name_str: String = str(tdata.get("name", typology_id))
-		var btn := Button.new()
-		btn.text = "%s %s" % [icon, name_str]
-		var accent: Color = accent_colors.get(typology_id, MerlinVisual.CRT_PALETTE["phosphor_dim"])
-		MerlinVisual.apply_celtic_option_theme(btn, accent)
-		var tid: String = typology_id
-		btn.pressed.connect(func(): _on_typology_selected(tid))
-		btn.mouse_entered.connect(func(): SFXManager.play("hover"))
-		vbox.add_child(btn)
-
-	# Fade in
-	container.modulate.a = 0.0
-	var tw := create_tween()
-	tw.tween_property(container, "modulate:a", 1.0, 0.25)
-
-
-func _make_separator_style() -> StyleBoxFlat:
-	var s := StyleBoxFlat.new()
-	s.bg_color = MerlinVisual.CRT_PALETTE["border"]
-	s.content_margin_top = 1
-	s.content_margin_bottom = 1
-	return s
-
-
-func _on_typology_selected(typology: String) -> void:
-	# Fermer le panel
-	if _typology_panel and is_instance_valid(_typology_panel):
-		var tw := create_tween()
-		tw.tween_property(_typology_panel, "modulate:a", 0.0, 0.2)
-		tw.tween_callback(_typology_panel.queue_free)
-		_typology_panel = null
-	# Enregistrer la typology dans le store
-	if store and is_instance_valid(store):
-		store.dispatch({"type": "SET_TYPOLOGY", "typology": typology})
 	_launch_adventure()
 
 

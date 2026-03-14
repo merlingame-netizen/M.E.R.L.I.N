@@ -114,10 +114,6 @@ var _last_narrative_fallback_idx: int = -1
 const REQUIRED_CARD_KEYS := ["text", "options"]
 const REQUIRED_OPTION_KEYS := ["direction", "label", "effects"]
 const VALID_DIRECTIONS := ["left", "right"]
-const VALID_GAUGES := ["Vigueur", "Esprit", "Faveur", "Ressources"]
-
-const MAX_GAUGE_DELTA := 40
-const MIN_GAUGE_DELTA := -40
 
 # ═══════════════════════════════════════════════════════════════════════════════
 # MERLIN AI REFERENCE
@@ -189,7 +185,7 @@ func build_category_user_prompt(event_category: String, context: Dictionary) -> 
 	user_tpl = user_tpl.replace("{karma}", str(context.get("karma", 0)))
 	user_tpl = user_tpl.replace("{tension}", str(context.get("tension", 40)))
 	user_tpl = user_tpl.replace("{life}", str(context.get("life_essence", 100)))
-	user_tpl = user_tpl.replace("{bestiole_bond}", str(context.get("bestiole_bond", 50)))
+
 
 	# Aspect states
 	for aspect in ["Corps", "Ame", "Monde"]:
@@ -1444,7 +1440,7 @@ func _substitute_template_vars(tpl: String, context: Dictionary, cards_played: i
 	tpl = tpl.replace("{karma}", str(context.get("karma", 0)))
 	tpl = tpl.replace("{tension}", str(context.get("tension", 0)))
 	tpl = tpl.replace("{life}", str(context.get("life_essence", 100)))
-	tpl = tpl.replace("{bestiole_bond}", str(context.get("bestiole_bond", 50)))
+
 	tpl = tpl.replace("{scenario_title}", str(context.get("scenario_title", "Voyage en Broceliande")))
 	tpl = tpl.replace("{scenario_theme}", str(context.get("scenario_theme", theme_word)))
 	tpl = tpl.replace("{anchor_context}", str(context.get("anchor_context", "")))
@@ -2414,16 +2410,6 @@ func _validate_triade_effect(effect: Dictionary) -> Dictionary:
 func build_context(state: Dictionary) -> Dictionary:
 	var run = state.get("run", {})
 	var bestiole = state.get("bestiole", {})
-	var gauges = run.get("gauges", {})
-
-	var critical_gauges := []
-	for gauge_name in VALID_GAUGES:
-		var value = int(gauges.get(gauge_name, 50))
-		# Legacy gauge thresholds (deprecated — inline defaults)
-		if value <= 15:
-			critical_gauges.append({"name": gauge_name, "value": value, "direction": "low"})
-		elif value >= 85:
-			critical_gauges.append({"name": gauge_name, "value": value, "direction": "high"})
 
 	var skills_ready := []
 	var cooldowns = bestiole.get("skill_cooldowns", {})
@@ -2435,8 +2421,6 @@ func build_context(state: Dictionary) -> Dictionary:
 	var mood := _get_bestiole_mood(bestiole)
 
 	return {
-		"gauges": gauges.duplicate(),
-		"critical_gauges": critical_gauges,
 		"bestiole": {
 			"name": bestiole.get("name", "Bestiole"),
 			"mood": mood,
@@ -2583,16 +2567,6 @@ func _validate_effect(effect: Dictionary, _effect_engine: MerlinEffectEngine) ->
 	var effect_type = effect.get("type", "")
 
 	match effect_type:
-		"ADD_GAUGE", "REMOVE_GAUGE":
-			var target = effect.get("target", "")
-			if not target in VALID_GAUGES:
-				return null
-			var value = int(effect.get("value", 0))
-			value = clampi(value, MIN_GAUGE_DELTA, MAX_GAUGE_DELTA)
-			if effect_type == "REMOVE_GAUGE":
-				value = -abs(value)
-			return {"type": effect_type, "target": target, "value": value}
-
 		"SET_FLAG":
 			var flag = effect.get("flag", "")
 			if flag.is_empty():
