@@ -63,7 +63,7 @@ NARRATOR_IDENTITY = (
     "Vocabulaire: nemeton, ogham, sidhe, dolmen, korrigans, brume, mousse, pierre dressee."
 )
 
-# Faction reputation states for game-wide context (replaces old Triade aspects)
+# Faction reputation states for game-wide context (v2.2)
 FACTION_CONTEXTS = {
     "neutral": "Druides=50 Anciens=50 Korrigans=50 Niamh=50 Ankou=50",
     "druides_high": "Druides=80 Anciens=40 Korrigans=50 Niamh=50 Ankou=30",
@@ -73,12 +73,37 @@ FACTION_CONTEXTS = {
     "anciens_high": "Anciens=80 Druides=60 Korrigans=40 Niamh=50 Ankou=40",
 }
 
-# Random game states for context variation (v2.2: factions, vie, tension)
+# Card types with weights (v2.2 GDD section 3.4)
+CARD_TYPES = ["narrative", "narrative", "narrative", "narrative",  # 80%
+              "event", "event",                                     # 10%
+              "promise",                                            # 5%
+              "merlin_direct"]                                      # 5%
+
+# MOS trust tiers (v2.2 GDD section 6.8)
+TRUST_TIERS = ["T0", "T1", "T2", "T3"]
+
+# Random game states for context variation (v2.2: factions, vie, tension, promesses, trust)
 GAME_STATE_TEMPLATES = [
     "Carte {card}. Vie: {vie}/100. {factions}.",
     "{factions}. Vie: {vie}. Carte {card}. Tension: {tension}.",
     "Carte {card}. {factions}. Promesses actives: {promesses}.",
+    "Carte {card} ({card_type}). Vie: {vie}/100. {factions}. Confiance Merlin: {trust}.",
+    "{factions}. Vie: {vie}. Carte {card}. Biome: {biome}. Tension: {tension}.",
 ]
+
+# PNJ recurrents par biome (v2.2 GDD section 3.7)
+BIOME_PNJ = {
+    "Foret de Broceliande": "Gwenn la Cueilleuse",
+    "Landes de Bruyere": "Aedan l'Ermite",
+    "Cotes Sauvages": "Bran le Passeur",
+    "Villages Celtes": "Morwenna la Forge",
+    "Cercles de Pierres": "Seren l'Etoilee",
+    "Marais des Korrigans": "Puck le Lutin",
+    "Collines aux Dolmens": "Taliesin le Barde",
+    "Iles Mystiques": "Branwen la Spectrale",
+}
+
+BIOME_NAMES = list(BIOME_PNJ.keys())
 
 
 def load_json(path: str):
@@ -176,7 +201,7 @@ def make_conversation(system: str, user: str, assistant: str, scene_id: str = ""
 
 
 def random_game_state(factions_desc: str = "") -> str:
-    """Generate a random game state context string (v2.2: factions, vie, tension)."""
+    """Generate a random game state context string (v2.2: factions, vie, tension, trust, biome)."""
     if not factions_desc:
         factions_desc = random.choice(list(FACTION_CONTEXTS.values()))
     tmpl = random.choice(GAME_STATE_TEMPLATES)
@@ -186,6 +211,9 @@ def random_game_state(factions_desc: str = "") -> str:
         factions=factions_desc,
         tension=random.choice(["basse", "moyenne", "haute"]),
         promesses=random.randint(0, 2),
+        card_type=random.choice(CARD_TYPES),
+        trust=random.choice(TRUST_TIERS),
+        biome=random.choice(BIOME_NAMES),
     )
 
 
@@ -454,6 +482,83 @@ def extract_player_choice_samples(intro: list) -> list:
     return samples
 
 
+def extract_promesse_samples() -> list:
+    """Synthetic promesse/quete samples — teach the model promise card patterns (v2.2)."""
+    promesse_scenarios = [
+        ("Un esprit des bois te demande de planter un chene avant 3 cartes.", "druides", "planter_chene"),
+        ("Bran le Passeur te confie un colis. Livre-le avant la prochaine tempete.", "anciens", "livrer_colis"),
+        ("Puck te lance un defi: trouve son tresor cache dans les marais.", "korrigans", "tresor_puck"),
+        ("Niamh murmure: 'Rapporte-moi une fleur du lac avant le crepuscule.'", "niamh", "fleur_lac"),
+        ("L'Ankou te previent: un passage s'ouvre pour 5 cartes. Trouve-le.", "ankou", "passage_ankou"),
+    ]
+    samples = []
+    for text, faction, promise_id in promesse_scenarios:
+        # Card that creates a promise
+        samples.append(make_conversation(
+            f"{MERLIN_IDENTITY} Genere une carte de type promesse. Le Voyageur recoit une quete avec un delai.",
+            f"{random_game_state()} Biome: {random.choice(BIOME_NAMES)}. Type: promesse. Cree une promesse.",
+            text,
+        ))
+        # Merlin commenting on a promise
+        samples.append(make_conversation(
+            merlin_system("mysterious"),
+            f"{random_game_state()} Le Voyageur a une promesse active: {promise_id}. Commente.",
+            f"Cette promesse pese sur ton chemin, Voyageur. Les {faction.title()} observent.",
+        ))
+    return samples
+
+
+def extract_pnj_samples() -> list:
+    """Synthetic PNJ recurrent samples — teach biome-specific named characters (v2.2)."""
+    pnj_dialogues = {
+        "Gwenn la Cueilleuse": [
+            "Voyageur, ces herbes guerissent mais seulement si tu sais les cueillir au bon moment.",
+            "La foret donne a ceux qui respectent ses racines. Viens, je vais te montrer.",
+        ],
+        "Aedan l'Ermite": [
+            "Le vent porte des reponses, si tu sais ecouter. Assieds-toi.",
+            "La solitude n'est pas l'absence. C'est la presence de tout ce que tu fuis.",
+        ],
+        "Bran le Passeur": [
+            "Le prix du passage n'est pas en or. C'est un secret que tu portes.",
+            "Les vagues racontent des histoires. Celle-ci parle de toi.",
+        ],
+        "Morwenna la Forge": [
+            "Le fer ne ment pas. Il revele la force de celui qui le frappe.",
+            "Les clans debattent, mais c'est le metal qui tranche.",
+        ],
+        "Seren l'Etoilee": [
+            "Les etoiles d'ici ne sont pas celles d'ailleurs. Regarde bien.",
+            "Le rituel demande du silence. Es-tu capable de te taire?",
+        ],
+        "Puck le Lutin": [
+            "Hehe! Tu cherches un tresor? Moi aussi. On fait la course?",
+            "Les feux follets mentent. Moi jamais. Enfin... presque.",
+        ],
+        "Taliesin le Barde": [
+            "Chaque pierre ici porte un nom. Celui-ci est le plus ancien de tous.",
+            "Je chante pour les morts. Ils ecoutent mieux que les vivants.",
+        ],
+        "Branwen la Spectrale": [
+            "Tu vois le voile? Il est mince ici. Tres mince.",
+            "Morgane attend au sommet. Mais la question est: es-tu pret?",
+        ],
+    }
+    samples = []
+    for pnj_name, dialogues in pnj_dialogues.items():
+        biome = next((b for b, p in BIOME_PNJ.items() if p == pnj_name), None)
+        if biome is None:
+            print(f"  [warn] PNJ '{pnj_name}' not found in BIOME_PNJ, skipping")
+            continue
+        for dialogue in dialogues:
+            samples.append(make_conversation(
+                f"{NARRATOR_IDENTITY} PNJ actif: {pnj_name} ({biome}). Ecris un dialogue en sa voix.",
+                f"{random_game_state()} Biome: {biome}. Le Voyageur rencontre {pnj_name}.",
+                dialogue,
+            ))
+    return samples
+
+
 def extract_fallback_comments() -> list:
     """Merlin's tone-specific comments (game-wide short reactions)."""
     fallbacks = {
@@ -547,13 +652,24 @@ def main():
     fallback_samples = extract_fallback_comments()
     print(f"  Tone reactions (gameplay):   {len(fallback_samples)} samples")
     all_samples.extend(fallback_samples)
+
+    # 6. Promesse/quete card samples (v2.2)
+    promesse_samples = extract_promesse_samples()
+    print(f"  Promesse cards (v2.2):       {len(promesse_samples)} samples")
+    all_samples.extend(promesse_samples)
+
+    # 7. PNJ recurrents per biome (v2.2)
+    pnj_samples = extract_pnj_samples()
+    print(f"  PNJ recurrents (v2.2):       {len(pnj_samples)} samples")
+    all_samples.extend(pnj_samples)
+
     output_path = OUTPUT_SCENE_AWARE if SCENE_AWARE else OUTPUT
 
     # Write output
     output_data = {
         "_meta": {
-            "version": "2.1.0",
-            "description": "M.E.R.L.I.N. narrator dataset for LoRA fine-tuning (optionally scene-aware).",
+            "version": "2.2.0",
+            "description": "M.E.R.L.I.N. narrator dataset for LoRA fine-tuning v2.2 (factions, promesses, MOS, PNJ).",
             "format": "ChatML conversations (system/user/assistant)",
             "base_model": "Qwen/Qwen3.5-4B",
             "total_samples": len(all_samples),

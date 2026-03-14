@@ -2,11 +2,14 @@
 """
 Augment the M.E.R.L.I.N. narrator training dataset with synthetic variations.
 
-Augmentation strategies:
-  1. Context permutation: reuse texts with different aspect states
+Augmentation strategies (v2.2):
+  1. Context permutation: reuse texts with different faction states
   2. Tone transfer: rephrase samples for different tones (requires API key)
   3. Celtic vocabulary injection: add druidic terms to existing texts
   4. Biome cross-pollination: mix biome contexts with existing texts
+  5. Scene contrast: reinforce scene-boundary adherence (scene-aware only)
+  6. Card type variation: vary card types (narrative/event/promise/merlin_direct)
+  7. Trust tier variation: vary MOS trust levels (T0-T3)
 
 Usage:
   python tools/lora/augment_dataset.py [--api-augment]
@@ -63,6 +66,10 @@ BIOMES = [
 
 TONES = ["playful", "mysterious", "warning", "melancholy", "warm", "cryptic", "neutral"]
 
+# v2.2 card types and trust tiers for augmentation
+CARD_TYPES = ["narrative", "event", "promise", "merlin_direct"]
+TRUST_TIERS = ["T0", "T1", "T2", "T3"]
+
 
 def load_json(path: str):
     with open(path, "r", encoding="utf-8") as f:
@@ -80,7 +87,7 @@ def make_conversation(system: str, user: str, assistant: str) -> dict:
 
 
 def augment_context_permutation(samples: list) -> list:
-    """Reuse narrative texts with different aspect state contexts."""
+    """Reuse narrative texts with different faction state contexts."""
     augmented = []
     # Only augment arrival/scenario samples (those with aspect state info)
     for sample in samples:
@@ -162,6 +169,37 @@ def augment_tone_transfer(samples: list) -> list:
                 sample["conversations"][2]["content"],
             ))
 
+    return augmented
+
+
+def augment_card_type(samples: list) -> list:
+    """Inject card type context into user prompts (v2.2: narrative/event/promise/merlin_direct)."""
+    augmented = []
+    for sample in samples:
+        user_msg = sample["conversations"][1]["content"]
+        sys_msg = sample["conversations"][0]["content"]
+        assistant_msg = sample["conversations"][2]["content"]
+        # Only augment samples that reference game state (Carte/Vie)
+        if "Carte " in user_msg and "(" not in user_msg:
+            card_type = random.choice(CARD_TYPES)
+            new_user = re.sub(r"Carte (\d+)\.", f"Carte \\1 ({card_type}).", user_msg)
+            if new_user != user_msg:
+                augmented.append(make_conversation(sys_msg, new_user, assistant_msg))
+    return augmented
+
+
+def augment_trust_tier(samples: list) -> list:
+    """Inject MOS trust tier into user prompts (v2.2: T0-T3)."""
+    augmented = []
+    for sample in samples:
+        user_msg = sample["conversations"][1]["content"]
+        sys_msg = sample["conversations"][0]["content"]
+        assistant_msg = sample["conversations"][2]["content"]
+        # Only augment Merlin voice samples
+        if "Merlin" in sys_msg and "Confiance" not in user_msg:
+            trust = random.choice(TRUST_TIERS)
+            new_user = user_msg.rstrip(".") + f". Confiance Merlin: {trust}."
+            augmented.append(make_conversation(sys_msg, new_user, assistant_msg))
     return augmented
 
 
@@ -254,6 +292,8 @@ def main():
         "celtic_vocab_injection",
         "biome_cross_pollination",
         "tone_transfer_soft",
+        "card_type_variation",
+        "trust_tier_variation",
     ]
 
     # Strategy 1: Context permutation
@@ -276,14 +316,24 @@ def main():
     print(f"  Tone transfer (soft): +{len(tone_samples)}")
     all_augmented.extend(tone_samples)
 
-    # Strategy 5: Scene contrast (scene-aware datasets only)
+    # Strategy 5: Card type variation (v2.2)
+    card_type_samples = augment_card_type(base_samples)
+    print(f"  Card type variation: +{len(card_type_samples)}")
+    all_augmented.extend(card_type_samples)
+
+    # Strategy 6: Trust tier variation (v2.2)
+    trust_samples = augment_trust_tier(base_samples)
+    print(f"  Trust tier variation: +{len(trust_samples)}")
+    all_augmented.extend(trust_samples)
+
+    # Strategy 7: Scene contrast (scene-aware datasets only)
     if use_scene_aware:
         scene_samples = augment_scene_contrast(base_samples)
         print(f"  Scene contrast (positive/negative): +{len(scene_samples)}")
         all_augmented.extend(scene_samples)
         strategies.append("scene_contrast_locking")
 
-    # Strategy 6: API-based paraphrasing (optional)
+    # Strategy 8: API-based paraphrasing (optional)
     if use_api:
         print("\n  [API augmentation not yet implemented]")
         print("  To implement: use Claude API to paraphrase samples in different tones")
@@ -295,8 +345,8 @@ def main():
     # Write output
     output_data = {
         "_meta": {
-            "version": "1.0.0",
-            "description": "Augmented M.E.R.L.I.N. narrator dataset for LoRA fine-tuning",
+            "version": "2.2.0",
+            "description": "Augmented M.E.R.L.I.N. narrator dataset for LoRA fine-tuning (v2.2: factions, promesses, MOS)",
             "format": "ChatML conversations",
             "base_model": "Qwen/Qwen3.5-4B",
             "scene_aware_mode": use_scene_aware,

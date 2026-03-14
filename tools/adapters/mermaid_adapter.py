@@ -30,7 +30,7 @@ from adapters.base_adapter import BaseAdapter  # noqa: E402
 
 DEFAULT_OUTPUT_DIR = Path.home() / "Downloads"
 THEME_DIR = Path.home() / ".claude" / "workspace" / "orange"
-MCD_SOURCE_DIR = Path.home() / ".claude" / "workspace" / "orange"
+MCD_SOURCE_DIR = Path.home() / ".claude" / "workspace" / "mermaid"
 _ALLOWED_OUTPUT_ROOTS = [Path.home().resolve()]
 _ALLOWED_EXTENSIONS = {".png", ".svg", ".pdf"}
 _MAX_INPUT_BYTES = 512 * 1024  # 512 KB

@@ -28,6 +28,8 @@ ADAPTER_REGISTRY: dict[str, tuple[str, str, str | None]] = {
     "figma":       ("adapters.figma_adapter",       "FigmaAdapter",       None),
     "stitch":      ("adapters.stitch_adapter",      "StitchAdapter",      None),
     "trellis":     ("adapters.trellis_adapter",     "TrellisAdapter",     None),
+    # ── Wave 4 — PBI Preview pipeline ────────────────────────────────────
+    "pbi-preview": ("adapters.pbi_preview_adapter", "PBIPreviewAdapter",  None),
 }
 
 

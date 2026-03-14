@@ -1,39 +1,42 @@
-# GBNF Grammar for Game Master Choices — M.E.R.L.I.N. Phase 33
+# GBNF Grammar for Game Master Choices — M.E.R.L.I.N. v2.2
 # GM generates contextual choice labels + effects + minigame hint.
 # Used by Brain 2 (Game Master) with constrained decoding.
+# Effects: ADD_REPUTATION, HEAL_LIFE, DAMAGE_LIFE, UNLOCK_OGHAM, ADD_TAG, TRIGGER_EVENT, PROMISE
 
 root ::= ws "{" ws labels-kv "," ws minigame-kv "," ws options-kv ws "}" ws
 
 labels-kv   ::= "\"labels\"" ws ":" ws "[" ws string "," ws string "," ws string ws "]"
 minigame-kv ::= "\"minigame\"" ws ":" ws field-name
 
-options-kv ::= "\"options\"" ws ":" ws "[" ws option-left "," ws option-center "," ws option-right ws "]"
+options-kv ::= "\"options\"" ws ":" ws "[" ws option ("," ws option)* ws "]"
 
-option-left   ::= "{" ws label-kv "," ws effects-kv ws "}"
-option-center ::= "{" ws label-kv "," ws cost-kv "," ws effects-kv ws "}"
-option-right  ::= "{" ws label-kv "," ws effects-kv ws "}"
+option ::= "{" ws label-kv "," ws effects-kv ws "}"
 
 label-kv   ::= "\"label\"" ws ":" ws string
-cost-kv    ::= "\"cost\"" ws ":" ws [1-3]
 effects-kv ::= "\"effects\"" ws ":" ws "[" ws effect-list ws "]"
 
 effect-list ::= effect | effect "," ws effect
 
-effect ::= shift-effect | karma-effect | souffle-effect
+effect ::= reputation-effect | heal-effect | damage-effect | ogham-effect | tag-effect | event-effect | promise-effect
 
-shift-effect   ::= "{" ws "\"type\"" ws ":" ws "\"SHIFT_ASPECT\"" "," ws aspect-kv "," ws direction-kv ws "}"
-karma-effect   ::= "{" ws "\"type\"" ws ":" ws "\"ADD_KARMA\"" "," ws amount-kv ws "}"
-souffle-effect ::= "{" ws "\"type\"" ws ":" ws souffle-type "," ws amount-kv ws "}"
+reputation-effect ::= "{" ws "\"type\"" ws ":" ws "\"ADD_REPUTATION\"" "," ws faction-kv "," ws amount-kv ws "}"
+heal-effect       ::= "{" ws "\"type\"" ws ":" ws "\"HEAL_LIFE\"" "," ws amount-kv ws "}"
+damage-effect     ::= "{" ws "\"type\"" ws ":" ws "\"DAMAGE_LIFE\"" "," ws amount-kv ws "}"
+ogham-effect      ::= "{" ws "\"type\"" ws ":" ws "\"UNLOCK_OGHAM\"" "," ws ogham-kv ws "}"
+tag-effect        ::= "{" ws "\"type\"" ws ":" ws tag-type "," ws tag-name-kv ws "}"
+event-effect      ::= "{" ws "\"type\"" ws ":" ws "\"TRIGGER_EVENT\"" "," ws event-id-kv ws "}"
+promise-effect    ::= "{" ws "\"type\"" ws ":" ws "\"CREATE_PROMISE\"" "," ws promise-id-kv ws "}"
 
-souffle-type ::= "\"USE_SOUFFLE\"" | "\"ADD_SOUFFLE\""
+tag-type       ::= "\"ADD_TAG\"" | "\"REMOVE_TAG\""
+faction-kv     ::= "\"faction\"" ws ":" ws faction
+amount-kv      ::= "\"amount\"" ws ":" ws integer
+ogham-kv       ::= "\"ogham\"" ws ":" ws string
+tag-name-kv    ::= "\"tag\"" ws ":" ws string
+event-id-kv    ::= "\"event_id\"" ws ":" ws string
+promise-id-kv  ::= "\"promise_id\"" ws ":" ws string
 
-aspect-kv    ::= "\"aspect\"" ws ":" ws aspect
-direction-kv ::= "\"direction\"" ws ":" ws direction
-amount-kv    ::= "\"amount\"" ws ":" ws integer
-
-aspect    ::= "\"Corps\"" | "\"Ame\"" | "\"Monde\""
-direction ::= "\"up\"" | "\"down\""
-field-name ::= "\"chance\"" | "\"bluff\"" | "\"observation\"" | "\"logique\"" | "\"finesse\""
+faction   ::= "\"druides\"" | "\"anciens\"" | "\"korrigans\"" | "\"niamh\"" | "\"ankou\""
+field-name ::= "\"chance\"" | "\"bluff\"" | "\"observation\"" | "\"logique\"" | "\"finesse\"" | "\"vigueur\"" | "\"esprit\"" | "\"perception\""
 integer   ::= "-"? [0-9] [0-9]?
 
 string ::= "\"" char* "\""

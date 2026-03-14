@@ -455,10 +455,7 @@ class RemoteTrainProvider {
         <canvas id="neuralCanvas"></canvas>
       </div>
       <div id="textSection">
-        <div id="section-activity" class="textBlock"></div>
-        <div id="section-agents" class="textBlock"></div>
-        <div id="section-sessions" class="textBlock"></div>
-        <div class="moreToggle" onclick="toggleMore()">&#9654; More (Brain, Chat, Roster)</div>
+        <div class="moreToggle" onclick="toggleMore()">&#9654; More (Brain, Chat)</div>
         <div id="section-more" class="moreContent"></div>
       </div>
       <script nonce="${nonce}" src="${dataBridgeUri}"></script>
@@ -1667,12 +1664,10 @@ class RemoteTrainProvider {
     }
 
     // 6. Send text section HTML updates (incremental, no DOM rebuild)
+    // Note: Agents Actifs, Sessions, Roster moved to CLAUDE AGENTS: Neural Monitor extension
     webview.postMessage({
       type: 'htmlUpdate',
       sections: {
-        activity: this.claudeActivityHtml(),
-        agents: `<div class="block"><div class="blockTitle">&#9889; Agents Actifs</div>${this.activeAgentsHtml()}</div>`,
-        sessions: `<div class="block"><div class="blockTitle">&#128268; SESSIONS</div>${this.claudeSessionsHtml()}</div>`,
         more: this._moreHtml(state, cfg, trainDisabled, chatDisabled, endpointLabel, brainSummary, selBrainState, selJob)
       }
     });
@@ -1691,10 +1686,6 @@ class RemoteTrainProvider {
         ${this.agentBusHtml()}
       </div>
       ${this.debugLoopHtml()}
-      <div class="block">
-        <div class="blockTitle">&#128218; ROSTER</div>
-        ${this.fullRosterHtml()}
-      </div>
       <div class="block">
         <div class="blockTitle">Brain Status Board &mdash; ${escapeHtml(brainSummary)}</div>
         <div style="border:1px solid ${CRT.border};border-radius:3px;padding:4px;margin:6px 0;background:#061006">${this.brainStatusHtml(state)}</div>

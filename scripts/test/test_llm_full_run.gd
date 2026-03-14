@@ -306,7 +306,6 @@ func _test_full_run() -> void:
 			"pre_life": pre_life, "post_life": post_life,
 			"balance_score": balance_score,
 			"aspects": state.aspects.duplicate(),
-			"souffle": state.souffle,
 			"dynamic_mod": state.dynamic_mod,
 			"anam_gained": anam_gained,
 			"essences_total": state.essences,
@@ -434,7 +433,6 @@ func _test_prologue_epilogue() -> void:
 
 class RunState:
 	var life: int = 100
-	var souffle: int = 1
 	var karma: int = 0
 	var aspects: Dictionary = {"Corps": 0, "Ame": 0, "Monde": 0}
 	var dynamic_mod: int = 0
@@ -468,7 +466,6 @@ const ACT_LABELS := {
 func _build_initial_state() -> RunState:
 	var s := RunState.new()
 	s.life = 100
-	s.souffle = 1
 	s.karma = 0
 	s.aspects = {"Corps": 0, "Ame": 0, "Monde": 0}
 
@@ -495,7 +492,6 @@ func _load_scenario() -> void:
 func _build_context_from_state(state: RunState, story_log: Array, card_idx: int) -> Dictionary:
 	var ctx := {
 		"aspects": state.aspects.duplicate(),
-		"souffle": state.souffle,
 		"life_essence": state.life,
 		"cards_played": card_idx,
 		"day": 1 + int(card_idx / 4),
@@ -591,8 +587,7 @@ func _apply_effects(state: RunState, effects: Array, outcome: String) -> void:
 			"HEAL_LIFE": state.life = mini(state.life + amount, 100)
 			"DAMAGE_LIFE": state.life = maxi(state.life - amount, 0)
 			"ADD_KARMA": state.karma += amount
-			"ADD_SOUFFLE": state.souffle = mini(state.souffle + amount, 1)
-			"ADD_ESSENCE":
+			"ADD_ANAM":
 				state.essences += maxi(int(eff.get("amount", 1)), 1)
 
 

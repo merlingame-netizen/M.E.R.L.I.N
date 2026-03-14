@@ -24,10 +24,12 @@ const ALLOWED_EFFECT_TYPES := [
 	"HEAL_LIFE",
 	"SET_FLAG",
 	"ADD_TAG",
+	"REMOVE_TAG",
+	"TRIGGER_EVENT",
 	"CREATE_PROMISE",
 	"FULFILL_PROMISE",
 	"BREAK_PROMISE",
-	"ADD_ESSENCE",
+	"ADD_ANAM",
 	"UNLOCK_OGHAM",
 ]
 
@@ -212,7 +214,6 @@ func build_category_user_prompt(event_category: String, context: Dictionary) -> 
 	user_tpl = user_tpl.replace("{biome}", str(context.get("biome", "foret_broceliande")))
 	user_tpl = user_tpl.replace("{day}", str(context.get("day", 1)))
 	user_tpl = user_tpl.replace("{season}", str(context.get("season", "spring")))
-	user_tpl = user_tpl.replace("{souffle}", str(context.get("souffle", 3)))
 	user_tpl = user_tpl.replace("{karma}", str(context.get("karma", 0)))
 	user_tpl = user_tpl.replace("{tension}", str(context.get("tension", 40)))
 	user_tpl = user_tpl.replace("{life}", str(context.get("life_essence", 100)))
@@ -292,8 +293,11 @@ func generate_prologue(context: Dictionary) -> Dictionary:
 		+ "Ton grave et poetique, comme un conteur au coin du feu. "
 		+ "JAMAIS de meta-commentaire. JAMAIS d'anglais."
 	)
-	var user := "Biome: %s. Etat: Vie=%d, Souffle=%d. Ecris le prologue." % [
-		biome, int(context.get("life_essence", 100)), int(context.get("souffle", 3))]
+	var faction_str: String = str(context.get("faction_status", ""))
+	var user := "Biome: %s. Etat: Vie=%d/100." % [biome, int(context.get("life_essence", 100))]
+	if not faction_str.is_empty():
+		user += " %s." % faction_str
+	user += " Ecris le prologue."
 	if not scenario_title.is_empty():
 		user += " Quete: %s." % scenario_title
 
@@ -993,8 +997,8 @@ func _build_result_text(verb: String, label: String, effect: Dictionary, is_succ
 			text += " Vous recuperez de la vigueur."
 		elif effect_type == "ADD_KARMA":
 			text += " L'equilibre karmique penche en votre faveur."
-		elif effect_type == "ADD_SOUFFLE":
-			text += " Le Souffle d'Ogham vous envahit."
+		elif effect_type == "ADD_ANAM":
+			text += " L'Anam afflue en vous, memoire des ancetres."
 		return text
 	else:
 		var failure_templates: Array[String] = [
@@ -1465,7 +1469,6 @@ func _substitute_template_vars(tpl: String, context: Dictionary, cards_played: i
 	tpl = tpl.replace("{biome}", str(context.get("biome", "foret_broceliande")))
 	tpl = tpl.replace("{day}", str(context.get("day", 1)))
 	tpl = tpl.replace("{season}", str(context.get("season", "spring")))
-	tpl = tpl.replace("{souffle}", str(context.get("souffle", 1)))
 	tpl = tpl.replace("{karma}", str(context.get("karma", 0)))
 	tpl = tpl.replace("{tension}", str(context.get("tension", 0)))
 	tpl = tpl.replace("{life}", str(context.get("life_essence", 100)))
@@ -1520,7 +1523,6 @@ func _build_arc_system_prompt(cards_played: int, theme_word: String, context: Di
 	# Fallback: enriched default prompt
 	var biome_name: String = str(context.get("biome", "foret_broceliande")).replace("_", " ").capitalize()
 	var life: int = int(context.get("life_essence", 100))
-	var souffle: int = int(context.get("souffle", 3))
 	var karma: int = int(context.get("karma", 0))
 
 	var convergence_hint := ""
@@ -1871,7 +1873,7 @@ func calculate_smart_effects(context: Dictionary, scenario_text: String, labels:
 	# GM system prompt: example-driven (Qwen 2.5-1.5B responds better to examples than instructions)
 	var system := "JSON only. Example:\n"
 	system += "{\"effects\":[[{\"type\":\"HEAL_LIFE\",\"amount\":5}],[{\"type\":\"DAMAGE_LIFE\",\"amount\":3}],[{\"type\":\"ADD_REPUTATION\",\"faction\":\"druides\",\"amount\":10}]]}\n"
-	system += "Types: DAMAGE_LIFE, HEAL_LIFE, ADD_KARMA, ADD_REPUTATION, ADD_ESSENCE.\n"
+	system += "Types: DAMAGE_LIFE, HEAL_LIFE, ADD_KARMA, ADD_REPUTATION, ADD_ANAM.\n"
 	system += "ADD_REPUTATION: {\"type\":\"ADD_REPUTATION\",\"faction\":\"druides\",\"amount\":10}\n"
 	system += "Factions: druides, anciens, korrigans, niamh, ankou.\n"
 	system += "3 arrays = 3 choices. 1 effect each. amount 1-15."
@@ -2257,7 +2259,7 @@ func _regex_extract_card_fields(raw: String) -> Dictionary:
 		if idx == 1:
 			opt["cost"] = 1
 		# Try to pair with an effect
-		# Default Vie/Karma/Souffle effects based on position
+		# Default Vie/Karma/Reputation effects based on position
 		var default_effects: Array = [
 			{"type": "HEAL_LIFE", "amount": 5},
 			{"type": "ADD_KARMA", "amount": 1},
@@ -2426,9 +2428,9 @@ func _validate_triade_effect(effect: Dictionary) -> Dictionary:
 				return {"type": effect_type, "promise_id": promise_id}
 			return {}
 
-		"ADD_ESSENCE":
+		"ADD_ANAM":
 			var amount := clampi(int(effect.get("amount", 1)), 1, 10)
-			return {"type": "ADD_ESSENCE", "amount": amount}
+			return {"type": "ADD_ANAM", "amount": amount}
 
 	return {}
 
