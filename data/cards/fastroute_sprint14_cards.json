@@ -1,0 +1,652 @@
+[
+  {
+    "id": "s14_ogham_01",
+    "text": "Les runes de Bouleau luisent sur l'ecorce ancienne, traçant des signes que seuls les inities peuvent dechiffrer. Un souffle chaud traverse la clairiere, porteur d'un savoir oublie depuis des siecles.",
+    "biome": "foret_broceliande",
+    "faction": "druides",
+    "trust_tier": "T0",
+    "tags": ["ogham_mastery", "druid"],
+    "options": [
+      {"text": "Dechiffrer les runes avec patience", "verb": "mediter", "effects": [{"type": "ADD_REPUTATION", "faction": "druides", "value": 8}, {"type": "ADD_ANAM", "value": 2}]},
+      {"text": "Toucher l'ecorce pour absorber le savoir", "verb": "absorber", "effects": [{"type": "HEAL_LIFE", "value": 10}]},
+      {"text": "Graver votre propre marque a cote", "verb": "forger", "effects": [{"type": "ADD_REPUTATION", "faction": "druides", "value": -5}, {"type": "ADD_BIOME_CURRENCY", "value": 3}]}
+    ]
+  },
+  {
+    "id": "s14_ogham_02",
+    "text": "Au coeur du nemeton, cinq pierres dressees vibrent a l'unisson. Chacune porte un Ogham different, et leur resonance forme une melodie que la terre elle-meme semble ecouter.",
+    "biome": "cercle_pierres",
+    "faction": "anciens",
+    "trust_tier": "T0",
+    "tags": ["ogham_mastery", "stone_circle"],
+    "options": [
+      {"text": "Ecouter la melodie des pierres", "verb": "ecouter", "effects": [{"type": "ADD_REPUTATION", "faction": "anciens", "value": 6}, {"type": "HEAL_LIFE", "value": 5}]},
+      {"text": "Chanter en harmonie avec les vibrations", "verb": "chanter", "effects": [{"type": "ADD_ANAM", "value": 3}, {"type": "ADD_REPUTATION", "faction": "anciens", "value": 4}]},
+      {"text": "Briser le cercle pour liberer l'energie", "verb": "detruire", "effects": [{"type": "DAMAGE_LIFE", "value": -10}, {"type": "ADD_BIOME_CURRENCY", "value": 5}]}
+    ]
+  },
+  {
+    "id": "s14_ogham_03",
+    "text": "Une brume epaisse enveloppe les landes. Dans le brouillard, des silhouettes dansent autour d'un menhir couvert de mousse et d'inscriptions oghamiques. Leurs voix murmurent des incantations anciennes.",
+    "biome": "landes_carnac",
+    "faction": "korrigans",
+    "trust_tier": "T0",
+    "tags": ["ogham_mastery", "korrigan_dance"],
+    "options": [
+      {"text": "Rejoindre la danse des Korrigans", "verb": "danser", "effects": [{"type": "ADD_REPUTATION", "faction": "korrigans", "value": 10}]},
+      {"text": "Observer depuis la lisiere de la brume", "verb": "observer", "effects": [{"type": "ADD_REPUTATION", "faction": "korrigans", "value": 3}, {"type": "HEAL_LIFE", "value": 8}]},
+      {"text": "Tenter de voler un secret des danseurs", "verb": "voler", "effects": [{"type": "ADD_REPUTATION", "faction": "korrigans", "value": -15}, {"type": "ADD_ANAM", "value": 2}]}
+    ]
+  },
+  {
+    "id": "s14_ogham_04",
+    "text": "Les eaux sombres du marais refletent un ciel charge d'etoiles impossibles. Sous la surface, des Oghams brillent comme des braises, pulsant au rythme d'un coeur enfoui dans la tourbe.",
+    "biome": "marais_yeun",
+    "faction": "ankou",
+    "trust_tier": "T0",
+    "tags": ["ogham_mastery", "death_marsh"],
+    "options": [
+      {"text": "Plonger la main dans les eaux noires", "verb": "explorer", "effects": [{"type": "ADD_REPUTATION", "faction": "ankou", "value": 7}, {"type": "DAMAGE_LIFE", "value": -8}]},
+      {"text": "Prier pour les ames perdues dans la tourbe", "verb": "prier", "effects": [{"type": "HEAL_LIFE", "value": 12}, {"type": "ADD_REPUTATION", "faction": "ankou", "value": 5}]},
+      {"text": "Purifier les eaux avec un rituel de feu", "verb": "purifier", "effects": [{"type": "ADD_REPUTATION", "faction": "ankou", "value": -8}, {"type": "ADD_BIOME_CURRENCY", "value": 4}]}
+    ]
+  },
+  {
+    "id": "s14_ogham_05",
+    "text": "Sur les falaises battues par le vent, une stele porte l'Ogham de la Mer. Les vagues en contrebas semblent repondre a ses inscriptions, formant des motifs ephemeres dans l'ecume.",
+    "biome": "cotes_armor",
+    "faction": "niamh",
+    "trust_tier": "T0",
+    "tags": ["ogham_mastery", "sea_ogham"],
+    "options": [
+      {"text": "Invoquer l'esprit de la stele marine", "verb": "invoquer", "effects": [{"type": "ADD_REPUTATION", "faction": "niamh", "value": 8}, {"type": "ADD_ANAM", "value": 1}]},
+      {"text": "Mediter face a l'ocean dechaine", "verb": "mediter", "effects": [{"type": "HEAL_LIFE", "value": 15}]},
+      {"text": "Defier la tempete en criant votre nom", "verb": "defier", "effects": [{"type": "DAMAGE_LIFE", "value": -7}, {"type": "ADD_REPUTATION", "faction": "niamh", "value": 12}]}
+    ]
+  },
+  {
+    "id": "s14_ogham_06",
+    "text": "Dans la grotte de Merlin, les parois sont couvertes de symboles oghamiques qui changent de forme selon l'angle de la lumiere. Un murmure vous invite a toucher la pierre la plus brillante.",
+    "biome": "grotte_merlin",
+    "faction": "druides",
+    "trust_tier": "T0",
+    "tags": ["ogham_mastery", "merlin_cave"],
+    "options": [
+      {"text": "Toucher la pierre lumineuse", "verb": "explorer", "effects": [{"type": "ADD_REPUTATION", "faction": "druides", "value": 6}, {"type": "ADD_ANAM", "value": 2}]},
+      {"text": "Recopier les symboles sur votre baton", "verb": "observer", "effects": [{"type": "ADD_BIOME_CURRENCY", "value": 3}, {"type": "ADD_KARMA", "value": 2}]},
+      {"text": "Resister a l'appel et rebrousser chemin", "verb": "resister", "effects": [{"type": "HEAL_LIFE", "value": 8}, {"type": "ADD_REPUTATION", "faction": "druides", "value": -3}]}
+    ]
+  },
+  {
+    "id": "s14_ogham_07",
+    "text": "Un if millenaire se dresse au sommet du mont, ses branches tordues par les siecles. Chaque noeud du bois forme un Ogham naturel, comme si l'arbre lui-meme ecrivait l'histoire du monde.",
+    "biome": "monts_arree",
+    "faction": "anciens",
+    "trust_tier": "T0",
+    "tags": ["ogham_mastery", "yew_tree"],
+    "options": [
+      {"text": "Ecouter le recit de l'if ancien", "verb": "ecouter", "effects": [{"type": "ADD_REPUTATION", "faction": "anciens", "value": 10}, {"type": "ADD_ANAM", "value": 1}]},
+      {"text": "Cueillir une branche pour en faire un talisman", "verb": "recolter", "effects": [{"type": "ADD_BIOME_CURRENCY", "value": 4}, {"type": "ADD_REPUTATION", "faction": "anciens", "value": -6}]},
+      {"text": "Planter une graine a ses racines en offrande", "verb": "planter", "effects": [{"type": "ADD_REPUTATION", "faction": "anciens", "value": 5}, {"type": "HEAL_LIFE", "value": 7}]}
+    ]
+  },
+  {
+    "id": "s14_ogham_08",
+    "text": "L'Ogham du Chene apparait grave dans l'air meme, traces de lumiere doree flottant entre les branches de Broceliande. Quiconque les lit a voix haute scelle un pacte avec la foret.",
+    "biome": "foret_broceliande",
+    "faction": "druides",
+    "trust_tier": "T0",
+    "tags": ["ogham_mastery", "oak_pact"],
+    "options": [
+      {"text": "Lire les runes a voix haute", "verb": "chanter", "effects": [{"type": "ADD_REPUTATION", "faction": "druides", "value": 12}, {"type": "ADD_PROMISE"}]},
+      {"text": "Garder le silence et observer le phenomene", "verb": "observer", "effects": [{"type": "HEAL_LIFE", "value": 10}, {"type": "ADD_KARMA", "value": 3}]},
+      {"text": "Tenter de capturer la lumiere dans un flacon", "verb": "accumuler", "effects": [{"type": "ADD_BIOME_CURRENCY", "value": 5}, {"type": "DAMAGE_LIFE", "value": -5}]}
+    ]
+  },
+  {
+    "id": "s14_ogham_09",
+    "text": "Au fond d'une caverne marine, les marees ont sculpte des Oghams dans le sel et la roche. Une fee des eaux veille sur ces inscriptions, sa chevelure d'algues ondulant dans le courant.",
+    "biome": "ile_avalon",
+    "faction": "niamh",
+    "trust_tier": "T0",
+    "tags": ["ogham_mastery", "sea_fairy"],
+    "options": [
+      {"text": "Offrir un coquillage a la fee", "verb": "offrir", "effects": [{"type": "ADD_REPUTATION", "faction": "niamh", "value": 8}, {"type": "HEAL_LIFE", "value": 8}]},
+      {"text": "Negocier l'acces aux inscriptions", "verb": "negocier", "effects": [{"type": "ADD_REPUTATION", "faction": "niamh", "value": 4}, {"type": "ADD_ANAM", "value": 2}]},
+      {"text": "Forcer le passage malgre la gardienne", "verb": "combattre", "effects": [{"type": "DAMAGE_LIFE", "value": -12}, {"type": "ADD_REPUTATION", "faction": "niamh", "value": -10}]}
+    ]
+  },
+  {
+    "id": "s14_ogham_10",
+    "text": "Les Korrigans ont dissimule un Ogham de pouvoir dans un tertre funeraire. Des feux follets dansent a l'entree, et des rires moqueurs resonnent dans l'obscurite souterraine.",
+    "biome": "landes_carnac",
+    "faction": "korrigans",
+    "trust_tier": "T0",
+    "tags": ["ogham_mastery", "barrow"],
+    "options": [
+      {"text": "Suivre les feux follets dans le tertre", "verb": "explorer", "effects": [{"type": "ADD_REPUTATION", "faction": "korrigans", "value": 7}, {"type": "DAMAGE_LIFE", "value": -5}]},
+      {"text": "Laisser une offrande de lait et de miel", "verb": "offrir", "effects": [{"type": "ADD_REPUTATION", "faction": "korrigans", "value": 10}, {"type": "ADD_KARMA", "value": 2}]},
+      {"text": "Repousser les feux follets par un sortilege", "verb": "repousser", "effects": [{"type": "ADD_REPUTATION", "faction": "korrigans", "value": -12}, {"type": "ADD_BIOME_CURRENCY", "value": 3}]}
+    ]
+  },
+  {
+    "id": "s14_ogham_11",
+    "text": "Un corbeau blanc se pose devant vous, un rameau d'Ogham dans le bec. Il vous fixe de ses yeux rubis, attendant que vous acceptiez ou refusiez le present de l'Ankou.",
+    "biome": "marais_yeun",
+    "faction": "ankou",
+    "trust_tier": "T0",
+    "tags": ["ogham_mastery", "white_raven"],
+    "options": [
+      {"text": "Accepter le rameau du corbeau blanc", "verb": "accepter", "effects": [{"type": "ADD_REPUTATION", "faction": "ankou", "value": 10}, {"type": "DAMAGE_LIFE", "value": -8}]},
+      {"text": "Refuser poliment et benir l'oiseau", "verb": "benir", "effects": [{"type": "HEAL_LIFE", "value": 10}, {"type": "ADD_REPUTATION", "faction": "ankou", "value": -3}]},
+      {"text": "Echanger le rameau contre un souvenir", "verb": "partager", "effects": [{"type": "ADD_REPUTATION", "faction": "ankou", "value": 5}, {"type": "ADD_ANAM", "value": 2}]}
+    ]
+  },
+  {
+    "id": "s14_ogham_12",
+    "text": "Trois sources jaillissent d'un rocher grave d'Oghams. L'une est claire comme le cristal, la deuxieme rouge comme le sang, la troisieme noire comme la nuit. Chacune murmure une promesse differente.",
+    "biome": "monts_arree",
+    "faction": "druides",
+    "trust_tier": "T0",
+    "tags": ["ogham_mastery", "three_springs"],
+    "options": [
+      {"text": "Boire a la source claire", "verb": "purifier", "effects": [{"type": "HEAL_LIFE", "value": 20}, {"type": "ADD_REPUTATION", "faction": "druides", "value": 3}]},
+      {"text": "Boire a la source rouge", "verb": "sacrifier", "effects": [{"type": "DAMAGE_LIFE", "value": -10}, {"type": "ADD_REPUTATION", "faction": "druides", "value": 15}]},
+      {"text": "Boire a la source noire", "verb": "rever", "effects": [{"type": "ADD_ANAM", "value": 3}, {"type": "ADD_KARMA", "value": -3}]}
+    ]
+  },
+  {
+    "id": "s14_ogham_13",
+    "text": "Un tisserand spectral tisse des fils d'argent entre les arbres, formant un vaste Ogham aerien. Les fils vibrent au vent, et chaque vibration revele un fragment de prophetie ancienne.",
+    "biome": "foret_broceliande",
+    "faction": "anciens",
+    "trust_tier": "T1",
+    "tags": ["ogham_mastery", "weaver_spirit"],
+    "options": [
+      {"text": "Tisser aux cotes du spectre", "verb": "tisser", "effects": [{"type": "ADD_REPUTATION", "faction": "anciens", "value": 10}, {"type": "ADD_ANAM", "value": 2}]},
+      {"text": "Dechiffrer la prophetie dans les fils", "verb": "reveler", "effects": [{"type": "ADD_REPUTATION", "faction": "anciens", "value": 6}, {"type": "ADD_KARMA", "value": 4}]},
+      {"text": "Trancher les fils pour liberer les secrets", "verb": "detruire", "effects": [{"type": "DAMAGE_LIFE", "value": -10}, {"type": "ADD_BIOME_CURRENCY", "value": 5}]}
+    ]
+  },
+  {
+    "id": "s14_ogham_14",
+    "text": "Dans les profondeurs de la grotte, un bassin de mercure reflete des constellations inconnues. Les Oghams graves sur le rebord du bassin semblent etre la cle d'une porte entre les mondes.",
+    "biome": "grotte_merlin",
+    "faction": "niamh",
+    "trust_tier": "T1",
+    "tags": ["ogham_mastery", "mercury_pool"],
+    "options": [
+      {"text": "Lire les Oghams du bassin a haute voix", "verb": "invoquer", "effects": [{"type": "ADD_REPUTATION", "faction": "niamh", "value": 12}, {"type": "ADD_PROMISE"}]},
+      {"text": "Observer les constellations refletees", "verb": "observer", "effects": [{"type": "ADD_ANAM", "value": 3}, {"type": "HEAL_LIFE", "value": 5}]},
+      {"text": "Cacher le bassin sous des pierres", "verb": "cacher", "effects": [{"type": "ADD_REPUTATION", "faction": "niamh", "value": -8}, {"type": "ADD_BIOME_CURRENCY", "value": 4}]}
+    ]
+  },
+  {
+    "id": "s14_ogham_15",
+    "text": "Un dolmen s'ouvre comme une machoire de pierre. A l'interieur, les Oghams forment une spirale qui descend dans les entrailles de la terre. L'air est charge d'electricite et de soufre.",
+    "biome": "cercle_pierres",
+    "faction": "ankou",
+    "trust_tier": "T1",
+    "tags": ["ogham_mastery", "dolmen_spiral"],
+    "options": [
+      {"text": "Descendre dans la spirale oghamique", "verb": "explorer", "effects": [{"type": "ADD_REPUTATION", "faction": "ankou", "value": 10}, {"type": "DAMAGE_LIFE", "value": -10}]},
+      {"text": "Proteger l'entree avec un sceau druidique", "verb": "proteger", "effects": [{"type": "ADD_REPUTATION", "faction": "druides", "value": 5}, {"type": "ADD_KARMA", "value": 3}]},
+      {"text": "Attirer l'energie du dolmen vers vous", "verb": "attirer", "effects": [{"type": "ADD_ANAM", "value": 3}, {"type": "DAMAGE_LIFE", "value": -7}]}
+    ]
+  },
+  {
+    "id": "s14_ogham_16",
+    "text": "Les Oghams du Houx s'illuminent sous la pluie, chaque goutte revelant un symbole cache. Un cerf blanc apparait entre les arbres, ses bois couverts de mousse et de runes vivantes.",
+    "biome": "foret_broceliande",
+    "faction": "druides",
+    "trust_tier": "T0",
+    "tags": ["ogham_mastery", "white_stag"],
+    "options": [
+      {"text": "Suivre le cerf blanc dans la foret", "verb": "voyager", "effects": [{"type": "ADD_REPUTATION", "faction": "druides", "value": 8}, {"type": "ADD_ANAM", "value": 1}]},
+      {"text": "Guerir une blessure sur le flanc du cerf", "verb": "guerir", "effects": [{"type": "HEAL_LIFE", "value": 12}, {"type": "ADD_REPUTATION", "faction": "druides", "value": 6}]},
+      {"text": "Fuir devant cette apparition surnaturelle", "verb": "fuir", "effects": [{"type": "DAMAGE_LIFE", "value": -5}, {"type": "ADD_KARMA", "value": -2}]}
+    ]
+  },
+  {
+    "id": "s14_ogham_17",
+    "text": "Une forge abandonnee recele un marteau grave d'Oghams de Feu. Les braises rougeoient encore dans l'atre, comme si le forgeron divin venait a peine de quitter les lieux.",
+    "biome": "monts_arree",
+    "faction": "korrigans",
+    "trust_tier": "T0",
+    "tags": ["ogham_mastery", "divine_forge"],
+    "options": [
+      {"text": "Forger une lame avec le marteau sacre", "verb": "forger", "effects": [{"type": "ADD_REPUTATION", "faction": "korrigans", "value": 10}, {"type": "ADD_BIOME_CURRENCY", "value": 3}]},
+      {"text": "Attiser les braises pour rechauffer la forge", "verb": "construire", "effects": [{"type": "ADD_REPUTATION", "faction": "korrigans", "value": 5}, {"type": "HEAL_LIFE", "value": 8}]},
+      {"text": "Eteindre les braises et fermer la forge", "verb": "refuser", "effects": [{"type": "ADD_REPUTATION", "faction": "korrigans", "value": -7}, {"type": "ADD_KARMA", "value": 3}]}
+    ]
+  },
+  {
+    "id": "s14_ogham_18",
+    "text": "Sur la plage d'Avalon, les vagues deposent des galets parfaitement ronds, chacun portant un Ogham unique. La maree monte et menace d'emporter ces tresors avant que vous ne puissiez tous les lire.",
+    "biome": "ile_avalon",
+    "faction": "niamh",
+    "trust_tier": "T0",
+    "tags": ["ogham_mastery", "tide_stones"],
+    "options": [
+      {"text": "Ramasser autant de galets que possible", "verb": "accumuler", "effects": [{"type": "ADD_BIOME_CURRENCY", "value": 4}, {"type": "ADD_REPUTATION", "faction": "niamh", "value": 3}]},
+      {"text": "Lire chaque galet avant que la maree ne l'emporte", "verb": "mediter", "effects": [{"type": "ADD_REPUTATION", "faction": "niamh", "value": 8}, {"type": "ADD_ANAM", "value": 2}]},
+      {"text": "Defier la maree en plantant un baton dans le sable", "verb": "defier", "effects": [{"type": "DAMAGE_LIFE", "value": -8}, {"type": "ADD_REPUTATION", "faction": "niamh", "value": 6}]}
+    ]
+  },
+  {
+    "id": "s14_ogham_19",
+    "text": "Un ancien gardien des Oghams emerge de la roche, son corps mi-pierre mi-chair. Il vous pose une enigme: quel Ogham protege et quel Ogham detruit? La reponse determinera votre passage.",
+    "biome": "grotte_merlin",
+    "faction": "anciens",
+    "trust_tier": "T1",
+    "tags": ["ogham_mastery", "stone_guardian"],
+    "options": [
+      {"text": "Repondre que tous protegent et detruisent", "verb": "reveler", "effects": [{"type": "ADD_REPUTATION", "faction": "anciens", "value": 12}, {"type": "ADD_ANAM", "value": 2}]},
+      {"text": "Honorer le gardien et demander un indice", "verb": "honorer", "effects": [{"type": "ADD_REPUTATION", "faction": "anciens", "value": 6}, {"type": "HEAL_LIFE", "value": 8}]},
+      {"text": "Attaquer le gardien pour forcer le passage", "verb": "combattre", "effects": [{"type": "DAMAGE_LIFE", "value": -15}, {"type": "ADD_REPUTATION", "faction": "anciens", "value": -10}]}
+    ]
+  },
+  {
+    "id": "s14_ogham_20",
+    "text": "Les feux de la Saint-Jean illuminent les landes de Carnac. Autour du feu central, les Oghams graves dans le sol forment un cercle de protection que les tenebres ne peuvent franchir.",
+    "biome": "landes_carnac",
+    "faction": "druides",
+    "trust_tier": "T0",
+    "tags": ["ogham_mastery", "solstice_fire"],
+    "options": [
+      {"text": "Danser autour du feu sacre", "verb": "danser", "effects": [{"type": "HEAL_LIFE", "value": 15}, {"type": "ADD_REPUTATION", "faction": "druides", "value": 5}]},
+      {"text": "Nourrir le feu avec des herbes druidiques", "verb": "offrir", "effects": [{"type": "ADD_REPUTATION", "faction": "druides", "value": 10}, {"type": "ADD_PROMISE"}]},
+      {"text": "Eteindre une flamme pour tester la protection", "verb": "defier", "effects": [{"type": "DAMAGE_LIFE", "value": -10}, {"type": "ADD_KARMA", "value": -3}]}
+    ]
+  },
+  {
+    "id": "s14_ogham_21",
+    "text": "Un manuscrit oghamique flotte au-dessus d'un autel de pierre noire. Ses pages tournent toutes seules, revelant des formules qui font trembler l'air autour de vous. Le savoir contenu ici pourrait changer le cours du destin.",
+    "biome": "cercle_pierres",
+    "faction": "anciens",
+    "trust_tier": "T1",
+    "tags": ["ogham_mastery", "floating_tome"],
+    "options": [
+      {"text": "Lire le manuscrit avec reverence", "verb": "mediter", "effects": [{"type": "ADD_REPUTATION", "faction": "anciens", "value": 10}, {"type": "ADD_ANAM", "value": 3}]},
+      {"text": "Recopier les formules les plus puissantes", "verb": "accumuler", "effects": [{"type": "ADD_BIOME_CURRENCY", "value": 5}, {"type": "ADD_KARMA", "value": -2}]},
+      {"text": "Refermer le manuscrit pour proteger ses secrets", "verb": "proteger", "effects": [{"type": "ADD_REPUTATION", "faction": "anciens", "value": 7}, {"type": "HEAL_LIFE", "value": 6}]}
+    ]
+  },
+  {
+    "id": "s14_ogham_22",
+    "text": "Les racines d'un aulne plongent dans un cours d'eau sacre, et chaque racine est gravee d'un Ogham de guerison. L'eau qui coule entre elles acquiert des proprietes curatives extraordinaires.",
+    "biome": "marais_yeun",
+    "faction": "druides",
+    "trust_tier": "T1",
+    "tags": ["ogham_mastery", "healing_alder"],
+    "options": [
+      {"text": "Boire l'eau curative de l'aulne", "verb": "guerir", "effects": [{"type": "HEAL_LIFE", "value": 18}, {"type": "ADD_REPUTATION", "faction": "druides", "value": 4}]},
+      {"text": "Collecter l'eau dans une fiole pour plus tard", "verb": "recolter", "effects": [{"type": "ADD_BIOME_CURRENCY", "value": 4}, {"type": "ADD_KARMA", "value": 2}]},
+      {"text": "Maudire la source pour en inverser le pouvoir", "verb": "maudire", "effects": [{"type": "ADD_REPUTATION", "faction": "ankou", "value": 8}, {"type": "ADD_REPUTATION", "faction": "druides", "value": -12}]}
+    ]
+  },
+  {
+    "id": "s14_ogham_23",
+    "text": "Une tempete d'Oghams se dechaine au-dessus des cotes. Les eclairs tracent des symboles dans le ciel, et chaque coup de tonnerre prononce un mot de pouvoir oublie depuis l'aube des temps.",
+    "biome": "cotes_armor",
+    "faction": "niamh",
+    "trust_tier": "T1",
+    "tags": ["ogham_mastery", "ogham_storm"],
+    "options": [
+      {"text": "Invoquer la foudre pour graver un Ogham", "verb": "invoquer", "effects": [{"type": "ADD_REPUTATION", "faction": "niamh", "value": 15}, {"type": "DAMAGE_LIFE", "value": -10}]},
+      {"text": "Se proteger et attendre la fin de la tempete", "verb": "resister", "effects": [{"type": "HEAL_LIFE", "value": 10}, {"type": "ADD_KARMA", "value": 2}]},
+      {"text": "Absorber l'energie de la tempete", "verb": "absorber", "effects": [{"type": "ADD_ANAM", "value": 3}, {"type": "DAMAGE_LIFE", "value": -7}]}
+    ]
+  },
+  {
+    "id": "s14_ogham_24",
+    "text": "Un Ogham de Transformation pulse dans le tronc d'un arbre frappe par la foudre. L'arbre est a moitie vivant, a moitie carbonise, et de ses branches mortes poussent des fleurs d'or.",
+    "biome": "foret_broceliande",
+    "faction": "korrigans",
+    "trust_tier": "T1",
+    "tags": ["ogham_mastery", "lightning_tree"],
+    "options": [
+      {"text": "Cueillir les fleurs d'or avec precaution", "verb": "recolter", "effects": [{"type": "ADD_BIOME_CURRENCY", "value": 5}, {"type": "ADD_REPUTATION", "faction": "korrigans", "value": 5}]},
+      {"text": "Transformer l'arbre entier en or vivant", "verb": "transformer", "effects": [{"type": "ADD_REPUTATION", "faction": "korrigans", "value": 12}, {"type": "DAMAGE_LIFE", "value": -8}]},
+      {"text": "Laisser la nature suivre son cours", "verb": "accepter", "effects": [{"type": "HEAL_LIFE", "value": 10}, {"type": "ADD_KARMA", "value": 5}]}
+    ]
+  },
+  {
+    "id": "s14_ogham_25",
+    "text": "Au sommet du cairn le plus ancien, un Ogham de Memoire conserve les souvenirs de tous les druides qui l'ont touche. Poser la main sur cette pierre, c'est voir mille vies defiler en un instant.",
+    "biome": "monts_arree",
+    "faction": "anciens",
+    "trust_tier": "T1",
+    "tags": ["ogham_mastery", "memory_cairn"],
+    "options": [
+      {"text": "Toucher la pierre et accepter les visions", "verb": "accepter", "effects": [{"type": "ADD_REPUTATION", "faction": "anciens", "value": 12}, {"type": "ADD_ANAM", "value": 3}]},
+      {"text": "Partager vos propres souvenirs avec la pierre", "verb": "partager", "effects": [{"type": "ADD_REPUTATION", "faction": "anciens", "value": 8}, {"type": "ADD_KARMA", "value": 4}]},
+      {"text": "Enchainer la pierre pour empecher son usage", "verb": "enchainer", "effects": [{"type": "ADD_REPUTATION", "faction": "anciens", "value": -15}, {"type": "ADD_BIOME_CURRENCY", "value": 4}]}
+    ]
+  },
+  {
+    "id": "s14_endgame_01",
+    "text": "Le Grand Druide vous convoque au nemeton supreme. Les cinq factions ont envoye leurs emissaires, et le verdict sur votre parcours sera prononce a la lumiere du solstice.",
+    "biome": "cercle_pierres",
+    "faction": "druides",
+    "trust_tier": "T0",
+    "tags": ["faction_endgame", "trial"],
+    "options": [
+      {"text": "Plaider votre cause avec eloquence", "verb": "negocier", "effects": [{"type": "ADD_REPUTATION", "faction": "druides", "value": 10}, {"type": "ADD_REPUTATION", "faction": "anciens", "value": 5}]},
+      {"text": "Accepter humblement le jugement", "verb": "accepter", "effects": [{"type": "HEAL_LIFE", "value": 15}, {"type": "ADD_KARMA", "value": 5}]},
+      {"text": "Defier l'autorite du Grand Druide", "verb": "defier", "effects": [{"type": "ADD_REPUTATION", "faction": "druides", "value": -15}, {"type": "DAMAGE_LIFE", "value": -10}]}
+    ]
+  },
+  {
+    "id": "s14_endgame_02",
+    "text": "L'Ankou se dresse a la croisee des chemins, sa charrette grinçante chargee d'ames. Il vous offre un marche: une ame contre un secret que seuls les morts connaissent.",
+    "biome": "marais_yeun",
+    "faction": "ankou",
+    "trust_tier": "T2",
+    "tags": ["faction_endgame", "death_deal"],
+    "options": [
+      {"text": "Accepter le marche de l'Ankou", "verb": "sacrifier", "effects": [{"type": "ADD_REPUTATION", "faction": "ankou", "value": 15}, {"type": "DAMAGE_LIFE", "value": -12}]},
+      {"text": "Offrir un souvenir a la place d'une ame", "verb": "negocier", "effects": [{"type": "ADD_REPUTATION", "faction": "ankou", "value": 8}, {"type": "ADD_ANAM", "value": 2}]},
+      {"text": "Refuser et repousser l'Ankou", "verb": "repousser", "effects": [{"type": "ADD_REPUTATION", "faction": "ankou", "value": -10}, {"type": "HEAL_LIFE", "value": 12}]}
+    ]
+  },
+  {
+    "id": "s14_endgame_03",
+    "text": "Le roi des Korrigans ouvre les portes de son palais souterrain. Des tresors inimaginables s'etalent devant vous, mais chaque objet porte une malediction differente, tissee avec malice et humour noir.",
+    "biome": "landes_carnac",
+    "faction": "korrigans",
+    "trust_tier": "T1",
+    "tags": ["faction_endgame", "treasure_hall"],
+    "options": [
+      {"text": "Choisir un tresor avec sagesse", "verb": "observer", "effects": [{"type": "ADD_REPUTATION", "faction": "korrigans", "value": 8}, {"type": "ADD_BIOME_CURRENCY", "value": 5}]},
+      {"text": "Rire des maledictions et danser avec le roi", "verb": "danser", "effects": [{"type": "ADD_REPUTATION", "faction": "korrigans", "value": 15}, {"type": "HEAL_LIFE", "value": 5}]},
+      {"text": "Voler le tresor le plus precieux en secret", "verb": "voler", "effects": [{"type": "ADD_BIOME_CURRENCY", "value": 5}, {"type": "ADD_REPUTATION", "faction": "korrigans", "value": -20}, {"type": "DAMAGE_LIFE", "value": -8}]}
+    ]
+  },
+  {
+    "id": "s14_endgame_04",
+    "text": "Niamh apparait dans un halo de lumiere d'argent, chevauchant son destrier blanc. Elle vous tend la main vers Tir na nOg, la Terre de l'Eternelle Jeunesse. Le choix est irrevocable.",
+    "biome": "ile_avalon",
+    "faction": "niamh",
+    "trust_tier": "T2",
+    "tags": ["faction_endgame", "tir_na_nog"],
+    "options": [
+      {"text": "Prendre la main de Niamh", "verb": "accepter", "effects": [{"type": "ADD_REPUTATION", "faction": "niamh", "value": 20}, {"type": "ADD_PROMISE"}]},
+      {"text": "Demander un delai pour faire vos adieux", "verb": "negocier", "effects": [{"type": "ADD_REPUTATION", "faction": "niamh", "value": 8}, {"type": "HEAL_LIFE", "value": 10}]},
+      {"text": "Refuser et rester dans le monde mortel", "verb": "refuser", "effects": [{"type": "ADD_REPUTATION", "faction": "niamh", "value": -12}, {"type": "ADD_KARMA", "value": 5}]}
+    ]
+  },
+  {
+    "id": "s14_endgame_05",
+    "text": "Les Anciens emergent de leurs tumulus pour la premiere fois en mille ans. La terre tremble, les menhirs s'inclinent, et une voix caverneuse annonce le Reveil de la Memoire du Monde.",
+    "biome": "cercle_pierres",
+    "faction": "anciens",
+    "trust_tier": "T2",
+    "tags": ["faction_endgame", "world_memory"],
+    "options": [
+      {"text": "S'agenouiller devant les Anciens reveilles", "verb": "honorer", "effects": [{"type": "ADD_REPUTATION", "faction": "anciens", "value": 15}, {"type": "ADD_ANAM", "value": 3}]},
+      {"text": "Partager votre propre memoire avec eux", "verb": "partager", "effects": [{"type": "ADD_REPUTATION", "faction": "anciens", "value": 10}, {"type": "ADD_KARMA", "value": 3}]},
+      {"text": "Tenter de les rendormir par un enchantement", "verb": "enchainer", "effects": [{"type": "ADD_REPUTATION", "faction": "anciens", "value": -18}, {"type": "DAMAGE_LIFE", "value": -10}]}
+    ]
+  },
+  {
+    "id": "s14_endgame_06",
+    "text": "La foret de Broceliande se referme autour de vous, les arbres formant un labyrinthe vivant. Au centre, un chaudron druidique bout sur un feu vert, exhalant des vapeurs prophetiques.",
+    "biome": "foret_broceliande",
+    "faction": "druides",
+    "trust_tier": "T1",
+    "tags": ["faction_endgame", "cauldron"],
+    "options": [
+      {"text": "Boire au chaudron de sagesse", "verb": "absorber", "effects": [{"type": "ADD_REPUTATION", "faction": "druides", "value": 12}, {"type": "ADD_ANAM", "value": 2}]},
+      {"text": "Ajouter vos propres herbes au breuvage", "verb": "construire", "effects": [{"type": "ADD_REPUTATION", "faction": "druides", "value": 8}, {"type": "HEAL_LIFE", "value": 10}]},
+      {"text": "Renverser le chaudron et fuir", "verb": "detruire", "effects": [{"type": "ADD_REPUTATION", "faction": "druides", "value": -15}, {"type": "DAMAGE_LIFE", "value": -8}]}
+    ]
+  },
+  {
+    "id": "s14_endgame_07",
+    "text": "Un cortege funebre traverse les landes sous la lune rousse. L'Ankou conduit les ames vers leur repos eternel, mais l'une d'elles vous appelle par votre nom et tend vers vous une main translucide.",
+    "biome": "landes_carnac",
+    "faction": "ankou",
+    "trust_tier": "T1",
+    "tags": ["faction_endgame", "funeral_march"],
+    "options": [
+      {"text": "Prendre la main de l'ame perdue", "verb": "accepter", "effects": [{"type": "ADD_REPUTATION", "faction": "ankou", "value": 10}, {"type": "DAMAGE_LIFE", "value": -10}]},
+      {"text": "Liberer l'ame du cortege par un rituel", "verb": "liberer", "effects": [{"type": "HEAL_LIFE", "value": 8}, {"type": "ADD_REPUTATION", "faction": "ankou", "value": -8}, {"type": "ADD_KARMA", "value": 5}]},
+      {"text": "Marcher aux cotes de l'Ankou en silence", "verb": "observer", "effects": [{"type": "ADD_REPUTATION", "faction": "ankou", "value": 12}, {"type": "ADD_ANAM", "value": 1}]}
+    ]
+  },
+  {
+    "id": "s14_endgame_08",
+    "text": "Les Korrigans organisent le Grand Festin sous la terre. Cent plats magiques sont servis, mais manger la nourriture des fees condamne a rester sous terre pour l'eternite.",
+    "biome": "grotte_merlin",
+    "faction": "korrigans",
+    "trust_tier": "T2",
+    "tags": ["faction_endgame", "fairy_feast"],
+    "options": [
+      {"text": "Gouter a un seul plat avec prudence", "verb": "accepter", "effects": [{"type": "ADD_REPUTATION", "faction": "korrigans", "value": 10}, {"type": "HEAL_LIFE", "value": 15}]},
+      {"text": "Chanter pour divertir les convives sans manger", "verb": "chanter", "effects": [{"type": "ADD_REPUTATION", "faction": "korrigans", "value": 12}, {"type": "ADD_ANAM", "value": 2}]},
+      {"text": "Mentir en pretendant avoir deja mange", "verb": "mentir", "effects": [{"type": "ADD_REPUTATION", "faction": "korrigans", "value": -5}, {"type": "ADD_KARMA", "value": -4}]}
+    ]
+  },
+  {
+    "id": "s14_endgame_09",
+    "text": "Sur les cotes d'Armor, un navire fantome emerge du brouillard. A son bord, des guerriers celtiques attendent un capitaine pour leur dernier voyage vers les iles bienheureuses.",
+    "biome": "cotes_armor",
+    "faction": "niamh",
+    "trust_tier": "T1",
+    "tags": ["faction_endgame", "ghost_ship"],
+    "options": [
+      {"text": "Monter a bord et prendre la barre", "verb": "voyager", "effects": [{"type": "ADD_REPUTATION", "faction": "niamh", "value": 15}, {"type": "ADD_PROMISE"}]},
+      {"text": "Benir le navire pour son dernier voyage", "verb": "benir", "effects": [{"type": "ADD_REPUTATION", "faction": "niamh", "value": 8}, {"type": "HEAL_LIFE", "value": 10}]},
+      {"text": "Bruler le navire pour liberer les guerriers", "verb": "detruire", "effects": [{"type": "ADD_REPUTATION", "faction": "niamh", "value": -10}, {"type": "ADD_REPUTATION", "faction": "ankou", "value": 10}]}
+    ]
+  },
+  {
+    "id": "s14_endgame_10",
+    "text": "Le Conseil des Anciens se reunit dans un cercle de menhirs invisibles. Seuls ceux qui ont prouve leur valeur peuvent voir les pierres. Ils deliberent sur le sort de votre monde.",
+    "biome": "monts_arree",
+    "faction": "anciens",
+    "trust_tier": "T1",
+    "tags": ["faction_endgame", "council"],
+    "options": [
+      {"text": "Presenter votre vision pour l'avenir", "verb": "reveler", "effects": [{"type": "ADD_REPUTATION", "faction": "anciens", "value": 12}, {"type": "ADD_KARMA", "value": 4}]},
+      {"text": "Ecouter humblement le verdict des Anciens", "verb": "ecouter", "effects": [{"type": "ADD_REPUTATION", "faction": "anciens", "value": 8}, {"type": "HEAL_LIFE", "value": 8}]},
+      {"text": "Contester leur autorite sur le monde des vivants", "verb": "defier", "effects": [{"type": "ADD_REPUTATION", "faction": "anciens", "value": -12}, {"type": "DAMAGE_LIFE", "value": -8}]}
+    ]
+  },
+  {
+    "id": "s14_endgame_11",
+    "text": "La grande pretresse des druides vous offre le choix: recevoir le gui sacre coupe a la serpe d'or, ou couper vous-meme la branche et devenir l'egal des druides.",
+    "biome": "foret_broceliande",
+    "faction": "druides",
+    "trust_tier": "T2",
+    "tags": ["faction_endgame", "golden_sickle"],
+    "options": [
+      {"text": "Recevoir le gui avec humilite", "verb": "accepter", "effects": [{"type": "ADD_REPUTATION", "faction": "druides", "value": 12}, {"type": "HEAL_LIFE", "value": 15}]},
+      {"text": "Couper vous-meme la branche sacree", "verb": "recolter", "effects": [{"type": "ADD_REPUTATION", "faction": "druides", "value": 18}, {"type": "DAMAGE_LIFE", "value": -5}, {"type": "ADD_PROMISE"}]},
+      {"text": "Refuser le gui et choisir votre propre voie", "verb": "refuser", "effects": [{"type": "ADD_REPUTATION", "faction": "druides", "value": -5}, {"type": "ADD_KARMA", "value": 5}]}
+    ]
+  },
+  {
+    "id": "s14_endgame_12",
+    "text": "L'Ankou vous revele que votre heure approche. Il vous montre votre nom inscrit dans son registre noir, mais l'encre n'est pas encore seche. Il reste une chance de la faire disparaitre.",
+    "biome": "marais_yeun",
+    "faction": "ankou",
+    "trust_tier": "T2",
+    "tags": ["faction_endgame", "death_ledger"],
+    "options": [
+      {"text": "Effacer votre nom du registre", "verb": "transformer", "effects": [{"type": "HEAL_LIFE", "value": 20}, {"type": "ADD_REPUTATION", "faction": "ankou", "value": -10}]},
+      {"text": "Accepter votre destin avec dignite", "verb": "accepter", "effects": [{"type": "ADD_REPUTATION", "faction": "ankou", "value": 20}, {"type": "ADD_ANAM", "value": 3}]},
+      {"text": "Ecrire un autre nom a la place du votre", "verb": "trahir", "effects": [{"type": "DAMAGE_LIFE", "value": -5}, {"type": "ADD_KARMA", "value": -5}, {"type": "ADD_REPUTATION", "faction": "ankou", "value": 5}]}
+    ]
+  },
+  {
+    "id": "s14_endgame_13",
+    "text": "Le roi Korrigan propose une ultime epreuve: resoudre trois enigmes avant le lever du soleil. Si vous echouez, vous deviendrez une statue de pierre ornant son palais souterrain.",
+    "biome": "landes_carnac",
+    "faction": "korrigans",
+    "trust_tier": "T2",
+    "tags": ["faction_endgame", "riddle_trial"],
+    "options": [
+      {"text": "Accepter le defi des trois enigmes", "verb": "defier", "effects": [{"type": "ADD_REPUTATION", "faction": "korrigans", "value": 15}, {"type": "ADD_ANAM", "value": 2}]},
+      {"text": "Proposer vos propres enigmes en echange", "verb": "negocier", "effects": [{"type": "ADD_REPUTATION", "faction": "korrigans", "value": 10}, {"type": "ADD_KARMA", "value": 3}]},
+      {"text": "Fuir avant le debut de l'epreuve", "verb": "fuir", "effects": [{"type": "ADD_REPUTATION", "faction": "korrigans", "value": -12}, {"type": "DAMAGE_LIFE", "value": -5}]}
+    ]
+  },
+  {
+    "id": "s14_endgame_14",
+    "text": "Niamh pleure des larmes de perle sur les cotes d'Armor. Chaque larme qui touche la mer cree une ile ephemere ou le temps s'arrete. Elle vous demande de consoler sa peine immortelle.",
+    "biome": "cotes_armor",
+    "faction": "niamh",
+    "trust_tier": "T1",
+    "tags": ["faction_endgame", "pearl_tears"],
+    "options": [
+      {"text": "Consoler Niamh avec des mots sinceres", "verb": "apaiser", "effects": [{"type": "ADD_REPUTATION", "faction": "niamh", "value": 12}, {"type": "HEAL_LIFE", "value": 10}]},
+      {"text": "Collecter ses larmes de perle", "verb": "accumuler", "effects": [{"type": "ADD_BIOME_CURRENCY", "value": 5}, {"type": "ADD_REPUTATION", "faction": "niamh", "value": -8}]},
+      {"text": "Chanter un lai d'amour pour elle", "verb": "chanter", "effects": [{"type": "ADD_REPUTATION", "faction": "niamh", "value": 10}, {"type": "ADD_ANAM", "value": 2}]}
+    ]
+  },
+  {
+    "id": "s14_endgame_15",
+    "text": "Les cinq factions se disputent le controle d'un Ogham de pouvoir supreme. La tension est palpable, et chaque emissaire attend que vous fassiez pencher la balance en faveur de son camp.",
+    "biome": "cercle_pierres",
+    "faction": "druides",
+    "trust_tier": "T2",
+    "tags": ["faction_endgame", "power_struggle"],
+    "options": [
+      {"text": "Remettre l'Ogham aux Druides", "verb": "offrir", "effects": [{"type": "ADD_REPUTATION", "faction": "druides", "value": 20}, {"type": "ADD_REPUTATION", "faction": "korrigans", "value": -8}]},
+      {"text": "Detruire l'Ogham pour que personne ne l'ait", "verb": "detruire", "effects": [{"type": "DAMAGE_LIFE", "value": -15}, {"type": "ADD_KARMA", "value": 5}]},
+      {"text": "Garder l'Ogham pour vous", "verb": "accumuler", "effects": [{"type": "ADD_ANAM", "value": 3}, {"type": "ADD_REPUTATION", "faction": "druides", "value": -10}, {"type": "ADD_REPUTATION", "faction": "anciens", "value": -10}]}
+    ]
+  },
+  {
+    "id": "s14_endgame_16",
+    "text": "Un ancien dragon celtique sommeille sous les monts d'Arree, son souffle creant des sources chaudes. Les ecailles de la bete portent des Oghams vivants qui racontent la creation du monde.",
+    "biome": "monts_arree",
+    "faction": "anciens",
+    "trust_tier": "T2",
+    "tags": ["faction_endgame", "sleeping_dragon"],
+    "options": [
+      {"text": "Lire les Oghams sur les ecailles du dragon", "verb": "observer", "effects": [{"type": "ADD_REPUTATION", "faction": "anciens", "value": 15}, {"type": "ADD_ANAM", "value": 3}]},
+      {"text": "Reveiller le dragon par un chant ancien", "verb": "chanter", "effects": [{"type": "ADD_REPUTATION", "faction": "anciens", "value": 10}, {"type": "DAMAGE_LIFE", "value": -12}]},
+      {"text": "Arracher une ecaille comme talisman", "verb": "voler", "effects": [{"type": "ADD_BIOME_CURRENCY", "value": 5}, {"type": "ADD_REPUTATION", "faction": "anciens", "value": -15}, {"type": "DAMAGE_LIFE", "value": -10}]}
+    ]
+  },
+  {
+    "id": "s14_endgame_17",
+    "text": "La fontaine de Barenton bout a gros bouillons. Quiconque y jette une pierre provoque une tempete, mais celui qui boit son eau recoit le don de prophetie. Le choix est entre pouvoir et chaos.",
+    "biome": "foret_broceliande",
+    "faction": "druides",
+    "trust_tier": "T0",
+    "tags": ["faction_endgame", "barenton_spring"],
+    "options": [
+      {"text": "Boire l'eau de la fontaine sacree", "verb": "absorber", "effects": [{"type": "ADD_REPUTATION", "faction": "druides", "value": 10}, {"type": "ADD_ANAM", "value": 2}]},
+      {"text": "Jeter une pierre pour declencher la tempete", "verb": "defier", "effects": [{"type": "DAMAGE_LIFE", "value": -10}, {"type": "ADD_BIOME_CURRENCY", "value": 4}]},
+      {"text": "Proteger la fontaine des profanateurs", "verb": "proteger", "effects": [{"type": "ADD_REPUTATION", "faction": "druides", "value": 8}, {"type": "HEAL_LIFE", "value": 8}]}
+    ]
+  },
+  {
+    "id": "s14_endgame_18",
+    "text": "Dans les marais de Yeun Elez, la porte de l'Enfer celtique est entrouverte. Des ombres s'echappent et errent dans la brume, cherchant un corps vivant a habiter.",
+    "biome": "marais_yeun",
+    "faction": "ankou",
+    "trust_tier": "T0",
+    "tags": ["faction_endgame", "hell_gate"],
+    "options": [
+      {"text": "Refermer la porte avec un sceau sacre", "verb": "proteger", "effects": [{"type": "ADD_REPUTATION", "faction": "druides", "value": 8}, {"type": "ADD_REPUTATION", "faction": "ankou", "value": -5}]},
+      {"text": "Communiquer avec les ombres en liberte", "verb": "ecouter", "effects": [{"type": "ADD_REPUTATION", "faction": "ankou", "value": 10}, {"type": "DAMAGE_LIFE", "value": -8}]},
+      {"text": "Traverser la porte pour explorer l'au-dela", "verb": "voyager", "effects": [{"type": "ADD_REPUTATION", "faction": "ankou", "value": 15}, {"type": "DAMAGE_LIFE", "value": -15}]}
+    ]
+  },
+  {
+    "id": "s14_endgame_19",
+    "text": "Les Korrigans gardent un miroir encorcele qui montre non pas votre reflet, mais votre veritable nature. Certains y voient un heros, d'autres un monstre. Ils vous invitent a regarder.",
+    "biome": "grotte_merlin",
+    "faction": "korrigans",
+    "trust_tier": "T0",
+    "tags": ["faction_endgame", "truth_mirror"],
+    "options": [
+      {"text": "Regarder votre reflet veritable", "verb": "reveler", "effects": [{"type": "ADD_REPUTATION", "faction": "korrigans", "value": 8}, {"type": "ADD_KARMA", "value": 4}]},
+      {"text": "Briser le miroir pour ne jamais savoir", "verb": "detruire", "effects": [{"type": "DAMAGE_LIFE", "value": -8}, {"type": "ADD_REPUTATION", "faction": "korrigans", "value": -10}]},
+      {"text": "Transformer le miroir en portail", "verb": "transformer", "effects": [{"type": "ADD_REPUTATION", "faction": "korrigans", "value": 12}, {"type": "ADD_ANAM", "value": 2}]}
+    ]
+  },
+  {
+    "id": "s14_endgame_20",
+    "text": "Niamh tisse un voile entre les mondes sur l'ile d'Avalon. Chaque fil est un destin humain, et elle vous demande de choisir quel fil sera coupe et lequel sera renforce.",
+    "biome": "ile_avalon",
+    "faction": "niamh",
+    "trust_tier": "T3",
+    "tags": ["faction_endgame", "fate_weaving"],
+    "options": [
+      {"text": "Renforcer le fil des innocents", "verb": "tisser", "effects": [{"type": "ADD_REPUTATION", "faction": "niamh", "value": 15}, {"type": "HEAL_LIFE", "value": 15}, {"type": "ADD_KARMA", "value": 5}]},
+      {"text": "Couper le fil des tyrans", "verb": "sacrifier", "effects": [{"type": "ADD_REPUTATION", "faction": "niamh", "value": 10}, {"type": "DAMAGE_LIFE", "value": -10}, {"type": "ADD_KARMA", "value": -3}]},
+      {"text": "Refuser de choisir un destin pour autrui", "verb": "refuser", "effects": [{"type": "ADD_REPUTATION", "faction": "niamh", "value": -5}, {"type": "ADD_KARMA", "value": 5}]}
+    ]
+  },
+  {
+    "id": "s14_endgame_21",
+    "text": "Le dernier gardien des Anciens vous transmet le Livre des Lignees, un artefact contenant la genealogie de tous les peuples celtiques. Sa possession confere une autorite immense mais aussi une responsabilite ecrasante.",
+    "biome": "cercle_pierres",
+    "faction": "anciens",
+    "trust_tier": "T3",
+    "tags": ["faction_endgame", "book_of_lineages"],
+    "options": [
+      {"text": "Accepter le Livre et sa responsabilite", "verb": "accepter", "effects": [{"type": "ADD_REPUTATION", "faction": "anciens", "value": 20}, {"type": "ADD_PROMISE"}, {"type": "ADD_ANAM", "value": 3}]},
+      {"text": "Partager le Livre avec toutes les factions", "verb": "partager", "effects": [{"type": "ADD_REPUTATION", "faction": "anciens", "value": 8}, {"type": "ADD_KARMA", "value": 5}]},
+      {"text": "Bruler le Livre pour liberer les peuples du passe", "verb": "detruire", "effects": [{"type": "ADD_REPUTATION", "faction": "anciens", "value": -20}, {"type": "DAMAGE_LIFE", "value": -10}, {"type": "ADD_KARMA", "value": -5}]}
+    ]
+  },
+  {
+    "id": "s14_endgame_22",
+    "text": "L'Ankou depose sa faux a vos pieds. Pour la premiere fois depuis des millenaires, la Mort demande un remplaçant. Celui qui prend la faux gagne l'immortalite mais perd son humanite.",
+    "biome": "marais_yeun",
+    "faction": "ankou",
+    "trust_tier": "T3",
+    "tags": ["faction_endgame", "death_succession"],
+    "options": [
+      {"text": "Prendre la faux et devenir le nouvel Ankou", "verb": "sacrifier", "effects": [{"type": "ADD_REPUTATION", "faction": "ankou", "value": 20}, {"type": "DAMAGE_LIFE", "value": -15}, {"type": "ADD_ANAM", "value": 3}]},
+      {"text": "Refuser et rendre la faux a son maitre", "verb": "refuser", "effects": [{"type": "HEAL_LIFE", "value": 15}, {"type": "ADD_REPUTATION", "faction": "ankou", "value": -5}]},
+      {"text": "Briser la faux pour abolir la Mort", "verb": "detruire", "effects": [{"type": "DAMAGE_LIFE", "value": -15}, {"type": "ADD_KARMA", "value": -5}, {"type": "ADD_REPUTATION", "faction": "ankou", "value": -20}]}
+    ]
+  },
+  {
+    "id": "s14_endgame_23",
+    "text": "Le Grand Korrigan revele que tout ce que vous avez vecu n'etait qu'un test elabore. La realite et l'illusion se confondent, et il vous offre le choix: rester dans le reve ou affronter la verite.",
+    "biome": "landes_carnac",
+    "faction": "korrigans",
+    "trust_tier": "T3",
+    "tags": ["faction_endgame", "grand_illusion"],
+    "options": [
+      {"text": "Choisir la verite, aussi cruelle soit-elle", "verb": "reveler", "effects": [{"type": "ADD_REPUTATION", "faction": "korrigans", "value": 15}, {"type": "ADD_KARMA", "value": 5}, {"type": "ADD_ANAM", "value": 2}]},
+      {"text": "Rester dans le reve des Korrigans", "verb": "rever", "effects": [{"type": "ADD_REPUTATION", "faction": "korrigans", "value": 10}, {"type": "HEAL_LIFE", "value": 20}]},
+      {"text": "Creer votre propre illusion rivale", "verb": "construire", "effects": [{"type": "ADD_REPUTATION", "faction": "korrigans", "value": -8}, {"type": "ADD_BIOME_CURRENCY", "value": 5}]}
+    ]
+  },
+  {
+    "id": "s14_endgame_24",
+    "text": "Le Grand Druide prononce la sentence finale. Les cinq Oghams de pouvoir convergent vers un point unique, et l'avenir de la Bretagne celtique repose entre vos mains tremblantes.",
+    "biome": "foret_broceliande",
+    "faction": "druides",
+    "trust_tier": "T3",
+    "tags": ["faction_endgame", "final_convergence"],
+    "options": [
+      {"text": "Unir les cinq Oghams en un seul", "verb": "forger", "effects": [{"type": "ADD_REPUTATION", "faction": "druides", "value": 18}, {"type": "ADD_ANAM", "value": 3}, {"type": "ADD_PROMISE"}]},
+      {"text": "Distribuer chaque Ogham a sa faction", "verb": "partager", "effects": [{"type": "ADD_KARMA", "value": 5}, {"type": "HEAL_LIFE", "value": 15}]},
+      {"text": "Detruire les Oghams pour que nul ne les possede", "verb": "sacrifier", "effects": [{"type": "DAMAGE_LIFE", "value": -15}, {"type": "ADD_REPUTATION", "faction": "druides", "value": -15}, {"type": "ADD_KARMA", "value": -3}]}
+    ]
+  },
+  {
+    "id": "s14_endgame_25",
+    "text": "L'aube se leve sur Avalon pour la derniere fois. Les voiles entre les mondes se dissolvent, et toutes les factions convergent vers un ultime rituel. Votre choix final determine si la magie celtique survit ou s'eteint a jamais.",
+    "biome": "ile_avalon",
+    "faction": "niamh",
+    "trust_tier": "T2",
+    "tags": ["faction_endgame", "final_ritual"],
+    "options": [
+      {"text": "Chanter l'hymne qui preserve la magie", "verb": "chanter", "effects": [{"type": "ADD_REPUTATION", "faction": "niamh", "value": 15}, {"type": "HEAL_LIFE", "value": 10}, {"type": "ADD_ANAM", "value": 3}]},
+      {"text": "Laisser la magie s'eteindre naturellement", "verb": "accepter", "effects": [{"type": "ADD_KARMA", "value": 5}, {"type": "ADD_REPUTATION", "faction": "anciens", "value": 8}]},
+      {"text": "Absorber toute la magie restante en vous", "verb": "absorber", "effects": [{"type": "DAMAGE_LIFE", "value": -12}, {"type": "ADD_ANAM", "value": 3}, {"type": "ADD_REPUTATION", "faction": "niamh", "value": -10}]}
+    ]
+  }
+]
