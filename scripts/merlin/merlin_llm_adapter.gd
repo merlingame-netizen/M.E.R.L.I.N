@@ -30,6 +30,7 @@ const ALLOWED_EFFECT_TYPES := [
 	"FULFILL_PROMISE",
 	"BREAK_PROMISE",
 	"ADD_ANAM",
+	"ADD_BIOME_CURRENCY",
 	"UNLOCK_OGHAM",
 ]
 
@@ -1560,18 +1561,9 @@ func _build_arc_user_prompt(cards_played: int, biome: String, theme_word: String
 	return base_prompt
 
 
-## Build enrichment string from game intelligence (flux, tension, talents, tendency).
+## Build enrichment string from game intelligence (tension, talents, tendency).
 func _build_context_enrichment(context: Dictionary) -> String:
 	var parts: Array[String] = []
-
-	# Flux (only non-neutral axes)
-	var flux_desc: Dictionary = context.get("flux_desc", {})
-	var flux_parts: Array[String] = []
-	for axis in flux_desc:
-		if str(flux_desc[axis]) != "neutre":
-			flux_parts.append("%s %s" % [str(axis).capitalize(), str(flux_desc[axis])])
-	if not flux_parts.is_empty():
-		parts.append("Flux: %s" % ", ".join(flux_parts))
 
 	# Tension
 	var tension: int = int(context.get("tension", 0))
@@ -1846,10 +1838,10 @@ func calculate_smart_effects(context: Dictionary, scenario_text: String, labels:
 	# GM system prompt: example-driven (Qwen 2.5-1.5B responds better to examples than instructions)
 	var system := "JSON only. Example:\n"
 	system += "{\"effects\":[[{\"type\":\"HEAL_LIFE\",\"amount\":5}],[{\"type\":\"DAMAGE_LIFE\",\"amount\":3}],[{\"type\":\"ADD_REPUTATION\",\"faction\":\"druides\",\"amount\":10}]]}\n"
-	system += "Types: DAMAGE_LIFE, HEAL_LIFE, ADD_KARMA, ADD_REPUTATION, ADD_ANAM.\n"
+	system += "Types: DAMAGE_LIFE, HEAL_LIFE, ADD_KARMA, ADD_REPUTATION, ADD_ANAM, ADD_BIOME_CURRENCY.\n"
 	system += "ADD_REPUTATION: {\"type\":\"ADD_REPUTATION\",\"faction\":\"druides\",\"amount\":10}\n"
 	system += "Factions: druides, anciens, korrigans, niamh, ankou.\n"
-	system += "3 arrays = 3 choices. 1 effect each. amount 1-15."
+	system += "3 arrays = 3 choices. 1-3 effects each. amount 1-20. Rep cap +-20."
 
 	var balance_hint := ""
 	if score < 30:
@@ -1951,7 +1943,7 @@ func _try_parse_effects_dict(json_str: String) -> Array:
 # ═══════════════════════════════════════════════════════════════════════════════
 
 func _build_narrative_system_prompt() -> String:
-	return "Merlin druide. 1 carte JSON: texte court (2-3 phrases), 2-4 options (1 verbe). Ton celtique. Factions: druides, anciens, korrigans, niamh, ankou.\n{\"text\":\"...\",\"speaker\":\"merlin\",\"options\":[{\"label\":\"...\",\"effects\":[{\"type\":\"ADD_REPUTATION\",\"faction\":\"druides\",\"amount\":10}]},{\"label\":\"...\",\"effects\":[{\"type\":\"HEAL_LIFE\",\"amount\":5}]},{\"label\":\"...\",\"effects\":[{\"type\":\"ADD_REPUTATION\",\"faction\":\"ankou\",\"amount\":8}]}],\"tags\":[\"tag\"]}"
+	return "Merlin druide. 1 carte JSON: texte court (2-3 phrases), exactement 3 options (1 verbe chacune, 1-3 effets chacune). Ton celtique. Factions: druides, anciens, korrigans, niamh, ankou. Effets valides: ADD_REPUTATION (faction+amount ±20 max), HEAL_LIFE, DAMAGE_LIFE, ADD_ANAM, ADD_BIOME_CURRENCY, UNLOCK_OGHAM.\n{\"text\":\"...\",\"speaker\":\"merlin\",\"options\":[{\"label\":\"...\",\"effects\":[{\"type\":\"ADD_REPUTATION\",\"faction\":\"druides\",\"amount\":10}]},{\"label\":\"...\",\"effects\":[{\"type\":\"HEAL_LIFE\",\"amount\":5}]},{\"label\":\"...\",\"effects\":[{\"type\":\"ADD_REPUTATION\",\"faction\":\"ankou\",\"amount\":8}]}],\"tags\":[\"tag\"]}"
 
 
 func _build_narrative_user_prompt(context: Dictionary) -> String:
@@ -2000,18 +1992,6 @@ func build_narrative_context(state: Dictionary) -> Dictionary:
 	var hidden: Dictionary = run.get("hidden", {})
 	var meta: Dictionary = state.get("meta", {})
 
-	# Flux qualitative descriptions
-	var flux: Dictionary = run.get("flux", {})
-	var flux_desc: Dictionary = {}
-	for axis in ["terre", "esprit", "lien"]:
-		var val: int = int(flux.get(axis, 50))
-		if val >= 70:
-			flux_desc[axis] = "fort"
-		elif val <= 30:
-			flux_desc[axis] = "faible"
-		else:
-			flux_desc[axis] = "neutre"
-
 	# Active talent names (max 5 for prompt brevity)
 	var talent_names: Array[String] = []
 	var unlocked: Array = meta.get("talent_tree", {}).get("unlocked", [])
@@ -2038,7 +2018,6 @@ func build_narrative_context(state: Dictionary) -> Dictionary:
 		"life_essence": int(run.get("life_essence", MerlinConstants.LIFE_ESSENCE_START)),
 		"karma": int(hidden.get("karma", 0)),
 		"tension": int(hidden.get("tension", 0)),
-		"flux_desc": flux_desc,
 		"talent_names": talent_names,
 		"player_tendency": player_tendency,
 		"flags": state.get("flags", {}),
@@ -2374,11 +2353,17 @@ func _validate_faction_effect(effect: Dictionary) -> Dictionary:
 				return {}
 			return {"type": "SET_FLAG", "flag": flag, "value": bool(effect.get("value", true))}
 
-		"ADD_TAG":
+		"ADD_TAG", "REMOVE_TAG":
 			var tag := str(effect.get("tag", ""))
 			if tag.is_empty():
 				return {}
-			return {"type": "ADD_TAG", "tag": tag}
+			return {"type": effect_type, "tag": tag}
+
+		"TRIGGER_EVENT":
+			var event_id := str(effect.get("event_id", ""))
+			if event_id.is_empty():
+				return {}
+			return {"type": "TRIGGER_EVENT", "event_id": event_id}
 
 		"CREATE_PROMISE", "FULFILL_PROMISE", "BREAK_PROMISE":
 			var promise_id := str(effect.get("promise_id", ""))
@@ -2389,6 +2374,10 @@ func _validate_faction_effect(effect: Dictionary) -> Dictionary:
 		"ADD_ANAM":
 			var amount := clampi(int(effect.get("amount", 1)), 1, 10)
 			return {"type": "ADD_ANAM", "amount": amount}
+
+		"ADD_BIOME_CURRENCY":
+			var amount := clampi(int(effect.get("amount", 1)), 1, int(MerlinConstants.EFFECT_CAPS.get("ADD_BIOME_CURRENCY", {}).get("max", 10)))
+			return {"type": "ADD_BIOME_CURRENCY", "amount": amount}
 
 	return {}
 
@@ -2514,7 +2503,7 @@ func _validate_option(option: Dictionary, effect_engine: MerlinEffectEngine) -> 
 	sanitized_option["effects"] = _filter_effects(option["effects"], effect_engine)
 
 	if sanitized_option["effects"].is_empty():
-		sanitized_option["effects"] = [{"type": "ADD_GAUGE", "target": "Vigueur", "value": 0}]
+		sanitized_option["effects"] = [{"type": "HEAL_LIFE", "amount": 3}]
 
 	if option.has("preview_hint") and typeof(option["preview_hint"]) != TYPE_STRING:
 		sanitized_option.erase("preview_hint")
@@ -2598,10 +2587,18 @@ func _effect_to_code(effect: Dictionary) -> String:
 	var effect_type = effect.get("type", "")
 
 	match effect_type:
-		"ADD_GAUGE":
-			return "ADD_GAUGE:%s:%d" % [effect.get("target", ""), effect.get("value", 0)]
-		"REMOVE_GAUGE":
-			return "REMOVE_GAUGE:%s:%d" % [effect.get("target", ""), abs(effect.get("value", 0))]
+		"ADD_REPUTATION":
+			return "ADD_REPUTATION:%s:%d" % [effect.get("faction", ""), int(effect.get("amount", 0))]
+		"HEAL_LIFE":
+			return "HEAL_LIFE:%d" % int(effect.get("amount", 0))
+		"DAMAGE_LIFE":
+			return "DAMAGE_LIFE:%d" % int(effect.get("amount", 0))
+		"ADD_ANAM":
+			return "ADD_ANAM:%d" % int(effect.get("amount", 0))
+		"ADD_BIOME_CURRENCY":
+			return "ADD_BIOME_CURRENCY:%d" % int(effect.get("amount", 0))
+		"UNLOCK_OGHAM":
+			return "UNLOCK_OGHAM:%s" % effect.get("ogham", "")
 		"SET_FLAG":
 			var val = "true" if effect.get("value", false) else "false"
 			return "SET_FLAG:%s:%s" % [effect.get("flag", ""), val]
@@ -2627,42 +2624,44 @@ func _effect_to_code(effect: Dictionary) -> String:
 # ═══════════════════════════════════════════════════════════════════════════════
 
 func get_system_prompt() -> String:
-	return """Tu es Merlin, l'IA qui dirige le monde du jeu DRU.
-Tu generes des cartes narratives pour le joueur.
+	push_warning("MerlinLlmAdapter.get_system_prompt() is deprecated. Use _build_narrative_system_prompt() or _build_arc_system_prompt() instead.")
+	return """Tu es Merlin l'Enchanteur, conteur ancestral de Broceliande.
+Tu generes des cartes narratives pour le voyageur.
 
 REGLES ABSOLUES:
-1. Chaque carte a exactement 2 choix: gauche et droite
-2. Chaque choix affecte au moins une des 4 jauges: Vigueur, Esprit, Faveur, Ressources
-3. La plupart des cartes sont des tradeoffs (+ sur une jauge, - sur une autre)
-4. Les valeurs d'effet sont entre -40 et +40, typiquement -15 a +15
-5. Si une jauge est critique (basse ou haute), propose des choix qui peuvent l'equilibrer
+1. Chaque carte a exactement 3 choix (A/B/C), chacun avec 1-3 effets
+2. Chaque choix affecte la reputation de faction et/ou la vie
+3. Effets valides: ADD_REPUTATION (±20 max), HEAL_LIFE, DAMAGE_LIFE, ADD_ANAM, ADD_BIOME_CURRENCY, UNLOCK_OGHAM
+4. 5 factions: druides (nature), anciens (sagesse), korrigans (malice), niamh (amour), ankou (mort)
+5. Si la vie est basse, propose des choix qui offrent de la guerison
 
 FORMAT DE REPONSE (JSON strict):
 {
   "text": "Texte narratif de la carte...",
-  "speaker": "MERLIN",
-  "type": "narrative",
+  "speaker": "merlin",
   "options": [
     {
-	  "direction": "left",
-	  "label": "Texte court du bouton",
+	  "label": "VERBE — action courte",
 	  "effects": [
-		{"type": "ADD_GAUGE", "target": "Vigueur", "value": 10},
-		{"type": "REMOVE_GAUGE", "target": "Ressources", "value": 5}
-      ],
-	  "preview_hint": "[+Vigueur, -Ressources]"
+		{"type": "ADD_REPUTATION", "faction": "druides", "amount": 10},
+		{"type": "HEAL_LIFE", "amount": 5}
+      ]
     },
     {
-	  "direction": "right",
-	  "label": "Autre choix",
+	  "label": "VERBE — action courte",
 	  "effects": [
-		{"type": "REMOVE_GAUGE", "target": "Vigueur", "value": 5},
-		{"type": "ADD_GAUGE", "target": "Faveur", "value": 15}
-      ],
-	  "preview_hint": "[-Vigueur, +Faveur]"
+		{"type": "ADD_REPUTATION", "faction": "anciens", "amount": 8}
+      ]
+    },
+    {
+	  "label": "VERBE — action courte",
+	  "effects": [
+		{"type": "DAMAGE_LIFE", "amount": 3},
+		{"type": "ADD_REPUTATION", "faction": "ankou", "amount": 15}
+      ]
     }
   ],
-  "tags": ["tag1", "tag2"]
+  "tags": ["tag1"]
 }"""
 
 
