@@ -77,6 +77,21 @@ def _extract_people(msg: dict) -> list[str]:
     return people
 
 
+_SPAM_INDICATORS = [
+    "emailing", "newsletter", "noreply", "no-reply", "promo",
+    "wonderbox", "marketing", "unsubscribe", "se desabonner",
+    "ne repondez pas", "do not reply", "notification@",
+]
+
+
+def _is_spam(msg: dict) -> bool:
+    """Check if message is spam/newsletter based on sender and subject."""
+    text = (
+        (msg.get("from", "") or "") + " " + (msg.get("subject", "") or "")
+    ).lower()
+    return any(ind in text for ind in _SPAM_INDICATORS)
+
+
 # ---------------------------------------------------------------------------
 # Public API
 # ---------------------------------------------------------------------------
@@ -88,6 +103,8 @@ def extract_intelligence(messages: list[dict]) -> list[dict]:
 
     entries: list[dict] = []
     for msg in messages:
+        if _is_spam(msg):
+            continue
         source = msg.get("source", "outlook")
         body = msg.get("body_preview") or msg.get("content") or ""
         subject = msg.get("subject", "")

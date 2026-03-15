@@ -422,9 +422,19 @@ class OutlookAdapter(BaseAdapter):
             ]
         except Exception:
             categories = []
+        # Prefer SenderName over Exchange DN addresses
+        sender_name = getattr(item, "SenderName", "") or ""
+        sender_email = getattr(item, "SenderEmailAddress", "") or ""
+        if sender_email.startswith("/O=") or not sender_email:
+            from_field = sender_name or sender_email
+        elif sender_name:
+            from_field = f"{sender_name} <{sender_email}>"
+        else:
+            from_field = sender_email
+
         return {
             "subject": getattr(item, "Subject", "") or "",
-            "from": getattr(item, "SenderEmailAddress", "") or "",
+            "from": from_field,
             "to": getattr(item, "To", "") or "",
             "cc": getattr(item, "CC", "") or "",
             "date": str(getattr(item, "ReceivedTime", "") or ""),
