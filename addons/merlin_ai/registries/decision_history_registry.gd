@@ -94,7 +94,7 @@ var npc_last_seen := {}  # {npc_id: card_number}
 var historical_summary := {
 	"total_choices": 0,
 	"left_ratio": 0.5,
-	"center_ratio": 0.0,  # For TRIADE system
+	"center_ratio": 0.0,  # Center choice ratio
 	"right_ratio": 0.5,
 	"promise_acceptance_rate": 0.0,
 	"average_gauge_at_death": {},

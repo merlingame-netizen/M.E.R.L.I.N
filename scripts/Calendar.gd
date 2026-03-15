@@ -65,14 +65,12 @@ const CALENDAR_EVENTS := [
 ]
 
 const ALL_ENDINGS := [
-	{"title": "L'Epuisement", "gauge": "Vigueur", "direction": 0},
-	{"title": "Le Surmenage", "gauge": "Vigueur", "direction": 100},
-	{"title": "La Folie", "gauge": "Esprit", "direction": 0},
-	{"title": "La Possession", "gauge": "Esprit", "direction": 100},
-	{"title": "L'Exile", "gauge": "Faveur", "direction": 0},
-	{"title": "La Tyrannie", "gauge": "Faveur", "direction": 100},
-	{"title": "La Famine", "gauge": "Ressources", "direction": 0},
-	{"title": "Le Pillage", "gauge": "Ressources", "direction": 100},
+	{"title": "Essences Epuisees", "condition": "Vie", "direction": 0},
+	{"title": "Harmonie Retrouvee", "condition": "Victoire", "direction": 100},
+	{"title": "Victoire Amere", "condition": "Victoire", "direction": 100},
+	{"title": "Le Prix Paye", "condition": "Victoire", "direction": 100},
+	{"title": "Transcendance", "condition": "Faction", "direction": 100},
+	{"title": "Abandon", "condition": "MOS", "direction": 0},
 ]
 
 # Scene nodes (@onready)
@@ -684,7 +682,7 @@ func _populate_stats() -> void:
 
 	_add_stat_row("Runs", str(meta_stats.total_runs))
 	_add_stat_row("Cartes jouees", str(meta_stats.total_cards_played))
-	_add_stat_row("Fins vues", "%d / 8" % meta_stats.endings_seen.size())
+	_add_stat_row("Fins vues", "%d / %d" % [meta_stats.endings_seen.size(), ALL_ENDINGS.size()])
 	_add_stat_row("Points de Gloire", str(meta_stats.gloire_points))
 
 	var endings_header := Label.new()

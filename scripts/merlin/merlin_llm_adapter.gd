@@ -2,13 +2,13 @@
 ## Merlin LLM Adapter — Card Contract (Faction-based)
 ## ═══════════════════════════════════════════════════════════════════════════════
 ## Handles communication with LLM for generating narrative cards.
-## v3.1.0 — Faction reputation system, Triade removed.
+## v3.2.0 — Faction reputation system, prompts optimized for Qwen 3.5.
 ## ═══════════════════════════════════════════════════════════════════════════════
 
 extends RefCounted
 class_name MerlinLlmAdapter
 
-const VERSION := "3.1.0"
+const VERSION := "3.2.0"
 
 # ═══════════════════════════════════════════════════════════════════════════════
 # EFFECT WHITELIST — Effects allowed from LLM card generation
@@ -225,10 +225,10 @@ func is_llm_ready() -> bool:
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
-# TRIADE CARD GENERATION — The main entry point
+# CARD GENERATION — The main entry point
 # ═══════════════════════════════════════════════════════════════════════════════
 
-## Generate a TRIADE card via LLM. Async — must be awaited.
+## Generate a narrative card via LLM. Async — must be awaited.
 ## Returns {ok: bool, card: Dictionary, error: String, raw: String}
 ## Uses two-stage approach directly: free text + programmatic JSON wrap.
 ## JSON primary generation skipped — Qwen 3B CPU always produces malformed JSON
@@ -498,7 +498,7 @@ func _generate_card_two_stage(context: Dictionary) -> Dictionary:
 			card["tags"] = []
 		card["tags"].append("llm_consequences")
 
-	var validated := validate_triade_card(card)
+	var validated := validate_faction_card(card)
 	if not validated["ok"]:
 		return {"ok": false, "card": {}, "error": "Two-stage validation: " + ", ".join(validated["errors"])}
 
@@ -507,7 +507,7 @@ func _generate_card_two_stage(context: Dictionary) -> Dictionary:
 	return {"ok": true, "card": validated["card"]}
 
 
-## Wrap free text into a valid TRIADE card JSON.
+## Wrap free text into a valid narrative card JSON.
 ## Extracts labels from text if possible, otherwise generates contextual defaults.
 func _wrap_text_as_card(raw_text: String, context: Dictionary) -> Dictionary:
 	var text := raw_text.strip_edges()
@@ -1940,7 +1940,7 @@ func _try_parse_effects_dict(json_str: String) -> Array:
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
-# TRIADE SYSTEM PROMPT — Compact for Qwen 2.5-3B-Instruct
+# NARRATIVE SYSTEM PROMPT — Compact for Qwen 3.5-4B
 # ═══════════════════════════════════════════════════════════════════════════════
 
 func _build_narrative_system_prompt() -> String:
@@ -2226,11 +2226,11 @@ func _regex_extract_card_fields(raw: String) -> Dictionary:
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
-# TRIADE CARD VALIDATION
+# FACTION CARD VALIDATION
 # ═══════════════════════════════════════════════════════════════════════════════
 
-## Validate and sanitize a TRIADE card from LLM response.
-func validate_triade_card(card: Dictionary) -> Dictionary:
+## Validate and sanitize a faction-based card from LLM response.
+func validate_faction_card(card: Dictionary) -> Dictionary:
 	var result := {"ok": false, "errors": [], "card": {}}
 
 	# Check text
@@ -2253,7 +2253,7 @@ func validate_triade_card(card: Dictionary) -> Dictionary:
 
 	# Validate each option
 	for i in range(sanitized["options"].size()):
-		sanitized["options"][i] = _validate_triade_option(sanitized["options"][i])
+		sanitized["options"][i] = _validate_faction_option(sanitized["options"][i])
 
 	# If only 2 options, insert a neutral center option
 	if sanitized["options"].size() == 2:
@@ -2287,7 +2287,7 @@ func validate_triade_card(card: Dictionary) -> Dictionary:
 	return result
 
 
-func _validate_triade_option(option) -> Dictionary:
+func _validate_faction_option(option) -> Dictionary:
 	if typeof(option) != TYPE_DICTIONARY:
 		return {"label": "...", "effects": []}
 
@@ -2309,7 +2309,7 @@ func _validate_triade_option(option) -> Dictionary:
 	for effect in effects_raw:
 		if typeof(effect) != TYPE_DICTIONARY:
 			continue
-		var validated := _validate_triade_effect(effect)
+		var validated := _validate_faction_effect(effect)
 		if not validated.is_empty():
 			valid_effects.append(validated)
 
@@ -2323,7 +2323,7 @@ func _validate_triade_option(option) -> Dictionary:
 	return sanitized
 
 
-func _validate_triade_effect(effect: Dictionary) -> Dictionary:
+func _validate_faction_effect(effect: Dictionary) -> Dictionary:
 	var effect_type := str(effect.get("type", ""))
 	if not effect_type in ALLOWED_EFFECT_TYPES:
 		return {}

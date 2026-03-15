@@ -69,7 +69,7 @@ class_name BiomeWalkConfig
 # GAMEPLAY MODIFIERS (from MerlinBiomeSystem)
 # ═══════════════════════════════════════════════════════════════════════════════
 
-@export var aspect_bias: Dictionary = {"Corps": 1.0, "Ame": 1.0, "Monde": 1.0}
+@export var faction_bias: Dictionary = {"druides": 1.0, "anciens": 1.0, "korrigans": 1.0, "niamh": 1.0, "ankou": 1.0}
 @export var difficulty: int = 0
 @export var creatures_desc: String = ""
 @export var atmosphere_desc: String = ""

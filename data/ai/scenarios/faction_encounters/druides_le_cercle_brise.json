@@ -1,0 +1,78 @@
+{
+  "_meta": {
+    "faction": "druides",
+    "version": "1.0.0",
+    "description": "Scenario de faction Druides — Le cercle brise de Barenton"
+  },
+  "scenario": {
+    "id": "druides_le_cercle_brise",
+    "title": "Le Cercle Brise",
+    "tone": "solennel",
+    "dealer_intro_context": "La Fontaine de Barenton ne chante plus. Maelgwn a envoye un message aux six autres druides — un seul mot: 'Venez.' Mais les chemins entre les cercles sont coupes par la brume. Le voyageur est le seul a pouvoir porter la parole d'un cercle a l'autre, avant que le silence ne devienne definitif.",
+    "biome_affinity": ["foret_broceliande", "cercles_pierres", "landes_bruyere"],
+    "difficulty": "medium",
+    "weight": 1.0,
+    "min_cards": 15,
+    "faction_rep_requirement": {"druides": 20},
+    "anchors": [
+      {
+        "id": "cercle_fontaine_muette",
+        "position": 2,
+        "position_flex": 1,
+        "type": "discovery",
+        "prompt_override": "La Fontaine de Barenton est immobile. Pas un cercle a la surface, pas un murmure dans les pierres. Maelgwn est agenouille au bord, les mains dans l'eau. Il ne se retourne pas. 'Elle s'est tue ce matin,' dit-il. 'Depuis le premier age, elle n'avait jamais cesse de parler. Jusqu'a ce matin.'",
+        "flags_set": ["fontaine_muette"],
+        "tags_add": ["druide", "fontaine", "silence"],
+        "must_reference": ["Fontaine de Barenton", "Maelgwn", "silence"],
+        "recommended_effects": [
+          {"type": "ADD_REPUTATION", "faction": "druides", "delta": 5}
+        ]
+      },
+      {
+        "id": "cercle_message_druides",
+        "position": 6,
+        "position_flex": 2,
+        "type": "encounter",
+        "condition": {"flag": "fontaine_muette"},
+        "branches": {
+          "default": {
+            "prompt_override": "Le chemin vers Carnac est mange par la brume. Une lueur verte pulse faiblement entre les menhirs — le cercle de Keridwen resiste encore. Elle attend, debout dans le vent, les mains serrees sur un baton de frene. 'Tu portes un message de Maelgwn? Bien. Dis-lui que mon cercle tient. Mais je ne peux pas le maintenir seule. Il faut que les sept se reunissent.' Elle hesite. 'Dis-lui aussi que j'ai peur.'",
+            "flags_set": ["keridwen_contactee"]
+          }
+        },
+        "must_reference": ["Keridwen", "Carnac", "cercle", "brume"],
+        "recommended_effects": [
+          {"type": "ADD_REPUTATION", "faction": "druides", "delta": 5},
+          {"type": "HEAL_LIFE", "amount": 3}
+        ]
+      },
+      {
+        "id": "cercle_choix_rituel",
+        "position": 12,
+        "position_flex": 2,
+        "type": "climax",
+        "condition": {"flag": "keridwen_contactee"},
+        "branches": {
+          "default": {
+            "prompt_override": "Quatre druides sont reunis a Barenton — Maelgwn, Keridwen, Talwen et Elouan. Les trois autres n'ont pas pu venir. Talwen entend les voix des Oghams plus fort que jamais: 'Ils chantent une note,' dit-elle, les yeux fermes. 'Une seule note. Si nous la chantons aussi, le cercle se reconnectera.' Mais chanter cette note a un prix — elle vibre a une frequence qui use la Membrane. Reconnecter les cercles pourrait accelerer la fin. Ne rien faire les laisse isoles. Le voyageur doit choisir: chanter avec eux, ou leur demander d'attendre.",
+            "tone": "sacre",
+            "flags_set": ["rituel_propose"]
+          }
+        },
+        "tags_add": ["climax_druide", "rituel", "oghams"],
+        "must_reference": ["quatre druides", "note", "Membrane"],
+        "recommended_effects": [
+          {"type": "ADD_REPUTATION", "faction": "druides", "delta": 10},
+          {"type": "DAMAGE_LIFE", "amount": 5}
+        ]
+      }
+    ],
+    "ambient_tags": ["druides", "cercle_brise", "fontaine", "brume", "rituel"],
+    "theme_injection": "Les cercles de pierres palissent. Leur lueur verte — visible seulement a ceux qui savent regarder — s'affaiblit comme une braise sous la pluie. Chaque menhir que le voyageur croise vibre faiblement, comme s'il essayait de parler a travers la pierre. Les druides sont quelque part dans cette brume, chacun seul avec son cercle mourant.",
+    "resolution_flags": {
+      "victoire": ["cercles_reconnectes"],
+      "sombre": ["druides_isoles"],
+      "twist": ["note_reveille_quelque_chose"]
+    }
+  }
+}

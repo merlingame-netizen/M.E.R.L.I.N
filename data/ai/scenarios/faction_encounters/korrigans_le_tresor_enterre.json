@@ -1,0 +1,77 @@
+{
+  "_meta": {
+    "faction": "korrigans",
+    "version": "1.0.0",
+    "description": "Scenario de faction Korrigans — Le tresor que personne ne devrait trouver"
+  },
+  "scenario": {
+    "id": "korrigans_le_tresor_enterre",
+    "title": "Le Tresor du Vieux Granit",
+    "tone": "malicieux",
+    "dealer_intro_context": "La terre tremble sous les pieds — pas un tremblement de terre, mais un rire. Enorme, profond, souterrain. Les korrigans sont excites. Quelque chose a ete deterre — quelque chose qui etait cache depuis le premier age. Le Vieux Granit rit, et quand le Vieux Granit rit, le monde devrait avoir peur.",
+    "biome_affinity": ["marais_korrigans", "foret_broceliande", "collines_dolmens"],
+    "difficulty": "medium",
+    "weight": 1.0,
+    "min_cards": 12,
+    "faction_rep_requirement": {"korrigans": 15},
+    "anchors": [
+      {
+        "id": "korrigan_terre_qui_rit",
+        "position": 2,
+        "position_flex": 1,
+        "type": "discovery",
+        "prompt_override": "Le sol vibre sous les pieds du voyageur — un rythme irregulier, comme un rire etouffe. Des champignons luminescents surgissent en cercle autour de ses bottes, violets et pulsants. Un feu follet zigzague entre les arbres, s'arrete, revient, repart — il veut qu'on le suive. Dans la mousse, des empreintes minuscules a cinq doigts, profondes comme si leurs proprietaires portaient quelque chose de tres lourd.",
+        "flags_set": ["feu_follet_suivi"],
+        "tags_add": ["korrigan", "feu_follet", "champignons", "tresor"],
+        "must_reference": ["sol qui vibre", "champignons violets", "feu follet"],
+        "recommended_effects": [
+          {"type": "ADD_REPUTATION", "faction": "korrigans", "delta": 3}
+        ]
+      },
+      {
+        "id": "korrigan_pik_le_messager",
+        "position": 5,
+        "position_flex": 2,
+        "type": "encounter",
+        "condition": {"flag": "feu_follet_suivi"},
+        "branches": {
+          "default": {
+            "prompt_override": "Pik surgit d'un trou dans un chene — la tete en bas, un sourire fendu jusqu'aux oreilles de granit. 'Tu viens! Bien! Le Vieux veut te montrer! Pas te donner — te montrer. Donner, c'est autre chose. Montrer, c'est gratuit. Enfin, presque.' Il se laisse tomber et roule comme une bille entre les racines. 'Suis-moi suis-moi suis-moi! Et ne touche a RIEN. Surtout pas au tresor. Surtout surtout pas.'",
+            "flags_set": ["pik_rencontre"]
+          }
+        },
+        "must_reference": ["Pik", "chene", "tresor", "Vieux Granit"],
+        "recommended_effects": [
+          {"type": "ADD_REPUTATION", "faction": "korrigans", "delta": 5}
+        ]
+      },
+      {
+        "id": "korrigan_tresor_revele",
+        "position": 10,
+        "position_flex": 2,
+        "type": "climax",
+        "condition": {"flag": "pik_rencontre"},
+        "branches": {
+          "default": {
+            "prompt_override": "Sous la plus vieille pierre du marais, une salle. Pas grande — juste assez pour le Vieux Granit, une douzaine de Rouleurs, et le voyageur. Au centre, sur un socle de mousse ancienne, un objet: un oeuf de pierre, noir et lisse, qui vibre comme un coeur. Le Vieux Granit parle, et pour une fois, pas en rimes: 'Ca, c'est d'avant. D'avant nous. D'avant la terre. Ca dormait. La terre tremblait et ca s'est reveille.' Pik chuchote: 'Il veut que tu decides. On le remet dans la terre? Ou on le laisse eclore?' Le Vieux Granit fixe le voyageur de ses yeux de granite. 'Choisis bien. La terre se souvient de tout. Et elle n'oublie pas les mauvais choix.'",
+            "tone": "grave_espiegle",
+            "flags_set": ["choix_oeuf"]
+          }
+        },
+        "tags_add": ["climax_korrigan", "oeuf_ancien", "choix"],
+        "must_reference": ["Vieux Granit", "oeuf de pierre", "Pik", "choix"],
+        "recommended_effects": [
+          {"type": "ADD_REPUTATION", "faction": "korrigans", "delta": 10},
+          {"type": "DAMAGE_LIFE", "amount": 3}
+        ]
+      }
+    ],
+    "ambient_tags": ["korrigans", "tresor", "souterrain", "rire", "feu_follet", "champignon"],
+    "theme_injection": "La terre rit. Pas une metaphore — des vibrations montent du sol, irregulieres, joyeuses, un peu inquietantes. Des champignons violets poussent en spirales le long du sentier, des yeux brillent dans chaque creux de rocher, et des rires aigus rebondissent entre les arbres. Les korrigans sont excites, et un korrigan excite est la chose la plus impredictible de Broceliande.",
+    "resolution_flags": {
+      "victoire": ["oeuf_enterre_sagement"],
+      "sombre": ["oeuf_eclos_chaos"],
+      "twist": ["oeuf_contenait_un_souvenir"]
+    }
+  }
+}

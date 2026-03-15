@@ -195,7 +195,7 @@ func _f_pity() -> float:
 
 func _f_crisis(ctx: Dictionary) -> float:
 	## CAL-REQ-072: Favor recovery events when gauges are critical.
-	## v2.5: Uses faction_rep_delta and life_essence instead of Triade aspects.
+	## Uses faction_rep_delta and life_essence for crisis detection.
 	var faction_rep_delta: Dictionary = ctx.get("faction_rep_delta", {})
 	var extreme_count := 0
 	for faction in faction_rep_delta:

@@ -2879,7 +2879,6 @@ func _get_fallback_monologue() -> String:
 
 func _get_fallback_text(bkey: String) -> Dictionary:
 	## Returns {"arrival": "...", "merlin": "..."} from JSON variants.
-	## Selects category based on current aspect states.
 	var category := _detect_aspect_category()
 	var variants_dict: Dictionary = biome_data.get("variants", {})
 	var variants: Array = variants_dict.get(category, [])
@@ -2895,7 +2894,7 @@ func _get_fallback_text(bkey: String) -> Dictionary:
 
 
 func _detect_aspect_category() -> String:
-	## Aspect system removed — always returns balanced.
+	## Always returns balanced (no aspect-based variant selection).
 	return "balanced"
 
 

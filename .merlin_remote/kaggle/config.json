@@ -4,19 +4,25 @@
   "title": "MERLIN Remote Lora Training",
   "dataset": "C:\\Users\\PGNK2128\\Godot-MCP\\data\\ai\\training\\merlin_full_v9.jsonl",
   "job_dir": "C:\\Users\\PGNK2128\\Godot-MCP\\.merlin_remote\\kaggle\\job",
-  "updated_at": "2026-03-10T22:01:24Z",
+  "updated_at": "2026-03-13T19:55:14Z",
+  "dataset_status": "OBSOLETE",
+  "obsolete_reason": "merlin_full_v9.jsonl contains Triade mechanics (180 references) — must regenerate dataset after faction system implementation",
   "brains": {
     "narrator": {
       "slug": "merlin-lora-narrator-4b",
       "title": "MERLIN LoRA Narrator (4B)",
       "dataset": "C:\\Users\\PGNK2128\\Godot-MCP\\data\\ai\\training\\brains\\narrator_v1.jsonl",
-      "job_dir": "C:\\Users\\PGNK2128\\Godot-MCP\\.merlin_remote\\kaggle\\jobs\\narrator"
+      "job_dir": "C:\\Users\\PGNK2128\\Godot-MCP\\.merlin_remote\\kaggle\\jobs\\narrator",
+      "status": "OBSOLETE",
+      "obsolete_reason": "Trained on Triade mechanics — must retrain after faction system implementation"
     },
     "gamemaster": {
       "slug": "merlin-lora-game-master-2b",
       "title": "MERLIN LoRA Game Master (2B)",
       "dataset": "C:\\Users\\PGNK2128\\Godot-MCP\\data\\ai\\training\\brains\\gamemaster_v1.jsonl",
-      "job_dir": "C:\\Users\\PGNK2128\\Godot-MCP\\.merlin_remote\\kaggle\\jobs\\gamemaster"
+      "job_dir": "C:\\Users\\PGNK2128\\Godot-MCP\\.merlin_remote\\kaggle\\jobs\\gamemaster",
+      "status": "OBSOLETE",
+      "obsolete_reason": "Trained on Triade mechanics — must retrain after faction system implementation"
     },
     "worker": {
       "slug": "merlin-lora-worker-0-8b",

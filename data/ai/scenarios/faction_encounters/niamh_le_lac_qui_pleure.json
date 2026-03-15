@@ -1,0 +1,78 @@
+{
+  "_meta": {
+    "faction": "niamh",
+    "version": "1.0.0",
+    "description": "Scenario de faction Niamh — Le lac qui pleure des souvenirs"
+  },
+  "scenario": {
+    "id": "niamh_le_lac_qui_pleure",
+    "title": "Le Lac Qui Pleure",
+    "tone": "lyrique",
+    "dealer_intro_context": "Le Lac de Viviane pleure. Pas une metaphore — des larmes d'eau pure montent de la surface, brillent un instant dans la lumiere, et retombent en emportant un eclat de couleur. Le lac perd ses souvenirs. Niamh a appele a l'aide, elle qui n'appelle jamais, elle qui donne toujours. Quelque chose de terrible se passe a Tir na nOg.",
+    "biome_affinity": ["foret_broceliande", "cotes_sauvages", "collines_dolmens"],
+    "difficulty": "medium",
+    "weight": 1.0,
+    "min_cards": 14,
+    "faction_rep_requirement": {"niamh": 20},
+    "anchors": [
+      {
+        "id": "niamh_lac_larmes",
+        "position": 2,
+        "position_flex": 1,
+        "type": "discovery",
+        "prompt_override": "Le lac est immobile, mais des gouttes montent — vers le haut, defiant la gravite. Chaque goutte brille d'une couleur differente avant de retomber, et quand elle touche la surface, une image fugace apparait: un visage qui sourit, un champ de ble au soleil, un enfant qui court. Des souvenirs. Le lac pleure des souvenirs. L'eau, d'habitude bleue et profonde, palitlonguement sous les yeux du voyageur.",
+        "flags_set": ["lac_pleure"],
+        "tags_add": ["niamh", "lac", "souvenirs", "larmes"],
+        "must_reference": ["lac", "gouttes qui montent", "souvenirs", "images fugaces"],
+        "recommended_effects": [
+          {"type": "ADD_REPUTATION", "faction": "niamh", "delta": 5}
+        ]
+      },
+      {
+        "id": "niamh_oisin_rivage",
+        "position": 6,
+        "position_flex": 2,
+        "type": "encounter",
+        "condition": {"flag": "lac_pleure"},
+        "branches": {
+          "default": {
+            "prompt_override": "Sur la rive, un homme est assis — ni jeune ni vieux, les yeux fixes sur l'eau. Oisin le Revenant. Il tient un carnet couvert d'ecriture si fine qu'elle ressemble a des fils d'araignee. 'Je les ecris,' dit-il sans lever les yeux. 'Les souvenirs qui tombent du lac. Je les attrape avec des mots avant qu'ils disparaissent.' Il montre une page: un poeme de trois lignes, si beau qu'il fait mal a lire. 'Mais les mots ne suffisent pas. Ils capturent la forme, pas la chaleur. Niamh a besoin de quelqu'un qui se souvient avec le coeur, pas avec la tete.'",
+            "flags_set": ["oisin_rencontre"]
+          }
+        },
+        "must_reference": ["Oisin", "carnet", "poeme", "souvenirs qui tombent"],
+        "recommended_effects": [
+          {"type": "ADD_REPUTATION", "faction": "niamh", "delta": 5},
+          {"type": "HEAL_LIFE", "amount": 5}
+        ]
+      },
+      {
+        "id": "niamh_apparition",
+        "position": 12,
+        "position_flex": 2,
+        "type": "climax",
+        "condition": {"flag": "oisin_rencontre"},
+        "branches": {
+          "default": {
+            "prompt_override": "Niamh se manifeste au centre du lac — debout sur l'eau, les cheveux d'or repandus comme des rayons de soleil sur la surface. Elle est plus transparente qu'avant. Le voyageur peut voir les arbres a travers elle. 'Je m'amincis,' dit-elle, et sa voix est une melodie brisee. 'Chaque souvenir que je perds emporte un peu de moi. Bientot il ne restera que le lac, et le lac oubliera pourquoi il pleure.' Elle tend les mains. 'Donne-moi un souvenir de ton voyage. Pas le plus beau — le plus vrai. Un moment ou tu as choisi d'etre bon quand c'etait plus facile de ne pas l'etre. Ca, ca brule assez longtemps pour me garder un peu plus.' Le voyageur peut offrir son souvenir — mais un souvenir donne est un souvenir perdu. Ou il peut refuser, par prudence ou par peur, et regarder Niamh s'amincir encore un peu.",
+            "tone": "dechire",
+            "flags_set": ["choix_niamh"]
+          }
+        },
+        "tags_add": ["climax_niamh", "sacrifice", "souvenir", "amour"],
+        "must_reference": ["Niamh", "lac", "transparence", "souvenir vrai"],
+        "recommended_effects": [
+          {"type": "ADD_REPUTATION", "faction": "niamh", "delta": 15},
+          {"type": "DAMAGE_LIFE", "amount": 5}
+        ]
+      }
+    ],
+    "ambient_tags": ["niamh", "lac", "larmes", "souvenirs", "musique", "amour"],
+    "theme_injection": "L'eau est partout, meme quand il ne pleut pas. Des reflets impossibles dansent dans les flaques — des visages, des lieux, des instants de bonheur qui n'appartiennent a personne. Une melodie monte du sol, presque inaudible, comme si la terre fredonnait un air qu'elle est en train d'oublier. L'air sent le miel et les fleurs de pommier, et chaque souffle porte un fragment de nostalgie pour quelque chose que le voyageur n'a jamais vecu.",
+    "resolution_flags": {
+      "victoire": ["souvenir_offert_niamh_sauvee"],
+      "sombre": ["niamh_s_amincit"],
+      "twist": ["le_lac_se_souvient_du_voyageur"]
+    }
+  }
+}

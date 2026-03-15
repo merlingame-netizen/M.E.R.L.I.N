@@ -1,0 +1,77 @@
+{
+  "_meta": {
+    "faction": "ankou",
+    "version": "1.0.0",
+    "description": "Scenario de faction Ankou — La charrette qui attend un passager qui ne meurt pas"
+  },
+  "scenario": {
+    "id": "ankou_la_charrette_vide",
+    "title": "La Charrette Vide",
+    "tone": "grave",
+    "dealer_intro_context": "On entend la charrette de l'Ankou depuis trois nuits. Mais personne ne meurt. La charrette roule, grince, fait le tour des chemins — et revient vide. L'Ankou attend quelqu'un. Pas pour le prendre. Pour lui parler. Dans tout Broceliande, un seul etre revient apres la fin: le Voyageur.",
+    "biome_affinity": ["marais_korrigans", "landes_bruyere", "foret_broceliande"],
+    "difficulty": "hard",
+    "weight": 0.7,
+    "min_cards": 16,
+    "faction_rep_requirement": {"ankou": 20},
+    "anchors": [
+      {
+        "id": "ankou_grincement",
+        "position": 3,
+        "position_flex": 1,
+        "type": "discovery",
+        "prompt_override": "La nuit tombe plus vite que d'habitude. Le ciel ne s'assombrit pas — il s'eteint, comme une chandelle qu'on souffle. Dans le silence qui suit, un son: le grincement d'une roue. Lent, regulier, patient. Il vient de partout et de nulle part. Les arbres retiennent leur souffle. Un oiseau tombe de sa branche, endormi en plein vol. Le voyageur comprend sans qu'on le lui dise: l'Ankou passe. Et cette nuit, il passe lentement.",
+        "flags_set": ["charrette_entendue"],
+        "tags_add": ["ankou", "charrette", "nuit", "silence"],
+        "must_reference": ["grincement", "nuit", "silence", "charrette"],
+        "recommended_effects": [
+          {"type": "ADD_REPUTATION", "faction": "ankou", "delta": 5},
+          {"type": "DAMAGE_LIFE", "amount": 3}
+        ]
+      },
+      {
+        "id": "ankou_youenn_charretier",
+        "position": 7,
+        "position_flex": 2,
+        "type": "encounter",
+        "condition": {"flag": "charrette_entendue"},
+        "branches": {
+          "default": {
+            "prompt_override": "Au carrefour, un homme attend. Pas l'Ankou — quelqu'un de plus ordinaire. Youenn, le charretier. Mort l'hiver dernier, encore confus par sa nouvelle condition. Il a la mine d'un paysan qui se serait reveille dans le mauvais reve. 'Il me demande de te trouver,' dit Youenn en frottant ses mains translucides. 'Le Maitre. Il dit que tu es le seul a revenir. Il veut comprendre. Moi, je comprends rien non plus. Etre mort, c'est comme etre vivant mais en plus froid et en moins utile.' Il fait signe de le suivre. 'Mais je te previens — il est de bonne humeur. C'est pire.'",
+            "flags_set": ["youenn_rencontre"]
+          }
+        },
+        "must_reference": ["Youenn", "carrefour", "charretier", "Maitre"],
+        "recommended_effects": [
+          {"type": "ADD_REPUTATION", "faction": "ankou", "delta": 5}
+        ]
+      },
+      {
+        "id": "ankou_face_a_face",
+        "position": 14,
+        "position_flex": 2,
+        "type": "climax",
+        "condition": {"flag": "youenn_rencontre"},
+        "branches": {
+          "default": {
+            "prompt_override": "La charrette est arretee au bord du marais. Le cheval pale broute une herbe qui n'est pas la. L'Ankou est assis sur le brancard, sa faux posee a cote de lui. Il ne fait pas peur — pas cette nuit. Il fait... vieux. Fatiguepeut-etre, si un axiome cosmique peut etre fatigue. 'Assieds-toi,' dit-il. Sa voix est douce, comme de la terre qui tombe sur un cercueil. Le voyageur s'assied. Un silence. Puis l'Ankou parle: 'J'ai demonte des mondes. Des ages. Des civilisations entieres. C'est mon travail. Je ne me plains pas. Mais toi — toi tu reviens. Apres chaque fin. Pourquoi?' Il leve la tete. Sous le chapeau, pas de visage. Juste deux points de lumiere pale. 'Est-ce que tu sais quelque chose que je ne sais pas? Est-ce que le debut est plus fort que la fin?' Le voyageur peut repondre, ou se taire. L'Ankou acceptera les deux. Mais s'il repond, quelque chose changera — pas dans le monde, pas dans la mecanique. Dans l'Ankou lui-meme.",
+            "tone": "intime",
+            "flags_set": ["conversation_ankou"]
+          }
+        },
+        "tags_add": ["climax_ankou", "question", "passage", "debut_vs_fin"],
+        "must_reference": ["Ankou", "charrette", "question", "revenir"],
+        "recommended_effects": [
+          {"type": "ADD_REPUTATION", "faction": "ankou", "delta": 15}
+        ]
+      }
+    ],
+    "ambient_tags": ["ankou", "charrette", "nuit", "mort", "passage", "silence"],
+    "theme_injection": "Le monde est plus silencieux que d'habitude. Les couleurs palissent aux bords, comme une aquarelle qui seche. Le grincement lointain d'une roue de charrette pulse dans le vent — pas menaçant, juste present. Les ombres sont plus longues, plus douces, presque tendres. L'Ankou n'est pas la pour prendre. Pas cette nuit. Cette nuit, il ecoute.",
+    "resolution_flags": {
+      "victoire": ["ankou_comprend"],
+      "sombre": ["silence_sans_reponse"],
+      "twist": ["ankou_offre_un_cadeau"]
+    }
+  }
+}

@@ -1,7 +1,7 @@
 {
-  "updated_at": "2026-03-11T19:13:34Z",
-  "last_action": "chat",
-  "last_status": "ok",
+  "updated_at": "2026-03-13T20:11:58Z",
+  "last_action": "status:narrator",
+  "last_status": "failed",
   "chat_mode": "remote_endpoint",
   "chat_model": "llama-3.1-8b-instant",
   "doctor_missing": [],
@@ -12,18 +12,23 @@
   "output_dir": "C:\\Users\\PGNK2128\\Godot-MCP\\output\\remote_kaggle",
   "brains": {
     "narrator": {
-      "status": "submitted",
-      "last_action": "submit",
-      "updated_at": "2026-03-10T22:01:12Z",
+      "status": "failed",
+      "training_status": "OBSOLETE",
+      "obsolete_reason": "Trained on Triade mechanics — must retrain after faction system implementation",
+      "last_action": "status",
+      "updated_at": "2026-03-13T20:11:58Z",
       "doctor_missing": [],
       "job": "maximebabonneau/merlin-lora-narrator-4b",
       "dataset": "C:\\Users\\PGNK2128\\Godot-MCP\\data\\ai\\training\\brains\\narrator_v1.jsonl",
       "url": "https://www.kaggle.com/code/maximebabonneau/merlin-lora-narrator-4b",
-      "submitted_at": "2026-03-10T22:01:12Z",
-      "raw_status": "maximebabonneau/merlin-lora-narrator-4b has status \"KernelWorkerStatus.COMPLETE\""
+      "submitted_at": "2026-03-13T19:55:32Z",
+      "raw_status": "maximebabonneau/merlin-lora-narrator-4b has status \"KernelWorkerStatus.ERROR\"",
+      "output_dir": "C:\\Users\\PGNK2128\\Godot-MCP\\output\\remote_kaggle\\narrator"
     },
     "gamemaster": {
       "status": "submitted",
+      "training_status": "OBSOLETE",
+      "obsolete_reason": "Trained on Triade mechanics — must retrain after faction system implementation",
       "last_action": "submit",
       "updated_at": "2026-03-10T22:01:24Z",
       "doctor_missing": [],

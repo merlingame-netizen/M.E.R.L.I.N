@@ -2,7 +2,6 @@
 ## Merlin Gauge System — 5 Continuous Gauges for World Map Progression
 ## =============================================================================
 ## Manages Esprit, Vigueur, Faveur, Logique, Ressources (0-100 scale).
-## Separate from the Triade system (Corps/Ame/Monde discrete aspects).
 ## All methods are pure functions returning new dictionaries (immutable).
 ## =============================================================================
 

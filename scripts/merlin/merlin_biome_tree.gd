@@ -4,7 +4,7 @@
 ## Defines the strict directed tree of 7 biomes across 4 tiers.
 ## No backtracking: Tier 1 -> Tier 2 -> Tier 3 -> Tier 4 (final).
 ## Conditions use the 5 continuous gauges from MerlinGaugeSystem,
-## plus items, reputations, and aspect states from the store.
+## plus items, reputations, and faction reputation from the store.
 ## =============================================================================
 
 extends RefCounted
@@ -70,7 +70,7 @@ const BIOME_TREE_EDGES: Array = [
 #   {"gauge": "esprit", "op": ">=", "value": 70}     -> MerlinGaugeSystem check
 #   {"item": "bois_construction"}                      -> item in items_collected
 #   {"reputation": "druide"}                           -> rep in reputations
-#   {"aspect": "Monde", "state": "haut"}               -> aspect state check
+#   {"faction": "druides", "op": ">=", "value": 50}     -> faction reputation check
 #   {"completed_tier3": 1}                              -> N tier-3 biomes completed
 #   {"karma": "positive"}                               -> hidden karma > 0
 
@@ -82,9 +82,9 @@ const BIOME_UNLOCK_CONDITIONS: Dictionary = {
 		"requires_from": "foret_broceliande",
 		"conditions": [
 			{"gauge": "faveur", "op": ">=", "value": 50},
-			{"aspect": "Monde", "state": "haut"},
+			{"faction": "druides", "op": ">=", "value": 50},
 		],
-		"hint": "Faveur >= 50% ou aspect Monde dominant",
+		"hint": "Faveur >= 50% ou reputation druides >= 50",
 	},
 
 	"cotes_sauvages": {
@@ -142,9 +142,9 @@ const BIOME_UNLOCK_CONDITIONS: Dictionary = {
 		"requires_from": "collines_dolmens",
 		"conditions": [
 			{"completed_tier3": 3},
-			{"aspect": "Ame", "state": "equilibre"},
+			{"faction": "niamh", "op": ">=", "value": 50},
 		],
-		"hint": "Completer les 3 biomes de palier 3 et avoir l'Ame en equilibre",
+		"hint": "Completer les 3 biomes de palier 3 et reputation niamh >= 50",
 	},
 }
 
@@ -231,7 +231,7 @@ func get_biomes_at_tier(tier: int) -> Array:
 ## Check if a biome is accessible given current state.
 ## map_state: {completed_biomes, visited_biomes, items_collected, reputations, tier_progress}
 ## gauges: {esprit, vigueur, faveur, logique, ressources}
-## store_state: full store state (for aspect checks, karma, etc.)
+## store_state: full store state (for faction reputation checks, karma, etc.)
 func is_biome_accessible(biome_key: String, map_state: Dictionary, gauges: Dictionary, store_state: Dictionary) -> bool:
 	# Root is always accessible
 	if biome_key == ROOT_BIOME:
@@ -328,20 +328,23 @@ func _evaluate_condition(cond: Dictionary, gauges: Dictionary, map_state: Dictio
 		var reps: Array = map_state.get("reputations", [])
 		return str(cond["reputation"]) in reps
 
-	# Aspect state condition
-	if cond.has("aspect"):
-		var aspect_name: String = str(cond["aspect"])
-		var required_state: String = str(cond.get("state", "haut"))
+	# Faction reputation condition
+	if cond.has("faction"):
+		var faction_name: String = str(cond["faction"])
+		var op: String = str(cond.get("op", ">="))
+		var threshold: float = float(cond.get("value", 50))
 		var run_data: Dictionary = store_state.get("run", {})
-		var aspects: Dictionary = run_data.get("aspects", {})
-		var current_state: int = int(aspects.get(aspect_name, 0))
-		match required_state:
-			"haut":
-				return current_state == 1
-			"bas":
-				return current_state == -1
-			"equilibre":
-				return current_state == 0
+		var factions: Dictionary = run_data.get("factions", {})
+		var rep: float = float(factions.get(faction_name, 50.0))
+		match op:
+			">=":
+				return rep >= threshold
+			"<=":
+				return rep <= threshold
+			">":
+				return rep > threshold
+			"<":
+				return rep < threshold
 			_:
 				return false
 

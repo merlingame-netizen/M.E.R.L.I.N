@@ -1,8 +1,8 @@
 ## ═══════════════════════════════════════════════════════════════════════════════
 ## Merlin Game UI — Main Gameplay Interface (v0.3.0)
 ## ═══════════════════════════════════════════════════════════════════════════════
-## UI for Merlin Triade system: 3 Aspects, 3 States, 3 Options per card.
-## Celtic symbols: Sanglier (Corps), Corbeau (Ame), Cerf (Monde)
+## UI for Merlin card system: 3 Options per card, 5 Factions reputation.
+## Triade system removed — replaced by faction reputation (TRIADE-UI-2).
 ## ═══════════════════════════════════════════════════════════════════════════════
 
 extends Control
@@ -24,11 +24,7 @@ const CardSceneCompositorClass = preload("res://scripts/ui/card_scene_compositor
 # CONFIGURATION
 # ═══════════════════════════════════════════════════════════════════════════════
 
-const STATE_LABELS := {
-	-1: "v",  # BAS       — Was U+25BC (TextServerFallback incompatible)
-	 0: "=",  # EQUILIBRE — Was U+25CF
-	 1: "^",  # HAUT      — Was U+25B2
-}
+# STATE_LABELS removed (Triade aspect states — TRIADE-UI-2)
 
 const SOUFFLE_ICON := "*"   # Was U+0DA7 (TextServerFallback incompatible)
 const SOUFFLE_EMPTY := "o"  # Was U+25CB
@@ -162,8 +158,7 @@ var _dialogue_btn: Button
 var _dialogue_popup: Control
 var _dialogue_bubble: MerlinBubble
 var _is_dialogue_open: bool = false
-var aspect_panel: Control
-var aspect_displays: Dictionary = {}
+# aspect_panel and aspect_displays removed (Triade — TRIADE-UI-2)
 
 # Unused but referenced by update_resource_bar() — kept for interface compat
 var _tool_label: Label
@@ -179,8 +174,7 @@ var biome_indicator: Label
 # ═══════════════════════════════════════════════════════════════════════════════
 
 var current_card: Dictionary = {}
-var current_aspects: Dictionary = {}
-var _previous_aspects: Dictionary = {}
+# current_aspects and _previous_aspects removed (Triade — TRIADE-UI-2)
 var current_souffle: int = 0
 var _previous_souffle: int = -1
 var _blip_pool: Array[AudioStreamPlayer] = []
@@ -341,9 +335,9 @@ func _configure_ui() -> void:
 	# Option buttons — collect refs + wire signals
 	option_buttons = [_btn_a, _btn_b, _btn_c]
 	var option_configs := [
-		{"key": "A", "color": MerlinVisual.ASPECT_COLORS["Monde"]},
+		{"key": "A", "color": MerlinVisual.CRT_PALETTE.phosphor},  # TRIADE-UI-2: was ASPECT_COLORS["Monde"]
 		{"key": "B", "color": MerlinVisual.CRT_PALETTE.amber},
-		{"key": "C", "color": MerlinVisual.ASPECT_COLORS["Corps"]},
+		{"key": "C", "color": MerlinVisual.CRT_PALETTE.danger},  # TRIADE-UI-2: was ASPECT_COLORS["Corps"]
 	]
 	for i in range(3):
 		var btn: Button = option_buttons[i]
@@ -606,11 +600,11 @@ func _draw_animal(ctrl: Control, animal: String, color: Color) -> void:
 	var r := mini(int(sz.x), int(sz.y)) * 0.4
 
 	match animal:
-		"sanglier":  # Boar — Corps (strength)
+		"sanglier":  # Boar — Celtic symbol
 			_draw_sanglier(ctrl, cx, cy, r, color)
-		"corbeau":  # Raven — Ame (spirit)
+		"corbeau":  # Raven — Celtic symbol
 			_draw_corbeau(ctrl, cx, cy, r, color)
-		"cerf":  # Stag — Monde (world)
+		"cerf":  # Stag — Celtic symbol
 			_draw_cerf(ctrl, cx, cy, r, color)
 		_:
 			# Fallback: Celtic spiral
@@ -1208,9 +1202,7 @@ func update_biome_indicator(biome_name: String, biome_color: Color) -> void:
 		biome_indicator.add_theme_color_override("font_color", Color(biome_color.r, biome_color.g, biome_color.b, 0.7))
 
 
-func update_aspects(_aspects: Dictionary) -> void:
-	# Aspect system removed — no-op (kept for interface compatibility)
-	pass
+# update_aspects() removed (Triade — TRIADE-UI-2)
 
 
 func update_souffle(souffle: int) -> void:
@@ -1224,9 +1216,8 @@ func update_selected_perk(perk_id: String) -> void:
 	if perk_id.is_empty():
 		_perk_badge.visible = false
 		return
-	var pdata: Dictionary = MerlinConstants.SOUFFLE_PERK_TYPES.get(perk_id, {})
-	var pname: String = str(pdata.get("name", perk_id.capitalize()))
-	_perk_badge.text = "[%s]" % pname
+	# TRIADE-UI-2: SOUFFLE_PERK_TYPES removed from MerlinConstants, use perk_id directly
+	_perk_badge.text = "[%s]" % perk_id.capitalize()
 	_perk_badge.visible = true
 
 
@@ -1844,7 +1835,7 @@ func _push_card_shadow() -> void:
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
-# PROGRESSIVE INDICATORS — Reveal aspects and souffle one by one
+# PROGRESSIVE INDICATORS — Reveal HUD metrics one by one
 # ═══════════════════════════════════════════════════════════════════════════════
 
 func show_progressive_indicators() -> void:
@@ -4107,6 +4098,7 @@ func show_journal_popup(run_summaries: Array[Dictionary]) -> void:
 
 		var ending: String = str(run.get("ending", "inconnu"))
 		var cards: int = int(run.get("cards_played", 0))
+		# TODO: verify post-Triade cleanup — dominant_aspect may still appear in old save data
 		var dom: String = str(run.get("dominant_aspect", ""))
 		var style: String = str(run.get("player_style", ""))
 		var life: int = int(run.get("life_final", 0))
@@ -4116,7 +4108,7 @@ func show_journal_popup(run_summaries: Array[Dictionary]) -> void:
 		if cards > 0:
 			text += "Cartes: %d | " % cards
 		if not dom.is_empty():
-			text += "Aspect: %s | " % dom
+			text += "Aspect: %s | " % dom  # Legacy — kept for old save compat
 		if not style.is_empty():
 			text += "Style: %s | " % style
 		if life > 0:

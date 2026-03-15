@@ -1,0 +1,64 @@
+{
+  "version": "1.0",
+  "updated_at": "2026-03-15T00:00:00Z",
+  "note": "Training roadmap for MERLIN LoRA models. Models trained on Triade mechanics are marked OBSOLETE.",
+  "models": {
+    "merlin-full-v9": {
+      "slug": "merlin-remote-lora-training",
+      "dataset": "merlin_full_v9.jsonl",
+      "triade_references": 180,
+      "status": "OBSOLETE",
+      "obsolete_reason": "Trained on Triade mechanics (180 references to Triade/aspects/Corps/Ame/Monde) — must retrain after faction system implementation"
+    },
+    "narrator-v1": {
+      "slug": "merlin-lora-narrator-4b",
+      "dataset": "brains/narrator_v1.jsonl",
+      "triade_references": 49,
+      "status": "OBSOLETE",
+      "obsolete_reason": "Trained on Triade mechanics (49 references to Triade/aspects) — must retrain after faction system implementation"
+    },
+    "gamemaster-v1": {
+      "slug": "merlin-lora-game-master-2b",
+      "dataset": "brains/gamemaster_v1.jsonl",
+      "triade_references": 300,
+      "status": "OBSOLETE",
+      "obsolete_reason": "Trained on Triade mechanics (300 references to Triade/aspects/Corps/Ame/Monde) — must retrain after faction system implementation"
+    },
+    "worker-v1": {
+      "slug": "merlin-lora-worker-0-8b",
+      "dataset": "brains/worker_v1.jsonl",
+      "triade_references": 0,
+      "status": "CURRENT",
+      "note": "No Triade references found in training data — safe to use"
+    }
+  },
+  "retrain_plan": {
+    "priority": "HIGH",
+    "blocker": "Faction system must be fully implemented in game design and code before retraining",
+    "steps": [
+      "1. Regenerate training JSONL with faction-based mechanics (no Triade/aspects)",
+      "2. Retrain narrator LoRA (highest Triade contamination after gamemaster)",
+      "3. Retrain gamemaster LoRA (300 Triade references — most contaminated)",
+      "4. Retrain full model on clean v10 dataset",
+      "5. Validate outputs contain no Triade/aspect references"
+    ]
+  },
+  "archived_datasets": {
+    "note": "Older datasets also contain Triade references — do NOT use for retraining",
+    "contaminated": [
+      "merlin_full_v8.jsonl",
+      "merlin_v8_gold_only.jsonl",
+      "merlin_full_v7.jsonl",
+      "merlin_v7_gold_only.jsonl",
+      "merlin_full_v6.jsonl",
+      "merlin_v6_gold_only.jsonl",
+      "merlin_v6_tier1_gold.jsonl",
+      "merlin_verbs_v5_augmented.jsonl",
+      "merlin_verbs_augmented.jsonl",
+      "gold_verbs_v4.jsonl",
+      "merlin_narrator_augmented.json",
+      "merlin_narrator_dataset.json",
+      "tone_mapping.json"
+    ]
+  }
+}

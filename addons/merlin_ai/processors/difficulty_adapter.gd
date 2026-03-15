@@ -174,7 +174,7 @@ func _is_in_crisis(context: Dictionary) -> bool:
 		if value < 15 or value > 85:
 			return true
 
-	# Check faction reputation deltas for crisis (v2.5, replaces Triade aspects)
+	# Check faction reputation deltas for crisis
 	var faction_rep_delta: Dictionary = context.get("faction_rep_delta", {})
 	var extreme_faction_count := 0
 	for faction in faction_rep_delta:

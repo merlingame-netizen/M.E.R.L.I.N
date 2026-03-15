@@ -205,7 +205,7 @@ function extractJson(raw) {
 }
 
 // ═══════════════════════════════════════════════════════════════════════════════
-// SCHEMA VALIDATION — Mirrors validate_triade_card()
+// SCHEMA VALIDATION — Mirrors validate_faction_card()
 // ═══════════════════════════════════════════════════════════════════════════════
 
 function validateTriadeCard(card) {

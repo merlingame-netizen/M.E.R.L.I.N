@@ -209,3 +209,101 @@ func test_tier_label_neutre():
 func test_tier_label_hostile():
 	assert_eq(MerlinReputationSystem.get_tier_label(0.0), "Hostile", "0 = Hostile")
 	assert_eq(MerlinReputationSystem.get_tier_label(19.9), "Hostile", "19.9 = Hostile")
+
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# INSTANCE API — Stateful reputation tracking
+# ═══════════════════════════════════════════════════════════════════════════════
+
+var rep: MerlinReputationSystem
+
+
+func before_each() -> void:
+	rep = MerlinReputationSystem.new()
+
+
+func after_each() -> void:
+	rep = null
+
+
+func test_initial_reputation_is_zero() -> void:
+	for faction in MerlinReputationSystem.FACTIONS:
+		assert_eq(rep.get_reputation(faction), 0, "Initial reputation should be 0 for " + faction)
+
+
+func test_add_reputation_clamps_0_100() -> void:
+	# Clamp max
+	rep.add_reputation("druides", 20)
+	rep.add_reputation("druides", 20)
+	rep.add_reputation("druides", 20)
+	rep.add_reputation("druides", 20)
+	rep.add_reputation("druides", 20)
+	var val_max: int = rep.add_reputation("druides", 20)
+	assert_eq(val_max, 100, "Should clamp at 100 (6x20=120 clamped)")
+	# Clamp min
+	rep.reset()
+	rep.add_reputation("ankou", 5)
+	var val_min: int = rep.add_reputation("ankou", -20)
+	assert_eq(val_min, 0, "Should clamp at 0 (5-20=-15 clamped)")
+
+
+func test_reputation_threshold_50_content() -> void:
+	assert_false(rep.has_content_threshold("druides"), "Should not have content at 0")
+	rep.add_reputation("druides", 20)
+	rep.add_reputation("druides", 20)
+	assert_false(rep.has_content_threshold("druides"), "Should not have content at 40")
+	rep.add_reputation("druides", 10)
+	assert_true(rep.has_content_threshold("druides"), "Should have content at 50")
+
+
+func test_reputation_threshold_80_ending() -> void:
+	assert_false(rep.has_ending_threshold("korrigans"), "Should not have ending at 0")
+	rep.add_reputation("korrigans", 20)
+	rep.add_reputation("korrigans", 20)
+	rep.add_reputation("korrigans", 20)
+	rep.add_reputation("korrigans", 20)
+	assert_true(rep.has_ending_threshold("korrigans"), "Should have ending at 80")
+
+
+func test_cross_run_persistence() -> void:
+	# Instance state persists across multiple add calls (simulating cross-run)
+	rep.add_reputation("niamh", 15)
+	rep.add_reputation("niamh", 10)
+	var all_reps: Dictionary = rep.get_all_reputations()
+	assert_eq(int(float(all_reps["niamh"])), 25, "Reputation should persist across calls")
+	# Reset simulates new profile
+	rep.reset()
+	assert_eq(rep.get_reputation("niamh"), 0, "Reset should zero out reputation")
+
+
+func test_cap_per_card_20() -> void:
+	# Amount > 20 should be capped to 20
+	var result: int = rep.add_reputation("anciens", 50)
+	assert_eq(result, 20, "Delta 50 capped to +20, so value = 20")
+	# Amount < -20 should be capped to -20
+	rep.reset()
+	rep.add_reputation("anciens", 20)
+	rep.add_reputation("anciens", 20)  # now at 40
+	var result_neg: int = rep.add_reputation("anciens", -35)
+	assert_eq(result_neg, 20, "Delta -35 capped to -20, so 40-20 = 20")
+
+
+func test_get_reputation_invalid_faction() -> void:
+	assert_eq(rep.get_reputation("humains"), 0, "Invalid faction returns 0")
+
+
+func test_add_reputation_invalid_faction() -> void:
+	assert_eq(rep.add_reputation("humains", 10), -1, "Invalid faction returns -1")
+
+
+func test_get_dominant_instance() -> void:
+	rep.add_reputation("druides", 15)
+	rep.add_reputation("ankou", 20)
+	assert_eq(rep.get_dominant(), "ankou", "Ankou dominant at 20 vs druides 15")
+
+
+func test_get_all_reputations_returns_copy() -> void:
+	rep.add_reputation("druides", 10)
+	var copy: Dictionary = rep.get_all_reputations()
+	copy["druides"] = 999.0
+	assert_eq(rep.get_reputation("druides"), 10, "Modifying copy should not affect instance")

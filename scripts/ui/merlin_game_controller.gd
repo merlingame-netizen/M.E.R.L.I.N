@@ -29,7 +29,7 @@ const LLM_TIMEOUT_SEC := 360.0  # CPU-only Qwen 3B: Strategy B (120s) + C (120s)
 # ═══════════════════════════════════════════════════════════════════════════════
 
 # DC now uses variable ranges from MerlinConstants.DC_BASE (Phase 43)
-# Left: 4-8, Center: 7-12, Right: 10-16 + aspect modifiers
+# Left: 4-8, Center: 7-12, Right: 10-16
 const DICE_ROLL_DURATION := 3.0  # Extended for LLM prefetch time
 
 const KARMA_MIN := -10
@@ -1734,9 +1734,9 @@ func _auto_progress_mission(outcome: String) -> void:
 			# Progress +1 per card played (survive N cards)
 			step = 1
 		"equilibre":
-			# Progress +1 if all aspects balanced after this card
-			if store.is_all_aspects_balanced():
-				step = 1
+			# TODO: verify post-Triade cleanup — is_all_aspects_balanced() removed with Triade
+			# Mission type "equilibre" needs new win condition (e.g. all factions >= 50?)
+			step = 0  # Disabled until rewired to faction system
 		"explore":
 			# Progress +1 per success/crit_success
 			if outcome == "success" or outcome == "critical_success":

@@ -1798,7 +1798,7 @@ func record_choice(card: Dictionary, option: int, outcome: Dictionary) -> void:
 	if outcome.get("skill_used", false):
 		session.record_skill_use()
 
-	# RAG v2.0: Log choice + aspect shifts to game journal
+	# RAG v2.0: Log choice + reputation changes to game journal
 	if rag_manager:
 		var day: int = int(context.get("day", 1))
 		var cards_played: int = int(_current_context.get("cards_played", 0))
@@ -2060,7 +2060,7 @@ const FALLBACK_DREAMS: Array[String] = [
 
 func generate_dream(game_state: Dictionary) -> String:
 	## Generate a dream sequence (50-80 tokens) reflecting the player's journey.
-	## Triggered during biome transitions. Uses player profile and aspects for context.
+	## Triggered during biome transitions. Uses player profile and factions for context.
 	if llm_interface == null or not llm_interface.is_ready:
 		return FALLBACK_DREAMS[randi() % FALLBACK_DREAMS.size()]
 

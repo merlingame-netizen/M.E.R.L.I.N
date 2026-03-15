@@ -1,7 +1,7 @@
 ## merlin_reputation_system.gd
-## Système de réputation 5 factions — helpers statiques purs (immutable pattern).
-## Valeurs float 0.0-100.0. Seuil contenu: 50. Seuil fin: 80.
-## Ref: docs/NEW_MECHANICS_DESIGN.md sections 4 + Q2 (2026-03-11)
+## Système de réputation 5 factions — stateless static helpers + stateful instance API.
+## Valeurs float 0.0-100.0. Seuil contenu: 50. Seuil fin: 80. Cap: ±20/carte.
+## Ref: docs/GAME_DESIGN_BIBLE.md v2.4 — factions, thresholds, caps
 
 class_name MerlinReputationSystem extends RefCounted
 
@@ -14,10 +14,66 @@ const THRESHOLD_CONTENT: float = 50.0  # Déblocage cartes spéciales faction
 const THRESHOLD_ENDING: float = 80.0   # Déblocage fin narrative faction
 const VALUE_MIN: float = 0.0
 const VALUE_MAX: float = 100.0
+const CAP_PER_CARD: float = 20.0       # Max ±20 reputation change per card
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
-# CORE HELPERS — All static, no internal state (immutable pattern)
+# INSTANCE STATE — Stateful API for systems that track reputation over time
+# ═══════════════════════════════════════════════════════════════════════════════
+
+var _reputations: Dictionary = {}
+
+
+func _init() -> void:
+	reset()
+
+
+## Réinitialise toutes les réputations à 0.
+func reset() -> void:
+	_reputations = build_default_factions()
+
+
+## Ajoute de la réputation à une faction. Clampé [0, 100], cappé à ±20/carte.
+## Retourne la nouvelle valeur, ou -1 si la faction est invalide.
+func add_reputation(faction: String, amount: int) -> int:
+	if not FACTIONS.has(faction):
+		return -1
+	var capped: float = clampf(float(amount), -CAP_PER_CARD, CAP_PER_CARD)
+	var current: float = float(_reputations.get(faction, 0.0))
+	var new_value: float = clampf(current + capped, VALUE_MIN, VALUE_MAX)
+	_reputations[faction] = new_value
+	return int(new_value)
+
+
+## Retourne la réputation d'une faction. 0 si invalide.
+func get_reputation(faction: String) -> int:
+	if not FACTIONS.has(faction):
+		return 0
+	return int(float(_reputations.get(faction, 0.0)))
+
+
+## Retourne un dict de toutes les réputations (copie).
+func get_all_reputations() -> Dictionary:
+	return _reputations.duplicate()
+
+
+## Vérifie si une faction a atteint le seuil contenu (>= 50).
+func has_content_threshold(faction: String) -> bool:
+	return float(_reputations.get(faction, 0.0)) >= THRESHOLD_CONTENT
+
+
+## Vérifie si une faction a atteint le seuil fin (>= 80).
+func has_ending_threshold(faction: String) -> bool:
+	return float(_reputations.get(faction, 0.0)) >= THRESHOLD_ENDING
+
+
+## Retourne la faction dominante (plus haute rep). "" si toutes à 0.
+func get_dominant() -> String:
+	return get_dominant_faction(_reputations)
+
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# STATIC HELPERS — Pure functions, no internal state (immutable pattern)
 # ═══════════════════════════════════════════════════════════════════════════════
 
 ## Retourne un NOUVEAU dict factions avec le delta appliqué sur faction.

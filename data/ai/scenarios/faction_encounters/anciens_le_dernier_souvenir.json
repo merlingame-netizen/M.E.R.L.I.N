@@ -1,0 +1,77 @@
+{
+  "_meta": {
+    "faction": "anciens",
+    "version": "1.0.0",
+    "description": "Scenario de faction Anciens — Le souvenir qui s'effrite"
+  },
+  "scenario": {
+    "id": "anciens_le_dernier_souvenir",
+    "title": "Le Dernier Souvenir de Brigid",
+    "tone": "contemplatif",
+    "dealer_intro_context": "Une lumiere doree vacille sur les collines aux dolmens — le feu sacre de Brigid, la derniere flamme visible de l'Awen. On dit qu'elle brule depuis le premier age. Cette nuit, pour la premiere fois, elle a faibli. Les Anciens sortent de leur silence. Quelque chose doit etre fait, ou le dernier signe de l'Awen disparaitra.",
+    "biome_affinity": ["collines_dolmens", "cercles_pierres"],
+    "difficulty": "hard",
+    "weight": 0.8,
+    "min_cards": 16,
+    "faction_rep_requirement": {"anciens": 20},
+    "anchors": [
+      {
+        "id": "ancien_flamme_vacillante",
+        "position": 3,
+        "position_flex": 1,
+        "type": "discovery",
+        "prompt_override": "Au sommet du dolmen, une flamme danse — pas sur du bois, pas sur de l'huile, sur rien. Elle brule dans l'air depuis si longtemps que la pierre en dessous est noire et polie comme un miroir. Mais ce soir, la flamme est plus petite qu'une chandelle. Dans son reflet sur la pierre noire, le voyageur voit un visage de femme — beau, fatigue, immensement vieux — qui le regarde avec une intensite qui serre le coeur.",
+        "flags_set": ["flamme_vue"],
+        "tags_add": ["ancien", "brigid", "feu_sacre", "awen"],
+        "must_reference": ["flamme", "dolmen", "visage de femme"],
+        "recommended_effects": [
+          {"type": "ADD_REPUTATION", "faction": "anciens", "delta": 5}
+        ]
+      },
+      {
+        "id": "ancien_manannan_brume",
+        "position": 7,
+        "position_flex": 2,
+        "type": "encounter",
+        "condition": {"flag": "flamme_vue"},
+        "branches": {
+          "default": {
+            "prompt_override": "La brume se solidifie en une silhouette immense, a peine visible — Manannan mac Lir, Gardien des Brumes. Il ne parle pas avec des mots mais avec des images qui s'impriment directement dans l'esprit du voyageur: une epoque ou mille flammes brillaient sur mille collines. Puis une par une, elles se sont eteintes. Il ne reste que celle de Brigid. Manannan montre un chemin a travers la brume — un chemin vers un lieu qui n'existe plus, ou existait avant. Le voyageur comprend: il faut nourrir la flamme avec un souvenir. Pas n'importe lequel. Un souvenir de joie si pur qu'il brule.",
+            "flags_set": ["chemin_manannan"]
+          }
+        },
+        "must_reference": ["Manannan", "brume", "mille flammes", "souvenir"],
+        "recommended_effects": [
+          {"type": "ADD_REPUTATION", "faction": "anciens", "delta": 5}
+        ]
+      },
+      {
+        "id": "ancien_choix_brigid",
+        "position": 14,
+        "position_flex": 2,
+        "type": "climax",
+        "condition": {"flag": "chemin_manannan"},
+        "branches": {
+          "default": {
+            "prompt_override": "Brigid se manifeste. Pas une apparition — une presence. L'air chauffe, les etoiles brillent plus fort, et pendant un instant le monde est tel qu'il etait a l'Age d'Or. Ses mains sont brulees, couvertes de cicatrices de lumiere. 'Je peux encore tenir,' dit-elle. 'Mais chaque jour me coute un souvenir. Bientot je n'aurai plus rien a bruler.' Le voyageur tient dans son esprit le souvenir le plus lumineux de ses runs — chaque choix genereux, chaque moment de grace. Il peut l'offrir a la flamme. Ou il peut demander a Brigid de lacher prise, de se reposer enfin, et de laisser la derniere flamme s'eteindre avec dignite.",
+            "tone": "sacre",
+            "flags_set": ["choix_brigid"]
+          }
+        },
+        "tags_add": ["climax_ancien", "sacrifice", "awen"],
+        "must_reference": ["Brigid", "flamme", "souvenir", "Age d'Or"],
+        "recommended_effects": [
+          {"type": "ADD_REPUTATION", "faction": "anciens", "delta": 15},
+          {"type": "DAMAGE_LIFE", "amount": 8}
+        ]
+      }
+    ],
+    "ambient_tags": ["anciens", "flamme_sacree", "memoire", "awen", "crepuscule"],
+    "theme_injection": "Une lumiere doree pulse a l'horizon, faible mais obstinee. L'air porte l'odeur du miel et de la cendre — le parfum de quelque chose qui brule depuis si longtemps que personne ne se souvient de ce qui l'a allume. Les dolmens projettent des ombres trop longues pour leur taille, comme si le monde se souvenait d'un temps ou les pierres etaient plus grandes.",
+    "resolution_flags": {
+      "victoire": ["flamme_nourrie"],
+      "sombre": ["flamme_eteinte_dignement"],
+      "twist": ["brigid_se_dissout_en_ogham"]
+    }
+  }
+}
