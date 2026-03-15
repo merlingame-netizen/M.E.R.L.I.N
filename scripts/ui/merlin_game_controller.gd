@@ -25,17 +25,12 @@ var _cards_this_run := 0
 const LLM_TIMEOUT_SEC := 360.0  # CPU-only Qwen 3B: Strategy B (120s) + C (120s) + overhead
 
 # ═══════════════════════════════════════════════════════════════════════════════
-# D20 DICE SYSTEM (from TestBrainPool fusion)
+# RESOLUTION SYSTEM (bible v2.4 — minigame mandatory, score 0-100)
 # ═══════════════════════════════════════════════════════════════════════════════
-
-# DC now uses variable ranges from MerlinConstants.DC_BASE (Phase 43)
-# Left: 4-8, Center: 7-12, Right: 10-16
-const DICE_ROLL_DURATION := 3.0  # Extended for LLM prefetch time
 
 const KARMA_MIN := -10
 const KARMA_MAX := 10
 const BLESSINGS_MAX := 2
-var minigame_chance := 0.3  # 30% mini-game, 70% dice (settable for headless testing)
 var headless_mode := false   # Disables all minigames (set by auto_play_runner)
 
 ## DEV — override biome pour test direct (sans passer par Hub/BiomeRadial)
@@ -769,7 +764,8 @@ func _build_prerun_context_string(choice: Dictionary) -> String:
 
 
 func _resolve_choice(option: int) -> void:
-	## Full resolution: choice → D20 or minigame → effects → reactions → travel → next.
+	## Full resolution: choice → minigame score → resolve_card() → effects → travel → next.
+	## Bible v2.4: minigames mandatory, score 0-100, proportional multiplier, no D20/DC.
 	if is_processing or current_card.is_empty():
 		return
 	if not store or not is_instance_valid(store):
@@ -783,69 +779,57 @@ func _resolve_choice(option: int) -> void:
 	var choice_label: String = _get_choice_label(option)
 	print("[Merlin] _resolve_choice option=%d direction=%s" % [option, direction])
 
-	# --- 1. Compute DC ---
-	var dc: int = _get_dc_for_direction(direction)
-
-	# --- 2. Determine dice roll or minigame ---
-	var dice_result: int = 0
-	var use_minigame: bool = not headless_mode and randf() < minigame_chance and _cards_this_run >= 2
-	if _is_critical_choice and not headless_mode:
-		use_minigame = true
-
-	# Chance modifier: force minigame with specific type from card
-	# "minigame" can be a Dict (from _detect_minigame) or empty string
+	# --- 1. Get the selected option's pre-annotated minigame field ---
+	var options_arr: Array = current_card.get("options", [])
+	var selected_opt: Dictionary = options_arr[clampi(option, 0, options_arr.size() - 1)] if option < options_arr.size() else {}
+	var mg_field: String = str(selected_opt.get("field", "esprit"))
+	# Also accept card-level minigame hint (chance modifier cards)
 	var mg_field_raw = current_card.get("minigame", "")
-	var chance_minigame: String = ""
+	var forced_field: String = ""
 	if mg_field_raw is Dictionary:
-		chance_minigame = str(mg_field_raw.get("id", ""))
+		forced_field = str(mg_field_raw.get("id", ""))
 	elif mg_field_raw is String:
-		chance_minigame = mg_field_raw
-	if not chance_minigame.is_empty() and not headless_mode:
-		use_minigame = true
+		forced_field = mg_field_raw
+	if not forced_field.is_empty():
+		mg_field = forced_field
 
 	SFXManager.play("card_draw")
 
+	# --- 2. Run minigame (always mandatory) or use fixed score in headless ---
+	var score: int = 0
 	if headless_mode:
-		# Headless: instant dice roll, no UI animations
-		dice_result = randi_range(1, 20)
-	elif use_minigame:
-		dice_result = await _run_minigame(direction, dc, chance_minigame)
+		# Headless: fixed score 75 → reussite (×1.0), reproducible
+		score = 75
 	else:
-		dice_result = await _run_dice_roll(dc)
+		score = await _run_minigame(mg_field)
 
 	if not is_inside_tree():
 		is_processing = false
 		return
 
-	# --- 4. Determine outcome ---
-	var outcome: String = _classify_outcome(dice_result, dc)
-	print("[Merlin] D20=%d vs DC=%d → %s" % [dice_result, dc, outcome])
+	# --- 3. Resolve card via MerlinCardSystem (multiplier table, scaling, caps) ---
+	var run_state: Dictionary = store.state.get("run", {})
+	var resolve_result: Dictionary = store.cards.resolve_card(run_state, current_card, option, score)
+	var outcome: String = resolve_result.get("multiplier_label", "reussite_partielle")
+	var modulated: Array = resolve_result.get("effects", [])
+	print("[Merlin] score=%d → %s (×%.2f)" % [score, outcome, float(resolve_result.get("multiplier", 1.0))])
 
-	# --- 5. SFX for outcome ---
+	# --- 4. SFX for outcome ---
 	if not headless_mode:
-		_play_outcome_sfx(outcome)
+		_play_outcome_sfx_score(score)
 
-	# --- 6. Dramatic pause before result reveal ---
+	# --- 5. Dramatic pause before result reveal ---
 	if not headless_mode and is_inside_tree():
 		await get_tree().create_timer(0.5).timeout
 
-	# --- 6b. Show dice result in UI ---
-	if not headless_mode and ui and is_instance_valid(ui):
-		ui.show_dice_result(dice_result, dc, outcome)
+	# --- 6. Show minigame score + multiplier label in UI ---
+	if not headless_mode and ui and is_instance_valid(ui) and ui.has_method("show_minigame_result"):
+		ui.show_minigame_result(score, outcome)
 
-	# --- 7. Compute modulated effects ---
-	var options: Array = current_card.get("options", [])
-	var base_effects: Array = options[clampi(option, 0, options.size() - 1)].get("effects", []) if option < options.size() else []
-	var modulated: Array = _modulate_effects(base_effects, outcome, direction)
-
-	# --- 7b. Chance modifier: double positive on success, add penalty on failure ---
-	if not chance_minigame.is_empty():
-		modulated = _apply_chance_modifier_effects(modulated, outcome)
-
-	# --- 8. Apply talent shields & blessings ---
+	# --- 7. Apply talent shields ---
 	modulated = _apply_talent_shields(modulated)
 
-	# --- 9. Dispatch to store (applies effects, checks run end) ---
+	# --- 8. Dispatch to store (applies effects, checks run end) ---
 	var result = await store.dispatch({
 		"type": "RESOLVE_CHOICE",
 		"card": current_card,
@@ -856,11 +840,11 @@ func _resolve_choice(option: int) -> void:
 	if result == null:
 		result = {"ok": false}
 
-	# --- 10. Update karma ---
-	_update_karma(outcome, direction)
+	# --- 9. Update karma ---
+	_update_karma_score(score, direction)
 
-	# --- 11. Record quest history ---
-	_quest_history.append({"card_idx": _cards_this_run, "choice": direction, "outcome": outcome, "d20": dice_result, "dc": dc})
+	# --- 10. Record quest history ---
+	_quest_history.append({"card_idx": _cards_this_run, "choice": direction, "outcome": outcome, "score": score})
 
 	# --- 12a. Track prerun choices for sequel cards ---
 	var card_tags: Array = current_card.get("tags", [])
@@ -903,7 +887,8 @@ func _resolve_choice(option: int) -> void:
 	# --- 14. Narrative result text (per-option first, then card-level, then reaction) ---
 	var _result_shown := false
 	if not headless_mode and ui and is_instance_valid(ui) and current_card.size() > 0:
-		var result_key: String = "result_success" if outcome.contains("success") else "result_failure"
+		# outcome is a multiplier_label: reussite_critique/reussite/reussite_partielle/echec/echec_critique
+		var result_key: String = "result_success" if outcome.begins_with("reussite") else "result_failure"
 		# Try per-option result text first (richer, contextual)
 		var result_text := ""
 		var opts_for_result: Array = current_card.get("options", [])
@@ -976,7 +961,7 @@ func _resolve_choice(option: int) -> void:
 		_last_biome = current_biome
 
 	# --- 18. Write RAG context ---
-	_write_context_entry("Choix: %s (%s, D20=%d vs DC%d)" % [choice_label, outcome, dice_result, dc])
+	_write_context_entry("Choix: %s (%s, score=%d)" % [choice_label, outcome, score])
 
 	# --- 18b. Dynamic difficulty check (every N cards) ---
 	_cards_since_rule_check += 1
@@ -1038,38 +1023,13 @@ func _update_dynamic_difficulty() -> void:
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
-# D20 RESOLUTION ENGINE
+# MINIGAME RUNNER (bible v2.4 — returns raw score 0-100)
 # ═══════════════════════════════════════════════════════════════════════════════
 
-func _run_dice_roll(dc: int) -> int:
-	## Animate D20 dice roll. Returns final value (1-20).
-	_try_tutorial("first_dice_roll")
-	var target: int = randi_range(1, 20)
-
-	SFXManager.play("dice_shake")
-	if is_inside_tree():
-		get_tree().create_timer(0.3).timeout.connect(func(): SFXManager.play("dice_roll"), CONNECT_ONE_SHOT)
-
-	if ui and is_instance_valid(ui):
-		await ui.show_dice_roll(dc, target)
-	elif is_inside_tree():
-		await get_tree().create_timer(DICE_ROLL_DURATION).timeout
-
-	SFXManager.play("dice_land")
-	return target
-
-
-func _run_minigame(direction: String, dc: int, override_field: String = "") -> int:
-	## Launch a minigame, convert score to D20. Fallback to dice if no registry.
-	var narrative_text: String = str(current_card.get("text", ""))
-	var gm_hint: String = str(current_card.get("minigame_hint", ""))
-
-	# Detect field from narrative + tags
-	var card_tags: Array = current_card.get("tags", [])
-	var field: String = override_field if not override_field.is_empty() else MiniGameRegistry.detect_field(narrative_text, gm_hint, card_tags)
-	var base_diff: int = clampi(int(dc / 2.0), 1, 10)
-	if _is_critical_choice:
-		base_diff = mini(base_diff + 3, 10)
+func _run_minigame(field: String) -> int:
+	## Launch a minigame for the given lexical field. Returns raw score 0-100.
+	## Fallback: score 50 (reussite_partielle) if minigame unavailable.
+	_try_tutorial("first_minigame")
 
 	# Tool bonus: check if equipped tool gives bonus for this field
 	var tool_bonus: int = 0
@@ -1094,11 +1054,15 @@ func _run_minigame(direction: String, dc: int, override_field: String = "") -> i
 		if is_inside_tree():
 			await get_tree().create_timer(1.2).timeout
 
-	var modifiers := {}
+	var base_diff: int = 5  # Fixed moderate difficulty (no DC influence)
+	if _is_critical_choice:
+		base_diff = mini(base_diff + 3, 10)
+
+	var modifiers: Dictionary = {}
 	var game: Node = MiniGameRegistry.create_minigame(field, base_diff, modifiers)
 	if game == null:
-		print("[Merlin] minigame creation failed, falling back to dice")
-		return await _run_dice_roll(dc)
+		push_warning("[Merlin] minigame creation failed for field '%s', using fallback score 50" % field)
+		return 50
 
 	SFXManager.play("minigame_start")
 	# Host minigame inside card body if UI has content host
@@ -1125,19 +1089,20 @@ func _run_minigame(direction: String, dc: int, override_field: String = "") -> i
 		mg_state[0] = true
 		mg_state[1] = result
 	, CONNECT_ONE_SHOT)
-	var mg_timeout := 30.0
-	var mg_deadline := Time.get_ticks_msec() + int(mg_timeout * 1000.0)
+	var mg_timeout: float = 30.0
+	var mg_deadline: int = Time.get_ticks_msec() + int(mg_timeout * 1000.0)
 	while not mg_state[0] and Time.get_ticks_msec() < mg_deadline:
 		if not is_inside_tree() or not is_instance_valid(game):
 			break
 		await get_tree().process_frame
 	if not mg_state[0]:
-		push_warning("[Merlin] minigame timed out after %.0fs, using dice fallback" % mg_timeout)
+		push_warning("[Merlin] minigame timed out after %.0fs, using fallback score 50" % mg_timeout)
 		if is_instance_valid(game):
 			game.queue_free()
 		if ui and is_instance_valid(ui) and ui.has_method("set_options_visible"):
 			ui.set_options_visible(true)
-		return await _run_dice_roll(dc)
+		return 50
+
 	var mg_result: Dictionary = mg_state[1]
 	var score: int = int(mg_result.get("score", 50))
 	var mg_success: bool = bool(mg_result.get("success", false))
@@ -1154,115 +1119,20 @@ func _run_minigame(direction: String, dc: int, override_field: String = "") -> i
 	if ui and is_instance_valid(ui) and ui.has_method("set_options_visible"):
 		ui.set_options_visible(true)
 
-	# Convert score to D20 + apply tool bonus
-	var d20: int = MiniGameBase.score_to_d20(score)
+	# Apply tool score bonus (positive tool_bonus → add to score)
 	if tool_bonus != 0:
-		d20 = clampi(d20 - tool_bonus, 1, 20)  # Negative bonus = easier (higher effective roll)
-		print("[Merlin] tool bonus: %d → D20 adjusted to %d" % [tool_bonus, d20])
-	print("[Merlin] minigame done: score=%d → D20=%d" % [score, d20])
+		score = clampi(score + tool_bonus * 5, 0, 100)
+		print("[Merlin] tool bonus: %d → score adjusted to %d" % [tool_bonus, score])
 
-	# Show score→D20 feedback then dice confirmation
-	if ui and is_instance_valid(ui):
-		ui.show_score_to_d20(score, d20, tool_bonus)
+	print("[Merlin] minigame done: field=%s score=%d" % [field, score])
+
+	# Show score feedback in UI
+	if ui and is_instance_valid(ui) and ui.has_method("show_minigame_score"):
+		ui.show_minigame_score(score)
 		if is_inside_tree():
 			await get_tree().create_timer(1.0).timeout
-		ui.show_dice_instant(dc, d20)
-	SFXManager.play("dice_land")
-	if is_inside_tree():
-		await get_tree().create_timer(0.6).timeout
 
-	return d20
-
-
-func _classify_outcome(roll: int, dc: int) -> String:
-	if roll == 20:
-		return "critical_success"
-	elif roll >= dc:
-		return "success"
-	elif roll > 1:
-		return "failure"
-	else:
-		return "critical_failure"
-
-
-func _get_dc_for_direction(direction: String) -> int:
-	# Variable DC from ranges (Phase 43)
-	var dc_info: Dictionary = MerlinConstants.DC_BASE.get(direction, MerlinConstants.DC_BASE.get("center", {}))
-	var dc_min: int = int(dc_info.get("min", 7))
-	var dc_max: int = int(dc_info.get("max", 12))
-	var base_dc: int = randi_range(dc_min, dc_max)
-
-	# Blend with card's dc_hint if available (60% base + 40% card hint)
-	var option_idx: int = ["left", "center", "right"].find(direction)
-	if option_idx >= 0:
-		var opts: Array = current_card.get("options", [])
-		if option_idx < opts.size() and opts[option_idx] is Dictionary:
-			var hint: Dictionary = opts[option_idx].get("dc_hint", {})
-			if hint.has("min") and hint.has("max"):
-				var hint_dc: int = randi_range(int(hint["min"]), int(hint["max"]))
-				base_dc = int(base_dc * 0.6 + hint_dc * 0.4)
-
-	var modifier: int = 0
-
-	# Adaptive difficulty (pity / challenge)
-	if _quest_history.size() >= 3:
-		var last_3: Array = _quest_history.slice(-3)
-		var consecutive_fails: int = 0
-		var consecutive_wins: int = 0
-		for entry in last_3:
-			var o: String = str(entry.get("outcome", ""))
-			if o == "failure" or o == "critical_failure":
-				consecutive_fails += 1
-			elif o == "success" or o == "critical_success":
-				consecutive_wins += 1
-		if consecutive_fails >= 3:
-			modifier = -4  # Pity mode
-		elif consecutive_wins >= 3:
-			modifier = 2  # Challenge mode
-
-	# Critical choice modifier
-	if _is_critical_choice:
-		var crit_penalty: int = 4
-		if store and store.has_method("is_talent_active") and store.is_talent_active("feuillage_4"):
-			crit_penalty = 2
-		modifier += crit_penalty
-
-	# Biome difficulty modifier
-	if store and store.biomes:
-		var biome_key: String = str(store.state.get("run", {}).get("current_biome", ""))
-		if not biome_key.is_empty():
-			var biome_data: Dictionary = store.biomes.get_biome_data(biome_key) if store.biomes.has_method("get_biome_data") else {}
-			modifier += int(biome_data.get("difficulty", 0))
-
-	# Power milestone DC reduction
-	var dc_bonus: int = 0
-	if store:
-		dc_bonus = int(store.state.get("run", {}).get("power_bonuses", {}).get("dc_reduction", 0))
-
-	# B.3 — Archetype DC bonus (read from GameManager.player_traits)
-	var archetype_modifier: int = 0
-	var gm_arch := get_node_or_null("/root/GameManager")
-	if gm_arch:
-		var traits = gm_arch.get("player_traits")
-		if traits is Dictionary:
-			var arch_id: String = str(traits.get("archetype_id", ""))
-			if MerlinConstants.ARCHETYPE_DC_BONUS.has(arch_id):
-				archetype_modifier = int(MerlinConstants.ARCHETYPE_DC_BONUS[arch_id])
-
-	# B.4 — Faction reputation DC modifier (extreme rep = harder)
-	var faction_modifier: int = 0
-	if store:
-		var factions: Dictionary = store.state.get("run", {}).get("factions", {})
-		var extremes: int = 0
-		for faction_key in MerlinReputationSystem.FACTIONS:
-			var rep: float = float(factions.get(faction_key, 0.0))
-			if rep < 20.0 or rep > 80.0:
-				extremes += 1
-				faction_modifier += 1
-		if extremes == 0:
-			faction_modifier = -2  # All factions neutral = easier
-
-	return clampi(base_dc + modifier + _dynamic_modifier - dc_bonus + archetype_modifier + faction_modifier, 2, 19)
+	return score
 
 
 func _get_choice_label(option: int) -> String:
@@ -1276,61 +1146,8 @@ func _get_choice_label(option: int) -> String:
 # EFFECT MODULATION
 # ═══════════════════════════════════════════════════════════════════════════════
 
-func _modulate_effects(base_effects: Array, outcome: String, _direction: String) -> Array:
-	## Modulate card effects based on minigame outcome.
-	## Effects: DAMAGE_LIFE, HEAL_LIFE, ADD_REPUTATION.
-	var result: Array = []
-	for effect in base_effects:
-		var e: Dictionary = effect.duplicate() if effect is Dictionary else {}
-		var etype: String = str(e.get("type", ""))
-		match outcome:
-			"critical_success":
-				# Double positive effects
-				if etype == "HEAL_LIFE" or etype == "ADD_REPUTATION":
-					var boosted: Dictionary = e.duplicate()
-					boosted["amount"] = int(e.get("amount", 0)) * 2
-					result.append(boosted)
-				elif etype == "DAMAGE_LIFE":
-					# Cancel damage on crit success
-					pass
-				else:
-					result.append(e)
-			"success":
-				result.append(e)
-			"failure":
-				# Reverse: heals become damage, damage becomes heal
-				if etype == "HEAL_LIFE":
-					result.append({"type": "DAMAGE_LIFE", "amount": int(e.get("amount", 0))})
-				elif etype == "DAMAGE_LIFE":
-					result.append({"type": "HEAL_LIFE", "amount": int(e.get("amount", 0))})
-				else:
-					result.append(e)
-			"critical_failure":
-				# Reverse heals to damage, keep damage as-is (bonus penalty applied separately)
-				if etype == "HEAL_LIFE":
-					result.append({"type": "DAMAGE_LIFE", "amount": int(e.get("amount", 0))})
-				elif etype == "DAMAGE_LIFE":
-					result.append(e)
-				else:
-					result.append(e)
-
-	# Life damage on critical failure (bonus penalty)
-	if outcome == "critical_failure" and store:
-		store.dispatch({"type": "DAMAGE_LIFE", "amount": MerlinConstants.LIFE_ESSENCE_CRIT_FAIL_DAMAGE})
-		print("[Merlin] Critical failure! Life essence -%d" % MerlinConstants.LIFE_ESSENCE_CRIT_FAIL_DAMAGE)
-
-	# Life heal on critical success (bonus heal)
-	if outcome == "critical_success" and store:
-		store.dispatch({"type": "HEAL_LIFE", "amount": MerlinConstants.LIFE_ESSENCE_CRIT_SUCCESS_HEAL})
-		print("[Merlin] Critical success! Life essence +%d" % MerlinConstants.LIFE_ESSENCE_CRIT_SUCCESS_HEAL)
-
-	# Talent: feuillage_7 — Negative effects -30%
-	if store and store.has_method("is_talent_active") and store.is_talent_active("feuillage_7"):
-		for e in result:
-			if str(e.get("type", "")) == "DAMAGE_LIFE":
-				e["amount"] = int(int(e.get("amount", 0)) * 0.7)
-
-	return result
+## NOTE: Effect scaling and multiplier logic now handled by MerlinCardSystem.resolve_card()
+## via store.cards.resolve_card(). _modulate_effects() removed (ARCH-1 migration).
 
 
 func _apply_talent_shields(effects: Array) -> Array:
@@ -1358,18 +1175,21 @@ func _apply_talent_shields(effects: Array) -> Array:
 # KARMA & BLESSINGS
 # ═══════════════════════════════════════════════════════════════════════════════
 
-func _update_karma(outcome: String, direction: String) -> void:
-	match outcome:
-		"critical_success":
-			_karma = clampi(_karma + 2, KARMA_MIN, KARMA_MAX)
-			_blessings = mini(_blessings + 1, BLESSINGS_MAX)
-		"critical_failure":
-			_karma = clampi(_karma - 2, KARMA_MIN, KARMA_MAX)
-		"success":
-			if direction == "right":
-				_karma = clampi(_karma + 1, KARMA_MIN, KARMA_MAX)
-			elif direction == "left":
-				_karma = clampi(_karma - 1, KARMA_MIN, KARMA_MAX)
+func _update_karma_score(score: int, direction: String) -> void:
+	## Karma update based on raw score (bible v2.4 multiplier thresholds).
+	if score >= 95:
+		# reussite_critique
+		_karma = clampi(_karma + 2, KARMA_MIN, KARMA_MAX)
+		_blessings = mini(_blessings + 1, BLESSINGS_MAX)
+	elif score <= 20:
+		# echec_critique
+		_karma = clampi(_karma - 2, KARMA_MIN, KARMA_MAX)
+	elif score >= 80:
+		# reussite — direction bonus
+		if direction == "right":
+			_karma = clampi(_karma + 1, KARMA_MIN, KARMA_MAX)
+		elif direction == "left":
+			_karma = clampi(_karma - 1, KARMA_MIN, KARMA_MAX)
 
 
 
@@ -1695,24 +1515,9 @@ func _show_card_modifier_indicator() -> void:
 		print("[Merlin] Nocturne modifier active!")
 
 
-func _apply_chance_modifier_effects(effects: Array, outcome: String) -> Array:
-	## Chance modifier: double positive effects on success, add penalty on failure.
-	var is_success: bool = outcome == "success" or outcome == "critical_success"
-	if is_success:
-		var result: Array = []
-		for e in effects:
-			var eff: Dictionary = e.duplicate() if e is Dictionary else {}
-			var etype: String = str(eff.get("type", ""))
-			if etype == "HEAL_LIFE" or etype == "ADD_REPUTATION":
-				eff["amount"] = int(eff.get("amount", 0)) * 2
-			result.append(eff)
-		print("[Merlin] Chance modifier: doubled positive effects (success)")
-		return result
-	else:
-		var result: Array = effects.duplicate()
-		result.append({"type": "DAMAGE_LIFE", "amount": 8})
-		print("[Merlin] Chance modifier: added penalty (failure)")
-		return result
+## _apply_chance_modifier_effects() removed — ARCH-1 migration.
+## Chance modifier effects are now part of the card's option effects,
+## scaled proportionally via MerlinEffectEngine.scale_and_cap() in resolve_card().
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
@@ -1738,12 +1543,12 @@ func _auto_progress_mission(outcome: String) -> void:
 			# Mission type "equilibre" needs new win condition (e.g. all factions >= 50?)
 			step = 0  # Disabled until rewired to faction system
 		"explore":
-			# Progress +1 per success/crit_success
-			if outcome == "success" or outcome == "critical_success":
+			# Progress +1 per reussite / reussite_critique (bible v2.4 multiplier labels)
+			if outcome == "reussite" or outcome == "reussite_critique":
 				step = 1
 		"artefact":
-			# Progress +1 on critical success only
-			if outcome == "critical_success":
+			# Progress +1 on reussite_critique only
+			if outcome == "reussite_critique":
 				step = 1
 
 	if step > 0:
@@ -1774,12 +1579,18 @@ func _check_biome_passive() -> void:
 # NARRATIVE REACTIONS
 # ═══════════════════════════════════════════════════════════════════════════════
 
-func _play_outcome_sfx(outcome: String) -> void:
-	match outcome:
-		"critical_success": SFXManager.play("dice_crit_success")
-		"success": SFXManager.play("aspect_up")
-		"failure": SFXManager.play("aspect_down")
-		"critical_failure": SFXManager.play("dice_crit_fail")
+func _play_outcome_sfx_score(score: int) -> void:
+	## Play SFX based on raw minigame score (bible v2.4 thresholds).
+	if score >= 95:
+		SFXManager.play("dice_crit_success")
+	elif score >= 80:
+		SFXManager.play("aspect_up")
+	elif score >= 51:
+		SFXManager.play("aspect_up")
+	elif score >= 21:
+		SFXManager.play("aspect_down")
+	else:
+		SFXManager.play("dice_crit_fail")
 
 
 # ═══════════════════════════════════════════════════════════════════════════════

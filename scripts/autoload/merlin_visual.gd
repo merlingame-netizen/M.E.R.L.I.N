@@ -5,7 +5,7 @@
 ## - CRT_PALETTE (active) — CRT terminal druido-tech aesthetic
 ## - PALETTE (legacy) — Parchemin Mystique Breton (rollback)
 ## - BIOME_CRT_PALETTES — 8 colors per biome (strict)
-## - CRT_ASPECT_COLORS — Triade in terminal phosphor
+## - CRT_ASPECT_COLORS — CRT terminal aspect colors (Corps/Ame/Monde)
 ## - GBC & Jugdral21 (reference palettes, biome pixel art)
 ## - Font references & sizes (VT323 monospace terminal)
 ## - Animation constants & easing defaults
@@ -262,42 +262,14 @@ const GBC := {
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
-# ASPECT COLORS — Triade system (Corps/Ame/Monde)
+# ASPECT COLORS — CRT terminal colors for Corps/Ame/Monde aspects
 # ═══════════════════════════════════════════════════════════════════════════════
 
-const ASPECT_COLORS := {
-	"Corps": Color(0.55, 0.40, 0.25),    # Earthy brown (GBC earth)
-	"Ame": Color(0.40, 0.45, 0.70),      # Ethereal purple (GBC mystic)
-	"Monde": Color(0.35, 0.55, 0.35),    # Forest green (GBC grass)
-}
-
-const ASPECT_COLORS_LIGHT := {
-	"Corps": Color(0.72, 0.58, 0.38),    # earth_light
-	"Ame": Color(0.62, 0.58, 0.82),      # mystic_light
-	"Monde": Color(0.50, 0.72, 0.50),    # grass_light
-}
-
-const ASPECT_COLORS_DARK := {
-	"Corps": Color(0.40, 0.30, 0.18),    # earth_dark
-	"Ame": Color(0.30, 0.25, 0.47),      # mystic_dark
-	"Monde": Color(0.22, 0.38, 0.22),    # grass_dark
-}
-
-# CRT terminal Triade colors (phosphor-style)
+# CRT terminal aspect colors (phosphor-style) — used by MenuPrincipalMerlin
 const CRT_ASPECT_COLORS := {
 	"Corps": Color(1.00, 0.40, 0.20),    # Red-orange (force, sanglier)
 	"Ame":   Color(0.50, 0.40, 1.00),    # Blue-violet (mystic, corbeau)
 	"Monde": Color(0.20, 1.00, 0.40),    # Green phosphor (nature, cerf)
-}
-const CRT_ASPECT_COLORS_LIGHT := {
-	"Corps": Color(1.00, 0.60, 0.40),
-	"Ame":   Color(0.70, 0.60, 1.00),
-	"Monde": Color(0.40, 1.00, 0.60),
-}
-const CRT_ASPECT_COLORS_DARK := {
-	"Corps": Color(0.60, 0.24, 0.12),
-	"Ame":   Color(0.30, 0.24, 0.60),
-	"Monde": Color(0.12, 0.60, 0.24),
 }
 
 
@@ -646,7 +618,6 @@ const LAYER_REVEAL_SLIDE := 10.0      # Slide-up offset in pixels
 const LAYER_REVEAL_DURATION := 0.30   # Per-layer reveal duration
 const PARALLAX_MAX_SHIFT := 8.0       # Max parallax offset in pixels on hover
 const SELECTION_STAMP_SCALE := 1.03   # Card scale on option selection
-const EFFECT_REVEAL_DURATION := 0.50  # Triade aspect pulse duration
 const LAYER_ILLUSTRATION_SIZE := Vector2(440.0, 220.0)
 
 # Option button animation
