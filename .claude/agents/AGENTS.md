@@ -3,7 +3,7 @@
 ## Overview
 
 This document defines the team of specialized Claude Code agents for the M.E.R.L.I.N. project.
-**49 agents + 1 knowledge base** organized by domain.
+**105 agents + 1 knowledge base** organized by domain.
 
 ## Usage with Claude Code
 
@@ -245,6 +245,102 @@ Le panneau **"Live View"** de l'extension `autodev-monitor-v4` affiche en temps 
 
 Lancer le jeu en debug : `powershell -File tools/autodev/launch_debug.ps1`
 
+### QA & Testing Agents (10) — NEW
+
+| Role | File | Specialty |
+|------|------|-----------|
+| **QA Regression** | `qa_regression.md` | **Regression test specialist, before/after behavior verification** |
+| **QA Boundary** | `qa_boundary.md` | **Boundary/edge case tester, numeric limits, overflow detection** |
+| **QA Integration** | `qa_integration.md` | **Integration test designer, cross-system signal chain testing** |
+| **QA Headless** | `qa_headless.md` | **Headless testing specialist, CLI test automation, validate.bat** |
+| **QA Coverage** | `qa_coverage.md` | **Test coverage analyzer, untested code path identification** |
+| **QA Data Integrity** | `qa_data_integrity.md` | **JSON card format validation, save file integrity, schema drift** |
+| **QA Smoke** | `qa_smoke.md` | **Smoke test designer, quick pass/fail health checks (<60s)** |
+| **QA Stress** | `qa_stress.md` | **Stress/load tester, extreme values, rapid inputs, long sessions** |
+| **QA Localization** | `qa_localization.md` | **i18n/l10n tester, French text quality, Celtic special characters** |
+| **QA Determinism** | `qa_determinism.md` | **Determinism tester, seed-based reproducible runs, replay** |
+
+### Game Design Agents (8) — NEW
+
+| Role | File | Specialty |
+|------|------|-----------|
+| **GD Economy** | `gd_economy.md` | **Anam flow, Ogham costs, cross-run reward curves** |
+| **GD Difficulty** | `gd_difficulty.md` | **MOS convergence tuning, difficulty curves, drain/heal balance** |
+| **GD Pacing** | `gd_pacing.md` | **Run length, card rhythm, tension/release, transition timing** |
+| **GD Faction Dynamics** | `gd_faction_dynamics.md` | **Alliance/rivalry balance, cross-faction effects, rep thresholds** |
+| **GD Narrative Flow** | `gd_narrative_flow.md` | **Per-run story arc, LLM narrative coherence, beat structure** |
+| **GD Reward Loop** | `gd_reward_loop.md` | **Dopamine hooks, micro/macro rewards, "one more run" design** |
+| **GD Onboarding** | `gd_onboarding.md` | **First-run experience, tutorial flow, progressive mechanic reveal** |
+| **GD Endgame** | `gd_endgame.md` | **Replayability, T3 content depth, post-unlock progression** |
+
+### UX & Accessibility Agents (8) — NEW
+
+| Role | File | Specialty |
+|------|------|-----------|
+| **UX Flow** | `ux_flow.md` | **Screen transitions, navigation clarity, state indication** |
+| **UX Feedback** | `ux_feedback.md` | **Visual/audio response design, action acknowledgement** |
+| **UX Readability** | `ux_readability.md` | **Font sizes, contrast ratios, WCAG 2.1, CRT readability** |
+| **UX Color Blind** | `ux_color_blind.md` | **CVD palette alternatives, redundant encoding, faction colors** |
+| **UX Input** | `ux_input.md` | **Keyboard/controller/touch mapping, focus navigation** |
+| **UX Cognitive Load** | `ux_cognitive_load.md` | **Information density, progressive disclosure, decision time** |
+| **UX Animation** | `ux_animation.md` | **Easing curves, transition timing, fondu coordination** |
+| **UX Error States** | `ux_error_states.md` | **Graceful degradation, error messages, empty states, fallbacks** |
+
+### Audio & Atmosphere Agents (6) — NEW
+
+| Role | File | Specialty |
+|------|------|-----------|
+| **Audio Mix** | `audio_mix.md` | **Volume balance, bus architecture, priority rules, ducking** |
+| **Audio Ambiance** | `audio_ambiance.md` | **Biome soundscapes, layered ambient, state-reactive atmosphere** |
+| **Audio Feedback** | `audio_feedback.md` | **UI sounds, effect audio cues, Celtic audio palette** |
+| **Audio Music Flow** | `audio_music_flow.md` | **Crossfade timing, biome themes, tension-reactive layers** |
+| **Audio Procedural** | `audio_procedural.md` | **Celtic scale synthesis, SFXManager extension, tone generation** |
+| **Audio Spatial** | `audio_spatial.md` | **3D audio positioning, distance attenuation, biome reverb** |
+
+### Visual & Art Agents (8) — NEW
+
+| Role | File | Specialty |
+|------|------|-----------|
+| **Vis Palette** | `vis_palette.md` | **CRT palette enforcement, biome colors, PALETTE/GBC constants** |
+| **Vis Particle** | `vis_particle.md` | **Atmospheric particles, Ogham magic effects, performance budget** |
+| **Vis Typography** | `vis_typography.md` | **Font hierarchy, Celtic styling, French glyph support** |
+| **Vis Layout** | `vis_layout.md` | **Grid systems, responsive UI, container hierarchy, spacing** |
+| **Vis Shader** | `vis_shader.md` | **CRT post-processing, biome shaders, shader optimization** |
+| **Vis Animation Art** | `vis_animation_art.md` | **Sprite sheets, procedural art, Celtic knotwork animation** |
+| **Vis Scene Composition** | `vis_scene_composition.md` | **Depth, focal points, visual hierarchy, z-order management** |
+| **Vis Celtic Authenticity** | `vis_celtic_authenticity.md` | **Ogham accuracy, knotwork patterns, Celtic symbol validation** |
+
+### Performance & Technical Agents (6) — NEW
+
+| Role | File | Specialty |
+|------|------|-----------|
+| **Perf Memory** | `perf_memory.md` | **Memory leaks, orphan nodes, resource pooling, signal cleanup** |
+| **Perf Render** | `perf_render.md` | **Draw calls, shader complexity, overdraw, 60fps target** |
+| **Perf Loading** | `perf_loading.md` | **Async loading, scene preloading, transition masking** |
+| **Perf Mobile** | `perf_mobile.md` | **Touch UI, reduced effects, 30fps mobile target, 256MB budget** |
+| **Perf Network** | `perf_network.md` | **Offline-first, Ollama caching, request prefetch, retry logic** |
+| **Perf Battery** | `perf_battery.md` | **Power-efficient modes, idle detection, timer coalescing** |
+
+### Content & Narrative Agents (6) — NEW
+
+| Role | File | Specialty |
+|------|------|-----------|
+| **Content Card Writer** | `content_card_writer.md` | **French card text, Celtic authenticity, 45-verb choices, biome variants** |
+| **Content Dialogue** | `content_dialogue.md` | **NPC voice, trust tier dialogue, faction speech patterns** |
+| **Content Flavor Text** | `content_flavor_text.md` | **Biome descriptions, Ogham lore, tooltips, loading quotes** |
+| **Content Quest Arc** | `content_quest_arc.md` | **Multi-card storylines, callbacks, branching quest chains** |
+| **Content Worldbuilding** | `content_worldbuilding.md` | **Timeline, geography, cosmology coherence, contradiction detection** |
+| **Content Merlin Voice** | `content_merlin_voice.md` | **Merlin personality, ambiguity, trust tier modulation T0-T3** |
+
+### Meta & Process Agents (4) — NEW
+
+| Role | File | Specialty |
+|------|------|-----------|
+| **Meta Bible Guardian** | `meta_bible_guardian.md` | **Bible v2.4 enforcement, design drift detection, removed system audit** |
+| **Meta Code-Bible Sync** | `meta_code_bible_sync.md` | **Constants alignment, enum sync, pipeline order verification** |
+| **Meta Sprint Reviewer** | `meta_sprint_reviewer.md` | **Post-sprint quality assessment, validation, debt tracking** |
+| **Meta Tech Debt** | `meta_tech_debt.md` | **TODO/FIXME tracking, duplication, complexity hotspots, dead code** |
+
 ### Shared Resources
 
 | Resource | File | Purpose |
@@ -256,7 +352,7 @@ Lancer le jeu en debug : `powershell -File tools/autodev/launch_debug.ps1`
 ## Summary Count
 
 ```
-Total: 49 agents + 1 knowledge base
+Total: 105 agents + 1 knowledge base
 
 By category:
   Direction:                  1 (game_director)
@@ -274,7 +370,15 @@ By category:
   LoRA Fine-Tuning:           4 (lora_gameplay_translator, lora_data_curator, lora_training_architect, lora_evaluator)
   Autonomous Studio:         10 (studio_orchestrator, playtester_ai, balance_analyst, player_simulator, content_factory, world_builder, visual_qa, regression_guardian, release_quality, perf_profiler)
   Runtime Observation:        1 (game_observer — inline workflow)
-  Knowledge Base:             1 (gdscript_knowledge_base)
+  QA & Testing:              10 (qa_regression, qa_boundary, qa_integration, qa_headless, qa_coverage, qa_data_integrity, qa_smoke, qa_stress, qa_localization, qa_determinism)
+  Game Design:                8 (gd_economy, gd_difficulty, gd_pacing, gd_faction_dynamics, gd_narrative_flow, gd_reward_loop, gd_onboarding, gd_endgame)
+  UX & Accessibility:         8 (ux_flow, ux_feedback, ux_readability, ux_color_blind, ux_input, ux_cognitive_load, ux_animation, ux_error_states)
+  Audio & Atmosphere:          6 (audio_mix, audio_ambiance, audio_feedback, audio_music_flow, audio_procedural, audio_spatial)
+  Visual & Art:                8 (vis_palette, vis_particle, vis_typography, vis_layout, vis_shader, vis_animation_art, vis_scene_composition, vis_celtic_authenticity)
+  Performance & Technical:     6 (perf_memory, perf_render, perf_loading, perf_mobile, perf_network, perf_battery)
+  Content & Narrative:         6 (content_card_writer, content_dialogue, content_flavor_text, content_quest_arc, content_worldbuilding, content_merlin_voice)
+  Meta & Process:              4 (meta_bible_guardian, meta_code_bible_sync, meta_sprint_reviewer, meta_tech_debt)
+  Knowledge Base:              1 (gdscript_knowledge_base)
 ```
 
 ---
@@ -399,6 +503,18 @@ When an agent completes work and needs handoff:
 | **`player_simulator.md`** | **"stress test", "spam click", "AFK test", "crash test"** | **Simule comportements extremes, detecte crashes et leaks** |
 | **`world_builder.md`** | **"nouveau biome", "nouveau lieu", "construction de monde"** | **Cree biomes complets (palette, cartes, shader, lore)** |
 | **`perf_profiler.md`** | **"profile performance", "FPS drop", "memory leak", "le jeu rame"** | **Profile runtime, correle avec code, auto-optimise** |
+| **`qa_regression.md`** | **Core system file modified, refactor 3+ files, bug fix applied** | **Before/after behavior comparison, regression detection** |
+| **`qa_boundary.md`** | **Clamp/cap logic modified, new effects added, division/percentage code** | **Boundary value testing, overflow detection** |
+| **`qa_smoke.md`** | **Pre-commit, pre-release, new scene/autoload added** | **Fast <60s health check across all systems** |
+| **`meta_bible_guardian.md`** | **Game mechanic code modified, new features without bible section** | **Design drift detection, bible alignment verification** |
+| **`meta_code_bible_sync.md`** | **merlin_constants.gd or GAME_DESIGN_BIBLE.md edited** | **Constants alignment, enum sync check** |
+| **`meta_tech_debt.md`** | **Code shortcuts introduced, sprint review, "clean up"** | **TODO tracking, duplication detection, complexity audit** |
+| **`content_card_writer.md`** | **Fallback pool expansion, new biome cards needed** | **French card text, Celtic authenticity, 45-verb choices** |
+| **`content_merlin_voice.md`** | **Merlin dialogue written, trust tier text needed** | **Merlin personality consistency, T0-T3 modulation** |
+| **`ux_error_states.md`** | **LLM fallback designed, error handling added, empty states** | **Graceful degradation, friendly error messages** |
+| **`audio_mix.md`** | **New sounds added, volume complaints, simultaneous sounds** | **Volume balance, priority rules, ducking** |
+| **`vis_palette.md`** | **New colors used, hardcoded Color() found, biome theme change** | **PALETTE/GBC enforcement, CRT aesthetic consistency** |
+| **`perf_memory.md`** | **Memory grows during play, node count increases, scene transitions** | **Orphan nodes, signal leaks, resource pooling** |
 
 ---
 
@@ -414,6 +530,33 @@ When an agent completes work and needs handoff:
 | **Performance fix** | **Perf Profiler** (re-profile), **Regression Guardian** |
 | **Pre-release** | **Release Quality** (full checklist) |
 | **Studio mode session** | **Studio Orchestrator** (coordonne tous) |
+
+### Cross-Functional Reviews (New Agents)
+
+| Change Type | Required Review |
+|-------------|-----------------|
+| **Core system refactor** | **QA Regression**, QA Integration, Lead Godot |
+| **Numeric constants changed** | **QA Boundary**, Meta Code-Bible Sync, Balance Tuner |
+| **New biome content** | Content Card Writer, Audio Ambiance, Vis Palette, Vis Celtic Authenticity |
+| **Card text added** | Content Card Writer, QA Localization, UX Readability |
+| **Merlin dialogue** | Content Merlin Voice, Merlin Guardian |
+| **UI screen added** | UX Flow, UX Cognitive Load, Vis Layout, UX Input |
+| **CRT shader changed** | Vis Shader, UX Readability, Perf Render |
+| **Font/typography change** | Vis Typography, UX Readability, QA Localization |
+| **Color palette change** | Vis Palette, UX Color Blind |
+| **Audio added** | Audio Mix, Audio Feedback |
+| **Scene transition** | UX Animation, Perf Loading, UX Flow |
+| **Error handling code** | UX Error States, QA Integration |
+| **Save system change** | QA Data Integrity, QA Boundary |
+| **Mobile deployment** | Perf Mobile, Perf Battery, UX Input |
+| **Sprint/session end** | Meta Sprint Reviewer, Meta Tech Debt, QA Smoke |
+| **Bible or constants edited** | Meta Bible Guardian, Meta Code-Bible Sync |
+| **Multi-card narrative** | Content Quest Arc, GD Narrative Flow |
+| **Economy/progression** | GD Economy, GD Reward Loop |
+| **Difficulty tuning** | GD Difficulty, GD Pacing, Balance Tuner |
+| **Onboarding/tutorial** | GD Onboarding, UX Cognitive Load |
+| **Memory concerns** | Perf Memory, QA Stress |
+| **Particle effects** | Vis Particle, Perf Render |
 
 ---
 
@@ -532,5 +675,5 @@ claude "Use Task to read .claude/agents/perf_profiler.md and profile runtime per
 ---
 
 *Created: 2026-02-06*
-*Updated: 2026-02-27 — 48 agents + 1 KB (new: 10 Autonomous Studio agents — studio_orchestrator, playtester_ai, balance_analyst, player_simulator, content_factory, world_builder, visual_qa, regression_guardian, release_quality, perf_profiler)*
+*Updated: 2026-03-15 — 105 agents + 1 KB (new: 56 specialized agents — 10 QA/Testing, 8 Game Design, 8 UX/Accessibility, 6 Audio/Atmosphere, 8 Visual/Art, 6 Performance/Technical, 6 Content/Narrative, 4 Meta/Process)*
 *Project: M.E.R.L.I.N. — Le Jeu des Oghams*
