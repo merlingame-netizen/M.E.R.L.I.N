@@ -21,6 +21,7 @@ signal season_changed(new_season: String)
 signal event_available(event_id: String, event_data: Dictionary)
 signal faveurs_changed(old_val: int, new_val: int)
 signal gauges_changed(gauges: Dictionary)
+signal trust_changed(old_value: int, new_value: int, tier: String)
 
 const VERSION := "0.4.0"  # Updated for World Map gauge system
 
@@ -370,6 +371,12 @@ func _reduce(action: Dictionary) -> Dictionary:
 					if merlin != null:
 						merlin.on_run_end(end_check)
 					return {"ok": true, "run_ended": true, "ending": end_check}
+				else:
+					# Store MOS tension zone in run state for LLM context
+					var run_ref: Dictionary = state.get("run", {})
+					run_ref["tension_zone"] = str(end_check.get("tension_zone", "none"))
+					run_ref["convergence_zone"] = end_check.get("convergence_zone", false)
+					state["run"] = run_ref
 			return result
 
 		"PROGRESS_MISSION":
@@ -1580,10 +1587,15 @@ func get_unlockable_biomes() -> Array:
 # ═══════════════════════════════════════════════════════════════════════════════
 
 func update_trust_merlin(delta: int) -> void:
+	if delta == 0:
+		return
 	var meta: Dictionary = state.get("meta", {})
-	var current: int = int(meta.get("trust_merlin", 0))
-	meta["trust_merlin"] = clampi(current + delta, 0, 100)
+	var old_value: int = int(meta.get("trust_merlin", 0))
+	var new_value: int = clampi(old_value + delta, 0, 100)
+	meta["trust_merlin"] = new_value
 	state["meta"] = meta
+	var tier: String = get_trust_tier()
+	trust_changed.emit(old_value, new_value, tier)
 	state_changed.emit(state)
 
 

@@ -134,6 +134,8 @@ func _sync_store_to_run_state() -> void:
 	_run_state["life_max"] = _store_life_max()
 	_run_state["biome_currency"] = _store_currency()
 	_run_state["anam_found"] = _store_anam()
+	# Trust tier synced so card system filters merlin_direct by current trust
+	_run_state["trust_tier"] = _store.get_trust_tier()
 	# Faction rep delta is tracked in _run_state for per-run accumulation
 	# (store has cross-run faction_rep, delta is applied at run end)
 
@@ -399,9 +401,15 @@ func _apply_effects(effects: Array) -> void:
 
 
 func _apply_trust_delta(delta: int) -> void:
-	# Trust delta is card-system tracking (accumulated per run, applied at end)
-	var trust: int = int(_run_state.get("trust_delta", 0)) + delta
-	_run_state["trust_delta"] = trust
+	if delta == 0:
+		return
+	# Bible v2.4 s.6.3: trust changes immediately mid-run (not deferred)
+	_store.update_trust_merlin(delta)
+	# Also track cumulative delta for end-of-run display
+	var cumul: int = int(_run_state.get("trust_delta", 0)) + delta
+	_run_state["trust_delta"] = cumul
+	# Sync trust tier into _run_state so card system sees updated tier
+	_run_state["trust_tier"] = _store.get_trust_tier()
 
 
 # ═══════════════════════════════════════════════════════════════════════════════

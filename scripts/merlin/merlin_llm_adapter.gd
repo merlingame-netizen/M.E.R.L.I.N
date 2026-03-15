@@ -1492,11 +1492,17 @@ func _build_arc_system_prompt(cards_played: int, theme_word: String, context: Di
 	var life: int = int(context.get("life_essence", 100))
 	var karma: int = int(context.get("karma", 0))
 
+	# MOS convergence hints aligned with MerlinConstants.MOS_CONVERGENCE thresholds
+	var mos: Dictionary = MerlinConstants.MOS_CONVERGENCE
 	var convergence_hint := ""
-	if cards_played >= 8:
+	if cards_played >= int(mos.get("soft_max_cards", 40)):
+		convergence_hint = "\nURGENCE NARRATIVE: La quete doit se conclure. Oriente TOUT vers la resolution finale."
+	elif cards_played >= int(mos.get("target_cards_max", 25)):
 		convergence_hint = "\nLa quete approche de sa fin. Oriente la scene vers une resolution."
-	elif cards_played >= 5:
+	elif cards_played >= int(mos.get("target_cards_min", 20)):
 		convergence_hint = "\nLa tension monte. Les enjeux deviennent plus importants."
+	elif cards_played >= int(mos.get("soft_min_cards", 8)):
+		convergence_hint = "\nLe voyage est engage. Les choix commencent a peser."
 
 	# Balance intelligence: adapt narrative tone to player state
 	var balance_hint := _build_balance_hint(context)

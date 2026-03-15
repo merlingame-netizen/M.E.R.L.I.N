@@ -38,10 +38,13 @@ static func _get_default_profile() -> Dictionary:
 			"cercles_pierres": 0, "marais_korrigans": 0,
 			"collines_dolmens": 0, "iles_mystiques": 0,
 		},
+		"biomes_unlocked": ["foret_broceliande"],
+		"tutorial_flags": {},
 		"stats": {
 			"total_cards": 0, "total_minigames_won": 0,
 			"total_deaths": 0, "consecutive_deaths": 0,
 			"oghams_discovered_in_runs": 0, "total_anam_earned": 0,
+			"total_play_time_seconds": 0, "total_minigames_played": 0,
 		},
 	}
 
@@ -183,7 +186,19 @@ func load_run_state() -> Dictionary:
 	var run_state = data.get("run_state")
 	if run_state == null or not (run_state is Dictionary):
 		return {}
-	return run_state as Dictionary
+	var rs: Dictionary = run_state as Dictionary
+	# Fill missing keys from default run_state
+	var defaults: Dictionary = _get_default_run_state()
+	for key in defaults:
+		if not rs.has(key):
+			rs[key] = defaults[key]
+	# Validate structure
+	if not _validate_run_state(rs):
+		push_warning("[MerlinSave] run_state validation failed, discarding")
+		return {}
+	# Clamp life to valid range
+	rs["life_essence"] = clampi(int(rs.get("life_essence", 0)), 0, MerlinConstants.LIFE_ESSENCE_MAX)
+	return rs
 
 
 func clear_run_state() -> void:
@@ -207,7 +222,7 @@ static func _validate(meta: Dictionary) -> bool:
 	var required_keys: Array = [
 		"anam", "total_runs", "faction_rep", "trust_merlin",
 		"talent_tree", "oghams", "endings_seen", "arc_tags",
-		"biome_runs", "stats",
+		"biome_runs", "biomes_unlocked", "tutorial_flags", "stats",
 	]
 	for key in required_keys:
 		if not meta.has(key):
@@ -223,6 +238,36 @@ static func _validate(meta: Dictionary) -> bool:
 	var oghams: Dictionary = meta.get("oghams", {})
 	if not oghams.has("owned") or not oghams.has("equipped"):
 		push_warning("[MerlinSave] Invalid oghams structure")
+		return false
+	# Validate starter oghams present (bible: corrupted profile if missing)
+	var owned: Array = oghams.get("owned", [])
+	for starter in MerlinConstants.OGHAM_STARTER_SKILLS:
+		if not owned.has(starter):
+			push_warning("[MerlinSave] Missing starter ogham: %s — forcing reset" % starter)
+			return false
+	# Validate type constraints
+	if typeof(meta.get("anam")) != TYPE_INT and typeof(meta.get("anam")) != TYPE_FLOAT:
+		push_warning("[MerlinSave] anam must be numeric")
+		return false
+	if typeof(meta.get("trust_merlin")) != TYPE_INT and typeof(meta.get("trust_merlin")) != TYPE_FLOAT:
+		push_warning("[MerlinSave] trust_merlin must be numeric")
+		return false
+	return true
+
+
+static func _validate_run_state(run_state: Dictionary) -> bool:
+	var required_keys: Array = [
+		"biome", "card_index", "life_essence",
+	]
+	for key in required_keys:
+		if not run_state.has(key):
+			push_warning("[MerlinSave] run_state missing key: %s" % key)
+			return false
+	if typeof(run_state.get("card_index")) != TYPE_INT and typeof(run_state.get("card_index")) != TYPE_FLOAT:
+		push_warning("[MerlinSave] run_state card_index must be numeric")
+		return false
+	if typeof(run_state.get("life_essence")) != TYPE_INT and typeof(run_state.get("life_essence")) != TYPE_FLOAT:
+		push_warning("[MerlinSave] run_state life_essence must be numeric")
 		return false
 	return true
 
@@ -272,6 +317,14 @@ func _migrate(data: Dictionary) -> Dictionary:
 	# Migrate old oghams format if needed
 	if not meta.has("oghams") or not (meta["oghams"] is Dictionary):
 		meta["oghams"] = defaults["oghams"]
+
+	# Ensure stats has all expected sub-keys
+	var stats: Dictionary = meta.get("stats", {})
+	var default_stats: Dictionary = defaults.get("stats", {})
+	for stat_key in default_stats:
+		if not stats.has(stat_key):
+			stats[stat_key] = default_stats[stat_key]
+	meta["stats"] = stats
 
 	migrated["meta"] = meta
 	migrated["version"] = CURRENT_VERSION
