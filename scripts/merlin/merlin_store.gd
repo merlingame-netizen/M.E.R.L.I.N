@@ -1467,11 +1467,15 @@ func calculate_run_rewards(run_data: Dictionary) -> Dictionary:
 	if is_victory:
 		anam += MerlinConstants.ANAM_VICTORY_BONUS
 
+	var minigames_won: int = int(run_data.get("minigames_won", 0))
+	var oghams_used: int = int(run_data.get("oghams_used", 0))
+	var cards_played: int = int(run_data.get("cards_played", 0))
+
 	# Per minigame won
-	anam += int(run_data.get("minigames_won", 0)) * MerlinConstants.ANAM_PER_MINIGAME
+	anam += minigames_won * MerlinConstants.ANAM_PER_MINIGAME
 
 	# Per ogham used
-	anam += int(run_data.get("oghams_used", 0)) * MerlinConstants.ANAM_PER_OGHAM
+	anam += oghams_used * MerlinConstants.ANAM_PER_OGHAM
 
 	# Faction honore bonus (+5 per faction >= 80)
 	var faction_rep: Dictionary = state.get("meta", {}).get("faction_rep", {})
@@ -1479,12 +1483,14 @@ func calculate_run_rewards(run_data: Dictionary) -> Dictionary:
 		if float(faction_rep[faction]) >= 80.0:
 			anam += MerlinConstants.ANAM_FACTION_HONORE
 
-	# Death/abandon: Anam × min(cards/30, 1.0) — bible v2.4 s.2.4
-	var cards_played: int = int(run_data.get("cards_played", 0))
+	# Death/abandon: Anam x min(cards/30, 1.0) — bible v2.4 s.2.4
 	if not is_victory:
 		var death_cap: int = int(MerlinConstants.ANAM_REWARDS.get("death_cap_cards", 30))
-		var ratio: float = minf(float(cards_played) / float(death_cap), 1.0)
-		anam = int(float(anam) * ratio)
+		if death_cap > 0:
+			var ratio: float = minf(float(cards_played) / float(death_cap), 1.0)
+			anam = int(float(anam) * ratio)
+		else:
+			anam = 0
 
 	# Talent modifiers
 	if _get_talent_modifier("double_anam_rewards"):
@@ -1496,7 +1502,17 @@ func calculate_run_rewards(run_data: Dictionary) -> Dictionary:
 	if _get_talent_modifier("new_game_plus"):
 		anam = int(anam * 1.5)
 
-	return {"anam": anam}
+	# Guard: anam can never be negative
+	anam = maxi(anam, 0)
+
+	return {
+		"anam": anam,
+		"victory": is_victory,
+		"cards_played": cards_played,
+		"minigames_won": minigames_won,
+		"oghams_used": oghams_used,
+		"biome": str(run_data.get("current_biome", run_data.get("biome", ""))),
+	}
 
 
 func apply_run_rewards(rewards: Dictionary) -> void:
