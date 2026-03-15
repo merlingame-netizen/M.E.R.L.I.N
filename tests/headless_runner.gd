@@ -7,7 +7,7 @@ extends SceneTree
 ## Exit code: 0 if all tests pass, 1 if any fail or error.
 
 
-const TEST_DIR := "res://tests/"
+const TEST_DIRS: Array[String] = ["res://tests/", "res://scripts/test/"]
 
 var _total: int = 0
 var _passed: int = 0
@@ -31,17 +31,19 @@ func _run_all_tests() -> void:
 
 func _discover_test_files() -> Array[String]:
 	var results: Array[String] = []
-	var dir := DirAccess.open(TEST_DIR)
-	if dir == null:
-		_errors.append("Cannot open test directory: " + TEST_DIR)
-		return results
-	dir.list_dir_begin()
-	var fname := dir.get_next()
-	while fname != "":
-		if not dir.current_is_dir() and fname.begins_with("test_") and fname.ends_with(".gd"):
-			results.append(TEST_DIR + fname)
-		fname = dir.get_next()
-	dir.list_dir_end()
+	for test_dir in TEST_DIRS:
+		var dir := DirAccess.open(test_dir)
+		if dir == null:
+			continue
+		dir.list_dir_begin()
+		var fname := dir.get_next()
+		while fname != "":
+			if not dir.current_is_dir() and fname.begins_with("test_") and fname.ends_with(".gd"):
+				results.append(test_dir + fname)
+			fname = dir.get_next()
+		dir.list_dir_end()
+	if results.is_empty():
+		_errors.append("No test files found in: " + ", ".join(TEST_DIRS))
 	results.sort()
 	return results
 
