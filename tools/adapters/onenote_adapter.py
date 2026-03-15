@@ -8,7 +8,6 @@ many corporate Windows installations.
 from __future__ import annotations
 
 import xml.etree.ElementTree as ET  # noqa: N817
-from datetime import datetime
 from pathlib import Path
 from typing import Any
 
@@ -469,7 +468,7 @@ class OneNoteAdapter(BaseAdapter):
                         '</one:OE></one:OEChildren></one:Outline>'
                     )
                 page_xml += '</one:Page>'
-                app.UpdatePageContent(page_xml, datetime(1, 1, 1))
+                app.UpdatePageContent(page_xml, 0)
         except Exception as exc:
             return self.error(f"Failed to create page: {exc}")
         return self.ok({
@@ -504,7 +503,7 @@ class OneNoteAdapter(BaseAdapter):
             t_elem = ET.SubElement(oe, f"{ns}T")
             t_elem.text = body_html
             updated_xml = ET.tostring(root, encoding="unicode", xml_declaration=True)
-            app.UpdatePageContent(updated_xml, datetime(1, 1, 1))
+            app.UpdatePageContent(updated_xml, 0)
         except Exception as exc:
             return self.error(f"Failed to append to page: {exc}")
         return self.ok({"page_id": pid, "status": "appended"})
@@ -519,7 +518,7 @@ class OneNoteAdapter(BaseAdapter):
             return err
         self.log(f"Updating page XML: {page_id}")
         try:
-            app.UpdatePageContent(page_xml, datetime(1, 1, 1))
+            app.UpdatePageContent(page_xml, 0)
         except Exception as exc:
             return self.error(f"Failed to update page: {exc}")
         return self.ok({"page_id": page_id, "status": "updated"})
@@ -535,7 +534,7 @@ class OneNoteAdapter(BaseAdapter):
             pid = page_id or _resolve_page_id(app, title)
             if not pid:
                 return self.error(f"Page not found: {title}")
-            app.DeleteHierarchy(pid, datetime(1, 1, 1))
+            app.DeleteHierarchy(pid, 0)
         except Exception as exc:
             return self.error(f"Failed to delete page: {exc}")
         return self.ok({"page_id": pid, "status": "deleted"})
@@ -584,7 +583,7 @@ class OneNoteAdapter(BaseAdapter):
             sec_id = _resolve_section_id(app, section)
             if not sec_id:
                 return self.error(f"Section not found: {section}")
-            app.DeleteHierarchy(sec_id, datetime(1, 1, 1))
+            app.DeleteHierarchy(sec_id, 0)
         except Exception as exc:
             return self.error(f"Failed to delete section: {exc}")
         return self.ok({"section": section, "status": "deleted"})
@@ -857,14 +856,13 @@ class OneNoteAdapter(BaseAdapter):
             target_id = _resolve_section_id(app, target_section)
             if not target_id:
                 return self.error(f"Target section not found: {target_section}")
-            # Read page content, create in target, delete from source
             xml_str = app.GetPageContent(pid, 0)
             new_page_id = app.CreateNewPage(target_id, 0)
             root = ET.fromstring(xml_str)
-            root.set("ID", new_page_id)
+            _prepare_page_for_copy(root, new_page_id)
             updated_xml = ET.tostring(root, encoding="unicode", xml_declaration=True)
-            app.UpdatePageContent(updated_xml, datetime(1, 1, 1))
-            app.DeleteHierarchy(pid, datetime(1, 1, 1))
+            app.UpdatePageContent(updated_xml, 0)
+            app.DeleteHierarchy(pid, 0)
         except Exception as exc:
             return self.error(f"Failed to move page: {exc}")
         return self.ok({
@@ -894,9 +892,9 @@ class OneNoteAdapter(BaseAdapter):
             xml_str = app.GetPageContent(pid, 0)
             new_page_id = app.CreateNewPage(target_id, 0)
             root = ET.fromstring(xml_str)
-            root.set("ID", new_page_id)
+            _prepare_page_for_copy(root, new_page_id)
             updated_xml = ET.tostring(root, encoding="unicode", xml_declaration=True)
-            app.UpdatePageContent(updated_xml, datetime(1, 1, 1))
+            app.UpdatePageContent(updated_xml, 0)
         except Exception as exc:
             return self.error(f"Failed to copy page: {exc}")
         return self.ok({
@@ -965,10 +963,10 @@ class OneNoteAdapter(BaseAdapter):
                 page_xml = app.GetPageContent(pid, 0)
                 new_pid = app.CreateNewPage(tgt_id, 0)
                 page_root = ET.fromstring(page_xml)
-                page_root.set("ID", new_pid)
+                _prepare_page_for_copy(page_root, new_pid)
                 updated = ET.tostring(page_root, encoding="unicode", xml_declaration=True)
-                app.UpdatePageContent(updated, datetime(1, 1, 1))
-                app.DeleteHierarchy(pid, datetime(1, 1, 1))
+                app.UpdatePageContent(updated, 0)
+                app.DeleteHierarchy(pid, 0)
                 moved += 1
         except Exception as exc:
             return self.error(f"Failed to merge sections: {exc}")
@@ -998,7 +996,7 @@ class OneNoteAdapter(BaseAdapter):
             root = ET.fromstring(xml_str)
             root.set("pageLevel", str(level_int))
             updated = ET.tostring(root, encoding="unicode", xml_declaration=True)
-            app.UpdatePageContent(updated, datetime(1, 1, 1))
+            app.UpdatePageContent(updated, 0)
         except Exception as exc:
             return self.error(f"Failed to set page level: {exc}")
         return self.ok({"page_id": pid, "level": level_int, "status": "updated"})
@@ -1257,10 +1255,10 @@ class OneNoteAdapter(BaseAdapter):
                 page_xml = app.GetPageContent(pid, 0)
                 new_pid = app.CreateNewPage(target_id, 0)
                 page_root = ET.fromstring(page_xml)
-                page_root.set("ID", new_pid)
+                _prepare_page_for_copy(page_root, new_pid)
                 updated = ET.tostring(page_root, encoding="unicode", xml_declaration=True)
-                app.UpdatePageContent(updated, datetime(1, 1, 1))
-                app.DeleteHierarchy(pid, datetime(1, 1, 1))
+                app.UpdatePageContent(updated, 0)
+                app.DeleteHierarchy(pid, 0)
                 moved += 1
         except Exception as exc:
             return self.error(f"Bulk move failed: {exc}")
@@ -1295,7 +1293,7 @@ class OneNoteAdapter(BaseAdapter):
                     continue
                 pages_found.append({"id": pid, "name": pname})
                 if not is_dry:
-                    app.DeleteHierarchy(pid, datetime(1, 1, 1))
+                    app.DeleteHierarchy(pid, 0)
         except Exception as exc:
             return self.error(f"Bulk delete failed: {exc}")
         return self.ok({
@@ -1610,6 +1608,22 @@ def _tree_section(sec: ET.Element, ns: str, depth: int) -> dict:
             "level": page.get("pageLevel", "1"),
         })
     return node
+
+
+def _prepare_page_for_copy(root: ET.Element, new_page_id: str) -> None:
+    """Prepare page XML for copying to a new page.
+
+    Sets the new page ID and strips objectID/objectID attributes from all
+    child elements so OneNote regenerates them for the new page context.
+    Also removes dateTime/lastModifiedTime to avoid conflicts.
+    """
+    root.set("ID", new_page_id)
+    # Remove attributes that bind content to the old page
+    strip_attrs = {"objectID", "lastModifiedTime", "creationTime"}
+    for elem in root.iter():
+        for attr in strip_attrs:
+            if attr in elem.attrib:
+                del elem.attrib[attr]
 
 
 def _find_attr_recursive(root: ET.Element, target_id: str, attr: str) -> str | None:
