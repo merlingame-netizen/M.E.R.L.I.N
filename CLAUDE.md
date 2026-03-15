@@ -265,6 +265,26 @@ python tools/cli.py onenote special-locations                                  #
 python tools/cli.py onenote open-notebook --path "C:/path/to/notebook.one"     # Open notebook
 python tools/cli.py onenote close-notebook --notebook "Old Notebook"           # Close notebook
 python tools/cli.py onenote page-info --title "Meeting Notes"                  # Page metadata
+# Move & Copy
+python tools/cli.py onenote move-page --title "Old Note" --target_section "Archive"
+python tools/cli.py onenote copy-page --title "Template" --target_section "Projects"
+python tools/cli.py onenote move-section --section "Done" --target_notebook "Archive NB"
+python tools/cli.py onenote merge-sections --source "Draft" --target "Final"
+python tools/cli.py onenote set-page-level --title "Sub Page" --level 2          # Indent 1-3
+python tools/cli.py onenote reorder-pages --title "Important" --position 0       # Move to top
+# Extraction
+python tools/cli.py onenote extract-tags --section "BACKLOG" --tag_type pending  # all/completed/pending
+python tools/cli.py onenote extract-tables --title "Meeting Notes"               # Tables as JSON
+python tools/cli.py onenote extract-links --title "Resources"                    # All hyperlinks
+python tools/cli.py onenote extract-text --section "COURS" --output ~/Downloads/cours.txt
+# Bulk Operations
+python tools/cli.py onenote bulk-move --query "draft" --target_section "Archive"
+python tools/cli.py onenote bulk-delete --query "temp" --dry_run true            # Preview first
+python tools/cli.py onenote bulk-export --section "COURS" --format pdf --output_dir ~/Downloads/export
+# Stats & Analysis
+python tools/cli.py onenote section-stats --section "ORANGE"                     # Words, chars, dates
+python tools/cli.py onenote notebook-stats                                       # All notebooks overview
+python tools/cli.py onenote duplicate-finder                                     # Find duplicate titles
 
 # Browser (Playwright / Edge)
 python tools/cli.py browser status              # Verifier Playwright installe

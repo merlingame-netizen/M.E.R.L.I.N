@@ -130,7 +130,8 @@ class OneNoteAdapter(BaseAdapter):
     Full-featured headless OneNote CLI via COM (comtypes vtable binding).
 
     Requires: OneNote desktop running + comtypes.
-    24 actions: hierarchy, CRUD, search, export, sync, navigation, links.
+    40 actions: hierarchy, CRUD, move/copy, search, export, extract,
+    bulk ops, stats, sync, navigation, links.
     """
 
     def __init__(self) -> None:
@@ -174,6 +175,26 @@ class OneNoteAdapter(BaseAdapter):
             "close-notebook":   "Close notebook (kwargs: notebook)",
             # Metadata
             "page-info":        "Page metadata (kwargs: page_id/title)",
+            # ── Wave 2: Move & Copy ──────────────────────────────────────
+            "move-page":        "Move page to another section (kwargs: page_id/title, target_section)",
+            "copy-page":        "Copy page to another section (kwargs: page_id/title, target_section)",
+            "move-section":     "Move section to another notebook (kwargs: section, target_notebook)",
+            "merge-sections":   "Merge source section into target (kwargs: source, target)",
+            "set-page-level":   "Set page indent level 1-3 (kwargs: page_id/title, level)",
+            "reorder-pages":    "Move a page to position N in its section (kwargs: page_id/title, position)",
+            # ── Wave 3: Extraction ───────────────────────────────────────
+            "extract-tags":     "Extract tags/to-dos from page(s) (kwargs: page_id/title/section, tag_type=all)",
+            "extract-tables":   "Extract tables as JSON (kwargs: page_id/title)",
+            "extract-links":    "Extract hyperlinks from a page (kwargs: page_id/title)",
+            "extract-text":     "Extract clean plain-text from page(s) (kwargs: section, output)",
+            # ── Wave 4: Bulk Operations ──────────────────────────────────
+            "bulk-move":        "Move pages matching query to section (kwargs: query, target_section, notebook=None)",
+            "bulk-delete":      "Delete pages matching query (kwargs: query, notebook=None, dry_run=true)",
+            "bulk-export":      "Export all pages in section (kwargs: section, format=pdf, output_dir)",
+            # ── Wave 5: Stats & Analysis ─────────────────────────────────
+            "section-stats":    "Section statistics (kwargs: section)",
+            "notebook-stats":   "Notebook statistics (kwargs: notebook=None)",
+            "duplicate-finder": "Find pages with similar/identical titles (kwargs: notebook=None)",
         }
 
     # ── Dispatch ─────────────────────────────────────────────────────────
@@ -204,6 +225,26 @@ class OneNoteAdapter(BaseAdapter):
             "open-notebook":    self._open_notebook,
             "close-notebook":   self._close_notebook,
             "page-info":        self._page_info,
+            # Wave 2: Move & Copy
+            "move-page":        self._move_page,
+            "copy-page":        self._copy_page,
+            "move-section":     self._move_section,
+            "merge-sections":   self._merge_sections,
+            "set-page-level":   self._set_page_level,
+            "reorder-pages":    self._reorder_pages,
+            # Wave 3: Extraction
+            "extract-tags":     self._extract_tags,
+            "extract-tables":   self._extract_tables,
+            "extract-links":    self._extract_links,
+            "extract-text":     self._extract_text,
+            # Wave 4: Bulk Operations
+            "bulk-move":        self._bulk_move,
+            "bulk-delete":      self._bulk_delete,
+            "bulk-export":      self._bulk_export,
+            # Wave 5: Stats & Analysis
+            "section-stats":    self._section_stats,
+            "notebook-stats":   self._notebook_stats,
+            "duplicate-finder": self._duplicate_finder,
         }
         handler = dispatch.get(action)
         if handler is None:
@@ -797,6 +838,630 @@ class OneNoteAdapter(BaseAdapter):
             return self.error(f"Failed to get page info: {exc}")
         return self.ok(info)
 
+    # ── Wave 2: Move & Copy ──────────────────────────────────────────────
+
+    def _move_page(self, page_id: str = "", title: str = "",
+                   target_section: str = "", **_) -> dict:
+        if not page_id and not title:
+            return self.error("Provide page_id or title")
+        if not target_section:
+            return self.error("Missing required argument: target_section")
+        app, err = self._connect()
+        if err:
+            return err
+        self.log(f"Moving page '{page_id or title}' to section: {target_section}")
+        try:
+            pid = page_id or _resolve_page_id(app, title)
+            if not pid:
+                return self.error(f"Page not found: {title}")
+            target_id = _resolve_section_id(app, target_section)
+            if not target_id:
+                return self.error(f"Target section not found: {target_section}")
+            # Read page content, create in target, delete from source
+            xml_str = app.GetPageContent(pid, 0)
+            new_page_id = app.CreateNewPage(target_id, 0)
+            root = ET.fromstring(xml_str)
+            root.set("ID", new_page_id)
+            updated_xml = ET.tostring(root, encoding="unicode", xml_declaration=True)
+            app.UpdatePageContent(updated_xml, datetime(1, 1, 1))
+            app.DeleteHierarchy(pid, datetime(1, 1, 1))
+        except Exception as exc:
+            return self.error(f"Failed to move page: {exc}")
+        return self.ok({
+            "old_page_id": pid,
+            "new_page_id": new_page_id,
+            "target_section": target_section,
+            "status": "moved",
+        })
+
+    def _copy_page(self, page_id: str = "", title: str = "",
+                   target_section: str = "", **_) -> dict:
+        if not page_id and not title:
+            return self.error("Provide page_id or title")
+        if not target_section:
+            return self.error("Missing required argument: target_section")
+        app, err = self._connect()
+        if err:
+            return err
+        self.log(f"Copying page '{page_id or title}' to section: {target_section}")
+        try:
+            pid = page_id or _resolve_page_id(app, title)
+            if not pid:
+                return self.error(f"Page not found: {title}")
+            target_id = _resolve_section_id(app, target_section)
+            if not target_id:
+                return self.error(f"Target section not found: {target_section}")
+            xml_str = app.GetPageContent(pid, 0)
+            new_page_id = app.CreateNewPage(target_id, 0)
+            root = ET.fromstring(xml_str)
+            root.set("ID", new_page_id)
+            updated_xml = ET.tostring(root, encoding="unicode", xml_declaration=True)
+            app.UpdatePageContent(updated_xml, datetime(1, 1, 1))
+        except Exception as exc:
+            return self.error(f"Failed to copy page: {exc}")
+        return self.ok({
+            "source_page_id": pid,
+            "new_page_id": new_page_id,
+            "target_section": target_section,
+            "status": "copied",
+        })
+
+    def _move_section(self, section: str = "", target_notebook: str = "", **_) -> dict:
+        if not section:
+            return self.error("Missing required argument: section")
+        if not target_notebook:
+            return self.error("Missing required argument: target_notebook")
+        app, err = self._connect()
+        if err:
+            return err
+        self.log(f"Moving section '{section}' to notebook: {target_notebook}")
+        try:
+            sec_id = _resolve_section_id(app, section)
+            if not sec_id:
+                return self.error(f"Section not found: {section}")
+            target_nb_id = _resolve_notebook_id(app, target_notebook)
+            if not target_nb_id:
+                return self.error(f"Target notebook not found: {target_notebook}")
+            # Get section path, then OpenHierarchy under the target notebook
+            xml_str = app.GetHierarchy(sec_id, _HS_SELF)
+            root = ET.fromstring(xml_str)
+            sec_path = _find_attr_recursive(root, sec_id, "path")
+            if not sec_path:
+                return self.error("Cannot determine section file path")
+            # Close and reopen under new parent
+            new_id = app.OpenHierarchy(sec_path, target_nb_id, 3)
+        except Exception as exc:
+            return self.error(f"Failed to move section: {exc}")
+        return self.ok({
+            "section": section,
+            "new_section_id": new_id,
+            "target_notebook": target_notebook,
+            "status": "moved",
+        })
+
+    def _merge_sections(self, source: str = "", target: str = "", **_) -> dict:
+        if not source or not target:
+            return self.error("Provide both source and target section names")
+        app, err = self._connect()
+        if err:
+            return err
+        self.log(f"Merging section '{source}' into '{target}'")
+        try:
+            src_id = _resolve_section_id(app, source)
+            tgt_id = _resolve_section_id(app, target)
+            if not src_id:
+                return self.error(f"Source section not found: {source}")
+            if not tgt_id:
+                return self.error(f"Target section not found: {target}")
+            # Get all pages from source
+            xml_str = app.GetHierarchy(src_id, _HS_PAGES)
+            root = ET.fromstring(xml_str)
+            ns = _ns(root)
+            moved = 0
+            for page in root.iter(f"{ns}Page"):
+                pid = page.get("ID", "")
+                if not pid:
+                    continue
+                page_xml = app.GetPageContent(pid, 0)
+                new_pid = app.CreateNewPage(tgt_id, 0)
+                page_root = ET.fromstring(page_xml)
+                page_root.set("ID", new_pid)
+                updated = ET.tostring(page_root, encoding="unicode", xml_declaration=True)
+                app.UpdatePageContent(updated, datetime(1, 1, 1))
+                app.DeleteHierarchy(pid, datetime(1, 1, 1))
+                moved += 1
+        except Exception as exc:
+            return self.error(f"Failed to merge sections: {exc}")
+        return self.ok({
+            "source": source,
+            "target": target,
+            "pages_moved": moved,
+            "status": "merged",
+        })
+
+    def _set_page_level(self, page_id: str = "", title: str = "",
+                        level: int | str = 1, **_) -> dict:
+        if not page_id and not title:
+            return self.error("Provide page_id or title")
+        level_int = int(level)
+        if level_int not in (1, 2, 3):
+            return self.error("Level must be 1, 2, or 3")
+        app, err = self._connect()
+        if err:
+            return err
+        self.log(f"Setting page level to {level_int}: {page_id or title}")
+        try:
+            pid = page_id or _resolve_page_id(app, title)
+            if not pid:
+                return self.error(f"Page not found: {title}")
+            xml_str = app.GetPageContent(pid, 0)
+            root = ET.fromstring(xml_str)
+            root.set("pageLevel", str(level_int))
+            updated = ET.tostring(root, encoding="unicode", xml_declaration=True)
+            app.UpdatePageContent(updated, datetime(1, 1, 1))
+        except Exception as exc:
+            return self.error(f"Failed to set page level: {exc}")
+        return self.ok({"page_id": pid, "level": level_int, "status": "updated"})
+
+    def _reorder_pages(self, page_id: str = "", title: str = "",
+                       position: int | str = 0, **_) -> dict:
+        """Move a page to a specific position within its section."""
+        if not page_id and not title:
+            return self.error("Provide page_id or title")
+        pos = int(position)
+        app, err = self._connect()
+        if err:
+            return err
+        self.log(f"Reordering page to position {pos}: {page_id or title}")
+        try:
+            pid = page_id or _resolve_page_id(app, title)
+            if not pid:
+                return self.error(f"Page not found: {title}")
+            # Find the section containing this page
+            sec_id = _find_section_for_page(app, pid)
+            if not sec_id:
+                return self.error("Cannot determine parent section for page")
+            # Get section hierarchy with pages
+            xml_str = app.GetHierarchy(sec_id, _HS_PAGES)
+            root = ET.fromstring(xml_str)
+            ns = _ns(root)
+            # Find the section element and its pages
+            sec_elem = root if root.get("ID") == sec_id else None
+            if sec_elem is None:
+                for elem in root.iter():
+                    if elem.get("ID") == sec_id:
+                        sec_elem = elem
+                        break
+            if sec_elem is None:
+                return self.error("Cannot locate section element")
+            pages = list(sec_elem.findall(f"{ns}Page"))
+            page_ids = [p.get("ID") for p in pages]
+            if pid not in page_ids:
+                return self.error("Page not found in section")
+            old_pos = page_ids.index(pid)
+            target_page = pages[old_pos]
+            # Remove and reinsert at new position
+            sec_elem.remove(target_page)
+            clamped_pos = max(0, min(pos, len(pages) - 1))
+            sec_elem.insert(clamped_pos, target_page)
+            updated = ET.tostring(root, encoding="unicode", xml_declaration=True)
+            app.UpdateHierarchy(updated)
+        except Exception as exc:
+            return self.error(f"Failed to reorder page: {exc}")
+        return self.ok({
+            "page_id": pid,
+            "old_position": old_pos,
+            "new_position": clamped_pos,
+            "status": "reordered",
+        })
+
+    # ── Wave 3: Extraction ───────────────────────────────────────────────
+
+    def _extract_tags(self, page_id: str = "", title: str = "",
+                      section: str = "", tag_type: str = "all", **_) -> dict:
+        app, err = self._connect()
+        if err:
+            return err
+        self.log(f"Extracting tags (type={tag_type})")
+        try:
+            page_ids = []
+            if page_id or title:
+                pid = page_id or _resolve_page_id(app, title)
+                if not pid:
+                    return self.error(f"Page not found: {title}")
+                page_ids = [pid]
+            elif section:
+                sec_id = _resolve_section_id(app, section)
+                if not sec_id:
+                    return self.error(f"Section not found: {section}")
+                xml_str = app.GetHierarchy(sec_id, _HS_PAGES)
+                root = ET.fromstring(xml_str)
+                ns = _ns(root)
+                page_ids = [p.get("ID") for p in root.iter(f"{ns}Page") if p.get("ID")]
+            else:
+                return self.error("Provide page_id, title, or section")
+
+            all_tags: list[dict] = []
+            for pid in page_ids:
+                page_xml = app.GetPageContent(pid, 0)
+                page_root = ET.fromstring(page_xml)
+                ns = _ns(page_root)
+                page_name = page_root.get("name", "")
+                for tag in page_root.iter(f"{ns}Tag"):
+                    tag_info = {
+                        "page_id": pid,
+                        "page_name": page_name,
+                        "index": tag.get("index", ""),
+                        "completed": tag.get("completed", "false") == "true",
+                        "creation_date": tag.get("creationDate", ""),
+                    }
+                    # Get text from parent OE element
+                    parent_oe = tag.getparent() if hasattr(tag, "getparent") else None
+                    if parent_oe is None:
+                        # ElementTree doesn't have getparent — walk manually
+                        tag_info["text"] = _find_tag_text(page_root, ns, tag)
+                    else:
+                        texts = [t.strip() for t in parent_oe.itertext() if t.strip()]
+                        tag_info["text"] = " ".join(texts)
+                    all_tags.append(tag_info)
+
+            if tag_type != "all":
+                if tag_type == "completed":
+                    all_tags = [t for t in all_tags if t["completed"]]
+                elif tag_type == "pending":
+                    all_tags = [t for t in all_tags if not t["completed"]]
+        except Exception as exc:
+            return self.error(f"Failed to extract tags: {exc}")
+        return self.ok({"tags": all_tags, "count": len(all_tags)})
+
+    def _extract_tables(self, page_id: str = "", title: str = "", **_) -> dict:
+        if not page_id and not title:
+            return self.error("Provide page_id or title")
+        app, err = self._connect()
+        if err:
+            return err
+        self.log(f"Extracting tables from: {page_id or title}")
+        try:
+            pid = page_id or _resolve_page_id(app, title)
+            if not pid:
+                return self.error(f"Page not found: {title}")
+            xml_str = app.GetPageContent(pid, 0)
+            root = ET.fromstring(xml_str)
+            ns = _ns(root)
+            tables: list[dict] = []
+            for i, table in enumerate(root.iter(f"{ns}Table")):
+                rows_data: list[list[str]] = []
+                for row in table.findall(f"{ns}Row"):
+                    cells: list[str] = []
+                    for cell in row.findall(f"{ns}Cell"):
+                        cell_texts = [t.strip() for t in cell.itertext() if t.strip()]
+                        cells.append(" ".join(cell_texts))
+                    rows_data.append(cells)
+                tables.append({
+                    "index": i,
+                    "rows": len(rows_data),
+                    "cols": max((len(r) for r in rows_data), default=0),
+                    "data": rows_data,
+                })
+        except Exception as exc:
+            return self.error(f"Failed to extract tables: {exc}")
+        return self.ok({"page_id": pid, "tables": tables, "count": len(tables)})
+
+    def _extract_links(self, page_id: str = "", title: str = "", **_) -> dict:
+        if not page_id and not title:
+            return self.error("Provide page_id or title")
+        app, err = self._connect()
+        if err:
+            return err
+        self.log(f"Extracting links from: {page_id or title}")
+        try:
+            pid = page_id or _resolve_page_id(app, title)
+            if not pid:
+                return self.error(f"Page not found: {title}")
+            xml_str = app.GetPageContent(pid, 0)
+            root = ET.fromstring(xml_str)
+            ns = _ns(root)
+            links: list[dict] = []
+            # OneNote stores links as <a href="..."> inside CDATA in <one:T>
+            import re
+            href_re = re.compile(r'<a\s[^>]*href="([^"]*)"[^>]*>(.*?)</a>', re.IGNORECASE)
+            for t_elem in root.iter(f"{ns}T"):
+                text = t_elem.text or ""
+                for match in href_re.finditer(text):
+                    links.append({
+                        "url": match.group(1),
+                        "text": re.sub(r"<[^>]+>", "", match.group(2)),
+                    })
+        except Exception as exc:
+            return self.error(f"Failed to extract links: {exc}")
+        return self.ok({"page_id": pid, "links": links, "count": len(links)})
+
+    def _extract_text(self, section: str = "", output: str = "", **_) -> dict:
+        if not section:
+            return self.error("Missing required argument: section")
+        app, err = self._connect()
+        if err:
+            return err
+        self.log(f"Extracting plain text from section: {section}")
+        try:
+            sec_id = _resolve_section_id(app, section)
+            if not sec_id:
+                return self.error(f"Section not found: {section}")
+            xml_str = app.GetHierarchy(sec_id, _HS_PAGES)
+            root = ET.fromstring(xml_str)
+            ns = _ns(root)
+            all_text_parts: list[dict] = []
+            for page in root.iter(f"{ns}Page"):
+                pid = page.get("ID", "")
+                page_name = page.get("name", "")
+                if not pid:
+                    continue
+                page_xml = app.GetPageContent(pid, 0)
+                page_root = ET.fromstring(page_xml)
+                texts = [t.strip() for t in page_root.itertext() if t.strip()]
+                all_text_parts.append({
+                    "page_id": pid,
+                    "page_name": page_name,
+                    "text": "\n".join(texts),
+                })
+            if output:
+                out_path = str(Path(output).resolve())
+                combined = "\n\n".join(
+                    f"=== {p['page_name']} ===\n{p['text']}" for p in all_text_parts
+                )
+                Path(out_path).write_text(combined, encoding="utf-8")
+        except Exception as exc:
+            return self.error(f"Failed to extract text: {exc}")
+        result: dict[str, Any] = {
+            "section": section,
+            "pages": len(all_text_parts),
+            "total_chars": sum(len(p["text"]) for p in all_text_parts),
+        }
+        if output:
+            result["output"] = out_path
+        else:
+            result["data"] = all_text_parts
+        return self.ok(result)
+
+    # ── Wave 4: Bulk Operations ──────────────────────────────────────────
+
+    def _bulk_move(self, query: str = "", target_section: str = "",
+                   notebook: str | None = None, **_) -> dict:
+        if not query:
+            return self.error("Missing required argument: query")
+        if not target_section:
+            return self.error("Missing required argument: target_section")
+        app, err = self._connect()
+        if err:
+            return err
+        self.log(f"Bulk moving pages matching '{query}' to: {target_section}")
+        try:
+            target_id = _resolve_section_id(app, target_section)
+            if not target_id:
+                return self.error(f"Target section not found: {target_section}")
+            start = ""
+            if notebook:
+                start = _resolve_notebook_id(app, notebook)
+                if not start:
+                    return self.error(f"Notebook not found: {notebook}")
+            result_xml = app.FindPages(start, query, False)
+            if not result_xml:
+                return self.ok({"query": query, "moved": 0, "status": "no_matches"})
+            root = ET.fromstring(result_xml)
+            ns = _ns(root)
+            moved = 0
+            for page in root.iter(f"{ns}Page"):
+                pid = page.get("ID", "")
+                if not pid:
+                    continue
+                page_xml = app.GetPageContent(pid, 0)
+                new_pid = app.CreateNewPage(target_id, 0)
+                page_root = ET.fromstring(page_xml)
+                page_root.set("ID", new_pid)
+                updated = ET.tostring(page_root, encoding="unicode", xml_declaration=True)
+                app.UpdatePageContent(updated, datetime(1, 1, 1))
+                app.DeleteHierarchy(pid, datetime(1, 1, 1))
+                moved += 1
+        except Exception as exc:
+            return self.error(f"Bulk move failed: {exc}")
+        return self.ok({"query": query, "target_section": target_section, "moved": moved})
+
+    def _bulk_delete(self, query: str = "", notebook: str | None = None,
+                     dry_run: str | bool = True, **_) -> dict:
+        if not query:
+            return self.error("Missing required argument: query")
+        is_dry = str(dry_run).lower() in ("true", "1", "yes")
+        app, err = self._connect()
+        if err:
+            return err
+        mode = "DRY RUN" if is_dry else "LIVE"
+        self.log(f"Bulk delete [{mode}] pages matching: {query}")
+        try:
+            start = ""
+            if notebook:
+                start = _resolve_notebook_id(app, notebook)
+                if not start:
+                    return self.error(f"Notebook not found: {notebook}")
+            result_xml = app.FindPages(start, query, False)
+            if not result_xml:
+                return self.ok({"query": query, "deleted": 0, "status": "no_matches"})
+            root = ET.fromstring(result_xml)
+            ns = _ns(root)
+            pages_found: list[dict] = []
+            for page in root.iter(f"{ns}Page"):
+                pid = page.get("ID", "")
+                pname = page.get("name", "")
+                if not pid:
+                    continue
+                pages_found.append({"id": pid, "name": pname})
+                if not is_dry:
+                    app.DeleteHierarchy(pid, datetime(1, 1, 1))
+        except Exception as exc:
+            return self.error(f"Bulk delete failed: {exc}")
+        return self.ok({
+            "query": query,
+            "dry_run": is_dry,
+            "pages": pages_found,
+            "count": len(pages_found),
+            "status": "preview" if is_dry else "deleted",
+        })
+
+    def _bulk_export(self, section: str = "", format: str = "pdf",  # noqa: A002
+                     output_dir: str = "", **_) -> dict:
+        if not section:
+            return self.error("Missing required argument: section")
+        fmt = format.lower()
+        if fmt not in _PUBLISH_FORMATS:
+            return self.error(f"Unknown format: {format}. Valid: {', '.join(_PUBLISH_FORMATS)}")
+        app, err = self._connect()
+        if err:
+            return err
+        out_dir = Path(output_dir or Path.home() / "Downloads" / "onenote_export").resolve()
+        out_dir.mkdir(parents=True, exist_ok=True)
+        self.log(f"Bulk exporting section '{section}' as {fmt} to {out_dir}")
+        try:
+            sec_id = _resolve_section_id(app, section)
+            if not sec_id:
+                return self.error(f"Section not found: {section}")
+            xml_str = app.GetHierarchy(sec_id, _HS_PAGES)
+            root = ET.fromstring(xml_str)
+            ns = _ns(root)
+            ext = _FORMAT_EXTENSIONS.get(fmt, f".{fmt}")
+            exported: list[dict] = []
+            for page in root.iter(f"{ns}Page"):
+                pid = page.get("ID", "")
+                pname = page.get("name", "Untitled")
+                if not pid:
+                    continue
+                safe_name = "".join(c if c.isalnum() or c in " _-" else "_" for c in pname)
+                file_path = str(out_dir / f"{safe_name}{ext}")
+                app.Publish(pid, file_path, _PUBLISH_FORMATS[fmt], "")
+                exported.append({"page": pname, "file": file_path})
+        except Exception as exc:
+            return self.error(f"Bulk export failed: {exc}")
+        return self.ok({
+            "section": section,
+            "format": fmt,
+            "output_dir": str(out_dir),
+            "exported": exported,
+            "count": len(exported),
+        })
+
+    # ── Wave 5: Stats & Analysis ─────────────────────────────────────────
+
+    def _section_stats(self, section: str = "", **_) -> dict:
+        if not section:
+            return self.error("Missing required argument: section")
+        app, err = self._connect()
+        if err:
+            return err
+        self.log(f"Computing stats for section: {section}")
+        try:
+            sec_id = _resolve_section_id(app, section)
+            if not sec_id:
+                return self.error(f"Section not found: {section}")
+            xml_str = app.GetHierarchy(sec_id, _HS_PAGES)
+            root = ET.fromstring(xml_str)
+            ns = _ns(root)
+            pages = list(root.iter(f"{ns}Page"))
+            total_words = 0
+            total_chars = 0
+            dates: list[str] = []
+            for page in pages:
+                pid = page.get("ID", "")
+                if not pid:
+                    continue
+                dt = page.get("lastModifiedTime", page.get("dateTime", ""))
+                if dt:
+                    dates.append(dt)
+                page_xml = app.GetPageContent(pid, 0)
+                page_root = ET.fromstring(page_xml)
+                texts = [t.strip() for t in page_root.itertext() if t.strip()]
+                total_words += sum(len(t.split()) for t in texts)
+                total_chars += sum(len(t) for t in texts)
+            dates.sort()
+        except Exception as exc:
+            return self.error(f"Failed to compute section stats: {exc}")
+        return self.ok({
+            "section": section,
+            "page_count": len(pages),
+            "total_words": total_words,
+            "total_chars": total_chars,
+            "oldest_modified": dates[0] if dates else None,
+            "newest_modified": dates[-1] if dates else None,
+        })
+
+    def _notebook_stats(self, notebook: str | None = None, **_) -> dict:
+        app, err = self._connect()
+        if err:
+            return err
+        self.log(f"Computing notebook stats (notebook={notebook}).")
+        try:
+            start = ""
+            if notebook:
+                start = _resolve_notebook_id(app, notebook)
+                if not start:
+                    return self.error(f"Notebook not found: {notebook}")
+            xml_str = app.GetHierarchy(start, _HS_PAGES)
+            root = ET.fromstring(xml_str)
+            ns = _ns(root)
+            notebooks = list(root.findall(f"{ns}Notebook")) if not start else [root]
+            stats: list[dict] = []
+            for nb in (notebooks if notebooks else [root]):
+                nb_name = nb.get("name", "Unknown")
+                sections = list(nb.iter(f"{ns}Section"))
+                section_groups = [
+                    sg for sg in nb.iter(f"{ns}SectionGroup")
+                    if sg.get("isRecycleBin", "false") != "true"
+                ]
+                pages = list(nb.iter(f"{ns}Page"))
+                stats.append({
+                    "notebook": nb_name,
+                    "section_groups": len(section_groups),
+                    "sections": len(sections),
+                    "pages": len(pages),
+                })
+        except Exception as exc:
+            return self.error(f"Failed to compute notebook stats: {exc}")
+        return self.ok({"notebooks": stats, "count": len(stats)})
+
+    def _duplicate_finder(self, notebook: str | None = None, **_) -> dict:
+        app, err = self._connect()
+        if err:
+            return err
+        self.log("Scanning for duplicate page titles.")
+        try:
+            start = ""
+            if notebook:
+                start = _resolve_notebook_id(app, notebook)
+                if not start:
+                    return self.error(f"Notebook not found: {notebook}")
+            xml_str = app.GetHierarchy(start, _HS_PAGES)
+            root = ET.fromstring(xml_str)
+            ns = _ns(root)
+            title_map: dict[str, list[dict]] = {}
+            for page in root.iter(f"{ns}Page"):
+                name = page.get("name", "").strip()
+                pid = page.get("ID", "")
+                if not name or not pid:
+                    continue
+                key = name.lower()
+                if key not in title_map:
+                    title_map[key] = []
+                title_map[key].append({
+                    "id": pid,
+                    "name": name,
+                    "last_modified": page.get("lastModifiedTime", ""),
+                })
+            duplicates = {k: v for k, v in title_map.items() if len(v) > 1}
+        except Exception as exc:
+            return self.error(f"Duplicate scan failed: {exc}")
+        return self.ok({
+            "duplicates": duplicates,
+            "duplicate_groups": len(duplicates),
+            "total_duplicate_pages": sum(len(v) for v in duplicates.values()),
+        })
+
 
 # ── Private helpers ──────────────────────────────────────────────────────────
 
@@ -945,3 +1610,37 @@ def _tree_section(sec: ET.Element, ns: str, depth: int) -> dict:
             "level": page.get("pageLevel", "1"),
         })
     return node
+
+
+def _find_attr_recursive(root: ET.Element, target_id: str, attr: str) -> str | None:
+    """Walk tree to find an element by ID and return a specific attribute."""
+    for elem in root.iter():
+        if elem.get("ID") == target_id:
+            return elem.get(attr)
+    return None
+
+
+def _find_section_for_page(app: Any, page_id: str) -> str | None:
+    """Find the section ID that contains a given page."""
+    try:
+        xml_str = app.GetHierarchy("", _HS_PAGES)
+        root = ET.fromstring(xml_str)
+        ns = _ns(root)
+        for sec in root.iter(f"{ns}Section"):
+            for page in sec.findall(f"{ns}Page"):
+                if page.get("ID") == page_id:
+                    return sec.get("ID")
+    except Exception:
+        pass
+    return None
+
+
+def _find_tag_text(page_root: ET.Element, ns: str, tag_elem: ET.Element) -> str:
+    """Find text associated with a Tag element (walk parent OE)."""
+    # Walk through OE elements to find one containing this tag
+    for oe in page_root.iter(f"{ns}OE"):
+        for child in oe:
+            if child is tag_elem:
+                texts = [t.strip() for t in oe.itertext() if t.strip()]
+                return " ".join(texts)
+    return ""
