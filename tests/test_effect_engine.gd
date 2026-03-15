@@ -413,8 +413,38 @@ func test_multiplier_score_0() -> bool:
 
 func test_multiplier_score_100() -> bool:
 	var m: float = EffectEngine.get_multiplier(100)
-	if m < 1.0:
-		push_error("Score 100 multiplier should be >= 1.0: %f" % m)
+	if m != 1.5:
+		push_error("Score 100 multiplier should be 1.5 (reussite_critique), got %f" % m)
+		return false
+	return true
+
+
+func test_multiplier_boundaries() -> bool:
+	# echec_critique: 0-20
+	if EffectEngine.get_multiplier(20) != -1.5:
+		push_error("Score 20 should be echec_critique (-1.5)")
+		return false
+	# echec: 21-50
+	if EffectEngine.get_multiplier(21) != -1.0:
+		push_error("Score 21 should be echec (-1.0)")
+		return false
+	if EffectEngine.get_multiplier(50) != -1.0:
+		push_error("Score 50 should be echec (-1.0)")
+		return false
+	# reussite_partielle: 51-79
+	if EffectEngine.get_multiplier(51) != 0.5:
+		push_error("Score 51 should be reussite_partielle (0.5)")
+		return false
+	if EffectEngine.get_multiplier(79) != 0.5:
+		push_error("Score 79 should be reussite_partielle (0.5)")
+		return false
+	# reussite: 80-94
+	if EffectEngine.get_multiplier(80) != 1.0:
+		push_error("Score 80 should be reussite (1.0)")
+		return false
+	# reussite_critique: 95-100
+	if EffectEngine.get_multiplier(95) != 1.5:
+		push_error("Score 95 should be reussite_critique (1.5)")
 		return false
 	return true
 

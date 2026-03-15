@@ -55,14 +55,7 @@ func _run_file(path: String) -> void:
 		return
 
 	# Skip scripts that don't extend RefCounted (e.g. GUT tests extending Node/Control)
-	var base: Script = script
-	var is_refcounted := false
-	while base != null:
-		if base.get_instance_base_type() == &"RefCounted":
-			is_refcounted = true
-			break
-		base = base.get_base_script()
-	if not is_refcounted:
+	if not ClassDB.is_parent_class(script.get_instance_base_type(), &"RefCounted"):
 		return
 
 	var instance: RefCounted = script.new()
