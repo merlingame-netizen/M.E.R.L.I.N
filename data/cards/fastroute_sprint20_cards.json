@@ -1,0 +1,1739 @@
+[
+  {
+    "id": "s20_danger_01",
+    "text": "Un brouillard empoisonne s'eleve des marais. Des silhouettes tordues rampent sous la surface de l'eau noire, tendant leurs mains griffues vers quiconque s'approche trop pres.",
+    "biome": "marais_korrigans",
+    "faction": "korrigans",
+    "trust_tier": "T0",
+    "tags": ["danger", "balance"],
+    "options": [
+      {
+        "text": "Traverser le marais en retenant votre souffle",
+        "verb": "traverser",
+        "effects": [
+          {"type": "DAMAGE_LIFE", "value": -12},
+          {"type": "ADD_REPUTATION", "faction": "korrigans", "value": 8}
+        ]
+      },
+      {
+        "text": "Fuir vers les hauteurs avant que le brouillard ne vous atteigne",
+        "verb": "fuir",
+        "effects": [
+          {"type": "DAMAGE_LIFE", "value": -8},
+          {"type": "ADD_REPUTATION", "faction": "korrigans", "value": -10}
+        ]
+      },
+      {
+        "text": "Mediter pour resister aux visions toxiques du marais",
+        "verb": "mediter",
+        "effects": [
+          {"type": "DAMAGE_LIFE", "value": -10},
+          {"type": "ADD_REPUTATION", "faction": "druides", "value": 5}
+        ]
+      }
+    ]
+  },
+  {
+    "id": "s20_danger_02",
+    "text": "Au coeur de la foret, un chene ancestral saigne une seve noire. Ses racines pulsent comme des veines, et chaque battement fait trembler le sol. Quelque chose de terrible s'eveille.",
+    "biome": "foret_broceliande",
+    "faction": "druides",
+    "trust_tier": "T0",
+    "tags": ["danger", "balance"],
+    "options": [
+      {
+        "text": "Examiner les racines pour comprendre ce qui corrompt l'arbre",
+        "verb": "examiner",
+        "effects": [
+          {"type": "DAMAGE_LIFE", "value": -10},
+          {"type": "ADD_REPUTATION", "faction": "druides", "value": 6}
+        ]
+      },
+      {
+        "text": "Combattre la corruption en arrachant les racines malades",
+        "verb": "combattre",
+        "effects": [
+          {"type": "DAMAGE_LIFE", "value": -15},
+          {"type": "ADD_REPUTATION", "faction": "druides", "value": 10}
+        ]
+      },
+      {
+        "text": "Fuir avant que l'arbre ne vous emprisonne dans ses branches",
+        "verb": "fuir",
+        "effects": [
+          {"type": "DAMAGE_LIFE", "value": -8},
+          {"type": "ADD_REPUTATION", "faction": "druides", "value": -12}
+        ]
+      }
+    ]
+  },
+  {
+    "id": "s20_danger_03",
+    "text": "Un cercle de pierres brille d'une lueur malsaine. Des ombres dansent entre les menhirs, chacune portant le visage d'un voyageur perdu. Elles murmurent des promesses de pouvoir.",
+    "biome": "cercles_pierres",
+    "faction": "anciens",
+    "trust_tier": "T0",
+    "tags": ["danger", "balance"],
+    "options": [
+      {
+        "text": "Ecouter les murmures pour en comprendre le sens",
+        "verb": "ecouter",
+        "effects": [
+          {"type": "DAMAGE_LIFE", "value": -12},
+          {"type": "ADD_REPUTATION", "faction": "anciens", "value": 5}
+        ]
+      },
+      {
+        "text": "Resister mentalement a l'appel des ombres",
+        "verb": "resister mentalement",
+        "effects": [
+          {"type": "DAMAGE_LIFE", "value": -9},
+          {"type": "ADD_REPUTATION", "faction": "anciens", "value": -8}
+        ]
+      },
+      {
+        "text": "Accepter le pacte des ombres pour gagner leur faveur",
+        "verb": "accepter",
+        "effects": [
+          {"type": "DAMAGE_LIFE", "value": -14},
+          {"type": "ADD_REPUTATION", "faction": "anciens", "value": 12},
+          {"type": "ADD_REPUTATION", "faction": "druides", "value": -15}
+        ]
+      }
+    ]
+  },
+  {
+    "id": "s20_danger_04",
+    "text": "Les cotes sont battues par une tempete surnaturelle. Des vagues noires frappent les falaises et des eclairs verdatres revelent un navire fantome a l'horizon, qui s'approche inexorablement.",
+    "biome": "cotes_sauvages",
+    "faction": "niamh",
+    "trust_tier": "T0",
+    "tags": ["danger", "balance"],
+    "options": [
+      {
+        "text": "Resister physiquement a la tempete en vous ancrant aux rochers",
+        "verb": "resister physiquement",
+        "effects": [
+          {"type": "DAMAGE_LIFE", "value": -12},
+          {"type": "ADD_REPUTATION", "faction": "niamh", "value": 5}
+        ]
+      },
+      {
+        "text": "Courir vers l'interieur des terres pour echapper aux vagues",
+        "verb": "courir",
+        "effects": [
+          {"type": "DAMAGE_LIFE", "value": -8},
+          {"type": "ADD_REPUTATION", "faction": "niamh", "value": -12}
+        ]
+      },
+      {
+        "text": "Endurer la tempete en attendant qu'elle passe",
+        "verb": "endurer",
+        "effects": [
+          {"type": "DAMAGE_LIFE", "value": -11},
+          {"type": "ADD_REPUTATION", "faction": "ankou", "value": 4}
+        ]
+      }
+    ]
+  },
+  {
+    "id": "s20_danger_05",
+    "text": "Un dolmen fissure exhale une fumee acide. Des os anciens jonchent le sol autour, et les runes gravees dans la pierre pulsent d'un rouge sang. Le passage vers le monde des morts est entrouvert.",
+    "biome": "collines_dolmens",
+    "faction": "ankou",
+    "trust_tier": "T0",
+    "tags": ["danger", "balance"],
+    "options": [
+      {
+        "text": "Dechiffrer les runes pour comprendre le rituel en cours",
+        "verb": "dechiffrer",
+        "effects": [
+          {"type": "DAMAGE_LIFE", "value": -10},
+          {"type": "ADD_REPUTATION", "faction": "ankou", "value": 8}
+        ]
+      },
+      {
+        "text": "Forcer le dolmen a se refermer en poussant les pierres",
+        "verb": "forcer",
+        "effects": [
+          {"type": "DAMAGE_LIFE", "value": -13},
+          {"type": "ADD_REPUTATION", "faction": "ankou", "value": -10}
+        ]
+      },
+      {
+        "text": "Se concentrer pour ne pas etre aspire par le passage",
+        "verb": "se concentrer",
+        "effects": [
+          {"type": "DAMAGE_LIFE", "value": -9},
+          {"type": "ADD_REPUTATION", "faction": "anciens", "value": -5}
+        ]
+      }
+    ]
+  },
+  {
+    "id": "s20_danger_06",
+    "text": "Dans le village, une fontaine crache de l'eau rougeatre. Les villageois se sont barricades chez eux. Un cri inhumain resonne depuis le puits central, de plus en plus fort.",
+    "biome": "villages_celtes",
+    "faction": "anciens",
+    "trust_tier": "T0",
+    "tags": ["danger", "balance"],
+    "options": [
+      {
+        "text": "Scruter les profondeurs du puits pour identifier la menace",
+        "verb": "scruter",
+        "effects": [
+          {"type": "DAMAGE_LIFE", "value": -11},
+          {"type": "ADD_REPUTATION", "faction": "anciens", "value": 7}
+        ]
+      },
+      {
+        "text": "Se cacher avec les villageois en attendant que le cri cesse",
+        "verb": "se cacher",
+        "effects": [
+          {"type": "DAMAGE_LIFE", "value": -8},
+          {"type": "ADD_REPUTATION", "faction": "anciens", "value": -10}
+        ]
+      },
+      {
+        "text": "Combattre ce qui emerge du puits",
+        "verb": "combattre",
+        "effects": [
+          {"type": "DAMAGE_LIFE", "value": -14},
+          {"type": "ADD_REPUTATION", "faction": "anciens", "value": 8}
+        ]
+      }
+    ]
+  },
+  {
+    "id": "s20_danger_07",
+    "text": "Les landes sont couvertes de givre noir en plein ete. Chaque pas brise la croute glacee et libere des murmures d'ames oubliees. La bruyere a pris une teinte funebre.",
+    "biome": "landes_bruyere",
+    "faction": "ankou",
+    "trust_tier": "T0",
+    "tags": ["danger", "balance"],
+    "options": [
+      {
+        "text": "Suivre les murmures pour trouver leur source",
+        "verb": "suivre",
+        "effects": [
+          {"type": "DAMAGE_LIFE", "value": -13},
+          {"type": "ADD_REPUTATION", "faction": "ankou", "value": 10}
+        ]
+      },
+      {
+        "text": "Contourner la zone gelee par les cretes",
+        "verb": "contourner",
+        "effects": [
+          {"type": "DAMAGE_LIFE", "value": -8},
+          {"type": "ADD_REPUTATION", "faction": "ankou", "value": -8}
+        ]
+      },
+      {
+        "text": "Calmer les ames en chantonnant une berceuse ancienne",
+        "verb": "calmer",
+        "effects": [
+          {"type": "DAMAGE_LIFE", "value": -10},
+          {"type": "HEAL_LIFE", "value": 3},
+          {"type": "ADD_REPUTATION", "faction": "ankou", "value": 5}
+        ]
+      }
+    ]
+  },
+  {
+    "id": "s20_danger_08",
+    "text": "Une ile flottante apparait dans la brume, mais sa surface est couverte de ronces noires. Des oiseaux au plumage de cendres tournent en cercle au-dessus, poussant des cris de mise en garde.",
+    "biome": "iles_mystiques",
+    "faction": "niamh",
+    "trust_tier": "T0",
+    "tags": ["danger", "balance"],
+    "options": [
+      {
+        "text": "Escalader les ronces pour atteindre le sommet de l'ile",
+        "verb": "escalader",
+        "effects": [
+          {"type": "DAMAGE_LIFE", "value": -14},
+          {"type": "ADD_REPUTATION", "faction": "niamh", "value": 8}
+        ]
+      },
+      {
+        "text": "Observer l'ile depuis la rive sans s'y aventurer",
+        "verb": "observer",
+        "effects": [
+          {"type": "DAMAGE_LIFE", "value": -8},
+          {"type": "ADD_REPUTATION", "faction": "niamh", "value": -10}
+        ]
+      },
+      {
+        "text": "Flairer les vents pour deviner ce que l'ile dissimule",
+        "verb": "flairer",
+        "effects": [
+          {"type": "DAMAGE_LIFE", "value": -9},
+          {"type": "ADD_REPUTATION", "faction": "niamh", "value": -5}
+        ]
+      }
+    ]
+  },
+  {
+    "id": "s20_danger_09",
+    "text": "Le nemeton sacre a ete profane. Des symboles de sang couvrent les troncs et l'air vibre d'une magie tordue. Les druides ont fui, mais leur appel a l'aide resonne dans votre esprit.",
+    "biome": "foret_broceliande",
+    "faction": "druides",
+    "trust_tier": "T0",
+    "tags": ["danger", "balance"],
+    "options": [
+      {
+        "text": "Analyser les symboles pour identifier le profanateur",
+        "verb": "analyser",
+        "effects": [
+          {"type": "DAMAGE_LIFE", "value": -10},
+          {"type": "ADD_REPUTATION", "faction": "druides", "value": 8}
+        ]
+      },
+      {
+        "text": "Esquiver les pieges magiques en traversant le nemeton",
+        "verb": "esquiver",
+        "effects": [
+          {"type": "DAMAGE_LIFE", "value": -12},
+          {"type": "ADD_REPUTATION", "faction": "druides", "value": -5}
+        ]
+      },
+      {
+        "text": "Apaiser la magie corrompue par un rituel de purification",
+        "verb": "apaiser",
+        "effects": [
+          {"type": "DAMAGE_LIFE", "value": -11},
+          {"type": "ADD_REPUTATION", "faction": "druides", "value": 6},
+          {"type": "ADD_REPUTATION", "faction": "ankou", "value": -8}
+        ]
+      }
+    ]
+  },
+  {
+    "id": "s20_danger_10",
+    "text": "Un korrigan geant bloque le sentier, ses yeux brillant de malice cruelle. Il propose un jeu : deviner le nombre de pierres dans sa main. Mais ses doigts sont fermes comme des serres.",
+    "biome": "marais_korrigans",
+    "faction": "korrigans",
+    "trust_tier": "T0",
+    "tags": ["danger", "balance"],
+    "options": [
+      {
+        "text": "Deviner le nombre et accepter les consequences",
+        "verb": "deviner",
+        "effects": [
+          {"type": "DAMAGE_LIFE", "value": -12},
+          {"type": "ADD_REPUTATION", "faction": "korrigans", "value": 10}
+        ]
+      },
+      {
+        "text": "Negocier d'autres termes pour le jeu",
+        "verb": "negocier",
+        "effects": [
+          {"type": "DAMAGE_LIFE", "value": -9},
+          {"type": "ADD_REPUTATION", "faction": "korrigans", "value": -8}
+        ]
+      },
+      {
+        "text": "Refuser le jeu et affronter sa colere",
+        "verb": "refuser",
+        "effects": [
+          {"type": "DAMAGE_LIFE", "value": -14},
+          {"type": "ADD_REPUTATION", "faction": "korrigans", "value": -15}
+        ]
+      }
+    ]
+  },
+  {
+    "id": "s20_danger_11",
+    "text": "Les pierres dressees vibrent en resonance, emettant un son grave qui fait saigner les oreilles. Au centre du cercle, une fissure s'ouvre dans le sol, revelant un gouffre sans fond.",
+    "biome": "cercles_pierres",
+    "faction": "anciens",
+    "trust_tier": "T1",
+    "tags": ["danger", "balance"],
+    "options": [
+      {
+        "text": "Inspecter le bord du gouffre pour en mesurer la profondeur",
+        "verb": "inspecter",
+        "effects": [
+          {"type": "DAMAGE_LIFE", "value": -13},
+          {"type": "ADD_REPUTATION", "faction": "anciens", "value": 8}
+        ]
+      },
+      {
+        "text": "Fuir le cercle avant que la fissure ne s'elargisse",
+        "verb": "fuir",
+        "effects": [
+          {"type": "DAMAGE_LIFE", "value": -8},
+          {"type": "ADD_REPUTATION", "faction": "anciens", "value": -12}
+        ]
+      },
+      {
+        "text": "Endurer le son pour communiquer avec ce qui est en dessous",
+        "verb": "endurer",
+        "effects": [
+          {"type": "DAMAGE_LIFE", "value": -15},
+          {"type": "ADD_REPUTATION", "faction": "anciens", "value": 10},
+          {"type": "ADD_REPUTATION", "faction": "druides", "value": -10}
+        ]
+      }
+    ]
+  },
+  {
+    "id": "s20_danger_12",
+    "text": "Une meute de loups spectraux encercle le sentier. Leurs yeux sont des flammes bleues et leur souffle gele l'air. Ils ne chassent pas par faim mais par devoir ancien.",
+    "biome": "landes_bruyere",
+    "faction": "ankou",
+    "trust_tier": "T1",
+    "tags": ["danger", "balance"],
+    "options": [
+      {
+        "text": "Combattre le loup alpha pour briser la meute",
+        "verb": "combattre",
+        "effects": [
+          {"type": "DAMAGE_LIFE", "value": -15},
+          {"type": "ADD_REPUTATION", "faction": "ankou", "value": 10}
+        ]
+      },
+      {
+        "text": "Se faufiler entre les loups pendant qu'ils se regroupent",
+        "verb": "se faufiler",
+        "effects": [
+          {"type": "DAMAGE_LIFE", "value": -10},
+          {"type": "ADD_REPUTATION", "faction": "ankou", "value": -5}
+        ]
+      },
+      {
+        "text": "Apaiser les loups en s'agenouillant devant eux",
+        "verb": "apaiser",
+        "effects": [
+          {"type": "DAMAGE_LIFE", "value": -11},
+          {"type": "HEAL_LIFE", "value": 2},
+          {"type": "ADD_REPUTATION", "faction": "ankou", "value": 6}
+        ]
+      }
+    ]
+  },
+  {
+    "id": "s20_danger_13",
+    "text": "Un marais de soufre bouillonne, liberant des vapeurs qui brulent les yeux et la gorge. Au fond, des lumieres pulsent — un tresor ou un piege, impossible a dire sans s'y risquer.",
+    "biome": "marais_korrigans",
+    "faction": "korrigans",
+    "trust_tier": "T1",
+    "tags": ["danger", "balance"],
+    "options": [
+      {
+        "text": "Fouiller a l'aveugle dans les vapeurs pour atteindre les lumieres",
+        "verb": "fouiller a l'aveugle",
+        "effects": [
+          {"type": "DAMAGE_LIFE", "value": -14},
+          {"type": "ADD_REPUTATION", "faction": "korrigans", "value": 10}
+        ]
+      },
+      {
+        "text": "Pister les bulles pour trouver un passage sur",
+        "verb": "pister",
+        "effects": [
+          {"type": "DAMAGE_LIFE", "value": -10},
+          {"type": "ADD_REPUTATION", "faction": "korrigans", "value": -5}
+        ]
+      },
+      {
+        "text": "Attendre que les vapeurs se dissipent naturellement",
+        "verb": "attendre",
+        "effects": [
+          {"type": "DAMAGE_LIFE", "value": -8},
+          {"type": "ADD_REPUTATION", "faction": "korrigans", "value": -12}
+        ]
+      }
+    ]
+  },
+  {
+    "id": "s20_danger_14",
+    "text": "Un vieux barde aveugle joue un air discordant au bord du chemin. Sa harpe est tendue de cordes de cheveux humains et chaque note fait apparaitre des visions de malheur.",
+    "biome": "villages_celtes",
+    "faction": "druides",
+    "trust_tier": "T1",
+    "tags": ["danger", "balance"],
+    "options": [
+      {
+        "text": "Ecouter la melodie complete malgre la douleur",
+        "verb": "ecouter",
+        "effects": [
+          {"type": "DAMAGE_LIFE", "value": -12},
+          {"type": "ADD_REPUTATION", "faction": "druides", "value": 8}
+        ]
+      },
+      {
+        "text": "Charmer le barde pour qu'il change de melodie",
+        "verb": "charmer",
+        "effects": [
+          {"type": "DAMAGE_LIFE", "value": -9},
+          {"type": "ADD_REPUTATION", "faction": "druides", "value": -5},
+          {"type": "ADD_REPUTATION", "faction": "korrigans", "value": -8}
+        ]
+      },
+      {
+        "text": "Fixer les cordes de la harpe pour comprendre leur pouvoir",
+        "verb": "fixer",
+        "effects": [
+          {"type": "DAMAGE_LIFE", "value": -11},
+          {"type": "ADD_REPUTATION", "faction": "anciens", "value": 5}
+        ]
+      }
+    ]
+  },
+  {
+    "id": "s20_danger_15",
+    "text": "Les falaises s'effritent sous vos pieds. La mer en contrebas est pleine de recifs tranchants et le vent souffle si fort qu'il menace de vous projeter dans le vide.",
+    "biome": "cotes_sauvages",
+    "faction": "niamh",
+    "trust_tier": "T1",
+    "tags": ["danger", "balance"],
+    "options": [
+      {
+        "text": "Escalader la paroi pour trouver un passage plus stable",
+        "verb": "escalader",
+        "effects": [
+          {"type": "DAMAGE_LIFE", "value": -13},
+          {"type": "ADD_REPUTATION", "faction": "niamh", "value": 6}
+        ]
+      },
+      {
+        "text": "Se concentrer pour garder l'equilibre face au vent",
+        "verb": "se concentrer",
+        "effects": [
+          {"type": "DAMAGE_LIFE", "value": -10},
+          {"type": "ADD_REPUTATION", "faction": "niamh", "value": -5}
+        ]
+      },
+      {
+        "text": "Courir le long de la crete avant qu'elle ne s'effondre",
+        "verb": "courir",
+        "effects": [
+          {"type": "DAMAGE_LIFE", "value": -11},
+          {"type": "ADD_REPUTATION", "faction": "niamh", "value": -8}
+        ]
+      }
+    ]
+  },
+  {
+    "id": "s20_danger_16",
+    "text": "Un dolmen sacrificiel est encore tache du sang d'un rituel recent. Des corbeaux noirs vous observent depuis les branches, et l'air pue le fer et la cendre.",
+    "biome": "collines_dolmens",
+    "faction": "ankou",
+    "trust_tier": "T1",
+    "tags": ["danger", "balance"],
+    "options": [
+      {
+        "text": "Interpreter les traces de sang pour comprendre le rituel",
+        "verb": "interpreter",
+        "effects": [
+          {"type": "DAMAGE_LIFE", "value": -10},
+          {"type": "ADD_REPUTATION", "faction": "ankou", "value": 10}
+        ]
+      },
+      {
+        "text": "Se cacher dans les foures pour observer qui revient",
+        "verb": "se cacher",
+        "effects": [
+          {"type": "DAMAGE_LIFE", "value": -8},
+          {"type": "ADD_REPUTATION", "faction": "ankou", "value": -8}
+        ]
+      },
+      {
+        "text": "Resister mentalement aux visions que le sang invoque",
+        "verb": "resister mentalement",
+        "effects": [
+          {"type": "DAMAGE_LIFE", "value": -12},
+          {"type": "ADD_REPUTATION", "faction": "anciens", "value": -10}
+        ]
+      }
+    ]
+  },
+  {
+    "id": "s20_danger_17",
+    "text": "Un bosquet de sorbiers a ete calcine par un feu surnaturel. Les troncs noircis forment des visages tordus de douleur. Une cendre fine tombe comme de la neige, brulant la peau.",
+    "biome": "foret_broceliande",
+    "faction": "druides",
+    "trust_tier": "T1",
+    "tags": ["danger", "balance"],
+    "options": [
+      {
+        "text": "Resister physiquement en traversant le bosquet carbonise",
+        "verb": "resister physiquement",
+        "effects": [
+          {"type": "DAMAGE_LIFE", "value": -13},
+          {"type": "ADD_REPUTATION", "faction": "druides", "value": 8}
+        ]
+      },
+      {
+        "text": "Contourner le bosquet par un detour de plusieurs heures",
+        "verb": "contourner",
+        "effects": [
+          {"type": "DAMAGE_LIFE", "value": -8},
+          {"type": "ADD_REPUTATION", "faction": "druides", "value": -10}
+        ]
+      },
+      {
+        "text": "Etudier les cendres pour comprendre ce qui a brule ici",
+        "verb": "etudier",
+        "effects": [
+          {"type": "DAMAGE_LIFE", "value": -11},
+          {"type": "ADD_REPUTATION", "faction": "druides", "value": 5},
+          {"type": "ADD_REPUTATION", "faction": "ankou", "value": -8}
+        ]
+      }
+    ]
+  },
+  {
+    "id": "s20_danger_18",
+    "text": "Une fee malveillante propose un defi : manger un fruit noir de son jardin. Ceux qui l'ont fait avant vous errent desormais sous forme d'ombres, lies a jamais au marais.",
+    "biome": "marais_korrigans",
+    "faction": "korrigans",
+    "trust_tier": "T1",
+    "tags": ["danger", "balance"],
+    "options": [
+      {
+        "text": "Tenter sa chance et croquer le fruit",
+        "verb": "tenter sa chance",
+        "effects": [
+          {"type": "DAMAGE_LIFE", "value": -15},
+          {"type": "ADD_REPUTATION", "faction": "korrigans", "value": 12}
+        ]
+      },
+      {
+        "text": "Mentir en pretendant avoir deja mange un fruit identique",
+        "verb": "mentir",
+        "effects": [
+          {"type": "DAMAGE_LIFE", "value": -10},
+          {"type": "ADD_REPUTATION", "faction": "korrigans", "value": -5}
+        ]
+      },
+      {
+        "text": "Refuser fermement malgre les menaces de la fee",
+        "verb": "refuser",
+        "effects": [
+          {"type": "DAMAGE_LIFE", "value": -12},
+          {"type": "ADD_REPUTATION", "faction": "korrigans", "value": -15}
+        ]
+      }
+    ]
+  },
+  {
+    "id": "s20_danger_19",
+    "text": "Sur l'ile, un ancien temple submerge emerge a maree basse. Ses murs sont couverts de bernacles tranchantes et l'entree exhale un air fetide. Des runes luisent dans l'obscurite.",
+    "biome": "iles_mystiques",
+    "faction": "anciens",
+    "trust_tier": "T1",
+    "tags": ["danger", "balance"],
+    "options": [
+      {
+        "text": "Decoder les runes avant que la maree ne remonte",
+        "verb": "decoder",
+        "effects": [
+          {"type": "DAMAGE_LIFE", "value": -12},
+          {"type": "ADD_REPUTATION", "faction": "anciens", "value": 8}
+        ]
+      },
+      {
+        "text": "Se faufiler dans le temple par une breche laterale",
+        "verb": "se faufiler",
+        "effects": [
+          {"type": "DAMAGE_LIFE", "value": -11},
+          {"type": "ADD_REPUTATION", "faction": "anciens", "value": -5}
+        ]
+      },
+      {
+        "text": "Sentir l'air pour evaluer les dangers a l'interieur",
+        "verb": "sentir",
+        "effects": [
+          {"type": "DAMAGE_LIFE", "value": -9},
+          {"type": "ADD_REPUTATION", "faction": "niamh", "value": -10}
+        ]
+      }
+    ]
+  },
+  {
+    "id": "s20_danger_20",
+    "text": "Le vent des landes charrie des voix qui appellent par votre nom. Des feux follets dansent en cercle, traçant un chemin qui mene droit a une tourbiere sans fond.",
+    "biome": "landes_bruyere",
+    "faction": "korrigans",
+    "trust_tier": "T0",
+    "tags": ["danger", "balance"],
+    "options": [
+      {
+        "text": "Suivre les feux follets malgre le danger evident",
+        "verb": "suivre",
+        "effects": [
+          {"type": "DAMAGE_LIFE", "value": -14},
+          {"type": "ADD_REPUTATION", "faction": "korrigans", "value": 10}
+        ]
+      },
+      {
+        "text": "Memoriser le motif de leurs deplacements",
+        "verb": "memoriser",
+        "effects": [
+          {"type": "DAMAGE_LIFE", "value": -8},
+          {"type": "ADD_REPUTATION", "faction": "druides", "value": 4},
+          {"type": "ADD_REPUTATION", "faction": "korrigans", "value": -8}
+        ]
+      },
+      {
+        "text": "Esquiver les feux follets et chercher un autre chemin",
+        "verb": "esquiver",
+        "effects": [
+          {"type": "DAMAGE_LIFE", "value": -10},
+          {"type": "ADD_REPUTATION", "faction": "korrigans", "value": -12}
+        ]
+      }
+    ]
+  },
+  {
+    "id": "s20_danger_21",
+    "text": "Un passeur fantome attend au bord d'un lac noir. Sa barque est faite d'os blanchis et il exige un tribut de sang pour la traversee. La rive opposee brille d'une lumiere doree.",
+    "biome": "cotes_sauvages",
+    "faction": "ankou",
+    "trust_tier": "T1",
+    "tags": ["danger", "balance"],
+    "options": [
+      {
+        "text": "Accepter le tribut de sang et monter dans la barque",
+        "verb": "accepter",
+        "effects": [
+          {"type": "DAMAGE_LIFE", "value": -15},
+          {"type": "ADD_REPUTATION", "faction": "ankou", "value": 12}
+        ]
+      },
+      {
+        "text": "Marchander un prix moins eleve avec le passeur",
+        "verb": "marchander",
+        "effects": [
+          {"type": "DAMAGE_LIFE", "value": -10},
+          {"type": "ADD_REPUTATION", "faction": "ankou", "value": -8}
+        ]
+      },
+      {
+        "text": "Chercher au hasard un gue pour traverser sans aide",
+        "verb": "chercher au hasard",
+        "effects": [
+          {"type": "DAMAGE_LIFE", "value": -12},
+          {"type": "ADD_REPUTATION", "faction": "ankou", "value": -10},
+          {"type": "ADD_REPUTATION", "faction": "niamh", "value": -5}
+        ]
+      }
+    ]
+  },
+  {
+    "id": "s20_danger_22",
+    "text": "Les villageois celebrent un rituel nocturne autour d'un bucher. Leurs visages sont peints de motifs spirales et leurs yeux sont vides. Ils vous invitent a danser avec eux.",
+    "biome": "villages_celtes",
+    "faction": "anciens",
+    "trust_tier": "T1",
+    "tags": ["danger", "balance"],
+    "options": [
+      {
+        "text": "Accepter la danse rituelle et entrer dans le cercle",
+        "verb": "accepter",
+        "effects": [
+          {"type": "DAMAGE_LIFE", "value": -12},
+          {"type": "ADD_REPUTATION", "faction": "anciens", "value": 10}
+        ]
+      },
+      {
+        "text": "Observer le rituel depuis l'ombre pour comprendre",
+        "verb": "observer",
+        "effects": [
+          {"type": "DAMAGE_LIFE", "value": -8},
+          {"type": "ADD_REPUTATION", "faction": "anciens", "value": -8}
+        ]
+      },
+      {
+        "text": "Convaincre les villageois d'arreter avant qu'il ne soit trop tard",
+        "verb": "convaincre",
+        "effects": [
+          {"type": "DAMAGE_LIFE", "value": -10},
+          {"type": "ADD_REPUTATION", "faction": "anciens", "value": -15},
+          {"type": "ADD_REPUTATION", "faction": "druides", "value": -5}
+        ]
+      }
+    ]
+  },
+  {
+    "id": "s20_danger_23",
+    "text": "Un if millenaire abrite en son tronc creux un nid de serpents aux ecailles d'argent. Ils sifflent des propheties a qui ose s'approcher, mais leur venin est mortel.",
+    "biome": "foret_broceliande",
+    "faction": "druides",
+    "trust_tier": "T1",
+    "tags": ["danger", "balance"],
+    "options": [
+      {
+        "text": "S'approcher pour entendre les propheties des serpents",
+        "verb": "s'approcher",
+        "effects": [
+          {"type": "DAMAGE_LIFE", "value": -14},
+          {"type": "ADD_REPUTATION", "faction": "druides", "value": 10}
+        ]
+      },
+      {
+        "text": "Tendre l'oreille depuis une distance prudente",
+        "verb": "tendre l'oreille",
+        "effects": [
+          {"type": "DAMAGE_LIFE", "value": -9},
+          {"type": "ADD_REPUTATION", "faction": "druides", "value": -5}
+        ]
+      },
+      {
+        "text": "Fuir avant que les serpents ne vous repèrent",
+        "verb": "fuir",
+        "effects": [
+          {"type": "DAMAGE_LIFE", "value": -8},
+          {"type": "ADD_REPUTATION", "faction": "druides", "value": -12}
+        ]
+      }
+    ]
+  },
+  {
+    "id": "s20_danger_24",
+    "text": "Au coeur d'un cercle de menhirs, un autel de pierre noire attend un sacrifice. Le vent change de direction chaque seconde et la temperature chute brutalement.",
+    "biome": "cercles_pierres",
+    "faction": "ankou",
+    "trust_tier": "T2",
+    "tags": ["danger", "balance"],
+    "options": [
+      {
+        "text": "Resoudre l'enigme gravee sur l'autel",
+        "verb": "resoudre",
+        "effects": [
+          {"type": "DAMAGE_LIFE", "value": -13},
+          {"type": "ADD_REPUTATION", "faction": "ankou", "value": 10}
+        ]
+      },
+      {
+        "text": "Pousser l'autel hors du cercle pour briser le sortilege",
+        "verb": "pousser",
+        "effects": [
+          {"type": "DAMAGE_LIFE", "value": -15},
+          {"type": "ADD_REPUTATION", "faction": "ankou", "value": -15},
+          {"type": "ADD_REPUTATION", "faction": "anciens", "value": -10}
+        ]
+      },
+      {
+        "text": "Mediter devant l'autel pour comprendre son pouvoir",
+        "verb": "mediter",
+        "effects": [
+          {"type": "DAMAGE_LIFE", "value": -11},
+          {"type": "ADD_REPUTATION", "faction": "anciens", "value": 5}
+        ]
+      }
+    ]
+  },
+  {
+    "id": "s20_danger_25",
+    "text": "Une source empoisonnee suinte entre les pierres du village. Les betes boivent et s'ecroulent. Un herboriste desesperee demande de l'aide mais son remede exige un sacrifice.",
+    "biome": "villages_celtes",
+    "faction": "druides",
+    "trust_tier": "T2",
+    "tags": ["danger", "balance"],
+    "options": [
+      {
+        "text": "Cueillir les herbes requises dans la zone contaminee",
+        "verb": "cueillir",
+        "effects": [
+          {"type": "DAMAGE_LIFE", "value": -13},
+          {"type": "ADD_REPUTATION", "faction": "druides", "value": 8}
+        ]
+      },
+      {
+        "text": "Analyser la source pour trouver l'origine du poison",
+        "verb": "analyser",
+        "effects": [
+          {"type": "DAMAGE_LIFE", "value": -10},
+          {"type": "ADD_REPUTATION", "faction": "druides", "value": 5},
+          {"type": "ADD_REPUTATION", "faction": "anciens", "value": -8}
+        ]
+      },
+      {
+        "text": "Refuser d'aider et poursuivre votre chemin",
+        "verb": "refuser",
+        "effects": [
+          {"type": "DAMAGE_LIFE", "value": -8},
+          {"type": "ADD_REPUTATION", "faction": "druides", "value": -15},
+          {"type": "ADD_REPUTATION", "faction": "anciens", "value": -5}
+        ]
+      }
+    ]
+  },
+  {
+    "id": "s20_danger_26",
+    "text": "Les vagues rejettent un coffre enchaîne sur la plage. Des runes d'avertissement couvrent le bois noirci. Le metal des chaînes brule au toucher et le coffre tremble de l'interieur.",
+    "biome": "cotes_sauvages",
+    "faction": "korrigans",
+    "trust_tier": "T2",
+    "tags": ["danger", "balance"],
+    "options": [
+      {
+        "text": "Forcer les chaînes pour ouvrir le coffre maudit",
+        "verb": "forcer",
+        "effects": [
+          {"type": "DAMAGE_LIFE", "value": -15},
+          {"type": "ADD_REPUTATION", "faction": "korrigans", "value": 10}
+        ]
+      },
+      {
+        "text": "Dechiffrer les runes d'avertissement avant toute action",
+        "verb": "dechiffrer",
+        "effects": [
+          {"type": "DAMAGE_LIFE", "value": -10},
+          {"type": "ADD_REPUTATION", "faction": "anciens", "value": 5},
+          {"type": "ADD_REPUTATION", "faction": "korrigans", "value": -8}
+        ]
+      },
+      {
+        "text": "Pousser le coffre dans la mer pour s'en debarrasser",
+        "verb": "pousser",
+        "effects": [
+          {"type": "DAMAGE_LIFE", "value": -9},
+          {"type": "ADD_REPUTATION", "faction": "niamh", "value": -12}
+        ]
+      }
+    ]
+  },
+  {
+    "id": "s20_danger_27",
+    "text": "Un brouillard vivant envahit les collines. Il pense, il chasse, il absorbe. Chaque voyageur qui s'y perd en ressort vieilli de dix ans — ou n'en ressort pas du tout.",
+    "biome": "collines_dolmens",
+    "faction": "anciens",
+    "trust_tier": "T2",
+    "tags": ["danger", "balance"],
+    "options": [
+      {
+        "text": "Traverser le brouillard en se concentrant sur le chemin",
+        "verb": "se concentrer",
+        "effects": [
+          {"type": "DAMAGE_LIFE", "value": -14},
+          {"type": "ADD_REPUTATION", "faction": "anciens", "value": 8}
+        ]
+      },
+      {
+        "text": "Contourner les collines en faisant un long detour",
+        "verb": "contourner",
+        "effects": [
+          {"type": "DAMAGE_LIFE", "value": -8},
+          {"type": "ADD_REPUTATION", "faction": "anciens", "value": -12}
+        ]
+      },
+      {
+        "text": "Combattre le brouillard avec du feu et des torches",
+        "verb": "combattre",
+        "effects": [
+          {"type": "DAMAGE_LIFE", "value": -12},
+          {"type": "ADD_REPUTATION", "faction": "anciens", "value": -10},
+          {"type": "ADD_REPUTATION", "faction": "druides", "value": -8}
+        ]
+      }
+    ]
+  },
+  {
+    "id": "s20_danger_28",
+    "text": "L'ile mystique tremble. Ses rivages reculent et la terre se fissure, revelant des cavernes remplies d'une eau noire et huileuse. Des tentacules palides emergent lentement des profondeurs.",
+    "biome": "iles_mystiques",
+    "faction": "niamh",
+    "trust_tier": "T2",
+    "tags": ["danger", "balance"],
+    "options": [
+      {
+        "text": "Examiner les tentacules pour identifier la creature",
+        "verb": "examiner",
+        "effects": [
+          {"type": "DAMAGE_LIFE", "value": -13},
+          {"type": "ADD_REPUTATION", "faction": "niamh", "value": 8}
+        ]
+      },
+      {
+        "text": "Esquiver les tentacules et courir vers le centre de l'ile",
+        "verb": "esquiver",
+        "effects": [
+          {"type": "DAMAGE_LIFE", "value": -11},
+          {"type": "ADD_REPUTATION", "faction": "niamh", "value": -5}
+        ]
+      },
+      {
+        "text": "Resister physiquement en repoussant les tentacules",
+        "verb": "resister physiquement",
+        "effects": [
+          {"type": "DAMAGE_LIFE", "value": -14},
+          {"type": "ADD_REPUTATION", "faction": "niamh", "value": -10}
+        ]
+      }
+    ]
+  },
+  {
+    "id": "s20_danger_29",
+    "text": "Les racines d'un chene mort s'animent soudain, formant un labyrinthe vivant autour de vous. Les parois de bois se resserrent et des epines poussent a vue d'oeil.",
+    "biome": "foret_broceliande",
+    "faction": "korrigans",
+    "trust_tier": "T2",
+    "tags": ["danger", "balance"],
+    "options": [
+      {
+        "text": "Se faufiler entre les racines avant qu'elles ne se referment",
+        "verb": "se faufiler",
+        "effects": [
+          {"type": "DAMAGE_LIFE", "value": -12},
+          {"type": "ADD_REPUTATION", "faction": "korrigans", "value": 8}
+        ]
+      },
+      {
+        "text": "Forcer un passage en brisant les racines",
+        "verb": "forcer",
+        "effects": [
+          {"type": "DAMAGE_LIFE", "value": -14},
+          {"type": "ADD_REPUTATION", "faction": "druides", "value": -15}
+        ]
+      },
+      {
+        "text": "Calmer l'arbre en murmurant des mots anciens",
+        "verb": "calmer",
+        "effects": [
+          {"type": "DAMAGE_LIFE", "value": -10},
+          {"type": "HEAL_LIFE", "value": 3},
+          {"type": "ADD_REPUTATION", "faction": "druides", "value": 5},
+          {"type": "ADD_REPUTATION", "faction": "korrigans", "value": -8}
+        ]
+      }
+    ]
+  },
+  {
+    "id": "s20_danger_30",
+    "text": "Un cairn funeraire s'est effondre, liberant une nuee de spectres furieux. Ils tournent en spirale au-dessus des ruines, cherchant quelqu'un a blamer pour la profanation.",
+    "biome": "collines_dolmens",
+    "faction": "ankou",
+    "trust_tier": "T0",
+    "tags": ["danger", "balance"],
+    "options": [
+      {
+        "text": "Parler aux spectres pour expliquer votre innocence",
+        "verb": "parler",
+        "effects": [
+          {"type": "DAMAGE_LIFE", "value": -11},
+          {"type": "ADD_REPUTATION", "faction": "ankou", "value": 8}
+        ]
+      },
+      {
+        "text": "Courir hors de portee des spectres",
+        "verb": "courir",
+        "effects": [
+          {"type": "DAMAGE_LIFE", "value": -9},
+          {"type": "ADD_REPUTATION", "faction": "ankou", "value": -12}
+        ]
+      },
+      {
+        "text": "Endurer la colere des spectres en restant immobile",
+        "verb": "endurer",
+        "effects": [
+          {"type": "DAMAGE_LIFE", "value": -13},
+          {"type": "ADD_REPUTATION", "faction": "ankou", "value": 6},
+          {"type": "ADD_REPUTATION", "faction": "anciens", "value": -5}
+        ]
+      }
+    ]
+  },
+  {
+    "id": "s20_danger_31",
+    "text": "Un ogre de pierre s'eveille dans les landes. Ses mouvements font trembler le sol et ses yeux de granit fixent chaque etre vivant avec une hostilite millenaire.",
+    "biome": "landes_bruyere",
+    "faction": "anciens",
+    "trust_tier": "T0",
+    "tags": ["danger", "balance"],
+    "options": [
+      {
+        "text": "Combattre l'ogre de pierre en visant ses fissures",
+        "verb": "combattre",
+        "effects": [
+          {"type": "DAMAGE_LIFE", "value": -15},
+          {"type": "ADD_REPUTATION", "faction": "anciens", "value": 10}
+        ]
+      },
+      {
+        "text": "Se cacher derriere un talus en attendant qu'il passe",
+        "verb": "se cacher",
+        "effects": [
+          {"type": "DAMAGE_LIFE", "value": -8},
+          {"type": "ADD_REPUTATION", "faction": "anciens", "value": -10}
+        ]
+      },
+      {
+        "text": "Amadouer l'ogre avec des offrandes de pierres precieuses",
+        "verb": "amadouer",
+        "effects": [
+          {"type": "DAMAGE_LIFE", "value": -10},
+          {"type": "ADD_REPUTATION", "faction": "anciens", "value": -5},
+          {"type": "ADD_REPUTATION", "faction": "korrigans", "value": -8}
+        ]
+      }
+    ]
+  },
+  {
+    "id": "s20_danger_32",
+    "text": "L'eau du lac se retire soudain, revelant un village englouti depuis des siecles. Des rires d'enfants fantomes montent des ruines submergees, attirant les imprudents.",
+    "biome": "iles_mystiques",
+    "faction": "niamh",
+    "trust_tier": "T0",
+    "tags": ["danger", "balance"],
+    "options": [
+      {
+        "text": "Fouiller a l'aveugle dans les ruines avant le retour de l'eau",
+        "verb": "fouiller a l'aveugle",
+        "effects": [
+          {"type": "DAMAGE_LIFE", "value": -14},
+          {"type": "ADD_REPUTATION", "faction": "niamh", "value": 10}
+        ]
+      },
+      {
+        "text": "Scruter les ruines depuis la rive pour en comprendre l'histoire",
+        "verb": "scruter",
+        "effects": [
+          {"type": "DAMAGE_LIFE", "value": -8},
+          {"type": "ADD_REPUTATION", "faction": "niamh", "value": -8}
+        ]
+      },
+      {
+        "text": "Resister mentalement a l'appel des voix enfantines",
+        "verb": "resister mentalement",
+        "effects": [
+          {"type": "DAMAGE_LIFE", "value": -10},
+          {"type": "ADD_REPUTATION", "faction": "ankou", "value": 5},
+          {"type": "ADD_REPUTATION", "faction": "niamh", "value": -10}
+        ]
+      }
+    ]
+  },
+  {
+    "id": "s20_danger_33",
+    "text": "Les korrigans ont dresse un pont de champignons lumineux au-dessus d'un ravin. Chaque champignon s'eteint sous le pied qui le touche, et le ravin est profond de cent coudees.",
+    "biome": "marais_korrigans",
+    "faction": "korrigans",
+    "trust_tier": "T1",
+    "tags": ["danger", "balance"],
+    "options": [
+      {
+        "text": "Traverser le pont en courant avant que tout ne s'eteigne",
+        "verb": "courir",
+        "effects": [
+          {"type": "DAMAGE_LIFE", "value": -13},
+          {"type": "ADD_REPUTATION", "faction": "korrigans", "value": 10}
+        ]
+      },
+      {
+        "text": "Chercher au hasard un autre passage dans le ravin",
+        "verb": "chercher au hasard",
+        "effects": [
+          {"type": "DAMAGE_LIFE", "value": -11},
+          {"type": "ADD_REPUTATION", "faction": "korrigans", "value": -10}
+        ]
+      },
+      {
+        "text": "Negocier avec les korrigans pour qu'ils rallument le pont",
+        "verb": "negocier",
+        "effects": [
+          {"type": "DAMAGE_LIFE", "value": -9},
+          {"type": "ADD_REPUTATION", "faction": "korrigans", "value": -5}
+        ]
+      }
+    ]
+  },
+  {
+    "id": "s20_danger_34",
+    "text": "Un torrent de lave noire coule entre les dolmens, vomie par une fissure dans la terre. La chaleur est insupportable et la fumee cache des formes mouvantes et hostiles.",
+    "biome": "collines_dolmens",
+    "faction": "druides",
+    "trust_tier": "T2",
+    "tags": ["danger", "balance"],
+    "options": [
+      {
+        "text": "Resoudre comment detourner le flux de lave",
+        "verb": "resoudre",
+        "effects": [
+          {"type": "DAMAGE_LIFE", "value": -12},
+          {"type": "ADD_REPUTATION", "faction": "druides", "value": 8}
+        ]
+      },
+      {
+        "text": "Escalader les dolmens pour surplomber la lave",
+        "verb": "escalader",
+        "effects": [
+          {"type": "DAMAGE_LIFE", "value": -11},
+          {"type": "ADD_REPUTATION", "faction": "druides", "value": -5}
+        ]
+      },
+      {
+        "text": "Endurer la chaleur en traversant une zone refroidie",
+        "verb": "endurer",
+        "effects": [
+          {"type": "DAMAGE_LIFE", "value": -14},
+          {"type": "ADD_REPUTATION", "faction": "anciens", "value": -10}
+        ]
+      }
+    ]
+  },
+  {
+    "id": "s20_danger_35",
+    "text": "La brume des landes prend la forme d'un guerrier celte immense. Il vous defie en duel, l'epee dressee. Ses yeux brillent de la fierte des morts qui n'ont jamais ete vaincus.",
+    "biome": "landes_bruyere",
+    "faction": "anciens",
+    "trust_tier": "T2",
+    "tags": ["danger", "balance"],
+    "options": [
+      {
+        "text": "Combattre le guerrier spectral en duel singulier",
+        "verb": "combattre",
+        "effects": [
+          {"type": "DAMAGE_LIFE", "value": -15},
+          {"type": "ADD_REPUTATION", "faction": "anciens", "value": 12}
+        ]
+      },
+      {
+        "text": "Esquiver ses coups et chercher une faille",
+        "verb": "esquiver",
+        "effects": [
+          {"type": "DAMAGE_LIFE", "value": -11},
+          {"type": "ADD_REPUTATION", "faction": "anciens", "value": -8}
+        ]
+      },
+      {
+        "text": "Apaiser le guerrier en reconnaissant sa valeur",
+        "verb": "apaiser",
+        "effects": [
+          {"type": "DAMAGE_LIFE", "value": -10},
+          {"type": "HEAL_LIFE", "value": 2},
+          {"type": "ADD_REPUTATION", "faction": "anciens", "value": 5},
+          {"type": "ADD_REPUTATION", "faction": "ankou", "value": -8}
+        ]
+      }
+    ]
+  },
+  {
+    "id": "s20_danger_36",
+    "text": "Un puits aux eaux noires murmure des verites que personne ne veut entendre. Ceux qui y plongent le regard voient leur pire souvenir, amplifie et tordu par la magie.",
+    "biome": "villages_celtes",
+    "faction": "niamh",
+    "trust_tier": "T2",
+    "tags": ["danger", "balance"],
+    "options": [
+      {
+        "text": "Fixer les eaux noires pour affronter vos souvenirs",
+        "verb": "fixer",
+        "effects": [
+          {"type": "DAMAGE_LIFE", "value": -14},
+          {"type": "ADD_REPUTATION", "faction": "niamh", "value": 10}
+        ]
+      },
+      {
+        "text": "Calmer votre esprit avant de regarder",
+        "verb": "calmer",
+        "effects": [
+          {"type": "DAMAGE_LIFE", "value": -10},
+          {"type": "ADD_REPUTATION", "faction": "niamh", "value": -5}
+        ]
+      },
+      {
+        "text": "Fuir le puits et ses verites cruelles",
+        "verb": "fuir",
+        "effects": [
+          {"type": "DAMAGE_LIFE", "value": -8},
+          {"type": "ADD_REPUTATION", "faction": "niamh", "value": -15}
+        ]
+      }
+    ]
+  },
+  {
+    "id": "s20_danger_37",
+    "text": "Un chene creux cache un essaim de guepes d'ombre dont les piqures ne laissent pas de marque mais volent les souvenirs. Chaque piqure efface un moment heureux de votre vie.",
+    "biome": "foret_broceliande",
+    "faction": "ankou",
+    "trust_tier": "T2",
+    "tags": ["danger", "balance"],
+    "options": [
+      {
+        "text": "Resister physiquement en traversant l'essaim",
+        "verb": "resister physiquement",
+        "effects": [
+          {"type": "DAMAGE_LIFE", "value": -13},
+          {"type": "ADD_REPUTATION", "faction": "ankou", "value": 8}
+        ]
+      },
+      {
+        "text": "Se faufiler sous le vent pour eviter l'essaim",
+        "verb": "se faufiler",
+        "effects": [
+          {"type": "DAMAGE_LIFE", "value": -10},
+          {"type": "ADD_REPUTATION", "faction": "ankou", "value": -5}
+        ]
+      },
+      {
+        "text": "Mediter pour renforcer vos souvenirs avant la traversee",
+        "verb": "mediter",
+        "effects": [
+          {"type": "DAMAGE_LIFE", "value": -11},
+          {"type": "ADD_REPUTATION", "faction": "druides", "value": 4},
+          {"type": "ADD_REPUTATION", "faction": "ankou", "value": -8}
+        ]
+      }
+    ]
+  },
+  {
+    "id": "s20_danger_38",
+    "text": "Un marchand korrigan vend des potions dans des flacons de verre fele. Toutes les etiquettes sont ecrites a l'envers et les couleurs changent quand on ne regarde pas.",
+    "biome": "marais_korrigans",
+    "faction": "korrigans",
+    "trust_tier": "T0",
+    "tags": ["danger", "balance"],
+    "options": [
+      {
+        "text": "Tenter sa chance et boire un flacon au hasard",
+        "verb": "tenter sa chance",
+        "effects": [
+          {"type": "DAMAGE_LIFE", "value": -12},
+          {"type": "HEAL_LIFE", "value": 3},
+          {"type": "ADD_REPUTATION", "faction": "korrigans", "value": 10}
+        ]
+      },
+      {
+        "text": "Marchander un prix plus bas pour reduire le risque",
+        "verb": "marchander",
+        "effects": [
+          {"type": "DAMAGE_LIFE", "value": -8},
+          {"type": "ADD_REPUTATION", "faction": "korrigans", "value": -8}
+        ]
+      },
+      {
+        "text": "Inspecter les flacons avec soin avant d'acheter",
+        "verb": "inspecter",
+        "effects": [
+          {"type": "DAMAGE_LIFE", "value": -9},
+          {"type": "ADD_REPUTATION", "faction": "korrigans", "value": -12}
+        ]
+      }
+    ]
+  },
+  {
+    "id": "s20_danger_39",
+    "text": "La maree amene des meduses geantes dont les tentacules emettent une lumiere hypnotique. Quiconque les fixe trop longtemps oublie ou il va et marche droit dans les vagues.",
+    "biome": "cotes_sauvages",
+    "faction": "niamh",
+    "trust_tier": "T0",
+    "tags": ["danger", "balance"],
+    "options": [
+      {
+        "text": "Resister mentalement a l'hypnose des meduses",
+        "verb": "resister mentalement",
+        "effects": [
+          {"type": "DAMAGE_LIFE", "value": -12},
+          {"type": "ADD_REPUTATION", "faction": "niamh", "value": 8}
+        ]
+      },
+      {
+        "text": "Fuir la plage avant que l'hypnose ne prenne effet",
+        "verb": "fuir",
+        "effects": [
+          {"type": "DAMAGE_LIFE", "value": -8},
+          {"type": "ADD_REPUTATION", "faction": "niamh", "value": -12}
+        ]
+      },
+      {
+        "text": "Flairer un changement dans le vent pour predire leur direction",
+        "verb": "flairer",
+        "effects": [
+          {"type": "DAMAGE_LIFE", "value": -10},
+          {"type": "ADD_REPUTATION", "faction": "druides", "value": -5},
+          {"type": "ADD_REPUTATION", "faction": "niamh", "value": -5}
+        ]
+      }
+    ]
+  },
+  {
+    "id": "s20_danger_40",
+    "text": "Un tertre s'ouvre sur une salle souterraine ou des cranes humains sont empiles en pyramide. Chaque crane chuchote un secret different, et certains secrets sont des maledictions.",
+    "biome": "collines_dolmens",
+    "faction": "ankou",
+    "trust_tier": "T0",
+    "tags": ["danger", "balance"],
+    "options": [
+      {
+        "text": "Ecouter les secrets des cranes malgre le risque",
+        "verb": "ecouter",
+        "effects": [
+          {"type": "DAMAGE_LIFE", "value": -13},
+          {"type": "ADD_REPUTATION", "faction": "ankou", "value": 10}
+        ]
+      },
+      {
+        "text": "Decoder les inscriptions sur les cranes",
+        "verb": "decoder",
+        "effects": [
+          {"type": "DAMAGE_LIFE", "value": -10},
+          {"type": "ADD_REPUTATION", "faction": "anciens", "value": 5},
+          {"type": "ADD_REPUTATION", "faction": "ankou", "value": -5}
+        ]
+      },
+      {
+        "text": "Se concentrer pour bloquer les murmures maudits",
+        "verb": "se concentrer",
+        "effects": [
+          {"type": "DAMAGE_LIFE", "value": -9},
+          {"type": "ADD_REPUTATION", "faction": "ankou", "value": -12}
+        ]
+      }
+    ]
+  },
+  {
+    "id": "s20_danger_41",
+    "text": "Les druides celebrent un rituel de purification par le feu. Ils vous demandent de marcher sur les braises ardentes pour prouver votre devotion. La chaleur est insoutenable.",
+    "biome": "cercles_pierres",
+    "faction": "druides",
+    "trust_tier": "T1",
+    "tags": ["danger", "balance"],
+    "options": [
+      {
+        "text": "Resister physiquement en marchant sur les braises",
+        "verb": "resister physiquement",
+        "effects": [
+          {"type": "DAMAGE_LIFE", "value": -14},
+          {"type": "ADD_REPUTATION", "faction": "druides", "value": 12}
+        ]
+      },
+      {
+        "text": "Convaincre les druides de vous epargner cette epreuve",
+        "verb": "convaincre",
+        "effects": [
+          {"type": "DAMAGE_LIFE", "value": -8},
+          {"type": "ADD_REPUTATION", "faction": "druides", "value": -15}
+        ]
+      },
+      {
+        "text": "Mediter pour transcender la douleur des braises",
+        "verb": "mediter",
+        "effects": [
+          {"type": "DAMAGE_LIFE", "value": -12},
+          {"type": "ADD_REPUTATION", "faction": "druides", "value": 8}
+        ]
+      }
+    ]
+  },
+  {
+    "id": "s20_danger_42",
+    "text": "Un arbre a voeux est couvert de rubans noues par des mains tremblantes. Chaque ruban porte une malediction deguisee en souhait. Toucher un ruban lie votre destin au sien.",
+    "biome": "foret_broceliande",
+    "faction": "niamh",
+    "trust_tier": "T1",
+    "tags": ["danger", "balance"],
+    "options": [
+      {
+        "text": "S'approcher et lire les voeux inscrits sur les rubans",
+        "verb": "s'approcher",
+        "effects": [
+          {"type": "DAMAGE_LIFE", "value": -11},
+          {"type": "ADD_REPUTATION", "faction": "niamh", "value": 8}
+        ]
+      },
+      {
+        "text": "Observer l'arbre de loin pour comprendre sa nature",
+        "verb": "observer",
+        "effects": [
+          {"type": "DAMAGE_LIFE", "value": -8},
+          {"type": "ADD_REPUTATION", "faction": "niamh", "value": -8}
+        ]
+      },
+      {
+        "text": "Accepter de nouer votre propre ruban sur l'arbre",
+        "verb": "accepter",
+        "effects": [
+          {"type": "DAMAGE_LIFE", "value": -14},
+          {"type": "ADD_REPUTATION", "faction": "niamh", "value": 10},
+          {"type": "ADD_REPUTATION", "faction": "druides", "value": -10}
+        ]
+      }
+    ]
+  },
+  {
+    "id": "s20_danger_43",
+    "text": "Des racines de ronce percent le sol du village, etouffant les cultures et fissurant les murs. Les anciens disent que c'est le prix d'un serment brise il y a des generations.",
+    "biome": "villages_celtes",
+    "faction": "anciens",
+    "trust_tier": "T0",
+    "tags": ["danger", "balance"],
+    "options": [
+      {
+        "text": "Cueillir les ronces a mains nues pour sauver les cultures",
+        "verb": "cueillir",
+        "effects": [
+          {"type": "DAMAGE_LIFE", "value": -13},
+          {"type": "ADD_REPUTATION", "faction": "anciens", "value": 8}
+        ]
+      },
+      {
+        "text": "Etudier les racines pour comprendre le serment brise",
+        "verb": "etudier",
+        "effects": [
+          {"type": "DAMAGE_LIFE", "value": -9},
+          {"type": "ADD_REPUTATION", "faction": "anciens", "value": 5},
+          {"type": "ADD_REPUTATION", "faction": "druides", "value": -8}
+        ]
+      },
+      {
+        "text": "Fuir le village maudit sans regarder en arriere",
+        "verb": "fuir",
+        "effects": [
+          {"type": "DAMAGE_LIFE", "value": -8},
+          {"type": "ADD_REPUTATION", "faction": "anciens", "value": -15}
+        ]
+      }
+    ]
+  },
+  {
+    "id": "s20_danger_44",
+    "text": "Un portail de vent s'ouvre dans les landes, aspirant tout ce qui passe a proximite. De l'autre cote, on aperçoit un paysage magnifique mais les corps de ceux qui y sont entres flottent, inertes.",
+    "biome": "landes_bruyere",
+    "faction": "niamh",
+    "trust_tier": "T1",
+    "tags": ["danger", "balance"],
+    "options": [
+      {
+        "text": "Traverser le portail malgre les avertissements visibles",
+        "verb": "traverser",
+        "effects": [
+          {"type": "DAMAGE_LIFE", "value": -15},
+          {"type": "ADD_REPUTATION", "faction": "niamh", "value": 12}
+        ]
+      },
+      {
+        "text": "Analyser la structure du portail pour comprendre son mecanisme",
+        "verb": "analyser",
+        "effects": [
+          {"type": "DAMAGE_LIFE", "value": -10},
+          {"type": "ADD_REPUTATION", "faction": "druides", "value": 5},
+          {"type": "ADD_REPUTATION", "faction": "niamh", "value": -8}
+        ]
+      },
+      {
+        "text": "Resister mentalement a l'aspiration du portail",
+        "verb": "resister mentalement",
+        "effects": [
+          {"type": "DAMAGE_LIFE", "value": -12},
+          {"type": "ADD_REPUTATION", "faction": "niamh", "value": -10}
+        ]
+      }
+    ]
+  },
+  {
+    "id": "s20_danger_45",
+    "text": "Un esprit de la foret vous propose un pacte : il guerira vos blessures mais en echange, votre ombre lui appartiendra. Sans ombre, les creatures des tenebres vous traqueront.",
+    "biome": "foret_broceliande",
+    "faction": "ankou",
+    "trust_tier": "T2",
+    "tags": ["danger", "balance"],
+    "options": [
+      {
+        "text": "Accepter le pacte et ceder votre ombre",
+        "verb": "accepter",
+        "effects": [
+          {"type": "HEAL_LIFE", "value": 10},
+          {"type": "ADD_REPUTATION", "faction": "ankou", "value": -20},
+          {"type": "ADD_REPUTATION", "faction": "druides", "value": -10}
+        ]
+      },
+      {
+        "text": "Negocier un prix different pour la guerison",
+        "verb": "negocier",
+        "effects": [
+          {"type": "DAMAGE_LIFE", "value": -10},
+          {"type": "ADD_REPUTATION", "faction": "korrigans", "value": 5},
+          {"type": "ADD_REPUTATION", "faction": "ankou", "value": -8}
+        ]
+      },
+      {
+        "text": "Refuser le pacte et endurer vos blessures",
+        "verb": "refuser",
+        "effects": [
+          {"type": "DAMAGE_LIFE", "value": -12},
+          {"type": "ADD_REPUTATION", "faction": "ankou", "value": 8}
+        ]
+      }
+    ]
+  },
+  {
+    "id": "s20_danger_46",
+    "text": "Des pierres tombent du ciel nocturne, chacune gravee d'un nom — le votre parmi eux. La ou elles touchent le sol, la terre pourrit et les plantes meurent instantanement.",
+    "biome": "cercles_pierres",
+    "faction": "anciens",
+    "trust_tier": "T2",
+    "tags": ["danger", "balance"],
+    "options": [
+      {
+        "text": "Esquiver les pierres en dansant entre les impacts",
+        "verb": "esquiver",
+        "effects": [
+          {"type": "DAMAGE_LIFE", "value": -12},
+          {"type": "ADD_REPUTATION", "faction": "anciens", "value": 6}
+        ]
+      },
+      {
+        "text": "Dechiffrer les noms pour comprendre la malediction",
+        "verb": "dechiffrer",
+        "effects": [
+          {"type": "DAMAGE_LIFE", "value": -11},
+          {"type": "ADD_REPUTATION", "faction": "anciens", "value": 5},
+          {"type": "ADD_REPUTATION", "faction": "ankou", "value": -8}
+        ]
+      },
+      {
+        "text": "Se concentrer pour devier les pierres par la volonte",
+        "verb": "se concentrer",
+        "effects": [
+          {"type": "DAMAGE_LIFE", "value": -14},
+          {"type": "ADD_REPUTATION", "faction": "druides", "value": -10}
+        ]
+      }
+    ]
+  },
+  {
+    "id": "s20_danger_47",
+    "text": "Un festival des morts anime le village cette nuit. Les defunts marchent parmi les vivants, mais certains refusent de retourner dans l'au-dela a l'aube et deviennent violents.",
+    "biome": "villages_celtes",
+    "faction": "ankou",
+    "trust_tier": "T1",
+    "tags": ["danger", "balance"],
+    "options": [
+      {
+        "text": "Convaincre les morts recalcitrants de repartir en paix",
+        "verb": "convaincre",
+        "effects": [
+          {"type": "DAMAGE_LIFE", "value": -11},
+          {"type": "ADD_REPUTATION", "faction": "ankou", "value": 10}
+        ]
+      },
+      {
+        "text": "Combattre les defunts violents pour proteger les vivants",
+        "verb": "combattre",
+        "effects": [
+          {"type": "DAMAGE_LIFE", "value": -14},
+          {"type": "ADD_REPUTATION", "faction": "ankou", "value": -12}
+        ]
+      },
+      {
+        "text": "Se cacher jusqu'a l'aube en esperant que tout se calme",
+        "verb": "se cacher",
+        "effects": [
+          {"type": "DAMAGE_LIFE", "value": -8},
+          {"type": "ADD_REPUTATION", "faction": "ankou", "value": -10},
+          {"type": "ADD_REPUTATION", "faction": "anciens", "value": -5}
+        ]
+      }
+    ]
+  },
+  {
+    "id": "s20_danger_48",
+    "text": "Les eaux autour de l'ile se sont transformees en un miroir parfait. Quiconque s'y regarde voit non pas son reflet, mais la maniere dont il mourra. Le savoir est un fardeau.",
+    "biome": "iles_mystiques",
+    "faction": "ankou",
+    "trust_tier": "T3",
+    "tags": ["danger", "balance"],
+    "options": [
+      {
+        "text": "Fixer les eaux-miroir pour connaitre votre destin",
+        "verb": "fixer",
+        "effects": [
+          {"type": "DAMAGE_LIFE", "value": -15},
+          {"type": "ADD_REPUTATION", "faction": "ankou", "value": 12}
+        ]
+      },
+      {
+        "text": "Calmer votre esprit pour affronter la vision sereinement",
+        "verb": "calmer",
+        "effects": [
+          {"type": "DAMAGE_LIFE", "value": -12},
+          {"type": "ADD_REPUTATION", "faction": "niamh", "value": 5},
+          {"type": "ADD_REPUTATION", "faction": "ankou", "value": -5}
+        ]
+      },
+      {
+        "text": "Contourner le rivage sans regarder les eaux",
+        "verb": "contourner",
+        "effects": [
+          {"type": "DAMAGE_LIFE", "value": -8},
+          {"type": "ADD_REPUTATION", "faction": "ankou", "value": -15}
+        ]
+      }
+    ]
+  },
+  {
+    "id": "s20_danger_49",
+    "text": "Un champ de bruyere s'enflamme spontanement, coupant toute retraite. Les flammes forment des lettres oghamiques qui epelent un avertissement : celui qui recule perira, celui qui avance souffrira.",
+    "biome": "landes_bruyere",
+    "faction": "druides",
+    "trust_tier": "T3",
+    "tags": ["danger", "balance"],
+    "options": [
+      {
+        "text": "Traverser les flammes oghamiques en courant",
+        "verb": "courir",
+        "effects": [
+          {"type": "DAMAGE_LIFE", "value": -15},
+          {"type": "ADD_REPUTATION", "faction": "druides", "value": 12}
+        ]
+      },
+      {
+        "text": "Interpreter les lettres pour trouver un passage sur",
+        "verb": "interpreter",
+        "effects": [
+          {"type": "DAMAGE_LIFE", "value": -11},
+          {"type": "ADD_REPUTATION", "faction": "druides", "value": 5},
+          {"type": "ADD_REPUTATION", "faction": "anciens", "value": -8}
+        ]
+      },
+      {
+        "text": "Endurer la chaleur en avançant lentement mais surement",
+        "verb": "endurer",
+        "effects": [
+          {"type": "DAMAGE_LIFE", "value": -13},
+          {"type": "ADD_REPUTATION", "faction": "ankou", "value": -8}
+        ]
+      }
+    ]
+  },
+  {
+    "id": "s20_danger_50",
+    "text": "Au sommet de l'ile, un autel final attend. Graver son nom dans la pierre ouvre un passage vers Tir na nOg, mais le prix est une part de votre ame que vous ne recupererez jamais.",
+    "biome": "iles_mystiques",
+    "faction": "niamh",
+    "trust_tier": "T3",
+    "tags": ["danger", "balance"],
+    "options": [
+      {
+        "text": "Accepter le sacrifice et graver votre nom",
+        "verb": "accepter",
+        "effects": [
+          {"type": "DAMAGE_LIFE", "value": -15},
+          {"type": "ADD_REPUTATION", "faction": "niamh", "value": 12},
+          {"type": "ADD_REPUTATION", "faction": "ankou", "value": -10}
+        ]
+      },
+      {
+        "text": "Examiner l'autel pour trouver un moyen de contourner le sacrifice",
+        "verb": "examiner",
+        "effects": [
+          {"type": "DAMAGE_LIFE", "value": -10},
+          {"type": "ADD_REPUTATION", "faction": "niamh", "value": -8}
+        ]
+      },
+      {
+        "text": "Refuser le passage et redescendre vers le monde des vivants",
+        "verb": "refuser",
+        "effects": [
+          {"type": "DAMAGE_LIFE", "value": -8},
+          {"type": "ADD_REPUTATION", "faction": "niamh", "value": -15},
+          {"type": "ADD_REPUTATION", "faction": "anciens", "value": -5}
+        ]
+      }
+    ]
+  }
+]
