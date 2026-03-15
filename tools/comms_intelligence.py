@@ -1,6 +1,7 @@
 """Extract structured intelligence from raw communication messages (Outlook, Teams, Calendar)."""
 from __future__ import annotations
 
+import os
 import re
 from datetime import datetime, timezone
 
@@ -195,15 +196,15 @@ def update_digest_file(digest_path: str, new_entries: list[dict]) -> int:
     except FileNotFoundError:
         existing = ""
 
-    # Strip old frontmatter if present
+    # Strip old frontmatter if present (robust regex)
     body = existing
-    if body.startswith("---"):
-        end = body.find("---", 3)
-        if end != -1:
-            body = body[end + 3:].strip()
-            # Remove the heading line if present
-            if body.startswith("# Communications Digest"):
-                body = body[len("# Communications Digest"):].strip()
+    fm_match = re.match(r'^---\n.*?\n---\s*', body, re.DOTALL)
+    if fm_match:
+        body = body[fm_match.end():].strip()
+        # Remove the heading line if present
+        heading_match = re.match(r'^# Communications Digest\s*', body)
+        if heading_match:
+            body = body[heading_match.end():].strip()
 
     # Deduplicate: collect existing bullet contents
     existing_bullets = set()
@@ -237,8 +238,11 @@ def update_digest_file(digest_path: str, new_entries: list[dict]) -> int:
 
     final = frontmatter + "\n".join(all_lines) + "\n"
 
-    with open(digest_path, "w", encoding="utf-8") as f:
+    # Atomic write: write to temp then replace
+    tmp_path = digest_path + ".tmp"
+    with open(tmp_path, "w", encoding="utf-8") as f:
         f.write(final)
+    os.replace(tmp_path, digest_path)
 
     return added
 

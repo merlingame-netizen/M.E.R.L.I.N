@@ -144,7 +144,11 @@ class OutlookAdapter(BaseAdapter):
             safe_f = from_addr.replace("'", "''")
             parts.append(f"\"urn:schemas:httpmail:fromemail\" LIKE '%{safe_f}%'")
         if since:
-            parts.append(f"\"urn:schemas:httpmail:datereceived\" >= '{since}'")
+            import re as _re
+            safe_since = since.replace("'", "''")
+            if not _re.match(r'^\d{4}-\d{2}-\d{2}', safe_since):
+                return self.error(f"Invalid --since format: expected YYYY-MM-DD, got {since!r}")
+            parts.append(f"\"urn:schemas:httpmail:datereceived\" >= '{safe_since}'")
 
         dasl_filter = "@SQL=" + " AND ".join(
             f"({p})" if " OR " in p else p for p in parts
@@ -209,10 +213,14 @@ class OutlookAdapter(BaseAdapter):
         mail.Importance = importance
 
         if attachments:
-            for path in attachments.split(";"):
-                path = path.strip()
-                if path:
-                    mail.Attachments.Add(path)
+            from pathlib import Path as _Path
+            for att_path in attachments.split(";"):
+                att_path = att_path.strip()
+                if att_path:
+                    resolved = _Path(att_path).resolve()
+                    if not resolved.is_file():
+                        return self.error(f"Attachment not found: {att_path}")
+                    mail.Attachments.Add(str(resolved))
 
         # CRITICAL: Display only, NEVER Send
         mail.Display()

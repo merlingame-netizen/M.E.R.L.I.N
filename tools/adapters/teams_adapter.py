@@ -131,15 +131,21 @@ class TeamsAdapter(BaseAdapter):
         self.log(f"Loaded {len(messages)} chat messages from Power Automate exports")
         return self.ok({"messages": messages, "count": len(messages)})
 
+    def _safe_resolve(self, base: Path, file: str) -> Path | None:
+        """Resolve file path safely, preventing path traversal."""
+        resolved = (base / file).resolve()
+        if not str(resolved).startswith(str(base.resolve())):
+            return None
+        return resolved
+
     def _read_chat(self, file: str = "", **_: Any) -> dict:
         if not file:
             return self.error("--file is required (filename from recent-chats)")
-        path = _PA_TEAMS_DIR / file
-        if not path.exists():
-            # Try subdir
-            path = _PA_TEAMS_DIR / "chats" / file
-        if not path.exists():
-            return self.error(f"File not found: {file}")
+        path = self._safe_resolve(_PA_TEAMS_DIR, file)
+        if path is None or not path.exists():
+            path = self._safe_resolve(_PA_TEAMS_DIR / "chats", file)
+        if path is None or not path.exists():
+            return self.error(f"File not found or invalid path: {file}")
         data = self._read_json_file(path)
         if data is None:
             return self.error(f"Failed to parse: {file}")
@@ -156,7 +162,9 @@ class TeamsAdapter(BaseAdapter):
             data = self._read_json_file(fp)
             if data is None:
                 continue
-            searchable = json.dumps(data, ensure_ascii=False).lower()
+            searchable = " ".join(
+                str(data.get(k, "")) for k in ("body", "content", "subject", "sender", "from", "channel")
+            ).lower()
             if query_lower in searchable:
                 matches.append(self._format_pa_message(data, fp))
                 if len(matches) >= limit:
@@ -185,11 +193,11 @@ class TeamsAdapter(BaseAdapter):
     def _read_channel(self, file: str = "", **_: Any) -> dict:
         if not file:
             return self.error("--file is required")
-        path = _PA_TEAMS_DIR / "channels" / file
-        if not path.exists():
-            path = _PA_TEAMS_DIR / file
-        if not path.exists():
-            return self.error(f"File not found: {file}")
+        path = self._safe_resolve(_PA_TEAMS_DIR / "channels", file)
+        if path is None or not path.exists():
+            path = self._safe_resolve(_PA_TEAMS_DIR, file)
+        if path is None or not path.exists():
+            return self.error(f"File not found or invalid path: {file}")
         data = self._read_json_file(path)
         if data is None:
             return self.error(f"Failed to parse: {file}")
@@ -213,27 +221,36 @@ class TeamsAdapter(BaseAdapter):
 
         self.log("Scanning Teams LevelDB cache (best-effort)...")
 
+        _MAX_FILE_SIZE = 20_000_000    # 20 MB per file
+        _MAX_TOTAL_SIZE = 100_000_000  # 100 MB total budget
+
         # Read all .ldb and .log files
         raw_data = bytearray()
         try:
             for f in sorted(_TEAMS_CACHE_BASE.iterdir()):
                 if f.suffix in (".ldb", ".log"):
+                    if f.stat().st_size > _MAX_FILE_SIZE:
+                        continue
                     raw_data.extend(f.read_bytes())
+                    if len(raw_data) > _MAX_TOTAL_SIZE:
+                        break
         except PermissionError:
             # Try copying to temp first
             self.log("Cache locked, copying to temp directory...")
-            tmp = Path(tempfile.mkdtemp(prefix="teams_cache_"))
-            try:
-                for f in _TEAMS_CACHE_BASE.iterdir():
-                    if f.suffix in (".ldb", ".log", "") and f.name.startswith(("0", "M", "C")):
-                        shutil.copy2(f, tmp / f.name)
-                for f in sorted(tmp.iterdir()):
-                    if f.suffix in (".ldb", ".log"):
-                        raw_data.extend(f.read_bytes())
-            except Exception as exc:
-                return self.error(f"Failed to copy cache: {exc}")
-            finally:
-                shutil.rmtree(tmp, ignore_errors=True)
+            with tempfile.TemporaryDirectory(prefix="teams_cache_") as tmp_str:
+                tmp = Path(tmp_str)
+                try:
+                    for f in _TEAMS_CACHE_BASE.iterdir():
+                        if f.suffix in (".ldb", ".log", "") and f.name.startswith(("0", "M", "C")):
+                            if f.stat().st_size <= _MAX_FILE_SIZE:
+                                shutil.copy2(f, tmp / f.name)
+                    for f in sorted(tmp.iterdir()):
+                        if f.suffix in (".ldb", ".log"):
+                            raw_data.extend(f.read_bytes())
+                            if len(raw_data) > _MAX_TOTAL_SIZE:
+                                break
+                except Exception as exc:
+                    return self.error(f"Failed to copy cache: {exc}")
 
         if not raw_data:
             return self.error("No data in Teams cache files")
