@@ -4,6 +4,13 @@
 ## Phase 6 (DEV_PLAN_V2.5). Wraps the 3D world scene and manages the run loop:
 ## walk → pause → card → minigame → resume → walk → ...
 ## Standalone (no MOS dependency). MOS hooks via signals.
+##
+## State ownership:
+## - Game state (life, rep, currency, anam): MerlinStore (read via _store_run(),
+##   write via _store_apply_effect / _store_dispatch)
+## - Card-system tracking (card_index, promises, story_log): _run_state dict
+##   (owned by MerlinCardSystem, synced with store game state before each use)
+## - Local UI state (timers, paused, current_card, ogham-per-card): this controller
 ## ═══════════════════════════════════════════════════════════════════════════════
 
 extends Node
@@ -36,17 +43,26 @@ var _minigame_system: MerlinMiniGameSystem
 var _headless: bool = false
 
 # ═══════════════════════════════════════════════════════════════════════════════
-# RUN STATE
+# STATE — card-system tracking (NOT game state)
 # ═══════════════════════════════════════════════════════════════════════════════
+# _run_state holds card-system tracking fields (card_index, promises, story_log,
+# active_tags, etc.). Game state fields (life_essence, biome_currency) are synced
+# INTO this dict from the store before card_system calls, so the card system sees
+# a unified view. The store remains the single source of truth for game values.
 
 var _run_state: Dictionary = {}
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# STATE — local UI / flow (owned by this controller, never in store)
+# ═══════════════════════════════════════════════════════════════════════════════
+
 var _is_running: bool = false
 var _is_paused: bool = false
 var _walk_timer: float = 0.0
 var _card_interval: float = 0.0
 var _current_card: Dictionary = {}
 
-# Ogham state — per-card tracking (bible pipeline step 3)
+# Ogham per-card tracking — local (bible pipeline step 3)
 var _active_ogham_this_card: String = ""
 var _ogham_activation_result: Dictionary = {}
 var _ogham_cooldowns: Dictionary = {}
@@ -77,30 +93,79 @@ func setup(store: MerlinStore, card_system: MerlinCardSystem,
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
+# STORE ACCESSORS — single source of truth for game state
+# ═══════════════════════════════════════════════════════════════════════════════
+
+## Returns the store's run sub-dictionary (read-only intent).
+func _store_run() -> Dictionary:
+	return _store.state.get("run", {})
+
+
+## Read life from store.
+func _store_life() -> int:
+	return int(_store_run().get("life_essence", 0))
+
+
+## Read life max (constant, but kept consistent with store init).
+func _store_life_max() -> int:
+	return MerlinConstants.LIFE_ESSENCE_MAX
+
+
+## Read biome currency from store.
+func _store_currency() -> int:
+	return int(_store_run().get("biome_currency", 0))
+
+
+## Read anam from store.
+func _store_anam() -> int:
+	return int(_store_run().get("anam", 0))
+
+
+## Apply a string-coded effect to the store via its effect engine.
+## This is the ONLY way game state (life, rep, currency) should be mutated.
+func _store_apply_effect(effect_code: String, source: String = "RUN_3D") -> void:
+	_effects.apply_effects(_store.state, [effect_code], source)
+
+
+## Sync game state from store INTO _run_state so card_system methods see
+## current values. Called before any _card_system method that reads life/currency.
+func _sync_store_to_run_state() -> void:
+	_run_state["life_essence"] = _store_life()
+	_run_state["life_max"] = _store_life_max()
+	_run_state["biome_currency"] = _store_currency()
+	_run_state["anam_found"] = _store_anam()
+	# Faction rep delta is tracked in _run_state for per-run accumulation
+	# (store has cross-run faction_rep, delta is applied at run end)
+
+
+# ═══════════════════════════════════════════════════════════════════════════════
 # RUN LIFECYCLE
 # ═══════════════════════════════════════════════════════════════════════════════
 
 func start_run(biome: String, ogham: String) -> void:
+	# Card-system tracking state (card_index, promises, story_log, etc.)
 	_run_state = _card_system.init_run(biome, ogham)
-	_run_state["life_essence"] = MerlinConstants.LIFE_ESSENCE_START
-	_run_state["life_max"] = MerlinConstants.LIFE_ESSENCE_MAX
-	_run_state["biome_currency"] = 0
+
+	# Sync game state from store into _run_state for card_system compatibility
+	_sync_store_to_run_state()
+	# Period is card-system tracking (derived from card_index)
 	_run_state["period"] = "aube"
 
+	# Local UI/flow state
 	_is_running = true
 	_is_paused = false
 	_walk_timer = 0.0
 	_card_interval = _next_card_interval()
 
-	# Initialize ogham state — 3 starters are always available
+	# Local ogham state — 3 starters are always available
 	_ogham_cooldowns = {}
 	_unlocked_oghams = MerlinConstants.OGHAM_STARTER_SKILLS.duplicate()
 	_active_ogham_this_card = ""
 	_ogham_activation_result = {}
 
-	# Emit initial state
-	life_changed.emit(_run_state["life_essence"], _run_state["life_max"])
-	currency_changed.emit(0)
+	# Emit initial state (read from store)
+	life_changed.emit(_store_life(), _store_life_max())
+	currency_changed.emit(_store_currency())
 	period_changed.emit("aube")
 	ogham_updated.emit(ogham, 0)
 	promises_updated.emit([])
@@ -118,9 +183,9 @@ func stop_run(reason: String) -> void:
 
 	var data: Dictionary = {
 		"card_index": int(_run_state.get("card_index", 0)),
-		"life_essence": int(_run_state.get("life_essence", 0)),
+		"life_essence": _store_life(),
 		"biome": str(_run_state.get("biome", "")),
-		"biome_currency": int(_run_state.get("biome_currency", 0)),
+		"biome_currency": _store_currency(),
 		"promises": _run_state.get("active_promises", []),
 	}
 	run_ended.emit(reason, data)
@@ -136,7 +201,7 @@ func process_tick(delta: float) -> void:
 
 	_walk_timer += delta
 
-	# Update period
+	# Update period (derived from card_index — card-system tracking)
 	var card_index: int = int(_run_state.get("card_index", 0))
 	var new_period: String = MerlinStore.get_period(card_index)
 	if new_period != str(_run_state.get("period", "")):
@@ -157,11 +222,13 @@ func _trigger_card() -> void:
 	_active_ogham_this_card = ""
 	_ogham_activation_result = {}
 
-	# Life drain
-	var life: int = int(_run_state.get("life_essence", 0))
-	life = maxi(life - DRAIN_PER_CARD, 0)
-	_run_state["life_essence"] = life
-	life_changed.emit(life, int(_run_state.get("life_max", 100)))
+	# Step 1: Life drain — mutate store, then emit signal
+	_store_apply_effect("DAMAGE_LIFE:%d" % DRAIN_PER_CARD, "CARD_DRAIN")
+	var life: int = _store_life()
+	life_changed.emit(life, _store_life_max())
+
+	# Sync store game state into _run_state before card_system calls
+	_sync_store_to_run_state()
 
 	# Check run end before card
 	var end_check: Dictionary = _card_system.check_run_end(_run_state)
@@ -226,6 +293,9 @@ func on_card_choice(option_index: int) -> void:
 			push_warning("[Run3D] No MerlinMiniGameSystem — using default score 75")
 			score = 75
 
+	# Sync store state into _run_state before card resolution
+	_sync_store_to_run_state()
+
 	# ─── Step 7: Resolve card with score ──────────────────────────────
 	var result: Dictionary = _card_system.resolve_card(
 		_run_state, _current_card, option_index, score
@@ -235,7 +305,7 @@ func on_card_choice(option_index: int) -> void:
 		resume_after_card()
 		return
 
-	# Apply effects to run state
+	# Apply effects to store (not local _run_state)
 	var effects: Array = result.get("effects", [])
 
 	# ─── Step 8: Ogham protection (luis/gort/eadhadh filter negatives) ──
@@ -244,7 +314,7 @@ func on_card_choice(option_index: int) -> void:
 
 	_apply_effects(effects)
 
-	# Update promise tracking
+	# Update promise tracking (card-system tracking)
 	for eff in effects:
 		if eff is Dictionary:
 			var etype: String = str(eff.get("type", ""))
@@ -256,11 +326,11 @@ func on_card_choice(option_index: int) -> void:
 				"DAMAGE_LIFE":
 					_card_system.update_promise_tracking(_run_state, "damage", eff)
 
-	# Track minigame result
+	# Track minigame result (card-system tracking)
 	if score >= 60 and card_type != "merlin_direct":
 		_card_system.update_promise_tracking(_run_state, "minigame_win", {})
 
-	# ─── Step 11: Cooldown -1 on all oghams ──────────────────────────
+	# ─── Step 11: Cooldown -1 on all oghams (local state) ────────────
 	_tick_ogham_cooldowns()
 
 	card_ended.emit()
@@ -288,7 +358,7 @@ func check_convergence(card_index: int, _tension: float) -> bool:
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
-# EFFECT APPLICATION
+# EFFECT APPLICATION — delegates to store for game state mutations
 # ═══════════════════════════════════════════════════════════════════════════════
 
 func _apply_effects(effects: Array) -> void:
@@ -300,30 +370,36 @@ func _apply_effects(effects: Array) -> void:
 
 		match etype:
 			"HEAL_LIFE":
-				var life: int = int(_run_state.get("life_essence", 0))
-				var life_max: int = int(_run_state.get("life_max", 100))
-				life = mini(life + amount, life_max)
-				_run_state["life_essence"] = life
-				life_changed.emit(life, life_max)
+				# Store mutation — store clamps to [0, max]
+				_store_apply_effect("HEAL_LIFE:%d" % amount, "CARD_EFFECT")
+				life_changed.emit(_store_life(), _store_life_max())
 			"DAMAGE_LIFE":
-				var life: int = int(_run_state.get("life_essence", 0))
-				life = maxi(life - amount, 0)
-				_run_state["life_essence"] = life
-				life_changed.emit(life, int(_run_state.get("life_max", 100)))
-				if life <= 0:
+				# Store mutation
+				_store_apply_effect("DAMAGE_LIFE:%d" % amount, "CARD_EFFECT")
+				var life_after: int = _store_life()
+				life_changed.emit(life_after, _store_life_max())
+				if life_after <= 0:
 					stop_run("death")
 			"ADD_REPUTATION":
+				# Store mutation for cross-run faction rep
 				var faction: String = str(effect.get("faction", ""))
+				if not faction.is_empty():
+					_store_apply_effect("ADD_REPUTATION:%s:%d" % [faction, amount], "CARD_EFFECT")
+				# Also track per-run delta in _run_state for card_system
 				var rep_delta: Dictionary = _run_state.get("faction_rep_delta", {})
 				rep_delta[faction] = float(rep_delta.get(faction, 0.0)) + float(amount)
 				_run_state["faction_rep_delta"] = rep_delta
 			"ADD_BIOME_CURRENCY":
-				var currency: int = int(_run_state.get("biome_currency", 0)) + amount
-				_run_state["biome_currency"] = currency
-				currency_changed.emit(currency)
+				# Store mutation
+				_store_apply_effect("ADD_BIOME_CURRENCY:%d" % amount, "CARD_EFFECT")
+				currency_changed.emit(_store_currency())
+
+	# After all effects, sync store values back into _run_state
+	_sync_store_to_run_state()
 
 
 func _apply_trust_delta(delta: int) -> void:
+	# Trust delta is card-system tracking (accumulated per run, applied at end)
 	var trust: int = int(_run_state.get("trust_delta", 0)) + delta
 	_run_state["trust_delta"] = trust
 
@@ -337,7 +413,7 @@ func _apply_trust_delta(delta: int) -> void:
 ## stores the activation result for step 8 (protection) and step 11 (cooldown).
 ## Bible v2.4: 1 ogham per card max, must be unlocked, not on cooldown.
 func on_ogham_activated(ogham_id: String) -> void:
-	# ── Guard: 1 ogham per card max ──
+	# ── Guard: 1 ogham per card max (local per-card tracking) ──
 	if not _active_ogham_this_card.is_empty():
 		push_warning("[Run3D] Ogham already activated this card: %s" % _active_ogham_this_card)
 		return
@@ -347,7 +423,7 @@ func on_ogham_activated(ogham_id: String) -> void:
 		push_warning("[Run3D] Ogham not available: %s" % ogham_id)
 		return
 
-	# ── Guard: must have a card displayed ──
+	# ── Guard: must have a card displayed (local UI state) ──
 	if _current_card.is_empty():
 		push_warning("[Run3D] No card displayed — cannot activate ogham")
 		return
@@ -357,32 +433,34 @@ func on_ogham_activated(ogham_id: String) -> void:
 		push_warning("[Run3D] Unknown ogham: %s" % ogham_id)
 		return
 
-	# ── Deduct anam cost (if any) ──
+	# ── Deduct anam cost (if any) — read/write via store ──
 	var cost_anam: int = int(spec.get("cost_anam", 0))
 	if cost_anam > 0:
-		var current_anam: int = int(_run_state.get("anam_found", 0))
+		var current_anam: int = _store_anam()
 		if current_anam < cost_anam:
 			push_warning("[Run3D] Not enough anam for %s (need %d, have %d)" % [ogham_id, cost_anam, current_anam])
 			return
-		_run_state["anam_found"] = current_anam - cost_anam
+		# Deduct anam via store (negative ADD_ANAM)
+		_store_apply_effect("ADD_ANAM:%d" % (-cost_anam), "OGHAM_COST")
 
 	# ── Activate: delegate to MerlinEffectEngine for step-3 effects ──
+	# Pass store.state so effect engine writes to the canonical game state
 	_active_ogham_this_card = ogham_id
-	_ogham_activation_result = _effects.activate_ogham(ogham_id, _run_state, _current_card)
+	_ogham_activation_result = _effects.activate_ogham(ogham_id, _store.state, _current_card)
 
-	# ── Set cooldown immediately ──
+	# ── Set cooldown immediately (local ogham tracking) ──
 	var cooldown_turns: int = int(spec.get("cooldown", 3))
 	_ogham_cooldowns[ogham_id] = cooldown_turns
 
-	# ── Sync run_state life/currency if effect engine modified them ──
-	_sync_life_from_run_state()
-
-	# ── Emit signal so HUD updates ──
+	# ── Emit signals with current store values ──
+	life_changed.emit(_store_life(), _store_life_max())
+	currency_changed.emit(_store_currency())
 	ogham_updated.emit(ogham_id, cooldown_turns)
 
 
 ## Returns list of ogham IDs the player can activate right now.
 ## Filters: must be unlocked (or starter), cooldown == 0.
+## (Local state — ogham availability is controller-owned)
 func get_available_oghams() -> Array:
 	var available: Array = []
 	for ogham_id in MerlinConstants.OGHAM_FULL_SPECS:
@@ -392,11 +470,12 @@ func get_available_oghams() -> Array:
 
 
 ## Returns the ogham activation result for this card (empty if none activated).
+## (Local per-card state)
 func get_ogham_activation_result() -> Dictionary:
 	return _ogham_activation_result
 
 
-## Check if a specific ogham can be activated.
+## Check if a specific ogham can be activated. (Local state)
 func _is_ogham_available(ogham_id: String) -> bool:
 	var spec: Dictionary = MerlinConstants.OGHAM_FULL_SPECS.get(ogham_id, {})
 	if spec.is_empty():
@@ -411,13 +490,14 @@ func _is_ogham_available(ogham_id: String) -> bool:
 	return true
 
 
-## Returns current cooldown for an ogham (0 = ready).
+## Returns current cooldown for an ogham (0 = ready). (Local state)
 func get_ogham_cooldown(ogham_id: String) -> int:
 	return int(_ogham_cooldowns.get(ogham_id, 0))
 
 
 ## Step 11: Decrement all ogham cooldowns by 1 after each card resolution.
 ## Removes entries that reach 0. Emits ogham_updated for each changed ogham.
+## (Local state — cooldowns are controller-owned)
 func _tick_ogham_cooldowns() -> void:
 	var to_remove: Array = []
 	for ogham_id in _ogham_cooldowns:
@@ -430,7 +510,7 @@ func _tick_ogham_cooldowns() -> void:
 		_ogham_cooldowns.erase(ogham_id)
 
 
-## Unlock an ogham for this run (e.g. via UNLOCK_OGHAM effect).
+## Unlock an ogham for this run (e.g. via UNLOCK_OGHAM effect). (Local state)
 func unlock_ogham(ogham_id: String) -> void:
 	if not MerlinConstants.OGHAM_FULL_SPECS.has(ogham_id):
 		push_warning("[Run3D] Cannot unlock unknown ogham: %s" % ogham_id)
@@ -439,36 +519,23 @@ func unlock_ogham(ogham_id: String) -> void:
 		_unlocked_oghams.append(ogham_id)
 
 
-## Sync life/currency from _run_state after effect engine modifies state dict.
-## The effect engine's activate_ogham writes to state["run"]["life_essence"] etc.
-## We need to reflect those changes in our flat _run_state and emit signals.
-func _sync_life_from_run_state() -> void:
-	var life: int = int(_run_state.get("life_essence", 0))
-	var life_max: int = int(_run_state.get("life_max", 100))
-	life_changed.emit(life, life_max)
-	var currency: int = int(_run_state.get("biome_currency", 0))
-	currency_changed.emit(currency)
-
-
 # ═══════════════════════════════════════════════════════════════════════════════
-# COLLECTIBLE PICKUP (called by spawner)
+# COLLECTIBLE PICKUP — delegates to store for game state mutations
 # ═══════════════════════════════════════════════════════════════════════════════
 
 func on_collectible_picked(type: String, amount: int) -> void:
 	match type:
 		"currency":
-			var currency: int = int(_run_state.get("biome_currency", 0)) + amount
-			_run_state["biome_currency"] = currency
-			currency_changed.emit(currency)
+			# Store mutation
+			_store_apply_effect("ADD_BIOME_CURRENCY:%d" % amount, "COLLECTIBLE")
+			currency_changed.emit(_store_currency())
 		"anam_rare":
-			# Rare anam pickup — stored separately
-			_run_state["anam_found"] = int(_run_state.get("anam_found", 0)) + amount
+			# Store mutation
+			_store_apply_effect("ADD_ANAM:%d" % amount, "COLLECTIBLE")
 		"heal":
-			var life: int = int(_run_state.get("life_essence", 0))
-			var life_max: int = int(_run_state.get("life_max", 100))
-			life = mini(life + amount, life_max)
-			_run_state["life_essence"] = life
-			life_changed.emit(life, life_max)
+			# Store mutation
+			_store_apply_effect("HEAL_LIFE:%d" % amount, "COLLECTIBLE")
+			life_changed.emit(_store_life(), _store_life_max())
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
@@ -486,6 +553,8 @@ func _next_card_interval() -> float:
 
 
 func get_run_state() -> Dictionary:
+	# Return _run_state with current store values synced in
+	_sync_store_to_run_state()
 	return _run_state
 
 

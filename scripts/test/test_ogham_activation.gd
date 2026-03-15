@@ -27,19 +27,27 @@ func _make_controller() -> Dictionary:
 
 
 ## Simulate a run start + card trigger so ogham can be activated.
-## Sets up _run_state and _current_card directly for unit testing.
+## Sets up _run_state (card-system tracking) and store.state["run"] (game state)
+## directly for unit testing. Game state lives in the store; _run_state holds
+## card-system fields plus a synced copy of game values.
 func _setup_card_state(controller: Run3DController) -> void:
+	# Card-system tracking fields
 	controller._run_state = {
-		"life_essence": 80,
-		"life_max": 100,
-		"biome_currency": 10,
 		"biome": "broceliande",
 		"card_index": 3,
 		"period": "aube",
-		"anam_found": 200,
 		"active_promises": [],
 		"faction_rep_delta": {},
 	}
+	# Game state in store (source of truth)
+	var store: MerlinStore = controller._store
+	if not store.state.has("run"):
+		store.state["run"] = {}
+	store.state["run"]["life_essence"] = 80
+	store.state["run"]["biome_currency"] = 10
+	store.state["run"]["anam"] = 200
+	# Sync store values into _run_state for card_system compatibility
+	controller._sync_store_to_run_state()
 	controller._current_card = {
 		"type": "narrative",
 		"text": "Test card",
@@ -254,10 +262,10 @@ func test_anam_cost_deducted() -> bool:
 
 	# Unlock duir (cost_anam: 70) and activate it
 	ctrl.unlock_ogham("duir")
-	var anam_before: int = int(ctrl._run_state.get("anam_found", 0))
+	var anam_before: int = int(deps["store"].state.get("run", {}).get("anam", 0))
 	ctrl.on_ogham_activated("duir")
 
-	var anam_after: int = int(ctrl._run_state.get("anam_found", 0))
+	var anam_after: int = int(deps["store"].state.get("run", {}).get("anam", 0))
 	var spec: Dictionary = MerlinConstants.OGHAM_FULL_SPECS.get("duir", {})
 	var expected_cost: int = int(spec.get("cost_anam", 0))
 
@@ -276,17 +284,17 @@ func test_insufficient_anam_rejected() -> bool:
 	var ctrl: Run3DController = deps["controller"]
 	_setup_card_state(ctrl)
 
-	# Unlock duir (cost_anam: 70) but set anam to 10
+	# Unlock duir (cost_anam: 70) but set anam to 10 in store
 	ctrl.unlock_ogham("duir")
-	ctrl._run_state["anam_found"] = 10
+	deps["store"].state["run"]["anam"] = 10
 
 	ctrl.on_ogham_activated("duir")
 	if not ctrl._active_ogham_this_card.is_empty():
 		push_error("Should reject activation with insufficient anam")
 		return false
 
-	# Anam should be unchanged
-	var anam: int = int(ctrl._run_state.get("anam_found", 0))
+	# Anam should be unchanged in store
+	var anam: int = int(deps["store"].state.get("run", {}).get("anam", 0))
 	if anam != 10:
 		push_error("Anam should be unchanged at 10, got %d" % anam)
 		return false
@@ -302,10 +310,10 @@ func test_starter_oghams_zero_cost() -> bool:
 	var ctrl: Run3DController = deps["controller"]
 	_setup_card_state(ctrl)
 
-	var anam_before: int = int(ctrl._run_state.get("anam_found", 0))
+	var anam_before: int = int(deps["store"].state.get("run", {}).get("anam", 0))
 	ctrl.on_ogham_activated("beith")
 
-	var anam_after: int = int(ctrl._run_state.get("anam_found", 0))
+	var anam_after: int = int(deps["store"].state.get("run", {}).get("anam", 0))
 	if anam_after != anam_before:
 		push_error("Starter ogham should cost 0 anam, but anam changed from %d to %d" % [anam_before, anam_after])
 		return false

@@ -1,0 +1,3317 @@
+[
+  {
+    "id": "fr_s7_merlin_t0_001",
+    "faction_primaire": "druides",
+    "biome": "foret_broceliande",
+    "champ_lexical": "esprit",
+    "merlin_direct": true,
+    "trust_tier": "T0",
+    "text": "Une voix fatiguee resonne entre les troncs, comme si elle parlait depuis longtemps sans etre entendue. 'Tu marches la ou d'autres ont trebuche. Je ne te connais pas encore, et tu ne me connais pas. Mais le chene devant toi est malade â€” ses racines s'etouffent. Ce que tu feras pour lui me dira ce que tu es.'",
+    "options": [
+      {
+        "label": "Apaiser les racines en degageant la terre a mains nues",
+        "verb": "apaiser",
+        "effects": [
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "druides",
+            "amount": 8
+          },
+          {
+            "type": "HEAL_LIFE",
+            "amount": 5
+          }
+        ]
+      },
+      {
+        "label": "Accepter l'invitation et parler a la voix dans les branches",
+        "verb": "accepter",
+        "effects": [
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "druides",
+            "amount": 6
+          },
+          {
+            "type": "ADD_ANAM",
+            "amount": 3
+          }
+        ]
+      },
+      {
+        "label": "Attendre en silence que la voix se revele davantage",
+        "verb": "attendre",
+        "effects": [
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "anciens",
+            "amount": 5
+          },
+          {
+            "type": "ADD_ANAM",
+            "amount": 4
+          }
+        ]
+      }
+    ],
+    "tags": [
+      "merlin",
+      "T0",
+      "chene",
+      "confiance",
+      "premier_contact"
+    ]
+  },
+  {
+    "id": "fr_s7_merlin_t0_002",
+    "faction_primaire": "anciens",
+    "biome": "cercles_pierres",
+    "champ_lexical": "observation",
+    "merlin_direct": true,
+    "trust_tier": "T0",
+    "text": "Un murmure grince dans le vent entre les menhirs, a peine audible. 'Je t'observe depuis trois cercles. Tu touches les pierres sans demander la permission â€” la plupart le font. La difference, c'est que tu t'es arrete pour ecouter. Le menhir le plus court cache une marque. Regarde, si tu veux.'",
+    "options": [
+      {
+        "label": "Scruter la base du menhir le plus court a la recherche de la marque",
+        "verb": "scruter",
+        "effects": [
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "anciens",
+            "amount": 10
+          },
+          {
+            "type": "ADD_ANAM",
+            "amount": 2
+          }
+        ]
+      },
+      {
+        "label": "Examiner tous les menhirs systematiquement avant de choisir",
+        "verb": "examiner",
+        "effects": [
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "anciens",
+            "amount": 7
+          },
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "druides",
+            "amount": 4
+          }
+        ]
+      },
+      {
+        "label": "Fixer la pierre sans bouger pour montrer qu'on ne craint rien",
+        "verb": "fixer",
+        "effects": [
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "ankou",
+            "amount": 6
+          },
+          {
+            "type": "DAMAGE_LIFE",
+            "amount": 3
+          }
+        ]
+      }
+    ],
+    "tags": [
+      "merlin",
+      "T0",
+      "menhir",
+      "observation",
+      "mefiance"
+    ]
+  },
+  {
+    "id": "fr_s7_merlin_t0_003",
+    "faction_primaire": "korrigans",
+    "biome": "marais_korrigans",
+    "champ_lexical": "perception",
+    "merlin_direct": true,
+    "trust_tier": "T0",
+    "text": "Une lueur verdatre pulse dans la brume des marais. La voix qui en emerge est mefiante, presque hostile. 'Encore un qui vient pietiner la tourbe. Les korrigans t'ont deja repere â€” ils rient dans les roseaux. Moi, je ne ris pas. Ecoute le clapotis. Il y a un rythme. Si tu l'entends, peut-etre que tu merites que je te parle encore.'",
+    "options": [
+      {
+        "label": "Tendre l'oreille pour capter le rythme dans le clapotis",
+        "verb": "tendre l'oreille",
+        "effects": [
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "korrigans",
+            "amount": 8
+          },
+          {
+            "type": "ADD_ANAM",
+            "amount": 3
+          }
+        ]
+      },
+      {
+        "label": "Suivre la lueur verdatre a travers les roseaux",
+        "verb": "suivre",
+        "effects": [
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "korrigans",
+            "amount": 10
+          },
+          {
+            "type": "DAMAGE_LIFE",
+            "amount": 5
+          }
+        ]
+      },
+      {
+        "label": "Flairer l'air pour detecter d'ou viennent les rires",
+        "verb": "flairer",
+        "effects": [
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "korrigans",
+            "amount": 6
+          },
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "niamh",
+            "amount": 4
+          }
+        ]
+      }
+    ],
+    "tags": [
+      "merlin",
+      "T0",
+      "marais",
+      "korrigans",
+      "mefiance",
+      "rythme"
+    ]
+  },
+  {
+    "id": "fr_s7_merlin_t1_001",
+    "faction_primaire": "druides",
+    "biome": "foret_broceliande",
+    "champ_lexical": "logique",
+    "merlin_direct": true,
+    "trust_tier": "T1",
+    "text": "La voix de Merlin est plus claire maintenant, presque familiere. 'Tu reviens. C'est deja mieux que la plupart. Ecoute â€” le Chaudron de Dagda n'est pas un simple recipient. C'est un calcul vivant : ce que tu y deposes en revient transforme, jamais identique. Les druides l'ont compris. La question est : qu'es-tu pret a y deposer?'",
+    "options": [
+      {
+        "label": "Analyser la logique du Chaudron en observant ses gravures",
+        "verb": "analyser",
+        "effects": [
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "druides",
+            "amount": 12
+          },
+          {
+            "type": "ADD_ANAM",
+            "amount": 5
+          }
+        ]
+      },
+      {
+        "label": "Decoder les symboles sur le rebord pour comprendre le mecanisme",
+        "verb": "decoder",
+        "effects": [
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "druides",
+            "amount": 10
+          },
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "anciens",
+            "amount": 6
+          }
+        ]
+      },
+      {
+        "label": "Resoudre l'enigme en versant de l'eau dans le Chaudron",
+        "verb": "resoudre",
+        "effects": [
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "druides",
+            "amount": 14
+          },
+          {
+            "type": "DAMAGE_LIFE",
+            "amount": 6
+          }
+        ]
+      }
+    ],
+    "tags": [
+      "merlin",
+      "T1",
+      "chaudron_dagda",
+      "confiance",
+      "transformation"
+    ]
+  },
+  {
+    "id": "fr_s7_merlin_t1_002",
+    "faction_primaire": "niamh",
+    "biome": "iles_mystiques",
+    "champ_lexical": "esprit",
+    "merlin_direct": true,
+    "trust_tier": "T1",
+    "text": "Merlin apparait comme un reflet dans l'eau entre les iles. Sa voix porte la fatigue de celui qui a trop vu. 'Niamh m'a appele autrefois depuis Tir na nOg. J'ai refuse. L'immortalite est un piege pour ceux qui veulent encore changer. Mais toi... tu es jeune dans ce chemin. Si elle t'appelle, ecoute d'abord ce qu'elle ne dit pas.'",
+    "options": [
+      {
+        "label": "Mediter sur les paroles de Merlin face a l'horizon",
+        "verb": "mediter",
+        "effects": [
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "niamh",
+            "amount": 12
+          },
+          {
+            "type": "ADD_ANAM",
+            "amount": 5
+          }
+        ]
+      },
+      {
+        "label": "Se concentrer pour percevoir l'appel cache de Niamh",
+        "verb": "se concentrer",
+        "effects": [
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "niamh",
+            "amount": 10
+          },
+          {
+            "type": "HEAL_LIFE",
+            "amount": 8
+          }
+        ]
+      },
+      {
+        "label": "Refuser l'appel et rester ancre dans le monde visible",
+        "verb": "refuser",
+        "effects": [
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "anciens",
+            "amount": 8
+          },
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "ankou",
+            "amount": 6
+          }
+        ]
+      }
+    ],
+    "tags": [
+      "merlin",
+      "T1",
+      "niamh",
+      "tir_na_nog",
+      "immortalite",
+      "choix"
+    ]
+  },
+  {
+    "id": "fr_s7_merlin_t1_003",
+    "faction_primaire": "ankou",
+    "biome": "collines_dolmens",
+    "champ_lexical": "esprit",
+    "merlin_direct": true,
+    "trust_tier": "T1",
+    "text": "Merlin est assis sur un dolmen, les jambes pendantes comme un enfant. Mais ses yeux sont vieux. 'L'Ankou ne recolte pas les ames â€” il les accompagne. C'est une nuance que peu saisissent. Un jour, j'ai marche a ses cotes sur cette colline. Il m'a dit une chose : le dernier souffle n'est pas une fin, c'est une porte. Tu me crois?'",
+    "options": [
+      {
+        "label": "Accepter les mots de Merlin et s'asseoir pres de lui",
+        "verb": "accepter",
+        "effects": [
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "ankou",
+            "amount": 12
+          },
+          {
+            "type": "ADD_ANAM",
+            "amount": 4
+          }
+        ]
+      },
+      {
+        "label": "Resister mentalement a l'idee de la mort comme passage",
+        "verb": "resister mentalement",
+        "effects": [
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "anciens",
+            "amount": 8
+          },
+          {
+            "type": "HEAL_LIFE",
+            "amount": 6
+          }
+        ]
+      },
+      {
+        "label": "Endurer le silence du dolmen pour en tirer une verite",
+        "verb": "endurer",
+        "effects": [
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "ankou",
+            "amount": 10
+          },
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "druides",
+            "amount": 5
+          }
+        ]
+      }
+    ],
+    "tags": [
+      "merlin",
+      "T1",
+      "ankou",
+      "mort",
+      "passage",
+      "dolmen"
+    ]
+  },
+  {
+    "id": "fr_s7_merlin_t2_001",
+    "faction_primaire": "druides",
+    "biome": "foret_broceliande",
+    "champ_lexical": "logique",
+    "merlin_direct": true,
+    "trust_tier": "T2",
+    "text": "Merlin marche a tes cotes, detendu. Il parle sans mystere pour la premiere fois. 'La Pierre de Fal crie quand le vrai roi la touche â€” mais personne ne te dit ce qu'elle murmure aux autres. Elle leur montre ce qu'ils refusent de voir en eux. J'ai pose ma main une fois. Elle m'a montre ma solitude. C'est pour cela que je suis ici, avec toi.'",
+    "options": [
+      {
+        "label": "Interpreter les paroles de Merlin a la lumiere de son histoire",
+        "verb": "interpreter",
+        "effects": [
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "druides",
+            "amount": 16
+          },
+          {
+            "type": "ADD_ANAM",
+            "amount": 6
+          }
+        ]
+      },
+      {
+        "label": "Etudier la Pierre de Fal pour comprendre son mecanisme",
+        "verb": "etudier",
+        "effects": [
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "anciens",
+            "amount": 14
+          },
+          {
+            "type": "ADD_BIOME_CURRENCY",
+            "amount": 8
+          }
+        ]
+      },
+      {
+        "label": "Resoudre l'enigme de la solitude de Merlin par l'empathie",
+        "verb": "resoudre",
+        "effects": [
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "druides",
+            "amount": 18
+          },
+          {
+            "type": "DAMAGE_LIFE",
+            "amount": 4
+          }
+        ]
+      }
+    ],
+    "tags": [
+      "merlin",
+      "T2",
+      "pierre_de_fal",
+      "solitude",
+      "revelation"
+    ]
+  },
+  {
+    "id": "fr_s7_merlin_t2_002",
+    "faction_primaire": "anciens",
+    "biome": "cercles_pierres",
+    "champ_lexical": "observation",
+    "merlin_direct": true,
+    "trust_tier": "T2",
+    "text": "Merlin trace un cercle dans la poussiere avec son baton. A l'interieur, il dessine une spirale. 'La Lance de Lugh ne rate jamais sa cible â€” mais ce n'est pas de la precision, c'est de la conviction. Lugh savait exactement ce qu'il voulait detruire. Et toi? Quand tu choisis dans les cartes, sais-tu ce que tu vises?'",
+    "options": [
+      {
+        "label": "Memoriser la spirale pour en retrouver le schema plus tard",
+        "verb": "memoriser",
+        "effects": [
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "anciens",
+            "amount": 14
+          },
+          {
+            "type": "ADD_ANAM",
+            "amount": 7
+          }
+        ]
+      },
+      {
+        "label": "Inspecter chaque trait du dessin pour y trouver un indice",
+        "verb": "inspecter",
+        "effects": [
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "anciens",
+            "amount": 12
+          },
+          {
+            "type": "ADD_BIOME_CURRENCY",
+            "amount": 6
+          }
+        ]
+      },
+      {
+        "label": "Scruter le visage de Merlin pour comprendre sa vraie intention",
+        "verb": "scruter",
+        "effects": [
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "druides",
+            "amount": 10
+          },
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "anciens",
+            "amount": 8
+          }
+        ]
+      }
+    ],
+    "tags": [
+      "merlin",
+      "T2",
+      "lance_de_lugh",
+      "conviction",
+      "spirale"
+    ]
+  },
+  {
+    "id": "fr_s7_merlin_t2_003",
+    "faction_primaire": "niamh",
+    "biome": "iles_mystiques",
+    "champ_lexical": "esprit",
+    "merlin_direct": true,
+    "trust_tier": "T2",
+    "text": "Merlin est translucide, presque absent. Il parle depuis un lieu entre les mondes. 'L'Epee de Nuada tranchait la verite du mensonge d'un seul coup. Mais Nuada a perdu son bras en l'utilisant. Tout pouvoir a un prix anatomique. Je t'ai montre le Chaudron, la Pierre, la Lance. L'Epee, je te la montre maintenant parce que je te fais confiance.'",
+    "options": [
+      {
+        "label": "Mediter sur le sacrifice de Nuada et ce qu'il signifie",
+        "verb": "mediter",
+        "effects": [
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "niamh",
+            "amount": 16
+          },
+          {
+            "type": "ADD_ANAM",
+            "amount": 8
+          }
+        ]
+      },
+      {
+        "label": "S'approcher de l'Epee pour sentir son poids sans la toucher",
+        "verb": "s'approcher",
+        "effects": [
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "niamh",
+            "amount": 12
+          },
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "ankou",
+            "amount": 8
+          }
+        ]
+      },
+      {
+        "label": "Calmer l'energie de l'Epee par la parole rituelle",
+        "verb": "calmer",
+        "effects": [
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "druides",
+            "amount": 10
+          },
+          {
+            "type": "HEAL_LIFE",
+            "amount": 10
+          }
+        ]
+      }
+    ],
+    "tags": [
+      "merlin",
+      "T2",
+      "epee_de_nuada",
+      "sacrifice",
+      "confiance"
+    ]
+  },
+  {
+    "id": "fr_s7_merlin_t3_001",
+    "faction_primaire": "druides",
+    "biome": "foret_broceliande",
+    "champ_lexical": "esprit",
+    "merlin_direct": true,
+    "trust_tier": "T3",
+    "text": "Merlin est la, completement. Plus de brume, plus de distance. Il te regarde comme un egal. 'Je vais te dire ce que je n'ai jamais dit. Les quatre tresors â€” Chaudron, Pierre, Lance, Epee â€” ne sont pas des objets. Ce sont des etats de l'ame. Le Chaudron est la capacite a transformer la douleur. La Pierre est la verite qu'on refuse. La Lance est la volonte pure. L'Epee est le choix final. Tu les portes deja.'",
+    "options": [
+      {
+        "label": "Accepter la revelation et laisser les quatre etats s'eveiller",
+        "verb": "accepter",
+        "effects": [
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "druides",
+            "amount": 18
+          },
+          {
+            "type": "ADD_ANAM",
+            "amount": 10
+          },
+          {
+            "type": "HEAL_LIFE",
+            "amount": 12
+          }
+        ]
+      },
+      {
+        "label": "Se concentrer pour integrer chaque tresor dans sa conscience",
+        "verb": "se concentrer",
+        "effects": [
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "anciens",
+            "amount": 16
+          },
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "druides",
+            "amount": 12
+          }
+        ]
+      },
+      {
+        "label": "Parler a Merlin en egal, partager sa propre verite",
+        "verb": "parler",
+        "effects": [
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "druides",
+            "amount": 20
+          },
+          {
+            "type": "ADD_ANAM",
+            "amount": 8
+          }
+        ]
+      }
+    ],
+    "tags": [
+      "merlin",
+      "T3",
+      "quatre_tresors",
+      "revelation",
+      "egalite",
+      "ame"
+    ]
+  },
+  {
+    "id": "fr_s7_merlin_t3_002",
+    "faction_primaire": "ankou",
+    "biome": "collines_dolmens",
+    "champ_lexical": "esprit",
+    "merlin_direct": true,
+    "trust_tier": "T3",
+    "text": "Merlin s'assoit dans l'herbe entre les dolmens, les etoiles au-dessus. Sa voix est douce, presque tendre. 'L'Ankou m'a dit un jour que je ne mourrais jamais vraiment â€” que je serais piege entre les mondes. Il avait raison. Mais il a ajoute une chose : que quelqu'un viendrait un jour pour m'en liberer. Je crois que c'est toi. Pas par un acte heroique â€” par ta simple presence.'",
+    "options": [
+      {
+        "label": "Endurer le poids de cette revelation sans flechir",
+        "verb": "endurer",
+        "effects": [
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "ankou",
+            "amount": 18
+          },
+          {
+            "type": "ADD_ANAM",
+            "amount": 10
+          }
+        ]
+      },
+      {
+        "label": "Calmer l'ame de Merlin par la presence silencieuse",
+        "verb": "calmer",
+        "effects": [
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "ankou",
+            "amount": 14
+          },
+          {
+            "type": "HEAL_LIFE",
+            "amount": 15
+          }
+        ]
+      },
+      {
+        "label": "Accepter le role sans chercher a le comprendre",
+        "verb": "accepter",
+        "effects": [
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "ankou",
+            "amount": 20
+          },
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "niamh",
+            "amount": 10
+          }
+        ]
+      }
+    ],
+    "tags": [
+      "merlin",
+      "T3",
+      "liberation",
+      "ankou",
+      "piege",
+      "etoiles"
+    ]
+  },
+  {
+    "id": "fr_s7_merlin_t3_003",
+    "faction_primaire": "korrigans",
+    "biome": "marais_korrigans",
+    "champ_lexical": "perception",
+    "merlin_direct": true,
+    "trust_tier": "T3",
+    "text": "Merlin rit â€” un vrai rire, pas un rire de sage. 'Les korrigans m'ont vole mes sandales un jour. J'ai couru pieds nus dans la tourbe pendant trois heures. C'est la que j'ai compris : ils ne volent pas par malice, ils testent si tu sais rire de toi-meme. Aujourd'hui, je te confie leur secret â€” les feux follets ne sont pas des lumieres, ce sont des rires solidifies. Ecoute.'",
+    "options": [
+      {
+        "label": "Ecouter les feux follets avec l'oreille du coeur",
+        "verb": "ecouter",
+        "effects": [
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "korrigans",
+            "amount": 20
+          },
+          {
+            "type": "ADD_ANAM",
+            "amount": 8
+          }
+        ]
+      },
+      {
+        "label": "Pister les lumieres a travers la tourbe pour les rejoindre",
+        "verb": "pister",
+        "effects": [
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "korrigans",
+            "amount": 16
+          },
+          {
+            "type": "ADD_BIOME_CURRENCY",
+            "amount": 10
+          }
+        ]
+      },
+      {
+        "label": "Sentir la vibration des rires dans la brume",
+        "verb": "sentir",
+        "effects": [
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "korrigans",
+            "amount": 14
+          },
+          {
+            "type": "HEAL_LIFE",
+            "amount": 12
+          }
+        ]
+      }
+    ],
+    "tags": [
+      "merlin",
+      "T3",
+      "korrigans",
+      "feux_follets",
+      "rire",
+      "secret"
+    ]
+  },
+  {
+    "id": "fr_s7_event_samhain_001",
+    "faction_primaire": "ankou",
+    "biome": "collines_dolmens",
+    "champ_lexical": "esprit",
+    "event_type": "festival",
+    "event_name": "Samhain",
+    "text": "La nuit de Samhain tombe sur les collines. Les dolmens brillent d'une phosphorescence bleutee et le voile entre les mondes s'amincit jusqu'a la transparence. Des silhouettes traversent l'air â€” les morts de l'annee passee qui viennent saluer les vivants. L'Ankou se tient au centre du cercle, sa charrette immobile, attendant que quelqu'un ose lui parler.",
+    "options": [
+      {
+        "label": "Parler a l'Ankou avec respect et lui offrir ses hommages",
+        "verb": "parler",
+        "effects": [
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "ankou",
+            "amount": 16
+          },
+          {
+            "type": "ADD_ANAM",
+            "amount": 6
+          }
+        ]
+      },
+      {
+        "label": "Mediter au pied du dolmen en accueillant les esprits",
+        "verb": "mediter",
+        "effects": [
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "ankou",
+            "amount": 10
+          },
+          {
+            "type": "HEAL_LIFE",
+            "amount": 10
+          }
+        ]
+      },
+      {
+        "label": "Resister mentalement a la terreur de la nuit des morts",
+        "verb": "resister mentalement",
+        "effects": [
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "anciens",
+            "amount": 8
+          },
+          {
+            "type": "DAMAGE_LIFE",
+            "amount": 5
+          },
+          {
+            "type": "ADD_ANAM",
+            "amount": 4
+          }
+        ]
+      }
+    ],
+    "tags": [
+      "event",
+      "samhain",
+      "ankou",
+      "morts",
+      "voile",
+      "dolmen"
+    ]
+  },
+  {
+    "id": "fr_s7_event_imbolc_002",
+    "faction_primaire": "druides",
+    "biome": "foret_broceliande",
+    "champ_lexical": "observation",
+    "event_type": "festival",
+    "event_name": "Imbolc",
+    "text": "Le festival d'Imbolc eclaire la foret de mille bougies plantees dans la neige fondante. Brigid, la triple deesse, est honoree ce soir â€” guerisseuse, forge, poete. Les druides preparent une infusion de premiere lait et de mousse de chene. La flamme centrale ne vacille pas malgre le vent. C'est le signe que le printemps sera genereux.",
+    "options": [
+      {
+        "label": "Observer la flamme immobile et y lire un presage",
+        "verb": "observer",
+        "effects": [
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "druides",
+            "amount": 14
+          },
+          {
+            "type": "HEAL_LIFE",
+            "amount": 8
+          }
+        ]
+      },
+      {
+        "label": "Examiner les offrandes des druides pour comprendre leurs prieres",
+        "verb": "examiner",
+        "effects": [
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "druides",
+            "amount": 12
+          },
+          {
+            "type": "ADD_ANAM",
+            "amount": 5
+          }
+        ]
+      },
+      {
+        "label": "Fixer la triple flamme de Brigid en memorisant ses couleurs",
+        "verb": "fixer",
+        "effects": [
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "druides",
+            "amount": 10
+          },
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "niamh",
+            "amount": 6
+          }
+        ]
+      }
+    ],
+    "tags": [
+      "event",
+      "imbolc",
+      "brigid",
+      "flamme",
+      "printemps",
+      "druides"
+    ]
+  },
+  {
+    "id": "fr_s7_event_beltane_003",
+    "faction_primaire": "korrigans",
+    "biome": "marais_korrigans",
+    "champ_lexical": "finesse",
+    "event_type": "festival",
+    "event_name": "Beltane",
+    "text": "Le feu de Beltane rugit dans la clairiere du marais. Les korrigans dansent entre les flammes sans se bruler, leurs rires sonnant comme des clochettes de verre. Le betail traverse les feux jumeaux pour etre purifie. L'air sent le sureau et le miel sauvage. Un korrigan te fait signe de les rejoindre dans la danse.",
+    "options": [
+      {
+        "label": "Se faufiler entre les danseurs pour rejoindre le cercle",
+        "verb": "se faufiler",
+        "effects": [
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "korrigans",
+            "amount": 14
+          },
+          {
+            "type": "DAMAGE_LIFE",
+            "amount": 4
+          }
+        ]
+      },
+      {
+        "label": "Esquiver les flammes avec agilite pour impressionner les korrigans",
+        "verb": "esquiver",
+        "effects": [
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "korrigans",
+            "amount": 16
+          },
+          {
+            "type": "DAMAGE_LIFE",
+            "amount": 8
+          }
+        ]
+      },
+      {
+        "label": "Traverser les feux jumeaux comme le betail pour etre purifie",
+        "verb": "traverser",
+        "effects": [
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "korrigans",
+            "amount": 10
+          },
+          {
+            "type": "HEAL_LIFE",
+            "amount": 12
+          }
+        ]
+      }
+    ],
+    "tags": [
+      "event",
+      "beltane",
+      "feu",
+      "danse",
+      "korrigans",
+      "purification"
+    ]
+  },
+  {
+    "id": "fr_s7_event_lughnasadh_004",
+    "faction_primaire": "anciens",
+    "biome": "villages_celtes",
+    "champ_lexical": "vigueur",
+    "event_type": "festival",
+    "event_name": "Lughnasadh",
+    "text": "Lughnasadh couronne l'ete. Le village entier se rassemble pour les jeux funeraires en l'honneur de Tailtiu, mere nourriciere de Lugh. Des concours de force, de course et de poesie se deroulent entre les maisons de pierre. Le chef du village offre la premiere gerbe de ble au gagnant. L'odeur du pain frais emplit l'air.",
+    "options": [
+      {
+        "label": "Combattre dans le cercle de lutte pour honorer Tailtiu",
+        "verb": "combattre",
+        "effects": [
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "anciens",
+            "amount": 16
+          },
+          {
+            "type": "DAMAGE_LIFE",
+            "amount": 7
+          }
+        ]
+      },
+      {
+        "label": "Courir dans la course autour du village pour gagner la gerbe",
+        "verb": "courir",
+        "effects": [
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "anciens",
+            "amount": 12
+          },
+          {
+            "type": "DAMAGE_LIFE",
+            "amount": 5
+          },
+          {
+            "type": "ADD_BIOME_CURRENCY",
+            "amount": 6
+          }
+        ]
+      },
+      {
+        "label": "Forcer le respect par un poeme improvise en l'honneur de Lugh",
+        "verb": "forcer",
+        "effects": [
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "anciens",
+            "amount": 14
+          },
+          {
+            "type": "ADD_ANAM",
+            "amount": 5
+          }
+        ]
+      }
+    ],
+    "tags": [
+      "event",
+      "lughnasadh",
+      "tailtiu",
+      "lugh",
+      "jeux",
+      "village",
+      "recolte"
+    ]
+  },
+  {
+    "id": "fr_s7_event_tempete_005",
+    "faction_primaire": "niamh",
+    "biome": "cotes_sauvages",
+    "champ_lexical": "vigueur",
+    "event_type": "storm",
+    "text": "Une tempete titanesque s'abat sur les cotes. Les vagues frappent les falaises avec une fureur surnaturelle â€” ce n'est pas le vent ordinaire, c'est le souffle d'un ancien qui reve dans les profondeurs. Les pecheurs ont fui. Seule reste une barque amarree a un rocher, sa corde sur le point de ceder. A l'interieur, une lanterne brille d'une lumiere qui n'est pas de ce monde.",
+    "options": [
+      {
+        "label": "Resister physiquement au vent pour atteindre la barque",
+        "verb": "resister physiquement",
+        "effects": [
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "niamh",
+            "amount": 14
+          },
+          {
+            "type": "DAMAGE_LIFE",
+            "amount": 10
+          }
+        ]
+      },
+      {
+        "label": "Fuir vers les falaises pour observer la tempete d'en haut",
+        "verb": "fuir",
+        "effects": [
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "anciens",
+            "amount": 8
+          },
+          {
+            "type": "HEAL_LIFE",
+            "amount": 5
+          }
+        ]
+      },
+      {
+        "label": "Pousser la barque vers la mer pour liberer ce qu'elle contient",
+        "verb": "pousser",
+        "effects": [
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "niamh",
+            "amount": 18
+          },
+          {
+            "type": "DAMAGE_LIFE",
+            "amount": 12
+          },
+          {
+            "type": "ADD_ANAM",
+            "amount": 6
+          }
+        ]
+      }
+    ],
+    "tags": [
+      "event",
+      "tempete",
+      "cotes",
+      "barque",
+      "lanterne",
+      "ancien"
+    ]
+  },
+  {
+    "id": "fr_s7_event_eclipse_006",
+    "faction_primaire": "anciens",
+    "biome": "cercles_pierres",
+    "champ_lexical": "logique",
+    "event_type": "eclipse",
+    "text": "L'eclipse commence sans prevenir. Le soleil se couvre et les cercles de pierres s'activent â€” les ombres des menhirs convergent vers le centre, dessinant un motif que personne n'a vu depuis des siecles. Les oiseaux se taisent. L'air vibre d'une frequence inaudible. Au centre du motif d'ombre, une dalle se souleve legerement.",
+    "options": [
+      {
+        "label": "Dechiffrer le motif d'ombre avant que l'eclipse ne s'acheve",
+        "verb": "dechiffrer",
+        "effects": [
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "anciens",
+            "amount": 18
+          },
+          {
+            "type": "ADD_ANAM",
+            "amount": 8
+          }
+        ]
+      },
+      {
+        "label": "Analyser l'alignement des ombres par rapport aux solstices",
+        "verb": "analyser",
+        "effects": [
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "anciens",
+            "amount": 14
+          },
+          {
+            "type": "ADD_BIOME_CURRENCY",
+            "amount": 8
+          }
+        ]
+      },
+      {
+        "label": "Etudier la dalle soulevee pour comprendre ce qu'elle cache",
+        "verb": "etudier",
+        "effects": [
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "anciens",
+            "amount": 12
+          },
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "druides",
+            "amount": 8
+          }
+        ]
+      }
+    ],
+    "tags": [
+      "event",
+      "eclipse",
+      "ombres",
+      "menhir",
+      "dalle",
+      "alignement"
+    ]
+  },
+  {
+    "id": "fr_s7_event_voyageur_007",
+    "faction_primaire": "niamh",
+    "biome": "landes_bruyere",
+    "champ_lexical": "bluff",
+    "event_type": "traveler",
+    "text": "Un voyageur apparait sur la lande, sa cape trempee de rosee, un baton noueux a la main. Il ne marche pas â€” il glisse, comme si ses pieds ne touchaient pas la bruyere. Quand il s'arrete, il te regarde avec des yeux qui sont des miroirs. 'J'ai besoin d'un nom pour continuer mon chemin,' dit-il. 'Donne-moi le tien, ou invente-en un. Mais ne me mens pas a moitie.'",
+    "options": [
+      {
+        "label": "Negocier un echange : ton nom contre le sien",
+        "verb": "negocier",
+        "effects": [
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "niamh",
+            "amount": 12
+          },
+          {
+            "type": "ADD_ANAM",
+            "amount": 6
+          }
+        ]
+      },
+      {
+        "label": "Convaincre le voyageur que les noms n'ont pas de pouvoir",
+        "verb": "convaincre",
+        "effects": [
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "anciens",
+            "amount": 10
+          },
+          {
+            "type": "HEAL_LIFE",
+            "amount": 8
+          }
+        ]
+      },
+      {
+        "label": "Charmer l'etranger avec un recit de ta lignee inventee",
+        "verb": "charmer",
+        "effects": [
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "korrigans",
+            "amount": 12
+          },
+          {
+            "type": "DAMAGE_LIFE",
+            "amount": 3
+          },
+          {
+            "type": "ADD_ANAM",
+            "amount": 4
+          }
+        ]
+      }
+    ],
+    "tags": [
+      "event",
+      "voyageur",
+      "nom",
+      "miroir",
+      "lande",
+      "echange"
+    ]
+  },
+  {
+    "id": "fr_s7_event_voyageur_008",
+    "faction_primaire": "druides",
+    "biome": "foret_broceliande",
+    "champ_lexical": "chance",
+    "event_type": "traveler",
+    "text": "Une vieille femme assise sous un if tresse des herbes en fredonnant. Sa voix est le bruissement meme de la foret. Quand tu approches, elle leve un panier debordant de plantes â€” certaines medicinales, d'autres mortelles. 'Choisis-en une, enfant du chemin. La chance guide parfois mieux que le savoir. Ou peut-etre pas.'",
+    "options": [
+      {
+        "label": "Cueillir une plante au hasard en faisant confiance a l'instinct",
+        "verb": "cueillir",
+        "effects": [
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "druides",
+            "amount": 10
+          },
+          {
+            "type": "HEAL_LIFE",
+            "amount": 12
+          }
+        ]
+      },
+      {
+        "label": "Chercher au hasard dans le panier en fermant les yeux",
+        "verb": "chercher au hasard",
+        "effects": [
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "korrigans",
+            "amount": 8
+          },
+          {
+            "type": "DAMAGE_LIFE",
+            "amount": 6
+          },
+          {
+            "type": "ADD_ANAM",
+            "amount": 5
+          }
+        ]
+      },
+      {
+        "label": "Deviner la plante correcte en observant les doigts de la vieille",
+        "verb": "deviner",
+        "effects": [
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "druides",
+            "amount": 14
+          },
+          {
+            "type": "ADD_BIOME_CURRENCY",
+            "amount": 5
+          }
+        ]
+      }
+    ],
+    "tags": [
+      "event",
+      "voyageur",
+      "vieille_femme",
+      "herbes",
+      "if",
+      "chance"
+    ]
+  },
+  {
+    "id": "fr_s7_cross_druides_ankou_001",
+    "faction_primaire": "druides",
+    "biome": "collines_dolmens",
+    "champ_lexical": "esprit",
+    "crossover_factions": [
+      "druides",
+      "ankou"
+    ],
+    "text": "Sur la colline, un vieux druide et un passeur masque se tiennent face a face devant un dolmen ouvert. Le druide veut planter un chene sacre dans la terre des morts. Le passeur refuse â€” les racines derangeraient les dormeurs. Aucun ne bougera. Ils te regardent, attendant que tu tranches.",
+    "options": [
+      {
+        "label": "Apaiser les deux parties en proposant un chene nain, moins profond",
+        "verb": "apaiser",
+        "effects": [
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "druides",
+            "amount": 10
+          },
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "ankou",
+            "amount": 8
+          }
+        ]
+      },
+      {
+        "label": "Parler pour le druide â€” la vie doit s'enraciner partout",
+        "verb": "parler",
+        "effects": [
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "druides",
+            "amount": 18
+          },
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "ankou",
+            "amount": -8
+          }
+        ]
+      },
+      {
+        "label": "Accepter la position du passeur â€” les morts ont droit au repos",
+        "verb": "accepter",
+        "effects": [
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "ankou",
+            "amount": 16
+          },
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "druides",
+            "amount": -6
+          }
+        ]
+      }
+    ],
+    "tags": [
+      "crossover",
+      "druides",
+      "ankou",
+      "dolmen",
+      "chene",
+      "conflit"
+    ]
+  },
+  {
+    "id": "fr_s7_cross_korrigans_anciens_002",
+    "faction_primaire": "korrigans",
+    "biome": "villages_celtes",
+    "champ_lexical": "bluff",
+    "crossover_factions": [
+      "korrigans",
+      "anciens"
+    ],
+    "text": "Un groupe de korrigans a vole la coupe ceremonielle du village avant le banquet des Anciens. Le chef Cadogan est furieux. Les korrigans, perches sur le toit de la forge, agitent la coupe en riant. 'On la rend si quelqu'un nous raconte une histoire qu'on n'a jamais entendue!' crie leur meneur. Le banquet est dans une heure.",
+    "options": [
+      {
+        "label": "Marchander avec les korrigans â€” une histoire contre la coupe et un festin",
+        "verb": "marchander",
+        "effects": [
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "korrigans",
+            "amount": 14
+          },
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "anciens",
+            "amount": 6
+          }
+        ]
+      },
+      {
+        "label": "Mentir aux korrigans avec une fausse legende pour reprendre la coupe",
+        "verb": "mentir",
+        "effects": [
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "anciens",
+            "amount": 14
+          },
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "korrigans",
+            "amount": -10
+          }
+        ]
+      },
+      {
+        "label": "Convaincre Cadogan de rire du vol et d'inviter les korrigans au banquet",
+        "verb": "convaincre",
+        "effects": [
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "korrigans",
+            "amount": 12
+          },
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "anciens",
+            "amount": 10
+          }
+        ]
+      }
+    ],
+    "tags": [
+      "crossover",
+      "korrigans",
+      "anciens",
+      "coupe",
+      "vol",
+      "banquet"
+    ]
+  },
+  {
+    "id": "fr_s7_cross_niamh_druides_003",
+    "faction_primaire": "niamh",
+    "biome": "iles_mystiques",
+    "champ_lexical": "esprit",
+    "crossover_factions": [
+      "niamh",
+      "druides"
+    ],
+    "text": "Une porte s'est ouverte entre Tir na nOg et le monde des vivants. Des fleurs immortelles poussent sur la plage de l'ile, mais elles aspirent la seve des chenes de Broceliande a travers des racines invisibles. Une pretresse de Niamh protege la porte. Un druide supplie qu'on la referme avant que la foret ne meure.",
+    "options": [
+      {
+        "label": "Mediter entre les deux mondes pour trouver un equilibre",
+        "verb": "mediter",
+        "effects": [
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "niamh",
+            "amount": 10
+          },
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "druides",
+            "amount": 10
+          }
+        ]
+      },
+      {
+        "label": "Calmer le druide et lui montrer que la porte guerira les deux mondes",
+        "verb": "calmer",
+        "effects": [
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "niamh",
+            "amount": 16
+          },
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "druides",
+            "amount": -8
+          }
+        ]
+      },
+      {
+        "label": "S'approcher de la porte et la refermer par la force du chant",
+        "verb": "s'approcher",
+        "effects": [
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "druides",
+            "amount": 16
+          },
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "niamh",
+            "amount": -6
+          }
+        ]
+      }
+    ],
+    "tags": [
+      "crossover",
+      "niamh",
+      "druides",
+      "tir_na_nog",
+      "porte",
+      "fleurs"
+    ]
+  },
+  {
+    "id": "fr_s7_cross_ankou_niamh_004",
+    "faction_primaire": "ankou",
+    "biome": "collines_dolmens",
+    "champ_lexical": "esprit",
+    "crossover_factions": [
+      "ankou",
+      "niamh"
+    ],
+    "text": "L'ame d'un guerrier mort refuse de partir. L'Ankou attend patiemment a cote du tumulus, sa charrette prete. Mais une lumiere doree descend des nuages â€” l'invitation de Tir na nOg. Le guerrier hesite entre le repos des morts et l'eternite des bienheureux. Les deux gardiens te regardent â€” c'est toi qui dois le conseiller.",
+    "options": [
+      {
+        "label": "Endurer le dilemme et conseiller le repos aupres de l'Ankou",
+        "verb": "endurer",
+        "effects": [
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "ankou",
+            "amount": 16
+          },
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "niamh",
+            "amount": -6
+          }
+        ]
+      },
+      {
+        "label": "Accepter l'offre de Tir na nOg pour le guerrier",
+        "verb": "accepter",
+        "effects": [
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "niamh",
+            "amount": 16
+          },
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "ankou",
+            "amount": -8
+          }
+        ]
+      },
+      {
+        "label": "Attendre que le guerrier choisisse lui-meme, sans influencer",
+        "verb": "attendre",
+        "effects": [
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "ankou",
+            "amount": 8
+          },
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "niamh",
+            "amount": 8
+          },
+          {
+            "type": "ADD_ANAM",
+            "amount": 5
+          }
+        ]
+      }
+    ],
+    "tags": [
+      "crossover",
+      "ankou",
+      "niamh",
+      "guerrier",
+      "tumulus",
+      "choix"
+    ]
+  },
+  {
+    "id": "fr_s7_cross_druides_korrigans_005",
+    "faction_primaire": "druides",
+    "biome": "foret_broceliande",
+    "champ_lexical": "bluff",
+    "crossover_factions": [
+      "druides",
+      "korrigans"
+    ],
+    "text": "Les korrigans ont deplace les pierres de guerison du bosquet sacre des druides pendant la nuit. Ils les ont cachees dans un terrier et demandent un tribut en champignons rares pour les rendre. La druidesse Gwenn est furieuse mais sait que la force ne marche pas avec les petits peuple. Elle te demande de negocier.",
+    "options": [
+      {
+        "label": "Negocier un echange equitable â€” champignons contre pierres et paix",
+        "verb": "negocier",
+        "effects": [
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "druides",
+            "amount": 10
+          },
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "korrigans",
+            "amount": 12
+          }
+        ]
+      },
+      {
+        "label": "Amadouer les korrigans avec des compliments sur leur ruse",
+        "verb": "amadouer",
+        "effects": [
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "korrigans",
+            "amount": 16
+          },
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "druides",
+            "amount": -4
+          }
+        ]
+      },
+      {
+        "label": "Convaincre Gwenn de partager les champignons volontairement",
+        "verb": "convaincre",
+        "effects": [
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "druides",
+            "amount": 14
+          },
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "korrigans",
+            "amount": 6
+          }
+        ]
+      }
+    ],
+    "tags": [
+      "crossover",
+      "druides",
+      "korrigans",
+      "pierres",
+      "champignons",
+      "negociation"
+    ]
+  },
+  {
+    "id": "fr_s7_cross_anciens_ankou_006",
+    "faction_primaire": "anciens",
+    "biome": "cercles_pierres",
+    "champ_lexical": "logique",
+    "crossover_factions": [
+      "anciens",
+      "ankou"
+    ],
+    "text": "Les Anciens ont grave une prophecie sur le menhir central du cercle. Mais l'Ankou affirme que la prophecie est fausse â€” que les morts qu'il a guides lui ont revele la verite. Les deux versions se contredisent. L'une annonce un age d'or, l'autre un long hiver. La pierre vibre entre les deux ecritures.",
+    "options": [
+      {
+        "label": "Decoder les deux versions pour trouver la verite entre les lignes",
+        "verb": "decoder",
+        "effects": [
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "anciens",
+            "amount": 12
+          },
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "ankou",
+            "amount": 10
+          }
+        ]
+      },
+      {
+        "label": "Analyser la gravure originale pour determiner l'authentique",
+        "verb": "analyser",
+        "effects": [
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "anciens",
+            "amount": 18
+          },
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "ankou",
+            "amount": -6
+          }
+        ]
+      },
+      {
+        "label": "Interpreter la prophecie des morts comme complementaire, pas opposee",
+        "verb": "interpreter",
+        "effects": [
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "ankou",
+            "amount": 14
+          },
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "anciens",
+            "amount": 6
+          }
+        ]
+      }
+    ],
+    "tags": [
+      "crossover",
+      "anciens",
+      "ankou",
+      "prophecie",
+      "menhir",
+      "contradiction"
+    ]
+  },
+  {
+    "id": "fr_s7_cross_niamh_korrigans_007",
+    "faction_primaire": "korrigans",
+    "biome": "marais_korrigans",
+    "champ_lexical": "finesse",
+    "crossover_factions": [
+      "niamh",
+      "korrigans"
+    ],
+    "text": "Les korrigans ont capture un cerf blanc â€” messager sacre de Niamh. Ils ne lui font pas de mal, mais le retiennent dans un enclos de mousse lumineuse, emus par sa beaute. Une emissaire de Niamh, les pieds dans l'eau, exige sa liberation immediate. Les korrigans refusent â€” ils veulent seulement le regarder encore un peu.",
+    "options": [
+      {
+        "label": "Contourner l'enclos pour ouvrir discretement la barriere",
+        "verb": "contourner",
+        "effects": [
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "niamh",
+            "amount": 14
+          },
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "korrigans",
+            "amount": -4
+          }
+        ]
+      },
+      {
+        "label": "Se cacher pres de l'enclos et attendre que les korrigans s'endorment",
+        "verb": "se cacher",
+        "effects": [
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "niamh",
+            "amount": 10
+          },
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "korrigans",
+            "amount": 8
+          }
+        ]
+      },
+      {
+        "label": "Escalader la mousse pour creer un passage que le cerf verra",
+        "verb": "escalader",
+        "effects": [
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "korrigans",
+            "amount": 12
+          },
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "niamh",
+            "amount": 10
+          }
+        ]
+      }
+    ],
+    "tags": [
+      "crossover",
+      "korrigans",
+      "niamh",
+      "cerf_blanc",
+      "enclos",
+      "beaute"
+    ]
+  },
+  {
+    "id": "fr_s7_cross_triple_008",
+    "faction_primaire": "anciens",
+    "biome": "villages_celtes",
+    "champ_lexical": "esprit",
+    "crossover_factions": [
+      "anciens",
+      "druides",
+      "korrigans"
+    ],
+    "text": "Le puits sacre du village est tari. Les Anciens accusent les druides d'avoir detourne l'eau pour leurs rituels. Les druides blament les korrigans qui auraient creuse des tunnels souterrains. Les korrigans jurent qu'ils n'ont rien fait â€” et pour une fois, ils semblent sinceres. La vraie cause est ailleurs, mais la colere monte entre les trois clans.",
+    "options": [
+      {
+        "label": "Calmer les trois clans et proposer une investigation commune",
+        "verb": "calmer",
+        "effects": [
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "anciens",
+            "amount": 8
+          },
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "druides",
+            "amount": 8
+          },
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "korrigans",
+            "amount": 8
+          }
+        ]
+      },
+      {
+        "label": "Parler en faveur des korrigans â€” ils sont innocents cette fois",
+        "verb": "parler",
+        "effects": [
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "korrigans",
+            "amount": 16
+          },
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "anciens",
+            "amount": -4
+          },
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "druides",
+            "amount": -4
+          }
+        ]
+      },
+      {
+        "label": "Resister mentalement a la pression et chercher la vraie cause",
+        "verb": "resister mentalement",
+        "effects": [
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "anciens",
+            "amount": 12
+          },
+          {
+            "type": "ADD_ANAM",
+            "amount": 6
+          }
+        ]
+      }
+    ],
+    "tags": [
+      "crossover",
+      "triple",
+      "puits",
+      "village",
+      "accusation",
+      "enquete"
+    ]
+  },
+  {
+    "id": "fr_s7_cross_druides_niamh_009",
+    "faction_primaire": "niamh",
+    "biome": "cotes_sauvages",
+    "champ_lexical": "perception",
+    "crossover_factions": [
+      "druides",
+      "niamh"
+    ],
+    "text": "Sur la cote, un phoque gris observe depuis les rochers. Les druides disent que c'est un selkie â€” un metamorphe emprisonne sous forme animale. Les pretresses de Niamh affirment que le phoque est un gardien volontaire qui surveille le passage vers Tir na nOg. Liberer ou proteger â€” les deux camps te demandent de trancher.",
+    "options": [
+      {
+        "label": "Ecouter le chant du phoque pour comprendre sa nature",
+        "verb": "ecouter",
+        "effects": [
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "niamh",
+            "amount": 12
+          },
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "druides",
+            "amount": 8
+          }
+        ]
+      },
+      {
+        "label": "Pister les traces sur les rochers pour voir d'ou vient le phoque",
+        "verb": "pister",
+        "effects": [
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "druides",
+            "amount": 14
+          },
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "niamh",
+            "amount": -4
+          }
+        ]
+      },
+      {
+        "label": "Suivre le phoque dans l'eau pour voir ou il mene",
+        "verb": "suivre",
+        "effects": [
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "niamh",
+            "amount": 16
+          },
+          {
+            "type": "DAMAGE_LIFE",
+            "amount": 8
+          },
+          {
+            "type": "ADD_ANAM",
+            "amount": 4
+          }
+        ]
+      }
+    ],
+    "tags": [
+      "crossover",
+      "druides",
+      "niamh",
+      "selkie",
+      "phoque",
+      "cote"
+    ]
+  },
+  {
+    "id": "fr_s7_cross_ankou_korrigans_010",
+    "faction_primaire": "ankou",
+    "biome": "marais_korrigans",
+    "champ_lexical": "finesse",
+    "crossover_factions": [
+      "ankou",
+      "korrigans"
+    ],
+    "text": "Un korrigan est mort â€” le premier depuis des siecles. Les korrigans ne savent pas quoi faire du corps, car ils ont oublie les rites funeraires. L'Ankou est venu mais les korrigans le fuient, terrorises. Le petit corps git sur un lit de mousse, entoure de champignons luminescents qui clignotent comme un coeur qui s'eteint.",
+    "options": [
+      {
+        "label": "Se faufiler entre les korrigans effaces pour atteindre l'Ankou",
+        "verb": "se faufiler",
+        "effects": [
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "ankou",
+            "amount": 14
+          },
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "korrigans",
+            "amount": 6
+          }
+        ]
+      },
+      {
+        "label": "Esquiver la panique des korrigans et organiser une ceremonie",
+        "verb": "esquiver",
+        "effects": [
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "korrigans",
+            "amount": 14
+          },
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "ankou",
+            "amount": 10
+          }
+        ]
+      },
+      {
+        "label": "Se cacher avec les korrigans les plus jeunes pour les rassurer",
+        "verb": "se cacher",
+        "effects": [
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "korrigans",
+            "amount": 16
+          },
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "ankou",
+            "amount": -4
+          }
+        ]
+      }
+    ],
+    "tags": [
+      "crossover",
+      "ankou",
+      "korrigans",
+      "mort",
+      "rite",
+      "champignons"
+    ]
+  },
+  {
+    "id": "fr_s7_biome_foret_001",
+    "faction_primaire": "druides",
+    "biome": "foret_broceliande",
+    "champ_lexical": "perception",
+    "text": "Dans la partie la plus ancienne de Broceliande, la ou les arbres sont si vieux que leur ecorce ressemble a de la pierre, un son monte du sol â€” une vibration sourde, reguliere, comme un battement de coeur souterrain. Les racines des chenes geants pulsent. Gwenn murmure que c'est le Nemeton, le sanctuaire invisible, qui respire.",
+    "options": [
+      {
+        "label": "Ecouter le battement en posant l'oreille contre le sol",
+        "verb": "ecouter",
+        "effects": [
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "druides",
+            "amount": 14
+          },
+          {
+            "type": "ADD_ANAM",
+            "amount": 6
+          }
+        ]
+      },
+      {
+        "label": "Sentir la direction du Nemeton en suivant les racines",
+        "verb": "sentir",
+        "effects": [
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "druides",
+            "amount": 12
+          },
+          {
+            "type": "HEAL_LIFE",
+            "amount": 10
+          }
+        ]
+      },
+      {
+        "label": "Pister la vibration jusqu'a sa source sous les fougeres",
+        "verb": "pister",
+        "effects": [
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "druides",
+            "amount": 16
+          },
+          {
+            "type": "DAMAGE_LIFE",
+            "amount": 5
+          }
+        ]
+      }
+    ],
+    "tags": [
+      "biome",
+      "foret",
+      "nemeton",
+      "racines",
+      "coeur",
+      "gwenn"
+    ]
+  },
+  {
+    "id": "fr_s7_biome_foret_002",
+    "faction_primaire": "niamh",
+    "biome": "foret_broceliande",
+    "champ_lexical": "observation",
+    "text": "Une clairiere s'ouvre la ou aucune carte ne la montre. Au centre, un lac parfaitement circulaire reflÃ¨te non pas le ciel, mais une foret inverse â€” les arbres poussent vers le bas dans le reflet, leurs racines dans les nuages. Un cygne noir nage en cercle, laissant derriere lui un sillage d'or. C'est l'entree de l'Annwn, l'autre monde.",
+    "options": [
+      {
+        "label": "Observer le cygne et memoriser le schema de son sillage",
+        "verb": "observer",
+        "effects": [
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "niamh",
+            "amount": 14
+          },
+          {
+            "type": "ADD_ANAM",
+            "amount": 7
+          }
+        ]
+      },
+      {
+        "label": "Scruter la foret inversee pour y reconnaitre des lieux connus",
+        "verb": "scruter",
+        "effects": [
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "niamh",
+            "amount": 12
+          },
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "druides",
+            "amount": 6
+          }
+        ]
+      },
+      {
+        "label": "Examiner l'eau du lac pour comprendre pourquoi elle reflÃ¨te l'Annwn",
+        "verb": "examiner",
+        "effects": [
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "niamh",
+            "amount": 10
+          },
+          {
+            "type": "HEAL_LIFE",
+            "amount": 8
+          },
+          {
+            "type": "ADD_BIOME_CURRENCY",
+            "amount": 4
+          }
+        ]
+      }
+    ],
+    "tags": [
+      "biome",
+      "foret",
+      "annwn",
+      "lac",
+      "cygne",
+      "autre_monde"
+    ]
+  },
+  {
+    "id": "fr_s7_biome_landes_001",
+    "faction_primaire": "anciens",
+    "biome": "landes_bruyere",
+    "champ_lexical": "perception",
+    "text": "Les cairns des landes chantent ce soir. Chaque pile de pierres emet une note differente quand le vent traverse ses interstices. Erwan affirme que les Anciens ont construit les cairns pour former un instrument geant â€” un orgue de pierre qui joue une melodie une seule nuit par siecle. Cette nuit est celle-la.",
+    "options": [
+      {
+        "label": "Tendre l'oreille pour saisir la melodie complete des cairns",
+        "verb": "tendre l'oreille",
+        "effects": [
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "anciens",
+            "amount": 16
+          },
+          {
+            "type": "ADD_ANAM",
+            "amount": 6
+          }
+        ]
+      },
+      {
+        "label": "Suivre la melodie en marchant de cairn en cairn",
+        "verb": "suivre",
+        "effects": [
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "anciens",
+            "amount": 12
+          },
+          {
+            "type": "ADD_BIOME_CURRENCY",
+            "amount": 8
+          }
+        ]
+      },
+      {
+        "label": "Flairer le vent pour comprendre d'ou vient la note la plus pure",
+        "verb": "flairer",
+        "effects": [
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "anciens",
+            "amount": 10
+          },
+          {
+            "type": "HEAL_LIFE",
+            "amount": 8
+          }
+        ]
+      }
+    ],
+    "tags": [
+      "biome",
+      "landes",
+      "cairns",
+      "melodie",
+      "vent",
+      "erwan"
+    ]
+  },
+  {
+    "id": "fr_s7_biome_landes_002",
+    "faction_primaire": "ankou",
+    "biome": "landes_bruyere",
+    "champ_lexical": "esprit",
+    "text": "Une croix de granit se dresse au carrefour des landes â€” un ankou kroas, lieu ou les vivants peuvent parler aux morts. La bruyere pousse en spirale autour de la croix, comme si la terre elle-meme tournait. Un berger mort l'hiver dernier attend ici, dit-on, car il n'a jamais acheve de raconter son histoire a ses fils.",
+    "options": [
+      {
+        "label": "Attendre au pied de la croix pour entendre l'histoire du berger",
+        "verb": "attendre",
+        "effects": [
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "ankou",
+            "amount": 14
+          },
+          {
+            "type": "ADD_ANAM",
+            "amount": 5
+          }
+        ]
+      },
+      {
+        "label": "Calmer l'esprit du berger en promettant de transmettre son recit",
+        "verb": "calmer",
+        "effects": [
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "ankou",
+            "amount": 12
+          },
+          {
+            "type": "HEAL_LIFE",
+            "amount": 8
+          }
+        ]
+      },
+      {
+        "label": "Se concentrer pour percevoir la presence du berger dans la bruyere",
+        "verb": "se concentrer",
+        "effects": [
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "ankou",
+            "amount": 10
+          },
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "anciens",
+            "amount": 8
+          }
+        ]
+      }
+    ],
+    "tags": [
+      "biome",
+      "landes",
+      "ankou_kroas",
+      "croix",
+      "berger",
+      "morts"
+    ]
+  },
+  {
+    "id": "fr_s7_biome_cotes_001",
+    "faction_primaire": "niamh",
+    "biome": "cotes_sauvages",
+    "champ_lexical": "esprit",
+    "text": "La maree a depose sur le sable une epave qui n'est pas en bois mais en os de baleine â€” un curragh ancien, construit par ceux qui naviguaient vers Tir na nOg. A l'interieur, un miroir d'eau de mer ne reflÃ¨te rien, comme un trou dans la realite. Maelle dit que c'est un passage â€” mais un passage a sens unique.",
+    "options": [
+      {
+        "label": "Mediter face au miroir pour comprendre ce qu'il ne reflÃ¨te pas",
+        "verb": "mediter",
+        "effects": [
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "niamh",
+            "amount": 16
+          },
+          {
+            "type": "ADD_ANAM",
+            "amount": 8
+          }
+        ]
+      },
+      {
+        "label": "S'approcher du miroir lentement pour tester ses limites",
+        "verb": "s'approcher",
+        "effects": [
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "niamh",
+            "amount": 12
+          },
+          {
+            "type": "DAMAGE_LIFE",
+            "amount": 6
+          }
+        ]
+      },
+      {
+        "label": "Refuser le passage et honorer l'epave comme un tombeau",
+        "verb": "refuser",
+        "effects": [
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "ankou",
+            "amount": 12
+          },
+          {
+            "type": "HEAL_LIFE",
+            "amount": 6
+          },
+          {
+            "type": "ADD_ANAM",
+            "amount": 3
+          }
+        ]
+      }
+    ],
+    "tags": [
+      "biome",
+      "cotes",
+      "curragh",
+      "miroir",
+      "tir_na_nog",
+      "maelle"
+    ]
+  },
+  {
+    "id": "fr_s7_biome_cotes_002",
+    "faction_primaire": "korrigans",
+    "biome": "cotes_sauvages",
+    "champ_lexical": "chance",
+    "text": "Les grottes marines resonnent a maree basse. Dans l'une d'elles, un korrigan a installe un etrange jeu : trois coquillages retournes sur un rocher plat, l'un cachant une perle d'ambre, les deux autres contenant de l'eau salee. 'Trouve la perle, promeneur. Si tu gagnes, je te montre le chemin du phare englouti. Si tu perds, tu nages.'",
+    "options": [
+      {
+        "label": "Tenter sa chance en pointant un coquillage au hasard",
+        "verb": "tenter sa chance",
+        "effects": [
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "korrigans",
+            "amount": 12
+          },
+          {
+            "type": "ADD_BIOME_CURRENCY",
+            "amount": 8
+          }
+        ]
+      },
+      {
+        "label": "Fouiller a l'aveugle sous les trois coquillages d'un seul geste",
+        "verb": "fouiller a l'aveugle",
+        "effects": [
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "korrigans",
+            "amount": 14
+          },
+          {
+            "type": "DAMAGE_LIFE",
+            "amount": 4
+          }
+        ]
+      },
+      {
+        "label": "Deviner par le poids en soulevant delicatement chaque coquillage",
+        "verb": "deviner",
+        "effects": [
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "korrigans",
+            "amount": 10
+          },
+          {
+            "type": "ADD_ANAM",
+            "amount": 4
+          },
+          {
+            "type": "HEAL_LIFE",
+            "amount": 5
+          }
+        ]
+      }
+    ],
+    "tags": [
+      "biome",
+      "cotes",
+      "grotte",
+      "korrigan",
+      "coquillage",
+      "jeu"
+    ]
+  },
+  {
+    "id": "fr_s7_biome_villages_001",
+    "faction_primaire": "anciens",
+    "biome": "villages_celtes",
+    "champ_lexical": "bluff",
+    "text": "Le forgeron du village refuse de reparer les armes du clan â€” il dit que ses reves lui ont montre que la prochaine bataille ne devrait pas etre gagnee. Le chef Cadogan est divise : le forgeron est le meilleur, mais le clan a besoin d'armes. Le forgeron te regarde et te demande de porter sa cause devant le conseil.",
+    "options": [
+      {
+        "label": "Convaincre le conseil que les reves du forgeron meritent attention",
+        "verb": "convaincre",
+        "effects": [
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "anciens",
+            "amount": 14
+          },
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "druides",
+            "amount": 6
+          }
+        ]
+      },
+      {
+        "label": "Marchander un compromis â€” les armes seront forgees mais pas affutees",
+        "verb": "marchander",
+        "effects": [
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "anciens",
+            "amount": 10
+          },
+          {
+            "type": "ADD_BIOME_CURRENCY",
+            "amount": 6
+          }
+        ]
+      },
+      {
+        "label": "Mentir au forgeron en disant que le chef a accepte ses reves",
+        "verb": "mentir",
+        "effects": [
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "korrigans",
+            "amount": 8
+          },
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "anciens",
+            "amount": -6
+          },
+          {
+            "type": "DAMAGE_LIFE",
+            "amount": 3
+          }
+        ]
+      }
+    ],
+    "tags": [
+      "biome",
+      "villages",
+      "forgeron",
+      "reves",
+      "cadogan",
+      "armes"
+    ]
+  },
+  {
+    "id": "fr_s7_biome_villages_002",
+    "faction_primaire": "druides",
+    "biome": "villages_celtes",
+    "champ_lexical": "observation",
+    "text": "Le barde du village a perdu sa voix apres avoir chante une chanson interdite â€” celle qui nomme les etoiles mortes. Sa femme supplie les druides de le guerir, mais la guerison exige de retrouver les paroles exactes qu'il a chantees. Le barde ecrit sur du sable, mais le vent efface ses mots a mesure qu'il les trace.",
+    "options": [
+      {
+        "label": "Memoriser les mots dans le sable avant que le vent ne les efface",
+        "verb": "memoriser",
+        "effects": [
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "druides",
+            "amount": 14
+          },
+          {
+            "type": "ADD_ANAM",
+            "amount": 5
+          }
+        ]
+      },
+      {
+        "label": "Observer les levres du barde pour lire les paroles qu'il ne peut dire",
+        "verb": "observer",
+        "effects": [
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "druides",
+            "amount": 12
+          },
+          {
+            "type": "HEAL_LIFE",
+            "amount": 8
+          }
+        ]
+      },
+      {
+        "label": "Inspecter les traces dans le sable pour reconstituer la chanson",
+        "verb": "inspecter",
+        "effects": [
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "anciens",
+            "amount": 10
+          },
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "druides",
+            "amount": 8
+          }
+        ]
+      }
+    ],
+    "tags": [
+      "biome",
+      "villages",
+      "barde",
+      "chanson",
+      "etoiles_mortes",
+      "sable"
+    ]
+  },
+  {
+    "id": "fr_s7_biome_cercles_001",
+    "faction_primaire": "anciens",
+    "biome": "cercles_pierres",
+    "champ_lexical": "logique",
+    "text": "Brennos a decouvert un anneau de pierre enfoui sous le cercle principal â€” un second cercle, plus ancien, construit par ceux qui etaient la avant les Anciens. Les gravures sur les pierres enfouies utilisent un alphabet inconnu, ni ogham ni rune. Brennos tremble d'excitation et de peur. 'Si on le decode, on saura pourquoi ils ont construit le cercle du dessus pour le cacher.'",
+    "options": [
+      {
+        "label": "Dechiffrer l'alphabet inconnu en comparant avec les oghams",
+        "verb": "dechiffrer",
+        "effects": [
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "anciens",
+            "amount": 18
+          },
+          {
+            "type": "ADD_ANAM",
+            "amount": 7
+          }
+        ]
+      },
+      {
+        "label": "Analyser la disposition des pierres enfouies pour y voir un plan",
+        "verb": "analyser",
+        "effects": [
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "anciens",
+            "amount": 14
+          },
+          {
+            "type": "ADD_BIOME_CURRENCY",
+            "amount": 6
+          }
+        ]
+      },
+      {
+        "label": "Resoudre l'enigme en superposant mentalement les deux cercles",
+        "verb": "resoudre",
+        "effects": [
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "anciens",
+            "amount": 16
+          },
+          {
+            "type": "DAMAGE_LIFE",
+            "amount": 4
+          }
+        ]
+      }
+    ],
+    "tags": [
+      "biome",
+      "cercles",
+      "brennos",
+      "anneau",
+      "alphabet",
+      "anciens_avant"
+    ]
+  },
+  {
+    "id": "fr_s7_biome_cercles_002",
+    "faction_primaire": "druides",
+    "biome": "cercles_pierres",
+    "champ_lexical": "esprit",
+    "text": "Le lichen sur les menhirs change de couleur avec les saisons â€” vert au printemps, rouge en automne. Mais ce soir, il est devenu bleu nuit, une teinte jamais observee. Les druides pensent que les pierres canalisent une energie stellaire inhabituelle. Le sol entre les menhirs craque doucement et une lueur emane des fissures.",
+    "options": [
+      {
+        "label": "Se concentrer sur l'energie stellaire pour la canaliser soi-meme",
+        "verb": "se concentrer",
+        "effects": [
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "druides",
+            "amount": 14
+          },
+          {
+            "type": "ADD_ANAM",
+            "amount": 8
+          }
+        ]
+      },
+      {
+        "label": "Calmer l'energie en posant les paumes sur la pierre la plus chaude",
+        "verb": "calmer",
+        "effects": [
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "druides",
+            "amount": 12
+          },
+          {
+            "type": "HEAL_LIFE",
+            "amount": 10
+          }
+        ]
+      },
+      {
+        "label": "Endurer la vibration et attendre que la pierre revele sa source",
+        "verb": "endurer",
+        "effects": [
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "anciens",
+            "amount": 10
+          },
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "druides",
+            "amount": 8
+          }
+        ]
+      }
+    ],
+    "tags": [
+      "biome",
+      "cercles",
+      "lichen",
+      "stellaire",
+      "menhir",
+      "fissures"
+    ]
+  },
+  {
+    "id": "fr_s7_biome_marais_001",
+    "faction_primaire": "korrigans",
+    "biome": "marais_korrigans",
+    "champ_lexical": "finesse",
+    "text": "Le Tertre du Silence s'ouvre une nuit par lune noire. Gwen Du, la gardienne korrigan, t'a guide jusqu'a l'entree â€” un trou dans la tourbe recouvert de mousse argentee. A l'interieur, le silence est si profond que tu entends ton propre sang circuler. Au fond du tertre, une sculpture de champignon geant brille d'une lumiere propre.",
+    "options": [
+      {
+        "label": "Se faufiler dans le tertre en suivant la lumiere du champignon",
+        "verb": "se faufiler",
+        "effects": [
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "korrigans",
+            "amount": 16
+          },
+          {
+            "type": "DAMAGE_LIFE",
+            "amount": 5
+          }
+        ]
+      },
+      {
+        "label": "Contourner la sculpture pour voir ce qu'elle cache derriere",
+        "verb": "contourner",
+        "effects": [
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "korrigans",
+            "amount": 12
+          },
+          {
+            "type": "ADD_BIOME_CURRENCY",
+            "amount": 8
+          }
+        ]
+      },
+      {
+        "label": "Se cacher a l'entree pour observer sans etre vu",
+        "verb": "se cacher",
+        "effects": [
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "korrigans",
+            "amount": 10
+          },
+          {
+            "type": "HEAL_LIFE",
+            "amount": 6
+          },
+          {
+            "type": "ADD_ANAM",
+            "amount": 4
+          }
+        ]
+      }
+    ],
+    "tags": [
+      "biome",
+      "marais",
+      "tertre",
+      "gwen_du",
+      "champignon",
+      "silence"
+    ]
+  },
+  {
+    "id": "fr_s7_biome_marais_002",
+    "faction_primaire": "ankou",
+    "biome": "marais_korrigans",
+    "champ_lexical": "perception",
+    "text": "Un feu follet plus gros que les autres flotte au-dessus du marais, immobile. D'ordinaire ils dansent et s'enfuient â€” celui-ci attend. Quand tu approches, il pulse trois fois et descend lentement vers la tourbe. La ou il se pose, une forme se dessine dans la boue â€” un visage endormi, parfaitement preserve. C'est un corps du Monde d'Avant.",
+    "options": [
+      {
+        "label": "Ecouter si le corps emet un son, une vibration, un souffle",
+        "verb": "ecouter",
+        "effects": [
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "ankou",
+            "amount": 14
+          },
+          {
+            "type": "ADD_ANAM",
+            "amount": 6
+          }
+        ]
+      },
+      {
+        "label": "Sentir l'age du corps par l'odeur de la tourbe qui l'entoure",
+        "verb": "sentir",
+        "effects": [
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "ankou",
+            "amount": 10
+          },
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "anciens",
+            "amount": 8
+          }
+        ]
+      },
+      {
+        "label": "Suivre le feu follet pour voir s'il revele d'autres corps",
+        "verb": "suivre",
+        "effects": [
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "ankou",
+            "amount": 16
+          },
+          {
+            "type": "DAMAGE_LIFE",
+            "amount": 8
+          }
+        ]
+      }
+    ],
+    "tags": [
+      "biome",
+      "marais",
+      "feu_follet",
+      "corps",
+      "tourbe",
+      "monde_avant"
+    ]
+  },
+  {
+    "id": "fr_s7_biome_collines_001",
+    "faction_primaire": "ankou",
+    "biome": "collines_dolmens",
+    "champ_lexical": "esprit",
+    "text": "Un tumulus s'est ouvert apres les pluies, revelant une chambre funeraire intacte. Des os blancs comme l'ivoire reposent sur une dalle gravee d'une spirale triple â€” le triskel des morts. Ildiko, la gardienne des collines, refuse d'y entrer. 'Celui qui repose la n'est pas un mort ordinaire,' dit-elle. 'C'est un roi qui a refuse de mourir. L'Ankou ne l'a jamais collecte.'",
+    "options": [
+      {
+        "label": "Apaiser l'esprit du roi en lui parlant avec les mots anciens",
+        "verb": "apaiser",
+        "effects": [
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "ankou",
+            "amount": 16
+          },
+          {
+            "type": "ADD_ANAM",
+            "amount": 6
+          }
+        ]
+      },
+      {
+        "label": "Resister mentalement a la presence du roi pour garder son calme",
+        "verb": "resister mentalement",
+        "effects": [
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "ankou",
+            "amount": 12
+          },
+          {
+            "type": "DAMAGE_LIFE",
+            "amount": 6
+          },
+          {
+            "type": "ADD_BIOME_CURRENCY",
+            "amount": 5
+          }
+        ]
+      },
+      {
+        "label": "Accepter la presence du roi et s'asseoir dans la chambre",
+        "verb": "accepter",
+        "effects": [
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "ankou",
+            "amount": 14
+          },
+          {
+            "type": "HEAL_LIFE",
+            "amount": 8
+          }
+        ]
+      }
+    ],
+    "tags": [
+      "biome",
+      "collines",
+      "tumulus",
+      "roi",
+      "triskel",
+      "ildiko"
+    ]
+  },
+  {
+    "id": "fr_s7_biome_collines_002",
+    "faction_primaire": "anciens",
+    "biome": "collines_dolmens",
+    "champ_lexical": "observation",
+    "text": "Les dolmens de la colline ouest sont alignes avec une precision que meme les Anciens ne s'expliquent pas. Ce soir, la lune passe exactement au centre de chaque ouverture, creant un couloir de lumiere d'argent qui traverse la colline d'est en ouest. Ildiko dit que cet alignement ne se produit qu'une fois par generation â€” et que quelque chose attend au bout du couloir.",
+    "options": [
+      {
+        "label": "Observer le couloir de lumiere et memoriser chaque reflet",
+        "verb": "observer",
+        "effects": [
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "anciens",
+            "amount": 14
+          },
+          {
+            "type": "ADD_ANAM",
+            "amount": 6
+          }
+        ]
+      },
+      {
+        "label": "Scruter le bout du couloir pour voir ce qui attend",
+        "verb": "scruter",
+        "effects": [
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "anciens",
+            "amount": 16
+          },
+          {
+            "type": "DAMAGE_LIFE",
+            "amount": 5
+          }
+        ]
+      },
+      {
+        "label": "Fixer la lune a travers les dolmens sans cligner",
+        "verb": "fixer",
+        "effects": [
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "anciens",
+            "amount": 10
+          },
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "niamh",
+            "amount": 8
+          }
+        ]
+      }
+    ],
+    "tags": [
+      "biome",
+      "collines",
+      "dolmens",
+      "lune",
+      "alignement",
+      "couloir"
+    ]
+  },
+  {
+    "id": "fr_s7_biome_iles_001",
+    "faction_primaire": "niamh",
+    "biome": "iles_mystiques",
+    "champ_lexical": "esprit",
+    "text": "L'ile la plus eloignee n'a pas de nom. Morgane t'y a conduit en barque, les yeux fermes, guidee par le chant des baleines. Sur la plage de galets noirs, un pommier pousse â€” le seul arbre de l'ile. Ses fruits sont translucides, remplis d'une lumiere liquide. 'C'est le pommier d'Avalon,' dit Morgane. 'Chaque fruit contient un souvenir vole au temps.'",
+    "options": [
+      {
+        "label": "Mediter sous le pommier pour recevoir un souvenir du temps",
+        "verb": "mediter",
+        "effects": [
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "niamh",
+            "amount": 18
+          },
+          {
+            "type": "ADD_ANAM",
+            "amount": 8
+          }
+        ]
+      },
+      {
+        "label": "S'approcher d'un fruit et le tenir sans le cueillir",
+        "verb": "s'approcher",
+        "effects": [
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "niamh",
+            "amount": 14
+          },
+          {
+            "type": "HEAL_LIFE",
+            "amount": 12
+          }
+        ]
+      },
+      {
+        "label": "Calmer l'envie de gouter et respecter l'arbre sacre",
+        "verb": "calmer",
+        "effects": [
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "druides",
+            "amount": 10
+          },
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "niamh",
+            "amount": 10
+          }
+        ]
+      }
+    ],
+    "tags": [
+      "biome",
+      "iles",
+      "pommier",
+      "avalon",
+      "morgane",
+      "souvenir"
+    ]
+  },
+  {
+    "id": "fr_s7_biome_iles_002",
+    "faction_primaire": "ankou",
+    "biome": "iles_mystiques",
+    "champ_lexical": "perception",
+    "text": "Entre deux iles, un banc de brouillard ne se dissipe jamais. Les pecheurs l'appellent le Voile de ManannÃ¡n. Quand tu t'en approches en barque, des voix murmurent â€” pas des mots, mais des emotions pures. Tristesse. Nostalgie. Esperance. Morgane serre les rames. 'Les ames en transit passent par ici. L'Ankou les guide mais certaines s'egarent dans le brouillard.'",
+    "options": [
+      {
+        "label": "Ecouter les voix pour distinguer celles qui se sont egarees",
+        "verb": "ecouter",
+        "effects": [
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "ankou",
+            "amount": 14
+          },
+          {
+            "type": "ADD_ANAM",
+            "amount": 6
+          }
+        ]
+      },
+      {
+        "label": "Sentir la direction ou les emotions sont les plus fortes",
+        "verb": "sentir",
+        "effects": [
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "niamh",
+            "amount": 10
+          },
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "ankou",
+            "amount": 8
+          }
+        ]
+      },
+      {
+        "label": "Pister une ame egaree en suivant sa tristesse comme un fil",
+        "verb": "pister",
+        "effects": [
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "ankou",
+            "amount": 18
+          },
+          {
+            "type": "DAMAGE_LIFE",
+            "amount": 8
+          },
+          {
+            "type": "ADD_ANAM",
+            "amount": 4
+          }
+        ]
+      }
+    ],
+    "tags": [
+      "biome",
+      "iles",
+      "voile",
+      "manannan",
+      "ames",
+      "brouillard"
+    ]
+  },
+  {
+    "id": "fr_s7_biome_foret_003",
+    "faction_primaire": "korrigans",
+    "biome": "foret_broceliande",
+    "champ_lexical": "finesse",
+    "text": "Un passage secret s'ouvre entre deux racines geantes â€” un escalier de mousse qui descend sous la foret. Les korrigans l'appellent le Ventre de Broceliande. L'air est tiede et sent le miel fermente. Des champignons bioluminescents balisent le chemin, mais certains clignotent en rouge â€” signe de danger. Le passage est etroit, parfait pour les petits peuples, difficile pour un humain.",
+    "options": [
+      {
+        "label": "Se faufiler dans le passage en suivant les champignons verts",
+        "verb": "se faufiler",
+        "effects": [
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "korrigans",
+            "amount": 14
+          },
+          {
+            "type": "DAMAGE_LIFE",
+            "amount": 6
+          }
+        ]
+      },
+      {
+        "label": "Escalader les racines pour contourner les zones rouges",
+        "verb": "escalader",
+        "effects": [
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "korrigans",
+            "amount": 12
+          },
+          {
+            "type": "ADD_BIOME_CURRENCY",
+            "amount": 6
+          }
+        ]
+      },
+      {
+        "label": "Traverser directement en acceptant les risques du passage",
+        "verb": "traverser",
+        "effects": [
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "korrigans",
+            "amount": 16
+          },
+          {
+            "type": "DAMAGE_LIFE",
+            "amount": 10
+          },
+          {
+            "type": "ADD_ANAM",
+            "amount": 5
+          }
+        ]
+      }
+    ],
+    "tags": [
+      "biome",
+      "foret",
+      "passage",
+      "champignons",
+      "ventre",
+      "korrigans"
+    ]
+  },
+  {
+    "id": "fr_s7_biome_landes_003",
+    "faction_primaire": "druides",
+    "biome": "landes_bruyere",
+    "champ_lexical": "chance",
+    "text": "Un arc-en-ciel double apparait sur les landes apres un orage bref. Erwan dit que la ou les deux arcs se touchent, une herbe rare pousse â€” le trefle a sept feuilles, capable de guerir toute blessure de l'ame. Mais l'endroit change avec la lumiere. Il faut courir avant que les nuages ne reviennent.",
+    "options": [
+      {
+        "label": "Chercher au hasard dans la direction du premier arc",
+        "verb": "chercher au hasard",
+        "effects": [
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "druides",
+            "amount": 10
+          },
+          {
+            "type": "HEAL_LIFE",
+            "amount": 14
+          }
+        ]
+      },
+      {
+        "label": "Tenter sa chance en courant vers le point de jonction",
+        "verb": "tenter sa chance",
+        "effects": [
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "druides",
+            "amount": 14
+          },
+          {
+            "type": "DAMAGE_LIFE",
+            "amount": 5
+          },
+          {
+            "type": "ADD_ANAM",
+            "amount": 4
+          }
+        ]
+      },
+      {
+        "label": "Cueillir les bruyeres sur le chemin â€” elles aussi guerissent",
+        "verb": "cueillir",
+        "effects": [
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "druides",
+            "amount": 8
+          },
+          {
+            "type": "HEAL_LIFE",
+            "amount": 10
+          },
+          {
+            "type": "ADD_BIOME_CURRENCY",
+            "amount": 4
+          }
+        ]
+      }
+    ],
+    "tags": [
+      "biome",
+      "landes",
+      "arc_en_ciel",
+      "trefle",
+      "erwan",
+      "guerison"
+    ]
+  },
+  {
+    "id": "fr_s7_biome_cotes_003",
+    "faction_primaire": "anciens",
+    "biome": "cotes_sauvages",
+    "champ_lexical": "vigueur",
+    "text": "La ville d'Ys est la, sous les vagues â€” visible seulement a maree basse extremement basse, une fois par decade. Les tours de la cite engloutie percent la surface comme des doigts de pierre. Maelle refuse de nager jusque-la. 'Ceux qui entrent dans Ys n'en reviennent pas tous,' dit-elle. 'Mais ceux qui reviennent portent un savoir que personne d'autre ne possede.'",
+    "options": [
+      {
+        "label": "Courir vers Ys a travers les rochers decouverts par la maree",
+        "verb": "courir",
+        "effects": [
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "anciens",
+            "amount": 16
+          },
+          {
+            "type": "DAMAGE_LIFE",
+            "amount": 10
+          },
+          {
+            "type": "ADD_ANAM",
+            "amount": 8
+          }
+        ]
+      },
+      {
+        "label": "Combattre les courants pour atteindre la premiere tour",
+        "verb": "combattre",
+        "effects": [
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "anciens",
+            "amount": 18
+          },
+          {
+            "type": "DAMAGE_LIFE",
+            "amount": 14
+          }
+        ]
+      },
+      {
+        "label": "Resister physiquement au froid et observer Ys depuis la rive",
+        "verb": "resister physiquement",
+        "effects": [
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "anciens",
+            "amount": 10
+          },
+          {
+            "type": "HEAL_LIFE",
+            "amount": 5
+          },
+          {
+            "type": "ADD_BIOME_CURRENCY",
+            "amount": 6
+          }
+        ]
+      }
+    ],
+    "tags": [
+      "biome",
+      "cotes",
+      "ys",
+      "cite_engloutie",
+      "maelle",
+      "maree"
+    ]
+  },
+  {
+    "id": "fr_s7_biome_villages_003",
+    "faction_primaire": "korrigans",
+    "biome": "villages_celtes",
+    "champ_lexical": "bluff",
+    "text": "Le marche nocturne des korrigans s'installe une fois par lune dans le village â€” des etals de mousse couverts d'objets impossibles : des clochettes qui sonnent hier, des fils qui cousent l'avenir, des bougies qui eclairent les mensonges. Le prix n'est jamais en monnaie â€” les korrigans echangent contre des secrets, des promesses et des rires.",
+    "options": [
+      {
+        "label": "Charmer un marchand korrigan pour obtenir la bougie de verite",
+        "verb": "charmer",
+        "effects": [
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "korrigans",
+            "amount": 14
+          },
+          {
+            "type": "ADD_ANAM",
+            "amount": 6
+          }
+        ]
+      },
+      {
+        "label": "Negocier en offrant un rire sincere contre un fil du futur",
+        "verb": "negocier",
+        "effects": [
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "korrigans",
+            "amount": 12
+          },
+          {
+            "type": "ADD_BIOME_CURRENCY",
+            "amount": 8
+          }
+        ]
+      },
+      {
+        "label": "Amadouer le chef des marchands pour acceder aux objets rares",
+        "verb": "amadouer",
+        "effects": [
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "korrigans",
+            "amount": 16
+          },
+          {
+            "type": "DAMAGE_LIFE",
+            "amount": 3
+          },
+          {
+            "type": "ADD_ANAM",
+            "amount": 4
+          }
+        ]
+      }
+    ],
+    "tags": [
+      "biome",
+      "villages",
+      "marche",
+      "korrigans",
+      "objets",
+      "secrets"
+    ]
+  }
+]
