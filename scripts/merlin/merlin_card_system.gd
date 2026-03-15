@@ -487,13 +487,36 @@ func check_run_end(state: Dictionary) -> Dictionary:
 	if card_index >= hard_max:
 		return {"ended": true, "reason": "hard_max", "card_index": card_index}
 
-	# Soft convergence zone (MOS decides, but we signal it)
+	# MOS tension tracking (bible v2.4 s.6.2)
+	var soft_min: int = int(mos.get("soft_min_cards", 8))
+	var target_min: int = int(mos.get("target_cards_min", 20))
 	var target_max: int = int(mos.get("target_cards_max", 25))
 	var soft_max: int = int(mos.get("soft_max_cards", 40))
-	if card_index >= target_max and card_index < soft_max:
-		return {"ended": false, "convergence_zone": true, "card_index": card_index}
 
-	return {"ended": false}
+	# Key is "tension_zone" (string) to avoid collision with run.hidden.tension (int 0-100)
+	var tension_zone: String = "none"
+	var convergence_zone: bool = false
+	var early_zone: bool = false
+	if card_index >= soft_max:
+		tension_zone = "critical"
+		convergence_zone = true
+	elif card_index >= target_max:
+		tension_zone = "high"
+		convergence_zone = true
+	elif card_index >= target_min:
+		tension_zone = "rising"
+		convergence_zone = true
+	elif card_index >= soft_min:
+		tension_zone = "low"
+		early_zone = true
+
+	return {
+		"ended": false,
+		"tension_zone": tension_zone,
+		"convergence_zone": convergence_zone,
+		"early_zone": early_zone,
+		"card_index": card_index,
+	}
 
 
 # ═══════════════════════════════════════════════════════════════════════════════

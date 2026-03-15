@@ -318,6 +318,16 @@ func _request_next_card() -> void:
 	is_processing = true
 	_cards_this_run += 1
 
+	# --- Step 1. Life drain BEFORE card (bible s.13.3: "1.DRAIN -1") ---
+	if store and is_instance_valid(store):
+		store.dispatch({"type": "DAMAGE_LIFE", "amount": MerlinConstants.LIFE_ESSENCE_DRAIN_PER_CARD})
+		# Death guard: if drain killed the player, end run immediately (3D parity)
+		if store.get_life_essence() <= 0:
+			print("[Merlin] Player died from life drain at card %d" % _cards_this_run)
+			is_processing = false
+			store.dispatch({"type": "END_RUN"})
+			return
+
 	# Tutorial: first card ever (P3.19)
 	if _cards_this_run == 1:
 		_try_tutorial("first_card_ever")
@@ -845,10 +855,6 @@ func _resolve_choice(option: int) -> void:
 	})
 	if result == null:
 		result = {"ok": false}
-
-	# --- 9b. Base life drain per card (survival pressure) ---
-	if store and is_instance_valid(store):
-		store.dispatch({"type": "DAMAGE_LIFE", "amount": MerlinConstants.LIFE_ESSENCE_DRAIN_PER_CARD})
 
 	# --- 10. Update karma ---
 	_update_karma(outcome, direction)

@@ -139,11 +139,21 @@ func test_check_run_end_still_alive() -> void:
 	assert_false(result.get("ended", true), "Run should not end with life>0 and low card_index")
 
 
-func test_check_run_end_convergence_zone() -> void:
-	var soft_min: int = int(MerlinConstants.MOS_CONVERGENCE.get("soft_min_cards", 12))
+func test_check_run_end_early_zone() -> void:
+	var soft_min: int = int(MerlinConstants.MOS_CONVERGENCE.get("soft_min_cards", 8))
 	var state: Dictionary = {"life_essence": 50, "card_index": soft_min + 1}
 	var result: Dictionary = cs.check_run_end(state)
-	assert_true(result.get("convergence_zone", false), "Should be in convergence zone past soft_min")
+	assert_true(result.get("early_zone", false), "Should be in early_zone past soft_min")
+	assert_eq(str(result.get("tension_zone", "")), "low", "Tension zone should be 'low' in early zone")
+	assert_false(result.get("convergence_zone", true), "Should NOT be in convergence_zone at soft_min+1")
+
+
+func test_check_run_end_convergence_zone() -> void:
+	var target_min: int = int(MerlinConstants.MOS_CONVERGENCE.get("target_cards_min", 20))
+	var state: Dictionary = {"life_essence": 50, "card_index": target_min + 1}
+	var result: Dictionary = cs.check_run_end(state)
+	assert_true(result.get("convergence_zone", false), "Should be in convergence zone past target_min")
+	assert_eq(str(result.get("tension_zone", "")), "rising", "Tension zone should be 'rising' at target_min+1")
 
 
 # ═══════════════════════════════════════════════════════════════════════════════

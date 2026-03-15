@@ -938,8 +938,9 @@ func _apply_ogham_effect(_skill_id: String, spec: Dictionary) -> void:
 			pass
 
 
+## Decrement all Ogham cooldowns by 1. Call after each card resolved.
+## Aligned with bible v2.4 s.5.2: cooldowns tick on step 11 (COOLDOWN) of pipeline.
 func tick_cooldowns() -> void:
-	"""Decrement all Ogham cooldowns by 1. Call after each card resolved."""
 	var oghams: Dictionary = state.get("oghams", {})
 	var cooldowns: Dictionary = oghams.get("skill_cooldowns", {})
 	var to_remove: Array = []
@@ -1132,7 +1133,50 @@ func _check_run_end() -> Dictionary:
 			"days_survived": run.get("day", 1),
 		}
 
-	return {"ended": false}
+	# MOS tension tracking (bible v2.4 s.6.2)
+	var mos: Dictionary = MerlinConstants.MOS_CONVERGENCE
+	var soft_min: int = int(mos.get("soft_min_cards", 8))
+	var target_min: int = int(mos.get("target_cards_min", 20))
+	var target_max: int = int(mos.get("target_cards_max", 25))
+	var soft_max: int = int(mos.get("soft_max_cards", 40))
+	var hard_max: int = int(mos.get("hard_max_cards", 50))
+
+	# Hard max: forced end
+	if cards_played >= hard_max:
+		return {
+			"ended": true,
+			"ending": {"title": "Fin du Temps", "text": "Le temps s'est ecoule... la foret te rappelle."},
+			"score": cards_played * 10,
+			"cards_played": cards_played,
+			"days_survived": run.get("day", 1),
+			"hard_max": true,
+		}
+
+	# Tension zones for LLM narrative guidance
+	# Key is "tension_zone" (string) to avoid collision with run.hidden.tension (int 0-100)
+	var tension_zone: String = "none"
+	var convergence_zone: bool = false
+	var early_zone: bool = false
+	if cards_played >= soft_max:
+		tension_zone = "critical"
+		convergence_zone = true
+	elif cards_played >= target_max:
+		tension_zone = "high"
+		convergence_zone = true
+	elif cards_played >= target_min:
+		tension_zone = "rising"
+		convergence_zone = true
+	elif cards_played >= soft_min:
+		tension_zone = "low"
+		early_zone = true
+
+	return {
+		"ended": false,
+		"tension_zone": tension_zone,
+		"convergence_zone": convergence_zone,
+		"early_zone": early_zone,
+		"cards_played": cards_played,
+	}
 
 
 func _get_victory_type() -> String:
