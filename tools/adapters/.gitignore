@@ -16,3 +16,8 @@ _*.mjs
 !_pbir_engine.py
 !_cockpit_generator.py
 !_pixel_compare.py
+
+# Keep communications adapters
+!outlook_adapter.py
+!teams_adapter.py
+!onenote_adapter.py

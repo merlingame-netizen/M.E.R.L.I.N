@@ -181,13 +181,26 @@ python tools/cli.py powerbi list-capacities                   # list-apps, get-d
 python tools/cli.py powerbi open --pbix <path>                # Inspecter .pbix offline
 python tools/cli.py powerbi extract --pbix <p>                # Extraire TMDL (pbi-tools)
 
-# Outlook
+# Outlook (win32com COM — Outlook desktop must be running)
 python tools/cli.py outlook inbox --limit 10
-python tools/cli.py outlook search --query "rapport"
+python tools/cli.py outlook sent --limit 10
+python tools/cli.py outlook search --query "rapport" --from_addr "x@orange.com" --since "2026-03-01"
 python tools/cli.py outlook read --index 0
 python tools/cli.py outlook send --to "x@y.com" --subject "S" --body "B"
 python tools/cli.py outlook reply --index 0 --body "Merci"
 python tools/cli.py outlook forward --index 0 --to "x@y.com" --body "FYI"
+python tools/cli.py outlook calendar-today
+python tools/cli.py outlook calendar-week
+python tools/cli.py outlook calendar-search --query "comite"
+python tools/cli.py outlook contacts-search --query "dupont"
+python tools/cli.py outlook folders
+
+# Teams (Power Automate exports + LevelDB cache fallback)
+python tools/cli.py teams status                          # Data sources status
+python tools/cli.py teams recent-chats --limit 10
+python tools/cli.py teams search-chats --query "dataset"
+python tools/cli.py teams recent-channels --limit 10
+python tools/cli.py teams cache-scan --limit 20           # Best-effort LevelDB scan
 
 # DBeaver / EDH Hive
 python tools/cli.py dbeaver list-connections
@@ -220,14 +233,38 @@ python tools/cli.py git push
 python tools/cli.py git pr-list
 python tools/cli.py git pr-create --title "Mon PR" --body "Description"
 
-# Office (PowerPoint / OneNote / Teams)
+# Office (PowerPoint / Teams)
 python tools/cli.py office ppt-open --pbix "C:/path/to/rapport.pptx"
 python tools/cli.py office ppt-info --pbix "C:/path/to/rapport.pptx"
 python tools/cli.py office ppt-export-pdf --pbix "C:/path/to/rapport.pptx"
-python tools/cli.py office onenote-notebooks
-python tools/cli.py office onenote-sections --query "Mon Notebook"
 python tools/cli.py office teams-status
 python tools/cli.py office teams-chat --to "colleague@orange.com"
+
+# OneNote (dedicated CLI — full COM headless)
+python tools/cli.py onenote notebooks                                          # List open notebooks
+python tools/cli.py onenote sections --notebook "My Notebook"                  # List sections
+python tools/cli.py onenote section-groups --notebook "My Notebook"            # List section groups
+python tools/cli.py onenote pages --section "Project Notes"                    # List pages in section
+python tools/cli.py onenote tree --notebook "My Notebook" --depth 3            # Full hierarchy tree
+python tools/cli.py onenote read --title "Meeting Notes"                       # Read page as text
+python tools/cli.py onenote read-xml --page_id "{...guid...}"                  # Read raw XML
+python tools/cli.py onenote create --section "Notes" --title "New" --body_html "<p>Hello</p>"
+python tools/cli.py onenote append --title "Meeting Notes" --body_html "<p>Action item</p>"
+python tools/cli.py onenote update --page_id "{...}" --page_xml "<one:Page>..."
+python tools/cli.py onenote delete --title "Old Page"                          # Delete page
+python tools/cli.py onenote create-section --notebook "My NB" --name "New Sec" # Create section
+python tools/cli.py onenote delete-section --section "Old Section"             # Delete section
+python tools/cli.py onenote rename-section --section "Old" --new_name "New"    # Rename section
+python tools/cli.py onenote search --query "action items" --notebook "Work"    # Full-text search
+python tools/cli.py onenote recent --limit 10                                  # Recent pages
+python tools/cli.py onenote export --id "{...}" --format pdf --output ~/Downloads/p.pdf
+python tools/cli.py onenote navigate --title "Meeting Notes"                   # Open in OneNote UI
+python tools/cli.py onenote get-link --title "Meeting Notes"                   # Get onenote:// link
+python tools/cli.py onenote sync --notebook "My Notebook"                      # Force sync
+python tools/cli.py onenote special-locations                                  # Backup/unfiled/default paths
+python tools/cli.py onenote open-notebook --path "C:/path/to/notebook.one"     # Open notebook
+python tools/cli.py onenote close-notebook --notebook "Old Notebook"           # Close notebook
+python tools/cli.py onenote page-info --title "Meeting Notes"                  # Page metadata
 
 # Browser (Playwright / Edge)
 python tools/cli.py browser status              # Verifier Playwright installe

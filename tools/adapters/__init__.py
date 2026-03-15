@@ -32,6 +32,11 @@ ADAPTER_REGISTRY: dict[str, tuple[str, str, str | None]] = {
     "pbi-preview": ("adapters.pbi_preview_adapter", "PBIPreviewAdapter",  None),
     # ── Wave 5 — PBI Visual CLI (pixel-precise PBIR control) ─────────
     "pbi-visual":  ("adapters.pbi_visual_adapter",  "PBIVisualAdapter",   None),
+    # ── Wave 6 — OneNote dedicated (full COM headless) ─────────────
+    "onenote":     ("adapters.onenote_adapter",     "OneNoteAdapter",     None),
+    # ── Wave 7 — Communications (Outlook COM + Teams cache/PA) ───
+    "outlook":     ("adapters.outlook_adapter",     "OutlookAdapter",     None),
+    "teams":       ("adapters.teams_adapter",       "TeamsAdapter",       None),
 }
 
 
