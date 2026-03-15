@@ -222,7 +222,7 @@
             color: #a0a0a0;
         }
 
-        .triade-grid {
+        .faction-grid {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
             gap: 1rem;
@@ -560,42 +560,37 @@
                 </div>
             </div>
 
-            <!-- Triade System -->
+            <!-- Faction System -->
             <div class="card full-width">
-                <h2>☘️ Game System: Triade</h2>
+                <h2>☘️ Game System: 5 Factions</h2>
                 <div style="text-align: center; margin-bottom: 1rem; color: #a0a0a0;">
-                    3 Aspects • 3 States Each • 16 Endings (12 chutes + 3 victoires + 1 secrète)
+                    5 Factions • 0-100 Reputation • Thresholds 50/80 • Cross-run persistence
                 </div>
-                <div class="triade-grid">
+                <div class="faction-grid">
                     <div class="aspect-card">
-                        <div class="aspect-icon">🐗</div>
-                        <div class="aspect-name">Corps</div>
-                        <div class="aspect-animal">Sanglier</div>
-                        <div class="aspect-states">
-                            <div class="state-item">⚠️ Epuisé</div>
-                            <div class="state-item">✓ Robuste</div>
-                            <div class="state-item">⚠️ Surmené</div>
-                        </div>
+                        <div class="aspect-icon">🌳</div>
+                        <div class="aspect-name">Druides</div>
+                        <div class="aspect-animal">Sagesse & Nature</div>
                     </div>
                     <div class="aspect-card">
-                        <div class="aspect-icon">🦅</div>
-                        <div class="aspect-name">Âme</div>
-                        <div class="aspect-animal">Corbeau</div>
-                        <div class="aspect-states">
-                            <div class="state-item">⚠️ Perdue</div>
-                            <div class="state-item">✓ Centrée</div>
-                            <div class="state-item">⚠️ Possédée</div>
-                        </div>
+                        <div class="aspect-icon">⚔️</div>
+                        <div class="aspect-name">Guerriers</div>
+                        <div class="aspect-animal">Force & Honneur</div>
                     </div>
                     <div class="aspect-card">
-                        <div class="aspect-icon">🦌</div>
-                        <div class="aspect-name">Monde</div>
-                        <div class="aspect-animal">Cerf</div>
-                        <div class="aspect-states">
-                            <div class="state-item">⚠️ Exilé</div>
-                            <div class="state-item">✓ Intégré</div>
-                            <div class="state-item">⚠️ Tyran</div>
-                        </div>
+                        <div class="aspect-icon">🎭</div>
+                        <div class="aspect-name">Bardes</div>
+                        <div class="aspect-animal">Art & Parole</div>
+                    </div>
+                    <div class="aspect-card">
+                        <div class="aspect-icon">👁️</div>
+                        <div class="aspect-name">Eclaireurs</div>
+                        <div class="aspect-animal">Vision & Exploration</div>
+                    </div>
+                    <div class="aspect-card">
+                        <div class="aspect-icon">🌙</div>
+                        <div class="aspect-name">Korrigans</div>
+                        <div class="aspect-animal">Malice & Secrets</div>
                     </div>
                 </div>
             </div>
@@ -683,7 +678,7 @@
                     </div>
                     <div class="timeline-item">
                         <div class="timeline-phase">Phase 26</div>
-                        <div class="timeline-desc">LLM TRIADE Pipeline</div>
+                        <div class="timeline-desc">LLM Game Pipeline</div>
                     </div>
                     <div class="timeline-item">
                         <div class="timeline-phase">Phase 25</div>
@@ -709,7 +704,7 @@
                         <div class="flow-arrow">→</div>
                         <div class="flow-node">TransitionBiome</div>
                         <div class="flow-arrow">→</div>
-                        <div class="flow-node">TriadeGame</div>
+                        <div class="flow-node">MerlinGame</div>
                         <div class="flow-arrow">→</div>
                         <div class="flow-node">[End]</div>
                         <div class="flow-arrow">↻</div>

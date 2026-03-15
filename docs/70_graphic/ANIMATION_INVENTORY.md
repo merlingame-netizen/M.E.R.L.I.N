@@ -1,3 +1,4 @@
+<!-- Updated 2026-03-15: Triade references removed -->
 # ANIMATION INVENTORY — M.E.R.L.I.N.: Le Jeu des Oghams
 
 > Motion Designer Agent — Inventaire complet, analyse de coherence, plan Bestiole
@@ -260,18 +261,7 @@
 
 ---
 
-### 1.17 ui/triade_game_ui.gd
-
-| Ligne | Type | Propriete | Duree | Easing | Description |
-|-------|------|-----------|-------|--------|-------------|
-| 361-364 | tween (2 loops) | icon modulate:a | 0.3s x 2 | none | Aspect extreme state pulse |
-| 468-470 | tween | btn modulate | 0.1s x 2 | none | Option button flash (1.5 brightness) |
-
-**Total animations: 2 tweens**
-
----
-
-### 1.18 ui/menu_return_button.gd
+### 1.17 ui/menu_return_button.gd
 
 | Ligne | Type | Propriete | Duree | Easing | Description |
 |-------|------|-----------|-------|--------|-------------|
@@ -282,7 +272,7 @@
 
 ---
 
-### 1.19 merlin_house_animations.gd (3D Menu Scene)
+### 1.18 merlin_house_animations.gd (3D Menu Scene)
 
 | Ligne | Type | Propriete | Duree | Easing | Description |
 |-------|------|-----------|-------|--------|-------------|
@@ -306,7 +296,7 @@
 |-----------|--------|--------|
 | Fade in/out (modulate:a) | ~40 | Toutes |
 | Position / slide | ~12 | IntroCeltOS, IntroMerlinDialogue, Menu, SceneAntre |
-| Scale / pulse | ~8 | IntroMerlinDialogue, Menu, main_game, triade_ui |
+| Scale / pulse | ~8 | IntroMerlinDialogue, Menu, main_game |
 | Color / tint | ~6 | IntroCeltOS, MerlinPortrait, ScreenEffects, Menu |
 | Rotation | ~3 | IntroMerlinDialogue, Menu (card swipe) |
 | Shader params | ~6 | ScreenEffects |
@@ -399,7 +389,7 @@
 | Celtic ornaments fade | 0.8s | Menu, SceneEveil, SceneAntre | OUI |
 | Mist breathing | 8.0s cycle | Menu (0.08-0.25), SceneEveil (0.08-0.25), SceneAntre (0.06-0.20) | PRESQUE (voir ecart) |
 | Button hover | 0.1-0.15s | Menu, menu_return_button | OUI |
-| Button press | 0.15-0.2s | Menu (0.2s), triade_ui (0.1+0.1s) | OK |
+| Button press | 0.15-0.2s | Menu (0.2s) | OK |
 | Modal appear | 0.2s | IntroQuiz, TestLLM | OUI |
 | Scene transition fade | 0.5-0.8s | IntroMerlinDialogue (0.8s), IntroQuiz (FADE_DURATION) | VARIABLE |
 
@@ -420,7 +410,7 @@
 | Probleme | Details | Severite |
 |----------|---------|----------|
 | **Mist amplitude mixte** | Menu: 0.08-0.25, SceneEveil: 0.08-0.25, SceneAntre: 0.06-0.20, Collection: 0.6-1.0 | MINEUR |
-| **Easing boutons inconsistant** | Menu: TRANS_SINE, menu_return: TRANS_QUAD, triade_ui: aucun | MINEUR |
+| **Easing boutons inconsistant** | Menu: TRANS_SINE, menu_return: TRANS_QUAD | MINEUR |
 | **Paper shader params divergent** | merlin_backdrop.gd utilise grain 0.04/vignette 0.12 vs 0.025/0.08 partout ailleurs | MINEUR |
 | **Bestiole float sans easing** | main_game.gd L681: pas d'easing (linear), type_label L226 a EASE_IN_OUT | MINEUR |
 | **Scene fade-out durees** | IntroMerlinDialogue: 0.8s, SceneEveil: 0.6s, SceneAntre: 0.6s | MINEUR |
@@ -453,7 +443,6 @@
 |---------|-------|-------|----------|----------|
 | Boutons Menu Principal | OUI (scale 1.02) | OUI (scale 1.15) | OUI | NON |
 | Boutons IntroQuiz | NON | OUI (scale 1.02) | NON | **Hover + feedback** |
-| Boutons Triade UI | NON | OUI (flash) | NON | **Hover** |
 | Boutons Reigns UI | NON | NON | tween position | **Hover + press** |
 | Boutons SceneAntre (biome) | NON | NON | pulse suggere | **Hover + press** |
 | Boutons Calendar | NON | NON | NON | **Tous manquants** |
@@ -464,12 +453,11 @@
 
 | Event | Animation actuelle | Recommandation |
 |-------|-------------------|----------------|
-| Aspect change (triade) | Pulse 2x (modulate:a 0.5<->1.0) | Ajouter color flash + label slide |
 | Souffle gain | Aucune | **Flash vert sur icone + scale pop** |
 | Souffle depense | Aucune | **Desaturation + shrink** |
 | Card arrive | Aucune (instant) | **Slide from bottom ou flip** |
 | Mission progress | Texte seulement | **Progress bar animate** |
-| Fin de partie | Non implemente dans triade UI | **Fade drammatique + text sequence** |
+| Fin de partie | Non implemente | **Fade drammatique + text sequence** |
 
 ---
 
@@ -662,10 +650,10 @@ const DEFAULT_EASE_INOUT := Tween.EASE_IN_OUT
 
 | Priorite | Action | Fichier(s) |
 |----------|--------|------------|
-| **HAUTE** | Ajouter hover+press a tous les boutons | IntroQuiz, Triade UI, Calendar, Collection |
+| **HAUTE** | Ajouter hover+press a tous les boutons | IntroQuiz, Calendar, Collection |
 | **HAUTE** | Ajouter entree/sortie a SelectionSauvegarde et MenuOptions | SelectionSauvegarde.gd, MenuOptions.gd |
 | **MOYENNE** | Harmoniser mist alpha range (0.08-0.25 partout) | SceneAntreMerlin (changer 0.06 -> 0.08), Collection (changer 0.6-1.0 -> 0.08-0.25) |
-| **MOYENNE** | Harmoniser easing boutons (TRANS_SINE partout) | menu_return_button, triade_game_ui |
+| **MOYENNE** | Harmoniser easing boutons (TRANS_SINE partout) | menu_return_button |
 | **MOYENNE** | Unifier paper shader params dans constante | Calendar, Collection, Menu, SceneEveil, SceneAntre, reigns_backdrop |
 | **BASSE** | Ajouter EASE_IN_OUT au float Bestiole | main_game.gd:681 |
 | **BASSE** | Integrer bestiole_squish.gdshader dans une scene | Bestiole touch/caresse |
@@ -697,8 +685,8 @@ const DEFAULT_EASE_INOUT := Tween.EASE_IN_OUT
 
 | Metrique | Valeur |
 |----------|--------|
-| **Fichiers avec animations** | 19 scripts + 7 shaders |
-| **Tweens totaux** | ~75 |
+| **Fichiers avec animations** | 18 scripts + 7 shaders |
+| **Tweens totaux** | ~73 |
 | **Process-based** | ~12 |
 | **Typewriters** | 5 |
 | **GPU Particles** | 2 |

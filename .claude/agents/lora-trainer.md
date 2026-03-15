@@ -51,7 +51,7 @@
 | Brain | Modèle base | Taille | Adapter fichier | Rôle |
 |-------|------------|--------|-----------------|------|
 | narrator | Qwen 2.5-4B-Instruct | 4B | merlin_narrator_lora.gguf | Narration principale, cartes, dialogues |
-| gamemaster | Qwen 2.5-2B-Instruct | 2B | merlin_gamemaster_lora.gguf | Logique gameplay, validation Triade |
+| gamemaster | Qwen 2.5-2B-Instruct | 2B | merlin_gamemaster_lora.gguf | Logique gameplay, validation factions (OBSOLETE — retrain needed) |
 | worker | Qwen 2.5-0.8B-Instruct | 0.8B | merlin_worker_lora.gguf | Tâches légères, reformulation |
 
 **Config QLoRA recommandée**: rank=16, alpha=32, 3-5 epochs, lr=2e-4, batch_size=4

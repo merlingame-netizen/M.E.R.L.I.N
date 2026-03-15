@@ -1058,7 +1058,7 @@ const FACTION_INFO := {
 
 const FACTION_SCORE_MIN := 0
 const FACTION_SCORE_MAX := 100
-const FACTION_SCORE_START := 10
+const FACTION_SCORE_START := 0
 
 # Bandes de seuil — évalués du plus haut (honore) au plus bas (hostile)
 const FACTION_TIERS := {

@@ -247,7 +247,7 @@ fi
 ```
 v{MAJOR}.{MINOR}.{PATCH}[-{PRE}]
 
-MAJOR: Breaking gameplay changes (new Triade system, etc.)
+MAJOR: Breaking gameplay changes (new faction system, etc.)
 MINOR: New features (new biome, new Oghams, etc.)
 PATCH: Bug fixes, balance tweaks
 PRE: alpha, beta, rc1, rc2

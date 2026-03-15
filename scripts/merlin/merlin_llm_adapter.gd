@@ -1926,7 +1926,8 @@ func _try_parse_effects_dict(json_str: String) -> Array:
 			var eff_type: String = str(eff["type"])
 			if eff_type == "ADD_REPUTATION":
 				var faction: String = str(eff.get("faction", ""))
-				var amount: float = clampf(float(eff.get("amount", 0.0)), -30.0, 30.0)
+				# SEC-3: Cap matches MerlinReputationSystem.CAP_PER_CARD (±20)
+				var amount: float = clampf(float(eff.get("amount", 0.0)), -20.0, 20.0)
 				if faction in FACTIONS:
 					validated.append({"type": "ADD_REPUTATION", "faction": faction, "amount": amount})
 			elif eff_type in ALLOWED_EFFECT_TYPES and eff.has("amount"):
@@ -2331,7 +2332,8 @@ func _validate_faction_effect(effect: Dictionary) -> Dictionary:
 	match effect_type:
 		"ADD_REPUTATION":
 			var faction: String = str(effect.get("faction", ""))
-			var amount: float = clampf(float(effect.get("amount", 0.0)), -30.0, 30.0)
+			# SEC-3: Cap matches MerlinReputationSystem.CAP_PER_CARD (±20)
+			var amount: float = clampf(float(effect.get("amount", 0.0)), -20.0, 20.0)
 			if faction in FACTIONS:
 				return {"type": "ADD_REPUTATION", "faction": faction, "amount": amount}
 			return {}
@@ -2342,9 +2344,10 @@ func _validate_faction_effect(effect: Dictionary) -> Dictionary:
 
 		"UNLOCK_OGHAM":
 			var ogham := str(effect.get("ogham", ""))
-			if not ogham.is_empty():
-				return {"type": "UNLOCK_OGHAM", "ogham": ogham}
-			return {}
+			# SEC-5: Only accept known oghams from the full specs list
+			if ogham.is_empty() or ogham not in MerlinConstants.OGHAM_FULL_SPECS:
+				return {}
+			return {"type": "UNLOCK_OGHAM", "ogham": ogham}
 
 		"PROGRESS_MISSION":
 			return {"type": "PROGRESS_MISSION", "step": clampi(int(effect.get("step", 1)), 0, 3)}

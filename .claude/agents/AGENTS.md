@@ -3,7 +3,7 @@
 ## Overview
 
 This document defines the team of specialized Claude Code agents for the M.E.R.L.I.N. project.
-**38 agents + 1 knowledge base** organized by domain.
+**49 agents + 1 knowledge base** organized by domain.
 
 ## Usage with Claude Code
 
@@ -75,7 +75,8 @@ Task tool:
 | Role | File | Specialty |
 |------|------|-----------|
 | Game Designer | `game_designer.md` | Rules, **data-driven balancing, economy, synergies** |
-| Narrative Writer | `narrative_writer.md` | Card text, **QA narrative, prompt writing, Triade templates** |
+| Narrative Writer | `narrative_writer.md` | Card text, **QA narrative, prompt writing, faction templates** |
+| **Balance Tuner** | `balance_tuner.md` | **Numeric balance, MOS convergence, difficulty curves, scoring tables** |
 | Art Direction | `art_direction.md` | **Pixel art pipeline, shaders, procedural landscapes** |
 | Audio Designer | `audio_designer.md` | **SFXManager procedural, adaptive music, accessibility** |
 
@@ -255,14 +256,14 @@ Lancer le jeu en debug : `powershell -File tools/autodev/launch_debug.ps1`
 ## Summary Count
 
 ```
-Total: 48 agents + 1 knowledge base
+Total: 49 agents + 1 knowledge base
 
 By category:
   Direction:                  1 (game_director)
   Orchestration:              1 (task_dispatcher)
   Core Technical:             6 (lead_godot, godot_expert, llm_expert, debug_qa, optimizer, shader_specialist)
   UI/UX & Animation:          4 (ui_impl, ux_research, motion_designer, mobile_touch_expert)
-  Content & Creative:         4 (game_designer, narrative_writer, art_direction, audio_designer)
+  Content & Creative:         5 (game_designer, narrative_writer, art_direction, audio_designer, balance_tuner)
   Lore & World-Building:      3 (merlin_guardian, lore_writer, historien_bretagne)
   Operations & Documentation: 4 (producer, localisation, technical_writer, data_analyst)
   Project Management:         2 (git_commit, project_curator)

@@ -11,7 +11,7 @@ You are the **QA and Debug Specialist** for the M.E.R.L.I.N. project. You are re
 - **DOCUMENTING LESSONS LEARNED** (Knowledge Base)
 - **Automated testing with GUT framework**
 - **LLM narrative QA (coherence, lore, voice)**
-- **Triade state coverage tracking**
+- **Faction reputation coverage tracking**
 
 ## AUTO-ACTIVATION RULE
 
@@ -139,11 +139,11 @@ powershell -ExecutionPolicy Bypass -File tools/validate_flow_order.ps1 -Quick
 
 ## Testing Focus Areas
 
-### Core Systems (Triade)
-- MerlinStore state transitions (3 aspects x 7 states: -3 to +3)
+### Core Systems (Factions + Life)
+- MerlinStore state transitions (5 factions, 0-100 each)
 - MerlinCardSystem card flow, fallback pool
-- MerlinEffectEngine: SHIFT_ASPECT, SOUFFLE, KARMA, PROMISE
-- Aspect boundary conditions (-3 and +3 = game over)
+- MerlinEffectEngine: ADD_REPUTATION, HEAL_LIFE, DAMAGE_LIFE, PROMISE
+- Life boundary conditions (0 = death, 100 = max)
 - Souffle d'Ogham economy (max 5/7, cost, regen)
 - DC-based resolution (D20 roll, critical success/failure)
 
@@ -360,28 +360,27 @@ func validate_card_narrative(card: Dictionary, context: Dictionary) -> Dictionar
 
 ---
 
-## Triade State Coverage
+## Faction Reputation Coverage
 
 ### State Space
 ```
-3 aspects x 7 states each (-3 to +3) = 343 possible combinations
-12 fall endings (2 aspects at extreme)
-3 victory endings
-1 secret ending
+5 factions x range 0-100 = continuous
+Thresholds: 50 (content), 80 (ending)
+Cap per card: ±20
+Cross-run persistence
 ```
 
 ### Coverage Tracking
 ```markdown
-## Triade State Coverage Matrix
+## Faction Coverage Matrix
 
-### Aspect States Tested
-| State | Corps | Ame | Monde |
-|-------|-------|-----|-------|
-| -3 (extreme low) | [ ] | [ ] | [ ] |
-| -2 | [ ] | [ ] | [ ] |
-| -1 | [ ] | [ ] | [ ] |
-|  0 (equilibre) | [x] | [x] | [x] |
-| +1 | [ ] | [ ] | [ ] |
+### Faction States Tested
+| State | Druides | Anciens | Korrigans | Niamh | Ankou |
+|-------|---------|---------|-----------|-------|-------|
+| 0 (initial) | [x] | [x] | [x] | [x] | [x] |
+| 1-49 (neutral) | [ ] | [ ] | [ ] | [ ] | [ ] |
+| 50+ (content) | [ ] | [ ] | [ ] | [ ] | [ ] |
+| 80+ (ending) | [ ] | [ ] | [ ] | [ ] | [ ] |
 | +2 | [ ] | [ ] | [ ] |
 | +3 (extreme high) | [ ] | [ ] | [ ] |
 
@@ -589,8 +588,8 @@ Le Debug Agent et l'Optimizer Agent partagent la meme knowledge base:
 - Issues: [list]
 
 ### Coverage
-- Triade states tested: X/343
-- Endings tested: X/16
+- Faction states tested: X/25
+- Endings tested: X/8
 - Edge cases covered: X/Y
 
 ### New Bugs Found

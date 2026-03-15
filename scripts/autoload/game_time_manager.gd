@@ -26,7 +26,10 @@ var moon_phase: String = "pleine"
 var active_festival: String = ""
 
 ## Game-time speed: 1.0 means 1 real minute = 1 game hour (24 game hours per 24 real minutes)
-var time_scale: float = 1.0
+# SEC-6: Clamped setter prevents unbounded time acceleration
+var time_scale: float = 1.0:
+	set(v):
+		time_scale = clampf(v, 0.0, 100.0)
 
 # ─── Constants ──────────────────────────────────────────────────────────────
 const SEASONS: Array[String] = ["printemps", "ete", "automne", "hiver"]
@@ -71,7 +74,7 @@ const BONUS_AUTOMNE_ANKOU: float = 0.30
 const SYNC_INTERVAL_SECONDS: float = 300.0
 
 # ─── Private state ──────────────────────────────────────────────────────────
-var _current_period: String = "jour"
+var _current_period: String = "nuit"
 var _current_hour: int = 12
 var _current_month: int = 3
 var _current_day: int = 15
@@ -130,10 +133,7 @@ func get_light_intensity() -> float:
 	# Use a raised cosine: intensity = 0.5 * (1 - cos(2*PI*(t - 0.25)))
 	# This gives 0 at t=0 (midnight), 1 at t=0.5 (noon)
 	var t: float = current_time_normalized
-	var raw: float = 0.5 * (1.0 - cos(TAU * t - PI))
-	# Shift so midnight=0, noon=1: cos curve centered at 0.5
-	# Actually: intensity = max(0, sin(PI * t)) gives 0 at 0 and 1, peak at 0.5
-	# But sin(PI*0)=0, sin(PI*0.5)=1, sin(PI*1)=0 — perfect.
+	# intensity = max(0, sin(PI * t)) gives 0 at midnight, 1 at noon
 	var intensity: float = maxf(0.0, sin(PI * t))
 	# Smooth clamp to avoid harsh transitions
 	return clampf(intensity, 0.0, 1.0)

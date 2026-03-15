@@ -79,10 +79,12 @@ Celtic Mystic (tertiary):
 - cyan:     (0.30, 0.85, 0.80) — magic/special
 - cyan_dim: (0.15, 0.42, 0.40) — subtle mystic
 
-CRT Aspect Colors (Triade in terminal phosphor):
-- Corps: Red-orange phosphor (1.00, 0.35, 0.20)
-- Ame:   Blue-violet phosphor (0.45, 0.35, 1.00)
-- Monde: Green phosphor (0.20, 1.00, 0.40)
+CRT Faction Colors (in terminal phosphor):
+- Druides: Green phosphor (0.20, 1.00, 0.40)
+- Anciens: Blue-violet phosphor (0.45, 0.35, 1.00)
+- Korrigans: Amber phosphor (1.00, 0.75, 0.20)
+- Niamh: Cyan phosphor (0.30, 0.85, 0.80)
+- Ankou: Red-orange phosphor (1.00, 0.35, 0.20)
 ```
 
 #### Colorblind-Safe Alternates
@@ -171,7 +173,7 @@ Individual frames:
 
 ---
 
-## Card Design (Triade System) — CRT Terminal
+## Card Design (Faction System) — CRT Terminal
 
 ### Card Layout
 ```

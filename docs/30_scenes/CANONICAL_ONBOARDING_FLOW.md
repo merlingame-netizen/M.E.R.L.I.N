@@ -1,3 +1,4 @@
+<!-- Updated 2026-03-15: Triade references removed -->
 # CANONICAL ONBOARDING FLOW
 
 Date de reference: 2026-02-13
@@ -19,7 +20,7 @@ IntroPersonalityQuiz -> SceneRencontreMerlin -> HubAntre -> TransitionBiome -> M
 - `res://scripts/HubAntre.gd`
   - Hub pre-run (destination, outil, condition, lancement)
 - `res://scripts/TransitionBiome.gd`
-  - Transition finale vers Triade
+  - Transition finale vers le run (MerlinGame)
 
 ## Regles hub pre-run (canon)
 

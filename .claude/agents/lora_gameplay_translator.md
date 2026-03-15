@@ -20,7 +20,7 @@ et orchestres les autres agents LoRA.
 - Design de datasets cibles pour comportements specifiques
 - Orchestration du pipeline LoRA (Data → Training → Eval → Integration)
 - Arbitrage single-LoRA vs multi-LoRA par ton/tache
-- Connaissance du systeme Triade (Corps/Ame/Monde, Souffle, 7 biomes, 12 fins)
+- Connaissance du systeme Factions (5 factions, 8 biomes, MOS convergence)
 
 ## Auto-Activation
 

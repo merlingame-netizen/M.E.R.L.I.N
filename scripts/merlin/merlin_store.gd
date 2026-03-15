@@ -24,6 +24,9 @@ signal gauges_changed(gauges: Dictionary)
 
 const VERSION := "0.4.0"  # Updated for World Map gauge system
 
+# SEC-4: Allowlist for valid game phases (prevents arbitrary phase injection)
+const VALID_PHASES: Array[String] = ["title", "card", "end"]
+
 # ═══════════════════════════════════════════════════════════════════════════════
 # SYSTEMS
 # ═══════════════════════════════════════════════════════════════════════════════
@@ -277,7 +280,12 @@ func _reduce(action: Dictionary) -> Dictionary:
 		# CORE ACTIONS
 		# ═══════════════════════════════════════════════════════════════════════
 		"SET_PHASE":
-			state["phase"] = action.get("phase", state.get("phase", "title"))
+			var phase_value: String = str(action.get("phase", state.get("phase", "title")))
+			# SEC-4: Only accept known phases to prevent arbitrary injection
+			if phase_value not in VALID_PHASES:
+				push_warning("[MerlinStore] SET_PHASE rejected unknown phase: %s" % phase_value)
+				return {"ok": false, "error": "invalid_phase"}
+			state["phase"] = phase_value
 			_log_transition("phase", {"phase": state["phase"]})
 			return {"ok": true}
 
@@ -298,6 +306,10 @@ func _reduce(action: Dictionary) -> Dictionary:
 			state["run"]["map_seed"] = seed_val
 			# Set biome from action (default: Broceliande)
 			var biome_key: String = str(action.get("biome", MerlinConstants.BIOME_DEFAULT))
+			# SEC-4: Only accept known biomes to prevent arbitrary injection
+			if biome_key not in MerlinConstants.BIOMES:
+				push_warning("[MerlinStore] START_RUN rejected unknown biome: %s" % biome_key)
+				biome_key = MerlinConstants.BIOME_DEFAULT
 			state["run"]["current_biome"] = biome_key
 			state["phase"] = "card"
 			state["mode"] = "run"
@@ -604,7 +616,8 @@ func _apply_faction_run_bonuses() -> void:
 		match bonus_type:
 			"ADD_KARMA":
 				var hidden: Dictionary = run.get("hidden", {})
-				hidden["karma"] = int(hidden.get("karma", 0)) + amount
+				# SEC-1: Clamp karma to prevent unbounded accumulation
+				hidden["karma"] = clampi(int(hidden.get("karma", 0)) + amount, -20, 20)
 				run["hidden"] = hidden
 			"ADD_TENSION":
 				var hidden: Dictionary = run.get("hidden", {})
@@ -1064,7 +1077,8 @@ func _apply_effect(effect: Dictionary) -> void:
 		"ADD_KARMA":
 			var amount: int = int(effect.get("amount", 0))
 			var hidden = state["run"].get("hidden", {})
-			hidden["karma"] = int(hidden.get("karma", 0)) + amount
+			# SEC-1: Clamp karma to prevent unbounded accumulation
+			hidden["karma"] = clampi(int(hidden.get("karma", 0)) + amount, -20, 20)
 			state["run"]["hidden"] = hidden
 		"ADD_TENSION":
 			var amount: int = int(effect.get("amount", 0))

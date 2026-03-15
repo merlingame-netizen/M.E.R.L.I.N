@@ -34,22 +34,22 @@ func reset() -> void:
 
 
 ## Ajoute de la réputation à une faction. Clampé [0, 100], cappé à ±20/carte.
-## Retourne la nouvelle valeur, ou -1 si la faction est invalide.
-func add_reputation(faction: String, amount: int) -> int:
+## Retourne la nouvelle valeur (float), ou -1.0 si la faction est invalide.
+func add_reputation(faction: String, amount: float) -> float:
 	if not FACTIONS.has(faction):
-		return -1
-	var capped: float = clampf(float(amount), -CAP_PER_CARD, CAP_PER_CARD)
+		return -1.0
+	var capped: float = clampf(amount, -CAP_PER_CARD, CAP_PER_CARD)
 	var current: float = float(_reputations.get(faction, 0.0))
 	var new_value: float = clampf(current + capped, VALUE_MIN, VALUE_MAX)
 	_reputations[faction] = new_value
-	return int(new_value)
+	return new_value
 
 
 ## Retourne la réputation d'une faction. 0 si invalide.
-func get_reputation(faction: String) -> int:
+func get_reputation(faction: String) -> float:
 	if not FACTIONS.has(faction):
-		return 0
-	return int(float(_reputations.get(faction, 0.0)))
+		return 0.0
+	return float(_reputations.get(faction, 0.0))
 
 
 ## Retourne un dict de toutes les réputations (copie).

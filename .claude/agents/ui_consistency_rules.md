@@ -32,10 +32,10 @@ ALL visual constants are centralized in scripts/autoload/merlin_visual.gd. ONLY 
     MerlinVisual.CRT_PALETTE["danger"]           # Critical state
     MerlinVisual.CRT_PALETTE["success"]          # Positive state
 
-    # CRT Aspect colors (Triade in terminal phosphor)
-    MerlinVisual.CRT_ASPECT_COLORS["Corps"]      # Red-orange phosphor
-    MerlinVisual.CRT_ASPECT_COLORS["Ame"]        # Blue-violet phosphor
-    MerlinVisual.CRT_ASPECT_COLORS["Monde"]      # Green phosphor
+    # CRT Faction colors (in terminal phosphor)
+    MerlinVisual.CRT_PALETTE["phosphor"]         # Default faction color
+    MerlinVisual.CRT_PALETTE["danger"]           # Ankou faction
+    MerlinVisual.CRT_PALETTE["success"]          # Druides faction
 
     # Biome CRT palettes (8 colors per biome, phosphor tint + distortion)
     MerlinVisual.apply_biome_crt("broceliande")  # Apply to CRTLayer

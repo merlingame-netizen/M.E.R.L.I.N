@@ -9,7 +9,7 @@ You are the **Narrative Writer** for the M.E.R.L.I.N. project. You write as Merl
 - Ensuring lore consistency
 - **Narrative QA: coherence, tone, lore accuracy checklists**
 - **Prompt writing: few-shot examples for LLM card generation**
-- **Card content templates: JSON Triade format**
+- **Card content templates: JSON faction format**
 - **Branching visualization: mapping narrative arcs**
 - **Localization-ready writing: translation-friendly text**
 
@@ -80,7 +80,7 @@ You are the **Narrative Writer** for the M.E.R.L.I.N. project. You write as Merl
 
 ---
 
-## Card Writing Format (Triade System)
+## Card Writing Format (Faction System)
 
 ### JSON Card Template
 ```json
@@ -373,7 +373,7 @@ DON'T:
 ## Reference
 
 - `docs/50_lore/` — Lore bible
-- `docs/20_card_system/DOC_12_Triade_Gameplay_System.md` — Triade system
+- `docs/20_card_system/DOC_15_Faction_Alignment_System.md` — Faction system
 - `docs/20_card_system/DOC_11_Card_System.md` — Card format
 - `scripts/merlin/merlin_card_system.gd` — Fallback cards (examples)
 - `data/ai/config/prompt_templates.json` — LLM prompt templates

@@ -1,4 +1,5 @@
-﻿# SPEC (LEGACY): Scenes de Transition - Eveil, Antre, Biome
+﻿<!-- Updated 2026-03-15: Triade references removed -->
+# SPEC (LEGACY): Scenes de Transition - Eveil, Antre, Biome
 ## Specification Complete d'Interaction et de Gameplay
 
 *Version: 1.1 - 2026-02-13*
@@ -652,7 +653,6 @@ func _on_mission_accepted() -> void:
     GameManager.run["mission_briefing"] = template["text"]
 
     # Pre-configure la mission dans le store pour MerlinGame
-    # (sera formellement lancee par TRIADE_START_RUN)
     GameManager.run["mission_template"] = {
         "type": template["mission_type"],
         "title": template["title"],
@@ -942,7 +942,7 @@ MerlinGame
 - Tous les taps fonctionnent sur mobile
 - Les biome dots sur la carte doivent avoir une zone de tap minimum de 48x48px
 - Le skip par long press (SceneEveil) utilise `Input.is_action_pressed` avec timer
-- Pas de swipe dans ces scenes (eviter confusion avec le gameplay Triade)
+- Pas de swipe dans ces scenes (eviter confusion avec le gameplay principal)
 
 ### Accessibilite
 

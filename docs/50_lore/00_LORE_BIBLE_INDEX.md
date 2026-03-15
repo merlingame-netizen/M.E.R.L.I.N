@@ -1,3 +1,4 @@
+<!-- Updated 2026-03-15: Triade references removed -->
 # LORE BIBLE — M.E.R.L.I.N.: Le Jeu des Oghams
 ## Index General
 
@@ -89,7 +90,7 @@ Ce que le joueur voit des le debut. Le monde tel qu'il apparait.
 
 - Les 7 druides vivants (03_FACTIONS, 11_PNJ) sont distincts des 18 druides dissous (07_OGHAMS)
 - Chaque biome (08_BIOMES) a un Ogham dominant coherent avec 07_OGHAMS
-- Les fins (09_FINS) correspondent aux 3 Aspects (10_PONT_MECANIQUE, DOC_12_Triade)
+- Les fins (09_FINS) correspondent aux 5 Factions (10_PONT_MECANIQUE, 03_LES_FACTIONS)
 - Bestiole (06_BESTIOLE) = canal des Oghams (07_OGHAMS) = fragment d'Awen (COSMOLOGIE_CACHEE)
 - Le Voyageur (05_VOYAGEUR) = Tyst/Temoin (COSMOLOGIE_CACHEE) = pont entre mondes
 - Merlin porte 18 heritages (07_OGHAMS) + triple nature (MERLIN_TRUE_NATURE)

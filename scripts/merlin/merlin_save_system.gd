@@ -113,6 +113,16 @@ func load_profile() -> Dictionary:
 	for key in defaults:
 		if not meta.has(key):
 			meta[key] = defaults[key]
+	# SEC-2: Validate structure before returning loaded data
+	if not _validate(meta):
+		push_warning("[MerlinSave] Validation failed, returning defaults")
+		return _get_default_profile()
+	# SEC-2: Clamp numeric fields to prevent save-file tampering
+	meta["anam"] = maxi(int(meta.get("anam", 0)), 0)
+	var faction_rep: Dictionary = meta.get("faction_rep", {})
+	for faction in faction_rep:
+		faction_rep[faction] = clampf(float(faction_rep[faction]), 0.0, 100.0)
+	meta["faction_rep"] = faction_rep
 	return meta
 
 

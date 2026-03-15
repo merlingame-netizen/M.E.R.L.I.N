@@ -1,3 +1,4 @@
+<!-- Updated 2026-03-15: Triade references removed -->
 # Art Direction Audit Report (LEGACY)
 ## M.E.R.L.I.N. — Le Jeu des Oghams
 
@@ -17,7 +18,7 @@
 4. [Shader Audit](#4-shader-audit)
 5. [Animation Timing Audit](#5-animation-timing-audit)
 6. [Celtic Ornament Consistency](#6-celtic-ornament-consistency)
-7. [Game UI Scenes (Triade / Reigns)](#7-game-ui-scenes)
+7. [Game UI Scenes (Reigns)](#7-game-ui-scenes)
 8. [IntroCeltOS Boot Scene](#8-introceltos-boot-scene)
 9. [TestLLMSceneUltimate](#9-testllmsceneultimate)
 10. [Asset Inventory](#10-asset-inventory)
@@ -40,7 +41,6 @@
 - `IntroMerlinDialogue.gd` — Matches reference palette (inline values, not const dict)
 
 **Scenes with CRITICAL visual divergence:**
-- `TriadeGameUI.gd` — **No parchment style at all**, uses default Godot theme, hard-coded generic colors
 - `ReignsGameUI.gd` — **No parchment style at all**, depends entirely on .tscn scene styling
 - `TestLLMSceneUltimate.gd` — **Completely different dark palette** ("DRU_COLORS"), does not match any project style
 
@@ -50,7 +50,7 @@
 ### Key Finding
 The project has **two visual worlds** that are not bridged:
 1. **Parchment World** (menu, narrative scenes) — Fully coherent, well-documented
-2. **Gameplay World** (Triade UI, Reigns UI) — Unstyled or uses a different vocabulary
+2. **Gameplay World** (Reigns UI) — Unstyled or uses a different vocabulary
 
 ---
 
@@ -86,7 +86,6 @@ Source of truth: `MenuPrincipalReigns.gd` PALETTE constant.
 | SceneAntreMerlin.gd | YES (14 entries) | Match + extensions | ogham_glow, bestiole | celtic_gold, celtic_brown |
 | Calendar.gd | YES (14 entries) | Match + extensions | spring/summer/autumn/winter, event_* | celtic_gold, celtic_brown |
 | IntroMerlinDialogue.gd | NO (inline vars) | MATCH (same values) | error Color(0.72, 0.38, 0.30) | -- |
-| TriadeGameUI.gd | NO | **NO MATCH** | ASPECT_COLORS, generic colors | All parchment colors |
 | ReignsGameUI.gd | NO | **NO MATCH** | gauge colors (red/green) | All parchment colors |
 | TestLLMSceneUltimate.gd | YES (DRU_COLORS) | **COMPLETELY DIFFERENT** | Dark UI palette | All parchment colors |
 | IntroCeltOS.gd | YES (PALETTE) | **INTENTIONALLY DIFFERENT** | Terminal green, eye blue | -- |
@@ -114,21 +113,6 @@ Source of truth: `MenuPrincipalReigns.gd` PALETTE constant.
   ```
 - **These are significantly different.** SceneAntreMerlin uses muted/desaturated approximations rather than the vivid GBC palette colors.
 - Recommendation: Update BIOME_DATA in SceneAntreMerlin.gd to use the canonical BIOME_COLORS from the VISUAL_SPEC doc.
-
-**ISSUE #3: TriadeGameUI.gd uses entirely unstyled colors**
-- Severity: HIGH
-- `ASPECT_COLORS`:
-  ```
-  "Corps": Color(0.8, 0.4, 0.2)   # Generic orange
-  "Ame": Color(0.5, 0.3, 0.7)     # Generic purple
-  "Monde": Color(0.3, 0.6, 0.4)   # Generic green
-  ```
-- Option button colors: `Color(0.4, 0.6, 0.8)`, `Color(0.8, 0.7, 0.3)`, `Color(0.8, 0.4, 0.4)`
-- Card speaker color: `Color(0.9, 0.7, 0.3)` — generic gold
-- End screen overlay: `Color(0, 0, 0, 0.85)` — pure black
-- Victory/defeat: `Color(0.4, 0.9, 0.4)` / `Color(0.9, 0.4, 0.4)` — pure green/red
-- **None of these match the parchment palette.**
-- Recommendation: Full restyle of TriadeGameUI to adopt parchment style (see Section 13).
 
 **ISSUE #4: ReignsGameUI.gd has no styling code**
 - Severity: HIGH
@@ -177,7 +161,6 @@ Available fonts:
 | SceneAntreMerlin | MorrisRomanBlack | MorrisRomanBlackAlt | -- | .otf -> .ttf -> title |
 | IntroMerlinDialogue | MorrisRomanBlack | MorrisRomanBlackAlt | -- | .ttf -> .otf -> celtic-bit-thin |
 | Calendar | MorrisRomanBlack | MorrisRomanBlackAlt | -- | direct path |
-| **TriadeGameUI** | **NONE** | **NONE** | **NONE** | **Default Godot font** |
 | **ReignsGameUI** | **NONE** | **NONE** | **NONE** | **Depends on theme** |
 
 ### 3.3 Font Size Consistency
@@ -363,41 +346,9 @@ Repeated 40 times (360 characters).
 
 ---
 
-## 7. GAME UI SCENES (Triade / Reigns)
+## 7. GAME UI SCENES (Reigns)
 
-### 7.1 TriadeGameUI.gd — CRITICAL STYLE GAP
-
-**Current state:** TriadeGameUI builds its entire UI programmatically using default Godot styles. It has:
-- No background (no paper shader)
-- No Celtic ornaments
-- No Morris Roman fonts
-- No card styling matching parchment aesthetic
-- Colors that don't belong to any palette
-
-**Specific issues:**
-1. ASPECT_COLORS `(0.8, 0.4, 0.2)`, `(0.5, 0.3, 0.7)`, `(0.3, 0.6, 0.4)` are generic and not from GBC palette
-2. Card panel uses default Godot Panel style (no parchment, no shadow, no border radius)
-3. Card speaker label uses `Color(0.9, 0.7, 0.3)` -- not matching `accent` or `celtic_gold`
-4. Option button colors `(0.4, 0.6, 0.8)`, `(0.8, 0.7, 0.3)`, `(0.8, 0.4, 0.4)` are fully arbitrary
-5. End screen uses pure black overlay `Color(0, 0, 0, 0.85)` -- should use `ink` with parchment tint
-6. Souffle icon uses emoji `SOUFFLE_ICON := "..."` -- fine for Unicode, but no consistent styling
-7. State indicator uses `Color(0.5, 0.5, 0.5)` for inactive and `Color(0.7, 0.7, 0.7)` for labels -- gray, not warm
-
-**Required restyle:**
-- Apply parchment paper shader as background
-- Add Celtic ornaments top/bottom
-- Style card panel with paper_warm bg, ink_faded border, shadow, corner_radius 4
-- Use Morris Roman fonts throughout
-- Replace ASPECT_COLORS with GBC palette equivalents:
-  ```
-  "Corps": Color("#a08058")  (earth)
-  "Ame": Color("#8868b0")    (mystic)
-  "Monde": Color("#48a028")  (grass)
-  ```
-- Replace option colors with palette colors
-- Style end screen with parchment overlay instead of black
-
-### 7.2 ReignsGameUI.gd — DEPENDS ON THEME FILE
+### 7.1 ReignsGameUI.gd — DEPENDS ON THEME FILE
 
 ReignsGameUI uses @onready references to .tscn nodes and `reigns_theme.tres`. It has minimal in-code styling:
 - Gauge critical colors: `Color(0.9, 0.2, 0.2)` and `Color(0.3, 0.7, 0.3)` -- generic red/green
@@ -528,7 +479,6 @@ All scenes use the same seasonal portrait logic. Consistent.
 
 | # | Issue | File | Description |
 |---|-------|------|-------------|
-| 3 | Unstyled TriadeGameUI | triade_game_ui.gd | No parchment style, arbitrary colors, no fonts |
 | 4 | Unstyled ReignsGameUI | reigns_game_ui.gd | No parchment style in code, depends on external theme |
 | 10 | No cave shader variant | SceneAntreMerlin.gd | Lair looks identical to menu, no cave atmosphere |
 | 19 | Wrong biome colors | SceneAntreMerlin.gd | 4/7 biome colors significantly wrong |
@@ -594,21 +544,7 @@ const FONTS := {
 }
 ```
 
-### 13.2 TriadeGameUI Restyle Plan
-
-1. Add parchment background with `reigns_paper.gdshader`
-2. Add Celtic ornaments top/bottom
-3. Use MorrisRomanBlack for aspect names, MorrisRomanBlackAlt for body
-4. Replace ASPECT_COLORS with GBC palette:
-   - Corps: `Color("#a08058")` (earth)
-   - Ame: `Color("#8868b0")` (mystic)
-   - Monde: `Color("#48a028")` (grass)
-5. Style card panel: paper_warm bg, ink_faded border 1px, corner_radius 4, shadow 16px
-6. Style option buttons: paper bg, ink_faded border, accent hover
-7. Replace end screen: paper_warm overlay with ink text instead of black
-8. Replace score color: `accent` instead of `Color(0.9, 0.8, 0.3)`
-
-### 13.3 SceneAntreMerlin Cave Variant
+### 13.2 SceneAntreMerlin Cave Variant
 
 Update the shader parameters for cave atmosphere:
 ```gdscript
@@ -621,7 +557,7 @@ mat.set_shader_parameter("grain_speed", 0.03)
 mat.set_shader_parameter("warp_strength", 0.0005)
 ```
 
-### 13.4 Fix Biome Colors in SceneAntreMerlin
+### 13.3 Fix Biome Colors in SceneAntreMerlin
 
 Replace BIOME_DATA with canonical GBC palette colors:
 ```gdscript
@@ -673,7 +609,6 @@ When implementing the Bestiole companion UI, follow these rules:
 - [x] Celtic ornament patterns verified
 - [x] Biome color accuracy checked
 - [x] Asset inventory completed
-- [ ] TriadeGameUI restyle (PENDING implementation)
 - [ ] ReignsGameUI restyle (PENDING implementation)
 - [ ] SceneAntreMerlin cave variant (PENDING implementation)
 - [ ] Biome color fix (PENDING implementation)
