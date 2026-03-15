@@ -151,15 +151,15 @@ static func build_default_factions() -> Dictionary:
 
 
 ## Retourne le tier textuel d'une valeur de réputation (pour affichage UI).
-## Paliers alignés sur FACTION_TIERS de MerlinConstants (adapté 0-100).
+## Paliers alignés sur FACTION_TIERS de MerlinConstants (bible v2.4).
 static func get_tier_label(value: float) -> String:
 	if value >= 80.0:
-		return "Venere"
-	elif value >= 60.0:
 		return "Honore"
-	elif value >= 40.0:
+	elif value >= 50.0:
 		return "Sympathisant"
 	elif value >= 20.0:
 		return "Neutre"
+	elif value >= 5.0:
+		return "Mefiant"
 	else:
 		return "Hostile"

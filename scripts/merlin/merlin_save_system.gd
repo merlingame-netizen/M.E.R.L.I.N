@@ -70,6 +70,20 @@ static func _get_default_run_state() -> Dictionary:
 		"period": "aube",
 		"buffs": [],
 		"events_log": [],
+		"active": true,
+		"anam": 0,
+		"cards_played": 0,
+		"day": 1,
+		"story_log": [],
+		"active_tags": [],
+		"active_promises": [],
+		"hidden": {
+			"karma": 0,
+			"tension": 0,
+			"narrative_debt": [],
+		},
+		"power_bonuses": {},
+		"active_scenario": "",
 	}
 
 

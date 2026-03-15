@@ -293,6 +293,8 @@ func _apply_hidden_counter(state: Dictionary, key: String, delta: int) -> bool:
 
 	if key == "tension":
 		hidden[key] = clampi(current + delta, 0, 100)
+	elif key == "karma":
+		hidden[key] = clampi(current + delta, -100, 100)
 	else:
 		hidden[key] = current + delta
 
@@ -369,10 +371,12 @@ func _build_faction_context(rep_dict: Dictionary) -> Dictionary:
 func _apply_faction_reputation(state: Dictionary, faction: String, delta: int) -> bool:
 	if not MerlinConstants.FACTIONS.has(faction):
 		return false
+	# Enforce per-card cap (bible v2.4: ±20 per faction per card)
+	var capped_delta: int = clampi(delta, -20, 20)
 	var meta: Dictionary = state.get("meta", {})
 	var faction_rep: Dictionary = meta.get("faction_rep", {})
 	var current: int = int(faction_rep.get(faction, MerlinConstants.FACTION_SCORE_START))
-	var new_score: int = clampi(current + delta, MerlinConstants.FACTION_SCORE_MIN, MerlinConstants.FACTION_SCORE_MAX)
+	var new_score: int = clampi(current + capped_delta, MerlinConstants.FACTION_SCORE_MIN, MerlinConstants.FACTION_SCORE_MAX)
 	faction_rep[faction] = new_score
 	meta["faction_rep"] = faction_rep
 	state["meta"] = meta
@@ -388,11 +392,11 @@ func _apply_add_anam(state: Dictionary, amount: int) -> bool:
 		return false
 	var run: Dictionary = state.get("run", {})
 	var run_anam: int = int(run.get("anam", 0))
-	run["anam"] = run_anam + amount
+	run["anam"] = maxi(run_anam + amount, 0)
 	state["run"] = run
 	var meta: Dictionary = state.get("meta", {})
 	var meta_anam: int = int(meta.get("anam", 0))
-	meta["anam"] = meta_anam + amount
+	meta["anam"] = maxi(meta_anam + amount, 0)
 	state["meta"] = meta
 	return true
 
