@@ -38,6 +38,7 @@ const VALID_CODES := {
 	# OGHAMS
 	# ═══════════════════════════════════════════════════════════════════════════
 	"UNLOCK_OGHAM": 1,     # UNLOCK_OGHAM:beith
+	"OFFERING": 3,         # OFFERING:cost:reward_type:reward_value (biome currency trade)
 	# ═══════════════════════════════════════════════════════════════════════════
 	# UI / AUDIO (fire-and-forget, applied by controller)
 	# ═══════════════════════════════════════════════════════════════════════════
@@ -156,6 +157,8 @@ func _apply_parsed(state: Dictionary, parsed: Dictionary) -> bool:
 			return _apply_unlock_ogham(state, args[0])
 		"ADD_BIOME_CURRENCY":
 			return _apply_biome_currency(state, _to_int(args[0]))
+		"OFFERING":
+			return _apply_offering(state, _to_int(args[0]), args[1], args[2])
 		"PLAY_SFX", "SHOW_DIALOG", "TRIGGER_EVENT":
 			# Fire-and-forget: recorded in effect_log, handled by controller
 			return true
@@ -423,6 +426,24 @@ func _apply_biome_currency(state: Dictionary, amount: int) -> bool:
 	run["biome_currency"] = maxi(current + amount, 0)
 	state["run"] = run
 	return true
+
+
+func _apply_offering(state: Dictionary, cost: int, reward_type: String, reward_value: String) -> bool:
+	var run: Dictionary = state.get("run", {})
+	var current_currency: int = int(run.get("biome_currency", 0))
+	if current_currency < cost:
+		push_warning("OFFERING rejected: need %d biome currency, have %d" % [cost, current_currency])
+		return false
+	# Deduct biome currency
+	run["biome_currency"] = current_currency - cost
+	state["run"] = run
+	# Build and apply the reward effect
+	var reward_code: String = "%s:%s" % [reward_type, reward_value]
+	var parsed: Dictionary = _parse_effect(reward_code)
+	if not parsed["ok"]:
+		push_warning("OFFERING reward invalid: %s — %s" % [reward_code, parsed.get("error", "")])
+		return false
+	return _apply_parsed(state, parsed)
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
