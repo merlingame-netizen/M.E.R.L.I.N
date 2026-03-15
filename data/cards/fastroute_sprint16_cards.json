@@ -1,0 +1,652 @@
+[
+  {
+    "id": "s16_biome_01",
+    "text": "Les landes de Carnac s'etendent a perte de vue, parsemees de menhirs alignes comme une armee petrifiee. Un vent glacial siffle entre les pierres, portant des echos d'une bataille oubliee.",
+    "biome": "landes_carnac",
+    "faction": "anciens",
+    "trust_tier": "T0",
+    "tags": ["biome_balance", "landes", "stone_army"],
+    "options": [
+      {"text": "Marcher parmi les menhirs en ecoutant leurs voix", "verb": "ecouter", "effects": [{"type": "ADD_REPUTATION", "faction": "anciens", "value": 8}, {"type": "ADD_ANAM", "value": 1}]},
+      {"text": "Toucher chaque pierre pour sentir leur memoire", "verb": "explorer", "effects": [{"type": "HEAL_LIFE", "value": 10}, {"type": "ADD_BIOME_CURRENCY", "value": 2}]},
+      {"text": "Defier l'esprit guerrier qui hante les alignements", "verb": "defier", "effects": [{"type": "DAMAGE_LIFE", "value": -10}, {"type": "ADD_REPUTATION", "faction": "anciens", "value": 15}]}
+    ]
+  },
+  {
+    "id": "s16_biome_02",
+    "text": "Au croisement de deux alignements, une pierre plus haute que les autres pulse d'une lumiere bleutee. Des symboles apparaissent a sa surface quand la lune perce les nuages.",
+    "biome": "landes_carnac",
+    "faction": "druides",
+    "trust_tier": "T0",
+    "tags": ["biome_balance", "landes", "moonstone"],
+    "options": [
+      {"text": "Dechiffrer les symboles a la lumiere lunaire", "verb": "mediter", "effects": [{"type": "ADD_REPUTATION", "faction": "druides", "value": 10}, {"type": "ADD_ANAM", "value": 2}]},
+      {"text": "Chanter un hymne ancien pour amplifier la lumiere", "verb": "chanter", "effects": [{"type": "HEAL_LIFE", "value": 8}, {"type": "ADD_REPUTATION", "faction": "druides", "value": 5}]},
+      {"text": "Briser la pierre pour liberer l'energie prisonniere", "verb": "detruire", "effects": [{"type": "ADD_BIOME_CURRENCY", "value": 5}, {"type": "ADD_REPUTATION", "faction": "druides", "value": -12}]}
+    ]
+  },
+  {
+    "id": "s16_biome_03",
+    "text": "Une brume epaisse rampe sur les landes, revelant des silhouettes de Korrigans qui dansent en cercle autour d'un dolmen couvert de lichen dore. Leur rire cristallin resonne dans la nuit.",
+    "biome": "landes_carnac",
+    "faction": "korrigans",
+    "trust_tier": "T1",
+    "tags": ["biome_balance", "landes", "korrigan_feast"],
+    "options": [
+      {"text": "Rejoindre la ronde des Korrigans", "verb": "danser", "effects": [{"type": "ADD_REPUTATION", "faction": "korrigans", "value": 12}, {"type": "HEAL_LIFE", "value": 5}]},
+      {"text": "Offrir un present au cercle de danse", "verb": "offrir", "effects": [{"type": "ADD_REPUTATION", "faction": "korrigans", "value": 8}, {"type": "ADD_KARMA", "value": 3}]},
+      {"text": "Voler un morceau du lichen dore", "verb": "voler", "effects": [{"type": "ADD_BIOME_CURRENCY", "value": 4}, {"type": "ADD_REPUTATION", "faction": "korrigans", "value": -15}]}
+    ]
+  },
+  {
+    "id": "s16_biome_04",
+    "text": "Un tumulus s'ouvre dans les landes, revelant un passage sombre vers les profondeurs. Des racines anciennes forment un escalier naturel, et une odeur de terre humide remonte du gouffre.",
+    "biome": "landes_carnac",
+    "faction": "ankou",
+    "trust_tier": "T1",
+    "tags": ["biome_balance", "landes", "tumulus"],
+    "options": [
+      {"text": "Descendre dans le tumulus avec prudence", "verb": "explorer", "effects": [{"type": "ADD_REPUTATION", "faction": "ankou", "value": 10}, {"type": "DAMAGE_LIFE", "value": -5}]},
+      {"text": "Prier pour les ancetres enfouis ici", "verb": "prier", "effects": [{"type": "HEAL_LIFE", "value": 12}, {"type": "ADD_REPUTATION", "faction": "ankou", "value": 6}]},
+      {"text": "Sceller l'entree avec des pierres", "verb": "proteger", "effects": [{"type": "ADD_KARMA", "value": -3}, {"type": "ADD_BIOME_CURRENCY", "value": 2}]}
+    ]
+  },
+  {
+    "id": "s16_biome_05",
+    "text": "Le vent des landes transporte des graines lumineuses qui flottent comme des lucioles. Elles se posent sur les menhirs, faisant eclore de minuscules fleurs phosphorescentes.",
+    "biome": "landes_carnac",
+    "faction": "niamh",
+    "trust_tier": "T2",
+    "tags": ["biome_balance", "landes", "luminous_seeds"],
+    "options": [
+      {"text": "Recolter les graines lumineuses avec soin", "verb": "recolter", "effects": [{"type": "ADD_BIOME_CURRENCY", "value": 4}, {"type": "ADD_REPUTATION", "faction": "niamh", "value": 8}]},
+      {"text": "Planter les graines pour etendre la floraison", "verb": "planter", "effects": [{"type": "ADD_REPUTATION", "faction": "niamh", "value": 12}, {"type": "HEAL_LIFE", "value": 8}]},
+      {"text": "Absorber leur lumiere pour vous renforcer", "verb": "absorber", "effects": [{"type": "HEAL_LIFE", "value": 15}, {"type": "ADD_REPUTATION", "faction": "niamh", "value": -8}]}
+    ]
+  },
+  {
+    "id": "s16_biome_06",
+    "text": "Un ancien cairn se dresse au sommet d'une colline balayee par le vent. A son pied, des offrandes recentes temoignent que les traditions ne sont pas mortes sur ces landes.",
+    "biome": "landes_carnac",
+    "faction": "anciens",
+    "trust_tier": "T2",
+    "tags": ["biome_balance", "landes", "cairn_offering"],
+    "options": [
+      {"text": "Ajouter votre propre offrande au cairn", "verb": "offrir", "effects": [{"type": "ADD_REPUTATION", "faction": "anciens", "value": 10}, {"type": "ADD_KARMA", "value": 3}]},
+      {"text": "Mediter au sommet pour comprendre les anciennes voies", "verb": "mediter", "effects": [{"type": "ADD_ANAM", "value": 2}, {"type": "HEAL_LIFE", "value": 8}]},
+      {"text": "Prendre une pierre du cairn comme talisman", "verb": "voler", "effects": [{"type": "ADD_BIOME_CURRENCY", "value": 3}, {"type": "ADD_REPUTATION", "faction": "anciens", "value": -10}, {"type": "DAMAGE_LIFE", "value": -5}]}
+    ]
+  },
+  {
+    "id": "s16_biome_07",
+    "text": "Au milieu des landes, un puits asseche murmure des propheries quand on y jette une pierre. Les Korrigans disent qu'il fut creuse par Merlin lui-meme pour pieger un demon.",
+    "biome": "landes_carnac",
+    "faction": "korrigans",
+    "trust_tier": "T3",
+    "tags": ["biome_balance", "landes", "merlin_well"],
+    "options": [
+      {"text": "Jeter une pierre et ecouter la prophetie", "verb": "ecouter", "effects": [{"type": "ADD_ANAM", "value": 3}, {"type": "ADD_REPUTATION", "faction": "korrigans", "value": 8}]},
+      {"text": "Descendre dans le puits pour affronter le demon", "verb": "combattre", "effects": [{"type": "DAMAGE_LIFE", "value": -15}, {"type": "ADD_REPUTATION", "faction": "korrigans", "value": 18}, {"type": "ADD_BIOME_CURRENCY", "value": 5}]},
+      {"text": "Sceller le puits avec un enchantement protecteur", "verb": "proteger", "effects": [{"type": "ADD_REPUTATION", "faction": "korrigans", "value": 6}, {"type": "HEAL_LIFE", "value": 10}]}
+    ]
+  },
+  {
+    "id": "s16_biome_08",
+    "text": "Une tempete de sable magique balaie les landes, revelant des fragments d'une route pavee oubliee. Les pierres portent des inscriptions oghamiques qui menent vers un sanctuaire inconnu.",
+    "biome": "landes_carnac",
+    "faction": "druides",
+    "trust_tier": "T3",
+    "tags": ["biome_balance", "landes", "hidden_road"],
+    "options": [
+      {"text": "Suivre la route pavee jusqu'au sanctuaire", "verb": "voyager", "effects": [{"type": "ADD_REPUTATION", "faction": "druides", "value": 15}, {"type": "ADD_ANAM", "value": 2}]},
+      {"text": "Recopier les inscriptions pour les etudier plus tard", "verb": "observer", "effects": [{"type": "ADD_BIOME_CURRENCY", "value": 4}, {"type": "ADD_KARMA", "value": 2}]},
+      {"text": "Recouvrir la route pour la proteger des intrus", "verb": "cacher", "effects": [{"type": "ADD_REPUTATION", "faction": "druides", "value": 8}, {"type": "HEAL_LIFE", "value": 5}]}
+    ]
+  },
+  {
+    "id": "s16_biome_09",
+    "text": "Les falaises d'Armor plongent dans une mer dechainee. Sur un promontoire rocheux, une ancienne vigie celtique surveille encore l'horizon, couverte de mousse et battue par les embruns.",
+    "biome": "cotes_armor",
+    "faction": "anciens",
+    "trust_tier": "T0",
+    "tags": ["biome_balance", "cotes", "celtic_watchtower"],
+    "options": [
+      {"text": "Monter dans la vigie pour observer l'horizon", "verb": "observer", "effects": [{"type": "ADD_REPUTATION", "faction": "anciens", "value": 8}, {"type": "ADD_BIOME_CURRENCY", "value": 2}]},
+      {"text": "Restaurer la vigie en honneur des anciens guetteurs", "verb": "construire", "effects": [{"type": "ADD_REPUTATION", "faction": "anciens", "value": 12}, {"type": "HEAL_LIFE", "value": 5}]},
+      {"text": "Demanteler la vigie pour recuperer les pierres", "verb": "detruire", "effects": [{"type": "ADD_BIOME_CURRENCY", "value": 4}, {"type": "ADD_REPUTATION", "faction": "anciens", "value": -12}]}
+    ]
+  },
+  {
+    "id": "s16_biome_10",
+    "text": "Dans une crique abritee, des algues phosphorescentes dessinent des motifs sur les rochers. Un phoque solitaire vous observe depuis un ilot, ses yeux brillant d'une intelligence surnaturelle.",
+    "biome": "cotes_armor",
+    "faction": "niamh",
+    "trust_tier": "T0",
+    "tags": ["biome_balance", "cotes", "selkie_cove"],
+    "options": [
+      {"text": "Nager vers le phoque pour communiquer avec lui", "verb": "explorer", "effects": [{"type": "ADD_REPUTATION", "faction": "niamh", "value": 10}, {"type": "DAMAGE_LIFE", "value": -5}]},
+      {"text": "Chanter une berceuse de marin pour l'attirer", "verb": "chanter", "effects": [{"type": "ADD_REPUTATION", "faction": "niamh", "value": 8}, {"type": "HEAL_LIFE", "value": 8}]},
+      {"text": "Recolter les algues phosphorescentes", "verb": "recolter", "effects": [{"type": "ADD_BIOME_CURRENCY", "value": 3}, {"type": "ADD_KARMA", "value": -2}]}
+    ]
+  },
+  {
+    "id": "s16_biome_11",
+    "text": "La maree basse revele un passage vers une grotte marine ornee de coquillages disposes en spirales. Des voix feminines murmurent depuis l'interieur, promettant des visions de l'Autre Monde.",
+    "biome": "cotes_armor",
+    "faction": "niamh",
+    "trust_tier": "T1",
+    "tags": ["biome_balance", "cotes", "otherworld_cave"],
+    "options": [
+      {"text": "Entrer dans la grotte et ecouter les voix", "verb": "ecouter", "effects": [{"type": "ADD_REPUTATION", "faction": "niamh", "value": 12}, {"type": "ADD_ANAM", "value": 2}]},
+      {"text": "Resister a l'appel et rester sur le rivage", "verb": "resister", "effects": [{"type": "HEAL_LIFE", "value": 10}, {"type": "ADD_KARMA", "value": 2}]},
+      {"text": "Invoquer une protection avant d'entrer", "verb": "invoquer", "effects": [{"type": "ADD_REPUTATION", "faction": "niamh", "value": 6}, {"type": "HEAL_LIFE", "value": 5}, {"type": "ADD_BIOME_CURRENCY", "value": 2}]}
+    ]
+  },
+  {
+    "id": "s16_biome_12",
+    "text": "Un vieux pecheur fantome repare ses filets sur les rochers, ignorant les vagues qui le traversent. Son bateau spectral tangue dans la baie, charge d'un tresor d'un autre age.",
+    "biome": "cotes_armor",
+    "faction": "ankou",
+    "trust_tier": "T1",
+    "tags": ["biome_balance", "cotes", "ghost_fisherman"],
+    "options": [
+      {"text": "Aider le fantome a reparer ses filets", "verb": "construire", "effects": [{"type": "ADD_REPUTATION", "faction": "ankou", "value": 10}, {"type": "HEAL_LIFE", "value": 8}]},
+      {"text": "Negocier un passage sur son bateau spectral", "verb": "negocier", "effects": [{"type": "ADD_REPUTATION", "faction": "ankou", "value": 6}, {"type": "ADD_ANAM", "value": 2}, {"type": "DAMAGE_LIFE", "value": -8}]},
+      {"text": "Tenter de voler une piece de son tresor", "verb": "voler", "effects": [{"type": "ADD_BIOME_CURRENCY", "value": 5}, {"type": "ADD_REPUTATION", "faction": "ankou", "value": -15}]}
+    ]
+  },
+  {
+    "id": "s16_biome_13",
+    "text": "Sur une plage de galets noirs, un cercle de pierres dressees emerge a maree basse. Les druides y celebraient jadis les solstices, et l'air vibre encore de leur pouvoir residuel.",
+    "biome": "cotes_armor",
+    "faction": "druides",
+    "trust_tier": "T0",
+    "tags": ["biome_balance", "cotes", "tidal_circle"],
+    "options": [
+      {"text": "Celebrer un rituel solsticial dans le cercle", "verb": "invoquer", "effects": [{"type": "ADD_REPUTATION", "faction": "druides", "value": 10}, {"type": "ADD_ANAM", "value": 1}]},
+      {"text": "Mediter au centre du cercle avant la maree", "verb": "mediter", "effects": [{"type": "HEAL_LIFE", "value": 12}, {"type": "ADD_REPUTATION", "faction": "druides", "value": 5}]},
+      {"text": "Emporter une pierre du cercle comme relique", "verb": "voler", "effects": [{"type": "ADD_BIOME_CURRENCY", "value": 3}, {"type": "ADD_REPUTATION", "faction": "druides", "value": -10}, {"type": "DAMAGE_LIFE", "value": -5}]}
+    ]
+  },
+  {
+    "id": "s16_biome_14",
+    "text": "Une tempete electrique illumine la cote. Les eclairs frappent un rocher sacre au large, et chaque impact libere des filaments d'energie doree qui serpentent sur l'eau jusqu'au rivage.",
+    "biome": "cotes_armor",
+    "faction": "korrigans",
+    "trust_tier": "T2",
+    "tags": ["biome_balance", "cotes", "lightning_rock"],
+    "options": [
+      {"text": "Capturer l'energie doree avec vos mains", "verb": "absorber", "effects": [{"type": "ADD_BIOME_CURRENCY", "value": 4}, {"type": "DAMAGE_LIFE", "value": -8}]},
+      {"text": "Danser sous la tempete pour honorer les esprits", "verb": "danser", "effects": [{"type": "ADD_REPUTATION", "faction": "korrigans", "value": 12}, {"type": "HEAL_LIFE", "value": 5}]},
+      {"text": "Fuir vers un abri et attendre la fin", "verb": "fuir", "effects": [{"type": "HEAL_LIFE", "value": 15}]}
+    ]
+  },
+  {
+    "id": "s16_biome_15",
+    "text": "Un phare abandonne domine la pointe rocheuse. Sa lanterne eteinte depuis des siecles projette pourtant une lueur fantomatique les nuits de pleine lune, guidant des navires qu'on ne voit pas.",
+    "biome": "cotes_armor",
+    "faction": "ankou",
+    "trust_tier": "T2",
+    "tags": ["biome_balance", "cotes", "ghost_lighthouse"],
+    "options": [
+      {"text": "Rallumer le phare pour guider les vivants", "verb": "construire", "effects": [{"type": "ADD_REPUTATION", "faction": "ankou", "value": -5}, {"type": "HEAL_LIFE", "value": 12}, {"type": "ADD_KARMA", "value": 3}]},
+      {"text": "Monter observer les navires fantomes", "verb": "observer", "effects": [{"type": "ADD_REPUTATION", "faction": "ankou", "value": 10}, {"type": "ADD_ANAM", "value": 2}]},
+      {"text": "Repousser les esprits qui hantent le phare", "verb": "repousser", "effects": [{"type": "ADD_REPUTATION", "faction": "ankou", "value": -8}, {"type": "ADD_BIOME_CURRENCY", "value": 3}]}
+    ]
+  },
+  {
+    "id": "s16_biome_16",
+    "text": "Un naufrage ancien git dans les eaux peu profondes, ses membrures couvertes de corail lumineux. Des coffres entreouverts laissent entrevoir des artefacts celtes d'une beaute saisissante.",
+    "biome": "cotes_armor",
+    "faction": "anciens",
+    "trust_tier": "T3",
+    "tags": ["biome_balance", "cotes", "celtic_shipwreck"],
+    "options": [
+      {"text": "Plonger pour examiner les artefacts avec respect", "verb": "explorer", "effects": [{"type": "ADD_REPUTATION", "faction": "anciens", "value": 15}, {"type": "DAMAGE_LIFE", "value": -8}]},
+      {"text": "Proteger le site des pilleurs", "verb": "proteger", "effects": [{"type": "ADD_REPUTATION", "faction": "anciens", "value": 10}, {"type": "ADD_KARMA", "value": 5}]},
+      {"text": "Recuperer un artefact pour votre quete", "verb": "recolter", "effects": [{"type": "ADD_BIOME_CURRENCY", "value": 5}, {"type": "ADD_REPUTATION", "faction": "anciens", "value": -5}, {"type": "ADD_ANAM", "value": 1}]}
+    ]
+  },
+  {
+    "id": "s16_biome_17",
+    "text": "Les eaux sombres du marais de Yeun bouillonnent de gaz sulfureux. Des lumieres tremblantes flottent au-dessus de la tourbe, et les roseaux murmurent des avertissements aux imprudents.",
+    "biome": "marais_yeun",
+    "faction": "ankou",
+    "trust_tier": "T0",
+    "tags": ["biome_balance", "marais", "swamp_lights"],
+    "options": [
+      {"text": "Suivre les lumieres a travers le marais", "verb": "explorer", "effects": [{"type": "ADD_REPUTATION", "faction": "ankou", "value": 8}, {"type": "DAMAGE_LIFE", "value": -8}]},
+      {"text": "Ecouter les avertissements des roseaux", "verb": "ecouter", "effects": [{"type": "HEAL_LIFE", "value": 10}, {"type": "ADD_KARMA", "value": 2}]},
+      {"text": "Purifier les emanations toxiques", "verb": "purifier", "effects": [{"type": "ADD_REPUTATION", "faction": "ankou", "value": -5}, {"type": "ADD_BIOME_CURRENCY", "value": 3}]}
+    ]
+  },
+  {
+    "id": "s16_biome_18",
+    "text": "Un arbre mort se dresse au milieu du marais, ses branches nues festonnees de mousse argentee. A son pied, un bassin d'eau claire defie la noirceur environnante, refletant un ciel etoile permanent.",
+    "biome": "marais_yeun",
+    "faction": "druides",
+    "trust_tier": "T0",
+    "tags": ["biome_balance", "marais", "mirror_pool"],
+    "options": [
+      {"text": "Contempler les etoiles dans le bassin", "verb": "mediter", "effects": [{"type": "ADD_ANAM", "value": 2}, {"type": "HEAL_LIFE", "value": 8}]},
+      {"text": "Boire l'eau claire pour vous purifier", "verb": "guerir", "effects": [{"type": "HEAL_LIFE", "value": 15}, {"type": "ADD_REPUTATION", "faction": "druides", "value": 5}]},
+      {"text": "Planter une graine dans la tourbe fertile", "verb": "planter", "effects": [{"type": "ADD_REPUTATION", "faction": "druides", "value": 10}, {"type": "ADD_BIOME_CURRENCY", "value": 2}]}
+    ]
+  },
+  {
+    "id": "s16_biome_19",
+    "text": "Des bulles eclatent a la surface du marais, liberant des souvenirs d'anciens druides sous forme de visions fugaces. Chaque bulle contient un fragment de savoir perdu depuis des millenaires.",
+    "biome": "marais_yeun",
+    "faction": "druides",
+    "trust_tier": "T1",
+    "tags": ["biome_balance", "marais", "memory_bubbles"],
+    "options": [
+      {"text": "Attraper les bulles pour absorber le savoir", "verb": "absorber", "effects": [{"type": "ADD_REPUTATION", "faction": "druides", "value": 10}, {"type": "ADD_ANAM", "value": 2}]},
+      {"text": "Observer les visions sans les toucher", "verb": "observer", "effects": [{"type": "HEAL_LIFE", "value": 8}, {"type": "ADD_BIOME_CURRENCY", "value": 2}]},
+      {"text": "Repousser les bulles pour proteger votre esprit", "verb": "repousser", "effects": [{"type": "ADD_KARMA", "value": 3}, {"type": "HEAL_LIFE", "value": 5}]}
+    ]
+  },
+  {
+    "id": "s16_biome_20",
+    "text": "Un passage de planches vermoulues traverse la partie la plus profonde du marais. Sous les planches, des mains spectrales emergent de la tourbe, implorant les vivants de les liberer.",
+    "biome": "marais_yeun",
+    "faction": "ankou",
+    "trust_tier": "T1",
+    "tags": ["biome_balance", "marais", "bog_spirits"],
+    "options": [
+      {"text": "Tendre la main aux esprits pour les liberer", "verb": "liberer", "effects": [{"type": "ADD_REPUTATION", "faction": "ankou", "value": 12}, {"type": "DAMAGE_LIFE", "value": -10}]},
+      {"text": "Prier pour leur repos eternel", "verb": "prier", "effects": [{"type": "ADD_REPUTATION", "faction": "ankou", "value": 8}, {"type": "HEAL_LIFE", "value": 5}]},
+      {"text": "Traverser rapidement sans regarder en bas", "verb": "fuir", "effects": [{"type": "HEAL_LIFE", "value": 12}, {"type": "ADD_REPUTATION", "faction": "ankou", "value": -5}]}
+    ]
+  },
+  {
+    "id": "s16_biome_21",
+    "text": "Un ilot de terre ferme abrite un cercle de champignons geants aux couleurs iridescentes. Les Korrigans y tiennent un marche secret ou s'echangent reves et souvenirs contre des faveurs.",
+    "biome": "marais_yeun",
+    "faction": "korrigans",
+    "trust_tier": "T2",
+    "tags": ["biome_balance", "marais", "fairy_market"],
+    "options": [
+      {"text": "Negocier avec les marchands Korrigans", "verb": "negocier", "effects": [{"type": "ADD_REPUTATION", "faction": "korrigans", "value": 10}, {"type": "ADD_BIOME_CURRENCY", "value": 3}]},
+      {"text": "Offrir un souvenir precieux en echange de guerison", "verb": "sacrifier", "effects": [{"type": "HEAL_LIFE", "value": 18}, {"type": "ADD_REPUTATION", "faction": "korrigans", "value": 6}]},
+      {"text": "Tenter de voler un champignon magique", "verb": "voler", "effects": [{"type": "ADD_BIOME_CURRENCY", "value": 5}, {"type": "ADD_REPUTATION", "faction": "korrigans", "value": -15}, {"type": "DAMAGE_LIFE", "value": -8}]}
+    ]
+  },
+  {
+    "id": "s16_biome_22",
+    "text": "La brume du marais se condense en une silhouette feminine qui tend les bras vers vous. C'est Niamh elle-meme, ou son reflet, qui vous invite a plonger dans les eaux noires pour decouvrir un passage vers Tir na nOg.",
+    "biome": "marais_yeun",
+    "faction": "niamh",
+    "trust_tier": "T2",
+    "tags": ["biome_balance", "marais", "niamh_apparition"],
+    "options": [
+      {"text": "Plonger dans les eaux en suivant la vision", "verb": "accepter", "effects": [{"type": "ADD_REPUTATION", "faction": "niamh", "value": 15}, {"type": "DAMAGE_LIFE", "value": -12}]},
+      {"text": "Mediter pour verifier si la vision est reelle", "verb": "mediter", "effects": [{"type": "ADD_ANAM", "value": 3}, {"type": "HEAL_LIFE", "value": 5}]},
+      {"text": "Refuser l'invitation et rebrousser chemin", "verb": "refuser", "effects": [{"type": "HEAL_LIFE", "value": 10}, {"type": "ADD_REPUTATION", "faction": "niamh", "value": -8}]}
+    ]
+  },
+  {
+    "id": "s16_biome_23",
+    "text": "Un crane de cerf orne de lianes emerge de la tourbe, ses bois encore charges de runes lumineuses. Les anciens disent que c'etait la monture d'un roi du marais, enterree avec ses secrets.",
+    "biome": "marais_yeun",
+    "faction": "anciens",
+    "trust_tier": "T3",
+    "tags": ["biome_balance", "marais", "stag_king"],
+    "options": [
+      {"text": "Dechiffrer les runes sur les bois du cerf", "verb": "reveler", "effects": [{"type": "ADD_REPUTATION", "faction": "anciens", "value": 15}, {"type": "ADD_ANAM", "value": 3}]},
+      {"text": "Honorer le roi du marais avec un rituel", "verb": "honorer", "effects": [{"type": "ADD_REPUTATION", "faction": "anciens", "value": 10}, {"type": "HEAL_LIFE", "value": 10}]},
+      {"text": "Extraire le crane pour l'etudier", "verb": "recolter", "effects": [{"type": "ADD_BIOME_CURRENCY", "value": 5}, {"type": "ADD_REPUTATION", "faction": "anciens", "value": -10}, {"type": "DAMAGE_LIFE", "value": -5}]}
+    ]
+  },
+  {
+    "id": "s16_biome_24",
+    "text": "Un serpent de brume geant ondule au-dessus du marais, avalant les feux follets sur son passage. Son corps translucide revele des ames capturees qui hurlent en silence.",
+    "biome": "marais_yeun",
+    "faction": "ankou",
+    "trust_tier": "T3",
+    "tags": ["biome_balance", "marais", "mist_serpent"],
+    "options": [
+      {"text": "Affronter le serpent pour liberer les ames", "verb": "combattre", "effects": [{"type": "DAMAGE_LIFE", "value": -15}, {"type": "ADD_REPUTATION", "faction": "ankou", "value": 18}, {"type": "ADD_KARMA", "value": 5}]},
+      {"text": "Chanter un chant funeraire pour apaiser les ames", "verb": "chanter", "effects": [{"type": "ADD_REPUTATION", "faction": "ankou", "value": 10}, {"type": "HEAL_LIFE", "value": 5}]},
+      {"text": "Fuir avant que le serpent ne vous avale", "verb": "fuir", "effects": [{"type": "HEAL_LIFE", "value": 12}, {"type": "ADD_REPUTATION", "faction": "ankou", "value": -5}]}
+    ]
+  },
+  {
+    "id": "s16_biome_25",
+    "text": "Les Monts d'Arree se dressent sous un ciel de plomb. Un sentier abrupt serpente vers un plateau ou les vents hurlent avec la voix des anciens guerriers tombes au combat.",
+    "biome": "monts_arree",
+    "faction": "anciens",
+    "trust_tier": "T0",
+    "tags": ["biome_balance", "monts", "warrior_winds"],
+    "options": [
+      {"text": "Gravir le sentier en honorant chaque cairn", "verb": "honorer", "effects": [{"type": "ADD_REPUTATION", "faction": "anciens", "value": 10}, {"type": "HEAL_LIFE", "value": 5}]},
+      {"text": "Defier les vents en criant votre defi", "verb": "defier", "effects": [{"type": "DAMAGE_LIFE", "value": -8}, {"type": "ADD_REPUTATION", "faction": "anciens", "value": 15}]},
+      {"text": "Construire un abri de pierres contre la tempete", "verb": "construire", "effects": [{"type": "HEAL_LIFE", "value": 12}, {"type": "ADD_BIOME_CURRENCY", "value": 2}]}
+    ]
+  },
+  {
+    "id": "s16_biome_26",
+    "text": "Une source chaude jaillit entre les rochers des Monts d'Arree, formant un bassin naturel entoure de fougeres geantes. La vapeur qui s'en eleve prend des formes animales fugaces.",
+    "biome": "monts_arree",
+    "faction": "druides",
+    "trust_tier": "T0",
+    "tags": ["biome_balance", "monts", "hot_spring"],
+    "options": [
+      {"text": "Se baigner dans la source pour se guerir", "verb": "guerir", "effects": [{"type": "HEAL_LIFE", "value": 18}]},
+      {"text": "Etudier les formes animales dans la vapeur", "verb": "observer", "effects": [{"type": "ADD_REPUTATION", "faction": "druides", "value": 8}, {"type": "ADD_ANAM", "value": 2}]},
+      {"text": "Canaliser l'energie thermique pour un rituel", "verb": "invoquer", "effects": [{"type": "ADD_REPUTATION", "faction": "druides", "value": 12}, {"type": "DAMAGE_LIFE", "value": -5}]}
+    ]
+  },
+  {
+    "id": "s16_biome_27",
+    "text": "Au sommet d'un pic isole, un autel de pierre noire surplombe la vallee. Des ossements d'animaux y sont disposes en motifs geometriques, offrandes a l'Ankou qui veille sur ces hauteurs.",
+    "biome": "monts_arree",
+    "faction": "ankou",
+    "trust_tier": "T1",
+    "tags": ["biome_balance", "monts", "bone_altar"],
+    "options": [
+      {"text": "Deposer votre propre offrande sur l'autel", "verb": "sacrifier", "effects": [{"type": "ADD_REPUTATION", "faction": "ankou", "value": 12}, {"type": "DAMAGE_LIFE", "value": -5}]},
+      {"text": "Prier devant l'autel pour la protection de l'Ankou", "verb": "prier", "effects": [{"type": "ADD_REPUTATION", "faction": "ankou", "value": 8}, {"type": "HEAL_LIFE", "value": 8}]},
+      {"text": "Renverser l'autel pour briser la malediction", "verb": "detruire", "effects": [{"type": "ADD_REPUTATION", "faction": "ankou", "value": -15}, {"type": "ADD_BIOME_CURRENCY", "value": 4}, {"type": "DAMAGE_LIFE", "value": -10}]}
+    ]
+  },
+  {
+    "id": "s16_biome_28",
+    "text": "Un troupeau de chevaux sauvages galope sur les cretes des Monts d'Arree, leurs crinieres flottant comme des flammes. Le plus grand d'entre eux, blanc comme neige, s'arrete et vous fixe.",
+    "biome": "monts_arree",
+    "faction": "niamh",
+    "trust_tier": "T1",
+    "tags": ["biome_balance", "monts", "wild_horses"],
+    "options": [
+      {"text": "Approcher le cheval blanc avec douceur", "verb": "apaiser", "effects": [{"type": "ADD_REPUTATION", "faction": "niamh", "value": 10}, {"type": "HEAL_LIFE", "value": 8}]},
+      {"text": "Monter sur son dos pour voyager au-dela du monde", "verb": "voyager", "effects": [{"type": "ADD_REPUTATION", "faction": "niamh", "value": 15}, {"type": "DAMAGE_LIFE", "value": -8}]},
+      {"text": "Observer le troupeau sans intervenir", "verb": "observer", "effects": [{"type": "ADD_BIOME_CURRENCY", "value": 3}, {"type": "ADD_ANAM", "value": 1}]}
+    ]
+  },
+  {
+    "id": "s16_biome_29",
+    "text": "Une mine abandonnee s'ouvre dans le flanc de la montagne, ses parois incrustees de cristaux qui emettent un bourdonnement grave. Les Korrigans y ont cache un tresor, dit la legende.",
+    "biome": "monts_arree",
+    "faction": "korrigans",
+    "trust_tier": "T0",
+    "tags": ["biome_balance", "monts", "crystal_mine"],
+    "options": [
+      {"text": "Explorer la mine en suivant le bourdonnement", "verb": "explorer", "effects": [{"type": "ADD_REPUTATION", "faction": "korrigans", "value": 6}, {"type": "ADD_BIOME_CURRENCY", "value": 3}]},
+      {"text": "Forger un outil avec les cristaux trouves", "verb": "forger", "effects": [{"type": "ADD_BIOME_CURRENCY", "value": 4}, {"type": "ADD_REPUTATION", "faction": "korrigans", "value": 5}]},
+      {"text": "Sceller l'entree pour proteger le tresor", "verb": "proteger", "effects": [{"type": "ADD_REPUTATION", "faction": "korrigans", "value": 10}, {"type": "HEAL_LIFE", "value": 5}]}
+    ]
+  },
+  {
+    "id": "s16_biome_30",
+    "text": "Un orage violet eclate au-dessus des Monts d'Arree. La foudre frappe un chene centenaire qui se fend en deux, revelant un espace creux rempli de parchemins druiciques roules.",
+    "biome": "monts_arree",
+    "faction": "druides",
+    "trust_tier": "T2",
+    "tags": ["biome_balance", "monts", "lightning_oak"],
+    "options": [
+      {"text": "Lire les parchemins avant qu'ils ne se desintegrent", "verb": "reveler", "effects": [{"type": "ADD_REPUTATION", "faction": "druides", "value": 15}, {"type": "ADD_ANAM", "value": 2}]},
+      {"text": "Proteger les parchemins de la pluie", "verb": "proteger", "effects": [{"type": "ADD_REPUTATION", "faction": "druides", "value": 8}, {"type": "ADD_KARMA", "value": 3}]},
+      {"text": "Bruler les parchemins pour liberer leur savoir", "verb": "sacrifier", "effects": [{"type": "HEAL_LIFE", "value": 15}, {"type": "ADD_REPUTATION", "faction": "druides", "value": -5}, {"type": "ADD_BIOME_CURRENCY", "value": 3}]}
+    ]
+  },
+  {
+    "id": "s16_biome_31",
+    "text": "Un pont de pierre enjambe un gouffre sans fond dans les Monts d'Arree. A mi-chemin, une silhouette encapuchonnee propose une enigme. La bonne reponse ouvre un passage; la mauvaise, un precipice.",
+    "biome": "monts_arree",
+    "faction": "korrigans",
+    "trust_tier": "T3",
+    "tags": ["biome_balance", "monts", "riddle_bridge"],
+    "options": [
+      {"text": "Accepter l'enigme et tenter d'y repondre", "verb": "accepter", "effects": [{"type": "ADD_REPUTATION", "faction": "korrigans", "value": 15}, {"type": "ADD_ANAM", "value": 3}]},
+      {"text": "Negocier un passage sans enigme", "verb": "negocier", "effects": [{"type": "ADD_REPUTATION", "faction": "korrigans", "value": 5}, {"type": "ADD_BIOME_CURRENCY", "value": 3}]},
+      {"text": "Repousser la silhouette et forcer le passage", "verb": "combattre", "effects": [{"type": "DAMAGE_LIFE", "value": -12}, {"type": "ADD_REPUTATION", "faction": "korrigans", "value": -10}, {"type": "ADD_BIOME_CURRENCY", "value": 5}]}
+    ]
+  },
+  {
+    "id": "s16_biome_32",
+    "text": "Le cercle de pierres vibre sous la pleine lune. Les menhirs projettent des ombres allongees qui forment des chemins lumineux convergeant vers la pierre centrale, la plus ancienne de toutes.",
+    "biome": "cercle_pierres",
+    "faction": "anciens",
+    "trust_tier": "T0",
+    "tags": ["biome_balance", "cercle", "moonlit_paths"],
+    "options": [
+      {"text": "Suivre un chemin lumineux jusqu'a la pierre centrale", "verb": "explorer", "effects": [{"type": "ADD_REPUTATION", "faction": "anciens", "value": 10}, {"type": "ADD_ANAM", "value": 1}]},
+      {"text": "Mediter a l'intersection des chemins", "verb": "mediter", "effects": [{"type": "HEAL_LIFE", "value": 12}, {"type": "ADD_REPUTATION", "faction": "anciens", "value": 5}]},
+      {"text": "Tracer votre propre chemin entre les pierres", "verb": "defier", "effects": [{"type": "ADD_BIOME_CURRENCY", "value": 3}, {"type": "ADD_REPUTATION", "faction": "anciens", "value": -5}, {"type": "ADD_KARMA", "value": -2}]}
+    ]
+  },
+  {
+    "id": "s16_biome_33",
+    "text": "Au centre du cercle sacre, un chaudron de bronze deborde d'une eau argentee qui ne se repand jamais. Les druides y lisaient l'avenir, et les rides a la surface dessinent encore des presages.",
+    "biome": "cercle_pierres",
+    "faction": "druides",
+    "trust_tier": "T0",
+    "tags": ["biome_balance", "cercle", "bronze_cauldron"],
+    "options": [
+      {"text": "Regarder dans le chaudron pour lire l'avenir", "verb": "reveler", "effects": [{"type": "ADD_REPUTATION", "faction": "druides", "value": 10}, {"type": "ADD_ANAM", "value": 2}]},
+      {"text": "Boire une gorgee de l'eau argentee", "verb": "absorber", "effects": [{"type": "HEAL_LIFE", "value": 15}, {"type": "DAMAGE_LIFE", "value": -5}]},
+      {"text": "Purifier le chaudron avec des herbes sacrees", "verb": "purifier", "effects": [{"type": "ADD_REPUTATION", "faction": "druides", "value": 8}, {"type": "ADD_BIOME_CURRENCY", "value": 2}]}
+    ]
+  },
+  {
+    "id": "s16_biome_34",
+    "text": "Les pierres du cercle chantent a l'unisson quand le vent les traverse. Un korrigan perche sur la plus haute observe les visiteurs et propose des paris aux courageux qui osent jouer.",
+    "biome": "cercle_pierres",
+    "faction": "korrigans",
+    "trust_tier": "T1",
+    "tags": ["biome_balance", "cercle", "korrigan_gambler"],
+    "options": [
+      {"text": "Accepter le pari du Korrigan", "verb": "accepter", "effects": [{"type": "ADD_REPUTATION", "faction": "korrigans", "value": 12}, {"type": "ADD_BIOME_CURRENCY", "value": 3}]},
+      {"text": "Negocier les termes du pari en votre faveur", "verb": "negocier", "effects": [{"type": "ADD_REPUTATION", "faction": "korrigans", "value": 5}, {"type": "ADD_KARMA", "value": -2}]},
+      {"text": "Refuser poliment et continuer votre chemin", "verb": "refuser", "effects": [{"type": "HEAL_LIFE", "value": 8}, {"type": "ADD_REPUTATION", "faction": "korrigans", "value": -5}]}
+    ]
+  },
+  {
+    "id": "s16_biome_35",
+    "text": "Un portail entre deux menhirs jumeaux scintille d'une lumiere opalescente. De l'autre cote, on aperçoit un paysage verdoyant qui n'appartient pas a ce monde — Tir na nOg, le Pays de l'Eternelle Jeunesse.",
+    "biome": "cercle_pierres",
+    "faction": "niamh",
+    "trust_tier": "T1",
+    "tags": ["biome_balance", "cercle", "otherworld_gate"],
+    "options": [
+      {"text": "Franchir le portail vers Tir na nOg", "verb": "voyager", "effects": [{"type": "ADD_REPUTATION", "faction": "niamh", "value": 15}, {"type": "DAMAGE_LIFE", "value": -10}]},
+      {"text": "Observer le paysage sans franchir le seuil", "verb": "observer", "effects": [{"type": "ADD_ANAM", "value": 2}, {"type": "ADD_REPUTATION", "faction": "niamh", "value": 5}]},
+      {"text": "Sceller le portail pour proteger les deux mondes", "verb": "proteger", "effects": [{"type": "ADD_KARMA", "value": 5}, {"type": "ADD_REPUTATION", "faction": "niamh", "value": -8}]}
+    ]
+  },
+  {
+    "id": "s16_biome_36",
+    "text": "Une procession d'esprits ancestraux traverse le cercle de pierres, chaque fantome portant une bougie dont la flamme ne vacille pas. Ils marchent vers la pierre de l'equinoxe pour un rituel millenaire.",
+    "biome": "cercle_pierres",
+    "faction": "ankou",
+    "trust_tier": "T2",
+    "tags": ["biome_balance", "cercle", "spirit_procession"],
+    "options": [
+      {"text": "Rejoindre la procession en silence", "verb": "accepter", "effects": [{"type": "ADD_REPUTATION", "faction": "ankou", "value": 12}, {"type": "ADD_ANAM", "value": 2}]},
+      {"text": "Benir les esprits a leur passage", "verb": "benir", "effects": [{"type": "ADD_REPUTATION", "faction": "ankou", "value": 8}, {"type": "HEAL_LIFE", "value": 10}]},
+      {"text": "Tenter de communiquer avec un esprit familier", "verb": "invoquer", "effects": [{"type": "ADD_REPUTATION", "faction": "ankou", "value": 6}, {"type": "DAMAGE_LIFE", "value": -8}, {"type": "ADD_BIOME_CURRENCY", "value": 3}]}
+    ]
+  },
+  {
+    "id": "s16_biome_37",
+    "text": "La pierre centrale du cercle se fissure sous vos yeux, liberant un rayon de lumiere pure qui monte vers le ciel. Dans la fissure, un Ogham inconnu pulse d'un pouvoir immemorial.",
+    "biome": "cercle_pierres",
+    "faction": "druides",
+    "trust_tier": "T2",
+    "tags": ["biome_balance", "cercle", "cracked_stone"],
+    "options": [
+      {"text": "Toucher l'Ogham pour recevoir son pouvoir", "verb": "absorber", "effects": [{"type": "ADD_REPUTATION", "faction": "druides", "value": 15}, {"type": "DAMAGE_LIFE", "value": -8}]},
+      {"text": "Tisser un sortilege pour reparer la pierre", "verb": "tisser", "effects": [{"type": "ADD_REPUTATION", "faction": "druides", "value": 10}, {"type": "HEAL_LIFE", "value": 5}, {"type": "ADD_KARMA", "value": 3}]},
+      {"text": "Elargir la fissure pour reveler plus de secrets", "verb": "detruire", "effects": [{"type": "ADD_BIOME_CURRENCY", "value": 5}, {"type": "ADD_REPUTATION", "faction": "druides", "value": -10}]}
+    ]
+  },
+  {
+    "id": "s16_biome_38",
+    "text": "Sept corbeaux se posent sur sept pierres du cercle, formant une constellation vivante. Leur croassement synchronise ouvre un passage souterrain sous la pierre de sacrifice.",
+    "biome": "cercle_pierres",
+    "faction": "anciens",
+    "trust_tier": "T3",
+    "tags": ["biome_balance", "cercle", "raven_circle"],
+    "options": [
+      {"text": "Descendre dans le passage souterrain", "verb": "explorer", "effects": [{"type": "ADD_REPUTATION", "faction": "anciens", "value": 18}, {"type": "DAMAGE_LIFE", "value": -10}]},
+      {"text": "Communiquer avec les corbeaux par un chant ancien", "verb": "chanter", "effects": [{"type": "ADD_REPUTATION", "faction": "anciens", "value": 10}, {"type": "ADD_ANAM", "value": 3}]},
+      {"text": "Chasser les corbeaux pour fermer le passage", "verb": "repousser", "effects": [{"type": "ADD_REPUTATION", "faction": "anciens", "value": -12}, {"type": "HEAL_LIFE", "value": 10}, {"type": "ADD_BIOME_CURRENCY", "value": 3}]}
+    ]
+  },
+  {
+    "id": "s16_biome_39",
+    "text": "L'ile d'Avalon emerge de la brume, ses rivages couverts de pommiers dont les fruits brillent d'une lumiere interieure. L'air lui-meme semble charge de magie et de promesses de guerison.",
+    "biome": "ile_avalon",
+    "faction": "niamh",
+    "trust_tier": "T0",
+    "tags": ["biome_balance", "avalon", "apple_shore"],
+    "options": [
+      {"text": "Cueillir une pomme lumineuse pour vous guerir", "verb": "recolter", "effects": [{"type": "HEAL_LIFE", "value": 18}, {"type": "ADD_REPUTATION", "faction": "niamh", "value": 5}]},
+      {"text": "Planter un noyau pour faire croitre un nouveau pommier", "verb": "planter", "effects": [{"type": "ADD_REPUTATION", "faction": "niamh", "value": 12}, {"type": "ADD_KARMA", "value": 3}]},
+      {"text": "Remplir votre sac de pommes pour le voyage", "verb": "accumuler", "effects": [{"type": "ADD_BIOME_CURRENCY", "value": 4}, {"type": "ADD_REPUTATION", "faction": "niamh", "value": -8}]}
+    ]
+  },
+  {
+    "id": "s16_biome_40",
+    "text": "Un temple en ruines se dresse au coeur d'Avalon, ses colonnes enlacees de lierre dore. A l'interieur, une fontaine de jouvence coule encore, gardee par un esprit qui exige un tribut.",
+    "biome": "ile_avalon",
+    "faction": "druides",
+    "trust_tier": "T1",
+    "tags": ["biome_balance", "avalon", "fountain_youth"],
+    "options": [
+      {"text": "Payer le tribut et boire a la fontaine", "verb": "sacrifier", "effects": [{"type": "HEAL_LIFE", "value": 20}, {"type": "DAMAGE_LIFE", "value": -5}, {"type": "ADD_REPUTATION", "faction": "druides", "value": 8}]},
+      {"text": "Negocier un tribut moindre avec l'esprit", "verb": "negocier", "effects": [{"type": "ADD_REPUTATION", "faction": "druides", "value": 6}, {"type": "HEAL_LIFE", "value": 10}]},
+      {"text": "Tenter de purifier la fontaine et la liberer", "verb": "purifier", "effects": [{"type": "ADD_REPUTATION", "faction": "druides", "value": 12}, {"type": "ADD_BIOME_CURRENCY", "value": 3}]}
+    ]
+  },
+  {
+    "id": "s16_biome_41",
+    "text": "Sur la plus haute colline d'Avalon, un trône de cristal attend son occupant. Les legendes disent que quiconque s'y assoit verra le passe, le present et l'avenir en un seul regard.",
+    "biome": "ile_avalon",
+    "faction": "anciens",
+    "trust_tier": "T1",
+    "tags": ["biome_balance", "avalon", "crystal_throne"],
+    "options": [
+      {"text": "S'asseoir sur le trône pour recevoir la vision", "verb": "accepter", "effects": [{"type": "ADD_REPUTATION", "faction": "anciens", "value": 15}, {"type": "DAMAGE_LIFE", "value": -10}, {"type": "ADD_ANAM", "value": 3}]},
+      {"text": "Toucher le cristal pour sentir son energie", "verb": "explorer", "effects": [{"type": "ADD_ANAM", "value": 2}, {"type": "HEAL_LIFE", "value": 5}]},
+      {"text": "Resister a la tentation et quitter la colline", "verb": "resister", "effects": [{"type": "HEAL_LIFE", "value": 12}, {"type": "ADD_KARMA", "value": 2}]}
+    ]
+  },
+  {
+    "id": "s16_biome_42",
+    "text": "Les fees d'Avalon tissent des voiles de lumiere entre les arbres, creant un labyrinthe chatoyant. Au centre, un oeuf d'or pulse au rythme d'un coeur, pret a eclore.",
+    "biome": "ile_avalon",
+    "faction": "korrigans",
+    "trust_tier": "T2",
+    "tags": ["biome_balance", "avalon", "golden_egg"],
+    "options": [
+      {"text": "Traverser le labyrinthe pour atteindre l'oeuf", "verb": "explorer", "effects": [{"type": "ADD_REPUTATION", "faction": "korrigans", "value": 10}, {"type": "ADD_BIOME_CURRENCY", "value": 3}]},
+      {"text": "Tisser votre propre voile pour rejoindre les fees", "verb": "tisser", "effects": [{"type": "ADD_REPUTATION", "faction": "korrigans", "value": 12}, {"type": "HEAL_LIFE", "value": 8}]},
+      {"text": "Prendre l'oeuf d'or avant qu'il n'eclose", "verb": "voler", "effects": [{"type": "ADD_BIOME_CURRENCY", "value": 5}, {"type": "ADD_REPUTATION", "faction": "korrigans", "value": -15}, {"type": "DAMAGE_LIFE", "value": -8}]}
+    ]
+  },
+  {
+    "id": "s16_biome_43",
+    "text": "Un lac immobile au coeur d'Avalon reflete un ciel qui n'est pas le notre. Une main etheree emerge de l'eau, tenant une epee dont la lame brille d'une lumiere surnaturelle.",
+    "biome": "ile_avalon",
+    "faction": "niamh",
+    "trust_tier": "T2",
+    "tags": ["biome_balance", "avalon", "lady_lake"],
+    "options": [
+      {"text": "Tendre la main pour recevoir l'epee", "verb": "accepter", "effects": [{"type": "ADD_REPUTATION", "faction": "niamh", "value": 15}, {"type": "ADD_BIOME_CURRENCY", "value": 4}]},
+      {"text": "S'agenouiller au bord du lac en signe de respect", "verb": "honorer", "effects": [{"type": "ADD_REPUTATION", "faction": "niamh", "value": 10}, {"type": "HEAL_LIFE", "value": 10}]},
+      {"text": "Plonger dans le lac pour decouvrir son secret", "verb": "explorer", "effects": [{"type": "DAMAGE_LIFE", "value": -12}, {"type": "ADD_ANAM", "value": 3}, {"type": "ADD_REPUTATION", "faction": "niamh", "value": 8}]}
+    ]
+  },
+  {
+    "id": "s16_biome_44",
+    "text": "A la lisiere d'Avalon, un passage se referme lentement. L'Ankou garde la sortie, pesant les ames de ceux qui veulent partir. Seuls ceux qui ont vecu pleinement peuvent quitter l'ile.",
+    "biome": "ile_avalon",
+    "faction": "ankou",
+    "trust_tier": "T3",
+    "tags": ["biome_balance", "avalon", "ankou_gate"],
+    "options": [
+      {"text": "Presenter votre ame a l'Ankou pour etre juge", "verb": "accepter", "effects": [{"type": "ADD_REPUTATION", "faction": "ankou", "value": 18}, {"type": "DAMAGE_LIFE", "value": -10}]},
+      {"text": "Negocier votre passage avec une offrande", "verb": "negocier", "effects": [{"type": "ADD_REPUTATION", "faction": "ankou", "value": 8}, {"type": "ADD_BIOME_CURRENCY", "value": 2}]},
+      {"text": "Tenter de forcer le passage avant qu'il ne se referme", "verb": "fuir", "effects": [{"type": "DAMAGE_LIFE", "value": -8}, {"type": "ADD_REPUTATION", "faction": "ankou", "value": -10}, {"type": "HEAL_LIFE", "value": 5}]}
+    ]
+  },
+  {
+    "id": "s16_biome_45",
+    "text": "Dans les profondeurs de la grotte de Merlin, les stalactites resonnent comme un carillon geant. Chaque note revele une couche de savoir ancien, grave dans la roche par le temps lui-meme.",
+    "biome": "grotte_merlin",
+    "faction": "druides",
+    "trust_tier": "T0",
+    "tags": ["biome_balance", "grotte", "stalactite_chimes"],
+    "options": [
+      {"text": "Ecouter la melodie des stalactites", "verb": "ecouter", "effects": [{"type": "ADD_REPUTATION", "faction": "druides", "value": 10}, {"type": "ADD_ANAM", "value": 2}]},
+      {"text": "Jouer votre propre melodie sur les stalactites", "verb": "chanter", "effects": [{"type": "HEAL_LIFE", "value": 10}, {"type": "ADD_REPUTATION", "faction": "druides", "value": 6}]},
+      {"text": "Briser une stalactite pour en extraire le savoir", "verb": "detruire", "effects": [{"type": "ADD_BIOME_CURRENCY", "value": 4}, {"type": "ADD_REPUTATION", "faction": "druides", "value": -10}]}
+    ]
+  },
+  {
+    "id": "s16_biome_46",
+    "text": "Une chambre secrete s'ouvre dans la grotte, revelee par un mecanisme de pierres pivotantes. A l'interieur, un grimoire enchaine a un pupitre de cristal attend d'etre dechiffre.",
+    "biome": "grotte_merlin",
+    "faction": "druides",
+    "trust_tier": "T1",
+    "tags": ["biome_balance", "grotte", "chained_grimoire"],
+    "options": [
+      {"text": "Dechiffrer le grimoire avec patience", "verb": "reveler", "effects": [{"type": "ADD_REPUTATION", "faction": "druides", "value": 12}, {"type": "ADD_ANAM", "value": 2}]},
+      {"text": "Liberer le grimoire de ses chaines", "verb": "liberer", "effects": [{"type": "ADD_REPUTATION", "faction": "druides", "value": 8}, {"type": "DAMAGE_LIFE", "value": -8}]},
+      {"text": "Refermer la chambre pour proteger son secret", "verb": "cacher", "effects": [{"type": "ADD_KARMA", "value": 3}, {"type": "HEAL_LIFE", "value": 8}]}
+    ]
+  },
+  {
+    "id": "s16_biome_47",
+    "text": "Les parois de la grotte suintent d'un liquide dore qui forme des flaques lumineuses au sol. Les Korrigans y voient le sang de la terre, et quiconque le touche gagne une faveur — ou une malediction.",
+    "biome": "grotte_merlin",
+    "faction": "korrigans",
+    "trust_tier": "T0",
+    "tags": ["biome_balance", "grotte", "golden_ichor"],
+    "options": [
+      {"text": "Tremper vos mains dans le liquide dore", "verb": "explorer", "effects": [{"type": "ADD_REPUTATION", "faction": "korrigans", "value": 8}, {"type": "HEAL_LIFE", "value": 10}]},
+      {"text": "Offrir une priere avant de toucher le liquide", "verb": "prier", "effects": [{"type": "ADD_REPUTATION", "faction": "korrigans", "value": 6}, {"type": "ADD_KARMA", "value": 3}]},
+      {"text": "Remplir une fiole du liquide pour plus tard", "verb": "accumuler", "effects": [{"type": "ADD_BIOME_CURRENCY", "value": 4}, {"type": "ADD_REPUTATION", "faction": "korrigans", "value": -8}]}
+    ]
+  },
+  {
+    "id": "s16_biome_48",
+    "text": "Au fond de la grotte, un miroir de pierre noire reflette non pas votre image, mais votre ombre interieure. L'Ankou murmure que confronter son ombre est le seul chemin vers la verite.",
+    "biome": "grotte_merlin",
+    "faction": "ankou",
+    "trust_tier": "T2",
+    "tags": ["biome_balance", "grotte", "shadow_mirror"],
+    "options": [
+      {"text": "Affronter votre ombre dans le miroir", "verb": "combattre", "effects": [{"type": "ADD_REPUTATION", "faction": "ankou", "value": 15}, {"type": "DAMAGE_LIFE", "value": -10}]},
+      {"text": "Mediter devant le miroir pour comprendre votre ombre", "verb": "mediter", "effects": [{"type": "ADD_ANAM", "value": 3}, {"type": "ADD_REPUTATION", "faction": "ankou", "value": 8}]},
+      {"text": "Briser le miroir pour detruire votre ombre", "verb": "detruire", "effects": [{"type": "DAMAGE_LIFE", "value": -12}, {"type": "ADD_REPUTATION", "faction": "ankou", "value": -5}, {"type": "ADD_BIOME_CURRENCY", "value": 4}]}
+    ]
+  },
+  {
+    "id": "s16_biome_49",
+    "text": "Une cascade souterraine alimente un lac interieur dont l'eau est si pure qu'elle revele le fond parseme de pierres gravees. Chaque pierre raconte un fragment de l'histoire de Merlin.",
+    "biome": "grotte_merlin",
+    "faction": "anciens",
+    "trust_tier": "T2",
+    "tags": ["biome_balance", "grotte", "merlin_history"],
+    "options": [
+      {"text": "Plonger pour lire les pierres gravees", "verb": "explorer", "effects": [{"type": "ADD_REPUTATION", "faction": "anciens", "value": 12}, {"type": "ADD_ANAM", "value": 2}]},
+      {"text": "Honorer Merlin en ajoutant votre propre pierre", "verb": "honorer", "effects": [{"type": "ADD_REPUTATION", "faction": "anciens", "value": 10}, {"type": "ADD_KARMA", "value": 3}]},
+      {"text": "Boire l'eau pure pour vous guerir", "verb": "guerir", "effects": [{"type": "HEAL_LIFE", "value": 18}]}
+    ]
+  },
+  {
+    "id": "s16_biome_50",
+    "text": "Le souffle de Merlin resonne dans la grotte, transformant les cristaux en instruments vivants. Une partition apparait sur la paroi, un chant si ancien qu'il precede le langage. Quiconque le chante complete correctement transformera la grotte a jamais.",
+    "biome": "grotte_merlin",
+    "faction": "niamh",
+    "trust_tier": "T3",
+    "tags": ["biome_balance", "grotte", "merlin_song"],
+    "options": [
+      {"text": "Chanter la partition ancienne avec tout votre coeur", "verb": "chanter", "effects": [{"type": "ADD_REPUTATION", "faction": "niamh", "value": 18}, {"type": "ADD_ANAM", "value": 3}]},
+      {"text": "Transformer les cristaux en instruments permanents", "verb": "transformer", "effects": [{"type": "ADD_REPUTATION", "faction": "niamh", "value": 10}, {"type": "ADD_BIOME_CURRENCY", "value": 5}]},
+      {"text": "Recopier la partition pour la partager au monde", "verb": "partager", "effects": [{"type": "ADD_REPUTATION", "faction": "niamh", "value": 8}, {"type": "HEAL_LIFE", "value": 10}, {"type": "ADD_KARMA", "value": 3}]}
+    ]
+  }
+]

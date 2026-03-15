@@ -491,6 +491,21 @@ func _reduce(action: Dictionary) -> Dictionary:
 		"MAP_SELECT_BIOME":
 			return _map_select_biome(action)
 
+		# ═══════════════════════════════════════════════════════════════════════
+		# TALENT TREE ACTIONS
+		# ═══════════════════════════════════════════════════════════════════════
+		"UNLOCK_TALENT":
+			var node_id: String = str(action.get("node_id", ""))
+			var unlocked: Array = state.get("meta", {}).get("talent_tree", {}).get("unlocked", [])
+			var anam: int = int(state.get("meta", {}).get("anam", 0))
+			var result: Dictionary = MerlinTalentSystem.unlock_talent(node_id, unlocked, anam)
+			if result.get("ok", false):
+				state["meta"]["talent_tree"]["unlocked"] = result["new_unlocked"]
+				state["meta"]["anam"] = result["new_anam"]
+				save_system.save_profile(state.get("meta", {}))
+				state_changed.emit(state)
+			return result
+
 		_:
 			return {"ok": false, "error": "Unknown action"}
 

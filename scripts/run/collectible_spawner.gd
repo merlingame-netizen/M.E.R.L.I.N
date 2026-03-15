@@ -1,8 +1,9 @@
 ## ═══════════════════════════════════════════════════════════════════════════════
 ## Collectible Spawner — 3D event spawning during on-rails walk
 ## ═══════════════════════════════════════════════════════════════════════════════
-## Phase 6 (DEV_PLAN_V2.5). Spawns collectibles at regular intervals:
-## currency (3-5s), rare events (plant, trap, rune, spirit, anam_rare).
+## Phase 6 (DEV_PLAN_V2.5). Spawns collectibles at regular intervals via
+## weighted random: currency, ogham_fragment, lore_inscription, healing_spring,
+## spirit_echo, plus legacy events (plant, trap, rune, spirit, anam_rare).
 ## ═══════════════════════════════════════════════════════════════════════════════
 
 extends Node
@@ -10,6 +11,7 @@ class_name CollectibleSpawner
 
 signal collectible_spawned(type: String, position: Vector3)
 signal collectible_picked(type: String, amount: int)
+signal lore_discovered(inscription_id: String)
 
 # ═══════════════════════════════════════════════════════════════════════════════
 # CONFIG
@@ -30,6 +32,31 @@ const EVENT_AMOUNTS: Dictionary = {
 	"spirit": 0,
 	"anam_rare": 5,
 }
+
+# Weighted spawn table — weights must sum to 100
+const SPAWN_WEIGHTS: Array[Dictionary] = [
+	{"type": "currency",          "weight": 60},
+	{"type": "lore_inscription",  "weight": 15},
+	{"type": "spirit_echo",       "weight": 12},
+	{"type": "healing_spring",    "weight": 8},
+	{"type": "ogham_fragment",    "weight": 5},
+]
+
+const COLLECTIBLE_AMOUNTS: Dictionary = {
+	"ogham_fragment": 5,     # +5 Anam
+	"lore_inscription": 0,   # cosmetic — no numeric effect
+	"healing_spring": 5,     # +5 life
+	"spirit_echo": 1,        # +1 random faction rep
+}
+
+const FACTIONS: Array[String] = ["druides", "bardes", "guerriers", "artisans", "navigateurs"]
+
+const LORE_POOL: Array[String] = [
+	"inscription_beith", "inscription_luis", "inscription_fearn",
+	"inscription_saille", "inscription_nion", "inscription_huath",
+	"inscription_duir", "inscription_tinne", "inscription_coll",
+	"inscription_quert", "inscription_muin", "inscription_gort",
+]
 
 # ═══════════════════════════════════════════════════════════════════════════════
 # STATE
