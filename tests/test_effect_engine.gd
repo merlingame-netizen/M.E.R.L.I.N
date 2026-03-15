@@ -404,8 +404,9 @@ func test_fire_and_forget_applied() -> bool:
 
 func test_multiplier_score_0() -> bool:
 	var m: float = EffectEngine.get_multiplier(0)
-	if m < 0.1 or m > 1.5:
-		push_error("Score 0 multiplier out of range: %f" % m)
+	# Score 0 = echec_critique → factor -1.5
+	if m != -1.5:
+		push_error("Score 0 multiplier should be -1.5, got %f" % m)
 		return false
 	return true
 

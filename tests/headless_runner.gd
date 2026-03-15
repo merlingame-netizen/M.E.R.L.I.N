@@ -54,6 +54,17 @@ func _run_file(path: String) -> void:
 		_errors.append("Failed to load script: " + path)
 		return
 
+	# Skip scripts that don't extend RefCounted (e.g. GUT tests extending Node/Control)
+	var base: Script = script
+	var is_refcounted := false
+	while base != null:
+		if base.get_instance_base_type() == &"RefCounted":
+			is_refcounted = true
+			break
+		base = base.get_base_script()
+	if not is_refcounted:
+		return
+
 	var instance: RefCounted = script.new()
 	var method_list := instance.get_method_list()
 
