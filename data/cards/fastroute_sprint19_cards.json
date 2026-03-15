@@ -1,0 +1,1702 @@
+[
+  {
+    "id": "s19_verb_01",
+    "text": "Dans la clairiere sacree, une fileuse spectrale tend des fils de lumiere entre les chenes. Chaque fil vibre d'une melodie differente, tissant un motif qui raconte l'histoire du monde.",
+    "biome": "foret_broceliande",
+    "faction": "druides",
+    "trust_tier": "T0",
+    "tags": ["verb_balance"],
+    "options": [
+      {
+        "text": "Tisser vos propres fils de lumiere dans le motif ancestral",
+        "verb": "tisser",
+        "effects": [
+          {"type": "ADD_REPUTATION", "faction": "druides", "value": 10},
+          {"type": "ADD_ANAM", "value": 1}
+        ]
+      },
+      {
+        "text": "Observer les motifs pour en comprendre le sens cache",
+        "verb": "observer",
+        "effects": [
+          {"type": "HEAL_LIFE", "value": 8},
+          {"type": "ADD_BIOME_CURRENCY", "value": 2}
+        ]
+      },
+      {
+        "text": "Trancher les fils pour liberer les ames emprisonnees",
+        "verb": "detruire",
+        "effects": [
+          {"type": "ADD_REPUTATION", "faction": "ankou", "value": 12},
+          {"type": "DAMAGE_LIFE", "value": -5}
+        ]
+      }
+    ]
+  },
+  {
+    "id": "s19_verb_02",
+    "text": "Un forgeron fantome martele une enclume invisible au coeur des dolmens. Des etincelles bleues jaillissent a chaque coup, formant brievement des runes dans l'air nocturne.",
+    "biome": "collines_dolmens",
+    "faction": "anciens",
+    "trust_tier": "T0",
+    "tags": ["verb_balance"],
+    "options": [
+      {
+        "text": "Forger une lame avec le fantome, coup pour coup",
+        "verb": "forger",
+        "effects": [
+          {"type": "ADD_REPUTATION", "faction": "anciens", "value": 12},
+          {"type": "ADD_BIOME_CURRENCY", "value": 2}
+        ]
+      },
+      {
+        "text": "Prier pour le repos du forgeron eternel",
+        "verb": "prier",
+        "effects": [
+          {"type": "HEAL_LIFE", "value": 10},
+          {"type": "ADD_REPUTATION", "faction": "anciens", "value": 5}
+        ]
+      },
+      {
+        "text": "Absorber la chaleur des flammes spectrales",
+        "verb": "absorber",
+        "effects": [
+          {"type": "ADD_REPUTATION", "faction": "druides", "value": 8},
+          {"type": "DAMAGE_LIFE", "value": -8}
+        ]
+      }
+    ]
+  },
+  {
+    "id": "s19_verb_03",
+    "text": "Les marais exhalent une brume epaisse ou dansent des feux follets. Sous vos pieds, la tourbe cache des graines anciennes qui n'attendent qu'un geste pour germer.",
+    "biome": "marais_korrigans",
+    "faction": "korrigans",
+    "trust_tier": "T0",
+    "tags": ["verb_balance"],
+    "options": [
+      {
+        "text": "Planter les graines ancestrales dans la tourbe fertile",
+        "verb": "planter",
+        "effects": [
+          {"type": "ADD_REPUTATION", "faction": "korrigans", "value": 10},
+          {"type": "HEAL_LIFE", "value": 5}
+        ]
+      },
+      {
+        "text": "Recolter les mousses luminescentes qui bordent le sentier",
+        "verb": "recolter",
+        "effects": [
+          {"type": "ADD_BIOME_CURRENCY", "value": 3},
+          {"type": "ADD_ANAM", "value": 1}
+        ]
+      },
+      {
+        "text": "Fuir avant que la brume ne vous engloutisse",
+        "verb": "fuir",
+        "effects": [
+          {"type": "HEAL_LIFE", "value": 12},
+          {"type": "ADD_REPUTATION", "faction": "korrigans", "value": -5}
+        ]
+      }
+    ]
+  },
+  {
+    "id": "s19_verb_04",
+    "text": "Un cercle de menhirs pulse d'energie tellurique. Au centre, une faille dans la terre laisse entrevoir des racines d'or pur qui s'enfoncent vers le coeur du monde.",
+    "biome": "cercles_pierres",
+    "faction": "druides",
+    "trust_tier": "T0",
+    "tags": ["verb_balance"],
+    "options": [
+      {
+        "text": "Absorber l'energie tellurique par meditation profonde",
+        "verb": "absorber",
+        "effects": [
+          {"type": "ADD_REPUTATION", "faction": "druides", "value": 12},
+          {"type": "DAMAGE_LIFE", "value": -6}
+        ]
+      },
+      {
+        "text": "Construire un cairn pour canaliser le flux",
+        "verb": "construire",
+        "effects": [
+          {"type": "ADD_BIOME_CURRENCY", "value": 3},
+          {"type": "HEAL_LIFE", "value": 5}
+        ]
+      },
+      {
+        "text": "Chanter un hymne ancien pour harmoniser les pierres",
+        "verb": "chanter",
+        "effects": [
+          {"type": "ADD_REPUTATION", "faction": "anciens", "value": 8},
+          {"type": "ADD_ANAM", "value": 1}
+        ]
+      }
+    ]
+  },
+  {
+    "id": "s19_verb_05",
+    "text": "Sur la falaise battue par les vents, un barde solitaire joue d'une harpe dont les cordes sont faites d'ecume. Ses chants parlent d'iles disparues au-dela de l'horizon.",
+    "biome": "cotes_sauvages",
+    "faction": "niamh",
+    "trust_tier": "T0",
+    "tags": ["verb_balance"],
+    "options": [
+      {
+        "text": "Chanter avec le barde les complaintes des navigateurs perdus",
+        "verb": "chanter",
+        "effects": [
+          {"type": "ADD_REPUTATION", "faction": "niamh", "value": 10},
+          {"type": "ADD_ANAM", "value": 1}
+        ]
+      },
+      {
+        "text": "Danser au bord du precipice, porte par la musique",
+        "verb": "danser",
+        "effects": [
+          {"type": "ADD_REPUTATION", "faction": "niamh", "value": 8},
+          {"type": "DAMAGE_LIFE", "value": -5}
+        ]
+      },
+      {
+        "text": "Rever des iles chantees, laissant votre esprit voyager",
+        "verb": "rever",
+        "effects": [
+          {"type": "HEAL_LIFE", "value": 8},
+          {"type": "ADD_BIOME_CURRENCY", "value": 2}
+        ]
+      }
+    ]
+  },
+  {
+    "id": "s19_verb_06",
+    "text": "Les korrigans ont emprisonne un esprit de lumiere dans une cage de ronces enchantees. Il supplie quiconque passe de briser ses liens.",
+    "biome": "marais_korrigans",
+    "faction": "korrigans",
+    "trust_tier": "T0",
+    "tags": ["verb_balance"],
+    "options": [
+      {
+        "text": "Enchainer l'esprit plus solidement pour plaire aux korrigans",
+        "verb": "enchainer",
+        "effects": [
+          {"type": "ADD_REPUTATION", "faction": "korrigans", "value": 15},
+          {"type": "ADD_REPUTATION", "faction": "niamh", "value": -8}
+        ]
+      },
+      {
+        "text": "Maudire les ronces pour qu'elles se fletrissent",
+        "verb": "maudire",
+        "effects": [
+          {"type": "ADD_REPUTATION", "faction": "ankou", "value": 10},
+          {"type": "DAMAGE_LIFE", "value": -5}
+        ]
+      },
+      {
+        "text": "Benir l'esprit pour adoucir sa captivite",
+        "verb": "benir",
+        "effects": [
+          {"type": "HEAL_LIFE", "value": 10},
+          {"type": "ADD_REPUTATION", "faction": "druides", "value": 8}
+        ]
+      }
+    ]
+  },
+  {
+    "id": "s19_verb_07",
+    "text": "Dans un village abandonné, un metier a tisser fonctionne seul, creant une tapisserie qui montre l'avenir. Les scenes qu'elle tisse changent selon qui la regarde.",
+    "biome": "villages_celtes",
+    "faction": "anciens",
+    "trust_tier": "T0",
+    "tags": ["verb_balance"],
+    "options": [
+      {
+        "text": "Tisser votre propre destin dans la tapisserie magique",
+        "verb": "tisser",
+        "effects": [
+          {"type": "ADD_REPUTATION", "faction": "anciens", "value": 12},
+          {"type": "ADD_ANAM", "value": 2}
+        ]
+      },
+      {
+        "text": "Detruire le metier pour empecher quiconque de voir l'avenir",
+        "verb": "detruire",
+        "effects": [
+          {"type": "ADD_REPUTATION", "faction": "ankou", "value": 10},
+          {"type": "DAMAGE_LIFE", "value": -8}
+        ]
+      },
+      {
+        "text": "Accumuler les fils d'or tombes au sol",
+        "verb": "accumuler",
+        "effects": [
+          {"type": "ADD_BIOME_CURRENCY", "value": 4},
+          {"type": "ADD_REPUTATION", "faction": "korrigans", "value": 5}
+        ]
+      }
+    ]
+  },
+  {
+    "id": "s19_verb_08",
+    "text": "Une forge souterraine brule sous la colline. Des nains anciens y faconnaient des armes capables de trancher le voile entre les mondes. L'enclume attend encore.",
+    "biome": "collines_dolmens",
+    "faction": "anciens",
+    "trust_tier": "T1",
+    "tags": ["verb_balance"],
+    "options": [
+      {
+        "text": "Forger une cle capable d'ouvrir les portes du Sid",
+        "verb": "forger",
+        "effects": [
+          {"type": "ADD_REPUTATION", "faction": "anciens", "value": 15},
+          {"type": "DAMAGE_LIFE", "value": -10}
+        ]
+      },
+      {
+        "text": "Repousser les flammes pour explorer la forge en securite",
+        "verb": "repousser",
+        "effects": [
+          {"type": "HEAL_LIFE", "value": 5},
+          {"type": "ADD_BIOME_CURRENCY", "value": 3}
+        ]
+      },
+      {
+        "text": "Construire un passage plus sur vers la forge",
+        "verb": "construire",
+        "effects": [
+          {"type": "ADD_REPUTATION", "faction": "druides", "value": 8},
+          {"type": "ADD_BIOME_CURRENCY", "value": 2}
+        ]
+      }
+    ]
+  },
+  {
+    "id": "s19_verb_09",
+    "text": "Le verger sacre des druides ploie sous des fruits d'ambre. Chaque fruit contient un souvenir d'un ancien sage. Les prendre nourrit le corps mais efface le souvenir.",
+    "biome": "foret_broceliande",
+    "faction": "druides",
+    "trust_tier": "T0",
+    "tags": ["verb_balance"],
+    "options": [
+      {
+        "text": "Recolter les fruits avec respect, un seul par branche",
+        "verb": "recolter",
+        "effects": [
+          {"type": "HEAL_LIFE", "value": 12},
+          {"type": "ADD_REPUTATION", "faction": "druides", "value": 5}
+        ]
+      },
+      {
+        "text": "Planter les graines des fruits tombes pour perpetuer le cycle",
+        "verb": "planter",
+        "effects": [
+          {"type": "ADD_REPUTATION", "faction": "druides", "value": 12},
+          {"type": "ADD_ANAM", "value": 1}
+        ]
+      },
+      {
+        "text": "Accumuler tous les fruits dans votre besace",
+        "verb": "accumuler",
+        "effects": [
+          {"type": "ADD_BIOME_CURRENCY", "value": 5},
+          {"type": "ADD_REPUTATION", "faction": "druides", "value": -8}
+        ]
+      }
+    ]
+  },
+  {
+    "id": "s19_verb_10",
+    "text": "Un tourbillon de feuilles mortes forme une silhouette dansante dans la lande. Elle vous invite a la rejoindre, ses gestes tracant des symboles oublies dans l'air.",
+    "biome": "landes_bruyere",
+    "faction": "niamh",
+    "trust_tier": "T0",
+    "tags": ["verb_balance"],
+    "options": [
+      {
+        "text": "Danser avec la silhouette de feuilles dans le vent",
+        "verb": "danser",
+        "effects": [
+          {"type": "ADD_REPUTATION", "faction": "niamh", "value": 12},
+          {"type": "ADD_ANAM", "value": 1}
+        ]
+      },
+      {
+        "text": "Fuir ce spectacle surnaturel avant d'etre ensorcele",
+        "verb": "fuir",
+        "effects": [
+          {"type": "HEAL_LIFE", "value": 10},
+          {"type": "ADD_REPUTATION", "faction": "niamh", "value": -5}
+        ]
+      },
+      {
+        "text": "Tisser les feuilles en une couronne pour capturer l'esprit",
+        "verb": "tisser",
+        "effects": [
+          {"type": "ADD_REPUTATION", "faction": "korrigans", "value": 10},
+          {"type": "ADD_BIOME_CURRENCY", "value": 2}
+        ]
+      }
+    ]
+  },
+  {
+    "id": "s19_verb_11",
+    "text": "Au fond d'une grotte marine, des cristaux chantent au rythme des marees. Leur resonance fait vibrer vos os et eveille des visions d'un passe immerge.",
+    "biome": "cotes_sauvages",
+    "faction": "anciens",
+    "trust_tier": "T1",
+    "tags": ["verb_balance"],
+    "options": [
+      {
+        "text": "Absorber les vibrations des cristaux pour voir le passe",
+        "verb": "absorber",
+        "effects": [
+          {"type": "ADD_REPUTATION", "faction": "anciens", "value": 15},
+          {"type": "DAMAGE_LIFE", "value": -8}
+        ]
+      },
+      {
+        "text": "Chanter en harmonie avec les cristaux",
+        "verb": "chanter",
+        "effects": [
+          {"type": "HEAL_LIFE", "value": 8},
+          {"type": "ADD_ANAM", "value": 2}
+        ]
+      },
+      {
+        "text": "Recolter un eclat de cristal chantant",
+        "verb": "recolter",
+        "effects": [
+          {"type": "ADD_BIOME_CURRENCY", "value": 4},
+          {"type": "ADD_REPUTATION", "faction": "anciens", "value": -5}
+        ]
+      }
+    ]
+  },
+  {
+    "id": "s19_verb_12",
+    "text": "Une source empoisonnee par une malediction ancienne coule noire entre les pierres. Les animaux l'evitent, mais des fleurs etranges poussent sur ses berges.",
+    "biome": "cercles_pierres",
+    "faction": "ankou",
+    "trust_tier": "T0",
+    "tags": ["verb_balance"],
+    "options": [
+      {
+        "text": "Benir la source pour purifier ses eaux corrompues",
+        "verb": "benir",
+        "effects": [
+          {"type": "ADD_REPUTATION", "faction": "druides", "value": 12},
+          {"type": "HEAL_LIFE", "value": 8}
+        ]
+      },
+      {
+        "text": "Maudire davantage la source pour renforcer le voile mortel",
+        "verb": "maudire",
+        "effects": [
+          {"type": "ADD_REPUTATION", "faction": "ankou", "value": 15},
+          {"type": "DAMAGE_LIFE", "value": -10}
+        ]
+      },
+      {
+        "text": "Planter des herbes curatives autour de la source",
+        "verb": "planter",
+        "effects": [
+          {"type": "ADD_REPUTATION", "faction": "druides", "value": 8},
+          {"type": "ADD_BIOME_CURRENCY", "value": 2}
+        ]
+      }
+    ]
+  },
+  {
+    "id": "s19_verb_13",
+    "text": "Un geant de pierre dort sous la colline. Ses ronflements font trembler la terre. Dans sa main entrouverte, un tresor ancien brille faiblement.",
+    "biome": "collines_dolmens",
+    "faction": "anciens",
+    "trust_tier": "T1",
+    "tags": ["verb_balance"],
+    "options": [
+      {
+        "text": "Accumuler les pieces du tresor sans reveiller le geant",
+        "verb": "accumuler",
+        "effects": [
+          {"type": "ADD_BIOME_CURRENCY", "value": 5},
+          {"type": "DAMAGE_LIFE", "value": -5}
+        ]
+      },
+      {
+        "text": "Forger un anneau avec l'or du geant pendant son sommeil",
+        "verb": "forger",
+        "effects": [
+          {"type": "ADD_REPUTATION", "faction": "anciens", "value": 12},
+          {"type": "ADD_BIOME_CURRENCY", "value": 3}
+        ]
+      },
+      {
+        "text": "Fuir avant que le geant ne se reveille",
+        "verb": "fuir",
+        "effects": [
+          {"type": "HEAL_LIFE", "value": 15},
+          {"type": "ADD_REPUTATION", "faction": "anciens", "value": -5}
+        ]
+      }
+    ]
+  },
+  {
+    "id": "s19_verb_14",
+    "text": "Les ruines d'un temple englouti emergent a maree basse. Des algues phosphorescentes dessinent des glyphes sur les murs, pulsant comme un coeur vivant.",
+    "biome": "iles_mystiques",
+    "faction": "niamh",
+    "trust_tier": "T0",
+    "tags": ["verb_balance"],
+    "options": [
+      {
+        "text": "Rever les souvenirs du temple en touchant les glyphes",
+        "verb": "rever",
+        "effects": [
+          {"type": "ADD_REPUTATION", "faction": "niamh", "value": 10},
+          {"type": "ADD_ANAM", "value": 2}
+        ]
+      },
+      {
+        "text": "Construire un autel temporaire avec les pierres du temple",
+        "verb": "construire",
+        "effects": [
+          {"type": "ADD_REPUTATION", "faction": "anciens", "value": 10},
+          {"type": "ADD_BIOME_CURRENCY", "value": 2}
+        ]
+      },
+      {
+        "text": "Enchainer les portes du temple pour sceller ce qui est a l'interieur",
+        "verb": "enchainer",
+        "effects": [
+          {"type": "ADD_REPUTATION", "faction": "ankou", "value": 10},
+          {"type": "DAMAGE_LIFE", "value": -5}
+        ]
+      }
+    ]
+  },
+  {
+    "id": "s19_verb_15",
+    "text": "Un jardin cache dans la foret abrite des plantes qui n'existent dans aucun herboriste. Leurs racines bougent lentement, cherchant la lumiere de la lune.",
+    "biome": "foret_broceliande",
+    "faction": "druides",
+    "trust_tier": "T0",
+    "tags": ["verb_balance"],
+    "options": [
+      {
+        "text": "Planter de nouvelles especes pour enrichir le jardin secret",
+        "verb": "planter",
+        "effects": [
+          {"type": "ADD_REPUTATION", "faction": "druides", "value": 12},
+          {"type": "ADD_ANAM", "value": 1}
+        ]
+      },
+      {
+        "text": "Recolter les plantes les plus rares pour vos potions",
+        "verb": "recolter",
+        "effects": [
+          {"type": "ADD_BIOME_CURRENCY", "value": 4},
+          {"type": "HEAL_LIFE", "value": 5}
+        ]
+      },
+      {
+        "text": "Repousser les ronces qui menacent d'etouffer le jardin",
+        "verb": "repousser",
+        "effects": [
+          {"type": "ADD_REPUTATION", "faction": "druides", "value": 8},
+          {"type": "HEAL_LIFE", "value": 8}
+        ]
+      }
+    ]
+  },
+  {
+    "id": "s19_verb_16",
+    "text": "Une procession de spectres traverse le village chaque nuit de pleine lune. Ils repetent les gestes de leur vie passee, inconscients de leur mort.",
+    "biome": "villages_celtes",
+    "faction": "ankou",
+    "trust_tier": "T1",
+    "tags": ["verb_balance"],
+    "options": [
+      {
+        "text": "Danser parmi les spectres pour comprendre leur peine",
+        "verb": "danser",
+        "effects": [
+          {"type": "ADD_REPUTATION", "faction": "ankou", "value": 12},
+          {"type": "DAMAGE_LIFE", "value": -8}
+        ]
+      },
+      {
+        "text": "Benir chaque spectre pour le guider vers le repos",
+        "verb": "benir",
+        "effects": [
+          {"type": "ADD_REPUTATION", "faction": "ankou", "value": 8},
+          {"type": "HEAL_LIFE", "value": 10}
+        ]
+      },
+      {
+        "text": "Enchainer les spectres au cimetiere pour arreter l'errance",
+        "verb": "enchainer",
+        "effects": [
+          {"type": "ADD_REPUTATION", "faction": "ankou", "value": 15},
+          {"type": "ADD_REPUTATION", "faction": "niamh", "value": -8}
+        ]
+      }
+    ]
+  },
+  {
+    "id": "s19_verb_17",
+    "text": "Un vieux chene creux abrite un nid de corbeaux blancs. Ils parlent en enigmes et proposent un marche: un secret contre un sacrifice.",
+    "biome": "foret_broceliande",
+    "faction": "korrigans",
+    "trust_tier": "T1",
+    "tags": ["verb_balance"],
+    "options": [
+      {
+        "text": "Maudire les corbeaux pour les forcer a reveler leurs secrets",
+        "verb": "maudire",
+        "effects": [
+          {"type": "ADD_REPUTATION", "faction": "ankou", "value": 12},
+          {"type": "DAMAGE_LIFE", "value": -8}
+        ]
+      },
+      {
+        "text": "Rever avec les corbeaux, partageant vos visions",
+        "verb": "rever",
+        "effects": [
+          {"type": "ADD_REPUTATION", "faction": "korrigans", "value": 10},
+          {"type": "ADD_ANAM", "value": 2}
+        ]
+      },
+      {
+        "text": "Construire un perchoir plus grand pour gagner leur confiance",
+        "verb": "construire",
+        "effects": [
+          {"type": "ADD_REPUTATION", "faction": "korrigans", "value": 8},
+          {"type": "ADD_BIOME_CURRENCY", "value": 3}
+        ]
+      }
+    ]
+  },
+  {
+    "id": "s19_verb_18",
+    "text": "L'orage gronde sur les landes. La foudre frappe un menhir qui se fissure, liberant une energie brute et sauvage qui cherche un receptacle.",
+    "biome": "landes_bruyere",
+    "faction": "druides",
+    "trust_tier": "T1",
+    "tags": ["verb_balance"],
+    "options": [
+      {
+        "text": "Absorber l'energie de la foudre dans votre corps",
+        "verb": "absorber",
+        "effects": [
+          {"type": "ADD_REPUTATION", "faction": "druides", "value": 15},
+          {"type": "DAMAGE_LIFE", "value": -12}
+        ]
+      },
+      {
+        "text": "Repousser l'energie vers le ciel pour proteger la lande",
+        "verb": "repousser",
+        "effects": [
+          {"type": "ADD_REPUTATION", "faction": "druides", "value": 8},
+          {"type": "HEAL_LIFE", "value": 5}
+        ]
+      },
+      {
+        "text": "Forger un talisman avec l'eclat du menhir frappe",
+        "verb": "forger",
+        "effects": [
+          {"type": "ADD_BIOME_CURRENCY", "value": 4},
+          {"type": "ADD_ANAM", "value": 1}
+        ]
+      }
+    ]
+  },
+  {
+    "id": "s19_verb_19",
+    "text": "Un portail de brume s'ouvre entre deux menhirs jumeaux. De l'autre cote, vous entrevoyez un monde ou les arbres poussent a l'envers et les rivieres coulent vers le ciel.",
+    "biome": "cercles_pierres",
+    "faction": "niamh",
+    "trust_tier": "T1",
+    "tags": ["verb_balance"],
+    "options": [
+      {
+        "text": "Rever le monde inverse pour en ramener des connaissances",
+        "verb": "rever",
+        "effects": [
+          {"type": "ADD_REPUTATION", "faction": "niamh", "value": 15},
+          {"type": "ADD_ANAM", "value": 2}
+        ]
+      },
+      {
+        "text": "Fuir ce portail avant qu'il ne vous aspire",
+        "verb": "fuir",
+        "effects": [
+          {"type": "HEAL_LIFE", "value": 12},
+          {"type": "ADD_REPUTATION", "faction": "niamh", "value": -5}
+        ]
+      },
+      {
+        "text": "Tisser un filet de runes pour stabiliser le portail",
+        "verb": "tisser",
+        "effects": [
+          {"type": "ADD_REPUTATION", "faction": "druides", "value": 10},
+          {"type": "ADD_BIOME_CURRENCY", "value": 3}
+        ]
+      }
+    ]
+  },
+  {
+    "id": "s19_verb_20",
+    "text": "Les korrigans organisent un festin sous les champignons geants du marais. Ils accumulent des tresors voles sur une table faite d'os de cerf.",
+    "biome": "marais_korrigans",
+    "faction": "korrigans",
+    "trust_tier": "T0",
+    "tags": ["verb_balance"],
+    "options": [
+      {
+        "text": "Accumuler votre part du butin en participant au festin",
+        "verb": "accumuler",
+        "effects": [
+          {"type": "ADD_BIOME_CURRENCY", "value": 5},
+          {"type": "ADD_REPUTATION", "faction": "korrigans", "value": 8}
+        ]
+      },
+      {
+        "text": "Danser la gigue des korrigans pour les impressionner",
+        "verb": "danser",
+        "effects": [
+          {"type": "ADD_REPUTATION", "faction": "korrigans", "value": 15},
+          {"type": "HEAL_LIFE", "value": 5}
+        ]
+      },
+      {
+        "text": "Detruire la table pour liberer les ames des cerfs",
+        "verb": "detruire",
+        "effects": [
+          {"type": "ADD_REPUTATION", "faction": "ankou", "value": 10},
+          {"type": "ADD_REPUTATION", "faction": "korrigans", "value": -10}
+        ]
+      }
+    ]
+  },
+  {
+    "id": "s19_verb_21",
+    "text": "Une ile flottante apparait dans la brume. Ses plages sont couvertes de coquillages qui murmurent des propheties quand on les porte a l'oreille.",
+    "biome": "iles_mystiques",
+    "faction": "niamh",
+    "trust_tier": "T1",
+    "tags": ["verb_balance"],
+    "options": [
+      {
+        "text": "Recolter les coquillages prophetiques avec soin",
+        "verb": "recolter",
+        "effects": [
+          {"type": "ADD_BIOME_CURRENCY", "value": 4},
+          {"type": "ADD_REPUTATION", "faction": "niamh", "value": 8}
+        ]
+      },
+      {
+        "text": "Chanter avec les coquillages pour amplifier leurs voix",
+        "verb": "chanter",
+        "effects": [
+          {"type": "ADD_REPUTATION", "faction": "niamh", "value": 12},
+          {"type": "ADD_ANAM", "value": 2}
+        ]
+      },
+      {
+        "text": "Enchainer l'ile au fond marin pour qu'elle cesse d'errer",
+        "verb": "enchainer",
+        "effects": [
+          {"type": "ADD_REPUTATION", "faction": "anciens", "value": 10},
+          {"type": "DAMAGE_LIFE", "value": -8}
+        ]
+      }
+    ]
+  },
+  {
+    "id": "s19_verb_22",
+    "text": "Un druide petrfie tient encore son baton. Des lianes l'enserrent, mais de minuscules fleurs poussent dans les fissures de sa pierre, temoins d'un cycle qui continue.",
+    "biome": "foret_broceliande",
+    "faction": "druides",
+    "trust_tier": "T1",
+    "tags": ["verb_balance"],
+    "options": [
+      {
+        "text": "Repousser les lianes pour reveler le druide entier",
+        "verb": "repousser",
+        "effects": [
+          {"type": "ADD_REPUTATION", "faction": "druides", "value": 12},
+          {"type": "ADD_BIOME_CURRENCY", "value": 2}
+        ]
+      },
+      {
+        "text": "Planter un cercle de gui autour du druide en hommage",
+        "verb": "planter",
+        "effects": [
+          {"type": "ADD_REPUTATION", "faction": "druides", "value": 10},
+          {"type": "HEAL_LIFE", "value": 8}
+        ]
+      },
+      {
+        "text": "Maudire celui qui a petrifie le druide",
+        "verb": "maudire",
+        "effects": [
+          {"type": "ADD_REPUTATION", "faction": "ankou", "value": 12},
+          {"type": "DAMAGE_LIFE", "value": -5}
+        ]
+      }
+    ]
+  },
+  {
+    "id": "s19_verb_23",
+    "text": "Les vagues apportent des debris d'un navire ancien. Parmi les planches, des coffres scelles portent des marques de clans oublies.",
+    "biome": "cotes_sauvages",
+    "faction": "anciens",
+    "trust_tier": "T0",
+    "tags": ["verb_balance"],
+    "options": [
+      {
+        "text": "Construire un memorial avec les debris du navire",
+        "verb": "construire",
+        "effects": [
+          {"type": "ADD_REPUTATION", "faction": "anciens", "value": 12},
+          {"type": "ADD_ANAM", "value": 1}
+        ]
+      },
+      {
+        "text": "Accumuler le contenu des coffres dans votre camp",
+        "verb": "accumuler",
+        "effects": [
+          {"type": "ADD_BIOME_CURRENCY", "value": 5},
+          {"type": "ADD_REPUTATION", "faction": "anciens", "value": -5}
+        ]
+      },
+      {
+        "text": "Forger de nouveaux outils avec le metal recupérée",
+        "verb": "forger",
+        "effects": [
+          {"type": "ADD_REPUTATION", "faction": "anciens", "value": 8},
+          {"type": "ADD_BIOME_CURRENCY", "value": 3}
+        ]
+      }
+    ]
+  },
+  {
+    "id": "s19_verb_24",
+    "text": "Une tour en ruine surplombe le marais. A son sommet, un miroir d'obsidienne reflète non pas votre image, mais vos peurs les plus profondes.",
+    "biome": "marais_korrigans",
+    "faction": "ankou",
+    "trust_tier": "T2",
+    "tags": ["verb_balance"],
+    "options": [
+      {
+        "text": "Detruire le miroir pour que personne ne voie ses peurs",
+        "verb": "detruire",
+        "effects": [
+          {"type": "ADD_REPUTATION", "faction": "ankou", "value": 15},
+          {"type": "DAMAGE_LIFE", "value": -10}
+        ]
+      },
+      {
+        "text": "Absorber les peurs refletees pour devenir plus fort",
+        "verb": "absorber",
+        "effects": [
+          {"type": "ADD_REPUTATION", "faction": "ankou", "value": 12},
+          {"type": "DAMAGE_LIFE", "value": -15}
+        ]
+      },
+      {
+        "text": "Fuir la tour avant que vos peurs ne prennent forme",
+        "verb": "fuir",
+        "effects": [
+          {"type": "HEAL_LIFE", "value": 15},
+          {"type": "ADD_REPUTATION", "faction": "korrigans", "value": 5}
+        ]
+      }
+    ]
+  },
+  {
+    "id": "s19_verb_25",
+    "text": "Un arbre millénaire aux racines visibles forme un labyrinthe naturel. Des champignons lumineux jalonnent differents chemins, chacun menant a un secret different.",
+    "biome": "foret_broceliande",
+    "faction": "korrigans",
+    "trust_tier": "T0",
+    "tags": ["verb_balance"],
+    "options": [
+      {
+        "text": "Tisser un fil d'Ariane avec les fibres de l'ecorce",
+        "verb": "tisser",
+        "effects": [
+          {"type": "ADD_REPUTATION", "faction": "korrigans", "value": 10},
+          {"type": "ADD_BIOME_CURRENCY", "value": 2}
+        ]
+      },
+      {
+        "text": "Recolter les champignons lumineux pour eclairer votre route",
+        "verb": "recolter",
+        "effects": [
+          {"type": "HEAL_LIFE", "value": 8},
+          {"type": "ADD_BIOME_CURRENCY", "value": 3}
+        ]
+      },
+      {
+        "text": "Danser entre les racines en suivant la musique du vent",
+        "verb": "danser",
+        "effects": [
+          {"type": "ADD_REPUTATION", "faction": "niamh", "value": 10},
+          {"type": "ADD_ANAM", "value": 1}
+        ]
+      }
+    ]
+  },
+  {
+    "id": "s19_verb_26",
+    "text": "Les pierres d'un dolmen se desassemblent lentement, comme si le temps inversait la construction. Chaque pierre qui tombe revele un glyphe grave sur sa face cachee.",
+    "biome": "collines_dolmens",
+    "faction": "anciens",
+    "trust_tier": "T2",
+    "tags": ["verb_balance"],
+    "options": [
+      {
+        "text": "Construire un nouveau dolmen avec les pierres revelees",
+        "verb": "construire",
+        "effects": [
+          {"type": "ADD_REPUTATION", "faction": "anciens", "value": 15},
+          {"type": "ADD_BIOME_CURRENCY", "value": 3}
+        ]
+      },
+      {
+        "text": "Detruire les dernieres pierres pour reveler tous les glyphes",
+        "verb": "detruire",
+        "effects": [
+          {"type": "ADD_REPUTATION", "faction": "ankou", "value": 12},
+          {"type": "ADD_ANAM", "value": 2}
+        ]
+      },
+      {
+        "text": "Enchainer les pierres avec des sortileges pour arreter la deconstruction",
+        "verb": "enchainer",
+        "effects": [
+          {"type": "ADD_REPUTATION", "faction": "druides", "value": 12},
+          {"type": "DAMAGE_LIFE", "value": -5}
+        ]
+      }
+    ]
+  },
+  {
+    "id": "s19_verb_27",
+    "text": "Un lac souterrain brille d'une lumiere propre. Des poissons translucides nagent en formant des constellations vivantes sous la surface immobile.",
+    "biome": "cercles_pierres",
+    "faction": "niamh",
+    "trust_tier": "T0",
+    "tags": ["verb_balance"],
+    "options": [
+      {
+        "text": "Rever les histoires que racontent les constellations de poissons",
+        "verb": "rever",
+        "effects": [
+          {"type": "ADD_REPUTATION", "faction": "niamh", "value": 12},
+          {"type": "ADD_ANAM", "value": 2}
+        ]
+      },
+      {
+        "text": "Chanter pour attirer les poissons-etoiles a la surface",
+        "verb": "chanter",
+        "effects": [
+          {"type": "ADD_REPUTATION", "faction": "niamh", "value": 8},
+          {"type": "HEAL_LIFE", "value": 8}
+        ]
+      },
+      {
+        "text": "Repousser les tenebres qui menacent le lac lumineux",
+        "verb": "repousser",
+        "effects": [
+          {"type": "ADD_REPUTATION", "faction": "druides", "value": 10},
+          {"type": "ADD_BIOME_CURRENCY", "value": 2}
+        ]
+      }
+    ]
+  },
+  {
+    "id": "s19_verb_28",
+    "text": "Un tumulus s'ouvre lors du solstice, revelant une chambre funeraire ornee de spirales d'or. L'air vibre d'une malediction millenaire.",
+    "biome": "collines_dolmens",
+    "faction": "ankou",
+    "trust_tier": "T2",
+    "tags": ["verb_balance"],
+    "options": [
+      {
+        "text": "Maudire les pilleurs qui ont trouble le repos du tumulus",
+        "verb": "maudire",
+        "effects": [
+          {"type": "ADD_REPUTATION", "faction": "ankou", "value": 15},
+          {"type": "DAMAGE_LIFE", "value": -10}
+        ]
+      },
+      {
+        "text": "Benir le tumulus pour apaiser l'esprit du defunt",
+        "verb": "benir",
+        "effects": [
+          {"type": "ADD_REPUTATION", "faction": "ankou", "value": 10},
+          {"type": "HEAL_LIFE", "value": 10}
+        ]
+      },
+      {
+        "text": "Accumuler les spirales d'or avant que le tumulus ne se referme",
+        "verb": "accumuler",
+        "effects": [
+          {"type": "ADD_BIOME_CURRENCY", "value": 5},
+          {"type": "DAMAGE_LIFE", "value": -8}
+        ]
+      }
+    ]
+  },
+  {
+    "id": "s19_verb_29",
+    "text": "Un reseau de lianes vivantes relie les arbres d'une clairiere, formant un pont suspendu naturel. Les lianes reagissent au toucher, se retractant ou s'etendant.",
+    "biome": "foret_broceliande",
+    "faction": "druides",
+    "trust_tier": "T1",
+    "tags": ["verb_balance"],
+    "options": [
+      {
+        "text": "Tisser les lianes en un motif plus solide et harmonieux",
+        "verb": "tisser",
+        "effects": [
+          {"type": "ADD_REPUTATION", "faction": "druides", "value": 12},
+          {"type": "ADD_BIOME_CURRENCY", "value": 3}
+        ]
+      },
+      {
+        "text": "Repousser les lianes agressives qui bloquent le passage",
+        "verb": "repousser",
+        "effects": [
+          {"type": "HEAL_LIFE", "value": 8},
+          {"type": "ADD_REPUTATION", "faction": "druides", "value": 5}
+        ]
+      },
+      {
+        "text": "Forger un passage permanent a travers le reseau vegetal",
+        "verb": "forger",
+        "effects": [
+          {"type": "ADD_REPUTATION", "faction": "anciens", "value": 10},
+          {"type": "ADD_BIOME_CURRENCY", "value": 2}
+        ]
+      }
+    ]
+  },
+  {
+    "id": "s19_verb_30",
+    "text": "Dans les ruines d'un village, les fantomes des habitants rejouent chaque soir leur derniere fete. La musique est reelle, la joie, spectrale.",
+    "biome": "villages_celtes",
+    "faction": "ankou",
+    "trust_tier": "T0",
+    "tags": ["verb_balance"],
+    "options": [
+      {
+        "text": "Danser avec les fantomes dans leur eternelle celebration",
+        "verb": "danser",
+        "effects": [
+          {"type": "ADD_REPUTATION", "faction": "ankou", "value": 10},
+          {"type": "ADD_ANAM", "value": 1}
+        ]
+      },
+      {
+        "text": "Chanter un requiem pour leur accorder le repos final",
+        "verb": "chanter",
+        "effects": [
+          {"type": "ADD_REPUTATION", "faction": "ankou", "value": 12},
+          {"type": "HEAL_LIFE", "value": 8}
+        ]
+      },
+      {
+        "text": "Fuir ce spectacle macabre avant d'en faire partie",
+        "verb": "fuir",
+        "effects": [
+          {"type": "HEAL_LIFE", "value": 12},
+          {"type": "ADD_REPUTATION", "faction": "ankou", "value": -5}
+        ]
+      }
+    ]
+  },
+  {
+    "id": "s19_verb_31",
+    "text": "Un arbre de corail pousse au milieu d'une source d'eau douce, defiant toute logique. Ses branches portent des perles qui contiennent des reves anciens.",
+    "biome": "iles_mystiques",
+    "faction": "niamh",
+    "trust_tier": "T2",
+    "tags": ["verb_balance"],
+    "options": [
+      {
+        "text": "Recolter les perles de reve avec la delicatesse d'un orfèvre",
+        "verb": "recolter",
+        "effects": [
+          {"type": "ADD_BIOME_CURRENCY", "value": 5},
+          {"type": "ADD_ANAM", "value": 2}
+        ]
+      },
+      {
+        "text": "Planter un nouveau corail pour etendre le jardin onirique",
+        "verb": "planter",
+        "effects": [
+          {"type": "ADD_REPUTATION", "faction": "niamh", "value": 15},
+          {"type": "HEAL_LIFE", "value": 5}
+        ]
+      },
+      {
+        "text": "Rever dans les branches du corail, suspendu entre les mondes",
+        "verb": "rever",
+        "effects": [
+          {"type": "ADD_REPUTATION", "faction": "niamh", "value": 12},
+          {"type": "ADD_ANAM", "value": 3}
+        ]
+      }
+    ]
+  },
+  {
+    "id": "s19_verb_32",
+    "text": "Un sentier de pierres chaudes serpente a travers la bruyere. Chaque pas fait jaillir des etincelles qui prennent la forme de creatures mythiques avant de s'eteindre.",
+    "biome": "landes_bruyere",
+    "faction": "anciens",
+    "trust_tier": "T0",
+    "tags": ["verb_balance"],
+    "options": [
+      {
+        "text": "Forger votre volonte dans le feu des pierres brulantes",
+        "verb": "forger",
+        "effects": [
+          {"type": "ADD_REPUTATION", "faction": "anciens", "value": 10},
+          {"type": "DAMAGE_LIFE", "value": -5}
+        ]
+      },
+      {
+        "text": "Absorber la chaleur des pierres pour renforcer votre aura",
+        "verb": "absorber",
+        "effects": [
+          {"type": "ADD_REPUTATION", "faction": "druides", "value": 10},
+          {"type": "DAMAGE_LIFE", "value": -8}
+        ]
+      },
+      {
+        "text": "Construire un foyer avec les pierres les plus chaudes",
+        "verb": "construire",
+        "effects": [
+          {"type": "ADD_BIOME_CURRENCY", "value": 3},
+          {"type": "HEAL_LIFE", "value": 5}
+        ]
+      }
+    ]
+  },
+  {
+    "id": "s19_verb_33",
+    "text": "Les racines d'un if millenaire ont emprisonne un tresor korrigan. Les petits etres negocient ferocerment, mais leurs yeux trahissent une peur que vous ne detruisiez leur cache.",
+    "biome": "marais_korrigans",
+    "faction": "korrigans",
+    "trust_tier": "T1",
+    "tags": ["verb_balance"],
+    "options": [
+      {
+        "text": "Detruire les racines pour prouver votre force aux korrigans",
+        "verb": "detruire",
+        "effects": [
+          {"type": "ADD_REPUTATION", "faction": "korrigans", "value": -10},
+          {"type": "ADD_BIOME_CURRENCY", "value": 5}
+        ]
+      },
+      {
+        "text": "Tisser un accord avec les korrigans, racine par racine",
+        "verb": "tisser",
+        "effects": [
+          {"type": "ADD_REPUTATION", "faction": "korrigans", "value": 12},
+          {"type": "ADD_BIOME_CURRENCY", "value": 2}
+        ]
+      },
+      {
+        "text": "Enchainer les racines pour securiser la cache et rassurer les korrigans",
+        "verb": "enchainer",
+        "effects": [
+          {"type": "ADD_REPUTATION", "faction": "korrigans", "value": 10},
+          {"type": "ADD_REPUTATION", "faction": "druides", "value": 5}
+        ]
+      }
+    ]
+  },
+  {
+    "id": "s19_verb_34",
+    "text": "Un phare eteint depuis des siecles se rallume soudain, projetant une lumiere verte qui ne pointe vers aucune direction connue. Les marins fantomes affluent vers lui.",
+    "biome": "cotes_sauvages",
+    "faction": "ankou",
+    "trust_tier": "T2",
+    "tags": ["verb_balance"],
+    "options": [
+      {
+        "text": "Enchainer la lumiere du phare pour la controler",
+        "verb": "enchainer",
+        "effects": [
+          {"type": "ADD_REPUTATION", "faction": "ankou", "value": 15},
+          {"type": "ADD_BIOME_CURRENCY", "value": 3}
+        ]
+      },
+      {
+        "text": "Benir les marins fantomes guides par la lumiere",
+        "verb": "benir",
+        "effects": [
+          {"type": "ADD_REPUTATION", "faction": "ankou", "value": 10},
+          {"type": "HEAL_LIFE", "value": 10}
+        ]
+      },
+      {
+        "text": "Detruire le phare pour liberer les ames prisonieres",
+        "verb": "detruire",
+        "effects": [
+          {"type": "ADD_REPUTATION", "faction": "niamh", "value": 12},
+          {"type": "DAMAGE_LIFE", "value": -10}
+        ]
+      }
+    ]
+  },
+  {
+    "id": "s19_verb_35",
+    "text": "Un champ de ble dore pousse en une nuit entre les menhirs. Les epis oscillent sans vent, et chaque grain contient un fragment de sagesse ancienne.",
+    "biome": "cercles_pierres",
+    "faction": "druides",
+    "trust_tier": "T0",
+    "tags": ["verb_balance"],
+    "options": [
+      {
+        "text": "Recolter le ble sacre avec des gestes rituels",
+        "verb": "recolter",
+        "effects": [
+          {"type": "ADD_REPUTATION", "faction": "druides", "value": 12},
+          {"type": "ADD_BIOME_CURRENCY", "value": 3}
+        ]
+      },
+      {
+        "text": "Planter de nouvelles graines pour etendre le champ magique",
+        "verb": "planter",
+        "effects": [
+          {"type": "ADD_REPUTATION", "faction": "druides", "value": 10},
+          {"type": "HEAL_LIFE", "value": 8}
+        ]
+      },
+      {
+        "text": "Accumuler les grains de sagesse dans une bourse enchantee",
+        "verb": "accumuler",
+        "effects": [
+          {"type": "ADD_BIOME_CURRENCY", "value": 5},
+          {"type": "ADD_ANAM", "value": 1}
+        ]
+      }
+    ]
+  },
+  {
+    "id": "s19_verb_36",
+    "text": "Un puits sans fond resonne de chants venant des profondeurs. Les voix sont harmonieuses mais les paroles parlent de chaines et d'oubli.",
+    "biome": "villages_celtes",
+    "faction": "ankou",
+    "trust_tier": "T1",
+    "tags": ["verb_balance"],
+    "options": [
+      {
+        "text": "Chanter en reponse pour dialoguer avec les ames enchainees",
+        "verb": "chanter",
+        "effects": [
+          {"type": "ADD_REPUTATION", "faction": "ankou", "value": 12},
+          {"type": "ADD_ANAM", "value": 2}
+        ]
+      },
+      {
+        "text": "Maudire les chaines invisibles pour tenter de les briser",
+        "verb": "maudire",
+        "effects": [
+          {"type": "ADD_REPUTATION", "faction": "ankou", "value": 15},
+          {"type": "DAMAGE_LIFE", "value": -8}
+        ]
+      },
+      {
+        "text": "Construire un couvercle de pierre pour sceller le puits",
+        "verb": "construire",
+        "effects": [
+          {"type": "ADD_REPUTATION", "faction": "anciens", "value": 8},
+          {"type": "HEAL_LIFE", "value": 5}
+        ]
+      }
+    ]
+  },
+  {
+    "id": "s19_verb_37",
+    "text": "Des aurores boreales apparaissent au-dessus de l'ile, chose impossible a cette latitude. Elles dessinent des chemins lumineux qui semblent mener a d'autres plans d'existence.",
+    "biome": "iles_mystiques",
+    "faction": "niamh",
+    "trust_tier": "T2",
+    "tags": ["verb_balance"],
+    "options": [
+      {
+        "text": "Rever eveille en suivant les chemins lumineux dans le ciel",
+        "verb": "rever",
+        "effects": [
+          {"type": "ADD_REPUTATION", "faction": "niamh", "value": 15},
+          {"type": "ADD_ANAM", "value": 3}
+        ]
+      },
+      {
+        "text": "Danser sous les aurores pour capter leur energie",
+        "verb": "danser",
+        "effects": [
+          {"type": "ADD_REPUTATION", "faction": "niamh", "value": 12},
+          {"type": "HEAL_LIFE", "value": 8}
+        ]
+      },
+      {
+        "text": "Absorber la lumiere des aurores dans un cristal",
+        "verb": "absorber",
+        "effects": [
+          {"type": "ADD_BIOME_CURRENCY", "value": 4},
+          {"type": "DAMAGE_LIFE", "value": -5}
+        ]
+      }
+    ]
+  },
+  {
+    "id": "s19_verb_38",
+    "text": "Un cercle de champignons veneneux entoure un faon endormi. Les spores forment des volutes qui prennent la forme de visages ricanants.",
+    "biome": "foret_broceliande",
+    "faction": "korrigans",
+    "trust_tier": "T0",
+    "tags": ["verb_balance"],
+    "options": [
+      {
+        "text": "Repousser les champignons pour sauver le faon",
+        "verb": "repousser",
+        "effects": [
+          {"type": "ADD_REPUTATION", "faction": "druides", "value": 12},
+          {"type": "ADD_REPUTATION", "faction": "korrigans", "value": -5}
+        ]
+      },
+      {
+        "text": "Benir le faon pour le proteger des spores malfaisantes",
+        "verb": "benir",
+        "effects": [
+          {"type": "HEAL_LIFE", "value": 10},
+          {"type": "ADD_REPUTATION", "faction": "druides", "value": 8}
+        ]
+      },
+      {
+        "text": "Accumuler les spores pour vos propres potions",
+        "verb": "accumuler",
+        "effects": [
+          {"type": "ADD_BIOME_CURRENCY", "value": 4},
+          {"type": "ADD_REPUTATION", "faction": "korrigans", "value": 8}
+        ]
+      }
+    ]
+  },
+  {
+    "id": "s19_verb_39",
+    "text": "Une cascade coule a l'envers, remontant la falaise. L'eau transporte des feuilles d'or qui tourbillonnent en spirales ascendantes vers un point lumineux au sommet.",
+    "biome": "cotes_sauvages",
+    "faction": "niamh",
+    "trust_tier": "T1",
+    "tags": ["verb_balance"],
+    "options": [
+      {
+        "text": "Tisser les feuilles d'or en une couronne pendant leur ascension",
+        "verb": "tisser",
+        "effects": [
+          {"type": "ADD_REPUTATION", "faction": "niamh", "value": 12},
+          {"type": "ADD_BIOME_CURRENCY", "value": 3}
+        ]
+      },
+      {
+        "text": "Forger un calice avec l'eau inversee et les feuilles d'or",
+        "verb": "forger",
+        "effects": [
+          {"type": "ADD_REPUTATION", "faction": "anciens", "value": 10},
+          {"type": "ADD_BIOME_CURRENCY", "value": 3}
+        ]
+      },
+      {
+        "text": "Fuir cette anomalie avant qu'elle ne vous emporte vers le haut",
+        "verb": "fuir",
+        "effects": [
+          {"type": "HEAL_LIFE", "value": 12},
+          {"type": "ADD_REPUTATION", "faction": "niamh", "value": -5}
+        ]
+      }
+    ]
+  },
+  {
+    "id": "s19_verb_40",
+    "text": "Les ruines d'une forge druidique emergent de la bruyere. Des outils incrustés de runes attendent, et le vent souffle sur les braises encore chaudes apres des siecles.",
+    "biome": "landes_bruyere",
+    "faction": "druides",
+    "trust_tier": "T2",
+    "tags": ["verb_balance"],
+    "options": [
+      {
+        "text": "Forger un outil runique dans la forge reveille",
+        "verb": "forger",
+        "effects": [
+          {"type": "ADD_REPUTATION", "faction": "druides", "value": 15},
+          {"type": "ADD_BIOME_CURRENCY", "value": 4}
+        ]
+      },
+      {
+        "text": "Construire un abri autour de la forge pour la preserver",
+        "verb": "construire",
+        "effects": [
+          {"type": "ADD_REPUTATION", "faction": "anciens", "value": 12},
+          {"type": "HEAL_LIFE", "value": 5}
+        ]
+      },
+      {
+        "text": "Detruire la forge pour empecher son utilisation malveillante",
+        "verb": "detruire",
+        "effects": [
+          {"type": "ADD_REPUTATION", "faction": "ankou", "value": 12},
+          {"type": "DAMAGE_LIFE", "value": -8}
+        ]
+      }
+    ]
+  },
+  {
+    "id": "s19_verb_41",
+    "text": "Un labyrinthe de haies vivantes se reconfigure constamment dans le jardin d'un manoir en ruine. Au centre, un rosier noir fleurit une fois par siecle.",
+    "biome": "villages_celtes",
+    "faction": "korrigans",
+    "trust_tier": "T2",
+    "tags": ["verb_balance"],
+    "options": [
+      {
+        "text": "Planter des graines du rosier noir dans votre propre jardin secret",
+        "verb": "planter",
+        "effects": [
+          {"type": "ADD_REPUTATION", "faction": "korrigans", "value": 12},
+          {"type": "ADD_ANAM", "value": 2}
+        ]
+      },
+      {
+        "text": "Enchainer les haies pour figer le labyrinthe",
+        "verb": "enchainer",
+        "effects": [
+          {"type": "ADD_REPUTATION", "faction": "anciens", "value": 10},
+          {"type": "ADD_BIOME_CURRENCY", "value": 3}
+        ]
+      },
+      {
+        "text": "Danser avec les haies mobiles, epousant leur rythme",
+        "verb": "danser",
+        "effects": [
+          {"type": "ADD_REPUTATION", "faction": "niamh", "value": 12},
+          {"type": "HEAL_LIFE", "value": 8}
+        ]
+      }
+    ]
+  },
+  {
+    "id": "s19_verb_42",
+    "text": "Un volcan eteint cache en son cratere un lac d'encre noire. Des bulles remontent lentement, eclatant en murmures qui racontent la fin du monde.",
+    "biome": "iles_mystiques",
+    "faction": "ankou",
+    "trust_tier": "T3",
+    "tags": ["verb_balance"],
+    "options": [
+      {
+        "text": "Absorber les murmures apocalyptiques pour les comprendre",
+        "verb": "absorber",
+        "effects": [
+          {"type": "ADD_REPUTATION", "faction": "ankou", "value": 18},
+          {"type": "DAMAGE_LIFE", "value": -15}
+        ]
+      },
+      {
+        "text": "Maudire le lac pour faire taire les propheties",
+        "verb": "maudire",
+        "effects": [
+          {"type": "ADD_REPUTATION", "faction": "ankou", "value": 15},
+          {"type": "DAMAGE_LIFE", "value": -10}
+        ]
+      },
+      {
+        "text": "Fuir le cratere avant que les murmures ne vous rendent fou",
+        "verb": "fuir",
+        "effects": [
+          {"type": "HEAL_LIFE", "value": 15},
+          {"type": "ADD_REPUTATION", "faction": "ankou", "value": -5}
+        ]
+      }
+    ]
+  },
+  {
+    "id": "s19_verb_43",
+    "text": "Un dolmen pulse comme un coeur geant. A chaque battement, des fleurs de givre poussent et fondent sur ses flancs, revelant et cachant tour a tour des inscriptions anciennes.",
+    "biome": "collines_dolmens",
+    "faction": "druides",
+    "trust_tier": "T3",
+    "tags": ["verb_balance"],
+    "options": [
+      {
+        "text": "Tisser les inscriptions en un sortilege coherent",
+        "verb": "tisser",
+        "effects": [
+          {"type": "ADD_REPUTATION", "faction": "druides", "value": 18},
+          {"type": "ADD_ANAM", "value": 3}
+        ]
+      },
+      {
+        "text": "Planter un arbre au sommet du dolmen pour l'ancrer",
+        "verb": "planter",
+        "effects": [
+          {"type": "ADD_REPUTATION", "faction": "druides", "value": 12},
+          {"type": "HEAL_LIFE", "value": 10}
+        ]
+      },
+      {
+        "text": "Repousser les pulsations pour reveler les inscriptions en permanence",
+        "verb": "repousser",
+        "effects": [
+          {"type": "ADD_REPUTATION", "faction": "anciens", "value": 15},
+          {"type": "DAMAGE_LIFE", "value": -8}
+        ]
+      }
+    ]
+  },
+  {
+    "id": "s19_verb_44",
+    "text": "Les korrigans ont creuse un reseau de tunnels sous le marais. Dans leurs reserves, des objets voles a travers les ages s'entassent: couronnes, epees, et livres oublies.",
+    "biome": "marais_korrigans",
+    "faction": "korrigans",
+    "trust_tier": "T1",
+    "tags": ["verb_balance"],
+    "options": [
+      {
+        "text": "Accumuler des artefacts rares pendant que les korrigans dorment",
+        "verb": "accumuler",
+        "effects": [
+          {"type": "ADD_BIOME_CURRENCY", "value": 5},
+          {"type": "ADD_REPUTATION", "faction": "korrigans", "value": -10}
+        ]
+      },
+      {
+        "text": "Construire des etageres pour organiser leur tresor chaotique",
+        "verb": "construire",
+        "effects": [
+          {"type": "ADD_REPUTATION", "faction": "korrigans", "value": 15},
+          {"type": "ADD_BIOME_CURRENCY", "value": 2}
+        ]
+      },
+      {
+        "text": "Forger une alliance avec les korrigans en echange d'un secret",
+        "verb": "forger",
+        "effects": [
+          {"type": "ADD_REPUTATION", "faction": "korrigans", "value": 12},
+          {"type": "ADD_ANAM", "value": 2}
+        ]
+      }
+    ]
+  },
+  {
+    "id": "s19_verb_45",
+    "text": "Une tempete de sable noir balaie la lande, mais au coeur du cyclone, tout est calme. Des grains noirs se deposent en motifs qui ressemblent a des cartes celestes.",
+    "biome": "landes_bruyere",
+    "faction": "anciens",
+    "trust_tier": "T1",
+    "tags": ["verb_balance"],
+    "options": [
+      {
+        "text": "Rever les cartes celestes pour naviguer entre les mondes",
+        "verb": "rever",
+        "effects": [
+          {"type": "ADD_REPUTATION", "faction": "niamh", "value": 15},
+          {"type": "ADD_ANAM", "value": 3}
+        ]
+      },
+      {
+        "text": "Repousser la tempete pour proteger les voyageurs egares",
+        "verb": "repousser",
+        "effects": [
+          {"type": "ADD_REPUTATION", "faction": "druides", "value": 15},
+          {"type": "HEAL_LIFE", "value": 10}
+        ]
+      },
+      {
+        "text": "Accumuler le sable noir dans une fiole pour etude",
+        "verb": "accumuler",
+        "effects": [
+          {"type": "ADD_BIOME_CURRENCY", "value": 5},
+          {"type": "ADD_REPUTATION", "faction": "anciens", "value": 8}
+        ]
+      }
+    ]
+  },
+  {
+    "id": "s19_verb_46",
+    "text": "Un arbre creux contient un essaim d'abeilles spectrales. Leur miel coule en filets d'or et guerit toute blessure, mais les abeilles piquent les ames, pas la chair.",
+    "biome": "foret_broceliande",
+    "faction": "druides",
+    "trust_tier": "T3",
+    "tags": ["verb_balance"],
+    "options": [
+      {
+        "text": "Recolter le miel spectral en acceptant les piqures d'ame",
+        "verb": "recolter",
+        "effects": [
+          {"type": "HEAL_LIFE", "value": 20},
+          {"type": "ADD_REPUTATION", "faction": "ankou", "value": 8}
+        ]
+      },
+      {
+        "text": "Benir les abeilles pour calmer leur essaim tourmente",
+        "verb": "benir",
+        "effects": [
+          {"type": "ADD_REPUTATION", "faction": "druides", "value": 15},
+          {"type": "HEAL_LIFE", "value": 10}
+        ]
+      },
+      {
+        "text": "Enchainer l'essaim dans l'arbre pour proteger les passants",
+        "verb": "enchainer",
+        "effects": [
+          {"type": "ADD_REPUTATION", "faction": "ankou", "value": 12},
+          {"type": "DAMAGE_LIFE", "value": -8}
+        ]
+      }
+    ]
+  },
+  {
+    "id": "s19_verb_47",
+    "text": "Un escalier taille dans la falaise descend sous la mer. A chaque marche, la pression augmente mais les visions deviennent plus claires, montrant une cite engloutie.",
+    "biome": "cotes_sauvages",
+    "faction": "anciens",
+    "trust_tier": "T2",
+    "tags": ["verb_balance"],
+    "options": [
+      {
+        "text": "Construire un barrage magique pour explorer la cite a sec",
+        "verb": "construire",
+        "effects": [
+          {"type": "ADD_REPUTATION", "faction": "anciens", "value": 15},
+          {"type": "DAMAGE_LIFE", "value": -10}
+        ]
+      },
+      {
+        "text": "Detruire les marches derriere vous pour empecher d'autres de suivre",
+        "verb": "detruire",
+        "effects": [
+          {"type": "ADD_REPUTATION", "faction": "ankou", "value": 12},
+          {"type": "ADD_BIOME_CURRENCY", "value": 3}
+        ]
+      },
+      {
+        "text": "Danser sur les marches pour invoquer les esprits de la cite",
+        "verb": "danser",
+        "effects": [
+          {"type": "ADD_REPUTATION", "faction": "niamh", "value": 12},
+          {"type": "ADD_ANAM", "value": 2}
+        ]
+      }
+    ]
+  },
+  {
+    "id": "s19_verb_48",
+    "text": "Un cercle de pierres vibre a une frequence que seuls les animaux entendent. Les loups hurlent, les oiseaux fuient, mais les serpents convergent vers le centre.",
+    "biome": "cercles_pierres",
+    "faction": "druides",
+    "trust_tier": "T2",
+    "tags": ["verb_balance"],
+    "options": [
+      {
+        "text": "Forger un lien telepathique avec les serpents du cercle",
+        "verb": "forger",
+        "effects": [
+          {"type": "ADD_REPUTATION", "faction": "druides", "value": 15},
+          {"type": "ADD_ANAM", "value": 2}
+        ]
+      },
+      {
+        "text": "Maudire la frequence pour faire taire les pierres",
+        "verb": "maudire",
+        "effects": [
+          {"type": "ADD_REPUTATION", "faction": "ankou", "value": 12},
+          {"type": "DAMAGE_LIFE", "value": -8}
+        ]
+      },
+      {
+        "text": "Fuir avec les oiseaux, loin de cette resonance malsaine",
+        "verb": "fuir",
+        "effects": [
+          {"type": "HEAL_LIFE", "value": 12},
+          {"type": "ADD_REPUTATION", "faction": "druides", "value": -5}
+        ]
+      }
+    ]
+  },
+  {
+    "id": "s19_verb_49",
+    "text": "Le village celebre le festival des morts. Des masques d'ecorce sont suspendus aux branches, et chacun porte le visage d'un ancetre. Les vivants et les morts dansent ensemble.",
+    "biome": "villages_celtes",
+    "faction": "ankou",
+    "trust_tier": "T3",
+    "tags": ["verb_balance"],
+    "options": [
+      {
+        "text": "Danser avec les morts en portant le masque de votre ancetre",
+        "verb": "danser",
+        "effects": [
+          {"type": "ADD_REPUTATION", "faction": "ankou", "value": 18},
+          {"type": "ADD_ANAM", "value": 3}
+        ]
+      },
+      {
+        "text": "Benir les masques pour renforcer le lien entre vivants et morts",
+        "verb": "benir",
+        "effects": [
+          {"type": "ADD_REPUTATION", "faction": "ankou", "value": 12},
+          {"type": "HEAL_LIFE", "value": 12}
+        ]
+      },
+      {
+        "text": "Detruire les masques pour rompre le cycle de la danse eternelle",
+        "verb": "detruire",
+        "effects": [
+          {"type": "ADD_REPUTATION", "faction": "niamh", "value": 10},
+          {"type": "DAMAGE_LIFE", "value": -12}
+        ]
+      }
+    ]
+  },
+  {
+    "id": "s19_verb_50",
+    "text": "Au sommet de la plus haute colline, un vent perpetuel souffle en spirale. Il emporte les pensees de quiconque reste trop longtemps, les tissant dans un nuage de souvenirs visibles.",
+    "biome": "collines_dolmens",
+    "faction": "niamh",
+    "trust_tier": "T3",
+    "tags": ["verb_balance"],
+    "options": [
+      {
+        "text": "Tisser les souvenirs epars en une tapisserie de sagesse",
+        "verb": "tisser",
+        "effects": [
+          {"type": "ADD_REPUTATION", "faction": "niamh", "value": 18},
+          {"type": "ADD_ANAM", "value": 3}
+        ]
+      },
+      {
+        "text": "Accumuler les pensees perdues pour les rendre a leurs proprietaires",
+        "verb": "accumuler",
+        "effects": [
+          {"type": "ADD_REPUTATION", "faction": "anciens", "value": 12},
+          {"type": "ADD_BIOME_CURRENCY", "value": 4}
+        ]
+      },
+      {
+        "text": "Repousser le vent pour creer un moment de calme au sommet",
+        "verb": "repousser",
+        "effects": [
+          {"type": "ADD_REPUTATION", "faction": "druides", "value": 12},
+          {"type": "HEAL_LIFE", "value": 10}
+        ]
+      }
+    ]
+  }
+]
