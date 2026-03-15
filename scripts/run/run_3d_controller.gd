@@ -32,6 +32,8 @@ var _card_system: MerlinCardSystem
 var _effects: MerlinEffectEngine
 var _transition: TransitionManager
 var _spawner: CollectibleSpawner
+var _minigame_system: MerlinMiniGameSystem
+var _headless: bool = false
 
 # ═══════════════════════════════════════════════════════════════════════════════
 # RUN STATE
@@ -43,6 +45,12 @@ var _is_paused: bool = false
 var _walk_timer: float = 0.0
 var _card_interval: float = 0.0
 var _current_card: Dictionary = {}
+
+# Ogham state — per-card tracking (bible pipeline step 3)
+var _active_ogham_this_card: String = ""
+var _ogham_activation_result: Dictionary = {}
+var _ogham_cooldowns: Dictionary = {}
+var _unlocked_oghams: Array = []
 
 const WALK_SPEED: float = 3.0
 const CARD_INTERVAL_MIN: float = 8.0
@@ -56,12 +64,16 @@ const DRAIN_PER_CARD: int = MerlinConstants.LIFE_ESSENCE_DRAIN_PER_CARD
 
 func setup(store: MerlinStore, card_system: MerlinCardSystem,
 		effects: MerlinEffectEngine, transition: TransitionManager,
-		spawner: CollectibleSpawner) -> void:
+		spawner: CollectibleSpawner,
+		minigame_system: MerlinMiniGameSystem = null,
+		headless: bool = false) -> void:
 	_store = store
 	_card_system = card_system
 	_effects = effects
 	_transition = transition
 	_spawner = spawner
+	_minigame_system = minigame_system
+	_headless = headless
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
@@ -79,6 +91,12 @@ func start_run(biome: String, ogham: String) -> void:
 	_is_paused = false
 	_walk_timer = 0.0
 	_card_interval = _next_card_interval()
+
+	# Initialize ogham state — 3 starters are always available
+	_ogham_cooldowns = {}
+	_unlocked_oghams = MerlinConstants.OGHAM_STARTER_SKILLS.duplicate()
+	_active_ogham_this_card = ""
+	_ogham_activation_result = {}
 
 	# Emit initial state
 	life_changed.emit(_run_state["life_essence"], _run_state["life_max"])
@@ -135,6 +153,10 @@ func process_tick(delta: float) -> void:
 func _trigger_card() -> void:
 	_is_paused = true
 
+	# Reset per-card ogham state (step 3 is optional, player may not activate)
+	_active_ogham_this_card = ""
+	_ogham_activation_result = {}
+
 	# Life drain
 	var life: int = int(_run_state.get("life_essence", 0))
 	life = maxi(life - DRAIN_PER_CARD, 0)
@@ -167,14 +189,47 @@ func _trigger_card() -> void:
 	card_started.emit(_current_card)
 
 
-func on_card_choice(option_index: int, score: int) -> void:
+func on_card_choice(option_index: int) -> void:
 	var card_type: String = str(_current_card.get("type", "narrative"))
+	var options: Array = _current_card.get("options", [])
 
-	# Merlin Direct: skip minigame, effects ×1.0
+	# ─── Step 5-6: Minigame → Score ───────────────────────────────────
+	var score: int = 75  # headless default (reussite_partielle per multiplier table)
+
 	if card_type == "merlin_direct":
-		score = 50  # neutral score, multiplier 1.0
+		# Merlin Direct: skip minigame, neutral score → multiplier 1.0
+		score = 50
+	else:
+		# Detect lexical field from the chosen option
+		var option_label: String = ""
+		if option_index >= 0 and option_index < options.size():
+			var option: Dictionary = options[option_index]
+			option_label = str(option.get("label", ""))
+		var lexical_field: String = _card_system.detect_lexical_field(option_label)
+		var minigame_type: String = _card_system.select_minigame(lexical_field)
 
-	var result: Dictionary = _card_system.resolve_card(_run_state, _current_card, option_index, score)
+		if _headless:
+			# Headless mode: fixed score 75 (reussite_partielle)
+			score = 75
+		elif _minigame_system != null:
+			# Live mode: transition to minigame overlay, run, get score
+			if _transition:
+				await _transition.fade_to_minigame(0.5)
+
+			var difficulty: int = _get_minigame_difficulty()
+			var minigame_result: Dictionary = _minigame_system.run(
+				minigame_type, difficulty
+			)
+			score = int(minigame_result.get("score", 75))
+		else:
+			# No minigame system available: fallback to fixed score
+			push_warning("[Run3D] No MerlinMiniGameSystem — using default score 75")
+			score = 75
+
+	# ─── Step 7: Resolve card with score ──────────────────────────────
+	var result: Dictionary = _card_system.resolve_card(
+		_run_state, _current_card, option_index, score
+	)
 	if not result.get("ok", false):
 		push_warning("[Run3D] Card resolution failed: %s" % str(result.get("error", "")))
 		resume_after_card()
@@ -182,6 +237,11 @@ func on_card_choice(option_index: int, score: int) -> void:
 
 	# Apply effects to run state
 	var effects: Array = result.get("effects", [])
+
+	# ─── Step 8: Ogham protection (luis/gort/eadhadh filter negatives) ──
+	if not _active_ogham_this_card.is_empty():
+		effects = MerlinEffectEngine.apply_ogham_protection(effects, _active_ogham_this_card)
+
 	_apply_effects(effects)
 
 	# Update promise tracking
@@ -199,6 +259,9 @@ func on_card_choice(option_index: int, score: int) -> void:
 	# Track minigame result
 	if score >= 60 and card_type != "merlin_direct":
 		_card_system.update_promise_tracking(_run_state, "minigame_win", {})
+
+	# ─── Step 11: Cooldown -1 on all oghams ──────────────────────────
+	_tick_ogham_cooldowns()
 
 	card_ended.emit()
 	resume_after_card()
@@ -266,6 +329,128 @@ func _apply_trust_delta(delta: int) -> void:
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
+# OGHAM ACTIVATION — Pipeline step 3 (before choice)
+# ═══════════════════════════════════════════════════════════════════════════════
+
+## Called when HudController.ogham_activated is emitted.
+## Validates the ogham can be used, deducts cost, applies step-3 effects,
+## stores the activation result for step 8 (protection) and step 11 (cooldown).
+## Bible v2.4: 1 ogham per card max, must be unlocked, not on cooldown.
+func on_ogham_activated(ogham_id: String) -> void:
+	# ── Guard: 1 ogham per card max ──
+	if not _active_ogham_this_card.is_empty():
+		push_warning("[Run3D] Ogham already activated this card: %s" % _active_ogham_this_card)
+		return
+
+	# ── Guard: must be available (unlocked + not on cooldown) ──
+	if not _is_ogham_available(ogham_id):
+		push_warning("[Run3D] Ogham not available: %s" % ogham_id)
+		return
+
+	# ── Guard: must have a card displayed ──
+	if _current_card.is_empty():
+		push_warning("[Run3D] No card displayed — cannot activate ogham")
+		return
+
+	var spec: Dictionary = MerlinConstants.OGHAM_FULL_SPECS.get(ogham_id, {})
+	if spec.is_empty():
+		push_warning("[Run3D] Unknown ogham: %s" % ogham_id)
+		return
+
+	# ── Deduct anam cost (if any) ──
+	var cost_anam: int = int(spec.get("cost_anam", 0))
+	if cost_anam > 0:
+		var current_anam: int = int(_run_state.get("anam_found", 0))
+		if current_anam < cost_anam:
+			push_warning("[Run3D] Not enough anam for %s (need %d, have %d)" % [ogham_id, cost_anam, current_anam])
+			return
+		_run_state["anam_found"] = current_anam - cost_anam
+
+	# ── Activate: delegate to MerlinEffectEngine for step-3 effects ──
+	_active_ogham_this_card = ogham_id
+	_ogham_activation_result = _effects.activate_ogham(ogham_id, _run_state, _current_card)
+
+	# ── Set cooldown immediately ──
+	var cooldown_turns: int = int(spec.get("cooldown", 3))
+	_ogham_cooldowns[ogham_id] = cooldown_turns
+
+	# ── Sync run_state life/currency if effect engine modified them ──
+	_sync_life_from_run_state()
+
+	# ── Emit signal so HUD updates ──
+	ogham_updated.emit(ogham_id, cooldown_turns)
+
+
+## Returns list of ogham IDs the player can activate right now.
+## Filters: must be unlocked (or starter), cooldown == 0.
+func get_available_oghams() -> Array:
+	var available: Array = []
+	for ogham_id in MerlinConstants.OGHAM_FULL_SPECS:
+		if _is_ogham_available(ogham_id):
+			available.append(ogham_id)
+	return available
+
+
+## Returns the ogham activation result for this card (empty if none activated).
+func get_ogham_activation_result() -> Dictionary:
+	return _ogham_activation_result
+
+
+## Check if a specific ogham can be activated.
+func _is_ogham_available(ogham_id: String) -> bool:
+	var spec: Dictionary = MerlinConstants.OGHAM_FULL_SPECS.get(ogham_id, {})
+	if spec.is_empty():
+		return false
+	# Must be unlocked or a starter
+	var is_starter: bool = bool(spec.get("starter", false))
+	if not is_starter and not _unlocked_oghams.has(ogham_id):
+		return false
+	# Must not be on cooldown
+	if int(_ogham_cooldowns.get(ogham_id, 0)) > 0:
+		return false
+	return true
+
+
+## Returns current cooldown for an ogham (0 = ready).
+func get_ogham_cooldown(ogham_id: String) -> int:
+	return int(_ogham_cooldowns.get(ogham_id, 0))
+
+
+## Step 11: Decrement all ogham cooldowns by 1 after each card resolution.
+## Removes entries that reach 0. Emits ogham_updated for each changed ogham.
+func _tick_ogham_cooldowns() -> void:
+	var to_remove: Array = []
+	for ogham_id in _ogham_cooldowns:
+		var remaining: int = maxi(int(_ogham_cooldowns[ogham_id]) - 1, 0)
+		_ogham_cooldowns[ogham_id] = remaining
+		if remaining <= 0:
+			to_remove.append(ogham_id)
+		ogham_updated.emit(ogham_id, remaining)
+	for ogham_id in to_remove:
+		_ogham_cooldowns.erase(ogham_id)
+
+
+## Unlock an ogham for this run (e.g. via UNLOCK_OGHAM effect).
+func unlock_ogham(ogham_id: String) -> void:
+	if not MerlinConstants.OGHAM_FULL_SPECS.has(ogham_id):
+		push_warning("[Run3D] Cannot unlock unknown ogham: %s" % ogham_id)
+		return
+	if not _unlocked_oghams.has(ogham_id):
+		_unlocked_oghams.append(ogham_id)
+
+
+## Sync life/currency from _run_state after effect engine modifies state dict.
+## The effect engine's activate_ogham writes to state["run"]["life_essence"] etc.
+## We need to reflect those changes in our flat _run_state and emit signals.
+func _sync_life_from_run_state() -> void:
+	var life: int = int(_run_state.get("life_essence", 0))
+	var life_max: int = int(_run_state.get("life_max", 100))
+	life_changed.emit(life, life_max)
+	var currency: int = int(_run_state.get("biome_currency", 0))
+	currency_changed.emit(currency)
+
+
+# ═══════════════════════════════════════════════════════════════════════════════
 # COLLECTIBLE PICKUP (called by spawner)
 # ═══════════════════════════════════════════════════════════════════════════════
 
@@ -289,6 +474,12 @@ func on_collectible_picked(type: String, amount: int) -> void:
 # ═══════════════════════════════════════════════════════════════════════════════
 # HELPERS
 # ═══════════════════════════════════════════════════════════════════════════════
+
+func _get_minigame_difficulty() -> int:
+	# Difficulty scales with card_index: 1 early, up to 7 late-run
+	var card_index: int = int(_run_state.get("card_index", 0))
+	return clampi(1 + int(card_index / 5), 1, 7)
+
 
 func _next_card_interval() -> float:
 	return randf_range(CARD_INTERVAL_MIN, CARD_INTERVAL_MAX)
