@@ -22,6 +22,7 @@ const VALID_CODES := {
 	# ═══════════════════════════════════════════════════════════════════════════
 	# PROMISE SYSTEM
 	# ═══════════════════════════════════════════════════════════════════════════
+	"ADD_PROMISE": 2,      # ADD_PROMISE:promise_id:deadline_cards (lightweight, cap 2 active)
 	"CREATE_PROMISE": 3,   # CREATE_PROMISE:oath_001:5:description
 	"FULFILL_PROMISE": 1,  # FULFILL_PROMISE:oath_001
 	"BREAK_PROMISE": 1,    # BREAK_PROMISE:oath_001
@@ -134,6 +135,8 @@ func _apply_parsed(state: Dictionary, parsed: Dictionary) -> bool:
 		# ═══════════════════════════════════════════════════════════════════════
 		# PROMISE SYSTEM
 		# ═══════════════════════════════════════════════════════════════════════
+		"ADD_PROMISE":
+			return _add_promise(state, args[0], _to_int(args[1]))
 		"CREATE_PROMISE":
 			return _create_promise(state, args[0], _to_int(args[1]), args[2])
 		"FULFILL_PROMISE":
@@ -232,6 +235,29 @@ func _trigger_arc(state: Dictionary, arc_id: String) -> bool:
 # ═══════════════════════════════════════════════════════════════════════════════
 # PROMISE SYSTEM FUNCTIONS
 # ═══════════════════════════════════════════════════════════════════════════════
+
+func _add_promise(state: Dictionary, promise_id: String, deadline_cards: int) -> bool:
+	var run: Dictionary = state.get("run", {})
+	var promises: Array = run.get("promises", [])
+	# Cap: max 2 active promises (bible rule)
+	var active_count: int = 0
+	for p in promises:
+		if str(p.get("status", "")) == "active":
+			active_count += 1
+	if active_count >= 2:
+		return false
+	var cards_played: int = int(run.get("cards_played", 0))
+	var promise: Dictionary = {
+		"id": promise_id,
+		"deadline_cards": deadline_cards,
+		"made_at_card": cards_played,
+		"status": "active",
+	}
+	promises.append(promise)
+	run["promises"] = promises
+	state["run"] = run
+	return true
+
 
 func _create_promise(state: Dictionary, promise_id: String, deadline_days: int, description: String) -> bool:
 	var run = state.get("run", {})

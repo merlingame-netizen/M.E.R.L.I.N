@@ -1707,22 +1707,14 @@ func _detect_card_source(card: Dictionary) -> String:
 # ═══════════════════════════════════════════════════════════════════════════════
 
 ## Tag-to-visual mapping: card panel color modulation per mood tag.
-const VISUAL_TAG_TINTS := {
-	"danger": Color(1.0, 0.7, 0.7, 1.0),
-	"combat": Color(1.0, 0.75, 0.75, 1.0),
-	"mort": Color(0.85, 0.75, 0.85, 1.0),
-	"magie": Color(0.85, 0.85, 1.0, 1.0),
-	"sacre": Color(0.9, 0.9, 1.0, 1.0),
-	"mystere": Color(0.8, 0.85, 0.95, 1.0),
-	"nuit": Color(0.75, 0.78, 0.9, 1.0),
-	"brume": Color(0.88, 0.9, 0.92, 1.0),
-	"orage": Color(0.8, 0.8, 0.88, 1.0),
-	"feu": Color(1.0, 0.85, 0.7, 1.0),
-	"eau": Color(0.8, 0.9, 1.0, 1.0),
-	"terre": Color(0.92, 0.88, 0.78, 1.0),
-	"lumiere": Color(1.0, 1.0, 0.9, 1.0),
-	"soin": Color(0.8, 1.0, 0.85, 1.0),
-}
+## Tag-to-visual mapping: card panel color modulation per mood tag.
+## Uses MerlinVisual.CRT_PALETTE — see VISUAL_TAG_TINTS dict in MerlinVisual.
+var _visual_tag_tints: Dictionary = {}
+
+func _get_visual_tag_tints() -> Dictionary:
+	if _visual_tag_tints.is_empty():
+		_visual_tag_tints = MerlinVisual.VISUAL_TAG_TINTS
+	return _visual_tag_tints
 
 ## Tag-to-sound mapping: ambient SFX per mood tag.
 const AUDIO_TAG_SOUNDS := {
@@ -1757,8 +1749,9 @@ func _apply_card_visual_tags(card: Dictionary) -> void:
 	var has_danger := false
 	for tag in all_tags:
 		var tag_str: String = str(tag).to_lower()
-		if VISUAL_TAG_TINTS.has(tag_str):
-			tint = VISUAL_TAG_TINTS[tag_str]
+		var tag_tints: Dictionary = _get_visual_tag_tints()
+		if tag_tints.has(tag_str):
+			tint = tag_tints[tag_str]
 		if tag_str == "danger" or tag_str == "combat" or tag_str == "mort":
 			has_danger = true
 
@@ -1916,47 +1909,47 @@ func _spawn_ambient_particle() -> void:
 	match key:
 		"broceliande":
 			# Falling leaves (green/brown)
-			px.color = [Color(0.35, 0.55, 0.28), Color(0.55, 0.40, 0.25)][randi() % 2]
+			px.color = [MerlinVisual.CRT_PALETTE["particle_leaf_green"], MerlinVisual.CRT_PALETTE["particle_leaf_brown"]][randi() % 2]
 			start_pos = Vector2(randf_range(0, vp.x), -10)
 			end_pos = start_pos + Vector2(randf_range(-60, 60), vp.y + 20)
 		"bruyere":
 			# Wind dust (horizontal)
-			px.color = Color(0.55, 0.40, 0.55, 0.5)
+			px.color = MerlinVisual.CRT_PALETTE["particle_dust_purple"]
 			start_pos = Vector2(-10, randf_range(vp.y * 0.3, vp.y * 0.8))
 			end_pos = Vector2(vp.x + 10, start_pos.y + randf_range(-30, 30))
 			duration = randf_range(3.0, 5.0)
 		"sauvages":
 			# Rising mist (blue)
-			px.color = Color(0.38, 0.58, 0.75, 0.4)
+			px.color = MerlinVisual.CRT_PALETTE["particle_mist_blue"]
 			start_pos = Vector2(randf_range(0, vp.x), vp.y + 10)
 			end_pos = start_pos + Vector2(randf_range(-20, 20), -vp.y * 0.4)
 		"celtes":
 			# Rising smoke (gray)
-			px.color = Color(0.5, 0.48, 0.45, 0.3)
+			px.color = MerlinVisual.CRT_PALETTE["particle_smoke_gray"]
 			start_pos = Vector2(randf_range(vp.x * 0.3, vp.x * 0.7), vp.y + 10)
 			end_pos = start_pos + Vector2(randf_range(-15, 15), -vp.y * 0.5)
 		"pierres":
 			# Fireflies (warm yellow glow)
-			px.color = Color(0.85, 0.75, 0.30, 0.6)
+			px.color = MerlinVisual.CRT_PALETTE["particle_firefly"]
 			px.size = Vector2(3, 3)
 			start_pos = Vector2(randf_range(vp.x * 0.1, vp.x * 0.9), randf_range(vp.y * 0.2, vp.y * 0.8))
 			end_pos = start_pos + Vector2(randf_range(-40, 40), randf_range(-40, 40))
 			duration = randf_range(2.0, 4.0)
 		"korrigans":
 			# Phosphorescence (dark green)
-			px.color = Color(0.20, 0.45, 0.25, 0.4)
+			px.color = MerlinVisual.CRT_PALETTE["particle_phosphor"]
 			start_pos = Vector2(randf_range(0, vp.x), vp.y * randf_range(0.6, 0.95))
 			end_pos = start_pos + Vector2(randf_range(-25, 25), randf_range(-20, -50))
 			duration = randf_range(3.0, 5.0)
 		"dolmens":
 			# Grass swaying (green tufts)
-			px.color = Color(0.40, 0.60, 0.30, 0.3)
+			px.color = MerlinVisual.CRT_PALETTE["particle_grass"]
 			start_pos = Vector2(randf_range(0, vp.x), vp.y * randf_range(0.7, 0.95))
 			end_pos = start_pos + Vector2(randf_range(-20, 20), randf_range(-10, 10))
 			duration = randf_range(2.0, 4.0)
 		_:
 			# Default: gentle floating motes
-			px.color = Color(0.6, 0.55, 0.45, 0.2)
+			px.color = MerlinVisual.CRT_PALETTE["particle_mote"]
 			start_pos = Vector2(randf_range(0, vp.x), randf_range(0, vp.y))
 			end_pos = start_pos + Vector2(randf_range(-30, 30), randf_range(-30, 30))
 
@@ -2664,7 +2657,7 @@ func _spawn_text_pixel_drop(progress_ratio: float) -> void:
 	var size_px := randf_range(2.0, 4.0)
 	px.size = Vector2(size_px, size_px)
 	px.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	px.color = Color(0.70, 0.86, 1.0, 0.90)
+	px.color = MerlinVisual.CRT_PALETTE["progress_sparkle"]
 	px.position = Vector2(
 		lerpf(card_panel.size.x * 0.12, card_panel.size.x * 0.88, clampf(progress_ratio, 0.0, 1.0)) + randf_range(-6.0, 6.0),
 		card_panel.size.y * 0.58 + randf_range(-24.0, -8.0)
@@ -2839,8 +2832,8 @@ func show_end_screen(ending: Dictionary) -> void:
 		var tw_forest := create_tween().set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
 		if is_victory:
 			# Victoire : forêt s'illumine → blanc doré
-			tw_forest.tween_property(biome_art_layer, "modulate", Color(1.4, 1.3, 0.8), 1.2)
-			tw_forest.tween_property(biome_art_layer, "modulate", Color(1.1, 1.1, 0.9), 0.6)
+			tw_forest.tween_property(biome_art_layer, "modulate", MerlinVisual.CRT_PALETTE["victory_flash"], 1.2)
+			tw_forest.tween_property(biome_art_layer, "modulate", MerlinVisual.CRT_PALETTE["victory_settle"], 0.6)
 		else:
 			# Mort : forêt s'assombrit lentement → presque noire
 			tw_forest.tween_property(biome_art_layer, "modulate:a", 0.06, 1.5)
@@ -3676,7 +3669,7 @@ func show_milestone_popup(title_text: String, desc_text: String) -> void:
 	## Milestone intégré : forêt pulse doré + texte dans la carte (pas de popup séparé).
 	# Forêt : pulse ambré 3 fois (milestone = moment magique)
 	if biome_art_layer and is_instance_valid(biome_art_layer):
-		var gold_tint := Color(1.4, 1.1, 0.6)
+		var gold_tint: Color = MerlinVisual.CRT_PALETTE["milestone_gold"]
 		var tw_forest := create_tween()
 		for _i in range(3):
 			tw_forest.tween_property(biome_art_layer, "modulate", gold_tint, 0.2).set_trans(Tween.TRANS_SINE)
@@ -4193,21 +4186,9 @@ func hide_typology_timer() -> void:
 		_typology_timer_bar.visible = false
 
 
-func show_typology_badge(typology: String) -> void:
-	if typology == "classique":
-		hide_typology_badge()
-		return
-	var tdata: Dictionary = MerlinConstants.RUN_TYPOLOGIES.get(typology, {})
-	var icon: String = str(tdata.get("icon", ""))
-	var name_str: String = str(tdata.get("name", typology))
-	if _typology_badge == null or not is_instance_valid(_typology_badge):
-		_typology_badge = Label.new()
-		_typology_badge.add_theme_font_size_override("font_size", 11)
-		_typology_badge.modulate = MerlinVisual.CRT_PALETTE.amber  ## BUG-09 fix: palette ref
-		if is_instance_valid(_top_status_bar):
-			_top_status_bar.add_child(_typology_badge)
-	_typology_badge.text = "%s %s" % [icon, name_str]
-	_typology_badge.visible = true
+func show_typology_badge(_typology: String) -> void:
+	# RUN_TYPOLOGIES removed (v2.1 design pivot) — no-op, hide badge
+	hide_typology_badge()
 
 
 func hide_typology_badge() -> void:

@@ -13,8 +13,14 @@ ROOT = Path(__file__).resolve().parent.parent
 PASS, WARN, FAIL = "PASS", "WARN", "FAIL"
 
 
+EXCLUDE_DIRS = {"archive", ".godot"}
+
+
 def _gd_files() -> list[Path]:
-    return sorted(ROOT.rglob("*.gd"))
+    return sorted(
+        p for p in ROOT.rglob("*.gd")
+        if not any(part in EXCLUDE_DIRS for part in p.relative_to(ROOT).parts)
+    )
 
 
 # ── Check 1: Autoload references ─────────────────────────────────────────────

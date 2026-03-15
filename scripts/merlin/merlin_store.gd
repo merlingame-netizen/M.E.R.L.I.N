@@ -506,6 +506,41 @@ func _reduce(action: Dictionary) -> Dictionary:
 				state_changed.emit(state)
 			return result
 
+		# ═══════════════════════════════════════════════════════════════════════
+		# KARMA / TENSION / EFFECTS / SKILL
+		# ═══════════════════════════════════════════════════════════════════════
+		"ADD_KARMA":
+			var value: int = int(action.get("value", 0))
+			var run: Dictionary = state.get("run", {})
+			var old_karma: int = int(run.get("karma", 0))
+			var new_karma: int = clampi(old_karma + value, -100, 100)
+			run["karma"] = new_karma
+			state["run"] = run
+			return {"ok": true, "karma": new_karma, "delta": new_karma - old_karma}
+
+		"ADD_TENSION":
+			var value: float = float(action.get("value", 0.0))
+			var run: Dictionary = state.get("run", {})
+			var old_tension: float = float(run.get("tension", 0.0))
+			var new_tension: float = clampf(old_tension + value, 0.0, 1.0)
+			run["tension"] = new_tension
+			state["run"] = run
+			return {"ok": true, "tension": new_tension, "delta": new_tension - old_tension}
+
+		"APPLY_EFFECTS":
+			var effect_list: Array = action.get("effects", [])
+			if effect_list.is_empty():
+				return {"ok": false, "error": "No effects provided"}
+			var source: String = str(action.get("source", "DISPATCH"))
+			var result: Dictionary = effects.apply_effects(state, effect_list, source)
+			return {"ok": true, "applied": result.get("applied", []), "rejected": result.get("rejected", [])}
+
+		"USE_SKILL":
+			var skill_id: String = str(action.get("skill_id", ""))
+			if skill_id.is_empty():
+				return {"ok": false, "error": "No skill_id provided"}
+			return _use_ogham(skill_id)
+
 		_:
 			return {"ok": false, "error": "Unknown action"}
 
