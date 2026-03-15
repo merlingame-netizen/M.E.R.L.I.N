@@ -10,28 +10,55 @@
         "label": "Observer l'ecorce du bouleau pour y dechiffrer le symbole Beith",
         "verb": "observer",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "druides", "amount": 12},
-          {"type": "ADD_ANAM", "amount": 5}
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "druides",
+            "amount": 12
+          },
+          {
+            "type": "ADD_ANAM",
+            "amount": 5
+          }
         ]
       },
       {
         "label": "Scruter les ombres projetees par les branches pour lire un message",
         "verb": "scruter",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "druides", "amount": 10},
-          {"type": "HEAL_LIFE", "amount": 6}
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "druides",
+            "amount": 10
+          },
+          {
+            "type": "HEAL_LIFE",
+            "amount": 6
+          }
         ]
       },
       {
         "label": "Memoriser la forme de chaque branche pour reconstituer l'ogham",
         "verb": "memoriser",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "anciens", "amount": 8},
-          {"type": "ADD_BIOME_CURRENCY", "amount": 5}
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "anciens",
+            "amount": 8
+          },
+          {
+            "type": "ADD_BIOME_CURRENCY",
+            "amount": 5
+          }
         ]
       }
     ],
-    "tags": ["ogham_quest", "beith", "bouleau", "revelation"]
+    "tags": [
+      "ogham_quest",
+      "beith",
+      "bouleau",
+      "revelation"
+    ],
+    "trust_tier": "T0"
   },
   {
     "id": "fr_s10c_ogham_luis_001",
@@ -44,28 +71,55 @@
         "label": "Mediter sous le sorbier pour demander humblement sa protection",
         "verb": "mediter",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "druides", "amount": 14},
-          {"type": "HEAL_LIFE", "amount": 8}
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "druides",
+            "amount": 14
+          },
+          {
+            "type": "HEAL_LIFE",
+            "amount": 8
+          }
         ]
       },
       {
         "label": "Se concentrer sur les baies pour sentir leur pouvoir protecteur",
         "verb": "se concentrer",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "druides", "amount": 10},
-          {"type": "ADD_ANAM", "amount": 5}
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "druides",
+            "amount": 10
+          },
+          {
+            "type": "ADD_ANAM",
+            "amount": 5
+          }
         ]
       },
       {
         "label": "Apaiser l'oiseau dans le nid pour montrer au sorbier ta bienveillance",
         "verb": "apaiser",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "niamh", "amount": 8},
-          {"type": "ADD_BIOME_CURRENCY", "amount": 6}
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "niamh",
+            "amount": 8
+          },
+          {
+            "type": "ADD_BIOME_CURRENCY",
+            "amount": 6
+          }
         ]
       }
     ],
-    "tags": ["ogham_quest", "luis", "sorbier", "protection"]
+    "tags": [
+      "ogham_quest",
+      "luis",
+      "sorbier",
+      "protection"
+    ],
+    "trust_tier": "T0"
   },
   {
     "id": "fr_s10c_ogham_nuin_001",
@@ -78,28 +132,55 @@
         "label": "Dechiffrer les motifs des racines pour comprendre le pouvoir du Nuin",
         "verb": "dechiffrer",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "druides", "amount": 15},
-          {"type": "ADD_ANAM", "amount": 6}
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "druides",
+            "amount": 15
+          },
+          {
+            "type": "ADD_ANAM",
+            "amount": 6
+          }
         ]
       },
       {
         "label": "Analyser les trois directions pour determiner laquelle mene au futur",
         "verb": "analyser",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "druides", "amount": 10},
-          {"type": "ADD_BIOME_CURRENCY", "amount": 7}
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "druides",
+            "amount": 10
+          },
+          {
+            "type": "ADD_BIOME_CURRENCY",
+            "amount": 7
+          }
         ]
       },
       {
         "label": "Etudier l'ecorce du frene pour y trouver l'inscription oghamique",
         "verb": "etudier",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "anciens", "amount": 10},
-          {"type": "HEAL_LIFE", "amount": 5}
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "anciens",
+            "amount": 10
+          },
+          {
+            "type": "HEAL_LIFE",
+            "amount": 5
+          }
         ]
       }
     ],
-    "tags": ["ogham_quest", "nuin", "frene", "connexion_mondes"]
+    "tags": [
+      "ogham_quest",
+      "nuin",
+      "frene",
+      "connexion_mondes"
+    ],
+    "trust_tier": "T0"
   },
   {
     "id": "fr_s10c_ogham_saille_001",
@@ -112,28 +193,55 @@
         "label": "Ecouter le clapotis des branches sur l'eau pour percevoir un rythme guerisseur",
         "verb": "ecouter",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "niamh", "amount": 14},
-          {"type": "HEAL_LIFE", "amount": 8}
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "niamh",
+            "amount": 14
+          },
+          {
+            "type": "HEAL_LIFE",
+            "amount": 8
+          }
         ]
       },
       {
         "label": "Sentir la seve du saule pour y detecter ses proprietes regeneratrices",
         "verb": "sentir",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "druides", "amount": 10},
-          {"type": "ADD_BIOME_CURRENCY", "amount": 6}
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "druides",
+            "amount": 10
+          },
+          {
+            "type": "ADD_BIOME_CURRENCY",
+            "amount": 6
+          }
         ]
       },
       {
         "label": "Suivre les cercles d'eau jusqu'a leur point d'origine magique",
         "verb": "suivre",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "niamh", "amount": 10},
-          {"type": "ADD_ANAM", "amount": 5}
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "niamh",
+            "amount": 10
+          },
+          {
+            "type": "ADD_ANAM",
+            "amount": 5
+          }
         ]
       }
     ],
-    "tags": ["ogham_quest", "saille", "saule", "regeneration"]
+    "tags": [
+      "ogham_quest",
+      "saille",
+      "saule",
+      "regeneration"
+    ],
+    "trust_tier": "T0"
   },
   {
     "id": "fr_s10c_ogham_huath_001",
@@ -146,28 +254,55 @@
         "label": "Resister mentalement au parfum enivrant pour garder ses esprits",
         "verb": "resister mentalement",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "korrigans", "amount": 12},
-          {"type": "ADD_ANAM", "amount": 5}
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "korrigans",
+            "amount": 12
+          },
+          {
+            "type": "ADD_ANAM",
+            "amount": 5
+          }
         ]
       },
       {
         "label": "Calmer son rythme cardiaque pour demander passage a l'aubepine",
         "verb": "calmer",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "druides", "amount": 10},
-          {"type": "HEAL_LIFE", "amount": 6}
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "druides",
+            "amount": 10
+          },
+          {
+            "type": "HEAL_LIFE",
+            "amount": 6
+          }
         ]
       },
       {
         "label": "Attendre que le korrigan se reveille pour apprendre le mot de passe",
         "verb": "attendre",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "korrigans", "amount": 14},
-          {"type": "ADD_BIOME_CURRENCY", "amount": 5}
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "korrigans",
+            "amount": 14
+          },
+          {
+            "type": "ADD_BIOME_CURRENCY",
+            "amount": 5
+          }
         ]
       }
     ],
-    "tags": ["ogham_quest", "huath", "aubepine", "seuil"]
+    "tags": [
+      "ogham_quest",
+      "huath",
+      "aubepine",
+      "seuil"
+    ],
+    "trust_tier": "T0"
   },
   {
     "id": "fr_s10c_ogham_duir_001",
@@ -180,29 +315,60 @@
         "label": "Resister physiquement en portant une branche tombee jusqu'a la racine principale",
         "verb": "resister physiquement",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "druides", "amount": 15},
-          {"type": "HEAL_LIFE", "amount": 12},
-          {"type": "DAMAGE_LIFE", "amount": 5}
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "druides",
+            "amount": 15
+          },
+          {
+            "type": "HEAL_LIFE",
+            "amount": 12
+          },
+          {
+            "type": "DAMAGE_LIFE",
+            "amount": 5
+          }
         ]
       },
       {
         "label": "Combattre sa propre fatigue pour rester debout toute une nuit pres du chene",
         "verb": "combattre",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "druides", "amount": 12},
-          {"type": "ADD_ANAM", "amount": 6}
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "druides",
+            "amount": 12
+          },
+          {
+            "type": "ADD_ANAM",
+            "amount": 6
+          }
         ]
       },
       {
         "label": "Pousser contre le tronc pour mesurer sa propre force face au Duir",
         "verb": "pousser",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "anciens", "amount": 10},
-          {"type": "ADD_BIOME_CURRENCY", "amount": 6}
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "anciens",
+            "amount": 10
+          },
+          {
+            "type": "ADD_BIOME_CURRENCY",
+            "amount": 6
+          }
         ]
       }
     ],
-    "tags": ["ogham_quest", "duir", "chene", "force", "guerison"]
+    "tags": [
+      "ogham_quest",
+      "duir",
+      "chene",
+      "force",
+      "guerison"
+    ],
+    "trust_tier": "T0"
   },
   {
     "id": "fr_s10c_ogham_tinne_001",
@@ -215,28 +381,55 @@
         "label": "Examiner les feuilles pour trouver l'inscription oghamique du Tinne",
         "verb": "examiner",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "anciens", "amount": 14},
-          {"type": "ADD_ANAM", "amount": 6}
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "anciens",
+            "amount": 14
+          },
+          {
+            "type": "ADD_ANAM",
+            "amount": 6
+          }
         ]
       },
       {
         "label": "Scruter les baies rouges pour determiner lesquelles sont comestibles",
         "verb": "scruter",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "druides", "amount": 10},
-          {"type": "HEAL_LIFE", "amount": 5}
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "druides",
+            "amount": 10
+          },
+          {
+            "type": "HEAL_LIFE",
+            "amount": 5
+          }
         ]
       },
       {
         "label": "Inspecter la base du tronc pour des gravures anciennes",
         "verb": "inspecter",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "anciens", "amount": 10},
-          {"type": "ADD_BIOME_CURRENCY", "amount": 7}
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "anciens",
+            "amount": 10
+          },
+          {
+            "type": "ADD_BIOME_CURRENCY",
+            "amount": 7
+          }
         ]
       }
     ],
-    "tags": ["ogham_quest", "tinne", "houx", "guerrier_spirituel"]
+    "tags": [
+      "ogham_quest",
+      "tinne",
+      "houx",
+      "guerrier_spirituel"
+    ],
+    "trust_tier": "T0"
   },
   {
     "id": "fr_s10c_ogham_coll_001",
@@ -249,28 +442,56 @@
         "label": "Resoudre l'enigme du saumon : pourquoi mange-t-il les noisettes avant toi?",
         "verb": "resoudre",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "druides", "amount": 15},
-          {"type": "ADD_ANAM", "amount": 7}
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "druides",
+            "amount": 15
+          },
+          {
+            "type": "ADD_ANAM",
+            "amount": 7
+          }
         ]
       },
       {
         "label": "Analyser le courant du ruisseau pour attraper une noisette avant le saumon",
         "verb": "analyser",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "druides", "amount": 12},
-          {"type": "ADD_BIOME_CURRENCY", "amount": 6}
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "druides",
+            "amount": 12
+          },
+          {
+            "type": "ADD_BIOME_CURRENCY",
+            "amount": 6
+          }
         ]
       },
       {
         "label": "Interpreter la competition noisette-saumon comme une lecon sur la sagesse",
         "verb": "interpreter",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "anciens", "amount": 10},
-          {"type": "HEAL_LIFE", "amount": 5}
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "anciens",
+            "amount": 10
+          },
+          {
+            "type": "HEAL_LIFE",
+            "amount": 5
+          }
         ]
       }
     ],
-    "tags": ["ogham_quest", "coll", "noisetier", "sagesse", "saumon"]
+    "tags": [
+      "ogham_quest",
+      "coll",
+      "noisetier",
+      "sagesse",
+      "saumon"
+    ],
+    "trust_tier": "T0"
   },
   {
     "id": "fr_s10c_ogham_quert_001",
@@ -283,29 +504,60 @@
         "label": "Tenter sa chance en croquant la pomme sans choisir le souvenir sacrifie",
         "verb": "tenter sa chance",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "niamh", "amount": 14},
-          {"type": "HEAL_LIFE", "amount": 10},
-          {"type": "DAMAGE_LIFE", "amount": 4}
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "niamh",
+            "amount": 14
+          },
+          {
+            "type": "HEAL_LIFE",
+            "amount": 10
+          },
+          {
+            "type": "DAMAGE_LIFE",
+            "amount": 4
+          }
         ]
       },
       {
         "label": "Deviner quel souvenir a le moins de valeur pour l'offrir en echange",
         "verb": "deviner",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "niamh", "amount": 10},
-          {"type": "HEAL_LIFE", "amount": 8}
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "niamh",
+            "amount": 10
+          },
+          {
+            "type": "HEAL_LIFE",
+            "amount": 8
+          }
         ]
       },
       {
         "label": "Cueillir une pomme soi-meme pour ne devoir rien a Morgane",
         "verb": "cueillir",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "druides", "amount": 8},
-          {"type": "ADD_ANAM", "amount": 5}
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "druides",
+            "amount": 8
+          },
+          {
+            "type": "ADD_ANAM",
+            "amount": 5
+          }
         ]
       }
     ],
-    "tags": ["ogham_quest", "quert", "pommier", "guerison", "avalon"]
+    "tags": [
+      "ogham_quest",
+      "quert",
+      "pommier",
+      "guerison",
+      "avalon"
+    ],
+    "trust_tier": "T0"
   },
   {
     "id": "fr_s10c_ogham_muin_001",
@@ -318,29 +570,60 @@
         "label": "Convaincre le korrigan de partager le secret de la vigne inversante",
         "verb": "convaincre",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "korrigans", "amount": 14},
-          {"type": "ADD_ANAM", "amount": 6}
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "korrigans",
+            "amount": 14
+          },
+          {
+            "type": "ADD_ANAM",
+            "amount": 6
+          }
         ]
       },
       {
         "label": "Marchander une grappe en echange d'une histoire sur l'ogham Muin",
         "verb": "marchander",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "korrigans", "amount": 10},
-          {"type": "ADD_BIOME_CURRENCY", "amount": 7}
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "korrigans",
+            "amount": 10
+          },
+          {
+            "type": "ADD_BIOME_CURRENCY",
+            "amount": 7
+          }
         ]
       },
       {
         "label": "Amadouer le vigneron pour gouter le vin et decouvrir l'inversion",
         "verb": "amadouer",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "korrigans", "amount": 8},
-          {"type": "HEAL_LIFE", "amount": 5},
-          {"type": "DAMAGE_LIFE", "amount": 3}
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "korrigans",
+            "amount": 8
+          },
+          {
+            "type": "HEAL_LIFE",
+            "amount": 5
+          },
+          {
+            "type": "DAMAGE_LIFE",
+            "amount": 3
+          }
         ]
       }
     ],
-    "tags": ["ogham_quest", "muin", "vigne", "inversion", "paradoxe"]
+    "tags": [
+      "ogham_quest",
+      "muin",
+      "vigne",
+      "inversion",
+      "paradoxe"
+    ],
+    "trust_tier": "T0"
   },
   {
     "id": "fr_s10c_ogham_gort_001",
@@ -353,28 +636,55 @@
         "label": "Se faufiler dans les lianes du lierre pour trouver son coeur vivant",
         "verb": "se faufiler",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "niamh", "amount": 14},
-          {"type": "ADD_ANAM", "amount": 5}
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "niamh",
+            "amount": 14
+          },
+          {
+            "type": "ADD_ANAM",
+            "amount": 5
+          }
         ]
       },
       {
         "label": "Contourner le lierre pour observer sa structure depuis l'exterieur",
         "verb": "contourner",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "druides", "amount": 10},
-          {"type": "HEAL_LIFE", "amount": 6}
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "druides",
+            "amount": 10
+          },
+          {
+            "type": "HEAL_LIFE",
+            "amount": 6
+          }
         ]
       },
       {
         "label": "Se cacher dans le lierre pour tester sa protection de l'interieur",
         "verb": "se cacher",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "niamh", "amount": 10},
-          {"type": "ADD_BIOME_CURRENCY", "amount": 6}
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "niamh",
+            "amount": 10
+          },
+          {
+            "type": "ADD_BIOME_CURRENCY",
+            "amount": 6
+          }
         ]
       }
     ],
-    "tags": ["ogham_quest", "gort", "lierre", "protection_absorbante"]
+    "tags": [
+      "ogham_quest",
+      "gort",
+      "lierre",
+      "protection_absorbante"
+    ],
+    "trust_tier": "T0"
   },
   {
     "id": "fr_s10c_ogham_straif_001",
@@ -387,29 +697,59 @@
         "label": "Se concentrer sur une epine pour recevoir la vision du retournement",
         "verb": "se concentrer",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "ankou", "amount": 15},
-          {"type": "ADD_ANAM", "amount": 7},
-          {"type": "DAMAGE_LIFE", "amount": 6}
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "ankou",
+            "amount": 15
+          },
+          {
+            "type": "ADD_ANAM",
+            "amount": 7
+          },
+          {
+            "type": "DAMAGE_LIFE",
+            "amount": 6
+          }
         ]
       },
       {
         "label": "Resister mentalement a l'appel du prunellier pour garder le controle",
         "verb": "resister mentalement",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "anciens", "amount": 10},
-          {"type": "HEAL_LIFE", "amount": 5}
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "anciens",
+            "amount": 10
+          },
+          {
+            "type": "HEAL_LIFE",
+            "amount": 5
+          }
         ]
       },
       {
         "label": "Accepter le retournement sans chercher a le contrôler",
         "verb": "accepter",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "ankou", "amount": 12},
-          {"type": "ADD_BIOME_CURRENCY", "amount": 6}
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "ankou",
+            "amount": 12
+          },
+          {
+            "type": "ADD_BIOME_CURRENCY",
+            "amount": 6
+          }
         ]
       }
     ],
-    "tags": ["ogham_quest", "straif", "prunellier", "retournement"]
+    "tags": [
+      "ogham_quest",
+      "straif",
+      "prunellier",
+      "retournement"
+    ],
+    "trust_tier": "T0"
   },
   {
     "id": "fr_s10c_ogham_ruis_001",
@@ -422,29 +762,59 @@
         "label": "Mediter sous le sureau pour comprendre l'equilibre entre guerison et sacrifice",
         "verb": "mediter",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "niamh", "amount": 14},
-          {"type": "HEAL_LIFE", "amount": 12},
-          {"type": "DAMAGE_LIFE", "amount": 5}
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "niamh",
+            "amount": 14
+          },
+          {
+            "type": "HEAL_LIFE",
+            "amount": 12
+          },
+          {
+            "type": "DAMAGE_LIFE",
+            "amount": 5
+          }
         ]
       },
       {
         "label": "Calmer les energies du sureau pour en cueillir une fleur sans danger",
         "verb": "calmer",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "druides", "amount": 10},
-          {"type": "ADD_ANAM", "amount": 5}
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "druides",
+            "amount": 10
+          },
+          {
+            "type": "ADD_ANAM",
+            "amount": 5
+          }
         ]
       },
       {
         "label": "Endurer le contact avec le tronc pour absorber une parcelle de son pouvoir",
         "verb": "endurer",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "ankou", "amount": 8},
-          {"type": "ADD_BIOME_CURRENCY", "amount": 7}
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "ankou",
+            "amount": 8
+          },
+          {
+            "type": "ADD_BIOME_CURRENCY",
+            "amount": 7
+          }
         ]
       }
     ],
-    "tags": ["ogham_quest", "ruis", "sureau", "guerison_massive"]
+    "tags": [
+      "ogham_quest",
+      "ruis",
+      "sureau",
+      "guerison_massive"
+    ],
+    "trust_tier": "T0"
   },
   {
     "id": "fr_s10c_ogham_ailm_001",
@@ -457,28 +827,55 @@
         "label": "Ecouter le vent dans les aiguilles du sapin pour y percevoir des presages",
         "verb": "ecouter",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "druides", "amount": 14},
-          {"type": "ADD_ANAM", "amount": 6}
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "druides",
+            "amount": 14
+          },
+          {
+            "type": "ADD_ANAM",
+            "amount": 6
+          }
         ]
       },
       {
         "label": "Sentir la resine du sapin pour ancrer la vision dans le present",
         "verb": "sentir",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "druides", "amount": 10},
-          {"type": "HEAL_LIFE", "amount": 6}
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "druides",
+            "amount": 10
+          },
+          {
+            "type": "HEAL_LIFE",
+            "amount": 6
+          }
         ]
       },
       {
         "label": "Tendre l'oreille pres des racines pour capter les vibrations du sol",
         "verb": "tendre l'oreille",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "anciens", "amount": 10},
-          {"type": "ADD_BIOME_CURRENCY", "amount": 5}
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "anciens",
+            "amount": 10
+          },
+          {
+            "type": "ADD_BIOME_CURRENCY",
+            "amount": 5
+          }
         ]
       }
     ],
-    "tags": ["ogham_quest", "ailm", "sapin", "prediction"]
+    "tags": [
+      "ogham_quest",
+      "ailm",
+      "sapin",
+      "prediction"
+    ],
+    "trust_tier": "T0"
   },
   {
     "id": "fr_s10c_ogham_onn_001",
@@ -491,29 +888,60 @@
         "label": "Pousser a travers les epines de l'ajonc pour atteindre son coeur incandescent",
         "verb": "pousser",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "korrigans", "amount": 14},
-          {"type": "ADD_BIOME_CURRENCY", "amount": 8},
-          {"type": "DAMAGE_LIFE", "amount": 4}
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "korrigans",
+            "amount": 14
+          },
+          {
+            "type": "ADD_BIOME_CURRENCY",
+            "amount": 8
+          },
+          {
+            "type": "DAMAGE_LIFE",
+            "amount": 4
+          }
         ]
       },
       {
         "label": "Resister physiquement a la chaleur pour rester pres de l'ajonc en feu",
         "verb": "resister physiquement",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "korrigans", "amount": 10},
-          {"type": "ADD_ANAM", "amount": 5}
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "korrigans",
+            "amount": 10
+          },
+          {
+            "type": "ADD_ANAM",
+            "amount": 5
+          }
         ]
       },
       {
         "label": "Courir chercher de l'eau pour eteindre le feu et sauver la plante",
         "verb": "courir",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "druides", "amount": 10},
-          {"type": "HEAL_LIFE", "amount": 5}
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "druides",
+            "amount": 10
+          },
+          {
+            "type": "HEAL_LIFE",
+            "amount": 5
+          }
         ]
       }
     ],
-    "tags": ["ogham_quest", "onn", "ajonc", "richesse", "feu"]
+    "tags": [
+      "ogham_quest",
+      "onn",
+      "ajonc",
+      "richesse",
+      "feu"
+    ],
+    "trust_tier": "T0"
   },
   {
     "id": "fr_s10c_ogham_ioho_001",
@@ -526,29 +954,59 @@
         "label": "Se concentrer et entrer dans le tronc creux pour l'epreuve de renaissance",
         "verb": "se concentrer",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "ankou", "amount": 18},
-          {"type": "ADD_ANAM", "amount": 8},
-          {"type": "DAMAGE_LIFE", "amount": 10}
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "ankou",
+            "amount": 18
+          },
+          {
+            "type": "ADD_ANAM",
+            "amount": 8
+          },
+          {
+            "type": "DAMAGE_LIFE",
+            "amount": 10
+          }
         ]
       },
       {
         "label": "Mediter devant l'if sans entrer, respectant la mort a distance",
         "verb": "mediter",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "ankou", "amount": 10},
-          {"type": "HEAL_LIFE", "amount": 5}
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "ankou",
+            "amount": 10
+          },
+          {
+            "type": "HEAL_LIFE",
+            "amount": 5
+          }
         ]
       },
       {
         "label": "Refuser l'epreuve et honorer l'if de l'exterieur",
         "verb": "refuser",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "anciens", "amount": 10},
-          {"type": "ADD_BIOME_CURRENCY", "amount": 6}
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "anciens",
+            "amount": 10
+          },
+          {
+            "type": "ADD_BIOME_CURRENCY",
+            "amount": 6
+          }
         ]
       }
     ],
-    "tags": ["ogham_quest", "ioho", "if", "mort_renaissance"]
+    "tags": [
+      "ogham_quest",
+      "ioho",
+      "if",
+      "mort_renaissance"
+    ],
+    "trust_tier": "T0"
   },
   {
     "id": "fr_s10c_ogham_ur_001",
@@ -561,29 +1019,59 @@
         "label": "Accepter le pacte de la bruyere en offrant quelques gouttes de son sang",
         "verb": "accepter",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "ankou", "amount": 14},
-          {"type": "DAMAGE_LIFE", "amount": 8},
-          {"type": "ADD_BIOME_CURRENCY", "amount": 10}
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "ankou",
+            "amount": 14
+          },
+          {
+            "type": "DAMAGE_LIFE",
+            "amount": 8
+          },
+          {
+            "type": "ADD_BIOME_CURRENCY",
+            "amount": 10
+          }
         ]
       },
       {
         "label": "Resister mentalement a l'appel du sacrifice",
         "verb": "resister mentalement",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "druides", "amount": 10},
-          {"type": "HEAL_LIFE", "amount": 5}
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "druides",
+            "amount": 10
+          },
+          {
+            "type": "HEAL_LIFE",
+            "amount": 5
+          }
         ]
       },
       {
         "label": "Endurer la tentation sans ceder pour prouver sa maitrise",
         "verb": "endurer",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "anciens", "amount": 10},
-          {"type": "ADD_ANAM", "amount": 5}
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "anciens",
+            "amount": 10
+          },
+          {
+            "type": "ADD_ANAM",
+            "amount": 5
+          }
         ]
       }
     ],
-    "tags": ["ogham_quest", "ur", "bruyere", "sacrifice"]
+    "tags": [
+      "ogham_quest",
+      "ur",
+      "bruyere",
+      "sacrifice"
+    ],
+    "trust_tier": "T0"
   },
   {
     "id": "fr_s10c_ogham_eadhadh_001",
@@ -596,29 +1084,59 @@
         "label": "Ecouter le murmure des feuilles pour affronter ses propres peurs",
         "verb": "ecouter",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "ankou", "amount": 14},
-          {"type": "ADD_ANAM", "amount": 6},
-          {"type": "DAMAGE_LIFE", "amount": 4}
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "ankou",
+            "amount": 14
+          },
+          {
+            "type": "ADD_ANAM",
+            "amount": 6
+          },
+          {
+            "type": "DAMAGE_LIFE",
+            "amount": 4
+          }
         ]
       },
       {
         "label": "Sentir les vibrations du tremble pour comprendre la nature de la peur",
         "verb": "sentir",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "druides", "amount": 10},
-          {"type": "HEAL_LIFE", "amount": 6}
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "druides",
+            "amount": 10
+          },
+          {
+            "type": "HEAL_LIFE",
+            "amount": 6
+          }
         ]
       },
       {
         "label": "Pister l'origine du frisson dans les racines du tremble",
         "verb": "pister",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "anciens", "amount": 10},
-          {"type": "ADD_BIOME_CURRENCY", "amount": 5}
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "anciens",
+            "amount": 10
+          },
+          {
+            "type": "ADD_BIOME_CURRENCY",
+            "amount": 5
+          }
         ]
       }
     ],
-    "tags": ["ogham_quest", "eadhadh", "tremble", "annulation_negatif"]
+    "tags": [
+      "ogham_quest",
+      "eadhadh",
+      "tremble",
+      "annulation_negatif"
+    ],
+    "trust_tier": "T0"
   },
   {
     "id": "fr_s10c_unlock_beith_001",
@@ -631,28 +1149,56 @@
         "label": "Dechiffrer l'inscription oghamique du Beith gravee dans la lumiere",
         "verb": "dechiffrer",
         "effects": [
-          {"type": "UNLOCK_OGHAM", "ogham": "beith"},
-          {"type": "ADD_REPUTATION", "faction": "druides", "amount": 12}
+          {
+            "type": "UNLOCK_OGHAM",
+            "ogham": "beith"
+          },
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "druides",
+            "amount": 12
+          }
         ]
       },
       {
         "label": "Analyser le motif lumineux pour comprendre sa structure",
         "verb": "analyser",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "druides", "amount": 14},
-          {"type": "ADD_ANAM", "amount": 6}
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "druides",
+            "amount": 14
+          },
+          {
+            "type": "ADD_ANAM",
+            "amount": 6
+          }
         ]
       },
       {
         "label": "Interpreter les pulsations comme un langage a decoder",
         "verb": "interpreter",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "anciens", "amount": 10},
-          {"type": "ADD_BIOME_CURRENCY", "amount": 5}
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "anciens",
+            "amount": 10
+          },
+          {
+            "type": "ADD_BIOME_CURRENCY",
+            "amount": 5
+          }
         ]
       }
     ],
-    "tags": ["ogham_quest", "unlock", "beith", "bouleau", "gravure_lumiere"]
+    "tags": [
+      "ogham_quest",
+      "unlock",
+      "beith",
+      "bouleau",
+      "gravure_lumiere"
+    ],
+    "trust_tier": "T0"
   },
   {
     "id": "fr_s10c_unlock_duir_001",
@@ -665,28 +1211,55 @@
         "label": "Resister physiquement a l'energie residuelle de la foudre pour saisir l'ogham",
         "verb": "resister physiquement",
         "effects": [
-          {"type": "UNLOCK_OGHAM", "ogham": "duir"},
-          {"type": "DAMAGE_LIFE", "amount": 8}
+          {
+            "type": "UNLOCK_OGHAM",
+            "ogham": "duir"
+          },
+          {
+            "type": "DAMAGE_LIFE",
+            "amount": 8
+          }
         ]
       },
       {
         "label": "Combattre la douleur electrique pour atteindre le symbole dans le bois",
         "verb": "combattre",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "druides", "amount": 15},
-          {"type": "ADD_ANAM", "amount": 6}
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "druides",
+            "amount": 15
+          },
+          {
+            "type": "ADD_ANAM",
+            "amount": 6
+          }
         ]
       },
       {
         "label": "Forcer ses muscles engourdis pour toucher l'ecorce calcinee",
         "verb": "forcer",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "anciens", "amount": 10},
-          {"type": "HEAL_LIFE", "amount": 5}
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "anciens",
+            "amount": 10
+          },
+          {
+            "type": "HEAL_LIFE",
+            "amount": 5
+          }
         ]
       }
     ],
-    "tags": ["ogham_quest", "unlock", "duir", "chene", "foudre"]
+    "tags": [
+      "ogham_quest",
+      "unlock",
+      "duir",
+      "chene",
+      "foudre"
+    ],
+    "trust_tier": "T0"
   },
   {
     "id": "fr_s10c_unlock_coll_001",
@@ -699,28 +1272,56 @@
         "label": "Resoudre l'enigme du saumon pour obtenir la noisette de sagesse",
         "verb": "resoudre",
         "effects": [
-          {"type": "UNLOCK_OGHAM", "ogham": "coll"},
-          {"type": "ADD_REPUTATION", "faction": "druides", "amount": 15}
+          {
+            "type": "UNLOCK_OGHAM",
+            "ogham": "coll"
+          },
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "druides",
+            "amount": 15
+          }
         ]
       },
       {
         "label": "Decoder les marques sur le dos du saumon comme indices",
         "verb": "decoder",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "druides", "amount": 12},
-          {"type": "ADD_ANAM", "amount": 7}
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "druides",
+            "amount": 12
+          },
+          {
+            "type": "ADD_ANAM",
+            "amount": 7
+          }
         ]
       },
       {
         "label": "Analyser la trajectoire du saumon pour deviner le lieu de depot",
         "verb": "analyser",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "anciens", "amount": 10},
-          {"type": "ADD_BIOME_CURRENCY", "amount": 6}
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "anciens",
+            "amount": 10
+          },
+          {
+            "type": "ADD_BIOME_CURRENCY",
+            "amount": 6
+          }
         ]
       }
     ],
-    "tags": ["ogham_quest", "unlock", "coll", "noisetier", "saumon_sagesse"]
+    "tags": [
+      "ogham_quest",
+      "unlock",
+      "coll",
+      "noisetier",
+      "saumon_sagesse"
+    ],
+    "trust_tier": "T0"
   },
   {
     "id": "fr_s10c_unlock_ailm_001",
@@ -733,28 +1334,56 @@
         "label": "Ecouter le menhir pour percevoir le moment ou il s'abaisse",
         "verb": "ecouter",
         "effects": [
-          {"type": "UNLOCK_OGHAM", "ogham": "ailm"},
-          {"type": "ADD_REPUTATION", "faction": "druides", "amount": 12}
+          {
+            "type": "UNLOCK_OGHAM",
+            "ogham": "ailm"
+          },
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "druides",
+            "amount": 12
+          }
         ]
       },
       {
         "label": "Suivre les vibrations de la pierre pour anticiper son mouvement",
         "verb": "suivre",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "anciens", "amount": 14},
-          {"type": "ADD_ANAM", "amount": 5}
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "anciens",
+            "amount": 14
+          },
+          {
+            "type": "ADD_ANAM",
+            "amount": 5
+          }
         ]
       },
       {
         "label": "Tendre l'oreille au vent qui siffle entre les pierres",
         "verb": "tendre l'oreille",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "druides", "amount": 10},
-          {"type": "ADD_BIOME_CURRENCY", "amount": 6}
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "druides",
+            "amount": 10
+          },
+          {
+            "type": "ADD_BIOME_CURRENCY",
+            "amount": 6
+          }
         ]
       }
     ],
-    "tags": ["ogham_quest", "unlock", "ailm", "sapin", "menhir"]
+    "tags": [
+      "ogham_quest",
+      "unlock",
+      "ailm",
+      "sapin",
+      "menhir"
+    ],
+    "trust_tier": "T0"
   },
   {
     "id": "fr_s10c_unlock_luis_001",
@@ -767,28 +1396,55 @@
         "label": "Endurer la tempete sous le sorbier pour gagner la protection du Luis",
         "verb": "endurer",
         "effects": [
-          {"type": "UNLOCK_OGHAM", "ogham": "luis"},
-          {"type": "DAMAGE_LIFE", "amount": 6}
+          {
+            "type": "UNLOCK_OGHAM",
+            "ogham": "luis"
+          },
+          {
+            "type": "DAMAGE_LIFE",
+            "amount": 6
+          }
         ]
       },
       {
         "label": "Mediter sous l'arbre en faisant confiance a sa protection",
         "verb": "mediter",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "druides", "amount": 14},
-          {"type": "HEAL_LIFE", "amount": 5}
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "druides",
+            "amount": 14
+          },
+          {
+            "type": "HEAL_LIFE",
+            "amount": 5
+          }
         ]
       },
       {
         "label": "Resister mentalement a la peur de la foudre pour rester immobile",
         "verb": "resister mentalement",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "anciens", "amount": 10},
-          {"type": "ADD_ANAM", "amount": 5}
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "anciens",
+            "amount": 10
+          },
+          {
+            "type": "ADD_ANAM",
+            "amount": 5
+          }
         ]
       }
     ],
-    "tags": ["ogham_quest", "unlock", "luis", "sorbier", "tempete"]
+    "tags": [
+      "ogham_quest",
+      "unlock",
+      "luis",
+      "sorbier",
+      "tempete"
+    ],
+    "trust_tier": "T0"
   },
   {
     "id": "fr_s10c_unlock_quert_001",
@@ -801,28 +1457,56 @@
         "label": "Tenter sa chance en offrant la pomme a un esprit blesse pres de l'arbre",
         "verb": "tenter sa chance",
         "effects": [
-          {"type": "UNLOCK_OGHAM", "ogham": "quert"},
-          {"type": "ADD_REPUTATION", "faction": "niamh", "amount": 10}
+          {
+            "type": "UNLOCK_OGHAM",
+            "ogham": "quert"
+          },
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "niamh",
+            "amount": 10
+          }
         ]
       },
       {
         "label": "Deviner quel esprit merite le plus la guerison",
         "verb": "deviner",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "niamh", "amount": 14},
-          {"type": "HEAL_LIFE", "amount": 8}
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "niamh",
+            "amount": 14
+          },
+          {
+            "type": "HEAL_LIFE",
+            "amount": 8
+          }
         ]
       },
       {
         "label": "Cueillir une deuxieme pomme pour partager la guerison",
         "verb": "cueillir",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "druides", "amount": 10},
-          {"type": "ADD_ANAM", "amount": 5}
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "druides",
+            "amount": 10
+          },
+          {
+            "type": "ADD_ANAM",
+            "amount": 5
+          }
         ]
       }
     ],
-    "tags": ["ogham_quest", "unlock", "quert", "pommier", "pomme_argent"]
+    "tags": [
+      "ogham_quest",
+      "unlock",
+      "quert",
+      "pommier",
+      "pomme_argent"
+    ],
+    "trust_tier": "T0"
   },
   {
     "id": "fr_s10c_unlock_tinne_001",
@@ -835,28 +1519,56 @@
         "label": "Examiner les feuilles sous chaque angle possible pour trouver le bon",
         "verb": "examiner",
         "effects": [
-          {"type": "UNLOCK_OGHAM", "ogham": "tinne"},
-          {"type": "ADD_REPUTATION", "faction": "anciens", "amount": 12}
+          {
+            "type": "UNLOCK_OGHAM",
+            "ogham": "tinne"
+          },
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "anciens",
+            "amount": 12
+          }
         ]
       },
       {
         "label": "Scruter les nervures pour reperer le motif oghamique",
         "verb": "scruter",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "anciens", "amount": 14},
-          {"type": "ADD_ANAM", "amount": 5}
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "anciens",
+            "amount": 14
+          },
+          {
+            "type": "ADD_ANAM",
+            "amount": 5
+          }
         ]
       },
       {
         "label": "Memoriser la forme complete du houx pour la reproduire plus tard",
         "verb": "memoriser",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "druides", "amount": 10},
-          {"type": "ADD_BIOME_CURRENCY", "amount": 6}
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "druides",
+            "amount": 10
+          },
+          {
+            "type": "ADD_BIOME_CURRENCY",
+            "amount": 6
+          }
         ]
       }
     ],
-    "tags": ["ogham_quest", "unlock", "tinne", "houx", "crane"]
+    "tags": [
+      "ogham_quest",
+      "unlock",
+      "tinne",
+      "houx",
+      "crane"
+    ],
+    "trust_tier": "T0"
   },
   {
     "id": "fr_s10c_unlock_saille_001",
@@ -869,28 +1581,56 @@
         "label": "Ecouter les souvenirs tristes que le marais murmure pour trouver une larme sincere",
         "verb": "ecouter",
         "effects": [
-          {"type": "UNLOCK_OGHAM", "ogham": "saille"},
-          {"type": "ADD_REPUTATION", "faction": "niamh", "amount": 12}
+          {
+            "type": "UNLOCK_OGHAM",
+            "ogham": "saille"
+          },
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "niamh",
+            "amount": 12
+          }
         ]
       },
       {
         "label": "Sentir la melancolie du lieu pour laisser une emotion vraie monter",
         "verb": "sentir",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "niamh", "amount": 14},
-          {"type": "HEAL_LIFE", "amount": 6}
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "niamh",
+            "amount": 14
+          },
+          {
+            "type": "HEAL_LIFE",
+            "amount": 6
+          }
         ]
       },
       {
         "label": "Flairer les eaux noires pour trouver la source de la tristesse du marais",
         "verb": "flairer",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "druides", "amount": 10},
-          {"type": "ADD_ANAM", "amount": 5}
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "druides",
+            "amount": 10
+          },
+          {
+            "type": "ADD_ANAM",
+            "amount": 5
+          }
         ]
       }
     ],
-    "tags": ["ogham_quest", "unlock", "saille", "saule", "larme_sincere"]
+    "tags": [
+      "ogham_quest",
+      "unlock",
+      "saille",
+      "saule",
+      "larme_sincere"
+    ],
+    "trust_tier": "T0"
   },
   {
     "id": "fr_s10c_unlock_nuin_001",
@@ -903,29 +1643,60 @@
         "label": "Dechiffrer l'ogham dans la fissure avant qu'elle ne se referme",
         "verb": "dechiffrer",
         "effects": [
-          {"type": "UNLOCK_OGHAM", "ogham": "nuin"},
-          {"type": "ADD_REPUTATION", "faction": "druides", "amount": 12},
-          {"type": "DAMAGE_LIFE", "amount": 5}
+          {
+            "type": "UNLOCK_OGHAM",
+            "ogham": "nuin"
+          },
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "druides",
+            "amount": 12
+          },
+          {
+            "type": "DAMAGE_LIFE",
+            "amount": 5
+          }
         ]
       },
       {
         "label": "Analyser la structure de la fissure pour estimer le temps restant",
         "verb": "analyser",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "druides", "amount": 14},
-          {"type": "ADD_ANAM", "amount": 5}
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "druides",
+            "amount": 14
+          },
+          {
+            "type": "ADD_ANAM",
+            "amount": 5
+          }
         ]
       },
       {
         "label": "Etudier les racines exposees pour comprendre pourquoi le frene s'ouvre",
         "verb": "etudier",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "anciens", "amount": 10},
-          {"type": "ADD_BIOME_CURRENCY", "amount": 6}
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "anciens",
+            "amount": 10
+          },
+          {
+            "type": "ADD_BIOME_CURRENCY",
+            "amount": 6
+          }
         ]
       }
     ],
-    "tags": ["ogham_quest", "unlock", "nuin", "frene", "orage"]
+    "tags": [
+      "ogham_quest",
+      "unlock",
+      "nuin",
+      "frene",
+      "orage"
+    ],
+    "trust_tier": "T0"
   },
   {
     "id": "fr_s10c_unlock_huath_001",
@@ -938,28 +1709,56 @@
         "label": "Se faufiler dans le passage en retenant son souffle",
         "verb": "se faufiler",
         "effects": [
-          {"type": "UNLOCK_OGHAM", "ogham": "huath"},
-          {"type": "ADD_REPUTATION", "faction": "korrigans", "amount": 12}
+          {
+            "type": "UNLOCK_OGHAM",
+            "ogham": "huath"
+          },
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "korrigans",
+            "amount": 12
+          }
         ]
       },
       {
         "label": "Contourner le korrigan endormi pour trouver un passage plus large",
         "verb": "contourner",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "korrigans", "amount": 14},
-          {"type": "ADD_ANAM", "amount": 5}
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "korrigans",
+            "amount": 14
+          },
+          {
+            "type": "ADD_ANAM",
+            "amount": 5
+          }
         ]
       },
       {
         "label": "Se cacher dans les feuilles jusqu'a ce que le passage s'elargisse naturellement",
         "verb": "se cacher",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "druides", "amount": 10},
-          {"type": "HEAL_LIFE", "amount": 5}
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "druides",
+            "amount": 10
+          },
+          {
+            "type": "HEAL_LIFE",
+            "amount": 5
+          }
         ]
       }
     ],
-    "tags": ["ogham_quest", "unlock", "huath", "aubepine", "passage_silencieux"]
+    "tags": [
+      "ogham_quest",
+      "unlock",
+      "huath",
+      "aubepine",
+      "passage_silencieux"
+    ],
+    "trust_tier": "T0"
   },
   {
     "id": "fr_s10c_unlock_straif_001",
@@ -972,28 +1771,56 @@
         "label": "Accepter le pacte du prunellier en nommant le changement desire",
         "verb": "accepter",
         "effects": [
-          {"type": "UNLOCK_OGHAM", "ogham": "straif"},
-          {"type": "ADD_REPUTATION", "faction": "ankou", "amount": 14}
+          {
+            "type": "UNLOCK_OGHAM",
+            "ogham": "straif"
+          },
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "ankou",
+            "amount": 14
+          }
         ]
       },
       {
         "label": "Mediter sur le changement necessaire avant de parler",
         "verb": "mediter",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "ankou", "amount": 12},
-          {"type": "ADD_ANAM", "amount": 6}
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "ankou",
+            "amount": 12
+          },
+          {
+            "type": "ADD_ANAM",
+            "amount": 6
+          }
         ]
       },
       {
         "label": "Se concentrer sur sa propre volonte pour ne pas etre manipule par l'arbre",
         "verb": "se concentrer",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "anciens", "amount": 10},
-          {"type": "HEAL_LIFE", "amount": 5}
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "anciens",
+            "amount": 10
+          },
+          {
+            "type": "HEAL_LIFE",
+            "amount": 5
+          }
         ]
       }
     ],
-    "tags": ["ogham_quest", "unlock", "straif", "prunellier", "pacte"]
+    "tags": [
+      "ogham_quest",
+      "unlock",
+      "straif",
+      "prunellier",
+      "pacte"
+    ],
+    "trust_tier": "T0"
   },
   {
     "id": "fr_s10c_unlock_gort_001",
@@ -1006,29 +1833,60 @@
         "label": "Se faufiler dans le cocon de lierre et se laisser envelopper volontairement",
         "verb": "se faufiler",
         "effects": [
-          {"type": "UNLOCK_OGHAM", "ogham": "gort"},
-          {"type": "ADD_REPUTATION", "faction": "niamh", "amount": 12},
-          {"type": "DAMAGE_LIFE", "amount": 4}
+          {
+            "type": "UNLOCK_OGHAM",
+            "ogham": "gort"
+          },
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "niamh",
+            "amount": 12
+          },
+          {
+            "type": "DAMAGE_LIFE",
+            "amount": 4
+          }
         ]
       },
       {
         "label": "Contourner le lierre pour trouver une ouverture naturelle",
         "verb": "contourner",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "druides", "amount": 10},
-          {"type": "ADD_ANAM", "amount": 5}
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "druides",
+            "amount": 10
+          },
+          {
+            "type": "ADD_ANAM",
+            "amount": 5
+          }
         ]
       },
       {
         "label": "Esquiver les vrilles les plus grosses pour atteindre le coeur du cocon",
         "verb": "esquiver",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "korrigans", "amount": 10},
-          {"type": "ADD_BIOME_CURRENCY", "amount": 6}
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "korrigans",
+            "amount": 10
+          },
+          {
+            "type": "ADD_BIOME_CURRENCY",
+            "amount": 6
+          }
         ]
       }
     ],
-    "tags": ["ogham_quest", "unlock", "gort", "lierre", "cocon"]
+    "tags": [
+      "ogham_quest",
+      "unlock",
+      "gort",
+      "lierre",
+      "cocon"
+    ],
+    "trust_tier": "T0"
   },
   {
     "id": "fr_s10c_unlock_muin_001",
@@ -1041,28 +1899,56 @@
         "label": "Convaincre le korrigan de te donner la grappe sans manger les grains",
         "verb": "convaincre",
         "effects": [
-          {"type": "UNLOCK_OGHAM", "ogham": "muin"},
-          {"type": "ADD_REPUTATION", "faction": "korrigans", "amount": 12}
+          {
+            "type": "UNLOCK_OGHAM",
+            "ogham": "muin"
+          },
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "korrigans",
+            "amount": 12
+          }
         ]
       },
       {
         "label": "Marchander un echange : un secret contre la grappe entiere",
         "verb": "marchander",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "korrigans", "amount": 14},
-          {"type": "ADD_ANAM", "amount": 6}
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "korrigans",
+            "amount": 14
+          },
+          {
+            "type": "ADD_ANAM",
+            "amount": 6
+          }
         ]
       },
       {
         "label": "Charmer le vigneron pour qu'il revele le moyen d'annuler le piege",
         "verb": "charmer",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "korrigans", "amount": 10},
-          {"type": "HEAL_LIFE", "amount": 5}
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "korrigans",
+            "amount": 10
+          },
+          {
+            "type": "HEAL_LIFE",
+            "amount": 5
+          }
         ]
       }
     ],
-    "tags": ["ogham_quest", "unlock", "muin", "vigne", "inversion"]
+    "tags": [
+      "ogham_quest",
+      "unlock",
+      "muin",
+      "vigne",
+      "inversion"
+    ],
+    "trust_tier": "T0"
   },
   {
     "id": "fr_s10c_unlock_onn_001",
@@ -1075,30 +1961,64 @@
         "label": "Pousser a travers les epines de l'ajonc pour atteindre le disque d'or",
         "verb": "pousser",
         "effects": [
-          {"type": "UNLOCK_OGHAM", "ogham": "onn"},
-          {"type": "ADD_REPUTATION", "faction": "korrigans", "amount": 14},
-          {"type": "DAMAGE_LIFE", "amount": 8}
+          {
+            "type": "UNLOCK_OGHAM",
+            "ogham": "onn"
+          },
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "korrigans",
+            "amount": 14
+          },
+          {
+            "type": "DAMAGE_LIFE",
+            "amount": 8
+          }
         ]
       },
       {
         "label": "Forcer un passage en ecartant les branches les plus epaisses",
         "verb": "forcer",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "anciens", "amount": 10},
-          {"type": "DAMAGE_LIFE", "amount": 5},
-          {"type": "ADD_BIOME_CURRENCY", "amount": 6}
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "anciens",
+            "amount": 10
+          },
+          {
+            "type": "DAMAGE_LIFE",
+            "amount": 5
+          },
+          {
+            "type": "ADD_BIOME_CURRENCY",
+            "amount": 6
+          }
         ]
       },
       {
         "label": "Courir chercher un baton solide pour ecarter les epines sans se blesser",
         "verb": "courir",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "druides", "amount": 10},
-          {"type": "HEAL_LIFE", "amount": 4}
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "druides",
+            "amount": 10
+          },
+          {
+            "type": "HEAL_LIFE",
+            "amount": 4
+          }
         ]
       }
     ],
-    "tags": ["ogham_quest", "unlock", "onn", "ajonc", "cage_epines"]
+    "tags": [
+      "ogham_quest",
+      "unlock",
+      "onn",
+      "ajonc",
+      "cage_epines"
+    ],
+    "trust_tier": "T0"
   },
   {
     "id": "fr_s10c_unlock_ruis_001",
@@ -1111,29 +2031,60 @@
         "label": "Mediter en offrant volontairement de sa force vitale au sureau",
         "verb": "mediter",
         "effects": [
-          {"type": "UNLOCK_OGHAM", "ogham": "ruis"},
-          {"type": "DAMAGE_LIFE", "amount": 10},
-          {"type": "ADD_REPUTATION", "faction": "niamh", "amount": 15}
+          {
+            "type": "UNLOCK_OGHAM",
+            "ogham": "ruis"
+          },
+          {
+            "type": "DAMAGE_LIFE",
+            "amount": 10
+          },
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "niamh",
+            "amount": 15
+          }
         ]
       },
       {
         "label": "Se concentrer pour doser l'offrande et minimiser le sacrifice",
         "verb": "se concentrer",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "niamh", "amount": 12},
-          {"type": "HEAL_LIFE", "amount": 5}
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "niamh",
+            "amount": 12
+          },
+          {
+            "type": "HEAL_LIFE",
+            "amount": 5
+          }
         ]
       },
       {
         "label": "Calmer la fleur pour qu'elle accepte une offrande symbolique au lieu de vitale",
         "verb": "calmer",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "druides", "amount": 10},
-          {"type": "ADD_ANAM", "amount": 5}
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "druides",
+            "amount": 10
+          },
+          {
+            "type": "ADD_ANAM",
+            "amount": 5
+          }
         ]
       }
     ],
-    "tags": ["ogham_quest", "unlock", "ruis", "sureau", "sacrifice"]
+    "tags": [
+      "ogham_quest",
+      "unlock",
+      "ruis",
+      "sureau",
+      "sacrifice"
+    ],
+    "trust_tier": "T0"
   },
   {
     "id": "fr_s10c_unlock_ioho_001",
@@ -1146,29 +2097,59 @@
         "label": "Combattre sa peur et entrer dans le tronc creux pour la mort symbolique",
         "verb": "combattre",
         "effects": [
-          {"type": "UNLOCK_OGHAM", "ogham": "ioho"},
-          {"type": "DAMAGE_LIFE", "amount": 12},
-          {"type": "ADD_ANAM", "amount": 8}
+          {
+            "type": "UNLOCK_OGHAM",
+            "ogham": "ioho"
+          },
+          {
+            "type": "DAMAGE_LIFE",
+            "amount": 12
+          },
+          {
+            "type": "ADD_ANAM",
+            "amount": 8
+          }
         ]
       },
       {
         "label": "Resister physiquement a l'attraction du tronc pour evaluer le risque",
         "verb": "resister physiquement",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "ankou", "amount": 14},
-          {"type": "HEAL_LIFE", "amount": 5}
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "ankou",
+            "amount": 14
+          },
+          {
+            "type": "HEAL_LIFE",
+            "amount": 5
+          }
         ]
       },
       {
         "label": "Fuir l'epreuve et attendre une meilleure occasion",
         "verb": "fuir",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "anciens", "amount": 8},
-          {"type": "ADD_BIOME_CURRENCY", "amount": 5}
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "anciens",
+            "amount": 8
+          },
+          {
+            "type": "ADD_BIOME_CURRENCY",
+            "amount": 5
+          }
         ]
       }
     ],
-    "tags": ["ogham_quest", "unlock", "ioho", "if", "mort_symbolique"]
+    "tags": [
+      "ogham_quest",
+      "unlock",
+      "ioho",
+      "if",
+      "mort_symbolique"
+    ],
+    "trust_tier": "T0"
   },
   {
     "id": "fr_s10c_unlock_eadhadh_001",
@@ -1181,28 +2162,56 @@
         "label": "Ecouter le silence entre les frissons pour saisir l'ogham fugace",
         "verb": "ecouter",
         "effects": [
-          {"type": "UNLOCK_OGHAM", "ogham": "eadhadh"},
-          {"type": "ADD_REPUTATION", "faction": "ankou", "amount": 12}
+          {
+            "type": "UNLOCK_OGHAM",
+            "ogham": "eadhadh"
+          },
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "ankou",
+            "amount": 12
+          }
         ]
       },
       {
         "label": "Sentir les vibrations du sol pour anticiper le prochain moment de silence",
         "verb": "sentir",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "druides", "amount": 12},
-          {"type": "ADD_ANAM", "amount": 5}
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "druides",
+            "amount": 12
+          },
+          {
+            "type": "ADD_ANAM",
+            "amount": 5
+          }
         ]
       },
       {
         "label": "Pister le rythme des frissons pour predire leur prochaine pause",
         "verb": "pister",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "anciens", "amount": 10},
-          {"type": "ADD_BIOME_CURRENCY", "amount": 6}
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "anciens",
+            "amount": 10
+          },
+          {
+            "type": "ADD_BIOME_CURRENCY",
+            "amount": 6
+          }
         ]
       }
     ],
-    "tags": ["ogham_quest", "unlock", "eadhadh", "tremble", "silence"]
+    "tags": [
+      "ogham_quest",
+      "unlock",
+      "eadhadh",
+      "tremble",
+      "silence"
+    ],
+    "trust_tier": "T0"
   },
   {
     "id": "fr_s10c_unlock_ur_001",
@@ -1215,29 +2224,59 @@
         "label": "Resister physiquement a la douleur et offrir son sang a la pierre",
         "verb": "resister physiquement",
         "effects": [
-          {"type": "UNLOCK_OGHAM", "ogham": "ur"},
-          {"type": "DAMAGE_LIFE", "amount": 10},
-          {"type": "ADD_BIOME_CURRENCY", "amount": 10}
+          {
+            "type": "UNLOCK_OGHAM",
+            "ogham": "ur"
+          },
+          {
+            "type": "DAMAGE_LIFE",
+            "amount": 10
+          },
+          {
+            "type": "ADD_BIOME_CURRENCY",
+            "amount": 10
+          }
         ]
       },
       {
         "label": "Combattre la peur du sacrifice pour approcher la pierre avec dignite",
         "verb": "combattre",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "ankou", "amount": 14},
-          {"type": "ADD_ANAM", "amount": 6}
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "ankou",
+            "amount": 14
+          },
+          {
+            "type": "ADD_ANAM",
+            "amount": 6
+          }
         ]
       },
       {
         "label": "Forcer ses muscles fatigues pour accomplir le rituel du sang",
         "verb": "forcer",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "anciens", "amount": 10},
-          {"type": "DAMAGE_LIFE", "amount": 5}
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "anciens",
+            "amount": 10
+          },
+          {
+            "type": "DAMAGE_LIFE",
+            "amount": 5
+          }
         ]
       }
     ],
-    "tags": ["ogham_quest", "unlock", "ur", "bruyere", "sang"]
+    "tags": [
+      "ogham_quest",
+      "unlock",
+      "ur",
+      "bruyere",
+      "sang"
+    ],
+    "trust_tier": "T0"
   },
   {
     "id": "fr_s10c_ogham_lore_001",
@@ -1250,28 +2289,55 @@
         "label": "Mediter sur la nature du pacte entre l'homme et l'arbre",
         "verb": "mediter",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "druides", "amount": 14},
-          {"type": "ADD_ANAM", "amount": 6}
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "druides",
+            "amount": 14
+          },
+          {
+            "type": "ADD_ANAM",
+            "amount": 6
+          }
         ]
       },
       {
         "label": "Se concentrer sur les quatre premiers Oghams pour les maitriser avant d'avancer",
         "verb": "se concentrer",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "druides", "amount": 10},
-          {"type": "HEAL_LIFE", "amount": 8}
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "druides",
+            "amount": 10
+          },
+          {
+            "type": "HEAL_LIFE",
+            "amount": 8
+          }
         ]
       },
       {
         "label": "Accepter humblement les enseignements du druide sans questionner",
         "verb": "accepter",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "anciens", "amount": 8},
-          {"type": "ADD_BIOME_CURRENCY", "amount": 5}
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "anciens",
+            "amount": 8
+          },
+          {
+            "type": "ADD_BIOME_CURRENCY",
+            "amount": 5
+          }
         ]
       }
     ],
-    "tags": ["ogham_quest", "lore", "pacte", "enseignement"]
+    "tags": [
+      "ogham_quest",
+      "lore",
+      "pacte",
+      "enseignement"
+    ],
+    "trust_tier": "T0"
   },
   {
     "id": "fr_s10c_ogham_lore_002",
@@ -1284,28 +2350,55 @@
         "label": "Observer les spirales pour identifier chaque ogham dans l'ordre",
         "verb": "observer",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "anciens", "amount": 15},
-          {"type": "ADD_ANAM", "amount": 7}
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "anciens",
+            "amount": 15
+          },
+          {
+            "type": "ADD_ANAM",
+            "amount": 7
+          }
         ]
       },
       {
         "label": "Memoriser la sequence des oghams telle qu'elle apparait dans les spirales",
         "verb": "memoriser",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "anciens", "amount": 12},
-          {"type": "ADD_BIOME_CURRENCY", "amount": 6}
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "anciens",
+            "amount": 12
+          },
+          {
+            "type": "ADD_BIOME_CURRENCY",
+            "amount": 6
+          }
         ]
       },
       {
         "label": "Fixer la bougie pour voir les ombres dessiner les oghams manquants",
         "verb": "fixer",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "druides", "amount": 10},
-          {"type": "HEAL_LIFE", "amount": 5}
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "druides",
+            "amount": 10
+          },
+          {
+            "type": "HEAL_LIFE",
+            "amount": 5
+          }
         ]
       }
     ],
-    "tags": ["ogham_quest", "lore", "gavrinis", "dix_huit_oghams"]
+    "tags": [
+      "ogham_quest",
+      "lore",
+      "gavrinis",
+      "dix_huit_oghams"
+    ],
+    "trust_tier": "T0"
   },
   {
     "id": "fr_s10c_ogham_lore_003",
@@ -1318,29 +2411,60 @@
         "label": "Mediter au centre du jardin pour entendre la phrase des 18 arbres",
         "verb": "mediter",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "niamh", "amount": 18},
-          {"type": "ADD_ANAM", "amount": 8},
-          {"type": "DAMAGE_LIFE", "amount": 5}
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "niamh",
+            "amount": 18
+          },
+          {
+            "type": "ADD_ANAM",
+            "amount": 8
+          },
+          {
+            "type": "DAMAGE_LIFE",
+            "amount": 5
+          }
         ]
       },
       {
         "label": "Se concentrer sur un arbre a la fois pour comprendre chaque mot",
         "verb": "se concentrer",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "niamh", "amount": 12},
-          {"type": "HEAL_LIFE", "amount": 6}
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "niamh",
+            "amount": 12
+          },
+          {
+            "type": "HEAL_LIFE",
+            "amount": 6
+          }
         ]
       },
       {
         "label": "S'approcher du pommier Quert pour commencer par le mot le plus doux",
         "verb": "s'approcher",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "druides", "amount": 10},
-          {"type": "ADD_BIOME_CURRENCY", "amount": 6}
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "druides",
+            "amount": 10
+          },
+          {
+            "type": "ADD_BIOME_CURRENCY",
+            "amount": 6
+          }
         ]
       }
     ],
-    "tags": ["ogham_quest", "lore", "avalon", "jardin_18_arbres", "phrase"]
+    "tags": [
+      "ogham_quest",
+      "lore",
+      "avalon",
+      "jardin_18_arbres",
+      "phrase"
+    ],
+    "trust_tier": "T0"
   },
   {
     "id": "fr_s10c_ogham_lore_004",
@@ -1353,28 +2477,55 @@
         "label": "Analyser les connexions entre les trois oghams de la mort",
         "verb": "analyser",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "ankou", "amount": 15},
-          {"type": "ADD_ANAM", "amount": 7}
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "ankou",
+            "amount": 15
+          },
+          {
+            "type": "ADD_ANAM",
+            "amount": 7
+          }
         ]
       },
       {
         "label": "Dechiffrer les inscriptions funeraires pour comprendre le Triangle",
         "verb": "dechiffrer",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "ankou", "amount": 12},
-          {"type": "ADD_BIOME_CURRENCY", "amount": 6}
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "ankou",
+            "amount": 12
+          },
+          {
+            "type": "ADD_BIOME_CURRENCY",
+            "amount": 6
+          }
         ]
       },
       {
         "label": "Interpreter le Triangle comme un avertissement plutot qu'une invitation",
         "verb": "interpreter",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "anciens", "amount": 10},
-          {"type": "HEAL_LIFE", "amount": 5}
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "anciens",
+            "amount": 10
+          },
+          {
+            "type": "HEAL_LIFE",
+            "amount": 5
+          }
         ]
       }
     ],
-    "tags": ["ogham_quest", "lore", "triangle_ankou", "ioho_eadhadh_ur"]
+    "tags": [
+      "ogham_quest",
+      "lore",
+      "triangle_ankou",
+      "ioho_eadhadh_ur"
+    ],
+    "trust_tier": "T0"
   },
   {
     "id": "fr_s10c_ogham_lore_005",
@@ -1387,29 +2538,60 @@
         "label": "Negocier avec Gwen Du pour qu'elle partage le secret de la triade korrigan",
         "verb": "negocier",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "korrigans", "amount": 15},
-          {"type": "ADD_ANAM", "amount": 6}
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "korrigans",
+            "amount": 15
+          },
+          {
+            "type": "ADD_ANAM",
+            "amount": 6
+          }
         ]
       },
       {
         "label": "Convaincre Gwen Du que les druides n'ont rien contre les korrigans",
         "verb": "convaincre",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "druides", "amount": 10},
-          {"type": "ADD_REPUTATION", "faction": "korrigans", "amount": 6}
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "druides",
+            "amount": 10
+          },
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "korrigans",
+            "amount": 6
+          }
         ]
       },
       {
         "label": "Mentir en disant que tu connais deja le secret pour la pousser a en dire plus",
         "verb": "mentir",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "korrigans", "amount": 8},
-          {"type": "ADD_BIOME_CURRENCY", "amount": 7},
-          {"type": "DAMAGE_LIFE", "amount": 3}
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "korrigans",
+            "amount": 8
+          },
+          {
+            "type": "ADD_BIOME_CURRENCY",
+            "amount": 7
+          },
+          {
+            "type": "DAMAGE_LIFE",
+            "amount": 3
+          }
         ]
       }
     ],
-    "tags": ["ogham_quest", "lore", "triade_korrigan", "muin_gort_onn"]
+    "tags": [
+      "ogham_quest",
+      "lore",
+      "triade_korrigan",
+      "muin_gort_onn"
+    ],
+    "trust_tier": "T0"
   },
   {
     "id": "fr_s10c_ogham_lore_006",
@@ -1422,28 +2604,55 @@
         "label": "Examiner le parchemin pour memoriser les affinites biome-ogham",
         "verb": "examiner",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "druides", "amount": 14},
-          {"type": "ADD_ANAM", "amount": 5}
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "druides",
+            "amount": 14
+          },
+          {
+            "type": "ADD_ANAM",
+            "amount": 5
+          }
         ]
       },
       {
         "label": "Scruter les marges du parchemin pour des annotations cachees",
         "verb": "scruter",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "anciens", "amount": 12},
-          {"type": "ADD_BIOME_CURRENCY", "amount": 6}
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "anciens",
+            "amount": 12
+          },
+          {
+            "type": "ADD_BIOME_CURRENCY",
+            "amount": 6
+          }
         ]
       },
       {
         "label": "Observer les reactions de Cadogan pour deviner les affinites les plus puissantes",
         "verb": "observer",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "korrigans", "amount": 8},
-          {"type": "HEAL_LIFE", "amount": 5}
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "korrigans",
+            "amount": 8
+          },
+          {
+            "type": "HEAL_LIFE",
+            "amount": 5
+          }
         ]
       }
     ],
-    "tags": ["ogham_quest", "lore", "affinites", "parchemin"]
+    "tags": [
+      "ogham_quest",
+      "lore",
+      "affinites",
+      "parchemin"
+    ],
+    "trust_tier": "T0"
   },
   {
     "id": "fr_s10c_ogham_lore_007",
@@ -1456,28 +2665,55 @@
         "label": "Se faufiler entre les vagues pour attraper un galet grave avant le korrigan",
         "verb": "se faufiler",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "korrigans", "amount": 12},
-          {"type": "ADD_BIOME_CURRENCY", "amount": 7}
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "korrigans",
+            "amount": 12
+          },
+          {
+            "type": "ADD_BIOME_CURRENCY",
+            "amount": 7
+          }
         ]
       },
       {
         "label": "Contourner le korrigan pour examiner sa collection deja assemblee",
         "verb": "contourner",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "anciens", "amount": 10},
-          {"type": "ADD_ANAM", "amount": 5}
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "anciens",
+            "amount": 10
+          },
+          {
+            "type": "ADD_ANAM",
+            "amount": 5
+          }
         ]
       },
       {
         "label": "Escalader les rochers pour reperer les galets dans les vagues depuis les hauteurs",
         "verb": "escalader",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "druides", "amount": 10},
-          {"type": "HEAL_LIFE", "amount": 5}
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "druides",
+            "amount": 10
+          },
+          {
+            "type": "HEAL_LIFE",
+            "amount": 5
+          }
         ]
       }
     ],
-    "tags": ["ogham_quest", "lore", "galets_graves", "carnac"]
+    "tags": [
+      "ogham_quest",
+      "lore",
+      "galets_graves",
+      "carnac"
+    ],
+    "trust_tier": "T0"
   },
   {
     "id": "fr_s10c_ogham_lore_008",
@@ -1490,29 +2726,59 @@
         "label": "Dechiffrer les traces residuelles des trois oghams effaces",
         "verb": "dechiffrer",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "anciens", "amount": 15},
-          {"type": "ADD_ANAM", "amount": 6}
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "anciens",
+            "amount": 15
+          },
+          {
+            "type": "ADD_ANAM",
+            "amount": 6
+          }
         ]
       },
       {
         "label": "Analyser la logique du cercle pour deduire les oghams manquants",
         "verb": "analyser",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "druides", "amount": 12},
-          {"type": "ADD_BIOME_CURRENCY", "amount": 6}
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "druides",
+            "amount": 12
+          },
+          {
+            "type": "ADD_BIOME_CURRENCY",
+            "amount": 6
+          }
         ]
       },
       {
         "label": "Resoudre le verrou par elimination en testant les combinaisons les plus probables",
         "verb": "resoudre",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "anciens", "amount": 10},
-          {"type": "HEAL_LIFE", "amount": 5},
-          {"type": "DAMAGE_LIFE", "amount": 3}
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "anciens",
+            "amount": 10
+          },
+          {
+            "type": "HEAL_LIFE",
+            "amount": 5
+          },
+          {
+            "type": "DAMAGE_LIFE",
+            "amount": 3
+          }
         ]
       }
     ],
-    "tags": ["ogham_quest", "lore", "stele_verrou", "trois_oghams"]
+    "tags": [
+      "ogham_quest",
+      "lore",
+      "stele_verrou",
+      "trois_oghams"
+    ],
+    "trust_tier": "T0"
   },
   {
     "id": "fr_s10c_unlock_huath_002",
@@ -1525,28 +2791,56 @@
         "label": "Tenter sa chance en nouant un ruban et touchant la racine oghamique",
         "verb": "tenter sa chance",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "druides", "amount": 14},
-          {"type": "ADD_ANAM", "amount": 5}
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "druides",
+            "amount": 14
+          },
+          {
+            "type": "ADD_ANAM",
+            "amount": 5
+          }
         ]
       },
       {
         "label": "Deviner la signification des trois notes du rouge-gorge",
         "verb": "deviner",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "niamh", "amount": 10},
-          {"type": "HEAL_LIFE", "amount": 6}
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "niamh",
+            "amount": 10
+          },
+          {
+            "type": "HEAL_LIFE",
+            "amount": 6
+          }
         ]
       },
       {
         "label": "Cueillir une baie d'aubepine comme talisman de passage",
         "verb": "cueillir",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "korrigans", "amount": 8},
-          {"type": "ADD_BIOME_CURRENCY", "amount": 6}
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "korrigans",
+            "amount": 8
+          },
+          {
+            "type": "ADD_BIOME_CURRENCY",
+            "amount": 6
+          }
         ]
       }
     ],
-    "tags": ["ogham_quest", "huath", "aubepine", "rouge_gorge", "rubans"]
+    "tags": [
+      "ogham_quest",
+      "huath",
+      "aubepine",
+      "rouge_gorge",
+      "rubans"
+    ],
+    "trust_tier": "T0"
   },
   {
     "id": "fr_s10c_unlock_muin_002",
@@ -1559,28 +2853,56 @@
         "label": "Examiner les grains pour confirmer le motif oghamique du Muin",
         "verb": "examiner",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "korrigans", "amount": 12},
-          {"type": "ADD_ANAM", "amount": 5}
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "korrigans",
+            "amount": 12
+          },
+          {
+            "type": "ADD_ANAM",
+            "amount": 5
+          }
         ]
       },
       {
         "label": "Scruter les racines de la vigne pour comprendre comment elle a perce la pierre",
         "verb": "scruter",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "anciens", "amount": 10},
-          {"type": "ADD_BIOME_CURRENCY", "amount": 6}
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "anciens",
+            "amount": 10
+          },
+          {
+            "type": "ADD_BIOME_CURRENCY",
+            "amount": 6
+          }
         ]
       },
       {
         "label": "Observer le forgeron travailler pres de la vigne pour voir l'inversion en action",
         "verb": "observer",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "druides", "amount": 10},
-          {"type": "HEAL_LIFE", "amount": 5}
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "druides",
+            "amount": 10
+          },
+          {
+            "type": "HEAL_LIFE",
+            "amount": 5
+          }
         ]
       }
     ],
-    "tags": ["ogham_quest", "muin", "vigne", "forgeron", "inversion_metal"]
+    "tags": [
+      "ogham_quest",
+      "muin",
+      "vigne",
+      "forgeron",
+      "inversion_metal"
+    ],
+    "trust_tier": "T0"
   },
   {
     "id": "fr_s10c_ogham_mastery_001",
@@ -1593,28 +2915,55 @@
         "label": "Se concentrer pour visualiser la sequence Beith-Luis-Quert en harmonie",
         "verb": "se concentrer",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "druides", "amount": 15},
-          {"type": "ADD_ANAM", "amount": 7}
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "druides",
+            "amount": 15
+          },
+          {
+            "type": "ADD_ANAM",
+            "amount": 7
+          }
         ]
       },
       {
         "label": "Mediter sur chaque ogham individuellement avant de les combiner",
         "verb": "mediter",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "druides", "amount": 12},
-          {"type": "HEAL_LIFE", "amount": 8}
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "druides",
+            "amount": 12
+          },
+          {
+            "type": "HEAL_LIFE",
+            "amount": 8
+          }
         ]
       },
       {
         "label": "Resister mentalement a la tentation de sauter des etapes",
         "verb": "resister mentalement",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "anciens", "amount": 10},
-          {"type": "ADD_BIOME_CURRENCY", "amount": 5}
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "anciens",
+            "amount": 10
+          },
+          {
+            "type": "ADD_BIOME_CURRENCY",
+            "amount": 5
+          }
         ]
       }
     ],
-    "tags": ["ogham_quest", "mastery", "triangle_novice", "beith_luis_quert"]
+    "tags": [
+      "ogham_quest",
+      "mastery",
+      "triangle_novice",
+      "beith_luis_quert"
+    ],
+    "trust_tier": "T0"
   },
   {
     "id": "fr_s10c_ogham_mastery_002",
@@ -1627,29 +2976,59 @@
         "label": "Combattre l'aspiration des trois oghams avec toute sa force vitale",
         "verb": "combattre",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "ankou", "amount": 20},
-          {"type": "DAMAGE_LIFE", "amount": 15},
-          {"type": "ADD_ANAM", "amount": 10}
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "ankou",
+            "amount": 20
+          },
+          {
+            "type": "DAMAGE_LIFE",
+            "amount": 15
+          },
+          {
+            "type": "ADD_ANAM",
+            "amount": 10
+          }
         ]
       },
       {
         "label": "Resister physiquement au portail en s'ancrant aux pierres du dolmen",
         "verb": "resister physiquement",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "ankou", "amount": 14},
-          {"type": "DAMAGE_LIFE", "amount": 8}
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "ankou",
+            "amount": 14
+          },
+          {
+            "type": "DAMAGE_LIFE",
+            "amount": 8
+          }
         ]
       },
       {
         "label": "Fuir avant que le portail ne s'ouvre completement",
         "verb": "fuir",
         "effects": [
-          {"type": "HEAL_LIFE", "amount": 5},
-          {"type": "ADD_REPUTATION", "faction": "anciens", "amount": 8}
+          {
+            "type": "HEAL_LIFE",
+            "amount": 5
+          },
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "anciens",
+            "amount": 8
+          }
         ]
       }
     ],
-    "tags": ["ogham_quest", "mastery", "triple_mort", "ioho_eadhadh_ur"]
+    "tags": [
+      "ogham_quest",
+      "mastery",
+      "triple_mort",
+      "ioho_eadhadh_ur"
+    ],
+    "trust_tier": "T0"
   },
   {
     "id": "fr_s10c_ogham_mastery_003",
@@ -1662,28 +3041,55 @@
         "label": "Ecouter le silence d'Avalon pour percevoir le nom de l'ogham manquant",
         "verb": "ecouter",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "niamh", "amount": 15},
-          {"type": "ADD_ANAM", "amount": 8}
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "niamh",
+            "amount": 15
+          },
+          {
+            "type": "ADD_ANAM",
+            "amount": 8
+          }
         ]
       },
       {
         "label": "Sentir le parfum de chaque arbre pour identifier celui qui t'appelle",
         "verb": "sentir",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "niamh", "amount": 12},
-          {"type": "HEAL_LIFE", "amount": 6}
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "niamh",
+            "amount": 12
+          },
+          {
+            "type": "HEAL_LIFE",
+            "amount": 6
+          }
         ]
       },
       {
         "label": "Tendre l'oreille vers le vent pour capter les vibrations des arbres lointains",
         "verb": "tendre l'oreille",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "druides", "amount": 10},
-          {"type": "ADD_BIOME_CURRENCY", "amount": 6}
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "druides",
+            "amount": 10
+          },
+          {
+            "type": "ADD_BIOME_CURRENCY",
+            "amount": 6
+          }
         ]
       }
     ],
-    "tags": ["ogham_quest", "mastery", "voix_ogham", "avalon"]
+    "tags": [
+      "ogham_quest",
+      "mastery",
+      "voix_ogham",
+      "avalon"
+    ],
+    "trust_tier": "T0"
   },
   {
     "id": "fr_s10c_ogham_mastery_004",
@@ -1696,27 +3102,54 @@
         "label": "Resoudre le puzzle en placant les 18 oghams dans l'ordre calendaire",
         "verb": "resoudre",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "anciens", "amount": 15},
-          {"type": "ADD_ANAM", "amount": 7}
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "anciens",
+            "amount": 15
+          },
+          {
+            "type": "ADD_ANAM",
+            "amount": 7
+          }
         ]
       },
       {
         "label": "Analyser les encoches pour trouver des indices sur l'ordre correct",
         "verb": "analyser",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "druides", "amount": 12},
-          {"type": "ADD_BIOME_CURRENCY", "amount": 6}
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "druides",
+            "amount": 12
+          },
+          {
+            "type": "ADD_BIOME_CURRENCY",
+            "amount": 6
+          }
         ]
       },
       {
         "label": "Decoder les symboles sur chaque jeton pour les associer aux bonnes encoches",
         "verb": "decoder",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "anciens", "amount": 10},
-          {"type": "HEAL_LIFE", "amount": 5}
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "anciens",
+            "amount": 10
+          },
+          {
+            "type": "HEAL_LIFE",
+            "amount": 5
+          }
         ]
       }
     ],
-    "tags": ["ogham_quest", "mastery", "puzzle_calendrier", "18_oghams"]
+    "tags": [
+      "ogham_quest",
+      "mastery",
+      "puzzle_calendrier",
+      "18_oghams"
+    ],
+    "trust_tier": "T0"
   }
 ]

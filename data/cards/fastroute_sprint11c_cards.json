@@ -12,28 +12,55 @@
         "label": "Mediter sur cette revelation pour en mesurer la portee",
         "verb": "mediter",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "druides", "amount": 20},
-          {"type": "ADD_ANAM", "amount": 10}
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "druides",
+            "amount": 20
+          },
+          {
+            "type": "ADD_ANAM",
+            "amount": 10
+          }
         ]
       },
       {
         "label": "Accepter cette verite avec humilite et gratitude",
         "verb": "accepter",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "druides", "amount": 16},
-          {"type": "HEAL_LIFE", "amount": 12}
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "druides",
+            "amount": 16
+          },
+          {
+            "type": "HEAL_LIFE",
+            "amount": 12
+          }
         ]
       },
       {
         "label": "Se concentrer pour sentir les Oghams repondre en toi",
         "verb": "se concentrer",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "anciens", "amount": 14},
-          {"type": "ADD_ANAM", "amount": 8}
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "anciens",
+            "amount": 14
+          },
+          {
+            "type": "ADD_ANAM",
+            "amount": 8
+          }
         ]
       }
     ],
-    "tags": ["endgame", "revelation", "oghams", "T3", "high_tier"]
+    "tags": [
+      "endgame",
+      "revelation",
+      "oghams",
+      "T3",
+      "high_tier"
+    ]
   },
   {
     "id": "fr_s11c_revelation_002",
@@ -48,28 +75,55 @@
         "label": "Dechiffrer les implications de cette revelation sur les biomes",
         "verb": "dechiffrer",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "anciens", "amount": 18},
-          {"type": "ADD_ANAM", "amount": 10}
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "anciens",
+            "amount": 18
+          },
+          {
+            "type": "ADD_ANAM",
+            "amount": 10
+          }
         ]
       },
       {
         "label": "Analyser la logique des lignes de force et leur reseau",
         "verb": "analyser",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "anciens", "amount": 14},
-          {"type": "ADD_BIOME_CURRENCY", "amount": 8}
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "anciens",
+            "amount": 14
+          },
+          {
+            "type": "ADD_BIOME_CURRENCY",
+            "amount": 8
+          }
         ]
       },
       {
         "label": "Interpreter les reves de la terre a travers tes propres experiences",
         "verb": "interpreter",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "druides", "amount": 12},
-          {"type": "HEAL_LIFE", "amount": 8}
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "druides",
+            "amount": 12
+          },
+          {
+            "type": "HEAL_LIFE",
+            "amount": 8
+          }
         ]
       }
     ],
-    "tags": ["endgame", "revelation", "ley_lines", "T3", "high_tier"]
+    "tags": [
+      "endgame",
+      "revelation",
+      "ley_lines",
+      "T3",
+      "high_tier"
+    ]
   },
   {
     "id": "fr_s11c_revelation_003",
@@ -84,28 +138,55 @@
         "label": "Ecouter cette verite avec chaque sens eveille",
         "verb": "ecouter",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "niamh", "amount": 16},
-          {"type": "ADD_ANAM", "amount": 10}
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "niamh",
+            "amount": 16
+          },
+          {
+            "type": "ADD_ANAM",
+            "amount": 10
+          }
         ]
       },
       {
         "label": "Sentir la connexion entre les factions a travers toi",
         "verb": "sentir",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "niamh", "amount": 14},
-          {"type": "HEAL_LIFE", "amount": 10}
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "niamh",
+            "amount": 14
+          },
+          {
+            "type": "HEAL_LIFE",
+            "amount": 10
+          }
         ]
       },
       {
         "label": "Suivre le fil qui relie les cinq factions dans ton experience",
         "verb": "suivre",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "druides", "amount": 12},
-          {"type": "ADD_BIOME_CURRENCY", "amount": 6}
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "druides",
+            "amount": 12
+          },
+          {
+            "type": "ADD_BIOME_CURRENCY",
+            "amount": 6
+          }
         ]
       }
     ],
-    "tags": ["endgame", "revelation", "factions", "T3", "high_tier"]
+    "tags": [
+      "endgame",
+      "revelation",
+      "factions",
+      "T3",
+      "high_tier"
+    ]
   },
   {
     "id": "fr_s11c_revelation_004",
@@ -120,28 +201,55 @@
         "label": "Endurer le poids de cette revelation sur la nature de l'Anam",
         "verb": "endurer",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "ankou", "amount": 16},
-          {"type": "ADD_ANAM", "amount": 10}
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "ankou",
+            "amount": 16
+          },
+          {
+            "type": "ADD_ANAM",
+            "amount": 10
+          }
         ]
       },
       {
         "label": "Mediter sur chaque moment d'harmonie que tu as vecu",
         "verb": "mediter",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "druides", "amount": 14},
-          {"type": "HEAL_LIFE", "amount": 10}
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "druides",
+            "amount": 14
+          },
+          {
+            "type": "HEAL_LIFE",
+            "amount": 10
+          }
         ]
       },
       {
         "label": "Accepter que tu fais partie de quelque chose de plus grand",
         "verb": "accepter",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "ankou", "amount": 14},
-          {"type": "ADD_ANAM", "amount": 8}
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "ankou",
+            "amount": 14
+          },
+          {
+            "type": "ADD_ANAM",
+            "amount": 8
+          }
         ]
       }
     ],
-    "tags": ["endgame", "revelation", "anam", "T3", "high_tier"]
+    "tags": [
+      "endgame",
+      "revelation",
+      "anam",
+      "T3",
+      "high_tier"
+    ]
   },
   {
     "id": "fr_s11c_revelation_005",
@@ -156,28 +264,55 @@
         "label": "Convaincre Merlin que tu comprends maintenant la sagesse des korrigans",
         "verb": "convaincre",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "korrigans", "amount": 18},
-          {"type": "ADD_ANAM", "amount": 8}
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "korrigans",
+            "amount": 18
+          },
+          {
+            "type": "ADD_ANAM",
+            "amount": 8
+          }
         ]
       },
       {
         "label": "Amadouer Merlin en repondant par un eclat de rire",
         "verb": "amadouer",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "korrigans", "amount": 16},
-          {"type": "HEAL_LIFE", "amount": 10}
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "korrigans",
+            "amount": 16
+          },
+          {
+            "type": "HEAL_LIFE",
+            "amount": 10
+          }
         ]
       },
       {
         "label": "Negocier un moment de legerete au milieu de tant de gravite",
         "verb": "negocier",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "korrigans", "amount": 12},
-          {"type": "ADD_BIOME_CURRENCY", "amount": 6}
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "korrigans",
+            "amount": 12
+          },
+          {
+            "type": "ADD_BIOME_CURRENCY",
+            "amount": 6
+          }
         ]
       }
     ],
-    "tags": ["endgame", "revelation", "korrigans", "T3", "high_tier"]
+    "tags": [
+      "endgame",
+      "revelation",
+      "korrigans",
+      "T3",
+      "high_tier"
+    ]
   },
   {
     "id": "fr_s11c_revelation_006",
@@ -192,28 +327,55 @@
         "label": "Observer Merlin pour voir s'il est serieux ou s'il te teste encore",
         "verb": "observer",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "druides", "amount": 18},
-          {"type": "ADD_ANAM", "amount": 10}
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "druides",
+            "amount": 18
+          },
+          {
+            "type": "ADD_ANAM",
+            "amount": 10
+          }
         ]
       },
       {
         "label": "Scruter ses yeux pour y lire la confirmation de cette verite",
         "verb": "scruter",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "druides", "amount": 16},
-          {"type": "HEAL_LIFE", "amount": 8}
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "druides",
+            "amount": 16
+          },
+          {
+            "type": "HEAL_LIFE",
+            "amount": 8
+          }
         ]
       },
       {
         "label": "Memoriser ce moment comme le plus important de ton voyage",
         "verb": "memoriser",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "anciens", "amount": 14},
-          {"type": "ADD_BIOME_CURRENCY", "amount": 6}
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "anciens",
+            "amount": 14
+          },
+          {
+            "type": "ADD_BIOME_CURRENCY",
+            "amount": 6
+          }
         ]
       }
     ],
-    "tags": ["endgame", "revelation", "succession", "T3", "high_tier"]
+    "tags": [
+      "endgame",
+      "revelation",
+      "succession",
+      "T3",
+      "high_tier"
+    ]
   },
   {
     "id": "fr_s11c_revelation_007",
@@ -228,28 +390,55 @@
         "label": "Calmer les regrets lies aux promesses brisees",
         "verb": "calmer",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "anciens", "amount": 16},
-          {"type": "HEAL_LIFE", "amount": 12}
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "anciens",
+            "amount": 16
+          },
+          {
+            "type": "HEAL_LIFE",
+            "amount": 12
+          }
         ]
       },
       {
         "label": "Se concentrer sur le sens profond des promesses",
         "verb": "se concentrer",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "anciens", "amount": 14},
-          {"type": "ADD_ANAM", "amount": 8}
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "anciens",
+            "amount": 14
+          },
+          {
+            "type": "ADD_ANAM",
+            "amount": 8
+          }
         ]
       },
       {
         "label": "Parler a Merlin des promesses qui comptent encore",
         "verb": "parler",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "druides", "amount": 12},
-          {"type": "ADD_BIOME_CURRENCY", "amount": 5}
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "druides",
+            "amount": 12
+          },
+          {
+            "type": "ADD_BIOME_CURRENCY",
+            "amount": 5
+          }
         ]
       }
     ],
-    "tags": ["endgame", "revelation", "promesses", "T3", "high_tier"]
+    "tags": [
+      "endgame",
+      "revelation",
+      "promesses",
+      "T3",
+      "high_tier"
+    ]
   },
   {
     "id": "fr_s11c_revelation_008",
@@ -264,28 +453,55 @@
         "label": "Tenter sa chance une derniere fois pour tester cette theorie",
         "verb": "tenter sa chance",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "niamh", "amount": 16},
-          {"type": "ADD_ANAM", "amount": 8}
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "niamh",
+            "amount": 16
+          },
+          {
+            "type": "ADD_ANAM",
+            "amount": 8
+          }
         ]
       },
       {
         "label": "Deviner ce que la terre choisira pour toi maintenant",
         "verb": "deviner",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "korrigans", "amount": 14},
-          {"type": "ADD_BIOME_CURRENCY", "amount": 7}
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "korrigans",
+            "amount": 14
+          },
+          {
+            "type": "ADD_BIOME_CURRENCY",
+            "amount": 7
+          }
         ]
       },
       {
         "label": "Chercher au hasard un signe dans le paysage pour confirmer",
         "verb": "chercher au hasard",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "niamh", "amount": 12},
-          {"type": "HEAL_LIFE", "amount": 8}
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "niamh",
+            "amount": 12
+          },
+          {
+            "type": "HEAL_LIFE",
+            "amount": 8
+          }
         ]
       }
     ],
-    "tags": ["endgame", "revelation", "hasard", "T3", "high_tier"]
+    "tags": [
+      "endgame",
+      "revelation",
+      "hasard",
+      "T3",
+      "high_tier"
+    ]
   },
   {
     "id": "fr_s11c_revelation_009",
@@ -300,28 +516,55 @@
         "label": "Ecouter le monde entier avec chaque fibre de ton etre",
         "verb": "ecouter",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "druides", "amount": 20},
-          {"type": "ADD_ANAM", "amount": 10}
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "druides",
+            "amount": 20
+          },
+          {
+            "type": "ADD_ANAM",
+            "amount": 10
+          }
         ]
       },
       {
         "label": "Pister chaque son jusqu'a sa source pour comprendre l'ensemble",
         "verb": "pister",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "druides", "amount": 16},
-          {"type": "HEAL_LIFE", "amount": 10}
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "druides",
+            "amount": 16
+          },
+          {
+            "type": "HEAL_LIFE",
+            "amount": 10
+          }
         ]
       },
       {
         "label": "Flairer l'air des landes pour completer l'experience sensorielle",
         "verb": "flairer",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "niamh", "amount": 12},
-          {"type": "ADD_BIOME_CURRENCY", "amount": 6}
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "niamh",
+            "amount": 12
+          },
+          {
+            "type": "ADD_BIOME_CURRENCY",
+            "amount": 6
+          }
         ]
       }
     ],
-    "tags": ["endgame", "revelation", "ecoute", "T3", "high_tier"]
+    "tags": [
+      "endgame",
+      "revelation",
+      "ecoute",
+      "T3",
+      "high_tier"
+    ]
   },
   {
     "id": "fr_s11c_revelation_010",
@@ -336,28 +579,55 @@
         "label": "Mediter sur le sens du dix-neuvieme Ogham",
         "verb": "mediter",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "druides", "amount": 20},
-          {"type": "ADD_ANAM", "amount": 10}
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "druides",
+            "amount": 20
+          },
+          {
+            "type": "ADD_ANAM",
+            "amount": 10
+          }
         ]
       },
       {
         "label": "Apaiser Merlin en lui promettant de chercher cet Ogham",
         "verb": "apaiser",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "druides", "amount": 16},
-          {"type": "HEAL_LIFE", "amount": 12}
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "druides",
+            "amount": 16
+          },
+          {
+            "type": "HEAL_LIFE",
+            "amount": 12
+          }
         ]
       },
       {
         "label": "Accepter la quete du dernier Ogham comme ton destin",
         "verb": "accepter",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "anciens", "amount": 14},
-          {"type": "ADD_ANAM", "amount": 8}
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "anciens",
+            "amount": 14
+          },
+          {
+            "type": "ADD_ANAM",
+            "amount": 8
+          }
         ]
       }
     ],
-    "tags": ["endgame", "revelation", "19e_ogham", "T3", "high_tier"]
+    "tags": [
+      "endgame",
+      "revelation",
+      "19e_ogham",
+      "T3",
+      "high_tier"
+    ]
   },
   {
     "id": "fr_s11c_confrontation_001",
@@ -370,28 +640,55 @@
         "label": "Combattre l'entite avec toute la force acquise",
         "verb": "combattre",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "ankou", "amount": 20},
-          {"type": "DAMAGE_LIFE", "amount": 15}
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "ankou",
+            "amount": 20
+          },
+          {
+            "type": "DAMAGE_LIFE",
+            "amount": 15
+          }
         ]
       },
       {
         "label": "Resister physiquement a la pression de sa presence",
         "verb": "resister physiquement",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "ankou", "amount": 16},
-          {"type": "DAMAGE_LIFE", "amount": 10}
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "ankou",
+            "amount": 16
+          },
+          {
+            "type": "DAMAGE_LIFE",
+            "amount": 10
+          }
         ]
       },
       {
         "label": "Fuir pour regrouper les factions avant l'affrontement",
         "verb": "fuir",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "anciens", "amount": 12},
-          {"type": "HEAL_LIFE", "amount": 5}
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "anciens",
+            "amount": 12
+          },
+          {
+            "type": "HEAL_LIFE",
+            "amount": 5
+          }
         ]
       }
     ],
-    "tags": ["endgame", "confrontation", "entite_ancienne", "boss"]
+    "tags": [
+      "endgame",
+      "confrontation",
+      "entite_ancienne",
+      "boss"
+    ],
+    "trust_tier": "T0"
   },
   {
     "id": "fr_s11c_confrontation_002",
@@ -404,28 +701,55 @@
         "label": "Apaiser les arbres en canalisant l'energie des Oghams",
         "verb": "apaiser",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "druides", "amount": 20},
-          {"type": "DAMAGE_LIFE", "amount": 10}
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "druides",
+            "amount": 20
+          },
+          {
+            "type": "DAMAGE_LIFE",
+            "amount": 10
+          }
         ]
       },
       {
         "label": "Se concentrer pour devenir le conduit entre la foret et la terre",
         "verb": "se concentrer",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "druides", "amount": 16},
-          {"type": "ADD_ANAM", "amount": 8}
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "druides",
+            "amount": 16
+          },
+          {
+            "type": "ADD_ANAM",
+            "amount": 8
+          }
         ]
       },
       {
         "label": "Calmer Maelgwn et organiser une resistance collective",
         "verb": "calmer",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "druides", "amount": 14},
-          {"type": "HEAL_LIFE", "amount": 8}
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "druides",
+            "amount": 14
+          },
+          {
+            "type": "HEAL_LIFE",
+            "amount": 8
+          }
         ]
       }
     ],
-    "tags": ["endgame", "confrontation", "foret_corrompue", "boss"]
+    "tags": [
+      "endgame",
+      "confrontation",
+      "foret_corrompue",
+      "boss"
+    ],
+    "trust_tier": "T0"
   },
   {
     "id": "fr_s11c_confrontation_003",
@@ -438,28 +762,55 @@
         "label": "Se faufiler entre les fissures du voile pour le reparer de l'interieur",
         "verb": "se faufiler",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "niamh", "amount": 18},
-          {"type": "DAMAGE_LIFE", "amount": 12}
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "niamh",
+            "amount": 18
+          },
+          {
+            "type": "DAMAGE_LIFE",
+            "amount": 12
+          }
         ]
       },
       {
         "label": "Esquiver les fragments de realite pour atteindre la source de la dechirure",
         "verb": "esquiver",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "niamh", "amount": 14},
-          {"type": "DAMAGE_LIFE", "amount": 8}
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "niamh",
+            "amount": 14
+          },
+          {
+            "type": "DAMAGE_LIFE",
+            "amount": 8
+          }
         ]
       },
       {
         "label": "Contourner le chaos pour trouver un point stable",
         "verb": "contourner",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "niamh", "amount": 12},
-          {"type": "HEAL_LIFE", "amount": 5}
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "niamh",
+            "amount": 12
+          },
+          {
+            "type": "HEAL_LIFE",
+            "amount": 5
+          }
         ]
       }
     ],
-    "tags": ["endgame", "confrontation", "voile_dechire", "boss"]
+    "tags": [
+      "endgame",
+      "confrontation",
+      "voile_dechire",
+      "boss"
+    ],
+    "trust_tier": "T0"
   },
   {
     "id": "fr_s11c_confrontation_004",
@@ -472,28 +823,56 @@
         "label": "Mentir de maniere si absurde que meme les petrifie riront",
         "verb": "mentir",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "korrigans", "amount": 18},
-          {"type": "HEAL_LIFE", "amount": 10}
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "korrigans",
+            "amount": 18
+          },
+          {
+            "type": "HEAL_LIFE",
+            "amount": 10
+          }
         ]
       },
       {
         "label": "Charmer les korrigans avec une histoire ridicule et impossible",
         "verb": "charmer",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "korrigans", "amount": 16},
-          {"type": "ADD_ANAM", "amount": 6}
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "korrigans",
+            "amount": 16
+          },
+          {
+            "type": "ADD_ANAM",
+            "amount": 6
+          }
         ]
       },
       {
         "label": "Amadouer Gwen Du pour qu'elle commence a rire la premiere",
         "verb": "amadouer",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "korrigans", "amount": 14},
-          {"type": "ADD_BIOME_CURRENCY", "amount": 6}
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "korrigans",
+            "amount": 14
+          },
+          {
+            "type": "ADD_BIOME_CURRENCY",
+            "amount": 6
+          }
         ]
       }
     ],
-    "tags": ["endgame", "confrontation", "silence", "rire", "boss"]
+    "tags": [
+      "endgame",
+      "confrontation",
+      "silence",
+      "rire",
+      "boss"
+    ],
+    "trust_tier": "T0"
   },
   {
     "id": "fr_s11c_confrontation_005",
@@ -506,28 +885,56 @@
         "label": "Dechiffrer les equations de la terre avant qu'elles ne s'effacent",
         "verb": "dechiffrer",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "anciens", "amount": 20},
-          {"type": "DAMAGE_LIFE", "amount": 10}
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "anciens",
+            "amount": 20
+          },
+          {
+            "type": "DAMAGE_LIFE",
+            "amount": 10
+          }
         ]
       },
       {
         "label": "Analyser le pattern d'absorption pour trouver un point faible",
         "verb": "analyser",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "anciens", "amount": 16},
-          {"type": "ADD_ANAM", "amount": 7}
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "anciens",
+            "amount": 16
+          },
+          {
+            "type": "ADD_ANAM",
+            "amount": 7
+          }
         ]
       },
       {
         "label": "Resoudre le probleme en alimentant les menhirs avec ton Anam",
         "verb": "resoudre",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "anciens", "amount": 14},
-          {"type": "DAMAGE_LIFE", "amount": 8}
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "anciens",
+            "amount": 14
+          },
+          {
+            "type": "DAMAGE_LIFE",
+            "amount": 8
+          }
         ]
       }
     ],
-    "tags": ["endgame", "confrontation", "menhirs", "memoire", "boss"]
+    "tags": [
+      "endgame",
+      "confrontation",
+      "menhirs",
+      "memoire",
+      "boss"
+    ],
+    "trust_tier": "T0"
   },
   {
     "id": "fr_s11c_confrontation_006",
@@ -542,28 +949,55 @@
         "label": "Ecouter Merlin pour absorber la strategie completement",
         "verb": "ecouter",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "druides", "amount": 18},
-          {"type": "ADD_ANAM", "amount": 10}
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "druides",
+            "amount": 18
+          },
+          {
+            "type": "ADD_ANAM",
+            "amount": 10
+          }
         ]
       },
       {
         "label": "Suivre les instructions de Merlin avec precision",
         "verb": "suivre",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "druides", "amount": 14},
-          {"type": "HEAL_LIFE", "amount": 8}
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "druides",
+            "amount": 14
+          },
+          {
+            "type": "HEAL_LIFE",
+            "amount": 8
+          }
         ]
       },
       {
         "label": "Pister la voix de Merlin pour la localiser dans les arbres",
         "verb": "pister",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "anciens", "amount": 12},
-          {"type": "ADD_BIOME_CURRENCY", "amount": 6}
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "anciens",
+            "amount": 12
+          },
+          {
+            "type": "ADD_BIOME_CURRENCY",
+            "amount": 6
+          }
         ]
       }
     ],
-    "tags": ["endgame", "confrontation", "merlin_aide", "oubli", "boss"]
+    "tags": [
+      "endgame",
+      "confrontation",
+      "merlin_aide",
+      "oubli",
+      "boss"
+    ]
   },
   {
     "id": "fr_s11c_confrontation_007",
@@ -576,28 +1010,56 @@
         "label": "Accepter l'aide de l'Ankou et se preparer a agir vite",
         "verb": "accepter",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "ankou", "amount": 18},
-          {"type": "ADD_ANAM", "amount": 8}
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "ankou",
+            "amount": 18
+          },
+          {
+            "type": "ADD_ANAM",
+            "amount": 8
+          }
         ]
       },
       {
         "label": "Endurer l'attente pendant que l'Ankou affronte l'Oubli",
         "verb": "endurer",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "ankou", "amount": 14},
-          {"type": "DAMAGE_LIFE", "amount": 6}
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "ankou",
+            "amount": 14
+          },
+          {
+            "type": "DAMAGE_LIFE",
+            "amount": 6
+          }
         ]
       },
       {
         "label": "Se concentrer sur les cinq forces a rassembler",
         "verb": "se concentrer",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "druides", "amount": 12},
-          {"type": "HEAL_LIFE", "amount": 8}
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "druides",
+            "amount": 12
+          },
+          {
+            "type": "HEAL_LIFE",
+            "amount": 8
+          }
         ]
       }
     ],
-    "tags": ["endgame", "confrontation", "ankou_aide", "memoire_vs_oubli", "boss"]
+    "tags": [
+      "endgame",
+      "confrontation",
+      "ankou_aide",
+      "memoire_vs_oubli",
+      "boss"
+    ],
+    "trust_tier": "T0"
   },
   {
     "id": "fr_s11c_confrontation_008",
@@ -610,28 +1072,56 @@
         "label": "Resister physiquement a la pression des cinq forces combinees",
         "verb": "resister physiquement",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "druides", "amount": 16},
-          {"type": "DAMAGE_LIFE", "amount": 12}
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "druides",
+            "amount": 16
+          },
+          {
+            "type": "DAMAGE_LIFE",
+            "amount": 12
+          }
         ]
       },
       {
         "label": "Forcer l'energie vers l'entite pour l'endormir",
         "verb": "forcer",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "anciens", "amount": 16},
-          {"type": "DAMAGE_LIFE", "amount": 10}
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "anciens",
+            "amount": 16
+          },
+          {
+            "type": "DAMAGE_LIFE",
+            "amount": 10
+          }
         ]
       },
       {
         "label": "Endurer la douleur en canalisant chaque faction une par une",
         "verb": "endurer",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "ankou", "amount": 14},
-          {"type": "DAMAGE_LIFE", "amount": 8}
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "ankou",
+            "amount": 14
+          },
+          {
+            "type": "DAMAGE_LIFE",
+            "amount": 8
+          }
         ]
       }
     ],
-    "tags": ["endgame", "confrontation", "convergence", "cinq_forces", "climax"]
+    "tags": [
+      "endgame",
+      "confrontation",
+      "convergence",
+      "cinq_forces",
+      "climax"
+    ],
+    "trust_tier": "T0"
   },
   {
     "id": "fr_s11c_confrontation_009",
@@ -644,28 +1134,56 @@
         "label": "Tenter sa chance en s'accrochant au souvenir le plus fort",
         "verb": "tenter sa chance",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "niamh", "amount": 20},
-          {"type": "DAMAGE_LIFE", "amount": 10}
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "niamh",
+            "amount": 20
+          },
+          {
+            "type": "DAMAGE_LIFE",
+            "amount": 10
+          }
         ]
       },
       {
         "label": "Deviner quel souvenir est la cle pour tout retrouver",
         "verb": "deviner",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "korrigans", "amount": 14},
-          {"type": "ADD_ANAM", "amount": 8}
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "korrigans",
+            "amount": 14
+          },
+          {
+            "type": "ADD_ANAM",
+            "amount": 8
+          }
         ]
       },
       {
         "label": "Fouiller a l'aveugle dans les fragments de memoire qui restent",
         "verb": "fouiller a l'aveugle",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "niamh", "amount": 16},
-          {"type": "HEAL_LIFE", "amount": 6}
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "niamh",
+            "amount": 16
+          },
+          {
+            "type": "HEAL_LIFE",
+            "amount": 6
+          }
         ]
       }
     ],
-    "tags": ["endgame", "confrontation", "memoire_effacee", "dernier_acte", "climax"]
+    "tags": [
+      "endgame",
+      "confrontation",
+      "memoire_effacee",
+      "dernier_acte",
+      "climax"
+    ],
+    "trust_tier": "T0"
   },
   {
     "id": "fr_s11c_confrontation_010",
@@ -680,28 +1198,55 @@
         "label": "Accepter le repos offert par Merlin et la foret",
         "verb": "accepter",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "druides", "amount": 18},
-          {"type": "HEAL_LIFE", "amount": 15}
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "druides",
+            "amount": 18
+          },
+          {
+            "type": "HEAL_LIFE",
+            "amount": 15
+          }
         ]
       },
       {
         "label": "Mediter sur tout ce qui vient de se passer",
         "verb": "mediter",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "druides", "amount": 16},
-          {"type": "ADD_ANAM", "amount": 10}
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "druides",
+            "amount": 16
+          },
+          {
+            "type": "ADD_ANAM",
+            "amount": 10
+          }
         ]
       },
       {
         "label": "Parler a Merlin une derniere fois avant de dormir",
         "verb": "parler",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "anciens", "amount": 14},
-          {"type": "ADD_ANAM", "amount": 8}
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "anciens",
+            "amount": 14
+          },
+          {
+            "type": "ADD_ANAM",
+            "amount": 8
+          }
         ]
       }
     ],
-    "tags": ["endgame", "confrontation", "victoire", "repos", "climax"]
+    "tags": [
+      "endgame",
+      "confrontation",
+      "victoire",
+      "repos",
+      "climax"
+    ]
   },
   {
     "id": "fr_s11c_epilogue_001",
@@ -714,28 +1259,55 @@
         "label": "Observer le jeune chene pour voir s'il porte un symbole",
         "verb": "observer",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "druides", "amount": 16},
-          {"type": "ADD_ANAM", "amount": 8}
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "druides",
+            "amount": 16
+          },
+          {
+            "type": "ADD_ANAM",
+            "amount": 8
+          }
         ]
       },
       {
         "label": "Examiner l'arbre de pres pour comprendre sa croissance miraculeuse",
         "verb": "examiner",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "druides", "amount": 14},
-          {"type": "HEAL_LIFE", "amount": 10}
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "druides",
+            "amount": 14
+          },
+          {
+            "type": "HEAL_LIFE",
+            "amount": 10
+          }
         ]
       },
       {
         "label": "Memoriser chaque detail de cet arbre pour ne jamais oublier",
         "verb": "memoriser",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "anciens", "amount": 12},
-          {"type": "ADD_BIOME_CURRENCY", "amount": 6}
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "anciens",
+            "amount": 12
+          },
+          {
+            "type": "ADD_BIOME_CURRENCY",
+            "amount": 6
+          }
         ]
       }
     ],
-    "tags": ["endgame", "epilogue", "chene", "renouveau"]
+    "tags": [
+      "endgame",
+      "epilogue",
+      "chene",
+      "renouveau"
+    ],
+    "trust_tier": "T0"
   },
   {
     "id": "fr_s11c_epilogue_002",
@@ -748,28 +1320,55 @@
         "label": "Dechiffrer les nouvelles inscriptions pour comprendre ce qu'elles disent",
         "verb": "dechiffrer",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "anciens", "amount": 16},
-          {"type": "ADD_ANAM", "amount": 8}
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "anciens",
+            "amount": 16
+          },
+          {
+            "type": "ADD_ANAM",
+            "amount": 8
+          }
         ]
       },
       {
         "label": "Analyser la nouvelle lumiere des menhirs pour en comprendre la source",
         "verb": "analyser",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "anciens", "amount": 14},
-          {"type": "ADD_BIOME_CURRENCY", "amount": 7}
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "anciens",
+            "amount": 14
+          },
+          {
+            "type": "ADD_BIOME_CURRENCY",
+            "amount": 7
+          }
         ]
       },
       {
         "label": "Etudier les changements pour documenter la transformation",
         "verb": "etudier",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "druides", "amount": 12},
-          {"type": "HEAL_LIFE", "amount": 8}
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "druides",
+            "amount": 12
+          },
+          {
+            "type": "HEAL_LIFE",
+            "amount": 8
+          }
         ]
       }
     ],
-    "tags": ["endgame", "epilogue", "menhirs", "histoire"]
+    "tags": [
+      "endgame",
+      "epilogue",
+      "menhirs",
+      "histoire"
+    ],
+    "trust_tier": "T0"
   },
   {
     "id": "fr_s11c_epilogue_003",
@@ -782,28 +1381,55 @@
         "label": "Charmer les korrigans avec un mensonge inaugural joyeux",
         "verb": "charmer",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "korrigans", "amount": 18},
-          {"type": "HEAL_LIFE", "amount": 12}
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "korrigans",
+            "amount": 18
+          },
+          {
+            "type": "HEAL_LIFE",
+            "amount": 12
+          }
         ]
       },
       {
         "label": "Convaincre Gwen Du que la verite peut etre aussi drole que le mensonge",
         "verb": "convaincre",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "korrigans", "amount": 14},
-          {"type": "ADD_ANAM", "amount": 6}
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "korrigans",
+            "amount": 14
+          },
+          {
+            "type": "ADD_ANAM",
+            "amount": 6
+          }
         ]
       },
       {
         "label": "Amadouer les korrigans en les remerciant avec exageration",
         "verb": "amadouer",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "korrigans", "amount": 12},
-          {"type": "ADD_BIOME_CURRENCY", "amount": 8}
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "korrigans",
+            "amount": 12
+          },
+          {
+            "type": "ADD_BIOME_CURRENCY",
+            "amount": 8
+          }
         ]
       }
     ],
-    "tags": ["endgame", "epilogue", "rire", "korrigans"]
+    "tags": [
+      "endgame",
+      "epilogue",
+      "rire",
+      "korrigans"
+    ],
+    "trust_tier": "T0"
   },
   {
     "id": "fr_s11c_epilogue_004",
@@ -816,28 +1442,55 @@
         "label": "Ecouter les sons qui filtrent a travers le voile aminci",
         "verb": "ecouter",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "niamh", "amount": 16},
-          {"type": "ADD_ANAM", "amount": 8}
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "niamh",
+            "amount": 16
+          },
+          {
+            "type": "ADD_ANAM",
+            "amount": 8
+          }
         ]
       },
       {
         "label": "Sentir le parfum du monde feerique a travers le voile",
         "verb": "sentir",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "niamh", "amount": 14},
-          {"type": "HEAL_LIFE", "amount": 10}
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "niamh",
+            "amount": 14
+          },
+          {
+            "type": "HEAL_LIFE",
+            "amount": 10
+          }
         ]
       },
       {
         "label": "Suivre du regard les silhouettes feeriques de l'autre cote",
         "verb": "suivre",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "niamh", "amount": 12},
-          {"type": "ADD_BIOME_CURRENCY", "amount": 6}
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "niamh",
+            "amount": 12
+          },
+          {
+            "type": "ADD_BIOME_CURRENCY",
+            "amount": 6
+          }
         ]
       }
     ],
-    "tags": ["endgame", "epilogue", "voile", "fees"]
+    "tags": [
+      "endgame",
+      "epilogue",
+      "voile",
+      "fees"
+    ],
+    "trust_tier": "T0"
   },
   {
     "id": "fr_s11c_epilogue_005",
@@ -850,28 +1503,56 @@
         "label": "Mediter aux cotes de l'Ankou sur le sens de la mortalite",
         "verb": "mediter",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "ankou", "amount": 16},
-          {"type": "ADD_ANAM", "amount": 8}
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "ankou",
+            "amount": 16
+          },
+          {
+            "type": "ADD_ANAM",
+            "amount": 8
+          }
         ]
       },
       {
         "label": "Accepter la sagesse de l'Ankou avec gratitude",
         "verb": "accepter",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "ankou", "amount": 14},
-          {"type": "HEAL_LIFE", "amount": 12}
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "ankou",
+            "amount": 14
+          },
+          {
+            "type": "HEAL_LIFE",
+            "amount": 12
+          }
         ]
       },
       {
         "label": "Attendre en silence le coucher du soleil ensemble",
         "verb": "attendre",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "ankou", "amount": 12},
-          {"type": "ADD_REPUTATION", "faction": "druides", "amount": 8}
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "ankou",
+            "amount": 12
+          },
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "druides",
+            "amount": 8
+          }
         ]
       }
     ],
-    "tags": ["endgame", "epilogue", "ankou", "paix"]
+    "tags": [
+      "endgame",
+      "epilogue",
+      "ankou",
+      "paix"
+    ],
+    "trust_tier": "T0"
   },
   {
     "id": "fr_s11c_epilogue_006",
@@ -884,28 +1565,55 @@
         "label": "Courir une derniere fois sur les landes pour celebrer",
         "verb": "courir",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "druides", "amount": 14},
-          {"type": "HEAL_LIFE", "amount": 10}
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "druides",
+            "amount": 14
+          },
+          {
+            "type": "HEAL_LIFE",
+            "amount": 10
+          }
         ]
       },
       {
         "label": "Pousser la derniere pierre du cairn pour le completer",
         "verb": "pousser",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "anciens", "amount": 14},
-          {"type": "ADD_ANAM", "amount": 6}
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "anciens",
+            "amount": 14
+          },
+          {
+            "type": "ADD_ANAM",
+            "amount": 6
+          }
         ]
       },
       {
         "label": "Endurer l'emotion de ce moment avec dignite",
         "verb": "endurer",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "druides", "amount": 12},
-          {"type": "ADD_BIOME_CURRENCY", "amount": 6}
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "druides",
+            "amount": 12
+          },
+          {
+            "type": "ADD_BIOME_CURRENCY",
+            "amount": 6
+          }
         ]
       }
     ],
-    "tags": ["endgame", "epilogue", "cairn", "landes"]
+    "tags": [
+      "endgame",
+      "epilogue",
+      "cairn",
+      "landes"
+    ],
+    "trust_tier": "T0"
   },
   {
     "id": "fr_s11c_epilogue_007",
@@ -918,28 +1626,55 @@
         "label": "Parler aux convives — vivants et spectres — avec la meme attention",
         "verb": "parler",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "anciens", "amount": 16},
-          {"type": "HEAL_LIFE", "amount": 12}
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "anciens",
+            "amount": 16
+          },
+          {
+            "type": "HEAL_LIFE",
+            "amount": 12
+          }
         ]
       },
       {
         "label": "Accepter le festin avec la gratitude qu'il merite",
         "verb": "accepter",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "anciens", "amount": 14},
-          {"type": "ADD_ANAM", "amount": 6}
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "anciens",
+            "amount": 14
+          },
+          {
+            "type": "ADD_ANAM",
+            "amount": 6
+          }
         ]
       },
       {
         "label": "Calmer l'emotion en savourant chaque instant du repas",
         "verb": "calmer",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "druides", "amount": 12},
-          {"type": "ADD_BIOME_CURRENCY", "amount": 6}
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "druides",
+            "amount": 12
+          },
+          {
+            "type": "ADD_BIOME_CURRENCY",
+            "amount": 6
+          }
         ]
       }
     ],
-    "tags": ["endgame", "epilogue", "festin", "ancetres"]
+    "tags": [
+      "endgame",
+      "epilogue",
+      "festin",
+      "ancetres"
+    ],
+    "trust_tier": "T0"
   },
   {
     "id": "fr_s11c_epilogue_008",
@@ -952,28 +1687,55 @@
         "label": "Observer les dauphins pour graver cette image dans ta memoire",
         "verb": "observer",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "niamh", "amount": 14},
-          {"type": "HEAL_LIFE", "amount": 12}
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "niamh",
+            "amount": 14
+          },
+          {
+            "type": "HEAL_LIFE",
+            "amount": 12
+          }
         ]
       },
       {
         "label": "Scruter l'horizon pour voir si d'autres merveilles attendent",
         "verb": "scruter",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "niamh", "amount": 12},
-          {"type": "ADD_ANAM", "amount": 6}
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "niamh",
+            "amount": 12
+          },
+          {
+            "type": "ADD_ANAM",
+            "amount": 6
+          }
         ]
       },
       {
         "label": "Memoriser chaque detail de cette scene comme dernier souvenir",
         "verb": "memoriser",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "anciens", "amount": 10},
-          {"type": "ADD_BIOME_CURRENCY", "amount": 6}
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "anciens",
+            "amount": 10
+          },
+          {
+            "type": "ADD_BIOME_CURRENCY",
+            "amount": 6
+          }
         ]
       }
     ],
-    "tags": ["endgame", "epilogue", "mer", "adieu"]
+    "tags": [
+      "endgame",
+      "epilogue",
+      "mer",
+      "adieu"
+    ],
+    "trust_tier": "T0"
   },
   {
     "id": "fr_s11c_epilogue_009",
@@ -986,28 +1748,55 @@
         "label": "Tenter sa chance et deviner le contenu du sac",
         "verb": "tenter sa chance",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "korrigans", "amount": 16},
-          {"type": "ADD_ANAM", "amount": 8}
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "korrigans",
+            "amount": 16
+          },
+          {
+            "type": "ADD_ANAM",
+            "amount": 8
+          }
         ]
       },
       {
         "label": "Fouiller a l'aveugle dans le sac pour la surprise",
         "verb": "fouiller a l'aveugle",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "korrigans", "amount": 14},
-          {"type": "ADD_BIOME_CURRENCY", "amount": 8}
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "korrigans",
+            "amount": 14
+          },
+          {
+            "type": "ADD_BIOME_CURRENCY",
+            "amount": 8
+          }
         ]
       },
       {
         "label": "Deviner chaque cadeau par faction pour montrer que tu les connais",
         "verb": "deviner",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "korrigans", "amount": 12},
-          {"type": "HEAL_LIFE", "amount": 10}
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "korrigans",
+            "amount": 12
+          },
+          {
+            "type": "HEAL_LIFE",
+            "amount": 10
+          }
         ]
       }
     ],
-    "tags": ["endgame", "epilogue", "cadeau", "surprise"]
+    "tags": [
+      "endgame",
+      "epilogue",
+      "cadeau",
+      "surprise"
+    ],
+    "trust_tier": "T0"
   },
   {
     "id": "fr_s11c_epilogue_010",
@@ -1022,27 +1811,54 @@
         "label": "Apaiser la tristesse du depart en ecoutant les feuilles une derniere fois",
         "verb": "apaiser",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "druides", "amount": 20},
-          {"type": "HEAL_LIFE", "amount": 15}
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "druides",
+            "amount": 20
+          },
+          {
+            "type": "HEAL_LIFE",
+            "amount": 15
+          }
         ]
       },
       {
         "label": "Accepter l'adieu de Merlin avec la force de tout ce que tu as appris",
         "verb": "accepter",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "druides", "amount": 18},
-          {"type": "ADD_ANAM", "amount": 10}
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "druides",
+            "amount": 18
+          },
+          {
+            "type": "ADD_ANAM",
+            "amount": 10
+          }
         ]
       },
       {
         "label": "Mediter une derniere fois sous les arbres avant de partir",
         "verb": "mediter",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "druides", "amount": 16},
-          {"type": "ADD_REPUTATION", "faction": "anciens", "amount": 8}
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "druides",
+            "amount": 16
+          },
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "anciens",
+            "amount": 8
+          }
         ]
       }
     ],
-    "tags": ["endgame", "epilogue", "adieu_merlin", "final"]
+    "tags": [
+      "endgame",
+      "epilogue",
+      "adieu_merlin",
+      "final"
+    ]
   }
 ]

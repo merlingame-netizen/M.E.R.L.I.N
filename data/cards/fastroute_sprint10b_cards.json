@@ -10,28 +10,57 @@
         "label": "Analyser les arguments des deux camps pour trouver un compromis fonde",
         "verb": "analyser",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "druides", "amount": 8},
-          {"type": "ADD_REPUTATION", "faction": "anciens", "amount": 8}
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "druides",
+            "amount": 8
+          },
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "anciens",
+            "amount": 8
+          }
         ]
       },
       {
         "label": "Interpreter les champignons comme preuve de vie, soutenant les druides",
         "verb": "interpreter",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "druides", "amount": 15},
-          {"type": "ADD_REPUTATION", "faction": "anciens", "amount": -8}
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "druides",
+            "amount": 15
+          },
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "anciens",
+            "amount": -8
+          }
         ]
       },
       {
         "label": "Decoder les inscriptions au sol pour confirmer la tombe royale",
         "verb": "decoder",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "anciens", "amount": 15},
-          {"type": "ADD_REPUTATION", "faction": "druides", "amount": -8}
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "anciens",
+            "amount": 15
+          },
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "druides",
+            "amount": -8
+          }
         ]
       }
     ],
-    "tags": ["faction_conflict", "druides_vs_anciens", "cercle_champignons"]
+    "tags": [
+      "faction_conflict",
+      "druides_vs_anciens",
+      "cercle_champignons"
+    ],
+    "trust_tier": "T0"
   },
   {
     "id": "fr_s10b_conflict_002",
@@ -44,29 +73,61 @@
         "label": "Marchander un accord : les druides meditent le matin, les korrigans percoivent l'apres-midi",
         "verb": "marchander",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "korrigans", "amount": 10},
-          {"type": "ADD_REPUTATION", "faction": "druides", "amount": 6}
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "korrigans",
+            "amount": 10
+          },
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "druides",
+            "amount": 6
+          }
         ]
       },
       {
         "label": "Convaincre le druide de payer en montrant le respect des traditions korriganes",
         "verb": "convaincre",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "korrigans", "amount": 14},
-          {"type": "ADD_REPUTATION", "faction": "druides", "amount": -6}
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "korrigans",
+            "amount": 14
+          },
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "druides",
+            "amount": -6
+          }
         ]
       },
       {
         "label": "Mentir au korrigan en pretendant que le druide a deja paye en secret",
         "verb": "mentir",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "druides", "amount": 12},
-          {"type": "ADD_REPUTATION", "faction": "korrigans", "amount": -10},
-          {"type": "DAMAGE_LIFE", "amount": 3}
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "druides",
+            "amount": 12
+          },
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "korrigans",
+            "amount": -10
+          },
+          {
+            "type": "DAMAGE_LIFE",
+            "amount": 3
+          }
         ]
       }
     ],
-    "tags": ["faction_conflict", "korrigans_vs_druides", "pont_peage"]
+    "tags": [
+      "faction_conflict",
+      "korrigans_vs_druides",
+      "pont_peage"
+    ],
+    "trust_tier": "T0"
   },
   {
     "id": "fr_s10b_conflict_003",
@@ -79,28 +140,57 @@
         "label": "Mediter sur la dualite vie-mort pour proposer un rituel partage",
         "verb": "mediter",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "ankou", "amount": 10},
-          {"type": "ADD_REPUTATION", "faction": "anciens", "amount": 8}
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "ankou",
+            "amount": 10
+          },
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "anciens",
+            "amount": 8
+          }
         ]
       },
       {
         "label": "Apaiser l'emissaire de l'Ankou en honorant le guerrier par ses rites",
         "verb": "apaiser",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "ankou", "amount": 15},
-          {"type": "ADD_REPUTATION", "faction": "anciens", "amount": -6}
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "ankou",
+            "amount": 15
+          },
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "anciens",
+            "amount": -6
+          }
         ]
       },
       {
         "label": "Calmer Ildiko en promettant que le dolmen sera purifie apres le depart du corps",
         "verb": "calmer",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "anciens", "amount": 14},
-          {"type": "ADD_REPUTATION", "faction": "ankou", "amount": -5}
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "anciens",
+            "amount": 14
+          },
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "ankou",
+            "amount": -5
+          }
         ]
       }
     ],
-    "tags": ["faction_conflict", "ankou_vs_anciens", "guerrier_tombe"]
+    "tags": [
+      "faction_conflict",
+      "ankou_vs_anciens",
+      "guerrier_tombe"
+    ],
+    "trust_tier": "T0"
   },
   {
     "id": "fr_s10b_conflict_004",
@@ -113,28 +203,57 @@
         "label": "Observer le miroir pour determiner son origine par ses reflets",
         "verb": "observer",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "niamh", "amount": 14},
-          {"type": "ADD_REPUTATION", "faction": "korrigans", "amount": -5}
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "niamh",
+            "amount": 14
+          },
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "korrigans",
+            "amount": -5
+          }
         ]
       },
       {
         "label": "Scruter les marques sur le miroir pour trancher le differend",
         "verb": "scruter",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "niamh", "amount": 8},
-          {"type": "ADD_REPUTATION", "faction": "korrigans", "amount": 8}
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "niamh",
+            "amount": 8
+          },
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "korrigans",
+            "amount": 8
+          }
         ]
       },
       {
         "label": "Examiner les traces de l'echouage pour prouver qu'il a ete depose intentionnellement",
         "verb": "examiner",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "korrigans", "amount": 14},
-          {"type": "ADD_REPUTATION", "faction": "niamh", "amount": -5}
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "korrigans",
+            "amount": 14
+          },
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "niamh",
+            "amount": -5
+          }
         ]
       }
     ],
-    "tags": ["faction_conflict", "niamh_vs_korrigans", "miroir_ecume"]
+    "tags": [
+      "faction_conflict",
+      "niamh_vs_korrigans",
+      "miroir_ecume"
+    ],
+    "trust_tier": "T0"
   },
   {
     "id": "fr_s10b_conflict_005",
@@ -147,28 +266,57 @@
         "label": "Apaiser les deux camps en proposant une zone tampon entre eau pure et eau morte",
         "verb": "apaiser",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "druides", "amount": 8},
-          {"type": "ADD_REPUTATION", "faction": "ankou", "amount": 8}
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "druides",
+            "amount": 8
+          },
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "ankou",
+            "amount": 8
+          }
         ]
       },
       {
         "label": "Se concentrer sur la purification pour sauver les vivants",
         "verb": "se concentrer",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "druides", "amount": 15},
-          {"type": "ADD_REPUTATION", "faction": "ankou", "amount": -10}
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "druides",
+            "amount": 15
+          },
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "ankou",
+            "amount": -10
+          }
         ]
       },
       {
         "label": "Accepter la logique de l'Ankou et proteger le refuge des ames",
         "verb": "accepter",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "ankou", "amount": 15},
-          {"type": "ADD_REPUTATION", "faction": "druides", "amount": -10}
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "ankou",
+            "amount": 15
+          },
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "druides",
+            "amount": -10
+          }
         ]
       }
     ],
-    "tags": ["faction_conflict", "druides_vs_ankou", "lac_toxique"]
+    "tags": [
+      "faction_conflict",
+      "druides_vs_ankou",
+      "lac_toxique"
+    ],
+    "trust_tier": "T0"
   },
   {
     "id": "fr_s10b_conflict_006",
@@ -181,28 +329,57 @@
         "label": "Negocier une restitution partielle en menageant l'honneur des deux camps",
         "verb": "negocier",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "anciens", "amount": 8},
-          {"type": "ADD_REPUTATION", "faction": "korrigans", "amount": 8}
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "anciens",
+            "amount": 8
+          },
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "korrigans",
+            "amount": 8
+          }
         ]
       },
       {
         "label": "Convaincre Cadogan que les preuves accusent les rats, pas les korrigans",
         "verb": "convaincre",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "korrigans", "amount": 15},
-          {"type": "ADD_REPUTATION", "faction": "anciens", "amount": -6}
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "korrigans",
+            "amount": 15
+          },
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "anciens",
+            "amount": -6
+          }
         ]
       },
       {
         "label": "Charmer le chef korrigan pour qu'il avoue et propose reparation",
         "verb": "charmer",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "anciens", "amount": 14},
-          {"type": "ADD_REPUTATION", "faction": "korrigans", "amount": -4}
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "anciens",
+            "amount": 14
+          },
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "korrigans",
+            "amount": -4
+          }
         ]
       }
     ],
-    "tags": ["faction_conflict", "anciens_vs_korrigans", "vol_grain"]
+    "tags": [
+      "faction_conflict",
+      "anciens_vs_korrigans",
+      "vol_grain"
+    ],
+    "trust_tier": "T0"
   },
   {
     "id": "fr_s10b_conflict_007",
@@ -215,28 +392,57 @@
         "label": "Mediter pres du navire pour comprendre sa volonte propre",
         "verb": "mediter",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "niamh", "amount": 14},
-          {"type": "ADD_REPUTATION", "faction": "druides", "amount": -4}
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "niamh",
+            "amount": 14
+          },
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "druides",
+            "amount": -4
+          }
         ]
       },
       {
         "label": "Calmer les voix dans la coque par une invocation druidique",
         "verb": "calmer",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "druides", "amount": 14},
-          {"type": "ADD_REPUTATION", "faction": "niamh", "amount": -4}
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "druides",
+            "amount": 14
+          },
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "niamh",
+            "amount": -4
+          }
         ]
       },
       {
         "label": "Resister mentalement aux murmures pour garder son propre jugement",
         "verb": "resister mentalement",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "niamh", "amount": 8},
-          {"type": "ADD_REPUTATION", "faction": "druides", "amount": 8}
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "niamh",
+            "amount": 8
+          },
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "druides",
+            "amount": 8
+          }
         ]
       }
     ],
-    "tags": ["faction_conflict", "niamh_vs_druides", "navire_fantome"]
+    "tags": [
+      "faction_conflict",
+      "niamh_vs_druides",
+      "navire_fantome"
+    ],
+    "trust_tier": "T0"
   },
   {
     "id": "fr_s10b_conflict_008",
@@ -249,29 +455,62 @@
         "label": "Se faufiler entre les deux camps pour desactiver les pieges discretement",
         "verb": "se faufiler",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "druides", "amount": 12},
-          {"type": "ADD_REPUTATION", "faction": "korrigans", "amount": -8}
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "druides",
+            "amount": 12
+          },
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "korrigans",
+            "amount": -8
+          }
         ]
       },
       {
         "label": "Contourner le conflit en proposant aux korrigans une zone de chasse alternative",
         "verb": "contourner",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "korrigans", "amount": 10},
-          {"type": "ADD_REPUTATION", "faction": "druides", "amount": 6}
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "korrigans",
+            "amount": 10
+          },
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "druides",
+            "amount": 6
+          }
         ]
       },
       {
         "label": "Escalader un arbre pour avoir une vue d'ensemble et compter les biches restantes",
         "verb": "escalader",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "druides", "amount": 8},
-          {"type": "ADD_REPUTATION", "faction": "korrigans", "amount": 4},
-          {"type": "ADD_ANAM", "amount": 3}
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "druides",
+            "amount": 8
+          },
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "korrigans",
+            "amount": 4
+          },
+          {
+            "type": "ADD_ANAM",
+            "amount": 3
+          }
         ]
       }
     ],
-    "tags": ["faction_conflict", "korrigans_vs_druides", "biches_sacrees", "chasse"]
+    "tags": [
+      "faction_conflict",
+      "korrigans_vs_druides",
+      "biches_sacrees",
+      "chasse"
+    ],
+    "trust_tier": "T0"
   },
   {
     "id": "fr_s10b_conflict_009",
@@ -284,28 +523,58 @@
         "label": "Resoudre le dilemme en concevant un cercle qui integre le passage",
         "verb": "resoudre",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "anciens", "amount": 10},
-          {"type": "ADD_REPUTATION", "faction": "niamh", "amount": 10}
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "anciens",
+            "amount": 10
+          },
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "niamh",
+            "amount": 10
+          }
         ]
       },
       {
         "label": "Analyser la structure du passage pour determiner s'il survivrait a la restauration",
         "verb": "analyser",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "anciens", "amount": 15},
-          {"type": "ADD_REPUTATION", "faction": "niamh", "amount": -6}
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "anciens",
+            "amount": 15
+          },
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "niamh",
+            "amount": -6
+          }
         ]
       },
       {
         "label": "Dechiffrer les pierres tombees pour comprendre l'intention originale des batisseurs",
         "verb": "dechiffrer",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "niamh", "amount": 14},
-          {"type": "ADD_REPUTATION", "faction": "anciens", "amount": -4}
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "niamh",
+            "amount": 14
+          },
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "anciens",
+            "amount": -4
+          }
         ]
       }
     ],
-    "tags": ["faction_conflict", "anciens_vs_niamh", "cercle_effondre", "passage"]
+    "tags": [
+      "faction_conflict",
+      "anciens_vs_niamh",
+      "cercle_effondre",
+      "passage"
+    ],
+    "trust_tier": "T0"
   },
   {
     "id": "fr_s10b_conflict_010",
@@ -318,30 +587,65 @@
         "label": "Combattre symboliquement pour remplacer l'epreuve de sang par un duel d'honneur",
         "verb": "combattre",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "ankou", "amount": 12},
-          {"type": "ADD_REPUTATION", "faction": "anciens", "amount": 5},
-          {"type": "DAMAGE_LIFE", "amount": 8}
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "ankou",
+            "amount": 12
+          },
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "anciens",
+            "amount": 5
+          },
+          {
+            "type": "DAMAGE_LIFE",
+            "amount": 8
+          }
         ]
       },
       {
         "label": "Forcer le guerrier a remettre l'epee et s'agenouiller",
         "verb": "forcer",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "ankou", "amount": 15},
-          {"type": "ADD_REPUTATION", "faction": "anciens", "amount": -10}
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "ankou",
+            "amount": 15
+          },
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "anciens",
+            "amount": -10
+          }
         ]
       },
       {
         "label": "Courir porter l'epee au tombeau avant que l'Ankou ne se venge",
         "verb": "courir",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "ankou", "amount": 8},
-          {"type": "ADD_REPUTATION", "faction": "anciens", "amount": 8},
-          {"type": "DAMAGE_LIFE", "amount": 4}
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "ankou",
+            "amount": 8
+          },
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "anciens",
+            "amount": 8
+          },
+          {
+            "type": "DAMAGE_LIFE",
+            "amount": 4
+          }
         ]
       }
     ],
-    "tags": ["faction_conflict", "ankou_vs_anciens", "epee_profanee"]
+    "tags": [
+      "faction_conflict",
+      "ankou_vs_anciens",
+      "epee_profanee"
+    ],
+    "trust_tier": "T0"
   },
   {
     "id": "fr_s10b_conflict_011",
@@ -354,29 +658,61 @@
         "label": "Tenter sa chance en goutant l'eau pour determiner sa nature",
         "verb": "tenter sa chance",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "niamh", "amount": 12},
-          {"type": "ADD_REPUTATION", "faction": "druides", "amount": -4},
-          {"type": "HEAL_LIFE", "amount": 8}
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "niamh",
+            "amount": 12
+          },
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "druides",
+            "amount": -4
+          },
+          {
+            "type": "HEAL_LIFE",
+            "amount": 8
+          }
         ]
       },
       {
         "label": "Deviner un compromis en laissant la source libre mais accessible aux malades",
         "verb": "deviner",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "druides", "amount": 10},
-          {"type": "ADD_REPUTATION", "faction": "niamh", "amount": 6}
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "druides",
+            "amount": 10
+          },
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "niamh",
+            "amount": 6
+          }
         ]
       },
       {
         "label": "Cueillir des plantes medicinales autour de la source comme alternative",
         "verb": "cueillir",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "druides", "amount": 14},
-          {"type": "ADD_REPUTATION", "faction": "niamh", "amount": -6}
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "druides",
+            "amount": 14
+          },
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "niamh",
+            "amount": -6
+          }
         ]
       }
     ],
-    "tags": ["faction_conflict", "druides_vs_niamh", "source_guerisseuse"]
+    "tags": [
+      "faction_conflict",
+      "druides_vs_niamh",
+      "source_guerisseuse"
+    ],
+    "trust_tier": "T0"
   },
   {
     "id": "fr_s10b_conflict_012",
@@ -389,28 +725,57 @@
         "label": "Negocier un partage de l'eau avec un calendrier d'alternance",
         "verb": "negocier",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "korrigans", "amount": 10},
-          {"type": "ADD_REPUTATION", "faction": "anciens", "amount": 10}
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "korrigans",
+            "amount": 10
+          },
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "anciens",
+            "amount": 10
+          }
         ]
       },
       {
         "label": "Amadouer les korrigans avec des provisions pour compenser la perte d'eau",
         "verb": "amadouer",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "korrigans", "amount": 15},
-          {"type": "ADD_REPUTATION", "faction": "anciens", "amount": -5}
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "korrigans",
+            "amount": 15
+          },
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "anciens",
+            "amount": -5
+          }
         ]
       },
       {
         "label": "Convaincre Cadogan que les terriers sont essentiels a l'equilibre",
         "verb": "convaincre",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "anciens", "amount": 14},
-          {"type": "ADD_REPUTATION", "faction": "korrigans", "amount": -4}
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "anciens",
+            "amount": 14
+          },
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "korrigans",
+            "amount": -4
+          }
         ]
       }
     ],
-    "tags": ["faction_conflict", "korrigans_vs_anciens", "riviere_detournee"]
+    "tags": [
+      "faction_conflict",
+      "korrigans_vs_anciens",
+      "riviere_detournee"
+    ],
+    "trust_tier": "T0"
   },
   {
     "id": "fr_s10b_conflict_013",
@@ -423,28 +788,58 @@
         "label": "Mediter entre les deux forces pour trouver une voie intermediaire",
         "verb": "mediter",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "niamh", "amount": 10},
-          {"type": "ADD_REPUTATION", "faction": "ankou", "amount": 10}
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "niamh",
+            "amount": 10
+          },
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "ankou",
+            "amount": 10
+          }
         ]
       },
       {
         "label": "Se concentrer sur les ames pour comprendre ce qu'elles veulent vraiment",
         "verb": "se concentrer",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "niamh", "amount": 15},
-          {"type": "ADD_REPUTATION", "faction": "ankou", "amount": -8}
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "niamh",
+            "amount": 15
+          },
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "ankou",
+            "amount": -8
+          }
         ]
       },
       {
         "label": "Accepter la logique de l'Ankou : le repos est un droit des morts",
         "verb": "accepter",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "ankou", "amount": 15},
-          {"type": "ADD_REPUTATION", "faction": "niamh", "amount": -8}
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "ankou",
+            "amount": 15
+          },
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "niamh",
+            "amount": -8
+          }
         ]
       }
     ],
-    "tags": ["faction_conflict", "niamh_vs_ankou", "ames_noyes", "passage"]
+    "tags": [
+      "faction_conflict",
+      "niamh_vs_ankou",
+      "ames_noyes",
+      "passage"
+    ],
+    "trust_tier": "T0"
   },
   {
     "id": "fr_s10b_conflict_014",
@@ -457,28 +852,57 @@
         "label": "Examiner les poteries pour comparer les symboles avec les originaux druidiques",
         "verb": "examiner",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "anciens", "amount": 8},
-          {"type": "ADD_REPUTATION", "faction": "druides", "amount": 8}
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "anciens",
+            "amount": 8
+          },
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "druides",
+            "amount": 8
+          }
         ]
       },
       {
         "label": "Scruter les differences subtiles entre les gravures anciennes et les copies",
         "verb": "scruter",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "druides", "amount": 14},
-          {"type": "ADD_REPUTATION", "faction": "anciens", "amount": -4}
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "druides",
+            "amount": 14
+          },
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "anciens",
+            "amount": -4
+          }
         ]
       },
       {
         "label": "Observer l'attitude du forgeron pour juger de sa sincerite",
         "verb": "observer",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "anciens", "amount": 14},
-          {"type": "ADD_REPUTATION", "faction": "druides", "amount": -4}
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "anciens",
+            "amount": 14
+          },
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "druides",
+            "amount": -4
+          }
         ]
       }
     ],
-    "tags": ["faction_conflict", "anciens_vs_druides", "poteries_symboles"]
+    "tags": [
+      "faction_conflict",
+      "anciens_vs_druides",
+      "poteries_symboles"
+    ],
+    "trust_tier": "T0"
   },
   {
     "id": "fr_s10b_conflict_015",
@@ -491,28 +915,57 @@
         "label": "Ecouter les echos dans l'ossuaire pour determiner qui l'a occupe en premier",
         "verb": "ecouter",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "ankou", "amount": 12},
-          {"type": "ADD_REPUTATION", "faction": "korrigans", "amount": -4}
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "ankou",
+            "amount": 12
+          },
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "korrigans",
+            "amount": -4
+          }
         ]
       },
       {
         "label": "Flairer l'air pour distinguer l'odeur des os anciens de l'or korrigan",
         "verb": "flairer",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "korrigans", "amount": 12},
-          {"type": "ADD_REPUTATION", "faction": "ankou", "amount": -4}
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "korrigans",
+            "amount": 12
+          },
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "ankou",
+            "amount": -4
+          }
         ]
       },
       {
         "label": "Sentir les vibrations du sol pour trouver une chambre separee pour chacun",
         "verb": "sentir",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "ankou", "amount": 8},
-          {"type": "ADD_REPUTATION", "faction": "korrigans", "amount": 8}
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "ankou",
+            "amount": 8
+          },
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "korrigans",
+            "amount": 8
+          }
         ]
       }
     ],
-    "tags": ["faction_conflict", "ankou_vs_korrigans", "ossuaire_tresor"]
+    "tags": [
+      "faction_conflict",
+      "ankou_vs_korrigans",
+      "ossuaire_tresor"
+    ],
+    "trust_tier": "T0"
   },
   {
     "id": "fr_s10b_conflict_016",
@@ -525,28 +978,57 @@
         "label": "Analyser le terrain pour trouver un espace qui serve les deux objectifs",
         "verb": "analyser",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "druides", "amount": 10},
-          {"type": "ADD_REPUTATION", "faction": "anciens", "amount": 8}
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "druides",
+            "amount": 10
+          },
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "anciens",
+            "amount": 8
+          }
         ]
       },
       {
         "label": "Resoudre le conflit en proposant un bosquet-terrain : arbres espaces pour le combat",
         "verb": "resoudre",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "druides", "amount": 8},
-          {"type": "ADD_REPUTATION", "faction": "anciens", "amount": 10}
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "druides",
+            "amount": 8
+          },
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "anciens",
+            "amount": 10
+          }
         ]
       },
       {
         "label": "Etudier les precedents historiques ou druides et guerriers coexistaient",
         "verb": "etudier",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "druides", "amount": 15},
-          {"type": "ADD_REPUTATION", "faction": "anciens", "amount": -6}
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "druides",
+            "amount": 15
+          },
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "anciens",
+            "amount": -6
+          }
         ]
       }
     ],
-    "tags": ["faction_conflict", "druides_vs_anciens", "bosquet_place_armes"]
+    "tags": [
+      "faction_conflict",
+      "druides_vs_anciens",
+      "bosquet_place_armes"
+    ],
+    "trust_tier": "T0"
   },
   {
     "id": "fr_s10b_conflict_017",
@@ -559,28 +1041,57 @@
         "label": "Se faufiler dans le tunnel pour evaluer les degats avant de juger",
         "verb": "se faufiler",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "korrigans", "amount": 10},
-          {"type": "ADD_REPUTATION", "faction": "niamh", "amount": 4}
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "korrigans",
+            "amount": 10
+          },
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "niamh",
+            "amount": 4
+          }
         ]
       },
       {
         "label": "Contourner le probleme en proposant un acces partage au filon",
         "verb": "contourner",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "korrigans", "amount": 8},
-          {"type": "ADD_REPUTATION", "faction": "niamh", "amount": 8}
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "korrigans",
+            "amount": 8
+          },
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "niamh",
+            "amount": 8
+          }
         ]
       },
       {
         "label": "Se cacher pour observer si les korrigans planifient d'agrandir le tunnel",
         "verb": "se cacher",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "niamh", "amount": 14},
-          {"type": "ADD_REPUTATION", "faction": "korrigans", "amount": -6}
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "niamh",
+            "amount": 14
+          },
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "korrigans",
+            "amount": -6
+          }
         ]
       }
     ],
-    "tags": ["faction_conflict", "korrigans_vs_niamh", "tunnel_cristaux"]
+    "tags": [
+      "faction_conflict",
+      "korrigans_vs_niamh",
+      "tunnel_cristaux"
+    ],
+    "trust_tier": "T0"
   },
   {
     "id": "fr_s10b_conflict_018",
@@ -593,30 +1104,65 @@
         "label": "Combattre l'idee que la mort est un droit sur les vivants",
         "verb": "combattre",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "druides", "amount": 15},
-          {"type": "ADD_REPUTATION", "faction": "ankou", "amount": -10},
-          {"type": "DAMAGE_LIFE", "amount": 5}
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "druides",
+            "amount": 15
+          },
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "ankou",
+            "amount": -10
+          },
+          {
+            "type": "DAMAGE_LIFE",
+            "amount": 5
+          }
         ]
       },
       {
         "label": "Resister physiquement a la presence ecrasante de l'Ankou pour proteger la guerisseuse",
         "verb": "resister physiquement",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "druides", "amount": 10},
-          {"type": "ADD_REPUTATION", "faction": "ankou", "amount": 6},
-          {"type": "DAMAGE_LIFE", "amount": 8}
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "druides",
+            "amount": 10
+          },
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "ankou",
+            "amount": 6
+          },
+          {
+            "type": "DAMAGE_LIFE",
+            "amount": 8
+          }
         ]
       },
       {
         "label": "Fuir chercher du renfort aupres des Anciens du village voisin",
         "verb": "fuir",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "anciens", "amount": 10},
-          {"type": "ADD_REPUTATION", "faction": "ankou", "amount": -3}
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "anciens",
+            "amount": 10
+          },
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "ankou",
+            "amount": -3
+          }
         ]
       }
     ],
-    "tags": ["faction_conflict", "ankou_vs_druides", "guerison_contestee"]
+    "tags": [
+      "faction_conflict",
+      "ankou_vs_druides",
+      "guerison_contestee"
+    ],
+    "trust_tier": "T0"
   },
   {
     "id": "fr_s10b_conflict_019",
@@ -629,29 +1175,62 @@
         "label": "Tenter sa chance en jouant de la harpe pour voir a qui elle repond",
         "verb": "tenter sa chance",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "niamh", "amount": 15},
-          {"type": "ADD_REPUTATION", "faction": "korrigans", "amount": -5},
-          {"type": "ADD_REPUTATION", "faction": "anciens", "amount": -5}
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "niamh",
+            "amount": 15
+          },
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "korrigans",
+            "amount": -5
+          },
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "anciens",
+            "amount": -5
+          }
         ]
       },
       {
         "label": "Deviner l'intention de la harpe en ecoutant sa melodie",
         "verb": "deviner",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "niamh", "amount": 10},
-          {"type": "ADD_REPUTATION", "faction": "korrigans", "amount": 4}
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "niamh",
+            "amount": 10
+          },
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "korrigans",
+            "amount": 4
+          }
         ]
       },
       {
         "label": "Fouiller a l'aveugle autour de la harpe pour des indices de propriete",
         "verb": "fouiller a l'aveugle",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "anciens", "amount": 12},
-          {"type": "ADD_REPUTATION", "faction": "niamh", "amount": -4}
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "anciens",
+            "amount": 12
+          },
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "niamh",
+            "amount": -4
+          }
         ]
       }
     ],
-    "tags": ["faction_conflict", "triple_conflit", "harpe_corail"]
+    "tags": [
+      "faction_conflict",
+      "triple_conflit",
+      "harpe_corail"
+    ],
+    "trust_tier": "T0"
   },
   {
     "id": "fr_s10b_conflict_020",
@@ -664,28 +1243,57 @@
         "label": "Resister mentalement a la pression des deux camps pour garder un jugement clair",
         "verb": "resister mentalement",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "anciens", "amount": 8},
-          {"type": "ADD_REPUTATION", "faction": "druides", "amount": 8}
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "anciens",
+            "amount": 8
+          },
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "druides",
+            "amount": 8
+          }
         ]
       },
       {
         "label": "Apaiser Brennos en proposant un rituel supervise par les deux camps",
         "verb": "apaiser",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "druides", "amount": 12},
-          {"type": "ADD_REPUTATION", "faction": "anciens", "amount": 5}
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "druides",
+            "amount": 12
+          },
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "anciens",
+            "amount": 5
+          }
         ]
       },
       {
         "label": "Endurer le debat pour permettre a chaque camp d'exprimer ses griefs",
         "verb": "endurer",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "anciens", "amount": 14},
-          {"type": "ADD_REPUTATION", "faction": "druides", "amount": -4}
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "anciens",
+            "amount": 14
+          },
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "druides",
+            "amount": -4
+          }
         ]
       }
     ],
-    "tags": ["faction_conflict", "anciens_vs_druides", "acces_cromlech"]
+    "tags": [
+      "faction_conflict",
+      "anciens_vs_druides",
+      "acces_cromlech"
+    ],
+    "trust_tier": "T0"
   },
   {
     "id": "fr_s10b_conflict_021",
@@ -698,28 +1306,57 @@
         "label": "Examiner les documents pour determiner leur veritable nature",
         "verb": "examiner",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "korrigans", "amount": 8},
-          {"type": "ADD_REPUTATION", "faction": "anciens", "amount": 8}
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "korrigans",
+            "amount": 8
+          },
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "anciens",
+            "amount": 8
+          }
         ]
       },
       {
         "label": "Scruter le sceau pour verifier l'autorite qui a envoye le messager",
         "verb": "scruter",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "anciens", "amount": 14},
-          {"type": "ADD_REPUTATION", "faction": "korrigans", "amount": -4}
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "anciens",
+            "amount": 14
+          },
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "korrigans",
+            "amount": -4
+          }
         ]
       },
       {
         "label": "Inspecter le messager pour des indices caches dans ses vetements",
         "verb": "inspecter",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "korrigans", "amount": 14},
-          {"type": "ADD_REPUTATION", "faction": "anciens", "amount": -6}
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "korrigans",
+            "amount": 14
+          },
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "anciens",
+            "amount": -6
+          }
         ]
       }
     ],
-    "tags": ["faction_conflict", "korrigans_vs_anciens", "messager_capture"]
+    "tags": [
+      "faction_conflict",
+      "korrigans_vs_anciens",
+      "messager_capture"
+    ],
+    "trust_tier": "T0"
   },
   {
     "id": "fr_s10b_conflict_022",
@@ -732,29 +1369,62 @@
         "label": "Ecouter le rythme de la maree pour calculer le temps restant pour les deux",
         "verb": "ecouter",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "druides", "amount": 8},
-          {"type": "ADD_REPUTATION", "faction": "ankou", "amount": 8},
-          {"type": "DAMAGE_LIFE", "amount": 4}
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "druides",
+            "amount": 8
+          },
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "ankou",
+            "amount": 8
+          },
+          {
+            "type": "DAMAGE_LIFE",
+            "amount": 4
+          }
         ]
       },
       {
         "label": "Suivre son instinct et sauver les plantes medicinales en priorite",
         "verb": "suivre",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "druides", "amount": 15},
-          {"type": "ADD_REPUTATION", "faction": "ankou", "amount": -10}
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "druides",
+            "amount": 15
+          },
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "ankou",
+            "amount": -10
+          }
         ]
       },
       {
         "label": "Pister un passage superieur pour evacuer les os d'abord",
         "verb": "pister",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "ankou", "amount": 15},
-          {"type": "ADD_REPUTATION", "faction": "druides", "amount": -10}
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "ankou",
+            "amount": 15
+          },
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "druides",
+            "amount": -10
+          }
         ]
       }
     ],
-    "tags": ["faction_conflict", "druides_vs_ankou", "grotte_marine", "maree"]
+    "tags": [
+      "faction_conflict",
+      "druides_vs_ankou",
+      "grotte_marine",
+      "maree"
+    ],
+    "trust_tier": "T0"
   },
   {
     "id": "fr_s10b_conflict_023",
@@ -767,28 +1437,57 @@
         "label": "Negocier un acces partage au torque pour les ceremonies des deux camps",
         "verb": "negocier",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "niamh", "amount": 10},
-          {"type": "ADD_REPUTATION", "faction": "anciens", "amount": 8}
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "niamh",
+            "amount": 10
+          },
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "anciens",
+            "amount": 8
+          }
         ]
       },
       {
         "label": "Convaincre Cadogan que le torque est effectivement un don ancestral",
         "verb": "convaincre",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "niamh", "amount": 15},
-          {"type": "ADD_REPUTATION", "faction": "anciens", "amount": -8}
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "niamh",
+            "amount": 15
+          },
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "anciens",
+            "amount": -8
+          }
         ]
       },
       {
         "label": "Charmer Morgane pour qu'elle accepte un echange symbolique",
         "verb": "charmer",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "anciens", "amount": 14},
-          {"type": "ADD_REPUTATION", "faction": "niamh", "amount": -4}
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "anciens",
+            "amount": 14
+          },
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "niamh",
+            "amount": -4
+          }
         ]
       }
     ],
-    "tags": ["faction_conflict", "niamh_vs_anciens", "torque_or"]
+    "tags": [
+      "faction_conflict",
+      "niamh_vs_anciens",
+      "torque_or"
+    ],
+    "trust_tier": "T0"
   },
   {
     "id": "fr_s10b_conflict_024",
@@ -801,28 +1500,58 @@
         "label": "Analyser l'inclinaison du menhir pour determiner si elle est naturelle ou surnaturelle",
         "verb": "analyser",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "ankou", "amount": 8},
-          {"type": "ADD_REPUTATION", "faction": "druides", "amount": 8}
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "ankou",
+            "amount": 8
+          },
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "druides",
+            "amount": 8
+          }
         ]
       },
       {
         "label": "Interpreter le mouvement comme un message ancien a dechiffrer",
         "verb": "interpreter",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "ankou", "amount": 15},
-          {"type": "ADD_REPUTATION", "faction": "druides", "amount": -6}
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "ankou",
+            "amount": 15
+          },
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "druides",
+            "amount": -6
+          }
         ]
       },
       {
         "label": "Resoudre le differend en proposant de redresser le menhir ensemble",
         "verb": "resoudre",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "druides", "amount": 14},
-          {"type": "ADD_REPUTATION", "faction": "ankou", "amount": -4}
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "druides",
+            "amount": 14
+          },
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "ankou",
+            "amount": -4
+          }
         ]
       }
     ],
-    "tags": ["faction_conflict", "ankou_vs_druides", "menhir_penche", "frontiere"]
+    "tags": [
+      "faction_conflict",
+      "ankou_vs_druides",
+      "menhir_penche",
+      "frontiere"
+    ],
+    "trust_tier": "T0"
   },
   {
     "id": "fr_s10b_conflict_025",
@@ -835,29 +1564,61 @@
         "label": "Mentir en confirmant le passage pour gagner la faveur des korrigans",
         "verb": "mentir",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "korrigans", "amount": 15},
-          {"type": "ADD_REPUTATION", "faction": "niamh", "amount": -10},
-          {"type": "DAMAGE_LIFE", "amount": 3}
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "korrigans",
+            "amount": 15
+          },
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "niamh",
+            "amount": -10
+          },
+          {
+            "type": "DAMAGE_LIFE",
+            "amount": 3
+          }
         ]
       },
       {
         "label": "Negocier une exploration conjointe pour verifier les dires des korrigans",
         "verb": "negocier",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "korrigans", "amount": 8},
-          {"type": "ADD_REPUTATION", "faction": "niamh", "amount": 8}
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "korrigans",
+            "amount": 8
+          },
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "niamh",
+            "amount": 8
+          }
         ]
       },
       {
         "label": "Amadouer Morgane en suggerant que meme un bluff peut reveler une verite",
         "verb": "amadouer",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "niamh", "amount": 12},
-          {"type": "ADD_REPUTATION", "faction": "korrigans", "amount": -4}
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "niamh",
+            "amount": 12
+          },
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "korrigans",
+            "amount": -4
+          }
         ]
       }
     ],
-    "tags": ["faction_conflict", "korrigans_vs_niamh", "passage_blaireau"]
+    "tags": [
+      "faction_conflict",
+      "korrigans_vs_niamh",
+      "passage_blaireau"
+    ],
+    "trust_tier": "T0"
   },
   {
     "id": "fr_s10b_conflict_026",
@@ -870,30 +1631,65 @@
         "label": "Combattre pour le clan le plus ancien en duel d'honneur",
         "verb": "combattre",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "anciens", "amount": 14},
-          {"type": "ADD_REPUTATION", "faction": "korrigans", "amount": -6},
-          {"type": "DAMAGE_LIFE", "amount": 8}
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "anciens",
+            "amount": 14
+          },
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "korrigans",
+            "amount": -6
+          },
+          {
+            "type": "DAMAGE_LIFE",
+            "amount": 8
+          }
         ]
       },
       {
         "label": "Courir prevenir le druide le plus proche pour une mediation officielle",
         "verb": "courir",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "anciens", "amount": 8},
-          {"type": "ADD_REPUTATION", "faction": "druides", "amount": 10}
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "anciens",
+            "amount": 8
+          },
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "druides",
+            "amount": 10
+          }
         ]
       },
       {
         "label": "Pousser les korrigans hors de la zone avant qu'ils ne profitent du chaos",
         "verb": "pousser",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "anciens", "amount": 10},
-          {"type": "ADD_REPUTATION", "faction": "korrigans", "amount": -8},
-          {"type": "DAMAGE_LIFE", "amount": 4}
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "anciens",
+            "amount": 10
+          },
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "korrigans",
+            "amount": -8
+          },
+          {
+            "type": "DAMAGE_LIFE",
+            "amount": 4
+          }
         ]
       }
     ],
-    "tags": ["faction_conflict", "anciens_vs_anciens_vs_korrigans", "gue_dispute"]
+    "tags": [
+      "faction_conflict",
+      "anciens_vs_anciens_vs_korrigans",
+      "gue_dispute"
+    ],
+    "trust_tier": "T0"
   },
   {
     "id": "fr_s10b_conflict_027",
@@ -906,28 +1702,57 @@
         "label": "Apaiser Erwan en proposant de decaler le rituel a la saison morte",
         "verb": "apaiser",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "druides", "amount": 8},
-          {"type": "ADD_REPUTATION", "faction": "anciens", "amount": 10}
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "druides",
+            "amount": 8
+          },
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "anciens",
+            "amount": 10
+          }
         ]
       },
       {
         "label": "Mediter pour trouver un rituel qui n'effraye pas le gibier",
         "verb": "mediter",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "druides", "amount": 15},
-          {"type": "ADD_REPUTATION", "faction": "anciens", "amount": -5}
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "druides",
+            "amount": 15
+          },
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "anciens",
+            "amount": -5
+          }
         ]
       },
       {
         "label": "Se concentrer sur les besoins des chasseurs plutot que sur le rituel",
         "verb": "se concentrer",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "anciens", "amount": 14},
-          {"type": "ADD_REPUTATION", "faction": "druides", "amount": -6}
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "anciens",
+            "amount": 14
+          },
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "druides",
+            "amount": -6
+          }
         ]
       }
     ],
-    "tags": ["faction_conflict", "druides_vs_anciens", "rituel_chasse"]
+    "tags": [
+      "faction_conflict",
+      "druides_vs_anciens",
+      "rituel_chasse"
+    ],
+    "trust_tier": "T0"
   },
   {
     "id": "fr_s10b_conflict_028",
@@ -940,28 +1765,56 @@
         "label": "Se faufiler a travers l'enchantement pour prouver qu'il peut etre contourne",
         "verb": "se faufiler",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "korrigans", "amount": 14},
-          {"type": "ADD_REPUTATION", "faction": "niamh", "amount": -6}
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "korrigans",
+            "amount": 14
+          },
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "niamh",
+            "amount": -6
+          }
         ]
       },
       {
         "label": "Contourner le conflit en trouvant une route alternative pour les korrigans",
         "verb": "contourner",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "korrigans", "amount": 10},
-          {"type": "ADD_REPUTATION", "faction": "niamh", "amount": 6}
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "korrigans",
+            "amount": 10
+          },
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "niamh",
+            "amount": 6
+          }
         ]
       },
       {
         "label": "Esquiver la responsabilite en renvoyant les deux parties vers Cadogan",
         "verb": "esquiver",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "anciens", "amount": 8},
-          {"type": "HEAL_LIFE", "amount": 4}
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "anciens",
+            "amount": 8
+          },
+          {
+            "type": "HEAL_LIFE",
+            "amount": 4
+          }
         ]
       }
     ],
-    "tags": ["faction_conflict", "niamh_vs_korrigans", "sentier_enchante"]
+    "tags": [
+      "faction_conflict",
+      "niamh_vs_korrigans",
+      "sentier_enchante"
+    ],
+    "trust_tier": "T0"
   },
   {
     "id": "fr_s10b_conflict_029",
@@ -974,28 +1827,57 @@
         "label": "Calmer les apparitions par un chant d'apaisement reconnu par les deux camps",
         "verb": "calmer",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "ankou", "amount": 10},
-          {"type": "ADD_REPUTATION", "faction": "anciens", "amount": 10}
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "ankou",
+            "amount": 10
+          },
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "anciens",
+            "amount": 10
+          }
         ]
       },
       {
         "label": "Resister mentalement aux apparitions pour montrer qu'elles ne sont pas menaçantes",
         "verb": "resister mentalement",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "anciens", "amount": 14},
-          {"type": "ADD_REPUTATION", "faction": "ankou", "amount": -4}
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "anciens",
+            "amount": 14
+          },
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "ankou",
+            "amount": -4
+          }
         ]
       },
       {
         "label": "Accepter les apparitions comme partie integrante des ceremonies",
         "verb": "accepter",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "ankou", "amount": 15},
-          {"type": "ADD_REPUTATION", "faction": "anciens", "amount": -6}
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "ankou",
+            "amount": 15
+          },
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "anciens",
+            "amount": -6
+          }
         ]
       }
     ],
-    "tags": ["faction_conflict", "ankou_vs_anciens", "cercle_hante"]
+    "tags": [
+      "faction_conflict",
+      "ankou_vs_anciens",
+      "cercle_hante"
+    ],
+    "trust_tier": "T0"
   },
   {
     "id": "fr_s10b_conflict_030",
@@ -1008,29 +1890,61 @@
         "label": "Convaincre le korrigan de fournir le vrai remede sous peine d'exil",
         "verb": "convaincre",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "korrigans", "amount": -5},
-          {"type": "ADD_REPUTATION", "faction": "druides", "amount": 15},
-          {"type": "HEAL_LIFE", "amount": 5}
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "korrigans",
+            "amount": -5
+          },
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "druides",
+            "amount": 15
+          },
+          {
+            "type": "HEAL_LIFE",
+            "amount": 5
+          }
         ]
       },
       {
         "label": "Marchander discretement avec le korrigan pour obtenir l'antidote",
         "verb": "marchander",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "korrigans", "amount": 10},
-          {"type": "ADD_REPUTATION", "faction": "druides", "amount": 6}
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "korrigans",
+            "amount": 10
+          },
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "druides",
+            "amount": 6
+          }
         ]
       },
       {
         "label": "Charmer le korrigan pour qu'il avoue la supercherie publiquement",
         "verb": "charmer",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "druides", "amount": 12},
-          {"type": "ADD_REPUTATION", "faction": "korrigans", "amount": -8}
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "druides",
+            "amount": 12
+          },
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "korrigans",
+            "amount": -8
+          }
         ]
       }
     ],
-    "tags": ["faction_conflict", "korrigans_vs_druides", "faux_elixir"]
+    "tags": [
+      "faction_conflict",
+      "korrigans_vs_druides",
+      "faux_elixir"
+    ],
+    "trust_tier": "T0"
   },
   {
     "id": "fr_s10b_conflict_031",
@@ -1043,28 +1957,57 @@
         "label": "Observer les runes pour verifier si elles endommagent les arbres",
         "verb": "observer",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "druides", "amount": 10},
-          {"type": "ADD_REPUTATION", "faction": "ankou", "amount": 6}
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "druides",
+            "amount": 10
+          },
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "ankou",
+            "amount": 6
+          }
         ]
       },
       {
         "label": "Scruter les marques pour voir si elles peuvent etre placees sur des pierres au lieu d'arbres",
         "verb": "scruter",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "druides", "amount": 14},
-          {"type": "ADD_REPUTATION", "faction": "ankou", "amount": -4}
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "druides",
+            "amount": 14
+          },
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "ankou",
+            "amount": -4
+          }
         ]
       },
       {
         "label": "Memoriser les runes pour les reproduire sur un support neutre",
         "verb": "memoriser",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "ankou", "amount": 12},
-          {"type": "ADD_REPUTATION", "faction": "druides", "amount": 4}
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "ankou",
+            "amount": 12
+          },
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "druides",
+            "amount": 4
+          }
         ]
       }
     ],
-    "tags": ["faction_conflict", "druides_vs_ankou", "runes_arbres"]
+    "tags": [
+      "faction_conflict",
+      "druides_vs_ankou",
+      "runes_arbres"
+    ],
+    "trust_tier": "T0"
   },
   {
     "id": "fr_s10b_conflict_032",
@@ -1077,31 +2020,70 @@
         "label": "Combattre aux cotes du guerrier pour equilibrer le duel",
         "verb": "combattre",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "anciens", "amount": 15},
-          {"type": "ADD_REPUTATION", "faction": "korrigans", "amount": -10},
-          {"type": "DAMAGE_LIFE", "amount": 8}
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "anciens",
+            "amount": 15
+          },
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "korrigans",
+            "amount": -10
+          },
+          {
+            "type": "DAMAGE_LIFE",
+            "amount": 8
+          }
         ]
       },
       {
         "label": "Courir entre les combattants quand un coup deloyal est porte",
         "verb": "courir",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "anciens", "amount": 8},
-          {"type": "ADD_REPUTATION", "faction": "korrigans", "amount": 8},
-          {"type": "DAMAGE_LIFE", "amount": 5}
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "anciens",
+            "amount": 8
+          },
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "korrigans",
+            "amount": 8
+          },
+          {
+            "type": "DAMAGE_LIFE",
+            "amount": 5
+          }
         ]
       },
       {
         "label": "Forcer l'arret du duel en invoquant une loi ancienne d'armistice",
         "verb": "forcer",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "druides", "amount": 10},
-          {"type": "ADD_REPUTATION", "faction": "anciens", "amount": -3},
-          {"type": "ADD_REPUTATION", "faction": "korrigans", "amount": -3}
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "druides",
+            "amount": 10
+          },
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "anciens",
+            "amount": -3
+          },
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "korrigans",
+            "amount": -3
+          }
         ]
       }
     ],
-    "tags": ["faction_conflict", "anciens_vs_korrigans", "duel_rituel"]
+    "tags": [
+      "faction_conflict",
+      "anciens_vs_korrigans",
+      "duel_rituel"
+    ],
+    "trust_tier": "T0"
   },
   {
     "id": "fr_s10b_conflict_033",
@@ -1114,28 +2096,57 @@
         "label": "Analyser les routes maritimes pour proposer des reperes qui protegent les deux",
         "verb": "analyser",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "niamh", "amount": 10},
-          {"type": "ADD_REPUTATION", "faction": "anciens", "amount": 10}
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "niamh",
+            "amount": 10
+          },
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "anciens",
+            "amount": 10
+          }
         ]
       },
       {
         "label": "Decoder l'ancien systeme de reperes pour comprendre ce qui a change",
         "verb": "decoder",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "anciens", "amount": 14},
-          {"type": "ADD_REPUTATION", "faction": "niamh", "amount": -4}
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "anciens",
+            "amount": 14
+          },
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "niamh",
+            "amount": -4
+          }
         ]
       },
       {
         "label": "Interpreter les naufrages comme un message des fees a dechiffrer",
         "verb": "interpreter",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "niamh", "amount": 15},
-          {"type": "ADD_REPUTATION", "faction": "anciens", "amount": -8}
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "niamh",
+            "amount": 15
+          },
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "anciens",
+            "amount": -8
+          }
         ]
       }
     ],
-    "tags": ["faction_conflict", "niamh_vs_anciens", "reperes_maritimes"]
+    "tags": [
+      "faction_conflict",
+      "niamh_vs_anciens",
+      "reperes_maritimes"
+    ],
+    "trust_tier": "T0"
   },
   {
     "id": "fr_s10b_conflict_034",
@@ -1148,28 +2159,58 @@
         "label": "Ecouter attentivement la fete pour determiner si elle perturbe reellement les esprits",
         "verb": "ecouter",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "ankou", "amount": 10},
-          {"type": "ADD_REPUTATION", "faction": "korrigans", "amount": 6}
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "ankou",
+            "amount": 10
+          },
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "korrigans",
+            "amount": 6
+          }
         ]
       },
       {
         "label": "Sentir les energies du marais pour evaluer leur equilibre actuel",
         "verb": "sentir",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "korrigans", "amount": 14},
-          {"type": "ADD_REPUTATION", "faction": "ankou", "amount": -4}
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "korrigans",
+            "amount": 14
+          },
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "ankou",
+            "amount": -4
+          }
         ]
       },
       {
         "label": "Pister les korrigans pour les prevenir de la colere imminente de l'Ankou",
         "verb": "pister",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "ankou", "amount": 14},
-          {"type": "ADD_REPUTATION", "faction": "korrigans", "amount": -6}
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "ankou",
+            "amount": 14
+          },
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "korrigans",
+            "amount": -6
+          }
         ]
       }
     ],
-    "tags": ["faction_conflict", "ankou_vs_korrigans", "fete_nocturne", "yeun_elez"]
+    "tags": [
+      "faction_conflict",
+      "ankou_vs_korrigans",
+      "fete_nocturne",
+      "yeun_elez"
+    ],
+    "trust_tier": "T0"
   },
   {
     "id": "fr_s10b_conflict_035",
@@ -1182,28 +2223,57 @@
         "label": "Tenter sa chance en liberant le feu follet et esperer qu'il sera reconnaissant",
         "verb": "tenter sa chance",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "druides", "amount": 14},
-          {"type": "ADD_REPUTATION", "faction": "korrigans", "amount": -8}
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "druides",
+            "amount": 14
+          },
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "korrigans",
+            "amount": -8
+          }
         ]
       },
       {
         "label": "Deviner une solution en cherchant une plante qui repousse les feux follets sans les blesser",
         "verb": "deviner",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "druides", "amount": 10},
-          {"type": "ADD_REPUTATION", "faction": "korrigans", "amount": 6}
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "druides",
+            "amount": 10
+          },
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "korrigans",
+            "amount": 6
+          }
         ]
       },
       {
         "label": "Cueillir une plante sacree de remplacement pour liberer celle utilisee comme appat",
         "verb": "cueillir",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "korrigans", "amount": 12},
-          {"type": "ADD_REPUTATION", "faction": "druides", "amount": -4}
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "korrigans",
+            "amount": 12
+          },
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "druides",
+            "amount": -4
+          }
         ]
       }
     ],
-    "tags": ["faction_conflict", "druides_vs_korrigans", "feu_follet_piege"]
+    "tags": [
+      "faction_conflict",
+      "druides_vs_korrigans",
+      "feu_follet_piege"
+    ],
+    "trust_tier": "T0"
   },
   {
     "id": "fr_s10b_conflict_036",
@@ -1216,28 +2286,57 @@
         "label": "Mediter sur le plan pour trouver un trace qui evite le site sacre",
         "verb": "mediter",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "anciens", "amount": 10},
-          {"type": "ADD_REPUTATION", "faction": "niamh", "amount": 10}
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "anciens",
+            "amount": 10
+          },
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "niamh",
+            "amount": 10
+          }
         ]
       },
       {
         "label": "Accepter le trace commercial en compensant Niamh par un nouveau sanctuaire",
         "verb": "accepter",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "anciens", "amount": 15},
-          {"type": "ADD_REPUTATION", "faction": "niamh", "amount": -6}
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "anciens",
+            "amount": 15
+          },
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "niamh",
+            "amount": -6
+          }
         ]
       },
       {
         "label": "Refuser le trace pour preserver l'integrite du site sacre",
         "verb": "refuser",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "niamh", "amount": 15},
-          {"type": "ADD_REPUTATION", "faction": "anciens", "amount": -8}
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "niamh",
+            "amount": 15
+          },
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "anciens",
+            "amount": -8
+          }
         ]
       }
     ],
-    "tags": ["faction_conflict", "anciens_vs_niamh", "chemin_commercial"]
+    "tags": [
+      "faction_conflict",
+      "anciens_vs_niamh",
+      "chemin_commercial"
+    ],
+    "trust_tier": "T0"
   },
   {
     "id": "fr_s10b_conflict_037",
@@ -1250,28 +2349,57 @@
         "label": "Examiner l'epave pour determiner si le bois et les herbes peuvent etre separes",
         "verb": "examiner",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "korrigans", "amount": 8},
-          {"type": "ADD_REPUTATION", "faction": "druides", "amount": 8}
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "korrigans",
+            "amount": 8
+          },
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "druides",
+            "amount": 8
+          }
         ]
       },
       {
         "label": "Scruter les courants pour prevenir si la maree va emporter l'epave",
         "verb": "scruter",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "korrigans", "amount": 12},
-          {"type": "ADD_REPUTATION", "faction": "druides", "amount": 5}
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "korrigans",
+            "amount": 12
+          },
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "druides",
+            "amount": 5
+          }
         ]
       },
       {
         "label": "Observer les deux camps pour identifier qui est pret a faire un compromis",
         "verb": "observer",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "druides", "amount": 14},
-          {"type": "ADD_REPUTATION", "faction": "korrigans", "amount": -4}
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "druides",
+            "amount": 14
+          },
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "korrigans",
+            "amount": -4
+          }
         ]
       }
     ],
-    "tags": ["faction_conflict", "korrigans_vs_druides", "epave_herbes"]
+    "tags": [
+      "faction_conflict",
+      "korrigans_vs_druides",
+      "epave_herbes"
+    ],
+    "trust_tier": "T0"
   },
   {
     "id": "fr_s10b_conflict_038",
@@ -1284,28 +2412,57 @@
         "label": "Calmer les tensions en proposant un siege consultatif sans droit de vote",
         "verb": "calmer",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "ankou", "amount": 10},
-          {"type": "ADD_REPUTATION", "faction": "anciens", "amount": 8}
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "ankou",
+            "amount": 10
+          },
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "anciens",
+            "amount": 8
+          }
         ]
       },
       {
         "label": "Resister mentalement a l'intimidation de l'Ankou et defendre les vivants",
         "verb": "resister mentalement",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "anciens", "amount": 14},
-          {"type": "ADD_REPUTATION", "faction": "ankou", "amount": -8}
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "anciens",
+            "amount": 14
+          },
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "ankou",
+            "amount": -8
+          }
         ]
       },
       {
         "label": "Accepter la legitimite de l'Ankou et plaider pour son integration",
         "verb": "accepter",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "ankou", "amount": 15},
-          {"type": "ADD_REPUTATION", "faction": "anciens", "amount": -10}
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "ankou",
+            "amount": 15
+          },
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "anciens",
+            "amount": -10
+          }
         ]
       }
     ],
-    "tags": ["faction_conflict", "ankou_vs_anciens", "conseil_village"]
+    "tags": [
+      "faction_conflict",
+      "ankou_vs_anciens",
+      "conseil_village"
+    ],
+    "trust_tier": "T0"
   },
   {
     "id": "fr_s10b_conflict_039",
@@ -1318,28 +2475,57 @@
         "label": "Ecouter les plantes pour sentir si l'entrelacement est benefique ou destructeur",
         "verb": "ecouter",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "niamh", "amount": 10},
-          {"type": "ADD_REPUTATION", "faction": "druides", "amount": 10}
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "niamh",
+            "amount": 10
+          },
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "druides",
+            "amount": 10
+          }
         ]
       },
       {
         "label": "Suivre les racines entremelees pour trouver le point d'origine du conflit",
         "verb": "suivre",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "druides", "amount": 14},
-          {"type": "ADD_REPUTATION", "faction": "niamh", "amount": -4}
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "druides",
+            "amount": 14
+          },
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "niamh",
+            "amount": -4
+          }
         ]
       },
       {
         "label": "Flairer les parfums melanges pour determiner quelles plantes dominent",
         "verb": "flairer",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "niamh", "amount": 14},
-          {"type": "ADD_REPUTATION", "faction": "druides", "amount": -4}
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "niamh",
+            "amount": 14
+          },
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "druides",
+            "amount": -4
+          }
         ]
       }
     ],
-    "tags": ["faction_conflict", "niamh_vs_druides", "jardin_entrelace"]
+    "tags": [
+      "faction_conflict",
+      "niamh_vs_druides",
+      "jardin_entrelace"
+    ],
+    "trust_tier": "T0"
   },
   {
     "id": "fr_s10b_conflict_040",
@@ -1352,28 +2538,58 @@
         "label": "Analyser le flux geomantique pour determiner si la redirection est reversible",
         "verb": "analyser",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "druides", "amount": 12},
-          {"type": "ADD_REPUTATION", "faction": "korrigans", "amount": -4}
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "druides",
+            "amount": 12
+          },
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "korrigans",
+            "amount": -4
+          }
         ]
       },
       {
         "label": "Resoudre le probleme en divisant le flux entre le cercle et les terriers",
         "verb": "resoudre",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "druides", "amount": 8},
-          {"type": "ADD_REPUTATION", "faction": "korrigans", "amount": 10}
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "druides",
+            "amount": 8
+          },
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "korrigans",
+            "amount": 10
+          }
         ]
       },
       {
         "label": "Dechiffrer les inscriptions sur les menhirs deplaces pour comprendre l'impact",
         "verb": "dechiffrer",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "korrigans", "amount": 14},
-          {"type": "ADD_REPUTATION", "faction": "druides", "amount": -6}
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "korrigans",
+            "amount": 14
+          },
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "druides",
+            "amount": -6
+          }
         ]
       }
     ],
-    "tags": ["faction_conflict", "druides_vs_korrigans", "ley_line", "menhirs"]
+    "tags": [
+      "faction_conflict",
+      "druides_vs_korrigans",
+      "ley_line",
+      "menhirs"
+    ],
+    "trust_tier": "T0"
   },
   {
     "id": "fr_s10b_conflict_041",
@@ -1386,30 +2602,64 @@
         "label": "Resister physiquement a la tempete pour rester debout entre les deux forces",
         "verb": "resister physiquement",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "ankou", "amount": 10},
-          {"type": "ADD_REPUTATION", "faction": "niamh", "amount": 10},
-          {"type": "DAMAGE_LIFE", "amount": 10}
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "ankou",
+            "amount": 10
+          },
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "niamh",
+            "amount": 10
+          },
+          {
+            "type": "DAMAGE_LIFE",
+            "amount": 10
+          }
         ]
       },
       {
         "label": "Combattre l'emprise de la tempete pour liberer les ames coincees",
         "verb": "combattre",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "ankou", "amount": 15},
-          {"type": "ADD_REPUTATION", "faction": "niamh", "amount": -8},
-          {"type": "DAMAGE_LIFE", "amount": 7}
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "ankou",
+            "amount": 15
+          },
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "niamh",
+            "amount": -8
+          },
+          {
+            "type": "DAMAGE_LIFE",
+            "amount": 7
+          }
         ]
       },
       {
         "label": "Fuir la tempete en tirant les vivants hors de la zone de conflit",
         "verb": "fuir",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "anciens", "amount": 8},
-          {"type": "HEAL_LIFE", "amount": 5}
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "anciens",
+            "amount": 8
+          },
+          {
+            "type": "HEAL_LIFE",
+            "amount": 5
+          }
         ]
       }
     ],
-    "tags": ["faction_conflict", "ankou_vs_niamh", "tempete_ames"]
+    "tags": [
+      "faction_conflict",
+      "ankou_vs_niamh",
+      "tempete_ames"
+    ],
+    "trust_tier": "T0"
   },
   {
     "id": "fr_s10b_conflict_042",
@@ -1422,28 +2672,57 @@
         "label": "Se faufiler sous le barrage pour evaluer s'il peut etre modifie sans le detruire",
         "verb": "se faufiler",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "korrigans", "amount": 8},
-          {"type": "ADD_REPUTATION", "faction": "druides", "amount": 8}
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "korrigans",
+            "amount": 8
+          },
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "druides",
+            "amount": 8
+          }
         ]
       },
       {
         "label": "Contourner le barrage en creusant un canal de derivation",
         "verb": "contourner",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "druides", "amount": 14},
-          {"type": "ADD_REPUTATION", "faction": "korrigans", "amount": -4}
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "druides",
+            "amount": 14
+          },
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "korrigans",
+            "amount": -4
+          }
         ]
       },
       {
         "label": "Escalader le barrage pour avoir une vue d'ensemble du probleme",
         "verb": "escalader",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "korrigans", "amount": 14},
-          {"type": "ADD_REPUTATION", "faction": "druides", "amount": -4}
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "korrigans",
+            "amount": 14
+          },
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "druides",
+            "amount": -4
+          }
         ]
       }
     ],
-    "tags": ["faction_conflict", "korrigans_vs_druides", "barrage_sanctuaire"]
+    "tags": [
+      "faction_conflict",
+      "korrigans_vs_druides",
+      "barrage_sanctuaire"
+    ],
+    "trust_tier": "T0"
   },
   {
     "id": "fr_s10b_conflict_043",
@@ -1456,29 +2735,61 @@
         "label": "Negocier la creation de balises visibles que l'enchantement ne peut pas masquer",
         "verb": "negocier",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "anciens", "amount": 10},
-          {"type": "ADD_REPUTATION", "faction": "niamh", "amount": 8}
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "anciens",
+            "amount": 10
+          },
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "niamh",
+            "amount": 8
+          }
         ]
       },
       {
         "label": "Convaincre les Anciens que les disparitions ont une cause naturelle",
         "verb": "convaincre",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "niamh", "amount": 15},
-          {"type": "ADD_REPUTATION", "faction": "anciens", "amount": -6}
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "niamh",
+            "amount": 15
+          },
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "anciens",
+            "amount": -6
+          }
         ]
       },
       {
         "label": "Mentir en pretendant avoir vu un enchantement pour forcer Morgane a intervenir",
         "verb": "mentir",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "anciens", "amount": 14},
-          {"type": "ADD_REPUTATION", "faction": "niamh", "amount": -8},
-          {"type": "DAMAGE_LIFE", "amount": 3}
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "anciens",
+            "amount": 14
+          },
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "niamh",
+            "amount": -8
+          },
+          {
+            "type": "DAMAGE_LIFE",
+            "amount": 3
+          }
         ]
       }
     ],
-    "tags": ["faction_conflict", "anciens_vs_niamh", "landes_enchantees"]
+    "tags": [
+      "faction_conflict",
+      "anciens_vs_niamh",
+      "landes_enchantees"
+    ],
+    "trust_tier": "T0"
   },
   {
     "id": "fr_s10b_conflict_044",
@@ -1491,29 +2802,63 @@
         "label": "Mediter sur la moralite du choix pour formuler une defense juste",
         "verb": "mediter",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "druides", "amount": 14},
-          {"type": "ADD_REPUTATION", "faction": "anciens", "amount": -5},
-          {"type": "ADD_REPUTATION", "faction": "ankou", "amount": -5}
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "druides",
+            "amount": 14
+          },
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "anciens",
+            "amount": -5
+          },
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "ankou",
+            "amount": -5
+          }
         ]
       },
       {
         "label": "Apaiser les Anciens en promettant que le rituel ne sera plus utilise",
         "verb": "apaiser",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "anciens", "amount": 12},
-          {"type": "ADD_REPUTATION", "faction": "druides", "amount": -4}
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "anciens",
+            "amount": 12
+          },
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "druides",
+            "amount": -4
+          }
         ]
       },
       {
         "label": "Calmer l'Ankou en scellant la fissure par un contre-rituel",
         "verb": "calmer",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "ankou", "amount": 12},
-          {"type": "ADD_REPUTATION", "faction": "druides", "amount": -4}
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "ankou",
+            "amount": 12
+          },
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "druides",
+            "amount": -4
+          }
         ]
       }
     ],
-    "tags": ["faction_conflict", "triple_conflit", "rituel_interdit", "proces"]
+    "tags": [
+      "faction_conflict",
+      "triple_conflit",
+      "rituel_interdit",
+      "proces"
+    ],
+    "trust_tier": "T0"
   },
   {
     "id": "fr_s10b_conflict_045",
@@ -1526,28 +2871,57 @@
         "label": "Observer la frequence du phare pour trouver un rythme invisible aux humains",
         "verb": "observer",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "niamh", "amount": 10},
-          {"type": "ADD_REPUTATION", "faction": "anciens", "amount": 8}
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "niamh",
+            "amount": 10
+          },
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "anciens",
+            "amount": 8
+          }
         ]
       },
       {
         "label": "Scruter les recifs pour determiner si un chenal de contournement existe",
         "verb": "scruter",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "anciens", "amount": 14},
-          {"type": "ADD_REPUTATION", "faction": "niamh", "amount": -4}
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "anciens",
+            "amount": 14
+          },
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "niamh",
+            "amount": -4
+          }
         ]
       },
       {
         "label": "Fixer la lumiere du phare pour comprendre sa magie et la modifier",
         "verb": "fixer",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "niamh", "amount": 14},
-          {"type": "ADD_REPUTATION", "faction": "anciens", "amount": -4}
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "niamh",
+            "amount": 14
+          },
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "anciens",
+            "amount": -4
+          }
         ]
       }
     ],
-    "tags": ["faction_conflict", "niamh_vs_anciens", "phare_enchante"]
+    "tags": [
+      "faction_conflict",
+      "niamh_vs_anciens",
+      "phare_enchante"
+    ],
+    "trust_tier": "T0"
   },
   {
     "id": "fr_s10b_conflict_046",
@@ -1560,28 +2934,57 @@
         "label": "Analyser le taux d'expansion du cercle pour estimer le temps restant",
         "verb": "analyser",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "druides", "amount": 12},
-          {"type": "ADD_REPUTATION", "faction": "ankou", "amount": 5}
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "druides",
+            "amount": 12
+          },
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "ankou",
+            "amount": 5
+          }
         ]
       },
       {
         "label": "Resoudre le probleme en proposant un portail temporaire au lieu de permanent",
         "verb": "resoudre",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "ankou", "amount": 12},
-          {"type": "ADD_REPUTATION", "faction": "druides", "amount": 6}
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "ankou",
+            "amount": 12
+          },
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "druides",
+            "amount": 6
+          }
         ]
       },
       {
         "label": "Etudier le dolmen pour determiner s'il peut supporter un portail sans tuer la vie autour",
         "verb": "etudier",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "ankou", "amount": 15},
-          {"type": "ADD_REPUTATION", "faction": "druides", "amount": -8}
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "ankou",
+            "amount": 15
+          },
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "druides",
+            "amount": -8
+          }
         ]
       }
     ],
-    "tags": ["faction_conflict", "ankou_vs_druides", "portail_dolmen"]
+    "tags": [
+      "faction_conflict",
+      "ankou_vs_druides",
+      "portail_dolmen"
+    ],
+    "trust_tier": "T0"
   },
   {
     "id": "fr_s10b_conflict_047",
@@ -1594,29 +2997,61 @@
         "label": "Tenter sa chance au tournoi pour gagner le respect des deux camps",
         "verb": "tenter sa chance",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "korrigans", "amount": 14},
-          {"type": "ADD_REPUTATION", "faction": "anciens", "amount": -6},
-          {"type": "ADD_ANAM", "amount": 5}
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "korrigans",
+            "amount": 14
+          },
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "anciens",
+            "amount": -6
+          },
+          {
+            "type": "ADD_ANAM",
+            "amount": 5
+          }
         ]
       },
       {
         "label": "Deviner un compromis : tournoi hors de la clairiere sacree",
         "verb": "deviner",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "korrigans", "amount": 8},
-          {"type": "ADD_REPUTATION", "faction": "anciens", "amount": 10}
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "korrigans",
+            "amount": 8
+          },
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "anciens",
+            "amount": 10
+          }
         ]
       },
       {
         "label": "Chercher au hasard un precedent ou jeu et sacre coexistaient",
         "verb": "chercher au hasard",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "korrigans", "amount": 10},
-          {"type": "ADD_REPUTATION", "faction": "anciens", "amount": 6}
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "korrigans",
+            "amount": 10
+          },
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "anciens",
+            "amount": 6
+          }
         ]
       }
     ],
-    "tags": ["faction_conflict", "korrigans_vs_anciens", "tournoi_chance"]
+    "tags": [
+      "faction_conflict",
+      "korrigans_vs_anciens",
+      "tournoi_chance"
+    ],
+    "trust_tier": "T0"
   },
   {
     "id": "fr_s10b_conflict_048",
@@ -1629,28 +3064,57 @@
         "label": "Ecouter le murmure de la source pour comprendre ce qu'elle veut",
         "verb": "ecouter",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "druides", "amount": 10},
-          {"type": "ADD_REPUTATION", "faction": "niamh", "amount": 8}
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "druides",
+            "amount": 10
+          },
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "niamh",
+            "amount": 8
+          }
         ]
       },
       {
         "label": "Sentir l'eau pour determiner si elle est druidique ou feerique a l'origine",
         "verb": "sentir",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "druides", "amount": 14},
-          {"type": "ADD_REPUTATION", "faction": "niamh", "amount": -6}
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "druides",
+            "amount": 14
+          },
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "niamh",
+            "amount": -6
+          }
         ]
       },
       {
         "label": "Flairer les traces de korrigans pour les empêcher de profiter du conflit",
         "verb": "flairer",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "niamh", "amount": 12},
-          {"type": "ADD_REPUTATION", "faction": "korrigans", "amount": -6}
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "niamh",
+            "amount": 12
+          },
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "korrigans",
+            "amount": -6
+          }
         ]
       }
     ],
-    "tags": ["faction_conflict", "druides_vs_niamh_vs_korrigans", "source_enchantee"]
+    "tags": [
+      "faction_conflict",
+      "druides_vs_niamh_vs_korrigans",
+      "source_enchantee"
+    ],
+    "trust_tier": "T0"
   },
   {
     "id": "fr_s10b_conflict_049",
@@ -1663,30 +3127,65 @@
         "label": "Combattre le froid surnaturel en alimentant le feu central avec du bois sacre",
         "verb": "combattre",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "anciens", "amount": 12},
-          {"type": "ADD_REPUTATION", "faction": "ankou", "amount": -6},
-          {"type": "DAMAGE_LIFE", "amount": 5}
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "anciens",
+            "amount": 12
+          },
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "ankou",
+            "amount": -6
+          },
+          {
+            "type": "DAMAGE_LIFE",
+            "amount": 5
+          }
         ]
       },
       {
         "label": "Pousser l'emissaire vers la sortie en invoquant les lois de l'hospitalite",
         "verb": "pousser",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "anciens", "amount": 14},
-          {"type": "ADD_REPUTATION", "faction": "ankou", "amount": -10}
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "anciens",
+            "amount": 14
+          },
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "ankou",
+            "amount": -10
+          }
         ]
       },
       {
         "label": "Courir chercher une couverture de laine enchantee pour proteger les convives",
         "verb": "courir",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "ankou", "amount": 8},
-          {"type": "ADD_REPUTATION", "faction": "anciens", "amount": 8},
-          {"type": "HEAL_LIFE", "amount": 4}
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "ankou",
+            "amount": 8
+          },
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "anciens",
+            "amount": 8
+          },
+          {
+            "type": "HEAL_LIFE",
+            "amount": 4
+          }
         ]
       }
     ],
-    "tags": ["faction_conflict", "multi_factions", "banquet_gele"]
+    "tags": [
+      "faction_conflict",
+      "multi_factions",
+      "banquet_gele"
+    ],
+    "trust_tier": "T0"
   },
   {
     "id": "fr_s10b_conflict_050",
@@ -1699,30 +3198,71 @@
         "label": "Mediter pour trouver un sacrifice que toutes les factions peuvent accepter",
         "verb": "mediter",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "niamh", "amount": 10},
-          {"type": "ADD_REPUTATION", "faction": "druides", "amount": 5},
-          {"type": "ADD_REPUTATION", "faction": "anciens", "amount": 5}
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "niamh",
+            "amount": 10
+          },
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "druides",
+            "amount": 5
+          },
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "anciens",
+            "amount": 5
+          }
         ]
       },
       {
         "label": "Se concentrer sur l'objectif commun pour transcender les rivalites",
         "verb": "se concentrer",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "niamh", "amount": 8},
-          {"type": "ADD_REPUTATION", "faction": "korrigans", "amount": 5},
-          {"type": "ADD_REPUTATION", "faction": "ankou", "amount": 5}
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "niamh",
+            "amount": 8
+          },
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "korrigans",
+            "amount": 5
+          },
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "ankou",
+            "amount": 5
+          }
         ]
       },
       {
         "label": "Refuser de choisir un camp et proposer un vote equitable",
         "verb": "refuser",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "anciens", "amount": 10},
-          {"type": "ADD_REPUTATION", "faction": "niamh", "amount": -5},
-          {"type": "ADD_ANAM", "amount": 5}
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "anciens",
+            "amount": 10
+          },
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "niamh",
+            "amount": -5
+          },
+          {
+            "type": "ADD_ANAM",
+            "amount": 5
+          }
         ]
       }
     ],
-    "tags": ["faction_conflict", "cinq_factions", "couronne_harmonie", "avalon"]
+    "tags": [
+      "faction_conflict",
+      "cinq_factions",
+      "couronne_harmonie",
+      "avalon"
+    ],
+    "trust_tier": "T0"
   }
 ]

@@ -12,28 +12,54 @@
         "label": "Apaiser Merlin en l'ecoutant avec un respect profond",
         "verb": "apaiser",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "druides", "amount": 12},
-          {"type": "ADD_ANAM", "amount": 6}
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "druides",
+            "amount": 12
+          },
+          {
+            "type": "ADD_ANAM",
+            "amount": 6
+          }
         ]
       },
       {
         "label": "Accepter le recit sans poser de questions indiscretes",
         "verb": "accepter",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "druides", "amount": 10},
-          {"type": "HEAL_LIFE", "amount": 8}
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "druides",
+            "amount": 10
+          },
+          {
+            "type": "HEAL_LIFE",
+            "amount": 8
+          }
         ]
       },
       {
         "label": "Attendre en silence que Merlin continue de lui-meme",
         "verb": "attendre",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "anciens", "amount": 8},
-          {"type": "ADD_ANAM", "amount": 4}
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "anciens",
+            "amount": 8
+          },
+          {
+            "type": "ADD_ANAM",
+            "amount": 4
+          }
         ]
       }
     ],
-    "tags": ["merlin_backstory", "naissance", "arc_1_of_10", "T1"]
+    "tags": [
+      "merlin_backstory",
+      "naissance",
+      "arc_1_of_10",
+      "T1"
+    ]
   },
   {
     "id": "fr_s11b_merlin_arc_002",
@@ -48,28 +74,55 @@
         "label": "Observer les pierres autour de toi pour percevoir ce que Merlin percevait",
         "verb": "observer",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "druides", "amount": 14},
-          {"type": "ADD_ANAM", "amount": 7}
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "druides",
+            "amount": 14
+          },
+          {
+            "type": "ADD_ANAM",
+            "amount": 7
+          }
         ]
       },
       {
         "label": "Scruter le sol sous tes pieds pour chercher des lignes de lumiere",
         "verb": "scruter",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "anciens", "amount": 12},
-          {"type": "ADD_BIOME_CURRENCY", "amount": 5}
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "anciens",
+            "amount": 12
+          },
+          {
+            "type": "ADD_BIOME_CURRENCY",
+            "amount": 5
+          }
         ]
       },
       {
         "label": "Fixer Merlin pour capter l'emotion derriere ses mots",
         "verb": "fixer",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "druides", "amount": 10},
-          {"type": "HEAL_LIFE", "amount": 6}
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "druides",
+            "amount": 10
+          },
+          {
+            "type": "HEAL_LIFE",
+            "amount": 6
+          }
         ]
       }
     ],
-    "tags": ["merlin_backstory", "vortigern", "dragons", "arc_2_of_10", "T1"]
+    "tags": [
+      "merlin_backstory",
+      "vortigern",
+      "dragons",
+      "arc_2_of_10",
+      "T1"
+    ]
   },
   {
     "id": "fr_s11b_merlin_arc_003",
@@ -84,28 +137,55 @@
         "label": "Analyser ce que Merlin appelle 'sagesse' pour comprendre sa definition",
         "verb": "analyser",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "druides", "amount": 14},
-          {"type": "ADD_ANAM", "amount": 5}
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "druides",
+            "amount": 14
+          },
+          {
+            "type": "ADD_ANAM",
+            "amount": 5
+          }
         ]
       },
       {
         "label": "Interpreter son rire comme un signe qu'il minimise son savoir",
         "verb": "interpreter",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "druides", "amount": 10},
-          {"type": "HEAL_LIFE", "amount": 7}
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "druides",
+            "amount": 10
+          },
+          {
+            "type": "HEAL_LIFE",
+            "amount": 7
+          }
         ]
       },
       {
         "label": "Etudier les expressions de Merlin pour saisir ce qu'il ne dit pas",
         "verb": "etudier",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "anciens", "amount": 12},
-          {"type": "ADD_BIOME_CURRENCY", "amount": 4}
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "anciens",
+            "amount": 12
+          },
+          {
+            "type": "ADD_BIOME_CURRENCY",
+            "amount": 4
+          }
         ]
       }
     ],
-    "tags": ["merlin_backstory", "formation", "druides", "arc_3_of_10", "T1"]
+    "tags": [
+      "merlin_backstory",
+      "formation",
+      "druides",
+      "arc_3_of_10",
+      "T1"
+    ]
   },
   {
     "id": "fr_s11b_merlin_arc_004",
@@ -120,28 +200,55 @@
         "label": "Mediter sur le sens de la faute que Merlin s'attribue",
         "verb": "mediter",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "anciens", "amount": 14},
-          {"type": "ADD_ANAM", "amount": 7}
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "anciens",
+            "amount": 14
+          },
+          {
+            "type": "ADD_ANAM",
+            "amount": 7
+          }
         ]
       },
       {
         "label": "Calmer la douleur de Merlin en reconnaissant sa sincerite",
         "verb": "calmer",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "druides", "amount": 12},
-          {"type": "HEAL_LIFE", "amount": 10}
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "druides",
+            "amount": 12
+          },
+          {
+            "type": "HEAL_LIFE",
+            "amount": 10
+          }
         ]
       },
       {
         "label": "Parler a Merlin de tes propres erreurs pour creer un lien",
         "verb": "parler",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "anciens", "amount": 10},
-          {"type": "ADD_ANAM", "amount": 5}
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "anciens",
+            "amount": 10
+          },
+          {
+            "type": "ADD_ANAM",
+            "amount": 5
+          }
         ]
       }
     ],
-    "tags": ["merlin_backstory", "arthur", "regret", "arc_4_of_10", "T2"]
+    "tags": [
+      "merlin_backstory",
+      "arthur",
+      "regret",
+      "arc_4_of_10",
+      "T2"
+    ]
   },
   {
     "id": "fr_s11b_merlin_arc_005",
@@ -156,28 +263,55 @@
         "label": "Ecouter la foret comme Merlin l'a fait — avec le coeur brise",
         "verb": "ecouter",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "druides", "amount": 16},
-          {"type": "ADD_ANAM", "amount": 8}
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "druides",
+            "amount": 16
+          },
+          {
+            "type": "ADD_ANAM",
+            "amount": 8
+          }
         ]
       },
       {
         "label": "Suivre les traces de la folie de Merlin dans les arbres",
         "verb": "suivre",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "druides", "amount": 12},
-          {"type": "DAMAGE_LIFE", "amount": 6}
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "druides",
+            "amount": 12
+          },
+          {
+            "type": "DAMAGE_LIFE",
+            "amount": 6
+          }
         ]
       },
       {
         "label": "Sentir l'air de la foret pour comprendre ce qu'elle a dit a Merlin",
         "verb": "sentir",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "niamh", "amount": 10},
-          {"type": "HEAL_LIFE", "amount": 6}
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "niamh",
+            "amount": 10
+          },
+          {
+            "type": "HEAL_LIFE",
+            "amount": 6
+          }
         ]
       }
     ],
-    "tags": ["merlin_backstory", "folie", "camlann", "arc_5_of_10", "T2"]
+    "tags": [
+      "merlin_backstory",
+      "folie",
+      "camlann",
+      "arc_5_of_10",
+      "T2"
+    ]
   },
   {
     "id": "fr_s11b_merlin_arc_006",
@@ -192,28 +326,55 @@
         "label": "Se concentrer sur les emotions de Merlin pour comprendre son choix",
         "verb": "se concentrer",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "druides", "amount": 14},
-          {"type": "ADD_ANAM", "amount": 6}
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "druides",
+            "amount": 14
+          },
+          {
+            "type": "ADD_ANAM",
+            "amount": 6
+          }
         ]
       },
       {
         "label": "Accepter la complexite de son histoire sans la juger",
         "verb": "accepter",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "niamh", "amount": 12},
-          {"type": "HEAL_LIFE", "amount": 8}
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "niamh",
+            "amount": 12
+          },
+          {
+            "type": "HEAL_LIFE",
+            "amount": 8
+          }
         ]
       },
       {
         "label": "Resister mentalement au piege de la pitie pour rester objectif",
         "verb": "resister mentalement",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "anciens", "amount": 10},
-          {"type": "ADD_BIOME_CURRENCY", "amount": 5}
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "anciens",
+            "amount": 10
+          },
+          {
+            "type": "ADD_BIOME_CURRENCY",
+            "amount": 5
+          }
         ]
       }
     ],
-    "tags": ["merlin_backstory", "viviane", "amour", "arc_6_of_10", "T2"]
+    "tags": [
+      "merlin_backstory",
+      "viviane",
+      "amour",
+      "arc_6_of_10",
+      "T2"
+    ]
   },
   {
     "id": "fr_s11b_merlin_arc_007",
@@ -228,28 +389,55 @@
         "label": "Endurer le poids de cette revelation sans faiblir",
         "verb": "endurer",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "ankou", "amount": 14},
-          {"type": "ADD_ANAM", "amount": 7}
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "ankou",
+            "amount": 14
+          },
+          {
+            "type": "ADD_ANAM",
+            "amount": 7
+          }
         ]
       },
       {
         "label": "Apaiser Merlin en lui rappelant que sa presence compte",
         "verb": "apaiser",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "druides", "amount": 12},
-          {"type": "HEAL_LIFE", "amount": 10}
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "druides",
+            "amount": 12
+          },
+          {
+            "type": "HEAL_LIFE",
+            "amount": 10
+          }
         ]
       },
       {
         "label": "Refuser l'idee que Merlin puisse cesser de guider",
         "verb": "refuser",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "anciens", "amount": 10},
-          {"type": "DAMAGE_LIFE", "amount": 4}
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "anciens",
+            "amount": 10
+          },
+          {
+            "type": "DAMAGE_LIFE",
+            "amount": 4
+          }
         ]
       }
     ],
-    "tags": ["merlin_backstory", "immortalite", "ankou", "arc_7_of_10", "T2"]
+    "tags": [
+      "merlin_backstory",
+      "immortalite",
+      "ankou",
+      "arc_7_of_10",
+      "T2"
+    ]
   },
   {
     "id": "fr_s11b_merlin_arc_008",
@@ -264,28 +452,55 @@
         "label": "Dechiffrer le sens de la prophetie a travers les mots de Merlin",
         "verb": "dechiffrer",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "druides", "amount": 18},
-          {"type": "ADD_ANAM", "amount": 10}
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "druides",
+            "amount": 18
+          },
+          {
+            "type": "ADD_ANAM",
+            "amount": 10
+          }
         ]
       },
       {
         "label": "Analyser si Merlin parle de toi ou de quelqu'un d'autre",
         "verb": "analyser",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "druides", "amount": 14},
-          {"type": "HEAL_LIFE", "amount": 6}
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "druides",
+            "amount": 14
+          },
+          {
+            "type": "HEAL_LIFE",
+            "amount": 6
+          }
         ]
       },
       {
         "label": "Interpreter la prophetie comme un guide plutot qu'un destin fixe",
         "verb": "interpreter",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "anciens", "amount": 12},
-          {"type": "ADD_BIOME_CURRENCY", "amount": 5}
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "anciens",
+            "amount": 12
+          },
+          {
+            "type": "ADD_BIOME_CURRENCY",
+            "amount": 5
+          }
         ]
       }
     ],
-    "tags": ["merlin_backstory", "prophetie", "voyageur", "arc_8_of_10", "T3"]
+    "tags": [
+      "merlin_backstory",
+      "prophetie",
+      "voyageur",
+      "arc_8_of_10",
+      "T3"
+    ]
   },
   {
     "id": "fr_s11b_merlin_arc_009",
@@ -300,28 +515,55 @@
         "label": "Accepter le secret de Merlin avec la gravite qu'il merite",
         "verb": "accepter",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "druides", "amount": 18},
-          {"type": "ADD_ANAM", "amount": 10}
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "druides",
+            "amount": 18
+          },
+          {
+            "type": "ADD_ANAM",
+            "amount": 10
+          }
         ]
       },
       {
         "label": "Mediter sur ce que signifie choisir sa propre prison",
         "verb": "mediter",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "druides", "amount": 14},
-          {"type": "HEAL_LIFE", "amount": 8}
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "druides",
+            "amount": 14
+          },
+          {
+            "type": "HEAL_LIFE",
+            "amount": 8
+          }
         ]
       },
       {
         "label": "Parler a Merlin pour lui dire que le choix n'est pas de la lachete",
         "verb": "parler",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "anciens", "amount": 12},
-          {"type": "ADD_ANAM", "amount": 6}
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "anciens",
+            "amount": 12
+          },
+          {
+            "type": "ADD_ANAM",
+            "amount": 6
+          }
         ]
       }
     ],
-    "tags": ["merlin_backstory", "secret", "auto_emprisonnement", "arc_9_of_10", "T3"]
+    "tags": [
+      "merlin_backstory",
+      "secret",
+      "auto_emprisonnement",
+      "arc_9_of_10",
+      "T3"
+    ]
   },
   {
     "id": "fr_s11b_merlin_arc_010",
@@ -336,28 +578,56 @@
         "label": "Apaiser Merlin en lui offrant ton amitie sans conditions",
         "verb": "apaiser",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "druides", "amount": 20},
-          {"type": "HEAL_LIFE", "amount": 15}
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "druides",
+            "amount": 20
+          },
+          {
+            "type": "HEAL_LIFE",
+            "amount": 15
+          }
         ]
       },
       {
         "label": "Accepter cette responsabilite avec humilite",
         "verb": "accepter",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "druides", "amount": 16},
-          {"type": "ADD_ANAM", "amount": 10}
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "druides",
+            "amount": 16
+          },
+          {
+            "type": "ADD_ANAM",
+            "amount": 10
+          }
         ]
       },
       {
         "label": "Parler a Merlin d'egal a egal, sans reverence excessive",
         "verb": "parler",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "anciens", "amount": 12},
-          {"type": "ADD_REPUTATION", "faction": "druides", "amount": 8}
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "anciens",
+            "amount": 12
+          },
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "druides",
+            "amount": 8
+          }
         ]
       }
     ],
-    "tags": ["merlin_backstory", "conclusion", "amitie", "arc_10_of_10", "T3"]
+    "tags": [
+      "merlin_backstory",
+      "conclusion",
+      "amitie",
+      "arc_10_of_10",
+      "T3"
+    ]
   },
   {
     "id": "fr_s11b_viviane_001",
@@ -370,28 +640,55 @@
         "label": "Ecouter la version de Viviane avec un esprit ouvert",
         "verb": "ecouter",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "niamh", "amount": 14},
-          {"type": "ADD_ANAM", "amount": 6}
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "niamh",
+            "amount": 14
+          },
+          {
+            "type": "ADD_ANAM",
+            "amount": 6
+          }
         ]
       },
       {
         "label": "Suivre les mouvements de la brume pour capter ses emotions",
         "verb": "suivre",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "niamh", "amount": 12},
-          {"type": "HEAL_LIFE", "amount": 8}
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "niamh",
+            "amount": 12
+          },
+          {
+            "type": "HEAL_LIFE",
+            "amount": 8
+          }
         ]
       },
       {
         "label": "Sentir l'air pour determiner si cette apparition est sincere",
         "verb": "sentir",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "druides", "amount": 10},
-          {"type": "ADD_BIOME_CURRENCY", "amount": 5}
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "druides",
+            "amount": 10
+          },
+          {
+            "type": "ADD_BIOME_CURRENCY",
+            "amount": 5
+          }
         ]
       }
     ],
-    "tags": ["viviane_niamh", "avalon", "verite", "arc_1_of_10"]
+    "tags": [
+      "viviane_niamh",
+      "avalon",
+      "verite",
+      "arc_1_of_10"
+    ],
+    "trust_tier": "T0"
   },
   {
     "id": "fr_s11b_viviane_002",
@@ -404,28 +701,56 @@
         "label": "Mediter sur la difference entre les deux visions du savoir",
         "verb": "mediter",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "niamh", "amount": 14},
-          {"type": "ADD_ANAM", "amount": 5}
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "niamh",
+            "amount": 14
+          },
+          {
+            "type": "ADD_ANAM",
+            "amount": 5
+          }
         ]
       },
       {
         "label": "Accepter la vision de Viviane comme complementaire a celle de Merlin",
         "verb": "accepter",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "niamh", "amount": 12},
-          {"type": "HEAL_LIFE", "amount": 8}
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "niamh",
+            "amount": 12
+          },
+          {
+            "type": "HEAL_LIFE",
+            "amount": 8
+          }
         ]
       },
       {
         "label": "Calmer les conflits en reconnaissant les deux perspectives",
         "verb": "calmer",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "druides", "amount": 10},
-          {"type": "ADD_REPUTATION", "faction": "niamh", "amount": 6}
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "druides",
+            "amount": 10
+          },
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "niamh",
+            "amount": 6
+          }
         ]
       }
     ],
-    "tags": ["viviane_niamh", "magie_eau", "savoir", "arc_2_of_10"]
+    "tags": [
+      "viviane_niamh",
+      "magie_eau",
+      "savoir",
+      "arc_2_of_10"
+    ],
+    "trust_tier": "T0"
   },
   {
     "id": "fr_s11b_viviane_003",
@@ -438,28 +763,55 @@
         "label": "Convaincre Viviane que tu comprends sa perspective",
         "verb": "convaincre",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "niamh", "amount": 14},
-          {"type": "HEAL_LIFE", "amount": 6}
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "niamh",
+            "amount": 14
+          },
+          {
+            "type": "HEAL_LIFE",
+            "amount": 6
+          }
         ]
       },
       {
         "label": "Negocier la verite entre les versions de Merlin et Viviane",
         "verb": "negocier",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "niamh", "amount": 10},
-          {"type": "ADD_ANAM", "amount": 5}
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "niamh",
+            "amount": 10
+          },
+          {
+            "type": "ADD_ANAM",
+            "amount": 5
+          }
         ]
       },
       {
         "label": "Charmer Viviane pour qu'elle revele ce qu'elle cache encore",
         "verb": "charmer",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "korrigans", "amount": 8},
-          {"type": "ADD_BIOME_CURRENCY", "amount": 6}
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "korrigans",
+            "amount": 8
+          },
+          {
+            "type": "ADD_BIOME_CURRENCY",
+            "amount": 6
+          }
         ]
       }
     ],
-    "tags": ["viviane_niamh", "emprisonnement", "cocon", "arc_3_of_10"]
+    "tags": [
+      "viviane_niamh",
+      "emprisonnement",
+      "cocon",
+      "arc_3_of_10"
+    ],
+    "trust_tier": "T0"
   },
   {
     "id": "fr_s11b_viviane_004",
@@ -472,28 +824,55 @@
         "label": "Observer les images dans les embruns pour comprendre leur histoire",
         "verb": "observer",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "niamh", "amount": 14},
-          {"type": "ADD_ANAM", "amount": 6}
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "niamh",
+            "amount": 14
+          },
+          {
+            "type": "ADD_ANAM",
+            "amount": 6
+          }
         ]
       },
       {
         "label": "Scruter les details des scenes pour y trouver ce que Viviane ne dit pas",
         "verb": "scruter",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "anciens", "amount": 12},
-          {"type": "ADD_BIOME_CURRENCY", "amount": 5}
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "anciens",
+            "amount": 12
+          },
+          {
+            "type": "ADD_BIOME_CURRENCY",
+            "amount": 5
+          }
         ]
       },
       {
         "label": "Memoriser chaque scene pour pouvoir un jour en parler a Merlin",
         "verb": "memoriser",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "niamh", "amount": 10},
-          {"type": "HEAL_LIFE", "amount": 8}
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "niamh",
+            "amount": 10
+          },
+          {
+            "type": "HEAL_LIFE",
+            "amount": 8
+          }
         ]
       }
     ],
-    "tags": ["viviane_niamh", "souvenirs", "amour", "arc_4_of_10"]
+    "tags": [
+      "viviane_niamh",
+      "souvenirs",
+      "amour",
+      "arc_4_of_10"
+    ],
+    "trust_tier": "T0"
   },
   {
     "id": "fr_s11b_viviane_005",
@@ -506,28 +885,55 @@
         "label": "Se faufiler entre les roseaux pour s'approcher du lac sacre",
         "verb": "se faufiler",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "niamh", "amount": 14},
-          {"type": "ADD_ANAM", "amount": 7}
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "niamh",
+            "amount": 14
+          },
+          {
+            "type": "ADD_ANAM",
+            "amount": 7
+          }
         ]
       },
       {
         "label": "Contourner le lac pour observer les structures de cristal",
         "verb": "contourner",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "niamh", "amount": 12},
-          {"type": "ADD_BIOME_CURRENCY", "amount": 6}
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "niamh",
+            "amount": 12
+          },
+          {
+            "type": "ADD_BIOME_CURRENCY",
+            "amount": 6
+          }
         ]
       },
       {
         "label": "Traverser la surface du lac en marchant sur les cristaux",
         "verb": "traverser",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "niamh", "amount": 16},
-          {"type": "DAMAGE_LIFE", "amount": 8}
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "niamh",
+            "amount": 16
+          },
+          {
+            "type": "DAMAGE_LIFE",
+            "amount": 8
+          }
         ]
       }
     ],
-    "tags": ["viviane_niamh", "lac", "cristal", "arc_5_of_10"]
+    "tags": [
+      "viviane_niamh",
+      "lac",
+      "cristal",
+      "arc_5_of_10"
+    ],
+    "trust_tier": "T0"
   },
   {
     "id": "fr_s11b_viviane_006",
@@ -540,28 +946,55 @@
         "label": "Mediter sur cette revelation pour en saisir les implications",
         "verb": "mediter",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "niamh", "amount": 16},
-          {"type": "ADD_ANAM", "amount": 8}
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "niamh",
+            "amount": 16
+          },
+          {
+            "type": "ADD_ANAM",
+            "amount": 8
+          }
         ]
       },
       {
         "label": "Se concentrer pour ressentir la connexion entre les deux mondes",
         "verb": "se concentrer",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "niamh", "amount": 14},
-          {"type": "HEAL_LIFE", "amount": 8}
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "niamh",
+            "amount": 14
+          },
+          {
+            "type": "HEAL_LIFE",
+            "amount": 8
+          }
         ]
       },
       {
         "label": "Accepter la nature paradoxale de Niamh sans la rationaliser",
         "verb": "accepter",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "druides", "amount": 10},
-          {"type": "ADD_BIOME_CURRENCY", "amount": 5}
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "druides",
+            "amount": 10
+          },
+          {
+            "type": "ADD_BIOME_CURRENCY",
+            "amount": 5
+          }
         ]
       }
     ],
-    "tags": ["viviane_niamh", "nature_niamh", "miroir", "arc_6_of_10"]
+    "tags": [
+      "viviane_niamh",
+      "nature_niamh",
+      "miroir",
+      "arc_6_of_10"
+    ],
+    "trust_tier": "T0"
   },
   {
     "id": "fr_s11b_viviane_007",
@@ -574,28 +1007,56 @@
         "label": "Endurer la colere de Viviane pour montrer que tu n'as pas peur",
         "verb": "endurer",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "niamh", "amount": 16},
-          {"type": "DAMAGE_LIFE", "amount": 6}
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "niamh",
+            "amount": 16
+          },
+          {
+            "type": "DAMAGE_LIFE",
+            "amount": 6
+          }
         ]
       },
       {
         "label": "Resister physiquement a l'energie qui crepite dans l'air",
         "verb": "resister physiquement",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "niamh", "amount": 12},
-          {"type": "DAMAGE_LIFE", "amount": 4}
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "niamh",
+            "amount": 12
+          },
+          {
+            "type": "DAMAGE_LIFE",
+            "amount": 4
+          }
         ]
       },
       {
         "label": "Combattre l'injustice en prenant sa defense",
         "verb": "combattre",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "niamh", "amount": 14},
-          {"type": "ADD_REPUTATION", "faction": "anciens", "amount": -6}
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "niamh",
+            "amount": 14
+          },
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "anciens",
+            "amount": -6
+          }
         ]
       }
     ],
-    "tags": ["viviane_niamh", "colere", "injustice", "arc_7_of_10"]
+    "tags": [
+      "viviane_niamh",
+      "colere",
+      "injustice",
+      "arc_7_of_10"
+    ],
+    "trust_tier": "T0"
   },
   {
     "id": "fr_s11b_viviane_008",
@@ -608,28 +1069,55 @@
         "label": "Analyser l'enigme en separant l'intention du resultat",
         "verb": "analyser",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "niamh", "amount": 14},
-          {"type": "ADD_ANAM", "amount": 6}
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "niamh",
+            "amount": 14
+          },
+          {
+            "type": "ADD_ANAM",
+            "amount": 6
+          }
         ]
       },
       {
         "label": "Resoudre le paradoxe en proposant que les deux verites coexistent",
         "verb": "resoudre",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "niamh", "amount": 12},
-          {"type": "HEAL_LIFE", "amount": 7}
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "niamh",
+            "amount": 12
+          },
+          {
+            "type": "HEAL_LIFE",
+            "amount": 7
+          }
         ]
       },
       {
         "label": "Interpreter l'enigme comme une preuve d'amour mutuel",
         "verb": "interpreter",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "druides", "amount": 10},
-          {"type": "ADD_BIOME_CURRENCY", "amount": 5}
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "druides",
+            "amount": 10
+          },
+          {
+            "type": "ADD_BIOME_CURRENCY",
+            "amount": 5
+          }
         ]
       }
     ],
-    "tags": ["viviane_niamh", "enigme", "paradoxe", "arc_8_of_10"]
+    "tags": [
+      "viviane_niamh",
+      "enigme",
+      "paradoxe",
+      "arc_8_of_10"
+    ],
+    "trust_tier": "T0"
   },
   {
     "id": "fr_s11b_viviane_009",
@@ -642,28 +1130,55 @@
         "label": "Cueillir la larme cristallisee avec delicatesse",
         "verb": "cueillir",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "niamh", "amount": 16},
-          {"type": "ADD_ANAM", "amount": 8}
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "niamh",
+            "amount": 16
+          },
+          {
+            "type": "ADD_ANAM",
+            "amount": 8
+          }
         ]
       },
       {
         "label": "Tenter sa chance en acceptant le cadeau sans conditions",
         "verb": "tenter sa chance",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "niamh", "amount": 14},
-          {"type": "HEAL_LIFE", "amount": 10}
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "niamh",
+            "amount": 14
+          },
+          {
+            "type": "HEAL_LIFE",
+            "amount": 10
+          }
         ]
       },
       {
         "label": "Deviner ce que la larme contient avant de la prendre",
         "verb": "deviner",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "druides", "amount": 10},
-          {"type": "ADD_BIOME_CURRENCY", "amount": 6}
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "druides",
+            "amount": 10
+          },
+          {
+            "type": "ADD_BIOME_CURRENCY",
+            "amount": 6
+          }
         ]
       }
     ],
-    "tags": ["viviane_niamh", "larme", "cadeau", "arc_9_of_10"]
+    "tags": [
+      "viviane_niamh",
+      "larme",
+      "cadeau",
+      "arc_9_of_10"
+    ],
+    "trust_tier": "T0"
   },
   {
     "id": "fr_s11b_viviane_010",
@@ -676,28 +1191,55 @@
         "label": "Mediter sur tout ce que Viviane a revele pour l'integrer",
         "verb": "mediter",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "niamh", "amount": 16},
-          {"type": "ADD_ANAM", "amount": 8}
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "niamh",
+            "amount": 16
+          },
+          {
+            "type": "ADD_ANAM",
+            "amount": 8
+          }
         ]
       },
       {
         "label": "Calmer les emotions suscitees par cette rencontre",
         "verb": "calmer",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "druides", "amount": 12},
-          {"type": "HEAL_LIFE", "amount": 10}
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "druides",
+            "amount": 12
+          },
+          {
+            "type": "HEAL_LIFE",
+            "amount": 10
+          }
         ]
       },
       {
         "label": "S'approcher de l'endroit ou elle se tenait pour capter un residue",
         "verb": "s'approcher",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "niamh", "amount": 12},
-          {"type": "ADD_BIOME_CURRENCY", "amount": 6}
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "niamh",
+            "amount": 12
+          },
+          {
+            "type": "ADD_BIOME_CURRENCY",
+            "amount": 6
+          }
         ]
       }
     ],
-    "tags": ["viviane_niamh", "adieu", "nenuphars", "arc_10_of_10"]
+    "tags": [
+      "viviane_niamh",
+      "adieu",
+      "nenuphars",
+      "arc_10_of_10"
+    ],
+    "trust_tier": "T0"
   },
   {
     "id": "fr_s11b_annwn_001",
@@ -710,28 +1252,56 @@
         "label": "Se faufiler dans l'escalier en restant proche des parois",
         "verb": "se faufiler",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "ankou", "amount": 14},
-          {"type": "DAMAGE_LIFE", "amount": 6}
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "ankou",
+            "amount": 14
+          },
+          {
+            "type": "DAMAGE_LIFE",
+            "amount": 6
+          }
         ]
       },
       {
         "label": "Escalader les marches prudemment pour ne rien deranger",
         "verb": "escalader",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "ankou", "amount": 12},
-          {"type": "ADD_ANAM", "amount": 5}
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "ankou",
+            "amount": 12
+          },
+          {
+            "type": "ADD_ANAM",
+            "amount": 5
+          }
         ]
       },
       {
         "label": "Esquiver les zones d'ombre pour rester dans la lumiere verte",
         "verb": "esquiver",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "ankou", "amount": 10},
-          {"type": "HEAL_LIFE", "amount": 6}
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "ankou",
+            "amount": 10
+          },
+          {
+            "type": "HEAL_LIFE",
+            "amount": 6
+          }
         ]
       }
     ],
-    "tags": ["annwn", "entree", "escalier", "os", "arc_1_of_10"]
+    "tags": [
+      "annwn",
+      "entree",
+      "escalier",
+      "os",
+      "arc_1_of_10"
+    ],
+    "trust_tier": "T0"
   },
   {
     "id": "fr_s11b_annwn_002",
@@ -744,28 +1314,55 @@
         "label": "Observer les dormeurs de loin pour comprendre leur nature",
         "verb": "observer",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "ankou", "amount": 14},
-          {"type": "ADD_ANAM", "amount": 6}
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "ankou",
+            "amount": 14
+          },
+          {
+            "type": "ADD_ANAM",
+            "amount": 6
+          }
         ]
       },
       {
         "label": "Scruter les visages pour reconnaitre quelqu'un",
         "verb": "scruter",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "ankou", "amount": 12},
-          {"type": "DAMAGE_LIFE", "amount": 5}
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "ankou",
+            "amount": 12
+          },
+          {
+            "type": "DAMAGE_LIFE",
+            "amount": 5
+          }
         ]
       },
       {
         "label": "Examiner les champignons lumineux pour comprendre l'eclairage",
         "verb": "examiner",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "druides", "amount": 10},
-          {"type": "ADD_BIOME_CURRENCY", "amount": 5}
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "druides",
+            "amount": 10
+          },
+          {
+            "type": "ADD_BIOME_CURRENCY",
+            "amount": 5
+          }
         ]
       }
     ],
-    "tags": ["annwn", "lac_souterrain", "dormeurs", "arc_2_of_10"]
+    "tags": [
+      "annwn",
+      "lac_souterrain",
+      "dormeurs",
+      "arc_2_of_10"
+    ],
+    "trust_tier": "T0"
   },
   {
     "id": "fr_s11b_annwn_003",
@@ -778,28 +1375,55 @@
         "label": "Combattre aux cotes des guerriers celtes si le combat reprend",
         "verb": "combattre",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "ankou", "amount": 18},
-          {"type": "DAMAGE_LIFE", "amount": 12}
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "ankou",
+            "amount": 18
+          },
+          {
+            "type": "DAMAGE_LIFE",
+            "amount": 12
+          }
         ]
       },
       {
         "label": "Courir entre les combattants figes pour atteindre l'autre cote",
         "verb": "courir",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "ankou", "amount": 14},
-          {"type": "DAMAGE_LIFE", "amount": 7}
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "ankou",
+            "amount": 14
+          },
+          {
+            "type": "DAMAGE_LIFE",
+            "amount": 7
+          }
         ]
       },
       {
         "label": "Resister physiquement a l'envie de toucher les guerriers",
         "verb": "resister physiquement",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "anciens", "amount": 12},
-          {"type": "HEAL_LIFE", "amount": 5}
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "anciens",
+            "amount": 12
+          },
+          {
+            "type": "HEAL_LIFE",
+            "amount": 5
+          }
         ]
       }
     ],
-    "tags": ["annwn", "bataille_figee", "guerriers", "arc_3_of_10"]
+    "tags": [
+      "annwn",
+      "bataille_figee",
+      "guerriers",
+      "arc_3_of_10"
+    ],
+    "trust_tier": "T0"
   },
   {
     "id": "fr_s11b_annwn_004",
@@ -812,28 +1436,55 @@
         "label": "Ecouter les melodies retrogrades pour y trouver un sens",
         "verb": "ecouter",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "ankou", "amount": 14},
-          {"type": "ADD_ANAM", "amount": 7}
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "ankou",
+            "amount": 14
+          },
+          {
+            "type": "ADD_ANAM",
+            "amount": 7
+          }
         ]
       },
       {
         "label": "Pister les oiseaux de nuit pour comprendre leur trajectoire",
         "verb": "pister",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "ankou", "amount": 12},
-          {"type": "ADD_BIOME_CURRENCY", "amount": 6}
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "ankou",
+            "amount": 12
+          },
+          {
+            "type": "ADD_BIOME_CURRENCY",
+            "amount": 6
+          }
         ]
       },
       {
         "label": "Flairer l'air inverse pour detecter des odeurs inconnues",
         "verb": "flairer",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "druides", "amount": 10},
-          {"type": "HEAL_LIFE", "amount": 6}
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "druides",
+            "amount": 10
+          },
+          {
+            "type": "HEAL_LIFE",
+            "amount": 6
+          }
         ]
       }
     ],
-    "tags": ["annwn", "foret_inversee", "oiseaux", "arc_4_of_10"]
+    "tags": [
+      "annwn",
+      "foret_inversee",
+      "oiseaux",
+      "arc_4_of_10"
+    ],
+    "trust_tier": "T0"
   },
   {
     "id": "fr_s11b_annwn_005",
@@ -846,28 +1497,56 @@
         "label": "Accepter d'etre juge par le roi d'Annwn",
         "verb": "accepter",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "ankou", "amount": 18},
-          {"type": "DAMAGE_LIFE", "amount": 10}
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "ankou",
+            "amount": 18
+          },
+          {
+            "type": "DAMAGE_LIFE",
+            "amount": 10
+          }
         ]
       },
       {
         "label": "Mediter sur la signification d'un jugement des morts",
         "verb": "mediter",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "ankou", "amount": 12},
-          {"type": "ADD_ANAM", "amount": 6}
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "ankou",
+            "amount": 12
+          },
+          {
+            "type": "ADD_ANAM",
+            "amount": 6
+          }
         ]
       },
       {
         "label": "Attendre en silence pour observer la justice d'Annwn",
         "verb": "attendre",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "anciens", "amount": 10},
-          {"type": "HEAL_LIFE", "amount": 5}
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "anciens",
+            "amount": 10
+          },
+          {
+            "type": "HEAL_LIFE",
+            "amount": 5
+          }
         ]
       }
     ],
-    "tags": ["annwn", "tribunal", "arawn", "jugement", "arc_5_of_10"]
+    "tags": [
+      "annwn",
+      "tribunal",
+      "arawn",
+      "jugement",
+      "arc_5_of_10"
+    ],
+    "trust_tier": "T0"
   },
   {
     "id": "fr_s11b_annwn_006",
@@ -880,28 +1559,55 @@
         "label": "Dechiffrer le rouleau le plus ancien pour remonter aux origines",
         "verb": "dechiffrer",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "ankou", "amount": 16},
-          {"type": "ADD_ANAM", "amount": 8}
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "ankou",
+            "amount": 16
+          },
+          {
+            "type": "ADD_ANAM",
+            "amount": 8
+          }
         ]
       },
       {
         "label": "Analyser les inscriptions pour choisir le plus pertinent",
         "verb": "analyser",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "anciens", "amount": 14},
-          {"type": "ADD_BIOME_CURRENCY", "amount": 6}
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "anciens",
+            "amount": 14
+          },
+          {
+            "type": "ADD_BIOME_CURRENCY",
+            "amount": 6
+          }
         ]
       },
       {
         "label": "Decoder les symboles d'un rouleau au hasard pour laisser le destin choisir",
         "verb": "decoder",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "ankou", "amount": 12},
-          {"type": "HEAL_LIFE", "amount": 5}
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "ankou",
+            "amount": 12
+          },
+          {
+            "type": "HEAL_LIFE",
+            "amount": 5
+          }
         ]
       }
     ],
-    "tags": ["annwn", "bibliotheque", "rouleaux", "arc_6_of_10"]
+    "tags": [
+      "annwn",
+      "bibliotheque",
+      "rouleaux",
+      "arc_6_of_10"
+    ],
+    "trust_tier": "T0"
   },
   {
     "id": "fr_s11b_annwn_007",
@@ -914,28 +1620,56 @@
         "label": "Cueillir un fruit au hasard et accepter le don inconnu",
         "verb": "cueillir",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "ankou", "amount": 16},
-          {"type": "ADD_ANAM", "amount": 8}
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "ankou",
+            "amount": 16
+          },
+          {
+            "type": "ADD_ANAM",
+            "amount": 8
+          }
         ]
       },
       {
         "label": "Tenter sa chance avec le fruit le plus lumineux",
         "verb": "tenter sa chance",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "ankou", "amount": 14},
-          {"type": "ADD_BIOME_CURRENCY", "amount": 7}
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "ankou",
+            "amount": 14
+          },
+          {
+            "type": "ADD_BIOME_CURRENCY",
+            "amount": 7
+          }
         ]
       },
       {
         "label": "Deviner le contenu des fruits en les soulevant pour sentir leur poids",
         "verb": "deviner",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "niamh", "amount": 10},
-          {"type": "HEAL_LIFE", "amount": 6}
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "niamh",
+            "amount": 10
+          },
+          {
+            "type": "HEAL_LIFE",
+            "amount": 6
+          }
         ]
       }
     ],
-    "tags": ["annwn", "verger", "fruits", "talents", "arc_7_of_10"]
+    "tags": [
+      "annwn",
+      "verger",
+      "fruits",
+      "talents",
+      "arc_7_of_10"
+    ],
+    "trust_tier": "T0"
   },
   {
     "id": "fr_s11b_annwn_008",
@@ -948,28 +1682,55 @@
         "label": "Endurer la peur et pousser la porte de pierre",
         "verb": "endurer",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "ankou", "amount": 20},
-          {"type": "DAMAGE_LIFE", "amount": 15}
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "ankou",
+            "amount": 20
+          },
+          {
+            "type": "DAMAGE_LIFE",
+            "amount": 15
+          }
         ]
       },
       {
         "label": "Resister mentalement a l'appel de ce qui est au-dela",
         "verb": "resister mentalement",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "ankou", "amount": 14},
-          {"type": "ADD_ANAM", "amount": 7}
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "ankou",
+            "amount": 14
+          },
+          {
+            "type": "ADD_ANAM",
+            "amount": 7
+          }
         ]
       },
       {
         "label": "Refuser de franchir la porte et accepter de remonter",
         "verb": "refuser",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "anciens", "amount": 12},
-          {"type": "HEAL_LIFE", "amount": 10}
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "anciens",
+            "amount": 12
+          },
+          {
+            "type": "HEAL_LIFE",
+            "amount": 10
+          }
         ]
       }
     ],
-    "tags": ["annwn", "porte_finale", "choix", "arc_8_of_10"]
+    "tags": [
+      "annwn",
+      "porte_finale",
+      "choix",
+      "arc_8_of_10"
+    ],
+    "trust_tier": "T0"
   },
   {
     "id": "fr_s11b_annwn_009",
@@ -982,28 +1743,56 @@
         "label": "Observer les arbres qui s'inclinent pour comprendre leur hommage",
         "verb": "observer",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "ankou", "amount": 14},
-          {"type": "ADD_REPUTATION", "faction": "druides", "amount": 8}
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "ankou",
+            "amount": 14
+          },
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "druides",
+            "amount": 8
+          }
         ]
       },
       {
         "label": "Memoriser ce que tu as vu en Annwn pour ne jamais oublier",
         "verb": "memoriser",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "anciens", "amount": 12},
-          {"type": "ADD_ANAM", "amount": 6}
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "anciens",
+            "amount": 12
+          },
+          {
+            "type": "ADD_ANAM",
+            "amount": 6
+          }
         ]
       },
       {
         "label": "Examiner tes propres mains pour verifier que tu n'as pas change",
         "verb": "examiner",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "ankou", "amount": 10},
-          {"type": "HEAL_LIFE", "amount": 8}
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "ankou",
+            "amount": 10
+          },
+          {
+            "type": "HEAL_LIFE",
+            "amount": 8
+          }
         ]
       }
     ],
-    "tags": ["annwn", "retour", "transformation", "arc_9_of_10"]
+    "tags": [
+      "annwn",
+      "retour",
+      "transformation",
+      "arc_9_of_10"
+    ],
+    "trust_tier": "T0"
   },
   {
     "id": "fr_s11b_annwn_010",
@@ -1016,28 +1805,55 @@
         "label": "Accepter la pierre avec la solennite qu'elle merite",
         "verb": "accepter",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "ankou", "amount": 16},
-          {"type": "ADD_ANAM", "amount": 8}
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "ankou",
+            "amount": 16
+          },
+          {
+            "type": "ADD_ANAM",
+            "amount": 8
+          }
         ]
       },
       {
         "label": "Mediter en tenant la pierre pour sentir le silence d'Annwn",
         "verb": "mediter",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "ankou", "amount": 14},
-          {"type": "HEAL_LIFE", "amount": 12}
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "ankou",
+            "amount": 14
+          },
+          {
+            "type": "HEAL_LIFE",
+            "amount": 12
+          }
         ]
       },
       {
         "label": "Se concentrer sur la pierre pour y lire un dernier message",
         "verb": "se concentrer",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "druides", "amount": 10},
-          {"type": "ADD_BIOME_CURRENCY", "amount": 6}
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "druides",
+            "amount": 10
+          },
+          {
+            "type": "ADD_BIOME_CURRENCY",
+            "amount": 6
+          }
         ]
       }
     ],
-    "tags": ["annwn", "don", "pierre_silence", "arc_10_of_10"]
+    "tags": [
+      "annwn",
+      "don",
+      "pierre_silence",
+      "arc_10_of_10"
+    ],
+    "trust_tier": "T0"
   },
   {
     "id": "fr_s11b_cauldron_001",
@@ -1050,28 +1866,55 @@
         "label": "Analyser le parchemin pour en extraire des indices de localisation",
         "verb": "analyser",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "anciens", "amount": 14},
-          {"type": "ADD_ANAM", "amount": 6}
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "anciens",
+            "amount": 14
+          },
+          {
+            "type": "ADD_ANAM",
+            "amount": 6
+          }
         ]
       },
       {
         "label": "Dechiffrer les symboles archaiques du parchemin",
         "verb": "dechiffrer",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "anciens", "amount": 12},
-          {"type": "ADD_BIOME_CURRENCY", "amount": 7}
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "anciens",
+            "amount": 12
+          },
+          {
+            "type": "ADD_BIOME_CURRENCY",
+            "amount": 7
+          }
         ]
       },
       {
         "label": "Etudier la texture du parchemin pour dater sa creation",
         "verb": "etudier",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "druides", "amount": 10},
-          {"type": "HEAL_LIFE", "amount": 5}
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "druides",
+            "amount": 10
+          },
+          {
+            "type": "HEAL_LIFE",
+            "amount": 5
+          }
         ]
       }
     ],
-    "tags": ["cauldron", "pair_dadeni", "parchemin", "arc_1_of_10"]
+    "tags": [
+      "cauldron",
+      "pair_dadeni",
+      "parchemin",
+      "arc_1_of_10"
+    ],
+    "trust_tier": "T0"
   },
   {
     "id": "fr_s11b_cauldron_002",
@@ -1084,28 +1927,55 @@
         "label": "Sentir la pierre pour confirmer la chaleur anormale",
         "verb": "sentir",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "anciens", "amount": 12},
-          {"type": "ADD_ANAM", "amount": 5}
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "anciens",
+            "amount": 12
+          },
+          {
+            "type": "ADD_ANAM",
+            "amount": 5
+          }
         ]
       },
       {
         "label": "Ecouter la resonance pour determiner la profondeur de la source",
         "verb": "ecouter",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "anciens", "amount": 14},
-          {"type": "ADD_BIOME_CURRENCY", "amount": 6}
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "anciens",
+            "amount": 14
+          },
+          {
+            "type": "ADD_BIOME_CURRENCY",
+            "amount": 6
+          }
         ]
       },
       {
         "label": "Tendre l'oreille pour capter des sons sous la terre",
         "verb": "tendre l'oreille",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "ankou", "amount": 10},
-          {"type": "HEAL_LIFE", "amount": 6}
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "ankou",
+            "amount": 10
+          },
+          {
+            "type": "HEAL_LIFE",
+            "amount": 6
+          }
         ]
       }
     ],
-    "tags": ["cauldron", "colline", "resonance", "arc_2_of_10"]
+    "tags": [
+      "cauldron",
+      "colline",
+      "resonance",
+      "arc_2_of_10"
+    ],
+    "trust_tier": "T0"
   },
   {
     "id": "fr_s11b_cauldron_003",
@@ -1118,28 +1988,55 @@
         "label": "Se faufiler dans le tunnel etroit sans hesiter",
         "verb": "se faufiler",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "anciens", "amount": 14},
-          {"type": "DAMAGE_LIFE", "amount": 6}
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "anciens",
+            "amount": 14
+          },
+          {
+            "type": "DAMAGE_LIFE",
+            "amount": 6
+          }
         ]
       },
       {
         "label": "Contourner le cairn pour chercher une entree plus large",
         "verb": "contourner",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "anciens", "amount": 10},
-          {"type": "ADD_BIOME_CURRENCY", "amount": 5}
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "anciens",
+            "amount": 10
+          },
+          {
+            "type": "ADD_BIOME_CURRENCY",
+            "amount": 5
+          }
         ]
       },
       {
         "label": "Escalader le cairn pour voir s'il y a une ouverture par le haut",
         "verb": "escalader",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "korrigans", "amount": 8},
-          {"type": "HEAL_LIFE", "amount": 6}
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "korrigans",
+            "amount": 8
+          },
+          {
+            "type": "HEAL_LIFE",
+            "amount": 6
+          }
         ]
       }
     ],
-    "tags": ["cauldron", "tunnel", "cairn", "arc_3_of_10"]
+    "tags": [
+      "cauldron",
+      "tunnel",
+      "cairn",
+      "arc_3_of_10"
+    ],
+    "trust_tier": "T0"
   },
   {
     "id": "fr_s11b_cauldron_004",
@@ -1152,28 +2049,55 @@
         "label": "Courir vers l'escalier pour maximiser le temps disponible",
         "verb": "courir",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "anciens", "amount": 16},
-          {"type": "DAMAGE_LIFE", "amount": 8}
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "anciens",
+            "amount": 16
+          },
+          {
+            "type": "DAMAGE_LIFE",
+            "amount": 8
+          }
         ]
       },
       {
         "label": "Forcer le passage entre les rochers pour atteindre le fond",
         "verb": "forcer",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "anciens", "amount": 12},
-          {"type": "DAMAGE_LIFE", "amount": 5}
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "anciens",
+            "amount": 12
+          },
+          {
+            "type": "DAMAGE_LIFE",
+            "amount": 5
+          }
         ]
       },
       {
         "label": "Endurer le froid de la grotte pour explorer methodiquement",
         "verb": "endurer",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "anciens", "amount": 10},
-          {"type": "HEAL_LIFE", "amount": 5}
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "anciens",
+            "amount": 10
+          },
+          {
+            "type": "HEAL_LIFE",
+            "amount": 5
+          }
         ]
       }
     ],
-    "tags": ["cauldron", "grotte_marine", "maree", "arc_4_of_10"]
+    "tags": [
+      "cauldron",
+      "grotte_marine",
+      "maree",
+      "arc_4_of_10"
+    ],
+    "trust_tier": "T0"
   },
   {
     "id": "fr_s11b_cauldron_005",
@@ -1186,28 +2110,55 @@
         "label": "Mediter sur les cinq symboles pour comprendre les gardiens",
         "verb": "mediter",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "anciens", "amount": 14},
-          {"type": "ADD_ANAM", "amount": 6}
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "anciens",
+            "amount": 14
+          },
+          {
+            "type": "ADD_ANAM",
+            "amount": 6
+          }
         ]
       },
       {
         "label": "Se concentrer sur la maquette pour memoriser chaque detail",
         "verb": "se concentrer",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "druides", "amount": 12},
-          {"type": "ADD_BIOME_CURRENCY", "amount": 5}
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "druides",
+            "amount": 12
+          },
+          {
+            "type": "ADD_BIOME_CURRENCY",
+            "amount": 5
+          }
         ]
       },
       {
         "label": "Calmer son impatience et etudier la maquette a fond",
         "verb": "calmer",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "anciens", "amount": 10},
-          {"type": "HEAL_LIFE", "amount": 8}
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "anciens",
+            "amount": 10
+          },
+          {
+            "type": "HEAL_LIFE",
+            "amount": 8
+          }
         ]
       }
     ],
-    "tags": ["cauldron", "maquette", "gardiens", "arc_5_of_10"]
+    "tags": [
+      "cauldron",
+      "maquette",
+      "gardiens",
+      "arc_5_of_10"
+    ],
+    "trust_tier": "T0"
   },
   {
     "id": "fr_s11b_cauldron_006",
@@ -1220,28 +2171,55 @@
         "label": "Convaincre le forgeron par un discours sincere sur tes motivations",
         "verb": "convaincre",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "anciens", "amount": 16},
-          {"type": "ADD_ANAM", "amount": 5}
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "anciens",
+            "amount": 16
+          },
+          {
+            "type": "ADD_ANAM",
+            "amount": 5
+          }
         ]
       },
       {
         "label": "Negocier un echange de services pour prouver ta valeur",
         "verb": "negocier",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "anciens", "amount": 12},
-          {"type": "ADD_BIOME_CURRENCY", "amount": 6}
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "anciens",
+            "amount": 12
+          },
+          {
+            "type": "ADD_BIOME_CURRENCY",
+            "amount": 6
+          }
         ]
       },
       {
         "label": "Marchander ta sincerite contre sa confiance",
         "verb": "marchander",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "korrigans", "amount": 10},
-          {"type": "HEAL_LIFE", "amount": 5}
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "korrigans",
+            "amount": 10
+          },
+          {
+            "type": "HEAL_LIFE",
+            "amount": 5
+          }
         ]
       }
     ],
-    "tags": ["cauldron", "gardien_1", "forgeron", "arc_6_of_10"]
+    "tags": [
+      "cauldron",
+      "gardien_1",
+      "forgeron",
+      "arc_6_of_10"
+    ],
+    "trust_tier": "T0"
   },
   {
     "id": "fr_s11b_cauldron_007",
@@ -1254,28 +2232,56 @@
         "label": "Observer ses gestes pour comprendre l'epreuve qui t'attend",
         "verb": "observer",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "anciens", "amount": 14},
-          {"type": "ADD_ANAM", "amount": 6}
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "anciens",
+            "amount": 14
+          },
+          {
+            "type": "ADD_ANAM",
+            "amount": 6
+          }
         ]
       },
       {
         "label": "Scruter ses yeux pour y trouver un indice sur la nature de l'epreuve",
         "verb": "scruter",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "korrigans", "amount": 12},
-          {"type": "HEAL_LIFE", "amount": 6}
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "korrigans",
+            "amount": 12
+          },
+          {
+            "type": "HEAL_LIFE",
+            "amount": 6
+          }
         ]
       },
       {
         "label": "Fixer la vieille femme avec la meme patience qu'elle",
         "verb": "fixer",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "anciens", "amount": 10},
-          {"type": "ADD_BIOME_CURRENCY", "amount": 5}
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "anciens",
+            "amount": 10
+          },
+          {
+            "type": "ADD_BIOME_CURRENCY",
+            "amount": 5
+          }
         ]
       }
     ],
-    "tags": ["cauldron", "gardien_2", "korrigan", "peurs", "arc_7_of_10"]
+    "tags": [
+      "cauldron",
+      "gardien_2",
+      "korrigan",
+      "peurs",
+      "arc_7_of_10"
+    ],
+    "trust_tier": "T0"
   },
   {
     "id": "fr_s11b_cauldron_008",
@@ -1288,28 +2294,55 @@
         "label": "S'approcher du Chaudron avec reverence pour le toucher",
         "verb": "s'approcher",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "anciens", "amount": 18},
-          {"type": "ADD_ANAM", "amount": 8}
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "anciens",
+            "amount": 18
+          },
+          {
+            "type": "ADD_ANAM",
+            "amount": 8
+          }
         ]
       },
       {
         "label": "Mediter devant le Chaudron pour comprendre son pouvoir",
         "verb": "mediter",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "anciens", "amount": 14},
-          {"type": "HEAL_LIFE", "amount": 10}
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "anciens",
+            "amount": 14
+          },
+          {
+            "type": "HEAL_LIFE",
+            "amount": 10
+          }
         ]
       },
       {
         "label": "Resister mentalement a l'appel du pouvoir pour rester lucide",
         "verb": "resister mentalement",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "druides", "amount": 12},
-          {"type": "DAMAGE_LIFE", "amount": 5}
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "druides",
+            "amount": 12
+          },
+          {
+            "type": "DAMAGE_LIFE",
+            "amount": 5
+          }
         ]
       }
     ],
-    "tags": ["cauldron", "decouverte", "pair_dadeni", "arc_8_of_10"]
+    "tags": [
+      "cauldron",
+      "decouverte",
+      "pair_dadeni",
+      "arc_8_of_10"
+    ],
+    "trust_tier": "T0"
   },
   {
     "id": "fr_s11b_cauldron_009",
@@ -1322,28 +2355,55 @@
         "label": "Analyser la vision pour en comprendre les consequences",
         "verb": "analyser",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "anciens", "amount": 16},
-          {"type": "ADD_ANAM", "amount": 7}
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "anciens",
+            "amount": 16
+          },
+          {
+            "type": "ADD_ANAM",
+            "amount": 7
+          }
         ]
       },
       {
         "label": "Interpreter le paradoxe comme une leçon de moderation",
         "verb": "interpreter",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "druides", "amount": 12},
-          {"type": "HEAL_LIFE", "amount": 8}
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "druides",
+            "amount": 12
+          },
+          {
+            "type": "HEAL_LIFE",
+            "amount": 8
+          }
         ]
       },
       {
         "label": "Resoudre le dilemme en cherchant un usage partiel du Chaudron",
         "verb": "resoudre",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "anciens", "amount": 12},
-          {"type": "ADD_BIOME_CURRENCY", "amount": 6}
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "anciens",
+            "amount": 12
+          },
+          {
+            "type": "ADD_BIOME_CURRENCY",
+            "amount": 6
+          }
         ]
       }
     ],
-    "tags": ["cauldron", "vision", "paradoxe", "arc_9_of_10"]
+    "tags": [
+      "cauldron",
+      "vision",
+      "paradoxe",
+      "arc_9_of_10"
+    ],
+    "trust_tier": "T0"
   },
   {
     "id": "fr_s11b_cauldron_010",
@@ -1356,28 +2416,56 @@
         "label": "Accepter la responsabilite de garder le Chaudron en surete",
         "verb": "accepter",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "anciens", "amount": 20},
-          {"type": "ADD_ANAM", "amount": 10}
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "anciens",
+            "amount": 20
+          },
+          {
+            "type": "ADD_ANAM",
+            "amount": 10
+          }
         ]
       },
       {
         "label": "Refuser de prendre le Chaudron et le confier aux gardiens",
         "verb": "refuser",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "anciens", "amount": 14},
-          {"type": "HEAL_LIFE", "amount": 12}
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "anciens",
+            "amount": 14
+          },
+          {
+            "type": "HEAL_LIFE",
+            "amount": 12
+          }
         ]
       },
       {
         "label": "Parler aux gardiens pour etablir un plan de protection collectif",
         "verb": "parler",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "anciens", "amount": 12},
-          {"type": "ADD_REPUTATION", "faction": "druides", "amount": 8}
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "anciens",
+            "amount": 12
+          },
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "druides",
+            "amount": 8
+          }
         ]
       }
     ],
-    "tags": ["cauldron", "decision", "conclusion", "arc_10_of_10"]
+    "tags": [
+      "cauldron",
+      "decision",
+      "conclusion",
+      "arc_10_of_10"
+    ],
+    "trust_tier": "T0"
   },
   {
     "id": "fr_s11b_treasures_001",
@@ -1390,28 +2478,55 @@
         "label": "Analyser la carte pour planifier un itineraire logique",
         "verb": "analyser",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "anciens", "amount": 14},
-          {"type": "ADD_ANAM", "amount": 6}
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "anciens",
+            "amount": 14
+          },
+          {
+            "type": "ADD_ANAM",
+            "amount": 6
+          }
         ]
       },
       {
         "label": "Dechiffrer les symboles qui accompagnent chaque point lumineux",
         "verb": "dechiffrer",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "anciens", "amount": 12},
-          {"type": "ADD_BIOME_CURRENCY", "amount": 7}
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "anciens",
+            "amount": 12
+          },
+          {
+            "type": "ADD_BIOME_CURRENCY",
+            "amount": 7
+          }
         ]
       },
       {
         "label": "Interpreter la disposition des tresors comme un schema cosmique",
         "verb": "interpreter",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "druides", "amount": 10},
-          {"type": "HEAL_LIFE", "amount": 5}
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "druides",
+            "amount": 10
+          },
+          {
+            "type": "HEAL_LIFE",
+            "amount": 5
+          }
         ]
       }
     ],
-    "tags": ["four_treasures", "carte", "tuatha", "arc_1_of_10"]
+    "tags": [
+      "four_treasures",
+      "carte",
+      "tuatha",
+      "arc_1_of_10"
+    ],
+    "trust_tier": "T0"
   },
   {
     "id": "fr_s11b_treasures_002",
@@ -1424,28 +2539,55 @@
         "label": "S'approcher de la Pierre pour voir si elle reagit a ta presence",
         "verb": "s'approcher",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "anciens", "amount": 16},
-          {"type": "ADD_ANAM", "amount": 7}
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "anciens",
+            "amount": 16
+          },
+          {
+            "type": "ADD_ANAM",
+            "amount": 7
+          }
         ]
       },
       {
         "label": "Mediter au pied de la Pierre pour ressentir son energie",
         "verb": "mediter",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "anciens", "amount": 12},
-          {"type": "HEAL_LIFE", "amount": 8}
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "anciens",
+            "amount": 12
+          },
+          {
+            "type": "HEAL_LIFE",
+            "amount": 8
+          }
         ]
       },
       {
         "label": "Attendre en silence pour voir si la Pierre chantera",
         "verb": "attendre",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "druides", "amount": 10},
-          {"type": "ADD_BIOME_CURRENCY", "amount": 5}
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "druides",
+            "amount": 10
+          },
+          {
+            "type": "ADD_BIOME_CURRENCY",
+            "amount": 5
+          }
         ]
       }
     ],
-    "tags": ["four_treasures", "lia_fail", "pierre", "arc_2_of_10"]
+    "tags": [
+      "four_treasures",
+      "lia_fail",
+      "pierre",
+      "arc_2_of_10"
+    ],
+    "trust_tier": "T0"
   },
   {
     "id": "fr_s11b_treasures_003",
@@ -1458,28 +2600,55 @@
         "label": "Resister physiquement au tremblement en s'agrippant a la Pierre",
         "verb": "resister physiquement",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "anciens", "amount": 18},
-          {"type": "DAMAGE_LIFE", "amount": 10}
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "anciens",
+            "amount": 18
+          },
+          {
+            "type": "DAMAGE_LIFE",
+            "amount": 10
+          }
         ]
       },
       {
         "label": "Courir vers la Pierre avant que le sol ne s'effondre",
         "verb": "courir",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "anciens", "amount": 14},
-          {"type": "DAMAGE_LIFE", "amount": 7}
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "anciens",
+            "amount": 14
+          },
+          {
+            "type": "DAMAGE_LIFE",
+            "amount": 7
+          }
         ]
       },
       {
         "label": "Endurer le seisme en restant immobile et centre",
         "verb": "endurer",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "ankou", "amount": 10},
-          {"type": "HEAL_LIFE", "amount": 5}
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "ankou",
+            "amount": 10
+          },
+          {
+            "type": "HEAL_LIFE",
+            "amount": 5
+          }
         ]
       }
     ],
-    "tags": ["four_treasures", "lia_fail", "epreuve", "arc_3_of_10"]
+    "tags": [
+      "four_treasures",
+      "lia_fail",
+      "epreuve",
+      "arc_3_of_10"
+    ],
+    "trust_tier": "T0"
   },
   {
     "id": "fr_s11b_treasures_004",
@@ -1492,28 +2661,55 @@
         "label": "Observer la lance intensement pour percevoir sa vraie nature",
         "verb": "observer",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "korrigans", "amount": 14},
-          {"type": "ADD_ANAM", "amount": 6}
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "korrigans",
+            "amount": 14
+          },
+          {
+            "type": "ADD_ANAM",
+            "amount": 6
+          }
         ]
       },
       {
         "label": "Scruter les flammes pour y lire la question que pose la lance",
         "verb": "scruter",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "anciens", "amount": 12},
-          {"type": "ADD_BIOME_CURRENCY", "amount": 6}
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "anciens",
+            "amount": 12
+          },
+          {
+            "type": "ADD_BIOME_CURRENCY",
+            "amount": 6
+          }
         ]
       },
       {
         "label": "Examiner le billot de chene pour comprendre pourquoi il ne brule pas",
         "verb": "examiner",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "druides", "amount": 10},
-          {"type": "HEAL_LIFE", "amount": 7}
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "druides",
+            "amount": 10
+          },
+          {
+            "type": "HEAL_LIFE",
+            "amount": 7
+          }
         ]
       }
     ],
-    "tags": ["four_treasures", "lance_lugh", "forgeron", "arc_4_of_10"]
+    "tags": [
+      "four_treasures",
+      "lance_lugh",
+      "forgeron",
+      "arc_4_of_10"
+    ],
+    "trust_tier": "T0"
   },
   {
     "id": "fr_s11b_treasures_005",
@@ -1526,28 +2722,55 @@
         "label": "Convaincre le forgeron que tu cherches la verite, pas la victoire",
         "verb": "convaincre",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "korrigans", "amount": 16},
-          {"type": "ADD_ANAM", "amount": 7}
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "korrigans",
+            "amount": 16
+          },
+          {
+            "type": "ADD_ANAM",
+            "amount": 7
+          }
         ]
       },
       {
         "label": "Negocier en admettant que tu veux les deux",
         "verb": "negocier",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "korrigans", "amount": 12},
-          {"type": "HEAL_LIFE", "amount": 6}
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "korrigans",
+            "amount": 12
+          },
+          {
+            "type": "HEAL_LIFE",
+            "amount": 6
+          }
         ]
       },
       {
         "label": "Charmer le forgeron avec une reponse inattendue",
         "verb": "charmer",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "niamh", "amount": 10},
-          {"type": "ADD_BIOME_CURRENCY", "amount": 5}
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "niamh",
+            "amount": 10
+          },
+          {
+            "type": "ADD_BIOME_CURRENCY",
+            "amount": 5
+          }
         ]
       }
     ],
-    "tags": ["four_treasures", "lance_lugh", "question", "arc_5_of_10"]
+    "tags": [
+      "four_treasures",
+      "lance_lugh",
+      "question",
+      "arc_5_of_10"
+    ],
+    "trust_tier": "T0"
   },
   {
     "id": "fr_s11b_treasures_006",
@@ -1560,28 +2783,55 @@
         "label": "Se faufiler entre les ombres avec precision",
         "verb": "se faufiler",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "ankou", "amount": 16},
-          {"type": "DAMAGE_LIFE", "amount": 8}
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "ankou",
+            "amount": 16
+          },
+          {
+            "type": "DAMAGE_LIFE",
+            "amount": 8
+          }
         ]
       },
       {
         "label": "Esquiver chaque ombre en anticipant ses mouvements",
         "verb": "esquiver",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "ankou", "amount": 14},
-          {"type": "ADD_ANAM", "amount": 5}
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "ankou",
+            "amount": 14
+          },
+          {
+            "type": "ADD_ANAM",
+            "amount": 5
+          }
         ]
       },
       {
         "label": "Se cacher derriere un menhir pour etudier les patterns des ombres",
         "verb": "se cacher",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "anciens", "amount": 10},
-          {"type": "HEAL_LIFE", "amount": 6}
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "anciens",
+            "amount": 10
+          },
+          {
+            "type": "HEAL_LIFE",
+            "amount": 6
+          }
         ]
       }
     ],
-    "tags": ["four_treasures", "epee_nuada", "ombres", "arc_6_of_10"]
+    "tags": [
+      "four_treasures",
+      "epee_nuada",
+      "ombres",
+      "arc_6_of_10"
+    ],
+    "trust_tier": "T0"
   },
   {
     "id": "fr_s11b_treasures_007",
@@ -1594,28 +2844,55 @@
         "label": "Endurer la lumiere de la verite sans detourner les yeux",
         "verb": "endurer",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "ankou", "amount": 18},
-          {"type": "DAMAGE_LIFE", "amount": 10}
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "ankou",
+            "amount": 18
+          },
+          {
+            "type": "DAMAGE_LIFE",
+            "amount": 10
+          }
         ]
       },
       {
         "label": "Accepter tes mensonges comme partie de toi et saisir l'epee",
         "verb": "accepter",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "ankou", "amount": 16},
-          {"type": "ADD_ANAM", "amount": 8}
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "ankou",
+            "amount": 16
+          },
+          {
+            "type": "ADD_ANAM",
+            "amount": 8
+          }
         ]
       },
       {
         "label": "Resister mentalement a la douleur de la verite",
         "verb": "resister mentalement",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "druides", "amount": 12},
-          {"type": "HEAL_LIFE", "amount": 5}
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "druides",
+            "amount": 12
+          },
+          {
+            "type": "HEAL_LIFE",
+            "amount": 5
+          }
         ]
       }
     ],
-    "tags": ["four_treasures", "epee_nuada", "verite", "arc_7_of_10"]
+    "tags": [
+      "four_treasures",
+      "epee_nuada",
+      "verite",
+      "arc_7_of_10"
+    ],
+    "trust_tier": "T0"
   },
   {
     "id": "fr_s11b_treasures_008",
@@ -1628,28 +2905,55 @@
         "label": "Suivre l'odeur mystérieuse pour localiser le Chaudron",
         "verb": "suivre",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "druides", "amount": 14},
-          {"type": "HEAL_LIFE", "amount": 10}
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "druides",
+            "amount": 14
+          },
+          {
+            "type": "HEAL_LIFE",
+            "amount": 10
+          }
         ]
       },
       {
         "label": "Flairer l'air pour distinguer l'odeur magique des odeurs naturelles",
         "verb": "flairer",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "druides", "amount": 12},
-          {"type": "ADD_ANAM", "amount": 5}
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "druides",
+            "amount": 12
+          },
+          {
+            "type": "ADD_ANAM",
+            "amount": 5
+          }
         ]
       },
       {
         "label": "Sentir chaque arbre creux pour trouver la source",
         "verb": "sentir",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "niamh", "amount": 10},
-          {"type": "ADD_BIOME_CURRENCY", "amount": 6}
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "niamh",
+            "amount": 10
+          },
+          {
+            "type": "ADD_BIOME_CURRENCY",
+            "amount": 6
+          }
         ]
       }
     ],
-    "tags": ["four_treasures", "chaudron_dagda", "foret", "arc_8_of_10"]
+    "tags": [
+      "four_treasures",
+      "chaudron_dagda",
+      "foret",
+      "arc_8_of_10"
+    ],
+    "trust_tier": "T0"
   },
   {
     "id": "fr_s11b_treasures_009",
@@ -1662,28 +2966,55 @@
         "label": "Accepter le marche et offrir un souvenir au Chaudron",
         "verb": "accepter",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "druides", "amount": 18},
-          {"type": "ADD_ANAM", "amount": 10}
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "druides",
+            "amount": 18
+          },
+          {
+            "type": "ADD_ANAM",
+            "amount": 10
+          }
         ]
       },
       {
         "label": "Mediter sur ce que tu es pret a oublier",
         "verb": "mediter",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "druides", "amount": 14},
-          {"type": "HEAL_LIFE", "amount": 8}
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "druides",
+            "amount": 14
+          },
+          {
+            "type": "HEAL_LIFE",
+            "amount": 8
+          }
         ]
       },
       {
         "label": "Refuser le sacrifice et honorer le Chaudron autrement",
         "verb": "refuser",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "anciens", "amount": 12},
-          {"type": "ADD_BIOME_CURRENCY", "amount": 6}
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "anciens",
+            "amount": 12
+          },
+          {
+            "type": "ADD_BIOME_CURRENCY",
+            "amount": 6
+          }
         ]
       }
     ],
-    "tags": ["four_treasures", "chaudron_dagda", "sacrifice", "arc_9_of_10"]
+    "tags": [
+      "four_treasures",
+      "chaudron_dagda",
+      "sacrifice",
+      "arc_9_of_10"
+    ],
+    "trust_tier": "T0"
   },
   {
     "id": "fr_s11b_treasures_010",
@@ -1696,27 +3027,55 @@
         "label": "Analyser les proprietes de chaque tresor pour faire un choix eclaire",
         "verb": "analyser",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "anciens", "amount": 18},
-          {"type": "ADD_ANAM", "amount": 10}
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "anciens",
+            "amount": 18
+          },
+          {
+            "type": "ADD_ANAM",
+            "amount": 10
+          }
         ]
       },
       {
         "label": "Resoudre le dilemme en choisissant le tresor qui manque le plus au monde",
         "verb": "resoudre",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "anciens", "amount": 14},
-          {"type": "HEAL_LIFE", "amount": 8}
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "anciens",
+            "amount": 14
+          },
+          {
+            "type": "HEAL_LIFE",
+            "amount": 8
+          }
         ]
       },
       {
         "label": "Interpreter le fait que les quatre existent ensemble comme la reponse",
         "verb": "interpreter",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "druides", "amount": 12},
-          {"type": "ADD_REPUTATION", "faction": "anciens", "amount": 8}
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "druides",
+            "amount": 12
+          },
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "anciens",
+            "amount": 8
+          }
         ]
       }
     ],
-    "tags": ["four_treasures", "reunion", "choix", "arc_10_of_10"]
+    "tags": [
+      "four_treasures",
+      "reunion",
+      "choix",
+      "arc_10_of_10"
+    ],
+    "trust_tier": "T0"
   }
 ]

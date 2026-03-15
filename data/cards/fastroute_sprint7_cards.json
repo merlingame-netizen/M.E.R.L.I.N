@@ -840,7 +840,8 @@
       "morts",
       "voile",
       "dolmen"
-    ]
+    ],
+    "trust_tier": "T0"
   },
   {
     "id": "fr_s7_event_imbolc_002",
@@ -905,7 +906,8 @@
       "flamme",
       "printemps",
       "druides"
-    ]
+    ],
+    "trust_tier": "T0"
   },
   {
     "id": "fr_s7_event_beltane_003",
@@ -969,7 +971,8 @@
       "danse",
       "korrigans",
       "purification"
-    ]
+    ],
+    "trust_tier": "T0"
   },
   {
     "id": "fr_s7_event_lughnasadh_004",
@@ -1038,7 +1041,8 @@
       "jeux",
       "village",
       "recolte"
-    ]
+    ],
+    "trust_tier": "T0"
   },
   {
     "id": "fr_s7_event_tempete_005",
@@ -1105,7 +1109,8 @@
       "barque",
       "lanterne",
       "ancien"
-    ]
+    ],
+    "trust_tier": "T0"
   },
   {
     "id": "fr_s7_event_eclipse_006",
@@ -1169,7 +1174,8 @@
       "menhir",
       "dalle",
       "alignement"
-    ]
+    ],
+    "trust_tier": "T0"
   },
   {
     "id": "fr_s7_event_voyageur_007",
@@ -1236,7 +1242,8 @@
       "miroir",
       "lande",
       "echange"
-    ]
+    ],
+    "trust_tier": "T0"
   },
   {
     "id": "fr_s7_event_voyageur_008",
@@ -1303,7 +1310,8 @@
       "herbes",
       "if",
       "chance"
-    ]
+    ],
+    "trust_tier": "T0"
   },
   {
     "id": "fr_s7_cross_druides_ankou_001",
@@ -1372,7 +1380,8 @@
       "dolmen",
       "chene",
       "conflit"
-    ]
+    ],
+    "trust_tier": "T0"
   },
   {
     "id": "fr_s7_cross_korrigans_anciens_002",
@@ -1441,7 +1450,8 @@
       "coupe",
       "vol",
       "banquet"
-    ]
+    ],
+    "trust_tier": "T0"
   },
   {
     "id": "fr_s7_cross_niamh_druides_003",
@@ -1510,7 +1520,8 @@
       "tir_na_nog",
       "porte",
       "fleurs"
-    ]
+    ],
+    "trust_tier": "T0"
   },
   {
     "id": "fr_s7_cross_ankou_niamh_004",
@@ -1583,7 +1594,8 @@
       "guerrier",
       "tumulus",
       "choix"
-    ]
+    ],
+    "trust_tier": "T0"
   },
   {
     "id": "fr_s7_cross_druides_korrigans_005",
@@ -1652,7 +1664,8 @@
       "pierres",
       "champignons",
       "negociation"
-    ]
+    ],
+    "trust_tier": "T0"
   },
   {
     "id": "fr_s7_cross_anciens_ankou_006",
@@ -1721,7 +1734,8 @@
       "prophecie",
       "menhir",
       "contradiction"
-    ]
+    ],
+    "trust_tier": "T0"
   },
   {
     "id": "fr_s7_cross_niamh_korrigans_007",
@@ -1790,7 +1804,8 @@
       "cerf_blanc",
       "enclos",
       "beaute"
-    ]
+    ],
+    "trust_tier": "T0"
   },
   {
     "id": "fr_s7_cross_triple_008",
@@ -1869,7 +1884,8 @@
       "village",
       "accusation",
       "enquete"
-    ]
+    ],
+    "trust_tier": "T0"
   },
   {
     "id": "fr_s7_cross_druides_niamh_009",
@@ -1941,7 +1957,8 @@
       "selkie",
       "phoque",
       "cote"
-    ]
+    ],
+    "trust_tier": "T0"
   },
   {
     "id": "fr_s7_cross_ankou_korrigans_010",
@@ -2010,7 +2027,8 @@
       "mort",
       "rite",
       "champignons"
-    ]
+    ],
+    "trust_tier": "T0"
   },
   {
     "id": "fr_s7_biome_foret_001",
@@ -2072,7 +2090,8 @@
       "racines",
       "coeur",
       "gwenn"
-    ]
+    ],
+    "trust_tier": "T0"
   },
   {
     "id": "fr_s7_biome_foret_002",
@@ -2139,7 +2158,8 @@
       "lac",
       "cygne",
       "autre_monde"
-    ]
+    ],
+    "trust_tier": "T0"
   },
   {
     "id": "fr_s7_biome_landes_001",
@@ -2201,7 +2221,8 @@
       "melodie",
       "vent",
       "erwan"
-    ]
+    ],
+    "trust_tier": "T0"
   },
   {
     "id": "fr_s7_biome_landes_002",
@@ -2264,7 +2285,8 @@
       "croix",
       "berger",
       "morts"
-    ]
+    ],
+    "trust_tier": "T0"
   },
   {
     "id": "fr_s7_biome_cotes_001",
@@ -2330,7 +2352,8 @@
       "miroir",
       "tir_na_nog",
       "maelle"
-    ]
+    ],
+    "trust_tier": "T0"
   },
   {
     "id": "fr_s7_biome_cotes_002",
@@ -2396,7 +2419,8 @@
       "korrigan",
       "coquillage",
       "jeu"
-    ]
+    ],
+    "trust_tier": "T0"
   },
   {
     "id": "fr_s7_biome_villages_001",
@@ -2464,7 +2488,8 @@
       "reves",
       "cadogan",
       "armes"
-    ]
+    ],
+    "trust_tier": "T0"
   },
   {
     "id": "fr_s7_biome_villages_002",
@@ -2527,7 +2552,8 @@
       "chanson",
       "etoiles_mortes",
       "sable"
-    ]
+    ],
+    "trust_tier": "T0"
   },
   {
     "id": "fr_s7_biome_cercles_001",
@@ -2589,7 +2615,8 @@
       "anneau",
       "alphabet",
       "anciens_avant"
-    ]
+    ],
+    "trust_tier": "T0"
   },
   {
     "id": "fr_s7_biome_cercles_002",
@@ -2652,7 +2679,8 @@
       "stellaire",
       "menhir",
       "fissures"
-    ]
+    ],
+    "trust_tier": "T0"
   },
   {
     "id": "fr_s7_biome_marais_001",
@@ -2718,7 +2746,8 @@
       "gwen_du",
       "champignon",
       "silence"
-    ]
+    ],
+    "trust_tier": "T0"
   },
   {
     "id": "fr_s7_biome_marais_002",
@@ -2781,7 +2810,8 @@
       "corps",
       "tourbe",
       "monde_avant"
-    ]
+    ],
+    "trust_tier": "T0"
   },
   {
     "id": "fr_s7_biome_collines_001",
@@ -2847,7 +2877,8 @@
       "roi",
       "triskel",
       "ildiko"
-    ]
+    ],
+    "trust_tier": "T0"
   },
   {
     "id": "fr_s7_biome_collines_002",
@@ -2910,7 +2941,8 @@
       "lune",
       "alignement",
       "couloir"
-    ]
+    ],
+    "trust_tier": "T0"
   },
   {
     "id": "fr_s7_biome_iles_001",
@@ -2973,7 +3005,8 @@
       "avalon",
       "morgane",
       "souvenir"
-    ]
+    ],
+    "trust_tier": "T0"
   },
   {
     "id": "fr_s7_biome_iles_002",
@@ -3040,7 +3073,8 @@
       "manannan",
       "ames",
       "brouillard"
-    ]
+    ],
+    "trust_tier": "T0"
   },
   {
     "id": "fr_s7_biome_foret_003",
@@ -3106,7 +3140,8 @@
       "champignons",
       "ventre",
       "korrigans"
-    ]
+    ],
+    "trust_tier": "T0"
   },
   {
     "id": "fr_s7_biome_landes_003",
@@ -3176,7 +3211,8 @@
       "trefle",
       "erwan",
       "guerison"
-    ]
+    ],
+    "trust_tier": "T0"
   },
   {
     "id": "fr_s7_biome_cotes_003",
@@ -3246,7 +3282,8 @@
       "cite_engloutie",
       "maelle",
       "maree"
-    ]
+    ],
+    "trust_tier": "T0"
   },
   {
     "id": "fr_s7_biome_villages_003",
@@ -3312,6 +3349,7 @@
       "korrigans",
       "objets",
       "secrets"
-    ]
+    ],
+    "trust_tier": "T0"
   }
 ]

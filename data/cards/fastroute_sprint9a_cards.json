@@ -10,28 +10,57 @@
         "label": "Apaiser ton esprit pour formuler une question digne des ancetres",
         "verb": "apaiser",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "druides", "amount": 12},
-          {"type": "ADD_ANAM", "amount": 5}
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "druides",
+            "amount": 12
+          },
+          {
+            "type": "ADD_ANAM",
+            "amount": 5
+          }
         ]
       },
       {
         "label": "Mediter sur la signification de la souche et ce qu'elle a vu",
         "verb": "mediter",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "druides", "amount": 10},
-          {"type": "HEAL_LIFE", "amount": 8}
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "druides",
+            "amount": 10
+          },
+          {
+            "type": "HEAL_LIFE",
+            "amount": 8
+          }
         ]
       },
       {
         "label": "Accepter l'invitation en silence, laissant l'arbre parler en premier",
         "verb": "accepter",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "druides", "amount": 8},
-          {"type": "ADD_REPUTATION", "faction": "anciens", "amount": 6}
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "druides",
+            "amount": 8
+          },
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "anciens",
+            "amount": 6
+          }
         ]
       }
     ],
-    "tags": ["druides", "origine", "foret", "premier_druide", "arc_1_of_2"]
+    "tags": [
+      "druides",
+      "origine",
+      "foret",
+      "premier_druide",
+      "arc_1_of_2"
+    ],
+    "trust_tier": "T0"
   },
   {
     "id": "fr_s9a_druides_origin_002",
@@ -44,28 +73,56 @@
         "label": "Scruter les filaments lumineux pour y dechiffrer un motif",
         "verb": "scruter",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "druides", "amount": 15},
-          {"type": "ADD_BIOME_CURRENCY", "amount": 8}
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "druides",
+            "amount": 15
+          },
+          {
+            "type": "ADD_BIOME_CURRENCY",
+            "amount": 8
+          }
         ]
       },
       {
         "label": "Examiner chaque racine avec methode pour cartographier la lumiere",
         "verb": "examiner",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "druides", "amount": 12},
-          {"type": "ADD_ANAM", "amount": 6}
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "druides",
+            "amount": 12
+          },
+          {
+            "type": "ADD_ANAM",
+            "amount": 6
+          }
         ]
       },
       {
         "label": "Inspecter la terre autour de la souche a la recherche de graines anciennes",
         "verb": "inspecter",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "druides", "amount": 10},
-          {"type": "HEAL_LIFE", "amount": 6}
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "druides",
+            "amount": 10
+          },
+          {
+            "type": "HEAL_LIFE",
+            "amount": 6
+          }
         ]
       }
     ],
-    "tags": ["druides", "origine", "foret", "souche_sacree", "arc_2_of_2"]
+    "tags": [
+      "druides",
+      "origine",
+      "foret",
+      "souche_sacree",
+      "arc_2_of_2"
+    ],
+    "trust_tier": "T0"
   },
   {
     "id": "fr_s9a_druides_conflit_003",
@@ -78,28 +135,58 @@
         "label": "Analyser les arguments des deux camps pour trouver le point de convergence",
         "verb": "analyser",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "druides", "amount": 10},
-          {"type": "ADD_REPUTATION", "faction": "ankou", "amount": 5}
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "druides",
+            "amount": 10
+          },
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "ankou",
+            "amount": 5
+          }
         ]
       },
       {
         "label": "Decoder les inscriptions du cairn pour trancher le differend",
         "verb": "decoder",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "druides", "amount": 14},
-          {"type": "DAMAGE_LIFE", "amount": 5}
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "druides",
+            "amount": 14
+          },
+          {
+            "type": "DAMAGE_LIFE",
+            "amount": 5
+          }
         ]
       },
       {
         "label": "Resoudre le conflit en proposant un partage equitable des terres",
         "verb": "resoudre",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "druides", "amount": 8},
-          {"type": "ADD_REPUTATION", "faction": "ankou", "amount": 8}
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "druides",
+            "amount": 8
+          },
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "ankou",
+            "amount": 8
+          }
         ]
       }
     ],
-    "tags": ["druides", "conflit", "ankou", "cairn", "landes"]
+    "tags": [
+      "druides",
+      "conflit",
+      "ankou",
+      "cairn",
+      "landes"
+    ],
+    "trust_tier": "T0"
   },
   {
     "id": "fr_s9a_druides_festival_004",
@@ -112,28 +199,56 @@
         "label": "Flairer la direction du vent pour placer ta bougie au bon endroit",
         "verb": "flairer",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "druides", "amount": 12},
-          {"type": "ADD_ANAM", "amount": 4}
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "druides",
+            "amount": 12
+          },
+          {
+            "type": "ADD_ANAM",
+            "amount": 4
+          }
         ]
       },
       {
         "label": "Tendre l'oreille aux murmures du feu pour choisir ton voeu",
         "verb": "tendre l'oreille",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "druides", "amount": 10},
-          {"type": "HEAL_LIFE", "amount": 10}
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "druides",
+            "amount": 10
+          },
+          {
+            "type": "HEAL_LIFE",
+            "amount": 10
+          }
         ]
       },
       {
         "label": "Pister les etincelles qui s'envolent pour lire l'avenir",
         "verb": "pister",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "druides", "amount": 8},
-          {"type": "ADD_BIOME_CURRENCY", "amount": 6}
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "druides",
+            "amount": 8
+          },
+          {
+            "type": "ADD_BIOME_CURRENCY",
+            "amount": 6
+          }
         ]
       }
     ],
-    "tags": ["druides", "festival", "imbolc", "feu", "voeu"]
+    "tags": [
+      "druides",
+      "festival",
+      "imbolc",
+      "feu",
+      "voeu"
+    ],
+    "trust_tier": "T0"
   },
   {
     "id": "fr_s9a_druides_ogham_005",
@@ -146,28 +261,56 @@
         "label": "Se faufiler avec delicatesse entre les branches de l'if",
         "verb": "se faufiler",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "druides", "amount": 12},
-          {"type": "UNLOCK_OGHAM", "ogham": "ioho"}
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "druides",
+            "amount": 12
+          },
+          {
+            "type": "UNLOCK_OGHAM",
+            "ogham": "ioho"
+          }
         ]
       },
       {
         "label": "Contourner l'arbre pour trouver un passage plus sur",
         "verb": "contourner",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "druides", "amount": 8},
-          {"type": "ADD_ANAM", "amount": 5}
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "druides",
+            "amount": 8
+          },
+          {
+            "type": "ADD_ANAM",
+            "amount": 5
+          }
         ]
       },
       {
         "label": "Escalader le tronc par l'arriere pour atteindre le sommet",
         "verb": "escalader",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "druides", "amount": 14},
-          {"type": "DAMAGE_LIFE", "amount": 8}
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "druides",
+            "amount": 14
+          },
+          {
+            "type": "DAMAGE_LIFE",
+            "amount": 8
+          }
         ]
       }
     ],
-    "tags": ["druides", "ogham", "if", "decouverte", "collines"]
+    "tags": [
+      "druides",
+      "ogham",
+      "if",
+      "decouverte",
+      "collines"
+    ],
+    "trust_tier": "T0"
   },
   {
     "id": "fr_s9a_druides_saison_006",
@@ -180,28 +323,58 @@
         "label": "Convaincre discretement le marchand de reveler la verite",
         "verb": "convaincre",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "druides", "amount": 12},
-          {"type": "ADD_REPUTATION", "faction": "korrigans", "amount": -5}
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "druides",
+            "amount": 12
+          },
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "korrigans",
+            "amount": -5
+          }
         ]
       },
       {
         "label": "Negocier un arrangement ou il vend les graines comme symboles",
         "verb": "negocier",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "druides", "amount": 8},
-          {"type": "ADD_REPUTATION", "faction": "korrigans", "amount": 6}
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "druides",
+            "amount": 8
+          },
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "korrigans",
+            "amount": 6
+          }
         ]
       },
       {
         "label": "Charmer la foule avec une histoire de Beltaine pour detourner l'attention",
         "verb": "charmer",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "druides", "amount": 6},
-          {"type": "HEAL_LIFE", "amount": 8}
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "druides",
+            "amount": 6
+          },
+          {
+            "type": "HEAL_LIFE",
+            "amount": 8
+          }
         ]
       }
     ],
-    "tags": ["druides", "festival", "beltaine", "marche", "tromperie"]
+    "tags": [
+      "druides",
+      "festival",
+      "beltaine",
+      "marche",
+      "tromperie"
+    ],
+    "trust_tier": "T0"
   },
   {
     "id": "fr_s9a_druides_arc_007",
@@ -214,28 +387,57 @@
         "label": "Tenter sa chance en plongeant la main dans l'eau noire",
         "verb": "tenter sa chance",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "druides", "amount": 15},
-          {"type": "DAMAGE_LIFE", "amount": 8}
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "druides",
+            "amount": 15
+          },
+          {
+            "type": "DAMAGE_LIFE",
+            "amount": 8
+          }
         ]
       },
       {
         "label": "Cueillir les mousses visibles au bord pour limiter les risques",
         "verb": "cueillir",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "druides", "amount": 10},
-          {"type": "HEAL_LIFE", "amount": 4}
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "druides",
+            "amount": 10
+          },
+          {
+            "type": "HEAL_LIFE",
+            "amount": 4
+          }
         ]
       },
       {
         "label": "Fouiller a l'aveugle dans la vase a proximite de Talwen",
         "verb": "fouiller a l'aveugle",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "druides", "amount": 12},
-          {"type": "ADD_REPUTATION", "faction": "korrigans", "amount": 5}
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "druides",
+            "amount": 12
+          },
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "korrigans",
+            "amount": 5
+          }
         ]
       }
     ],
-    "tags": ["druides", "talwen", "marais", "mousse", "pleine_lune"]
+    "tags": [
+      "druides",
+      "talwen",
+      "marais",
+      "mousse",
+      "pleine_lune"
+    ],
+    "trust_tier": "T0"
   },
   {
     "id": "fr_s9a_druides_quete_008",
@@ -248,28 +450,57 @@
         "label": "Courir vers la roche avant que la maree ne la recouvre",
         "verb": "courir",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "druides", "amount": 15},
-          {"type": "DAMAGE_LIFE", "amount": 10}
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "druides",
+            "amount": 15
+          },
+          {
+            "type": "DAMAGE_LIFE",
+            "amount": 10
+          }
         ]
       },
       {
         "label": "Resister a l'urgence et attendre la maree basse avec patience",
         "verb": "resister physiquement",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "druides", "amount": 8},
-          {"type": "ADD_REPUTATION", "faction": "anciens", "amount": 6}
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "druides",
+            "amount": 8
+          },
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "anciens",
+            "amount": 6
+          }
         ]
       },
       {
         "label": "Endurer les embruns glaces pour observer la roche depuis la falaise",
         "verb": "endurer",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "druides", "amount": 10},
-          {"type": "ADD_ANAM", "amount": 4}
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "druides",
+            "amount": 10
+          },
+          {
+            "type": "ADD_ANAM",
+            "amount": 4
+          }
         ]
       }
     ],
-    "tags": ["druides", "ogham", "cotes", "maree", "falaise"]
+    "tags": [
+      "druides",
+      "ogham",
+      "cotes",
+      "maree",
+      "falaise"
+    ],
+    "trust_tier": "T0"
   },
   {
     "id": "fr_s9a_druides_recit_009",
@@ -282,28 +513,56 @@
         "label": "Mediter sous l'arbre inverse pour toucher les reves ancestraux",
         "verb": "mediter",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "druides", "amount": 18},
-          {"type": "DAMAGE_LIFE", "amount": 6}
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "druides",
+            "amount": 18
+          },
+          {
+            "type": "DAMAGE_LIFE",
+            "amount": 6
+          }
         ]
       },
       {
         "label": "Accepter de partager un de tes propres reves avec l'arbre",
         "verb": "accepter",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "druides", "amount": 14},
-          {"type": "ADD_ANAM", "amount": 8}
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "druides",
+            "amount": 14
+          },
+          {
+            "type": "ADD_ANAM",
+            "amount": 8
+          }
         ]
       },
       {
         "label": "Apaiser les vibrations de l'arbre en chantonnant un air ancien",
         "verb": "apaiser",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "druides", "amount": 10},
-          {"type": "HEAL_LIFE", "amount": 12}
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "druides",
+            "amount": 10
+          },
+          {
+            "type": "HEAL_LIFE",
+            "amount": 12
+          }
         ]
       }
     ],
-    "tags": ["druides", "arbre_monde", "iles", "reves", "bile"]
+    "tags": [
+      "druides",
+      "arbre_monde",
+      "iles",
+      "reves",
+      "bile"
+    ],
+    "trust_tier": "T0"
   },
   {
     "id": "fr_s9a_druides_revelation_010",
@@ -316,30 +575,56 @@
         "label": "Flairer l'air pour percevoir le mouvement residuel des arbres",
         "verb": "flairer",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "druides", "amount": 12},
-          {"type": "ADD_BIOME_CURRENCY", "amount": 7}
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "druides",
+            "amount": 12
+          },
+          {
+            "type": "ADD_BIOME_CURRENCY",
+            "amount": 7
+          }
         ]
       },
       {
         "label": "Tendre l'oreille au bruissement des racines sous terre",
         "verb": "tendre l'oreille",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "druides", "amount": 15},
-          {"type": "ADD_ANAM", "amount": 5}
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "druides",
+            "amount": 15
+          },
+          {
+            "type": "ADD_ANAM",
+            "amount": 5
+          }
         ]
       },
       {
         "label": "Pister les traces laissees par les arbres en mouvement",
         "verb": "pister",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "druides", "amount": 10},
-          {"type": "HEAL_LIFE", "amount": 6}
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "druides",
+            "amount": 10
+          },
+          {
+            "type": "HEAL_LIFE",
+            "amount": 6
+          }
         ]
       }
     ],
-    "tags": ["druides", "revelation", "foret_vivante", "arbres_mobiles"]
+    "tags": [
+      "druides",
+      "revelation",
+      "foret_vivante",
+      "arbres_mobiles"
+    ],
+    "trust_tier": "T0"
   },
-
   {
     "id": "fr_s9a_anciens_origin_001",
     "faction_primaire": "anciens",
@@ -351,28 +636,56 @@
         "label": "Scruter la marque avec attention pour en memoriser chaque trait",
         "verb": "scruter",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "anciens", "amount": 14},
-          {"type": "ADD_ANAM", "amount": 5}
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "anciens",
+            "amount": 14
+          },
+          {
+            "type": "ADD_ANAM",
+            "amount": 5
+          }
         ]
       },
       {
         "label": "Examiner les menhirs voisins pour trouver des marques similaires",
         "verb": "examiner",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "anciens", "amount": 12},
-          {"type": "ADD_BIOME_CURRENCY", "amount": 6}
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "anciens",
+            "amount": 12
+          },
+          {
+            "type": "ADD_BIOME_CURRENCY",
+            "amount": 6
+          }
         ]
       },
       {
         "label": "Inspecter la base du menhir ou la terre est la plus ancienne",
         "verb": "inspecter",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "anciens", "amount": 10},
-          {"type": "HEAL_LIFE", "amount": 5}
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "anciens",
+            "amount": 10
+          },
+          {
+            "type": "HEAL_LIFE",
+            "amount": 5
+          }
         ]
       }
     ],
-    "tags": ["anciens", "origine", "menhir", "premiere_promesse", "arc_1_of_3"]
+    "tags": [
+      "anciens",
+      "origine",
+      "menhir",
+      "premiere_promesse",
+      "arc_1_of_3"
+    ],
+    "trust_tier": "T0"
   },
   {
     "id": "fr_s9a_anciens_origin_002",
@@ -385,28 +698,57 @@
         "label": "Decoder le systeme numerique en comparant les gravures des deux cercles",
         "verb": "decoder",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "anciens", "amount": 15},
-          {"type": "ADD_ANAM", "amount": 6}
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "anciens",
+            "amount": 15
+          },
+          {
+            "type": "ADD_ANAM",
+            "amount": 6
+          }
         ]
       },
       {
         "label": "Analyser les positions relatives des menhirs comme un cadran",
         "verb": "analyser",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "anciens", "amount": 12},
-          {"type": "ADD_BIOME_CURRENCY", "amount": 8}
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "anciens",
+            "amount": 12
+          },
+          {
+            "type": "ADD_BIOME_CURRENCY",
+            "amount": 8
+          }
         ]
       },
       {
         "label": "Resoudre l'enigme en comptant les pierres des deux cercles",
         "verb": "resoudre",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "anciens", "amount": 10},
-          {"type": "ADD_REPUTATION", "faction": "druides", "amount": 5}
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "anciens",
+            "amount": 10
+          },
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "druides",
+            "amount": 5
+          }
         ]
       }
     ],
-    "tags": ["anciens", "origine", "cercle_cache", "nombres", "arc_2_of_3"]
+    "tags": [
+      "anciens",
+      "origine",
+      "cercle_cache",
+      "nombres",
+      "arc_2_of_3"
+    ],
+    "trust_tier": "T0"
   },
   {
     "id": "fr_s9a_anciens_origin_003",
@@ -419,28 +761,56 @@
         "label": "Accepter la fiole et franchir le seuil du dolmen seul",
         "verb": "accepter",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "anciens", "amount": 18},
-          {"type": "DAMAGE_LIFE", "amount": 8}
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "anciens",
+            "amount": 18
+          },
+          {
+            "type": "DAMAGE_LIFE",
+            "amount": 8
+          }
         ]
       },
       {
         "label": "Mediter au seuil pour preparer ton esprit avant d'entrer",
         "verb": "mediter",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "anciens", "amount": 14},
-          {"type": "HEAL_LIFE", "amount": 6}
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "anciens",
+            "amount": 14
+          },
+          {
+            "type": "HEAL_LIFE",
+            "amount": 6
+          }
         ]
       },
       {
         "label": "Parler a la pierre du dolmen avant de la franchir",
         "verb": "parler",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "anciens", "amount": 12},
-          {"type": "ADD_ANAM", "amount": 7}
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "anciens",
+            "amount": 12
+          },
+          {
+            "type": "ADD_ANAM",
+            "amount": 7
+          }
         ]
       }
     ],
-    "tags": ["anciens", "origine", "dolmen", "seuil", "arc_3_of_3"]
+    "tags": [
+      "anciens",
+      "origine",
+      "dolmen",
+      "seuil",
+      "arc_3_of_3"
+    ],
+    "trust_tier": "T0"
   },
   {
     "id": "fr_s9a_anciens_conflit_004",
@@ -453,28 +823,57 @@
         "label": "Convaincre les Anciens que la confrontation n'est pas la voie",
         "verb": "convaincre",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "anciens", "amount": 10},
-          {"type": "HEAL_LIFE", "amount": 6}
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "anciens",
+            "amount": 10
+          },
+          {
+            "type": "HEAL_LIFE",
+            "amount": 6
+          }
         ]
       },
       {
         "label": "Negocier avec le forgeron une restitution symbolique",
         "verb": "negocier",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "anciens", "amount": 12},
-          {"type": "ADD_REPUTATION", "faction": "korrigans", "amount": -4}
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "anciens",
+            "amount": 12
+          },
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "korrigans",
+            "amount": -4
+          }
         ]
       },
       {
         "label": "Charmer la foule avec un recit sur l'histoire sacree des menhirs",
         "verb": "charmer",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "anciens", "amount": 14},
-          {"type": "ADD_ANAM", "amount": 3}
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "anciens",
+            "amount": 14
+          },
+          {
+            "type": "ADD_ANAM",
+            "amount": 3
+          }
         ]
       }
     ],
-    "tags": ["anciens", "conflit", "forgeron", "menhir_fondu", "village"]
+    "tags": [
+      "anciens",
+      "conflit",
+      "forgeron",
+      "menhir_fondu",
+      "village"
+    ],
+    "trust_tier": "T0"
   },
   {
     "id": "fr_s9a_anciens_festival_005",
@@ -487,28 +886,56 @@
         "label": "Courir de toutes tes forces a travers les landes",
         "verb": "courir",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "anciens", "amount": 15},
-          {"type": "DAMAGE_LIFE", "amount": 8}
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "anciens",
+            "amount": 15
+          },
+          {
+            "type": "DAMAGE_LIFE",
+            "amount": 8
+          }
         ]
       },
       {
         "label": "Endurer le parcours a ton rythme, sans chercher la victoire",
         "verb": "endurer",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "anciens", "amount": 12},
-          {"type": "HEAL_LIFE", "amount": 4}
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "anciens",
+            "amount": 12
+          },
+          {
+            "type": "HEAL_LIFE",
+            "amount": 4
+          }
         ]
       },
       {
         "label": "Forcer le passage par un raccourci entre les cairns",
         "verb": "forcer",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "anciens", "amount": 8},
-          {"type": "ADD_BIOME_CURRENCY", "amount": 7}
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "anciens",
+            "amount": 8
+          },
+          {
+            "type": "ADD_BIOME_CURRENCY",
+            "amount": 7
+          }
         ]
       }
     ],
-    "tags": ["anciens", "festival", "lughnasadh", "course", "cairns"]
+    "tags": [
+      "anciens",
+      "festival",
+      "lughnasadh",
+      "course",
+      "cairns"
+    ],
+    "trust_tier": "T0"
   },
   {
     "id": "fr_s9a_anciens_quete_006",
@@ -521,28 +948,56 @@
         "label": "Se faufiler dans la cavite avec une delicatesse extreme",
         "verb": "se faufiler",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "anciens", "amount": 14},
-          {"type": "UNLOCK_OGHAM", "ogham": "straif"}
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "anciens",
+            "amount": 14
+          },
+          {
+            "type": "UNLOCK_OGHAM",
+            "ogham": "straif"
+          }
         ]
       },
       {
         "label": "Contourner le dolmen pour trouver une entree plus large",
         "verb": "contourner",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "anciens", "amount": 10},
-          {"type": "ADD_ANAM", "amount": 5}
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "anciens",
+            "amount": 10
+          },
+          {
+            "type": "ADD_ANAM",
+            "amount": 5
+          }
         ]
       },
       {
         "label": "Escalader les debris pour voir la cavite d'en haut",
         "verb": "escalader",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "anciens", "amount": 8},
-          {"type": "DAMAGE_LIFE", "amount": 6}
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "anciens",
+            "amount": 8
+          },
+          {
+            "type": "DAMAGE_LIFE",
+            "amount": 6
+          }
         ]
       }
     ],
-    "tags": ["anciens", "ogham", "dolmen_effondre", "cavite", "cotes"]
+    "tags": [
+      "anciens",
+      "ogham",
+      "dolmen_effondre",
+      "cavite",
+      "cotes"
+    ],
+    "trust_tier": "T0"
   },
   {
     "id": "fr_s9a_anciens_saison_007",
@@ -555,28 +1010,56 @@
         "label": "Tendre l'oreille au craquement des racines quand l'ombre les touche",
         "verb": "tendre l'oreille",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "anciens", "amount": 14},
-          {"type": "ADD_ANAM", "amount": 5}
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "anciens",
+            "amount": 14
+          },
+          {
+            "type": "ADD_ANAM",
+            "amount": 5
+          }
         ]
       },
       {
         "label": "Flairer le changement dans l'air au moment du passage",
         "verb": "flairer",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "anciens", "amount": 12},
-          {"type": "ADD_BIOME_CURRENCY", "amount": 5}
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "anciens",
+            "amount": 12
+          },
+          {
+            "type": "ADD_BIOME_CURRENCY",
+            "amount": 5
+          }
         ]
       },
       {
         "label": "Pister l'ombre avec precision pour marquer le point exact",
         "verb": "pister",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "anciens", "amount": 10},
-          {"type": "HEAL_LIFE", "amount": 8}
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "anciens",
+            "amount": 10
+          },
+          {
+            "type": "HEAL_LIFE",
+            "amount": 8
+          }
         ]
       }
     ],
-    "tags": ["anciens", "equinoxe", "ombre", "passage", "foret"]
+    "tags": [
+      "anciens",
+      "equinoxe",
+      "ombre",
+      "passage",
+      "foret"
+    ],
+    "trust_tier": "T0"
   },
   {
     "id": "fr_s9a_anciens_recit_008",
@@ -589,28 +1072,56 @@
         "label": "Tenter sa chance en lisant les os selon ton instinct",
         "verb": "tenter sa chance",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "anciens", "amount": 15},
-          {"type": "DAMAGE_LIFE", "amount": 5}
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "anciens",
+            "amount": 15
+          },
+          {
+            "type": "DAMAGE_LIFE",
+            "amount": 5
+          }
         ]
       },
       {
         "label": "Cueillir un os supplementaire pour completer la lecture",
         "verb": "cueillir",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "anciens", "amount": 10},
-          {"type": "ADD_ANAM", "amount": 6}
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "anciens",
+            "amount": 10
+          },
+          {
+            "type": "ADD_ANAM",
+            "amount": 6
+          }
         ]
       },
       {
         "label": "Fouiller a l'aveugle parmi les os pour trouver celui qui vibre",
         "verb": "fouiller a l'aveugle",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "anciens", "amount": 12},
-          {"type": "ADD_BIOME_CURRENCY", "amount": 8}
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "anciens",
+            "amount": 12
+          },
+          {
+            "type": "ADD_BIOME_CURRENCY",
+            "amount": 8
+          }
         ]
       }
     ],
-    "tags": ["anciens", "divination", "os", "iles", "rituel"]
+    "tags": [
+      "anciens",
+      "divination",
+      "os",
+      "iles",
+      "rituel"
+    ],
+    "trust_tier": "T0"
   },
   {
     "id": "fr_s9a_anciens_conflit2_009",
@@ -623,28 +1134,58 @@
         "label": "Scruter le fond du marais pour confirmer la presence du menhir",
         "verb": "scruter",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "anciens", "amount": 14},
-          {"type": "ADD_REPUTATION", "faction": "korrigans", "amount": -6}
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "anciens",
+            "amount": 14
+          },
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "korrigans",
+            "amount": -6
+          }
         ]
       },
       {
         "label": "Examiner la situation pour proposer une exploration conjointe",
         "verb": "examiner",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "anciens", "amount": 10},
-          {"type": "ADD_REPUTATION", "faction": "korrigans", "amount": 5}
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "anciens",
+            "amount": 10
+          },
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "korrigans",
+            "amount": 5
+          }
         ]
       },
       {
         "label": "Inspecter les rives du marais pour trouver un compromis territorial",
         "verb": "inspecter",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "anciens", "amount": 8},
-          {"type": "HEAL_LIFE", "amount": 6}
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "anciens",
+            "amount": 8
+          },
+          {
+            "type": "HEAL_LIFE",
+            "amount": 6
+          }
         ]
       }
     ],
-    "tags": ["anciens", "conflit", "korrigans", "menhir_englouti", "marais"]
+    "tags": [
+      "anciens",
+      "conflit",
+      "korrigans",
+      "menhir_englouti",
+      "marais"
+    ],
+    "trust_tier": "T0"
   },
   {
     "id": "fr_s9a_anciens_revelation_010",
@@ -657,30 +1198,57 @@
         "label": "Mediter sur cette revelation aupres du menhir le plus proche",
         "verb": "mediter",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "anciens", "amount": 18},
-          {"type": "ADD_ANAM", "amount": 8}
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "anciens",
+            "amount": 18
+          },
+          {
+            "type": "ADD_ANAM",
+            "amount": 8
+          }
         ]
       },
       {
         "label": "Parler au menhir comme s'il etait une personne",
         "verb": "parler",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "anciens", "amount": 14},
-          {"type": "HEAL_LIFE", "amount": 8}
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "anciens",
+            "amount": 14
+          },
+          {
+            "type": "HEAL_LIFE",
+            "amount": 8
+          }
         ]
       },
       {
         "label": "Accepter cette verite et jurer de proteger les pierres",
         "verb": "accepter",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "anciens", "amount": 16},
-          {"type": "ADD_BIOME_CURRENCY", "amount": 5}
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "anciens",
+            "amount": 16
+          },
+          {
+            "type": "ADD_BIOME_CURRENCY",
+            "amount": 5
+          }
         ]
       }
     ],
-    "tags": ["anciens", "revelation", "menhirs_vivants", "secret", "memoire"]
+    "tags": [
+      "anciens",
+      "revelation",
+      "menhirs_vivants",
+      "secret",
+      "memoire"
+    ],
+    "trust_tier": "T0"
   },
-
   {
     "id": "fr_s9a_korrigans_origin_001",
     "faction_primaire": "korrigans",
@@ -692,28 +1260,56 @@
         "label": "Se faufiler dans la ronde des Korrigans pour danser avec eux",
         "verb": "se faufiler",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "korrigans", "amount": 14},
-          {"type": "DAMAGE_LIFE", "amount": 5}
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "korrigans",
+            "amount": 14
+          },
+          {
+            "type": "DAMAGE_LIFE",
+            "amount": 5
+          }
         ]
       },
       {
         "label": "Contourner le cercle de danse pour observer le rythme d'abord",
         "verb": "contourner",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "korrigans", "amount": 10},
-          {"type": "ADD_ANAM", "amount": 4}
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "korrigans",
+            "amount": 10
+          },
+          {
+            "type": "ADD_ANAM",
+            "amount": 4
+          }
         ]
       },
       {
         "label": "Escalader un rocher proche pour voir la danse de haut",
         "verb": "escalader",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "korrigans", "amount": 8},
-          {"type": "ADD_BIOME_CURRENCY", "amount": 6}
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "korrigans",
+            "amount": 8
+          },
+          {
+            "type": "ADD_BIOME_CURRENCY",
+            "amount": 6
+          }
         ]
       }
     ],
-    "tags": ["korrigans", "origine", "danse", "premier_korrigan", "arc_1_of_2"]
+    "tags": [
+      "korrigans",
+      "origine",
+      "danse",
+      "premier_korrigan",
+      "arc_1_of_2"
+    ],
+    "trust_tier": "T0"
   },
   {
     "id": "fr_s9a_korrigans_origin_002",
@@ -726,28 +1322,56 @@
         "label": "Tenter sa chance en creusant dans le tertre au hasard",
         "verb": "tenter sa chance",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "korrigans", "amount": 15},
-          {"type": "DAMAGE_LIFE", "amount": 7}
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "korrigans",
+            "amount": 15
+          },
+          {
+            "type": "DAMAGE_LIFE",
+            "amount": 7
+          }
         ]
       },
       {
         "label": "Fouiller a l'aveugle en suivant les vibrations du sol",
         "verb": "fouiller a l'aveugle",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "korrigans", "amount": 12},
-          {"type": "ADD_ANAM", "amount": 5}
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "korrigans",
+            "amount": 12
+          },
+          {
+            "type": "ADD_ANAM",
+            "amount": 5
+          }
         ]
       },
       {
         "label": "Cueillir les champignons lumineux pour eclairer le tertre",
         "verb": "cueillir",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "korrigans", "amount": 10},
-          {"type": "HEAL_LIFE", "amount": 6}
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "korrigans",
+            "amount": 10
+          },
+          {
+            "type": "HEAL_LIFE",
+            "amount": 6
+          }
         ]
       }
     ],
-    "tags": ["korrigans", "origine", "tertre", "nom_cache", "arc_2_of_2"]
+    "tags": [
+      "korrigans",
+      "origine",
+      "tertre",
+      "nom_cache",
+      "arc_2_of_2"
+    ],
+    "trust_tier": "T0"
   },
   {
     "id": "fr_s9a_korrigans_conflit_003",
@@ -760,28 +1384,59 @@
         "label": "Negocier un echange : les herbes contre un service futur",
         "verb": "negocier",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "korrigans", "amount": 12},
-          {"type": "ADD_REPUTATION", "faction": "druides", "amount": 5}
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "korrigans",
+            "amount": 12
+          },
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "druides",
+            "amount": 5
+          }
         ]
       },
       {
         "label": "Convaincre les Korrigans que les herbes perdent leur pouvoir hors de la foret",
         "verb": "convaincre",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "korrigans", "amount": 8},
-          {"type": "ADD_REPUTATION", "faction": "druides", "amount": 10}
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "korrigans",
+            "amount": 8
+          },
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "druides",
+            "amount": 10
+          }
         ]
       },
       {
         "label": "Charmer le chef Korrigan avec un compliment sur son audace",
         "verb": "charmer",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "korrigans", "amount": 15},
-          {"type": "ADD_REPUTATION", "faction": "druides", "amount": -5}
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "korrigans",
+            "amount": 15
+          },
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "druides",
+            "amount": -5
+          }
         ]
       }
     ],
-    "tags": ["korrigans", "conflit", "druides", "herbes_volees", "foret"]
+    "tags": [
+      "korrigans",
+      "conflit",
+      "druides",
+      "herbes_volees",
+      "foret"
+    ],
+    "trust_tier": "T0"
   },
   {
     "id": "fr_s9a_korrigans_festival_004",
@@ -794,28 +1449,56 @@
         "label": "Courir vers le bord et sauter sans hesiter",
         "verb": "courir",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "korrigans", "amount": 16},
-          {"type": "DAMAGE_LIFE", "amount": 10}
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "korrigans",
+            "amount": 16
+          },
+          {
+            "type": "DAMAGE_LIFE",
+            "amount": 10
+          }
         ]
       },
       {
         "label": "Resister physiquement au froid de l'eau en y entrant lentement",
         "verb": "resister physiquement",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "korrigans", "amount": 10},
-          {"type": "HEAL_LIFE", "amount": 4}
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "korrigans",
+            "amount": 10
+          },
+          {
+            "type": "HEAL_LIFE",
+            "amount": 4
+          }
         ]
       },
       {
         "label": "Forcer un passage vers un bassin plus petit mais plus sur",
         "verb": "forcer",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "korrigans", "amount": 8},
-          {"type": "ADD_BIOME_CURRENCY", "amount": 5}
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "korrigans",
+            "amount": 8
+          },
+          {
+            "type": "ADD_BIOME_CURRENCY",
+            "amount": 5
+          }
         ]
       }
     ],
-    "tags": ["korrigans", "festival", "samhain", "plongeon", "cotes"]
+    "tags": [
+      "korrigans",
+      "festival",
+      "samhain",
+      "plongeon",
+      "cotes"
+    ],
+    "trust_tier": "T0"
   },
   {
     "id": "fr_s9a_korrigans_quete_005",
@@ -828,28 +1511,56 @@
         "label": "Scruter les poutres de la charpente avec une bougie volee",
         "verb": "scruter",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "korrigans", "amount": 14},
-          {"type": "UNLOCK_OGHAM", "ogham": "onn"}
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "korrigans",
+            "amount": 14
+          },
+          {
+            "type": "UNLOCK_OGHAM",
+            "ogham": "onn"
+          }
         ]
       },
       {
         "label": "Examiner les murs exterieurs d'abord pour reperer l'ogham",
         "verb": "examiner",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "korrigans", "amount": 10},
-          {"type": "ADD_ANAM", "amount": 4}
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "korrigans",
+            "amount": 10
+          },
+          {
+            "type": "ADD_ANAM",
+            "amount": 4
+          }
         ]
       },
       {
         "label": "Inspecter les abords de l'auberge pour un acces discret",
         "verb": "inspecter",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "korrigans", "amount": 8},
-          {"type": "HEAL_LIFE", "amount": 5}
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "korrigans",
+            "amount": 8
+          },
+          {
+            "type": "HEAL_LIFE",
+            "amount": 5
+          }
         ]
       }
     ],
-    "tags": ["korrigans", "ogham", "auberge", "infiltration", "village"]
+    "tags": [
+      "korrigans",
+      "ogham",
+      "auberge",
+      "infiltration",
+      "village"
+    ],
+    "trust_tier": "T0"
   },
   {
     "id": "fr_s9a_korrigans_saison_006",
@@ -862,28 +1573,56 @@
         "label": "Accepter de danser avec les Korrigans toute la nuit",
         "verb": "accepter",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "korrigans", "amount": 15},
-          {"type": "DAMAGE_LIFE", "amount": 8}
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "korrigans",
+            "amount": 15
+          },
+          {
+            "type": "DAMAGE_LIFE",
+            "amount": 8
+          }
         ]
       },
       {
         "label": "Apaiser le rythme en frappant un tambour improvisé",
         "verb": "apaiser",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "korrigans", "amount": 12},
-          {"type": "ADD_ANAM", "amount": 5}
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "korrigans",
+            "amount": 12
+          },
+          {
+            "type": "ADD_ANAM",
+            "amount": 5
+          }
         ]
       },
       {
         "label": "Mediter pour transmettre ta chaleur interieure a la terre",
         "verb": "mediter",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "korrigans", "amount": 10},
-          {"type": "HEAL_LIFE", "amount": 8}
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "korrigans",
+            "amount": 10
+          },
+          {
+            "type": "HEAL_LIFE",
+            "amount": 8
+          }
         ]
       }
     ],
-    "tags": ["korrigans", "ronde_hiver", "danse", "landes", "saison"]
+    "tags": [
+      "korrigans",
+      "ronde_hiver",
+      "danse",
+      "landes",
+      "saison"
+    ],
+    "trust_tier": "T0"
   },
   {
     "id": "fr_s9a_korrigans_recit_007",
@@ -896,28 +1635,56 @@
         "label": "Analyser le mecanisme de pierres pour verifier la logique",
         "verb": "analyser",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "korrigans", "amount": 14},
-          {"type": "ADD_BIOME_CURRENCY", "amount": 7}
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "korrigans",
+            "amount": 14
+          },
+          {
+            "type": "ADD_BIOME_CURRENCY",
+            "amount": 7
+          }
         ]
       },
       {
         "label": "Decoder les marques sur les pierres du mecanisme",
         "verb": "decoder",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "korrigans", "amount": 12},
-          {"type": "ADD_ANAM", "amount": 4}
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "korrigans",
+            "amount": 12
+          },
+          {
+            "type": "ADD_ANAM",
+            "amount": 4
+          }
         ]
       },
       {
         "label": "Resoudre le probleme en testant differents reglages",
         "verb": "resoudre",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "korrigans", "amount": 10},
-          {"type": "DAMAGE_LIFE", "amount": 4}
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "korrigans",
+            "amount": 10
+          },
+          {
+            "type": "DAMAGE_LIFE",
+            "amount": 4
+          }
         ]
       }
     ],
-    "tags": ["korrigans", "mecanisme", "dolmen", "ingeniosite", "collines"]
+    "tags": [
+      "korrigans",
+      "mecanisme",
+      "dolmen",
+      "ingeniosite",
+      "collines"
+    ],
+    "trust_tier": "T0"
   },
   {
     "id": "fr_s9a_korrigans_recit_008",
@@ -930,28 +1697,56 @@
         "label": "Pister les traces de mousse bioluminescente sur les rochers",
         "verb": "pister",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "korrigans", "amount": 14},
-          {"type": "HEAL_LIFE", "amount": 6}
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "korrigans",
+            "amount": 14
+          },
+          {
+            "type": "HEAL_LIFE",
+            "amount": 6
+          }
         ]
       },
       {
         "label": "Flairer l'air salin pour reperer ou la mousse pousse le mieux",
         "verb": "flairer",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "korrigans", "amount": 12},
-          {"type": "ADD_BIOME_CURRENCY", "amount": 8}
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "korrigans",
+            "amount": 12
+          },
+          {
+            "type": "ADD_BIOME_CURRENCY",
+            "amount": 8
+          }
         ]
       },
       {
         "label": "Tendre l'oreille au bruissement de la mousse vivante",
         "verb": "tendre l'oreille",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "korrigans", "amount": 10},
-          {"type": "ADD_ANAM", "amount": 6}
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "korrigans",
+            "amount": 10
+          },
+          {
+            "type": "ADD_ANAM",
+            "amount": 6
+          }
         ]
       }
     ],
-    "tags": ["korrigans", "phare", "mousse", "iles", "gardien"]
+    "tags": [
+      "korrigans",
+      "phare",
+      "mousse",
+      "iles",
+      "gardien"
+    ],
+    "trust_tier": "T0"
   },
   {
     "id": "fr_s9a_korrigans_conflit2_009",
@@ -964,28 +1759,58 @@
         "label": "Se faufiler entre les deux camps pour ouvrir le dialogue",
         "verb": "se faufiler",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "korrigans", "amount": 10},
-          {"type": "ADD_REPUTATION", "faction": "niamh", "amount": 6}
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "korrigans",
+            "amount": 10
+          },
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "niamh",
+            "amount": 6
+          }
         ]
       },
       {
         "label": "Contourner le conflit en proposant un nouveau chemin partage",
         "verb": "contourner",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "korrigans", "amount": 12},
-          {"type": "ADD_REPUTATION", "faction": "niamh", "amount": 4}
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "korrigans",
+            "amount": 12
+          },
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "niamh",
+            "amount": 4
+          }
         ]
       },
       {
         "label": "Escalader un arbre pour voir la situation de haut et arbitrer",
         "verb": "escalader",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "korrigans", "amount": 8},
-          {"type": "HEAL_LIFE", "amount": 6}
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "korrigans",
+            "amount": 8
+          },
+          {
+            "type": "HEAL_LIFE",
+            "amount": 6
+          }
         ]
       }
     ],
-    "tags": ["korrigans", "conflit", "niamh", "chemin_secret", "foret"]
+    "tags": [
+      "korrigans",
+      "conflit",
+      "niamh",
+      "chemin_secret",
+      "foret"
+    ],
+    "trust_tier": "T0"
   },
   {
     "id": "fr_s9a_korrigans_revelation_010",
@@ -998,30 +1823,58 @@
         "label": "Negocier une alliance formelle basee sur la confiance mutuelle",
         "verb": "negocier",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "korrigans", "amount": 18},
-          {"type": "ADD_ANAM", "amount": 5}
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "korrigans",
+            "amount": 18
+          },
+          {
+            "type": "ADD_ANAM",
+            "amount": 5
+          }
         ]
       },
       {
         "label": "Charmer le chef avec une farce de ton cru",
         "verb": "charmer",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "korrigans", "amount": 15},
-          {"type": "HEAL_LIFE", "amount": 6}
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "korrigans",
+            "amount": 15
+          },
+          {
+            "type": "HEAL_LIFE",
+            "amount": 6
+          }
         ]
       },
       {
         "label": "Convaincre les Korrigans d'inclure les druides dans leurs tests",
         "verb": "convaincre",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "korrigans", "amount": 10},
-          {"type": "ADD_REPUTATION", "faction": "druides", "amount": 8}
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "korrigans",
+            "amount": 10
+          },
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "druides",
+            "amount": 8
+          }
         ]
       }
     ],
-    "tags": ["korrigans", "revelation", "farces", "alliance", "verite"]
+    "tags": [
+      "korrigans",
+      "revelation",
+      "farces",
+      "alliance",
+      "verite"
+    ],
+    "trust_tier": "T0"
   },
-
   {
     "id": "fr_s9a_niamh_origin_001",
     "faction_primaire": "niamh",
@@ -1033,28 +1886,56 @@
         "label": "Mediter au bord du lac pour sentir le passage entre les mondes",
         "verb": "mediter",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "niamh", "amount": 14},
-          {"type": "ADD_ANAM", "amount": 7}
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "niamh",
+            "amount": 14
+          },
+          {
+            "type": "ADD_ANAM",
+            "amount": 7
+          }
         ]
       },
       {
         "label": "Accepter de regarder dans le lac pour voir ce qu'il cache",
         "verb": "accepter",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "niamh", "amount": 12},
-          {"type": "DAMAGE_LIFE", "amount": 6}
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "niamh",
+            "amount": 12
+          },
+          {
+            "type": "DAMAGE_LIFE",
+            "amount": 6
+          }
         ]
       },
       {
         "label": "Parler a la fee pour comprendre sa solitude de gardienne",
         "verb": "parler",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "niamh", "amount": 10},
-          {"type": "HEAL_LIFE", "amount": 8}
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "niamh",
+            "amount": 10
+          },
+          {
+            "type": "HEAL_LIFE",
+            "amount": 8
+          }
         ]
       }
     ],
-    "tags": ["niamh", "origine", "lac_miroir", "premiere_fee", "arc_1_of_2"]
+    "tags": [
+      "niamh",
+      "origine",
+      "lac_miroir",
+      "premiere_fee",
+      "arc_1_of_2"
+    ],
+    "trust_tier": "T0"
   },
   {
     "id": "fr_s9a_niamh_origin_002",
@@ -1067,28 +1948,56 @@
         "label": "Scruter les etoiles de corail pour comprendre leur agencement",
         "verb": "scruter",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "niamh", "amount": 15},
-          {"type": "ADD_BIOME_CURRENCY", "amount": 8}
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "niamh",
+            "amount": 15
+          },
+          {
+            "type": "ADD_BIOME_CURRENCY",
+            "amount": 8
+          }
         ]
       },
       {
         "label": "Examiner les arbres inverses pour identifier leurs essences",
         "verb": "examiner",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "niamh", "amount": 12},
-          {"type": "ADD_ANAM", "amount": 6}
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "niamh",
+            "amount": 12
+          },
+          {
+            "type": "ADD_ANAM",
+            "amount": 6
+          }
         ]
       },
       {
         "label": "Inspecter la frontiere entre les deux mondes pour comprendre le passage",
         "verb": "inspecter",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "niamh", "amount": 10},
-          {"type": "HEAL_LIFE", "amount": 7}
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "niamh",
+            "amount": 10
+          },
+          {
+            "type": "HEAL_LIFE",
+            "amount": 7
+          }
         ]
       }
     ],
-    "tags": ["niamh", "origine", "tir_na_nog", "vision", "arc_2_of_2"]
+    "tags": [
+      "niamh",
+      "origine",
+      "tir_na_nog",
+      "vision",
+      "arc_2_of_2"
+    ],
+    "trust_tier": "T0"
   },
   {
     "id": "fr_s9a_niamh_conflit_003",
@@ -1101,28 +2010,58 @@
         "label": "Convaincre la fee que l'arbre peut etre replante comme porte",
         "verb": "convaincre",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "niamh", "amount": 14},
-          {"type": "ADD_REPUTATION", "faction": "druides", "amount": 4}
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "niamh",
+            "amount": 14
+          },
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "druides",
+            "amount": 4
+          }
         ]
       },
       {
         "label": "Negocier une compensation : un nouvel arbre de passage plante ensemble",
         "verb": "negocier",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "niamh", "amount": 10},
-          {"type": "ADD_REPUTATION", "faction": "druides", "amount": 8}
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "niamh",
+            "amount": 10
+          },
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "druides",
+            "amount": 8
+          }
         ]
       },
       {
         "label": "Charmer les deux camps avec un recit sur les arbres qui renaissent",
         "verb": "charmer",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "niamh", "amount": 12},
-          {"type": "HEAL_LIFE", "amount": 5}
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "niamh",
+            "amount": 12
+          },
+          {
+            "type": "HEAL_LIFE",
+            "amount": 5
+          }
         ]
       }
     ],
-    "tags": ["niamh", "conflit", "druides", "arbre_passage", "foret"]
+    "tags": [
+      "niamh",
+      "conflit",
+      "druides",
+      "arbre_passage",
+      "foret"
+    ],
+    "trust_tier": "T0"
   },
   {
     "id": "fr_s9a_niamh_festival_004",
@@ -1135,28 +2074,56 @@
         "label": "Pister les traces luminescentes avec une concentration absolue",
         "verb": "pister",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "niamh", "amount": 15},
-          {"type": "ADD_ANAM", "amount": 6}
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "niamh",
+            "amount": 15
+          },
+          {
+            "type": "ADD_ANAM",
+            "amount": 6
+          }
         ]
       },
       {
         "label": "Flairer le parfum des fees pour les suivre quand les traces s'effacent",
         "verb": "flairer",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "niamh", "amount": 12},
-          {"type": "HEAL_LIFE", "amount": 8}
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "niamh",
+            "amount": 12
+          },
+          {
+            "type": "HEAL_LIFE",
+            "amount": 8
+          }
         ]
       },
       {
         "label": "Tendre l'oreille a la musique invisible qui guide la danse",
         "verb": "tendre l'oreille",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "niamh", "amount": 10},
-          {"type": "ADD_BIOME_CURRENCY", "amount": 7}
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "niamh",
+            "amount": 10
+          },
+          {
+            "type": "ADD_BIOME_CURRENCY",
+            "amount": 7
+          }
         ]
       }
     ],
-    "tags": ["niamh", "festival", "beltaine", "danse_fees", "traces"]
+    "tags": [
+      "niamh",
+      "festival",
+      "beltaine",
+      "danse_fees",
+      "traces"
+    ],
+    "trust_tier": "T0"
   },
   {
     "id": "fr_s9a_niamh_quete_005",
@@ -1169,28 +2136,56 @@
         "label": "Decoder la melodie en identifiant les intervalles entre les notes",
         "verb": "decoder",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "niamh", "amount": 14},
-          {"type": "UNLOCK_OGHAM", "ogham": "muin"}
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "niamh",
+            "amount": 14
+          },
+          {
+            "type": "UNLOCK_OGHAM",
+            "ogham": "muin"
+          }
         ]
       },
       {
         "label": "Analyser les vibrations du coquillage pour trouver la resonance",
         "verb": "analyser",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "niamh", "amount": 12},
-          {"type": "ADD_ANAM", "amount": 5}
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "niamh",
+            "amount": 12
+          },
+          {
+            "type": "ADD_ANAM",
+            "amount": 5
+          }
         ]
       },
       {
         "label": "Resoudre le schema en reproduisant les notes avec la voix",
         "verb": "resoudre",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "niamh", "amount": 10},
-          {"type": "HEAL_LIFE", "amount": 6}
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "niamh",
+            "amount": 10
+          },
+          {
+            "type": "HEAL_LIFE",
+            "amount": 6
+          }
         ]
       }
     ],
-    "tags": ["niamh", "ogham", "coquillage", "melodie", "cotes"]
+    "tags": [
+      "niamh",
+      "ogham",
+      "coquillage",
+      "melodie",
+      "cotes"
+    ],
+    "trust_tier": "T0"
   },
   {
     "id": "fr_s9a_niamh_saison_006",
@@ -1203,28 +2198,56 @@
         "label": "Tenter sa chance en choisissant la pierre qui semble vibrer",
         "verb": "tenter sa chance",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "niamh", "amount": 15},
-          {"type": "DAMAGE_LIFE", "amount": 5}
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "niamh",
+            "amount": 15
+          },
+          {
+            "type": "DAMAGE_LIFE",
+            "amount": 5
+          }
         ]
       },
       {
         "label": "Cueillir un brin d'herbe pour le lancer et voir ou le vent le mene",
         "verb": "cueillir",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "niamh", "amount": 12},
-          {"type": "ADD_BIOME_CURRENCY", "amount": 6}
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "niamh",
+            "amount": 12
+          },
+          {
+            "type": "ADD_BIOME_CURRENCY",
+            "amount": 6
+          }
         ]
       },
       {
         "label": "Fouiller a l'aveugle derriere la plus petite pierre",
         "verb": "fouiller a l'aveugle",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "niamh", "amount": 10},
-          {"type": "ADD_ANAM", "amount": 7}
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "niamh",
+            "amount": 10
+          },
+          {
+            "type": "ADD_ANAM",
+            "amount": 7
+          }
         ]
       }
     ],
-    "tags": ["niamh", "solstice", "cadeaux_invisibles", "cercle", "don"]
+    "tags": [
+      "niamh",
+      "solstice",
+      "cadeaux_invisibles",
+      "cercle",
+      "don"
+    ],
+    "trust_tier": "T0"
   },
   {
     "id": "fr_s9a_niamh_recit_007",
@@ -1237,28 +2260,57 @@
         "label": "Se faufiler entre les roseaux pour guider la fee hors du marais",
         "verb": "se faufiler",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "niamh", "amount": 14},
-          {"type": "DAMAGE_LIFE", "amount": 6}
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "niamh",
+            "amount": 14
+          },
+          {
+            "type": "DAMAGE_LIFE",
+            "amount": 6
+          }
         ]
       },
       {
         "label": "Contourner les zones de brume epaisse par un chemin plus long",
         "verb": "contourner",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "niamh", "amount": 10},
-          {"type": "HEAL_LIFE", "amount": 5}
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "niamh",
+            "amount": 10
+          },
+          {
+            "type": "HEAL_LIFE",
+            "amount": 5
+          }
         ]
       },
       {
         "label": "Escalader un saule pour reperer la sortie la plus proche",
         "verb": "escalader",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "niamh", "amount": 12},
-          {"type": "ADD_REPUTATION", "faction": "korrigans", "amount": 4}
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "niamh",
+            "amount": 12
+          },
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "korrigans",
+            "amount": 4
+          }
         ]
       }
     ],
-    "tags": ["niamh", "fee_egaree", "marais", "lumiere", "sauvetage"]
+    "tags": [
+      "niamh",
+      "fee_egaree",
+      "marais",
+      "lumiere",
+      "sauvetage"
+    ],
+    "trust_tier": "T0"
   },
   {
     "id": "fr_s9a_niamh_recit_008",
@@ -1271,28 +2323,56 @@
         "label": "Endurer le rituel feerique pour canaliser la force vers l'enfant",
         "verb": "endurer",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "niamh", "amount": 15},
-          {"type": "DAMAGE_LIFE", "amount": 8}
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "niamh",
+            "amount": 15
+          },
+          {
+            "type": "DAMAGE_LIFE",
+            "amount": 8
+          }
         ]
       },
       {
         "label": "Forcer ta propre energie pour alimenter le don de la fee",
         "verb": "forcer",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "niamh", "amount": 12},
-          {"type": "DAMAGE_LIFE", "amount": 5}
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "niamh",
+            "amount": 12
+          },
+          {
+            "type": "DAMAGE_LIFE",
+            "amount": 5
+          }
         ]
       },
       {
         "label": "Courir chercher une fleur de sorbier comme catalyseur du rituel",
         "verb": "courir",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "niamh", "amount": 10},
-          {"type": "HEAL_LIFE", "amount": 6}
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "niamh",
+            "amount": 10
+          },
+          {
+            "type": "HEAL_LIFE",
+            "amount": 6
+          }
         ]
       }
     ],
-    "tags": ["niamh", "enfant", "village", "cadeau", "adieu"]
+    "tags": [
+      "niamh",
+      "enfant",
+      "village",
+      "cadeau",
+      "adieu"
+    ],
+    "trust_tier": "T0"
   },
   {
     "id": "fr_s9a_niamh_conflit2_009",
@@ -1305,28 +2385,57 @@
         "label": "Apaiser les deux camps en proposant un usage alterne du dolmen",
         "verb": "apaiser",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "niamh", "amount": 10},
-          {"type": "ADD_REPUTATION", "faction": "ankou", "amount": 8}
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "niamh",
+            "amount": 10
+          },
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "ankou",
+            "amount": 8
+          }
         ]
       },
       {
         "label": "Mediter au pied du dolmen pour determiner sa vraie nature",
         "verb": "mediter",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "niamh", "amount": 14},
-          {"type": "DAMAGE_LIFE", "amount": 5}
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "niamh",
+            "amount": 14
+          },
+          {
+            "type": "DAMAGE_LIFE",
+            "amount": 5
+          }
         ]
       },
       {
         "label": "Accepter le paradoxe — le dolmen peut etre les deux a la fois",
         "verb": "accepter",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "niamh", "amount": 12},
-          {"type": "ADD_ANAM", "amount": 6}
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "niamh",
+            "amount": 12
+          },
+          {
+            "type": "ADD_ANAM",
+            "amount": 6
+          }
         ]
       }
     ],
-    "tags": ["niamh", "conflit", "ankou", "dolmen", "portail_vs_tombe"]
+    "tags": [
+      "niamh",
+      "conflit",
+      "ankou",
+      "dolmen",
+      "portail_vs_tombe"
+    ],
+    "trust_tier": "T0"
   },
   {
     "id": "fr_s9a_niamh_revelation_010",
@@ -1339,30 +2448,57 @@
         "label": "Analyser cette revelation pour comprendre la double frequence",
         "verb": "analyser",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "niamh", "amount": 18},
-          {"type": "ADD_ANAM", "amount": 8}
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "niamh",
+            "amount": 18
+          },
+          {
+            "type": "ADD_ANAM",
+            "amount": 8
+          }
         ]
       },
       {
         "label": "Decoder la frequence feerique en ecoutant les harmoniques du lieu",
         "verb": "decoder",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "niamh", "amount": 14},
-          {"type": "ADD_BIOME_CURRENCY", "amount": 8}
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "niamh",
+            "amount": 14
+          },
+          {
+            "type": "ADD_BIOME_CURRENCY",
+            "amount": 8
+          }
         ]
       },
       {
         "label": "Resoudre l'equation des frequences pour voir les deux mondes",
         "verb": "resoudre",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "niamh", "amount": 12},
-          {"type": "HEAL_LIFE", "amount": 10}
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "niamh",
+            "amount": 12
+          },
+          {
+            "type": "HEAL_LIFE",
+            "amount": 10
+          }
         ]
       }
     ],
-    "tags": ["niamh", "revelation", "frequence", "tir_na_nog", "double_monde"]
+    "tags": [
+      "niamh",
+      "revelation",
+      "frequence",
+      "tir_na_nog",
+      "double_monde"
+    ],
+    "trust_tier": "T0"
   },
-
   {
     "id": "fr_s9a_ankou_origin_001",
     "faction_primaire": "ankou",
@@ -1374,28 +2510,56 @@
         "label": "Scruter les gravures du tumulus pour lire l'histoire du premier Ankou",
         "verb": "scruter",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "ankou", "amount": 14},
-          {"type": "ADD_ANAM", "amount": 5}
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "ankou",
+            "amount": 14
+          },
+          {
+            "type": "ADD_ANAM",
+            "amount": 5
+          }
         ]
       },
       {
         "label": "Examiner les ossements deposes en offrande a l'entree",
         "verb": "examiner",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "ankou", "amount": 12},
-          {"type": "ADD_BIOME_CURRENCY", "amount": 6}
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "ankou",
+            "amount": 12
+          },
+          {
+            "type": "ADD_BIOME_CURRENCY",
+            "amount": 6
+          }
         ]
       },
       {
         "label": "Inspecter l'interieur du tumulus avec respect et prudence",
         "verb": "inspecter",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "ankou", "amount": 10},
-          {"type": "DAMAGE_LIFE", "amount": 5}
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "ankou",
+            "amount": 10
+          },
+          {
+            "type": "DAMAGE_LIFE",
+            "amount": 5
+          }
         ]
       }
     ],
-    "tags": ["ankou", "origine", "premier_ankou", "tumulus", "arc_1_of_3"]
+    "tags": [
+      "ankou",
+      "origine",
+      "premier_ankou",
+      "tumulus",
+      "arc_1_of_3"
+    ],
+    "trust_tier": "T0"
   },
   {
     "id": "fr_s9a_ankou_origin_002",
@@ -1408,28 +2572,56 @@
         "label": "Parler de tes propres peurs pour creer un pont entre vous",
         "verb": "parler",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "ankou", "amount": 15},
-          {"type": "DAMAGE_LIFE", "amount": 6}
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "ankou",
+            "amount": 15
+          },
+          {
+            "type": "DAMAGE_LIFE",
+            "amount": 6
+          }
         ]
       },
       {
         "label": "Mediter pour retrouver un souvenir d'enfance a partager",
         "verb": "mediter",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "ankou", "amount": 12},
-          {"type": "HEAL_LIFE", "amount": 5}
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "ankou",
+            "amount": 12
+          },
+          {
+            "type": "HEAL_LIFE",
+            "amount": 5
+          }
         ]
       },
       {
         "label": "Accepter sa demande et lui offrir un souvenir de lumiere",
         "verb": "accepter",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "ankou", "amount": 18},
-          {"type": "DAMAGE_LIFE", "amount": 10}
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "ankou",
+            "amount": 18
+          },
+          {
+            "type": "DAMAGE_LIFE",
+            "amount": 10
+          }
         ]
       }
     ],
-    "tags": ["ankou", "origine", "spectre", "souvenir", "arc_2_of_3"]
+    "tags": [
+      "ankou",
+      "origine",
+      "spectre",
+      "souvenir",
+      "arc_2_of_3"
+    ],
+    "trust_tier": "T0"
   },
   {
     "id": "fr_s9a_ankou_origin_003",
@@ -1442,28 +2634,56 @@
         "label": "Tendre l'oreille aux murmures des morts qui le remercient",
         "verb": "tendre l'oreille",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "ankou", "amount": 18},
-          {"type": "ADD_ANAM", "amount": 8}
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "ankou",
+            "amount": 18
+          },
+          {
+            "type": "ADD_ANAM",
+            "amount": 8
+          }
         ]
       },
       {
         "label": "Flairer le changement dans l'air du tumulus — la peur disparait",
         "verb": "flairer",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "ankou", "amount": 14},
-          {"type": "HEAL_LIFE", "amount": 10}
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "ankou",
+            "amount": 14
+          },
+          {
+            "type": "HEAL_LIFE",
+            "amount": 10
+          }
         ]
       },
       {
         "label": "Pister la lumiere du spectre transforme jusqu'a la sortie",
         "verb": "pister",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "ankou", "amount": 12},
-          {"type": "ADD_BIOME_CURRENCY", "amount": 8}
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "ankou",
+            "amount": 12
+          },
+          {
+            "type": "ADD_BIOME_CURRENCY",
+            "amount": 8
+          }
         ]
       }
     ],
-    "tags": ["ankou", "origine", "revelation", "passeur", "arc_3_of_3"]
+    "tags": [
+      "ankou",
+      "origine",
+      "revelation",
+      "passeur",
+      "arc_3_of_3"
+    ],
+    "trust_tier": "T0"
   },
   {
     "id": "fr_s9a_ankou_conflit_004",
@@ -1476,28 +2696,58 @@
         "label": "Analyser les revendications pour trouver un terrain d'entente juridique",
         "verb": "analyser",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "ankou", "amount": 12},
-          {"type": "ADD_REPUTATION", "faction": "anciens", "amount": 5}
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "ankou",
+            "amount": 12
+          },
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "anciens",
+            "amount": 5
+          }
         ]
       },
       {
         "label": "Decoder les inscriptions pour prouver que le cercle honore aussi les morts",
         "verb": "decoder",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "ankou", "amount": 14},
-          {"type": "ADD_ANAM", "amount": 4}
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "ankou",
+            "amount": 14
+          },
+          {
+            "type": "ADD_ANAM",
+            "amount": 4
+          }
         ]
       },
       {
         "label": "Resoudre le differend en proposant un rituel commun",
         "verb": "resoudre",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "ankou", "amount": 10},
-          {"type": "ADD_REPUTATION", "faction": "anciens", "amount": 8}
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "ankou",
+            "amount": 10
+          },
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "anciens",
+            "amount": 8
+          }
         ]
       }
     ],
-    "tags": ["ankou", "conflit", "anciens", "ames_non_guidees", "cercle"]
+    "tags": [
+      "ankou",
+      "conflit",
+      "anciens",
+      "ames_non_guidees",
+      "cercle"
+    ],
+    "trust_tier": "T0"
   },
   {
     "id": "fr_s9a_ankou_festival_005",
@@ -1510,28 +2760,56 @@
         "label": "Tenter sa chance en suivant la bougie la plus vacillante",
         "verb": "tenter sa chance",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "ankou", "amount": 16},
-          {"type": "DAMAGE_LIFE", "amount": 10}
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "ankou",
+            "amount": 16
+          },
+          {
+            "type": "DAMAGE_LIFE",
+            "amount": 10
+          }
         ]
       },
       {
         "label": "Fouiller a l'aveugle autour de la premiere bougie",
         "verb": "fouiller a l'aveugle",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "ankou", "amount": 12},
-          {"type": "ADD_BIOME_CURRENCY", "amount": 7}
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "ankou",
+            "amount": 12
+          },
+          {
+            "type": "ADD_BIOME_CURRENCY",
+            "amount": 7
+          }
         ]
       },
       {
         "label": "Cueillir de la tourbe phosphorescente pour creer ta propre lumiere",
         "verb": "cueillir",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "ankou", "amount": 8},
-          {"type": "HEAL_LIFE", "amount": 6}
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "ankou",
+            "amount": 8
+          },
+          {
+            "type": "HEAL_LIFE",
+            "amount": 6
+          }
         ]
       }
     ],
-    "tags": ["ankou", "festival", "samhain", "bougies", "loterie"]
+    "tags": [
+      "ankou",
+      "festival",
+      "samhain",
+      "bougies",
+      "loterie"
+    ],
+    "trust_tier": "T0"
   },
   {
     "id": "fr_s9a_ankou_quete_006",
@@ -1544,28 +2822,56 @@
         "label": "Se faufiler dans le tronc creux pour atteindre l'ogham",
         "verb": "se faufiler",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "ankou", "amount": 14},
-          {"type": "UNLOCK_OGHAM", "ogham": "ruis"}
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "ankou",
+            "amount": 14
+          },
+          {
+            "type": "UNLOCK_OGHAM",
+            "ogham": "ruis"
+          }
         ]
       },
       {
         "label": "Contourner l'arbre pour chercher un acces plus sur",
         "verb": "contourner",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "ankou", "amount": 10},
-          {"type": "ADD_ANAM", "amount": 5}
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "ankou",
+            "amount": 10
+          },
+          {
+            "type": "ADD_ANAM",
+            "amount": 5
+          }
         ]
       },
       {
         "label": "Escalader les branches mortes pour regarder a l'interieur",
         "verb": "escalader",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "ankou", "amount": 12},
-          {"type": "DAMAGE_LIFE", "amount": 7}
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "ankou",
+            "amount": 12
+          },
+          {
+            "type": "DAMAGE_LIFE",
+            "amount": 7
+          }
         ]
       }
     ],
-    "tags": ["ankou", "ogham", "chene_mort", "foret", "decouverte"]
+    "tags": [
+      "ankou",
+      "ogham",
+      "chene_mort",
+      "foret",
+      "decouverte"
+    ],
+    "trust_tier": "T0"
   },
   {
     "id": "fr_s9a_ankou_saison_007",
@@ -1578,29 +2884,60 @@
         "label": "Courir vers les rochers pour guetter les naufrages",
         "verb": "courir",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "ankou", "amount": 10},
-          {"type": "DAMAGE_LIFE", "amount": 8},
-          {"type": "HEAL_LIFE", "amount": 12}
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "ankou",
+            "amount": 10
+          },
+          {
+            "type": "DAMAGE_LIFE",
+            "amount": 8
+          },
+          {
+            "type": "HEAL_LIFE",
+            "amount": 12
+          }
         ]
       },
       {
         "label": "Endurer la tempete aux cotes de l'Ankou pour guider les ames",
         "verb": "endurer",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "ankou", "amount": 16},
-          {"type": "DAMAGE_LIFE", "amount": 10}
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "ankou",
+            "amount": 16
+          },
+          {
+            "type": "DAMAGE_LIFE",
+            "amount": 10
+          }
         ]
       },
       {
         "label": "Resister physiquement au vent pour allumer un feu de signalisation",
         "verb": "resister physiquement",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "ankou", "amount": 8},
-          {"type": "HEAL_LIFE", "amount": 8}
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "ankou",
+            "amount": 8
+          },
+          {
+            "type": "HEAL_LIFE",
+            "amount": 8
+          }
         ]
       }
     ],
-    "tags": ["ankou", "tempete", "marins", "cotes", "hiver"]
+    "tags": [
+      "ankou",
+      "tempete",
+      "marins",
+      "cotes",
+      "hiver"
+    ],
+    "trust_tier": "T0"
   },
   {
     "id": "fr_s9a_ankou_recit_008",
@@ -1613,28 +2950,57 @@
         "label": "Negocier avec l'Ankou pour qu'il se revele aux villageois",
         "verb": "negocier",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "ankou", "amount": 12},
-          {"type": "ADD_REPUTATION", "faction": "korrigans", "amount": -4}
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "ankou",
+            "amount": 12
+          },
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "korrigans",
+            "amount": -4
+          }
         ]
       },
       {
         "label": "Charmer les villageois avec la vraie histoire de l'Ankou",
         "verb": "charmer",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "ankou", "amount": 15},
-          {"type": "HEAL_LIFE", "amount": 6}
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "ankou",
+            "amount": 15
+          },
+          {
+            "type": "HEAL_LIFE",
+            "amount": 6
+          }
         ]
       },
       {
         "label": "Convaincre l'Ankou de garder son deguisement et d'ecouter plus",
         "verb": "convaincre",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "ankou", "amount": 10},
-          {"type": "ADD_ANAM", "amount": 5}
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "ankou",
+            "amount": 10
+          },
+          {
+            "type": "ADD_ANAM",
+            "amount": 5
+          }
         ]
       }
     ],
-    "tags": ["ankou", "deguisement", "village", "auberge", "humanite"]
+    "tags": [
+      "ankou",
+      "deguisement",
+      "village",
+      "auberge",
+      "humanite"
+    ],
+    "trust_tier": "T0"
   },
   {
     "id": "fr_s9a_ankou_recit_009",
@@ -1647,28 +3013,56 @@
         "label": "Scruter les pierres du cairn pour trouver un signe du defunt",
         "verb": "scruter",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "ankou", "amount": 14},
-          {"type": "ADD_ANAM", "amount": 6}
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "ankou",
+            "amount": 14
+          },
+          {
+            "type": "ADD_ANAM",
+            "amount": 6
+          }
         ]
       },
       {
         "label": "Examiner les environs pour comprendre qui vivait ici autrefois",
         "verb": "examiner",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "ankou", "amount": 12},
-          {"type": "HEAL_LIFE", "amount": 6}
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "ankou",
+            "amount": 12
+          },
+          {
+            "type": "HEAL_LIFE",
+            "amount": 6
+          }
         ]
       },
       {
         "label": "Inspecter la fleur deposee — elle contient peut-etre un indice",
         "verb": "inspecter",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "ankou", "amount": 10},
-          {"type": "ADD_BIOME_CURRENCY", "amount": 5}
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "ankou",
+            "amount": 10
+          },
+          {
+            "type": "ADD_BIOME_CURRENCY",
+            "amount": 5
+          }
         ]
       }
     ],
-    "tags": ["ankou", "oubli", "cairn", "landes", "memoire"]
+    "tags": [
+      "ankou",
+      "oubli",
+      "cairn",
+      "landes",
+      "memoire"
+    ],
+    "trust_tier": "T0"
   },
   {
     "id": "fr_s9a_ankou_revelation_010",
@@ -1681,27 +3075,55 @@
         "label": "Mediter face a l'ocean pour comprendre le silence de l'Ankou",
         "verb": "mediter",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "ankou", "amount": 18},
-          {"type": "ADD_ANAM", "amount": 10}
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "ankou",
+            "amount": 18
+          },
+          {
+            "type": "ADD_ANAM",
+            "amount": 10
+          }
         ]
       },
       {
         "label": "Accepter la verite de l'Ankou et lui offrir ton respect",
         "verb": "accepter",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "ankou", "amount": 16},
-          {"type": "HEAL_LIFE", "amount": 8}
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "ankou",
+            "amount": 16
+          },
+          {
+            "type": "HEAL_LIFE",
+            "amount": 8
+          }
         ]
       },
       {
         "label": "Parler avec l'Ankou de ce qu'il ressent apres tant de siecles",
         "verb": "parler",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "ankou", "amount": 14},
-          {"type": "DAMAGE_LIFE", "amount": 5}
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "ankou",
+            "amount": 14
+          },
+          {
+            "type": "DAMAGE_LIFE",
+            "amount": 5
+          }
         ]
       }
     ],
-    "tags": ["ankou", "revelation", "silence", "ocean", "paix"]
+    "tags": [
+      "ankou",
+      "revelation",
+      "silence",
+      "ocean",
+      "paix"
+    ],
+    "trust_tier": "T0"
   }
 ]

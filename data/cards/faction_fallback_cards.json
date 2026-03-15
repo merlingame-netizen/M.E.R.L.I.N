@@ -4,10 +4,15 @@
     "date": "2026-03-15",
     "description": "Faction fallback cards — 4 per faction (druides, anciens, korrigans, niamh, ankou). Aligned with GDD v2.4.",
     "total_cards": 20,
-    "factions": ["druides", "anciens", "korrigans", "niamh", "ankou"]
+    "factions": [
+      "druides",
+      "anciens",
+      "korrigans",
+      "niamh",
+      "ankou"
+    ]
   },
   "faction_cards": [
-
     {
       "id": "faction_druides_001",
       "faction_primaire": "druides",
@@ -19,31 +24,62 @@
           "label": "Interpreter les inscriptions sur la pierre",
           "verb": "dechiffrer",
           "effects": [
-            {"type": "ADD_REPUTATION", "faction": "druides", "amount": 12},
-            {"type": "ADD_REPUTATION", "faction": "anciens", "amount": 5}
+            {
+              "type": "ADD_REPUTATION",
+              "faction": "druides",
+              "amount": 12
+            },
+            {
+              "type": "ADD_REPUTATION",
+              "faction": "anciens",
+              "amount": 5
+            }
           ]
         },
         {
           "label": "Mediter aupres du druide pour sentir la frequence",
           "verb": "mediter",
           "effects": [
-            {"type": "ADD_REPUTATION", "faction": "druides", "amount": 8},
-            {"type": "HEAL_LIFE", "amount": 6}
+            {
+              "type": "ADD_REPUTATION",
+              "faction": "druides",
+              "amount": 8
+            },
+            {
+              "type": "HEAL_LIFE",
+              "amount": 6
+            }
           ]
         },
         {
           "label": "Etudier le cercle pour comprendre sa geometrie",
           "verb": "analyser",
           "effects": [
-            {"type": "ADD_REPUTATION", "faction": "druides", "amount": 5},
-            {"type": "ADD_REPUTATION", "faction": "anciens", "amount": 8},
-            {"type": "DAMAGE_LIFE", "amount": 4}
+            {
+              "type": "ADD_REPUTATION",
+              "faction": "druides",
+              "amount": 5
+            },
+            {
+              "type": "ADD_REPUTATION",
+              "faction": "anciens",
+              "amount": 8
+            },
+            {
+              "type": "DAMAGE_LIFE",
+              "amount": 4
+            }
           ]
         }
       ],
-      "tags": ["druides", "rituel", "foret", "cercle"]
+      "tags": [
+        "druides",
+        "rituel",
+        "foret",
+        "cercle"
+      ],
+      "trust_tier": "T0"
     },
-
     {
       "id": "faction_druides_002",
       "faction_primaire": "druides",
@@ -55,31 +91,61 @@
           "label": "Tendre l'oreille au savoir de la guerisseuse",
           "verb": "ecouter",
           "effects": [
-            {"type": "HEAL_LIFE", "amount": 14},
-            {"type": "ADD_REPUTATION", "faction": "druides", "amount": 8}
+            {
+              "type": "HEAL_LIFE",
+              "amount": 14
+            },
+            {
+              "type": "ADD_REPUTATION",
+              "faction": "druides",
+              "amount": 8
+            }
           ]
         },
         {
           "label": "Pister les plantes qu'elle cueille pour comprendre leur usage",
           "verb": "pister",
           "effects": [
-            {"type": "ADD_REPUTATION", "faction": "druides", "amount": 10},
-            {"type": "ADD_ANAM", "amount": 3}
+            {
+              "type": "ADD_REPUTATION",
+              "faction": "druides",
+              "amount": 10
+            },
+            {
+              "type": "ADD_ANAM",
+              "amount": 3
+            }
           ]
         },
         {
           "label": "Sentir l'air pour deviner ce que la nature cache ce matin",
           "verb": "flairer",
           "effects": [
-            {"type": "ADD_REPUTATION", "faction": "druides", "amount": 6},
-            {"type": "ADD_REPUTATION", "faction": "korrigans", "amount": 5},
-            {"type": "HEAL_LIFE", "amount": 4}
+            {
+              "type": "ADD_REPUTATION",
+              "faction": "druides",
+              "amount": 6
+            },
+            {
+              "type": "ADD_REPUTATION",
+              "faction": "korrigans",
+              "amount": 5
+            },
+            {
+              "type": "HEAL_LIFE",
+              "amount": 4
+            }
           ]
         }
       ],
-      "tags": ["druides", "guerison", "herbes", "keridwen"]
+      "tags": [
+        "druides",
+        "guerison",
+        "herbes",
+        "keridwen"
+      ],
+      "trust_tier": "T0"
     },
-
     {
       "id": "faction_druides_003",
       "faction_primaire": "druides",
@@ -91,30 +157,57 @@
           "label": "Accepter de partager ce que tu percois dans les murmures",
           "verb": "accepter",
           "effects": [
-            {"type": "ADD_REPUTATION", "faction": "druides", "amount": 15},
-            {"type": "DAMAGE_LIFE", "amount": 6}
+            {
+              "type": "ADD_REPUTATION",
+              "faction": "druides",
+              "amount": 15
+            },
+            {
+              "type": "DAMAGE_LIFE",
+              "amount": 6
+            }
           ]
         },
         {
           "label": "Parler doucement pour apaiser la jeune medium",
           "verb": "parler",
           "effects": [
-            {"type": "ADD_REPUTATION", "faction": "druides", "amount": 10},
-            {"type": "HEAL_LIFE", "amount": 5}
+            {
+              "type": "ADD_REPUTATION",
+              "faction": "druides",
+              "amount": 10
+            },
+            {
+              "type": "HEAL_LIFE",
+              "amount": 5
+            }
           ]
         },
         {
           "label": "Attendre que les voix elles-memes choisissent un locuteur",
           "verb": "attendre",
           "effects": [
-            {"type": "ADD_REPUTATION", "faction": "druides", "amount": 7},
-            {"type": "ADD_REPUTATION", "faction": "anciens", "amount": 6}
+            {
+              "type": "ADD_REPUTATION",
+              "faction": "druides",
+              "amount": 7
+            },
+            {
+              "type": "ADD_REPUTATION",
+              "faction": "anciens",
+              "amount": 6
+            }
           ]
         }
       ],
-      "tags": ["druides", "talwen", "oghams", "murmures"]
+      "tags": [
+        "druides",
+        "talwen",
+        "oghams",
+        "murmures"
+      ],
+      "trust_tier": "T0"
     },
-
     {
       "id": "faction_druides_004",
       "faction_primaire": "druides",
@@ -126,30 +219,57 @@
           "label": "Se faufiler jusqu'a la pierre plate sans troubler le reflet",
           "verb": "se faufiler",
           "effects": [
-            {"type": "ADD_REPUTATION", "faction": "druides", "amount": 14},
-            {"type": "ADD_REPUTATION", "faction": "anciens", "amount": -5}
+            {
+              "type": "ADD_REPUTATION",
+              "faction": "druides",
+              "amount": 14
+            },
+            {
+              "type": "ADD_REPUTATION",
+              "faction": "anciens",
+              "amount": -5
+            }
           ]
         },
         {
           "label": "Contourner la fontaine pour observer depuis l'ombre des arbres",
           "verb": "contourner",
           "effects": [
-            {"type": "ADD_REPUTATION", "faction": "druides", "amount": 6},
-            {"type": "HEAL_LIFE", "amount": 8}
+            {
+              "type": "ADD_REPUTATION",
+              "faction": "druides",
+              "amount": 6
+            },
+            {
+              "type": "HEAL_LIFE",
+              "amount": 8
+            }
           ]
         },
         {
           "label": "Traverser a gue les rochers jusqu'a la pierre",
           "verb": "traverser",
           "effects": [
-            {"type": "ADD_REPUTATION", "faction": "druides", "amount": 18},
-            {"type": "DAMAGE_LIFE", "amount": 10}
+            {
+              "type": "ADD_REPUTATION",
+              "faction": "druides",
+              "amount": 18
+            },
+            {
+              "type": "DAMAGE_LIFE",
+              "amount": 10
+            }
           ]
         }
       ],
-      "tags": ["druides", "fontaine_barenton", "rituel", "tempete"]
+      "tags": [
+        "druides",
+        "fontaine_barenton",
+        "rituel",
+        "tempete"
+      ],
+      "trust_tier": "T0"
     },
-
     {
       "id": "faction_anciens_001",
       "faction_primaire": "anciens",
@@ -161,30 +281,57 @@
           "label": "Memoriser chaque nuance du visage de brume",
           "verb": "memoriser",
           "effects": [
-            {"type": "ADD_REPUTATION", "faction": "anciens", "amount": 12},
-            {"type": "ADD_ANAM", "amount": 4}
+            {
+              "type": "ADD_REPUTATION",
+              "faction": "anciens",
+              "amount": 12
+            },
+            {
+              "type": "ADD_ANAM",
+              "amount": 4
+            }
           ]
         },
         {
           "label": "Fixer le voile de brume jusqu'a y distinguer quelque chose",
           "verb": "fixer",
           "effects": [
-            {"type": "ADD_REPUTATION", "faction": "anciens", "amount": 15},
-            {"type": "DAMAGE_LIFE", "amount": 7}
+            {
+              "type": "ADD_REPUTATION",
+              "faction": "anciens",
+              "amount": 15
+            },
+            {
+              "type": "DAMAGE_LIFE",
+              "amount": 7
+            }
           ]
         },
         {
           "label": "Scruter les alignements de pierres derriere la brume",
           "verb": "scruter",
           "effects": [
-            {"type": "ADD_REPUTATION", "faction": "anciens", "amount": 9},
-            {"type": "ADD_REPUTATION", "faction": "druides", "amount": 4}
+            {
+              "type": "ADD_REPUTATION",
+              "faction": "anciens",
+              "amount": 9
+            },
+            {
+              "type": "ADD_REPUTATION",
+              "faction": "druides",
+              "amount": 4
+            }
           ]
         }
       ],
-      "tags": ["anciens", "manannan", "brume", "passage"]
+      "tags": [
+        "anciens",
+        "manannan",
+        "brume",
+        "passage"
+      ],
+      "trust_tier": "T0"
     },
-
     {
       "id": "faction_anciens_002",
       "faction_primaire": "anciens",
@@ -196,31 +343,63 @@
           "label": "Decoder les spirales selon la logique de la Membrane",
           "verb": "decoder",
           "effects": [
-            {"type": "ADD_REPUTATION", "faction": "anciens", "amount": 14},
-            {"type": "ADD_REPUTATION", "faction": "druides", "amount": 6}
+            {
+              "type": "ADD_REPUTATION",
+              "faction": "anciens",
+              "amount": 14
+            },
+            {
+              "type": "ADD_REPUTATION",
+              "faction": "druides",
+              "amount": 6
+            }
           ]
         },
         {
           "label": "Interpreter le motif des flammes comme une ecriture",
           "verb": "interpreter",
           "effects": [
-            {"type": "ADD_REPUTATION", "faction": "anciens", "amount": 10},
-            {"type": "HEAL_LIFE", "amount": 7}
+            {
+              "type": "ADD_REPUTATION",
+              "faction": "anciens",
+              "amount": 10
+            },
+            {
+              "type": "HEAL_LIFE",
+              "amount": 7
+            }
           ]
         },
         {
           "label": "Resoudre quelle spirale correspond au prochain biome",
           "verb": "resoudre",
           "effects": [
-            {"type": "ADD_REPUTATION", "faction": "anciens", "amount": 8},
-            {"type": "ADD_ANAM", "amount": 5},
-            {"type": "ADD_REPUTATION", "faction": "niamh", "amount": -6}
+            {
+              "type": "ADD_REPUTATION",
+              "faction": "anciens",
+              "amount": 8
+            },
+            {
+              "type": "ADD_ANAM",
+              "amount": 5
+            },
+            {
+              "type": "ADD_REPUTATION",
+              "faction": "niamh",
+              "amount": -6
+            }
           ]
         }
       ],
-      "tags": ["anciens", "brigid", "feu", "spirales", "carnac"]
+      "tags": [
+        "anciens",
+        "brigid",
+        "feu",
+        "spirales",
+        "carnac"
+      ],
+      "trust_tier": "T0"
     },
-
     {
       "id": "faction_anciens_003",
       "faction_primaire": "anciens",
@@ -232,30 +411,58 @@
           "label": "Endurer le poids de ce souvenir qu'il te tend",
           "verb": "endurer",
           "effects": [
-            {"type": "ADD_REPUTATION", "faction": "anciens", "amount": 16},
-            {"type": "DAMAGE_LIFE", "amount": 8}
+            {
+              "type": "ADD_REPUTATION",
+              "faction": "anciens",
+              "amount": 16
+            },
+            {
+              "type": "DAMAGE_LIFE",
+              "amount": 8
+            }
           ]
         },
         {
           "label": "Se concentrer pour garder la lumiere de Lugh visible",
           "verb": "se concentrer",
           "effects": [
-            {"type": "ADD_REPUTATION", "faction": "anciens", "amount": 12},
-            {"type": "ADD_REPUTATION", "faction": "niamh", "amount": 7}
+            {
+              "type": "ADD_REPUTATION",
+              "faction": "anciens",
+              "amount": 12
+            },
+            {
+              "type": "ADD_REPUTATION",
+              "faction": "niamh",
+              "amount": 7
+            }
           ]
         },
         {
           "label": "Resister mentalement a la melancolie qui rayonne de lui",
           "verb": "resister mentalement",
           "effects": [
-            {"type": "ADD_REPUTATION", "faction": "anciens", "amount": 8},
-            {"type": "HEAL_LIFE", "amount": 10}
+            {
+              "type": "ADD_REPUTATION",
+              "faction": "anciens",
+              "amount": 8
+            },
+            {
+              "type": "HEAL_LIFE",
+              "amount": 10
+            }
           ]
         }
       ],
-      "tags": ["anciens", "lugh", "lumiere", "souvenir", "iles"]
+      "tags": [
+        "anciens",
+        "lugh",
+        "lumiere",
+        "souvenir",
+        "iles"
+      ],
+      "trust_tier": "T0"
     },
-
     {
       "id": "faction_anciens_004",
       "faction_primaire": "anciens",
@@ -267,31 +474,62 @@
           "label": "Tendre l'oreille vers le compte invisible qu'elle tient",
           "verb": "ecouter",
           "effects": [
-            {"type": "ADD_REPUTATION", "faction": "anciens", "amount": 13},
-            {"type": "ADD_ANAM", "amount": 3}
+            {
+              "type": "ADD_REPUTATION",
+              "faction": "anciens",
+              "amount": 13
+            },
+            {
+              "type": "ADD_ANAM",
+              "amount": 3
+            }
           ]
         },
         {
           "label": "Suivre le regard de la vieille pour voir ce qu'elle compte",
           "verb": "suivre",
           "effects": [
-            {"type": "ADD_REPUTATION", "faction": "anciens", "amount": 10},
-            {"type": "ADD_REPUTATION", "faction": "druides", "amount": 5}
+            {
+              "type": "ADD_REPUTATION",
+              "faction": "anciens",
+              "amount": 10
+            },
+            {
+              "type": "ADD_REPUTATION",
+              "faction": "druides",
+              "amount": 5
+            }
           ]
         },
         {
           "label": "Sentir si l'air autour d'elle porte l'odeur d'Annwn",
           "verb": "sentir",
           "effects": [
-            {"type": "ADD_REPUTATION", "faction": "anciens", "amount": 7},
-            {"type": "ADD_REPUTATION", "faction": "ankou", "amount": 8},
-            {"type": "DAMAGE_LIFE", "amount": 5}
+            {
+              "type": "ADD_REPUTATION",
+              "faction": "anciens",
+              "amount": 7
+            },
+            {
+              "type": "ADD_REPUTATION",
+              "faction": "ankou",
+              "amount": 8
+            },
+            {
+              "type": "DAMAGE_LIFE",
+              "amount": 5
+            }
           ]
         }
       ],
-      "tags": ["anciens", "enigme", "cycles", "village"]
+      "tags": [
+        "anciens",
+        "enigme",
+        "cycles",
+        "village"
+      ],
+      "trust_tier": "T0"
     },
-
     {
       "id": "faction_korrigans_001",
       "faction_primaire": "korrigans",
@@ -303,30 +541,57 @@
           "label": "Marchander le prix du souvenir avec le Vieux Granit",
           "verb": "marchander",
           "effects": [
-            {"type": "ADD_REPUTATION", "faction": "korrigans", "amount": 14},
-            {"type": "ADD_REPUTATION", "faction": "anciens", "amount": -8}
+            {
+              "type": "ADD_REPUTATION",
+              "faction": "korrigans",
+              "amount": 14
+            },
+            {
+              "type": "ADD_REPUTATION",
+              "faction": "anciens",
+              "amount": -8
+            }
           ]
         },
         {
           "label": "Negocier un autre type d'echange que la memoire",
           "verb": "negocier",
           "effects": [
-            {"type": "ADD_REPUTATION", "faction": "korrigans", "amount": 10},
-            {"type": "HEAL_LIFE", "amount": 6}
+            {
+              "type": "ADD_REPUTATION",
+              "faction": "korrigans",
+              "amount": 10
+            },
+            {
+              "type": "HEAL_LIFE",
+              "amount": 6
+            }
           ]
         },
         {
           "label": "Convaincre le korrigan que ta presence ici vaut plus qu'un souvenir",
           "verb": "convaincre",
           "effects": [
-            {"type": "ADD_REPUTATION", "faction": "korrigans", "amount": 18},
-            {"type": "DAMAGE_LIFE", "amount": 10}
+            {
+              "type": "ADD_REPUTATION",
+              "faction": "korrigans",
+              "amount": 18
+            },
+            {
+              "type": "DAMAGE_LIFE",
+              "amount": 10
+            }
           ]
         }
       ],
-      "tags": ["korrigans", "vieux_granit", "marche", "souvenir"]
+      "tags": [
+        "korrigans",
+        "vieux_granit",
+        "marche",
+        "souvenir"
+      ],
+      "trust_tier": "T0"
     },
-
     {
       "id": "faction_korrigans_002",
       "faction_primaire": "korrigans",
@@ -338,31 +603,61 @@
           "label": "Cueillir des plantes autour de la source pour tester leur nature",
           "verb": "cueillir",
           "effects": [
-            {"type": "ADD_REPUTATION", "faction": "korrigans", "amount": 12},
-            {"type": "HEAL_LIFE", "amount": 8}
+            {
+              "type": "ADD_REPUTATION",
+              "faction": "korrigans",
+              "amount": 12
+            },
+            {
+              "type": "HEAL_LIFE",
+              "amount": 8
+            }
           ]
         },
         {
           "label": "Fouiller dans les roseaux pour trouver ce que la source cache",
           "verb": "fouiller a l'aveugle",
           "effects": [
-            {"type": "ADD_REPUTATION", "faction": "korrigans", "amount": 16},
-            {"type": "DAMAGE_LIFE", "amount": 9}
+            {
+              "type": "ADD_REPUTATION",
+              "faction": "korrigans",
+              "amount": 16
+            },
+            {
+              "type": "DAMAGE_LIFE",
+              "amount": 9
+            }
           ]
         },
         {
           "label": "Tenter sa chance et boire l'eau noire sans preparation",
           "verb": "tenter sa chance",
           "effects": [
-            {"type": "ADD_REPUTATION", "faction": "korrigans", "amount": 20},
-            {"type": "DAMAGE_LIFE", "amount": 13},
-            {"type": "ADD_ANAM", "amount": 6}
+            {
+              "type": "ADD_REPUTATION",
+              "faction": "korrigans",
+              "amount": 20
+            },
+            {
+              "type": "DAMAGE_LIFE",
+              "amount": 13
+            },
+            {
+              "type": "ADD_ANAM",
+              "amount": 6
+            }
           ]
         }
       ],
-      "tags": ["korrigans", "louarn", "source", "eau_noire", "risque"]
+      "tags": [
+        "korrigans",
+        "louarn",
+        "source",
+        "eau_noire",
+        "risque"
+      ],
+      "trust_tier": "T0"
     },
-
     {
       "id": "faction_korrigans_003",
       "faction_primaire": "korrigans",
@@ -374,31 +669,62 @@
           "label": "Se faufiler dans les crevasses des falaises apres lui",
           "verb": "se faufiler",
           "effects": [
-            {"type": "ADD_REPUTATION", "faction": "korrigans", "amount": 14},
-            {"type": "DAMAGE_LIFE", "amount": 6}
+            {
+              "type": "ADD_REPUTATION",
+              "faction": "korrigans",
+              "amount": 14
+            },
+            {
+              "type": "DAMAGE_LIFE",
+              "amount": 6
+            }
           ]
         },
         {
           "label": "Esquiver ses ruses en restant hors de sa portee",
           "verb": "esquiver",
           "effects": [
-            {"type": "ADD_REPUTATION", "faction": "korrigans", "amount": 8},
-            {"type": "HEAL_LIFE", "amount": 9}
+            {
+              "type": "ADD_REPUTATION",
+              "faction": "korrigans",
+              "amount": 8
+            },
+            {
+              "type": "HEAL_LIFE",
+              "amount": 9
+            }
           ]
         },
         {
           "label": "Escalader la falaise pour le prendre de haut",
           "verb": "escalader",
           "effects": [
-            {"type": "ADD_REPUTATION", "faction": "korrigans", "amount": 11},
-            {"type": "ADD_REPUTATION", "faction": "niamh", "amount": 5},
-            {"type": "DAMAGE_LIFE", "amount": 7}
+            {
+              "type": "ADD_REPUTATION",
+              "faction": "korrigans",
+              "amount": 11
+            },
+            {
+              "type": "ADD_REPUTATION",
+              "faction": "niamh",
+              "amount": 5
+            },
+            {
+              "type": "DAMAGE_LIFE",
+              "amount": 7
+            }
           ]
         }
       ],
-      "tags": ["korrigans", "pik", "farce", "poursuite", "cotes"]
+      "tags": [
+        "korrigans",
+        "pik",
+        "farce",
+        "poursuite",
+        "cotes"
+      ],
+      "trust_tier": "T0"
     },
-
     {
       "id": "faction_korrigans_004",
       "faction_primaire": "korrigans",
@@ -410,31 +736,62 @@
           "label": "Resister physiquement a la pression de la terre qui pulse",
           "verb": "resister physiquement",
           "effects": [
-            {"type": "ADD_REPUTATION", "faction": "korrigans", "amount": 15},
-            {"type": "DAMAGE_LIFE", "amount": 8}
+            {
+              "type": "ADD_REPUTATION",
+              "faction": "korrigans",
+              "amount": 15
+            },
+            {
+              "type": "DAMAGE_LIFE",
+              "amount": 8
+            }
           ]
         },
         {
           "label": "Forcer ta presence jusqu'au menhir central",
           "verb": "forcer",
           "effects": [
-            {"type": "ADD_REPUTATION", "faction": "korrigans", "amount": 12},
-            {"type": "ADD_REPUTATION", "faction": "anciens", "amount": -7},
-            {"type": "DAMAGE_LIFE", "amount": 5}
+            {
+              "type": "ADD_REPUTATION",
+              "faction": "korrigans",
+              "amount": 12
+            },
+            {
+              "type": "ADD_REPUTATION",
+              "faction": "anciens",
+              "amount": -7
+            },
+            {
+              "type": "DAMAGE_LIFE",
+              "amount": 5
+            }
           ]
         },
         {
           "label": "Courir jusqu'au point de resonance maximal avant qu'il s'arrete",
           "verb": "courir",
           "effects": [
-            {"type": "ADD_REPUTATION", "faction": "korrigans", "amount": 10},
-            {"type": "HEAL_LIFE", "amount": 6}
+            {
+              "type": "ADD_REPUTATION",
+              "faction": "korrigans",
+              "amount": 10
+            },
+            {
+              "type": "HEAL_LIFE",
+              "amount": 6
+            }
           ]
         }
       ],
-      "tags": ["korrigans", "conseil", "menhir", "terre", "cercles"]
+      "tags": [
+        "korrigans",
+        "conseil",
+        "menhir",
+        "terre",
+        "cercles"
+      ],
+      "trust_tier": "T0"
     },
-
     {
       "id": "faction_niamh_001",
       "faction_primaire": "niamh",
@@ -446,31 +803,62 @@
           "label": "Tendre l'oreille vers la musique que le lac chante",
           "verb": "ecouter",
           "effects": [
-            {"type": "ADD_REPUTATION", "faction": "niamh", "amount": 15},
-            {"type": "HEAL_LIFE", "amount": 11}
+            {
+              "type": "ADD_REPUTATION",
+              "faction": "niamh",
+              "amount": 15
+            },
+            {
+              "type": "HEAL_LIFE",
+              "amount": 11
+            }
           ]
         },
         {
           "label": "Suivre le reflet lumineux vers le centre du lac",
           "verb": "suivre",
           "effects": [
-            {"type": "ADD_REPUTATION", "faction": "niamh", "amount": 18},
-            {"type": "DAMAGE_LIFE", "amount": 8}
+            {
+              "type": "ADD_REPUTATION",
+              "faction": "niamh",
+              "amount": 18
+            },
+            {
+              "type": "DAMAGE_LIFE",
+              "amount": 8
+            }
           ]
         },
         {
           "label": "Sentir si la brise porte l'odeur de Tir na nOg",
           "verb": "sentir",
           "effects": [
-            {"type": "ADD_REPUTATION", "faction": "niamh", "amount": 10},
-            {"type": "ADD_ANAM", "amount": 5},
-            {"type": "ADD_REPUTATION", "faction": "ankou", "amount": -6}
+            {
+              "type": "ADD_REPUTATION",
+              "faction": "niamh",
+              "amount": 10
+            },
+            {
+              "type": "ADD_ANAM",
+              "amount": 5
+            },
+            {
+              "type": "ADD_REPUTATION",
+              "faction": "ankou",
+              "amount": -6
+            }
           ]
         }
       ],
-      "tags": ["niamh", "lac", "souvenir", "tir_na_nog", "iles"]
+      "tags": [
+        "niamh",
+        "lac",
+        "souvenir",
+        "tir_na_nog",
+        "iles"
+      ],
+      "trust_tier": "T0"
     },
-
     {
       "id": "faction_niamh_002",
       "faction_primaire": "niamh",
@@ -482,31 +870,63 @@
           "label": "Calmer le mouvement des vagues en posant ta main dans l'eau",
           "verb": "calmer",
           "effects": [
-            {"type": "ADD_REPUTATION", "faction": "niamh", "amount": 14},
-            {"type": "ADD_REPUTATION", "faction": "ankou", "amount": -5}
+            {
+              "type": "ADD_REPUTATION",
+              "faction": "niamh",
+              "amount": 14
+            },
+            {
+              "type": "ADD_REPUTATION",
+              "faction": "ankou",
+              "amount": -5
+            }
           ]
         },
         {
           "label": "Apaiser le poete en partageant un silence compris",
           "verb": "apaiser",
           "effects": [
-            {"type": "ADD_REPUTATION", "faction": "niamh", "amount": 12},
-            {"type": "HEAL_LIFE", "amount": 12}
+            {
+              "type": "ADD_REPUTATION",
+              "faction": "niamh",
+              "amount": 12
+            },
+            {
+              "type": "HEAL_LIFE",
+              "amount": 12
+            }
           ]
         },
         {
           "label": "Accepter que les mots disparaissent et rester quand meme",
           "verb": "accepter",
           "effects": [
-            {"type": "ADD_REPUTATION", "faction": "niamh", "amount": 16},
-            {"type": "ADD_REPUTATION", "faction": "anciens", "amount": 7},
-            {"type": "DAMAGE_LIFE", "amount": 6}
+            {
+              "type": "ADD_REPUTATION",
+              "faction": "niamh",
+              "amount": 16
+            },
+            {
+              "type": "ADD_REPUTATION",
+              "faction": "anciens",
+              "amount": 7
+            },
+            {
+              "type": "DAMAGE_LIFE",
+              "amount": 6
+            }
           ]
         }
       ],
-      "tags": ["niamh", "oisin", "poesie", "cotes", "memoire"]
+      "tags": [
+        "niamh",
+        "oisin",
+        "poesie",
+        "cotes",
+        "memoire"
+      ],
+      "trust_tier": "T0"
     },
-
     {
       "id": "faction_niamh_003",
       "faction_primaire": "niamh",
@@ -518,30 +938,58 @@
           "label": "Inspecter le fond du lac pour voir ce qui a ete abandonne",
           "verb": "inspecter",
           "effects": [
-            {"type": "ADD_REPUTATION", "faction": "niamh", "amount": 13},
-            {"type": "ADD_ANAM", "amount": 4}
+            {
+              "type": "ADD_REPUTATION",
+              "faction": "niamh",
+              "amount": 13
+            },
+            {
+              "type": "ADD_ANAM",
+              "amount": 4
+            }
           ]
         },
         {
           "label": "Examiner le reflet de Morgane pour comprendre ce qu'elle garde",
           "verb": "examiner",
           "effects": [
-            {"type": "ADD_REPUTATION", "faction": "niamh", "amount": 10},
-            {"type": "ADD_REPUTATION", "faction": "anciens", "amount": 6}
+            {
+              "type": "ADD_REPUTATION",
+              "faction": "niamh",
+              "amount": 10
+            },
+            {
+              "type": "ADD_REPUTATION",
+              "faction": "anciens",
+              "amount": 6
+            }
           ]
         },
         {
           "label": "Observer sans bouger jusqu'a ce que le lac revele son motif",
           "verb": "observer",
           "effects": [
-            {"type": "ADD_REPUTATION", "faction": "niamh", "amount": 8},
-            {"type": "HEAL_LIFE", "amount": 14}
+            {
+              "type": "ADD_REPUTATION",
+              "faction": "niamh",
+              "amount": 8
+            },
+            {
+              "type": "HEAL_LIFE",
+              "amount": 14
+            }
           ]
         }
       ],
-      "tags": ["niamh", "morgane", "lac_viviane", "reflet", "foret"]
+      "tags": [
+        "niamh",
+        "morgane",
+        "lac_viviane",
+        "reflet",
+        "foret"
+      ],
+      "trust_tier": "T0"
     },
-
     {
       "id": "faction_niamh_004",
       "faction_primaire": "niamh",
@@ -553,31 +1001,63 @@
           "label": "Charmer l'enfant pour qu'il enseigne la melodie sans prix",
           "verb": "charmer",
           "effects": [
-            {"type": "ADD_REPUTATION", "faction": "niamh", "amount": 12},
-            {"type": "HEAL_LIFE", "amount": 8}
+            {
+              "type": "ADD_REPUTATION",
+              "faction": "niamh",
+              "amount": 12
+            },
+            {
+              "type": "HEAL_LIFE",
+              "amount": 8
+            }
           ]
         },
         {
           "label": "Amadouer l'enfant en lui offrant un souvenir heureux",
           "verb": "amadouer",
           "effects": [
-            {"type": "ADD_REPUTATION", "faction": "niamh", "amount": 16},
-            {"type": "ADD_REPUTATION", "faction": "korrigans", "amount": 5},
-            {"type": "DAMAGE_LIFE", "amount": 5}
+            {
+              "type": "ADD_REPUTATION",
+              "faction": "niamh",
+              "amount": 16
+            },
+            {
+              "type": "ADD_REPUTATION",
+              "faction": "korrigans",
+              "amount": 5
+            },
+            {
+              "type": "DAMAGE_LIFE",
+              "amount": 5
+            }
           ]
         },
         {
           "label": "Negocier un accord equitable avec la voix de Niamh",
           "verb": "negocier",
           "effects": [
-            {"type": "ADD_REPUTATION", "faction": "niamh", "amount": 14},
-            {"type": "ADD_REPUTATION", "faction": "ankou", "amount": -8}
+            {
+              "type": "ADD_REPUTATION",
+              "faction": "niamh",
+              "amount": 14
+            },
+            {
+              "type": "ADD_REPUTATION",
+              "faction": "ankou",
+              "amount": -8
+            }
           ]
         }
       ],
-      "tags": ["niamh", "chanson", "enfant", "beaute", "landes"]
+      "tags": [
+        "niamh",
+        "chanson",
+        "enfant",
+        "beaute",
+        "landes"
+      ],
+      "trust_tier": "T0"
     },
-
     {
       "id": "faction_ankou_001",
       "faction_primaire": "ankou",
@@ -589,30 +1069,58 @@
           "label": "Attendre que l'Ankou revele ce qui sera pris cette nuit",
           "verb": "attendre",
           "effects": [
-            {"type": "ADD_REPUTATION", "faction": "ankou", "amount": 14},
-            {"type": "ADD_REPUTATION", "faction": "niamh", "amount": -7}
+            {
+              "type": "ADD_REPUTATION",
+              "faction": "ankou",
+              "amount": 14
+            },
+            {
+              "type": "ADD_REPUTATION",
+              "faction": "niamh",
+              "amount": -7
+            }
           ]
         },
         {
           "label": "Accepter la fin de ce qui doit finir sans negocier",
           "verb": "accepter",
           "effects": [
-            {"type": "ADD_REPUTATION", "faction": "ankou", "amount": 18},
-            {"type": "DAMAGE_LIFE", "amount": 11}
+            {
+              "type": "ADD_REPUTATION",
+              "faction": "ankou",
+              "amount": 18
+            },
+            {
+              "type": "DAMAGE_LIFE",
+              "amount": 11
+            }
           ]
         },
         {
           "label": "Refuser de savoir ce qui sera pris ce soir",
           "verb": "refuser",
           "effects": [
-            {"type": "ADD_REPUTATION", "faction": "ankou", "amount": 8},
-            {"type": "HEAL_LIFE", "amount": 13}
+            {
+              "type": "ADD_REPUTATION",
+              "faction": "ankou",
+              "amount": 8
+            },
+            {
+              "type": "HEAL_LIFE",
+              "amount": 13
+            }
           ]
         }
       ],
-      "tags": ["ankou", "charrette", "fin", "dolmens", "nuit"]
+      "tags": [
+        "ankou",
+        "charrette",
+        "fin",
+        "dolmens",
+        "nuit"
+      ],
+      "trust_tier": "T0"
     },
-
     {
       "id": "faction_ankou_002",
       "faction_primaire": "ankou",
@@ -624,31 +1132,63 @@
           "label": "Tendre l'oreille vers le silence pour identifier ce que Youenn n'entend plus",
           "verb": "ecouter",
           "effects": [
-            {"type": "ADD_REPUTATION", "faction": "ankou", "amount": 13},
-            {"type": "ADD_ANAM", "amount": 4}
+            {
+              "type": "ADD_REPUTATION",
+              "faction": "ankou",
+              "amount": 13
+            },
+            {
+              "type": "ADD_ANAM",
+              "amount": 4
+            }
           ]
         },
         {
           "label": "Pister les traces de roues dans la boue pour suivre la charrette",
           "verb": "pister",
           "effects": [
-            {"type": "ADD_REPUTATION", "faction": "ankou", "amount": 10},
-            {"type": "ADD_REPUTATION", "faction": "korrigans", "amount": 5}
+            {
+              "type": "ADD_REPUTATION",
+              "faction": "ankou",
+              "amount": 10
+            },
+            {
+              "type": "ADD_REPUTATION",
+              "faction": "korrigans",
+              "amount": 5
+            }
           ]
         },
         {
           "label": "Sentir si l'air du marais porte l'empreinte de ce qui vient de finir",
           "verb": "flairer",
           "effects": [
-            {"type": "ADD_REPUTATION", "faction": "ankou", "amount": 16},
-            {"type": "DAMAGE_LIFE", "amount": 9},
-            {"type": "ADD_REPUTATION", "faction": "niamh", "amount": -6}
+            {
+              "type": "ADD_REPUTATION",
+              "faction": "ankou",
+              "amount": 16
+            },
+            {
+              "type": "DAMAGE_LIFE",
+              "amount": 9
+            },
+            {
+              "type": "ADD_REPUTATION",
+              "faction": "niamh",
+              "amount": -6
+            }
           ]
         }
       ],
-      "tags": ["ankou", "youenn", "mort", "marais", "memoire"]
+      "tags": [
+        "ankou",
+        "youenn",
+        "mort",
+        "marais",
+        "memoire"
+      ],
+      "trust_tier": "T0"
     },
-
     {
       "id": "faction_ankou_003",
       "faction_primaire": "ankou",
@@ -660,31 +1200,63 @@
           "label": "Endurer le chant complet jusqu'au dernier accord",
           "verb": "endurer",
           "effects": [
-            {"type": "ADD_REPUTATION", "faction": "ankou", "amount": 20},
-            {"type": "DAMAGE_LIFE", "amount": 13}
+            {
+              "type": "ADD_REPUTATION",
+              "faction": "ankou",
+              "amount": 20
+            },
+            {
+              "type": "DAMAGE_LIFE",
+              "amount": 13
+            }
           ]
         },
         {
           "label": "Resister mentalement a la prediction que le chant implique",
           "verb": "resister mentalement",
           "effects": [
-            {"type": "ADD_REPUTATION", "faction": "ankou", "amount": 12},
-            {"type": "HEAL_LIFE", "amount": 9}
+            {
+              "type": "ADD_REPUTATION",
+              "faction": "ankou",
+              "amount": 12
+            },
+            {
+              "type": "HEAL_LIFE",
+              "amount": 9
+            }
           ]
         },
         {
           "label": "S'approcher de la lavandiere pour voir ce qu'elle lave",
           "verb": "s'approcher",
           "effects": [
-            {"type": "ADD_REPUTATION", "faction": "ankou", "amount": 16},
-            {"type": "ADD_REPUTATION", "faction": "niamh", "amount": -10},
-            {"type": "DAMAGE_LIFE", "amount": 7}
+            {
+              "type": "ADD_REPUTATION",
+              "faction": "ankou",
+              "amount": 16
+            },
+            {
+              "type": "ADD_REPUTATION",
+              "faction": "niamh",
+              "amount": -10
+            },
+            {
+              "type": "DAMAGE_LIFE",
+              "amount": 7
+            }
           ]
         }
       ],
-      "tags": ["ankou", "lavandiere", "chant", "fin", "landes", "kannerezed"]
+      "tags": [
+        "ankou",
+        "lavandiere",
+        "chant",
+        "fin",
+        "landes",
+        "kannerezed"
+      ],
+      "trust_tier": "T0"
     },
-
     {
       "id": "faction_ankou_004",
       "faction_primaire": "ankou",
@@ -696,31 +1268,67 @@
           "label": "Analyser la frontiere entre le monde visible et le Vide",
           "verb": "analyser",
           "effects": [
-            {"type": "ADD_REPUTATION", "faction": "ankou", "amount": 17},
-            {"type": "ADD_REPUTATION", "faction": "anciens", "amount": 8},
-            {"type": "DAMAGE_LIFE", "amount": 12}
+            {
+              "type": "ADD_REPUTATION",
+              "faction": "ankou",
+              "amount": 17
+            },
+            {
+              "type": "ADD_REPUTATION",
+              "faction": "anciens",
+              "amount": 8
+            },
+            {
+              "type": "DAMAGE_LIFE",
+              "amount": 12
+            }
           ]
         },
         {
           "label": "Etudier la faux de l'Ankou pour comprendre comment elle tranche",
           "verb": "etudier",
           "effects": [
-            {"type": "ADD_REPUTATION", "faction": "ankou", "amount": 14},
-            {"type": "ADD_ANAM", "amount": 6}
+            {
+              "type": "ADD_REPUTATION",
+              "faction": "ankou",
+              "amount": 14
+            },
+            {
+              "type": "ADD_ANAM",
+              "amount": 6
+            }
           ]
         },
         {
           "label": "Dechiffrer le message que le Vide envoie a travers l'Ankou",
           "verb": "dechiffrer",
           "effects": [
-            {"type": "ADD_REPUTATION", "faction": "ankou", "amount": 11},
-            {"type": "ADD_REPUTATION", "faction": "druides", "amount": 6},
-            {"type": "HEAL_LIFE", "amount": 5}
+            {
+              "type": "ADD_REPUTATION",
+              "faction": "ankou",
+              "amount": 11
+            },
+            {
+              "type": "ADD_REPUTATION",
+              "faction": "druides",
+              "amount": 6
+            },
+            {
+              "type": "HEAL_LIFE",
+              "amount": 5
+            }
           ]
         }
       ],
-      "tags": ["ankou", "vide", "frontiere", "iles", "fin", "savoir"]
+      "tags": [
+        "ankou",
+        "vide",
+        "frontiere",
+        "iles",
+        "fin",
+        "savoir"
+      ],
+      "trust_tier": "T0"
     }
-
   ]
 }
