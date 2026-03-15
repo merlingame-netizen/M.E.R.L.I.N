@@ -122,11 +122,17 @@ def check_constants_usage() -> tuple[str, list[str]]:
             src = gd.read_text(encoding="utf-8", errors="replace")
         except OSError:
             continue
-        for m in re.finditer(r"MerlinConstants\.(\w+)", src):
-            ref = m.group(1)
-            if ref not in members:
-                rel = str(gd.relative_to(ROOT))
-                bad_refs.append(f"  {rel}: MerlinConstants.{ref} — not defined")
+        for line in src.splitlines():
+            stripped = line.lstrip()
+            if stripped.startswith("#") or stripped.startswith("//"):
+                continue
+            # Strip trailing comments before matching
+            code_part = line.split("#")[0] if "#" in line else line
+            for m in re.finditer(r"MerlinConstants\.(\w+)", code_part):
+                ref = m.group(1)
+                if ref not in members:
+                    rel = str(gd.relative_to(ROOT))
+                    bad_refs.append(f"  {rel}: MerlinConstants.{ref} — not defined")
     # Deduplicate
     bad_refs = sorted(set(bad_refs))
     if bad_refs:

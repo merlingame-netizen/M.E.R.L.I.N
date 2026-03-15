@@ -9,7 +9,7 @@
 ## ═══════════════════════════════════════════════════════════════════════════════
 
 extends Node
-class_name EndRunScreen
+class_name EndRunScreenUI
 
 signal screen_completed(screen_name: String)
 signal return_to_hub()
