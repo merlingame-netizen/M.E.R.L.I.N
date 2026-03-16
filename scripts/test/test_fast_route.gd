@@ -114,6 +114,15 @@ func test_classify_exploration_directional() -> bool:
 	return true
 
 
+func test_classify_exploration_exclude_zeroes_score() -> bool:
+	# "regles d'exploration" is in exploration's excludes list
+	var scores: Dictionary = FastRoute.debug_scores("regles d'exploration du donjon")
+	if float(scores.get("exploration", 1.0)) != 0.0:
+		push_error("classify exploration exclude: score must be 0.0, got %f" % float(scores.get("exploration", -1.0)))
+		return false
+	return true
+
+
 # ═══════════════════════════════════════════════════════════════════════════════
 # classify() — INVENTAIRE category
 # ═══════════════════════════════════════════════════════════════════════════════
@@ -130,6 +139,15 @@ func test_classify_inventaire_phrase() -> bool:
 	var result: Dictionary = FastRoute.classify("j'equipe l'armure")
 	if str(result.get("category", "")) != "inventaire":
 		push_error("classify inventaire phrase: expected 'inventaire', got '%s'" % str(result.get("category", "")))
+		return false
+	return true
+
+
+func test_classify_inventaire_exclude_zeroes_score() -> bool:
+	# "regles inventaire" is in inventaire's excludes list
+	var scores: Dictionary = FastRoute.debug_scores("regles inventaire et equipement")
+	if float(scores.get("inventaire", 1.0)) != 0.0:
+		push_error("classify inventaire exclude: score must be 0.0, got %f" % float(scores.get("inventaire", -1.0)))
 		return false
 	return true
 
@@ -183,6 +201,15 @@ func test_classify_quete_phrase() -> bool:
 	return true
 
 
+func test_classify_quete_exclude_zeroes_score() -> bool:
+	# "regles quetes" is in quete's excludes list
+	var scores: Dictionary = FastRoute.debug_scores("regles quetes du jeu")
+	if float(scores.get("quete", 1.0)) != 0.0:
+		push_error("classify quete exclude: score must be 0.0, got %f" % float(scores.get("quete", -1.0)))
+		return false
+	return true
+
+
 # ═══════════════════════════════════════════════════════════════════════════════
 # classify() — META detection (is_meta = true)
 # ═══════════════════════════════════════════════════════════════════════════════
@@ -216,6 +243,33 @@ func test_classify_meta_phrase_explique_moi() -> bool:
 	var result: Dictionary = FastRoute.classify("explique-moi comment fonctionne la magie")
 	if not bool(result.get("is_meta", false)):
 		push_error("classify meta explique-moi: is_meta should be true")
+		return false
+	return true
+
+
+func test_classify_meta_keyword_tutoriel() -> bool:
+	var result: Dictionary = FastRoute.classify("tutoriel pour les nouveaux joueurs")
+	if not bool(result.get("is_meta", false)):
+		push_error("classify meta tutoriel: is_meta should be true for 'tutoriel'")
+		return false
+	if str(result.get("category", "")) != "dialogue":
+		push_error("classify meta tutoriel: category should be 'dialogue', got '%s'" % str(result.get("category", "")))
+		return false
+	return true
+
+
+func test_classify_meta_phrase_quest_ce_que() -> bool:
+	var result: Dictionary = FastRoute.classify("qu'est-ce que les oghams exactement")
+	if not bool(result.get("is_meta", false)):
+		push_error("classify meta qu'est-ce que: is_meta should be true for phrase 'qu'est-ce que'")
+		return false
+	return true
+
+
+func test_classify_meta_phrase_comment_faire_pour() -> bool:
+	var result: Dictionary = FastRoute.classify("comment faire pour gagner de l'anam")
+	if not bool(result.get("is_meta", false)):
+		push_error("classify meta comment faire pour: is_meta should be true for phrase 'comment faire pour'")
 		return false
 	return true
 
@@ -257,6 +311,31 @@ func test_classify_result_is_never_meta_without_is_meta_flag() -> bool:
 	var result: Dictionary = FastRoute.classify("je combats le dragon")
 	if bool(result.get("is_meta", false)):
 		push_error("classify non-meta input: is_meta should be false for 'je combats le dragon'")
+		return false
+	return true
+
+
+func test_classify_is_meta_false_for_clear_action_inputs() -> bool:
+	# Several unambiguous action sentences must never trigger meta detection
+	var actions: Array[String] = [
+		"je frappe l'ennemi",
+		"j'explore la foret",
+		"je prends la potion",
+		"j'active l'ogham beith",
+		"j'accepte la quete du mage",
+	]
+	for inp in actions:
+		var result: Dictionary = FastRoute.classify(inp)
+		if bool(result.get("is_meta", false)):
+			push_error("classify is_meta false: input '%s' should not be meta" % inp)
+			return false
+	return true
+
+
+func test_debug_scores_is_meta_false_for_action_input() -> bool:
+	var scores: Dictionary = FastRoute.debug_scores("je frappe l'ennemi avec mon epee")
+	if bool(scores.get("_is_meta", true)):
+		push_error("debug_scores: _is_meta must be false for clear action input")
 		return false
 	return true
 
@@ -422,41 +501,49 @@ func run_all() -> Dictionary:
 		# Dialogue (2)
 		"test_classify_dialogue_keyword",
 		"test_classify_dialogue_phrase",
-		# Exploration (3)
+		# Exploration (4)
 		"test_classify_exploration_keyword",
 		"test_classify_exploration_phrase",
 		"test_classify_exploration_directional",
-		# Inventaire (2)
+		"test_classify_exploration_exclude_zeroes_score",
+		# Inventaire (3)
 		"test_classify_inventaire_keyword",
 		"test_classify_inventaire_phrase",
+		"test_classify_inventaire_exclude_zeroes_score",
 		# Magie (3)
 		"test_classify_magie_keyword",
 		"test_classify_magie_phrase",
 		"test_classify_magie_exclude_zeroes_score",
-		# Quete (2)
+		# Quete (3)
 		"test_classify_quete_keyword",
 		"test_classify_quete_phrase",
-		# Meta detection (3)
+		"test_classify_quete_exclude_zeroes_score",
+		# Meta detection (7)
 		"test_classify_meta_keyword_comment",
 		"test_classify_meta_keyword_aide",
 		"test_classify_meta_phrase_explique_moi",
-		# Edge cases / boundary (5)
+		"test_classify_meta_keyword_tutoriel",
+		"test_classify_meta_phrase_quest_ce_que",
+		"test_classify_meta_phrase_comment_faire_pour",
+		# Edge cases / boundary (6)
 		"test_classify_empty_input_returns_no_category",
 		"test_classify_whitespace_only_returns_no_category",
 		"test_classify_unrecognized_input_no_confident_match",
 		"test_classify_result_is_never_meta_without_is_meta_flag",
+		"test_classify_is_meta_false_for_clear_action_inputs",
 		"test_classify_case_insensitive",
 		# Score internals (4)
 		"test_score_three_keywords_triggers_bonus",
 		"test_score_two_keywords_triggers_small_bonus",
 		"test_score_phrase_worth_0_4",
 		"test_score_clamped_at_1_0",
-		# debug_scores (5)
+		# debug_scores (7)
 		"test_debug_scores_returns_all_categories",
 		"test_debug_scores_has_meta_and_input_keys",
 		"test_debug_scores_normalizes_input_to_lowercase",
 		"test_debug_scores_is_meta_true_on_meta_input",
 		"test_debug_scores_all_scores_in_0_1_range",
+		"test_debug_scores_is_meta_false_for_action_input",
 		# Return shape (3)
 		"test_classify_always_returns_required_keys",
 		"test_classify_method_is_none_when_no_match",
