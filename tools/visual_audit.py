@@ -34,6 +34,7 @@ PROJECT_ROOT = Path(__file__).resolve().parent.parent
 # Files that ARE the palette definition — hardcoded colors are expected there
 PALETTE_DEFINITION_FILES = {
     "merlin_visual.gd",
+    "merlin_visual_palettes.gd",
     "sprite_palette.gd",
     "pixel_scene_data.gd",
     "biome_config.gd",
@@ -263,8 +264,8 @@ def audit_biome_completeness(gd_files: list[Path]) -> dict[str, dict]:
         for m in re.finditer(r'"(\w+)":\s*\[', content):
             particle_biomes.add(m.group(1))
 
-    # Parse merlin_visual.gd for BIOME_CRT_PALETTES
-    visual_file = _find_file(gd_files, "merlin_visual.gd")
+    # Parse merlin_visual.gd (or merlin_visual_palettes.gd) for BIOME_CRT_PALETTES
+    visual_file = _find_file(gd_files, "merlin_visual_palettes.gd") or _find_file(gd_files, "merlin_visual.gd")
     palette_biomes: set[str] = set()
     if visual_file:
         content = visual_file.read_text(encoding="utf-8", errors="replace")

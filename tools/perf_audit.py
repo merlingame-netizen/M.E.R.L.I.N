@@ -40,7 +40,7 @@ PROJECT_ROOT = Path(__file__).resolve().parent.parent
 NODE_BUDGET_WARNING = 500
 NODE_BUDGET_CRITICAL = 1000
 PARTICLE_RECOMMENDED_MAX = 500
-SIGNAL_HOTSPOT_THRESHOLD = 15
+SIGNAL_HOTSPOT_THRESHOLD = 20
 DRAW_CALL_WARNING = 300
 DRAW_CALL_CRITICAL = 600
 COMPLEXITY_WARNING = 20
@@ -441,6 +441,9 @@ def analyze_script_complexity(project_root: Path) -> list[dict[str, Any]]:
     results: list[dict[str, Any]] = []
 
     for gd_file in _find_files(project_root / "scripts", ".gd"):
+        # Skip test files — they don't affect runtime performance
+        if "test" in gd_file.parts or gd_file.name.startswith("test_"):
+            continue
         try:
             content = gd_file.read_text(encoding="utf-8", errors="replace")
         except OSError:

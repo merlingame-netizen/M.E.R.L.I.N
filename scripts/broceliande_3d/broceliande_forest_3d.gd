@@ -21,6 +21,11 @@ const WalkHudClass = preload("res://scripts/ui/walk_hud.gd")
 const BrocScreenVfxClass = preload("res://scripts/broceliande_3d/broc_screen_vfx.gd")
 const BrocCreatureSpawnerClass = preload("res://scripts/broceliande_3d/broc_creature_spawner.gd")
 const BrocNarrativeDirectorClass = preload("res://scripts/broceliande_3d/broc_narrative_director.gd")
+const ForestAssetSpawnerClass = preload("res://scripts/broceliande_3d/forest_asset_spawner.gd")
+const ForestZoneBuilderClass = preload("res://scripts/broceliande_3d/forest_zone_builder.gd")
+const ForestEffectsClass = preload("res://scripts/broceliande_3d/forest_effects.gd")
+const ForestMerlinNpcClass = preload("res://scripts/broceliande_3d/forest_merlin_npc.gd")
+const ForestTerrainBuilderClass = preload("res://scripts/broceliande_3d/forest_terrain_builder.gd")
 
 # --- Input ---
 const ACT_FWD: StringName = &"broc_move_forward"
@@ -100,28 +105,6 @@ const BROC_ASSETS: Dictionary = {
 	"giant_stump": "res://Assets/3d_models/broceliande/decor/giant_stump.glb",
 }
 
-# --- Merlin pixel rig ---
-const MERLIN_PX: float = 0.12
-const MERLIN_GRID: Array = [
-	[0,0,0,0,0,0,0,6,0,0,0,0],
-	[0,0,0,0,0,0,1,1,0,0,0,0],
-	[0,0,0,0,0,1,1,1,1,0,0,0],
-	[0,0,0,0,1,1,1,2,2,0,0,0],
-	[0,0,0,1,1,1,2,2,2,2,0,0],
-	[0,5,5,5,5,5,5,5,5,5,5,0],
-	[0,0,3,3,4,4,4,4,3,3,0,0],
-	[0,0,3,7,4,4,4,7,3,3,0,0],
-	[0,0,3,3,4,3,3,3,3,3,0,0],
-	[0,0,0,3,3,3,3,3,3,0,0,0],
-	[0,0,0,0,3,3,3,3,0,0,0,0],
-	[0,0,0,0,0,0,0,0,0,0,0,0],
-]
-const MERLIN_COLORS: Dictionary = {
-	1: Color(0.07, 0.12, 0.29), 2: Color(0.12, 0.20, 0.42),
-	3: Color(0.04, 0.05, 0.08), 4: Color(0.14, 0.15, 0.20),
-	5: Color(0.03, 0.04, 0.06), 6: Color(0.34, 0.72, 1.0),
-	7: Color(0.40, 0.84, 1.0),
-}
 
 # --- Exports ---
 @export var low_pixel_height: int = 320
@@ -156,24 +139,12 @@ var _gravity: float = 9.8
 var _velocity: Vector3 = Vector3.ZERO
 var _pitch: float = 0.0
 var _merlin_found: bool = false
-var _merlin_float_time: float = 0.0
-var _merlin_pixel_rig: Node3D
-var _merlin_orb_light: OmniLight3D
 var _current_zone: int = 0
 var _event_text: String = ""
 var _event_text_timer: float = 0.0
 var _head_bob_time: float = 0.0
 var _time: float = 0.0
 
-# Loaded scene caches
-var _tree_scenes: Array[PackedScene] = []
-var _bush_scenes: Array[PackedScene] = []
-var _special_scenes: Dictionary = {}
-var _detail_scenes: Dictionary = {}
-var _broc_scenes: Dictionary = {}
-
-# Swaying trees tracking
-var _sway_nodes: Array[Node3D] = []
 
 # Helper modules
 var _autowalk: RefCounted
@@ -196,9 +167,12 @@ var _gameplay_active: bool = false  # true when LLM event system is wired
 var _saved_crt_preset: String = "medium"
 var _crt_was_visible: bool = true
 
-# Particle refs for day/night modulation
-var _pollen_node: GPUParticles3D
-var _firefly_nodes: Array[GPUParticles3D] = []
+# Extracted modules
+var _asset_spawner: RefCounted  # ForestAssetSpawner
+var _zone_builder: RefCounted  # ForestZoneBuilder
+var _effects: RefCounted  # ForestEffects
+var _merlin_npc: RefCounted  # ForestMerlinNpc
+var _terrain_builder: RefCounted  # ForestTerrainBuilder
 
 var _path_points: PackedVector3Array = PackedVector3Array()
 var _zone_centers: Array[Vector3] = []
@@ -222,21 +196,25 @@ func _ready() -> void:
 			crt_layer.set_crt_preset("off")
 		if crt_layer.has_method("set_enabled"):
 			crt_layer.set_enabled(false)
-	_load_assets()
+	_asset_spawner = ForestAssetSpawnerClass.new(forest_root, _rng)
+	_asset_spawner.load_assets(TREE_MODELS, BUSH_MODELS, SPECIAL_TREES, DETAIL_MODELS, BROC_ASSETS)
 	_ensure_actions()
 	_setup_viewport()
 	_setup_environment()
 	_generate_path()
 	_setup_player()
-	_build_ground()
-	_build_path_terrain()
-	_build_zones()  # POIs, megaliths, zone-specific decor (kept)
+	_terrain_builder = ForestTerrainBuilderClass.new(world_root, forest_root, _zone_centers, _path_points, _rng, _asset_spawner)
+	_terrain_builder.build_ground()
+	_terrain_builder.build_path_terrain()
+	_zone_builder = ForestZoneBuilderClass.new(_asset_spawner, forest_root, _zone_centers, _rng)
+	_zone_builder.build_zones()
 	# _populate_forest() removed — chunk manager handles vegetation
 	_spawn_merlin()
-	_add_fog_particles()
-	_add_pollen_particles()
-	_add_fireflies()
-	_add_god_rays()
+	_effects = ForestEffectsClass.new(forest_root, _zone_centers, _rng)
+	_effects.add_fog_particles()
+	_effects.add_pollen_particles()
+	_effects.add_fireflies()
+	_effects.add_god_rays()
 	_init_helpers()
 	_wire_buttons()
 	_update_hud()
@@ -250,8 +228,8 @@ func _init_helpers() -> void:
 	# Procedural chunk manager (replaces dense_fill + mass_fill + extra_decor)
 	_chunk_manager = BrocChunkManager.new()
 	_chunk_manager.setup(
-		forest_root, _tree_scenes, _bush_scenes,
-		_special_scenes, _detail_scenes, _broc_scenes,
+		forest_root, _asset_spawner.tree_scenes, _asset_spawner.bush_scenes,
+		_asset_spawner.special_scenes, _asset_spawner.detail_scenes, _asset_spawner.broc_scenes,
 		_zone_centers, _path_points)
 	_chunk_manager.generate_initial(player.position.z)
 
@@ -262,8 +240,8 @@ func _init_helpers() -> void:
 	_season = BrocSeason.new(forest_root, self)
 
 	# Wind-blown grass (along path borders)
-	var grass_tall: PackedScene = _detail_scenes.get("grass_tall") as PackedScene
-	var grass_short: PackedScene = _detail_scenes.get("grass_short") as PackedScene
+	var grass_tall: PackedScene = _asset_spawner.detail_scenes.get("grass_tall") as PackedScene
+	var grass_short: PackedScene = _asset_spawner.detail_scenes.get("grass_short") as PackedScene
 	if grass_tall or grass_short:
 		_grass_wind = BrocGrassWind.new(forest_root, _path_points, _zone_centers, grass_tall, grass_short)
 
@@ -346,103 +324,6 @@ func _exit_tree() -> void:
 		if crt_layer.has_method("set_enabled"):
 			crt_layer.set_enabled(_crt_was_visible)
 
-
-# ============================================================
-# ASSET LOADING
-# ============================================================
-
-func _load_assets() -> void:
-	for path in TREE_MODELS:
-		var scene: PackedScene = _try_load(path)
-		if scene:
-			_tree_scenes.append(scene)
-
-	for path in BUSH_MODELS:
-		var scene: PackedScene = _try_load(path)
-		if scene:
-			_bush_scenes.append(scene)
-
-	for key in SPECIAL_TREES:
-		var scene: PackedScene = _try_load(SPECIAL_TREES[key])
-		if scene:
-			_special_scenes[key] = scene
-
-	for key in DETAIL_MODELS:
-		var scene: PackedScene = _try_load(DETAIL_MODELS[key])
-		if scene:
-			_detail_scenes[key] = scene
-
-	for key in BROC_ASSETS:
-		var scene: PackedScene = _try_load(BROC_ASSETS[key])
-		if scene:
-			_broc_scenes[key] = scene
-	print("[Broceliande] Loaded %d/%d GLB assets" % [_broc_scenes.size(), BROC_ASSETS.size()])
-
-
-func _try_load(path: String) -> PackedScene:
-	if ResourceLoader.exists(path):
-		return load(path) as PackedScene
-	return null
-
-
-func _spawn_glb(scene: PackedScene, pos: Vector3, scale_f: float = 1.0, rot_y: float = -1.0, vis_range: float = 0.0) -> Node3D:
-	var instance: Node3D = scene.instantiate() as Node3D
-	instance.position = pos
-	instance.scale = Vector3.ONE * scale_f
-	if rot_y < 0.0:
-		instance.rotation_degrees.y = _rng.randf_range(0.0, 360.0)
-	else:
-		instance.rotation_degrees.y = rot_y
-	if vis_range > 0.0:
-		_apply_lod(instance, vis_range)
-	forest_root.add_child(instance)
-	return instance
-
-
-func _apply_lod(node: Node3D, range_end: float) -> void:
-	if node is GeometryInstance3D:
-		node.visibility_range_end = range_end
-		node.visibility_range_fade_mode = GeometryInstance3D.VISIBILITY_RANGE_FADE_SELF
-	for child in node.get_children():
-		if child is Node3D:
-			_apply_lod(child as Node3D, range_end)
-
-
-func _spawn_random_tree(pos: Vector3, scale_f: float = 1.0) -> Node3D:
-	if _tree_scenes.is_empty():
-		return _create_fallback_tree(pos, scale_f)
-	var scene: PackedScene = _tree_scenes[_rng.randi_range(0, _tree_scenes.size() - 1)]
-	var node: Node3D = _spawn_glb(scene, pos, scale_f, -1.0, 60.0)
-	_sway_nodes.append(node)
-	return node
-
-
-func _spawn_random_bush(pos: Vector3, scale_f: float = 1.0) -> Node3D:
-	if _bush_scenes.is_empty():
-		return _create_fallback_shrub(pos, scale_f)
-	var scene: PackedScene = _bush_scenes[_rng.randi_range(0, _bush_scenes.size() - 1)]
-	return _spawn_glb(scene, pos, scale_f, -1.0, 40.0)
-
-
-func _spawn_special(key: String, pos: Vector3, scale_f: float = 1.0) -> Node3D:
-	if _special_scenes.has(key):
-		var node: Node3D = _spawn_glb(_special_scenes[key], pos, scale_f, -1.0, 60.0)
-		_sway_nodes.append(node)
-		return node
-	return _create_fallback_tree(pos, scale_f)
-
-
-func _spawn_detail(key: String, pos: Vector3, scale_f: float = 1.0) -> Node3D:
-	if _detail_scenes.has(key):
-		return _spawn_glb(_detail_scenes[key], pos, scale_f, -1.0, 25.0)
-	return null
-
-
-func _spawn_broc(key: String, pos: Vector3, scale_f: float = 1.0, rot_y: float = -1.0) -> Node3D:
-	if _broc_scenes.has(key):
-		return _spawn_glb(_broc_scenes[key], pos, scale_f, rot_y, 70.0)
-	push_warning("[Broceliande] Missing asset: %s" % key)
-	return null
 
 
 # ============================================================
@@ -589,12 +470,13 @@ func _physics_process(delta: float) -> void:
 		var t: float = _day_night.get_time()
 		var is_night: bool = t >= 0.55 and t < 0.95
 		# Fireflies visible at night, faint during day
-		for ff in _firefly_nodes:
-			if is_instance_valid(ff):
-				ff.amount_ratio = 1.0 if is_night else 0.15
-		# Pollen only during daytime
-		if _pollen_node and is_instance_valid(_pollen_node):
-			_pollen_node.amount_ratio = 0.0 if is_night else 1.0
+		if _effects:
+			for ff in _effects.firefly_nodes:
+				if is_instance_valid(ff):
+					ff.amount_ratio = 1.0 if is_night else 0.15
+			# Pollen only during daytime
+			if _effects.pollen_node and is_instance_valid(_effects.pollen_node):
+				_effects.pollen_node.amount_ratio = 0.0 if is_night else 1.0
 
 	# Event system: use new walk controller if gameplay active, else legacy
 	if _gameplay_active and _walk_event_controller:
@@ -609,7 +491,8 @@ func _physics_process(delta: float) -> void:
 	# Tree sway animation
 	_update_tree_sway(delta)
 
-	_update_merlin_visual(delta)
+	if _merlin_npc:
+		_merlin_npc.update_visual(delta)
 	_update_current_zone()
 	_update_hud()
 
@@ -736,512 +619,8 @@ func _generate_path() -> void:
 			_path_points.append(last)
 
 
-# ============================================================
-# TERRAIN
-# ============================================================
-
-func _build_ground() -> void:
-	var ground: StaticBody3D = StaticBody3D.new()
-	ground.name = "Ground"
-	world_root.add_child(ground)
-
-	var col: CollisionShape3D = CollisionShape3D.new()
-	var shape: BoxShape3D = BoxShape3D.new()
-	shape.size = Vector3(120.0, 2.0, 320.0)
-	col.shape = shape
-	col.position = Vector3(0.0, -1.0, -135.0)
-	ground.add_child(col)
-
-	# Ground mesh with better color
-	var mi: MeshInstance3D = MeshInstance3D.new()
-	var bm: BoxMesh = BoxMesh.new()
-	bm.size = Vector3(120.0, 0.2, 320.0)
-	mi.mesh = bm
-	mi.position = Vector3(0.0, -0.1, -135.0)
-	var mat: StandardMaterial3D = StandardMaterial3D.new()
-	mat.albedo_color = Color(0.12, 0.22, 0.10)
-	mat.roughness = 0.95
-	mi.material_override = mat
-	ground.add_child(mi)
 
 
-func _build_path_terrain() -> void:
-	# Organic path: variable width, terre+racines base
-	var dirt_mat: StandardMaterial3D = StandardMaterial3D.new()
-	dirt_mat.albedo_color = Color(0.28, 0.20, 0.11)
-	dirt_mat.roughness = 0.95
-
-	var root_mat: StandardMaterial3D = StandardMaterial3D.new()
-	root_mat.albedo_color = Color(0.15, 0.10, 0.06)
-	root_mat.roughness = 1.0
-
-	# Luminescent marker material (for dark zones)
-	var glow_mat: StandardMaterial3D = StandardMaterial3D.new()
-	glow_mat.albedo_color = Color(0.3, 0.9, 0.5, 0.8)
-	glow_mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
-	glow_mat.emission_enabled = true
-	glow_mat.emission = Color(0.3, 0.9, 0.5)
-	glow_mat.emission_energy_multiplier = 3.0
-	glow_mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
-
-	for i in range(_path_points.size() - 1):
-		var a: Vector3 = _path_points[i]
-		var b: Vector3 = _path_points[i + 1]
-		var mid: Vector3 = (a + b) * 0.5
-		var length: float = a.distance_to(b)
-		if length < 0.05:
-			continue
-
-		# Variable width: wider at clearings, narrower in dense forest
-		var zone_idx: int = _get_zone_for_pos(mid)
-		var width: float = 2.0
-		if zone_idx in [2, 5, 6]:  # clearings
-			width = 3.0
-		elif zone_idx == 4:  # profonde
-			width = 1.5
-
-		# Dirt segment
-		var seg: MeshInstance3D = MeshInstance3D.new()
-		var bx: BoxMesh = BoxMesh.new()
-		bx.size = Vector3(width, 0.06, length + 0.3)
-		seg.mesh = bx
-		seg.material_override = dirt_mat
-		seg.position = mid + Vector3(0.0, 0.03, 0.0)
-		seg.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
-		var dir: Vector3 = (b - a).normalized()
-		if dir.length() > 0.001:
-			seg.rotation.y = atan2(dir.x, dir.z)
-		forest_root.add_child(seg)
-
-		# Root details on path edges (every 3rd segment)
-		if i % 3 == 0:
-			for side_sign in [-1.0, 1.0]:
-				var root_pos: Vector3 = mid + Vector3(side_sign * width * 0.4, 0.04, 0.0)
-				var root_seg: MeshInstance3D = MeshInstance3D.new()
-				var root_bx: BoxMesh = BoxMesh.new()
-				root_bx.size = Vector3(0.15, 0.04, _rng.randf_range(0.5, 1.2))
-				root_seg.mesh = root_bx
-				root_seg.material_override = root_mat
-				root_seg.position = root_pos
-				root_seg.rotation.y = _rng.randf_range(-0.5, 0.5) + seg.rotation.y
-				root_seg.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
-				forest_root.add_child(root_seg)
-
-		# Luminescent markers in dark zones (Z3 Mare, Z4 Profonde)
-		if zone_idx in [3, 4] and i % 8 == 0:
-			for side_sign in [-1.0, 1.0]:
-				var glow_pos: Vector3 = mid + Vector3(side_sign * (width * 0.5 + 0.2), 0.08, 0.0)
-				var glow_quad: MeshInstance3D = MeshInstance3D.new()
-				var gm: QuadMesh = QuadMesh.new()
-				gm.size = Vector2(0.12, 0.12)
-				glow_quad.mesh = gm
-				glow_quad.material_override = glow_mat
-				glow_quad.position = glow_pos
-				glow_quad.rotation_degrees.x = -90.0
-				glow_quad.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
-				forest_root.add_child(glow_quad)
-
-	# Stone markers at zone transitions
-	for i in range(1, _zone_centers.size()):
-		var closest_idx: int = _find_closest_path_point(_zone_centers[i])
-		if closest_idx >= 0 and closest_idx < _path_points.size():
-			var pt: Vector3 = _path_points[closest_idx]
-			_spawn_broc("menhir_01", pt + Vector3(_rng.randf_range(2.0, 3.5), 0.0, 0.0), _rng.randf_range(1.0, 1.8))
-
-
-func _get_zone_for_pos(pos: Vector3) -> int:
-	var best: int = 0
-	var best_d: float = INF
-	for i in _zone_centers.size():
-		var d: float = Vector2(pos.x - _zone_centers[i].x, pos.z - _zone_centers[i].z).length()
-		if d < best_d:
-			best_d = d
-			best = i
-	return best
-
-
-func _find_closest_path_point(target: Vector3) -> int:
-	var best_idx: int = -1
-	var best_dist: float = INF
-	for i in range(0, _path_points.size(), 4):
-		var d: float = _path_points[i].distance_to(target)
-		if d < best_dist:
-			best_dist = d
-			best_idx = i
-	return best_idx
-
-
-# ============================================================
-# ZONES — now using real GLB assets
-# ============================================================
-
-func _build_zones() -> void:
-	_build_z1_lisiere()
-	_build_z2_dense()
-	_build_z3_dolmen()
-	_build_z4_mare()
-	_build_z5_profonde()
-	_build_z6_fontaine()
-	_build_z7_cercle()
-
-
-func _build_z1_lisiere() -> void:
-	var c: Vector3 = _zone_centers[0]
-	# POI decor only — bulk vegetation handled by ChunkManager MultiMesh
-	_spawn_broc("fallen_trunk", c + Vector3(10.0, 0.0, -5.0), 2.0, 15.0)
-	_spawn_broc("giant_stump", c + Vector3(-12.0, 0.0, -8.0), 2.5)
-
-
-func _build_z2_dense() -> void:
-	var c: Vector3 = _zone_centers[1]
-	# POI decor only — bulk vegetation handled by ChunkManager MultiMesh
-	_spawn_broc("root_network", c + Vector3(-6.0, 0.0, 5.0), 2.5)
-	_spawn_broc("spider_web", c + Vector3(8.0, 3.0, -3.0), 2.0)
-	_spawn_broc("giant_mushroom", c + Vector3(-3.0, 0.0, -10.0), 2.5)
-	_spawn_broc("fallen_trunk", c + Vector3(12.0, 0.0, 8.0), 2.0, 45.0)
-
-
-func _build_z3_dolmen() -> void:
-	var c: Vector3 = _zone_centers[2]
-	# POI: megaliths + special trees + lights
-	_spawn_broc("dolmen", c, 3.5, 0.0)
-	_spawn_broc("menhir_01", c + Vector3(-4.0, 0.0, -3.0), 3.0)
-	_spawn_broc("menhir_02", c + Vector3(4.5, 0.0, -2.0), 2.8)
-	_spawn_broc("merlin_tomb", c + Vector3(7.0, 0.0, 5.0), 2.5)
-	_spawn_special("old_oak", c + Vector3(-10.0, 0.0, 4.0), 4.0)
-	_spawn_broc("merlin_oak", c + Vector3(9.0, 0.0, -5.0), 3.5)
-	_add_point_light(c + Vector3(0.0, 2.0, 0.0), Color(0.85, 0.75, 0.35), 0.6, 10.0)
-
-
-func _build_z4_mare() -> void:
-	var c: Vector3 = _zone_centers[3]
-	# POI: water, willows, structures, lights
-	_create_water(c, 8.0)
-	for i in 6:
-		var angle: float = float(i) * TAU / 6.0 + 0.3
-		_spawn_special("willow", c + Vector3(cos(angle) * 9.0, 0.0, sin(angle) * 9.0), _rng.randf_range(3.5, 5.0))
-	# Water plants (unique to this zone, not in chunk manager)
-	for i in 6:
-		_spawn_detail("lily_pink", c + _roff(1.0, 6.0) + Vector3(0.0, -0.25, 0.0), _rng.randf_range(1.5, 2.5))
-	for i in 4:
-		_spawn_detail("lily_white", c + _roff(1.0, 5.5) + Vector3(0.0, -0.25, 0.0), _rng.randf_range(1.5, 2.5))
-	for i in 6:
-		_spawn_detail("cattail", c + _roff(5.0, 9.0), _rng.randf_range(1.5, 2.5))
-	_spawn_broc("bridge_wood", c + Vector3(8.0, -0.15, 0.0), 2.5, 90.0)
-	_spawn_broc("giant_mushroom", c + Vector3(-6.0, 0.0, 4.0), 2.5, 45.0)
-	_spawn_broc("spider_web", c + Vector3(5.0, 2.5, -6.0), 2.0)
-	_add_point_light(c + Vector3(0.0, 0.8, 0.0), Color(0.3, 0.5, 0.7), 0.5, 9.0)
-
-
-func _build_z5_profonde() -> void:
-	var c: Vector3 = _zone_centers[4]
-	# POI: unique decor + dead trees + lights
-	for i in 4:
-		_spawn_special("dead", c + _roff(6.0, 25.0), _rng.randf_range(3.0, 4.5))
-	_spawn_broc("giant_mushroom", c + Vector3(-5.0, 0.0, 4.0), 3.0)
-	_spawn_broc("giant_stump", c + Vector3(6.0, 0.0, -7.0), 3.0)
-	_spawn_broc("fallen_trunk", c + Vector3(-8.0, 0.0, -5.0), 2.5, 30.0)
-	_spawn_broc("root_network", c + Vector3(4.0, 0.0, 8.0), 2.5)
-	_spawn_broc("spider_web", c + Vector3(-12.0, 3.0, 10.0), 2.5, 120.0)
-	_spawn_broc("root_network", c + Vector3(8.0, 0.0, -4.0), 2.0, 200.0)
-	_spawn_broc("fallen_trunk", c + Vector3(14.0, 0.0, 6.0), 2.0, 75.0)
-	for i in 5:
-		_add_point_light(c + _roff(3.0, 14.0) + Vector3(0.0, 0.5, 0.0), Color(0.5, 0.8, 0.3), 0.3, 3.5)
-
-
-func _build_z6_fontaine() -> void:
-	var c: Vector3 = _zone_centers[5]
-	# Real fountain GLB — imposing sacred spring
-	_spawn_broc("fountain_barenton", c, 3.0, 0.0)
-	_create_water(c + Vector3(0.0, 0.3, 0.0), 3.0)
-	# Fairy lanterns around fountain — scaled up
-	_spawn_broc("fairy_lantern", c + Vector3(4.5, 0.0, -3.5), 2.5)
-	_spawn_broc("fairy_lantern", c + Vector3(-3.5, 0.0, 4.0), 2.2, 180.0)
-	# Root arch as entrance — massive
-	_spawn_broc("root_arch", c + Vector3(0.0, 0.0, 10.0), 3.5, 0.0)
-	# Sacred trees — giant spiral and silver
-	_spawn_special("spiral", c + Vector3(7.0, 0.0, -5.0), 4.0)
-	_spawn_special("silver", c + Vector3(-6.0, 0.0, -4.0), 3.5)
-	# POI: stump with fairy glow
-	_spawn_broc("giant_stump", c + Vector3(-6.0, 0.0, -2.0), 2.5, 60.0)
-	_add_point_light(c + Vector3(0.0, 1.5, 0.0), Color(0.90, 0.75, 0.35), 1.0, 10.0)
-
-
-func _build_z7_cercle() -> void:
-	var c: Vector3 = _zone_centers[6]
-	# Real stone circle GLB at center — massive ritual site
-	_spawn_broc("stone_circle", c, 4.0, 0.0)
-	# Towering menhirs around the circle
-	for i in 6:
-		var angle: float = float(i) * TAU / 6.0 + 0.4
-		var key: String = "menhir_01" if i % 2 == 0 else "menhir_02"
-		_spawn_broc(key, c + Vector3(cos(angle) * 10.0, 0.0, sin(angle) * 10.0), _rng.randf_range(3.0, 4.0))
-	# Druid altar at center — imposing
-	_spawn_broc("druid_altar", c + Vector3(0.0, 0.0, 0.0), 2.5, 0.0)
-	# Ancient giant oaks — the oldest trees in the forest
-	_spawn_special("old_oak", c + Vector3(-12.0, 0.0, 6.0), 5.0)
-	_spawn_special("old_oak", c + Vector3(11.0, 0.0, -7.0), 4.5)
-	_spawn_special("old_oak", c + Vector3(0.0, 0.0, 12.0), 5.5)
-	_spawn_special("golden", c + Vector3(-8.0, 0.0, -9.0), 4.0)
-	# POI: fallen trunk as ancient sentinel
-	_spawn_broc("fallen_trunk", c + Vector3(0.0, 0.0, -10.0), 2.5, 0.0)
-	# Mystical blue glow — strongest here
-	_add_point_light(c + Vector3(0.0, 1.5, 0.0), Color(0.30, 0.60, 0.90), 1.0, 12.0)
-	_add_point_light(c + Vector3(5.0, 0.8, 5.0), Color(0.20, 0.40, 0.80), 0.4, 6.0)
-	_add_point_light(c + Vector3(-5.0, 0.8, -5.0), Color(0.20, 0.40, 0.80), 0.4, 6.0)
-
-
-# ============================================================
-# PROCEDURAL BUILDERS (water + fallbacks)
-# ============================================================
-
-func _create_water(pos: Vector3, radius: float) -> void:
-	var mi: MeshInstance3D = MeshInstance3D.new()
-	var cm: CylinderMesh = CylinderMesh.new()
-	cm.height = 0.05
-	cm.bottom_radius = radius
-	cm.top_radius = radius
-	cm.radial_segments = 12
-	mi.mesh = cm
-	mi.position = pos + Vector3(0.0, -0.3, 0.0)
-	var mat: StandardMaterial3D = StandardMaterial3D.new()
-	mat.albedo_color = Color(0.10, 0.22, 0.28, 0.7)
-	mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
-	mat.roughness = 0.15
-	mat.metallic = 0.3
-	mi.material_override = mat
-	forest_root.add_child(mi)
-
-
-# Fallbacks if GLB not loaded
-func _create_fallback_tree(pos: Vector3, scale_f: float) -> Node3D:
-	var tree: Node3D = Node3D.new()
-	tree.position = pos
-	forest_root.add_child(tree)
-	var trunk: MeshInstance3D = MeshInstance3D.new()
-	var tm: CylinderMesh = CylinderMesh.new()
-	tm.height = 2.4 * scale_f
-	tm.bottom_radius = 0.2 * scale_f
-	tm.top_radius = 0.15 * scale_f
-	tm.radial_segments = 6
-	trunk.mesh = tm
-	trunk.position = Vector3(0.0, 1.2 * scale_f, 0.0)
-	var t_mat: StandardMaterial3D = StandardMaterial3D.new()
-	t_mat.albedo_color = Color(0.20, 0.14, 0.08)
-	t_mat.roughness = 1.0
-	trunk.material_override = t_mat
-	tree.add_child(trunk)
-	for layer in 3:
-		var crown: MeshInstance3D = MeshInstance3D.new()
-		var cone: CylinderMesh = CylinderMesh.new()
-		cone.height = (1.3 - float(layer) * 0.15) * scale_f
-		cone.bottom_radius = (1.3 - float(layer) * 0.2) * scale_f
-		cone.top_radius = 0.0
-		cone.radial_segments = 6
-		crown.mesh = cone
-		crown.position = Vector3(0.0, 2.4 * scale_f + 0.4 + float(layer) * 0.55, 0.0)
-		var lm: StandardMaterial3D = StandardMaterial3D.new()
-		lm.albedo_color = Color(0.14 + _rng.randf_range(-0.03, 0.04), 0.32, 0.12)
-		lm.roughness = 1.0
-		crown.material_override = lm
-		tree.add_child(crown)
-	_sway_nodes.append(tree)
-	return tree
-
-
-func _create_fallback_shrub(pos: Vector3, scale_f: float) -> Node3D:
-	var shrub: MeshInstance3D = MeshInstance3D.new()
-	shrub.position = pos + Vector3(0.0, 0.35 * scale_f, 0.0)
-	forest_root.add_child(shrub)
-	var sm: SphereMesh = SphereMesh.new()
-	sm.radius = 0.5 * scale_f
-	sm.height = 0.7 * scale_f
-	sm.radial_segments = 6
-	sm.rings = 3
-	shrub.mesh = sm
-	var mat: StandardMaterial3D = StandardMaterial3D.new()
-	mat.albedo_color = Color(0.14, 0.34, 0.12)
-	mat.roughness = 1.0
-	shrub.material_override = mat
-	return shrub
-
-
-# ============================================================
-# VOLUMETRIC EFFECTS
-# ============================================================
-
-func _add_fog_particles() -> void:
-	# Ground fog along the path
-	for i in range(0, _zone_centers.size()):
-		var center: Vector3 = _zone_centers[i]
-		var fog: GPUParticles3D = GPUParticles3D.new()
-		fog.name = "FogZone%d" % i
-		fog.position = center + Vector3(0.0, 0.3, 0.0)
-		fog.amount = 30
-		fog.lifetime = 8.0
-		fog.explosiveness = 0.0
-		fog.randomness = 1.0
-		fog.visibility_aabb = AABB(Vector3(-15, -1, -15), Vector3(30, 3, 30))
-
-		var mat: ParticleProcessMaterial = ParticleProcessMaterial.new()
-		mat.direction = Vector3(1.0, 0.1, 0.0)
-		mat.spread = 180.0
-		mat.initial_velocity_min = 0.2
-		mat.initial_velocity_max = 0.5
-		mat.gravity = Vector3(0.0, 0.0, 0.0)
-		mat.scale_min = 3.0
-		mat.scale_max = 6.0
-		mat.emission_shape = ParticleProcessMaterial.EMISSION_SHAPE_BOX
-		mat.emission_box_extents = Vector3(12.0, 0.3, 12.0)
-		# Fade
-		mat.color = Color(0.35, 0.45, 0.35, 0.08)
-		fog.process_material = mat
-
-		# Billboard quad mesh
-		var qm: QuadMesh = QuadMesh.new()
-		qm.size = Vector2(2.0, 2.0)
-		var draw_mat: StandardMaterial3D = StandardMaterial3D.new()
-		draw_mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
-		draw_mat.albedo_color = Color(0.40, 0.50, 0.38, 0.06)
-		draw_mat.billboard_mode = BaseMaterial3D.BILLBOARD_ENABLED
-		draw_mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
-		draw_mat.no_depth_test = true
-		qm.material = draw_mat
-		fog.draw_pass_1 = qm
-
-		forest_root.add_child(fog)
-
-
-func _add_pollen_particles() -> void:
-	# Floating pollen/dust everywhere
-	var pollen: GPUParticles3D = GPUParticles3D.new()
-	pollen.name = "Pollen"
-	pollen.position = Vector3(0.0, 2.0, -55.0)
-	pollen.amount = 80
-	pollen.lifetime = 12.0
-	pollen.explosiveness = 0.0
-	pollen.randomness = 1.0
-	pollen.visibility_aabb = AABB(Vector3(-60, -2, -80), Vector3(120, 8, 160))
-
-	var mat: ParticleProcessMaterial = ParticleProcessMaterial.new()
-	mat.direction = Vector3(0.3, 0.1, -0.1)
-	mat.spread = 90.0
-	mat.initial_velocity_min = 0.05
-	mat.initial_velocity_max = 0.15
-	mat.gravity = Vector3(0.0, -0.01, 0.0)
-	mat.scale_min = 0.5
-	mat.scale_max = 1.5
-	mat.emission_shape = ParticleProcessMaterial.EMISSION_SHAPE_BOX
-	mat.emission_box_extents = Vector3(50.0, 3.0, 70.0)
-	mat.color = Color(0.90, 0.85, 0.60, 0.3)
-	pollen.process_material = mat
-
-	var qm: QuadMesh = QuadMesh.new()
-	qm.size = Vector2(0.04, 0.04)
-	var dm: StandardMaterial3D = StandardMaterial3D.new()
-	dm.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
-	dm.albedo_color = Color(0.95, 0.90, 0.65, 0.5)
-	dm.billboard_mode = BaseMaterial3D.BILLBOARD_ENABLED
-	dm.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
-	dm.emission_enabled = true
-	dm.emission = Color(0.95, 0.90, 0.65)
-	dm.emission_energy_multiplier = 0.5
-	qm.material = dm
-	pollen.draw_pass_1 = qm
-
-	forest_root.add_child(pollen)
-	_pollen_node = pollen
-
-
-func _add_fireflies() -> void:
-	# Fireflies in zones 3-7
-	for zi in range(2, _zone_centers.size()):
-		var center: Vector3 = _zone_centers[zi]
-		var ff: GPUParticles3D = GPUParticles3D.new()
-		ff.name = "Fireflies_Z%d" % zi
-		ff.position = center + Vector3(0.0, 1.0, 0.0)
-		ff.amount = 12
-		ff.lifetime = 6.0
-		ff.explosiveness = 0.0
-		ff.randomness = 1.0
-		ff.visibility_aabb = AABB(Vector3(-10, -1, -10), Vector3(20, 5, 20))
-
-		var mat: ParticleProcessMaterial = ParticleProcessMaterial.new()
-		mat.direction = Vector3(0.0, 0.5, 0.0)
-		mat.spread = 180.0
-		mat.initial_velocity_min = 0.1
-		mat.initial_velocity_max = 0.3
-		mat.gravity = Vector3(0.0, 0.0, 0.0)
-		mat.scale_min = 1.0
-		mat.scale_max = 2.0
-		mat.emission_shape = ParticleProcessMaterial.EMISSION_SHAPE_BOX
-		mat.emission_box_extents = Vector3(8.0, 1.5, 8.0)
-		mat.color = Color(0.55, 0.90, 0.35, 0.8)
-		ff.process_material = mat
-
-		var qm: QuadMesh = QuadMesh.new()
-		qm.size = Vector2(0.06, 0.06)
-		var dm: StandardMaterial3D = StandardMaterial3D.new()
-		dm.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
-		dm.albedo_color = Color(0.55, 0.85, 0.35, 0.9)
-		dm.billboard_mode = BaseMaterial3D.BILLBOARD_ENABLED
-		dm.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
-		dm.emission_enabled = true
-		dm.emission = Color(0.55, 0.90, 0.35)
-		dm.emission_energy_multiplier = 3.0
-		qm.material = dm
-		ff.draw_pass_1 = qm
-
-		forest_root.add_child(ff)
-		_firefly_nodes.append(ff)
-
-		# Per-firefly point light for glow
-		_add_point_light(center + Vector3(0.0, 1.5, 0.0), Color(0.50, 0.80, 0.30), 0.15, 4.0)
-
-
-func _add_god_rays() -> void:
-	# Fake light shafts using vertical billboard quads in clearings
-	var ray_mat: StandardMaterial3D = StandardMaterial3D.new()
-	ray_mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
-	ray_mat.albedo_color = Color(0.95, 0.90, 0.60, 0.04)
-	ray_mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
-	ray_mat.cull_mode = BaseMaterial3D.CULL_DISABLED
-	ray_mat.no_depth_test = false
-	ray_mat.emission_enabled = true
-	ray_mat.emission = Color(0.95, 0.90, 0.60)
-	ray_mat.emission_energy_multiplier = 0.15
-
-	# Place god rays in clearings (zones 3, 6, 7)
-	for zi in [2, 5, 6]:
-		var center: Vector3 = _zone_centers[zi]
-		for r in 3:
-			var ray: MeshInstance3D = MeshInstance3D.new()
-			var qm: QuadMesh = QuadMesh.new()
-			qm.size = Vector2(_rng.randf_range(1.5, 3.0), _rng.randf_range(8.0, 14.0))
-			qm.material = ray_mat
-			ray.mesh = qm
-			ray.position = center + Vector3(
-				_rng.randf_range(-4.0, 4.0),
-				_rng.randf_range(3.0, 6.0),
-				_rng.randf_range(-4.0, 4.0)
-			)
-			ray.rotation_degrees = Vector3(
-				_rng.randf_range(-10.0, 10.0),
-				_rng.randf_range(0.0, 360.0),
-				_rng.randf_range(-5.0, 5.0)
-			)
-			ray.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
-			forest_root.add_child(ray)
-
-
-func _add_point_light(pos: Vector3, color: Color, energy: float, rng: float) -> void:
-	var light: OmniLight3D = OmniLight3D.new()
-	light.position = pos
-	light.light_color = color
-	light.light_energy = energy
-	light.omni_range = rng
-	light.shadow_enabled = false
-	forest_root.add_child(light)
 
 
 # ============================================================
@@ -1249,7 +628,9 @@ func _add_point_light(pos: Vector3, color: Color, energy: float, rng: float) -> 
 # ============================================================
 
 func _update_tree_sway(_delta: float) -> void:
-	for node in _sway_nodes:
+	if not _asset_spawner:
+		return
+	for node in _asset_spawner.sway_nodes:
 		if not is_instance_valid(node):
 			continue
 		var hash_val: float = float(node.get_instance_id() % 1000) * 0.001
@@ -1264,85 +645,8 @@ func _update_tree_sway(_delta: float) -> void:
 # ============================================================
 
 func _spawn_merlin() -> void:
-	var center: Vector3 = _zone_centers[6]
-	merlin_node.position = center
-	_merlin_float_time = _rng.randf_range(0.0, TAU)
-	_merlin_pixel_rig = Node3D.new()
-	_merlin_pixel_rig.name = "PixelRig"
-	_merlin_pixel_rig.position = Vector3(0.0, 0.65, 0.0)
-	merlin_node.add_child(_merlin_pixel_rig)
-	_build_merlin_rig(_merlin_pixel_rig)
-
-
-func _build_merlin_rig(rig: Node3D) -> void:
-	var bx: BoxMesh = BoxMesh.new()
-	bx.size = Vector3(MERLIN_PX, MERLIN_PX, 0.08)
-	var pixels: Array[MeshInstance3D] = []
-	var gh: int = MERLIN_GRID.size()
-	var gw: int = int(MERLIN_GRID[0].size())
-	var orb: Vector3 = Vector3.ZERO
-
-	for row in gh:
-		var rd: Array = MERLIN_GRID[row]
-		for col in rd.size():
-			var ci: int = int(rd[col])
-			if ci == 0:
-				continue
-			var px: MeshInstance3D = MeshInstance3D.new()
-			px.mesh = bx
-			px.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
-			var mat: StandardMaterial3D = StandardMaterial3D.new()
-			mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
-			mat.albedo_color = MERLIN_COLORS.get(ci, Color.WHITE)
-			mat.roughness = 1.0
-			if ci == 6 or ci == 7:
-				mat.emission_enabled = true
-				mat.emission = mat.albedo_color
-				mat.emission_energy_multiplier = 1.5 if ci == 6 else 2.0
-			px.material_override = mat
-			var target: Vector3 = Vector3(
-				(float(col) - (float(gw) - 1.0) * 0.5) * MERLIN_PX,
-				float(gh - 1 - row) * MERLIN_PX,
-				0.0
-			)
-			px.position = target + Vector3(_rng.randf_range(-0.12, 0.12), _rng.randf_range(1.0, 2.5), _rng.randf_range(-0.1, 0.1))
-			px.scale = Vector3.ONE * _rng.randf_range(0.4, 0.8)
-			px.set_meta("t", target)
-			px.set_meta("r", row)
-			rig.add_child(px)
-			pixels.append(px)
-			if ci == 6:
-				orb = target
-
-	# Assemble animation
-	var tw: Tween = create_tween().set_parallel(true)
-	for px in pixels:
-		var t: Vector3 = px.get_meta("t")
-		var r: int = int(px.get_meta("r"))
-		var dl: float = float(r) * 0.02 + _rng.randf_range(0.0, 0.2)
-		var dur: float = 0.4 + _rng.randf_range(0.1, 0.4)
-		tw.tween_property(px, "position", t, dur).set_delay(dl).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
-		tw.tween_property(px, "scale", Vector3.ONE, dur * 0.9).set_delay(dl).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_OUT)
-
-	_merlin_orb_light = OmniLight3D.new()
-	_merlin_orb_light.light_color = Color(0.33, 0.73, 1.0)
-	_merlin_orb_light.light_energy = 1.0
-	_merlin_orb_light.omni_range = 4.0
-	_merlin_orb_light.position = orb + Vector3(0.0, 0.0, 0.3)
-	rig.add_child(_merlin_orb_light)
-
-
-func _update_merlin_visual(delta: float) -> void:
-	if not is_instance_valid(merlin_node):
-		return
-	_merlin_float_time += delta
-	merlin_node.position.y = _zone_centers[6].y + sin(_merlin_float_time * 1.6) * 0.08
-	if _merlin_pixel_rig and is_instance_valid(_merlin_pixel_rig) and is_instance_valid(player):
-		var look: Vector3 = Vector3(player.global_position.x, _merlin_pixel_rig.global_position.y, player.global_position.z)
-		if _merlin_pixel_rig.global_position.distance_to(look) > 0.01:
-			_merlin_pixel_rig.look_at(look, Vector3.UP)
-	if _merlin_orb_light and is_instance_valid(_merlin_orb_light):
-		_merlin_orb_light.light_energy = 0.8 + sin(_merlin_float_time * 4.5) * 0.3
+	_merlin_npc = ForestMerlinNpcClass.new(merlin_node, player, _zone_centers[6], _rng, self)
+	_merlin_npc.spawn()
 
 
 # ============================================================
@@ -1446,9 +750,3 @@ func _on_replay() -> void:
 
 func _on_hub() -> void:
 	get_tree().change_scene_to_file(HUB_SCENE)
-
-
-func _roff(min_r: float, max_r: float) -> Vector3:
-	var d: float = _rng.randf_range(min_r, max_r)
-	var a: float = _rng.randf_range(0.0, TAU)
-	return Vector3(cos(a) * d, 0.0, sin(a) * d)
