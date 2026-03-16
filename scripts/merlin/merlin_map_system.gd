@@ -1,5 +1,5 @@
 ## ═══════════════════════════════════════════════════════════════════════════════
-## Merlin Map System — STS-like world map for TRIADE
+## Merlin Map System — STS-like world map for biome runs
 ## ═══════════════════════════════════════════════════════════════════════════════
 ## Generates a floor-based map with typed nodes and connections.
 ## Node types: NARRATIVE, EVENT, PROMISE, REST, MERCHANT, MYSTERY, MERLIN.
@@ -71,7 +71,7 @@ func _pick_node_type(floor_idx: int, total: int, rng: MerlinRng, _config: Dictio
 	if floor_idx == int(total / 2.0):
 		return "REST" if rng.randf() > 0.5 else "MERCHANT"
 
-	# Weighted random selection from TRIADE node types
+	# Weighted random selection from node types
 	var types: Dictionary = NODE_TYPES
 	var total_weight: float = 0.0
 	for type_key in types:

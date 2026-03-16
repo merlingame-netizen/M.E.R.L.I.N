@@ -319,7 +319,7 @@ func _reduce(action: Dictionary) -> Dictionary:
 					state["run"]["active"] = false
 					state["phase"] = "end"
 					StoreRun.handle_run_end(state, end_check, save_system)
-					_log_transition("triade_run_end", end_check)
+					_log_transition("run_end", end_check)
 					run_ended.emit(end_check)
 					if merlin != null:
 						merlin.on_run_end(end_check)
@@ -355,7 +355,7 @@ func _reduce(action: Dictionary) -> Dictionary:
 			state["run"]["active"] = false
 			state["phase"] = "end"
 			StoreRun.handle_run_end(state, end_check, save_system)
-			_log_transition("triade_run_end", end_check)
+			_log_transition("run_end", end_check)
 			run_ended.emit(end_check)
 			if merlin != null:
 				merlin.on_run_end(end_check)
