@@ -940,3 +940,175 @@ func test_edge_scale_and_cap_zero_amount() -> bool:
 		push_error("edge_scale_zero: expected 0, got %d" % scaled)
 		return false
 	return true
+
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# STEP 8 — PROTECTION BEHAVIOR (ogham actually filters effects)
+# ═══════════════════════════════════════════════════════════════════════════════
+
+func test_protection_luis_blocks_first_damage() -> bool:
+	var engine := MerlinEffectEngine.new()
+	var state: Dictionary = _make_state(100)
+	# Card with DAMAGE_LIFE:10 — luis should block it
+	var card: Dictionary = _make_card(["DAMAGE_LIFE:10"])
+	var result: Dictionary = engine.process_card(state, card, 0, 80, "luis")
+	# Without protection: life = 100 -1(drain) -10(dmg) = 89
+	# With luis: DAMAGE_LIFE removed → life = 100 -1(drain) = 99
+	var life: int = int(state["run"]["life_essence"])
+	if life != 99:
+		push_error("luis_blocks: expected life=99, got %d" % life)
+		return false
+	return true
+
+
+func test_protection_luis_only_blocks_first_negative() -> bool:
+	var engine := MerlinEffectEngine.new()
+	var state: Dictionary = _make_state(100)
+	# Two damage effects — luis blocks only the first
+	var card: Dictionary = {
+		"type": "standard",
+		"options": [
+			{"verb": "test", "effects": ["DAMAGE_LIFE:5", "DAMAGE_LIFE:3"]},
+			{"verb": "b", "effects": []},
+			{"verb": "c", "effects": []},
+		],
+	}
+	var result: Dictionary = engine.process_card(state, card, 0, 80, "luis")
+	# Without protection: 100 -1 -5 -3 = 91
+	# With luis: first DAMAGE_LIFE:5 blocked → 100 -1 -3 = 96
+	var life: int = int(state["run"]["life_essence"])
+	if life != 96:
+		push_error("luis_first_only: expected life=96, got %d" % life)
+		return false
+	return true
+
+
+func test_protection_luis_preserves_positive_effects() -> bool:
+	var engine := MerlinEffectEngine.new()
+	var state: Dictionary = _make_state(50)
+	# Heal + damage — luis blocks the damage, heal applies
+	var card: Dictionary = {
+		"type": "standard",
+		"options": [
+			{"verb": "test", "effects": ["HEAL_LIFE:10", "DAMAGE_LIFE:5"]},
+			{"verb": "b", "effects": []},
+			{"verb": "c", "effects": []},
+		],
+	}
+	var result: Dictionary = engine.process_card(state, card, 0, 80, "luis")
+	# 50 -1(drain) +10(heal) = 59 (damage blocked)
+	var life: int = int(state["run"]["life_essence"])
+	if life != 59:
+		push_error("luis_preserves_positive: expected life=59, got %d" % life)
+		return false
+	return true
+
+
+func test_protection_eadhadh_cancels_all_negatives() -> bool:
+	var engine := MerlinEffectEngine.new()
+	var state: Dictionary = _make_state(100)
+	# Multiple negatives — eadhadh cancels all
+	var card: Dictionary = {
+		"type": "standard",
+		"options": [
+			{"verb": "test", "effects": ["DAMAGE_LIFE:8", "ADD_REPUTATION:druides:-10", "DAMAGE_LIFE:5"]},
+			{"verb": "b", "effects": []},
+			{"verb": "c", "effects": []},
+		],
+	}
+	var result: Dictionary = engine.process_card(state, card, 0, 80, "eadhadh")
+	# Without protection: 100 -1 -8 -5 = 86, rep = 50-10 = 40
+	# With eadhadh: all negatives removed → life = 100 -1 = 99, rep = 50
+	var life: int = int(state["run"]["life_essence"])
+	if life != 99:
+		push_error("eadhadh_all: expected life=99, got %d" % life)
+		return false
+	var rep: int = int(state["meta"]["faction_rep"]["druides"])
+	if rep != 50:
+		push_error("eadhadh_rep: expected rep=50, got %d" % rep)
+		return false
+	return true
+
+
+func test_protection_eadhadh_preserves_positives() -> bool:
+	var engine := MerlinEffectEngine.new()
+	var state: Dictionary = _make_state(50)
+	# Mix of positive and negative — only negatives removed
+	var card: Dictionary = {
+		"type": "standard",
+		"options": [
+			{"verb": "test", "effects": ["HEAL_LIFE:10", "DAMAGE_LIFE:5", "ADD_REPUTATION:druides:15"]},
+			{"verb": "b", "effects": []},
+			{"verb": "c", "effects": []},
+		],
+	}
+	var result: Dictionary = engine.process_card(state, card, 0, 80, "eadhadh")
+	# 50 -1(drain) +10(heal) = 59, rep = 50+15 = 65, DAMAGE_LIFE removed
+	var life: int = int(state["run"]["life_essence"])
+	if life != 59:
+		push_error("eadhadh_positives: expected life=59, got %d" % life)
+		return false
+	var rep: int = int(state["meta"]["faction_rep"]["druides"])
+	if rep != 65:
+		push_error("eadhadh_rep: expected rep=65, got %d" % rep)
+		return false
+	return true
+
+
+func test_protection_gort_reduces_high_damage() -> bool:
+	var engine := MerlinEffectEngine.new()
+	var state: Dictionary = _make_state(100)
+	# DAMAGE_LIFE:12 at score 80 (mult 1.0) → 12 > threshold(10) → reduced to 5
+	var card: Dictionary = _make_card(["DAMAGE_LIFE:12"])
+	var result: Dictionary = engine.process_card(state, card, 0, 80, "gort")
+	# 100 -1(drain) -5(reduced from 12) = 94
+	var life: int = int(state["run"]["life_essence"])
+	if life != 94:
+		push_error("gort_reduce: expected life=94, got %d" % life)
+		return false
+	return true
+
+
+func test_protection_gort_no_reduce_below_threshold() -> bool:
+	var engine := MerlinEffectEngine.new()
+	var state: Dictionary = _make_state(100)
+	# DAMAGE_LIFE:8 at mult 1.0 → 8 ≤ threshold(10) → no reduction
+	var card: Dictionary = _make_card(["DAMAGE_LIFE:8"])
+	var result: Dictionary = engine.process_card(state, card, 0, 80, "gort")
+	# 100 -1(drain) -8(not reduced) = 91
+	var life: int = int(state["run"]["life_essence"])
+	if life != 91:
+		push_error("gort_no_reduce: expected life=91, got %d" % life)
+		return false
+	return true
+
+
+func test_protection_no_filter_without_protection_ogham() -> bool:
+	var engine := MerlinEffectEngine.new()
+	var state: Dictionary = _make_state(100)
+	# beith is a reveal ogham, not protection — damage should apply normally
+	var card: Dictionary = _make_card(["DAMAGE_LIFE:10"])
+	var result: Dictionary = engine.process_card(state, card, 0, 80, "beith")
+	# 100 -1(drain) -10(dmg) = 89
+	var life: int = int(state["run"]["life_essence"])
+	if life != 89:
+		push_error("no_prot: expected life=89, got %d" % life)
+		return false
+	return true
+
+
+func test_protection_no_effects_no_crash() -> bool:
+	var engine := MerlinEffectEngine.new()
+	var state: Dictionary = _make_state(100)
+	# Empty effects with protection ogham — should not crash
+	var card: Dictionary = _make_card([])
+	var result: Dictionary = engine.process_card(state, card, 0, 80, "luis")
+	if result["ogham_result"].get("action", "") != "protection_active":
+		push_error("prot_empty: expected protection_active")
+		return false
+	var life: int = int(state["run"]["life_essence"])
+	# 100 -1(drain) = 99
+	if life != 99:
+		push_error("prot_empty: expected life=99, got %d" % life)
+		return false
+	return true

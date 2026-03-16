@@ -144,6 +144,11 @@ func process_card(state: Dictionary, card: Dictionary, chosen_option: int,
 					var val: int = _to_int(parsed["args"][0])
 					parsed["args"][0] = str(-val)
 			scaled_effects.append(parsed)
+		# ── Step 8: OGHAM PROTECTION (luis/gort/eadhadh filter) ──
+		# Filter effects through protection ogham BEFORE applying to state.
+		if not active_ogham.is_empty() and result["ogham_result"].get("action", "") == "protection_active":
+			scaled_effects = _filter_protection(scaled_effects, active_ogham)
+
 		# Build effect strings and apply
 		for parsed_eff in scaled_effects:
 			var parts: Array = [parsed_eff["code"]]
@@ -152,15 +157,8 @@ func process_card(state: Dictionary, card: Dictionary, chosen_option: int,
 			var apply_result: Dictionary = apply_effects(state, [effect_str], "card")
 			result["effects_applied"].append_array(apply_result.get("applied", []))
 			result["effects_rejected"].append_array(apply_result.get("rejected", []))
-	result["steps_completed"].append("effects")
-
-	# ── Step 8: OGHAM PROTECTION (luis/gort/eadhadh filter) ──
-	# Protection oghams are already flagged via activate_ogham as "protection_active".
-	# The filtering is conceptually applied here. In practice, the protection is
-	# handled by apply_ogham_protection() on structured effects before state mutation.
-	# Since we already mutated state in step 7, protection oghams apply their
-	# effect during step 3 activation (block/reduce/cancel is immediate).
 	result["steps_completed"].append("protection")
+	result["steps_completed"].append("effects")
 
 	# ── Step 9: DEATH CHECK (AFTER effects) ──
 	run = state.get("run", {})
@@ -330,7 +328,7 @@ func _record(state: Dictionary, effect: String, source: String, status: String) 
 	state["effect_log"] = effect_log
 
 
-func _to_int(value: Variant) -> int:
+static func _to_int(value: Variant) -> int:
 	if typeof(value) == TYPE_INT:
 		return value
 	if typeof(value) == TYPE_FLOAT:
@@ -720,6 +718,65 @@ static func _is_negative_effect(effect: Dictionary) -> bool:
 		return true
 	if code == "ADD_REPUTATION" and int(effect.get("amount", 0)) < 0:
 		return true
+	return false
+
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# PROTECTION FILTER — Operates on parsed effect dicts in process_card step 8
+# ═══════════════════════════════════════════════════════════════════════════════
+
+## Filters parsed effects (from process_card step 7) through protection ogham.
+## Unlike apply_ogham_protection() which works on structured dicts, this works
+## on the parsed format {"code": String, "args": Array} used by process_card.
+static func _filter_protection(scaled_effects: Array, active_ogham: String) -> Array:
+	var spec: Dictionary = MerlinConstants.OGHAM_FULL_SPECS.get(active_ogham, {})
+	var effect_name: String = str(spec.get("effect", ""))
+
+	match effect_name:
+		"block_first_negative":
+			# luis: remove the first negative effect
+			for i in range(scaled_effects.size()):
+				if _is_negative_parsed(scaled_effects[i]):
+					var filtered: Array = scaled_effects.duplicate()
+					filtered.remove_at(i)
+					return filtered
+		"reduce_high_damage":
+			# gort: reduce DAMAGE_LIFE > threshold to reduced_to
+			var params: Dictionary = spec.get("effect_params", {})
+			var threshold: int = int(params.get("threshold", 10))
+			var reduced_to: int = int(params.get("reduced_to", 5))
+			var result: Array = []
+			var applied: bool = false
+			for parsed_eff in scaled_effects:
+				if not applied and parsed_eff["code"] == "DAMAGE_LIFE":
+					var dmg: int = abs(_to_int(parsed_eff["args"][0]))
+					if dmg > threshold:
+						var modified: Dictionary = parsed_eff.duplicate(true)
+						modified["args"][0] = str(reduced_to)
+						result.append(modified)
+						applied = true
+						continue
+				result.append(parsed_eff)
+			return result
+		"cancel_all_negatives":
+			# eadhadh: remove ALL negative effects
+			var result: Array = []
+			for parsed_eff in scaled_effects:
+				if not _is_negative_parsed(parsed_eff):
+					result.append(parsed_eff)
+			return result
+
+	return scaled_effects.duplicate()
+
+
+## Check if a parsed effect {"code": ..., "args": [...]} is negative.
+## Aligned with _is_negative_effect() — only visible effects (life, reputation).
+static func _is_negative_parsed(parsed: Dictionary) -> bool:
+	var code: String = str(parsed.get("code", ""))
+	if code == "DAMAGE_LIFE":
+		return true
+	if code == "ADD_REPUTATION" and parsed.get("args", []).size() >= 2:
+		return _to_int(parsed["args"][1]) < 0
 	return false
 
 
