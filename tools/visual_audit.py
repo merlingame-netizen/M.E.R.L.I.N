@@ -39,6 +39,7 @@ PALETTE_DEFINITION_FILES = {
     "biome_config.gd",
     "biome_particles.gd",
     # Pixel art asset data files — colors define procedural art, not UI
+    "pixel_art_showcase.gd",
     "layered_scene_data.gd",
     "ambiance_data.gd",
     "pixel_npc_portrait.gd",

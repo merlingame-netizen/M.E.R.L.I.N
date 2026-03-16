@@ -1,0 +1,1085 @@
+{
+  "color_violations": [
+    {
+      "file": "scripts/HubAntre.gd",
+      "line": 95,
+      "color_value": "Color(0.25, 0.42, 0.60, 1.0)",
+      "suggestion": "Use MerlinVisual.CRT_PALETTE[\"...\"] instead of hardcoded Color(0.25, 0.42, 0.60)"
+    },
+    {
+      "file": "scripts/MenuPrincipalMerlin.gd",
+      "line": 154,
+      "color_value": "Color(0.85, 0.45, 0.15, 0.85)",
+      "suggestion": "Use MerlinVisual.CRT_PALETTE[\"...\"] instead of hardcoded Color(0.85, 0.45, 0.15)"
+    },
+    {
+      "file": "scripts/MenuPrincipalMerlin.gd",
+      "line": 156,
+      "color_value": "Color(0.65, 0.35, 0.12, 0.75)",
+      "suggestion": "Use MerlinVisual.CRT_PALETTE[\"...\"] instead of hardcoded Color(0.65, 0.35, 0.12)"
+    },
+    {
+      "file": "scripts/MenuPrincipalMerlin.gd",
+      "line": 166,
+      "color_value": "Color(1.0, 0.78, 0.85, 0.7)",
+      "suggestion": "Use MerlinVisual.CRT_PALETTE[\"...\"] instead of hardcoded Color(1.0, 0.78, 0.85)"
+    },
+    {
+      "file": "scripts/MenuPrincipalMerlin.gd",
+      "line": 168,
+      "color_value": "Color(0.95, 0.80, 0.85, 0.6)",
+      "suggestion": "Use MerlinVisual.CRT_PALETTE[\"...\"] instead of hardcoded Color(0.95, 0.80, 0.85)"
+    },
+    {
+      "file": "scripts/autoload/pixel_transition.gd",
+      "line": 96,
+      "color_value": "Color(0.08, 0.06, 0.04, 1.0)",
+      "suggestion": "Use MerlinVisual.CRT_PALETTE[\"...\"] instead of hardcoded Color(0.08, 0.06, 0.04)"
+    },
+    {
+      "file": "scripts/autoload/pixel_transition.gd",
+      "line": 530,
+      "color_value": "Color(0.08, 0.06, 0.04, 1.0)",
+      "suggestion": "Use MerlinVisual.CRT_PALETTE[\"...\"] instead of hardcoded Color(0.08, 0.06, 0.04)"
+    },
+    {
+      "file": "scripts/autoload/pixel_transition_config.gd",
+      "line": 39,
+      "color_value": "Color(0.02, 0.04, 0.02, 1.0)",
+      "suggestion": "Use MerlinVisual.CRT_PALETTE[\"...\"] instead of hardcoded Color(0.02, 0.04, 0.02)"
+    },
+    {
+      "file": "scripts/merlin/merlin_biome_system.gd",
+      "line": 42,
+      "color_value": "Color(0.30, 0.50, 0.28, 1.0)",
+      "suggestion": "Use MerlinVisual.CRT_PALETTE[\"...\"] instead of hardcoded Color(0.30, 0.50, 0.28)"
+    },
+    {
+      "file": "scripts/merlin/merlin_biome_system.gd",
+      "line": 57,
+      "color_value": "Color(0.55, 0.40, 0.55, 1.0)",
+      "suggestion": "Use MerlinVisual.CRT_PALETTE[\"...\"] instead of hardcoded Color(0.55, 0.40, 0.55)"
+    },
+    {
+      "file": "scripts/merlin/merlin_biome_system.gd",
+      "line": 72,
+      "color_value": "Color(0.35, 0.50, 0.65, 1.0)",
+      "suggestion": "Use MerlinVisual.CRT_PALETTE[\"...\"] instead of hardcoded Color(0.35, 0.50, 0.65)"
+    },
+    {
+      "file": "scripts/merlin/merlin_biome_system.gd",
+      "line": 87,
+      "color_value": "Color(0.60, 0.45, 0.30, 1.0)",
+      "suggestion": "Use MerlinVisual.CRT_PALETTE[\"...\"] instead of hardcoded Color(0.60, 0.45, 0.30)"
+    },
+    {
+      "file": "scripts/merlin/merlin_biome_system.gd",
+      "line": 102,
+      "color_value": "Color(0.50, 0.50, 0.55, 1.0)",
+      "suggestion": "Use MerlinVisual.CRT_PALETTE[\"...\"] instead of hardcoded Color(0.50, 0.50, 0.55)"
+    },
+    {
+      "file": "scripts/merlin/merlin_biome_system.gd",
+      "line": 117,
+      "color_value": "Color(0.30, 0.42, 0.30, 1.0)",
+      "suggestion": "Use MerlinVisual.CRT_PALETTE[\"...\"] instead of hardcoded Color(0.30, 0.42, 0.30)"
+    },
+    {
+      "file": "scripts/merlin/merlin_biome_system.gd",
+      "line": 132,
+      "color_value": "Color(0.48, 0.55, 0.40, 1.0)",
+      "suggestion": "Use MerlinVisual.CRT_PALETTE[\"...\"] instead of hardcoded Color(0.48, 0.55, 0.40)"
+    },
+    {
+      "file": "scripts/merlin/merlin_biome_system.gd",
+      "line": 147,
+      "color_value": "Color(0.25, 0.42, 0.60, 1.0)",
+      "suggestion": "Use MerlinVisual.CRT_PALETTE[\"...\"] instead of hardcoded Color(0.25, 0.42, 0.60)"
+    },
+    {
+      "file": "scripts/merlin/merlin_biome_tree.gd",
+      "line": 168,
+      "color_value": "Color(0.32, 0.50, 0.28, 1.0)",
+      "suggestion": "Use MerlinVisual.CRT_PALETTE[\"...\"] instead of hardcoded Color(0.32, 0.50, 0.28)"
+    },
+    {
+      "file": "scripts/merlin/merlin_biome_tree.gd",
+      "line": 169,
+      "color_value": "Color(0.60, 0.45, 0.30, 1.0)",
+      "suggestion": "Use MerlinVisual.CRT_PALETTE[\"...\"] instead of hardcoded Color(0.60, 0.45, 0.30)"
+    },
+    {
+      "file": "scripts/merlin/merlin_biome_tree.gd",
+      "line": 170,
+      "color_value": "Color(0.35, 0.50, 0.65, 1.0)",
+      "suggestion": "Use MerlinVisual.CRT_PALETTE[\"...\"] instead of hardcoded Color(0.35, 0.50, 0.65)"
+    },
+    {
+      "file": "scripts/merlin/merlin_biome_tree.gd",
+      "line": 171,
+      "color_value": "Color(0.55, 0.40, 0.55, 1.0)",
+      "suggestion": "Use MerlinVisual.CRT_PALETTE[\"...\"] instead of hardcoded Color(0.55, 0.40, 0.55)"
+    },
+    {
+      "file": "scripts/merlin/merlin_biome_tree.gd",
+      "line": 172,
+      "color_value": "Color(0.30, 0.42, 0.28, 1.0)",
+      "suggestion": "Use MerlinVisual.CRT_PALETTE[\"...\"] instead of hardcoded Color(0.30, 0.42, 0.28)"
+    },
+    {
+      "file": "scripts/merlin/merlin_biome_tree.gd",
+      "line": 173,
+      "color_value": "Color(0.60, 0.55, 0.65, 1.0)",
+      "suggestion": "Use MerlinVisual.CRT_PALETTE[\"...\"] instead of hardcoded Color(0.60, 0.55, 0.65)"
+    },
+    {
+      "file": "scripts/merlin/merlin_biome_tree.gd",
+      "line": 174,
+      "color_value": "Color(0.50, 0.52, 0.38, 1.0)",
+      "suggestion": "Use MerlinVisual.CRT_PALETTE[\"...\"] instead of hardcoded Color(0.50, 0.52, 0.38)"
+    },
+    {
+      "file": "scripts/merlin/merlin_biome_tree.gd",
+      "line": 175,
+      "color_value": "Color(0.25, 0.42, 0.60, 1.0)",
+      "suggestion": "Use MerlinVisual.CRT_PALETTE[\"...\"] instead of hardcoded Color(0.25, 0.42, 0.60)"
+    },
+    {
+      "file": "scripts/merlin/merlin_gauge_system.gd",
+      "line": 21,
+      "color_value": "Color(0.55, 0.40, 0.75, 1.0)",
+      "suggestion": "Use MerlinVisual.CRT_PALETTE[\"...\"] instead of hardcoded Color(0.55, 0.40, 0.75)"
+    },
+    {
+      "file": "scripts/merlin/merlin_gauge_system.gd",
+      "line": 30,
+      "color_value": "Color(0.72, 0.35, 0.25, 1.0)",
+      "suggestion": "Use MerlinVisual.CRT_PALETTE[\"...\"] instead of hardcoded Color(0.72, 0.35, 0.25)"
+    },
+    {
+      "file": "scripts/merlin/merlin_gauge_system.gd",
+      "line": 39,
+      "color_value": "Color(0.65, 0.52, 0.34, 1.0)",
+      "suggestion": "Use MerlinVisual.CRT_PALETTE[\"...\"] instead of hardcoded Color(0.65, 0.52, 0.34)"
+    },
+    {
+      "file": "scripts/merlin/merlin_gauge_system.gd",
+      "line": 48,
+      "color_value": "Color(0.35, 0.55, 0.70, 1.0)",
+      "suggestion": "Use MerlinVisual.CRT_PALETTE[\"...\"] instead of hardcoded Color(0.35, 0.55, 0.70)"
+    },
+    {
+      "file": "scripts/merlin/merlin_gauge_system.gd",
+      "line": 57,
+      "color_value": "Color(0.48, 0.55, 0.30, 1.0)",
+      "suggestion": "Use MerlinVisual.CRT_PALETTE[\"...\"] instead of hardcoded Color(0.48, 0.55, 0.30)"
+    },
+    {
+      "file": "scripts/minigames/mg_pile_ou_face.gd",
+      "line": 61,
+      "color_value": "Color(0.82, 0.72, 0.42, 1.0)",
+      "suggestion": "Use MerlinVisual.CRT_PALETTE[\"...\"] instead of hardcoded Color(0.82, 0.72, 0.42)"
+    },
+    {
+      "file": "scripts/minigames/mg_pile_ou_face.gd",
+      "line": 62,
+      "color_value": "Color(0.62, 0.52, 0.22, 1.0)",
+      "suggestion": "Use MerlinVisual.CRT_PALETTE[\"...\"] instead of hardcoded Color(0.62, 0.52, 0.22)"
+    },
+    {
+      "file": "scripts/minigames/mg_pile_ou_face.gd",
+      "line": 80,
+      "color_value": "Color(0.18, 0.12, 0.05, 1.0)",
+      "suggestion": "Use MerlinVisual.CRT_PALETTE[\"...\"] instead of hardcoded Color(0.18, 0.12, 0.05)"
+    },
+    {
+      "file": "scripts/minigames/mg_pile_ou_face.gd",
+      "line": 200,
+      "color_value": "Color(0.18, 0.12, 0.05, 1.0)",
+      "suggestion": "Use MerlinVisual.CRT_PALETTE[\"...\"] instead of hardcoded Color(0.18, 0.12, 0.05)"
+    },
+    {
+      "file": "scripts/minigames/mg_pile_ou_face.gd",
+      "line": 204,
+      "color_value": "Color(0.62, 0.52, 0.22, 1.0)",
+      "suggestion": "Use MerlinVisual.CRT_PALETTE[\"...\"] instead of hardcoded Color(0.62, 0.52, 0.22)"
+    },
+    {
+      "file": "scripts/minigames/minigame_base.gd",
+      "line": 17,
+      "color_value": "Color(0.06, 0.12, 0.06, 0.95)",
+      "suggestion": "Use MerlinVisual.CRT_PALETTE[\"...\"] instead of hardcoded Color(0.06, 0.12, 0.06)"
+    },
+    {
+      "file": "scripts/minigames/minigame_base.gd",
+      "line": 18,
+      "color_value": "Color(0.20, 1.00, 0.40, 1.0)",
+      "suggestion": "Use MerlinVisual.CRT_PALETTE[\"...\"] instead of hardcoded Color(0.20, 1.00, 0.40)"
+    },
+    {
+      "file": "scripts/minigames/minigame_base.gd",
+      "line": 19,
+      "color_value": "Color(1.00, 0.75, 0.20, 1.0)",
+      "suggestion": "Use MerlinVisual.CRT_PALETTE[\"...\"] instead of hardcoded Color(1.00, 0.75, 0.20)"
+    },
+    {
+      "file": "scripts/minigames/minigame_base.gd",
+      "line": 20,
+      "color_value": "Color(1.00, 0.85, 0.40, 1.0)",
+      "suggestion": "Use MerlinVisual.CRT_PALETTE[\"...\"] instead of hardcoded Color(1.00, 0.85, 0.40)"
+    },
+    {
+      "file": "scripts/minigames/minigame_base.gd",
+      "line": 21,
+      "color_value": "Color(0.20, 1.00, 0.40, 1.0)",
+      "suggestion": "Use MerlinVisual.CRT_PALETTE[\"...\"] instead of hardcoded Color(0.20, 1.00, 0.40)"
+    },
+    {
+      "file": "scripts/minigames/minigame_base.gd",
+      "line": 22,
+      "color_value": "Color(1.00, 0.25, 0.20, 1.0)",
+      "suggestion": "Use MerlinVisual.CRT_PALETTE[\"...\"] instead of hardcoded Color(1.00, 0.25, 0.20)"
+    },
+    {
+      "file": "scripts/minigames/minigame_base.gd",
+      "line": 23,
+      "color_value": "Color(0.04, 0.08, 0.04, 1.0)",
+      "suggestion": "Use MerlinVisual.CRT_PALETTE[\"...\"] instead of hardcoded Color(0.04, 0.08, 0.04)"
+    },
+    {
+      "file": "scripts/run/end_run_screen.gd",
+      "line": 136,
+      "color_value": "Color(0.04, 0.02, 0.02, 1.0)",
+      "suggestion": "Use MerlinVisual.CRT_PALETTE[\"...\"] instead of hardcoded Color(0.04, 0.02, 0.02)"
+    },
+    {
+      "file": "scripts/test/pixel_art_showcase.gd",
+      "line": 74,
+      "color_value": "Color(0.02, 0.04, 0.02, 1.0)",
+      "suggestion": "Use MerlinVisual.CRT_PALETTE[\"...\"] instead of hardcoded Color(0.02, 0.04, 0.02)"
+    },
+    {
+      "file": "scripts/test/pixel_art_showcase.gd",
+      "line": 92,
+      "color_value": "Color(0.80, 0.85, 0.95, 0.20)",
+      "suggestion": "Use MerlinVisual.CRT_PALETTE[\"...\"] instead of hardcoded Color(0.80, 0.85, 0.95)"
+    },
+    {
+      "file": "scripts/test/pixel_art_showcase.gd",
+      "line": 365,
+      "color_value": "Color(0.596, 0.667, 0.847, 1.0)",
+      "suggestion": "Use MerlinVisual.CRT_PALETTE[\"...\"] instead of hardcoded Color(0.596, 0.667, 0.847)"
+    },
+    {
+      "file": "scripts/test/pixel_art_showcase.gd",
+      "line": 366,
+      "color_value": "Color(0.361, 0.580, 0.486, 1.0)",
+      "suggestion": "Use MerlinVisual.CRT_PALETTE[\"...\"] instead of hardcoded Color(0.361, 0.580, 0.486)"
+    },
+    {
+      "file": "scripts/test/pixel_art_showcase.gd",
+      "line": 367,
+      "color_value": "Color(0.769, 0.573, 0.337, 1.0)",
+      "suggestion": "Use MerlinVisual.CRT_PALETTE[\"...\"] instead of hardcoded Color(0.769, 0.573, 0.337)"
+    },
+    {
+      "file": "scripts/test/pixel_art_showcase.gd",
+      "line": 368,
+      "color_value": "Color(0.298, 0.267, 0.318, 1.0)",
+      "suggestion": "Use MerlinVisual.CRT_PALETTE[\"...\"] instead of hardcoded Color(0.298, 0.267, 0.318)"
+    },
+    {
+      "file": "scripts/test/pixel_art_showcase.gd",
+      "line": 369,
+      "color_value": "Color(0.541, 0.612, 0.420, 1.0)",
+      "suggestion": "Use MerlinVisual.CRT_PALETTE[\"...\"] instead of hardcoded Color(0.541, 0.612, 0.420)"
+    },
+    {
+      "file": "scripts/test/pixel_art_showcase.gd",
+      "line": 370,
+      "color_value": "Color(0.580, 0.290, 0.259, 1.0)",
+      "suggestion": "Use MerlinVisual.CRT_PALETTE[\"...\"] instead of hardcoded Color(0.580, 0.290, 0.259)"
+    },
+    {
+      "file": "scripts/ui/card_scene_compositor.gd",
+      "line": 276,
+      "color_value": "Color(0.06, 0.14, 0.08, 1.0)",
+      "suggestion": "Use MerlinVisual.CRT_PALETTE[\"...\"] instead of hardcoded Color(0.06, 0.14, 0.08)"
+    },
+    {
+      "file": "scripts/ui/card_scene_compositor.gd",
+      "line": 277,
+      "color_value": "Color(0.12, 0.28, 0.14, 1.0)",
+      "suggestion": "Use MerlinVisual.CRT_PALETTE[\"...\"] instead of hardcoded Color(0.12, 0.28, 0.14)"
+    },
+    {
+      "file": "scripts/ui/card_scene_compositor.gd",
+      "line": 278,
+      "color_value": "Color(0.18, 0.40, 0.20, 1.0)",
+      "suggestion": "Use MerlinVisual.CRT_PALETTE[\"...\"] instead of hardcoded Color(0.18, 0.40, 0.20)"
+    },
+    {
+      "file": "scripts/ui/card_scene_compositor.gd",
+      "line": 284,
+      "color_value": "Color(0.6, 0.6, 0.65, 1.0)",
+      "suggestion": "Use MerlinVisual.CRT_PALETTE[\"...\"] instead of hardcoded Color(0.6, 0.6, 0.65)"
+    },
+    {
+      "file": "scripts/ui/card_scene_compositor.gd",
+      "line": 290,
+      "color_value": "Color(0.12, 0.28, 0.14, 1.0)",
+      "suggestion": "Use MerlinVisual.CRT_PALETTE[\"...\"] instead of hardcoded Color(0.12, 0.28, 0.14)"
+    },
+    {
+      "file": "scripts/ui/card_scene_compositor.gd",
+      "line": 307,
+      "color_value": "Color(0.08, 0.16, 0.10, 1.0)",
+      "suggestion": "Use MerlinVisual.CRT_PALETTE[\"...\"] instead of hardcoded Color(0.08, 0.16, 0.10)"
+    },
+    {
+      "file": "scripts/ui/card_scene_compositor.gd",
+      "line": 317,
+      "color_value": "Color(0.08, 0.16, 0.10, 1.0)",
+      "suggestion": "Use MerlinVisual.CRT_PALETTE[\"...\"] instead of hardcoded Color(0.08, 0.16, 0.10)"
+    },
+    {
+      "file": "scripts/ui/card_scene_compositor.gd",
+      "line": 430,
+      "color_value": "Color(0.3, 0.4, 0.3, 0.15)",
+      "suggestion": "Use MerlinVisual.CRT_PALETTE[\"...\"] instead of hardcoded Color(0.3, 0.4, 0.3)"
+    },
+    {
+      "file": "scripts/ui/custom_cursor.gd",
+      "line": 9,
+      "color_value": "Color(0.22, 0.18, 0.14, 0.45)",
+      "suggestion": "Use MerlinVisual.CRT_PALETTE[\"...\"] instead of hardcoded Color(0.22, 0.18, 0.14)"
+    },
+    {
+      "file": "scripts/ui/custom_cursor.gd",
+      "line": 10,
+      "color_value": "Color(0.22, 0.18, 0.14, 0.8)",
+      "suggestion": "Use MerlinVisual.CRT_PALETTE[\"...\"] instead of hardcoded Color(0.22, 0.18, 0.14)"
+    },
+    {
+      "file": "scripts/ui/faction_rep_bar.gd",
+      "line": 27,
+      "color_value": "Color(0.20, 0.80, 0.30, 1.0)",
+      "suggestion": "Use MerlinVisual.CRT_PALETTE[\"...\"] instead of hardcoded Color(0.20, 0.80, 0.30)"
+    },
+    {
+      "file": "scripts/ui/faction_rep_bar.gd",
+      "line": 28,
+      "color_value": "Color(0.70, 0.55, 0.30, 1.0)",
+      "suggestion": "Use MerlinVisual.CRT_PALETTE[\"...\"] instead of hardcoded Color(0.70, 0.55, 0.30)"
+    },
+    {
+      "file": "scripts/ui/faction_rep_bar.gd",
+      "line": 29,
+      "color_value": "Color(0.80, 0.40, 0.80, 1.0)",
+      "suggestion": "Use MerlinVisual.CRT_PALETTE[\"...\"] instead of hardcoded Color(0.80, 0.40, 0.80)"
+    },
+    {
+      "file": "scripts/ui/faction_rep_bar.gd",
+      "line": 30,
+      "color_value": "Color(0.30, 0.70, 0.90, 1.0)",
+      "suggestion": "Use MerlinVisual.CRT_PALETTE[\"...\"] instead of hardcoded Color(0.30, 0.70, 0.90)"
+    },
+    {
+      "file": "scripts/ui/faction_rep_bar.gd",
+      "line": 31,
+      "color_value": "Color(0.60, 0.20, 0.20, 1.0)",
+      "suggestion": "Use MerlinVisual.CRT_PALETTE[\"...\"] instead of hardcoded Color(0.60, 0.20, 0.20)"
+    },
+    {
+      "file": "scripts/ui/hud_controller.gd",
+      "line": 91,
+      "color_value": "Color(1.0, 0.3, 0.3, 1.0)",
+      "suggestion": "Use MerlinVisual.CRT_PALETTE[\"...\"] instead of hardcoded Color(1.0, 0.3, 0.3)"
+    },
+    {
+      "file": "scripts/ui/llm_source_badge.gd",
+      "line": 17,
+      "color_value": "Color(0.18, 0.55, 0.28, 0.90)",
+      "suggestion": "Use MerlinVisual.CRT_PALETTE[\"...\"] instead of hardcoded Color(0.18, 0.55, 0.28)"
+    },
+    {
+      "file": "scripts/ui/llm_source_badge.gd",
+      "line": 18,
+      "color_value": "Color(0.72, 0.50, 0.10, 0.90)",
+      "suggestion": "Use MerlinVisual.CRT_PALETTE[\"...\"] instead of hardcoded Color(0.72, 0.50, 0.10)"
+    },
+    {
+      "file": "scripts/ui/llm_source_badge.gd",
+      "line": 19,
+      "color_value": "Color(0.42, 0.40, 0.38, 0.75)",
+      "suggestion": "Use MerlinVisual.CRT_PALETTE[\"...\"] instead of hardcoded Color(0.42, 0.40, 0.38)"
+    },
+    {
+      "file": "scripts/ui/llm_source_badge.gd",
+      "line": 20,
+      "color_value": "Color(0.70, 0.22, 0.18, 0.90)",
+      "suggestion": "Use MerlinVisual.CRT_PALETTE[\"...\"] instead of hardcoded Color(0.70, 0.22, 0.18)"
+    },
+    {
+      "file": "scripts/ui/merlin_game_ui.gd",
+      "line": 1711,
+      "color_value": "Color(1.0, 0.7, 0.7, 1.0)",
+      "suggestion": "Use MerlinVisual.CRT_PALETTE[\"...\"] instead of hardcoded Color(1.0, 0.7, 0.7)"
+    },
+    {
+      "file": "scripts/ui/merlin_game_ui.gd",
+      "line": 1712,
+      "color_value": "Color(1.0, 0.75, 0.75, 1.0)",
+      "suggestion": "Use MerlinVisual.CRT_PALETTE[\"...\"] instead of hardcoded Color(1.0, 0.75, 0.75)"
+    },
+    {
+      "file": "scripts/ui/merlin_game_ui.gd",
+      "line": 1713,
+      "color_value": "Color(0.85, 0.75, 0.85, 1.0)",
+      "suggestion": "Use MerlinVisual.CRT_PALETTE[\"...\"] instead of hardcoded Color(0.85, 0.75, 0.85)"
+    },
+    {
+      "file": "scripts/ui/merlin_game_ui.gd",
+      "line": 1717,
+      "color_value": "Color(0.75, 0.78, 0.9, 1.0)",
+      "suggestion": "Use MerlinVisual.CRT_PALETTE[\"...\"] instead of hardcoded Color(0.75, 0.78, 0.9)"
+    },
+    {
+      "file": "scripts/ui/merlin_game_ui.gd",
+      "line": 1720,
+      "color_value": "Color(1.0, 0.85, 0.7, 1.0)",
+      "suggestion": "Use MerlinVisual.CRT_PALETTE[\"...\"] instead of hardcoded Color(1.0, 0.85, 0.7)"
+    },
+    {
+      "file": "scripts/ui/merlin_game_ui.gd",
+      "line": 1722,
+      "color_value": "Color(0.92, 0.88, 0.78, 1.0)",
+      "suggestion": "Use MerlinVisual.CRT_PALETTE[\"...\"] instead of hardcoded Color(0.92, 0.88, 0.78)"
+    },
+    {
+      "file": "scripts/ui/merlin_game_ui.gd",
+      "line": 1919,
+      "color_value": "Color(0.35, 0.55, 0.28, 1.0)",
+      "suggestion": "Use MerlinVisual.CRT_PALETTE[\"...\"] instead of hardcoded Color(0.35, 0.55, 0.28)"
+    },
+    {
+      "file": "scripts/ui/merlin_game_ui.gd",
+      "line": 1919,
+      "color_value": "Color(0.55, 0.40, 0.25, 1.0)",
+      "suggestion": "Use MerlinVisual.CRT_PALETTE[\"...\"] instead of hardcoded Color(0.55, 0.40, 0.25)"
+    },
+    {
+      "file": "scripts/ui/merlin_game_ui.gd",
+      "line": 1924,
+      "color_value": "Color(0.55, 0.40, 0.55, 0.5)",
+      "suggestion": "Use MerlinVisual.CRT_PALETTE[\"...\"] instead of hardcoded Color(0.55, 0.40, 0.55)"
+    },
+    {
+      "file": "scripts/ui/merlin_game_ui.gd",
+      "line": 1930,
+      "color_value": "Color(0.38, 0.58, 0.75, 0.4)",
+      "suggestion": "Use MerlinVisual.CRT_PALETTE[\"...\"] instead of hardcoded Color(0.38, 0.58, 0.75)"
+    },
+    {
+      "file": "scripts/ui/merlin_game_ui.gd",
+      "line": 1935,
+      "color_value": "Color(0.5, 0.48, 0.45, 0.3)",
+      "suggestion": "Use MerlinVisual.CRT_PALETTE[\"...\"] instead of hardcoded Color(0.5, 0.48, 0.45)"
+    },
+    {
+      "file": "scripts/ui/merlin_game_ui.gd",
+      "line": 1940,
+      "color_value": "Color(0.85, 0.75, 0.30, 0.6)",
+      "suggestion": "Use MerlinVisual.CRT_PALETTE[\"...\"] instead of hardcoded Color(0.85, 0.75, 0.30)"
+    },
+    {
+      "file": "scripts/ui/merlin_game_ui.gd",
+      "line": 1947,
+      "color_value": "Color(0.20, 0.45, 0.25, 0.4)",
+      "suggestion": "Use MerlinVisual.CRT_PALETTE[\"...\"] instead of hardcoded Color(0.20, 0.45, 0.25)"
+    },
+    {
+      "file": "scripts/ui/merlin_game_ui.gd",
+      "line": 1953,
+      "color_value": "Color(0.40, 0.60, 0.30, 0.3)",
+      "suggestion": "Use MerlinVisual.CRT_PALETTE[\"...\"] instead of hardcoded Color(0.40, 0.60, 0.30)"
+    },
+    {
+      "file": "scripts/ui/merlin_game_ui.gd",
+      "line": 1959,
+      "color_value": "Color(0.6, 0.55, 0.45, 0.2)",
+      "suggestion": "Use MerlinVisual.CRT_PALETTE[\"...\"] instead of hardcoded Color(0.6, 0.55, 0.45)"
+    },
+    {
+      "file": "scripts/ui/merlin_game_ui.gd",
+      "line": 2667,
+      "color_value": "Color(0.70, 0.86, 1.0, 0.90)",
+      "suggestion": "Use MerlinVisual.CRT_PALETTE[\"...\"] instead of hardcoded Color(0.70, 0.86, 1.0)"
+    },
+    {
+      "file": "scripts/ui/merlin_game_ui.gd",
+      "line": 2842,
+      "color_value": "Color(1.4, 1.3, 0.8, 1.0)",
+      "suggestion": "Use MerlinVisual.CRT_PALETTE[\"...\"] instead of hardcoded Color(1.4, 1.3, 0.8)"
+    },
+    {
+      "file": "scripts/ui/merlin_game_ui.gd",
+      "line": 3679,
+      "color_value": "Color(1.4, 1.1, 0.6, 1.0)",
+      "suggestion": "Use MerlinVisual.CRT_PALETTE[\"...\"] instead of hardcoded Color(1.4, 1.1, 0.6)"
+    },
+    {
+      "file": "scripts/ui/pixel_biome_backdrop.gd",
+      "line": 381,
+      "color_value": "Color(0.9, 0.9, 0.95, 0.7)",
+      "suggestion": "Use MerlinVisual.CRT_PALETTE[\"...\"] instead of hardcoded Color(0.9, 0.9, 0.95)"
+    }
+  ],
+  "palette_coverage": {
+    "total_color_refs": 1916,
+    "from_palette": 855,
+    "hardcoded": 154,
+    "percentage": 44.6
+  },
+  "biome_completeness": {
+    "foret_broceliande": {
+      "has_config": true,
+      "has_particles": true,
+      "has_palette": true,
+      "has_sky": true,
+      "has_fog": true,
+      "complete": true
+    },
+    "landes_bruyere": {
+      "has_config": true,
+      "has_particles": true,
+      "has_palette": true,
+      "has_sky": true,
+      "has_fog": true,
+      "complete": true
+    },
+    "cotes_sauvages": {
+      "has_config": true,
+      "has_particles": true,
+      "has_palette": true,
+      "has_sky": true,
+      "has_fog": true,
+      "complete": true
+    },
+    "villages_celtes": {
+      "has_config": true,
+      "has_particles": true,
+      "has_palette": true,
+      "has_sky": true,
+      "has_fog": true,
+      "complete": true
+    },
+    "cercles_pierres": {
+      "has_config": true,
+      "has_particles": true,
+      "has_palette": true,
+      "has_sky": true,
+      "has_fog": true,
+      "complete": true
+    },
+    "marais_korrigans": {
+      "has_config": true,
+      "has_particles": true,
+      "has_palette": true,
+      "has_sky": true,
+      "has_fog": true,
+      "complete": true
+    },
+    "collines_dolmens": {
+      "has_config": true,
+      "has_particles": true,
+      "has_palette": true,
+      "has_sky": true,
+      "has_fog": true,
+      "complete": true
+    },
+    "iles_mystiques": {
+      "has_config": true,
+      "has_particles": true,
+      "has_palette": true,
+      "has_sky": true,
+      "has_fog": true,
+      "complete": true
+    }
+  },
+  "font_references": [],
+  "scene_depth": [
+    {
+      "scene": "scenes/ui/MerlinGameUI.tscn",
+      "max_depth": 8,
+      "deepest_path": "MainVBox/MiddleZone/CardContainer/CardPanel/CardVisualSplit/CardIllustration/IlloLayer/IlloBg"
+    },
+    {
+      "scene": "scenes/Collection.tscn",
+      "max_depth": 7,
+      "deepest_path": "MainContainer/Layout/ContentPanel/ContentScroll/ContentStack/ProgressSection/ProgressTitleLabel"
+    },
+    {
+      "scene": "scenes/MenuOptions.tscn",
+      "max_depth": 7,
+      "deepest_path": "MainLayout/VBox/ScrollContainer/OptionsContainer/CalendarSection/OverrideRow/OverrideLabel"
+    },
+    {
+      "scene": "scenes/BroceliandeForest3D.tscn",
+      "max_depth": 6,
+      "deepest_path": "HUD/ResultPanel/ResultMargin/VBox/Buttons/ReplayButton"
+    },
+    {
+      "scene": "scenes/ArbreDeVie.tscn",
+      "max_depth": 5,
+      "deepest_path": "MainMargin/RootVBox/HSplit/DetailPanel/DetailVBox"
+    },
+    {
+      "scene": "scenes/Calendar.tscn",
+      "max_depth": 5,
+      "deepest_path": "MainCard/CardVBox/ContentScroll/ContentVBox/EventsSection"
+    },
+    {
+      "scene": "scenes/MenuPrincipal.tscn",
+      "max_depth": 4,
+      "deepest_path": "Card/CardContents/SeparatorContainer/SepLeft"
+    },
+    {
+      "scene": "scenes/SceneRencontreMerlin.tscn",
+      "max_depth": 4,
+      "deepest_path": "Card/CardVBox/SeparatorContainer/SepLeft"
+    },
+    {
+      "scene": "scenes/SelectionSauvegarde.tscn",
+      "max_depth": 3,
+      "deepest_path": "RootPanel/RootVBox/Title"
+    },
+    {
+      "scene": "scenes/ui/LLMWarmupOverlay.tscn",
+      "max_depth": 3,
+      "deepest_path": "Container/ProgressBar/ProgressFill"
+    },
+    {
+      "scene": "native/godot-cpp/test/project/main.tscn",
+      "max_depth": 2,
+      "deepest_path": "Example/ExampleMin"
+    },
+    {
+      "scene": "scenes/MapMonde.tscn",
+      "max_depth": 2,
+      "deepest_path": "BottomBar/BackButton"
+    },
+    {
+      "scene": "scenes/TransitionBiome.tscn",
+      "max_depth": 2,
+      "deepest_path": "ClockPanel/ClockLabel"
+    },
+    {
+      "scene": "scenes/HubAntre.tscn",
+      "max_depth": 1,
+      "deepest_path": "ParchmentBg"
+    },
+    {
+      "scene": "scenes/MerlinGame.tscn",
+      "max_depth": 1,
+      "deepest_path": "MerlinGameUI"
+    }
+  ],
+  "materials": [
+    {
+      "file": "scripts/Calendar.gd",
+      "line": 807,
+      "material_type": "ShaderMaterial"
+    },
+    {
+      "file": "scripts/MenuPrincipalMerlin.gd",
+      "line": 212,
+      "material_type": "ShaderMaterial"
+    },
+    {
+      "file": "scripts/autoload/merlin_visual.gd",
+      "line": 1040,
+      "material_type": "ShaderMaterial"
+    },
+    {
+      "file": "scripts/autoload/merlin_visual.gd",
+      "line": 1041,
+      "material_type": "ShaderMaterial"
+    },
+    {
+      "file": "scripts/autoload/merlin_visual.gd",
+      "line": 1043,
+      "material_type": "ShaderMaterial"
+    },
+    {
+      "file": "scripts/autoload/merlin_visual.gd",
+      "line": 1095,
+      "material_type": "ShaderMaterial"
+    },
+    {
+      "file": "scripts/broceliande_3d/broceliande_forest_3d.gd",
+      "line": 761,
+      "material_type": "StandardMaterial3D"
+    },
+    {
+      "file": "scripts/broceliande_3d/broceliande_forest_3d.gd",
+      "line": 770,
+      "material_type": "StandardMaterial3D"
+    },
+    {
+      "file": "scripts/broceliande_3d/broceliande_forest_3d.gd",
+      "line": 774,
+      "material_type": "StandardMaterial3D"
+    },
+    {
+      "file": "scripts/broceliande_3d/broceliande_forest_3d.gd",
+      "line": 779,
+      "material_type": "StandardMaterial3D"
+    },
+    {
+      "file": "scripts/broceliande_3d/broceliande_forest_3d.gd",
+      "line": 1007,
+      "material_type": "StandardMaterial3D"
+    },
+    {
+      "file": "scripts/broceliande_3d/broceliande_forest_3d.gd",
+      "line": 1029,
+      "material_type": "StandardMaterial3D"
+    },
+    {
+      "file": "scripts/broceliande_3d/broceliande_forest_3d.gd",
+      "line": 1043,
+      "material_type": "StandardMaterial3D"
+    },
+    {
+      "file": "scripts/broceliande_3d/broceliande_forest_3d.gd",
+      "line": 1062,
+      "material_type": "StandardMaterial3D"
+    },
+    {
+      "file": "scripts/broceliande_3d/broceliande_forest_3d.gd",
+      "line": 1086,
+      "material_type": "ParticleProcessMaterial"
+    },
+    {
+      "file": "scripts/broceliande_3d/broceliande_forest_3d.gd",
+      "line": 1094,
+      "material_type": "ParticleProcessMaterial"
+    },
+    {
+      "file": "scripts/broceliande_3d/broceliande_forest_3d.gd",
+      "line": 1103,
+      "material_type": "StandardMaterial3D"
+    },
+    {
+      "file": "scripts/broceliande_3d/broceliande_forest_3d.gd",
+      "line": 1126,
+      "material_type": "ParticleProcessMaterial"
+    },
+    {
+      "file": "scripts/broceliande_3d/broceliande_forest_3d.gd",
+      "line": 1134,
+      "material_type": "ParticleProcessMaterial"
+    },
+    {
+      "file": "scripts/broceliande_3d/broceliande_forest_3d.gd",
+      "line": 1141,
+      "material_type": "StandardMaterial3D"
+    },
+    {
+      "file": "scripts/broceliande_3d/broceliande_forest_3d.gd",
+      "line": 1169,
+      "material_type": "ParticleProcessMaterial"
+    },
+    {
+      "file": "scripts/broceliande_3d/broceliande_forest_3d.gd",
+      "line": 1177,
+      "material_type": "ParticleProcessMaterial"
+    },
+    {
+      "file": "scripts/broceliande_3d/broceliande_forest_3d.gd",
+      "line": 1184,
+      "material_type": "StandardMaterial3D"
+    },
+    {
+      "file": "scripts/broceliande_3d/broceliande_forest_3d.gd",
+      "line": 1204,
+      "material_type": "StandardMaterial3D"
+    },
+    {
+      "file": "scripts/broceliande_3d/broceliande_forest_3d.gd",
+      "line": 1294,
+      "material_type": "StandardMaterial3D"
+    },
+    {
+      "file": "scripts/broceliande_3d/broc_atmosphere.gd",
+      "line": 84,
+      "material_type": "StandardMaterial3D"
+    },
+    {
+      "file": "scripts/broceliande_3d/broc_atmosphere.gd",
+      "line": 160,
+      "material_type": "StandardMaterial3D"
+    },
+    {
+      "file": "scripts/broceliande_3d/broc_chunk_manager.gd",
+      "line": 383,
+      "material_type": "StandardMaterial3D"
+    },
+    {
+      "file": "scripts/broceliande_3d/broc_creature_spawner.gd",
+      "line": 235,
+      "material_type": "StandardMaterial3D"
+    },
+    {
+      "file": "scripts/broceliande_3d/broc_creature_spawner.gd",
+      "line": 252,
+      "material_type": "StandardMaterial3D"
+    },
+    {
+      "file": "scripts/broceliande_3d/broc_events.gd",
+      "line": 119,
+      "material_type": "StandardMaterial3D"
+    },
+    {
+      "file": "scripts/broceliande_3d/broc_events.gd",
+      "line": 166,
+      "material_type": "StandardMaterial3D"
+    },
+    {
+      "file": "scripts/broceliande_3d/broc_events.gd",
+      "line": 195,
+      "material_type": "StandardMaterial3D"
+    },
+    {
+      "file": "scripts/broceliande_3d/broc_event_vfx.gd",
+      "line": 156,
+      "material_type": "StandardMaterial3D"
+    },
+    {
+      "file": "scripts/broceliande_3d/broc_event_vfx.gd",
+      "line": 184,
+      "material_type": "StandardMaterial3D"
+    },
+    {
+      "file": "scripts/broceliande_3d/broc_event_vfx.gd",
+      "line": 226,
+      "material_type": "StandardMaterial3D"
+    },
+    {
+      "file": "scripts/broceliande_3d/broc_extra_decor.gd",
+      "line": 62,
+      "material_type": "StandardMaterial3D"
+    },
+    {
+      "file": "scripts/broceliande_3d/broc_extra_decor.gd",
+      "line": 94,
+      "material_type": "StandardMaterial3D"
+    },
+    {
+      "file": "scripts/broceliande_3d/broc_extra_decor.gd",
+      "line": 127,
+      "material_type": "StandardMaterial3D"
+    },
+    {
+      "file": "scripts/broceliande_3d/broc_extra_decor.gd",
+      "line": 149,
+      "material_type": "StandardMaterial3D"
+    },
+    {
+      "file": "scripts/broceliande_3d/broc_grass_wind.gd",
+      "line": 93,
+      "material_type": "ShaderMaterial"
+    },
+    {
+      "file": "scripts/broceliande_3d/broc_mass_fill.gd",
+      "line": 122,
+      "material_type": "StandardMaterial3D"
+    },
+    {
+      "file": "scripts/broceliande_3d/broc_mass_fill.gd",
+      "line": 123,
+      "material_type": "StandardMaterial3D"
+    },
+    {
+      "file": "scripts/broceliande_3d/broc_screen_vfx.gd",
+      "line": 13,
+      "material_type": "ShaderMaterial"
+    },
+    {
+      "file": "scripts/broceliande_3d/broc_screen_vfx.gd",
+      "line": 181,
+      "material_type": "ParticleProcessMaterial"
+    },
+    {
+      "file": "scripts/broceliande_3d/broc_screen_vfx.gd",
+      "line": 190,
+      "material_type": "ParticleProcessMaterial"
+    },
+    {
+      "file": "scripts/broceliande_3d/broc_season.gd",
+      "line": 32,
+      "material_type": "ShaderMaterial"
+    },
+    {
+      "file": "scripts/broceliande_3d/broc_season.gd",
+      "line": 79,
+      "material_type": "ShaderMaterial"
+    },
+    {
+      "file": "scripts/broceliande_3d/broc_season.gd",
+      "line": 97,
+      "material_type": "StandardMaterial3D"
+    },
+    {
+      "file": "scripts/broceliande_3d/broc_season.gd",
+      "line": 108,
+      "material_type": "StandardMaterial3D"
+    },
+    {
+      "file": "scripts/broceliande_3d/broc_season.gd",
+      "line": 109,
+      "material_type": "StandardMaterial3D"
+    },
+    {
+      "file": "scripts/run/biome_particles.gd",
+      "line": 6,
+      "material_type": "ParticleProcessMaterial"
+    },
+    {
+      "file": "scripts/run/biome_particles.gd",
+      "line": 179,
+      "material_type": "ParticleProcessMaterial"
+    },
+    {
+      "file": "scripts/run/biome_particles.gd",
+      "line": 208,
+      "material_type": "ParticleProcessMaterial"
+    },
+    {
+      "file": "scripts/run/biome_particles.gd",
+      "line": 214,
+      "material_type": "ParticleProcessMaterial"
+    },
+    {
+      "file": "scripts/run/biome_particles.gd",
+      "line": 240,
+      "material_type": "ParticleProcessMaterial"
+    },
+    {
+      "file": "scripts/run/biome_particles.gd",
+      "line": 246,
+      "material_type": "ParticleProcessMaterial"
+    },
+    {
+      "file": "scripts/run/biome_particles.gd",
+      "line": 280,
+      "material_type": "ParticleProcessMaterial"
+    },
+    {
+      "file": "scripts/run/biome_particles.gd",
+      "line": 286,
+      "material_type": "ParticleProcessMaterial"
+    },
+    {
+      "file": "scripts/run/biome_particles.gd",
+      "line": 320,
+      "material_type": "ParticleProcessMaterial"
+    },
+    {
+      "file": "scripts/run/biome_particles.gd",
+      "line": 326,
+      "material_type": "ParticleProcessMaterial"
+    },
+    {
+      "file": "scripts/run/biome_particles.gd",
+      "line": 359,
+      "material_type": "ParticleProcessMaterial"
+    },
+    {
+      "file": "scripts/run/biome_particles.gd",
+      "line": 365,
+      "material_type": "ParticleProcessMaterial"
+    },
+    {
+      "file": "scripts/run/biome_particles.gd",
+      "line": 403,
+      "material_type": "ParticleProcessMaterial"
+    },
+    {
+      "file": "scripts/run/biome_particles.gd",
+      "line": 409,
+      "material_type": "ParticleProcessMaterial"
+    },
+    {
+      "file": "scripts/run/biome_particles.gd",
+      "line": 442,
+      "material_type": "ParticleProcessMaterial"
+    },
+    {
+      "file": "scripts/run/biome_particles.gd",
+      "line": 448,
+      "material_type": "ParticleProcessMaterial"
+    },
+    {
+      "file": "scripts/run/biome_visual_manager.gd",
+      "line": 166,
+      "material_type": "StandardMaterial3D"
+    },
+    {
+      "file": "scripts/run/biome_visual_manager.gd",
+      "line": 167,
+      "material_type": "StandardMaterial3D"
+    },
+    {
+      "file": "scripts/run/biome_visual_manager.gd",
+      "line": 182,
+      "material_type": "StandardMaterial3D"
+    },
+    {
+      "file": "scripts/run/biome_visual_manager.gd",
+      "line": 183,
+      "material_type": "StandardMaterial3D"
+    },
+    {
+      "file": "scripts/test/pixel_art_showcase.gd",
+      "line": 88,
+      "material_type": "ShaderMaterial"
+    },
+    {
+      "file": "scripts/ui/card_layer.gd",
+      "line": 11,
+      "material_type": "ShaderMaterial"
+    },
+    {
+      "file": "scripts/ui/card_layer.gd",
+      "line": 29,
+      "material_type": "ShaderMaterial"
+    },
+    {
+      "file": "scripts/ui/card_scene_compositor.gd",
+      "line": 273,
+      "material_type": "ShaderMaterial"
+    },
+    {
+      "file": "scripts/ui/card_scene_compositor.gd",
+      "line": 305,
+      "material_type": "ShaderMaterial"
+    },
+    {
+      "file": "scripts/ui/screen_dither_layer.gd",
+      "line": 43,
+      "material_type": "ShaderMaterial"
+    },
+    {
+      "file": "scripts/ui/screen_dither_layer.gd",
+      "line": 49,
+      "material_type": "ShaderMaterial"
+    }
+  ],
+  "summary": {
+    "score": 0,
+    "issues_count": 89,
+    "pass": false
+  }
+}

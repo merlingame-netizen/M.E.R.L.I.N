@@ -1,0 +1,3155 @@
+{
+  "node_budget": {
+    "per_scene": {
+      "scenes/ArbreDeVie.tscn": 14,
+      "scenes/BootstrapMerlinGame.tscn": 1,
+      "scenes/BroceliandeForest3D.tscn": 25,
+      "scenes/Calendar.tscn": 22,
+      "scenes/Collection.tscn": 40,
+      "scenes/HubAntre.tscn": 3,
+      "scenes/IntroCeltOS.tscn": 1,
+      "scenes/IntroPersonalityQuiz.tscn": 1,
+      "scenes/IntroTutorial.tscn": 1,
+      "scenes/MapMonde.tscn": 12,
+      "scenes/MenuOptions.tscn": 82,
+      "scenes/MenuPrincipal.tscn": 16,
+      "scenes/MerlinGame.tscn": 2,
+      "scenes/PixelArtShowcase.tscn": 1,
+      "scenes/SceneRencontreMerlin.tscn": 16,
+      "scenes/ScreenshotRunner.tscn": 1,
+      "scenes/SelectionSauvegarde.tscn": 8,
+      "scenes/TestAutoPlay.tscn": 1,
+      "scenes/TestLLMBenchmarkRun.tscn": 1,
+      "scenes/TestLLMFullRun.tscn": 1,
+      "scenes/TestLLMIntelligence.tscn": 1,
+      "scenes/TransitionBiome.tscn": 13,
+      "scenes/test/TestCardLayers.tscn": 1,
+      "scenes/ui/LLMWarmupOverlay.tscn": 8,
+      "scenes/ui/MenuReturnButton.tscn": 1,
+      "scenes/ui/MerlinGameUI.tscn": 64
+    },
+    "total": 337,
+    "budget_warning": 500,
+    "budget_critical": 1000,
+    "budget_status": "ok"
+  },
+  "particle_budget": {
+    "per_biome": {
+      "foret_broceliande": 70,
+      "landes_bruyere": 30,
+      "cotes_sauvages": 200,
+      "marais_korrigans": 40,
+      "collines_dolmens": 25,
+      "iles_mystiques": 240,
+      "cercles_pierres": 50,
+      "villages_celtes": 25
+    },
+    "worst_biome": "iles_mystiques",
+    "worst_biome_particles": 240,
+    "extra_gpu_particles_in_scripts": 4,
+    "max_concurrent": 244,
+    "recommended_max": 500,
+    "particle_types": {
+      "rain": 200,
+      "fireflies": 30,
+      "mist": 40,
+      "snow": 100,
+      "leaves": 25,
+      "embers": 50,
+      "spores": 20
+    },
+    "status": "ok"
+  },
+  "signal_density": {
+    "per_file": {
+      "scripts/Calendar.gd": {
+        "declarations": 0,
+        "connections": 8,
+        "total": 8
+      },
+      "scripts/Collection.gd": {
+        "declarations": 0,
+        "connections": 5,
+        "total": 5
+      },
+      "scripts/game_manager.gd": {
+        "declarations": 3,
+        "connections": 0,
+        "total": 3
+      },
+      "scripts/HubAntre.gd": {
+        "declarations": 0,
+        "connections": 8,
+        "total": 8
+      },
+      "scripts/IntroCeltOS.gd": {
+        "declarations": 0,
+        "connections": 0,
+        "total": 0
+      },
+      "scripts/IntroPersonalityQuiz.gd": {
+        "declarations": 1,
+        "connections": 6,
+        "total": 7
+      },
+      "scripts/IntroTutorial.gd": {
+        "declarations": 0,
+        "connections": 1,
+        "total": 1
+      },
+      "scripts/MenuOptions.gd": {
+        "declarations": 0,
+        "connections": 18,
+        "total": 18
+      },
+      "scripts/MenuPrincipalMerlin.gd": {
+        "declarations": 0,
+        "connections": 19,
+        "total": 19
+      },
+      "scripts/merlin_backdrop.gd": {
+        "declarations": 0,
+        "connections": 0,
+        "total": 0
+      },
+      "scripts/SceneRencontreMerlin.gd": {
+        "declarations": 0,
+        "connections": 3,
+        "total": 3
+      },
+      "scripts/SelectionSauvegarde.gd": {
+        "declarations": 0,
+        "connections": 5,
+        "total": 5
+      },
+      "scripts/TransitionBiome.gd": {
+        "declarations": 0,
+        "connections": 1,
+        "total": 1
+      },
+      "scripts/audio/music_manager.gd": {
+        "declarations": 2,
+        "connections": 2,
+        "total": 4
+      },
+      "scripts/audio/sfx_manager.gd": {
+        "declarations": 0,
+        "connections": 0,
+        "total": 0
+      },
+      "scripts/audio/stems_music_manager.gd": {
+        "declarations": 2,
+        "connections": 0,
+        "total": 2
+      },
+      "scripts/autoload/game_time_manager.gd": {
+        "declarations": 3,
+        "connections": 1,
+        "total": 4
+      },
+      "scripts/autoload/LocaleManager.gd": {
+        "declarations": 1,
+        "connections": 0,
+        "total": 1
+      },
+      "scripts/autoload/merlin_visual.gd": {
+        "declarations": 0,
+        "connections": 1,
+        "total": 1
+      },
+      "scripts/autoload/music_manager.gd": {
+        "declarations": 0,
+        "connections": 2,
+        "total": 2
+      },
+      "scripts/autoload/pixel_content_animator.gd": {
+        "declarations": 1,
+        "connections": 1,
+        "total": 2
+      },
+      "scripts/autoload/pixel_transition.gd": {
+        "declarations": 4,
+        "connections": 2,
+        "total": 6
+      },
+      "scripts/autoload/pixel_transition_config.gd": {
+        "declarations": 0,
+        "connections": 0,
+        "total": 0
+      },
+      "scripts/autoload/SceneSelector.gd": {
+        "declarations": 0,
+        "connections": 2,
+        "total": 2
+      },
+      "scripts/autoload/ScreenEffects.gd": {
+        "declarations": 4,
+        "connections": 0,
+        "total": 4
+      },
+      "scripts/autoload/screen_frame.gd": {
+        "declarations": 0,
+        "connections": 3,
+        "total": 3
+      },
+      "scripts/autoload/SFXManager.gd": {
+        "declarations": 0,
+        "connections": 0,
+        "total": 0
+      },
+      "scripts/autoload/world_map_system.gd": {
+        "declarations": 5,
+        "connections": 0,
+        "total": 5
+      },
+      "scripts/broceliande_3d/biome_walk_config.gd": {
+        "declarations": 0,
+        "connections": 0,
+        "total": 0
+      },
+      "scripts/broceliande_3d/broceliande_forest_3d.gd": {
+        "declarations": 0,
+        "connections": 2,
+        "total": 2
+      },
+      "scripts/broceliande_3d/broc_atmosphere.gd": {
+        "declarations": 0,
+        "connections": 0,
+        "total": 0
+      },
+      "scripts/broceliande_3d/broc_autowalk.gd": {
+        "declarations": 0,
+        "connections": 0,
+        "total": 0
+      },
+      "scripts/broceliande_3d/broc_chunk_manager.gd": {
+        "declarations": 0,
+        "connections": 0,
+        "total": 0
+      },
+      "scripts/broceliande_3d/broc_creature_spawner.gd": {
+        "declarations": 0,
+        "connections": 0,
+        "total": 0
+      },
+      "scripts/broceliande_3d/broc_day_night.gd": {
+        "declarations": 0,
+        "connections": 0,
+        "total": 0
+      },
+      "scripts/broceliande_3d/broc_dense_fill.gd": {
+        "declarations": 0,
+        "connections": 0,
+        "total": 0
+      },
+      "scripts/broceliande_3d/broc_events.gd": {
+        "declarations": 0,
+        "connections": 0,
+        "total": 0
+      },
+      "scripts/broceliande_3d/broc_event_vfx.gd": {
+        "declarations": 0,
+        "connections": 0,
+        "total": 0
+      },
+      "scripts/broceliande_3d/broc_extra_decor.gd": {
+        "declarations": 0,
+        "connections": 0,
+        "total": 0
+      },
+      "scripts/broceliande_3d/broc_grass_wind.gd": {
+        "declarations": 0,
+        "connections": 0,
+        "total": 0
+      },
+      "scripts/broceliande_3d/broc_mass_fill.gd": {
+        "declarations": 0,
+        "connections": 0,
+        "total": 0
+      },
+      "scripts/broceliande_3d/broc_multimesh_pool.gd": {
+        "declarations": 0,
+        "connections": 0,
+        "total": 0
+      },
+      "scripts/broceliande_3d/broc_narrative_director.gd": {
+        "declarations": 0,
+        "connections": 0,
+        "total": 0
+      },
+      "scripts/broceliande_3d/broc_screen_vfx.gd": {
+        "declarations": 0,
+        "connections": 0,
+        "total": 0
+      },
+      "scripts/broceliande_3d/broc_season.gd": {
+        "declarations": 0,
+        "connections": 0,
+        "total": 0
+      },
+      "scripts/broceliande_3d/walk_event_controller.gd": {
+        "declarations": 0,
+        "connections": 2,
+        "total": 2
+      },
+      "scripts/core/game_flow_controller.gd": {
+        "declarations": 2,
+        "connections": 5,
+        "total": 7
+      },
+      "scripts/merlin/merlin_action_resolver.gd": {
+        "declarations": 0,
+        "connections": 0,
+        "total": 0
+      },
+      "scripts/merlin/merlin_biome_system.gd": {
+        "declarations": 0,
+        "connections": 0,
+        "total": 0
+      },
+      "scripts/merlin/merlin_biome_tree.gd": {
+        "declarations": 0,
+        "connections": 0,
+        "total": 0
+      },
+      "scripts/merlin/merlin_card_system.gd": {
+        "declarations": 5,
+        "connections": 0,
+        "total": 5
+      },
+      "scripts/merlin/merlin_constants.gd": {
+        "declarations": 0,
+        "connections": 0,
+        "total": 0
+      },
+      "scripts/merlin/merlin_effect_engine.gd": {
+        "declarations": 0,
+        "connections": 0,
+        "total": 0
+      },
+      "scripts/merlin/merlin_event_system.gd": {
+        "declarations": 0,
+        "connections": 0,
+        "total": 0
+      },
+      "scripts/merlin/merlin_gauge_system.gd": {
+        "declarations": 0,
+        "connections": 0,
+        "total": 0
+      },
+      "scripts/merlin/merlin_llm_adapter.gd": {
+        "declarations": 0,
+        "connections": 0,
+        "total": 0
+      },
+      "scripts/merlin/merlin_map_system.gd": {
+        "declarations": 0,
+        "connections": 0,
+        "total": 0
+      },
+      "scripts/merlin/merlin_minigame_system.gd": {
+        "declarations": 1,
+        "connections": 0,
+        "total": 1
+      },
+      "scripts/merlin/merlin_reputation_system.gd": {
+        "declarations": 0,
+        "connections": 0,
+        "total": 0
+      },
+      "scripts/merlin/merlin_rng.gd": {
+        "declarations": 0,
+        "connections": 0,
+        "total": 0
+      },
+      "scripts/merlin/merlin_save_system.gd": {
+        "declarations": 0,
+        "connections": 0,
+        "total": 0
+      },
+      "scripts/merlin/merlin_scenario_manager.gd": {
+        "declarations": 3,
+        "connections": 0,
+        "total": 3
+      },
+      "scripts/merlin/merlin_store.gd": {
+        "declarations": 14,
+        "connections": 2,
+        "total": 16
+      },
+      "scripts/merlin/merlin_talent_system.gd": {
+        "declarations": 0,
+        "connections": 0,
+        "total": 0
+      },
+      "scripts/minigames/mg_apaisement.gd": {
+        "declarations": 0,
+        "connections": 0,
+        "total": 0
+      },
+      "scripts/minigames/mg_bluff_druide.gd": {
+        "declarations": 0,
+        "connections": 0,
+        "total": 0
+      },
+      "scripts/minigames/mg_combat_rituel.gd": {
+        "declarations": 0,
+        "connections": 0,
+        "total": 0
+      },
+      "scripts/minigames/mg_course.gd": {
+        "declarations": 0,
+        "connections": 0,
+        "total": 0
+      },
+      "scripts/minigames/mg_echo.gd": {
+        "declarations": 0,
+        "connections": 1,
+        "total": 1
+      },
+      "scripts/minigames/mg_enigme_ogham.gd": {
+        "declarations": 0,
+        "connections": 1,
+        "total": 1
+      },
+      "scripts/minigames/mg_joute_verbale.gd": {
+        "declarations": 0,
+        "connections": 0,
+        "total": 0
+      },
+      "scripts/minigames/mg_lame_druide.gd": {
+        "declarations": 0,
+        "connections": 1,
+        "total": 1
+      },
+      "scripts/minigames/mg_meditation.gd": {
+        "declarations": 0,
+        "connections": 0,
+        "total": 0
+      },
+      "scripts/minigames/mg_negociation.gd": {
+        "declarations": 0,
+        "connections": 1,
+        "total": 1
+      },
+      "scripts/minigames/mg_noeud_celtique.gd": {
+        "declarations": 0,
+        "connections": 0,
+        "total": 0
+      },
+      "scripts/minigames/mg_oeil_corbeau.gd": {
+        "declarations": 0,
+        "connections": 1,
+        "total": 1
+      },
+      "scripts/minigames/mg_ombres.gd": {
+        "declarations": 0,
+        "connections": 1,
+        "total": 1
+      },
+      "scripts/minigames/mg_pas_renard.gd": {
+        "declarations": 0,
+        "connections": 0,
+        "total": 0
+      },
+      "scripts/minigames/mg_pierre_feuille_racine.gd": {
+        "declarations": 0,
+        "connections": 0,
+        "total": 0
+      },
+      "scripts/minigames/mg_pile_ou_face.gd": {
+        "declarations": 0,
+        "connections": 1,
+        "total": 1
+      },
+      "scripts/minigames/mg_regard.gd": {
+        "declarations": 0,
+        "connections": 1,
+        "total": 1
+      },
+      "scripts/minigames/mg_roue_fortune.gd": {
+        "declarations": 0,
+        "connections": 0,
+        "total": 0
+      },
+      "scripts/minigames/mg_rune_cachee.gd": {
+        "declarations": 0,
+        "connections": 1,
+        "total": 1
+      },
+      "scripts/minigames/mg_sang_froid.gd": {
+        "declarations": 0,
+        "connections": 0,
+        "total": 0
+      },
+      "scripts/minigames/mg_tir_a_larc.gd": {
+        "declarations": 0,
+        "connections": 0,
+        "total": 0
+      },
+      "scripts/minigames/mg_trace_cerf.gd": {
+        "declarations": 0,
+        "connections": 1,
+        "total": 1
+      },
+      "scripts/minigames/mg_volonte.gd": {
+        "declarations": 0,
+        "connections": 1,
+        "total": 1
+      },
+      "scripts/minigames/minigame_base.gd": {
+        "declarations": 1,
+        "connections": 1,
+        "total": 2
+      },
+      "scripts/minigames/minigame_registry.gd": {
+        "declarations": 0,
+        "connections": 0,
+        "total": 0
+      },
+      "scripts/run/biome_config.gd": {
+        "declarations": 0,
+        "connections": 0,
+        "total": 0
+      },
+      "scripts/run/biome_particles.gd": {
+        "declarations": 2,
+        "connections": 0,
+        "total": 2
+      },
+      "scripts/run/biome_visual_manager.gd": {
+        "declarations": 1,
+        "connections": 0,
+        "total": 1
+      },
+      "scripts/run/collectible_spawner.gd": {
+        "declarations": 2,
+        "connections": 0,
+        "total": 2
+      },
+      "scripts/run/end_run_screen.gd": {
+        "declarations": 1,
+        "connections": 1,
+        "total": 2
+      },
+      "scripts/run/journey_map_display.gd": {
+        "declarations": 0,
+        "connections": 0,
+        "total": 0
+      },
+      "scripts/run/run_3d_controller.gd": {
+        "declarations": 9,
+        "connections": 0,
+        "total": 9
+      },
+      "scripts/run/transition_manager.gd": {
+        "declarations": 4,
+        "connections": 0,
+        "total": 4
+      },
+      "scripts/test/auto_play_runner.gd": {
+        "declarations": 0,
+        "connections": 1,
+        "total": 1
+      },
+      "scripts/test/auto_screenshot.gd": {
+        "declarations": 0,
+        "connections": 0,
+        "total": 0
+      },
+      "scripts/test/auto_walk_qa.gd": {
+        "declarations": 0,
+        "connections": 0,
+        "total": 0
+      },
+      "scripts/test/bootstrap_merlin_game.gd": {
+        "declarations": 0,
+        "connections": 0,
+        "total": 0
+      },
+      "scripts/test/game_debug_server.gd": {
+        "declarations": 0,
+        "connections": 1,
+        "total": 1
+      },
+      "scripts/test/pixel_art_showcase.gd": {
+        "declarations": 0,
+        "connections": 6,
+        "total": 6
+      },
+      "scripts/test/screenshot_runner.gd": {
+        "declarations": 0,
+        "connections": 0,
+        "total": 0
+      },
+      "scripts/test/test_anam_economy.gd": {
+        "declarations": 0,
+        "connections": 0,
+        "total": 0
+      },
+      "scripts/test/test_audio_generation.gd": {
+        "declarations": 0,
+        "connections": 0,
+        "total": 0
+      },
+      "scripts/test/test_biome_config.gd": {
+        "declarations": 0,
+        "connections": 0,
+        "total": 0
+      },
+      "scripts/test/test_biome_maturity.gd": {
+        "declarations": 0,
+        "connections": 0,
+        "total": 0
+      },
+      "scripts/test/test_biome_particles.gd": {
+        "declarations": 0,
+        "connections": 0,
+        "total": 0
+      },
+      "scripts/test/test_card_layers.gd": {
+        "declarations": 0,
+        "connections": 6,
+        "total": 6
+      },
+      "scripts/test/test_card_system.gd": {
+        "declarations": 0,
+        "connections": 0,
+        "total": 0
+      },
+      "scripts/test/test_confiance_merlin.gd": {
+        "declarations": 0,
+        "connections": 0,
+        "total": 0
+      },
+      "scripts/test/test_effect_engine.gd": {
+        "declarations": 0,
+        "connections": 0,
+        "total": 0
+      },
+      "scripts/test/test_end_run_screen.gd": {
+        "declarations": 0,
+        "connections": 1,
+        "total": 1
+      },
+      "scripts/test/test_fallback_pool.gd": {
+        "declarations": 0,
+        "connections": 0,
+        "total": 0
+      },
+      "scripts/test/test_game_flow.gd": {
+        "declarations": 0,
+        "connections": 3,
+        "total": 3
+      },
+      "scripts/test/test_hub_screen.gd": {
+        "declarations": 0,
+        "connections": 3,
+        "total": 3
+      },
+      "scripts/test/test_integration_e2e.gd": {
+        "declarations": 0,
+        "connections": 0,
+        "total": 0
+      },
+      "scripts/test/test_llm_benchmark_run.gd": {
+        "declarations": 0,
+        "connections": 0,
+        "total": 0
+      },
+      "scripts/test/test_llm_card_validation.gd": {
+        "declarations": 0,
+        "connections": 0,
+        "total": 0
+      },
+      "scripts/test/test_llm_full_run.gd": {
+        "declarations": 0,
+        "connections": 0,
+        "total": 0
+      },
+      "scripts/test/test_llm_intelligence.gd": {
+        "declarations": 0,
+        "connections": 0,
+        "total": 0
+      },
+      "scripts/test/test_merlin_store.gd": {
+        "declarations": 0,
+        "connections": 0,
+        "total": 0
+      },
+      "scripts/test/test_minigame_scoring.gd": {
+        "declarations": 0,
+        "connections": 0,
+        "total": 0
+      },
+      "scripts/test/test_minigame_system.gd": {
+        "declarations": 0,
+        "connections": 0,
+        "total": 0
+      },
+      "scripts/test/test_mos.gd": {
+        "declarations": 0,
+        "connections": 0,
+        "total": 0
+      },
+      "scripts/test/test_mos_convergence.gd": {
+        "declarations": 0,
+        "connections": 0,
+        "total": 0
+      },
+      "scripts/test/test_ogham_activation.gd": {
+        "declarations": 0,
+        "connections": 0,
+        "total": 0
+      },
+      "scripts/test/test_promise_karma.gd": {
+        "declarations": 0,
+        "connections": 0,
+        "total": 0
+      },
+      "scripts/test/test_reputation_system.gd": {
+        "declarations": 0,
+        "connections": 0,
+        "total": 0
+      },
+      "scripts/test/test_save_system.gd": {
+        "declarations": 0,
+        "connections": 0,
+        "total": 0
+      },
+      "scripts/test/test_sfx_manager.gd": {
+        "declarations": 0,
+        "connections": 0,
+        "total": 0
+      },
+      "scripts/test/test_talent_tree.gd": {
+        "declarations": 0,
+        "connections": 0,
+        "total": 0
+      },
+      "scripts/test/test_time_manager.gd": {
+        "declarations": 0,
+        "connections": 0,
+        "total": 0
+      },
+      "scripts/tutorial/tutorial_manager.gd": {
+        "declarations": 2,
+        "connections": 0,
+        "total": 2
+      },
+      "scripts/ui/ambiance_data.gd": {
+        "declarations": 0,
+        "connections": 0,
+        "total": 0
+      },
+      "scripts/ui/arbre_de_vie_ui.gd": {
+        "declarations": 0,
+        "connections": 4,
+        "total": 4
+      },
+      "scripts/ui/arbre_pixel_art.gd": {
+        "declarations": 1,
+        "connections": 0,
+        "total": 1
+      },
+      "scripts/ui/biome_radial.gd": {
+        "declarations": 2,
+        "connections": 0,
+        "total": 2
+      },
+      "scripts/ui/card_layer.gd": {
+        "declarations": 0,
+        "connections": 0,
+        "total": 0
+      },
+      "scripts/ui/card_scene_compositor.gd": {
+        "declarations": 0,
+        "connections": 0,
+        "total": 0
+      },
+      "scripts/ui/custom_cursor.gd": {
+        "declarations": 0,
+        "connections": 0,
+        "total": 0
+      },
+      "scripts/ui/end_run_screen.gd": {
+        "declarations": 3,
+        "connections": 0,
+        "total": 3
+      },
+      "scripts/ui/faction_rep_bar.gd": {
+        "declarations": 1,
+        "connections": 1,
+        "total": 2
+      },
+      "scripts/ui/hub_controller.gd": {
+        "declarations": 3,
+        "connections": 0,
+        "total": 3
+      },
+      "scripts/ui/hub_hotspot.gd": {
+        "declarations": 2,
+        "connections": 0,
+        "total": 2
+      },
+      "scripts/ui/hub_screen.gd": {
+        "declarations": 3,
+        "connections": 5,
+        "total": 8
+      },
+      "scripts/ui/hub_souffle_bar.gd": {
+        "declarations": 0,
+        "connections": 0,
+        "total": 0
+      },
+      "scripts/ui/hub_triade_hud.gd": {
+        "declarations": 0,
+        "connections": 0,
+        "total": 0
+      },
+      "scripts/ui/hud_controller.gd": {
+        "declarations": 2,
+        "connections": 10,
+        "total": 12
+      },
+      "scripts/ui/layered_scene_data.gd": {
+        "declarations": 0,
+        "connections": 0,
+        "total": 0
+      },
+      "scripts/ui/llm_source_badge.gd": {
+        "declarations": 0,
+        "connections": 0,
+        "total": 0
+      },
+      "scripts/ui/llm_warmup_overlay.gd": {
+        "declarations": 0,
+        "connections": 3,
+        "total": 3
+      },
+      "scripts/ui/map_ui.gd": {
+        "declarations": 3,
+        "connections": 9,
+        "total": 12
+      },
+      "scripts/ui/menu_return_button.gd": {
+        "declarations": 0,
+        "connections": 5,
+        "total": 5
+      },
+      "scripts/ui/merlin_bubble.gd": {
+        "declarations": 2,
+        "connections": 3,
+        "total": 5
+      },
+      "scripts/ui/merlin_game_controller.gd": {
+        "declarations": 0,
+        "connections": 10,
+        "total": 10
+      },
+      "scripts/ui/merlin_game_ui.gd": {
+        "declarations": 7,
+        "connections": 23,
+        "total": 30
+      },
+      "scripts/ui/merlin_reward_badge.gd": {
+        "declarations": 0,
+        "connections": 0,
+        "total": 0
+      },
+      "scripts/ui/pixel_biome_backdrop.gd": {
+        "declarations": 0,
+        "connections": 1,
+        "total": 1
+      },
+      "scripts/ui/pixel_character_portrait.gd": {
+        "declarations": 1,
+        "connections": 0,
+        "total": 1
+      },
+      "scripts/ui/pixel_matrix_bg.gd": {
+        "declarations": 0,
+        "connections": 0,
+        "total": 0
+      },
+      "scripts/ui/pixel_merlin_portrait.gd": {
+        "declarations": 2,
+        "connections": 0,
+        "total": 2
+      },
+      "scripts/ui/pixel_npc_portrait.gd": {
+        "declarations": 2,
+        "connections": 0,
+        "total": 2
+      },
+      "scripts/ui/pixel_ogham_icons.gd": {
+        "declarations": 1,
+        "connections": 0,
+        "total": 1
+      },
+      "scripts/ui/pixel_scene_compositor.gd": {
+        "declarations": 0,
+        "connections": 0,
+        "total": 0
+      },
+      "scripts/ui/pixel_scene_data.gd": {
+        "declarations": 0,
+        "connections": 0,
+        "total": 0
+      },
+      "scripts/ui/reputation_hud.gd": {
+        "declarations": 0,
+        "connections": 1,
+        "total": 1
+      },
+      "scripts/ui/screen_dither_layer.gd": {
+        "declarations": 0,
+        "connections": 0,
+        "total": 0
+      },
+      "scripts/ui/tutorial_card_layer.gd": {
+        "declarations": 1,
+        "connections": 1,
+        "total": 2
+      },
+      "scripts/ui/walk_event_overlay.gd": {
+        "declarations": 2,
+        "connections": 1,
+        "total": 3
+      },
+      "scripts/ui/walk_hud.gd": {
+        "declarations": 0,
+        "connections": 0,
+        "total": 0
+      },
+      "scripts/ui/sprite_factory/sprite_factory.gd": {
+        "declarations": 0,
+        "connections": 0,
+        "total": 0
+      },
+      "scripts/ui/sprite_factory/sprite_noise.gd": {
+        "declarations": 0,
+        "connections": 0,
+        "total": 0
+      },
+      "scripts/ui/sprite_factory/sprite_palette.gd": {
+        "declarations": 0,
+        "connections": 0,
+        "total": 0
+      },
+      "scripts/ui/sprite_factory/sprite_templates.gd": {
+        "declarations": 0,
+        "connections": 0,
+        "total": 0
+      }
+    },
+    "hotspots": [
+      {
+        "file": "scripts/ui/merlin_game_ui.gd",
+        "total": 30,
+        "declarations": 7,
+        "connections": 23
+      },
+      {
+        "file": "scripts/MenuPrincipalMerlin.gd",
+        "total": 19,
+        "declarations": 0,
+        "connections": 19
+      },
+      {
+        "file": "scripts/MenuOptions.gd",
+        "total": 18,
+        "declarations": 0,
+        "connections": 18
+      },
+      {
+        "file": "scripts/merlin/merlin_store.gd",
+        "total": 16,
+        "declarations": 14,
+        "connections": 2
+      }
+    ],
+    "hotspot_threshold": 15
+  },
+  "draw_calls_estimate": {
+    "meshes": 0,
+    "sprites": 0,
+    "ui_controls": 307,
+    "total": 307,
+    "warning_threshold": 300,
+    "critical_threshold": 600,
+    "status": "warning"
+  },
+  "memory_estimate": {
+    "textures_mb": 25.84,
+    "textures_count": 302,
+    "audio_mb": 91.38,
+    "audio_count": 280,
+    "fonts_count": 8,
+    "scripts_count": 238
+  },
+  "tween_analysis": {
+    "per_file": {
+      "scripts/Calendar.gd": {
+        "tween_vars": 0,
+        "create_calls": 3,
+        "property_tweens": 7,
+        "duplicate_properties": {
+          "position:y": 2,
+          "modulate:a": 5
+        }
+      },
+      "scripts/Collection.gd": {
+        "tween_vars": 0,
+        "create_calls": 1,
+        "property_tweens": 2,
+        "duplicate_properties": {
+          "modulate:a": 2
+        }
+      },
+      "scripts/HubAntre.gd": {
+        "tween_vars": 1,
+        "create_calls": 6,
+        "property_tweens": 8,
+        "duplicate_properties": {
+          "scale": 3,
+          "modulate:a": 5
+        }
+      },
+      "scripts/IntroCeltOS.gd": {
+        "tween_vars": 0,
+        "create_calls": 5,
+        "property_tweens": 16,
+        "duplicate_properties": {
+          "modulate:a": 7,
+          "color": 2,
+          "size:x": 4
+        }
+      },
+      "scripts/IntroPersonalityQuiz.gd": {
+        "tween_vars": 1,
+        "create_calls": 6,
+        "property_tweens": 9,
+        "duplicate_properties": {
+          "modulate:a": 7,
+          "scale": 2
+        }
+      },
+      "scripts/IntroTutorial.gd": {
+        "tween_vars": 0,
+        "create_calls": 7,
+        "property_tweens": 9,
+        "duplicate_properties": {
+          "modulate:a": 9
+        }
+      },
+      "scripts/MenuPrincipalMerlin.gd": {
+        "tween_vars": 4,
+        "create_calls": 15,
+        "property_tweens": 34,
+        "duplicate_properties": {
+          "modulate:a": 13,
+          "position:y": 7,
+          "scale": 9,
+          "position": 2
+        }
+      },
+      "scripts/SceneRencontreMerlin.gd": {
+        "tween_vars": 4,
+        "create_calls": 12,
+        "property_tweens": 21,
+        "duplicate_properties": {
+          "modulate:a": 20
+        }
+      },
+      "scripts/SelectionSauvegarde.gd": {
+        "tween_vars": 0,
+        "create_calls": 1,
+        "property_tweens": 2,
+        "duplicate_properties": {
+          "modulate:a": 2
+        }
+      },
+      "scripts/TransitionBiome.gd": {
+        "tween_vars": 1,
+        "create_calls": 21,
+        "property_tweens": 40,
+        "duplicate_properties": {
+          "modulate": 7,
+          "modulate:a": 22,
+          "scale": 5,
+          "position:y": 2,
+          "position": 2
+        }
+      },
+      "scripts/audio/music_manager.gd": {
+        "tween_vars": 1,
+        "create_calls": 2,
+        "property_tweens": 4,
+        "duplicate_properties": {
+          "volume_db": 4
+        }
+      },
+      "scripts/autoload/merlin_visual.gd": {
+        "tween_vars": 0,
+        "create_calls": 2,
+        "property_tweens": 1,
+        "duplicate_properties": {}
+      },
+      "scripts/autoload/music_manager.gd": {
+        "tween_vars": 1,
+        "create_calls": 4,
+        "property_tweens": 6,
+        "duplicate_properties": {
+          "volume_db": 6
+        }
+      },
+      "scripts/autoload/ScreenEffects.gd": {
+        "tween_vars": 2,
+        "create_calls": 3,
+        "property_tweens": 0,
+        "duplicate_properties": {}
+      },
+      "scripts/autoload/screen_frame.gd": {
+        "tween_vars": 0,
+        "create_calls": 1,
+        "property_tweens": 2,
+        "duplicate_properties": {
+          "modulate": 2
+        }
+      },
+      "scripts/broceliande_3d/broceliande_forest_3d.gd": {
+        "tween_vars": 0,
+        "create_calls": 1,
+        "property_tweens": 2,
+        "duplicate_properties": {}
+      },
+      "scripts/minigames/mg_pile_ou_face.gd": {
+        "tween_vars": 0,
+        "create_calls": 2,
+        "property_tweens": 2,
+        "duplicate_properties": {
+          "scale:y": 2
+        }
+      },
+      "scripts/minigames/mg_trace_cerf.gd": {
+        "tween_vars": 0,
+        "create_calls": 2,
+        "property_tweens": 2,
+        "duplicate_properties": {}
+      },
+      "scripts/minigames/minigame_base.gd": {
+        "tween_vars": 0,
+        "create_calls": 1,
+        "property_tweens": 1,
+        "duplicate_properties": {}
+      },
+      "scripts/run/biome_particles.gd": {
+        "tween_vars": 1,
+        "create_calls": 1,
+        "property_tweens": 0,
+        "duplicate_properties": {}
+      },
+      "scripts/run/biome_visual_manager.gd": {
+        "tween_vars": 3,
+        "create_calls": 2,
+        "property_tweens": 6,
+        "duplicate_properties": {}
+      },
+      "scripts/run/transition_manager.gd": {
+        "tween_vars": 1,
+        "create_calls": 1,
+        "property_tweens": 1,
+        "duplicate_properties": {}
+      },
+      "scripts/ui/arbre_pixel_art.gd": {
+        "tween_vars": 1,
+        "create_calls": 1,
+        "property_tweens": 0,
+        "duplicate_properties": {}
+      },
+      "scripts/ui/biome_radial.gd": {
+        "tween_vars": 0,
+        "create_calls": 3,
+        "property_tweens": 0,
+        "duplicate_properties": {}
+      },
+      "scripts/ui/card_scene_compositor.gd": {
+        "tween_vars": 1,
+        "create_calls": 1,
+        "property_tweens": 2,
+        "duplicate_properties": {}
+      },
+      "scripts/ui/llm_source_badge.gd": {
+        "tween_vars": 0,
+        "create_calls": 1,
+        "property_tweens": 1,
+        "duplicate_properties": {}
+      },
+      "scripts/ui/llm_warmup_overlay.gd": {
+        "tween_vars": 0,
+        "create_calls": 2,
+        "property_tweens": 2,
+        "duplicate_properties": {}
+      },
+      "scripts/ui/map_ui.gd": {
+        "tween_vars": 2,
+        "create_calls": 1,
+        "property_tweens": 2,
+        "duplicate_properties": {
+          "modulate:a": 2
+        }
+      },
+      "scripts/ui/menu_return_button.gd": {
+        "tween_vars": 1,
+        "create_calls": 2,
+        "property_tweens": 3,
+        "duplicate_properties": {
+          "scale": 2
+        }
+      },
+      "scripts/ui/merlin_bubble.gd": {
+        "tween_vars": 0,
+        "create_calls": 2,
+        "property_tweens": 3,
+        "duplicate_properties": {
+          "modulate:a": 2
+        }
+      },
+      "scripts/ui/merlin_game_ui.gd": {
+        "tween_vars": 6,
+        "create_calls": 71,
+        "property_tweens": 134,
+        "duplicate_properties": {
+          "position:y": 7,
+          "scale": 31,
+          "modulate:a": 42,
+          "self_modulate": 3,
+          "position": 10,
+          "modulate": 12,
+          "rotation_degrees": 7,
+          "color:a": 8,
+          "theme_override_colors/font_color:a": 4,
+          "position:x": 8
+        }
+      },
+      "scripts/ui/pixel_character_portrait.gd": {
+        "tween_vars": 0,
+        "create_calls": 2,
+        "property_tweens": 4,
+        "duplicate_properties": {
+          "modulate:a": 2,
+          "position": 2
+        }
+      },
+      "scripts/ui/pixel_merlin_portrait.gd": {
+        "tween_vars": 0,
+        "create_calls": 1,
+        "property_tweens": 0,
+        "duplicate_properties": {}
+      },
+      "scripts/ui/pixel_npc_portrait.gd": {
+        "tween_vars": 0,
+        "create_calls": 1,
+        "property_tweens": 0,
+        "duplicate_properties": {}
+      },
+      "scripts/ui/screen_dither_layer.gd": {
+        "tween_vars": 0,
+        "create_calls": 1,
+        "property_tweens": 0,
+        "duplicate_properties": {}
+      },
+      "scripts/ui/tutorial_card_layer.gd": {
+        "tween_vars": 0,
+        "create_calls": 6,
+        "property_tweens": 12,
+        "duplicate_properties": {
+          "modulate:a": 10,
+          "color:a": 2
+        }
+      },
+      "scripts/ui/walk_event_overlay.gd": {
+        "tween_vars": 1,
+        "create_calls": 3,
+        "property_tweens": 2,
+        "duplicate_properties": {
+          "color:a": 2
+        }
+      }
+    },
+    "files_with_tweens": 37,
+    "concurrent_risks": [
+      {
+        "file": "scripts/Calendar.gd",
+        "properties": {
+          "position:y": 2,
+          "modulate:a": 5
+        }
+      },
+      {
+        "file": "scripts/Collection.gd",
+        "properties": {
+          "modulate:a": 2
+        }
+      },
+      {
+        "file": "scripts/HubAntre.gd",
+        "properties": {
+          "scale": 3,
+          "modulate:a": 5
+        }
+      },
+      {
+        "file": "scripts/IntroCeltOS.gd",
+        "properties": {
+          "modulate:a": 7,
+          "color": 2,
+          "size:x": 4
+        }
+      },
+      {
+        "file": "scripts/IntroPersonalityQuiz.gd",
+        "properties": {
+          "modulate:a": 7,
+          "scale": 2
+        }
+      },
+      {
+        "file": "scripts/IntroTutorial.gd",
+        "properties": {
+          "modulate:a": 9
+        }
+      },
+      {
+        "file": "scripts/MenuPrincipalMerlin.gd",
+        "properties": {
+          "modulate:a": 13,
+          "position:y": 7,
+          "scale": 9,
+          "position": 2
+        }
+      },
+      {
+        "file": "scripts/SceneRencontreMerlin.gd",
+        "properties": {
+          "modulate:a": 20
+        }
+      },
+      {
+        "file": "scripts/SelectionSauvegarde.gd",
+        "properties": {
+          "modulate:a": 2
+        }
+      },
+      {
+        "file": "scripts/TransitionBiome.gd",
+        "properties": {
+          "modulate": 7,
+          "modulate:a": 22,
+          "scale": 5,
+          "position:y": 2,
+          "position": 2
+        }
+      },
+      {
+        "file": "scripts/audio/music_manager.gd",
+        "properties": {
+          "volume_db": 4
+        }
+      },
+      {
+        "file": "scripts/autoload/music_manager.gd",
+        "properties": {
+          "volume_db": 6
+        }
+      },
+      {
+        "file": "scripts/autoload/screen_frame.gd",
+        "properties": {
+          "modulate": 2
+        }
+      },
+      {
+        "file": "scripts/minigames/mg_pile_ou_face.gd",
+        "properties": {
+          "scale:y": 2
+        }
+      },
+      {
+        "file": "scripts/ui/map_ui.gd",
+        "properties": {
+          "modulate:a": 2
+        }
+      },
+      {
+        "file": "scripts/ui/menu_return_button.gd",
+        "properties": {
+          "scale": 2
+        }
+      },
+      {
+        "file": "scripts/ui/merlin_bubble.gd",
+        "properties": {
+          "modulate:a": 2
+        }
+      },
+      {
+        "file": "scripts/ui/merlin_game_ui.gd",
+        "properties": {
+          "position:y": 7,
+          "scale": 31,
+          "modulate:a": 42,
+          "self_modulate": 3,
+          "position": 10,
+          "modulate": 12,
+          "rotation_degrees": 7,
+          "color:a": 8,
+          "theme_override_colors/font_color:a": 4,
+          "position:x": 8
+        }
+      },
+      {
+        "file": "scripts/ui/pixel_character_portrait.gd",
+        "properties": {
+          "modulate:a": 2,
+          "position": 2
+        }
+      },
+      {
+        "file": "scripts/ui/tutorial_card_layer.gd",
+        "properties": {
+          "modulate:a": 10,
+          "color:a": 2
+        }
+      },
+      {
+        "file": "scripts/ui/walk_event_overlay.gd",
+        "properties": {
+          "color:a": 2
+        }
+      }
+    ]
+  },
+  "audio_pool": {
+    "pool_size": 8,
+    "sfx_count": 27,
+    "ratio_sfx_to_pool": 3.4,
+    "status": "ok",
+    "note": "Pool reuses players; ratio > 5 may cause sound drops under heavy usage"
+  },
+  "script_complexity": [
+    {
+      "file": "scripts/ui/merlin_game_ui.gd",
+      "lines": 4308,
+      "max_nesting": 6,
+      "complexity": 851,
+      "status": "critical",
+      "issues": [
+        ">800 lines",
+        "complexity=851"
+      ]
+    },
+    {
+      "file": "scripts/TransitionBiome.gd",
+      "lines": 3111,
+      "max_nesting": 6,
+      "complexity": 550,
+      "status": "critical",
+      "issues": [
+        ">800 lines",
+        "complexity=550"
+      ]
+    },
+    {
+      "file": "scripts/merlin/merlin_llm_adapter.gd",
+      "lines": 2687,
+      "max_nesting": 7,
+      "complexity": 587,
+      "status": "critical",
+      "issues": [
+        ">800 lines",
+        "nesting=7",
+        "complexity=587"
+      ]
+    },
+    {
+      "file": "scripts/ui/sprite_factory/sprite_templates.gd",
+      "lines": 2059,
+      "max_nesting": 6,
+      "complexity": 175,
+      "status": "critical",
+      "issues": [
+        ">800 lines",
+        "complexity=175"
+      ]
+    },
+    {
+      "file": "scripts/ui/merlin_game_controller.gd",
+      "lines": 1929,
+      "max_nesting": 6,
+      "complexity": 556,
+      "status": "critical",
+      "issues": [
+        ">800 lines",
+        "complexity=556"
+      ]
+    },
+    {
+      "file": "scripts/MenuPrincipalMerlin.gd",
+      "lines": 1911,
+      "max_nesting": 6,
+      "complexity": 246,
+      "status": "critical",
+      "issues": [
+        ">800 lines",
+        "complexity=246"
+      ]
+    },
+    {
+      "file": "scripts/merlin/merlin_store.gd",
+      "lines": 1686,
+      "max_nesting": 9,
+      "complexity": 204,
+      "status": "critical",
+      "issues": [
+        ">800 lines",
+        "nesting=9",
+        "complexity=204"
+      ]
+    },
+    {
+      "file": "scripts/broceliande_3d/broceliande_forest_3d.gd",
+      "lines": 1454,
+      "max_nesting": 4,
+      "complexity": 185,
+      "status": "critical",
+      "issues": [
+        ">800 lines",
+        "complexity=185"
+      ]
+    },
+    {
+      "file": "scripts/autoload/SFXManager.gd",
+      "lines": 1302,
+      "max_nesting": 4,
+      "complexity": 100,
+      "status": "critical",
+      "issues": [
+        ">800 lines",
+        "complexity=100"
+      ]
+    },
+    {
+      "file": "scripts/test/test_llm_intelligence.gd",
+      "lines": 1299,
+      "max_nesting": 5,
+      "complexity": 176,
+      "status": "critical",
+      "issues": [
+        ">800 lines",
+        "complexity=176"
+      ]
+    },
+    {
+      "file": "scripts/audio/sfx_manager.gd",
+      "lines": 1177,
+      "max_nesting": 3,
+      "complexity": 80,
+      "status": "critical",
+      "issues": [
+        ">800 lines",
+        "complexity=80"
+      ]
+    },
+    {
+      "file": "scripts/merlin/merlin_constants.gd",
+      "lines": 1123,
+      "max_nesting": 4,
+      "complexity": 11,
+      "status": "critical",
+      "issues": [
+        ">800 lines"
+      ]
+    },
+    {
+      "file": "scripts/Calendar.gd",
+      "lines": 1109,
+      "max_nesting": 4,
+      "complexity": 144,
+      "status": "critical",
+      "issues": [
+        ">800 lines",
+        "complexity=144"
+      ]
+    },
+    {
+      "file": "scripts/test/test_integration_e2e.gd",
+      "lines": 1103,
+      "max_nesting": 4,
+      "complexity": 146,
+      "status": "critical",
+      "issues": [
+        ">800 lines",
+        "complexity=146"
+      ]
+    },
+    {
+      "file": "scripts/autoload/merlin_visual.gd",
+      "lines": 1100,
+      "max_nesting": 5,
+      "complexity": 51,
+      "status": "critical",
+      "issues": [
+        ">800 lines",
+        "complexity=51"
+      ]
+    },
+    {
+      "file": "scripts/SceneRencontreMerlin.gd",
+      "lines": 1086,
+      "max_nesting": 5,
+      "complexity": 185,
+      "status": "critical",
+      "issues": [
+        ">800 lines",
+        "complexity=185"
+      ]
+    },
+    {
+      "file": "scripts/test/test_llm_benchmark_run.gd",
+      "lines": 964,
+      "max_nesting": 6,
+      "complexity": 152,
+      "status": "critical",
+      "issues": [
+        ">800 lines",
+        "complexity=152"
+      ]
+    },
+    {
+      "file": "scripts/HubAntre.gd",
+      "lines": 919,
+      "max_nesting": 4,
+      "complexity": 102,
+      "status": "critical",
+      "issues": [
+        ">800 lines",
+        "complexity=102"
+      ]
+    },
+    {
+      "file": "scripts/merlin/merlin_card_system.gd",
+      "lines": 892,
+      "max_nesting": 5,
+      "complexity": 148,
+      "status": "critical",
+      "issues": [
+        ">800 lines",
+        "complexity=148"
+      ]
+    },
+    {
+      "file": "scripts/ui/pixel_scene_data.gd",
+      "lines": 830,
+      "max_nesting": 3,
+      "complexity": 3,
+      "status": "critical",
+      "issues": [
+        ">800 lines"
+      ]
+    },
+    {
+      "file": "scripts/IntroPersonalityQuiz.gd",
+      "lines": 805,
+      "max_nesting": 4,
+      "complexity": 70,
+      "status": "critical",
+      "issues": [
+        ">800 lines",
+        "complexity=70"
+      ]
+    },
+    {
+      "file": "scripts/test/test_llm_full_run.gd",
+      "lines": 788,
+      "max_nesting": 5,
+      "complexity": 131,
+      "status": "warning",
+      "issues": [
+        ">400 lines",
+        "complexity=131"
+      ]
+    },
+    {
+      "file": "scripts/autoload/pixel_transition.gd",
+      "lines": 780,
+      "max_nesting": 6,
+      "complexity": 122,
+      "status": "warning",
+      "issues": [
+        ">400 lines",
+        "complexity=122"
+      ]
+    },
+    {
+      "file": "scripts/Collection.gd",
+      "lines": 758,
+      "max_nesting": 3,
+      "complexity": 79,
+      "status": "warning",
+      "issues": [
+        ">400 lines",
+        "complexity=79"
+      ]
+    },
+    {
+      "file": "scripts/test/test_llm_card_validation.gd",
+      "lines": 713,
+      "max_nesting": 3,
+      "complexity": 70,
+      "status": "warning",
+      "issues": [
+        ">400 lines",
+        "complexity=70"
+      ]
+    },
+    {
+      "file": "scripts/ui/pixel_npc_portrait.gd",
+      "lines": 683,
+      "max_nesting": 5,
+      "complexity": 54,
+      "status": "warning",
+      "issues": [
+        ">400 lines",
+        "complexity=54"
+      ]
+    },
+    {
+      "file": "scripts/game_manager.gd",
+      "lines": 681,
+      "max_nesting": 6,
+      "complexity": 44,
+      "status": "warning",
+      "issues": [
+        ">400 lines",
+        "complexity=44"
+      ]
+    },
+    {
+      "file": "scripts/test/auto_play_runner.gd",
+      "lines": 679,
+      "max_nesting": 4,
+      "complexity": 132,
+      "status": "warning",
+      "issues": [
+        ">400 lines",
+        "complexity=132"
+      ]
+    },
+    {
+      "file": "scripts/test/game_debug_server.gd",
+      "lines": 655,
+      "max_nesting": 4,
+      "complexity": 87,
+      "status": "warning",
+      "issues": [
+        ">400 lines",
+        "complexity=87"
+      ]
+    },
+    {
+      "file": "scripts/merlin/merlin_effect_engine.gd",
+      "lines": 636,
+      "max_nesting": 5,
+      "complexity": 61,
+      "status": "warning",
+      "issues": [
+        ">400 lines",
+        "complexity=61"
+      ]
+    },
+    {
+      "file": "scripts/ui/hub_screen.gd",
+      "lines": 572,
+      "max_nesting": 4,
+      "complexity": 35,
+      "status": "warning",
+      "issues": [
+        ">400 lines",
+        "complexity=35"
+      ]
+    },
+    {
+      "file": "scripts/run/run_3d_controller.gd",
+      "lines": 570,
+      "max_nesting": 5,
+      "complexity": 76,
+      "status": "warning",
+      "issues": [
+        ">400 lines",
+        "complexity=76"
+      ]
+    },
+    {
+      "file": "scripts/autoload/pixel_content_animator.gd",
+      "lines": 560,
+      "max_nesting": 4,
+      "complexity": 87,
+      "status": "warning",
+      "issues": [
+        ">400 lines",
+        "complexity=87"
+      ]
+    },
+    {
+      "file": "scripts/ui/map_ui.gd",
+      "lines": 559,
+      "max_nesting": 6,
+      "complexity": 67,
+      "status": "warning",
+      "issues": [
+        ">400 lines",
+        "complexity=67"
+      ]
+    },
+    {
+      "file": "scripts/MenuOptions.gd",
+      "lines": 544,
+      "max_nesting": 4,
+      "complexity": 56,
+      "status": "warning",
+      "issues": [
+        ">400 lines",
+        "complexity=56"
+      ]
+    },
+    {
+      "file": "scripts/ui/card_scene_compositor.gd",
+      "lines": 544,
+      "max_nesting": 5,
+      "complexity": 75,
+      "status": "warning",
+      "issues": [
+        ">400 lines",
+        "complexity=75"
+      ]
+    },
+    {
+      "file": "scripts/ui/pixel_ogham_icons.gd",
+      "lines": 541,
+      "max_nesting": 4,
+      "complexity": 21,
+      "status": "warning",
+      "issues": [
+        ">400 lines",
+        "complexity=21"
+      ]
+    },
+    {
+      "file": "scripts/test/test_mos_convergence.gd",
+      "lines": 526,
+      "max_nesting": 4,
+      "complexity": 89,
+      "status": "warning",
+      "issues": [
+        ">400 lines",
+        "complexity=89"
+      ]
+    },
+    {
+      "file": "scripts/ui/pixel_merlin_portrait.gd",
+      "lines": 526,
+      "max_nesting": 5,
+      "complexity": 68,
+      "status": "warning",
+      "issues": [
+        ">400 lines",
+        "complexity=68"
+      ]
+    },
+    {
+      "file": "scripts/autoload/ScreenEffects.gd",
+      "lines": 523,
+      "max_nesting": 4,
+      "complexity": 42,
+      "status": "warning",
+      "issues": [
+        ">400 lines",
+        "complexity=42"
+      ]
+    },
+    {
+      "file": "scripts/run/biome_particles.gd",
+      "lines": 522,
+      "max_nesting": 3,
+      "complexity": 34,
+      "status": "warning",
+      "issues": [
+        ">400 lines",
+        "complexity=34"
+      ]
+    },
+    {
+      "file": "scripts/test/test_hub_screen.gd",
+      "lines": 509,
+      "max_nesting": 3,
+      "complexity": 57,
+      "status": "warning",
+      "issues": [
+        ">400 lines",
+        "complexity=57"
+      ]
+    },
+    {
+      "file": "scripts/IntroTutorial.gd",
+      "lines": 507,
+      "max_nesting": 4,
+      "complexity": 57,
+      "status": "warning",
+      "issues": [
+        ">400 lines",
+        "complexity=57"
+      ]
+    },
+    {
+      "file": "scripts/test/test_audio_generation.gd",
+      "lines": 501,
+      "max_nesting": 4,
+      "complexity": 50,
+      "status": "warning",
+      "issues": [
+        ">400 lines",
+        "complexity=50"
+      ]
+    },
+    {
+      "file": "scripts/test/test_confiance_merlin.gd",
+      "lines": 494,
+      "max_nesting": 4,
+      "complexity": 61,
+      "status": "warning",
+      "issues": [
+        ">400 lines",
+        "complexity=61"
+      ]
+    },
+    {
+      "file": "scripts/broceliande_3d/broc_chunk_manager.gd",
+      "lines": 490,
+      "max_nesting": 5,
+      "complexity": 61,
+      "status": "warning",
+      "issues": [
+        ">400 lines",
+        "complexity=61"
+      ]
+    },
+    {
+      "file": "scripts/ui/tutorial_card_layer.gd",
+      "lines": 472,
+      "max_nesting": 5,
+      "complexity": 57,
+      "status": "warning",
+      "issues": [
+        ">400 lines",
+        "complexity=57"
+      ]
+    },
+    {
+      "file": "scripts/ui/layered_scene_data.gd",
+      "lines": 449,
+      "max_nesting": 2,
+      "complexity": 4,
+      "status": "warning",
+      "issues": [
+        ">400 lines"
+      ]
+    },
+    {
+      "file": "scripts/test/test_mos.gd",
+      "lines": 440,
+      "max_nesting": 3,
+      "complexity": 71,
+      "status": "warning",
+      "issues": [
+        ">400 lines",
+        "complexity=71"
+      ]
+    },
+    {
+      "file": "scripts/test/test_card_layers.gd",
+      "lines": 428,
+      "max_nesting": 5,
+      "complexity": 17,
+      "status": "warning",
+      "issues": [
+        ">400 lines"
+      ]
+    },
+    {
+      "file": "scripts/ui/pixel_biome_backdrop.gd",
+      "lines": 426,
+      "max_nesting": 4,
+      "complexity": 69,
+      "status": "warning",
+      "issues": [
+        ">400 lines",
+        "complexity=69"
+      ]
+    },
+    {
+      "file": "scripts/merlin/merlin_save_system.gd",
+      "lines": 423,
+      "max_nesting": 4,
+      "complexity": 84,
+      "status": "warning",
+      "issues": [
+        ">400 lines",
+        "complexity=84"
+      ]
+    },
+    {
+      "file": "scripts/test/test_promise_karma.gd",
+      "lines": 423,
+      "max_nesting": 4,
+      "complexity": 46,
+      "status": "warning",
+      "issues": [
+        ">400 lines",
+        "complexity=46"
+      ]
+    },
+    {
+      "file": "scripts/test/test_minigame_scoring.gd",
+      "lines": 412,
+      "max_nesting": 3,
+      "complexity": 48,
+      "status": "warning",
+      "issues": [
+        ">400 lines",
+        "complexity=48"
+      ]
+    },
+    {
+      "file": "scripts/core/game_flow_controller.gd",
+      "lines": 410,
+      "max_nesting": 3,
+      "complexity": 45,
+      "status": "warning",
+      "issues": [
+        ">400 lines",
+        "complexity=45"
+      ]
+    },
+    {
+      "file": "scripts/test/test_ogham_activation.gd",
+      "lines": 405,
+      "max_nesting": 3,
+      "complexity": 38,
+      "status": "warning",
+      "issues": [
+        ">400 lines",
+        "complexity=38"
+      ]
+    },
+    {
+      "file": "scripts/test/test_fallback_pool.gd",
+      "lines": 404,
+      "max_nesting": 6,
+      "complexity": 63,
+      "status": "warning",
+      "issues": [
+        ">400 lines",
+        "complexity=63"
+      ]
+    },
+    {
+      "file": "scripts/run/end_run_screen.gd",
+      "lines": 397,
+      "max_nesting": 4,
+      "complexity": 23,
+      "status": "warning",
+      "issues": [
+        "complexity=23"
+      ]
+    },
+    {
+      "file": "scripts/test/test_anam_economy.gd",
+      "lines": 397,
+      "max_nesting": 4,
+      "complexity": 36,
+      "status": "warning",
+      "issues": [
+        "complexity=36"
+      ]
+    },
+    {
+      "file": "scripts/ui/pixel_scene_compositor.gd",
+      "lines": 397,
+      "max_nesting": 4,
+      "complexity": 75,
+      "status": "warning",
+      "issues": [
+        "complexity=75"
+      ]
+    },
+    {
+      "file": "scripts/broceliande_3d/walk_event_controller.gd",
+      "lines": 395,
+      "max_nesting": 3,
+      "complexity": 68,
+      "status": "warning",
+      "issues": [
+        "complexity=68"
+      ]
+    },
+    {
+      "file": "scripts/test/test_minigame_system.gd",
+      "lines": 389,
+      "max_nesting": 3,
+      "complexity": 44,
+      "status": "warning",
+      "issues": [
+        "complexity=44"
+      ]
+    },
+    {
+      "file": "scripts/merlin/merlin_biome_system.gd",
+      "lines": 384,
+      "max_nesting": 3,
+      "complexity": 46,
+      "status": "warning",
+      "issues": [
+        "complexity=46"
+      ]
+    },
+    {
+      "file": "scripts/autoload/screen_frame.gd",
+      "lines": 383,
+      "max_nesting": 5,
+      "complexity": 48,
+      "status": "warning",
+      "issues": [
+        "complexity=48"
+      ]
+    },
+    {
+      "file": "scripts/ui/pixel_character_portrait.gd",
+      "lines": 383,
+      "max_nesting": 4,
+      "complexity": 37,
+      "status": "warning",
+      "issues": [
+        "complexity=37"
+      ]
+    },
+    {
+      "file": "scripts/ui/biome_radial.gd",
+      "lines": 380,
+      "max_nesting": 4,
+      "complexity": 34,
+      "status": "warning",
+      "issues": [
+        "complexity=34"
+      ]
+    },
+    {
+      "file": "scripts/merlin/merlin_biome_tree.gd",
+      "lines": 374,
+      "max_nesting": 5,
+      "complexity": 50,
+      "status": "warning",
+      "issues": [
+        "complexity=50"
+      ]
+    },
+    {
+      "file": "scripts/test/pixel_art_showcase.gd",
+      "lines": 372,
+      "max_nesting": 5,
+      "complexity": 20,
+      "status": "ok",
+      "issues": []
+    },
+    {
+      "file": "scripts/test/test_game_flow.gd",
+      "lines": 371,
+      "max_nesting": 3,
+      "complexity": 13,
+      "status": "ok",
+      "issues": []
+    },
+    {
+      "file": "scripts/test/test_effect_engine.gd",
+      "lines": 369,
+      "max_nesting": 4,
+      "complexity": 46,
+      "status": "warning",
+      "issues": [
+        "complexity=46"
+      ]
+    },
+    {
+      "file": "scripts/autoload/world_map_system.gd",
+      "lines": 368,
+      "max_nesting": 4,
+      "complexity": 51,
+      "status": "warning",
+      "issues": [
+        "complexity=51"
+      ]
+    },
+    {
+      "file": "scripts/test/test_biome_maturity.gd",
+      "lines": 345,
+      "max_nesting": 4,
+      "complexity": 15,
+      "status": "ok",
+      "issues": []
+    },
+    {
+      "file": "scripts/test/test_save_system.gd",
+      "lines": 343,
+      "max_nesting": 3,
+      "complexity": 32,
+      "status": "warning",
+      "issues": [
+        "complexity=32"
+      ]
+    },
+    {
+      "file": "scripts/ui/hub_hotspot.gd",
+      "lines": 343,
+      "max_nesting": 5,
+      "complexity": 72,
+      "status": "warning",
+      "issues": [
+        "complexity=72"
+      ]
+    },
+    {
+      "file": "scripts/merlin/merlin_scenario_manager.gd",
+      "lines": 342,
+      "max_nesting": 4,
+      "complexity": 70,
+      "status": "warning",
+      "issues": [
+        "complexity=70"
+      ]
+    },
+    {
+      "file": "scripts/ui/arbre_de_vie_ui.gd",
+      "lines": 332,
+      "max_nesting": 4,
+      "complexity": 53,
+      "status": "warning",
+      "issues": [
+        "complexity=53"
+      ]
+    },
+    {
+      "file": "scripts/autoload/game_time_manager.gd",
+      "lines": 327,
+      "max_nesting": 4,
+      "complexity": 38,
+      "status": "warning",
+      "issues": [
+        "complexity=38"
+      ]
+    },
+    {
+      "file": "scripts/test/test_talent_tree.gd",
+      "lines": 327,
+      "max_nesting": 3,
+      "complexity": 43,
+      "status": "warning",
+      "issues": [
+        "complexity=43"
+      ]
+    },
+    {
+      "file": "scripts/ui/pixel_matrix_bg.gd",
+      "lines": 322,
+      "max_nesting": 5,
+      "complexity": 30,
+      "status": "warning",
+      "issues": [
+        "complexity=30"
+      ]
+    },
+    {
+      "file": "scripts/test/test_end_run_screen.gd",
+      "lines": 320,
+      "max_nesting": 3,
+      "complexity": 29,
+      "status": "warning",
+      "issues": [
+        "complexity=29"
+      ]
+    },
+    {
+      "file": "scripts/ui/sprite_factory/sprite_factory.gd",
+      "lines": 320,
+      "max_nesting": 3,
+      "complexity": 22,
+      "status": "warning",
+      "issues": [
+        "complexity=22"
+      ]
+    },
+    {
+      "file": "scripts/audio/music_manager.gd",
+      "lines": 318,
+      "max_nesting": 4,
+      "complexity": 50,
+      "status": "warning",
+      "issues": [
+        "complexity=50"
+      ]
+    },
+    {
+      "file": "scripts/test/test_reputation_system.gd",
+      "lines": 309,
+      "max_nesting": 2,
+      "complexity": 6,
+      "status": "ok",
+      "issues": []
+    },
+    {
+      "file": "scripts/IntroCeltOS.gd",
+      "lines": 294,
+      "max_nesting": 5,
+      "complexity": 15,
+      "status": "ok",
+      "issues": []
+    },
+    {
+      "file": "scripts/merlin/merlin_talent_system.gd",
+      "lines": 277,
+      "max_nesting": 6,
+      "complexity": 44,
+      "status": "warning",
+      "issues": [
+        "complexity=44"
+      ]
+    },
+    {
+      "file": "scripts/test/test_sfx_manager.gd",
+      "lines": 271,
+      "max_nesting": 3,
+      "complexity": 27,
+      "status": "warning",
+      "issues": [
+        "complexity=27"
+      ]
+    },
+    {
+      "file": "scripts/ui/hub_controller.gd",
+      "lines": 271,
+      "max_nesting": 5,
+      "complexity": 24,
+      "status": "warning",
+      "issues": [
+        "complexity=24"
+      ]
+    },
+    {
+      "file": "scripts/ui/arbre_pixel_art.gd",
+      "lines": 270,
+      "max_nesting": 5,
+      "complexity": 35,
+      "status": "warning",
+      "issues": [
+        "complexity=35"
+      ]
+    },
+    {
+      "file": "scripts/test/test_merlin_store.gd",
+      "lines": 268,
+      "max_nesting": 2,
+      "complexity": 10,
+      "status": "ok",
+      "issues": []
+    },
+    {
+      "file": "scripts/broceliande_3d/broc_event_vfx.gd",
+      "lines": 266,
+      "max_nesting": 4,
+      "complexity": 29,
+      "status": "warning",
+      "issues": [
+        "complexity=29"
+      ]
+    },
+    {
+      "file": "scripts/test/test_time_manager.gd",
+      "lines": 266,
+      "max_nesting": 3,
+      "complexity": 28,
+      "status": "warning",
+      "issues": [
+        "complexity=28"
+      ]
+    },
+    {
+      "file": "scripts/ui/walk_event_overlay.gd",
+      "lines": 258,
+      "max_nesting": 3,
+      "complexity": 20,
+      "status": "ok",
+      "issues": []
+    },
+    {
+      "file": "scripts/broceliande_3d/broc_events.gd",
+      "lines": 255,
+      "max_nesting": 6,
+      "complexity": 35,
+      "status": "warning",
+      "issues": [
+        "complexity=35"
+      ]
+    },
+    {
+      "file": "scripts/test/test_card_system.gd",
+      "lines": 255,
+      "max_nesting": 3,
+      "complexity": 15,
+      "status": "ok",
+      "issues": []
+    },
+    {
+      "file": "scripts/broceliande_3d/broc_creature_spawner.gd",
+      "lines": 254,
+      "max_nesting": 5,
+      "complexity": 29,
+      "status": "warning",
+      "issues": [
+        "complexity=29"
+      ]
+    },
+    {
+      "file": "scripts/ui/ambiance_data.gd",
+      "lines": 250,
+      "max_nesting": 2,
+      "complexity": 11,
+      "status": "ok",
+      "issues": []
+    },
+    {
+      "file": "scripts/merlin/merlin_minigame_system.gd",
+      "lines": 245,
+      "max_nesting": 3,
+      "complexity": 29,
+      "status": "warning",
+      "issues": [
+        "complexity=29"
+      ]
+    },
+    {
+      "file": "scripts/autoload/music_manager.gd",
+      "lines": 239,
+      "max_nesting": 3,
+      "complexity": 42,
+      "status": "warning",
+      "issues": [
+        "complexity=42"
+      ]
+    },
+    {
+      "file": "scripts/ui/hud_controller.gd",
+      "lines": 238,
+      "max_nesting": 3,
+      "complexity": 35,
+      "status": "warning",
+      "issues": [
+        "complexity=35"
+      ]
+    },
+    {
+      "file": "scripts/SelectionSauvegarde.gd",
+      "lines": 236,
+      "max_nesting": 4,
+      "complexity": 25,
+      "status": "warning",
+      "issues": [
+        "complexity=25"
+      ]
+    },
+    {
+      "file": "scripts/test/test_biome_particles.gd",
+      "lines": 235,
+      "max_nesting": 4,
+      "complexity": 9,
+      "status": "ok",
+      "issues": []
+    },
+    {
+      "file": "scripts/ui/faction_rep_bar.gd",
+      "lines": 233,
+      "max_nesting": 3,
+      "complexity": 13,
+      "status": "ok",
+      "issues": []
+    },
+    {
+      "file": "scripts/run/biome_config.gd",
+      "lines": 232,
+      "max_nesting": 2,
+      "complexity": 10,
+      "status": "ok",
+      "issues": []
+    },
+    {
+      "file": "scripts/merlin/merlin_gauge_system.gd",
+      "lines": 229,
+      "max_nesting": 3,
+      "complexity": 33,
+      "status": "warning",
+      "issues": [
+        "complexity=33"
+      ]
+    },
+    {
+      "file": "scripts/test/test_biome_config.gd",
+      "lines": 222,
+      "max_nesting": 4,
+      "complexity": 28,
+      "status": "warning",
+      "issues": [
+        "complexity=28"
+      ]
+    },
+    {
+      "file": "scripts/autoload/SceneSelector.gd",
+      "lines": 219,
+      "max_nesting": 3,
+      "complexity": 15,
+      "status": "ok",
+      "issues": []
+    },
+    {
+      "file": "scripts/minigames/mg_pile_ou_face.gd",
+      "lines": 217,
+      "max_nesting": 2,
+      "complexity": 21,
+      "status": "warning",
+      "issues": [
+        "complexity=21"
+      ]
+    },
+    {
+      "file": "scripts/broceliande_3d/broc_screen_vfx.gd",
+      "lines": 216,
+      "max_nesting": 4,
+      "complexity": 22,
+      "status": "warning",
+      "issues": [
+        "complexity=22"
+      ]
+    },
+    {
+      "file": "scripts/minigames/mg_joute_verbale.gd",
+      "lines": 213,
+      "max_nesting": 3,
+      "complexity": 25,
+      "status": "warning",
+      "issues": [
+        "complexity=25"
+      ]
+    },
+    {
+      "file": "scripts/ui/walk_hud.gd",
+      "lines": 212,
+      "max_nesting": 3,
+      "complexity": 9,
+      "status": "ok",
+      "issues": []
+    },
+    {
+      "file": "scripts/run/biome_visual_manager.gd",
+      "lines": 208,
+      "max_nesting": 3,
+      "complexity": 35,
+      "status": "warning",
+      "issues": [
+        "complexity=35"
+      ]
+    },
+    {
+      "file": "scripts/ui/merlin_bubble.gd",
+      "lines": 204,
+      "max_nesting": 3,
+      "complexity": 16,
+      "status": "ok",
+      "issues": []
+    },
+    {
+      "file": "scripts/test/auto_screenshot.gd",
+      "lines": 202,
+      "max_nesting": 6,
+      "complexity": 40,
+      "status": "warning",
+      "issues": [
+        "complexity=40"
+      ]
+    },
+    {
+      "file": "scripts/minigames/mg_volonte.gd",
+      "lines": 201,
+      "max_nesting": 4,
+      "complexity": 31,
+      "status": "warning",
+      "issues": [
+        "complexity=31"
+      ]
+    },
+    {
+      "file": "scripts/test/auto_walk_qa.gd",
+      "lines": 198,
+      "max_nesting": 5,
+      "complexity": 45,
+      "status": "warning",
+      "issues": [
+        "complexity=45"
+      ]
+    },
+    {
+      "file": "scripts/minigames/mg_echo.gd",
+      "lines": 194,
+      "max_nesting": 3,
+      "complexity": 15,
+      "status": "ok",
+      "issues": []
+    },
+    {
+      "file": "scripts/ui/sprite_factory/sprite_noise.gd",
+      "lines": 194,
+      "max_nesting": 7,
+      "complexity": 53,
+      "status": "warning",
+      "issues": [
+        "nesting=7",
+        "complexity=53"
+      ]
+    },
+    {
+      "file": "scripts/ui/end_run_screen.gd",
+      "lines": 193,
+      "max_nesting": 3,
+      "complexity": 14,
+      "status": "ok",
+      "issues": []
+    },
+    {
+      "file": "scripts/minigames/mg_enigme_ogham.gd",
+      "lines": 192,
+      "max_nesting": 3,
+      "complexity": 23,
+      "status": "warning",
+      "issues": [
+        "complexity=23"
+      ]
+    },
+    {
+      "file": "scripts/audio/stems_music_manager.gd",
+      "lines": 190,
+      "max_nesting": 4,
+      "complexity": 27,
+      "status": "warning",
+      "issues": [
+        "complexity=27"
+      ]
+    },
+    {
+      "file": "scripts/broceliande_3d/broc_atmosphere.gd",
+      "lines": 189,
+      "max_nesting": 5,
+      "complexity": 26,
+      "status": "warning",
+      "issues": [
+        "complexity=26"
+      ]
+    },
+    {
+      "file": "scripts/minigames/mg_pierre_feuille_racine.gd",
+      "lines": 182,
+      "max_nesting": 3,
+      "complexity": 17,
+      "status": "ok",
+      "issues": []
+    },
+    {
+      "file": "scripts/run/journey_map_display.gd",
+      "lines": 180,
+      "max_nesting": 3,
+      "complexity": 21,
+      "status": "warning",
+      "issues": [
+        "complexity=21"
+      ]
+    },
+    {
+      "file": "scripts/tutorial/tutorial_manager.gd",
+      "lines": 177,
+      "max_nesting": 3,
+      "complexity": 9,
+      "status": "ok",
+      "issues": []
+    },
+    {
+      "file": "scripts/minigames/mg_pas_renard.gd",
+      "lines": 174,
+      "max_nesting": 3,
+      "complexity": 28,
+      "status": "warning",
+      "issues": [
+        "complexity=28"
+      ]
+    },
+    {
+      "file": "scripts/broceliande_3d/broc_extra_decor.gd",
+      "lines": 172,
+      "max_nesting": 3,
+      "complexity": 13,
+      "status": "ok",
+      "issues": []
+    },
+    {
+      "file": "scripts/minigames/mg_ombres.gd",
+      "lines": 169,
+      "max_nesting": 3,
+      "complexity": 17,
+      "status": "ok",
+      "issues": []
+    },
+    {
+      "file": "scripts/minigames/mg_regard.gd",
+      "lines": 169,
+      "max_nesting": 3,
+      "complexity": 22,
+      "status": "warning",
+      "issues": [
+        "complexity=22"
+      ]
+    },
+    {
+      "file": "scripts/run/collectible_spawner.gd",
+      "lines": 167,
+      "max_nesting": 3,
+      "complexity": 12,
+      "status": "ok",
+      "issues": []
+    },
+    {
+      "file": "scripts/ui/merlin_reward_badge.gd",
+      "lines": 166,
+      "max_nesting": 6,
+      "complexity": 24,
+      "status": "warning",
+      "issues": [
+        "complexity=24"
+      ]
+    },
+    {
+      "file": "scripts/merlin/merlin_reputation_system.gd",
+      "lines": 165,
+      "max_nesting": 3,
+      "complexity": 18,
+      "status": "ok",
+      "issues": []
+    },
+    {
+      "file": "scripts/broceliande_3d/broc_autowalk.gd",
+      "lines": 162,
+      "max_nesting": 3,
+      "complexity": 15,
+      "status": "ok",
+      "issues": []
+    },
+    {
+      "file": "scripts/ui/sprite_factory/sprite_palette.gd",
+      "lines": 162,
+      "max_nesting": 3,
+      "complexity": 10,
+      "status": "ok",
+      "issues": []
+    },
+    {
+      "file": "scripts/minigames/mg_lame_druide.gd",
+      "lines": 161,
+      "max_nesting": 3,
+      "complexity": 25,
+      "status": "warning",
+      "issues": [
+        "complexity=25"
+      ]
+    },
+    {
+      "file": "scripts/minigames/mg_meditation.gd",
+      "lines": 161,
+      "max_nesting": 2,
+      "complexity": 16,
+      "status": "ok",
+      "issues": []
+    },
+    {
+      "file": "scripts/minigames/mg_negociation.gd",
+      "lines": 161,
+      "max_nesting": 2,
+      "complexity": 17,
+      "status": "ok",
+      "issues": []
+    },
+    {
+      "file": "scripts/minigames/minigame_registry.gd",
+      "lines": 160,
+      "max_nesting": 4,
+      "complexity": 19,
+      "status": "ok",
+      "issues": []
+    },
+    {
+      "file": "scripts/minigames/mg_oeil_corbeau.gd",
+      "lines": 158,
+      "max_nesting": 3,
+      "complexity": 22,
+      "status": "warning",
+      "issues": [
+        "complexity=22"
+      ]
+    },
+    {
+      "file": "scripts/minigames/mg_sang_froid.gd",
+      "lines": 158,
+      "max_nesting": 3,
+      "complexity": 24,
+      "status": "warning",
+      "issues": [
+        "complexity=24"
+      ]
+    },
+    {
+      "file": "scripts/minigames/mg_apaisement.gd",
+      "lines": 154,
+      "max_nesting": 3,
+      "complexity": 19,
+      "status": "ok",
+      "issues": []
+    },
+    {
+      "file": "scripts/minigames/mg_bluff_druide.gd",
+      "lines": 154,
+      "max_nesting": 3,
+      "complexity": 23,
+      "status": "warning",
+      "issues": [
+        "complexity=23"
+      ]
+    },
+    {
+      "file": "scripts/minigames/mg_noeud_celtique.gd",
+      "lines": 149,
+      "max_nesting": 3,
+      "complexity": 24,
+      "status": "warning",
+      "issues": [
+        "complexity=24"
+      ]
+    },
+    {
+      "file": "scripts/ui/llm_warmup_overlay.gd",
+      "lines": 148,
+      "max_nesting": 3,
+      "complexity": 32,
+      "status": "warning",
+      "issues": [
+        "complexity=32"
+      ]
+    },
+    {
+      "file": "scripts/minigames/mg_combat_rituel.gd",
+      "lines": 147,
+      "max_nesting": 3,
+      "complexity": 16,
+      "status": "ok",
+      "issues": []
+    },
+    {
+      "file": "scripts/broceliande_3d/broc_mass_fill.gd",
+      "lines": 145,
+      "max_nesting": 5,
+      "complexity": 36,
+      "status": "warning",
+      "issues": [
+        "complexity=36"
+      ]
+    },
+    {
+      "file": "scripts/broceliande_3d/broc_season.gd",
+      "lines": 144,
+      "max_nesting": 5,
+      "complexity": 22,
+      "status": "warning",
+      "issues": [
+        "complexity=22"
+      ]
+    },
+    {
+      "file": "scripts/ui/screen_dither_layer.gd",
+      "lines": 144,
+      "max_nesting": 2,
+      "complexity": 5,
+      "status": "ok",
+      "issues": []
+    },
+    {
+      "file": "scripts/minigames/mg_tir_a_larc.gd",
+      "lines": 143,
+      "max_nesting": 2,
+      "complexity": 13,
+      "status": "ok",
+      "issues": []
+    },
+    {
+      "file": "scripts/minigames/minigame_base.gd",
+      "lines": 139,
+      "max_nesting": 3,
+      "complexity": 15,
+      "status": "ok",
+      "issues": []
+    },
+    {
+      "file": "scripts/minigames/mg_course.gd",
+      "lines": 133,
+      "max_nesting": 3,
+      "complexity": 16,
+      "status": "ok",
+      "issues": []
+    },
+    {
+      "file": "scripts/run/transition_manager.gd",
+      "lines": 132,
+      "max_nesting": 2,
+      "complexity": 13,
+      "status": "ok",
+      "issues": []
+    },
+    {
+      "file": "scripts/broceliande_3d/broc_day_night.gd",
+      "lines": 130,
+      "max_nesting": 3,
+      "complexity": 11,
+      "status": "ok",
+      "issues": []
+    },
+    {
+      "file": "scripts/ui/menu_return_button.gd",
+      "lines": 130,
+      "max_nesting": 3,
+      "complexity": 8,
+      "status": "ok",
+      "issues": []
+    },
+    {
+      "file": "scripts/minigames/mg_rune_cachee.gd",
+      "lines": 128,
+      "max_nesting": 3,
+      "complexity": 16,
+      "status": "ok",
+      "issues": []
+    },
+    {
+      "file": "scripts/autoload/pixel_transition_config.gd",
+      "lines": 127,
+      "max_nesting": 3,
+      "complexity": 5,
+      "status": "ok",
+      "issues": []
+    },
+    {
+      "file": "scripts/minigames/mg_trace_cerf.gd",
+      "lines": 127,
+      "max_nesting": 3,
+      "complexity": 14,
+      "status": "ok",
+      "issues": []
+    },
+    {
+      "file": "scripts/merlin/merlin_map_system.gd",
+      "lines": 125,
+      "max_nesting": 4,
+      "complexity": 34,
+      "status": "warning",
+      "issues": [
+        "complexity=34"
+      ]
+    },
+    {
+      "file": "scripts/merlin/merlin_action_resolver.gd",
+      "lines": 123,
+      "max_nesting": 3,
+      "complexity": 12,
+      "status": "ok",
+      "issues": []
+    },
+    {
+      "file": "scripts/minigames/mg_roue_fortune.gd",
+      "lines": 123,
+      "max_nesting": 3,
+      "complexity": 20,
+      "status": "ok",
+      "issues": []
+    },
+    {
+      "file": "scripts/test/screenshot_runner.gd",
+      "lines": 123,
+      "max_nesting": 3,
+      "complexity": 19,
+      "status": "ok",
+      "issues": []
+    },
+    {
+      "file": "scripts/autoload/LocaleManager.gd",
+      "lines": 122,
+      "max_nesting": 3,
+      "complexity": 19,
+      "status": "ok",
+      "issues": []
+    },
+    {
+      "file": "scripts/broceliande_3d/broc_narrative_director.gd",
+      "lines": 112,
+      "max_nesting": 4,
+      "complexity": 23,
+      "status": "warning",
+      "issues": [
+        "complexity=23"
+      ]
+    },
+    {
+      "file": "scripts/broceliande_3d/broc_dense_fill.gd",
+      "lines": 109,
+      "max_nesting": 3,
+      "complexity": 18,
+      "status": "ok",
+      "issues": []
+    },
+    {
+      "file": "scripts/broceliande_3d/broc_grass_wind.gd",
+      "lines": 106,
+      "max_nesting": 6,
+      "complexity": 21,
+      "status": "warning",
+      "issues": [
+        "complexity=21"
+      ]
+    },
+    {
+      "file": "scripts/ui/llm_source_badge.gd",
+      "lines": 103,
+      "max_nesting": 3,
+      "complexity": 7,
+      "status": "ok",
+      "issues": []
+    },
+    {
+      "file": "scripts/broceliande_3d/broc_multimesh_pool.gd",
+      "lines": 94,
+      "max_nesting": 3,
+      "complexity": 19,
+      "status": "ok",
+      "issues": []
+    },
+    {
+      "file": "scripts/ui/custom_cursor.gd",
+      "lines": 87,
+      "max_nesting": 3,
+      "complexity": 7,
+      "status": "ok",
+      "issues": []
+    },
+    {
+      "file": "scripts/broceliande_3d/biome_walk_config.gd",
+      "lines": 75,
+      "max_nesting": 1,
+      "complexity": 3,
+      "status": "ok",
+      "issues": []
+    },
+    {
+      "file": "scripts/merlin/merlin_event_system.gd",
+      "lines": 73,
+      "max_nesting": 2,
+      "complexity": 8,
+      "status": "ok",
+      "issues": []
+    },
+    {
+      "file": "scripts/merlin_backdrop.gd",
+      "lines": 68,
+      "max_nesting": 2,
+      "complexity": 7,
+      "status": "ok",
+      "issues": []
+    },
+    {
+      "file": "scripts/test/bootstrap_merlin_game.gd",
+      "lines": 54,
+      "max_nesting": 2,
+      "complexity": 4,
+      "status": "ok",
+      "issues": []
+    },
+    {
+      "file": "scripts/ui/card_layer.gd",
+      "lines": 42,
+      "max_nesting": 1,
+      "complexity": 1,
+      "status": "ok",
+      "issues": []
+    },
+    {
+      "file": "scripts/merlin/merlin_rng.gd",
+      "lines": 37,
+      "max_nesting": 2,
+      "complexity": 2,
+      "status": "ok",
+      "issues": []
+    },
+    {
+      "file": "scripts/ui/reputation_hud.gd",
+      "lines": 35,
+      "max_nesting": 3,
+      "complexity": 7,
+      "status": "ok",
+      "issues": []
+    },
+    {
+      "file": "scripts/ui/hub_souffle_bar.gd",
+      "lines": 8,
+      "max_nesting": 1,
+      "complexity": 1,
+      "status": "ok",
+      "issues": []
+    },
+    {
+      "file": "scripts/ui/hub_triade_hud.gd",
+      "lines": 8,
+      "max_nesting": 1,
+      "complexity": 1,
+      "status": "ok",
+      "issues": []
+    }
+  ],
+  "summary": {
+    "score": 67,
+    "bottlenecks": [
+      "Estimated draw calls 307 exceeds warning threshold",
+      "21 files with potential concurrent tween risks (review recommended)",
+      "21 scripts exceed 800 lines (refactoring recommended)"
+    ],
+    "pass": true,
+    "grade": "D"
+  }
+}
