@@ -106,8 +106,7 @@ def find_wrong_option_count(cards: list[dict]) -> list[dict]:
 
 
 def build_report(cards: list[dict], files: list[Path]) -> dict:
-    # Use faction_primaire if present in data, fall back to faction
-    faction_field = "faction_primaire" if any("faction_primaire" in c for c in cards) else "faction"
+    faction_field = "faction"
 
     return {
         "total_cards": len(cards),

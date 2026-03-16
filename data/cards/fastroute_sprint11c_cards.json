@@ -1,7 +1,6 @@
 [
   {
     "id": "fr_s11c_revelation_001",
-    "faction_primaire": "druides",
     "biome": "foret_broceliande",
     "champ_lexical": "esprit",
     "merlin_direct": true,
@@ -60,11 +59,11 @@
       "oghams",
       "T3",
       "high_tier"
-    ]
+    ],
+    "faction": "druides"
   },
   {
     "id": "fr_s11c_revelation_002",
-    "faction_primaire": "anciens",
     "biome": "cercles_pierres",
     "champ_lexical": "logique",
     "merlin_direct": true,
@@ -123,11 +122,11 @@
       "ley_lines",
       "T3",
       "high_tier"
-    ]
+    ],
+    "faction": "anciens"
   },
   {
     "id": "fr_s11c_revelation_003",
-    "faction_primaire": "niamh",
     "biome": "iles_mystiques",
     "champ_lexical": "perception",
     "merlin_direct": true,
@@ -186,11 +185,11 @@
       "factions",
       "T3",
       "high_tier"
-    ]
+    ],
+    "faction": "niamh"
   },
   {
     "id": "fr_s11c_revelation_004",
-    "faction_primaire": "ankou",
     "biome": "collines_dolmens",
     "champ_lexical": "esprit",
     "merlin_direct": true,
@@ -249,11 +248,11 @@
       "anam",
       "T3",
       "high_tier"
-    ]
+    ],
+    "faction": "ankou"
   },
   {
     "id": "fr_s11c_revelation_005",
-    "faction_primaire": "korrigans",
     "biome": "marais_korrigans",
     "champ_lexical": "bluff",
     "merlin_direct": true,
@@ -312,11 +311,11 @@
       "korrigans",
       "T3",
       "high_tier"
-    ]
+    ],
+    "faction": "korrigans"
   },
   {
     "id": "fr_s11c_revelation_006",
-    "faction_primaire": "druides",
     "biome": "foret_broceliande",
     "champ_lexical": "observation",
     "merlin_direct": true,
@@ -375,11 +374,11 @@
       "succession",
       "T3",
       "high_tier"
-    ]
+    ],
+    "faction": "druides"
   },
   {
     "id": "fr_s11c_revelation_007",
-    "faction_primaire": "anciens",
     "biome": "villages_celtes",
     "champ_lexical": "esprit",
     "merlin_direct": true,
@@ -438,11 +437,11 @@
       "promesses",
       "T3",
       "high_tier"
-    ]
+    ],
+    "faction": "anciens"
   },
   {
     "id": "fr_s11c_revelation_008",
-    "faction_primaire": "niamh",
     "biome": "cotes_sauvages",
     "champ_lexical": "chance",
     "merlin_direct": true,
@@ -501,11 +500,11 @@
       "hasard",
       "T3",
       "high_tier"
-    ]
+    ],
+    "faction": "niamh"
   },
   {
     "id": "fr_s11c_revelation_009",
-    "faction_primaire": "druides",
     "biome": "landes_bruyere",
     "champ_lexical": "perception",
     "merlin_direct": true,
@@ -564,11 +563,11 @@
       "ecoute",
       "T3",
       "high_tier"
-    ]
+    ],
+    "faction": "druides"
   },
   {
     "id": "fr_s11c_revelation_010",
-    "faction_primaire": "druides",
     "biome": "foret_broceliande",
     "champ_lexical": "esprit",
     "merlin_direct": true,
@@ -627,11 +626,11 @@
       "19e_ogham",
       "T3",
       "high_tier"
-    ]
+    ],
+    "faction": "druides"
   },
   {
     "id": "fr_s11c_confrontation_001",
-    "faction_primaire": "ankou",
     "biome": "collines_dolmens",
     "champ_lexical": "vigueur",
     "text": "La terre tremble. Les dolmens s'effondrent un par un, liberant des colonnes de fumee noire. Une entite ancienne — ni vivante ni morte, anterieure aux factions — s'eleve du sol. 'Je suis ce qui etait avant les reves,' gronde-t-elle. 'Et je serai ce qui restera quand les reves cesseront.' L'Ankou recule pour la premiere fois.",
@@ -688,11 +687,11 @@
       "entite_ancienne",
       "boss"
     ],
-    "trust_tier": "T0"
+    "trust_tier": "T0",
+    "faction": "ankou"
   },
   {
     "id": "fr_s11c_confrontation_002",
-    "faction_primaire": "druides",
     "biome": "foret_broceliande",
     "champ_lexical": "esprit",
     "text": "L'entite ancienne a corrompu la foret. Les arbres saignent de la seve noire, les animaux fuient en hurlant. Maelgwn est a genoux, ses forces de druide insuffisantes. 'Les arbres appellent a l'aide,' dit-il d'une voix brisee. 'Ils disent ton nom. Pas le mien. Le tien.' Il te regarde avec un melange de terreur et d'espoir.",
@@ -749,11 +748,11 @@
       "foret_corrompue",
       "boss"
     ],
-    "trust_tier": "T0"
+    "trust_tier": "T0",
+    "faction": "druides"
   },
   {
     "id": "fr_s11c_confrontation_003",
-    "faction_primaire": "niamh",
     "biome": "iles_mystiques",
     "champ_lexical": "finesse",
     "text": "L'entite a envahi les iles mystiques. Le voile entre les mondes se dechire, melangeant les vivants et les morts, le reel et l'imaginaire. Morgane tente de maintenir les barrieres, mais elle faiblit. 'Si les mondes fusionnent, tout sera perdu — pas detruit, melange. Et le melange sera la folie.'",
@@ -810,11 +809,11 @@
       "voile_dechire",
       "boss"
     ],
-    "trust_tier": "T0"
+    "trust_tier": "T0",
+    "faction": "niamh"
   },
   {
     "id": "fr_s11c_confrontation_004",
-    "faction_primaire": "korrigans",
     "biome": "marais_korrigans",
     "champ_lexical": "bluff",
     "text": "L'entite a plonge les marais dans un silence absolu — plus de rires, plus de tours, plus de malice. Les korrigans sont petrifie. Gwen Du te tire par la manche. 'L'Oubli,' murmure-t-elle. 'C'est comme cela que l'entite gagne — elle efface la joie. Si les korrigans ne rient plus, c'est la fin. Fais-les rire. N'importe comment.'",
@@ -872,11 +871,11 @@
       "rire",
       "boss"
     ],
-    "trust_tier": "T0"
+    "trust_tier": "T0",
+    "faction": "korrigans"
   },
   {
     "id": "fr_s11c_confrontation_005",
-    "faction_primaire": "anciens",
     "biome": "cercles_pierres",
     "champ_lexical": "logique",
     "text": "L'entite se tient au centre du cercle de pierres, absorbant l'energie des menhirs. Brennos crie que si elle vide les pierres, les anciens perdront leur memoire — des millenaires d'histoire, effaces. 'Les equations de la terre se defont,' dit-il. 'Il faut les recalculer — maintenant — avant que le dernier menhir ne s'eteigne.'",
@@ -934,11 +933,11 @@
       "memoire",
       "boss"
     ],
-    "trust_tier": "T0"
+    "trust_tier": "T0",
+    "faction": "anciens"
   },
   {
     "id": "fr_s11c_confrontation_006",
-    "faction_primaire": "druides",
     "biome": "foret_broceliande",
     "champ_lexical": "perception",
     "merlin_direct": true,
@@ -997,11 +996,11 @@
       "merlin_aide",
       "oubli",
       "boss"
-    ]
+    ],
+    "faction": "druides"
   },
   {
     "id": "fr_s11c_confrontation_007",
-    "faction_primaire": "ankou",
     "biome": "collines_dolmens",
     "champ_lexical": "esprit",
     "text": "L'Ankou offre son aide ultime : 'Je peux rallentir l'entite. Pas longtemps. Mais assez pour que tu rassembles les cinq forces. Je suis la Memoire de la terre — l'Oubli est mon oppose. Nous nous annulons.' Il leve sa faux, et pour la premiere fois, elle brille — non pas de mort, mais de souvenir.",
@@ -1059,11 +1058,11 @@
       "memoire_vs_oubli",
       "boss"
     ],
-    "trust_tier": "T0"
+    "trust_tier": "T0",
+    "faction": "ankou"
   },
   {
     "id": "fr_s11c_confrontation_008",
-    "faction_primaire": "druides",
     "biome": "cercles_pierres",
     "champ_lexical": "vigueur",
     "text": "Le moment decisif. Les cinq factions canalisent leur force a travers toi — tu es le point de convergence. L'energie est ecrasante. Tes os vibrent, ta vision se brouille. Mais tu tiens. Chaque faction ajoute sa note : la perception des druides, la sagesse des anciens, l'instinct des korrigans, l'imagination de Niamh, la memoire de l'Ankou.",
@@ -1121,11 +1120,11 @@
       "cinq_forces",
       "climax"
     ],
-    "trust_tier": "T0"
+    "trust_tier": "T0",
+    "faction": "druides"
   },
   {
     "id": "fr_s11c_confrontation_009",
-    "faction_primaire": "niamh",
     "biome": "iles_mystiques",
     "champ_lexical": "chance",
     "text": "L'entite vacille. L'Oubli recule. Mais elle tente un dernier acte : effacer ta memoire de tout le voyage. Tes souvenirs commencent a s'estomper — les visages, les noms, les choix. Il ne reste qu'un seul — le premier. Le moment ou tu as pose le pied dans ce monde. 'Souviens-toi,' hurle la voix de Merlin. 'Souviens-toi de TOUT.'",
@@ -1183,11 +1182,11 @@
       "dernier_acte",
       "climax"
     ],
-    "trust_tier": "T0"
+    "trust_tier": "T0",
+    "faction": "niamh"
   },
   {
     "id": "fr_s11c_confrontation_010",
-    "faction_primaire": "druides",
     "biome": "foret_broceliande",
     "champ_lexical": "esprit",
     "merlin_direct": true,
@@ -1246,11 +1245,11 @@
       "victoire",
       "repos",
       "climax"
-    ]
+    ],
+    "faction": "druides"
   },
   {
     "id": "fr_s11c_epilogue_001",
-    "faction_primaire": "druides",
     "biome": "foret_broceliande",
     "champ_lexical": "observation",
     "text": "Le matin suivant, la foret est plus belle qu'elle ne l'a jamais ete. Les oiseaux chantent des melodies que tu n'avais jamais entendues. Un jeune chene a pousse pendant la nuit a l'endroit exact ou tu as dormi. Maelgwn le regarde avec emerveillement. 'Un Ogham vivant,' murmure-t-il. 'Tu as plante quelque chose cette nuit. Quelque chose qui durera des siecles.'",
@@ -1307,11 +1306,11 @@
       "chene",
       "renouveau"
     ],
-    "trust_tier": "T0"
+    "trust_tier": "T0",
+    "faction": "druides"
   },
   {
     "id": "fr_s11c_epilogue_002",
-    "faction_primaire": "anciens",
     "biome": "cercles_pierres",
     "champ_lexical": "logique",
     "text": "Les menhirs du cercle brillent d'une lumiere nouvelle — pas l'ancienne lumiere froide, mais une lumiere chaude, doree. Brennos decouvre de nouvelles inscriptions qui n'existaient pas hier. 'Tu as ajoute une page a l'histoire du monde,' dit-il, emu. 'Les pierres se souviennent de ce que tu as fait. Et elles le raconteront a ceux qui viendront apres.'",
@@ -1368,11 +1367,11 @@
       "menhirs",
       "histoire"
     ],
-    "trust_tier": "T0"
+    "trust_tier": "T0",
+    "faction": "anciens"
   },
   {
     "id": "fr_s11c_epilogue_003",
-    "faction_primaire": "korrigans",
     "biome": "marais_korrigans",
     "champ_lexical": "bluff",
     "text": "Les marais resonnent de rires — les korrigans celebrent. Gwen Du t'accueille avec une couronne de roseaux tresses. 'Tu as sauve le rire,' dit-elle. 'C'est le plus grand exploit qu'un mortel ait jamais accompli selon les korrigans. En recompense, tu as le droit de nous mentir une fois par an — et nous serons obliges de te croire.'",
@@ -1429,11 +1428,11 @@
       "rire",
       "korrigans"
     ],
-    "trust_tier": "T0"
+    "trust_tier": "T0",
+    "faction": "korrigans"
   },
   {
     "id": "fr_s11c_epilogue_004",
-    "faction_primaire": "niamh",
     "biome": "iles_mystiques",
     "champ_lexical": "perception",
     "text": "Sur les iles, le voile entre les mondes s'est reconstitue — mais differemment. Il est plus fin, plus translucide. Morgane te montre que tu peux maintenant voir l'autre cote si tu plisses les yeux. 'Le monde feerique n'est plus cache,' dit-elle. 'Il est juste a cote, comme une piece voisine dont la porte est toujours entrouverte.'",
@@ -1490,11 +1489,11 @@
       "voile",
       "fees"
     ],
-    "trust_tier": "T0"
+    "trust_tier": "T0",
+    "faction": "niamh"
   },
   {
     "id": "fr_s11c_epilogue_005",
-    "faction_primaire": "ankou",
     "biome": "collines_dolmens",
     "champ_lexical": "esprit",
     "text": "L'Ankou est assis sur un dolmen, regardant le coucher de soleil. C'est la premiere fois que tu le vois immobile et paisible. 'La mort n'est pas la fin,' dit-il sans se retourner. 'La mort est la ponctuation. Sans elle, la vie serait une phrase qui ne s'arrete jamais. Et une phrase sans fin n'a pas de sens.'",
@@ -1552,11 +1551,11 @@
       "ankou",
       "paix"
     ],
-    "trust_tier": "T0"
+    "trust_tier": "T0",
+    "faction": "ankou"
   },
   {
     "id": "fr_s11c_epilogue_006",
-    "faction_primaire": "druides",
     "biome": "landes_bruyere",
     "champ_lexical": "vigueur",
     "text": "Erwan et Keridwen t'attendent sur les landes pour un dernier rite. Ils ont construit un cairn a ton nom — le premier cairn dedie a un vivant. 'Les landes se souviennent de ton passage,' dit Erwan. 'Le vent portera ton histoire aux quatre coins de cette terre. Tu n'as plus besoin de courir — tu fais partie du paysage maintenant.'",
@@ -1613,11 +1612,11 @@
       "cairn",
       "landes"
     ],
-    "trust_tier": "T0"
+    "trust_tier": "T0",
+    "faction": "druides"
   },
   {
     "id": "fr_s11c_epilogue_007",
-    "faction_primaire": "anciens",
     "biome": "villages_celtes",
     "champ_lexical": "esprit",
     "text": "Cadogan organise un festin en ton honneur. Tout le village est present — et pas seulement les vivants. Des silhouettes translucides assistent depuis les coins de la salle, souriant en silence. 'Les ancetres sont venus voir celui qui a sauve la memoire du monde,' dit Cadogan. 'C'est le plus grand honneur qu'un village celte puisse offrir.'",
@@ -1674,11 +1673,11 @@
       "festin",
       "ancetres"
     ],
-    "trust_tier": "T0"
+    "trust_tier": "T0",
+    "faction": "anciens"
   },
   {
     "id": "fr_s11c_epilogue_008",
-    "faction_primaire": "niamh",
     "biome": "cotes_sauvages",
     "champ_lexical": "observation",
     "text": "Maelle t'accompagne une derniere fois sur les cotes. La mer est d'un bleu impossible, comme si le ciel s'y etait fondu. Des dauphins feeriques sautent entre les vagues, laissant des trainées d'arc-en-ciel. 'La mer te dit au revoir a sa maniere,' sourit Maelle. 'Elle est contente. Tu as bien joue.'",
@@ -1735,11 +1734,11 @@
       "mer",
       "adieu"
     ],
-    "trust_tier": "T0"
+    "trust_tier": "T0",
+    "faction": "niamh"
   },
   {
     "id": "fr_s11c_epilogue_009",
-    "faction_primaire": "korrigans",
     "biome": "villages_celtes",
     "champ_lexical": "chance",
     "text": "Un korrigan t'arrête a la sortie du village. Il porte un sac de toile. 'Dedans, il y a un cadeau de chaque faction,' dit-il. 'Mais on a tout melange parce que c'est plus drole. Tu veux ouvrir le sac ? Ou tu preferes deviner ce qu'il y a dedans ? Le premier choix est sur. Le deuxieme est meilleur.'",
@@ -1796,11 +1795,11 @@
       "cadeau",
       "surprise"
     ],
-    "trust_tier": "T0"
+    "trust_tier": "T0",
+    "faction": "korrigans"
   },
   {
     "id": "fr_s11c_epilogue_010",
-    "faction_primaire": "druides",
     "biome": "foret_broceliande",
     "champ_lexical": "esprit",
     "merlin_direct": true,
@@ -1859,6 +1858,7 @@
       "epilogue",
       "adieu_merlin",
       "final"
-    ]
+    ],
+    "faction": "druides"
   }
 ]

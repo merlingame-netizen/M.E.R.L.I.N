@@ -5,31 +5,53 @@
     "biome": "foret_broceliande",
     "faction": "druides",
     "trust_tier": "T0",
-    "tags": ["verb_balance"],
+    "tags": [
+      "verb_balance"
+    ],
     "options": [
       {
-        "text": "Tisser vos propres fils de lumiere dans le motif ancestral",
-        "verb": "tisser",
+        "verb": "accepter",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "druides", "value": 10},
-          {"type": "ADD_ANAM", "value": 1}
-        ]
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "druides",
+            "amount": 10
+          },
+          {
+            "type": "ADD_ANAM",
+            "amount": 1
+          }
+        ],
+        "label": "Tisser vos propres fils de lumiere dans le motif ancestral"
       },
       {
-        "text": "Observer les motifs pour en comprendre le sens cache",
         "verb": "observer",
         "effects": [
-          {"type": "HEAL_LIFE", "value": 8},
-          {"type": "ADD_BIOME_CURRENCY", "value": 2}
-        ]
+          {
+            "type": "HEAL_LIFE",
+            "amount": 8
+          },
+          {
+            "type": "ADD_BIOME_CURRENCY",
+            "amount": 2
+          }
+        ],
+        "label": "Observer les motifs pour en comprendre le sens cache"
       },
       {
-        "text": "Trancher les fils pour liberer les ames emprisonnees",
-        "verb": "detruire",
+        "verb": "accepter",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "ankou", "value": 12},
-          {"type": "DAMAGE_LIFE", "value": -5}
-        ]
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "ankou",
+            "amount": 12
+          },
+          {
+            "type": "DAMAGE_LIFE",
+            "amount": -5
+          }
+        ],
+        "label": "Trancher les fils pour liberer les ames emprisonnees"
       }
     ]
   },
@@ -39,31 +61,54 @@
     "biome": "collines_dolmens",
     "faction": "anciens",
     "trust_tier": "T0",
-    "tags": ["verb_balance"],
+    "tags": [
+      "verb_balance"
+    ],
     "options": [
       {
-        "text": "Forger une lame avec le fantome, coup pour coup",
-        "verb": "forger",
+        "verb": "forcer",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "anciens", "value": 12},
-          {"type": "ADD_BIOME_CURRENCY", "value": 2}
-        ]
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "anciens",
+            "amount": 12
+          },
+          {
+            "type": "ADD_BIOME_CURRENCY",
+            "amount": 2
+          }
+        ],
+        "label": "Forger une lame avec le fantome, coup pour coup"
       },
       {
-        "text": "Prier pour le repos du forgeron eternel",
-        "verb": "prier",
+        "verb": "mediter",
         "effects": [
-          {"type": "HEAL_LIFE", "value": 10},
-          {"type": "ADD_REPUTATION", "faction": "anciens", "value": 5}
-        ]
+          {
+            "type": "HEAL_LIFE",
+            "amount": 10
+          },
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "anciens",
+            "amount": 5
+          }
+        ],
+        "label": "Prier pour le repos du forgeron eternel"
       },
       {
-        "text": "Absorber la chaleur des flammes spectrales",
-        "verb": "absorber",
+        "verb": "accepter",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "druides", "value": 8},
-          {"type": "DAMAGE_LIFE", "value": -8}
-        ]
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "druides",
+            "amount": 8
+          },
+          {
+            "type": "DAMAGE_LIFE",
+            "amount": -8
+          }
+        ],
+        "label": "Absorber la chaleur des flammes spectrales"
       }
     ]
   },
@@ -73,31 +118,53 @@
     "biome": "marais_korrigans",
     "faction": "korrigans",
     "trust_tier": "T0",
-    "tags": ["verb_balance"],
+    "tags": [
+      "verb_balance"
+    ],
     "options": [
       {
-        "text": "Planter les graines ancestrales dans la tourbe fertile",
-        "verb": "planter",
+        "verb": "accepter",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "korrigans", "value": 10},
-          {"type": "HEAL_LIFE", "value": 5}
-        ]
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "korrigans",
+            "amount": 10
+          },
+          {
+            "type": "HEAL_LIFE",
+            "amount": 5
+          }
+        ],
+        "label": "Planter les graines ancestrales dans la tourbe fertile"
       },
       {
-        "text": "Recolter les mousses luminescentes qui bordent le sentier",
-        "verb": "recolter",
+        "verb": "accepter",
         "effects": [
-          {"type": "ADD_BIOME_CURRENCY", "value": 3},
-          {"type": "ADD_ANAM", "value": 1}
-        ]
+          {
+            "type": "ADD_BIOME_CURRENCY",
+            "amount": 3
+          },
+          {
+            "type": "ADD_ANAM",
+            "amount": 1
+          }
+        ],
+        "label": "Recolter les mousses luminescentes qui bordent le sentier"
       },
       {
-        "text": "Fuir avant que la brume ne vous engloutisse",
         "verb": "fuir",
         "effects": [
-          {"type": "HEAL_LIFE", "value": 12},
-          {"type": "ADD_REPUTATION", "faction": "korrigans", "value": -5}
-        ]
+          {
+            "type": "HEAL_LIFE",
+            "amount": 12
+          },
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "korrigans",
+            "amount": -5
+          }
+        ],
+        "label": "Fuir avant que la brume ne vous engloutisse"
       }
     ]
   },
@@ -107,31 +174,53 @@
     "biome": "cercles_pierres",
     "faction": "druides",
     "trust_tier": "T0",
-    "tags": ["verb_balance"],
+    "tags": [
+      "verb_balance"
+    ],
     "options": [
       {
-        "text": "Absorber l'energie tellurique par meditation profonde",
-        "verb": "absorber",
+        "verb": "accepter",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "druides", "value": 12},
-          {"type": "DAMAGE_LIFE", "value": -6}
-        ]
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "druides",
+            "amount": 12
+          },
+          {
+            "type": "DAMAGE_LIFE",
+            "amount": -6
+          }
+        ],
+        "label": "Absorber l'energie tellurique par meditation profonde"
       },
       {
-        "text": "Construire un cairn pour canaliser le flux",
-        "verb": "construire",
+        "verb": "contourner",
         "effects": [
-          {"type": "ADD_BIOME_CURRENCY", "value": 3},
-          {"type": "HEAL_LIFE", "value": 5}
-        ]
+          {
+            "type": "ADD_BIOME_CURRENCY",
+            "amount": 3
+          },
+          {
+            "type": "HEAL_LIFE",
+            "amount": 5
+          }
+        ],
+        "label": "Construire un cairn pour canaliser le flux"
       },
       {
-        "text": "Chanter un hymne ancien pour harmoniser les pierres",
-        "verb": "chanter",
+        "verb": "apaiser",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "anciens", "value": 8},
-          {"type": "ADD_ANAM", "value": 1}
-        ]
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "anciens",
+            "amount": 8
+          },
+          {
+            "type": "ADD_ANAM",
+            "amount": 1
+          }
+        ],
+        "label": "Chanter un hymne ancien pour harmoniser les pierres"
       }
     ]
   },
@@ -141,31 +230,53 @@
     "biome": "cotes_sauvages",
     "faction": "niamh",
     "trust_tier": "T0",
-    "tags": ["verb_balance"],
+    "tags": [
+      "verb_balance"
+    ],
     "options": [
       {
-        "text": "Chanter avec le barde les complaintes des navigateurs perdus",
-        "verb": "chanter",
+        "verb": "apaiser",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "niamh", "value": 10},
-          {"type": "ADD_ANAM", "value": 1}
-        ]
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "niamh",
+            "amount": 10
+          },
+          {
+            "type": "ADD_ANAM",
+            "amount": 1
+          }
+        ],
+        "label": "Chanter avec le barde les complaintes des navigateurs perdus"
       },
       {
-        "text": "Danser au bord du precipice, porte par la musique",
-        "verb": "danser",
+        "verb": "accepter",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "niamh", "value": 8},
-          {"type": "DAMAGE_LIFE", "value": -5}
-        ]
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "niamh",
+            "amount": 8
+          },
+          {
+            "type": "DAMAGE_LIFE",
+            "amount": -5
+          }
+        ],
+        "label": "Danser au bord du precipice, porte par la musique"
       },
       {
-        "text": "Rever des iles chantees, laissant votre esprit voyager",
-        "verb": "rever",
+        "verb": "accepter",
         "effects": [
-          {"type": "HEAL_LIFE", "value": 8},
-          {"type": "ADD_BIOME_CURRENCY", "value": 2}
-        ]
+          {
+            "type": "HEAL_LIFE",
+            "amount": 8
+          },
+          {
+            "type": "ADD_BIOME_CURRENCY",
+            "amount": 2
+          }
+        ],
+        "label": "Rever des iles chantees, laissant votre esprit voyager"
       }
     ]
   },
@@ -175,31 +286,55 @@
     "biome": "marais_korrigans",
     "faction": "korrigans",
     "trust_tier": "T0",
-    "tags": ["verb_balance"],
+    "tags": [
+      "verb_balance"
+    ],
     "options": [
       {
-        "text": "Enchainer l'esprit plus solidement pour plaire aux korrigans",
-        "verb": "enchainer",
+        "verb": "accepter",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "korrigans", "value": 15},
-          {"type": "ADD_REPUTATION", "faction": "niamh", "value": -8}
-        ]
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "korrigans",
+            "amount": 15
+          },
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "niamh",
+            "amount": -8
+          }
+        ],
+        "label": "Enchainer l'esprit plus solidement pour plaire aux korrigans"
       },
       {
-        "text": "Maudire les ronces pour qu'elles se fletrissent",
-        "verb": "maudire",
+        "verb": "accepter",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "ankou", "value": 10},
-          {"type": "DAMAGE_LIFE", "value": -5}
-        ]
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "ankou",
+            "amount": 10
+          },
+          {
+            "type": "DAMAGE_LIFE",
+            "amount": -5
+          }
+        ],
+        "label": "Maudire les ronces pour qu'elles se fletrissent"
       },
       {
-        "text": "Benir l'esprit pour adoucir sa captivite",
-        "verb": "benir",
+        "verb": "accepter",
         "effects": [
-          {"type": "HEAL_LIFE", "value": 10},
-          {"type": "ADD_REPUTATION", "faction": "druides", "value": 8}
-        ]
+          {
+            "type": "HEAL_LIFE",
+            "amount": 10
+          },
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "druides",
+            "amount": 8
+          }
+        ],
+        "label": "Benir l'esprit pour adoucir sa captivite"
       }
     ]
   },
@@ -209,31 +344,54 @@
     "biome": "villages_celtes",
     "faction": "anciens",
     "trust_tier": "T0",
-    "tags": ["verb_balance"],
+    "tags": [
+      "verb_balance"
+    ],
     "options": [
       {
-        "text": "Tisser votre propre destin dans la tapisserie magique",
-        "verb": "tisser",
+        "verb": "accepter",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "anciens", "value": 12},
-          {"type": "ADD_ANAM", "value": 2}
-        ]
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "anciens",
+            "amount": 12
+          },
+          {
+            "type": "ADD_ANAM",
+            "amount": 2
+          }
+        ],
+        "label": "Tisser votre propre destin dans la tapisserie magique"
       },
       {
-        "text": "Detruire le metier pour empecher quiconque de voir l'avenir",
-        "verb": "detruire",
+        "verb": "accepter",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "ankou", "value": 10},
-          {"type": "DAMAGE_LIFE", "value": -8}
-        ]
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "ankou",
+            "amount": 10
+          },
+          {
+            "type": "DAMAGE_LIFE",
+            "amount": -8
+          }
+        ],
+        "label": "Detruire le metier pour empecher quiconque de voir l'avenir"
       },
       {
-        "text": "Accumuler les fils d'or tombes au sol",
-        "verb": "accumuler",
+        "verb": "accepter",
         "effects": [
-          {"type": "ADD_BIOME_CURRENCY", "value": 4},
-          {"type": "ADD_REPUTATION", "faction": "korrigans", "value": 5}
-        ]
+          {
+            "type": "ADD_BIOME_CURRENCY",
+            "amount": 4
+          },
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "korrigans",
+            "amount": 5
+          }
+        ],
+        "label": "Accumuler les fils d'or tombes au sol"
       }
     ]
   },
@@ -243,31 +401,53 @@
     "biome": "collines_dolmens",
     "faction": "anciens",
     "trust_tier": "T1",
-    "tags": ["verb_balance"],
+    "tags": [
+      "verb_balance"
+    ],
     "options": [
       {
-        "text": "Forger une cle capable d'ouvrir les portes du Sid",
-        "verb": "forger",
+        "verb": "forcer",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "anciens", "value": 15},
-          {"type": "DAMAGE_LIFE", "value": -10}
-        ]
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "anciens",
+            "amount": 15
+          },
+          {
+            "type": "DAMAGE_LIFE",
+            "amount": -10
+          }
+        ],
+        "label": "Forger une cle capable d'ouvrir les portes du Sid"
       },
       {
-        "text": "Repousser les flammes pour explorer la forge en securite",
-        "verb": "repousser",
+        "verb": "pousser",
         "effects": [
-          {"type": "HEAL_LIFE", "value": 5},
-          {"type": "ADD_BIOME_CURRENCY", "value": 3}
-        ]
+          {
+            "type": "HEAL_LIFE",
+            "amount": 5
+          },
+          {
+            "type": "ADD_BIOME_CURRENCY",
+            "amount": 3
+          }
+        ],
+        "label": "Repousser les flammes pour explorer la forge en securite"
       },
       {
-        "text": "Construire un passage plus sur vers la forge",
-        "verb": "construire",
+        "verb": "contourner",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "druides", "value": 8},
-          {"type": "ADD_BIOME_CURRENCY", "value": 2}
-        ]
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "druides",
+            "amount": 8
+          },
+          {
+            "type": "ADD_BIOME_CURRENCY",
+            "amount": 2
+          }
+        ],
+        "label": "Construire un passage plus sur vers la forge"
       }
     ]
   },
@@ -277,31 +457,54 @@
     "biome": "foret_broceliande",
     "faction": "druides",
     "trust_tier": "T0",
-    "tags": ["verb_balance"],
+    "tags": [
+      "verb_balance"
+    ],
     "options": [
       {
-        "text": "Recolter les fruits avec respect, un seul par branche",
-        "verb": "recolter",
+        "verb": "accepter",
         "effects": [
-          {"type": "HEAL_LIFE", "value": 12},
-          {"type": "ADD_REPUTATION", "faction": "druides", "value": 5}
-        ]
+          {
+            "type": "HEAL_LIFE",
+            "amount": 12
+          },
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "druides",
+            "amount": 5
+          }
+        ],
+        "label": "Recolter les fruits avec respect, un seul par branche"
       },
       {
-        "text": "Planter les graines des fruits tombes pour perpetuer le cycle",
-        "verb": "planter",
+        "verb": "accepter",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "druides", "value": 12},
-          {"type": "ADD_ANAM", "value": 1}
-        ]
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "druides",
+            "amount": 12
+          },
+          {
+            "type": "ADD_ANAM",
+            "amount": 1
+          }
+        ],
+        "label": "Planter les graines des fruits tombes pour perpetuer le cycle"
       },
       {
-        "text": "Accumuler tous les fruits dans votre besace",
-        "verb": "accumuler",
+        "verb": "accepter",
         "effects": [
-          {"type": "ADD_BIOME_CURRENCY", "value": 5},
-          {"type": "ADD_REPUTATION", "faction": "druides", "value": -8}
-        ]
+          {
+            "type": "ADD_BIOME_CURRENCY",
+            "amount": 5
+          },
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "druides",
+            "amount": -8
+          }
+        ],
+        "label": "Accumuler tous les fruits dans votre besace"
       }
     ]
   },
@@ -311,31 +514,54 @@
     "biome": "landes_bruyere",
     "faction": "niamh",
     "trust_tier": "T0",
-    "tags": ["verb_balance"],
+    "tags": [
+      "verb_balance"
+    ],
     "options": [
       {
-        "text": "Danser avec la silhouette de feuilles dans le vent",
-        "verb": "danser",
+        "verb": "accepter",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "niamh", "value": 12},
-          {"type": "ADD_ANAM", "value": 1}
-        ]
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "niamh",
+            "amount": 12
+          },
+          {
+            "type": "ADD_ANAM",
+            "amount": 1
+          }
+        ],
+        "label": "Danser avec la silhouette de feuilles dans le vent"
       },
       {
-        "text": "Fuir ce spectacle surnaturel avant d'etre ensorcele",
         "verb": "fuir",
         "effects": [
-          {"type": "HEAL_LIFE", "value": 10},
-          {"type": "ADD_REPUTATION", "faction": "niamh", "value": -5}
-        ]
+          {
+            "type": "HEAL_LIFE",
+            "amount": 10
+          },
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "niamh",
+            "amount": -5
+          }
+        ],
+        "label": "Fuir ce spectacle surnaturel avant d'etre ensorcele"
       },
       {
-        "text": "Tisser les feuilles en une couronne pour capturer l'esprit",
-        "verb": "tisser",
+        "verb": "accepter",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "korrigans", "value": 10},
-          {"type": "ADD_BIOME_CURRENCY", "value": 2}
-        ]
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "korrigans",
+            "amount": 10
+          },
+          {
+            "type": "ADD_BIOME_CURRENCY",
+            "amount": 2
+          }
+        ],
+        "label": "Tisser les feuilles en une couronne pour capturer l'esprit"
       }
     ]
   },
@@ -345,31 +571,53 @@
     "biome": "cotes_sauvages",
     "faction": "anciens",
     "trust_tier": "T1",
-    "tags": ["verb_balance"],
+    "tags": [
+      "verb_balance"
+    ],
     "options": [
       {
-        "text": "Absorber les vibrations des cristaux pour voir le passe",
-        "verb": "absorber",
+        "verb": "accepter",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "anciens", "value": 15},
-          {"type": "DAMAGE_LIFE", "value": -8}
-        ]
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "anciens",
+            "amount": 15
+          },
+          {
+            "type": "DAMAGE_LIFE",
+            "amount": -8
+          }
+        ],
+        "label": "Absorber les vibrations des cristaux pour voir le passe"
       },
       {
-        "text": "Chanter en harmonie avec les cristaux",
-        "verb": "chanter",
+        "verb": "apaiser",
         "effects": [
-          {"type": "HEAL_LIFE", "value": 8},
-          {"type": "ADD_ANAM", "value": 2}
-        ]
+          {
+            "type": "HEAL_LIFE",
+            "amount": 8
+          },
+          {
+            "type": "ADD_ANAM",
+            "amount": 2
+          }
+        ],
+        "label": "Chanter en harmonie avec les cristaux"
       },
       {
-        "text": "Recolter un eclat de cristal chantant",
-        "verb": "recolter",
+        "verb": "accepter",
         "effects": [
-          {"type": "ADD_BIOME_CURRENCY", "value": 4},
-          {"type": "ADD_REPUTATION", "faction": "anciens", "value": -5}
-        ]
+          {
+            "type": "ADD_BIOME_CURRENCY",
+            "amount": 4
+          },
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "anciens",
+            "amount": -5
+          }
+        ],
+        "label": "Recolter un eclat de cristal chantant"
       }
     ]
   },
@@ -379,31 +627,54 @@
     "biome": "cercles_pierres",
     "faction": "ankou",
     "trust_tier": "T0",
-    "tags": ["verb_balance"],
+    "tags": [
+      "verb_balance"
+    ],
     "options": [
       {
-        "text": "Benir la source pour purifier ses eaux corrompues",
-        "verb": "benir",
+        "verb": "accepter",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "druides", "value": 12},
-          {"type": "HEAL_LIFE", "value": 8}
-        ]
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "druides",
+            "amount": 12
+          },
+          {
+            "type": "HEAL_LIFE",
+            "amount": 8
+          }
+        ],
+        "label": "Benir la source pour purifier ses eaux corrompues"
       },
       {
-        "text": "Maudire davantage la source pour renforcer le voile mortel",
-        "verb": "maudire",
+        "verb": "accepter",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "ankou", "value": 15},
-          {"type": "DAMAGE_LIFE", "value": -10}
-        ]
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "ankou",
+            "amount": 15
+          },
+          {
+            "type": "DAMAGE_LIFE",
+            "amount": -10
+          }
+        ],
+        "label": "Maudire davantage la source pour renforcer le voile mortel"
       },
       {
-        "text": "Planter des herbes curatives autour de la source",
-        "verb": "planter",
+        "verb": "accepter",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "druides", "value": 8},
-          {"type": "ADD_BIOME_CURRENCY", "value": 2}
-        ]
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "druides",
+            "amount": 8
+          },
+          {
+            "type": "ADD_BIOME_CURRENCY",
+            "amount": 2
+          }
+        ],
+        "label": "Planter des herbes curatives autour de la source"
       }
     ]
   },
@@ -413,31 +684,53 @@
     "biome": "collines_dolmens",
     "faction": "anciens",
     "trust_tier": "T1",
-    "tags": ["verb_balance"],
+    "tags": [
+      "verb_balance"
+    ],
     "options": [
       {
-        "text": "Accumuler les pieces du tresor sans reveiller le geant",
-        "verb": "accumuler",
+        "verb": "accepter",
         "effects": [
-          {"type": "ADD_BIOME_CURRENCY", "value": 5},
-          {"type": "DAMAGE_LIFE", "value": -5}
-        ]
+          {
+            "type": "ADD_BIOME_CURRENCY",
+            "amount": 5
+          },
+          {
+            "type": "DAMAGE_LIFE",
+            "amount": -5
+          }
+        ],
+        "label": "Accumuler les pieces du tresor sans reveiller le geant"
       },
       {
-        "text": "Forger un anneau avec l'or du geant pendant son sommeil",
-        "verb": "forger",
+        "verb": "forcer",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "anciens", "value": 12},
-          {"type": "ADD_BIOME_CURRENCY", "value": 3}
-        ]
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "anciens",
+            "amount": 12
+          },
+          {
+            "type": "ADD_BIOME_CURRENCY",
+            "amount": 3
+          }
+        ],
+        "label": "Forger un anneau avec l'or du geant pendant son sommeil"
       },
       {
-        "text": "Fuir avant que le geant ne se reveille",
         "verb": "fuir",
         "effects": [
-          {"type": "HEAL_LIFE", "value": 15},
-          {"type": "ADD_REPUTATION", "faction": "anciens", "value": -5}
-        ]
+          {
+            "type": "HEAL_LIFE",
+            "amount": 15
+          },
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "anciens",
+            "amount": -5
+          }
+        ],
+        "label": "Fuir avant que le geant ne se reveille"
       }
     ]
   },
@@ -447,31 +740,54 @@
     "biome": "iles_mystiques",
     "faction": "niamh",
     "trust_tier": "T0",
-    "tags": ["verb_balance"],
+    "tags": [
+      "verb_balance"
+    ],
     "options": [
       {
-        "text": "Rever les souvenirs du temple en touchant les glyphes",
-        "verb": "rever",
+        "verb": "accepter",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "niamh", "value": 10},
-          {"type": "ADD_ANAM", "value": 2}
-        ]
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "niamh",
+            "amount": 10
+          },
+          {
+            "type": "ADD_ANAM",
+            "amount": 2
+          }
+        ],
+        "label": "Rever les souvenirs du temple en touchant les glyphes"
       },
       {
-        "text": "Construire un autel temporaire avec les pierres du temple",
-        "verb": "construire",
+        "verb": "contourner",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "anciens", "value": 10},
-          {"type": "ADD_BIOME_CURRENCY", "value": 2}
-        ]
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "anciens",
+            "amount": 10
+          },
+          {
+            "type": "ADD_BIOME_CURRENCY",
+            "amount": 2
+          }
+        ],
+        "label": "Construire un autel temporaire avec les pierres du temple"
       },
       {
-        "text": "Enchainer les portes du temple pour sceller ce qui est a l'interieur",
-        "verb": "enchainer",
+        "verb": "accepter",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "ankou", "value": 10},
-          {"type": "DAMAGE_LIFE", "value": -5}
-        ]
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "ankou",
+            "amount": 10
+          },
+          {
+            "type": "DAMAGE_LIFE",
+            "amount": -5
+          }
+        ],
+        "label": "Enchainer les portes du temple pour sceller ce qui est a l'interieur"
       }
     ]
   },
@@ -481,31 +797,53 @@
     "biome": "foret_broceliande",
     "faction": "druides",
     "trust_tier": "T0",
-    "tags": ["verb_balance"],
+    "tags": [
+      "verb_balance"
+    ],
     "options": [
       {
-        "text": "Planter de nouvelles especes pour enrichir le jardin secret",
-        "verb": "planter",
+        "verb": "accepter",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "druides", "value": 12},
-          {"type": "ADD_ANAM", "value": 1}
-        ]
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "druides",
+            "amount": 12
+          },
+          {
+            "type": "ADD_ANAM",
+            "amount": 1
+          }
+        ],
+        "label": "Planter de nouvelles especes pour enrichir le jardin secret"
       },
       {
-        "text": "Recolter les plantes les plus rares pour vos potions",
-        "verb": "recolter",
+        "verb": "accepter",
         "effects": [
-          {"type": "ADD_BIOME_CURRENCY", "value": 4},
-          {"type": "HEAL_LIFE", "value": 5}
-        ]
+          {
+            "type": "ADD_BIOME_CURRENCY",
+            "amount": 4
+          },
+          {
+            "type": "HEAL_LIFE",
+            "amount": 5
+          }
+        ],
+        "label": "Recolter les plantes les plus rares pour vos potions"
       },
       {
-        "text": "Repousser les ronces qui menacent d'etouffer le jardin",
-        "verb": "repousser",
+        "verb": "pousser",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "druides", "value": 8},
-          {"type": "HEAL_LIFE", "value": 8}
-        ]
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "druides",
+            "amount": 8
+          },
+          {
+            "type": "HEAL_LIFE",
+            "amount": 8
+          }
+        ],
+        "label": "Repousser les ronces qui menacent d'etouffer le jardin"
       }
     ]
   },
@@ -515,31 +853,55 @@
     "biome": "villages_celtes",
     "faction": "ankou",
     "trust_tier": "T1",
-    "tags": ["verb_balance"],
+    "tags": [
+      "verb_balance"
+    ],
     "options": [
       {
-        "text": "Danser parmi les spectres pour comprendre leur peine",
-        "verb": "danser",
+        "verb": "accepter",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "ankou", "value": 12},
-          {"type": "DAMAGE_LIFE", "value": -8}
-        ]
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "ankou",
+            "amount": 12
+          },
+          {
+            "type": "DAMAGE_LIFE",
+            "amount": -8
+          }
+        ],
+        "label": "Danser parmi les spectres pour comprendre leur peine"
       },
       {
-        "text": "Benir chaque spectre pour le guider vers le repos",
-        "verb": "benir",
+        "verb": "accepter",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "ankou", "value": 8},
-          {"type": "HEAL_LIFE", "value": 10}
-        ]
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "ankou",
+            "amount": 8
+          },
+          {
+            "type": "HEAL_LIFE",
+            "amount": 10
+          }
+        ],
+        "label": "Benir chaque spectre pour le guider vers le repos"
       },
       {
-        "text": "Enchainer les spectres au cimetiere pour arreter l'errance",
-        "verb": "enchainer",
+        "verb": "accepter",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "ankou", "value": 15},
-          {"type": "ADD_REPUTATION", "faction": "niamh", "value": -8}
-        ]
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "ankou",
+            "amount": 15
+          },
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "niamh",
+            "amount": -8
+          }
+        ],
+        "label": "Enchainer les spectres au cimetiere pour arreter l'errance"
       }
     ]
   },
@@ -549,31 +911,54 @@
     "biome": "foret_broceliande",
     "faction": "korrigans",
     "trust_tier": "T1",
-    "tags": ["verb_balance"],
+    "tags": [
+      "verb_balance"
+    ],
     "options": [
       {
-        "text": "Maudire les corbeaux pour les forcer a reveler leurs secrets",
-        "verb": "maudire",
+        "verb": "accepter",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "ankou", "value": 12},
-          {"type": "DAMAGE_LIFE", "value": -8}
-        ]
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "ankou",
+            "amount": 12
+          },
+          {
+            "type": "DAMAGE_LIFE",
+            "amount": -8
+          }
+        ],
+        "label": "Maudire les corbeaux pour les forcer a reveler leurs secrets"
       },
       {
-        "text": "Rever avec les corbeaux, partageant vos visions",
-        "verb": "rever",
+        "verb": "accepter",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "korrigans", "value": 10},
-          {"type": "ADD_ANAM", "value": 2}
-        ]
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "korrigans",
+            "amount": 10
+          },
+          {
+            "type": "ADD_ANAM",
+            "amount": 2
+          }
+        ],
+        "label": "Rever avec les corbeaux, partageant vos visions"
       },
       {
-        "text": "Construire un perchoir plus grand pour gagner leur confiance",
-        "verb": "construire",
+        "verb": "contourner",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "korrigans", "value": 8},
-          {"type": "ADD_BIOME_CURRENCY", "value": 3}
-        ]
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "korrigans",
+            "amount": 8
+          },
+          {
+            "type": "ADD_BIOME_CURRENCY",
+            "amount": 3
+          }
+        ],
+        "label": "Construire un perchoir plus grand pour gagner leur confiance"
       }
     ]
   },
@@ -583,31 +968,53 @@
     "biome": "landes_bruyere",
     "faction": "druides",
     "trust_tier": "T1",
-    "tags": ["verb_balance"],
+    "tags": [
+      "verb_balance"
+    ],
     "options": [
       {
-        "text": "Absorber l'energie de la foudre dans votre corps",
-        "verb": "absorber",
+        "verb": "accepter",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "druides", "value": 15},
-          {"type": "DAMAGE_LIFE", "value": -12}
-        ]
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "druides",
+            "amount": 15
+          },
+          {
+            "type": "DAMAGE_LIFE",
+            "amount": -12
+          }
+        ],
+        "label": "Absorber l'energie de la foudre dans votre corps"
       },
       {
-        "text": "Repousser l'energie vers le ciel pour proteger la lande",
-        "verb": "repousser",
+        "verb": "pousser",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "druides", "value": 8},
-          {"type": "HEAL_LIFE", "value": 5}
-        ]
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "druides",
+            "amount": 8
+          },
+          {
+            "type": "HEAL_LIFE",
+            "amount": 5
+          }
+        ],
+        "label": "Repousser l'energie vers le ciel pour proteger la lande"
       },
       {
-        "text": "Forger un talisman avec l'eclat du menhir frappe",
-        "verb": "forger",
+        "verb": "forcer",
         "effects": [
-          {"type": "ADD_BIOME_CURRENCY", "value": 4},
-          {"type": "ADD_ANAM", "value": 1}
-        ]
+          {
+            "type": "ADD_BIOME_CURRENCY",
+            "amount": 4
+          },
+          {
+            "type": "ADD_ANAM",
+            "amount": 1
+          }
+        ],
+        "label": "Forger un talisman avec l'eclat du menhir frappe"
       }
     ]
   },
@@ -617,31 +1024,54 @@
     "biome": "cercles_pierres",
     "faction": "niamh",
     "trust_tier": "T1",
-    "tags": ["verb_balance"],
+    "tags": [
+      "verb_balance"
+    ],
     "options": [
       {
-        "text": "Rever le monde inverse pour en ramener des connaissances",
-        "verb": "rever",
+        "verb": "accepter",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "niamh", "value": 15},
-          {"type": "ADD_ANAM", "value": 2}
-        ]
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "niamh",
+            "amount": 15
+          },
+          {
+            "type": "ADD_ANAM",
+            "amount": 2
+          }
+        ],
+        "label": "Rever le monde inverse pour en ramener des connaissances"
       },
       {
-        "text": "Fuir ce portail avant qu'il ne vous aspire",
         "verb": "fuir",
         "effects": [
-          {"type": "HEAL_LIFE", "value": 12},
-          {"type": "ADD_REPUTATION", "faction": "niamh", "value": -5}
-        ]
+          {
+            "type": "HEAL_LIFE",
+            "amount": 12
+          },
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "niamh",
+            "amount": -5
+          }
+        ],
+        "label": "Fuir ce portail avant qu'il ne vous aspire"
       },
       {
-        "text": "Tisser un filet de runes pour stabiliser le portail",
-        "verb": "tisser",
+        "verb": "accepter",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "druides", "value": 10},
-          {"type": "ADD_BIOME_CURRENCY", "value": 3}
-        ]
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "druides",
+            "amount": 10
+          },
+          {
+            "type": "ADD_BIOME_CURRENCY",
+            "amount": 3
+          }
+        ],
+        "label": "Tisser un filet de runes pour stabiliser le portail"
       }
     ]
   },
@@ -651,31 +1081,55 @@
     "biome": "marais_korrigans",
     "faction": "korrigans",
     "trust_tier": "T0",
-    "tags": ["verb_balance"],
+    "tags": [
+      "verb_balance"
+    ],
     "options": [
       {
-        "text": "Accumuler votre part du butin en participant au festin",
-        "verb": "accumuler",
+        "verb": "accepter",
         "effects": [
-          {"type": "ADD_BIOME_CURRENCY", "value": 5},
-          {"type": "ADD_REPUTATION", "faction": "korrigans", "value": 8}
-        ]
+          {
+            "type": "ADD_BIOME_CURRENCY",
+            "amount": 5
+          },
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "korrigans",
+            "amount": 8
+          }
+        ],
+        "label": "Accumuler votre part du butin en participant au festin"
       },
       {
-        "text": "Danser la gigue des korrigans pour les impressionner",
-        "verb": "danser",
+        "verb": "accepter",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "korrigans", "value": 15},
-          {"type": "HEAL_LIFE", "value": 5}
-        ]
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "korrigans",
+            "amount": 15
+          },
+          {
+            "type": "HEAL_LIFE",
+            "amount": 5
+          }
+        ],
+        "label": "Danser la gigue des korrigans pour les impressionner"
       },
       {
-        "text": "Detruire la table pour liberer les ames des cerfs",
-        "verb": "detruire",
+        "verb": "accepter",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "ankou", "value": 10},
-          {"type": "ADD_REPUTATION", "faction": "korrigans", "value": -10}
-        ]
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "ankou",
+            "amount": 10
+          },
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "korrigans",
+            "amount": -10
+          }
+        ],
+        "label": "Detruire la table pour liberer les ames des cerfs"
       }
     ]
   },
@@ -685,31 +1139,54 @@
     "biome": "iles_mystiques",
     "faction": "niamh",
     "trust_tier": "T1",
-    "tags": ["verb_balance"],
+    "tags": [
+      "verb_balance"
+    ],
     "options": [
       {
-        "text": "Recolter les coquillages prophetiques avec soin",
-        "verb": "recolter",
+        "verb": "accepter",
         "effects": [
-          {"type": "ADD_BIOME_CURRENCY", "value": 4},
-          {"type": "ADD_REPUTATION", "faction": "niamh", "value": 8}
-        ]
+          {
+            "type": "ADD_BIOME_CURRENCY",
+            "amount": 4
+          },
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "niamh",
+            "amount": 8
+          }
+        ],
+        "label": "Recolter les coquillages prophetiques avec soin"
       },
       {
-        "text": "Chanter avec les coquillages pour amplifier leurs voix",
-        "verb": "chanter",
+        "verb": "apaiser",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "niamh", "value": 12},
-          {"type": "ADD_ANAM", "value": 2}
-        ]
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "niamh",
+            "amount": 12
+          },
+          {
+            "type": "ADD_ANAM",
+            "amount": 2
+          }
+        ],
+        "label": "Chanter avec les coquillages pour amplifier leurs voix"
       },
       {
-        "text": "Enchainer l'ile au fond marin pour qu'elle cesse d'errer",
-        "verb": "enchainer",
+        "verb": "accepter",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "anciens", "value": 10},
-          {"type": "DAMAGE_LIFE", "value": -8}
-        ]
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "anciens",
+            "amount": 10
+          },
+          {
+            "type": "DAMAGE_LIFE",
+            "amount": -8
+          }
+        ],
+        "label": "Enchainer l'ile au fond marin pour qu'elle cesse d'errer"
       }
     ]
   },
@@ -719,31 +1196,54 @@
     "biome": "foret_broceliande",
     "faction": "druides",
     "trust_tier": "T1",
-    "tags": ["verb_balance"],
+    "tags": [
+      "verb_balance"
+    ],
     "options": [
       {
-        "text": "Repousser les lianes pour reveler le druide entier",
-        "verb": "repousser",
+        "verb": "pousser",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "druides", "value": 12},
-          {"type": "ADD_BIOME_CURRENCY", "value": 2}
-        ]
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "druides",
+            "amount": 12
+          },
+          {
+            "type": "ADD_BIOME_CURRENCY",
+            "amount": 2
+          }
+        ],
+        "label": "Repousser les lianes pour reveler le druide entier"
       },
       {
-        "text": "Planter un cercle de gui autour du druide en hommage",
-        "verb": "planter",
+        "verb": "accepter",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "druides", "value": 10},
-          {"type": "HEAL_LIFE", "value": 8}
-        ]
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "druides",
+            "amount": 10
+          },
+          {
+            "type": "HEAL_LIFE",
+            "amount": 8
+          }
+        ],
+        "label": "Planter un cercle de gui autour du druide en hommage"
       },
       {
-        "text": "Maudire celui qui a petrifie le druide",
-        "verb": "maudire",
+        "verb": "accepter",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "ankou", "value": 12},
-          {"type": "DAMAGE_LIFE", "value": -5}
-        ]
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "ankou",
+            "amount": 12
+          },
+          {
+            "type": "DAMAGE_LIFE",
+            "amount": -5
+          }
+        ],
+        "label": "Maudire celui qui a petrifie le druide"
       }
     ]
   },
@@ -753,31 +1253,54 @@
     "biome": "cotes_sauvages",
     "faction": "anciens",
     "trust_tier": "T0",
-    "tags": ["verb_balance"],
+    "tags": [
+      "verb_balance"
+    ],
     "options": [
       {
-        "text": "Construire un memorial avec les debris du navire",
-        "verb": "construire",
+        "verb": "contourner",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "anciens", "value": 12},
-          {"type": "ADD_ANAM", "value": 1}
-        ]
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "anciens",
+            "amount": 12
+          },
+          {
+            "type": "ADD_ANAM",
+            "amount": 1
+          }
+        ],
+        "label": "Construire un memorial avec les debris du navire"
       },
       {
-        "text": "Accumuler le contenu des coffres dans votre camp",
-        "verb": "accumuler",
+        "verb": "accepter",
         "effects": [
-          {"type": "ADD_BIOME_CURRENCY", "value": 5},
-          {"type": "ADD_REPUTATION", "faction": "anciens", "value": -5}
-        ]
+          {
+            "type": "ADD_BIOME_CURRENCY",
+            "amount": 5
+          },
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "anciens",
+            "amount": -5
+          }
+        ],
+        "label": "Accumuler le contenu des coffres dans votre camp"
       },
       {
-        "text": "Forger de nouveaux outils avec le metal recupérée",
-        "verb": "forger",
+        "verb": "forcer",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "anciens", "value": 8},
-          {"type": "ADD_BIOME_CURRENCY", "value": 3}
-        ]
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "anciens",
+            "amount": 8
+          },
+          {
+            "type": "ADD_BIOME_CURRENCY",
+            "amount": 3
+          }
+        ],
+        "label": "Forger de nouveaux outils avec le metal recupérée"
       }
     ]
   },
@@ -787,31 +1310,54 @@
     "biome": "marais_korrigans",
     "faction": "ankou",
     "trust_tier": "T2",
-    "tags": ["verb_balance"],
+    "tags": [
+      "verb_balance"
+    ],
     "options": [
       {
-        "text": "Detruire le miroir pour que personne ne voie ses peurs",
-        "verb": "detruire",
+        "verb": "accepter",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "ankou", "value": 15},
-          {"type": "DAMAGE_LIFE", "value": -10}
-        ]
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "ankou",
+            "amount": 15
+          },
+          {
+            "type": "DAMAGE_LIFE",
+            "amount": -10
+          }
+        ],
+        "label": "Detruire le miroir pour que personne ne voie ses peurs"
       },
       {
-        "text": "Absorber les peurs refletees pour devenir plus fort",
-        "verb": "absorber",
+        "verb": "accepter",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "ankou", "value": 12},
-          {"type": "DAMAGE_LIFE", "value": -15}
-        ]
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "ankou",
+            "amount": 12
+          },
+          {
+            "type": "DAMAGE_LIFE",
+            "amount": -15
+          }
+        ],
+        "label": "Absorber les peurs refletees pour devenir plus fort"
       },
       {
-        "text": "Fuir la tour avant que vos peurs ne prennent forme",
         "verb": "fuir",
         "effects": [
-          {"type": "HEAL_LIFE", "value": 15},
-          {"type": "ADD_REPUTATION", "faction": "korrigans", "value": 5}
-        ]
+          {
+            "type": "HEAL_LIFE",
+            "amount": 15
+          },
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "korrigans",
+            "amount": 5
+          }
+        ],
+        "label": "Fuir la tour avant que vos peurs ne prennent forme"
       }
     ]
   },
@@ -821,31 +1367,53 @@
     "biome": "foret_broceliande",
     "faction": "korrigans",
     "trust_tier": "T0",
-    "tags": ["verb_balance"],
+    "tags": [
+      "verb_balance"
+    ],
     "options": [
       {
-        "text": "Tisser un fil d'Ariane avec les fibres de l'ecorce",
-        "verb": "tisser",
+        "verb": "accepter",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "korrigans", "value": 10},
-          {"type": "ADD_BIOME_CURRENCY", "value": 2}
-        ]
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "korrigans",
+            "amount": 10
+          },
+          {
+            "type": "ADD_BIOME_CURRENCY",
+            "amount": 2
+          }
+        ],
+        "label": "Tisser un fil d'Ariane avec les fibres de l'ecorce"
       },
       {
-        "text": "Recolter les champignons lumineux pour eclairer votre route",
-        "verb": "recolter",
+        "verb": "accepter",
         "effects": [
-          {"type": "HEAL_LIFE", "value": 8},
-          {"type": "ADD_BIOME_CURRENCY", "value": 3}
-        ]
+          {
+            "type": "HEAL_LIFE",
+            "amount": 8
+          },
+          {
+            "type": "ADD_BIOME_CURRENCY",
+            "amount": 3
+          }
+        ],
+        "label": "Recolter les champignons lumineux pour eclairer votre route"
       },
       {
-        "text": "Danser entre les racines en suivant la musique du vent",
-        "verb": "danser",
+        "verb": "accepter",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "niamh", "value": 10},
-          {"type": "ADD_ANAM", "value": 1}
-        ]
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "niamh",
+            "amount": 10
+          },
+          {
+            "type": "ADD_ANAM",
+            "amount": 1
+          }
+        ],
+        "label": "Danser entre les racines en suivant la musique du vent"
       }
     ]
   },
@@ -855,31 +1423,54 @@
     "biome": "collines_dolmens",
     "faction": "anciens",
     "trust_tier": "T2",
-    "tags": ["verb_balance"],
+    "tags": [
+      "verb_balance"
+    ],
     "options": [
       {
-        "text": "Construire un nouveau dolmen avec les pierres revelees",
-        "verb": "construire",
+        "verb": "contourner",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "anciens", "value": 15},
-          {"type": "ADD_BIOME_CURRENCY", "value": 3}
-        ]
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "anciens",
+            "amount": 15
+          },
+          {
+            "type": "ADD_BIOME_CURRENCY",
+            "amount": 3
+          }
+        ],
+        "label": "Construire un nouveau dolmen avec les pierres revelees"
       },
       {
-        "text": "Detruire les dernieres pierres pour reveler tous les glyphes",
-        "verb": "detruire",
+        "verb": "accepter",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "ankou", "value": 12},
-          {"type": "ADD_ANAM", "value": 2}
-        ]
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "ankou",
+            "amount": 12
+          },
+          {
+            "type": "ADD_ANAM",
+            "amount": 2
+          }
+        ],
+        "label": "Detruire les dernieres pierres pour reveler tous les glyphes"
       },
       {
-        "text": "Enchainer les pierres avec des sortileges pour arreter la deconstruction",
-        "verb": "enchainer",
+        "verb": "accepter",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "druides", "value": 12},
-          {"type": "DAMAGE_LIFE", "value": -5}
-        ]
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "druides",
+            "amount": 12
+          },
+          {
+            "type": "DAMAGE_LIFE",
+            "amount": -5
+          }
+        ],
+        "label": "Enchainer les pierres avec des sortileges pour arreter la deconstruction"
       }
     ]
   },
@@ -889,31 +1480,54 @@
     "biome": "cercles_pierres",
     "faction": "niamh",
     "trust_tier": "T0",
-    "tags": ["verb_balance"],
+    "tags": [
+      "verb_balance"
+    ],
     "options": [
       {
-        "text": "Rever les histoires que racontent les constellations de poissons",
-        "verb": "rever",
+        "verb": "accepter",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "niamh", "value": 12},
-          {"type": "ADD_ANAM", "value": 2}
-        ]
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "niamh",
+            "amount": 12
+          },
+          {
+            "type": "ADD_ANAM",
+            "amount": 2
+          }
+        ],
+        "label": "Rever les histoires que racontent les constellations de poissons"
       },
       {
-        "text": "Chanter pour attirer les poissons-etoiles a la surface",
-        "verb": "chanter",
+        "verb": "apaiser",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "niamh", "value": 8},
-          {"type": "HEAL_LIFE", "value": 8}
-        ]
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "niamh",
+            "amount": 8
+          },
+          {
+            "type": "HEAL_LIFE",
+            "amount": 8
+          }
+        ],
+        "label": "Chanter pour attirer les poissons-etoiles a la surface"
       },
       {
-        "text": "Repousser les tenebres qui menacent le lac lumineux",
-        "verb": "repousser",
+        "verb": "pousser",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "druides", "value": 10},
-          {"type": "ADD_BIOME_CURRENCY", "value": 2}
-        ]
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "druides",
+            "amount": 10
+          },
+          {
+            "type": "ADD_BIOME_CURRENCY",
+            "amount": 2
+          }
+        ],
+        "label": "Repousser les tenebres qui menacent le lac lumineux"
       }
     ]
   },
@@ -923,31 +1537,53 @@
     "biome": "collines_dolmens",
     "faction": "ankou",
     "trust_tier": "T2",
-    "tags": ["verb_balance"],
+    "tags": [
+      "verb_balance"
+    ],
     "options": [
       {
-        "text": "Maudire les pilleurs qui ont trouble le repos du tumulus",
-        "verb": "maudire",
+        "verb": "accepter",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "ankou", "value": 15},
-          {"type": "DAMAGE_LIFE", "value": -10}
-        ]
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "ankou",
+            "amount": 15
+          },
+          {
+            "type": "DAMAGE_LIFE",
+            "amount": -10
+          }
+        ],
+        "label": "Maudire les pilleurs qui ont trouble le repos du tumulus"
       },
       {
-        "text": "Benir le tumulus pour apaiser l'esprit du defunt",
-        "verb": "benir",
+        "verb": "accepter",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "ankou", "value": 10},
-          {"type": "HEAL_LIFE", "value": 10}
-        ]
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "ankou",
+            "amount": 10
+          },
+          {
+            "type": "HEAL_LIFE",
+            "amount": 10
+          }
+        ],
+        "label": "Benir le tumulus pour apaiser l'esprit du defunt"
       },
       {
-        "text": "Accumuler les spirales d'or avant que le tumulus ne se referme",
-        "verb": "accumuler",
+        "verb": "accepter",
         "effects": [
-          {"type": "ADD_BIOME_CURRENCY", "value": 5},
-          {"type": "DAMAGE_LIFE", "value": -8}
-        ]
+          {
+            "type": "ADD_BIOME_CURRENCY",
+            "amount": 5
+          },
+          {
+            "type": "DAMAGE_LIFE",
+            "amount": -8
+          }
+        ],
+        "label": "Accumuler les spirales d'or avant que le tumulus ne se referme"
       }
     ]
   },
@@ -957,31 +1593,54 @@
     "biome": "foret_broceliande",
     "faction": "druides",
     "trust_tier": "T1",
-    "tags": ["verb_balance"],
+    "tags": [
+      "verb_balance"
+    ],
     "options": [
       {
-        "text": "Tisser les lianes en un motif plus solide et harmonieux",
-        "verb": "tisser",
+        "verb": "accepter",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "druides", "value": 12},
-          {"type": "ADD_BIOME_CURRENCY", "value": 3}
-        ]
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "druides",
+            "amount": 12
+          },
+          {
+            "type": "ADD_BIOME_CURRENCY",
+            "amount": 3
+          }
+        ],
+        "label": "Tisser les lianes en un motif plus solide et harmonieux"
       },
       {
-        "text": "Repousser les lianes agressives qui bloquent le passage",
-        "verb": "repousser",
+        "verb": "pousser",
         "effects": [
-          {"type": "HEAL_LIFE", "value": 8},
-          {"type": "ADD_REPUTATION", "faction": "druides", "value": 5}
-        ]
+          {
+            "type": "HEAL_LIFE",
+            "amount": 8
+          },
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "druides",
+            "amount": 5
+          }
+        ],
+        "label": "Repousser les lianes agressives qui bloquent le passage"
       },
       {
-        "text": "Forger un passage permanent a travers le reseau vegetal",
-        "verb": "forger",
+        "verb": "forcer",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "anciens", "value": 10},
-          {"type": "ADD_BIOME_CURRENCY", "value": 2}
-        ]
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "anciens",
+            "amount": 10
+          },
+          {
+            "type": "ADD_BIOME_CURRENCY",
+            "amount": 2
+          }
+        ],
+        "label": "Forger un passage permanent a travers le reseau vegetal"
       }
     ]
   },
@@ -991,31 +1650,54 @@
     "biome": "villages_celtes",
     "faction": "ankou",
     "trust_tier": "T0",
-    "tags": ["verb_balance"],
+    "tags": [
+      "verb_balance"
+    ],
     "options": [
       {
-        "text": "Danser avec les fantomes dans leur eternelle celebration",
-        "verb": "danser",
+        "verb": "accepter",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "ankou", "value": 10},
-          {"type": "ADD_ANAM", "value": 1}
-        ]
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "ankou",
+            "amount": 10
+          },
+          {
+            "type": "ADD_ANAM",
+            "amount": 1
+          }
+        ],
+        "label": "Danser avec les fantomes dans leur eternelle celebration"
       },
       {
-        "text": "Chanter un requiem pour leur accorder le repos final",
-        "verb": "chanter",
+        "verb": "apaiser",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "ankou", "value": 12},
-          {"type": "HEAL_LIFE", "value": 8}
-        ]
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "ankou",
+            "amount": 12
+          },
+          {
+            "type": "HEAL_LIFE",
+            "amount": 8
+          }
+        ],
+        "label": "Chanter un requiem pour leur accorder le repos final"
       },
       {
-        "text": "Fuir ce spectacle macabre avant d'en faire partie",
         "verb": "fuir",
         "effects": [
-          {"type": "HEAL_LIFE", "value": 12},
-          {"type": "ADD_REPUTATION", "faction": "ankou", "value": -5}
-        ]
+          {
+            "type": "HEAL_LIFE",
+            "amount": 12
+          },
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "ankou",
+            "amount": -5
+          }
+        ],
+        "label": "Fuir ce spectacle macabre avant d'en faire partie"
       }
     ]
   },
@@ -1025,31 +1707,53 @@
     "biome": "iles_mystiques",
     "faction": "niamh",
     "trust_tier": "T2",
-    "tags": ["verb_balance"],
+    "tags": [
+      "verb_balance"
+    ],
     "options": [
       {
-        "text": "Recolter les perles de reve avec la delicatesse d'un orfèvre",
-        "verb": "recolter",
+        "verb": "accepter",
         "effects": [
-          {"type": "ADD_BIOME_CURRENCY", "value": 5},
-          {"type": "ADD_ANAM", "value": 2}
-        ]
+          {
+            "type": "ADD_BIOME_CURRENCY",
+            "amount": 5
+          },
+          {
+            "type": "ADD_ANAM",
+            "amount": 2
+          }
+        ],
+        "label": "Recolter les perles de reve avec la delicatesse d'un orfèvre"
       },
       {
-        "text": "Planter un nouveau corail pour etendre le jardin onirique",
-        "verb": "planter",
+        "verb": "accepter",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "niamh", "value": 15},
-          {"type": "HEAL_LIFE", "value": 5}
-        ]
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "niamh",
+            "amount": 15
+          },
+          {
+            "type": "HEAL_LIFE",
+            "amount": 5
+          }
+        ],
+        "label": "Planter un nouveau corail pour etendre le jardin onirique"
       },
       {
-        "text": "Rever dans les branches du corail, suspendu entre les mondes",
-        "verb": "rever",
+        "verb": "accepter",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "niamh", "value": 12},
-          {"type": "ADD_ANAM", "value": 3}
-        ]
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "niamh",
+            "amount": 12
+          },
+          {
+            "type": "ADD_ANAM",
+            "amount": 3
+          }
+        ],
+        "label": "Rever dans les branches du corail, suspendu entre les mondes"
       }
     ]
   },
@@ -1059,31 +1763,53 @@
     "biome": "landes_bruyere",
     "faction": "anciens",
     "trust_tier": "T0",
-    "tags": ["verb_balance"],
+    "tags": [
+      "verb_balance"
+    ],
     "options": [
       {
-        "text": "Forger votre volonte dans le feu des pierres brulantes",
-        "verb": "forger",
+        "verb": "forcer",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "anciens", "value": 10},
-          {"type": "DAMAGE_LIFE", "value": -5}
-        ]
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "anciens",
+            "amount": 10
+          },
+          {
+            "type": "DAMAGE_LIFE",
+            "amount": -5
+          }
+        ],
+        "label": "Forger votre volonte dans le feu des pierres brulantes"
       },
       {
-        "text": "Absorber la chaleur des pierres pour renforcer votre aura",
-        "verb": "absorber",
+        "verb": "accepter",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "druides", "value": 10},
-          {"type": "DAMAGE_LIFE", "value": -8}
-        ]
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "druides",
+            "amount": 10
+          },
+          {
+            "type": "DAMAGE_LIFE",
+            "amount": -8
+          }
+        ],
+        "label": "Absorber la chaleur des pierres pour renforcer votre aura"
       },
       {
-        "text": "Construire un foyer avec les pierres les plus chaudes",
-        "verb": "construire",
+        "verb": "contourner",
         "effects": [
-          {"type": "ADD_BIOME_CURRENCY", "value": 3},
-          {"type": "HEAL_LIFE", "value": 5}
-        ]
+          {
+            "type": "ADD_BIOME_CURRENCY",
+            "amount": 3
+          },
+          {
+            "type": "HEAL_LIFE",
+            "amount": 5
+          }
+        ],
+        "label": "Construire un foyer avec les pierres les plus chaudes"
       }
     ]
   },
@@ -1093,31 +1819,55 @@
     "biome": "marais_korrigans",
     "faction": "korrigans",
     "trust_tier": "T1",
-    "tags": ["verb_balance"],
+    "tags": [
+      "verb_balance"
+    ],
     "options": [
       {
-        "text": "Detruire les racines pour prouver votre force aux korrigans",
-        "verb": "detruire",
+        "verb": "accepter",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "korrigans", "value": -10},
-          {"type": "ADD_BIOME_CURRENCY", "value": 5}
-        ]
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "korrigans",
+            "amount": -10
+          },
+          {
+            "type": "ADD_BIOME_CURRENCY",
+            "amount": 5
+          }
+        ],
+        "label": "Detruire les racines pour prouver votre force aux korrigans"
       },
       {
-        "text": "Tisser un accord avec les korrigans, racine par racine",
-        "verb": "tisser",
+        "verb": "accepter",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "korrigans", "value": 12},
-          {"type": "ADD_BIOME_CURRENCY", "value": 2}
-        ]
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "korrigans",
+            "amount": 12
+          },
+          {
+            "type": "ADD_BIOME_CURRENCY",
+            "amount": 2
+          }
+        ],
+        "label": "Tisser un accord avec les korrigans, racine par racine"
       },
       {
-        "text": "Enchainer les racines pour securiser la cache et rassurer les korrigans",
-        "verb": "enchainer",
+        "verb": "accepter",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "korrigans", "value": 10},
-          {"type": "ADD_REPUTATION", "faction": "druides", "value": 5}
-        ]
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "korrigans",
+            "amount": 10
+          },
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "druides",
+            "amount": 5
+          }
+        ],
+        "label": "Enchainer les racines pour securiser la cache et rassurer les korrigans"
       }
     ]
   },
@@ -1127,31 +1877,54 @@
     "biome": "cotes_sauvages",
     "faction": "ankou",
     "trust_tier": "T2",
-    "tags": ["verb_balance"],
+    "tags": [
+      "verb_balance"
+    ],
     "options": [
       {
-        "text": "Enchainer la lumiere du phare pour la controler",
-        "verb": "enchainer",
+        "verb": "accepter",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "ankou", "value": 15},
-          {"type": "ADD_BIOME_CURRENCY", "value": 3}
-        ]
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "ankou",
+            "amount": 15
+          },
+          {
+            "type": "ADD_BIOME_CURRENCY",
+            "amount": 3
+          }
+        ],
+        "label": "Enchainer la lumiere du phare pour la controler"
       },
       {
-        "text": "Benir les marins fantomes guides par la lumiere",
-        "verb": "benir",
+        "verb": "accepter",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "ankou", "value": 10},
-          {"type": "HEAL_LIFE", "value": 10}
-        ]
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "ankou",
+            "amount": 10
+          },
+          {
+            "type": "HEAL_LIFE",
+            "amount": 10
+          }
+        ],
+        "label": "Benir les marins fantomes guides par la lumiere"
       },
       {
-        "text": "Detruire le phare pour liberer les ames prisonieres",
-        "verb": "detruire",
+        "verb": "accepter",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "niamh", "value": 12},
-          {"type": "DAMAGE_LIFE", "value": -10}
-        ]
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "niamh",
+            "amount": 12
+          },
+          {
+            "type": "DAMAGE_LIFE",
+            "amount": -10
+          }
+        ],
+        "label": "Detruire le phare pour liberer les ames prisonieres"
       }
     ]
   },
@@ -1161,31 +1934,53 @@
     "biome": "cercles_pierres",
     "faction": "druides",
     "trust_tier": "T0",
-    "tags": ["verb_balance"],
+    "tags": [
+      "verb_balance"
+    ],
     "options": [
       {
-        "text": "Recolter le ble sacre avec des gestes rituels",
-        "verb": "recolter",
+        "verb": "accepter",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "druides", "value": 12},
-          {"type": "ADD_BIOME_CURRENCY", "value": 3}
-        ]
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "druides",
+            "amount": 12
+          },
+          {
+            "type": "ADD_BIOME_CURRENCY",
+            "amount": 3
+          }
+        ],
+        "label": "Recolter le ble sacre avec des gestes rituels"
       },
       {
-        "text": "Planter de nouvelles graines pour etendre le champ magique",
-        "verb": "planter",
+        "verb": "accepter",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "druides", "value": 10},
-          {"type": "HEAL_LIFE", "value": 8}
-        ]
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "druides",
+            "amount": 10
+          },
+          {
+            "type": "HEAL_LIFE",
+            "amount": 8
+          }
+        ],
+        "label": "Planter de nouvelles graines pour etendre le champ magique"
       },
       {
-        "text": "Accumuler les grains de sagesse dans une bourse enchantee",
-        "verb": "accumuler",
+        "verb": "accepter",
         "effects": [
-          {"type": "ADD_BIOME_CURRENCY", "value": 5},
-          {"type": "ADD_ANAM", "value": 1}
-        ]
+          {
+            "type": "ADD_BIOME_CURRENCY",
+            "amount": 5
+          },
+          {
+            "type": "ADD_ANAM",
+            "amount": 1
+          }
+        ],
+        "label": "Accumuler les grains de sagesse dans une bourse enchantee"
       }
     ]
   },
@@ -1195,31 +1990,54 @@
     "biome": "villages_celtes",
     "faction": "ankou",
     "trust_tier": "T1",
-    "tags": ["verb_balance"],
+    "tags": [
+      "verb_balance"
+    ],
     "options": [
       {
-        "text": "Chanter en reponse pour dialoguer avec les ames enchainees",
-        "verb": "chanter",
+        "verb": "apaiser",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "ankou", "value": 12},
-          {"type": "ADD_ANAM", "value": 2}
-        ]
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "ankou",
+            "amount": 12
+          },
+          {
+            "type": "ADD_ANAM",
+            "amount": 2
+          }
+        ],
+        "label": "Chanter en reponse pour dialoguer avec les ames enchainees"
       },
       {
-        "text": "Maudire les chaines invisibles pour tenter de les briser",
-        "verb": "maudire",
+        "verb": "accepter",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "ankou", "value": 15},
-          {"type": "DAMAGE_LIFE", "value": -8}
-        ]
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "ankou",
+            "amount": 15
+          },
+          {
+            "type": "DAMAGE_LIFE",
+            "amount": -8
+          }
+        ],
+        "label": "Maudire les chaines invisibles pour tenter de les briser"
       },
       {
-        "text": "Construire un couvercle de pierre pour sceller le puits",
-        "verb": "construire",
+        "verb": "contourner",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "anciens", "value": 8},
-          {"type": "HEAL_LIFE", "value": 5}
-        ]
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "anciens",
+            "amount": 8
+          },
+          {
+            "type": "HEAL_LIFE",
+            "amount": 5
+          }
+        ],
+        "label": "Construire un couvercle de pierre pour sceller le puits"
       }
     ]
   },
@@ -1229,31 +2047,53 @@
     "biome": "iles_mystiques",
     "faction": "niamh",
     "trust_tier": "T2",
-    "tags": ["verb_balance"],
+    "tags": [
+      "verb_balance"
+    ],
     "options": [
       {
-        "text": "Rever eveille en suivant les chemins lumineux dans le ciel",
-        "verb": "rever",
+        "verb": "accepter",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "niamh", "value": 15},
-          {"type": "ADD_ANAM", "value": 3}
-        ]
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "niamh",
+            "amount": 15
+          },
+          {
+            "type": "ADD_ANAM",
+            "amount": 3
+          }
+        ],
+        "label": "Rever eveille en suivant les chemins lumineux dans le ciel"
       },
       {
-        "text": "Danser sous les aurores pour capter leur energie",
-        "verb": "danser",
+        "verb": "accepter",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "niamh", "value": 12},
-          {"type": "HEAL_LIFE", "value": 8}
-        ]
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "niamh",
+            "amount": 12
+          },
+          {
+            "type": "HEAL_LIFE",
+            "amount": 8
+          }
+        ],
+        "label": "Danser sous les aurores pour capter leur energie"
       },
       {
-        "text": "Absorber la lumiere des aurores dans un cristal",
-        "verb": "absorber",
+        "verb": "accepter",
         "effects": [
-          {"type": "ADD_BIOME_CURRENCY", "value": 4},
-          {"type": "DAMAGE_LIFE", "value": -5}
-        ]
+          {
+            "type": "ADD_BIOME_CURRENCY",
+            "amount": 4
+          },
+          {
+            "type": "DAMAGE_LIFE",
+            "amount": -5
+          }
+        ],
+        "label": "Absorber la lumiere des aurores dans un cristal"
       }
     ]
   },
@@ -1263,31 +2103,55 @@
     "biome": "foret_broceliande",
     "faction": "korrigans",
     "trust_tier": "T0",
-    "tags": ["verb_balance"],
+    "tags": [
+      "verb_balance"
+    ],
     "options": [
       {
-        "text": "Repousser les champignons pour sauver le faon",
-        "verb": "repousser",
+        "verb": "pousser",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "druides", "value": 12},
-          {"type": "ADD_REPUTATION", "faction": "korrigans", "value": -5}
-        ]
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "druides",
+            "amount": 12
+          },
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "korrigans",
+            "amount": -5
+          }
+        ],
+        "label": "Repousser les champignons pour sauver le faon"
       },
       {
-        "text": "Benir le faon pour le proteger des spores malfaisantes",
-        "verb": "benir",
+        "verb": "accepter",
         "effects": [
-          {"type": "HEAL_LIFE", "value": 10},
-          {"type": "ADD_REPUTATION", "faction": "druides", "value": 8}
-        ]
+          {
+            "type": "HEAL_LIFE",
+            "amount": 10
+          },
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "druides",
+            "amount": 8
+          }
+        ],
+        "label": "Benir le faon pour le proteger des spores malfaisantes"
       },
       {
-        "text": "Accumuler les spores pour vos propres potions",
-        "verb": "accumuler",
+        "verb": "accepter",
         "effects": [
-          {"type": "ADD_BIOME_CURRENCY", "value": 4},
-          {"type": "ADD_REPUTATION", "faction": "korrigans", "value": 8}
-        ]
+          {
+            "type": "ADD_BIOME_CURRENCY",
+            "amount": 4
+          },
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "korrigans",
+            "amount": 8
+          }
+        ],
+        "label": "Accumuler les spores pour vos propres potions"
       }
     ]
   },
@@ -1297,31 +2161,54 @@
     "biome": "cotes_sauvages",
     "faction": "niamh",
     "trust_tier": "T1",
-    "tags": ["verb_balance"],
+    "tags": [
+      "verb_balance"
+    ],
     "options": [
       {
-        "text": "Tisser les feuilles d'or en une couronne pendant leur ascension",
-        "verb": "tisser",
+        "verb": "accepter",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "niamh", "value": 12},
-          {"type": "ADD_BIOME_CURRENCY", "value": 3}
-        ]
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "niamh",
+            "amount": 12
+          },
+          {
+            "type": "ADD_BIOME_CURRENCY",
+            "amount": 3
+          }
+        ],
+        "label": "Tisser les feuilles d'or en une couronne pendant leur ascension"
       },
       {
-        "text": "Forger un calice avec l'eau inversee et les feuilles d'or",
-        "verb": "forger",
+        "verb": "forcer",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "anciens", "value": 10},
-          {"type": "ADD_BIOME_CURRENCY", "value": 3}
-        ]
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "anciens",
+            "amount": 10
+          },
+          {
+            "type": "ADD_BIOME_CURRENCY",
+            "amount": 3
+          }
+        ],
+        "label": "Forger un calice avec l'eau inversee et les feuilles d'or"
       },
       {
-        "text": "Fuir cette anomalie avant qu'elle ne vous emporte vers le haut",
         "verb": "fuir",
         "effects": [
-          {"type": "HEAL_LIFE", "value": 12},
-          {"type": "ADD_REPUTATION", "faction": "niamh", "value": -5}
-        ]
+          {
+            "type": "HEAL_LIFE",
+            "amount": 12
+          },
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "niamh",
+            "amount": -5
+          }
+        ],
+        "label": "Fuir cette anomalie avant qu'elle ne vous emporte vers le haut"
       }
     ]
   },
@@ -1331,31 +2218,54 @@
     "biome": "landes_bruyere",
     "faction": "druides",
     "trust_tier": "T2",
-    "tags": ["verb_balance"],
+    "tags": [
+      "verb_balance"
+    ],
     "options": [
       {
-        "text": "Forger un outil runique dans la forge reveille",
-        "verb": "forger",
+        "verb": "forcer",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "druides", "value": 15},
-          {"type": "ADD_BIOME_CURRENCY", "value": 4}
-        ]
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "druides",
+            "amount": 15
+          },
+          {
+            "type": "ADD_BIOME_CURRENCY",
+            "amount": 4
+          }
+        ],
+        "label": "Forger un outil runique dans la forge reveille"
       },
       {
-        "text": "Construire un abri autour de la forge pour la preserver",
-        "verb": "construire",
+        "verb": "contourner",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "anciens", "value": 12},
-          {"type": "HEAL_LIFE", "value": 5}
-        ]
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "anciens",
+            "amount": 12
+          },
+          {
+            "type": "HEAL_LIFE",
+            "amount": 5
+          }
+        ],
+        "label": "Construire un abri autour de la forge pour la preserver"
       },
       {
-        "text": "Detruire la forge pour empecher son utilisation malveillante",
-        "verb": "detruire",
+        "verb": "accepter",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "ankou", "value": 12},
-          {"type": "DAMAGE_LIFE", "value": -8}
-        ]
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "ankou",
+            "amount": 12
+          },
+          {
+            "type": "DAMAGE_LIFE",
+            "amount": -8
+          }
+        ],
+        "label": "Detruire la forge pour empecher son utilisation malveillante"
       }
     ]
   },
@@ -1365,31 +2275,54 @@
     "biome": "villages_celtes",
     "faction": "korrigans",
     "trust_tier": "T2",
-    "tags": ["verb_balance"],
+    "tags": [
+      "verb_balance"
+    ],
     "options": [
       {
-        "text": "Planter des graines du rosier noir dans votre propre jardin secret",
-        "verb": "planter",
+        "verb": "accepter",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "korrigans", "value": 12},
-          {"type": "ADD_ANAM", "value": 2}
-        ]
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "korrigans",
+            "amount": 12
+          },
+          {
+            "type": "ADD_ANAM",
+            "amount": 2
+          }
+        ],
+        "label": "Planter des graines du rosier noir dans votre propre jardin secret"
       },
       {
-        "text": "Enchainer les haies pour figer le labyrinthe",
-        "verb": "enchainer",
+        "verb": "accepter",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "anciens", "value": 10},
-          {"type": "ADD_BIOME_CURRENCY", "value": 3}
-        ]
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "anciens",
+            "amount": 10
+          },
+          {
+            "type": "ADD_BIOME_CURRENCY",
+            "amount": 3
+          }
+        ],
+        "label": "Enchainer les haies pour figer le labyrinthe"
       },
       {
-        "text": "Danser avec les haies mobiles, epousant leur rythme",
-        "verb": "danser",
+        "verb": "accepter",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "niamh", "value": 12},
-          {"type": "HEAL_LIFE", "value": 8}
-        ]
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "niamh",
+            "amount": 12
+          },
+          {
+            "type": "HEAL_LIFE",
+            "amount": 8
+          }
+        ],
+        "label": "Danser avec les haies mobiles, epousant leur rythme"
       }
     ]
   },
@@ -1399,31 +2332,54 @@
     "biome": "iles_mystiques",
     "faction": "ankou",
     "trust_tier": "T3",
-    "tags": ["verb_balance"],
+    "tags": [
+      "verb_balance"
+    ],
     "options": [
       {
-        "text": "Absorber les murmures apocalyptiques pour les comprendre",
-        "verb": "absorber",
+        "verb": "accepter",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "ankou", "value": 18},
-          {"type": "DAMAGE_LIFE", "value": -15}
-        ]
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "ankou",
+            "amount": 18
+          },
+          {
+            "type": "DAMAGE_LIFE",
+            "amount": -15
+          }
+        ],
+        "label": "Absorber les murmures apocalyptiques pour les comprendre"
       },
       {
-        "text": "Maudire le lac pour faire taire les propheties",
-        "verb": "maudire",
+        "verb": "accepter",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "ankou", "value": 15},
-          {"type": "DAMAGE_LIFE", "value": -10}
-        ]
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "ankou",
+            "amount": 15
+          },
+          {
+            "type": "DAMAGE_LIFE",
+            "amount": -10
+          }
+        ],
+        "label": "Maudire le lac pour faire taire les propheties"
       },
       {
-        "text": "Fuir le cratere avant que les murmures ne vous rendent fou",
         "verb": "fuir",
         "effects": [
-          {"type": "HEAL_LIFE", "value": 15},
-          {"type": "ADD_REPUTATION", "faction": "ankou", "value": -5}
-        ]
+          {
+            "type": "HEAL_LIFE",
+            "amount": 15
+          },
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "ankou",
+            "amount": -5
+          }
+        ],
+        "label": "Fuir le cratere avant que les murmures ne vous rendent fou"
       }
     ]
   },
@@ -1433,31 +2389,54 @@
     "biome": "collines_dolmens",
     "faction": "druides",
     "trust_tier": "T3",
-    "tags": ["verb_balance"],
+    "tags": [
+      "verb_balance"
+    ],
     "options": [
       {
-        "text": "Tisser les inscriptions en un sortilege coherent",
-        "verb": "tisser",
+        "verb": "accepter",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "druides", "value": 18},
-          {"type": "ADD_ANAM", "value": 3}
-        ]
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "druides",
+            "amount": 18
+          },
+          {
+            "type": "ADD_ANAM",
+            "amount": 3
+          }
+        ],
+        "label": "Tisser les inscriptions en un sortilege coherent"
       },
       {
-        "text": "Planter un arbre au sommet du dolmen pour l'ancrer",
-        "verb": "planter",
+        "verb": "accepter",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "druides", "value": 12},
-          {"type": "HEAL_LIFE", "value": 10}
-        ]
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "druides",
+            "amount": 12
+          },
+          {
+            "type": "HEAL_LIFE",
+            "amount": 10
+          }
+        ],
+        "label": "Planter un arbre au sommet du dolmen pour l'ancrer"
       },
       {
-        "text": "Repousser les pulsations pour reveler les inscriptions en permanence",
-        "verb": "repousser",
+        "verb": "pousser",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "anciens", "value": 15},
-          {"type": "DAMAGE_LIFE", "value": -8}
-        ]
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "anciens",
+            "amount": 15
+          },
+          {
+            "type": "DAMAGE_LIFE",
+            "amount": -8
+          }
+        ],
+        "label": "Repousser les pulsations pour reveler les inscriptions en permanence"
       }
     ]
   },
@@ -1467,31 +2446,54 @@
     "biome": "marais_korrigans",
     "faction": "korrigans",
     "trust_tier": "T1",
-    "tags": ["verb_balance"],
+    "tags": [
+      "verb_balance"
+    ],
     "options": [
       {
-        "text": "Accumuler des artefacts rares pendant que les korrigans dorment",
-        "verb": "accumuler",
+        "verb": "accepter",
         "effects": [
-          {"type": "ADD_BIOME_CURRENCY", "value": 5},
-          {"type": "ADD_REPUTATION", "faction": "korrigans", "value": -10}
-        ]
+          {
+            "type": "ADD_BIOME_CURRENCY",
+            "amount": 5
+          },
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "korrigans",
+            "amount": -10
+          }
+        ],
+        "label": "Accumuler des artefacts rares pendant que les korrigans dorment"
       },
       {
-        "text": "Construire des etageres pour organiser leur tresor chaotique",
-        "verb": "construire",
+        "verb": "contourner",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "korrigans", "value": 15},
-          {"type": "ADD_BIOME_CURRENCY", "value": 2}
-        ]
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "korrigans",
+            "amount": 15
+          },
+          {
+            "type": "ADD_BIOME_CURRENCY",
+            "amount": 2
+          }
+        ],
+        "label": "Construire des etageres pour organiser leur tresor chaotique"
       },
       {
-        "text": "Forger une alliance avec les korrigans en echange d'un secret",
-        "verb": "forger",
+        "verb": "forcer",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "korrigans", "value": 12},
-          {"type": "ADD_ANAM", "value": 2}
-        ]
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "korrigans",
+            "amount": 12
+          },
+          {
+            "type": "ADD_ANAM",
+            "amount": 2
+          }
+        ],
+        "label": "Forger une alliance avec les korrigans en echange d'un secret"
       }
     ]
   },
@@ -1501,31 +2503,54 @@
     "biome": "landes_bruyere",
     "faction": "anciens",
     "trust_tier": "T1",
-    "tags": ["verb_balance"],
+    "tags": [
+      "verb_balance"
+    ],
     "options": [
       {
-        "text": "Rever les cartes celestes pour naviguer entre les mondes",
-        "verb": "rever",
+        "verb": "accepter",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "niamh", "value": 15},
-          {"type": "ADD_ANAM", "value": 3}
-        ]
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "niamh",
+            "amount": 15
+          },
+          {
+            "type": "ADD_ANAM",
+            "amount": 3
+          }
+        ],
+        "label": "Rever les cartes celestes pour naviguer entre les mondes"
       },
       {
-        "text": "Repousser la tempete pour proteger les voyageurs egares",
-        "verb": "repousser",
+        "verb": "pousser",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "druides", "value": 15},
-          {"type": "HEAL_LIFE", "value": 10}
-        ]
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "druides",
+            "amount": 15
+          },
+          {
+            "type": "HEAL_LIFE",
+            "amount": 10
+          }
+        ],
+        "label": "Repousser la tempete pour proteger les voyageurs egares"
       },
       {
-        "text": "Accumuler le sable noir dans une fiole pour etude",
-        "verb": "accumuler",
+        "verb": "accepter",
         "effects": [
-          {"type": "ADD_BIOME_CURRENCY", "value": 5},
-          {"type": "ADD_REPUTATION", "faction": "anciens", "value": 8}
-        ]
+          {
+            "type": "ADD_BIOME_CURRENCY",
+            "amount": 5
+          },
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "anciens",
+            "amount": 8
+          }
+        ],
+        "label": "Accumuler le sable noir dans une fiole pour etude"
       }
     ]
   },
@@ -1535,31 +2560,54 @@
     "biome": "foret_broceliande",
     "faction": "druides",
     "trust_tier": "T3",
-    "tags": ["verb_balance"],
+    "tags": [
+      "verb_balance"
+    ],
     "options": [
       {
-        "text": "Recolter le miel spectral en acceptant les piqures d'ame",
-        "verb": "recolter",
+        "verb": "accepter",
         "effects": [
-          {"type": "HEAL_LIFE", "value": 20},
-          {"type": "ADD_REPUTATION", "faction": "ankou", "value": 8}
-        ]
+          {
+            "type": "HEAL_LIFE",
+            "amount": 20
+          },
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "ankou",
+            "amount": 8
+          }
+        ],
+        "label": "Recolter le miel spectral en acceptant les piqures d'ame"
       },
       {
-        "text": "Benir les abeilles pour calmer leur essaim tourmente",
-        "verb": "benir",
+        "verb": "accepter",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "druides", "value": 15},
-          {"type": "HEAL_LIFE", "value": 10}
-        ]
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "druides",
+            "amount": 15
+          },
+          {
+            "type": "HEAL_LIFE",
+            "amount": 10
+          }
+        ],
+        "label": "Benir les abeilles pour calmer leur essaim tourmente"
       },
       {
-        "text": "Enchainer l'essaim dans l'arbre pour proteger les passants",
-        "verb": "enchainer",
+        "verb": "accepter",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "ankou", "value": 12},
-          {"type": "DAMAGE_LIFE", "value": -8}
-        ]
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "ankou",
+            "amount": 12
+          },
+          {
+            "type": "DAMAGE_LIFE",
+            "amount": -8
+          }
+        ],
+        "label": "Enchainer l'essaim dans l'arbre pour proteger les passants"
       }
     ]
   },
@@ -1569,31 +2617,54 @@
     "biome": "cotes_sauvages",
     "faction": "anciens",
     "trust_tier": "T2",
-    "tags": ["verb_balance"],
+    "tags": [
+      "verb_balance"
+    ],
     "options": [
       {
-        "text": "Construire un barrage magique pour explorer la cite a sec",
-        "verb": "construire",
+        "verb": "contourner",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "anciens", "value": 15},
-          {"type": "DAMAGE_LIFE", "value": -10}
-        ]
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "anciens",
+            "amount": 15
+          },
+          {
+            "type": "DAMAGE_LIFE",
+            "amount": -10
+          }
+        ],
+        "label": "Construire un barrage magique pour explorer la cite a sec"
       },
       {
-        "text": "Detruire les marches derriere vous pour empecher d'autres de suivre",
-        "verb": "detruire",
+        "verb": "accepter",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "ankou", "value": 12},
-          {"type": "ADD_BIOME_CURRENCY", "value": 3}
-        ]
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "ankou",
+            "amount": 12
+          },
+          {
+            "type": "ADD_BIOME_CURRENCY",
+            "amount": 3
+          }
+        ],
+        "label": "Detruire les marches derriere vous pour empecher d'autres de suivre"
       },
       {
-        "text": "Danser sur les marches pour invoquer les esprits de la cite",
-        "verb": "danser",
+        "verb": "accepter",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "niamh", "value": 12},
-          {"type": "ADD_ANAM", "value": 2}
-        ]
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "niamh",
+            "amount": 12
+          },
+          {
+            "type": "ADD_ANAM",
+            "amount": 2
+          }
+        ],
+        "label": "Danser sur les marches pour invoquer les esprits de la cite"
       }
     ]
   },
@@ -1603,31 +2674,54 @@
     "biome": "cercles_pierres",
     "faction": "druides",
     "trust_tier": "T2",
-    "tags": ["verb_balance"],
+    "tags": [
+      "verb_balance"
+    ],
     "options": [
       {
-        "text": "Forger un lien telepathique avec les serpents du cercle",
-        "verb": "forger",
+        "verb": "forcer",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "druides", "value": 15},
-          {"type": "ADD_ANAM", "value": 2}
-        ]
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "druides",
+            "amount": 15
+          },
+          {
+            "type": "ADD_ANAM",
+            "amount": 2
+          }
+        ],
+        "label": "Forger un lien telepathique avec les serpents du cercle"
       },
       {
-        "text": "Maudire la frequence pour faire taire les pierres",
-        "verb": "maudire",
+        "verb": "accepter",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "ankou", "value": 12},
-          {"type": "DAMAGE_LIFE", "value": -8}
-        ]
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "ankou",
+            "amount": 12
+          },
+          {
+            "type": "DAMAGE_LIFE",
+            "amount": -8
+          }
+        ],
+        "label": "Maudire la frequence pour faire taire les pierres"
       },
       {
-        "text": "Fuir avec les oiseaux, loin de cette resonance malsaine",
         "verb": "fuir",
         "effects": [
-          {"type": "HEAL_LIFE", "value": 12},
-          {"type": "ADD_REPUTATION", "faction": "druides", "value": -5}
-        ]
+          {
+            "type": "HEAL_LIFE",
+            "amount": 12
+          },
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "druides",
+            "amount": -5
+          }
+        ],
+        "label": "Fuir avec les oiseaux, loin de cette resonance malsaine"
       }
     ]
   },
@@ -1637,31 +2731,54 @@
     "biome": "villages_celtes",
     "faction": "ankou",
     "trust_tier": "T3",
-    "tags": ["verb_balance"],
+    "tags": [
+      "verb_balance"
+    ],
     "options": [
       {
-        "text": "Danser avec les morts en portant le masque de votre ancetre",
-        "verb": "danser",
+        "verb": "accepter",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "ankou", "value": 18},
-          {"type": "ADD_ANAM", "value": 3}
-        ]
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "ankou",
+            "amount": 18
+          },
+          {
+            "type": "ADD_ANAM",
+            "amount": 3
+          }
+        ],
+        "label": "Danser avec les morts en portant le masque de votre ancetre"
       },
       {
-        "text": "Benir les masques pour renforcer le lien entre vivants et morts",
-        "verb": "benir",
+        "verb": "accepter",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "ankou", "value": 12},
-          {"type": "HEAL_LIFE", "value": 12}
-        ]
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "ankou",
+            "amount": 12
+          },
+          {
+            "type": "HEAL_LIFE",
+            "amount": 12
+          }
+        ],
+        "label": "Benir les masques pour renforcer le lien entre vivants et morts"
       },
       {
-        "text": "Detruire les masques pour rompre le cycle de la danse eternelle",
-        "verb": "detruire",
+        "verb": "accepter",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "niamh", "value": 10},
-          {"type": "DAMAGE_LIFE", "value": -12}
-        ]
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "niamh",
+            "amount": 10
+          },
+          {
+            "type": "DAMAGE_LIFE",
+            "amount": -12
+          }
+        ],
+        "label": "Detruire les masques pour rompre le cycle de la danse eternelle"
       }
     ]
   },
@@ -1671,31 +2788,54 @@
     "biome": "collines_dolmens",
     "faction": "niamh",
     "trust_tier": "T3",
-    "tags": ["verb_balance"],
+    "tags": [
+      "verb_balance"
+    ],
     "options": [
       {
-        "text": "Tisser les souvenirs epars en une tapisserie de sagesse",
-        "verb": "tisser",
+        "verb": "accepter",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "niamh", "value": 18},
-          {"type": "ADD_ANAM", "value": 3}
-        ]
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "niamh",
+            "amount": 18
+          },
+          {
+            "type": "ADD_ANAM",
+            "amount": 3
+          }
+        ],
+        "label": "Tisser les souvenirs epars en une tapisserie de sagesse"
       },
       {
-        "text": "Accumuler les pensees perdues pour les rendre a leurs proprietaires",
-        "verb": "accumuler",
+        "verb": "accepter",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "anciens", "value": 12},
-          {"type": "ADD_BIOME_CURRENCY", "value": 4}
-        ]
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "anciens",
+            "amount": 12
+          },
+          {
+            "type": "ADD_BIOME_CURRENCY",
+            "amount": 4
+          }
+        ],
+        "label": "Accumuler les pensees perdues pour les rendre a leurs proprietaires"
       },
       {
-        "text": "Repousser le vent pour creer un moment de calme au sommet",
-        "verb": "repousser",
+        "verb": "pousser",
         "effects": [
-          {"type": "ADD_REPUTATION", "faction": "druides", "value": 12},
-          {"type": "HEAL_LIFE", "value": 10}
-        ]
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "druides",
+            "amount": 12
+          },
+          {
+            "type": "HEAL_LIFE",
+            "amount": 10
+          }
+        ],
+        "label": "Repousser le vent pour creer un moment de calme au sommet"
       }
     ]
   }

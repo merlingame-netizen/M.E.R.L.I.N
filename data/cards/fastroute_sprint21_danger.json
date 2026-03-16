@@ -1,0 +1,3002 @@
+[
+  {
+    "id": "FR_S21D_001",
+    "text": "Un dolmen fissure exhale une brume violacee. Les runes gravees saignent une encre noire qui brule la pierre. Quiconque s'approche sent ses forces s'evaporer comme rosee au soleil maudit.",
+    "biome": "collines_dolmens",
+    "champ_lexical": "logique",
+    "trust_tier": "T0",
+    "tags": [
+      "danger",
+      "malediction",
+      "dolmen"
+    ],
+    "options": [
+      {
+        "label": "Dechiffrer les runes malgre la douleur qui irradie",
+        "verb": "dechiffrer",
+        "effects": [
+          {
+            "type": "DAMAGE_LIFE",
+            "amount": 14
+          },
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "anciens",
+            "amount": -8
+          }
+        ]
+      },
+      {
+        "label": "Fuir avant que la brume ne vous consume entierement",
+        "verb": "fuir",
+        "effects": [
+          {
+            "type": "DAMAGE_LIFE",
+            "amount": 10
+          },
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "anciens",
+            "amount": -12
+          }
+        ]
+      },
+      {
+        "label": "Endurer la brume en esperant qu'elle se dissipe",
+        "verb": "endurer",
+        "effects": [
+          {
+            "type": "DAMAGE_LIFE",
+            "amount": 18
+          },
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "anciens",
+            "amount": 3
+          }
+        ]
+      }
+    ],
+    "faction": "anciens"
+  },
+  {
+    "id": "FR_S21D_002",
+    "text": "Un korrigan aux yeux vides propose un marche: votre sang contre un secret. Son sourire revele des dents taillees en pointes. Derriere lui, d'autres silhouettes attendent dans l'ombre du marais.",
+    "biome": "marais_korrigans",
+    "champ_lexical": "bluff",
+    "trust_tier": "T0",
+    "tags": [
+      "danger",
+      "pacte",
+      "korrigan"
+    ],
+    "options": [
+      {
+        "label": "Negocier un prix moins sanglant pour le secret",
+        "verb": "negocier",
+        "effects": [
+          {
+            "type": "DAMAGE_LIFE",
+            "amount": 12
+          },
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "korrigans",
+            "amount": -5
+          }
+        ]
+      },
+      {
+        "label": "Accepter le pacte de sang sans marchander",
+        "verb": "accepter",
+        "effects": [
+          {
+            "type": "DAMAGE_LIFE",
+            "amount": 20
+          },
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "korrigans",
+            "amount": 5
+          }
+        ]
+      },
+      {
+        "label": "Refuser et reculer lentement dans la boue",
+        "verb": "refuser",
+        "effects": [
+          {
+            "type": "DAMAGE_LIFE",
+            "amount": 8
+          },
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "korrigans",
+            "amount": -15
+          }
+        ]
+      }
+    ],
+    "faction": "korrigans"
+  },
+  {
+    "id": "FR_S21D_003",
+    "text": "La foret de Broceliande gronde. Les arbres se penchent vers vous, leurs branches griffant l'air comme des serres. Une voix ancienne murmure que vous avez profane un lieu sacre sans le savoir.",
+    "biome": "foret_broceliande",
+    "champ_lexical": "esprit",
+    "trust_tier": "T0",
+    "tags": [
+      "danger",
+      "profanation",
+      "foret"
+    ],
+    "options": [
+      {
+        "label": "Mediter pour apaiser la colere de la foret",
+        "verb": "mediter",
+        "effects": [
+          {
+            "type": "DAMAGE_LIFE",
+            "amount": 12
+          },
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "druides",
+            "amount": -6
+          }
+        ]
+      },
+      {
+        "label": "Courir vers la clairiere avant que les branches ne se referment",
+        "verb": "courir",
+        "effects": [
+          {
+            "type": "DAMAGE_LIFE",
+            "amount": 15
+          },
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "druides",
+            "amount": -10
+          }
+        ]
+      },
+      {
+        "label": "Resister mentalement aux visions de culpabilite",
+        "verb": "resister mentalement",
+        "effects": [
+          {
+            "type": "DAMAGE_LIFE",
+            "amount": 16
+          },
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "druides",
+            "amount": -4
+          }
+        ]
+      }
+    ],
+    "faction": "druides"
+  },
+  {
+    "id": "FR_S21D_004",
+    "text": "Sur la cote sauvage, une maree noire surnaturelle monte a contre-courant. Les poissons echoues ont des yeux humains qui vous fixent. L'eau avance inexorablement vers vos pieds.",
+    "biome": "cotes_sauvages",
+    "champ_lexical": "perception",
+    "trust_tier": "T0",
+    "tags": [
+      "danger",
+      "maree",
+      "cote"
+    ],
+    "options": [
+      {
+        "label": "Ecouter ce que les poissons tentent de communiquer",
+        "verb": "ecouter",
+        "effects": [
+          {
+            "type": "DAMAGE_LIFE",
+            "amount": 14
+          },
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "niamh",
+            "amount": -8
+          }
+        ]
+      },
+      {
+        "label": "Escalader les falaises pour echapper a la maree",
+        "verb": "escalader",
+        "effects": [
+          {
+            "type": "DAMAGE_LIFE",
+            "amount": 16
+          },
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "niamh",
+            "amount": -6
+          }
+        ]
+      },
+      {
+        "label": "Pister l'origine de la maree noire le long de la cote",
+        "verb": "pister",
+        "effects": [
+          {
+            "type": "DAMAGE_LIFE",
+            "amount": 18
+          },
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "niamh",
+            "amount": -3
+          }
+        ]
+      }
+    ],
+    "faction": "niamh"
+  },
+  {
+    "id": "FR_S21D_005",
+    "text": "Un cercle de pierres vibre d'une energie malveillante. Au centre, un autel tache de sang ancien pulse comme un coeur. Les menhirs projettent des ombres qui bougent a contre-jour.",
+    "biome": "cercles_pierres",
+    "champ_lexical": "observation",
+    "trust_tier": "T0",
+    "tags": [
+      "danger",
+      "autel",
+      "sang"
+    ],
+    "options": [
+      {
+        "label": "Observer les ombres pour comprendre le rituel interrompu",
+        "verb": "observer",
+        "effects": [
+          {
+            "type": "DAMAGE_LIFE",
+            "amount": 15
+          },
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "anciens",
+            "amount": -7
+          }
+        ]
+      },
+      {
+        "label": "Scruter l'autel pour identifier les symboles graves",
+        "verb": "scruter",
+        "effects": [
+          {
+            "type": "DAMAGE_LIFE",
+            "amount": 18
+          },
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "anciens",
+            "amount": 2
+          }
+        ]
+      },
+      {
+        "label": "Se cacher derriere un menhir et attendre la nuit",
+        "verb": "se cacher",
+        "effects": [
+          {
+            "type": "DAMAGE_LIFE",
+            "amount": 10
+          },
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "anciens",
+            "amount": -14
+          }
+        ]
+      }
+    ],
+    "faction": "anciens"
+  },
+  {
+    "id": "FR_S21D_006",
+    "text": "Un village celte est deserte. Les feux brulent encore, la nourriture fume sur les tables, mais pas ame qui vive. Sur le mur de la grande hutte, un message grave dans le bois: 'Ne restez pas.'",
+    "biome": "villages_celtes",
+    "champ_lexical": "logique",
+    "trust_tier": "T0",
+    "tags": [
+      "danger",
+      "village",
+      "deserte"
+    ],
+    "options": [
+      {
+        "label": "Analyser les indices pour comprendre ce qui a fait fuir les habitants",
+        "verb": "analyser",
+        "effects": [
+          {
+            "type": "DAMAGE_LIFE",
+            "amount": 12
+          },
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "anciens",
+            "amount": -10
+          }
+        ]
+      },
+      {
+        "label": "Fouiller a l'aveugle les huttes abandonees",
+        "verb": "fouiller a l'aveugle",
+        "effects": [
+          {
+            "type": "DAMAGE_LIFE",
+            "amount": 16
+          },
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "anciens",
+            "amount": -8
+          }
+        ]
+      },
+      {
+        "label": "Fuir immediatement en suivant le conseil grave",
+        "verb": "fuir",
+        "effects": [
+          {
+            "type": "DAMAGE_LIFE",
+            "amount": 8
+          },
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "anciens",
+            "amount": -12
+          }
+        ]
+      }
+    ],
+    "faction": "anciens"
+  },
+  {
+    "id": "FR_S21D_007",
+    "text": "Les landes de bruyere sont en feu — mais d'un feu froid, bleu et silencieux. Les flammes ne brulent pas la vegetation mais glacent tout ce qu'elles touchent. Un cerf blanc traverse l'incendie, indifferent.",
+    "biome": "landes_bruyere",
+    "champ_lexical": "vigueur",
+    "trust_tier": "T0",
+    "tags": [
+      "danger",
+      "feu_froid",
+      "landes"
+    ],
+    "options": [
+      {
+        "label": "Courir a travers les flammes froides en suivant le cerf",
+        "verb": "courir",
+        "effects": [
+          {
+            "type": "DAMAGE_LIFE",
+            "amount": 18
+          },
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "druides",
+            "amount": -5
+          }
+        ]
+      },
+      {
+        "label": "Resister physiquement au froid surnaturel et avancer",
+        "verb": "resister physiquement",
+        "effects": [
+          {
+            "type": "DAMAGE_LIFE",
+            "amount": 20
+          },
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "druides",
+            "amount": 2
+          }
+        ]
+      },
+      {
+        "label": "Contourner l'incendie par les ravines",
+        "verb": "contourner",
+        "effects": [
+          {
+            "type": "DAMAGE_LIFE",
+            "amount": 10
+          },
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "druides",
+            "amount": -12
+          }
+        ]
+      }
+    ],
+    "faction": "druides"
+  },
+  {
+    "id": "FR_S21D_008",
+    "text": "Un spectre de l'Ankou se materialise sur l'ile, sa charrette grincant sur le sable noir. Il pointe son doigt osseux vers vous: 'Tu as une dette. Le passage se paie.'",
+    "biome": "iles_mystiques",
+    "champ_lexical": "esprit",
+    "trust_tier": "T0",
+    "tags": [
+      "danger",
+      "ankou",
+      "dette"
+    ],
+    "options": [
+      {
+        "label": "Accepter de payer la dette en souffrance vitale",
+        "verb": "accepter",
+        "effects": [
+          {
+            "type": "DAMAGE_LIFE",
+            "amount": 20
+          },
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "ankou",
+            "amount": 5
+          }
+        ]
+      },
+      {
+        "label": "Refuser et affronter la colere du passeur",
+        "verb": "refuser",
+        "effects": [
+          {
+            "type": "DAMAGE_LIFE",
+            "amount": 15
+          },
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "ankou",
+            "amount": -15
+          }
+        ]
+      },
+      {
+        "label": "Marchander un delai avec des mots choisis",
+        "verb": "marchander",
+        "effects": [
+          {
+            "type": "DAMAGE_LIFE",
+            "amount": 12
+          },
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "ankou",
+            "amount": -8
+          }
+        ]
+      }
+    ],
+    "faction": "ankou"
+  },
+  {
+    "id": "FR_S21D_009",
+    "text": "Un tourbillon de corbeaux descend sur les collines. Chaque oiseau porte dans son bec un fragment d'os grave. Ils tournent autour de vous en resserrant le cercle, leurs cris percant l'esprit.",
+    "biome": "collines_dolmens",
+    "champ_lexical": "perception",
+    "trust_tier": "T0",
+    "tags": [
+      "danger",
+      "corbeaux",
+      "os"
+    ],
+    "options": [
+      {
+        "label": "Tendre l'oreille pour decoder le message dans leurs cris",
+        "verb": "tendre l'oreille",
+        "effects": [
+          {
+            "type": "DAMAGE_LIFE",
+            "amount": 14
+          },
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "ankou",
+            "amount": -6
+          }
+        ]
+      },
+      {
+        "label": "Combattre les corbeaux pour les disperser",
+        "verb": "combattre",
+        "effects": [
+          {
+            "type": "DAMAGE_LIFE",
+            "amount": 16
+          },
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "ankou",
+            "amount": -12
+          }
+        ]
+      },
+      {
+        "label": "Se concentrer pour ignorer la douleur de leurs serres",
+        "verb": "se concentrer",
+        "effects": [
+          {
+            "type": "DAMAGE_LIFE",
+            "amount": 18
+          },
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "ankou",
+            "amount": -2
+          }
+        ]
+      }
+    ],
+    "faction": "ankou"
+  },
+  {
+    "id": "FR_S21D_010",
+    "text": "Le marais s'ouvre soudain sous vos pieds, revelant une caverne souterraine ou des lumieres blafardes dansent. Des korrigans difformes y forgent des chaines avec du fer maudit.",
+    "biome": "marais_korrigans",
+    "champ_lexical": "finesse",
+    "trust_tier": "T0",
+    "tags": [
+      "danger",
+      "forge",
+      "chaines"
+    ],
+    "options": [
+      {
+        "label": "Se faufiler dans la forge pour voler un outil",
+        "verb": "se faufiler",
+        "effects": [
+          {
+            "type": "DAMAGE_LIFE",
+            "amount": 16
+          },
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "korrigans",
+            "amount": -14
+          }
+        ]
+      },
+      {
+        "label": "Esquiver les chaines volantes et traverser la caverne",
+        "verb": "esquiver",
+        "effects": [
+          {
+            "type": "DAMAGE_LIFE",
+            "amount": 14
+          },
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "korrigans",
+            "amount": -8
+          }
+        ]
+      },
+      {
+        "label": "Forcer le passage en brisant les chaines a mains nues",
+        "verb": "forcer",
+        "effects": [
+          {
+            "type": "DAMAGE_LIFE",
+            "amount": 20
+          },
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "korrigans",
+            "amount": -4
+          }
+        ]
+      }
+    ],
+    "faction": "korrigans"
+  },
+  {
+    "id": "FR_S21D_011",
+    "text": "Au coeur de Broceliande, un arbre miroir reflete votre double — mais corrompu. Il vous tends la main, ses yeux noirs comme l'encre. Si vous le touchez, vous absorberez sa souffrance.",
+    "biome": "foret_broceliande",
+    "champ_lexical": "esprit",
+    "trust_tier": "T0",
+    "tags": [
+      "danger",
+      "double",
+      "miroir"
+    ],
+    "options": [
+      {
+        "label": "Accepter de toucher le double et absorber sa douleur",
+        "verb": "accepter",
+        "effects": [
+          {
+            "type": "DAMAGE_LIFE",
+            "amount": 20
+          },
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "druides",
+            "amount": 3
+          }
+        ]
+      },
+      {
+        "label": "Apaiser le double en lui parlant doucement",
+        "verb": "apaiser",
+        "effects": [
+          {
+            "type": "DAMAGE_LIFE",
+            "amount": 12
+          },
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "druides",
+            "amount": -8
+          }
+        ]
+      },
+      {
+        "label": "Fuir l'arbre miroir avant que le double ne s'echappe",
+        "verb": "fuir",
+        "effects": [
+          {
+            "type": "DAMAGE_LIFE",
+            "amount": 8
+          },
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "druides",
+            "amount": -15
+          }
+        ]
+      }
+    ],
+    "faction": "druides"
+  },
+  {
+    "id": "FR_S21D_012",
+    "text": "Une tempete de sel s'abat sur les cotes. Les vagues crachent des debris de navires antiques. Dans l'ecume, des mains spectrales agrippent quiconque s'approche du rivage.",
+    "biome": "cotes_sauvages",
+    "champ_lexical": "vigueur",
+    "trust_tier": "T0",
+    "tags": [
+      "danger",
+      "tempete",
+      "spectres"
+    ],
+    "options": [
+      {
+        "label": "Combattre les vagues pour atteindre les debris flottants",
+        "verb": "combattre",
+        "effects": [
+          {
+            "type": "DAMAGE_LIFE",
+            "amount": 18
+          },
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "niamh",
+            "amount": -6
+          }
+        ]
+      },
+      {
+        "label": "Resister physiquement a la tempete en s'ancrant au sol",
+        "verb": "resister physiquement",
+        "effects": [
+          {
+            "type": "DAMAGE_LIFE",
+            "amount": 15
+          },
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "niamh",
+            "amount": -10
+          }
+        ]
+      },
+      {
+        "label": "Esquiver les debris et les mains spectrales",
+        "verb": "esquiver",
+        "effects": [
+          {
+            "type": "DAMAGE_LIFE",
+            "amount": 12
+          },
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "niamh",
+            "amount": -12
+          }
+        ]
+      }
+    ],
+    "faction": "niamh"
+  },
+  {
+    "id": "FR_S21D_013",
+    "text": "Un vieux druide aveugle bloque le sentier. Il exige un tribut de sang pour traverser son territoire. Ses mains tremblent, mais la puissance qui emane de lui est terrifiante.",
+    "biome": "landes_bruyere",
+    "champ_lexical": "bluff",
+    "trust_tier": "T0",
+    "tags": [
+      "danger",
+      "druide",
+      "tribut"
+    ],
+    "options": [
+      {
+        "label": "Convaincre le druide que vous avez deja paye",
+        "verb": "convaincre",
+        "effects": [
+          {
+            "type": "DAMAGE_LIFE",
+            "amount": 8
+          },
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "druides",
+            "amount": -18
+          }
+        ]
+      },
+      {
+        "label": "Mentir sur votre identite pour eviter le tribut",
+        "verb": "mentir",
+        "effects": [
+          {
+            "type": "DAMAGE_LIFE",
+            "amount": 10
+          },
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "druides",
+            "amount": -14
+          }
+        ]
+      },
+      {
+        "label": "Accepter de verser le tribut de sang demande",
+        "verb": "accepter",
+        "effects": [
+          {
+            "type": "DAMAGE_LIFE",
+            "amount": 18
+          },
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "druides",
+            "amount": -2
+          }
+        ]
+      }
+    ],
+    "faction": "druides"
+  },
+  {
+    "id": "FR_S21D_014",
+    "text": "Sur l'ile mystique, un phare eteint depuis des siecles se rallume d'une lumiere verdatre. Ceux qui la regardent trop longtemps perdent la vue. Un gardien squelettique vous invite a entrer.",
+    "biome": "iles_mystiques",
+    "champ_lexical": "observation",
+    "trust_tier": "T0",
+    "tags": [
+      "danger",
+      "phare",
+      "gardien"
+    ],
+    "options": [
+      {
+        "label": "Fixer la lumiere pour comprendre sa source",
+        "verb": "fixer",
+        "effects": [
+          {
+            "type": "DAMAGE_LIFE",
+            "amount": 18
+          },
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "ankou",
+            "amount": -5
+          }
+        ]
+      },
+      {
+        "label": "Examiner le phare en evitant la lumiere directe",
+        "verb": "examiner",
+        "effects": [
+          {
+            "type": "DAMAGE_LIFE",
+            "amount": 12
+          },
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "ankou",
+            "amount": -10
+          }
+        ]
+      },
+      {
+        "label": "Inspecter les environs du phare sans y entrer",
+        "verb": "inspecter",
+        "effects": [
+          {
+            "type": "DAMAGE_LIFE",
+            "amount": 10
+          },
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "ankou",
+            "amount": -12
+          }
+        ]
+      }
+    ],
+    "faction": "ankou"
+  },
+  {
+    "id": "FR_S21D_015",
+    "text": "Le cercle de pierres est envahi par des lianes noires qui etouffent les menhirs. Les lianes bougent avec intelligence, enveloppant tout ce qui entre dans leur perimetre.",
+    "biome": "cercles_pierres",
+    "champ_lexical": "finesse",
+    "trust_tier": "T0",
+    "tags": [
+      "danger",
+      "lianes",
+      "corruption"
+    ],
+    "options": [
+      {
+        "label": "Se faufiler entre les lianes en retenant votre souffle",
+        "verb": "se faufiler",
+        "effects": [
+          {
+            "type": "DAMAGE_LIFE",
+            "amount": 14
+          },
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "druides",
+            "amount": -10
+          }
+        ]
+      },
+      {
+        "label": "Contourner le cercle en cherchant une brèche",
+        "verb": "contourner",
+        "effects": [
+          {
+            "type": "DAMAGE_LIFE",
+            "amount": 10
+          },
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "druides",
+            "amount": -14
+          }
+        ]
+      },
+      {
+        "label": "Traverser les lianes de force en les arrachant",
+        "verb": "traverser",
+        "effects": [
+          {
+            "type": "DAMAGE_LIFE",
+            "amount": 18
+          },
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "druides",
+            "amount": -6
+          }
+        ]
+      }
+    ],
+    "faction": "druides"
+  },
+  {
+    "id": "FR_S21D_016",
+    "text": "Un village celte celebre un festival sanglant. Les habitants dansent autour d'un bucher ou se consument des offrandes vivantes. Ils vous invitent a participer avec des sourires figes.",
+    "biome": "villages_celtes",
+    "champ_lexical": "esprit",
+    "trust_tier": "T0",
+    "tags": [
+      "danger",
+      "festival",
+      "sacrifice"
+    ],
+    "options": [
+      {
+        "label": "Participer au rituel pour ne pas offenser les villageois",
+        "verb": "accepter",
+        "effects": [
+          {
+            "type": "DAMAGE_LIFE",
+            "amount": 16
+          },
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "anciens",
+            "amount": -6
+          }
+        ]
+      },
+      {
+        "label": "Calmer les villageois et suggerer une alternative",
+        "verb": "calmer",
+        "effects": [
+          {
+            "type": "DAMAGE_LIFE",
+            "amount": 12
+          },
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "anciens",
+            "amount": -12
+          }
+        ]
+      },
+      {
+        "label": "Refuser categoriquement et quitter le village",
+        "verb": "refuser",
+        "effects": [
+          {
+            "type": "DAMAGE_LIFE",
+            "amount": 8
+          },
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "anciens",
+            "amount": -16
+          }
+        ]
+      }
+    ],
+    "faction": "anciens"
+  },
+  {
+    "id": "FR_S21D_017",
+    "text": "Dans les collines, un dolmen s'est effondre, revelant un passage vers les profondeurs. Des gemissements montent du trou. L'air qui s'en echappe sent la mort et la pierre humide.",
+    "biome": "collines_dolmens",
+    "champ_lexical": "perception",
+    "trust_tier": "T0",
+    "tags": [
+      "danger",
+      "passage",
+      "profondeurs"
+    ],
+    "options": [
+      {
+        "label": "Sentir l'air pour evaluer la profondeur du passage",
+        "verb": "sentir",
+        "effects": [
+          {
+            "type": "DAMAGE_LIFE",
+            "amount": 12
+          },
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "ankou",
+            "amount": -10
+          }
+        ]
+      },
+      {
+        "label": "Suivre les gemissements dans les tenebres",
+        "verb": "suivre",
+        "effects": [
+          {
+            "type": "DAMAGE_LIFE",
+            "amount": 20
+          },
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "ankou",
+            "amount": 2
+          }
+        ]
+      },
+      {
+        "label": "Flairer un piege et reculer prudemment",
+        "verb": "flairer",
+        "effects": [
+          {
+            "type": "DAMAGE_LIFE",
+            "amount": 8
+          },
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "ankou",
+            "amount": -14
+          }
+        ]
+      }
+    ],
+    "faction": "ankou"
+  },
+  {
+    "id": "FR_S21D_018",
+    "text": "Le marais se couvre d'une mousse luminescente toxique. Chaque pas libere des spores qui brulent les poumons. Au loin, un tresor brille sous l'eau verte, tentant et mortel.",
+    "biome": "marais_korrigans",
+    "champ_lexical": "chance",
+    "trust_tier": "T0",
+    "tags": [
+      "danger",
+      "spores",
+      "tresor"
+    ],
+    "options": [
+      {
+        "label": "Tenter sa chance et plonger vers le tresor",
+        "verb": "tenter sa chance",
+        "effects": [
+          {
+            "type": "DAMAGE_LIFE",
+            "amount": 20
+          },
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "korrigans",
+            "amount": -4
+          }
+        ]
+      },
+      {
+        "label": "Cueillir la mousse pour analyser le poison",
+        "verb": "cueillir",
+        "effects": [
+          {
+            "type": "DAMAGE_LIFE",
+            "amount": 14
+          },
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "korrigans",
+            "amount": -8
+          }
+        ]
+      },
+      {
+        "label": "Deviner un chemin sur par les pierres emergees",
+        "verb": "deviner",
+        "effects": [
+          {
+            "type": "DAMAGE_LIFE",
+            "amount": 12
+          },
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "korrigans",
+            "amount": -10
+          }
+        ]
+      }
+    ],
+    "faction": "korrigans"
+  },
+  {
+    "id": "FR_S21D_019",
+    "text": "Broceliande pleure. Des larmes de seve acide coulent des arbres, creusant des rigoles fumantes dans le sol. Les animaux fuient en silence. Quelque chose empoisonne la foret depuis ses racines.",
+    "biome": "foret_broceliande",
+    "champ_lexical": "logique",
+    "trust_tier": "T0",
+    "tags": [
+      "danger",
+      "poison",
+      "seve"
+    ],
+    "options": [
+      {
+        "label": "Interpreter les motifs d'ecoulement pour trouver la source",
+        "verb": "interpreter",
+        "effects": [
+          {
+            "type": "DAMAGE_LIFE",
+            "amount": 16
+          },
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "druides",
+            "amount": -6
+          }
+        ]
+      },
+      {
+        "label": "Etudier la composition de la seve acide",
+        "verb": "etudier",
+        "effects": [
+          {
+            "type": "DAMAGE_LIFE",
+            "amount": 14
+          },
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "druides",
+            "amount": -8
+          }
+        ]
+      },
+      {
+        "label": "Decoder les runes sur les troncs pour comprendre la malediction",
+        "verb": "decoder",
+        "effects": [
+          {
+            "type": "DAMAGE_LIFE",
+            "amount": 18
+          },
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "druides",
+            "amount": -3
+          }
+        ]
+      }
+    ],
+    "faction": "druides"
+  },
+  {
+    "id": "FR_S21D_020",
+    "text": "Sur la cote, une grotte marine s'est ouverte a maree basse. A l'interieur, des ossements humains sont disposes en motifs rituels. L'eau commence a remonter, lentement mais surement.",
+    "biome": "cotes_sauvages",
+    "champ_lexical": "finesse",
+    "trust_tier": "T0",
+    "tags": [
+      "danger",
+      "grotte",
+      "ossements"
+    ],
+    "options": [
+      {
+        "label": "Se faufiler dans la grotte avant la montee des eaux",
+        "verb": "se faufiler",
+        "effects": [
+          {
+            "type": "DAMAGE_LIFE",
+            "amount": 18
+          },
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "anciens",
+            "amount": -5
+          }
+        ]
+      },
+      {
+        "label": "Escalader la paroi pour atteindre un surplomb sec",
+        "verb": "escalader",
+        "effects": [
+          {
+            "type": "DAMAGE_LIFE",
+            "amount": 14
+          },
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "anciens",
+            "amount": -10
+          }
+        ]
+      },
+      {
+        "label": "Traverser la grotte a la nage en retenant votre souffle",
+        "verb": "traverser",
+        "effects": [
+          {
+            "type": "DAMAGE_LIFE",
+            "amount": 20
+          },
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "anciens",
+            "amount": -2
+          }
+        ]
+      }
+    ],
+    "faction": "anciens"
+  },
+  {
+    "id": "FR_S21D_021",
+    "text": "Un menhir solitaire sur les landes emet un bourdonnement qui fait saigner les oreilles. Des symboles anciens s'illuminent un par un, comme un compte a rebours vers quelque chose de terrible.",
+    "biome": "landes_bruyere",
+    "champ_lexical": "logique",
+    "trust_tier": "T0",
+    "tags": [
+      "danger",
+      "menhir",
+      "compte_rebours"
+    ],
+    "options": [
+      {
+        "label": "Resoudre la sequence de symboles pour arreter le compte",
+        "verb": "resoudre",
+        "effects": [
+          {
+            "type": "DAMAGE_LIFE",
+            "amount": 16
+          },
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "anciens",
+            "amount": -5
+          }
+        ]
+      },
+      {
+        "label": "Analyser les vibrations pour predire ce qui approche",
+        "verb": "analyser",
+        "effects": [
+          {
+            "type": "DAMAGE_LIFE",
+            "amount": 14
+          },
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "anciens",
+            "amount": -8
+          }
+        ]
+      },
+      {
+        "label": "Fuir les landes avant la fin du decompte",
+        "verb": "fuir",
+        "effects": [
+          {
+            "type": "DAMAGE_LIFE",
+            "amount": 10
+          },
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "anciens",
+            "amount": -14
+          }
+        ]
+      }
+    ],
+    "faction": "anciens"
+  },
+  {
+    "id": "FR_S21D_022",
+    "text": "Sur l'ile, un jardin de corail petrfie s'eleve hors de l'eau. Ses branches coupantes comme des lames protegent un fruit noir qui pulse d'une energie sombre. Les mouettes evitent ce lieu.",
+    "biome": "iles_mystiques",
+    "champ_lexical": "chance",
+    "trust_tier": "T0",
+    "tags": [
+      "danger",
+      "corail",
+      "fruit_noir"
+    ],
+    "options": [
+      {
+        "label": "Tenter sa chance et cueillir le fruit parmi les lames",
+        "verb": "tenter sa chance",
+        "effects": [
+          {
+            "type": "DAMAGE_LIFE",
+            "amount": 20
+          },
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "niamh",
+            "amount": -5
+          }
+        ]
+      },
+      {
+        "label": "Chercher au hasard un passage entre les branches",
+        "verb": "chercher au hasard",
+        "effects": [
+          {
+            "type": "DAMAGE_LIFE",
+            "amount": 16
+          },
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "niamh",
+            "amount": -8
+          }
+        ]
+      },
+      {
+        "label": "Deviner quel corail est le moins tranchant",
+        "verb": "deviner",
+        "effects": [
+          {
+            "type": "DAMAGE_LIFE",
+            "amount": 14
+          },
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "niamh",
+            "amount": -10
+          }
+        ]
+      }
+    ],
+    "faction": "niamh"
+  },
+  {
+    "id": "FR_S21D_023",
+    "text": "Un cercle de pierres s'anime la nuit. Les menhirs se deplacent lentement, ecrasant tout sur leur passage. Le sol tremble et les fissures s'elargissent. Il n'y a presque plus d'issue.",
+    "biome": "cercles_pierres",
+    "champ_lexical": "vigueur",
+    "trust_tier": "T0",
+    "tags": [
+      "danger",
+      "menhirs_vivants",
+      "pieges"
+    ],
+    "options": [
+      {
+        "label": "Pousser un menhir pour creer un passage",
+        "verb": "pousser",
+        "effects": [
+          {
+            "type": "DAMAGE_LIFE",
+            "amount": 20
+          },
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "anciens",
+            "amount": -8
+          }
+        ]
+      },
+      {
+        "label": "Courir entre les menhirs en mouvement",
+        "verb": "courir",
+        "effects": [
+          {
+            "type": "DAMAGE_LIFE",
+            "amount": 16
+          },
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "anciens",
+            "amount": -6
+          }
+        ]
+      },
+      {
+        "label": "Forcer le passage en sautant par-dessus les fissures",
+        "verb": "forcer",
+        "effects": [
+          {
+            "type": "DAMAGE_LIFE",
+            "amount": 18
+          },
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "anciens",
+            "amount": -4
+          }
+        ]
+      }
+    ],
+    "faction": "anciens"
+  },
+  {
+    "id": "FR_S21D_024",
+    "text": "Un village celte a ete envahi par des plantes carnivores geantes. Les huttes sont englouties sous les tiges epineuses. Des cris etouffes viennent de l'interieur — des survivants, peut-etre.",
+    "biome": "villages_celtes",
+    "champ_lexical": "vigueur",
+    "trust_tier": "T0",
+    "tags": [
+      "danger",
+      "plantes",
+      "village"
+    ],
+    "options": [
+      {
+        "label": "Combattre les plantes pour liberer les survivants",
+        "verb": "combattre",
+        "effects": [
+          {
+            "type": "DAMAGE_LIFE",
+            "amount": 18
+          },
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "druides",
+            "amount": -8
+          }
+        ]
+      },
+      {
+        "label": "Forcer un passage a travers les epines",
+        "verb": "forcer",
+        "effects": [
+          {
+            "type": "DAMAGE_LIFE",
+            "amount": 16
+          },
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "druides",
+            "amount": -6
+          }
+        ]
+      },
+      {
+        "label": "Fuir et chercher de l'aide ailleurs",
+        "verb": "fuir",
+        "effects": [
+          {
+            "type": "DAMAGE_LIFE",
+            "amount": 6
+          },
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "druides",
+            "amount": -18
+          }
+        ]
+      }
+    ],
+    "faction": "druides"
+  },
+  {
+    "id": "FR_S21D_025",
+    "text": "Les collines sont couvertes d'un givre surnaturel qui ne fond jamais. Chaque inspiration gele les poumons. Au sommet, un cairn brille d'une lueur glaciale, promettant des reponses a un prix terrible.",
+    "biome": "collines_dolmens",
+    "champ_lexical": "esprit",
+    "trust_tier": "T0",
+    "tags": [
+      "danger",
+      "givre",
+      "cairn"
+    ],
+    "options": [
+      {
+        "label": "Mediter au pied du cairn pour comprendre le gel",
+        "verb": "mediter",
+        "effects": [
+          {
+            "type": "DAMAGE_LIFE",
+            "amount": 16
+          },
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "druides",
+            "amount": -6
+          }
+        ]
+      },
+      {
+        "label": "Endurer le froid et escalader jusqu'au sommet",
+        "verb": "endurer",
+        "effects": [
+          {
+            "type": "DAMAGE_LIFE",
+            "amount": 20
+          },
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "druides",
+            "amount": 2
+          }
+        ]
+      },
+      {
+        "label": "Attendre que le givre se leve — en vain",
+        "verb": "attendre",
+        "effects": [
+          {
+            "type": "DAMAGE_LIFE",
+            "amount": 14
+          },
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "druides",
+            "amount": -10
+          }
+        ]
+      }
+    ],
+    "faction": "druides"
+  },
+  {
+    "id": "FR_S21D_026",
+    "text": "Un korrigan geant bloque le pont de lianes au-dessus du marais. Il exige un duel de devinettes — mais ses questions sont des pieges mortels. Perdre signifie etre jete dans la vase.",
+    "biome": "marais_korrigans",
+    "champ_lexical": "logique",
+    "trust_tier": "T0",
+    "tags": [
+      "danger",
+      "devinettes",
+      "pont"
+    ],
+    "options": [
+      {
+        "label": "Resoudre les devinettes malgre le risque",
+        "verb": "resoudre",
+        "effects": [
+          {
+            "type": "DAMAGE_LIFE",
+            "amount": 14
+          },
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "korrigans",
+            "amount": -8
+          }
+        ]
+      },
+      {
+        "label": "Charmer le korrigan pour eviter le duel",
+        "verb": "charmer",
+        "effects": [
+          {
+            "type": "DAMAGE_LIFE",
+            "amount": 10
+          },
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "korrigans",
+            "amount": -14
+          }
+        ]
+      },
+      {
+        "label": "Contourner le pont en nageant dans le marais",
+        "verb": "contourner",
+        "effects": [
+          {
+            "type": "DAMAGE_LIFE",
+            "amount": 18
+          },
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "korrigans",
+            "amount": -6
+          }
+        ]
+      }
+    ],
+    "faction": "korrigans"
+  },
+  {
+    "id": "FR_S21D_027",
+    "text": "La foret murmure des noms — votre nom. Les arbres se souviennent de chaque voyageur qui n'est jamais ressorti. Leurs racines s'enroulent autour de vos chevilles, lentement, patiemment.",
+    "biome": "foret_broceliande",
+    "champ_lexical": "perception",
+    "trust_tier": "T0",
+    "tags": [
+      "danger",
+      "racines",
+      "memoire"
+    ],
+    "options": [
+      {
+        "label": "Ecouter les murmures pour trouver le chemin de sortie",
+        "verb": "ecouter",
+        "effects": [
+          {
+            "type": "DAMAGE_LIFE",
+            "amount": 14
+          },
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "niamh",
+            "amount": -10
+          }
+        ]
+      },
+      {
+        "label": "Pister les traces des precedents voyageurs",
+        "verb": "pister",
+        "effects": [
+          {
+            "type": "DAMAGE_LIFE",
+            "amount": 16
+          },
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "niamh",
+            "amount": -6
+          }
+        ]
+      },
+      {
+        "label": "Se concentrer pour ne pas succomber a la panique",
+        "verb": "se concentrer",
+        "effects": [
+          {
+            "type": "DAMAGE_LIFE",
+            "amount": 12
+          },
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "niamh",
+            "amount": -12
+          }
+        ]
+      }
+    ],
+    "faction": "niamh"
+  },
+  {
+    "id": "FR_S21D_028",
+    "text": "Les falaises de la cote sauvage se couvrent de visages sculpts qui pleurent des larmes de sel. Chaque larme qui touche la peau laisse une brulure. Le vent hurle les peches des voyageurs.",
+    "biome": "cotes_sauvages",
+    "champ_lexical": "esprit",
+    "trust_tier": "T0",
+    "tags": [
+      "danger",
+      "falaises",
+      "larmes"
+    ],
+    "options": [
+      {
+        "label": "Resister mentalement aux accusations du vent",
+        "verb": "resister mentalement",
+        "effects": [
+          {
+            "type": "DAMAGE_LIFE",
+            "amount": 16
+          },
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "ankou",
+            "amount": -6
+          }
+        ]
+      },
+      {
+        "label": "Parler aux visages pour apaiser leur chagrin",
+        "verb": "parler",
+        "effects": [
+          {
+            "type": "DAMAGE_LIFE",
+            "amount": 14
+          },
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "ankou",
+            "amount": -8
+          }
+        ]
+      },
+      {
+        "label": "Endurer les brulures de sel en traversant la zone",
+        "verb": "endurer",
+        "effects": [
+          {
+            "type": "DAMAGE_LIFE",
+            "amount": 18
+          },
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "ankou",
+            "amount": -4
+          }
+        ]
+      }
+    ],
+    "faction": "ankou"
+  },
+  {
+    "id": "FR_S21D_029",
+    "text": "Les landes cachent un puits sans fond. Ceux qui s'en approchent entendent la voix de leurs morts appeler depuis les profondeurs. L'attraction est presque irresistible.",
+    "biome": "landes_bruyere",
+    "champ_lexical": "esprit",
+    "trust_tier": "T0",
+    "tags": [
+      "danger",
+      "puits",
+      "morts"
+    ],
+    "options": [
+      {
+        "label": "S'approcher du bord pour entendre les voix",
+        "verb": "s'approcher",
+        "effects": [
+          {
+            "type": "DAMAGE_LIFE",
+            "amount": 18
+          },
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "ankou",
+            "amount": -4
+          }
+        ]
+      },
+      {
+        "label": "Resister mentalement a l'appel des profondeurs",
+        "verb": "resister mentalement",
+        "effects": [
+          {
+            "type": "DAMAGE_LIFE",
+            "amount": 12
+          },
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "ankou",
+            "amount": -10
+          }
+        ]
+      },
+      {
+        "label": "Fuir les landes avant de perdre la raison",
+        "verb": "fuir",
+        "effects": [
+          {
+            "type": "DAMAGE_LIFE",
+            "amount": 8
+          },
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "ankou",
+            "amount": -16
+          }
+        ]
+      }
+    ],
+    "faction": "ankou"
+  },
+  {
+    "id": "FR_S21D_030",
+    "text": "Un portail de pierre s'ouvre sur l'ile, revelant un monde inverse ou le ciel est en bas. Des creatures ailees fondent sur quiconque ose passer le seuil.",
+    "biome": "iles_mystiques",
+    "champ_lexical": "finesse",
+    "trust_tier": "T0",
+    "tags": [
+      "danger",
+      "portail",
+      "monde_inverse"
+    ],
+    "options": [
+      {
+        "label": "Esquiver les creatures et traverser le portail",
+        "verb": "esquiver",
+        "effects": [
+          {
+            "type": "DAMAGE_LIFE",
+            "amount": 18
+          },
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "niamh",
+            "amount": -6
+          }
+        ]
+      },
+      {
+        "label": "Se cacher derriere les pierres du portail",
+        "verb": "se cacher",
+        "effects": [
+          {
+            "type": "DAMAGE_LIFE",
+            "amount": 12
+          },
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "niamh",
+            "amount": -12
+          }
+        ]
+      },
+      {
+        "label": "Se faufiler sous les ailes des creatures",
+        "verb": "se faufiler",
+        "effects": [
+          {
+            "type": "DAMAGE_LIFE",
+            "amount": 16
+          },
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "niamh",
+            "amount": -8
+          }
+        ]
+      }
+    ],
+    "faction": "niamh"
+  },
+  {
+    "id": "FR_S21D_031",
+    "text": "Un cercle de pierres est infeste de serpents aux ecailles de bronze. Leur morsure injecte un venin qui fait revivre les pires souvenirs. Le sol en est couvert.",
+    "biome": "cercles_pierres",
+    "champ_lexical": "finesse",
+    "trust_tier": "T0",
+    "tags": [
+      "danger",
+      "serpents",
+      "venin"
+    ],
+    "options": [
+      {
+        "label": "Se faufiler en marchant sur les pierres surélevees",
+        "verb": "se faufiler",
+        "effects": [
+          {
+            "type": "DAMAGE_LIFE",
+            "amount": 14
+          },
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "korrigans",
+            "amount": -10
+          }
+        ]
+      },
+      {
+        "label": "Escalader un menhir pour echapper aux serpents",
+        "verb": "escalader",
+        "effects": [
+          {
+            "type": "DAMAGE_LIFE",
+            "amount": 12
+          },
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "korrigans",
+            "amount": -12
+          }
+        ]
+      },
+      {
+        "label": "Traverser en courant malgre les morsures",
+        "verb": "traverser",
+        "effects": [
+          {
+            "type": "DAMAGE_LIFE",
+            "amount": 20
+          },
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "korrigans",
+            "amount": -4
+          }
+        ]
+      }
+    ],
+    "faction": "korrigans"
+  },
+  {
+    "id": "FR_S21D_032",
+    "text": "Le village celte est sous l'emprise d'un barde corrompu. Sa musique rend fous les habitants qui attaquent quiconque refuse d'ecouter. Les notes dissonantes vrillent le crane.",
+    "biome": "villages_celtes",
+    "champ_lexical": "bluff",
+    "trust_tier": "T0",
+    "tags": [
+      "danger",
+      "barde",
+      "musique"
+    ],
+    "options": [
+      {
+        "label": "Convaincre le barde de changer de melodie",
+        "verb": "convaincre",
+        "effects": [
+          {
+            "type": "DAMAGE_LIFE",
+            "amount": 14
+          },
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "niamh",
+            "amount": -10
+          }
+        ]
+      },
+      {
+        "label": "Amadouer les villageois pour qu'ils cessent d'attaquer",
+        "verb": "amadouer",
+        "effects": [
+          {
+            "type": "DAMAGE_LIFE",
+            "amount": 12
+          },
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "niamh",
+            "amount": -12
+          }
+        ]
+      },
+      {
+        "label": "Negocier votre passage avec le barde",
+        "verb": "negocier",
+        "effects": [
+          {
+            "type": "DAMAGE_LIFE",
+            "amount": 16
+          },
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "niamh",
+            "amount": -6
+          }
+        ]
+      }
+    ],
+    "faction": "niamh"
+  },
+  {
+    "id": "FR_S21D_033",
+    "text": "Les collines de dolmens resonnent d'un glas funebre. Chaque coup de cloche fait apparaitre un spectre supplementaire. Ils encerclent les vivants, absorbant leur chaleur vitale.",
+    "biome": "collines_dolmens",
+    "champ_lexical": "vigueur",
+    "trust_tier": "T0",
+    "tags": [
+      "danger",
+      "glas",
+      "spectres"
+    ],
+    "options": [
+      {
+        "label": "Combattre les spectres pour briser le cercle",
+        "verb": "combattre",
+        "effects": [
+          {
+            "type": "DAMAGE_LIFE",
+            "amount": 18
+          },
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "ankou",
+            "amount": -8
+          }
+        ]
+      },
+      {
+        "label": "Courir vers la source du glas pour l'arreter",
+        "verb": "courir",
+        "effects": [
+          {
+            "type": "DAMAGE_LIFE",
+            "amount": 16
+          },
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "ankou",
+            "amount": -6
+          }
+        ]
+      },
+      {
+        "label": "Resister physiquement au froid spectral",
+        "verb": "resister physiquement",
+        "effects": [
+          {
+            "type": "DAMAGE_LIFE",
+            "amount": 14
+          },
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "ankou",
+            "amount": -10
+          }
+        ]
+      }
+    ],
+    "faction": "ankou"
+  },
+  {
+    "id": "FR_S21D_034",
+    "text": "Le marais abrite un arbre-piege dont les branches s'animent pour capturer les imprudents. Ses fruits degagent un parfum enivrant qui attire les victimes comme des papillons vers une flamme.",
+    "biome": "marais_korrigans",
+    "champ_lexical": "observation",
+    "trust_tier": "T0",
+    "tags": [
+      "danger",
+      "arbre_piege",
+      "parfum"
+    ],
+    "options": [
+      {
+        "label": "Observer les mouvements de l'arbre pour trouver une faiblesse",
+        "verb": "observer",
+        "effects": [
+          {
+            "type": "DAMAGE_LIFE",
+            "amount": 14
+          },
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "druides",
+            "amount": -10
+          }
+        ]
+      },
+      {
+        "label": "Memoriser le schema des branches pour les eviter",
+        "verb": "memoriser",
+        "effects": [
+          {
+            "type": "DAMAGE_LIFE",
+            "amount": 16
+          },
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "druides",
+            "amount": -6
+          }
+        ]
+      },
+      {
+        "label": "Scruter les racines pour comprendre comment il se nourrit",
+        "verb": "scruter",
+        "effects": [
+          {
+            "type": "DAMAGE_LIFE",
+            "amount": 18
+          },
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "druides",
+            "amount": -4
+          }
+        ]
+      }
+    ],
+    "faction": "druides"
+  },
+  {
+    "id": "FR_S21D_035",
+    "text": "La foret cache un lac de mercure liquide. Sa surface reflète un monde ou les regles sont inversees. Boire une goutte offre la clairvoyance — mais empoisonne irremediablement le corps.",
+    "biome": "foret_broceliande",
+    "champ_lexical": "chance",
+    "trust_tier": "T0",
+    "tags": [
+      "danger",
+      "mercure",
+      "lac"
+    ],
+    "options": [
+      {
+        "label": "Tenter sa chance et gouter une goutte de mercure",
+        "verb": "tenter sa chance",
+        "effects": [
+          {
+            "type": "DAMAGE_LIFE",
+            "amount": 20
+          },
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "anciens",
+            "amount": -4
+          }
+        ]
+      },
+      {
+        "label": "Fouiller a l'aveugle autour du lac pour des artefacts",
+        "verb": "fouiller a l'aveugle",
+        "effects": [
+          {
+            "type": "DAMAGE_LIFE",
+            "amount": 14
+          },
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "anciens",
+            "amount": -10
+          }
+        ]
+      },
+      {
+        "label": "Cueillir les plantes qui poussent pres du lac toxique",
+        "verb": "cueillir",
+        "effects": [
+          {
+            "type": "DAMAGE_LIFE",
+            "amount": 16
+          },
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "anciens",
+            "amount": -6
+          }
+        ]
+      }
+    ],
+    "faction": "anciens"
+  },
+  {
+    "id": "FR_S21D_036",
+    "text": "La cote est hantee par un vaisseau fantome qui echoue chaque nuit. Son equipage spectral cherche un remplacement — un vivant pour prendre la barre et naviguer l'eternite.",
+    "biome": "cotes_sauvages",
+    "champ_lexical": "bluff",
+    "trust_tier": "T0",
+    "tags": [
+      "danger",
+      "vaisseau",
+      "fantome"
+    ],
+    "options": [
+      {
+        "label": "Marchander avec le capitaine fantome pour votre liberte",
+        "verb": "marchander",
+        "effects": [
+          {
+            "type": "DAMAGE_LIFE",
+            "amount": 14
+          },
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "ankou",
+            "amount": -10
+          }
+        ]
+      },
+      {
+        "label": "Mentir sur votre aptitude a naviguer",
+        "verb": "mentir",
+        "effects": [
+          {
+            "type": "DAMAGE_LIFE",
+            "amount": 12
+          },
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "ankou",
+            "amount": -14
+          }
+        ]
+      },
+      {
+        "label": "Charmer l'equipage avec des histoires de terre",
+        "verb": "charmer",
+        "effects": [
+          {
+            "type": "DAMAGE_LIFE",
+            "amount": 16
+          },
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "ankou",
+            "amount": -6
+          }
+        ]
+      }
+    ],
+    "faction": "ankou"
+  },
+  {
+    "id": "FR_S21D_037",
+    "text": "Les landes sont parcourues par des feux follets malveillants. Ils guident les voyageurs vers des tourbières sans fond. Leur lumiere est hypnotique, et chaque pas vous enfonce un peu plus.",
+    "biome": "landes_bruyere",
+    "champ_lexical": "perception",
+    "trust_tier": "T0",
+    "tags": [
+      "danger",
+      "feux_follets",
+      "tourbieres"
+    ],
+    "options": [
+      {
+        "label": "Suivre les feux pour decouvrir leur source",
+        "verb": "suivre",
+        "effects": [
+          {
+            "type": "DAMAGE_LIFE",
+            "amount": 18
+          },
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "korrigans",
+            "amount": -6
+          }
+        ]
+      },
+      {
+        "label": "Flairer la direction du vent pour trouver la terre ferme",
+        "verb": "flairer",
+        "effects": [
+          {
+            "type": "DAMAGE_LIFE",
+            "amount": 12
+          },
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "korrigans",
+            "amount": -12
+          }
+        ]
+      },
+      {
+        "label": "Tendre l'oreille pour entendre l'eau sous la tourbe",
+        "verb": "tendre l'oreille",
+        "effects": [
+          {
+            "type": "DAMAGE_LIFE",
+            "amount": 14
+          },
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "korrigans",
+            "amount": -10
+          }
+        ]
+      }
+    ],
+    "faction": "korrigans"
+  },
+  {
+    "id": "FR_S21D_038",
+    "text": "Sur l'ile, un labyrinthe de ronces enchantees a pousse en une nuit. Les epines secretent un poison soporifique. Ceux qui s'endorment dans le labyrinthe ne se reveillent jamais.",
+    "biome": "iles_mystiques",
+    "champ_lexical": "finesse",
+    "trust_tier": "T0",
+    "tags": [
+      "danger",
+      "labyrinthe",
+      "ronces"
+    ],
+    "options": [
+      {
+        "label": "Se faufiler entre les ronces avec precision",
+        "verb": "se faufiler",
+        "effects": [
+          {
+            "type": "DAMAGE_LIFE",
+            "amount": 16
+          },
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "druides",
+            "amount": -8
+          }
+        ]
+      },
+      {
+        "label": "Esquiver les epines en sautant de pierre en pierre",
+        "verb": "esquiver",
+        "effects": [
+          {
+            "type": "DAMAGE_LIFE",
+            "amount": 14
+          },
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "druides",
+            "amount": -10
+          }
+        ]
+      },
+      {
+        "label": "Escalader les ronces pour passer au-dessus",
+        "verb": "escalader",
+        "effects": [
+          {
+            "type": "DAMAGE_LIFE",
+            "amount": 20
+          },
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "druides",
+            "amount": -4
+          }
+        ]
+      }
+    ],
+    "faction": "druides"
+  },
+  {
+    "id": "FR_S21D_039",
+    "text": "Un cercle de pierres contient un puits de ténèbres absolues. Rien n'en sort, pas meme la lumiere. Une voix offre la connaissance ultime en echange de votre ombre — votre essence vitale.",
+    "biome": "cercles_pierres",
+    "champ_lexical": "esprit",
+    "trust_tier": "T0",
+    "tags": [
+      "danger",
+      "tenebres",
+      "ombre"
+    ],
+    "options": [
+      {
+        "label": "Accepter le marche et abandonner votre ombre",
+        "verb": "accepter",
+        "effects": [
+          {
+            "type": "DAMAGE_LIFE",
+            "amount": 22
+          },
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "ankou",
+            "amount": 3
+          }
+        ]
+      },
+      {
+        "label": "Refuser et sceller le puits avec des pierres",
+        "verb": "refuser",
+        "effects": [
+          {
+            "type": "DAMAGE_LIFE",
+            "amount": 12
+          },
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "ankou",
+            "amount": -14
+          }
+        ]
+      },
+      {
+        "label": "Mediter au bord du puits pour sonder ses intentions",
+        "verb": "mediter",
+        "effects": [
+          {
+            "type": "DAMAGE_LIFE",
+            "amount": 16
+          },
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "ankou",
+            "amount": -8
+          }
+        ]
+      }
+    ],
+    "faction": "ankou"
+  },
+  {
+    "id": "FR_S21D_040",
+    "text": "Le village celte est en proie a une peste magique. Les malades voient des visions d'un age d'or qui les pousse a errer dans la nuit. Un guerisseur demande votre sang pour fabriquer un antidote.",
+    "biome": "villages_celtes",
+    "champ_lexical": "bluff",
+    "trust_tier": "T0",
+    "tags": [
+      "danger",
+      "peste",
+      "guerisseur"
+    ],
+    "options": [
+      {
+        "label": "Amadouer le guerisseur pour reduire la quantite de sang",
+        "verb": "amadouer",
+        "effects": [
+          {
+            "type": "DAMAGE_LIFE",
+            "amount": 14
+          },
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "druides",
+            "amount": -8
+          }
+        ]
+      },
+      {
+        "label": "Negocier un autre type de paiement",
+        "verb": "negocier",
+        "effects": [
+          {
+            "type": "DAMAGE_LIFE",
+            "amount": 10
+          },
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "druides",
+            "amount": -14
+          }
+        ]
+      },
+      {
+        "label": "Accepter de donner votre sang pour sauver le village",
+        "verb": "accepter",
+        "effects": [
+          {
+            "type": "DAMAGE_LIFE",
+            "amount": 20
+          },
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "druides",
+            "amount": 2
+          }
+        ]
+      }
+    ],
+    "faction": "druides"
+  },
+  {
+    "id": "FR_S21D_041",
+    "text": "Les collines tremblent. Un geant de pierre se leve d'un tumulus, ses yeux de magma scanning l'horizon. Il cherche l'offrande qui n'a pas ete faite depuis mille ans.",
+    "biome": "collines_dolmens",
+    "champ_lexical": "observation",
+    "trust_tier": "T0",
+    "tags": [
+      "danger",
+      "geant",
+      "tumulus"
+    ],
+    "options": [
+      {
+        "label": "Observer les mouvements du geant pour trouver sa faiblesse",
+        "verb": "observer",
+        "effects": [
+          {
+            "type": "DAMAGE_LIFE",
+            "amount": 14
+          },
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "anciens",
+            "amount": -10
+          }
+        ]
+      },
+      {
+        "label": "Examiner le tumulus pour trouver l'offrande requise",
+        "verb": "examiner",
+        "effects": [
+          {
+            "type": "DAMAGE_LIFE",
+            "amount": 16
+          },
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "anciens",
+            "amount": -6
+          }
+        ]
+      },
+      {
+        "label": "Fixer le geant dans les yeux pour le defier",
+        "verb": "fixer",
+        "effects": [
+          {
+            "type": "DAMAGE_LIFE",
+            "amount": 20
+          },
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "anciens",
+            "amount": -2
+          }
+        ]
+      }
+    ],
+    "faction": "anciens"
+  },
+  {
+    "id": "FR_S21D_042",
+    "text": "Le marais vomit des bulles de gaz toxique qui eclatent en liberant des hallucinations. Les voyageurs precedents ont trace des symboles fous dans la boue avant de disparaitre.",
+    "biome": "marais_korrigans",
+    "champ_lexical": "esprit",
+    "trust_tier": "T0",
+    "tags": [
+      "danger",
+      "gaz",
+      "hallucinations"
+    ],
+    "options": [
+      {
+        "label": "Se concentrer pour ne pas succomber aux visions",
+        "verb": "se concentrer",
+        "effects": [
+          {
+            "type": "DAMAGE_LIFE",
+            "amount": 16
+          },
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "korrigans",
+            "amount": -8
+          }
+        ]
+      },
+      {
+        "label": "Calmer son esprit en recitant les noms des Oghams",
+        "verb": "calmer",
+        "effects": [
+          {
+            "type": "DAMAGE_LIFE",
+            "amount": 14
+          },
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "korrigans",
+            "amount": -10
+          }
+        ]
+      },
+      {
+        "label": "Endurer les hallucinations en avancant coute que coute",
+        "verb": "endurer",
+        "effects": [
+          {
+            "type": "DAMAGE_LIFE",
+            "amount": 20
+          },
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "korrigans",
+            "amount": -2
+          }
+        ]
+      }
+    ],
+    "faction": "korrigans"
+  },
+  {
+    "id": "FR_S21D_043",
+    "text": "Broceliande cache un sanctuaire profane ou les statues saignent. Les murs suintent une substance qui brule l'esprit et la chair. Entrer pourrait reveler un secret — ou vous detruire.",
+    "biome": "foret_broceliande",
+    "champ_lexical": "vigueur",
+    "trust_tier": "T0",
+    "tags": [
+      "danger",
+      "sanctuaire",
+      "profanation"
+    ],
+    "options": [
+      {
+        "label": "Forcer l'entree du sanctuaire malgre les brulures",
+        "verb": "forcer",
+        "effects": [
+          {
+            "type": "DAMAGE_LIFE",
+            "amount": 20
+          },
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "anciens",
+            "amount": -4
+          }
+        ]
+      },
+      {
+        "label": "Combattre les gardiens de pierre qui s'animent",
+        "verb": "combattre",
+        "effects": [
+          {
+            "type": "DAMAGE_LIFE",
+            "amount": 18
+          },
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "anciens",
+            "amount": -8
+          }
+        ]
+      },
+      {
+        "label": "Pousser les debris pour ouvrir un passage secondaire",
+        "verb": "pousser",
+        "effects": [
+          {
+            "type": "DAMAGE_LIFE",
+            "amount": 16
+          },
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "anciens",
+            "amount": -6
+          }
+        ]
+      }
+    ],
+    "faction": "anciens"
+  },
+  {
+    "id": "FR_S21D_044",
+    "text": "La cote est frappee par une pluie de sel cristallise qui dechire tout. Les rochers eclatent sous l'impact. Un abri naturel existe mais il faut traverser la zone battue par la tempete.",
+    "biome": "cotes_sauvages",
+    "champ_lexical": "vigueur",
+    "trust_tier": "T0",
+    "tags": [
+      "danger",
+      "pluie_sel",
+      "tempete"
+    ],
+    "options": [
+      {
+        "label": "Courir vers l'abri en se protegeant le visage",
+        "verb": "courir",
+        "effects": [
+          {
+            "type": "DAMAGE_LIFE",
+            "amount": 16
+          },
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "korrigans",
+            "amount": -8
+          }
+        ]
+      },
+      {
+        "label": "Resister physiquement a la pluie de sel",
+        "verb": "resister physiquement",
+        "effects": [
+          {
+            "type": "DAMAGE_LIFE",
+            "amount": 20
+          },
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "korrigans",
+            "amount": -2
+          }
+        ]
+      },
+      {
+        "label": "Se cacher sous un rocher en attendant la fin",
+        "verb": "se cacher",
+        "effects": [
+          {
+            "type": "DAMAGE_LIFE",
+            "amount": 10
+          },
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "korrigans",
+            "amount": -14
+          }
+        ]
+      }
+    ],
+    "faction": "korrigans"
+  },
+  {
+    "id": "FR_S21D_045",
+    "text": "Les landes abritent un charnier ancien ou les morts ne sont pas restes tranquilles. Des mains osseuses percent la terre. Le sol est instable, chaque pas risque de vous faire chuter parmi eux.",
+    "biome": "landes_bruyere",
+    "champ_lexical": "finesse",
+    "trust_tier": "T0",
+    "tags": [
+      "danger",
+      "charnier",
+      "morts_vivants"
+    ],
+    "options": [
+      {
+        "label": "Contourner le charnier par les rochers",
+        "verb": "contourner",
+        "effects": [
+          {
+            "type": "DAMAGE_LIFE",
+            "amount": 12
+          },
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "ankou",
+            "amount": -12
+          }
+        ]
+      },
+      {
+        "label": "Traverser le charnier en sautant entre les tombes",
+        "verb": "traverser",
+        "effects": [
+          {
+            "type": "DAMAGE_LIFE",
+            "amount": 18
+          },
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "ankou",
+            "amount": -4
+          }
+        ]
+      },
+      {
+        "label": "Se faufiler entre les mains en rampant au sol",
+        "verb": "se faufiler",
+        "effects": [
+          {
+            "type": "DAMAGE_LIFE",
+            "amount": 16
+          },
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "ankou",
+            "amount": -8
+          }
+        ]
+      }
+    ],
+    "faction": "ankou"
+  },
+  {
+    "id": "FR_S21D_046",
+    "text": "L'ile mystique est couverte d'un brouillard qui efface les souvenirs. Plus vous restez, plus vous oubliez qui vous etes. Des silhouettes errantes ont oublie meme comment partir.",
+    "biome": "iles_mystiques",
+    "champ_lexical": "esprit",
+    "trust_tier": "T0",
+    "tags": [
+      "danger",
+      "brouillard",
+      "oubli"
+    ],
+    "options": [
+      {
+        "label": "Se concentrer pour maintenir ses souvenirs intacts",
+        "verb": "se concentrer",
+        "effects": [
+          {
+            "type": "DAMAGE_LIFE",
+            "amount": 16
+          },
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "niamh",
+            "amount": -8
+          }
+        ]
+      },
+      {
+        "label": "Mediter pour ancrer sa conscience dans le present",
+        "verb": "mediter",
+        "effects": [
+          {
+            "type": "DAMAGE_LIFE",
+            "amount": 14
+          },
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "niamh",
+            "amount": -10
+          }
+        ]
+      },
+      {
+        "label": "Parler aux silhouettes pour retrouver le chemin",
+        "verb": "parler",
+        "effects": [
+          {
+            "type": "DAMAGE_LIFE",
+            "amount": 18
+          },
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "niamh",
+            "amount": -4
+          }
+        ]
+      }
+    ],
+    "faction": "niamh"
+  },
+  {
+    "id": "FR_S21D_047",
+    "text": "Un cercle de pierres vibre a une frequence qui liquefie les os. Plus on reste, plus le corps se ramollit. Les druides disent que c'est le chant de la terre qui reclame ses enfants.",
+    "biome": "cercles_pierres",
+    "champ_lexical": "perception",
+    "trust_tier": "T0",
+    "tags": [
+      "danger",
+      "vibrations",
+      "os"
+    ],
+    "options": [
+      {
+        "label": "Ecouter le chant pour trouver la note dissonante",
+        "verb": "ecouter",
+        "effects": [
+          {
+            "type": "DAMAGE_LIFE",
+            "amount": 18
+          },
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "druides",
+            "amount": -6
+          }
+        ]
+      },
+      {
+        "label": "Sentir les vibrations dans le sol pour trouver un point calme",
+        "verb": "sentir",
+        "effects": [
+          {
+            "type": "DAMAGE_LIFE",
+            "amount": 14
+          },
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "druides",
+            "amount": -10
+          }
+        ]
+      },
+      {
+        "label": "Fuir le cercle avant que vos jambes ne cedent",
+        "verb": "fuir",
+        "effects": [
+          {
+            "type": "DAMAGE_LIFE",
+            "amount": 10
+          },
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "druides",
+            "amount": -16
+          }
+        ]
+      }
+    ],
+    "faction": "druides"
+  },
+  {
+    "id": "FR_S21D_048",
+    "text": "Un village celte a sombre dans la terre, ne laissant que les toits emergents. Des voix appellent a l'aide depuis les maisons englouties. Le sol continue de s'affaisser lentement.",
+    "biome": "villages_celtes",
+    "champ_lexical": "chance",
+    "trust_tier": "T0",
+    "tags": [
+      "danger",
+      "village_englouti",
+      "effondrement"
+    ],
+    "options": [
+      {
+        "label": "Tenter sa chance en marchant sur les toits",
+        "verb": "tenter sa chance",
+        "effects": [
+          {
+            "type": "DAMAGE_LIFE",
+            "amount": 18
+          },
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "korrigans",
+            "amount": -6
+          }
+        ]
+      },
+      {
+        "label": "Deviner quels toits sont assez solides pour supporter votre poids",
+        "verb": "deviner",
+        "effects": [
+          {
+            "type": "DAMAGE_LIFE",
+            "amount": 14
+          },
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "korrigans",
+            "amount": -10
+          }
+        ]
+      },
+      {
+        "label": "Fouiller a l'aveugle les decombres accessibles",
+        "verb": "fouiller a l'aveugle",
+        "effects": [
+          {
+            "type": "DAMAGE_LIFE",
+            "amount": 16
+          },
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "korrigans",
+            "amount": -8
+          }
+        ]
+      }
+    ],
+    "faction": "korrigans"
+  },
+  {
+    "id": "FR_S21D_049",
+    "text": "Le marais cache un miroir d'eau noire parfaitement immobile. Votre reflet y sourit quand vous ne souriez pas. Il commence a bouger de facon independante, tendant les mains hors de la surface.",
+    "biome": "marais_korrigans",
+    "champ_lexical": "observation",
+    "trust_tier": "T0",
+    "tags": [
+      "danger",
+      "miroir",
+      "double"
+    ],
+    "options": [
+      {
+        "label": "Observer le reflet pour comprendre ses intentions",
+        "verb": "observer",
+        "effects": [
+          {
+            "type": "DAMAGE_LIFE",
+            "amount": 16
+          },
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "niamh",
+            "amount": -8
+          }
+        ]
+      },
+      {
+        "label": "Memoriser les differences entre vous et le reflet",
+        "verb": "memoriser",
+        "effects": [
+          {
+            "type": "DAMAGE_LIFE",
+            "amount": 14
+          },
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "niamh",
+            "amount": -10
+          }
+        ]
+      },
+      {
+        "label": "Scruter la surface pour trouver ce qui anime le reflet",
+        "verb": "scruter",
+        "effects": [
+          {
+            "type": "DAMAGE_LIFE",
+            "amount": 18
+          },
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "niamh",
+            "amount": -4
+          }
+        ]
+      }
+    ],
+    "faction": "niamh"
+  },
+  {
+    "id": "FR_S21D_050",
+    "text": "Au sommet de la foret de Broceliande, un autel de cristal noir absorbe toute lumiere. Qui le touche perd une partie de son ame. Mais les druides disent qu'il accorde aussi un don — a ceux qui survivent.",
+    "biome": "foret_broceliande",
+    "champ_lexical": "logique",
+    "trust_tier": "T0",
+    "tags": [
+      "danger",
+      "autel",
+      "cristal_noir"
+    ],
+    "options": [
+      {
+        "label": "Analyser les inscriptions sur l'autel avant de le toucher",
+        "verb": "analyser",
+        "effects": [
+          {
+            "type": "DAMAGE_LIFE",
+            "amount": 16
+          },
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "druides",
+            "amount": -8
+          }
+        ]
+      },
+      {
+        "label": "Dechiffrer les runes pour desactiver le piege",
+        "verb": "dechiffrer",
+        "effects": [
+          {
+            "type": "DAMAGE_LIFE",
+            "amount": 14
+          },
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "druides",
+            "amount": -10
+          }
+        ]
+      },
+      {
+        "label": "Resoudre le puzzle de cristal pour neutraliser l'autel",
+        "verb": "resoudre",
+        "effects": [
+          {
+            "type": "DAMAGE_LIFE",
+            "amount": 20
+          },
+          {
+            "type": "ADD_REPUTATION",
+            "faction": "druides",
+            "amount": -2
+          }
+        ]
+      }
+    ],
+    "faction": "druides"
+  }
+]

@@ -1,7 +1,6 @@
 [
   {
     "id": "fr_druides_foret_001",
-    "faction_primaire": "druides",
     "biome": "foret_broceliande",
     "champ_lexical": "observation",
     "text": "Maelgwn s'est accroupi au pied d'un chene centenaire dont l'ecorce suinte une resine doree. Il ne parle pas tout de suite. Quand il le fait, sa voix porte le poids d'une attente: 'L'arbre se souvient de la derniere fois qu'on lui a demande conseil. C'etait il y a trois generations. La reponse n'a pas change — c'est la question qui a evolue.'",
@@ -60,11 +59,11 @@
       "memoire",
       "resine"
     ],
-    "trust_tier": "T0"
+    "trust_tier": "T0",
+    "faction": "druides"
   },
   {
     "id": "fr_druides_landes_002",
-    "faction_primaire": "druides",
     "biome": "landes_bruyere",
     "champ_lexical": "vigueur",
     "text": "La tempete se leve sur les landes sans prevenir. Keridwen court deja vers le cairn, sa besace claquant contre sa hanche. 'Le vent arrache les herbes que j'ai plantees!' crie-t-elle. 'Aide-moi a les sauver ou aide le vent — mais ne reste pas au milieu.' L'air gifle et le sol vibre sous les bourrasques. Il faut choisir vite.",
@@ -122,11 +121,11 @@
       "landes",
       "herbes"
     ],
-    "trust_tier": "T0"
+    "trust_tier": "T0",
+    "faction": "druides"
   },
   {
     "id": "fr_druides_cercles_003",
-    "faction_primaire": "druides",
     "biome": "cercles_pierres",
     "champ_lexical": "logique",
     "text": "Un cercle de sept menhirs entoure une dalle gravee de spirales. Talwen est agenouilee, les doigts suivant les lignes avec une precision presque mecanique. 'Chaque spirale est une equation,' dit-elle sans lever les yeux. 'La reponse dit quand le prochain passage s'ouvrira. La mauvaise reponse dit quand il se fermera definitivement.'",
@@ -185,11 +184,11 @@
       "cercle",
       "equation"
     ],
-    "trust_tier": "T0"
+    "trust_tier": "T0",
+    "faction": "druides"
   },
   {
     "id": "fr_druides_villages_004",
-    "faction_primaire": "druides",
     "biome": "villages_celtes",
     "champ_lexical": "perception",
     "text": "Au coeur du village, un puits qu'on croyait asseche depuis l'hiver se remet a chanter. L'eau monte lentement, chargee d'une odeur de mousse et de metal ancien. Les villageois reculent. Maelgwn, lui, s'approche et tend l'oreille. 'L'eau ne chante pas,' corrige-t-il. 'Quelque chose chante a travers elle. La distinction importe.'",
@@ -248,11 +247,11 @@
       "village",
       "eau"
     ],
-    "trust_tier": "T0"
+    "trust_tier": "T0",
+    "faction": "druides"
   },
   {
     "id": "fr_druides_cotes_005",
-    "faction_primaire": "druides",
     "biome": "cotes_sauvages",
     "champ_lexical": "bluff",
     "text": "Un pecheur ramene dans ses filets un coffret scelle de cire verte — le sceau des druides disparus de Sein. Keridwen le reconnait immediatement et palît. 'Ca ne devrait pas etre ici,' murmure-t-elle. Deux marchands s'approchent deja, flairant la valeur. Le pecheur ne sait pas ce qu'il tient. Toi, si.",
@@ -312,11 +311,11 @@
       "cotes",
       "sceau"
     ],
-    "trust_tier": "T0"
+    "trust_tier": "T0",
+    "faction": "druides"
   },
   {
     "id": "fr_druides_marais_006",
-    "faction_primaire": "druides",
     "biome": "marais_korrigans",
     "champ_lexical": "chance",
     "text": "Le sentier s'arrete net au bord d'une eau noire et immobile. Des nenuphars geants forment un chemin incertain vers un ilot ou brille une lueur verte — la lueur caractéristique du gui sacre, celui que les druides ne cueillent qu'a la sixieme nuit. Maelgwn est reste en arriere. 'Je ne peux pas y aller,' dit-il. 'Mon poids briserait les feuilles. Le tien — peut-etre pas.'",
@@ -375,11 +374,11 @@
       "marais",
       "nenuphars"
     ],
-    "trust_tier": "T0"
+    "trust_tier": "T0",
+    "faction": "druides"
   },
   {
     "id": "fr_druides_collines_007",
-    "faction_primaire": "druides",
     "biome": "collines_dolmens",
     "champ_lexical": "esprit",
     "text": "Au sommet de la colline, un dolmen s'ouvre sur le vide. Talwen y est assise, les jambes dans le neant, sereine. 'Quand je ferme les yeux ici,' dit-elle, 'je sens les dix-huit Oghams respirer ensemble. Pas comme des symboles — comme des etres. Certains sont fatigues. D'autres sont en colere. Un seul dort encore.' Elle ouvre un oeil. 'Celui qui dort, c'est le tien.'",
@@ -437,11 +436,11 @@
       "dolmen",
       "collines"
     ],
-    "trust_tier": "T0"
+    "trust_tier": "T0",
+    "faction": "druides"
   },
   {
     "id": "fr_druides_iles_008",
-    "faction_primaire": "druides",
     "biome": "iles_mystiques",
     "champ_lexical": "finesse",
     "text": "L'ile de Sein emerge du brouillard comme un songe qu'on refuse de quitter. Keridwen murmure que neuf pretresses y gardaient autrefois un feu qui ne brulait rien. Le passage vers le sanctuaire interieur est etroit — une fissure dans la roche, a peine assez large pour un corps. De l'autre cote, une lueur chaude et ancienne pulse doucement.",
@@ -503,11 +502,11 @@
       "pretresses",
       "feu"
     ],
-    "trust_tier": "T0"
+    "trust_tier": "T0",
+    "faction": "druides"
   },
   {
     "id": "fr_druides_foret_009",
-    "faction_primaire": "druides",
     "biome": "foret_broceliande",
     "champ_lexical": "esprit",
     "text": "La clairiere de Barenton est silencieuse ce matin — un silence actif, tendu, qui attend quelque chose. Maelgwn a trace un cercle d'aubepine au sol et s'est assis au centre. Ses yeux sont fermes. 'Je vais lacher prise,' annonce-t-il. 'Si je ne reviens pas dans vingt battements, rappelle-moi. Pas mon nom — rappelle-moi pourquoi je suis ici.'",
@@ -566,11 +565,11 @@
       "transe",
       "cercle"
     ],
-    "trust_tier": "T0"
+    "trust_tier": "T0",
+    "faction": "druides"
   },
   {
     "id": "fr_druides_landes_010",
-    "faction_primaire": "druides",
     "biome": "landes_bruyere",
     "champ_lexical": "logique",
     "text": "Un alignement de pierres basses traverse la lande en ligne droite — trop droit pour etre naturel, trop ancien pour etre humain. Talwen marche le long, comptant ses pas a voix haute. 'Quarante-deux,' dit-elle. 'Comme les phases de la lune multipliees par... non, ce n'est pas ca.' Elle recommence. Le vent porte l'odeur du calcul inacheve.",
@@ -630,11 +629,11 @@
       "landes",
       "calcul"
     ],
-    "trust_tier": "T0"
+    "trust_tier": "T0",
+    "faction": "druides"
   },
   {
     "id": "fr_anciens_collines_001",
-    "faction_primaire": "anciens",
     "biome": "collines_dolmens",
     "champ_lexical": "esprit",
     "text": "Manannan se materialise dans le creux du dolmen, sa forme oscillant entre brume et chair. Il porte un miroir sans reflet — ou plutot un miroir qui reflete un temps qui n'est pas le tien. 'Ce que tu vois la-dedans n'est pas ton passe,' dit-il. 'C'est le passe de quelqu'un que tu n'as pas encore rencontre. Quand tu le rencontreras, tu comprendras pourquoi je te le montre maintenant.'",
@@ -692,11 +691,11 @@
       "temps",
       "dolmen"
     ],
-    "trust_tier": "T0"
+    "trust_tier": "T0",
+    "faction": "anciens"
   },
   {
     "id": "fr_anciens_cercles_002",
-    "faction_primaire": "anciens",
     "biome": "cercles_pierres",
     "champ_lexical": "observation",
     "text": "Le cercle de Carnac vibre cette nuit. Brigid dit que ca n'arrive qu'une fois par siecle — les pierres se mettent a luire d'une lumiere qui n'est ni chaude ni froide, juste ancienne. Si on les observe assez longtemps, on peut voir les ombres de ceux qui les ont dressees. Pas des fantomes. Des empreintes. La difference est capitale.",
@@ -754,11 +753,11 @@
       "lueur",
       "empreintes"
     ],
-    "trust_tier": "T0"
+    "trust_tier": "T0",
+    "faction": "anciens"
   },
   {
     "id": "fr_anciens_foret_003",
-    "faction_primaire": "anciens",
     "biome": "foret_broceliande",
     "champ_lexical": "perception",
     "text": "Lugh est apparu au fond de la foret, la ou les arbres sont si vieux qu'ils ont oublie comment grandir. Sa lumiere est eteinte aujourd'hui — il ressemble a n'importe quel homme fatigue. 'Ecoute,' dit-il. Pas un ordre. Une priere. 'La foret se souvient de quelque chose que j'ai perdu. Ses racines le murmurent. Moi, je n'entends plus.'",
@@ -817,11 +816,11 @@
       "memoire",
       "foret"
     ],
-    "trust_tier": "T0"
+    "trust_tier": "T0",
+    "faction": "anciens"
   },
   {
     "id": "fr_anciens_cotes_004",
-    "faction_primaire": "anciens",
     "biome": "cotes_sauvages",
     "champ_lexical": "vigueur",
     "text": "La maree monte avec une violence inhabituelle. Brigid se tient sur un rocher qui sera bientot submerge, immobile comme une statue. 'Les Anciens testaient leur volonte ici,' dit-elle. 'Pas contre la mer — contre eux-memes. Celui qui reste quand l'eau arrive prouve qu'il sait ce qui vaut plus que la peur.' L'ecume leche deja tes chevilles.",
@@ -883,11 +882,11 @@
       "cotes",
       "epreuve"
     ],
-    "trust_tier": "T0"
+    "trust_tier": "T0",
+    "faction": "anciens"
   },
   {
     "id": "fr_anciens_marais_005",
-    "faction_primaire": "anciens",
     "biome": "marais_korrigans",
     "champ_lexical": "bluff",
     "text": "Un esprit ancien hante le carrefour du marais — pas un fantome, mais une conscience sans corps qui pose des questions a ceux qui passent. Sa voix est partout: 'Dis-moi qui tu es vraiment, et je te laisse passer. Mens-moi, et je te laisse aussi passer — mais pas par le meme chemin.' Impossible de savoir quel chemin est le bon.",
@@ -951,11 +950,11 @@
       "marais",
       "verite"
     ],
-    "trust_tier": "T0"
+    "trust_tier": "T0",
+    "faction": "anciens"
   },
   {
     "id": "fr_anciens_villages_006",
-    "faction_primaire": "anciens",
     "biome": "villages_celtes",
     "champ_lexical": "logique",
     "text": "Au centre du village, une dalle de granit porte des inscriptions que personne ne lit plus. Lugh s'y tient, sa paume posee sur la pierre comme on touche un ami perdu. 'C'est un contrat,' dit-il. 'Entre les premiers villageois et la terre elle-meme. Si tu le lis correctement, tu comprends pourquoi ce village existe encore. Pourquoi il a survecu a ce qui a detruit les autres.'",
@@ -1014,11 +1013,11 @@
       "village",
       "inscriptions"
     ],
-    "trust_tier": "T0"
+    "trust_tier": "T0",
+    "faction": "anciens"
   },
   {
     "id": "fr_anciens_iles_007",
-    "faction_primaire": "anciens",
     "biome": "iles_mystiques",
     "champ_lexical": "finesse",
     "text": "L'ile flotte plus qu'elle ne repose. Manannan guide tes pas a travers un labyrinthe de passages naturels, si etroits que la roche effleure tes epaules. 'Les premiers Anciens construisaient des lieux ou seuls les corps fins pouvaient entrer,' explique-t-il. 'Pas par cruaute. Par selection. Certains savoirs ne sont pas faits pour les epaules larges.'",
@@ -1080,11 +1079,11 @@
       "iles",
       "passage"
     ],
-    "trust_tier": "T0"
+    "trust_tier": "T0",
+    "faction": "anciens"
   },
   {
     "id": "fr_anciens_landes_008",
-    "faction_primaire": "anciens",
     "biome": "landes_bruyere",
     "champ_lexical": "chance",
     "text": "Un tumulus s'est ouvert apres la derniere pluie, revelant un espace sombre ou quelque chose scintille. Brigid hesite — fait rare pour elle. 'Ce qui est la-dedans est peut-etre un tresor,' dit-elle. 'Ou peut-etre un piege. Les Anciens ne faisaient pas toujours la difference. Ils aimaient que le destin choisisse a leur place.'",
@@ -1146,11 +1145,11 @@
       "landes",
       "tresor"
     ],
-    "trust_tier": "T0"
+    "trust_tier": "T0",
+    "faction": "anciens"
   },
   {
     "id": "fr_anciens_foret_009",
-    "faction_primaire": "anciens",
     "biome": "foret_broceliande",
     "champ_lexical": "esprit",
     "text": "Le chene le plus ancien de Broceliande est fendu en deux — mais vivant. Lugh pose sa main sur la blessure de l'arbre et ferme les yeux. 'Il a survecu a un eclair il y a mille ans,' dit-il. 'La foudre ne l'a pas tue parce qu'il n'a pas essaye de l'eviter. Il l'a accueillie.' Le silence qui suit pese comme une lecon.",
@@ -1209,11 +1208,11 @@
       "foudre",
       "foret"
     ],
-    "trust_tier": "T0"
+    "trust_tier": "T0",
+    "faction": "anciens"
   },
   {
     "id": "fr_anciens_collines_010",
-    "faction_primaire": "anciens",
     "biome": "collines_dolmens",
     "champ_lexical": "perception",
     "text": "Au sommet de la colline, un dolmen forme une arche ouverte sur le ciel. Manannan dit que si tu te places exactement au centre a l'equinoxe, tu peux entendre le son que la terre fait en tournant. Pas un grondement — un chant. 'C'est presque le bon jour,' dit-il. 'A quelques heures pres. Avec de bonnes oreilles, ca devrait suffire.'",
@@ -1272,11 +1271,11 @@
       "dolmen",
       "rotation"
     ],
-    "trust_tier": "T0"
+    "trust_tier": "T0",
+    "faction": "anciens"
   },
   {
     "id": "fr_korrigans_marais_001",
-    "faction_primaire": "korrigans",
     "biome": "marais_korrigans",
     "champ_lexical": "bluff",
     "text": "Le Vieux Granit a pose une enigme sur une pierre plate: trois coquillages, trois noix, trois plumes. 'Un de chaque groupe est vrai,' dit-il. 'Les autres sont des copies. Je te donne une chance de deviner — ou de me convaincre que les copies sont plus interessantes que les originaux. Personne n'a jamais essaye ca.' Son sourire est un defi.",
@@ -1339,11 +1338,11 @@
       "marais",
       "copies"
     ],
-    "trust_tier": "T0"
+    "trust_tier": "T0",
+    "faction": "korrigans"
   },
   {
     "id": "fr_korrigans_cotes_002",
-    "faction_primaire": "korrigans",
     "biome": "cotes_sauvages",
     "champ_lexical": "finesse",
     "text": "Pik a vole quelque chose dans la grotte marine — un cristal qui projette des arcs-en-ciel dans l'obscurite. Il bondit de rocher en rocher, l'objet serre contre sa poitrine, riant si fort que les mouettes s'envolent. 'Viens le chercher!' crie-t-il. 'Mais attention — les rochers ici sont aussi traîtres que moi!' Le cristal pulse comme un coeur.",
@@ -1401,11 +1400,11 @@
       "cotes",
       "poursuite"
     ],
-    "trust_tier": "T0"
+    "trust_tier": "T0",
+    "faction": "korrigans"
   },
   {
     "id": "fr_korrigans_foret_003",
-    "faction_primaire": "korrigans",
     "biome": "foret_broceliande",
     "champ_lexical": "chance",
     "text": "Louarn garde un jeu d'osselets dans un creux de racines. Les osselets ne sont pas en os — ils sont en quelque chose de plus ancien, peut-etre du temps cristallise. 'Je parie contre toi,' dit-elle. 'Si tu gagnes, je te montre un chemin que personne ne connait. Si tu perds, tu me donnes un nom. N'importe lequel — sauf le tien.'",
@@ -1468,11 +1467,11 @@
       "pari",
       "foret"
     ],
-    "trust_tier": "T0"
+    "trust_tier": "T0",
+    "faction": "korrigans"
   },
   {
     "id": "fr_korrigans_villages_004",
-    "faction_primaire": "korrigans",
     "biome": "villages_celtes",
     "champ_lexical": "observation",
     "text": "Un korrigan que personne ne remarque est assis sur le rebord de la fontaine du village. Il observe les passants avec une attention predatrice — mais pas mechante, juste affamee de details. Quand il te voit le voir, il sursaute et sourit. 'Enfin quelqu'un qui regarde!' Il se penche. 'En echange, je te montre ce que les autres ne voient pas. Regarde la troisieme maison a gauche. Regarde bien.'",
@@ -1530,11 +1529,11 @@
       "observation",
       "maison"
     ],
-    "trust_tier": "T0"
+    "trust_tier": "T0",
+    "faction": "korrigans"
   },
   {
     "id": "fr_korrigans_cercles_005",
-    "faction_primaire": "korrigans",
     "biome": "cercles_pierres",
     "champ_lexical": "vigueur",
     "text": "Le cercle de pierres tremble — quelque chose pousse d'en dessous. Un korrigan de terre emerge lentement du sol, son corps fait de racines et de gravier. Il est plus grand que les autres, plus lent aussi. 'Les pierres veulent bouger,' gronde-t-il. 'Aide-moi a les pousser ou elles bougeront toutes seules. Et quand elles bougent seules, elles ne s'arretent pas.'",
@@ -1597,11 +1596,11 @@
       "pierres",
       "mouvement"
     ],
-    "trust_tier": "T0"
+    "trust_tier": "T0",
+    "faction": "korrigans"
   },
   {
     "id": "fr_korrigans_landes_006",
-    "faction_primaire": "korrigans",
     "biome": "landes_bruyere",
     "champ_lexical": "perception",
     "text": "Le vent des landes porte une voix — pas humaine, pas animale. Quelque chose entre les deux, qui rit et qui pleure en meme temps. Le Vieux Granit leve un doigt. 'Tu entends? C'est le marais qui appelle. Il veut quelqu'un cette nuit.' Son regard se durcit. 'Pas toi. Mais il ne sait pas encore.'",
@@ -1659,11 +1658,11 @@
       "appel",
       "vent"
     ],
-    "trust_tier": "T0"
+    "trust_tier": "T0",
+    "faction": "korrigans"
   },
   {
     "id": "fr_korrigans_iles_007",
-    "faction_primaire": "korrigans",
     "biome": "iles_mystiques",
     "champ_lexical": "esprit",
     "text": "Sur l'ile, un puits sans fond reflete un ciel qui n'est pas celui d'en haut. Pik danse au bord, dangereux et joyeux. 'Je peux te pousser,' dit-il. 'Ou tu peux sauter. Le resultat est le meme — mais la facon dont tu tombes change ce que tu trouves en bas.' Il arrete de danser. Pour la premiere fois, il a l'air serieux. 'Ou tu peux rester la et ne rien trouver du tout. C'est un choix aussi.'",
@@ -1726,11 +1725,11 @@
       "iles",
       "saut"
     ],
-    "trust_tier": "T0"
+    "trust_tier": "T0",
+    "faction": "korrigans"
   },
   {
     "id": "fr_korrigans_collines_008",
-    "faction_primaire": "korrigans",
     "biome": "collines_dolmens",
     "champ_lexical": "logique",
     "text": "Louarn a dessine une carte dans la poussiere au pied d'un dolmen — mais la carte est inversee, les chemins ne menent nulle part et les lieux n'ont pas de nom. 'C'est la carte du monde tel qu'il sera demain,' explique-t-elle. 'Ou tel qu'il etait hier. Je ne me souviens plus. De toute facon, si tu la lis dans le bon sens, elle dit quelque chose d'utile.'",
@@ -1789,11 +1788,11 @@
       "dolmen",
       "inversee"
     ],
-    "trust_tier": "T0"
+    "trust_tier": "T0",
+    "faction": "korrigans"
   },
   {
     "id": "fr_korrigans_marais_009",
-    "faction_primaire": "korrigans",
     "biome": "marais_korrigans",
     "champ_lexical": "finesse",
     "text": "Les lucioles du marais se comportent etrangement ce soir — elles forment un chemin, puis un autre, puis disparaissent. Le Vieux Granit grogne: 'Elles font ca quand quelqu'un les paie. Quelqu'un veut t'attirer quelque part.' Il ne dit pas ou. Il ne dit pas qui. Son silence est le plus eloquent des avertissements.",
@@ -1856,11 +1855,11 @@
       "marais",
       "piege"
     ],
-    "trust_tier": "T0"
+    "trust_tier": "T0",
+    "faction": "korrigans"
   },
   {
     "id": "fr_korrigans_cotes_010",
-    "faction_primaire": "korrigans",
     "biome": "cotes_sauvages",
     "champ_lexical": "bluff",
     "text": "Pik a installe un etal sur la greve, vendant des coquillages qui 'parlent quand on les porte a l'oreille.' Les marchands humains rient. Mais toi, tu sais que certains coquillages de cette cote parlent vraiment — si on sait lequel choisir. Le probleme, c'est que Pik le sait aussi, et son prix n'est jamais en monnaie.",
@@ -1919,11 +1918,11 @@
       "cotes",
       "echange"
     ],
-    "trust_tier": "T0"
+    "trust_tier": "T0",
+    "faction": "korrigans"
   },
   {
     "id": "fr_niamh_iles_001",
-    "faction_primaire": "niamh",
     "biome": "iles_mystiques",
     "champ_lexical": "esprit",
     "text": "Niamh t'attend au seuil de Tir na nOg. L'ile respire d'une lumiere qui n'a pas de source visible — elle vient de l'interieur des choses, des pierres, de l'herbe, de l'air. 'Le temps ne passe pas ici,' dit-elle. 'Il s'accumule. Si tu restes une heure, tu rentres avec un siecle de souvenirs que tu n'as pas vecus. Est-ce un cadeau ou une malediction? Personne n'a jamais su repondre.'",
@@ -1986,11 +1985,11 @@
       "temps",
       "seuil"
     ],
-    "trust_tier": "T0"
+    "trust_tier": "T0",
+    "faction": "niamh"
   },
   {
     "id": "fr_niamh_foret_002",
-    "faction_primaire": "niamh",
     "biome": "foret_broceliande",
     "champ_lexical": "perception",
     "text": "Dans une clairiere que tu n'avais jamais vue, un cerf blanc se tient immobile. Ses bois portent des lumieres — pas des lucioles, des fragments d'aurore boreale emprisonnes dans le velours. Oisin est la, a genoux dans l'herbe. 'Il vient de l'Autre Cote,' chuchote-t-il. 'Si tu touches ses bois, tu entends ce que les morts n'ont pas eu le temps de dire.'",
@@ -2053,11 +2052,11 @@
       "foret",
       "aurore"
     ],
-    "trust_tier": "T0"
+    "trust_tier": "T0",
+    "faction": "niamh"
   },
   {
     "id": "fr_niamh_landes_003",
-    "faction_primaire": "niamh",
     "biome": "landes_bruyere",
     "champ_lexical": "observation",
     "text": "Les bruyeres sont en fleur et la lande entiere a pris la couleur du crepuscule. Morgane des Eaux est la, incorporelle, suspendue entre deux brins de bruyere comme une goutte de rosee qui refuse de tomber. 'Regarde la lande comme si c'etait un tableau,' dit-elle. 'Chaque fleur est un mot. La phrase complete dit quelque chose que tu as oublie il y a longtemps.'",
@@ -2115,11 +2114,11 @@
       "landes",
       "fleurs"
     ],
-    "trust_tier": "T0"
+    "trust_tier": "T0",
+    "faction": "niamh"
   },
   {
     "id": "fr_niamh_cotes_004",
-    "faction_primaire": "niamh",
     "biome": "cotes_sauvages",
     "champ_lexical": "chance",
     "text": "La brume s'epaissit sur la cote jusqu'a devenir presque solide. Dans cette blancheur, des formes dansent — pas des fantomes, des possibilites. Niamh murmure: 'Chaque forme est un futur qui pourrait etre le tien. Si tu en touches une, elle devient la seule. Les autres disparaissent. Si tu n'en touches aucune, elles disparaissent toutes.'",
@@ -2182,11 +2181,11 @@
       "cotes",
       "possibilites"
     ],
-    "trust_tier": "T0"
+    "trust_tier": "T0",
+    "faction": "niamh"
   },
   {
     "id": "fr_niamh_villages_005",
-    "faction_primaire": "niamh",
     "biome": "villages_celtes",
     "champ_lexical": "bluff",
     "text": "Une femme etrangere est arrivee au village avec un harpe dont les cordes sont faites de brume. Elle ne dit pas son nom mais son sourire est celui de Niamh — ou de quelqu'un qui a passe assez de temps avec elle pour l'imiter parfaitement. Elle joue une melodie qui rend les gens tristes et heureux en meme temps. Le forgeron pleure. Le boulanger rit. L'enfant dort.",
@@ -2249,11 +2248,11 @@
       "musique",
       "enchantement"
     ],
-    "trust_tier": "T0"
+    "trust_tier": "T0",
+    "faction": "niamh"
   },
   {
     "id": "fr_niamh_cercles_006",
-    "faction_primaire": "niamh",
     "biome": "cercles_pierres",
     "champ_lexical": "logique",
     "text": "Le cercle de pierres est envahi par le gui — pas le gui ordinaire, celui dont les baies brillent d'une lumiere argentee. Oisin dit que c'est le signe que le Sidhe est proche, que la membrane entre les mondes est si fine ici qu'on pourrait la lire comme un parchemin. 'Chaque brin de gui est un mot du passage,' explique-t-il. 'Si tu les lis dans le bon ordre, tu ouvres la porte.'",
@@ -2316,11 +2315,11 @@
       "cercle",
       "sidhe"
     ],
-    "trust_tier": "T0"
+    "trust_tier": "T0",
+    "faction": "niamh"
   },
   {
     "id": "fr_niamh_marais_007",
-    "faction_primaire": "niamh",
     "biome": "marais_korrigans",
     "champ_lexical": "finesse",
     "text": "Le marais est couvert d'un brouillard si dense que la lumiere elle-meme semble se noyer. Morgane des Eaux flotte au-dessus de la surface, traçant des chemins invisibles avec ses doigts transparents. 'Il y a un passage,' dit-elle. 'Mais il bouge. Il faut etre leger pour le suivre — leger dans le corps et dans les intentions.'",
@@ -2382,11 +2381,11 @@
       "marais",
       "passage"
     ],
-    "trust_tier": "T0"
+    "trust_tier": "T0",
+    "faction": "niamh"
   },
   {
     "id": "fr_niamh_collines_008",
-    "faction_primaire": "niamh",
     "biome": "collines_dolmens",
     "champ_lexical": "vigueur",
     "text": "Les collines sont battues par un vent d'equinoxe qui hurle entre les dolmens. Niamh apparait au sommet, ses cheveux de brume fouettant l'air. 'Le vent ne vient pas du ciel,' crie-t-elle. 'Il vient de l'Autre Cote. Il pousse ceux qui peuvent y entrer. Si tu tiens debout, il finira par te montrer la porte.' Le vent redouble. Rester debout devient un acte de foi.",
@@ -2448,11 +2447,11 @@
       "collines",
       "autre_cote"
     ],
-    "trust_tier": "T0"
+    "trust_tier": "T0",
+    "faction": "niamh"
   },
   {
     "id": "fr_niamh_iles_009",
-    "faction_primaire": "niamh",
     "biome": "iles_mystiques",
     "champ_lexical": "observation",
     "text": "L'ile la plus eloignee n'a pas de nom. Oisin dit qu'elle en avait un autrefois, mais que le nom s'est envole avec le dernier oiseau qui l'a quittee. Sur cette ile, les coquillages poussent a l'envers — ouverts vers le ciel comme des oreilles geantes. 'Ils ecoutent les etoiles,' explique Oisin. 'Mais si tu les regardes bien, tu vois que certains ecoutent autre chose.'",
@@ -2514,11 +2513,11 @@
       "etoiles",
       "iles"
     ],
-    "trust_tier": "T0"
+    "trust_tier": "T0",
+    "faction": "niamh"
   },
   {
     "id": "fr_niamh_foret_010",
-    "faction_primaire": "niamh",
     "biome": "foret_broceliande",
     "champ_lexical": "esprit",
     "text": "Le Lac de Viviane est immobile ce matin — pas calme, immobile. La surface est si lisse qu'elle semble solide. Morgane des Eaux dit que c'est le moment ou le lac decide s'il sera un lac ou un miroir pour le reste de la journee. 'Si tu lui parles maintenant,' chuchote-t-elle, 'il se souviendra de ta voix. Pour toujours. Est-ce que tu veux etre souvenu par un lac?'",
@@ -2581,11 +2580,11 @@
       "voix",
       "memoire"
     ],
-    "trust_tier": "T0"
+    "trust_tier": "T0",
+    "faction": "niamh"
   },
   {
     "id": "fr_ankou_collines_001",
-    "faction_primaire": "ankou",
     "biome": "collines_dolmens",
     "champ_lexical": "observation",
     "text": "L'Ankou est assis sur le dolmen, ses jambes dans le vide. Il ne porte pas sa faux ce soir — juste une lanterne dont la flamme est noire. 'Je ne travaille pas ce soir,' dit-il. 'Je regarde. Comme toi.' Il pointe la vallee en contrebas. 'Tu vois les lumieres? Chacune est une fin qui approche. Pas ce soir. Mais bientot. Si tu regardes bien, tu peux voir laquelle est la plus proche.'",
@@ -2643,11 +2642,11 @@
       "lumieres",
       "fin"
     ],
-    "trust_tier": "T0"
+    "trust_tier": "T0",
+    "faction": "ankou"
   },
   {
     "id": "fr_ankou_marais_002",
-    "faction_primaire": "ankou",
     "biome": "marais_korrigans",
     "champ_lexical": "finesse",
     "text": "Youenn le Charretier attend au passage le plus etroit du marais, la ou les saules pleureurs forment un tunnel. Sa charrette bloque le chemin. 'Je ne peux pas la bouger,' dit-il. 'Et tu ne peux pas la contourner sans entrer dans l'eau noire.' Il reflechit. 'Mais peut-etre que tu peux passer dessous. Ou a travers. Les vivants sont souples. Je l'etais aussi, autrefois.'",
@@ -2709,11 +2708,11 @@
       "marais",
       "passage"
     ],
-    "trust_tier": "T0"
+    "trust_tier": "T0",
+    "faction": "ankou"
   },
   {
     "id": "fr_ankou_foret_003",
-    "faction_primaire": "ankou",
     "biome": "foret_broceliande",
     "champ_lexical": "esprit",
     "text": "Au carrefour de la foret, trois chemins s'ouvrent. Au bout de chacun, une lumiere differente: blanche, rouge, absente. La Lavandiere de Nuit est agenouilee au carrefour, lavant un tissu dans un ruisseau qui n'existait pas hier. 'Chaque chemin mene a la meme chose,' dit-elle sans lever les yeux. 'Mais le trajet change qui tu es quand tu arrives. Choisis selon qui tu veux devenir.'",
@@ -2780,11 +2779,11 @@
       "foret",
       "chemins"
     ],
-    "trust_tier": "T0"
+    "trust_tier": "T0",
+    "faction": "ankou"
   },
   {
     "id": "fr_ankou_cotes_004",
-    "faction_primaire": "ankou",
     "biome": "cotes_sauvages",
     "champ_lexical": "vigueur",
     "text": "La tempete a jete un navire fantome sur les recifs. Sa coque est intacte mais vide — vide de tout sauf d'une presence. L'Ankou est a la proue, immobile, sa faux plantee dans le pont. 'Ce navire cherche un port,' dit-il. 'Mais les ports n'existent plus pour lui. Ce qui reste, c'est la force de celui qui monte a bord et le pousse vers le large. Ca demande des muscles et du courage.'",
@@ -2846,11 +2845,11 @@
       "cotes",
       "fantome"
     ],
-    "trust_tier": "T0"
+    "trust_tier": "T0",
+    "faction": "ankou"
   },
   {
     "id": "fr_ankou_villages_005",
-    "faction_primaire": "ankou",
     "biome": "villages_celtes",
     "champ_lexical": "perception",
     "text": "Le village est en deuil — pas pour un mort recent, mais pour un mort ancien dont personne ne se souvient plus du nom. Youenn le Charretier se tient devant la tombe sans inscription. 'Quelqu'un devrait se souvenir,' dit-il. 'Quelqu'un devrait ecouter assez longtemps pour que le sol parle. Les morts disent leur nom si on sait les entendre. Le probleme c'est que ca prend du temps.'",
@@ -2909,11 +2908,11 @@
       "village",
       "memoire"
     ],
-    "trust_tier": "T0"
+    "trust_tier": "T0",
+    "faction": "ankou"
   },
   {
     "id": "fr_ankou_cercles_006",
-    "faction_primaire": "ankou",
     "biome": "cercles_pierres",
     "champ_lexical": "logique",
     "text": "Les pierres du cercle portent des marques que personne n'avait remarquees — des encoches, regulieres, precises, qui forment un systeme de comptage. L'Ankou est la, comptant avec elles. 'C'est un calendrier,' dit-il. 'Pas des jours. Des fins. Chaque encoche est un cycle qui s'est termine ici.' Il te regarde. 'Si tu lis le calcul correctement, tu sais combien de cycles il reste.'",
@@ -2976,11 +2975,11 @@
       "encoches",
       "cycles"
     ],
-    "trust_tier": "T0"
+    "trust_tier": "T0",
+    "faction": "ankou"
   },
   {
     "id": "fr_ankou_landes_007",
-    "faction_primaire": "ankou",
     "biome": "landes_bruyere",
     "champ_lexical": "chance",
     "text": "La Lavandiere de Nuit a etendu ses tissus blancs sur les bruyeres pour les faire secher au clair de lune. Chaque tissu est brode d'un nom — certains que tu connais, d'autres non. 'Il y en a un qui est pour toi,' dit-elle sans sourire. 'Mais pas cette nuit. Cette nuit, tu peux en choisir un autre et le garder. Ou les laisser tous secher en paix.'",
@@ -3042,11 +3041,11 @@
       "landes",
       "noms"
     ],
-    "trust_tier": "T0"
+    "trust_tier": "T0",
+    "faction": "ankou"
   },
   {
     "id": "fr_ankou_iles_008",
-    "faction_primaire": "ankou",
     "biome": "iles_mystiques",
     "champ_lexical": "esprit",
     "text": "L'ile des morts est exactement ce que son nom dit — mais pas comme on l'imagine. Elle est belle. Paisible. Les arbres y sont en fleur toute l'annee. L'Ankou marche entre les tombes comme un jardinier. 'Tu t'attendais a quoi?' demande-t-il. 'A des os et du froid? La mort n'est pas une punition. C'est un jardin. Je l'entretiens.' Il s'arrete devant une tombe vide. 'Celle-la est reservee. Pas pour toi. Mais pour quelqu'un que tu connais.'",
@@ -3108,11 +3107,11 @@
       "tombe",
       "revelation"
     ],
-    "trust_tier": "T0"
+    "trust_tier": "T0",
+    "faction": "ankou"
   },
   {
     "id": "fr_ankou_foret_009",
-    "faction_primaire": "ankou",
     "biome": "foret_broceliande",
     "champ_lexical": "bluff",
     "text": "Youenn le Charretier est assis au pied d'un if, jouant avec un jeu de cartes dont les faces sont blanches. Il en retourne une devant toi — vide. 'Dis-moi ce qu'elle montre,' demande-t-il. 'Si tu devines juste, je te laisse poser une question aux morts. Si tu mens bien, je te laisse en poser deux.' Son sourire est celui de quelqu'un qui a cesse de faire la difference entre les vivants et les morts.",
@@ -3175,11 +3174,11 @@
       "foret",
       "mensonge"
     ],
-    "trust_tier": "T0"
+    "trust_tier": "T0",
+    "faction": "ankou"
   },
   {
     "id": "fr_ankou_landes_010",
-    "faction_primaire": "ankou",
     "biome": "landes_bruyere",
     "champ_lexical": "vigueur",
     "text": "Un orage eclate sur les landes et la foudre frappe un cairn ancien. La pierre se fend, liberant une lumiere froide qui pulse comme un battement de coeur. L'Ankou apparait dans l'eclair, sa silhouette decoupee contre le ciel. 'La foudre ne detruit pas,' dit-il. 'Elle revele. Ce qui etait cache dans cette pierre attend depuis des siecles qu'on le libere. Mais il faut des mains fortes pour porter ce que la foudre libere.'",
@@ -3245,6 +3244,7 @@
       "landes",
       "orage"
     ],
-    "trust_tier": "T0"
+    "trust_tier": "T0",
+    "faction": "ankou"
   }
 ]

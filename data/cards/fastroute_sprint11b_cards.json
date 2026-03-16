@@ -1,7 +1,6 @@
 [
   {
     "id": "fr_s11b_merlin_arc_001",
-    "faction_primaire": "druides",
     "biome": "foret_broceliande",
     "champ_lexical": "esprit",
     "merlin_direct": true,
@@ -59,11 +58,11 @@
       "naissance",
       "arc_1_of_10",
       "T1"
-    ]
+    ],
+    "faction": "druides"
   },
   {
     "id": "fr_s11b_merlin_arc_002",
-    "faction_primaire": "druides",
     "biome": "cercles_pierres",
     "champ_lexical": "observation",
     "merlin_direct": true,
@@ -122,11 +121,11 @@
       "dragons",
       "arc_2_of_10",
       "T1"
-    ]
+    ],
+    "faction": "druides"
   },
   {
     "id": "fr_s11b_merlin_arc_003",
-    "faction_primaire": "druides",
     "biome": "foret_broceliande",
     "champ_lexical": "logique",
     "merlin_direct": true,
@@ -185,11 +184,11 @@
       "druides",
       "arc_3_of_10",
       "T1"
-    ]
+    ],
+    "faction": "druides"
   },
   {
     "id": "fr_s11b_merlin_arc_004",
-    "faction_primaire": "anciens",
     "biome": "collines_dolmens",
     "champ_lexical": "esprit",
     "merlin_direct": true,
@@ -248,11 +247,11 @@
       "regret",
       "arc_4_of_10",
       "T2"
-    ]
+    ],
+    "faction": "anciens"
   },
   {
     "id": "fr_s11b_merlin_arc_005",
-    "faction_primaire": "druides",
     "biome": "foret_broceliande",
     "champ_lexical": "perception",
     "merlin_direct": true,
@@ -311,11 +310,11 @@
       "camlann",
       "arc_5_of_10",
       "T2"
-    ]
+    ],
+    "faction": "druides"
   },
   {
     "id": "fr_s11b_merlin_arc_006",
-    "faction_primaire": "druides",
     "biome": "iles_mystiques",
     "champ_lexical": "esprit",
     "merlin_direct": true,
@@ -374,11 +373,11 @@
       "amour",
       "arc_6_of_10",
       "T2"
-    ]
+    ],
+    "faction": "druides"
   },
   {
     "id": "fr_s11b_merlin_arc_007",
-    "faction_primaire": "ankou",
     "biome": "collines_dolmens",
     "champ_lexical": "esprit",
     "merlin_direct": true,
@@ -437,11 +436,11 @@
       "ankou",
       "arc_7_of_10",
       "T2"
-    ]
+    ],
+    "faction": "ankou"
   },
   {
     "id": "fr_s11b_merlin_arc_008",
-    "faction_primaire": "druides",
     "biome": "foret_broceliande",
     "champ_lexical": "logique",
     "merlin_direct": true,
@@ -500,11 +499,11 @@
       "voyageur",
       "arc_8_of_10",
       "T3"
-    ]
+    ],
+    "faction": "druides"
   },
   {
     "id": "fr_s11b_merlin_arc_009",
-    "faction_primaire": "druides",
     "biome": "cercles_pierres",
     "champ_lexical": "esprit",
     "merlin_direct": true,
@@ -563,11 +562,11 @@
       "auto_emprisonnement",
       "arc_9_of_10",
       "T3"
-    ]
+    ],
+    "faction": "druides"
   },
   {
     "id": "fr_s11b_merlin_arc_010",
-    "faction_primaire": "druides",
     "biome": "foret_broceliande",
     "champ_lexical": "esprit",
     "merlin_direct": true,
@@ -627,11 +626,11 @@
       "amitie",
       "arc_10_of_10",
       "T3"
-    ]
+    ],
+    "faction": "druides"
   },
   {
     "id": "fr_s11b_viviane_001",
-    "faction_primaire": "niamh",
     "biome": "iles_mystiques",
     "champ_lexical": "perception",
     "text": "Sur l'ile d'Avalon, une brume persistante prend la forme d'une femme. 'Je suis Viviane,' dit-elle. 'Ou ce qu'il en reste. Les hommes racontent que j'ai trahi Merlin. Les fees racontent que je l'ai sauve. La verite est entre les deux — comme toujours.' Sa voix est un chant sous-marin. 'Ecoute mon version.'",
@@ -688,11 +687,11 @@
       "verite",
       "arc_1_of_10"
     ],
-    "trust_tier": "T0"
+    "trust_tier": "T0",
+    "faction": "niamh"
   },
   {
     "id": "fr_s11b_viviane_002",
-    "faction_primaire": "niamh",
     "biome": "foret_broceliande",
     "champ_lexical": "esprit",
     "text": "Viviane raconte : 'Merlin m'a appris la magie des arbres. En retour, je lui ai montre la magie de l'eau. Les druides pensent que le savoir se transmet de haut en bas — du maitre a l'eleve. Les fees savent que le savoir circule comme l'eau — dans toutes les directions.' Elle fait jaillir une fontaine d'entre les racines.",
@@ -750,11 +749,11 @@
       "savoir",
       "arc_2_of_10"
     ],
-    "trust_tier": "T0"
+    "trust_tier": "T0",
+    "faction": "niamh"
   },
   {
     "id": "fr_s11b_viviane_003",
-    "faction_primaire": "niamh",
     "biome": "marais_korrigans",
     "champ_lexical": "bluff",
     "text": "'L'emprisonnement,' Viviane soupire. 'Le sort que j'ai tisse autour de Merlin etait un cocon, pas une cage. Il devait dormir pour guerir de ses blessures — celles de l'ame, pas du corps. Mais il a refuse de dormir. Alors le cocon est devenu une barriere. Ce n'etait pas mon intention.' Elle te regarde. 'Me crois-tu ?'",
@@ -811,11 +810,11 @@
       "cocon",
       "arc_3_of_10"
     ],
-    "trust_tier": "T0"
+    "trust_tier": "T0",
+    "faction": "niamh"
   },
   {
     "id": "fr_s11b_viviane_004",
-    "faction_primaire": "niamh",
     "biome": "cotes_sauvages",
     "champ_lexical": "observation",
     "text": "Sur un rocher face a la mer, Viviane materialise des images dans les embruns — des scenes de sa vie avec Merlin. Leur premiere rencontre pres d'un lac. Les lecons de magie sous la lune. Le moment ou elle a compris qu'il ne vieillirait jamais mais qu'elle, malgre sa nature feerique, changerait. 'L'amour entre un immortel et une fee est un paradoxe,' dit-elle.",
@@ -872,11 +871,11 @@
       "amour",
       "arc_4_of_10"
     ],
-    "trust_tier": "T0"
+    "trust_tier": "T0",
+    "faction": "niamh"
   },
   {
     "id": "fr_s11b_viviane_005",
-    "faction_primaire": "niamh",
     "biome": "foret_broceliande",
     "champ_lexical": "finesse",
     "text": "Viviane te guide vers un lac cache au coeur de Broceliande. Sous la surface, des structures de cristal pulsent d'une lumiere bleue. 'C'est ma demeure,' dit-elle. 'Le Lac. Pas un piege — un refuge. Merlin pourrait en sortir s'il le voulait. Il ne veut pas. Et je respecte ce choix, meme s'il me brise.'",
@@ -933,11 +932,11 @@
       "cristal",
       "arc_5_of_10"
     ],
-    "trust_tier": "T0"
+    "trust_tier": "T0",
+    "faction": "niamh"
   },
   {
     "id": "fr_s11b_viviane_006",
-    "faction_primaire": "niamh",
     "biome": "iles_mystiques",
     "champ_lexical": "esprit",
     "text": "'La connexion entre Niamh et moi est plus profonde que ce que les mortels comprennent,' revele Viviane. 'Niamh n'est pas un peuple — c'est un etat. Quand une fee aime un mortel, elle devient Niamh. Quand un mortel aime une fee, il le devient aussi. Merlin et moi sommes tous les deux Niamh — de deux cotes differents du meme miroir.'",
@@ -994,11 +993,11 @@
       "miroir",
       "arc_6_of_10"
     ],
-    "trust_tier": "T0"
+    "trust_tier": "T0",
+    "faction": "niamh"
   },
   {
     "id": "fr_s11b_viviane_007",
-    "faction_primaire": "niamh",
     "biome": "landes_bruyere",
     "champ_lexical": "vigueur",
     "text": "Viviane est en colere. 'Les Anciens racontent mon histoire comme un avertissement — ne faites pas confiance aux fees ! Mais c'est Merlin qui est venu a moi. C'est lui qui a insiste pour m'enseigner. Et quand j'ai utilise ce savoir, ils m'ont appelee traitresse.' L'air crépite autour d'elle. 'Je n'ai trahi personne. J'ai aime.'",
@@ -1056,11 +1055,11 @@
       "injustice",
       "arc_7_of_10"
     ],
-    "trust_tier": "T0"
+    "trust_tier": "T0",
+    "faction": "niamh"
   },
   {
     "id": "fr_s11b_viviane_008",
-    "faction_primaire": "niamh",
     "biome": "foret_broceliande",
     "champ_lexical": "logique",
     "text": "Viviane presente une enigme : 'Si Merlin m'a volontairement enseigne le sort qui l'a enferme, est-ce un emprisonnement ou un don ? Si je l'ai utilise sachant qu'il le savait, est-ce une trahison ou un pacte ? Les humains appellent cela de la manipulation. Les fees appellent cela de la danse.' Elle attend ta reponse.",
@@ -1117,11 +1116,11 @@
       "paradoxe",
       "arc_8_of_10"
     ],
-    "trust_tier": "T0"
+    "trust_tier": "T0",
+    "faction": "niamh"
   },
   {
     "id": "fr_s11b_viviane_009",
-    "faction_primaire": "niamh",
     "biome": "iles_mystiques",
     "champ_lexical": "chance",
     "text": "Viviane te propose un cadeau — une larme de fee cristallisee. 'Celle-ci est la derniere que j'ai versee pour Merlin,' dit-elle. 'Elle contient tout ce que je n'ai jamais su lui dire. Si tu la lui portes, quelque chose changera. Je ne sais pas quoi. Mais les larmes de fee ne mentent pas.'",
@@ -1178,11 +1177,11 @@
       "cadeau",
       "arc_9_of_10"
     ],
-    "trust_tier": "T0"
+    "trust_tier": "T0",
+    "faction": "niamh"
   },
   {
     "id": "fr_s11b_viviane_010",
-    "faction_primaire": "niamh",
     "biome": "foret_broceliande",
     "champ_lexical": "esprit",
     "text": "Viviane commence a se dissoudre dans la brume. 'Je t'ai dit tout ce que je pouvais. Le reste est entre toi et Merlin. Dis-lui...' Elle hesite. 'Non. Ne lui dis rien. Il sait deja. Il a toujours su.' La brume retombe et la foret reprend ses droits. Mais l'air a change — il porte un parfum de nenuphars qui n'etait pas la avant.",
@@ -1239,11 +1238,11 @@
       "nenuphars",
       "arc_10_of_10"
     ],
-    "trust_tier": "T0"
+    "trust_tier": "T0",
+    "faction": "niamh"
   },
   {
     "id": "fr_s11b_annwn_001",
-    "faction_primaire": "ankou",
     "biome": "collines_dolmens",
     "champ_lexical": "finesse",
     "text": "Un dolmen s'ouvre sur un escalier qui descend dans la terre. Les marches sont faites d'os blancs polis par des millenaires de passage. L'Ankou attend en bas, sa lanterne projetant des ombres vertes. 'Annwn — le monde d'en-dessous. Pas l'enfer des chretiens, non. Quelque chose de plus ancien. Un lieu ou le temps coule a l'envers et les morts marchent a l'endroit.'",
@@ -1301,11 +1300,11 @@
       "os",
       "arc_1_of_10"
     ],
-    "trust_tier": "T0"
+    "trust_tier": "T0",
+    "faction": "ankou"
   },
   {
     "id": "fr_s11b_annwn_002",
-    "faction_primaire": "ankou",
     "biome": "iles_mystiques",
     "champ_lexical": "observation",
     "text": "Le premier niveau d'Annwn est un vaste lac souterrain eclaire par des champignons bioluminescents. Des barques sans rameurs glissent sur l'eau noire. Sur chaque barque, une silhouette assise regarde le plafond. 'Les dormeurs,' explique l'Ankou. 'Ils attendent leur prochaine vie. Ne les reveille pas — sauf si tu veux connaitre leur histoire.'",
@@ -1362,11 +1361,11 @@
       "dormeurs",
       "arc_2_of_10"
     ],
-    "trust_tier": "T0"
+    "trust_tier": "T0",
+    "faction": "ankou"
   },
   {
     "id": "fr_s11b_annwn_003",
-    "faction_primaire": "ankou",
     "biome": "cercles_pierres",
     "champ_lexical": "vigueur",
     "text": "Le deuxieme niveau d'Annwn est une plaine de bataille figee. Des guerriers celtes et romains sont immobilises mid-combat, leurs epees levees, leurs boucliers tendus. Le temps s'est arrete ici il y a deux mille ans. 'Ils se battent encore dans leurs reves,' dit l'Ankou. 'Si tu les touches, le combat reprend. Es-tu pret ?'",
@@ -1423,11 +1422,11 @@
       "guerriers",
       "arc_3_of_10"
     ],
-    "trust_tier": "T0"
+    "trust_tier": "T0",
+    "faction": "ankou"
   },
   {
     "id": "fr_s11b_annwn_004",
-    "faction_primaire": "ankou",
     "biome": "foret_broceliande",
     "champ_lexical": "perception",
     "text": "Le troisieme niveau est une foret inversee — les arbres poussent vers le bas, leurs racines dans un ciel de terre et leurs cimes plongeant dans le vide. Des oiseaux de nuit volent a l'envers, chantant des melodies retrogrades. 'Le monde tel qu'il etait avant le monde,' dit l'Ankou. 'Ou tel qu'il sera apres.'",
@@ -1484,11 +1483,11 @@
       "oiseaux",
       "arc_4_of_10"
     ],
-    "trust_tier": "T0"
+    "trust_tier": "T0",
+    "faction": "ankou"
   },
   {
     "id": "fr_s11b_annwn_005",
-    "faction_primaire": "ankou",
     "biome": "marais_korrigans",
     "champ_lexical": "esprit",
     "text": "Au quatrieme niveau, un tribunal des morts siege dans une caverne de stalactites. Arawn, roi d'Annwn, trone sur un siege d'ambre noir. Devant lui, des ames attendent leur jugement. Il te voit. 'Un vivant. Rare.' Il sourit — un sourire qui n'a rien de mechant. 'Tu veux assister ? Ou etre juge toi aussi ?'",
@@ -1546,11 +1545,11 @@
       "jugement",
       "arc_5_of_10"
     ],
-    "trust_tier": "T0"
+    "trust_tier": "T0",
+    "faction": "ankou"
   },
   {
     "id": "fr_s11b_annwn_006",
-    "faction_primaire": "ankou",
     "biome": "collines_dolmens",
     "champ_lexical": "logique",
     "text": "Le cinquieme niveau contient une bibliotheque des morts — des milliers de rouleaux graves sur os, peau et ecorce petrifiee. Chaque rouleau contient la vie complete d'un mort. L'Ankou te laisse lire un seul rouleau. 'Choisis bien. Ce que tu lis changera ta comprehension du monde des vivants.'",
@@ -1607,11 +1606,11 @@
       "rouleaux",
       "arc_6_of_10"
     ],
-    "trust_tier": "T0"
+    "trust_tier": "T0",
+    "faction": "ankou"
   },
   {
     "id": "fr_s11b_annwn_007",
-    "faction_primaire": "ankou",
     "biome": "iles_mystiques",
     "champ_lexical": "chance",
     "text": "Au sixieme niveau, un jardin souterrain pousse sans lumiere. Des fruits transparents pendent a des branches de cristal. 'Le Verger des Ames,' dit l'Ankou. 'Chaque fruit contient un talent perdu par un mort. Si tu en cueilles un, le talent sera le tien. Mais tu ne sauras pas lequel avant de mordre.'",
@@ -1669,11 +1668,11 @@
       "talents",
       "arc_7_of_10"
     ],
-    "trust_tier": "T0"
+    "trust_tier": "T0",
+    "faction": "ankou"
   },
   {
     "id": "fr_s11b_annwn_008",
-    "faction_primaire": "ankou",
     "biome": "cercles_pierres",
     "champ_lexical": "esprit",
     "text": "Au septieme et dernier niveau, le silence est absolu. Une porte de pierre sans poignee se dresse, gravee d'un seul mot en ogham : 'Reviens.' L'Ankou dit : 'Au-dela, il y a ce qui etait avant tout. Personne n'en revient pareil. Certains n'en reviennent pas du tout. Le choix est tien — et il ne peut etre defait.'",
@@ -1730,11 +1729,11 @@
       "choix",
       "arc_8_of_10"
     ],
-    "trust_tier": "T0"
+    "trust_tier": "T0",
+    "faction": "ankou"
   },
   {
     "id": "fr_s11b_annwn_009",
-    "faction_primaire": "ankou",
     "biome": "foret_broceliande",
     "champ_lexical": "observation",
     "text": "De retour a la surface, le monde semble different. Les couleurs sont plus vives, les sons plus nets. L'Ankou te regarde avec un respect nouveau. 'Tu as vu Annwn et tu es remonte. Les arbres le savent — regarde, ils s'inclinent vers toi.' En effet, les branches des chenes les plus proches se courbent imperceptiblement dans ta direction.",
@@ -1792,11 +1791,11 @@
       "transformation",
       "arc_9_of_10"
     ],
-    "trust_tier": "T0"
+    "trust_tier": "T0",
+    "faction": "ankou"
   },
   {
     "id": "fr_s11b_annwn_010",
-    "faction_primaire": "ankou",
     "biome": "collines_dolmens",
     "champ_lexical": "esprit",
     "text": "L'Ankou t'offre un dernier don : une pierre polie d'Annwn, noire comme l'absence de lumiere. 'Celle-ci contient un fragment du silence d'en-dessous,' dit-il. 'Tiens-la quand le monde est trop bruyant. Elle te rappellera que sous tout ce chaos, il y a la paix.' Il s'incline — premiere et derniere fois — et disparait dans l'ombre du dolmen.",
@@ -1853,11 +1852,11 @@
       "pierre_silence",
       "arc_10_of_10"
     ],
-    "trust_tier": "T0"
+    "trust_tier": "T0",
+    "faction": "ankou"
   },
   {
     "id": "fr_s11b_cauldron_001",
-    "faction_primaire": "anciens",
     "biome": "cercles_pierres",
     "champ_lexical": "logique",
     "text": "Brennos deroule un parchemin jauni. 'Le Chaudron de Renaissance — Pair Dadeni. Les Anciens racontent qu'il se trouve quelque part sous les cercles de pierres. Il peut ramener les morts, mais les ramenes ne parlent plus. Ils se souviennent de tout sauf des mots.' Il te regarde. 'Tu veux le chercher ? Le chemin est long.'",
@@ -1914,11 +1913,11 @@
       "parchemin",
       "arc_1_of_10"
     ],
-    "trust_tier": "T0"
+    "trust_tier": "T0",
+    "faction": "anciens"
   },
   {
     "id": "fr_s11b_cauldron_002",
-    "faction_primaire": "anciens",
     "biome": "collines_dolmens",
     "champ_lexical": "perception",
     "text": "Le premier indice mene a une colline ou un dolmen vibre d'une resonance basse. Ildiko pose sa main sur la pierre. 'Je sens de la chaleur — comme si quelque chose couvait en dessous. Le Chaudron chauffe meme quand il est vide, disent les legendes. Il attend d'etre rempli.'",
@@ -1975,11 +1974,11 @@
       "resonance",
       "arc_2_of_10"
     ],
-    "trust_tier": "T0"
+    "trust_tier": "T0",
+    "faction": "anciens"
   },
   {
     "id": "fr_s11b_cauldron_003",
-    "faction_primaire": "anciens",
     "biome": "landes_bruyere",
     "champ_lexical": "finesse",
     "text": "Le deuxieme indice revele un tunnel cache sous un cairn des landes. Le passage est etroit — a peine assez large pour un corps. Des racines de bruyere pendent du plafond comme des doigts maigres. Erwan refuse d'entrer. 'Je suis trop large,' dit-il. 'Mais toi, tu pourrais passer. Le Chaudron est pour ceux qui acceptent de ramper.'",
@@ -2036,11 +2035,11 @@
       "cairn",
       "arc_3_of_10"
     ],
-    "trust_tier": "T0"
+    "trust_tier": "T0",
+    "faction": "anciens"
   },
   {
     "id": "fr_s11b_cauldron_004",
-    "faction_primaire": "anciens",
     "biome": "cotes_sauvages",
     "champ_lexical": "vigueur",
     "text": "Le troisieme indice conduit a une grotte marine accessible seulement a maree basse. L'eau ruisselle sur des murs couverts de gravures representant un chaudron geant. Maelle previent : 'La maree remonte dans deux heures. Ce que tu fais ici, fais-le vite.' Au fond de la grotte, un escalier descend dans l'obscurite.",
@@ -2097,11 +2096,11 @@
       "maree",
       "arc_4_of_10"
     ],
-    "trust_tier": "T0"
+    "trust_tier": "T0",
+    "faction": "anciens"
   },
   {
     "id": "fr_s11b_cauldron_005",
-    "faction_primaire": "anciens",
     "biome": "foret_broceliande",
     "champ_lexical": "esprit",
     "text": "Le quatrieme indice est un arbre mort au coeur de la foret dont le tronc creux contient une maquette du Chaudron en argile. Maelgwn la tient avec precaution. 'C'est une carte,' dit-il. 'Le Chaudron est represente au centre de cinq symboles. Chaque symbole correspond a un gardien. Il faudra les convaincre tous les cinq.'",
@@ -2158,11 +2157,11 @@
       "gardiens",
       "arc_5_of_10"
     ],
-    "trust_tier": "T0"
+    "trust_tier": "T0",
+    "faction": "anciens"
   },
   {
     "id": "fr_s11b_cauldron_006",
-    "faction_primaire": "anciens",
     "biome": "villages_celtes",
     "champ_lexical": "bluff",
     "text": "Le premier gardien du Chaudron est un vieux forgeron du village qui refuse de croire que tu es digne. 'Tout le monde veut le Chaudron,' grogne-t-il. 'Les rois, les druides, les guerriers. Ils pensent qu'il donne le pouvoir. Il donne la responsabilite. C'est pire.' Il croise les bras. 'Convaincs-moi que tu peux porter ce poids.'",
@@ -2219,11 +2218,11 @@
       "forgeron",
       "arc_6_of_10"
     ],
-    "trust_tier": "T0"
+    "trust_tier": "T0",
+    "faction": "anciens"
   },
   {
     "id": "fr_s11b_cauldron_007",
-    "faction_primaire": "anciens",
     "biome": "marais_korrigans",
     "champ_lexical": "observation",
     "text": "Le deuxieme gardien est une vieille femme korrigan qui vit seule au bord des marais. Elle t'observe en silence pendant une heure entiere avant de parler. 'Le Chaudron connait tes peurs,' dit-elle enfin. 'Il les refletera. Si tu peux regarder tes peurs en face, il t'acceptera. Sinon...' Elle dessine un geste d'explosion avec ses doigts.",
@@ -2281,11 +2280,11 @@
       "peurs",
       "arc_7_of_10"
     ],
-    "trust_tier": "T0"
+    "trust_tier": "T0",
+    "faction": "anciens"
   },
   {
     "id": "fr_s11b_cauldron_008",
-    "faction_primaire": "anciens",
     "biome": "cercles_pierres",
     "champ_lexical": "esprit",
     "text": "Les cinq gardiens ont accepte. Le chemin vers le Chaudron s'ouvre — une spirale de pierres qui descend sous le cercle, eclairee par des veines d'or dans la roche. Au centre, le Pair Dadeni repose sur un lit de charbon froid. Il est plus petit que tu ne l'imaginais — un simple recipient de bronze noirci. Mais l'air autour de lui vibre d'une puissance immense.",
@@ -2342,11 +2341,11 @@
       "pair_dadeni",
       "arc_8_of_10"
     ],
-    "trust_tier": "T0"
+    "trust_tier": "T0",
+    "faction": "anciens"
   },
   {
     "id": "fr_s11b_cauldron_009",
-    "faction_primaire": "anciens",
     "biome": "collines_dolmens",
     "champ_lexical": "logique",
     "text": "Le Chaudron te montre une vision : le monde sans la mort. Des forets eternelles, des recoltes qui ne pourrissent jamais, des hommes qui ne vieillissent pas. Mais aussi : des enfants qui ne naissent plus, des saisons figees, un monde immobile. 'Le Chaudron offre la renaissance,' dit une voix. 'Mais la renaissance a un prix : la fin de toute fin.'",
@@ -2403,11 +2402,11 @@
       "paradoxe",
       "arc_9_of_10"
     ],
-    "trust_tier": "T0"
+    "trust_tier": "T0",
+    "faction": "anciens"
   },
   {
     "id": "fr_s11b_cauldron_010",
-    "faction_primaire": "anciens",
     "biome": "cercles_pierres",
     "champ_lexical": "esprit",
     "text": "Le Chaudron attend ta decision. Tu peux le prendre, le laisser, ou le detruire. Brennos, les gardiens et l'Ankou te regardent. 'Quelle que soit ta decision,' dit Brennos, 'elle sera respectee. Le Chaudron a survecu des millenaires. Il peut survivre un jour de plus — ou un jour de moins.'",
@@ -2465,11 +2464,11 @@
       "conclusion",
       "arc_10_of_10"
     ],
-    "trust_tier": "T0"
+    "trust_tier": "T0",
+    "faction": "anciens"
   },
   {
     "id": "fr_s11b_treasures_001",
-    "faction_primaire": "anciens",
     "biome": "iles_mystiques",
     "champ_lexical": "logique",
     "text": "Morgane deroule une carte ancienne qui montre quatre points lumineux disperses a travers le monde celtique. 'Les Quatre Tresors des Tuatha De Danann,' explique-t-elle. 'La Pierre de Fal, la Lance de Lugh, l'Epee de Nuada et le Chaudron du Dagda. Chacun a ete cache dans un lieu different. Chacun attend un porteur digne.'",
@@ -2526,11 +2525,11 @@
       "tuatha",
       "arc_1_of_10"
     ],
-    "trust_tier": "T0"
+    "trust_tier": "T0",
+    "faction": "anciens"
   },
   {
     "id": "fr_s11b_treasures_002",
-    "faction_primaire": "anciens",
     "biome": "collines_dolmens",
     "champ_lexical": "esprit",
     "text": "La Pierre de Fal — Lia Fail — repose au sommet de la plus haute colline, deguisee en dolmen ordinaire. Mais quand tu t'en approches, elle emet un son grave, presque un chant. 'La Pierre crie sous les pieds du roi legitime,' raconte Ildiko. 'Elle n'a pas crie depuis des siecles. Mais elle vibre... peut-etre qu'elle se prepare.'",
@@ -2587,11 +2586,11 @@
       "pierre",
       "arc_2_of_10"
     ],
-    "trust_tier": "T0"
+    "trust_tier": "T0",
+    "faction": "anciens"
   },
   {
     "id": "fr_s11b_treasures_003",
-    "faction_primaire": "anciens",
     "biome": "collines_dolmens",
     "champ_lexical": "vigueur",
     "text": "La Pierre de Fal te pose une epreuve : un tremblement de terre secoue la colline. Des fissures s'ouvrent dans le sol, et des piliers de roche s'elevent et retombent. 'La Pierre teste ta determination,' crie Ildiko par-dessus le grondement. 'Tiens bon ou elle jugera que tu es indigne !'",
@@ -2648,11 +2647,11 @@
       "epreuve",
       "arc_3_of_10"
     ],
-    "trust_tier": "T0"
+    "trust_tier": "T0",
+    "faction": "anciens"
   },
   {
     "id": "fr_s11b_treasures_004",
-    "faction_primaire": "korrigans",
     "biome": "villages_celtes",
     "champ_lexical": "observation",
     "text": "La Lance de Lugh — Sleg — est gardee par un korrigan forgeron dans un village cache. La lance est plantee dans un billot de chene et brule d'un feu perpetuel. 'Elle ne peut etre retiree que par celui qui voit sa vraie forme,' dit le forgeron. 'La plupart voient une arme. La lance n'est pas une arme — elle est une question.'",
@@ -2709,11 +2708,11 @@
       "forgeron",
       "arc_4_of_10"
     ],
-    "trust_tier": "T0"
+    "trust_tier": "T0",
+    "faction": "korrigans"
   },
   {
     "id": "fr_s11b_treasures_005",
-    "faction_primaire": "korrigans",
     "biome": "villages_celtes",
     "champ_lexical": "bluff",
     "text": "Le korrigan forgeron te defie : 'Reponds a la question de la Lance. Que cherches-tu — la victoire ou la verite ?' Il croise les bras. 'Attention — la Lance sait quand on ment. Et elle n'aime pas les menteurs. Enfin, sauf les menteurs honnetes.'",
@@ -2770,11 +2769,11 @@
       "question",
       "arc_5_of_10"
     ],
-    "trust_tier": "T0"
+    "trust_tier": "T0",
+    "faction": "korrigans"
   },
   {
     "id": "fr_s11b_treasures_006",
-    "faction_primaire": "ankou",
     "biome": "cercles_pierres",
     "champ_lexical": "finesse",
     "text": "L'Epee de Nuada — Claíomh Solais, l'Epee de Lumiere — repose au fond d'un puits sous le cercle de pierres. Le puits est garde par des ombres vivantes qui se deplacent entre les menhirs. 'L'epee ne coupe pas la chair,' dit l'Ankou. 'Elle coupe le mensonge. Pour l'atteindre, il faut passer entre les ombres sans etre touche.'",
@@ -2831,11 +2830,11 @@
       "ombres",
       "arc_6_of_10"
     ],
-    "trust_tier": "T0"
+    "trust_tier": "T0",
+    "faction": "ankou"
   },
   {
     "id": "fr_s11b_treasures_007",
-    "faction_primaire": "ankou",
     "biome": "cercles_pierres",
     "champ_lexical": "esprit",
     "text": "Au fond du puits, l'Epee de Nuada brille d'une lumiere blanche insoutenable. Quand tu la touches, elle te montre tes propres mensonges — chaque demi-verite, chaque omission, chaque chose que tu t'es dite pour te rassurer. 'L'Epee de Lumiere eclaire d'abord l'interieur,' murmure l'Ankou. 'Supporte la lumiere ou lache la garde.'",
@@ -2892,11 +2891,11 @@
       "verite",
       "arc_7_of_10"
     ],
-    "trust_tier": "T0"
+    "trust_tier": "T0",
+    "faction": "ankou"
   },
   {
     "id": "fr_s11b_treasures_008",
-    "faction_primaire": "druides",
     "biome": "foret_broceliande",
     "champ_lexical": "perception",
     "text": "Le Chaudron du Dagda — le dernier tresor — est cache dans un arbre creux au coeur de Broceliande. Contrairement au Pair Dadeni, ce chaudron nourrit les vivants. Maelgwn le trouve en suivant une odeur de soupe qui n'a pas de source. 'Le Chaudron du Dagda est genereux,' dit-il. 'Il donne a manger a tous. Mais il ne se remplit que quand on donne d'abord.'",
@@ -2953,11 +2952,11 @@
       "foret",
       "arc_8_of_10"
     ],
-    "trust_tier": "T0"
+    "trust_tier": "T0",
+    "faction": "druides"
   },
   {
     "id": "fr_s11b_treasures_009",
-    "faction_primaire": "druides",
     "biome": "foret_broceliande",
     "champ_lexical": "esprit",
     "text": "Le Chaudron du Dagda te demande un sacrifice : 'Donne-moi quelque chose qui t'est cher — pas un objet, mais un savoir. Oublie une chose que tu sais, et je te donnerai en echange un savoir que personne ne possede.' Le chaudron bout doucement, repandant une vapeur qui sent la noisette et le miel.",
@@ -3014,11 +3013,11 @@
       "sacrifice",
       "arc_9_of_10"
     ],
-    "trust_tier": "T0"
+    "trust_tier": "T0",
+    "faction": "druides"
   },
   {
     "id": "fr_s11b_treasures_010",
-    "faction_primaire": "anciens",
     "biome": "iles_mystiques",
     "champ_lexical": "logique",
     "text": "Les quatre tresors reunis sur l'ile sacree creent un champ de lumiere. Morgane explique : 'Ensemble, ils forment un tout — la Pierre ancre, la Lance dirige, l'Epee tranche et le Chaudron nourrit. C'est la recette d'un monde en equilibre. Mais personne ne peut porter les quatre. Tu dois choisir celui qui definira ton chemin.'",
@@ -3076,6 +3075,7 @@
       "choix",
       "arc_10_of_10"
     ],
-    "trust_tier": "T0"
+    "trust_tier": "T0",
+    "faction": "anciens"
   }
 ]

@@ -12,48 +12,48 @@
     ],
     "options": [
       {
-        "text": "Marcher parmi les menhirs en ecoutant leurs voix",
         "verb": "ecouter",
         "effects": [
           {
             "type": "ADD_REPUTATION",
             "faction": "anciens",
-            "value": 8
+            "amount": 8
           },
           {
             "type": "ADD_ANAM",
-            "value": 1
+            "amount": 1
           }
-        ]
+        ],
+        "label": "Marcher parmi les menhirs en ecoutant leurs voix"
       },
       {
-        "text": "Toucher chaque pierre pour sentir leur memoire",
-        "verb": "explorer",
+        "verb": "scruter",
         "effects": [
           {
             "type": "HEAL_LIFE",
-            "value": 10
+            "amount": 10
           },
           {
             "type": "ADD_BIOME_CURRENCY",
-            "value": 2
+            "amount": 2
           }
-        ]
+        ],
+        "label": "Toucher chaque pierre pour sentir leur memoire"
       },
       {
-        "text": "Defier l'esprit guerrier qui hante les alignements",
-        "verb": "defier",
+        "verb": "accepter",
         "effects": [
           {
             "type": "DAMAGE_LIFE",
-            "value": -10
+            "amount": -10
           },
           {
             "type": "ADD_REPUTATION",
             "faction": "anciens",
-            "value": 15
+            "amount": 15
           }
-        ]
+        ],
+        "label": "Defier l'esprit guerrier qui hante les alignements"
       }
     ]
   },
@@ -70,49 +70,49 @@
     ],
     "options": [
       {
-        "text": "Dechiffrer les symboles a la lumiere lunaire",
         "verb": "mediter",
         "effects": [
           {
             "type": "ADD_REPUTATION",
             "faction": "druides",
-            "value": 10
+            "amount": 10
           },
           {
             "type": "ADD_ANAM",
-            "value": 2
+            "amount": 2
           }
-        ]
+        ],
+        "label": "Dechiffrer les symboles a la lumiere lunaire"
       },
       {
-        "text": "Chanter un hymne ancien pour amplifier la lumiere",
-        "verb": "chanter",
+        "verb": "apaiser",
         "effects": [
           {
             "type": "HEAL_LIFE",
-            "value": 8
+            "amount": 8
           },
           {
             "type": "ADD_REPUTATION",
             "faction": "druides",
-            "value": 5
+            "amount": 5
           }
-        ]
+        ],
+        "label": "Chanter un hymne ancien pour amplifier la lumiere"
       },
       {
-        "text": "Briser la pierre pour liberer l'energie prisonniere",
-        "verb": "detruire",
+        "verb": "accepter",
         "effects": [
           {
             "type": "ADD_BIOME_CURRENCY",
-            "value": 5
+            "amount": 5
           },
           {
             "type": "ADD_REPUTATION",
             "faction": "druides",
-            "value": -12
+            "amount": -12
           }
-        ]
+        ],
+        "label": "Briser la pierre pour liberer l'energie prisonniere"
       }
     ]
   },
@@ -129,49 +129,49 @@
     ],
     "options": [
       {
-        "text": "Rejoindre la ronde des Korrigans",
-        "verb": "danser",
+        "verb": "accepter",
         "effects": [
           {
             "type": "ADD_REPUTATION",
             "faction": "korrigans",
-            "value": 12
+            "amount": 12
           },
           {
             "type": "HEAL_LIFE",
-            "value": 5
+            "amount": 5
           }
-        ]
+        ],
+        "label": "Rejoindre la ronde des Korrigans"
       },
       {
-        "text": "Offrir un present au cercle de danse",
-        "verb": "offrir",
+        "verb": "accepter",
         "effects": [
           {
             "type": "ADD_REPUTATION",
             "faction": "korrigans",
-            "value": 8
+            "amount": 8
           },
           {
             "type": "ADD_KARMA",
-            "value": 3
+            "amount": 3
           }
-        ]
+        ],
+        "label": "Offrir un present au cercle de danse"
       },
       {
-        "text": "Voler un morceau du lichen dore",
-        "verb": "voler",
+        "verb": "accepter",
         "effects": [
           {
             "type": "ADD_BIOME_CURRENCY",
-            "value": 4
+            "amount": 4
           },
           {
             "type": "ADD_REPUTATION",
             "faction": "korrigans",
-            "value": -15
+            "amount": -15
           }
-        ]
+        ],
+        "label": "Voler un morceau du lichen dore"
       }
     ]
   },
@@ -188,48 +188,48 @@
     ],
     "options": [
       {
-        "text": "Descendre dans le tumulus avec prudence",
-        "verb": "explorer",
+        "verb": "scruter",
         "effects": [
           {
             "type": "ADD_REPUTATION",
             "faction": "ankou",
-            "value": 10
+            "amount": 10
           },
           {
             "type": "DAMAGE_LIFE",
-            "value": -5
+            "amount": -5
           }
-        ]
+        ],
+        "label": "Descendre dans le tumulus avec prudence"
       },
       {
-        "text": "Prier pour les ancetres enfouis ici",
-        "verb": "prier",
+        "verb": "mediter",
         "effects": [
           {
             "type": "HEAL_LIFE",
-            "value": 12
+            "amount": 12
           },
           {
             "type": "ADD_REPUTATION",
             "faction": "ankou",
-            "value": 6
+            "amount": 6
           }
-        ]
+        ],
+        "label": "Prier pour les ancetres enfouis ici"
       },
       {
-        "text": "Sceller l'entree avec des pierres",
-        "verb": "proteger",
+        "verb": "accepter",
         "effects": [
           {
             "type": "ADD_KARMA",
-            "value": -3
+            "amount": -3
           },
           {
             "type": "ADD_BIOME_CURRENCY",
-            "value": 2
+            "amount": 2
           }
-        ]
+        ],
+        "label": "Sceller l'entree avec des pierres"
       }
     ]
   },
@@ -246,49 +246,49 @@
     ],
     "options": [
       {
-        "text": "Recolter les graines lumineuses avec soin",
-        "verb": "recolter",
+        "verb": "accepter",
         "effects": [
           {
             "type": "ADD_BIOME_CURRENCY",
-            "value": 4
+            "amount": 4
           },
           {
             "type": "ADD_REPUTATION",
             "faction": "niamh",
-            "value": 8
+            "amount": 8
           }
-        ]
+        ],
+        "label": "Recolter les graines lumineuses avec soin"
       },
       {
-        "text": "Planter les graines pour etendre la floraison",
-        "verb": "planter",
+        "verb": "accepter",
         "effects": [
           {
             "type": "ADD_REPUTATION",
             "faction": "niamh",
-            "value": 12
+            "amount": 12
           },
           {
             "type": "HEAL_LIFE",
-            "value": 8
+            "amount": 8
           }
-        ]
+        ],
+        "label": "Planter les graines pour etendre la floraison"
       },
       {
-        "text": "Absorber leur lumiere pour vous renforcer",
-        "verb": "absorber",
+        "verb": "accepter",
         "effects": [
           {
             "type": "HEAL_LIFE",
-            "value": 15
+            "amount": 15
           },
           {
             "type": "ADD_REPUTATION",
             "faction": "niamh",
-            "value": -8
+            "amount": -8
           }
-        ]
+        ],
+        "label": "Absorber leur lumiere pour vous renforcer"
       }
     ]
   },
@@ -305,52 +305,52 @@
     ],
     "options": [
       {
-        "text": "Ajouter votre propre offrande au cairn",
-        "verb": "offrir",
+        "verb": "accepter",
         "effects": [
           {
             "type": "ADD_REPUTATION",
             "faction": "anciens",
-            "value": 10
+            "amount": 10
           },
           {
             "type": "ADD_KARMA",
-            "value": 3
+            "amount": 3
           }
-        ]
+        ],
+        "label": "Ajouter votre propre offrande au cairn"
       },
       {
-        "text": "Mediter au sommet pour comprendre les anciennes voies",
         "verb": "mediter",
         "effects": [
           {
             "type": "ADD_ANAM",
-            "value": 2
+            "amount": 2
           },
           {
             "type": "HEAL_LIFE",
-            "value": 8
+            "amount": 8
           }
-        ]
+        ],
+        "label": "Mediter au sommet pour comprendre les anciennes voies"
       },
       {
-        "text": "Prendre une pierre du cairn comme talisman",
-        "verb": "voler",
+        "verb": "accepter",
         "effects": [
           {
             "type": "ADD_BIOME_CURRENCY",
-            "value": 3
+            "amount": 3
           },
           {
             "type": "ADD_REPUTATION",
             "faction": "anciens",
-            "value": -10
+            "amount": -10
           },
           {
             "type": "DAMAGE_LIFE",
-            "value": -5
+            "amount": -5
           }
-        ]
+        ],
+        "label": "Prendre une pierre du cairn comme talisman"
       }
     ]
   },
@@ -367,53 +367,53 @@
     ],
     "options": [
       {
-        "text": "Jeter une pierre et ecouter la prophetie",
         "verb": "ecouter",
         "effects": [
           {
             "type": "ADD_ANAM",
-            "value": 3
+            "amount": 3
           },
           {
             "type": "ADD_REPUTATION",
             "faction": "korrigans",
-            "value": 8
+            "amount": 8
           }
-        ]
+        ],
+        "label": "Jeter une pierre et ecouter la prophetie"
       },
       {
-        "text": "Descendre dans le puits pour affronter le demon",
         "verb": "combattre",
         "effects": [
           {
             "type": "DAMAGE_LIFE",
-            "value": -15
+            "amount": -15
           },
           {
             "type": "ADD_REPUTATION",
             "faction": "korrigans",
-            "value": 18
+            "amount": 18
           },
           {
             "type": "ADD_BIOME_CURRENCY",
-            "value": 5
+            "amount": 5
           }
-        ]
+        ],
+        "label": "Descendre dans le puits pour affronter le demon"
       },
       {
-        "text": "Sceller le puits avec un enchantement protecteur",
-        "verb": "proteger",
+        "verb": "accepter",
         "effects": [
           {
             "type": "ADD_REPUTATION",
             "faction": "korrigans",
-            "value": 6
+            "amount": 6
           },
           {
             "type": "HEAL_LIFE",
-            "value": 10
+            "amount": 10
           }
-        ]
+        ],
+        "label": "Sceller le puits avec un enchantement protecteur"
       }
     ]
   },
@@ -430,48 +430,48 @@
     ],
     "options": [
       {
-        "text": "Suivre la route pavee jusqu'au sanctuaire",
-        "verb": "voyager",
+        "verb": "accepter",
         "effects": [
           {
             "type": "ADD_REPUTATION",
             "faction": "druides",
-            "value": 15
+            "amount": 15
           },
           {
             "type": "ADD_ANAM",
-            "value": 2
+            "amount": 2
           }
-        ]
+        ],
+        "label": "Suivre la route pavee jusqu'au sanctuaire"
       },
       {
-        "text": "Recopier les inscriptions pour les etudier plus tard",
         "verb": "observer",
         "effects": [
           {
             "type": "ADD_BIOME_CURRENCY",
-            "value": 4
+            "amount": 4
           },
           {
             "type": "ADD_KARMA",
-            "value": 2
+            "amount": 2
           }
-        ]
+        ],
+        "label": "Recopier les inscriptions pour les etudier plus tard"
       },
       {
-        "text": "Recouvrir la route pour la proteger des intrus",
-        "verb": "cacher",
+        "verb": "se cacher",
         "effects": [
           {
             "type": "ADD_REPUTATION",
             "faction": "druides",
-            "value": 8
+            "amount": 8
           },
           {
             "type": "HEAL_LIFE",
-            "value": 5
+            "amount": 5
           }
-        ]
+        ],
+        "label": "Recouvrir la route pour la proteger des intrus"
       }
     ]
   },
@@ -488,49 +488,49 @@
     ],
     "options": [
       {
-        "text": "Monter dans la vigie pour observer l'horizon",
         "verb": "observer",
         "effects": [
           {
             "type": "ADD_REPUTATION",
             "faction": "anciens",
-            "value": 8
+            "amount": 8
           },
           {
             "type": "ADD_BIOME_CURRENCY",
-            "value": 2
+            "amount": 2
           }
-        ]
+        ],
+        "label": "Monter dans la vigie pour observer l'horizon"
       },
       {
-        "text": "Restaurer la vigie en honneur des anciens guetteurs",
-        "verb": "construire",
+        "verb": "contourner",
         "effects": [
           {
             "type": "ADD_REPUTATION",
             "faction": "anciens",
-            "value": 12
+            "amount": 12
           },
           {
             "type": "HEAL_LIFE",
-            "value": 5
+            "amount": 5
           }
-        ]
+        ],
+        "label": "Restaurer la vigie en honneur des anciens guetteurs"
       },
       {
-        "text": "Demanteler la vigie pour recuperer les pierres",
-        "verb": "detruire",
+        "verb": "accepter",
         "effects": [
           {
             "type": "ADD_BIOME_CURRENCY",
-            "value": 4
+            "amount": 4
           },
           {
             "type": "ADD_REPUTATION",
             "faction": "anciens",
-            "value": -12
+            "amount": -12
           }
-        ]
+        ],
+        "label": "Demanteler la vigie pour recuperer les pierres"
       }
     ]
   },
@@ -547,48 +547,48 @@
     ],
     "options": [
       {
-        "text": "Nager vers le phoque pour communiquer avec lui",
-        "verb": "explorer",
+        "verb": "scruter",
         "effects": [
           {
             "type": "ADD_REPUTATION",
             "faction": "niamh",
-            "value": 10
+            "amount": 10
           },
           {
             "type": "DAMAGE_LIFE",
-            "value": -5
+            "amount": -5
           }
-        ]
+        ],
+        "label": "Nager vers le phoque pour communiquer avec lui"
       },
       {
-        "text": "Chanter une berceuse de marin pour l'attirer",
-        "verb": "chanter",
+        "verb": "apaiser",
         "effects": [
           {
             "type": "ADD_REPUTATION",
             "faction": "niamh",
-            "value": 8
+            "amount": 8
           },
           {
             "type": "HEAL_LIFE",
-            "value": 8
+            "amount": 8
           }
-        ]
+        ],
+        "label": "Chanter une berceuse de marin pour l'attirer"
       },
       {
-        "text": "Recolter les algues phosphorescentes",
-        "verb": "recolter",
+        "verb": "accepter",
         "effects": [
           {
             "type": "ADD_BIOME_CURRENCY",
-            "value": 3
+            "amount": 3
           },
           {
             "type": "ADD_KARMA",
-            "value": -2
+            "amount": -2
           }
-        ]
+        ],
+        "label": "Recolter les algues phosphorescentes"
       }
     ]
   },
@@ -605,52 +605,52 @@
     ],
     "options": [
       {
-        "text": "Entrer dans la grotte et ecouter les voix",
         "verb": "ecouter",
         "effects": [
           {
             "type": "ADD_REPUTATION",
             "faction": "niamh",
-            "value": 12
+            "amount": 12
           },
           {
             "type": "ADD_ANAM",
-            "value": 2
+            "amount": 2
           }
-        ]
+        ],
+        "label": "Entrer dans la grotte et ecouter les voix"
       },
       {
-        "text": "Resister a l'appel et rester sur le rivage",
-        "verb": "resister",
+        "verb": "resister mentalement",
         "effects": [
           {
             "type": "HEAL_LIFE",
-            "value": 10
+            "amount": 10
           },
           {
             "type": "ADD_KARMA",
-            "value": 2
+            "amount": 2
           }
-        ]
+        ],
+        "label": "Resister a l'appel et rester sur le rivage"
       },
       {
-        "text": "Invoquer une protection avant d'entrer",
-        "verb": "invoquer",
+        "verb": "se concentrer",
         "effects": [
           {
             "type": "ADD_REPUTATION",
             "faction": "niamh",
-            "value": 6
+            "amount": 6
           },
           {
             "type": "HEAL_LIFE",
-            "value": 5
+            "amount": 5
           },
           {
             "type": "ADD_BIOME_CURRENCY",
-            "value": 2
+            "amount": 2
           }
-        ]
+        ],
+        "label": "Invoquer une protection avant d'entrer"
       }
     ]
   },
@@ -667,53 +667,53 @@
     ],
     "options": [
       {
-        "text": "Aider le fantome a reparer ses filets",
-        "verb": "construire",
+        "verb": "contourner",
         "effects": [
           {
             "type": "ADD_REPUTATION",
             "faction": "ankou",
-            "value": 10
+            "amount": 10
           },
           {
             "type": "HEAL_LIFE",
-            "value": 8
+            "amount": 8
           }
-        ]
+        ],
+        "label": "Aider le fantome a reparer ses filets"
       },
       {
-        "text": "Negocier un passage sur son bateau spectral",
         "verb": "negocier",
         "effects": [
           {
             "type": "ADD_REPUTATION",
             "faction": "ankou",
-            "value": 6
+            "amount": 6
           },
           {
             "type": "ADD_ANAM",
-            "value": 2
+            "amount": 2
           },
           {
             "type": "DAMAGE_LIFE",
-            "value": -8
+            "amount": -8
           }
-        ]
+        ],
+        "label": "Negocier un passage sur son bateau spectral"
       },
       {
-        "text": "Tenter de voler une piece de son tresor",
-        "verb": "voler",
+        "verb": "accepter",
         "effects": [
           {
             "type": "ADD_BIOME_CURRENCY",
-            "value": 5
+            "amount": 5
           },
           {
             "type": "ADD_REPUTATION",
             "faction": "ankou",
-            "value": -15
+            "amount": -15
           }
-        ]
+        ],
+        "label": "Tenter de voler une piece de son tresor"
       }
     ]
   },
@@ -730,53 +730,53 @@
     ],
     "options": [
       {
-        "text": "Celebrer un rituel solsticial dans le cercle",
-        "verb": "invoquer",
+        "verb": "se concentrer",
         "effects": [
           {
             "type": "ADD_REPUTATION",
             "faction": "druides",
-            "value": 10
+            "amount": 10
           },
           {
             "type": "ADD_ANAM",
-            "value": 1
+            "amount": 1
           }
-        ]
+        ],
+        "label": "Celebrer un rituel solsticial dans le cercle"
       },
       {
-        "text": "Mediter au centre du cercle avant la maree",
         "verb": "mediter",
         "effects": [
           {
             "type": "HEAL_LIFE",
-            "value": 12
+            "amount": 12
           },
           {
             "type": "ADD_REPUTATION",
             "faction": "druides",
-            "value": 5
+            "amount": 5
           }
-        ]
+        ],
+        "label": "Mediter au centre du cercle avant la maree"
       },
       {
-        "text": "Emporter une pierre du cercle comme relique",
-        "verb": "voler",
+        "verb": "accepter",
         "effects": [
           {
             "type": "ADD_BIOME_CURRENCY",
-            "value": 3
+            "amount": 3
           },
           {
             "type": "ADD_REPUTATION",
             "faction": "druides",
-            "value": -10
+            "amount": -10
           },
           {
             "type": "DAMAGE_LIFE",
-            "value": -5
+            "amount": -5
           }
-        ]
+        ],
+        "label": "Emporter une pierre du cercle comme relique"
       }
     ]
   },
@@ -793,43 +793,43 @@
     ],
     "options": [
       {
-        "text": "Capturer l'energie doree avec vos mains",
-        "verb": "absorber",
+        "verb": "accepter",
         "effects": [
           {
             "type": "ADD_BIOME_CURRENCY",
-            "value": 4
+            "amount": 4
           },
           {
             "type": "DAMAGE_LIFE",
-            "value": -8
+            "amount": -8
           }
-        ]
+        ],
+        "label": "Capturer l'energie doree avec vos mains"
       },
       {
-        "text": "Danser sous la tempete pour honorer les esprits",
-        "verb": "danser",
+        "verb": "accepter",
         "effects": [
           {
             "type": "ADD_REPUTATION",
             "faction": "korrigans",
-            "value": 12
+            "amount": 12
           },
           {
             "type": "HEAL_LIFE",
-            "value": 5
+            "amount": 5
           }
-        ]
+        ],
+        "label": "Danser sous la tempete pour honorer les esprits"
       },
       {
-        "text": "Fuir vers un abri et attendre la fin",
         "verb": "fuir",
         "effects": [
           {
             "type": "HEAL_LIFE",
-            "value": 15
+            "amount": 15
           }
-        ]
+        ],
+        "label": "Fuir vers un abri et attendre la fin"
       }
     ]
   },
@@ -846,53 +846,53 @@
     ],
     "options": [
       {
-        "text": "Rallumer le phare pour guider les vivants",
-        "verb": "construire",
+        "verb": "contourner",
         "effects": [
           {
             "type": "ADD_REPUTATION",
             "faction": "ankou",
-            "value": -5
+            "amount": -5
           },
           {
             "type": "HEAL_LIFE",
-            "value": 12
+            "amount": 12
           },
           {
             "type": "ADD_KARMA",
-            "value": 3
+            "amount": 3
           }
-        ]
+        ],
+        "label": "Rallumer le phare pour guider les vivants"
       },
       {
-        "text": "Monter observer les navires fantomes",
         "verb": "observer",
         "effects": [
           {
             "type": "ADD_REPUTATION",
             "faction": "ankou",
-            "value": 10
+            "amount": 10
           },
           {
             "type": "ADD_ANAM",
-            "value": 2
+            "amount": 2
           }
-        ]
+        ],
+        "label": "Monter observer les navires fantomes"
       },
       {
-        "text": "Repousser les esprits qui hantent le phare",
-        "verb": "repousser",
+        "verb": "pousser",
         "effects": [
           {
             "type": "ADD_REPUTATION",
             "faction": "ankou",
-            "value": -8
+            "amount": -8
           },
           {
             "type": "ADD_BIOME_CURRENCY",
-            "value": 3
+            "amount": 3
           }
-        ]
+        ],
+        "label": "Repousser les esprits qui hantent le phare"
       }
     ]
   },
@@ -909,53 +909,53 @@
     ],
     "options": [
       {
-        "text": "Plonger pour examiner les artefacts avec respect",
-        "verb": "explorer",
+        "verb": "scruter",
         "effects": [
           {
             "type": "ADD_REPUTATION",
             "faction": "anciens",
-            "value": 15
+            "amount": 15
           },
           {
             "type": "DAMAGE_LIFE",
-            "value": -8
+            "amount": -8
           }
-        ]
+        ],
+        "label": "Plonger pour examiner les artefacts avec respect"
       },
       {
-        "text": "Proteger le site des pilleurs",
-        "verb": "proteger",
+        "verb": "accepter",
         "effects": [
           {
             "type": "ADD_REPUTATION",
             "faction": "anciens",
-            "value": 10
+            "amount": 10
           },
           {
             "type": "ADD_KARMA",
-            "value": 5
+            "amount": 5
           }
-        ]
+        ],
+        "label": "Proteger le site des pilleurs"
       },
       {
-        "text": "Recuperer un artefact pour votre quete",
-        "verb": "recolter",
+        "verb": "accepter",
         "effects": [
           {
             "type": "ADD_BIOME_CURRENCY",
-            "value": 5
+            "amount": 5
           },
           {
             "type": "ADD_REPUTATION",
             "faction": "anciens",
-            "value": -5
+            "amount": -5
           },
           {
             "type": "ADD_ANAM",
-            "value": 1
+            "amount": 1
           }
-        ]
+        ],
+        "label": "Recuperer un artefact pour votre quete"
       }
     ]
   },
@@ -972,48 +972,48 @@
     ],
     "options": [
       {
-        "text": "Suivre les lumieres a travers le marais",
-        "verb": "explorer",
+        "verb": "scruter",
         "effects": [
           {
             "type": "ADD_REPUTATION",
             "faction": "ankou",
-            "value": 8
+            "amount": 8
           },
           {
             "type": "DAMAGE_LIFE",
-            "value": -8
+            "amount": -8
           }
-        ]
+        ],
+        "label": "Suivre les lumieres a travers le marais"
       },
       {
-        "text": "Ecouter les avertissements des roseaux",
         "verb": "ecouter",
         "effects": [
           {
             "type": "HEAL_LIFE",
-            "value": 10
+            "amount": 10
           },
           {
             "type": "ADD_KARMA",
-            "value": 2
+            "amount": 2
           }
-        ]
+        ],
+        "label": "Ecouter les avertissements des roseaux"
       },
       {
-        "text": "Purifier les emanations toxiques",
-        "verb": "purifier",
+        "verb": "accepter",
         "effects": [
           {
             "type": "ADD_REPUTATION",
             "faction": "ankou",
-            "value": -5
+            "amount": -5
           },
           {
             "type": "ADD_BIOME_CURRENCY",
-            "value": 3
+            "amount": 3
           }
-        ]
+        ],
+        "label": "Purifier les emanations toxiques"
       }
     ]
   },
@@ -1030,48 +1030,48 @@
     ],
     "options": [
       {
-        "text": "Contempler les etoiles dans le bassin",
         "verb": "mediter",
         "effects": [
           {
             "type": "ADD_ANAM",
-            "value": 2
+            "amount": 2
           },
           {
             "type": "HEAL_LIFE",
-            "value": 8
+            "amount": 8
           }
-        ]
+        ],
+        "label": "Contempler les etoiles dans le bassin"
       },
       {
-        "text": "Boire l'eau claire pour vous purifier",
-        "verb": "guerir",
+        "verb": "apaiser",
         "effects": [
           {
             "type": "HEAL_LIFE",
-            "value": 15
+            "amount": 15
           },
           {
             "type": "ADD_REPUTATION",
             "faction": "druides",
-            "value": 5
+            "amount": 5
           }
-        ]
+        ],
+        "label": "Boire l'eau claire pour vous purifier"
       },
       {
-        "text": "Planter une graine dans la tourbe fertile",
-        "verb": "planter",
+        "verb": "accepter",
         "effects": [
           {
             "type": "ADD_REPUTATION",
             "faction": "druides",
-            "value": 10
+            "amount": 10
           },
           {
             "type": "ADD_BIOME_CURRENCY",
-            "value": 2
+            "amount": 2
           }
-        ]
+        ],
+        "label": "Planter une graine dans la tourbe fertile"
       }
     ]
   },
@@ -1088,47 +1088,47 @@
     ],
     "options": [
       {
-        "text": "Attraper les bulles pour absorber le savoir",
-        "verb": "absorber",
+        "verb": "accepter",
         "effects": [
           {
             "type": "ADD_REPUTATION",
             "faction": "druides",
-            "value": 10
+            "amount": 10
           },
           {
             "type": "ADD_ANAM",
-            "value": 2
+            "amount": 2
           }
-        ]
+        ],
+        "label": "Attraper les bulles pour absorber le savoir"
       },
       {
-        "text": "Observer les visions sans les toucher",
         "verb": "observer",
         "effects": [
           {
             "type": "HEAL_LIFE",
-            "value": 8
+            "amount": 8
           },
           {
             "type": "ADD_BIOME_CURRENCY",
-            "value": 2
+            "amount": 2
           }
-        ]
+        ],
+        "label": "Observer les visions sans les toucher"
       },
       {
-        "text": "Repousser les bulles pour proteger votre esprit",
-        "verb": "repousser",
+        "verb": "pousser",
         "effects": [
           {
             "type": "ADD_KARMA",
-            "value": 3
+            "amount": 3
           },
           {
             "type": "HEAL_LIFE",
-            "value": 5
+            "amount": 5
           }
-        ]
+        ],
+        "label": "Repousser les bulles pour proteger votre esprit"
       }
     ]
   },
@@ -1145,49 +1145,49 @@
     ],
     "options": [
       {
-        "text": "Tendre la main aux esprits pour les liberer",
-        "verb": "liberer",
+        "verb": "accepter",
         "effects": [
           {
             "type": "ADD_REPUTATION",
             "faction": "ankou",
-            "value": 12
+            "amount": 12
           },
           {
             "type": "DAMAGE_LIFE",
-            "value": -10
+            "amount": -10
           }
-        ]
+        ],
+        "label": "Tendre la main aux esprits pour les liberer"
       },
       {
-        "text": "Prier pour leur repos eternel",
-        "verb": "prier",
+        "verb": "mediter",
         "effects": [
           {
             "type": "ADD_REPUTATION",
             "faction": "ankou",
-            "value": 8
+            "amount": 8
           },
           {
             "type": "HEAL_LIFE",
-            "value": 5
+            "amount": 5
           }
-        ]
+        ],
+        "label": "Prier pour leur repos eternel"
       },
       {
-        "text": "Traverser rapidement sans regarder en bas",
         "verb": "fuir",
         "effects": [
           {
             "type": "HEAL_LIFE",
-            "value": 12
+            "amount": 12
           },
           {
             "type": "ADD_REPUTATION",
             "faction": "ankou",
-            "value": -5
+            "amount": -5
           }
-        ]
+        ],
+        "label": "Traverser rapidement sans regarder en bas"
       }
     ]
   },
@@ -1204,53 +1204,53 @@
     ],
     "options": [
       {
-        "text": "Negocier avec les marchands Korrigans",
         "verb": "negocier",
         "effects": [
           {
             "type": "ADD_REPUTATION",
             "faction": "korrigans",
-            "value": 10
+            "amount": 10
           },
           {
             "type": "ADD_BIOME_CURRENCY",
-            "value": 3
+            "amount": 3
           }
-        ]
+        ],
+        "label": "Negocier avec les marchands Korrigans"
       },
       {
-        "text": "Offrir un souvenir precieux en echange de guerison",
-        "verb": "sacrifier",
+        "verb": "accepter",
         "effects": [
           {
             "type": "HEAL_LIFE",
-            "value": 18
+            "amount": 18
           },
           {
             "type": "ADD_REPUTATION",
             "faction": "korrigans",
-            "value": 6
+            "amount": 6
           }
-        ]
+        ],
+        "label": "Offrir un souvenir precieux en echange de guerison"
       },
       {
-        "text": "Tenter de voler un champignon magique",
-        "verb": "voler",
+        "verb": "accepter",
         "effects": [
           {
             "type": "ADD_BIOME_CURRENCY",
-            "value": 5
+            "amount": 5
           },
           {
             "type": "ADD_REPUTATION",
             "faction": "korrigans",
-            "value": -15
+            "amount": -15
           },
           {
             "type": "DAMAGE_LIFE",
-            "value": -8
+            "amount": -8
           }
-        ]
+        ],
+        "label": "Tenter de voler un champignon magique"
       }
     ]
   },
@@ -1267,48 +1267,48 @@
     ],
     "options": [
       {
-        "text": "Plonger dans les eaux en suivant la vision",
         "verb": "accepter",
         "effects": [
           {
             "type": "ADD_REPUTATION",
             "faction": "niamh",
-            "value": 15
+            "amount": 15
           },
           {
             "type": "DAMAGE_LIFE",
-            "value": -12
+            "amount": -12
           }
-        ]
+        ],
+        "label": "Plonger dans les eaux en suivant la vision"
       },
       {
-        "text": "Mediter pour verifier si la vision est reelle",
         "verb": "mediter",
         "effects": [
           {
             "type": "ADD_ANAM",
-            "value": 3
+            "amount": 3
           },
           {
             "type": "HEAL_LIFE",
-            "value": 5
+            "amount": 5
           }
-        ]
+        ],
+        "label": "Mediter pour verifier si la vision est reelle"
       },
       {
-        "text": "Refuser l'invitation et rebrousser chemin",
         "verb": "refuser",
         "effects": [
           {
             "type": "HEAL_LIFE",
-            "value": 10
+            "amount": 10
           },
           {
             "type": "ADD_REPUTATION",
             "faction": "niamh",
-            "value": -8
+            "amount": -8
           }
-        ]
+        ],
+        "label": "Refuser l'invitation et rebrousser chemin"
       }
     ]
   },
@@ -1325,53 +1325,53 @@
     ],
     "options": [
       {
-        "text": "Dechiffrer les runes sur les bois du cerf",
-        "verb": "reveler",
+        "verb": "accepter",
         "effects": [
           {
             "type": "ADD_REPUTATION",
             "faction": "anciens",
-            "value": 15
+            "amount": 15
           },
           {
             "type": "ADD_ANAM",
-            "value": 3
+            "amount": 3
           }
-        ]
+        ],
+        "label": "Dechiffrer les runes sur les bois du cerf"
       },
       {
-        "text": "Honorer le roi du marais avec un rituel",
-        "verb": "honorer",
+        "verb": "accepter",
         "effects": [
           {
             "type": "ADD_REPUTATION",
             "faction": "anciens",
-            "value": 10
+            "amount": 10
           },
           {
             "type": "HEAL_LIFE",
-            "value": 10
+            "amount": 10
           }
-        ]
+        ],
+        "label": "Honorer le roi du marais avec un rituel"
       },
       {
-        "text": "Extraire le crane pour l'etudier",
-        "verb": "recolter",
+        "verb": "accepter",
         "effects": [
           {
             "type": "ADD_BIOME_CURRENCY",
-            "value": 5
+            "amount": 5
           },
           {
             "type": "ADD_REPUTATION",
             "faction": "anciens",
-            "value": -10
+            "amount": -10
           },
           {
             "type": "DAMAGE_LIFE",
-            "value": -5
+            "amount": -5
           }
-        ]
+        ],
+        "label": "Extraire le crane pour l'etudier"
       }
     ]
   },
@@ -1388,53 +1388,53 @@
     ],
     "options": [
       {
-        "text": "Affronter le serpent pour liberer les ames",
         "verb": "combattre",
         "effects": [
           {
             "type": "DAMAGE_LIFE",
-            "value": -15
+            "amount": -15
           },
           {
             "type": "ADD_REPUTATION",
             "faction": "ankou",
-            "value": 18
+            "amount": 18
           },
           {
             "type": "ADD_KARMA",
-            "value": 5
+            "amount": 5
           }
-        ]
+        ],
+        "label": "Affronter le serpent pour liberer les ames"
       },
       {
-        "text": "Chanter un chant funeraire pour apaiser les ames",
-        "verb": "chanter",
+        "verb": "apaiser",
         "effects": [
           {
             "type": "ADD_REPUTATION",
             "faction": "ankou",
-            "value": 10
+            "amount": 10
           },
           {
             "type": "HEAL_LIFE",
-            "value": 5
+            "amount": 5
           }
-        ]
+        ],
+        "label": "Chanter un chant funeraire pour apaiser les ames"
       },
       {
-        "text": "Fuir avant que le serpent ne vous avale",
         "verb": "fuir",
         "effects": [
           {
             "type": "HEAL_LIFE",
-            "value": 12
+            "amount": 12
           },
           {
             "type": "ADD_REPUTATION",
             "faction": "ankou",
-            "value": -5
+            "amount": -5
           }
-        ]
+        ],
+        "label": "Fuir avant que le serpent ne vous avale"
       }
     ]
   },
@@ -1451,48 +1451,48 @@
     ],
     "options": [
       {
-        "text": "Gravir le sentier en honorant chaque cairn",
-        "verb": "honorer",
+        "verb": "accepter",
         "effects": [
           {
             "type": "ADD_REPUTATION",
             "faction": "anciens",
-            "value": 10
+            "amount": 10
           },
           {
             "type": "HEAL_LIFE",
-            "value": 5
+            "amount": 5
           }
-        ]
+        ],
+        "label": "Gravir le sentier en honorant chaque cairn"
       },
       {
-        "text": "Defier les vents en criant votre defi",
-        "verb": "defier",
+        "verb": "accepter",
         "effects": [
           {
             "type": "DAMAGE_LIFE",
-            "value": -8
+            "amount": -8
           },
           {
             "type": "ADD_REPUTATION",
             "faction": "anciens",
-            "value": 15
+            "amount": 15
           }
-        ]
+        ],
+        "label": "Defier les vents en criant votre defi"
       },
       {
-        "text": "Construire un abri de pierres contre la tempete",
-        "verb": "construire",
+        "verb": "contourner",
         "effects": [
           {
             "type": "HEAL_LIFE",
-            "value": 12
+            "amount": 12
           },
           {
             "type": "ADD_BIOME_CURRENCY",
-            "value": 2
+            "amount": 2
           }
-        ]
+        ],
+        "label": "Construire un abri de pierres contre la tempete"
       }
     ]
   },
@@ -1509,44 +1509,44 @@
     ],
     "options": [
       {
-        "text": "Se baigner dans la source pour se guerir",
-        "verb": "guerir",
+        "verb": "apaiser",
         "effects": [
           {
             "type": "HEAL_LIFE",
-            "value": 18
+            "amount": 18
           }
-        ]
+        ],
+        "label": "Se baigner dans la source pour se guerir"
       },
       {
-        "text": "Etudier les formes animales dans la vapeur",
         "verb": "observer",
         "effects": [
           {
             "type": "ADD_REPUTATION",
             "faction": "druides",
-            "value": 8
+            "amount": 8
           },
           {
             "type": "ADD_ANAM",
-            "value": 2
+            "amount": 2
           }
-        ]
+        ],
+        "label": "Etudier les formes animales dans la vapeur"
       },
       {
-        "text": "Canaliser l'energie thermique pour un rituel",
-        "verb": "invoquer",
+        "verb": "se concentrer",
         "effects": [
           {
             "type": "ADD_REPUTATION",
             "faction": "druides",
-            "value": 12
+            "amount": 12
           },
           {
             "type": "DAMAGE_LIFE",
-            "value": -5
+            "amount": -5
           }
-        ]
+        ],
+        "label": "Canaliser l'energie thermique pour un rituel"
       }
     ]
   },
@@ -1563,53 +1563,53 @@
     ],
     "options": [
       {
-        "text": "Deposer votre propre offrande sur l'autel",
-        "verb": "sacrifier",
+        "verb": "accepter",
         "effects": [
           {
             "type": "ADD_REPUTATION",
             "faction": "ankou",
-            "value": 12
+            "amount": 12
           },
           {
             "type": "DAMAGE_LIFE",
-            "value": -5
+            "amount": -5
           }
-        ]
+        ],
+        "label": "Deposer votre propre offrande sur l'autel"
       },
       {
-        "text": "Prier devant l'autel pour la protection de l'Ankou",
-        "verb": "prier",
+        "verb": "mediter",
         "effects": [
           {
             "type": "ADD_REPUTATION",
             "faction": "ankou",
-            "value": 8
+            "amount": 8
           },
           {
             "type": "HEAL_LIFE",
-            "value": 8
+            "amount": 8
           }
-        ]
+        ],
+        "label": "Prier devant l'autel pour la protection de l'Ankou"
       },
       {
-        "text": "Renverser l'autel pour briser la malediction",
-        "verb": "detruire",
+        "verb": "accepter",
         "effects": [
           {
             "type": "ADD_REPUTATION",
             "faction": "ankou",
-            "value": -15
+            "amount": -15
           },
           {
             "type": "ADD_BIOME_CURRENCY",
-            "value": 4
+            "amount": 4
           },
           {
             "type": "DAMAGE_LIFE",
-            "value": -10
+            "amount": -10
           }
-        ]
+        ],
+        "label": "Renverser l'autel pour briser la malediction"
       }
     ]
   },
@@ -1626,48 +1626,48 @@
     ],
     "options": [
       {
-        "text": "Approcher le cheval blanc avec douceur",
         "verb": "apaiser",
         "effects": [
           {
             "type": "ADD_REPUTATION",
             "faction": "niamh",
-            "value": 10
+            "amount": 10
           },
           {
             "type": "HEAL_LIFE",
-            "value": 8
+            "amount": 8
           }
-        ]
+        ],
+        "label": "Approcher le cheval blanc avec douceur"
       },
       {
-        "text": "Monter sur son dos pour voyager au-dela du monde",
-        "verb": "voyager",
+        "verb": "accepter",
         "effects": [
           {
             "type": "ADD_REPUTATION",
             "faction": "niamh",
-            "value": 15
+            "amount": 15
           },
           {
             "type": "DAMAGE_LIFE",
-            "value": -8
+            "amount": -8
           }
-        ]
+        ],
+        "label": "Monter sur son dos pour voyager au-dela du monde"
       },
       {
-        "text": "Observer le troupeau sans intervenir",
         "verb": "observer",
         "effects": [
           {
             "type": "ADD_BIOME_CURRENCY",
-            "value": 3
+            "amount": 3
           },
           {
             "type": "ADD_ANAM",
-            "value": 1
+            "amount": 1
           }
-        ]
+        ],
+        "label": "Observer le troupeau sans intervenir"
       }
     ]
   },
@@ -1684,49 +1684,49 @@
     ],
     "options": [
       {
-        "text": "Explorer la mine en suivant le bourdonnement",
-        "verb": "explorer",
+        "verb": "scruter",
         "effects": [
           {
             "type": "ADD_REPUTATION",
             "faction": "korrigans",
-            "value": 6
+            "amount": 6
           },
           {
             "type": "ADD_BIOME_CURRENCY",
-            "value": 3
+            "amount": 3
           }
-        ]
+        ],
+        "label": "Explorer la mine en suivant le bourdonnement"
       },
       {
-        "text": "Forger un outil avec les cristaux trouves",
-        "verb": "forger",
+        "verb": "forcer",
         "effects": [
           {
             "type": "ADD_BIOME_CURRENCY",
-            "value": 4
+            "amount": 4
           },
           {
             "type": "ADD_REPUTATION",
             "faction": "korrigans",
-            "value": 5
+            "amount": 5
           }
-        ]
+        ],
+        "label": "Forger un outil avec les cristaux trouves"
       },
       {
-        "text": "Sceller l'entree pour proteger le tresor",
-        "verb": "proteger",
+        "verb": "accepter",
         "effects": [
           {
             "type": "ADD_REPUTATION",
             "faction": "korrigans",
-            "value": 10
+            "amount": 10
           },
           {
             "type": "HEAL_LIFE",
-            "value": 5
+            "amount": 5
           }
-        ]
+        ],
+        "label": "Sceller l'entree pour proteger le tresor"
       }
     ]
   },
@@ -1743,53 +1743,53 @@
     ],
     "options": [
       {
-        "text": "Lire les parchemins avant qu'ils ne se desintegrent",
-        "verb": "reveler",
+        "verb": "accepter",
         "effects": [
           {
             "type": "ADD_REPUTATION",
             "faction": "druides",
-            "value": 15
+            "amount": 15
           },
           {
             "type": "ADD_ANAM",
-            "value": 2
+            "amount": 2
           }
-        ]
+        ],
+        "label": "Lire les parchemins avant qu'ils ne se desintegrent"
       },
       {
-        "text": "Proteger les parchemins de la pluie",
-        "verb": "proteger",
+        "verb": "accepter",
         "effects": [
           {
             "type": "ADD_REPUTATION",
             "faction": "druides",
-            "value": 8
+            "amount": 8
           },
           {
             "type": "ADD_KARMA",
-            "value": 3
+            "amount": 3
           }
-        ]
+        ],
+        "label": "Proteger les parchemins de la pluie"
       },
       {
-        "text": "Bruler les parchemins pour liberer leur savoir",
-        "verb": "sacrifier",
+        "verb": "accepter",
         "effects": [
           {
             "type": "HEAL_LIFE",
-            "value": 15
+            "amount": 15
           },
           {
             "type": "ADD_REPUTATION",
             "faction": "druides",
-            "value": -5
+            "amount": -5
           },
           {
             "type": "ADD_BIOME_CURRENCY",
-            "value": 3
+            "amount": 3
           }
-        ]
+        ],
+        "label": "Bruler les parchemins pour liberer leur savoir"
       }
     ]
   },
@@ -1806,53 +1806,53 @@
     ],
     "options": [
       {
-        "text": "Accepter l'enigme et tenter d'y repondre",
         "verb": "accepter",
         "effects": [
           {
             "type": "ADD_REPUTATION",
             "faction": "korrigans",
-            "value": 15
+            "amount": 15
           },
           {
             "type": "ADD_ANAM",
-            "value": 3
+            "amount": 3
           }
-        ]
+        ],
+        "label": "Accepter l'enigme et tenter d'y repondre"
       },
       {
-        "text": "Negocier un passage sans enigme",
         "verb": "negocier",
         "effects": [
           {
             "type": "ADD_REPUTATION",
             "faction": "korrigans",
-            "value": 5
+            "amount": 5
           },
           {
             "type": "ADD_BIOME_CURRENCY",
-            "value": 3
+            "amount": 3
           }
-        ]
+        ],
+        "label": "Negocier un passage sans enigme"
       },
       {
-        "text": "Repousser la silhouette et forcer le passage",
         "verb": "combattre",
         "effects": [
           {
             "type": "DAMAGE_LIFE",
-            "value": -12
+            "amount": -12
           },
           {
             "type": "ADD_REPUTATION",
             "faction": "korrigans",
-            "value": -10
+            "amount": -10
           },
           {
             "type": "ADD_BIOME_CURRENCY",
-            "value": 5
+            "amount": 5
           }
-        ]
+        ],
+        "label": "Repousser la silhouette et forcer le passage"
       }
     ]
   },
@@ -1869,53 +1869,53 @@
     ],
     "options": [
       {
-        "text": "Suivre un chemin lumineux jusqu'a la pierre centrale",
-        "verb": "explorer",
+        "verb": "scruter",
         "effects": [
           {
             "type": "ADD_REPUTATION",
             "faction": "anciens",
-            "value": 10
+            "amount": 10
           },
           {
             "type": "ADD_ANAM",
-            "value": 1
+            "amount": 1
           }
-        ]
+        ],
+        "label": "Suivre un chemin lumineux jusqu'a la pierre centrale"
       },
       {
-        "text": "Mediter a l'intersection des chemins",
         "verb": "mediter",
         "effects": [
           {
             "type": "HEAL_LIFE",
-            "value": 12
+            "amount": 12
           },
           {
             "type": "ADD_REPUTATION",
             "faction": "anciens",
-            "value": 5
+            "amount": 5
           }
-        ]
+        ],
+        "label": "Mediter a l'intersection des chemins"
       },
       {
-        "text": "Tracer votre propre chemin entre les pierres",
-        "verb": "defier",
+        "verb": "accepter",
         "effects": [
           {
             "type": "ADD_BIOME_CURRENCY",
-            "value": 3
+            "amount": 3
           },
           {
             "type": "ADD_REPUTATION",
             "faction": "anciens",
-            "value": -5
+            "amount": -5
           },
           {
             "type": "ADD_KARMA",
-            "value": -2
+            "amount": -2
           }
-        ]
+        ],
+        "label": "Tracer votre propre chemin entre les pierres"
       }
     ]
   },
@@ -1932,48 +1932,48 @@
     ],
     "options": [
       {
-        "text": "Regarder dans le chaudron pour lire l'avenir",
-        "verb": "reveler",
+        "verb": "accepter",
         "effects": [
           {
             "type": "ADD_REPUTATION",
             "faction": "druides",
-            "value": 10
+            "amount": 10
           },
           {
             "type": "ADD_ANAM",
-            "value": 2
+            "amount": 2
           }
-        ]
+        ],
+        "label": "Regarder dans le chaudron pour lire l'avenir"
       },
       {
-        "text": "Boire une gorgee de l'eau argentee",
-        "verb": "absorber",
+        "verb": "accepter",
         "effects": [
           {
             "type": "HEAL_LIFE",
-            "value": 15
+            "amount": 15
           },
           {
             "type": "DAMAGE_LIFE",
-            "value": -5
+            "amount": -5
           }
-        ]
+        ],
+        "label": "Boire une gorgee de l'eau argentee"
       },
       {
-        "text": "Purifier le chaudron avec des herbes sacrees",
-        "verb": "purifier",
+        "verb": "accepter",
         "effects": [
           {
             "type": "ADD_REPUTATION",
             "faction": "druides",
-            "value": 8
+            "amount": 8
           },
           {
             "type": "ADD_BIOME_CURRENCY",
-            "value": 2
+            "amount": 2
           }
-        ]
+        ],
+        "label": "Purifier le chaudron avec des herbes sacrees"
       }
     ]
   },
@@ -1990,49 +1990,49 @@
     ],
     "options": [
       {
-        "text": "Accepter le pari du Korrigan",
         "verb": "accepter",
         "effects": [
           {
             "type": "ADD_REPUTATION",
             "faction": "korrigans",
-            "value": 12
+            "amount": 12
           },
           {
             "type": "ADD_BIOME_CURRENCY",
-            "value": 3
+            "amount": 3
           }
-        ]
+        ],
+        "label": "Accepter le pari du Korrigan"
       },
       {
-        "text": "Negocier les termes du pari en votre faveur",
         "verb": "negocier",
         "effects": [
           {
             "type": "ADD_REPUTATION",
             "faction": "korrigans",
-            "value": 5
+            "amount": 5
           },
           {
             "type": "ADD_KARMA",
-            "value": -2
+            "amount": -2
           }
-        ]
+        ],
+        "label": "Negocier les termes du pari en votre faveur"
       },
       {
-        "text": "Refuser poliment et continuer votre chemin",
         "verb": "refuser",
         "effects": [
           {
             "type": "HEAL_LIFE",
-            "value": 8
+            "amount": 8
           },
           {
             "type": "ADD_REPUTATION",
             "faction": "korrigans",
-            "value": -5
+            "amount": -5
           }
-        ]
+        ],
+        "label": "Refuser poliment et continuer votre chemin"
       }
     ]
   },
@@ -2049,49 +2049,49 @@
     ],
     "options": [
       {
-        "text": "Franchir le portail vers Tir na nOg",
-        "verb": "voyager",
+        "verb": "accepter",
         "effects": [
           {
             "type": "ADD_REPUTATION",
             "faction": "niamh",
-            "value": 15
+            "amount": 15
           },
           {
             "type": "DAMAGE_LIFE",
-            "value": -10
+            "amount": -10
           }
-        ]
+        ],
+        "label": "Franchir le portail vers Tir na nOg"
       },
       {
-        "text": "Observer le paysage sans franchir le seuil",
         "verb": "observer",
         "effects": [
           {
             "type": "ADD_ANAM",
-            "value": 2
+            "amount": 2
           },
           {
             "type": "ADD_REPUTATION",
             "faction": "niamh",
-            "value": 5
+            "amount": 5
           }
-        ]
+        ],
+        "label": "Observer le paysage sans franchir le seuil"
       },
       {
-        "text": "Sceller le portail pour proteger les deux mondes",
-        "verb": "proteger",
+        "verb": "accepter",
         "effects": [
           {
             "type": "ADD_KARMA",
-            "value": 5
+            "amount": 5
           },
           {
             "type": "ADD_REPUTATION",
             "faction": "niamh",
-            "value": -8
+            "amount": -8
           }
-        ]
+        ],
+        "label": "Sceller le portail pour proteger les deux mondes"
       }
     ]
   },
@@ -2108,53 +2108,53 @@
     ],
     "options": [
       {
-        "text": "Rejoindre la procession en silence",
         "verb": "accepter",
         "effects": [
           {
             "type": "ADD_REPUTATION",
             "faction": "ankou",
-            "value": 12
+            "amount": 12
           },
           {
             "type": "ADD_ANAM",
-            "value": 2
+            "amount": 2
           }
-        ]
+        ],
+        "label": "Rejoindre la procession en silence"
       },
       {
-        "text": "Benir les esprits a leur passage",
-        "verb": "benir",
+        "verb": "accepter",
         "effects": [
           {
             "type": "ADD_REPUTATION",
             "faction": "ankou",
-            "value": 8
+            "amount": 8
           },
           {
             "type": "HEAL_LIFE",
-            "value": 10
+            "amount": 10
           }
-        ]
+        ],
+        "label": "Benir les esprits a leur passage"
       },
       {
-        "text": "Tenter de communiquer avec un esprit familier",
-        "verb": "invoquer",
+        "verb": "se concentrer",
         "effects": [
           {
             "type": "ADD_REPUTATION",
             "faction": "ankou",
-            "value": 6
+            "amount": 6
           },
           {
             "type": "DAMAGE_LIFE",
-            "value": -8
+            "amount": -8
           },
           {
             "type": "ADD_BIOME_CURRENCY",
-            "value": 3
+            "amount": 3
           }
-        ]
+        ],
+        "label": "Tenter de communiquer avec un esprit familier"
       }
     ]
   },
@@ -2171,53 +2171,53 @@
     ],
     "options": [
       {
-        "text": "Toucher l'Ogham pour recevoir son pouvoir",
-        "verb": "absorber",
+        "verb": "accepter",
         "effects": [
           {
             "type": "ADD_REPUTATION",
             "faction": "druides",
-            "value": 15
+            "amount": 15
           },
           {
             "type": "DAMAGE_LIFE",
-            "value": -8
+            "amount": -8
           }
-        ]
+        ],
+        "label": "Toucher l'Ogham pour recevoir son pouvoir"
       },
       {
-        "text": "Tisser un sortilege pour reparer la pierre",
-        "verb": "tisser",
+        "verb": "accepter",
         "effects": [
           {
             "type": "ADD_REPUTATION",
             "faction": "druides",
-            "value": 10
+            "amount": 10
           },
           {
             "type": "HEAL_LIFE",
-            "value": 5
+            "amount": 5
           },
           {
             "type": "ADD_KARMA",
-            "value": 3
+            "amount": 3
           }
-        ]
+        ],
+        "label": "Tisser un sortilege pour reparer la pierre"
       },
       {
-        "text": "Elargir la fissure pour reveler plus de secrets",
-        "verb": "detruire",
+        "verb": "accepter",
         "effects": [
           {
             "type": "ADD_BIOME_CURRENCY",
-            "value": 5
+            "amount": 5
           },
           {
             "type": "ADD_REPUTATION",
             "faction": "druides",
-            "value": -10
+            "amount": -10
           }
-        ]
+        ],
+        "label": "Elargir la fissure pour reveler plus de secrets"
       }
     ]
   },
@@ -2234,53 +2234,53 @@
     ],
     "options": [
       {
-        "text": "Descendre dans le passage souterrain",
-        "verb": "explorer",
+        "verb": "scruter",
         "effects": [
           {
             "type": "ADD_REPUTATION",
             "faction": "anciens",
-            "value": 18
+            "amount": 18
           },
           {
             "type": "DAMAGE_LIFE",
-            "value": -10
+            "amount": -10
           }
-        ]
+        ],
+        "label": "Descendre dans le passage souterrain"
       },
       {
-        "text": "Communiquer avec les corbeaux par un chant ancien",
-        "verb": "chanter",
+        "verb": "apaiser",
         "effects": [
           {
             "type": "ADD_REPUTATION",
             "faction": "anciens",
-            "value": 10
+            "amount": 10
           },
           {
             "type": "ADD_ANAM",
-            "value": 3
+            "amount": 3
           }
-        ]
+        ],
+        "label": "Communiquer avec les corbeaux par un chant ancien"
       },
       {
-        "text": "Chasser les corbeaux pour fermer le passage",
-        "verb": "repousser",
+        "verb": "pousser",
         "effects": [
           {
             "type": "ADD_REPUTATION",
             "faction": "anciens",
-            "value": -12
+            "amount": -12
           },
           {
             "type": "HEAL_LIFE",
-            "value": 10
+            "amount": 10
           },
           {
             "type": "ADD_BIOME_CURRENCY",
-            "value": 3
+            "amount": 3
           }
-        ]
+        ],
+        "label": "Chasser les corbeaux pour fermer le passage"
       }
     ]
   },
@@ -2297,49 +2297,49 @@
     ],
     "options": [
       {
-        "text": "Cueillir une pomme lumineuse pour vous guerir",
-        "verb": "recolter",
+        "verb": "accepter",
         "effects": [
           {
             "type": "HEAL_LIFE",
-            "value": 18
+            "amount": 18
           },
           {
             "type": "ADD_REPUTATION",
             "faction": "niamh",
-            "value": 5
+            "amount": 5
           }
-        ]
+        ],
+        "label": "Cueillir une pomme lumineuse pour vous guerir"
       },
       {
-        "text": "Planter un noyau pour faire croitre un nouveau pommier",
-        "verb": "planter",
+        "verb": "accepter",
         "effects": [
           {
             "type": "ADD_REPUTATION",
             "faction": "niamh",
-            "value": 12
+            "amount": 12
           },
           {
             "type": "ADD_KARMA",
-            "value": 3
+            "amount": 3
           }
-        ]
+        ],
+        "label": "Planter un noyau pour faire croitre un nouveau pommier"
       },
       {
-        "text": "Remplir votre sac de pommes pour le voyage",
-        "verb": "accumuler",
+        "verb": "accepter",
         "effects": [
           {
             "type": "ADD_BIOME_CURRENCY",
-            "value": 4
+            "amount": 4
           },
           {
             "type": "ADD_REPUTATION",
             "faction": "niamh",
-            "value": -8
+            "amount": -8
           }
-        ]
+        ],
+        "label": "Remplir votre sac de pommes pour le voyage"
       }
     ]
   },
@@ -2356,53 +2356,53 @@
     ],
     "options": [
       {
-        "text": "Payer le tribut et boire a la fontaine",
-        "verb": "sacrifier",
+        "verb": "accepter",
         "effects": [
           {
             "type": "HEAL_LIFE",
-            "value": 20
+            "amount": 20
           },
           {
             "type": "DAMAGE_LIFE",
-            "value": -5
+            "amount": -5
           },
           {
             "type": "ADD_REPUTATION",
             "faction": "druides",
-            "value": 8
+            "amount": 8
           }
-        ]
+        ],
+        "label": "Payer le tribut et boire a la fontaine"
       },
       {
-        "text": "Negocier un tribut moindre avec l'esprit",
         "verb": "negocier",
         "effects": [
           {
             "type": "ADD_REPUTATION",
             "faction": "druides",
-            "value": 6
+            "amount": 6
           },
           {
             "type": "HEAL_LIFE",
-            "value": 10
+            "amount": 10
           }
-        ]
+        ],
+        "label": "Negocier un tribut moindre avec l'esprit"
       },
       {
-        "text": "Tenter de purifier la fontaine et la liberer",
-        "verb": "purifier",
+        "verb": "accepter",
         "effects": [
           {
             "type": "ADD_REPUTATION",
             "faction": "druides",
-            "value": 12
+            "amount": 12
           },
           {
             "type": "ADD_BIOME_CURRENCY",
-            "value": 3
+            "amount": 3
           }
-        ]
+        ],
+        "label": "Tenter de purifier la fontaine et la liberer"
       }
     ]
   },
@@ -2419,51 +2419,51 @@
     ],
     "options": [
       {
-        "text": "S'asseoir sur le trône pour recevoir la vision",
         "verb": "accepter",
         "effects": [
           {
             "type": "ADD_REPUTATION",
             "faction": "anciens",
-            "value": 15
+            "amount": 15
           },
           {
             "type": "DAMAGE_LIFE",
-            "value": -10
+            "amount": -10
           },
           {
             "type": "ADD_ANAM",
-            "value": 3
+            "amount": 3
           }
-        ]
+        ],
+        "label": "S'asseoir sur le trône pour recevoir la vision"
       },
       {
-        "text": "Toucher le cristal pour sentir son energie",
-        "verb": "explorer",
+        "verb": "scruter",
         "effects": [
           {
             "type": "ADD_ANAM",
-            "value": 2
+            "amount": 2
           },
           {
             "type": "HEAL_LIFE",
-            "value": 5
+            "amount": 5
           }
-        ]
+        ],
+        "label": "Toucher le cristal pour sentir son energie"
       },
       {
-        "text": "Resister a la tentation et quitter la colline",
-        "verb": "resister",
+        "verb": "resister mentalement",
         "effects": [
           {
             "type": "HEAL_LIFE",
-            "value": 12
+            "amount": 12
           },
           {
             "type": "ADD_KARMA",
-            "value": 2
+            "amount": 2
           }
-        ]
+        ],
+        "label": "Resister a la tentation et quitter la colline"
       }
     ]
   },
@@ -2480,53 +2480,53 @@
     ],
     "options": [
       {
-        "text": "Traverser le labyrinthe pour atteindre l'oeuf",
-        "verb": "explorer",
+        "verb": "scruter",
         "effects": [
           {
             "type": "ADD_REPUTATION",
             "faction": "korrigans",
-            "value": 10
+            "amount": 10
           },
           {
             "type": "ADD_BIOME_CURRENCY",
-            "value": 3
+            "amount": 3
           }
-        ]
+        ],
+        "label": "Traverser le labyrinthe pour atteindre l'oeuf"
       },
       {
-        "text": "Tisser votre propre voile pour rejoindre les fees",
-        "verb": "tisser",
+        "verb": "accepter",
         "effects": [
           {
             "type": "ADD_REPUTATION",
             "faction": "korrigans",
-            "value": 12
+            "amount": 12
           },
           {
             "type": "HEAL_LIFE",
-            "value": 8
+            "amount": 8
           }
-        ]
+        ],
+        "label": "Tisser votre propre voile pour rejoindre les fees"
       },
       {
-        "text": "Prendre l'oeuf d'or avant qu'il n'eclose",
-        "verb": "voler",
+        "verb": "accepter",
         "effects": [
           {
             "type": "ADD_BIOME_CURRENCY",
-            "value": 5
+            "amount": 5
           },
           {
             "type": "ADD_REPUTATION",
             "faction": "korrigans",
-            "value": -15
+            "amount": -15
           },
           {
             "type": "DAMAGE_LIFE",
-            "value": -8
+            "amount": -8
           }
-        ]
+        ],
+        "label": "Prendre l'oeuf d'or avant qu'il n'eclose"
       }
     ]
   },
@@ -2543,53 +2543,53 @@
     ],
     "options": [
       {
-        "text": "Tendre la main pour recevoir l'epee",
         "verb": "accepter",
         "effects": [
           {
             "type": "ADD_REPUTATION",
             "faction": "niamh",
-            "value": 15
+            "amount": 15
           },
           {
             "type": "ADD_BIOME_CURRENCY",
-            "value": 4
+            "amount": 4
           }
-        ]
+        ],
+        "label": "Tendre la main pour recevoir l'epee"
       },
       {
-        "text": "S'agenouiller au bord du lac en signe de respect",
-        "verb": "honorer",
+        "verb": "accepter",
         "effects": [
           {
             "type": "ADD_REPUTATION",
             "faction": "niamh",
-            "value": 10
+            "amount": 10
           },
           {
             "type": "HEAL_LIFE",
-            "value": 10
+            "amount": 10
           }
-        ]
+        ],
+        "label": "S'agenouiller au bord du lac en signe de respect"
       },
       {
-        "text": "Plonger dans le lac pour decouvrir son secret",
-        "verb": "explorer",
+        "verb": "scruter",
         "effects": [
           {
             "type": "DAMAGE_LIFE",
-            "value": -12
+            "amount": -12
           },
           {
             "type": "ADD_ANAM",
-            "value": 3
+            "amount": 3
           },
           {
             "type": "ADD_REPUTATION",
             "faction": "niamh",
-            "value": 8
+            "amount": 8
           }
-        ]
+        ],
+        "label": "Plonger dans le lac pour decouvrir son secret"
       }
     ]
   },
@@ -2606,53 +2606,53 @@
     ],
     "options": [
       {
-        "text": "Presenter votre ame a l'Ankou pour etre juge",
         "verb": "accepter",
         "effects": [
           {
             "type": "ADD_REPUTATION",
             "faction": "ankou",
-            "value": 18
+            "amount": 18
           },
           {
             "type": "DAMAGE_LIFE",
-            "value": -10
+            "amount": -10
           }
-        ]
+        ],
+        "label": "Presenter votre ame a l'Ankou pour etre juge"
       },
       {
-        "text": "Negocier votre passage avec une offrande",
         "verb": "negocier",
         "effects": [
           {
             "type": "ADD_REPUTATION",
             "faction": "ankou",
-            "value": 8
+            "amount": 8
           },
           {
             "type": "ADD_BIOME_CURRENCY",
-            "value": 2
+            "amount": 2
           }
-        ]
+        ],
+        "label": "Negocier votre passage avec une offrande"
       },
       {
-        "text": "Tenter de forcer le passage avant qu'il ne se referme",
         "verb": "fuir",
         "effects": [
           {
             "type": "DAMAGE_LIFE",
-            "value": -8
+            "amount": -8
           },
           {
             "type": "ADD_REPUTATION",
             "faction": "ankou",
-            "value": -10
+            "amount": -10
           },
           {
             "type": "HEAL_LIFE",
-            "value": 5
+            "amount": 5
           }
-        ]
+        ],
+        "label": "Tenter de forcer le passage avant qu'il ne se referme"
       }
     ]
   },
@@ -2669,49 +2669,49 @@
     ],
     "options": [
       {
-        "text": "Ecouter la melodie des stalactites",
         "verb": "ecouter",
         "effects": [
           {
             "type": "ADD_REPUTATION",
             "faction": "druides",
-            "value": 10
+            "amount": 10
           },
           {
             "type": "ADD_ANAM",
-            "value": 2
+            "amount": 2
           }
-        ]
+        ],
+        "label": "Ecouter la melodie des stalactites"
       },
       {
-        "text": "Jouer votre propre melodie sur les stalactites",
-        "verb": "chanter",
+        "verb": "apaiser",
         "effects": [
           {
             "type": "HEAL_LIFE",
-            "value": 10
+            "amount": 10
           },
           {
             "type": "ADD_REPUTATION",
             "faction": "druides",
-            "value": 6
+            "amount": 6
           }
-        ]
+        ],
+        "label": "Jouer votre propre melodie sur les stalactites"
       },
       {
-        "text": "Briser une stalactite pour en extraire le savoir",
-        "verb": "detruire",
+        "verb": "accepter",
         "effects": [
           {
             "type": "ADD_BIOME_CURRENCY",
-            "value": 4
+            "amount": 4
           },
           {
             "type": "ADD_REPUTATION",
             "faction": "druides",
-            "value": -10
+            "amount": -10
           }
-        ]
+        ],
+        "label": "Briser une stalactite pour en extraire le savoir"
       }
     ]
   },
@@ -2728,48 +2728,48 @@
     ],
     "options": [
       {
-        "text": "Dechiffrer le grimoire avec patience",
-        "verb": "reveler",
+        "verb": "accepter",
         "effects": [
           {
             "type": "ADD_REPUTATION",
             "faction": "druides",
-            "value": 12
+            "amount": 12
           },
           {
             "type": "ADD_ANAM",
-            "value": 2
+            "amount": 2
           }
-        ]
+        ],
+        "label": "Dechiffrer le grimoire avec patience"
       },
       {
-        "text": "Liberer le grimoire de ses chaines",
-        "verb": "liberer",
+        "verb": "accepter",
         "effects": [
           {
             "type": "ADD_REPUTATION",
             "faction": "druides",
-            "value": 8
+            "amount": 8
           },
           {
             "type": "DAMAGE_LIFE",
-            "value": -8
+            "amount": -8
           }
-        ]
+        ],
+        "label": "Liberer le grimoire de ses chaines"
       },
       {
-        "text": "Refermer la chambre pour proteger son secret",
-        "verb": "cacher",
+        "verb": "se cacher",
         "effects": [
           {
             "type": "ADD_KARMA",
-            "value": 3
+            "amount": 3
           },
           {
             "type": "HEAL_LIFE",
-            "value": 8
+            "amount": 8
           }
-        ]
+        ],
+        "label": "Refermer la chambre pour proteger son secret"
       }
     ]
   },
@@ -2786,49 +2786,49 @@
     ],
     "options": [
       {
-        "text": "Tremper vos mains dans le liquide dore",
-        "verb": "explorer",
+        "verb": "scruter",
         "effects": [
           {
             "type": "ADD_REPUTATION",
             "faction": "korrigans",
-            "value": 8
+            "amount": 8
           },
           {
             "type": "HEAL_LIFE",
-            "value": 10
+            "amount": 10
           }
-        ]
+        ],
+        "label": "Tremper vos mains dans le liquide dore"
       },
       {
-        "text": "Offrir une priere avant de toucher le liquide",
-        "verb": "prier",
+        "verb": "mediter",
         "effects": [
           {
             "type": "ADD_REPUTATION",
             "faction": "korrigans",
-            "value": 6
+            "amount": 6
           },
           {
             "type": "ADD_KARMA",
-            "value": 3
+            "amount": 3
           }
-        ]
+        ],
+        "label": "Offrir une priere avant de toucher le liquide"
       },
       {
-        "text": "Remplir une fiole du liquide pour plus tard",
-        "verb": "accumuler",
+        "verb": "accepter",
         "effects": [
           {
             "type": "ADD_BIOME_CURRENCY",
-            "value": 4
+            "amount": 4
           },
           {
             "type": "ADD_REPUTATION",
             "faction": "korrigans",
-            "value": -8
+            "amount": -8
           }
-        ]
+        ],
+        "label": "Remplir une fiole du liquide pour plus tard"
       }
     ]
   },
@@ -2845,53 +2845,53 @@
     ],
     "options": [
       {
-        "text": "Affronter votre ombre dans le miroir",
         "verb": "combattre",
         "effects": [
           {
             "type": "ADD_REPUTATION",
             "faction": "ankou",
-            "value": 15
+            "amount": 15
           },
           {
             "type": "DAMAGE_LIFE",
-            "value": -10
+            "amount": -10
           }
-        ]
+        ],
+        "label": "Affronter votre ombre dans le miroir"
       },
       {
-        "text": "Mediter devant le miroir pour comprendre votre ombre",
         "verb": "mediter",
         "effects": [
           {
             "type": "ADD_ANAM",
-            "value": 3
+            "amount": 3
           },
           {
             "type": "ADD_REPUTATION",
             "faction": "ankou",
-            "value": 8
+            "amount": 8
           }
-        ]
+        ],
+        "label": "Mediter devant le miroir pour comprendre votre ombre"
       },
       {
-        "text": "Briser le miroir pour detruire votre ombre",
-        "verb": "detruire",
+        "verb": "accepter",
         "effects": [
           {
             "type": "DAMAGE_LIFE",
-            "value": -12
+            "amount": -12
           },
           {
             "type": "ADD_REPUTATION",
             "faction": "ankou",
-            "value": -5
+            "amount": -5
           },
           {
             "type": "ADD_BIOME_CURRENCY",
-            "value": 4
+            "amount": 4
           }
-        ]
+        ],
+        "label": "Briser le miroir pour detruire votre ombre"
       }
     ]
   },
@@ -2908,44 +2908,44 @@
     ],
     "options": [
       {
-        "text": "Plonger pour lire les pierres gravees",
-        "verb": "explorer",
+        "verb": "scruter",
         "effects": [
           {
             "type": "ADD_REPUTATION",
             "faction": "anciens",
-            "value": 12
+            "amount": 12
           },
           {
             "type": "ADD_ANAM",
-            "value": 2
+            "amount": 2
           }
-        ]
+        ],
+        "label": "Plonger pour lire les pierres gravees"
       },
       {
-        "text": "Honorer Merlin en ajoutant votre propre pierre",
-        "verb": "honorer",
+        "verb": "accepter",
         "effects": [
           {
             "type": "ADD_REPUTATION",
             "faction": "anciens",
-            "value": 10
+            "amount": 10
           },
           {
             "type": "ADD_KARMA",
-            "value": 3
+            "amount": 3
           }
-        ]
+        ],
+        "label": "Honorer Merlin en ajoutant votre propre pierre"
       },
       {
-        "text": "Boire l'eau pure pour vous guerir",
-        "verb": "guerir",
+        "verb": "apaiser",
         "effects": [
           {
             "type": "HEAL_LIFE",
-            "value": 18
+            "amount": 18
           }
-        ]
+        ],
+        "label": "Boire l'eau pure pour vous guerir"
       }
     ]
   },
@@ -2962,53 +2962,53 @@
     ],
     "options": [
       {
-        "text": "Chanter la partition ancienne avec tout votre coeur",
-        "verb": "chanter",
+        "verb": "apaiser",
         "effects": [
           {
             "type": "ADD_REPUTATION",
             "faction": "niamh",
-            "value": 18
+            "amount": 18
           },
           {
             "type": "ADD_ANAM",
-            "value": 3
+            "amount": 3
           }
-        ]
+        ],
+        "label": "Chanter la partition ancienne avec tout votre coeur"
       },
       {
-        "text": "Transformer les cristaux en instruments permanents",
-        "verb": "transformer",
+        "verb": "traverser",
         "effects": [
           {
             "type": "ADD_REPUTATION",
             "faction": "niamh",
-            "value": 10
+            "amount": 10
           },
           {
             "type": "ADD_BIOME_CURRENCY",
-            "value": 5
+            "amount": 5
           }
-        ]
+        ],
+        "label": "Transformer les cristaux en instruments permanents"
       },
       {
-        "text": "Recopier la partition pour la partager au monde",
-        "verb": "partager",
+        "verb": "parler",
         "effects": [
           {
             "type": "ADD_REPUTATION",
             "faction": "niamh",
-            "value": 8
+            "amount": 8
           },
           {
             "type": "HEAL_LIFE",
-            "value": 10
+            "amount": 10
           },
           {
             "type": "ADD_KARMA",
-            "value": 3
+            "amount": 3
           }
-        ]
+        ],
+        "label": "Recopier la partition pour la partager au monde"
       }
     ]
   }

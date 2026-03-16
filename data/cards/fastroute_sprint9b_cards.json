@@ -1,7 +1,6 @@
 [
   {
     "id": "fr_s9b_highrisk_001",
-    "faction_primaire": "ankou",
     "biome": "collines_dolmens",
     "champ_lexical": "vigueur",
     "text": "Un gouffre s'est ouvert dans la colline apres un eboulement. Au fond, une lueur palpite. L'Ankou murmure : 'C'est une ame ancienne, piegee depuis des siecles. La liberer te coutera cher. L'ignorer te coutera plus encore — elle attirera les vivants dans le gouffre.'",
@@ -59,11 +58,11 @@
       "ame_piegee",
       "collines"
     ],
-    "trust_tier": "T0"
+    "trust_tier": "T0",
+    "faction": "ankou"
   },
   {
     "id": "fr_s9b_highrisk_002",
-    "faction_primaire": "druides",
     "biome": "foret_broceliande",
     "champ_lexical": "esprit",
     "text": "Un chene millénaire est en train de mourir. Maelgwn dit qu'il est possible de lui transferer ta propre force vitale. 'Mais l'arbre prendra ce que tu lui donnes — peut-etre plus. Les arbres ne connaissent pas la mesure.' Le chene gémit dans le vent.",
@@ -121,11 +120,11 @@
       "sacrifice",
       "foret"
     ],
-    "trust_tier": "T0"
+    "trust_tier": "T0",
+    "faction": "druides"
   },
   {
     "id": "fr_s9b_highrisk_003",
-    "faction_primaire": "korrigans",
     "biome": "marais_korrigans",
     "champ_lexical": "chance",
     "text": "Les Korrigans proposent un pari insense : plonger dans la fosse a tourbe et remonter avec un tresor. 'Si tu remontes,' precise le chef avec un sourire mauvais. 'La tourbe garde ceux qui hesitent. Elle relache ceux qui foncent.' Autour, les Korrigans parient sur ton sort.",
@@ -183,11 +182,11 @@
       "tourbe",
       "marais"
     ],
-    "trust_tier": "T0"
+    "trust_tier": "T0",
+    "faction": "korrigans"
   },
   {
     "id": "fr_s9b_highrisk_004",
-    "faction_primaire": "niamh",
     "biome": "iles_mystiques",
     "champ_lexical": "finesse",
     "text": "Une fee te propose de traverser le Voile de Brume — la frontiere entre le monde mortel et Tir na nOg. 'Tu reviendras transforme,' promet-elle. 'Ou tu ne reviendras pas du tout. Le Voile ne ment jamais — il montre qui tu es vraiment. Certains ne supportent pas la verite.'",
@@ -245,11 +244,11 @@
       "transformation",
       "iles"
     ],
-    "trust_tier": "T0"
+    "trust_tier": "T0",
+    "faction": "niamh"
   },
   {
     "id": "fr_s9b_highrisk_005",
-    "faction_primaire": "anciens",
     "biome": "cercles_pierres",
     "champ_lexical": "logique",
     "text": "Un Ancien propose d'activer l'alignement complet du cercle de pierres — un rituel qui n'a pas ete tente depuis mille ans. 'Si les calculs sont justes, le cercle revele une carte du monde invisible. Si les calculs sont faux...' Il montre un menhir brise. 'Ca arrive.'",
@@ -307,11 +306,11 @@
       "rituel",
       "cercle"
     ],
-    "trust_tier": "T0"
+    "trust_tier": "T0",
+    "faction": "anciens"
   },
   {
     "id": "fr_s9b_highrisk_006",
-    "faction_primaire": "druides",
     "biome": "cotes_sauvages",
     "champ_lexical": "vigueur",
     "text": "Une vague gigantesque a emporte un autel druidique dans la mer. Keridwen veut le recuperer avant la maree haute. 'C'est de la folie,' admet-elle. 'Mais cet autel contient le savoir de dix generations. Je ne peux pas le laisser sombrer.' L'eau monte deja.",
@@ -369,11 +368,11 @@
       "vagues",
       "cotes"
     ],
-    "trust_tier": "T0"
+    "trust_tier": "T0",
+    "faction": "druides"
   },
   {
     "id": "fr_s9b_highrisk_007",
-    "faction_primaire": "ankou",
     "biome": "marais_korrigans",
     "champ_lexical": "esprit",
     "text": "Une porte vers l'Au-dela s'est ouverte par accident dans le marais. Des ames s'echappent, desorientees. L'Ankou est deborde. 'Aide-moi a les guider ou elles erreront pour l'eternite,' ordonne-t-il. 'Mais chaque ame que tu touches te prend un peu de chaleur.'",
@@ -431,11 +430,11 @@
       "ames",
       "marais"
     ],
-    "trust_tier": "T0"
+    "trust_tier": "T0",
+    "faction": "ankou"
   },
   {
     "id": "fr_s9b_highrisk_008",
-    "faction_primaire": "niamh",
     "biome": "foret_broceliande",
     "champ_lexical": "perception",
     "text": "La Reine des Fees propose un echange dangereux : tes yeux mortels contre des yeux feériques, le temps d'une nuit. 'Tu verras le monde tel que nous le voyons,' dit-elle. 'Toutes les couches, toutes les frequences. Certains humains en deviennent fous. D'autres en deviennent sages.'",
@@ -493,11 +492,11 @@
       "echange",
       "foret"
     ],
-    "trust_tier": "T0"
+    "trust_tier": "T0",
+    "faction": "niamh"
   },
   {
     "id": "fr_s9b_highrisk_009",
-    "faction_primaire": "korrigans",
     "biome": "villages_celtes",
     "champ_lexical": "bluff",
     "text": "Les Korrigans ont vole la cloche du village et la cachent dans leur terrier. Le forgeron menace de noyer le terrier. Les Korrigans menacent de pieger tout le village. Tu es au milieu, et les deux camps te regardent. La situation peut basculer dans la violence.",
@@ -555,11 +554,11 @@
       "village",
       "tension"
     ],
-    "trust_tier": "T0"
+    "trust_tier": "T0",
+    "faction": "korrigans"
   },
   {
     "id": "fr_s9b_highrisk_010",
-    "faction_primaire": "anciens",
     "biome": "collines_dolmens",
     "champ_lexical": "observation",
     "text": "Un dolmen tremble. Les Anciens disent qu'il va s'effondrer — avec une bibliotheque de gravures oghams a l'interieur. 'Quelqu'un doit entrer et recopier les gravures avant que le toit ne cede,' dit un Ancien d'une voix blanche. 'Mais ce quelqu'un risque de ne pas sortir.'",
@@ -617,11 +616,11 @@
       "gravures",
       "collines"
     ],
-    "trust_tier": "T0"
+    "trust_tier": "T0",
+    "faction": "anciens"
   },
   {
     "id": "fr_s9b_diplo_001",
-    "faction_primaire": "druides",
     "biome": "foret_broceliande",
     "champ_lexical": "bluff",
     "text": "Les druides et les Korrigans se disputent un bosquet de noisetiers. Les noix sont sacrees pour les druides, precieuses pour les Korrigans. Maelgwn refuse de ceder ; le chef Korrigan refuse de partir. La foret tremble sous la tension de deux volontes anciennes.",
@@ -682,11 +681,11 @@
       "noisetiers",
       "foret"
     ],
-    "trust_tier": "T0"
+    "trust_tier": "T0",
+    "faction": "druides"
   },
   {
     "id": "fr_s9b_diplo_002",
-    "faction_primaire": "anciens",
     "biome": "cercles_pierres",
     "champ_lexical": "logique",
     "text": "Les Anciens et les fees de Niamh revendiquent tous deux un cercle de pierres orne de cristaux. Les Anciens y voient un calendrier sacre ; les fees, un amplificateur de magie. La coexistence semble impossible — les rituels des uns perturbent ceux des autres.",
@@ -747,11 +746,11 @@
       "cristaux",
       "cercle"
     ],
-    "trust_tier": "T0"
+    "trust_tier": "T0",
+    "faction": "anciens"
   },
   {
     "id": "fr_s9b_diplo_003",
-    "faction_primaire": "korrigans",
     "biome": "marais_korrigans",
     "champ_lexical": "esprit",
     "text": "Les Korrigans veulent etendre leur marais, mais l'expansion menace un cimetiere surveille par l'Ankou. 'Mes morts ne seront pas noyes sous votre boue,' gronde l'Ankou. 'Et nous ne resterons pas a l'etroit a cause de vos os!' replique le chef Korrigan.",
@@ -812,11 +811,11 @@
       "expansion",
       "marais"
     ],
-    "trust_tier": "T0"
+    "trust_tier": "T0",
+    "faction": "korrigans"
   },
   {
     "id": "fr_s9b_diplo_004",
-    "faction_primaire": "niamh",
     "biome": "landes_bruyere",
     "champ_lexical": "observation",
     "text": "Les fees accusent les druides d'avoir cueilli des fleurs enchantees sans permission. Les druides affirment que les fleurs poussent sur leur territoire. La carte des territoires n'a jamais ete dessinee. Tout repose sur la memoire — et les deux camps se souviennent differemment.",
@@ -877,11 +876,11 @@
       "fleurs",
       "frontiere"
     ],
-    "trust_tier": "T0"
+    "trust_tier": "T0",
+    "faction": "niamh"
   },
   {
     "id": "fr_s9b_diplo_005",
-    "faction_primaire": "ankou",
     "biome": "villages_celtes",
     "champ_lexical": "perception",
     "text": "L'Ankou demande aux villageois de respecter un jour de silence pour honorer les morts. Les Korrigans du village s'y opposent — 'le silence est la mort du rire, et le rire est notre vie.' Le village est divise entre recueillement et celebration.",
@@ -942,11 +941,11 @@
       "silence_vs_rire",
       "village"
     ],
-    "trust_tier": "T0"
+    "trust_tier": "T0",
+    "faction": "ankou"
   },
   {
     "id": "fr_s9b_diplo_006",
-    "faction_primaire": "druides",
     "biome": "collines_dolmens",
     "champ_lexical": "finesse",
     "text": "Les druides et les Anciens se disputent la garde d'un dolmen ou poussent des herbes rares. Les Anciens veulent le fermer pour proteger les gravures ; les druides veulent l'ouvrir pour cultiver les herbes. Talwen te regarde avec espoir.",
@@ -1007,11 +1006,11 @@
       "dolmen",
       "herbes"
     ],
-    "trust_tier": "T0"
+    "trust_tier": "T0",
+    "faction": "druides"
   },
   {
     "id": "fr_s9b_diplo_007",
-    "faction_primaire": "niamh",
     "biome": "cotes_sauvages",
     "champ_lexical": "chance",
     "text": "Les fees des cotes et les Anciens se disputent un recif ou poussent des algues magiques. Les fees les utilisent pour teindre leurs ailes ; les Anciens les conservent comme medecine. La maree va bientot recouvrir le recif — il faut decider vite qui recolte.",
@@ -1071,11 +1070,11 @@
       "algues",
       "recif"
     ],
-    "trust_tier": "T0"
+    "trust_tier": "T0",
+    "faction": "niamh"
   },
   {
     "id": "fr_s9b_diplo_008",
-    "faction_primaire": "korrigans",
     "biome": "foret_broceliande",
     "champ_lexical": "vigueur",
     "text": "Les Korrigans ont detourne un ruisseau pour alimenter leur terrier, assechant un bassin sacre des druides. Keridwen est hors d'elle. Le chef Korrigan refuse de reconnaitre le probleme. L'eau manque, la tension monte.",
@@ -1136,11 +1135,11 @@
       "ruisseau",
       "eau"
     ],
-    "trust_tier": "T0"
+    "trust_tier": "T0",
+    "faction": "korrigans"
   },
   {
     "id": "fr_s9b_diplo_009",
-    "faction_primaire": "anciens",
     "biome": "iles_mystiques",
     "champ_lexical": "esprit",
     "text": "Les Anciens veulent placer un menhir sur une ile que les fees considerent comme un sanctuaire inviolable. L'Ankou intervient : les ames de l'ile auraient besoin de la pierre comme repere. Trois factions, un seul rocher, et aucune ne cedera facilement.",
@@ -1207,11 +1206,11 @@
       "ile",
       "triple"
     ],
-    "trust_tier": "T0"
+    "trust_tier": "T0",
+    "faction": "anciens"
   },
   {
     "id": "fr_s9b_diplo_010",
-    "faction_primaire": "ankou",
     "biome": "landes_bruyere",
     "champ_lexical": "logique",
     "text": "L'Ankou et les druides se disputent le sort d'un arbre mort qui abrite encore des esprits. L'Ankou veut l'abattre pour liberer les ames ; les druides veulent le preserver car ses racines nourrissent d'autres arbres. 'Mort ou vivant, cet arbre ne peut pas etre les deux,' dit l'Ankou.",
@@ -1272,11 +1271,11 @@
       "arbre_mort",
       "ames"
     ],
-    "trust_tier": "T0"
+    "trust_tier": "T0",
+    "faction": "ankou"
   },
   {
     "id": "fr_s9b_mystery_001",
-    "faction_primaire": "druides",
     "biome": "foret_broceliande",
     "champ_lexical": "observation",
     "text": "Talwen decouvre des champignons disposes en cercle parfait — un anneau de fee, mais fait de champignons inconnus. 'Aucun texte druidique ne les mentionne,' admet-elle. 'Ils pourraient contenir un ogham perdu. Ou un poison. Ou les deux.' Les champignons luisent doucement dans la penombre.",
@@ -1334,11 +1333,11 @@
       "ogham_perdu",
       "foret"
     ],
-    "trust_tier": "T0"
+    "trust_tier": "T0",
+    "faction": "druides"
   },
   {
     "id": "fr_s9b_mystery_002",
-    "faction_primaire": "anciens",
     "biome": "cercles_pierres",
     "champ_lexical": "logique",
     "text": "Un menhir est apparu pendant la nuit dans un cercle qui ne comptait que sept pierres. Huit maintenant. Les Anciens sont fascines et inquiets. 'Les menhirs ne poussent pas,' dit l'un d'eux. 'Quelqu'un — ou quelque chose — a place cette pierre. Et la question est : pourquoi?'",
@@ -1396,11 +1395,11 @@
       "enigme",
       "cercle"
     ],
-    "trust_tier": "T0"
+    "trust_tier": "T0",
+    "faction": "anciens"
   },
   {
     "id": "fr_s9b_mystery_003",
-    "faction_primaire": "korrigans",
     "biome": "marais_korrigans",
     "champ_lexical": "perception",
     "text": "Un Korrigan a trouve une grotte sous-marine dans le marais, remplie de cristaux qui emettent des sons. 'Chaque cristal chante une note differente,' dit-il. 'Si on trouve le bon accord, quelque chose s'ouvre. J'ai essaye pendant des lunes. Mes oreilles sont trop petites pour tout entendre.'",
@@ -1458,11 +1457,11 @@
       "grotte",
       "marais"
     ],
-    "trust_tier": "T0"
+    "trust_tier": "T0",
+    "faction": "korrigans"
   },
   {
     "id": "fr_s9b_mystery_004",
-    "faction_primaire": "niamh",
     "biome": "iles_mystiques",
     "champ_lexical": "finesse",
     "text": "Sur une ile deserte, une porte de pierre se dresse sans mur autour. Quand on la traverse d'un cote, rien ne se passe. Mais une fee affirme que de l'autre cote, elle mene a un jardin ou poussent des oghams vivants — des arbres qui SONT des oghams.",
@@ -1520,11 +1519,11 @@
       "oghams_vivants",
       "iles"
     ],
-    "trust_tier": "T0"
+    "trust_tier": "T0",
+    "faction": "niamh"
   },
   {
     "id": "fr_s9b_mystery_005",
-    "faction_primaire": "ankou",
     "biome": "collines_dolmens",
     "champ_lexical": "esprit",
     "text": "L'Ankou te montre un ossuaire ou les os s'agencent en motifs geometriques — pas par la main de l'homme, mais par une force inconnue. 'Les morts se reorganisent,' dit l'Ankou, perplexe. 'Ce n'est jamais arrive. Quelque chose veut communiquer depuis l'autre cote.'",
@@ -1582,11 +1581,11 @@
       "motifs",
       "message"
     ],
-    "trust_tier": "T0"
+    "trust_tier": "T0",
+    "faction": "ankou"
   },
   {
     "id": "fr_s9b_mystery_006",
-    "faction_primaire": "druides",
     "biome": "landes_bruyere",
     "champ_lexical": "chance",
     "text": "Un puits asseche dans les landes a commence a emettre une lueur verte. Keridwen pense qu'un ogham ancien est enfoui tout en bas. 'Mais les puits asseches sont les tombeaux de l'eau,' dit-elle. 'Descendre est toujours un pari. Ce qu'on trouve en bas n'est jamais ce qu'on attend.'",
@@ -1644,11 +1643,11 @@
       "lueur_verte",
       "landes"
     ],
-    "trust_tier": "T0"
+    "trust_tier": "T0",
+    "faction": "druides"
   },
   {
     "id": "fr_s9b_mystery_007",
-    "faction_primaire": "korrigans",
     "biome": "cotes_sauvages",
     "champ_lexical": "bluff",
     "text": "Un Korrigan pretend avoir decouvert un navire invisible dans une crique. 'Il apparait seulement au crepuscule,' jure-t-il. 'Et il est plein de tresors! Mais pour y monter, il faut que le navire te croie digne.' Le Korrigan est-il sincere ou s'agit-il d'un piege?",
@@ -1706,11 +1705,11 @@
       "tresor",
       "cotes"
     ],
-    "trust_tier": "T0"
+    "trust_tier": "T0",
+    "faction": "korrigans"
   },
   {
     "id": "fr_s9b_mystery_008",
-    "faction_primaire": "anciens",
     "biome": "villages_celtes",
     "champ_lexical": "observation",
     "text": "Sous la place du village, des ouvriers ont trouve une dalle gravee d'oghams inconnus. Les Anciens sont fascines mais nerveux. 'Cette dalle date d'avant nous,' admet l'un d'eux. 'Quelqu'un etait ici avant les Anciens. Et ils avaient des secrets que nous n'avons jamais retrouves.'",
@@ -1768,11 +1767,11 @@
       "proto_oghams",
       "village"
     ],
-    "trust_tier": "T0"
+    "trust_tier": "T0",
+    "faction": "anciens"
   },
   {
     "id": "fr_s9b_mystery_009",
-    "faction_primaire": "niamh",
     "biome": "foret_broceliande",
     "champ_lexical": "logique",
     "text": "Une fee a decouvert une equation gravee sur un arbre — une equation que personne ne peut resoudre. 'Celui qui la resout verra les chemins invisibles de la foret,' promet-elle. 'Ces chemins menent a des endroits que personne n'a jamais trouves. Ni les druides, ni les Anciens.'",
@@ -1830,11 +1829,11 @@
       "chemins_invisibles",
       "foret"
     ],
-    "trust_tier": "T0"
+    "trust_tier": "T0",
+    "faction": "niamh"
   },
   {
     "id": "fr_s9b_mystery_010",
-    "faction_primaire": "ankou",
     "biome": "marais_korrigans",
     "champ_lexical": "vigueur",
     "text": "L'Ankou decouvre une source d'eau noire dans le marais qui semble couler a l'envers — remontant du sol vers le ciel. 'Cette eau vient de l'Au-dela,' dit-il, stupefait. 'Si un vivant la boit, il voit les morts pendant une journee. Si un mort la boit, il revit pendant une heure.'",
@@ -1892,11 +1891,11 @@
       "eau_noire",
       "marais"
     ],
-    "trust_tier": "T0"
+    "trust_tier": "T0",
+    "faction": "ankou"
   },
   {
     "id": "fr_s9b_survival_001",
-    "faction_primaire": "druides",
     "biome": "landes_bruyere",
     "champ_lexical": "vigueur",
     "text": "Un incendie de bruyere se propage a grande vitesse. Keridwen est piegee de l'autre cote des flammes. 'Ne viens pas!' crie-t-elle. 'Trouve de l'eau!' Mais le ruisseau le plus proche est a cinq minutes de course. Les flammes avancent.",
@@ -1953,11 +1952,11 @@
       "keridwen",
       "landes"
     ],
-    "trust_tier": "T0"
+    "trust_tier": "T0",
+    "faction": "druides"
   },
   {
     "id": "fr_s9b_survival_002",
-    "faction_primaire": "korrigans",
     "biome": "marais_korrigans",
     "champ_lexical": "finesse",
     "text": "Le sol du marais cede sous tes pieds. Tu t'enfonces dans une boue epaisse et glacee. Un Korrigan te regarde depuis la berge. 'Si tu paniques, tu coules plus vite,' dit-il calmement. 'Si tu ne fais rien, tu coules lentement. Il faut que tu ruses.'",
@@ -2015,11 +2014,11 @@
       "piege",
       "marais"
     ],
-    "trust_tier": "T0"
+    "trust_tier": "T0",
+    "faction": "korrigans"
   },
   {
     "id": "fr_s9b_survival_003",
-    "faction_primaire": "niamh",
     "biome": "cotes_sauvages",
     "champ_lexical": "perception",
     "text": "Une brume magique envahit la cote, effacant tout repere. Tu ne vois plus ni la mer ni la terre. Une fee chuchote : 'Suis ma voix. Mais si tu suis la mauvaise voix, tu marcheras droit vers la falaise.' Plusieurs voix s'elevent autour de toi, identiques.",
@@ -2077,11 +2076,11 @@
       "voix",
       "cotes"
     ],
-    "trust_tier": "T0"
+    "trust_tier": "T0",
+    "faction": "niamh"
   },
   {
     "id": "fr_s9b_survival_004",
-    "faction_primaire": "ankou",
     "biome": "collines_dolmens",
     "champ_lexical": "esprit",
     "text": "Une tempete de grele frappe les collines. Les greles sont enormes — de la taille d'un poing. Il n'y a pas d'abri visible. L'Ankou pointe un dolmen a moitie effondre. 'La-bas. Mais les morts y dorment, et ils n'aiment pas etre deranges. A toi de voir ce que tu crains le plus.'",
@@ -2139,11 +2138,11 @@
       "dolmen",
       "abri"
     ],
-    "trust_tier": "T0"
+    "trust_tier": "T0",
+    "faction": "ankou"
   },
   {
     "id": "fr_s9b_survival_005",
-    "faction_primaire": "anciens",
     "biome": "foret_broceliande",
     "champ_lexical": "observation",
     "text": "Tu es perdu dans la foret la nuit. Pas de lune, pas d'etoiles. Un Ancien t'avait prevenu : 'Si tu te perds, trouve un menhir. Les menhirs sont toujours alignes avec la sortie.' Mais dans l'obscurite totale, trouver un menhir est un defi en soi.",
@@ -2201,11 +2200,11 @@
       "perdu",
       "foret"
     ],
-    "trust_tier": "T0"
+    "trust_tier": "T0",
+    "faction": "anciens"
   },
   {
     "id": "fr_s9b_survival_006",
-    "faction_primaire": "druides",
     "biome": "iles_mystiques",
     "champ_lexical": "chance",
     "text": "L'ile tremble — un seisme sous-marin. L'eau commence a monter sur les plages. Maelgwn cherche un terrain eleve mais l'ile est plate. 'Il y a peut-etre une grotte en hauteur,' dit-il sans conviction. 'Ou peut-etre pas. On tente?'",
@@ -2262,11 +2261,11 @@
       "inondation",
       "iles"
     ],
-    "trust_tier": "T0"
+    "trust_tier": "T0",
+    "faction": "druides"
   },
   {
     "id": "fr_s9b_survival_007",
-    "faction_primaire": "korrigans",
     "biome": "villages_celtes",
     "champ_lexical": "bluff",
     "text": "Un ours affame est entre dans le village. Les villageois se barricadent. Un Korrigan ricane : 'Les ours sont betes. Si tu fais le mort, il s'en va. Si tu le regardes dans les yeux, il attaque. Si tu le fais rire... non, ca n'existe pas. Quoique...'",
@@ -2324,11 +2323,11 @@
       "village",
       "danger"
     ],
-    "trust_tier": "T0"
+    "trust_tier": "T0",
+    "faction": "korrigans"
   },
   {
     "id": "fr_s9b_survival_008",
-    "faction_primaire": "niamh",
     "biome": "landes_bruyere",
     "champ_lexical": "logique",
     "text": "Un cercle de feu feerique s'est allume autour de toi sans raison. Les flammes sont froides mais infranchissables. Une fee observe depuis l'exterieur. 'Le cercle s'eteint quand tu trouves la reponse a son enigme,' dit-elle. 'Quelle est la seule chose qui grandit en brulant?'",
@@ -2386,11 +2385,11 @@
       "enigme",
       "landes"
     ],
-    "trust_tier": "T0"
+    "trust_tier": "T0",
+    "faction": "niamh"
   },
   {
     "id": "fr_s9b_survival_009",
-    "faction_primaire": "anciens",
     "biome": "cercles_pierres",
     "champ_lexical": "esprit",
     "text": "Les menhirs du cercle se sont mis a vibrer, emettant un son grave qui donne le vertige. Un Ancien s'effondre. D'autres chancellent. 'Le cercle se reveille,' comprend un Ancien age. 'Il teste ceux qui sont a l'interieur. Ceux qui resistent seront juges dignes. Les autres...'",
@@ -2448,11 +2447,11 @@
       "cercle_reveille",
       "test"
     ],
-    "trust_tier": "T0"
+    "trust_tier": "T0",
+    "faction": "anciens"
   },
   {
     "id": "fr_s9b_survival_010",
-    "faction_primaire": "ankou",
     "biome": "foret_broceliande",
     "champ_lexical": "perception",
     "text": "Une creature ni vivante ni morte te traque dans la foret. L'Ankou la connait : 'C'est un Revenant — quelqu'un qui a refuse de mourir et qui n'est plus vraiment en vie. Il chasse par le son. Ne fais aucun bruit.' Tes pieds craquent sur les feuilles mortes.",
@@ -2510,11 +2509,11 @@
       "silence",
       "foret"
     ],
-    "trust_tier": "T0"
+    "trust_tier": "T0",
+    "faction": "ankou"
   },
   {
     "id": "fr_s9b_merlin_t0_001",
-    "faction_primaire": "druides",
     "biome": "foret_broceliande",
     "champ_lexical": "esprit",
     "merlin_direct": true,
@@ -2573,11 +2572,11 @@
       "outil",
       "mystere",
       "premier_contact"
-    ]
+    ],
+    "faction": "druides"
   },
   {
     "id": "fr_s9b_merlin_t0_002",
-    "faction_primaire": "anciens",
     "biome": "collines_dolmens",
     "champ_lexical": "observation",
     "merlin_direct": true,
@@ -2636,11 +2635,11 @@
       "ombre",
       "symbole",
       "dolmens"
-    ]
+    ],
+    "faction": "anciens"
   },
   {
     "id": "fr_s9b_merlin_t1_001",
-    "faction_primaire": "druides",
     "biome": "landes_bruyere",
     "champ_lexical": "logique",
     "merlin_direct": true,
@@ -2699,11 +2698,11 @@
       "indice",
       "carrefour",
       "landes"
-    ]
+    ],
+    "faction": "druides"
   },
   {
     "id": "fr_s9b_merlin_t1_002",
-    "faction_primaire": "korrigans",
     "biome": "marais_korrigans",
     "champ_lexical": "chance",
     "merlin_direct": true,
@@ -2762,11 +2761,11 @@
       "chance",
       "korrigans",
       "secret"
-    ]
+    ],
+    "faction": "korrigans"
   },
   {
     "id": "fr_s9b_merlin_t2_001",
-    "faction_primaire": "niamh",
     "biome": "iles_mystiques",
     "champ_lexical": "perception",
     "merlin_direct": true,
@@ -2826,11 +2825,11 @@
       "avertissement",
       "factions",
       "perspectives"
-    ]
+    ],
+    "faction": "niamh"
   },
   {
     "id": "fr_s9b_merlin_t2_002",
-    "faction_primaire": "ankou",
     "biome": "cercles_pierres",
     "champ_lexical": "esprit",
     "merlin_direct": true,
@@ -2890,11 +2889,11 @@
       "mort",
       "boussole",
       "sagesse"
-    ]
+    ],
+    "faction": "ankou"
   },
   {
     "id": "fr_s9b_merlin_t2_003",
-    "faction_primaire": "druides",
     "biome": "foret_broceliande",
     "champ_lexical": "finesse",
     "merlin_direct": true,
@@ -2953,11 +2952,11 @@
       "avertissement",
       "arbres",
       "foret"
-    ]
+    ],
+    "faction": "druides"
   },
   {
     "id": "fr_s9b_merlin_t3_001",
-    "faction_primaire": "anciens",
     "biome": "cercles_pierres",
     "champ_lexical": "logique",
     "merlin_direct": true,
@@ -3016,11 +3015,11 @@
       "revelation_identite",
       "prison",
       "cercle"
-    ]
+    ],
+    "faction": "anciens"
   },
   {
     "id": "fr_s9b_merlin_t3_002",
-    "faction_primaire": "druides",
     "biome": "foret_broceliande",
     "champ_lexical": "observation",
     "merlin_direct": true,
@@ -3080,11 +3079,11 @@
       "secret_final",
       "factions",
       "lien"
-    ]
+    ],
+    "faction": "druides"
   },
   {
     "id": "fr_s9b_merlin_t3_003",
-    "faction_primaire": "niamh",
     "biome": "iles_mystiques",
     "champ_lexical": "vigueur",
     "merlin_direct": true,
@@ -3143,6 +3142,7 @@
       "quete_finale",
       "reunion",
       "transformation"
-    ]
+    ],
+    "faction": "niamh"
   }
 ]

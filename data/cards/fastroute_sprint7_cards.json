@@ -1,7 +1,6 @@
 [
   {
     "id": "fr_s7_merlin_t0_001",
-    "faction_primaire": "druides",
     "biome": "foret_broceliande",
     "champ_lexical": "esprit",
     "merlin_direct": true,
@@ -60,11 +59,11 @@
       "chene",
       "confiance",
       "premier_contact"
-    ]
+    ],
+    "faction": "druides"
   },
   {
     "id": "fr_s7_merlin_t0_002",
-    "faction_primaire": "anciens",
     "biome": "cercles_pierres",
     "champ_lexical": "observation",
     "merlin_direct": true,
@@ -124,11 +123,11 @@
       "menhir",
       "observation",
       "mefiance"
-    ]
+    ],
+    "faction": "anciens"
   },
   {
     "id": "fr_s7_merlin_t0_003",
-    "faction_primaire": "korrigans",
     "biome": "marais_korrigans",
     "champ_lexical": "perception",
     "merlin_direct": true,
@@ -189,11 +188,11 @@
       "korrigans",
       "mefiance",
       "rythme"
-    ]
+    ],
+    "faction": "korrigans"
   },
   {
     "id": "fr_s7_merlin_t1_001",
-    "faction_primaire": "druides",
     "biome": "foret_broceliande",
     "champ_lexical": "logique",
     "merlin_direct": true,
@@ -253,11 +252,11 @@
       "chaudron_dagda",
       "confiance",
       "transformation"
-    ]
+    ],
+    "faction": "druides"
   },
   {
     "id": "fr_s7_merlin_t1_002",
-    "faction_primaire": "niamh",
     "biome": "iles_mystiques",
     "champ_lexical": "esprit",
     "merlin_direct": true,
@@ -318,11 +317,11 @@
       "tir_na_nog",
       "immortalite",
       "choix"
-    ]
+    ],
+    "faction": "niamh"
   },
   {
     "id": "fr_s7_merlin_t1_003",
-    "faction_primaire": "ankou",
     "biome": "collines_dolmens",
     "champ_lexical": "esprit",
     "merlin_direct": true,
@@ -383,11 +382,11 @@
       "mort",
       "passage",
       "dolmen"
-    ]
+    ],
+    "faction": "ankou"
   },
   {
     "id": "fr_s7_merlin_t2_001",
-    "faction_primaire": "druides",
     "biome": "foret_broceliande",
     "champ_lexical": "logique",
     "merlin_direct": true,
@@ -446,11 +445,11 @@
       "pierre_de_fal",
       "solitude",
       "revelation"
-    ]
+    ],
+    "faction": "druides"
   },
   {
     "id": "fr_s7_merlin_t2_002",
-    "faction_primaire": "anciens",
     "biome": "cercles_pierres",
     "champ_lexical": "observation",
     "merlin_direct": true,
@@ -510,11 +509,11 @@
       "lance_de_lugh",
       "conviction",
       "spirale"
-    ]
+    ],
+    "faction": "anciens"
   },
   {
     "id": "fr_s7_merlin_t2_003",
-    "faction_primaire": "niamh",
     "biome": "iles_mystiques",
     "champ_lexical": "esprit",
     "merlin_direct": true,
@@ -574,11 +573,11 @@
       "epee_de_nuada",
       "sacrifice",
       "confiance"
-    ]
+    ],
+    "faction": "niamh"
   },
   {
     "id": "fr_s7_merlin_t3_001",
-    "faction_primaire": "druides",
     "biome": "foret_broceliande",
     "champ_lexical": "esprit",
     "merlin_direct": true,
@@ -643,11 +642,11 @@
       "revelation",
       "egalite",
       "ame"
-    ]
+    ],
+    "faction": "druides"
   },
   {
     "id": "fr_s7_merlin_t3_002",
-    "faction_primaire": "ankou",
     "biome": "collines_dolmens",
     "champ_lexical": "esprit",
     "merlin_direct": true,
@@ -708,11 +707,11 @@
       "ankou",
       "piege",
       "etoiles"
-    ]
+    ],
+    "faction": "ankou"
   },
   {
     "id": "fr_s7_merlin_t3_003",
-    "faction_primaire": "korrigans",
     "biome": "marais_korrigans",
     "champ_lexical": "perception",
     "merlin_direct": true,
@@ -772,11 +771,11 @@
       "feux_follets",
       "rire",
       "secret"
-    ]
+    ],
+    "faction": "korrigans"
   },
   {
     "id": "fr_s7_event_samhain_001",
-    "faction_primaire": "ankou",
     "biome": "collines_dolmens",
     "champ_lexical": "esprit",
     "event_type": "festival",
@@ -841,11 +840,11 @@
       "voile",
       "dolmen"
     ],
-    "trust_tier": "T0"
+    "trust_tier": "T0",
+    "faction": "ankou"
   },
   {
     "id": "fr_s7_event_imbolc_002",
-    "faction_primaire": "druides",
     "biome": "foret_broceliande",
     "champ_lexical": "observation",
     "event_type": "festival",
@@ -907,11 +906,11 @@
       "printemps",
       "druides"
     ],
-    "trust_tier": "T0"
+    "trust_tier": "T0",
+    "faction": "druides"
   },
   {
     "id": "fr_s7_event_beltane_003",
-    "faction_primaire": "korrigans",
     "biome": "marais_korrigans",
     "champ_lexical": "finesse",
     "event_type": "festival",
@@ -972,11 +971,11 @@
       "korrigans",
       "purification"
     ],
-    "trust_tier": "T0"
+    "trust_tier": "T0",
+    "faction": "korrigans"
   },
   {
     "id": "fr_s7_event_lughnasadh_004",
-    "faction_primaire": "anciens",
     "biome": "villages_celtes",
     "champ_lexical": "vigueur",
     "event_type": "festival",
@@ -1042,11 +1041,11 @@
       "village",
       "recolte"
     ],
-    "trust_tier": "T0"
+    "trust_tier": "T0",
+    "faction": "anciens"
   },
   {
     "id": "fr_s7_event_tempete_005",
-    "faction_primaire": "niamh",
     "biome": "cotes_sauvages",
     "champ_lexical": "vigueur",
     "event_type": "storm",
@@ -1110,11 +1109,11 @@
       "lanterne",
       "ancien"
     ],
-    "trust_tier": "T0"
+    "trust_tier": "T0",
+    "faction": "niamh"
   },
   {
     "id": "fr_s7_event_eclipse_006",
-    "faction_primaire": "anciens",
     "biome": "cercles_pierres",
     "champ_lexical": "logique",
     "event_type": "eclipse",
@@ -1175,11 +1174,11 @@
       "dalle",
       "alignement"
     ],
-    "trust_tier": "T0"
+    "trust_tier": "T0",
+    "faction": "anciens"
   },
   {
     "id": "fr_s7_event_voyageur_007",
-    "faction_primaire": "niamh",
     "biome": "landes_bruyere",
     "champ_lexical": "bluff",
     "event_type": "traveler",
@@ -1243,11 +1242,11 @@
       "lande",
       "echange"
     ],
-    "trust_tier": "T0"
+    "trust_tier": "T0",
+    "faction": "niamh"
   },
   {
     "id": "fr_s7_event_voyageur_008",
-    "faction_primaire": "druides",
     "biome": "foret_broceliande",
     "champ_lexical": "chance",
     "event_type": "traveler",
@@ -1311,11 +1310,11 @@
       "if",
       "chance"
     ],
-    "trust_tier": "T0"
+    "trust_tier": "T0",
+    "faction": "druides"
   },
   {
     "id": "fr_s7_cross_druides_ankou_001",
-    "faction_primaire": "druides",
     "biome": "collines_dolmens",
     "champ_lexical": "esprit",
     "crossover_factions": [
@@ -1381,11 +1380,11 @@
       "chene",
       "conflit"
     ],
-    "trust_tier": "T0"
+    "trust_tier": "T0",
+    "faction": "druides"
   },
   {
     "id": "fr_s7_cross_korrigans_anciens_002",
-    "faction_primaire": "korrigans",
     "biome": "villages_celtes",
     "champ_lexical": "bluff",
     "crossover_factions": [
@@ -1451,11 +1450,11 @@
       "vol",
       "banquet"
     ],
-    "trust_tier": "T0"
+    "trust_tier": "T0",
+    "faction": "korrigans"
   },
   {
     "id": "fr_s7_cross_niamh_druides_003",
-    "faction_primaire": "niamh",
     "biome": "iles_mystiques",
     "champ_lexical": "esprit",
     "crossover_factions": [
@@ -1521,11 +1520,11 @@
       "porte",
       "fleurs"
     ],
-    "trust_tier": "T0"
+    "trust_tier": "T0",
+    "faction": "niamh"
   },
   {
     "id": "fr_s7_cross_ankou_niamh_004",
-    "faction_primaire": "ankou",
     "biome": "collines_dolmens",
     "champ_lexical": "esprit",
     "crossover_factions": [
@@ -1595,11 +1594,11 @@
       "tumulus",
       "choix"
     ],
-    "trust_tier": "T0"
+    "trust_tier": "T0",
+    "faction": "ankou"
   },
   {
     "id": "fr_s7_cross_druides_korrigans_005",
-    "faction_primaire": "druides",
     "biome": "foret_broceliande",
     "champ_lexical": "bluff",
     "crossover_factions": [
@@ -1665,11 +1664,11 @@
       "champignons",
       "negociation"
     ],
-    "trust_tier": "T0"
+    "trust_tier": "T0",
+    "faction": "druides"
   },
   {
     "id": "fr_s7_cross_anciens_ankou_006",
-    "faction_primaire": "anciens",
     "biome": "cercles_pierres",
     "champ_lexical": "logique",
     "crossover_factions": [
@@ -1735,11 +1734,11 @@
       "menhir",
       "contradiction"
     ],
-    "trust_tier": "T0"
+    "trust_tier": "T0",
+    "faction": "anciens"
   },
   {
     "id": "fr_s7_cross_niamh_korrigans_007",
-    "faction_primaire": "korrigans",
     "biome": "marais_korrigans",
     "champ_lexical": "finesse",
     "crossover_factions": [
@@ -1805,11 +1804,11 @@
       "enclos",
       "beaute"
     ],
-    "trust_tier": "T0"
+    "trust_tier": "T0",
+    "faction": "korrigans"
   },
   {
     "id": "fr_s7_cross_triple_008",
-    "faction_primaire": "anciens",
     "biome": "villages_celtes",
     "champ_lexical": "esprit",
     "crossover_factions": [
@@ -1885,11 +1884,11 @@
       "accusation",
       "enquete"
     ],
-    "trust_tier": "T0"
+    "trust_tier": "T0",
+    "faction": "anciens"
   },
   {
     "id": "fr_s7_cross_druides_niamh_009",
-    "faction_primaire": "niamh",
     "biome": "cotes_sauvages",
     "champ_lexical": "perception",
     "crossover_factions": [
@@ -1958,11 +1957,11 @@
       "phoque",
       "cote"
     ],
-    "trust_tier": "T0"
+    "trust_tier": "T0",
+    "faction": "niamh"
   },
   {
     "id": "fr_s7_cross_ankou_korrigans_010",
-    "faction_primaire": "ankou",
     "biome": "marais_korrigans",
     "champ_lexical": "finesse",
     "crossover_factions": [
@@ -2028,11 +2027,11 @@
       "rite",
       "champignons"
     ],
-    "trust_tier": "T0"
+    "trust_tier": "T0",
+    "faction": "ankou"
   },
   {
     "id": "fr_s7_biome_foret_001",
-    "faction_primaire": "druides",
     "biome": "foret_broceliande",
     "champ_lexical": "perception",
     "text": "Dans la partie la plus ancienne de Broceliande, la ou les arbres sont si vieux que leur ecorce ressemble a de la pierre, un son monte du sol â€” une vibration sourde, reguliere, comme un battement de coeur souterrain. Les racines des chenes geants pulsent. Gwenn murmure que c'est le Nemeton, le sanctuaire invisible, qui respire.",
@@ -2091,11 +2090,11 @@
       "coeur",
       "gwenn"
     ],
-    "trust_tier": "T0"
+    "trust_tier": "T0",
+    "faction": "druides"
   },
   {
     "id": "fr_s7_biome_foret_002",
-    "faction_primaire": "niamh",
     "biome": "foret_broceliande",
     "champ_lexical": "observation",
     "text": "Une clairiere s'ouvre la ou aucune carte ne la montre. Au centre, un lac parfaitement circulaire reflÃ¨te non pas le ciel, mais une foret inverse â€” les arbres poussent vers le bas dans le reflet, leurs racines dans les nuages. Un cygne noir nage en cercle, laissant derriere lui un sillage d'or. C'est l'entree de l'Annwn, l'autre monde.",
@@ -2159,11 +2158,11 @@
       "cygne",
       "autre_monde"
     ],
-    "trust_tier": "T0"
+    "trust_tier": "T0",
+    "faction": "niamh"
   },
   {
     "id": "fr_s7_biome_landes_001",
-    "faction_primaire": "anciens",
     "biome": "landes_bruyere",
     "champ_lexical": "perception",
     "text": "Les cairns des landes chantent ce soir. Chaque pile de pierres emet une note differente quand le vent traverse ses interstices. Erwan affirme que les Anciens ont construit les cairns pour former un instrument geant â€” un orgue de pierre qui joue une melodie une seule nuit par siecle. Cette nuit est celle-la.",
@@ -2222,11 +2221,11 @@
       "vent",
       "erwan"
     ],
-    "trust_tier": "T0"
+    "trust_tier": "T0",
+    "faction": "anciens"
   },
   {
     "id": "fr_s7_biome_landes_002",
-    "faction_primaire": "ankou",
     "biome": "landes_bruyere",
     "champ_lexical": "esprit",
     "text": "Une croix de granit se dresse au carrefour des landes â€” un ankou kroas, lieu ou les vivants peuvent parler aux morts. La bruyere pousse en spirale autour de la croix, comme si la terre elle-meme tournait. Un berger mort l'hiver dernier attend ici, dit-on, car il n'a jamais acheve de raconter son histoire a ses fils.",
@@ -2286,11 +2285,11 @@
       "berger",
       "morts"
     ],
-    "trust_tier": "T0"
+    "trust_tier": "T0",
+    "faction": "ankou"
   },
   {
     "id": "fr_s7_biome_cotes_001",
-    "faction_primaire": "niamh",
     "biome": "cotes_sauvages",
     "champ_lexical": "esprit",
     "text": "La maree a depose sur le sable une epave qui n'est pas en bois mais en os de baleine â€” un curragh ancien, construit par ceux qui naviguaient vers Tir na nOg. A l'interieur, un miroir d'eau de mer ne reflÃ¨te rien, comme un trou dans la realite. Maelle dit que c'est un passage â€” mais un passage a sens unique.",
@@ -2353,11 +2352,11 @@
       "tir_na_nog",
       "maelle"
     ],
-    "trust_tier": "T0"
+    "trust_tier": "T0",
+    "faction": "niamh"
   },
   {
     "id": "fr_s7_biome_cotes_002",
-    "faction_primaire": "korrigans",
     "biome": "cotes_sauvages",
     "champ_lexical": "chance",
     "text": "Les grottes marines resonnent a maree basse. Dans l'une d'elles, un korrigan a installe un etrange jeu : trois coquillages retournes sur un rocher plat, l'un cachant une perle d'ambre, les deux autres contenant de l'eau salee. 'Trouve la perle, promeneur. Si tu gagnes, je te montre le chemin du phare englouti. Si tu perds, tu nages.'",
@@ -2420,11 +2419,11 @@
       "coquillage",
       "jeu"
     ],
-    "trust_tier": "T0"
+    "trust_tier": "T0",
+    "faction": "korrigans"
   },
   {
     "id": "fr_s7_biome_villages_001",
-    "faction_primaire": "anciens",
     "biome": "villages_celtes",
     "champ_lexical": "bluff",
     "text": "Le forgeron du village refuse de reparer les armes du clan â€” il dit que ses reves lui ont montre que la prochaine bataille ne devrait pas etre gagnee. Le chef Cadogan est divise : le forgeron est le meilleur, mais le clan a besoin d'armes. Le forgeron te regarde et te demande de porter sa cause devant le conseil.",
@@ -2489,11 +2488,11 @@
       "cadogan",
       "armes"
     ],
-    "trust_tier": "T0"
+    "trust_tier": "T0",
+    "faction": "anciens"
   },
   {
     "id": "fr_s7_biome_villages_002",
-    "faction_primaire": "druides",
     "biome": "villages_celtes",
     "champ_lexical": "observation",
     "text": "Le barde du village a perdu sa voix apres avoir chante une chanson interdite â€” celle qui nomme les etoiles mortes. Sa femme supplie les druides de le guerir, mais la guerison exige de retrouver les paroles exactes qu'il a chantees. Le barde ecrit sur du sable, mais le vent efface ses mots a mesure qu'il les trace.",
@@ -2553,11 +2552,11 @@
       "etoiles_mortes",
       "sable"
     ],
-    "trust_tier": "T0"
+    "trust_tier": "T0",
+    "faction": "druides"
   },
   {
     "id": "fr_s7_biome_cercles_001",
-    "faction_primaire": "anciens",
     "biome": "cercles_pierres",
     "champ_lexical": "logique",
     "text": "Brennos a decouvert un anneau de pierre enfoui sous le cercle principal â€” un second cercle, plus ancien, construit par ceux qui etaient la avant les Anciens. Les gravures sur les pierres enfouies utilisent un alphabet inconnu, ni ogham ni rune. Brennos tremble d'excitation et de peur. 'Si on le decode, on saura pourquoi ils ont construit le cercle du dessus pour le cacher.'",
@@ -2616,11 +2615,11 @@
       "alphabet",
       "anciens_avant"
     ],
-    "trust_tier": "T0"
+    "trust_tier": "T0",
+    "faction": "anciens"
   },
   {
     "id": "fr_s7_biome_cercles_002",
-    "faction_primaire": "druides",
     "biome": "cercles_pierres",
     "champ_lexical": "esprit",
     "text": "Le lichen sur les menhirs change de couleur avec les saisons â€” vert au printemps, rouge en automne. Mais ce soir, il est devenu bleu nuit, une teinte jamais observee. Les druides pensent que les pierres canalisent une energie stellaire inhabituelle. Le sol entre les menhirs craque doucement et une lueur emane des fissures.",
@@ -2680,11 +2679,11 @@
       "menhir",
       "fissures"
     ],
-    "trust_tier": "T0"
+    "trust_tier": "T0",
+    "faction": "druides"
   },
   {
     "id": "fr_s7_biome_marais_001",
-    "faction_primaire": "korrigans",
     "biome": "marais_korrigans",
     "champ_lexical": "finesse",
     "text": "Le Tertre du Silence s'ouvre une nuit par lune noire. Gwen Du, la gardienne korrigan, t'a guide jusqu'a l'entree â€” un trou dans la tourbe recouvert de mousse argentee. A l'interieur, le silence est si profond que tu entends ton propre sang circuler. Au fond du tertre, une sculpture de champignon geant brille d'une lumiere propre.",
@@ -2747,11 +2746,11 @@
       "champignon",
       "silence"
     ],
-    "trust_tier": "T0"
+    "trust_tier": "T0",
+    "faction": "korrigans"
   },
   {
     "id": "fr_s7_biome_marais_002",
-    "faction_primaire": "ankou",
     "biome": "marais_korrigans",
     "champ_lexical": "perception",
     "text": "Un feu follet plus gros que les autres flotte au-dessus du marais, immobile. D'ordinaire ils dansent et s'enfuient â€” celui-ci attend. Quand tu approches, il pulse trois fois et descend lentement vers la tourbe. La ou il se pose, une forme se dessine dans la boue â€” un visage endormi, parfaitement preserve. C'est un corps du Monde d'Avant.",
@@ -2811,11 +2810,11 @@
       "tourbe",
       "monde_avant"
     ],
-    "trust_tier": "T0"
+    "trust_tier": "T0",
+    "faction": "ankou"
   },
   {
     "id": "fr_s7_biome_collines_001",
-    "faction_primaire": "ankou",
     "biome": "collines_dolmens",
     "champ_lexical": "esprit",
     "text": "Un tumulus s'est ouvert apres les pluies, revelant une chambre funeraire intacte. Des os blancs comme l'ivoire reposent sur une dalle gravee d'une spirale triple â€” le triskel des morts. Ildiko, la gardienne des collines, refuse d'y entrer. 'Celui qui repose la n'est pas un mort ordinaire,' dit-elle. 'C'est un roi qui a refuse de mourir. L'Ankou ne l'a jamais collecte.'",
@@ -2878,11 +2877,11 @@
       "triskel",
       "ildiko"
     ],
-    "trust_tier": "T0"
+    "trust_tier": "T0",
+    "faction": "ankou"
   },
   {
     "id": "fr_s7_biome_collines_002",
-    "faction_primaire": "anciens",
     "biome": "collines_dolmens",
     "champ_lexical": "observation",
     "text": "Les dolmens de la colline ouest sont alignes avec une precision que meme les Anciens ne s'expliquent pas. Ce soir, la lune passe exactement au centre de chaque ouverture, creant un couloir de lumiere d'argent qui traverse la colline d'est en ouest. Ildiko dit que cet alignement ne se produit qu'une fois par generation â€” et que quelque chose attend au bout du couloir.",
@@ -2942,11 +2941,11 @@
       "alignement",
       "couloir"
     ],
-    "trust_tier": "T0"
+    "trust_tier": "T0",
+    "faction": "anciens"
   },
   {
     "id": "fr_s7_biome_iles_001",
-    "faction_primaire": "niamh",
     "biome": "iles_mystiques",
     "champ_lexical": "esprit",
     "text": "L'ile la plus eloignee n'a pas de nom. Morgane t'y a conduit en barque, les yeux fermes, guidee par le chant des baleines. Sur la plage de galets noirs, un pommier pousse â€” le seul arbre de l'ile. Ses fruits sont translucides, remplis d'une lumiere liquide. 'C'est le pommier d'Avalon,' dit Morgane. 'Chaque fruit contient un souvenir vole au temps.'",
@@ -3006,11 +3005,11 @@
       "morgane",
       "souvenir"
     ],
-    "trust_tier": "T0"
+    "trust_tier": "T0",
+    "faction": "niamh"
   },
   {
     "id": "fr_s7_biome_iles_002",
-    "faction_primaire": "ankou",
     "biome": "iles_mystiques",
     "champ_lexical": "perception",
     "text": "Entre deux iles, un banc de brouillard ne se dissipe jamais. Les pecheurs l'appellent le Voile de ManannÃ¡n. Quand tu t'en approches en barque, des voix murmurent â€” pas des mots, mais des emotions pures. Tristesse. Nostalgie. Esperance. Morgane serre les rames. 'Les ames en transit passent par ici. L'Ankou les guide mais certaines s'egarent dans le brouillard.'",
@@ -3074,11 +3073,11 @@
       "ames",
       "brouillard"
     ],
-    "trust_tier": "T0"
+    "trust_tier": "T0",
+    "faction": "ankou"
   },
   {
     "id": "fr_s7_biome_foret_003",
-    "faction_primaire": "korrigans",
     "biome": "foret_broceliande",
     "champ_lexical": "finesse",
     "text": "Un passage secret s'ouvre entre deux racines geantes â€” un escalier de mousse qui descend sous la foret. Les korrigans l'appellent le Ventre de Broceliande. L'air est tiede et sent le miel fermente. Des champignons bioluminescents balisent le chemin, mais certains clignotent en rouge â€” signe de danger. Le passage est etroit, parfait pour les petits peuples, difficile pour un humain.",
@@ -3141,11 +3140,11 @@
       "ventre",
       "korrigans"
     ],
-    "trust_tier": "T0"
+    "trust_tier": "T0",
+    "faction": "korrigans"
   },
   {
     "id": "fr_s7_biome_landes_003",
-    "faction_primaire": "druides",
     "biome": "landes_bruyere",
     "champ_lexical": "chance",
     "text": "Un arc-en-ciel double apparait sur les landes apres un orage bref. Erwan dit que la ou les deux arcs se touchent, une herbe rare pousse â€” le trefle a sept feuilles, capable de guerir toute blessure de l'ame. Mais l'endroit change avec la lumiere. Il faut courir avant que les nuages ne reviennent.",
@@ -3212,11 +3211,11 @@
       "erwan",
       "guerison"
     ],
-    "trust_tier": "T0"
+    "trust_tier": "T0",
+    "faction": "druides"
   },
   {
     "id": "fr_s7_biome_cotes_003",
-    "faction_primaire": "anciens",
     "biome": "cotes_sauvages",
     "champ_lexical": "vigueur",
     "text": "La ville d'Ys est la, sous les vagues â€” visible seulement a maree basse extremement basse, une fois par decade. Les tours de la cite engloutie percent la surface comme des doigts de pierre. Maelle refuse de nager jusque-la. 'Ceux qui entrent dans Ys n'en reviennent pas tous,' dit-elle. 'Mais ceux qui reviennent portent un savoir que personne d'autre ne possede.'",
@@ -3283,11 +3282,11 @@
       "maelle",
       "maree"
     ],
-    "trust_tier": "T0"
+    "trust_tier": "T0",
+    "faction": "anciens"
   },
   {
     "id": "fr_s7_biome_villages_003",
-    "faction_primaire": "korrigans",
     "biome": "villages_celtes",
     "champ_lexical": "bluff",
     "text": "Le marche nocturne des korrigans s'installe une fois par lune dans le village â€” des etals de mousse couverts d'objets impossibles : des clochettes qui sonnent hier, des fils qui cousent l'avenir, des bougies qui eclairent les mensonges. Le prix n'est jamais en monnaie â€” les korrigans echangent contre des secrets, des promesses et des rires.",
@@ -3350,6 +3349,7 @@
       "objets",
       "secrets"
     ],
-    "trust_tier": "T0"
+    "trust_tier": "T0",
+    "faction": "korrigans"
   }
 ]

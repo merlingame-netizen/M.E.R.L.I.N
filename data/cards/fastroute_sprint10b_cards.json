@@ -1,7 +1,6 @@
 [
   {
     "id": "fr_s10b_conflict_001",
-    "faction_primaire": "druides",
     "biome": "foret_broceliande",
     "champ_lexical": "logique",
     "text": "Maelgwn et un emissaire des Anciens se disputent la propriete d'un cercle de champignons sacre. Le druide affirme que les champignons sont des messagers vivants, tandis que l'Ancien insiste que le cercle marque la tombe d'un roi oublie. Les deux camps attendent ton arbitrage.",
@@ -60,11 +59,11 @@
       "druides_vs_anciens",
       "cercle_champignons"
     ],
-    "trust_tier": "T0"
+    "trust_tier": "T0",
+    "faction": "druides"
   },
   {
     "id": "fr_s10b_conflict_002",
-    "faction_primaire": "korrigans",
     "biome": "marais_korrigans",
     "champ_lexical": "bluff",
     "text": "Les korrigans de Gwen Du exigent un peage pour traverser un pont de pierre que les druides considerent comme un lieu de meditation libre. Un druide refuse de payer. Le korrigan menace de detruire le pont. Les deux se tournent vers toi.",
@@ -127,11 +126,11 @@
       "korrigans_vs_druides",
       "pont_peage"
     ],
-    "trust_tier": "T0"
+    "trust_tier": "T0",
+    "faction": "korrigans"
   },
   {
     "id": "fr_s10b_conflict_003",
-    "faction_primaire": "ankou",
     "biome": "collines_dolmens",
     "champ_lexical": "esprit",
     "text": "L'Ankou reclame le corps d'un guerrier tombe dans un dolmen sacre des Anciens. Ildiko refuse : 'Les morts dans nos monuments restent avec nous.' L'emissaire de l'Ankou gronde : 'Chaque mort m'appartient, peu importe ou il tombe.' La tension electrifie l'air.",
@@ -190,11 +189,11 @@
       "ankou_vs_anciens",
       "guerrier_tombe"
     ],
-    "trust_tier": "T0"
+    "trust_tier": "T0",
+    "faction": "ankou"
   },
   {
     "id": "fr_s10b_conflict_004",
-    "faction_primaire": "niamh",
     "biome": "iles_mystiques",
     "champ_lexical": "observation",
     "text": "Morgane et un chef korrigan se disputent un artefact fee echoue sur la plage de l'ile de Batz. L'objet — un miroir d'ecume solidifiee — montre l'avenir a qui le touche. 'C'est un objet de l'Autre Monde,' dit Morgane. 'C'est un tresor trouve. La loi des trouvailles s'applique,' retorque le korrigan.",
@@ -253,11 +252,11 @@
       "niamh_vs_korrigans",
       "miroir_ecume"
     ],
-    "trust_tier": "T0"
+    "trust_tier": "T0",
+    "faction": "niamh"
   },
   {
     "id": "fr_s10b_conflict_005",
-    "faction_primaire": "druides",
     "biome": "landes_bruyere",
     "champ_lexical": "esprit",
     "text": "Un druide herboriste et un serviteur de l'Ankou se croisent pres d'un lac toxique des Monts d'Arree. Le druide veut purifier l'eau; l'Ankou veut la garder empoisonnee car les ames errantes y trouvent refuge. 'Purifier, c'est chasser les morts,' insiste l'ombre. 'Les laisser, c'est empoisonner les vivants,' replique le druide.",
@@ -316,11 +315,11 @@
       "druides_vs_ankou",
       "lac_toxique"
     ],
-    "trust_tier": "T0"
+    "trust_tier": "T0",
+    "faction": "druides"
   },
   {
     "id": "fr_s10b_conflict_006",
-    "faction_primaire": "anciens",
     "biome": "villages_celtes",
     "champ_lexical": "bluff",
     "text": "Le chef de Guerlesquin accuse les korrigans d'avoir vole les reserves de grain du village pendant l'hiver. Les korrigans jurent qu'ils n'ont pris que les miettes que les rats avaient deja rongees. Cadogan demande : 'Qui dit vrai? Les traces dans le grenier parlent, si l'on sait les lire.'",
@@ -379,11 +378,11 @@
       "anciens_vs_korrigans",
       "vol_grain"
     ],
-    "trust_tier": "T0"
+    "trust_tier": "T0",
+    "faction": "anciens"
   },
   {
     "id": "fr_s10b_conflict_007",
-    "faction_primaire": "niamh",
     "biome": "cotes_sauvages",
     "champ_lexical": "esprit",
     "text": "Une tempete a depose un navire fantome sur la cote de Douarnenez. Les druides veulent l'etudier; Morgane insiste que le navire appartient a l'Autre Monde et doit retourner a la mer. Le bois du navire est vivant — il bourgeonne malgre le sel. Des voix murmurent depuis la coque.",
@@ -442,11 +441,11 @@
       "niamh_vs_druides",
       "navire_fantome"
     ],
-    "trust_tier": "T0"
+    "trust_tier": "T0",
+    "faction": "niamh"
   },
   {
     "id": "fr_s10b_conflict_008",
-    "faction_primaire": "korrigans",
     "biome": "foret_broceliande",
     "champ_lexical": "finesse",
     "text": "Un groupe de korrigans a installe des pieges dans la foret pour capturer des biches sacrees que les druides protegent. Gwenn decouvre les pieges et menace de les detruire. Les korrigans repondent que sans gibier, leur clan mourra de faim cet hiver.",
@@ -510,11 +509,11 @@
       "biches_sacrees",
       "chasse"
     ],
-    "trust_tier": "T0"
+    "trust_tier": "T0",
+    "faction": "korrigans"
   },
   {
     "id": "fr_s10b_conflict_009",
-    "faction_primaire": "anciens",
     "biome": "cercles_pierres",
     "champ_lexical": "logique",
     "text": "Les Anciens veulent restaurer un cercle de pierres effondre. Les serviteurs de Niamh s'y opposent : l'effondrement a ouvert un passage vers l'Autre Monde, et le refermer serait une offense. Brennos hesite. 'Le cercle servait les vivants. Le passage sert les esprits. Peut-on servir les deux?'",
@@ -574,11 +573,11 @@
       "cercle_effondre",
       "passage"
     ],
-    "trust_tier": "T0"
+    "trust_tier": "T0",
+    "faction": "anciens"
   },
   {
     "id": "fr_s10b_conflict_010",
-    "faction_primaire": "ankou",
     "biome": "landes_bruyere",
     "champ_lexical": "vigueur",
     "text": "Un guerrier des Anciens a profane un tombeau de l'Ankou en prenant une epee rouille comme trophee. L'Ankou exige une epreuve de sang en reparation. Erwan, le berger, tente de calmer la situation : 'L'epee etait la pour etre trouvee. Mais la profanation doit etre reparee.'",
@@ -645,11 +644,11 @@
       "ankou_vs_anciens",
       "epee_profanee"
     ],
-    "trust_tier": "T0"
+    "trust_tier": "T0",
+    "faction": "ankou"
   },
   {
     "id": "fr_s10b_conflict_011",
-    "faction_primaire": "druides",
     "biome": "foret_broceliande",
     "champ_lexical": "chance",
     "text": "Un druide et un emissaire de Niamh se disputent une source guerisseuse. Le druide veut la canaliser pour soigner les malades du village. Morgane insiste : la source est un don des fees et ne doit pas etre domestiquee. L'eau change de couleur a chaque pleine lune.",
@@ -712,11 +711,11 @@
       "druides_vs_niamh",
       "source_guerisseuse"
     ],
-    "trust_tier": "T0"
+    "trust_tier": "T0",
+    "faction": "druides"
   },
   {
     "id": "fr_s10b_conflict_012",
-    "faction_primaire": "korrigans",
     "biome": "villages_celtes",
     "champ_lexical": "bluff",
     "text": "Les korrigans accusent les Anciens d'avoir detourne une riviere souterraine qui alimentait leurs terriers. Cadogan repond que la riviere a ete canalisee pour irriguer les champs du village. Les recoltes dependent de cette eau. Les terriers aussi.",
@@ -775,11 +774,11 @@
       "korrigans_vs_anciens",
       "riviere_detournee"
     ],
-    "trust_tier": "T0"
+    "trust_tier": "T0",
+    "faction": "korrigans"
   },
   {
     "id": "fr_s10b_conflict_013",
-    "faction_primaire": "niamh",
     "biome": "iles_mystiques",
     "champ_lexical": "esprit",
     "text": "Morgane et l'Ankou se font face sur l'ile de Sein. Un passage vers l'Autre Monde s'ouvre. Les ames des noyes tentent d'entrer; Morgane veut les accueillir, l'Ankou veut les guider vers le repos final. 'Accueillir n'est pas guerir,' gronde l'ombre. 'Guider n'est pas choisir,' repond Morgane.",
@@ -839,11 +838,11 @@
       "ames_noyes",
       "passage"
     ],
-    "trust_tier": "T0"
+    "trust_tier": "T0",
+    "faction": "niamh"
   },
   {
     "id": "fr_s10b_conflict_014",
-    "faction_primaire": "anciens",
     "biome": "villages_celtes",
     "champ_lexical": "observation",
     "text": "Un conflit commercial eclate au marche de Locronan. Les Anciens vendent des poteries ceremoniales que les druides accusent de porter de faux symboles sacres. Le forgeron montre la gravure : 'C'est le symbole de mon grand-pere. Les druides n'ont pas le monopole des spirales.'",
@@ -902,11 +901,11 @@
       "anciens_vs_druides",
       "poteries_symboles"
     ],
-    "trust_tier": "T0"
+    "trust_tier": "T0",
+    "faction": "anciens"
   },
   {
     "id": "fr_s10b_conflict_015",
-    "faction_primaire": "ankou",
     "biome": "collines_dolmens",
     "champ_lexical": "perception",
     "text": "Un vent glacial souffle du nord, portant une odeur de cendres. L'Ankou et les korrigans revendiquent un ossuaire sous un dolmen. L'Ankou veut en faire un sanctuaire; les korrigans y cachent leurs tresors depuis des generations. Ildiko soupire : 'Les os et l'or partagent le meme silence.'",
@@ -965,11 +964,11 @@
       "ankou_vs_korrigans",
       "ossuaire_tresor"
     ],
-    "trust_tier": "T0"
+    "trust_tier": "T0",
+    "faction": "ankou"
   },
   {
     "id": "fr_s10b_conflict_016",
-    "faction_primaire": "druides",
     "biome": "foret_broceliande",
     "champ_lexical": "logique",
     "text": "Les druides veulent planter un bosquet sacre sur un terrain que les Anciens utilisent comme place d'armes pour entrainer les jeunes guerriers. 'Les arbres enseignent mieux que les epees,' insiste Maelgwn. Cadogan repond : 'Les arbres ne protegeent personne quand l'ennemi arrive.'",
@@ -1028,11 +1027,11 @@
       "druides_vs_anciens",
       "bosquet_place_armes"
     ],
-    "trust_tier": "T0"
+    "trust_tier": "T0",
+    "faction": "druides"
   },
   {
     "id": "fr_s10b_conflict_017",
-    "faction_primaire": "korrigans",
     "biome": "marais_korrigans",
     "champ_lexical": "finesse",
     "text": "Les korrigans ont creuse un tunnel sous un sanctuaire de Niamh pour acceder a un filon de cristaux phosphorescents. Morgane decouvre le tunnel. 'Vous avez perce le plancher de mon temple!' Gwen Du hausse les epaules : 'Le sol n'appartient a personne. Ce qui est dessous est a qui creuse.'",
@@ -1091,11 +1090,11 @@
       "korrigans_vs_niamh",
       "tunnel_cristaux"
     ],
-    "trust_tier": "T0"
+    "trust_tier": "T0",
+    "faction": "korrigans"
   },
   {
     "id": "fr_s10b_conflict_018",
-    "faction_primaire": "ankou",
     "biome": "landes_bruyere",
     "champ_lexical": "vigueur",
     "text": "Les serviteurs de l'Ankou exigent que les druides cessent de guerir les mourants, car cela 'vole des ames destinees au repos'. Keridwen refuse : 'Tant qu'une flamme brule, je la protege.' L'Ankou repond : 'Toute flamme doit s'eteindre. C'est la loi.'",
@@ -1162,11 +1161,11 @@
       "ankou_vs_druides",
       "guerison_contestee"
     ],
-    "trust_tier": "T0"
+    "trust_tier": "T0",
+    "faction": "ankou"
   },
   {
     "id": "fr_s10b_conflict_019",
-    "faction_primaire": "niamh",
     "biome": "cotes_sauvages",
     "champ_lexical": "chance",
     "text": "Un tresor fee s'est echoue pres de Camaret. Les korrigans, les Anciens et Morgane le revendiquent. Le tresor — une harpe de corail vivant — joue toute seule une melodie triste. Chaque faction a un argument : trouvaille, heritage, appartenance surnaturelle.",
@@ -1230,11 +1229,11 @@
       "triple_conflit",
       "harpe_corail"
     ],
-    "trust_tier": "T0"
+    "trust_tier": "T0",
+    "faction": "niamh"
   },
   {
     "id": "fr_s10b_conflict_020",
-    "faction_primaire": "anciens",
     "biome": "cercles_pierres",
     "champ_lexical": "esprit",
     "text": "Les Anciens veulent interdire l'acces au cromlech de Monteneuf aux druides itinerants, accusant leurs rituels de 'desequilibrer les pierres'. Les druides repondent que les rituels maintiennent les pierres debout depuis des millenaires. Brennos hesite entre tradition et prudence.",
@@ -1293,11 +1292,11 @@
       "anciens_vs_druides",
       "acces_cromlech"
     ],
-    "trust_tier": "T0"
+    "trust_tier": "T0",
+    "faction": "anciens"
   },
   {
     "id": "fr_s10b_conflict_021",
-    "faction_primaire": "korrigans",
     "biome": "marais_korrigans",
     "champ_lexical": "observation",
     "text": "Les korrigans ont capture un messager des Anciens qui traversait le marais avec des documents scelles. Gwen Du les brandit : 'Des plans pour drainer notre marais! Ils veulent nous noyer sous la terre seche!' Le messager jure qu'il s'agit de cartes de navigation, pas de drainage.",
@@ -1356,11 +1355,11 @@
       "korrigans_vs_anciens",
       "messager_capture"
     ],
-    "trust_tier": "T0"
+    "trust_tier": "T0",
+    "faction": "korrigans"
   },
   {
     "id": "fr_s10b_conflict_022",
-    "faction_primaire": "druides",
     "biome": "cotes_sauvages",
     "champ_lexical": "perception",
     "text": "Un druide et un serviteur de l'Ankou decouvrent simultanement une grotte marine contenant des os humains et des plantes medicinales rares. Le druide veut preserver les plantes; l'Ankou veut proteger les restes. La maree monte — il faut choisir vite ce qui sera sauve en premier.",
@@ -1424,11 +1423,11 @@
       "grotte_marine",
       "maree"
     ],
-    "trust_tier": "T0"
+    "trust_tier": "T0",
+    "faction": "druides"
   },
   {
     "id": "fr_s10b_conflict_023",
-    "faction_primaire": "niamh",
     "biome": "iles_mystiques",
     "champ_lexical": "bluff",
     "text": "Les fees de Niamh ont emprunte une relique des Anciens — un torque d'or — pour une ceremonie. Cadogan exige son retour immediat. Morgane sourit : 'Le torque a ete offert il y a mille ans par vos propres ancetres. C'est un don, pas un pret.'",
@@ -1487,11 +1486,11 @@
       "niamh_vs_anciens",
       "torque_or"
     ],
-    "trust_tier": "T0"
+    "trust_tier": "T0",
+    "faction": "niamh"
   },
   {
     "id": "fr_s10b_conflict_024",
-    "faction_primaire": "ankou",
     "biome": "collines_dolmens",
     "champ_lexical": "logique",
     "text": "Un alignement de menhirs sert de frontiere entre le territoire de l'Ankou et celui des druides. Un menhir s'est penche, deplacant la frontiere de trois pas vers le territoire druidique. L'Ankou considere cela comme un signe; les druides, comme un accident geologique.",
@@ -1551,11 +1550,11 @@
       "menhir_penche",
       "frontiere"
     ],
-    "trust_tier": "T0"
+    "trust_tier": "T0",
+    "faction": "ankou"
   },
   {
     "id": "fr_s10b_conflict_025",
-    "faction_primaire": "korrigans",
     "biome": "foret_broceliande",
     "champ_lexical": "bluff",
     "text": "Les korrigans de Broceliande pretendent avoir decouvert un nouveau passage vers l'Autre Monde dans un terrier de blaireau. Morgane les accuse de bluffer pour negocier des privileges. 'Prouvez-le,' dit-elle. Le chef korrigan te fixe : 'Dis-lui que c'est vrai. Tu y gagnerais aussi.'",
@@ -1618,11 +1617,11 @@
       "korrigans_vs_niamh",
       "passage_blaireau"
     ],
-    "trust_tier": "T0"
+    "trust_tier": "T0",
+    "faction": "korrigans"
   },
   {
     "id": "fr_s10b_conflict_026",
-    "faction_primaire": "anciens",
     "biome": "villages_celtes",
     "champ_lexical": "vigueur",
     "text": "Une dispute territoriale entre deux clans des Anciens menace de devenir violente. L'un reclame un gue strategique; l'autre le controle depuis trois generations. Les korrigans observent, prets a profiter du chaos pour s'emparer du gue.",
@@ -1689,11 +1688,11 @@
       "anciens_vs_anciens_vs_korrigans",
       "gue_dispute"
     ],
-    "trust_tier": "T0"
+    "trust_tier": "T0",
+    "faction": "anciens"
   },
   {
     "id": "fr_s10b_conflict_027",
-    "faction_primaire": "druides",
     "biome": "landes_bruyere",
     "champ_lexical": "esprit",
     "text": "Les druides ont commence un rituel de purification sur les landes que les Anciens considerent comme un terrain de chasse sacre. Le rituel eloigne les animaux. Erwan proteste : 'Nos chasseurs n'ont rien pris depuis une lune. Vos chants chassent le gibier.'",
@@ -1752,11 +1751,11 @@
       "druides_vs_anciens",
       "rituel_chasse"
     ],
-    "trust_tier": "T0"
+    "trust_tier": "T0",
+    "faction": "druides"
   },
   {
     "id": "fr_s10b_conflict_028",
-    "faction_primaire": "niamh",
     "biome": "cotes_sauvages",
     "champ_lexical": "finesse",
     "text": "Les fees de Niamh ont enchante un sentier cotier qui mene a une crique cachee. Les korrigans s'en servent comme route commerciale. L'enchantement fait tourner en rond quiconque n'est pas invite. Les korrigans sont furieux : 'Nos marchandises pourrissent sur le chemin!'",
@@ -1814,11 +1813,11 @@
       "niamh_vs_korrigans",
       "sentier_enchante"
     ],
-    "trust_tier": "T0"
+    "trust_tier": "T0",
+    "faction": "niamh"
   },
   {
     "id": "fr_s10b_conflict_029",
-    "faction_primaire": "ankou",
     "biome": "cercles_pierres",
     "champ_lexical": "esprit",
     "text": "L'Ankou a commence a hanter un cercle de pierres que Brennos utilise pour les ceremonies des Anciens. Les apparitions effraient les participants. L'Ankou insiste : 'Ce cercle a ete bati sur mes morts. Ils ont le droit de manifester leur presence.'",
@@ -1877,11 +1876,11 @@
       "ankou_vs_anciens",
       "cercle_hante"
     ],
-    "trust_tier": "T0"
+    "trust_tier": "T0",
+    "faction": "ankou"
   },
   {
     "id": "fr_s10b_conflict_030",
-    "faction_primaire": "korrigans",
     "biome": "villages_celtes",
     "champ_lexical": "bluff",
     "text": "Un korrigan marchant a vendu un faux elixir de jouvence aux villageois de Josselin. Les druides exigent reparation. Le korrigan jure que l'elixir etait vrai mais que les humains 'ne savent pas s'en servir'. Trois villageois sont malades.",
@@ -1944,11 +1943,11 @@
       "korrigans_vs_druides",
       "faux_elixir"
     ],
-    "trust_tier": "T0"
+    "trust_tier": "T0",
+    "faction": "korrigans"
   },
   {
     "id": "fr_s10b_conflict_031",
-    "faction_primaire": "druides",
     "biome": "foret_broceliande",
     "champ_lexical": "observation",
     "text": "Les druides surprennent des emissaires de l'Ankou en train de marquer des arbres dans la foret — des arbres que les druides considerent comme des gardiens vivants. Les marques sont des runes de passage pour les morts. 'Nos morts ont besoin de chemins,' dit l'ombre. 'Vos arbres sont nos panneaux indicateurs.'",
@@ -2007,11 +2006,11 @@
       "druides_vs_ankou",
       "runes_arbres"
     ],
-    "trust_tier": "T0"
+    "trust_tier": "T0",
+    "faction": "druides"
   },
   {
     "id": "fr_s10b_conflict_032",
-    "faction_primaire": "anciens",
     "biome": "cercles_pierres",
     "champ_lexical": "vigueur",
     "text": "Un jeune guerrier des Anciens a defie un champion korrigan pour le controle d'un passage strategique entre deux cercles de pierres. Le duel est rituel mais dangereux. Brennos te demande de servir de temoin impartial. Les regles sont claires mais les coups, non.",
@@ -2083,11 +2082,11 @@
       "anciens_vs_korrigans",
       "duel_rituel"
     ],
-    "trust_tier": "T0"
+    "trust_tier": "T0",
+    "faction": "anciens"
   },
   {
     "id": "fr_s10b_conflict_033",
-    "faction_primaire": "niamh",
     "biome": "iles_mystiques",
     "champ_lexical": "logique",
     "text": "Les fees de Niamh ont brouille les reperes maritimes autour d'Ouessant, causant des naufrages. Les Anciens exigent que les reperes soient retablis. Morgane explique : 'Les reperes guidaient aussi les chasseurs de fees. Nous protegeons les notres.'",
@@ -2146,11 +2145,11 @@
       "niamh_vs_anciens",
       "reperes_maritimes"
     ],
-    "trust_tier": "T0"
+    "trust_tier": "T0",
+    "faction": "niamh"
   },
   {
     "id": "fr_s10b_conflict_034",
-    "faction_primaire": "ankou",
     "biome": "landes_bruyere",
     "champ_lexical": "perception",
     "text": "Les serviteurs de l'Ankou entendent des chants korrigans dans le Yeun Elez — les korrigans y celebrent une fete nocturne. L'Ankou considere le marais maudit comme son domaine exclusif. 'Le bruit des vivants derange le sommeil de mes morts,' gronde l'ombre.",
@@ -2210,11 +2209,11 @@
       "fete_nocturne",
       "yeun_elez"
     ],
-    "trust_tier": "T0"
+    "trust_tier": "T0",
+    "faction": "ankou"
   },
   {
     "id": "fr_s10b_conflict_035",
-    "faction_primaire": "druides",
     "biome": "marais_korrigans",
     "champ_lexical": "chance",
     "text": "Les druides decouvrent que les korrigans utilisent des plantes sacrees comme appat pour pieger les feux follets. Les korrigans repondent que les feux follets detruisent leurs recoltes souterraines. Un feu follet pris au piege brille d'un eclat desesp ere.",
@@ -2273,11 +2272,11 @@
       "druides_vs_korrigans",
       "feu_follet_piege"
     ],
-    "trust_tier": "T0"
+    "trust_tier": "T0",
+    "faction": "druides"
   },
   {
     "id": "fr_s10b_conflict_036",
-    "faction_primaire": "anciens",
     "biome": "collines_dolmens",
     "champ_lexical": "esprit",
     "text": "Les Anciens veulent ouvrir un nouveau chemin commercial a travers les collines, mais le trace passe sur un site sacre de Niamh. Ildiko plaide pour le commerce; Morgane pour la sacralite du lieu. Les deux argumentent avec passion devant l'assemblee.",
@@ -2336,11 +2335,11 @@
       "anciens_vs_niamh",
       "chemin_commercial"
     ],
-    "trust_tier": "T0"
+    "trust_tier": "T0",
+    "faction": "anciens"
   },
   {
     "id": "fr_s10b_conflict_037",
-    "faction_primaire": "korrigans",
     "biome": "cotes_sauvages",
     "champ_lexical": "observation",
     "text": "Les korrigans cotiers et les druides se disputent une epave riche en herbes marines medicinales. Les korrigans veulent le bois de l'epave pour construire; les druides veulent les herbes pour leurs potions. Maelle observe en silence : 'L'ocean a donne. Il reprendra si vous vous battez.'",
@@ -2399,11 +2398,11 @@
       "korrigans_vs_druides",
       "epave_herbes"
     ],
-    "trust_tier": "T0"
+    "trust_tier": "T0",
+    "faction": "korrigans"
   },
   {
     "id": "fr_s10b_conflict_038",
-    "faction_primaire": "ankou",
     "biome": "villages_celtes",
     "champ_lexical": "esprit",
     "text": "L'Ankou reclame une place dans le conseil du village de Guerlesquin. Les Anciens refusent : 'Les morts n'ont pas de voix dans les affaires des vivants.' L'ombre repond : 'Les morts sont plus nombreux que les vivants. Par quel droit les excluez-vous?'",
@@ -2462,11 +2461,11 @@
       "ankou_vs_anciens",
       "conseil_village"
     ],
-    "trust_tier": "T0"
+    "trust_tier": "T0",
+    "faction": "ankou"
   },
   {
     "id": "fr_s10b_conflict_039",
-    "faction_primaire": "niamh",
     "biome": "foret_broceliande",
     "champ_lexical": "perception",
     "text": "Les fees de Niamh ont fait pousser un jardin merveilleux au coeur de Broceliande, mais il empiete sur un bosquet que les druides cultivent depuis des generations. Les plantes fees et druidiques commencent a s'entrelacer de maniere imprevisible.",
@@ -2525,11 +2524,11 @@
       "niamh_vs_druides",
       "jardin_entrelace"
     ],
-    "trust_tier": "T0"
+    "trust_tier": "T0",
+    "faction": "niamh"
   },
   {
     "id": "fr_s10b_conflict_040",
-    "faction_primaire": "druides",
     "biome": "cercles_pierres",
     "champ_lexical": "logique",
     "text": "Les druides decouvrent que les korrigans ont modifie un alignement de menhirs pour rediriger une ley line vers leurs terriers. L'energie geomantique du cercle est perturbee. Brennos est furieux. Les korrigans affirment que la ley line etait 'gaspillee' par des ceremonies depassees.",
@@ -2589,11 +2588,11 @@
       "ley_line",
       "menhirs"
     ],
-    "trust_tier": "T0"
+    "trust_tier": "T0",
+    "faction": "druides"
   },
   {
     "id": "fr_s10b_conflict_041",
-    "faction_primaire": "ankou",
     "biome": "iles_mystiques",
     "champ_lexical": "vigueur",
     "text": "Sur l'ile de Sein, l'Ankou et Morgane se disputent le droit de conduire les ames des noyes. L'Ankou veut les mener au repos; Morgane veut les accueillir dans l'Autre Monde comme gardiens. Une tempete eclate, et les ames tourbillonnent entre les deux forces.",
@@ -2659,11 +2658,11 @@
       "ankou_vs_niamh",
       "tempete_ames"
     ],
-    "trust_tier": "T0"
+    "trust_tier": "T0",
+    "faction": "ankou"
   },
   {
     "id": "fr_s10b_conflict_042",
-    "faction_primaire": "korrigans",
     "biome": "marais_korrigans",
     "champ_lexical": "finesse",
     "text": "Les korrigans ont construit un barrage de tourbe pour creer un lac artificiel, inondant un sanctuaire druidique en contrebas. Gwen Du dit : 'Le lac nourrit nos champs.' Les druides repondent : 'Le sanctuaire nourrit nos ames.'",
@@ -2722,11 +2721,11 @@
       "korrigans_vs_druides",
       "barrage_sanctuaire"
     ],
-    "trust_tier": "T0"
+    "trust_tier": "T0",
+    "faction": "korrigans"
   },
   {
     "id": "fr_s10b_conflict_043",
-    "faction_primaire": "anciens",
     "biome": "landes_bruyere",
     "champ_lexical": "bluff",
     "text": "Les Anciens accusent les serviteurs de Niamh d'avoir enchante les landes pour que les voyageurs se perdent et finissent dans l'Autre Monde. Morgane nie : 'Les landes ont toujours ete dangereuses. Ce n'est pas notre faute si vos sentiers sont mal traces.'",
@@ -2789,11 +2788,11 @@
       "anciens_vs_niamh",
       "landes_enchantees"
     ],
-    "trust_tier": "T0"
+    "trust_tier": "T0",
+    "faction": "anciens"
   },
   {
     "id": "fr_s10b_conflict_044",
-    "faction_primaire": "druides",
     "biome": "villages_celtes",
     "champ_lexical": "esprit",
     "text": "Un druide guerisseur a sauve un enfant mourant en utilisant un rituel interdit par les Anciens. Le rituel a fonctionne, mais il a ouvert une breve fissure entre les mondes. L'Ankou et les Anciens demandent tous deux un proces. Le druide ne regrette rien.",
@@ -2858,11 +2857,11 @@
       "rituel_interdit",
       "proces"
     ],
-    "trust_tier": "T0"
+    "trust_tier": "T0",
+    "faction": "druides"
   },
   {
     "id": "fr_s10b_conflict_045",
-    "faction_primaire": "niamh",
     "biome": "cotes_sauvages",
     "champ_lexical": "observation",
     "text": "Un phare enchante par Niamh guide les navires fees vers la cote bretonne, mais il attire aussi les bateaux humains vers des recifs. Les Anciens veulent eteindre le phare. Maelle defie : 'Si on l'eteint, les fees perdent leur chemin. Si on le garde, les marins perdent la vie.'",
@@ -2921,11 +2920,11 @@
       "niamh_vs_anciens",
       "phare_enchante"
     ],
-    "trust_tier": "T0"
+    "trust_tier": "T0",
+    "faction": "niamh"
   },
   {
     "id": "fr_s10b_conflict_046",
-    "faction_primaire": "ankou",
     "biome": "collines_dolmens",
     "champ_lexical": "logique",
     "text": "L'Ankou veut transformer un dolmen en portail permanent vers le monde des morts. Les druides s'y opposent : le portail aspirerait la vie autour de lui. Ildiko montre la vegetation mourante autour du dolmen : 'Ca a deja commence. Chaque jour, le cercle de mort s'elargit.'",
@@ -2984,11 +2983,11 @@
       "ankou_vs_druides",
       "portail_dolmen"
     ],
-    "trust_tier": "T0"
+    "trust_tier": "T0",
+    "faction": "ankou"
   },
   {
     "id": "fr_s10b_conflict_047",
-    "faction_primaire": "korrigans",
     "biome": "foret_broceliande",
     "champ_lexical": "chance",
     "text": "Les korrigans organisent un tournoi de chance dans une clairiere sacree — des et cartes avec des enjeux reels. Les Anciens s'offusquent : 'Le jeu de hasard dans un lieu sacre est une profanation.' Les korrigans ricanent : 'Le hasard est aussi sacre que vos pierres.'",
@@ -3051,11 +3050,11 @@
       "korrigans_vs_anciens",
       "tournoi_chance"
     ],
-    "trust_tier": "T0"
+    "trust_tier": "T0",
+    "faction": "korrigans"
   },
   {
     "id": "fr_s10b_conflict_048",
-    "faction_primaire": "druides",
     "biome": "marais_korrigans",
     "champ_lexical": "perception",
     "text": "Les druides et les serviteurs de Niamh se disputent le controle d'une source d'eau enchantee au coeur du marais. La source guerit les vivants mais nourrit aussi les fleurs de l'Autre Monde. Gwen Du observe : 'Pendant que vous vous battez, les korrigans boivent.'",
@@ -3114,11 +3113,11 @@
       "druides_vs_niamh_vs_korrigans",
       "source_enchantee"
     ],
-    "trust_tier": "T0"
+    "trust_tier": "T0",
+    "faction": "druides"
   },
   {
     "id": "fr_s10b_conflict_049",
-    "faction_primaire": "anciens",
     "biome": "villages_celtes",
     "champ_lexical": "vigueur",
     "text": "Un conflit eclate lors d'un banquet. Les Anciens ont invite toutes les factions, mais l'Ankou a envoye un emissaire non invite qui jette un froid mortel — litteralement. La temperature chute, le vin gele dans les coupes. Les korrigans paniquent, les druides se lèvent.",
@@ -3185,11 +3184,11 @@
       "multi_factions",
       "banquet_gele"
     ],
-    "trust_tier": "T0"
+    "trust_tier": "T0",
+    "faction": "anciens"
   },
   {
     "id": "fr_s10b_conflict_050",
-    "faction_primaire": "niamh",
     "biome": "iles_mystiques",
     "champ_lexical": "esprit",
     "text": "Sur Avalon, les cinq factions se reunissent pour la premiere fois depuis un siecle. Chacune revendique un fragment de la Couronne d'Harmonie. Morgane preside : 'La couronne ne peut etre reconstituee que si chaque faction accepte de renoncer a quelque chose. Qu'offrez-vous?' Tous les regards se tournent vers toi.",
@@ -3263,6 +3262,7 @@
       "couronne_harmonie",
       "avalon"
     ],
-    "trust_tier": "T0"
+    "trust_tier": "T0",
+    "faction": "niamh"
   }
 ]

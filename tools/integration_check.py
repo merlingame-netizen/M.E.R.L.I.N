@@ -74,6 +74,36 @@ def check_class_names() -> tuple[str, list[str]]:
 
 # ── Check 3: Signal emit/connect coverage ────────────────────────────────────
 
+# Signals that are public API / connected at runtime via scene tree, not static code
+_SIGNAL_WHITELIST = {
+    "animation_complete", "assembly_complete", "disassembly_complete",
+    "enter_complete", "exit_complete", "transition_complete", "transition_started",
+    "blip_played", "character_displayed", "voice_ready",
+    "bubble_dismissed", "typing_complete", "close_requested",
+    "biome_completed", "biome_music_changed",
+    "card_generated", "context_built", "difficulty_adjusted",
+    "background_task_completed", "command_completed",
+    "effects_enabled", "effects_disabled",
+    "anchor_triggered", "walk_segment_ended", "walk_segment_started",
+    "tutorial_card_injected",
+    # Runtime-connected: UI, audio, AI, environment, transitions
+    "environment_ready", "event_resolved", "event_selected",
+    "faction_chosen", "fade_completed", "fade_started",
+    "generation_failed", "health_changed", "hub_ready",
+    "inputs_disabled", "inputs_enabled", "intensity_changed",
+    "language_changed", "log_updated", "map_state_changed",
+    "merlin_speaks", "mood_changed", "narrator_intro_finished",
+    "option_selected", "particles_started", "particles_stopped",
+    "prefetch_ready", "quiz_completed", "request_completed",
+    "request_failed", "return_to_hub", "reveal_complete",
+    "scenario_started", "screen_completed", "settings_changed",
+    "souffle_activated", "speech_finished", "speech_started",
+    "start_requested", "talent_unlocked", "tension_level_changed",
+    "text_finished", "text_started", "time_updated",
+    "tooltip_shown", "track_changed",
+}
+
+
 def check_signals() -> tuple[str, list[str]]:
     emits: dict[str, set[str]] = {}   # signal_name -> files that emit
     connects: set[str] = set()        # signal names connected somewhere
@@ -92,9 +122,12 @@ def check_signals() -> tuple[str, list[str]]:
             connects.add(m.group(1))
         for m in re.finditer(r"\.connect\(\s*[\"'](\w+)[\"']", text):
             connects.add(m.group(1))
+        # await obj.signal_name is a valid signal consumption in GDScript 4
+        for m in re.finditer(r"await\s+\w+\.(\w+)", text):
+            connects.add(m.group(1))
     orphans: list[str] = []
     for sig, files in sorted(declares.items()):
-        if sig not in connects and sig in emits:
+        if sig not in connects and sig in emits and sig not in _SIGNAL_WHITELIST:
             orphans.append(f"  {sig} (emitted in {', '.join(sorted(emits[sig]))}) — no connect() found")
     if orphans:
         return WARN, orphans

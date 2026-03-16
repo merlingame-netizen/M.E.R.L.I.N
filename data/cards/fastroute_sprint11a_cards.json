@@ -1,7 +1,6 @@
 [
   {
     "id": "fr_s11a_samhain_001",
-    "faction_primaire": "ankou",
     "biome": "collines_dolmens",
     "champ_lexical": "esprit",
     "text": "La nuit de Samhain, les dolmens tremblent. Une procession de silhouettes translucides remonte la colline, portant des bougies dont la flamme brule a l'envers. L'Ankou marche en tete, sa faux posee sur l'epaule comme un berger porte sa houlette. 'Ce soir, les morts visitent. Tu peux les accueillir ou fermer les yeux. Mais ils te verront quand meme.'",
@@ -59,11 +58,11 @@
       "morts",
       "festival"
     ],
-    "trust_tier": "T0"
+    "trust_tier": "T0",
+    "faction": "ankou"
   },
   {
     "id": "fr_s11a_samhain_002",
-    "faction_primaire": "ankou",
     "biome": "cercles_pierres",
     "champ_lexical": "perception",
     "text": "Au cercle de pierres, un voile entre les mondes s'est dechire pour Samhain. Des voix murmurent depuis l'autre cote — certaines supplient, d'autres rient. Une femme agee, assise sur le menhir central, trie des os graves dans un panier d'osier. 'Chaque os est un nom. Chaque nom est une dette. Ecoute bien — le tien pourrait y etre.'",
@@ -122,11 +121,11 @@
       "os",
       "festival"
     ],
-    "trust_tier": "T0"
+    "trust_tier": "T0",
+    "faction": "ankou"
   },
   {
     "id": "fr_s11a_samhain_003",
-    "faction_primaire": "ankou",
     "biome": "marais_korrigans",
     "champ_lexical": "finesse",
     "text": "Dans les marais, Samhain transforme les feux follets en visages. Des esprits errants dansent entre les roseaux, leurs pieds effleurant l'eau noire sans la troubler. Un passage etroit s'ouvre entre deux saules pleureurs — au-dela, une lumiere chaude pulse comme un coeur. 'Les morts connaissent le chemin,' souffle une voix. 'Mais les vivants doivent le meriter.'",
@@ -185,11 +184,11 @@
       "marais",
       "festival"
     ],
-    "trust_tier": "T0"
+    "trust_tier": "T0",
+    "faction": "ankou"
   },
   {
     "id": "fr_s11a_samhain_004",
-    "faction_primaire": "ankou",
     "biome": "foret_broceliande",
     "champ_lexical": "observation",
     "text": "La foret de Broceliande est meconnaissable cette nuit de Samhain. Les arbres ont inverse leurs ombres — elles tombent vers le haut, vers un ciel sans etoiles. Au pied d'un if geant, une table de pierre est dressee avec des coupes vides et des places pour treize convives. Onze sieges sont occupes par des formes brumeuses. Deux restent vides.",
@@ -247,11 +246,11 @@
       "foret",
       "festival"
     ],
-    "trust_tier": "T0"
+    "trust_tier": "T0",
+    "faction": "ankou"
   },
   {
     "id": "fr_s11a_samhain_005",
-    "faction_primaire": "ankou",
     "biome": "collines_dolmens",
     "champ_lexical": "vigueur",
     "text": "Un taureau noir apparait sur la colline, ses cornes enveloppees de flammes bleutees. C'est le Tarw Rith, le taureau de Samhain qui court entre les mondes. Il charge vers toi — non par hostilite, mais pour tester ta valeur. L'Ankou observe depuis un dolmen, les bras croises. 'S'il te depasse, tu perds un an. S'il s'arrete, tu gagnes un secret.'",
@@ -309,11 +308,11 @@
       "epreuve",
       "festival"
     ],
-    "trust_tier": "T0"
+    "trust_tier": "T0",
+    "faction": "ankou"
   },
   {
     "id": "fr_s11a_samhain_006",
-    "faction_primaire": "ankou",
     "biome": "iles_mystiques",
     "champ_lexical": "logique",
     "text": "Sur l'ile la plus occidentale, un phare eteint se rallume chaque Samhain. Sa lumiere ne brille que pour les morts, traçant des codes dans la brume. Un gardien spectral te tend un parchemin couvert de symboles oghamiques et pointe vers la lanterne. 'Decode le message avant que la lumiere s'eteigne. Apres, il faudra attendre un an.'",
@@ -371,11 +370,11 @@
       "code",
       "festival"
     ],
-    "trust_tier": "T0"
+    "trust_tier": "T0",
+    "faction": "ankou"
   },
   {
     "id": "fr_s11a_samhain_007",
-    "faction_primaire": "ankou",
     "biome": "villages_celtes",
     "champ_lexical": "bluff",
     "text": "Au village, les habitants ont laisse leurs portes ouvertes et de la nourriture sur les tables pour Samhain. Un esprit malin s'est installe dans la maison du forgeron et refuse de partir a l'aube. Il reclame une offrande impossible — le rire d'un enfant qui n'est pas encore ne. Les villageois te regardent, desesperes.",
@@ -434,11 +433,11 @@
       "village",
       "festival"
     ],
-    "trust_tier": "T0"
+    "trust_tier": "T0",
+    "faction": "ankou"
   },
   {
     "id": "fr_s11a_samhain_008",
-    "faction_primaire": "ankou",
     "biome": "landes_bruyere",
     "champ_lexical": "chance",
     "text": "Sur les landes balayees par le vent de Samhain, des cairns se sont ouverts d'eux-memes, revelant des cavites remplies d'objets anciens. La bruyere s'est teintee de rouge sang autour de chaque cairn. Erwan dit que c'est la terre qui rend ce qu'elle a pris. 'Choisis un cairn. Un seul. Ce que tu y trouveras te definira pour le reste de la nuit.'",
@@ -496,11 +495,11 @@
       "landes",
       "festival"
     ],
-    "trust_tier": "T0"
+    "trust_tier": "T0",
+    "faction": "ankou"
   },
   {
     "id": "fr_s11a_samhain_009",
-    "faction_primaire": "ankou",
     "biome": "cercles_pierres",
     "champ_lexical": "esprit",
     "text": "Le cercle de pierres vibre d'une frequence inaudible cette nuit de Samhain. Des runes apparaissent sur chaque menhir, brillant d'un bleu glacial. Au centre, une silhouette d'enfant joue seule avec des osselets. Elle leve les yeux vers toi. 'Tu veux jouer ? Les regles sont simples. Si je gagne, tu restes ici jusqu'au prochain Samhain. Si tu gagnes, je te montre le chemin.'",
@@ -558,11 +557,11 @@
       "jeu",
       "festival"
     ],
-    "trust_tier": "T0"
+    "trust_tier": "T0",
+    "faction": "ankou"
   },
   {
     "id": "fr_s11a_samhain_010",
-    "faction_primaire": "ankou",
     "biome": "foret_broceliande",
     "champ_lexical": "perception",
     "text": "Un cerf blanc aux bois de cristal traverse la foret de Samhain, laissant des empreintes lumineuses dans la mousse. C'est le messager entre les mondes, dit-on. Il s'arrete et tourne la tete vers toi. Ses yeux contiennent des galaxies miniatures. Puis il reprend sa course, mais plus lentement — comme s'il t'invitait.",
@@ -620,11 +619,11 @@
       "messager",
       "festival"
     ],
-    "trust_tier": "T0"
+    "trust_tier": "T0",
+    "faction": "ankou"
   },
   {
     "id": "fr_s11a_samhain_011",
-    "faction_primaire": "ankou",
     "biome": "cotes_sauvages",
     "champ_lexical": "vigueur",
     "text": "Sur les cotes, Samhain amene la Chasse Sauvage. Des cavaliers fantomes galopent sur les vagues, leurs chevaux ecumant comme la mer elle-meme. Le chef de la Chasse — un guerrier sans visage — pointe sa lance vers le rivage. 'Cours avec nous ou tiens bon contre la tempete que nous amenons. Il n'y a pas de troisieme choix.'",
@@ -682,11 +681,11 @@
       "cotes",
       "festival"
     ],
-    "trust_tier": "T0"
+    "trust_tier": "T0",
+    "faction": "ankou"
   },
   {
     "id": "fr_s11a_samhain_012",
-    "faction_primaire": "ankou",
     "biome": "collines_dolmens",
     "champ_lexical": "logique",
     "text": "Le dernier acte de Samhain : l'Ankou ouvre le Grand Livre des Ames au sommet de la colline. Chaque page contient un nom et une histoire. Il te montre une page blanche — la tienne. 'Ce que tu y ecris ce soir restera pour toujours. Les morts lisent ce livre aussi.' Il te tend une plume faite d'une epine d'if.",
@@ -744,11 +743,11 @@
       "ecriture",
       "festival"
     ],
-    "trust_tier": "T0"
+    "trust_tier": "T0",
+    "faction": "ankou"
   },
   {
     "id": "fr_s11a_imbolc_001",
-    "faction_primaire": "druides",
     "biome": "foret_broceliande",
     "champ_lexical": "observation",
     "text": "Imbolc arrive avec les premieres perce-neige. Maelgwn a allume un feu sacre au coeur de la foret, alimenté par neuf bois differents. Chaque flamme porte une couleur differente — or pour le chene, argent pour le bouleau, vert pour le frene. 'Le feu de Brigid revele la verite cachee dans le bois,' dit-il. 'Regarde bien — chaque flamme te montre un avenir possible.'",
@@ -806,11 +805,11 @@
       "brigid",
       "festival"
     ],
-    "trust_tier": "T0"
+    "trust_tier": "T0",
+    "faction": "druides"
   },
   {
     "id": "fr_s11a_imbolc_002",
-    "faction_primaire": "druides",
     "biome": "landes_bruyere",
     "champ_lexical": "esprit",
     "text": "Sur les landes, Imbolc fait fondre la derniere neige. Des sources jaillissent la ou il n'y avait que de la terre gelee. Keridwen, la guerisseuse, trempe ses mains dans une source nouvelle. 'L'eau d'Imbolc guerit ce que l'hiver a blesse,' murmure-t-elle. 'Mais elle demande de la sincerite. Si tu bois avec un mensonge dans le coeur, elle te le rendra au centuple.'",
@@ -868,11 +867,11 @@
       "guerison",
       "festival"
     ],
-    "trust_tier": "T0"
+    "trust_tier": "T0",
+    "faction": "druides"
   },
   {
     "id": "fr_s11a_imbolc_003",
-    "faction_primaire": "druides",
     "biome": "cercles_pierres",
     "champ_lexical": "logique",
     "text": "Les menhirs du cercle ont fleuri pour Imbolc — du lichen dore recouvre leurs faces est. Brennos affirme que c'est le signe que Brigid a beni le lieu. Il a dispose neuf chandelles en spirale et demande aux pelerins de les allumer dans le bon ordre. 'L'ordre revele l'enseignement. Trompe-toi et les chandelles s'eteindront d'elles-memes.'",
@@ -930,11 +929,11 @@
       "spirale",
       "festival"
     ],
-    "trust_tier": "T0"
+    "trust_tier": "T0",
+    "faction": "druides"
   },
   {
     "id": "fr_s11a_imbolc_004",
-    "faction_primaire": "druides",
     "biome": "villages_celtes",
     "champ_lexical": "bluff",
     "text": "Au village, les femmes tressent des croix de Brigid avec des joncs frais. Cadogan explique que chaque croix protege un foyer pour l'annee. Mais il n'y a pas assez de joncs pour tout le village. Les familles se disputent les derniers brins. 'Il faut decider qui recevra la protection et qui devra s'en passer.'",
@@ -993,11 +992,11 @@
       "village",
       "festival"
     ],
-    "trust_tier": "T0"
+    "trust_tier": "T0",
+    "faction": "druides"
   },
   {
     "id": "fr_s11a_imbolc_005",
-    "faction_primaire": "druides",
     "biome": "foret_broceliande",
     "champ_lexical": "perception",
     "text": "Les premiers agneaux naissent dans la clairiere d'Imbolc. Gwenn veille sur eux avec une lanterne de cristal qui ne s'eteint jamais. 'Les agneaux entendent des sons que nous ne percevons plus,' dit-elle. 'Ils tournent la tete vers l'est — quelque chose approche. Quelque chose de doux et de tres ancien.'",
@@ -1055,11 +1054,11 @@
       "naissance",
       "festival"
     ],
-    "trust_tier": "T0"
+    "trust_tier": "T0",
+    "faction": "druides"
   },
   {
     "id": "fr_s11a_imbolc_006",
-    "faction_primaire": "druides",
     "biome": "cotes_sauvages",
     "champ_lexical": "vigueur",
     "text": "La mer est etrangement calme pour Imbolc. Maelle conduit un rituel de purification sur la plage — les participants doivent marcher pieds nus dans l'eau glacee jusqu'aux genoux. 'Le froid d'Imbolc nettoie l'ame de ses ombres d'hiver,' dit-elle. 'Mais il faut y aller de plein gre. La mer sait si tu triches.'",
@@ -1117,11 +1116,11 @@
       "mer",
       "festival"
     ],
-    "trust_tier": "T0"
+    "trust_tier": "T0",
+    "faction": "druides"
   },
   {
     "id": "fr_s11a_imbolc_007",
-    "faction_primaire": "druides",
     "biome": "foret_broceliande",
     "champ_lexical": "chance",
     "text": "Un pommier fleuri hors saison — miracle d'Imbolc. Ses fleurs sont d'un blanc irreal, et chaque petale qui tombe se change en flocon de neige avant de toucher le sol. Maelgwn est emu. 'Le Quert s'eveille. Celui qui cueille une fleur d'Imbolc reçoit un don — mais la fleur choisit qui peut la toucher.'",
@@ -1179,11 +1178,11 @@
       "quert",
       "festival"
     ],
-    "trust_tier": "T0"
+    "trust_tier": "T0",
+    "faction": "druides"
   },
   {
     "id": "fr_s11a_imbolc_008",
-    "faction_primaire": "druides",
     "biome": "collines_dolmens",
     "champ_lexical": "observation",
     "text": "Au sommet de la colline la plus haute, un foyer d'Imbolc brule depuis l'aube. Ildiko, la gardienne des dolmens, a entoure le feu de miroirs d'obsidienne. Chaque miroir reflete une saison differente. 'Brigid m'a enseigne que le temps n'est pas une ligne,' dit-elle. 'Regarde dans le bon miroir et tu verras ce dont tu as besoin.'",
@@ -1241,11 +1240,11 @@
       "obsidienne",
       "festival"
     ],
-    "trust_tier": "T0"
+    "trust_tier": "T0",
+    "faction": "druides"
   },
   {
     "id": "fr_s11a_imbolc_009",
-    "faction_primaire": "druides",
     "biome": "marais_korrigans",
     "champ_lexical": "finesse",
     "text": "Meme les marais celebrent Imbolc : des nenuphars blancs ont eclos sur l'eau noire, formant un sentier naturel. Gwen Du, la korrigane, affirme que Brigid a marche ici et que ses pas ont laisse ces fleurs. 'Le chemin existe une seule nuit,' previent-elle. 'Traverse avant l'aube ou reste dans la boue un an de plus.'",
@@ -1303,11 +1302,11 @@
       "marais",
       "festival"
     ],
-    "trust_tier": "T0"
+    "trust_tier": "T0",
+    "faction": "druides"
   },
   {
     "id": "fr_s11a_imbolc_010",
-    "faction_primaire": "druides",
     "biome": "iles_mystiques",
     "champ_lexical": "esprit",
     "text": "Sur l'ile sacree, une pretresse d'Imbolc entretient une flamme qui n'a jamais ete eteinte depuis des siecles. Elle te regarde avec des yeux d'ambre. 'La flamme de Brigid ne brule pas le bois — elle brule l'ignorance. Approche ta main si tu veux apprendre. Mais ce que la flamme revele ne peut etre oublie.'",
@@ -1365,11 +1364,11 @@
       "pretresse",
       "festival"
     ],
-    "trust_tier": "T0"
+    "trust_tier": "T0",
+    "faction": "druides"
   },
   {
     "id": "fr_s11a_imbolc_011",
-    "faction_primaire": "druides",
     "biome": "landes_bruyere",
     "champ_lexical": "logique",
     "text": "Erwan a decouvert un ancien calendrier grave dans la roche, revele par la fonte des neiges d'Imbolc. Les symboles indiquent des alignements stellaires oublies. 'Ce calendrier est plus ancien que nos cairns,' dit-il, stupefait. 'Si on le decode, on pourrait predire les prochaines floraisons sacrees. Mais certains symboles manquent — il faut les reconstituer.'",
@@ -1427,11 +1426,11 @@
       "astronomie",
       "festival"
     ],
-    "trust_tier": "T0"
+    "trust_tier": "T0",
+    "faction": "druides"
   },
   {
     "id": "fr_s11a_imbolc_012",
-    "faction_primaire": "druides",
     "biome": "foret_broceliande",
     "champ_lexical": "perception",
     "text": "Le dernier rite d'Imbolc : Maelgwn enterre un grain de ble beni dans la terre humide de la clairiere. 'Ce grain contient le souvenir de toutes les moissons passees,' dit-il. 'Ecoute — si tu presses ton oreille contre la terre, tu entendras les racines qui l'accueillent. C'est le son du renouveau.'",
@@ -1489,11 +1488,11 @@
       "renouveau",
       "festival"
     ],
-    "trust_tier": "T0"
+    "trust_tier": "T0",
+    "faction": "druides"
   },
   {
     "id": "fr_s11a_beltane_001",
-    "faction_primaire": "niamh",
     "biome": "foret_broceliande",
     "champ_lexical": "esprit",
     "text": "Beltane enflamme la foret. Deux grands feux brulent de part et d'autre d'un sentier de mousse, et les creatures de Niamh dansent entre les flammes. Leurs corps sont mi-humains, mi-vegetaux — des fougeres poussent dans leurs cheveux, des fleurs s'ouvrent sur leurs epaules. 'Passe entre les feux,' chante une voix, 'et tu seras renouvele. Mais le feu prend autant qu'il donne.'",
@@ -1551,11 +1550,11 @@
       "danse",
       "festival"
     ],
-    "trust_tier": "T0"
+    "trust_tier": "T0",
+    "faction": "niamh"
   },
   {
     "id": "fr_s11a_beltane_002",
-    "faction_primaire": "niamh",
     "biome": "landes_bruyere",
     "champ_lexical": "bluff",
     "text": "Une foire feerique s'est installee sur les landes pour Beltane. Des marchands aux yeux de chat vendent des philtres, des reves et des mensonges dores. Un marchand te propose une fiole d'eau de Beltane qui guerit toute blessure — mais son prix est un souvenir que tu ne retrouveras jamais. 'Choisis lequel. Je ne suis pas regargant.'",
@@ -1613,11 +1612,11 @@
       "marchand",
       "festival"
     ],
-    "trust_tier": "T0"
+    "trust_tier": "T0",
+    "faction": "niamh"
   },
   {
     "id": "fr_s11a_beltane_003",
-    "faction_primaire": "niamh",
     "biome": "cotes_sauvages",
     "champ_lexical": "perception",
     "text": "Sur les cotes, Beltane fait chanter la mer. Des sirenes — non pas celles des legendes marines, mais des fees d'eau celtiques — emergent des vagues en chantant un hymne de fertilite. Maelle dit que leur chant peut reveler l'emplacement de tresors sous-marins. 'Mais il faut savoir ecouter la bonne note. Certaines melent un piege a leur chanson.'",
@@ -1675,11 +1674,11 @@
       "chant",
       "festival"
     ],
-    "trust_tier": "T0"
+    "trust_tier": "T0",
+    "faction": "niamh"
   },
   {
     "id": "fr_s11a_beltane_004",
-    "faction_primaire": "niamh",
     "biome": "marais_korrigans",
     "champ_lexical": "finesse",
     "text": "Les marais fleurissent pour Beltane — des orchidees sauvages d'un violet irreal poussent sur les troncs morts. Gwen Du raconte que ces fleurs sont les coeurs transformes des fees qui ont aime des mortels. 'Cueille-en une et la fee reviendra. Mais elle te demandera ce que tu es pret a donner en echange de son amour.'",
@@ -1737,11 +1736,11 @@
       "fees",
       "festival"
     ],
-    "trust_tier": "T0"
+    "trust_tier": "T0",
+    "faction": "niamh"
   },
   {
     "id": "fr_s11a_beltane_005",
-    "faction_primaire": "niamh",
     "biome": "foret_broceliande",
     "champ_lexical": "observation",
     "text": "L'Arbre de Mai est dresse au coeur de la clairiere, entoure de rubans multicolores. Les danseurs tournent autour en tressant les rubans, et chaque noeud represente un voeu. Mais un ruban noir s'est mele aux autres. 'Quelqu'un a fait un voeu sombre,' dit Gwenn, inquiete. 'Il faut trouver qui avant que le tressage ne se termine.'",
@@ -1799,11 +1798,11 @@
       "rubans",
       "festival"
     ],
-    "trust_tier": "T0"
+    "trust_tier": "T0",
+    "faction": "niamh"
   },
   {
     "id": "fr_s11a_beltane_006",
-    "faction_primaire": "niamh",
     "biome": "iles_mystiques",
     "champ_lexical": "chance",
     "text": "Sur les iles, Beltane ouvre un passage vers Tir na nOg — la Terre de l'Eternelle Jeunesse. Morgane garde l'entree, un portail de brume doree. 'Tu peux tenter le passage,' dit-elle. 'Mais le portail est capricieux. Il accepte un voyageur sur trois. Les autres reviennent un an plus vieux.'",
@@ -1861,11 +1860,11 @@
       "portail",
       "festival"
     ],
-    "trust_tier": "T0"
+    "trust_tier": "T0",
+    "faction": "niamh"
   },
   {
     "id": "fr_s11a_beltane_007",
-    "faction_primaire": "niamh",
     "biome": "villages_celtes",
     "champ_lexical": "vigueur",
     "text": "Les jeunes du village disputent les jeux de Beltane — courses, luttes, sauts au-dessus du feu. Cadogan supervise avec fierte. 'Le vainqueur sera couronne Roi ou Reine de Mai pour un jour,' annonce-t-il. 'Mais la couronne n'est pas qu'un honneur — elle lie celui qui la porte aux esprits de la fertilite pour une lune entiere.'",
@@ -1923,11 +1922,11 @@
       "couronne_mai",
       "festival"
     ],
-    "trust_tier": "T0"
+    "trust_tier": "T0",
+    "faction": "niamh"
   },
   {
     "id": "fr_s11a_beltane_008",
-    "faction_primaire": "niamh",
     "biome": "cercles_pierres",
     "champ_lexical": "logique",
     "text": "A minuit de Beltane, les pierres du cercle s'illuminent selon un schema que Brennos n'a jamais vu. Des lignes de lumiere relient les menhirs deux par deux, formant une constellation au sol. 'Ce n'est pas un motif druidique,' murmure-t-il. 'C'est plus ancien. Plus sauvage. C'est le langage des fees avant qu'elles n'apprennent le notre.'",
@@ -1985,11 +1984,11 @@
       "pierres",
       "festival"
     ],
-    "trust_tier": "T0"
+    "trust_tier": "T0",
+    "faction": "niamh"
   },
   {
     "id": "fr_s11a_beltane_009",
-    "faction_primaire": "niamh",
     "biome": "foret_broceliande",
     "champ_lexical": "esprit",
     "text": "Un couple de cerfs feeriques — bois de cristal, pelage de mousse — apparait dans la clairiere de Beltane. Ils s'inclinent l'un vers l'autre dans une danse lente, leurs bois entrelaces creant des arcs de lumiere. 'C'est le Mariage Sylvestre,' souffle Gwenn. 'Ceux qui en sont temoins recoivent une benediction. Mais il faut etre parfaitement immobile.'",
@@ -2047,11 +2046,11 @@
       "mariage",
       "festival"
     ],
-    "trust_tier": "T0"
+    "trust_tier": "T0",
+    "faction": "niamh"
   },
   {
     "id": "fr_s11a_beltane_010",
-    "faction_primaire": "niamh",
     "biome": "cotes_sauvages",
     "champ_lexical": "observation",
     "text": "A l'aube de Beltane, la maree a recule plus loin que jamais, revelant un jardin sous-marin de corail vivant. Des fleurs de mer s'ouvrent et se ferment au rythme d'une musique inaudible. Maelle est emerveilee. 'Beltane revele ce que la mer cache le reste de l'annee. Mais quand la maree remontera, tout disparaitra. Observe vite.'",
@@ -2109,11 +2108,11 @@
       "maree",
       "festival"
     ],
-    "trust_tier": "T0"
+    "trust_tier": "T0",
+    "faction": "niamh"
   },
   {
     "id": "fr_s11a_beltane_011",
-    "faction_primaire": "niamh",
     "biome": "landes_bruyere",
     "champ_lexical": "perception",
     "text": "Des papillons de nuit geants — ailes peintes de visages feeriques — envahissent les landes de Beltane. Chacun porte un message different sur ses ailes, ecrit en ogham minuscule. Erwan essaie de les lire mais ils bougent trop vite. 'Les fees de Niamh envoient leurs invitations,' dit-il. 'Si tu arrives a en lire un, tu sauras ou se tient le grand bal.'",
@@ -2171,11 +2170,11 @@
       "messages",
       "festival"
     ],
-    "trust_tier": "T0"
+    "trust_tier": "T0",
+    "faction": "niamh"
   },
   {
     "id": "fr_s11a_beltane_012",
-    "faction_primaire": "niamh",
     "biome": "collines_dolmens",
     "champ_lexical": "vigueur",
     "text": "Le sommet de la colline est couronne de flammes pour Beltane. Des guerriers feeriques s'affrontent dans un tournoi aerien — ils volent sur des montures de vent, leurs lances faites de lumiere solide. Le vainqueur recevra le droit de nommer l'ete. 'Tu peux defier un champion,' propose Ildiko. 'Ou simplement regarder. Mais les fees respectent ceux qui osent.'",
@@ -2233,11 +2232,11 @@
       "guerriers",
       "festival"
     ],
-    "trust_tier": "T0"
+    "trust_tier": "T0",
+    "faction": "niamh"
   },
   {
     "id": "fr_s11a_beltane_013",
-    "faction_primaire": "niamh",
     "biome": "marais_korrigans",
     "champ_lexical": "bluff",
     "text": "La Reine de Mai des korrigans exige un tribut pour laisser les celebrations de Beltane se poursuivre dans ses marais. Elle veut une chanson que personne n'a jamais entendue — composee sur l'instant. Gwen Du te pousse en avant. 'Tu es le seul etranger. Elle ne connait pas tes chansons. Invente quelque chose — ou elle nous chassera tous.'",
@@ -2296,11 +2295,11 @@
       "chanson",
       "festival"
     ],
-    "trust_tier": "T0"
+    "trust_tier": "T0",
+    "faction": "niamh"
   },
   {
     "id": "fr_s11a_lughnasadh_001",
-    "faction_primaire": "korrigans",
     "biome": "villages_celtes",
     "champ_lexical": "vigueur",
     "text": "Lughnasadh transforme le village en arene. Les korrigans ont organise les Jeux du Dieu Lugh — epreuves de force, d'adresse et de ruse. Cadogan explique les regles : 'Trois epreuves. Le plus fort ne gagne pas toujours — Lugh etait aussi le plus ruse. Le vainqueur recoit le premier grain de la moisson.' Le sol tremble sous les pieds des concurrents.",
@@ -2358,11 +2357,11 @@
       "competition",
       "festival"
     ],
-    "trust_tier": "T0"
+    "trust_tier": "T0",
+    "faction": "korrigans"
   },
   {
     "id": "fr_s11a_lughnasadh_002",
-    "faction_primaire": "korrigans",
     "biome": "landes_bruyere",
     "champ_lexical": "bluff",
     "text": "Sur les landes, la moisson de Lughnasadh est un spectacle. Les korrigans vendent les premiers grains aux encheres — mais ce ne sont pas des encheres normales. Chaque encherisseur doit raconter l'histoire la plus invraisemblable. Le meilleur menteur remporte le lot. 'La verite est ennuyeuse,' declare le crieur. 'Lugh aimait les histoires impossibles.'",
@@ -2420,11 +2419,11 @@
       "mensonge",
       "festival"
     ],
-    "trust_tier": "T0"
+    "trust_tier": "T0",
+    "faction": "korrigans"
   },
   {
     "id": "fr_s11a_lughnasadh_003",
-    "faction_primaire": "korrigans",
     "biome": "marais_korrigans",
     "champ_lexical": "finesse",
     "text": "Les korrigans des marais ont installe un parcours d'obstacles dans la boue pour Lughnasadh. Des troncs flottants, des lianes pendantes et des mares de vase forment un labyrinthe aquatique. Le record est detenu par un korrigan nomme Pik qui le complete en battant des mains. 'Essaie,' ricane-t-il. 'La boue aime les lents.'",
@@ -2482,11 +2481,11 @@
       "boue",
       "festival"
     ],
-    "trust_tier": "T0"
+    "trust_tier": "T0",
+    "faction": "korrigans"
   },
   {
     "id": "fr_s11a_lughnasadh_004",
-    "faction_primaire": "korrigans",
     "biome": "foret_broceliande",
     "champ_lexical": "chance",
     "text": "Dans la foret, les korrigans ont cache treize pommes d'or dans les branches — tradition de Lughnasadh. Qui en trouve une la garde. Mais les pommes sont enchanteees : elles changent de place quand on les regarde directement. 'Il faut les voir du coin de l'oeil,' conseille Gwenn. 'Ou avoir beaucoup de chance.'",
@@ -2544,11 +2543,11 @@
       "chasse",
       "festival"
     ],
-    "trust_tier": "T0"
+    "trust_tier": "T0",
+    "faction": "korrigans"
   },
   {
     "id": "fr_s11a_lughnasadh_005",
-    "faction_primaire": "korrigans",
     "biome": "cotes_sauvages",
     "champ_lexical": "observation",
     "text": "Sur les cotes, les korrigans organisent la Course des Barques pour Lughnasadh. Des bateaux faits de branches tressees et de cuir doivent naviguer entre les ecueils. Maelle joue les juges. 'La mer ne pardonne pas la maladresse,' previent-elle. 'Mais elle respecte ceux qui la lisent bien. Observe les vagues avant de choisir ta route.'",
@@ -2606,11 +2605,11 @@
       "mer",
       "festival"
     ],
-    "trust_tier": "T0"
+    "trust_tier": "T0",
+    "faction": "korrigans"
   },
   {
     "id": "fr_s11a_lughnasadh_006",
-    "faction_primaire": "korrigans",
     "biome": "cercles_pierres",
     "champ_lexical": "logique",
     "text": "Brennos propose une enigme de Lughnasadh au cercle de pierres : 'Lugh avait trois talents — forgeron, charpentier et harpiste. Chaque talent est lie a un menhir. Trouve lequel va avec lequel et tu recevras un fragment de la Lame de Lugh.' Les menhirs portent des symboles graves mais uses par le temps.",
@@ -2668,11 +2667,11 @@
       "menhirs",
       "festival"
     ],
-    "trust_tier": "T0"
+    "trust_tier": "T0",
+    "faction": "korrigans"
   },
   {
     "id": "fr_s11a_lughnasadh_007",
-    "faction_primaire": "korrigans",
     "biome": "collines_dolmens",
     "champ_lexical": "esprit",
     "text": "Au sommet de la colline, un korrigan ancien organise le Defi des Volontes de Lughnasadh. Chaque participant doit fixer une flamme sans ciller jusqu'a ce qu'elle s'eteigne d'elle-meme. 'Lugh a fixe le soleil pendant trois jours,' dit le vieux korrigan. 'Toi, je ne te demande qu'une chandelle. Mais elle brulera aussi longtemps que ta volonte tiendra.'",
@@ -2730,11 +2729,11 @@
       "flamme",
       "festival"
     ],
-    "trust_tier": "T0"
+    "trust_tier": "T0",
+    "faction": "korrigans"
   },
   {
     "id": "fr_s11a_lughnasadh_008",
-    "faction_primaire": "korrigans",
     "biome": "villages_celtes",
     "champ_lexical": "perception",
     "text": "Le festin de Lughnasadh est dresse sur la place du village. Mais les korrigans ont piege les plats — certains sont enchantes pour reveler les verites cachees de ceux qui les mangent. Cadogan rit nerveusement. 'La tradition veut que le festin soit un jeu de verite. Mange le bon plat et tu apprendras un secret. Mange le mauvais...'",
@@ -2792,11 +2791,11 @@
       "verite",
       "festival"
     ],
-    "trust_tier": "T0"
+    "trust_tier": "T0",
+    "faction": "korrigans"
   },
   {
     "id": "fr_s11a_lughnasadh_009",
-    "faction_primaire": "korrigans",
     "biome": "foret_broceliande",
     "champ_lexical": "finesse",
     "text": "Les korrigans de la foret organisent la Chasse au Sanglier Dore de Lughnasadh — un sanglier magique qui ne peut etre attrape que par la ruse. Il court entre les chenes, laissant des traces de poussiere d'or. 'Ne cours pas apres lui,' conseille un vieux chasseur korrigan. 'Anticipe. Le sanglier pense comme un roi — il va toujours vers le trône.'",
@@ -2854,11 +2853,11 @@
       "chasse",
       "festival"
     ],
-    "trust_tier": "T0"
+    "trust_tier": "T0",
+    "faction": "korrigans"
   },
   {
     "id": "fr_s11a_lughnasadh_010",
-    "faction_primaire": "korrigans",
     "biome": "iles_mystiques",
     "champ_lexical": "esprit",
     "text": "Sur les iles, Lughnasadh prend une forme plus serieuse. Morgane organise le Concours des Arts — poesie, musique, forge et guerison. 'Lugh maitrisait tous les arts,' rappelle-t-elle. 'Montre-moi le tien. Un seul suffit, mais il doit etre sincere. Les iles ne tolerent pas la mediocrite volontaire.'",
@@ -2916,11 +2915,11 @@
       "iles",
       "festival"
     ],
-    "trust_tier": "T0"
+    "trust_tier": "T0",
+    "faction": "korrigans"
   },
   {
     "id": "fr_s11a_lughnasadh_011",
-    "faction_primaire": "korrigans",
     "biome": "marais_korrigans",
     "champ_lexical": "observation",
     "text": "Les korrigans des marais ont construit un labyrinthe ephemere avec des roseaux tresses pour Lughnasadh. Au centre, un chaudron contient le premier hydromel de la saison. 'Celui qui trouve le centre boit en premier,' annonce Gwen Du. 'Mais le labyrinthe change — les roseaux se deplacent quand tu ne regardes pas.'",
@@ -2978,11 +2977,11 @@
       "hydromel",
       "festival"
     ],
-    "trust_tier": "T0"
+    "trust_tier": "T0",
+    "faction": "korrigans"
   },
   {
     "id": "fr_s11a_lughnasadh_012",
-    "faction_primaire": "korrigans",
     "biome": "landes_bruyere",
     "champ_lexical": "logique",
     "text": "Le dernier defi de Lughnasadh sur les landes : un korrigan mathematicien a grave trois equations dans le granit. Chaque equation utilise des symboles oghamiques au lieu de chiffres. 'Lugh comptait en arbres,' explique-t-il. 'Le bouleau est un, le sorbier est deux, le frene est trois. Resous les trois et tu gagneras la Moisson d'Or.'",
@@ -3040,11 +3039,11 @@
       "ogham",
       "festival"
     ],
-    "trust_tier": "T0"
+    "trust_tier": "T0",
+    "faction": "korrigans"
   },
   {
     "id": "fr_s11a_lughnasadh_013",
-    "faction_primaire": "korrigans",
     "biome": "villages_celtes",
     "champ_lexical": "chance",
     "text": "Le dernier acte de Lughnasadh au village : les korrigans ont rempli treize paniers de grains. Un seul contient un grain d'or qui garantit une moisson abondante. Les paniers sont melanges et redistribues au hasard. 'Choisis ton panier,' dit Cadogan. 'Les dieux de la moisson aiment les audacieux.'",
@@ -3102,6 +3101,7 @@
       "moisson",
       "festival"
     ],
-    "trust_tier": "T0"
+    "trust_tier": "T0",
+    "faction": "korrigans"
   }
 ]

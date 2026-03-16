@@ -48,7 +48,7 @@ def compute_net_impact(card: dict) -> tuple[float, float, float]:
             if etype == "HEAL_LIFE":
                 benefit += amount
             elif etype == "DAMAGE_LIFE":
-                cost -= amount
+                cost -= abs(amount)
             elif etype == "ADD_REPUTATION":
                 if amount >= 0:
                     benefit += amount
