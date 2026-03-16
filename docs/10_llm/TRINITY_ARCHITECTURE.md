@@ -1,6 +1,11 @@
 # Architecture LLM Qwen 2.5-3B-Instruct — M.E.R.L.I.N.
 
-> MAJ: 2026-02-15 — Ollama Backend + Zero Fallback + Multi-Brain + Buffer 5
+> **[ARCHIVED — 2026-03-16]** Ce document date de la phase Triade (pre-v2.0).
+> Le systeme actuel utilise 5 factions + minigames + multiplicateur (voir GAME_DESIGN_BIBLE.md v2.4).
+> Les sections LLM (Ollama, RAG, Multi-Brain, guardrails, prefetch) restent valides.
+> Les references a "Triade", "SHIFT_ASPECT", "Corps/Ame/Monde", "Souffle", "D20" sont OBSOLETES.
+
+> MAJ originale: 2026-02-15 — Ollama Backend + Zero Fallback + Multi-Brain + Buffer 5
 
 ---
 
@@ -480,9 +485,9 @@ Le GM genere des tags audio qui declenchent les sons proceduraux du SFXManager.
 | `scripts/merlin/merlin_store.gd` | Redux-like state, dispatch TRIADE |
 | `scripts/merlin/merlin_card_system.gd` | Pool cartes TRIADE |
 | `scripts/merlin/merlin_constants.gd` | Constantes gameplay |
-| `scripts/ui/triade_game_ui.gd` | UI cartes + thinking animation triskelion |
-| `scripts/ui/triade_game_controller.gd` | Store-UI bridge + buffer 5 + retry + prefetch |
-| `scripts/TestTriadeLLMBenchmark.gd` | Benchmark in-engine (6 tests incl. perf + zero fallback) |
+| ~~`scripts/ui/triade_game_ui.gd`~~ | REMOVED — replaced by merlin_game_controller.gd |
+| ~~`scripts/ui/triade_game_controller.gd`~~ | REMOVED — replaced by merlin_game_controller.gd |
+| ~~`scripts/TestTriadeLLMBenchmark.gd`~~ | REMOVED — replaced by test_llm_full_run.gd |
 
 ---
 

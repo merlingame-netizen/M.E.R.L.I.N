@@ -4,7 +4,7 @@
 # Card System — Reference Run (20 cartes)
 
 > Source: MERLIN_LLM_Pipeline_Test_Report_v3_REWRITE_actions_tree_v3.docx
-> Aligned with: merlin_card_system.gd, triade_game_ui.gd, triade_game_controller.gd
+> Originally aligned with: merlin_card_system.gd (Triade UI/controller files removed in v2.0)
 
 ---
 
@@ -86,7 +86,7 @@ MARCHANDER, BRAVER, TRAVERSER, APPELER, DEFIER, IGNORER
 
 ---
 
-## 5. Aspect Mechanics (Triade)
+## 5. Aspect Mechanics (OBSOLETE — replaced by 5 Factions in v2.0)
 
 | Aspect | Animal | Bas | Equilibre | Haut |
 |--------|--------|-----|-----------|------|

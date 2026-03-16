@@ -1,3 +1,6 @@
+> **[PARTIALLY OUTDATED — 2026-03-16]** Factions concept valide, mais certaines refs
+> (decay 8%, _init_triade_run, Souffle) sont obsoletes. Voir GAME_DESIGN_BIBLE.md v2.4.
+
 # DOC_15 - Systeme Alignement (Factions)
 
 **Version**: 1.0 | **Date**: 2026-02-26
@@ -72,7 +75,7 @@ Exemples :
 
 ## 7. Bonus de Debut de Run
 
-Sequence dans _init_triade_run() :
+Sequence dans le run init (anciennement _init_triade_run) :
 1. _decay_faction_rep() -- decroissance 8%
 2. _build_and_store_faction_context() -- snapshot meta -> run["faction_context"]
 3. _apply_faction_run_bonuses() -- effets concrets selon les tiers

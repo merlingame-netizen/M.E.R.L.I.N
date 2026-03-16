@@ -1,12 +1,16 @@
 # Etat des lieux pour Claude (Merlin LLM / Godot)
 
+> **[ARCHIVED — 2026-03-16]** Ce document date de 2026-02-09 (phase Triade pre-v2.0).
+> Le systeme actuel utilise Multi-Brain Qwen 3.5 via Ollama (voir docs/LLM_ARCHITECTURE.md).
+> Les references a "Triade", "TestTriadeLLMBenchmark", "SHIFT_ASPECT" sont OBSOLETES.
+
 Purpose
 - Current state snapshot for Merlin LLM integration in Godot.
 
 Scope
 - Paths, status, known issues, and next actions.
 
-Derniere MAJ: 2026-02-09
+Derniere MAJ: 2026-02-09 (ARCHIVE)
 
 Ce document resume l'etat actuel du projet, les scripts en place, les chemins exacts, et les points restants pour stabiliser/optimiser la reactivite et la coherence du LLM dans Godot.
 
