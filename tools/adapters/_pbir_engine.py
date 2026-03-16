@@ -53,6 +53,9 @@ def load_report(report_dir: str) -> dict:
 
     De-stringifies all nested JSON fields (config, filters, vc.config, vc.filters).
     Returns a fully parsed dict with nested dicts (not strings).
+
+    CRITICAL: Preserves ALL keys from the original JSON — not just the ones we
+    know about. This prevents silently dropping undocumented PBI metadata.
     """
     report_path = Path(report_dir) / "report.json"
     if not report_path.exists():
@@ -60,91 +63,77 @@ def load_report(report_dir: str) -> dict:
 
     raw = json.loads(report_path.read_text(encoding="utf-8"))
 
-    # Parse top-level config
-    config = _safe_json_parse(raw.get("config", "{}"))
+    # Start with ALL top-level keys, then parse stringified fields
+    report = dict(raw)
+    report["config"] = _safe_json_parse(raw.get("config", "{}"))
 
     sections = []
     for s in raw.get("sections", []):
-        section_config = _safe_json_parse(s.get("config", "{}"))
-        section_filters = _safe_json_parse(s.get("filters", "[]"))
+        # Preserve ALL section keys
+        section = dict(s)
+        section["config"] = _safe_json_parse(s.get("config", "{}"))
+        section["filters"] = _safe_json_parse(s.get("filters", "[]"))
 
         vcs = []
         for vc in s.get("visualContainers", []):
-            vc_config = _safe_json_parse(vc.get("config", "{}"))
-            vc_filters = _safe_json_parse(vc.get("filters", "[]"))
-            vcs.append({
-                "x": vc.get("x", 0),
-                "y": vc.get("y", 0),
-                "z": vc.get("z", 0),
-                "width": vc.get("width", 300),
-                "height": vc.get("height", 200),
-                "config": vc_config,
-                "filters": vc_filters,
-                "tabOrder": vc.get("tabOrder", 0),
-            })
+            # Preserve ALL VC keys (not just the 8 we know)
+            parsed_vc = dict(vc)
+            parsed_vc["config"] = _safe_json_parse(vc.get("config", "{}"))
+            parsed_vc["filters"] = _safe_json_parse(vc.get("filters", "[]"))
+            vcs.append(parsed_vc)
 
-        sections.append({
-            "id": s.get("id", 0),
-            "name": s.get("name", ""),
-            "displayName": s.get("displayName", ""),
-            "ordinal": s.get("ordinal", 0),
-            "displayOption": s.get("displayOption", 1),
-            "width": s.get("width", 1280),
-            "height": s.get("height", 720),
-            "filters": section_filters,
-            "config": section_config,
-            "visualContainers": vcs,
-        })
+        section["visualContainers"] = vcs
+        sections.append(section)
 
-    return {
-        "config": config,
-        "layoutOptimization": raw.get("layoutOptimization", 0),
-        "resourcePackages": raw.get("resourcePackages", []),
-        "sections": sections,
-    }
+    report["sections"] = sections
+    return report
 
 
 def save_report(report_dir: str, report: dict) -> None:
     """Save a parsed report back to report.json.
 
     Re-stringifies config, filters, vc.config, vc.filters.
+    Uses compact separators (no spaces) to match native PBI Desktop format.
+
+    CRITICAL: Preserves ALL keys from the parsed report — not just the ones
+    we know about. This prevents silently dropping undocumented PBI metadata.
     """
     report_path = Path(report_dir) / "report.json"
+    # Compact separators (no spaces) + preserve UTF-8 chars (no \uXXXX escaping)
+    _j = {"separators": (",", ":"), "ensure_ascii": False}
 
-    raw = {
-        "config": json.dumps(report["config"]),
-        "layoutOptimization": report.get("layoutOptimization", 0),
-        "resourcePackages": report.get("resourcePackages", []),
-        "sections": [
-            {
-                "id": s["id"],
-                "name": s["name"],
-                "displayName": s["displayName"],
-                "filters": json.dumps(s["filters"]),
-                "ordinal": s["ordinal"],
-                "config": json.dumps(s["config"]),
-                "displayOption": s["displayOption"],
-                "width": s["width"],
-                "height": s["height"],
-                "visualContainers": [
-                    {
-                        "x": vc["x"],
-                        "y": vc["y"],
-                        "z": vc["z"],
-                        "width": vc["width"],
-                        "height": vc["height"],
-                        "config": json.dumps(vc["config"]),
-                        "filters": json.dumps(vc["filters"]),
-                        "tabOrder": vc["tabOrder"],
-                    }
-                    for vc in s["visualContainers"]
-                ],
-            }
-            for s in report["sections"]
-        ],
-    }
+    # Start with ALL report keys, then re-stringify parsed fields
+    raw = dict(report)
+    raw["config"] = json.dumps(report["config"], **_j)
 
-    report_path.write_text(json.dumps(raw, indent=2), encoding="utf-8")
+    sections_raw = []
+    for s in report["sections"]:
+        # Preserve ALL section keys
+        s_raw = dict(s)
+        s_raw["config"] = json.dumps(s["config"], **_j)
+        s_raw["filters"] = json.dumps(s["filters"], **_j)
+
+        vcs_raw = []
+        for vc in s["visualContainers"]:
+            # Preserve ALL VC keys (not just the 8 we know)
+            vc_raw = dict(vc)
+            vc_raw["config"] = json.dumps(vc["config"], **_j)
+            vc_raw["filters"] = json.dumps(vc["filters"], **_j)
+            vcs_raw.append(vc_raw)
+
+        s_raw["visualContainers"] = vcs_raw
+        sections_raw.append(s_raw)
+
+    raw["sections"] = sections_raw
+
+    # Use LF + preserve UTF-8 in outer JSON too
+    content = json.dumps(raw, indent=2, ensure_ascii=False)
+    report_path.write_text(content, encoding="utf-8", newline="\n")
+
+    # Remove backup file — PBI Desktop may use it to restore/merge old state
+    backup_path = report_path.with_name("report.backup.json")
+    if backup_path.exists():
+        backup_path.unlink()
 
 
 # ── Visual listing ───────────────────────────────────────────────────────────
@@ -217,7 +206,7 @@ def add_visual(report: dict, page_index: int, vtype: str,
     vc_config = _build_vc_config(visual_id, vtype, x, y, width, height,
                                   properties or {}, bindings or {}, title)
 
-    tab_order = len(section["visualContainers"])
+    tab_order = (len(section["visualContainers"]) + 1) * 1000
     new_vc = {
         "x": x, "y": y, "z": 0,
         "width": width, "height": height,
@@ -315,9 +304,126 @@ def set_text(report: dict, page_index: int, visual_id: str,
     raise ValueError(f"Visual '{visual_id}' not found")
 
 
+def get_visual_type(vc: dict) -> str:
+    """Extract the visualType from a VC's config."""
+    return vc.get("config", {}).get("singleVisual", {}).get("visualType", "unknown")
+
+
+def clone_visual(vc: dict, new_x: int, new_y: int,
+                 new_width: int, new_height: int,
+                 fill_color: str | None = None,
+                 fill_transparency: int | None = None,
+                 line_weight: int | None = None,
+                 line_color: str | None = None,
+                 text: str | None = None,
+                 font_size: str | None = None,
+                 font_color: str | None = None,
+                 font_weight: str | None = None,
+                 font_family: str | None = None,
+                 round_edge: int | None = None,
+                 tab_order: int | None = None) -> dict:
+    """Deep copy a native VC and modify position/style.
+
+    Preserves ALL metadata from the original VC (including undocumented fields).
+    Only modifies the fields we explicitly set.
+    """
+    new_vc = _deep_copy(vc)
+
+    # Update root position
+    new_vc["x"] = new_x
+    new_vc["y"] = new_y
+    new_vc["width"] = new_width
+    new_vc["height"] = new_height
+    if tab_order is not None:
+        new_vc["tabOrder"] = tab_order
+
+    # Generate new unique ID
+    new_id = generate_visual_id()
+    new_vc["config"]["name"] = new_id
+
+    # Update config.layouts position (include z + tabOrder like .pbix format)
+    z_val = new_vc.get("z", 0)
+    new_vc["config"]["layouts"] = [{
+        "id": 0,
+        "position": {"x": new_x, "y": new_y, "z": z_val,
+                      "width": new_width, "height": new_height,
+                      "tabOrder": tab_order if tab_order is not None else 0},
+    }]
+
+    vtype = get_visual_type(new_vc)
+    sv = new_vc["config"].setdefault("singleVisual", {})
+    objects = sv.setdefault("objects", {})
+
+    # Update shape fill/line if requested (format matches PBI Desktop .pbix)
+    if vtype in ("shape", "basicShape"):
+        # Ensure shape type is defined (PBI Desktop requires this)
+        if "shape" not in objects:
+            objects["shape"] = [{
+                "properties": {
+                    "tileShape": pbi_literal("'rectangle'"),
+                },
+            }]
+        # Ensure rotation is defined
+        if "rotation" not in objects:
+            objects["rotation"] = [{
+                "properties": {
+                    "shapeAngle": pbi_literal("0L"),
+                },
+            }]
+        # drillFilterOtherVisuals required by PBI Desktop
+        sv.setdefault("drillFilterOtherVisuals", True)
+
+        if fill_color is not None:
+            # CRITICAL: selector {"id": "default"} is REQUIRED by PBI Desktop
+            # Without it, PBI falls back to theme default (#118DFF blue)
+            # Also: do NOT include "show" or "transparency" — .pbix format
+            # only has fillColor in the fill properties
+            objects["fill"] = [{
+                "properties": {
+                    "fillColor": pbi_color(fill_color),
+                },
+                "selector": {"id": "default"},
+            }]
+        if line_weight is not None or line_color is not None:
+            # Use "outline" instead of "line" (matches .pbix format)
+            objects.pop("line", None)
+            if line_weight == 0:
+                objects["outline"] = [{
+                    "properties": {
+                        "show": pbi_literal("false"),
+                    },
+                }]
+            else:
+                objects["outline"] = [{
+                    "properties": {
+                        "show": pbi_literal("true"),
+                        "lineColor": pbi_color(line_color or "#000000"),
+                        "weight": pbi_literal(
+                            f"{line_weight}D"),
+                    },
+                }]
+
+    # Update textbox text if requested
+    if vtype == "textbox" and text is not None:
+        objects["general"] = [_build_paragraphs(
+            text,
+            font_size or "11pt",
+            font_color or "#000000",
+            font_weight or "normal",
+            font_family or "Segoe UI",
+        )]
+
+    return new_vc
+
+
 def set_page_background(report: dict, page_index: int,
                         color: str, transparency: int = 0) -> dict:
-    """Set the page background color."""
+    """Set the page background color via section config.
+
+    WARNING: Native PBI Desktop reports keep section.config empty ("{}").
+    Using this function may cause PBI Desktop to apply theme colors globally.
+    Prefer using a full-page background shape instead.
+    """
     report = _deep_copy(report)
     section = _get_section(report, page_index)
     config = section.setdefault("config", {})
@@ -328,6 +434,18 @@ def set_page_background(report: dict, page_index: int,
             "transparency": pbi_literal(f"{transparency}D"),
         },
     }]
+    return report
+
+
+def clear_section_config(report: dict, page_index: int = 0) -> dict:
+    """Reset section config to empty — matches native PBI Desktop pattern.
+
+    Native PBI reports always have section.config = {}. Any objects in section
+    config can cause PBI Desktop to override visual-level styling with theme colors.
+    """
+    report = _deep_copy(report)
+    section = _get_section(report, page_index)
+    section["config"] = {}
     return report
 
 
@@ -392,6 +510,7 @@ def _build_vc_objects(title: str = "") -> dict:
         "background": [{
             "properties": {
                 "show": pbi_literal("false"),
+                "color": pbi_color("#FFFFFF"),
                 "transparency": pbi_literal("100D"),
             },
         }],
@@ -530,12 +649,19 @@ def _build_card_objects(props: dict, title: str) -> dict:
                 "show": pbi_literal("true"),
             },
         }],
+        "background": [{
+            "properties": {
+                "show": pbi_literal("false"),
+                "transparency": pbi_literal("100D"),
+            },
+        }],
     }
     return objects
 
 
 def _build_slicer_objects(props: dict, title: str) -> dict:
-    """Build objects for slicer visual."""
+    """Build objects for slicer visual — matches native PBI structure."""
+    header_color = props.get("header_color", "#FF7900")
     objects: dict[str, Any] = {}
     if title:
         objects["title"] = [{
@@ -544,6 +670,22 @@ def _build_slicer_objects(props: dict, title: str) -> dict:
                 "titleText": pbi_literal(f"'{title}'"),
             },
         }]
+    objects["background"] = [{
+        "properties": {
+            "show": pbi_literal("false"),
+            "transparency": pbi_literal("100D"),
+        },
+    }]
+    objects["border"] = [{
+        "properties": {
+            "show": pbi_literal("false"),
+        },
+    }]
+    objects["header"] = [{
+        "properties": {
+            "fontColor": pbi_color(header_color),
+        },
+    }]
     return objects
 
 
@@ -704,13 +846,19 @@ def patch_theme(report_dir: str, background_show: bool = False) -> dict:
     for tf in theme_files:
         theme = _json.loads(tf.read_text(encoding="utf-8"))
         vs = theme.setdefault("visualStyles", {})
+
+        # Patch global wildcard background — use transparency only, NOT show.
+        # CRITICAL: PBI Desktop treats "show: false" as disabling the entire
+        # fill rendering pipeline, which kills shape fills. The native Orange
+        # theme uses transparency:100 WITHOUT a "show" key to make backgrounds
+        # invisible while preserving fill rendering.
         star = vs.setdefault("*", {})
         star_star = star.setdefault("*", {})
         bg_list = star_star.setdefault("background", [{}])
         if bg_list:
-            bg_list[0]["show"] = background_show
-            if "transparency" not in bg_list[0]:
-                bg_list[0]["transparency"] = 100
+            bg_list[0].pop("show", None)  # Remove show key if present
+            bg_list[0]["transparency"] = 100
+
         tf.write_text(_json.dumps(theme, indent=2, ensure_ascii=False), encoding="utf-8")
         patched.append(str(tf))
 

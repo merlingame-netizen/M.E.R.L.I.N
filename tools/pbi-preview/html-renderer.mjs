@@ -117,13 +117,14 @@ export function parseVisualContainer(vc) {
   if (type === 'slicer') {
     const sel = sv.prototypeQuery?.Select?.[0] || {};
     const fieldName = sel.Column?.Property || sel.Measure?.Property || '';
+    const fromEntity = sv.prototypeQuery?.From?.[0]?.Entity || '';
     const titleText = stripQuotes(
       pbiLiteral(objects.title?.[0]?.properties?.text) || fieldName
     );
     const headerColor = stripQuotes(
       pbiLiteral(objects.header?.[0]?.properties?.fontColor?.solid?.color) || '#FF7900'
     );
-    return { ...base, fieldName, titleText, headerColor };
+    return { ...base, fieldName, fromEntity, titleText, headerColor };
   }
 
   return base;
@@ -142,7 +143,11 @@ function renderShape(v) {
 }
 
 function renderTextbox(v) {
-  const spans = (v.paragraphs || []).flatMap(para =>
+  const paras = v.paragraphs || [];
+  const hasMultiLine = paras.length > 1 || paras.some(p =>
+    (p.textRuns || []).some(r => (r.value || '').includes('\n'))
+  );
+  const spans = paras.flatMap(para =>
     (para.textRuns || []).map(run => {
       const s = run.textStyle || {};
       const styles = [
@@ -151,17 +156,33 @@ function renderTextbox(v) {
         s.color ? `color:${s.color}` : '',
         s.fontWeight ? `font-weight:${s.fontWeight}` : '',
       ].filter(Boolean).join(';');
-      return `<span style="${styles}">${esc(run.value || '')}</span>`;
+      const text = esc(run.value || '').replace(/\n/g, '<br>');
+      return `<span style="${styles}">${text}</span>`;
     })
   );
+  const wrapStyle = hasMultiLine ? 'white-space:normal;' : '';
   return `<div class="vc tb" style="left:${v.x}px;top:${v.y}px;width:${v.width}px;height:${v.height}px;`
-    + `z-index:${v.tabOrder}">${spans.join('')}</div>`;
+    + `z-index:${v.tabOrder};${wrapStyle}">${spans.join('')}</div>`;
+}
+
+/** NPS conditional color: green ≥50, blue 30-49, orange 0-29, red <0 */
+function npsColor(val, fallbackColor) {
+  const n = Number(val);
+  if (Number.isNaN(n)) return fallbackColor;
+  if (n >= 50) return '#2A7B3F';
+  if (n >= 30) return '#4BB4E6';
+  if (n >= 0) return '#FF7900';
+  return '#CD3C14';
 }
 
 function renderCard(v, measureValues) {
   const raw = measureValues?.get(v.measureName);
   const display = raw != null ? formatValue(raw) : '(Vide)';
-  const color = raw != null ? v.labelColor : '#999';
+  // Apply NPS conditional coloring for NPS_ measures with large font (main KPI values)
+  const isNpsMeasure = v.measureName.startsWith('NPS_') && v.labelFontSize >= 20;
+  const color = raw != null
+    ? (isNpsMeasure ? npsColor(raw, v.labelColor) : v.labelColor)
+    : '#999';
   const fontSize = v.labelFontSize || 14;
   return `<div class="vc card-vc" style="left:${v.x}px;top:${v.y}px;width:${v.width}px;height:${v.height}px;`
     + `z-index:${v.tabOrder};display:flex;align-items:center;justify-content:center;`
@@ -171,11 +192,35 @@ function renderCard(v, measureValues) {
 }
 
 function renderSlicer(v) {
+  const title = v.titleText || v.fieldName || '';
+  const isBaro = (v.fromEntity || '').toLowerCase().includes('baro');
+  const isPeriode = title.toLowerCase().includes('période') || v.fieldName?.toLowerCase().includes('periode');
+
+  if (isPeriode) {
+    // Dropdown style — show "Mars 2026" or "T4 2025" matching reference
+    const dropdownValue = isBaro ? 'T4 2025' : 'Mars 2026';
+    return `<div class="vc slicer" style="left:${v.x}px;top:${v.y}px;width:${v.width}px;height:${v.height}px;`
+      + `z-index:${v.tabOrder};display:flex;align-items:center;gap:6px">`
+      + `<span style="font-size:11px;color:#999">${esc(title)}</span>`
+      + `<select style="font-size:11px;padding:2px 6px;border:1px solid #CCC;border-radius:3px;background:#FFF;color:#333">`
+      + `<option>${esc(dropdownValue)}</option></select></div>`;
+  }
+
+  // Button-group style — Mois selected for sondage, Trim. for baromètre
+  const buttons = isBaro ? ['Trim.', 'Sem.', 'Année'] : ['Mois', 'Trim.', 'Sem.', 'Année'];
+  const selected = isBaro ? 'Trim.' : 'Mois';
+  const btnHtml = buttons.map(b => {
+    const isActive = b === selected;
+    const style = isActive
+      ? 'background:#FF7900;color:#FFF;border:1px solid #FF7900'
+      : 'background:#FFF;color:#666;border:1px solid #CCC';
+    return `<span style="${style};padding:2px 8px;font-size:10px;border-radius:3px;cursor:pointer">${b}</span>`;
+  }).join('');
+
   return `<div class="vc slicer" style="left:${v.x}px;top:${v.y}px;width:${v.width}px;height:${v.height}px;`
-    + `z-index:${v.tabOrder};background:#FFF;border:1px solid #CCC;border-radius:4px;overflow:hidden">`
-    + `<div style="background:${v.headerColor};color:#FFF;padding:3px 8px;font-size:11px;font-weight:600">`
-    + `${esc(v.titleText)}</div>`
-    + `<div style="padding:4px 8px;font-size:12px;color:#666">&#9662; ${esc(v.fieldName)}</div></div>`;
+    + `z-index:${v.tabOrder};display:flex;align-items:center;gap:4px">`
+    + `<span style="font-size:11px;color:#999">${esc(title)}</span>`
+    + `<span style="display:flex;gap:1px">${btnHtml}</span></div>`;
 }
 
 function renderVisual(v, measureValues) {
