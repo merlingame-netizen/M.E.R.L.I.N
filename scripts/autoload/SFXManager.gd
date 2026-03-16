@@ -111,7 +111,7 @@ func _get_volume_for(sound_name: String) -> float:
 	if sound_name in ["block_land", "pixel_land", "pixel_cascade", "pixel_scatter",
 			"accum_explode", "dice_land", "dice_roll"]:
 		return VOLUME.impact
-	if sound_name in ["ogham_chime", "ogham_unlock", "bestiole_shimmer", "eye_open",
+	if sound_name in ["ogham_chime", "ogham_unlock", "eye_open",
 			"flash_boom", "magic_reveal", "skill_activate",
 			"dice_crit_success", "dice_crit_fail", "critical_alert"]:
 		return VOLUME.magic
