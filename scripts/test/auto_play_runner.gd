@@ -4,7 +4,7 @@
 ## Simulates a complete run by auto-selecting choices. Logs every card with:
 ## - Full text, all tags, speaker, card source, generation time
 ## - D20/DC/outcome, minigame type (if triggered), effect modulation
-## - Life/souffle/karma/flux/mission state per card
+## - Life/karma/flux/mission state per card
 ## Prefix: [AUTOPLAY] for easy grep.
 ## ═══════════════════════════════════════════════════════════════════════════════
 
@@ -200,7 +200,6 @@ func _auto_play_loop() -> void:
 		_cards_played += 1
 		var card: Dictionary = _controller.get("current_card")
 		var pre_life: int = _get_life()
-		var pre_souffle: int = 0
 		var pre_karma: int = _controller.get("_karma") if "_karma" in _controller else 0
 
 		# ---- DETAILED CARD LOG ----
@@ -251,7 +250,6 @@ func _auto_play_loop() -> void:
 
 		# Capture post-choice state
 		var post_life: int = _get_life()
-		var post_souffle: int = 0
 		var post_karma: int = _controller.get("_karma") if "_karma" in _controller else 0
 		var life_delta: int = post_life - pre_life
 		_total_life_drain += life_delta
@@ -277,9 +275,8 @@ func _auto_play_loop() -> void:
 
 		# ---- DETAILED POST-CHOICE LOG ----
 		_log("D20=%d DC=%d outcome=%s resolve_time=%dms" % [d20, dc, outcome, resolve_time_ms])
-		_log("life:%d->%d (%+d) souffle:%d->%d karma:%d->%d (%+d)" % [
+		_log("life:%d->%d (%+d) karma:%d->%d (%+d)" % [
 			pre_life, post_life, life_delta,
-			pre_souffle, post_souffle,
 			pre_karma, post_karma, post_karma - pre_karma])
 		_log("flux: terre=%d esprit=%d lien=%d (total=%d)" % [
 			int(flux.get("terre", 0)), int(flux.get("esprit", 0)), int(flux.get("lien", 0)),

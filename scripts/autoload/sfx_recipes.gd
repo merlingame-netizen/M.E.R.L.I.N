@@ -264,24 +264,6 @@ func gen_ogham_unlock() -> AudioStreamWAV:
 	return SFXHelpers.make_stream(buf)
 
 
-func gen_bestiole_shimmer() -> AudioStreamWAV:
-	## Bestiole — NES-style triangle shimmer (A pentatonic: A4 E5 A5)
-	var dur := 0.80
-	var buf := SFXHelpers.alloc_buffer(dur)
-	var count := SFXHelpers.sample_count(dur)
-	for i in range(count):
-		var t := float(i) / SFXHelpers.SAMPLE_RATE
-		var env := sin(t / dur * PI) * 0.5
-		# A4=440 pentatonic shimmer (Celtic root)
-		var val := SFXHelpers.tri(440.0, t) * 0.07 * env
-		val += SFXHelpers.tri(659.0, t) * 0.04 * env   # E5 (5th above A4)
-		val += SFXHelpers.tri(880.0, t) * 0.025 * env  # A5 (octave)
-		# Pixel pulse sparkle — short bursts
-		val += SFXHelpers.pulse(1320.0, t, 0.125) * 0.015 * env * (sin(t * 22.0) * 0.5 + 0.5)
-		SFXHelpers.write_sample(buf, i, val)
-	return SFXHelpers.make_stream(buf)
-
-
 func gen_eye_open() -> AudioStreamWAV:
 	## Eyes open — Celtic drone awakening: D1->D2 octave rise (deep square)
 	var dur := 2.0

@@ -124,7 +124,7 @@ func _get_volume_for(sound_name: String) -> float:
 	if sound_name in ["minigame_start", "minigame_success", "minigame_fail",
 			"biome_reveal", "partir_fanfare"]:
 		return VOLUME.transition
-	if sound_name in ["camera_focus", "souffle_regen", "souffle_full", "perk_confirm"]:
+	if sound_name in ["camera_focus", "perk_confirm"]:
 		return VOLUME.magic
 	return VOLUME.ui
 
@@ -140,7 +140,7 @@ func _generate_all_sounds() -> void:
 		"hover", "click", "slider_tick", "button_appear",
 		"whoosh", "card_draw", "card_swipe", "scene_transition",
 		"block_land", "pixel_land", "pixel_cascade", "pixel_scatter", "accum_explode",
-		"ogham_chime", "ogham_unlock", "bestiole_shimmer", "eye_open",
+		"ogham_chime", "ogham_unlock", "eye_open",
 		"flash_boom", "magic_reveal", "skill_activate",
 		"path_scratch", "landmark_pop", "mist_breath",
 		"aspect_shift", "aspect_up", "aspect_down",
@@ -148,7 +148,6 @@ func _generate_all_sounds() -> void:
 		"choice_hover", "choice_select", "result_reveal", "question_transition",
 		"dice_shake", "dice_roll", "dice_land", "dice_crit_success", "dice_crit_fail",
 		"minigame_start", "minigame_success", "minigame_fail", "minigame_tick", "critical_alert",
-		"souffle_regen", "souffle_full",
 		"camera_focus", "error", "hub_enter", "perk_confirm", "biome_reveal", "partir_fanfare",
 		"biome_dissolve",
 		"amb_broceliande", "amb_landes", "amb_cotes", "amb_cercles",

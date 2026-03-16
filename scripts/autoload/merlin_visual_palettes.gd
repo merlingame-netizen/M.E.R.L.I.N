@@ -54,13 +54,8 @@ const CRT_PALETTE := {
 	"line":           Color(0.12, 0.30, 0.14, 0.25),
 	"mist":           Color(0.10, 0.20, 0.10, 0.20),
 
-	# Souffle d'Ogham
-	"souffle":        Color(0.30, 0.85, 0.80),
-	"souffle_full":   Color(1.00, 0.85, 0.40),
-
 	# Gameplay UI
 	"ogham_glow":     Color(0.30, 0.85, 0.80),
-	"bestiole":       Color(0.30, 0.70, 0.90),
 
 	# CeltOS Intro — boot sequence
 	"block":          Color(0.20, 1.00, 0.40),
@@ -257,16 +252,11 @@ const PALETTE := {
 
 	# Gameplay UI
 	"ogham_glow": Color(0.45, 0.62, 0.32),
-	"bestiole": Color(0.42, 0.60, 0.72),
 
 	# Status
 	"danger": Color(0.72, 0.28, 0.22),
 	"success": Color(0.32, 0.58, 0.28),
 	"warning": Color(0.72, 0.58, 0.22),
-
-	# Souffle d'Ogham
-	"souffle": Color(0.30, 0.70, 0.90),
-	"souffle_full": Color(0.85, 0.75, 0.30),
 
 	# UI neutral
 	"inactive": Color(0.50, 0.50, 0.50),

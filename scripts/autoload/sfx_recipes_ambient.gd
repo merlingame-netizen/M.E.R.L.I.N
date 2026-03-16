@@ -405,45 +405,6 @@ func gen_critical_alert() -> AudioStreamWAV:
 	return SFXHelpers.make_stream(buf)
 
 
-# =============================================================================
-# SOUFFLE / PERK SOUNDS
-# =============================================================================
-
-func gen_souffle_regen() -> AudioStreamWAV:
-	## Souffle regen — D Dorian glide D4->A4 (triangle), pixel sparkle peak
-	var dur := 0.60
-	var buf := SFXHelpers.alloc_buffer(dur)
-	var count := SFXHelpers.sample_count(dur)
-	for i in range(count):
-		var t := float(i) / SFXHelpers.SAMPLE_RATE
-		var env := sin(t / dur * PI) * 0.5
-		var freq := lerpf(294.0, 440.0, t / dur)  # D4->A4 (Dorian 5th)
-		var val := SFXHelpers.tri(freq, t) * 0.08 * env
-		val += SFXHelpers.tri(freq * 2.0, t) * 0.025 * env  # Octave above
-		# Square pixel sparkle at peak (t~0.35)
-		val += SFXHelpers.sq(freq * 4.0, t) * 0.012 * exp(-abs(t - 0.30) * 16.0)
-		val += (_rng.randf() * 2.0 - 1.0) * 0.015 * env
-		SFXHelpers.write_sample(buf, i, val)
-	return SFXHelpers.make_stream(buf)
-
-
-func gen_souffle_full() -> AudioStreamWAV:
-	## Souffle full — D pentatonic arpeggio (D4 G4 A4 D5 triangle + square shimmer)
-	var dur := 0.55
-	var buf := SFXHelpers.alloc_buffer(dur)
-	var count := SFXHelpers.sample_count(dur)
-	for i in range(count):
-		var t := float(i) / SFXHelpers.SAMPLE_RATE
-		# D4(294) G4(392) A4(440) D5(587) — ascending triangle
-		var n1 := SFXHelpers.tri(294.0, t) * 0.08 * exp(-t * 5.5) * clampf(t * 20.0, 0.0, 1.0)
-		var n2 := SFXHelpers.tri(392.0, t) * 0.09 * exp(-t * 5.0) * clampf((t - 0.07) * 16.0, 0.0, 1.0)
-		var n3 := SFXHelpers.tri(440.0, t) * 0.10 * exp(-t * 4.5) * clampf((t - 0.14) * 13.0, 0.0, 1.0)
-		var n4 := SFXHelpers.tri(587.0, t) * 0.11 * exp(-t * 4.0) * clampf((t - 0.22) * 11.0, 0.0, 1.0)
-		# Pixel square D6 shimmer at end
-		var shimmer := SFXHelpers.sq(1174.0, t) * 0.012 * clampf((t - 0.30) * 9.0, 0.0, 1.0) * exp(-(t - 0.30) * 5.0)
-		SFXHelpers.write_sample(buf, i, n1 + n2 + n3 + n4 + shimmer)
-	return SFXHelpers.make_stream(buf)
-
 
 # =============================================================================
 # UX / SCENE ATMOSPHERIC SOUNDS
