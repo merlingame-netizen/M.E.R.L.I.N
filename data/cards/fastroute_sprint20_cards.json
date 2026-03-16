@@ -55,7 +55,8 @@
         ],
         "label": "Mediter pour resister aux visions toxiques du marais"
       }
-    ]
+    ],
+    "champ_lexical": "vigueur"
   },
   {
     "id": "s20_danger_02",
@@ -113,7 +114,8 @@
         ],
         "label": "Fuir avant que l'arbre ne vous emprisonne dans ses branches"
       }
-    ]
+    ],
+    "champ_lexical": "observation"
   },
   {
     "id": "s20_danger_03",
@@ -176,7 +178,8 @@
         ],
         "label": "Accepter le pacte des ombres pour gagner leur faveur"
       }
-    ]
+    ],
+    "champ_lexical": "perception"
   },
   {
     "id": "s20_danger_04",
@@ -234,7 +237,8 @@
         ],
         "label": "Endurer la tempete en attendant qu'elle passe"
       }
-    ]
+    ],
+    "champ_lexical": "esprit"
   },
   {
     "id": "s20_danger_05",
@@ -292,7 +296,8 @@
         ],
         "label": "Se concentrer pour ne pas etre aspire par le passage"
       }
-    ]
+    ],
+    "champ_lexical": "logique"
   },
   {
     "id": "s20_danger_06",
@@ -350,7 +355,8 @@
         ],
         "label": "Combattre ce qui emerge du puits"
       }
-    ]
+    ],
+    "champ_lexical": "esprit"
   },
   {
     "id": "s20_danger_07",
@@ -412,7 +418,8 @@
         ],
         "label": "Calmer les ames en chantonnant une berceuse ancienne"
       }
-    ]
+    ],
+    "champ_lexical": "esprit"
   },
   {
     "id": "s20_danger_08",
@@ -470,7 +477,8 @@
         ],
         "label": "Flairer les vents pour deviner ce que l'ile dissimule"
       }
-    ]
+    ],
+    "champ_lexical": "esprit"
   },
   {
     "id": "s20_danger_09",
@@ -533,7 +541,8 @@
         ],
         "label": "Apaiser la magie corrompue par un rituel de purification"
       }
-    ]
+    ],
+    "champ_lexical": "logique"
   },
   {
     "id": "s20_danger_10",
@@ -591,7 +600,8 @@
         ],
         "label": "Refuser le jeu et affronter sa colere"
       }
-    ]
+    ],
+    "champ_lexical": "esprit"
   },
   {
     "id": "s20_danger_11",
@@ -654,7 +664,8 @@
         ],
         "label": "Endurer le son pour communiquer avec ce qui est en dessous"
       }
-    ]
+    ],
+    "champ_lexical": "esprit"
   },
   {
     "id": "s20_danger_12",
@@ -716,7 +727,8 @@
         ],
         "label": "Apaiser les loups en s'agenouillant devant eux"
       }
-    ]
+    ],
+    "champ_lexical": "vigueur"
   },
   {
     "id": "s20_danger_13",
@@ -774,7 +786,8 @@
         ],
         "label": "Attendre que les vapeurs se dissipent naturellement"
       }
-    ]
+    ],
+    "champ_lexical": "esprit"
   },
   {
     "id": "s20_danger_14",
@@ -837,7 +850,8 @@
         ],
         "label": "Fixer les cordes de la harpe pour comprendre leur pouvoir"
       }
-    ]
+    ],
+    "champ_lexical": "perception"
   },
   {
     "id": "s20_danger_15",
@@ -895,7 +909,8 @@
         ],
         "label": "Courir le long de la crete avant qu'elle ne s'effondre"
       }
-    ]
+    ],
+    "champ_lexical": "esprit"
   },
   {
     "id": "s20_danger_16",
@@ -953,7 +968,8 @@
         ],
         "label": "Resister mentalement aux visions que le sang invoque"
       }
-    ]
+    ],
+    "champ_lexical": "esprit"
   },
   {
     "id": "s20_danger_17",
@@ -1016,7 +1032,8 @@
         ],
         "label": "Etudier les cendres pour comprendre ce qui a brule ici"
       }
-    ]
+    ],
+    "champ_lexical": "esprit"
   },
   {
     "id": "s20_danger_18",
@@ -1074,7 +1091,8 @@
         ],
         "label": "Refuser fermement malgre les menaces de la fee"
       }
-    ]
+    ],
+    "champ_lexical": "esprit"
   },
   {
     "id": "s20_danger_19",
@@ -1132,7 +1150,8 @@
         ],
         "label": "Sentir l'air pour evaluer les dangers a l'interieur"
       }
-    ]
+    ],
+    "champ_lexical": "esprit"
   },
   {
     "id": "s20_danger_20",
@@ -1195,7 +1214,8 @@
         ],
         "label": "Esquiver les feux follets et chercher un autre chemin"
       }
-    ]
+    ],
+    "champ_lexical": "esprit"
   },
   {
     "id": "s20_danger_21",
@@ -1258,7 +1278,8 @@
         ],
         "label": "Chercher au hasard un gue pour traverser sans aide"
       }
-    ]
+    ],
+    "champ_lexical": "esprit"
   },
   {
     "id": "s20_danger_22",
@@ -1321,7 +1342,8 @@
         ],
         "label": "Convaincre les villageois d'arreter avant qu'il ne soit trop tard"
       }
-    ]
+    ],
+    "champ_lexical": "esprit"
   },
   {
     "id": "s20_danger_23",
@@ -1379,7 +1401,8 @@
         ],
         "label": "Fuir avant que les serpents ne vous repèrent"
       }
-    ]
+    ],
+    "champ_lexical": "finesse"
   },
   {
     "id": "s20_danger_24",
@@ -1442,7 +1465,8 @@
         ],
         "label": "Mediter devant l'autel pour comprendre son pouvoir"
       }
-    ]
+    ],
+    "champ_lexical": "esprit"
   },
   {
     "id": "s20_danger_25",
@@ -1510,7 +1534,8 @@
         ],
         "label": "Refuser d'aider et poursuivre votre chemin"
       }
-    ]
+    ],
+    "champ_lexical": "chance"
   },
   {
     "id": "s20_danger_26",
@@ -1573,7 +1598,8 @@
         ],
         "label": "Pousser le coffre dans la mer pour s'en debarrasser"
       }
-    ]
+    ],
+    "champ_lexical": "esprit"
   },
   {
     "id": "s20_danger_27",
@@ -1636,7 +1662,8 @@
         ],
         "label": "Combattre le brouillard avec du feu et des torches"
       }
-    ]
+    ],
+    "champ_lexical": "logique"
   },
   {
     "id": "s20_danger_28",
@@ -1694,7 +1721,8 @@
         ],
         "label": "Resister physiquement en repoussant les tentacules"
       }
-    ]
+    ],
+    "champ_lexical": "observation"
   },
   {
     "id": "s20_danger_29",
@@ -1761,7 +1789,8 @@
         ],
         "label": "Calmer l'arbre en murmurant des mots anciens"
       }
-    ]
+    ],
+    "champ_lexical": "esprit"
   },
   {
     "id": "s20_danger_30",
@@ -1824,7 +1853,8 @@
         ],
         "label": "Endurer la colere des spectres en restant immobile"
       }
-    ]
+    ],
+    "champ_lexical": "esprit"
   },
   {
     "id": "s20_danger_31",
@@ -1887,7 +1917,8 @@
         ],
         "label": "Amadouer l'ogre avec des offrandes de pierres precieuses"
       }
-    ]
+    ],
+    "champ_lexical": "vigueur"
   },
   {
     "id": "s20_danger_32",
@@ -1950,7 +1981,8 @@
         ],
         "label": "Resister mentalement a l'appel des voix enfantines"
       }
-    ]
+    ],
+    "champ_lexical": "esprit"
   },
   {
     "id": "s20_danger_33",
@@ -2008,7 +2040,8 @@
         ],
         "label": "Negocier avec les korrigans pour qu'ils rallument le pont"
       }
-    ]
+    ],
+    "champ_lexical": "esprit"
   },
   {
     "id": "s20_danger_34",
@@ -2066,7 +2099,8 @@
         ],
         "label": "Endurer la chaleur en traversant une zone refroidie"
       }
-    ]
+    ],
+    "champ_lexical": "esprit"
   },
   {
     "id": "s20_danger_35",
@@ -2133,7 +2167,8 @@
         ],
         "label": "Apaiser le guerrier en reconnaissant sa valeur"
       }
-    ]
+    ],
+    "champ_lexical": "vigueur"
   },
   {
     "id": "s20_danger_36",
@@ -2191,7 +2226,8 @@
         ],
         "label": "Fuir le puits et ses verites cruelles"
       }
-    ]
+    ],
+    "champ_lexical": "esprit"
   },
   {
     "id": "s20_danger_37",
@@ -2254,7 +2290,8 @@
         ],
         "label": "Mediter pour renforcer vos souvenirs avant la traversee"
       }
-    ]
+    ],
+    "champ_lexical": "esprit"
   },
   {
     "id": "s20_danger_38",
@@ -2316,7 +2353,8 @@
         ],
         "label": "Inspecter les flacons avec soin avant d'acheter"
       }
-    ]
+    ],
+    "champ_lexical": "esprit"
   },
   {
     "id": "s20_danger_39",
@@ -2379,7 +2417,8 @@
         ],
         "label": "Flairer un changement dans le vent pour predire leur direction"
       }
-    ]
+    ],
+    "champ_lexical": "esprit"
   },
   {
     "id": "s20_danger_40",
@@ -2442,7 +2481,8 @@
         ],
         "label": "Se concentrer pour bloquer les murmures maudits"
       }
-    ]
+    ],
+    "champ_lexical": "perception"
   },
   {
     "id": "s20_danger_41",
@@ -2500,7 +2540,8 @@
         ],
         "label": "Mediter pour transcender la douleur des braises"
       }
-    ]
+    ],
+    "champ_lexical": "esprit"
   },
   {
     "id": "s20_danger_42",
@@ -2563,7 +2604,8 @@
         ],
         "label": "Accepter de nouer votre propre ruban sur l'arbre"
       }
-    ]
+    ],
+    "champ_lexical": "finesse"
   },
   {
     "id": "s20_danger_43",
@@ -2626,7 +2668,8 @@
         ],
         "label": "Fuir le village maudit sans regarder en arriere"
       }
-    ]
+    ],
+    "champ_lexical": "chance"
   },
   {
     "id": "s20_danger_44",
@@ -2689,7 +2732,8 @@
         ],
         "label": "Resister mentalement a l'aspiration du portail"
       }
-    ]
+    ],
+    "champ_lexical": "vigueur"
   },
   {
     "id": "s20_danger_45",
@@ -2757,7 +2801,8 @@
         ],
         "label": "Refuser le pacte et endurer vos blessures"
       }
-    ]
+    ],
+    "champ_lexical": "esprit"
   },
   {
     "id": "s20_danger_46",
@@ -2820,7 +2865,8 @@
         ],
         "label": "Se concentrer pour devier les pierres par la volonte"
       }
-    ]
+    ],
+    "champ_lexical": "finesse"
   },
   {
     "id": "s20_danger_47",
@@ -2883,7 +2929,8 @@
         ],
         "label": "Se cacher jusqu'a l'aube en esperant que tout se calme"
       }
-    ]
+    ],
+    "champ_lexical": "esprit"
   },
   {
     "id": "s20_danger_48",
@@ -2946,7 +2993,8 @@
         ],
         "label": "Contourner le rivage sans regarder les eaux"
       }
-    ]
+    ],
+    "champ_lexical": "esprit"
   },
   {
     "id": "s20_danger_49",
@@ -3009,7 +3057,8 @@
         ],
         "label": "Endurer la chaleur en avançant lentement mais surement"
       }
-    ]
+    ],
+    "champ_lexical": "esprit"
   },
   {
     "id": "s20_danger_50",
@@ -3077,6 +3126,7 @@
         ],
         "label": "Refuser le passage et redescendre vers le monde des vivants"
       }
-    ]
+    ],
+    "champ_lexical": "esprit"
   }
 ]

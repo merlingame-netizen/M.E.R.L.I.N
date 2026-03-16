@@ -53,7 +53,8 @@
         ],
         "label": "Trancher les fils pour liberer les ames emprisonnees"
       }
-    ]
+    ],
+    "champ_lexical": "esprit"
   },
   {
     "id": "s19_verb_02",
@@ -110,7 +111,8 @@
         ],
         "label": "Absorber la chaleur des flammes spectrales"
       }
-    ]
+    ],
+    "champ_lexical": "esprit"
   },
   {
     "id": "s19_verb_03",
@@ -166,7 +168,8 @@
         ],
         "label": "Fuir avant que la brume ne vous engloutisse"
       }
-    ]
+    ],
+    "champ_lexical": "esprit"
   },
   {
     "id": "s19_verb_04",
@@ -222,7 +225,8 @@
         ],
         "label": "Chanter un hymne ancien pour harmoniser les pierres"
       }
-    ]
+    ],
+    "champ_lexical": "esprit"
   },
   {
     "id": "s19_verb_05",
@@ -278,7 +282,8 @@
         ],
         "label": "Rever des iles chantees, laissant votre esprit voyager"
       }
-    ]
+    ],
+    "champ_lexical": "esprit"
   },
   {
     "id": "s19_verb_06",
@@ -336,7 +341,8 @@
         ],
         "label": "Benir l'esprit pour adoucir sa captivite"
       }
-    ]
+    ],
+    "champ_lexical": "esprit"
   },
   {
     "id": "s19_verb_07",
@@ -393,7 +399,8 @@
         ],
         "label": "Accumuler les fils d'or tombes au sol"
       }
-    ]
+    ],
+    "champ_lexical": "esprit"
   },
   {
     "id": "s19_verb_08",
@@ -449,7 +456,8 @@
         ],
         "label": "Construire un passage plus sur vers la forge"
       }
-    ]
+    ],
+    "champ_lexical": "esprit"
   },
   {
     "id": "s19_verb_09",
@@ -506,7 +514,8 @@
         ],
         "label": "Accumuler tous les fruits dans votre besace"
       }
-    ]
+    ],
+    "champ_lexical": "esprit"
   },
   {
     "id": "s19_verb_10",
@@ -563,7 +572,8 @@
         ],
         "label": "Tisser les feuilles en une couronne pour capturer l'esprit"
       }
-    ]
+    ],
+    "champ_lexical": "esprit"
   },
   {
     "id": "s19_verb_11",
@@ -619,7 +629,8 @@
         ],
         "label": "Recolter un eclat de cristal chantant"
       }
-    ]
+    ],
+    "champ_lexical": "esprit"
   },
   {
     "id": "s19_verb_12",
@@ -676,7 +687,8 @@
         ],
         "label": "Planter des herbes curatives autour de la source"
       }
-    ]
+    ],
+    "champ_lexical": "esprit"
   },
   {
     "id": "s19_verb_13",
@@ -732,7 +744,8 @@
         ],
         "label": "Fuir avant que le geant ne se reveille"
       }
-    ]
+    ],
+    "champ_lexical": "esprit"
   },
   {
     "id": "s19_verb_14",
@@ -789,7 +802,8 @@
         ],
         "label": "Enchainer les portes du temple pour sceller ce qui est a l'interieur"
       }
-    ]
+    ],
+    "champ_lexical": "esprit"
   },
   {
     "id": "s19_verb_15",
@@ -845,7 +859,8 @@
         ],
         "label": "Repousser les ronces qui menacent d'etouffer le jardin"
       }
-    ]
+    ],
+    "champ_lexical": "esprit"
   },
   {
     "id": "s19_verb_16",
@@ -903,7 +918,8 @@
         ],
         "label": "Enchainer les spectres au cimetiere pour arreter l'errance"
       }
-    ]
+    ],
+    "champ_lexical": "esprit"
   },
   {
     "id": "s19_verb_17",
@@ -960,7 +976,8 @@
         ],
         "label": "Construire un perchoir plus grand pour gagner leur confiance"
       }
-    ]
+    ],
+    "champ_lexical": "esprit"
   },
   {
     "id": "s19_verb_18",
@@ -1016,7 +1033,8 @@
         ],
         "label": "Forger un talisman avec l'eclat du menhir frappe"
       }
-    ]
+    ],
+    "champ_lexical": "esprit"
   },
   {
     "id": "s19_verb_19",
@@ -1073,7 +1091,8 @@
         ],
         "label": "Tisser un filet de runes pour stabiliser le portail"
       }
-    ]
+    ],
+    "champ_lexical": "esprit"
   },
   {
     "id": "s19_verb_20",
@@ -1131,7 +1150,8 @@
         ],
         "label": "Detruire la table pour liberer les ames des cerfs"
       }
-    ]
+    ],
+    "champ_lexical": "esprit"
   },
   {
     "id": "s19_verb_21",
@@ -1188,7 +1208,8 @@
         ],
         "label": "Enchainer l'ile au fond marin pour qu'elle cesse d'errer"
       }
-    ]
+    ],
+    "champ_lexical": "esprit"
   },
   {
     "id": "s19_verb_22",
@@ -1245,7 +1266,8 @@
         ],
         "label": "Maudire celui qui a petrifie le druide"
       }
-    ]
+    ],
+    "champ_lexical": "esprit"
   },
   {
     "id": "s19_verb_23",
@@ -1302,7 +1324,8 @@
         ],
         "label": "Forger de nouveaux outils avec le metal recupérée"
       }
-    ]
+    ],
+    "champ_lexical": "esprit"
   },
   {
     "id": "s19_verb_24",
@@ -1359,7 +1382,8 @@
         ],
         "label": "Fuir la tour avant que vos peurs ne prennent forme"
       }
-    ]
+    ],
+    "champ_lexical": "esprit"
   },
   {
     "id": "s19_verb_25",
@@ -1415,7 +1439,8 @@
         ],
         "label": "Danser entre les racines en suivant la musique du vent"
       }
-    ]
+    ],
+    "champ_lexical": "esprit"
   },
   {
     "id": "s19_verb_26",
@@ -1472,7 +1497,8 @@
         ],
         "label": "Enchainer les pierres avec des sortileges pour arreter la deconstruction"
       }
-    ]
+    ],
+    "champ_lexical": "esprit"
   },
   {
     "id": "s19_verb_27",
@@ -1529,7 +1555,8 @@
         ],
         "label": "Repousser les tenebres qui menacent le lac lumineux"
       }
-    ]
+    ],
+    "champ_lexical": "esprit"
   },
   {
     "id": "s19_verb_28",
@@ -1585,7 +1612,8 @@
         ],
         "label": "Accumuler les spirales d'or avant que le tumulus ne se referme"
       }
-    ]
+    ],
+    "champ_lexical": "esprit"
   },
   {
     "id": "s19_verb_29",
@@ -1642,7 +1670,8 @@
         ],
         "label": "Forger un passage permanent a travers le reseau vegetal"
       }
-    ]
+    ],
+    "champ_lexical": "esprit"
   },
   {
     "id": "s19_verb_30",
@@ -1699,7 +1728,8 @@
         ],
         "label": "Fuir ce spectacle macabre avant d'en faire partie"
       }
-    ]
+    ],
+    "champ_lexical": "esprit"
   },
   {
     "id": "s19_verb_31",
@@ -1755,7 +1785,8 @@
         ],
         "label": "Rever dans les branches du corail, suspendu entre les mondes"
       }
-    ]
+    ],
+    "champ_lexical": "esprit"
   },
   {
     "id": "s19_verb_32",
@@ -1811,7 +1842,8 @@
         ],
         "label": "Construire un foyer avec les pierres les plus chaudes"
       }
-    ]
+    ],
+    "champ_lexical": "esprit"
   },
   {
     "id": "s19_verb_33",
@@ -1869,7 +1901,8 @@
         ],
         "label": "Enchainer les racines pour securiser la cache et rassurer les korrigans"
       }
-    ]
+    ],
+    "champ_lexical": "esprit"
   },
   {
     "id": "s19_verb_34",
@@ -1926,7 +1959,8 @@
         ],
         "label": "Detruire le phare pour liberer les ames prisonieres"
       }
-    ]
+    ],
+    "champ_lexical": "esprit"
   },
   {
     "id": "s19_verb_35",
@@ -1982,7 +2016,8 @@
         ],
         "label": "Accumuler les grains de sagesse dans une bourse enchantee"
       }
-    ]
+    ],
+    "champ_lexical": "esprit"
   },
   {
     "id": "s19_verb_36",
@@ -2039,7 +2074,8 @@
         ],
         "label": "Construire un couvercle de pierre pour sceller le puits"
       }
-    ]
+    ],
+    "champ_lexical": "esprit"
   },
   {
     "id": "s19_verb_37",
@@ -2095,7 +2131,8 @@
         ],
         "label": "Absorber la lumiere des aurores dans un cristal"
       }
-    ]
+    ],
+    "champ_lexical": "esprit"
   },
   {
     "id": "s19_verb_38",
@@ -2153,7 +2190,8 @@
         ],
         "label": "Accumuler les spores pour vos propres potions"
       }
-    ]
+    ],
+    "champ_lexical": "esprit"
   },
   {
     "id": "s19_verb_39",
@@ -2210,7 +2248,8 @@
         ],
         "label": "Fuir cette anomalie avant qu'elle ne vous emporte vers le haut"
       }
-    ]
+    ],
+    "champ_lexical": "esprit"
   },
   {
     "id": "s19_verb_40",
@@ -2267,7 +2306,8 @@
         ],
         "label": "Detruire la forge pour empecher son utilisation malveillante"
       }
-    ]
+    ],
+    "champ_lexical": "esprit"
   },
   {
     "id": "s19_verb_41",
@@ -2324,7 +2364,8 @@
         ],
         "label": "Danser avec les haies mobiles, epousant leur rythme"
       }
-    ]
+    ],
+    "champ_lexical": "esprit"
   },
   {
     "id": "s19_verb_42",
@@ -2381,7 +2422,8 @@
         ],
         "label": "Fuir le cratere avant que les murmures ne vous rendent fou"
       }
-    ]
+    ],
+    "champ_lexical": "esprit"
   },
   {
     "id": "s19_verb_43",
@@ -2438,7 +2480,8 @@
         ],
         "label": "Repousser les pulsations pour reveler les inscriptions en permanence"
       }
-    ]
+    ],
+    "champ_lexical": "esprit"
   },
   {
     "id": "s19_verb_44",
@@ -2495,7 +2538,8 @@
         ],
         "label": "Forger une alliance avec les korrigans en echange d'un secret"
       }
-    ]
+    ],
+    "champ_lexical": "esprit"
   },
   {
     "id": "s19_verb_45",
@@ -2552,7 +2596,8 @@
         ],
         "label": "Accumuler le sable noir dans une fiole pour etude"
       }
-    ]
+    ],
+    "champ_lexical": "esprit"
   },
   {
     "id": "s19_verb_46",
@@ -2609,7 +2654,8 @@
         ],
         "label": "Enchainer l'essaim dans l'arbre pour proteger les passants"
       }
-    ]
+    ],
+    "champ_lexical": "esprit"
   },
   {
     "id": "s19_verb_47",
@@ -2666,7 +2712,8 @@
         ],
         "label": "Danser sur les marches pour invoquer les esprits de la cite"
       }
-    ]
+    ],
+    "champ_lexical": "esprit"
   },
   {
     "id": "s19_verb_48",
@@ -2723,7 +2770,8 @@
         ],
         "label": "Fuir avec les oiseaux, loin de cette resonance malsaine"
       }
-    ]
+    ],
+    "champ_lexical": "esprit"
   },
   {
     "id": "s19_verb_49",
@@ -2780,7 +2828,8 @@
         ],
         "label": "Detruire les masques pour rompre le cycle de la danse eternelle"
       }
-    ]
+    ],
+    "champ_lexical": "esprit"
   },
   {
     "id": "s19_verb_50",
@@ -2837,6 +2886,7 @@
         ],
         "label": "Repousser le vent pour creer un moment de calme au sommet"
       }
-    ]
+    ],
+    "champ_lexical": "esprit"
   }
 ]

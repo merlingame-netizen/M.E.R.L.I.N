@@ -3,7 +3,7 @@
     "id": "FR_S21B_001",
     "text": "Un chene millenaire s'ouvre en deux, revelant une cavite grouillante de serpents spectraux. Leur sifflement resonne comme des lamentations anciennes qui glacent le sang.",
     "biome": "foret_broceliande",
-    "champ_lexical": "force",
+    "champ_lexical": "vigueur",
     "trust_tier": "T0",
     "tags": [
       "danger",
@@ -63,7 +63,7 @@
     "id": "FR_S21B_002",
     "text": "Une brume acide s'eleve des racines pourries de Broceliande. Chaque inspiration brule les poumons. Les arbres eux-memes semblent se tordre de douleur.",
     "biome": "foret_broceliande",
-    "champ_lexical": "volonte",
+    "champ_lexical": "esprit",
     "trust_tier": "T0",
     "tags": [
       "danger",
@@ -123,7 +123,7 @@
     "id": "FR_S21B_003",
     "text": "Les racines de Broceliande se soulevent et forment une cage vivante autour de vous. Des epines empoisonnees percent votre peau tandis que la foret vous reclame.",
     "biome": "foret_broceliande",
-    "champ_lexical": "agilite",
+    "champ_lexical": "finesse",
     "trust_tier": "T0",
     "tags": [
       "danger",
@@ -303,7 +303,7 @@
     "id": "FR_S21B_006",
     "text": "Un arbre-piege referme ses branches sur vous dans la penombre de Broceliande. La seve visqueuse colle a votre peau et commence a durcir comme de l'ambre.",
     "biome": "foret_broceliande",
-    "champ_lexical": "ruse",
+    "champ_lexical": "bluff",
     "trust_tier": "T0",
     "tags": [
       "danger",
@@ -423,7 +423,7 @@
     "id": "FR_S21B_008",
     "text": "Un lierre maudit s'enroule autour de vos chevilles avec une force surnaturelle. Plus vous luttez, plus il serre, drainant votre chaleur corporelle.",
     "biome": "foret_broceliande",
-    "champ_lexical": "empathie",
+    "champ_lexical": "perception",
     "trust_tier": "T0",
     "tags": [
       "danger",
@@ -483,7 +483,7 @@
     "id": "FR_S21B_009",
     "text": "Une mare stagnante au coeur de Broceliande bouillonne soudain. Des mains squelettiques emergent, cherchant a vous entrainer dans les profondeurs obscures.",
     "biome": "foret_broceliande",
-    "champ_lexical": "force",
+    "champ_lexical": "vigueur",
     "trust_tier": "T0",
     "tags": [
       "danger",
@@ -543,7 +543,7 @@
     "id": "FR_S21B_010",
     "text": "Un feu follet malefique vous guide vers un gouffre dissimule sous la mousse. Le sol s'effondre sous vos pieds et vous glissez dans l'obscurite humide.",
     "biome": "foret_broceliande",
-    "champ_lexical": "agilite",
+    "champ_lexical": "finesse",
     "trust_tier": "T0",
     "tags": [
       "danger",
@@ -603,7 +603,7 @@
     "id": "FR_S21B_011",
     "text": "La bruyere des landes prend feu spontanement, formant un cercle de flammes violettes. La fumee porte des murmures de trahison qui rongent la volonte.",
     "biome": "landes_bruyere",
-    "champ_lexical": "volonte",
+    "champ_lexical": "esprit",
     "trust_tier": "T0",
     "tags": [
       "danger",
@@ -663,7 +663,7 @@
     "id": "FR_S21B_012",
     "text": "Un vent glacial balaie les landes, portant des eclats de givre qui entaillent la chair. Les pierres dressees gemissent sous la tourmente surnaturelle.",
     "biome": "landes_bruyere",
-    "champ_lexical": "force",
+    "champ_lexical": "vigueur",
     "trust_tier": "T0",
     "tags": [
       "danger",
@@ -783,7 +783,7 @@
     "id": "FR_S21B_014",
     "text": "Un fantome de berger erre dans les landes avec son troupeau de moutons squelettiques. Il vous barre la route et exige un tribut de sang pour passer.",
     "biome": "landes_bruyere",
-    "champ_lexical": "ruse",
+    "champ_lexical": "bluff",
     "trust_tier": "T0",
     "tags": [
       "danger",
@@ -843,7 +843,7 @@
     "id": "FR_S21B_015",
     "text": "La terre des landes se craquelle et un geyser de vapeur sulfureuse jaillit. L'air devient irrespirable et la peau se couvre de cloques brulantes.",
     "biome": "landes_bruyere",
-    "champ_lexical": "agilite",
+    "champ_lexical": "finesse",
     "trust_tier": "T0",
     "tags": [
       "danger",
@@ -1023,7 +1023,7 @@
     "id": "FR_S21B_018",
     "text": "Un tourbillon de poussiere noire se forme dans les landes desolees. Des visages tourmentes apparaissent dans la spirale, hurlant silencieusement.",
     "biome": "landes_bruyere",
-    "champ_lexical": "empathie",
+    "champ_lexical": "perception",
     "trust_tier": "T0",
     "tags": [
       "danger",
@@ -1083,7 +1083,7 @@
     "id": "FR_S21B_019",
     "text": "Un marecage de bile noire coupe votre chemin dans les landes. Des bulles eclatent en liberant un gaz qui provoque des visions de vos pires cauchemars.",
     "biome": "landes_bruyere",
-    "champ_lexical": "volonte",
+    "champ_lexical": "esprit",
     "trust_tier": "T0",
     "tags": [
       "danger",
@@ -1203,7 +1203,7 @@
     "id": "FR_S21B_021",
     "text": "Une vague monstrueuse se forme sans avertissement sur les cotes sauvages. L'ecume noire transporte des debris tranchants et des algues etrangleuses.",
     "biome": "cotes_sauvages",
-    "champ_lexical": "force",
+    "champ_lexical": "vigueur",
     "trust_tier": "T0",
     "tags": [
       "danger",
@@ -1323,7 +1323,7 @@
     "id": "FR_S21B_023",
     "text": "Un kraken miniature surgit des eaux cotieres, ses tentacules enduites d'un mucus corrosif. Il s'enroule autour de votre bras avec une force implacable.",
     "biome": "cotes_sauvages",
-    "champ_lexical": "agilite",
+    "champ_lexical": "finesse",
     "trust_tier": "T0",
     "tags": [
       "danger",
@@ -1443,7 +1443,7 @@
     "id": "FR_S21B_025",
     "text": "Un vaisseau fantome emerge du brouillard cotier. Son equipage squelettique lance des harpons rouilles qui s'ancrent dans la chair avec des crochets barbeles.",
     "biome": "cotes_sauvages",
-    "champ_lexical": "ruse",
+    "champ_lexical": "bluff",
     "trust_tier": "T0",
     "tags": [
       "danger",
@@ -1503,7 +1503,7 @@
     "id": "FR_S21B_026",
     "text": "Une maree noire surnaturelle recouvre la plage. Le liquide visqueux brule au contact et libere des vapeurs qui font pleurer du sang.",
     "biome": "cotes_sauvages",
-    "champ_lexical": "volonte",
+    "champ_lexical": "esprit",
     "trust_tier": "T0",
     "tags": [
       "danger",
@@ -1623,7 +1623,7 @@
     "id": "FR_S21B_028",
     "text": "Un phare abandonne emet une lumiere qui rend aveugle. Ceux qui la fixent perdent la vue progressivement tandis que des murmures les guident vers les recifs.",
     "biome": "cotes_sauvages",
-    "champ_lexical": "empathie",
+    "champ_lexical": "perception",
     "trust_tier": "T0",
     "tags": [
       "danger",
@@ -1683,7 +1683,7 @@
     "id": "FR_S21B_029",
     "text": "Un tourbillon apparait dans une crique des cotes sauvages. L'eau aspire tout ce qui flotte et les rochers craquent sous la pression titanesque.",
     "biome": "cotes_sauvages",
-    "champ_lexical": "force",
+    "champ_lexical": "vigueur",
     "trust_tier": "T0",
     "tags": [
       "danger",
@@ -1803,7 +1803,7 @@
     "id": "FR_S21B_031",
     "text": "Un ancien puits du village libere une colonne d'eau noire qui corrompt tout ce qu'elle touche. Les villageois fuient en hurlant leurs maledictions.",
     "biome": "villages_celtes",
-    "champ_lexical": "empathie",
+    "champ_lexical": "perception",
     "trust_tier": "T0",
     "tags": [
       "danger",
@@ -1863,7 +1863,7 @@
     "id": "FR_S21B_032",
     "text": "Une forge celte s'embrase de flammes bleues incontrolables. Le metal en fusion coule dans les rues et les murs de pierre craquent sous la chaleur.",
     "biome": "villages_celtes",
-    "champ_lexical": "force",
+    "champ_lexical": "vigueur",
     "trust_tier": "T0",
     "tags": [
       "danger",
@@ -1983,7 +1983,7 @@
     "id": "FR_S21B_034",
     "text": "Les masques ceremoniels du village prennent vie la nuit. Ils flottent dans les rues, mordant les passants et volant des fragments de leur personnalite.",
     "biome": "villages_celtes",
-    "champ_lexical": "ruse",
+    "champ_lexical": "bluff",
     "trust_tier": "T0",
     "tags": [
       "danger",
@@ -2103,7 +2103,7 @@
     "id": "FR_S21B_036",
     "text": "La taverne du village s'effondre soudain. Les poutres tombent comme des massues et la biere repandue s'enflamme, creant un enfer de flammes et d'eclats.",
     "biome": "villages_celtes",
-    "champ_lexical": "agilite",
+    "champ_lexical": "finesse",
     "trust_tier": "T0",
     "tags": [
       "danger",
@@ -2163,7 +2163,7 @@
     "id": "FR_S21B_037",
     "text": "Un forgeron possede frappe son enclume sans relache, chaque coup liberant une onde de choc qui fissure les os des passants proches.",
     "biome": "villages_celtes",
-    "champ_lexical": "volonte",
+    "champ_lexical": "esprit",
     "trust_tier": "T0",
     "tags": [
       "danger",
@@ -2283,7 +2283,7 @@
     "id": "FR_S21B_039",
     "text": "Le cimetiere du village deborde de ses tombes. Des mains terreuses agrippent les chevilles des vivants et les tirent vers les fosses beantes.",
     "biome": "villages_celtes",
-    "champ_lexical": "force",
+    "champ_lexical": "vigueur",
     "trust_tier": "T0",
     "tags": [
       "danger",
@@ -2463,7 +2463,7 @@
     "id": "FR_S21B_042",
     "text": "Les menhirs d'un cercle sacre se mettent a tourner lentement, broyant tout sur leur passage. Le sol tremble et des fissures s'ouvrent en spirale.",
     "biome": "cercles_pierres",
-    "champ_lexical": "agilite",
+    "champ_lexical": "finesse",
     "trust_tier": "T0",
     "tags": [
       "danger",
@@ -2583,7 +2583,7 @@
     "id": "FR_S21B_044",
     "text": "Un sacrifice ancien se rejoue en boucle au centre du cercle de pierres. Le sang spectral eclabousse ceux qui s'approchent et marque leur ame.",
     "biome": "cercles_pierres",
-    "champ_lexical": "empathie",
+    "champ_lexical": "perception",
     "trust_tier": "T0",
     "tags": [
       "danger",
@@ -2643,7 +2643,7 @@
     "id": "FR_S21B_045",
     "text": "Les pierres du cercle emettent un bourdonnement qui fait eclater les vaisseaux sanguins. Le nez saigne, les oreilles sifflent, la vision se trouble.",
     "biome": "cercles_pierres",
-    "champ_lexical": "volonte",
+    "champ_lexical": "esprit",
     "trust_tier": "T0",
     "tags": [
       "danger",
@@ -2703,7 +2703,7 @@
     "id": "FR_S21B_046",
     "text": "Un portail inter-dimensionnel s'ouvre dans le cercle de pierres. Des tentacules d'ombre en emergent, cherchant des etres vivants a devorer.",
     "biome": "cercles_pierres",
-    "champ_lexical": "force",
+    "champ_lexical": "vigueur",
     "trust_tier": "T0",
     "tags": [
       "danger",
@@ -2763,7 +2763,7 @@
     "id": "FR_S21B_047",
     "text": "Les gravures des pierres s'animent et des guerriers de pierre en emergent. Leurs coups sont lents mais devastateurs, fendant le sol a chaque frappe.",
     "biome": "cercles_pierres",
-    "champ_lexical": "ruse",
+    "champ_lexical": "bluff",
     "trust_tier": "T0",
     "tags": [
       "danger",
@@ -2943,7 +2943,7 @@
     "id": "FR_S21B_050",
     "text": "Le cercle de pierres s'enfonce dans la terre, emportant quiconque se trouve en son sein. Les parois du gouffre suintent un acide verdatre.",
     "biome": "cercles_pierres",
-    "champ_lexical": "agilite",
+    "champ_lexical": "finesse",
     "trust_tier": "T0",
     "tags": [
       "danger",
@@ -3003,7 +3003,7 @@
     "id": "FR_S21B_051",
     "text": "Les eaux stagnantes du marais bouillonnent de bulles de gaz toxique. Chaque bulle qui eclate libere une hallucination terrifiante et un spasme de douleur.",
     "biome": "marais_korrigans",
-    "champ_lexical": "volonte",
+    "champ_lexical": "esprit",
     "trust_tier": "T0",
     "tags": [
       "danger",
@@ -3063,7 +3063,7 @@
     "id": "FR_S21B_052",
     "text": "Un korrigan geant surgit de la boue, trois fois la taille normale. Ses yeux luisent de rage et ses griffes tranchent l'air avec un sifflement mortel.",
     "biome": "marais_korrigans",
-    "champ_lexical": "force",
+    "champ_lexical": "vigueur",
     "trust_tier": "T0",
     "tags": [
       "danger",
@@ -3243,7 +3243,7 @@
     "id": "FR_S21B_055",
     "text": "Un arbre mort du marais s'anime et projette ses branches comme des lances. La seve noire qui en coule empoisonne les plaies et provoque la fievre.",
     "biome": "marais_korrigans",
-    "champ_lexical": "agilite",
+    "champ_lexical": "finesse",
     "trust_tier": "T0",
     "tags": [
       "danger",
@@ -3363,7 +3363,7 @@
     "id": "FR_S21B_057",
     "text": "Le marais secrete un brouillard si dense qu'il etouffe. Les korrigans en profitent pour voler vos provisions et lacerer vos vetements dans le noir.",
     "biome": "marais_korrigans",
-    "champ_lexical": "ruse",
+    "champ_lexical": "bluff",
     "trust_tier": "T0",
     "tags": [
       "danger",
@@ -3423,7 +3423,7 @@
     "id": "FR_S21B_058",
     "text": "Des nenuphars carnivores referment leurs petales sur les mains et les pieds de ceux qui les touchent. Leur suc digestif ronge la chair lentement.",
     "biome": "marais_korrigans",
-    "champ_lexical": "empathie",
+    "champ_lexical": "perception",
     "trust_tier": "T0",
     "tags": [
       "danger",
@@ -3483,7 +3483,7 @@
     "id": "FR_S21B_059",
     "text": "Un ancien piege a korrigans se referme sur vous dans les profondeurs du marais. Les barres de fer rouille s'enfoncent dans la chair et le mecanisme grince.",
     "biome": "marais_korrigans",
-    "champ_lexical": "force",
+    "champ_lexical": "vigueur",
     "trust_tier": "T0",
     "tags": [
       "danger",
@@ -3543,7 +3543,7 @@
     "id": "FR_S21B_060",
     "text": "Une tribu de korrigans corrompus vous encercle dans les roseaux. Leurs yeux noirs refletent une faim ancienne et leurs crocs degouttent d'un venin violet.",
     "biome": "marais_korrigans",
-    "champ_lexical": "volonte",
+    "champ_lexical": "esprit",
     "trust_tier": "T0",
     "tags": [
       "danger",
@@ -3603,7 +3603,7 @@
     "id": "FR_S21B_061",
     "text": "Un dolmen fissure sur la colline libere un essaim de scarabees noirs qui rongent tout tissu organique. Leur bourdonnement couvre les cris de douleur.",
     "biome": "collines_dolmens",
-    "champ_lexical": "agilite",
+    "champ_lexical": "finesse",
     "trust_tier": "T0",
     "tags": [
       "danger",
@@ -3723,7 +3723,7 @@
     "id": "FR_S21B_063",
     "text": "Un gardien de dolmen spectral vous barre la route. Son epee fantomatique traverse l'armure et gele le sang dans les veines a chaque coup.",
     "biome": "collines_dolmens",
-    "champ_lexical": "force",
+    "champ_lexical": "vigueur",
     "trust_tier": "T0",
     "tags": [
       "danger",
@@ -3903,7 +3903,7 @@
     "id": "FR_S21B_066",
     "text": "Un vent hurlant emporte les pierres des dolmens effondres. Les eclats volent comme des lames et lacerent quiconque se tient debout sur la colline.",
     "biome": "collines_dolmens",
-    "champ_lexical": "volonte",
+    "champ_lexical": "esprit",
     "trust_tier": "T0",
     "tags": [
       "danger",
@@ -3963,7 +3963,7 @@
     "id": "FR_S21B_067",
     "text": "Des racines petrifiees sous le dolmen s'animent et percent le sol comme des piques. Elles cherchent la chaleur des corps vivants pour se nourrir.",
     "biome": "collines_dolmens",
-    "champ_lexical": "ruse",
+    "champ_lexical": "bluff",
     "trust_tier": "T0",
     "tags": [
       "danger",
@@ -4023,7 +4023,7 @@
     "id": "FR_S21B_068",
     "text": "Un ancien autel sacrificiel sur la colline se reactive. Le sang seche bouillonne et les os empiles s'assemblent en une creature osseuse affamee.",
     "biome": "collines_dolmens",
-    "champ_lexical": "empathie",
+    "champ_lexical": "perception",
     "trust_tier": "T0",
     "tags": [
       "danger",
@@ -4083,7 +4083,7 @@
     "id": "FR_S21B_069",
     "text": "Le sol de la colline vibre d'une frequence qui desagrege les os. Les dolmens vibrent en harmonie et chaque pas devient une agonie dans les articulations.",
     "biome": "collines_dolmens",
-    "champ_lexical": "force",
+    "champ_lexical": "vigueur",
     "trust_tier": "T0",
     "tags": [
       "danger",
@@ -4263,7 +4263,7 @@
     "id": "FR_S21B_072",
     "text": "Un maelstrom se forme autour de l'ile, coupant toute retraite. L'eau aspire les rochers du rivage et les projette comme des boulets de canon.",
     "biome": "iles_mystiques",
-    "champ_lexical": "force",
+    "champ_lexical": "vigueur",
     "trust_tier": "T0",
     "tags": [
       "danger",
@@ -4323,7 +4323,7 @@
     "id": "FR_S21B_073",
     "text": "Une source d'eau cristalline sur l'ile est en realite un piege de Niamh corrompue. L'eau guerit les blessures mais vole les emotions, laissant un vide glacial.",
     "biome": "iles_mystiques",
-    "champ_lexical": "empathie",
+    "champ_lexical": "perception",
     "trust_tier": "T0",
     "tags": [
       "danger",
@@ -4443,7 +4443,7 @@
     "id": "FR_S21B_075",
     "text": "Un phare spectral sur l'ile emet un rayon qui petrifie ceux qu'il touche. Le faisceau tourne lentement, balayant chaque recoin sans pitie.",
     "biome": "iles_mystiques",
-    "champ_lexical": "agilite",
+    "champ_lexical": "finesse",
     "trust_tier": "T0",
     "tags": [
       "danger",
@@ -4563,7 +4563,7 @@
     "id": "FR_S21B_077",
     "text": "Des coraux vivants sur l'ile se detachent et rampent vers les etres de chair. Ils s'incrustent dans la peau et commencent a calcifier les tissus.",
     "biome": "iles_mystiques",
-    "champ_lexical": "volonte",
+    "champ_lexical": "esprit",
     "trust_tier": "T0",
     "tags": [
       "danger",
@@ -4623,7 +4623,7 @@
     "id": "FR_S21B_078",
     "text": "Un oracle aveugle de l'ile prononce votre nom et annonce votre mort prochaine. Ses mots pesent comme du plomb et drainent votre espoir de survie.",
     "biome": "iles_mystiques",
-    "champ_lexical": "ruse",
+    "champ_lexical": "bluff",
     "trust_tier": "T0",
     "tags": [
       "danger",
@@ -4683,7 +4683,7 @@
     "id": "FR_S21B_079",
     "text": "Un portail aquatique s'ouvre dans la grotte de l'ile et aspire l'air ambiant. Le vide cree suffoque et les parois se couvrent de givre mortel.",
     "biome": "iles_mystiques",
-    "champ_lexical": "force",
+    "champ_lexical": "vigueur",
     "trust_tier": "T0",
     "tags": [
       "danger",

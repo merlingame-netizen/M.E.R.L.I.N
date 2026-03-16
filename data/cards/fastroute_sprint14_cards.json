@@ -50,7 +50,8 @@
         ],
         "label": "Graver votre propre marque a cote"
       }
-    ]
+    ],
+    "champ_lexical": "esprit"
   },
   {
     "id": "s14_ogham_02",
@@ -107,7 +108,8 @@
         ],
         "label": "Briser le cercle pour liberer l'energie"
       }
-    ]
+    ],
+    "champ_lexical": "perception"
   },
   {
     "id": "s14_ogham_03",
@@ -161,7 +163,8 @@
         ],
         "label": "Tenter de voler un secret des danseurs"
       }
-    ]
+    ],
+    "champ_lexical": "esprit"
   },
   {
     "id": "s14_ogham_04",
@@ -219,7 +222,8 @@
         ],
         "label": "Purifier les eaux avec un rituel de feu"
       }
-    ]
+    ],
+    "champ_lexical": "esprit"
   },
   {
     "id": "s14_ogham_05",
@@ -272,7 +276,8 @@
         ],
         "label": "Defier la tempete en criant votre nom"
       }
-    ]
+    ],
+    "champ_lexical": "logique"
   },
   {
     "id": "s14_ogham_06",
@@ -329,7 +334,8 @@
         ],
         "label": "Resister a l'appel et rebrousser chemin"
       }
-    ]
+    ],
+    "champ_lexical": "esprit"
   },
   {
     "id": "s14_ogham_07",
@@ -387,7 +393,8 @@
         ],
         "label": "Planter une graine a ses racines en offrande"
       }
-    ]
+    ],
+    "champ_lexical": "perception"
   },
   {
     "id": "s14_ogham_08",
@@ -442,7 +449,8 @@
         ],
         "label": "Tenter de capturer la lumiere dans un flacon"
       }
-    ]
+    ],
+    "champ_lexical": "esprit"
   },
   {
     "id": "s14_ogham_09",
@@ -500,7 +508,8 @@
         ],
         "label": "Forcer le passage malgre la gardienne"
       }
-    ]
+    ],
+    "champ_lexical": "esprit"
   },
   {
     "id": "s14_ogham_10",
@@ -558,7 +567,8 @@
         ],
         "label": "Repousser les feux follets par un sortilege"
       }
-    ]
+    ],
+    "champ_lexical": "esprit"
   },
   {
     "id": "s14_ogham_11",
@@ -616,7 +626,8 @@
         ],
         "label": "Echanger le rameau contre un souvenir"
       }
-    ]
+    ],
+    "champ_lexical": "esprit"
   },
   {
     "id": "s14_ogham_12",
@@ -673,7 +684,8 @@
         ],
         "label": "Boire a la source noire"
       }
-    ]
+    ],
+    "champ_lexical": "esprit"
   },
   {
     "id": "s14_ogham_13",
@@ -730,7 +742,8 @@
         ],
         "label": "Trancher les fils pour liberer les secrets"
       }
-    ]
+    ],
+    "champ_lexical": "esprit"
   },
   {
     "id": "s14_ogham_14",
@@ -786,7 +799,8 @@
         ],
         "label": "Cacher le bassin sous des pierres"
       }
-    ]
+    ],
+    "champ_lexical": "logique"
   },
   {
     "id": "s14_ogham_15",
@@ -843,7 +857,8 @@
         ],
         "label": "Attirer l'energie du dolmen vers vous"
       }
-    ]
+    ],
+    "champ_lexical": "esprit"
   },
   {
     "id": "s14_ogham_16",
@@ -900,7 +915,8 @@
         ],
         "label": "Fuir devant cette apparition surnaturelle"
       }
-    ]
+    ],
+    "champ_lexical": "esprit"
   },
   {
     "id": "s14_ogham_17",
@@ -958,7 +974,8 @@
         ],
         "label": "Eteindre les braises et fermer la forge"
       }
-    ]
+    ],
+    "champ_lexical": "esprit"
   },
   {
     "id": "s14_ogham_18",
@@ -1016,7 +1033,8 @@
         ],
         "label": "Defier la maree en plantant un baton dans le sable"
       }
-    ]
+    ],
+    "champ_lexical": "esprit"
   },
   {
     "id": "s14_ogham_19",
@@ -1074,7 +1092,8 @@
         ],
         "label": "Attaquer le gardien pour forcer le passage"
       }
-    ]
+    ],
+    "champ_lexical": "esprit"
   },
   {
     "id": "s14_ogham_20",
@@ -1130,7 +1149,8 @@
         ],
         "label": "Eteindre une flamme pour tester la protection"
       }
-    ]
+    ],
+    "champ_lexical": "esprit"
   },
   {
     "id": "s14_ogham_21",
@@ -1187,7 +1207,8 @@
         ],
         "label": "Refermer le manuscrit pour proteger ses secrets"
       }
-    ]
+    ],
+    "champ_lexical": "esprit"
   },
   {
     "id": "s14_ogham_22",
@@ -1245,7 +1266,8 @@
         ],
         "label": "Maudire la source pour en inverser le pouvoir"
       }
-    ]
+    ],
+    "champ_lexical": "esprit"
   },
   {
     "id": "s14_ogham_23",
@@ -1301,7 +1323,8 @@
         ],
         "label": "Absorber l'energie de la tempete"
       }
-    ]
+    ],
+    "champ_lexical": "logique"
   },
   {
     "id": "s14_ogham_24",
@@ -1358,7 +1381,8 @@
         ],
         "label": "Laisser la nature suivre son cours"
       }
-    ]
+    ],
+    "champ_lexical": "esprit"
   },
   {
     "id": "s14_ogham_25",
@@ -1416,7 +1440,8 @@
         ],
         "label": "Enchainer la pierre pour empecher son usage"
       }
-    ]
+    ],
+    "champ_lexical": "esprit"
   },
   {
     "id": "s14_endgame_01",
@@ -1474,7 +1499,8 @@
         ],
         "label": "Defier l'autorite du Grand Druide"
       }
-    ]
+    ],
+    "champ_lexical": "bluff"
   },
   {
     "id": "s14_endgame_02",
@@ -1532,7 +1558,8 @@
         ],
         "label": "Refuser et repousser l'Ankou"
       }
-    ]
+    ],
+    "champ_lexical": "esprit"
   },
   {
     "id": "s14_endgame_03",
@@ -1594,7 +1621,8 @@
         ],
         "label": "Voler le tresor le plus precieux en secret"
       }
-    ]
+    ],
+    "champ_lexical": "observation"
   },
   {
     "id": "s14_endgame_04",
@@ -1651,7 +1679,8 @@
         ],
         "label": "Refuser et rester dans le monde mortel"
       }
-    ]
+    ],
+    "champ_lexical": "esprit"
   },
   {
     "id": "s14_endgame_05",
@@ -1709,7 +1738,8 @@
         ],
         "label": "Tenter de les rendormir par un enchantement"
       }
-    ]
+    ],
+    "champ_lexical": "esprit"
   },
   {
     "id": "s14_endgame_06",
@@ -1767,7 +1797,8 @@
         ],
         "label": "Renverser le chaudron et fuir"
       }
-    ]
+    ],
+    "champ_lexical": "esprit"
   },
   {
     "id": "s14_endgame_07",
@@ -1829,7 +1860,8 @@
         ],
         "label": "Marcher aux cotes de l'Ankou en silence"
       }
-    ]
+    ],
+    "champ_lexical": "esprit"
   },
   {
     "id": "s14_endgame_08",
@@ -1887,7 +1919,8 @@
         ],
         "label": "Mentir en pretendant avoir deja mange"
       }
-    ]
+    ],
+    "champ_lexical": "esprit"
   },
   {
     "id": "s14_endgame_09",
@@ -1945,7 +1978,8 @@
         ],
         "label": "Bruler le navire pour liberer les guerriers"
       }
-    ]
+    ],
+    "champ_lexical": "esprit"
   },
   {
     "id": "s14_endgame_10",
@@ -2003,7 +2037,8 @@
         ],
         "label": "Contester leur autorite sur le monde des vivants"
       }
-    ]
+    ],
+    "champ_lexical": "esprit"
   },
   {
     "id": "s14_endgame_11",
@@ -2064,7 +2099,8 @@
         ],
         "label": "Refuser le gui et choisir votre propre voie"
       }
-    ]
+    ],
+    "champ_lexical": "esprit"
   },
   {
     "id": "s14_endgame_12",
@@ -2126,7 +2162,8 @@
         ],
         "label": "Ecrire un autre nom a la place du votre"
       }
-    ]
+    ],
+    "champ_lexical": "vigueur"
   },
   {
     "id": "s14_endgame_13",
@@ -2184,7 +2221,8 @@
         ],
         "label": "Fuir avant le debut de l'epreuve"
       }
-    ]
+    ],
+    "champ_lexical": "esprit"
   },
   {
     "id": "s14_endgame_14",
@@ -2242,7 +2280,8 @@
         ],
         "label": "Chanter un lai d'amour pour elle"
       }
-    ]
+    ],
+    "champ_lexical": "esprit"
   },
   {
     "id": "s14_endgame_15",
@@ -2305,7 +2344,8 @@
         ],
         "label": "Garder l'Ogham pour vous"
       }
-    ]
+    ],
+    "champ_lexical": "esprit"
   },
   {
     "id": "s14_endgame_16",
@@ -2367,7 +2407,8 @@
         ],
         "label": "Arracher une ecaille comme talisman"
       }
-    ]
+    ],
+    "champ_lexical": "observation"
   },
   {
     "id": "s14_endgame_17",
@@ -2424,7 +2465,8 @@
         ],
         "label": "Proteger la fontaine des profanateurs"
       }
-    ]
+    ],
+    "champ_lexical": "esprit"
   },
   {
     "id": "s14_endgame_18",
@@ -2483,7 +2525,8 @@
         ],
         "label": "Traverser la porte pour explorer l'au-dela"
       }
-    ]
+    ],
+    "champ_lexical": "esprit"
   },
   {
     "id": "s14_endgame_19",
@@ -2541,7 +2584,8 @@
         ],
         "label": "Transformer le miroir en portail"
       }
-    ]
+    ],
+    "champ_lexical": "esprit"
   },
   {
     "id": "s14_endgame_20",
@@ -2607,7 +2651,8 @@
         ],
         "label": "Refuser de choisir un destin pour autrui"
       }
-    ]
+    ],
+    "champ_lexical": "esprit"
   },
   {
     "id": "s14_endgame_21",
@@ -2672,7 +2717,8 @@
         ],
         "label": "Bruler le Livre pour liberer les peuples du passe"
       }
-    ]
+    ],
+    "champ_lexical": "esprit"
   },
   {
     "id": "s14_endgame_22",
@@ -2738,7 +2784,8 @@
         ],
         "label": "Briser la faux pour abolir la Mort"
       }
-    ]
+    ],
+    "champ_lexical": "esprit"
   },
   {
     "id": "s14_endgame_23",
@@ -2800,7 +2847,8 @@
         ],
         "label": "Creer votre propre illusion rivale"
       }
-    ]
+    ],
+    "champ_lexical": "esprit"
   },
   {
     "id": "s14_endgame_24",
@@ -2864,7 +2912,8 @@
         ],
         "label": "Detruire les Oghams pour que nul ne les possede"
       }
-    ]
+    ],
+    "champ_lexical": "esprit"
   },
   {
     "id": "s14_endgame_25",
@@ -2930,6 +2979,7 @@
         ],
         "label": "Absorber toute la magie restante en vous"
       }
-    ]
+    ],
+    "champ_lexical": "esprit"
   }
 ]
