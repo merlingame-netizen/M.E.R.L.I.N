@@ -18,7 +18,7 @@ const GAUGES: Dictionary = {
 		"name": "Esprit",
 		"description": "Savoir spirituel et magique",
 		"icon": "\u2726",
-		"color": Color(0.55, 0.40, 0.75),
+		"color": Color(0.55, 0.40, 0.75),  # MerlinVisual.CRT_PALETTE["gauge_esprit"]
 		"default": 30,
 		"min": 0,
 		"max": 100,
@@ -27,7 +27,7 @@ const GAUGES: Dictionary = {
 		"name": "Vigueur",
 		"description": "Endurance physique et resistance",
 		"icon": "\u2694",
-		"color": Color(0.72, 0.35, 0.25),
+		"color": Color(0.72, 0.35, 0.25),  # MerlinVisual.CRT_PALETTE["gauge_vigueur"]
 		"default": 50,
 		"min": 0,
 		"max": 100,
@@ -36,7 +36,7 @@ const GAUGES: Dictionary = {
 		"name": "Faveur",
 		"description": "Reputation et liens sociaux",
 		"icon": "\u2665",
-		"color": Color(0.65, 0.52, 0.34),
+		"color": Color(0.65, 0.52, 0.34),  # MerlinVisual.CRT_PALETTE["gauge_faveur"]
 		"default": 40,
 		"min": 0,
 		"max": 100,
@@ -45,7 +45,7 @@ const GAUGES: Dictionary = {
 		"name": "Logique",
 		"description": "Raisonnement et analyse",
 		"icon": "@",
-		"color": Color(0.35, 0.55, 0.70),
+		"color": Color(0.35, 0.55, 0.70),  # MerlinVisual.CRT_PALETTE["gauge_logique"]
 		"default": 35,
 		"min": 0,
 		"max": 100,
@@ -54,7 +54,7 @@ const GAUGES: Dictionary = {
 		"name": "Ressources",
 		"description": "Biens materiels et reserves",
 		"icon": "<>",
-		"color": Color(0.48, 0.55, 0.30),
+		"color": Color(0.48, 0.55, 0.30),  # MerlinVisual.CRT_PALETTE["gauge_ressources"]
 		"default": 45,
 		"min": 0,
 		"max": 100,

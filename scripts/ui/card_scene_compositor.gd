@@ -273,21 +273,21 @@ func _create_sky_node(config: CardLayer) -> ColorRect:
 		var mat := ShaderMaterial.new()
 		mat.shader = _sky_shader
 		# Gradient colors (already computed by AmbianceData with period+weather+season applied)
-		mat.set_shader_parameter("top_color", sky_data.get("top_color", Color(0.06, 0.14, 0.08)))
-		mat.set_shader_parameter("mid_color", sky_data.get("mid_color", Color(0.12, 0.28, 0.14)))
-		mat.set_shader_parameter("bottom_color", sky_data.get("bottom_color", Color(0.18, 0.40, 0.20)))
+		mat.set_shader_parameter("top_color", sky_data.get("top_color", MerlinVisual.CRT_PALETTE["sky_top"]))
+		mat.set_shader_parameter("mid_color", sky_data.get("mid_color", MerlinVisual.CRT_PALETTE["sky_mid"]))
+		mat.set_shader_parameter("bottom_color", sky_data.get("bottom_color", MerlinVisual.CRT_PALETTE["sky_bottom"]))
 		mat.set_shader_parameter("mid_position", sky_data.get("mid_position", 0.45))
 		# Season tint already baked into colors by AmbianceData, pass neutral
 		mat.set_shader_parameter("season_tint", Color(1, 1, 1))
 		# Weather uniforms
 		mat.set_shader_parameter("fog_density", sky_data.get("fog_density", 0.0))
-		mat.set_shader_parameter("fog_color", sky_data.get("fog_color", Color(0.6, 0.6, 0.65)))
+		mat.set_shader_parameter("fog_color", sky_data.get("fog_color", MerlinVisual.CRT_PALETTE["sky_fog"]))
 		mat.set_shader_parameter("cloud_cover", sky_data.get("cloud_cover", 0.0))
 		mat.set_shader_parameter("rain_intensity", sky_data.get("rain_intensity", 0.0))
 		rect.material = mat
 	else:
 		# Fallback: solid mid color
-		rect.color = sky_data.get("mid_color", Color(0.12, 0.28, 0.14))
+		rect.color = sky_data.get("mid_color", MerlinVisual.CRT_PALETTE["sky_mid"])
 
 	config.idle_motion = {}  ## Reset after extracting gradient data
 	return rect
@@ -304,7 +304,7 @@ func _create_terrain_node(config: CardLayer) -> ColorRect:
 	if _silhouette_shader:
 		var mat := ShaderMaterial.new()
 		mat.shader = _silhouette_shader
-		mat.set_shader_parameter("silhouette_color", mid_data.get("silhouette_color", Color(0.08, 0.16, 0.10)))
+		mat.set_shader_parameter("silhouette_color", mid_data.get("silhouette_color", MerlinVisual.CRT_PALETTE["silhouette"]))
 		mat.set_shader_parameter("height_base", mid_data.get("height_base", 0.55))
 		mat.set_shader_parameter("height_variation", mid_data.get("height_variation", 0.20))
 		mat.set_shader_parameter("roughness", mid_data.get("roughness", 0.65))
@@ -314,7 +314,7 @@ func _create_terrain_node(config: CardLayer) -> ColorRect:
 	else:
 		# Fallback: colored band in lower portion
 		var h_base: float = mid_data.get("height_base", 0.55)
-		rect.color = mid_data.get("silhouette_color", Color(0.08, 0.16, 0.10))
+		rect.color = mid_data.get("silhouette_color", MerlinVisual.CRT_PALETTE["silhouette"])
 		rect.position.y = _target_size.y * h_base
 		rect.size.y = _target_size.y * (1.0 - h_base)
 
@@ -427,7 +427,7 @@ func _create_particles(atmo_data: Dictionary) -> Control:
 	particles.scale_amount_max = size_range.y / 10.0
 
 	# Color
-	var color: Color = atmo_data.get("color", Color(0.3, 0.4, 0.3, 0.15))
+	var color: Color = atmo_data.get("color", MerlinVisual.CRT_PALETTE["atmo_particle"])
 	particles.color = color
 
 	# Gravity off for floating effect

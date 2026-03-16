@@ -148,6 +148,15 @@ func _connect_signals() -> void:
 		store.life_changed.connect(_on_life_changed)
 		store.run_ended.connect(_on_run_ended)
 		store.mission_progress.connect(_on_mission_progress)
+		store.trust_changed.connect(_on_trust_changed)
+		store.card_resolved.connect(_on_card_resolved)
+		store.ogham_activated.connect(_on_ogham_activated)
+		store.season_changed.connect(_on_season_changed)
+		store.faveurs_changed.connect(_on_faveurs_changed)
+
+	# MerlinOmniscient signals (trust tier change → HUD badge)
+	if store and store.merlin:
+		store.merlin.trust_tier_changed.connect(_on_trust_tier_changed)
 
 	# UI signals
 	if ui:
@@ -1765,6 +1774,47 @@ func _on_mission_progress(step: int, total: int) -> void:
 
 	if step >= total and total > 0:
 		print("[Merlin] Mission complete!")
+
+
+func _on_card_resolved(card_id: String, option: int) -> void:
+	_cards_this_run += 1
+	_quest_history.append({"card_id": card_id, "option": option, "index": _cards_this_run})
+	print("[Merlin] Card resolved: %s (option %d, total %d)" % [card_id, option, _cards_this_run])
+
+
+func _on_ogham_activated(skill_id: String, effect: String) -> void:
+	SFXManager.play("ogham_chime")
+	print("[Merlin] Ogham activated: %s -> %s" % [skill_id, effect])
+
+
+func _on_season_changed(new_season: String) -> void:
+	print("[Merlin] Season changed: %s" % new_season)
+
+
+func _on_faveurs_changed(old_val: int, new_val: int) -> void:
+	if new_val > old_val:
+		SFXManager.play("ogham_chime")
+	print("[Merlin] Faveurs: %d -> %d" % [old_val, new_val])
+
+
+func _on_trust_changed(old_value: int, new_value: int, tier: String) -> void:
+	print("[Merlin] Trust Merlin: %d → %d (tier: %s)" % [old_value, new_value, tier])
+	if ui and is_instance_valid(ui) and ui.has_method("show_life_delta"):
+		var delta: int = new_value - old_value
+		if delta != 0:
+			SFXManager.play("ogham_chime" if delta > 0 else "aspect_down")
+
+
+func _on_trust_tier_changed(old_tier: int, new_tier: int) -> void:
+	var tier_names: Array[String] = ["T0", "T1", "T2", "T3"]
+	var old_name: String = tier_names[clampi(old_tier, 0, 3)]
+	var new_name: String = tier_names[clampi(new_tier, 0, 3)]
+	print("[Merlin] Trust tier changed: %s → %s" % [old_name, new_name])
+	if ui and is_instance_valid(ui) and ui.has_method("show_milestone_popup"):
+		if new_tier > old_tier:
+			ui.show_milestone_popup("Confiance accrue", "Merlin te fait davantage confiance (%s)" % new_name)
+		else:
+			ui.show_milestone_popup("Confiance en recul", "Merlin se montre plus distant (%s)" % new_name)
 
 
 # ═══════════════════════════════════════════════════════════════════════════════

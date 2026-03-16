@@ -50,6 +50,10 @@ func bind_to_run_controller(controller: Run3DController) -> void:
 	controller.card_started.connect(_on_card_started)
 	controller.card_ended.connect(_on_card_ended)
 	controller.run_ended.connect(_on_run_ended)
+	# Merchant spawner signal → HUD notification
+	var spawner: NpcMerchantSpawner = controller.get_merchant_spawner()
+	if spawner:
+		spawner.merchant_spawned.connect(_on_merchant_spawned)
 
 
 func set_ui_nodes(nodes: Dictionary) -> void:
@@ -88,7 +92,7 @@ func update_life(current: int, maximum: int) -> void:
 		_life_label.text = "%d/%d" % [current, maximum]
 	# Low life warning
 	if current <= MerlinConstants.LIFE_ESSENCE_LOW_THRESHOLD and _life_bar:
-		_life_bar.modulate = Color(1.0, 0.3, 0.3)
+		_life_bar.modulate = MerlinVisual.CRT_PALETTE["danger"]
 	elif _life_bar:
 		_life_bar.modulate = Color.WHITE
 
@@ -168,6 +172,10 @@ func _on_card_ended() -> void:
 
 func _on_run_ended(_reason: String, _data: Dictionary) -> void:
 	_hide_card_overlay()
+
+
+func _on_merchant_spawned(npc_name: String) -> void:
+	print("[HUD] Merchant appeared: %s" % npc_name)
 
 
 func _show_card_overlay(card: Dictionary) -> void:

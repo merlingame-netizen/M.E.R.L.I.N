@@ -198,14 +198,33 @@ func _sync_persona_forbidden_words() -> void:
 
 
 func _connect_signals() -> void:
-	# Registry signals
+	# Registry signals — relationship
 	relationship.trust_changed.connect(_on_trust_changed)
+	relationship.rapport_updated.connect(_on_rapport_updated)
+	relationship.special_moment_triggered.connect(_on_special_moment_triggered)
+
+	# Registry signals — decision history
 	decision_history.pattern_detected.connect(_on_pattern_detected)
+	decision_history.callback_opportunity.connect(_on_callback_opportunity)
+
+	# Registry signals — session
 	session.wellness_alert.connect(_on_wellness_alert)
+	session.engagement_changed.connect(_on_engagement_changed)
+	session.session_ended.connect(_on_session_ended)
+
+	# Registry signals — player profile
+	player_profile.profile_updated.connect(_on_profile_updated)
+	player_profile.skill_assessed.connect(_on_skill_assessed)
+	player_profile.preference_detected.connect(_on_preference_detected)
 
 	# Narrative signals
+	narrative.arc_started.connect(_on_arc_started)
+	narrative.arc_progressed.connect(_on_arc_progressed)
 	narrative.arc_completed.connect(_on_arc_completed)
+	narrative.foreshadowing_planted.connect(_on_foreshadowing_planted)
+	narrative.foreshadowing_revealed.connect(_on_foreshadowing_revealed)
 	narrative.twist_triggered.connect(_on_twist_triggered)
+	narrative.theme_fatigue_warning.connect(_on_theme_fatigue_warning)
 
 	# Screen distortion reacts to Merlin's tone
 	merlin_speaks.connect(_on_merlin_speaks_screen_fx)
@@ -2113,8 +2132,25 @@ func _on_trust_changed(old_tier: int, new_tier: int, points: int) -> void:
 	trust_tier_changed.emit(old_tier, new_tier)
 
 
+func _on_rapport_updated(dimension: String, value: float) -> void:
+	# Rapport shifts feed into context for next card generation
+	print("[MOS] Rapport updated: %s = %.2f" % [dimension, value])
+
+
+func _on_special_moment_triggered(moment: String) -> void:
+	# Special moments increase narrative tension and earn trust
+	relationship.update_trust("special_moment")
+	narrative.increase_tension(0.1)
+	print("[MOS] Special moment triggered: %s" % moment)
+
+
 func _on_pattern_detected(pattern: String, confidence: float) -> void:
 	pattern_detected.emit(pattern, confidence)
+
+
+func _on_callback_opportunity(npc_id: String, card_id: String) -> void:
+	# Log callback opportunity for sequel card generation
+	print("[MOS] Callback opportunity: npc=%s card=%s" % [npc_id, card_id])
 
 
 func _on_wellness_alert(alert_type: String, data: Dictionary) -> void:
@@ -2128,8 +2164,59 @@ func _on_wellness_alert(alert_type: String, data: Dictionary) -> void:
 		pass
 
 
+func _on_engagement_changed(level: String) -> void:
+	# Track engagement level for difficulty adaptation
+	print("[MOS] Engagement changed: %s" % level)
+
+
+func _on_session_ended(summary: Dictionary) -> void:
+	# Session summary logged for cross-session learning
+	print("[MOS] Session ended: %d decisions, %d cards" % [
+		int(summary.get("decisions", 0)),
+		int(summary.get("cards_generated", 0)),
+	])
+
+
+func _on_profile_updated(trait_name: String, _old_value: float, new_value: float) -> void:
+	# Player trait updates feed into adaptive card generation
+	print("[MOS] Profile trait updated: %s = %.2f" % [trait_name, new_value])
+
+
+func _on_skill_assessed(skill: String, level: float) -> void:
+	# Skill assessment feeds difficulty adaptation
+	print("[MOS] Skill assessed: %s = %.2f" % [skill, level])
+
+
+func _on_preference_detected(preference: String, value: Variant) -> void:
+	# Detected preferences influence card theme selection
+	print("[MOS] Preference detected: %s = %s" % [preference, str(value)])
+
+
+func _on_arc_started(arc_id: String) -> void:
+	# New arc started — increase tension slightly
+	narrative.increase_tension(0.05)
+	print("[MOS] Arc started: %s" % arc_id)
+
+
+func _on_arc_progressed(arc_id: String, stage: int) -> void:
+	# Arc progression — maintain narrative momentum
+	print("[MOS] Arc progressed: %s stage %d" % [arc_id, stage])
+
+
 func _on_arc_completed(arc_id: String, resolution: String) -> void:
 	relationship.update_trust("completed_arc")
+
+
+func _on_foreshadowing_planted(hint_id: String) -> void:
+	# Track planted hints for future reveal
+	print("[MOS] Foreshadowing planted: %s" % hint_id)
+
+
+func _on_foreshadowing_revealed(hint_id: String) -> void:
+	# Revealed foreshadowing boosts trust and decreases tension
+	relationship.update_trust("foreshadowing_reveal")
+	narrative.decrease_tension(0.1)
+	print("[MOS] Foreshadowing revealed: %s" % hint_id)
 
 
 func _on_twist_triggered(twist_type: String) -> void:
@@ -2138,6 +2225,11 @@ func _on_twist_triggered(twist_type: String) -> void:
 	var screen_fx := get_node_or_null("/root/ScreenEffects")
 	if screen_fx and screen_fx.has_method("narrative_shock"):
 		screen_fx.narrative_shock(0.5)
+
+
+func _on_theme_fatigue_warning(theme: String) -> void:
+	# Theme fatigue — avoid this theme in upcoming cards
+	print("[MOS] Theme fatigue warning: %s" % theme)
 
 
 func _on_merlin_speaks_screen_fx(text: String, tone: String) -> void:

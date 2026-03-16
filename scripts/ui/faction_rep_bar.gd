@@ -22,14 +22,19 @@ const THRESHOLD_ENDING: int = 80
 const VALUE_MIN: float = 0.0
 const VALUE_MAX: float = 100.0
 
-## Faction-specific colors (CRT terminal aesthetic)
-const FACTION_COLORS: Dictionary = {
-	"druides":   Color(0.20, 0.80, 0.30),
-	"anciens":   Color(0.70, 0.55, 0.30),
-	"korrigans": Color(0.80, 0.40, 0.80),
-	"niamh":     Color(0.30, 0.70, 0.90),
-	"ankou":     Color(0.60, 0.20, 0.20),
-}
+## Faction-specific colors (CRT terminal aesthetic) — from MerlinVisual.CRT_PALETTE
+static var FACTION_COLORS: Dictionary:
+	get:
+		if _faction_colors_cache.is_empty():
+			_faction_colors_cache = {
+				"druides":   MerlinVisual.CRT_PALETTE["faction_druides"],
+				"anciens":   MerlinVisual.CRT_PALETTE["faction_anciens"],
+				"korrigans": MerlinVisual.CRT_PALETTE["faction_korrigans"],
+				"niamh":     MerlinVisual.CRT_PALETTE["faction_niamh"],
+				"ankou":     MerlinVisual.CRT_PALETTE["faction_ankou"],
+			}
+		return _faction_colors_cache
+static var _faction_colors_cache: Dictionary = {}
 
 const FACTION_SYMBOLS: Dictionary = {
 	"druides":   "[D]",

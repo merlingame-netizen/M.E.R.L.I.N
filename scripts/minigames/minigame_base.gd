@@ -12,16 +12,21 @@ var _started: bool = false
 var _finished: bool = false
 var _start_time_ms: int = 0
 
-# Colors matching the CRT terminal theme
-const MG_PALETTE := {
-	"bg": Color(0.06, 0.12, 0.06, 0.95),
-	"ink": Color(0.20, 1.00, 0.40),
-	"accent": Color(1.00, 0.75, 0.20),
-	"gold": Color(1.00, 0.85, 0.40),
-	"green": Color(0.20, 1.00, 0.40),
-	"red": Color(1.00, 0.25, 0.20),
-	"paper": Color(0.04, 0.08, 0.04),
-}
+# Colors matching the CRT terminal theme — references MerlinVisual.CRT_PALETTE
+static var MG_PALETTE: Dictionary:
+	get:
+		if _mg_palette_cache.is_empty():
+			_mg_palette_cache = {
+				"bg": Color(MerlinVisual.CRT_PALETTE["bg_panel"].r, MerlinVisual.CRT_PALETTE["bg_panel"].g, MerlinVisual.CRT_PALETTE["bg_panel"].b, 0.95),
+				"ink": MerlinVisual.CRT_PALETTE["phosphor"],
+				"accent": MerlinVisual.CRT_PALETTE["amber"],
+				"gold": MerlinVisual.CRT_PALETTE["amber_bright"],
+				"green": MerlinVisual.CRT_PALETTE["success"],
+				"red": MerlinVisual.CRT_PALETTE["danger"],
+				"paper": MerlinVisual.CRT_PALETTE["bg_dark"],
+			}
+		return _mg_palette_cache
+static var _mg_palette_cache: Dictionary = {}
 
 
 var _in_card_mode: bool = false

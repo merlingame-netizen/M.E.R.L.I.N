@@ -36,7 +36,7 @@ const DEFAULT := {
 	"skip_enter": false,
 	"sfx_scatter": "pixel_scatter",
 	"sfx_assemble": "pixel_cascade",
-	"bg_color": Color(0.02, 0.04, 0.02),
+	"bg_color": Color(0.02, 0.04, 0.02),  # MerlinVisual.CRT_PALETTE["bg_deep"]
 }
 
 

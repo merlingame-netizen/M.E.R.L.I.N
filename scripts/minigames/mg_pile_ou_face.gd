@@ -58,8 +58,8 @@ func _on_start() -> void:
 	# Coin frame (sized dynamically via resized signal)
 	_coin_frame = PanelContainer.new()
 	var style := StyleBoxFlat.new()
-	style.bg_color = Color(0.82, 0.72, 0.42)  # Gold coin
-	style.border_color = Color(0.62, 0.52, 0.22)  # Darker gold edge
+	style.bg_color = MerlinVisual.CRT_PALETTE["coin_face"]  # Gold coin
+	style.border_color = MerlinVisual.CRT_PALETTE["coin_edge"]  # Darker gold edge
 	style.set_border_width_all(3)
 	style.set_corner_radius_all(999)  # Large value = always circular
 	style.content_margin_left = 4
@@ -77,7 +77,7 @@ func _on_start() -> void:
 	_coin_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	_coin_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	_coin_label.add_theme_font_size_override("font_size", 20)
-	_coin_label.add_theme_color_override("font_color", Color(0.18, 0.12, 0.05))
+	_coin_label.add_theme_color_override("font_color", MerlinVisual.CRT_PALETTE["coin_text"])
 	_coin_label.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	_coin_frame.add_child(_coin_label)
 
@@ -197,11 +197,11 @@ func _start_next_round() -> void:
 	_face_button.disabled = false
 	_round_label.text = "Manche %d/%d" % [_current_round, _total_rounds]
 	_coin_label.text = "?"
-	_coin_label.add_theme_color_override("font_color", Color(0.18, 0.12, 0.05))
+	_coin_label.add_theme_color_override("font_color", MerlinVisual.CRT_PALETTE["coin_text"])
 	# Reset coin border to gold
 	var coin_style: StyleBoxFlat = _coin_frame.get_theme_stylebox("panel") as StyleBoxFlat
 	if coin_style:
-		coin_style.border_color = Color(0.62, 0.52, 0.22)
+		coin_style.border_color = MerlinVisual.CRT_PALETTE["coin_edge"]
 
 
 func _finish_game() -> void:

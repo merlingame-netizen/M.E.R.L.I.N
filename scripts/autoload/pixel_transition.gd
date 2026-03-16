@@ -93,7 +93,7 @@ func _ready() -> void:
 	_bg_rect = ColorRect.new()
 	_bg_rect.name = "TransitionBG"
 	_bg_rect.set_anchors_preset(Control.PRESET_FULL_RECT)
-	_bg_rect.color = Color(0.08, 0.06, 0.04, 1.0)
+	_bg_rect.color = MerlinVisual.CRT_PALETTE["transition_bg"]
 	_bg_rect.visible = false
 	_bg_rect.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	add_child(_bg_rect)
@@ -527,7 +527,7 @@ func _tick_exit(delta: float) -> void:
 # ═══════════════════════════════════════════════════════════════════════════════
 
 func _show_black_screen() -> void:
-	_bg_rect.color = _profile.get("bg_color", Color(0.08, 0.06, 0.04, 1.0))
+	_bg_rect.color = _profile.get("bg_color", MerlinVisual.CRT_PALETTE["transition_bg"])
 	_bg_rect.visible = true
 	_canvas.visible = false
 	_state = State.BLACK

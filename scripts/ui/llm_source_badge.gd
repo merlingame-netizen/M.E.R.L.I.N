@@ -13,12 +13,17 @@ class_name LLMSourceBadge
 extends RefCounted
 
 
-const BADGE_COLORS := {
-	"llm": Color(0.18, 0.55, 0.28, 0.90),       # Green
-	"fallback": Color(0.72, 0.50, 0.10, 0.90),   # Amber
-	"static": Color(0.42, 0.40, 0.38, 0.75),     # Gray
-	"error": Color(0.70, 0.22, 0.18, 0.90),      # Red
-}
+static var BADGE_COLORS: Dictionary:
+	get:
+		if _badge_colors_cache.is_empty():
+			_badge_colors_cache = {
+				"llm": MerlinVisual.CRT_PALETTE["badge_llm"],         # Green
+				"fallback": MerlinVisual.CRT_PALETTE["badge_fallback"], # Amber
+				"static": MerlinVisual.CRT_PALETTE["badge_static"],   # Gray
+				"error": MerlinVisual.CRT_PALETTE["badge_error"],     # Red
+			}
+		return _badge_colors_cache
+static var _badge_colors_cache: Dictionary = {}
 
 const BADGE_LABELS := {
 	"llm": "LLM",

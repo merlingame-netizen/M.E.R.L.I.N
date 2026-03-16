@@ -87,6 +87,7 @@ func setup(biome_id: String, environment: Environment, world_node: Node3D) -> vo
 	# Create visual manager
 	_visual_manager = BiomeVisualManager.new()
 	_visual_manager.name = "BiomeVisualManager"
+	_visual_manager.biome_transition_complete.connect(_on_biome_transition_complete)
 	add_child(_visual_manager)
 
 	# Create particles

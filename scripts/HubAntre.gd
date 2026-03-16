@@ -92,7 +92,7 @@ const BIOME_DATA := {
 	"iles_mystiques": {
 		"name": "Iles Mystiques",
 		"subtitle": "Au-dela des brumes",
-		"color": Color(0.25, 0.42, 0.60),
+		"color": MerlinVisual.CRT_PALETTE["biome_iles"],
 		"ogham": "ailm",
 		"guardian": "Morgane",
 		"season": "samhain",

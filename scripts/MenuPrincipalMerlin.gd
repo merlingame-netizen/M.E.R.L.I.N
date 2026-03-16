@@ -151,9 +151,9 @@ const SEASON_CONFIG := {
 		"size_min": 5.0, "size_max": 11.0,
 		"speed_min": 15.0, "speed_max": 40.0,
 		"drift": 25.0,
-		"color_base": Color(0.85, 0.45, 0.15, 0.85),  # Autumn leaf orange/brown
+		"color_base": MerlinVisual.CRT_PALETTE["season_autumn_leaf"],  # Autumn leaf orange/brown
 		"color_var": 0.25,
-		"accum_color": Color(0.65, 0.35, 0.12, 0.75),  # Fallen leaves pile
+		"accum_color": MerlinVisual.CRT_PALETTE["season_autumn_pile"],  # Fallen leaves pile
 		"accum_grow": 0.10,
 		"round": false,
 	},
@@ -163,9 +163,9 @@ const SEASON_CONFIG := {
 		"size_min": 3.0, "size_max": 7.0,
 		"speed_min": 10.0, "speed_max": 28.0,  # very gentle
 		"drift": 18.0,
-		"color_base": Color(1.0, 0.78, 0.85, 0.7),  # Spring blossom pink
+		"color_base": MerlinVisual.CRT_PALETTE["season_spring_petal"],  # Spring blossom pink
 		"color_var": 0.15,
-		"accum_color": Color(0.95, 0.80, 0.85, 0.6),  # Petal accumulation
+		"accum_color": MerlinVisual.CRT_PALETTE["season_spring_pile"],  # Petal accumulation
 		"accum_grow": 0.08,
 		"round": true,
 	},

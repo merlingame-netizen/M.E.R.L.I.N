@@ -70,9 +70,9 @@ func _create_manager() -> RunEnvironmentManager:
 func _create_environment() -> Environment:
 	var env: Environment = Environment.new()
 	env.background_mode = Environment.BG_COLOR
-	env.background_color = Color(0.2, 0.3, 0.4)
+	env.background_color = MerlinVisual.CRT_PALETTE["test_bg"]
 	env.fog_enabled = false
-	env.fog_light_color = Color(0.5, 0.5, 0.5)
+	env.fog_light_color = MerlinVisual.CRT_PALETTE["test_fog"]
 	env.fog_density = 0.0
 	env.ambient_light_color = Color(0.8, 0.8, 0.8)
 	env.ambient_light_energy = 1.0

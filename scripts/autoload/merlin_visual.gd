@@ -100,7 +100,130 @@ const CRT_PALETTE := {
 	"llm_success":    Color(0.20, 1.00, 0.40),
 	"llm_warning":    Color(1.00, 0.75, 0.20),
 	"llm_error":      Color(1.00, 0.20, 0.15),
+
+	# Transition backgrounds
+	"transition_bg":  Color(0.08, 0.06, 0.04),
+
+	# Death/defeat variant background (red-tinted deep black)
+	"bg_death":       Color(0.04, 0.02, 0.02),
+
+	# Biome identity colors (for map nodes, biome labels, ambient particles)
+	"biome_broceliande":    Color(0.30, 0.50, 0.28),
+	"biome_landes":         Color(0.55, 0.40, 0.55),
+	"biome_cotes":          Color(0.35, 0.50, 0.65),
+	"biome_villages":       Color(0.60, 0.45, 0.30),
+	"biome_cercles":        Color(0.50, 0.50, 0.55),
+	"biome_marais":         Color(0.30, 0.42, 0.30),
+	"biome_dolmens":        Color(0.48, 0.55, 0.40),
+	"biome_iles":           Color(0.25, 0.42, 0.60),
+
+	# Biome tree map colors (slightly different shading for tree nodes)
+	"biome_tree_broceliande": Color(0.32, 0.50, 0.28),
+	"biome_tree_marais":      Color(0.30, 0.42, 0.28),
+	"biome_tree_cercles":     Color(0.60, 0.55, 0.65),
+	"biome_tree_dolmens":     Color(0.50, 0.52, 0.38),
+
+	# Gauge colors (deprecated jauges system, kept for UI)
+	"gauge_esprit":     Color(0.55, 0.40, 0.75),
+	"gauge_vigueur":    Color(0.72, 0.35, 0.25),
+	"gauge_faveur":     Color(0.65, 0.52, 0.34),
+	"gauge_logique":    Color(0.35, 0.55, 0.70),
+	"gauge_ressources": Color(0.48, 0.55, 0.30),
+
+	# Faction identity colors (CRT-styled)
+	"faction_druides":   Color(0.20, 0.80, 0.30),
+	"faction_anciens":   Color(0.70, 0.55, 0.30),
+	"faction_korrigans": Color(0.80, 0.40, 0.80),
+	"faction_niamh":     Color(0.30, 0.70, 0.90),
+	"faction_ankou":     Color(0.60, 0.20, 0.20),
+
+	# Visual tag tints (mood-driven card panel modulation)
+	"tint_danger":   Color(1.0, 0.7, 0.7),
+	"tint_combat":   Color(1.0, 0.75, 0.75),
+	"tint_mort":     Color(0.85, 0.75, 0.85),
+	"tint_nuit":     Color(0.75, 0.78, 0.9),
+	"tint_feu":      Color(1.0, 0.85, 0.7),
+	"tint_terre":    Color(0.92, 0.88, 0.78),
+
+	# Ambient biome particles (2D pixel FX)
+	"particle_leaf_green":  Color(0.35, 0.55, 0.28),
+	"particle_leaf_brown":  Color(0.55, 0.40, 0.25),
+	"particle_dust_purple": Color(0.55, 0.40, 0.55, 0.5),
+	"particle_mist_blue":   Color(0.38, 0.58, 0.75, 0.4),
+	"particle_smoke_gray":  Color(0.5, 0.48, 0.45, 0.3),
+	"particle_firefly":     Color(0.85, 0.75, 0.30, 0.6),
+	"particle_phosphor":    Color(0.20, 0.45, 0.25, 0.4),
+	"particle_grass":       Color(0.40, 0.60, 0.30, 0.3),
+	"particle_mote":        Color(0.6, 0.55, 0.45, 0.2),
+
+	# Coin minigame (gold coin face/edge/text)
+	"coin_face":     Color(0.82, 0.72, 0.42),
+	"coin_edge":     Color(0.62, 0.52, 0.22),
+	"coin_text":     Color(0.18, 0.12, 0.05),
+
+	# LLM source badge colors
+	"badge_llm":      Color(0.18, 0.55, 0.28, 0.90),
+	"badge_fallback": Color(0.72, 0.50, 0.10, 0.90),
+	"badge_static":   Color(0.42, 0.40, 0.38, 0.75),
+	"badge_error":    Color(0.70, 0.22, 0.18, 0.90),
+
+	# Seasonal particle colors (MenuPrincipal)
+	"season_autumn_leaf":  Color(0.85, 0.45, 0.15, 0.85),
+	"season_autumn_pile":  Color(0.65, 0.35, 0.12, 0.75),
+	"season_spring_petal": Color(1.0, 0.78, 0.85, 0.7),
+	"season_spring_pile":  Color(0.95, 0.80, 0.85, 0.6),
+
+	# Sky shader defaults (card scene compositor)
+	"sky_top":        Color(0.06, 0.14, 0.08),
+	"sky_mid":        Color(0.12, 0.28, 0.14),
+	"sky_bottom":     Color(0.18, 0.40, 0.20),
+	"sky_fog":        Color(0.6, 0.6, 0.65),
+	"silhouette":     Color(0.08, 0.16, 0.10),
+
+	# Atmospheric particles default
+	"atmo_particle":  Color(0.3, 0.4, 0.3, 0.15),
+
+	# Snow weather pixel
+	"snow_pixel":     Color(0.9, 0.9, 0.95, 0.7),
+
+	# Cursor colors (CRT ring + dot)
+	"cursor_ring":    Color(0.22, 0.18, 0.14, 0.45),
+	"cursor_dot":     Color(0.22, 0.18, 0.14, 0.8),
+
+	# Progress sparkle (card text FX)
+	"progress_sparkle": Color(0.70, 0.86, 1.0, 0.90),
+
+	# Victory/milestone modulate tints (super-bright, >1.0 intentional)
+	"victory_flash":    Color(1.4, 1.3, 0.8),
+	"victory_settle":   Color(1.1, 1.1, 0.9),
+	"milestone_gold":   Color(1.4, 1.1, 0.6),
+
+	# Test environment fallback colors
+	"test_bg":          Color(0.2, 0.3, 0.4),
+	"test_fog":         Color(0.5, 0.5, 0.5),
 }
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# VISUAL_TAG_TINTS — Card panel mood modulation (from CRT_PALETTE)
+# ═══════════════════════════════════════════════════════════════════════════════
+
+const VISUAL_TAG_TINTS := {
+	"danger":   Color(1.0, 0.7, 0.7, 1.0),
+	"combat":   Color(1.0, 0.75, 0.75, 1.0),
+	"mort":     Color(0.85, 0.75, 0.85, 1.0),
+	"magie":    Color(0.85, 0.85, 1.0, 1.0),
+	"sacre":    Color(0.9, 0.9, 1.0, 1.0),
+	"mystere":  Color(0.8, 0.85, 0.95, 1.0),
+	"nuit":     Color(0.75, 0.78, 0.9, 1.0),
+	"brume":    Color(0.88, 0.9, 0.92, 1.0),
+	"orage":    Color(0.8, 0.8, 0.88, 1.0),
+	"feu":      Color(1.0, 0.85, 0.7, 1.0),
+	"eau":      Color(0.8, 0.9, 1.0, 1.0),
+	"terre":    Color(0.92, 0.88, 0.78, 1.0),
+	"lumiere":  Color(1.0, 1.0, 0.9, 1.0),
+	"soin":     Color(0.8, 1.0, 0.85, 1.0),
+}
+
 
 # ═══════════════════════════════════════════════════════════════════════════════
 # PALETTE — Parchemin Mystique Breton (legacy, kept for gradual migration)

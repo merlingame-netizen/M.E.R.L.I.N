@@ -133,7 +133,7 @@ func _create_bg_panel() -> Panel:
 	if _is_victory:
 		style.bg_color = MerlinVisual.CRT_PALETTE["bg_deep"]
 	else:
-		style.bg_color = Color(0.04, 0.02, 0.02)
+		style.bg_color = MerlinVisual.CRT_PALETTE["bg_death"]
 	style.border_width_top = 2
 	style.border_width_bottom = 2
 	style.border_color = _get_accent_color()

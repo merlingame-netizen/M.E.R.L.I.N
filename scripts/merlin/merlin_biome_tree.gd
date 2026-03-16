@@ -164,16 +164,23 @@ const BIOME_NAMES: Dictionary = {
 	"iles_mystiques": "Iles Mystiques",
 }
 
-const BIOME_COLORS: Dictionary = {
-	"foret_broceliande": Color(0.32, 0.50, 0.28),
-	"villages_celtes": Color(0.60, 0.45, 0.30),
-	"cotes_sauvages": Color(0.35, 0.50, 0.65),
-	"landes_bruyere": Color(0.55, 0.40, 0.55),
-	"marais_korrigans": Color(0.30, 0.42, 0.28),
-	"cercles_pierres": Color(0.60, 0.55, 0.65),
-	"collines_dolmens": Color(0.50, 0.52, 0.38),
-	"iles_mystiques": Color(0.25, 0.42, 0.60),
-}
+## Biome identity colors for map tree nodes — references MerlinVisual.CRT_PALETTE.
+## Initialized lazily to avoid autoload ordering issues.
+static var BIOME_COLORS: Dictionary:
+	get:
+		if _biome_colors_cache.is_empty():
+			_biome_colors_cache = {
+				"foret_broceliande": MerlinVisual.CRT_PALETTE["biome_tree_broceliande"],
+				"villages_celtes": MerlinVisual.CRT_PALETTE["biome_villages"],
+				"cotes_sauvages": MerlinVisual.CRT_PALETTE["biome_cotes"],
+				"landes_bruyere": MerlinVisual.CRT_PALETTE["biome_landes"],
+				"marais_korrigans": MerlinVisual.CRT_PALETTE["biome_tree_marais"],
+				"cercles_pierres": MerlinVisual.CRT_PALETTE["biome_tree_cercles"],
+				"collines_dolmens": MerlinVisual.CRT_PALETTE["biome_tree_dolmens"],
+				"iles_mystiques": MerlinVisual.CRT_PALETTE["biome_iles"],
+			}
+		return _biome_colors_cache
+static var _biome_colors_cache: Dictionary = {}
 
 ## Map positions for UI — tier-based layout (bottom = start, top = final)
 const BIOME_POSITIONS: Dictionary = {

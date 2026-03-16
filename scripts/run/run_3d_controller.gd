@@ -40,6 +40,7 @@ var _effects: MerlinEffectEngine
 var _transition: TransitionManager
 var _spawner: CollectibleSpawner
 var _minigame_system: MerlinMiniGameSystem
+var _merchant_spawner: NpcMerchantSpawner = null
 var _headless: bool = false
 
 # ═══════════════════════════════════════════════════════════════════════════════
@@ -90,6 +91,19 @@ func setup(store: MerlinStore, card_system: MerlinCardSystem,
 	_spawner = spawner
 	_minigame_system = minigame_system
 	_headless = headless
+
+	# Collectible spawner — wire collectible_picked to store effects
+	if _spawner:
+		_spawner.collectible_picked.connect(on_collectible_picked)
+
+	# Minigame system — track completed minigames for stats
+	if _minigame_system:
+		_minigame_system.minigame_completed.connect(_on_minigame_completed)
+
+	# Merchant spawner — wire signal to notify HUD of NPC merchant events
+	_merchant_spawner = NpcMerchantSpawner.new()
+	_merchant_spawner.merchant_spawned.connect(_on_merchant_spawned)
+	add_child(_merchant_spawner)
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
@@ -544,6 +558,23 @@ func on_collectible_picked(type: String, amount: int) -> void:
 			# Store mutation
 			_store_apply_effect("HEAL_LIFE:%d" % amount, "COLLECTIBLE")
 			life_changed.emit(_store_life(), _store_life_max())
+
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# MERCHANT SIGNAL HANDLER
+# ═══════════════════════════════════════════════════════════════════════════════
+
+func _on_minigame_completed(score: int) -> void:
+	print("[Run3D] Minigame completed: score=%d" % score)
+
+
+func _on_merchant_spawned(npc_name: String) -> void:
+	print("[Run3D] Merchant spawned: %s" % npc_name)
+
+
+## Returns the merchant spawner instance for external wiring (e.g., HUD).
+func get_merchant_spawner() -> NpcMerchantSpawner:
+	return _merchant_spawner
 
 
 # ═══════════════════════════════════════════════════════════════════════════════

@@ -39,7 +39,7 @@ const BIOMES: Dictionary = {
 		"name": "Foret de Broceliande",
 		"subtitle": "Ou les arbres ont des yeux",
 		"theme": "Nature ancienne, mystere vegetal, brume enchantee, korrigans",
-		"color": Color(0.30, 0.50, 0.28),
+		"color": Color(0.30, 0.50, 0.28),  # MerlinVisual.CRT_PALETTE["biome_broceliande"]
 		"faction_affinity": {"korrigans": 1.2, "druides": 1.0, "anciens": 0.8},
 		"passive": {"every_n": 5, "faction": "korrigans", "direction": "up"},
 		"difficulty": 0,
@@ -54,7 +54,7 @@ const BIOMES: Dictionary = {
 		"name": "Landes de Bruyere",
 		"subtitle": "L'horizon sans fin",
 		"theme": "Survie, solitude, endurance, vent hurlant",
-		"color": Color(0.55, 0.40, 0.55),
+		"color": Color(0.55, 0.40, 0.55),  # MerlinVisual.CRT_PALETTE["biome_landes"]
 		"faction_affinity": {"anciens": 1.2, "ankou": 1.0, "druides": 0.8},
 		"passive": {"every_n": 6, "faction": "anciens", "direction": "down"},
 		"difficulty": 1,
@@ -69,7 +69,7 @@ const BIOMES: Dictionary = {
 		"name": "Cotes Sauvages",
 		"subtitle": "L'ocean murmurant",
 		"theme": "Commerce, exploration, danger maritime, tempetes",
-		"color": Color(0.35, 0.50, 0.65),
+		"color": Color(0.35, 0.50, 0.65),  # MerlinVisual.CRT_PALETTE["biome_cotes"]
 		"faction_affinity": {"niamh": 1.2, "korrigans": 1.0, "druides": 0.8},
 		"passive": {"every_n": 5, "faction": "niamh", "direction": "up"},
 		"difficulty": 0,
@@ -84,7 +84,7 @@ const BIOMES: Dictionary = {
 		"name": "Villages Celtes",
 		"subtitle": "Flammes obstinees de l'humanite",
 		"theme": "Politique, social, intrigues, assemblee tribale",
-		"color": Color(0.60, 0.45, 0.30),
+		"color": Color(0.60, 0.45, 0.30),  # MerlinVisual.CRT_PALETTE["biome_villages"]
 		"faction_affinity": {"niamh": 1.0, "druides": 1.2, "anciens": 0.8},
 		"passive": {"every_n": 4, "faction": "druides", "direction": "up"},
 		"difficulty": -1,
@@ -99,7 +99,7 @@ const BIOMES: Dictionary = {
 		"name": "Cercles de Pierres",
 		"subtitle": "Ou le temps hesite",
 		"theme": "Magie, spirituel, liminal, rituels druidiques",
-		"color": Color(0.50, 0.50, 0.55),
+		"color": Color(0.50, 0.50, 0.55),  # MerlinVisual.CRT_PALETTE["biome_cercles"]
 		"faction_affinity": {"druides": 1.4, "anciens": 1.0, "korrigans": 0.8},
 		"passive": {"every_n": 4, "faction": "druides", "direction": "up"},
 		"difficulty": 1,
@@ -114,7 +114,7 @@ const BIOMES: Dictionary = {
 		"name": "Marais des Korrigans",
 		"subtitle": "Deception et feux follets",
 		"theme": "Danger, mystere, tentation, tresors caches",
-		"color": Color(0.30, 0.42, 0.30),
+		"color": Color(0.30, 0.42, 0.30),  # MerlinVisual.CRT_PALETTE["biome_marais"]
 		"faction_affinity": {"korrigans": 1.4, "ankou": 1.0, "druides": 0.8},
 		"passive": {"every_n": 5, "faction": "korrigans", "direction": "down"},
 		"difficulty": 2,
@@ -129,7 +129,7 @@ const BIOMES: Dictionary = {
 		"name": "Collines aux Dolmens",
 		"subtitle": "Les os de la terre",
 		"theme": "Sagesse, ancestral, memoire, paix profonde",
-		"color": Color(0.48, 0.55, 0.40),
+		"color": Color(0.48, 0.55, 0.40),  # MerlinVisual.CRT_PALETTE["biome_dolmens"]
 		"faction_affinity": {"druides": 1.0, "anciens": 1.0, "korrigans": 1.0},
 		"passive": {"every_n": 7, "faction": "random", "direction": "random"},
 		"difficulty": 0,
@@ -144,7 +144,7 @@ const BIOMES: Dictionary = {
 		"name": "Iles Mystiques",
 		"subtitle": "Au-dela des brumes",
 		"theme": "Transcendance, passage, monde invisible, liminalite absolue",
-		"color": Color(0.25, 0.42, 0.60),
+		"color": Color(0.25, 0.42, 0.60),  # MerlinVisual.CRT_PALETTE["biome_iles"]
 		"faction_affinity": {"niamh": 1.4, "anciens": 1.0, "ankou": 0.8},
 		"passive": {"every_n": 4, "faction": "niamh", "direction": "random"},
 		"difficulty": 3,

@@ -378,7 +378,7 @@ func _draw_particles() -> void:
 				_safe_blend_pixel(px, py, pc)
 				_safe_blend_pixel(px, (py + 1) % PIXEL_H, pc)
 			Weather.SNOW:
-				pc = Color(0.9, 0.9, 0.95, 0.7)
+				pc = MerlinVisual.CRT_PALETTE["snow_pixel"]
 				_safe_blend_pixel(px, py, pc)
 			Weather.FOG:
 				pc = Color(_mist_color.r, _mist_color.g, _mist_color.b, 0.15)
