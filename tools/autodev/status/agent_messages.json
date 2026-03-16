@@ -1,10 +1,27 @@
 {
   "version": "2.0",
   "description": "Inter-agent message bus FIFO — orchestrator_v2 protocol",
-  "messages": [],
+  "messages": [
+    {
+      "id": "msg_20260313_203205_873",
+      "timestamp": "2026-03-13T19:32:05.503861+00:00",
+      "from_agent": "lora_trainer",
+      "to_agent": "orchestrator",
+      "type": "model_ready",
+      "priority": "HIGH",
+      "payload": {
+        "brain": "narrator",
+        "adapter_path": "addons/merlin_llm/adapters/merlin_narrator_lora.gguf",
+        "metrics_after": {},
+        "status": "completed"
+      },
+      "status": "pending",
+      "handled_at": null
+    }
+  ],
   "stats": {
-    "total_sent": 0,
+    "total_sent": 1,
     "total_handled": 0,
-    "last_message_id": null
+    "last_message_id": "msg_20260313_203205_873"
   }
 }

@@ -1,0 +1,9 @@
+**/*
+!extension.js
+!robot-monitor-core.js
+!robot-monitor-webview.js
+!robot-monitor-server.js
+!neural-renderer.js
+!package.json
+!README.md
+!media/**

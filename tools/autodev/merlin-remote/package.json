@@ -1,0 +1,72 @@
+{
+  "name": "merlin-remote",
+  "displayName": "M.E.R.L.I.N. Remote",
+  "description": "Kaggle LoRA training orchestration and Merlin LLM chat for the M.E.R.L.I.N. game project",
+  "version": "14.0.0",
+  "publisher": "merlin-local",
+  "engines": { "vscode": "^1.80.0" },
+  "categories": ["Other"],
+  "activationEvents": ["onStartupFinished"],
+  "main": "./extension.js",
+  "contributes": {
+    "viewsContainers": {
+      "activitybar": [{
+        "id": "merlin-remote-sidebar",
+        "title": "M.E.R.L.I.N. Remote",
+        "icon": "media/merlin-icon.svg"
+      }]
+    },
+    "views": {
+      "merlin-remote-sidebar": [{
+        "type": "webview",
+        "id": "merlin-remote.panel",
+        "name": "GPU Train + Chat"
+      }]
+    },
+    "commands": [
+      { "command": "merlin-remote.open", "title": "MERLIN Remote: Open Panel" },
+      { "command": "merlin-remote.refresh", "title": "MERLIN Remote: Refresh" },
+      { "command": "merlin-remote.configure", "title": "MERLIN Remote: Configure" },
+      { "command": "merlin-remote.doctor", "title": "MERLIN Remote: Doctor" },
+      { "command": "merlin-remote.setup", "title": "MERLIN Remote: Setup" },
+      { "command": "merlin-remote.submit", "title": "MERLIN Remote: Submit" },
+      { "command": "merlin-remote.status", "title": "MERLIN Remote: Status" },
+      { "command": "merlin-remote.download", "title": "MERLIN Remote: Download" },
+      { "command": "merlin-remote.openKaggle", "title": "MERLIN Remote: Open Kaggle" }
+    ],
+    "configuration": {
+      "title": "M.E.R.L.I.N. Remote",
+      "properties": {
+        "merlin-remote.pythonPath": {
+          "type": "string", "default": "python",
+          "description": "Python executable used for remote Kaggle orchestration."
+        },
+        "merlin-remote.kaggleUsername": {
+          "type": "string", "default": "",
+          "description": "Kaggle username used to create and monitor kernels."
+        },
+        "merlin-remote.kernelSlug": {
+          "type": "string", "default": "merlin-remote-train",
+          "description": "Kaggle kernel slug."
+        },
+        "merlin-remote.kernelTitle": {
+          "type": "string", "default": "MERLIN Remote LoRA Training",
+          "description": "Kaggle kernel title."
+        },
+        "merlin-remote.testModel": {
+          "type": "string", "default": "meta-llama/Meta-Llama-3.1-8B-Instruct-Turbo",
+          "description": "Model used for chat test."
+        },
+        "merlin-remote.testEndpoint": {
+          "type": "string",
+          "default": "https://api.together.xyz/v1/chat/completions",
+          "description": "OpenAI-compatible endpoint URL for remote inference. If empty, fallback to local Ollama."
+        },
+        "merlin-remote.testApiKey": {
+          "type": "string", "default": "",
+          "description": "API key for testEndpoint."
+        }
+      }
+    }
+  }
+}
