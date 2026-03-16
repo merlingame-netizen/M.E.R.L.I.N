@@ -285,6 +285,10 @@ python tools/cli.py onenote bulk-export --section "COURS" --format pdf --output_
 python tools/cli.py onenote section-stats --section "ORANGE"                     # Words, chars, dates
 python tools/cli.py onenote notebook-stats                                       # All notebooks overview
 python tools/cli.py onenote duplicate-finder                                     # Find duplicate titles
+# OneNote Auto-Sync (skill /onenote-sync)
+# /onenote-sync              — Synchronise notes avec etat reel des travaux
+# /onenote-sync review       — Audit sante notebook (pages vides, doublons, perimees)
+# Mode auto: Claude ajoute des entrees dans PROJETS ACTIFS en fin de session MODERATE+
 
 # Browser (Playwright / Edge)
 python tools/cli.py browser status              # Verifier Playwright installe
