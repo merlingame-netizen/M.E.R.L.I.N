@@ -56,7 +56,8 @@
         "label": "Defier l'esprit guerrier qui hante les alignements"
       }
     ],
-    "champ_lexical": "perception"
+    "champ_lexical": "perception",
+    "type": "narrative"
   },
   {
     "id": "s16_biome_02",
@@ -116,7 +117,8 @@
         "label": "Briser la pierre pour liberer l'energie prisonniere"
       }
     ],
-    "champ_lexical": "esprit"
+    "champ_lexical": "esprit",
+    "type": "narrative"
   },
   {
     "id": "s16_biome_03",
@@ -176,7 +178,8 @@
         "label": "Voler un morceau du lichen dore"
       }
     ],
-    "champ_lexical": "esprit"
+    "champ_lexical": "esprit",
+    "type": "narrative"
   },
   {
     "id": "s16_biome_04",
@@ -235,7 +238,8 @@
         "label": "Sceller l'entree avec des pierres"
       }
     ],
-    "champ_lexical": "esprit"
+    "champ_lexical": "esprit",
+    "type": "narrative"
   },
   {
     "id": "s16_biome_05",
@@ -295,7 +299,8 @@
         "label": "Absorber leur lumiere pour vous renforcer"
       }
     ],
-    "champ_lexical": "esprit"
+    "champ_lexical": "esprit",
+    "type": "narrative"
   },
   {
     "id": "s16_biome_06",
@@ -358,7 +363,8 @@
         "label": "Prendre une pierre du cairn comme talisman"
       }
     ],
-    "champ_lexical": "esprit"
+    "champ_lexical": "esprit",
+    "type": "narrative"
   },
   {
     "id": "s16_biome_07",
@@ -422,7 +428,8 @@
         "label": "Sceller le puits avec un enchantement protecteur"
       }
     ],
-    "champ_lexical": "perception"
+    "champ_lexical": "perception",
+    "type": "narrative"
   },
   {
     "id": "s16_biome_08",
@@ -481,7 +488,8 @@
         "label": "Recouvrir la route pour la proteger des intrus"
       }
     ],
-    "champ_lexical": "esprit"
+    "champ_lexical": "esprit",
+    "type": "narrative"
   },
   {
     "id": "s16_biome_09",
@@ -541,7 +549,8 @@
         "label": "Demanteler la vigie pour recuperer les pierres"
       }
     ],
-    "champ_lexical": "observation"
+    "champ_lexical": "observation",
+    "type": "narrative"
   },
   {
     "id": "s16_biome_10",
@@ -600,7 +609,8 @@
         "label": "Recolter les algues phosphorescentes"
       }
     ],
-    "champ_lexical": "esprit"
+    "champ_lexical": "esprit",
+    "type": "narrative"
   },
   {
     "id": "s16_biome_11",
@@ -663,7 +673,8 @@
         "label": "Invoquer une protection avant d'entrer"
       }
     ],
-    "champ_lexical": "perception"
+    "champ_lexical": "perception",
+    "type": "narrative"
   },
   {
     "id": "s16_biome_12",
@@ -727,7 +738,8 @@
         "label": "Tenter de voler une piece de son tresor"
       }
     ],
-    "champ_lexical": "esprit"
+    "champ_lexical": "esprit",
+    "type": "narrative"
   },
   {
     "id": "s16_biome_13",
@@ -791,7 +803,8 @@
         "label": "Emporter une pierre du cercle comme relique"
       }
     ],
-    "champ_lexical": "logique"
+    "champ_lexical": "logique",
+    "type": "narrative"
   },
   {
     "id": "s16_biome_14",
@@ -845,7 +858,8 @@
         "label": "Fuir vers un abri et attendre la fin"
       }
     ],
-    "champ_lexical": "esprit"
+    "champ_lexical": "esprit",
+    "type": "narrative"
   },
   {
     "id": "s16_biome_15",
@@ -909,7 +923,8 @@
         "label": "Repousser les esprits qui hantent le phare"
       }
     ],
-    "champ_lexical": "esprit"
+    "champ_lexical": "esprit",
+    "type": "narrative"
   },
   {
     "id": "s16_biome_16",
@@ -973,7 +988,8 @@
         "label": "Recuperer un artefact pour votre quete"
       }
     ],
-    "champ_lexical": "esprit"
+    "champ_lexical": "esprit",
+    "type": "narrative"
   },
   {
     "id": "s16_biome_17",
@@ -1032,7 +1048,8 @@
         "label": "Purifier les emanations toxiques"
       }
     ],
-    "champ_lexical": "esprit"
+    "champ_lexical": "esprit",
+    "type": "narrative"
   },
   {
     "id": "s16_biome_18",
@@ -1091,7 +1108,8 @@
         "label": "Planter une graine dans la tourbe fertile"
       }
     ],
-    "champ_lexical": "esprit"
+    "champ_lexical": "esprit",
+    "type": "narrative"
   },
   {
     "id": "s16_biome_19",
@@ -1149,7 +1167,8 @@
         "label": "Repousser les bulles pour proteger votre esprit"
       }
     ],
-    "champ_lexical": "esprit"
+    "champ_lexical": "esprit",
+    "type": "narrative"
   },
   {
     "id": "s16_biome_20",
@@ -1209,7 +1228,8 @@
         "label": "Traverser rapidement sans regarder en bas"
       }
     ],
-    "champ_lexical": "esprit"
+    "champ_lexical": "esprit",
+    "type": "narrative"
   },
   {
     "id": "s16_biome_21",
@@ -1273,7 +1293,8 @@
         "label": "Tenter de voler un champignon magique"
       }
     ],
-    "champ_lexical": "bluff"
+    "champ_lexical": "bluff",
+    "type": "narrative"
   },
   {
     "id": "s16_biome_22",
@@ -1332,7 +1353,8 @@
         "label": "Refuser l'invitation et rebrousser chemin"
       }
     ],
-    "champ_lexical": "esprit"
+    "champ_lexical": "esprit",
+    "type": "narrative"
   },
   {
     "id": "s16_biome_23",
@@ -1396,7 +1418,8 @@
         "label": "Extraire le crane pour l'etudier"
       }
     ],
-    "champ_lexical": "esprit"
+    "champ_lexical": "esprit",
+    "type": "narrative"
   },
   {
     "id": "s16_biome_24",
@@ -1460,7 +1483,8 @@
         "label": "Fuir avant que le serpent ne vous avale"
       }
     ],
-    "champ_lexical": "vigueur"
+    "champ_lexical": "vigueur",
+    "type": "narrative"
   },
   {
     "id": "s16_biome_25",
@@ -1519,7 +1543,8 @@
         "label": "Construire un abri de pierres contre la tempete"
       }
     ],
-    "champ_lexical": "esprit"
+    "champ_lexical": "esprit",
+    "type": "narrative"
   },
   {
     "id": "s16_biome_26",
@@ -1574,7 +1599,8 @@
         "label": "Canaliser l'energie thermique pour un rituel"
       }
     ],
-    "champ_lexical": "esprit"
+    "champ_lexical": "esprit",
+    "type": "narrative"
   },
   {
     "id": "s16_biome_27",
@@ -1638,7 +1664,8 @@
         "label": "Renverser l'autel pour briser la malediction"
       }
     ],
-    "champ_lexical": "esprit"
+    "champ_lexical": "esprit",
+    "type": "narrative"
   },
   {
     "id": "s16_biome_28",
@@ -1697,7 +1724,8 @@
         "label": "Observer le troupeau sans intervenir"
       }
     ],
-    "champ_lexical": "esprit"
+    "champ_lexical": "esprit",
+    "type": "narrative"
   },
   {
     "id": "s16_biome_29",
@@ -1757,7 +1785,8 @@
         "label": "Sceller l'entree pour proteger le tresor"
       }
     ],
-    "champ_lexical": "esprit"
+    "champ_lexical": "esprit",
+    "type": "narrative"
   },
   {
     "id": "s16_biome_30",
@@ -1821,7 +1850,8 @@
         "label": "Bruler les parchemins pour liberer leur savoir"
       }
     ],
-    "champ_lexical": "esprit"
+    "champ_lexical": "esprit",
+    "type": "narrative"
   },
   {
     "id": "s16_biome_31",
@@ -1885,7 +1915,8 @@
         "label": "Repousser la silhouette et forcer le passage"
       }
     ],
-    "champ_lexical": "esprit"
+    "champ_lexical": "esprit",
+    "type": "narrative"
   },
   {
     "id": "s16_biome_32",
@@ -1949,7 +1980,8 @@
         "label": "Tracer votre propre chemin entre les pierres"
       }
     ],
-    "champ_lexical": "esprit"
+    "champ_lexical": "esprit",
+    "type": "narrative"
   },
   {
     "id": "s16_biome_33",
@@ -2008,7 +2040,8 @@
         "label": "Purifier le chaudron avec des herbes sacrees"
       }
     ],
-    "champ_lexical": "esprit"
+    "champ_lexical": "esprit",
+    "type": "narrative"
   },
   {
     "id": "s16_biome_34",
@@ -2068,11 +2101,12 @@
         "label": "Refuser poliment et continuer votre chemin"
       }
     ],
-    "champ_lexical": "esprit"
+    "champ_lexical": "esprit",
+    "type": "narrative"
   },
   {
     "id": "s16_biome_35",
-    "text": "Un portail entre deux menhirs jumeaux scintille d'une lumiere opalescente. De l'autre cote, on aperçoit un paysage verdoyant qui n'appartient pas a ce monde — Tir na nOg, le Pays de l'Eternelle Jeunesse.",
+    "text": "Un portail entre deux menhirs jumeaux scintille d'une lumiere opalescente. De l'autre cote, on aperÃ§oit un paysage verdoyant qui n'appartient pas a ce monde â€” Tir na nOg, le Pays de l'Eternelle Jeunesse.",
     "biome": "cercles_pierres",
     "faction": "niamh",
     "trust_tier": "T1",
@@ -2128,7 +2162,8 @@
         "label": "Sceller le portail pour proteger les deux mondes"
       }
     ],
-    "champ_lexical": "esprit"
+    "champ_lexical": "esprit",
+    "type": "narrative"
   },
   {
     "id": "s16_biome_36",
@@ -2192,7 +2227,8 @@
         "label": "Tenter de communiquer avec un esprit familier"
       }
     ],
-    "champ_lexical": "esprit"
+    "champ_lexical": "esprit",
+    "type": "narrative"
   },
   {
     "id": "s16_biome_37",
@@ -2256,7 +2292,8 @@
         "label": "Elargir la fissure pour reveler plus de secrets"
       }
     ],
-    "champ_lexical": "esprit"
+    "champ_lexical": "esprit",
+    "type": "narrative"
   },
   {
     "id": "s16_biome_38",
@@ -2320,7 +2357,8 @@
         "label": "Chasser les corbeaux pour fermer le passage"
       }
     ],
-    "champ_lexical": "esprit"
+    "champ_lexical": "esprit",
+    "type": "narrative"
   },
   {
     "id": "s16_biome_39",
@@ -2380,7 +2418,8 @@
         "label": "Remplir votre sac de pommes pour le voyage"
       }
     ],
-    "champ_lexical": "esprit"
+    "champ_lexical": "esprit",
+    "type": "narrative"
   },
   {
     "id": "s16_biome_40",
@@ -2444,11 +2483,12 @@
         "label": "Tenter de purifier la fontaine et la liberer"
       }
     ],
-    "champ_lexical": "esprit"
+    "champ_lexical": "esprit",
+    "type": "narrative"
   },
   {
     "id": "s16_biome_41",
-    "text": "Sur la plus haute colline d'Avalon, un trône de cristal attend son occupant. Les legendes disent que quiconque s'y assoit verra le passe, le present et l'avenir en un seul regard.",
+    "text": "Sur la plus haute colline d'Avalon, un trÃ´ne de cristal attend son occupant. Les legendes disent que quiconque s'y assoit verra le passe, le present et l'avenir en un seul regard.",
     "biome": "iles_mystiques",
     "faction": "anciens",
     "trust_tier": "T1",
@@ -2475,7 +2515,7 @@
             "amount": 3
           }
         ],
-        "label": "S'asseoir sur le trône pour recevoir la vision"
+        "label": "S'asseoir sur le trÃ´ne pour recevoir la vision"
       },
       {
         "verb": "scruter",
@@ -2506,7 +2546,8 @@
         "label": "Resister a la tentation et quitter la colline"
       }
     ],
-    "champ_lexical": "esprit"
+    "champ_lexical": "esprit",
+    "type": "narrative"
   },
   {
     "id": "s16_biome_42",
@@ -2570,7 +2611,8 @@
         "label": "Prendre l'oeuf d'or avant qu'il n'eclose"
       }
     ],
-    "champ_lexical": "esprit"
+    "champ_lexical": "esprit",
+    "type": "narrative"
   },
   {
     "id": "s16_biome_43",
@@ -2634,7 +2676,8 @@
         "label": "Plonger dans le lac pour decouvrir son secret"
       }
     ],
-    "champ_lexical": "esprit"
+    "champ_lexical": "esprit",
+    "type": "narrative"
   },
   {
     "id": "s16_biome_44",
@@ -2698,7 +2741,8 @@
         "label": "Tenter de forcer le passage avant qu'il ne se referme"
       }
     ],
-    "champ_lexical": "esprit"
+    "champ_lexical": "esprit",
+    "type": "narrative"
   },
   {
     "id": "s16_biome_45",
@@ -2758,7 +2802,8 @@
         "label": "Briser une stalactite pour en extraire le savoir"
       }
     ],
-    "champ_lexical": "perception"
+    "champ_lexical": "perception",
+    "type": "narrative"
   },
   {
     "id": "s16_biome_46",
@@ -2817,11 +2862,12 @@
         "label": "Refermer la chambre pour proteger son secret"
       }
     ],
-    "champ_lexical": "esprit"
+    "champ_lexical": "esprit",
+    "type": "narrative"
   },
   {
     "id": "s16_biome_47",
-    "text": "Les parois de la grotte suintent d'un liquide dore qui forme des flaques lumineuses au sol. Les Korrigans y voient le sang de la terre, et quiconque le touche gagne une faveur — ou une malediction.",
+    "text": "Les parois de la grotte suintent d'un liquide dore qui forme des flaques lumineuses au sol. Les Korrigans y voient le sang de la terre, et quiconque le touche gagne une faveur â€” ou une malediction.",
     "biome": "collines_dolmens",
     "faction": "korrigans",
     "trust_tier": "T0",
@@ -2877,7 +2923,8 @@
         "label": "Remplir une fiole du liquide pour plus tard"
       }
     ],
-    "champ_lexical": "esprit"
+    "champ_lexical": "esprit",
+    "type": "narrative"
   },
   {
     "id": "s16_biome_48",
@@ -2941,7 +2988,8 @@
         "label": "Briser le miroir pour detruire votre ombre"
       }
     ],
-    "champ_lexical": "vigueur"
+    "champ_lexical": "vigueur",
+    "type": "narrative"
   },
   {
     "id": "s16_biome_49",
@@ -2996,7 +3044,8 @@
         "label": "Boire l'eau pure pour vous guerir"
       }
     ],
-    "champ_lexical": "esprit"
+    "champ_lexical": "esprit",
+    "type": "narrative"
   },
   {
     "id": "s16_biome_50",
@@ -3060,6 +3109,7 @@
         "label": "Recopier la partition pour la partager au monde"
       }
     ],
-    "champ_lexical": "esprit"
+    "champ_lexical": "esprit",
+    "type": "narrative"
   }
 ]
