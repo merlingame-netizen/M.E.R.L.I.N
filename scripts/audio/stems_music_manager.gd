@@ -139,7 +139,7 @@ func _update_stem_volumes(tension: float) -> void:
 # PROCESS — Smooth volume transitions
 # ═══════════════════════════════════════════════════════════════════════════════
 
-func process_tick(delta: float) -> void:
+func _process(delta: float) -> void:
 	if not _active:
 		return
 
