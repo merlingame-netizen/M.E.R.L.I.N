@@ -212,6 +212,7 @@ var _current_mission: Dictionary = {}
 var _is_first_hub: bool = true
 var _passive_llm_pending: bool = false
 var _mist_tween: Tween
+var _partir_hover_tween: Tween
 
 # Audio
 var voicebox: Node = null
@@ -449,12 +450,16 @@ func _create_partir_button() -> void:
 	_partir_btn.pressed.connect(_on_partir_pressed)
 	_partir_btn.mouse_entered.connect(func():
 		SFXManager.play("hover")
-		var tw := create_tween().set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
-		tw.tween_property(_partir_btn, "scale", Vector2(1.08, 1.08), 0.12)
+		if _partir_hover_tween:
+			_partir_hover_tween.kill()
+		_partir_hover_tween = create_tween().set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
+		_partir_hover_tween.tween_property(_partir_btn, "scale", Vector2(1.08, 1.08), 0.12)
 	)
 	_partir_btn.mouse_exited.connect(func():
-		var tw := create_tween().set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
-		tw.tween_property(_partir_btn, "scale", Vector2(1.0, 1.0), 0.12)
+		if _partir_hover_tween:
+			_partir_hover_tween.kill()
+		_partir_hover_tween = create_tween().set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
+		_partir_hover_tween.tween_property(_partir_btn, "scale", Vector2(1.0, 1.0), 0.12)
 	)
 
 	_layout_partir()

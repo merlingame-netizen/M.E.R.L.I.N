@@ -66,6 +66,7 @@ var _beat_idx: int = 0
 var _advance_requested: bool = false
 var _skip_all: bool = false
 var _breathe_t: float = 0.0
+var _hint_blink_tween: Tween
 
 # Nodes
 var _bg: ColorRect
@@ -465,9 +466,11 @@ func _wait_for_advance() -> void:
 func _start_hint_blink() -> void:
 	if not is_inside_tree() or not _continue_hint:
 		return
-	var tw := create_tween().set_loops()
-	tw.tween_property(_continue_hint, "modulate:a", 0.3, 0.6)
-	tw.tween_property(_continue_hint, "modulate:a", 1.0, 0.6)
+	if _hint_blink_tween:
+		_hint_blink_tween.kill()
+	_hint_blink_tween = create_tween().set_loops()
+	_hint_blink_tween.tween_property(_continue_hint, "modulate:a", 0.3, 0.6)
+	_hint_blink_tween.tween_property(_continue_hint, "modulate:a", 1.0, 0.6)
 
 
 func _spawn_particle() -> void:

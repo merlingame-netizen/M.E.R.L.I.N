@@ -203,6 +203,8 @@ var title_font: Font
 var body_font: Font
 
 var active_tween: Tween
+var _hover_tweens: Dictionary = {}
+var _skip_modal_tween: Tween
 
 # =============================================================================
 # LIFECYCLE
@@ -405,8 +407,10 @@ func _show_skip_modal() -> void:
 	skip_modal_visible = true
 	skip_modal.visible = true
 	skip_modal.modulate.a = 0
-	var tween := create_tween()
-	tween.tween_property(skip_modal, "modulate:a", 1.0, 0.2)
+	if _skip_modal_tween:
+		_skip_modal_tween.kill()
+	_skip_modal_tween = create_tween()
+	_skip_modal_tween.tween_property(skip_modal, "modulate:a", 1.0, 0.2)
 
 
 func _hide_skip_modal() -> void:
@@ -414,9 +418,11 @@ func _hide_skip_modal() -> void:
 	if sfx:
 		sfx.play("click")
 	skip_modal_visible = false
-	var tween := create_tween()
-	tween.tween_property(skip_modal, "modulate:a", 0.0, 0.15)
-	tween.tween_callback(func(): skip_modal.visible = false)
+	if _skip_modal_tween:
+		_skip_modal_tween.kill()
+	_skip_modal_tween = create_tween()
+	_skip_modal_tween.tween_property(skip_modal, "modulate:a", 0.0, 0.15)
+	_skip_modal_tween.tween_callback(func(): skip_modal.visible = false)
 
 
 func _skip_to_menu() -> void:
@@ -549,7 +555,10 @@ func _create_choice_button(text: String, index: int) -> Button:
 
 
 func _on_choice_hover(btn: Button, hovering: bool) -> void:
+	if _hover_tweens.has(btn) and _hover_tweens[btn]:
+		_hover_tweens[btn].kill()
 	var tween := create_tween().set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
+	_hover_tweens[btn] = tween
 	if hovering:
 		var sfx := get_node_or_null("/root/SFXManager")
 		if sfx:

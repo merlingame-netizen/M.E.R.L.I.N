@@ -73,6 +73,9 @@ var swipe_in_progress := false
 var swipe_tween: Tween
 var _entry_tween: Tween
 var _mist_tween: Tween
+var _card_float_tween: Tween
+var _cta_pulse_tween: Tween
+var _btn_hover_tweens: Dictionary = {}
 
 # Voice calibration
 var _voice_panel: CanvasLayer
