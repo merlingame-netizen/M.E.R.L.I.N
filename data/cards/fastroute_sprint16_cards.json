@@ -45,7 +45,7 @@
         "effects": [
           {
             "type": "DAMAGE_LIFE",
-            "amount": -10
+            "amount": 10
           },
           {
             "type": "ADD_REPUTATION",
@@ -203,7 +203,7 @@
           },
           {
             "type": "DAMAGE_LIFE",
-            "amount": -5
+            "amount": 5
           }
         ],
         "label": "Descendre dans le tumulus avec prudence"
@@ -357,7 +357,7 @@
           },
           {
             "type": "DAMAGE_LIFE",
-            "amount": -5
+            "amount": 5
           }
         ],
         "label": "Prendre une pierre du cairn comme talisman"
@@ -398,7 +398,7 @@
         "effects": [
           {
             "type": "DAMAGE_LIFE",
-            "amount": -15
+            "amount": 15
           },
           {
             "type": "ADD_REPUTATION",
@@ -574,7 +574,7 @@
           },
           {
             "type": "DAMAGE_LIFE",
-            "amount": -5
+            "amount": 5
           }
         ],
         "label": "Nager vers le phoque pour communiquer avec lui"
@@ -717,7 +717,7 @@
           },
           {
             "type": "DAMAGE_LIFE",
-            "amount": -8
+            "amount": 8
           }
         ],
         "label": "Negocier un passage sur son bateau spectral"
@@ -797,7 +797,7 @@
           },
           {
             "type": "DAMAGE_LIFE",
-            "amount": -5
+            "amount": 5
           }
         ],
         "label": "Emporter une pierre du cercle comme relique"
@@ -827,7 +827,7 @@
           },
           {
             "type": "DAMAGE_LIFE",
-            "amount": -8
+            "amount": 8
           }
         ],
         "label": "Capturer l'energie doree avec vos mains"
@@ -948,7 +948,7 @@
           },
           {
             "type": "DAMAGE_LIFE",
-            "amount": -8
+            "amount": 8
           }
         ],
         "label": "Plonger pour examiner les artefacts avec respect"
@@ -1013,7 +1013,7 @@
           },
           {
             "type": "DAMAGE_LIFE",
-            "amount": -8
+            "amount": 8
           }
         ],
         "label": "Suivre les lumieres a travers le marais"
@@ -1192,7 +1192,7 @@
           },
           {
             "type": "DAMAGE_LIFE",
-            "amount": -10
+            "amount": 10
           }
         ],
         "label": "Tendre la main aux esprits pour les liberer"
@@ -1287,7 +1287,7 @@
           },
           {
             "type": "DAMAGE_LIFE",
-            "amount": -8
+            "amount": 8
           }
         ],
         "label": "Tenter de voler un champignon magique"
@@ -1318,7 +1318,7 @@
           },
           {
             "type": "DAMAGE_LIFE",
-            "amount": -12
+            "amount": 12
           }
         ],
         "label": "Plonger dans les eaux en suivant la vision"
@@ -1412,7 +1412,7 @@
           },
           {
             "type": "DAMAGE_LIFE",
-            "amount": -5
+            "amount": 5
           }
         ],
         "label": "Extraire le crane pour l'etudier"
@@ -1438,7 +1438,7 @@
         "effects": [
           {
             "type": "DAMAGE_LIFE",
-            "amount": -15
+            "amount": 15
           },
           {
             "type": "ADD_REPUTATION",
@@ -1518,7 +1518,7 @@
         "effects": [
           {
             "type": "DAMAGE_LIFE",
-            "amount": -8
+            "amount": 8
           },
           {
             "type": "ADD_REPUTATION",
@@ -1593,7 +1593,7 @@
           },
           {
             "type": "DAMAGE_LIFE",
-            "amount": -5
+            "amount": 5
           }
         ],
         "label": "Canaliser l'energie thermique pour un rituel"
@@ -1624,7 +1624,7 @@
           },
           {
             "type": "DAMAGE_LIFE",
-            "amount": -5
+            "amount": 5
           }
         ],
         "label": "Deposer votre propre offrande sur l'autel"
@@ -1658,7 +1658,7 @@
           },
           {
             "type": "DAMAGE_LIFE",
-            "amount": -10
+            "amount": 10
           }
         ],
         "label": "Renverser l'autel pour briser la malediction"
@@ -1704,7 +1704,7 @@
           },
           {
             "type": "DAMAGE_LIFE",
-            "amount": -8
+            "amount": 8
           }
         ],
         "label": "Monter sur son dos pour voyager au-dela du monde"
@@ -1900,7 +1900,7 @@
         "effects": [
           {
             "type": "DAMAGE_LIFE",
-            "amount": -12
+            "amount": 12
           },
           {
             "type": "ADD_REPUTATION",
@@ -2019,7 +2019,7 @@
           },
           {
             "type": "DAMAGE_LIFE",
-            "amount": -5
+            "amount": 5
           }
         ],
         "label": "Boire une gorgee de l'eau argentee"
@@ -2126,7 +2126,7 @@
           },
           {
             "type": "DAMAGE_LIFE",
-            "amount": -10
+            "amount": 10
           }
         ],
         "label": "Franchir le portail vers Tir na nOg"
@@ -2217,7 +2217,7 @@
           },
           {
             "type": "DAMAGE_LIFE",
-            "amount": -8
+            "amount": 8
           },
           {
             "type": "ADD_BIOME_CURRENCY",
@@ -2252,7 +2252,7 @@
           },
           {
             "type": "DAMAGE_LIFE",
-            "amount": -8
+            "amount": 8
           }
         ],
         "label": "Toucher l'Ogham pour recevoir son pouvoir"
@@ -2317,7 +2317,7 @@
           },
           {
             "type": "DAMAGE_LIFE",
-            "amount": -10
+            "amount": 10
           }
         ],
         "label": "Descendre dans le passage souterrain"
@@ -2442,7 +2442,7 @@
           },
           {
             "type": "DAMAGE_LIFE",
-            "amount": -5
+            "amount": 5
           },
           {
             "type": "ADD_REPUTATION",
@@ -2508,7 +2508,7 @@
           },
           {
             "type": "DAMAGE_LIFE",
-            "amount": -10
+            "amount": 10
           },
           {
             "type": "ADD_ANAM",
@@ -2605,7 +2605,7 @@
           },
           {
             "type": "DAMAGE_LIFE",
-            "amount": -8
+            "amount": 8
           }
         ],
         "label": "Prendre l'oeuf d'or avant qu'il n'eclose"
@@ -2661,7 +2661,7 @@
         "effects": [
           {
             "type": "DAMAGE_LIFE",
-            "amount": -12
+            "amount": 12
           },
           {
             "type": "ADD_ANAM",
@@ -2701,7 +2701,7 @@
           },
           {
             "type": "DAMAGE_LIFE",
-            "amount": -10
+            "amount": 10
           }
         ],
         "label": "Presenter votre ame a l'Ankou pour etre juge"
@@ -2726,7 +2726,7 @@
         "effects": [
           {
             "type": "DAMAGE_LIFE",
-            "amount": -8
+            "amount": 8
           },
           {
             "type": "ADD_REPUTATION",
@@ -2842,7 +2842,7 @@
           },
           {
             "type": "DAMAGE_LIFE",
-            "amount": -8
+            "amount": 8
           }
         ],
         "label": "Liberer le grimoire de ses chaines"
@@ -2948,7 +2948,7 @@
           },
           {
             "type": "DAMAGE_LIFE",
-            "amount": -10
+            "amount": 10
           }
         ],
         "label": "Affronter votre ombre dans le miroir"
@@ -2973,7 +2973,7 @@
         "effects": [
           {
             "type": "DAMAGE_LIFE",
-            "amount": -12
+            "amount": 12
           },
           {
             "type": "ADD_REPUTATION",

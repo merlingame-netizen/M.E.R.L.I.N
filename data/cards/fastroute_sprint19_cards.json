@@ -48,7 +48,7 @@
           },
           {
             "type": "DAMAGE_LIFE",
-            "amount": -5
+            "amount": 5
           }
         ],
         "label": "Trancher les fils pour liberer les ames emprisonnees"
@@ -106,7 +106,7 @@
           },
           {
             "type": "DAMAGE_LIFE",
-            "amount": -8
+            "amount": 8
           }
         ],
         "label": "Absorber la chaleur des flammes spectrales"
@@ -191,7 +191,7 @@
           },
           {
             "type": "DAMAGE_LIFE",
-            "amount": -6
+            "amount": 6
           }
         ],
         "label": "Absorber l'energie tellurique par meditation profonde"
@@ -263,7 +263,7 @@
           },
           {
             "type": "DAMAGE_LIFE",
-            "amount": -5
+            "amount": 5
           }
         ],
         "label": "Danser au bord du precipice, porte par la musique"
@@ -321,7 +321,7 @@
           },
           {
             "type": "DAMAGE_LIFE",
-            "amount": -5
+            "amount": 5
           }
         ],
         "label": "Maudire les ronces pour qu'elles se fletrissent"
@@ -379,7 +379,7 @@
           },
           {
             "type": "DAMAGE_LIFE",
-            "amount": -8
+            "amount": 8
           }
         ],
         "label": "Detruire le metier pour empecher quiconque de voir l'avenir"
@@ -422,7 +422,7 @@
           },
           {
             "type": "DAMAGE_LIFE",
-            "amount": -10
+            "amount": 10
           }
         ],
         "label": "Forger une cle capable d'ouvrir les portes du Sid"
@@ -595,7 +595,7 @@
           },
           {
             "type": "DAMAGE_LIFE",
-            "amount": -8
+            "amount": 8
           }
         ],
         "label": "Absorber les vibrations des cristaux pour voir le passe"
@@ -667,7 +667,7 @@
           },
           {
             "type": "DAMAGE_LIFE",
-            "amount": -10
+            "amount": 10
           }
         ],
         "label": "Maudire davantage la source pour renforcer le voile mortel"
@@ -709,7 +709,7 @@
           },
           {
             "type": "DAMAGE_LIFE",
-            "amount": -5
+            "amount": 5
           }
         ],
         "label": "Accumuler les pieces du tresor sans reveiller le geant"
@@ -797,7 +797,7 @@
           },
           {
             "type": "DAMAGE_LIFE",
-            "amount": -5
+            "amount": 5
           }
         ],
         "label": "Enchainer les portes du temple pour sceller ce qui est a l'interieur"
@@ -882,7 +882,7 @@
           },
           {
             "type": "DAMAGE_LIFE",
-            "amount": -8
+            "amount": 8
           }
         ],
         "label": "Danser parmi les spectres pour comprendre leur peine"
@@ -941,7 +941,7 @@
           },
           {
             "type": "DAMAGE_LIFE",
-            "amount": -8
+            "amount": 8
           }
         ],
         "label": "Maudire les corbeaux pour les forcer a reveler leurs secrets"
@@ -999,7 +999,7 @@
           },
           {
             "type": "DAMAGE_LIFE",
-            "amount": -12
+            "amount": 12
           }
         ],
         "label": "Absorber l'energie de la foudre dans votre corps"
@@ -1203,7 +1203,7 @@
           },
           {
             "type": "DAMAGE_LIFE",
-            "amount": -8
+            "amount": 8
           }
         ],
         "label": "Enchainer l'ile au fond marin pour qu'elle cesse d'errer"
@@ -1261,7 +1261,7 @@
           },
           {
             "type": "DAMAGE_LIFE",
-            "amount": -5
+            "amount": 5
           }
         ],
         "label": "Maudire celui qui a petrifie le druide"
@@ -1347,7 +1347,7 @@
           },
           {
             "type": "DAMAGE_LIFE",
-            "amount": -10
+            "amount": 10
           }
         ],
         "label": "Detruire le miroir pour que personne ne voie ses peurs"
@@ -1362,7 +1362,7 @@
           },
           {
             "type": "DAMAGE_LIFE",
-            "amount": -15
+            "amount": 15
           }
         ],
         "label": "Absorber les peurs refletees pour devenir plus fort"
@@ -1492,7 +1492,7 @@
           },
           {
             "type": "DAMAGE_LIFE",
-            "amount": -5
+            "amount": 5
           }
         ],
         "label": "Enchainer les pierres avec des sortileges pour arreter la deconstruction"
@@ -1578,7 +1578,7 @@
           },
           {
             "type": "DAMAGE_LIFE",
-            "amount": -10
+            "amount": 10
           }
         ],
         "label": "Maudire les pilleurs qui ont trouble le repos du tumulus"
@@ -1607,7 +1607,7 @@
           },
           {
             "type": "DAMAGE_LIFE",
-            "amount": -8
+            "amount": 8
           }
         ],
         "label": "Accumuler les spirales d'or avant que le tumulus ne se referme"
@@ -1808,7 +1808,7 @@
           },
           {
             "type": "DAMAGE_LIFE",
-            "amount": -5
+            "amount": 5
           }
         ],
         "label": "Forger votre volonte dans le feu des pierres brulantes"
@@ -1823,7 +1823,7 @@
           },
           {
             "type": "DAMAGE_LIFE",
-            "amount": -8
+            "amount": 8
           }
         ],
         "label": "Absorber la chaleur des pierres pour renforcer votre aura"
@@ -1954,7 +1954,7 @@
           },
           {
             "type": "DAMAGE_LIFE",
-            "amount": -10
+            "amount": 10
           }
         ],
         "label": "Detruire le phare pour liberer les ames prisonieres"
@@ -2054,7 +2054,7 @@
           },
           {
             "type": "DAMAGE_LIFE",
-            "amount": -8
+            "amount": 8
           }
         ],
         "label": "Maudire les chaines invisibles pour tenter de les briser"
@@ -2126,7 +2126,7 @@
           },
           {
             "type": "DAMAGE_LIFE",
-            "amount": -5
+            "amount": 5
           }
         ],
         "label": "Absorber la lumiere des aurores dans un cristal"
@@ -2301,7 +2301,7 @@
           },
           {
             "type": "DAMAGE_LIFE",
-            "amount": -8
+            "amount": 8
           }
         ],
         "label": "Detruire la forge pour empecher son utilisation malveillante"
@@ -2387,7 +2387,7 @@
           },
           {
             "type": "DAMAGE_LIFE",
-            "amount": -15
+            "amount": 15
           }
         ],
         "label": "Absorber les murmures apocalyptiques pour les comprendre"
@@ -2402,7 +2402,7 @@
           },
           {
             "type": "DAMAGE_LIFE",
-            "amount": -10
+            "amount": 10
           }
         ],
         "label": "Maudire le lac pour faire taire les propheties"
@@ -2475,7 +2475,7 @@
           },
           {
             "type": "DAMAGE_LIFE",
-            "amount": -8
+            "amount": 8
           }
         ],
         "label": "Repousser les pulsations pour reveler les inscriptions en permanence"
@@ -2649,7 +2649,7 @@
           },
           {
             "type": "DAMAGE_LIFE",
-            "amount": -8
+            "amount": 8
           }
         ],
         "label": "Enchainer l'essaim dans l'arbre pour proteger les passants"
@@ -2677,7 +2677,7 @@
           },
           {
             "type": "DAMAGE_LIFE",
-            "amount": -10
+            "amount": 10
           }
         ],
         "label": "Construire un barrage magique pour explorer la cite a sec"
@@ -2750,7 +2750,7 @@
           },
           {
             "type": "DAMAGE_LIFE",
-            "amount": -8
+            "amount": 8
           }
         ],
         "label": "Maudire la frequence pour faire taire les pierres"
@@ -2823,7 +2823,7 @@
           },
           {
             "type": "DAMAGE_LIFE",
-            "amount": -12
+            "amount": 12
           }
         ],
         "label": "Detruire les masques pour rompre le cycle de la danse eternelle"

@@ -15,7 +15,7 @@
   "faction_cards": [
     {
       "id": "faction_druides_001",
-      "faction_primaire": "druides",
+      "faction": "druides",
       "biome": "foret_broceliande",
       "champ_lexical": "logique",
       "text": "Maelgwn se tient pres d'une pierre noire, les doigts traces de seve. Il ne te regarde pas. 'La frequence de ce cercle s'eteint,' murmure-t-il. 'Je pourrais la ranimer. Ou je pourrais accepter que certaines choses s'eteignent pour que d'autres survivent.' Il attend. La pierre attend aussi.",
@@ -82,7 +82,7 @@
     },
     {
       "id": "faction_druides_002",
-      "faction_primaire": "druides",
+      "faction": "druides",
       "biome": "cercles_pierres",
       "champ_lexical": "perception",
       "text": "Keridwen cueille des herbes dans le silence du matin, sa besace deja pleine. Elle leve les yeux sur toi un instant — un regard qui jauge, qui pese, qui diagnostique. 'Tu portes quelque chose de trop lourd,' dit-elle. 'Je ne suis pas sure que tu saches ce que c'est. Moi si.' Elle replonge dans ses plantes. Le choix est tien.",
@@ -148,7 +148,7 @@
     },
     {
       "id": "faction_druides_003",
-      "faction_primaire": "druides",
+      "faction": "druides",
       "biome": "landes_bruyere",
       "champ_lexical": "esprit",
       "text": "Talwen tourne en rond au milieu des landes, les bras serres autour d'elle. 'Ils parlent tous en meme temps ce soir,' chuchote-t-elle. 'Les dix-huit. Je ne comprends pas leurs mots mais je comprends leur peur.' Elle s'arrete enfin. Ses yeux te cherchent, pleins d'une terreur jeune et honnete. 'Toi, tu les entends?'",
@@ -210,7 +210,7 @@
     },
     {
       "id": "faction_druides_004",
-      "faction_primaire": "druides",
+      "faction": "druides",
       "biome": "foret_broceliande",
       "champ_lexical": "finesse",
       "text": "La fontaine de Barenton reflète un ciel que tu ne reconnais pas. Maelgwn dit que si tu y jettes de l'eau sur la pierre plate, une tempete nait. Il ne dit pas pourquoi quelqu'un voudrait faire ca. Il dit juste que cette possibilite existe encore — et que la Membrane a besoin de cette tempete pour ne pas se figer definitivement.",
@@ -272,7 +272,7 @@
     },
     {
       "id": "faction_anciens_001",
-      "faction_primaire": "anciens",
+      "faction": "anciens",
       "biome": "collines_dolmens",
       "champ_lexical": "observation",
       "text": "Manannan se manifeste dans un rideau de brume doree. Il n'a pas de corps vraiment — une presence, une conscience qui pese sur l'air. 'Nous regardons,' dit-il. 'Nous avons toujours regarde.' Une pause — un siecle dans cette pause. 'Toi, tu fais. Ca nous amuse. Ca nous navre. Ca revient souvent au meme.'",
@@ -334,7 +334,7 @@
     },
     {
       "id": "faction_anciens_002",
-      "faction_primaire": "anciens",
+      "faction": "anciens",
       "biome": "cercles_pierres",
       "champ_lexical": "logique",
       "text": "Brigid est agenouilee devant sa flamme. Pas celle du foyer — la Vraie, la derniere, celle qui ne s'eteint pas. Ses mains brulent depuis si longtemps qu'elles ont oublie comment ne pas brûler. Elle leve les yeux. 'Les spirales du cairn de Gavrinis sont des cartes,' dit-elle. 'Pas de lieux. De moments. Si tu sais les lire, tu sais ce qui finira en premier.'",
@@ -402,7 +402,7 @@
     },
     {
       "id": "faction_anciens_003",
-      "faction_primaire": "anciens",
+      "faction": "anciens",
       "biome": "iles_mystiques",
       "champ_lexical": "esprit",
       "text": "Lugh se tient au bord de l'ile, face a un horizon qu'il ne regarde plus vraiment. Sa lumiere est presque eteinte — une lueur pale autour de ses poignets. 'Je me souviens d'avoir ete brillant,' dit-il. Ni plainte ni fierté. Juste un constat, aussi neutre que la maree. 'Toi, tu te souviens de choses que tu n'as pas encore vecues. Ca compte pour quelque chose.'",
@@ -465,7 +465,7 @@
     },
     {
       "id": "faction_anciens_004",
-      "faction_primaire": "anciens",
+      "faction": "anciens",
       "biome": "villages_celtes",
       "champ_lexical": "perception",
       "text": "Une vieille femme que personne au village ne reconnait est assise a la fontaine depuis trois jours. Elle ne boit pas. Elle ne mange pas. Elle compte quelque chose sur ses doigts — un calcul que personne d'autre ne comprend. Quand tu t'approches, elle dit: 'Il manque deux cycles. Tu peux en recuperer un si tu choisis bien ce soir.'",
@@ -532,7 +532,7 @@
     },
     {
       "id": "faction_korrigans_001",
-      "faction_primaire": "korrigans",
+      "faction": "korrigans",
       "biome": "marais_korrigans",
       "champ_lexical": "bluff",
       "text": "Le Vieux Granit t'attend au carrefour. Pas une question cette fois — une proposition. Il pose sur la mousse un objet enveloppe dans une feuille : quelque chose qui pulse faiblement. 'Donne-moi un souvenir vrai,' dit-il. 'Un que tu aimerais garder. En echange, je te montre ce qui est sous.' Son sourire est la chose la plus ancienne que tu aies jamais vue.",
@@ -594,7 +594,7 @@
     },
     {
       "id": "faction_korrigans_002",
-      "faction_primaire": "korrigans",
+      "faction": "korrigans",
       "biome": "marais_korrigans",
       "champ_lexical": "chance",
       "text": "Louarn garde la Source Noire dans un silence qui n'est pas pacifique. Ses yeux brillent comme du charbon mouille. 'L'eau est plus ancienne que la terre qui la contient,' dit-elle. 'Si tu en bois, tu te souviens de ce que tu n'as pas encore vecu. Ou tu oublies ce que tu as cru savoir. On ne choisit pas.' Elle sourit. 'Moi non plus, je n'ai jamais su d'avance.'",
@@ -660,7 +660,7 @@
     },
     {
       "id": "faction_korrigans_003",
-      "faction_primaire": "korrigans",
+      "faction": "korrigans",
       "biome": "cotes_sauvages",
       "champ_lexical": "finesse",
       "text": "Pik surgit de nulle part — entre deux cailloux, entre deux instants. Il rit comme une cascade qui se fiche de tout. 'J'ai pris quelque chose qui t'appartient,' dit-il. 'Mais j'ai aussi laisse quelque chose a la place. Je ne dis pas ce que c'est. C'est plus drole comme ca.' Il pivote, disparait a moitie dans un rocher. 'Viens le reprendre si tu peux.'",
@@ -727,7 +727,7 @@
     },
     {
       "id": "faction_korrigans_004",
-      "faction_primaire": "korrigans",
+      "faction": "korrigans",
       "biome": "cercles_pierres",
       "champ_lexical": "vigueur",
       "text": "Sous le grand menhir, la terre tremble — pas de seisme, juste un pouls. Des voix grondent dans la roche: les Korrigans tiennent leur conseil. Ils debattent de quelque chose qui te concerne, dans une langue que tu ne comprends pas, mais dont le rythme te dit qu'ils ne sont pas d'accord. L'un d'eux parle pour toi. Un autre parle contre.",
@@ -794,7 +794,7 @@
     },
     {
       "id": "faction_niamh_001",
-      "faction_primaire": "niamh",
+      "faction": "niamh",
       "biome": "iles_mystiques",
       "champ_lexical": "perception",
       "text": "Niamh est au bord du lac. Elle ne se manifeste pas vraiment — elle est comme un souvenir de lumiere sur l'eau. Sa voix vient de partout et de nulle part: 'Il y a un souvenir la qui t'appartient. Quelque chose que tu aimeras dans quelques annees, ou que tu as aime dans une autre vie. L'eau peut te le montrer.' Une pause. 'Ca fera mal. Toute beaute fait un peu mal.'",
@@ -861,7 +861,7 @@
     },
     {
       "id": "faction_niamh_002",
-      "faction_primaire": "niamh",
+      "faction": "niamh",
       "biome": "cotes_sauvages",
       "champ_lexical": "esprit",
       "text": "Oisin est assis sur un rocher, face a l'ouest. Il a l'age qu'il ne devrait pas avoir — entre deux temps, deux visages superposes. Il ecrit dans le sable. Les vagues effacent ses mots avant qu'il finisse. Il recommence. Chaque poeme est le meme et completement different. 'Si tu lis ce que les vagues effacent,' dit-il sans te regarder, 'tu comprends pourquoi on continue.'",
@@ -929,7 +929,7 @@
     },
     {
       "id": "faction_niamh_003",
-      "faction_primaire": "niamh",
+      "faction": "niamh",
       "biome": "foret_broceliande",
       "champ_lexical": "observation",
       "text": "Morgane des Eaux se tient au centre du Lac de Viviane. Elle ne touche pas la surface — elle est la surface. Son regard traverse toi comme si tu etais de verre. 'Tu cherches quelque chose,' dit-elle. Ce n'est pas une question. 'Tout le monde cherche quelque chose ici. Moi je garde ce que les chercheurs abandonnent en repartant. Tu serais surpris de ce qu'on laisse.'",
@@ -992,7 +992,7 @@
     },
     {
       "id": "faction_niamh_004",
-      "faction_primaire": "niamh",
+      "faction": "niamh",
       "biome": "landes_bruyere",
       "champ_lexical": "bluff",
       "text": "Parmi les bruyeres, un enfant que personne ne connait chante une chanson que personne n'a apprise. La melodie est celeste et brute a la fois — quelque chose qui appartient a un age ou les chansons etaient des lois. L'enfant te regarde. Dans ses yeux, l'age de Niamh. 'Tu veux l'apprendre?' Il tend la main. 'Ca coute quelque chose. Tout ce qui est beau coute quelque chose.'",
@@ -1060,7 +1060,7 @@
     },
     {
       "id": "faction_ankou_001",
-      "faction_primaire": "ankou",
+      "faction": "ankou",
       "biome": "collines_dolmens",
       "champ_lexical": "esprit",
       "text": "La charrette grince au carrefour, mais tu ne la vois pas — tu l'entends seulement. L'Ankou n'est pas la non plus. Juste une voix, sombrement douce, qui vient d'entre les dolmens: 'Plusieurs choses finissent ce soir. Je dois choisir l'ordre.' Un silence long comme une saison. 'Toi, tu n'es pas dans ma liste ce soir. Mais quelque chose qui t'appartient l'est peut-etre.'",
@@ -1123,7 +1123,7 @@
     },
     {
       "id": "faction_ankou_002",
-      "faction_primaire": "ankou",
+      "faction": "ankou",
       "biome": "marais_korrigans",
       "champ_lexical": "perception",
       "text": "Youenn le Charretier te croise sur le chemin du marais. Il a l'air d'un vivant mais ses yeux ne clignent pas. 'Ca fait etrange,' dit-il, 'de ne plus avoir a fermer les yeux la nuit.' Il rit nerveusement. 'Mon maitre m'a dit de te demander quelque chose. Il veut savoir ce que tu as vu. Ce que tu as vraiment vu, pas ce que tu crois avoir vu.' Il sort un morceau de charbon. 'Raconte. Il recopie.'",
@@ -1191,7 +1191,7 @@
     },
     {
       "id": "faction_ankou_003",
-      "faction_primaire": "ankou",
+      "faction": "ankou",
       "biome": "landes_bruyere",
       "champ_lexical": "esprit",
       "text": "La Lavandiere de Nuit est au bord d'un ruisseau invisible. Elle lave quelque chose de blanc qui n'a pas encore de nom. Son chant est inhumain — pas mechaniquement, mais dans sa completude: il contient a la fois la naissance et la fin de ce pour quoi elle lave. Si tu l'ecoutes jusqu'au bout, tu sauras quelque chose que tu ne pourras pas deoublier. Si tu t'en vas avant, tu le sauras quand meme, mais seulement a moitie.",
@@ -1259,7 +1259,7 @@
     },
     {
       "id": "faction_ankou_004",
-      "faction_primaire": "ankou",
+      "faction": "ankou",
       "biome": "iles_mystiques",
       "champ_lexical": "logique",
       "text": "A l'extremite de l'ile, la mer et le brouillard forment un mur opaque. Quelque chose attend de l'autre cote. L'Ankou est la cette fois — silhouette sous son chapeau, faux appuyee contre le vide. Il dit: 'Tout ce qui reste ici reste parce que personne ne sait encore qu'il est fini. Je le sais. Le probleme, c'est que toi aussi tu commences a le savoir.' Il incline sa tete. 'Ce n'est pas une menace. C'est juste que le savoir a un poids.'",

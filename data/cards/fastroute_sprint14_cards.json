@@ -100,7 +100,7 @@
         "effects": [
           {
             "type": "DAMAGE_LIFE",
-            "amount": -10
+            "amount": 10
           },
           {
             "type": "ADD_BIOME_CURRENCY",
@@ -190,7 +190,7 @@
           },
           {
             "type": "DAMAGE_LIFE",
-            "amount": -8
+            "amount": 8
           }
         ],
         "label": "Plonger la main dans les eaux noires"
@@ -270,7 +270,7 @@
         "effects": [
           {
             "type": "DAMAGE_LIFE",
-            "amount": -7
+            "amount": 7
           },
           {
             "type": "ADD_REPUTATION",
@@ -451,7 +451,7 @@
           },
           {
             "type": "DAMAGE_LIFE",
-            "amount": -5
+            "amount": 5
           }
         ],
         "label": "Tenter de capturer la lumiere dans un flacon"
@@ -506,7 +506,7 @@
         "effects": [
           {
             "type": "DAMAGE_LIFE",
-            "amount": -12
+            "amount": 12
           },
           {
             "type": "ADD_REPUTATION",
@@ -541,7 +541,7 @@
           },
           {
             "type": "DAMAGE_LIFE",
-            "amount": -5
+            "amount": 5
           }
         ],
         "label": "Suivre les feux follets dans le tertre"
@@ -601,7 +601,7 @@
           },
           {
             "type": "DAMAGE_LIFE",
-            "amount": -8
+            "amount": 8
           }
         ],
         "label": "Accepter le rameau du corbeau blanc"
@@ -671,7 +671,7 @@
         "effects": [
           {
             "type": "DAMAGE_LIFE",
-            "amount": -10
+            "amount": 10
           },
           {
             "type": "ADD_REPUTATION",
@@ -745,7 +745,7 @@
         "effects": [
           {
             "type": "DAMAGE_LIFE",
-            "amount": -10
+            "amount": 10
           },
           {
             "type": "ADD_BIOME_CURRENCY",
@@ -837,7 +837,7 @@
           },
           {
             "type": "DAMAGE_LIFE",
-            "amount": -10
+            "amount": 10
           }
         ],
         "label": "Descendre dans la spirale oghamique"
@@ -866,7 +866,7 @@
           },
           {
             "type": "DAMAGE_LIFE",
-            "amount": -7
+            "amount": 7
           }
         ],
         "label": "Attirer l'energie du dolmen vers vous"
@@ -921,7 +921,7 @@
         "effects": [
           {
             "type": "DAMAGE_LIFE",
-            "amount": -5
+            "amount": 5
           },
           {
             "type": "ADD_KARMA",
@@ -1040,7 +1040,7 @@
         "effects": [
           {
             "type": "DAMAGE_LIFE",
-            "amount": -8
+            "amount": 8
           },
           {
             "type": "ADD_REPUTATION",
@@ -1100,7 +1100,7 @@
         "effects": [
           {
             "type": "DAMAGE_LIFE",
-            "amount": -15
+            "amount": 15
           },
           {
             "type": "ADD_REPUTATION",
@@ -1159,7 +1159,7 @@
         "effects": [
           {
             "type": "DAMAGE_LIFE",
-            "amount": -10
+            "amount": 10
           },
           {
             "type": "ADD_KARMA",
@@ -1312,7 +1312,7 @@
           },
           {
             "type": "DAMAGE_LIFE",
-            "amount": -10
+            "amount": 10
           }
         ],
         "label": "Invoquer la foudre pour graver un Ogham"
@@ -1340,7 +1340,7 @@
           },
           {
             "type": "DAMAGE_LIFE",
-            "amount": -7
+            "amount": 7
           }
         ],
         "label": "Absorber l'energie de la tempete"
@@ -1385,7 +1385,7 @@
           },
           {
             "type": "DAMAGE_LIFE",
-            "amount": -8
+            "amount": 8
           }
         ],
         "label": "Transformer l'arbre entier en or vivant"
@@ -1519,7 +1519,7 @@
           },
           {
             "type": "DAMAGE_LIFE",
-            "amount": -10
+            "amount": 10
           }
         ],
         "label": "Defier l'autorite du Grand Druide"
@@ -1549,7 +1549,7 @@
           },
           {
             "type": "DAMAGE_LIFE",
-            "amount": -12
+            "amount": 12
           }
         ],
         "label": "Accepter le marche de l'Ankou"
@@ -1643,7 +1643,7 @@
           },
           {
             "type": "DAMAGE_LIFE",
-            "amount": -8
+            "amount": 8
           }
         ],
         "label": "Voler le tresor le plus precieux en secret"
@@ -1762,7 +1762,7 @@
           },
           {
             "type": "DAMAGE_LIFE",
-            "amount": -10
+            "amount": 10
           }
         ],
         "label": "Tenter de les rendormir par un enchantement"
@@ -1822,7 +1822,7 @@
           },
           {
             "type": "DAMAGE_LIFE",
-            "amount": -8
+            "amount": 8
           }
         ],
         "label": "Renverser le chaudron et fuir"
@@ -1852,7 +1852,7 @@
           },
           {
             "type": "DAMAGE_LIFE",
-            "amount": -10
+            "amount": 10
           }
         ],
         "label": "Prendre la main de l'ame perdue"
@@ -2066,7 +2066,7 @@
           },
           {
             "type": "DAMAGE_LIFE",
-            "amount": -8
+            "amount": 8
           }
         ],
         "label": "Contester leur autorite sur le monde des vivants"
@@ -2111,7 +2111,7 @@
           },
           {
             "type": "DAMAGE_LIFE",
-            "amount": -5
+            "amount": 5
           },
           {
             "type": "ADD_PROMISE"
@@ -2184,7 +2184,7 @@
         "effects": [
           {
             "type": "DAMAGE_LIFE",
-            "amount": -5
+            "amount": 5
           },
           {
             "type": "ADD_KARMA",
@@ -2253,7 +2253,7 @@
           },
           {
             "type": "DAMAGE_LIFE",
-            "amount": -5
+            "amount": 5
           }
         ],
         "label": "Fuir avant le debut de l'epreuve"
@@ -2354,7 +2354,7 @@
         "effects": [
           {
             "type": "DAMAGE_LIFE",
-            "amount": -15
+            "amount": 15
           },
           {
             "type": "ADD_KARMA",
@@ -2423,7 +2423,7 @@
           },
           {
             "type": "DAMAGE_LIFE",
-            "amount": -12
+            "amount": 12
           }
         ],
         "label": "Reveiller le dragon par un chant ancien"
@@ -2442,7 +2442,7 @@
           },
           {
             "type": "DAMAGE_LIFE",
-            "amount": -10
+            "amount": 10
           }
         ],
         "label": "Arracher une ecaille comme talisman"
@@ -2482,7 +2482,7 @@
         "effects": [
           {
             "type": "DAMAGE_LIFE",
-            "amount": -10
+            "amount": 10
           },
           {
             "type": "ADD_BIOME_CURRENCY",
@@ -2547,7 +2547,7 @@
           },
           {
             "type": "DAMAGE_LIFE",
-            "amount": -8
+            "amount": 8
           }
         ],
         "label": "Communiquer avec les ombres en liberte"
@@ -2562,7 +2562,7 @@
           },
           {
             "type": "DAMAGE_LIFE",
-            "amount": -15
+            "amount": 15
           }
         ],
         "label": "Traverser la porte pour explorer l'au-dela"
@@ -2602,7 +2602,7 @@
         "effects": [
           {
             "type": "DAMAGE_LIFE",
-            "amount": -8
+            "amount": 8
           },
           {
             "type": "ADD_REPUTATION",
@@ -2671,7 +2671,7 @@
           },
           {
             "type": "DAMAGE_LIFE",
-            "amount": -10
+            "amount": 10
           },
           {
             "type": "ADD_KARMA",
@@ -2753,7 +2753,7 @@
           },
           {
             "type": "DAMAGE_LIFE",
-            "amount": -10
+            "amount": 10
           },
           {
             "type": "ADD_KARMA",
@@ -2787,7 +2787,7 @@
           },
           {
             "type": "DAMAGE_LIFE",
-            "amount": -15
+            "amount": 15
           },
           {
             "type": "ADD_ANAM",
@@ -2816,7 +2816,7 @@
         "effects": [
           {
             "type": "DAMAGE_LIFE",
-            "amount": -15
+            "amount": 15
           },
           {
             "type": "ADD_KARMA",
@@ -2946,7 +2946,7 @@
         "effects": [
           {
             "type": "DAMAGE_LIFE",
-            "amount": -15
+            "amount": 15
           },
           {
             "type": "ADD_REPUTATION",
@@ -3014,7 +3014,7 @@
         "effects": [
           {
             "type": "DAMAGE_LIFE",
-            "amount": -12
+            "amount": 12
           },
           {
             "type": "ADD_ANAM",
