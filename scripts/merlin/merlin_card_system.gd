@@ -103,25 +103,35 @@ func generate_card(context: Dictionary) -> Dictionary:
 	var card_type: String = _pick_card_type(context)
 
 	# Special types use pool directly (no LLM)
+	# _validate_card MUST run before _ensure_3_options (padding effects are trusted).
 	match card_type:
 		"event":
 			var event_card: Dictionary = _generate_event_card(context)
 			if not event_card.is_empty():
-				var final: Dictionary = _ensure_3_options(event_card)
-				_annotate_fields(final)
-				return final
+				var v: Dictionary = _validate_card(event_card)
+				if v.get("valid", false):
+					var final: Dictionary = _ensure_3_options(v["card"])
+					_annotate_fields(final)
+					return final
+				push_warning("Event card invalid: %s" % v.get("error", ""))
 		"promise":
 			var promise_card: Dictionary = _generate_promise_card(context)
 			if not promise_card.is_empty():
-				var final: Dictionary = _ensure_3_options(promise_card)
-				_annotate_fields(final)
-				return final
+				var v: Dictionary = _validate_card(promise_card)
+				if v.get("valid", false):
+					var final: Dictionary = _ensure_3_options(v["card"])
+					_annotate_fields(final)
+					return final
+				push_warning("Promise card invalid: %s" % v.get("error", ""))
 		"merlin_direct":
 			var md_card: Dictionary = _generate_merlin_direct_card(context)
 			if not md_card.is_empty():
-				var final: Dictionary = _ensure_3_options(md_card)
-				_annotate_fields(final)
-				return final
+				var v: Dictionary = _validate_card(md_card)
+				if v.get("valid", false):
+					var final: Dictionary = _ensure_3_options(v["card"])
+					_annotate_fields(final)
+					return final
+				push_warning("Merlin direct card invalid: %s" % v.get("error", ""))
 
 	# Narrative: try LLM first
 	if _llm != null:
@@ -621,16 +631,33 @@ func _validate_card(card: Dictionary) -> Dictionary:
 	if options.size() < 2:
 		return {"valid": false, "error": "Need at least 2 options"}
 
-	# Validate each option has a label
-	for option in options:
+	# Validate each option: label, effects whitelist, effect count cap
+	for i in range(options.size()):
+		var option: Variant = options[i]
 		if not (option is Dictionary):
-			return {"valid": false, "error": "Invalid option format"}
+			return {"valid": false, "error": "Invalid option format at index %d" % i}
 		if str(option.get("label", "")).is_empty():
-			return {"valid": false, "error": "Option missing label"}
+			return {"valid": false, "error": "Option %d missing label" % i}
+
+		var effects: Array = option.get("effects", [])
+		# Bible rule: max 3 effects per option
+		if effects.size() > 3:
+			return {"valid": false, "error": "Option %d has %d effects (max 3)" % [i, effects.size()]}
+
+		for eff in effects:
+			if not (eff is Dictionary):
+				return {"valid": false, "error": "Option %d: non-dict effect" % i}
+			var etype: String = str(eff.get("type", ""))
+			if etype.is_empty():
+				return {"valid": false, "error": "Option %d: effect missing type" % i}
+			if not MerlinEffectEngine.VALID_CODES.has(etype):
+				return {"valid": false, "error": "Option %d: unknown effect type '%s'" % [i, etype]}
 
 	return {"valid": true, "card": card}
 
 
+## Pad/trim options to exactly 3. Padding effects are trusted (not LLM-sourced).
+## INVARIANT: _validate_card() MUST run before this function.
 func _ensure_3_options(card: Dictionary) -> Dictionary:
 	var result: Dictionary = card.duplicate(true)
 	var options: Array = result.get("options", [])
