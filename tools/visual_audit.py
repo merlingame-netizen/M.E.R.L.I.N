@@ -167,9 +167,9 @@ def audit_colors(gd_files: list[Path], verbose: bool = False) -> tuple[list[dict
 
             # Count Color() literals
             for m in RE_COLOR_LITERAL.finditer(line):
-                total_color_refs += 1
                 if is_palette_def:
                     continue  # expected in palette definition files
+                total_color_refs += 1
                 hardcoded_refs += 1
                 r, g, b = m.group(1), m.group(2), m.group(3)
                 a = m.group(4) or "1.0"
@@ -191,9 +191,9 @@ def audit_colors(gd_files: list[Path], verbose: bool = False) -> tuple[list[dict
                 })
 
             for m in RE_COLOR_HEX.finditer(line):
-                total_color_refs += 1
                 if is_palette_def:
                     continue
+                total_color_refs += 1
                 hardcoded_refs += 1
                 hex_val = m.group(1)
                 if RE_MERLIN_VISUAL_REF.search(line):
