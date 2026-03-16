@@ -699,8 +699,9 @@ func get_summary_for_prompt() -> String:
 
 func on_run_end() -> void:
 	## Appele a la fin d'une run.
-	# Close all active arcs
-	for arc in active_arcs:
+	# Close all active arcs (copy to avoid mutation during iteration)
+	var arcs_to_close: Array = active_arcs.duplicate()
+	for arc in arcs_to_close:
 		_complete_arc(arc, "run_ended")
 
 	save_to_disk()
