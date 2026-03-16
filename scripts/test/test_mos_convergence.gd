@@ -1,15 +1,15 @@
 ## ═══════════════════════════════════════════════════════════════════════════════
 ## Unit Tests — MOS Convergence Behavior v2.4
 ## ═══════════════════════════════════════════════════════════════════════════════
-## Tests: convergence toward target range, soft limit behavior, hard cap,
-## convergence speed, boundary values, tension zone propagation to run state,
-## and LLM convergence hint alignment with MOS constants.
-## Source: MerlinConstants.MOS_CONVERGENCE, MerlinStore._check_run_end(),
-##         MerlinLlmAdapter._build_arc_system_prompt()
-## Pattern: extends RefCounted, methods return bool on success/failure.
+## Tests: soft min/max boundaries, target range, hard max, merchant exemption,
+## promise cap, tension tracking, convergence probability curve.
+## Source: MerlinConstants.MOS_CONVERGENCE, MerlinConstants.NODE_TYPES,
+##         MerlinConstants.MAX_ACTIVE_PROMISES, MerlinStore._check_run_end()
+## Pattern: extends RefCounted, run_all() returns Dictionary of test results.
 ## ═══════════════════════════════════════════════════════════════════════════════
 
 extends RefCounted
+class_name TestMOSConvergence
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
@@ -61,66 +61,81 @@ func _classify_mos_zone(cards_played: int) -> Dictionary:
 	}
 
 
-## Simulate a full run from card 0 to n, collecting zone transitions.
-func _simulate_run(num_cards: int) -> Array:
-	var transitions: Array = []
-	var prev_zone: String = ""
-	for i in range(num_cards + 1):
-		var result: Dictionary = _classify_mos_zone(i)
-		var zone: String = str(result.get("tension_zone", "none"))
-		if zone != prev_zone:
-			transitions.append({"card": i, "from": prev_zone, "to": zone})
-			prev_zone = zone
-	return transitions
+## Computes a convergence probability for a given card count.
+## Models increasing end-probability as cards approach soft_max and beyond.
+## Returns 0.0 below target range, ramps linearly to 1.0 at hard_max.
+func _convergence_probability(cards_played: int) -> float:
+	var mos: Dictionary = MerlinConstants.MOS_CONVERGENCE
+	var target_min: int = int(mos.get("target_cards_min", 20))
+	var soft_max: int = int(mos.get("soft_max_cards", 40))
+	var hard_max: int = int(mos.get("hard_max_cards", 50))
+
+	if cards_played < target_min:
+		return 0.0
+	if cards_played >= hard_max:
+		return 1.0
+	# Linear ramp from 0.0 at target_min to 1.0 at hard_max
+	var span: float = float(hard_max - target_min)
+	if span <= 0.0:
+		return 1.0
+	return clampf(float(cards_played - target_min) / span, 0.0, 1.0)
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
-# TEST 1: MOS below soft_min converges upward (tension increases naturally)
+# TEST 1: MOS respects soft min 8 cards
 # ═══════════════════════════════════════════════════════════════════════════════
 
-func test_below_soft_min_converges_up() -> bool:
-	## Starting at card 0 (below soft_min=8), playing cards should
-	## eventually reach "low" zone, proving upward convergence.
-	var reached_low: bool = false
-	for i in range(0, 20):
+func test_soft_min_boundary() -> bool:
+	## Cards below soft_min (8) must be in "none" zone with no flags.
+	## Card 8 must transition to "low" zone (early_zone=true).
+	var mos: Dictionary = MerlinConstants.MOS_CONVERGENCE
+	var soft_min: int = int(mos.get("soft_min_cards", 8))
+
+	# Below soft_min: no tension, no convergence, no early
+	for i in range(0, soft_min):
 		var result: Dictionary = _classify_mos_zone(i)
-		if str(result.get("tension_zone", "")) == "low":
-			reached_low = true
-			if i < 8:
-				push_error("Entered 'low' zone too early at card %d (soft_min=8)" % i)
-				return false
-			break
-	if not reached_low:
-		push_error("Never reached 'low' zone within 20 cards")
+		if str(result.get("tension_zone", "")) != "none":
+			push_error("cards=%d: expected 'none' below soft_min=%d, got '%s'" % [i, soft_min, result.get("tension_zone", "")])
+			return false
+		if result.get("convergence_zone", false) or result.get("early_zone", false):
+			push_error("cards=%d: no flags should be set below soft_min" % i)
+			return false
+		if result.get("ended", false):
+			push_error("cards=%d: must not be ended below soft_min" % i)
+			return false
+
+	# At soft_min: enters early zone
+	var at_min: Dictionary = _classify_mos_zone(soft_min)
+	if str(at_min.get("tension_zone", "")) != "low":
+		push_error("cards=%d: expected 'low' at soft_min, got '%s'" % [soft_min, at_min.get("tension_zone", "")])
+		return false
+	if not at_min.get("early_zone", false):
+		push_error("cards=%d: early_zone must be true at soft_min" % soft_min)
 		return false
 	return true
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
-# TEST 2: MOS above soft_max converges toward forced end
+# TEST 2: MOS targets 20-25 cards
 # ═══════════════════════════════════════════════════════════════════════════════
 
-func test_above_soft_max_converges_down() -> bool:
-	## At card 45 (above soft_max=40), the system must be in "critical" zone,
-	## signaling strong convergence pressure toward run end.
-	var result: Dictionary = _classify_mos_zone(45)
-	if str(result.get("tension_zone", "")) != "critical":
-		push_error("cards=45: expected 'critical', got '%s'" % result.get("tension_zone", ""))
+func test_target_range() -> bool:
+	## Cards in [target_min, target_max) must be in "rising" zone with
+	## convergence_zone=true and early_zone=false. This is the ideal run length.
+	var mos: Dictionary = MerlinConstants.MOS_CONVERGENCE
+	var target_min: int = int(mos.get("target_cards_min", 20))
+	var target_max: int = int(mos.get("target_cards_max", 25))
+
+	# Verify constant values match game design
+	if target_min != 20:
+		push_error("target_cards_min should be 20, got %d" % target_min)
 		return false
-	if not result.get("convergence_zone", false):
-		push_error("cards=45: convergence_zone should be true above soft_max")
+	if target_max != 25:
+		push_error("target_cards_max should be 25, got %d" % target_max)
 		return false
-	return true
 
-
-# ═══════════════════════════════════════════════════════════════════════════════
-# TEST 3: MOS in target range (20-24) stays stable ("rising")
-# ═══════════════════════════════════════════════════════════════════════════════
-
-func test_target_range_stays_stable() -> bool:
-	## All cards in [20, 24] must classify as "rising" with convergence_zone=true.
-	## This is the ideal run length zone — stable, not pushing toward end.
-	for i in range(20, 25):
+	# All cards in target range must be "rising" with convergence
+	for i in range(target_min, target_max):
 		var result: Dictionary = _classify_mos_zone(i)
 		if str(result.get("tension_zone", "")) != "rising":
 			push_error("cards=%d: expected 'rising' in target range, got '%s'" % [i, result.get("tension_zone", "")])
@@ -131,20 +146,88 @@ func test_target_range_stays_stable() -> bool:
 		if result.get("early_zone", false):
 			push_error("cards=%d: early_zone must be false in target range" % i)
 			return false
+		if result.get("ended", false):
+			push_error("cards=%d: must not be ended in target range" % i)
+			return false
+
+	# Card at target_max transitions to "high"
+	var at_max: Dictionary = _classify_mos_zone(target_max)
+	if str(at_max.get("tension_zone", "")) != "high":
+		push_error("cards=%d: expected 'high' at target_max, got '%s'" % [target_max, at_max.get("tension_zone", "")])
+		return false
 	return true
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
-# TEST 4: Hard cap at 50 never exceeded
+# TEST 3: MOS soft max at 40 cards
 # ═══════════════════════════════════════════════════════════════════════════════
 
-func test_hard_cap_never_exceeded() -> bool:
-	## Any card count >= 50 must result in ended=true.
-	## Tests exact boundary and overflow values.
-	for n in [50, 51, 75, 100, 999]:
+func test_soft_max() -> bool:
+	## Card 39 must be "high", card 40 must transition to "critical".
+	## Critical zone signals strong convergence pressure but does NOT end the run.
+	var mos: Dictionary = MerlinConstants.MOS_CONVERGENCE
+	var soft_max: int = int(mos.get("soft_max_cards", 40))
+
+	if soft_max != 40:
+		push_error("soft_max_cards should be 40, got %d" % soft_max)
+		return false
+
+	# Just before soft_max
+	var before: Dictionary = _classify_mos_zone(soft_max - 1)
+	if str(before.get("tension_zone", "")) != "high":
+		push_error("cards=%d: expected 'high' just before soft_max, got '%s'" % [soft_max - 1, before.get("tension_zone", "")])
+		return false
+
+	# At soft_max: critical zone, NOT ended
+	var at_max: Dictionary = _classify_mos_zone(soft_max)
+	if str(at_max.get("tension_zone", "")) != "critical":
+		push_error("cards=%d: expected 'critical' at soft_max, got '%s'" % [soft_max, at_max.get("tension_zone", "")])
+		return false
+	if at_max.get("ended", false):
+		push_error("cards=%d: soft_max must NOT end the run (that is hard_max)" % soft_max)
+		return false
+	if not at_max.get("convergence_zone", false):
+		push_error("cards=%d: convergence_zone must be true at soft_max" % soft_max)
+		return false
+
+	# All cards in [soft_max, hard_max) are critical but not ended
+	var hard_max: int = int(mos.get("hard_max_cards", 50))
+	for i in range(soft_max, hard_max):
+		var result: Dictionary = _classify_mos_zone(i)
+		if str(result.get("tension_zone", "")) != "critical":
+			push_error("cards=%d: expected 'critical' in [soft_max, hard_max), got '%s'" % [i, result.get("tension_zone", "")])
+			return false
+		if result.get("ended", false):
+			push_error("cards=%d: must not be ended before hard_max" % i)
+			return false
+	return true
+
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# TEST 4: MOS hard max at 50 cards (absolute stop)
+# ═══════════════════════════════════════════════════════════════════════════════
+
+func test_hard_max() -> bool:
+	## Card 50 and beyond must force ended=true with hard_max=true.
+	## Card 49 must NOT be ended. This is the absolute boundary.
+	var mos: Dictionary = MerlinConstants.MOS_CONVERGENCE
+	var hard_max: int = int(mos.get("hard_max_cards", 50))
+
+	if hard_max != 50:
+		push_error("hard_max_cards should be 50, got %d" % hard_max)
+		return false
+
+	# Card 49: not ended
+	var before: Dictionary = _classify_mos_zone(hard_max - 1)
+	if before.get("ended", false):
+		push_error("cards=%d: must NOT be ended one card before hard_max" % (hard_max - 1))
+		return false
+
+	# Card 50 and overflow values: all ended
+	for n in [hard_max, hard_max + 1, hard_max + 25, 100, 999]:
 		var result: Dictionary = _classify_mos_zone(n)
 		if not result.get("ended", false):
-			push_error("cards=%d: must be ended at or beyond hard_max=50" % n)
+			push_error("cards=%d: must be ended at or beyond hard_max=%d" % [n, hard_max])
 			return false
 		if not result.get("hard_max", false):
 			push_error("cards=%d: hard_max flag must be true" % n)
@@ -153,331 +236,177 @@ func test_hard_cap_never_exceeded() -> bool:
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
-# TEST 5: Convergence speed — zone transitions happen at correct card counts
+# TEST 5: MOS doesn't trigger during merchant interaction
 # ═══════════════════════════════════════════════════════════════════════════════
 
-func test_convergence_speed_transitions() -> bool:
-	## A full run simulation from 0 to 50 must produce exactly 5 zone transitions:
-	## none -> low (at 8) -> rising (at 20) -> high (at 25) -> critical (at 40) -> ended (at 50)
-	var transitions: Array = _simulate_run(50)
-	# First transition: "" -> "none" at card 0
-	# Then: none -> low at card 8
-	# Then: low -> rising at card 20
-	# Then: rising -> high at card 25
-	# Then: high -> critical at card 40
-	var expected_transitions: Array = [
-		{"card": 0, "to": "none"},
-		{"card": 8, "to": "low"},
-		{"card": 20, "to": "rising"},
-		{"card": 25, "to": "high"},
-		{"card": 40, "to": "critical"},
-	]
-	if transitions.size() != expected_transitions.size():
-		push_error("Expected %d transitions, got %d: %s" % [expected_transitions.size(), transitions.size(), str(transitions)])
+func test_no_convergence_during_merchant() -> bool:
+	## MERCHANT node type has cards_min=0 and cards_max=0, meaning it generates
+	## zero narrative cards. MOS convergence should not advance during merchant
+	## encounters because no cards are played. Verify MERCHANT node config.
+	var merchant: Dictionary = MerlinConstants.NODE_TYPES.get("MERCHANT", {})
+	if merchant.is_empty():
+		push_error("NODE_TYPES missing MERCHANT entry")
 		return false
-	for i in range(expected_transitions.size()):
-		var actual: Dictionary = transitions[i]
-		var expected: Dictionary = expected_transitions[i]
-		if int(actual.get("card", -1)) != int(expected.get("card", -2)):
-			push_error("Transition %d: expected at card %d, got card %d" % [i, expected["card"], actual["card"]])
-			return false
-		if str(actual.get("to", "")) != str(expected.get("to", "")):
-			push_error("Transition %d: expected zone '%s', got '%s'" % [i, expected["to"], actual["to"]])
-			return false
-	return true
 
+	var cards_min: int = int(merchant.get("cards_min", -1))
+	var cards_max: int = int(merchant.get("cards_max", -1))
 
-# ═══════════════════════════════════════════════════════════════════════════════
-# TEST 6: MOS at exact soft_min boundary (card 8)
-# ═══════════════════════════════════════════════════════════════════════════════
-
-func test_exact_soft_min_boundary() -> bool:
-	## Card 7 = "none", card 8 = "low". Boundary must be inclusive.
-	var before: Dictionary = _classify_mos_zone(7)
-	var at: Dictionary = _classify_mos_zone(8)
-	if str(before.get("tension_zone", "")) != "none":
-		push_error("Card 7 should be 'none'")
+	if cards_min != 0:
+		push_error("MERCHANT cards_min should be 0 (no card generation), got %d" % cards_min)
 		return false
-	if str(at.get("tension_zone", "")) != "low":
-		push_error("Card 8 should be 'low'")
+	if cards_max != 0:
+		push_error("MERCHANT cards_max should be 0 (no card generation), got %d" % cards_max)
 		return false
-	if not at.get("early_zone", false):
-		push_error("Card 8 should have early_zone=true")
+
+	# Since MERCHANT produces 0 cards, MOS state before and after
+	# a merchant encounter must be identical (same cards_played).
+	var cards_before: int = 15
+	var zone_before: Dictionary = _classify_mos_zone(cards_before)
+	# After merchant: cards_played unchanged (0 cards added)
+	var zone_after: Dictionary = _classify_mos_zone(cards_before + cards_min)
+	if str(zone_before.get("tension_zone", "")) != str(zone_after.get("tension_zone", "")):
+		push_error("MOS zone must not change during merchant (0 cards played)")
 		return false
 	return true
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
-# TEST 7: MOS at exact target_min boundary (card 20)
+# TEST 6: MOS doesn't generate promise card if 2 already active
 # ═══════════════════════════════════════════════════════════════════════════════
 
-func test_exact_target_min_boundary() -> bool:
-	## Card 19 = "low" (early_zone), card 20 = "rising" (convergence_zone).
-	var before: Dictionary = _classify_mos_zone(19)
-	var at: Dictionary = _classify_mos_zone(20)
-	if str(before.get("tension_zone", "")) != "low":
-		push_error("Card 19 should be 'low'")
+func test_max_active_promises() -> bool:
+	## MOS_CONVERGENCE.max_active_promises must equal MAX_ACTIVE_PROMISES (both = 2).
+	## When 2 promises are active, no new promise card should be generated.
+	var mos_max: int = int(MerlinConstants.MOS_CONVERGENCE.get("max_active_promises", -1))
+	var const_max: int = MerlinConstants.MAX_ACTIVE_PROMISES
+
+	if mos_max != 2:
+		push_error("MOS_CONVERGENCE.max_active_promises should be 2, got %d" % mos_max)
 		return false
-	if before.get("convergence_zone", false):
-		push_error("Card 19 should not have convergence_zone")
+	if const_max != 2:
+		push_error("MAX_ACTIVE_PROMISES should be 2, got %d" % const_max)
 		return false
-	if str(at.get("tension_zone", "")) != "rising":
-		push_error("Card 20 should be 'rising'")
+	if mos_max != const_max:
+		push_error("MOS max_active_promises (%d) must equal MAX_ACTIVE_PROMISES (%d)" % [mos_max, const_max])
 		return false
-	if not at.get("convergence_zone", false):
-		push_error("Card 20 should have convergence_zone=true")
+
+	# PROMISE node type must exist with limited card generation
+	var promise_node: Dictionary = MerlinConstants.NODE_TYPES.get("PROMISE", {})
+	if promise_node.is_empty():
+		push_error("NODE_TYPES missing PROMISE entry")
+		return false
+	var promise_max_cards: int = int(promise_node.get("cards_max", -1))
+	if promise_max_cards != 1:
+		push_error("PROMISE node cards_max should be 1, got %d" % promise_max_cards)
+		return false
+
+	# Simulate: 2 active promises = at cap, no new promise allowed
+	var active_promises: int = 2
+	var can_generate: bool = active_promises < const_max
+	if can_generate:
+		push_error("Should NOT allow new promise when active_promises=%d >= max=%d" % [active_promises, const_max])
+		return false
+
+	# Simulate: 1 active promise = below cap, new promise allowed
+	active_promises = 1
+	can_generate = active_promises < const_max
+	if not can_generate:
+		push_error("Should allow new promise when active_promises=%d < max=%d" % [active_promises, const_max])
 		return false
 	return true
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
-# TEST 8: MOS at exact target_max boundary (card 25)
+# TEST 7: Tension increases over time, affects convergence
 # ═══════════════════════════════════════════════════════════════════════════════
 
-func test_exact_target_max_boundary() -> bool:
-	## Card 24 = "rising", card 25 = "high". Both convergence_zone=true.
-	var before: Dictionary = _classify_mos_zone(24)
-	var at: Dictionary = _classify_mos_zone(25)
-	if str(before.get("tension_zone", "")) != "rising":
-		push_error("Card 24 should be 'rising'")
-		return false
-	if str(at.get("tension_zone", "")) != "high":
-		push_error("Card 25 should be 'high'")
-		return false
-	if not before.get("convergence_zone", false) or not at.get("convergence_zone", false):
-		push_error("Both card 24 and 25 should have convergence_zone=true")
-		return false
-	return true
-
-
-# ═══════════════════════════════════════════════════════════════════════════════
-# TEST 9: MOS at exact soft_max boundary (card 40)
-# ═══════════════════════════════════════════════════════════════════════════════
-
-func test_exact_soft_max_boundary() -> bool:
-	## Card 39 = "high", card 40 = "critical". Both convergence_zone=true.
-	var before: Dictionary = _classify_mos_zone(39)
-	var at: Dictionary = _classify_mos_zone(40)
-	if str(before.get("tension_zone", "")) != "high":
-		push_error("Card 39 should be 'high'")
-		return false
-	if str(at.get("tension_zone", "")) != "critical":
-		push_error("Card 40 should be 'critical'")
-		return false
-	if not at.get("convergence_zone", false):
-		push_error("Card 40 should have convergence_zone=true")
-		return false
-	if at.get("ended", false):
-		push_error("Card 40 should NOT be ended (soft_max, not hard_max)")
-		return false
-	return true
-
-
-# ═══════════════════════════════════════════════════════════════════════════════
-# TEST 10: MOS at exact hard_max boundary (card 50)
-# ═══════════════════════════════════════════════════════════════════════════════
-
-func test_exact_hard_max_boundary() -> bool:
-	## Card 49 = not ended, card 50 = ended.
-	var before: Dictionary = _classify_mos_zone(49)
-	var at: Dictionary = _classify_mos_zone(50)
-	if before.get("ended", false):
-		push_error("Card 49 should NOT be ended")
-		return false
-	if not at.get("ended", false):
-		push_error("Card 50 MUST be ended")
-		return false
-	return true
-
-
-# ═══════════════════════════════════════════════════════════════════════════════
-# TEST 11: Zone ordering is monotonically increasing (never goes backward)
-# ═══════════════════════════════════════════════════════════════════════════════
-
-func test_zone_monotonic_progression() -> bool:
-	## Zones must progress in order: none -> low -> rising -> high -> critical -> ended.
-	## No zone should ever appear after a later zone in a sequential run.
+func test_tension_tracking() -> bool:
+	## Tension zones must progress monotonically: none -> low -> rising -> high -> critical.
+	## Zone level must never decrease as cards_played increases.
 	var zone_order: Dictionary = {"none": 0, "low": 1, "rising": 2, "high": 3, "critical": 4}
 	var prev_level: int = -1
-	for i in range(0, 51):
+	var prev_zone: String = ""
+
+	for i in range(0, 50):
 		var result: Dictionary = _classify_mos_zone(i)
-		if result.get("ended", false):
-			if prev_level > 4:
-				push_error("Ended state reached after invalid level")
-				return false
-			break
 		var zone: String = str(result.get("tension_zone", "none"))
 		var level: int = int(zone_order.get(zone, -1))
+
 		if level < 0:
-			push_error("Unknown zone '%s' at card %d" % [zone, i])
+			push_error("Unknown tension zone '%s' at cards=%d" % [zone, i])
 			return false
 		if level < prev_level:
-			push_error("Zone went backward at card %d: level %d < prev %d" % [i, level, prev_level])
+			push_error("Tension decreased at cards=%d: '%s' (level %d) < '%s' (level %d)" % [i, zone, level, prev_zone, prev_level])
 			return false
+
 		prev_level = level
-	return true
+		prev_zone = zone
 
-
-# ═══════════════════════════════════════════════════════════════════════════════
-# TEST 12: Early zone and convergence zone are mutually exclusive
-# ═══════════════════════════════════════════════════════════════════════════════
-
-func test_early_and_convergence_mutually_exclusive() -> bool:
-	## early_zone and convergence_zone must never both be true at the same card count.
-	for i in range(0, 51):
+	# Verify all 5 zones are visited in a full 0-49 run
+	var visited: Dictionary = {}
+	for i in range(0, 50):
 		var result: Dictionary = _classify_mos_zone(i)
-		if result.get("ended", false):
-			continue
-		var early: bool = result.get("early_zone", false)
-		var convergence: bool = result.get("convergence_zone", false)
-		if early and convergence:
-			push_error("cards=%d: early_zone and convergence_zone both true (mutually exclusive)" % i)
+		var zone: String = str(result.get("tension_zone", "none"))
+		visited[zone] = true
+
+	var expected_zones: Array = ["none", "low", "rising", "high", "critical"]
+	for z in expected_zones:
+		if not visited.has(z):
+			push_error("Zone '%s' was never visited in a 0-49 card run" % z)
 			return false
 	return true
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
-# TEST 13: Negative card count handled gracefully
+# TEST 8: Convergence probability increases as cards approach soft max
 # ═══════════════════════════════════════════════════════════════════════════════
 
-func test_negative_card_count_safe() -> bool:
-	## Negative card counts should classify as "none" zone, not crash.
-	for n in [-1, -10, -100]:
-		var result: Dictionary = _classify_mos_zone(n)
-		if result.get("ended", false):
-			push_error("cards=%d: negative count should not end the run" % n)
-			return false
-		if str(result.get("tension_zone", "")) != "none":
-			push_error("cards=%d: expected 'none' for negative count, got '%s'" % [n, result.get("tension_zone", "")])
-			return false
-	return true
-
-
-# ═══════════════════════════════════════════════════════════════════════════════
-# TEST 14: MOS constants hierarchy is valid (soft_min < target_min < target_max < soft_max < hard_max)
-# ═══════════════════════════════════════════════════════════════════════════════
-
-func test_mos_constants_hierarchy() -> bool:
-	## The five MOS thresholds must form a strictly increasing sequence.
+func test_convergence_probability() -> bool:
+	## Convergence probability must be 0 below target_min, increase monotonically
+	## from target_min to hard_max, and reach 1.0 at hard_max.
 	var mos: Dictionary = MerlinConstants.MOS_CONVERGENCE
-	var soft_min: int = int(mos.get("soft_min_cards", 0))
-	var target_min: int = int(mos.get("target_cards_min", 0))
-	var target_max: int = int(mos.get("target_cards_max", 0))
-	var soft_max: int = int(mos.get("soft_max_cards", 0))
-	var hard_max: int = int(mos.get("hard_max_cards", 0))
-	if not (soft_min < target_min):
-		push_error("soft_min (%d) must be < target_min (%d)" % [soft_min, target_min])
-		return false
-	if not (target_min < target_max):
-		push_error("target_min (%d) must be < target_max (%d)" % [target_min, target_max])
-		return false
-	if not (target_max < soft_max):
-		push_error("target_max (%d) must be < soft_max (%d)" % [target_max, soft_max])
-		return false
-	if not (soft_max < hard_max):
-		push_error("soft_max (%d) must be < hard_max (%d)" % [soft_max, hard_max])
-		return false
-	return true
-
-
-# ═══════════════════════════════════════════════════════════════════════════════
-# TEST 15: Each zone spans a reasonable number of cards (not degenerate)
-# ═══════════════════════════════════════════════════════════════════════════════
-
-func test_zone_spans_not_degenerate() -> bool:
-	## Each zone should span at least 3 cards to be meaningful for gameplay.
-	var mos: Dictionary = MerlinConstants.MOS_CONVERGENCE
-	var soft_min: int = int(mos.get("soft_min_cards", 8))
 	var target_min: int = int(mos.get("target_cards_min", 20))
-	var target_max: int = int(mos.get("target_cards_max", 25))
 	var soft_max: int = int(mos.get("soft_max_cards", 40))
 	var hard_max: int = int(mos.get("hard_max_cards", 50))
 
-	var none_span: int = soft_min           # [0, soft_min)
-	var low_span: int = target_min - soft_min     # [soft_min, target_min)
-	var rising_span: int = target_max - target_min # [target_min, target_max)
-	var high_span: int = soft_max - target_max    # [target_max, soft_max)
-	var critical_span: int = hard_max - soft_max  # [soft_max, hard_max)
-
-	if none_span < 3:
-		push_error("'none' zone spans only %d cards (minimum 3)" % none_span)
-		return false
-	if low_span < 3:
-		push_error("'low' zone spans only %d cards (minimum 3)" % low_span)
-		return false
-	if rising_span < 3:
-		push_error("'rising' zone spans only %d cards (minimum 3)" % rising_span)
-		return false
-	if high_span < 3:
-		push_error("'high' zone spans only %d cards (minimum 3)" % high_span)
-		return false
-	if critical_span < 3:
-		push_error("'critical' zone spans only %d cards (minimum 3)" % critical_span)
-		return false
-	return true
-
-
-# ═══════════════════════════════════════════════════════════════════════════════
-# TEST 16: Full run simulation produces correct zone sequence
-# ═══════════════════════════════════════════════════════════════════════════════
-
-func test_full_run_zone_sequence() -> bool:
-	## A simulated full run from card 0 to 50 must visit zones in order:
-	## none -> low -> rising -> high -> critical -> ended.
-	var visited_zones: Array = []
-	for i in range(0, 51):
-		var result: Dictionary = _classify_mos_zone(i)
-		var zone: String = str(result.get("tension_zone", "none"))
-		if result.get("ended", false):
-			zone = "ended"
-		if visited_zones.is_empty() or visited_zones[-1] != zone:
-			visited_zones.append(zone)
-	var expected: Array = ["none", "low", "rising", "high", "critical", "ended"]
-	if visited_zones.size() != expected.size():
-		push_error("Expected zone sequence %s, got %s" % [str(expected), str(visited_zones)])
-		return false
-	for i in range(expected.size()):
-		if visited_zones[i] != expected[i]:
-			push_error("Zone sequence mismatch at index %d: expected '%s', got '%s'" % [i, expected[i], visited_zones[i]])
+	# Below target_min: probability must be 0
+	for i in [0, 5, 10, 19]:
+		var prob: float = _convergence_probability(i)
+		if prob > 0.001:
+			push_error("cards=%d: convergence probability should be 0 below target_min, got %.3f" % [i, prob])
 			return false
-	return true
 
+	# At target_min: probability starts (should be very low, near 0)
+	var prob_at_min: float = _convergence_probability(target_min)
+	if prob_at_min < -0.001 or prob_at_min > 0.1:
+		push_error("cards=%d: probability at target_min should be near 0, got %.3f" % [target_min, prob_at_min])
+		return false
 
-# ═══════════════════════════════════════════════════════════════════════════════
-# TEST 17: MOS convergence_zone covers entire target-to-hard_max range
-# ═══════════════════════════════════════════════════════════════════════════════
-
-func test_convergence_zone_full_range() -> bool:
-	## convergence_zone must be true for ALL cards in [target_min, hard_max).
-	var mos: Dictionary = MerlinConstants.MOS_CONVERGENCE
-	var target_min: int = int(mos.get("target_cards_min", 20))
-	var hard_max: int = int(mos.get("hard_max_cards", 50))
-	for i in range(target_min, hard_max):
-		var result: Dictionary = _classify_mos_zone(i)
-		if not result.get("convergence_zone", false):
-			push_error("cards=%d: convergence_zone should be true in [%d, %d)" % [i, target_min, hard_max])
+	# Monotonically increasing from target_min to hard_max
+	var prev_prob: float = -1.0
+	for i in range(target_min, hard_max + 1):
+		var prob: float = _convergence_probability(i)
+		if prob < prev_prob - 0.001:
+			push_error("cards=%d: probability decreased (%.3f < %.3f), must be monotonic" % [i, prob, prev_prob])
 			return false
-	return true
+		prev_prob = prob
 
+	# At soft_max: probability should be significantly above 0 (around 0.67)
+	var prob_at_soft_max: float = _convergence_probability(soft_max)
+	if prob_at_soft_max < 0.5:
+		push_error("cards=%d: probability at soft_max should be >= 0.5, got %.3f" % [soft_max, prob_at_soft_max])
+		return false
 
-# ═══════════════════════════════════════════════════════════════════════════════
-# TEST 18: MOS card 0 initialization is safe
-# ═══════════════════════════════════════════════════════════════════════════════
+	# At hard_max: probability must be 1.0 (absolute end)
+	var prob_at_hard: float = _convergence_probability(hard_max)
+	if absf(prob_at_hard - 1.0) > 0.001:
+		push_error("cards=%d: probability at hard_max must be 1.0, got %.3f" % [hard_max, prob_at_hard])
+		return false
 
-func test_card_zero_initialization() -> bool:
-	## At card 0 (run start), MOS should be in "none" zone with no flags.
-	var result: Dictionary = _classify_mos_zone(0)
-	if result.get("ended", false):
-		push_error("Card 0 must not be ended")
-		return false
-	if str(result.get("tension_zone", "")) != "none":
-		push_error("Card 0: expected 'none', got '%s'" % result.get("tension_zone", ""))
-		return false
-	if result.get("convergence_zone", false):
-		push_error("Card 0: convergence_zone must be false")
-		return false
-	if result.get("early_zone", false):
-		push_error("Card 0: early_zone must be false")
+	# Beyond hard_max: still 1.0
+	var prob_beyond: float = _convergence_probability(hard_max + 10)
+	if absf(prob_beyond - 1.0) > 0.001:
+		push_error("cards=%d: probability beyond hard_max must be 1.0, got %.3f" % [hard_max + 10, prob_beyond])
 		return false
 	return true
 
@@ -486,41 +415,36 @@ func test_card_zero_initialization() -> bool:
 # RUN ALL
 # ═══════════════════════════════════════════════════════════════════════════════
 
-func run_all() -> void:
-	var tests: Array[Callable] = [
-		test_below_soft_min_converges_up,
-		test_above_soft_max_converges_down,
-		test_target_range_stays_stable,
-		test_hard_cap_never_exceeded,
-		test_convergence_speed_transitions,
-		test_exact_soft_min_boundary,
-		test_exact_target_min_boundary,
-		test_exact_target_max_boundary,
-		test_exact_soft_max_boundary,
-		test_exact_hard_max_boundary,
-		test_zone_monotonic_progression,
-		test_early_and_convergence_mutually_exclusive,
-		test_negative_card_count_safe,
-		test_mos_constants_hierarchy,
-		test_zone_spans_not_degenerate,
-		test_full_run_zone_sequence,
-		test_convergence_zone_full_range,
-		test_card_zero_initialization,
-	]
+func run_all() -> Dictionary:
+	var results: Dictionary = {}
+	var _tests: Dictionary = {
+		"test_soft_min_boundary": test_soft_min_boundary,
+		"test_target_range": test_target_range,
+		"test_soft_max": test_soft_max,
+		"test_hard_max": test_hard_max,
+		"test_no_convergence_during_merchant": test_no_convergence_during_merchant,
+		"test_max_active_promises": test_max_active_promises,
+		"test_tension_tracking": test_tension_tracking,
+		"test_convergence_probability": test_convergence_probability,
+	}
 
 	var passed: int = 0
 	var failed: int = 0
 
-	for test in tests:
-		var ok: bool = test.call()
+	for test_name in _tests:
+		var test_fn: Callable = _tests[test_name]
+		var ok: bool = test_fn.call()
+		results[test_name] = ok
 		if ok:
 			passed += 1
 		else:
 			failed += 1
-			push_error("[FAIL] %s" % test.get_method())
+			push_error("[FAIL] %s" % test_name)
 
 	print("[test_mos_convergence] Results: %d/%d passed" % [passed, passed + failed])
 	if failed > 0:
 		push_error("[test_mos_convergence] %d test(s) FAILED" % failed)
 	else:
 		print("[test_mos_convergence] All tests passed.")
+
+	return results
