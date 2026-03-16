@@ -55,7 +55,10 @@ func build_result_text(verb: String, label: String, effect: Dictionary, is_succe
 			"%s — un choix qui s'avere payant." % label,
 			"Merlin sourit. Votre %s etait le bon choix." % verb,
 		]
-		var text: String = success_templates[randi() % success_templates.size()]
+		var idx: int = (verb + label).hash() % success_templates.size()
+		if idx < 0:
+			idx = -idx % success_templates.size()
+		var text: String = success_templates[idx]
 		if effect_type == "HEAL_LIFE":
 			text += " Vous recuperez de la vigueur."
 		elif effect_type == "ADD_KARMA":
@@ -70,7 +73,10 @@ func build_result_text(verb: String, label: String, effect: Dictionary, is_succe
 			"%s — les consequences sont immediates." % label,
 			"Merlin grimace. Ce n'etait pas le bon moment pour %s." % verb,
 		]
-		var text: String = failure_templates[randi() % failure_templates.size()]
+		var fidx: int = (verb + label).hash() % failure_templates.size()
+		if fidx < 0:
+			fidx = -fidx % failure_templates.size()
+		var text: String = failure_templates[fidx]
 		if effect_type == "DAMAGE_LIFE":
 			text += " La douleur se fait sentir."
 		elif effect_type == "HEAL_LIFE":
