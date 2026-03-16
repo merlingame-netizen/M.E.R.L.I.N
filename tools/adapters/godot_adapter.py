@@ -286,11 +286,11 @@ class GodotAdapter(BaseAdapter):
         if isinstance(godot, dict):
             return godot
 
-        runner_scene = "res://tests/headless_runner.tscn"
-        self.log(f"Running test suite via {runner_scene} …")
+        runner_script = "res://tests/headless_runner.gd"
+        self.log(f"Running test suite via {runner_script} …")
         try:
             stdout, stderr, code = _run(
-                [godot, "--headless", "--quit-after", "60", runner_scene],
+                [godot, "--headless", "--quit-after", "60", "--script", runner_script],
                 timeout=90,
             )
         except subprocess.TimeoutExpired:
