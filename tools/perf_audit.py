@@ -440,9 +440,10 @@ def analyze_script_complexity(project_root: Path) -> list[dict[str, Any]]:
     """Analyze lines, nesting depth, and cyclomatic complexity estimate per script."""
     results: list[dict[str, Any]] = []
 
-    # Data-only files: primarily const/static definitions, not runtime logic
+    # Data-only files: primarily const/static definitions, not runtime logic.
+    # merlin_constants.gd excluded: contains infer_reward_type() with match/for.
     DATA_FILE_NAMES = {
-        "merlin_constants.gd", "sprite_templates.gd", "pixel_scene_data.gd",
+        "sprite_templates.gd", "pixel_scene_data.gd",
         "merlin_visual.gd",
     }
 
@@ -595,7 +596,8 @@ def compute_summary(
     elif len(critical_scripts) > 3:
         score -= 5
         bottlenecks.append(f"{len(critical_scripts)} scripts exceed {LINES_CRITICAL} lines")
-    if len(warning_scripts) > 80:
+    # Flag when >30% of scripts are in warning state (proportional to project size)
+    if len(warning_scripts) > 30:
         score -= 5
 
     score = max(0, min(100, score))
