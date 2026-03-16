@@ -100,7 +100,8 @@ func _save_state_to_profile() -> void:
 	updated_meta["tutorial_completed"] = _completed
 	updated_meta["tutorial_flags"] = _tooltip_flags.duplicate()
 	_store.state["meta"] = updated_meta
-	_store.save_system.save_profile(updated_meta)
+	if _store.save_system != null:
+		_store.save_system.save_profile(updated_meta)
 
 
 # ═══════════════════════════════════════════════════════════════════════════════

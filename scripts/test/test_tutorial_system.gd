@@ -67,11 +67,11 @@ func test_start_sets_intro_step() -> bool:
 func test_start_emits_step_changed() -> bool:
 	var store: MerlinStore = _make_mock_store()
 	var tutorial: TutorialSystem = _make_tutorial(store)
-	var received_step: int = -99
-	tutorial.step_changed.connect(func(step: int) -> void: received_step = step)
+	var received: Array = []
+	tutorial.step_changed.connect(func(step: int) -> void: received.append(step))
 	tutorial.start_tutorial()
-	if received_step != TutorialSystem.TutorialStep.INTRO:
-		push_error("step_changed should emit INTRO (0), got: %d" % received_step)
+	if received.is_empty() or received[0] != TutorialSystem.TutorialStep.INTRO:
+		push_error("step_changed should emit INTRO (0), got: %s" % str(received))
 		return false
 	return true
 
@@ -149,15 +149,15 @@ func test_skip_marks_complete() -> bool:
 func test_skip_emits_both_signals() -> bool:
 	var store: MerlinStore = _make_mock_store()
 	var tutorial: TutorialSystem = _make_tutorial(store)
-	var step_received: bool = false
-	var completed_received: bool = false
-	tutorial.step_changed.connect(func(_step: int) -> void: step_received = true)
-	tutorial.tutorial_completed.connect(func() -> void: completed_received = true)
+	var step_received: Array = []
+	var completed_received: Array = []
+	tutorial.step_changed.connect(func(step: int) -> void: step_received.append(step))
+	tutorial.tutorial_completed.connect(func() -> void: completed_received.append(true))
 	tutorial.skip_tutorial()
-	if not step_received:
+	if step_received.is_empty():
 		push_error("Skip should emit step_changed")
 		return false
-	if not completed_received:
+	if completed_received.is_empty():
 		push_error("Skip should emit tutorial_completed")
 		return false
 	return true
@@ -347,13 +347,13 @@ func test_no_forced_biome_after_completion() -> bool:
 func test_reaching_complete_emits_signal() -> bool:
 	var store: MerlinStore = _make_mock_store()
 	var tutorial: TutorialSystem = _make_tutorial(store)
-	var completed_received: bool = false
-	tutorial.tutorial_completed.connect(func() -> void: completed_received = true)
+	var completed_received: Array = []
+	tutorial.tutorial_completed.connect(func() -> void: completed_received.append(true))
 	tutorial.start_tutorial()
 	# Advance through all steps to COMPLETE
 	for i in range(TutorialSystem.STEP_COUNT - 1):
 		tutorial.advance()
-	if not completed_received:
+	if completed_received.is_empty():
 		push_error("tutorial_completed signal should fire when reaching COMPLETE step")
 		return false
 	if not tutorial.is_complete():

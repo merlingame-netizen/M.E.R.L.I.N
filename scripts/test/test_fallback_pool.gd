@@ -274,13 +274,13 @@ func test_recently_used_resets_when_exhausted() -> bool:
 	# Fill recently_used beyond pool size to force a reset
 	pool.recently_used.clear()
 	# Grab all card IDs from all pools
-	var all_ids: Array = []
+	var all_ids: Array[String] = []
 	for ctx_key in pool.cards_by_context:
 		for card in pool.cards_by_context[ctx_key]:
 			if card is Dictionary:
 				all_ids.append(str(card.get("id", "")))
 	# Mark all as recently used
-	pool.recently_used = all_ids.duplicate()
+	pool.recently_used = all_ids
 	# Draw should still return a card (forces reset)
 	var card: Dictionary = pool.get_fallback_card(_make_context())
 	if card.is_empty():

@@ -210,6 +210,7 @@ func test_run_victory_flow() -> bool:
 
 	# Simulate playing hard_max cards
 	state["run"]["cards_played"] = hard_max
+	state["run"]["card_index"] = hard_max
 	state["run"]["life_essence"] = 50  # Still alive
 
 	# Use CardSystem check_run_end

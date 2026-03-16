@@ -95,4 +95,4 @@ func _on_choice(choice: String) -> void:
 
 func _finish() -> void:
 	var score: int = int(float(_correct) / float(_total_rounds) * 100.0)
-	_complete(score)
+	_complete(score >= 50, score)
