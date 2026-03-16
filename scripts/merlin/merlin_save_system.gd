@@ -428,6 +428,7 @@ func _backup_file(path: String) -> void:
 		return
 	var src: FileAccess = FileAccess.open(path, FileAccess.READ)
 	if src == null:
+		push_warning("[MerlinSave] Cannot read %s for backup" % path)
 		return
 	var content: String = src.get_as_text()
 	src.close()
@@ -435,3 +436,5 @@ func _backup_file(path: String) -> void:
 	if dst:
 		dst.store_string(content)
 		dst.close()
+	else:
+		push_warning("[MerlinSave] Cannot write backup to %s" % (path + BACKUP_SUFFIX))

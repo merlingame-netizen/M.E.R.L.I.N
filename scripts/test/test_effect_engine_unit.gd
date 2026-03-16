@@ -614,3 +614,131 @@ func test_get_multiplier_label_out_of_range() -> bool:
 		push_error("get_multiplier_label 200: expected reussite (default), got %s" % label)
 		return false
 	return true
+
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# REPUTATION EDGE CASES
+# ═══════════════════════════════════════════════════════════════════════════════
+
+func test_reputation_invalid_faction_returns_false() -> bool:
+	var engine := MerlinEffectEngine.new()
+	var state: Dictionary = _make_state()
+	var result: Dictionary = engine.apply_effects(state, ["ADD_REPUTATION:nonexistent:15"])
+	if result["rejected"].size() != 1:
+		push_error("Invalid faction: expected 1 rejected, got %d" % result["rejected"].size())
+		return false
+	return true
+
+
+func test_reputation_clamped_at_zero() -> bool:
+	var engine := MerlinEffectEngine.new()
+	var state: Dictionary = _make_state()
+	state["meta"]["faction_rep"]["druides"] = 5
+	engine.apply_effects(state, ["ADD_REPUTATION:druides:-20"])
+	var score: int = int(state["meta"]["faction_rep"]["druides"])
+	if score != 0:
+		push_error("Rep floor: expected 0, got %d" % score)
+		return false
+	return true
+
+
+func test_reputation_clamped_at_hundred() -> bool:
+	var engine := MerlinEffectEngine.new()
+	var state: Dictionary = _make_state()
+	state["meta"]["faction_rep"]["druides"] = 95
+	engine.apply_effects(state, ["ADD_REPUTATION:druides:20"])
+	var score: int = int(state["meta"]["faction_rep"]["druides"])
+	if score != 100:
+		push_error("Rep ceiling: expected 100, got %d" % score)
+		return false
+	return true
+
+
+func test_reputation_per_card_cap_20() -> bool:
+	var engine := MerlinEffectEngine.new()
+	var state: Dictionary = _make_state()
+	state["meta"]["faction_rep"]["druides"] = 50
+	engine.apply_effects(state, ["ADD_REPUTATION:druides:50"])
+	var score: int = int(state["meta"]["faction_rep"]["druides"])
+	# Should be capped at 50 + 20 = 70 (not 100)
+	if score != 70:
+		push_error("Per-card cap: expected 70, got %d" % score)
+		return false
+	return true
+
+
+func test_reputation_rebuilds_faction_context() -> bool:
+	var engine := MerlinEffectEngine.new()
+	var state: Dictionary = _make_state()
+	state["run"]["faction_context"] = ""
+	engine.apply_effects(state, ["ADD_REPUTATION:druides:10"])
+	var ctx: String = str(state["run"].get("faction_context", ""))
+	if ctx.is_empty():
+		push_error("Faction context not rebuilt after reputation change")
+		return false
+	return true
+
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# PROMISE VALIDATION EDGE CASES
+# ═══════════════════════════════════════════════════════════════════════════════
+
+func test_add_promise_empty_id_rejected() -> bool:
+	var engine := MerlinEffectEngine.new()
+	var state: Dictionary = _make_state()
+	var result: Dictionary = engine.apply_effects(state, ["ADD_PROMISE::5"])
+	var promises: Array = state["run"].get("promises", [])
+	if promises.size() != 0:
+		push_error("Empty promise_id: expected 0 promises, got %d" % promises.size())
+		return false
+	return true
+
+
+func test_create_promise_empty_id_rejected() -> bool:
+	var engine := MerlinEffectEngine.new()
+	var state: Dictionary = _make_state()
+	var result: Dictionary = engine.apply_effects(state, ["CREATE_PROMISE::5:test"])
+	var promises: Array = state["run"].get("active_promises", [])
+	if promises.size() != 0:
+		push_error("Empty promise_id create: expected 0 promises, got %d" % promises.size())
+		return false
+	return true
+
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# MINIGAME SCORE CLAMP (process_card boundary)
+# ═══════════════════════════════════════════════════════════════════════════════
+
+func test_process_card_negative_score_clamped() -> bool:
+	var engine := MerlinEffectEngine.new()
+	var state: Dictionary = _make_state()
+	var card: Dictionary = {
+		"type": "standard",
+		"options": [{"effects": ["HEAL_LIFE:5"]}],
+	}
+	var result: Dictionary = engine.process_card(state, card, 0, -50)
+	var steps: Array = result.get("steps_completed", [])
+	if not steps.has("score"):
+		push_error("Negative score clamp: pipeline did not reach score step")
+		return false
+	var mult: float = float(result.get("multiplier", 0.0))
+	if mult > 0.25 or mult < 0.0:
+		push_error("Negative score clamp: expected 0.0-0.25 multiplier, got %f" % mult)
+		return false
+	return true
+
+
+func test_process_card_over_100_score_clamped() -> bool:
+	var engine := MerlinEffectEngine.new()
+	var state: Dictionary = _make_state()
+	var card: Dictionary = {
+		"type": "standard",
+		"options": [{"effects": ["HEAL_LIFE:5"]}],
+	}
+	var result: Dictionary = engine.process_card(state, card, 0, 999)
+	# Should clamp to 100, giving reussite multiplier
+	var mult: float = float(result.get("multiplier", 0.0))
+	if mult < 1.0:
+		push_error("Over-100 score clamp: expected >=1.0 multiplier, got %f" % mult)
+		return false
+	return true

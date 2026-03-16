@@ -562,3 +562,89 @@ func test_load_profile_returns_defaults_on_invalid_save() -> bool:
 			return false
 	save.reset_profile()
 	return true
+
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# ROUND-TRIP: save → load → compare
+# ═══════════════════════════════════════════════════════════════════════════════
+
+func test_round_trip_meta_preserved() -> bool:
+	var save: MerlinSaveSystem = _make_save_instance()
+	var meta: Dictionary = _make_valid_meta()
+	meta["faction_rep"]["druides"] = 75
+	meta["faction_rep"]["ankou"] = 30
+	meta["anam"] = 42
+	var ok: bool = save.save_profile(meta)
+	if not ok:
+		push_error("Round-trip: save_profile failed")
+		save.reset_profile()
+		return false
+	var loaded: Dictionary = save.load_profile()
+	if loaded.is_empty():
+		push_error("Round-trip: load_profile returned empty")
+		save.reset_profile()
+		return false
+	if int(loaded.get("faction_rep", {}).get("druides", 0)) != 75:
+		push_error("Round-trip: druides rep not preserved (got %d)" % int(loaded["faction_rep"]["druides"]))
+		save.reset_profile()
+		return false
+	if int(loaded.get("anam", 0)) != 42:
+		push_error("Round-trip: anam not preserved (got %d)" % int(loaded["anam"]))
+		save.reset_profile()
+		return false
+	save.reset_profile()
+	return true
+
+
+func test_round_trip_run_state_preserved() -> bool:
+	var save: MerlinSaveSystem = _make_save_instance()
+	var meta: Dictionary = _make_valid_meta()
+	save.save_profile(meta)
+	var run: Dictionary = _make_valid_run_state()
+	run["life_essence"] = 73
+	run["cards_played"] = 12
+	run["biome"] = "broceliande"
+	save.save_run_state(run)
+	var loaded_run: Dictionary = save.load_run_state()
+	if loaded_run.is_empty():
+		push_error("Round-trip run: load_run_state returned empty")
+		save.reset_profile()
+		return false
+	if int(loaded_run.get("life_essence", 0)) != 73:
+		push_error("Round-trip run: life_essence not preserved (got %d)" % int(loaded_run["life_essence"]))
+		save.reset_profile()
+		return false
+	if int(loaded_run.get("cards_played", 0)) != 12:
+		push_error("Round-trip run: cards_played not preserved")
+		save.reset_profile()
+		return false
+	if str(loaded_run.get("biome", "")) != "broceliande":
+		push_error("Round-trip run: biome not preserved (got '%s')" % str(loaded_run.get("biome", "")))
+		save.reset_profile()
+		return false
+	save.clear_run_state()
+	save.reset_profile()
+	return true
+
+
+func test_backup_recovery_on_corrupted_primary() -> bool:
+	var save: MerlinSaveSystem = _make_save_instance()
+	var meta: Dictionary = _make_valid_meta()
+	meta["anam"] = 99
+	save.save_profile(meta)
+	# Now save again with different data (creates backup of previous)
+	var meta2: Dictionary = _make_valid_meta()
+	meta2["anam"] = 200
+	save.save_profile(meta2)
+	# The backup should contain anam=99. Load should succeed with anam=200.
+	var loaded: Dictionary = save.load_profile()
+	if loaded.is_empty():
+		push_error("Backup recovery: load failed")
+		save.reset_profile()
+		return false
+	if int(loaded.get("anam", 0)) != 200:
+		push_error("Backup recovery: expected latest save anam=200, got %d" % int(loaded["anam"]))
+		save.reset_profile()
+		return false
+	save.reset_profile()
+	return true

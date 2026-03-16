@@ -70,6 +70,7 @@ func validate_effect(effect_code: String) -> bool:
 ## This function handles: 1, 3, 6, 7, 8, 9, 10, 11.
 func process_card(state: Dictionary, card: Dictionary, chosen_option: int,
 		minigame_score: int, active_ogham: String = "") -> Dictionary:
+	minigame_score = clampi(minigame_score, 0, 100)
 	var run: Dictionary = state.get("run", {})
 	var result: Dictionary = {
 		"steps_completed": [],
@@ -382,6 +383,9 @@ func _trigger_arc(state: Dictionary, arc_id: String) -> bool:
 # ═══════════════════════════════════════════════════════════════════════════════
 
 func _add_promise(state: Dictionary, promise_id: String, deadline_cards: int) -> bool:
+	if promise_id.is_empty():
+		push_warning("[EffectEngine] _add_promise: empty promise_id")
+		return false
 	var run: Dictionary = state.get("run", {})
 	var promises: Array = run.get("promises", [])
 	# Cap: max 2 active promises (bible rule)
@@ -405,6 +409,9 @@ func _add_promise(state: Dictionary, promise_id: String, deadline_cards: int) ->
 
 
 func _create_promise(state: Dictionary, promise_id: String, deadline_days: int, description: String) -> bool:
+	if promise_id.is_empty():
+		push_warning("[EffectEngine] _create_promise: empty promise_id")
+		return false
 	var run = state.get("run", {})
 	var promises = run.get("active_promises", [])
 	var current_day = int(run.get("day", 1))

@@ -106,9 +106,11 @@ var _last_narrative_fallback_idx: int = -1
 
 ## Connect to MerlinAI autoload for LLM inference.
 func set_merlin_ai(ai_node: Node) -> void:
+	if ai_node == null:
+		push_warning("[MerlinLlmAdapter] set_merlin_ai called with null node")
+		return
 	_merlin_ai = ai_node
-	if _merlin_ai:
-		print("[MerlinLlmAdapter] MerlinAI wired (ready=%s)" % str(_merlin_ai.is_ready))
+	print("[MerlinLlmAdapter] MerlinAI wired (ready=%s)" % str(_merlin_ai.is_ready))
 	_load_scenario_prompts()
 
 ## Load scenario prompt templates for per-category LLM generation.
