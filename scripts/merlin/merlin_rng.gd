@@ -23,6 +23,11 @@ func randf_range(min_val: float, max_val: float) -> float:
 	return lerpf(min_val, max_val, randf())
 
 
+func randi() -> int:
+	var f: float = randf()
+	return int(f * 2147483647.0)
+
+
 func randi_range(min_val: int, max_val: int) -> int:
 	return min_val + int(randf() * float(max_val - min_val + 1))
 
