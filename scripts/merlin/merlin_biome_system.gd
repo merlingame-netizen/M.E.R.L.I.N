@@ -215,7 +215,10 @@ func get_passive_effect(biome_key: String, cards_played: int) -> Dictionary:
 
 	# Handle "random" direction for Collines aux Dolmens
 	if direction == "random":
-		direction = ["up", "down"][randi() % 2]
+		var dir_hash: int = (biome_key + str(cards_played)).hash() % 2
+		if dir_hash < 0:
+			dir_hash = -dir_hash % 2
+		direction = ["up", "down"][dir_hash]
 
 	if direction.is_empty():
 		return {}

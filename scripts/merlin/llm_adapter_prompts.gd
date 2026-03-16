@@ -311,7 +311,10 @@ func get_phase_verb_pool(balance_score: int) -> Array:
 	else:
 		pool = MerlinLlmAdapter.VERB_POOL_CRITICAL
 	# Avoid repeating the same triplet as the previous card
-	var idx: int = randi() % pool.size()
+	var hash_input: String = str(balance_score) + "_" + str(pool.size())
+	var idx: int = hash_input.hash() % pool.size()
+	if idx < 0:
+		idx = -idx % pool.size()
 	if pool.size() > 1 and idx == _last_verb_pool_idx:
 		idx = (idx + 1) % pool.size()
 	_last_verb_pool_idx = idx

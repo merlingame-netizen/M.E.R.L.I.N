@@ -81,8 +81,11 @@ func select_scenario(biome: String, meta: Dictionary) -> Dictionary:
 	if candidates.is_empty() or total_weight <= 0.0:
 		return {}
 
-	# Weighted random selection
-	var roll: float = randf() * total_weight
+	# Weighted deterministic selection using hash
+	var roll_hash: int = (biome + str(scenarios_seen.size())).hash()
+	if roll_hash < 0:
+		roll_hash = -roll_hash
+	var roll: float = float(roll_hash % 10000) / 10000.0 * total_weight
 	var cumul: float = 0.0
 	for c in candidates:
 		cumul += float(c["weight"])

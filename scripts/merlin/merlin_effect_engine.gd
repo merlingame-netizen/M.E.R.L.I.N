@@ -684,4 +684,7 @@ static func pick_minigame_for_field(field: String) -> String:
 	var minigames: Array = MerlinConstants.FIELD_MINIGAMES.get(field, [])
 	if minigames.is_empty():
 		return "apaisement"  # safe fallback
-	return str(minigames[randi() % minigames.size()])
+	var mg_hash: int = field.hash() % minigames.size()
+	if mg_hash < 0:
+		mg_hash = -mg_hash % minigames.size()
+	return str(minigames[mg_hash])

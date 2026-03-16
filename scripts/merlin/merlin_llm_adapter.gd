@@ -283,9 +283,12 @@ func _generate_card_two_stage(context: Dictionary) -> Dictionary:
 
 	# Stage 1: Free text generation with rich context
 	var cards_played: int = int(context.get("cards_played", 0))
-	var theme_idx: int = (cards_played + randi()) % CELTIC_THEMES.size()
-	var theme_word: String = CELTIC_THEMES[theme_idx]
 	var biome: String = str(context.get("biome", "foret_broceliande"))
+	var theme_hash: int = (str(cards_played) + biome).hash() % CELTIC_THEMES.size()
+	if theme_hash < 0:
+		theme_hash = -theme_hash % CELTIC_THEMES.size()
+	var theme_idx: int = theme_hash
+	var theme_word: String = CELTIC_THEMES[theme_idx]
 	var karma: int = int(context.get("karma", 0))
 
 	context["_celtic_theme"] = theme_word
@@ -577,7 +580,10 @@ func _wrap_text_as_card(raw_text: String, context: Dictionary) -> Dictionary:
 		var prev_text: String = str(story_log_check[-1].get("text", ""))
 		if not prev_text.is_empty() and _prompts.jaccard_similarity(text, prev_text) > 0.7:
 			print("[MerlinLlmAdapter] Jaccard > 0.7 — using narrative fallback")
-			var fb_idx: int = randi() % NARRATIVE_FALLBACKS.size()
+			var fb_hash: int = text.hash() % NARRATIVE_FALLBACKS.size()
+			if fb_hash < 0:
+				fb_hash = -fb_hash % NARRATIVE_FALLBACKS.size()
+			var fb_idx: int = fb_hash
 			if NARRATIVE_FALLBACKS.size() > 1 and fb_idx == _last_narrative_fallback_idx:
 				fb_idx = (fb_idx + 1) % NARRATIVE_FALLBACKS.size()
 			_last_narrative_fallback_idx = fb_idx
@@ -595,7 +601,10 @@ func _wrap_text_as_card(raw_text: String, context: Dictionary) -> Dictionary:
 
 	var final_text: String = text
 	if text.length() <= 15:
-		var fb_idx2: int = randi() % NARRATIVE_FALLBACKS.size()
+		var fb_hash2: int = final_text.hash() % NARRATIVE_FALLBACKS.size()
+		if fb_hash2 < 0:
+			fb_hash2 = -fb_hash2 % NARRATIVE_FALLBACKS.size()
+		var fb_idx2: int = fb_hash2
 		if NARRATIVE_FALLBACKS.size() > 1 and fb_idx2 == _last_narrative_fallback_idx:
 			fb_idx2 = (fb_idx2 + 1) % NARRATIVE_FALLBACKS.size()
 		_last_narrative_fallback_idx = fb_idx2

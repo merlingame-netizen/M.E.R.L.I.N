@@ -450,7 +450,10 @@ func build_failure_from_success(success_text: String) -> String:
 		"L'effort ne suffit pas. ",
 		"La foret refuse. ",
 	]
-	var prefix: String = failure_prefixes[randi() % failure_prefixes.size()]
+	var prefix_hash: int = success_text.hash() % failure_prefixes.size()
+	if prefix_hash < 0:
+		prefix_hash = -prefix_hash % failure_prefixes.size()
+	var prefix: String = failure_prefixes[prefix_hash]
 	# Take the second sentence from success if available, or truncate
 	var sentences := success_text.split(". ")
 	if sentences.size() > 1:
