@@ -871,9 +871,16 @@ func _load_tag_glossary() -> void:
 # ═══════════════════════════════════════════════════════════════════════════════
 
 func get_relevant_context(query: String, _category: String) -> Dictionary:
+	var keywords: Array[String] = []
+	for word in query.split(" "):
+		keywords.append(word)
+	var relevant: Array = search_journal(keywords, 3)
+	var relevant_entries: Array = []
+	for item in relevant:
+		relevant_entries.append(item.get("entry", {}))
 	return {
-		"recent_history": journal.slice(-5) if journal.size() >= 5 else journal,
-		"relevant_history": search_journal(query.split(" ") as Array[String], 3).map(func(x): return x.entry),
+		"recent_history": journal.slice(-5) if journal.size() >= 5 else journal.duplicate(),
+		"relevant_history": relevant_entries,
 		"world_state_subset": world_state,
 		"available_actions": [],
 	}
