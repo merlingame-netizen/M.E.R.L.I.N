@@ -107,29 +107,6 @@ func show_journal_popup(run_summaries: Array[Dictionary]) -> void:
 	_endscreen.show_journal_popup(run_summaries)
 
 
-func show_typology_timer(total_seconds: float) -> void:
-	_endscreen.show_typology_timer(total_seconds)
-
-
-func update_typology_timer(remaining: float) -> void:
-	_endscreen.update_typology_timer(remaining)
-
-
-func hide_typology_timer() -> void:
-	_endscreen.hide_typology_timer()
-
-
-func show_typology_badge(_typology: String) -> void:
-	_endscreen.show_typology_badge(_typology)
-
-
-func hide_typology_badge() -> void:
-	_endscreen.hide_typology_badge()
-
-
-func show_typology_event(event: String) -> void:
-	_endscreen.show_typology_event(event)
-
 
 # ═══════════════════════════════════════════════════════════════════════════════
 # CARD OUTCOME ANIMATIONS & EFFECTS

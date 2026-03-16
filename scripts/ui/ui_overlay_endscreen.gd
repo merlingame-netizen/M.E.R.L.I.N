@@ -1,17 +1,11 @@
 ## ═══════════════════════════════════════════════════════════════════════════════
-## UI Overlay EndScreen — End screen, journal popup, typology UI
+## UI Overlay EndScreen — End screen, journal popup
 ## ═══════════════════════════════════════════════════════════════════════════════
 
 extends RefCounted
 class_name UIOverlayEndScreen
 
 var _ui: MerlinGameUI
-
-# Typology
-var _typology_timer_bar: ProgressBar = null
-var _typology_badge: Label = null
-var _typology_timer_max: float = 10.0
-
 
 func initialize(ui: MerlinGameUI) -> void:
 	_ui = ui
@@ -351,64 +345,3 @@ func show_journal_popup(run_summaries: Array[Dictionary]) -> void:
 	)
 
 
-# ═══════════════════════════════════════════════════════════════════════════════
-# TYPOLOGY UI
-# ═══════════════════════════════════════════════════════════════════════════════
-
-func show_typology_timer(total_seconds: float) -> void:
-	_typology_timer_max = total_seconds
-	if _typology_timer_bar == null or not is_instance_valid(_typology_timer_bar):
-		_typology_timer_bar = ProgressBar.new()
-		_typology_timer_bar.custom_minimum_size = Vector2(120.0, 14.0)
-		_typology_timer_bar.min_value = 0.0
-		_typology_timer_bar.max_value = total_seconds
-		_typology_timer_bar.value = total_seconds
-		_typology_timer_bar.show_percentage = false
-		_typology_timer_bar.modulate = MerlinVisual.CRT_PALETTE.warning
-		if is_instance_valid(_ui._top_status_bar):
-			_ui._top_status_bar.add_child(_typology_timer_bar)
-	_typology_timer_bar.max_value = total_seconds
-	_typology_timer_bar.value = total_seconds
-	_typology_timer_bar.visible = true
-
-
-func update_typology_timer(remaining: float) -> void:
-	if _typology_timer_bar and is_instance_valid(_typology_timer_bar):
-		_typology_timer_bar.value = maxf(remaining, 0.0)
-		var alpha: float = 1.0 if remaining > 3.0 else 0.6 + 0.4 * sin(remaining * 6.0)
-		var warn: Color = MerlinVisual.CRT_PALETTE.warning
-		warn.a = alpha
-		_typology_timer_bar.modulate = warn
-
-
-func hide_typology_timer() -> void:
-	if _typology_timer_bar and is_instance_valid(_typology_timer_bar):
-		_typology_timer_bar.visible = false
-
-
-func show_typology_badge(_typology: String) -> void:
-	hide_typology_badge()
-
-
-func hide_typology_badge() -> void:
-	if _typology_badge and is_instance_valid(_typology_badge):
-		_typology_badge.visible = false
-
-
-func show_typology_event(event: String) -> void:
-	var label: Label = Label.new()
-	var vs: Vector2 = _ui.get_viewport_rect().size
-	label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	label.custom_minimum_size = Vector2(200.0, 40.0)
-	label.position = Vector2((vs.x - 200.0) / 2.0, vs.y * 0.35)
-	label.add_theme_font_size_override("font_size", 20)
-	if event == "critique":
-		label.text = "CRITIQUE !"
-		label.modulate = MerlinVisual.CRT_PALETTE.success
-	else:
-		label.text = "FUMBLE..."
-		label.modulate = MerlinVisual.CRT_PALETTE.danger
-	_ui.add_child(label)
-	var tw: Tween = _ui.create_tween()
-	tw.tween_property(label, "modulate:a", 0.0, 1.2)
-	tw.tween_callback(label.queue_free)

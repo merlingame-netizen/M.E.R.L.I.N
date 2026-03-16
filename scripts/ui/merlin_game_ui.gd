@@ -644,23 +644,6 @@ func show_end_screen(ending: Dictionary) -> void:
 func show_journal_popup(run_summaries: Array[Dictionary]) -> void:
 	_overlays_module.show_journal_popup(run_summaries)
 
-func show_typology_timer(total_seconds: float) -> void:
-	_overlays_module.show_typology_timer(total_seconds)
-
-func update_typology_timer(remaining: float) -> void:
-	_overlays_module.update_typology_timer(remaining)
-
-func hide_typology_timer() -> void:
-	_overlays_module.hide_typology_timer()
-
-func show_typology_badge(_typology: String) -> void:
-	_overlays_module.show_typology_badge(_typology)
-
-func hide_typology_badge() -> void:
-	_overlays_module.hide_typology_badge()
-
-func show_typology_event(event: String) -> void:
-	_overlays_module.show_typology_event(event)
 
 func show_reaction_text(text: String, outcome: String) -> void:
 	_overlays_module.show_reaction_text(text, outcome)
