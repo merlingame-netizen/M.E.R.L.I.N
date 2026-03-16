@@ -1,5 +1,5 @@
 ## ═══════════════════════════════════════════════════════════════════════════════
-## UI Status Bar Module — Life, souffle, essences, clock, resources
+## UI Status Bar Module — Life, essences, clock, resources
 ## ═══════════════════════════════════════════════════════════════════════════════
 ## Extracted from merlin_game_ui.gd — handles top HUD status indicators.
 ## ═══════════════════════════════════════════════════════════════════════════════
@@ -9,14 +9,6 @@ class_name UIStatusBar
 
 var _ui: MerlinGameUI
 
-const SOUFFLE_ICON := "*"
-const SOUFFLE_EMPTY := "o"
-const SOUFFLE_MAX := 1
-
-var current_souffle: int = 0
-var _previous_souffle: int = -1
-var _souffle_active: bool = false
-var _souffle_glow_tween: Tween = null
 var _life_segment_bars: Array = []
 
 
@@ -100,125 +92,6 @@ func update_resource_bar(tool_id: String, day: int, mission_current: int, missio
 		else:
 			_ui._mission_progress_label.text = ""
 	update_essences_collected(essences_collected)
-
-
-func update_souffle(souffle: int) -> void:
-	var old_souffle: int = _previous_souffle
-	_previous_souffle = souffle
-	current_souffle = souffle
-
-	if _ui._souffle_counter and is_instance_valid(_ui._souffle_counter):
-		_ui._souffle_counter.text = "%d/%d" % [souffle, SOUFFLE_MAX]
-		if souffle == 0:
-			_ui._souffle_counter.add_theme_color_override("font_color", MerlinVisual.CRT_PALETTE.danger)
-		elif souffle <= 2:
-			_ui._souffle_counter.add_theme_color_override("font_color", MerlinVisual.CRT_PALETTE.warning)
-		else:
-			_ui._souffle_counter.add_theme_color_override("font_color", MerlinVisual.CRT_PALETTE.souffle)
-
-	if not _ui.souffle_display:
-		return
-
-	for i in range(SOUFFLE_MAX):
-		var icon: Label = _ui.souffle_display.get_child(i) as Label
-		if icon:
-			if i < souffle:
-				icon.text = SOUFFLE_ICON
-				icon.add_theme_color_override("font_color", MerlinVisual.CRT_PALETTE.souffle)
-			else:
-				icon.text = SOUFFLE_EMPTY
-				icon.add_theme_color_override("font_color", MerlinVisual.CRT_PALETTE.inactive_dark)
-
-	# VFX: Regen animation
-	if old_souffle >= 0 and souffle > old_souffle:
-		for i in range(old_souffle, mini(souffle, SOUFFLE_MAX)):
-			var icon: Label = _ui.souffle_display.get_child(i) as Label
-			if icon:
-				icon.scale = Vector2(0.3, 0.3)
-				icon.pivot_offset = icon.size * 0.5
-				var tw: Tween = _ui.create_tween()
-				tw.tween_property(icon, "scale", Vector2(1.2, 1.2), 0.25) \
-					.set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT).set_delay(0.1 * (i - old_souffle))
-				tw.tween_property(icon, "scale", Vector2(1.0, 1.0), 0.15)
-		SFXManager.play("souffle_regen")
-
-	# VFX: Consumption animation
-	if old_souffle >= 0 and souffle < old_souffle:
-		for i in range(souffle, mini(old_souffle, SOUFFLE_MAX)):
-			var icon: Label = _ui.souffle_display.get_child(i) as Label
-			if icon:
-				var tw: Tween = _ui.create_tween()
-				tw.tween_property(icon, "scale", Vector2(0.5, 0.5), 0.2) \
-					.set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_IN)
-				tw.tween_property(icon, "scale", Vector2(1.0, 1.0), 0.1)
-
-	# VFX: Full souffle glow
-	if souffle >= SOUFFLE_MAX:
-		for i in range(SOUFFLE_MAX):
-			var icon: Label = _ui.souffle_display.get_child(i) as Label
-			if icon:
-				icon.add_theme_color_override("font_color", MerlinVisual.CRT_PALETTE.souffle_full)
-		if old_souffle >= 0 and old_souffle < SOUFFLE_MAX:
-			SFXManager.play("souffle_full")
-
-	# VFX: Empty souffle blink
-	if souffle <= 0:
-		for i in range(SOUFFLE_MAX):
-			var icon: Label = _ui.souffle_display.get_child(i) as Label
-			if icon:
-				var tw: Tween = _ui.create_tween()
-				tw.set_loops(3)
-				tw.tween_property(icon, "modulate:a", 0.3, 0.4)
-				tw.tween_property(icon, "modulate:a", 1.0, 0.4)
-
-	_update_souffle_btn_state()
-
-	# Glow pulsant sur l'icone souffle
-	if _ui.souffle_display and is_instance_valid(_ui.souffle_display):
-		var icon: Label = _ui.souffle_display.get_child(0) as Label
-		if icon and is_instance_valid(icon):
-			if _souffle_glow_tween and _souffle_glow_tween.is_valid():
-				_souffle_glow_tween.kill()
-			if souffle > 0:
-				icon.add_theme_color_override("font_color", MerlinVisual.CRT_PALETTE.souffle)
-				_souffle_glow_tween = _ui.create_tween().set_loops()
-				_souffle_glow_tween.tween_property(icon, "modulate:a", 0.55, 1.2).set_trans(Tween.TRANS_SINE)
-				_souffle_glow_tween.tween_property(icon, "modulate:a", 1.0, 1.2).set_trans(Tween.TRANS_SINE)
-			else:
-				icon.modulate.a = 0.35
-				icon.add_theme_color_override("font_color", MerlinVisual.CRT_PALETTE.inactive_dark)
-
-
-func on_souffle_btn_pressed() -> void:
-	if current_souffle <= 0 or _souffle_active:
-		SFXManager.play("error")
-		return
-	_souffle_active = true
-	SFXManager.play("souffle_regen")
-	if _ui._souffle_btn and is_instance_valid(_ui._souffle_btn):
-		_ui._souffle_btn.text = "+" + SOUFFLE_ICON
-		_ui._souffle_btn.pivot_offset = _ui._souffle_btn.size / 2.0
-		var tw: Tween = _ui.create_tween().set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
-		tw.tween_property(_ui._souffle_btn, "scale", Vector2(1.3, 1.3), 0.15)
-		tw.tween_property(_ui._souffle_btn, "scale", Vector2(1.1, 1.1), 0.25)
-	_ui.souffle_activated.emit()
-
-
-func _update_souffle_btn_state() -> void:
-	if not _ui._souffle_btn or not is_instance_valid(_ui._souffle_btn):
-		return
-	var can_use: bool = current_souffle > 0 and not _souffle_active
-	_ui._souffle_btn.disabled = not can_use
-	_ui._souffle_btn.modulate.a = 1.0 if can_use else 0.35
-
-
-func is_souffle_active() -> bool:
-	return _souffle_active
-
-
-func consume_souffle_active() -> void:
-	_souffle_active = false
-	_update_souffle_btn_state()
 
 
 func update_selected_perk(perk_id: String) -> void:

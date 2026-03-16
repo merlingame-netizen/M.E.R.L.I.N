@@ -60,59 +60,6 @@ show_percentage = false
 layout_mode = 2
 horizontal_alignment = 1
 
-[node name="SoufflePanel" type="VBoxContainer" parent="MainVBox/TopStatusBar"]
-layout_mode = 2
-alignment = 1
-
-[node name="SouffleTitle" type="Label" parent="MainVBox/TopStatusBar/SoufflePanel"]
-layout_mode = 2
-text = "Souffle unique"
-horizontal_alignment = 1
-
-[node name="SouffleIcons" type="HBoxContainer" parent="MainVBox/TopStatusBar/SoufflePanel"]
-layout_mode = 2
-alignment = 1
-theme_override_constants/separation = 4
-
-[node name="Icon0" type="Label" parent="MainVBox/TopStatusBar/SoufflePanel/SouffleIcons"]
-layout_mode = 2
-text = "o"
-theme_override_font_sizes/font_size = 28
-
-[node name="Icon1" type="Label" parent="MainVBox/TopStatusBar/SoufflePanel/SouffleIcons"]
-layout_mode = 2
-text = "o"
-theme_override_font_sizes/font_size = 28
-
-[node name="Icon2" type="Label" parent="MainVBox/TopStatusBar/SoufflePanel/SouffleIcons"]
-layout_mode = 2
-text = "o"
-theme_override_font_sizes/font_size = 28
-
-[node name="Icon3" type="Label" parent="MainVBox/TopStatusBar/SoufflePanel/SouffleIcons"]
-layout_mode = 2
-text = "o"
-theme_override_font_sizes/font_size = 28
-
-[node name="Icon4" type="Label" parent="MainVBox/TopStatusBar/SoufflePanel/SouffleIcons"]
-layout_mode = 2
-text = "o"
-theme_override_font_sizes/font_size = 28
-
-[node name="Icon5" type="Label" parent="MainVBox/TopStatusBar/SoufflePanel/SouffleIcons"]
-layout_mode = 2
-text = "o"
-theme_override_font_sizes/font_size = 28
-
-[node name="Icon6" type="Label" parent="MainVBox/TopStatusBar/SoufflePanel/SouffleIcons"]
-layout_mode = 2
-text = "o"
-theme_override_font_sizes/font_size = 28
-
-[node name="SouffleCounter" type="Label" parent="MainVBox/TopStatusBar/SoufflePanel"]
-layout_mode = 2
-horizontal_alignment = 1
-
 [node name="EssencePanel" type="VBoxContainer" parent="MainVBox/TopStatusBar"]
 layout_mode = 2
 alignment = 1

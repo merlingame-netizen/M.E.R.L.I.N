@@ -11,16 +11,12 @@ extends CanvasLayer
 # CONFIG
 # ═══════════════════════════════════════════════════════════════════════════════
 
-const MAX_SOUFFLE: int = 7
 const FONT_SIZE_HUD: int = 14
-const FONT_SIZE_SOUFFLE: int = 16
 const FONT_SIZE_ZONE: int = 11
 const MARGIN_H: int = 12
 const MARGIN_V: int = 8
 const PV_BAR_WIDTH: float = 120.0
 const PV_BAR_HEIGHT: float = 10.0
-const SOUFFLE_ICON: String = "*"
-const SOUFFLE_EMPTY: String = "o"
 
 # ═══════════════════════════════════════════════════════════════════════════════
 # NODES
@@ -29,7 +25,6 @@ const SOUFFLE_EMPTY: String = "o"
 var _root: Control
 var _pv_bar: ProgressBar
 var _pv_label: Label
-var _souffle_label: Label
 var _essences_label: Label
 var _zone_label: Label
 var _crosshair: Label
@@ -63,16 +58,6 @@ func update_pv(current: int, max_pv: int) -> void:
 		_pv_label.add_theme_color_override("font_color", pal["warning"])
 	else:
 		_pv_label.add_theme_color_override("font_color", pal["phosphor"])
-
-
-func update_souffle(current: int) -> void:
-	var parts: Array[String] = []
-	for i in MAX_SOUFFLE:
-		if i < current:
-			parts.append(SOUFFLE_ICON)
-		else:
-			parts.append(SOUFFLE_EMPTY)
-	_souffle_label.text = " ".join(parts)
 
 
 func update_essences(count: int) -> void:
@@ -164,14 +149,6 @@ func _build_ui() -> void:
 	top_hbox.add_child(spacer)
 
 	# Souffle (center)
-	_souffle_label = Label.new()
-	_souffle_label.text = "* * * o o o o"
-	_souffle_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	_souffle_label.add_theme_font_override("font", font)
-	_souffle_label.add_theme_font_size_override("font_size", FONT_SIZE_SOUFFLE)
-	_souffle_label.add_theme_color_override("font_color", pal["souffle"])
-	top_hbox.add_child(_souffle_label)
-
 	# Spacer
 	var spacer2: Control = Control.new()
 	spacer2.size_flags_horizontal = Control.SIZE_EXPAND_FILL

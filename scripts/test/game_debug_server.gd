@@ -152,7 +152,6 @@ func _connect_store_signals() -> void:
 	_safe_connect(store, "life_changed", _on_life_changed)
 	_safe_connect(store, "run_ended", _on_run_ended)
 	_safe_connect(store, "phase_changed", _on_phase_changed)
-	_safe_connect(store, "souffle_changed", _on_souffle_changed)
 	_append_log("[GameObserver] MerlinStore signals connected")
 
 
@@ -186,10 +185,6 @@ func _on_run_ended(_ending: Dictionary) -> void:
 
 
 func _on_phase_changed(_phase: String) -> void:
-	_write_state()
-
-
-func _on_souffle_changed(_old: int, _new_val: int) -> void:
 	_write_state()
 
 

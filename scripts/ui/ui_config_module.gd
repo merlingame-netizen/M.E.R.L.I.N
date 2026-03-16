@@ -74,9 +74,6 @@ func configure_ui() -> void:
 	_ui._reward_badge = MerlinRewardBadge.new()
 	_ui.add_child(_ui._reward_badge)
 
-	# Souffle button
-	_setup_souffle_button()
-
 	# Perk badge
 	_setup_perk_badge()
 
@@ -199,21 +196,6 @@ func _setup_minigame_badge() -> void:
 	_ui._card_body_vbox.add_child(_ui._minigame_badge)
 
 
-func _setup_souffle_button() -> void:
-	_ui._souffle_btn = Button.new()
-	_ui._souffle_btn.name = "SouffleBtn"
-	_ui._souffle_btn.text = UIStatusBar.SOUFFLE_ICON
-	_ui._souffle_btn.custom_minimum_size = Vector2(56, 56)
-	_ui._souffle_btn.tooltip_text = "Souffle d'Ogham: bonus au prochain jet (usage unique)"
-	MerlinVisual.apply_celtic_option_theme(_ui._souffle_btn, MerlinVisual.CRT_PALETTE.souffle)
-	_ui._souffle_btn.z_index = 20
-	_ui._souffle_btn.mouse_filter = Control.MOUSE_FILTER_STOP
-	_ui._souffle_btn.pressed.connect(_ui._status_bar.on_souffle_btn_pressed)
-	_ui._souffle_btn.mouse_entered.connect(func(): SFXManager.play("hover"))
-	_ui.add_child(_ui._souffle_btn)
-	_ui._souffle_btn.visible = false
-
-
 func _setup_perk_badge() -> void:
 	_ui._perk_badge = Label.new()
 	_ui._perk_badge.name = "PerkBadge"
@@ -244,7 +226,6 @@ func _apply_label_theming() -> void:
 	# Hide redundant titles
 	for lbl: Label in [
 		_ui.get_node("MainVBox/TopStatusBar/LifePanel/LifeTitle"),
-		_ui.get_node("MainVBox/TopStatusBar/SoufflePanel/SouffleTitle"),
 		_ui.get_node("MainVBox/TopStatusBar/EssencePanel/EssenceTitle"),
 	]:
 		lbl.visible = false
@@ -255,17 +236,6 @@ func _apply_label_theming() -> void:
 		_ui._life_counter.add_theme_font_override("font", _ui.body_font)
 	_ui._life_counter.add_theme_font_size_override("font_size", 16)
 	_ui._life_counter.add_theme_color_override("font_color", MerlinVisual.CRT_PALETTE.danger)
-
-	# Souffle counter hidden
-	_ui._souffle_counter.visible = false
-
-	# Hide extra souffle icons (only 1 needed)
-	if _ui.souffle_display and is_instance_valid(_ui.souffle_display):
-		var n: int = _ui.souffle_display.get_child_count()
-		for i: int in range(1, n):
-			var extra: Control = _ui.souffle_display.get_child(i) as Control
-			if extra and is_instance_valid(extra):
-				extra.visible = false
 
 	# Essence counter
 	if _ui.body_font:

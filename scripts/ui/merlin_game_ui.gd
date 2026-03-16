@@ -13,7 +13,6 @@ class_name MerlinGameUI
 signal option_chosen(option: int)  # 0=LEFT, 1=CENTER, 2=RIGHT
 signal skill_activated(skill_id: String)
 signal pause_requested
-signal souffle_activated
 signal merlin_dialogue_requested(player_input: String)
 signal journal_requested
 
@@ -65,9 +64,6 @@ const BIOME_DEFAULT_SEASON := {
 @onready var life_panel: VBoxContainer = $MainVBox/TopStatusBar/LifePanel
 @onready var _life_bar: ProgressBar = $MainVBox/TopStatusBar/LifePanel/LifeBar
 @onready var _life_counter: Label = $MainVBox/TopStatusBar/LifePanel/LifeCounter
-@onready var souffle_panel: VBoxContainer = $MainVBox/TopStatusBar/SoufflePanel
-@onready var souffle_display: HBoxContainer = $MainVBox/TopStatusBar/SoufflePanel/SouffleIcons
-@onready var _souffle_counter: Label = $MainVBox/TopStatusBar/SoufflePanel/SouffleCounter
 @onready var _essence_counter: Label = $MainVBox/TopStatusBar/EssencePanel/EssenceCounter
 
 # Card area
@@ -140,7 +136,6 @@ var _day_label: Label
 var _mission_progress_label: Label
 var _current_speaker_key: String = ""
 var biome_indicator: Label
-var _souffle_btn: Button
 var _perk_badge: Label = null
 
 # ═══════════════════════════════════════════════════════════════════════════════
@@ -214,7 +209,6 @@ func _ready() -> void:
 	_overlays_module.setup_dialogue_nodes()
 
 	# Initial state
-	_status_bar.update_souffle(0)
 	_status_bar.update_life_essence(MerlinConstants.LIFE_ESSENCE_START)
 	_status_bar.update_essences_collected(0)
 	_deck_module.reset_run_visuals()
@@ -245,8 +239,6 @@ func _layout_run_zones() -> void:
 		_middle_zone.custom_minimum_size = Vector2(0.0, middle_h)
 	if _bottom_zone and is_instance_valid(_bottom_zone):
 		_bottom_zone.custom_minimum_size = Vector2(0.0, bottom_h)
-	if _souffle_btn and is_instance_valid(_souffle_btn):
-		_souffle_btn.position = Vector2(vp_size.x - 68.0, vp_size.y - 68.0)
 	if _perk_badge and is_instance_valid(_perk_badge):
 		_perk_badge.position = Vector2(vp_size.x - 76.0, vp_size.y - 84.0)
 		_perk_badge.custom_minimum_size = Vector2(72.0, 14.0)
@@ -540,9 +532,6 @@ func update_essences_collected(value: int) -> void:
 func update_resource_bar(tool_id: String, day: int, mission_current: int, mission_total: int, essences_collected: int = 0) -> void:
 	_status_bar.update_resource_bar(tool_id, day, mission_current, mission_total, essences_collected)
 
-func update_souffle(souffle: int) -> void:
-	_status_bar.update_souffle(souffle)
-
 func update_selected_perk(perk_id: String) -> void:
 	_status_bar.update_selected_perk(perk_id)
 
@@ -555,12 +544,6 @@ func update_mission(mission: Dictionary) -> void:
 func update_cards_count(count: int) -> void:
 	_status_bar.update_cards_count(count)
 	_deck_module.update_cards_count(count)
-
-func is_souffle_active() -> bool:
-	return _status_bar.is_souffle_active()
-
-func consume_souffle_active() -> void:
-	_status_bar.consume_souffle_active()
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
