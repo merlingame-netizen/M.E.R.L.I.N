@@ -180,10 +180,14 @@ func get_fastroute_card(context: Dictionary) -> Dictionary:
 	var selected: Dictionary = candidates[idx].duplicate(true)
 	_fastroute_seen.append(str(selected.get("id", "")))
 
-	# Set type and annotate fields
+	# Set type, validate, annotate, pad
 	selected["type"] = "narrative"
-	_annotate_fields(selected)
-	return _ensure_3_options(selected)
+	var v: Dictionary = _validate_card(selected)
+	if not v.get("valid", false):
+		push_warning("FastRoute card %s invalid: %s" % [str(selected.get("id", "")), v.get("error", "")])
+		return _get_emergency_card()
+	_annotate_fields(v["card"])
+	return _ensure_3_options(v["card"])
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
