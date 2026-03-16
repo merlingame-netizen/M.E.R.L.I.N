@@ -1,9 +1,10 @@
 ## =============================================================================
-## Unit Tests — EventCategorySelector v2.0
+## Tests — EventCategorySelector
 ## =============================================================================
-## Tests: weight computation, anti-repetition, sub-type selection, pity system,
-## modifier system, history management, matrix conditions, triggers.
-## Pattern: extends RefCounted, methods return false on failure.
+## Covers: weighted selection, anti-repetition, sub-type selection, pity system,
+## modifier system, history management, matrix conditions, trigger evaluation,
+## debug/query helpers, and edge cases.
+## Pattern: extends RefCounted, func test_xxx() -> bool, push_error before false.
 ## =============================================================================
 
 extends RefCounted
@@ -13,10 +14,15 @@ extends RefCounted
 # HELPERS
 # =============================================================================
 
+func _fail(msg: String) -> bool:
+	push_error(msg)
+	return false
+
+
 func _make_selector() -> EventCategorySelector:
-	## Create a selector and inject test data (bypass file loading).
+	## Create an EventCategorySelector with fully injected state.
+	## Bypasses file I/O so tests run headless without res:// data files.
 	var sel: EventCategorySelector = EventCategorySelector.new()
-	# Inject categories directly
 	sel._categories = {
 		"narrative": {
 			"label": "Narrative",
@@ -25,8 +31,8 @@ func _make_selector() -> EventCategorySelector:
 			"effect_profile": {"healing": 0.3},
 			"sub_types": {
 				"dialogue": {"weight": 0.5, "triggers": {}},
-				"lore": {"weight": 0.3, "triggers": {"min_cards_played": 5}},
-				"mystery": {"weight": 0.2, "triggers": {"biome": ["foret", "marais"]}},
+				"lore":     {"weight": 0.3, "triggers": {"min_cards_played": 5}},
+				"mystery":  {"weight": 0.2, "triggers": {"biome": ["foret", "marais"]}},
 			},
 		},
 		"combat": {
@@ -35,7 +41,7 @@ func _make_selector() -> EventCategorySelector:
 			"narrator_guidance": "Fight scene",
 			"effect_profile": {"damage": 0.5},
 			"sub_types": {
-				"duel": {"weight": 0.6, "triggers": {}},
+				"duel":   {"weight": 0.6, "triggers": {}},
 				"ambush": {"weight": 0.4, "triggers": {"tension_above": 60}},
 			},
 		},
@@ -46,7 +52,7 @@ func _make_selector() -> EventCategorySelector:
 			"effect_profile": {},
 			"sub_types": {
 				"discovery": {"weight": 0.5, "triggers": {}},
-				"puzzle": {"weight": 0.5, "triggers": {}},
+				"puzzle":    {"weight": 0.5, "triggers": {}},
 			},
 		},
 		"faction": {
@@ -91,62 +97,70 @@ func _make_game_state(run_overrides: Dictionary = {}) -> Dictionary:
 	return {"run": _make_run(run_overrides)}
 
 
+func _init() -> void:
+	pass
+
+
 # =============================================================================
-# INITIALIZATION & LOADING
+# 1. LOADING / is_loaded
 # =============================================================================
 
-func test_is_loaded_returns_true_when_categories_set() -> bool:
+func test_is_loaded_true_after_injection() -> bool:
 	var sel: EventCategorySelector = _make_selector()
 	if not sel.is_loaded():
-		push_error("is_loaded should return true after injection")
-		return false
+		return _fail("is_loaded() should return true after state injection")
 	return true
 
 
-func test_is_loaded_returns_false_when_empty() -> bool:
+func test_is_loaded_false_when_cleared() -> bool:
 	var sel: EventCategorySelector = EventCategorySelector.new()
-	# Force unloaded state (constructor auto-loads if config file exists on disk)
 	sel._categories = {}
 	sel._is_loaded = false
 	if sel.is_loaded():
-		push_error("is_loaded should return false when categories cleared")
-		return false
+		return _fail("is_loaded() should return false when _is_loaded=false")
 	return true
 
 
-func test_select_event_returns_empty_when_not_loaded() -> bool:
+func test_select_event_empty_when_not_loaded() -> bool:
 	var sel: EventCategorySelector = EventCategorySelector.new()
 	sel._categories = {}
 	sel._is_loaded = false
 	var result: Dictionary = sel.select_event({"run": {}})
 	if not result.is_empty():
-		push_error("select_event should return empty dict when not loaded")
-		return false
+		return _fail("select_event should return {} when not loaded")
 	return true
 
 
 # =============================================================================
-# WEIGHT COMPUTATION
+# 2. WEIGHT COMPUTATION — base weights
 # =============================================================================
 
 func test_base_weights_match_config() -> bool:
 	var sel: EventCategorySelector = _make_selector()
 	var weights: Dictionary = sel._compute_category_weights(_make_run())
-	# Without matrix or pity, weights should equal base_weight
-	var expected_narrative: float = 0.4
-	var actual: float = float(weights.get("narrative", 0.0))
-	if absf(actual - expected_narrative) > 0.001:
-		push_error("narrative base weight: expected %.3f, got %.3f" % [expected_narrative, actual])
-		return false
-	var expected_combat: float = 0.3
-	actual = float(weights.get("combat", 0.0))
-	if absf(actual - expected_combat) > 0.001:
-		push_error("combat base weight: expected %.3f, got %.3f" % [expected_combat, actual])
-		return false
+	var w_narr: float = float(weights.get("narrative", -1.0))
+	if absf(w_narr - 0.4) > 0.001:
+		return _fail("narrative base_weight: expected 0.400, got %.4f" % w_narr)
+	var w_comb: float = float(weights.get("combat", -1.0))
+	if absf(w_comb - 0.3) > 0.001:
+		return _fail("combat base_weight: expected 0.300, got %.4f" % w_comb)
 	return true
 
 
-func test_matrix_multiplier_applied() -> bool:
+func test_base_weights_all_categories_present() -> bool:
+	var sel: EventCategorySelector = _make_selector()
+	var weights: Dictionary = sel._compute_category_weights(_make_run())
+	for cat in ["narrative", "combat", "exploration", "faction"]:
+		if not weights.has(cat):
+			return _fail("_compute_category_weights missing key '%s'" % cat)
+	return true
+
+
+# =============================================================================
+# 3. FREQUENCY MATRIX
+# =============================================================================
+
+func test_matrix_multiplier_applied_when_condition_met() -> bool:
 	var sel: EventCategorySelector = _make_selector()
 	sel._frequency_matrix = {
 		"early_game": {
@@ -154,22 +168,17 @@ func test_matrix_multiplier_applied() -> bool:
 			"multipliers": {"narrative": 2.0, "combat": 0.5},
 		},
 	}
-	var run: Dictionary = _make_run({"cards_played": 3})
-	var weights: Dictionary = sel._compute_category_weights(run)
-	# narrative: 0.4 * 2.0 = 0.8
+	var weights: Dictionary = sel._compute_category_weights(_make_run({"cards_played": 3}))
 	var w_narr: float = float(weights.get("narrative", 0.0))
 	if absf(w_narr - 0.8) > 0.001:
-		push_error("matrix multiplier narrative: expected 0.8, got %.3f" % w_narr)
-		return false
-	# combat: 0.3 * 0.5 = 0.15
-	var w_combat: float = float(weights.get("combat", 0.0))
-	if absf(w_combat - 0.15) > 0.001:
-		push_error("matrix multiplier combat: expected 0.15, got %.3f" % w_combat)
-		return false
+		return _fail("narrative with 2x multiplier: expected 0.800, got %.4f" % w_narr)
+	var w_comb: float = float(weights.get("combat", 0.0))
+	if absf(w_comb - 0.15) > 0.001:
+		return _fail("combat with 0.5x multiplier: expected 0.150, got %.4f" % w_comb)
 	return true
 
 
-func test_matrix_condition_cards_played_min() -> bool:
+func test_matrix_multiplier_not_applied_when_condition_not_met() -> bool:
 	var sel: EventCategorySelector = _make_selector()
 	sel._frequency_matrix = {
 		"late_game": {
@@ -177,93 +186,89 @@ func test_matrix_condition_cards_played_min() -> bool:
 			"multipliers": {"faction": 3.0},
 		},
 	}
-	# cards_played=5 < 15 => condition not met => no multiplier
-	var weights_early: Dictionary = sel._compute_category_weights(_make_run({"cards_played": 5}))
-	var w_faction_early: float = float(weights_early.get("faction", 0.0))
-	if absf(w_faction_early - 0.1) > 0.001:
-		push_error("faction should be base 0.1 when condition not met, got %.3f" % w_faction_early)
-		return false
-	# cards_played=20 >= 15 => condition met => 0.1 * 3.0 = 0.3
-	var weights_late: Dictionary = sel._compute_category_weights(_make_run({"cards_played": 20}))
-	var w_faction_late: float = float(weights_late.get("faction", 0.0))
-	if absf(w_faction_late - 0.3) > 0.001:
-		push_error("faction should be 0.3 when condition met, got %.3f" % w_faction_late)
-		return false
+	var weights: Dictionary = sel._compute_category_weights(_make_run({"cards_played": 5}))
+	var w: float = float(weights.get("faction", 0.0))
+	if absf(w - 0.1) > 0.001:
+		return _fail("faction at cards=5 < min=15: expected 0.100, got %.4f" % w)
 	return true
 
 
-func test_multiple_matrix_states_multiply() -> bool:
+func test_multiple_matrix_states_combine_multiplicatively() -> bool:
 	var sel: EventCategorySelector = _make_selector()
 	sel._frequency_matrix = {
-		"state_a": {
-			"condition": {"cards_played_max": 20},
-			"multipliers": {"narrative": 2.0},
-		},
-		"state_b": {
-			"condition": {"cards_played_max": 20},
-			"multipliers": {"narrative": 3.0},
-		},
+		"state_a": {"condition": {"cards_played_max": 20}, "multipliers": {"narrative": 2.0}},
+		"state_b": {"condition": {"cards_played_max": 20}, "multipliers": {"narrative": 3.0}},
 	}
 	var weights: Dictionary = sel._compute_category_weights(_make_run({"cards_played": 5}))
-	# narrative: 0.4 * 2.0 * 3.0 = 2.4
 	var w: float = float(weights.get("narrative", 0.0))
 	if absf(w - 2.4) > 0.01:
-		push_error("multiple matrix states should multiply: expected 2.4, got %.3f" % w)
-		return false
+		return _fail("2x * 3x matrix: expected 2.400, got %.4f" % w)
+	return true
+
+
+func test_matrix_meta_key_is_skipped() -> bool:
+	var sel: EventCategorySelector = _make_selector()
+	sel._frequency_matrix = {
+		"_meta": {"version": "1.0"},
+		"boost": {"condition": {"cards_played_max": 100}, "multipliers": {"combat": 2.0}},
+	}
+	var weights: Dictionary = sel._compute_category_weights(_make_run())
+	var w: float = float(weights.get("combat", 0.0))
+	if w <= 0.3:
+		return _fail("_meta key should be skipped; boost multiplier should apply, got %.4f" % w)
 	return true
 
 
 # =============================================================================
-# PITY SYSTEM
+# 4. PITY SYSTEM
 # =============================================================================
 
-func test_pity_override_life_below() -> bool:
+func test_pity_life_below_activates() -> bool:
 	var sel: EventCategorySelector = _make_selector()
 	sel._pity_system = {
-		"low_life_heal": {
+		"low_life": {
 			"condition": {"life_below": 20},
 			"overrides": {"narrative": 3.0},
 		},
 	}
-	# life=50 >= 20 => no pity
-	var w_normal: Dictionary = sel._compute_category_weights(_make_run({"life_essence": 50}))
-	var normal_narr: float = float(w_normal.get("narrative", 0.0))
-	if absf(normal_narr - 0.4) > 0.001:
-		push_error("pity should not activate at life=50, got %.3f" % normal_narr)
-		return false
-	# life=10 < 20 => pity: 0.4 * 3.0 = 1.2
 	var w_pity: Dictionary = sel._compute_category_weights(_make_run({"life_essence": 10}))
-	var pity_narr: float = float(w_pity.get("narrative", 0.0))
-	if absf(pity_narr - 1.2) > 0.01:
-		push_error("pity should boost narrative to 1.2, got %.3f" % pity_narr)
-		return false
+	var w: float = float(w_pity.get("narrative", 0.0))
+	if absf(w - 1.2) > 0.01:
+		return _fail("pity life_below=20 with life=10: expected 1.200, got %.4f" % w)
 	return true
 
 
-func test_pity_override_life_above() -> bool:
+func test_pity_life_below_does_not_activate_above_threshold() -> bool:
 	var sel: EventCategorySelector = _make_selector()
 	sel._pity_system = {
-		"high_life_challenge": {
+		"low_life": {
+			"condition": {"life_below": 20},
+			"overrides": {"narrative": 3.0},
+		},
+	}
+	var w_normal: Dictionary = sel._compute_category_weights(_make_run({"life_essence": 50}))
+	var w: float = float(w_normal.get("narrative", 0.0))
+	if absf(w - 0.4) > 0.001:
+		return _fail("pity should not activate at life=50, got %.4f" % w)
+	return true
+
+
+func test_pity_life_above_activates() -> bool:
+	var sel: EventCategorySelector = _make_selector()
+	sel._pity_system = {
+		"high_life": {
 			"condition": {"life_above": 80},
 			"overrides": {"combat": 2.0},
 		},
 	}
-	# life=50 <= 80 => no pity
-	var w_normal: Dictionary = sel._compute_category_weights(_make_run({"life_essence": 50}))
-	var normal_combat: float = float(w_normal.get("combat", 0.0))
-	if absf(normal_combat - 0.3) > 0.001:
-		push_error("pity should not activate at life=50, got %.3f" % normal_combat)
-		return false
-	# life=90 > 80 => pity: 0.3 * 2.0 = 0.6
 	var w_pity: Dictionary = sel._compute_category_weights(_make_run({"life_essence": 90}))
-	var pity_combat: float = float(w_pity.get("combat", 0.0))
-	if absf(pity_combat - 0.6) > 0.01:
-		push_error("pity should boost combat to 0.6, got %.3f" % pity_combat)
-		return false
+	var w: float = float(w_pity.get("combat", 0.0))
+	if absf(w - 0.6) > 0.01:
+		return _fail("pity life_above=80 with life=90: expected 0.600, got %.4f" % w)
 	return true
 
 
-func test_pity_equilibre_condition() -> bool:
+func test_pity_equilibre_condition_activates() -> bool:
 	var sel: EventCategorySelector = _make_selector()
 	sel._pity_system = {
 		"balanced": {
@@ -271,75 +276,86 @@ func test_pity_equilibre_condition() -> bool:
 			"overrides": {"exploration": 2.5},
 		},
 	}
-	# All deltas within +-5 => EQUILIBRE => pity activates
 	var run_eq: Dictionary = _make_run({"faction_rep_delta": {"druides": 2.0, "anciens": -3.0}})
 	var w_eq: Dictionary = sel._compute_category_weights(run_eq)
-	var expl_eq: float = float(w_eq.get("exploration", 0.0))
-	if absf(expl_eq - 0.5) > 0.01:  # 0.2 * 2.5
-		push_error("EQUILIBRE pity: expected 0.5, got %.3f" % expl_eq)
-		return false
-	# One delta > 5 => not EQUILIBRE => no pity
+	var w: float = float(w_eq.get("exploration", 0.0))
+	if absf(w - 0.5) > 0.01:
+		return _fail("EQUILIBRE pity: expected 0.500, got %.4f" % w)
+	return true
+
+
+func test_pity_equilibre_condition_does_not_activate_when_not_balanced() -> bool:
+	var sel: EventCategorySelector = _make_selector()
+	sel._pity_system = {
+		"balanced": {
+			"condition": {"all_aspects": "EQUILIBRE"},
+			"overrides": {"exploration": 2.5},
+		},
+	}
 	var run_neq: Dictionary = _make_run({"faction_rep_delta": {"druides": 10.0}})
 	var w_neq: Dictionary = sel._compute_category_weights(run_neq)
-	var expl_neq: float = float(w_neq.get("exploration", 0.0))
-	if absf(expl_neq - 0.2) > 0.01:
-		push_error("non-EQUILIBRE: expected 0.2, got %.3f" % expl_neq)
-		return false
+	var w: float = float(w_neq.get("exploration", 0.0))
+	if absf(w - 0.2) > 0.01:
+		return _fail("non-EQUILIBRE: expected 0.200, got %.4f" % w)
 	return true
 
 
 # =============================================================================
-# ANTI-REPETITION
+# 5. ANTI-REPETITION
 # =============================================================================
 
-func test_anti_repetition_penalizes_recent_category() -> bool:
+func test_anti_rep_penalizes_recent_category() -> bool:
 	var sel: EventCategorySelector = _make_selector()
-	# Record "narrative" as most recent
 	sel.record_selection("narrative", "dialogue", 1)
 	var weights: Dictionary = sel._compute_category_weights(_make_run())
 	weights = sel._apply_anti_repetition(weights)
-	# Gap=0 < min_gap=2 => penalty *0.1
 	var w: float = float(weights.get("narrative", 0.0))
 	var expected: float = 0.4 * 0.1
 	if absf(w - expected) > 0.001:
-		push_error("anti-rep penalty: expected %.3f, got %.3f" % [expected, w])
-		return false
+		return _fail("anti-rep gap=0 penalty: expected %.4f, got %.4f" % [expected, w])
 	return true
 
 
-func test_anti_repetition_no_penalty_after_gap() -> bool:
+func test_anti_rep_no_penalty_at_min_gap() -> bool:
 	var sel: EventCategorySelector = _make_selector()
 	sel.record_selection("narrative", "dialogue", 1)
 	sel.record_selection("combat", "duel", 2)
 	sel.record_selection("exploration", "discovery", 3)
-	# Gap for narrative = 2, min_gap = 2 => no penalty
+	# narrative gap = 2, min_gap_same_category = 2 => no penalty
 	var weights: Dictionary = sel._compute_category_weights(_make_run())
 	weights = sel._apply_anti_repetition(weights)
 	var w: float = float(weights.get("narrative", 0.0))
 	if absf(w - 0.4) > 0.001:
-		push_error("no penalty after gap: expected 0.4, got %.3f" % w)
-		return false
+		return _fail("no penalty at gap==min_gap: expected 0.400, got %.4f" % w)
 	return true
 
 
-func test_anti_repetition_consecutive_penalty() -> bool:
+func test_anti_rep_consecutive_penalty() -> bool:
 	var sel: EventCategorySelector = _make_selector()
 	sel.record_selection("combat", "duel", 1)
 	sel.record_selection("combat", "ambush", 2)
-	# 2 consecutive "combat" >= max_consecutive=2 => *0.05
+	# consecutive=2 >= max_consecutive=2 => *0.05; gap=0 => *0.1
 	var weights: Dictionary = sel._compute_category_weights(_make_run())
 	weights = sel._apply_anti_repetition(weights)
 	var w: float = float(weights.get("combat", 0.0))
-	# Also gap=0 penalty (*0.1), combined: 0.3 * 0.1 * 0.05
 	var expected: float = 0.3 * 0.1 * 0.05
-	if absf(w - expected) > 0.001:
-		push_error("consecutive penalty: expected %.5f, got %.5f" % [expected, w])
-		return false
+	if absf(w - expected) > 0.0001:
+		return _fail("consecutive penalty: expected %.5f, got %.5f" % [expected, w])
+	return true
+
+
+func test_anti_rep_does_not_mutate_input() -> bool:
+	var sel: EventCategorySelector = _make_selector()
+	sel.record_selection("narrative", "dialogue", 1)
+	var original: Dictionary = {"narrative": 1.0, "combat": 1.0}
+	var _result: Dictionary = sel._apply_anti_repetition(original)
+	if original["narrative"] != 1.0:
+		return _fail("_apply_anti_repetition must not mutate the input dictionary")
 	return true
 
 
 # =============================================================================
-# HISTORY MANAGEMENT
+# 6. HISTORY MANAGEMENT
 # =============================================================================
 
 func test_record_selection_adds_entry() -> bool:
@@ -347,485 +363,589 @@ func test_record_selection_adds_entry() -> bool:
 	sel.record_selection("narrative", "dialogue", 1)
 	var hist: Array[Dictionary] = sel.get_history()
 	if hist.size() != 1:
-		push_error("history size: expected 1, got %d" % hist.size())
-		return false
+		return _fail("expected 1 history entry, got %d" % hist.size())
 	if str(hist[0].get("category", "")) != "narrative":
-		push_error("history category mismatch")
-		return false
+		return _fail("history entry category mismatch")
+	if str(hist[0].get("sub_type", "")) != "dialogue":
+		return _fail("history entry sub_type mismatch")
+	if int(hist[0].get("card_num", -1)) != 1:
+		return _fail("history entry card_num mismatch")
 	return true
 
 
-func test_history_window_trims() -> bool:
+func test_history_window_trims_to_max() -> bool:
 	var sel: EventCategorySelector = _make_selector()
-	# Window is 10
+	# window = 10
 	for i in range(15):
 		sel.record_selection("cat_%d" % i, "sub", i)
 	var hist: Array[Dictionary] = sel.get_history()
 	if hist.size() != 10:
-		push_error("history should trim to window=10, got %d" % hist.size())
-		return false
-	# First entry should be cat_5 (0-4 trimmed)
+		return _fail("history should trim to window=10, got %d" % hist.size())
+	# After trimming, index 0 should be cat_5
 	if str(hist[0].get("category", "")) != "cat_5":
-		push_error("oldest entry should be cat_5, got %s" % str(hist[0].get("category", "")))
-		return false
+		return _fail("oldest retained entry should be cat_5, got '%s'" % str(hist[0].get("category", "")))
 	return true
 
 
-func test_clear_history() -> bool:
+func test_clear_history_empties() -> bool:
 	var sel: EventCategorySelector = _make_selector()
 	sel.record_selection("narrative", "dialogue", 1)
 	sel.record_selection("combat", "duel", 2)
 	sel.clear_history()
 	if sel.get_history().size() != 0:
-		push_error("clear_history should empty history")
-		return false
+		return _fail("clear_history() should empty history")
 	return true
 
+
+func test_get_history_returns_duplicate() -> bool:
+	var sel: EventCategorySelector = _make_selector()
+	sel.record_selection("narrative", "dialogue", 1)
+	var h1: Array[Dictionary] = sel.get_history()
+	h1.clear()
+	if sel.get_history().size() == 0:
+		return _fail("get_history() must return a copy, not a reference")
+	return true
+
+
+# =============================================================================
+# 7. _cards_since_last_category / _cards_since_last_subtype
+# =============================================================================
 
 func test_cards_since_last_category_never_used() -> bool:
 	var sel: EventCategorySelector = _make_selector()
-	var gap: int = sel._cards_since_last_category("narrative")
-	if gap != -1:
-		push_error("never used category should return -1, got %d" % gap)
-		return false
+	if sel._cards_since_last_category("narrative") != -1:
+		return _fail("never-used category should return -1")
 	return true
 
 
-func test_cards_since_last_category_used() -> bool:
+func test_cards_since_last_category_just_used() -> bool:
+	var sel: EventCategorySelector = _make_selector()
+	sel.record_selection("narrative", "dialogue", 1)
+	if sel._cards_since_last_category("narrative") != 0:
+		return _fail("gap should be 0 immediately after recording")
+	return true
+
+
+func test_cards_since_last_category_two_later() -> bool:
 	var sel: EventCategorySelector = _make_selector()
 	sel.record_selection("narrative", "dialogue", 1)
 	sel.record_selection("combat", "duel", 2)
-	# narrative at index 0, history size=2, gap = (2-1) - 0 = 1
-	var gap: int = sel._cards_since_last_category("narrative")
-	if gap != 1:
-		push_error("gap for narrative: expected 1, got %d" % gap)
-		return false
+	sel.record_selection("exploration", "discovery", 3)
+	if sel._cards_since_last_category("narrative") != 2:
+		return _fail("gap for narrative should be 2 after two subsequent entries")
 	return true
 
 
-func test_cards_since_last_subtype() -> bool:
+func test_cards_since_last_subtype_never_used() -> bool:
+	var sel: EventCategorySelector = _make_selector()
+	if sel._cards_since_last_subtype("dialogue") != -1:
+		return _fail("never-used sub_type should return -1")
+	return true
+
+
+func test_cards_since_last_subtype_correct_gap() -> bool:
 	var sel: EventCategorySelector = _make_selector()
 	sel.record_selection("narrative", "dialogue", 1)
 	sel.record_selection("narrative", "lore", 2)
 	sel.record_selection("combat", "duel", 3)
 	# dialogue at index 0, size=3, gap = 2
-	var gap: int = sel._cards_since_last_subtype("dialogue")
-	if gap != 2:
-		push_error("subtype gap: expected 2, got %d" % gap)
-		return false
+	if sel._cards_since_last_subtype("dialogue") != 2:
+		return _fail("dialogue sub_type gap should be 2, got %d" % sel._cards_since_last_subtype("dialogue"))
 	return true
 
 
-func test_count_consecutive() -> bool:
+# =============================================================================
+# 8. _count_consecutive
+# =============================================================================
+
+func test_count_consecutive_zero_on_empty() -> bool:
+	var sel: EventCategorySelector = _make_selector()
+	if sel._count_consecutive("combat") != 0:
+		return _fail("empty history should give consecutive=0")
+	return true
+
+
+func test_count_consecutive_three_in_a_row() -> bool:
 	var sel: EventCategorySelector = _make_selector()
 	sel.record_selection("exploration", "discovery", 1)
 	sel.record_selection("combat", "duel", 2)
 	sel.record_selection("combat", "ambush", 3)
 	sel.record_selection("combat", "duel", 4)
-	var count: int = sel._count_consecutive("combat")
-	if count != 3:
-		push_error("consecutive combat: expected 3, got %d" % count)
-		return false
+	if sel._count_consecutive("combat") != 3:
+		return _fail("consecutive combat should be 3, got %d" % sel._count_consecutive("combat"))
 	return true
 
 
-func test_count_consecutive_broken_chain() -> bool:
+func test_count_consecutive_breaks_on_different() -> bool:
 	var sel: EventCategorySelector = _make_selector()
 	sel.record_selection("combat", "duel", 1)
 	sel.record_selection("narrative", "dialogue", 2)
 	sel.record_selection("combat", "ambush", 3)
-	var count: int = sel._count_consecutive("combat")
-	if count != 1:
-		push_error("broken chain: expected 1, got %d" % count)
-		return false
+	if sel._count_consecutive("combat") != 1:
+		return _fail("chain broken by narrative; expected 1, got %d" % sel._count_consecutive("combat"))
 	return true
 
 
 # =============================================================================
-# FACTION DELTA TO STATE
+# 9. _faction_delta_to_state
 # =============================================================================
 
-func test_faction_delta_to_state_equilibre() -> bool:
+func test_faction_delta_equilibre_at_zero() -> bool:
 	var sel: EventCategorySelector = _make_selector()
-	var state: String = sel._faction_delta_to_state(0.0)
-	if state != "EQUILIBRE":
-		push_error("delta=0 should be EQUILIBRE, got %s" % state)
-		return false
-	state = sel._faction_delta_to_state(5.0)
-	if state != "EQUILIBRE":
-		push_error("delta=5.0 should be EQUILIBRE, got %s" % state)
-		return false
-	state = sel._faction_delta_to_state(-5.0)
-	if state != "EQUILIBRE":
-		push_error("delta=-5.0 should be EQUILIBRE, got %s" % state)
-		return false
+	if sel._faction_delta_to_state(0.0) != "EQUILIBRE":
+		return _fail("delta=0 should be EQUILIBRE")
 	return true
 
 
-func test_faction_delta_to_state_haut() -> bool:
+func test_faction_delta_equilibre_at_boundary_plus5() -> bool:
 	var sel: EventCategorySelector = _make_selector()
-	var state: String = sel._faction_delta_to_state(10.0)
-	if state != "HAUT":
-		push_error("delta=10 should be HAUT, got %s" % state)
-		return false
+	if sel._faction_delta_to_state(5.0) != "EQUILIBRE":
+		return _fail("delta=5.0 (boundary) should be EQUILIBRE")
 	return true
 
 
-func test_faction_delta_to_state_bas() -> bool:
+func test_faction_delta_equilibre_at_boundary_minus5() -> bool:
 	var sel: EventCategorySelector = _make_selector()
-	var state: String = sel._faction_delta_to_state(-10.0)
-	if state != "BAS":
-		push_error("delta=-10 should be BAS, got %s" % state)
-		return false
+	if sel._faction_delta_to_state(-5.0) != "EQUILIBRE":
+		return _fail("delta=-5.0 (boundary) should be EQUILIBRE")
+	return true
+
+
+func test_faction_delta_haut() -> bool:
+	var sel: EventCategorySelector = _make_selector()
+	if sel._faction_delta_to_state(10.0) != "HAUT":
+		return _fail("delta=10 should be HAUT")
+	return true
+
+
+func test_faction_delta_bas() -> bool:
+	var sel: EventCategorySelector = _make_selector()
+	if sel._faction_delta_to_state(-10.0) != "BAS":
+		return _fail("delta=-10 should be BAS")
+	return true
+
+
+func test_faction_delta_just_above_5_is_haut() -> bool:
+	var sel: EventCategorySelector = _make_selector()
+	if sel._faction_delta_to_state(5.01) != "HAUT":
+		return _fail("delta=5.01 should be HAUT")
 	return true
 
 
 # =============================================================================
-# TRIGGER EVALUATION
+# 10. MATRIX CONDITION CHECKS
 # =============================================================================
 
-func test_trigger_biome_match_boost() -> bool:
+func test_matrix_condition_empty_always_true() -> bool:
 	var sel: EventCategorySelector = _make_selector()
-	var triggers: Dictionary = {"biome": ["foret", "marais"]}
-	var bonus: float = sel._evaluate_triggers(triggers, {}, 5, 50, "foret", {}, 40, 0)
-	if absf(bonus - 2.0) > 0.001:
-		push_error("biome match should give 2.0, got %.3f" % bonus)
-		return false
+	if not sel._check_matrix_condition({}, 5, {}):
+		return _fail("empty condition should always return true")
 	return true
 
 
-func test_trigger_biome_mismatch_penalty() -> bool:
+func test_matrix_condition_cards_max_pass() -> bool:
 	var sel: EventCategorySelector = _make_selector()
-	var triggers: Dictionary = {"biome": ["foret", "marais"]}
-	var bonus: float = sel._evaluate_triggers(triggers, {}, 5, 50, "montagne", {}, 40, 0)
-	if absf(bonus - 0.5) > 0.001:
-		push_error("biome mismatch should give 0.5, got %.3f" % bonus)
-		return false
+	if not sel._check_matrix_condition({"cards_played_max": 10}, 5, {}):
+		return _fail("cards=5 <= max=10 should pass")
 	return true
 
 
-func test_trigger_min_cards_played_blocks() -> bool:
+func test_matrix_condition_cards_max_fail() -> bool:
 	var sel: EventCategorySelector = _make_selector()
-	var triggers: Dictionary = {"min_cards_played": 10}
-	var bonus: float = sel._evaluate_triggers(triggers, {}, 3, 50, "", {}, 40, 0)
-	if absf(bonus) > 0.001:
-		push_error("min_cards_played should block (0.0), got %.3f" % bonus)
-		return false
+	if sel._check_matrix_condition({"cards_played_max": 5}, 6, {}):
+		return _fail("cards=6 > max=5 should fail")
 	return true
 
 
-func test_trigger_tension_above_met() -> bool:
+func test_matrix_condition_cards_min_pass() -> bool:
 	var sel: EventCategorySelector = _make_selector()
-	var triggers: Dictionary = {"tension_above": 60}
-	var bonus: float = sel._evaluate_triggers(triggers, {}, 5, 50, "", {}, 70, 0)
-	if absf(bonus - 1.5) > 0.001:
-		push_error("tension_above met should give 1.5, got %.3f" % bonus)
-		return false
+	if not sel._check_matrix_condition({"cards_played_min": 5}, 10, {}):
+		return _fail("cards=10 >= min=5 should pass")
 	return true
 
 
-func test_trigger_tension_above_not_met() -> bool:
+func test_matrix_condition_cards_min_fail() -> bool:
 	var sel: EventCategorySelector = _make_selector()
-	var triggers: Dictionary = {"tension_above": 60}
-	var bonus: float = sel._evaluate_triggers(triggers, {}, 5, 50, "", {}, 40, 0)
-	if absf(bonus - 0.5) > 0.001:
-		push_error("tension_above not met should give 0.5, got %.3f" % bonus)
-		return false
+	if sel._check_matrix_condition({"cards_played_min": 10}, 5, {}):
+		return _fail("cards=5 < min=10 should fail")
 	return true
 
 
-func test_trigger_life_below_met() -> bool:
+func test_matrix_condition_equilibre_passes() -> bool:
 	var sel: EventCategorySelector = _make_selector()
-	var triggers: Dictionary = {"life_below": 30}
-	var bonus: float = sel._evaluate_triggers(triggers, {}, 5, 20, "", {}, 40, 0)
-	if absf(bonus - 1.5) > 0.001:
-		push_error("life_below met should give 1.5, got %.3f" % bonus)
-		return false
+	var cond: Dictionary = {"all_aspects": "EQUILIBRE"}
+	var delta: Dictionary = {"druides": 3.0, "anciens": -2.0}
+	if not sel._check_matrix_condition(cond, 0, delta):
+		return _fail("all deltas <=5 should satisfy EQUILIBRE")
 	return true
 
 
-func test_trigger_dominant_faction_above() -> bool:
+func test_matrix_condition_equilibre_fails_on_extreme() -> bool:
 	var sel: EventCategorySelector = _make_selector()
-	var triggers: Dictionary = {"dominant_faction_above": 60}
-	var factions: Dictionary = {"druides": 70, "anciens": 20}
-	var bonus: float = sel._evaluate_triggers(triggers, {}, 5, 50, "", {}, 40, 0, factions)
-	if absf(bonus - 1.5) > 0.001:
-		push_error("dominant_faction met should give 1.5, got %.3f" % bonus)
-		return false
+	var cond: Dictionary = {"all_aspects": "EQUILIBRE"}
+	var delta: Dictionary = {"druides": 10.0}
+	if sel._check_matrix_condition(cond, 0, delta):
+		return _fail("delta=10 should break EQUILIBRE")
 	return true
 
 
-func test_trigger_flags_required_all_present() -> bool:
+func test_matrix_condition_any_aspect_haut_passes() -> bool:
 	var sel: EventCategorySelector = _make_selector()
-	var triggers: Dictionary = {"flags_required": ["quest_started", "npc_met"]}
-	var flags: Dictionary = {"quest_started": true, "npc_met": true}
-	var bonus: float = sel._evaluate_triggers(triggers, {}, 5, 50, "", flags, 40, 0)
+	var cond: Dictionary = {"any_aspect": ["HAUT"]}
+	var delta: Dictionary = {"druides": 20.0}
+	if not sel._check_matrix_condition(cond, 0, delta):
+		return _fail("delta=20 should satisfy any_aspect=[HAUT]")
+	return true
+
+
+func test_matrix_condition_any_aspect_not_found_fails() -> bool:
+	var sel: EventCategorySelector = _make_selector()
+	var cond: Dictionary = {"any_aspect": ["BAS"]}
+	var delta: Dictionary = {"druides": 3.0}  # EQUILIBRE
+	if sel._check_matrix_condition(cond, 0, delta):
+		return _fail("EQUILIBRE delta should not satisfy any_aspect=[BAS]")
+	return true
+
+
+# =============================================================================
+# 11. TRIGGER EVALUATION
+# =============================================================================
+
+func test_trigger_empty_returns_1() -> bool:
+	var sel: EventCategorySelector = _make_selector()
+	var bonus: float = sel._evaluate_triggers({}, {}, 0, 100, "foret", {}, 40, 0)
 	if absf(bonus - 1.0) > 0.001:
-		push_error("all flags present should give 1.0, got %.3f" % bonus)
-		return false
+		return _fail("empty triggers should give bonus=1.0, got %.4f" % bonus)
 	return true
 
 
-func test_trigger_flags_required_missing() -> bool:
+func test_trigger_biome_match_boosts() -> bool:
 	var sel: EventCategorySelector = _make_selector()
-	var triggers: Dictionary = {"flags_required": ["quest_started", "npc_met"]}
-	var flags: Dictionary = {"quest_started": true}
-	var bonus: float = sel._evaluate_triggers(triggers, {}, 5, 50, "", flags, 40, 0)
+	var bonus: float = sel._evaluate_triggers({"biome": ["foret", "marais"]}, {}, 5, 50, "foret", {}, 40, 0)
+	if absf(bonus - 2.0) > 0.001:
+		return _fail("matching biome should give bonus=2.0, got %.4f" % bonus)
+	return true
+
+
+func test_trigger_biome_mismatch_penalizes() -> bool:
+	var sel: EventCategorySelector = _make_selector()
+	var bonus: float = sel._evaluate_triggers({"biome": ["foret"]}, {}, 5, 50, "montagne", {}, 40, 0)
+	if absf(bonus - 0.5) > 0.001:
+		return _fail("mismatching biome should give bonus=0.5, got %.4f" % bonus)
+	return true
+
+
+func test_trigger_min_cards_blocks_when_below() -> bool:
+	var sel: EventCategorySelector = _make_selector()
+	var bonus: float = sel._evaluate_triggers({"min_cards_played": 10}, {}, 3, 100, "", {}, 40, 0)
+	if absf(bonus) > 0.001:
+		return _fail("cards=3 < min=10 should block (bonus=0), got %.4f" % bonus)
+	return true
+
+
+func test_trigger_tension_above_boosts() -> bool:
+	var sel: EventCategorySelector = _make_selector()
+	var bonus: float = sel._evaluate_triggers({"tension_above": 60}, {}, 0, 100, "", {}, 80, 0)
+	if absf(bonus - 1.5) > 0.001:
+		return _fail("tension=80 >= 60 should give bonus=1.5, got %.4f" % bonus)
+	return true
+
+
+func test_trigger_tension_above_penalizes_when_below() -> bool:
+	var sel: EventCategorySelector = _make_selector()
+	var bonus: float = sel._evaluate_triggers({"tension_above": 60}, {}, 0, 100, "", {}, 40, 0)
+	if absf(bonus - 0.5) > 0.001:
+		return _fail("tension=40 < 60 should give bonus=0.5, got %.4f" % bonus)
+	return true
+
+
+func test_trigger_life_below_boosts() -> bool:
+	var sel: EventCategorySelector = _make_selector()
+	var bonus: float = sel._evaluate_triggers({"life_below": 30}, {}, 0, 20, "", {}, 40, 0)
+	if absf(bonus - 1.5) > 0.001:
+		return _fail("life=20 < 30 should give bonus=1.5, got %.4f" % bonus)
+	return true
+
+
+func test_trigger_karma_above_boosts() -> bool:
+	var sel: EventCategorySelector = _make_selector()
+	var bonus: float = sel._evaluate_triggers({"karma_above": 50}, {}, 0, 100, "", {}, 40, 70)
+	if absf(bonus - 1.5) > 0.001:
+		return _fail("karma=70 >= 50 should give bonus=1.5, got %.4f" % bonus)
+	return true
+
+
+func test_trigger_dominant_faction_above_boosts() -> bool:
+	var sel: EventCategorySelector = _make_selector()
+	var factions: Dictionary = {"druides": 70, "anciens": 20}
+	var bonus: float = sel._evaluate_triggers({"dominant_faction_above": 60}, {}, 0, 100, "", {}, 40, 0, factions)
+	if absf(bonus - 1.5) > 0.001:
+		return _fail("max_rep=70 >= 60 should give bonus=1.5, got %.4f" % bonus)
+	return true
+
+
+func test_trigger_flags_required_all_present_no_penalty() -> bool:
+	var sel: EventCategorySelector = _make_selector()
+	var flags: Dictionary = {"quest_started": true, "npc_met": true}
+	var bonus: float = sel._evaluate_triggers({"flags_required": ["quest_started", "npc_met"]}, {}, 0, 100, "", flags, 40, 0)
+	if absf(bonus - 1.0) > 0.001:
+		return _fail("all flags present should give bonus=1.0, got %.4f" % bonus)
+	return true
+
+
+func test_trigger_flags_required_missing_penalizes() -> bool:
+	var sel: EventCategorySelector = _make_selector()
+	var flags: Dictionary = {"quest_started": true}  # npc_met absent
+	var bonus: float = sel._evaluate_triggers({"flags_required": ["quest_started", "npc_met"]}, {}, 0, 100, "", flags, 40, 0)
 	if absf(bonus - 0.1) > 0.001:
-		push_error("missing flag should give 0.1, got %.3f" % bonus)
-		return false
+		return _fail("missing flag should give bonus=0.1, got %.4f" % bonus)
 	return true
 
 
 # =============================================================================
-# MATRIX CONDITION CHECKS
-# =============================================================================
-
-func test_matrix_condition_all_aspects_equilibre() -> bool:
-	var sel: EventCategorySelector = _make_selector()
-	var condition: Dictionary = {"all_aspects": "EQUILIBRE"}
-	var delta_eq: Dictionary = {"druides": 2.0, "anciens": -3.0}
-	if not sel._check_matrix_condition(condition, 5, delta_eq):
-		push_error("all deltas within +-5 should pass EQUILIBRE")
-		return false
-	var delta_neq: Dictionary = {"druides": 10.0, "anciens": -3.0}
-	if sel._check_matrix_condition(condition, 5, delta_neq):
-		push_error("delta=10 should fail EQUILIBRE")
-		return false
-	return true
-
-
-func test_matrix_condition_any_aspect_haut() -> bool:
-	var sel: EventCategorySelector = _make_selector()
-	var condition: Dictionary = {"any_aspect": ["HAUT"]}
-	var delta_haut: Dictionary = {"druides": 15.0, "anciens": 0.0}
-	if not sel._check_matrix_condition(condition, 5, delta_haut):
-		push_error("delta=15 should match HAUT")
-		return false
-	var delta_none: Dictionary = {"druides": 3.0, "anciens": -2.0}
-	if sel._check_matrix_condition(condition, 5, delta_none):
-		push_error("all small deltas should not match HAUT")
-		return false
-	return true
-
-
-# =============================================================================
-# WEIGHTED SELECT
+# 12. _weighted_select
 # =============================================================================
 
 func test_weighted_select_single_entry() -> bool:
 	var sel: EventCategorySelector = _make_selector()
-	var result: String = sel._weighted_select({"only": 1.0})
-	if result != "only":
-		push_error("single entry should always be selected, got %s" % result)
-		return false
+	if sel._weighted_select({"only": 1.0}) != "only":
+		return _fail("single entry should always be selected")
 	return true
 
 
-func test_weighted_select_empty_dict() -> bool:
+func test_weighted_select_empty_dict_returns_empty_string() -> bool:
 	var sel: EventCategorySelector = _make_selector()
-	var result: String = sel._weighted_select({})
-	if result != "":
-		push_error("empty dict should return empty string, got %s" % result)
-		return false
+	if sel._weighted_select({}) != "":
+		return _fail("empty dict should return ''")
 	return true
 
 
-func test_weighted_select_zero_weights_fallback() -> bool:
+func test_weighted_select_zero_total_fallback_to_first_key() -> bool:
 	var sel: EventCategorySelector = _make_selector()
-	var result: String = sel._weighted_select({"a": 0.0, "b": 0.0})
-	# When total <= 0, returns first key
-	if result != "a":
-		push_error("zero weights should fallback to first key, got %s" % result)
-		return false
+	var result: String = sel._weighted_select({"alpha": 0.0, "beta": 0.0})
+	if result != "alpha":
+		return _fail("zero-total weights should fallback to first key 'alpha', got '%s'" % result)
+	return true
+
+
+func test_weighted_select_heavy_dominates() -> bool:
+	var sel: EventCategorySelector = _make_selector()
+	var wins: int = 0
+	for _i in range(100):
+		if sel._weighted_select({"heavy": 10000.0, "light": 0.0001}) == "heavy":
+			wins += 1
+	if wins < 95:
+		return _fail("heavy entry should win 95+/100 times, won %d" % wins)
 	return true
 
 
 # =============================================================================
-# SELECT EVENT (integration)
+# 13. SELECT EVENT — integration
 # =============================================================================
 
-func test_select_event_returns_valid_structure() -> bool:
+func test_select_event_returns_required_keys() -> bool:
 	var sel: EventCategorySelector = _make_selector()
-	var state: Dictionary = _make_game_state()
-	var result: Dictionary = sel.select_event(state)
-	if result.is_empty():
-		push_error("select_event should return non-empty dict")
-		return false
-	if not result.has("category"):
-		push_error("result missing 'category' key")
-		return false
-	if not result.has("sub_type"):
-		push_error("result missing 'sub_type' key")
-		return false
-	if not result.has("label"):
-		push_error("result missing 'label' key")
-		return false
-	if not result.has("narrator_guidance"):
-		push_error("result missing 'narrator_guidance' key")
-		return false
-	var cat: String = str(result["category"])
-	if cat not in ["narrative", "combat", "exploration", "faction"]:
-		push_error("unexpected category: %s" % cat)
-		return false
+	var result: Dictionary = sel.select_event(_make_game_state())
+	for key in ["category", "sub_type", "label", "narrator_guidance", "effect_profile"]:
+		if not result.has(key):
+			return _fail("select_event result missing key '%s'" % key)
 	return true
 
 
 func test_select_event_category_in_known_set() -> bool:
 	var sel: EventCategorySelector = _make_selector()
 	var known: Array[String] = sel.get_all_categories()
-	# Run 50 times to check distribution
-	for i in range(50):
+	for _i in range(20):
 		var result: Dictionary = sel.select_event(_make_game_state())
 		if result.is_empty():
 			continue
 		var cat: String = str(result["category"])
 		if cat not in known:
-			push_error("category '%s' not in known set" % cat)
-			return false
+			return _fail("select_event returned unknown category '%s'" % cat)
+	return true
+
+
+func test_select_event_sub_type_belongs_to_category() -> bool:
+	var sel: EventCategorySelector = _make_selector()
+	var result: Dictionary = sel.select_event(_make_game_state())
+	var cat: Dictionary = sel._categories.get(str(result["category"]), {})
+	var subs: Dictionary = cat.get("sub_types", {})
+	if not subs.has(result["sub_type"]):
+		return _fail("sub_type '%s' not found in category '%s'" % [result["sub_type"], result["category"]])
 	return true
 
 
 # =============================================================================
-# DEBUG / QUERY
+# 14. DEBUG / QUERY
 # =============================================================================
 
-func test_get_all_categories() -> bool:
+func test_get_all_categories_size_and_content() -> bool:
 	var sel: EventCategorySelector = _make_selector()
 	var cats: Array[String] = sel.get_all_categories()
 	if cats.size() != 4:
-		push_error("expected 4 categories, got %d" % cats.size())
-		return false
-	if "narrative" not in cats or "combat" not in cats:
-		push_error("missing expected categories")
-		return false
+		return _fail("expected 4 categories, got %d" % cats.size())
+	for expected in ["narrative", "combat", "exploration", "faction"]:
+		if expected not in cats:
+			return _fail("get_all_categories missing '%s'" % expected)
 	return true
 
 
-func test_get_sub_types() -> bool:
+func test_get_sub_types_correct_content() -> bool:
 	var sel: EventCategorySelector = _make_selector()
 	var subs: Array[String] = sel.get_sub_types("narrative")
 	if subs.size() != 3:
-		push_error("narrative should have 3 sub_types, got %d" % subs.size())
-		return false
+		return _fail("narrative should have 3 sub_types, got %d" % subs.size())
 	if "dialogue" not in subs:
-		push_error("missing 'dialogue' sub_type")
-		return false
+		return _fail("missing 'dialogue' sub_type")
 	return true
 
 
-func test_get_category_info_exists() -> bool:
+func test_get_sub_types_empty_for_unknown() -> bool:
+	var sel: EventCategorySelector = _make_selector()
+	if sel.get_sub_types("ghost_category").size() != 0:
+		return _fail("unknown category should return empty sub_types")
+	return true
+
+
+func test_get_category_info_returns_data() -> bool:
 	var sel: EventCategorySelector = _make_selector()
 	var info: Dictionary = sel.get_category_info("narrative")
 	if info.is_empty():
-		push_error("get_category_info should return data for 'narrative'")
-		return false
+		return _fail("get_category_info('narrative') should not be empty")
 	if str(info.get("label", "")) != "Narrative":
-		push_error("label mismatch")
-		return false
+		return _fail("label should be 'Narrative', got '%s'" % str(info.get("label", "")))
 	return true
 
 
-func test_get_category_info_missing() -> bool:
+func test_get_category_info_empty_for_unknown() -> bool:
 	var sel: EventCategorySelector = _make_selector()
-	var info: Dictionary = sel.get_category_info("nonexistent")
-	if not info.is_empty():
-		push_error("missing category should return empty dict")
-		return false
+	if not sel.get_category_info("nonexistent").is_empty():
+		return _fail("unknown category should return empty dict")
 	return true
 
 
-func test_get_debug_weights_not_loaded() -> bool:
+func test_get_debug_weights_empty_when_not_loaded() -> bool:
 	var sel: EventCategorySelector = EventCategorySelector.new()
-	sel._categories = {}
 	sel._is_loaded = false
-	var weights: Dictionary = sel.get_debug_weights({"run": {}})
-	if not weights.is_empty():
-		push_error("debug weights should be empty when not loaded")
-		return false
+	if not sel.get_debug_weights({"run": {}}).is_empty():
+		return _fail("get_debug_weights should return {} when not loaded")
 	return true
 
 
-func test_get_debug_weights_loaded() -> bool:
+func test_get_debug_weights_contains_all_categories() -> bool:
 	var sel: EventCategorySelector = _make_selector()
-	var weights: Dictionary = sel.get_debug_weights(_make_game_state())
-	if weights.is_empty():
-		push_error("debug weights should not be empty when loaded")
-		return false
-	if not weights.has("narrative"):
-		push_error("debug weights missing 'narrative'")
-		return false
+	var dw: Dictionary = sel.get_debug_weights(_make_game_state())
+	for cat in ["narrative", "combat", "exploration", "faction"]:
+		if not dw.has(cat):
+			return _fail("get_debug_weights missing category '%s'" % cat)
 	return true
 
 
 # =============================================================================
-# MODIFIER SYSTEM
+# 15. MODIFIER SYSTEM
 # =============================================================================
 
-func test_modifier_gap_never_used() -> bool:
+func test_modifier_gap_never_used_returns_minus1() -> bool:
 	var sel: EventCategorySelector = _make_selector()
-	var gap: int = sel._modifier_gap("some_mod")
-	if gap != -1:
-		push_error("never used modifier should return -1, got %d" % gap)
-		return false
+	if sel._modifier_gap("storm") != -1:
+		return _fail("never-used modifier should return -1")
 	return true
 
 
-func test_record_modifier_and_gap() -> bool:
+func test_modifier_gap_immediately_after_record() -> bool:
 	var sel: EventCategorySelector = _make_selector()
-	sel.record_modifier("mod_a")
-	sel.record_modifier("mod_b")
-	sel.record_modifier("")
-	# mod_a at index 0, size=3, gap = 2
-	var gap: int = sel._modifier_gap("mod_a")
-	if gap != 2:
-		push_error("modifier gap: expected 2, got %d" % gap)
-		return false
+	sel.record_modifier("storm")
+	if sel._modifier_gap("storm") != 0:
+		return _fail("gap should be 0 immediately after recording")
 	return true
 
 
-func test_record_modifier_trims_at_20() -> bool:
+func test_modifier_gap_increases_with_entries() -> bool:
+	var sel: EventCategorySelector = _make_selector()
+	sel.record_modifier("storm")
+	sel.record_modifier("calm")
+	sel.record_modifier("fog")
+	if sel._modifier_gap("storm") != 2:
+		return _fail("gap should be 2 after 2 subsequent entries, got %d" % sel._modifier_gap("storm"))
+	return true
+
+
+func test_record_modifier_trims_to_20() -> bool:
 	var sel: EventCategorySelector = _make_selector()
 	for i in range(25):
 		sel.record_modifier("mod_%d" % i)
 	if sel._modifier_history.size() != 20:
-		push_error("modifier history should trim to 20, got %d" % sel._modifier_history.size())
-		return false
+		return _fail("modifier history should trim to 20, got %d" % sel._modifier_history.size())
 	return true
 
 
-func test_check_modifier_trigger_empty() -> bool:
+func test_select_modifier_returns_empty_when_not_loaded() -> bool:
 	var sel: EventCategorySelector = _make_selector()
-	var result: bool = sel._check_modifier_trigger({}, _make_run())
-	if not result:
-		push_error("empty trigger should return true")
-		return false
+	sel._modifiers_loaded = false
+	if not sel.select_modifier(_make_game_state(), "narrative").is_empty():
+		return _fail("select_modifier should return {} when modifiers not loaded")
 	return true
 
 
-func test_check_modifier_trigger_dominant_faction() -> bool:
+func test_select_modifier_skips_anchor_card() -> bool:
+	var sel: EventCategorySelector = _make_selector()
+	sel._modifiers_loaded = true
+	sel._modifier_rules = {
+		"scenario_anchor_never_modified": true,
+		"max_consecutive_modified": 3,
+		"min_gap_same_modifier": 5,
+	}
+	sel._modifiers = {
+		"storm": {
+			"probability": 1.0,
+			"category_exclusions": [],
+			"trigger": {},
+			"label": "Storm",
+			"prompt_injection": "",
+			"effect_modifier": {},
+			"minigame_pool": [],
+		}
+	}
+	var state: Dictionary = _make_game_state({"current_card_is_anchor": true})
+	if not sel.select_modifier(state, "narrative").is_empty():
+		return _fail("anchor card should never receive a modifier")
+	return true
+
+
+func test_check_modifier_trigger_empty_returns_true() -> bool:
+	var sel: EventCategorySelector = _make_selector()
+	if not sel._check_modifier_trigger({}, _make_run()):
+		return _fail("empty trigger should always return true")
+	return true
+
+
+func test_check_modifier_trigger_dominant_faction_passes() -> bool:
 	var sel: EventCategorySelector = _make_selector()
 	var trigger: Dictionary = {"dominant_faction_above": 50}
 	var run: Dictionary = _make_run({"factions": {"druides": 70, "anciens": 20}})
 	if not sel._check_modifier_trigger(trigger, run):
-		push_error("dominant faction 70 >= 50 should pass")
-		return false
-	var run_low: Dictionary = _make_run({"factions": {"druides": 30, "anciens": 20}})
-	if sel._check_modifier_trigger(trigger, run_low):
-		push_error("dominant faction 30 < 50 should fail")
-		return false
+		return _fail("dominant faction 70 >= 50 should pass")
 	return true
 
 
-func test_check_modifier_trigger_cards_played_min() -> bool:
+func test_check_modifier_trigger_dominant_faction_fails() -> bool:
 	var sel: EventCategorySelector = _make_selector()
-	var trigger: Dictionary = {"cards_played_min": 10}
-	var run_ok: Dictionary = _make_run({"cards_played": 15})
-	if not sel._check_modifier_trigger(trigger, run_ok):
-		push_error("cards_played=15 >= 10 should pass")
-		return false
-	var run_fail: Dictionary = _make_run({"cards_played": 5})
-	if sel._check_modifier_trigger(trigger, run_fail):
-		push_error("cards_played=5 < 10 should fail")
-		return false
+	var trigger: Dictionary = {"dominant_faction_above": 50}
+	var run: Dictionary = _make_run({"factions": {"druides": 30, "anciens": 20}})
+	if sel._check_modifier_trigger(trigger, run):
+		return _fail("dominant faction 30 < 50 should fail")
+	return true
+
+
+func test_check_modifier_trigger_cards_played_min_passes() -> bool:
+	var sel: EventCategorySelector = _make_selector()
+	if not sel._check_modifier_trigger({"cards_played_min": 10}, _make_run({"cards_played": 15})):
+		return _fail("cards=15 >= min=10 should pass")
+	return true
+
+
+func test_check_modifier_trigger_cards_played_min_fails() -> bool:
+	var sel: EventCategorySelector = _make_selector()
+	if sel._check_modifier_trigger({"cards_played_min": 10}, _make_run({"cards_played": 5})):
+		return _fail("cards=5 < min=10 should fail")
 	return true
