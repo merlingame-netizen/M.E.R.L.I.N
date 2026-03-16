@@ -13,7 +13,7 @@
     "options": [
       {
         "label": "Frapper les serpents avec une branche enflammee",
-        "verb": "accepter",
+        "verb": "combattre",
         "effects": [
           {
             "type": "DAMAGE_LIFE",
@@ -133,7 +133,7 @@
     "options": [
       {
         "label": "Briser les racines a mains nues malgre les epines",
-        "verb": "accepter",
+        "verb": "forcer",
         "effects": [
           {
             "type": "DAMAGE_LIFE",
@@ -208,7 +208,7 @@
       },
       {
         "label": "Defier la bete en soutenant son regard brulant",
-        "verb": "accepter",
+        "verb": "combattre",
         "effects": [
           {
             "type": "DAMAGE_LIFE",
@@ -268,7 +268,7 @@
       },
       {
         "label": "Attaquer le druide avant qu'il acheve son sort",
-        "verb": "attendre",
+        "verb": "combattre",
         "effects": [
           {
             "type": "DAMAGE_LIFE",
@@ -313,7 +313,7 @@
     "options": [
       {
         "label": "Trancher les branches collantes avec votre lame",
-        "verb": "traverser",
+        "verb": "combattre",
         "effects": [
           {
             "type": "DAMAGE_LIFE",
@@ -448,7 +448,7 @@
       },
       {
         "label": "Briser le lierre en arrachant vos propres bottes",
-        "verb": "accepter",
+        "verb": "forcer",
         "effects": [
           {
             "type": "DAMAGE_LIFE",
@@ -808,7 +808,7 @@
       },
       {
         "label": "Defier le berger spectral en duel",
-        "verb": "accepter",
+        "verb": "combattre",
         "effects": [
           {
             "type": "DAMAGE_LIFE",
@@ -928,7 +928,7 @@
       },
       {
         "label": "Briser une pierre pour rompre la malediction",
-        "verb": "accepter",
+        "verb": "forcer",
         "effects": [
           {
             "type": "DAMAGE_LIFE",
@@ -988,7 +988,7 @@
       },
       {
         "label": "Trancher les ronces avec votre lame empoisonnee",
-        "verb": "traverser",
+        "verb": "combattre",
         "effects": [
           {
             "type": "DAMAGE_LIFE",
@@ -1303,7 +1303,7 @@
       },
       {
         "label": "Defier les sirenes en chantant plus fort qu'elles",
-        "verb": "accepter",
+        "verb": "combattre",
         "effects": [
           {
             "type": "DAMAGE_LIFE",
@@ -1333,7 +1333,7 @@
     "options": [
       {
         "label": "Trancher le tentacule avec une pierre tranchante",
-        "verb": "traverser",
+        "verb": "combattre",
         "effects": [
           {
             "type": "DAMAGE_LIFE",
@@ -1348,7 +1348,7 @@
       },
       {
         "label": "Frapper la tete de la creature pour la desorienter",
-        "verb": "accepter",
+        "verb": "combattre",
         "effects": [
           {
             "type": "DAMAGE_LIFE",
@@ -1453,7 +1453,7 @@
     "options": [
       {
         "label": "Attaquer l'equipage avec des galets enflammes",
-        "verb": "attendre",
+        "verb": "combattre",
         "effects": [
           {
             "type": "DAMAGE_LIFE",
@@ -1483,7 +1483,7 @@
       },
       {
         "label": "Defier le capitaine spectral en duel d'honneur",
-        "verb": "accepter",
+        "verb": "combattre",
         "effects": [
           {
             "type": "DAMAGE_LIFE",
@@ -1588,7 +1588,7 @@
       },
       {
         "label": "Briser les oursins avec un baton trouve sur la plage",
-        "verb": "accepter",
+        "verb": "forcer",
         "effects": [
           {
             "type": "DAMAGE_LIFE",
@@ -1948,7 +1948,7 @@
       },
       {
         "label": "Defier l'entite en affrontant votre propre ombre",
-        "verb": "accepter",
+        "verb": "combattre",
         "effects": [
           {
             "type": "DAMAGE_LIFE",
@@ -1993,7 +1993,7 @@
     "options": [
       {
         "label": "Attaquer les masques flottants avec une torche",
-        "verb": "attendre",
+        "verb": "combattre",
         "effects": [
           {
             "type": "DAMAGE_LIFE",
@@ -2188,7 +2188,7 @@
       },
       {
         "label": "Defier le forgeron en lui arrachant son marteau",
-        "verb": "accepter",
+        "verb": "combattre",
         "effects": [
           {
             "type": "DAMAGE_LIFE",
@@ -2248,7 +2248,7 @@
       },
       {
         "label": "Briser le cercle en dispersant les enfants",
-        "verb": "accepter",
+        "verb": "forcer",
         "effects": [
           {
             "type": "DAMAGE_LIFE",
@@ -2443,7 +2443,7 @@
       },
       {
         "label": "Defier les esprits liberes en les confrontant",
-        "verb": "accepter",
+        "verb": "combattre",
         "effects": [
           {
             "type": "DAMAGE_LIFE",
@@ -2683,7 +2683,7 @@
       },
       {
         "label": "Briser la pierre emettrice pour stopper le son",
-        "verb": "accepter",
+        "verb": "forcer",
         "effects": [
           {
             "type": "DAMAGE_LIFE",
@@ -2728,7 +2728,7 @@
       },
       {
         "label": "Trancher les tentacules les plus proches de vous",
-        "verb": "traverser",
+        "verb": "combattre",
         "effects": [
           {
             "type": "DAMAGE_LIFE",
@@ -2773,7 +2773,7 @@
     "options": [
       {
         "label": "Attaquer les joints entre leurs plaques de pierre",
-        "verb": "attendre",
+        "verb": "combattre",
         "effects": [
           {
             "type": "DAMAGE_LIFE",
@@ -2803,7 +2803,7 @@
       },
       {
         "label": "Defier le plus grand en esperant briser leur lien",
-        "verb": "accepter",
+        "verb": "combattre",
         "effects": [
           {
             "type": "DAMAGE_LIFE",
@@ -2908,7 +2908,7 @@
       },
       {
         "label": "Briser la statue pour mettre fin a l'agonie",
-        "verb": "accepter",
+        "verb": "forcer",
         "effects": [
           {
             "type": "DAMAGE_LIFE",
@@ -3088,7 +3088,7 @@
       },
       {
         "label": "Frapper ses genoux pour le destabiliser",
-        "verb": "accepter",
+        "verb": "combattre",
         "effects": [
           {
             "type": "DAMAGE_LIFE",
@@ -3148,7 +3148,7 @@
       },
       {
         "label": "Briser les sangsues en les arrachant violemment",
-        "verb": "accepter",
+        "verb": "forcer",
         "effects": [
           {
             "type": "DAMAGE_LIFE",
@@ -3268,7 +3268,7 @@
       },
       {
         "label": "Trancher les branches les plus menacantes",
-        "verb": "traverser",
+        "verb": "combattre",
         "effects": [
           {
             "type": "DAMAGE_LIFE",
@@ -3373,7 +3373,7 @@
     "options": [
       {
         "label": "Attaquer a l'aveugle pour repousser les voleurs",
-        "verb": "attendre",
+        "verb": "combattre",
         "effects": [
           {
             "type": "DAMAGE_LIFE",
@@ -3448,7 +3448,7 @@
       },
       {
         "label": "Briser les petales en forcant de toutes vos forces",
-        "verb": "accepter",
+        "verb": "forcer",
         "effects": [
           {
             "type": "DAMAGE_LIFE",
@@ -3523,7 +3523,7 @@
       },
       {
         "label": "Defier la rouille en tordant le metal ancien",
-        "verb": "accepter",
+        "verb": "combattre",
         "effects": [
           {
             "type": "DAMAGE_LIFE",
@@ -3568,7 +3568,7 @@
       },
       {
         "label": "Defier leur chef en le regardant dans les yeux",
-        "verb": "accepter",
+        "verb": "combattre",
         "effects": [
           {
             "type": "DAMAGE_LIFE",
@@ -3748,7 +3748,7 @@
       },
       {
         "label": "Defier le gardien en recitant un serment ancien",
-        "verb": "accepter",
+        "verb": "combattre",
         "effects": [
           {
             "type": "DAMAGE_LIFE",
@@ -3973,7 +3973,7 @@
     "options": [
       {
         "label": "Attaquer les racines en les brulant avec un silex",
-        "verb": "attendre",
+        "verb": "combattre",
         "effects": [
           {
             "type": "DAMAGE_LIFE",
@@ -4048,7 +4048,7 @@
       },
       {
         "label": "Briser l'autel pour stopper la resurrection",
-        "verb": "accepter",
+        "verb": "forcer",
         "effects": [
           {
             "type": "DAMAGE_LIFE",
@@ -4168,7 +4168,7 @@
       },
       {
         "label": "Briser les champignons en les pietinant rapidement",
-        "verb": "accepter",
+        "verb": "forcer",
         "effects": [
           {
             "type": "DAMAGE_LIFE",
@@ -4483,7 +4483,7 @@
       },
       {
         "label": "Briser la lentille du phare en lancant une pierre",
-        "verb": "accepter",
+        "verb": "forcer",
         "effects": [
           {
             "type": "DAMAGE_LIFE",
@@ -4543,7 +4543,7 @@
       },
       {
         "label": "Defier le gardien en renversant les trois calices",
-        "verb": "accepter",
+        "verb": "combattre",
         "effects": [
           {
             "type": "DAMAGE_LIFE",
@@ -4633,7 +4633,7 @@
     "options": [
       {
         "label": "Attaquer l'oracle pour faire taire sa prophetie",
-        "verb": "attendre",
+        "verb": "combattre",
         "effects": [
           {
             "type": "DAMAGE_LIFE",

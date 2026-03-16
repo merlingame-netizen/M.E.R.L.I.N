@@ -48,7 +48,7 @@ func _ready() -> void:
 func _create_player_pool() -> void:
 	for i in range(POOL_SIZE):
 		var player := AudioStreamPlayer.new()
-		player.bus = "Master"
+		player.bus = "SFX"
 		add_child(player)
 		_pool.append(player)
 

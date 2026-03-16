@@ -35,6 +35,7 @@ var _wired_flow: GameFlowController = null
 
 var _sfx: SFXEngine = null
 var _music: MusicManagerV2 = null
+var _stems: StemsMusicManager = null
 
 
 # =============================================================================
@@ -176,6 +177,7 @@ func unwire_all() -> void:
 	unwire_hub()
 	unwire_end_screen()
 	unwire_flow()
+	unwire_stems()
 	_sfx = null
 	_music = null
 
@@ -227,9 +229,11 @@ func _on_run_ended(reason: String, _data: Dictionary) -> void:
 	else:
 		_play_sfx(SFXEngine.SFX.VICTORY)
 
-	# Fade out run music
+	# Fade out run music and stems
 	if _music:
 		_music.fade_out(MUSIC_FADE_DURATION)
+	if _stems:
+		_stems.stop()
 
 
 func _on_run_period_changed(period: String) -> void:
@@ -309,6 +313,33 @@ func _on_flow_phase_changed(old_phase: String, new_phase: String) -> void:
 func set_run_biome_music(biome_id: String) -> void:
 	if _music and not biome_id.is_empty():
 		_music.set_biome_music(biome_id)
+	if _stems and not biome_id.is_empty():
+		_stems.set_biome(biome_id)
+
+
+# =============================================================================
+# STEMS MUSIC — Tension-based stem mixing
+# =============================================================================
+
+## Wire a StemsMusicManager for tension-driven stem mixing during runs.
+func wire_stems(stems: StemsMusicManager) -> void:
+	_stems = stems
+
+
+## Disconnect stems manager.
+func unwire_stems() -> void:
+	if _stems:
+		_stems.stop()
+	_stems = null
+
+
+## Update music tension from MOS/store tension value (0-100 → 0.0-0.8).
+## Call after each card resolution or when tension changes in the store.
+func update_tension(tension_value: int) -> void:
+	if _stems == null:
+		return
+	var normalized: float = clampf(float(tension_value) / 100.0 * 0.8, 0.0, 0.8)
+	_stems.set_tension(normalized)
 
 
 # =============================================================================

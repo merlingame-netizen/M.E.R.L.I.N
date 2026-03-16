@@ -65,7 +65,7 @@ const HUB_MUSIC: Dictionary = {
 }
 
 const MENU_MUSIC: Dictionary = {
-	"loop": "res://audio/music/menu/loop.ogg",
+	"loop": "res://Assets/Music/M.E.R.L.I.N - MAIN THEME.mp3",
 }
 
 # ═══════════════════════════════════════════════════════════════════════════════
@@ -310,6 +310,9 @@ func _enable_looping(stream: AudioStream) -> void:
 			var total_frames: int = int(wav.get_length() * float(wav.mix_rate))
 			if total_frames > 0:
 				wav.loop_end = total_frames
+	elif stream is AudioStreamMP3:
+		var mp3: AudioStreamMP3 = stream as AudioStreamMP3
+		mp3.loop = true
 
 
 func _kill_tween() -> void:
