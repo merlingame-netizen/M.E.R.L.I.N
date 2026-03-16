@@ -369,7 +369,7 @@ func _f_season(ev: Dictionary) -> float:
 func _f_date_proximity(ev: Dictionary) -> float:
 	## CAL-REQ-076: Bonus as event date approaches.
 	var date_val = ev.get("date", null)
-	if date_val == null or date_val == "floating":
+	if date_val == null or (date_val is String and date_val == "floating"):
 		return 1.0
 
 	var ev_month := 0
@@ -421,7 +421,7 @@ func get_events_in_window_from_catalogue(days_ahead: int) -> Array:
 	var results: Array = []
 	for ev in _event_catalogue:
 		var date_val = ev.get("date", null)
-		if date_val == null or date_val == "floating":
+		if date_val == null or (date_val is String and date_val == "floating"):
 			continue
 
 		var ev_month := 0
@@ -457,7 +457,7 @@ func _is_in_window(ev: Dictionary) -> bool:
 	var date_val = ev.get("date", null)
 
 	# Floating events are always in window (conditions handle availability)
-	if date_val == null or date_val == "floating":
+	if date_val == null or (date_val is String and date_val == "floating"):
 		return true
 
 	if date_val is Dictionary:
