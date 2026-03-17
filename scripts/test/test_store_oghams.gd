@@ -298,6 +298,64 @@ func test_effect_double_positives() -> bool:
 
 
 # =============================================================================
+# APPLY OGHAM EFFECT — currency_and_heal (saille)
+# =============================================================================
+
+func test_effect_currency_and_heal() -> bool:
+	var state: Dictionary = _make_state()
+	state["run"]["biome_currency"] = 5
+	var tracker: Dictionary = {"healed": 0}
+	var heal_func: Callable = func(amount: int) -> Dictionary:
+		tracker["healed"] = amount
+		return {"ok": true}
+	var spec: Dictionary = {"effect": "currency_and_heal", "effect_params": {"currency": 8, "heal": 3}}
+	StoreOghams.apply_ogham_effect("saille", spec, state, heal_func)
+	if int(tracker["healed"]) != 3:
+		push_error("effect currency_and_heal: should heal 3, healed %d" % int(tracker["healed"]))
+		return false
+	var currency: int = int(state["run"]["biome_currency"])
+	if currency != 13:
+		push_error("effect currency_and_heal: currency should be 13 (5+8), got %d" % currency)
+		return false
+	return true
+
+
+# =============================================================================
+# APPLY OGHAM EFFECT — no-op effects (protection/modifier/narrative)
+# =============================================================================
+
+func test_effect_cancel_all_negatives_is_noop() -> bool:
+	var state: Dictionary = _make_state()
+	var heal_func: Callable = func(_amount: int) -> Dictionary: return {}
+	var spec: Dictionary = {"effect": "cancel_all_negatives", "effect_params": {}}
+	StoreOghams.apply_ogham_effect("eadhadh", spec, state, heal_func)
+	if state["run"]["effect_modifier"].has("skip_all_negative"):
+		push_error("effect cancel_all_negatives: must NOT write to effect_modifier")
+		return false
+	return true
+
+
+func test_effect_reduce_high_damage_is_noop() -> bool:
+	var state: Dictionary = _make_state()
+	var heal_func: Callable = func(_amount: int) -> Dictionary: return {}
+	var spec: Dictionary = {"effect": "reduce_high_damage", "effect_params": {"threshold": 10, "reduced_to": 5}}
+	StoreOghams.apply_ogham_effect("gort", spec, state, heal_func)
+	if state["run"]["effect_modifier"].has("reduce_high_damage"):
+		push_error("effect reduce_high_damage: must NOT write to effect_modifier")
+		return false
+	return true
+
+
+func test_effect_reveal_is_noop() -> bool:
+	var state: Dictionary = _make_state()
+	var heal_func: Callable = func(_amount: int) -> Dictionary: return {}
+	var spec: Dictionary = {"effect": "reveal_one_option", "effect_params": {"target": "single_option"}}
+	StoreOghams.apply_ogham_effect("beith", spec, state, heal_func)
+	# reveal effects are pass-through — no state mutation expected
+	return true
+
+
+# =============================================================================
 # GET OGHAM COST / DISCOUNT
 # =============================================================================
 
