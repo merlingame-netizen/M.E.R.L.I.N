@@ -313,3 +313,7 @@ func _kill_ambient_tween() -> void:
 
 func _on_collectible_spawned(type: String, position: Vector3) -> void:
 	collectible_spawned.emit(type, position)
+
+
+func _on_biome_transition_complete(_biome_id: String) -> void:
+	pass

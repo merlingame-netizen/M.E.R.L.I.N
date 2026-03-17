@@ -1677,9 +1677,12 @@ func _validate_card(card: Dictionary) -> Dictionary:
 	# Pad to 3 options if LLM only returned 2
 	_pad_options_to_minimum(card)
 
-	# Validate each option
+	# Validate each option (guard against non-dict from malformed LLM output)
 	for i in range(card.options.size()):
-		card.options[i] = _validate_option(card.options[i])
+		if card.options[i] is Dictionary:
+			card.options[i] = _validate_option(card.options[i])
+		else:
+			card.options[i] = {"direction": "left", "label": "...", "effects": []}
 
 	# Ensure tags is array
 	if typeof(card.get("tags", null)) != TYPE_ARRAY:
