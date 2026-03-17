@@ -626,6 +626,67 @@ func test_guardrails_clean_card_is_valid() -> bool:
 	return true
 
 
+func test_guardrails_g2_no_tradeoff_flagged() -> bool:
+	var mos: MerlinOmniscient = _make_mos()
+	var card: Dictionary = {
+		"text": "Le soleil brille sur la lande.",
+		"options": [
+			{"effects": [{"type": "HEAL_LIFE", "amount": 5}]},
+			{"effects": [{"type": "ADD_REPUTATION", "amount": 3}]},
+		],
+	}
+	var result: Dictionary = mos.check_guardrails_phase8(card)
+	var issues: Array = result.get("issues", [])
+	var has_g2: bool = false
+	for issue in issues:
+		if str(issue).begins_with("G2:"):
+			has_g2 = true
+	if not has_g2:
+		push_error("guardrails_g2: card with no negative effects should flag G2 tradeoff warning")
+		return false
+	# G2 is a warning, not a rejection — card should still be valid
+	if not result.get("valid", false):
+		push_error("guardrails_g2: G2 warning should NOT invalidate the card")
+		return false
+	return true
+
+
+func test_guardrails_g2_tradeoff_present_no_flag() -> bool:
+	var mos: MerlinOmniscient = _make_mos()
+	var card: Dictionary = {
+		"text": "Un choix difficile se presente.",
+		"options": [
+			{"effects": [{"type": "HEAL_LIFE", "amount": 8}]},
+			{"effects": [{"type": "DAMAGE_LIFE", "amount": 5}]},
+		],
+	}
+	var result: Dictionary = mos.check_guardrails_phase8(card)
+	var issues: Array = result.get("issues", [])
+	for issue in issues:
+		if str(issue).begins_with("G2:"):
+			push_error("guardrails_g2: card WITH tradeoff should NOT flag G2")
+			return false
+	return true
+
+
+func test_guardrails_g1_under_50_no_flag() -> bool:
+	var mos: MerlinOmniscient = _make_mos()
+	var card: Dictionary = {
+		"text": "Un esprit vous observe.",
+		"options": [
+			{"effects": [{"type": "HEAL_LIFE", "amount": 10}]},
+			{"effects": [{"type": "DAMAGE_LIFE", "amount": 5}]},
+		],
+	}
+	var result: Dictionary = mos.check_guardrails_phase8(card)
+	var issues: Array = result.get("issues", [])
+	for issue in issues:
+		if str(issue).begins_with("G1:"):
+			push_error("guardrails_g1: total_effect 15 should NOT flag G1")
+			return false
+	return true
+
+
 # ---------------------------------------------------------------------------
 # init_mos_registries
 # ---------------------------------------------------------------------------
