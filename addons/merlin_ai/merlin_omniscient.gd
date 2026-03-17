@@ -2646,24 +2646,30 @@ func check_guardrails_phase8(card: Dictionary) -> Dictionary:
 		if text.contains(str(word)):
 			issues.append("G4: modern word '%s'" % word)
 
-	# G5: Max 2 active promises — flag if card adds a PROMISE effect
+	# G5: Max 2 active promises — flag once if card adds a PROMISE effect
 	# while 2 are already active (promise system enforces, this warns)
 	var promise_reg: Dictionary = _mos_registries.get("promises", {})
 	var active_promises: Array = promise_reg.get("active", [])
 	if active_promises.size() >= 2:
+		var g5_flagged: bool = false
 		for option in options:
+			if g5_flagged:
+				break
 			if option is Dictionary:
 				for effect in option.get("effects", []):
 					if effect is Dictionary and str(effect.get("type", "")) == "PROMISE":
 						issues.append("G5: card adds PROMISE but 2 already active")
+						g5_flagged = true
+						break
 
 	# G6: Cross-faction 10% cap — flag if >10% of cards played affect
-	# multiple factions (tracked in faction registry)
+	# multiple factions (tracked in faction registry).
+	# NOTE: cross_faction_count is approximate (per-call, not per-card).
 	var faction_reg: Dictionary = _mos_registries.get("faction", {})
 	var cross_count: int = int(faction_reg.get("cross_faction_count", 0))
 	var cards_reg: Dictionary = _mos_registries.get("cards", {})
 	var total_played: int = int(cards_reg.get("total_played", 0))
-	if total_played > 0 and cross_count > 0:
+	if total_played > 0:
 		var cross_ratio: float = float(cross_count) / float(total_played)
 		if cross_ratio > 0.10:
 			issues.append("G6: cross-faction ratio %.1f%% > 10%%" % (cross_ratio * 100.0))
