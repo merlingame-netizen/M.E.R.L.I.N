@@ -588,3 +588,59 @@ func test_get_npc_card_tracks_recently_used() -> bool:
 	if card_id not in pool.recently_used:
 		return _fail("get_npc_card should track returned card in recently_used")
 	return true
+
+
+# =============================================================================
+# EFFECT CODE VALIDATION — All cards must use valid effect codes
+# =============================================================================
+
+func test_all_cards_have_valid_effect_codes() -> bool:
+	var pool := _make_pool()
+	var invalid: Array = []
+	var total_cards: int = 0
+	for context_key in pool.cards_by_context:
+		var cards: Array = pool.cards_by_context[context_key]
+		for card in cards:
+			total_cards += 1
+			var options: Array = card.get("options", [])
+			for opt_idx in range(options.size()):
+				var option: Variant = options[opt_idx]
+				if not (option is Dictionary):
+					continue
+				var effects: Array = option.get("effects", [])
+				for eff in effects:
+					var code: String = ""
+					if eff is String:
+						code = str(eff).split(":")[0]
+					elif eff is Dictionary:
+						code = str(eff.get("type", ""))
+					if not code.is_empty() and not MerlinEffectEngine.VALID_CODES.has(code):
+						invalid.append("card=%s ctx=%s opt=%d code=%s" % [
+							str(card.get("id", "?")), context_key, opt_idx, code])
+	if invalid.size() > 0:
+		push_error("Found %d invalid effect codes in %d cards: %s" % [
+			invalid.size(), total_cards, str(invalid.slice(0, 5))])
+		return false
+	return true
+
+
+func test_all_cards_have_at_most_3_effects_per_option() -> bool:
+	var pool := _make_pool()
+	var violations: Array = []
+	for context_key in pool.cards_by_context:
+		var cards: Array = pool.cards_by_context[context_key]
+		for card in cards:
+			var options: Array = card.get("options", [])
+			for opt_idx in range(options.size()):
+				var option: Variant = options[opt_idx]
+				if not (option is Dictionary):
+					continue
+				var effects: Array = option.get("effects", [])
+				if effects.size() > 3:
+					violations.append("card=%s ctx=%s opt=%d count=%d" % [
+						str(card.get("id", "?")), context_key, opt_idx, effects.size()])
+	if violations.size() > 0:
+		push_error("Found %d options with >3 effects: %s" % [
+			violations.size(), str(violations.slice(0, 5))])
+		return false
+	return true
