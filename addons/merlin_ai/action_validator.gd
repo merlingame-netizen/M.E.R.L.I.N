@@ -29,13 +29,14 @@ func validate(action: Dictionary) -> Dictionary:
 	return result
 
 func _check_condition(condition: String, action: Dictionary) -> bool:
+	var params: Dictionary = action.get("params", {})
 	match condition:
 		"target_in_range":
-			return _check_target_in_range(str(action.params.get("target_id", "")))
+			return _check_target_in_range(str(params.get("target_id", "")))
 		"has_mana":
 			return int(game_state_ref.get("player_mana", 0)) > 0
 		"spell_known":
-			return action.params.get("spell_id", "") in game_state_ref.get("known_spells", [])
+			return str(params.get("spell_id", "")) in game_state_ref.get("known_spells", [])
 		_:
 			return true
 
