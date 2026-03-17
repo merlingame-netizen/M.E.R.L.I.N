@@ -687,6 +687,90 @@ func test_guardrails_g1_under_50_no_flag() -> bool:
 	return true
 
 
+func test_guardrails_g5_promise_at_cap_flagged() -> bool:
+	var mos: MerlinOmniscient = _make_mos()
+	mos.init_mos_registries()
+	mos._mos_registries["promises"]["active"] = [{"id": "p1"}, {"id": "p2"}]
+	var card: Dictionary = {
+		"text": "Le druide propose un pacte.",
+		"options": [
+			{"effects": [{"type": "PROMISE", "amount": 1}]},
+		],
+	}
+	var result: Dictionary = mos.check_guardrails_phase8(card)
+	var issues: Array = result.get("issues", [])
+	var has_g5: bool = false
+	for issue in issues:
+		if str(issue).begins_with("G5:"):
+			has_g5 = true
+	if not has_g5:
+		push_error("guardrails_g5: card adding PROMISE with 2 active should flag G5")
+		return false
+	return true
+
+
+func test_guardrails_g5_no_flag_below_cap() -> bool:
+	var mos: MerlinOmniscient = _make_mos()
+	mos.init_mos_registries()
+	mos._mos_registries["promises"]["active"] = [{"id": "p1"}]
+	var card: Dictionary = {
+		"text": "Un esprit offre son aide.",
+		"options": [
+			{"effects": [{"type": "PROMISE", "amount": 1}]},
+		],
+	}
+	var result: Dictionary = mos.check_guardrails_phase8(card)
+	var issues: Array = result.get("issues", [])
+	for issue in issues:
+		if str(issue).begins_with("G5:"):
+			push_error("guardrails_g5: only 1 active promise, should NOT flag G5")
+			return false
+	return true
+
+
+func test_guardrails_g6_cross_faction_over_10pct_flagged() -> bool:
+	var mos: MerlinOmniscient = _make_mos()
+	mos.init_mos_registries()
+	mos._mos_registries["faction"]["cross_faction_count"] = 3
+	mos._mos_registries["cards"]["total_played"] = 10
+	var card: Dictionary = {
+		"text": "Un choix entre les factions.",
+		"options": [
+			{"effects": [{"type": "HEAL_LIFE", "amount": 5}]},
+		],
+	}
+	var result: Dictionary = mos.check_guardrails_phase8(card)
+	var issues: Array = result.get("issues", [])
+	var has_g6: bool = false
+	for issue in issues:
+		if str(issue).begins_with("G6:"):
+			has_g6 = true
+	if not has_g6:
+		push_error("guardrails_g6: 30%% cross-faction should flag G6")
+		return false
+	return true
+
+
+func test_guardrails_g6_no_flag_under_10pct() -> bool:
+	var mos: MerlinOmniscient = _make_mos()
+	mos.init_mos_registries()
+	mos._mos_registries["faction"]["cross_faction_count"] = 1
+	mos._mos_registries["cards"]["total_played"] = 20
+	var card: Dictionary = {
+		"text": "Un calme dans la foret.",
+		"options": [
+			{"effects": [{"type": "HEAL_LIFE", "amount": 3}]},
+		],
+	}
+	var result: Dictionary = mos.check_guardrails_phase8(card)
+	var issues: Array = result.get("issues", [])
+	for issue in issues:
+		if str(issue).begins_with("G6:"):
+			push_error("guardrails_g6: 5%% cross-faction should NOT flag G6")
+			return false
+	return true
+
+
 # ---------------------------------------------------------------------------
 # init_mos_registries
 # ---------------------------------------------------------------------------
