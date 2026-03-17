@@ -40,9 +40,10 @@ static func use_ogham(state: Dictionary, skill_id: String) -> Dictionary:
 
 ## Apply the actual Ogham effect on the game state.
 ## heal_func: Callable that takes (amount: int) -> Dictionary
-## Protection/modifier oghams (block_first_negative, cancel_all_negatives, reduce_high_damage,
-## double_positives, invert_effects) are handled at step 8 of MerlinEffectEngine.process_card()
-## via _filter_protection() — they need no state mutation here.
+## Protection oghams (block_first_negative, cancel_all_negatives, reduce_high_damage) are
+## handled at step 8 of MerlinEffectEngine.process_card() via _filter_protection().
+## Modifier oghams (double_positives, invert_effects) are no-ops pending implementation.
+## None of these need state mutation here.
 static func apply_ogham_effect(_skill_id: String, spec: Dictionary, state: Dictionary, heal_func: Callable) -> void:
 	var effect_id: String = str(spec.get("effect", ""))
 	var params: Dictionary = spec.get("effect_params", {})

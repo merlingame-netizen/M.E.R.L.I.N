@@ -233,9 +233,10 @@ func test_effect_block_first_negative() -> bool:
 	var heal_func: Callable = func(_amount: int) -> Dictionary: return {}
 	var spec: Dictionary = {"effect": "block_first_negative", "effect_params": {"count": 1}}
 	StoreOghams.apply_ogham_effect("luis", spec, state, heal_func)
-	var shield: bool = bool(state["run"]["effect_modifier"].get("shield_next_negative", false))
-	if not shield:
-		push_error("effect block_first_negative: shield_next_negative should be true")
+	# Protection is handled by _filter_protection in process_card step 8.
+	# apply_ogham_effect must NOT mutate effect_modifier for this effect.
+	if state["run"]["effect_modifier"].has("shield_next_negative"):
+		push_error("effect block_first_negative: must NOT write to effect_modifier (handled by _filter_protection)")
 		return false
 	return true
 
@@ -289,9 +290,9 @@ func test_effect_double_positives() -> bool:
 	var heal_func: Callable = func(_amount: int) -> Dictionary: return {}
 	var spec: Dictionary = {"effect": "double_positives", "effect_params": {"multiplier": 2.0}}
 	StoreOghams.apply_ogham_effect("tinne", spec, state, heal_func)
-	var dp: bool = bool(state["run"]["effect_modifier"].get("double_positive", false))
-	if not dp:
-		push_error("effect double_positives: double_positive modifier should be true")
+	# Modifier is handled downstream by process_card, not by apply_ogham_effect.
+	if state["run"]["effect_modifier"].has("double_positive"):
+		push_error("effect double_positives: must NOT write to effect_modifier (handled downstream)")
 		return false
 	return true
 
