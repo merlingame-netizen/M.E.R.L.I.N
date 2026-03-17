@@ -40,24 +40,15 @@ static func use_ogham(state: Dictionary, skill_id: String) -> Dictionary:
 
 ## Apply the actual Ogham effect on the game state.
 ## heal_func: Callable that takes (amount: int) -> Dictionary
-## NOTE: Protection flags (shield_next_negative, skip_all_negative, reduce_high_damage)
-## and modifier flags (double_positive, invert_effects) are set here but consumed via
-## ogham_result.flag in MerlinEffectEngine.process_card() — the effect_modifier dict
-## in state.run is legacy and not read by any active code path.
+## Protection/modifier oghams (block_first_negative, cancel_all_negatives, reduce_high_damage,
+## double_positives, invert_effects) are handled at step 8 of MerlinEffectEngine.process_card()
+## via _filter_protection() — they need no state mutation here.
 static func apply_ogham_effect(_skill_id: String, spec: Dictionary, state: Dictionary, heal_func: Callable) -> void:
 	var effect_id: String = str(spec.get("effect", ""))
 	var params: Dictionary = spec.get("effect_params", {})
 	match effect_id:
 		"heal_immediate":
 			heal_func.call(int(params.get("amount", 10)))
-		"block_first_negative":
-			var run: Dictionary = state.get("run", {})
-			var modifiers: Dictionary = run.get("effect_modifier", {})
-			modifiers["shield_next_negative"] = true
-			run["effect_modifier"] = modifiers
-			state["run"] = run
-		"reveal_one_option", "reveal_all_options", "predict_next":
-			pass
 		"heal_and_cost":
 			heal_func.call(int(params.get("heal", 18)))
 			var run: Dictionary = state.get("run", {})
@@ -75,32 +66,9 @@ static func apply_ogham_effect(_skill_id: String, spec: Dictionary, state: Dicti
 			var currency: int = int(run.get("biome_currency", 0))
 			run["biome_currency"] = currency + int(params.get("currency", 8))
 			state["run"] = run
-		"cancel_all_negatives":
-			var run: Dictionary = state.get("run", {})
-			var modifiers: Dictionary = run.get("effect_modifier", {})
-			modifiers["skip_all_negative"] = true
-			run["effect_modifier"] = modifiers
-			state["run"] = run
-		"reduce_high_damage":
-			var run: Dictionary = state.get("run", {})
-			var modifiers: Dictionary = run.get("effect_modifier", {})
-			modifiers["reduce_high_damage"] = true
-			modifiers["damage_threshold"] = int(params.get("threshold", 10))
-			modifiers["damage_reduced_to"] = int(params.get("reduced_to", 5))
-			run["effect_modifier"] = modifiers
-			state["run"] = run
-		"double_positives":
-			var run: Dictionary = state.get("run", {})
-			var modifiers: Dictionary = run.get("effect_modifier", {})
-			modifiers["double_positive"] = true
-			run["effect_modifier"] = modifiers
-			state["run"] = run
-		"invert_effects":
-			var run: Dictionary = state.get("run", {})
-			var modifiers: Dictionary = run.get("effect_modifier", {})
-			modifiers["invert_effects"] = true
-			run["effect_modifier"] = modifiers
-			state["run"] = run
+		"block_first_negative", "cancel_all_negatives", "reduce_high_damage", \
+		"double_positives", "invert_effects", \
+		"reveal_one_option", "reveal_all_options", "predict_next", \
 		"replace_worst_option", "regenerate_all_options", "full_reroll", "force_twist", "sacrifice_trade":
 			pass
 

@@ -675,6 +675,9 @@ static func scale_and_cap(effect_code: String, raw_amount: int, multiplier: floa
 ## Returns the filtered effects array (new array, does not mutate input).
 ## active_ogham: the currently active ogham key (e.g. "luis")
 ## applied_effects: array of {"code": String, "amount": int, ...} dicts
+## NOTE: This method works on structured effect dicts and is used by run_3d_controller.gd.
+## For the process_card() pipeline (step 8), see _filter_protection() below which
+## operates on the parsed {"code", "args"} format instead.
 static func apply_ogham_protection(applied_effects: Array, active_ogham: String) -> Array:
 	if active_ogham.is_empty():
 		return applied_effects.duplicate()

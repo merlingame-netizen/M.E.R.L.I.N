@@ -458,7 +458,7 @@ func _reduce(action: Dictionary) -> Dictionary:
 			var value: int = int(action.get("value", 0))
 			var run: Dictionary = state.get("run", {})
 			var old_karma: int = int(run.get("karma", 0))
-			var new_karma: int = clampi(old_karma + value, -100, 100)
+			var new_karma: int = clampi(old_karma + value, -20, 20)
 			run["karma"] = new_karma
 			state["run"] = run
 			return {"ok": true, "karma": new_karma, "delta": new_karma - old_karma}
