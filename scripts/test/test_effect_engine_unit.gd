@@ -721,9 +721,10 @@ func test_process_card_negative_score_clamped() -> bool:
 	if not steps.has("score"):
 		push_error("Negative score clamp: pipeline did not reach score step")
 		return false
+	# Score -50 is clamped to 0, which maps to echec_critique (mult -1.5)
 	var mult: float = float(result.get("multiplier", 0.0))
-	if mult > 0.25 or mult < 0.0:
-		push_error("Negative score clamp: expected 0.0-0.25 multiplier, got %f" % mult)
+	if not is_equal_approx(mult, -1.5):
+		push_error("Negative score clamp: expected -1.5 (echec_critique for score 0), got %f" % mult)
 		return false
 	return true
 

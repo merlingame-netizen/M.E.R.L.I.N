@@ -241,9 +241,9 @@ func test_card_valid_structure_passes() -> bool:
 	var card: Dictionary = {
 		"text": "Un druide vous interpelle au bord du sentier.",
 		"options": [
-			{"label": "Ecouter", "effects": ["HEAL_LIFE:2"]},
-			{"label": "Ignorer", "effects": ["DAMAGE_LIFE:1"]},
-			{"label": "Fuir", "effects": ["ADD_ANAM:3"]},
+			{"label": "Ecouter", "effects": [{"type": "HEAL_LIFE", "amount": 2}]},
+			{"label": "Ignorer", "effects": [{"type": "DAMAGE_LIFE", "amount": 1}]},
+			{"label": "Fuir", "effects": [{"type": "ADD_ANAM", "amount": 3}]},
 		],
 	}
 	var result: Dictionary = card_sys._validate_card(card)
