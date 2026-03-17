@@ -2409,20 +2409,32 @@ func record_card_played(card: Dictionary, option_index: int, score: int, field: 
 	cards_reg["themes_seen"] = themes
 	_mos_registries["cards"] = cards_reg
 
+	# Track cross-faction cards: count distinct factions affected by chosen option
+	var options: Array = card.get("options", [])
+	if option_index >= 0 and option_index < options.size():
+		var option: Variant = options[option_index]
+		if option is Dictionary:
+			var factions_touched: Dictionary = {}
+			for effect in option.get("effects", []):
+				if effect is Dictionary and str(effect.get("type", "")) == "ADD_REPUTATION":
+					var f: String = str(effect.get("faction", ""))
+					if not f.is_empty():
+						factions_touched[f] = true
+				elif effect is String and str(effect).begins_with("ADD_REPUTATION:"):
+					var parts: Array = str(effect).split(":")
+					if parts.size() >= 2:
+						factions_touched[str(parts[1])] = true
+			if factions_touched.size() >= 2:
+				var faction_reg: Dictionary = _mos_registries.get("faction", {})
+				faction_reg["cross_faction_count"] = int(faction_reg.get("cross_faction_count", 0)) + 1
+				_mos_registries["faction"] = faction_reg
+
 
 func record_faction_delta(faction: String, amount: float) -> void:
 	var faction_reg: Dictionary = _mos_registries.get("faction", {})
 	var deltas: Dictionary = faction_reg.get("rep_deltas_this_run", {})
 	deltas[faction] = float(deltas.get(faction, 0.0)) + amount
 	faction_reg["rep_deltas_this_run"] = deltas
-
-	# Track cross-faction cards (positive rep for 2+ factions in same card)
-	var positive_count: int = 0
-	for f in deltas:
-		if float(deltas[f]) > 0:
-			positive_count += 1
-	if positive_count >= 2:
-		faction_reg["cross_faction_count"] = int(faction_reg.get("cross_faction_count", 0)) + 1
 	_mos_registries["faction"] = faction_reg
 
 
