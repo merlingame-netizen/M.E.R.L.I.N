@@ -558,6 +558,47 @@ func test_annotate_fields_uses_explicit_verb() -> bool:
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
+# SELECT MINIGAME
+# ═══════════════════════════════════════════════════════════════════════════════
+
+func test_select_minigame_known_field_returns_valid() -> bool:
+	var cs: MerlinCardSystem = _make_card_system()
+	for field in MerlinConstants.FIELD_MINIGAMES:
+		var mg: String = cs.select_minigame(field)
+		if mg.is_empty():
+			push_error("select_minigame('%s') returned empty" % field)
+			return false
+		var valid_mgs: Array = MerlinConstants.FIELD_MINIGAMES[field]
+		if mg not in valid_mgs:
+			push_error("select_minigame('%s') returned '%s' not in %s" % [field, mg, str(valid_mgs)])
+			return false
+	return true
+
+
+func test_select_minigame_unknown_field_returns_fallback() -> bool:
+	var cs: MerlinCardSystem = _make_card_system()
+	var mg: String = cs.select_minigame("nonexistent_field")
+	if mg != "apaisement":
+		push_error("select_minigame unknown field: expected 'apaisement', got '%s'" % mg)
+		return false
+	return true
+
+
+func test_select_minigame_all_8_fields_covered() -> bool:
+	var expected_fields: Array = ["chance", "bluff", "observation", "logique",
+		"finesse", "vigueur", "esprit", "perception"]
+	for field in expected_fields:
+		if not MerlinConstants.FIELD_MINIGAMES.has(field):
+			push_error("FIELD_MINIGAMES missing field '%s'" % field)
+			return false
+		var mgs: Array = MerlinConstants.FIELD_MINIGAMES[field]
+		if mgs.is_empty():
+			push_error("FIELD_MINIGAMES['%s'] has empty minigame list" % field)
+			return false
+	return true
+
+
+# ═══════════════════════════════════════════════════════════════════════════════
 # FIND WORST OPTION
 # ═══════════════════════════════════════════════════════════════════════════════
 
