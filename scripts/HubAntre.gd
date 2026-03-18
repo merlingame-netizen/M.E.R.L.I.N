@@ -25,11 +25,11 @@ const SCENE_MAPMONDE := "res://scenes/MapMonde.tscn"
 # BIOME DATA -- 7 Sanctuaires de Bretagne
 # =============================================================================
 
-const BIOME_DATA := {
+var BIOME_DATA := {
 	"foret_broceliande": {
 		"name": "Foret de Broceliande",
 		"subtitle": "Mystere et magie ancestrale",
-		"color": MerlinVisual.GBC.forest,
+		"color": MerlinVisual.GBC.grass_dark,
 		"ogham": "duir",
 		"guardian": "Maelgwn",
 		"season": "automne",

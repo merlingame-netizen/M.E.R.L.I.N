@@ -59,7 +59,7 @@ func connect_signals() -> void:
 			ui.journal_requested.connect(_on_journal_requested)
 
 	# Ogham wheel signals
-	if ui and ui.has("ogham_wheel") and ui.ogham_wheel:
+	if ui and "ogham_wheel" in ui and ui.ogham_wheel:
 		if ui.ogham_wheel.has_signal("ogham_selected"):
 			ui.ogham_wheel.ogham_selected.connect(_on_ogham_selected)
 
