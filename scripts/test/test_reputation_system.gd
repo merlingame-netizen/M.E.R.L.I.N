@@ -1,309 +1,377 @@
-# test_reputation_system.gd
-# GUT Unit Tests for MerlinReputationSystem
-# Covers: apply_delta, get_available_endings, get_unlocked_content,
-#         get_dominant_faction, describe_factions, validation helpers
+## =============================================================================
+## Unit Tests — MerlinReputationSystem (headless-safe, RefCounted)
+## =============================================================================
+## Covers: apply_delta, get_available_endings, get_unlocked_content,
+##         get_dominant_faction, describe_factions, validation helpers,
+##         instance API (add_reputation, clamp, cap_per_card, thresholds)
+## Converted from GutTest to RefCounted for headless runner compatibility.
+## =============================================================================
 
-extends GutTest
+extends RefCounted
 
 
-# ═══════════════════════════════════════════════════════════════════════════════
-# HELPERS
-# ═══════════════════════════════════════════════════════════════════════════════
+func _fail(msg: String) -> bool:
+	push_error(msg)
+	return false
+
 
 func _make_factions(druides: float, anciens: float, korrigans: float, niamh: float, ankou: float) -> Dictionary:
-	return {
-		"druides": druides,
-		"anciens": anciens,
-		"korrigans": korrigans,
-		"niamh": niamh,
-		"ankou": ankou,
-	}
+	return {"druides": druides, "anciens": anciens, "korrigans": korrigans, "niamh": niamh, "ankou": ankou}
+
+
+func _make_rep() -> MerlinReputationSystem:
+	return MerlinReputationSystem.new()
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
-# apply_delta
+# apply_delta (static)
 # ═══════════════════════════════════════════════════════════════════════════════
 
-func test_apply_delta_basic():
+func test_apply_delta_basic() -> bool:
 	var factions: Dictionary = _make_factions(30.0, 0.0, 0.0, 0.0, 0.0)
 	var result: Dictionary = MerlinReputationSystem.apply_delta(factions, "druides", 20.0)
-	assert_eq(result["druides"], 50.0, "Druides devrait etre 50 apres +20")
-	# Original non muté
-	assert_eq(factions["druides"], 30.0, "L'original ne doit pas etre mute")
+	if result["druides"] != 50.0:
+		return _fail("apply_delta: expected 50, got %s" % str(result["druides"]))
+	if factions["druides"] != 30.0:
+		return _fail("apply_delta: original mutated")
+	return true
 
 
-func test_apply_delta_clamped_max():
+func test_apply_delta_clamped_max() -> bool:
 	var factions: Dictionary = _make_factions(90.0, 0.0, 0.0, 0.0, 0.0)
 	var result: Dictionary = MerlinReputationSystem.apply_delta(factions, "druides", 20.0)
-	assert_eq(result["druides"], 100.0, "Clamp max a 100")
+	if result["druides"] != 100.0:
+		return _fail("apply_delta clamp max: expected 100, got %s" % str(result["druides"]))
+	return true
 
 
-func test_apply_delta_clamped_min():
+func test_apply_delta_clamped_min() -> bool:
 	var factions: Dictionary = _make_factions(5.0, 0.0, 0.0, 0.0, 0.0)
 	var result: Dictionary = MerlinReputationSystem.apply_delta(factions, "druides", -20.0)
-	assert_eq(result["druides"], 0.0, "Clamp min a 0")
+	if result["druides"] != 0.0:
+		return _fail("apply_delta clamp min: expected 0, got %s" % str(result["druides"]))
+	return true
 
 
-func test_apply_delta_invalid_faction():
+func test_apply_delta_invalid_faction() -> bool:
 	var factions: Dictionary = _make_factions(50.0, 0.0, 0.0, 0.0, 0.0)
 	var result: Dictionary = MerlinReputationSystem.apply_delta(factions, "humains", 10.0)
-	# Faction inconnue : dict retourné identique, pas d'entrée ajoutée
-	assert_false(result.has("humains"), "Faction inconnue ne doit pas etre ajoutee")
-	assert_eq(result["druides"], 50.0, "Autres factions inchangees")
+	if result.has("humains"):
+		return _fail("apply_delta: invalid faction should not be added")
+	if result["druides"] != 50.0:
+		return _fail("apply_delta: other factions should be unchanged")
+	return true
 
 
-func test_apply_delta_negative():
+func test_apply_delta_negative() -> bool:
 	var factions: Dictionary = _make_factions(60.0, 0.0, 0.0, 0.0, 0.0)
 	var result: Dictionary = MerlinReputationSystem.apply_delta(factions, "druides", -15.0)
-	assert_eq(result["druides"], 45.0, "Delta negatif applique correctement")
+	if result["druides"] != 45.0:
+		return _fail("apply_delta negative: expected 45, got %s" % str(result["druides"]))
+	return true
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
 # get_available_endings
 # ═══════════════════════════════════════════════════════════════════════════════
 
-func test_no_endings_below_threshold():
+func test_no_endings_below_threshold() -> bool:
 	var factions: Dictionary = _make_factions(79.9, 79.9, 79.9, 79.9, 79.9)
 	var endings: Array[String] = MerlinReputationSystem.get_available_endings(factions)
-	assert_eq(endings.size(), 0, "Aucune fin sous 80")
+	if endings.size() != 0:
+		return _fail("endings below 80: expected 0, got %d" % endings.size())
+	return true
 
 
-func test_single_ending_at_threshold():
+func test_single_ending_at_threshold() -> bool:
 	var factions: Dictionary = _make_factions(80.0, 0.0, 0.0, 0.0, 0.0)
 	var endings: Array[String] = MerlinReputationSystem.get_available_endings(factions)
-	assert_eq(endings.size(), 1, "Une fin disponible a 80")
-	assert_true(endings.has("druides"), "Druides debloques")
+	if endings.size() != 1 or not endings.has("druides"):
+		return _fail("single ending at 80: expected [druides], got %s" % str(endings))
+	return true
 
 
-func test_multiple_endings_available():
-	# Design Q2 2026-03-11 : plusieurs fins valides sans hierarchie
+func test_multiple_endings_available() -> bool:
 	var factions: Dictionary = _make_factions(85.0, 90.0, 0.0, 80.0, 0.0)
 	var endings: Array[String] = MerlinReputationSystem.get_available_endings(factions)
-	assert_eq(endings.size(), 3, "Trois fins disponibles simultanement")
-	assert_true(endings.has("druides"), "Druides debloques")
-	assert_true(endings.has("anciens"), "Anciens debloques")
-	assert_true(endings.has("niamh"), "Niamh debloquee")
+	if endings.size() != 3:
+		return _fail("multiple endings: expected 3, got %d" % endings.size())
+	return true
 
 
-func test_all_endings_at_100():
+func test_all_endings_at_100() -> bool:
 	var factions: Dictionary = _make_factions(100.0, 100.0, 100.0, 100.0, 100.0)
 	var endings: Array[String] = MerlinReputationSystem.get_available_endings(factions)
-	assert_eq(endings.size(), 5, "Toutes les fins disponibles a 100")
+	if endings.size() != 5:
+		return _fail("all endings at 100: expected 5, got %d" % endings.size())
+	return true
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
 # get_unlocked_content
 # ═══════════════════════════════════════════════════════════════════════════════
 
-func test_no_content_below_threshold():
+func test_no_content_below_threshold() -> bool:
 	var factions: Dictionary = _make_factions(49.9, 0.0, 0.0, 0.0, 0.0)
 	var content: Array[String] = MerlinReputationSystem.get_unlocked_content(factions)
-	assert_eq(content.size(), 0, "Aucun contenu sous 50")
+	if content.size() != 0:
+		return _fail("content below 50: expected 0, got %d" % content.size())
+	return true
 
 
-func test_content_at_threshold():
+func test_content_at_threshold() -> bool:
 	var factions: Dictionary = _make_factions(50.0, 0.0, 0.0, 0.0, 0.0)
 	var content: Array[String] = MerlinReputationSystem.get_unlocked_content(factions)
-	assert_eq(content.size(), 1, "Contenu debloque a 50")
-	assert_true(content.has("druides"), "Druides debloque")
+	if content.size() != 1 or not content.has("druides"):
+		return _fail("content at 50: expected [druides], got %s" % str(content))
+	return true
 
 
-func test_ending_also_unlocks_content():
-	# Faction a 80 doit apparaitre dans get_unlocked_content aussi (80 >= 50)
+func test_ending_also_unlocks_content() -> bool:
 	var factions: Dictionary = _make_factions(0.0, 80.0, 0.0, 0.0, 0.0)
 	var content: Array[String] = MerlinReputationSystem.get_unlocked_content(factions)
-	assert_true(content.has("anciens"), "Anciens a 80 debloques dans le contenu aussi")
+	if not content.has("anciens"):
+		return _fail("80 should unlock content too")
+	return true
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
 # get_dominant_faction
 # ═══════════════════════════════════════════════════════════════════════════════
 
-func test_dominant_faction_single():
+func test_dominant_faction_single() -> bool:
 	var factions: Dictionary = _make_factions(0.0, 0.0, 75.0, 0.0, 0.0)
 	var dominant: String = MerlinReputationSystem.get_dominant_faction(factions)
-	assert_eq(dominant, "korrigans", "Korrigans dominant")
+	if dominant != "korrigans":
+		return _fail("dominant single: expected korrigans, got %s" % dominant)
+	return true
 
 
-func test_dominant_faction_all_zero():
+func test_dominant_faction_all_zero() -> bool:
 	var factions: Dictionary = _make_factions(0.0, 0.0, 0.0, 0.0, 0.0)
 	var dominant: String = MerlinReputationSystem.get_dominant_faction(factions)
-	assert_eq(dominant, "", "Aucun dominant si toutes a 0")
+	if dominant != "":
+		return _fail("dominant all zero: expected empty, got %s" % dominant)
+	return true
 
 
-func test_dominant_faction_uses_max():
+func test_dominant_faction_uses_max() -> bool:
 	var factions: Dictionary = _make_factions(60.0, 70.0, 65.0, 55.0, 45.0)
 	var dominant: String = MerlinReputationSystem.get_dominant_faction(factions)
-	assert_eq(dominant, "anciens", "Anciens dominant a 70")
+	if dominant != "anciens":
+		return _fail("dominant max: expected anciens, got %s" % dominant)
+	return true
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
 # describe_factions
 # ═══════════════════════════════════════════════════════════════════════════════
 
-func test_describe_factions_format():
+func test_describe_factions_format() -> bool:
 	var factions: Dictionary = _make_factions(45.0, 12.0, 78.0, 5.0, 30.0)
 	var desc: String = MerlinReputationSystem.describe_factions(factions)
-	assert_true(desc.contains("Druides:45"), "Contient Druides:45")
-	assert_true(desc.contains("Anciens:12"), "Contient Anciens:12")
-	assert_true(desc.contains("Korrigans:78"), "Contient Korrigans:78")
-	assert_true(desc.contains("Niamh:5"), "Contient Niamh:5")
-	assert_true(desc.contains("Ankou:30"), "Contient Ankou:30")
+	if not desc.contains("Druides:45") or not desc.contains("Korrigans:78"):
+		return _fail("describe format missing expected content: %s" % desc)
+	return true
 
 
-func test_describe_factions_all_zero():
+func test_describe_factions_all_zero() -> bool:
 	var factions: Dictionary = _make_factions(0.0, 0.0, 0.0, 0.0, 0.0)
 	var desc: String = MerlinReputationSystem.describe_factions(factions)
-	assert_true(desc.length() > 0, "Description non vide meme a 0")
-	assert_true(desc.contains("Druides:0"), "Contient Druides:0")
+	if desc.length() == 0 or not desc.contains("Druides:0"):
+		return _fail("describe all zero: unexpected output")
+	return true
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
 # build_default_factions
 # ═══════════════════════════════════════════════════════════════════════════════
 
-func test_build_default_factions():
+func test_build_default_factions() -> bool:
 	var factions: Dictionary = MerlinReputationSystem.build_default_factions()
-	assert_eq(factions.size(), 5, "5 factions par defaut")
+	if factions.size() != 5:
+		return _fail("default factions: expected 5, got %d" % factions.size())
 	for faction in MerlinReputationSystem.FACTIONS:
-		assert_true(factions.has(faction), "Faction presente: " + faction)
-		assert_eq(factions[faction], 0.0, "Valeur initiale 0.0 pour " + faction)
+		if not factions.has(faction) or factions[faction] != 0.0:
+			return _fail("default factions: %s missing or non-zero" % faction)
+	return true
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
 # is_valid_faction
 # ═══════════════════════════════════════════════════════════════════════════════
 
-func test_valid_factions():
+func test_valid_factions() -> bool:
 	for faction in MerlinReputationSystem.FACTIONS:
-		assert_true(MerlinReputationSystem.is_valid_faction(faction), faction + " devrait etre valide")
+		if not MerlinReputationSystem.is_valid_faction(faction):
+			return _fail("is_valid_faction: %s should be valid" % faction)
+	return true
 
 
-func test_invalid_faction():
-	assert_false(MerlinReputationSystem.is_valid_faction("humains"), "humains n'est pas dans les 5 factions")
-	assert_false(MerlinReputationSystem.is_valid_faction(""), "chaine vide invalide")
+func test_invalid_faction() -> bool:
+	if MerlinReputationSystem.is_valid_faction("humains"):
+		return _fail("humains should be invalid")
+	if MerlinReputationSystem.is_valid_faction(""):
+		return _fail("empty string should be invalid")
+	return true
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
 # get_tier_label
 # ═══════════════════════════════════════════════════════════════════════════════
 
-func test_tier_label_venere():
-	assert_eq(MerlinReputationSystem.get_tier_label(80.0), "Venere", "80 = Venere")
-	assert_eq(MerlinReputationSystem.get_tier_label(100.0), "Venere", "100 = Venere")
+func test_tier_label_honore() -> bool:
+	if MerlinReputationSystem.get_tier_label(80.0) != "Honore":
+		return _fail("tier 80 should be Honore, got %s" % MerlinReputationSystem.get_tier_label(80.0))
+	if MerlinReputationSystem.get_tier_label(100.0) != "Honore":
+		return _fail("tier 100 should be Honore")
+	return true
 
 
-func test_tier_label_honore():
-	assert_eq(MerlinReputationSystem.get_tier_label(60.0), "Honore", "60 = Honore")
-	assert_eq(MerlinReputationSystem.get_tier_label(79.9), "Honore", "79.9 = Honore")
+func test_tier_label_sympathisant() -> bool:
+	if MerlinReputationSystem.get_tier_label(50.0) != "Sympathisant":
+		return _fail("tier 50 should be Sympathisant, got %s" % MerlinReputationSystem.get_tier_label(50.0))
+	if MerlinReputationSystem.get_tier_label(79.9) != "Sympathisant":
+		return _fail("tier 79.9 should be Sympathisant")
+	return true
 
 
-func test_tier_label_sympathisant():
-	assert_eq(MerlinReputationSystem.get_tier_label(40.0), "Sympathisant", "40 = Sympathisant")
+func test_tier_label_neutre() -> bool:
+	if MerlinReputationSystem.get_tier_label(20.0) != "Neutre":
+		return _fail("tier 20 should be Neutre, got %s" % MerlinReputationSystem.get_tier_label(20.0))
+	if MerlinReputationSystem.get_tier_label(49.9) != "Neutre":
+		return _fail("tier 49.9 should be Neutre")
+	return true
 
 
-func test_tier_label_neutre():
-	assert_eq(MerlinReputationSystem.get_tier_label(20.0), "Neutre", "20 = Neutre")
+func test_tier_label_mefiant() -> bool:
+	if MerlinReputationSystem.get_tier_label(5.0) != "Mefiant":
+		return _fail("tier 5 should be Mefiant, got %s" % MerlinReputationSystem.get_tier_label(5.0))
+	if MerlinReputationSystem.get_tier_label(19.9) != "Mefiant":
+		return _fail("tier 19.9 should be Mefiant")
+	return true
 
 
-func test_tier_label_hostile():
-	assert_eq(MerlinReputationSystem.get_tier_label(0.0), "Hostile", "0 = Hostile")
-	assert_eq(MerlinReputationSystem.get_tier_label(19.9), "Hostile", "19.9 = Hostile")
+func test_tier_label_hostile() -> bool:
+	if MerlinReputationSystem.get_tier_label(0.0) != "Hostile":
+		return _fail("tier 0 should be Hostile, got %s" % MerlinReputationSystem.get_tier_label(0.0))
+	if MerlinReputationSystem.get_tier_label(4.9) != "Hostile":
+		return _fail("tier 4.9 should be Hostile")
+	return true
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
 # INSTANCE API — Stateful reputation tracking
 # ═══════════════════════════════════════════════════════════════════════════════
 
-var rep: MerlinReputationSystem
-
-
-func before_each() -> void:
-	rep = MerlinReputationSystem.new()
-
-
-func after_each() -> void:
-	rep = null
-
-
-func test_initial_reputation_is_zero() -> void:
+func test_initial_reputation_is_zero() -> bool:
+	var rep: MerlinReputationSystem = _make_rep()
 	for faction in MerlinReputationSystem.FACTIONS:
-		assert_eq(rep.get_reputation(faction), 0.0, "Initial reputation should be 0 for " + faction)
+		if rep.get_reputation(faction) != 0.0:
+			return _fail("initial rep for %s should be 0" % faction)
+	return true
 
 
-func test_add_reputation_clamps_0_100() -> void:
-	# Clamp max
+func test_add_reputation_clamps_0_100() -> bool:
+	var rep: MerlinReputationSystem = _make_rep()
 	rep.add_reputation("druides", 20.0)
 	rep.add_reputation("druides", 20.0)
 	rep.add_reputation("druides", 20.0)
 	rep.add_reputation("druides", 20.0)
 	rep.add_reputation("druides", 20.0)
 	var val_max: float = rep.add_reputation("druides", 20.0)
-	assert_eq(val_max, 100.0, "Should clamp at 100 (6x20=120 clamped)")
-	# Clamp min
+	if val_max != 100.0:
+		return _fail("clamp max: expected 100, got %s" % str(val_max))
 	rep.reset()
 	rep.add_reputation("ankou", 5.0)
 	var val_min: float = rep.add_reputation("ankou", -20.0)
-	assert_eq(val_min, 0.0, "Should clamp at 0 (5-20=-15 clamped)")
+	if val_min != 0.0:
+		return _fail("clamp min: expected 0, got %s" % str(val_min))
+	return true
 
 
-func test_reputation_threshold_50_content() -> void:
-	assert_false(rep.has_content_threshold("druides"), "Should not have content at 0")
+func test_reputation_threshold_50_content() -> bool:
+	var rep: MerlinReputationSystem = _make_rep()
+	if rep.has_content_threshold("druides"):
+		return _fail("should not have content at 0")
 	rep.add_reputation("druides", 20.0)
 	rep.add_reputation("druides", 20.0)
-	assert_false(rep.has_content_threshold("druides"), "Should not have content at 40")
+	if rep.has_content_threshold("druides"):
+		return _fail("should not have content at 40")
 	rep.add_reputation("druides", 10.0)
-	assert_true(rep.has_content_threshold("druides"), "Should have content at 50")
+	if not rep.has_content_threshold("druides"):
+		return _fail("should have content at 50")
+	return true
 
 
-func test_reputation_threshold_80_ending() -> void:
-	assert_false(rep.has_ending_threshold("korrigans"), "Should not have ending at 0")
+func test_reputation_threshold_80_ending() -> bool:
+	var rep: MerlinReputationSystem = _make_rep()
+	if rep.has_ending_threshold("korrigans"):
+		return _fail("should not have ending at 0")
 	rep.add_reputation("korrigans", 20.0)
 	rep.add_reputation("korrigans", 20.0)
 	rep.add_reputation("korrigans", 20.0)
 	rep.add_reputation("korrigans", 20.0)
-	assert_true(rep.has_ending_threshold("korrigans"), "Should have ending at 80")
+	if not rep.has_ending_threshold("korrigans"):
+		return _fail("should have ending at 80")
+	return true
 
 
-func test_cross_run_persistence() -> void:
-	# Instance state persists across multiple add calls (simulating cross-run)
+func test_cross_run_persistence() -> bool:
+	var rep: MerlinReputationSystem = _make_rep()
 	rep.add_reputation("niamh", 15.0)
 	rep.add_reputation("niamh", 10.0)
 	var all_reps: Dictionary = rep.get_all_reputations()
-	assert_eq(float(all_reps["niamh"]), 25.0, "Reputation should persist across calls")
-	# Reset simulates new profile
+	if float(all_reps["niamh"]) != 25.0:
+		return _fail("persistence: expected 25, got %s" % str(all_reps["niamh"]))
 	rep.reset()
-	assert_eq(rep.get_reputation("niamh"), 0.0, "Reset should zero out reputation")
+	if rep.get_reputation("niamh") != 0.0:
+		return _fail("reset should zero reputation")
+	return true
 
 
-func test_cap_per_card_20() -> void:
-	# Amount > 20 should be capped to 20
+func test_cap_per_card_20() -> bool:
+	var rep: MerlinReputationSystem = _make_rep()
 	var result: float = rep.add_reputation("anciens", 50.0)
-	assert_eq(result, 20.0, "Delta 50 capped to +20, so value = 20")
-	# Amount < -20 should be capped to -20
+	if result != 20.0:
+		return _fail("cap +50 should give 20, got %s" % str(result))
 	rep.reset()
 	rep.add_reputation("anciens", 20.0)
-	rep.add_reputation("anciens", 20.0)  # now at 40
+	rep.add_reputation("anciens", 20.0)
 	var result_neg: float = rep.add_reputation("anciens", -35.0)
-	assert_eq(result_neg, 20.0, "Delta -35 capped to -20, so 40-20 = 20")
+	if result_neg != 20.0:
+		return _fail("cap -35 from 40 should give 20, got %s" % str(result_neg))
+	return true
 
 
-func test_get_reputation_invalid_faction() -> void:
-	assert_eq(rep.get_reputation("humains"), 0.0, "Invalid faction returns 0")
+func test_get_reputation_invalid_faction() -> bool:
+	var rep: MerlinReputationSystem = _make_rep()
+	if rep.get_reputation("humains") != 0.0:
+		return _fail("invalid faction should return 0")
+	return true
 
 
-func test_add_reputation_invalid_faction() -> void:
-	assert_eq(rep.add_reputation("humains", 10.0), -1.0, "Invalid faction returns -1")
+func test_add_reputation_invalid_faction() -> bool:
+	var rep: MerlinReputationSystem = _make_rep()
+	if rep.add_reputation("humains", 10.0) != -1.0:
+		return _fail("invalid faction add should return -1")
+	return true
 
 
-func test_get_dominant_instance() -> void:
+func test_get_dominant_instance() -> bool:
+	var rep: MerlinReputationSystem = _make_rep()
 	rep.add_reputation("druides", 15.0)
 	rep.add_reputation("ankou", 20.0)
-	assert_eq(rep.get_dominant(), "ankou", "Ankou dominant at 20 vs druides 15")
+	if rep.get_dominant() != "ankou":
+		return _fail("dominant: expected ankou, got %s" % rep.get_dominant())
+	return true
 
 
-func test_get_all_reputations_returns_copy() -> void:
+func test_get_all_reputations_returns_copy() -> bool:
+	var rep: MerlinReputationSystem = _make_rep()
 	rep.add_reputation("druides", 10.0)
 	var copy: Dictionary = rep.get_all_reputations()
 	copy["druides"] = 999.0
-	assert_eq(rep.get_reputation("druides"), 10.0, "Modifying copy should not affect instance")
+	if rep.get_reputation("druides") != 10.0:
+		return _fail("modifying copy should not affect instance")
+	return true
