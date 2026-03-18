@@ -632,6 +632,158 @@ func _generate_default_cards() -> void:
 			],
 			"tags": ["npc", "merchant", "trade"]
 		},
+		{
+			"id": "npc_gwenn_merchant",
+			"text": "Gwenn, herboriste de Broceliande, prepare des potions sous un chene. 'Mes remedes guerissent tout... pour un prix.'",
+			"speaker": "Gwenn",
+			"type": "npc_encounter",
+			"biome": "foret_broceliande",
+			"options": [
+				{"direction": "left", "label": "Acheter une potion de soin", "effects": [
+					{"type": "HEAL_LIFE", "amount": 12}, {"type": "ADD_BIOME_CURRENCY", "amount": -3}
+				], "preview": "+12 Vie / -3 Monnaie"},
+				{"direction": "center", "label": "Demander un conseil", "effects": [
+					{"type": "ADD_REPUTATION", "faction": "druides", "amount": 8}
+				], "preview": "+Druides"},
+				{"direction": "right", "label": "Proposer des herbes", "effects": [
+					{"type": "ADD_BIOME_CURRENCY", "amount": 5}
+				], "preview": "+5 Monnaie"},
+			],
+			"tags": ["npc", "merchant", "foret", "gwenn"]
+		},
+		{
+			"id": "npc_erwan_merchant",
+			"text": "Erwan taille des pierres au bord du sentier. 'Les cairns protegent les voyageurs... pour qui sait les honorer.'",
+			"speaker": "Erwan",
+			"type": "npc_encounter",
+			"biome": "landes_bruyere",
+			"options": [
+				{"direction": "left", "label": "Acheter un talisman", "effects": [
+					{"type": "HEAL_LIFE", "amount": 8}, {"type": "ADD_BIOME_CURRENCY", "amount": -2}
+				], "preview": "+8 Vie / -2 Monnaie"},
+				{"direction": "center", "label": "Ecouter ses recits", "effects": [
+					{"type": "ADD_REPUTATION", "faction": "anciens", "amount": 8}
+				], "preview": "+Anciens"},
+				{"direction": "right", "label": "Aider a la taille", "effects": [
+					{"type": "ADD_REPUTATION", "faction": "anciens", "amount": 5}, {"type": "HEAL_LIFE", "amount": 3}
+				], "preview": "+Anciens +Vie"},
+			],
+			"tags": ["npc", "merchant", "landes", "erwan"]
+		},
+		{
+			"id": "npc_maelle_merchant",
+			"text": "Maelle, pecheuse aux yeux verts, repare ses filets. 'La mer donne et reprend. Veux-tu troquer ?'",
+			"speaker": "Maelle",
+			"type": "npc_encounter",
+			"biome": "cotes_sauvages",
+			"options": [
+				{"direction": "left", "label": "Acheter du poisson seche", "effects": [
+					{"type": "HEAL_LIFE", "amount": 10}, {"type": "ADD_BIOME_CURRENCY", "amount": -3}
+				], "preview": "+10 Vie / -3 Monnaie"},
+				{"direction": "center", "label": "Aider a reparer les filets", "effects": [
+					{"type": "ADD_REPUTATION", "faction": "korrigans", "amount": 8}
+				], "preview": "+Korrigans"},
+				{"direction": "right", "label": "Echanger des coquillages", "effects": [
+					{"type": "ADD_BIOME_CURRENCY", "amount": 5}
+				], "preview": "+5 Monnaie"},
+			],
+			"tags": ["npc", "merchant", "cotes", "maelle"]
+		},
+		{
+			"id": "npc_cadogan_merchant",
+			"text": "Cadogan le forgeron souffle sur les braises. 'Les armes ne servent a rien ici. Mais les amulettes...'",
+			"speaker": "Cadogan",
+			"type": "npc_encounter",
+			"biome": "villages_celtes",
+			"options": [
+				{"direction": "left", "label": "Acheter une amulette", "effects": [
+					{"type": "ADD_REPUTATION", "faction": "anciens", "amount": 10}, {"type": "ADD_BIOME_CURRENCY", "amount": -4}
+				], "preview": "+Anciens / -4 Monnaie"},
+				{"direction": "center", "label": "Apprendre a forger", "effects": [
+					{"type": "ADD_REPUTATION", "faction": "anciens", "amount": 5}, {"type": "DAMAGE_LIFE", "amount": 2}
+				], "preview": "+Anciens / -Vie"},
+				{"direction": "right", "label": "Vendre des metaux", "effects": [
+					{"type": "ADD_BIOME_CURRENCY", "amount": 8}
+				], "preview": "+8 Monnaie"},
+			],
+			"tags": ["npc", "merchant", "villages", "cadogan"]
+		},
+		{
+			"id": "npc_brennos_merchant",
+			"text": "Brennos medite entre deux menhirs. 'Le savoir des pierres se negocie en silence, pas en or.'",
+			"speaker": "Brennos",
+			"type": "npc_encounter",
+			"biome": "cercles_pierres",
+			"options": [
+				{"direction": "left", "label": "Offrir du silence", "effects": [
+					{"type": "ADD_REPUTATION", "faction": "druides", "amount": 8}, {"type": "ADD_REPUTATION", "faction": "ankou", "amount": 5}
+				], "preview": "+Druides +Ankou"},
+				{"direction": "center", "label": "Partager un secret", "effects": [
+					{"type": "ADD_REPUTATION", "faction": "anciens", "amount": 10}
+				], "preview": "+Anciens"},
+				{"direction": "right", "label": "Demander une rune", "effects": [
+					{"type": "HEAL_LIFE", "amount": 5}, {"type": "ADD_BIOME_CURRENCY", "amount": -2}
+				], "preview": "+Vie / -2 Monnaie"},
+			],
+			"tags": ["npc", "merchant", "cercles", "brennos"]
+		},
+		{
+			"id": "npc_gwen_du_merchant",
+			"text": "Gwen Du emerge d'un tertre, les mains pleines de champignons lumineux. 'Gouter, c'est risquer. Mais quel profit !'",
+			"speaker": "Gwen Du",
+			"type": "npc_encounter",
+			"biome": "marais_korrigans",
+			"options": [
+				{"direction": "left", "label": "Gouter un champignon", "effects": [
+					{"type": "HEAL_LIFE", "amount": 15}, {"type": "DAMAGE_LIFE", "amount": 5}
+				], "preview": "Net +10 Vie (risque)"},
+				{"direction": "center", "label": "Troquer des herbes", "effects": [
+					{"type": "ADD_BIOME_CURRENCY", "amount": 5}, {"type": "ADD_REPUTATION", "faction": "korrigans", "amount": 5}
+				], "preview": "+Monnaie +Korrigans"},
+				{"direction": "right", "label": "Refuser poliment", "effects": [
+					{"type": "ADD_REPUTATION", "faction": "niamh", "amount": 3}
+				], "preview": "+Niamh"},
+			],
+			"tags": ["npc", "merchant", "marais", "gwen_du"]
+		},
+		{
+			"id": "npc_ildiko_merchant",
+			"text": "Ildiko grave des os dans sa caverne. 'Les morts parlent, si tu paies le prix.'",
+			"speaker": "Ildiko",
+			"type": "npc_encounter",
+			"biome": "collines_dolmens",
+			"options": [
+				{"direction": "left", "label": "Consulter les os", "effects": [
+					{"type": "ADD_REPUTATION", "faction": "ankou", "amount": 10}, {"type": "DAMAGE_LIFE", "amount": 3}
+				], "preview": "+Ankou / -Vie"},
+				{"direction": "center", "label": "Acheter un os grave", "effects": [
+					{"type": "ADD_REPUTATION", "faction": "anciens", "amount": 5}, {"type": "ADD_BIOME_CURRENCY", "amount": -3}
+				], "preview": "+Anciens / -3 Monnaie"},
+				{"direction": "right", "label": "Offrir un souvenir", "effects": [
+					{"type": "ADD_REPUTATION", "faction": "ankou", "amount": 5}, {"type": "ADD_REPUTATION", "faction": "niamh", "amount": 3}
+				], "preview": "+Ankou +Niamh"},
+			],
+			"tags": ["npc", "merchant", "collines", "ildiko"]
+		},
+		{
+			"id": "npc_morgane_merchant",
+			"text": "Morgane apparait dans un halo brumeux. 'Les brumes d'Avalon s'ouvrent pour ceux qui osent rever.'",
+			"speaker": "Morgane",
+			"type": "npc_encounter",
+			"biome": "iles_mystiques",
+			"options": [
+				{"direction": "left", "label": "Rever avec elle", "effects": [
+					{"type": "ADD_REPUTATION", "faction": "niamh", "amount": 12}, {"type": "DAMAGE_LIFE", "amount": 3}
+				], "preview": "+Niamh / -Vie"},
+				{"direction": "center", "label": "Demander passage vers Avalon", "effects": [
+					{"type": "ADD_REPUTATION", "faction": "niamh", "amount": 8}, {"type": "ADD_REPUTATION", "faction": "druides", "amount": 5}
+				], "preview": "+Niamh +Druides"},
+				{"direction": "right", "label": "Echanger une vision", "effects": [
+					{"type": "HEAL_LIFE", "amount": 8}, {"type": "ADD_BIOME_CURRENCY", "amount": -2}
+				], "preview": "+Vie / -2 Monnaie"},
+			],
+			"tags": ["npc", "merchant", "iles", "morgane"]
+		},
 	]
 
 
