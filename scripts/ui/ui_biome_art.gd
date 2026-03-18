@@ -122,7 +122,7 @@ func _reveal_empty_center_card() -> void:
 
 func _reveal_intro_blocks() -> void:
 	var essence_panel: Control = _ui._essence_counter.get_parent() if _ui._essence_counter and is_instance_valid(_ui._essence_counter) else null
-	var reveal_targets: Array = [_ui._top_status_bar, _ui._bottom_zone, _ui._pioche_column, _ui._cimetiere_column, _ui.card_container, _ui.info_panel, _ui.life_panel, _ui.souffle_panel, essence_panel]
+	var reveal_targets: Array = [_ui._top_status_bar, _ui._bottom_zone, _ui._pioche_column, _ui._cimetiere_column, _ui.card_container, _ui.info_panel, _ui.life_panel, essence_panel]
 	for i in range(reveal_targets.size()):
 		var target: Control = reveal_targets[i] as Control
 		if not target or not is_instance_valid(target):

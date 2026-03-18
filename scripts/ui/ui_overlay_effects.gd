@@ -212,8 +212,6 @@ func show_progressive_indicators() -> void:
 		_ui._top_status_bar.modulate.a = 1.0
 	if _ui.life_panel and is_instance_valid(_ui.life_panel):
 		_ui.life_panel.modulate.a = 0.0
-	if _ui.souffle_panel and is_instance_valid(_ui.souffle_panel):
-		_ui.souffle_panel.modulate.a = 0.0
 	if essence_panel and is_instance_valid(essence_panel):
 		essence_panel.modulate.a = 0.0
 	await _ui.get_tree().create_timer(0.15).timeout
@@ -226,13 +224,6 @@ func show_progressive_indicators() -> void:
 			await _ui.get_tree().create_timer(0.32).timeout
 		else:
 			_ui.life_panel.modulate.a = 1.0
-	if _ui.souffle_panel and is_instance_valid(_ui.souffle_panel):
-		SFXManager.play("ogham_chime")
-		if pca:
-			pca.reveal(_ui.souffle_panel, {"duration": 0.35, "block_size": 6})
-			await _ui.get_tree().create_timer(0.38).timeout
-		else:
-			_ui.souffle_panel.modulate.a = 1.0
 	if essence_panel and is_instance_valid(essence_panel):
 		if pca:
 			pca.reveal(essence_panel, {"duration": 0.28, "block_size": 6})
