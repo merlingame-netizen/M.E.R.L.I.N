@@ -363,3 +363,50 @@ func test_faction_colors_present() -> bool:
 			push_error("CRT_PALETTE[%s] has non-finite component" % key)
 			return false
 	return true
+
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# 12. UI PALETTE CROSS-REFERENCE — Keys used by UI code must exist
+# ═══════════════════════════════════════════════════════════════════════════════
+
+func test_crt_palette_has_core_ui_keys() -> bool:
+	# Keys used across HubAntre, arbre_de_vie, merlin_game_ui, overlays
+	var required: Array = [
+		"amber", "amber_bright", "amber_dim", "phosphor", "phosphor_dim",
+		"phosphor_glow", "bg_dark", "bg_deep", "bg_panel", "line",
+		"cyan", "cyan_dim", "shadow", "scanline",
+		"inactive", "border_bright", "mist",
+	]
+	for key: String in required:
+		if not MerlinVisual.CRT_PALETTE.has(key):
+			push_error("CRT_PALETTE missing core UI key: %s" % key)
+			return false
+	return true
+
+
+func test_gbc_palette_has_core_keys() -> bool:
+	# Keys used by HubAntre, biome_radial, card_layer
+	var required: Array = [
+		"white", "cream", "black", "grass", "grass_dark", "water", "fire",
+	]
+	for key: String in required:
+		if not MerlinVisual.GBC.has(key):
+			push_error("GBC missing core key: %s" % key)
+			return false
+	return true
+
+
+func test_all_palette_colors_are_finite() -> bool:
+	# Every color in CRT_PALETTE must have finite RGBA
+	for key in MerlinVisual.CRT_PALETTE:
+		var val = MerlinVisual.CRT_PALETTE[key]
+		if val is Color and not _is_valid_color(val):
+			push_error("CRT_PALETTE[%s] has non-finite color" % key)
+			return false
+	# Every color in GBC
+	for key in MerlinVisual.GBC:
+		var val = MerlinVisual.GBC[key]
+		if val is Color and not _is_valid_color(val):
+			push_error("GBC[%s] has non-finite color" % key)
+			return false
+	return true
