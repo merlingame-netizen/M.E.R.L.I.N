@@ -304,7 +304,6 @@ func _auto_play_loop() -> void:
 			"d20": d20, "dc": dc, "outcome": outcome,
 			"pre_life": pre_life, "post_life": post_life,
 			"life_delta": life_delta,
-			"pre_souffle": pre_souffle, "post_souffle": post_souffle,
 			"karma_delta": post_karma - pre_karma,
 			"source": source,
 			"tags": tags.duplicate(),
