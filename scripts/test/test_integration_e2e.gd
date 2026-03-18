@@ -1505,6 +1505,81 @@ func test_varied_ogham_categories_in_run() -> bool:
 	return true
 
 
+## E2E: Festival detection returns valid structure.
+func test_festival_detection_structure() -> bool:
+	var fest: Dictionary = StoreFactions.get_active_festival()
+	if not fest.has("active") or not fest.has("id") or not fest.has("faction"):
+		push_error("festival: missing keys in result")
+		return false
+	# Active should be bool
+	if typeof(fest["active"]) != TYPE_BOOL:
+		push_error("festival: 'active' should be bool")
+		return false
+	return true
+
+
+## E2E: Multi-run progression — 2 runs accumulate Anam, unlock biomes.
+func test_multi_run_anam_accumulation() -> bool:
+	var state: Dictionary = _make_state()
+
+	# Run 1: death at 15 cards → anam = base × min(15/30, 1.0) = 10 × 0.5 = 5
+	var base: int = int(MerlinConstants.ANAM_REWARDS.get("base", 10))
+	var death_cap: int = int(MerlinConstants.ANAM_REWARDS.get("death_cap_cards", 30))
+	var run1_cards: int = 15
+	var run1_anam: int = int(float(base) * minf(float(run1_cards) / float(death_cap), 1.0))
+	state["meta"]["anam"] = int(state["meta"]["anam"]) + run1_anam
+	state["meta"]["total_runs"] = 1
+
+	# Run 2: victory at 25 cards → anam = base + victory = 10 + 15 = 25
+	var victory: int = int(MerlinConstants.ANAM_REWARDS.get("victory_bonus", 15))
+	var run2_anam: int = base + victory
+	state["meta"]["anam"] = int(state["meta"]["anam"]) + run2_anam
+	state["meta"]["total_runs"] = 2
+
+	# Total anam: 5 + 25 = 30
+	var total_anam: int = int(state["meta"]["anam"])
+	if total_anam != 30:
+		push_error("multi_run: expected 30 anam after 2 runs, got %d" % total_anam)
+		return false
+
+	# Can unlock druides_1 (cost 20) with 30 anam
+	if not StoreTalents.can_unlock_talent(state, "druides_1"):
+		push_error("multi_run: should afford druides_1 (cost 20) with 30 anam")
+		return false
+
+	return true
+
+
+## E2E: Biome maturity advances after runs — landes unlockable after 2 runs.
+func test_multi_run_biome_unlock_progression() -> bool:
+	var bs: MerlinBiomeSystem = MerlinBiomeSystem.new()
+	# Fresh profile: only broceliande unlocked
+	var meta0: Dictionary = {"total_runs": 0, "fins_vues": 0, "oghams_debloques": 0,
+		"max_faction_rep": 0.0, "endings_seen": []}
+	if not bs.is_unlocked("foret_broceliande", meta0):
+		push_error("biome_progression: broceliande should always be unlocked")
+		return false
+	if bs.is_unlocked("landes_bruyere", meta0):
+		push_error("biome_progression: landes should be locked at 0 runs")
+		return false
+
+	# After 2 runs: landes unlocked (min_runs: 2)
+	var meta2: Dictionary = meta0.duplicate()
+	meta2["total_runs"] = 2
+	if not bs.is_unlocked("landes_bruyere", meta2):
+		push_error("biome_progression: landes should be unlocked at 2 runs")
+		return false
+
+	# After 3 runs: cotes unlocked (min_runs: 3)
+	var meta3: Dictionary = meta0.duplicate()
+	meta3["total_runs"] = 3
+	if not bs.is_unlocked("cotes_sauvages", meta3):
+		push_error("biome_progression: cotes should be unlocked at 3 runs")
+		return false
+
+	return true
+
+
 # =============================================================================
 # RUN_ALL
 # =============================================================================
