@@ -624,6 +624,28 @@ func test_all_cards_have_valid_effect_codes() -> bool:
 	return true
 
 
+func test_every_pool_has_at_least_one_card() -> bool:
+	var pool := _make_pool()
+	var sizes: Dictionary = pool.get_pool_sizes()
+	# At minimum, early_game and universal must have content
+	for ctx in ["early_game", "universal"]:
+		var actual: int = int(sizes.get(ctx, 0))
+		if actual < 1:
+			return _fail("pool '%s' is empty (must have >= 1 card)" % ctx)
+	return true
+
+
+func test_total_pool_not_empty() -> bool:
+	var pool := _make_pool()
+	var sizes: Dictionary = pool.get_pool_sizes()
+	var total: int = 0
+	for key in sizes:
+		total += int(sizes[key])
+	if total < 1:
+		return _fail("total pool is empty")
+	return true
+
+
 func test_all_cards_have_at_most_3_effects_per_option() -> bool:
 	var pool := _make_pool()
 	var violations: Array = []
