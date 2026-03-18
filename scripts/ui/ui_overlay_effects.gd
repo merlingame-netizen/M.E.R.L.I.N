@@ -37,7 +37,7 @@ func show_result_text_transition(result_text: String, outcome: String) -> void:
 		match outcome:
 			"critical_success":
 				_ui.card_speaker.text = "Reussite critique !"
-				_ui.card_speaker.add_theme_color_override("font_color", MerlinVisual.CRT_PALETTE.souffle_full)
+				_ui.card_speaker.add_theme_color_override("font_color", MerlinVisual.CRT_PALETTE.amber_bright)
 			"success":
 				_ui.card_speaker.text = "Reussite"
 				_ui.card_speaker.add_theme_color_override("font_color", MerlinVisual.CRT_PALETTE.success)
@@ -65,7 +65,7 @@ func show_critical_badge() -> void:
 		return
 	var style: StyleBoxFlat = base_style.duplicate() as StyleBoxFlat
 	if style:
-		style.border_color = MerlinVisual.CRT_PALETTE.souffle_full
+		style.border_color = MerlinVisual.CRT_PALETTE.amber_bright
 		style.set_border_width_all(3)
 		_ui.card_panel.add_theme_stylebox_override("panel", style)
 	_ui._critical_badge_tween = _ui.create_tween().set_loops(0)

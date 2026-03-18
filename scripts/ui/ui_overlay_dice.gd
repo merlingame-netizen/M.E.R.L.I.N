@@ -101,7 +101,7 @@ func show_dice_result(roll: int, dc: int, outcome: String) -> void:
 	match outcome:
 		"critical_success":
 			_dice_result_label.text = "Coup Critique !"
-			_dice_result_label.add_theme_color_override("font_color", MerlinVisual.CRT_PALETTE.souffle_full)
+			_dice_result_label.add_theme_color_override("font_color", MerlinVisual.CRT_PALETTE.amber_bright)
 		"success":
 			_dice_result_label.text = "Reussite ! (%d >= %d)" % [roll, dc]
 			_dice_result_label.add_theme_color_override("font_color", MerlinVisual.CRT_PALETTE.success)
@@ -115,7 +115,7 @@ func show_dice_result(roll: int, dc: int, outcome: String) -> void:
 
 func _dice_outcome_color(roll: int, dc: int) -> Color:
 	if roll == 20:
-		return MerlinVisual.CRT_PALETTE.souffle_full
+		return MerlinVisual.CRT_PALETTE.amber_bright
 	elif roll == 1:
 		return MerlinVisual.CRT_PALETTE.danger
 	elif roll >= dc:
