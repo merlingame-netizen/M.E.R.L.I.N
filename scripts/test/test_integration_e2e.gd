@@ -1252,6 +1252,93 @@ func test_period_transitions_across_run() -> bool:
 	return true
 
 
+## E2E: Ogham activation sequence — beith (reveal), quert (heal), luis (protection).
+func test_ogham_activation_sequence_in_run() -> bool:
+	var engine: MerlinEffectEngine = MerlinEffectEngine.new()
+	var state: Dictionary = _make_state()
+	state["run"]["active"] = true
+
+	# beith = reveal_one_option
+	var card1: Dictionary = _make_card("ogham_t1", [[{"type": "HEAL_LIFE", "amount": 3}]])
+	var r1: Dictionary = engine.process_card(state, card1, 0, 80, "beith")
+	if str(r1.get("ogham_result", {}).get("action", "")) != "reveal":
+		push_error("ogham_seq: beith should produce action=reveal")
+		return false
+
+	# quert = heal_immediate
+	var card2: Dictionary = _make_card("ogham_t2", [[{"type": "DAMAGE_LIFE", "amount": 2}]])
+	var r2: Dictionary = engine.process_card(state, card2, 0, 80, "quert")
+	if str(r2.get("ogham_result", {}).get("action", "")) != "heal":
+		push_error("ogham_seq: quert should produce action=heal")
+		return false
+
+	# luis = protection
+	var card3: Dictionary = _make_card("ogham_t3", [[{"type": "DAMAGE_LIFE", "amount": 10}]])
+	var r3: Dictionary = engine.process_card(state, card3, 0, 80, "luis")
+	if str(r3.get("ogham_result", {}).get("action", "")) != "protection_active":
+		push_error("ogham_seq: luis should produce action=protection_active")
+		return false
+
+	return true
+
+
+## E2E: Biome affinity bonus — quert has affinity with foret_broceliande.
+func test_biome_affinity_bonus_cross_system() -> bool:
+	var bonus: Dictionary = StoreFactions.get_biome_affinity_bonus("foret_broceliande", "quert")
+	if float(bonus.get("score_bonus", 0.0)) < 0.05:
+		push_error("affinity: quert score_bonus should be >= 0.05, got %s" % str(bonus.get("score_bonus", 0.0)))
+		return false
+	if int(bonus.get("cooldown_reduction", 0)) < 1:
+		push_error("affinity: quert cooldown_reduction should be >= 1")
+		return false
+	# Non-affinity check
+	var no_bonus: Dictionary = StoreFactions.get_biome_affinity_bonus("foret_broceliande", "ioho")
+	if float(no_bonus.get("score_bonus", 0.0)) > 0.0:
+		push_error("affinity: ioho should have 0 score_bonus with foret_broceliande")
+		return false
+	return true
+
+
+## E2E: Promise lifecycle — create 2, tick past deadline, verify resolution + cap.
+func test_promise_full_lifecycle_e2e() -> bool:
+	var cs: MerlinCardSystem = _make_card_system()
+	var run_state: Dictionary = cs.init_run("foret_broceliande", "beith")
+	run_state["card_index"] = 5
+	run_state["life_essence"] = 80
+
+	cs.create_promise(run_state, {
+		"promise_id": "prom_heal", "deadline_cards": 3,
+		"condition_type": "life_above", "condition_value": 50,
+		"reward_trust": 10, "penalty_trust": -15, "description": "Stay healthy",
+	})
+	cs.create_promise(run_state, {
+		"promise_id": "prom_rep", "deadline_cards": 2,
+		"condition_type": "life_above", "condition_value": 90,
+		"reward_trust": 5, "penalty_trust": -10, "description": "Stay strong",
+	})
+	if run_state.get("active_promises", []).size() != 2:
+		push_error("promise_lifecycle: should have 2 promises")
+		return false
+
+	# Advance past prom_rep deadline (card 5+2=7, now at 8)
+	run_state["card_index"] = 8
+	var resolved: Array = cs.check_promises(run_state)
+	if resolved.is_empty():
+		push_error("promise_lifecycle: should have resolved at card 8")
+		return false
+
+	# Cap test — try creating 3rd while some active
+	cs.create_promise(run_state, {
+		"promise_id": "prom_extra", "deadline_cards": 5,
+		"condition_type": "life_above", "condition_value": 25,
+		"reward_trust": 5, "penalty_trust": -5, "description": "Extra",
+	})
+	if run_state.get("active_promises", []).size() > 2:
+		push_error("promise_lifecycle: cap at 2 broken")
+		return false
+	return true
+
+
 # =============================================================================
 # RUN_ALL
 # =============================================================================
