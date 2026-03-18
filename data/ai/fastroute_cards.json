@@ -153,6 +153,182 @@
 				{"label": "Continuer ta route", "verb": "avancer", "effects": [{"type": "HEAL_LIFE", "amount": 3}]}
 			],
 			"tags": ["animal", "exploration"]
+		},
+		{
+			"id": "fr_broceliande_003",
+			"text": "Un cercle de champignons luminescents pulse doucement au pied d'un if centenaire. L'air vibre d'une energie ancienne.",
+			"biome": "foret_broceliande",
+			"options": [
+				{"label": "Entrer dans le cercle", "verb": "s'approcher", "effects": [{"type": "ADD_REPUTATION", "faction": "druides", "amount": 10}, {"type": "DAMAGE_LIFE", "amount": 3}]},
+				{"label": "Cueillir un champignon", "verb": "cueillir", "effects": [{"type": "HEAL_LIFE", "amount": 8}]},
+				{"label": "Dechiffrer les runes sur l'if", "verb": "dechiffrer", "effects": [{"type": "ADD_REPUTATION", "faction": "anciens", "amount": 7}]}
+			],
+			"tags": ["foret", "magie", "champignon"]
+		},
+		{
+			"id": "fr_broceliande_004",
+			"text": "Un loup solitaire hurle a la lune depuis une colline proche. Ses yeux brillent d'une intelligence surnaturelle.",
+			"biome": "foret_broceliande",
+			"options": [
+				{"label": "Affronter le loup", "verb": "combattre", "effects": [{"type": "ADD_REPUTATION", "faction": "ankou", "amount": 8}, {"type": "DAMAGE_LIFE", "amount": 5}]},
+				{"label": "Chanter pour l'apaiser", "verb": "chanter", "effects": [{"type": "ADD_REPUTATION", "faction": "niamh", "amount": 8}]},
+				{"label": "Observer a distance", "verb": "observer", "effects": [{"type": "ADD_REPUTATION", "faction": "druides", "amount": 5}]}
+			],
+			"tags": ["foret", "animal", "danger"]
+		},
+		{
+			"id": "fr_landes_002",
+			"text": "Un berger errant te hele depuis un promontoire rocheux. Son troupeau de moutons noirs broute les bruyeres alentour.",
+			"biome": "landes_bruyere",
+			"options": [
+				{"label": "Partager ton repas", "verb": "offrir", "effects": [{"type": "ADD_REPUTATION", "faction": "niamh", "amount": 8}, {"type": "DAMAGE_LIFE", "amount": 2}]},
+				{"label": "Demander le chemin", "verb": "parler", "effects": [{"type": "ADD_REPUTATION", "faction": "anciens", "amount": 5}]},
+				{"label": "Aider a rassembler le troupeau", "verb": "proteger", "effects": [{"type": "ADD_REPUTATION", "faction": "druides", "amount": 5}, {"type": "HEAL_LIFE", "amount": 3}]}
+			],
+			"tags": ["landes", "rencontre", "berger"]
+		},
+		{
+			"id": "fr_landes_003",
+			"text": "Une tempete approche. Le ciel noircit et les premiers eclairs zebrent l'horizon au-dessus des landes.",
+			"biome": "landes_bruyere",
+			"options": [
+				{"label": "Chercher un abri", "verb": "se cacher", "effects": [{"type": "HEAL_LIFE", "amount": 5}]},
+				{"label": "Defier la tempete", "verb": "resister physiquement", "effects": [{"type": "ADD_REPUTATION", "faction": "ankou", "amount": 10}, {"type": "DAMAGE_LIFE", "amount": 5}]},
+				{"label": "Invoquer une protection", "verb": "invoquer", "effects": [{"type": "ADD_REPUTATION", "faction": "druides", "amount": 8}]}
+			],
+			"tags": ["landes", "tempete", "danger"]
+		},
+		{
+			"id": "fr_cotes_002",
+			"text": "Un navire echoue se balance avec la maree. Des caisses de marchandises jonchent le sable.",
+			"biome": "cotes_sauvages",
+			"options": [
+				{"label": "Fouiller les caisses", "verb": "fouiller a l'aveugle", "effects": [{"type": "ADD_BIOME_CURRENCY", "amount": 5}, {"type": "ADD_REPUTATION", "faction": "korrigans", "amount": 5}]},
+				{"label": "Chercher des survivants", "verb": "examiner", "effects": [{"type": "ADD_REPUTATION", "faction": "niamh", "amount": 8}]},
+				{"label": "Signaler l'epave", "verb": "signaler", "effects": [{"type": "ADD_REPUTATION", "faction": "anciens", "amount": 5}, {"type": "HEAL_LIFE", "amount": 3}]}
+			],
+			"tags": ["cotes", "naufrage", "tresor"]
+		},
+		{
+			"id": "fr_cotes_003",
+			"text": "Une sirene chante depuis un rocher au large. Sa voix est envoûtante mais tes compagnons te mettent en garde.",
+			"biome": "cotes_sauvages",
+			"options": [
+				{"label": "Ecouter le chant", "verb": "ecouter", "effects": [{"type": "ADD_REPUTATION", "faction": "niamh", "amount": 10}, {"type": "DAMAGE_LIFE", "amount": 3}]},
+				{"label": "Se boucher les oreilles", "verb": "refuser", "effects": [{"type": "HEAL_LIFE", "amount": 5}]},
+				{"label": "Nager vers le rocher", "verb": "tenter sa chance", "effects": [{"type": "ADD_REPUTATION", "faction": "korrigans", "amount": 8}, {"type": "DAMAGE_LIFE", "amount": 5}]}
+			],
+			"tags": ["cotes", "sirene", "tentation"]
+		},
+		{
+			"id": "fr_villages_002",
+			"text": "Le forgeron du village travaille un metal etrange qui brille d'une lueur bleue. Il cherche un apprenti.",
+			"biome": "villages_celtes",
+			"options": [
+				{"label": "Aider a la forge", "verb": "forger", "effects": [{"type": "ADD_REPUTATION", "faction": "anciens", "amount": 8}, {"type": "DAMAGE_LIFE", "amount": 2}]},
+				{"label": "Marchander le metal", "verb": "marchander", "effects": [{"type": "ADD_BIOME_CURRENCY", "amount": 5}]},
+				{"label": "Observer la technique", "verb": "observer", "effects": [{"type": "ADD_REPUTATION", "faction": "druides", "amount": 5}]}
+			],
+			"tags": ["villages", "artisan", "forge"]
+		},
+		{
+			"id": "fr_villages_003",
+			"text": "Une fete bat son plein sur la place du village. De la musique, des danses et l'odeur du pain chaud emplissent l'air.",
+			"biome": "villages_celtes",
+			"options": [
+				{"label": "Danser avec les villageois", "verb": "danser", "effects": [{"type": "ADD_REPUTATION", "faction": "niamh", "amount": 8}, {"type": "HEAL_LIFE", "amount": 5}]},
+				{"label": "Ecouter les recits des anciens", "verb": "ecouter", "effects": [{"type": "ADD_REPUTATION", "faction": "anciens", "amount": 8}]},
+				{"label": "Jouer un tour aux enfants", "verb": "jouer un tour", "effects": [{"type": "ADD_REPUTATION", "faction": "korrigans", "amount": 8}]}
+			],
+			"tags": ["villages", "fete", "communaute"]
+		},
+		{
+			"id": "fr_cercles_002",
+			"text": "Les menhirs vibrent a l'unisson tandis que la pleine lune les eclaire. Une fissure s'ouvre entre deux pierres.",
+			"biome": "cercles_pierres",
+			"options": [
+				{"label": "Franchir la fissure", "verb": "tenter sa chance", "effects": [{"type": "ADD_REPUTATION", "faction": "ankou", "amount": 10}, {"type": "DAMAGE_LIFE", "amount": 5}]},
+				{"label": "Mediter face aux menhirs", "verb": "mediter", "effects": [{"type": "ADD_REPUTATION", "faction": "druides", "amount": 8}, {"type": "HEAL_LIFE", "amount": 3}]},
+				{"label": "Toucher les pierres vibrantes", "verb": "s'approcher", "effects": [{"type": "ADD_REPUTATION", "faction": "anciens", "amount": 8}]}
+			],
+			"tags": ["cercles", "menhir", "lune"]
+		},
+		{
+			"id": "fr_cercles_003",
+			"text": "Un druide fantomatique trace des symboles oghams dans l'air. Chaque symbole reste suspendu quelques secondes.",
+			"biome": "cercles_pierres",
+			"options": [
+				{"label": "Dechiffrer les symboles", "verb": "dechiffrer", "effects": [{"type": "ADD_REPUTATION", "faction": "druides", "amount": 10}]},
+				{"label": "Reproduire les gestes", "verb": "imiter", "effects": [{"type": "ADD_REPUTATION", "faction": "anciens", "amount": 5}, {"type": "ADD_REPUTATION", "faction": "druides", "amount": 5}]},
+				{"label": "S'agenouiller en respect", "verb": "accepter", "effects": [{"type": "ADD_REPUTATION", "faction": "ankou", "amount": 5}, {"type": "HEAL_LIFE", "amount": 5}]}
+			],
+			"tags": ["cercles", "fantome", "ogham"]
+		},
+		{
+			"id": "fr_marais_002",
+			"text": "Des feux follets dansent au-dessus de l'eau stagnante. Ils semblent tracer un chemin a travers le marecage.",
+			"biome": "marais_korrigans",
+			"options": [
+				{"label": "Suivre les feux follets", "verb": "suivre", "effects": [{"type": "ADD_REPUTATION", "faction": "korrigans", "amount": 10}, {"type": "DAMAGE_LIFE", "amount": 3}]},
+				{"label": "Ignorer les lumieres", "verb": "refuser", "effects": [{"type": "HEAL_LIFE", "amount": 5}]},
+				{"label": "Capturer un feu follet", "verb": "attraper", "effects": [{"type": "ADD_BIOME_CURRENCY", "amount": 5}, {"type": "DAMAGE_LIFE", "amount": 5}]}
+			],
+			"tags": ["marais", "feu_follet", "piege"]
+		},
+		{
+			"id": "fr_marais_003",
+			"text": "Un korrigan emerge d'un tertre couvert de mousse. Il te propose un marche : une enigme contre un tresor.",
+			"biome": "marais_korrigans",
+			"options": [
+				{"label": "Accepter le defi", "verb": "accepter", "effects": [{"type": "ADD_REPUTATION", "faction": "korrigans", "amount": 12}]},
+				{"label": "Refuser poliment", "verb": "refuser", "effects": [{"type": "HEAL_LIFE", "amount": 3}]},
+				{"label": "Proposer un contre-defi", "verb": "negocier", "effects": [{"type": "ADD_REPUTATION", "faction": "korrigans", "amount": 5}, {"type": "ADD_REPUTATION", "faction": "anciens", "amount": 5}]}
+			],
+			"tags": ["marais", "korrigan", "enigme"]
+		},
+		{
+			"id": "fr_collines_002",
+			"text": "Un tumulus ouvert revele des fresques anciennes. Les couleurs sont encore vives malgre les siecles.",
+			"biome": "collines_dolmens",
+			"options": [
+				{"label": "Etudier les fresques", "verb": "analyser", "effects": [{"type": "ADD_REPUTATION", "faction": "anciens", "amount": 10}]},
+				{"label": "Entrer dans le tumulus", "verb": "s'approcher", "effects": [{"type": "ADD_REPUTATION", "faction": "ankou", "amount": 8}, {"type": "DAMAGE_LIFE", "amount": 3}]},
+				{"label": "Dessiner les motifs", "verb": "dessiner", "effects": [{"type": "ADD_REPUTATION", "faction": "druides", "amount": 5}, {"type": "HEAL_LIFE", "amount": 3}]}
+			],
+			"tags": ["collines", "tumulus", "art"]
+		},
+		{
+			"id": "fr_collines_003",
+			"text": "Un vent glacial balaie la colline. Au sommet, une pierre levee porte des inscriptions qui changent avec la lumiere.",
+			"biome": "collines_dolmens",
+			"options": [
+				{"label": "Dechiffrer les inscriptions", "verb": "dechiffrer", "effects": [{"type": "ADD_REPUTATION", "faction": "anciens", "amount": 8}, {"type": "ADD_REPUTATION", "faction": "ankou", "amount": 3}]},
+				{"label": "Toucher la pierre", "verb": "s'approcher", "effects": [{"type": "DAMAGE_LIFE", "amount": 5}, {"type": "ADD_REPUTATION", "faction": "ankou", "amount": 10}]},
+				{"label": "Deposer une offrande", "verb": "offrir", "effects": [{"type": "ADD_REPUTATION", "faction": "niamh", "amount": 5}, {"type": "HEAL_LIFE", "amount": 3}]}
+			],
+			"tags": ["collines", "pierre_levee", "vent"]
+		},
+		{
+			"id": "fr_iles_002",
+			"text": "Une barque sans rameur attend au bord de l'eau. L'ile d'en face scintille d'une lueur irréelle.",
+			"biome": "iles_mystiques",
+			"options": [
+				{"label": "Monter dans la barque", "verb": "tenter sa chance", "effects": [{"type": "ADD_REPUTATION", "faction": "niamh", "amount": 12}, {"type": "DAMAGE_LIFE", "amount": 3}]},
+				{"label": "Nager vers l'ile", "verb": "escalader", "effects": [{"type": "ADD_REPUTATION", "faction": "ankou", "amount": 8}, {"type": "DAMAGE_LIFE", "amount": 5}]},
+				{"label": "Rester sur la berge", "verb": "attendre", "effects": [{"type": "HEAL_LIFE", "amount": 5}]}
+			],
+			"tags": ["iles", "barque", "mystere"]
+		},
+		{
+			"id": "fr_iles_003",
+			"text": "Un pommier aux fruits d'or pousse au centre de l'ile. Chaque pomme semble contenir une vision du futur.",
+			"biome": "iles_mystiques",
+			"options": [
+				{"label": "Cueillir une pomme", "verb": "cueillir", "effects": [{"type": "ADD_REPUTATION", "faction": "druides", "amount": 8}, {"type": "ADD_REPUTATION", "faction": "niamh", "amount": 5}]},
+				{"label": "Mediter sous le pommier", "verb": "mediter", "effects": [{"type": "HEAL_LIFE", "amount": 8}, {"type": "ADD_REPUTATION", "faction": "druides", "amount": 5}]},
+				{"label": "Secouer l'arbre", "verb": "forcer un passage", "effects": [{"type": "ADD_BIOME_CURRENCY", "amount": 5}, {"type": "DAMAGE_LIFE", "amount": 3}]}
+			],
+			"tags": ["iles", "pommier", "vision"]
 		}
 	],
 	"merlin_direct": [
