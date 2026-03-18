@@ -138,11 +138,12 @@ func process_card(state: Dictionary, card: Dictionary, chosen_option: int,
 						parsed["args"][1] = str(doubled)
 					else:
 						parsed["args"][0] = str(doubled)
-			# Apply invert_effects flag from ogham (muin)
+			# Apply invert_effects flag from ogham (muin) — swap codes
 			if ogham_flags.get("flag", "") == "invert_effects":
-				if code in ["DAMAGE_LIFE", "HEAL_LIFE"]:
-					var val: int = _to_int(parsed["args"][0])
-					parsed["args"][0] = str(-val)
+				if code == "DAMAGE_LIFE":
+					parsed["code"] = "HEAL_LIFE"
+				elif code == "HEAL_LIFE":
+					parsed["code"] = "DAMAGE_LIFE"
 			scaled_effects.append(parsed)
 		# ── Step 8: OGHAM PROTECTION (luis/gort/eadhadh filter) ──
 		# Filter effects through protection ogham BEFORE applying to state.

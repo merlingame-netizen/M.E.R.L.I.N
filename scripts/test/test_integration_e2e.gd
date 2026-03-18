@@ -1445,26 +1445,31 @@ func test_tinne_doubles_positive_effects() -> bool:
 	return true
 
 
-## E2E: Muin ogham (invert_effects) sets flag correctly in process_card.
-## NOTE: Current apply_effects uses abs() on DAMAGE_LIFE/HEAL_LIFE amounts,
-## so value inversion is neutralized. The flag IS set correctly for future
-## code that handles inversion at a higher level (e.g., swap codes).
-func test_muin_sets_invert_flag() -> bool:
+## E2E: Muin ogham (invert_effects) swaps DAMAGE↔HEAL in process_card.
+func test_muin_inverts_damage_to_heal() -> bool:
 	var engine: MerlinEffectEngine = MerlinEffectEngine.new()
 	var state: Dictionary = _make_state()
 	state["run"]["active"] = true
 	state["run"]["life_essence"] = 50
 
+	# DAMAGE_LIFE:5 normally → life 50-1(drain)-5(dmg)=44
 	var card: Dictionary = {"id": "muin_t", "type": "narrative", "options": [
-		{"effects": ["HEAL_LIFE:5"]}, {"effects": []}, {"effects": []}
+		{"effects": ["DAMAGE_LIFE:5"]}, {"effects": []}, {"effects": []}
 	], "tags": []}
 
-	var result: Dictionary = engine.process_card(state, card, 0, 80, "muin")
-	if str(result.get("ogham_result", {}).get("flag", "")) != "invert_effects":
-		push_error("muin: flag should be invert_effects")
+	var r_normal: Dictionary = engine.process_card(state, card, 0, 80, "")
+	var life_normal: int = int(state["run"]["life_essence"])
+
+	# With muin: DAMAGE_LIFE swapped to HEAL_LIFE → 50-1(drain)+5(heal)=54
+	state["run"]["life_essence"] = 50
+	var r_muin: Dictionary = engine.process_card(state, card, 0, 80, "muin")
+	var life_muin: int = int(state["run"]["life_essence"])
+
+	if life_muin <= life_normal:
+		push_error("muin: inverted damage should heal (%d vs %d)" % [life_muin, life_normal])
 		return false
-	if str(result.get("ogham_result", {}).get("action", "")) != "flag":
-		push_error("muin: action should be flag")
+	if str(r_muin.get("ogham_result", {}).get("flag", "")) != "invert_effects":
+		push_error("muin: flag should be invert_effects")
 		return false
 	return true
 

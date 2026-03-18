@@ -189,27 +189,17 @@ func test_ogham_double_positives_tinne() -> bool:
 func test_ogham_invert_effects_muin() -> bool:
 	var engine := MerlinEffectEngine.new()
 	var state: Dictionary = _make_state(80)
-	# DAMAGE_LIFE:5 should be inverted to heal
+	# DAMAGE_LIFE:5 → muin swaps code to HEAL_LIFE:5
 	var card: Dictionary = _make_card(["DAMAGE_LIFE:5"])
 	var result: Dictionary = engine.process_card(state, card, 0, 80, "muin")
 	var ogham_result: Dictionary = result["ogham_result"]
 	if str(ogham_result.get("flag", "")) != "invert_effects":
 		push_error("ogham_muin: expected flag=invert_effects")
 		return false
-	# DAMAGE_LIFE:5 at score 80 (mult 1.0) → scaled 5 → inverted to -5
-	# apply_parsed for DAMAGE_LIFE does -abs(val), so -abs(-5) = -5 → still damage
-	# Actually the invert sets args[0] = str(-val) = "-5", then _apply_parsed does -abs(-5) = -5
-	# So life = 80 - 1(drain) - 5 = 74
-	# Wait - let me re-read: invert sets val = -5, then DAMAGE_LIFE does -abs(-5) = -5
-	# Hmm, that means invert doesn't actually heal for DAMAGE_LIFE path.
-	# For HEAL_LIFE: invert sets val=-5, then HEAL_LIFE does +abs(-5) = +5 (no change)
-	# The invert_effects on DAMAGE_LIFE: parsed["args"][0] = str(-5) = "-5"
-	# Then in apply_effects it calls DAMAGE_LIFE with _to_int("-5") = -5
-	# _apply_life_delta(state, -abs(-5)) = _apply_life_delta(state, -5) → still damage
-	# This is the actual engine behavior. Test it as-is.
+	# life = 80 - 1(drain) + 5(healed via inverted code) = 84
 	var life: int = int(state["run"]["life_essence"])
-	if life != 74:
-		push_error("ogham_muin_damage: expected life=74, got %d" % life)
+	if life != 84:
+		push_error("ogham_muin: expected life=84 (damage inverted to heal), got %d" % life)
 		return false
 	return true
 
