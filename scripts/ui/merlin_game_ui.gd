@@ -439,7 +439,7 @@ func display_card(card: Dictionary) -> void:
 			var risk2: String = str(option.get("risk_level", ""))
 			match risk2:
 				"faible": option_buttons[i].tooltip_text = "Prudent \u2014 risque faible"
-				"moyen": option_buttons[i].tooltip_text = "Equilibre \u2014 risque moyen (coute 1 Souffle)"
+				"moyen": option_buttons[i].tooltip_text = "Equilibre \u2014 risque moyen"
 				"eleve": option_buttons[i].tooltip_text = "Audacieux \u2014 risque eleve"
 
 	# Minigame badge
