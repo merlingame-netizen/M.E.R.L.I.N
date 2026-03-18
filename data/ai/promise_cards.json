@@ -133,6 +133,83 @@
 			],
 			"tags": ["promise", "niamh", "soin"],
 			"faction": "niamh"
+		},
+		{
+			"id": "promise_anciens_001",
+			"type": "promise",
+			"promise_id": "honor_ancestors",
+			"deadline_cards": 6,
+			"description": "Gagner 20 points de reputation Anciens en 6 cartes",
+			"text": "Un dolmen tremble. Une voix ancestrale resonne : 'Prouve que tu honores nos traditions, ou perds ma confiance.'",
+			"reward_trust": 10,
+			"penalty_trust": -15,
+			"condition_type": "faction_rep_gain",
+			"condition_value": 20,
+			"condition_faction": "anciens",
+			"options": [
+				{"label": "Decliner l'epreuve", "effects": []},
+				{"label": "Jurer sur les pierres", "effects": [{"type": "CREATE_PROMISE", "promise_id": "honor_ancestors", "deadline_cards": 6}]},
+				{"label": "Offrir un sacrifice", "effects": [{"type": "CREATE_PROMISE", "promise_id": "honor_ancestors", "deadline_cards": 6}, {"type": "DAMAGE_LIFE", "amount": 3}]}
+			],
+			"tags": ["promise", "anciens", "tradition"],
+			"faction": "anciens"
+		},
+		{
+			"id": "promise_druides_002",
+			"type": "promise",
+			"promise_id": "forest_guardian",
+			"deadline_cards": 5,
+			"description": "Ne pas perdre plus de 10 PV en 5 cartes",
+			"text": "Le gui sacre brille devant toi. Merlin murmure : 'La foret protege ceux qui se protegent. Montre ta resilience.'",
+			"reward_trust": 8,
+			"penalty_trust": -10,
+			"condition_type": "max_damage_taken",
+			"condition_value": 10,
+			"options": [
+				{"label": "La foret est impitoyable", "effects": []},
+				{"label": "Je serai prudent", "effects": [{"type": "CREATE_PROMISE", "promise_id": "forest_guardian", "deadline_cards": 5}]},
+				{"label": "Les druides me guideront", "effects": [{"type": "CREATE_PROMISE", "promise_id": "forest_guardian", "deadline_cards": 5}, {"type": "HEAL_LIFE", "amount": 5}]}
+			],
+			"tags": ["promise", "druides", "protection"],
+			"faction": "druides"
+		},
+		{
+			"id": "promise_korrigans_002",
+			"type": "promise",
+			"promise_id": "trickster_challenge",
+			"deadline_cards": 4,
+			"description": "Reussir 3 minigames en 4 cartes",
+			"text": "Un korrigan ricane depuis un buisson. 'Tu crois etre malin ? Prouve-le en 4 epreuves, et je partagerai mon tresor.'",
+			"reward_trust": 12,
+			"penalty_trust": -10,
+			"condition_type": "minigames_won",
+			"condition_value": 3,
+			"options": [
+				{"label": "Les korrigans sont fourbes", "effects": []},
+				{"label": "Defi accepte", "effects": [{"type": "CREATE_PROMISE", "promise_id": "trickster_challenge", "deadline_cards": 4}]},
+				{"label": "Double ou rien", "effects": [{"type": "CREATE_PROMISE", "promise_id": "trickster_challenge", "deadline_cards": 4}, {"type": "ADD_REPUTATION", "faction": "korrigans", "amount": 5}]}
+			],
+			"tags": ["promise", "korrigans", "defi"],
+			"faction": "korrigans"
+		},
+		{
+			"id": "promise_ankou_002",
+			"type": "promise",
+			"promise_id": "dance_with_death",
+			"deadline_cards": 6,
+			"description": "Survivre 6 cartes avec moins de 20 PV",
+			"text": "L'Ankou tend sa main osseuse. 'Danse avec moi, mortel. Reste au bord du gouffre, et je te revelerai un secret.'",
+			"reward_trust": 15,
+			"penalty_trust": -20,
+			"condition_type": "life_below",
+			"condition_value": 20,
+			"options": [
+				{"label": "Je refuse cette folie", "effects": []},
+				{"label": "La mort ne me fait pas peur", "effects": [{"type": "CREATE_PROMISE", "promise_id": "dance_with_death", "deadline_cards": 6}, {"type": "DAMAGE_LIFE", "amount": 5}]},
+				{"label": "Un pas dans l'ombre", "effects": [{"type": "CREATE_PROMISE", "promise_id": "dance_with_death", "deadline_cards": 6}]}
+			],
+			"tags": ["promise", "ankou", "sacrifice"],
+			"faction": "ankou"
 		}
 	]
 }
