@@ -304,6 +304,43 @@ func test_biome_affinity_unknown_biome() -> bool:
 
 
 # =============================================================================
+# FESTIVAL DETECTION
+# =============================================================================
+
+func test_festival_returns_dict_structure() -> bool:
+	var result: Dictionary = StoreFactions.get_active_festival()
+	if not result.has("active") or not result.has("id") or not result.has("faction"):
+		push_error("festival: result missing required keys")
+		return false
+	return true
+
+
+func test_all_festivals_defined_in_constants() -> bool:
+	var expected: Array = ["imbolc", "beltane", "lughnasadh", "samhain"]
+	for fest in expected:
+		if not MerlinConstants.FESTIVALS.has(fest):
+			push_error("festival: FESTIVALS missing '%s'" % fest)
+			return false
+		var f: Dictionary = MerlinConstants.FESTIVALS[fest]
+		if str(f.get("faction", "")).is_empty():
+			push_error("festival: '%s' missing faction" % fest)
+			return false
+		if int(f.get("rep_bonus", 0)) <= 0:
+			push_error("festival: '%s' has no rep_bonus" % fest)
+			return false
+	return true
+
+
+func test_festival_factions_are_valid() -> bool:
+	for fest_id in MerlinConstants.FESTIVALS:
+		var faction: String = str(MerlinConstants.FESTIVALS[fest_id].get("faction", ""))
+		if not MerlinReputationSystem.is_valid_faction(faction):
+			push_error("festival: '%s' has invalid faction '%s'" % [fest_id, faction])
+			return false
+	return true
+
+
+# =============================================================================
 # APPLY FACTION RUN BONUSES
 # =============================================================================
 

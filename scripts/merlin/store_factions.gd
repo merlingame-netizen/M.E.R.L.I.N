@@ -113,3 +113,21 @@ static func get_biome_affinity_bonus(biome_id: String, ogham_id: String) -> Dict
 	if affinity_list.has(ogham_id):
 		return {"score_bonus": 0.10, "cooldown_reduction": 1}
 	return {"score_bonus": 0.0, "cooldown_reduction": 0}
+
+
+## Detect if a Celtic festival is active based on real-world date.
+## Returns {"active": true, "id": "samhain", ...} or {"active": false}.
+static func get_active_festival() -> Dictionary:
+	var now: Dictionary = Time.get_date_dict_from_system()
+	var month: int = int(now.get("month", 0))
+	var day: int = int(now.get("day", 0))
+	for fest_id in MerlinConstants.FESTIVALS:
+		var f: Dictionary = MerlinConstants.FESTIVALS[fest_id]
+		var ms: int = int(f.get("month_start", 0))
+		var ds: int = int(f.get("day_start", 0))
+		var me: int = int(f.get("month_end", 0))
+		var de: int = int(f.get("day_end", 0))
+		if (month == ms and day >= ds) or (month == me and day <= de):
+			return {"active": true, "id": fest_id, "label": str(f.get("label", "")),
+				"faction": str(f.get("faction", "")), "rep_bonus": int(f.get("rep_bonus", 0))}
+	return {"active": false, "id": "", "label": "", "faction": "", "rep_bonus": 0}

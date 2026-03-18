@@ -959,6 +959,18 @@ const SEASONAL_EFFECTS := {
 	},
 }
 
+# Celtic festivals — real-world date ranges trigger themed card modifiers
+const FESTIVALS := {
+	"imbolc": {"month_start": 2, "day_start": 1, "month_end": 2, "day_end": 2,
+		"label": "Imbolc", "faction": "druides", "rep_bonus": 5, "description": "Fete du renouveau et de la purification"},
+	"beltane": {"month_start": 5, "day_start": 1, "month_end": 5, "day_end": 2,
+		"label": "Beltane", "faction": "niamh", "rep_bonus": 5, "description": "Fete des feux et de la fertilite"},
+	"lughnasadh": {"month_start": 8, "day_start": 1, "month_end": 8, "day_end": 2,
+		"label": "Lughnasadh", "faction": "anciens", "rep_bonus": 5, "description": "Fete des moissons et de la force"},
+	"samhain": {"month_start": 10, "day_start": 31, "month_end": 11, "day_end": 1,
+		"label": "Samhain", "faction": "ankou", "rep_bonus": 5, "description": "Fete des morts et du passage"},
+}
+
 # Minimum cards before allowing event/promise cards
 const MIN_CARDS_BEFORE_EVENT := 3
 const MIN_CARDS_BEFORE_PROMISE := 5
