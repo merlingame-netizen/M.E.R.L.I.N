@@ -243,9 +243,9 @@ func _on_pause_requested() -> void:
 
 func _on_merlin_dialogue_requested(player_input: String) -> void:
 	## Player talks to Merlin — generate LLM response.
-	if _ctrl.is_processing:
+	if _ctrl.is_busy:
 		return
-	_ctrl.is_processing = true
+	_ctrl.is_busy = true
 	print("[Merlin] Dialogue: player asks '%s'" % player_input)
 
 	var ui: Node = _ctrl.ui
@@ -272,7 +272,7 @@ func _on_merlin_dialogue_requested(player_input: String) -> void:
 		ui.show_merlin_dialogue_response(response)
 
 	write_context_entry("Dialogue: %s -> %s" % [player_input, response.left(80)], _ctrl._cards_this_run)
-	_ctrl.is_processing = false
+	_ctrl.is_busy = false
 
 
 func _on_journal_requested() -> void:
@@ -350,7 +350,7 @@ func use_skill(skill_id: String) -> void:
 				else:
 					ui.show_reveal_effects(options, 1)
 		"reroll_card", "full_reroll":
-			if not _ctrl.is_processing:
+			if not _ctrl.is_busy:
 				_ctrl._request_next_card()
 		_:
 			sync_ui_with_state()

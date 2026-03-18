@@ -17,7 +17,7 @@ var ui: MerlinGameUI
 var merlin_ai: Node = null  # MerlinAI autoload reference
 
 var current_card: Dictionary = {}
-var is_processing := false
+var is_busy := false
 var _intro_shown := false
 var _cards_this_run := 0
 const LLM_TIMEOUT_SEC := 360.0
@@ -268,8 +268,8 @@ func start_run(seed_value: int = -1) -> void:
 func _request_next_card() -> void:
 	## Get and display the next card (LLM or fallback).
 	var _rnc_t0 := Time.get_ticks_msec()
-	print("[Merlin] _request_next_card() called at t=%d, is_processing=%s" % [_rnc_t0, str(is_processing)])
-	if is_processing:
+	print("[Merlin] _request_next_card() called at t=%d, is_busy=%s" % [_rnc_t0, str(is_busy)])
+	if is_busy:
 		return
 	if not is_inside_tree():
 		print("[Merlin] not inside tree, aborting _request_next_card")
@@ -278,7 +278,7 @@ func _request_next_card() -> void:
 		push_error("[Merlin] store is null in _request_next_card")
 		return
 
-	is_processing = true
+	is_busy = true
 	_cards_this_run += 1
 
 	# Step 1. Life drain BEFORE card (bible s.13.3: "1.DRAIN -1")
@@ -286,7 +286,7 @@ func _request_next_card() -> void:
 		store.dispatch({"type": "DAMAGE_LIFE", "amount": MerlinConstants.LIFE_ESSENCE_DRAIN_PER_CARD})
 		if store.get_life_essence() <= 0:
 			print("[Merlin] Player died from life drain at card %d" % _cards_this_run)
-			is_processing = false
+			is_busy = false
 			store.dispatch({"type": "END_RUN"})
 			return
 
@@ -302,7 +302,7 @@ func _request_next_card() -> void:
 		current_card = _card_buffer.pop_front()
 		print("[Merlin] Using pre-generated card (%d remaining)" % _card_buffer.size())
 		_handle_card_display()
-		is_processing = false
+		is_busy = false
 		return
 
 	# Sequel card: ~30% chance after prerun buffer exhausted
@@ -312,7 +312,7 @@ func _request_next_card() -> void:
 			current_card = sequel_card
 			print("[Merlin] Sequel card generated from prerun choice")
 			_handle_card_display()
-			is_processing = false
+			is_busy = false
 			return
 
 	# Fast path: try consuming prefetched card
@@ -324,7 +324,7 @@ func _request_next_card() -> void:
 				print("[Merlin] Using prefetched card (fast path)")
 				current_card = prefetched
 				_handle_card_display()
-				is_processing = false
+				is_busy = false
 				return
 
 	# Show thinking animation while LLM generates
@@ -351,7 +351,7 @@ func _request_next_card() -> void:
 
 	if not is_inside_tree():
 		print("[Merlin] removed from tree after dispatch, aborting")
-		is_processing = false
+		is_busy = false
 		return
 
 	if not result.get("ok", false) or result.get("card", {}).is_empty():
@@ -364,12 +364,12 @@ func _request_next_card() -> void:
 			await get_tree().create_timer(5.0).timeout
 			if ui and is_instance_valid(ui):
 				ui.hide_merlin_thinking_overlay()
-			is_processing = false
+			is_busy = false
 			await _request_next_card()
 			return
 		current_card = retry_card
 		_handle_card_display()
-		is_processing = false
+		is_busy = false
 		return
 
 	print("[Merlin] card dispatch result ok=%s (dt=%dms)" % [str(result.get("ok", false)), Time.get_ticks_msec() - _rnc_t0])
@@ -383,7 +383,7 @@ func _request_next_card() -> void:
 			if not retry_card.is_empty():
 				current_card = retry_card
 			else:
-				is_processing = false
+				is_busy = false
 				await _request_next_card()
 				return
 		# NPC encounter: 15% chance after card 5
@@ -403,7 +403,7 @@ func _request_next_card() -> void:
 			await get_tree().create_timer(3.0).timeout
 			if ui and is_instance_valid(ui):
 				ui.hide_merlin_thinking_overlay()
-			is_processing = false
+			is_busy = false
 			await _request_next_card()
 			return
 		current_card = llm_card
@@ -411,7 +411,7 @@ func _request_next_card() -> void:
 		_check_vision_perk_auto_reveal()
 
 	print("[Merlin] _request_next_card() done (dt=%dms)" % (Time.get_ticks_msec() - _rnc_t0))
-	is_processing = false
+	is_busy = false
 
 
 func _handle_card_display() -> void:
@@ -429,7 +429,7 @@ func _handle_card_display() -> void:
 
 func _resolve_choice(option: int) -> void:
 	## Full resolution: choice -> minigame score -> resolve_card() -> effects -> travel -> next.
-	if is_processing or current_card.is_empty():
+	if is_busy or current_card.is_empty():
 		return
 	if not store or not is_instance_valid(store):
 		push_error("[Merlin] store invalid in _resolve_choice")
@@ -437,7 +437,7 @@ func _resolve_choice(option: int) -> void:
 	if not is_inside_tree():
 		return
 
-	is_processing = true
+	is_busy = true
 	var direction: String = ["left", "center", "right"][clampi(option, 0, 2)]
 	var choice_label: String = _effects.get_choice_label(option, current_card)
 	print("[Merlin] _resolve_choice option=%d direction=%s" % [option, direction])
@@ -466,7 +466,7 @@ func _resolve_choice(option: int) -> void:
 		score = await _minigame_runner.run_minigame(mg_field, _is_critical_choice)
 
 	if not is_inside_tree():
-		is_processing = false
+		is_busy = false
 		return
 
 	# 3. Resolve card via MerlinCardSystem
@@ -581,7 +581,7 @@ func _resolve_choice(option: int) -> void:
 	# Wait for player to see reaction
 	if not headless_mode:
 		if not is_inside_tree():
-			is_processing = false
+			is_busy = false
 			return
 		await get_tree().create_timer(3.0).timeout
 
@@ -595,7 +595,7 @@ func _resolve_choice(option: int) -> void:
 			ui.mark_card_completed()
 		if not headless_mode and ui and is_instance_valid(ui):
 			ui.show_end_screen(ending)
-		is_processing = false
+		is_busy = false
 		return
 
 	# 17. Travel animation -> next card
@@ -631,7 +631,7 @@ func _resolve_choice(option: int) -> void:
 		_dynamic_modifier = _effects.update_dynamic_difficulty(store, _dynamic_modifier)
 
 	# 19. Next card
-	is_processing = false
+	is_busy = false
 	_request_next_card()
 
 
@@ -663,4 +663,4 @@ func _check_vision_perk_auto_reveal() -> void:
 
 func _exit_tree() -> void:
 	## Cleanup to prevent dangling coroutines on scene change.
-	is_processing = false
+	is_busy = false
