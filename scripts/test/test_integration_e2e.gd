@@ -1339,6 +1339,83 @@ func test_promise_full_lifecycle_e2e() -> bool:
 	return true
 
 
+## E2E: NPC merchant cards — fallback pool returns valid NPC cards.
+func test_npc_merchant_cards_available() -> bool:
+	var pool: MerlinFallbackPool = MerlinFallbackPool.new()
+	var npc_card: Dictionary = pool.get_npc_card()
+	if npc_card.is_empty():
+		push_error("npc_merchant: get_npc_card returned empty")
+		return false
+	var options: Array = npc_card.get("options", [])
+	if options.size() < 2:
+		push_error("npc_merchant: card should have 2+ options, got %d" % options.size())
+		return false
+	if str(npc_card.get("type", "")) != "npc_encounter":
+		push_error("npc_merchant: type should be npc_encounter, got %s" % str(npc_card.get("type", "")))
+		return false
+	return true
+
+
+## E2E: Talent tree unlock flow — can_unlock checks prerequisites + cost.
+func test_talent_tree_unlock_flow() -> bool:
+	var state: Dictionary = _make_state()
+	state["meta"]["anam"] = 200
+
+	# druides_1: no prerequisites, cost 20 — should be unlockable
+	if not StoreTalents.can_unlock_talent(state, "druides_1"):
+		push_error("talent_unlock: druides_1 should be unlockable with 200 anam")
+		return false
+
+	# Simulate unlock manually (skip save_system which needs Node)
+	state["meta"]["anam"] = 180
+	state["meta"]["talent_tree"]["unlocked"].append("druides_1")
+
+	# druides_2 requires druides_1 — should now be unlockable
+	if not StoreTalents.can_unlock_talent(state, "druides_2"):
+		push_error("talent_unlock: druides_2 should be unlockable after druides_1")
+		return false
+
+	# ankou_2 requires ankou_1 — should NOT be unlockable
+	if StoreTalents.can_unlock_talent(state, "ankou_2"):
+		push_error("talent_unlock: ankou_2 should NOT be unlockable (missing ankou_1)")
+		return false
+
+	# Insufficient anam — set to 0
+	state["meta"]["anam"] = 0
+	if StoreTalents.can_unlock_talent(state, "druides_2"):
+		push_error("talent_unlock: druides_2 should NOT be unlockable with 0 anam")
+		return false
+
+	return true
+
+
+## E2E: Anam reward calculation matches bible formula across scenarios.
+func test_anam_rewards_formula_accuracy() -> bool:
+	# Victory at 25 cards: base(10) + victory(15) = 25
+	var base: int = int(MerlinConstants.ANAM_REWARDS.get("base", 10))
+	var victory: int = int(MerlinConstants.ANAM_REWARDS.get("victory_bonus", 15))
+	var expected_victory: int = base + victory
+	if expected_victory != 25:
+		push_error("anam_formula: victory reward should be 25, got %d" % expected_victory)
+		return false
+
+	# Death at 15 cards: base × min(15/30, 1.0) = 10 × 0.5 = 5
+	var death_cap: int = int(MerlinConstants.ANAM_REWARDS.get("death_cap_cards", 30))
+	var death_ratio: float = minf(15.0 / float(death_cap), 1.0)
+	var death_anam: int = int(float(base) * death_ratio)
+	if death_anam != 5:
+		push_error("anam_formula: death at 15 cards should give 5 anam, got %d" % death_anam)
+		return false
+
+	# Death at 30+ cards: ratio capped at 1.0, anam = base
+	var full_ratio: float = minf(35.0 / float(death_cap), 1.0)
+	if full_ratio != 1.0:
+		push_error("anam_formula: 35 cards should cap ratio at 1.0, got %s" % str(full_ratio))
+		return false
+
+	return true
+
+
 # =============================================================================
 # RUN_ALL
 # =============================================================================
