@@ -83,7 +83,7 @@ func show_opening_sequence(biome_key: String, season_hint: String = "", hour_hin
 func _set_intro_hidden_state() -> void:
 	var essence_panel: Control = _ui._essence_counter.get_parent() if _ui._essence_counter and is_instance_valid(_ui._essence_counter) else null
 	var hide_targets: Array = [
-		_ui._top_status_bar, _ui.life_panel, _ui.souffle_panel, essence_panel,
+		_ui._top_status_bar, _ui.life_panel, essence_panel,
 		_ui.card_container, _ui._bottom_zone, _ui._pioche_column,
 		_ui._cimetiere_column, _ui.options_container, _ui.info_panel,
 	]

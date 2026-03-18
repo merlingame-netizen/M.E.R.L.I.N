@@ -145,10 +145,10 @@ func show_response_blocks(line_index: int, context_line: String = "") -> void:
 	# Position buttons between card bottom and viewport bottom
 	var visible_count := mini(responses.size(), 3)
 	var total_h := visible_count * 44.0 + (visible_count - 1) * 10.0
-	var btn_area_top := _scene.card.position.y + _scene.card.size.y + 16.0
-	var btn_area_bottom := vp.y - 24.0
-	var available_h := btn_area_bottom - btn_area_top
-	var btn_y := btn_area_top + (available_h - total_h) * 0.5
+	var btn_area_top: float = _scene.card.position.y + _scene.card.size.y + 16.0
+	var btn_area_bottom: float = vp.y - 24.0
+	var available_h: float = btn_area_bottom - btn_area_top
+	var btn_y: float = btn_area_top + (available_h - total_h) * 0.5
 	btn_y = clampf(btn_y, btn_area_top, vp.y - total_h - 16.0)
 	_scene.response_container.position = Vector2((vp.x - rc_width) * 0.5, btn_y)
 	_scene.response_container.size.x = rc_width
@@ -211,9 +211,9 @@ func show_destination_choice() -> int:
 
 	var vp := _scene.get_viewport().get_visible_rect().size
 	var rc_width := minf(380.0, vp.x * 0.75)
-	var btn_area_top := _scene.card.position.y + _scene.card.size.y + 16.0
-	var total_h := 2.0 * 44.0 + 10.0
-	var btn_y := btn_area_top + ((vp.y - 24.0 - btn_area_top - total_h) * 0.5)
+	var btn_area_top: float = _scene.card.position.y + _scene.card.size.y + 16.0
+	var total_h: float = 2.0 * 44.0 + 10.0
+	var btn_y: float = btn_area_top + ((vp.y - 24.0 - btn_area_top - total_h) * 0.5)
 	_scene.response_container.position = Vector2((vp.x - rc_width) * 0.5, btn_y)
 	_scene.response_container.size.x = rc_width
 	_scene.response_container.visible = true
