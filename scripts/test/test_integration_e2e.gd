@@ -1416,6 +1416,90 @@ func test_anam_rewards_formula_accuracy() -> bool:
 	return true
 
 
+## E2E: Tinne ogham (double_positives) doubles positive effects in process_card.
+func test_tinne_doubles_positive_effects() -> bool:
+	var engine: MerlinEffectEngine = MerlinEffectEngine.new()
+	var state: Dictionary = _make_state()
+	state["run"]["active"] = true
+	state["run"]["life_essence"] = 50
+
+	# process_card uses STRING effects — card options need ["HEAL_LIFE:5"]
+	var card: Dictionary = {"id": "tinne_t", "type": "narrative", "options": [
+		{"effects": ["HEAL_LIFE:5"]}, {"effects": []}, {"effects": []}
+	], "tags": []}
+
+	var result_normal: Dictionary = engine.process_card(state, card, 0, 80, "")
+	var life_after_normal: int = int(state["run"]["life_essence"])
+
+	state["run"]["life_essence"] = 50
+	var result_tinne: Dictionary = engine.process_card(state, card, 0, 80, "tinne")
+	var life_after_tinne: int = int(state["run"]["life_essence"])
+
+	# Tinne doubles HEAL_LIFE:5 → 10
+	if life_after_tinne <= life_after_normal:
+		push_error("tinne: doubled heal should give more life (%d vs %d)" % [life_after_tinne, life_after_normal])
+		return false
+	if str(result_tinne.get("ogham_result", {}).get("flag", "")) != "double_positives":
+		push_error("tinne: flag should be double_positives")
+		return false
+	return true
+
+
+## E2E: Muin ogham (invert_effects) sets flag correctly in process_card.
+## NOTE: Current apply_effects uses abs() on DAMAGE_LIFE/HEAL_LIFE amounts,
+## so value inversion is neutralized. The flag IS set correctly for future
+## code that handles inversion at a higher level (e.g., swap codes).
+func test_muin_sets_invert_flag() -> bool:
+	var engine: MerlinEffectEngine = MerlinEffectEngine.new()
+	var state: Dictionary = _make_state()
+	state["run"]["active"] = true
+	state["run"]["life_essence"] = 50
+
+	var card: Dictionary = {"id": "muin_t", "type": "narrative", "options": [
+		{"effects": ["HEAL_LIFE:5"]}, {"effects": []}, {"effects": []}
+	], "tags": []}
+
+	var result: Dictionary = engine.process_card(state, card, 0, 80, "muin")
+	if str(result.get("ogham_result", {}).get("flag", "")) != "invert_effects":
+		push_error("muin: flag should be invert_effects")
+		return false
+	if str(result.get("ogham_result", {}).get("action", "")) != "flag":
+		push_error("muin: action should be flag")
+		return false
+	return true
+
+
+## E2E: Full run with varied oghams — cycle through all categories.
+func test_varied_ogham_categories_in_run() -> bool:
+	var engine: MerlinEffectEngine = MerlinEffectEngine.new()
+	var state: Dictionary = _make_state()
+	state["run"]["active"] = true
+
+	# Test each ogham category produces a valid action
+	var ogham_actions: Dictionary = {}
+	var test_oghams: Array = ["beith", "luis", "duir", "nuin", "quert", "muin", "tinne"]
+	for og in test_oghams:
+		var card: Dictionary = _make_card("cat_test_%s" % og, [[{"type": "HEAL_LIFE", "amount": 3}]])
+		var result: Dictionary = engine.process_card(state, card, 0, 80, og)
+		var action: String = str(result.get("ogham_result", {}).get("action", ""))
+		if action.is_empty():
+			push_error("ogham_categories: %s produced empty action" % og)
+			return false
+		ogham_actions[og] = action
+		# Reset life to avoid death
+		state["run"]["life_essence"] = maxi(int(state["run"]["life_essence"]), 50)
+
+	# Verify we got diverse actions (at least 3 different types)
+	var unique_actions: Dictionary = {}
+	for og in ogham_actions:
+		unique_actions[ogham_actions[og]] = true
+	if unique_actions.size() < 3:
+		push_error("ogham_categories: expected 3+ unique actions, got %d" % unique_actions.size())
+		return false
+
+	return true
+
+
 # =============================================================================
 # RUN_ALL
 # =============================================================================
