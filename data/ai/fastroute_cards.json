@@ -671,6 +671,66 @@
 			"arc_condition": {"type": "faction_rep", "faction": "korrigans", "min_value": 30}
 		},
 		{
+			"id": "arc_marais_02",
+			"text": "Gwen Du t'entraine plus profondement. 'Ecoute. La ou le silence est le plus dense, il y a une porte. Mais elle est gardee par des ombres.'",
+			"biome": "marais_korrigans",
+			"speaker": "Gwen Du",
+			"arc": "le_tertre_du_silence",
+			"arc_stage": 2,
+			"options": [
+				{"label": "Chasser les ombres", "verb": "combattre", "effects": [{"type": "ADD_REPUTATION", "faction": "ankou", "amount": 8}, {"type": "DAMAGE_LIFE", "amount": 5}]},
+				{"label": "Se glisser entre elles", "verb": "se faufiler", "effects": [{"type": "ADD_REPUTATION", "faction": "korrigans", "amount": 10}]},
+				{"label": "Parler aux ombres", "verb": "parler", "effects": [{"type": "ADD_REPUTATION", "faction": "korrigans", "amount": 5}, {"type": "ADD_REPUTATION", "faction": "ankou", "amount": 5}]}
+			],
+			"tags": ["arc", "le_tertre_du_silence", "gwen_du", "marais"],
+			"arc_condition": {"type": "arc_stage", "arc": "le_tertre_du_silence", "min_stage": 1}
+		},
+		{
+			"id": "arc_marais_03",
+			"text": "La porte s'ouvre sur une salle souterraine. Des champignons lumineux eclairent des fresques korriganes oubliees. Au centre, un esprit prisonnier.",
+			"biome": "marais_korrigans",
+			"speaker": "Gwen Du",
+			"arc": "le_tertre_du_silence",
+			"arc_stage": 3,
+			"options": [
+				{"label": "Liberer l'esprit", "verb": "invoquer", "effects": [{"type": "ADD_REPUTATION", "faction": "korrigans", "amount": 12}, {"type": "DAMAGE_LIFE", "amount": 3}]},
+				{"label": "Etudier les fresques", "verb": "dechiffrer", "effects": [{"type": "ADD_REPUTATION", "faction": "anciens", "amount": 8}, {"type": "ADD_REPUTATION", "faction": "korrigans", "amount": 5}]},
+				{"label": "Cueillir les champignons", "verb": "cueillir", "effects": [{"type": "ADD_BIOME_CURRENCY", "amount": 8}, {"type": "HEAL_LIFE", "amount": 3}]}
+			],
+			"tags": ["arc", "le_tertre_du_silence", "gwen_du", "marais"],
+			"arc_condition": {"type": "arc_stage", "arc": "le_tertre_du_silence", "min_stage": 2}
+		},
+		{
+			"id": "arc_marais_04",
+			"text": "L'esprit parle enfin. 'Je suis le Gardien du Tertre. On m'a emprisonne pour voler la voix des korrigans. Libere-moi et je reveillerai les marais.'",
+			"biome": "marais_korrigans",
+			"speaker": "Gwen Du",
+			"arc": "le_tertre_du_silence",
+			"arc_stage": 4,
+			"options": [
+				{"label": "Briser les chaines", "verb": "forcer un passage", "effects": [{"type": "ADD_REPUTATION", "faction": "korrigans", "amount": 12}, {"type": "ADD_REPUTATION", "faction": "ankou", "amount": 5}]},
+				{"label": "Negocier sa liberation", "verb": "negocier", "effects": [{"type": "ADD_REPUTATION", "faction": "korrigans", "amount": 10}, {"type": "ADD_REPUTATION", "faction": "druides", "amount": 3}]},
+				{"label": "Refuser de le liberer", "verb": "refuser", "effects": [{"type": "ADD_REPUTATION", "faction": "anciens", "amount": 8}, {"type": "HEAL_LIFE", "amount": 5}]}
+			],
+			"tags": ["arc", "le_tertre_du_silence", "gwen_du", "marais"],
+			"arc_condition": {"type": "arc_stage", "arc": "le_tertre_du_silence", "min_stage": 3}
+		},
+		{
+			"id": "arc_marais_05",
+			"text": "Le Tertre vibre. Les korrigans emergent de partout, riant et chantant. Le silence est brise. Gwen Du danse avec eux. 'Tu as rendu la voix aux marais.'",
+			"biome": "marais_korrigans",
+			"speaker": "Gwen Du",
+			"arc": "le_tertre_du_silence",
+			"arc_stage": 5,
+			"options": [
+				{"label": "Danser avec les korrigans", "verb": "danser", "effects": [{"type": "ADD_REPUTATION", "faction": "korrigans", "amount": 15}, {"type": "HEAL_LIFE", "amount": 10}]},
+				{"label": "Demander un secret korrigan", "verb": "parler", "effects": [{"type": "ADD_REPUTATION", "faction": "korrigans", "amount": 12}, {"type": "ADD_BIOME_CURRENCY", "amount": 10}]},
+				{"label": "Planter un arbre au centre", "verb": "offrir", "effects": [{"type": "ADD_REPUTATION", "faction": "druides", "amount": 10}, {"type": "ADD_REPUTATION", "faction": "korrigans", "amount": 8}]}
+			],
+			"tags": ["arc", "le_tertre_du_silence", "gwen_du", "marais", "resolution"],
+			"arc_condition": {"type": "arc_stage", "arc": "le_tertre_du_silence", "min_stage": 4}
+		},
+		{
 			"id": "arc_collines_01",
 			"text": "Ildiko t'attend au pied d'un dolmen fissure. 'L'if sacre murmure des propheties. Mais quelqu'un a vole sa voix. Aide-moi a la retrouver.'",
 			"biome": "collines_dolmens",
