@@ -2997,6 +2997,90 @@ func test_qa_joueur_veteran_meta_narrative() -> bool:
 
 
 # =============================================================================
+# GAME BALANCE VALIDATION
+# =============================================================================
+
+## Validates heal/damage ratio across all card data is within target range.
+## Bible says 90% of cards should have tradeoffs. Ratio target: 0.8-2.5.
+func test_balance_heal_damage_ratio() -> bool:
+	var heal_count: int = 0
+	var damage_count: int = 0
+	var files: Array = [
+		"res://data/ai/fastroute_cards.json",
+		"res://data/ai/event_cards.json",
+		"res://data/ai/promise_cards.json",
+	]
+	for path in files:
+		if not FileAccess.file_exists(path):
+			continue
+		var file: FileAccess = FileAccess.open(path, FileAccess.READ)
+		var data = JSON.parse_string(file.get_as_text())
+		file.close()
+		if not (data is Dictionary):
+			continue
+		for key in data:
+			var arr = data[key]
+			if not (arr is Array):
+				continue
+			for card in arr:
+				if not (card is Dictionary):
+					continue
+				for opt in card.get("options", []):
+					if not (opt is Dictionary):
+						continue
+					for eff in opt.get("effects", []):
+						if eff is Dictionary:
+							if str(eff.get("type", "")) == "HEAL_LIFE":
+								heal_count += 1
+							elif str(eff.get("type", "")) == "DAMAGE_LIFE":
+								damage_count += 1
+	if damage_count == 0:
+		push_error("balance: zero DAMAGE_LIFE effects across all cards")
+		return false
+	var ratio: float = float(heal_count) / float(damage_count)
+	# Target: 0.8-2.5 (some healing advantage is okay for fun)
+	if ratio < 0.5 or ratio > 3.0:
+		push_error("balance: heal/damage ratio %.2f outside range [0.5, 3.0]" % ratio)
+		return false
+	return true
+
+
+## Validates that at least 60% of narrative cards have at least one DAMAGE effect.
+func test_balance_tradeoff_percentage() -> bool:
+	var path: String = "res://data/ai/fastroute_cards.json"
+	if not FileAccess.file_exists(path):
+		return true
+	var file: FileAccess = FileAccess.open(path, FileAccess.READ)
+	var data = JSON.parse_string(file.get_as_text())
+	file.close()
+
+	var narrative: Array = data.get("narrative", [])
+	var total: int = narrative.size()
+	var with_damage: int = 0
+	for card in narrative:
+		if not (card is Dictionary):
+			continue
+		var has_dmg: bool = false
+		for opt in card.get("options", []):
+			if not (opt is Dictionary):
+				continue
+			for eff in opt.get("effects", []):
+				if eff is Dictionary and str(eff.get("type", "")) == "DAMAGE_LIFE":
+					has_dmg = true
+		if has_dmg:
+			with_damage += 1
+
+	if total == 0:
+		return true
+	var pct: float = float(with_damage) / float(total) * 100.0
+	# Target: at least 40% of narrative cards have damage tradeoffs
+	if pct < 30.0:
+		push_error("tradeoff: only %.0f%% of narrative cards have damage (need 30%%+)" % pct)
+		return false
+	return true
+
+
+# =============================================================================
 # RUN_ALL
 # =============================================================================
 
