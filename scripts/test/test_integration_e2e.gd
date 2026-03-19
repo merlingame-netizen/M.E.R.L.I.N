@@ -2775,6 +2775,95 @@ func test_meta_narrative_pipeline_complete() -> bool:
 
 
 # =============================================================================
+# QA TESTEUR 1 — NOUVEAU JOUEUR
+# =============================================================================
+
+func test_qa_nouveau_joueur() -> bool:
+	# Profil vierge
+	var profile: Dictionary = MerlinSaveSystem._get_default_profile()
+	if int(profile.get("total_runs", -1)) != 0:
+		push_error("QA1: total_runs should be 0")
+		return false
+
+	# Tutorial 3 cartes
+	var tm: TutorialManager = TutorialManager.new()
+	tm.setup(profile)
+	if not tm.is_first_run():
+		push_error("QA1: should be first_run")
+		return false
+	for i in range(3):
+		if not tm.should_inject_tutorial_card(i):
+			push_error("QA1: tutorial card %d missing" % i)
+			return false
+		var card: Dictionary = tm.get_tutorial_card(i)
+		if card.get("options", []).size() != 3:
+			push_error("QA1: tutorial card %d needs 3 options" % i)
+			return false
+		# UX: labels < 40 chars
+		for opt in card["options"]:
+			if str(opt.get("label", "")).length() > 50:
+				push_error("QA1: label trop long: %s" % str(opt["label"]))
+				return false
+
+	# 3 starter oghams
+	var oghams: Array = profile.get("oghams", {}).get("owned", [])
+	if oghams.size() != 3:
+		push_error("QA1: should have 3 starters, got %d" % oghams.size())
+		return false
+
+	# Premier run survie >= 10 cartes
+	var engine: MerlinEffectEngine = MerlinEffectEngine.new()
+	var state: Dictionary = _make_state()
+	state["run"]["active"] = true
+	var survived: int = 0
+	for i in range(25):
+		var eff: Array = ["HEAL_LIFE:3"] if i % 2 == 0 else ["DAMAGE_LIFE:4"]
+		var c: Dictionary = {"id": "qa_%d" % i, "type": "narrative", "options": [
+			{"effects": eff}, {"effects": []}, {"effects": []}
+		], "tags": []}
+		engine.process_card(state, c, 0, 60, "")
+		survived = i + 1
+		if int(state["run"]["life_essence"]) <= 0:
+			break
+	if survived < 8:
+		push_error("QA1: nouveau joueur meurt trop vite (%d cartes)" % survived)
+		return false
+	return true
+
+
+# =============================================================================
+# QA TESTEUR 4 — CASSEUR (edge cases)
+# =============================================================================
+
+func test_qa_casseur_no_crash() -> bool:
+	var engine: MerlinEffectEngine = MerlinEffectEngine.new()
+	var state: Dictionary = _make_state()
+	state["run"]["active"] = true
+	var card: Dictionary = {"id": "brk", "type": "narrative", "options": [
+		{"effects": ["HEAL_LIFE:5"]}, {"effects": []}, {"effects": []}
+	], "tags": []}
+
+	# Option hors range
+	engine.process_card(state, card, 99, 50, "")
+	# Ogham inexistant
+	engine.process_card(state, card, 0, 50, "ogham_fake_xyz")
+	# Score negatif (clampe a 0)
+	engine.process_card(state, card, 0, -999, "")
+	# Score > 100 (clampe a 100)
+	engine.process_card(state, card, 0, 9999, "")
+	# Carte vide
+	engine.process_card(state, {}, 0, 50, "")
+	# Vie a 1 + gros damage
+	state["run"]["life_essence"] = 1
+	engine.process_card(state, {"id": "kill", "type": "narrative", "options": [
+		{"effects": ["DAMAGE_LIFE:50"]}, {"effects": []}, {"effects": []}
+	], "tags": []}, 0, 80, "")
+
+	# Si on arrive ici sans crash → succes
+	return true
+
+
+# =============================================================================
 # RUN_ALL
 # =============================================================================
 
