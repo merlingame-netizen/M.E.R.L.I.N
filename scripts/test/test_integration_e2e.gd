@@ -2259,6 +2259,50 @@ func test_archetype_faction_focused_reaches_ending() -> bool:
 	return true
 
 
+## E2E: Ogham biome affinity applies +10% score bonus in process_card.
+func test_ogham_affinity_boosts_score_in_pipeline() -> bool:
+	var engine: MerlinEffectEngine = MerlinEffectEngine.new()
+	var state: Dictionary = _make_state()
+	state["run"]["active"] = true
+	state["run"]["current_biome"] = "foret_broceliande"
+	state["run"]["life_essence"] = 80
+
+	# quert has affinity with foret_broceliande
+	# Score 70 + 10% bonus = 77 → still reussite_partielle (51-79, mult 0.5)
+	var card: Dictionary = {"id": "aff_test", "type": "narrative", "options": [
+		{"effects": ["HEAL_LIFE:10"]}, {"effects": []}, {"effects": []}
+	], "tags": []}
+	var result: Dictionary = engine.process_card(state, card, 0, 70, "quert")
+
+	# Check affinity bonus was applied
+	var bonus: int = int(result.get("affinity_bonus", 0))
+	if bonus <= 0:
+		push_error("affinity_pipeline: expected bonus > 0, got %d" % bonus)
+		return false
+	# Score 70 + 7 (10% of 70) = 77 → mult should still be 0.5 (reussite_partielle)
+	return true
+
+
+## E2E: No affinity bonus when ogham doesn't match biome.
+func test_no_affinity_bonus_wrong_biome() -> bool:
+	var engine: MerlinEffectEngine = MerlinEffectEngine.new()
+	var state: Dictionary = _make_state()
+	state["run"]["active"] = true
+	state["run"]["current_biome"] = "foret_broceliande"
+	state["run"]["life_essence"] = 80
+
+	# ioho does NOT have affinity with foret_broceliande
+	var card: Dictionary = {"id": "noaff_test", "type": "narrative", "options": [
+		{"effects": ["HEAL_LIFE:5"]}, {"effects": []}, {"effects": []}
+	], "tags": []}
+	var result: Dictionary = engine.process_card(state, card, 0, 70, "ioho")
+
+	if result.has("affinity_bonus"):
+		push_error("no_affinity: ioho should NOT get bonus in broceliande")
+		return false
+	return true
+
+
 # =============================================================================
 # RUN_ALL
 # =============================================================================

@@ -95,6 +95,15 @@ func process_card(state: Dictionary, card: Dictionary, chosen_option: int,
 		result["ogham_result"] = activate_ogham(active_ogham, state, card)
 		result["steps_completed"].append("ogham")
 
+	# ── Step 5.5: BIOME AFFINITY — +10% score if ogham matches biome ──
+	var current_biome: String = str(run.get("current_biome", ""))
+	if not active_ogham.is_empty() and not current_biome.is_empty():
+		var affinity: Dictionary = StoreFactions.get_biome_affinity_bonus(current_biome, active_ogham)
+		if float(affinity.get("score_bonus", 0.0)) > 0.0:
+			var bonus: int = int(float(minigame_score) * float(affinity.get("score_bonus", 0.0)))
+			minigame_score = clampi(minigame_score + bonus, 0, 100)
+			result["affinity_bonus"] = bonus
+
 	# ── Step 6: SCORE → multiplier ──
 	var is_merlin_direct: bool = str(card.get("type", "")).to_lower() == "merlin_direct"
 	var multiplier: float = 1.0
