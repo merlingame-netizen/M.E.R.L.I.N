@@ -746,6 +746,66 @@
 			"arc_condition": {"type": "faction_rep", "faction": "ankou", "min_value": 40}
 		},
 		{
+			"id": "arc_collines_02",
+			"text": "Ildiko te conduit dans une grotte sous le dolmen. Des os graves tapissent les murs. 'Le voleur a laisse une piste — ces marques ne sont pas anciennes.'",
+			"biome": "collines_dolmens",
+			"speaker": "Ildiko",
+			"arc": "la_voix_de_l_if",
+			"arc_stage": 2,
+			"options": [
+				{"label": "Suivre les marques", "verb": "suivre", "effects": [{"type": "ADD_REPUTATION", "faction": "ankou", "amount": 10}, {"type": "DAMAGE_LIFE", "amount": 3}]},
+				{"label": "Analyser les os", "verb": "analyser", "effects": [{"type": "ADD_REPUTATION", "faction": "anciens", "amount": 8}, {"type": "ADD_REPUTATION", "faction": "ankou", "amount": 3}]},
+				{"label": "Poser un piege", "verb": "se cacher", "effects": [{"type": "ADD_REPUTATION", "faction": "korrigans", "amount": 8}]}
+			],
+			"tags": ["arc", "la_voix_de_l_if", "ildiko", "collines"],
+			"arc_condition": {"type": "arc_stage", "arc": "la_voix_de_l_if", "min_stage": 1}
+		},
+		{
+			"id": "arc_collines_03",
+			"text": "La piste mene a un cercle de corbeaux. Au centre, un homme en haillons serre un cristal noir. 'La voix de l'if est a moi maintenant !'",
+			"biome": "collines_dolmens",
+			"speaker": "Ildiko",
+			"arc": "la_voix_de_l_if",
+			"arc_stage": 3,
+			"options": [
+				{"label": "Affronter le voleur", "verb": "combattre", "effects": [{"type": "ADD_REPUTATION", "faction": "ankou", "amount": 12}, {"type": "DAMAGE_LIFE", "amount": 5}]},
+				{"label": "Raisonner avec lui", "verb": "parler", "effects": [{"type": "ADD_REPUTATION", "faction": "niamh", "amount": 8}, {"type": "ADD_REPUTATION", "faction": "ankou", "amount": 5}]},
+				{"label": "Voler le cristal discretement", "verb": "se faufiler", "effects": [{"type": "ADD_REPUTATION", "faction": "korrigans", "amount": 10}, {"type": "DAMAGE_LIFE", "amount": 2}]}
+			],
+			"tags": ["arc", "la_voix_de_l_if", "ildiko", "collines"],
+			"arc_condition": {"type": "arc_stage", "arc": "la_voix_de_l_if", "min_stage": 2}
+		},
+		{
+			"id": "arc_collines_04",
+			"text": "Le cristal est brise. La voix de l'if s'echappe en un murmure qui traverse les collines. Ildiko le ramene vers l'arbre sacre.",
+			"biome": "collines_dolmens",
+			"speaker": "Ildiko",
+			"arc": "la_voix_de_l_if",
+			"arc_stage": 4,
+			"options": [
+				{"label": "Porter le cristal a l'if", "verb": "s'approcher", "effects": [{"type": "ADD_REPUTATION", "faction": "ankou", "amount": 10}, {"type": "ADD_REPUTATION", "faction": "druides", "amount": 5}]},
+				{"label": "Purifier le cristal d'abord", "verb": "invoquer", "effects": [{"type": "ADD_REPUTATION", "faction": "druides", "amount": 10}, {"type": "HEAL_LIFE", "amount": 5}]},
+				{"label": "Ecouter la voix liberee", "verb": "ecouter", "effects": [{"type": "ADD_REPUTATION", "faction": "ankou", "amount": 8}, {"type": "ADD_REPUTATION", "faction": "anciens", "amount": 5}]}
+			],
+			"tags": ["arc", "la_voix_de_l_if", "ildiko", "collines"],
+			"arc_condition": {"type": "arc_stage", "arc": "la_voix_de_l_if", "min_stage": 3}
+		},
+		{
+			"id": "arc_collines_05",
+			"text": "L'if sacre chante a nouveau. Ses feuilles sombres vibrent d'un eclat violet. Ildiko pose la main sur le tronc. 'La mort et la vie sont reunies. L'equilibre est restaure.'",
+			"biome": "collines_dolmens",
+			"speaker": "Ildiko",
+			"arc": "la_voix_de_l_if",
+			"arc_stage": 5,
+			"options": [
+				{"label": "Recevoir la benediction de l'if", "verb": "accepter", "effects": [{"type": "ADD_REPUTATION", "faction": "ankou", "amount": 15}, {"type": "HEAL_LIFE", "amount": 10}]},
+				{"label": "Graver un ogham sur l'ecorce", "verb": "dessiner", "effects": [{"type": "ADD_REPUTATION", "faction": "ankou", "amount": 12}, {"type": "ADD_REPUTATION", "faction": "druides", "amount": 8}]},
+				{"label": "Demander une prophitie", "verb": "parler", "effects": [{"type": "ADD_REPUTATION", "faction": "ankou", "amount": 10}, {"type": "ADD_BIOME_CURRENCY", "amount": 10}]}
+			],
+			"tags": ["arc", "la_voix_de_l_if", "ildiko", "collines", "resolution"],
+			"arc_condition": {"type": "arc_stage", "arc": "la_voix_de_l_if", "min_stage": 4}
+		},
+		{
 			"id": "arc_iles_01",
 			"text": "Morgane t'apparait dans les brumes. 'Le Passage d'Avalon s'ouvre une fois par cycle. Les etoiles s'alignent bientot. Seras-tu pret ?'",
 			"biome": "iles_mystiques",
