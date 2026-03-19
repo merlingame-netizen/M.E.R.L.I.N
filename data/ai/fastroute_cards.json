@@ -940,6 +940,80 @@
 				{"label": "Refuser poliment", "effects": [{"type": "ADD_REPUTATION", "faction": "anciens", "amount": 5}]}
 			],
 			"tags": ["merlin", "cadeau"]
+		},
+		{
+			"id": "md_stats_aware_001",
+			"text": "Merlin te regarde longuement. 'Tu as marche dans ces forets... combien de fois deja ? Je perds le compte. Mais toi, tu ne t'en souviens pas, n'est-ce pas ?'",
+			"trust_tier_min": "T3",
+			"min_total_runs": 5,
+			"options": [
+				{"label": "De quoi parlez-vous ?", "effects": [{"type": "ADD_REPUTATION", "faction": "anciens", "amount": 8}]},
+				{"label": "Je me souviens de tout", "effects": [{"type": "ADD_REPUTATION", "faction": "druides", "amount": 5}, {"type": "ADD_REPUTATION", "faction": "ankou", "amount": 5}]},
+				{"label": "Combien de fois ?", "effects": [{"type": "ADD_REPUTATION", "faction": "ankou", "amount": 8}]}
+			],
+			"tags": ["merlin", "meta", "stats_aware"]
+		},
+		{
+			"id": "md_stats_aware_002",
+			"text": "Merlin trace des lignes dans la poussiere. Des chiffres. Tes chiffres. 'Tu as choisi le courage plus souvent que la prudence. Cela te definit... ou cela te limite.'",
+			"trust_tier_min": "T3",
+			"min_total_runs": 8,
+			"options": [
+				{"label": "Comment savez-vous ca ?", "effects": [{"type": "ADD_REPUTATION", "faction": "anciens", "amount": 10}]},
+				{"label": "Le courage est une vertu", "effects": [{"type": "ADD_REPUTATION", "faction": "ankou", "amount": 5}, {"type": "HEAL_LIFE", "amount": 3}]},
+				{"label": "Effacer les chiffres", "effects": [{"type": "ADD_REPUTATION", "faction": "korrigans", "amount": 8}]}
+			],
+			"tags": ["merlin", "meta", "stats_aware"]
+		},
+		{
+			"id": "md_farewell_001",
+			"text": "Merlin s'assied. Pour la premiere fois, il semble fatigue. 'Un jour, tu comprendras pourquoi je t'ai guide. Ce n'etait pas par bonte. C'etait... necessaire.' Il ferme les yeux.",
+			"trust_tier_min": "T3",
+			"min_total_runs": 12,
+			"options": [
+				{"label": "Necessaire pour qui ?", "effects": [{"type": "ADD_REPUTATION", "faction": "ankou", "amount": 10}, {"type": "ADD_REPUTATION", "faction": "anciens", "amount": 5}]},
+				{"label": "Reposez-vous, vieil homme", "effects": [{"type": "ADD_REPUTATION", "faction": "niamh", "amount": 8}, {"type": "HEAL_LIFE", "amount": 5}]},
+				{"label": "Je comprends deja", "effects": [{"type": "ADD_REPUTATION", "faction": "druides", "amount": 8}, {"type": "ADD_REPUTATION", "faction": "anciens", "amount": 5}]}
+			],
+			"tags": ["merlin", "meta", "farewell", "deep"]
+		}
+	],
+	"echo": [
+		{
+			"id": "echo_death_memory",
+			"type": "echo",
+			"text": "Un frisson te traverse. Tu sens la mort — pas comme un danger, mais comme un souvenir. Tu es deja mort ici. Tu le sais, meme si tu ne sais pas comment.",
+			"options": [
+				{"label": "Accepter le souvenir", "effects": [{"type": "ADD_REPUTATION", "faction": "ankou", "amount": 8}, {"type": "HEAL_LIFE", "amount": 3}]},
+				{"label": "Le repousser", "effects": [{"type": "HEAL_LIFE", "amount": 5}]},
+				{"label": "Chercher l'endroit exact", "effects": [{"type": "ADD_REPUTATION", "faction": "anciens", "amount": 5}, {"type": "ADD_REPUTATION", "faction": "ankou", "amount": 5}]}
+			],
+			"tags": ["echo", "meta", "death_memory"],
+			"condition": "previous_death_in_biome"
+		},
+		{
+			"id": "echo_faction_loyalty",
+			"type": "echo",
+			"text": "Un PNJ te salue comme un vieil ami. 'Content de te revoir. La derniere fois, tu avais choisi de nous aider.' Tu ne te souviens pas. Mais lui, oui.",
+			"options": [
+				{"label": "Renouveler l'alliance", "effects": [{"type": "ADD_REPUTATION", "faction": "druides", "amount": 10}]},
+				{"label": "Changer de camp cette fois", "effects": [{"type": "ADD_REPUTATION", "faction": "korrigans", "amount": 8}]},
+				{"label": "Je ne me souviens de rien", "effects": [{"type": "ADD_REPUTATION", "faction": "anciens", "amount": 5}, {"type": "HEAL_LIFE", "amount": 3}]}
+			],
+			"tags": ["echo", "meta", "loyalty"],
+			"condition": "dominant_faction_above_50"
+		},
+		{
+			"id": "echo_ogham_recognition",
+			"type": "echo",
+			"text": "L'ogham dans ta main pulse. Il te reconnait. Ce n'est pas la premiere fois que vous travaillez ensemble. L'arbre dont il vient... se souvient de toi.",
+			"options": [
+				{"label": "Parler a l'ogham", "effects": [{"type": "ADD_REPUTATION", "faction": "druides", "amount": 8}, {"type": "HEAL_LIFE", "amount": 3}]},
+				{"label": "Ecouter le souvenir de l'arbre", "effects": [{"type": "ADD_REPUTATION", "faction": "anciens", "amount": 8}, {"type": "ADD_REPUTATION", "faction": "druides", "amount": 3}]},
+				{"label": "Ranger l'ogham", "effects": [{"type": "HEAL_LIFE", "amount": 5}]}
+			],
+			"tags": ["echo", "meta", "ogham_memory"],
+			"condition": "oghams_owned_above_5"
 		}
 	],
 	"twist": [
