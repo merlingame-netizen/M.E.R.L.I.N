@@ -2173,6 +2173,93 @@ func test_mercy_reduces_damage() -> bool:
 
 
 # =============================================================================
+# PLAYER ARCHETYPE SIMULATIONS
+# =============================================================================
+
+## Simulate "joueur prudent" — always picks heal option. Should survive long.
+func test_archetype_prudent_survives_25_cards() -> bool:
+	var engine: MerlinEffectEngine = MerlinEffectEngine.new()
+	var state: Dictionary = _make_state()
+	state["run"]["active"] = true
+
+	for i in range(25):
+		# Prudent player: always heals
+		var card: Dictionary = {"id": "prud_%d" % i, "type": "narrative", "options": [
+			{"effects": ["HEAL_LIFE:5"]},
+			{"effects": ["DAMAGE_LIFE:3"]},
+			{"effects": ["ADD_REPUTATION:druides:5"]},
+		], "tags": []}
+		engine.process_card(state, card, 0, 80, "")  # option 0 = heal
+
+	var life: int = int(state["run"]["life_essence"])
+	# 100 + 25*(5-1drain) = 100 + 100 = clamped at 100
+	if life <= 0:
+		push_error("prudent: should survive 25 cards with constant healing")
+		return false
+	if life < 50:
+		push_error("prudent: life should be high (>50), got %d" % life)
+		return false
+	return true
+
+
+## Simulate "joueur audacieux" — always picks risky option (damage+rep).
+func test_archetype_audacieux_gains_reputation() -> bool:
+	var engine: MerlinEffectEngine = MerlinEffectEngine.new()
+	var state: Dictionary = _make_state()
+	state["run"]["active"] = true
+
+	var cards_survived: int = 0
+	for i in range(25):
+		var card: Dictionary = {"id": "aud_%d" % i, "type": "narrative", "options": [
+			{"effects": ["HEAL_LIFE:3"]},
+			{"effects": ["DAMAGE_LIFE:5", "ADD_REPUTATION:anciens:10"]},
+			{"effects": ["ADD_REPUTATION:druides:5"]},
+		], "tags": []}
+		engine.process_card(state, card, 1, 80, "")  # option 1 = damage+rep
+		cards_survived = i + 1
+		if int(state["run"]["life_essence"]) <= 0:
+			break
+
+	# Audacious player dies faster but gains more rep
+	var anciens_rep: int = int(state["meta"]["faction_rep"]["anciens"])
+	if anciens_rep < 30:
+		push_error("audacieux: anciens rep should be >= 30 after %d cards, got %d" % [cards_survived, anciens_rep])
+		return false
+	return true
+
+
+## Simulate "joueur korrigans" — maximizes one faction to reach ending.
+func test_archetype_faction_focused_reaches_ending() -> bool:
+	var engine: MerlinEffectEngine = MerlinEffectEngine.new()
+	var state: Dictionary = _make_state()
+	state["run"]["active"] = true
+
+	# 20 cards focusing korrigans + heals to survive
+	for i in range(20):
+		if i % 3 == 0:
+			engine.apply_effects(state, ["HEAL_LIFE:5"])
+		engine.apply_effects(state, ["ADD_REPUTATION:korrigans:5"])
+		engine.apply_effects(state, ["DAMAGE_LIFE:1"])  # drain
+		state["run"]["cards_played"] = i + 1
+
+	var korrigans: int = int(state["meta"]["faction_rep"]["korrigans"])
+	# 20 cards * 5 rep = 100, capped at 100 (but per-card cap is 20, so 5 is fine)
+	if korrigans < 80:
+		push_error("korrigans_focus: expected >= 80 rep, got %d" % korrigans)
+		return false
+
+	# Should have korrigans ending available
+	var factions: Dictionary = {}
+	for f in state["meta"]["faction_rep"]:
+		factions[f] = float(state["meta"]["faction_rep"][f])
+	var endings: Array[String] = MerlinReputationSystem.get_available_endings(factions)
+	if not endings.has("korrigans"):
+		push_error("korrigans_focus: ending should be available at %d rep" % korrigans)
+		return false
+	return true
+
+
+# =============================================================================
 # RUN_ALL
 # =============================================================================
 
