@@ -446,6 +446,36 @@
 			"arc_condition": {"type": "faction_rep", "faction": "anciens", "min_value": 25}
 		},
 		{
+			"id": "arc_landes_02",
+			"text": "Erwan revient, couvert de poussiere. 'J'ai trouve la source du silence. Un esprit blesse habite sous le cairn. Il faut le liberer ou le calmer.'",
+			"biome": "landes_bruyere",
+			"speaker": "Erwan",
+			"arc": "le_chant_des_cairns",
+			"arc_stage": 2,
+			"options": [
+				{"label": "Liberer l'esprit", "verb": "invoquer", "effects": [{"type": "ADD_REPUTATION", "faction": "ankou", "amount": 10}, {"type": "DAMAGE_LIFE", "amount": 3}]},
+				{"label": "Chanter pour l'apaiser", "verb": "chanter", "effects": [{"type": "ADD_REPUTATION", "faction": "anciens", "amount": 10}, {"type": "ADD_REPUTATION", "faction": "druides", "amount": 3}]},
+				{"label": "Sceller le cairn", "verb": "forger", "effects": [{"type": "ADD_REPUTATION", "faction": "anciens", "amount": 8}, {"type": "HEAL_LIFE", "amount": 3}]}
+			],
+			"tags": ["arc", "le_chant_des_cairns", "erwan", "landes"],
+			"arc_condition": {"type": "arc_stage", "arc": "le_chant_des_cairns", "min_stage": 1}
+		},
+		{
+			"id": "arc_landes_03",
+			"text": "Le cairn vibre. Les pierres chantent a nouveau, un son grave et profond qui fait trembler les landes. Erwan sourit, les yeux humides. 'Elles se souviennent.'",
+			"biome": "landes_bruyere",
+			"speaker": "Erwan",
+			"arc": "le_chant_des_cairns",
+			"arc_stage": 3,
+			"options": [
+				{"label": "Ecouter le chant des cairns", "verb": "ecouter", "effects": [{"type": "ADD_REPUTATION", "faction": "anciens", "amount": 15}, {"type": "HEAL_LIFE", "amount": 8}]},
+				{"label": "Graver ton nom dans la pierre", "verb": "dessiner", "effects": [{"type": "ADD_REPUTATION", "faction": "anciens", "amount": 10}, {"type": "ADD_REPUTATION", "faction": "ankou", "amount": 5}]},
+				{"label": "Emporter un fragment chantant", "verb": "cueillir", "effects": [{"type": "ADD_BIOME_CURRENCY", "amount": 8}, {"type": "ADD_REPUTATION", "faction": "anciens", "amount": 8}]}
+			],
+			"tags": ["arc", "le_chant_des_cairns", "erwan", "landes", "resolution"],
+			"arc_condition": {"type": "arc_stage", "arc": "le_chant_des_cairns", "min_stage": 2}
+		},
+		{
 			"id": "arc_cotes_01",
 			"text": "Maelle te hele depuis sa barque. 'Le phare de Sein s'est eteint il y a trois lunes. Les bateaux s'ecrasent dans le noir. Aide-moi a rallumer la flamme.'",
 			"biome": "cotes_sauvages",
