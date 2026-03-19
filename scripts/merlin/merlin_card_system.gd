@@ -80,6 +80,7 @@ func init_run(biome: String, ogham: String) -> Dictionary:
 	_event_cards_seen.clear()
 	_promise_ids_taken.clear()
 	_fastroute_seen.clear()
+	var festival: Dictionary = StoreFactions.get_active_festival()
 	return {
 		"biome": biome,
 		"active_ogham": ogham,
@@ -92,7 +93,26 @@ func init_run(biome: String, ogham: String) -> Dictionary:
 		"minigame_wins_this_run": 0,
 		"total_healing_this_run": 0,
 		"damage_taken_this_run": 0,
+		"festival": festival,
 	}
+
+
+## Apply festival rep bonus to state at run start (call after init_run).
+## Returns the bonus applied or 0 if no festival active.
+static func apply_festival_bonus(state: Dictionary, run_state: Dictionary) -> int:
+	var festival: Dictionary = run_state.get("festival", {})
+	if not festival.get("active", false):
+		return 0
+	var faction: String = str(festival.get("faction", ""))
+	var bonus: int = int(festival.get("rep_bonus", 0))
+	if faction.is_empty() or bonus <= 0:
+		return 0
+	var meta: Dictionary = state.get("meta", {})
+	var rep: Dictionary = meta.get("faction_rep", {})
+	rep[faction] = clampi(int(rep.get(faction, 0)) + bonus, 0, 100)
+	meta["faction_rep"] = rep
+	state["meta"] = meta
+	return bonus
 
 
 # ═══════════════════════════════════════════════════════════════════════════════

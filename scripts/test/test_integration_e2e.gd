@@ -2371,6 +2371,53 @@ func test_victory_type_amere() -> bool:
 	return true
 
 
+## E2E: Festival bonus applies rep at run start.
+func test_festival_bonus_applies_rep() -> bool:
+	var state: Dictionary = _make_state()
+	# Simulate a festival run_state with druides bonus
+	var run_state: Dictionary = {
+		"festival": {"active": true, "id": "imbolc", "faction": "druides", "rep_bonus": 5},
+	}
+	var bonus: int = MerlinCardSystem.apply_festival_bonus(state, run_state)
+	if bonus != 5:
+		push_error("festival_bonus: expected 5, got %d" % bonus)
+		return false
+	var druides_rep: int = int(state["meta"]["faction_rep"]["druides"])
+	if druides_rep != 5:
+		push_error("festival_bonus: druides rep should be 5, got %d" % druides_rep)
+		return false
+	return true
+
+
+## E2E: No festival bonus when inactive.
+func test_no_festival_bonus_when_inactive() -> bool:
+	var state: Dictionary = _make_state()
+	var run_state: Dictionary = {
+		"festival": {"active": false, "id": "", "faction": "", "rep_bonus": 0},
+	}
+	var bonus: int = MerlinCardSystem.apply_festival_bonus(state, run_state)
+	if bonus != 0:
+		push_error("no_festival: bonus should be 0, got %d" % bonus)
+		return false
+	return true
+
+
+## E2E: init_run includes festival detection.
+func test_init_run_includes_festival() -> bool:
+	var cs: MerlinCardSystem = _make_card_system()
+	var run_state: Dictionary = cs.init_run("foret_broceliande", "beith")
+	if not run_state.has("festival"):
+		push_error("init_run: should include festival key")
+		return false
+	if typeof(run_state["festival"]) != TYPE_DICTIONARY:
+		push_error("init_run: festival should be a dictionary")
+		return false
+	if not run_state["festival"].has("active"):
+		push_error("init_run: festival should have 'active' key")
+		return false
+	return true
+
+
 # =============================================================================
 # RUN_ALL
 # =============================================================================
