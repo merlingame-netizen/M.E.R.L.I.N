@@ -81,7 +81,6 @@ func _ready() -> void:
 	var game_instance: Node = game_scene.instantiate()
 	# Set headless_mode BEFORE add_child — _ready() → start_run() triggers during add_child
 	game_instance.headless_mode = true
-	game_instance.minigame_chance = 0.0
 	add_child(game_instance)
 	_log("MerlinGame instantiated (headless_mode set pre-ready)")
 
@@ -174,7 +173,7 @@ func _auto_play_loop() -> void:
 				_run_active = false
 				break
 
-			var is_proc: bool = _controller.get("is_processing") if "is_processing" in _controller else true
+			var is_proc: bool = bool(_controller.get("is_busy")) if "is_busy" in _controller else true
 			var cur_card: Dictionary = _controller.get("current_card") if "current_card" in _controller else {}
 
 			if not is_proc and not cur_card.is_empty():
