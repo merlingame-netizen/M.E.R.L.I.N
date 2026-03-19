@@ -2091,6 +2091,87 @@ func test_ogham_cost_and_discount() -> bool:
 	return true
 
 
+## E2E: Recovery heal — +5 PV when life < 20 after effects.
+func test_recovery_heal_below_20() -> bool:
+	var engine: MerlinEffectEngine = MerlinEffectEngine.new()
+	var state: Dictionary = _make_state()
+	state["run"]["active"] = true
+	state["run"]["life_essence"] = 18  # Below 20
+
+	# Play a card with no effects — drain -1 brings to 17, then recovery +5 → 22
+	var card: Dictionary = {"id": "rec_test", "type": "narrative", "options": [
+		{"effects": []}, {"effects": []}, {"effects": []}
+	], "tags": []}
+	var result: Dictionary = engine.process_card(state, card, 0, 80, "")
+
+	var life: int = int(state["run"]["life_essence"])
+	# 18 - 1(drain) = 17 < 20 → recovery +5 → 22
+	if life != 22:
+		push_error("recovery: expected life=22 (18-1+5), got %d" % life)
+		return false
+	if not result.get("pacing_recovery", false):
+		push_error("recovery: pacing_recovery flag should be true")
+		return false
+	return true
+
+
+## E2E: No recovery when life >= 20.
+func test_no_recovery_above_20() -> bool:
+	var engine: MerlinEffectEngine = MerlinEffectEngine.new()
+	var state: Dictionary = _make_state()
+	state["run"]["active"] = true
+	state["run"]["life_essence"] = 50
+
+	var card: Dictionary = {"id": "norec_test", "type": "narrative", "options": [
+		{"effects": []}, {"effects": []}, {"effects": []}
+	], "tags": []}
+	var result: Dictionary = engine.process_card(state, card, 0, 80, "")
+
+	var life: int = int(state["run"]["life_essence"])
+	# 50 - 1(drain) = 49, no recovery
+	if life != 49:
+		push_error("no_recovery: expected life=49, got %d" % life)
+		return false
+	if result.get("pacing_recovery", false):
+		push_error("no_recovery: pacing_recovery should be false")
+		return false
+	return true
+
+
+## E2E: Mercy reduces damage by 20% when consecutive_deaths >= 3.
+func test_mercy_reduces_damage() -> bool:
+	var engine: MerlinEffectEngine = MerlinEffectEngine.new()
+	var state: Dictionary = _make_state()
+	state["run"]["active"] = true
+	state["run"]["life_essence"] = 80
+
+	# Normal: DAMAGE_LIFE:10 at score 80 (mult 1.0) → -10
+	var card: Dictionary = {"id": "mercy_test", "type": "narrative", "options": [
+		{"effects": ["DAMAGE_LIFE:10"]}, {"effects": []}, {"effects": []}
+	], "tags": []}
+	var r1: Dictionary = engine.process_card(state, card, 0, 80, "")
+	var life_normal: int = int(state["run"]["life_essence"])
+	# 80 - 1(drain) - 10(damage) = 69
+	if life_normal != 69:
+		push_error("mercy_normal: expected 69, got %d" % life_normal)
+		return false
+
+	# Now set 3 consecutive deaths → mercy active
+	state["run"]["life_essence"] = 80
+	state["meta"]["stats"]["consecutive_deaths"] = 3
+	var r2: Dictionary = engine.process_card(state, card, 0, 80, "")
+	var life_mercy: int = int(state["run"]["life_essence"])
+	# 80 - 1(drain) - 8(10*0.8 mercy) = 71
+	if life_mercy != 71:
+		push_error("mercy_active: expected 71 (damage 10*0.8=8), got %d" % life_mercy)
+		return false
+	if not r2.get("mercy_active", false):
+		push_error("mercy: mercy_active flag should be true")
+		return false
+
+	return true
+
+
 # =============================================================================
 # RUN_ALL
 # =============================================================================

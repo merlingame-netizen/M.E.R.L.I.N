@@ -127,6 +127,11 @@ func process_card(state: Dictionary, card: Dictionary, chosen_option: int,
 			elif code in ["DAMAGE_LIFE", "HEAL_LIFE", "ADD_BIOME_CURRENCY", "ADD_ANAM", "ADD_KARMA", "ADD_TENSION"]:
 				var raw_amount: int = _to_int(parsed["args"][0])
 				var scaled_amount: int = scale_and_cap(code, raw_amount, multiplier)
+				# Mercy pacing: reduce damage by 20% if 3+ consecutive deaths
+				if code == "DAMAGE_LIFE":
+					var mercy_stats: Dictionary = state.get("meta", {}).get("stats", {})
+					if int(mercy_stats.get("consecutive_deaths", 0)) >= 3:
+						scaled_amount = int(float(scaled_amount) * 0.8)
 				parsed["args"][0] = str(scaled_amount)
 			# Apply double_positives flag from ogham (tinne)
 			var ogham_flags: Dictionary = result["ogham_result"]
@@ -161,7 +166,20 @@ func process_card(state: Dictionary, card: Dictionary, chosen_option: int,
 	result["steps_completed"].append("protection")
 	result["steps_completed"].append("effects")
 
-	# ── Step 9: DEATH CHECK (AFTER effects) ──
+	# ── Step 8.5: PACING — Recovery heal + mercy damage reduction ──
+	run = state.get("run", {})
+	var life_post_effects: int = int(run.get("life_essence", 0))
+	# Recovery: +5 PV if life < 20 (bible v2.4 pacing rule)
+	if life_post_effects > 0 and life_post_effects < 20:
+		_apply_life_delta(state, 5)
+		result["pacing_recovery"] = true
+	# Mercy: consecutive_deaths >= 3 tracked in meta.stats
+	var stats: Dictionary = state.get("meta", {}).get("stats", {})
+	var consecutive_deaths: int = int(stats.get("consecutive_deaths", 0))
+	result["mercy_active"] = consecutive_deaths >= 3
+	result["steps_completed"].append("pacing")
+
+	# ── Step 9: DEATH CHECK (AFTER effects + pacing) ──
 	run = state.get("run", {})
 	var life_after: int = int(run.get("life_essence", 0))
 	result["life_after"] = life_after

@@ -553,11 +553,8 @@ func test_death_check_dead_from_damage() -> bool:
 
 func test_death_check_survives_with_heal() -> bool:
 	var engine := MerlinEffectEngine.new()
-	# life=2: drain -1 → 1, DAMAGE_LIFE:5 → 0, then HEAL_LIFE:10 → 10
-	# But effects are applied sequentially: damage first kills, then heal
-	# Actually effects from the same option are all applied. Let's check:
-	# effects = ["DAMAGE_LIFE:5", "HEAL_LIFE:10"]
-	# After processing: damage → life goes to max(0, 1-5) = 0, then heal → 0+10 = 10
+	# life=2: drain -1 → 1, DAMAGE_LIFE:5 → 0, HEAL_LIFE:10 → 10
+	# Then pacing recovery: 10 < 20 → +5 → 15
 	var state: Dictionary = _make_state(2)
 	var card: Dictionary = _make_card(["DAMAGE_LIFE:5", "HEAL_LIFE:10"])
 	var result: Dictionary = engine.process_card(state, card, 0, 80)
@@ -565,9 +562,9 @@ func test_death_check_survives_with_heal() -> bool:
 		push_error("death_with_heal: should survive thanks to heal")
 		return false
 	var life: int = int(state["run"]["life_essence"])
-	# 2 -1(drain)=1, -5(dmg)→clamped 0, +10(heal)=10
-	if life != 10:
-		push_error("death_with_heal: expected life=10, got %d" % life)
+	# 2 -1(drain)=1, -5(dmg)→0, +10(heal)=10, +5(recovery)=15
+	if life != 15:
+		push_error("death_with_heal: expected life=15 (10+5 recovery), got %d" % life)
 		return false
 	return true
 
