@@ -173,10 +173,11 @@ const HOTSPOT_DEFS := [
 	# 2 coins : Calendar (haut-gauche) + Options (haut-droite)
 	{"name": "calendar",   "icon": 0, "label": "Calendrier",  "palette_key": "amber_bright", "ratio": Vector2(0.04, 0.06)},
 	{"name": "options",    "icon": 3, "label": "Options",      "palette_key": "phosphor_dim", "ratio": Vector2(0.88, 0.06)},
-	# 3 centraux : Arbre de Vie | Alignement (futur) | Collection
-	{"name": "arbre",      "icon": 1, "label": "Arbre de Vie", "palette_key": "phosphor_dim", "ratio": Vector2(0.22, 0.38)},
-	{"name": "alignement", "icon": 4, "label": "Alignement",   "palette_key": "amber_dim",    "ratio": Vector2(0.46, 0.38)},
-	{"name": "collection", "icon": 2, "label": "Collection",   "palette_key": "amber_dim",    "ratio": Vector2(0.70, 0.38)},
+	# 4 centraux : Arbre de Vie | Memoires | Collection | Journal
+	{"name": "arbre",      "icon": 1, "label": "Arbre de Vie", "palette_key": "phosphor_dim", "ratio": Vector2(0.15, 0.38)},
+	{"name": "memoires",   "icon": 4, "label": "Memoires",     "palette_key": "cyan_dim",     "ratio": Vector2(0.38, 0.38)},
+	{"name": "collection", "icon": 2, "label": "Collection",   "palette_key": "amber_dim",    "ratio": Vector2(0.61, 0.38)},
+	{"name": "journal",    "icon": 5, "label": "Vies Passees", "palette_key": "amber_dim",    "ratio": Vector2(0.84, 0.38)},
 ]
 
 # =============================================================================
@@ -565,9 +566,14 @@ func _on_hotspot_pressed(hotspot_name: String) -> void:
 		"collection":
 			SFXManager.play("whoosh")
 			PixelTransition.transition_to(SCENE_COLLECTION)
-		"alignement":
-			# FUTUR — Menu Favorabilité par biome × saison × factions (DOC_17)
-			SFXManager.play("hover")
+		"memoires":
+			# Whisper memories — collected meta-narrative breadcrumbs
+			SFXManager.play("ogham_chime")
+			_show_memoires_panel()
+		"journal":
+			# Cross-run history — vies passees
+			SFXManager.play("whoosh")
+			_show_journal_panel()
 
 
 func _on_partir_pressed() -> void:
@@ -785,4 +791,114 @@ func _play_entry_animation() -> void:
 		var tw := create_tween().set_parallel(true)
 		tw.tween_property(_partir_btn, "modulate:a", 1.0, 0.4).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
 		tw.tween_property(_partir_btn, "scale", Vector2(1.0, 1.0), 0.4).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
+
+
+# =============================================================================
+# MEMOIRES — Whisper collection display
+# =============================================================================
+
+func _show_memoires_panel() -> void:
+	var store: Node = get_node_or_null("/root/MerlinStore")
+	var whispers_seen: Array = []
+	if store and "state" in store:
+		whispers_seen = store.state.get("meta", {}).get("whispers_seen", [])
+
+	var panel := PanelContainer.new()
+	var style := StyleBoxFlat.new()
+	style.bg_color = MerlinVisual.CRT_PALETTE["bg_deep"]
+	style.border_color = MerlinVisual.CRT_PALETTE["cyan_dim"]
+	style.set_border_width_all(2)
+	style.set_corner_radius_all(8)
+	style.set_content_margin_all(20)
+	panel.add_theme_stylebox_override("panel", style)
+
+	var vbox := VBoxContainer.new()
+	var title := Label.new()
+	title.text = "Memoires (%d/13)" % whispers_seen.size()
+	title.add_theme_color_override("font_color", MerlinVisual.CRT_PALETTE["cyan"])
+	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	vbox.add_child(title)
+
+	if whispers_seen.is_empty():
+		var hint := Label.new()
+		hint.text = "Aucune memoire collectee.\nContinuez a jouer..."
+		hint.add_theme_color_override("font_color", MerlinVisual.CRT_PALETTE["phosphor_dim"])
+		hint.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		vbox.add_child(hint)
+	else:
+		for wid in whispers_seen:
+			var entry := Label.new()
+			entry.text = "* %s" % str(wid).replace("whisper_", "").replace("_", " ").capitalize()
+			entry.add_theme_color_override("font_color", MerlinVisual.CRT_PALETTE["phosphor"])
+			vbox.add_child(entry)
+
+	var close := Button.new()
+	close.text = "Fermer"
+	close.pressed.connect(func(): panel.queue_free())
+	vbox.add_child(close)
+
+	panel.add_child(vbox)
+	var vp := get_viewport_rect().size
+	panel.position = vp * 0.15
+	panel.size = vp * 0.7
+	add_child(panel)
+
+
+# =============================================================================
+# JOURNAL — Cross-run history display
+# =============================================================================
+
+func _show_journal_panel() -> void:
+	var store: Node = get_node_or_null("/root/MerlinStore")
+	var run_history: Array = []
+	var total_runs: int = 0
+	if store and "state" in store:
+		run_history = store.state.get("meta", {}).get("run_history", [])
+		total_runs = int(store.state.get("meta", {}).get("total_runs", 0))
+
+	var panel := PanelContainer.new()
+	var style := StyleBoxFlat.new()
+	style.bg_color = MerlinVisual.CRT_PALETTE["bg_deep"]
+	style.border_color = MerlinVisual.CRT_PALETTE["amber_dim"]
+	style.set_border_width_all(2)
+	style.set_corner_radius_all(8)
+	style.set_content_margin_all(20)
+	panel.add_theme_stylebox_override("panel", style)
+
+	var vbox := VBoxContainer.new()
+	var title := Label.new()
+	title.text = "Vies Passees (%d runs)" % total_runs
+	title.add_theme_color_override("font_color", MerlinVisual.CRT_PALETTE["amber_bright"])
+	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	vbox.add_child(title)
+
+	if run_history.is_empty():
+		var hint := Label.new()
+		hint.text = "Aucune vie passee.\nTerminez un run pour commencer le journal."
+		hint.add_theme_color_override("font_color", MerlinVisual.CRT_PALETTE["phosphor_dim"])
+		hint.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		vbox.add_child(hint)
+	else:
+		for i in range(mini(run_history.size(), 10)):
+			var run: Dictionary = run_history[run_history.size() - 1 - i]
+			var entry := Label.new()
+			entry.text = "Vie %d: %s — %d cartes — %s" % [
+				total_runs - i,
+				str(run.get("biome", "?")).replace("_", " ").capitalize(),
+				int(run.get("cards_played", 0)),
+				str(run.get("ending", "mort")),
+			]
+			entry.add_theme_color_override("font_color", MerlinVisual.CRT_PALETTE["phosphor"])
+			vbox.add_child(entry)
+
+	var close := Button.new()
+	close.text = "Fermer"
+	close.pressed.connect(func(): panel.queue_free())
+	vbox.add_child(close)
+
+	panel.add_child(vbox)
+	var vp := get_viewport_rect().size
+	panel.position = vp * 0.15
+	panel.size = vp * 0.7
+	add_child(panel)
 
