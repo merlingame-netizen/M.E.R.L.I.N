@@ -2477,6 +2477,12 @@ func orchestrate_card(context: Dictionary) -> Dictionary:
 	if not whisper_card.is_empty():
 		card = whisper_card
 
+	# 7. Try echo injection (cross-run memories)
+	if not card.get("_is_whisper", false):  # Don't override whispers with echoes
+		var echo_card: Dictionary = _try_inject_echo(context)
+		if not echo_card.is_empty():
+			card = echo_card
+
 	return card
 
 
@@ -2853,7 +2859,58 @@ func _try_inject_whisper(context: Dictionary) -> Dictionary:
 
 	# Pick a random eligible whisper
 	var chosen: Dictionary = eligible[randi() % eligible.size()]
+	# Mark as whisper for glitch overlay trigger
+	chosen["_is_whisper"] = true
 	return chosen
+
+
+## Try injecting an echo card based on cross-run memory.
+## Echo cards reference past deaths, alliances, ogham usage.
+func _try_inject_echo(context: Dictionary) -> Dictionary:
+	var meta: Dictionary = context.get("meta", {})
+	var echo_memory: Dictionary = meta.get("echo_memory", {})
+	var card_index: int = int(context.get("card_index", 0))
+	var total_runs: int = int(meta.get("total_runs", 0))
+
+	# Only after 3+ runs, mid-run, 10% chance
+	if total_runs < 3 or card_index < 8 or card_index > 35:
+		return {}
+	if randf() > 0.10:
+		return {}
+
+	# Load echo cards from FastRoute JSON
+	var path: String = "res://data/ai/fastroute_cards.json"
+	if not FileAccess.file_exists(path):
+		return {}
+	var file: FileAccess = FileAccess.open(path, FileAccess.READ)
+	var data = JSON.parse_string(file.get_as_text())
+	file.close()
+	if typeof(data) != TYPE_DICTIONARY:
+		return {}
+
+	var echos: Array = data.get("echo", [])
+	var biome: String = str(context.get("biome", ""))
+
+	for echo_card in echos:
+		if not (echo_card is Dictionary):
+			continue
+		var condition: String = str(echo_card.get("condition", ""))
+		var met: bool = false
+		match condition:
+			"previous_death_in_biome":
+				met = int(echo_memory.get("deaths_by_biome", {}).get(biome, 0)) > 0
+			"dominant_faction_above_50":
+				for f in meta.get("faction_rep", {}):
+					if float(meta["faction_rep"][f]) >= 50.0:
+						met = true
+			"oghams_owned_above_5":
+				met = meta.get("oghams", {}).get("owned", []).size() > 5
+		if met:
+			var card: Dictionary = echo_card.duplicate(true)
+			card["_is_echo"] = true
+			return card
+
+	return {}
 
 
 func _exit_tree() -> void:
