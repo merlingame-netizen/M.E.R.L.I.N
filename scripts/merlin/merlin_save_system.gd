@@ -40,6 +40,7 @@ static func _get_default_profile() -> Dictionary:
 		},
 		"biomes_unlocked": ["foret_broceliande"],
 		"whispers_seen": [],
+		"run_history": [],
 		"tutorial_flags": {},
 		"stats": {
 			"total_cards": 0, "total_minigames_won": 0,

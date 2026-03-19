@@ -238,6 +238,64 @@ func get_stats() -> Dictionary:
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
+# WHISPER MEMORIES — Collected meta-narrative breadcrumbs
+# ═══════════════════════════════════════════════════════════════════════════════
+
+func get_whisper_memories() -> Dictionary:
+	var whispers_seen: Array = _profile.get("whispers_seen", [])
+	var total_whispers: int = 10  # Total whisper cards in event_cards.json
+	return {
+		"collected": whispers_seen,
+		"count": whispers_seen.size(),
+		"total": total_whispers,
+		"progress": float(whispers_seen.size()) / float(maxi(total_whispers, 1)),
+		"all_found": whispers_seen.size() >= total_whispers,
+	}
+
+
+func record_whisper_seen(whisper_id: String) -> void:
+	var whispers_seen: Array = _profile.get("whispers_seen", [])
+	if not whispers_seen.has(whisper_id):
+		whispers_seen.append(whisper_id)
+		_profile["whispers_seen"] = whispers_seen
+		if _save:
+			_save.save_profile(_profile)
+
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# JOURNAL — Cross-run history for "vies passées"
+# ═══════════════════════════════════════════════════════════════════════════════
+
+func get_journal() -> Dictionary:
+	var run_history: Array = _profile.get("run_history", [])
+	return {
+		"total_runs": int(_profile.get("total_runs", 0)),
+		"runs": run_history,
+		"endings_seen": _profile.get("endings_seen", []),
+		"arc_tags": _profile.get("arc_tags", []),
+		"whispers_found": _profile.get("whispers_seen", []).size(),
+	}
+
+
+func record_run_end(run_summary: Dictionary) -> void:
+	var run_history: Array = _profile.get("run_history", [])
+	# Keep last 20 runs
+	run_history.append({
+		"biome": str(run_summary.get("biome", "")),
+		"cards_played": int(run_summary.get("cards_played", 0)),
+		"ending": str(run_summary.get("ending", "")),
+		"life_remaining": int(run_summary.get("life_remaining", 0)),
+		"dominant_faction": str(run_summary.get("dominant_faction", "")),
+		"whisper_seen": str(run_summary.get("whisper_seen", "")),
+	})
+	if run_history.size() > 20:
+		run_history = run_history.slice(run_history.size() - 20)
+	_profile["run_history"] = run_history
+	if _save:
+		_save.save_profile(_profile)
+
+
+# ═══════════════════════════════════════════════════════════════════════════════
 # OGHAM MANAGEMENT
 # ═══════════════════════════════════════════════════════════════════════════════
 
