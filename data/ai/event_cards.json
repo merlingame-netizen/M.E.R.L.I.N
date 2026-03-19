@@ -451,6 +451,44 @@
 			"tags": ["whisper", "meta", "morgane", "deep"],
 			"min_trust_tier": "T3",
 			"min_total_runs": 10
+		},
+		{
+			"id": "whisper_name_spoken",
+			"type": "event",
+			"text": "Un vent froid. Puis ton nom. Pas 'voyageur'. Ton nom. Prononce clairement par une voix qui n'est pas la. Tu te retournes. Personne.",
+			"options": [
+				{"label": "Repondre a voix haute", "effects": [{"type": "ADD_REPUTATION", "faction": "ankou", "amount": 8}]},
+				{"label": "Se boucher les oreilles", "effects": [{"type": "HEAL_LIFE", "amount": 5}]},
+				{"label": "Dire : je sais que tu es la", "effects": [{"type": "ADD_REPUTATION", "faction": "anciens", "amount": 8}, {"type": "ADD_REPUTATION", "faction": "ankou", "amount": 3}]}
+			],
+			"tags": ["whisper", "meta", "name"],
+			"min_total_runs": 6,
+			"min_trust_tier": "T1"
+		},
+		{
+			"id": "whisper_same_rain",
+			"type": "event",
+			"text": "Il pleut. Les gouttes tombent exactement au meme endroit que la derniere fois. Tu le sais parce que les flaques ont la meme forme. Exactement. La. Meme. Forme.",
+			"options": [
+				{"label": "Marcher dans les flaques", "effects": [{"type": "ADD_REPUTATION", "faction": "korrigans", "amount": 5}, {"type": "HEAL_LIFE", "amount": 3}]},
+				{"label": "Compter les gouttes", "effects": [{"type": "ADD_REPUTATION", "faction": "anciens", "amount": 8}]},
+				{"label": "Chercher un abri different", "effects": [{"type": "ADD_REPUTATION", "faction": "druides", "amount": 5}]}
+			],
+			"tags": ["whisper", "meta", "repetition"],
+			"min_total_runs": 7
+		},
+		{
+			"id": "whisper_merlin_error",
+			"type": "event",
+			"text": "Merlin s'arrete net. Il fixe le vide. Ses levres bougent sans son. Puis il dit, d'une voix qui n'est pas la sienne : 'Recalibrage en cours.' Il cligne des yeux. 'Pardon. Ou en etais-je ?'",
+			"options": [
+				{"label": "Recalibrage ?", "effects": [{"type": "ADD_REPUTATION", "faction": "anciens", "amount": 10}, {"type": "ADD_REPUTATION", "faction": "ankou", "amount": 5}]},
+				{"label": "Vous allez bien ?", "effects": [{"type": "ADD_REPUTATION", "faction": "niamh", "amount": 5}, {"type": "HEAL_LIFE", "amount": 3}]},
+				{"label": "Faire comme si de rien n'etait", "effects": [{"type": "HEAL_LIFE", "amount": 5}]}
+			],
+			"tags": ["whisper", "meta", "glitch", "merlin"],
+			"min_total_runs": 9,
+			"min_trust_tier": "T2"
 		}
 	]
 }
