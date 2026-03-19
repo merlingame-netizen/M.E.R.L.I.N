@@ -1580,6 +1580,81 @@ func test_multi_run_biome_unlock_progression() -> bool:
 	return true
 
 
+## E2E: Cross-run faction reputation persists between runs.
+func test_cross_run_faction_persistence() -> bool:
+	var engine: MerlinEffectEngine = MerlinEffectEngine.new()
+	var state: Dictionary = _make_state()
+
+	# Run 1: gain druides rep
+	engine.apply_effects(state, ["ADD_REPUTATION:druides:15"])
+	var druides_after_r1: int = int(state["meta"]["faction_rep"]["druides"])
+	if druides_after_r1 != 15:
+		push_error("cross_run: druides should be 15 after run 1, got %d" % druides_after_r1)
+		return false
+
+	# Simulate run end — faction_rep stays in meta (cross-run)
+	state["meta"]["total_runs"] = 1
+	state["run"]["active"] = false
+
+	# Run 2: gain more druides rep
+	state["run"]["active"] = true
+	engine.apply_effects(state, ["ADD_REPUTATION:druides:10"])
+	var druides_after_r2: int = int(state["meta"]["faction_rep"]["druides"])
+	# 15 + 10 = 25 (persisted across runs)
+	if druides_after_r2 != 25:
+		push_error("cross_run: druides should be 25 after run 2, got %d" % druides_after_r2)
+		return false
+
+	# Other factions unchanged
+	if int(state["meta"]["faction_rep"]["ankou"]) != 0:
+		push_error("cross_run: ankou should still be 0")
+		return false
+
+	return true
+
+
+## E2E: All 5 factions reach ending threshold (80) independently.
+func test_all_factions_can_reach_ending_threshold() -> bool:
+	for faction in MerlinReputationSystem.FACTIONS:
+		var rep: MerlinReputationSystem = MerlinReputationSystem.new()
+		# Add 20 rep four times (cap per card = 20)
+		for i in 4:
+			rep.add_reputation(faction, 20.0)
+		if not rep.has_ending_threshold(faction):
+			push_error("ending_threshold: %s should reach 80 after 4x20" % faction)
+			return false
+	return true
+
+
+## E2E: Full card pipeline → faction rep → ending check integration.
+func test_card_effects_trigger_faction_ending() -> bool:
+	var engine: MerlinEffectEngine = MerlinEffectEngine.new()
+	var state: Dictionary = _make_state()
+
+	# Apply enough rep to reach 80 for druides
+	for i in 4:
+		engine.apply_effects(state, ["ADD_REPUTATION:druides:20"])
+
+	var druides_rep: int = int(state["meta"]["faction_rep"]["druides"])
+	if druides_rep < 80:
+		push_error("faction_ending: druides should be >= 80, got %d" % druides_rep)
+		return false
+
+	# Check available endings
+	var factions: Dictionary = {}
+	for f in state["meta"]["faction_rep"]:
+		factions[f] = float(state["meta"]["faction_rep"][f])
+	var endings: Array[String] = MerlinReputationSystem.get_available_endings(factions)
+	if not endings.has("druides"):
+		push_error("faction_ending: druides ending should be available")
+		return false
+	if endings.size() != 1:
+		push_error("faction_ending: only druides should have ending, got %d" % endings.size())
+		return false
+
+	return true
+
+
 # =============================================================================
 # RUN_ALL
 # =============================================================================
