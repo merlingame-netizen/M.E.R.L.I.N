@@ -686,5 +686,51 @@
 			],
 			"tags": ["merlin", "cadeau"]
 		}
+	],
+	"twist": [
+		{
+			"id": "twist_betrayal_001",
+			"type": "twist",
+			"text": "Un allie de confiance revele ses vraies intentions. Il t'a suivi depuis le debut, attendant le bon moment pour frapper.",
+			"options": [
+				{"label": "Affronter la trahison", "verb": "combattre", "effects": [{"type": "DAMAGE_LIFE", "amount": 8}, {"type": "ADD_REPUTATION", "faction": "anciens", "amount": 10}]},
+				{"label": "Fuir dans la foret", "verb": "se faufiler", "effects": [{"type": "ADD_REPUTATION", "faction": "korrigans", "amount": 5}, {"type": "HEAL_LIFE", "amount": 3}]},
+				{"label": "Tenter de le raisonner", "verb": "parler", "effects": [{"type": "ADD_REPUTATION", "faction": "niamh", "amount": 8}, {"type": "DAMAGE_LIFE", "amount": 3}]}
+			],
+			"tags": ["twist", "trahison", "tension_high"]
+		},
+		{
+			"id": "twist_vision_001",
+			"type": "twist",
+			"text": "Le monde se fige. Tu vois l'avenir : trois chemins, trois destins. Mais la vision s'efface avant que tu puisses tout comprendre.",
+			"options": [
+				{"label": "Suivre le chemin lumineux", "verb": "suivre", "effects": [{"type": "HEAL_LIFE", "amount": 10}, {"type": "ADD_REPUTATION", "faction": "druides", "amount": 5}]},
+				{"label": "Plonger dans l'ombre", "verb": "tenter sa chance", "effects": [{"type": "ADD_REPUTATION", "faction": "ankou", "amount": 12}, {"type": "DAMAGE_LIFE", "amount": 5}]},
+				{"label": "Refuser la vision", "verb": "refuser", "effects": [{"type": "ADD_REPUTATION", "faction": "anciens", "amount": 8}]}
+			],
+			"tags": ["twist", "vision", "tension_high"]
+		},
+		{
+			"id": "twist_storm_001",
+			"type": "twist",
+			"text": "Un orage magique eclate sans prevenir. La foudre frappe le sol, revelant des os anciens et un message ogham grave dans la pierre.",
+			"options": [
+				{"label": "Dechiffrer le message", "verb": "dechiffrer", "effects": [{"type": "ADD_REPUTATION", "faction": "druides", "amount": 10}, {"type": "ADD_REPUTATION", "faction": "anciens", "amount": 5}]},
+				{"label": "Collecter les os", "verb": "cueillir", "effects": [{"type": "ADD_REPUTATION", "faction": "ankou", "amount": 8}, {"type": "ADD_BIOME_CURRENCY", "amount": 5}]},
+				{"label": "S'abriter et attendre", "verb": "se cacher", "effects": [{"type": "HEAL_LIFE", "amount": 5}]}
+			],
+			"tags": ["twist", "orage", "tension_medium"]
+		},
+		{
+			"id": "twist_merlin_test_001",
+			"type": "twist",
+			"text": "Merlin apparait soudainement. 'Ceci est un test, druide. Tes choix precedents ont attire mon attention. Voyons ce que tu feras maintenant.'",
+			"options": [
+				{"label": "Montrer sa sagesse", "verb": "mediter", "effects": [{"type": "ADD_REPUTATION", "faction": "druides", "amount": 8}, {"type": "ADD_REPUTATION", "faction": "anciens", "amount": 5}]},
+				{"label": "Montrer son courage", "verb": "combattre", "effects": [{"type": "ADD_REPUTATION", "faction": "ankou", "amount": 8}, {"type": "DAMAGE_LIFE", "amount": 3}]},
+				{"label": "Montrer sa ruse", "verb": "jouer un tour", "effects": [{"type": "ADD_REPUTATION", "faction": "korrigans", "amount": 10}]}
+			],
+			"tags": ["twist", "merlin", "test", "tension_high"]
+		}
 	]
 }
