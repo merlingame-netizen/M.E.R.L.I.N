@@ -2303,6 +2303,74 @@ func test_no_affinity_bonus_wrong_biome() -> bool:
 	return true
 
 
+## E2E: Combined gameplay features — affinity + recovery + mercy in one run.
+func test_combined_features_full_run() -> bool:
+	var engine: MerlinEffectEngine = MerlinEffectEngine.new()
+	var state: Dictionary = _make_state()
+	state["run"]["active"] = true
+	state["run"]["current_biome"] = "foret_broceliande"
+	state["meta"]["stats"]["consecutive_deaths"] = 3  # Mercy active
+
+	# Card with DAMAGE_LIFE:10 — mercy reduces to 8, affinity boosts score
+	var card: Dictionary = {"id": "combo_test", "type": "narrative", "options": [
+		{"effects": ["DAMAGE_LIFE:10"]}, {"effects": []}, {"effects": []}
+	], "tags": []}
+
+	# Use quert (affinity with broceliande) at score 75
+	var result: Dictionary = engine.process_card(state, card, 0, 75, "quert")
+
+	# Verify mercy flag
+	if not result.get("mercy_active", false):
+		push_error("combined: mercy should be active (3 consecutive deaths)")
+		return false
+
+	# Verify affinity bonus applied
+	if int(result.get("affinity_bonus", 0)) <= 0:
+		push_error("combined: affinity bonus should apply for quert in broceliande")
+		return false
+
+	# Life should be higher than without mercy (damage reduced by 20%)
+	var life: int = int(state["run"]["life_essence"])
+	# 100 - 1(drain) - 8(10*0.8 mercy) + quert heal(8) = depends on ogham
+	# At minimum, player should still be alive
+	if life <= 0:
+		push_error("combined: should survive with mercy + affinity")
+		return false
+
+	return true
+
+
+## E2E: Victory type — harmonie when karma >= 5.
+func test_victory_type_harmonie() -> bool:
+	var state: Dictionary = _make_state()
+	state["run"]["hidden"]["karma"] = 10  # Positive karma → harmonie
+
+	var victory_type: String = StoreRun.get_victory_type(state)
+	if victory_type != "harmonie":
+		push_error("victory_type: karma 10 should be harmonie, got %s" % victory_type)
+		return false
+	return true
+
+
+## E2E: Victory type — victoire_amere when karma <= -5.
+func test_victory_type_amere() -> bool:
+	var state: Dictionary = _make_state()
+	state["run"]["hidden"]["karma"] = -8  # Negative karma → victoire_amere
+
+	var victory_type: String = StoreRun.get_victory_type(state)
+	if victory_type != "victoire_amere":
+		push_error("victory_type: karma -8 should be victoire_amere, got %s" % victory_type)
+		return false
+
+	# prix_paye: karma between -4 and +4
+	state["run"]["hidden"]["karma"] = 0
+	var prix: String = StoreRun.get_victory_type(state)
+	if prix != "prix_paye":
+		push_error("victory_type: karma 0 should be prix_paye, got %s" % prix)
+		return false
+	return true
+
+
 # =============================================================================
 # RUN_ALL
 # =============================================================================
