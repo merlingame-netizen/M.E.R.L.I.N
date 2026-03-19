@@ -1792,6 +1792,74 @@ func test_fastroute_json_cards_valid_structure() -> bool:
 	return true
 
 
+## E2E: Event cards JSON has valid structure (all 26 cards).
+func test_event_cards_json_valid() -> bool:
+	var path: String = "res://data/ai/event_cards.json"
+	if not FileAccess.file_exists(path):
+		push_error("event_json: file not found")
+		return false
+	var file: FileAccess = FileAccess.open(path, FileAccess.READ)
+	var data = JSON.parse_string(file.get_as_text())
+	file.close()
+	if typeof(data) != TYPE_DICTIONARY:
+		push_error("event_json: not a valid JSON dict")
+		return false
+	# Events spread across seasonal, biome_specific, universal arrays
+	var total_events: int = 0
+	for key in data:
+		var arr = data[key]
+		if not (arr is Array):
+			continue
+		total_events += arr.size()
+		for i in range(arr.size()):
+			var ev: Dictionary = arr[i]
+			if str(ev.get("id", "")).is_empty():
+				push_error("event_json: %s[%d] missing id" % [key, i])
+				return false
+			if str(ev.get("text", "")).is_empty():
+				push_error("event_json: %s[%d] missing text" % [key, i])
+				return false
+			if ev.get("options", []).size() < 2:
+				push_error("event_json: %s has < 2 options" % str(ev["id"]))
+				return false
+	if total_events < 15:
+		push_error("event_json: expected 15+ total events, got %d" % total_events)
+		return false
+	return true
+
+
+## E2E: Ogham cooldown ticks down after each card.
+func test_ogham_cooldown_tick_per_card() -> bool:
+	var state: Dictionary = _make_state()
+	state["run"]["active"] = true
+	# Set beith cooldown to 3
+	state["oghams"]["skill_cooldowns"] = {"beith": 3}
+
+	# Tick once
+	StoreOghams.tick_cooldowns(state)
+	var cd_after_1: int = int(state["oghams"]["skill_cooldowns"].get("beith", 0))
+	if cd_after_1 != 2:
+		push_error("cooldown_tick: beith should be 2 after 1 tick, got %d" % cd_after_1)
+		return false
+
+	# Tick twice more
+	StoreOghams.tick_cooldowns(state)
+	StoreOghams.tick_cooldowns(state)
+	var cd_after_3: int = int(state["oghams"]["skill_cooldowns"].get("beith", 0))
+	if cd_after_3 != 0:
+		push_error("cooldown_tick: beith should be 0 after 3 ticks, got %d" % cd_after_3)
+		return false
+
+	# Extra tick shouldn't go negative
+	StoreOghams.tick_cooldowns(state)
+	var cd_after_4: int = int(state["oghams"]["skill_cooldowns"].get("beith", 0))
+	if cd_after_4 < 0:
+		push_error("cooldown_tick: beith should not go negative, got %d" % cd_after_4)
+		return false
+
+	return true
+
+
 # =============================================================================
 # RUN_ALL
 # =============================================================================
