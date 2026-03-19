@@ -2622,6 +2622,76 @@ func test_all_8_arcs_complete_with_resolution() -> bool:
 	return true
 
 
+## E2E: Whisper cards JSON has valid gates (min_total_runs, min_trust_tier).
+func test_whisper_cards_have_valid_gates() -> bool:
+	var path: String = "res://data/ai/event_cards.json"
+	var file: FileAccess = FileAccess.open(path, FileAccess.READ)
+	var data = JSON.parse_string(file.get_as_text())
+	file.close()
+
+	var whispers: Array = data.get("whispers", [])
+	if whispers.size() < 8:
+		push_error("whisper_gates: expected 8+ whispers, got %d" % whispers.size())
+		return false
+
+	for w in whispers:
+		if str(w.get("id", "")).is_empty():
+			push_error("whisper_gates: whisper missing id")
+			return false
+		var min_runs: int = int(w.get("min_total_runs", 0))
+		if min_runs < 2:
+			push_error("whisper_gates: %s has min_runs < 2 (too early)" % str(w["id"]))
+			return false
+		if w.get("options", []).size() < 2:
+			push_error("whisper_gates: %s has < 2 options" % str(w["id"]))
+			return false
+	return true
+
+
+## E2E: Whisper progression — runs gate whispers correctly.
+func test_whisper_progression_by_runs() -> bool:
+	var path: String = "res://data/ai/event_cards.json"
+	var file: FileAccess = FileAccess.open(path, FileAccess.READ)
+	var data = JSON.parse_string(file.get_as_text())
+	file.close()
+	var whispers: Array = data.get("whispers", [])
+
+	# At run 2: only early whispers (min_total_runs <= 2) eligible
+	var eligible_at_2: int = 0
+	var eligible_at_10: int = 0
+	for w in whispers:
+		if int(w.get("min_total_runs", 99)) <= 2:
+			eligible_at_2 += 1
+		if int(w.get("min_total_runs", 99)) <= 10:
+			eligible_at_10 += 1
+
+	if eligible_at_2 < 1:
+		push_error("whisper_prog: no whispers available at run 2")
+		return false
+	if eligible_at_10 <= eligible_at_2:
+		push_error("whisper_prog: more whispers should unlock by run 10")
+		return false
+	return true
+
+
+## E2E: Profile has whispers_seen + run_history fields.
+func test_profile_has_whisper_and_journal_fields() -> bool:
+	var profile: Dictionary = MerlinSaveSystem._get_default_profile()
+	if not profile.has("whispers_seen"):
+		push_error("profile: missing whispers_seen")
+		return false
+	if typeof(profile["whispers_seen"]) != TYPE_ARRAY:
+		push_error("profile: whispers_seen should be array")
+		return false
+	if not profile.has("run_history"):
+		push_error("profile: missing run_history")
+		return false
+	if typeof(profile["run_history"]) != TYPE_ARRAY:
+		push_error("profile: run_history should be array")
+		return false
+	return true
+
+
 # =============================================================================
 # RUN_ALL
 # =============================================================================
