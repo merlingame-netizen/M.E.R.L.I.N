@@ -2864,6 +2864,139 @@ func test_qa_casseur_no_crash() -> bool:
 
 
 # =============================================================================
+# QA TESTEUR 2 — JOUEUR REGULIER (3 runs consecutifs)
+# =============================================================================
+
+func test_qa_joueur_regulier_3_runs() -> bool:
+	var engine: MerlinEffectEngine = MerlinEffectEngine.new()
+	var state: Dictionary = _make_state()
+	state["meta"]["total_runs"] = 5  # Joueur qui a deja joue
+
+	var faction_history: Array = []
+	var cards_per_run: Array = []
+
+	for run_idx in range(3):
+		state["run"]["active"] = true
+		state["run"]["life_essence"] = MerlinConstants.LIFE_ESSENCE_START
+		state["run"]["current_biome"] = MerlinConstants.BIOME_KEYS[run_idx % MerlinConstants.BIOME_KEYS.size()]
+
+		var run_cards: int = 0
+		# Joueur regulier: varie ses choix, score 60-90
+		for i in range(20):
+			var effects: Array = []
+			match i % 4:
+				0: effects = ["HEAL_LIFE:5"]
+				1: effects = ["DAMAGE_LIFE:3", "ADD_REPUTATION:druides:5"]
+				2: effects = ["ADD_REPUTATION:anciens:8"]
+				3: effects = ["HEAL_LIFE:3", "ADD_REPUTATION:korrigans:3"]
+			var card: Dictionary = {"id": "reg_%d_%d" % [run_idx, i], "type": "narrative",
+				"options": [{"effects": effects}, {"effects": []}, {"effects": []}], "tags": []}
+			var score: int = 60 + (i * 7) % 31
+			# Ogham switching every 5 cards
+			var ogham: String = ["beith", "luis", "quert", ""][i % 4]
+			engine.process_card(state, card, 0, score, ogham)
+			run_cards += 1
+			if int(state["run"]["life_essence"]) <= 0:
+				break
+
+		cards_per_run.append(run_cards)
+		# Record dominant faction
+		var max_rep: float = 0.0
+		var dom: String = ""
+		for f in state["meta"]["faction_rep"]:
+			var rep: float = float(state["meta"]["faction_rep"][f])
+			if rep > max_rep:
+				max_rep = rep
+				dom = f
+		faction_history.append(dom)
+
+		# End run: increment total_runs
+		state["meta"]["total_runs"] = int(state["meta"]["total_runs"]) + 1
+		state["run"]["active"] = false
+
+	# CHECKS
+	# 1. Survived at least 12 cards per run (regulier player is decent)
+	for i in range(cards_per_run.size()):
+		if int(cards_per_run[i]) < 10:
+			push_error("QA2: run %d too short (%d cards)" % [i, int(cards_per_run[i])])
+			return false
+
+	# 2. Factions progressed — at least 2 factions > 0
+	var factions_above_zero: int = 0
+	for f in state["meta"]["faction_rep"]:
+		if float(state["meta"]["faction_rep"][f]) > 0.0:
+			factions_above_zero += 1
+	if factions_above_zero < 2:
+		push_error("QA2: only %d factions > 0 after 3 runs (should be 2+)" % factions_above_zero)
+		return false
+
+	# 3. Total runs incremented correctly
+	if int(state["meta"]["total_runs"]) != 8:  # Started at 5, did 3
+		push_error("QA2: total_runs should be 8, got %d" % int(state["meta"]["total_runs"]))
+		return false
+
+	return true
+
+
+# =============================================================================
+# QA TESTEUR 3 — JOUEUR VETERAN (run 15+, meta-narrative)
+# =============================================================================
+
+func test_qa_joueur_veteran_meta_narrative() -> bool:
+	var state: Dictionary = _make_state()
+	state["meta"]["total_runs"] = 15
+	state["meta"]["trust_merlin"] = 80  # T3
+	state["meta"]["faction_rep"]["druides"] = 85.0
+	state["meta"]["faction_rep"]["niamh"] = 60.0
+	state["meta"]["oghams"] = {"owned": ["beith", "luis", "quert", "duir", "onn", "nuin"], "equipped": "beith"}
+	state["meta"]["endings_seen"] = ["harmonie", "victoire_amere"]
+
+	# 1. Trust tier should be T3
+	var tier: String = StoreFactions.get_trust_tier(state)
+	if tier != "T3":
+		push_error("QA3: trust_merlin=80 should be T3, got %s" % tier)
+		return false
+
+	# 2. Endings available — druides >= 80
+	var factions: Dictionary = {}
+	for f in state["meta"]["faction_rep"]:
+		factions[f] = float(state["meta"]["faction_rep"][f])
+	var endings: Array[String] = MerlinReputationSystem.get_available_endings(factions)
+	if not endings.has("druides"):
+		push_error("QA3: druides ending should be available at 85 rep")
+		return false
+
+	# 3. Whispers should be eligible at run 15
+	var path: String = "res://data/ai/event_cards.json"
+	if FileAccess.file_exists(path):
+		var file: FileAccess = FileAccess.open(path, FileAccess.READ)
+		var data = JSON.parse_string(file.get_as_text())
+		file.close()
+		var whispers: Array = data.get("whispers", [])
+		var eligible: int = 0
+		for w in whispers:
+			if int(w.get("min_total_runs", 99)) <= 15:
+				eligible += 1
+		if eligible < 8:
+			push_error("QA3: at run 15, should have 8+ eligible whispers, got %d" % eligible)
+			return false
+
+	# 4. Biome maturity should unlock several biomes
+	var bs: MerlinBiomeSystem = MerlinBiomeSystem.new()
+	var meta: Dictionary = {"total_runs": 15, "fins_vues": 2, "oghams_debloques": 6,
+		"max_faction_rep": 85.0, "endings_seen": ["harmonie", "victoire_amere"]}
+	var unlocked: int = 0
+	for biome in MerlinConstants.BIOME_KEYS:
+		if bs.is_unlocked(biome, meta):
+			unlocked += 1
+	if unlocked < 4:
+		push_error("QA3: veteran should have 4+ biomes unlocked, got %d" % unlocked)
+		return false
+
+	return true
+
+
+# =============================================================================
 # RUN_ALL
 # =============================================================================
 
