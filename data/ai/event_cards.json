@@ -326,5 +326,131 @@
 			"tags": ["festival", "samhain", "ankou", "seasonal"],
 			"festival": "samhain"
 		}
+	],
+	"whispers": [
+		{
+			"id": "whisper_deja_vu",
+			"type": "event",
+			"text": "Tu t'arretes. Cet arbre. Cette pierre. Cette lumiere exacte. Tu as deja vu ca. Pas dans un reve. Ici. Exactement ici.",
+			"options": [
+				{"label": "Secouer la tete et continuer", "effects": [{"type": "HEAL_LIFE", "amount": 3}]},
+				{"label": "Toucher l'arbre pour verifier", "effects": [{"type": "ADD_REPUTATION", "faction": "druides", "amount": 5}]},
+				{"label": "Fermer les yeux et compter", "effects": [{"type": "ADD_REPUTATION", "faction": "anciens", "amount": 5}]}
+			],
+			"tags": ["whisper", "meta", "deja_vu"],
+			"min_total_runs": 3
+		},
+		{
+			"id": "whisper_merlin_slip",
+			"type": "event",
+			"text": "Merlin parle, puis s'interrompt. '...comme la derniere fois que tu—' Il tousse. 'Pardonne un vieil homme. La memoire joue des tours.'",
+			"options": [
+				{"label": "Quelle derniere fois ?", "effects": [{"type": "ADD_REPUTATION", "faction": "anciens", "amount": 5}]},
+				{"label": "Laisser passer", "effects": [{"type": "HEAL_LIFE", "amount": 3}]},
+				{"label": "Tu me connais depuis longtemps ?", "effects": [{"type": "ADD_REPUTATION", "faction": "druides", "amount": 5}, {"type": "ADD_REPUTATION", "faction": "anciens", "amount": 3}]}
+			],
+			"tags": ["whisper", "meta", "merlin_slip"],
+			"min_total_runs": 2
+		},
+		{
+			"id": "whisper_too_perfect",
+			"type": "event",
+			"text": "La clairiere est parfaite. Trop parfaite. Chaque fougere placee comme dans un tableau. Chaque rayon de soleil a l'angle exact. Comme si quelqu'un avait... arrange tout ca.",
+			"options": [
+				{"label": "Admirer la beaute", "effects": [{"type": "HEAL_LIFE", "amount": 5}]},
+				{"label": "Chercher ce qui cloche", "effects": [{"type": "ADD_REPUTATION", "faction": "korrigans", "amount": 8}]},
+				{"label": "Deplacer une pierre", "effects": [{"type": "ADD_REPUTATION", "faction": "ankou", "amount": 5}, {"type": "DAMAGE_LIFE", "amount": 2}]}
+			],
+			"tags": ["whisper", "meta", "uncanny"],
+			"min_total_runs": 4
+		},
+		{
+			"id": "whisper_npc_echo",
+			"type": "event",
+			"text": "Le marchand te regarde. 'Tu as le visage de quelqu'un qui est deja venu.' Tu n'es jamais venu ici. Pas dans cette vie.",
+			"options": [
+				{"label": "Vous me confondez", "effects": [{"type": "HEAL_LIFE", "amount": 3}]},
+				{"label": "Racontez-moi", "effects": [{"type": "ADD_REPUTATION", "faction": "anciens", "amount": 8}]},
+				{"label": "Combien de fois suis-je venu ?", "effects": [{"type": "ADD_REPUTATION", "faction": "ankou", "amount": 5}, {"type": "ADD_REPUTATION", "faction": "korrigans", "amount": 3}]}
+			],
+			"tags": ["whisper", "meta", "recognition"],
+			"min_total_runs": 5
+		},
+		{
+			"id": "whisper_words_on_stone",
+			"type": "event",
+			"text": "Des mots graves dans la pierre. Pas des oghams. Des mots modernes, impossibles. Tu lis : 'ITERATION' puis un nombre. Le reste est efface.",
+			"options": [
+				{"label": "Recopier le nombre", "effects": [{"type": "ADD_REPUTATION", "faction": "anciens", "amount": 8}, {"type": "ADD_REPUTATION", "faction": "ankou", "amount": 3}]},
+				{"label": "Gratter la pierre", "effects": [{"type": "ADD_REPUTATION", "faction": "druides", "amount": 5}]},
+				{"label": "Reculer lentement", "effects": [{"type": "HEAL_LIFE", "amount": 5}]}
+			],
+			"tags": ["whisper", "meta", "glitch"],
+			"min_total_runs": 6
+		},
+		{
+			"id": "whisper_bird_pattern",
+			"type": "event",
+			"text": "Un vol d'etourneaux dessine des formes dans le ciel. Pas des formes naturelles. Des lignes droites. Des angles. Comme un langage que tu devrais connaitre.",
+			"options": [
+				{"label": "Dessiner les formes", "effects": [{"type": "ADD_REPUTATION", "faction": "druides", "amount": 8}]},
+				{"label": "Les compter", "effects": [{"type": "ADD_REPUTATION", "faction": "anciens", "amount": 5}, {"type": "ADD_REPUTATION", "faction": "korrigans", "amount": 3}]},
+				{"label": "Detourner le regard", "effects": [{"type": "HEAL_LIFE", "amount": 3}]}
+			],
+			"tags": ["whisper", "meta", "pattern"],
+			"min_total_runs": 4
+		},
+		{
+			"id": "whisper_merlin_count",
+			"type": "event",
+			"text": "Merlin murmure dans son sommeil. Tu t'approches. Il dit des nombres. Tes nombres. Le nombre exact de cartes que tu as jouees. Le nombre exact de morts.",
+			"options": [
+				{"label": "Le reveiller", "effects": [{"type": "ADD_REPUTATION", "faction": "druides", "amount": 5}]},
+				{"label": "Ecouter encore", "effects": [{"type": "ADD_REPUTATION", "faction": "ankou", "amount": 8}, {"type": "ADD_REPUTATION", "faction": "anciens", "amount": 5}]},
+				{"label": "S'eloigner sans bruit", "effects": [{"type": "HEAL_LIFE", "amount": 5}]}
+			],
+			"tags": ["whisper", "meta", "numbers"],
+			"min_trust_tier": "T2",
+			"min_total_runs": 7
+		},
+		{
+			"id": "whisper_world_edge",
+			"type": "event",
+			"text": "Au bout du sentier, rien. Pas un precipice, pas la mer. Rien. Le monde s'arrete net, comme une page inachevee. Puis, lentement, la foret apparait devant toi.",
+			"options": [
+				{"label": "Avancer dans la foret nouvelle", "effects": [{"type": "ADD_REPUTATION", "faction": "druides", "amount": 5}, {"type": "ADD_REPUTATION", "faction": "korrigans", "amount": 5}]},
+				{"label": "Toucher le bord du vide", "effects": [{"type": "ADD_REPUTATION", "faction": "ankou", "amount": 10}, {"type": "DAMAGE_LIFE", "amount": 3}]},
+				{"label": "Reculer et ne rien dire", "effects": [{"type": "HEAL_LIFE", "amount": 5}]}
+			],
+			"tags": ["whisper", "meta", "boundary"],
+			"min_trust_tier": "T2",
+			"min_total_runs": 8
+		},
+		{
+			"id": "whisper_child_drawing",
+			"type": "event",
+			"text": "Un enfant dessine sur le sol avec un baton. Tu reconnais le dessin. C'est toi. Vu d'en haut. Avec tes chemins traces comme des lignes sur une carte. Tous tes chemins. De toutes tes vies.",
+			"options": [
+				{"label": "Lui demander qui lui a appris", "effects": [{"type": "ADD_REPUTATION", "faction": "niamh", "amount": 8}, {"type": "ADD_REPUTATION", "faction": "anciens", "amount": 5}]},
+				{"label": "Effacer le dessin", "effects": [{"type": "ADD_REPUTATION", "faction": "ankou", "amount": 5}, {"type": "HEAL_LIFE", "amount": 3}]},
+				{"label": "Ajouter le chemin actuel", "effects": [{"type": "ADD_REPUTATION", "faction": "druides", "amount": 8}]}
+			],
+			"tags": ["whisper", "meta", "map"],
+			"min_trust_tier": "T1",
+			"min_total_runs": 5
+		},
+		{
+			"id": "whisper_morgane_truth",
+			"type": "event",
+			"text": "Morgane te fixe longtemps. 'Tu ne te demandes jamais pourquoi tout est si... coherent ? Pourquoi chaque rencontre mene a la suivante ? Pourquoi Merlin sait toujours ou tu vas ?' Elle sourit. 'Moi, je me le demande.'",
+			"options": [
+				{"label": "Qu'essayez-vous de me dire ?", "effects": [{"type": "ADD_REPUTATION", "faction": "niamh", "amount": 10}, {"type": "ADD_REPUTATION", "faction": "anciens", "amount": 5}]},
+				{"label": "C'est le destin", "effects": [{"type": "ADD_REPUTATION", "faction": "druides", "amount": 5}, {"type": "HEAL_LIFE", "amount": 3}]},
+				{"label": "Vous savez quelque chose", "effects": [{"type": "ADD_REPUTATION", "faction": "ankou", "amount": 8}, {"type": "ADD_REPUTATION", "faction": "niamh", "amount": 5}]}
+			],
+			"tags": ["whisper", "meta", "morgane", "deep"],
+			"min_trust_tier": "T3",
+			"min_total_runs": 10
+		}
 	]
 }
