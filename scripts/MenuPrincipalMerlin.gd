@@ -296,14 +296,8 @@ func _update_clock_text() -> void:
 	if not clock_label:
 		return
 	var time_dict := Time.get_time_dict_from_system()
-	var date_dict := _get_current_date()
-	var weekday: int = Time.get_date_dict_from_system().weekday
-	var day_name: String = DAY_NAMES[weekday]
-	var month_name: String = MONTH_NAMES[date_dict.month]
 	var time_str := "%02d:%02d" % [time_dict.hour, time_dict.minute]
-	clock_label.text = "%s. %d %s\n%s" % [
-		day_name, date_dict.day, month_name, time_str
-	]
+	clock_label.text = time_str
 
 
 func _layout_clock() -> void:
@@ -321,9 +315,18 @@ func _configure_main_ui() -> void:
 	_sep_diamond.add_theme_color_override("font_color", MerlinVisual.CRT_PALETTE.amber)
 	_sep_right.color = MerlinVisual.CRT_PALETTE.line
 
+	# Fallback labels if translations.csv is missing
+	var _fallback_labels: Dictionary = {
+		"MENU_NEW_GAME": "Nouvelle Partie",
+		"MENU_CONTINUE": "Continuer",
+		"MENU_OPTIONS": "Options",
+	}
 	for item in MAIN_MENU_ITEMS:
 		var is_primary: bool = item.get("priority", "") == "primary"
-		var btn := _create_menu_button(tr(item.text_key), item.scene, is_primary)
+		var label: String = tr(item.text_key)
+		if label == item.text_key:  # Translation not found — use fallback
+			label = _fallback_labels.get(item.text_key, item.text_key)
+		var btn := _create_menu_button(label, item.scene, is_primary)
 		btn.set_meta("priority", item.get("priority", "secondary"))
 		btn.pivot_offset = Vector2(200, 28)
 		main_buttons.add_child(btn)

@@ -3,13 +3,13 @@ shader_type canvas_item;
 // CRT Static/Snow Effect - Effet de neige cathodique
 // Basé sur les shaders de godotshaders.com (CC0)
 
-uniform float intensity : hint_range(0.0, 1.0) = 1.0;
+uniform float intensity : hint_range(0.0, 1.0) = 0.6;
 uniform float noise_speed : hint_range(1.0, 100.0) = 50.0;
-uniform float scanline_opacity : hint_range(0.0, 1.0) = 0.4;
+uniform float scanline_opacity : hint_range(0.0, 1.0) = 0.15;
 uniform float scanline_count : hint_range(100.0, 800.0) = 400.0;
-uniform float grain_intensity : hint_range(0.0, 1.0) = 0.8;
-uniform float flicker_intensity : hint_range(0.0, 0.5) = 0.15;
-uniform float vignette_intensity : hint_range(0.0, 1.0) = 0.3;
+uniform float grain_intensity : hint_range(0.0, 1.0) = 0.3;
+uniform float flicker_intensity : hint_range(0.0, 0.5) = 0.05;
+uniform float vignette_intensity : hint_range(0.0, 1.0) = 0.2;
 uniform vec4 tint : source_color = vec4(0.85, 0.9, 0.95, 1.0);
 
 // Fonction de bruit pseudo-aleatoire rapide
