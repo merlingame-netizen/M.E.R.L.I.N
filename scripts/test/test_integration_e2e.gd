@@ -2041,6 +2041,56 @@ func test_generic_cards_available_all_biomes() -> bool:
 	return true
 
 
+## E2E: Complete arcs have 3 stages with resolution tag.
+func test_complete_arcs_have_resolution() -> bool:
+	var path: String = "res://data/ai/fastroute_cards.json"
+	var file: FileAccess = FileAccess.open(path, FileAccess.READ)
+	var data = JSON.parse_string(file.get_as_text())
+	file.close()
+
+	var complete_arcs: Array = ["le_chene_chantant", "le_chant_des_cairns", "le_signal_de_sein"]
+	for arc_id in complete_arcs:
+		var stages: Dictionary = {}
+		var has_resolution: bool = false
+		for card in data.get("narrative", []):
+			if str(card.get("arc", "")) == arc_id:
+				stages[int(card.get("arc_stage", 0))] = true
+				if card.get("tags", []).has("resolution"):
+					has_resolution = true
+		if stages.size() < 3:
+			push_error("arc_complete: '%s' has %d stages (need 3)" % [arc_id, stages.size()])
+			return false
+		if not has_resolution:
+			push_error("arc_complete: '%s' missing resolution tag" % arc_id)
+			return false
+	return true
+
+
+## E2E: Ogham cost + 50% discount flow.
+func test_ogham_cost_and_discount() -> bool:
+	var state: Dictionary = _make_state()
+	# duir costs 70 Anam
+	var base_cost: int = StoreOghams.get_ogham_cost(state, "duir")
+	if base_cost != 70:
+		push_error("ogham_cost: duir base should be 70, got %d" % base_cost)
+		return false
+
+	# Apply 50% discount
+	StoreOghams.apply_ogham_discount(state, "duir")
+	var discounted: int = StoreOghams.get_ogham_cost(state, "duir")
+	if discounted != 35:
+		push_error("ogham_cost: duir discounted should be 35, got %d" % discounted)
+		return false
+
+	# Starter oghams cost 0
+	var beith_cost: int = StoreOghams.get_ogham_cost(state, "beith")
+	if beith_cost != 0:
+		push_error("ogham_cost: beith (starter) should be 0, got %d" % beith_cost)
+		return false
+
+	return true
+
+
 # =============================================================================
 # RUN_ALL
 # =============================================================================
