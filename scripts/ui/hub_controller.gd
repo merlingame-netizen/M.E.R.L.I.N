@@ -296,6 +296,45 @@ func record_run_end(run_summary: Dictionary) -> void:
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
+# ECHO MEMORY — Cross-run choice tracking for echo cards
+# ═══════════════════════════════════════════════════════════════════════════════
+
+func record_death_in_biome(biome: String) -> void:
+	var echo: Dictionary = _profile.get("echo_memory", {})
+	var deaths: Dictionary = echo.get("deaths_by_biome", {})
+	deaths[biome] = int(deaths.get(biome, 0)) + 1
+	echo["deaths_by_biome"] = deaths
+	_profile["echo_memory"] = echo
+
+
+func record_dominant_faction(faction: String) -> void:
+	var echo: Dictionary = _profile.get("echo_memory", {})
+	var factions: Array = echo.get("dominant_factions_seen", [])
+	if not factions.has(faction):
+		factions.append(faction)
+	echo["dominant_factions_seen"] = factions
+	_profile["echo_memory"] = echo
+
+
+func check_echo_condition(condition: String, context: Dictionary) -> bool:
+	var echo: Dictionary = _profile.get("echo_memory", {})
+	var biome: String = str(context.get("biome", ""))
+	match condition:
+		"previous_death_in_biome":
+			return int(echo.get("deaths_by_biome", {}).get(biome, 0)) > 0
+		"dominant_faction_above_50":
+			var factions: Dictionary = _profile.get("faction_rep", {})
+			for f in factions:
+				if float(factions[f]) >= 50.0:
+					return true
+			return false
+		"oghams_owned_above_5":
+			return _profile.get("oghams", {}).get("owned", []).size() > 5
+		_:
+			return false
+
+
+# ═══════════════════════════════════════════════════════════════════════════════
 # OGHAM MANAGEMENT
 # ═══════════════════════════════════════════════════════════════════════════════
 
