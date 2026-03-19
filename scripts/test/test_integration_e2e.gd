@@ -2001,6 +2001,46 @@ func test_trust_tier_progression() -> bool:
 	return true
 
 
+## E2E: Multiplier boundary transitions — each threshold produces correct factor.
+func test_multiplier_all_boundaries() -> bool:
+	var boundaries: Array = [
+		[0, -1.5], [20, -1.5],   # echec_critique
+		[21, -1.0], [50, -1.0],  # echec
+		[51, 0.5], [79, 0.5],    # reussite_partielle
+		[80, 1.0], [94, 1.0],    # reussite
+		[95, 1.5], [100, 1.5],   # reussite_critique
+	]
+	for pair in boundaries:
+		var score: int = int(pair[0])
+		var expected: float = float(pair[1])
+		var actual: float = MerlinEffectEngine.get_multiplier(score)
+		if not is_equal_approx(actual, expected):
+			push_error("multiplier boundary: score %d expected %s got %s" % [score, str(expected), str(actual)])
+			return false
+	return true
+
+
+## E2E: Generic cards (biome="") are available to all biomes via FastRoute.
+func test_generic_cards_available_all_biomes() -> bool:
+	var path: String = "res://data/ai/fastroute_cards.json"
+	if not FileAccess.file_exists(path):
+		push_error("generic_cards: file not found")
+		return false
+	var file: FileAccess = FileAccess.open(path, FileAccess.READ)
+	var data = JSON.parse_string(file.get_as_text())
+	file.close()
+
+	var generic_count: int = 0
+	for card in data.get("narrative", []):
+		if str(card.get("biome", "X")).is_empty():
+			generic_count += 1
+
+	if generic_count < 8:
+		push_error("generic_cards: expected 8+ generic cards, got %d" % generic_count)
+		return false
+	return true
+
+
 # =============================================================================
 # RUN_ALL
 # =============================================================================
