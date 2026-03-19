@@ -155,6 +155,61 @@
 			"tags": ["animal", "exploration"]
 		},
 		{
+			"id": "fr_generic_006",
+			"text": "Un carrefour de trois chemins. Une pierre gravee porte des oghams effaces. Le vent souffle differemment dans chaque direction.",
+			"biome": "",
+			"options": [
+				{"label": "Dechiffrer les oghams", "verb": "dechiffrer", "effects": [{"type": "ADD_REPUTATION", "faction": "anciens", "amount": 8}]},
+				{"label": "Prendre le chemin le plus sombre", "verb": "tenter sa chance", "effects": [{"type": "ADD_REPUTATION", "faction": "ankou", "amount": 5}, {"type": "DAMAGE_LIFE", "amount": 3}]},
+				{"label": "Suivre le vent le plus chaud", "verb": "suivre", "effects": [{"type": "HEAL_LIFE", "amount": 5}]}
+			],
+			"tags": ["carrefour", "choix", "universal"]
+		},
+		{
+			"id": "fr_generic_007",
+			"text": "Une vieille femme file sa quenouille au bord d'un ruisseau. Elle fredonne une berceuse que tu connais, sans savoir d'ou.",
+			"biome": "",
+			"options": [
+				{"label": "Ecouter la berceuse", "verb": "ecouter", "effects": [{"type": "HEAL_LIFE", "amount": 8}, {"type": "ADD_REPUTATION", "faction": "niamh", "amount": 3}]},
+				{"label": "Demander qui elle est", "verb": "parler", "effects": [{"type": "ADD_REPUTATION", "faction": "anciens", "amount": 5}, {"type": "ADD_REPUTATION", "faction": "niamh", "amount": 3}]},
+				{"label": "Lui offrir de l'aide", "verb": "offrir", "effects": [{"type": "ADD_REPUTATION", "faction": "niamh", "amount": 8}]}
+			],
+			"tags": ["rencontre", "mystere", "universal"]
+		},
+		{
+			"id": "fr_generic_008",
+			"text": "Un orage eclate soudainement. La foudre frappe un arbre tout proche, revelant une cavite dans le tronc.",
+			"biome": "",
+			"options": [
+				{"label": "Explorer la cavite", "verb": "fouiller a l'aveugle", "effects": [{"type": "ADD_BIOME_CURRENCY", "amount": 5}, {"type": "DAMAGE_LIFE", "amount": 2}]},
+				{"label": "S'abriter sous l'arbre", "verb": "se cacher", "effects": [{"type": "HEAL_LIFE", "amount": 3}]},
+				{"label": "Invoquer la protection des druides", "verb": "invoquer", "effects": [{"type": "ADD_REPUTATION", "faction": "druides", "amount": 8}]}
+			],
+			"tags": ["orage", "danger", "universal"]
+		},
+		{
+			"id": "fr_generic_009",
+			"text": "Un cercle de pierres moussues forme un siege naturel. Tu sens une invitation silencieuse a t'y asseoir et reflechir.",
+			"biome": "",
+			"options": [
+				{"label": "Mediter sur le siege", "verb": "mediter", "effects": [{"type": "HEAL_LIFE", "amount": 5}, {"type": "ADD_REPUTATION", "faction": "druides", "amount": 5}]},
+				{"label": "Examiner les mousses", "verb": "examiner", "effects": [{"type": "ADD_REPUTATION", "faction": "druides", "amount": 5}, {"type": "ADD_REPUTATION", "faction": "anciens", "amount": 3}]},
+				{"label": "Graver un symbole", "verb": "dessiner", "effects": [{"type": "ADD_REPUTATION", "faction": "ankou", "amount": 5}, {"type": "ADD_REPUTATION", "faction": "anciens", "amount": 3}]}
+			],
+			"tags": ["pierres", "repos", "universal"]
+		},
+		{
+			"id": "fr_generic_010",
+			"text": "Un marchand ambulant te propose un echange etrange : 'Donne-moi un souvenir heureux, et je te donnerai un secret.'",
+			"biome": "",
+			"options": [
+				{"label": "Accepter l'echange", "verb": "accepter", "effects": [{"type": "ADD_REPUTATION", "faction": "korrigans", "amount": 8}, {"type": "DAMAGE_LIFE", "amount": 2}]},
+				{"label": "Negocier les termes", "verb": "negocier", "effects": [{"type": "ADD_REPUTATION", "faction": "anciens", "amount": 5}, {"type": "ADD_BIOME_CURRENCY", "amount": 3}]},
+				{"label": "Decliner poliment", "verb": "refuser", "effects": [{"type": "HEAL_LIFE", "amount": 3}]}
+			],
+			"tags": ["marchand", "troc", "universal"]
+		},
+		{
 			"id": "fr_broceliande_003",
 			"text": "Un cercle de champignons luminescents pulse doucement au pied d'un if centenaire. L'air vibre d'une energie ancienne.",
 			"biome": "foret_broceliande",
