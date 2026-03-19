@@ -2498,6 +2498,32 @@ func test_ultimate_full_run_all_features() -> bool:
 	return true
 
 
+## E2E: Biome affinity gives extra -1 cooldown to matching ogham.
+func test_affinity_cooldown_bonus() -> bool:
+	var engine: MerlinEffectEngine = MerlinEffectEngine.new()
+	var state: Dictionary = _make_state()
+	state["run"]["active"] = true
+	state["run"]["current_biome"] = "foret_broceliande"
+	# Set quert cooldown to 4 (quert has affinity with broceliande)
+	state["run"]["cooldowns"] = {"quert": 4}
+
+	var card: Dictionary = {"id": "cd_test", "type": "narrative", "options": [
+		{"effects": ["HEAL_LIFE:3"]}, {"effects": []}, {"effects": []}
+	], "tags": []}
+
+	# Process card with quert active — cooldown should decrease by 2 (1 normal + 1 affinity)
+	var result: Dictionary = engine.process_card(state, card, 0, 80, "quert")
+	var cd_after: int = int(state["run"].get("cooldowns", {}).get("quert", 0))
+	# 4 - 2 = 2
+	if cd_after != 2:
+		push_error("affinity_cd: quert cooldown should be 2 (4-2), got %d" % cd_after)
+		return false
+	if int(result.get("affinity_cooldown_bonus", 0)) != 1:
+		push_error("affinity_cd: bonus flag should be 1")
+		return false
+	return true
+
+
 # =============================================================================
 # RUN_ALL
 # =============================================================================

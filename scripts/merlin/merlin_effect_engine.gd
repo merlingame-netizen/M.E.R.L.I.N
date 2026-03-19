@@ -214,10 +214,19 @@ func process_card(state: Dictionary, card: Dictionary, chosen_option: int,
 	result["steps_completed"].append("promises")
 
 	# ── Step 11: COOLDOWN — decrement ogham cooldowns ──
+	# Biome affinity gives extra -1 cooldown (total -2 this turn)
+	var affinity_cd_bonus: int = 0
+	if not active_ogham.is_empty() and not current_biome.is_empty():
+		var cd_affinity: Dictionary = StoreFactions.get_biome_affinity_bonus(current_biome, active_ogham)
+		affinity_cd_bonus = int(cd_affinity.get("cooldown_reduction", 0))
 	var cooldowns: Dictionary = run.get("cooldowns", {})
 	var cd_keys: Array = cooldowns.keys().duplicate()
 	for key in cd_keys:
-		var remaining: int = int(cooldowns[key]) - 1
+		var decrement: int = 1
+		if key == active_ogham and affinity_cd_bonus > 0:
+			decrement += affinity_cd_bonus
+			result["affinity_cooldown_bonus"] = affinity_cd_bonus
+		var remaining: int = int(cooldowns[key]) - decrement
 		if remaining <= 0:
 			cooldowns.erase(key)
 		else:
