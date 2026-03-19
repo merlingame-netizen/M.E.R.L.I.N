@@ -329,6 +329,66 @@
 				{"label": "Secouer l'arbre", "verb": "forcer un passage", "effects": [{"type": "ADD_BIOME_CURRENCY", "amount": 5}, {"type": "DAMAGE_LIFE", "amount": 3}]}
 			],
 			"tags": ["iles", "pommier", "vision"]
+		},
+		{
+			"id": "arc_broceliande_01",
+			"text": "Gwenn l'herboriste te barre le chemin. 'Le Chene Chantant est malade, voyageur. Ses feuilles jaunissent hors saison. Aide-moi a trouver la cause.'",
+			"biome": "foret_broceliande",
+			"speaker": "Gwenn",
+			"arc": "le_chene_chantant",
+			"arc_stage": 1,
+			"options": [
+				{"label": "Examiner les racines du chene", "verb": "examiner", "effects": [{"type": "ADD_REPUTATION", "faction": "druides", "amount": 10}]},
+				{"label": "Chercher des parasites", "verb": "fouiller a l'aveugle", "effects": [{"type": "ADD_REPUTATION", "faction": "druides", "amount": 5}, {"type": "ADD_REPUTATION", "faction": "anciens", "amount": 5}]},
+				{"label": "Ignorer la demande", "verb": "refuser", "effects": [{"type": "HEAL_LIFE", "amount": 3}, {"type": "ADD_REPUTATION", "faction": "druides", "amount": -5}]}
+			],
+			"tags": ["arc", "le_chene_chantant", "gwenn", "foret"],
+			"arc_condition": {"type": "faction_rep", "faction": "druides", "min_value": 30}
+		},
+		{
+			"id": "arc_broceliande_02",
+			"text": "Gwenn t'attend pres du Chene. 'J'ai trouve la source du mal — une racine corrompue sous la terre. Il faut creuser, mais le sol est piege.'",
+			"biome": "foret_broceliande",
+			"speaker": "Gwenn",
+			"arc": "le_chene_chantant",
+			"arc_stage": 2,
+			"options": [
+				{"label": "Creuser avec precaution", "verb": "s'approcher", "effects": [{"type": "ADD_REPUTATION", "faction": "druides", "amount": 12}, {"type": "DAMAGE_LIFE", "amount": 3}]},
+				{"label": "Utiliser un ogham de protection", "verb": "invoquer", "effects": [{"type": "ADD_REPUTATION", "faction": "druides", "amount": 8}, {"type": "HEAL_LIFE", "amount": 3}]},
+				{"label": "Envoyer un animal creuser", "verb": "commander", "effects": [{"type": "ADD_REPUTATION", "faction": "korrigans", "amount": 5}, {"type": "ADD_REPUTATION", "faction": "druides", "amount": 5}]}
+			],
+			"tags": ["arc", "le_chene_chantant", "gwenn", "foret"],
+			"arc_condition": {"type": "arc_stage", "arc": "le_chene_chantant", "min_stage": 1}
+		},
+		{
+			"id": "arc_broceliande_03",
+			"text": "Le Chene Chantant vibre a nouveau. Gwenn sourit, les larmes aux yeux. 'Tu as sauve l'arbre le plus ancien de Broceliande. La foret entiere te remercie.'",
+			"biome": "foret_broceliande",
+			"speaker": "Gwenn",
+			"arc": "le_chene_chantant",
+			"arc_stage": 3,
+			"options": [
+				{"label": "Ecouter le chant du chene", "verb": "ecouter", "effects": [{"type": "ADD_REPUTATION", "faction": "druides", "amount": 15}, {"type": "HEAL_LIFE", "amount": 10}]},
+				{"label": "Demander un don a l'arbre", "verb": "parler", "effects": [{"type": "ADD_REPUTATION", "faction": "druides", "amount": 10}, {"type": "ADD_BIOME_CURRENCY", "amount": 8}]},
+				{"label": "Graver ton nom dans l'ecorce", "verb": "dessiner", "effects": [{"type": "ADD_REPUTATION", "faction": "druides", "amount": 8}, {"type": "ADD_REPUTATION", "faction": "anciens", "amount": 8}]}
+			],
+			"tags": ["arc", "le_chene_chantant", "gwenn", "foret", "resolution"],
+			"arc_condition": {"type": "arc_stage", "arc": "le_chene_chantant", "min_stage": 2}
+		},
+		{
+			"id": "arc_landes_01",
+			"text": "Erwan pointe vers un cairn effondre. 'Les pierres chantaient autrefois. Maintenant elles se taisent. Quelque chose a brise l'harmonie.'",
+			"biome": "landes_bruyere",
+			"speaker": "Erwan",
+			"arc": "le_chant_des_cairns",
+			"arc_stage": 1,
+			"options": [
+				{"label": "Rebatir le cairn", "verb": "forger", "effects": [{"type": "ADD_REPUTATION", "faction": "anciens", "amount": 10}, {"type": "DAMAGE_LIFE", "amount": 2}]},
+				{"label": "Ecouter le silence des pierres", "verb": "ecouter", "effects": [{"type": "ADD_REPUTATION", "faction": "anciens", "amount": 8}, {"type": "ADD_REPUTATION", "faction": "druides", "amount": 3}]},
+				{"label": "Passer son chemin", "verb": "avancer", "effects": [{"type": "HEAL_LIFE", "amount": 3}]}
+			],
+			"tags": ["arc", "le_chant_des_cairns", "erwan", "landes"],
+			"arc_condition": {"type": "faction_rep", "faction": "anciens", "min_value": 25}
 		}
 	],
 	"merlin_direct": [
