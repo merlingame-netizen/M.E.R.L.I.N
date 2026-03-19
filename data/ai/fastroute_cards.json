@@ -389,6 +389,66 @@
 			],
 			"tags": ["arc", "le_chant_des_cairns", "erwan", "landes"],
 			"arc_condition": {"type": "faction_rep", "faction": "anciens", "min_value": 25}
+		},
+		{
+			"id": "arc_cotes_01",
+			"text": "Maelle te hele depuis sa barque. 'Le phare de Sein s'est eteint il y a trois lunes. Les bateaux s'ecrasent dans le noir. Aide-moi a rallumer la flamme.'",
+			"biome": "cotes_sauvages",
+			"speaker": "Maelle",
+			"arc": "le_signal_de_sein",
+			"arc_stage": 1,
+			"options": [
+				{"label": "Chercher du bois flotte", "verb": "fouiller a l'aveugle", "effects": [{"type": "ADD_REPUTATION", "faction": "korrigans", "amount": 8}, {"type": "ADD_REPUTATION", "faction": "anciens", "amount": 3}]},
+				{"label": "Escalader la falaise vers le phare", "verb": "escalader", "effects": [{"type": "ADD_REPUTATION", "faction": "anciens", "amount": 10}, {"type": "DAMAGE_LIFE", "amount": 3}]},
+				{"label": "Prier les esprits de la mer", "verb": "invoquer", "effects": [{"type": "ADD_REPUTATION", "faction": "niamh", "amount": 8}]}
+			],
+			"tags": ["arc", "le_signal_de_sein", "maelle", "cotes"],
+			"arc_condition": {"type": "faction_rep", "faction": "korrigans", "min_value": 20}
+		},
+		{
+			"id": "arc_cotes_02",
+			"text": "Maelle attend au pied du phare. 'La meche est la, mais il manque l'huile sacree. Les korrigans en gardent dans une grotte sous-marine.'",
+			"biome": "cotes_sauvages",
+			"speaker": "Maelle",
+			"arc": "le_signal_de_sein",
+			"arc_stage": 2,
+			"options": [
+				{"label": "Plonger dans la grotte", "verb": "tenter sa chance", "effects": [{"type": "ADD_REPUTATION", "faction": "korrigans", "amount": 12}, {"type": "DAMAGE_LIFE", "amount": 5}]},
+				{"label": "Negocier avec les korrigans", "verb": "negocier", "effects": [{"type": "ADD_REPUTATION", "faction": "korrigans", "amount": 8}, {"type": "ADD_BIOME_CURRENCY", "amount": -3}]},
+				{"label": "Fabriquer une huile de substitution", "verb": "forger", "effects": [{"type": "ADD_REPUTATION", "faction": "druides", "amount": 8}, {"type": "ADD_REPUTATION", "faction": "korrigans", "amount": 3}]}
+			],
+			"tags": ["arc", "le_signal_de_sein", "maelle", "cotes"],
+			"arc_condition": {"type": "arc_stage", "arc": "le_signal_de_sein", "min_stage": 1}
+		},
+		{
+			"id": "arc_cotes_03",
+			"text": "Le phare de Sein brille a nouveau ! Maelle pleure de joie. 'Les marins verront la lumiere cette nuit. Tu as sauve des vies, voyageur.'",
+			"biome": "cotes_sauvages",
+			"speaker": "Maelle",
+			"arc": "le_signal_de_sein",
+			"arc_stage": 3,
+			"options": [
+				{"label": "Contempler la mer eclairee", "verb": "observer", "effects": [{"type": "ADD_REPUTATION", "faction": "korrigans", "amount": 15}, {"type": "HEAL_LIFE", "amount": 10}]},
+				{"label": "Demander une recompense", "verb": "marchander", "effects": [{"type": "ADD_BIOME_CURRENCY", "amount": 10}, {"type": "ADD_REPUTATION", "faction": "korrigans", "amount": 8}]},
+				{"label": "Graver le symbole de Sein", "verb": "dessiner", "effects": [{"type": "ADD_REPUTATION", "faction": "anciens", "amount": 10}, {"type": "ADD_REPUTATION", "faction": "korrigans", "amount": 8}]}
+			],
+			"tags": ["arc", "le_signal_de_sein", "maelle", "cotes", "resolution"],
+			"arc_condition": {"type": "arc_stage", "arc": "le_signal_de_sein", "min_stage": 2}
+		},
+		{
+			"id": "arc_villages_01",
+			"text": "Cadogan le forgeron semble trouble. 'Le Puits des Souhaits est tari. Sans son eau, la forge ne peut plus tremper les lames sacrees.'",
+			"biome": "villages_celtes",
+			"speaker": "Cadogan",
+			"arc": "le_puits_des_souhaits",
+			"arc_stage": 1,
+			"options": [
+				{"label": "Examiner le puits", "verb": "examiner", "effects": [{"type": "ADD_REPUTATION", "faction": "anciens", "amount": 10}]},
+				{"label": "Chercher une source souterraine", "verb": "fouiller a l'aveugle", "effects": [{"type": "ADD_REPUTATION", "faction": "druides", "amount": 8}, {"type": "ADD_REPUTATION", "faction": "anciens", "amount": 3}]},
+				{"label": "Consulter les anciens du village", "verb": "parler", "effects": [{"type": "ADD_REPUTATION", "faction": "anciens", "amount": 8}, {"type": "HEAL_LIFE", "amount": 3}]}
+			],
+			"tags": ["arc", "le_puits_des_souhaits", "cadogan", "villages"],
+			"arc_condition": {"type": "faction_rep", "faction": "anciens", "min_value": 35}
 		}
 	],
 	"merlin_direct": [
