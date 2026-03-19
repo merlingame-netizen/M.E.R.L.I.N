@@ -479,6 +479,36 @@
 			],
 			"tags": ["arc", "le_tertre_du_silence", "gwen_du", "marais"],
 			"arc_condition": {"type": "faction_rep", "faction": "korrigans", "min_value": 30}
+		},
+		{
+			"id": "arc_collines_01",
+			"text": "Ildiko t'attend au pied d'un dolmen fissure. 'L'if sacre murmure des propheties. Mais quelqu'un a vole sa voix. Aide-moi a la retrouver.'",
+			"biome": "collines_dolmens",
+			"speaker": "Ildiko",
+			"arc": "la_voix_de_l_if",
+			"arc_stage": 1,
+			"options": [
+				{"label": "Examiner l'if sacre", "verb": "examiner", "effects": [{"type": "ADD_REPUTATION", "faction": "ankou", "amount": 10}]},
+				{"label": "Chercher des traces de vol", "verb": "fouiller a l'aveugle", "effects": [{"type": "ADD_REPUTATION", "faction": "anciens", "amount": 8}, {"type": "ADD_REPUTATION", "faction": "ankou", "amount": 3}]},
+				{"label": "Mediter sous l'if", "verb": "mediter", "effects": [{"type": "ADD_REPUTATION", "faction": "druides", "amount": 5}, {"type": "HEAL_LIFE", "amount": 5}]}
+			],
+			"tags": ["arc", "la_voix_de_l_if", "ildiko", "collines"],
+			"arc_condition": {"type": "faction_rep", "faction": "ankou", "min_value": 40}
+		},
+		{
+			"id": "arc_iles_01",
+			"text": "Morgane t'apparait dans les brumes. 'Le Passage d'Avalon s'ouvre une fois par cycle. Les etoiles s'alignent bientot. Seras-tu pret ?'",
+			"biome": "iles_mystiques",
+			"speaker": "Morgane",
+			"arc": "le_passage_d_avalon",
+			"arc_stage": 1,
+			"options": [
+				{"label": "Jurer fidelite a Morgane", "verb": "accepter", "effects": [{"type": "ADD_REPUTATION", "faction": "niamh", "amount": 12}, {"type": "DAMAGE_LIFE", "amount": 3}]},
+				{"label": "Demander les conditions", "verb": "parler", "effects": [{"type": "ADD_REPUTATION", "faction": "niamh", "amount": 8}, {"type": "ADD_REPUTATION", "faction": "anciens", "amount": 5}]},
+				{"label": "Observer les etoiles", "verb": "observer", "effects": [{"type": "ADD_REPUTATION", "faction": "druides", "amount": 5}, {"type": "ADD_REPUTATION", "faction": "niamh", "amount": 5}]}
+			],
+			"tags": ["arc", "le_passage_d_avalon", "morgane", "iles"],
+			"arc_condition": {"type": "faction_rep", "faction": "niamh", "min_value": 60}
 		}
 	],
 	"merlin_direct": [
