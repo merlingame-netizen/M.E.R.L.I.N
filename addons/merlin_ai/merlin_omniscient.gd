@@ -2472,6 +2472,11 @@ func orchestrate_card(context: Dictionary) -> Dictionary:
 	if not arc_card.is_empty():
 		card = arc_card
 
+	# 6. Try whisper injection (meta-narrative breadcrumbs)
+	var whisper_card: Dictionary = _try_inject_whisper(context)
+	if not whisper_card.is_empty():
+		card = whisper_card
+
 	return card
 
 
@@ -2790,6 +2795,65 @@ func insert_key_card(state: Dictionary) -> Dictionary:
 			{"label": "Mediter sur le sens", "verb": "mediter", "effects": [{"type": "HEAL_LIFE", "amount": 5}, {"type": "ADD_REPUTATION", "faction": "druides", "amount": 5}]},
 		],
 	}
+
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# WHISPER SYSTEM — Meta-narrative breadcrumbs (cross-run)
+# ═══════════════════════════════════════════════════════════════════════════════
+
+func _try_inject_whisper(context: Dictionary) -> Dictionary:
+	var meta: Dictionary = context.get("meta", {})
+	var total_runs: int = int(meta.get("total_runs", 0))
+	var trust: int = int(meta.get("trust_merlin", 0))
+	var trust_tier: String = StoreFactions.get_trust_tier(context)
+	var whispers_seen: Array = meta.get("whispers_seen", [])
+	var card_index: int = int(context.get("card_index", 0))
+
+	# Only inject whispers mid-run (not first or last cards)
+	if card_index < 5 or card_index > 40:
+		return {}
+
+	# Max 1 whisper per run, random chance (15%)
+	var run_whisper_shown: bool = context.get("run", {}).get("whisper_shown", false)
+	if run_whisper_shown:
+		return {}
+	if randf() > 0.15:
+		return {}
+
+	# Load whisper cards from JSON
+	var path: String = "res://data/ai/event_cards.json"
+	if not FileAccess.file_exists(path):
+		return {}
+	var file: FileAccess = FileAccess.open(path, FileAccess.READ)
+	var data = JSON.parse_string(file.get_as_text())
+	file.close()
+	if typeof(data) != TYPE_DICTIONARY:
+		return {}
+
+	var whispers: Array = data.get("whispers", [])
+	var eligible: Array = []
+	for w in whispers:
+		if not (w is Dictionary):
+			continue
+		var wid: String = str(w.get("id", ""))
+		if whispers_seen.has(wid):
+			continue
+		var min_runs: int = int(w.get("min_total_runs", 0))
+		if total_runs < min_runs:
+			continue
+		var min_tier: String = str(w.get("min_trust_tier", ""))
+		if not min_tier.is_empty():
+			var tier_order: Dictionary = {"T0": 0, "T1": 1, "T2": 2, "T3": 3}
+			if int(tier_order.get(trust_tier, 0)) < int(tier_order.get(min_tier, 0)):
+				continue
+		eligible.append(w)
+
+	if eligible.is_empty():
+		return {}
+
+	# Pick a random eligible whisper
+	var chosen: Dictionary = eligible[randi() % eligible.size()]
+	return chosen
 
 
 func _exit_tree() -> void:

@@ -39,6 +39,7 @@ static func _get_default_profile() -> Dictionary:
 			"collines_dolmens": 0, "iles_mystiques": 0,
 		},
 		"biomes_unlocked": ["foret_broceliande"],
+		"whispers_seen": [],
 		"tutorial_flags": {},
 		"stats": {
 			"total_cards": 0, "total_minigames_won": 0,
