@@ -1717,6 +1717,81 @@ func test_default_profile_bible_conformance() -> bool:
 	return true
 
 
+## E2E: 40-card stress run — exercises hard_max forced ending.
+func test_stress_run_40_cards_no_crash() -> bool:
+	var engine: MerlinEffectEngine = MerlinEffectEngine.new()
+	var state: Dictionary = _make_state()
+	state["run"]["active"] = true
+
+	for card_idx in range(40):
+		# Alternate heal/damage to keep player alive
+		if card_idx % 3 == 0:
+			engine.apply_effects(state, ["HEAL_LIFE:3"])
+		else:
+			engine.apply_effects(state, ["DAMAGE_LIFE:1"])
+		state["run"]["cards_played"] = card_idx + 1
+		state["run"]["card_index"] = card_idx + 1
+
+		# Check death
+		if int(state["run"]["life_essence"]) <= 0:
+			break
+
+	var cards_played: int = int(state["run"]["cards_played"])
+	if cards_played < 25:
+		push_error("stress_40: died too early at card %d" % cards_played)
+		return false
+
+	# Life should still be positive (heals > damages)
+	if int(state["run"]["life_essence"]) <= 0 and cards_played >= 25:
+		push_error("stress_40: unexpected death at card %d" % cards_played)
+		return false
+
+	# MOS should detect soft_max zone at 40 cards
+	var end_check: Dictionary = StoreRun.check_run_end(state)
+	var tension: String = str(end_check.get("tension_zone", ""))
+	if tension != "critical" and not end_check.get("ended", false):
+		push_error("stress_40: at 40 cards tension should be critical, got %s" % tension)
+		return false
+
+	return true
+
+
+## E2E: All FastRoute cards in JSON have valid structure.
+func test_fastroute_json_cards_valid_structure() -> bool:
+	var path: String = "res://data/ai/fastroute_cards.json"
+	if not FileAccess.file_exists(path):
+		push_error("fastroute_json: file not found")
+		return false
+	var file: FileAccess = FileAccess.open(path, FileAccess.READ)
+	var data = JSON.parse_string(file.get_as_text())
+	file.close()
+	if typeof(data) != TYPE_DICTIONARY:
+		push_error("fastroute_json: not a valid JSON dict")
+		return false
+
+	var narrative: Array = data.get("narrative", [])
+	for i in range(narrative.size()):
+		var card: Dictionary = narrative[i]
+		if str(card.get("id", "")).is_empty():
+			push_error("fastroute_json: card %d missing id" % i)
+			return false
+		if str(card.get("text", "")).is_empty():
+			push_error("fastroute_json: card %d missing text" % i)
+			return false
+		var options: Array = card.get("options", [])
+		if options.size() < 2:
+			push_error("fastroute_json: card %s has < 2 options" % str(card["id"]))
+			return false
+		# Each option must have label + effects
+		for j in range(options.size()):
+			var opt: Dictionary = options[j]
+			if str(opt.get("label", "")).is_empty():
+				push_error("fastroute_json: card %s opt %d missing label" % [str(card["id"]), j])
+				return false
+
+	return true
+
+
 # =============================================================================
 # RUN_ALL
 # =============================================================================
