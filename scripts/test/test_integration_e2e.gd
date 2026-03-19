@@ -1655,6 +1655,68 @@ func test_card_effects_trigger_faction_ending() -> bool:
 	return true
 
 
+## E2E: Save system preserves profile data through serialize/deserialize.
+func test_save_serialize_roundtrip() -> bool:
+	var profile: Dictionary = MerlinSaveSystem._get_default_profile()
+
+	# Modify profile (flat structure, no meta wrapper)
+	profile["anam"] = 42
+	profile["faction_rep"]["druides"] = 75.0
+	profile["total_runs"] = 7
+	profile["trust_merlin"] = 65
+	profile["talent_tree"]["unlocked"] = ["druides_1", "druides_2"]
+
+	# Serialize to JSON and back
+	var json_str: String = JSON.stringify(profile)
+	var parsed = JSON.parse_string(json_str)
+	if typeof(parsed) != TYPE_DICTIONARY:
+		push_error("save_roundtrip: JSON parse failed")
+		return false
+
+	if int(parsed["anam"]) != 42:
+		push_error("save_roundtrip: anam should be 42")
+		return false
+	if float(parsed["faction_rep"]["druides"]) != 75.0:
+		push_error("save_roundtrip: druides rep should be 75.0")
+		return false
+	if int(parsed["total_runs"]) != 7:
+		push_error("save_roundtrip: total_runs should be 7")
+		return false
+	if int(parsed["trust_merlin"]) != 65:
+		push_error("save_roundtrip: trust_merlin should be 65")
+		return false
+	var unlocked: Array = parsed["talent_tree"]["unlocked"]
+	if unlocked.size() != 2 or not unlocked.has("druides_1"):
+		push_error("save_roundtrip: talent unlocked should have druides_1")
+		return false
+
+	return true
+
+
+## E2E: Default profile has correct initial values per bible.
+func test_default_profile_bible_conformance() -> bool:
+	var profile: Dictionary = MerlinSaveSystem._get_default_profile()
+
+	if int(profile.get("anam", -1)) != 0:
+		push_error("default_profile: anam should be 0")
+		return false
+	var factions: Dictionary = profile.get("faction_rep", {})
+	for f in MerlinReputationSystem.FACTIONS:
+		if float(factions.get(f, -1.0)) != 0.0:
+			push_error("default_profile: %s should be 0.0" % f)
+			return false
+	if int(profile.get("trust_merlin", -1)) != 0:
+		push_error("default_profile: trust_merlin should be 0")
+		return false
+	var owned: Array = profile.get("oghams", {}).get("owned", [])
+	for starter in MerlinConstants.OGHAM_STARTER_SKILLS:
+		if not owned.has(starter):
+			push_error("default_profile: missing starter ogham %s" % starter)
+			return false
+
+	return true
+
+
 # =============================================================================
 # RUN_ALL
 # =============================================================================
