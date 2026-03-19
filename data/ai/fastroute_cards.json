@@ -596,6 +596,66 @@
 			"arc_condition": {"type": "oghams_owned", "min_value": 5}
 		},
 		{
+			"id": "arc_cercles_02",
+			"text": "Brennos t'attend a l'aube. 'J'ai decouvert le probleme. Un menhir-clef a ete deplace par un tremblement de terre. Sans lui, l'alignement est brise.'",
+			"biome": "cercles_pierres",
+			"speaker": "Brennos",
+			"arc": "l_alignement_perdu",
+			"arc_stage": 2,
+			"options": [
+				{"label": "Chercher le menhir deplace", "verb": "fouiller a l'aveugle", "effects": [{"type": "ADD_REPUTATION", "faction": "druides", "amount": 8}, {"type": "DAMAGE_LIFE", "amount": 2}]},
+				{"label": "Consulter les runes", "verb": "dechiffrer", "effects": [{"type": "ADD_REPUTATION", "faction": "anciens", "amount": 10}]},
+				{"label": "Demander l'aide des esprits", "verb": "invoquer", "effects": [{"type": "ADD_REPUTATION", "faction": "ankou", "amount": 8}, {"type": "ADD_REPUTATION", "faction": "druides", "amount": 3}]}
+			],
+			"tags": ["arc", "l_alignement_perdu", "brennos", "cercles"],
+			"arc_condition": {"type": "arc_stage", "arc": "l_alignement_perdu", "min_stage": 1}
+		},
+		{
+			"id": "arc_cercles_03",
+			"text": "Le menhir-clef est la, couche dans un ravin. Brennos calcule sa position. 'Il faut le remettre exactement ici, a l'angle des etoiles d'hiver.'",
+			"biome": "cercles_pierres",
+			"speaker": "Brennos",
+			"arc": "l_alignement_perdu",
+			"arc_stage": 3,
+			"options": [
+				{"label": "Soulever la pierre seul", "verb": "forcer un passage", "effects": [{"type": "ADD_REPUTATION", "faction": "anciens", "amount": 10}, {"type": "DAMAGE_LIFE", "amount": 5}]},
+				{"label": "Appeler les villageois", "verb": "parler", "effects": [{"type": "ADD_REPUTATION", "faction": "anciens", "amount": 8}, {"type": "ADD_REPUTATION", "faction": "niamh", "amount": 3}]},
+				{"label": "Utiliser un ogham de force", "verb": "invoquer", "effects": [{"type": "ADD_REPUTATION", "faction": "druides", "amount": 10}]}
+			],
+			"tags": ["arc", "l_alignement_perdu", "brennos", "cercles"],
+			"arc_condition": {"type": "arc_stage", "arc": "l_alignement_perdu", "min_stage": 2}
+		},
+		{
+			"id": "arc_cercles_04",
+			"text": "La pierre est en place. Brennos verifie l'angle avec les etoiles. 'Presque... il manque un calibrage. Les menhirs doivent resonner ensemble.'",
+			"biome": "cercles_pierres",
+			"speaker": "Brennos",
+			"arc": "l_alignement_perdu",
+			"arc_stage": 4,
+			"options": [
+				{"label": "Chanter l'harmonique", "verb": "chanter", "effects": [{"type": "ADD_REPUTATION", "faction": "druides", "amount": 10}, {"type": "ADD_REPUTATION", "faction": "anciens", "amount": 5}]},
+				{"label": "Frapper les pierres en rythme", "verb": "forger", "effects": [{"type": "ADD_REPUTATION", "faction": "anciens", "amount": 12}]},
+				{"label": "Mediter pour sentir la frequence", "verb": "mediter", "effects": [{"type": "ADD_REPUTATION", "faction": "druides", "amount": 8}, {"type": "HEAL_LIFE", "amount": 5}]}
+			],
+			"tags": ["arc", "l_alignement_perdu", "brennos", "cercles"],
+			"arc_condition": {"type": "arc_stage", "arc": "l_alignement_perdu", "min_stage": 3}
+		},
+		{
+			"id": "arc_cercles_05",
+			"text": "Les menhirs vibrent a l'unisson. Un faisceau de lumiere stellaire traverse le cercle. Brennos tombe a genoux, les yeux pleins de larmes. 'L'alignement est retrouve. Les etoiles chantent a nouveau.'",
+			"biome": "cercles_pierres",
+			"speaker": "Brennos",
+			"arc": "l_alignement_perdu",
+			"arc_stage": 5,
+			"options": [
+				{"label": "Contempler l'alignement", "verb": "observer", "effects": [{"type": "ADD_REPUTATION", "faction": "anciens", "amount": 15}, {"type": "ADD_REPUTATION", "faction": "druides", "amount": 10}, {"type": "HEAL_LIFE", "amount": 10}]},
+				{"label": "Graver ton nom dans le menhir-clef", "verb": "dessiner", "effects": [{"type": "ADD_REPUTATION", "faction": "anciens", "amount": 12}, {"type": "ADD_BIOME_CURRENCY", "amount": 10}]},
+				{"label": "Demander a voir les etoiles", "verb": "parler", "effects": [{"type": "ADD_REPUTATION", "faction": "druides", "amount": 12}, {"type": "ADD_REPUTATION", "faction": "ankou", "amount": 8}]}
+			],
+			"tags": ["arc", "l_alignement_perdu", "brennos", "cercles", "resolution"],
+			"arc_condition": {"type": "arc_stage", "arc": "l_alignement_perdu", "min_stage": 4}
+		},
+		{
 			"id": "arc_marais_01",
 			"text": "Gwen Du emerge silencieusement du tertre. 'Le silence grandit ici. Les esprits se taisent un a un. Quelque chose les effraye.'",
 			"biome": "marais_korrigans",
