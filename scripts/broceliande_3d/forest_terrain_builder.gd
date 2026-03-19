@@ -8,6 +8,7 @@ var _zone_centers: Array[Vector3]
 var _path_points: PackedVector3Array
 var _rng: RandomNumberGenerator
 var _asset_spawner: RefCounted  # ForestAssetSpawner
+var _biome_config: Dictionary = {}  # From BiomeWalkConfigs
 
 
 func _init(
@@ -24,6 +25,14 @@ func _init(
 	_path_points = path_points
 	_rng = rng
 	_asset_spawner = asset_spawner
+
+
+func set_biome_config(biome_key: String) -> void:
+	_biome_config = BiomeWalkConfigs.get_config(biome_key)
+
+
+func _get_terrain_color() -> Color:
+	return _biome_config.get("terrain_color", Color(0.12, 0.22, 0.10))
 
 
 func build_ground() -> void:
@@ -45,7 +54,7 @@ func build_ground() -> void:
 	mi.mesh = bm
 	mi.position = Vector3(0.0, -0.1, -135.0)
 	var mat: StandardMaterial3D = StandardMaterial3D.new()
-	mat.albedo_color = Color(0.12, 0.22, 0.10)
+	mat.albedo_color = _get_terrain_color()
 	mat.roughness = 0.95
 	mi.material_override = mat
 	ground.add_child(mi)

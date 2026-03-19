@@ -3081,6 +3081,35 @@ func test_balance_tradeoff_percentage() -> bool:
 
 
 # =============================================================================
+# BIOME 3D WALK CONFIGS
+# =============================================================================
+
+func test_biome_walk_configs_all_8_biomes() -> bool:
+	var keys: Array = BiomeWalkConfigs.get_all_biome_keys()
+	if keys.size() != 8:
+		push_error("walk_configs: expected 8 biomes, got %d" % keys.size())
+		return false
+	for key in MerlinConstants.BIOME_KEYS:
+		var cfg: Dictionary = BiomeWalkConfigs.get_config(key)
+		if cfg.is_empty():
+			push_error("walk_configs: empty config for %s" % key)
+			return false
+		if str(cfg.get("name", "")).is_empty():
+			push_error("walk_configs: %s missing name" % key)
+			return false
+		if cfg.get("zones", []).size() < 3:
+			push_error("walk_configs: %s has < 3 zones" % key)
+			return false
+		if cfg.get("tiles", []).size() < 2:
+			push_error("walk_configs: %s has < 2 tile types" % key)
+			return false
+		if float(cfg.get("walk_speed", 0.0)) <= 0.0:
+			push_error("walk_configs: %s has invalid walk_speed" % key)
+			return false
+	return true
+
+
+# =============================================================================
 # RUN_ALL
 # =============================================================================
 
