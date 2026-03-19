@@ -2590,6 +2590,38 @@ func test_promise_broken_trust_penalty() -> bool:
 	return true
 
 
+## E2E: ALL 8 biome arcs have complete stage chains with resolution.
+func test_all_8_arcs_complete_with_resolution() -> bool:
+	var path: String = "res://data/ai/fastroute_cards.json"
+	var file: FileAccess = FileAccess.open(path, FileAccess.READ)
+	var data = JSON.parse_string(file.get_as_text())
+	file.close()
+
+	var all_arcs: Dictionary = {
+		"le_chene_chantant": 3, "le_chant_des_cairns": 3, "le_signal_de_sein": 3,
+		"le_puits_des_souhaits": 4, "l_alignement_perdu": 5, "le_tertre_du_silence": 5,
+		"la_voix_de_l_if": 5, "le_passage_d_avalon": 6,
+	}
+
+	for arc_id in all_arcs:
+		var expected_stages: int = int(all_arcs[arc_id])
+		var stages_found: Dictionary = {}
+		var has_resolution: bool = false
+		for card in data.get("narrative", []):
+			if str(card.get("arc", "")) == arc_id:
+				stages_found[int(card.get("arc_stage", 0))] = true
+				if card.get("tags", []).has("resolution"):
+					has_resolution = true
+		if stages_found.size() < expected_stages:
+			push_error("arcs_complete: '%s' has %d/%d stages" % [arc_id, stages_found.size(), expected_stages])
+			return false
+		if not has_resolution:
+			push_error("arcs_complete: '%s' missing resolution tag" % arc_id)
+			return false
+
+	return true
+
+
 # =============================================================================
 # RUN_ALL
 # =============================================================================
