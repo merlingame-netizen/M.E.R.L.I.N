@@ -536,6 +536,51 @@
 			"arc_condition": {"type": "faction_rep", "faction": "anciens", "min_value": 35}
 		},
 		{
+			"id": "arc_villages_02",
+			"text": "Cadogan revient, les mains noires de suie. 'La source est bloquee par une creature de pierre. Elle garde le puits depuis des siecles.'",
+			"biome": "villages_celtes",
+			"speaker": "Cadogan",
+			"arc": "le_puits_des_souhaits",
+			"arc_stage": 2,
+			"options": [
+				{"label": "Affronter la creature", "verb": "combattre", "effects": [{"type": "ADD_REPUTATION", "faction": "anciens", "amount": 10}, {"type": "DAMAGE_LIFE", "amount": 5}]},
+				{"label": "Negocier un passage", "verb": "negocier", "effects": [{"type": "ADD_REPUTATION", "faction": "anciens", "amount": 8}, {"type": "ADD_REPUTATION", "faction": "korrigans", "amount": 3}]},
+				{"label": "Chercher un autre acces", "verb": "fouiller a l'aveugle", "effects": [{"type": "ADD_REPUTATION", "faction": "druides", "amount": 5}, {"type": "HEAL_LIFE", "amount": 3}]}
+			],
+			"tags": ["arc", "le_puits_des_souhaits", "cadogan", "villages"],
+			"arc_condition": {"type": "arc_stage", "arc": "le_puits_des_souhaits", "min_stage": 1}
+		},
+		{
+			"id": "arc_villages_03",
+			"text": "L'eau coule a nouveau ! Cadogan plonge une lame dans le puits. Le metal siffle et brille d'un eclat bleu. 'L'eau sacree est de retour.'",
+			"biome": "villages_celtes",
+			"speaker": "Cadogan",
+			"arc": "le_puits_des_souhaits",
+			"arc_stage": 3,
+			"options": [
+				{"label": "Demander une lame trempee", "verb": "marchander", "effects": [{"type": "ADD_BIOME_CURRENCY", "amount": 8}, {"type": "ADD_REPUTATION", "faction": "anciens", "amount": 8}]},
+				{"label": "Boire l'eau du puits", "verb": "cueillir", "effects": [{"type": "HEAL_LIFE", "amount": 12}, {"type": "ADD_REPUTATION", "faction": "druides", "amount": 5}]},
+				{"label": "Faire un voeu", "verb": "invoquer", "effects": [{"type": "ADD_REPUTATION", "faction": "niamh", "amount": 10}, {"type": "ADD_REPUTATION", "faction": "anciens", "amount": 5}]}
+			],
+			"tags": ["arc", "le_puits_des_souhaits", "cadogan", "villages"],
+			"arc_condition": {"type": "arc_stage", "arc": "le_puits_des_souhaits", "min_stage": 2}
+		},
+		{
+			"id": "arc_villages_04",
+			"text": "Le village entier fete le retour de l'eau sacree. Cadogan te presente au chef. 'Cet etranger a sauve notre puits. Il merite l'honneur des Anciens.'",
+			"biome": "villages_celtes",
+			"speaker": "Cadogan",
+			"arc": "le_puits_des_souhaits",
+			"arc_stage": 4,
+			"options": [
+				{"label": "Accepter l'honneur humblement", "verb": "accepter", "effects": [{"type": "ADD_REPUTATION", "faction": "anciens", "amount": 15}, {"type": "HEAL_LIFE", "amount": 8}]},
+				{"label": "Demander a rejoindre le conseil", "verb": "parler", "effects": [{"type": "ADD_REPUTATION", "faction": "anciens", "amount": 12}, {"type": "ADD_REPUTATION", "faction": "druides", "amount": 5}]},
+				{"label": "Danser avec les villageois", "verb": "danser", "effects": [{"type": "HEAL_LIFE", "amount": 10}, {"type": "ADD_REPUTATION", "faction": "niamh", "amount": 8}]}
+			],
+			"tags": ["arc", "le_puits_des_souhaits", "cadogan", "villages", "resolution"],
+			"arc_condition": {"type": "arc_stage", "arc": "le_puits_des_souhaits", "min_stage": 3}
+		},
+		{
 			"id": "arc_cercles_01",
 			"text": "Brennos medite au centre du cercle. Les menhirs penchent dangereusement. 'L'alignement est perdu. Les etoiles ne parlent plus aux pierres.'",
 			"biome": "cercles_pierres",
