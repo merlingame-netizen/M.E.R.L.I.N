@@ -819,6 +819,81 @@
 			],
 			"tags": ["arc", "le_passage_d_avalon", "morgane", "iles"],
 			"arc_condition": {"type": "faction_rep", "faction": "niamh", "min_value": 60}
+		},
+		{
+			"id": "arc_iles_02",
+			"text": "Morgane te guide vers un cercle de pierres blanches au bord de l'eau. 'Trois epreuves t'attendent avant le Passage. La premiere : traverser le Miroir.'",
+			"biome": "iles_mystiques",
+			"speaker": "Morgane",
+			"arc": "le_passage_d_avalon",
+			"arc_stage": 2,
+			"options": [
+				{"label": "Plonger dans le Miroir", "verb": "tenter sa chance", "effects": [{"type": "ADD_REPUTATION", "faction": "niamh", "amount": 12}, {"type": "DAMAGE_LIFE", "amount": 5}]},
+				{"label": "Mediter devant le reflet", "verb": "mediter", "effects": [{"type": "ADD_REPUTATION", "faction": "druides", "amount": 8}, {"type": "ADD_REPUTATION", "faction": "niamh", "amount": 5}]},
+				{"label": "Demander a Morgane de te guider", "verb": "parler", "effects": [{"type": "ADD_REPUTATION", "faction": "niamh", "amount": 10}]}
+			],
+			"tags": ["arc", "le_passage_d_avalon", "morgane", "iles"],
+			"arc_condition": {"type": "arc_stage", "arc": "le_passage_d_avalon", "min_stage": 1}
+		},
+		{
+			"id": "arc_iles_03",
+			"text": "Tu emerges de l'autre cote du Miroir. Un jardin eternel s'etend devant toi. Morgane sourit. 'Deuxieme epreuve : choisir la bonne fleur dans ce jardin.'",
+			"biome": "iles_mystiques",
+			"speaker": "Morgane",
+			"arc": "le_passage_d_avalon",
+			"arc_stage": 3,
+			"options": [
+				{"label": "Cueillir la fleur doree", "verb": "cueillir", "effects": [{"type": "ADD_REPUTATION", "faction": "niamh", "amount": 10}, {"type": "HEAL_LIFE", "amount": 8}]},
+				{"label": "Cueillir la fleur sombre", "verb": "cueillir", "effects": [{"type": "ADD_REPUTATION", "faction": "ankou", "amount": 10}, {"type": "ADD_REPUTATION", "faction": "niamh", "amount": 5}]},
+				{"label": "Ne rien cueillir", "verb": "refuser", "effects": [{"type": "ADD_REPUTATION", "faction": "druides", "amount": 8}, {"type": "ADD_REPUTATION", "faction": "niamh", "amount": 8}]}
+			],
+			"tags": ["arc", "le_passage_d_avalon", "morgane", "iles"],
+			"arc_condition": {"type": "arc_stage", "arc": "le_passage_d_avalon", "min_stage": 2}
+		},
+		{
+			"id": "arc_iles_04",
+			"text": "Morgane hoche la tete. 'Troisieme epreuve : affronter ton reflet. Celui que tu aurais pu etre.' Un double de toi-meme apparait.",
+			"biome": "iles_mystiques",
+			"speaker": "Morgane",
+			"arc": "le_passage_d_avalon",
+			"arc_stage": 4,
+			"options": [
+				{"label": "Combattre ton double", "verb": "combattre", "effects": [{"type": "ADD_REPUTATION", "faction": "anciens", "amount": 10}, {"type": "DAMAGE_LIFE", "amount": 5}]},
+				{"label": "Accepter ton double", "verb": "accepter", "effects": [{"type": "ADD_REPUTATION", "faction": "niamh", "amount": 12}, {"type": "HEAL_LIFE", "amount": 5}]},
+				{"label": "Fusionner avec lui", "verb": "invoquer", "effects": [{"type": "ADD_REPUTATION", "faction": "druides", "amount": 8}, {"type": "ADD_REPUTATION", "faction": "niamh", "amount": 8}]}
+			],
+			"tags": ["arc", "le_passage_d_avalon", "morgane", "iles"],
+			"arc_condition": {"type": "arc_stage", "arc": "le_passage_d_avalon", "min_stage": 3}
+		},
+		{
+			"id": "arc_iles_05",
+			"text": "Les epreuves sont terminees. Le Passage s'ouvre — un portail de brume et de lumiere. Morgane tend la main. 'Avalon t'attend. Mais le prix est lourd.'",
+			"biome": "iles_mystiques",
+			"speaker": "Morgane",
+			"arc": "le_passage_d_avalon",
+			"arc_stage": 5,
+			"options": [
+				{"label": "Franchir le Passage", "verb": "tenter sa chance", "effects": [{"type": "ADD_REPUTATION", "faction": "niamh", "amount": 15}, {"type": "DAMAGE_LIFE", "amount": 8}]},
+				{"label": "Hesiter au seuil", "verb": "attendre", "effects": [{"type": "ADD_REPUTATION", "faction": "niamh", "amount": 10}, {"type": "HEAL_LIFE", "amount": 5}]},
+				{"label": "Demander a Morgane de t'accompagner", "verb": "parler", "effects": [{"type": "ADD_REPUTATION", "faction": "niamh", "amount": 12}, {"type": "ADD_REPUTATION", "faction": "druides", "amount": 5}]}
+			],
+			"tags": ["arc", "le_passage_d_avalon", "morgane", "iles"],
+			"arc_condition": {"type": "arc_stage", "arc": "le_passage_d_avalon", "min_stage": 4}
+		},
+		{
+			"id": "arc_iles_06",
+			"text": "Avalon. Un monde de lumiere et de silence. Les pommiers d'or ploient sous les fruits. Morgane murmure : 'Tu es le premier mortel a voir ceci depuis mille ans. Bienvenue chez toi.'",
+			"biome": "iles_mystiques",
+			"speaker": "Morgane",
+			"arc": "le_passage_d_avalon",
+			"arc_stage": 6,
+			"options": [
+				{"label": "Rester a Avalon", "verb": "accepter", "effects": [{"type": "ADD_REPUTATION", "faction": "niamh", "amount": 20}, {"type": "HEAL_LIFE", "amount": 15}]},
+				{"label": "Rapporter un secret au monde", "verb": "parler", "effects": [{"type": "ADD_REPUTATION", "faction": "niamh", "amount": 15}, {"type": "ADD_REPUTATION", "faction": "anciens", "amount": 10}, {"type": "ADD_BIOME_CURRENCY", "amount": 15}]},
+				{"label": "Planter un arbre d'Avalon dans le monde mortel", "verb": "offrir", "effects": [{"type": "ADD_REPUTATION", "faction": "druides", "amount": 12}, {"type": "ADD_REPUTATION", "faction": "niamh", "amount": 12}]}
+			],
+			"tags": ["arc", "le_passage_d_avalon", "morgane", "iles", "resolution"],
+			"arc_condition": {"type": "arc_stage", "arc": "le_passage_d_avalon", "min_stage": 5}
 		}
 	],
 	"merlin_direct": [
