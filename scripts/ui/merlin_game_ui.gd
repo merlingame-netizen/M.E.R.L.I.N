@@ -15,6 +15,7 @@ signal skill_activated(skill_id: String)
 signal pause_requested
 signal merlin_dialogue_requested(player_input: String)
 signal journal_requested
+signal narrator_intro_finished
 
 # Explicit preloads — required when scripts created outside editor (UID cache stale)
 const PixelSceneCompositor = preload("res://scripts/ui/pixel_scene_compositor.gd")
