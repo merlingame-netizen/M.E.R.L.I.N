@@ -2692,6 +2692,88 @@ func test_profile_has_whisper_and_journal_fields() -> bool:
 	return true
 
 
+## E2E: Profile has echo_memory with all required fields.
+func test_profile_has_echo_memory() -> bool:
+	var profile: Dictionary = MerlinSaveSystem._get_default_profile()
+	var echo: Dictionary = profile.get("echo_memory", {})
+	if echo.is_empty():
+		push_error("echo_memory: missing from profile")
+		return false
+	if not echo.has("deaths_by_biome"):
+		push_error("echo_memory: missing deaths_by_biome")
+		return false
+	if not echo.has("dominant_factions_seen"):
+		push_error("echo_memory: missing dominant_factions_seen")
+		return false
+	return true
+
+
+## E2E: All 8 biomes appear in world map data.
+func test_world_map_has_all_biomes() -> bool:
+	# Simulate get_world_map logic without HubController (needs Node)
+	var biome_data: Array = []
+	for biome_key in MerlinConstants.BIOME_KEYS:
+		var biome: Dictionary = MerlinConstants.BIOMES.get(biome_key, {})
+		biome_data.append({
+			"id": biome_key,
+			"name": str(biome.get("name", "")),
+			"arc": str(biome.get("arc", "")),
+			"arc_cards": int(biome.get("arc_cards", 0)),
+			"pnj": str(biome.get("pnj", "")),
+		})
+
+	if biome_data.size() != 8:
+		push_error("world_map: expected 8 biomes, got %d" % biome_data.size())
+		return false
+
+	# Every biome should have a PNJ and arc
+	for b in biome_data:
+		if str(b["pnj"]).is_empty():
+			push_error("world_map: biome %s missing pnj" % str(b["id"]))
+			return false
+		if str(b["arc"]).is_empty():
+			push_error("world_map: biome %s missing arc" % str(b["id"]))
+			return false
+		if int(b["arc_cards"]) < 3:
+			push_error("world_map: biome %s has < 3 arc_cards" % str(b["id"]))
+			return false
+	return true
+
+
+## E2E: Complete meta-narrative pipeline — whispers + echo + journal all present.
+func test_meta_narrative_pipeline_complete() -> bool:
+	var profile: Dictionary = MerlinSaveSystem._get_default_profile()
+
+	# All meta-narrative profile fields exist
+	var required: Array = ["whispers_seen", "run_history", "echo_memory", "arc_tags", "endings_seen"]
+	for key in required:
+		if not profile.has(key):
+			push_error("meta_pipeline: profile missing '%s'" % key)
+			return false
+
+	# Whisper cards exist in JSON
+	var path: String = "res://data/ai/event_cards.json"
+	if FileAccess.file_exists(path):
+		var file: FileAccess = FileAccess.open(path, FileAccess.READ)
+		var data = JSON.parse_string(file.get_as_text())
+		file.close()
+		if data is Dictionary and data.get("whispers", []).size() < 8:
+			push_error("meta_pipeline: need 8+ whisper cards")
+			return false
+
+	# Echo cards exist in FastRoute
+	var fr_path: String = "res://data/ai/fastroute_cards.json"
+	if FileAccess.file_exists(fr_path):
+		var file2: FileAccess = FileAccess.open(fr_path, FileAccess.READ)
+		var fr_data = JSON.parse_string(file2.get_as_text())
+		file2.close()
+		if fr_data is Dictionary and fr_data.get("echo", []).size() < 2:
+			push_error("meta_pipeline: need 2+ echo cards")
+			return false
+
+	return true
+
+
 # =============================================================================
 # RUN_ALL
 # =============================================================================
