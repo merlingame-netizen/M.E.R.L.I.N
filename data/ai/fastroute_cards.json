@@ -449,6 +449,36 @@
 			],
 			"tags": ["arc", "le_puits_des_souhaits", "cadogan", "villages"],
 			"arc_condition": {"type": "faction_rep", "faction": "anciens", "min_value": 35}
+		},
+		{
+			"id": "arc_cercles_01",
+			"text": "Brennos medite au centre du cercle. Les menhirs penchent dangereusement. 'L'alignement est perdu. Les etoiles ne parlent plus aux pierres.'",
+			"biome": "cercles_pierres",
+			"speaker": "Brennos",
+			"arc": "l_alignement_perdu",
+			"arc_stage": 1,
+			"options": [
+				{"label": "Etudier les etoiles", "verb": "observer", "effects": [{"type": "ADD_REPUTATION", "faction": "druides", "amount": 8}, {"type": "ADD_REPUTATION", "faction": "anciens", "amount": 5}]},
+				{"label": "Redresser un menhir", "verb": "forcer un passage", "effects": [{"type": "ADD_REPUTATION", "faction": "anciens", "amount": 10}, {"type": "DAMAGE_LIFE", "amount": 3}]},
+				{"label": "Chanter pour les pierres", "verb": "chanter", "effects": [{"type": "ADD_REPUTATION", "faction": "ankou", "amount": 5}, {"type": "ADD_REPUTATION", "faction": "druides", "amount": 5}]}
+			],
+			"tags": ["arc", "l_alignement_perdu", "brennos", "cercles"],
+			"arc_condition": {"type": "oghams_owned", "min_value": 5}
+		},
+		{
+			"id": "arc_marais_01",
+			"text": "Gwen Du emerge silencieusement du tertre. 'Le silence grandit ici. Les esprits se taisent un a un. Quelque chose les effraye.'",
+			"biome": "marais_korrigans",
+			"speaker": "Gwen Du",
+			"arc": "le_tertre_du_silence",
+			"arc_stage": 1,
+			"options": [
+				{"label": "Ecouter le silence", "verb": "ecouter", "effects": [{"type": "ADD_REPUTATION", "faction": "korrigans", "amount": 10}]},
+				{"label": "Entrer dans le tertre", "verb": "s'approcher", "effects": [{"type": "ADD_REPUTATION", "faction": "korrigans", "amount": 8}, {"type": "ADD_REPUTATION", "faction": "ankou", "amount": 5}, {"type": "DAMAGE_LIFE", "amount": 3}]},
+				{"label": "Appeler les esprits", "verb": "invoquer", "effects": [{"type": "ADD_REPUTATION", "faction": "druides", "amount": 5}, {"type": "ADD_REPUTATION", "faction": "korrigans", "amount": 5}]}
+			],
+			"tags": ["arc", "le_tertre_du_silence", "gwen_du", "marais"],
+			"arc_condition": {"type": "faction_rep", "faction": "korrigans", "min_value": 30}
 		}
 	],
 	"merlin_direct": [
