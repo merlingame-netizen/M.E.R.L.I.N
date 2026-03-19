@@ -1935,6 +1935,72 @@ func test_full_progression_pipeline() -> bool:
 	return true
 
 
+## E2E: All 8 biome arcs exist in FastRoute JSON with valid structure.
+func test_all_8_biome_arcs_in_json() -> bool:
+	var path: String = "res://data/ai/fastroute_cards.json"
+	if not FileAccess.file_exists(path):
+		push_error("arcs: fastroute file not found")
+		return false
+	var file: FileAccess = FileAccess.open(path, FileAccess.READ)
+	var data = JSON.parse_string(file.get_as_text())
+	file.close()
+
+	var expected_arcs: Array = [
+		"le_chene_chantant", "le_chant_des_cairns", "le_signal_de_sein",
+		"le_puits_des_souhaits", "l_alignement_perdu", "le_tertre_du_silence",
+		"la_voix_de_l_if", "le_passage_d_avalon",
+	]
+
+	var arcs_found: Dictionary = {}
+	for card in data.get("narrative", []):
+		var arc: String = str(card.get("arc", ""))
+		if not arc.is_empty():
+			arcs_found[arc] = int(arcs_found.get(arc, 0)) + 1
+
+	for expected in expected_arcs:
+		if not arcs_found.has(expected):
+			push_error("arcs: missing arc '%s' in narrative cards" % expected)
+			return false
+
+	return true
+
+
+## E2E: Trust tier progression — 0→T0→T1→T2→T3 via update_trust_merlin.
+func test_trust_tier_progression() -> bool:
+	var state: Dictionary = _make_state()
+
+	# T0: 0-24
+	if StoreFactions.get_trust_tier(state) != "T0":
+		push_error("trust: initial should be T0, got %s" % StoreFactions.get_trust_tier(state))
+		return false
+
+	# Add 25 → T1
+	state["meta"]["trust_merlin"] = 25
+	if StoreFactions.get_trust_tier(state) != "T1":
+		push_error("trust: 25 should be T1")
+		return false
+
+	# Add to 50 → T2
+	state["meta"]["trust_merlin"] = 50
+	if StoreFactions.get_trust_tier(state) != "T2":
+		push_error("trust: 50 should be T2")
+		return false
+
+	# Add to 75 → T3
+	state["meta"]["trust_merlin"] = 75
+	if StoreFactions.get_trust_tier(state) != "T3":
+		push_error("trust: 75 should be T3")
+		return false
+
+	# Clamp at 100
+	state["meta"]["trust_merlin"] = 100
+	if StoreFactions.get_trust_tier(state) != "T3":
+		push_error("trust: 100 should still be T3")
+		return false
+
+	return true
+
+
 # =============================================================================
 # RUN_ALL
 # =============================================================================
