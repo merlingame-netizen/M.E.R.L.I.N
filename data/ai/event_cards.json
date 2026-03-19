@@ -277,6 +277,54 @@
 				{"label": "Le chasser", "effects": [{"type": "HEAL_LIFE", "amount": 3}, {"type": "ADD_REPUTATION", "faction": "ankou", "amount": -5}]}
 			],
 			"tags": ["animal", "omen", "universal"]
+		},
+		{
+			"id": "event_festival_imbolc",
+			"type": "event",
+			"text": "C'est Imbolc ! La flamme de Brigid brule dans chaque foyer. La terre s'eveille doucement sous la neige. Les druides celebrent le renouveau.",
+			"options": [
+				{"label": "Allumer un feu sacre", "effects": [{"type": "ADD_REPUTATION", "faction": "druides", "amount": 10}, {"type": "HEAL_LIFE", "amount": 5}]},
+				{"label": "Purifier tes intentions", "effects": [{"type": "HEAL_LIFE", "amount": 8}, {"type": "ADD_REPUTATION", "faction": "niamh", "amount": 5}]},
+				{"label": "Mediter sur le cycle", "effects": [{"type": "ADD_REPUTATION", "faction": "druides", "amount": 8}, {"type": "ADD_REPUTATION", "faction": "anciens", "amount": 5}]}
+			],
+			"tags": ["festival", "imbolc", "druides", "seasonal"],
+			"festival": "imbolc"
+		},
+		{
+			"id": "event_festival_beltane",
+			"type": "event",
+			"text": "Beltane ! Les feux jumeaux illuminent la nuit. Les amoureux dansent, et le voile entre les mondes s'amincit. Niamh sourit dans les flammes.",
+			"options": [
+				{"label": "Danser autour des feux", "effects": [{"type": "ADD_REPUTATION", "faction": "niamh", "amount": 10}, {"type": "HEAL_LIFE", "amount": 5}]},
+				{"label": "Sauter par-dessus les flammes", "effects": [{"type": "ADD_REPUTATION", "faction": "korrigans", "amount": 8}, {"type": "DAMAGE_LIFE", "amount": 3}]},
+				{"label": "Chanter avec les bardes", "effects": [{"type": "ADD_REPUTATION", "faction": "niamh", "amount": 8}, {"type": "ADD_REPUTATION", "faction": "anciens", "amount": 5}]}
+			],
+			"tags": ["festival", "beltane", "niamh", "seasonal"],
+			"festival": "beltane"
+		},
+		{
+			"id": "event_festival_lughnasadh",
+			"type": "event",
+			"text": "Lughnasadh, la fete des moissons ! Les champs debordent, et les guerriers s'affrontent dans des jeux d'adresse. Le peuple honore Lugh le lumineux.",
+			"options": [
+				{"label": "Participer aux jeux", "effects": [{"type": "ADD_REPUTATION", "faction": "anciens", "amount": 10}, {"type": "DAMAGE_LIFE", "amount": 3}]},
+				{"label": "Offrir les premieres gerbes", "effects": [{"type": "ADD_REPUTATION", "faction": "anciens", "amount": 8}, {"type": "ADD_REPUTATION", "faction": "druides", "amount": 5}]},
+				{"label": "Festoyer avec le village", "effects": [{"type": "HEAL_LIFE", "amount": 10}, {"type": "ADD_REPUTATION", "faction": "anciens", "amount": 5}]}
+			],
+			"tags": ["festival", "lughnasadh", "anciens", "seasonal"],
+			"festival": "lughnasadh"
+		},
+		{
+			"id": "event_festival_samhain",
+			"type": "event",
+			"text": "Samhain. Le voile tombe. Les morts marchent parmi les vivants cette nuit. L'Ankou passe, sa charrette grince dans le brouillard.",
+			"options": [
+				{"label": "Honorer les defunts", "effects": [{"type": "ADD_REPUTATION", "faction": "ankou", "amount": 10}, {"type": "ADD_REPUTATION", "faction": "anciens", "amount": 5}]},
+				{"label": "Defier l'Ankou", "effects": [{"type": "ADD_REPUTATION", "faction": "ankou", "amount": 12}, {"type": "DAMAGE_LIFE", "amount": 5}]},
+				{"label": "Se barricader chez soi", "effects": [{"type": "HEAL_LIFE", "amount": 8}]}
+			],
+			"tags": ["festival", "samhain", "ankou", "seasonal"],
+			"festival": "samhain"
 		}
 	]
 }
