@@ -223,6 +223,53 @@ func request_run(biome: String, ogham: String) -> void:
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
+# WORLD MAP — Full progression view for carte du monde
+# ═══════════════════════════════════════════════════════════════════════════════
+
+func get_world_map() -> Dictionary:
+	var arc_tags: Array = _profile.get("arc_tags", [])
+	var biome_runs: Dictionary = _profile.get("biome_runs", {})
+	var endings: Array = _profile.get("endings_seen", [])
+	var whispers: Array = _profile.get("whispers_seen", [])
+
+	var biome_data: Array = []
+	for biome_key in MerlinConstants.BIOME_KEYS:
+		var biome: Dictionary = MerlinConstants.BIOMES.get(biome_key, {})
+		var arc_id: String = str(biome.get("arc", ""))
+		var arc_total: int = int(biome.get("arc_cards", 0))
+
+		# Count completed arc stages from arc_tags
+		var arc_completed: int = 0
+		for tag in arc_tags:
+			if str(tag).begins_with(arc_id):
+				arc_completed += 1
+
+		var runs_here: int = int(biome_runs.get(biome_key, 0))
+		var deaths_here: int = int(_profile.get("echo_memory", {}).get("deaths_by_biome", {}).get(biome_key, 0))
+
+		biome_data.append({
+			"id": biome_key,
+			"name": str(biome.get("name", biome_key)),
+			"pnj": str(biome.get("pnj", "")),
+			"arc": arc_id,
+			"arc_progress": arc_completed,
+			"arc_total": arc_total,
+			"arc_complete": arc_completed >= arc_total and arc_total > 0,
+			"runs": runs_here,
+			"deaths": deaths_here,
+			"unlocked": _profile.get("biomes_unlocked", []).has(biome_key),
+		})
+
+	return {
+		"biomes": biome_data,
+		"total_runs": int(_profile.get("total_runs", 0)),
+		"endings_seen": endings,
+		"whispers_found": whispers.size(),
+		"whispers_total": 10,
+	}
+
+
+# ═══════════════════════════════════════════════════════════════════════════════
 # STATS
 # ═══════════════════════════════════════════════════════════════════════════════
 
