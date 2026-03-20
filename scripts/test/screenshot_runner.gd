@@ -34,9 +34,9 @@ func _ready() -> void:
 	var instance: Node = packed.instantiate()
 	add_child(instance)
 
-	# Ensure any Camera3D in the scene is active
+	# Ensure any Camera3D in the scene is active (search whole tree — instance may be freed by scene switches)
 	await get_tree().process_frame
-	var cam: Camera3D = _find_camera(instance)
+	var cam: Camera3D = _find_camera(get_tree().root)
 	if cam:
 		cam.make_current()
 		print("[SCREENSHOT] Camera found: %s — made current" % cam.get_path())
