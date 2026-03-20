@@ -695,7 +695,12 @@ func _get_greeting_text() -> String:
 	else:
 		pool = MERLIN_GREETINGS.get("return", ["Te revoila, %s."])
 
-	return pool[randi() % pool.size()] % chronicle_name
+	var template: String = pool[randi() % pool.size()]
+	var name: String = chronicle_name.strip_edges()
+	if name == "":
+		template = template.replace(", %s", "").replace(" %s", "").replace("%s", "")
+		return template
+	return template % name
 
 
 func _request_merlin_passive_comment(context: String) -> void:

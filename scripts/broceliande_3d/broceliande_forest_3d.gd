@@ -561,8 +561,8 @@ func _setup_environment() -> void:
 func _setup_player() -> void:
 	player.position = Vector3(0.0, 1.2, 2.0) if _path_points.is_empty() else _path_points[0] + Vector3(0.0, 1.2, 0.0)
 	player.rotation = Vector3.ZERO
-	player_head.rotation = Vector3(deg_to_rad(-15.0), 0.0, 0.0)
-	_pitch = deg_to_rad(-15.0)
+	player_head.rotation = Vector3(deg_to_rad(-20.0), 0.0, 0.0)
+	_pitch = deg_to_rad(-20.0)
 	var capsule: CapsuleShape3D = CapsuleShape3D.new()
 	capsule.radius = 0.3
 	capsule.height = 1.0
