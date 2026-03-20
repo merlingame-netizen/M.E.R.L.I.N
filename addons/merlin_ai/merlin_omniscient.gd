@@ -740,6 +740,8 @@ func _apply_adaptive_processing() -> void:
 	tone_controller.update_from_session(session)
 
 
+const MAX_GENERATION_TOTAL_MS: int = 30000  # 30s total cap across all strategies
+
 func _generate_with_strategy() -> Dictionary:
 	## LLM generation — zero fallback policy.
 	## Returns empty dict on failure. Controller handles retry + UI overlay.
@@ -806,6 +808,10 @@ func _try_llm_generation() -> Dictionary:
 		print("[MOS] Strategy S: failed, falling through to B/C")
 
 	# Strategy B: Use MerlinLlmAdapter if available (single-instance)
+	if (Time.get_ticks_msec() - start_time) > MAX_GENERATION_TOTAL_MS:
+		print("[MOS] Total generation time exceeded %dms, aborting strategies" % MAX_GENERATION_TOTAL_MS)
+		generation_failed.emit("total_timeout")
+		return {}
 	if _store and _store.llm and _store.llm.is_llm_ready():
 		var adapter: MerlinLlmAdapter = _store.llm
 		var ctx: Dictionary = _current_context.duplicate()
@@ -824,6 +830,10 @@ func _try_llm_generation() -> Dictionary:
 			print("[MOS] Strategy B: FAILED in %dms — %s" % [b_elapsed, str(adapter_result.get("error", "unknown"))])
 
 	# Strategy SEQ: Sequential pipeline (P1.5) — narrator(card_full) → parse → gm(effects)
+	if (Time.get_ticks_msec() - start_time) > MAX_GENERATION_TOTAL_MS:
+		print("[MOS] Total time cap hit before SEQ (%dms)" % (Time.get_ticks_msec() - start_time))
+		generation_failed.emit("total_timeout")
+		return {}
 	if llm_interface.has_method("generate_sequential") and not llm_interface.prompt_templates.get("sequential_card_full", {}).is_empty():
 		var seq_card := await _try_sequential_generation()
 		if not seq_card.is_empty():
@@ -837,6 +847,9 @@ func _try_llm_generation() -> Dictionary:
 	var user_prompt := _build_user_prompt()
 
 	for attempt in range(MAX_RETRIES):
+		if (Time.get_ticks_msec() - start_time) > MAX_GENERATION_TOTAL_MS:
+			print("[MOS] Total time cap hit during Strategy C attempt %d (%dms)" % [attempt + 1, Time.get_ticks_msec() - start_time])
+			break
 		var c_start := Time.get_ticks_msec()
 		print("[MOS] Strategy C attempt %d/%d starting..." % [attempt + 1, MAX_RETRIES])
 		var result: Dictionary = await llm_interface.generate_with_system(
