@@ -64,6 +64,8 @@ var _path_points: PackedVector3Array
 var _tree_keys: Array[String] = []
 var _bush_keys: Array[String] = []
 var _detail_keys: Array[String] = []
+var _grass_color: Color = Color(0.18, 0.35, 0.12, 0.85)
+var _canopy_color: Color = Color(0.08, 0.20, 0.05)
 
 ## chunk_z_index -> { state, container, rng, transforms, node_count }
 var _chunks: Dictionary = {}
@@ -117,6 +119,12 @@ func generate_initial(player_z: float) -> void:
 
 func set_density_mult(mult: float) -> void:
 	_density_mult = clampf(mult, 0.1, 3.0)
+
+
+func set_biome_colors(terrain_color: Color) -> void:
+	# Derive grass and canopy colors from terrain base
+	_grass_color = Color(terrain_color.r * 0.8, terrain_color.g * 1.4, terrain_color.b * 0.7, 0.85)
+	_canopy_color = Color(terrain_color.r * 0.5, terrain_color.g * 1.0, terrain_color.b * 0.4)
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
@@ -405,7 +413,7 @@ func _spawn_canopy_spheres(container: Node3D, xforms: Array[Transform3D]) -> voi
 	sphere.rings = 3
 
 	var mat: StandardMaterial3D = StandardMaterial3D.new()
-	mat.albedo_color = Color(0.08, 0.20, 0.05)
+	mat.albedo_color = _canopy_color
 	mat.roughness = 1.0
 	mat.cull_mode = BaseMaterial3D.CULL_DISABLED
 	sphere.material = mat
@@ -436,7 +444,7 @@ func _spawn_multimesh_grass(container: Node3D, rng: RandomNumberGenerator, z_ran
 	grass_mesh.orientation = PlaneMesh.FACE_Y
 
 	var mat: StandardMaterial3D = StandardMaterial3D.new()
-	mat.albedo_color = Color(0.18, 0.35, 0.12, 0.85)
+	mat.albedo_color = _grass_color
 	mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA_SCISSOR
 	mat.alpha_scissor_threshold = 0.3
 	mat.shading_mode = BaseMaterial3D.SHADING_MODE_PER_VERTEX

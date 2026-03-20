@@ -177,11 +177,7 @@ var _terrain_builder: RefCounted  # ForestTerrainBuilder
 
 var _path_points: PackedVector3Array = PackedVector3Array()
 var _zone_centers: Array[Vector3] = []
-var _zone_names: Array[String] = [
-	"La Lisiere", "La Foret Dense", "Le Dolmen",
-	"La Mare Enchantee", "La Foret Profonde",
-	"La Fontaine de Barenton", "Le Cercle de Pierres",
-]
+var _zone_names: Array[String] = []  # Loaded from BiomeWalkConfigs in _ready
 
 
 func _ready() -> void:
@@ -204,6 +200,16 @@ func _ready() -> void:
 	_setup_environment()
 	_generate_path()
 	_setup_player()
+	# Load zone names from biome config
+	var ready_biome_cfg: Dictionary = BiomeWalkConfigs.get_config(biome_key)
+	var cfg_zones: Array = ready_biome_cfg.get("zones", []) as Array
+	_zone_names.clear()
+	for z in cfg_zones:
+		_zone_names.append(str(z))
+	# Pad to match _zone_centers count if config has fewer names
+	while _zone_names.size() < _zone_centers.size():
+		_zone_names.append("Zone %d" % _zone_names.size())
+
 	_terrain_builder = ForestTerrainBuilderClass.new(world_root, forest_root, _zone_centers, _path_points, _rng, _asset_spawner)
 	_terrain_builder.set_biome_config(biome_key)
 	_terrain_builder.build_ground()
@@ -236,6 +242,9 @@ func _init_helpers() -> void:
 		forest_root, _asset_spawner.tree_scenes, _asset_spawner.bush_scenes,
 		_asset_spawner.special_scenes, _asset_spawner.detail_scenes, _asset_spawner.broc_scenes,
 		_zone_centers, _path_points)
+	var chunk_biome_cfg: Dictionary = BiomeWalkConfigs.get_config(biome_key)
+	var terrain_col: Color = chunk_biome_cfg.get("terrain_color", Color(0.15, 0.25, 0.10)) as Color
+	_chunk_manager.set_biome_colors(terrain_col)
 	_chunk_manager.generate_initial(player.position.z)
 
 	# Day/night cycle
