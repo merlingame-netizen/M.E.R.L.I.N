@@ -233,6 +233,22 @@ func _queue_chunk_build(ci: int) -> void:
 			transforms[detail_key] = [] as Array[Transform3D]
 		(transforms[detail_key] as Array[Transform3D]).append(t)
 
+	# Generate canopy spheres above trees
+	var canopy_xforms: Array[Transform3D] = []
+	for tree_key: String in transforms:
+		if not tree_key.begins_with("tree"):
+			continue
+		for tree_t: Transform3D in transforms[tree_key]:
+			var tree_scale: float = tree_t.basis.get_scale().y
+			var canopy_pos: Vector3 = tree_t.origin + Vector3(0.0, tree_scale * 1.2, 0.0)
+			var canopy_scale: float = tree_scale * rng.randf_range(1.2, 2.0)
+			var ct: Transform3D = Transform3D.IDENTITY
+			ct = ct.scaled(Vector3(canopy_scale, canopy_scale * 0.5, canopy_scale))
+			ct.origin = canopy_pos
+			canopy_xforms.append(ct)
+	if not canopy_xforms.is_empty():
+		transforms["_canopy"] = canopy_xforms
+
 	# Collect pending keys for frame-budgeted finalization
 	var pending: Array[String] = []
 	for key: String in transforms:
@@ -265,6 +281,10 @@ func _process_build_queues() -> void:
 				var grass_count: int = int(float(density[3]) * 2.0 * _density_mult)
 				var z_range: Vector2 = chunk["_z_range"] as Vector2
 				_spawn_multimesh_grass(container, rng, z_range, grass_count)
+			elif key == "_canopy":
+				var transforms: Dictionary = chunk["transforms"]
+				if transforms.has("_canopy"):
+					_spawn_canopy_spheres(container, transforms["_canopy"] as Array[Transform3D])
 			else:
 				var transforms: Dictionary = chunk["transforms"]
 				if transforms.has(key):
@@ -368,6 +388,41 @@ func _finalize_multimesh(container: Node3D, key: String, xforms: Array[Transform
 		mmi.visibility_range_end = VIS_RANGE_DETAIL
 	mmi.visibility_range_fade_mode = GeometryInstance3D.VISIBILITY_RANGE_FADE_SELF
 
+	container.add_child(mmi)
+
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# CANOPY SPHERES (procedural tree foliage)
+# ═══════════════════════════════════════════════════════════════════════════════
+
+func _spawn_canopy_spheres(container: Node3D, xforms: Array[Transform3D]) -> void:
+	if xforms.is_empty():
+		return
+	var sphere: SphereMesh = SphereMesh.new()
+	sphere.radius = 1.0
+	sphere.height = 1.2
+	sphere.radial_segments = 6
+	sphere.rings = 3
+
+	var mat: StandardMaterial3D = StandardMaterial3D.new()
+	mat.albedo_color = Color(0.08, 0.20, 0.05)
+	mat.roughness = 1.0
+	mat.cull_mode = BaseMaterial3D.CULL_DISABLED
+	sphere.material = mat
+
+	var mm: MultiMesh = MultiMesh.new()
+	mm.transform_format = MultiMesh.TRANSFORM_3D
+	mm.mesh = sphere
+	mm.instance_count = xforms.size()
+
+	for i in xforms.size():
+		mm.set_instance_transform(i, xforms[i])
+
+	var mmi: MultiMeshInstance3D = MultiMeshInstance3D.new()
+	mmi.multimesh = mm
+	mmi.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	mmi.visibility_range_end = VIS_RANGE_TREE
+	mmi.visibility_range_fade_mode = GeometryInstance3D.VISIBILITY_RANGE_FADE_SELF
 	container.add_child(mmi)
 
 
