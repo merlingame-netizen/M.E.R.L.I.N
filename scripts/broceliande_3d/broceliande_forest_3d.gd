@@ -112,8 +112,8 @@ const BROC_ASSETS: Dictionary = {
 @export var move_speed: float = 3.5
 @export var mouse_sensitivity: float = 0.0026
 @export var interact_distance: float = 2.8
-@export var head_bob_amount: float = 0.04
-@export var head_bob_speed: float = 8.0
+@export var head_bob_amount: float = 0.015
+@export var head_bob_speed: float = 5.0
 
 # --- Scene refs ---
 @onready var world_root: Node3D = $World3D
@@ -445,7 +445,7 @@ func _physics_process(delta: float) -> void:
 		if is_moving and player.is_on_floor():
 			_head_bob_time += delta * head_bob_speed
 			player_camera.position.y = sin(_head_bob_time) * head_bob_amount
-			player_camera.position.x = cos(_head_bob_time * 0.5) * head_bob_amount * 0.5
+			player_camera.position.x = cos(_head_bob_time * 0.5) * head_bob_amount * 0.25
 		else:
 			_head_bob_time = 0.0
 			player_camera.position.y = move_toward(player_camera.position.y, 0.0, delta * 2.0)
