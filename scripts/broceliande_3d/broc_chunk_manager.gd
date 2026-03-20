@@ -22,10 +22,10 @@ const UNLOAD_BEHIND: int = 2
 const BUILD_PER_FRAME: int = 4  # Chunk finalize ops per frame (fewer but heavier)
 
 ## Visibility range for all MultiMesh instances (fog-of-war culling)
-const VIS_RANGE_TREE: float = 12.0
-const VIS_RANGE_BUSH: float = 10.0
-const VIS_RANGE_DETAIL: float = 8.0
-const VIS_RANGE_GRASS: float = 8.0
+const VIS_RANGE_TREE: float = 25.0
+const VIS_RANGE_BUSH: float = 18.0
+const VIS_RANGE_DETAIL: float = 12.0
+const VIS_RANGE_GRASS: float = 10.0
 
 ## Zone density profiles x10: [trees, small_trees, bushes, detail_count, fog_density_add]
 const ZONE_DENSITY: Array[Array] = [

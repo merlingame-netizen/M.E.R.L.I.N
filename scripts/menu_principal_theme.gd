@@ -173,8 +173,8 @@ func _style_menu_buttons(main_buttons: VBoxContainer) -> void:
 				"tertiary":
 					if _body_font:
 						btn.add_theme_font_override("font", _body_font)
-					btn.add_theme_font_size_override("font_size", 18)
-					btn.add_theme_color_override("font_color", MerlinVisual.CRT_PALETTE.phosphor_dim)
+					btn.add_theme_font_size_override("font_size", 22)
+					btn.add_theme_color_override("font_color", MerlinVisual.CRT_PALETTE.phosphor)
 
 
 func _apply_corner_button_style(btn: Button) -> void:
