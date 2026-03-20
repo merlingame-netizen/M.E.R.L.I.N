@@ -419,6 +419,39 @@
 			"tags": ["villages", "fete", "communaute"]
 		},
 		{
+			"id": "fr_villages_004",
+			"text": "Une guerisseuse prepare des onguents devant sa chaumiere. Elle t'observe d'un oeil perçant et te fait signe d'approcher.",
+			"biome": "villages_celtes",
+			"options": [
+				{"label": "Demander a etre soigne", "verb": "implorer", "effects": [{"type": "HEAL_LIFE", "amount": 10}, {"type": "ADD_REPUTATION", "faction": "druides", "amount": 3}]},
+				{"label": "Apprendre ses recettes", "verb": "etudier", "effects": [{"type": "ADD_REPUTATION", "faction": "druides", "amount": 10}]},
+				{"label": "Lui offrir des herbes rares", "verb": "offrir", "effects": [{"type": "ADD_REPUTATION", "faction": "niamh", "amount": 5}, {"type": "HEAL_LIFE", "amount": 5}]}
+			],
+			"tags": ["villages", "guerisseuse", "soin"]
+		},
+		{
+			"id": "fr_villages_005",
+			"text": "Un barde aveugle joue de la harpe sous un tilleul. Ses doigts tirent des notes qui font pleurer les pierres.",
+			"biome": "villages_celtes",
+			"options": [
+				{"label": "Ecouter jusqu'a la fin", "verb": "ecouter", "effects": [{"type": "ADD_REPUTATION", "faction": "anciens", "amount": 8}, {"type": "HEAL_LIFE", "amount": 3}]},
+				{"label": "Deposer une offrande", "verb": "offrir", "effects": [{"type": "ADD_REPUTATION", "faction": "niamh", "amount": 8}]},
+				{"label": "Demander une chanson de guerre", "verb": "defier", "effects": [{"type": "ADD_REPUTATION", "faction": "ankou", "amount": 5}, {"type": "ADD_REPUTATION", "faction": "korrigans", "amount": 3}]}
+			],
+			"tags": ["villages", "barde", "musique"]
+		},
+		{
+			"id": "fr_villages_006",
+			"text": "Le puits du village est tari. Les anciens murmurent qu'un esprit de l'eau a ete offense. Personne n'ose descendre.",
+			"biome": "villages_celtes",
+			"options": [
+				{"label": "Descendre dans le puits", "verb": "penetrer", "effects": [{"type": "ADD_REPUTATION", "faction": "korrigans", "amount": 10}, {"type": "DAMAGE_LIFE", "amount": 5}]},
+				{"label": "Preparer un rituel d'apaisement", "verb": "invoquer", "effects": [{"type": "ADD_REPUTATION", "faction": "druides", "amount": 8}]},
+				{"label": "Chercher une source alternative", "verb": "explorer", "effects": [{"type": "HEAL_LIFE", "amount": 5}, {"type": "ADD_REPUTATION", "faction": "anciens", "amount": 3}]}
+			],
+			"tags": ["villages", "puits", "esprit"]
+		},
+		{
 			"id": "fr_cercles_002",
 			"text": "Les menhirs vibrent a l'unisson tandis que la pleine lune les eclaire. Une fissure s'ouvre entre deux pierres.",
 			"biome": "cercles_pierres",
