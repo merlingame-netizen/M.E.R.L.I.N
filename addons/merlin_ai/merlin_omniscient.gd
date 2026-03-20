@@ -740,7 +740,7 @@ func _apply_adaptive_processing() -> void:
 	tone_controller.update_from_session(session)
 
 
-const MAX_GENERATION_TOTAL_MS: int = 30000  # 30s total cap across all strategies
+const MAX_GENERATION_TOTAL_MS: int = 26000  # 26s — one strategy attempt then FastRoute
 
 func _generate_with_strategy() -> Dictionary:
 	## LLM generation — zero fallback policy.
