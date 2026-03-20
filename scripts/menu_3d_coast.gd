@@ -101,12 +101,12 @@ func _build_3d_world() -> void:
 	_env = WorldEnvironment.new()
 	var env: Environment = Environment.new()
 	env.background_mode = Environment.BG_COLOR
-	env.background_color = Color(0.45, 0.50, 0.55)  # Gris breton
+	env.background_color = Color(0.55, 0.72, 0.88)  # Blue sky like reference
 	env.ambient_light_source = Environment.AMBIENT_SOURCE_COLOR
-	env.ambient_light_color = Color(0.50, 0.55, 0.60)
-	env.ambient_light_energy = 0.8
+	env.ambient_light_color = Color(0.60, 0.65, 0.55)
+	env.ambient_light_energy = 1.0
 	env.fog_enabled = true
-	env.fog_light_color = Color(0.55, 0.58, 0.62)
+	env.fog_light_color = Color(0.65, 0.75, 0.85)
 	env.fog_density = 0.008
 	env.tonemap_mode = Environment.TONE_MAPPER_FILMIC
 	env.tonemap_exposure = 1.3
@@ -132,16 +132,31 @@ func _build_3d_world() -> void:
 	fill.shadow_enabled = false
 	_world.add_child(fill)
 
-	# --- CLIFF (low-poly grey rock) ---
+	# --- CLIFF (green, lush) ---
 	_build_cliff()
 
-	# --- OCEAN ---
+	# --- OCEAN (geometric waves) ---
 	_build_ocean()
 
-	# --- CABIN ---
+	# --- CELTIC TOWER (ruined, floating stones) ---
+	_build_tower()
+
+	# --- CABIN (small, smoking) ---
 	_build_cabin()
 
-	# --- GRASS on cliff top ---
+	# --- SUN (3D halo sphere) ---
+	_build_sun_sphere()
+
+	# --- CLOUDS (billboard quads) ---
+	_build_clouds()
+
+	# --- CRYSTALS (emissive prisms) ---
+	_build_crystals()
+
+	# --- MAGIC PARTICLES around tower ---
+	_build_magic_particles()
+
+	# --- GRASS + vegetation on cliff ---
 	_build_cliff_grass()
 
 
@@ -152,7 +167,7 @@ func _build_cliff() -> void:
 	bm.size = Vector3(40.0, 12.0, 30.0)
 	cliff.mesh = bm
 	var mat: StandardMaterial3D = StandardMaterial3D.new()
-	mat.albedo_color = Color(0.35, 0.38, 0.40)
+	mat.albedo_color = Color(0.30, 0.45, 0.22)  # Green lush cliff like reference
 	mat.roughness = 0.95
 	cliff.material_override = mat
 	cliff.position = Vector3(0.0, -2.0, -5.0)
@@ -168,7 +183,7 @@ func _build_cliff() -> void:
 		rbm.size = Vector3(w, h, _rng.randf_range(2.0, 4.0))
 		rock.mesh = rbm
 		var rmat: StandardMaterial3D = StandardMaterial3D.new()
-		rmat.albedo_color = Color(0.30 + _rng.randf() * 0.1, 0.32 + _rng.randf() * 0.08, 0.35 + _rng.randf() * 0.08)
+		rmat.albedo_color = Color(0.25 + _rng.randf() * 0.1, 0.38 + _rng.randf() * 0.12, 0.18 + _rng.randf() * 0.08)
 		rmat.roughness = 1.0
 		rock.material_override = rmat
 		rock.position = Vector3(_rng.randf_range(-15.0, 15.0), -4.0 - _rng.randf() * 3.0, -18.0 + _rng.randf_range(-3.0, 3.0))
@@ -183,9 +198,9 @@ func _build_ocean() -> void:
 	pm.size = Vector2(200.0, 200.0)
 	_ocean_mesh.mesh = pm
 	var mat: StandardMaterial3D = StandardMaterial3D.new()
-	mat.albedo_color = Color(0.15, 0.25, 0.35)
-	mat.roughness = 0.3
-	mat.metallic = 0.2
+	mat.albedo_color = Color(0.10, 0.30, 0.45)  # Deep blue-teal like reference
+	mat.roughness = 0.2
+	mat.metallic = 0.3
 	_ocean_mesh.material_override = mat
 	_ocean_mesh.position = Vector3(0.0, -3.5, -40.0)
 	_ocean_mesh.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
@@ -298,6 +313,253 @@ func _build_cliff_grass() -> void:
 	mmi.multimesh = mm
 	mmi.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 	_world.add_child(mmi)
+
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# CELTIC TOWER — Ruined tower with floating stones
+# ═══════════════════════════════════════════════════════════════════════════════
+
+func _build_tower() -> void:
+	var tower_pos: Vector3 = Vector3(2.0, 4.0, -12.0)
+	var stone_mat: StandardMaterial3D = StandardMaterial3D.new()
+	stone_mat.albedo_color = Color(0.40, 0.38, 0.32)
+	stone_mat.roughness = 0.95
+
+	# Tower base — cylinder approximated with octagon boxes
+	for i in 5:
+		var block: MeshInstance3D = MeshInstance3D.new()
+		var bm: BoxMesh = BoxMesh.new()
+		var height_f: float = float(i)
+		bm.size = Vector3(2.5 - height_f * 0.2, 2.5, 2.5 - height_f * 0.2)
+		block.mesh = bm
+		block.material_override = stone_mat
+		block.position = tower_pos + Vector3(0.0, height_f * 2.3, 0.0)
+		block.rotation.y = height_f * 0.15
+		block.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+		_world.add_child(block)
+
+	# Tower top — pointed roof
+	var roof: MeshInstance3D = MeshInstance3D.new()
+	var roof_bm: BoxMesh = BoxMesh.new()
+	roof_bm.size = Vector3(2.0, 3.0, 2.0)
+	roof.mesh = roof_bm
+	var roof_mat: StandardMaterial3D = StandardMaterial3D.new()
+	roof_mat.albedo_color = Color(0.30, 0.35, 0.25)
+	roof_mat.roughness = 1.0
+	roof.material_override = roof_mat
+	roof.position = tower_pos + Vector3(0.0, 13.0, 0.0)
+	roof.rotation = Vector3(0.0, 0.3, 0.1)
+	roof.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	_world.add_child(roof)
+
+	# Floating stones around tower (ruined/magical)
+	for i in 12:
+		var stone: MeshInstance3D = MeshInstance3D.new()
+		var sbm: BoxMesh = BoxMesh.new()
+		sbm.size = Vector3(_rng.randf_range(0.3, 1.0), _rng.randf_range(0.3, 0.8), _rng.randf_range(0.3, 1.0))
+		stone.mesh = sbm
+		stone.material_override = stone_mat
+		var angle: float = float(i) * TAU / 12.0
+		var radius: float = _rng.randf_range(2.5, 5.0)
+		var height: float = _rng.randf_range(6.0, 16.0)
+		stone.position = tower_pos + Vector3(cos(angle) * radius, height, sin(angle) * radius)
+		stone.rotation = Vector3(_rng.randf_range(-0.5, 0.5), _rng.randf_range(0.0, TAU), _rng.randf_range(-0.3, 0.3))
+		stone.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+		_world.add_child(stone)
+
+	# Glowing window (green gem)
+	var gem: MeshInstance3D = MeshInstance3D.new()
+	var gem_bm: SphereMesh = SphereMesh.new()
+	gem_bm.radius = 0.3
+	gem_bm.height = 0.6
+	gem_bm.radial_segments = 6
+	gem_bm.rings = 3
+	gem.mesh = gem_bm
+	var gem_mat: StandardMaterial3D = StandardMaterial3D.new()
+	gem_mat.albedo_color = Color(0.2, 0.9, 0.4)
+	gem_mat.emission_enabled = true
+	gem_mat.emission = Color(0.2, 0.9, 0.4)
+	gem_mat.emission_energy_multiplier = 3.0
+	gem_mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+	gem.material_override = gem_mat
+	gem.position = tower_pos + Vector3(0.0, 8.0, 1.3)
+	gem.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	_world.add_child(gem)
+
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# SUN — 3D halo sphere (like reference)
+# ═══════════════════════════════════════════════════════════════════════════════
+
+func _build_sun_sphere() -> void:
+	# Sun glow sphere (unshaded, bright)
+	var sun_sphere: MeshInstance3D = MeshInstance3D.new()
+	var sm: SphereMesh = SphereMesh.new()
+	sm.radius = 8.0
+	sm.height = 16.0
+	sm.radial_segments = 12
+	sm.rings = 6
+	sun_sphere.mesh = sm
+	var smat: StandardMaterial3D = StandardMaterial3D.new()
+	smat.albedo_color = Color(1.0, 0.95, 0.70, 0.4)
+	smat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+	smat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+	smat.cull_mode = BaseMaterial3D.CULL_FRONT  # Visible from inside
+	sun_sphere.material_override = smat
+	sun_sphere.position = Vector3(15.0, 18.0, -50.0)
+	sun_sphere.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	_world.add_child(sun_sphere)
+
+	# Sun core (solid bright)
+	var core: MeshInstance3D = MeshInstance3D.new()
+	var cm: SphereMesh = SphereMesh.new()
+	cm.radius = 3.0
+	cm.height = 6.0
+	cm.radial_segments = 8
+	cm.rings = 4
+	core.mesh = cm
+	var cmat: StandardMaterial3D = StandardMaterial3D.new()
+	cmat.albedo_color = Color(1.0, 0.98, 0.85)
+	cmat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+	core.material_override = cmat
+	core.position = Vector3(15.0, 18.0, -50.0)
+	core.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	_world.add_child(core)
+
+	# Sun omni light
+	var sun_omni: OmniLight3D = OmniLight3D.new()
+	sun_omni.light_color = Color(1.0, 0.95, 0.80)
+	sun_omni.light_energy = 2.0
+	sun_omni.omni_range = 80.0
+	sun_omni.position = Vector3(15.0, 18.0, -50.0)
+	sun_omni.shadow_enabled = false
+	_world.add_child(sun_omni)
+
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# CLOUDS — Billboard quads
+# ═══════════════════════════════════════════════════════════════════════════════
+
+func _build_clouds() -> void:
+	var cloud_mat: StandardMaterial3D = StandardMaterial3D.new()
+	cloud_mat.albedo_color = Color(0.92, 0.94, 0.96, 0.5)
+	cloud_mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+	cloud_mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+	cloud_mat.billboard_mode = BaseMaterial3D.BILLBOARD_ENABLED
+	cloud_mat.cull_mode = BaseMaterial3D.CULL_DISABLED
+
+	for i in 8:
+		var cloud: MeshInstance3D = MeshInstance3D.new()
+		var qm: QuadMesh = QuadMesh.new()
+		qm.size = Vector2(_rng.randf_range(8.0, 20.0), _rng.randf_range(3.0, 6.0))
+		qm.material = cloud_mat
+		cloud.mesh = qm
+		cloud.position = Vector3(
+			_rng.randf_range(-40.0, 40.0),
+			_rng.randf_range(20.0, 30.0),
+			_rng.randf_range(-60.0, -30.0)
+		)
+		cloud.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+		_world.add_child(cloud)
+
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# CRYSTALS — Emissive prisms on cliff edge
+# ═══════════════════════════════════════════════════════════════════════════════
+
+func _build_crystals() -> void:
+	var crystal_mat: StandardMaterial3D = StandardMaterial3D.new()
+	crystal_mat.albedo_color = Color(0.5, 0.2, 0.7)
+	crystal_mat.emission_enabled = true
+	crystal_mat.emission = Color(0.6, 0.2, 0.8)
+	crystal_mat.emission_energy_multiplier = 2.0
+	crystal_mat.roughness = 0.2
+	crystal_mat.metallic = 0.5
+
+	for i in 6:
+		var crystal: MeshInstance3D = MeshInstance3D.new()
+		var cbm: BoxMesh = BoxMesh.new()
+		var h: float = _rng.randf_range(1.0, 3.0)
+		cbm.size = Vector3(0.3, h, 0.3)
+		crystal.mesh = cbm
+		crystal.material_override = crystal_mat
+		crystal.position = Vector3(
+			_rng.randf_range(-3.0, 8.0),
+			4.0 + h * 0.5,
+			_rng.randf_range(-14.0, -8.0)
+		)
+		crystal.rotation = Vector3(
+			_rng.randf_range(-0.3, 0.3),
+			_rng.randf_range(0.0, TAU),
+			_rng.randf_range(-0.2, 0.2)
+		)
+		crystal.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+		_world.add_child(crystal)
+
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# MAGIC PARTICLES — Floating around tower
+# ═══════════════════════════════════════════════════════════════════════════════
+
+func _build_magic_particles() -> void:
+	var tower_pos: Vector3 = Vector3(2.0, 10.0, -12.0)
+
+	# Dark magic orbs
+	var orbs: GPUParticles3D = GPUParticles3D.new()
+	orbs.amount = 25
+	orbs.lifetime = 5.0
+	orbs.position = tower_pos
+
+	var omat: ParticleProcessMaterial = ParticleProcessMaterial.new()
+	omat.direction = Vector3(0.0, 0.5, 0.0)
+	omat.spread = 180.0
+	omat.initial_velocity_min = 0.3
+	omat.initial_velocity_max = 1.0
+	omat.gravity = Vector3(0.0, 0.1, 0.0)
+	omat.scale_min = 0.15
+	omat.scale_max = 0.4
+	omat.color = Color(0.5, 0.1, 0.7, 0.7)
+	omat.emission_shape = ParticleProcessMaterial.EMISSION_SHAPE_SPHERE
+	omat.emission_sphere_radius = 5.0
+	omat.angular_velocity_min = -90.0
+	omat.angular_velocity_max = 90.0
+	orbs.process_material = omat
+
+	var orb_mesh: SphereMesh = SphereMesh.new()
+	orb_mesh.radius = 0.2
+	orb_mesh.height = 0.4
+	orb_mesh.radial_segments = 6
+	orb_mesh.rings = 3
+	orbs.draw_pass_1 = orb_mesh
+	orbs.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	_world.add_child(orbs)
+
+	# Stone debris particles
+	var debris: GPUParticles3D = GPUParticles3D.new()
+	debris.amount = 15
+	debris.lifetime = 8.0
+	debris.position = tower_pos + Vector3(0.0, 2.0, 0.0)
+
+	var dmat: ParticleProcessMaterial = ParticleProcessMaterial.new()
+	dmat.direction = Vector3(0.0, 0.3, 0.0)
+	dmat.spread = 120.0
+	dmat.initial_velocity_min = 0.1
+	dmat.initial_velocity_max = 0.4
+	dmat.gravity = Vector3(0.0, -0.05, 0.0)
+	dmat.scale_min = 0.05
+	dmat.scale_max = 0.15
+	dmat.color = Color(0.4, 0.38, 0.32, 0.8)
+	dmat.emission_shape = ParticleProcessMaterial.EMISSION_SHAPE_SPHERE
+	dmat.emission_sphere_radius = 4.0
+	dmat.angular_velocity_min = -45.0
+	dmat.angular_velocity_max = 45.0
+	debris.process_material = dmat
+
+	var debris_mesh: BoxMesh = BoxMesh.new()
+	debris_mesh.size = Vector3(0.15, 0.15, 0.15)
+	debris.draw_pass_1 = debris_mesh
+	debris.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	_world.add_child(debris)
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
