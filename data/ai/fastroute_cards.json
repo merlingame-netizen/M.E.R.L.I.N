@@ -331,6 +331,72 @@
 			"tags": ["cotes", "sirene", "tentation"]
 		},
 		{
+			"id": "fr_landes_004",
+			"text": "Un dolmen fissure bloque le sentier. Des runes pulsent faiblement sur la pierre, comme un coeur qui bat.",
+			"biome": "landes_bruyere",
+			"options": [
+				{"label": "Dechiffrer les runes", "verb": "dechiffrer", "effects": [{"type": "ADD_REPUTATION", "faction": "anciens", "amount": 10}]},
+				{"label": "Escalader le dolmen", "verb": "escalader", "effects": [{"type": "ADD_REPUTATION", "faction": "korrigans", "amount": 5}, {"type": "DAMAGE_LIFE", "amount": 3}]},
+				{"label": "Poser la main sur la pierre", "verb": "toucher", "effects": [{"type": "ADD_REPUTATION", "faction": "druides", "amount": 8}]}
+			],
+			"tags": ["landes", "dolmen", "runes"]
+		},
+		{
+			"id": "fr_landes_005",
+			"text": "Une brume epaisse se leve soudain. Dans le silence, tu entends des pas qui ne sont pas les tiens.",
+			"biome": "landes_bruyere",
+			"options": [
+				{"label": "Appeler dans la brume", "verb": "invoquer", "effects": [{"type": "ADD_REPUTATION", "faction": "ankou", "amount": 8}]},
+				{"label": "S'accroupir et attendre", "verb": "attendre", "effects": [{"type": "HEAL_LIFE", "amount": 5}]},
+				{"label": "Courir vers les pas", "verb": "traquer", "effects": [{"type": "ADD_REPUTATION", "faction": "korrigans", "amount": 8}, {"type": "DAMAGE_LIFE", "amount": 3}]}
+			],
+			"tags": ["landes", "brume", "mystere"]
+		},
+		{
+			"id": "fr_landes_006",
+			"text": "Un tertre herbu s'ouvre sur un escalier de pierre descendant dans les tenebres. L'air qui en sort est tiede.",
+			"biome": "landes_bruyere",
+			"options": [
+				{"label": "Descendre l'escalier", "verb": "penetrer", "effects": [{"type": "ADD_REPUTATION", "faction": "anciens", "amount": 8}, {"type": "DAMAGE_LIFE", "amount": 5}]},
+				{"label": "Jeter une pierre dans le trou", "verb": "tester", "effects": [{"type": "ADD_REPUTATION", "faction": "druides", "amount": 5}]},
+				{"label": "Sceller l'entree avec des branches", "verb": "proteger", "effects": [{"type": "HEAL_LIFE", "amount": 5}, {"type": "ADD_REPUTATION", "faction": "druides", "amount": 3}]}
+			],
+			"tags": ["landes", "souterrain", "danger"]
+		},
+		{
+			"id": "fr_cotes_004",
+			"text": "Une epave de navire celte est echouee dans une crique. Sa coque porte des gravures d'entrelacs encore intactes.",
+			"biome": "cotes_sauvages",
+			"options": [
+				{"label": "Explorer la cale", "verb": "fouiller", "effects": [{"type": "ADD_REPUTATION", "faction": "anciens", "amount": 8}, {"type": "DAMAGE_LIFE", "amount": 2}]},
+				{"label": "Relever les gravures", "verb": "dechiffrer", "effects": [{"type": "ADD_REPUTATION", "faction": "druides", "amount": 8}]},
+				{"label": "Recuperer du bois flotte", "verb": "collecter", "effects": [{"type": "HEAL_LIFE", "amount": 5}]}
+			],
+			"tags": ["cotes", "epave", "exploration"]
+		},
+		{
+			"id": "fr_cotes_005",
+			"text": "Le maree descendante revele un passage entre les rochers menant a une grotte tapissee de coquillages. Des reflets dansent sur les parois.",
+			"biome": "cotes_sauvages",
+			"options": [
+				{"label": "Entrer dans la grotte", "verb": "penetrer", "effects": [{"type": "ADD_REPUTATION", "faction": "niamh", "amount": 10}, {"type": "DAMAGE_LIFE", "amount": 3}]},
+				{"label": "Ramasser les coquillages", "verb": "collecter", "effects": [{"type": "HEAL_LIFE", "amount": 5}]},
+				{"label": "Graver ton nom sur la paroi", "verb": "marquer", "effects": [{"type": "ADD_REPUTATION", "faction": "korrigans", "amount": 5}]}
+			],
+			"tags": ["cotes", "grotte", "maree"]
+		},
+		{
+			"id": "fr_cotes_006",
+			"text": "Un pecheur repare ses filets sur la greve. Il fredonne un chant ancien que tu reconnais sans l'avoir jamais entendu.",
+			"biome": "cotes_sauvages",
+			"options": [
+				{"label": "Chanter avec lui", "verb": "chanter", "effects": [{"type": "ADD_REPUTATION", "faction": "niamh", "amount": 8}]},
+				{"label": "Aider a reparer les filets", "verb": "reparer", "effects": [{"type": "ADD_REPUTATION", "faction": "anciens", "amount": 5}, {"type": "HEAL_LIFE", "amount": 3}]},
+				{"label": "Demander le sens du chant", "verb": "parler", "effects": [{"type": "ADD_REPUTATION", "faction": "druides", "amount": 8}]}
+			],
+			"tags": ["cotes", "pecheur", "chant"]
+		},
+		{
 			"id": "fr_villages_002",
 			"text": "Le forgeron du village travaille un metal etrange qui brille d'une lueur bleue. Il cherche un apprenti.",
 			"biome": "villages_celtes",
