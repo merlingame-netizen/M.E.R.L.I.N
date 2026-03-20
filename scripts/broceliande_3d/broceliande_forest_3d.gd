@@ -228,6 +228,8 @@ func _ready() -> void:
 	_effects.add_pollen_particles()
 	_effects.add_fireflies()
 	_effects.add_god_rays()
+	_effects.add_falling_leaves()
+	_effects.add_ground_mist()
 	_init_helpers()
 	_wire_buttons()
 	_update_hud()

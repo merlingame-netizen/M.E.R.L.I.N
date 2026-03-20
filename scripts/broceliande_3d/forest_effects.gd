@@ -60,7 +60,7 @@ func add_pollen_particles() -> void:
 	var pollen: GPUParticles3D = GPUParticles3D.new()
 	pollen.name = "Pollen"
 	pollen.position = Vector3(0.0, 2.0, -55.0)
-	pollen.amount = 80
+	pollen.amount = 120
 	pollen.lifetime = 12.0
 	pollen.explosiveness = 0.0
 	pollen.randomness = 1.0
@@ -172,6 +172,81 @@ func add_god_rays() -> void:
 			)
 			ray.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 			_forest_root.add_child(ray)
+
+
+func add_falling_leaves() -> void:
+	for i in range(0, _zone_centers.size()):
+		var center: Vector3 = _zone_centers[i]
+		var leaves: GPUParticles3D = GPUParticles3D.new()
+		leaves.name = "FallingLeaves_Z%d" % i
+		leaves.position = center + Vector3(0.0, 4.0, 0.0)
+		leaves.amount = 12
+		leaves.lifetime = 8.0
+		leaves.one_shot = false
+		leaves.explosiveness = 0.0
+		leaves.randomness = 1.0
+		leaves.visibility_aabb = AABB(Vector3(-12, -8, -12), Vector3(24, 14, 24))
+
+		var mat: ParticleProcessMaterial = ParticleProcessMaterial.new()
+		mat.direction = Vector3(0.0, -1.0, 0.0)
+		mat.spread = 30.0
+		mat.initial_velocity_min = 0.3
+		mat.initial_velocity_max = 0.8
+		mat.gravity = Vector3(0.0, -0.2, 0.0)
+		mat.angular_velocity_min = -90.0
+		mat.angular_velocity_max = 90.0
+		mat.emission_shape = ParticleProcessMaterial.EMISSION_SHAPE_BOX
+		mat.emission_box_extents = Vector3(10.0, 6.0, 10.0)
+		mat.scale_min = 0.03
+		mat.scale_max = 0.07
+		mat.color = Color(0.5, 0.35, 0.15)
+		leaves.process_material = mat
+
+		var qm: QuadMesh = QuadMesh.new()
+		qm.size = Vector2(0.06, 0.06)
+		leaves.draw_pass_1 = qm
+
+		leaves.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+		_forest_root.add_child(leaves)
+
+
+func add_ground_mist() -> void:
+	for i in range(0, _zone_centers.size()):
+		var center: Vector3 = _zone_centers[i]
+		var mist: GPUParticles3D = GPUParticles3D.new()
+		mist.name = "GroundMist_Z%d" % i
+		mist.position = center + Vector3(0.0, 0.3, 0.0)
+		mist.amount = 8
+		mist.lifetime = 12.0
+		mist.explosiveness = 0.0
+		mist.randomness = 1.0
+		mist.visibility_aabb = AABB(Vector3(-10, -1, -10), Vector3(20, 3, 20))
+
+		var mat: ParticleProcessMaterial = ParticleProcessMaterial.new()
+		mat.direction = Vector3(1.0, 0.0, 0.0)
+		mat.spread = 180.0
+		mat.initial_velocity_min = 0.1
+		mat.initial_velocity_max = 0.3
+		mat.gravity = Vector3(0.0, 0.0, 0.0)
+		mat.emission_shape = ParticleProcessMaterial.EMISSION_SHAPE_BOX
+		mat.emission_box_extents = Vector3(8.0, 0.3, 8.0)
+		mat.scale_min = 1.5
+		mat.scale_max = 3.0
+		mat.color = Color(0.3, 0.4, 0.3, 0.04)
+		mist.process_material = mat
+
+		var qm: QuadMesh = QuadMesh.new()
+		qm.size = Vector2(2.0, 1.0)
+		var dm: StandardMaterial3D = StandardMaterial3D.new()
+		dm.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+		dm.albedo_color = Color(0.3, 0.4, 0.3, 0.04)
+		dm.billboard_mode = BaseMaterial3D.BILLBOARD_ENABLED
+		dm.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+		qm.material = dm
+		mist.draw_pass_1 = qm
+
+		mist.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+		_forest_root.add_child(mist)
 
 
 func _add_point_light(pos: Vector3, color: Color, energy: float, rng: float) -> void:
