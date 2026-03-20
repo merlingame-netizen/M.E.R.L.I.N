@@ -210,6 +210,39 @@
 			"tags": ["marchand", "troc", "universal"]
 		},
 		{
+			"id": "fr_generic_011",
+			"text": "Un vieil arbre s'effondre en travers du chemin. Sous ses racines arrachees, quelque chose brille faiblement.",
+			"biome": "",
+			"options": [
+				{"label": "Creuser sous les racines", "verb": "fouiller", "effects": [{"type": "ADD_REPUTATION", "faction": "anciens", "amount": 8}]},
+				{"label": "Deblayer le chemin", "verb": "deblayer", "effects": [{"type": "ADD_REPUTATION", "faction": "druides", "amount": 5}, {"type": "HEAL_LIFE", "amount": 3}]},
+				{"label": "Contourner par la foret", "verb": "contourner", "effects": [{"type": "HEAL_LIFE", "amount": 5}]}
+			],
+			"tags": ["arbre", "decouverte", "universal"]
+		},
+		{
+			"id": "fr_generic_012",
+			"text": "La pluie commence a tomber. Tu trouves un abri sous un surplomb rocheux ou des voyageurs ont laisse des offrandes.",
+			"biome": "",
+			"options": [
+				{"label": "Deposer ta propre offrande", "verb": "offrir", "effects": [{"type": "ADD_REPUTATION", "faction": "niamh", "amount": 8}]},
+				{"label": "Attendre que la pluie cesse", "verb": "attendre", "effects": [{"type": "HEAL_LIFE", "amount": 8}]},
+				{"label": "Braver la pluie", "verb": "endurer", "effects": [{"type": "ADD_REPUTATION", "faction": "ankou", "amount": 5}, {"type": "DAMAGE_LIFE", "amount": 2}]}
+			],
+			"tags": ["pluie", "abri", "universal"]
+		},
+		{
+			"id": "fr_generic_013",
+			"text": "Un renard roux te suit depuis un moment. Il s'assied et penche la tete comme s'il attendait une decision de ta part.",
+			"biome": "",
+			"options": [
+				{"label": "Partager ta nourriture", "verb": "offrir", "effects": [{"type": "ADD_REPUTATION", "faction": "druides", "amount": 8}, {"type": "DAMAGE_LIFE", "amount": 2}]},
+				{"label": "Le suivre", "verb": "suivre", "effects": [{"type": "ADD_REPUTATION", "faction": "korrigans", "amount": 8}]},
+				{"label": "Le chasser", "verb": "repousser", "effects": [{"type": "HEAL_LIFE", "amount": 3}]}
+			],
+			"tags": ["animal", "renard", "universal"]
+		},
+		{
 			"id": "fr_broceliande_003",
 			"text": "Un cercle de champignons luminescents pulse doucement au pied d'un if centenaire. L'air vibre d'une energie ancienne.",
 			"biome": "foret_broceliande",
