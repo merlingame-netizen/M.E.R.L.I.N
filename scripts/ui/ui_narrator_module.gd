@@ -301,6 +301,10 @@ func show_narrator_intro(biome_key: String = "") -> void:
 
 	SFXManager.play("eye_open")
 
+	# Hide card illustration during narrator (shows bright green rect otherwise)
+	if _ui._card_illustration_panel and is_instance_valid(_ui._card_illustration_panel):
+		_ui._card_illustration_panel.visible = false
+
 	var pages: Array[String] = _split_into_pages(intro_text)
 	for page_idx in range(pages.size()):
 		if not _ui.is_inside_tree():
@@ -332,6 +336,10 @@ func show_narrator_intro(biome_key: String = "") -> void:
 			pca.reveal(_ui.info_panel, {"duration": 0.35, "block_size": 8})
 		else:
 			_ui.info_panel.modulate.a = 1.0
+
+	# Restore card illustration for actual cards
+	if _ui._card_illustration_panel and is_instance_valid(_ui._card_illustration_panel):
+		_ui._card_illustration_panel.visible = true
 
 	_narrator_active = false
 	_ui.narrator_intro_finished.emit()
