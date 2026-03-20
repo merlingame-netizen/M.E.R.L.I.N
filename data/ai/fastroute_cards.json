@@ -551,6 +551,72 @@
 			"tags": ["collines", "pierre_levee", "vent"]
 		},
 		{
+			"id": "fr_cercles_004",
+			"text": "A minuit, les ombres des menhirs dessinent une carte sur le sol. Un chemin lumineux mene vers le centre du cercle.",
+			"biome": "cercles_pierres",
+			"options": [
+				{"label": "Suivre le chemin lumineux", "verb": "penetrer", "effects": [{"type": "ADD_REPUTATION", "faction": "druides", "amount": 10}, {"type": "DAMAGE_LIFE", "amount": 3}]},
+				{"label": "Dessiner la carte sur du cuir", "verb": "dechiffrer", "effects": [{"type": "ADD_REPUTATION", "faction": "anciens", "amount": 8}]},
+				{"label": "Attendre l'aube", "verb": "attendre", "effects": [{"type": "HEAL_LIFE", "amount": 5}]}
+			],
+			"tags": ["cercles", "ombres", "nuit"]
+		},
+		{
+			"id": "fr_cercles_005",
+			"text": "Un druide en transe chante au centre du cromlech. Sa voix fait trembler l'air autour des pierres.",
+			"biome": "cercles_pierres",
+			"options": [
+				{"label": "Joindre ta voix au chant", "verb": "chanter", "effects": [{"type": "ADD_REPUTATION", "faction": "druides", "amount": 10}]},
+				{"label": "Interrompre la transe", "verb": "defier", "effects": [{"type": "ADD_REPUTATION", "faction": "ankou", "amount": 8}, {"type": "DAMAGE_LIFE", "amount": 3}]},
+				{"label": "Observer le rituel en silence", "verb": "observer", "effects": [{"type": "ADD_REPUTATION", "faction": "anciens", "amount": 5}, {"type": "HEAL_LIFE", "amount": 3}]}
+			],
+			"tags": ["cercles", "druide", "rituel"]
+		},
+		{
+			"id": "fr_marais_004",
+			"text": "Des feux follets dansent au-dessus de l'eau stagnante. Ils semblent former des mots dans une langue oubliee.",
+			"biome": "marais_korrigans",
+			"options": [
+				{"label": "Suivre les feux follets", "verb": "suivre", "effects": [{"type": "ADD_REPUTATION", "faction": "korrigans", "amount": 10}, {"type": "DAMAGE_LIFE", "amount": 5}]},
+				{"label": "Lire les mots de feu", "verb": "dechiffrer", "effects": [{"type": "ADD_REPUTATION", "faction": "anciens", "amount": 8}]},
+				{"label": "Reculer prudemment", "verb": "refuser", "effects": [{"type": "HEAL_LIFE", "amount": 5}]}
+			],
+			"tags": ["marais", "feux_follets", "mystere"]
+		},
+		{
+			"id": "fr_marais_005",
+			"text": "Un tronc creux abrite une famille de loutres. L'une d'elles te tend un coquillage perce comme un pendentif.",
+			"biome": "marais_korrigans",
+			"options": [
+				{"label": "Accepter le coquillage", "verb": "prendre", "effects": [{"type": "ADD_REPUTATION", "faction": "korrigans", "amount": 8}, {"type": "HEAL_LIFE", "amount": 3}]},
+				{"label": "Offrir de la nourriture en echange", "verb": "offrir", "effects": [{"type": "ADD_REPUTATION", "faction": "niamh", "amount": 8}]},
+				{"label": "Proteger le terrier", "verb": "proteger", "effects": [{"type": "ADD_REPUTATION", "faction": "druides", "amount": 5}, {"type": "HEAL_LIFE", "amount": 5}]}
+			],
+			"tags": ["marais", "animal", "loutre"]
+		},
+		{
+			"id": "fr_collines_004",
+			"text": "Au creux d'un vallon, un dolmen intact abrite des gravures spiralees. Le soleil couchant les illumine de l'interieur.",
+			"biome": "collines_dolmens",
+			"options": [
+				{"label": "Entrer dans le dolmen", "verb": "penetrer", "effects": [{"type": "ADD_REPUTATION", "faction": "anciens", "amount": 10}, {"type": "DAMAGE_LIFE", "amount": 3}]},
+				{"label": "Tracer les spirales du doigt", "verb": "toucher", "effects": [{"type": "ADD_REPUTATION", "faction": "druides", "amount": 8}]},
+				{"label": "Camper pres du dolmen", "verb": "attendre", "effects": [{"type": "HEAL_LIFE", "amount": 8}]}
+			],
+			"tags": ["collines", "dolmen", "spirales"]
+		},
+		{
+			"id": "fr_collines_005",
+			"text": "Un aigle plane au-dessus de la colline. Il lache une plume doree qui tournoie lentement vers toi.",
+			"biome": "collines_dolmens",
+			"options": [
+				{"label": "Attraper la plume", "verb": "saisir", "effects": [{"type": "ADD_REPUTATION", "faction": "niamh", "amount": 10}]},
+				{"label": "Laisser la plume se poser", "verb": "attendre", "effects": [{"type": "ADD_REPUTATION", "faction": "druides", "amount": 5}, {"type": "HEAL_LIFE", "amount": 3}]},
+				{"label": "Imiter le cri de l'aigle", "verb": "invoquer", "effects": [{"type": "ADD_REPUTATION", "faction": "ankou", "amount": 5}, {"type": "ADD_REPUTATION", "faction": "korrigans", "amount": 3}]}
+			],
+			"tags": ["collines", "aigle", "plume"]
+		},
+		{
 			"id": "fr_iles_002",
 			"text": "Une barque sans rameur attend au bord de l'eau. L'ile d'en face scintille d'une lueur irréelle.",
 			"biome": "iles_mystiques",
