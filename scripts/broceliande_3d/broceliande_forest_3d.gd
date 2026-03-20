@@ -107,6 +107,7 @@ const BROC_ASSETS: Dictionary = {
 
 
 # --- Exports ---
+@export var biome_key: String = "foret_broceliande"
 @export var low_pixel_height: int = 320
 @export var move_speed: float = 3.5
 @export var mouse_sensitivity: float = 0.0026
@@ -204,8 +205,12 @@ func _ready() -> void:
 	_generate_path()
 	_setup_player()
 	_terrain_builder = ForestTerrainBuilderClass.new(world_root, forest_root, _zone_centers, _path_points, _rng, _asset_spawner)
+	_terrain_builder.set_biome_config(biome_key)
 	_terrain_builder.build_ground()
 	_terrain_builder.build_path_terrain()
+	# Apply biome walk speed
+	var biome_walk_cfg: Dictionary = BiomeWalkConfigs.get_config(biome_key)
+	move_speed = float(biome_walk_cfg.get("walk_speed", 3.5))
 	_zone_builder = ForestZoneBuilderClass.new(_asset_spawner, forest_root, _zone_centers, _rng)
 	_zone_builder.build_zones()
 	# _populate_forest() removed — chunk manager handles vegetation
@@ -515,20 +520,26 @@ func _setup_viewport() -> void:
 func _setup_environment() -> void:
 	var env: Environment = Environment.new()
 
+	# Load biome-specific colors from BiomeWalkConfigs
+	var biome_cfg: Dictionary = BiomeWalkConfigs.get_config(biome_key)
+	var bg_color: Color = biome_cfg.get("fog_color", Color(0.30, 0.40, 0.28)) as Color
+	var ambient_color: Color = biome_cfg.get("ambient_color", Color(0.55, 0.65, 0.45)) as Color
+	var fog_color: Color = biome_cfg.get("fog_color", Color(0.35, 0.45, 0.32)) as Color
+	var fog_density: float = float(biome_cfg.get("fog_density", 0.018))
+
 	# GL Compatibility: ProceduralSkyMaterial renders white regardless of BG_COLOR mode.
-	# Remove sky entirely — ambient light comes from AMBIENT_SOURCE_COLOR below.
 	env.background_mode = Environment.BG_COLOR
-	env.background_color = Color(0.30, 0.40, 0.28)  # Forest canopy — muted green
+	env.background_color = bg_color * 0.7  # Darker than fog for depth
 
 	# Ambient — strong enough to light dark CRT-style materials
 	env.ambient_light_source = Environment.AMBIENT_SOURCE_COLOR
-	env.ambient_light_color = Color(0.55, 0.65, 0.45)
+	env.ambient_light_color = ambient_color
 	env.ambient_light_energy = 0.9
 
-	# Fog — forest mist
+	# Fog — biome-specific
 	env.fog_enabled = true
-	env.fog_light_color = Color(0.35, 0.45, 0.32)
-	env.fog_density = 0.018
+	env.fog_light_color = fog_color
+	env.fog_density = fog_density
 	# fog_aerial_perspective not supported in GL Compatibility — skip
 
 	# Tonemap
