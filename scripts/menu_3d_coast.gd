@@ -712,14 +712,14 @@ func _build_ui() -> void:
 
 	# Menu container (hidden initially)
 	_menu_container = VBoxContainer.new()
-	_menu_container.set_anchors_preset(Control.PRESET_CENTER)
+	_menu_container.set_anchors_preset(Control.PRESET_CENTER_BOTTOM)
 	_menu_container.grow_horizontal = Control.GROW_DIRECTION_BOTH
-	_menu_container.grow_vertical = Control.GROW_DIRECTION_BOTH
-	_menu_container.offset_left = -200.0
-	_menu_container.offset_right = 200.0
-	_menu_container.offset_top = -180.0
-	_menu_container.offset_bottom = 180.0
-	_menu_container.alignment = BoxContainer.ALIGNMENT_CENTER
+	_menu_container.grow_vertical = Control.GROW_DIRECTION_BEGIN
+	_menu_container.offset_left = -220.0
+	_menu_container.offset_right = 220.0
+	_menu_container.offset_top = -280.0
+	_menu_container.offset_bottom = -20.0
+	_menu_container.alignment = BoxContainer.ALIGNMENT_END
 	_menu_container.add_theme_constant_override("separation", 16)
 	_menu_container.modulate.a = 0.0  # Hidden
 	_ui_layer.add_child(_menu_container)
