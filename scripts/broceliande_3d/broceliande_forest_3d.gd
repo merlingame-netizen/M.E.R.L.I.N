@@ -11,6 +11,7 @@ const BrocDayNight = preload("res://scripts/broceliande_3d/broc_day_night.gd")
 const BrocSeason = preload("res://scripts/broceliande_3d/broc_season.gd")
 const BrocGrassWind = preload("res://scripts/broceliande_3d/broc_grass_wind.gd")
 const BrocAtmosphere = preload("res://scripts/broceliande_3d/broc_atmosphere.gd")
+const BrocParallaxLayers = preload("res://scripts/broceliande_3d/broc_parallax_layers.gd")
 # Deprecated: BrocDenseFill, BrocExtraDecor, BrocMassFill — replaced by BrocChunkManager
 const BrocChunkManager = preload("res://scripts/broceliande_3d/broc_chunk_manager.gd")
 const BrocEvents = preload("res://scripts/broceliande_3d/broc_events.gd")
@@ -153,6 +154,7 @@ var _day_night: RefCounted
 var _season: RefCounted
 var _grass_wind: RefCounted
 var _atmosphere: RefCounted
+var _parallax: RefCounted
 var _events: RefCounted
 var _chunk_manager: RefCounted
 
@@ -262,6 +264,10 @@ func _init_helpers() -> void:
 	# Enhanced atmosphere (zone-aware fog)
 	_atmosphere = BrocAtmosphere.new(forest_root, _zone_centers)
 	_atmosphere.set_environment(world_env.environment)
+
+	# 2D parallax forest layers (behind + in front of 3D)
+	_parallax = BrocParallaxLayers.new()
+	_parallax.setup(self, biome_key)
 
 	# Screen VFX (shake, flash, glitch, vignette)
 	_screen_vfx = BrocScreenVfxClass.new()
@@ -466,6 +472,11 @@ func _physics_process(delta: float) -> void:
 	elif _atmosphere:
 		_atmosphere.update(delta, 0.15)
 		_atmosphere.update_zone(_current_zone)
+
+	# Parallax 2D layers scroll with player
+	if _parallax:
+		_parallax.update(player.position.z, player.position.x)
+		_parallax.set_zone(_current_zone)
 
 	# Screen VFX (shake, glitch, vignette decay)
 	if _screen_vfx:
