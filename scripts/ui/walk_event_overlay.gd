@@ -42,6 +42,8 @@ var _total_chars: int = 0
 var _type_timer: float = 0.0
 var _current_labels: Array[String] = []
 var _fade_tween: Tween
+var _auto_respond_timer: float = 0.0
+const AUTO_RESPOND_TIMEOUT: float = 30.0  # Auto-select option A after 30s (for auto-test)
 
 
 func _ready() -> void:
@@ -51,6 +53,13 @@ func _ready() -> void:
 
 
 func _process(delta: float) -> void:
+	# Auto-respond if overlay idle too long (for headless/auto-test)
+	if _active and not _typing and _button_container.visible:
+		_auto_respond_timer += delta
+		if _auto_respond_timer >= AUTO_RESPOND_TIMEOUT:
+			_auto_respond_timer = 0.0
+			_on_button_pressed(0)  # Auto-select option A
+			return
 	if not _typing:
 		return
 	_type_timer += delta * TYPEWRITER_SPEED
@@ -74,6 +83,7 @@ func show_event(text: String, labels: Array[String]) -> void:
 		return
 	_active = true
 	_current_labels = labels
+	_auto_respond_timer = 0.0
 
 	# Reset text
 	_text_label.text = text
@@ -239,9 +249,29 @@ func _show_buttons_delayed() -> void:
 	tw.tween_interval(BUTTON_APPEAR_DELAY)
 	tw.tween_callback(func() -> void:
 		_button_container.visible = true
-		# Keyboard focus on first button
+		# Staggered slide-in + scale for each button
+		var stagger: float = 0.0
+		for btn in _buttons:
+			if not btn.visible:
+				continue
+			btn.pivot_offset = btn.size * 0.5
+			btn.modulate.a = 0.0
+			btn.scale = Vector2(0.8, 0.8)
+			btn.position.y += 20.0
+			var entry: Tween = btn.create_tween()
+			entry.set_parallel(true)
+			entry.tween_property(btn, "modulate:a", 1.0, 0.25).set_delay(stagger)
+			entry.tween_property(btn, "scale", Vector2.ONE, 0.3).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT).set_delay(stagger)
+			entry.tween_property(btn, "position:y", btn.position.y - 20.0, 0.3).set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_OUT).set_delay(stagger)
+			stagger += 0.12
+		# Keyboard focus on first button after animation
 		if _buttons.size() > 0 and _buttons[0].visible:
-			_buttons[0].grab_focus()
+			var focus_tw: Tween = create_tween()
+			focus_tw.tween_interval(stagger + 0.15)
+			focus_tw.tween_callback(func() -> void:
+				if _buttons[0].is_inside_tree():
+					_buttons[0].grab_focus()
+			)
 	)
 
 
