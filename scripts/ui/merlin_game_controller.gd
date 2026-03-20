@@ -355,15 +355,20 @@ func _request_next_card() -> void:
 		return
 
 	if not result.get("ok", false) or result.get("card", {}).is_empty():
-		# Dispatch failed — retry via direct LLM
-		print("[Merlin] dispatch failed or empty, retrying LLM (dt=%dms)" % dispatch_elapsed)
-		var retry_card: Dictionary = await _llm.retry_llm_generation(3)
+		# Dispatch failed — use FastRoute fallback immediately
+		print("[Merlin] dispatch failed, using FastRoute fallback (dt=%dms)" % dispatch_elapsed)
+		var fr_card: Dictionary = _get_fastroute_card()
+		if not fr_card.is_empty():
+			current_card = fr_card
+			print("[Merlin] FastRoute card loaded: %s" % str(fr_card.get("title", "")))
+			_handle_card_display()
+			is_busy = false
+			return
+		# FastRoute also empty — retry LLM as last resort
+		print("[Merlin] FastRoute empty, retrying LLM")
+		var retry_card: Dictionary = await _llm.retry_llm_generation(1)
 		if retry_card.is_empty():
-			if ui and is_instance_valid(ui):
-				ui.show_merlin_thinking_overlay()
-			await get_tree().create_timer(5.0).timeout
-			if ui and is_instance_valid(ui):
-				ui.hide_merlin_thinking_overlay()
+			await get_tree().create_timer(3.0).timeout
 			is_busy = false
 			await _request_next_card()
 			return
@@ -412,6 +417,14 @@ func _request_next_card() -> void:
 
 	print("[Merlin] _request_next_card() done (dt=%dms)" % (Time.get_ticks_msec() - _rnc_t0))
 	is_busy = false
+
+
+func _get_fastroute_card() -> Dictionary:
+	## Pull a card from FastRoute pool when LLM fails.
+	if not store or not is_instance_valid(store):
+		return {}
+	var context: Dictionary = {"biome": store.state.get("biome", "broceliande"), "card_index": _cards_this_run}
+	return store.cards.get_fastroute_card(context)
 
 
 func _handle_card_display() -> void:
