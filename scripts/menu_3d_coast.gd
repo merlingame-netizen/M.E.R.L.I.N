@@ -73,7 +73,7 @@ func _process(delta: float) -> void:
 			continue
 		var phase: float = float(i) * 0.6
 		var wave_y: float = sin(_ocean_time * 1.2 + phase) * 0.4 + sin(_ocean_time * 0.7 + phase * 1.5) * 0.2
-		_wave_strips[i].position.y = -3.5 + wave_y
+		_wave_strips[i].position.y = -6.0 + wave_y
 		_wave_strips[i].rotation.x = sin(_ocean_time * 0.9 + phase) * 0.05
 
 	# Floating stones orbit around tower
@@ -185,32 +185,45 @@ func _build_3d_world() -> void:
 
 
 func _build_cliff() -> void:
-	# Main cliff body — large grey box
+	# Main cliff top — green plateau
 	var cliff: MeshInstance3D = MeshInstance3D.new()
 	var bm: BoxMesh = BoxMesh.new()
-	bm.size = Vector3(40.0, 12.0, 30.0)
+	bm.size = Vector3(50.0, 4.0, 25.0)
 	cliff.mesh = bm
 	var mat: StandardMaterial3D = StandardMaterial3D.new()
-	mat.albedo_color = Color(0.30, 0.45, 0.22)  # Green lush cliff like reference
+	mat.albedo_color = Color(0.30, 0.45, 0.22)
 	mat.roughness = 0.95
 	cliff.material_override = mat
-	cliff.position = Vector3(0.0, -2.0, -5.0)
+	cliff.position = Vector3(-5.0, 2.0, 0.0)
 	cliff.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 	_world.add_child(cliff)
 
-	# Cliff face detail — jagged rocks
-	for i in 8:
+	# Cliff FACE — vertical brown rock wall (dramatic drop to ocean)
+	var face: MeshInstance3D = MeshInstance3D.new()
+	var face_bm: BoxMesh = BoxMesh.new()
+	face_bm.size = Vector3(50.0, 10.0, 3.0)
+	face.mesh = face_bm
+	var face_mat: StandardMaterial3D = StandardMaterial3D.new()
+	face_mat.albedo_color = Color(0.35, 0.30, 0.22)
+	face_mat.roughness = 1.0
+	face.material_override = face_mat
+	face.position = Vector3(-5.0, -3.0, -13.5)
+	face.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	_world.add_child(face)
+
+	# Cliff ledge rocks — jagged outcrops on the face
+	for i in 12:
 		var rock: MeshInstance3D = MeshInstance3D.new()
 		var rbm: BoxMesh = BoxMesh.new()
 		var w: float = _rng.randf_range(2.0, 5.0)
-		var h: float = _rng.randf_range(3.0, 8.0)
-		rbm.size = Vector3(w, h, _rng.randf_range(2.0, 4.0))
+		var h: float = _rng.randf_range(2.0, 6.0)
+		rbm.size = Vector3(w, h, _rng.randf_range(1.5, 3.0))
 		rock.mesh = rbm
 		var rmat: StandardMaterial3D = StandardMaterial3D.new()
 		rmat.albedo_color = Color(0.25 + _rng.randf() * 0.1, 0.38 + _rng.randf() * 0.12, 0.18 + _rng.randf() * 0.08)
 		rmat.roughness = 1.0
 		rock.material_override = rmat
-		rock.position = Vector3(_rng.randf_range(-15.0, 15.0), -4.0 - _rng.randf() * 3.0, -18.0 + _rng.randf_range(-3.0, 3.0))
+		rock.position = Vector3(_rng.randf_range(-20.0, 15.0), -2.0 - _rng.randf() * 5.0, -14.0 + _rng.randf_range(-2.0, 1.0))
 		rock.rotation.y = _rng.randf_range(-0.3, 0.3)
 		rock.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 		_world.add_child(rock)
@@ -233,7 +246,7 @@ func _build_ocean() -> void:
 		smat.roughness = 0.15 + depth_t * 0.2
 		smat.metallic = 0.3 - depth_t * 0.2
 		strip.material_override = smat
-		strip.position = Vector3(0.0, -3.5, -20.0 - float(i) * 5.0)
+		strip.position = Vector3(-5.0, -6.0, -16.0 - float(i) * 4.0)
 		strip.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 		_world.add_child(strip)
 		_wave_strips.append(strip)
@@ -245,7 +258,7 @@ func _build_ocean() -> void:
 	var spray: GPUParticles3D = GPUParticles3D.new()
 	spray.amount = 30
 	spray.lifetime = 2.5
-	spray.position = Vector3(0.0, -2.5, -19.0)
+	spray.position = Vector3(-5.0, -5.0, -15.0)
 
 	var spray_mat: ParticleProcessMaterial = ParticleProcessMaterial.new()
 	spray_mat.direction = Vector3(0.0, 1.0, 0.5)
@@ -279,7 +292,7 @@ func _build_ocean() -> void:
 	fmat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
 	fmat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
 	foam.material_override = fmat
-	foam.position = Vector3(0.0, -2.8, -19.5)
+	foam.position = Vector3(-5.0, -5.5, -15.0)
 	foam.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 	_world.add_child(foam)
 
@@ -441,15 +454,15 @@ func _build_tower() -> void:
 	stone_mat.albedo_color = Color(0.40, 0.38, 0.32)
 	stone_mat.roughness = 0.95
 
-	# Tower base — cylinder approximated with octagon boxes
-	for i in 5:
+	# Tower base — cylinder approximated with stacked blocks (taller)
+	for i in 7:
 		var block: MeshInstance3D = MeshInstance3D.new()
 		var bm: BoxMesh = BoxMesh.new()
 		var height_f: float = float(i)
-		bm.size = Vector3(2.5 - height_f * 0.2, 2.5, 2.5 - height_f * 0.2)
+		bm.size = Vector3(3.0 - height_f * 0.2, 3.0, 3.0 - height_f * 0.2)
 		block.mesh = bm
 		block.material_override = stone_mat
-		block.position = tower_pos + Vector3(0.0, height_f * 2.3, 0.0)
+		block.position = tower_pos + Vector3(0.0, height_f * 2.8, 0.0)
 		block.rotation.y = height_f * 0.15
 		block.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 		_world.add_child(block)
@@ -463,7 +476,7 @@ func _build_tower() -> void:
 	roof_mat.albedo_color = Color(0.30, 0.35, 0.25)
 	roof_mat.roughness = 1.0
 	roof.material_override = roof_mat
-	roof.position = tower_pos + Vector3(0.0, 13.0, 0.0)
+	roof.position = tower_pos + Vector3(0.0, 20.0, 0.0)
 	roof.rotation = Vector3(0.0, 0.3, 0.1)
 	roof.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 	_world.add_child(roof)
@@ -495,7 +508,7 @@ func _build_tower() -> void:
 	gem_mat.emission_energy_multiplier = 3.0
 	gem_mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
 	gem.material_override = gem_mat
-	gem.position = tower_pos + Vector3(0.0, 8.0, 1.3)
+	gem.position = tower_pos + Vector3(0.0, 12.0, 1.5)
 	gem.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 	_world.add_child(gem)
 
