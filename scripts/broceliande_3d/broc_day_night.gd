@@ -4,10 +4,10 @@ extends RefCounted
 
 var _sun: DirectionalLight3D
 var _env: WorldEnvironment
-var _time: float = 0.05  # Start just after dawn
+var _time: float = 0.15  # Start at late morning (good visibility)
 var _duration: float = 300.0  # 5 min = 1 full cycle
 var _paused: bool = false
-var _realtime_mode: bool = true  # Use system clock by default
+var _realtime_mode: bool = false  # Game time by default (not system clock)
 
 # Color stops for gradient interpolation
 const SUN_COLORS: Array[Color] = [
