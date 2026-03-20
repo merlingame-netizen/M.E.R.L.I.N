@@ -834,7 +834,7 @@ func _try_llm_generation() -> Dictionary:
 		print("[MOS] Total time cap hit before SEQ (%dms)" % (Time.get_ticks_msec() - start_time))
 		generation_failed.emit("total_timeout")
 		return {}
-	if llm_interface.has_method("generate_sequential") and not llm_interface.prompt_templates.get("sequential_card_full", {}).is_empty():
+	if llm_interface.has_method("generate_sequential") and not llm_interface.prompt_templates.get("sequential_card_full", {}).is_empty() and (Time.get_ticks_msec() - start_time) <= MAX_GENERATION_TOTAL_MS:
 		var seq_card := await _try_sequential_generation()
 		if not seq_card.is_empty():
 			seq_card["_strategy"] = "sequential"
