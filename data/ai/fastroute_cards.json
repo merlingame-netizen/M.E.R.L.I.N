@@ -232,6 +232,61 @@
 			"tags": ["foret", "animal", "danger"]
 		},
 		{
+			"id": "fr_broceliande_005",
+			"text": "Des champignons luminescents forment un cercle parfait au pied d'un vieux hetre. L'air vibre d'une energie ancienne.",
+			"biome": "foret_broceliande",
+			"options": [
+				{"label": "Entrer dans le cercle", "verb": "penetrer", "effects": [{"type": "ADD_REPUTATION", "faction": "druides", "amount": 10}, {"type": "DAMAGE_LIFE", "amount": 3}]},
+				{"label": "Cueillir un champignon", "verb": "cueillir", "effects": [{"type": "HEAL_LIFE", "amount": 8}]},
+				{"label": "Dessiner les runes au sol", "verb": "dechiffrer", "effects": [{"type": "ADD_REPUTATION", "faction": "anciens", "amount": 8}]}
+			],
+			"tags": ["foret", "mystere", "champignons"]
+		},
+		{
+			"id": "fr_broceliande_006",
+			"text": "Une fontaine mousseuse jaillit entre les racines d'un if centenaire. L'eau a une teinte doree etrange.",
+			"biome": "foret_broceliande",
+			"options": [
+				{"label": "Boire l'eau doree", "verb": "boire", "effects": [{"type": "HEAL_LIFE", "amount": 10}, {"type": "ADD_REPUTATION", "faction": "niamh", "amount": 5}]},
+				{"label": "Remplir ta gourde", "verb": "collecter", "effects": [{"type": "HEAL_LIFE", "amount": 5}]},
+				{"label": "Mediter pres de la source", "verb": "mediter", "effects": [{"type": "ADD_REPUTATION", "faction": "druides", "amount": 8}]}
+			],
+			"tags": ["foret", "eau", "guerison"]
+		},
+		{
+			"id": "fr_broceliande_007",
+			"text": "Un corbeau geant se pose sur ta route. Il croasse trois fois, puis depose une pierre noire polie a tes pieds.",
+			"biome": "foret_broceliande",
+			"options": [
+				{"label": "Ramasser la pierre", "verb": "prendre", "effects": [{"type": "ADD_REPUTATION", "faction": "ankou", "amount": 8}]},
+				{"label": "Parler au corbeau", "verb": "invoquer", "effects": [{"type": "ADD_REPUTATION", "faction": "korrigans", "amount": 5}, {"type": "ADD_REPUTATION", "faction": "anciens", "amount": 3}]},
+				{"label": "Laisser la pierre et reculer", "verb": "resister", "effects": [{"type": "HEAL_LIFE", "amount": 5}]}
+			],
+			"tags": ["foret", "animal", "corbeau", "mystere"]
+		},
+		{
+			"id": "fr_broceliande_008",
+			"text": "Le sentier s'enfonce dans un bosquet de bouleaux blancs. Des fils de soie scintillent entre les troncs comme un voile tisse par les fees.",
+			"biome": "foret_broceliande",
+			"options": [
+				{"label": "Traverser le voile", "verb": "traverser", "effects": [{"type": "ADD_REPUTATION", "faction": "niamh", "amount": 10}, {"type": "DAMAGE_LIFE", "amount": 5}]},
+				{"label": "Contourner le bosquet", "verb": "contourner", "effects": [{"type": "HEAL_LIFE", "amount": 3}]},
+				{"label": "Toucher les fils de soie", "verb": "toucher", "effects": [{"type": "ADD_REPUTATION", "faction": "korrigans", "amount": 8}]}
+			],
+			"tags": ["foret", "fees", "mystere"]
+		},
+		{
+			"id": "fr_broceliande_009",
+			"text": "Un feu de camp abandonne fume encore. Autour, des empreintes de pas nus menent vers le coeur de la foret.",
+			"biome": "foret_broceliande",
+			"options": [
+				{"label": "Suivre les empreintes", "verb": "traquer", "effects": [{"type": "ADD_REPUTATION", "faction": "ankou", "amount": 5}, {"type": "DAMAGE_LIFE", "amount": 2}]},
+				{"label": "Fouiller les cendres", "verb": "fouiller", "effects": [{"type": "ADD_REPUTATION", "faction": "anciens", "amount": 5}, {"type": "HEAL_LIFE", "amount": 3}]},
+				{"label": "Ranimer le feu", "verb": "creer", "effects": [{"type": "HEAL_LIFE", "amount": 8}]}
+			],
+			"tags": ["foret", "feu", "camp"]
+		},
+		{
 			"id": "fr_landes_002",
 			"text": "Un berger errant te hele depuis un promontoire rocheux. Son troupeau de moutons noirs broute les bruyeres alentour.",
 			"biome": "landes_bruyere",
