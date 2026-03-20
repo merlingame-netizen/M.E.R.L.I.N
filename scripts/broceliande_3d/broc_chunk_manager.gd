@@ -16,31 +16,33 @@ const BrocMultiMeshPool = preload("res://scripts/broceliande_3d/broc_multimesh_p
 
 const CHUNK_SIZE_Z: float = 30.0
 const CHUNK_SIZE_X: float = 30.0
-const CHUNKS_AHEAD: int = 2  # Reduced from 3 for GL Compat perf
+const CHUNKS_AHEAD: int = 3  # Extended for billboard distance coverage
 const CHUNKS_BEHIND: int = 1
 const UNLOAD_BEHIND: int = 2
 const BUILD_PER_FRAME: int = 4  # Chunk finalize ops per frame (fewer but heavier)
 
 ## Visibility range for all MultiMesh instances (LOD culling)
 ## begin = fade-in start, end = fade-out end (aggressive LOD for GL Compat perf)
-const VIS_RANGE_TREE: float = 28.0
-const VIS_RANGE_TREE_BEGIN: float = 0.0    # Trees always visible up close
-const VIS_RANGE_BUSH: float = 18.0
-const VIS_RANGE_BUSH_BEGIN: float = 2.0    # Bushes fade in at 2m (not underfoot)
+const VIS_RANGE_TREE: float = 40.0
+const VIS_RANGE_TREE_BEGIN: float = 0.0
+const VIS_RANGE_BUSH: float = 20.0
+const VIS_RANGE_BUSH_BEGIN: float = 2.0
 const VIS_RANGE_DETAIL: float = 10.0
 const VIS_RANGE_DETAIL_BEGIN: float = 1.0
 const VIS_RANGE_GRASS: float = 8.0
-const VIS_RANGE_CANOPY: float = 22.0       # Canopies slightly shorter than trees
+const VIS_RANGE_CANOPY: float = 30.0
+const VIS_RANGE_BILLBOARD: float = 60.0    # Far billboard impostors
+const VIS_RANGE_BILLBOARD_BEGIN: float = 35.0
 
 ## Zone density profiles x10: [trees, small_trees, bushes, detail_count, fog_density_add]
 const ZONE_DENSITY: Array[Array] = [
-	[60, 30, 50, 180, 0.0],     # Z0 Lisiere — open but lush (×1.5)
-	[120, 52, 80, 300, 0.005],  # Z1 Dense — closing canopy (×1.5)
-	[75, 30, 60, 240, 0.008],   # Z2 Dolmen — clearing + surround (×1.5)
-	[82, 42, 75, 330, 0.015],   # Z3 Mare — wet, lush undergrowth (×1.5)
-	[180, 82, 105, 450, 0.02],  # Z4 Profonde — maximum density (×1.5)
-	[97, 42, 75, 255, 0.01],    # Z5 Fontaine — filtered light (×1.5)
-	[97, 52, 82, 240, 0.008],   # Z6 Cercle — moderate (×1.5)
+	[100, 50, 80, 300, 0.0],    # Z0 Lisiere — open (×2.5)
+	[200, 90, 130, 500, 0.005], # Z1 Dense — thick canopy (×2.5)
+	[120, 50, 100, 400, 0.008], # Z2 Dolmen — clearing ring (×2.5)
+	[140, 70, 120, 550, 0.015], # Z3 Mare — wet lush (×2.5)
+	[300, 140, 180, 750, 0.02], # Z4 Profonde — ULTRA dense (×2.5)
+	[160, 70, 120, 420, 0.01],  # Z5 Fontaine — filtered (×2.5)
+	[160, 90, 140, 400, 0.008], # Z6 Cercle — moderate (×2.5)
 ]
 
 ## Detail type distribution (cumulative weights)
@@ -262,6 +264,19 @@ func _queue_chunk_build(ci: int) -> void:
 	if not canopy_xforms.is_empty():
 		transforms["_canopy"] = canopy_xforms
 
+	# Billboard impostors: far-field tree silhouettes (35-60m range)
+	var billboard_xforms: Array[Transform3D] = []
+	var billboard_count: int = int(float(density[0]) * 0.4)  # 40% of tree count as billboards
+	for _b in billboard_count:
+		var bpos: Vector3 = _random_pos(rng, z_range)
+		var bscale: float = rng.randf_range(3.0, 7.0)
+		var bt: Transform3D = Transform3D.IDENTITY
+		bt = bt.scaled(Vector3(bscale * 0.4, bscale, 0.1))
+		bt.origin = bpos + Vector3(0.0, bscale * 0.5, 0.0)
+		billboard_xforms.append(bt)
+	if not billboard_xforms.is_empty():
+		transforms["_billboard"] = billboard_xforms
+
 	# Collect pending keys for frame-budgeted finalization
 	var pending: Array[String] = []
 	for key: String in transforms:
@@ -298,6 +313,10 @@ func _process_build_queues() -> void:
 				var transforms: Dictionary = chunk["transforms"]
 				if transforms.has("_canopy"):
 					_spawn_canopy_spheres(container, transforms["_canopy"] as Array[Transform3D])
+			elif key == "_billboard":
+				var transforms: Dictionary = chunk["transforms"]
+				if transforms.has("_billboard"):
+					_spawn_billboard_trees(container, transforms["_billboard"] as Array[Transform3D])
 			else:
 				var transforms: Dictionary = chunk["transforms"]
 				if transforms.has(key):
@@ -338,9 +357,21 @@ func _collect_transforms(
 ) -> void:
 	if keys.is_empty():
 		return
+	# Tree clustering: 30% placed in tight groups for natural root-intertwined feel
+	var cluster_centers: Array[Vector3] = []
+	var cluster_count: int = maxi(1, int(count * 0.1))
+	for _c in cluster_count:
+		cluster_centers.append(_random_pos(rng, z_range))
+
 	for _i in count:
 		var key: String = keys[rng.randi_range(0, keys.size() - 1)]
-		var pos: Vector3 = _random_pos(rng, z_range)
+		var pos: Vector3
+		if rng.randf() < 0.3 and not cluster_centers.is_empty():
+			# Clustered: offset 1-3m from a cluster center
+			var center: Vector3 = cluster_centers[rng.randi_range(0, cluster_centers.size() - 1)]
+			pos = center + Vector3(rng.randf_range(-2.5, 2.5), 0.0, rng.randf_range(-2.5, 2.5))
+		else:
+			pos = _random_pos(rng, z_range)
 		if _is_on_path(pos, 3.0):
 			pos.x += sign(pos.x + 0.01) * 3.0 + rng.randf_range(1.0, 3.0)
 		var scale_f: float = rng.randf_range(scale_min, scale_max)
@@ -438,6 +469,42 @@ func _spawn_canopy_spheres(container: Node3D, xforms: Array[Transform3D]) -> voi
 	mmi.multimesh = mm
 	mmi.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 	mmi.visibility_range_end = VIS_RANGE_CANOPY
+	mmi.visibility_range_fade_mode = GeometryInstance3D.VISIBILITY_RANGE_FADE_SELF
+	container.add_child(mmi)
+
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# BILLBOARD IMPOSTORS (far-field tree silhouettes, 35-60m)
+# ═══════════════════════════════════════════════════════════════════════════════
+
+func _spawn_billboard_trees(container: Node3D, xforms: Array[Transform3D]) -> void:
+	if xforms.is_empty():
+		return
+	var quad: QuadMesh = QuadMesh.new()
+	quad.size = Vector2(1.0, 1.0)
+
+	var mat: StandardMaterial3D = StandardMaterial3D.new()
+	mat.albedo_color = _canopy_color * 1.2  # Slightly brighter than canopy for visibility
+	mat.roughness = 1.0
+	mat.billboard_mode = BaseMaterial3D.BILLBOARD_FIXED_Y
+	mat.cull_mode = BaseMaterial3D.CULL_DISABLED
+	mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA_SCISSOR
+	mat.alpha_scissor_threshold = 0.1
+	quad.material = mat
+
+	var mm: MultiMesh = MultiMesh.new()
+	mm.transform_format = MultiMesh.TRANSFORM_3D
+	mm.mesh = quad
+	mm.instance_count = xforms.size()
+
+	for i in xforms.size():
+		mm.set_instance_transform(i, xforms[i])
+
+	var mmi: MultiMeshInstance3D = MultiMeshInstance3D.new()
+	mmi.multimesh = mm
+	mmi.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	mmi.visibility_range_begin = VIS_RANGE_BILLBOARD_BEGIN
+	mmi.visibility_range_end = VIS_RANGE_BILLBOARD
 	mmi.visibility_range_fade_mode = GeometryInstance3D.VISIBILITY_RANGE_FADE_SELF
 	container.add_child(mmi)
 
