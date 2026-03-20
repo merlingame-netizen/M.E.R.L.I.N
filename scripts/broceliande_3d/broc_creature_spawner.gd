@@ -246,6 +246,20 @@ func _build_pixel_rig(creature_type: String) -> Node3D:
 	return root
 
 
+func get_active_creatures() -> Array:
+	var result: Array = []
+	for c: Dictionary in _active:
+		var node: Node3D = c.get("node") as Node3D
+		if not is_instance_valid(node):
+			continue
+		result.append({
+			"position": node.position,
+			"type": str(c.get("type", "")),
+			"state": str(c.get("state", "")),
+		})
+	return result
+
+
 func _set_creature_alpha(node: Node3D, alpha: float) -> void:
 	for child in node.get_children():
 		if child is MeshInstance3D:

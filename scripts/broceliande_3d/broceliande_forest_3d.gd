@@ -20,6 +20,7 @@ const WalkEventControllerClass = preload("res://scripts/broceliande_3d/walk_even
 const WalkEventOverlayClass = preload("res://scripts/ui/walk_event_overlay.gd")
 const WalkHudClass = preload("res://scripts/ui/walk_hud.gd")
 const BrocScreenVfxClass = preload("res://scripts/broceliande_3d/broc_screen_vfx.gd")
+const BrocFaunaBubbleClass = preload("res://scripts/broceliande_3d/broc_fauna_bubble.gd")
 const BrocCreatureSpawnerClass = preload("res://scripts/broceliande_3d/broc_creature_spawner.gd")
 const BrocNarrativeDirectorClass = preload("res://scripts/broceliande_3d/broc_narrative_director.gd")
 const ForestAssetSpawnerClass = preload("res://scripts/broceliande_3d/forest_asset_spawner.gd")
@@ -165,6 +166,7 @@ var _walk_event_controller: RefCounted  # WalkEventController
 var _event_vfx: RefCounted  # BrocEventVfx
 var _screen_vfx: RefCounted  # BrocScreenVfx
 var _creature_spawner: RefCounted  # BrocCreatureSpawner
+var _fauna_bubble: RefCounted  # BrocFaunaBubble
 var _narrative_director: RefCounted  # BrocNarrativeDirector
 var _gameplay_active: bool = false  # true when LLM event system is wired
 var _saved_crt_preset: String = "medium"
@@ -277,6 +279,10 @@ func _init_helpers() -> void:
 
 	# Billboard creatures
 	_creature_spawner = BrocCreatureSpawnerClass.new(forest_root)
+
+	# Fauna dialogue bubbles
+	_fauna_bubble = BrocFaunaBubbleClass.new()
+	_fauna_bubble.setup(self)
 
 	# VFX system (keyword → 3D effects) — must be created before NarrativeDirector
 	_event_vfx = BrocEventVfxClass.new(forest_root, world_env, sun_light)
@@ -491,6 +497,10 @@ func _physics_process(delta: float) -> void:
 			var t: float = _day_night.get_time()
 			is_night = t >= 0.55 and t < 0.95
 		_creature_spawner.update(delta, player.position, _current_zone, is_night)
+
+	# Fauna dialogue bubbles
+	if _fauna_bubble and _creature_spawner:
+		_fauna_bubble.update(delta, player_camera, _creature_spawner.get_active_creatures())
 
 	# Modulate particles by day/night
 	if _day_night:
