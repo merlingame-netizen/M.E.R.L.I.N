@@ -397,6 +397,17 @@
 			"tags": ["landes", "souterrain", "danger"]
 		},
 		{
+			"id": "fr_landes_007",
+			"text": "Une meute de chiens sauvages encercle un agneau egare. Leurs yeux jaunes te fixent, guettant ta reaction.",
+			"biome": "landes_bruyere",
+			"options": [
+				{"label": "Effrayer les chiens", "verb": "repousser", "effects": [{"type": "ADD_REPUTATION", "faction": "druides", "amount": 8}, {"type": "DAMAGE_LIFE", "amount": 3}]},
+				{"label": "Sauver l'agneau", "verb": "proteger", "effects": [{"type": "ADD_REPUTATION", "faction": "niamh", "amount": 10}]},
+				{"label": "Observer la nature a l'oeuvre", "verb": "observer", "effects": [{"type": "ADD_REPUTATION", "faction": "ankou", "amount": 5}, {"type": "HEAL_LIFE", "amount": 3}]}
+			],
+			"tags": ["landes", "animal", "danger"]
+		},
+		{
 			"id": "fr_cotes_004",
 			"text": "Une epave de navire celte est echouee dans une crique. Sa coque porte des gravures d'entrelacs encore intactes.",
 			"biome": "cotes_sauvages",
@@ -428,6 +439,17 @@
 				{"label": "Demander le sens du chant", "verb": "parler", "effects": [{"type": "ADD_REPUTATION", "faction": "druides", "amount": 8}]}
 			],
 			"tags": ["cotes", "pecheur", "chant"]
+		},
+		{
+			"id": "fr_cotes_007",
+			"text": "La tempete a depose des algues etranges sur la plage. Elles bougent encore, comme animees d'une volonte propre.",
+			"biome": "cotes_sauvages",
+			"options": [
+				{"label": "Examiner les algues", "verb": "examiner", "effects": [{"type": "ADD_REPUTATION", "faction": "korrigans", "amount": 8}]},
+				{"label": "Les rejeter a la mer", "verb": "repousser", "effects": [{"type": "ADD_REPUTATION", "faction": "druides", "amount": 5}, {"type": "HEAL_LIFE", "amount": 3}]},
+				{"label": "Les gouter", "verb": "tenter sa chance", "effects": [{"type": "HEAL_LIFE", "amount": 8}, {"type": "DAMAGE_LIFE", "amount": 3}]}
+			],
+			"tags": ["cotes", "tempete", "algues"]
 		},
 		{
 			"id": "fr_villages_002",
@@ -637,6 +659,17 @@
 				{"label": "Secouer l'arbre", "verb": "forcer un passage", "effects": [{"type": "ADD_BIOME_CURRENCY", "amount": 5}, {"type": "DAMAGE_LIFE", "amount": 3}]}
 			],
 			"tags": ["iles", "pommier", "vision"]
+		},
+		{
+			"id": "fr_iles_004",
+			"text": "Les vagues deposent un coffre de bois sculpte sur le rivage. Des entrelacs celtes ornent le couvercle, et il vibre au toucher.",
+			"biome": "iles_mystiques",
+			"options": [
+				{"label": "Ouvrir le coffre", "verb": "ouvrir", "effects": [{"type": "ADD_REPUTATION", "faction": "korrigans", "amount": 8}, {"type": "DAMAGE_LIFE", "amount": 3}]},
+				{"label": "Le remettre a la mer", "verb": "offrir", "effects": [{"type": "ADD_REPUTATION", "faction": "niamh", "amount": 10}]},
+				{"label": "Etudier les entrelacs", "verb": "dechiffrer", "effects": [{"type": "ADD_REPUTATION", "faction": "anciens", "amount": 8}]}
+			],
+			"tags": ["iles", "coffre", "tresor"]
 		},
 		{
 			"id": "arc_broceliande_01",
