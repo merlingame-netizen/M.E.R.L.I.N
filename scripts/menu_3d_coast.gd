@@ -18,6 +18,7 @@ var _ocean_time: float = 0.0
 var _floating_stones: Array[MeshInstance3D] = []
 var _floating_angles: Array[float] = []
 var _tower_pos: Vector3 = Vector3(2.0, 4.0, -12.0)
+var _wave_strips: Array[MeshInstance3D] = []
 
 # --- UI refs ---
 var _ui_layer: CanvasLayer
@@ -65,10 +66,15 @@ func _process(delta: float) -> void:
 	if _day_night:
 		_day_night.update(delta)
 
-	# Ocean wave animation
+	# Ocean wave strips animation — each strip bobs at different phase
 	_ocean_time += delta
-	if _ocean_mesh:
-		_ocean_mesh.position.y = sin(_ocean_time * 0.8) * 0.25 - 3.5
+	for i in _wave_strips.size():
+		if not is_instance_valid(_wave_strips[i]):
+			continue
+		var phase: float = float(i) * 0.6
+		var wave_y: float = sin(_ocean_time * 1.2 + phase) * 0.4 + sin(_ocean_time * 0.7 + phase * 1.5) * 0.2
+		_wave_strips[i].position.y = -3.5 + wave_y
+		_wave_strips[i].rotation.x = sin(_ocean_time * 0.9 + phase) * 0.05
 
 	# Floating stones orbit around tower
 	for i in _floating_stones.size():
@@ -108,9 +114,9 @@ func _build_3d_world() -> void:
 
 	# Camera — fixed view looking at cliff edge + ocean
 	_camera = Camera3D.new()
-	_camera.position = Vector3(0.0, 5.0, 8.0)
-	_camera.rotation_degrees = Vector3(-12.0, -5.0, 0.0)
-	_camera.fov = 60.0
+	_camera.position = Vector3(5.0, 6.0, 10.0)
+	_camera.rotation_degrees = Vector3(-10.0, -10.0, 0.0)
+	_camera.fov = 65.0
 	_camera.current = true
 	_camera.far = 200.0
 	_world.add_child(_camera)
@@ -211,30 +217,69 @@ func _build_cliff() -> void:
 
 
 func _build_ocean() -> void:
-	_ocean_mesh = MeshInstance3D.new()
-	var pm: PlaneMesh = PlaneMesh.new()
-	pm.size = Vector2(200.0, 200.0)
-	_ocean_mesh.mesh = pm
-	var mat: StandardMaterial3D = StandardMaterial3D.new()
-	mat.albedo_color = Color(0.10, 0.30, 0.45)  # Deep blue-teal like reference
-	mat.roughness = 0.2
-	mat.metallic = 0.3
-	_ocean_mesh.material_override = mat
-	_ocean_mesh.position = Vector3(0.0, -3.5, -40.0)
-	_ocean_mesh.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
-	_world.add_child(_ocean_mesh)
+	# Geometric wave strips — 20 rows of tilted boxes for faceted ocean look
+	var deep_color: Color = Color(0.06, 0.22, 0.40)
+	var mid_color: Color = Color(0.10, 0.32, 0.50)
+	var bright_color: Color = Color(0.15, 0.42, 0.55)
 
-	# Foam line at cliff base
+	for i in 20:
+		var strip: MeshInstance3D = MeshInstance3D.new()
+		var bm: BoxMesh = BoxMesh.new()
+		bm.size = Vector3(60.0, 0.4, 4.0)
+		strip.mesh = bm
+		var smat: StandardMaterial3D = StandardMaterial3D.new()
+		var depth_t: float = float(i) / 20.0
+		smat.albedo_color = deep_color.lerp(bright_color, 1.0 - depth_t)
+		smat.roughness = 0.15 + depth_t * 0.2
+		smat.metallic = 0.3 - depth_t * 0.2
+		strip.material_override = smat
+		strip.position = Vector3(0.0, -3.5, -20.0 - float(i) * 5.0)
+		strip.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+		_world.add_child(strip)
+		_wave_strips.append(strip)
+
+	# Keep _ocean_mesh for backward compat (first strip)
+	_ocean_mesh = _wave_strips[0] if not _wave_strips.is_empty() else null
+
+	# Foam/spray particles at cliff base
+	var spray: GPUParticles3D = GPUParticles3D.new()
+	spray.amount = 30
+	spray.lifetime = 2.5
+	spray.position = Vector3(0.0, -2.5, -19.0)
+
+	var spray_mat: ParticleProcessMaterial = ParticleProcessMaterial.new()
+	spray_mat.direction = Vector3(0.0, 1.0, 0.5)
+	spray_mat.spread = 60.0
+	spray_mat.initial_velocity_min = 1.0
+	spray_mat.initial_velocity_max = 3.0
+	spray_mat.gravity = Vector3(0.0, -3.0, 0.0)
+	spray_mat.scale_min = 0.08
+	spray_mat.scale_max = 0.25
+	spray_mat.color = Color(0.80, 0.85, 0.90, 0.5)
+	spray_mat.emission_shape = ParticleProcessMaterial.EMISSION_SHAPE_BOX
+	spray_mat.emission_box_extents = Vector3(15.0, 0.3, 1.0)
+	spray.process_material = spray_mat
+
+	var spray_mesh: SphereMesh = SphereMesh.new()
+	spray_mesh.radius = 0.1
+	spray_mesh.height = 0.2
+	spray_mesh.radial_segments = 4
+	spray_mesh.rings = 2
+	spray.draw_pass_1 = spray_mesh
+	spray.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	_world.add_child(spray)
+
+	# White foam line at cliff base
 	var foam: MeshInstance3D = MeshInstance3D.new()
 	var fbm: BoxMesh = BoxMesh.new()
-	fbm.size = Vector3(35.0, 0.3, 2.0)
+	fbm.size = Vector3(40.0, 0.5, 3.0)
 	foam.mesh = fbm
 	var fmat: StandardMaterial3D = StandardMaterial3D.new()
-	fmat.albedo_color = Color(0.70, 0.75, 0.80, 0.6)
+	fmat.albedo_color = Color(0.80, 0.85, 0.90, 0.5)
 	fmat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
 	fmat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
 	foam.material_override = fmat
-	foam.position = Vector3(0.0, -3.0, -19.0)
+	foam.position = Vector3(0.0, -2.8, -19.5)
 	foam.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 	_world.add_child(foam)
 
