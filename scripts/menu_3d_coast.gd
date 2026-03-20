@@ -15,6 +15,9 @@ var _sun: DirectionalLight3D
 var _day_night: RefCounted
 var _ocean_mesh: MeshInstance3D
 var _ocean_time: float = 0.0
+var _floating_stones: Array[MeshInstance3D] = []
+var _floating_angles: Array[float] = []
+var _tower_pos: Vector3 = Vector3(2.0, 4.0, -12.0)
 
 # --- UI refs ---
 var _ui_layer: CanvasLayer
@@ -65,7 +68,22 @@ func _process(delta: float) -> void:
 	# Ocean wave animation
 	_ocean_time += delta
 	if _ocean_mesh:
-		_ocean_mesh.position.y = sin(_ocean_time * 0.8) * 0.15 - 3.5
+		_ocean_mesh.position.y = sin(_ocean_time * 0.8) * 0.25 - 3.5
+
+	# Floating stones orbit around tower
+	for i in _floating_stones.size():
+		if i >= _floating_angles.size():
+			break
+		var stone: MeshInstance3D = _floating_stones[i]
+		if not is_instance_valid(stone):
+			continue
+		_floating_angles[i] += delta * (0.15 + float(i) * 0.02)
+		var angle: float = _floating_angles[i]
+		var radius: float = 3.0 + float(i % 4) * 0.8
+		var height: float = 8.0 + float(i % 3) * 3.0 + sin(_ocean_time * 0.5 + float(i)) * 0.5
+		stone.position = _tower_pos + Vector3(cos(angle) * radius, height, sin(angle) * radius)
+		stone.rotation.y = angle
+		stone.rotation.x = sin(_ocean_time * 0.3 + float(i) * 0.7) * 0.2
 
 	# Boot sequence
 	if _boot_phase:
@@ -282,9 +300,9 @@ func _build_cabin() -> void:
 
 
 func _build_cliff_grass() -> void:
-	# Sparse grass on cliff top
+	# Dense grass (500 quads)
 	var grass_mat: StandardMaterial3D = StandardMaterial3D.new()
-	grass_mat.albedo_color = Color(0.25, 0.35, 0.20)
+	grass_mat.albedo_color = Color(0.30, 0.50, 0.20)
 	grass_mat.roughness = 1.0
 	grass_mat.billboard_mode = BaseMaterial3D.BILLBOARD_FIXED_Y
 	grass_mat.cull_mode = BaseMaterial3D.CULL_DISABLED
@@ -292,20 +310,20 @@ func _build_cliff_grass() -> void:
 	var mm: MultiMesh = MultiMesh.new()
 	mm.transform_format = MultiMesh.TRANSFORM_3D
 	var qm: QuadMesh = QuadMesh.new()
-	qm.size = Vector2(0.3, 0.5)
+	qm.size = Vector2(0.4, 0.6)
 	qm.material = grass_mat
 	mm.mesh = qm
-	mm.instance_count = 200
+	mm.instance_count = 500
 
-	for i in 200:
+	for i in 500:
 		var t: Transform3D = Transform3D.IDENTITY
-		var scale_f: float = _rng.randf_range(0.6, 1.3)
+		var scale_f: float = _rng.randf_range(0.5, 1.5)
 		t = t.scaled(Vector3(scale_f, scale_f, scale_f))
 		t = t.rotated(Vector3.UP, _rng.randf_range(0.0, TAU))
 		t.origin = Vector3(
 			_rng.randf_range(-18.0, 18.0),
 			4.1,
-			_rng.randf_range(-15.0, 5.0)
+			_rng.randf_range(-18.0, 5.0)
 		)
 		mm.set_instance_transform(i, t)
 
@@ -313,6 +331,59 @@ func _build_cliff_grass() -> void:
 	mmi.multimesh = mm
 	mmi.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 	_world.add_child(mmi)
+
+	# Bushes (dark green spheres, 30 instances)
+	var bush_mat: StandardMaterial3D = StandardMaterial3D.new()
+	bush_mat.albedo_color = Color(0.15, 0.30, 0.10)
+	bush_mat.roughness = 1.0
+
+	var bush_mm: MultiMesh = MultiMesh.new()
+	bush_mm.transform_format = MultiMesh.TRANSFORM_3D
+	var bush_mesh: SphereMesh = SphereMesh.new()
+	bush_mesh.radius = 1.0
+	bush_mesh.height = 1.2
+	bush_mesh.radial_segments = 6
+	bush_mesh.rings = 3
+	bush_mesh.material = bush_mat
+	bush_mm.mesh = bush_mesh
+	bush_mm.instance_count = 30
+
+	for i in 30:
+		var bt: Transform3D = Transform3D.IDENTITY
+		var bs: float = _rng.randf_range(0.4, 1.2)
+		bt = bt.scaled(Vector3(bs, bs * 0.7, bs))
+		bt.origin = Vector3(
+			_rng.randf_range(-16.0, 16.0),
+			4.3,
+			_rng.randf_range(-16.0, 3.0)
+		)
+		bush_mm.set_instance_transform(i, bt)
+
+	var bush_mmi: MultiMeshInstance3D = MultiMeshInstance3D.new()
+	bush_mmi.multimesh = bush_mm
+	bush_mmi.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	_world.add_child(bush_mmi)
+
+	# Standing stones / menhirs (tall thin boxes, 8 instances)
+	var stone_mat: StandardMaterial3D = StandardMaterial3D.new()
+	stone_mat.albedo_color = Color(0.38, 0.40, 0.36)
+	stone_mat.roughness = 1.0
+
+	for i in 8:
+		var menhir: MeshInstance3D = MeshInstance3D.new()
+		var mbm: BoxMesh = BoxMesh.new()
+		var mh: float = _rng.randf_range(1.5, 4.0)
+		mbm.size = Vector3(0.5, mh, 0.4)
+		menhir.mesh = mbm
+		menhir.material_override = stone_mat
+		menhir.position = Vector3(
+			_rng.randf_range(-15.0, -5.0),
+			4.0 + mh * 0.5,
+			_rng.randf_range(-12.0, 0.0)
+		)
+		menhir.rotation = Vector3(_rng.randf_range(-0.1, 0.1), _rng.randf_range(0.0, TAU), _rng.randf_range(-0.05, 0.05))
+		menhir.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+		_world.add_child(menhir)
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
@@ -352,20 +423,17 @@ func _build_tower() -> void:
 	roof.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 	_world.add_child(roof)
 
-	# Floating stones around tower (ruined/magical)
-	for i in 12:
+	# Floating stones around tower (animated orbit in _process)
+	for i in 15:
 		var stone: MeshInstance3D = MeshInstance3D.new()
 		var sbm: BoxMesh = BoxMesh.new()
-		sbm.size = Vector3(_rng.randf_range(0.3, 1.0), _rng.randf_range(0.3, 0.8), _rng.randf_range(0.3, 1.0))
+		sbm.size = Vector3(_rng.randf_range(0.3, 1.2), _rng.randf_range(0.3, 1.0), _rng.randf_range(0.3, 1.2))
 		stone.mesh = sbm
 		stone.material_override = stone_mat
-		var angle: float = float(i) * TAU / 12.0
-		var radius: float = _rng.randf_range(2.5, 5.0)
-		var height: float = _rng.randf_range(6.0, 16.0)
-		stone.position = tower_pos + Vector3(cos(angle) * radius, height, sin(angle) * radius)
-		stone.rotation = Vector3(_rng.randf_range(-0.5, 0.5), _rng.randf_range(0.0, TAU), _rng.randf_range(-0.3, 0.3))
 		stone.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 		_world.add_child(stone)
+		_floating_stones.append(stone)
+		_floating_angles.append(float(i) * TAU / 15.0)
 
 	# Glowing window (green gem)
 	var gem: MeshInstance3D = MeshInstance3D.new()
