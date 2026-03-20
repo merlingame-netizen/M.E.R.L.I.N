@@ -16,16 +16,21 @@ const BrocMultiMeshPool = preload("res://scripts/broceliande_3d/broc_multimesh_p
 
 const CHUNK_SIZE_Z: float = 30.0
 const CHUNK_SIZE_X: float = 30.0
-const CHUNKS_AHEAD: int = 3
+const CHUNKS_AHEAD: int = 2  # Reduced from 3 for GL Compat perf
 const CHUNKS_BEHIND: int = 1
 const UNLOAD_BEHIND: int = 2
 const BUILD_PER_FRAME: int = 4  # Chunk finalize ops per frame (fewer but heavier)
 
-## Visibility range for all MultiMesh instances (fog-of-war culling)
-const VIS_RANGE_TREE: float = 25.0
+## Visibility range for all MultiMesh instances (LOD culling)
+## begin = fade-in start, end = fade-out end (aggressive LOD for GL Compat perf)
+const VIS_RANGE_TREE: float = 28.0
+const VIS_RANGE_TREE_BEGIN: float = 0.0    # Trees always visible up close
 const VIS_RANGE_BUSH: float = 18.0
-const VIS_RANGE_DETAIL: float = 12.0
-const VIS_RANGE_GRASS: float = 10.0
+const VIS_RANGE_BUSH_BEGIN: float = 2.0    # Bushes fade in at 2m (not underfoot)
+const VIS_RANGE_DETAIL: float = 10.0
+const VIS_RANGE_DETAIL_BEGIN: float = 1.0
+const VIS_RANGE_GRASS: float = 8.0
+const VIS_RANGE_CANOPY: float = 22.0       # Canopies slightly shorter than trees
 
 ## Zone density profiles x10: [trees, small_trees, bushes, detail_count, fog_density_add]
 const ZONE_DENSITY: Array[Array] = [
@@ -286,7 +291,7 @@ func _process_build_queues() -> void:
 			if key == "_grass_carpet":
 				var zone_idx: int = int(chunk.get("_zone_idx", 0))
 				var density: Array = ZONE_DENSITY[zone_idx] if zone_idx < ZONE_DENSITY.size() else ZONE_DENSITY[0]
-				var grass_count: int = int(float(density[3]) * 2.0 * _density_mult)
+				var grass_count: int = int(float(density[3]) * 1.2 * _density_mult)
 				var z_range: Vector2 = chunk["_z_range"] as Vector2
 				_spawn_multimesh_grass(container, rng, z_range, grass_count)
 			elif key == "_canopy":
@@ -387,12 +392,15 @@ func _finalize_multimesh(container: Node3D, key: String, xforms: Array[Transform
 	if mat:
 		mmi.material_override = mat
 
-	# Visibility range based on type
+	# LOD visibility ranges — aggressive culling for GL Compat perf
 	if key.begins_with("tree"):
+		mmi.visibility_range_begin = VIS_RANGE_TREE_BEGIN
 		mmi.visibility_range_end = VIS_RANGE_TREE
 	elif key.begins_with("bush"):
+		mmi.visibility_range_begin = VIS_RANGE_BUSH_BEGIN
 		mmi.visibility_range_end = VIS_RANGE_BUSH
 	else:
+		mmi.visibility_range_begin = VIS_RANGE_DETAIL_BEGIN
 		mmi.visibility_range_end = VIS_RANGE_DETAIL
 	mmi.visibility_range_fade_mode = GeometryInstance3D.VISIBILITY_RANGE_FADE_SELF
 
@@ -429,7 +437,7 @@ func _spawn_canopy_spheres(container: Node3D, xforms: Array[Transform3D]) -> voi
 	var mmi: MultiMeshInstance3D = MultiMeshInstance3D.new()
 	mmi.multimesh = mm
 	mmi.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
-	mmi.visibility_range_end = VIS_RANGE_TREE
+	mmi.visibility_range_end = VIS_RANGE_CANOPY
 	mmi.visibility_range_fade_mode = GeometryInstance3D.VISIBILITY_RANGE_FADE_SELF
 	container.add_child(mmi)
 
@@ -522,7 +530,7 @@ func _build_chunk_full(ci: int) -> void:
 		if key == "_grass_carpet":
 			var zone_idx: int = int(chunk.get("_zone_idx", 0))
 			var density: Array = ZONE_DENSITY[zone_idx] if zone_idx < ZONE_DENSITY.size() else ZONE_DENSITY[0]
-			var grass_count: int = int(float(density[3]) * 2.0 * _density_mult)
+			var grass_count: int = int(float(density[3]) * 1.2 * _density_mult)
 			var z_range: Vector2 = chunk["_z_range"] as Vector2
 			_spawn_multimesh_grass(container, rng, z_range, grass_count)
 		else:
