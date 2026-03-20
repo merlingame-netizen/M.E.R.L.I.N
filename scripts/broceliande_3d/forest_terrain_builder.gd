@@ -32,7 +32,7 @@ func set_biome_config(biome_key: String) -> void:
 
 
 func _get_terrain_color() -> Color:
-	return _biome_config.get("terrain_color", Color(0.12, 0.22, 0.10))
+	return _biome_config.get("terrain_color", Color(0.22, 0.35, 0.18))
 
 
 func build_ground() -> void:
@@ -63,7 +63,7 @@ func build_ground() -> void:
 func build_path_terrain() -> void:
 	# Organic path: variable width, terre+racines base
 	var dirt_mat: StandardMaterial3D = StandardMaterial3D.new()
-	dirt_mat.albedo_color = Color(0.28, 0.20, 0.11)
+	dirt_mat.albedo_color = Color(0.40, 0.30, 0.18)
 	dirt_mat.roughness = 0.95
 
 	var root_mat: StandardMaterial3D = StandardMaterial3D.new()

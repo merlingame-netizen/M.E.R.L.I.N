@@ -186,16 +186,16 @@ var _zone_names: Array[String] = [
 func _ready() -> void:
 	_rng.randomize()
 	_gravity = float(ProjectSettings.get_setting("physics/3d/default_gravity", 9.8))
-	# Hide CRT post-process entirely (screen_texture incompatible with SubViewport in GL Compat)
-	var crt_layer: Node = get_node_or_null("/root/ScreenDither")
-	if crt_layer:
-		_crt_was_visible = crt_layer.visible
-		if crt_layer.has_method("get_crt_preset"):
-			_saved_crt_preset = crt_layer.get_crt_preset()
-		if crt_layer.has_method("set_crt_preset"):
-			crt_layer.set_crt_preset("off")
-		if crt_layer.has_method("set_enabled"):
-			crt_layer.set_enabled(false)
+	# Disable ALL autoload CanvasLayers — hint_screen_texture breaks 3D in GL Compatibility
+	for child in get_tree().root.get_children():
+		if child is CanvasLayer:
+			if child.has_method("get_crt_preset"):
+				_saved_crt_preset = child.get_crt_preset()
+			_crt_was_visible = child.visible
+			child.visible = false
+			for sub in child.get_children():
+				sub.queue_free()
+			print("[Broceliande] Disabled autoload CanvasLayer: %s" % child.name)
 	_asset_spawner = ForestAssetSpawnerClass.new(forest_root, _rng)
 	_asset_spawner.load_assets(TREE_MODELS, BUSH_MODELS, SPECIAL_TREES, DETAIL_MODELS, BROC_ASSETS)
 	_ensure_actions()
@@ -307,7 +307,7 @@ func _find_store() -> Node:
 
 
 func _spawn_diag_box() -> void:
-	pass  # Diagnostic removed
+	pass  # Diagnostic removed — 3D rendering confirmed working
 
 
 func _notification(_what: int) -> void:
@@ -518,23 +518,23 @@ func _setup_environment() -> void:
 	# GL Compatibility: ProceduralSkyMaterial renders white regardless of BG_COLOR mode.
 	# Remove sky entirely — ambient light comes from AMBIENT_SOURCE_COLOR below.
 	env.background_mode = Environment.BG_COLOR
-	env.background_color = Color(0.05, 0.12, 0.05)  # Deep forest canopy — near-black green
+	env.background_color = Color(0.30, 0.40, 0.28)  # Forest canopy — muted green
 
-	# Ambient — brighter, warmer
+	# Ambient — strong enough to light dark CRT-style materials
 	env.ambient_light_source = Environment.AMBIENT_SOURCE_COLOR
-	env.ambient_light_color = Color(0.45, 0.55, 0.40)
-	env.ambient_light_energy = 0.7
+	env.ambient_light_color = Color(0.55, 0.65, 0.45)
+	env.ambient_light_energy = 0.9
 
-	# Fog — dense forest mist (fog of war effect)
+	# Fog — forest mist
 	env.fog_enabled = true
 	env.fog_light_color = Color(0.35, 0.45, 0.32)
-	env.fog_density = 0.025
+	env.fog_density = 0.018
 	# fog_aerial_perspective not supported in GL Compatibility — skip
 
 	# Tonemap
 	env.tonemap_mode = Environment.TONE_MAPPER_FILMIC
-	env.tonemap_white = 8.0
-	env.tonemap_exposure = 1.2
+	env.tonemap_white = 6.0
+	env.tonemap_exposure = 1.4
 
 	# Glow, SSAO — not supported in GL Compatibility, omitted
 	# env.ssao_enabled = true
@@ -544,7 +544,7 @@ func _setup_environment() -> void:
 	# Sun — warm filtered light
 	sun_light.rotation_degrees = Vector3(-45.0, -25.0, 0.0)
 	sun_light.light_color = Color(0.85, 0.80, 0.60)
-	sun_light.light_energy = 1.6
+	sun_light.light_energy = 1.8
 	sun_light.shadow_enabled = true
 	sun_light.shadow_bias = 0.02
 	sun_light.shadow_normal_bias = 1.0
@@ -553,7 +553,7 @@ func _setup_environment() -> void:
 	var fill: DirectionalLight3D = DirectionalLight3D.new()
 	fill.rotation_degrees = Vector3(30.0, 160.0, 0.0)
 	fill.light_color = Color(0.40, 0.55, 0.65)
-	fill.light_energy = 0.35
+	fill.light_energy = 0.5
 	fill.shadow_enabled = false
 	world_root.add_child(fill)
 

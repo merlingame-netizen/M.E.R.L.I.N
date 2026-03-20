@@ -5,7 +5,7 @@
 
 extends Node
 
-const SETTLE_SECONDS := 2.0
+const SETTLE_SECONDS := 5.0
 const FALLBACK_OUTPUT := "user://screenshot.png"
 
 var _target_scene_path: String = ""
@@ -34,6 +34,15 @@ func _ready() -> void:
 	var instance: Node = packed.instantiate()
 	add_child(instance)
 
+	# Ensure any Camera3D in the scene is active
+	await get_tree().process_frame
+	var cam: Camera3D = _find_camera(instance)
+	if cam:
+		cam.make_current()
+		print("[SCREENSHOT] Camera found: %s — made current" % cam.get_path())
+	else:
+		print("[SCREENSHOT] WARNING: No Camera3D found in scene")
+
 	# Wait for scene to settle (animations, shaders, layout)
 	await get_tree().create_timer(SETTLE_SECONDS).timeout
 
@@ -42,7 +51,9 @@ func _ready() -> void:
 
 
 func _capture_and_save() -> void:
-	# Wait for frame to finish drawing
+	# Wait multiple frames to ensure 3D rendering is flushed to viewport texture
+	for i in 3:
+		await get_tree().process_frame
 	await RenderingServer.frame_post_draw
 
 	var viewport: Viewport = get_viewport()
@@ -121,3 +132,13 @@ func _write_result(status: String, error_msg: String = "",
 	if f:
 		f.store_string(JSON.stringify(result, "\t"))
 		f.close()
+
+
+func _find_camera(node: Node) -> Camera3D:
+	if node is Camera3D:
+		return node as Camera3D
+	for child in node.get_children():
+		var found: Camera3D = _find_camera(child)
+		if found:
+			return found
+	return null

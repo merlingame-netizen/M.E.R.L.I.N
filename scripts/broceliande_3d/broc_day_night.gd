@@ -25,15 +25,15 @@ const FOG_COLORS: Array[Color] = [
 ]
 
 const SKY_COLORS: Array[Color] = [
-	Color(0.55, 0.45, 0.35),  # dawn
-	Color(0.50, 0.58, 0.52),  # noon
-	Color(0.45, 0.30, 0.28),  # dusk
-	Color(0.03, 0.04, 0.08),  # midnight
+	Color(0.45, 0.40, 0.30),  # dawn — warm amber canopy
+	Color(0.35, 0.45, 0.32),  # noon — forest green filtered light
+	Color(0.38, 0.28, 0.22),  # dusk — warm brown canopy
+	Color(0.04, 0.06, 0.10),  # midnight — near black
 ]
 
-const SUN_ENERGY_STOPS: Array[float] = [0.6, 1.5, 0.5, 0.05]
-const SUN_PITCH_STOPS: Array[float] = [-15.0, -75.0, -165.0, -195.0]
-const AMBIENT_ENERGY_STOPS: Array[float] = [0.4, 0.7, 0.35, 0.12]
+const SUN_ENERGY_STOPS: Array[float] = [0.8, 1.8, 0.6, 0.05]
+const SUN_PITCH_STOPS: Array[float] = [-15.0, -60.0, -165.0, -195.0]
+const AMBIENT_ENERGY_STOPS: Array[float] = [0.5, 1.0, 0.4, 0.15]
 
 
 func _init(sun: DirectionalLight3D, env: WorldEnvironment) -> void:
