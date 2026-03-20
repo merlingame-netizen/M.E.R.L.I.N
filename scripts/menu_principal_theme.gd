@@ -175,6 +175,42 @@ func _style_menu_buttons(main_buttons: VBoxContainer) -> void:
 						btn.add_theme_font_override("font", _body_font)
 					btn.add_theme_font_size_override("font_size", 22)
 					btn.add_theme_color_override("font_color", MerlinVisual.CRT_PALETTE.phosphor)
+			_connect_scale_animations(btn)
+
+
+# ---------------------------------------------------------------------------
+# Scale animations (hover / press)
+# ---------------------------------------------------------------------------
+
+func _connect_scale_animations(btn: Button) -> void:
+	# Defer pivot setup until the button has its final size
+	btn.resized.connect(func() -> void:
+		btn.pivot_offset = btn.size * 0.5
+	)
+	# Also set it now in case size is already valid
+	if btn.size != Vector2.ZERO:
+		btn.pivot_offset = btn.size * 0.5
+
+	btn.mouse_entered.connect(func() -> void:
+		_tween_scale(btn, Vector2(1.05, 1.05), 0.15)
+	)
+	btn.mouse_exited.connect(func() -> void:
+		_tween_scale(btn, Vector2.ONE, 0.12)
+	)
+	btn.button_down.connect(func() -> void:
+		_tween_scale(btn, Vector2(0.95, 0.95), 0.06)
+	)
+	btn.button_up.connect(func() -> void:
+		_tween_scale(btn, Vector2(1.05, 1.05), 0.08)
+	)
+
+
+func _tween_scale(btn: Button, target: Vector2, duration: float) -> void:
+	# Ensure pivot stays centred before animating
+	btn.pivot_offset = btn.size * 0.5
+	var t: Tween = btn.create_tween()
+	t.tween_property(btn, "scale", target, duration) \
+		.set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
 
 
 func _apply_corner_button_style(btn: Button) -> void:

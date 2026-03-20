@@ -29,13 +29,13 @@ const VIS_RANGE_GRASS: float = 10.0
 
 ## Zone density profiles x10: [trees, small_trees, bushes, detail_count, fog_density_add]
 const ZONE_DENSITY: Array[Array] = [
-	[40, 20, 35, 120, 0.0],     # Z0 Lisiere — open but lush
-	[80, 35, 55, 200, 0.005],   # Z1 Dense — closing canopy
-	[50, 20, 40, 160, 0.008],   # Z2 Dolmen — clearing + surround
-	[55, 28, 50, 220, 0.015],   # Z3 Mare — wet, lush undergrowth
-	[120, 55, 70, 300, 0.02],   # Z4 Profonde — maximum density
-	[65, 28, 50, 170, 0.01],    # Z5 Fontaine — filtered light
-	[65, 35, 55, 160, 0.008],   # Z6 Cercle — moderate
+	[60, 30, 50, 180, 0.0],     # Z0 Lisiere — open but lush (×1.5)
+	[120, 52, 80, 300, 0.005],  # Z1 Dense — closing canopy (×1.5)
+	[75, 30, 60, 240, 0.008],   # Z2 Dolmen — clearing + surround (×1.5)
+	[82, 42, 75, 330, 0.015],   # Z3 Mare — wet, lush undergrowth (×1.5)
+	[180, 82, 105, 450, 0.02],  # Z4 Profonde — maximum density (×1.5)
+	[97, 42, 75, 255, 0.01],    # Z5 Fontaine — filtered light (×1.5)
+	[97, 52, 82, 240, 0.008],   # Z6 Cercle — moderate (×1.5)
 ]
 
 ## Detail type distribution (cumulative weights)

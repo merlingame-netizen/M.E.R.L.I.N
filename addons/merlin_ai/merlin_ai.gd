@@ -94,7 +94,7 @@ const TASK_BALANCE := "balance"
 const TASK_PRIORITIES := {"prefetch": 0, "voice": 1, "balance": 2}
 const BG_QUEUE_MAX_SIZE := 100      # Max pending tasks (prevents OOM)
 const BG_TASK_TIMEOUT_MS := 30000   # 30s timeout for stuck bg tasks
-const LLM_POLL_TIMEOUT_MS := 45000         # 45s — Qwen 1.5B: ~7s warm, 15s worst case
+const LLM_POLL_TIMEOUT_MS := 15000         # 15s — FastRoute fallback kicks in faster
 const LLM_POLL_TIMEOUT_FIRST_MS := 90000   # 90s — cold start loads 1GB model into RAM
 var _first_generation_done := false
 
