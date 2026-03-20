@@ -17,7 +17,7 @@ enum Tier { SINGLE = 1, DUAL = 2, SLIM = 3, FULL = 4 }
 # ── Timeouts per model type (ms) ─────────────────────────────────────────────
 const TIMEOUT_SMALL_MS := 30000   # BitNet-2B4T: 30s
 const TIMEOUT_LARGE_MS := 60000   # Falcon3-7B: 60s
-const TIMEOUT_DEFAULT_MS := 15000
+const TIMEOUT_DEFAULT_MS := 25000
 
 # ── Brain Registration ────────────────────────────────────────────────────────
 # Each brain slot: {llm: Object, role: String, busy: bool, busy_since: int,
