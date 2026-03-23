@@ -608,8 +608,8 @@ def build_crystals():
 
     clusters = [
         # (center_x, center_y, center_z, count, color, name_prefix)
-        (12, -8, 8.0, 5, C_CRYSTAL_PURPLE, "Purple"),
-        (8, -10, 7.0, 4, C_CRYSTAL_TEAL, "Teal"),
+        (10, -10, 9.5, 5, C_CRYSTAL_PURPLE, "Purple"),
+        (6, -12, 9.0, 4, C_CRYSTAL_TEAL, "Teal"),
     ]
 
     for cx, cy, cz, count, color, prefix in clusters:
@@ -758,7 +758,7 @@ def build_ocean():
     """Simple geometric ocean plane for Blender preview.
     Low subdivisions for visible triangle facets, lighter foam near cliff."""
     bpy.ops.mesh.primitive_grid_add(
-        x_subdivisions=12, y_subdivisions=8, size=1, location=(0, -35, -1.5)
+        x_subdivisions=8, y_subdivisions=5, size=1, location=(0, -35, -1.5)
     )
     ocean = bpy.context.active_object
     ocean.name = "OceanPreview"
@@ -897,10 +897,10 @@ def build_vegetation():
     bsdf.inputs["Base Color"].default_value = (0.35, 0.58, 0.20, 1.0)
     bsdf.inputs["Roughness"].default_value = 0.85
 
-    # 30 bushes on plateau
-    for i in range(30):
+    # 50 bushes on plateau
+    for i in range(50):
         bpy.ops.mesh.primitive_ico_sphere_add(
-            subdivisions=1, radius=random.uniform(0.5, 1.2),
+            subdivisions=1, radius=random.uniform(0.8, 1.8),
             location=(random.uniform(-20, 12), random.uniform(-5, 8), 9.0 + random.uniform(0, 0.5))
         )
         bush = bpy.context.active_object
@@ -921,6 +921,27 @@ def build_vegetation():
         grass.data.materials.clear()
         grass.data.materials.append(veg_mat)
 
+    # 8 trees
+    tree_trunk_mat = bpy.data.materials.new("TreeTrunk")
+    tree_trunk_mat.use_nodes = True
+    tree_trunk_mat.node_tree.nodes["Principled BSDF"].inputs["Base Color"].default_value = (0.35, 0.28, 0.18, 1.0)
+
+    for i in range(8):
+        tx = random.uniform(-18, 10)
+        ty = random.uniform(-4, 7)
+        # Trunk
+        bpy.ops.mesh.primitive_cylinder_add(vertices=6, radius=0.15, depth=2.0, location=(tx, ty, 10.0))
+        trunk = bpy.context.active_object
+        trunk.data.materials.clear()
+        trunk.data.materials.append(tree_trunk_mat)
+        # Canopy
+        bpy.ops.mesh.primitive_ico_sphere_add(subdivisions=1, radius=random.uniform(1.0, 1.8), location=(tx, ty, 11.5))
+        canopy = bpy.context.active_object
+        canopy.scale.z = 0.7
+        shade_flat(canopy)
+        canopy.data.materials.clear()
+        canopy.data.materials.append(veg_mat)
+
 
 def build_foam():
     """White spray where ocean meets cliff."""
@@ -930,10 +951,10 @@ def build_foam():
     bsdf.inputs["Base Color"].default_value = (0.85, 0.90, 0.95, 1.0)
     bsdf.inputs["Roughness"].default_value = 1.0
 
-    for i in range(25):
+    for i in range(40):
         bpy.ops.mesh.primitive_ico_sphere_add(
-            subdivisions=0, radius=random.uniform(0.2, 0.8),
-            location=(random.uniform(-20, 18), random.uniform(-18, -14), random.uniform(-1, 0.5))
+            subdivisions=0, radius=random.uniform(0.3, 1.2),
+            location=(random.uniform(-20, 18), random.uniform(-18, -14), random.uniform(-1, 1.5))
         )
         foam = bpy.context.active_object
         foam.name = f"Foam_{i}"
@@ -941,6 +962,52 @@ def build_foam():
         shade_flat(foam)
         foam.data.materials.clear()
         foam.data.materials.append(foam_mat)
+
+
+def build_floating_debris():
+    """Floating stone fragments around the tower — preview only."""
+    debris_mat = bpy.data.materials.new("DebrisMat")
+    debris_mat.use_nodes = True
+    bsdf = debris_mat.node_tree.nodes["Principled BSDF"]
+    bsdf.inputs["Base Color"].default_value = (0.38, 0.35, 0.30, 1.0)
+    bsdf.inputs["Roughness"].default_value = 0.9
+
+    tower_x, tower_y = 15, -5
+    for i in range(15):
+        angle = random.uniform(0, math.tau)
+        dist = random.uniform(5, 10)
+        h = random.uniform(12, 28)
+        size = random.uniform(0.3, 1.0)
+        bpy.ops.mesh.primitive_cube_add(size=size, location=(
+            tower_x + math.cos(angle) * dist,
+            tower_y + math.sin(angle) * dist,
+            h
+        ))
+        d = bpy.context.active_object
+        d.name = f"Debris_{i}"
+        d.rotation_euler = (random.uniform(0, 1), random.uniform(0, 1), random.uniform(0, 1))
+        shade_flat(d)
+        d.data.materials.clear()
+        d.data.materials.append(debris_mat)
+
+
+def build_magic_orbs():
+    """2 dark magical orbs flanking the tower."""
+    orb_mat = bpy.data.materials.new("OrbMat")
+    orb_mat.use_nodes = True
+    bsdf = orb_mat.node_tree.nodes["Principled BSDF"]
+    bsdf.inputs["Base Color"].default_value = (0.15, 0.05, 0.25, 1.0)
+    bsdf.inputs["Emission Color"].default_value = (0.30, 0.10, 0.50, 1.0)
+    bsdf.inputs["Emission Strength"].default_value = 3.0
+
+    tower_x, tower_y = 15, -5
+    for i, (dx, dz) in enumerate([(-6, 18), (7, 16)]):
+        bpy.ops.mesh.primitive_uv_sphere_add(segments=12, ring_count=8, radius=1.2,
+            location=(tower_x + dx, tower_y, dz))
+        orb = bpy.context.active_object
+        orb.name = f"MagicOrb_{i}"
+        orb.data.materials.clear()
+        orb.data.materials.append(orb_mat)
 
 
 # =============================================================================
@@ -1039,6 +1106,12 @@ def main():
 
     print("[MENU SCENE v4] Building foam spray (preview only)...")
     build_foam()
+
+    print("[MENU SCENE v4] Building floating debris (preview only)...")
+    build_floating_debris()
+
+    print("[MENU SCENE v4] Building magic orbs (preview only)...")
+    build_magic_orbs()
 
     # Preview setup (Blender only)
     setup_camera()
