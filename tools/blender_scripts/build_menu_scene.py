@@ -146,83 +146,176 @@ def export_glb(obj_or_list, filename):
 # =============================================================================
 
 def build_cliff():
-    """Single mesh: displaced grid + 15 outcrops, vertex painted.
-    Green plateau top, brown cliff face, dark base."""
+    """Multi-layered cliff: main plateau + 3 terraces + cliff faces +
+    overhangs + outcrops + menhirs. Vertex painted by height zone."""
     from mathutils import noise as mn
 
-    # Main terrain grid
+    all_parts = []
+
+    # === MAIN PLATEAU (highest, flat green top) ===
     bpy.ops.mesh.primitive_grid_add(
-        x_subdivisions=40, y_subdivisions=30, size=1, location=(0, 0, 0)
+        x_subdivisions=35, y_subdivisions=25, size=1, location=(0, 2, 0)
     )
-    terrain = bpy.context.active_object
-    terrain.name = "Cliff"
-    terrain.scale = (70, 55, 1)
+    plateau = bpy.context.active_object
+    plateau.name = "Plateau"
+    plateau.scale = (65, 40, 1)
     bpy.ops.object.transform_apply(scale=True)
 
-    # Displace vertices for organic cliff shape
-    for v in terrain.data.vertices:
-        x_n = v.co.x / 70
-        y_n = v.co.y / 55
-        if y_n > -0.15:
-            # Plateau top
-            h = 9.0 + mn.noise(Vector((x_n * 3, y_n * 3, 0))) * 1.5
-        elif y_n > -0.30:
-            # Cliff face transition
-            t = (y_n + 0.30) / 0.15
-            h = t * 9.0 + mn.noise(Vector((x_n * 6, y_n * 12, 1))) * 3.0
-            h = max(0, h)
-        else:
-            # Beach/base
-            h = -0.5 + mn.noise(Vector((x_n * 4, y_n * 4, 0))) * 0.3
-        v.co.z = h
+    for v in plateau.data.vertices:
+        x_n = v.co.x / 65
+        y_n = v.co.y / 40
+        h = 9.0 + mn.noise(Vector((x_n * 4, y_n * 4, 0))) * 1.0
+        # Taper edges down
+        edge_drop = min(abs(x_n) - 0.4, 0) * 5.0
+        h += edge_drop
+        v.co.z = max(h, 7.5)
+    all_parts.append(plateau)
 
-    # Rock outcrops along cliff face
-    outcrop_objects = []
-    for i in range(15):
+    # === TERRACE 1 (mid-height, extends forward) ===
+    bpy.ops.mesh.primitive_grid_add(
+        x_subdivisions=20, y_subdivisions=15, size=1, location=(8, -8, 0)
+    )
+    t1 = bpy.context.active_object
+    t1.name = "Terrace1"
+    t1.scale = (30, 18, 1)
+    bpy.ops.object.transform_apply(scale=True)
+    for v in t1.data.vertices:
+        x_n = v.co.x / 30
+        y_n = v.co.y / 18
+        h = 6.0 + mn.noise(Vector((x_n * 5, y_n * 5, 2.0))) * 1.5
+        v.co.z = max(h, 4.0)
+    all_parts.append(t1)
+
+    # === TERRACE 2 (lower, left side) ===
+    bpy.ops.mesh.primitive_grid_add(
+        x_subdivisions=15, y_subdivisions=12, size=1, location=(-12, -12, 0)
+    )
+    t2 = bpy.context.active_object
+    t2.name = "Terrace2"
+    t2.scale = (25, 15, 1)
+    bpy.ops.object.transform_apply(scale=True)
+    for v in t2.data.vertices:
+        x_n = v.co.x / 25
+        y_n = v.co.y / 15
+        h = 3.5 + mn.noise(Vector((x_n * 6, y_n * 6, 3.0))) * 1.2
+        v.co.z = max(h, 1.5)
+    all_parts.append(t2)
+
+    # === TERRACE 3 (lowest, right side finger) ===
+    bpy.ops.mesh.primitive_grid_add(
+        x_subdivisions=12, y_subdivisions=10, size=1, location=(18, -16, 0)
+    )
+    t3 = bpy.context.active_object
+    t3.name = "Terrace3"
+    t3.scale = (20, 12, 1)
+    bpy.ops.object.transform_apply(scale=True)
+    for v in t3.data.vertices:
+        x_n = v.co.x / 20
+        y_n = v.co.y / 12
+        h = 1.8 + mn.noise(Vector((x_n * 7, y_n * 7, 5.0))) * 0.8
+        v.co.z = max(h, 0.5)
+    all_parts.append(t3)
+
+    # === CLIFF FACE (vertical rock wall under plateau) ===
+    bpy.ops.mesh.primitive_cube_add(size=1, location=(0, -12, 4.5))
+    face1 = bpy.context.active_object
+    face1.name = "CliffFace1"
+    face1.scale = (60, 3, 9)
+    bpy.ops.object.transform_apply(scale=True)
+    all_parts.append(face1)
+
+    # Second cliff face layer (offset for depth)
+    bpy.ops.mesh.primitive_cube_add(size=1, location=(5, -14, 3))
+    face2 = bpy.context.active_object
+    face2.name = "CliffFace2"
+    face2.scale = (45, 2.5, 6)
+    bpy.ops.object.transform_apply(scale=True)
+    all_parts.append(face2)
+
+    # Third cliff face (lower overhang)
+    bpy.ops.mesh.primitive_cube_add(size=1, location=(-8, -16, 1.5))
+    face3 = bpy.context.active_object
+    face3.name = "CliffFace3"
+    face3.scale = (35, 2, 3.5)
+    bpy.ops.object.transform_apply(scale=True)
+    all_parts.append(face3)
+
+    # === ROCK OUTCROPS on cliff face (18 icospheres) ===
+    for i in range(18):
         bpy.ops.mesh.primitive_ico_sphere_add(
             subdivisions=2,
-            radius=random.uniform(1.5, 4.0),
+            radius=random.uniform(1.5, 4.5),
             location=(
-                random.uniform(-20, 20),
-                random.uniform(-16, -10),
-                random.uniform(-1, 7),
+                random.uniform(-25, 25),
+                random.uniform(-18, -8),
+                random.uniform(0, 8),
             ),
         )
         outcrop = bpy.context.active_object
-        outcrop.scale.z = random.uniform(0.5, 0.8)
+        outcrop.scale = (
+            random.uniform(0.8, 1.3),
+            random.uniform(0.6, 1.0),
+            random.uniform(0.4, 0.8),
+        )
         bpy.ops.object.transform_apply(scale=True)
-        # Roughen surface
         for v in outcrop.data.vertices:
-            v.co += v.co.normalized() * random.uniform(-0.2, 0.2)
-        outcrop_objects.append(outcrop)
+            v.co += v.co.normalized() * random.uniform(-0.25, 0.25)
+        all_parts.append(outcrop)
 
-    # Join all into terrain
-    join_objects(terrain, outcrop_objects)
+    # === MENHIRS on plateau (thin vertical standing stones) ===
+    for i in range(12):
+        h = random.uniform(1.5, 3.5)
+        bpy.ops.mesh.primitive_cube_add(
+            size=1,
+            location=(
+                random.uniform(-20, 20),
+                random.uniform(-5, 8),
+                9.0 + h / 2,
+            ),
+        )
+        menhir = bpy.context.active_object
+        menhir.scale = (0.2, 0.15, h)
+        bpy.ops.object.transform_apply(scale=True)
+        menhir.rotation_euler.y = random.uniform(-0.08, 0.08)
+        all_parts.append(menhir)
+
+    # === JOIN ALL ===
+    main = all_parts[0]
+    join_objects(main, all_parts[1:])
+    main.name = "Cliff"
 
     # Decimate for faceted look
-    decimate(terrain, 0.4)
-    shade_flat(terrain)
+    decimate(main, 0.35)
+    shade_flat(main)
 
-    # Vertex color paint
+    # Vertex color paint — zone by height
     def cliff_color(vert):
         z = vert.co.z
-        if z > 7.5:
-            return (0.40, 0.60, 0.28, 1.0)  # Green plateau
+        n = random.uniform(-0.02, 0.02)
+
+        if z > 8.0:
+            # Bright green plateau top
+            return (0.42 + n, 0.62 + n, 0.22 + n, 1.0)
+        elif z > 5.5:
+            # Mid-green terrace
+            return (0.35 + n, 0.52 + n, 0.20 + n, 1.0)
         elif z > 3.0:
-            return (0.45, 0.35, 0.25, 1.0)  # Brown rock face
-        elif z > 0.5:
-            return (0.30, 0.25, 0.18, 1.0)  # Dark rock
+            # Yellow-green lower terrace
+            return (0.45 + n, 0.50 + n, 0.22 + n, 1.0)
+        elif z > 1.0:
+            # Warm brown rock face
+            return (0.48 + n, 0.38 + n, 0.26 + n, 1.0)
         else:
-            return (0.20, 0.18, 0.14, 1.0)  # Base dark
+            # Dark rock base
+            return (0.25 + n, 0.22 + n, 0.18 + n, 1.0)
 
-    paint_vertex_colors(terrain, cliff_color)
+    paint_vertex_colors(main, cliff_color)
 
-    # Assign vertex color material
     mat = create_vertex_color_material("CliffMat")
-    terrain.data.materials.clear()
-    terrain.data.materials.append(mat)
+    main.data.materials.clear()
+    main.data.materials.append(mat)
 
-    return terrain
+    return main
 
 
 def build_tower():
