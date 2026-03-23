@@ -43,7 +43,7 @@ def _run_blender_script(
     _ensure_dirs()
 
     with tempfile.NamedTemporaryFile(
-        mode="w", suffix=".py", delete=False, dir=str(SCRIPTS_DIR)
+        mode="w", suffix=".py", delete=False, dir=str(SCRIPTS_DIR), encoding="utf-8"
     ) as f:
         f.write(script_content)
         script_path = f.name
@@ -536,6 +536,9 @@ class BlenderAdapter(BaseAdapter):
             "scene-compose":  "Compose GLB assets into scene (--config path, --output)",
             "list-assets":    "List all generated 3D assets in assets/3d_models/",
             "open":           "Open file in Blender GUI (--file path)",
+            "build-scene":    "Build menu scene headless, render preview, open in GUI",
+            "render":         "Render .blend to PNG (--file blend, --output png, --frame N)",
+            "cleanup":        "Kill all Blender instances",
         }
 
     def health_probe(self) -> tuple[str, dict]:
@@ -561,6 +564,12 @@ class BlenderAdapter(BaseAdapter):
                 return self._list_assets()
             case "open":
                 return self._open(**kwargs)
+            case "build-scene":
+                return self._build_scene(**kwargs)
+            case "render":
+                return self._render(**kwargs)
+            case "cleanup":
+                return self._cleanup_scenes(**kwargs)
             case _:
                 raise NotImplementedError(action)
 
@@ -737,3 +746,55 @@ class BlenderAdapter(BaseAdapter):
 
         subprocess.Popen(cmd)
         return self.ok({"message": f"Opened {file_path} in Blender GUI"})
+
+    def _build_scene(self, **kw: Any) -> dict:
+        """Run build_menu_scene.py headless, render preview, then open in GUI."""
+        script_path = str(SCRIPTS_DIR / "build_menu_scene.py")
+        if not os.path.exists(script_path):
+            return self.error(f"Scene script not found: {script_path}")
+        # Kill existing Blender
+        subprocess.run(["taskkill", "/IM", "blender.exe", "/F"],
+                        capture_output=True, timeout=5)
+        import time; time.sleep(1)
+        # Headless render
+        result = _run_blender_script(
+            open(script_path, encoding="utf-8").read(), timeout=300
+        )
+        blend_path = str(PROJECT_DIR / "assets" / "blender" / "menu_coast_scene.blend")
+        # Open in GUI
+        if os.path.exists(blend_path):
+            subprocess.Popen([BLENDER_EXE, blend_path])
+        return self.ok({
+            "blend": blend_path,
+            "preview": str(Path.home() / "Downloads" / "menu_scene_preview.png"),
+            "render": result.get("data", {}),
+        })
+
+    def _render(self, **kw: Any) -> dict:
+        """Render current .blend to PNG."""
+        blend_file = kw.get("file", str(PROJECT_DIR / "assets" / "blender" / "menu_coast_scene.blend"))
+        output = kw.get("output", str(Path.home() / "Downloads" / "menu_scene_preview.png"))
+        frame = int(kw.get("frame", 1))
+        script = f'''
+import bpy, os
+bpy.context.scene.render.filepath = r"{output}"
+bpy.context.scene.frame_set({frame})
+bpy.ops.render.render(write_still=True)
+size = os.path.getsize(r"{output}")
+import json
+print(json.dumps({{"status": "ok", "file": r"{output}", "size_bytes": size}}))
+'''
+        result = _run_blender_script(script, blend_file=blend_file, timeout=120)
+        return self.ok(result.get("data", {"file": output}))
+
+    def _cleanup_scenes(self, **kw: Any) -> dict:
+        """Kill all Blender instances and clean up temp files."""
+        subprocess.run(["taskkill", "/IM", "blender.exe", "/F"],
+                        capture_output=True, timeout=5)
+        # Clean old screenshots
+        downloads = Path.home() / "Downloads"
+        cleaned = 0
+        for f in downloads.glob("menu_scene_preview*.png"):
+            if f.stat().st_size > 0:
+                cleaned += 1
+        return self.ok({"killed": True, "preview_files": cleaned})
