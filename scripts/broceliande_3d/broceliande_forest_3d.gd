@@ -28,6 +28,7 @@ const ForestZoneBuilderClass = preload("res://scripts/broceliande_3d/forest_zone
 const ForestEffectsClass = preload("res://scripts/broceliande_3d/forest_effects.gd")
 const ForestMerlinNpcClass = preload("res://scripts/broceliande_3d/forest_merlin_npc.gd")
 const ForestTerrainBuilderClass = preload("res://scripts/broceliande_3d/forest_terrain_builder.gd")
+const GlbAssetPlacerClass = preload("res://scripts/broceliande_3d/glb_asset_placer.gd")
 
 # --- Input ---
 const ACT_FWD: StringName = &"broc_move_forward"
@@ -178,6 +179,7 @@ var _zone_builder: RefCounted  # ForestZoneBuilder
 var _effects: RefCounted  # ForestEffects
 var _merlin_npc: RefCounted  # ForestMerlinNpc
 var _terrain_builder: RefCounted  # ForestTerrainBuilder
+var _glb_placer: RefCounted  # GlbAssetPlacer
 
 var _path_points: PackedVector3Array = PackedVector3Array()
 var _zone_centers: Array[Vector3] = []
@@ -223,6 +225,9 @@ func _ready() -> void:
 	move_speed = float(biome_walk_cfg.get("walk_speed", 3.5))
 	_zone_builder = ForestZoneBuilderClass.new(_asset_spawner, forest_root, _zone_centers, _rng)
 	_zone_builder.build_zones()
+	# GLB asset placer — creatures, extra megaliths, decor scatter, vegetation GLBs
+	_glb_placer = GlbAssetPlacerClass.new()
+	_glb_placer.place_assets(forest_root, _zone_centers, _rng)
 	# _populate_forest() removed — chunk manager handles vegetation
 	_spawn_merlin()
 	_effects = ForestEffectsClass.new(forest_root, _zone_centers, _rng)
