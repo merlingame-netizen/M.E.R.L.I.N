@@ -1,15 +1,15 @@
 """
-M.E.R.L.I.N. Menu Coast Scene — Blender Builder v3
+M.E.R.L.I.N. Menu Coast Scene — Blender Builder v4 (Pixel-Perfect)
 Strategy: Blender = static geometry only (5 GLBs). Godot handles all dynamic effects.
 
 Exports:
-  1. cliff_unified.glb    — Merged cliff + outcrops, vertex colored
-  2. tower_unified.glb    — Tower + windows + moss + crenellations merged
-  3. rocks_set.glb        — 5 sea rocks merged
-  4. crystal_cluster_unified.glb — 8 crystals merged (emission material)
-  5. cabin_unified.glb    — Cabin + roof + chimney + door merged
+  1. cliff_unified.glb    — Whale-back cliff + 3 ridges + outcrops + menhirs + boulder
+  2. tower_unified.glb    — Tall ruined tower + broken spire + windows + moss
+  3. rocks_set.glb        — 7 sea rocks at cliff base
+  4. crystal_cluster_unified.glb — 2 clusters (purple + teal)
+  5. cabin_unified.glb    — Cabin on far-left plateau
 
-NOT exported (Godot handles): ocean, sky, clouds, sun, particles, vegetation,
+NOT exported (Godot handles): ocean, sky, clouds, sun mesh, particles, vegetation,
 orbiting stones, fog, day/night, UI.
 """
 import bpy, bmesh, math, random, os
@@ -22,6 +22,20 @@ from pathlib import Path
 EXPORT_DIR = r"c:\Users\PGNK2128\Godot-MCP\assets\3d_models\menu_coast"
 BLEND_DIR = r"c:\Users\PGNK2128\Godot-MCP\assets\blender"
 random.seed(42)
+
+# --- EXACT COLOR PALETTE (from reference) ---
+C_SKY = (0.45, 0.75, 0.95)
+C_GREEN_SUN = (0.55, 0.70, 0.25)
+C_GREEN_SHADE = (0.30, 0.50, 0.18)
+C_ROCK_FACE = (0.50, 0.40, 0.28)
+C_ROCK_DARK = (0.25, 0.22, 0.16)
+C_OCEAN_DEEP = (0.05, 0.22, 0.40)
+C_OCEAN_MID = (0.10, 0.35, 0.55)
+C_OCEAN_FOAM = (0.60, 0.75, 0.80)
+C_TOWER_STONE = (0.42, 0.38, 0.32)
+C_CRYSTAL_PURPLE = (0.50, 0.15, 0.75)
+C_CRYSTAL_TEAL = (0.15, 0.70, 0.65)
+C_SUN_EMIT = (1.0, 0.95, 0.70)
 
 
 # =============================================================================
@@ -41,33 +55,85 @@ def shade_flat(obj):
         poly.use_smooth = False
 
 
-def create_vertex_color_material(name):
-    """Single material that reads vertex colors — used for ALL meshes."""
+def _make_solid_material(name, color, roughness=0.85):
+    """Create a simple solid-color Principled BSDF material."""
     mat = bpy.data.materials.new(name)
     mat.use_nodes = True
-    nodes = mat.node_tree.nodes
-    links = mat.node_tree.links
-    nodes.clear()
-
-    attr = nodes.new("ShaderNodeAttribute")
-    attr.attribute_name = "Color"
-    attr.location = (-300, 0)
-
-    bsdf = nodes.new("ShaderNodeBsdfPrincipled")
-    bsdf.location = (0, 0)
-    bsdf.inputs["Roughness"].default_value = 0.9
-    bsdf.inputs["Metallic"].default_value = 0.0
-
-    output = nodes.new("ShaderNodeOutputMaterial")
-    output.location = (300, 0)
-
-    links.new(attr.outputs["Color"], bsdf.inputs["Base Color"])
-    links.new(bsdf.outputs["BSDF"], output.inputs["Surface"])
+    bsdf = mat.node_tree.nodes["Principled BSDF"]
+    bsdf.inputs["Base Color"].default_value = (*color, 1.0)
+    bsdf.inputs["Roughness"].default_value = roughness
     return mat
 
 
-def create_crystal_material(name):
-    """Emission material for crystals — purple glow, no vertex colors needed."""
+def create_zone_materials():
+    """5 zone materials for cliff height-based assignment."""
+    zones = {
+        'green_bright': (0.55, 0.70, 0.25),
+        'green_mid': (0.38, 0.55, 0.22),
+        'green_dark': (0.30, 0.48, 0.18),
+        'rock_warm': (0.50, 0.40, 0.28),
+        'rock_dark': (0.28, 0.24, 0.18),
+    }
+    mats = {}
+    for name, color in zones.items():
+        mats[name] = _make_solid_material(f"Zone_{name}", color)
+    return mats
+
+
+def create_tower_materials():
+    """Tower-specific materials."""
+    specs = {
+        'stone_light': (0.50, 0.48, 0.42),
+        'stone_mid': (0.42, 0.38, 0.32),
+        'stone_dark': (0.32, 0.28, 0.22),
+        'window': (0.08, 0.06, 0.05),
+        'moss': (0.28, 0.48, 0.20),
+    }
+    mats = {}
+    for name, color in specs.items():
+        mats[name] = _make_solid_material(f"Tower_{name}", color)
+    return mats
+
+
+def create_cabin_materials():
+    """Cabin-specific materials."""
+    specs = {
+        'wood_warm': (0.48, 0.33, 0.18),
+        'roof_dark': (0.20, 0.16, 0.13),
+        'chimney': (0.40, 0.38, 0.35),
+        'door': (0.12, 0.08, 0.05),
+    }
+    mats = {}
+    for name, color in specs.items():
+        mats[name] = _make_solid_material(f"Cabin_{name}", color)
+    return mats
+
+
+def assign_materials_by_height(obj, zone_mats, thresholds):
+    """Assign materials to faces based on average vertex Z height."""
+    mesh = obj.data
+    mat_list = list(zone_mats.values())
+    mat_names = list(zone_mats.keys())
+    mesh.materials.clear()
+    for mat in mat_list:
+        mesh.materials.append(mat)
+
+    for face in mesh.polygons:
+        avg_z = sum(mesh.vertices[vi].co.z for vi in face.vertices) / len(face.vertices)
+        if avg_z > thresholds[0]:
+            face.material_index = mat_names.index(mat_names[0])
+        elif avg_z > thresholds[1]:
+            face.material_index = mat_names.index(mat_names[1])
+        elif avg_z > thresholds[2]:
+            face.material_index = mat_names.index(mat_names[2])
+        elif avg_z > thresholds[3]:
+            face.material_index = mat_names.index(mat_names[3])
+        else:
+            face.material_index = len(mat_names) - 1
+
+
+def create_emission_material(name, base_color, emission_color, emission_strength):
+    """Emission material for crystals and sun mesh."""
     mat = bpy.data.materials.new(name)
     mat.use_nodes = True
     nodes = mat.node_tree.nodes
@@ -76,11 +142,11 @@ def create_crystal_material(name):
 
     bsdf = nodes.new("ShaderNodeBsdfPrincipled")
     bsdf.location = (0, 0)
-    bsdf.inputs["Base Color"].default_value = (0.45, 0.15, 0.70, 1.0)
+    bsdf.inputs["Base Color"].default_value = (*base_color, 1.0)
     bsdf.inputs["Roughness"].default_value = 0.3
     bsdf.inputs["Metallic"].default_value = 0.1
-    bsdf.inputs["Emission Color"].default_value = (0.55, 0.20, 0.85, 1.0)
-    bsdf.inputs["Emission Strength"].default_value = 3.0
+    bsdf.inputs["Emission Color"].default_value = (*emission_color, 1.0)
+    bsdf.inputs["Emission Strength"].default_value = emission_strength
 
     output = nodes.new("ShaderNodeOutputMaterial")
     output.location = (300, 0)
@@ -89,17 +155,22 @@ def create_crystal_material(name):
     return mat
 
 
-def paint_vertex_colors(obj, color_func):
-    """Paint vertex colors on mesh using a function(vertex) -> (r, g, b, a)."""
+def assign_materials_to_faces(obj, zone_mats, classify_func):
+    """Assign materials to faces using a classify function(avg_x, avg_y, avg_z) -> mat_key."""
     mesh = obj.data
-    if "Color" not in mesh.color_attributes:
-        mesh.color_attributes.new(name="Color", type='FLOAT_COLOR', domain='CORNER')
-    color_attr = mesh.color_attributes["Color"]
+    mat_names = list(zone_mats.keys())
+    mesh.materials.clear()
+    for mat in zone_mats.values():
+        mesh.materials.append(mat)
 
-    for loop_idx, loop in enumerate(mesh.loops):
-        vert = mesh.vertices[loop.vertex_index]
-        color = color_func(vert)
-        color_attr.data[loop_idx].color = color
+    for face in mesh.polygons:
+        verts = [mesh.vertices[vi].co for vi in face.vertices]
+        n = len(verts)
+        avg_x = sum(v.x for v in verts) / n
+        avg_y = sum(v.y for v in verts) / n
+        avg_z = sum(v.z for v in verts) / n
+        key = classify_func(avg_x, avg_y, avg_z)
+        face.material_index = mat_names.index(key)
 
 
 def join_objects(main_obj, others):
@@ -141,142 +212,192 @@ def export_glb(obj_or_list, filename):
     print(f"[EXPORT] {filename}: {size // 1024}KB")
 
 
+def _noise3(x, y, z):
+    """Simple deterministic noise using mathutils."""
+    from mathutils import noise as mn
+    return mn.noise(Vector((x, y, z)))
+
+
 # =============================================================================
 # BUILD FUNCTIONS
 # =============================================================================
 
 def build_cliff():
-    """Multi-layered cliff: main plateau + 3 terraces + cliff faces +
-    overhangs + outcrops + menhirs. Vertex painted by height zone."""
-    from mathutils import noise as mn
+    """Whale-back cliff with 3 ridges stepping down left-to-right,
+    steep rock face on ocean side, large protruding boulder, menhirs.
+    Extends heavily to the LEFT; tower sits at rightmost edge (~x=15)."""
 
     all_parts = []
 
-    # === MAIN PLATEAU (highest, flat green top) ===
+    # === RIDGE 1 (leftmost, highest ~80% height) — extends far left ===
     bpy.ops.mesh.primitive_grid_add(
-        x_subdivisions=35, y_subdivisions=25, size=1, location=(0, 2, 0)
+        x_subdivisions=40, y_subdivisions=30, size=1, location=(-18, 0, 0)
     )
-    plateau = bpy.context.active_object
-    plateau.name = "Plateau"
-    plateau.scale = (65, 40, 1)
+    ridge1 = bpy.context.active_object
+    ridge1.name = "Ridge1"
+    ridge1.scale = (50, 35, 1)
     bpy.ops.object.transform_apply(scale=True)
 
-    for v in plateau.data.vertices:
-        x_n = v.co.x / 65
-        y_n = v.co.y / 40
-        h = 9.0 + mn.noise(Vector((x_n * 4, y_n * 4, 0))) * 1.0
-        # Taper edges down
-        edge_drop = min(abs(x_n) - 0.4, 0) * 5.0
-        h += edge_drop
-        v.co.z = max(h, 7.5)
-    all_parts.append(plateau)
+    for v in ridge1.data.vertices:
+        xn = v.co.x / 50
+        yn = v.co.y / 35
+        # Whale-back profile: rounded on top, steep on ocean (negative Y) side
+        whale = 1.0 - (xn + 0.3) ** 2 * 1.5  # peaks left-of-center
+        whale = max(whale, 0.0)
+        # Y falloff: gentle on positive Y (inland), steep on negative Y (ocean)
+        if yn < -0.1:
+            y_drop = (yn + 0.1) ** 2 * 25.0
+        else:
+            y_drop = 0.0
+        h = 11.0 * whale - y_drop
+        h += _noise3(xn * 5, yn * 5, 0.0) * 1.2
+        # Taper right edge down toward ridge 2
+        if xn > 0.3:
+            h -= (xn - 0.3) * 8.0
+        # Taper far left gently
+        if xn < -0.4:
+            h -= (abs(xn) - 0.4) * 3.0
+        v.co.z = max(h, -1.0)
+    all_parts.append(ridge1)
 
-    # === TERRACE 1 (mid-height, extends forward) ===
+    # === RIDGE 2 (middle, ~60% height) — main plateau where tower sits ===
     bpy.ops.mesh.primitive_grid_add(
-        x_subdivisions=20, y_subdivisions=15, size=1, location=(8, -8, 0)
+        x_subdivisions=30, y_subdivisions=25, size=1, location=(5, -3, 0)
     )
-    t1 = bpy.context.active_object
-    t1.name = "Terrace1"
-    t1.scale = (30, 18, 1)
+    ridge2 = bpy.context.active_object
+    ridge2.name = "Ridge2"
+    ridge2.scale = (35, 25, 1)
     bpy.ops.object.transform_apply(scale=True)
-    for v in t1.data.vertices:
-        x_n = v.co.x / 30
-        y_n = v.co.y / 18
-        h = 6.0 + mn.noise(Vector((x_n * 5, y_n * 5, 2.0))) * 1.5
-        v.co.z = max(h, 4.0)
-    all_parts.append(t1)
 
-    # === TERRACE 2 (lower, left side) ===
+    for v in ridge2.data.vertices:
+        xn = v.co.x / 35
+        yn = v.co.y / 25
+        base = 7.5
+        # Peninsula shape: narrows toward right (where tower goes)
+        width_at_x = max(0.5 - xn * 0.8, 0.05)
+        if abs(yn) > width_at_x:
+            base -= (abs(yn) - width_at_x) * 12.0
+        # Noise
+        base += _noise3(xn * 6, yn * 6, 2.0) * 0.8
+        # Drop at edges
+        if xn > 0.35:
+            base -= (xn - 0.35) * 6.0
+        if xn < -0.4:
+            base -= (abs(xn) - 0.4) * 4.0
+        v.co.z = max(base, -1.0)
+    all_parts.append(ridge2)
+
+    # === RIDGE 3 (lowest, ~30% height) — extends toward camera, has protruding rock ===
     bpy.ops.mesh.primitive_grid_add(
-        x_subdivisions=15, y_subdivisions=12, size=1, location=(-12, -12, 0)
+        x_subdivisions=20, y_subdivisions=18, size=1, location=(0, -14, 0)
     )
-    t2 = bpy.context.active_object
-    t2.name = "Terrace2"
-    t2.scale = (25, 15, 1)
+    ridge3 = bpy.context.active_object
+    ridge3.name = "Ridge3"
+    ridge3.scale = (30, 16, 1)
     bpy.ops.object.transform_apply(scale=True)
-    for v in t2.data.vertices:
-        x_n = v.co.x / 25
-        y_n = v.co.y / 15
-        h = 3.5 + mn.noise(Vector((x_n * 6, y_n * 6, 3.0))) * 1.2
-        v.co.z = max(h, 1.5)
-    all_parts.append(t2)
 
-    # === TERRACE 3 (lowest, right side finger) ===
-    bpy.ops.mesh.primitive_grid_add(
-        x_subdivisions=12, y_subdivisions=10, size=1, location=(18, -16, 0)
-    )
-    t3 = bpy.context.active_object
-    t3.name = "Terrace3"
-    t3.scale = (20, 12, 1)
-    bpy.ops.object.transform_apply(scale=True)
-    for v in t3.data.vertices:
-        x_n = v.co.x / 20
-        y_n = v.co.y / 12
-        h = 1.8 + mn.noise(Vector((x_n * 7, y_n * 7, 5.0))) * 0.8
-        v.co.z = max(h, 0.5)
-    all_parts.append(t3)
+    for v in ridge3.data.vertices:
+        xn = v.co.x / 30
+        yn = v.co.y / 16
+        base = 3.5
+        base += _noise3(xn * 7, yn * 7, 4.0) * 1.0
+        # Taper edges
+        edge_dist = max(abs(xn) - 0.3, 0) + max(abs(yn) - 0.3, 0)
+        base -= edge_dist * 5.0
+        v.co.z = max(base, -1.5)
+    all_parts.append(ridge3)
 
-    # === CLIFF FACE (vertical rock wall under plateau) ===
-    bpy.ops.mesh.primitive_cube_add(size=1, location=(0, -12, 4.5))
+    # === CLIFF FACE — vertical rock wall under plateaus (ocean side) ===
+    # Main face: tall slab behind ridges
+    bpy.ops.mesh.primitive_cube_add(size=1, location=(-5, -12, 3.0))
     face1 = bpy.context.active_object
     face1.name = "CliffFace1"
-    face1.scale = (60, 3, 9)
+    face1.scale = (55, 3.5, 11)
     bpy.ops.object.transform_apply(scale=True)
     all_parts.append(face1)
 
-    # Second cliff face layer (offset for depth)
-    bpy.ops.mesh.primitive_cube_add(size=1, location=(5, -14, 3))
+    # Secondary face layer (depth variation)
+    bpy.ops.mesh.primitive_cube_add(size=1, location=(3, -15, 1.5))
     face2 = bpy.context.active_object
     face2.name = "CliffFace2"
-    face2.scale = (45, 2.5, 6)
+    face2.scale = (40, 2.5, 7)
     bpy.ops.object.transform_apply(scale=True)
     all_parts.append(face2)
 
-    # Third cliff face (lower overhang)
-    bpy.ops.mesh.primitive_cube_add(size=1, location=(-8, -16, 1.5))
+    # Lower overhang face
+    bpy.ops.mesh.primitive_cube_add(size=1, location=(-10, -17, 0.0))
     face3 = bpy.context.active_object
     face3.name = "CliffFace3"
-    face3.scale = (35, 2, 3.5)
+    face3.scale = (30, 2, 4)
     bpy.ops.object.transform_apply(scale=True)
     all_parts.append(face3)
 
-    # === ROCK OUTCROPS on cliff face (18 icospheres) ===
-    for i in range(18):
+    # === LARGE PROTRUDING BOULDER (center-bottom, over ocean) ===
+    bpy.ops.mesh.primitive_ico_sphere_add(
+        subdivisions=3, radius=6.0, location=(2, -18, 1.0)
+    )
+    boulder = bpy.context.active_object
+    boulder.name = "Boulder"
+    boulder.scale = (1.4, 1.0, 0.7)
+    bpy.ops.object.transform_apply(scale=True)
+    for v in boulder.data.vertices:
+        v.co += v.co.normalized() * random.uniform(-0.4, 0.4)
+    all_parts.append(boulder)
+
+    # === ROCK OUTCROPS on cliff face (22 icospheres for texture) ===
+    for i in range(22):
         bpy.ops.mesh.primitive_ico_sphere_add(
             subdivisions=2,
-            radius=random.uniform(1.5, 4.5),
+            radius=random.uniform(1.5, 5.0),
             location=(
-                random.uniform(-25, 25),
-                random.uniform(-18, -8),
-                random.uniform(0, 8),
+                random.uniform(-30, 20),
+                random.uniform(-20, -8),
+                random.uniform(-1, 7),
             ),
         )
         outcrop = bpy.context.active_object
         outcrop.scale = (
-            random.uniform(0.8, 1.3),
-            random.uniform(0.6, 1.0),
-            random.uniform(0.4, 0.8),
+            random.uniform(0.8, 1.4),
+            random.uniform(0.5, 1.0),
+            random.uniform(0.3, 0.7),
         )
         bpy.ops.object.transform_apply(scale=True)
         for v in outcrop.data.vertices:
-            v.co += v.co.normalized() * random.uniform(-0.25, 0.25)
+            v.co += v.co.normalized() * random.uniform(-0.3, 0.3)
         all_parts.append(outcrop)
 
-    # === MENHIRS on plateau (thin vertical standing stones) ===
-    for i in range(12):
-        h = random.uniform(1.5, 3.5)
-        bpy.ops.mesh.primitive_cube_add(
-            size=1,
+    # === CAVE / OVERHANG recesses (dark indentations) ===
+    for i in range(5):
+        bpy.ops.mesh.primitive_ico_sphere_add(
+            subdivisions=2,
+            radius=random.uniform(2.0, 4.0),
             location=(
-                random.uniform(-20, 20),
-                random.uniform(-5, 8),
-                9.0 + h / 2,
+                random.uniform(-20, 10),
+                random.uniform(-16, -10),
+                random.uniform(0, 4),
             ),
         )
-        menhir = bpy.context.active_object
-        menhir.scale = (0.2, 0.15, h)
+        cave = bpy.context.active_object
+        cave.scale = (1.2, 0.5, 0.6)
         bpy.ops.object.transform_apply(scale=True)
-        menhir.rotation_euler.y = random.uniform(-0.08, 0.08)
+        all_parts.append(cave)
+
+    # === MENHIRS on plateau (thin vertical standing stones) ===
+    for i in range(15):
+        h = random.uniform(1.2, 3.0)
+        px = random.uniform(-30, 10)
+        py = random.uniform(-6, 8)
+        # Estimate plateau height at this location
+        pz = 9.0 if px < -5 else 7.5 if px < 10 else 5.0
+        bpy.ops.mesh.primitive_cube_add(
+            size=1,
+            location=(px, py, pz + h / 2),
+        )
+        menhir = bpy.context.active_object
+        menhir.scale = (0.18, 0.14, h)
+        bpy.ops.object.transform_apply(scale=True)
+        menhir.rotation_euler.y = random.uniform(-0.1, 0.1)
+        menhir.rotation_euler.x = random.uniform(-0.05, 0.05)
         all_parts.append(menhir)
 
     # === JOIN ALL ===
@@ -284,172 +405,183 @@ def build_cliff():
     join_objects(main, all_parts[1:])
     main.name = "Cliff"
 
-    # Decimate for faceted look
-    decimate(main, 0.35)
+    # Decimate for low-poly faceted look
+    decimate(main, 0.30)
     shade_flat(main)
 
-    # Vertex color paint — zone by height
-    def cliff_color(vert):
-        z = vert.co.z
-        n = random.uniform(-0.02, 0.02)
-
-        if z > 8.0:
-            # Bright green plateau top
-            return (0.42 + n, 0.62 + n, 0.22 + n, 1.0)
-        elif z > 5.5:
-            # Mid-green terrace
-            return (0.35 + n, 0.52 + n, 0.20 + n, 1.0)
-        elif z > 3.0:
-            # Yellow-green lower terrace
-            return (0.45 + n, 0.50 + n, 0.22 + n, 1.0)
-        elif z > 1.0:
-            # Warm brown rock face
-            return (0.48 + n, 0.38 + n, 0.26 + n, 1.0)
-        else:
-            # Dark rock base
-            return (0.25 + n, 0.22 + n, 0.18 + n, 1.0)
-
-    paint_vertex_colors(main, cliff_color)
-
-    mat = create_vertex_color_material("CliffMat")
-    main.data.materials.clear()
-    main.data.materials.append(mat)
+    # Multi-material assignment by height zones
+    zone_mats = create_zone_materials()
+    assign_materials_by_height(main, zone_mats, [8.0, 5.5, 3.0, 1.0])
 
     return main
 
 
 def build_tower():
-    """Celtic ruined tower: cylinder body + window holes + moss patches +
-    crenellations on top. All joined into 1 mesh, vertex painted."""
+    """Very tall ruined Celtic tower at the right edge of the plateau.
+    Height ~25 (3x cliff height). Brown/grey stone, pointed broken top,
+    windows, moss patches. Position at rightmost cliff edge."""
 
-    # Main tower body
+    # Tower center at right edge of plateau
+    tower_x = 15
+    tower_y = -5
+    tower_base_z = 7.5  # plateau height at this location
+    tower_height = 25
+    tower_center_z = tower_base_z + tower_height / 2
+
+    # Main tower body — 12-sided cylinder
     bpy.ops.mesh.primitive_cylinder_add(
-        vertices=12, radius=3.5, depth=18, location=(5, -8, 18)
+        vertices=12, radius=3.0, depth=tower_height,
+        location=(tower_x, tower_y, tower_center_z)
     )
     tower = bpy.context.active_object
     tower.name = "Tower"
 
-    # Roughen tower surface for weathered look
+    # Roughen tower surface for weathered stone look
     for v in tower.data.vertices:
-        offset = random.uniform(-0.15, 0.15)
+        offset = random.uniform(-0.2, 0.2)
         v.co.x += offset
         v.co.y += offset
+        # Slight taper toward top
+        t = (v.co.z - (tower_center_z - tower_height / 2)) / tower_height
+        taper = 1.0 - t * 0.15  # slightly narrower at top
+        local_x = v.co.x - tower_x
+        local_y = v.co.y - tower_y
+        v.co.x = tower_x + local_x * taper
+        v.co.y = tower_y + local_y * taper
 
     parts = []
 
-    # Crenellations on top (8 small cubes around rim)
-    for i in range(8):
-        angle = math.radians(i * 45)
-        cx = 5 + math.cos(angle) * 3.2
-        cy = -8 + math.sin(angle) * 3.2
-        bpy.ops.mesh.primitive_cube_add(size=1.5, location=(cx, cy, 27.5))
-        cren = bpy.context.active_object
-        cren.scale = (0.7, 0.7, 1.2)
-        bpy.ops.object.transform_apply(scale=True)
-        parts.append(cren)
+    # === POINTED BROKEN SPIRE on top ===
+    spire_base_z = tower_base_z + tower_height
+    bpy.ops.mesh.primitive_cone_add(
+        vertices=8, radius1=2.2, radius2=0.15,
+        depth=8.0, location=(tower_x, tower_y, spire_base_z + 4.0)
+    )
+    spire = bpy.context.active_object
+    spire.name = "Spire"
+    # Break the spire: remove some vertices on one side by displacing them
+    for v in spire.data.vertices:
+        local_x = v.co.x - tower_x
+        if local_x > 0.5 and v.co.z > spire_base_z + 5:
+            # Broken chunk — push inward/down
+            v.co.z -= random.uniform(1.0, 3.0)
+            v.co.x -= random.uniform(0.5, 1.5)
+        v.co += Vector((
+            random.uniform(-0.15, 0.15),
+            random.uniform(-0.15, 0.15),
+            random.uniform(-0.1, 0.1),
+        ))
+    parts.append(spire)
 
-    # Window recesses (small cubes subtracted visually — here just placed as
-    # inset geometry that will get dark vertex color)
-    for j in range(3):
-        wz = 14 + j * 5
-        angle = math.radians(j * 90 + 30)
-        wx = 5 + math.cos(angle) * 3.6
-        wy = -8 + math.sin(angle) * 3.6
+    # === WINDOWS (3 dark recesses around tower) ===
+    for j in range(4):
+        wz = tower_base_z + 5 + j * 5
+        angle = math.radians(j * 80 + 20)
+        wx = tower_x + math.cos(angle) * 3.2
+        wy = tower_y + math.sin(angle) * 3.2
         bpy.ops.mesh.primitive_cube_add(size=1.0, location=(wx, wy, wz))
         win = bpy.context.active_object
-        win.scale = (0.4, 0.15, 0.7)
+        win.name = f"Window_{j}"
+        win.scale = (0.5, 0.2, 0.9)
         bpy.ops.object.transform_apply(scale=True)
         parts.append(win)
 
-    # Moss patches (flattened spheres on the surface)
-    for k in range(6):
-        angle = math.radians(k * 60 + 15)
-        mz = random.uniform(10, 24)
-        mx = 5 + math.cos(angle) * 3.7
-        my = -8 + math.sin(angle) * 3.7
+    # === MOSS PATCHES (flattened spheres on surface) ===
+    for k in range(8):
+        angle = math.radians(k * 45 + 10)
+        mz = random.uniform(tower_base_z + 2, tower_base_z + tower_height - 3)
+        mx = tower_x + math.cos(angle) * 3.3
+        my = tower_y + math.sin(angle) * 3.3
         bpy.ops.mesh.primitive_uv_sphere_add(
-            segments=8, ring_count=6, radius=random.uniform(0.8, 1.5),
+            segments=8, ring_count=6, radius=random.uniform(0.6, 1.2),
             location=(mx, my, mz)
         )
         moss = bpy.context.active_object
-        moss.scale.z = 0.3
+        moss.scale.z = 0.25
         bpy.ops.object.transform_apply(scale=True)
         parts.append(moss)
+
+    # === BASE RUBBLE (stones around tower base) ===
+    for i in range(6):
+        angle = math.radians(i * 60 + random.uniform(-15, 15))
+        dist = random.uniform(3.5, 6.0)
+        rx = tower_x + math.cos(angle) * dist
+        ry = tower_y + math.sin(angle) * dist
+        rz = tower_base_z + random.uniform(-0.5, 0.5)
+        bpy.ops.mesh.primitive_ico_sphere_add(
+            subdivisions=1, radius=random.uniform(0.4, 1.0),
+            location=(rx, ry, rz)
+        )
+        rubble = bpy.context.active_object
+        rubble.scale.z = random.uniform(0.4, 0.7)
+        bpy.ops.object.transform_apply(scale=True)
+        parts.append(rubble)
 
     # Join everything
     join_objects(tower, parts)
 
     # Decimate
-    decimate(tower, 0.5)
+    decimate(tower, 0.45)
     shade_flat(tower)
 
-    # Vertex color: grey stone, dark windows (inset cubes), green moss
-    def tower_color(vert):
-        z = vert.co.z
-        # Distance from tower center axis
-        dx = vert.co.x - 5
-        dy = vert.co.y + 8
+    # Multi-material assignment by height + distance
+    tower_mats = create_tower_materials()
+
+    def classify_tower(x, y, z):
+        dx = x - tower_x
+        dy = y - tower_y
         dist = math.sqrt(dx * dx + dy * dy)
+        # Moss patches: outside tower radius
+        if dist > 3.4 and dist < 4.5 and z > tower_base_z + 1:
+            return 'moss'
+        # Window recesses
+        if dist > 3.0 and dist < 3.8 and z > tower_base_z + 3:
+            return 'window'
+        # Upper tower
+        if z > tower_base_z + tower_height * 0.6:
+            return 'stone_light'
+        # Mid tower
+        if z > tower_base_z + tower_height * 0.25:
+            return 'stone_mid'
+        # Base
+        return 'stone_dark'
 
-        # Moss patches: on the outer surface, small Z scale means
-        # they are close to the cylinder radius
-        if dist > 3.5 and z > 6:
-            # Could be moss — check if vertex is from a flattened sphere
-            # Simple heuristic: slightly outside tower radius
-            if dist > 4.0:
-                return (0.30, 0.50, 0.22, 1.0)  # Green moss
-            else:
-                return (0.12, 0.10, 0.08, 1.0)  # Dark window recess
-
-        # Crenellations at top
-        if z > 26.0:
-            return (0.50, 0.48, 0.42, 1.0)  # Light stone
-
-        # Main tower body — vary by height
-        noise_val = random.uniform(-0.03, 0.03)
-        if z > 19:
-            return (0.48 + noise_val, 0.45 + noise_val, 0.40 + noise_val, 1.0)
-        elif z > 12:
-            return (0.42 + noise_val, 0.40 + noise_val, 0.35 + noise_val, 1.0)
-        else:
-            return (0.35 + noise_val, 0.33 + noise_val, 0.28 + noise_val, 1.0)
-
-    paint_vertex_colors(tower, tower_color)
-
-    mat = create_vertex_color_material("TowerMat")
-    tower.data.materials.clear()
-    tower.data.materials.append(mat)
+    assign_materials_to_faces(tower, tower_mats, classify_tower)
 
     return tower
 
 
 def build_rocks():
-    """5 sea rocks merged into 1 mesh, vertex painted dark grey."""
+    """7 sea rocks at cliff base where ocean meets cliff.
+    Positioned along the base of the cliff face (y=-16 to -22, z=-1 to 0)."""
 
-    rock_positions = [
-        (-25, -28, -1.5),
-        (-18, -32, -2.0),
-        (-10, -30, -1.0),
-        (15, -35, -2.5),
-        (22, -30, -1.8),
+    rock_configs = [
+        # (x, y, z, radius)
+        (-20, -18, -0.5, 3.5),
+        (-12, -20, -1.0, 2.8),
+        (-5, -19, -0.3, 4.2),
+        (3, -21, -1.2, 3.0),
+        (10, -18, -0.8, 2.5),
+        (18, -20, -1.5, 3.2),
+        (8, -22, -1.8, 2.0),
     ]
-    rock_radii = [3.5, 2.8, 4.0, 3.0, 2.5]
 
     rocks = []
-    for idx, (pos, rad) in enumerate(zip(rock_positions, rock_radii)):
+    for idx, (rx, ry, rz, rad) in enumerate(rock_configs):
         bpy.ops.mesh.primitive_ico_sphere_add(
-            subdivisions=2, radius=rad, location=pos
+            subdivisions=2, radius=rad, location=(rx, ry, rz)
         )
         rock = bpy.context.active_object
         rock.name = f"Rock_{idx}"
-        # Flatten and roughen
-        rock.scale.z = random.uniform(0.4, 0.7)
-        rock.scale.x = random.uniform(0.8, 1.3)
+        # Flatten and shape
+        rock.scale.z = random.uniform(0.35, 0.65)
+        rock.scale.x = random.uniform(0.85, 1.35)
+        rock.scale.y = random.uniform(0.8, 1.2)
         bpy.ops.object.transform_apply(scale=True)
 
         # Randomize vertices for natural look
         for v in rock.data.vertices:
-            v.co += v.co.normalized() * random.uniform(-0.3, 0.3)
+            v.co += v.co.normalized() * random.uniform(-0.35, 0.35)
 
         rocks.append(rock)
 
@@ -458,24 +590,11 @@ def build_rocks():
     join_objects(main_rock, rocks[1:])
     main_rock.name = "Rocks"
 
-    # Decimate
-    decimate(main_rock, 0.45)
+    decimate(main_rock, 0.40)
     shade_flat(main_rock)
 
-    # Vertex color: dark grey with slight variation
-    def rock_color(vert):
-        z = vert.co.z
-        base = 0.22 + random.uniform(-0.04, 0.04)
-        if z > 0:
-            # Top exposed: slightly lighter
-            return (base + 0.05, base + 0.04, base + 0.03, 1.0)
-        else:
-            # Submerged: darker, greenish tint
-            return (base - 0.02, base + 0.01, base, 1.0)
-
-    paint_vertex_colors(main_rock, rock_color)
-
-    mat = create_vertex_color_material("RocksMat")
+    # Single dark rock material
+    mat = _make_solid_material("RocksMat", C_ROCK_DARK, roughness=0.9)
     main_rock.data.materials.clear()
     main_rock.data.materials.append(mat)
 
@@ -483,77 +602,94 @@ def build_rocks():
 
 
 def build_crystals():
-    """8 crystals merged into a cluster. Uses emission material (not vertex colors)."""
+    """2 crystal clusters near tower at cliff edge:
+    Cluster 1: PURPLE (x=12, y=-8) — near tower base
+    Cluster 2: TEAL/CYAN (x=8, y=-10) — slightly left
+    Tall pointed quartz shapes."""
 
-    crystals = []
-    center = Vector((-12, -5, 9.5))
+    all_crystals = []
 
-    for i in range(8):
-        angle = math.radians(i * 45 + random.uniform(-15, 15))
-        dist = random.uniform(0.5, 2.5)
-        cx = center.x + math.cos(angle) * dist
-        cy = center.y + math.sin(angle) * dist
-        cz = center.z + random.uniform(-0.5, 0.5)
+    clusters = [
+        # (center_x, center_y, center_z, count, color, name_prefix)
+        (12, -8, 8.0, 5, C_CRYSTAL_PURPLE, "Purple"),
+        (8, -10, 7.0, 4, C_CRYSTAL_TEAL, "Teal"),
+    ]
 
-        height = random.uniform(1.5, 4.0)
-        radius = random.uniform(0.3, 0.8)
+    for cx, cy, cz, count, color, prefix in clusters:
+        for i in range(count):
+            angle = math.radians(i * (360 / count) + random.uniform(-20, 20))
+            dist = random.uniform(0.3, 2.0)
+            px = cx + math.cos(angle) * dist
+            py = cy + math.sin(angle) * dist
+            pz = cz + random.uniform(-0.3, 0.3)
 
-        bpy.ops.mesh.primitive_cone_add(
-            vertices=6, radius1=radius, radius2=0.05,
-            depth=height, location=(cx, cy, cz + height / 2)
-        )
-        crystal = bpy.context.active_object
-        crystal.name = f"Crystal_{i}"
+            height = random.uniform(2.0, 5.0)
+            radius = random.uniform(0.25, 0.7)
 
-        # Tilt randomly
-        crystal.rotation_euler = (
-            math.radians(random.uniform(-20, 20)),
-            math.radians(random.uniform(-20, 20)),
-            math.radians(random.uniform(0, 360)),
-        )
-        bpy.ops.object.transform_apply(rotation=True)
+            bpy.ops.mesh.primitive_cone_add(
+                vertices=6, radius1=radius, radius2=0.04,
+                depth=height, location=(px, py, pz + height / 2)
+            )
+            crystal = bpy.context.active_object
+            crystal.name = f"{prefix}Crystal_{i}"
 
-        # Slight vertex noise for organic facets
-        for v in crystal.data.vertices:
-            v.co += Vector((
-                random.uniform(-0.05, 0.05),
-                random.uniform(-0.05, 0.05),
-                random.uniform(-0.03, 0.03),
-            ))
+            # Tilt randomly for natural cluster
+            crystal.rotation_euler = (
+                math.radians(random.uniform(-25, 25)),
+                math.radians(random.uniform(-25, 25)),
+                math.radians(random.uniform(0, 360)),
+            )
+            bpy.ops.object.transform_apply(rotation=True)
 
-        crystals.append(crystal)
+            # Vertex noise for facets
+            for v in crystal.data.vertices:
+                v.co += Vector((
+                    random.uniform(-0.06, 0.06),
+                    random.uniform(-0.06, 0.06),
+                    random.uniform(-0.04, 0.04),
+                ))
+
+            # Apply emission material per crystal with its cluster color
+            emission_col = tuple(c * 1.3 for c in color)
+            mat = create_emission_material(
+                f"{prefix}CrystalMat_{i}", color, emission_col, 4.0
+            )
+            crystal.data.materials.clear()
+            crystal.data.materials.append(mat)
+
+            all_crystals.append(crystal)
 
     # Join all into first
-    main_crystal = crystals[0]
-    join_objects(main_crystal, crystals[1:])
+    main_crystal = all_crystals[0]
+    join_objects(main_crystal, all_crystals[1:])
     main_crystal.name = "CrystalCluster"
 
     shade_flat(main_crystal)
-
-    # Crystal emission material (no vertex colors)
-    mat = create_crystal_material("CrystalMat")
-    main_crystal.data.materials.clear()
-    main_crystal.data.materials.append(mat)
 
     return main_crystal
 
 
 def build_cabin():
-    """Cabin with roof, chimney, and door. All merged, vertex painted."""
+    """Small cabin on far-left plateau. Position: (x=-22, y=0, z=plateau_height).
+    Plateau height at far left is ~9-10."""
+
+    cabin_x = -22
+    cabin_y = 0
+    cabin_z = 9.5  # on top of ridge 1
 
     # Main cabin body
-    bpy.ops.mesh.primitive_cube_add(size=1, location=(-20, -3, 9.5))
+    bpy.ops.mesh.primitive_cube_add(size=1, location=(cabin_x, cabin_y, cabin_z + 1.25))
     cabin = bpy.context.active_object
     cabin.name = "Cabin"
-    cabin.scale = (4, 3, 2.5)
+    cabin.scale = (3.5, 2.5, 2.5)
     bpy.ops.object.transform_apply(scale=True)
 
     parts = []
 
-    # Roof (cone / flattened)
+    # Roof (4-sided cone for pitched roof)
     bpy.ops.mesh.primitive_cone_add(
-        vertices=4, radius1=5.5, radius2=0.3,
-        depth=3.5, location=(-20, -3, 13.0)
+        vertices=4, radius1=4.5, radius2=0.2,
+        depth=3.0, location=(cabin_x, cabin_y, cabin_z + 4.5)
     )
     roof = bpy.context.active_object
     roof.name = "Roof"
@@ -562,57 +698,80 @@ def build_cabin():
     parts.append(roof)
 
     # Chimney
-    bpy.ops.mesh.primitive_cube_add(size=1, location=(-18, -2, 14.5))
+    bpy.ops.mesh.primitive_cube_add(
+        size=1, location=(cabin_x + 1.5, cabin_y - 0.5, cabin_z + 5.5)
+    )
     chimney = bpy.context.active_object
     chimney.name = "Chimney"
-    chimney.scale = (0.6, 0.6, 2.0)
+    chimney.scale = (0.5, 0.5, 1.8)
     bpy.ops.object.transform_apply(scale=True)
     parts.append(chimney)
 
     # Door
-    bpy.ops.mesh.primitive_cube_add(size=1, location=(-20, -5.1, 8.5))
+    bpy.ops.mesh.primitive_cube_add(
+        size=1, location=(cabin_x, cabin_y - 2.6, cabin_z + 0.8)
+    )
     door = bpy.context.active_object
     door.name = "Door"
-    door.scale = (0.8, 0.1, 1.5)
+    door.scale = (0.7, 0.1, 1.3)
     bpy.ops.object.transform_apply(scale=True)
     parts.append(door)
 
     # Join all
     join_objects(cabin, parts)
 
-    # Decimate slightly
     decimate(cabin, 0.6)
     shade_flat(cabin)
 
-    # Vertex color: brown wood walls, dark roof, dark door, grey chimney
-    def cabin_color(vert):
-        z = vert.co.z
-        x = vert.co.x
-        y = vert.co.y
+    # Multi-material by height
+    cabin_mats = {
+        'wood': (0.48, 0.33, 0.18),
+        'roof': (0.20, 0.16, 0.13),
+        'stone': (0.40, 0.38, 0.35),
+        'door': (0.12, 0.08, 0.05),
+    }
+    cabin_zone_mats = {}
+    for name, color in cabin_mats.items():
+        mat = bpy.data.materials.new(f"Cabin_{name}")
+        mat.use_nodes = True
+        bsdf = mat.node_tree.nodes["Principled BSDF"]
+        bsdf.inputs["Base Color"].default_value = (*color, 1.0)
+        bsdf.inputs["Roughness"].default_value = 0.85
+        cabin_zone_mats[name] = mat
 
-        # Door area: dark brown
-        if abs(x - (-20)) < 1.0 and y < -4.5 and z < 10.0:
-            return (0.15, 0.10, 0.06, 1.0)
-
-        # Chimney: grey stone
-        if abs(x - (-18)) < 1.0 and abs(y - (-2)) < 1.0 and z > 13.0:
-            return (0.40, 0.38, 0.35, 1.0)
-
-        # Roof: dark slate
-        if z > 11.5:
-            return (0.22, 0.18, 0.15, 1.0)
-
-        # Walls: warm brown wood
-        noise_val = random.uniform(-0.03, 0.03)
-        return (0.50 + noise_val, 0.35 + noise_val, 0.20 + noise_val, 1.0)
-
-    paint_vertex_colors(cabin, cabin_color)
-
-    mat = create_vertex_color_material("CabinMat")
     cabin.data.materials.clear()
-    cabin.data.materials.append(mat)
+    for m in cabin_zone_mats.values():
+        cabin.data.materials.append(m)
+
+    mat_names = list(cabin_zone_mats.keys())
+    for face in cabin.data.polygons:
+        avg_z = sum(cabin.data.vertices[vi].co.z for vi in face.vertices) / len(face.vertices)
+        if avg_z > cabin_z + 3.5:
+            face.material_index = mat_names.index('stone')
+        elif avg_z > cabin_z + 2.5:
+            face.material_index = mat_names.index('roof')
+        else:
+            face.material_index = mat_names.index('wood')
 
     return cabin
+
+
+def build_sun_mesh():
+    """Bright emissive sphere representing the visible sun.
+    Position: upper-right from camera perspective, behind/beside tower."""
+    bpy.ops.mesh.primitive_uv_sphere_add(
+        segments=16, ring_count=12, radius=2.0,
+        location=(30, -20, 25)
+    )
+    sun = bpy.context.active_object
+    sun.name = "SunMesh"
+
+    mat = create_emission_material("SunMat", C_SUN_EMIT, C_SUN_EMIT, 5.0)
+    sun.data.materials.clear()
+    sun.data.materials.append(mat)
+
+    shade_flat(sun)
+    return sun
 
 
 # =============================================================================
@@ -620,49 +779,53 @@ def build_cabin():
 # =============================================================================
 
 def setup_camera():
-    bpy.ops.object.camera_add(location=(45, -55, 5))
+    """Camera at water level, slightly left of center, looking UP at cliff+tower.
+    Wide angle 26mm. Ocean fills bottom-right, cliff center-left, tower center-top."""
+    bpy.ops.object.camera_add(location=(40, -50, 1))
     cam = bpy.context.active_object
     cam.name = "PreviewCamera"
-    cam.data.lens = 35
-    cam.data.clip_end = 200
-    target = Vector((-5, -5, 12))
+    cam.data.lens = 26
+    cam.data.clip_end = 250
+    # Look at cliff mid-height + tower area
+    target = Vector((5, -5, 12))
     direction = target - cam.location
     cam.rotation_euler = direction.to_track_quat('-Z', 'Y').to_euler()
     bpy.context.scene.camera = cam
 
 
 def setup_lighting():
+    """Golden warm sun, cool fill, bright cyan sky."""
     # Sun — warm golden
-    bpy.ops.object.light_add(type='SUN', location=(20, -20, 30))
+    bpy.ops.object.light_add(type='SUN', location=(25, -15, 35))
     sun = bpy.context.active_object
     sun.name = "Sun"
-    sun.data.energy = 4.0
-    sun.data.color = (1.0, 0.92, 0.75)
+    sun.data.energy = 3.0
+    sun.data.color = (1.0, 0.92, 0.70)
     sun.rotation_euler = (
-        math.radians(-50), math.radians(15), math.radians(-25)
+        math.radians(-45), math.radians(12), math.radians(-20)
     )
 
     # Fill light — cool blue
-    bpy.ops.object.light_add(type='SUN', location=(-10, 10, 15))
+    bpy.ops.object.light_add(type='SUN', location=(-15, 10, 15))
     fill = bpy.context.active_object
     fill.name = "FillLight"
-    fill.data.energy = 1.2
-    fill.data.color = (0.55, 0.65, 0.85)
+    fill.data.energy = 1.5
+    fill.data.color = (0.50, 0.60, 0.85)
     fill.rotation_euler = (
         math.radians(-30), math.radians(-150), 0
     )
 
-    # Sky background
+    # Sky background — bright cyan-blue
     world = bpy.data.worlds.new("Sky")
     world.use_nodes = True
     bg = world.node_tree.nodes["Background"]
-    bg.inputs["Color"].default_value = (0.35, 0.65, 0.95, 1.0)
-    bg.inputs["Strength"].default_value = 1.5
+    bg.inputs["Color"].default_value = (*C_SKY, 1.0)
+    bg.inputs["Strength"].default_value = 1.2
     bpy.context.scene.world = world
 
     # Color management
     bpy.context.scene.view_settings.view_transform = 'Standard'
-    bpy.context.scene.view_settings.exposure = 0.3
+    bpy.context.scene.view_settings.exposure = 0.0
 
 
 # =============================================================================
@@ -674,28 +837,31 @@ def main():
     os.makedirs(EXPORT_DIR, exist_ok=True)
     os.makedirs(BLEND_DIR, exist_ok=True)
 
-    print("[MENU SCENE] Building cliff...")
+    print("[MENU SCENE v4] Building cliff (whale-back + 3 ridges)...")
     cliff = build_cliff()
     export_glb(cliff, "cliff_unified.glb")
 
-    # Clear and rebuild for each to avoid name conflicts
     bpy.ops.object.select_all(action='DESELECT')
 
-    print("[MENU SCENE] Building tower...")
+    print("[MENU SCENE v4] Building tower (tall ruined, right edge)...")
     tower = build_tower()
     export_glb(tower, "tower_unified.glb")
 
-    print("[MENU SCENE] Building rocks...")
+    print("[MENU SCENE v4] Building rocks (7 at cliff base)...")
     rocks = build_rocks()
     export_glb(rocks, "rocks_set.glb")
 
-    print("[MENU SCENE] Building crystals...")
+    print("[MENU SCENE v4] Building crystals (purple + teal clusters)...")
     crystals = build_crystals()
     export_glb(crystals, "crystal_cluster_unified.glb")
 
-    print("[MENU SCENE] Building cabin...")
+    print("[MENU SCENE v4] Building cabin (far-left plateau)...")
     cabin = build_cabin()
     export_glb(cabin, "cabin_unified.glb")
+
+    print("[MENU SCENE v4] Building sun mesh (emissive sphere)...")
+    sun_mesh = build_sun_mesh()
+    # Sun mesh is preview-only, not exported as separate GLB
 
     # Preview setup (Blender only)
     setup_camera()
@@ -725,10 +891,10 @@ def main():
     bpy.context.scene.eevee.taa_render_samples = 16
     bpy.ops.render.render(write_still=True)
 
-    print(f"[MENU SCENE] Rendered: {render_path}")
-    print(f"[MENU SCENE] Blend saved: {blend_path}")
-    print("[MENU SCENE] === COMPLETE ===")
-    print("[MENU SCENE] 5 GLBs exported for Godot integration")
+    print(f"[MENU SCENE v4] Rendered: {render_path}")
+    print(f"[MENU SCENE v4] Blend saved: {blend_path}")
+    print("[MENU SCENE v4] === COMPLETE ===")
+    print("[MENU SCENE v4] 5 GLBs exported for Godot integration")
 
 
 main()
