@@ -3,7 +3,7 @@
 ## Overview
 
 This document defines the team of specialized Claude Code agents for the M.E.R.L.I.N. project.
-**105 agents + 1 knowledge base** organized by domain.
+**117 agents + 1 knowledge base** organized by domain.
 
 ## Usage with Claude Code
 
@@ -341,6 +341,43 @@ Lancer le jeu en debug : `powershell -File tools/autodev/launch_debug.ps1`
 | **Meta Sprint Reviewer** | `meta_sprint_reviewer.md` | **Post-sprint quality assessment, validation, debt tracking** |
 | **Meta Tech Debt** | `meta_tech_debt.md` | **TODO/FIXME tracking, duplication, complexity hotspots, dead code** |
 
+### Blender Art Pipeline (12 agents) — NEW
+
+Wave-based dispatch for 3D asset generation and scene composition.
+
+#### Wave 1 — Foundation (parallel)
+| Agent | File | Tier | Model | Triggers |
+|-------|------|------|-------|----------|
+| Terrain Sculptor | `blender_terrain_sculptor.md` | 1 | sonnet | terrain, cliff, displacement, biome terrain |
+| Ocean Animator | `blender_ocean_animator.md` | 2 | haiku | ocean, waves, water, foam |
+| Material Master | `blender_material_master.md` | 1 | sonnet | material, pbr, vertex color, texture |
+| Export Engineer | `blender_export_engineer.md` | 1 | haiku | export glb, lod, batch export |
+
+#### Wave 2 — Asset Producers (parallel)
+| Agent | File | Tier | Model | Triggers |
+|-------|------|------|-------|----------|
+| Tower Architect | `blender_tower_architect.md` | 2 | sonnet | tower, celtic, dolmen, menhir, ruin |
+| Vegetation Artist | `blender_vegetation_artist.md` | 2 | haiku | vegetation, tree, bush, grass, flora |
+| VFX Artist | `blender_vfx_artist.md` | 2 | sonnet | vfx, particle, magic, crystal glow |
+
+#### Wave 3 — Scene Assembly (parallel)
+| Agent | File | Tier | Model | Triggers |
+|-------|------|------|-------|----------|
+| Lighting Director | `blender_lighting_director.md` | 1 | sonnet | lighting, eevee, volumetric, day night |
+| Camera Director | `blender_camera_director.md` | 2 | haiku | camera, composition, cinematic, lens |
+| Scene Compositor | `blender_scene_compositor.md` | 2 | sonnet | compose scene, placement, z-fighting |
+| Animator | `blender_animator.md` | 2 | sonnet | animate, keyframe, nla, wave cycle |
+
+#### Wave 4 — QA (sequential)
+| Agent | File | Tier | Model | Triggers |
+|-------|------|------|-------|----------|
+| QA Renderer | `blender_qa_renderer.md` | 1 | haiku | qa render, compare reference, quality score |
+
+#### CLI Commands (20 total)
+```
+python tools/cli.py blender version|create-terrain|create-tower|create-object|create-ocean|batch-generate|scene-compose|list-assets|open|build-scene|render|cleanup|animate|light|material|lod|qa
+```
+
 ### Shared Resources
 
 | Resource | File | Purpose |
@@ -352,7 +389,7 @@ Lancer le jeu en debug : `powershell -File tools/autodev/launch_debug.ps1`
 ## Summary Count
 
 ```
-Total: 105 agents + 1 knowledge base
+Total: 117 agents + 1 knowledge base
 
 By category:
   Direction:                  1 (game_director)
@@ -378,6 +415,7 @@ By category:
   Performance & Technical:     6 (perf_memory, perf_render, perf_loading, perf_mobile, perf_network, perf_battery)
   Content & Narrative:         6 (content_card_writer, content_dialogue, content_flavor_text, content_quest_arc, content_worldbuilding, content_merlin_voice)
   Meta & Process:              4 (meta_bible_guardian, meta_code_bible_sync, meta_sprint_reviewer, meta_tech_debt)
+  Blender Art Pipeline:       12 (terrain_sculptor, ocean_animator, material_master, export_engineer, tower_architect, vegetation_artist, vfx_artist, lighting_director, camera_director, scene_compositor, animator, qa_renderer)
   Knowledge Base:              1 (gdscript_knowledge_base)
 ```
 
