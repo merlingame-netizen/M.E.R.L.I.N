@@ -213,7 +213,7 @@ func _build_cliff() -> void:
 	ledge_bm.size = Vector3(45.0, 2.5, 6.0)
 	ledge.mesh = ledge_bm
 	var ledge_mat: StandardMaterial3D = StandardMaterial3D.new()
-	ledge_mat.albedo_color = Color(0.28, 0.35, 0.20)
+	ledge_mat.albedo_color = Color(0.35, 0.30, 0.22)
 	ledge_mat.roughness = 0.95
 	ledge.material_override = ledge_mat
 	ledge.position = Vector3(-5.0, -2.0, -11.0)
@@ -492,13 +492,8 @@ func _build_cliff_grass() -> void:
 		var bt: Transform3D = Transform3D.IDENTITY
 		var bs: float = _rng.randf_range(0.4, 1.4)
 		bt = bt.scaled(Vector3(bs, bs * 0.7, bs))
-		# Last 15 bushes hang over the cliff edge (z beyond -12)
-		if i >= 45:
-			bt.origin = Vector3(
-				_rng.randf_range(-16.0, 14.0),
-				3.8 + _rng.randf_range(-0.3, 0.2),
-				_rng.randf_range(-14.5, -11.5)
-			)
+		if false:
+			pass  # Removed hanging bushes (looked like floating green boxes)
 		else:
 			bt.origin = Vector3(
 				_rng.randf_range(-16.0, 16.0),
@@ -725,13 +720,8 @@ func _build_clouds() -> void:
 
 func _build_crystals() -> void:
 	var crystal_mat: StandardMaterial3D = StandardMaterial3D.new()
-	crystal_mat.albedo_color = Color(0.7, 0.3, 1.0)  # Bright purple, visible without emission
-	crystal_mat.transparency = BaseMaterial3D.TRANSPARENCY_DISABLED
-	crystal_mat.emission_enabled = true
-	crystal_mat.emission = Color(0.6, 0.2, 0.9)
-	crystal_mat.emission_energy_multiplier = 2.0
-	crystal_mat.roughness = 0.2
-	crystal_mat.metallic = 0.5
+	crystal_mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+	crystal_mat.albedo_color = Color(0.55, 0.15, 0.85)  # Vivid purple, unshaded for GL Compat
 
 	for i in 6:
 		var crystal: MeshInstance3D = MeshInstance3D.new()
