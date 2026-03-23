@@ -202,13 +202,13 @@ def build_terrain(mats):
     shade_flat(terrain)
 
     # Additional rock outcrops glued to cliff face for more 3D depth
-    for i in range(15):
+    for i in range(20):
         bpy.ops.mesh.primitive_ico_sphere_add(
             subdivisions=2,
-            radius=random.uniform(1.0, 3.0),
+            radius=random.uniform(1.5, 4.0),
             location=(
                 random.uniform(-25, 25),
-                random.uniform(-16, -8),
+                random.uniform(-16, -14),
                 random.uniform(1, 7)
             )
         )
@@ -231,10 +231,10 @@ def build_terrain(mats):
 # ═══════════════════════════════════════════════════════════════════════════════
 def build_ocean(mats):
     """Low-subdivision ocean for visible triangle facets. Bright teal with crest highlights."""
-    bpy.ops.mesh.primitive_grid_add(x_subdivisions=15, y_subdivisions=10, size=1, location=(0, -38, -2))
+    bpy.ops.mesh.primitive_grid_add(x_subdivisions=15, y_subdivisions=10, size=1, location=(0, -40, -4))
     ocean = bpy.context.active_object
     ocean.name = "Ocean"
-    ocean.scale = (140, 70, 1)
+    ocean.scale = (140, 80, 1)
     bpy.ops.object.transform_apply(scale=True)
 
     # Large wave displacement for visible geometric facets
@@ -674,15 +674,15 @@ def build_cabin(mats):
 # CAMERA — Low, wide, dramatic angle
 # ═══════════════════════════════════════════════════════════════════════════════
 def setup_camera():
-    # Lower and further back to frame full tower + sun in upper-right
-    bpy.ops.object.camera_add(location=(30, -50, 3))
+    # More to the side to see cliff face prominently
+    bpy.ops.object.camera_add(location=(30, -45, 5))
     cam = bpy.context.active_object
     cam.name = "MenuCamera"
-    cam.data.lens = 24  # Wider to capture sun + tower + cliff
+    cam.data.lens = 28  # Wider angle to capture more scene
     cam.data.clip_end = 400
 
-    # Look at cliff/tower junction — shows full tower and sun in frame
-    target = Vector((-2, -10, 15))
+    # Look at cliff face mid-height for prominent visibility
+    target = Vector((-2, -8, 10))
     direction = target - cam.location
     rot = direction.to_track_quat('-Z', 'Y')
     cam.rotation_euler = rot.to_euler()
