@@ -756,22 +756,120 @@ def build_cabin():
     return cabin
 
 
-def build_sun_mesh():
-    """Bright emissive sphere representing the visible sun.
-    Position: upper-right from camera perspective, behind/beside tower."""
-    bpy.ops.mesh.primitive_uv_sphere_add(
-        segments=16, ring_count=12, radius=2.0,
-        location=(30, -20, 25)
+def build_ocean():
+    """Simple geometric ocean plane for Blender preview."""
+    bpy.ops.mesh.primitive_grid_add(
+        x_subdivisions=20, y_subdivisions=15, size=1, location=(0, -35, -1.5)
     )
-    sun = bpy.context.active_object
-    sun.name = "SunMesh"
+    ocean = bpy.context.active_object
+    ocean.name = "OceanPreview"
+    ocean.scale = (120, 70, 1)
+    bpy.ops.object.transform_apply(scale=True)
 
-    mat = create_emission_material("SunMat", C_SUN_EMIT, C_SUN_EMIT, 5.0)
-    sun.data.materials.clear()
-    sun.data.materials.append(mat)
+    # Wave displacement
+    from mathutils import noise as mn
+    for v in ocean.data.vertices:
+        x_n = v.co.x / 120
+        y_n = v.co.y / 70
+        wave = math.sin(x_n * 12) * 0.8 + math.sin(y_n * 8 + x_n * 5) * 0.6
+        wave += mn.noise(Vector((x_n * 6, y_n * 4, 0))) * 0.4
+        v.co.z = wave
 
-    shade_flat(sun)
-    return sun
+    shade_flat(ocean)
+
+    # Dark teal material
+    mat = bpy.data.materials.new("OceanMat")
+    mat.use_nodes = True
+    bsdf = mat.node_tree.nodes["Principled BSDF"]
+    bsdf.inputs["Base Color"].default_value = (0.06, 0.25, 0.45, 1.0)
+    bsdf.inputs["Roughness"].default_value = 0.3
+    bsdf.inputs["Metallic"].default_value = 0.05
+    ocean.data.materials.clear()
+    ocean.data.materials.append(mat)
+
+    # DON'T export this as GLB — it's preview only
+    return ocean
+
+
+def build_sun_mesh():
+    """Emissive sun sphere + transparent halo for preview."""
+    sun_pos = (30, -20, 22)
+
+    # Core
+    bpy.ops.mesh.primitive_uv_sphere_add(segments=16, ring_count=8, radius=2.5, location=sun_pos)
+    core = bpy.context.active_object
+    core.name = "SunCore"
+    core_mat = bpy.data.materials.new("SunCoreMat")
+    core_mat.use_nodes = True
+    bsdf = core_mat.node_tree.nodes["Principled BSDF"]
+    bsdf.inputs["Base Color"].default_value = (1.0, 0.95, 0.70, 1.0)
+    bsdf.inputs["Emission Color"].default_value = (1.0, 0.95, 0.70, 1.0)
+    bsdf.inputs["Emission Strength"].default_value = 8.0
+    core.data.materials.clear()
+    core.data.materials.append(core_mat)
+
+    # Halo (larger, transparent)
+    bpy.ops.mesh.primitive_uv_sphere_add(segments=16, ring_count=8, radius=6, location=sun_pos)
+    halo = bpy.context.active_object
+    halo.name = "SunHalo"
+    halo_mat = bpy.data.materials.new("SunHaloMat")
+    halo_mat.use_nodes = True
+    bsdf_h = halo_mat.node_tree.nodes["Principled BSDF"]
+    bsdf_h.inputs["Base Color"].default_value = (1.0, 0.95, 0.75, 1.0)
+    bsdf_h.inputs["Emission Color"].default_value = (1.0, 0.95, 0.75, 1.0)
+    bsdf_h.inputs["Emission Strength"].default_value = 2.0
+    bsdf_h.inputs["Alpha"].default_value = 0.15
+    try:
+        halo_mat.surface_render_method = 'DITHERED'
+    except (AttributeError, TypeError):
+        try:
+            halo_mat.blend_method = 'BLEND'
+        except (AttributeError, TypeError):
+            pass
+    halo.data.materials.clear()
+    halo.data.materials.append(halo_mat)
+
+
+def build_clouds():
+    """5 scattered low-poly cloud puffs in the sky."""
+    cloud_mat = bpy.data.materials.new("CloudMat")
+    cloud_mat.use_nodes = True
+    bsdf = cloud_mat.node_tree.nodes["Principled BSDF"]
+    bsdf.inputs["Base Color"].default_value = (0.95, 0.97, 1.0, 1.0)
+    bsdf.inputs["Roughness"].default_value = 1.0
+    bsdf.inputs["Alpha"].default_value = 0.7
+    try:
+        cloud_mat.surface_render_method = 'DITHERED'
+    except (AttributeError, TypeError):
+        try:
+            cloud_mat.blend_method = 'BLEND'
+        except (AttributeError, TypeError):
+            pass
+
+    cloud_positions = [
+        (-25, -15, 28), (-10, -25, 32), (15, -10, 30), (35, -20, 35), (50, -15, 27)
+    ]
+    for i, pos in enumerate(cloud_positions):
+        # Each cloud = 2-3 overlapping stretched icospheres
+        for j in range(3):
+            bpy.ops.mesh.primitive_ico_sphere_add(
+                subdivisions=1,
+                radius=random.uniform(3, 6),
+                location=(
+                    pos[0] + random.uniform(-2, 2),
+                    pos[1] + random.uniform(-1, 1),
+                    pos[2] + j * 1.5
+                )
+            )
+            cloud = bpy.context.active_object
+            cloud.name = f"Cloud_{i}_{j}"
+            cloud.scale = (random.uniform(1.5, 2.5), random.uniform(0.8, 1.2), random.uniform(0.4, 0.7))
+            bpy.ops.object.transform_apply(scale=True)
+            for v in cloud.data.vertices:
+                v.co += v.co.normalized() * random.uniform(-0.3, 0.3)
+            shade_flat(cloud)
+            cloud.data.materials.clear()
+            cloud.data.materials.append(cloud_mat)
 
 
 # =============================================================================
@@ -779,15 +877,12 @@ def build_sun_mesh():
 # =============================================================================
 
 def setup_camera():
-    """Camera at water level, slightly left of center, looking UP at cliff+tower.
-    Wide angle 26mm. Ocean fills bottom-right, cliff center-left, tower center-top."""
-    bpy.ops.object.camera_add(location=(40, -50, 1))
+    bpy.ops.object.camera_add(location=(38, -55, 0.5))  # AT water level
     cam = bpy.context.active_object
     cam.name = "PreviewCamera"
-    cam.data.lens = 26
+    cam.data.lens = 24  # Very wide for dramatic effect
     cam.data.clip_end = 250
-    # Look at cliff mid-height + tower area
-    target = Vector((5, -5, 12))
+    target = Vector((0, -5, 10))  # Look at cliff mid-height
     direction = target - cam.location
     cam.rotation_euler = direction.to_track_quat('-Z', 'Y').to_euler()
     bpy.context.scene.camera = cam
@@ -859,9 +954,14 @@ def main():
     cabin = build_cabin()
     export_glb(cabin, "cabin_unified.glb")
 
-    print("[MENU SCENE v4] Building sun mesh (emissive sphere)...")
-    sun_mesh = build_sun_mesh()
-    # Sun mesh is preview-only, not exported as separate GLB
+    print("[MENU SCENE v4] Building ocean preview...")
+    ocean = build_ocean()  # Preview only, not exported as GLB
+
+    print("[MENU SCENE v4] Building sun...")
+    build_sun_mesh()
+
+    print("[MENU SCENE v4] Building clouds...")
+    build_clouds()
 
     # Preview setup (Blender only)
     setup_camera()
