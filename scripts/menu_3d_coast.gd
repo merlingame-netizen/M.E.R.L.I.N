@@ -285,9 +285,9 @@ func _build_cliff() -> void:
 
 func _build_ocean() -> void:
 	# Geometric wave strips — 20 rows of tilted boxes for faceted ocean look
-	var deep_color: Color = Color(0.10, 0.30, 0.50)
-	var mid_color: Color = Color(0.15, 0.38, 0.58)
-	var bright_color: Color = Color(0.20, 0.45, 0.65)
+	var deep_color: Color = Color(0.05, 0.18, 0.35)
+	var mid_color: Color = Color(0.08, 0.25, 0.42)
+	var bright_color: Color = Color(0.12, 0.32, 0.50)
 
 	for i in 20:
 		var strip: MeshInstance3D = MeshInstance3D.new()
@@ -297,8 +297,8 @@ func _build_ocean() -> void:
 		var smat: StandardMaterial3D = StandardMaterial3D.new()
 		var depth_t: float = float(i) / 20.0
 		smat.albedo_color = deep_color.lerp(bright_color, 1.0 - depth_t)
-		smat.roughness = 0.15 + depth_t * 0.2
-		smat.metallic = 0.3 - depth_t * 0.2
+		smat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+		smat.roughness = 1.0
 		strip.material_override = smat
 		strip.position = Vector3(-5.0, -4.5, -15.0 - float(i) * 3.5)
 		strip.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
