@@ -85,7 +85,7 @@ def create_tower_materials():
     specs = {
         'stone_light': (0.52, 0.48, 0.40),
         'stone_mid': (0.45, 0.40, 0.33),
-        'stone_dark': (0.35, 0.30, 0.24),
+        'stone_dark': (0.28, 0.23, 0.18),
         'window': (0.08, 0.06, 0.05),
         'moss': (0.28, 0.48, 0.20),
     }
@@ -648,7 +648,7 @@ def build_crystals():
 
             # Apply emission material per crystal with its cluster color
             emission_col = tuple(c * 1.3 for c in color)
-            emission_strength = 5.0 if prefix == "Purple" else 4.0
+            emission_strength = 2.0 if prefix == "Purple" else 1.5
             mat = create_emission_material(
                 f"{prefix}CrystalMat_{i}", color, emission_col, emission_strength
             )
@@ -954,7 +954,7 @@ def build_foam():
     for i in range(40):
         bpy.ops.mesh.primitive_ico_sphere_add(
             subdivisions=0, radius=random.uniform(0.3, 1.2),
-            location=(random.uniform(-20, 18), random.uniform(-18, -14), random.uniform(-1, 1.5))
+            location=(random.uniform(-20, 18), random.uniform(-16, -12), random.uniform(0.0, 2.0))
         )
         foam = bpy.context.active_object
         foam.name = f"Foam_{i}"
@@ -996,9 +996,9 @@ def build_magic_orbs():
     orb_mat = bpy.data.materials.new("OrbMat")
     orb_mat.use_nodes = True
     bsdf = orb_mat.node_tree.nodes["Principled BSDF"]
-    bsdf.inputs["Base Color"].default_value = (0.15, 0.05, 0.25, 1.0)
-    bsdf.inputs["Emission Color"].default_value = (0.30, 0.10, 0.50, 1.0)
-    bsdf.inputs["Emission Strength"].default_value = 3.0
+    bsdf.inputs["Base Color"].default_value = (0.08, 0.02, 0.12, 1.0)
+    bsdf.inputs["Emission Color"].default_value = (0.20, 0.05, 0.30, 1.0)
+    bsdf.inputs["Emission Strength"].default_value = 1.5
 
     tower_x, tower_y = 15, -5
     for i, (dx, dz) in enumerate([(-6, 18), (7, 16)]):
