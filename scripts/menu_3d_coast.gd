@@ -18,10 +18,6 @@ var _ocean_time: float = 0.0
 var _floating_stones: Array[MeshInstance3D] = []
 var _floating_angles: Array[float] = []
 var _tower_pos: Vector3 = Vector3(2.0, 4.0, -12.0)
-var _wave_strips: Array[MeshInstance3D] = []
-var _wave_base_z: Array[float] = []
-var _wave_base_x: Array[float] = []
-var _crash_strips: Array[MeshInstance3D] = []
 
 # --- UI refs ---
 var _ui_layer: CanvasLayer
@@ -67,26 +63,8 @@ func _ready() -> void:
 func _process(delta: float) -> void:
 	# Day/night disabled — fixed bright lighting for menu
 
-	# Ocean wave strips animation — multi-frequency reactive waves
+	# Ocean animation handled by shader (TIME uniform) — no GDScript needed
 	_ocean_time += delta
-	for i in _wave_strips.size():
-		if not is_instance_valid(_wave_strips[i]):
-			continue
-		var fi: float = float(i)
-		var wave_y: float = sin(_ocean_time * 1.5 + fi * 0.8) * 0.4 + sin(_ocean_time * 0.7 + fi * 1.3) * 0.25 + sin(_ocean_time * 2.2 + fi * 0.3) * 0.15
-		_wave_strips[i].position.y = -4.5 + wave_y
-		_wave_strips[i].rotation.x = sin(_ocean_time * 0.9 + fi * 0.5) * 0.08
-		if i < _wave_base_x.size():
-			_wave_strips[i].position.x = _wave_base_x[i] + sin(_ocean_time * 0.3 + fi * 0.7) * 0.5
-
-	# Crash zone strips — faster, choppier
-	for i in _crash_strips.size():
-		if not is_instance_valid(_crash_strips[i]):
-			continue
-		var fi: float = float(i)
-		var crash_y: float = sin(_ocean_time * 3.0 + fi * 1.2) * 0.5 + sin(_ocean_time * 2.0 + fi * 0.9) * 0.3
-		_crash_strips[i].position.y = -5.0 + crash_y
-		_crash_strips[i].rotation.x = sin(_ocean_time * 2.5 + fi * 0.8) * 0.12
 
 	# Floating stones orbit around tower
 	for i in _floating_stones.size():
@@ -335,65 +313,30 @@ func _build_cliff() -> void:
 
 
 func _build_ocean() -> void:
-	# --- 40 THIN wave strips — high-definition faceted ocean ---
-	var near_color: Color = Color(0.15, 0.40, 0.55)
-	var deep_color: Color = Color(0.03, 0.12, 0.28)
+	# --- SINGLE PlaneMesh + vertex displacement shader ---
+	var ocean: MeshInstance3D = MeshInstance3D.new()
+	var plane: PlaneMesh = PlaneMesh.new()
+	plane.size = Vector2(120.0, 80.0)
+	plane.subdivide_width = 60
+	plane.subdivide_depth = 40
+	ocean.mesh = plane
 
-	for i in 40:
-		var strip: MeshInstance3D = MeshInstance3D.new()
-		var strip_bm: BoxMesh = BoxMesh.new()
-		strip_bm.size = Vector3(60.0, 0.15, 1.5)
-		strip.mesh = strip_bm
-		var smat: StandardMaterial3D = StandardMaterial3D.new()
-		var depth_t: float = float(i) / 40.0
-		smat.albedo_color = near_color.lerp(deep_color, depth_t)
-		smat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
-		smat.roughness = 1.0
-		strip.material_override = smat
-		var base_z: float = -15.0 - float(i) * 1.75
-		var base_x: float = -5.0
-		strip.position = Vector3(base_x, -4.5, base_z)
-		strip.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
-		_world.add_child(strip)
-		_wave_strips.append(strip)
-		_wave_base_z.append(base_z)
-		_wave_base_x.append(base_x)
+	var shader_mat: ShaderMaterial = ShaderMaterial.new()
+	var shader: Shader = load("res://shaders/ocean_lowpoly.gdshader")
+	shader_mat.shader = shader
+	shader_mat.set_shader_parameter("deep_color", Color(0.03, 0.12, 0.28))
+	shader_mat.set_shader_parameter("shallow_color", Color(0.12, 0.35, 0.50))
+	shader_mat.set_shader_parameter("foam_color", Color(0.55, 0.70, 0.78))
+	shader_mat.set_shader_parameter("wave_speed", 1.2)
+	shader_mat.set_shader_parameter("wave_height", 0.8)
+	shader_mat.set_shader_parameter("wave_frequency", 1.5)
+	shader_mat.set_shader_parameter("foam_threshold", 0.6)
+	ocean.material_override = shader_mat
 
-	# Whitecap foam crests on every 4th strip
-	var foam_crest_mat: StandardMaterial3D = StandardMaterial3D.new()
-	foam_crest_mat.albedo_color = Color(0.75, 0.85, 0.90, 0.7)
-	foam_crest_mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
-	foam_crest_mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
-	for wi in 40:
-		if wi % 4 != 0:
-			continue
-		var cap: MeshInstance3D = MeshInstance3D.new()
-		var cap_bm: BoxMesh = BoxMesh.new()
-		cap_bm.size = Vector3(55.0, 0.08, 0.6)
-		cap.mesh = cap_bm
-		cap.material_override = foam_crest_mat
-		cap.position = Vector3(-5.0, -4.2, -15.0 - float(wi) * 1.75)
-		cap.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
-		_world.add_child(cap)
-
-	# --- WAVE CRASH ZONE at cliff base (z ~ -14 to -16) ---
-	var crash_color: Color = Color(0.40, 0.55, 0.65)
-	for i in 5:
-		var crash: MeshInstance3D = MeshInstance3D.new()
-		var crash_bm: BoxMesh = BoxMesh.new()
-		crash_bm.size = Vector3(50.0, 0.2, 1.0)
-		crash.mesh = crash_bm
-		var cmat: StandardMaterial3D = StandardMaterial3D.new()
-		cmat.albedo_color = crash_color.lerp(Color(0.60, 0.70, 0.78), float(i) / 5.0)
-		cmat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
-		crash.material_override = cmat
-		crash.position = Vector3(-5.0, -5.0, -14.0 - float(i) * 0.5)
-		crash.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
-		_world.add_child(crash)
-		_crash_strips.append(crash)
-
-	# Keep _ocean_mesh for backward compat (first strip)
-	_ocean_mesh = _wave_strips[0] if not _wave_strips.is_empty() else null
+	ocean.position = Vector3(-5.0, -5.0, -45.0)
+	ocean.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	_world.add_child(ocean)
+	_ocean_mesh = ocean
 
 	# Foam/spray particles at cliff base
 	var spray: GPUParticles3D = GPUParticles3D.new()
