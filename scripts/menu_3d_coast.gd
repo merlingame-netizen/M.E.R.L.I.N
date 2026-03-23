@@ -62,9 +62,7 @@ func _ready() -> void:
 
 
 func _process(delta: float) -> void:
-	# Day/night cycle (realtime)
-	if _day_night:
-		_day_night.update(delta)
+	# Day/night disabled — fixed bright lighting for menu
 
 	# Ocean wave strips animation — each strip bobs at different phase
 	_ocean_time += delta
@@ -112,27 +110,27 @@ func _build_3d_world() -> void:
 	_world.name = "World3D"
 	add_child(_world)
 
-	# Camera — from ocean side, angled to show cliff face + ocean + tower + sky
+	# Camera — low at ocean level, looking UP at cliff face + tower (dramatic side view)
 	_camera = Camera3D.new()
-	_camera.position = Vector3(16.0, 2.0, -20.0)
-	_camera.fov = 60.0
+	_camera.position = Vector3(35.0, 3.0, -30.0)
+	_camera.fov = 50.0
 	_camera.current = true
 	_camera.far = 200.0
 	_world.add_child(_camera)
-	# Look at tower mid-height with ocean visible below
-	_camera.look_at(Vector3(-2.0, 10.0, -12.0), Vector3.UP)
+	# Look up at cliff edge + tower silhouette against sky
+	_camera.look_at(Vector3(-5.0, 8.0, -5.0), Vector3.UP)
 
 	# Environment
 	_env = WorldEnvironment.new()
 	var env: Environment = Environment.new()
 	env.background_mode = Environment.BG_COLOR
-	env.background_color = Color(0.50, 0.70, 0.92)  # Brighter blue sky
+	env.background_color = Color(0.40, 0.65, 0.95)  # Vivid blue sky
 	env.ambient_light_source = Environment.AMBIENT_SOURCE_COLOR
-	env.ambient_light_color = Color(0.75, 0.80, 0.85)
-	env.ambient_light_energy = 1.4
+	env.ambient_light_color = Color(0.80, 0.85, 0.95)  # Cooler, bluer
+	env.ambient_light_energy = 1.8
 	env.fog_enabled = true
-	env.fog_light_color = Color(0.65, 0.75, 0.85)
-	env.fog_density = 0.003
+	env.fog_light_color = Color(0.65, 0.80, 0.95)  # Blue-tinted fog
+	env.fog_density = 0.0005
 	env.tonemap_mode = Environment.TONE_MAPPER_FILMIC
 	env.tonemap_exposure = 1.3
 	_env.environment = env
@@ -140,14 +138,11 @@ func _build_3d_world() -> void:
 
 	# Sun — realtime position
 	_sun = DirectionalLight3D.new()
-	_sun.light_color = Color(0.90, 0.85, 0.75)
-	_sun.light_energy = 1.5
+	_sun.light_color = Color(1.0, 0.95, 0.85)
+	_sun.light_energy = 2.5
 	_sun.shadow_enabled = false
+	_sun.rotation_degrees = Vector3(-55.0, -30.0, 0.0)  # High noon, slightly angled
 	_world.add_child(_sun)
-
-	# Day/night cycle — REALTIME mode (system clock)
-	_day_night = BrocDayNight.new(_sun, _env)
-	_day_night.set_realtime(true)
 
 	# Fill light
 	var fill: DirectionalLight3D = DirectionalLight3D.new()
@@ -664,15 +659,15 @@ func _build_clouds() -> void:
 		var base_pos: Vector3 = Vector3(
 			_rng.randf_range(-40.0, 40.0),
 			_rng.randf_range(20.0, 30.0),
-			_rng.randf_range(-60.0, -30.0)
+			_rng.randf_range(-80.0, -50.0)
 		)
-		var base_w: float = _rng.randf_range(8.0, 20.0)
-		var base_h: float = _rng.randf_range(3.0, 6.0)
+		var base_w: float = _rng.randf_range(4.0, 10.0)
+		var base_h: float = _rng.randf_range(1.5, 3.0)
 		# 3 overlapping quads per cloud for volume
 		for layer_idx in 3:
 			var cloud: MeshInstance3D = MeshInstance3D.new()
 			var layer_mat: StandardMaterial3D = StandardMaterial3D.new()
-			layer_mat.albedo_color = Color(0.92, 0.94, 0.96, 0.35 - float(layer_idx) * 0.08)
+			layer_mat.albedo_color = Color(0.92, 0.94, 0.96, 0.15 - float(layer_idx) * 0.03)
 			layer_mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
 			layer_mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
 			layer_mat.billboard_mode = BaseMaterial3D.BILLBOARD_ENABLED
@@ -697,9 +692,10 @@ func _build_clouds() -> void:
 
 func _build_crystals() -> void:
 	var crystal_mat: StandardMaterial3D = StandardMaterial3D.new()
-	crystal_mat.albedo_color = Color(0.5, 0.2, 0.7)
+	crystal_mat.albedo_color = Color(0.7, 0.3, 1.0)  # Bright purple, visible without emission
+	crystal_mat.transparency = BaseMaterial3D.TRANSPARENCY_DISABLED
 	crystal_mat.emission_enabled = true
-	crystal_mat.emission = Color(0.6, 0.2, 0.8)
+	crystal_mat.emission = Color(0.6, 0.2, 0.9)
 	crystal_mat.emission_energy_multiplier = 2.0
 	crystal_mat.roughness = 0.2
 	crystal_mat.metallic = 0.5
@@ -814,12 +810,12 @@ func _build_ui() -> void:
 
 	# Menu container (hidden initially)
 	_menu_container = VBoxContainer.new()
-	_menu_container.set_anchors_preset(Control.PRESET_CENTER_BOTTOM)
-	_menu_container.grow_horizontal = Control.GROW_DIRECTION_BOTH
+	_menu_container.set_anchors_preset(Control.PRESET_BOTTOM_RIGHT)
+	_menu_container.grow_horizontal = Control.GROW_DIRECTION_BEGIN
 	_menu_container.grow_vertical = Control.GROW_DIRECTION_BEGIN
-	_menu_container.offset_left = -220.0
-	_menu_container.offset_right = 220.0
-	_menu_container.offset_top = -280.0
+	_menu_container.offset_left = -460.0
+	_menu_container.offset_right = -20.0
+	_menu_container.offset_top = -300.0
 	_menu_container.offset_bottom = -20.0
 	_menu_container.alignment = BoxContainer.ALIGNMENT_END
 	_menu_container.add_theme_constant_override("separation", 16)

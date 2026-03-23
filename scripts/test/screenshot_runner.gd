@@ -5,7 +5,7 @@
 
 extends Node
 
-const SETTLE_SECONDS := 5.0
+const SETTLE_SECONDS := 1.0
 const FALLBACK_OUTPUT := "user://screenshot.png"
 
 var _target_scene_path: String = ""
@@ -47,7 +47,8 @@ func _ready() -> void:
 	await get_tree().create_timer(SETTLE_SECONDS).timeout
 
 	# Capture viewport
-	_capture_and_save()
+	print("[SCREENSHOT] Settle done, capturing...")
+	await _capture_and_save()
 
 
 func _capture_and_save() -> void:
@@ -55,6 +56,7 @@ func _capture_and_save() -> void:
 	for i in 3:
 		await get_tree().process_frame
 	await RenderingServer.frame_post_draw
+	print("[SCREENSHOT] Render flushed, saving...")
 
 	var viewport: Viewport = get_viewport()
 	if viewport == null:
