@@ -425,7 +425,7 @@ def build_tower():
     tower_x = 15
     tower_y = -5
     tower_base_z = 7.5  # plateau height at this location
-    tower_height = 25
+    tower_height = 30
     tower_center_z = tower_base_z + tower_height / 2
 
     # Main tower body — 12-sided cylinder
@@ -454,23 +454,20 @@ def build_tower():
     # === POINTED BROKEN SPIRE on top ===
     spire_base_z = tower_base_z + tower_height
     bpy.ops.mesh.primitive_cone_add(
-        vertices=8, radius1=2.2, radius2=0.15,
-        depth=8.0, location=(tower_x, tower_y, spire_base_z + 4.0)
+        vertices=6, radius1=2.5, radius2=0.3,
+        depth=8, location=(tower_x, tower_y, spire_base_z + 4)
     )
     spire = bpy.context.active_object
     spire.name = "Spire"
-    # Break the spire: remove some vertices on one side by displacing them
-    for v in spire.data.vertices:
-        local_x = v.co.x - tower_x
-        if local_x > 0.5 and v.co.z > spire_base_z + 5:
-            # Broken chunk — push inward/down
-            v.co.z -= random.uniform(1.0, 3.0)
-            v.co.x -= random.uniform(0.5, 1.5)
-        v.co += Vector((
-            random.uniform(-0.15, 0.15),
-            random.uniform(-0.15, 0.15),
-            random.uniform(-0.1, 0.1),
-        ))
+    # Delete some vertices to make it "broken"
+    bpy.ops.object.mode_set(mode='EDIT')
+    bm = bmesh.from_edit_mesh(spire.data)
+    bm.verts.ensure_lookup_table()
+    verts_remove = [v for v in bm.verts if v.co.x > 1.0 and v.co.z > 2.0]
+    if verts_remove:
+        bmesh.ops.delete(bm, geom=verts_remove, context='VERTS')
+    bmesh.update_edit_mesh(spire.data)
+    bpy.ops.object.mode_set(mode='OBJECT')
     parts.append(spire)
 
     # === WINDOWS (3 dark recesses around tower) ===
@@ -757,35 +754,54 @@ def build_cabin():
 
 
 def build_ocean():
-    """Simple geometric ocean plane for Blender preview."""
+    """Simple geometric ocean plane for Blender preview.
+    Low subdivisions for visible triangle facets, lighter foam near cliff."""
     bpy.ops.mesh.primitive_grid_add(
-        x_subdivisions=20, y_subdivisions=15, size=1, location=(0, -35, -1.5)
+        x_subdivisions=12, y_subdivisions=8, size=1, location=(0, -35, -1.5)
     )
     ocean = bpy.context.active_object
     ocean.name = "OceanPreview"
     ocean.scale = (120, 70, 1)
     bpy.ops.object.transform_apply(scale=True)
 
-    # Wave displacement
+    # Wave displacement — 2x amplitude for visible facets
     from mathutils import noise as mn
     for v in ocean.data.vertices:
         x_n = v.co.x / 120
         y_n = v.co.y / 70
-        wave = math.sin(x_n * 12) * 0.8 + math.sin(y_n * 8 + x_n * 5) * 0.6
-        wave += mn.noise(Vector((x_n * 6, y_n * 4, 0))) * 0.4
+        wave = math.sin(x_n * 12) * 1.6 + math.sin(y_n * 8 + x_n * 5) * 1.2
+        wave += mn.noise(Vector((x_n * 6, y_n * 4, 0))) * 0.8
         v.co.z = wave
 
     shade_flat(ocean)
 
-    # Dark teal material
+    # Dark teal material (deep ocean)
     mat = bpy.data.materials.new("OceanMat")
     mat.use_nodes = True
     bsdf = mat.node_tree.nodes["Principled BSDF"]
     bsdf.inputs["Base Color"].default_value = (0.06, 0.25, 0.45, 1.0)
     bsdf.inputs["Roughness"].default_value = 0.3
     bsdf.inputs["Metallic"].default_value = 0.05
+
+    # Lighter foam material for faces near cliff
+    foam_mat = bpy.data.materials.new("OceanFoam")
+    foam_mat.use_nodes = True
+    foam_bsdf = foam_mat.node_tree.nodes["Principled BSDF"]
+    foam_bsdf.inputs["Base Color"].default_value = (0.35, 0.55, 0.65, 1.0)
+    foam_bsdf.inputs["Roughness"].default_value = 0.4
+    foam_bsdf.inputs["Metallic"].default_value = 0.05
+
     ocean.data.materials.clear()
     ocean.data.materials.append(mat)
+    ocean.data.materials.append(foam_mat)
+
+    # Assign foam to faces near cliff (avg vertex y > -25)
+    for face in ocean.data.polygons:
+        avg_y = sum(ocean.data.vertices[vi].co.y for vi in face.vertices) / len(face.vertices)
+        if avg_y > -25:
+            face.material_index = 1  # OceanFoam
+        else:
+            face.material_index = 0  # OceanMat
 
     # DON'T export this as GLB — it's preview only
     return ocean
@@ -872,17 +888,71 @@ def build_clouds():
             cloud.data.materials.append(cloud_mat)
 
 
+def build_vegetation():
+    """Dense vegetation on cliff plateau — NOT exported, for preview only."""
+    veg_mat = bpy.data.materials.new("VegMat")
+    veg_mat.use_nodes = True
+    bsdf = veg_mat.node_tree.nodes["Principled BSDF"]
+    bsdf.inputs["Base Color"].default_value = (0.35, 0.58, 0.20, 1.0)
+    bsdf.inputs["Roughness"].default_value = 0.85
+
+    # 30 bushes on plateau
+    for i in range(30):
+        bpy.ops.mesh.primitive_ico_sphere_add(
+            subdivisions=1, radius=random.uniform(0.5, 1.2),
+            location=(random.uniform(-20, 12), random.uniform(-5, 8), 9.0 + random.uniform(0, 0.5))
+        )
+        bush = bpy.context.active_object
+        bush.name = f"VegBush_{i}"
+        bush.scale.z = random.uniform(0.5, 0.8)
+        shade_flat(bush)
+        bush.data.materials.clear()
+        bush.data.materials.append(veg_mat)
+
+    # 40 grass tufts
+    for i in range(40):
+        bpy.ops.mesh.primitive_cone_add(
+            vertices=4, radius1=0.08, depth=0.4,
+            location=(random.uniform(-22, 14), random.uniform(-6, 9), 9.2)
+        )
+        grass = bpy.context.active_object
+        grass.name = f"Grass_{i}"
+        grass.data.materials.clear()
+        grass.data.materials.append(veg_mat)
+
+
+def build_foam():
+    """White spray where ocean meets cliff."""
+    foam_mat = bpy.data.materials.new("FoamMat")
+    foam_mat.use_nodes = True
+    bsdf = foam_mat.node_tree.nodes["Principled BSDF"]
+    bsdf.inputs["Base Color"].default_value = (0.85, 0.90, 0.95, 1.0)
+    bsdf.inputs["Roughness"].default_value = 1.0
+
+    for i in range(25):
+        bpy.ops.mesh.primitive_ico_sphere_add(
+            subdivisions=0, radius=random.uniform(0.2, 0.8),
+            location=(random.uniform(-20, 18), random.uniform(-18, -14), random.uniform(-1, 0.5))
+        )
+        foam = bpy.context.active_object
+        foam.name = f"Foam_{i}"
+        foam.scale.z = random.uniform(0.3, 0.6)
+        shade_flat(foam)
+        foam.data.materials.clear()
+        foam.data.materials.append(foam_mat)
+
+
 # =============================================================================
 # CAMERA + LIGHTING (Blender preview only — Godot has its own)
 # =============================================================================
 
 def setup_camera():
-    bpy.ops.object.camera_add(location=(38, -55, 0.5))  # AT water level
+    bpy.ops.object.camera_add(location=(32, -45, 2))  # Balance: close enough for detail, ocean visible
     cam = bpy.context.active_object
     cam.name = "PreviewCamera"
-    cam.data.lens = 24  # Very wide for dramatic effect
+    cam.data.lens = 26  # Wide for drama + ocean foreground
     cam.data.clip_end = 250
-    target = Vector((0, -5, 10))  # Look at cliff mid-height
+    target = Vector((2, -5, 11))  # Slightly lower look-at to show more tower top
     direction = target - cam.location
     cam.rotation_euler = direction.to_track_quat('-Z', 'Y').to_euler()
     bpy.context.scene.camera = cam
@@ -962,6 +1032,12 @@ def main():
 
     print("[MENU SCENE v4] Building clouds...")
     build_clouds()
+
+    print("[MENU SCENE v4] Building vegetation (preview only)...")
+    build_vegetation()
+
+    print("[MENU SCENE v4] Building foam spray (preview only)...")
+    build_foam()
 
     # Preview setup (Blender only)
     setup_camera()
