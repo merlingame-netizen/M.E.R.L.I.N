@@ -37,6 +37,8 @@ ADAPTER_REGISTRY: dict[str, tuple[str, str, str | None]] = {
     # ── Wave 7 — Communications (Outlook COM + Teams cache/PA) ───
     "outlook":     ("adapters.outlook_adapter",     "OutlookAdapter",     None),
     "teams":       ("adapters.teams_adapter",       "TeamsAdapter",       None),
+    # ── Wave 8 — 3D asset generation (Blender headless) ──────────────
+    "blender":     ("adapters.blender_adapter",     "BlenderAdapter",     None),
 }
 
 
