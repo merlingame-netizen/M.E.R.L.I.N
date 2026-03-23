@@ -516,6 +516,292 @@ print(json.dumps({{"status": "ok", "file": r"{output}", "size_bytes": size,
 '''
 
 
+def _script_animate(target: str, anim_type: str, frames: int, output: str) -> str:
+    """Generate Blender script for keyframe animation."""
+    return f'''
+import bpy, json, math, os
+
+scene = bpy.context.scene
+scene.frame_start = 1
+scene.frame_end = {frames}
+
+target_obj = bpy.data.objects.get("{target}")
+if not target_obj:
+    print(json.dumps({{"status": "error", "message": "Object '{target}' not found"}}))
+    raise SystemExit(1)
+
+anim_type = "{anim_type}"
+
+if anim_type == "orbit":
+    for f in range({frames}):
+        scene.frame_set(f + 1)
+        angle = (f / {frames}) * math.pi * 2
+        radius = max(target_obj.dimensions) * 2
+        target_obj.location.x = math.cos(angle) * radius
+        target_obj.location.y = math.sin(angle) * radius
+        target_obj.keyframe_insert(data_path="location", frame=f + 1)
+elif anim_type == "wave":
+    if target_obj.type == "MESH" and not target_obj.data.shape_keys:
+        basis = target_obj.shape_key_add(name="Basis")
+        wave_key = target_obj.shape_key_add(name="Wave")
+        for i, v in enumerate(wave_key.data):
+            v.co.z += math.sin(v.co.x * 3) * 0.3
+        wave_key.value = 0
+        wave_key.keyframe_insert(data_path="value", frame=1)
+        wave_key.value = 1
+        wave_key.keyframe_insert(data_path="value", frame={frames} // 2)
+        wave_key.value = 0
+        wave_key.keyframe_insert(data_path="value", frame={frames})
+elif anim_type == "smoke":
+    for f in range({frames}):
+        scene.frame_set(f + 1)
+        t = f / max({frames} - 1, 1)
+        target_obj.location.z = t * 5.0
+        s = 1.0 - t * 0.8
+        target_obj.scale = (s, s, s)
+        target_obj.keyframe_insert(data_path="location", frame=f + 1)
+        target_obj.keyframe_insert(data_path="scale", frame=f + 1)
+elif anim_type == "camera":
+    curve = bpy.data.curves.new("CameraPath", type="CURVE")
+    curve.dimensions = "3D"
+    spline = curve.splines.new("BEZIER")
+    spline.bezier_points.add(3)
+    radius = max(target_obj.dimensions) * 3
+    for i, bp in enumerate(spline.bezier_points):
+        angle = (i / 4) * math.pi * 2
+        bp.co = (math.cos(angle) * radius, math.sin(angle) * radius, radius * 0.5)
+    spline.use_cyclic_u = True
+    path_obj = bpy.data.objects.new("CameraPath", curve)
+    bpy.context.collection.objects.link(path_obj)
+    cam_data = bpy.data.cameras.new("AnimCam")
+    cam_obj = bpy.data.objects.new("AnimCam", cam_data)
+    bpy.context.collection.objects.link(cam_obj)
+    follow = cam_obj.constraints.new("FOLLOW_PATH")
+    follow.target = path_obj
+    follow.use_curve_follow = True
+    path_obj.data.path_duration = {frames}
+    anim = path_obj.data.animation_data_create()
+    action = bpy.data.actions.new("PathAction")
+    anim.action = action
+    fc = action.fcurves.new("eval_time")
+    fc.keyframe_points.add(2)
+    fc.keyframe_points[0].co = (1, 0)
+    fc.keyframe_points[1].co = ({frames}, {frames})
+    track = cam_obj.constraints.new("TRACK_TO")
+    track.target = target_obj
+
+os.makedirs(os.path.dirname(r"{output}"), exist_ok=True)
+bpy.ops.export_scene.gltf(filepath=r"{output}", export_format="GLB",
+    export_animations=True)
+size = os.path.getsize(r"{output}")
+print(json.dumps({{"status": "ok", "file": r"{output}", "size_bytes": size,
+    "anim_type": anim_type, "frames": {frames}}}))
+'''
+
+
+def _script_light(setup: str, fog_density: float) -> str:
+    """Generate Blender script for lighting setup."""
+    presets = {
+        "golden_hour": {"rotation": (1.2, 0, 0.8), "energy": 3.0, "color": (1.0, 0.85, 0.6), "bg": (0.95, 0.65, 0.35)},
+        "noon":        {"rotation": (0.2, 0, 0.3), "energy": 5.0, "color": (1.0, 1.0, 0.98), "bg": (0.53, 0.72, 0.95)},
+        "dusk":        {"rotation": (1.4, 0, 1.2), "energy": 1.5, "color": (0.9, 0.5, 0.35), "bg": (0.3, 0.2, 0.35)},
+        "night":       {"rotation": (1.0, 0, 0.5), "energy": 0.3, "color": (0.6, 0.65, 0.9), "bg": (0.02, 0.02, 0.06)},
+    }
+    p = presets.get(setup, presets["noon"])
+    rot = p["rotation"]
+    col = p["color"]
+    bg = p["bg"]
+    return f'''
+import bpy, json
+
+# Remove existing lights
+for obj in list(bpy.data.objects):
+    if obj.type == "LIGHT":
+        bpy.data.objects.remove(obj, do_unlink=True)
+
+# Sun light
+sun_data = bpy.data.lights.new(name="Sun", type="SUN")
+sun_data.energy = {p["energy"]}
+sun_data.color = {col}
+sun_obj = bpy.data.objects.new("Sun", sun_data)
+bpy.context.collection.objects.link(sun_obj)
+sun_obj.rotation_euler = {rot}
+
+# World background
+world = bpy.context.scene.world
+if not world:
+    world = bpy.data.worlds.new("World")
+    bpy.context.scene.world = world
+world.use_nodes = True
+bg_node = world.node_tree.nodes.get("Background")
+if bg_node:
+    bg_node.inputs["Color"].default_value = ({bg[0]}, {bg[1]}, {bg[2]}, 1.0)
+    bg_node.inputs["Strength"].default_value = 1.0
+
+# Volume fog
+if {fog_density} > 0:
+    if not world.node_tree.nodes.get("Volume Scatter"):
+        scatter = world.node_tree.nodes.new("ShaderNodeVolumeScatter")
+        scatter.inputs["Density"].default_value = {fog_density}
+        scatter.inputs["Color"].default_value = ({bg[0]}, {bg[1]}, {bg[2]}, 1.0)
+        output = world.node_tree.nodes.get("World Output")
+        if output:
+            world.node_tree.links.new(scatter.outputs["Volume"], output.inputs["Volume"])
+
+print(json.dumps({{"status": "ok", "setup": "{setup}", "energy": {p["energy"]},
+    "fog_density": {fog_density}}}))
+'''
+
+
+def _script_material(action: str, name: str, color: str, roughness: float, emission: float) -> str:
+    """Generate Blender script for PBR material operations."""
+    r, g, b = [float(x) for x in color.split(",")]
+    return f'''
+import bpy, json
+
+action = "{action}"
+
+if action == "create":
+    mat = bpy.data.materials.new("{name}")
+    mat.use_nodes = True
+    bsdf = mat.node_tree.nodes.get("Principled BSDF")
+    if bsdf:
+        bsdf.inputs["Base Color"].default_value = ({r}, {g}, {b}, 1.0)
+        bsdf.inputs["Roughness"].default_value = {roughness}
+        bsdf.inputs["Emission Strength"].default_value = {emission}
+        if {emission} > 0:
+            bsdf.inputs["Emission Color"].default_value = ({r}, {g}, {b}, 1.0)
+    print(json.dumps({{"status": "ok", "action": "create", "name": "{name}",
+        "color": [{r}, {g}, {b}], "roughness": {roughness}, "emission": {emission}}}))
+
+elif action == "apply":
+    mat = bpy.data.materials.get("{name}")
+    if not mat:
+        print(json.dumps({{"status": "error", "message": "Material '{name}' not found"}}))
+        raise SystemExit(1)
+    applied = 0
+    for obj in bpy.context.selected_objects:
+        if obj.type == "MESH":
+            if not obj.data.materials:
+                obj.data.materials.append(mat)
+            else:
+                obj.data.materials[0] = mat
+            applied += 1
+    print(json.dumps({{"status": "ok", "action": "apply", "name": "{name}",
+        "applied_to": applied}}))
+
+elif action == "list":
+    materials = []
+    for mat in bpy.data.materials:
+        info = {{"name": mat.name, "users": mat.users}}
+        if mat.use_nodes:
+            bsdf = mat.node_tree.nodes.get("Principled BSDF")
+            if bsdf:
+                bc = bsdf.inputs["Base Color"].default_value
+                info["color"] = [round(bc[0], 3), round(bc[1], 3), round(bc[2], 3)]
+                info["roughness"] = round(bsdf.inputs["Roughness"].default_value, 3)
+        materials.append(info)
+    print(json.dumps({{"status": "ok", "action": "list", "count": len(materials),
+        "materials": materials}}))
+'''
+
+
+def _script_lod(blend_file: str, levels: int, ratios: str, output_dir: str) -> str:
+    """Generate Blender script for LOD level generation."""
+    return f'''
+import bpy, json, os
+
+ratios = [float(x) for x in "{ratios}".split(",")]
+if len(ratios) < {levels}:
+    ratios.extend([ratios[-1] * 0.5] * ({levels} - len(ratios)))
+
+os.makedirs(r"{output_dir}", exist_ok=True)
+
+results = []
+original_obj = None
+for obj in bpy.data.objects:
+    if obj.type == "MESH":
+        original_obj = obj
+        break
+
+if not original_obj:
+    print(json.dumps({{"status": "error", "message": "No mesh object found"}}))
+    raise SystemExit(1)
+
+base_name = original_obj.name
+original_verts = len(original_obj.data.vertices)
+
+for i in range({levels}):
+    bpy.ops.object.select_all(action="DESELECT")
+    original_obj.select_set(True)
+    bpy.context.view_layer.objects.active = original_obj
+    bpy.ops.object.duplicate()
+    lod_obj = bpy.context.active_object
+    lod_obj.name = f"{{base_name}}_LOD{{i}}"
+
+    ratio = ratios[i]
+    if ratio < 1.0:
+        mod = lod_obj.modifiers.new("Decimate", "DECIMATE")
+        mod.ratio = ratio
+        bpy.ops.object.modifier_apply(modifier="Decimate")
+
+    bpy.ops.object.select_all(action="DESELECT")
+    lod_obj.select_set(True)
+    bpy.context.view_layer.objects.active = lod_obj
+
+    out_path = os.path.join(r"{output_dir}", f"{{base_name}}_LOD{{i}}.glb")
+    bpy.ops.export_scene.gltf(filepath=out_path, export_format="GLB",
+        use_selection=True, export_apply=True)
+    size = os.path.getsize(out_path)
+    verts = len(lod_obj.data.vertices)
+    results.append({{"level": i, "ratio": ratio, "file": out_path,
+        "size_bytes": size, "vertices": verts}})
+
+    bpy.data.objects.remove(lod_obj, do_unlink=True)
+
+print(json.dumps({{"status": "ok", "base_name": base_name, "original_vertices": original_verts,
+    "levels": results}}))
+'''
+
+
+def _script_qa(blend_file: str, output: str) -> str:
+    """Generate Blender script for QA render at 1920x1080."""
+    return f'''
+import bpy, json, os
+
+scene = bpy.context.scene
+scene.render.resolution_x = 1920
+scene.render.resolution_y = 1080
+scene.render.resolution_percentage = 100
+scene.render.image_settings.file_format = "PNG"
+
+scene.render.engine = "CYCLES"
+scene.cycles.samples = 32
+scene.cycles.use_denoising = True
+
+if not any(obj.type == "CAMERA" for obj in bpy.data.objects):
+    cam_data = bpy.data.cameras.new("QA_Camera")
+    cam_obj = bpy.data.objects.new("QA_Camera", cam_data)
+    bpy.context.collection.objects.link(cam_obj)
+    cam_obj.location = (10, -10, 8)
+    cam_obj.rotation_euler = (1.1, 0, 0.8)
+    scene.camera = cam_obj
+elif not scene.camera:
+    for obj in bpy.data.objects:
+        if obj.type == "CAMERA":
+            scene.camera = obj
+            break
+
+os.makedirs(os.path.dirname(r"{output}"), exist_ok=True)
+scene.render.filepath = r"{output}"
+bpy.ops.render.render(write_still=True)
+
+size = os.path.getsize(r"{output}")
+print(json.dumps({{"status": "ok", "file": r"{output}", "size_bytes": size,
+    "resolution": "1920x1080", "samples": 32, "engine": "cycles"}}))
+'''
+
+
 # ── Adapter ─────────────────────────────────────────────────────────────────
 
 
@@ -539,6 +825,11 @@ class BlenderAdapter(BaseAdapter):
             "build-scene":    "Build menu scene headless, render preview, open in GUI",
             "render":         "Render .blend to PNG (--file blend, --output png, --frame N)",
             "cleanup":        "Kill all Blender instances",
+            "animate":        "Animate object (--target, --anim_type orbit|wave|smoke|camera, --frames N, --output)",
+            "light":          "Setup scene lighting (--setup golden_hour|noon|dusk|night, --fog_density 0.0-1.0)",
+            "material":       "PBR material ops (--action create|apply|list, --name, --color r,g,b, --roughness, --emission)",
+            "lod":            "Generate LOD levels (--file blend, --levels N, --ratios 1.0,0.5,0.25, --output_dir)",
+            "qa":             "QA render 1920x1080 (--file blend, --output png)",
         }
 
     def health_probe(self) -> tuple[str, dict]:
@@ -570,6 +861,16 @@ class BlenderAdapter(BaseAdapter):
                 return self._render(**kwargs)
             case "cleanup":
                 return self._cleanup_scenes(**kwargs)
+            case "animate":
+                return self._animate(**kwargs)
+            case "light":
+                return self._light(**kwargs)
+            case "material":
+                return self._material(**kwargs)
+            case "lod":
+                return self._lod(**kwargs)
+            case "qa":
+                return self._qa(**kwargs)
             case _:
                 raise NotImplementedError(action)
 
@@ -786,6 +1087,88 @@ print(json.dumps({{"status": "ok", "file": r"{output}", "size_bytes": size}}))
 '''
         result = _run_blender_script(script, blend_file=blend_file, timeout=120)
         return self.ok(result.get("data", {"file": output}))
+
+    def _animate(self, **kw: Any) -> dict:
+        target = kw.get("target", "")
+        if not target:
+            return self.error("No target specified (--target object_name)")
+        anim_type = kw.get("anim_type", "orbit")
+        if anim_type not in ("orbit", "wave", "smoke", "camera"):
+            return self.error(f"Unknown anim_type '{anim_type}'. Available: orbit, wave, smoke, camera")
+        frames = int(kw.get("frames", 60))
+        output = kw.get("output", str(ASSETS_DIR / f"{target}_anim.glb"))
+        script = _script_animate(target=target, anim_type=anim_type, frames=frames, output=output)
+        blend_file = kw.get("file", None)
+        result = _run_blender_script(script, blend_file=blend_file, timeout=120)
+        if result.get("data"):
+            return self.ok(result["data"])
+        return self.error(
+            result.get("stderr", "Animation failed")[:500],
+            data={"stdout": result.get("stdout", "")[-500:]},
+        )
+
+    def _light(self, **kw: Any) -> dict:
+        setup = kw.get("setup", "noon")
+        if setup not in ("golden_hour", "noon", "dusk", "night"):
+            return self.error(f"Unknown setup '{setup}'. Available: golden_hour, noon, dusk, night")
+        fog_density = float(kw.get("fog_density", 0.0))
+        script = _script_light(setup=setup, fog_density=fog_density)
+        blend_file = kw.get("file", None)
+        result = _run_blender_script(script, blend_file=blend_file, timeout=60)
+        if result.get("data"):
+            return self.ok(result["data"])
+        return self.error(
+            result.get("stderr", "Light setup failed")[:500],
+            data={"stdout": result.get("stdout", "")[-500:]},
+        )
+
+    def _material(self, **kw: Any) -> dict:
+        action = kw.get("action", "create")
+        if action not in ("create", "apply", "list"):
+            return self.error(f"Unknown action '{action}'. Available: create, apply, list")
+        name = kw.get("name", "material")
+        color = kw.get("color", "0.5,0.5,0.5")
+        roughness = float(kw.get("roughness", 0.5))
+        emission = float(kw.get("emission", 0.0))
+        script = _script_material(action=action, name=name, color=color, roughness=roughness, emission=emission)
+        blend_file = kw.get("file", None)
+        result = _run_blender_script(script, blend_file=blend_file, timeout=60)
+        if result.get("data"):
+            return self.ok(result["data"])
+        return self.error(
+            result.get("stderr", "Material operation failed")[:500],
+            data={"stdout": result.get("stdout", "")[-500:]},
+        )
+
+    def _lod(self, **kw: Any) -> dict:
+        blend_file = kw.get("file", "")
+        if not blend_file or not os.path.exists(blend_file):
+            return self.error(f"Blend file not found: {blend_file}")
+        levels = int(kw.get("levels", 3))
+        ratios = kw.get("ratios", "1.0,0.5,0.25")
+        output_dir = kw.get("output_dir", str(ASSETS_DIR / "lod"))
+        script = _script_lod(blend_file=blend_file, levels=levels, ratios=ratios, output_dir=output_dir)
+        result = _run_blender_script(script, blend_file=blend_file, timeout=180)
+        if result.get("data"):
+            return self.ok(result["data"])
+        return self.error(
+            result.get("stderr", "LOD generation failed")[:500],
+            data={"stdout": result.get("stdout", "")[-500:]},
+        )
+
+    def _qa(self, **kw: Any) -> dict:
+        blend_file = kw.get("file", "")
+        if not blend_file or not os.path.exists(blend_file):
+            return self.error(f"Blend file not found: {blend_file}")
+        output = kw.get("output", str(Path.home() / "Downloads" / "qa_render.png"))
+        script = _script_qa(blend_file=blend_file, output=output)
+        result = _run_blender_script(script, blend_file=blend_file, timeout=300)
+        if result.get("data"):
+            return self.ok(result["data"])
+        return self.error(
+            result.get("stderr", "QA render failed")[:500],
+            data={"stdout": result.get("stdout", "")[-500:]},
+        )
 
     def _cleanup_scenes(self, **kw: Any) -> dict:
         """Kill all Blender instances and clean up temp files."""
