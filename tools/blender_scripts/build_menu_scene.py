@@ -62,14 +62,14 @@ def deselect_all():
 def create_materials():
     m = {}
     # Cliff zones
-    m['cliff_green'] = make_mat("cliff_green", (0.25, 0.52, 0.18), roughness=0.85)
+    m['cliff_green'] = make_mat("cliff_green", (0.40, 0.60, 0.28), roughness=0.85)
     m['cliff_green_dark'] = make_mat("cliff_green_dark", (0.18, 0.40, 0.12), roughness=0.9)
     m['cliff_rock'] = make_mat("cliff_rock", (0.45, 0.38, 0.28), roughness=0.95)
     m['cliff_rock_light'] = make_mat("cliff_rock_light", (0.52, 0.45, 0.35), roughness=0.9)
     m['cliff_dark'] = make_mat("cliff_dark", (0.22, 0.20, 0.16), roughness=1.0)
     m['cliff_base'] = make_mat("cliff_base", (0.15, 0.13, 0.10), roughness=1.0)
     # Ocean
-    m['ocean'] = make_mat("ocean", (0.02, 0.12, 0.28), roughness=0.25, metallic=0.15)
+    m['ocean'] = make_mat("ocean", (0.08, 0.30, 0.52), roughness=0.25, metallic=0.2)
     m['ocean_deep'] = make_mat("ocean_deep", (0.01, 0.08, 0.20), roughness=0.3, metallic=0.1)
     m['foam'] = make_mat("foam", (0.85, 0.90, 0.95), roughness=0.6, emission_strength=0.3)
     # Stone
@@ -87,9 +87,9 @@ def create_materials():
     m['tree_trunk'] = make_mat("tree_trunk", (0.38, 0.28, 0.18), roughness=0.95)
     m['tree_canopy'] = make_mat("tree_canopy", (0.22, 0.48, 0.16), roughness=0.85)
     # Sky objects
-    m['cloud'] = make_mat("cloud", (0.95, 0.97, 1.0), roughness=1.0, alpha=0.5)
-    m['sun_core'] = make_mat("sun_core", (1.0, 0.95, 0.75), emission_strength=25.0)
-    m['sun_halo'] = make_mat("sun_halo", (1.0, 0.95, 0.80), emission_strength=4.0, alpha=0.20)
+    m['cloud'] = make_mat("cloud", (0.95, 0.97, 1.0), roughness=1.0, alpha=0.65)
+    m['sun_core'] = make_mat("sun_core", (1.0, 0.90, 0.60), emission_strength=25.0)
+    m['sun_halo'] = make_mat("sun_halo", (1.0, 0.92, 0.65), emission_strength=4.0, alpha=0.20)
     m['sun_ring'] = make_mat("sun_ring", (1.0, 0.92, 0.70), emission_strength=2.0, alpha=0.10)
     # Magic
     m['magic_orb'] = make_mat("magic_orb", (0.10, 0.05, 0.15), roughness=0.2, metallic=0.5, emission_strength=1.5)
@@ -228,7 +228,7 @@ def build_terrain(mats):
 # ═══════════════════════════════════════════════════════════════════════════════
 def build_ocean(mats):
     """Low-subdivision ocean for visible triangle facets. Dark teal."""
-    bpy.ops.mesh.primitive_grid_add(x_subdivisions=30, y_subdivisions=20, size=1, location=(0, -38, -0.8))
+    bpy.ops.mesh.primitive_grid_add(x_subdivisions=25, y_subdivisions=15, size=1, location=(0, -38, -2))
     ocean = bpy.context.active_object
     ocean.name = "Ocean"
     ocean.scale = (140, 70, 1)
@@ -239,12 +239,11 @@ def build_ocean(mats):
         x_n = v.co.x / 140.0
         y_n = v.co.y / 70.0
 
-        wave = math.sin(x_n * 12) * 0.6
-        wave += math.sin(y_n * 8 + x_n * 4) * 0.5
-        wave += noise.noise(Vector((x_n * 6, y_n * 5, 0))) * 0.4
+        wave = math.sin(x_n * 12) * 1.5
+        wave += math.sin(y_n * 8 + x_n * 4) * 1.25
+        wave += noise.noise(Vector((x_n * 6, y_n * 5, 0))) * 1.0
 
-        # Quantize for sharp faceted look
-        v.co.z = round(wave * 2) / 2
+        v.co.z = wave
 
     # Two-tone ocean material
     mesh = ocean.data
@@ -356,12 +355,18 @@ def build_tower(mats):
         assign_mat(cren, mats['stone_dark'] if random.random() > 0.4 else mats['stone'])
         shade_flat(cren)
 
-    # Pointed broken spire at center
-    bpy.ops.mesh.primitive_cone_add(vertices=6, radius1=1.2, radius2=0.1, depth=5, location=(0, -5, top_z + 2.5))
+    # Broken pointed spire at very top
+    bpy.ops.mesh.primitive_cone_add(vertices=6, radius1=1.5, depth=5, location=(0, -5, top_z + 2.5))
     spire = bpy.context.active_object
     spire.name = "TowerSpire"
-    spire.rotation_euler = (random.uniform(-0.08, 0.08), random.uniform(-0.08, 0.08), 0)
-    assign_mat(spire, mats['stone_dark'])
+    # Break it by removing top half vertices
+    bpy.ops.object.mode_set(mode='EDIT')
+    bm = bmesh.from_edit_mesh(spire.data)
+    verts_to_remove = [v for v in bm.verts if v.co.z > 2.0]
+    bmesh.ops.delete(bm, geom=verts_to_remove, context='VERTS')
+    bmesh.update_edit_mesh(spire.data)
+    bpy.ops.object.mode_set(mode='OBJECT')
+    assign_mat(spire, mats['stone'])
     shade_flat(spire)
 
     # Windows (dark slits)
@@ -492,9 +497,9 @@ def build_vegetation(mats):
     """Much denser vegetation: 70+ bushes, grass tufts, trees."""
     bush_mats = [mats['bush_1'], mats['bush_2'], mats['bush_3']]
 
-    # Bushes — 70+ scattered on plateau
-    for i in range(75):
-        r = random.uniform(0.3, 1.4)
+    # Bushes — 80 scattered on plateau
+    for i in range(80):
+        r = random.uniform(0.39, 1.82)
         px = random.uniform(-22, 22)
         py = random.uniform(-9, 12)
         bpy.ops.mesh.primitive_ico_sphere_add(subdivisions=1, radius=r, location=(px, py, 8.5 + r * 0.3))
@@ -507,7 +512,7 @@ def build_vegetation(mats):
         shade_flat(bush)
 
     # Grass tufts — thin cones pointing up along cliff edge
-    for i in range(50):
+    for i in range(80):
         px = random.uniform(-22, 22)
         py = random.uniform(-11, -6)
         h = random.uniform(0.5, 1.8)
@@ -573,20 +578,20 @@ def build_clouds(mats):
     """Larger clouds positioned where camera can see them."""
     cloud_specs = [
         # (x, y, z, radius, x_scale)
-        (-30, -35, 30, 5, 2.5),
-        (-10, -45, 35, 6, 3.0),
-        (20, -50, 28, 4, 2.0),
-        (50, -40, 38, 7, 2.8),
-        (-40, -30, 33, 5, 2.2),
-        (35, -55, 32, 8, 3.5),
-        (-20, -50, 40, 6, 2.5),
-        (10, -30, 36, 4, 2.0),
-        (60, -35, 34, 5, 2.3),
-        (-50, -45, 37, 6, 2.8),
-        (0, -55, 42, 7, 3.0),
-        (40, -25, 31, 4, 2.0),
-        (-35, -55, 35, 5, 2.5),
-        (25, -42, 39, 6, 2.8),
+        (-15, -25, 22, 7, 2.5),
+        (5, -35, 28, 8, 3.0),
+        (25, -45, 24, 6, 2.0),
+        (40, -30, 30, 10, 2.8),
+        (-10, -20, 26, 7, 2.2),
+        (30, -50, 25, 9, 3.5),
+        (-5, -40, 32, 8, 2.5),
+        (15, -25, 29, 6, 2.0),
+        (35, -28, 27, 7, 2.3),
+        (-18, -38, 30, 8, 2.8),
+        (10, -55, 20, 9, 3.0),
+        (38, -22, 24, 6, 2.0),
+        (-12, -48, 28, 7, 2.5),
+        (20, -33, 31, 8, 2.8),
     ]
     for i, (cx, cy, cz, r, xs) in enumerate(cloud_specs):
         # Each cloud = 2-3 overlapping icospheres
@@ -681,7 +686,7 @@ def setup_camera():
     cam.data.clip_end = 400
 
     # Look at cliff/tower junction — shows full tower and sun in frame
-    target = Vector((-2, -10, 12))
+    target = Vector((-2, -10, 15))
     direction = target - cam.location
     rot = direction.to_track_quat('-Z', 'Y')
     cam.rotation_euler = rot.to_euler()
