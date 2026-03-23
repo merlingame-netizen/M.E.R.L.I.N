@@ -64,14 +64,14 @@ def create_materials():
     # Cliff zones
     m['cliff_green'] = make_mat("cliff_green", (0.40, 0.60, 0.28), roughness=0.85)
     m['cliff_green_dark'] = make_mat("cliff_green_dark", (0.18, 0.40, 0.12), roughness=0.9)
-    m['cliff_rock'] = make_mat("cliff_rock", (0.45, 0.38, 0.28), roughness=0.95)
+    m['cliff_rock'] = make_mat("cliff_rock", (0.45, 0.35, 0.25), roughness=0.95)
     m['cliff_rock_light'] = make_mat("cliff_rock_light", (0.52, 0.45, 0.35), roughness=0.9)
-    m['cliff_dark'] = make_mat("cliff_dark", (0.22, 0.20, 0.16), roughness=1.0)
+    m['cliff_dark'] = make_mat("cliff_dark", (0.20, 0.18, 0.14), roughness=1.0)
     m['cliff_base'] = make_mat("cliff_base", (0.15, 0.13, 0.10), roughness=1.0)
     # Ocean
     m['ocean'] = make_mat("ocean", (0.10, 0.35, 0.55), roughness=0.4, metallic=0.2)
     m['ocean_deep'] = make_mat("ocean_deep", (0.01, 0.08, 0.20), roughness=0.3, metallic=0.1)
-    m['ocean_crest'] = make_mat("ocean_crest", (0.25, 0.50, 0.65), roughness=0.35, metallic=0.15)
+    m['ocean_crest'] = make_mat("ocean_crest", (0.35, 0.58, 0.72), roughness=0.35, metallic=0.15)
     m['foam'] = make_mat("foam", (0.85, 0.90, 0.95), roughness=1.0, emission_strength=0.3)
     # Stone
     m['stone'] = make_mat("stone", (0.35, 0.30, 0.25), roughness=0.95)
@@ -97,6 +97,8 @@ def create_materials():
     # Magic
     m['magic_orb'] = make_mat("magic_orb", (0.10, 0.05, 0.15), roughness=0.2, metallic=0.5, emission_strength=1.5)
     m['magic_green'] = make_mat("magic_green", (0.12, 0.90, 0.40), emission_strength=5.0, alpha=0.6)
+    # Sun rays
+    m['sun_ray'] = make_mat("sun_ray", (1.0, 0.92, 0.55), emission_strength=2.0, alpha=0.04)
     # Cabin
     m['wood'] = make_mat("wood", (0.42, 0.34, 0.24), roughness=0.9)
     m['roof'] = make_mat("roof", (0.30, 0.25, 0.18), roughness=0.95)
@@ -309,7 +311,7 @@ def build_tower(mats):
     tower_center = Vector((0, -5, tower_base_z + tower_height / 2))
 
     # Main tower body
-    bpy.ops.mesh.primitive_cylinder_add(vertices=8, radius=2.2, depth=tower_height, location=tower_center)
+    bpy.ops.mesh.primitive_cylinder_add(vertices=8, radius=2.5, depth=tower_height, location=tower_center)
     tower = bpy.context.active_object
     tower.name = "Tower"
 
@@ -366,6 +368,20 @@ def build_tower(mats):
     bpy.ops.object.mode_set(mode='OBJECT')
     assign_mat(spire, mats['stone'])
     shade_flat(spire)
+
+    # Broken roof remnant (half cone)
+    bpy.ops.mesh.primitive_cone_add(vertices=6, radius1=3.0, depth=4, location=(0, -5, top_z + 2))
+    roof_remnant = bpy.context.active_object
+    roof_remnant.name = "RoofRemnant"
+    bpy.ops.object.mode_set(mode='EDIT')
+    bm = bmesh.from_edit_mesh(roof_remnant.data)
+    for v in bm.verts:
+        if v.co.x > 0.5:
+            v.co.z *= 0.3  # Collapse one side
+    bmesh.update_edit_mesh(roof_remnant.data)
+    bpy.ops.object.mode_set(mode='OBJECT')
+    assign_mat(roof_remnant, mats['stone_dark'])
+    shade_flat(roof_remnant)
 
     # Windows (dark slits)
     for i in range(6):
@@ -588,6 +604,15 @@ def build_clouds(mats):
         (38, -22, 24, 6, 2.0),
         (-12, -48, 28, 7, 2.5),
         (20, -33, 31, 8, 2.8),
+        # Extra clouds — left side fill
+        (-30, -30, 25, 7, 2.4),
+        (-25, -42, 29, 8, 2.6),
+        (-22, -35, 23, 6, 2.2),
+        (-28, -50, 27, 9, 3.0),
+        (-18, -28, 31, 7, 2.5),
+        (-26, -45, 22, 6, 2.0),
+        (-14, -52, 26, 8, 2.8),
+        (-20, -32, 30, 7, 2.3),
     ]
     for i, (cx, cy, cz, r, xs) in enumerate(cloud_specs):
         # Each cloud = 2-3 overlapping icospheres
@@ -634,6 +659,21 @@ def build_sun(mats):
     halo2 = bpy.context.active_object
     halo2.name = "SunHalo2"
     assign_mat(halo2, mats['sun_ring'])
+
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# SUN RAYS — God ray quads from sun toward cliff
+# ═══════════════════════════════════════════════════════════════════════════════
+def build_sun_rays(mats):
+    """3-4 long thin stretched quads simulating volumetric god rays."""
+    sun_x, sun_y, sun_z = 32, 5, 28
+    for i in range(4):
+        bpy.ops.mesh.primitive_plane_add(size=1, location=(sun_x - i * 5, sun_y + i * 3, sun_z - i * 4))
+        ray = bpy.context.active_object
+        ray.name = f"SunRay_{i}"
+        ray.scale = (0.3, 15 + i * 5, 1)
+        ray.rotation_euler = (0.3 + i * 0.1, 0, 0.5 + i * 0.15)
+        assign_mat(ray, mats['sun_ray'])
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
@@ -766,6 +806,7 @@ def main():
         ("sea rocks", lambda: build_sea_rocks(mats)),
         ("clouds", lambda: build_clouds(mats)),
         ("sun", lambda: build_sun(mats)),
+        ("sun rays", lambda: build_sun_rays(mats)),
     ]
 
     for name, fn in steps:
