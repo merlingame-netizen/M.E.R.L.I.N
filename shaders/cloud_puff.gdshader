@@ -1,5 +1,5 @@
 shader_type spatial;
-render_mode unshaded, cull_disabled, billboard_fixed_y;
+render_mode unshaded, cull_disabled;
 
 uniform vec4 cloud_color : source_color = vec4(0.95, 0.97, 1.0, 0.5);
 uniform float cloud_speed : hint_range(0.0, 2.0) = 0.3;

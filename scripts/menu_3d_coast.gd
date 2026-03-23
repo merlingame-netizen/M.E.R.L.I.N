@@ -579,7 +579,7 @@ func _build_tower() -> void:
 	var tower_instance: Node3D = tower_scene.instantiate()
 	tower_instance.name = "CelticTower"
 	tower_instance.position = Vector3(-5.0, 4.0, -5.0)
-	tower_instance.scale = Vector3(0.8, 0.8, 0.8)
+	tower_instance.scale = Vector3(2.0, 2.0, 2.0)
 	_set_no_shadow_recursive(tower_instance)
 	_world.add_child(tower_instance)
 	_tower_pos = tower_instance.position
@@ -678,7 +678,6 @@ func _build_sun_sphere() -> void:
 
 func _build_clouds() -> void:
 	# 14 scattered volumetric cloud clusters across the sky
-	var cloud_shader: Shader = load("res://shaders/cloud_puff.gdshader")
 	for i in 14:
 		var base_pos: Vector3 = Vector3(
 			_rng.randf_range(-35.0, 45.0),
@@ -687,15 +686,15 @@ func _build_clouds() -> void:
 		)
 		var base_w: float = _rng.randf_range(4.0, 10.0)
 		var base_h: float = _rng.randf_range(1.5, 3.5)
-		# 3 overlapping billboard quads per cluster for volumetric look
 		for layer_idx in 3:
 			var cloud: MeshInstance3D = MeshInstance3D.new()
 			var alpha: float = _rng.randf_range(0.3, 0.6) - float(layer_idx) * 0.08
-			var cmat: ShaderMaterial = ShaderMaterial.new()
-			cmat.shader = cloud_shader
-			cmat.set_shader_parameter("cloud_color", Color(0.95, 0.97, 1.0, alpha))
-			cmat.set_shader_parameter("cloud_speed", 0.3)
-			cmat.set_shader_parameter("cloud_density", 1.2)
+			var cmat: StandardMaterial3D = StandardMaterial3D.new()
+			cmat.albedo_color = Color(0.95, 0.97, 1.0, alpha)
+			cmat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+			cmat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+			cmat.billboard_mode = BaseMaterial3D.BILLBOARD_ENABLED
+			cmat.cull_mode = BaseMaterial3D.CULL_DISABLED
 			var qm: QuadMesh = QuadMesh.new()
 			var scale_f: float = 1.0 - float(layer_idx) * 0.15
 			qm.size = Vector2(base_w * scale_f, base_h * scale_f)
