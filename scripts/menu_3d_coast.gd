@@ -766,12 +766,12 @@ func _build_clouds() -> void:
 	# 14 scattered volumetric cloud clusters across the sky
 	for i in 14:
 		var base_pos: Vector3 = Vector3(
-			_rng.randf_range(-40.0, 40.0),
-			_rng.randf_range(15.0, 35.0),
-			_rng.randf_range(-80.0, -40.0)
+			_rng.randf_range(-35.0, 45.0),
+			_rng.randf_range(10.0, 22.0),
+			_rng.randf_range(-55.0, -25.0)
 		)
-		var base_w: float = _rng.randf_range(3.0, 8.0)
-		var base_h: float = _rng.randf_range(1.0, 2.5)
+		var base_w: float = _rng.randf_range(4.0, 10.0)
+		var base_h: float = _rng.randf_range(1.5, 3.5)
 		# 3 overlapping billboard quads per cluster for volumetric look
 		for layer_idx in 3:
 			var cloud: MeshInstance3D = MeshInstance3D.new()
