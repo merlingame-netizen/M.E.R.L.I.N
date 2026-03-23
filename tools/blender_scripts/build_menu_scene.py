@@ -33,8 +33,8 @@ C_OCEAN_DEEP = (0.05, 0.22, 0.40)
 C_OCEAN_MID = (0.10, 0.35, 0.55)
 C_OCEAN_FOAM = (0.60, 0.75, 0.80)
 C_TOWER_STONE = (0.42, 0.38, 0.32)
-C_CRYSTAL_PURPLE = (0.50, 0.15, 0.75)
-C_CRYSTAL_TEAL = (0.15, 0.70, 0.65)
+C_CRYSTAL_PURPLE = (0.55, 0.15, 0.85)
+C_CRYSTAL_TEAL = (0.10, 0.75, 0.65)
 C_SUN_EMIT = (1.0, 0.95, 0.70)
 
 
@@ -83,9 +83,9 @@ def create_zone_materials():
 def create_tower_materials():
     """Tower-specific materials."""
     specs = {
-        'stone_light': (0.50, 0.48, 0.42),
-        'stone_mid': (0.42, 0.38, 0.32),
-        'stone_dark': (0.32, 0.28, 0.22),
+        'stone_light': (0.52, 0.48, 0.40),
+        'stone_mid': (0.45, 0.40, 0.33),
+        'stone_dark': (0.35, 0.30, 0.24),
         'window': (0.08, 0.06, 0.05),
         'moss': (0.28, 0.48, 0.20),
     }
@@ -620,8 +620,8 @@ def build_crystals():
             py = cy + math.sin(angle) * dist
             pz = cz + random.uniform(-0.3, 0.3)
 
-            height = random.uniform(2.0, 5.0)
-            radius = random.uniform(0.25, 0.7)
+            height = random.uniform(3.0, 7.5)
+            radius = random.uniform(0.325, 0.91)
 
             bpy.ops.mesh.primitive_cone_add(
                 vertices=6, radius1=radius, radius2=0.04,
@@ -648,8 +648,9 @@ def build_crystals():
 
             # Apply emission material per crystal with its cluster color
             emission_col = tuple(c * 1.3 for c in color)
+            emission_strength = 5.0 if prefix == "Purple" else 4.0
             mat = create_emission_material(
-                f"{prefix}CrystalMat_{i}", color, emission_col, 4.0
+                f"{prefix}CrystalMat_{i}", color, emission_col, emission_strength
             )
             crystal.data.materials.clear()
             crystal.data.materials.append(mat)
@@ -779,7 +780,7 @@ def build_ocean():
     mat = bpy.data.materials.new("OceanMat")
     mat.use_nodes = True
     bsdf = mat.node_tree.nodes["Principled BSDF"]
-    bsdf.inputs["Base Color"].default_value = (0.06, 0.25, 0.45, 1.0)
+    bsdf.inputs["Base Color"].default_value = (0.05, 0.30, 0.52, 1.0)
     bsdf.inputs["Roughness"].default_value = 0.3
     bsdf.inputs["Metallic"].default_value = 0.05
 
@@ -787,7 +788,7 @@ def build_ocean():
     foam_mat = bpy.data.materials.new("OceanFoam")
     foam_mat.use_nodes = True
     foam_bsdf = foam_mat.node_tree.nodes["Principled BSDF"]
-    foam_bsdf.inputs["Base Color"].default_value = (0.35, 0.55, 0.65, 1.0)
+    foam_bsdf.inputs["Base Color"].default_value = (0.30, 0.50, 0.62, 1.0)
     foam_bsdf.inputs["Roughness"].default_value = 0.4
     foam_bsdf.inputs["Metallic"].default_value = 0.05
 
@@ -809,7 +810,7 @@ def build_ocean():
 
 def build_sun_mesh():
     """Emissive sun sphere + transparent halo for preview."""
-    sun_pos = (30, -20, 22)
+    sun_pos = (25, -15, 20)
 
     # Core
     bpy.ops.mesh.primitive_uv_sphere_add(segments=16, ring_count=8, radius=2.5, location=sun_pos)
@@ -818,8 +819,8 @@ def build_sun_mesh():
     core_mat = bpy.data.materials.new("SunCoreMat")
     core_mat.use_nodes = True
     bsdf = core_mat.node_tree.nodes["Principled BSDF"]
-    bsdf.inputs["Base Color"].default_value = (1.0, 0.95, 0.70, 1.0)
-    bsdf.inputs["Emission Color"].default_value = (1.0, 0.95, 0.70, 1.0)
+    bsdf.inputs["Base Color"].default_value = (1.0, 0.90, 0.60, 1.0)
+    bsdf.inputs["Emission Color"].default_value = (1.0, 0.90, 0.60, 1.0)
     bsdf.inputs["Emission Strength"].default_value = 8.0
     core.data.materials.clear()
     core.data.materials.append(core_mat)
