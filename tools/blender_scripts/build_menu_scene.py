@@ -62,14 +62,14 @@ def deselect_all():
 def create_materials():
     m = {}
     # Cliff zones
-    m['cliff_green'] = make_mat("cliff_green", (0.40, 0.60, 0.28), roughness=0.85)
+    m['cliff_green'] = make_mat("cliff_green", (0.45, 0.65, 0.25), roughness=0.85)
     m['cliff_green_dark'] = make_mat("cliff_green_dark", (0.18, 0.40, 0.12), roughness=0.9)
-    m['cliff_rock'] = make_mat("cliff_rock", (0.45, 0.35, 0.25), roughness=0.95)
+    m['cliff_rock'] = make_mat("cliff_rock", (0.50, 0.38, 0.26), roughness=0.95)
     m['cliff_rock_light'] = make_mat("cliff_rock_light", (0.52, 0.45, 0.35), roughness=0.9)
     m['cliff_dark'] = make_mat("cliff_dark", (0.20, 0.18, 0.14), roughness=1.0)
     m['cliff_base'] = make_mat("cliff_base", (0.15, 0.13, 0.10), roughness=1.0)
     # Ocean
-    m['ocean'] = make_mat("ocean", (0.10, 0.35, 0.55), roughness=0.4, metallic=0.2)
+    m['ocean'] = make_mat("ocean", (0.06, 0.25, 0.48), roughness=0.4, metallic=0.2)
     m['ocean_deep'] = make_mat("ocean_deep", (0.01, 0.08, 0.20), roughness=0.3, metallic=0.1)
     m['ocean_crest'] = make_mat("ocean_crest", (0.35, 0.58, 0.72), roughness=0.35, metallic=0.15)
     m['foam'] = make_mat("foam", (0.85, 0.90, 0.95), roughness=1.0, emission_strength=0.3)
@@ -78,8 +78,8 @@ def create_materials():
     m['stone_dark'] = make_mat("stone_dark", (0.20, 0.18, 0.15), roughness=1.0)
     m['moss'] = make_mat("moss", (0.18, 0.40, 0.12), roughness=1.0)
     # Crystal
-    m['crystal_purple'] = make_mat("crystal_purple", (0.55, 0.12, 0.85), roughness=0.15, metallic=0.35, emission_strength=4.0)
-    m['crystal_teal'] = make_mat("crystal_teal", (0.10, 0.65, 0.70), roughness=0.15, metallic=0.3, emission_strength=3.5)
+    m['crystal_purple'] = make_mat("crystal_purple", (0.55, 0.12, 0.85), roughness=0.15, metallic=0.35, emission_strength=8.0)
+    m['crystal_teal'] = make_mat("crystal_teal", (0.10, 0.65, 0.70), roughness=0.15, metallic=0.3, emission_strength=7.0)
     # Vegetation
     m['bush_1'] = make_mat("bush_1", (0.20, 0.45, 0.15), roughness=0.85)
     m['bush_2'] = make_mat("bush_2", (0.28, 0.55, 0.18), roughness=0.85)
@@ -91,12 +91,12 @@ def create_materials():
     m['tree_canopy'] = make_mat("tree_canopy", (0.22, 0.48, 0.16), roughness=0.85)
     # Sky objects
     m['cloud'] = make_mat("cloud", (0.95, 0.97, 1.0), roughness=1.0, alpha=0.65)
-    m['sun_core'] = make_mat("sun_core", (1.0, 0.90, 0.60), emission_strength=25.0)
-    m['sun_halo'] = make_mat("sun_halo", (1.0, 0.92, 0.65), emission_strength=4.0, alpha=0.20)
+    m['sun_core'] = make_mat("sun_core", (1.0, 0.90, 0.60), emission_strength=30.0)
+    m['sun_halo'] = make_mat("sun_halo", (1.0, 0.92, 0.65), emission_strength=4.0, alpha=0.25)
     m['sun_ring'] = make_mat("sun_ring", (1.0, 0.92, 0.70), emission_strength=2.0, alpha=0.10)
     # Magic
-    m['magic_orb'] = make_mat("magic_orb", (0.10, 0.05, 0.15), roughness=0.2, metallic=0.5, emission_strength=1.5)
-    m['magic_green'] = make_mat("magic_green", (0.12, 0.90, 0.40), emission_strength=5.0, alpha=0.6)
+    m['magic_orb'] = make_mat("magic_orb", (0.10, 0.05, 0.15), roughness=0.2, metallic=0.5, emission_strength=5.0)
+    m['magic_green'] = make_mat("magic_green", (0.12, 0.90, 0.40), emission_strength=6.0, alpha=0.6)
     # Sun rays
     m['sun_ray'] = make_mat("sun_ray", (1.0, 0.92, 0.55), emission_strength=2.0, alpha=0.04)
     # Cabin
@@ -270,19 +270,34 @@ def build_ocean(mats):
 
     shade_flat(ocean)
 
-    # Shape key for wave animation
+    # Shape key for wave animation — dramatic waves
     ocean.shape_key_add(name="Basis")
     sk = ocean.shape_key_add(name="Wave1")
     for i, v in enumerate(sk.data):
         x_n = v.co.x / 140.0
         y_n = v.co.y / 70.0
-        v.co.z += math.sin(x_n * 10 + 2.0) * 0.7 + math.cos(y_n * 7 + 1.5) * 0.4
+        v.co.z += math.sin(x_n * 10 + 2.0) * 1.2 + math.cos(y_n * 7 + 1.5) * 0.7
     sk.value = 0.0
     sk.keyframe_insert("value", frame=1)
-    sk.value = 1.0
+    sk.value = 1.5
     sk.keyframe_insert("value", frame=60)
     sk.value = 0.0
     sk.keyframe_insert("value", frame=120)
+
+    # Second shape key — cross-wave pattern for complex motion
+    sk2 = ocean.shape_key_add(name="Wave2")
+    for i, v in enumerate(sk2.data):
+        x_n = v.co.x / 140.0
+        y_n = v.co.y / 70.0
+        v.co.z += math.cos(x_n * 14 + 1.0) * 0.8 + math.sin(y_n * 11 + 3.0) * 0.5
+    sk2.value = 0.0
+    sk2.keyframe_insert("value", frame=1)
+    sk2.value = 1.2
+    sk2.keyframe_insert("value", frame=40)
+    sk2.value = 0.0
+    sk2.keyframe_insert("value", frame=80)
+    sk2.value = 1.0
+    sk2.keyframe_insert("value", frame=120)
 
 
 def build_foam(mats):
@@ -738,9 +753,9 @@ def setup_lighting():
     bpy.ops.object.light_add(type='SUN', location=(20, -20, 30))
     sun = bpy.context.active_object
     sun.name = "SunLight"
-    sun.data.energy = 3.0
-    sun.data.color = (1.0, 0.95, 0.82)
-    sun.rotation_euler = (math.radians(-50), math.radians(15), math.radians(-25))
+    sun.data.energy = 5.0
+    sun.data.color = (1.0, 0.88, 0.65)
+    sun.rotation_euler = (math.radians(-45), math.radians(15), math.radians(-25))
 
     # Fill light — blue tint
     bpy.ops.object.light_add(type='SUN', location=(-10, 10, 15))
@@ -766,10 +781,13 @@ def setup_lighting():
     bg.inputs["Strength"].default_value = 1.0
     bpy.context.scene.world = world
 
+    # Note: Volume Scatter removed — absorbs too much light in EEVEE Next
+    # Atmospheric depth achieved via fog-colored distant objects instead
+
     # Color management — Standard for saturated pixel-art look
     bpy.context.scene.view_settings.view_transform = 'Standard'
     bpy.context.scene.view_settings.look = 'None'
-    bpy.context.scene.view_settings.exposure = -0.5
+    bpy.context.scene.view_settings.exposure = 0.5
     bpy.context.scene.view_settings.gamma = 1.0
 
 
@@ -781,10 +799,23 @@ def setup_render():
     scene.render.engine = 'BLENDER_EEVEE_NEXT'
     scene.render.resolution_x = 1920
     scene.render.resolution_y = 1080
-    scene.frame_start = 1
-    scene.frame_end = 120
     scene.render.fps = 30
     scene.eevee.taa_render_samples = 64
+
+    # Volumetric settings (EEVEE)
+    try:
+        eevee = bpy.context.scene.eevee
+        eevee.volumetric_start = 0.1
+        eevee.volumetric_end = 200.0
+        eevee.volumetric_tile_size = '8'
+        eevee.volumetric_samples = 64
+    except Exception:
+        pass  # Some attributes may not exist in EEVEE Next (Blender 4.5+)
+
+    # Animation timeline
+    scene.frame_start = 1
+    scene.frame_end = 120
+    scene.frame_current = 30
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
@@ -856,6 +887,7 @@ def main():
                     space.shading.type = 'MATERIAL'
                     space.region_3d.view_perspective = 'CAMERA'
                     break
+            break
 
     print("[MENU SCENE] === COMPLETE ===")
 
