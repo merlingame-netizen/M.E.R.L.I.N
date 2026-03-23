@@ -231,7 +231,7 @@ def build_tower():
 
     # Main tower body
     bpy.ops.mesh.primitive_cylinder_add(
-        vertices=12, radius=3.5, depth=18, location=(5, -8, 14)
+        vertices=12, radius=3.5, depth=18, location=(5, -8, 18)
     )
     tower = bpy.context.active_object
     tower.name = "Tower"
@@ -249,7 +249,7 @@ def build_tower():
         angle = math.radians(i * 45)
         cx = 5 + math.cos(angle) * 3.2
         cy = -8 + math.sin(angle) * 3.2
-        bpy.ops.mesh.primitive_cube_add(size=1.5, location=(cx, cy, 23.5))
+        bpy.ops.mesh.primitive_cube_add(size=1.5, location=(cx, cy, 27.5))
         cren = bpy.context.active_object
         cren.scale = (0.7, 0.7, 1.2)
         bpy.ops.object.transform_apply(scale=True)
@@ -258,7 +258,7 @@ def build_tower():
     # Window recesses (small cubes subtracted visually — here just placed as
     # inset geometry that will get dark vertex color)
     for j in range(3):
-        wz = 10 + j * 5
+        wz = 14 + j * 5
         angle = math.radians(j * 90 + 30)
         wx = 5 + math.cos(angle) * 3.6
         wy = -8 + math.sin(angle) * 3.6
@@ -271,7 +271,7 @@ def build_tower():
     # Moss patches (flattened spheres on the surface)
     for k in range(6):
         angle = math.radians(k * 60 + 15)
-        mz = random.uniform(6, 20)
+        mz = random.uniform(10, 24)
         mx = 5 + math.cos(angle) * 3.7
         my = -8 + math.sin(angle) * 3.7
         bpy.ops.mesh.primitive_uv_sphere_add(
@@ -309,14 +309,14 @@ def build_tower():
                 return (0.12, 0.10, 0.08, 1.0)  # Dark window recess
 
         # Crenellations at top
-        if z > 22.0:
+        if z > 26.0:
             return (0.50, 0.48, 0.42, 1.0)  # Light stone
 
         # Main tower body — vary by height
         noise_val = random.uniform(-0.03, 0.03)
-        if z > 15:
+        if z > 19:
             return (0.48 + noise_val, 0.45 + noise_val, 0.40 + noise_val, 1.0)
-        elif z > 8:
+        elif z > 12:
             return (0.42 + noise_val, 0.40 + noise_val, 0.35 + noise_val, 1.0)
         else:
             return (0.35 + noise_val, 0.33 + noise_val, 0.28 + noise_val, 1.0)
@@ -449,7 +449,7 @@ def build_cabin():
     """Cabin with roof, chimney, and door. All merged, vertex painted."""
 
     # Main cabin body
-    bpy.ops.mesh.primitive_cube_add(size=1, location=(-20, -3, 7.5))
+    bpy.ops.mesh.primitive_cube_add(size=1, location=(-20, -3, 9.5))
     cabin = bpy.context.active_object
     cabin.name = "Cabin"
     cabin.scale = (4, 3, 2.5)
@@ -460,7 +460,7 @@ def build_cabin():
     # Roof (cone / flattened)
     bpy.ops.mesh.primitive_cone_add(
         vertices=4, radius1=5.5, radius2=0.3,
-        depth=3.5, location=(-20, -3, 11.0)
+        depth=3.5, location=(-20, -3, 13.0)
     )
     roof = bpy.context.active_object
     roof.name = "Roof"
@@ -469,7 +469,7 @@ def build_cabin():
     parts.append(roof)
 
     # Chimney
-    bpy.ops.mesh.primitive_cube_add(size=1, location=(-18, -2, 12.5))
+    bpy.ops.mesh.primitive_cube_add(size=1, location=(-18, -2, 14.5))
     chimney = bpy.context.active_object
     chimney.name = "Chimney"
     chimney.scale = (0.6, 0.6, 2.0)
@@ -477,7 +477,7 @@ def build_cabin():
     parts.append(chimney)
 
     # Door
-    bpy.ops.mesh.primitive_cube_add(size=1, location=(-20, -5.1, 6.5))
+    bpy.ops.mesh.primitive_cube_add(size=1, location=(-20, -5.1, 8.5))
     door = bpy.context.active_object
     door.name = "Door"
     door.scale = (0.8, 0.1, 1.5)
@@ -498,15 +498,15 @@ def build_cabin():
         y = vert.co.y
 
         # Door area: dark brown
-        if abs(x - (-20)) < 1.0 and y < -4.5 and z < 8.0:
+        if abs(x - (-20)) < 1.0 and y < -4.5 and z < 10.0:
             return (0.15, 0.10, 0.06, 1.0)
 
         # Chimney: grey stone
-        if abs(x - (-18)) < 1.0 and abs(y - (-2)) < 1.0 and z > 11.0:
+        if abs(x - (-18)) < 1.0 and abs(y - (-2)) < 1.0 and z > 13.0:
             return (0.40, 0.38, 0.35, 1.0)
 
         # Roof: dark slate
-        if z > 9.5:
+        if z > 11.5:
             return (0.22, 0.18, 0.15, 1.0)
 
         # Walls: warm brown wood
