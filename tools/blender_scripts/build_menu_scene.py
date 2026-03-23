@@ -69,9 +69,10 @@ def create_materials():
     m['cliff_dark'] = make_mat("cliff_dark", (0.22, 0.20, 0.16), roughness=1.0)
     m['cliff_base'] = make_mat("cliff_base", (0.15, 0.13, 0.10), roughness=1.0)
     # Ocean
-    m['ocean'] = make_mat("ocean", (0.08, 0.30, 0.52), roughness=0.25, metallic=0.2)
+    m['ocean'] = make_mat("ocean", (0.10, 0.35, 0.55), roughness=0.4, metallic=0.2)
     m['ocean_deep'] = make_mat("ocean_deep", (0.01, 0.08, 0.20), roughness=0.3, metallic=0.1)
-    m['foam'] = make_mat("foam", (0.85, 0.90, 0.95), roughness=0.6, emission_strength=0.3)
+    m['ocean_crest'] = make_mat("ocean_crest", (0.25, 0.50, 0.65), roughness=0.35, metallic=0.15)
+    m['foam'] = make_mat("foam", (0.85, 0.90, 0.95), roughness=1.0, emission_strength=0.3)
     # Stone
     m['stone'] = make_mat("stone", (0.35, 0.30, 0.25), roughness=0.95)
     m['stone_dark'] = make_mat("stone_dark", (0.20, 0.18, 0.15), roughness=1.0)
@@ -83,6 +84,8 @@ def create_materials():
     m['bush_1'] = make_mat("bush_1", (0.20, 0.45, 0.15), roughness=0.85)
     m['bush_2'] = make_mat("bush_2", (0.28, 0.55, 0.18), roughness=0.85)
     m['bush_3'] = make_mat("bush_3", (0.15, 0.38, 0.12), roughness=0.9)
+    m['bush_4'] = make_mat("bush_4", (0.12, 0.32, 0.08), roughness=0.9)
+    m['bush_5'] = make_mat("bush_5", (0.35, 0.60, 0.22), roughness=0.85)
     m['grass'] = make_mat("grass", (0.30, 0.58, 0.20), roughness=0.9)
     m['tree_trunk'] = make_mat("tree_trunk", (0.38, 0.28, 0.18), roughness=0.95)
     m['tree_canopy'] = make_mat("tree_canopy", (0.22, 0.48, 0.16), roughness=0.85)
@@ -227,32 +230,41 @@ def build_terrain(mats):
 # OCEAN — Geometric with visible triangle facets
 # ═══════════════════════════════════════════════════════════════════════════════
 def build_ocean(mats):
-    """Low-subdivision ocean for visible triangle facets. Dark teal."""
-    bpy.ops.mesh.primitive_grid_add(x_subdivisions=25, y_subdivisions=15, size=1, location=(0, -38, -2))
+    """Low-subdivision ocean for visible triangle facets. Bright teal with crest highlights."""
+    bpy.ops.mesh.primitive_grid_add(x_subdivisions=15, y_subdivisions=10, size=1, location=(0, -38, -2))
     ocean = bpy.context.active_object
     ocean.name = "Ocean"
     ocean.scale = (140, 70, 1)
     bpy.ops.object.transform_apply(scale=True)
 
-    # Stronger wave displacement for visible geometry
+    # Large wave displacement for visible geometric facets
     for v in ocean.data.vertices:
         x_n = v.co.x / 140.0
         y_n = v.co.y / 70.0
 
-        wave = math.sin(x_n * 12) * 1.5
-        wave += math.sin(y_n * 8 + x_n * 4) * 1.25
-        wave += noise.noise(Vector((x_n * 6, y_n * 5, 0))) * 1.0
+        wave = math.sin(x_n * 12) * 2.5
+        wave += math.sin(y_n * 8 + x_n * 4) * 2.0
+        wave += noise.noise(Vector((x_n * 6, y_n * 5, 0))) * 1.5
 
         v.co.z = wave
 
-    # Two-tone ocean material
+    # Compute average z for crest threshold
     mesh = ocean.data
-    mesh.materials.append(mats['ocean'])       # 0
-    mesh.materials.append(mats['ocean_deep'])  # 1
+    avg_z = sum(v.co.z for v in mesh.vertices) / len(mesh.vertices)
+
+    # Three-tone ocean: deep, base, crest
+    mesh.materials.append(mats['ocean'])        # 0 — base teal
+    mesh.materials.append(mats['ocean_deep'])   # 1 — deep dark
+    mesh.materials.append(mats['ocean_crest'])  # 2 — bright crest
 
     for poly in mesh.polygons:
         center_z = sum(mesh.vertices[vi].co.z for vi in poly.vertices) / len(poly.vertices)
-        poly.material_index = 0 if center_z > -0.1 else 1
+        if center_z > avg_z:
+            poly.material_index = 2  # crest
+        elif center_z > avg_z - 1.0:
+            poly.material_index = 0  # base
+        else:
+            poly.material_index = 1  # deep
 
     shade_flat(ocean)
 
@@ -272,33 +284,19 @@ def build_ocean(mats):
 
 
 def build_foam(mats):
-    """White spray/foam particles where ocean meets cliff base."""
-    # Foam line along cliff base
-    for i in range(40):
+    """White foam meshes where cliff meets ocean — 30 small icospheres at cliff base."""
+    for i in range(30):
         x_pos = random.uniform(-28, 28)
-        y_pos = random.uniform(-15, -12) + random.uniform(-1, 0)
-        z_pos = random.uniform(-0.5, 1.5)
-        size = random.uniform(0.15, 0.6)
+        y_pos = random.uniform(-15, -13)
+        z_pos = random.uniform(-1, 1)
+        size = random.uniform(0.2, 0.6)
 
-        bpy.ops.mesh.primitive_ico_sphere_add(subdivisions=1, radius=size, location=(x_pos, y_pos, z_pos))
+        bpy.ops.mesh.primitive_ico_sphere_add(subdivisions=0, radius=size, location=(x_pos, y_pos, z_pos))
         foam = bpy.context.active_object
         foam.name = f"Foam_{i}"
         foam.scale.z = random.uniform(0.3, 0.6)
         assign_mat(foam, mats['foam'])
         shade_flat(foam)
-
-    # Spray particles (tiny, higher up)
-    for i in range(25):
-        x_pos = random.uniform(-20, 20)
-        y_pos = random.uniform(-14, -11)
-        z_pos = random.uniform(0.5, 3.5)
-        size = random.uniform(0.05, 0.2)
-
-        bpy.ops.mesh.primitive_ico_sphere_add(subdivisions=0, radius=size, location=(x_pos, y_pos, z_pos))
-        spray = bpy.context.active_object
-        spray.name = f"Spray_{i}"
-        assign_mat(spray, mats['foam'])
-        shade_flat(spray)
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
@@ -494,11 +492,11 @@ def build_menhirs(mats):
 # VEGETATION — Dense bushes, grass tufts, trees
 # ═══════════════════════════════════════════════════════════════════════════════
 def build_vegetation(mats):
-    """Much denser vegetation: 70+ bushes, grass tufts, trees."""
-    bush_mats = [mats['bush_1'], mats['bush_2'], mats['bush_3']]
+    """Lush dense vegetation: 120 bushes, grass tufts, 20 trees — plateau only (z>7, y>-10)."""
+    bush_mats = [mats['bush_1'], mats['bush_2'], mats['bush_3'], mats['bush_4'], mats['bush_5']]
 
-    # Bushes — 80 scattered on plateau
-    for i in range(80):
+    # Bushes — 120 scattered on plateau
+    for i in range(120):
         r = random.uniform(0.39, 1.82)
         px = random.uniform(-22, 22)
         py = random.uniform(-9, 12)
@@ -514,7 +512,7 @@ def build_vegetation(mats):
     # Grass tufts — thin cones pointing up along cliff edge
     for i in range(80):
         px = random.uniform(-22, 22)
-        py = random.uniform(-11, -6)
+        py = random.uniform(-9, -6)
         h = random.uniform(0.5, 1.8)
         bpy.ops.mesh.primitive_cone_add(vertices=4, radius1=0.12, depth=h, location=(px, py, 8.5 + h * 0.5))
         grass = bpy.context.active_object
@@ -523,13 +521,11 @@ def build_vegetation(mats):
         assign_mat(grass, mats['grass'])
         shade_flat(grass)
 
-    # Trees — cylinder trunk + icosphere canopy
-    tree_positions = [
-        (-18, 5, 8.5), (-14, -2, 8.5), (16, 3, 8.5), (20, -4, 8.5),
-        (-20, 8, 8.5), (8, 8, 8.5), (-5, 10, 8.5), (22, 7, 8.5),
-        (-10, 7, 8.5), (12, 10, 8.5)
-    ]
-    for i, (tx, ty, tz) in enumerate(tree_positions):
+    # Trees — 20 small trees (thin cylinder trunk + icosphere canopy) on plateau
+    for i in range(20):
+        tx = random.uniform(-22, 22)
+        ty = random.uniform(-8, 12)
+        tz = 8.5
         trunk_h = random.uniform(2.0, 4.0)
         # Trunk
         bpy.ops.mesh.primitive_cylinder_add(vertices=5, radius=0.15, depth=trunk_h,
