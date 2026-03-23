@@ -285,14 +285,14 @@ func _build_cliff() -> void:
 
 func _build_ocean() -> void:
 	# Geometric wave strips — 20 rows of tilted boxes for faceted ocean look
-	var deep_color: Color = Color(0.04, 0.18, 0.45)
-	var mid_color: Color = Color(0.08, 0.30, 0.55)
-	var bright_color: Color = Color(0.12, 0.45, 0.65)
+	var deep_color: Color = Color(0.10, 0.30, 0.50)
+	var mid_color: Color = Color(0.15, 0.38, 0.58)
+	var bright_color: Color = Color(0.20, 0.45, 0.65)
 
 	for i in 20:
 		var strip: MeshInstance3D = MeshInstance3D.new()
 		var bm: BoxMesh = BoxMesh.new()
-		bm.size = Vector3(60.0, 0.4, 4.0)
+		bm.size = Vector3(60.0, 0.6, 4.0)
 		strip.mesh = bm
 		var smat: StandardMaterial3D = StandardMaterial3D.new()
 		var depth_t: float = float(i) / 20.0
@@ -342,7 +342,7 @@ func _build_ocean() -> void:
 	fbm.size = Vector3(40.0, 0.5, 3.0)
 	foam.mesh = fbm
 	var fmat: StandardMaterial3D = StandardMaterial3D.new()
-	fmat.albedo_color = Color(0.80, 0.85, 0.90, 0.5)
+	fmat.albedo_color = Color(0.85, 0.90, 0.95, 0.6)
 	fmat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
 	fmat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
 	foam.material_override = fmat
@@ -471,13 +471,14 @@ func _build_cliff_grass() -> void:
 	mmi.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 	_world.add_child(mmi)
 
-	# Bushes (dark green spheres, 30 instances)
+	# Bushes (varied green spheres, 60 instances — lush vegetation)
 	var bush_mat: StandardMaterial3D = StandardMaterial3D.new()
-	bush_mat.albedo_color = Color(0.15, 0.30, 0.10)
+	bush_mat.albedo_color = Color(0.25, 0.50, 0.15)
 	bush_mat.roughness = 1.0
 
 	var bush_mm: MultiMesh = MultiMesh.new()
 	bush_mm.transform_format = MultiMesh.TRANSFORM_3D
+	bush_mm.use_colors = true
 	var bush_mesh: SphereMesh = SphereMesh.new()
 	bush_mesh.radius = 1.0
 	bush_mesh.height = 1.2
@@ -485,18 +486,30 @@ func _build_cliff_grass() -> void:
 	bush_mesh.rings = 3
 	bush_mesh.material = bush_mat
 	bush_mm.mesh = bush_mesh
-	bush_mm.instance_count = 30
+	bush_mm.instance_count = 60
 
-	for i in 30:
+	for i in 60:
 		var bt: Transform3D = Transform3D.IDENTITY
-		var bs: float = _rng.randf_range(0.4, 1.2)
+		var bs: float = _rng.randf_range(0.4, 1.4)
 		bt = bt.scaled(Vector3(bs, bs * 0.7, bs))
-		bt.origin = Vector3(
-			_rng.randf_range(-16.0, 16.0),
-			4.3,
-			_rng.randf_range(-16.0, 3.0)
-		)
+		# Last 15 bushes hang over the cliff edge (z beyond -12)
+		if i >= 45:
+			bt.origin = Vector3(
+				_rng.randf_range(-16.0, 14.0),
+				3.8 + _rng.randf_range(-0.3, 0.2),
+				_rng.randf_range(-14.5, -11.5)
+			)
+		else:
+			bt.origin = Vector3(
+				_rng.randf_range(-16.0, 16.0),
+				4.3,
+				_rng.randf_range(-16.0, 3.0)
+			)
 		bush_mm.set_instance_transform(i, bt)
+		# Varied green shades per instance
+		var green_t: float = _rng.randf()
+		var bush_color: Color = Color(0.25, 0.50, 0.15).lerp(Color(0.35, 0.55, 0.20), green_t)
+		bush_mm.set_instance_color(i, bush_color)
 
 	var bush_mmi: MultiMeshInstance3D = MultiMeshInstance3D.new()
 	bush_mmi.multimesh = bush_mm
@@ -535,12 +548,12 @@ func _build_tower() -> void:
 	stone_mat.albedo_color = Color(0.40, 0.38, 0.32)
 	stone_mat.roughness = 0.95
 
-	# Tower base — cylinder approximated with stacked blocks (taller)
-	for i in 7:
+	# Tower base — cylinder approximated with stacked blocks (taller, 1.5x)
+	for i in 10:
 		var block: MeshInstance3D = MeshInstance3D.new()
 		var bm: BoxMesh = BoxMesh.new()
 		var height_f: float = float(i)
-		bm.size = Vector3(3.0 - height_f * 0.2, 3.0, 3.0 - height_f * 0.2)
+		bm.size = Vector3(3.0 - height_f * 0.15, 3.0, 3.0 - height_f * 0.15)
 		block.mesh = bm
 		block.material_override = stone_mat
 		block.position = tower_pos + Vector3(0.0, height_f * 2.8, 0.0)
@@ -548,7 +561,7 @@ func _build_tower() -> void:
 		block.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 		_world.add_child(block)
 
-	# Tower top — pointed roof
+	# Tower top — pointed roof (raised to match taller tower)
 	var roof: MeshInstance3D = MeshInstance3D.new()
 	var roof_bm: BoxMesh = BoxMesh.new()
 	roof_bm.size = Vector3(2.0, 3.0, 2.0)
@@ -557,10 +570,30 @@ func _build_tower() -> void:
 	roof_mat.albedo_color = Color(0.30, 0.35, 0.25)
 	roof_mat.roughness = 1.0
 	roof.material_override = roof_mat
-	roof.position = tower_pos + Vector3(0.0, 20.0, 0.0)
+	roof.position = tower_pos + Vector3(0.0, 29.0, 0.0)
 	roof.rotation = Vector3(0.0, 0.3, 0.1)
 	roof.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 	_world.add_child(roof)
+
+	# Ruined top — broken stone pieces jutting out at angles
+	var ruin_mat: StandardMaterial3D = StandardMaterial3D.new()
+	ruin_mat.albedo_color = Color(0.35, 0.33, 0.30)
+	ruin_mat.roughness = 1.0
+	var ruin_data: Array[Dictionary] = [
+		{"size": Vector3(1.2, 2.5, 0.8), "offset": Vector3(0.8, 27.0, 0.5), "rot": Vector3(0.3, 0.2, 0.5)},
+		{"size": Vector3(0.9, 2.0, 1.0), "offset": Vector3(-0.6, 26.5, -0.7), "rot": Vector3(-0.4, 0.0, -0.3)},
+		{"size": Vector3(1.0, 1.8, 0.7), "offset": Vector3(0.3, 27.5, -0.9), "rot": Vector3(0.2, -0.5, 0.4)},
+	]
+	for rd in ruin_data:
+		var ruin: MeshInstance3D = MeshInstance3D.new()
+		var rbm: BoxMesh = BoxMesh.new()
+		rbm.size = rd["size"] as Vector3
+		ruin.mesh = rbm
+		ruin.material_override = ruin_mat
+		ruin.position = tower_pos + (rd["offset"] as Vector3)
+		ruin.rotation = rd["rot"] as Vector3
+		ruin.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+		_world.add_child(ruin)
 
 	# Floating stones around tower (animated orbit in _process)
 	for i in 15:
