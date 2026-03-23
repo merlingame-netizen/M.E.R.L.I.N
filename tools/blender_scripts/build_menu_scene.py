@@ -37,8 +37,15 @@ def make_mat(name, color, roughness=0.9, metallic=0.0, emission_strength=0.0, al
         bsdf.inputs["Emission Color"].default_value = (*color, 1.0)
         bsdf.inputs["Emission Strength"].default_value = emission_strength
     if alpha < 1.0:
-        mat.blend_method = 'BLEND'
         bsdf.inputs["Alpha"].default_value = alpha
+        # Blender 4.2+: use surface_render_method instead of blend_method
+        try:
+            mat.surface_render_method = 'DITHERED'
+        except (AttributeError, TypeError):
+            try:
+                mat.blend_method = 'BLEND'
+            except (AttributeError, TypeError):
+                pass
     return mat
 
 
@@ -232,72 +239,97 @@ def build_terrain(mats):
 # OCEAN — Geometric with visible triangle facets
 # ═══════════════════════════════════════════════════════════════════════════════
 def build_ocean(mats):
-    """Low-subdivision ocean for visible triangle facets. Bright teal with crest highlights."""
-    bpy.ops.mesh.primitive_grid_add(x_subdivisions=15, y_subdivisions=10, size=1, location=(0, -40, -4))
+    """Shader-based ocean — noise bump for wave appearance, no vertex displacement."""
+    bpy.ops.mesh.primitive_grid_add(x_subdivisions=20, y_subdivisions=15, size=1, location=(0, -40, -3))
     ocean = bpy.context.active_object
     ocean.name = "Ocean"
-    ocean.scale = (140, 80, 1)
+    ocean.scale = (120, 80, 1)
     bpy.ops.object.transform_apply(scale=True)
-
-    # Large wave displacement for visible geometric facets
-    for v in ocean.data.vertices:
-        x_n = v.co.x / 140.0
-        y_n = v.co.y / 70.0
-
-        wave = math.sin(x_n * 12) * 2.5
-        wave += math.sin(y_n * 8 + x_n * 4) * 2.0
-        wave += noise.noise(Vector((x_n * 6, y_n * 5, 0))) * 1.5
-
-        v.co.z = wave
-
-    # Compute average z for crest threshold
-    mesh = ocean.data
-    avg_z = sum(v.co.z for v in mesh.vertices) / len(mesh.vertices)
-
-    # Three-tone ocean: deep, base, crest
-    mesh.materials.append(mats['ocean'])        # 0 — base teal
-    mesh.materials.append(mats['ocean_deep'])   # 1 — deep dark
-    mesh.materials.append(mats['ocean_crest'])  # 2 — bright crest
-
-    for poly in mesh.polygons:
-        center_z = sum(mesh.vertices[vi].co.z for vi in poly.vertices) / len(poly.vertices)
-        if center_z > avg_z:
-            poly.material_index = 2  # crest
-        elif center_z > avg_z - 1.0:
-            poly.material_index = 0  # base
-        else:
-            poly.material_index = 1  # deep
-
     shade_flat(ocean)
 
-    # Shape key for wave animation — dramatic waves
-    ocean.shape_key_add(name="Basis")
-    sk = ocean.shape_key_add(name="Wave1")
-    for i, v in enumerate(sk.data):
-        x_n = v.co.x / 140.0
-        y_n = v.co.y / 70.0
-        v.co.z += math.sin(x_n * 10 + 2.0) * 1.2 + math.cos(y_n * 7 + 1.5) * 0.7
-    sk.value = 0.0
-    sk.keyframe_insert("value", frame=1)
-    sk.value = 1.5
-    sk.keyframe_insert("value", frame=60)
-    sk.value = 0.0
-    sk.keyframe_insert("value", frame=120)
+    # Create procedural water shader
+    mat = bpy.data.materials.new("Ocean_Procedural")
+    mat.use_nodes = True
+    try:
+        mat.surface_render_method = 'DITHERED'
+    except (AttributeError, TypeError):
+        pass
 
-    # Second shape key — cross-wave pattern for complex motion
-    sk2 = ocean.shape_key_add(name="Wave2")
-    for i, v in enumerate(sk2.data):
-        x_n = v.co.x / 140.0
-        y_n = v.co.y / 70.0
-        v.co.z += math.cos(x_n * 14 + 1.0) * 0.8 + math.sin(y_n * 11 + 3.0) * 0.5
-    sk2.value = 0.0
-    sk2.keyframe_insert("value", frame=1)
-    sk2.value = 1.2
-    sk2.keyframe_insert("value", frame=40)
-    sk2.value = 0.0
-    sk2.keyframe_insert("value", frame=80)
-    sk2.value = 1.0
-    sk2.keyframe_insert("value", frame=120)
+    nodes = mat.node_tree.nodes
+    links = mat.node_tree.links
+    nodes.clear()
+
+    # Texture coordinates
+    tex_coord = nodes.new('ShaderNodeTexCoord')
+    tex_coord.location = (-800, 0)
+
+    # Mapping for animation (driver on Z)
+    mapping = nodes.new('ShaderNodeMapping')
+    mapping.location = (-600, 0)
+
+    # Noise texture for wave pattern
+    noise1 = nodes.new('ShaderNodeTexNoise')
+    noise1.location = (-400, 100)
+    noise1.inputs['Scale'].default_value = 4.0
+    noise1.inputs['Detail'].default_value = 4.0
+    noise1.inputs['Roughness'].default_value = 0.5
+
+    # Second noise for variation
+    noise2 = nodes.new('ShaderNodeTexNoise')
+    noise2.location = (-400, -100)
+    noise2.inputs['Scale'].default_value = 8.0
+    noise2.inputs['Detail'].default_value = 2.0
+
+    # Mix noises
+    mix = nodes.new('ShaderNodeMix')
+    mix.data_type = 'FLOAT'
+    mix.location = (-200, 0)
+    mix.inputs['Factor'].default_value = 0.5
+
+    # Bump node for surface detail
+    bump = nodes.new('ShaderNodeBump')
+    bump.location = (0, -100)
+    bump.inputs['Strength'].default_value = 0.8
+    bump.inputs['Distance'].default_value = 0.5
+
+    # Color ramp: deep teal -> lighter teal -> white foam on peaks
+    ramp = nodes.new('ShaderNodeValToRGB')
+    ramp.location = (-200, 200)
+    ramp.color_ramp.elements[0].color = (0.04, 0.15, 0.35, 1.0)  # Deep
+    ramp.color_ramp.elements[0].position = 0.0
+    mid = ramp.color_ramp.elements.new(0.5)
+    mid.color = (0.08, 0.30, 0.52, 1.0)  # Mid teal
+    ramp.color_ramp.elements[1].color = (0.45, 0.65, 0.75, 1.0)  # Foam
+    ramp.color_ramp.elements[1].position = 1.0
+
+    # Principled BSDF
+    bsdf = nodes.new('ShaderNodeBsdfPrincipled')
+    bsdf.location = (200, 0)
+    bsdf.inputs['Roughness'].default_value = 0.25
+    bsdf.inputs['Metallic'].default_value = 0.05
+    bsdf.inputs['Specular IOR Level'].default_value = 0.5
+
+    output = nodes.new('ShaderNodeOutputMaterial')
+    output.location = (400, 0)
+
+    # Wire up
+    links.new(tex_coord.outputs['Generated'], mapping.inputs['Vector'])
+    links.new(mapping.outputs['Vector'], noise1.inputs['Vector'])
+    links.new(mapping.outputs['Vector'], noise2.inputs['Vector'])
+    links.new(noise1.outputs['Fac'], mix.inputs['A'])
+    links.new(noise2.outputs['Fac'], mix.inputs['B'])
+    links.new(mix.outputs['Result'], bump.inputs['Height'])
+    links.new(mix.outputs['Result'], ramp.inputs['Fac'])
+    links.new(ramp.outputs['Color'], bsdf.inputs['Base Color'])
+    links.new(bump.outputs['Normal'], bsdf.inputs['Normal'])
+    links.new(bsdf.outputs['BSDF'], output.inputs['Surface'])
+
+    ocean.data.materials.clear()
+    ocean.data.materials.append(mat)
+
+    # Animate wave motion via driver on mapping Z
+    driver = mapping.inputs['Location'].driver_add('default_value', 2)
+    driver.driver.expression = "frame * 0.005"
 
 
 def build_foam(mats):
@@ -424,12 +456,13 @@ def build_tower(mats):
         mp.rotation_euler.z = angle
         assign_mat(mp, mats['moss'])
 
-    # Orbiting stone debris
-    for i in range(16):
+    # Orbiting stone debris — dramatic, numerous, animated
+    debris_list = []
+    for i in range(20):
         angle = random.uniform(0, math.tau)
-        dist = random.uniform(3.5, 7)
+        dist = random.uniform(4, 8)
         h = random.uniform(tower_base_z + 8, tower_base_z + tower_height + 5)
-        size = random.uniform(0.25, 0.9)
+        size = random.uniform(0.5, 1.2)
         bpy.ops.mesh.primitive_cube_add(size=size, location=(
             math.cos(angle) * dist, -5 + math.sin(angle) * dist, h
         ))
@@ -438,17 +471,48 @@ def build_tower(mats):
         debris.rotation_euler = (random.uniform(0, 1), random.uniform(0, 1), random.uniform(0, 1))
         assign_mat(debris, mats['stone'])
         shade_flat(debris)
+        debris_list.append(debris)
+
+    # Animate debris orbiting around tower
+    for i, debris in enumerate(debris_list):
+        angle_start = (i / len(debris_list)) * math.tau
+        debris.rotation_euler.z = angle_start
+        debris.keyframe_insert(data_path="rotation_euler", frame=1)
+        debris.rotation_euler.z = angle_start + math.tau
+        debris.keyframe_insert(data_path="rotation_euler", frame=240)
+        # Make animation linear
+        if debris.animation_data and debris.animation_data.action:
+            for fcurve in debris.animation_data.action.fcurves:
+                for kf in fcurve.keyframe_points:
+                    kf.interpolation = 'LINEAR'
 
     # Dark magical orbs
     for i in range(8):
         angle = random.uniform(0, math.tau)
-        dist = random.uniform(3, 6)
+        dist = random.uniform(4, 8)
         h = random.uniform(tower_base_z + 12, tower_base_z + tower_height + 3)
         bpy.ops.mesh.primitive_uv_sphere_add(segments=8, ring_count=6, radius=random.uniform(0.3, 0.6),
                                               location=(math.cos(angle) * dist, -5 + math.sin(angle) * dist, h))
         orb = bpy.context.active_object
         orb.name = f"MagicOrb_{i}"
         assign_mat(orb, mats['magic_orb'])
+
+    # Glowing magic orbs — green and purple
+    glow_colors = [
+        ("magic_glow_green", (0.12, 0.90, 0.40), 8.0),
+        ("magic_glow_purple", (0.60, 0.15, 0.85), 8.0),
+    ]
+    for i in range(6):
+        angle = (i / 6) * math.tau + random.uniform(-0.3, 0.3)
+        dist = random.uniform(5, 9)
+        h = random.uniform(tower_base_z + 15, tower_base_z + tower_height + 4)
+        mat_name, mat_color, mat_emission = glow_colors[i % 2]
+        glow_mat = make_mat(f"{mat_name}_{i}", mat_color, roughness=0.1, metallic=0.3, emission_strength=mat_emission, alpha=0.7)
+        bpy.ops.mesh.primitive_uv_sphere_add(segments=10, ring_count=8, radius=random.uniform(0.2, 0.45),
+                                              location=(math.cos(angle) * dist, -5 + math.sin(angle) * dist, h))
+        gorb = bpy.context.active_object
+        gorb.name = f"GlowOrb_{i}"
+        assign_mat(gorb, glow_mat)
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
@@ -650,45 +714,52 @@ def build_clouds(mats):
 # SUN — Massive and bright, dominates right side
 # ═══════════════════════════════════════════════════════════════════════════════
 def build_sun(mats):
-    """Massive sun with intense core, halo, and outer ring."""
-    # Camera at (30,-50,3) looking at (-2,-10,12)
-    # Screen-right = positive X direction from camera perspective
-    # Sun visible upper-right: between camera and target but offset right+up
-    # Upper-right of frame: partially visible, bright glow
-    sun_pos = (32, 5, 28)
+    """Smaller sun — distant and elegant, not overpowering."""
+    sun_pos = (35, -25, 32)
 
-    # Core — bright emissive sphere
-    bpy.ops.mesh.primitive_uv_sphere_add(segments=16, ring_count=8, radius=6, location=sun_pos)
+    # Core — smaller, bright emissive sphere
+    bpy.ops.mesh.primitive_uv_sphere_add(segments=16, ring_count=8, radius=2.0, location=sun_pos)
     core = bpy.context.active_object
     core.name = "SunCore"
     assign_mat(core, mats['sun_core'])
 
     # Inner halo
-    bpy.ops.mesh.primitive_uv_sphere_add(segments=16, ring_count=8, radius=14, location=sun_pos)
+    halo_mat = make_mat("sun_halo_small", (1.0, 0.92, 0.65), emission_strength=4.0, alpha=0.15)
+    bpy.ops.mesh.primitive_uv_sphere_add(segments=16, ring_count=8, radius=5, location=sun_pos)
     halo1 = bpy.context.active_object
     halo1.name = "SunHalo1"
-    assign_mat(halo1, mats['sun_halo'])
+    assign_mat(halo1, halo_mat)
 
     # Outer halo ring
-    bpy.ops.mesh.primitive_uv_sphere_add(segments=16, ring_count=8, radius=22, location=sun_pos)
+    ring_mat = make_mat("sun_ring_small", (1.0, 0.92, 0.70), emission_strength=2.0, alpha=0.06)
+    bpy.ops.mesh.primitive_uv_sphere_add(segments=16, ring_count=8, radius=8, location=sun_pos)
     halo2 = bpy.context.active_object
     halo2.name = "SunHalo2"
-    assign_mat(halo2, mats['sun_ring'])
+    assign_mat(halo2, ring_mat)
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
 # SUN RAYS — God ray quads from sun toward cliff
 # ═══════════════════════════════════════════════════════════════════════════════
 def build_sun_rays(mats):
-    """3-4 long thin stretched quads simulating volumetric god rays."""
-    sun_x, sun_y, sun_z = 32, 5, 28
-    for i in range(4):
-        bpy.ops.mesh.primitive_plane_add(size=1, location=(sun_x - i * 5, sun_y + i * 3, sun_z - i * 4))
-        ray = bpy.context.active_object
-        ray.name = f"SunRay_{i}"
-        ray.scale = (0.3, 15 + i * 5, 1)
-        ray.rotation_euler = (0.3 + i * 0.1, 0, 0.5 + i * 0.15)
-        assign_mat(ray, mats['sun_ray'])
+    """Removed — god ray planes too expensive with transparency. Sun emission suffices."""
+    pass
+
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# FOG LAYERS — Mesh-based atmospheric fog (not Volume Scatter)
+# ═══════════════════════════════════════════════════════════════════════════════
+def build_fog_layers(mats):
+    """2 atmospheric fog planes — DITHERED for performance."""
+    fog_mat = make_mat("fog_layer", (0.65, 0.78, 0.90), roughness=1.0, alpha=0.06)
+    for i in range(2):
+        bpy.ops.mesh.primitive_plane_add(size=1, location=(0, -25 - i * 20, 4 + i * 3))
+        fog = bpy.context.active_object
+        fog.name = f"FogLayer_{i}"
+        fog.scale = (120, 1, 25)
+        fog.rotation_euler.x = math.radians(90)
+        assign_mat(fog, fog_mat)
+        shade_flat(fog)
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
@@ -729,15 +800,15 @@ def build_cabin(mats):
 # CAMERA — Low, wide, dramatic angle
 # ═══════════════════════════════════════════════════════════════════════════════
 def setup_camera():
-    # More to the side to see cliff face prominently
-    bpy.ops.object.camera_add(location=(30, -45, 5))
+    # Pulled back — tower visible "au loin", mysterious and distant
+    bpy.ops.object.camera_add(location=(50, -60, 6))
     cam = bpy.context.active_object
     cam.name = "MenuCamera"
-    cam.data.lens = 28  # Wider angle to capture more scene
+    cam.data.lens = 35  # Less distortion at this distance
     cam.data.clip_end = 400
 
-    # Look at cliff face mid-height for prominent visibility
-    target = Vector((-2, -8, 10))
+    # Look at tower area — distant silhouette
+    target = Vector((-5, -5, 15))
     direction = target - cam.location
     rot = direction.to_track_quat('-Z', 'Y')
     cam.rotation_euler = rot.to_euler()
@@ -761,8 +832,8 @@ def setup_lighting():
     bpy.ops.object.light_add(type='SUN', location=(-10, 10, 15))
     fill = bpy.context.active_object
     fill.name = "FillLight"
-    fill.data.energy = 1.2
-    fill.data.color = (0.50, 0.60, 0.85)
+    fill.data.energy = 1.5
+    fill.data.color = (0.60, 0.70, 0.85)
     fill.rotation_euler = (math.radians(-30), math.radians(-150), 0)
 
     # Rim light from sun side
@@ -773,12 +844,38 @@ def setup_lighting():
     rim.data.color = (1.0, 0.90, 0.70)
     rim.rotation_euler = (math.radians(-40), math.radians(30), math.radians(-20))
 
-    # World: VIVID CYAN-BLUE sky
+    # Sky gradient: horizon bright blue -> zenith darker blue
     world = bpy.data.worlds.new("MenuWorld")
     world.use_nodes = True
-    bg = world.node_tree.nodes["Background"]
-    bg.inputs["Color"].default_value = (0.18, 0.45, 0.85, 1.0)
-    bg.inputs["Strength"].default_value = 1.0
+    nodes = world.node_tree.nodes
+    links = world.node_tree.links
+    for n in list(nodes):
+        nodes.remove(n)
+
+    world_output = nodes.new('ShaderNodeOutputWorld')
+    background = nodes.new('ShaderNodeBackground')
+    gradient = nodes.new('ShaderNodeTexGradient')
+    mapping = nodes.new('ShaderNodeMapping')
+    tex_coord = nodes.new('ShaderNodeTexCoord')
+    color_ramp = nodes.new('ShaderNodeValToRGB')
+
+    # Horizon = light blue, zenith = deep blue
+    color_ramp.color_ramp.elements[0].color = (0.55, 0.78, 0.95, 1.0)
+    color_ramp.color_ramp.elements[0].position = 0.0
+    color_ramp.color_ramp.elements[1].color = (0.15, 0.35, 0.70, 1.0)
+    color_ramp.color_ramp.elements[1].position = 1.0
+    # Warm tint near horizon
+    mid = color_ramp.color_ramp.elements.new(0.3)
+    mid.color = (0.65, 0.80, 0.90, 1.0)
+
+    gradient.gradient_type = 'LINEAR'
+
+    links.new(tex_coord.outputs['Generated'], mapping.inputs['Vector'])
+    links.new(mapping.outputs['Vector'], gradient.inputs['Vector'])
+    links.new(gradient.outputs['Color'], color_ramp.inputs['Fac'])
+    links.new(color_ramp.outputs['Color'], background.inputs['Color'])
+    background.inputs['Strength'].default_value = 1.5
+    links.new(background.outputs['Background'], world_output.inputs['Surface'])
     bpy.context.scene.world = world
 
     # Note: Volume Scatter removed — absorbs too much light in EEVEE Next
@@ -787,7 +884,7 @@ def setup_lighting():
     # Color management — Standard for saturated pixel-art look
     bpy.context.scene.view_settings.view_transform = 'Standard'
     bpy.context.scene.view_settings.look = 'None'
-    bpy.context.scene.view_settings.exposure = 0.5
+    bpy.context.scene.view_settings.exposure = 0.3  # Slight boost, not too bright
     bpy.context.scene.view_settings.gamma = 1.0
 
 
@@ -799,22 +896,18 @@ def setup_render():
     scene.render.engine = 'BLENDER_EEVEE_NEXT'
     scene.render.resolution_x = 1920
     scene.render.resolution_y = 1080
+    scene.frame_end = 240
     scene.render.fps = 30
-    scene.eevee.taa_render_samples = 64
 
-    # Volumetric settings (EEVEE)
+    eevee = scene.eevee
+    eevee.taa_render_samples = 16  # Lower for speed
     try:
-        eevee = bpy.context.scene.eevee
-        eevee.volumetric_start = 0.1
-        eevee.volumetric_end = 200.0
-        eevee.volumetric_tile_size = '8'
-        eevee.volumetric_samples = 64
-    except Exception:
-        pass  # Some attributes may not exist in EEVEE Next (Blender 4.5+)
+        eevee.use_raytracing = False  # Disable for performance
+    except AttributeError:
+        pass
 
     # Animation timeline
     scene.frame_start = 1
-    scene.frame_end = 120
     scene.frame_current = 30
 
 
@@ -836,6 +929,7 @@ def main():
         ("vegetation", lambda: build_vegetation(mats)),
         ("sea rocks", lambda: build_sea_rocks(mats)),
         ("clouds", lambda: build_clouds(mats)),
+        ("fog layers", lambda: build_fog_layers(mats)),
         ("sun", lambda: build_sun(mats)),
         ("sun rays", lambda: build_sun_rays(mats)),
     ]
