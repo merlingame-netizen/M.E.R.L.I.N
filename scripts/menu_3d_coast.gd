@@ -202,15 +202,73 @@ func _build_cliff() -> void:
 	# Cliff FACE — vertical brown rock wall (dramatic drop to ocean)
 	var face: MeshInstance3D = MeshInstance3D.new()
 	var face_bm: BoxMesh = BoxMesh.new()
-	face_bm.size = Vector3(50.0, 10.0, 3.0)
+	face_bm.size = Vector3(50.0, 12.0, 3.0)
 	face.mesh = face_bm
 	var face_mat: StandardMaterial3D = StandardMaterial3D.new()
 	face_mat.albedo_color = Color(0.35, 0.30, 0.22)
 	face_mat.roughness = 1.0
 	face.material_override = face_mat
-	face.position = Vector3(-5.0, -3.0, -13.5)
+	face.position = Vector3(-5.0, -4.0, -13.5)
 	face.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 	_world.add_child(face)
+
+	# Second cliff layer — stepped ledge (mid-height terrace for drama)
+	var ledge: MeshInstance3D = MeshInstance3D.new()
+	var ledge_bm: BoxMesh = BoxMesh.new()
+	ledge_bm.size = Vector3(45.0, 2.5, 6.0)
+	ledge.mesh = ledge_bm
+	var ledge_mat: StandardMaterial3D = StandardMaterial3D.new()
+	ledge_mat.albedo_color = Color(0.28, 0.35, 0.20)
+	ledge_mat.roughness = 0.95
+	ledge.material_override = ledge_mat
+	ledge.position = Vector3(-5.0, -2.0, -11.0)
+	ledge.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	_world.add_child(ledge)
+
+	# Lower cliff face below ledge
+	var lower_face: MeshInstance3D = MeshInstance3D.new()
+	var lf_bm: BoxMesh = BoxMesh.new()
+	lf_bm.size = Vector3(45.0, 6.0, 2.5)
+	lower_face.mesh = lf_bm
+	var lf_mat: StandardMaterial3D = StandardMaterial3D.new()
+	lf_mat.albedo_color = Color(0.30, 0.25, 0.18)
+	lf_mat.roughness = 1.0
+	lower_face.material_override = lf_mat
+	lower_face.position = Vector3(-5.0, -6.0, -14.5)
+	lower_face.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	_world.add_child(lower_face)
+
+	# Fog wisps near cliff edge (horizontal drift)
+	var fog_wisps: GPUParticles3D = GPUParticles3D.new()
+	fog_wisps.amount = 15
+	fog_wisps.lifetime = 8.0
+	fog_wisps.position = Vector3(-5.0, 2.0, -12.0)
+
+	var fog_pmat: ParticleProcessMaterial = ParticleProcessMaterial.new()
+	fog_pmat.direction = Vector3(1.0, 0.1, 0.3)
+	fog_pmat.spread = 25.0
+	fog_pmat.initial_velocity_min = 0.5
+	fog_pmat.initial_velocity_max = 1.5
+	fog_pmat.gravity = Vector3(0.0, 0.0, 0.0)
+	fog_pmat.scale_min = 1.5
+	fog_pmat.scale_max = 4.0
+	fog_pmat.color = Color(0.85, 0.88, 0.92, 0.2)
+	fog_pmat.emission_shape = ParticleProcessMaterial.EMISSION_SHAPE_BOX
+	fog_pmat.emission_box_extents = Vector3(20.0, 1.0, 3.0)
+	fog_wisps.process_material = fog_pmat
+
+	var fog_mesh: QuadMesh = QuadMesh.new()
+	fog_mesh.size = Vector2(3.0, 1.5)
+	var fog_draw_mat: StandardMaterial3D = StandardMaterial3D.new()
+	fog_draw_mat.albedo_color = Color(0.85, 0.88, 0.92, 0.2)
+	fog_draw_mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+	fog_draw_mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+	fog_draw_mat.billboard_mode = BaseMaterial3D.BILLBOARD_ENABLED
+	fog_draw_mat.cull_mode = BaseMaterial3D.CULL_DISABLED
+	fog_mesh.material = fog_draw_mat
+	fog_wisps.draw_pass_1 = fog_mesh
+	fog_wisps.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	_world.add_child(fog_wisps)
 
 	# Cliff ledge rocks — jagged outcrops on the face
 	for i in 12:
@@ -297,6 +355,33 @@ func _build_ocean() -> void:
 	foam.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 	_world.add_child(foam)
 
+	# Distant rock formations poking above waves
+	var rock_mat: StandardMaterial3D = StandardMaterial3D.new()
+	rock_mat.albedo_color = Color(0.22, 0.20, 0.18)
+	rock_mat.roughness = 1.0
+	var rock_positions: Array[Vector3] = [
+		Vector3(15.0, -4.0, -35.0),
+		Vector3(-18.0, -3.8, -45.0),
+		Vector3(8.0, -4.2, -55.0),
+		Vector3(-10.0, -3.5, -40.0),
+		Vector3(22.0, -4.0, -50.0),
+	]
+	for rp in rock_positions:
+		var rock: MeshInstance3D = MeshInstance3D.new()
+		var rbm: BoxMesh = BoxMesh.new()
+		rbm.size = Vector3(
+			_rng.randf_range(1.5, 3.5),
+			_rng.randf_range(2.0, 4.5),
+			_rng.randf_range(1.5, 3.0)
+		)
+		rock.mesh = rbm
+		rock.material_override = rock_mat
+		rock.position = rp
+		rock.rotation.y = _rng.randf_range(0.0, TAU)
+		rock.rotation.z = _rng.randf_range(-0.15, 0.15)
+		rock.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+		_world.add_child(rock)
+
 
 func _build_cabin() -> void:
 	# Small cabin — far left on cliff top
@@ -343,7 +428,7 @@ func _build_cabin() -> void:
 	smat.gravity = Vector3(0.1, 0.05, 0.0)
 	smat.scale_min = 0.3
 	smat.scale_max = 0.8
-	smat.color = Color(0.6, 0.6, 0.6, 0.15)
+	smat.color = Color(0.6, 0.6, 0.6, 0.3)
 	smat.emission_shape = ParticleProcessMaterial.EMISSION_SHAPE_SPHERE
 	smat.emission_sphere_radius = 0.2
 	smoke.process_material = smat
@@ -576,18 +661,34 @@ func _build_clouds() -> void:
 	cloud_mat.cull_mode = BaseMaterial3D.CULL_DISABLED
 
 	for i in 8:
-		var cloud: MeshInstance3D = MeshInstance3D.new()
-		var qm: QuadMesh = QuadMesh.new()
-		qm.size = Vector2(_rng.randf_range(8.0, 20.0), _rng.randf_range(3.0, 6.0))
-		qm.material = cloud_mat
-		cloud.mesh = qm
-		cloud.position = Vector3(
+		var base_pos: Vector3 = Vector3(
 			_rng.randf_range(-40.0, 40.0),
 			_rng.randf_range(20.0, 30.0),
 			_rng.randf_range(-60.0, -30.0)
 		)
-		cloud.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
-		_world.add_child(cloud)
+		var base_w: float = _rng.randf_range(8.0, 20.0)
+		var base_h: float = _rng.randf_range(3.0, 6.0)
+		# 3 overlapping quads per cloud for volume
+		for layer_idx in 3:
+			var cloud: MeshInstance3D = MeshInstance3D.new()
+			var layer_mat: StandardMaterial3D = StandardMaterial3D.new()
+			layer_mat.albedo_color = Color(0.92, 0.94, 0.96, 0.35 - float(layer_idx) * 0.08)
+			layer_mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+			layer_mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+			layer_mat.billboard_mode = BaseMaterial3D.BILLBOARD_ENABLED
+			layer_mat.cull_mode = BaseMaterial3D.CULL_DISABLED
+			var qm: QuadMesh = QuadMesh.new()
+			var scale_f: float = 1.0 - float(layer_idx) * 0.2
+			qm.size = Vector2(base_w * scale_f, base_h * scale_f)
+			qm.material = layer_mat
+			cloud.mesh = qm
+			cloud.position = base_pos + Vector3(
+				float(layer_idx) * 1.5,
+				float(layer_idx) * 0.8,
+				float(layer_idx) * 0.5
+			)
+			cloud.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+			_world.add_child(cloud)
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
