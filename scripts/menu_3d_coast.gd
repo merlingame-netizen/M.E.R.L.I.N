@@ -176,103 +176,21 @@ func _build_3d_world() -> void:
 
 
 func _build_cliff() -> void:
-	# Main cliff top — green plateau
-	var cliff: MeshInstance3D = MeshInstance3D.new()
-	var bm: BoxMesh = BoxMesh.new()
-	bm.size = Vector3(50.0, 4.0, 25.0)
-	cliff.mesh = bm
-	var mat: StandardMaterial3D = StandardMaterial3D.new()
-	mat.albedo_color = Color(0.30, 0.45, 0.22)
-	mat.roughness = 0.95
-	cliff.material_override = mat
-	cliff.position = Vector3(-5.0, 2.0, 0.0)
-	cliff.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
-	_world.add_child(cliff)
+	var cliff_scene: PackedScene = load("res://assets/3d_models/menu_coast/menu_cliff.glb")
+	var cliff_instance: Node3D = cliff_scene.instantiate()
+	cliff_instance.name = "CliffTerrain"
+	# Position so cliff edge faces ocean (negative Z side), flat top visible
+	cliff_instance.position = Vector3(-5.0, 0.0, 0.0)
+	cliff_instance.rotation_degrees = Vector3(-90.0, 0.0, 0.0)
+	cliff_instance.scale = Vector3(1.0, 1.0, 1.0)
+	_set_no_shadow_recursive(cliff_instance)
+	_world.add_child(cliff_instance)
 
-	# --- LAYERED CLIFF FACE — 10 overlapping rock strata for textured look ---
-	var cliff_layers: Array[Dictionary] = [
-		{"size": Vector3(45.0, 3.0, 2.5), "pos": Vector3(-5.0, 0.0, -13.5), "rot": 0.0, "c": Color(0.38, 0.32, 0.24)},
-		{"size": Vector3(35.0, 1.5, 3.2), "pos": Vector3(-3.0, -1.5, -13.0), "rot": 0.02, "c": Color(0.34, 0.28, 0.20)},
-		{"size": Vector3(40.0, 2.0, 1.8), "pos": Vector3(-6.0, -3.5, -14.2), "rot": -0.03, "c": Color(0.32, 0.27, 0.19)},
-		{"size": Vector3(42.0, 2.5, 2.8), "pos": Vector3(-4.0, -5.5, -13.8), "rot": 0.04, "c": Color(0.36, 0.30, 0.22)},
-		{"size": Vector3(38.0, 1.8, 2.2), "pos": Vector3(-7.0, -7.0, -14.5), "rot": -0.02, "c": Color(0.30, 0.25, 0.18)},
-		{"size": Vector3(44.0, 2.2, 2.0), "pos": Vector3(-3.5, -8.8, -13.6), "rot": 0.03, "c": Color(0.33, 0.29, 0.21)},
-		{"size": Vector3(36.0, 1.6, 3.0), "pos": Vector3(-8.0, -2.8, -12.8), "rot": -0.04, "c": Color(0.37, 0.31, 0.23)},
-		{"size": Vector3(30.0, 2.0, 2.5), "pos": Vector3(-2.0, -4.8, -14.0), "rot": 0.05, "c": Color(0.28, 0.24, 0.17)},
-		{"size": Vector3(25.0, 1.4, 2.8), "pos": Vector3(5.0, -6.5, -13.2), "rot": -0.03, "c": Color(0.35, 0.30, 0.22)},
-		{"size": Vector3(20.0, 1.8, 2.4), "pos": Vector3(-12.0, -9.0, -14.3), "rot": 0.02, "c": Color(0.31, 0.26, 0.19)},
-	]
-	var cliff_shader: Shader = load("res://shaders/cliff_rock.gdshader")
-	for layer in cliff_layers:
-		var face: MeshInstance3D = MeshInstance3D.new()
-		var face_bm: BoxMesh = BoxMesh.new()
-		face_bm.size = layer["size"] as Vector3
-		face.mesh = face_bm
-		var smat: ShaderMaterial = ShaderMaterial.new()
-		smat.shader = cliff_shader
-		smat.set_shader_parameter("rock_color_1", layer["c"] as Color)
-		smat.set_shader_parameter("rock_color_2", (layer["c"] as Color).darkened(0.15))
-		smat.set_shader_parameter("moss_color", Color(0.22, 0.38, 0.15))
-		smat.set_shader_parameter("moss_amount", 0.3)
-		smat.set_shader_parameter("roughness_val", 1.0)
-		face.material_override = smat
-		face.position = layer["pos"] as Vector3
-		face.rotation.z = layer["rot"] as float
-		face.rotation.y = _rng.randf_range(-0.03, 0.03)
-		face.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
-		_world.add_child(face)
+	# Keep fog wisps near cliff edge
+	_add_fog_wisps()
 
-	# --- ROCK OUTCROPS — 8 protruding rock knobs on the cliff face ---
-	for i in 8:
-		var outcrop: MeshInstance3D = MeshInstance3D.new()
-		var obm: BoxMesh = BoxMesh.new()
-		obm.size = Vector3(
-			_rng.randf_range(1.0, 3.0),
-			_rng.randf_range(0.5, 1.5),
-			_rng.randf_range(0.5, 1.2)
-		)
-		outcrop.mesh = obm
-		var o_color: Color = Color(0.30 + _rng.randf() * 0.08, 0.25 + _rng.randf() * 0.06, 0.18 + _rng.randf() * 0.05)
-		var osmat: ShaderMaterial = ShaderMaterial.new()
-		osmat.shader = cliff_shader
-		osmat.set_shader_parameter("rock_color_1", o_color)
-		osmat.set_shader_parameter("rock_color_2", o_color.darkened(0.15))
-		osmat.set_shader_parameter("moss_color", Color(0.22, 0.38, 0.15))
-		osmat.set_shader_parameter("moss_amount", 0.2)
-		osmat.set_shader_parameter("roughness_val", 1.0)
-		outcrop.material_override = osmat
-		outcrop.position = Vector3(
-			_rng.randf_range(-22.0, 18.0),
-			_rng.randf_range(-9.0, 0.0),
-			-12.5 + _rng.randf_range(-1.0, 0.5)
-		)
-		outcrop.rotation = Vector3(
-			_rng.randf_range(-0.15, 0.15),
-			_rng.randf_range(-0.3, 0.3),
-			_rng.randf_range(-0.1, 0.1)
-		)
-		outcrop.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
-		_world.add_child(outcrop)
 
-	# --- SERRATED CLIFF TOP EDGE — uneven grassline ---
-	for i in 12:
-		var edge_box: MeshInstance3D = MeshInstance3D.new()
-		var ebm: BoxMesh = BoxMesh.new()
-		var ew: float = _rng.randf_range(2.5, 5.0)
-		var eh: float = _rng.randf_range(0.5, 2.0)
-		ebm.size = Vector3(ew, eh, _rng.randf_range(1.5, 3.0))
-		edge_box.mesh = ebm
-		var emat: StandardMaterial3D = StandardMaterial3D.new()
-		emat.albedo_color = Color(0.28 + _rng.randf() * 0.06, 0.42 + _rng.randf() * 0.08, 0.20 + _rng.randf() * 0.05)
-		emat.roughness = 0.95
-		edge_box.material_override = emat
-		var x_spread: float = -20.0 + float(i) * 3.5 + _rng.randf_range(-1.0, 1.0)
-		edge_box.position = Vector3(x_spread, 4.0 + eh * 0.3, -11.0 + _rng.randf_range(-1.0, 0.5))
-		edge_box.rotation.y = _rng.randf_range(-0.1, 0.1)
-		edge_box.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
-		_world.add_child(edge_box)
-
-	# Fog wisps near cliff edge (horizontal drift)
+func _add_fog_wisps() -> void:
 	var fog_wisps: GPUParticles3D = GPUParticles3D.new()
 	fog_wisps.amount = 15
 	fog_wisps.lifetime = 8.0
@@ -304,27 +222,12 @@ func _build_cliff() -> void:
 	fog_wisps.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 	_world.add_child(fog_wisps)
 
-	# Cliff ledge rocks — jagged outcrops on the face
-	for i in 12:
-		var rock: MeshInstance3D = MeshInstance3D.new()
-		var rbm: BoxMesh = BoxMesh.new()
-		var w: float = _rng.randf_range(2.0, 5.0)
-		var h: float = _rng.randf_range(2.0, 6.0)
-		rbm.size = Vector3(w, h, _rng.randf_range(1.5, 3.0))
-		rock.mesh = rbm
-		var r_color: Color = Color(0.25 + _rng.randf() * 0.1, 0.38 + _rng.randf() * 0.12, 0.18 + _rng.randf() * 0.08)
-		var rsmat: ShaderMaterial = ShaderMaterial.new()
-		rsmat.shader = cliff_shader
-		rsmat.set_shader_parameter("rock_color_1", r_color)
-		rsmat.set_shader_parameter("rock_color_2", r_color.darkened(0.15))
-		rsmat.set_shader_parameter("moss_color", Color(0.22, 0.38, 0.15))
-		rsmat.set_shader_parameter("moss_amount", 0.35)
-		rsmat.set_shader_parameter("roughness_val", 1.0)
-		rock.material_override = rsmat
-		rock.position = Vector3(_rng.randf_range(-20.0, 15.0), -2.0 - _rng.randf() * 5.0, -14.0 + _rng.randf_range(-2.0, 1.0))
-		rock.rotation.y = _rng.randf_range(-0.3, 0.3)
-		rock.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
-		_world.add_child(rock)
+
+func _set_no_shadow_recursive(node: Node) -> void:
+	if node is GeometryInstance3D:
+		node.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	for child in node.get_children():
+		_set_no_shadow_recursive(child)
 
 
 func _build_ocean() -> void:
@@ -395,44 +298,24 @@ func _build_ocean() -> void:
 	foam.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 	_world.add_child(foam)
 
-	# Distant rock formations — multi-box clusters, not raw cubes
-	var rock_mat: StandardMaterial3D = StandardMaterial3D.new()
-	rock_mat.albedo_color = Color(0.22, 0.20, 0.18)
-	rock_mat.roughness = 1.0
-	var rock_positions: Array[Vector3] = [
-		Vector3(15.0, -4.0, -35.0),
-		Vector3(-18.0, -3.8, -45.0),
-		Vector3(8.0, -4.2, -55.0),
-		Vector3(-10.0, -3.5, -40.0),
-		Vector3(22.0, -4.0, -50.0),
+	# Distant rock formations — GLB assets
+	var rock_scene_1: PackedScene = load("res://assets/3d_models/menu_coast/sea_rock_1.glb")
+	var rock_scene_2: PackedScene = load("res://assets/3d_models/menu_coast/sea_rock_2.glb")
+	var rock_placements: Array[Dictionary] = [
+		{"scene": rock_scene_1, "pos": Vector3(15.0, -4.0, -35.0), "scale": 1.0},
+		{"scene": rock_scene_2, "pos": Vector3(-18.0, -3.8, -45.0), "scale": 0.8},
+		{"scene": rock_scene_1, "pos": Vector3(8.0, -4.2, -55.0), "scale": 1.2},
+		{"scene": rock_scene_2, "pos": Vector3(-10.0, -3.5, -40.0), "scale": 0.9},
+		{"scene": rock_scene_1, "pos": Vector3(22.0, -4.0, -50.0), "scale": 1.1},
 	]
-	for rp in rock_positions:
-		# Main rock body
-		var rock: MeshInstance3D = MeshInstance3D.new()
-		var rbm: BoxMesh = BoxMesh.new()
-		var rw: float = _rng.randf_range(1.5, 3.5)
-		var rh: float = _rng.randf_range(2.0, 4.5)
-		rbm.size = Vector3(rw, rh, _rng.randf_range(1.5, 3.0))
-		rock.mesh = rbm
-		rock.material_override = rock_mat
-		rock.position = rp
-		rock.rotation.y = _rng.randf_range(0.0, TAU)
-		rock.rotation.z = _rng.randf_range(-0.15, 0.15)
-		rock.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
-		_world.add_child(rock)
-		# Secondary shard beside main rock
-		var shard: MeshInstance3D = MeshInstance3D.new()
-		var shard_bm: BoxMesh = BoxMesh.new()
-		shard_bm.size = Vector3(rw * 0.4, rh * 0.7, _rng.randf_range(0.5, 1.2))
-		shard.mesh = shard_bm
-		var shard_mat: StandardMaterial3D = StandardMaterial3D.new()
-		shard_mat.albedo_color = Color(0.25, 0.22, 0.20)
-		shard_mat.roughness = 1.0
-		shard.material_override = shard_mat
-		shard.position = rp + Vector3(_rng.randf_range(-1.0, 1.0), 0.3, _rng.randf_range(-0.5, 0.5))
-		shard.rotation = Vector3(_rng.randf_range(-0.2, 0.2), _rng.randf_range(0.0, TAU), _rng.randf_range(-0.15, 0.15))
-		shard.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
-		_world.add_child(shard)
+	for rp in rock_placements:
+		var rock_inst: Node3D = (rp["scene"] as PackedScene).instantiate()
+		rock_inst.position = rp["pos"] as Vector3
+		var s: float = rp["scale"] as float
+		rock_inst.scale = Vector3(s, s, s)
+		rock_inst.rotation.y = _rng.randf_range(0.0, TAU)
+		_set_no_shadow_recursive(rock_inst)
+		_world.add_child(rock_inst)
 
 
 func _build_cabin() -> void:
@@ -692,59 +575,23 @@ func _build_cliff_grass() -> void:
 # ═══════════════════════════════════════════════════════════════════════════════
 
 func _build_tower() -> void:
-	var tower_pos: Vector3 = Vector3(2.0, 4.0, -12.0)
+	var tower_scene: PackedScene = load("res://assets/3d_models/menu_coast/celtic_tower.glb")
+	var tower_instance: Node3D = tower_scene.instantiate()
+	tower_instance.name = "CelticTower"
+	tower_instance.position = Vector3(-5.0, 4.0, -5.0)
+	tower_instance.scale = Vector3(0.8, 0.8, 0.8)
+	_set_no_shadow_recursive(tower_instance)
+	_world.add_child(tower_instance)
+	_tower_pos = tower_instance.position
+
+	# Keep orbiting stones (animated in _process)
+	_build_orbiting_stones()
+
+
+func _build_orbiting_stones() -> void:
 	var stone_mat: StandardMaterial3D = StandardMaterial3D.new()
 	stone_mat.albedo_color = Color(0.40, 0.38, 0.32)
 	stone_mat.roughness = 0.95
-
-	# Tower base — cylinder approximated with stacked blocks (taller, 1.5x)
-	for i in 10:
-		var block: MeshInstance3D = MeshInstance3D.new()
-		var bm: BoxMesh = BoxMesh.new()
-		var height_f: float = float(i)
-		bm.size = Vector3(3.0 - height_f * 0.15, 3.0, 3.0 - height_f * 0.15)
-		block.mesh = bm
-		block.material_override = stone_mat
-		block.position = tower_pos + Vector3(0.0, height_f * 2.8, 0.0)
-		block.rotation.y = height_f * 0.15
-		block.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
-		_world.add_child(block)
-
-	# Tower top — pointed roof (raised to match taller tower)
-	var roof: MeshInstance3D = MeshInstance3D.new()
-	var roof_bm: BoxMesh = BoxMesh.new()
-	roof_bm.size = Vector3(2.0, 3.0, 2.0)
-	roof.mesh = roof_bm
-	var roof_mat: StandardMaterial3D = StandardMaterial3D.new()
-	roof_mat.albedo_color = Color(0.30, 0.35, 0.25)
-	roof_mat.roughness = 1.0
-	roof.material_override = roof_mat
-	roof.position = tower_pos + Vector3(0.0, 29.0, 0.0)
-	roof.rotation = Vector3(0.0, 0.3, 0.1)
-	roof.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
-	_world.add_child(roof)
-
-	# Ruined top — broken stone pieces jutting out at angles
-	var ruin_mat: StandardMaterial3D = StandardMaterial3D.new()
-	ruin_mat.albedo_color = Color(0.35, 0.33, 0.30)
-	ruin_mat.roughness = 1.0
-	var ruin_data: Array[Dictionary] = [
-		{"size": Vector3(1.2, 2.5, 0.8), "offset": Vector3(0.8, 27.0, 0.5), "rot": Vector3(0.3, 0.2, 0.5)},
-		{"size": Vector3(0.9, 2.0, 1.0), "offset": Vector3(-0.6, 26.5, -0.7), "rot": Vector3(-0.4, 0.0, -0.3)},
-		{"size": Vector3(1.0, 1.8, 0.7), "offset": Vector3(0.3, 27.5, -0.9), "rot": Vector3(0.2, -0.5, 0.4)},
-	]
-	for rd in ruin_data:
-		var ruin: MeshInstance3D = MeshInstance3D.new()
-		var rbm: BoxMesh = BoxMesh.new()
-		rbm.size = rd["size"] as Vector3
-		ruin.mesh = rbm
-		ruin.material_override = ruin_mat
-		ruin.position = tower_pos + (rd["offset"] as Vector3)
-		ruin.rotation = rd["rot"] as Vector3
-		ruin.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
-		_world.add_child(ruin)
-
-	# Floating stones around tower (animated orbit in _process)
 	for i in 15:
 		var stone: MeshInstance3D = MeshInstance3D.new()
 		var sbm: BoxMesh = BoxMesh.new()
@@ -755,95 +602,6 @@ func _build_tower() -> void:
 		_world.add_child(stone)
 		_floating_stones.append(stone)
 		_floating_angles.append(float(i) * TAU / 15.0)
-
-	# --- TOWER WINDOWS — dark recesses at varied heights ---
-	var win_mat: StandardMaterial3D = StandardMaterial3D.new()
-	win_mat.albedo_color = Color(0.08, 0.06, 0.05)
-	win_mat.roughness = 1.0
-	var win_data: Array[Dictionary] = [
-		{"offset": Vector3(0.0, 8.0, 1.55), "rot_y": 0.0},
-		{"offset": Vector3(1.55, 14.0, 0.0), "rot_y": PI * 0.5},
-		{"offset": Vector3(-0.3, 20.0, 1.5), "rot_y": 0.15},
-	]
-	for wd in win_data:
-		var win: MeshInstance3D = MeshInstance3D.new()
-		var win_bm: BoxMesh = BoxMesh.new()
-		win_bm.size = Vector3(0.4, 0.6, 0.1)
-		win.mesh = win_bm
-		win.material_override = win_mat
-		win.position = tower_pos + (wd["offset"] as Vector3)
-		win.rotation.y = wd["rot_y"] as float
-		win.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
-		_world.add_child(win)
-
-	# --- SPIRAL STAIRCASE HINTS — tiny protruding steps ---
-	var step_mat: StandardMaterial3D = StandardMaterial3D.new()
-	step_mat.albedo_color = Color(0.38, 0.36, 0.30)
-	step_mat.roughness = 1.0
-	for si in 6:
-		var step: MeshInstance3D = MeshInstance3D.new()
-		var step_bm: BoxMesh = BoxMesh.new()
-		step_bm.size = Vector3(0.3, 0.1, 0.5)
-		step.mesh = step_bm
-		step.material_override = step_mat
-		var step_angle: float = float(si) * 1.05
-		var step_h: float = 5.0 + float(si) * 3.5
-		step.position = tower_pos + Vector3(sin(step_angle) * 1.6, step_h, cos(step_angle) * 1.6)
-		step.rotation.y = step_angle
-		step.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
-		_world.add_child(step)
-
-	# --- CRENELLATIONS — broken battlement pieces on tower rim ---
-	var cren_mat: StandardMaterial3D = StandardMaterial3D.new()
-	cren_mat.albedo_color = Color(0.37, 0.35, 0.30)
-	cren_mat.roughness = 1.0
-	for ci in 5:
-		var cren: MeshInstance3D = MeshInstance3D.new()
-		var cren_bm: BoxMesh = BoxMesh.new()
-		cren_bm.size = Vector3(0.4, _rng.randf_range(0.6, 1.2), 0.4)
-		cren.mesh = cren_bm
-		cren.material_override = cren_mat
-		var cren_angle: float = float(ci) * TAU / 5.0
-		cren.position = tower_pos + Vector3(sin(cren_angle) * 1.2, 28.5, cos(cren_angle) * 1.2)
-		cren.rotation.y = cren_angle + _rng.randf_range(-0.2, 0.2)
-		cren.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
-		_world.add_child(cren)
-
-	# Moss/vine color bands on tower
-	var moss_mat: StandardMaterial3D = StandardMaterial3D.new()
-	moss_mat.albedo_color = Color(0.2, 0.4, 0.15)
-	moss_mat.roughness = 1.0
-	var moss_heights: Array[float] = [4.0, 10.0, 16.0, 22.0]
-	for mh_idx in moss_heights.size():
-		var moss: MeshInstance3D = MeshInstance3D.new()
-		var moss_bm: BoxMesh = BoxMesh.new()
-		moss_bm.size = Vector3(0.3, 0.5, 2.5)
-		moss.mesh = moss_bm
-		moss.material_override = moss_mat
-		var angle_offset: float = float(mh_idx) * 1.2
-		moss.position = tower_pos + Vector3(sin(angle_offset) * 1.5, moss_heights[mh_idx], cos(angle_offset) * 1.5)
-		moss.rotation.y = angle_offset
-		moss.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
-		_world.add_child(moss)
-
-	# Glowing window (green gem)
-	var gem: MeshInstance3D = MeshInstance3D.new()
-	var gem_bm: SphereMesh = SphereMesh.new()
-	gem_bm.radius = 0.3
-	gem_bm.height = 0.6
-	gem_bm.radial_segments = 6
-	gem_bm.rings = 3
-	gem.mesh = gem_bm
-	var gem_mat: StandardMaterial3D = StandardMaterial3D.new()
-	gem_mat.albedo_color = Color(0.2, 0.9, 0.4)
-	gem_mat.emission_enabled = true
-	gem_mat.emission = Color(0.2, 0.9, 0.4)
-	gem_mat.emission_energy_multiplier = 3.0
-	gem_mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
-	gem.material_override = gem_mat
-	gem.position = tower_pos + Vector3(0.0, 12.0, 1.5)
-	gem.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
-	_world.add_child(gem)
 
 
 # ═══════════════════════════════════════════════════════════════════════════════

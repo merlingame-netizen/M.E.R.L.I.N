@@ -113,17 +113,11 @@ from mathutils import Vector, noise
 bpy.ops.object.select_all(action='SELECT')
 bpy.ops.object.delete()
 
-bpy.ops.mesh.primitive_plane_add(size=1)
+bpy.ops.mesh.primitive_grid_add(x_subdivisions={subdivisions}, y_subdivisions={subdivisions}, size=1)
 obj = bpy.context.active_object
 obj.name = "{name}"
 obj.scale = ({size_x}, {size_y}, 1)
 bpy.ops.object.transform_apply(scale=True)
-
-bpy.ops.object.mode_set(mode='EDIT')
-bm = bmesh.from_edit_mesh(obj.data)
-bmesh.ops.subdivide_edges(bm, edges=bm.edges[:], cuts={subdivisions})
-bmesh.update_edit_mesh(obj.data)
-bpy.ops.object.mode_set(mode='OBJECT')
 
 random.seed({seed})
 for v in obj.data.vertices:
@@ -452,17 +446,11 @@ import bpy, bmesh, json, math, os
 bpy.ops.object.select_all(action='SELECT')
 bpy.ops.object.delete()
 
-bpy.ops.mesh.primitive_plane_add(size=1)
+bpy.ops.mesh.primitive_grid_add(x_subdivisions={resolution}, y_subdivisions=int({resolution}*0.67), size=1)
 obj = bpy.context.active_object
 obj.name = "{name}"
 obj.scale = ({size_x}, {size_y}, 1)
 bpy.ops.object.transform_apply(scale=True)
-
-bpy.ops.object.mode_set(mode='EDIT')
-bm = bmesh.from_edit_mesh(obj.data)
-bmesh.ops.subdivide_edges(bm, edges=bm.edges[:], cuts={resolution})
-bmesh.update_edit_mesh(obj.data)
-bpy.ops.object.mode_set(mode='OBJECT')
 
 from mathutils import noise, Vector
 for v in obj.data.vertices:
