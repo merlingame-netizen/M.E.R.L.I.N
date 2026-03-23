@@ -859,7 +859,17 @@ def main():
         pass
     bpy.ops.object.select_all(action='DESELECT')
 
-    # Save .blend
+    # Force camera view + material preview BEFORE saving
+    for area in bpy.context.screen.areas:
+        if area.type == 'VIEW_3D':
+            for space in area.spaces:
+                if space.type == 'VIEW_3D':
+                    space.shading.type = 'MATERIAL'
+                    space.region_3d.view_perspective = 'CAMERA'
+                    break
+            break
+
+    # Save .blend (includes viewport state = camera + material preview)
     os.makedirs(SAVE_DIR, exist_ok=True)
     blend_path = os.path.join(SAVE_DIR, "menu_coast_scene.blend")
     bpy.ops.wm.save_as_mainfile(filepath=blend_path)
@@ -878,16 +888,6 @@ def main():
     bpy.context.scene.render.filepath = render_path
     bpy.ops.render.render(write_still=True)
     print(f"[MENU SCENE] Rendered: {render_path}")
-
-    # Force camera view + material preview in viewport
-    for area in bpy.context.screen.areas:
-        if area.type == 'VIEW_3D':
-            for space in area.spaces:
-                if space.type == 'VIEW_3D':
-                    space.shading.type = 'MATERIAL'
-                    space.region_3d.view_perspective = 'CAMERA'
-                    break
-            break
 
     print("[MENU SCENE] === COMPLETE ===")
 

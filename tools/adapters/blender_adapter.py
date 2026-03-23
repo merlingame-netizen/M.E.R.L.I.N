@@ -1034,7 +1034,15 @@ class BlenderAdapter(BaseAdapter):
     def _open(self, **kw: Any) -> dict:
         file_path = kw.get("file", "")
         if not file_path:
-            return self.error("No file specified (--file path)")
+            # Default: open the menu coast scene
+            file_path = str(PROJECT_DIR / "assets" / "blender" / "menu_coast_scene.blend")
+        if not os.path.exists(file_path):
+            return self.error(f"File not found: {file_path}")
+
+        # Kill any existing Blender first (single instance)
+        subprocess.run(["taskkill", "/IM", "blender.exe", "/F"],
+                        capture_output=True, timeout=5)
+        import time; time.sleep(1)
 
         cmd = [BLENDER_EXE]
         if file_path.endswith((".glb", ".gltf")):
@@ -1044,9 +1052,13 @@ class BlenderAdapter(BaseAdapter):
             ])
         else:
             cmd.append(file_path)
+            # Use open script to force camera view + Material Preview
+            open_script = str(SCRIPTS_DIR / "open_menu_scene.py")
+            if os.path.exists(open_script):
+                cmd.extend(["--python", open_script])
 
         subprocess.Popen(cmd)
-        return self.ok({"message": f"Opened {file_path} in Blender GUI"})
+        return self.ok({"message": f"Opened {file_path} — camera view + Material Preview"})
 
     def _build_scene(self, **kw: Any) -> dict:
         """Run build_menu_scene.py headless, render preview, then open in GUI."""
@@ -1062,9 +1074,13 @@ class BlenderAdapter(BaseAdapter):
             open(script_path, encoding="utf-8").read(), timeout=300
         )
         blend_path = str(PROJECT_DIR / "assets" / "blender" / "menu_coast_scene.blend")
-        # Open in GUI
+        # Open in GUI with camera view + Material Preview
         if os.path.exists(blend_path):
-            subprocess.Popen([BLENDER_EXE, blend_path])
+            open_script = str(SCRIPTS_DIR / "open_menu_scene.py")
+            cmd = [BLENDER_EXE, blend_path]
+            if os.path.exists(open_script):
+                cmd.extend(["--python", open_script])
+            subprocess.Popen(cmd)
         return self.ok({
             "blend": blend_path,
             "preview": str(Path.home() / "Downloads" / "menu_scene_preview.png"),
