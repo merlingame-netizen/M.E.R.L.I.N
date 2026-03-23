@@ -72,8 +72,8 @@ func _process(delta: float) -> void:
 		if not is_instance_valid(_wave_strips[i]):
 			continue
 		var phase: float = float(i) * 0.6
-		var wave_y: float = sin(_ocean_time * 1.2 + phase) * 0.4 + sin(_ocean_time * 0.7 + phase * 1.5) * 0.2
-		_wave_strips[i].position.y = -6.0 + wave_y
+		var wave_y: float = sin(_ocean_time * 1.2 + phase) * 0.5 + sin(_ocean_time * 0.7 + phase * 1.5) * 0.3
+		_wave_strips[i].position.y = -4.5 + wave_y
 		_wave_strips[i].rotation.x = sin(_ocean_time * 0.9 + phase) * 0.05
 
 	# Floating stones orbit around tower
@@ -112,26 +112,27 @@ func _build_3d_world() -> void:
 	_world.name = "World3D"
 	add_child(_world)
 
-	# Camera — fixed view looking at cliff edge + ocean
+	# Camera — from ocean side, angled to show cliff face + ocean + tower + sky
 	_camera = Camera3D.new()
-	_camera.position = Vector3(5.0, 6.0, 10.0)
-	_camera.rotation_degrees = Vector3(-10.0, -10.0, 0.0)
-	_camera.fov = 65.0
+	_camera.position = Vector3(16.0, 2.0, -20.0)
+	_camera.fov = 60.0
 	_camera.current = true
 	_camera.far = 200.0
 	_world.add_child(_camera)
+	# Look at tower mid-height with ocean visible below
+	_camera.look_at(Vector3(-2.0, 10.0, -12.0), Vector3.UP)
 
 	# Environment
 	_env = WorldEnvironment.new()
 	var env: Environment = Environment.new()
 	env.background_mode = Environment.BG_COLOR
-	env.background_color = Color(0.55, 0.72, 0.88)  # Blue sky like reference
+	env.background_color = Color(0.50, 0.70, 0.92)  # Brighter blue sky
 	env.ambient_light_source = Environment.AMBIENT_SOURCE_COLOR
-	env.ambient_light_color = Color(0.60, 0.65, 0.55)
-	env.ambient_light_energy = 1.0
+	env.ambient_light_color = Color(0.75, 0.80, 0.85)
+	env.ambient_light_energy = 1.4
 	env.fog_enabled = true
 	env.fog_light_color = Color(0.65, 0.75, 0.85)
-	env.fog_density = 0.008
+	env.fog_density = 0.003
 	env.tonemap_mode = Environment.TONE_MAPPER_FILMIC
 	env.tonemap_exposure = 1.3
 	_env.environment = env
@@ -231,9 +232,9 @@ func _build_cliff() -> void:
 
 func _build_ocean() -> void:
 	# Geometric wave strips — 20 rows of tilted boxes for faceted ocean look
-	var deep_color: Color = Color(0.06, 0.22, 0.40)
-	var mid_color: Color = Color(0.10, 0.32, 0.50)
-	var bright_color: Color = Color(0.15, 0.42, 0.55)
+	var deep_color: Color = Color(0.04, 0.18, 0.45)
+	var mid_color: Color = Color(0.08, 0.30, 0.55)
+	var bright_color: Color = Color(0.12, 0.45, 0.65)
 
 	for i in 20:
 		var strip: MeshInstance3D = MeshInstance3D.new()
@@ -246,7 +247,7 @@ func _build_ocean() -> void:
 		smat.roughness = 0.15 + depth_t * 0.2
 		smat.metallic = 0.3 - depth_t * 0.2
 		strip.material_override = smat
-		strip.position = Vector3(-5.0, -6.0, -16.0 - float(i) * 4.0)
+		strip.position = Vector3(-5.0, -4.5, -15.0 - float(i) * 3.5)
 		strip.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 		_world.add_child(strip)
 		_wave_strips.append(strip)
@@ -521,8 +522,8 @@ func _build_sun_sphere() -> void:
 	# Sun glow sphere (unshaded, bright)
 	var sun_sphere: MeshInstance3D = MeshInstance3D.new()
 	var sm: SphereMesh = SphereMesh.new()
-	sm.radius = 8.0
-	sm.height = 16.0
+	sm.radius = 14.0
+	sm.height = 28.0
 	sm.radial_segments = 12
 	sm.rings = 6
 	sun_sphere.mesh = sm
@@ -532,15 +533,15 @@ func _build_sun_sphere() -> void:
 	smat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
 	smat.cull_mode = BaseMaterial3D.CULL_FRONT  # Visible from inside
 	sun_sphere.material_override = smat
-	sun_sphere.position = Vector3(15.0, 18.0, -50.0)
+	sun_sphere.position = Vector3(-8.0, 22.0, -35.0)
 	sun_sphere.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 	_world.add_child(sun_sphere)
 
-	# Sun core (solid bright)
+	# Sun core (solid bright, bigger)
 	var core: MeshInstance3D = MeshInstance3D.new()
 	var cm: SphereMesh = SphereMesh.new()
-	cm.radius = 3.0
-	cm.height = 6.0
+	cm.radius = 5.0
+	cm.height = 10.0
 	cm.radial_segments = 8
 	cm.rings = 4
 	core.mesh = cm
@@ -548,16 +549,16 @@ func _build_sun_sphere() -> void:
 	cmat.albedo_color = Color(1.0, 0.98, 0.85)
 	cmat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
 	core.material_override = cmat
-	core.position = Vector3(15.0, 18.0, -50.0)
+	core.position = Vector3(-8.0, 22.0, -35.0)
 	core.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 	_world.add_child(core)
 
-	# Sun omni light
+	# Sun omni light — warm glow
 	var sun_omni: OmniLight3D = OmniLight3D.new()
 	sun_omni.light_color = Color(1.0, 0.95, 0.80)
-	sun_omni.light_energy = 2.0
-	sun_omni.omni_range = 80.0
-	sun_omni.position = Vector3(15.0, 18.0, -50.0)
+	sun_omni.light_energy = 3.0
+	sun_omni.omni_range = 100.0
+	sun_omni.position = Vector3(-8.0, 22.0, -35.0)
 	sun_omni.shadow_enabled = false
 	_world.add_child(sun_omni)
 
