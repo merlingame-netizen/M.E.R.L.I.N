@@ -202,15 +202,20 @@ func _build_cliff() -> void:
 		{"size": Vector3(25.0, 1.4, 2.8), "pos": Vector3(5.0, -6.5, -13.2), "rot": -0.03, "c": Color(0.35, 0.30, 0.22)},
 		{"size": Vector3(20.0, 1.8, 2.4), "pos": Vector3(-12.0, -9.0, -14.3), "rot": 0.02, "c": Color(0.31, 0.26, 0.19)},
 	]
+	var cliff_shader: Shader = load("res://shaders/cliff_rock.gdshader")
 	for layer in cliff_layers:
 		var face: MeshInstance3D = MeshInstance3D.new()
 		var face_bm: BoxMesh = BoxMesh.new()
 		face_bm.size = layer["size"] as Vector3
 		face.mesh = face_bm
-		var face_mat: StandardMaterial3D = StandardMaterial3D.new()
-		face_mat.albedo_color = layer["c"] as Color
-		face_mat.roughness = 1.0
-		face.material_override = face_mat
+		var smat: ShaderMaterial = ShaderMaterial.new()
+		smat.shader = cliff_shader
+		smat.set_shader_parameter("rock_color_1", layer["c"] as Color)
+		smat.set_shader_parameter("rock_color_2", (layer["c"] as Color).darkened(0.15))
+		smat.set_shader_parameter("moss_color", Color(0.22, 0.38, 0.15))
+		smat.set_shader_parameter("moss_amount", 0.3)
+		smat.set_shader_parameter("roughness_val", 1.0)
+		face.material_override = smat
 		face.position = layer["pos"] as Vector3
 		face.rotation.z = layer["rot"] as float
 		face.rotation.y = _rng.randf_range(-0.03, 0.03)
@@ -227,10 +232,15 @@ func _build_cliff() -> void:
 			_rng.randf_range(0.5, 1.2)
 		)
 		outcrop.mesh = obm
-		var omat: StandardMaterial3D = StandardMaterial3D.new()
-		omat.albedo_color = Color(0.30 + _rng.randf() * 0.08, 0.25 + _rng.randf() * 0.06, 0.18 + _rng.randf() * 0.05)
-		omat.roughness = 1.0
-		outcrop.material_override = omat
+		var o_color: Color = Color(0.30 + _rng.randf() * 0.08, 0.25 + _rng.randf() * 0.06, 0.18 + _rng.randf() * 0.05)
+		var osmat: ShaderMaterial = ShaderMaterial.new()
+		osmat.shader = cliff_shader
+		osmat.set_shader_parameter("rock_color_1", o_color)
+		osmat.set_shader_parameter("rock_color_2", o_color.darkened(0.15))
+		osmat.set_shader_parameter("moss_color", Color(0.22, 0.38, 0.15))
+		osmat.set_shader_parameter("moss_amount", 0.2)
+		osmat.set_shader_parameter("roughness_val", 1.0)
+		outcrop.material_override = osmat
 		outcrop.position = Vector3(
 			_rng.randf_range(-22.0, 18.0),
 			_rng.randf_range(-9.0, 0.0),
@@ -302,10 +312,15 @@ func _build_cliff() -> void:
 		var h: float = _rng.randf_range(2.0, 6.0)
 		rbm.size = Vector3(w, h, _rng.randf_range(1.5, 3.0))
 		rock.mesh = rbm
-		var rmat: StandardMaterial3D = StandardMaterial3D.new()
-		rmat.albedo_color = Color(0.25 + _rng.randf() * 0.1, 0.38 + _rng.randf() * 0.12, 0.18 + _rng.randf() * 0.08)
-		rmat.roughness = 1.0
-		rock.material_override = rmat
+		var r_color: Color = Color(0.25 + _rng.randf() * 0.1, 0.38 + _rng.randf() * 0.12, 0.18 + _rng.randf() * 0.08)
+		var rsmat: ShaderMaterial = ShaderMaterial.new()
+		rsmat.shader = cliff_shader
+		rsmat.set_shader_parameter("rock_color_1", r_color)
+		rsmat.set_shader_parameter("rock_color_2", r_color.darkened(0.15))
+		rsmat.set_shader_parameter("moss_color", Color(0.22, 0.38, 0.15))
+		rsmat.set_shader_parameter("moss_amount", 0.35)
+		rsmat.set_shader_parameter("roughness_val", 1.0)
+		rock.material_override = rsmat
 		rock.position = Vector3(_rng.randf_range(-20.0, 15.0), -2.0 - _rng.randf() * 5.0, -14.0 + _rng.randf_range(-2.0, 1.0))
 		rock.rotation.y = _rng.randf_range(-0.3, 0.3)
 		rock.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
@@ -905,6 +920,7 @@ func _build_sun_sphere() -> void:
 
 func _build_clouds() -> void:
 	# 14 scattered volumetric cloud clusters across the sky
+	var cloud_shader: Shader = load("res://shaders/cloud_puff.gdshader")
 	for i in 14:
 		var base_pos: Vector3 = Vector3(
 			_rng.randf_range(-35.0, 45.0),
@@ -917,16 +933,15 @@ func _build_clouds() -> void:
 		for layer_idx in 3:
 			var cloud: MeshInstance3D = MeshInstance3D.new()
 			var alpha: float = _rng.randf_range(0.3, 0.6) - float(layer_idx) * 0.08
-			var layer_mat: StandardMaterial3D = StandardMaterial3D.new()
-			layer_mat.albedo_color = Color(0.92, 0.95, 1.0, alpha)
-			layer_mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
-			layer_mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
-			layer_mat.billboard_mode = BaseMaterial3D.BILLBOARD_ENABLED
-			layer_mat.cull_mode = BaseMaterial3D.CULL_DISABLED
+			var cmat: ShaderMaterial = ShaderMaterial.new()
+			cmat.shader = cloud_shader
+			cmat.set_shader_parameter("cloud_color", Color(0.95, 0.97, 1.0, alpha))
+			cmat.set_shader_parameter("cloud_speed", 0.3)
+			cmat.set_shader_parameter("cloud_density", 1.2)
 			var qm: QuadMesh = QuadMesh.new()
 			var scale_f: float = 1.0 - float(layer_idx) * 0.15
 			qm.size = Vector2(base_w * scale_f, base_h * scale_f)
-			qm.material = layer_mat
+			qm.material = cmat
 			cloud.mesh = qm
 			cloud.position = base_pos + Vector3(
 				_rng.randf_range(-1.5, 1.5),
