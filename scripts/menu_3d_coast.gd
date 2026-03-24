@@ -854,7 +854,7 @@ func _build_trellis_trees() -> void:
 		var inst: Node3D = scene.instantiate()
 		inst.name = "Tree_%d" % i
 		inst.position = positions[i]
-		inst.scale = Vector3(0.8, 0.8, 0.8)
+		inst.scale = Vector3(2.5, 2.5, 2.5)
 		inst.rotation.y = randf() * TAU
 		_set_no_shadow_recursive(inst)
 		_world.add_child(inst)
@@ -874,7 +874,7 @@ func _build_megaliths() -> void:
 		var inst: Node3D = menhir_scene.instantiate()
 		inst.name = "Menhir_%d" % i
 		inst.position = positions[i]
-		inst.scale = Vector3(0.5, 0.5, 0.5)
+		inst.scale = Vector3(1.5, 1.5, 1.5)
 		inst.rotation.y = randf() * TAU
 		_set_no_shadow_recursive(inst)
 		_world.add_child(inst)
