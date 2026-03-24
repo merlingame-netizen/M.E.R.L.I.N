@@ -24,7 +24,7 @@ BLEND_DIR = r"c:\Users\PGNK2128\Godot-MCP\assets\blender"
 random.seed(42)
 
 # --- EXACT COLOR PALETTE (from reference) ---
-C_SKY = (0.45, 0.75, 0.95)
+C_SKY = (0.35, 0.65, 0.92)
 C_GREEN_SUN = (0.55, 0.70, 0.25)
 C_GREEN_SHADE = (0.30, 0.50, 0.18)
 C_ROCK_FACE = (0.50, 0.40, 0.28)
@@ -428,7 +428,7 @@ def build_tower():
     tower_x = 15
     tower_y = -5
     tower_base_z = 7.5  # plateau height at this location
-    tower_height = 22
+    tower_height = 18
     tower_center_z = tower_base_z + tower_height / 2
 
     # Main tower body — 12-sided cylinder
@@ -816,7 +816,7 @@ def build_ocean():
 
 def build_sun_mesh():
     """Emissive sun sphere + transparent halo for preview."""
-    sun_pos = (25, -15, 20)
+    sun_pos = (22, -8, 18)
 
     # Core
     bpy.ops.mesh.primitive_uv_sphere_add(segments=16, ring_count=8, radius=2.5, location=sun_pos)
