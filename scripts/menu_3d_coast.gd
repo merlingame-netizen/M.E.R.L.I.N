@@ -304,107 +304,46 @@ func _build_ocean() -> void:
 	foam.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 	_world.add_child(foam)
 
-	# Distant rock formations — GLB assets
-	var rock_scene_1: PackedScene = load("res://assets/3d_models/menu_coast/rocks_set.glb")
-	var rock_scene_2: PackedScene = load("res://assets/3d_models/menu_coast/rocks_set.glb")
-	var rock_placements: Array[Dictionary] = [
-		{"scene": rock_scene_1, "pos": Vector3(15.0, -4.0, -35.0), "scale": 1.0},
-		{"scene": rock_scene_2, "pos": Vector3(-18.0, -3.8, -45.0), "scale": 0.8},
-		{"scene": rock_scene_1, "pos": Vector3(8.0, -4.2, -55.0), "scale": 1.2},
-		{"scene": rock_scene_2, "pos": Vector3(-10.0, -3.5, -40.0), "scale": 0.9},
-		{"scene": rock_scene_1, "pos": Vector3(22.0, -4.0, -50.0), "scale": 1.1},
-	]
-	for rp in rock_placements:
-		var rock_inst: Node3D = (rp["scene"] as PackedScene).instantiate()
-		rock_inst.position = rp["pos"] as Vector3
-		var s: float = rp["scale"] as float
-		rock_inst.scale = Vector3(s, s, s)
-		rock_inst.rotation.y = _rng.randf_range(0.0, TAU)
-		_set_no_shadow_recursive(rock_inst)
-		_world.add_child(rock_inst)
+	# Sea rocks — single GLB with pre-positioned merged mesh
+	var rocks_scene: PackedScene = load("res://assets/3d_models/menu_coast/rocks_set.glb")
+	if rocks_scene:
+		var rocks_instance: Node3D = rocks_scene.instantiate()
+		rocks_instance.name = "SeaRocks"
+		rocks_instance.position = Vector3(0.0, 0.0, 0.0)  # Rocks are pre-positioned in the GLB
+		rocks_instance.scale = Vector3(1.0, 1.0, 1.0)
+		_set_no_shadow_recursive(rocks_instance)
+		_world.add_child(rocks_instance)
 
 
 func _build_cabin() -> void:
-	# Small cabin — far left on cliff top
-	var cabin_pos: Vector3 = Vector3(-12.0, 4.2, -8.0)
+	var cabin_scene: PackedScene = load("res://assets/3d_models/menu_coast/cabin_unified.glb")
+	if cabin_scene == null:
+		return
+	var cabin_instance: Node3D = cabin_scene.instantiate()
+	cabin_instance.name = "Cabin"
+	cabin_instance.position = Vector3(-20.0, 9.5, 5.0)  # On cliff plateau, far left
+	cabin_instance.scale = Vector3(1.5, 1.5, 1.5)
+	_set_no_shadow_recursive(cabin_instance)
+	_world.add_child(cabin_instance)
 
-	# Walls
-	var walls: MeshInstance3D = MeshInstance3D.new()
-	var wbm: BoxMesh = BoxMesh.new()
-	wbm.size = Vector3(2.5, 2.0, 2.5)
-	walls.mesh = wbm
-	var wmat: StandardMaterial3D = StandardMaterial3D.new()
-	wmat.albedo_color = Color(0.30, 0.22, 0.15)
-	wmat.roughness = 1.0
-	walls.material_override = wmat
-	walls.position = cabin_pos
-	walls.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
-	_world.add_child(walls)
-
-	# Door (dark rectangle on front face)
-	var door: MeshInstance3D = MeshInstance3D.new()
-	var door_bm: BoxMesh = BoxMesh.new()
-	door_bm.size = Vector3(0.6, 1.2, 0.05)
-	door.mesh = door_bm
-	var door_mat: StandardMaterial3D = StandardMaterial3D.new()
-	door_mat.albedo_color = Color(0.10, 0.08, 0.06)
-	door_mat.roughness = 1.0
-	door.material_override = door_mat
-	door.position = cabin_pos + Vector3(0.0, -0.4, 1.28)
-	door.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
-	_world.add_child(door)
-
-	# Roof (tilted box)
-	var roof: MeshInstance3D = MeshInstance3D.new()
-	var rbm: BoxMesh = BoxMesh.new()
-	rbm.size = Vector3(3.0, 0.3, 3.2)
-	roof.mesh = rbm
-	var rmat: StandardMaterial3D = StandardMaterial3D.new()
-	rmat.albedo_color = Color(0.20, 0.15, 0.10)
-	rmat.roughness = 1.0
-	roof.material_override = rmat
-	roof.position = cabin_pos + Vector3(0.0, 1.3, 0.0)
-	roof.rotation_degrees.z = 8.0
-	roof.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
-	_world.add_child(roof)
-
-	# Chimney (thin box on roof)
-	var chimney: MeshInstance3D = MeshInstance3D.new()
-	var chim_bm: BoxMesh = BoxMesh.new()
-	chim_bm.size = Vector3(0.35, 1.0, 0.35)
-	chimney.mesh = chim_bm
-	var chim_mat: StandardMaterial3D = StandardMaterial3D.new()
-	chim_mat.albedo_color = Color(0.25, 0.20, 0.15)
-	chim_mat.roughness = 1.0
-	chimney.material_override = chim_mat
-	chimney.position = cabin_pos + Vector3(0.8, 2.0, 0.0)
-	chimney.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
-	_world.add_child(chimney)
-
-	# Chimney smoke — GPUParticles3D
+	# Smoke particles from chimney
 	var smoke: GPUParticles3D = GPUParticles3D.new()
-	smoke.amount = 20
-	smoke.lifetime = 6.0
-	smoke.position = cabin_pos + Vector3(0.8, 2.5, 0.0)
-
-	var smat: ParticleProcessMaterial = ParticleProcessMaterial.new()
-	smat.direction = Vector3(0.2, 1.0, 0.0)
-	smat.spread = 15.0
-	smat.initial_velocity_min = 0.2
-	smat.initial_velocity_max = 0.5
-	smat.gravity = Vector3(0.1, 0.05, 0.0)
-	smat.scale_min = 0.3
-	smat.scale_max = 0.8
-	smat.color = Color(0.6, 0.6, 0.6, 0.3)
-	smat.emission_shape = ParticleProcessMaterial.EMISSION_SHAPE_SPHERE
-	smat.emission_sphere_radius = 0.2
-	smoke.process_material = smat
-
+	smoke.amount = 8
+	smoke.lifetime = 4.0
+	smoke.position = Vector3(-18.5, 12.0, 5.0)
+	var smoke_mat: ParticleProcessMaterial = ParticleProcessMaterial.new()
+	smoke_mat.direction = Vector3(0.2, 1.0, 0.0)
+	smoke_mat.spread = 15.0
+	smoke_mat.initial_velocity_min = 0.3
+	smoke_mat.initial_velocity_max = 0.8
+	smoke_mat.gravity = Vector3(0.0, 0.2, 0.0)
+	smoke_mat.scale_min = 0.15
+	smoke_mat.scale_max = 0.4
+	smoke_mat.color = Color(0.6, 0.6, 0.6, 0.15)
+	smoke.process_material = smoke_mat
 	var smoke_mesh: SphereMesh = SphereMesh.new()
-	smoke_mesh.radius = 0.15
-	smoke_mesh.height = 0.3
-	smoke_mesh.radial_segments = 4
-	smoke_mesh.rings = 2
+	smoke_mesh.radius = 0.1
+	smoke_mesh.height = 0.2
 	smoke.draw_pass_1 = smoke_mesh
 	smoke.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 	_world.add_child(smoke)
@@ -720,45 +659,15 @@ func _build_clouds() -> void:
 # ═══════════════════════════════════════════════════════════════════════════════
 
 func _build_crystals() -> void:
-	var crystal_mat: StandardMaterial3D = StandardMaterial3D.new()
-	crystal_mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
-	crystal_mat.albedo_color = Color(0.55, 0.15, 0.85)  # Vivid purple, unshaded for GL Compat
-
-	for i in 6:
-		var h: float = _rng.randf_range(1.0, 3.0)
-		var cpos: Vector3 = Vector3(
-			_rng.randf_range(-3.0, 8.0),
-			4.0 + h * 0.5,
-			_rng.randf_range(-14.0, -8.0)
-		)
-		# Main crystal
-		var crystal: MeshInstance3D = MeshInstance3D.new()
-		var cbm: BoxMesh = BoxMesh.new()
-		cbm.size = Vector3(0.3, h, 0.3)
-		crystal.mesh = cbm
-		crystal.material_override = crystal_mat
-		crystal.position = cpos
-		crystal.rotation = Vector3(
-			_rng.randf_range(-0.3, 0.3),
-			_rng.randf_range(0.0, TAU),
-			_rng.randf_range(-0.2, 0.2)
-		)
-		crystal.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
-		_world.add_child(crystal)
-		# Companion shard — smaller, tilted differently
-		var shard: MeshInstance3D = MeshInstance3D.new()
-		var shard_bm: BoxMesh = BoxMesh.new()
-		shard_bm.size = Vector3(0.2, h * 0.5, 0.2)
-		shard.mesh = shard_bm
-		shard.material_override = crystal_mat
-		shard.position = cpos + Vector3(_rng.randf_range(-0.4, 0.4), -h * 0.15, _rng.randf_range(-0.3, 0.3))
-		shard.rotation = Vector3(
-			_rng.randf_range(-0.5, 0.5),
-			_rng.randf_range(0.0, TAU),
-			_rng.randf_range(-0.4, 0.4)
-		)
-		shard.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
-		_world.add_child(shard)
+	var crystal_scene: PackedScene = load("res://assets/3d_models/menu_coast/crystal_cluster_unified.glb")
+	if crystal_scene == null:
+		return
+	var crystal_instance: Node3D = crystal_scene.instantiate()
+	crystal_instance.name = "CrystalCluster"
+	crystal_instance.position = Vector3(5.0, 10.0, -8.0)  # Near tower base, cliff edge
+	crystal_instance.scale = Vector3(1.2, 1.2, 1.2)
+	_set_no_shadow_recursive(crystal_instance)
+	_world.add_child(crystal_instance)
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
@@ -839,12 +748,12 @@ func _build_trellis_trees() -> void:
 	]
 	# Scatter 12 trees on plateau (y > -8 in Blender = z > -8 in Godot after rotation)
 	var positions: Array[Vector3] = [
-		Vector3(-15.0, 10.0, 5.0), Vector3(-10.0, 10.5, -2.0),
-		Vector3(-5.0, 10.0, 8.0), Vector3(0.0, 10.2, -5.0),
-		Vector3(5.0, 10.0, 3.0), Vector3(-20.0, 10.0, 0.0),
-		Vector3(-12.0, 10.3, -8.0), Vector3(8.0, 10.0, -3.0),
-		Vector3(-8.0, 10.0, 10.0), Vector3(3.0, 10.5, 7.0),
-		Vector3(-18.0, 10.0, -4.0), Vector3(10.0, 10.0, 0.0),
+		Vector3(-18.0, 10.0, 2.0), Vector3(-14.0, 10.0, -3.0),
+		Vector3(-10.0, 10.0, 6.0), Vector3(-6.0, 10.0, -1.0),
+		Vector3(-2.0, 10.0, 4.0), Vector3(2.0, 10.0, -2.0),
+		Vector3(6.0, 10.0, 3.0), Vector3(-16.0, 10.0, -5.0),
+		Vector3(-12.0, 10.0, 7.0), Vector3(-8.0, 10.0, 0.0),
+		Vector3(0.0, 10.0, 5.0), Vector3(4.0, 10.0, -4.0),
 	]
 	for i in positions.size():
 		var path: String = tree_paths[i % tree_paths.size()]
@@ -854,7 +763,7 @@ func _build_trellis_trees() -> void:
 		var inst: Node3D = scene.instantiate()
 		inst.name = "Tree_%d" % i
 		inst.position = positions[i]
-		inst.scale = Vector3(2.5, 2.5, 2.5)
+		inst.scale = Vector3(3.0, 3.0, 3.0)
 		inst.rotation.y = randf() * TAU
 		_set_no_shadow_recursive(inst)
 		_world.add_child(inst)
@@ -874,7 +783,7 @@ func _build_megaliths() -> void:
 		var inst: Node3D = menhir_scene.instantiate()
 		inst.name = "Menhir_%d" % i
 		inst.position = positions[i]
-		inst.scale = Vector3(1.5, 1.5, 1.5)
+		inst.scale = Vector3(3.0, 3.0, 3.0)
 		inst.rotation.y = randf() * TAU
 		_set_no_shadow_recursive(inst)
 		_world.add_child(inst)
