@@ -1026,7 +1026,7 @@ def setup_camera():
     cam.name = "PreviewCamera"
     cam.data.lens = 26  # Wide for drama + ocean foreground
     cam.data.clip_end = 250
-    target = Vector((2, -5, 11))  # Slightly lower look-at to show more tower top
+    target = Vector((5, -5, 14))  # Higher look-at to include tower spire
     direction = target - cam.location
     cam.rotation_euler = direction.to_track_quat('-Z', 'Y').to_euler()
     bpy.context.scene.camera = cam
