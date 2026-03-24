@@ -1,4 +1,4 @@
-"""Forge: Cliff Asset — High-quality low-poly cliff with vertex colors."""
+"""Forge: Cliff Asset — Whale-back cliff with terraces, caves, and outcrops."""
 import bpy, bmesh, math, random, os, json
 from mathutils import Vector, noise
 
@@ -14,9 +14,9 @@ for m in list(bpy.data.meshes): bpy.data.meshes.remove(m)
 print("[FORGE:CLIFF] Starting...")
 
 # ══════════════════════════════════════════════════════════════
-# 1. MAIN PLATEAU — high-res for organic shape
+# 1. MAIN PLATEAU — 60x50 grid for organic whale-back shape
 # ══════════════════════════════════════════════════════════════
-bpy.ops.mesh.primitive_grid_add(x_subdivisions=50, y_subdivisions=40, size=1, location=(0, 0, 0))
+bpy.ops.mesh.primitive_grid_add(x_subdivisions=60, y_subdivisions=50, size=1, location=(0, 0, 0))
 plateau = bpy.context.active_object
 plateau.name = "CliffPlateau"
 plateau.scale = (70, 55, 1)
@@ -26,45 +26,60 @@ for v in plateau.data.vertices:
     xn, yn = v.co.x / 70, v.co.y / 55
 
     if yn > -0.12:
-        # Flat plateau top with gentle undulation
+        # Whale-back plateau top — smoothly rounded, left side higher
         h = 10.0
-        h += noise.noise(Vector((xn * 3, yn * 3, 0))) * 1.2
-        h += noise.noise(Vector((xn * 8, yn * 8, 0.5))) * 0.4
-        # Left side rises higher (like reference)
-        if xn < -0.15:
-            h += 2.5
-        # Edges drop slightly
-        edge = max(0, abs(xn) - 0.35) * 4.0
+        # Large-scale undulation
+        h += noise.noise(Vector((xn * 3, yn * 3, 0))) * 1.5
+        h += noise.noise(Vector((xn * 7, yn * 7, 0.5))) * 0.6
+        # Small detail bumps
+        h += noise.noise(Vector((xn * 15, yn * 15, 1.5))) * 0.25
+        # Left side rises 3 units higher (whale profile)
+        left_rise = max(0, -xn - 0.1) * 6.0
+        h += min(left_rise, 3.0)
+        # Whale-back rounded profile from front to back
+        front_roll = max(0, yn - 0.2) * 2.0
+        h -= front_roll
+        # Edges drop smoothly
+        edge = max(0, abs(xn) - 0.32) * 5.0
         h -= edge
-        h = max(h, 8.0)
-    elif yn > -0.28:
-        # CLIFF FACE — steep drop with outcrops and caves
-        t = (yn + 0.28) / 0.16
+        h = max(h, 7.5)
+    elif yn > -0.30:
+        # CLIFF FACE — steep drop with caves and overhangs
+        t = (yn + 0.30) / 0.18
         base = t * 10.0
-        # Strong noise for irregular cliff face
+        # Strong noise for irregular cliff face (amplitude 4.0)
         base += noise.noise(Vector((xn * 5, yn * 15, 1.0))) * 4.0
-        base += noise.noise(Vector((xn * 12, yn * 20, 2.0))) * 1.5
-        # Cave-like recesses
+        base += noise.noise(Vector((xn * 12, yn * 20, 2.0))) * 2.0
+        # Medium detail
+        base += noise.noise(Vector((xn * 20, yn * 25, 4.0))) * 0.8
+        # Deep caves — threshold -0.25, subtract 3.0
         cave = noise.noise(Vector((xn * 8, yn * 8, 3.0)))
-        if cave < -0.3:
-            base -= 2.0
-        h = max(0.0, base)
+        if cave < -0.25:
+            base -= 3.0
+        # Secondary cave layer
+        cave2 = noise.noise(Vector((xn * 6, yn * 12, 6.0)))
+        if cave2 < -0.3:
+            base -= 1.5
+        # Left side stays higher on cliff face too
+        if xn < -0.15:
+            base += 1.5
+        h = max(-0.5, base)
     else:
         # Ocean floor
-        h = -1.0 + noise.noise(Vector((xn * 4, yn * 4, 0))) * 0.4
+        h = -1.5 + noise.noise(Vector((xn * 4, yn * 4, 0))) * 0.5
 
     v.co.z = h
 
 parts = [plateau]
 
 # ══════════════════════════════════════════════════════════════
-# 2. TERRACE FINGERS — 3 ridges stepping down
+# 2. TERRACE FINGERS — 3 wider ridges stepping down left to right
 # ══════════════════════════════════════════════════════════════
 terrace_specs = [
     # (x, y, sx, sy, subdx, subdy, base_h, noise_seed)
-    (10, -10, 28, 16, 22, 16, 6.5, 2.0),   # Mid terrace, center-right
-    (-14, -14, 22, 12, 16, 12, 4.0, 3.0),   # Low terrace, left
-    (20, -18, 18, 10, 14, 10, 2.0, 5.0),    # Lowest finger, far right
+    (8, -10, 35, 18, 28, 18, 7.0, 2.0),    # High terrace, center
+    (-12, -14, 28, 14, 22, 14, 4.5, 3.0),   # Mid terrace, left
+    (22, -18, 22, 12, 18, 12, 2.5, 5.0),    # Low terrace, right
 ]
 for i, (tx, ty, sx, sy, sdx, sdy, bh, ns) in enumerate(terrace_specs):
     bpy.ops.mesh.primitive_grid_add(x_subdivisions=sdx, y_subdivisions=sdy, size=1, location=(tx, ty, 0))
@@ -73,17 +88,18 @@ for i, (tx, ty, sx, sy, sdx, sdy, bh, ns) in enumerate(terrace_specs):
     t.scale = (sx, sy, 1)
     bpy.ops.object.transform_apply(scale=True)
     for v in t.data.vertices:
-        h = bh + noise.noise(Vector((v.co.x/sx*5, v.co.y/sy*5, ns))) * 1.5
-        v.co.z = max(h, bh - 2.0)
+        h = bh + noise.noise(Vector((v.co.x / sx * 5, v.co.y / sy * 5, ns))) * 1.8
+        h += noise.noise(Vector((v.co.x / sx * 12, v.co.y / sy * 12, ns + 1))) * 0.5
+        v.co.z = max(h, bh - 2.5)
     parts.append(t)
 
 # ══════════════════════════════════════════════════════════════
-# 3. CLIFF FACE WALLS — thick boxes for rock mass
+# 3. CLIFF FACE WALLS — thick boxes for rock mass depth
 # ══════════════════════════════════════════════════════════════
 face_specs = [
-    ((0, -14, 5.0), (65, 4, 10)),       # Main wall
-    ((8, -16, 3.0), (45, 3, 6)),         # Second layer
-    ((-10, -18, 1.5), (35, 2.5, 3.5)),   # Lower overhang
+    ((0, -15, 5.0), (68, 5, 11)),        # Main wall (wider, thicker)
+    ((10, -17, 3.5), (48, 4, 7)),         # Second layer
+    ((-8, -19, 1.5), (38, 3, 4)),         # Lower overhang
 ]
 for pos, sc in face_specs:
     bpy.ops.mesh.primitive_cube_add(size=1, location=pos)
@@ -93,33 +109,33 @@ for pos, sc in face_specs:
     parts.append(f)
 
 # ══════════════════════════════════════════════════════════════
-# 4. ROCK OUTCROPS — organic shapes on cliff face
+# 4. ROCK OUTCROPS — 25 organic shapes on cliff face
 # ══════════════════════════════════════════════════════════════
-for i in range(22):
+for i in range(25):
     bpy.ops.mesh.primitive_ico_sphere_add(
-        subdivisions=2, radius=random.uniform(1.5, 5.0),
-        location=(random.uniform(-28, 28), random.uniform(-20, -8), random.uniform(-1, 9)))
+        subdivisions=2, radius=random.uniform(2.0, 6.0),
+        location=(random.uniform(-30, 30), random.uniform(-22, -6), random.uniform(-1, 10)))
     o = bpy.context.active_object
-    o.scale = (random.uniform(0.7, 1.4), random.uniform(0.5, 1.0), random.uniform(0.3, 0.8))
+    o.scale = (random.uniform(0.7, 1.5), random.uniform(0.5, 1.1), random.uniform(0.3, 0.9))
     bpy.ops.object.transform_apply(scale=True)
     for v in o.data.vertices:
-        v.co += v.co.normalized() * random.uniform(-0.3, 0.3)
+        v.co += v.co.normalized() * random.uniform(-0.4, 0.4)
     parts.append(o)
 
 # ══════════════════════════════════════════════════════════════
-# 5. LARGE PROTRUDING BOULDER (center-bottom, like reference)
+# 5. LARGE PROTRUDING BOULDER (center-bottom, r=7, further out)
 # ══════════════════════════════════════════════════════════════
-bpy.ops.mesh.primitive_ico_sphere_add(subdivisions=3, radius=5.0, location=(2, -18, 3.0))
+bpy.ops.mesh.primitive_ico_sphere_add(subdivisions=3, radius=7.0, location=(2, -20, 3.0))
 boulder = bpy.context.active_object
 boulder.name = "Boulder"
-boulder.scale = (1.3, 0.8, 0.6)
+boulder.scale = (1.4, 0.9, 0.65)
 bpy.ops.object.transform_apply(scale=True)
 for v in boulder.data.vertices:
-    v.co += v.co.normalized() * random.uniform(-0.4, 0.4)
+    v.co += v.co.normalized() * random.uniform(-0.5, 0.5)
 parts.append(boulder)
 
 # ══════════════════════════════════════════════════════════════
-# 6. JOIN ALL → DECIMATE → FLAT SHADE
+# 6. JOIN ALL → DECIMATE 0.25 → FLAT SHADE
 # ══════════════════════════════════════════════════════════════
 print(f"[FORGE:CLIFF] Joining {len(parts)} objects...")
 bpy.ops.object.select_all(action='DESELECT')
@@ -131,9 +147,9 @@ bpy.context.view_layer.objects.active = main
 bpy.ops.object.join()
 main.name = "Cliff"
 
-# Decimate for faceted low-poly look
+# Decimate for faceted low-poly look (0.25 = more faceted)
 mod = main.modifiers.new("Dec", "DECIMATE")
-mod.ratio = 0.30
+mod.ratio = 0.25
 bpy.ops.object.modifier_apply(modifier="Dec")
 
 # Flat shade
@@ -143,13 +159,13 @@ for poly in main.data.polygons:
 print(f"[FORGE:CLIFF] Mesh: {len(main.data.vertices)} verts, {len(main.data.polygons)} faces")
 
 # ══════════════════════════════════════════════════════════════
-# 7. MULTI-MATERIAL by height zone
+# 7. MULTI-MATERIAL by height zone (6 zones, reference colors)
 # ══════════════════════════════════════════════════════════════
 zone_colors = {
-    "green_bright": (0.48, 0.68, 0.22),  # Sunlit plateau
-    "green_mid":    (0.38, 0.55, 0.20),   # Mid terrace
-    "green_shadow": (0.28, 0.45, 0.16),   # Shadow green
-    "rock_warm":    (0.52, 0.42, 0.30),   # Warm brown rock
+    "green_bright": (0.48, 0.68, 0.22),  # Sunlit plateau top
+    "green_mid":    (0.38, 0.55, 0.20),   # Mid terrace green
+    "green_shadow": (0.30, 0.48, 0.16),   # Shadow green (adjusted)
+    "rock_warm":    (0.52, 0.42, 0.30),   # Warm brown rock face
     "rock_mid":     (0.42, 0.35, 0.25),   # Mid brown
     "rock_dark":    (0.25, 0.22, 0.16),   # Dark base
 }
@@ -170,7 +186,6 @@ for m in mats.values():
 
 for face in main.data.polygons:
     avg_z = sum(main.data.vertices[vi].co.z for vi in face.vertices) / len(face.vertices)
-    avg_y = sum(main.data.vertices[vi].co.y for vi in face.vertices) / len(face.vertices)
 
     if avg_z > 9.0:
         face.material_index = mat_names.index("green_bright")
