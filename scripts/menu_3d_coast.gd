@@ -104,19 +104,19 @@ func _build_3d_world() -> void:
 
 	# Camera — low at ocean level, looking UP at cliff face + tower (dramatic side view)
 	_camera = Camera3D.new()
-	_camera.position = Vector3(35.0, 3.0, -30.0)
-	_camera.fov = 50.0
+	_camera.position = Vector3(30.0, 2.0, -35.0)
+	_camera.fov = 55.0
 	_camera.current = true
 	_camera.far = 200.0
 	_world.add_child(_camera)
-	# Look up at cliff edge + tower silhouette against sky
-	_camera.look_at(Vector3(-5.0, 8.0, -5.0), Vector3.UP)
+	# Look up at cliff + tower — dramatic low angle
+	_camera.look_at(Vector3(-2.0, 12.0, -3.0), Vector3.UP)
 
 	# Environment
 	_env = WorldEnvironment.new()
 	var env: Environment = Environment.new()
 	env.background_mode = Environment.BG_COLOR
-	env.background_color = Color(0.40, 0.65, 0.95)  # Vivid blue sky
+	env.background_color = Color(0.35, 0.62, 0.92)  # Saturated blue sky
 	env.ambient_light_source = Environment.AMBIENT_SOURCE_COLOR
 	env.ambient_light_color = Color(0.80, 0.85, 0.95)  # Cooler, bluer
 	env.ambient_light_energy = 1.8
