@@ -176,7 +176,7 @@ func _build_3d_world() -> void:
 
 
 func _build_cliff() -> void:
-	var cliff_scene: PackedScene = load("res://assets/3d_models/menu_coast/menu_cliff.glb")
+	var cliff_scene: PackedScene = load("res://assets/3d_models/menu_coast/cliff_unified.glb")
 	var cliff_instance: Node3D = cliff_scene.instantiate()
 	cliff_instance.name = "CliffTerrain"
 	# Position so cliff edge faces ocean (negative Z side), flat top visible
@@ -299,8 +299,8 @@ func _build_ocean() -> void:
 	_world.add_child(foam)
 
 	# Distant rock formations — GLB assets
-	var rock_scene_1: PackedScene = load("res://assets/3d_models/menu_coast/sea_rock_1.glb")
-	var rock_scene_2: PackedScene = load("res://assets/3d_models/menu_coast/sea_rock_2.glb")
+	var rock_scene_1: PackedScene = load("res://assets/3d_models/menu_coast/rocks_set.glb")
+	var rock_scene_2: PackedScene = load("res://assets/3d_models/menu_coast/rocks_set.glb")
 	var rock_placements: Array[Dictionary] = [
 		{"scene": rock_scene_1, "pos": Vector3(15.0, -4.0, -35.0), "scale": 1.0},
 		{"scene": rock_scene_2, "pos": Vector3(-18.0, -3.8, -45.0), "scale": 0.8},
@@ -575,7 +575,7 @@ func _build_cliff_grass() -> void:
 # ═══════════════════════════════════════════════════════════════════════════════
 
 func _build_tower() -> void:
-	var tower_scene: PackedScene = load("res://assets/3d_models/menu_coast/celtic_tower.glb")
+	var tower_scene: PackedScene = load("res://assets/3d_models/menu_coast/tower_unified.glb")
 	var tower_instance: Node3D = tower_scene.instantiate()
 	tower_instance.name = "CelticTower"
 	tower_instance.position = Vector3(-5.0, 4.0, -5.0)
