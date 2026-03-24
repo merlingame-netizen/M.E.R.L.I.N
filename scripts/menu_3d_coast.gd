@@ -171,6 +171,12 @@ func _build_3d_world() -> void:
 	# --- GRASS + vegetation on cliff ---
 	_build_cliff_grass()
 
+	# --- TRELLIS TREES on plateau ---
+	_build_trellis_trees()
+
+	# --- MEGALITHS on plateau ---
+	_build_megaliths()
+
 	# --- DISTANT ISLANDS (depth) ---
 	_build_distant_islands()
 
@@ -821,6 +827,59 @@ func _build_magic_particles() -> void:
 
 # ═══════════════════════════════════════════════════════════════════════════════
 # DISTANT ISLANDS — Dark silhouettes at horizon for depth
+# ═══════════════════════════════════════════════════════════════════════════════
+
+func _build_trellis_trees() -> void:
+	# Place existing Trellis tree GLBs on the cliff plateau
+	var tree_paths: Array[String] = [
+		"res://assets/3d_models/vegetation/01_Tree_Small.glb",
+		"res://assets/3d_models/vegetation/02_Tree_Medium.glb",
+		"res://assets/3d_models/vegetation/04_Pine.glb",
+		"res://assets/3d_models/vegetation/07_Bush.glb",
+	]
+	# Scatter 12 trees on plateau (y > -8 in Blender = z > -8 in Godot after rotation)
+	var positions: Array[Vector3] = [
+		Vector3(-15.0, 10.0, 5.0), Vector3(-10.0, 10.5, -2.0),
+		Vector3(-5.0, 10.0, 8.0), Vector3(0.0, 10.2, -5.0),
+		Vector3(5.0, 10.0, 3.0), Vector3(-20.0, 10.0, 0.0),
+		Vector3(-12.0, 10.3, -8.0), Vector3(8.0, 10.0, -3.0),
+		Vector3(-8.0, 10.0, 10.0), Vector3(3.0, 10.5, 7.0),
+		Vector3(-18.0, 10.0, -4.0), Vector3(10.0, 10.0, 0.0),
+	]
+	for i in positions.size():
+		var path: String = tree_paths[i % tree_paths.size()]
+		var scene: PackedScene = load(path)
+		if scene == null:
+			continue
+		var inst: Node3D = scene.instantiate()
+		inst.name = "Tree_%d" % i
+		inst.position = positions[i]
+		inst.scale = Vector3(0.8, 0.8, 0.8)
+		inst.rotation.y = randf() * TAU
+		_set_no_shadow_recursive(inst)
+		_world.add_child(inst)
+
+
+func _build_megaliths() -> void:
+	# Place existing megalith GLBs on cliff
+	var menhir_scene: PackedScene = load("res://assets/3d_models/broceliande/megaliths/menhir_01.glb")
+	if menhir_scene == null:
+		return
+	var positions: Array[Vector3] = [
+		Vector3(-8.0, 10.0, -6.0), Vector3(2.0, 10.0, 8.0),
+		Vector3(-14.0, 10.0, 3.0), Vector3(6.0, 10.0, -2.0),
+		Vector3(-3.0, 10.0, -10.0),
+	]
+	for i in positions.size():
+		var inst: Node3D = menhir_scene.instantiate()
+		inst.name = "Menhir_%d" % i
+		inst.position = positions[i]
+		inst.scale = Vector3(0.5, 0.5, 0.5)
+		inst.rotation.y = randf() * TAU
+		_set_no_shadow_recursive(inst)
+		_world.add_child(inst)
+
+
 # ═══════════════════════════════════════════════════════════════════════════════
 
 func _build_distant_islands() -> void:
