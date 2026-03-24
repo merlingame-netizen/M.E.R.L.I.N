@@ -251,6 +251,9 @@ def build_cliff():
             y_drop = 0.0
         h = 11.0 * whale - y_drop
         h += _noise3(xn * 5, yn * 5, 0.0) * 1.2
+        # Make left ridge taller
+        if xn < -0.15:
+            h += 2.0
         # Taper right edge down toward ridge 2
         if xn > 0.3:
             h -= (xn - 0.3) * 8.0
@@ -425,7 +428,7 @@ def build_tower():
     tower_x = 15
     tower_y = -5
     tower_base_z = 7.5  # plateau height at this location
-    tower_height = 30
+    tower_height = 22
     tower_center_z = tower_base_z + tower_height / 2
 
     # Main tower body — 12-sided cylinder
@@ -772,6 +775,9 @@ def build_ocean():
         y_n = v.co.y / 70
         wave = math.sin(x_n * 12) * 1.6 + math.sin(y_n * 8 + x_n * 5) * 1.2
         wave += mn.noise(Vector((x_n * 6, y_n * 4, 0))) * 0.8
+        # Extra amplitude boost for foreground waves (y < -50)
+        if v.co.y < -50:
+            wave *= 1.5
         v.co.z = wave
 
     shade_flat(ocean)
@@ -926,7 +932,7 @@ def build_vegetation():
     tree_trunk_mat.use_nodes = True
     tree_trunk_mat.node_tree.nodes["Principled BSDF"].inputs["Base Color"].default_value = (0.35, 0.28, 0.18, 1.0)
 
-    for i in range(8):
+    for i in range(20):
         tx = random.uniform(-18, 10)
         ty = random.uniform(-4, 7)
         # Trunk
@@ -934,8 +940,8 @@ def build_vegetation():
         trunk = bpy.context.active_object
         trunk.data.materials.clear()
         trunk.data.materials.append(tree_trunk_mat)
-        # Canopy
-        bpy.ops.mesh.primitive_ico_sphere_add(subdivisions=1, radius=random.uniform(1.0, 1.8), location=(tx, ty, 11.5))
+        # Canopy (larger: 1.2-2.2 instead of 1.0-1.8)
+        bpy.ops.mesh.primitive_ico_sphere_add(subdivisions=1, radius=random.uniform(1.2, 2.2), location=(tx, ty, 11.5))
         canopy = bpy.context.active_object
         canopy.scale.z = 0.7
         shade_flat(canopy)
@@ -948,12 +954,12 @@ def build_foam():
     foam_mat = bpy.data.materials.new("FoamMat")
     foam_mat.use_nodes = True
     bsdf = foam_mat.node_tree.nodes["Principled BSDF"]
-    bsdf.inputs["Base Color"].default_value = (0.85, 0.90, 0.95, 1.0)
+    bsdf.inputs["Base Color"].default_value = (0.95, 0.97, 1.0, 1.0)
     bsdf.inputs["Roughness"].default_value = 1.0
 
     for i in range(40):
         bpy.ops.mesh.primitive_ico_sphere_add(
-            subdivisions=0, radius=random.uniform(0.3, 1.2),
+            subdivisions=0, radius=random.uniform(0.5, 1.5),
             location=(random.uniform(-20, 18), random.uniform(-16, -12), random.uniform(0.0, 2.0))
         )
         foam = bpy.context.active_object
