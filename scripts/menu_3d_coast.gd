@@ -176,7 +176,7 @@ func _build_3d_world() -> void:
 
 
 func _build_cliff() -> void:
-	var cliff_scene: PackedScene = load("res://assets/3d_models/menu_coast/cliff_unified.glb")
+	var cliff_scene: PackedScene = load("res://assets/3d_models/menu_coast/menu_cliff.glb")
 	var cliff_instance: Node3D = cliff_scene.instantiate()
 	cliff_instance.name = "CliffTerrain"
 	# Position so cliff edge faces ocean (negative Z side), flat top visible
