@@ -291,4 +291,4 @@ func _wait_then_complete(bar_width: float) -> void:
 
 
 func _transition_to_menu() -> void:
-	PixelTransition.transition_to("res://scenes/MenuPrincipal.tscn")
+	PixelTransition.transition_to("res://scenes/Menu3DCoast.tscn")
