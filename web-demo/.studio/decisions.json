@@ -1,0 +1,20 @@
+[
+  {
+    "date": "2026-03-25",
+    "decision": "Use vanilla Three.js over React Three Fiber",
+    "reason": "Simpler, more performant, no React dependency overhead",
+    "decided_by": "studio-director"
+  },
+  {
+    "date": "2026-03-25",
+    "decision": "FastRoute first, LLM second",
+    "reason": "Validate gameplay loop without LLM dependency. Add Ollama adapter later.",
+    "decided_by": "studio-director"
+  },
+  {
+    "date": "2026-03-25",
+    "decision": "Zustand for state management",
+    "reason": "Lightweight, immutable-friendly, no boilerplate. Matches Redux-like pattern from Godot store.",
+    "decided_by": "gameplay-programmer"
+  }
+]

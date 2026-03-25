@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>M.E.R.L.I.N. — Le Jeu des Oghams</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    html, body { width: 100%; height: 100%; overflow: hidden; background: #0a0a12; }
+    #app { width: 100%; height: 100%; position: relative; }
+    canvas { display: block; }
+
+    /* HUD overlay */
+    #hud {
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      padding: 16px 24px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      pointer-events: none;
+      z-index: 10;
+      font-family: 'Segoe UI', system-ui, sans-serif;
+      color: #e8dcc8;
+    }
+    #hud .life-bar {
+      width: 200px; height: 12px;
+      background: rgba(0,0,0,0.5);
+      border-radius: 6px;
+      border: 1px solid rgba(232,220,200,0.3);
+      overflow: hidden;
+    }
+    #hud .life-bar-fill {
+      height: 100%;
+      background: linear-gradient(90deg, #8b4513, #cd853f);
+      border-radius: 6px;
+      transition: width 0.5s ease;
+    }
+    #hud .info { font-size: 14px; opacity: 0.8; }
+
+    /* Card overlay */
+    #card-overlay {
+      position: absolute;
+      top: 0; left: 0; right: 0; bottom: 0;
+      display: none;
+      justify-content: center;
+      align-items: center;
+      background: rgba(10, 10, 18, 0.85);
+      z-index: 20;
+      font-family: 'Segoe UI', system-ui, sans-serif;
+    }
+    #card-overlay.visible { display: flex; }
+
+    .card-container {
+      max-width: 700px;
+      width: 90%;
+      padding: 40px;
+      background: linear-gradient(145deg, rgba(30,25,20,0.95), rgba(15,12,10,0.98));
+      border: 1px solid rgba(205,133,63,0.3);
+      border-radius: 16px;
+      color: #e8dcc8;
+    }
+    .card-narrative {
+      font-size: 18px;
+      line-height: 1.6;
+      margin-bottom: 32px;
+      font-style: italic;
+      text-align: center;
+    }
+    .card-options {
+      display: flex;
+      gap: 16px;
+      justify-content: center;
+    }
+    .card-option {
+      flex: 1;
+      max-width: 200px;
+      padding: 16px;
+      background: rgba(139,69,19,0.15);
+      border: 1px solid rgba(205,133,63,0.4);
+      border-radius: 12px;
+      cursor: pointer;
+      text-align: center;
+      transition: all 0.3s ease;
+      pointer-events: all;
+    }
+    .card-option:hover {
+      background: rgba(139,69,19,0.35);
+      border-color: rgba(205,133,63,0.8);
+      transform: translateY(-2px);
+    }
+    .card-option .verb { font-weight: bold; font-size: 16px; margin-bottom: 8px; }
+    .card-option .desc { font-size: 13px; opacity: 0.7; }
+
+    /* Minigame overlay */
+    #minigame-overlay {
+      position: absolute;
+      top: 0; left: 0; right: 0; bottom: 0;
+      display: none;
+      justify-content: center;
+      align-items: center;
+      background: rgba(10, 10, 18, 0.9);
+      z-index: 30;
+      font-family: 'Segoe UI', system-ui, sans-serif;
+      color: #e8dcc8;
+    }
+    #minigame-overlay.visible { display: flex; }
+
+    /* Fade transition */
+    #fade-overlay {
+      position: absolute;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: #0a0a12;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.8s ease;
+      z-index: 50;
+    }
+    #fade-overlay.active { opacity: 1; }
+
+    /* Loading screen */
+    #loading {
+      position: absolute;
+      top: 0; left: 0; right: 0; bottom: 0;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      background: #0a0a12;
+      color: #e8dcc8;
+      font-family: 'Segoe UI', system-ui, sans-serif;
+      z-index: 100;
+    }
+    #loading h1 { font-size: 32px; margin-bottom: 8px; letter-spacing: 4px; }
+    #loading p { font-size: 14px; opacity: 0.6; }
+    #loading .spinner {
+      width: 40px; height: 40px;
+      border: 3px solid rgba(205,133,63,0.2);
+      border-top-color: #cd853f;
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+      margin-top: 24px;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+  </style>
+</head>
+<body>
+  <div id="app">
+    <div id="loading">
+      <h1>M.E.R.L.I.N.</h1>
+      <p>Le Jeu des Oghams</p>
+      <div class="spinner"></div>
+    </div>
+    <div id="hud">
+      <div>
+        <div class="info">Vie</div>
+        <div class="life-bar">
+          <div class="life-bar-fill" id="life-fill" style="width: 100%"></div>
+        </div>
+      </div>
+      <div class="info" id="cards-count">Carte 0</div>
+      <div class="info" id="biome-name">Foret de Broceliande</div>
+    </div>
+    <div id="card-overlay">
+      <div class="card-container">
+        <div class="card-narrative" id="card-text"></div>
+        <div class="card-options" id="card-options"></div>
+      </div>
+    </div>
+    <div id="minigame-overlay">
+      <div id="minigame-container"></div>
+    </div>
+    <div id="fade-overlay"></div>
+  </div>
+  <script type="module" src="/src/main.ts"></script>
+</body>
+</html>
