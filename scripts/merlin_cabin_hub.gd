@@ -257,6 +257,25 @@ func _build_ui_overlay() -> void:
 	title.add_theme_color_override("font_color", pal.get("amber", Color(1.0, 0.75, 0.2)))
 	_ui_layer.add_child(title)
 
+	# Merlin greeting (typewriter effect)
+	var greeting_quotes: Array[String] = [
+		"Bienvenue, voyageur. Les pierres m'ont parle de ta venue.",
+		"Ah, te voila. La foret t'attendait, comme toujours.",
+		"Entre, entre. Le chaudron est chaud et les etoiles sont alignees.",
+		"Je sentais ta presence dans les ley lines. Assieds-toi.",
+		"Les korrigans m'ont prevenu. Tu cherches les Oghams, n'est-ce pas ?",
+	]
+	var greeting: Label = Label.new()
+	greeting.text = greeting_quotes[randi() % greeting_quotes.size()]
+	greeting.set_anchors_preset(Control.PRESET_TOP_WIDE)
+	greeting.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	greeting.offset_top = 55
+	greeting.autowrap_mode = TextServer.AUTOWRAP_WORD
+	if font: greeting.add_theme_font_override("font", font)
+	greeting.add_theme_font_size_override("font_size", 15)
+	greeting.add_theme_color_override("font_color", pal.get("phosphor_dim", Color(0.12, 0.6, 0.24)))
+	_ui_layer.add_child(greeting)
+
 	# Bottom buttons
 	var btn_box: HBoxContainer = HBoxContainer.new()
 	btn_box.set_anchors_preset(Control.PRESET_BOTTOM_WIDE)
