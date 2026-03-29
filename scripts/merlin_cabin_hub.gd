@@ -61,6 +61,28 @@ func _build_3d_cabin() -> void:
 	fire_light.shadow_enabled = true
 	_world.add_child(fire_light)
 
+	# Fire particles (dust motes in firelight)
+	var fire_particles: GPUParticles3D = GPUParticles3D.new()
+	fire_particles.position = Vector3(-1.0, 1.8, -2.0)
+	fire_particles.amount = 20
+	fire_particles.lifetime = 4.0
+	fire_particles.visibility_aabb = AABB(Vector3(-2, -1, -2), Vector3(4, 3, 4))
+	var pmat: ParticleProcessMaterial = ParticleProcessMaterial.new()
+	pmat.emission_shape = ParticleProcessMaterial.EMISSION_SHAPE_SPHERE
+	pmat.emission_sphere_radius = 1.5
+	pmat.gravity = Vector3(0, 0.1, 0)
+	pmat.initial_velocity_min = 0.05
+	pmat.initial_velocity_max = 0.15
+	pmat.scale_min = 0.02
+	pmat.scale_max = 0.06
+	pmat.color = Color(1.0, 0.85, 0.5, 0.3)
+	fire_particles.process_material = pmat
+	var pmesh: SphereMesh = SphereMesh.new()
+	pmesh.radius = 0.02
+	pmesh.height = 0.04
+	fire_particles.draw_pass_1 = pmesh
+	_world.add_child(fire_particles)
+
 	# Ambient fill
 	var fill: OmniLight3D = OmniLight3D.new()
 	fill.position = Vector3(2.0, 2.5, 0.0)
