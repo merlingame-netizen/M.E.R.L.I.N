@@ -515,11 +515,12 @@ func _init_local_models() -> void:
 	target = clampi(target, BRAIN_SINGLE, BRAIN_MAX)
 	_log("Target brains: %d" % target)
 
-	# ── Strategy 1: Try Ollama backend (fast, multi-brain native) ──────────
-	if await _try_init_ollama(target):
-		return
+	# ── Strategy 1: Try Ollama backend (skip in web — CORS blocked) ──────────
+	if not OS.has_feature("web"):
+		if await _try_init_ollama(target):
+			return
 
-	# ── Strategy 2: Try Groq cloud API (web export, no local LLM) ─────────
+	# ── Strategy 2: Try Groq cloud API (primary for web export) ─────────
 	if await _try_init_groq():
 		return
 
