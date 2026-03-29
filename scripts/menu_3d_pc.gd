@@ -63,12 +63,12 @@ var _rng: RandomNumberGenerator = RandomNumberGenerator.new()
 
 func _ready() -> void:
 	_rng.randomize()
-	# Disable CRT autoload CanvasLayers (hint_screen_texture breaks 3D in GL Compat)
+	# Hide CRT autoload CanvasLayers (hint_screen_texture breaks 3D in GL Compat)
+	# KEEP PixelTransition and SFXManager intact — they're needed for scene transitions
+	var keep_names: Array[String] = ["PixelTransition", "SFXManager", "MusicManager", "MerlinAI", "GameManager", "MerlinVisual", "LocaleManager"]
 	for child in get_tree().root.get_children():
-		if child is CanvasLayer and child != self:
+		if child is CanvasLayer and child != self and not (str(child.name) in keep_names):
 			child.visible = false
-			for sub in child.get_children():
-				sub.queue_free()
 
 	_build_3d_world()
 	_build_ui()
