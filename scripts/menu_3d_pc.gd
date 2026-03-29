@@ -879,22 +879,38 @@ func _build_ui() -> void:
 	bezel.offset_top = 0; bezel.offset_bottom = 0
 	_ui_layer.add_child(bezel)
 
-	# Bezel border (dark frame)
-	var bezel_border: ColorRect = ColorRect.new()
-	bezel_border.set_anchors_preset(Control.PRESET_FULL_RECT)
-	bezel_border.color = Color(0.06, 0.07, 0.06, 1.0)
-	bezel_border.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	bezel.add_child(bezel_border)
+	# CRT frame — 4 thin border bars around the edges (NOT a full opaque rectangle)
+	var frame_color: Color = Color(0.06, 0.07, 0.06, 0.9)
+	var frame_w: float = 8.0  # border thickness
+	# Top bar
+	var ft: ColorRect = ColorRect.new()
+	ft.anchor_left = 0.0; ft.anchor_right = 1.0; ft.anchor_top = 0.0; ft.anchor_bottom = 0.0
+	ft.offset_bottom = frame_w; ft.color = frame_color; ft.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	bezel.add_child(ft)
+	# Bottom bar
+	var fb: ColorRect = ColorRect.new()
+	fb.anchor_left = 0.0; fb.anchor_right = 1.0; fb.anchor_top = 1.0; fb.anchor_bottom = 1.0
+	fb.offset_top = -frame_w; fb.color = frame_color; fb.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	bezel.add_child(fb)
+	# Left bar
+	var fl: ColorRect = ColorRect.new()
+	fl.anchor_left = 0.0; fl.anchor_right = 0.0; fl.anchor_top = 0.0; fl.anchor_bottom = 1.0
+	fl.offset_right = frame_w; fl.color = frame_color; fl.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	bezel.add_child(fl)
+	# Right bar
+	var fr: ColorRect = ColorRect.new()
+	fr.anchor_left = 1.0; fr.anchor_right = 1.0; fr.anchor_top = 0.0; fr.anchor_bottom = 1.0
+	fr.offset_left = -frame_w; fr.color = frame_color; fr.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	bezel.add_child(fr)
 
-	# Screen surface (inset from border by 10px — the actual CRT screen)
-	var screen_bg: ColorRect = ColorRect.new()
-	screen_bg.anchor_left = 0.0; screen_bg.anchor_right = 1.0
-	screen_bg.anchor_top = 0.0; screen_bg.anchor_bottom = 1.0
-	screen_bg.offset_left = 10; screen_bg.offset_right = -10
-	screen_bg.offset_top = 10; screen_bg.offset_bottom = -10
-	screen_bg.color = Color(0.01, 0.03, 0.01, 0.0)  # Fully transparent — 3D cliff/tower visible through CRT glass
-	screen_bg.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	bezel.add_child(screen_bg)
+	# Semi-transparent CRT tint over 3D (very subtle green)
+	var screen_tint: ColorRect = ColorRect.new()
+	screen_tint.set_anchors_preset(Control.PRESET_FULL_RECT)
+	screen_tint.offset_left = frame_w; screen_tint.offset_right = -frame_w
+	screen_tint.offset_top = frame_w; screen_tint.offset_bottom = -frame_w
+	screen_tint.color = Color(0.0, 0.02, 0.0, 0.15)  # Very subtle green tint — 3D fully visible
+	screen_tint.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	bezel.add_child(screen_tint)
 
 	# LED indicator (amber dot bottom-right of bezel)
 	var led: ColorRect = ColorRect.new()
