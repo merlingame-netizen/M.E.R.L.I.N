@@ -267,7 +267,7 @@ func _start_phase_3() -> void:
 	tween.tween_callback(_wait_then_complete.bind(bar_width))
 
 
-func _wait_then_complete(bar_width: float) -> void:
+func _wait_then_complete(_bar_width: float) -> void:
 	if not _warmup_done:
 		loading_label.text = "Eveil de M.E.R.L.I.N. ..."
 		while not _warmup_done:
@@ -275,20 +275,21 @@ func _wait_then_complete(bar_width: float) -> void:
 
 	# Complete the bar
 	loading_label.text = "Systeme pret."
-	var tween := create_tween()
-	tween.tween_property(loading_bar, "size:x", bar_width, 0.3).set_trans(Tween.TRANS_SINE)
-	tween.tween_callback(func() -> void:
-		loading_bar.color = MerlinVisual.CRT_PALETTE.amber
-		SFXManager.play("boot_confirm")
-	)
-	tween.tween_interval(0.4)
+	loading_bar.color = MerlinVisual.CRT_PALETTE.amber
+	SFXManager.play("boot_confirm")
 
-	# Fade out everything
-	tween.tween_property(loading_container, "modulate:a", 0.0, 0.3)
-	tween.parallel().tween_property(logo_container, "modulate:a", 0.0, 0.3)
-	tween.tween_interval(0.2)
-	tween.tween_callback(_transition_to_menu)
+	# Simple timer-based transition (avoids tween-inside-coroutine issues)
+	await get_tree().create_timer(1.0).timeout
+	_transition_to_menu()
 
 
 func _transition_to_menu() -> void:
-	PixelTransition.transition_to("res://scenes/Menu3DCoast.tscn")
+	# Force reset PixelTransition if stuck in non-IDLE state
+	if PixelTransition.has_method("_force_complete"):
+		PixelTransition._force_complete()
+	PixelTransition.transition_to("res://scenes/MenuPrincipal.tscn")
+	# Fallback: if transition didn't start after 2s, force scene change
+	await get_tree().create_timer(2.0).timeout
+	if get_tree().current_scene == self:
+		push_warning("IntroCeltOS: PixelTransition failed, forcing scene change")
+		get_tree().change_scene_to_file("res://scenes/MenuPrincipal.tscn")

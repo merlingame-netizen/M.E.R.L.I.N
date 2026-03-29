@@ -7,9 +7,9 @@
 
 extends Control
 
-const SCENE_HUB := "res://scenes/HubAntre.tscn"
-const SCENE_BIOME := "res://scenes/TransitionBiome.tscn"
-const SCENE_TUTORIAL := "res://scenes/IntroTutorial.tscn"
+const SCENE_HUB := "res://scenes/BroceliandeForest3D.tscn"      # Was HubAntre (archived)
+const SCENE_BIOME := "res://scenes/BroceliandeForest3D.tscn"   # Was TransitionBiome (archived)
+const SCENE_TUTORIAL := "res://scenes/BroceliandeForest3D.tscn" # Was IntroTutorial (archived)
 const DATA_PATH := "res://data/dialogues/scene_dialogues.json"
 var _next_scene: String = SCENE_HUB
 

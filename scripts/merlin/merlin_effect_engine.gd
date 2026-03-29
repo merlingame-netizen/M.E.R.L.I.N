@@ -213,6 +213,24 @@ func process_card(state: Dictionary, card: Dictionary, chosen_option: int,
 	state["run"] = run
 	result["steps_completed"].append("promises")
 
+	# ── Step 10b: POWER MILESTONES — heal/bonus at card thresholds ──
+	if MerlinConstants.POWER_MILESTONES.has(cards_played):
+		var milestone: Dictionary = MerlinConstants.POWER_MILESTONES[cards_played]
+		var m_type: String = str(milestone.get("type", ""))
+		var m_value: int = int(milestone.get("value", 0))
+		if m_type == "HEAL":
+			var life_now: int = int(run.get("life_essence", 0))
+			run["life_essence"] = mini(life_now + m_value, MerlinConstants.LIFE_ESSENCE_MAX)
+			result["milestone_heal"] = m_value
+		elif m_type == "MINIGAME_BONUS":
+			var bonus: int = int(run.get("minigame_bonus", 0))
+			run["minigame_bonus"] = bonus + m_value
+			result["milestone_bonus"] = m_value
+		result["milestone_label"] = str(milestone.get("label", ""))
+		result["milestone_desc"] = str(milestone.get("desc", ""))
+		state["run"] = run
+		result["steps_completed"].append("power_milestone")
+
 	# ── Step 11: COOLDOWN — decrement ogham cooldowns ──
 	# Biome affinity gives extra -1 cooldown (total -2 this turn)
 	var affinity_cd_bonus: int = 0

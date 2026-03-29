@@ -68,13 +68,10 @@ func _next_round() -> void:
 	if lbl:
 		lbl.text = "Manche %d/%d" % [_round, MAX_ROUNDS]
 
-	# Assign colors (correct = gold, others = grey)
+	# Assign colors — all paths same color (no hint during selection)
 	_path_colors.clear()
 	for path in _paths:
-		if path == _correct_path:
-			_path_colors[path] = MG_PALETTE.gold
-		else:
-			_path_colors[path] = MG_PALETTE.accent
+		_path_colors[path] = MG_PALETTE.accent
 
 	# Update path visual
 	var path_container := get_node_or_null("VBoxContainer/PathContainer") as HBoxContainer

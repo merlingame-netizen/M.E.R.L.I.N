@@ -1,0 +1,212 @@
+================================================================================
+ M.E.R.L.I.N. SCENE FLOW — CHAIN DIAGRAM WITH QA STATUS
+================================================================================
+
+MAIN ENTRY → Menu3DPC.tscn
+            ↓
+        Boot Sequence (5.5s)
+            ↓
+        ┌─────────────────────────────────────────┐
+        │  MENU 3D PC (Main Menu)                  │
+        │  scripts/menu_3d_pc.gd (914 lines)      │
+        │  Status: ✓ PARSE OK, ✓ HANDLERS OK      │
+        └─────────────────────────────────────────┘
+            │
+            ├─ "Nouvelle Partie" button
+            │  ├─ Handler: _on_menu_button() [line 1032]
+            │  ├─ Action: _camera_to_tower() [zoom 2.5s]
+            │  └─ Result: PixelTransition → MerlinCabinHub ✓
+            │
+            ├─ "Continuer" button
+            │  ├─ Handler: _on_menu_button() [line 1035]
+            │  └─ Result: PixelTransition → MerlinCabinHub ✓
+            │
+            └─ (Boot/Animation complete)
+                └─ Display menu buttons ✓
+
+                ║
+                ║
+                V
+
+    ┌───────────────────────────────────────────────────┐
+    │  MERLIN CABIN HUB (3D Interior)                     │
+    │  scripts/merlin_cabin_hub.gd (294 lines)          │
+    │  Status: CRITICAL PARSE ERROR (lines 292-293)    │
+    └───────────────────────────────────────────────────┘
+        │
+        ├─ "Nouvelle Quete" button
+        │  ├─ Handler: _on_hub_action("quest") [line 272]
+        │  ├─ Action: _show_book_cinematic_then_forest() [line 284]
+        │  │   ├─ var cinematic = BookCinematic.new() [line 286]
+        │  │       (Class EXISTS, code UNREACHABLE due to parse error)
+        │  │   ├─ cinematic.set_intro()
+        │  │   ├─ Wait for cinematic_complete signal
+        │  │   └─ PixelTransition → BroceliandeForest3D
+        │  └─ Status: BLOCKED (parse error prevents execution)
+        │
+        ├─ "Retour" button
+        │  ├─ Handler: _on_hub_action("menu") [line 272]
+        │  ├─ Action: Should be PixelTransition → Menu3DPC
+        │  ├─ Code Location: lines 292-293 (ORPHANED)
+        │  └─ Status: BLOCKED (orphaned code outside match scope)
+        │
+        ├─ "Tapisserie" button (Not implemented) [line 279]
+        │
+        └─ "Carte du Monde" button (Not implemented) [line 280]
+
+        PARSE ERROR DETAIL:
+        func _on_hub_action(action: String):
+          match action:
+            "quest": ...            (line 276-277 OK)
+            "tapestry": ...         (line 278-279 OK)
+            "map": ...              (line 280-281 OK)
+          # Match scope ENDS here (line 281)
+
+        func _show_book_cinematic_then_forest(): ...
+        ...
+        ORPHANED:
+          "menu": ...              (line 292 OUTSIDE scope)
+            PixelTransition(...)   (line 293 OUTSIDE scope)
+
+        FIX: Move lines 292-293 into match block (indent after line 281)
+
+            ║
+            ║  BLOCKED BY PARSE ERROR
+            ║
+
+    ┌──────────────────────────────────────────────────────┐
+    │  BROCELIANDE FOREST 3D (Gameplay Loop)               │
+    │  scripts/broceliande_3d/broceliande_forest_3d.gd     │
+    │  Status: MAJOR ASYNC ERROR + MEDIUM HANDLER          │
+    └──────────────────────────────────────────────────────┘
+        │
+        ├─ _start_aerial_then_walk() [line 846]
+        │  ├─ BrocAerialDescent camera descent (2s)
+        │  └─ Auto-walk starts with _autowalk controller
+        │
+        ├─ Auto-walk loop (poll waypoints)
+        │  ├─ 7 zones, 25 waypoints total
+        │  └─ Encounters every ~5 waypoints (5 total per run)
+        │
+        ├─ ENCOUNTER #1-5 (cycle)
+        │  │
+        │  ├─ _get_encounter_card(enc_idx) [line 940]
+        │  │  Status: MAJOR ASYNC/AWAIT MISMATCH
+        │  │
+        │  │  PROBLEM:
+        │  │  940│ func _get_encounter_card() → Dict:
+        │  │       NOT MARKED AS ASYNC
+        │  │
+        │  │  958│ await get_tree().process_frame
+        │  │       INVALID: await in non-async function
+        │  │
+        │  │  RESULT: Runtime error, LLM fails
+        │  │  FALLBACK: Lines 966-981 always work
+        │  │
+        │  │  FIX: Change to "async func _get_encounter_card()"
+        │  │       Update all callers to "await"
+        │  │
+        │  ├─ Card Display (LLM or fallback)
+        │  │  ├─ 10 hardcoded fallback cards (always available)
+        │  │  └─ LLM generation optional (graceful fallback)
+        │  │
+        │  ├─ Choices (3 options per card)
+        │  │
+        │  └─ Continue walk
+        │
+        └─ _on_run_complete() [line 985]
+           Status: MEDIUM HANDLER MISSING
+
+           PROBLEM:
+           Creates end-run overlay with 4 buttons:
+            - Stats display
+            - "Retour au Menu" button [line 1026-1038]
+
+           Button created, styled, BUT:
+           NO pressed.connect() handler wired
+
+           Result: Click button → nothing happens
+                   Player STUCK at end screen
+
+           FIX: Add after line 1038:
+                btn_menu.pressed.connect(func():
+                  PixelTransition.transition_to(HUB_SCENE)
+                )
+
+            ║  (STUCK — no handler)
+            ║  BLOCKED BY MISSING HANDLER
+
+    ┌──────────────────────────────────────────────────┐
+    │  MerlinGame.tscn (Card Minigame)                 │
+    │  Status: Not reached in current flow             │
+    └──────────────────────────────────────────────────┘
+
+================================================================================
+SCENE TRANSITION SUCCESS MATRIX
+================================================================================
+
+Transition                  From              To                    Status
+
+1. Boot → Menu              (startup)         Menu3DPC              WORKS
+2. Menu → Cabin (New Game)  Menu3DPC          MerlinCabinHub        WORKS
+3. Menu → Cabin (Continue)  Menu3DPC          MerlinCabinHub        WORKS
+4. Cabin → Forest (Quest)   MerlinCabinHub    BroceliandeForest3D   BLOCKED
+5. Cabin → Menu (Return)    MerlinCabinHub    Menu3DPC              BLOCKED
+6. Forest → Encounter       (auto-walk)       Card Overlay          DEGRADE
+7. Forest → End-Run         (5 encounters)    End Overlay           DISPLAYS
+8. End-Run → Menu/Hub       End Overlay       (any)                 BLOCKED
+
+PASS: 3/8 (37.5%)
+DEGRADE: 1/8 (12.5%)
+BLOCKED: 4/8 (50%)
+
+================================================================================
+CRITICAL ISSUE SUMMARY
+================================================================================
+
+ISSUE #1: Syntax Error in merlin_cabin_hub.gd (Lines 292-293)
+- Lines orphaned outside match block scope
+- Godot parser fails → scene unloadable
+- Blocks "quest" and "menu" button handlers
+- FIX: Indent into match block (2 tabs, after line 281)
+- IMPACT: Cannot proceed from cabin (critical path blocked)
+
+ISSUE #2: BookCinematic Reference (Depends on Issue #1)
+- Class properly defined but code unreachable
+- Auto-resolved when Issue #1 fixed
+- IMPACT: Quest/cinematic chain depends on this
+
+ISSUE #3: Async/Await Mismatch in _get_encounter_card() (Line 940-958)
+- Function uses await but not declared async
+- Runtime error when LLM encounters triggered
+- Fallback cards still work
+- FIX: Add "async" keyword, update callers
+- IMPACT: LLM encounters fail, fallback only
+
+ISSUE #4: Missing Handler in _on_run_complete() (Line 1038)
+- Button created but not connected to handler
+- Player stuck at end-run screen
+- FIX: Wire button.pressed.connect()
+- IMPACT: Cannot exit gameplay loop
+
+================================================================================
+NEXT ACTIONS
+================================================================================
+
+IMMEDIATE (Next 40 minutes total):
+1. Fix Issue #1 (5 min): Edit merlin_cabin_hub.gd lines 292-293
+2. Fix Issue #3 (10 min): Edit broceliande_forest_3d.gd line 940 + callers
+3. Fix Issue #4 (5 min): Edit broceliande_forest_3d.gd line 1038+
+4. Validate (5 min): Run validate.bat Step 0
+5. Test (15 min): Full gameplay loop Menu → Cabin → Forest → Encounters → End
+
+BLOCKING: All 4 issues must be fixed before deployment
+
+================================================================================
+QA Report
+- Date: 2026-03-27T17:30:00Z
+- Lead: Claude Code (QA Lead)
+- Status: CRITICAL - DO NOT DEPLOY
+- Fixes Required: 4
+- Estimated Fix Time: 25 minutes + 15 minutes testing = 40 minutes total
+================================================================================

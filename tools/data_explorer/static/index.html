@@ -1,0 +1,490 @@
+<!doctype html>
+<html lang="fr" data-bs-theme="dark">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Data Explorer — Orange VOC</title>
+
+  <!-- Orange Helvetica Neue -->
+  <link href="https://cdn.jsdelivr.net/npm/boosted@5.3.8/dist/css/orange-helvetica.min.css"
+        rel="stylesheet"
+        integrity="sha384-A0Qk1uKfS1i83/YuU13i2nx5pk79PkIfNFOVzTcjCMPGKIDj9Lqx9lJmV7cdBVQZ"
+        crossorigin="anonymous">
+
+  <!-- Boosted CSS -->
+  <link href="https://cdn.jsdelivr.net/npm/boosted@5.3.8/dist/css/boosted.min.css"
+        rel="stylesheet"
+        integrity="sha384-kwpgedOHSHo219WTezLqyMOgCWremFb5TML711U5X8c4TJMMBAyhHFf2gNv78IpY"
+        crossorigin="anonymous">
+
+  <!-- Plotly.js -->
+  <script src="https://cdn.plot.ly/plotly-2.35.2.min.js" charset="utf-8"></script>
+
+  <!-- CodeMirror 6 (SQL) -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@codemirror/view@6/dist/index.css">
+
+  <!-- App CSS -->
+  <link rel="stylesheet" href="/static/css/app.css">
+</head>
+<body>
+
+  <!-- ========== NAVBAR ========== -->
+  <header class="app-header">
+    <nav class="navbar navbar-expand-lg" data-bs-theme="dark">
+      <div class="container-fluid">
+        <a class="navbar-brand" href="#">
+          <img src="https://boosted.orange.com/docs/5.3/assets/brand/orange-logo.svg"
+               alt="Orange" width="50" height="50" loading="lazy">
+        </a>
+        <a class="navbar-brand fw-bold" href="#">Data Explorer</a>
+
+        <button class="navbar-toggler" type="button"
+                data-bs-toggle="collapse" data-bs-target="#navbarMain">
+          <span class="navbar-toggler-icon"></span>
+        </button>
+
+        <div class="collapse navbar-collapse" id="navbarMain">
+          <!-- Tabs in navbar -->
+          <ul class="navbar-nav me-auto mb-2 mb-lg-0" id="mainTabs" role="tablist">
+            <li class="nav-item" role="presentation">
+              <button class="nav-link active" id="tab-explorer" data-bs-toggle="tab"
+                      data-bs-target="#pane-explorer" type="button" role="tab"
+                      aria-controls="pane-explorer" aria-selected="true">
+                Explorer
+              </button>
+            </li>
+            <li class="nav-item" role="presentation">
+              <button class="nav-link" id="tab-charts" data-bs-toggle="tab"
+                      data-bs-target="#pane-charts" type="button" role="tab"
+                      aria-controls="pane-charts" aria-selected="false">
+                Graphiques
+              </button>
+            </li>
+            <li class="nav-item" role="presentation">
+              <button class="nav-link" id="tab-queries" data-bs-toggle="tab"
+                      data-bs-target="#pane-queries" type="button" role="tab"
+                      aria-controls="pane-queries" aria-selected="false">
+                Requetes
+              </button>
+            </li>
+            <li class="nav-item" role="presentation">
+              <button class="nav-link" id="tab-settings" data-bs-toggle="tab"
+                      data-bs-target="#pane-settings" type="button" role="tab"
+                      aria-controls="pane-settings" aria-selected="false">
+                Parametres
+              </button>
+            </li>
+          </ul>
+
+          <!-- Connection quick-connect -->
+          <div class="d-flex align-items-center gap-2" id="quick-connect-bar">
+            <!-- EDH button -->
+            <button class="btn quick-conn-btn d-flex align-items-center gap-2"
+                    id="btn-quick-edh" title="Connecter EDH (ODBC local)">
+              <span class="conn-icon" id="icon-edh">
+                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 18 18">
+                  <rect x="2" y="3" width="14" height="4" rx="1.5" class="conn-icon-db"/>
+                  <rect x="2" y="8.5" width="14" height="4" rx="1.5" class="conn-icon-db"/>
+                  <circle cx="13" cy="5" r="1.2" class="conn-icon-dot"/>
+                  <circle cx="13" cy="10.5" r="1.2" class="conn-icon-dot"/>
+                </svg>
+              </span>
+              <span class="conn-label">EDH</span>
+              <span class="conn-status-text" id="edh-conn-text">ODBC</span>
+              <span class="spinner-border spinner-border-sm d-none" id="spinner-edh" role="status"></span>
+            </button>
+
+            <div class="vr mx-1 opacity-25"></div>
+
+            <!-- GCP button -->
+            <button class="btn quick-conn-btn d-flex align-items-center gap-2"
+                    id="btn-quick-gcp" title="Connecter GCP BigQuery (ADC)">
+              <span class="conn-icon" id="icon-gcp">
+                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 18 18">
+                  <path d="M9 2L3 6v6l6 4 6-4V6z" class="conn-icon-cloud" stroke-width="1.3" fill="none"/>
+                  <circle cx="9" cy="9" r="2.5" class="conn-icon-dot"/>
+                </svg>
+              </span>
+              <span class="conn-label">GCP</span>
+              <span class="conn-status-text" id="gcp-conn-text">ADC</span>
+              <span class="spinner-border spinner-border-sm d-none" id="spinner-gcp" role="status"></span>
+            </button>
+          </div>
+        </div>
+      </div>
+    </nav>
+  </header>
+
+  <!-- ========== MAIN CONTENT ========== -->
+  <main class="container-fluid py-3">
+    <div class="tab-content" id="mainTabContent">
+
+      <!-- ===== TAB 1: EXPLORER ===== -->
+      <div class="tab-pane fade show active" id="pane-explorer" role="tabpanel" aria-labelledby="tab-explorer">
+        <div class="row g-3">
+          <!-- Left sidebar: table browser -->
+          <div class="col-lg-3">
+            <div class="card">
+              <div class="card-header d-flex justify-content-between align-items-center">
+                <span>Tables</span>
+                <div class="btn-group btn-group-sm" role="group" aria-label="Source">
+                  <input type="radio" class="btn-check" name="source" id="src-edh" value="edh" checked>
+                  <label class="btn btn-outline-primary" for="src-edh">EDH</label>
+                  <input type="radio" class="btn-check" name="source" id="src-bq" value="bigquery">
+                  <label class="btn btn-outline-primary" for="src-bq">GCP</label>
+                </div>
+              </div>
+              <div class="card-body p-2">
+                <input type="text" class="form-control form-control-sm mb-2"
+                       id="table-filter" placeholder="Filtrer tables...">
+                <div class="table-list list-group list-group-flush" id="table-list">
+                  <div class="text-center text-body-secondary py-3">
+                    <small>Connectez-vous pour voir les tables</small>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Right: content area -->
+          <div class="col-lg-9">
+            <!-- KPI cards -->
+            <div class="row g-2 mb-3" id="kpi-cards">
+              <div class="col-sm-6 col-xl-3">
+                <div class="card stat-card text-center">
+                  <div class="card-body py-2">
+                    <div class="card-title text-primary" id="kpi-rows">--</div>
+                    <div class="card-text text-body-secondary">Lignes</div>
+                  </div>
+                </div>
+              </div>
+              <div class="col-sm-6 col-xl-3">
+                <div class="card stat-card text-center">
+                  <div class="card-body py-2">
+                    <div class="card-title text-info" id="kpi-cols">--</div>
+                    <div class="card-text text-body-secondary">Colonnes</div>
+                  </div>
+                </div>
+              </div>
+              <div class="col-sm-6 col-xl-3">
+                <div class="card stat-card text-center">
+                  <div class="card-body py-2">
+                    <div class="card-title text-warning" id="kpi-nulls">--</div>
+                    <div class="card-text text-body-secondary">Nulls (%)</div>
+                  </div>
+                </div>
+              </div>
+              <div class="col-sm-6 col-xl-3">
+                <div class="card stat-card text-center">
+                  <div class="card-body py-2">
+                    <div class="card-title text-success" id="kpi-uniques">--</div>
+                    <div class="card-text text-body-secondary">Uniques (1re col)</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Action buttons -->
+            <div class="d-flex flex-wrap gap-2 mb-3 align-items-center">
+              <button class="btn btn-outline-secondary btn-sm" id="btn-describe" disabled>
+                DESCRIBE
+              </button>
+              <button class="btn btn-primary btn-sm" id="btn-sample" disabled>
+                Echantillon (100)
+              </button>
+              <button class="btn btn-outline-secondary btn-sm" id="btn-export-csv" disabled>
+                Export CSV
+              </button>
+
+              <div class="vr mx-1"></div>
+
+              <!-- Profiling: column selector + Count / Distinct -->
+              <select class="form-select form-select-sm" id="profile-col"
+                      style="width: 200px;" disabled>
+                <option value="">-- Champ --</option>
+              </select>
+              <button class="btn btn-outline-info btn-sm" id="btn-count-col" disabled
+                      title="Compter le nombre total d'enregistrements pour ce champ">
+                Compter
+              </button>
+              <button class="btn btn-outline-warning btn-sm" id="btn-distinct-col" disabled
+                      title="Valeurs distinctes du champ (affiche si &lt;50)">
+                Distinct
+              </button>
+              <span class="spinner-border spinner-border-sm d-none text-info" id="spinner-profile"></span>
+
+              <span class="text-body-secondary small align-self-center ms-2" id="table-info"></span>
+            </div>
+
+            <!-- Profiling results panel -->
+            <div class="d-none mb-3" id="profile-results">
+              <div class="card border-info">
+                <div class="card-header d-flex justify-content-between align-items-center py-1">
+                  <small class="fw-bold" id="profile-title">Profiling</small>
+                  <button class="btn btn-sm btn-outline-secondary py-0" id="btn-close-profile">X</button>
+                </div>
+                <div class="card-body py-2" id="profile-body">
+                </div>
+              </div>
+            </div>
+
+            <!-- Data table -->
+            <div class="table-scroll" id="data-table-wrapper">
+              <table class="table table-hover table-sm data-table mb-0" id="data-table">
+                <thead id="data-thead"></thead>
+                <tbody id="data-tbody"></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ===== TAB 2: GRAPHIQUES ===== -->
+      <div class="tab-pane fade" id="pane-charts" role="tabpanel" aria-labelledby="tab-charts">
+        <div class="row g-3">
+          <!-- Chart controls sidebar -->
+          <div class="col-lg-3">
+            <div class="card">
+              <div class="card-header">Controles</div>
+              <div class="card-body">
+                <div class="mb-2">
+                  <label class="form-label small" for="chart-type">Type</label>
+                  <select class="form-select form-select-sm" id="chart-type">
+                    <option value="bar_count">Bar (value_counts)</option>
+                    <option value="stacked_bar">Stacked Bar</option>
+                    <option value="hist">Histogramme</option>
+                    <option value="scatter">Scatter</option>
+                    <option value="line">Line</option>
+                    <option value="box">Box</option>
+                    <option value="pie">Pie (top N)</option>
+                    <option value="heatmap">Heatmap (corr)</option>
+                    <option value="treemap">Treemap</option>
+                  </select>
+                </div>
+                <div class="mb-2">
+                  <label class="form-label small" for="chart-x">X</label>
+                  <select class="form-select form-select-sm" id="chart-x"><option value="">--</option></select>
+                </div>
+                <div class="mb-2">
+                  <label class="form-label small" for="chart-y">Y</label>
+                  <select class="form-select form-select-sm" id="chart-y"><option value="">--</option></select>
+                </div>
+                <div class="mb-2">
+                  <label class="form-label small" for="chart-color">Couleur</label>
+                  <select class="form-select form-select-sm" id="chart-color"><option value="">--</option></select>
+                </div>
+                <div class="mb-2">
+                  <label class="form-label small">Top N : <span id="topn-val">15</span></label>
+                  <input type="range" class="form-range" id="chart-topn" min="3" max="50" value="15">
+                </div>
+                <button class="btn btn-primary btn-sm w-100" id="btn-chart" disabled>
+                  Generer graphe
+                </button>
+              </div>
+            </div>
+          </div>
+          <!-- Chart display -->
+          <div class="col-lg-9">
+            <div class="card">
+              <div class="card-body p-2" id="chart-container">
+                <div class="text-center text-body-secondary py-5">
+                  <p>Chargez un echantillon dans Explorer, puis generez un graphe ici.</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ===== TAB 3: REQUETES ===== -->
+      <div class="tab-pane fade" id="pane-queries" role="tabpanel" aria-labelledby="tab-queries">
+        <div class="row g-3">
+          <!-- SQL editor -->
+          <div class="col-lg-8">
+            <div class="card mb-3">
+              <div class="card-header d-flex justify-content-between align-items-center">
+                <span>Editeur SQL</span>
+                <div class="d-flex gap-2">
+                  <select class="form-select form-select-sm" id="query-source" style="width: 120px;">
+                    <option value="edh">EDH</option>
+                    <option value="bigquery">BigQuery</option>
+                  </select>
+                  <button class="btn btn-primary btn-sm" id="btn-run-query" disabled>
+                    Executer
+                  </button>
+                  <button class="btn btn-outline-secondary btn-sm" id="btn-save-query">
+                    Sauvegarder
+                  </button>
+                </div>
+              </div>
+              <div class="card-body p-0">
+                <div class="sql-editor-wrapper" id="sql-editor">
+                  <textarea class="form-control" id="sql-textarea" rows="8"
+                            placeholder="SELECT * FROM table LIMIT 100"
+                            style="font-family: 'Courier New', monospace; font-size: 0.9rem; border: none; border-radius: 0;"></textarea>
+                </div>
+              </div>
+            </div>
+
+            <!-- Query results -->
+            <div class="card">
+              <div class="card-header d-flex justify-content-between align-items-center">
+                <span id="query-result-info">Resultats</span>
+                <div class="d-flex gap-1">
+                  <button class="btn btn-outline-secondary btn-sm" id="btn-export-query-csv" disabled>CSV</button>
+                  <button class="btn btn-outline-secondary btn-sm" id="btn-export-query-xlsx" disabled>Excel</button>
+                  <button class="btn btn-outline-secondary btn-sm" id="btn-export-query-json" disabled>JSON</button>
+                </div>
+              </div>
+              <div class="table-scroll" style="max-height: 350px;">
+                <table class="table table-hover table-sm data-table mb-0" id="query-result-table">
+                  <thead id="query-result-thead"></thead>
+                  <tbody id="query-result-tbody"></tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+
+          <!-- Saved queries + history -->
+          <div class="col-lg-4">
+            <div class="card mb-3">
+              <div class="card-header">Requetes sauvegardees</div>
+              <div class="card-body p-2">
+                <div class="list-group list-group-flush" id="saved-queries-list">
+                  <div class="text-center text-body-secondary py-2">
+                    <small>Aucune requete sauvegardee</small>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="card">
+              <div class="card-header">Historique</div>
+              <div class="card-body p-2" style="max-height: 300px; overflow-y: auto;">
+                <div id="query-history-list">
+                  <div class="text-center text-body-secondary py-2">
+                    <small>Aucun historique</small>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ===== TAB 4: PARAMETRES ===== -->
+      <div class="tab-pane fade" id="pane-settings" role="tabpanel" aria-labelledby="tab-settings">
+        <div class="row g-3">
+          <!-- EDH connection -->
+          <div class="col-md-6">
+            <div class="card">
+              <div class="card-header d-flex justify-content-between align-items-center">
+                <span>EDH (Hive/Knox)</span>
+                <span class="badge conn-badge disconnected" id="settings-badge-edh">Deconnecte</span>
+              </div>
+              <div class="card-body">
+                <p class="small text-body-secondary">
+                  DSN : <code>EDH_BCV_ODBC</code> — Schema : <code>prod_app_bcv_vm_v</code>
+                </p>
+                <div class="mb-2">
+                  <label class="form-label small" for="edh-user">Utilisateur LDAP</label>
+                  <input type="text" class="form-control form-control-sm" id="edh-user" placeholder="PGNK2128">
+                </div>
+                <div class="mb-2">
+                  <label class="form-label small" for="edh-pass">Mot de passe</label>
+                  <input type="password" class="form-control form-control-sm" id="edh-pass">
+                </div>
+                <button class="btn btn-primary btn-sm" id="btn-connect-edh">
+                  Connecter EDH
+                </button>
+                <button class="btn btn-outline-secondary btn-sm" id="btn-disconnect-edh" disabled>
+                  Deconnecter
+                </button>
+                <div class="mt-2" id="edh-status-msg"></div>
+              </div>
+            </div>
+          </div>
+
+          <!-- BigQuery connection -->
+          <div class="col-md-6">
+            <div class="card">
+              <div class="card-header d-flex justify-content-between align-items-center">
+                <span>GCP BigQuery</span>
+                <span class="badge conn-badge disconnected" id="settings-badge-bq">Deconnecte</span>
+              </div>
+              <div class="card-body">
+                <p class="small text-body-secondary">
+                  Projet : <code>ofr-ppx-propme-1-prd</code> — Dataset : <code>usr_pgnk2128</code>
+                </p>
+                <p class="small text-body-secondary">
+                  Auth via ADC (Application Default Credentials).
+                </p>
+                <button class="btn btn-primary btn-sm" id="btn-connect-bq">
+                  Connecter BigQuery
+                </button>
+                <button class="btn btn-outline-secondary btn-sm" id="btn-disconnect-bq" disabled>
+                  Deconnecter
+                </button>
+                <div class="mt-2" id="bq-status-msg"></div>
+                <div class="mt-2">
+                  <details>
+                    <summary class="small text-body-secondary">Si auth echouee</summary>
+                    <pre class="small mt-1"><code>gcloud auth login --update-adc</code></pre>
+                  </details>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </main>
+
+  <!-- ========== TOAST CONTAINER ========== -->
+  <div class="toast-container position-fixed bottom-0 end-0 p-3" id="toast-container"></div>
+
+  <!-- ========== FOOTER ========== -->
+  <footer class="footer navbar-dark bg-dark py-2 mt-3">
+    <div class="container-fluid">
+      <div class="d-flex justify-content-between align-items-center">
+        <div class="d-flex align-items-center gap-2">
+          <img src="https://boosted.orange.com/docs/5.3/assets/brand/orange-logo.svg"
+               alt="Orange" width="24" height="24" loading="lazy">
+          <small class="text-body-secondary">Data Explorer v1.0 — VOC DEF</small>
+        </div>
+        <small class="text-body-secondary">&copy; Orange 2026</small>
+      </div>
+    </div>
+  </footer>
+
+  <!-- ========== SAVE QUERY MODAL ========== -->
+  <div class="modal fade" id="saveQueryModal" tabindex="-1">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title">Sauvegarder la requete</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body">
+          <div class="mb-3">
+            <label class="form-label" for="save-query-name">Nom</label>
+            <input type="text" class="form-control" id="save-query-name" placeholder="Ma requete">
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Annuler</button>
+          <button type="button" class="btn btn-primary" id="btn-confirm-save-query">Sauvegarder</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Boosted Bundle JS -->
+  <script src="https://cdn.jsdelivr.net/npm/boosted@5.3.8/dist/js/boosted.bundle.min.js"
+          integrity="sha384-lSjE7ZAWc1Wiua5r2jyHbPL07FiKkHPWCXugD3qTq4o4M4YZQzLTrDF1CXrjxU/m"
+          crossorigin="anonymous"></script>
+
+  <!-- App JS -->
+  <script src="/static/js/app.js"></script>
+</body>
+</html>

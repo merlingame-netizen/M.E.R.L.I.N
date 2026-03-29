@@ -25,8 +25,8 @@ static func _all_configs() -> Dictionary:
 		"foret_broceliande": {
 			"name": "Foret de Broceliande",
 			"zones": ["La Lisiere", "La Foret Dense", "Le Dolmen", "La Mare Enchantee", "La Foret Profonde", "La Fontaine de Barenton", "Le Cercle de Pierres"],
-			"terrain_color": Color(0.15, 0.25, 0.10),
-			"fog_color": Color(0.6, 0.7, 0.5),
+			"terrain_color": Color(0.22, 0.38, 0.15),
+			"fog_color": Color(0.5, 0.6, 0.45),  # Slightly darker fog for depth against bright sky
 			"fog_density": 0.025,
 			"ambient_color": Color(0.35, 0.40, 0.30),
 			"sky_top": Color(0.35, 0.55, 0.75),

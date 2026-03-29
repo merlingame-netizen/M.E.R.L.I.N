@@ -52,7 +52,76 @@ func load_assets(
 		var scene: PackedScene = _try_load(broc_assets[key])
 		if scene:
 			broc_scenes[key] = scene
-	print("[Broceliande] Loaded %d/%d GLB assets" % [broc_scenes.size(), broc_assets.size()])
+	print("[Broceliande] Loaded trees=%d bush=%d special=%d detail=%d broc=%d" % [tree_scenes.size(), bush_scenes.size(), special_scenes.size(), detail_scenes.size(), broc_scenes.size()])
+
+	# Fallback: if no trees loaded, create procedural ones
+	if tree_scenes.is_empty():
+		print("[Broceliande] No GLB trees — generating procedural fallbacks")
+		_create_procedural_trees()
+
+
+func _create_procedural_trees() -> void:
+	## Generate 3 procedural tree types as PackedScene substitutes
+	## Each is a Node3D with trunk (CylinderMesh) + canopy (SphereMesh)
+	for i in 3:
+		var tree_root: Node3D = Node3D.new()
+		tree_root.name = "ProceduralTree_%d" % i
+
+		# Trunk
+		var trunk: MeshInstance3D = MeshInstance3D.new()
+		var trunk_mesh: CylinderMesh = CylinderMesh.new()
+		trunk_mesh.top_radius = 0.08 + float(i) * 0.02
+		trunk_mesh.bottom_radius = 0.15 + float(i) * 0.03
+		trunk_mesh.height = 2.0 + float(i) * 1.0
+		trunk.mesh = trunk_mesh
+		trunk.position.y = trunk_mesh.height / 2.0
+		var trunk_mat: StandardMaterial3D = StandardMaterial3D.new()
+		trunk_mat.albedo_color = Color(0.45, 0.30, 0.15)  # Warmer brown trunk
+		trunk_mat.roughness = 0.9
+		trunk.material_override = trunk_mat
+		trunk.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_ON
+		tree_root.add_child(trunk)
+
+		# Canopy
+		var canopy: MeshInstance3D = MeshInstance3D.new()
+		var canopy_mesh: SphereMesh = SphereMesh.new()
+		canopy_mesh.radius = 0.8 + float(i) * 0.4
+		canopy_mesh.height = 1.2 + float(i) * 0.5
+		canopy.mesh = canopy_mesh
+		canopy.position.y = trunk_mesh.height + canopy_mesh.height * 0.3
+		var canopy_mat: StandardMaterial3D = StandardMaterial3D.new()
+		canopy_mat.albedo_color = Color(0.25 + float(i) * 0.08, 0.55 + float(i) * 0.1, 0.18)  # Brighter green canopy
+		canopy_mat.roughness = 0.7
+		canopy.material_override = canopy_mat
+		canopy.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_ON
+		tree_root.add_child(canopy)
+
+		# Pack as scene — we can't create PackedScene at runtime,
+		# so we store the root nodes and spawn_glb will use them directly
+		# Instead: add a helper array of Node3D templates
+		_procedural_tree_templates.append(tree_root)
+
+	# Create pseudo-PackedScenes by wrapping in a callable spawner
+	print("[Broceliande] Created %d procedural tree templates" % _procedural_tree_templates.size())
+
+
+var _procedural_tree_templates: Array[Node3D] = []
+
+
+func spawn_procedural_tree(pos: Vector3, scale_f: float = 1.0) -> Node3D:
+	if _procedural_tree_templates.is_empty():
+		return null
+	var template: Node3D = _procedural_tree_templates[_rng.randi() % _procedural_tree_templates.size()]
+	var instance: Node3D = template.duplicate()
+	instance.position = pos
+	instance.scale = Vector3.ONE * scale_f
+	instance.rotation_degrees.y = _rng.randf_range(0.0, 360.0)
+	_forest_root.add_child(instance)
+	return instance
+
+
+func has_trees() -> bool:
+	return not tree_scenes.is_empty() or not _procedural_tree_templates.is_empty()
 
 
 func _try_load(path: String) -> PackedScene:

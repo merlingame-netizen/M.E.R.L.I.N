@@ -126,8 +126,21 @@ func substitute_template_vars(tpl: String, context: Dictionary, cards_played: in
 	tpl = tpl.replace("{arc_theme}", str(context.get("scenario_theme", theme_word)))
 	tpl = tpl.replace("{arc_name}", str(context.get("scenario_title", "")))
 	tpl = tpl.replace("{arc_progress}", str(cards_played))
-	tpl = tpl.replace("{duality_a}", "")
-	tpl = tpl.replace("{duality_b}", "")
+	# Duality pairs for moral dilemmas — rotate by card index
+	var duality_pairs := [
+		["honneur", "survie"], ["verite", "paix"], ["loyaute", "conscience"],
+		["courage", "prudence"], ["memoire", "oubli"], ["justice", "misericorde"],
+		["force", "ruse"], ["tradition", "changement"], ["devoir", "liberte"],
+	]
+	var pair: Array = duality_pairs[cards_played % duality_pairs.size()]
+	tpl = tpl.replace("{duality_a}", pair[0])
+	tpl = tpl.replace("{duality_b}", pair[1])
+
+	# Faction reputation summary for templates using {faction_rep}
+	var rep_parts: PackedStringArray = []
+	for f_name in factions:
+		rep_parts.append("%s=%d" % [str(f_name), int(factions[f_name])])
+	tpl = tpl.replace("{faction_rep}", ", ".join(rep_parts) if not rep_parts.is_empty() else "equilibre")
 	return tpl
 
 

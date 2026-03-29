@@ -284,7 +284,11 @@ func show_pause_menu() -> void:
 	MerlinVisual.apply_button_theme(btn_quit)
 	btn_quit.pressed.connect(func():
 		_ui.get_tree().paused = false
-		_ui.get_tree().change_scene_to_file("res://scenes/MenuPrincipal.tscn"))
+		var pt: Node = _ui.get_node_or_null("/root/PixelTransition")
+		if pt and pt.has_method("transition_to"):
+			pt.transition_to("res://scenes/MenuPrincipal.tscn")
+		else:
+			_ui.get_tree().change_scene_to_file("res://scenes/MenuPrincipal.tscn"))
 	vbox.add_child(btn_quit)
 
 

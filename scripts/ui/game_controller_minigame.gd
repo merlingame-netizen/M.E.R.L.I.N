@@ -101,9 +101,9 @@ func run_minigame(field: String, is_critical: bool) -> int:
 	else:
 		SFXManager.play("minigame_fail")
 
-	# Cleanup minigame
-	if is_instance_valid(game):
-		game.queue_free()
+	# Cleanup: let base class tween handle fade-out (0.3s), then free
+	# Don't call queue_free here — _complete() already schedules it via tween
+	# Double queue_free cancels the fade animation
 	# Restore option buttons after minigame
 	if ui and is_instance_valid(ui) and ui.has_method("set_options_visible"):
 		ui.set_options_visible(true)

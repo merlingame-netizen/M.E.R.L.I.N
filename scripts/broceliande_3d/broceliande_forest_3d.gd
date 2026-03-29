@@ -3,10 +3,15 @@ extends Node
 ## Marche contemplative FPS — Foret de Broceliande.
 ## 7 zones, assets GLB reels, effets volumetriques, cycle jour/nuit, saisons.
 
-const HUB_SCENE: String = "res://scenes/HubAntre.tscn"
+signal merlin_encounter_complete  # Emitted when Merlin found → ready for MerlinGame
+
+const HUB_SCENE: String = "res://scenes/MerlinCabinHub.tscn"
+const GAME_SCENE: String = "res://scenes/MerlinGame.tscn"
 
 # --- Helper modules ---
 const BrocAutowalk = preload("res://scripts/broceliande_3d/broc_autowalk.gd")
+const BrocAerialDescent = preload("res://scripts/broceliande_3d/broc_aerial_descent.gd")
+const EncounterCardOverlayScript = preload("res://scripts/ui/encounter_card_overlay.gd")
 const BrocDayNight = preload("res://scripts/broceliande_3d/broc_day_night.gd")
 const BrocSeason = preload("res://scripts/broceliande_3d/broc_season.gd")
 const BrocGrassWind = preload("res://scripts/broceliande_3d/broc_grass_wind.gd")
@@ -238,14 +243,44 @@ func _ready() -> void:
 	_effects.add_falling_leaves()
 	_effects.add_ground_mist()
 	_init_helpers()
+
+	# If no GLB trees loaded, spawn procedural fallback trees along the path
+	if _asset_spawner and not _asset_spawner.has_trees():
+		print("[Broceliande] Spawning 40 procedural trees along path")
+		for i in 40:
+			var t: float = float(i) / 40.0
+			var path_idx: int = clampi(int(t * float(_path_points.size() - 1)), 0, _path_points.size() - 1)
+			var base_pos: Vector3 = _path_points[path_idx]
+			var offset_x: float = randf_range(-12.0, 12.0)
+			var offset_z: float = randf_range(-8.0, 8.0)
+			if absf(offset_x) < 3.0:
+				offset_x = 3.0 * signf(offset_x + 0.01)
+			var pos: Vector3 = Vector3(base_pos.x + offset_x, 0.0, base_pos.z + offset_z)
+			_asset_spawner.spawn_procedural_tree(pos, randf_range(1.5, 3.5))
+
+	# Procedural ground detail (rocks + grass patches) along path
+	_spawn_ground_details()
+
 	_wire_buttons()
 	_update_hud()
 	Input.set_mouse_mode(Input.MOUSE_MODE_CAPTURED)
 
+	# Book cinematic is now shown in MerlinCabinHub BEFORE entering forest
+	# Forest starts directly with aerial descent → auto-walk
+	_start_aerial_then_walk()
+
 
 func _init_helpers() -> void:
-	# Auto-walk controller
+	# Auto-walk controller with encounter stops
 	_autowalk = BrocAutowalk.new(_path_points, player, player_head, player_camera, _zone_centers)
+	# Set encounter stops every ~15 waypoints (5 encounters per run)
+	var total_wp: int = _path_points.size()
+	var enc_spacing: int = maxi(total_wp / 6, 5)
+	var enc_indices: Array[int] = []
+	for i in range(enc_spacing, total_wp - enc_spacing, enc_spacing):
+		enc_indices.append(i)
+	_autowalk.set_encounters(enc_indices, _on_encounter_reached)
+	_autowalk.set_run_complete_callback(_on_run_complete)
 
 	# Procedural chunk manager (replaces dense_fill + mass_fill + extra_decor)
 	_chunk_manager = BrocChunkManager.new()
@@ -562,16 +597,16 @@ func _setup_environment() -> void:
 	var bg_color: Color = biome_cfg.get("fog_color", Color(0.30, 0.40, 0.28)) as Color
 	var ambient_color: Color = biome_cfg.get("ambient_color", Color(0.55, 0.65, 0.45)) as Color
 	var fog_color: Color = biome_cfg.get("fog_color", Color(0.35, 0.45, 0.32)) as Color
-	var fog_density: float = float(biome_cfg.get("fog_density", 0.018))
+	var fog_density: float = float(biome_cfg.get("fog_density", 0.018)) * 0.25  # Heavily reduced for web — trees must be visible
 
 	# GL Compatibility: ProceduralSkyMaterial renders white regardless of BG_COLOR mode.
 	env.background_mode = Environment.BG_COLOR
-	env.background_color = bg_color * 0.7  # Darker than fog for depth
+	env.background_color = Color(0.45, 0.55, 0.70)  # Blue-grey sky for contrast with green trees
 
 	# Ambient — strong enough to light dark CRT-style materials
 	env.ambient_light_source = Environment.AMBIENT_SOURCE_COLOR
 	env.ambient_light_color = ambient_color
-	env.ambient_light_energy = 0.9
+	env.ambient_light_energy = 1.3  # Brighter for web (low-poly needs more light)
 
 	# Fog — biome-specific
 	env.fog_enabled = true
@@ -592,7 +627,7 @@ func _setup_environment() -> void:
 	# Sun — warm filtered light
 	sun_light.rotation_degrees = Vector3(-45.0, -25.0, 0.0)
 	sun_light.light_color = Color(0.85, 0.80, 0.60)
-	sun_light.light_energy = 1.8
+	sun_light.light_energy = 2.5  # Brighter sun for low-poly visibility
 	sun_light.shadow_enabled = true
 	sun_light.shadow_bias = 0.02
 	sun_light.shadow_normal_bias = 1.0
@@ -692,6 +727,55 @@ func _update_tree_sway(_delta: float) -> void:
 # MERLIN
 # ============================================================
 
+func _spawn_ground_details() -> void:
+	## Procedural rocks + grass patches for visual depth
+	var rng_local: RandomNumberGenerator = RandomNumberGenerator.new()
+	rng_local.seed = 42
+	for i in 25:
+		var t: float = float(i) / 25.0
+		var pidx: int = clampi(int(t * float(_path_points.size() - 1)), 0, _path_points.size() - 1)
+		var bp: Vector3 = _path_points[pidx]
+
+		# Rock
+		var rock: MeshInstance3D = MeshInstance3D.new()
+		var rm: BoxMesh = BoxMesh.new()
+		var rs: float = rng_local.randf_range(0.2, 0.8)
+		rm.size = Vector3(rs, rs * 0.6, rs * 0.8)
+		rock.mesh = rm
+		var rmat: StandardMaterial3D = StandardMaterial3D.new()
+		rmat.albedo_color = Color(0.35, 0.32, 0.28)
+		rmat.roughness = 0.95
+		rock.material_override = rmat
+		rock.position = Vector3(
+			bp.x + rng_local.randf_range(-8.0, 8.0),
+			rs * 0.2,
+			bp.z + rng_local.randf_range(-6.0, 6.0)
+		)
+		rock.rotation.y = rng_local.randf_range(0.0, TAU)
+		rock.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+		forest_root.add_child(rock)
+
+		# Grass patch (flat disc on ground)
+		if i % 2 == 0:
+			var grass: MeshInstance3D = MeshInstance3D.new()
+			var gm: CylinderMesh = CylinderMesh.new()
+			gm.top_radius = rng_local.randf_range(0.5, 1.5)
+			gm.bottom_radius = gm.top_radius * 1.1
+			gm.height = 0.05
+			grass.mesh = gm
+			var gmat: StandardMaterial3D = StandardMaterial3D.new()
+			gmat.albedo_color = Color(0.18 + rng_local.randf() * 0.1, 0.35 + rng_local.randf() * 0.15, 0.12)
+			gmat.roughness = 1.0
+			grass.material_override = gmat
+			grass.position = Vector3(
+				bp.x + rng_local.randf_range(-10.0, 10.0),
+				0.02,
+				bp.z + rng_local.randf_range(-8.0, 8.0)
+			)
+			grass.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+			forest_root.add_child(grass)
+
+
 func _spawn_merlin() -> void:
 	_merlin_npc = ForestMerlinNpcClass.new(merlin_node, player, _zone_centers[6], _rng, self)
 	_merlin_npc.spawn()
@@ -715,6 +799,19 @@ func _update_current_zone() -> void:
 func _update_hud() -> void:
 	if _merlin_found:
 		return
+
+	# Update WalkHUD (PV + Ogham + Essences)
+	if _walk_hud:
+		var store: Node = get_node_or_null("/root/GameManager")
+		if store:
+			var run: Dictionary = store.get("run_state") as Dictionary if store.has_method("get") else {}
+			var life: int = int(run.get("life_essence", 100))
+			_walk_hud.update_pv(life, 100)
+			var essences: int = int(run.get("biome_currency", 0))
+			_walk_hud.update_essences(essences)
+		# Default ogham (Beith starter)
+		if _walk_hud.has_method("update_ogham"):
+			_walk_hud.update_ogham("\u1681", "Beith", 0)
 
 	# Zone name + season + time of day + autowalk indicators
 	var zone_text: String = _zone_names[_current_zone]
@@ -770,12 +867,13 @@ func _try_interact() -> void:
 		return
 	_merlin_found = true
 	objective_label.text = "Merlin t'a retrouve au coeur de Broceliande."
-	status_label.text = "Le druide ouvre un passage vers son Antre."
+	status_label.text = "Le druide ouvre un passage vers la quete."
 	zone_label.text = "Le Cercle de Pierres — Rencontre"
-	result_text.text = "Au centre du cercle millenaire,\nMerlin se revele dans un halo bleu.\n\nLe chemin mystique est ouvert."
+	result_text.text = "Au centre du cercle millenaire,\nMerlin se revele dans un halo bleu.\n\nLa quete des Oghams commence."
 	result_panel.visible = true
 	crosshair.visible = false
 	Input.set_mouse_mode(Input.MOUSE_MODE_VISIBLE)
+	merlin_encounter_complete.emit()
 
 
 func _toggle_mouse() -> void:
@@ -796,5 +894,216 @@ func _on_replay() -> void:
 	get_tree().reload_current_scene()
 
 
+## Start aerial descent then auto-walk (book cinematic already shown in cabin)
+func _start_aerial_then_walk() -> void:
+	if _autowalk:
+		_autowalk._stopped = true
+	# Aerial descent → then start walking
+	var descent: Node = BrocAerialDescent.new(
+		player_camera, _path_points, _zone_centers, biome_key, world_env)
+	descent.descent_complete.connect(func():
+		if _autowalk:
+			_autowalk._stopped = false
+	)
+	add_child(descent)
+	descent.start()
+
+
+## (Legacy) Show book cinematic overlay — kept for reference
+func _show_book_cinematic() -> void:
+	# Pause auto-walk during intro sequence
+	if _autowalk:
+		_autowalk._stopped = true
+
+	# Phase 1: Book cinematic (double scroll intro)
+	var cinematic: BookCinematic = BookCinematic.new()
+	cinematic.set_intro(_title_text(), FALLBACK_INTRO_TEXT)
+	add_child(cinematic)
+	cinematic.cinematic_complete.connect(func():
+		# Phase 2: Aerial descent (camera high → spiral → ground)
+		var descent: Node = BrocAerialDescent.new(
+			player_camera, _path_points, _zone_centers, biome_key, world_env)
+		descent.descent_complete.connect(func():
+			# Phase 3: Start walking
+			if _autowalk:
+				_autowalk._stopped = false
+		)
+		add_child(descent)
+		descent.start()
+	)
+
+
+func _title_text() -> String:
+	var cfg: Dictionary = BiomeWalkConfigs.get_config(biome_key)
+	return str(cfg.get("display_name", "Broceliande"))
+
+
+const FALLBACK_INTRO_TEXT: String = "Les brumes de Broceliande se levent lentement, devoilant les racines noueuses des chenes millenaires. Au loin, une lueur ambre pulse — le Nemeton, coeur sacre de la foret. Le sentier s'ouvre devant toi, etroit et sinueux. Merlin murmure dans le vent. La foret attend."
+
+
+## Encounter callback — auto-walk paused, show card overlay on 3D
+func _on_encounter_reached(enc_idx: int) -> void:
+	print("[Forest3D] Encounter %d — showing card overlay" % enc_idx)
+	if is_instance_valid(objective_label):
+		objective_label.text = "Rencontre %d" % (enc_idx + 1)
+
+	# Release mouse for UI interaction
+	Input.set_mouse_mode(Input.MOUSE_MODE_VISIBLE)
+
+	# Generate card (FastRoute fallback or LLM)
+	var card: Dictionary = await _get_encounter_card(enc_idx)
+
+	# Show card overlay on top of frozen 3D
+	var overlay: CanvasLayer = EncounterCardOverlayScript.new(card)
+	add_child(overlay)
+	overlay.card_resolved.connect(func(choice_idx: int, score: int):
+		print("[Forest3D] Card resolved: choice=%d score=%d" % [choice_idx, score])
+
+		# Apply effects: drain life (-1 per card), heal/damage based on score
+		var store: Node = get_node_or_null("/root/GameManager")
+		if store and store.has_method("get") and store.get("run_state") is Dictionary:
+			var run: Dictionary = store.get("run_state") as Dictionary
+			var life: int = int(run.get("life_essence", 100))
+			life -= 1  # Drain per card (Bible v2.4)
+			if score >= 80:
+				life += 5  # Reussite bonus
+			elif score < 30:
+				life -= 8  # Echec penalty
+			life = clampi(life, 0, 100)
+			run["life_essence"] = life
+			# Update HUD
+			if _walk_hud and _walk_hud.has_method("update_pv"):
+				_walk_hud.update_pv(life, 100)
+			# Check death
+			if life <= 0:
+				print("[Forest3D] Life = 0 — ending run")
+				_on_run_complete()
+				return
+
+		# Re-capture mouse for walk
+		Input.set_mouse_mode(Input.MOUSE_MODE_CAPTURED)
+		if is_instance_valid(objective_label):
+			objective_label.text = "Le sentier continue..."
+		if _autowalk:
+			_autowalk.resume_after_encounter()
+	)
+
+
+func _get_encounter_card(enc_idx: int) -> Dictionary:
+	# Try LLM via MerlinAI (Groq cloud in web export)
+	var ai: Node = get_node_or_null("/root/MerlinAI")
+	if ai and ai.get("is_ready") and ai.get("narrator_llm"):
+		var llm: Object = ai.narrator_llm
+		if llm and llm.has_method("generate_async") and not llm.is_generating_now():
+			var prompt: String = "<|im_start|>system\nTu es Merlin. Genere une carte narrative celtique en JSON: {\"title\":\"...\",\"text\":\"...\",\"choices\":[{\"label\":\"...\"},{\"label\":\"...\"},{\"label\":\"...\"}]}. Francais uniquement. Pas d'anglais.\n<|im_end|>\n<|im_start|>user\nEncounter %d en foret de Broceliande. Genere une carte avec 3 choix distincts.\n<|im_end|>" % (enc_idx + 1)
+			var result: Dictionary = {}
+			var done: bool = false
+			llm.generate_async(prompt, func(r: Dictionary):
+				result = r
+				done = true
+			)
+			# Poll for up to 15s
+			var wait_start: float = Time.get_ticks_msec() / 1000.0
+			while not done and (Time.get_ticks_msec() / 1000.0 - wait_start) < 15.0:
+				if llm.has_method("poll_result"):
+					llm.poll_result()
+				await get_tree().process_frame
+			if result.has("response"):
+				var json := JSON.new()
+				if json.parse(str(result["response"])) == OK and json.data is Dictionary:
+					var card: Dictionary = json.data as Dictionary
+					if card.has("title") and card.has("choices"):
+						print("[Forest3D] LLM card generated: %s" % str(card.get("title", "")))
+						return card
+	# 10 fallback cards — varied themes, factions, verbs
+	var fallback_cards: Array[Dictionary] = [
+		{"title": "Le Cercle des Anciens", "text": "Des menhirs se dressent en sentinelles immobiles. Des runes a moitie effacees luisent dans la penombre. Le sol vibre sous tes pieds comme un coeur ancien.", "choices": [{"label": "Dechiffrer les runes"}, {"label": "Mediter au centre"}, {"label": "Contourner le cercle"}]},
+		{"title": "Le Ruisseau Murmurant", "text": "Une eau cristalline coule entre les racines noueuses. Les reflets dansent comme des esprits malicieux. Le courant porte des fragments de melodies oubliees.", "choices": [{"label": "Boire l'eau sacree"}, {"label": "Suivre le courant"}, {"label": "Jeter une offrande"}]},
+		{"title": "Le Marchand des Ombres", "text": "Un voyageur aux yeux d'ambre se tient au carrefour. Sa carriole deborde de curiosites etranges. Chaque objet semble porter le poids d'une histoire.", "choices": [{"label": "Negocier un echange"}, {"label": "Examiner les reliques"}, {"label": "Passer son chemin"}]},
+		{"title": "La Grotte des Echos", "text": "L'obscurite s'ouvre comme une bouche de pierre. Des stalagmites brillent d'une lumiere interieure. Les echos repetent des mots que personne n'a prononces.", "choices": [{"label": "Explorer les profondeurs"}, {"label": "Appeler dans le noir"}, {"label": "Allumer une torche"}]},
+		{"title": "Le Seuil de Broceliande", "text": "Le sentier debouche sur une arche naturelle de branches entrelacees. Au-dela, la foret change. Les regles du monde ordinaire n'ont plus cours.", "choices": [{"label": "Franchir l'arche"}, {"label": "Invoquer un guide"}, {"label": "Observer depuis le seuil"}]},
+		{"title": "La Fontaine de Barenton", "text": "Une source jaillit entre des pierres moussues. L'eau scintille d'une lumiere surnaturelle. On dit que boire ici revele les verites cachees.", "choices": [{"label": "Boire a la source"}, {"label": "Verser une offrande"}, {"label": "Ecouter l'eau"}]},
+		{"title": "Le Korrigan Malicieux", "text": "Un petit etre aux yeux brillants surgit d'un buisson. Il rit et fait tournoyer une piece d'or entre ses doigts. Son sourire est a la fois charmant et inquietant.", "choices": [{"label": "Jouer a son jeu"}, {"label": "Marchander avec lui"}, {"label": "L'ignorer"}]},
+		{"title": "Le Dolmen du Passage", "text": "Deux pierres massives soutiennent une dalle de granit. L'air entre les pierres est plus froid, plus dense. Quelque chose attend de l'autre cote.", "choices": [{"label": "Traverser le passage"}, {"label": "Toucher les pierres"}, {"label": "Deposer un present"}]},
+		{"title": "Le Loup de Brume", "text": "Une silhouette grise se dessine dans le brouillard. Deux yeux ambres vous fixent sans ciller. Le loup ne montre ni agressivite ni peur.", "choices": [{"label": "Soutenir son regard"}, {"label": "Tendre la main"}, {"label": "Reculer lentement"}]},
+		{"title": "Le Chene de Merlin", "text": "Un chene immense deploie ses branches comme des bras protecteurs. Son tronc porte les cicatrices de mille saisons. Les druides y ont grave des symboles de pouvoir.", "choices": [{"label": "Toucher l'ecorce"}, {"label": "Grimper dans l'arbre"}, {"label": "Graver son nom"}]},
+	]
+	# Shuffle based on encounter index for variety
+	var idx: int = (enc_idx * 7 + 3) % fallback_cards.size()
+	return fallback_cards[idx]
+
+
+## Run complete — path ended, show end-run stats overlay
+func _on_run_complete() -> void:
+	print("[Forest3D] Run complete — showing end stats")
+	Input.set_mouse_mode(Input.MOUSE_MODE_VISIBLE)
+
+	var end_overlay: CanvasLayer = CanvasLayer.new()
+	end_overlay.layer = 18
+	add_child(end_overlay)
+
+	var bg: ColorRect = ColorRect.new()
+	bg.set_anchors_preset(Control.PRESET_FULL_RECT)
+	bg.color = Color(0.0, 0.02, 0.0, 0.0)
+	end_overlay.add_child(bg)
+	var tw: Tween = create_tween()
+	tw.tween_property(bg, "color:a", 0.9, 1.0)
+
+	var font: Font = MerlinVisual.get_font("terminal") if is_instance_valid(MerlinVisual) else null
+	var pal: Dictionary = MerlinVisual.CRT_PALETTE if is_instance_valid(MerlinVisual) else {}
+
+	var vbox: VBoxContainer = VBoxContainer.new()
+	vbox.anchor_left = 0.2; vbox.anchor_right = 0.8
+	vbox.anchor_top = 0.15; vbox.anchor_bottom = 0.85
+	vbox.add_theme_constant_override("separation", 20)
+	vbox.alignment = BoxContainer.ALIGNMENT_CENTER
+	end_overlay.add_child(vbox)
+
+	var title: Label = Label.new()
+	title.text = "Fin du Voyage"
+	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	if font: title.add_theme_font_override("font", font)
+	title.add_theme_font_size_override("font_size", 36)
+	title.add_theme_color_override("font_color", pal.get("amber", Color(1.0, 0.75, 0.2)))
+	vbox.add_child(title)
+
+	var stats: Label = Label.new()
+	stats.text = "Rencontres: 5\nBiome: Broceliande\nSaison: Printemps"
+	stats.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	if font: stats.add_theme_font_override("font", font)
+	stats.add_theme_font_size_override("font_size", 18)
+	stats.add_theme_color_override("font_color", pal.get("phosphor", Color(0.2, 1.0, 0.4)))
+	vbox.add_child(stats)
+
+	var btn_menu: Button = Button.new()
+	btn_menu.text = "Retour au Menu"
+	btn_menu.custom_minimum_size = Vector2(0, 48)
+	btn_menu.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	if font: btn_menu.add_theme_font_override("font", font)
+	btn_menu.add_theme_font_size_override("font_size", 20)
+	btn_menu.add_theme_color_override("font_color", pal.get("phosphor", Color(0.2, 1.0, 0.4)))
+	var btn_s: StyleBoxFlat = StyleBoxFlat.new()
+	btn_s.bg_color = Color(0.02, 0.04, 0.02, 0.8)
+	btn_s.border_color = pal.get("phosphor_dim", Color(0.12, 0.60, 0.24))
+	btn_s.set_border_width_all(1)
+	btn_s.set_corner_radius_all(4)
+	btn_s.set_content_margin_all(10)
+	btn_menu.add_theme_stylebox_override("normal", btn_s)
+	btn_menu.pressed.connect(func():
+		var pt: Node = get_node_or_null("/root/PixelTransition")
+		if pt and pt.has_method("transition_to"):
+			pt.transition_to("res://scenes/MerlinCabinHub.tscn")
+		else:
+			get_tree().change_scene_to_file("res://scenes/MerlinCabinHub.tscn")
+	)
+	vbox.add_child(btn_menu)
+
+
 func _on_hub() -> void:
-	get_tree().change_scene_to_file(HUB_SCENE)
+	# After forest walk, go to MerlinGame (card encounters)
+	var target: String = GAME_SCENE if _merlin_found else HUB_SCENE
+	var pt: Node = get_node_or_null("/root/PixelTransition")
+	if pt and pt.has_method("transition_to"):
+		pt.transition_to(target)
+	else:
+		get_tree().change_scene_to_file(target)

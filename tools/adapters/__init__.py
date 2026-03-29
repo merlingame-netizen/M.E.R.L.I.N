@@ -39,6 +39,10 @@ ADAPTER_REGISTRY: dict[str, tuple[str, str, str | None]] = {
     "teams":       ("adapters.teams_adapter",       "TeamsAdapter",       None),
     # ── Wave 8 — 3D asset generation (Blender headless) ──────────────
     "blender":     ("adapters.blender_adapter",     "BlenderAdapter",     None),
+    # ── Wave 9 — Downloads organizer ────────────────────────────────
+    "downloads":   ("adapters.downloads_adapter",   "DownloadsAdapter",   None),
+    # ── Wave 10 — Data Explorer (local web app) ─────────────────────
+    "data-explorer": ("adapters.data_explorer_adapter", "DataExplorerAdapter", None),
 }
 
 

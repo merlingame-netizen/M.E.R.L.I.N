@@ -1,0 +1,239 @@
+================================================================================
+ M.E.R.L.I.N. QA AUDIT FINAL REPORT — BLOCKING ISSUES
+================================================================================
+
+DATE: 2026-03-27T17:30:00Z
+STATUS: CRITICAL — DO NOT DEPLOY
+BLOCKING ISSUES: 4 (1 syntax parse, 1 async runtime, 1 handler, 1 dependency)
+
+================================================================================
+ISSUE #1 — CRITICAL SYNTAX ERROR
+================================================================================
+
+FILE: scripts/merlin_cabin_hub.gd
+LINES: 292-293
+SEVERITY: CRITICAL — PARSE ERROR BLOCKS SCENE LOAD
+
+PROBLEM:
+Code lines 292-293 are orphaned OUTSIDE the _on_hub_action() match block.
+Godot parser will fail when loading MerlinCabinHub.tscn.
+
+CURRENT CODE (lines 272-294):
+  272│ func _on_hub_action(action: String) -> void:
+  273│ 	if is_instance_valid(SFXManager):
+  274│ 		SFXManager.play("click")
+  275│ 	match action:
+  276│ 		"quest":
+  277│ 			_show_book_cinematic_then_forest()
+  278│ 		"tapestry":
+  279│ 			print("[Cabin] Tapestry (talent tree) — TODO")
+  280│ 		"map":
+  281│ 			print("[Cabin] World map — TODO")
+  282│
+  283│
+  284│ func _show_book_cinematic_then_forest() -> void:
+  ...
+  292│ 		"menu":                                     ← ORPHANED (outside scope)
+  293│ 			PixelTransition.transition_to(...)     ← ORPHANED (outside scope)
+
+FIX:
+1. Delete lines 292-293
+2. Add these lines INSIDE the match block (after line 281):
+   282│ 		"menu":
+   283│ 			PixelTransition.transition_to(MENU_SCENE)
+
+IMPACT: Menu → Cabin button click fails, cannot return to menu from cabin
+
+================================================================================
+ISSUE #2 — CRITICAL DEPENDENCY (Depends on Issue #1)
+================================================================================
+
+FILE: scripts/merlin_cabin_hub.gd
+LINE: 286
+SEVERITY: CRITICAL — CLASS INSTANTIATION UNREACHABLE
+
+PROBLEM:
+Line 286 tries to create BookCinematic.new()
+Code path never reached due to parse error in Issue #1
+
+CURRENT CODE:
+  286│ var cinematic: BookCinematic = BookCinematic.new()
+
+CLASS STATUS: ✓ DEFINED
+The BookCinematic class is properly defined in scripts/ui/book_cinematic.gd
+Once Issue #1 is fixed, this line will work correctly.
+
+FIX: Fix Issue #1 (automatic resolution)
+
+IMPACT: Quest button in cabin will work once Issue #1 fixed
+
+================================================================================
+ISSUE #3 — MAJOR ASYNC/AWAIT MISMATCH
+================================================================================
+
+FILE: scripts/broceliande_3d/broceliande_forest_3d.gd
+LINES: 940, 958
+SEVERITY: MAJOR — RUNTIME ERROR, LLM ENCOUNTERS FAIL
+
+PROBLEM:
+Function uses await keyword but is not declared async.
+Godot 4.x requires "async func" for any function using await.
+
+CURRENT CODE:
+  940│ func _get_encounter_card(enc_idx: int) -> Dictionary:  ← NOT async
+  ...
+  958│ 			await get_tree().process_frame              ← INVALID
+
+RUNTIME BEHAVIOR:
+- LLM generation triggered (Groq cloud)
+- Function tries to poll result with await
+- Runtime error: "await not valid in non-async function"
+- Fallback cards still load (lines 966-981)
+- LLM encounters broken, fallback always used
+
+FIX:
+1. Change line 940 to:
+   async func _get_encounter_card(enc_idx: int) -> Dictionary:
+
+2. Find all callers of _get_encounter_card() and change:
+   OLD: var card = _get_encounter_card(enc_idx)
+   NEW: var card = await _get_encounter_card(enc_idx)
+
+SEARCH PATTERN: grep "_get_encounter_card(" in broceliande_forest_3d.gd
+
+IMPACT: LLM-based encounters fail, fallback cards only
+
+================================================================================
+ISSUE #4 — MEDIUM MISSING SIGNAL HANDLER
+================================================================================
+
+FILE: scripts/broceliande_3d/broceliande_forest_3d.gd
+FUNCTION: _on_run_complete() (line 985)
+SEVERITY: MEDIUM — GAMEPLAY LOOP BROKEN
+
+PROBLEM:
+End-run overlay created with "Retour au Menu" button.
+Button is created and styled but never wired to a handler.
+Clicking button does nothing — player stuck at end screen.
+
+CURRENT CODE (lines 1026-1038):
+  1026│ var btn_menu: Button = Button.new()
+  1027│ btn_menu.text = "Retour au Menu"
+  ...
+  1038│ btn_menu.add_theme_stylebox_override("normal", btn_s)
+        (NO pressed.connect() call)
+
+FIX:
+Add after line 1038:
+  btn_menu.pressed.connect(func():
+      PixelTransition.transition_to(HUB_SCENE)
+  )
+
+ALTERNATIVE: Transition directly to MENU_SCENE if skipping hub
+
+IMPACT: Players cannot exit end-run screen
+
+================================================================================
+VERIFICATION CHECKLIST
+================================================================================
+
+BEFORE FIXES:
+[ ] Read this document
+[ ] Open scripts/merlin_cabin_hub.gd
+[ ] Locate lines 272-294
+[ ] Verify Issue #1 (orphaned lines 292-293 outside match scope)
+
+APPLY FIX #1 (15 minutes):
+[ ] Edit merlin_cabin_hub.gd
+[ ] Move lines 292-293 into match block (indent 2 tabs, after line 281)
+[ ] Save file
+
+APPLY FIX #2 (5 minutes):
+[ ] Edit broceliande_forest_3d.gd line 940
+[ ] Change "func" to "async func"
+[ ] Search for all callers of _get_encounter_card()
+[ ] Update all to use: var card = await _get_encounter_card(...)
+[ ] Save file
+
+APPLY FIX #3 (5 minutes):
+[ ] Edit broceliande_forest_3d.gd
+[ ] Find _on_run_complete() function (line 985)
+[ ] Add button handler after line 1038
+[ ] Save file
+
+VALIDATE (5 minutes):
+[ ] Open PowerShell
+[ ] cd C:\Users\PGNK2128\Godot-MCP
+[ ] .\validate.bat
+[ ] Wait for Step 0 (Editor parse check) to complete
+[ ] Verify: zero errors reported
+
+TEST (10 minutes):
+[ ] Launch game: godot --path .
+[ ] Menu3DPC appears → Click "Nouvelle Partie"
+[ ] MerlinCabinHub loads → Click "Nouvelle Quete"
+[ ] Book cinematic plays → Forest loads
+[ ] Walk to first encounter → Card displays
+[ ] Complete 5 encounters → End-run screen
+[ ] Click "Retour au Menu" → Hub/Menu appears
+[ ] No console errors
+
+================================================================================
+DEPLOYMENT GATE
+================================================================================
+
+CURRENT STATUS: BLOCKED
+
+UNBLOCK CRITERIA (ALL must be met):
+[?] Issue #1 FIXED (syntax error resolved)
+[?] Issue #2 VERIFIED (BookCinematic works)
+[?] Issue #3 FIXED (async/await corrected)
+[?] Issue #4 FIXED (button handler wired)
+[?] validate.bat Step 0: zero parse errors
+[?] Full gameplay loop tested: Menu → Cabin → Forest → 5x Encounters → End → Back
+[?] No console errors during 10-minute session
+[?] All 4 transitions tested and working
+
+ESTIMATED TIME TO UNBLOCK: 45 minutes (fixes + validation + testing)
+
+================================================================================
+SCENE CONSTANTS (VERIFIED CORRECT)
+================================================================================
+
+broceliande_forest_3d.gd:
+  8│ const HUB_SCENE: String = "res://scenes/MerlinCabinHub.tscn" ✓
+  9│ const GAME_SCENE: String = "res://scenes/MerlinGame.tscn" ✓
+
+merlin_cabin_hub.gd:
+  6│ const FOREST_SCENE: String = "res://scenes/BroceliandeForest3D.tscn" ✓
+  7│ const MENU_SCENE: String = "res://scenes/Menu3DPC.tscn" ✓
+
+All scene files exist and are accessible.
+No missing scene files (unlike earlier audits).
+
+================================================================================
+RECOMMENDED NEXT STEPS
+================================================================================
+
+IMMEDIATE (Next 1 hour):
+1. Apply fixes #1-4 above
+2. Run validate.bat Step 0
+3. Fix any remaining parse errors
+4. Test full gameplay loop
+
+IF STUCK:
+- Re-read Issue #1 section (most common mistake)
+- Verify indentation matches (GDScript uses TAB indentation)
+- Verify all 3 files match corrections
+
+AFTER FIXES:
+- Commit to git with message: "fix(qa): resolve scene flow blocking issues"
+- Update QA status from BLOCKED to PASS
+- Prepare for deployment
+
+================================================================================
+QA LEAD: Claude Code (Haiku 4.5)
+DATE: 2026-03-27T17:30:00Z
+AUDIT DURATION: 30 minutes
+CONFIDENCE LEVEL: HIGH (all issues syntactic, straightforward fixes)
+================================================================================

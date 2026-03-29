@@ -123,12 +123,12 @@ func _on_choice(player_choice: Choice) -> void:
 
 
 func _get_ai_choice() -> Choice:
-	# At higher difficulty, AI has pattern awareness
-	if _difficulty >= 7 and randf() < 0.4:
-		# Strategic pick (counter common patterns)
-		return [Choice.PIERRE, Choice.FEUILLE, Choice.RACINE].pick_random()
+	# At higher difficulty, AI biases toward winning choices (40% of the time)
+	if _difficulty >= 7 and randf() < 0.4 and _current_round > 0:
+		# Weighted: favour the choice that beats the most common human pick (PIERRE)
+		var weighted := [Choice.FEUILLE, Choice.FEUILLE, Choice.RACINE, Choice.PIERRE]
+		return weighted.pick_random()
 	else:
-		# Random
 		return [Choice.PIERRE, Choice.FEUILLE, Choice.RACINE].pick_random()
 
 

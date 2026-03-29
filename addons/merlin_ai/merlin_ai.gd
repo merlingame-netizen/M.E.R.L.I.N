@@ -16,12 +16,13 @@ const MODEL_FILE := "res://addons/merlin_llm/models/qwen3.5-4b-q4_k_m.gguf"
 const MODEL_CANDIDATES := [MODEL_FILE]
 const FastRoute = preload("res://addons/merlin_ai/fast_route.gd")
 const OllamaBackendScript = preload("res://addons/merlin_ai/ollama_backend.gd")
+const GroqBackendScript = preload("res://addons/merlin_ai/groq_backend.gd")
 const BitNetBackendScript = preload("res://addons/merlin_ai/bitnet_backend.gd")
 const BrainProcessManagerScript = preload("res://addons/merlin_ai/brain_process_manager.gd")
 const BrainSwarmSchedulerScript = preload("res://addons/merlin_ai/brain_swarm_scheduler.gd")
 
 # Backend type tracking
-enum BackendType { NONE, OLLAMA, BITNET, MERLIN_LLM }
+enum BackendType { NONE, OLLAMA, GROQ, BITNET, MERLIN_LLM }
 var active_backend: int = BackendType.NONE
 var _brain_process_manager: BrainProcessManager = null  # Auto-spawn manager (Phase 2)
 var _swarm_scheduler: BrainSwarmScheduler = null          # Smart allocation (Phase 3)
@@ -518,11 +519,15 @@ func _init_local_models() -> void:
 	if await _try_init_ollama(target):
 		return
 
-	# ── Strategy 2: Try BitNet swarm (llama-server.exe instances) ─────────
+	# ── Strategy 2: Try Groq cloud API (web export, no local LLM) ─────────
+	if await _try_init_groq():
+		return
+
+	# ── Strategy 3: Try BitNet swarm (llama-server.exe instances) ─────────
 	if await _try_init_bitnet(target):
 		return
 
-	# ── Strategy 3: Fallback to MerlinLLM (C++ GDExtension) ───────────────
+	# ── Strategy 4: Fallback to MerlinLLM (C++ GDExtension) ───────────────
 	await _try_init_merlin_llm(target)
 
 
@@ -652,6 +657,42 @@ const BITNET_MODEL_CANDIDATES := {
 		"C:/Users/PGNK2128/BitNet/models/BitNet-b1.58-2B-4T/ggml-model-i2_s.gguf",
 	],
 }
+# ═══════════════════════════════════════════════════════════════════════════════
+# GROQ CLOUD — Fallback when no local LLM available (web export)
+# ═══════════════════════════════════════════════════════════════════════════════
+
+func _try_init_groq() -> bool:
+	_set_status("Connexion: ...", "Detection Groq Cloud API...", 10.0)
+	var groq_narrator := GroqBackendScript.new("narrator")
+	if not groq_narrator.check_available():
+		_log("Groq: pas de cle API (GROQ_API_KEY ou ProjectSettings merlin/groq_api_key)")
+		return false
+
+	_log("Groq: API key trouvee, initialisation cloud LLM...")
+
+	# Narrator: llama-3.3-70b-versatile
+	narrator_llm = groq_narrator
+	narrator_llm.set_sampling_params(0.8, 0.9, 512)
+	brain_count = 1
+
+	# GM: llama-3.1-8b-instant (fast, structured output)
+	var groq_gm := GroqBackendScript.new("gm")
+	groq_gm.set_sampling_params(0.6, 0.85, 256)
+	gamemaster_llm = groq_gm
+	brain_count = 2
+
+	active_backend = BackendType.GROQ
+	_set_status("Connexion: OK", "Groq Cloud (Narrator 70b + GM 8b)", 100.0)
+	is_ready = true
+	ready_changed.emit(true)
+	_log("Backend: Groq Cloud | 2 brains | Narrator=llama-3.3-70b | GM=llama-3.1-8b")
+	return true
+
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# BITNET SWARM — Multiple llama-server.exe instances on different ports
+# ═══════════════════════════════════════════════════════════════════════════════
+
 # Thread and context budget per role
 const BITNET_BRAIN_PARAMS := {
 	"narrator":    {"threads": 3, "n_ctx": 1024},

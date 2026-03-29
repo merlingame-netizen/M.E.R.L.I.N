@@ -1,6 +1,7 @@
 extends RefCounted
 ## BrocAutowalk — Guided FPS auto-walk along path waypoints.
 ## Catmull-Rom interpolation, smooth camera look-ahead, head bob.
+## Encounter stops: pauses at designated waypoints, emits callback.
 
 var _path_points: PackedVector3Array
 var _player: CharacterBody3D
@@ -14,6 +15,13 @@ var _speed: float = 2.0
 var _base_speed: float = 2.0
 var _bob_time: float = 0.0
 var _zone_centers: Array[Vector3] = []
+
+# Encounter system — stops at specific waypoints
+var _encounter_indices: Array[int] = []  # waypoint indices where encounters trigger
+var _encounter_callback: Callable = Callable()  # called with encounter index
+var _run_complete_callback: Callable = Callable()  # called when path ends
+var _next_encounter: int = 0  # index into _encounter_indices
+var _stopped: bool = false
 
 const BOB_AMOUNT: float = 0.035
 const BOB_SPEED: float = 7.0
@@ -47,18 +55,36 @@ func _init(
 
 
 func is_active() -> bool:
-	return _active
+	return _active and not _stopped
 
 
 func toggle() -> void:
 	_active = not _active
 	if _active:
-		# Find nearest waypoint to current player position
 		_waypoint_idx = _find_nearest_waypoint(_player.global_position)
 		_segment_t = 0.0
+		_stopped = false
 	else:
-		# Zero velocity to prevent lurch on resume of manual control
 		_player.velocity = Vector3.ZERO
+
+
+## Set up encounter stops at specific waypoint indices.
+## callback receives the encounter number (0-based).
+func set_encounters(indices: Array[int], callback: Callable) -> void:
+	_encounter_indices = indices
+	_encounter_callback = callback
+	_next_encounter = 0
+	_stopped = false
+
+
+## Resume walking after an encounter is resolved.
+func resume_after_encounter() -> void:
+	_stopped = false
+
+
+## Set callback for when the path ends (run complete).
+func set_run_complete_callback(callback: Callable) -> void:
+	_run_complete_callback = callback
 
 
 func update(delta: float) -> void:
@@ -108,7 +134,20 @@ func _advance_waypoint() -> void:
 	_waypoint_idx += 1
 	_segment_t = 0.0
 	if _waypoint_idx >= _path_points.size() - 1:
-		_waypoint_idx = 0  # Loop
+		_waypoint_idx = _path_points.size() - 2  # Stop at end, don't loop
+		_stopped = true
+		if _run_complete_callback.is_valid():
+			_run_complete_callback.call()
+		return
+
+	# Check encounter stops
+	if _next_encounter < _encounter_indices.size():
+		if _waypoint_idx >= _encounter_indices[_next_encounter]:
+			_stopped = true
+			var enc_idx: int = _next_encounter
+			_next_encounter += 1
+			if _encounter_callback.is_valid():
+				_encounter_callback.call(enc_idx)
 
 
 func _segment_length() -> float:

@@ -11,7 +11,7 @@ config_version=5
 [application]
 
 config/name="DRU"
-run/main_scene="res://scenes/IntroCeltOS.tscn"
+run/main_scene="res://scenes/Menu3DPC.tscn"
 config/features=PackedStringArray("4.5", "GL Compatibility")
 config/icon="res://icon.svg"
 
@@ -36,7 +36,13 @@ GameDebugServer="*res://scripts/test/game_debug_server.gd"
 
 [display]
 
+window/size/viewport_width=1280
+window/size/viewport_height=720
+window/size/window_width_override=1280
+window/size/window_height_override=720
 window/stretch/mode="canvas_items"
+window/stretch/aspect="expand"
+window/handheld/orientation=5
 
 [editor_plugins]
 
@@ -50,6 +56,10 @@ theme/custom="res://themes/merlin_theme.tres"
 
 locale/translations=PackedStringArray("res://data/i18n/translations.csv")
 locale/fallback="fr"
+
+[merlin]
+
+groq_api_key="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"
 
 [merlin_llm]
 

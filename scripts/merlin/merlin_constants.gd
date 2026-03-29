@@ -1068,7 +1068,7 @@ const FACTION_INFO := {
 
 const FACTION_SCORE_MIN := 0
 const FACTION_SCORE_MAX := 100
-const FACTION_SCORE_START := 0
+const FACTION_SCORE_START := 20  # Neutral on run 1 (was 0 = Hostile = -45 HP penalty)
 
 # Bandes de seuil — évalués du plus haut (honore) au plus bas (hostile)
 const FACTION_TIERS := {

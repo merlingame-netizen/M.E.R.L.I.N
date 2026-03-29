@@ -28,6 +28,8 @@ var _pv_label: Label
 var _essences_label: Label
 var _zone_label: Label
 var _crosshair: Label
+var _ogham_label: Label
+var _ogham_cd_label: Label
 
 # ═══════════════════════════════════════════════════════════════════════════════
 # STATE
@@ -75,6 +77,16 @@ func update_zone(zone_name: String, season_name: String, time_name: String) -> v
 		_zone_label.visible = true
 	else:
 		_zone_label.visible = false
+
+
+func update_ogham(rune: String, ogham_name: String, cooldown: int) -> void:
+	_ogham_label.text = "%s %s" % [rune, ogham_name]
+	if cooldown <= 0:
+		_ogham_cd_label.text = "Pret"
+		_ogham_cd_label.add_theme_color_override("font_color", MerlinVisual.CRT_PALETTE["cyan"])
+	else:
+		_ogham_cd_label.text = "CD: %d" % cooldown
+		_ogham_cd_label.add_theme_color_override("font_color", MerlinVisual.CRT_PALETTE["phosphor_dim"])
 
 
 func toggle_zone_display() -> void:
@@ -148,7 +160,27 @@ func _build_ui() -> void:
 	spacer.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	top_hbox.add_child(spacer)
 
-	# Souffle (center)
+	# Ogham actif (center)
+	var ogham_vbox: VBoxContainer = VBoxContainer.new()
+	ogham_vbox.add_theme_constant_override("separation", 2)
+	top_hbox.add_child(ogham_vbox)
+
+	_ogham_label = Label.new()
+	_ogham_label.text = "\u1681 Beith"
+	_ogham_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	_ogham_label.add_theme_font_override("font", font)
+	_ogham_label.add_theme_font_size_override("font_size", FONT_SIZE_HUD + 2)
+	_ogham_label.add_theme_color_override("font_color", pal["cyan"])
+	ogham_vbox.add_child(_ogham_label)
+
+	_ogham_cd_label = Label.new()
+	_ogham_cd_label.text = "Pret"
+	_ogham_cd_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	_ogham_cd_label.add_theme_font_override("font", font)
+	_ogham_cd_label.add_theme_font_size_override("font_size", FONT_SIZE_ZONE)
+	_ogham_cd_label.add_theme_color_override("font_color", pal["phosphor_dim"])
+	ogham_vbox.add_child(_ogham_cd_label)
+
 	# Spacer
 	var spacer2: Control = Control.new()
 	spacer2.size_flags_horizontal = Control.SIZE_EXPAND_FILL

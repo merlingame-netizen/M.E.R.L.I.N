@@ -1,0 +1,106 @@
+{
+  "total": 20,
+  "processed": 20,
+  "results": [
+    {
+      "name": "bridge_wood",
+      "status": "failed",
+      "error": "TSR.extract_mesh() missing 1 required positional argument: 'has_vertex_color'"
+    },
+    {
+      "name": "dolmen_01",
+      "status": "failed",
+      "error": "TSR.extract_mesh() missing 1 required positional argument: 'has_vertex_color'"
+    },
+    {
+      "name": "druid_altar",
+      "status": "failed",
+      "error": "TSR.extract_mesh() missing 1 required positional argument: 'has_vertex_color'"
+    },
+    {
+      "name": "fairy_lantern",
+      "status": "failed",
+      "error": "TSR.extract_mesh() missing 1 required positional argument: 'has_vertex_color'"
+    },
+    {
+      "name": "fallen_trunk",
+      "status": "failed",
+      "error": "TSR.extract_mesh() missing 1 required positional argument: 'has_vertex_color'"
+    },
+    {
+      "name": "fountain_barenton",
+      "status": "failed",
+      "error": "TSR.extract_mesh() missing 1 required positional argument: 'has_vertex_color'"
+    },
+    {
+      "name": "giant_mushroom",
+      "status": "failed",
+      "error": "TSR.extract_mesh() missing 1 required positional argument: 'has_vertex_color'"
+    },
+    {
+      "name": "giant_raven",
+      "status": "failed",
+      "error": "TSR.extract_mesh() missing 1 required positional argument: 'has_vertex_color'"
+    },
+    {
+      "name": "giant_stump",
+      "status": "failed",
+      "error": "TSR.extract_mesh() missing 1 required positional argument: 'has_vertex_color'"
+    },
+    {
+      "name": "korrigan",
+      "status": "failed",
+      "error": "TSR.extract_mesh() missing 1 required positional argument: 'has_vertex_color'"
+    },
+    {
+      "name": "menhir_01",
+      "status": "failed",
+      "error": "TSR.extract_mesh() missing 1 required positional argument: 'has_vertex_color'"
+    },
+    {
+      "name": "menhir_02_ogham",
+      "status": "failed",
+      "error": "TSR.extract_mesh() missing 1 required positional argument: 'has_vertex_color'"
+    },
+    {
+      "name": "merlin_oak",
+      "status": "failed",
+      "error": "TSR.extract_mesh() missing 1 required positional argument: 'has_vertex_color'"
+    },
+    {
+      "name": "merlin_tomb",
+      "status": "failed",
+      "error": "TSR.extract_mesh() missing 1 required positional argument: 'has_vertex_color'"
+    },
+    {
+      "name": "mist_wolf",
+      "status": "failed",
+      "error": "TSR.extract_mesh() missing 1 required positional argument: 'has_vertex_color'"
+    },
+    {
+      "name": "root_arch",
+      "status": "failed",
+      "error": "TSR.extract_mesh() missing 1 required positional argument: 'has_vertex_color'"
+    },
+    {
+      "name": "root_network",
+      "status": "failed",
+      "error": "TSR.extract_mesh() missing 1 required positional argument: 'has_vertex_color'"
+    },
+    {
+      "name": "spider_web",
+      "status": "failed",
+      "error": "TSR.extract_mesh() missing 1 required positional argument: 'has_vertex_color'"
+    },
+    {
+      "name": "stone_circle",
+      "status": "failed",
+      "error": "TSR.extract_mesh() missing 1 required positional argument: 'has_vertex_color'"
+    },
+    {
+      "name": "white_doe",
+      "status": "failed",
+      "error": "TSR.extract_mesh() missing 1 required positional argument: 'has_vertex_color'"
+    }
+  ]
+}

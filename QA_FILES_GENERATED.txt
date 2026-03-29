@@ -1,0 +1,165 @@
+================================================================================
+ QA AUDIT COMPLETE — FILES GENERATED FOR REVIEW
+================================================================================
+
+DATE: 2026-03-27T17:30:00Z
+QA LEAD: Claude Code (Haiku 4.5)
+STATUS: CRITICAL BLOCKING ISSUES FOUND
+
+================================================================================
+MAIN AUDIT REPORTS (Read in this order)
+================================================================================
+
+1. QA_BLOCKING_ISSUES_SUMMARY.txt (THIS DIRECTORY)
+   - EXECUTIVE SUMMARY of all 4 blocking issues
+   - Exact line numbers and code excerpts
+   - Step-by-step fix instructions
+   - Deployment gate checklist
+   START HERE for quick overview
+
+2. QA_SCENE_FLOW_AUDIT.md (THIS DIRECTORY)
+   - Comprehensive 300-line technical audit
+   - Complete flow trace (Menu → Cabin → Forest → Encounters)
+   - Detailed async/await analysis
+   - Code syntax verification matrix
+   FOR DETAILED TECHNICAL REVIEW
+
+3. QA_SCENE_CHAIN_DIAGRAM.txt (THIS DIRECTORY)
+   - ASCII visual diagram of scene transitions
+   - Success matrix (8 transitions, 4 blocked)
+   - Dependency graph (Issues 1-4 relationships)
+   FOR VISUAL UNDERSTANDING OF FLOW
+
+4. web-demo/METRICS.md (EXISTING, UPDATED)
+   - Test case matrix (Pass/Fail status)
+   - Code quality metrics
+   - Deployment gate criteria
+   FOR WEB DEMO INTEGRATION STATUS
+
+================================================================================
+FILES TO EDIT (IN PRIORITY ORDER)
+================================================================================
+
+FIX #1 (CRITICAL - 5 minutes):
+  File: C:\Users\PGNK2128\Godot-MCP\scripts\merlin_cabin_hub.gd
+  Lines: 272-293 (entire function)
+  Action: Move lines 292-293 into match block (indent 2 tabs)
+  Issue: Parse error blocks scene load
+
+FIX #2 (MAJOR - 10 minutes):
+  File: C:\Users\PGNK2128\Godot-MCP\scripts\broceliande_3d\broceliande_forest_3d.gd
+  Line: 940 (function definition)
+  Action: Change "func" to "async func", update all callers to use await
+  Issue: Async/await mismatch causes LLM runtime error
+
+FIX #3 (MEDIUM - 5 minutes):
+  File: C:\Users\PGNK2128\Godot-MCP\scripts\broceliande_3d\broceliande_forest_3d.gd
+  Line: 1038+ (after button styling)
+  Action: Add button.pressed.connect() handler
+  Issue: End-run menu button unhandled, player stuck
+
+================================================================================
+VALIDATION COMMAND
+================================================================================
+
+After applying all 3 fixes, run:
+
+  cd C:\Users\PGNK2128\Godot-MCP
+  .\validate.bat
+
+Expected output:
+  [OK] Step 0: Editor parse check — 0 errors
+  [OK] Step 1-3: Static analysis — 0 warnings
+  [OK] Step 4: Affected scenes — all pass
+  [OK] Step 5: Smoke test — all scenes load
+  [OK] Step 6: Flow validation — transitions work
+  [INFO] Step 7: LLM backend available (or not, informational)
+
+If any failures, review error messages and re-read fix instructions.
+
+================================================================================
+TESTING CHECKLIST (After validation)
+================================================================================
+
+[ ] Launch: godot --path C:\Users\PGNK2128\Godot-MCP
+[ ] Menu3DPC boots, buttons appear (no console errors)
+[ ] Click "Nouvelle Partie" → Cabin loads
+[ ] In Cabin, click "Nouvelle Quete" → Book cinematic plays
+[ ] Cinematic ends → Forest loads
+[ ] Forest loads → Walk to first encounter
+[ ] Card displays (fallback or LLM)
+[ ] Choices appear, selectable
+[ ] Loop 5 encounters total
+[ ] End-run screen appears
+[ ] Click "Retour au Menu" → Cabin/Menu loads
+[ ] No console errors during entire session
+
+Time estimate: 15 minutes for full loop
+
+================================================================================
+SCENE REFERENCE
+================================================================================
+
+Scene Files (All exist and verified):
+  scenes/Menu3DPC.tscn
+  scenes/MerlinCabinHub.tscn
+  scenes/BroceliandeForest3D.tscn
+  scenes/MerlinGame.tscn
+
+Script Files (All paths absolute for clarity):
+  C:\Users\PGNK2128\Godot-MCP\scripts\menu_3d_pc.gd
+  C:\Users\PGNK2128\Godot-MCP\scripts\merlin_cabin_hub.gd
+  C:\Users\PGNK2128\Godot-MCP\scripts\broceliande_3d\broceliande_forest_3d.gd
+  C:\Users\PGNK2128\Godot-MCP\scripts\ui\book_cinematic.gd
+
+Autoloads (All 11 verified present):
+  GameManager
+  MerlinAI (LLM backend)
+  PixelTransition (scene transitions)
+  SFXManager (audio)
+  MerlinVisual (colors/fonts)
+  ... and 6 others (full list in QA_SCENE_FLOW_AUDIT.md)
+
+================================================================================
+CRITICAL FACTS
+================================================================================
+
+✓ All scene files exist (no missing .tscn files)
+✓ BookCinematic class defined correctly (scripts/ui/book_cinematic.gd:7)
+✓ All scene constants correctly defined (HUB_SCENE, GAME_SCENE, etc.)
+✓ All autoloads registered (11/11 in project.godot)
+✓ Menu3DPC boots without errors
+✓ Transition code uses PixelTransition correctly
+
+❌ merlin_cabin_hub.gd has 1 parse error (lines 292-293 orphaned)
+❌ broceliande_forest_3d.gd has 1 async mismatch (line 940)
+❌ broceliande_forest_3d.gd has 1 missing handler (line 1038+)
+
+CONSEQUENCE: Gameplay loop breaks at cabin → forest transition
+
+================================================================================
+ESTIMATED TIMELINE
+================================================================================
+
+Read docs & understand issues:        5-10 minutes
+Apply Fix #1 (syntax):                5 minutes
+Apply Fix #2 (async):                 10 minutes
+Apply Fix #3 (handler):               5 minutes
+Run validate.bat (Step 0):            5 minutes
+Manual testing (full loop):           15 minutes
+TOTAL:                                45-50 minutes
+
+After fixes: Ready for deployment
+
+================================================================================
+QUESTIONS? REFER TO:
+================================================================================
+
+For issue details → QA_SCENE_FLOW_AUDIT.md (line 2-290)
+For exact code fix → QA_BLOCKING_ISSUES_SUMMARY.txt (sections 2-4)
+For visual flow → QA_SCENE_CHAIN_DIAGRAM.txt (sections 1-4)
+For checklist → This file (sections 3-4)
+
+All documents in: C:\Users\PGNK2128\Godot-MCP\
+
+================================================================================
