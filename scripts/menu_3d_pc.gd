@@ -78,8 +78,17 @@ func _ready() -> void:
 func _process(delta: float) -> void:
 	# Day/night disabled — fixed bright lighting for menu
 
-	# Ocean animation handled by shader (TIME uniform) — no GDScript needed
 	_ocean_time += delta
+
+	# Slow camera orbit around the scene (cinematic feel)
+	if is_instance_valid(_camera) and _menu_visible and not _boot_phase:
+		var orbit_speed: float = 0.03
+		var orbit_radius: float = 35.0
+		var cam_angle: float = _ocean_time * orbit_speed
+		_camera.position.x = cos(cam_angle) * orbit_radius
+		_camera.position.z = sin(cam_angle) * orbit_radius - 10.0
+		_camera.position.y = 3.0 + sin(_ocean_time * 0.1) * 1.0
+		_camera.look_at(_tower_pos + Vector3(0, 4, 0), Vector3.UP)
 
 	# Floating stones orbit around tower
 	for i in _floating_stones.size():
