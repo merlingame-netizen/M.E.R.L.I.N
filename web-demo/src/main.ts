@@ -20,6 +20,8 @@ import { MinigameHerboristerie } from './minigames/mg_herboristerie';
 import { MinigameNegociation } from './minigames/mg_negociation';
 import { MinigameCombatRituel } from './minigames/mg_combat_rituel';
 import { MinigameApaisement } from './minigames/mg_apaisement';
+import { MinigameSangFroid } from './minigames/mg_sang_froid';
+import { MinigameCourse } from './minigames/mg_course';
 import { initOghamPanel, showOghamPanel, hideOghamPanel } from './ui/OghamPanel';
 
 // --- Config ---
@@ -181,6 +183,10 @@ function createMinigame(id: string, container: HTMLElement) {
       return new MinigameCombatRituel(container);
     case 'apaisement':
       return new MinigameApaisement(container);
+    case 'sang_froid':
+      return new MinigameSangFroid(container);
+    case 'course':
+      return new MinigameCourse(container);
     case 'traces':
     default:
       // Remaining minigames fall back to Traces

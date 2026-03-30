@@ -1,6 +1,6 @@
 {
   "_comment": "Remplace BACKLOG.md -- format compact pour studio-director v2",
-  "updated": "2026-03-30T21:30:00Z",
+  "updated": "2026-03-30T22:30:00Z",
   "tasks": [
     {
       "id": "T001",
@@ -123,6 +123,34 @@
       "domain": "gameplay",
       "completed_cycle": 5,
       "completed_at": "2026-03-30T21:30:00Z"
+    },
+    {
+      "id": "T017",
+      "title": "Implement sang_froid minigame (steady cursor in shrinking zone)",
+      "domain": "gameplay",
+      "completed_cycle": 6,
+      "completed_at": "2026-03-30T22:30:00Z"
+    },
+    {
+      "id": "T018",
+      "title": "Implement course minigame (QTE symbol chase)",
+      "domain": "gameplay",
+      "completed_cycle": 6,
+      "completed_at": "2026-03-30T22:30:00Z"
+    },
+    {
+      "id": "T019",
+      "title": "Generate 20 FastRoute cards for cercles_pierres + druides",
+      "domain": "narrative",
+      "completed_cycle": 6,
+      "completed_at": "2026-03-30T22:30:00Z"
+    },
+    {
+      "id": "TOPT",
+      "title": "Bundle optimization -- Vite manual chunks (709KB -> 208KB app code)",
+      "domain": "visual",
+      "completed_cycle": 6,
+      "completed_at": "2026-03-30T22:30:00Z"
     }
   ]
 }

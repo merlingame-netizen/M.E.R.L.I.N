@@ -755,6 +755,167 @@ const FASTROUTE_TEMPLATES: readonly {
       { verb: 'proteger', text: 'Tu negocies avec le korrigan pour limiter les escapades.', effects: ['HEAL_LIFE:5', 'ADD_REPUTATION:anciens:6'] },
     ],
   },
+  // --- cercles_pierres + druides (20 cards) ---
+  {
+    narrative: 'Un cercle de douze menhirs se dresse au sommet d\'une colline battue par le vent. L\'equinoxe approche et des druides en robes blanches disposent des torches entre les pierres, murmurant des invocations anciennes.',
+    options: [
+      { verb: 'mediter', text: 'Tu t\'agenouilles au centre du cercle et synchronises ta respiration avec les chants.', effects: ['HEAL_LIFE:7', 'ADD_REPUTATION:druides:10'] },
+      { verb: 'observer', text: 'Tu etudies la disposition des torches, cherchant un motif astronomique.', effects: ['ADD_ANAM:6', 'ADD_REPUTATION:druides:5'] },
+      { verb: 'fuir', text: 'L\'energie qui monte te glace le sang. Tu recules dans l\'obscurite.', effects: ['DAMAGE_LIFE:3', 'ADD_REPUTATION:ankou:4'] },
+    ],
+  },
+  {
+    narrative: 'Les lignes de ley convergent sous tes pieds — tu le sens dans la vibration du sol. Deux menhirs jumeaux encadrent un passage ou l\'air ondule comme au-dessus d\'un feu, bien qu\'aucune flamme ne brule.',
+    options: [
+      { verb: 'examiner', text: 'Tu tends la main dans l\'air ondulant entre les menhirs.', effects: ['ADD_ANAM:8', 'ADD_REPUTATION:druides:6'] },
+      { verb: 'se concentrer', text: 'Tu fermes les yeux et laisses la vibration guider tes pensees.', effects: ['HEAL_LIFE:5', 'ADD_REPUTATION:druides:8'] },
+      { verb: 'escalader', text: 'Tu grimpes sur l\'un des menhirs pour voir au-dela du passage.', effects: ['ADD_BIOME_CURRENCY:7', 'DAMAGE_LIFE:4'] },
+    ],
+  },
+  {
+    narrative: 'Le temps glisse — un instant tu es sous la lune, l\'instant d\'apres le soleil brule. Les ombres des menhirs tournent en cercles fous. Un druide te fixe, immobile dans la tempete temporelle, et tend une main calme.',
+    options: [
+      { verb: 's\'approcher', text: 'Tu saisis la main du druide, acceptant son ancrage.', effects: ['HEAL_LIFE:8', 'ADD_REPUTATION:druides:9'] },
+      { verb: 'resister mentalement', text: 'Tu ancres ton esprit dans le present, refusant la derive.', effects: ['ADD_REPUTATION:anciens:7', 'ADD_ANAM:4'] },
+      { verb: 'courir', text: 'Tu traverses le cercle en courant, surfant sur les vagues du temps.', effects: ['ADD_BIOME_CURRENCY:8', 'DAMAGE_LIFE:5'] },
+    ],
+  },
+  {
+    narrative: 'Des oghams luisent sur un pilier central du cercle, pulsant d\'une lumiere verdatre qui s\'intensifie a mesure que tu approches. Chaque symbole semble raconter un fragment d\'histoire oubliee.',
+    options: [
+      { verb: 'dechiffrer', text: 'Tu traces les oghams du bout des doigts, absorbant leur savoir.', effects: ['ADD_ANAM:8', 'ADD_REPUTATION:druides:7'] },
+      { verb: 'ecouter', text: 'Tu restes immobile, laissant les symboles murmurer leur histoire.', effects: ['HEAL_LIFE:5', 'ADD_REPUTATION:anciens:6'] },
+      { verb: 'tenter sa chance', text: 'Tu presses ta paume contre le pilier, invoquant sa puissance.', effects: ['ADD_BIOME_CURRENCY:9', 'DAMAGE_LIFE:4'] },
+    ],
+  },
+  {
+    narrative: 'Des druides-astronomes pointent vers la constellation du Cerf qui se leve entre deux menhirs. Selon eux, cet alignement ne se produit qu\'une fois par siecle et confere le don de double vue a qui sait regarder.',
+    options: [
+      { verb: 'scruter', text: 'Tu fixes la constellation a travers l\'arche de pierre.', effects: ['ADD_ANAM:7', 'ADD_REPUTATION:druides:8'] },
+      { verb: 'mediter', text: 'Tu medites sous les etoiles, ouvrant ton esprit a la vision.', effects: ['HEAL_LIFE:6', 'ADD_REPUTATION:druides:6'] },
+      { verb: 'marchander', text: 'Tu proposes un service aux druides en echange de leur savoir stellaire.', effects: ['ADD_BIOME_CURRENCY:6', 'ADD_REPUTATION:druides:3'] },
+    ],
+  },
+  {
+    narrative: 'La geometrie sacree du cercle revele ses secrets : chaque pierre est placee selon un angle precis, formant un dodecagone parfait. Au centre, une dalle hexagonale est gravee de spirales triples.',
+    options: [
+      { verb: 'examiner', text: 'Tu mesures les angles et decouvres un message cache dans la geometrie.', effects: ['ADD_ANAM:6', 'ADD_REPUTATION:druides:9'] },
+      { verb: 'apaiser', text: 'Tu t\'assieds sur la dalle et laisses les spirales calmer ton esprit.', effects: ['HEAL_LIFE:7', 'ADD_REPUTATION:druides:5'] },
+      { verb: 'forcer', text: 'Tu tentes de soulever la dalle hexagonale.', effects: ['ADD_BIOME_CURRENCY:8', 'DAMAGE_LIFE:5'] },
+    ],
+  },
+  {
+    narrative: 'Sous le plus grand menhir, un passage s\'ouvre dans la terre. Des marches taillees dans la roche menent vers une chambre souterraine ou brulent des bougies que personne n\'a allumees depuis des siecles.',
+    options: [
+      { verb: 'se faufiler', text: 'Tu descends les marches vers la chambre cachee.', effects: ['ADD_BIOME_CURRENCY:7', 'ADD_REPUTATION:anciens:6'] },
+      { verb: 'observer', text: 'Tu etudies les marques sur les marches avant de descendre.', effects: ['ADD_ANAM:5', 'ADD_REPUTATION:druides:7'] },
+      { verb: 'proteger', text: 'Tu scelles l\'entree pour empecher les profanateurs d\'y acceder.', effects: ['HEAL_LIFE:4', 'ADD_REPUTATION:druides:8'] },
+    ],
+  },
+  {
+    narrative: 'Les feux du solstice brulent entre les pierres dressees. Les flammes dessinent des silhouettes dansantes — des guerriers, des biches, des arbres. Les druides jettent du gui dans le brasier, et chaque branche produit une etincelle d\'or.',
+    options: [
+      { verb: 'cueillir', text: 'Tu attrapes une etincelle d\'or dans ta paume ouverte.', effects: ['ADD_BIOME_CURRENCY:8', 'DAMAGE_LIFE:3'] },
+      { verb: 'ecouter', text: 'Tu ecoutes le craquement des flammes, y cherchant des presages.', effects: ['ADD_ANAM:5', 'ADD_REPUTATION:druides:7'] },
+      { verb: 'apaiser', text: 'Tu danses avec les silhouettes de flamme, trouvant la paix.', effects: ['HEAL_LIFE:8', 'ADD_REPUTATION:druides:5'] },
+    ],
+  },
+  {
+    narrative: 'Un dolmen massif occupe le centre du cercle, sa dalle superieure couverte de lichens dores. Dessous, l\'espace est assez grand pour une personne. Les druides disent que quiconque y passe la nuit recoit des reves prophetiques.',
+    options: [
+      { verb: 'se concentrer', text: 'Tu te glisses sous le dolmen et fermes les yeux.', effects: ['ADD_ANAM:7', 'ADD_REPUTATION:druides:6'] },
+      { verb: 'scruter', text: 'Tu examines les lichens dores, cherchant des motifs.', effects: ['ADD_REPUTATION:druides:8', 'HEAL_LIFE:3'] },
+      { verb: 'combattre', text: 'Tu refuses la tentation et frappes la pierre de ton baton.', effects: ['DAMAGE_LIFE:4', 'ADD_REPUTATION:ankou:5'] },
+    ],
+  },
+  {
+    narrative: 'L\'alignement des pierres cree un couloir de vent ou soufflent des murmures en vieux gaelique. Les mots se forment presque — des noms, des lieux, des avertissements — avant de se dissoudre.',
+    options: [
+      { verb: 'ecouter', text: 'Tu tends l\'oreille, pieçant les fragments de murmures.', effects: ['HEAL_LIFE:5', 'ADD_REPUTATION:druides:8'] },
+      { verb: 'parler', text: 'Tu reponds aux murmures en gaelique, partageant ton propre nom.', effects: ['ADD_REPUTATION:druides:10', 'ADD_ANAM:3'] },
+      { verb: 'fuir', text: 'Les voix te glacent. Tu quittes le couloir de vent.', effects: ['DAMAGE_LIFE:2', 'ADD_REPUTATION:korrigans:4'] },
+    ],
+  },
+  {
+    narrative: 'Un cercle interieur de sept petites pierres apparait quand la rosee du matin les revele. Elles ne sont visibles qu\'a l\'aube et forment un heptagone parfait, chaque pierre gravee d\'un ogham different.',
+    options: [
+      { verb: 'dechiffrer', text: 'Tu copies les sept oghams dans la terre avant que la rosee ne seche.', effects: ['ADD_ANAM:8', 'ADD_REPUTATION:druides:6'] },
+      { verb: 'sentir', text: 'Tu touches chaque pierre, sentant leur energie distincte.', effects: ['HEAL_LIFE:6', 'ADD_REPUTATION:druides:7'] },
+      { verb: 'tenter sa chance', text: 'Tu retires l\'une des petites pierres de son emplacement.', effects: ['ADD_BIOME_CURRENCY:9', 'DAMAGE_LIFE:5'] },
+    ],
+  },
+  {
+    narrative: 'Un druide aveugle chante au centre du cercle. Sa voix fait vibrer les menhirs, et des harmoniques invisibles font fleurir du lichen bleu sur la pierre. Il chante depuis trois jours sans s\'arreter.',
+    options: [
+      { verb: 'apaiser', text: 'Tu t\'assieds pres de lui et fredonnes en harmonie.', effects: ['HEAL_LIFE:8', 'ADD_REPUTATION:druides:8'] },
+      { verb: 'observer', text: 'Tu etudies le lichen bleu qui fleurit sous sa voix.', effects: ['ADD_ANAM:6', 'ADD_REPUTATION:druides:5'] },
+      { verb: 'distribuer', text: 'Tu apportes eau et nourriture au chanteur infatigable.', effects: ['ADD_REPUTATION:druides:7', 'ADD_REPUTATION:anciens:5'] },
+    ],
+  },
+  {
+    narrative: 'Deux ley lines se croisent exactement sous la pierre-mere du cercle. A minuit, l\'intersection pulse et projette des eclairs horizontaux d\'un bleu electrique entre les menhirs. Les druides veillent, solennels.',
+    options: [
+      { verb: 'examiner', text: 'Tu traces la trajectoire des eclairs, cartographiant les ley lines.', effects: ['ADD_ANAM:7', 'ADD_REPUTATION:druides:9'] },
+      { verb: 'se concentrer', text: 'Tu te places a l\'intersection et absorbes l\'energie.', effects: ['HEAL_LIFE:6', 'DAMAGE_LIFE:2', 'ADD_REPUTATION:druides:6'] },
+      { verb: 'proteger', text: 'Tu montes la garde avec les druides toute la nuit.', effects: ['ADD_REPUTATION:druides:8', 'ADD_REPUTATION:anciens:4'] },
+    ],
+  },
+  {
+    narrative: 'Le cercle de pierres entoure un if noueux dont les racines enserrent les menhirs comme des doigts. L\'arbre porte des baies rouges en plein hiver et son tronc est grave de dizaines d\'oghams superposes.',
+    options: [
+      { verb: 'dechiffrer', text: 'Tu denoues les couches d\'oghams, lisant l\'histoire millenaire.', effects: ['ADD_ANAM:8', 'ADD_REPUTATION:druides:7'] },
+      { verb: 'cueillir', text: 'Tu cueilles une grappe de baies rouges hivernales.', effects: ['HEAL_LIFE:5', 'ADD_BIOME_CURRENCY:5'] },
+      { verb: 'mediter', text: 'Tu t\'adosses au tronc et laisses l\'arbre te parler.', effects: ['HEAL_LIFE:7', 'ADD_REPUTATION:druides:6'] },
+    ],
+  },
+  {
+    narrative: 'Une excavation recente au pied d\'un menhir a revele une chambre mortuaire intacte. Des poteries, des bijoux de bronze et un crane trephine reposent sur un lit de fougeres petrifiees.',
+    options: [
+      { verb: 'fouiller a l\'aveugle', text: 'Tu examines les artefacts avec precaution et respect.', effects: ['ADD_BIOME_CURRENCY:8', 'ADD_REPUTATION:anciens:6'] },
+      { verb: 'mediter', text: 'Tu honores le defunt par une priere silencieuse.', effects: ['HEAL_LIFE:5', 'ADD_REPUTATION:druides:8'] },
+      { verb: 'resister mentalement', text: 'L\'aura de la tombe est lourde. Tu resistes a son emprise.', effects: ['ADD_ANAM:5', 'ADD_REPUTATION:ankou:5'] },
+    ],
+  },
+  {
+    narrative: 'Un brouillard dense enveloppe le cercle de pierres, et les sons se distordent. Tes pas de gauche sonnent comme des tambours, ceux de droite comme des cloches. Un druide emerge du brouillard, portant une harpe d\'os.',
+    options: [
+      { verb: 'ecouter', text: 'Tu t\'arretes pour ecouter la harpe d\'os, fascinee par ses harmoniques.', effects: ['HEAL_LIFE:6', 'ADD_REPUTATION:druides:9'] },
+      { verb: 'suivre', text: 'Tu suis le druide harpiste dans le brouillard.', effects: ['ADD_ANAM:6', 'ADD_REPUTATION:druides:6'] },
+      { verb: 'pister', text: 'Tu cherches la source du brouillard, suspectant un enchantement.', effects: ['ADD_BIOME_CURRENCY:6', 'ADD_REPUTATION:korrigans:4'] },
+    ],
+  },
+  {
+    narrative: 'Au lever du soleil, la lumiere traverse un trou dans la pierre-mere et projette un faisceau dore sur une dalle au sol. Le spot lumineux revele des spirales triples gravees, invisibles en toute autre lumiere.',
+    options: [
+      { verb: 'examiner', text: 'Tu te penches sur les spirales revelees par la lumiere.', effects: ['ADD_ANAM:7', 'ADD_REPUTATION:druides:8'] },
+      { verb: 'attendre', text: 'Tu attends de voir ou le faisceau se deplace au fil des heures.', effects: ['HEAL_LIFE:4', 'ADD_REPUTATION:anciens:7'] },
+      { verb: 'escalader', text: 'Tu grimpes jusqu\'au trou dans la pierre-mere pour regarder au travers.', effects: ['ADD_BIOME_CURRENCY:7', 'DAMAGE_LIFE:3'] },
+    ],
+  },
+  {
+    narrative: 'La nuit de Samhain, les menhirs semblent s\'animer. Leurs ombres bougent independamment, formant un cercle dansant. Les druides affirment que les esprits des batisseurs reviennent ce soir-la pour verifier leur oeuvre.',
+    options: [
+      { verb: 'observer', text: 'Tu regardes la danse des ombres, cherchant un message.', effects: ['ADD_ANAM:6', 'ADD_REPUTATION:druides:7'] },
+      { verb: 'apaiser', text: 'Tu chantes un hymne d\'accueil pour les esprits batisseurs.', effects: ['HEAL_LIFE:7', 'ADD_REPUTATION:druides:8'] },
+      { verb: 'combattre', text: 'Tu brandis ta torche contre les ombres mouvantes.', effects: ['DAMAGE_LIFE:4', 'ADD_REPUTATION:ankou:6'] },
+    ],
+  },
+  {
+    narrative: 'Trois druides en cercle autour de la pierre-autel executent un rituel de guerison. Leurs bras dessinent des spirales dans l\'air et l\'herbe sous leurs pieds verdit a vue d\'oeil. Ils t\'invitent a rejoindre le cercle.',
+    options: [
+      { verb: 'apaiser', text: 'Tu joins tes mains aux leurs et participes au rituel de guerison.', effects: ['HEAL_LIFE:8', 'ADD_REPUTATION:druides:10'] },
+      { verb: 'observer', text: 'Tu memorises leurs gestes pour reproduire le rituel plus tard.', effects: ['ADD_ANAM:7', 'ADD_REPUTATION:druides:5'] },
+      { verb: 'marchander', text: 'Tu proposes des herbes rares en echange de leur enseignement.', effects: ['ADD_BIOME_CURRENCY:5', 'ADD_REPUTATION:druides:6'] },
+    ],
+  },
+  {
+    narrative: 'Un menhir isole au bord du cercle vibre d\'une note basse quand tu le touches. Un druide t\'explique que cette pierre est le diapason du cercle — elle accorde toutes les autres. Elle attend un nouveau gardien.',
+    options: [
+      { verb: 'se concentrer', text: 'Tu poses les deux mains sur la pierre et laisses sa vibration t\'envahir.', effects: ['HEAL_LIFE:6', 'ADD_REPUTATION:druides:9'] },
+      { verb: 'parler', text: 'Tu promets au druide de proteger le cercle sur ta route.', effects: ['ADD_REPUTATION:druides:8', 'ADD_REPUTATION:anciens:5'] },
+      { verb: 'tenter sa chance', text: 'Tu frappes la pierre pour amplifier sa note.', effects: ['ADD_BIOME_CURRENCY:6', 'DAMAGE_LIFE:3'] },
+    ],
+  },
 ];
 
 /** Generate a card using FastRoute (hardcoded templates). */

@@ -1,16 +1,17 @@
 {
   "_comment": "Contexte pre-calcule par le director en debut de cycle. Lu par les agents a la place de tous les docs.",
   "_usage": "Director ecrit ce fichier avant de dispatcher. Agents lisent UNIQUEMENT ce fichier pour le contexte.",
-  "cycle": 5,
-  "timestamp": "2026-03-30T21:00:00Z",
+  "cycle": 6,
+  "timestamp": "2026-03-30T22:30:00Z",
   "selected_tasks": [
-    {"id": "T014", "title": "Implement combat_rituel minigame (dodge in sacred circle)", "domain": "gameplay", "agent": "merlin-gameplay-programmer"},
-    {"id": "T016", "title": "Implement apaisement minigame (rhythm breathing)", "domain": "gameplay", "agent": "merlin-gameplay-programmer"},
-    {"id": "T015", "title": "Generate 20 FastRoute cards for villages_celtes + korrigans", "domain": "narrative", "agent": "merlin-narrative-designer"}
+    {"id": "T017", "title": "Implement sang_froid minigame (steady cursor in shrinking zone)", "domain": "gameplay", "agent": "merlin-gameplay-programmer"},
+    {"id": "T018", "title": "Implement course minigame (QTE chase with flashing symbols)", "domain": "gameplay", "agent": "merlin-gameplay-programmer"},
+    {"id": "T019", "title": "Generate 20 FastRoute cards for cercles_pierres + druides", "domain": "narrative", "agent": "merlin-narrative-designer"},
+    {"id": "TOPT", "title": "Bundle optimization -- manual chunks in Vite", "domain": "visual", "agent": "merlin-tech-artist"}
   ],
   "changed_files_by_domain": {
-    "gameplay": ["web-demo/src/minigames/mg_combat_rituel.ts", "web-demo/src/minigames/mg_apaisement.ts", "web-demo/src/main.ts"],
-    "visual": [],
+    "gameplay": ["web-demo/src/minigames/mg_sang_froid.ts", "web-demo/src/minigames/mg_course.ts", "web-demo/src/main.ts"],
+    "visual": ["web-demo/vite.config.ts"],
     "narrative": ["web-demo/src/game/CardSystem.ts"],
     "llm": [],
     "qa": []
@@ -26,19 +27,19 @@
     "life_drain_per_card": 1,
     "life_max": 100,
     "factions": ["druides", "anciens", "korrigans", "niamh", "ankou"],
-    "minigames_done": ["traces", "runes", "equilibre", "herboristerie", "negociation"],
-    "minigames_implementing": ["combat_rituel", "apaisement"],
-    "minigames_todo": ["sang_froid", "course", "fouille", "ombres", "volonte", "regard", "echo"],
+    "minigames_done": ["traces", "runes", "equilibre", "herboristerie", "negociation", "combat_rituel", "apaisement", "sang_froid", "course"],
+    "minigames_todo": ["fouille", "ombres", "volonte", "regard", "echo"],
     "minigame_base_pattern": "extends MinigameBase, setup()+render()+cleanup(), canvas-based, score 0-100, finish(score) to end",
-    "fastroute_templates_count": 66,
-    "biome_current": "cotes_sauvages",
+    "fastroute_templates_count": 106,
+    "biome_current": "cercles_pierres",
     "ogham_categories": ["reveal", "protection", "boost", "narrative", "recovery", "special"],
-    "card_templates_adding": "20 villages_celtes + korrigans"
+    "card_templates_adding": "20 cercles_pierres + druides",
+    "bundle_optimization": "manual chunks: three-core (529KB cached), index (148KB), minigames (60KB)"
   },
   "agent_outputs_summary": {
-    "gameplay": {"last_cycle": 4, "status": "completed", "summary": "Negociation minigame + Ogham effect execution"},
-    "visual": {"last_cycle": 2, "status": "needs-repro", "summary": "T001 deferred"},
-    "narrative": {"last_cycle": 4, "status": "completed", "summary": "20 FastRoute cards for landes_bruyere + anciens"},
-    "qa": {"last_cycle": 4, "status": "passed", "summary": "ts_errors=0, build_ok, bundle=683KB (+3.6%)"}
+    "gameplay": {"last_cycle": 6, "status": "completed", "summary": "sang_froid (shrinking zone steady cursor, 10s) + course (QTE symbol chase, 8 rounds, 1.5s window)"},
+    "visual": {"last_cycle": 6, "status": "completed", "summary": "Bundle optimization via manual chunks: 709KB monolith -> 148+60+529(vendor) = app code 208KB"},
+    "narrative": {"last_cycle": 6, "status": "completed", "summary": "20 FastRoute cards for cercles_pierres + druides (megalithic themes)"},
+    "qa": {"last_cycle": 6, "status": "passed", "summary": "ts_errors=0, build_ok, main_bundle=148KB, total=737KB (3 chunks)"}
   }
 }

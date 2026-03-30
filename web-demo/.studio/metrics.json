@@ -1,13 +1,16 @@
 {
   "_comment": "Metriques par cycle -- remplace METRICS.md. Ecrit par merlin-qa-lead apres chaque cycle.",
-  "cycle": 5,
-  "timestamp": "2026-03-30T21:30:00Z",
+  "cycle": 6,
+  "timestamp": "2026-03-30T22:30:00Z",
   "ts_errors": 0,
-  "bundle_kb": 709,
+  "bundle_kb": 208,
+  "bundle_kb_total": 737,
+  "bundle_kb_vendor": 529,
+  "bundle_chunks": 3,
   "tests_pass": 0,
   "load_ms": 0,
   "errors_runtime": 0,
   "build_ok": true,
   "smoke_pass": true,
-  "notes": "Cycle 5: +combat_rituel minigame (circular dodge arena, rotating arc obstacles, 10s timer, survival+center bonus scoring), +apaisement minigame (breathing rhythm sync, pulsing circle expand/contract, 12s timer, click accuracy scoring), +20 FastRoute cards for villages_celtes+korrigans (market days, blacksmiths, traveling bards, fairy doors, mischievous pranks, secret passages, talking tools, midnight dances). Bundle +3.81% (683->709 KB). 7/14 minigames done. 86 card templates total (6+20+20+20+20)."
+  "notes": "Cycle 6: Bundle optimization via Vite manual chunks (709KB monolith -> 3 chunks: index 148KB + minigames 60KB + three-core 529KB vendor). App code now 208KB (-70.7% from 709KB). +sang_froid minigame (shrinking safe zone, cursor tracking, drifting zone center, 10s timer, score = % time inside). +course minigame (QTE symbol chase, ogham symbols, 8 rounds x 1.5s, click target among decoys, score = hits/rounds * 100). +20 FastRoute cards for cercles_pierres+druides (equinox rituals, ley line convergences, time slips, ogham inscriptions, stargazing druids, sacred geometry, underground chambers, solstice fires, druide healers, singing stones). 9/14 minigames done. 106 card templates total (86+20). All caps respected (rep<=10, heal<=8, dmg<=5)."
 }

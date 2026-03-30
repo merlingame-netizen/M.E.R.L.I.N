@@ -133,6 +133,37 @@
       ],
       "summary": "Implemented combat_rituel minigame (circular dodge arena with rotating arc obstacles at various radii/speeds, 10s timer, score = survival time % + center bonus zone %). Implemented apaisement minigame (breathing rhythm sync with pulsing circle expand/contract cycle, 12s timer, click at peaks for accuracy, score = avg accuracy * tap count bonus). Added 20 FastRoute cards for villages_celtes+korrigans (market days, blacksmiths, traveling bards, hidden fairy doors, mischievous pranks, secret passages, talking tools, midnight dances, prophetic moss, enchanted mills). All caps respected (rep<=10, heal<=8, dmg<=5). 3/3 tasks completed. Bundle +3.81% (683->709 KB), under 717 KB WARN threshold. 7/14 minigames done. 86 card templates total.",
       "agents_dispatched": ["merlin-gameplay-programmer", "merlin-narrative-designer", "merlin-qa-lead"]
+    },
+    {
+      "cycle": 6,
+      "timestamp": "2026-03-30T22:30:00Z",
+      "tasks_attempted": ["T017", "T018", "T019", "TOPT"],
+      "tasks_completed": ["T017", "T018", "T019", "TOPT"],
+      "tasks_deferred": [],
+      "gate": {
+        "ts_errors": 0,
+        "build_ok": true,
+        "bundle_kb": 208,
+        "bundle_kb_total": 737,
+        "bundle_kb_vendor": 529,
+        "bundle_chunks": 3,
+        "bundle_delta_pct": -70.7,
+        "tests_pass": 0,
+        "verdict": "PROCEED"
+      },
+      "files_changed": [
+        "web-demo/vite.config.ts",
+        "web-demo/src/minigames/mg_sang_froid.ts",
+        "web-demo/src/minigames/mg_course.ts",
+        "web-demo/src/game/CardSystem.ts",
+        "web-demo/src/main.ts",
+        "web-demo/.studio/backlog.json",
+        "web-demo/.studio/metrics.json",
+        "web-demo/.studio/context_bundle.json",
+        "web-demo/.studio/cycle_audit.json"
+      ],
+      "summary": "Bundle optimization: Vite manual chunks split 709KB monolith into 3 chunks (three-core 529KB vendor + index 148KB app + minigames 60KB). App code now 208KB (-70.7%). Implemented sang_froid minigame (cursor tracking in progressively shrinking + drifting safe zone, 10s timer, score = % time inside). Implemented course minigame (QTE symbol chase with ogham characters, 8 rounds x 1.5s window, click target among 4 decoys, score = hits/rounds * 100). Added 20 FastRoute cards for cercles_pierres+druides (equinox rituals, ley line convergences, time slips, ogham inscriptions awakening, stargazing druids, sacred geometry, underground chambers, solstice fires, druide singing stones, healing rituals). All caps respected (rep<=10, heal<=8, dmg<=5). 4/4 tasks completed. 9/14 minigames done. 106 card templates total.",
+      "agents_dispatched": ["merlin-tech-artist", "merlin-gameplay-programmer", "merlin-narrative-designer", "merlin-qa-lead"]
     }
   ]
 }
