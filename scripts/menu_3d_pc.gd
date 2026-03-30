@@ -44,6 +44,7 @@ const LORE_QUOTES: Array[String] = [
 # --- State ---
 var _boot_phase: bool = true
 var _boot_timer: float = 0.0
+var _boot_bg: ColorRect
 var _boot_lines: Array[String] = [
 	"[color=#20ff40]CeltOS v3.7.2 — Initialisation systeme...[/color]",
 	"[color=#20ff40]Memoire: 16384 Ko OK[/color]",
@@ -912,14 +913,14 @@ func _build_ui() -> void:
 	fr.offset_left = -frame_w; fr.color = frame_color; fr.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	bezel.add_child(fr)
 
-	# Semi-transparent CRT tint over 3D (very subtle green)
-	var screen_tint: ColorRect = ColorRect.new()
-	screen_tint.set_anchors_preset(Control.PRESET_FULL_RECT)
-	screen_tint.offset_left = frame_w; screen_tint.offset_right = -frame_w
-	screen_tint.offset_top = frame_w; screen_tint.offset_bottom = -frame_w
-	screen_tint.color = Color(0.0, 0.02, 0.0, 0.15)  # Very subtle green tint — 3D fully visible
-	screen_tint.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	bezel.add_child(screen_tint)
+	# Boot background — opaque during boot, fades to transparent when menu appears
+	_boot_bg = ColorRect.new()
+	_boot_bg.set_anchors_preset(Control.PRESET_FULL_RECT)
+	_boot_bg.offset_left = frame_w; _boot_bg.offset_right = -frame_w
+	_boot_bg.offset_top = frame_w; _boot_bg.offset_bottom = -frame_w
+	_boot_bg.color = Color(0.01, 0.02, 0.01, 0.95)  # Almost opaque during boot — CRT screen dark
+	_boot_bg.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	bezel.add_child(_boot_bg)
 
 	# LED indicator (amber dot bottom-right of bezel)
 	var led: ColorRect = ColorRect.new()
@@ -1116,9 +1117,11 @@ func _show_menu() -> void:
 		return
 	_menu_visible = true
 
-	# Fade out boot text
-	var tw: Tween = create_tween()
+	# Fade out boot text + boot background → reveals 3D
+	var tw: Tween = create_tween().set_parallel(true)
 	tw.tween_property(_boot_label, "modulate:a", 0.0, 1.0)
+	if is_instance_valid(_boot_bg):
+		tw.tween_property(_boot_bg, "color:a", 0.0, 1.5)  # Slower fade — dramatic reveal
 
 	# Fade in menu container
 	var tw2: Tween = create_tween()
