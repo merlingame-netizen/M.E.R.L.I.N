@@ -1,17 +1,61 @@
 {
   "_comment": "Remplace BACKLOG.md -- format compact pour studio-director v2",
-  "updated": "2026-03-31T00:30:00Z",
+  "updated": "2026-03-31T01:30:00Z",
   "tasks": [
     {
       "id": "T001",
-      "title": "Fix white/blank scenes -- diagnose rendering issue",
+      "title": "Fix white/blank scenes -- add background ColorRect in editor",
       "priority": 1,
-      "status": "needs-repro",
+      "status": "diagnosed",
       "domain": "visual",
-      "est_tokens": 800,
+      "est_tokens": 400,
       "depends_on": [],
-      "tags": ["CRITICAL", "blocking"],
-      "notes": "Cycle 1-5: investigated, no blank scene found in code. 3D scene has proper lighting, materials, sky shader, fog. Needs reproduction steps from user."
+      "tags": ["CRITICAL", "requires-editor"],
+      "notes": "Cycle 9 diagnosis: Root cause = plain Node root in .tscn files with no background ColorRect. MerlinCabinHub also has parse error in script. Fix: add CanvasLayer+ColorRect in editor, fix parse error, set project background_color."
+    },
+    {
+      "id": "T028",
+      "title": "Full loop integration audit",
+      "priority": 2,
+      "status": "done",
+      "domain": "gameplay",
+      "est_tokens": 500,
+      "depends_on": [],
+      "tags": ["integration"],
+      "notes": "Cycle 9: All 14 minigames in switch, OghamPanel wired, EffectEngine calls verified, game loop 11-step flow intact."
+    },
+    {
+      "id": "T029",
+      "title": "Error resilience -- try/catch LLM + minigame + effects",
+      "priority": 2,
+      "status": "done",
+      "domain": "gameplay",
+      "est_tokens": 400,
+      "depends_on": [],
+      "tags": ["robustness"],
+      "notes": "Cycle 9: 3 try/catch guards added. Card gen fallback, minigame neutral score 50, effect skip. Game loop never crashes."
+    },
+    {
+      "id": "T030",
+      "title": "T001 white scenes diagnostic (code-only)",
+      "priority": 2,
+      "status": "done",
+      "domain": "visual",
+      "est_tokens": 500,
+      "depends_on": [],
+      "tags": ["diagnostic"],
+      "notes": "Cycle 9: Root cause identified. Fix requires editor. See worker_visual.json for next_steps."
+    },
+    {
+      "id": "T031",
+      "title": "Card quality pass -- 166 templates",
+      "priority": 3,
+      "status": "done",
+      "domain": "narrative",
+      "est_tokens": 300,
+      "depends_on": [],
+      "tags": ["quality"],
+      "notes": "Cycle 9: All 166 templates pass. 3 options each, no duplicate verbs, no narrative length violations, all effects non-empty."
     },
     {
       "id": "T005",

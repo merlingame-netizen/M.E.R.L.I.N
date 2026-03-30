@@ -1,10 +1,10 @@
 {
   "_comment": "Metriques par cycle -- remplace METRICS.md. Ecrit par merlin-qa-lead apres chaque cycle.",
-  "cycle": 8,
-  "timestamp": "2026-03-31T00:30:00Z",
+  "cycle": 9,
+  "timestamp": "2026-03-31T01:30:00Z",
   "ts_errors": 0,
-  "bundle_kb": 283,
-  "bundle_kb_total": 812,
+  "bundle_kb": 284,
+  "bundle_kb_total": 813,
   "bundle_kb_vendor": 529,
   "bundle_chunks": 3,
   "tests_pass": 0,
@@ -12,5 +12,5 @@
   "errors_runtime": 0,
   "build_ok": true,
   "smoke_pass": true,
-  "notes": "Cycle 8 FINAL CONTENT: +2 minigames (regard: memory sequence 3 rounds x 4/5/6 symbols, 5x3 grid, score = correct/total*100; echo: visual sound-direction 6 rounds x 1.2s window, 4 quadrants, score = hits/rounds*100). 14/14 minigames COMPLETE. +40 FastRoute cards (20 collines_dolmens: passage tombs, ancestor visions, hilltop fires, territorial oaths; 20 iles_mystiques: Avalon, selkies, faery ferrymen, time-lost islands, sacred apple orchards). 166 card templates total (126+40). All caps respected (rep<=10, heal<=7, dmg<=5). Druides capped at 4/20 in collines. Niamh emphasized at 14/20 options in iles. Field quotas met: chance>=4, bluff>=3, obs>=3, logique>=3, finesse>=3, vigueur>=3, esprit<=8, perception>=3 per 20-card batch. App bundle 283KB (index 223KB + minigames 60KB), under 310KB WARN threshold."
+  "notes": "Cycle 9 POLISH & INTEGRATION: Integration audit verified all 14 minigames in createMinigame() switch, OghamPanel wired before card phase, EffectEngine.applyOghamEffect() + processOghamModifiers() correctly called, game loop 11-step flow intact. Error resilience added: 3 try/catch guards (card generation with emergency fallback, minigame with neutral score 50, effect application with skip). T001 white scenes diagnosed: root cause is plain Node root in .tscn files + no background ColorRect — fix requires Godot editor. Card quality pass: 166 templates all have 3 options, no narrative under 20 or over 200 words, no duplicate verbs per card, all effects non-empty. Bundle 284KB (+1KB from try/catch code), under 370KB WARN. Zero TS errors."
 }

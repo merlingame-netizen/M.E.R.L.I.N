@@ -1,14 +1,32 @@
 {
+  "cycle": 9,
   "agent": "merlin-qa-lead",
-  "cycle": 8,
-  "timestamp": "2026-03-31T00:30:00Z",
-  "status": "PASS",
-  "checks": {
-    "tsc_noEmit": {"errors": 0, "verdict": "PASS"},
-    "vite_build": {"success": true, "verdict": "PASS"},
-    "bundle_app_kb": {"value": 283, "warn_threshold": 310, "block_threshold": 380, "verdict": "PASS"},
-    "bundle_total_kb": {"value": 812, "vendor": 529, "app_index": 223, "app_minigames": 60},
-    "chunks": 3
+  "timestamp": "2026-03-31T01:30:00Z",
+  "quality_gate": {
+    "ts_errors": 0,
+    "build_ok": true,
+    "bundle_kb": 284,
+    "bundle_kb_total": 813,
+    "bundle_kb_vendor": 529,
+    "bundle_chunks": 3,
+    "bundle_breakdown": {
+      "index": "224.14 KB",
+      "minigames": "60.20 KB",
+      "three_core": "529.01 KB"
+    },
+    "bundle_delta_kb": 1,
+    "bundle_under_warn_370": true,
+    "bundle_under_block_450": true
   },
-  "summary": "All quality gates passed. TS zero errors, build OK, app bundle 283KB (under 310KB WARN)."
+  "minigame_imports_check": {
+    "minigame_imports_count": 14,
+    "all_14_imported": true
+  },
+  "regression_checks": {
+    "no_new_ts_errors": true,
+    "build_still_passes": true,
+    "bundle_size_stable": true,
+    "no_features_removed": true
+  },
+  "verdict": "PASS"
 }

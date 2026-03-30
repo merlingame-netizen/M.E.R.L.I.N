@@ -1,0 +1,54 @@
+{
+  "cycle": 9,
+  "agent": "merlin-tech-artist",
+  "task": "T030",
+  "timestamp": "2026-03-31T01:30:00Z",
+  "diagnosis": {
+    "scenes_analyzed": {
+      "MerlinGame.tscn": {
+        "root_node": "Node (not Node2D or Control)",
+        "script": "merlin_game_controller.gd",
+        "has_canvas_layer": false,
+        "has_background_colorrect": false,
+        "children": ["MerlinGameUI (instanced PackedScene)"],
+        "notes": "Root is plain Node, relies on MerlinGameUI sub-scene for all rendering"
+      },
+      "MerlinCabinHub.tscn": {
+        "root_node": "Node (not Node2D or Control)",
+        "script": "merlin_cabin_hub.gd",
+        "has_canvas_layer": false,
+        "has_background_colorrect": false,
+        "children": "none visible in .tscn - all created by script",
+        "notes": "Minimal scene file. Script creates all UI. Known CRITICAL parse error in merlin_cabin_hub.gd blocks loading."
+      }
+    },
+    "merlin_visual_gd": {
+      "is_autoload": true,
+      "autoload_name": "MerlinVisual",
+      "palette_defined": true,
+      "palette_source": "MerlinVisualPalettes (separate file, re-exported via const)",
+      "constants_available": ["PALETTE", "GBC", "CRT_PALETTE", "BIOME_COLORS", "BIOME_VISUALS"]
+    },
+    "project_godot": {
+      "merlin_visual_listed": true,
+      "autoload_path": "*res://scripts/autoload/merlin_visual.gd",
+      "other_visual_autoloads": ["MerlinBackdrop", "ScreenFrame", "ScreenEffects", "ScreenDither", "PixelTransition"]
+    },
+    "scene_grep_results": {
+      "background_color_matches": 0,
+      "modulate_matches": 0,
+      "notes": "No background_color or modulate properties set directly in .tscn files"
+    }
+  },
+  "root_cause": "MerlinGame.tscn and MerlinCabinHub.tscn use plain Node as root (not Node2D/Control). Rendering depends entirely on scripts and sub-scenes creating visual nodes at runtime. MerlinCabinHub has a known parse error in its script, preventing the scene from loading at all. If the sub-scene MerlinGameUI.tscn fails to load or its script errors, the screen would be blank. The lack of any background ColorRect in the .tscn files means there is no fallback color — the window clear color (project settings) would show through.",
+  "fix_applied": false,
+  "fix_requires_editor": true,
+  "next_steps": [
+    "1. Fix merlin_cabin_hub.gd parse error (CRITICAL blocker)",
+    "2. Add a CanvasLayer + ColorRect(black/dark) as first child in MerlinGame.tscn and MerlinCabinHub.tscn via editor",
+    "3. Set project-level window/background_color in project.godot to a dark color as fallback",
+    "4. Verify MerlinGameUI.tscn has proper background coverage",
+    "5. Test scene transitions Menu3DPC -> MerlinCabinHub -> MerlinGame in editor"
+  ],
+  "verdict": "DIAGNOSED - root cause identified, fix requires Godot editor for scene hierarchy changes"
+}

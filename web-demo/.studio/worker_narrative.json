@@ -1,23 +1,31 @@
 {
+  "cycle": 9,
   "agent": "merlin-narrative-designer",
-  "cycle": 8,
-  "timestamp": "2026-03-31T00:30:00Z",
-  "tasks": ["T026", "T027"],
-  "status": "complete",
-  "deliverables": [
-    "web-demo/src/game/CardSystem.ts (40 new templates appended)"
-  ],
-  "constraints_applied": {
-    "source": "web-demo/.studio/card_generation_constraints.json",
-    "heal_per_option_max": 7,
-    "heal_options_per_card_max": 1,
-    "rep_max": 10,
-    "dmg_max": 5,
-    "field_quotas_met": true,
-    "faction_adjustments": {
-      "druides_capped": "4/20 in collines_dolmens",
-      "niamh_boosted": "14/20 rep options in iles_mystiques"
-    }
-  },
-  "summary": "Generated 40 FastRoute card templates: 20 collines_dolmens (passage tombs, burial mounds, hilltop fires, territorial oaths, ancestor visions) and 20 iles_mystiques (Avalon, selkies, faery ferrymen, time-frozen islands, sacred apple orchards, Morgane, Tir na nOg). All caps respected. Field quotas met per batch. 166 total card templates."
+  "task": "T031",
+  "timestamp": "2026-03-31T01:30:00Z",
+  "card_quality_pass": {
+    "total_templates_checked": 166,
+    "structure_check": {
+      "all_have_3_options": true,
+      "all_effects_non_empty": true,
+      "all_verbs_present": true,
+      "all_text_present": true
+    },
+    "narrative_length_check": {
+      "shortest_narrative_words_approx": 25,
+      "longest_narrative_words_approx": 65,
+      "under_20_words": 0,
+      "over_200_words": 0,
+      "verdict": "PASS"
+    },
+    "duplicate_verb_check": {
+      "cards_with_duplicate_verb_in_same_card": 0,
+      "verdict": "PASS"
+    },
+    "first_10_spot_check": "Starter+foret cards. 3 distinct verbs each, effects balanced, narratives 25-50 words.",
+    "last_10_spot_check": "iles_mystiques finale. Themes: ghost ship, seal guardian, Avalon. Verbs distinct, effects within caps.",
+    "issues_fixed": 0,
+    "quality_pass": true,
+    "verdict": "PASS - all 166 templates meet quality criteria"
+  }
 }

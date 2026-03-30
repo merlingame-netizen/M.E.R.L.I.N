@@ -115,7 +115,24 @@ async function gameLoop(
     // 4. CARD phase — fade to card overlay
     await fadeIn(600);
 
-    const card = generateFastRouteCard(state().run.biome);
+    let card;
+    try {
+      card = generateFastRouteCard(state().run.biome);
+    } catch (err) {
+      // FastRoute fallback: generate a minimal safe card if template fails
+      console.warn('[MERLIN] Card generation failed, using emergency fallback:', err);
+      card = {
+        id: `card_emergency_${Date.now()}`,
+        narrative: 'Le brouillard se leve, revelant un sentier paisible devant toi.',
+        options: [
+          { verb: 'observer', text: 'Tu observes les alentours calmement.', field: 'observation', effects: ['HEAL_LIFE:3'] },
+          { verb: 'avancer', text: 'Tu poursuis ta route avec prudence.', field: 'esprit', effects: ['ADD_ANAM:2'] },
+          { verb: 'attendre', text: 'Tu fais une pause pour reprendre tes forces.', field: 'esprit', effects: ['HEAL_LIFE:2'] },
+        ] as const,
+        biome: state().run.biome,
+        source: 'fastroute' as const,
+      };
+    }
     await fadeOut(300);
 
     const chosenOption = await showCard(card);
@@ -125,10 +142,16 @@ async function gameLoop(
     const minigameContainer = document.getElementById('minigame-container')!;
     const minigameOverlay = document.getElementById('minigame-overlay')!;
 
-    minigameOverlay.classList.add('visible');
-    const minigame = createMinigame(minigameId, minigameContainer);
-    const result = await minigame.play();
-    minigameOverlay.classList.remove('visible');
+    let result = { score: 50 }; // neutral fallback
+    try {
+      minigameOverlay.classList.add('visible');
+      const minigame = createMinigame(minigameId, minigameContainer);
+      result = await minigame.play();
+    } catch (err) {
+      console.warn(`[MERLIN] Minigame '${minigameId}' failed, using neutral score 50:`, err);
+    } finally {
+      minigameOverlay.classList.remove('visible');
+    }
 
     // 6. SCORE → multiplier
     const multiplier = getMultiplier(result.score);
@@ -137,10 +160,15 @@ async function gameLoop(
     // 7. APPLY EFFECTS (with ogham modifiers if active)
     const option = card.options[chosenOption];
     const activeOgham = state().run.activeOgham;
-    const modifiedEffects = activeOgham
-      ? processOghamModifiers(option.effects, activeOgham)
-      : option.effects;
-    const effectResult = applyEffects(modifiedEffects, multiplier);
+    let effectResult: { applied: readonly string[]; rejected: readonly string[] } = { applied: [], rejected: [] };
+    try {
+      const modifiedEffects = activeOgham
+        ? processOghamModifiers(option.effects, activeOgham)
+        : option.effects;
+      effectResult = applyEffects(modifiedEffects, multiplier);
+    } catch (err) {
+      console.warn('[MERLIN] Effect application failed, skipping effects:', err);
+    }
 
     // 8. Tick ogham cooldowns + clear active ogham
     state().tickCooldowns();

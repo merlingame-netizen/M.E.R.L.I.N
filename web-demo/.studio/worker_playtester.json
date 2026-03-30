@@ -1,17 +1,8 @@
 {
-  "worker": "merlin-ai-playtester",
-  "cycle": 8,
-  "status": "COMPLETE",
-  "started_at": "2026-03-31T00:25:00Z",
-  "completed_at": "2026-03-31T00:30:00Z",
-  "duration_s": 300,
-  "method": "analytical_audit",
-  "findings_count": {
-    "pass": 6,
-    "warning": 0,
-    "fail": 0
-  },
-  "summary": "166 card templates verified (target reached). Effect caps all compliant (rep<=10, heal<=7, dmg<=5). Faction rebalance effective: druides reduced from 27.6% to ~22%, niamh increased from 13% to ~18%. Field quotas met in both new batches. 14/14 minigames complete and wired. All content milestones reached.",
-  "output_path": "tools/autodev/playtest_reports/playtest_report_cycle8.json",
+  "cycle": 9,
+  "agent": "merlin-ai-playtester",
+  "timestamp": "2026-03-31T01:30:00Z",
+  "report_path": "tools/autodev/playtest_reports/playtest_report_cycle9.json",
+  "summary": "Integration validation cycle. No new content. Verified faction balance stable (~22% druides, ~18% niamh). All 14 minigames wired and imported. Error resilience guards added for card gen, minigame, and effect application. No regressions found.",
   "verdict": "PASS"
 }

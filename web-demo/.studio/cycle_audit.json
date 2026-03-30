@@ -290,6 +290,67 @@
           "verdict": "PASS"
         }
       }
+    },
+    {
+      "cycle": 9,
+      "timestamp": "2026-03-31T01:30:00Z",
+      "tasks_attempted": ["T028", "T029", "T030", "T031"],
+      "tasks_completed": ["T028", "T029", "T030", "T031"],
+      "tasks_deferred": [],
+      "gate": {
+        "ts_errors": 0,
+        "build_ok": true,
+        "bundle_kb": 284,
+        "bundle_kb_total": 813,
+        "bundle_kb_vendor": 529,
+        "bundle_chunks": 3,
+        "bundle_delta_pct": 0.35,
+        "tests_pass": 0,
+        "verdict": "PROCEED"
+      },
+      "files_changed": [
+        "web-demo/src/main.ts",
+        "web-demo/.studio/context_bundle.json",
+        "web-demo/.studio/backlog.json",
+        "web-demo/.studio/metrics.json",
+        "web-demo/.studio/cycle_audit.json",
+        "web-demo/.studio/worker_gameplay.json",
+        "web-demo/.studio/worker_visual.json",
+        "web-demo/.studio/worker_narrative.json",
+        "web-demo/.studio/worker_playtester.json",
+        "web-demo/.studio/worker_qa.json",
+        "tools/autodev/playtest_reports/playtest_report_cycle9.json"
+      ],
+      "summary": "POLISH & INTEGRATION CYCLE. T028 Integration audit: verified all 14 minigames in createMinigame() switch, OghamPanel wired (show/hide before card), EffectEngine.applyOghamEffect() called after ogham selection, processOghamModifiers() called before applyEffects(), game loop 11-step flow intact, save/load not needed (web demo ephemeral store). T029 Error resilience: added 3 try/catch guards in main.ts -- card generation with emergency fallback card (3 safe options, no damage), minigame with neutral score 50 fallback + finally block for overlay cleanup, effect application with skip fallback. T030 White scenes diagnosis: root cause identified -- MerlinGame.tscn and MerlinCabinHub.tscn use plain Node root with no background ColorRect, no background_color/modulate in scene files, MerlinCabinHub has parse error in script. Fix requires Godot editor (add CanvasLayer+ColorRect, fix parse error, set project background_color). T031 Card quality pass: all 166 templates verified -- 3 options each, no narrative under 20 or over 200 words, no duplicate verbs per card, all effects non-empty, all within caps. App bundle 284KB (+1KB), under 370KB WARN.",
+      "agents_dispatched": ["merlin-gameplay-programmer", "merlin-tech-artist", "merlin-narrative-designer", "merlin-ai-playtester", "merlin-qa-lead"],
+      "qa_extended": {
+        "integration_audit": {
+          "minigames_in_switch": 14,
+          "ogham_panel_wired": true,
+          "ogham_effects_wired": true,
+          "game_loop_steps": 11,
+          "verdict": "PASS"
+        },
+        "error_resilience": {
+          "try_catch_guards": 3,
+          "fallback_card": true,
+          "fallback_minigame_score": 50,
+          "fallback_effects_skip": true,
+          "verdict": "PASS"
+        },
+        "white_scenes_diagnosis": {
+          "root_cause": "Plain Node root + no background ColorRect",
+          "fix_requires_editor": true,
+          "verdict": "DIAGNOSED"
+        },
+        "card_quality": {
+          "templates_checked": 166,
+          "all_3_options": true,
+          "no_duplicate_verbs": true,
+          "no_length_violations": true,
+          "verdict": "PASS"
+        }
+      }
     }
   ]
 }

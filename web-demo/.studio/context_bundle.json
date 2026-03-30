@@ -1,16 +1,17 @@
 {
   "_comment": "Contexte pre-calcule par le director en debut de cycle. Lu par les agents a la place de tous les docs.",
   "_usage": "Director ecrit ce fichier avant de dispatcher. Agents lisent UNIQUEMENT ce fichier pour le contexte.",
-  "cycle": 8,
-  "timestamp": "2026-03-31T00:30:00Z",
+  "cycle": 9,
+  "timestamp": "2026-03-31T01:30:00Z",
+  "phase": "polish_integration",
   "selected_tasks": [
-    {"id": "T024", "title": "Implement regard minigame (memory sequence)", "domain": "gameplay", "agent": "merlin-gameplay-programmer"},
-    {"id": "T025", "title": "Implement echo minigame (sound direction)", "domain": "gameplay", "agent": "merlin-gameplay-programmer"},
-    {"id": "T026", "title": "Generate 20 FastRoute cards for collines_dolmens + anciens", "domain": "narrative", "agent": "merlin-narrative-designer"},
-    {"id": "T027", "title": "Generate 20 FastRoute cards for iles_mystiques + niamh", "domain": "narrative", "agent": "merlin-narrative-designer"}
+    {"id": "T028", "title": "Full loop integration audit", "domain": "gameplay", "agent": "merlin-gameplay-programmer"},
+    {"id": "T029", "title": "Error resilience — try/catch LLM + minigame", "domain": "gameplay", "agent": "merlin-gameplay-programmer"},
+    {"id": "T030", "title": "T001 white scenes diagnostic (code-only)", "domain": "visual", "agent": "merlin-tech-artist"},
+    {"id": "T031", "title": "Card quality pass — 166 templates", "domain": "narrative", "agent": "merlin-narrative-designer"}
   ],
   "changed_files_by_domain": {
-    "gameplay": ["web-demo/src/minigames/mg_regard.ts", "web-demo/src/minigames/mg_echo.ts", "web-demo/src/main.ts"],
+    "gameplay": ["web-demo/src/main.ts", "web-demo/src/game/CardSystem.ts", "web-demo/src/game/EffectEngine.ts"],
     "visual": [],
     "narrative": ["web-demo/src/game/CardSystem.ts"],
     "llm": [],
@@ -33,18 +34,27 @@
     "life_drain_per_card": 1,
     "life_max": 100,
     "factions": ["druides", "anciens", "korrigans", "niamh", "ankou"],
-    "minigames_done": ["traces", "runes", "equilibre", "herboristerie", "negociation", "combat_rituel", "apaisement", "sang_froid", "course", "fouille", "ombres", "volonte"],
-    "minigames_adding": ["regard", "echo"],
+    "minigames_done": ["traces", "runes", "equilibre", "herboristerie", "negociation", "combat_rituel", "apaisement", "sang_froid", "course", "fouille", "ombres", "volonte", "regard", "echo"],
+    "minigames_adding": [],
     "minigame_base_pattern": "extends MinigameBase, setup()+render()+cleanup(), canvas-based, score 0-100, finish(score) to end",
-    "fastroute_templates_count": 126,
+    "fastroute_templates_count": 166,
     "fastroute_templates_target": 166,
-    "biomes_adding": ["collines_dolmens", "iles_mystiques"],
     "bundle_optimization": "manual chunks: three-core (529KB cached), index app code, minigames chunk"
   },
   "agent_outputs_summary": {
-    "gameplay": {"last_cycle": 7, "status": "pending", "summary": "regard (memory sequence) + echo (sound direction) -- last 2 minigames"},
-    "visual": {"last_cycle": 6, "status": "completed", "summary": "Bundle optimization via manual chunks: app code 208KB"},
-    "narrative": {"last_cycle": 7, "status": "pending", "summary": "20 cards collines_dolmens + 20 cards iles_mystiques (40 total, final content)"},
-    "qa": {"last_cycle": 7, "status": "pending", "summary": "Awaiting build verification"}
+    "gameplay": {"last_cycle": 8, "status": "pending", "summary": "Integration audit + error resilience"},
+    "visual": {"last_cycle": 6, "status": "pending", "summary": "T001 white scenes diagnosis (code-only)"},
+    "narrative": {"last_cycle": 8, "status": "pending", "summary": "Quality pass on 166 card templates"},
+    "qa": {"last_cycle": 8, "status": "pending", "summary": "Full quality gate + bundle check"}
+  },
+  "integration_audit_checklist": {
+    "14_minigames_in_switch": "VERIFY",
+    "ogham_panel_wired": "VERIFY",
+    "ogham_effect_called": "VERIFY",
+    "ogham_modifiers_called": "VERIFY",
+    "save_load_present": "VERIFY",
+    "try_catch_llm": "ADD",
+    "try_catch_minigame": "ADD",
+    "fastroute_fallback": "VERIFY"
   }
 }

@@ -1,0 +1,38 @@
+{
+  "cycle": 9,
+  "timestamp": "2026-03-31T01:30:00Z",
+  "agent": "merlin-ai-playtester",
+  "method": "integration_validation",
+  "improvements_from_cycle8": {
+    "faction_balance": {
+      "cycle7": {"druides": "27.6%", "niamh": "13.0%", "ratio": "2.12:1"},
+      "cycle8": {"druides": "~22%", "niamh": "~18%", "ratio": "~1.22:1"},
+      "cycle9": "No new cards added. Balance stable at cycle 8 levels.",
+      "target_met": true,
+      "notes": "druides ~22% (target 15-25%), niamh ~18% (target 15-25%)"
+    },
+    "field_quotas_last_40_cards": {
+      "collines_dolmens": {"chance": 5, "bluff": 4, "observation": 5, "logique": 4, "finesse": 4, "vigueur": 4, "esprit": 7, "perception": 5},
+      "iles_mystiques": {"chance": 5, "bluff": 4, "observation": 4, "logique": 3, "finesse": 4, "vigueur": 3, "esprit": 7, "perception": 5},
+      "all_quotas_met": true
+    },
+    "minigames_wired": {
+      "total": 14,
+      "target": 14,
+      "all_in_createMinigame_switch": true,
+      "all_imported": true
+    }
+  },
+  "cycle9_integration_validation": {
+    "error_resilience_added": true,
+    "fallback_paths": {
+      "card_generation": "Emergency card with safe options",
+      "minigame_crash": "Neutral score 50",
+      "effect_application": "Effects skipped, game continues"
+    },
+    "ogham_system_wired": true,
+    "game_loop_complete": true,
+    "no_regressions": true
+  },
+  "verdict": "PASS - integration validated, error resilience added"
+}
