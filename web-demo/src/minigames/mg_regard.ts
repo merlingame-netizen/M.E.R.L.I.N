@@ -1,0 +1,411 @@
+// =============================================================================
+// Minigame: Regard -- Memory sequence (memorize ogham symbols, reproduce order)
+// Show 4-6 symbols for 3s, hide them, player clicks in order from shuffled grid.
+// 3 rounds with increasing length (4, 5, 6). Score = correct / total * 100.
+// =============================================================================
+
+import { MinigameBase } from './MinigameBase';
+
+/** Immutable symbol cell in the grid. */
+interface GridCell {
+  readonly symbol: string;
+  readonly gridX: number;
+  readonly gridY: number;
+  readonly isTarget: boolean;
+  readonly targetIndex: number; // -1 if not a target
+}
+
+/** All ogham symbols used. */
+const SYMBOLS: readonly string[] = [
+  '\u1681', '\u1682', '\u1683', '\u1684', '\u1685',
+  '\u1686', '\u1687', '\u1688', '\u1689', '\u168A',
+  '\u168B', '\u168C', '\u168D', '\u168E', '\u168F',
+];
+
+function shuffle<T>(arr: readonly T[]): T[] {
+  const result = [...arr];
+  for (let i = result.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [result[i], result[j]] = [result[j], result[i]];
+  }
+  return result;
+}
+
+function pick<T>(arr: readonly T[]): T {
+  return arr[Math.floor(Math.random() * arr.length)];
+}
+
+export class MinigameRegard extends MinigameBase {
+  private canvas: HTMLCanvasElement | null = null;
+  private ctx: CanvasRenderingContext2D | null = null;
+  private animFrame = 0;
+
+  // Canvas dimensions
+  private readonly canvasW = 380;
+  private readonly canvasH = 360;
+
+  // Game config
+  private readonly roundLengths: readonly number[] = [4, 5, 6]; // symbols per round
+  private readonly showTime = 3.0;    // seconds to memorize
+  private readonly gridCols = 5;
+  private readonly gridRows = 3;
+  private readonly cellSize = 60;
+
+  // Game state
+  private currentRound = 0;
+  private correctTotal = 0;
+  private attemptsTotal = 0;
+  private phase: 'show' | 'recall' | 'feedback' | 'done' = 'show';
+  private showTimer = 0;
+  private feedbackTimer = 0;
+  private feedbackCorrect = false;
+  private sequence: readonly string[] = [];
+  private grid: readonly GridCell[] = [];
+  private clickedIndex = 0; // next expected index in sequence
+  private clickedCells: Set<number> = new Set(); // grid indices already clicked
+  private pulsePhase = 0;
+
+  protected setup(): void {
+    this.container.innerHTML = '';
+
+    // Title
+    const title = document.createElement('div');
+    title.textContent = 'REGARD -- Memorise la sequence';
+    title.style.cssText = 'color:#e8dcc8;font-size:20px;text-align:center;margin-bottom:4px;font-family:system-ui;';
+    this.container.appendChild(title);
+
+    // Instruction
+    const instr = document.createElement('div');
+    instr.id = 'mg-regard-instr';
+    instr.textContent = 'Observe les symboles dans l\'ordre, puis reproduis la sequence !';
+    instr.style.cssText = 'color:#cd853f;font-size:13px;text-align:center;margin-bottom:8px;font-family:system-ui;';
+    this.container.appendChild(instr);
+
+    // Round indicator
+    const roundEl = document.createElement('div');
+    roundEl.id = 'mg-regard-round';
+    roundEl.style.cssText = `width:${this.canvasW}px;height:24px;margin:0 auto 8px;color:rgba(232,220,200,0.7);font-size:14px;text-align:center;font-family:system-ui;line-height:24px;`;
+    roundEl.textContent = `Manche 1 / ${this.roundLengths.length}`;
+    this.container.appendChild(roundEl);
+
+    // Canvas
+    this.canvas = document.createElement('canvas');
+    this.canvas.width = this.canvasW;
+    this.canvas.height = this.canvasH;
+    this.canvas.style.cssText = 'border-radius:12px;background:rgba(15,15,25,0.9);border:2px solid rgba(100,80,140,0.4);cursor:pointer;display:block;margin:0 auto;touch-action:none;';
+    this.container.appendChild(this.canvas);
+    this.ctx = this.canvas.getContext('2d');
+
+    // Status
+    const statusEl = document.createElement('div');
+    statusEl.id = 'mg-regard-status';
+    statusEl.style.cssText = `width:${this.canvasW}px;min-height:24px;margin:8px auto 0;color:rgba(232,220,200,0.6);font-size:13px;text-align:center;font-family:system-ui;`;
+    statusEl.textContent = 'Memorise...';
+    this.container.appendChild(statusEl);
+
+    // Input
+    this.canvas.addEventListener('pointerdown', this.onClick);
+
+    // Reset state
+    this.currentRound = 0;
+    this.correctTotal = 0;
+    this.attemptsTotal = 0;
+    this.pulsePhase = 0;
+
+    this.prepareRound();
+  }
+
+  private prepareRound(): void {
+    if (this.currentRound >= this.roundLengths.length) {
+      this.endGame();
+      return;
+    }
+
+    const seqLen = this.roundLengths[this.currentRound];
+    // Pick unique symbols for the sequence
+    const shuffled = shuffle(SYMBOLS);
+    this.sequence = shuffled.slice(0, seqLen);
+
+    // Build grid: sequence symbols + fillers, shuffled into grid positions
+    const totalCells = this.gridCols * this.gridRows;
+    const fillerCount = totalCells - seqLen;
+    const fillerSymbols: string[] = [];
+    const usedSymbols = new Set(this.sequence);
+    for (let i = 0; i < fillerCount; i++) {
+      let s = pick(SYMBOLS);
+      // Allow duplicates in fillers but try to avoid sequence symbols
+      let attempts = 0;
+      while (usedSymbols.has(s) && attempts < 20) {
+        s = pick(SYMBOLS);
+        attempts++;
+      }
+      fillerSymbols.push(s);
+    }
+
+    // Create cells: targets first, then fillers
+    const allCells: { symbol: string; isTarget: boolean; targetIndex: number }[] = [];
+    for (let i = 0; i < seqLen; i++) {
+      allCells.push({ symbol: this.sequence[i], isTarget: true, targetIndex: i });
+    }
+    for (const fs of fillerSymbols) {
+      allCells.push({ symbol: fs, isTarget: false, targetIndex: -1 });
+    }
+
+    // Shuffle positions
+    const shuffledCells = shuffle(allCells);
+    const gridOffsetX = (this.canvasW - this.gridCols * this.cellSize) / 2;
+    const gridOffsetY = 80;
+
+    this.grid = shuffledCells.map((cell, i) => ({
+      symbol: cell.symbol,
+      gridX: gridOffsetX + (i % this.gridCols) * this.cellSize + this.cellSize / 2,
+      gridY: gridOffsetY + Math.floor(i / this.gridCols) * this.cellSize + this.cellSize / 2,
+      isTarget: cell.isTarget,
+      targetIndex: cell.targetIndex,
+    }));
+
+    this.clickedIndex = 0;
+    this.clickedCells = new Set();
+    this.phase = 'show';
+    this.showTimer = this.showTime;
+
+    const instrEl = document.getElementById('mg-regard-instr');
+    if (instrEl) instrEl.textContent = `Memorise l'ordre des ${seqLen} symboles illumines !`;
+
+    const statusEl = document.getElementById('mg-regard-status');
+    if (statusEl) statusEl.textContent = 'Memorise...';
+  }
+
+  private onClick = (e: PointerEvent): void => {
+    if (!this.canvas || this.phase !== 'recall') return;
+    const rect = this.canvas.getBoundingClientRect();
+    const mx = (e.clientX - rect.left) * (this.canvas.width / rect.width);
+    const my = (e.clientY - rect.top) * (this.canvas.height / rect.height);
+
+    // Find clicked cell
+    const clickRadius = this.cellSize / 2 - 4;
+    for (let i = 0; i < this.grid.length; i++) {
+      if (this.clickedCells.has(i)) continue;
+      const cell = this.grid[i];
+      const dx = mx - cell.gridX;
+      const dy = my - cell.gridY;
+      if (Math.sqrt(dx * dx + dy * dy) <= clickRadius) {
+        this.clickedCells.add(i);
+        this.attemptsTotal++;
+
+        if (cell.isTarget && cell.targetIndex === this.clickedIndex) {
+          // Correct
+          this.correctTotal++;
+          this.clickedIndex++;
+
+          if (this.clickedIndex >= this.sequence.length) {
+            // Round complete
+            this.phase = 'feedback';
+            this.feedbackCorrect = true;
+            this.feedbackTimer = 0.8;
+          }
+        } else {
+          // Wrong -- end round
+          this.phase = 'feedback';
+          this.feedbackCorrect = false;
+          this.feedbackTimer = 0.8;
+        }
+
+        const statusEl = document.getElementById('mg-regard-status');
+        if (statusEl) {
+          statusEl.textContent = `Correct: ${this.correctTotal} / ${this.attemptsTotal}`;
+        }
+        break;
+      }
+    }
+  };
+
+  private endGame(): void {
+    this.phase = 'done';
+    cancelAnimationFrame(this.animFrame);
+    this.canvas?.removeEventListener('pointerdown', this.onClick);
+
+    // Score: total correct sequences vs total sequence lengths
+    const totalSymbols = this.roundLengths.reduce((a, b) => a + b, 0);
+    const finalScore = (this.correctTotal / totalSymbols) * 100;
+    this.finish(finalScore);
+  }
+
+  protected render(): void {
+    if (!this.ctx || !this.canvas || this.phase === 'done') return;
+    const ctx = this.ctx;
+    const dt = 1 / 60;
+    this.pulsePhase += dt;
+
+    // Phase transitions
+    if (this.phase === 'show') {
+      this.showTimer -= dt;
+      if (this.showTimer <= 0) {
+        this.phase = 'recall';
+        const instrEl = document.getElementById('mg-regard-instr');
+        if (instrEl) instrEl.textContent = 'Clique les symboles dans le bon ordre !';
+        const statusEl = document.getElementById('mg-regard-status');
+        if (statusEl) statusEl.textContent = `Correct: ${this.correctTotal} / ${this.attemptsTotal}`;
+      }
+    }
+
+    if (this.phase === 'feedback') {
+      this.feedbackTimer -= dt;
+      if (this.feedbackTimer <= 0) {
+        this.currentRound++;
+        const roundEl = document.getElementById('mg-regard-round');
+        if (roundEl) {
+          roundEl.textContent = this.currentRound < this.roundLengths.length
+            ? `Manche ${this.currentRound + 1} / ${this.roundLengths.length}`
+            : 'Termine !';
+        }
+        if (this.currentRound >= this.roundLengths.length) {
+          this.endGame();
+          return;
+        }
+        this.prepareRound();
+      }
+    }
+
+    // Clear
+    ctx.clearRect(0, 0, this.canvasW, this.canvasH);
+
+    // Background circles
+    ctx.strokeStyle = 'rgba(100,80,140,0.06)';
+    ctx.lineWidth = 1;
+    for (let i = 0; i < 5; i++) {
+      ctx.beginPath();
+      ctx.arc(this.canvasW / 2, this.canvasH / 2 + 20, 50 + i * 35, 0, Math.PI * 2);
+      ctx.stroke();
+    }
+
+    // Show phase: display sequence with numbered order
+    if (this.phase === 'show') {
+      // Show sequence order at top
+      ctx.fillStyle = '#e8dcc8';
+      ctx.font = '14px system-ui';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'top';
+      ctx.fillText('Sequence:', this.canvasW / 2, 8);
+
+      const seqSpacing = 40;
+      const seqStartX = (this.canvasW - (this.sequence.length - 1) * seqSpacing) / 2;
+      for (let i = 0; i < this.sequence.length; i++) {
+        const sx = seqStartX + i * seqSpacing;
+        ctx.font = '24px serif';
+        ctx.fillStyle = '#cd853f';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText(this.sequence[i], sx, 46);
+
+        // Number below
+        ctx.font = '11px system-ui';
+        ctx.fillStyle = 'rgba(232,220,200,0.5)';
+        ctx.fillText(`${i + 1}`, sx, 64);
+      }
+
+      // Timer bar
+      const timePct = this.showTimer / this.showTime;
+      const barW = this.canvasW - 40;
+      ctx.fillStyle = 'rgba(255,255,255,0.1)';
+      ctx.fillRect(20, 72, barW, 3);
+      ctx.fillStyle = 'rgba(205,133,63,0.6)';
+      ctx.fillRect(20, 72, barW * timePct, 3);
+    }
+
+    // Draw grid
+    for (let i = 0; i < this.grid.length; i++) {
+      const cell = this.grid[i];
+      const isClicked = this.clickedCells.has(i);
+
+      // Cell background
+      let bgColor = 'rgba(40,35,50,0.6)';
+      if (this.phase === 'show' && cell.isTarget) {
+        // Highlight targets during show phase
+        const pulse = 0.4 + Math.sin(this.pulsePhase * 3 + cell.targetIndex * 0.5) * 0.2;
+        bgColor = `rgba(100,80,140,${pulse})`;
+      } else if (isClicked) {
+        bgColor = cell.isTarget && cell.targetIndex < this.clickedIndex
+          ? 'rgba(60,140,60,0.4)'
+          : 'rgba(140,50,50,0.4)';
+      }
+
+      ctx.fillStyle = bgColor;
+      ctx.beginPath();
+      ctx.arc(cell.gridX, cell.gridY, this.cellSize / 2 - 6, 0, Math.PI * 2);
+      ctx.fill();
+
+      // Cell border
+      ctx.strokeStyle = this.phase === 'show' && cell.isTarget
+        ? 'rgba(205,133,63,0.5)'
+        : 'rgba(100,80,140,0.2)';
+      ctx.lineWidth = 1.5;
+      ctx.stroke();
+
+      // Symbol (always visible -- player must remember ORDER not position)
+      const symAlpha = isClicked ? 0.3 : 0.8;
+      ctx.font = '22px serif';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillStyle = `rgba(232,220,200,${symAlpha})`;
+      ctx.fillText(cell.symbol, cell.gridX, cell.gridY);
+
+      // Show order number during show phase
+      if (this.phase === 'show' && cell.isTarget) {
+        ctx.font = '12px system-ui';
+        ctx.fillStyle = '#cd853f';
+        ctx.fillText(`${cell.targetIndex + 1}`, cell.gridX, cell.gridY + 18);
+      }
+    }
+
+    // Feedback overlay
+    if (this.phase === 'feedback') {
+      const fbAlpha = this.feedbackTimer / 0.8;
+      ctx.fillStyle = this.feedbackCorrect
+        ? `rgba(60,160,60,${fbAlpha * 0.15})`
+        : `rgba(180,50,50,${fbAlpha * 0.15})`;
+      ctx.fillRect(0, 0, this.canvasW, this.canvasH);
+
+      ctx.font = '28px system-ui';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillStyle = this.feedbackCorrect
+        ? `rgba(80,220,80,${fbAlpha})`
+        : `rgba(220,80,80,${fbAlpha})`;
+      ctx.fillText(
+        this.feedbackCorrect ? 'Sequence correcte !' : 'Erreur de sequence',
+        this.canvasW / 2, this.canvasH / 2
+      );
+    }
+
+    // Round progress dots
+    const dotY = this.canvasH - 16;
+    const dotSpacing = 40;
+    const dotStartX = (this.canvasW - (this.roundLengths.length - 1) * dotSpacing) / 2;
+    for (let i = 0; i < this.roundLengths.length; i++) {
+      const dx = dotStartX + i * dotSpacing;
+      ctx.beginPath();
+      ctx.arc(dx, dotY, 6, 0, Math.PI * 2);
+      if (i < this.currentRound) {
+        ctx.fillStyle = 'rgba(140,130,120,0.5)';
+      } else if (i === this.currentRound) {
+        const cp = 0.5 + Math.sin(this.pulsePhase * 4) * 0.3;
+        ctx.fillStyle = `rgba(200,170,100,${cp})`;
+      } else {
+        ctx.fillStyle = 'rgba(80,70,60,0.3)';
+      }
+      ctx.fill();
+      ctx.strokeStyle = 'rgba(200,170,100,0.2)';
+      ctx.lineWidth = 1;
+      ctx.stroke();
+    }
+
+    this.animFrame = requestAnimationFrame(() => this.render());
+  }
+
+  protected cleanup(): void {
+    cancelAnimationFrame(this.animFrame);
+    this.canvas?.removeEventListener('pointerdown', this.onClick);
+    super.cleanup();
+  }
+}

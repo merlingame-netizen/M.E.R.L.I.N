@@ -1077,6 +1077,340 @@ const FASTROUTE_TEMPLATES: readonly {
       { verb: 'proteger', text: 'Tu scelles la porte avec un rituel de gui — les mondes doivent rester separes.', effects: ['HEAL_LIFE:7', 'ADD_REPUTATION:druides:5'] },
     ],
   },
+  // ═══════════════════════════════════════════════════════════════════════════
+  // BIOME 8: collines_dolmens (20 cards) — Cycle 8
+  // Themes: passage tombs, ancestor visions, burial mound guardians, land rights,
+  // territorial oaths, hill fort ruins, hilltop fires. Faction: balanced, druides MAX 4.
+  // Field quotas: chance>=4, bluff>=3, obs>=3, logique>=3, finesse>=3, vigueur>=3, esprit<=8, perception>=3
+  // Effect caps: rep<=10, heal<=7, dmg<=5
+  // ═══════════════════════════════════════════════════════════════════════════
+  {
+    narrative: 'Le dolmen se dresse contre le ciel d\'hiver, ses trois pierres massives formant un portail vers le passe. Une lumiere pale filtre entre les megalithes, revelant des gravures en spirale qui semblent tourner lentement.',
+    options: [
+      { verb: 'examiner', text: 'Tu etudies les gravures spiralees, cherchant leur signification.', effects: ['ADD_ANAM:5', 'ADD_REPUTATION:anciens:8'] },
+      { verb: 'tenter sa chance', text: 'Tu poses ta main sur la pierre centrale, esperant une vision.', effects: ['HEAL_LIFE:7', 'ADD_REPUTATION:anciens:5'] },
+      { verb: 'se faufiler', text: 'Tu te glisses entre les megalithes pour explorer l\'autre cote.', effects: ['ADD_BIOME_CURRENCY:6', 'DAMAGE_LIFE:3'] },
+    ],
+  },
+  {
+    narrative: 'Au sommet de la colline, un tumulus s\'ouvre sur un couloir obscur. Des os graves de runes tapissent les murs. Un gardien spectral, guerrier d\'un autre age, bloque le passage, sa lance de lumiere pointee vers toi.',
+    options: [
+      { verb: 'combattre', text: 'Tu fais face au gardien, montrant ta valeur au combat.', effects: ['ADD_REPUTATION:ankou:9', 'DAMAGE_LIFE:5'] },
+      { verb: 'parler', text: 'Tu salues le guerrier dans la langue ancienne.', effects: ['ADD_REPUTATION:anciens:7', 'HEAL_LIFE:4'] },
+      { verb: 'observer', text: 'Tu etudies ses mouvements, cherchant une faille dans sa garde.', effects: ['ADD_ANAM:4', 'ADD_REPUTATION:korrigans:6'] },
+    ],
+  },
+  {
+    narrative: 'Un feu brule au sommet du fort en ruine. Des silhouettes dansent autour des flammes, ni vivantes ni mortes. Elles t\'invitent a les rejoindre d\'un geste lent, leurs visages illumines par les braises.',
+    options: [
+      { verb: 'deviner', text: 'Tu tentes de comprendre le sens de leur danse rituelle.', effects: ['ADD_REPUTATION:druides:8', 'ADD_ANAM:3'] },
+      { verb: 'negocier', text: 'Tu proposes un echange : ta chaleur contre leur savoir.', effects: ['ADD_BIOME_CURRENCY:7', 'ADD_REPUTATION:ankou:5'] },
+      { verb: 'fuir', text: 'La scene est trop etrange — tu redescends la colline.', effects: ['DAMAGE_LIFE:2', 'ADD_REPUTATION:korrigans:4'] },
+    ],
+  },
+  {
+    narrative: 'Un cairn de pierres blanches marque la frontiere entre deux territoires anciens. Des serments graves dans la roche promettent malheur a qui franchit sans autorisation. Un vent glacial siffle entre les pierres.',
+    options: [
+      { verb: 'dechiffrer', text: 'Tu dechiffres les serments graves, apprenant l\'histoire du lieu.', effects: ['ADD_ANAM:6', 'ADD_REPUTATION:anciens:7'] },
+      { verb: 'escalader', text: 'Tu franchis le cairn en grimpant par-dessus.', effects: ['ADD_BIOME_CURRENCY:8', 'DAMAGE_LIFE:4'] },
+      { verb: 'amadouer', text: 'Tu deposes une offrande au pied du cairn pour apaiser les esprits.', effects: ['HEAL_LIFE:5', 'ADD_REPUTATION:niamh:6'] },
+    ],
+  },
+  {
+    narrative: 'Une tombe a couloir s\'ouvre a l\'aube, la lumiere du soleil penetrant jusqu\'a la chambre funeraire. Les murs brillent de cristaux incrustes. Au centre, un crane humain orne de feuilles d\'or te fixe de ses orbites vides.',
+    options: [
+      { verb: 'memoriser', text: 'Tu memorises la disposition des cristaux et leur alignement solaire.', effects: ['ADD_REPUTATION:druides:7', 'ADD_ANAM:5'] },
+      { verb: 'fouiller a l\'aveugle', text: 'Tu cherches des tresors parmi les offrandes funeraires.', effects: ['ADD_BIOME_CURRENCY:9', 'DAMAGE_LIFE:5'] },
+      { verb: 'mediter', text: 'Tu t\'assieds face au crane et ecoutes les morts.', effects: ['HEAL_LIFE:6', 'ADD_REPUTATION:ankou:8'] },
+    ],
+  },
+  {
+    narrative: 'Des pierres dressees forment un cercle au sommet de la colline. Chacune porte le visage sculpte d\'un ancetre different. L\'une d\'elles pleure des larmes de resine ambre qui durcissent en tombant.',
+    options: [
+      { verb: 'pister', text: 'Tu suis la trace de resine jusqu\'a sa source dans la pierre.', effects: ['ADD_REPUTATION:korrigans:8', 'ADD_BIOME_CURRENCY:5'] },
+      { verb: 'convaincre', text: 'Tu parles a la pierre qui pleure, promettant de porter son message.', effects: ['ADD_REPUTATION:niamh:9', 'HEAL_LIFE:3'] },
+      { verb: 'analyser', text: 'Tu analyses la composition de la resine, cherchant ses proprietes.', effects: ['ADD_ANAM:6', 'ADD_REPUTATION:druides:5'] },
+    ],
+  },
+  {
+    narrative: 'Un berger spectral garde un troupeau de moutons blancs sur les pentes. Ses betes broutent l\'herbe rase, mais ne laissent aucune trace. Il leve la tete a ton approche et designe un chemin qui mene a un village en ruine.',
+    options: [
+      { verb: 'suivre', text: 'Tu suis le chemin indique vers le village abandonne.', effects: ['ADD_BIOME_CURRENCY:6', 'ADD_REPUTATION:anciens:7'] },
+      { verb: 'charmer', text: 'Tu essaies de gagner la confiance du berger fantome.', effects: ['ADD_REPUTATION:niamh:8', 'ADD_ANAM:3'] },
+      { verb: 'courir', text: 'Tu traverses le troupeau en courant, bousculant les moutons spectres.', effects: ['DAMAGE_LIFE:4', 'ADD_REPUTATION:korrigans:7'] },
+    ],
+  },
+  {
+    narrative: 'Une source sacree jaillit du flanc de la colline, son eau si claire qu\'elle semble lumineuse. Des guerriers d\'autrefois venaient y tremper leurs lames avant la bataille. L\'eau murmure des noms oublies.',
+    options: [
+      { verb: 'ecouter', text: 'Tu tends l\'oreille pour capter les noms murmures par la source.', effects: ['ADD_REPUTATION:anciens:10', 'ADD_ANAM:4'] },
+      { verb: 'chercher au hasard', text: 'Tu plonges la main dans l\'eau, esperant toucher une lame ancienne.', effects: ['ADD_BIOME_CURRENCY:8', 'DAMAGE_LIFE:3'] },
+      { verb: 'apaiser', text: 'Tu bois l\'eau sacree et sens une force ancienne te guerir.', effects: ['HEAL_LIFE:7', 'ADD_REPUTATION:niamh:4'] },
+    ],
+  },
+  {
+    narrative: 'Un tertre funeraire s\'est effondre, revelant une chambre ornee de fresques. Les peintures montrent un roi celte recevant un ogham des mains d\'un druide. Les couleurs sont encore vives apres des millenaires.',
+    options: [
+      { verb: 'inspecter', text: 'Tu inspectes chaque fresque, notant les details du rituel.', effects: ['ADD_REPUTATION:druides:9', 'ADD_ANAM:5'] },
+      { verb: 'contourner', text: 'Tu contournes le tertre effondre pour chercher d\'autres entrees.', effects: ['ADD_BIOME_CURRENCY:5', 'ADD_REPUTATION:korrigans:6'] },
+      { verb: 'mentir', text: 'Tu pretends etre l\'heritier du roi pour activer les fresques.', effects: ['DAMAGE_LIFE:3', 'ADD_REPUTATION:ankou:8'] },
+    ],
+  },
+  {
+    narrative: 'Deux collines jumelles encadrent une vallee etroite. Au fond, un dolmen massif porte des chaines rouillees. On dit qu\'un serment brise peut etre renouvele ici, a condition d\'y laisser quelque chose de precieux.',
+    options: [
+      { verb: 'resister physiquement', text: 'Tu tires sur les chaines pour liberer ce qui est enchaine.', effects: ['ADD_REPUTATION:ankou:7', 'DAMAGE_LIFE:5'] },
+      { verb: 'marchander', text: 'Tu negocies avec l\'esprit du dolmen — un souvenir contre un serment.', effects: ['ADD_REPUTATION:korrigans:8', 'ADD_BIOME_CURRENCY:4'] },
+      { verb: 'sentir', text: 'Tu fais confiance a ton instinct pour comprendre ce qui est enchaine.', effects: ['HEAL_LIFE:5', 'ADD_REPUTATION:anciens:7'] },
+    ],
+  },
+  {
+    narrative: 'Un cercle de menhirs entoure un chene mort. Ses branches nues pointent vers le ciel comme des doigts accuses. A sa base, une cavite contient un nid de corbeau avec trois oeufs d\'argent.',
+    options: [
+      { verb: 'cueillir', text: 'Tu prends un oeuf d\'argent, fascine par son eclat froid.', effects: ['ADD_BIOME_CURRENCY:9', 'ADD_REPUTATION:ankou:5'] },
+      { verb: 'decoder', text: 'Tu cherches la signification du chene mort au milieu des menhirs.', effects: ['ADD_ANAM:5', 'ADD_REPUTATION:druides:6'] },
+      { verb: 'esquiver', text: 'Tu evites le chene et longes les menhirs, cherchant un autre passage.', effects: ['HEAL_LIFE:4', 'ADD_REPUTATION:korrigans:5'] },
+    ],
+  },
+  {
+    narrative: 'Une procession de torches descend la colline dans la nuit. Les porteurs sont des femmes voilees qui chantent un threne funebre. Elles deposent des offrandes sur chaque pierre dressee qu\'elles croisent.',
+    options: [
+      { verb: 'flairer', text: 'Tu humes l\'encens des torches, reconnaissant des plantes rituelles.', effects: ['ADD_REPUTATION:niamh:7', 'HEAL_LIFE:5'] },
+      { verb: 'convaincre', text: 'Tu rejoins la procession et offres tes services aux pleureuses.', effects: ['ADD_REPUTATION:anciens:8', 'ADD_ANAM:4'] },
+      { verb: 'se cacher', text: 'Tu te caches derriere un menhir pour observer sans etre vu.', effects: ['ADD_BIOME_CURRENCY:5', 'ADD_REPUTATION:korrigans:6'] },
+    ],
+  },
+  {
+    narrative: 'Un vieux guerrier est assis devant l\'entree d\'un tumulus, son epee plantee dans le sol. Il te dit qu\'il attend la releve depuis trois cents ans. "Prends ma place ou aide-moi a partir," murmure-t-il.',
+    options: [
+      { verb: 'accepter', text: 'Tu prends l\'epee et acceptes la garde du tumulus.', effects: ['ADD_REPUTATION:anciens:10', 'DAMAGE_LIFE:4'] },
+      { verb: 'tenter sa chance', text: 'Tu proposes un jeu de des — le perdant reste.', effects: ['ADD_BIOME_CURRENCY:7', 'ADD_REPUTATION:korrigans:6'] },
+      { verb: 'calmer', text: 'Tu parles doucement au guerrier, l\'aidant a trouver la paix.', effects: ['HEAL_LIFE:6', 'ADD_REPUTATION:ankou:7'] },
+    ],
+  },
+  {
+    narrative: 'La brume matinale revele un champ de pierres tombales, chacune gravee d\'un arbre different. Un if, un chene, un bouleau... Les arbres graves semblent pousser hors de la pierre, formant une foret minerale.',
+    options: [
+      { verb: 'fixer', text: 'Tu fixes intensement les gravures, cherchant le motif cache.', effects: ['ADD_REPUTATION:druides:7', 'ADD_ANAM:6'] },
+      { verb: 'forcer', text: 'Tu deracines une pierre tombale pour voir ce qu\'il y a dessous.', effects: ['ADD_BIOME_CURRENCY:8', 'DAMAGE_LIFE:5'] },
+      { verb: 'attendre', text: 'Tu attends que la brume se dissipe pour mieux voir.', effects: ['HEAL_LIFE:5', 'ADD_REPUTATION:niamh:6'] },
+    ],
+  },
+  {
+    narrative: 'Un pont de dalles traverse un ravin entre deux collines. Chaque dalle porte un ogham different. On dit que seul celui qui marche sur les bons oghams dans le bon ordre atteindra l\'autre cote.',
+    options: [
+      { verb: 'resoudre', text: 'Tu etudies la sequence d\'oghams et cherches la logique.', effects: ['ADD_ANAM:7', 'ADD_REPUTATION:anciens:6'] },
+      { verb: 'deviner', text: 'Tu avances en choisissant les dalles au hasard.', effects: ['ADD_BIOME_CURRENCY:6', 'DAMAGE_LIFE:4'] },
+      { verb: 'tendre l\'oreille', text: 'Tu ecoutes le vent qui siffle entre les dalles — il chante la sequence.', effects: ['HEAL_LIFE:4', 'ADD_REPUTATION:niamh:8'] },
+    ],
+  },
+  {
+    narrative: 'Un autel de sacrifice se dresse au carrefour de trois sentiers. Du sang seche forme des runes sur sa surface. Un loup blanc dort a ses pieds, sa fourrure tachetee de rouille ancienne.',
+    options: [
+      { verb: 'scruter', text: 'Tu dechiffres les runes de sang seche sur l\'autel.', effects: ['ADD_REPUTATION:ankou:9', 'ADD_ANAM:4'] },
+      { verb: 'se faufiler', text: 'Tu passes devant le loup endormi sans le reveiller.', effects: ['ADD_BIOME_CURRENCY:6', 'ADD_REPUTATION:korrigans:5'] },
+      { verb: 'apaiser', text: 'Tu caresses doucement le loup blanc, qui ouvre un oeil d\'or.', effects: ['HEAL_LIFE:6', 'ADD_REPUTATION:niamh:7'] },
+    ],
+  },
+  {
+    narrative: 'Un puits profond perce le sommet de la colline. Des echos montent des profondeurs — des voix qui repetent tes pensees les plus secretes. Un seau en bronze pend a une chaine, couvert de vert-de-gris.',
+    options: [
+      { verb: 'ecouter', text: 'Tu ecoutes les echos, essayant de demeler tes pensees des leurs.', effects: ['ADD_REPUTATION:niamh:8', 'ADD_ANAM:5'] },
+      { verb: 'fouiller a l\'aveugle', text: 'Tu descends le seau pour voir ce que le puits contient.', effects: ['ADD_BIOME_CURRENCY:7', 'DAMAGE_LIFE:3'] },
+      { verb: 'endurer', text: 'Tu resistes aux voix, gardant tes secrets pour toi.', effects: ['HEAL_LIFE:5', 'ADD_REPUTATION:anciens:6'] },
+    ],
+  },
+  {
+    narrative: 'Des ruines de fortification couronnent la colline, leurs murs effondres formant un labyrinthe de pierre. Au centre, un feu de tourbe brule sans combustible visible, projetant des ombres dansantes sur les murs.',
+    options: [
+      { verb: 'interpreter', text: 'Tu lis l\'avenir dans les ombres projetees par le feu.', effects: ['ADD_REPUTATION:druides:8', 'ADD_ANAM:4'] },
+      { verb: 'traverser', text: 'Tu traverses le labyrinthe de ruines vers le feu central.', effects: ['ADD_BIOME_CURRENCY:5', 'DAMAGE_LIFE:4'] },
+      { verb: 'charmer', text: 'Tu chantes une melodie pour accompagner les ombres dansantes.', effects: ['HEAL_LIFE:5', 'ADD_REPUTATION:korrigans:7'] },
+    ],
+  },
+  {
+    narrative: 'Un dolmen penche dangereusement, sa pierre de couverture glissant lentement au fil des siecles. En dessous, un espace sacre abrite des inscriptions que personne n\'a lues depuis des generations.',
+    options: [
+      { verb: 'etudier', text: 'Tu rampes sous le dolmen pour etudier les inscriptions cachees.', effects: ['ADD_ANAM:6', 'ADD_REPUTATION:anciens:8'] },
+      { verb: 'resister physiquement', text: 'Tu tentes de stabiliser la pierre de couverture avec des cales.', effects: ['ADD_REPUTATION:korrigans:6', 'DAMAGE_LIFE:5'] },
+      { verb: 'chercher au hasard', text: 'Tu fouilles autour du dolmen, esperant trouver des artefacts tombes.', effects: ['ADD_BIOME_CURRENCY:8', 'HEAL_LIFE:3'] },
+    ],
+  },
+  {
+    narrative: 'La derniere colline de la chaine est la plus haute. A son sommet, un menhir solitaire pointe vers l\'etoile polaire. Des generations de voyageurs ont depose des cailloux a sa base, formant un monticule de gratitude.',
+    options: [
+      { verb: 'mediter', text: 'Tu ajoutes ta pierre et medites sur ton voyage.', effects: ['HEAL_LIFE:7', 'ADD_REPUTATION:anciens:6'] },
+      { verb: 'mentir', text: 'Tu pretends avoir accompli un exploit pour impressionner les esprits.', effects: ['ADD_BIOME_CURRENCY:7', 'ADD_REPUTATION:korrigans:5'] },
+      { verb: 'pister', text: 'Tu suis l\'alignement du menhir vers d\'autres sites sacres.', effects: ['ADD_ANAM:5', 'ADD_REPUTATION:niamh:7'] },
+    ],
+  },
+  // ═══════════════════════════════════════════════════════════════════════════
+  // BIOME 9: iles_mystiques (20 cards) — Cycle 8
+  // Themes: Avalon mists, faery ferrymen, time-lost islands, enchanted sea paths,
+  // selkie kingdoms, glastonbury thorn, sacred apple orchards. Faction: niamh MIN 6.
+  // Field quotas: chance>=4, bluff>=3, obs>=3, logique>=3, finesse>=3, vigueur>=3, esprit<=8, perception>=3
+  // Effect caps: rep<=10, heal<=7, dmg<=5
+  // ═══════════════════════════════════════════════════════════════════════════
+  {
+    narrative: 'La brume se leve sur les eaux immobiles, revelant une ile qui n\'existait pas hier. Ses contours changent a chaque battement de coeur, comme un reve qui hesite a prendre forme. Un passeur attend sur la rive, sa barque faite d\'os de baleine.',
+    options: [
+      { verb: 'parler', text: 'Tu demandes au passeur le prix de la traversee.', effects: ['ADD_REPUTATION:niamh:9', 'ADD_BIOME_CURRENCY:4'] },
+      { verb: 'deviner', text: 'Tu tentes de deviner le nom de l\'ile avant d\'embarquer.', effects: ['ADD_ANAM:6', 'ADD_REPUTATION:anciens:5'] },
+      { verb: 'courir', text: 'Tu sautes dans la barque sans attendre la permission.', effects: ['DAMAGE_LIFE:4', 'ADD_REPUTATION:korrigans:7'] },
+    ],
+  },
+  {
+    narrative: 'Un verger de pommiers d\'argent s\'etend sur l\'ile, leurs fruits brillant comme des lunes miniatures. Chaque pomme contient un souvenir oublie. Une femme aux yeux d\'emeraude cueille les fruits avec une reverence infinie.',
+    options: [
+      { verb: 'observer', text: 'Tu observes la femme cueillir, apprenant ses gestes rituels.', effects: ['ADD_REPUTATION:niamh:10', 'ADD_ANAM:3'] },
+      { verb: 'cueillir', text: 'Tu cueilles une pomme d\'argent et la croques.', effects: ['HEAL_LIFE:7', 'ADD_REPUTATION:druides:4'] },
+      { verb: 'marchander', text: 'Tu proposes un echange — un souvenir de ton monde contre une pomme.', effects: ['ADD_BIOME_CURRENCY:8', 'ADD_REPUTATION:korrigans:5'] },
+    ],
+  },
+  {
+    narrative: 'Le temps s\'est arrete sur cette ile. Les vagues sont figees en mid-air, les oiseaux suspendus dans le ciel. Seul toi peux bouger. Au centre de l\'ile, un sablier enorme mesure un temps qui n\'est pas le tien.',
+    options: [
+      { verb: 'analyser', text: 'Tu etudies le sablier, cherchant a comprendre son mecanisme.', effects: ['ADD_ANAM:7', 'ADD_REPUTATION:anciens:6'] },
+      { verb: 'tenter sa chance', text: 'Tu retournes le sablier pour voir ce qui se passe.', effects: ['ADD_BIOME_CURRENCY:7', 'DAMAGE_LIFE:5'] },
+      { verb: 'calmer', text: 'Tu acceptes la stase et laisses le temps te traverser.', effects: ['HEAL_LIFE:6', 'ADD_REPUTATION:niamh:7'] },
+    ],
+  },
+  {
+    narrative: 'Des selkies nagent autour de l\'ile, leurs peaux de phoque empilees sur les rochers. L\'une d\'elles, sous forme humaine, te demande si tu as vu sa peau — elle a ete volee par un pecheur il y a cent ans.',
+    options: [
+      { verb: 'pister', text: 'Tu suis les indices pour retrouver la peau volee.', effects: ['ADD_REPUTATION:niamh:8', 'ADD_BIOME_CURRENCY:5'] },
+      { verb: 'mentir', text: 'Tu pretends savoir ou est la peau pour gagner sa confiance.', effects: ['ADD_REPUTATION:korrigans:7', 'DAMAGE_LIFE:3'] },
+      { verb: 'resister mentalement', text: 'Tu resistes a l\'envie de voler une peau toi-meme.', effects: ['HEAL_LIFE:5', 'ADD_REPUTATION:anciens:7'] },
+    ],
+  },
+  {
+    narrative: 'Un phare abandonne se dresse sur le point le plus haut de l\'ile. Sa lumiere tourne encore, mais elle n\'eclaire rien de visible — sauf, parfois, d\'autres iles au loin qui disparaissent quand on cligne des yeux.',
+    options: [
+      { verb: 'fixer', text: 'Tu fixes le faisceau lumineux, essayant de ne pas cligner.', effects: ['ADD_REPUTATION:niamh:7', 'ADD_ANAM:5'] },
+      { verb: 'escalader', text: 'Tu grimpes au sommet du phare pour avoir une meilleure vue.', effects: ['ADD_BIOME_CURRENCY:6', 'DAMAGE_LIFE:4'] },
+      { verb: 'convaincre', text: 'Tu parles au phare, le suppliant de reveler ses secrets.', effects: ['HEAL_LIFE:4', 'ADD_REPUTATION:druides:7'] },
+    ],
+  },
+  {
+    narrative: 'La mer entre les iles brille d\'une lumiere sous-marine. En regardant sous l\'eau, tu vois un sentier de pierres rondes qui mene d\'ile en ile, juste sous la surface. Des poissons lumineux en marquent le chemin.',
+    options: [
+      { verb: 'traverser', text: 'Tu marches sur le sentier immerse, l\'eau te montant aux chevilles.', effects: ['ADD_REPUTATION:niamh:9', 'DAMAGE_LIFE:3'] },
+      { verb: 'sentir', text: 'Tu plonges ta main dans l\'eau pour sentir le courant te guider.', effects: ['ADD_ANAM:5', 'ADD_REPUTATION:anciens:6'] },
+      { verb: 'fouiller a l\'aveugle', text: 'Tu cherches des pierres precieuses le long du sentier submerge.', effects: ['ADD_BIOME_CURRENCY:8', 'ADD_REPUTATION:korrigans:4'] },
+    ],
+  },
+  {
+    narrative: 'Un arbre epineux pousse seul au centre de l\'ile, ses branches couvertes de rubans de tissu noues par des pelerins d\'un autre temps. Chaque ruban porte un voeu ecrit dans une langue que tu ne connais pas.',
+    options: [
+      { verb: 'dechiffrer', text: 'Tu essaies de dechiffrer les voeux ecrits sur les rubans.', effects: ['ADD_ANAM:6', 'ADD_REPUTATION:druides:7'] },
+      { verb: 'tenter sa chance', text: 'Tu noues ton propre ruban avec un voeu muet.', effects: ['HEAL_LIFE:7', 'ADD_REPUTATION:niamh:5'] },
+      { verb: 'se cacher', text: 'Tu te blottis sous l\'arbre pour te reposer a l\'abri du vent.', effects: ['ADD_BIOME_CURRENCY:5', 'ADD_REPUTATION:korrigans:6'] },
+    ],
+  },
+  {
+    narrative: 'Des colonnes de basalte emergent de la mer, formant une chaussee des geants en miniature. Au bout, une grotte marine s\'ouvre, tapissee de cristaux qui vibrent avec la maree. Un chant doux emane des profondeurs.',
+    options: [
+      { verb: 'ecouter', text: 'Tu ecoutes le chant des cristaux, laissant la melodie te guider.', effects: ['ADD_REPUTATION:niamh:8', 'HEAL_LIFE:5'] },
+      { verb: 'examiner', text: 'Tu examines les cristaux, notant leurs frequences de vibration.', effects: ['ADD_ANAM:5', 'ADD_REPUTATION:druides:6'] },
+      { verb: 'forcer', text: 'Tu detaches un cristal vibrant pour l\'emporter.', effects: ['ADD_BIOME_CURRENCY:9', 'DAMAGE_LIFE:5'] },
+    ],
+  },
+  {
+    narrative: 'Un banc de brume epaisse entoure l\'ile suivante. En y penetrant, tu perds toute notion du temps et de l\'espace. Des visages familiers apparaissent dans la brume — des gens que tu n\'as pas encore rencontres.',
+    options: [
+      { verb: 'se concentrer', text: 'Tu te concentres sur ta destination, refusant les illusions.', effects: ['ADD_REPUTATION:anciens:8', 'HEAL_LIFE:4'] },
+      { verb: 'charmer', text: 'Tu engages la conversation avec les visages de brume.', effects: ['ADD_REPUTATION:niamh:7', 'ADD_ANAM:4'] },
+      { verb: 'contourner', text: 'Tu longes le bord de la brume, cherchant un passage plus clair.', effects: ['ADD_BIOME_CURRENCY:6', 'ADD_REPUTATION:korrigans:5'] },
+    ],
+  },
+  {
+    narrative: 'Une tour de verre se dresse sur un ilot minuscule, refletant tout sauf celui qui la regarde. A l\'interieur, des miroirs sans fin se font face. On dit que celui qui trouve son reflet ici decouvre sa veritable nature.',
+    options: [
+      { verb: 'scruter', text: 'Tu cherches ton reflet dans les miroirs sans fin.', effects: ['ADD_REPUTATION:niamh:9', 'ADD_ANAM:5'] },
+      { verb: 'resoudre', text: 'Tu analyses l\'agencement des miroirs comme un probleme geometrique.', effects: ['ADD_REPUTATION:anciens:7', 'ADD_BIOME_CURRENCY:4'] },
+      { verb: 'combattre', text: 'Tu brises un miroir de frustration.', effects: ['DAMAGE_LIFE:5', 'ADD_REPUTATION:ankou:8'] },
+    ],
+  },
+  {
+    narrative: 'Des chevaux blancs galopent sur les vagues autour de l\'ile, leurs crinieres d\'ecume se melant aux embruns. L\'un d\'eux s\'arrete devant toi et baisse la tete, t\'invitant a monter.',
+    options: [
+      { verb: 'tenter sa chance', text: 'Tu montes sur le cheval marin, t\'accrochant a sa criniere.', effects: ['ADD_REPUTATION:niamh:10', 'DAMAGE_LIFE:4'] },
+      { verb: 'observer', text: 'Tu observes les chevaux, cherchant un signe dans leur course.', effects: ['ADD_ANAM:4', 'ADD_REPUTATION:anciens:7'] },
+      { verb: 'amadouer', text: 'Tu offres de l\'herbe sacree au cheval pour gagner sa confiance.', effects: ['HEAL_LIFE:5', 'ADD_REPUTATION:druides:6'] },
+    ],
+  },
+  {
+    narrative: 'Un jardin sous-marin est visible a travers l\'eau cristalline. Des algues dorees forment des allees, des coraux sculptent des arches. Des lumieres clignotent dans les profondeurs — des ames en transit vers l\'Autre Monde.',
+    options: [
+      { verb: 'flairer', text: 'Tu humes l\'air sale, percevant une fragrance surnaturelle.', effects: ['ADD_REPUTATION:niamh:7', 'HEAL_LIFE:5'] },
+      { verb: 'decoder', text: 'Tu essaies de comprendre le code des lumieres clignotantes.', effects: ['ADD_ANAM:6', 'ADD_REPUTATION:ankou:6'] },
+      { verb: 'esquiver', text: 'Tu evites les zones lumineuses, craignant d\'etre attire vers le fond.', effects: ['ADD_BIOME_CURRENCY:6', 'ADD_REPUTATION:korrigans:5'] },
+    ],
+  },
+  {
+    narrative: 'Morgane la fay apparait sur la plage, vetue de brume et de lumiere de lune. Elle tient un calice d\'or rempli d\'un liquide qui change de couleur a chaque seconde. "Bois et oublie, ou refuse et souviens-toi," dit-elle.',
+    options: [
+      { verb: 'accepter', text: 'Tu bois du calice, laissant les couleurs envahir ta vision.', effects: ['HEAL_LIFE:7', 'ADD_REPUTATION:niamh:8'] },
+      { verb: 'refuser', text: 'Tu refuses poliment, preferant garder tes souvenirs.', effects: ['ADD_REPUTATION:anciens:8', 'ADD_ANAM:5'] },
+      { verb: 'negocier', text: 'Tu proposes de boire la moitie — oublier un peu, se souvenir un peu.', effects: ['ADD_BIOME_CURRENCY:7', 'ADD_REPUTATION:korrigans:6'] },
+    ],
+  },
+  {
+    narrative: 'Un cercle de pierres immergees entoure un ilot minuscule. A maree basse, les pierres emergent et forment un portail. De l\'autre cote, tu apercois Tir na nOg — la Terre de l\'Eternelle Jeunesse.',
+    options: [
+      { verb: 'memoriser', text: 'Tu memorises la configuration des pierres pour revenir un jour.', effects: ['ADD_ANAM:7', 'ADD_REPUTATION:druides:5'] },
+      { verb: 'se faufiler', text: 'Tu te faufiles entre les pierres avant que la maree ne remonte.', effects: ['ADD_REPUTATION:niamh:9', 'DAMAGE_LIFE:4'] },
+      { verb: 'endurer', text: 'Tu restes sur l\'ilot, attendant que le portail se revele completement.', effects: ['HEAL_LIFE:5', 'ADD_REPUTATION:anciens:7'] },
+    ],
+  },
+  {
+    narrative: 'Des oiseaux translucides volent en formation au-dessus de l\'ile, leurs ailes projetant des arcs-en-ciel sur le sol. Ils chantent une melodie qui raconte l\'histoire de toutes les iles perdues.',
+    options: [
+      { verb: 'tendre l\'oreille', text: 'Tu ecoutes leur chant, absorbant l\'histoire des iles perdues.', effects: ['ADD_REPUTATION:niamh:8', 'ADD_ANAM:5'] },
+      { verb: 'deviner', text: 'Tu essaies de predire la prochaine formation des oiseaux.', effects: ['ADD_BIOME_CURRENCY:6', 'ADD_REPUTATION:korrigans:6'] },
+      { verb: 'resister physiquement', text: 'Tu cours avec les oiseaux, essayant de suivre leur rythme.', effects: ['DAMAGE_LIFE:3', 'ADD_REPUTATION:anciens:7'] },
+    ],
+  },
+  {
+    narrative: 'Une fontaine de corail rose jaillit au centre de l\'ile, son eau montant en spirale avant de se disperser en pluie fine. Chaque goutte contient une minuscule etoile qui s\'eteint en touchant le sol.',
+    options: [
+      { verb: 'se concentrer', text: 'Tu te tiens sous la pluie d\'etoiles, absorbant leur lumiere.', effects: ['HEAL_LIFE:6', 'ADD_REPUTATION:niamh:7'] },
+      { verb: 'chercher au hasard', text: 'Tu essaies d\'attraper les etoiles avant qu\'elles ne s\'eteignent.', effects: ['ADD_BIOME_CURRENCY:7', 'ADD_REPUTATION:druides:5'] },
+      { verb: 'fuir', text: 'La beaute est trop intense — tu t\'eloignes, aveugle.', effects: ['DAMAGE_LIFE:3', 'ADD_REPUTATION:ankou:6'] },
+    ],
+  },
+  {
+    narrative: 'Un navire fantome est echoue sur la greve, ses voiles de brume se gonflant d\'un vent invisible. A son bord, des marins squelettiques jouent aux des avec des pierres runiques. Le capitaine t\'invite a jouer.',
+    options: [
+      { verb: 'marchander', text: 'Tu negocies les regles du jeu avant de t\'asseoir.', effects: ['ADD_REPUTATION:korrigans:8', 'ADD_BIOME_CURRENCY:5'] },
+      { verb: 'inspecter', text: 'Tu examines les des runiques, cherchant des des pipes.', effects: ['ADD_ANAM:5', 'ADD_REPUTATION:ankou:7'] },
+      { verb: 'apaiser', text: 'Tu offres un toast aux marins disparus avant de jouer.', effects: ['HEAL_LIFE:5', 'ADD_REPUTATION:niamh:6'] },
+    ],
+  },
+  {
+    narrative: 'L\'ile la plus lointaine est a peine visible, juste une lueur doree a l\'horizon. Le passeur dit que seuls ceux qui ont le coeur pur peuvent la rejoindre. La brume s\'epaissit, et tu dois choisir ta voie.',
+    options: [
+      { verb: 'suivre', text: 'Tu suis la lueur doree, marchant sur l\'eau sans y penser.', effects: ['ADD_REPUTATION:niamh:10', 'DAMAGE_LIFE:3'] },
+      { verb: 'analyser', text: 'Tu calcules la distance et la direction optimale.', effects: ['ADD_ANAM:6', 'ADD_REPUTATION:druides:6'] },
+      { verb: 'attendre', text: 'Tu attends que la brume se dissipe pour y voir plus clair.', effects: ['HEAL_LIFE:6', 'ADD_REPUTATION:anciens:5'] },
+    ],
+  },
+  {
+    narrative: 'Un phoque geant te regarde depuis les rochers, ses yeux noirs refletant des galaxies. Il ouvre la bouche et parle d\'une voix humaine : "Je suis le gardien du passage. Que cherches-tu de l\'autre cote ?"',
+    options: [
+      { verb: 'parler', text: 'Tu reponds honnetement, partageant ta quete avec le gardien.', effects: ['ADD_REPUTATION:niamh:9', 'HEAL_LIFE:5'] },
+      { verb: 'mentir', text: 'Tu inventes une raison noble pour cacher tes vraies intentions.', effects: ['ADD_BIOME_CURRENCY:7', 'DAMAGE_LIFE:4'] },
+      { verb: 'observer', text: 'Tu observes les galaxies dans ses yeux, cherchant une reponse.', effects: ['ADD_ANAM:5', 'ADD_REPUTATION:anciens:8'] },
+    ],
+  },
+  {
+    narrative: 'La derniere ile est Avalon elle-meme. Les pommiers sont en fleur malgre l\'hiver. Des fees dansent dans les branches, et la musique est si belle qu\'elle guerit les blessures de l\'ame. Mais pour y rester, il faut tout abandonner.',
+    options: [
+      { verb: 'mediter', text: 'Tu medites sous les pommiers en fleur, absorbant la paix d\'Avalon.', effects: ['HEAL_LIFE:7', 'ADD_REPUTATION:niamh:8'] },
+      { verb: 'etudier', text: 'Tu etudies les plantes d\'Avalon, notant leurs proprietes uniques.', effects: ['ADD_ANAM:7', 'ADD_REPUTATION:druides:6'] },
+      { verb: 'contourner', text: 'Tu explores le tour de l\'ile, cherchant un passage vers d\'autres mondes.', effects: ['ADD_BIOME_CURRENCY:6', 'ADD_REPUTATION:korrigans:7'] },
+    ],
+  },
 ];
 
 /** Generate a card using FastRoute (hardcoded templates). */

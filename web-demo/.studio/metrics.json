@@ -1,10 +1,10 @@
 {
   "_comment": "Metriques par cycle -- remplace METRICS.md. Ecrit par merlin-qa-lead apres chaque cycle.",
-  "cycle": 7,
-  "timestamp": "2026-03-30T23:30:00Z",
+  "cycle": 8,
+  "timestamp": "2026-03-31T00:30:00Z",
   "ts_errors": 0,
-  "bundle_kb": 242,
-  "bundle_kb_total": 771,
+  "bundle_kb": 283,
+  "bundle_kb_total": 812,
   "bundle_kb_vendor": 529,
   "bundle_chunks": 3,
   "tests_pass": 0,
@@ -12,5 +12,5 @@
   "errors_runtime": 0,
   "build_ok": true,
   "smoke_pass": true,
-  "notes": "Cycle 7: +3 minigames (fouille: find hidden object among 15 decoys with 2s shuffle, 12s timer, early find bonus; ombres: stealth corridor navigation with narrowing winding path, 10s timer, collision penalty; volonte: hold cursor on pulsing center circle vs flashing distractor squares, 10s timer, focus %). +20 FastRoute cards for marais_korrigans+ankou (bog/death themes: will-o-wisps, drowned crossroads, ghostly washerwomen, bog bodies, ankou's cart, death omens, spectral processions, ancestor bargains, mortal coil choices, singing reeds, spectral door). 12/14 minigames done. 126 card templates total (106+20). All caps respected (rep<=10, heal<=8, dmg<=5). App bundle 242KB (+34KB from 20 card templates), under 280KB WARN threshold."
+  "notes": "Cycle 8 FINAL CONTENT: +2 minigames (regard: memory sequence 3 rounds x 4/5/6 symbols, 5x3 grid, score = correct/total*100; echo: visual sound-direction 6 rounds x 1.2s window, 4 quadrants, score = hits/rounds*100). 14/14 minigames COMPLETE. +40 FastRoute cards (20 collines_dolmens: passage tombs, ancestor visions, hilltop fires, territorial oaths; 20 iles_mystiques: Avalon, selkies, faery ferrymen, time-lost islands, sacred apple orchards). 166 card templates total (126+40). All caps respected (rep<=10, heal<=7, dmg<=5). Druides capped at 4/20 in collines. Niamh emphasized at 14/20 options in iles. Field quotas met: chance>=4, bluff>=3, obs>=3, logique>=3, finesse>=3, vigueur>=3, esprit<=8, perception>=3 per 20-card batch. App bundle 283KB (index 223KB + minigames 60KB), under 310KB WARN threshold."
 }

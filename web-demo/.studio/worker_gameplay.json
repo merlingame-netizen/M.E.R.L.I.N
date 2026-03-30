@@ -1,0 +1,13 @@
+{
+  "agent": "merlin-gameplay-programmer",
+  "cycle": 8,
+  "timestamp": "2026-03-31T00:30:00Z",
+  "tasks": ["T024", "T025"],
+  "status": "complete",
+  "deliverables": [
+    "web-demo/src/minigames/mg_regard.ts",
+    "web-demo/src/minigames/mg_echo.ts",
+    "web-demo/src/main.ts (imports + switch cases)"
+  ],
+  "summary": "Implemented regard (memory sequence: 3 rounds x 4/5/6 symbols, 3s show, 5x3 shuffled grid, click-in-order, score = correct/total*100) and echo (sound direction visual: 6 rounds, symbol flash in 1/4 quadrants for 0.5s, 1.2s answer window, score = hits/rounds*100). Both follow MinigameBase pattern with canvas rendering, cleanup, and animFrame management. Wired into main.ts createMinigame switch. 14/14 minigames now complete."
+}

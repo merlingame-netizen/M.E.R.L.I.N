@@ -1,0 +1,29 @@
+{
+  "_comment": "Constraints for narrative-designer when generating card batches. Enforced from cycle 8+.",
+  "updated_cycle": 7,
+  "field_quotas_per_20_cards": {
+    "chance": {"min": 4},
+    "bluff": {"min": 3},
+    "observation": {"min": 3},
+    "logique": {"min": 3},
+    "finesse": {"min": 3},
+    "vigueur": {"min": 3},
+    "esprit": {"max": 8},
+    "perception": {"min": 3}
+  },
+  "heal_constraints": {
+    "max_heal_per_option": 7,
+    "max_heal_options_per_card": 1
+  },
+  "faction_balance_targets": {
+    "druides": {"target_pct": 20},
+    "anciens": {"target_pct": 20},
+    "korrigans": {"target_pct": 20},
+    "niamh": {"target_pct": 20},
+    "ankou": {"target_pct": 20}
+  },
+  "faction_cycle8_adjustments": {
+    "niamh": "+4 cards emphasis in collines_dolmens + iles_mystiques batches",
+    "druides": "reduce to 3-4 cards per 20 (currently over-represented)"
+  }
+}

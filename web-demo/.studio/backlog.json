@@ -1,6 +1,6 @@
 {
   "_comment": "Remplace BACKLOG.md -- format compact pour studio-director v2",
-  "updated": "2026-03-30T23:30:00Z",
+  "updated": "2026-03-31T00:30:00Z",
   "tasks": [
     {
       "id": "T001",
@@ -28,45 +28,45 @@
       "id": "T024",
       "title": "Implement regard minigame (memorize/reproduce shapes)",
       "priority": 2,
-      "status": "open",
+      "status": "done",
       "domain": "gameplay",
       "est_tokens": 600,
       "depends_on": [],
       "tags": ["minigame"],
-      "notes": "13th minigame. Pattern: memorize sequence of shapes, then reproduce. Lexical field: perception."
+      "notes": "13th minigame. Cycle 8: Memory sequence with 3 rounds (4/5/6 symbols), 3s memorize, click order from shuffled 5x3 grid."
     },
     {
       "id": "T025",
       "title": "Implement echo minigame (follow sound intensity)",
       "priority": 2,
-      "status": "open",
+      "status": "done",
       "domain": "gameplay",
       "est_tokens": 600,
       "depends_on": [],
       "tags": ["minigame"],
-      "notes": "14th and final minigame. Follow audio intensity toward source. Lexical field: perception."
+      "notes": "14th and final minigame. Cycle 8: Visual-only sound direction, 6 rounds, symbol flashes in 1 of 4 quadrants, 1.2s window."
     },
     {
       "id": "T026",
       "title": "Generate 20 FastRoute cards for collines_dolmens + anciens",
       "priority": 3,
-      "status": "open",
+      "status": "done",
       "domain": "narrative",
       "est_tokens": 500,
       "depends_on": [],
       "tags": ["content"],
-      "notes": "8th biome card set. Hill/ancestor themes: dolmens, cairns, hillforts, ancient oaths, tribal gatherings."
+      "notes": "8th biome card set. Cycle 8: 20 cards, dolmen/hill themes, druides capped at 4, all field quotas met."
     },
     {
       "id": "T027",
       "title": "Generate 20 FastRoute cards for iles_mystiques + niamh",
       "priority": 3,
-      "status": "open",
+      "status": "done",
       "domain": "narrative",
       "est_tokens": 500,
       "depends_on": [],
       "tags": ["content"],
-      "notes": "9th and final biome card set. Island/otherworld themes: Tir na nOg, sea journeys, Niamh encounters."
+      "notes": "9th and final biome card set. Cycle 8: 20 cards, Avalon/island themes, niamh 14/20 options (70%), all quotas met."
     }
   ],
   "completed": [
@@ -223,6 +223,34 @@
       "domain": "gameplay",
       "completed_cycle": 7,
       "completed_at": "2026-03-30T23:30:00Z"
+    },
+    {
+      "id": "T024",
+      "title": "Implement regard minigame (memory sequence)",
+      "domain": "gameplay",
+      "completed_cycle": 8,
+      "completed_at": "2026-03-31T00:30:00Z"
+    },
+    {
+      "id": "T025",
+      "title": "Implement echo minigame (sound direction)",
+      "domain": "gameplay",
+      "completed_cycle": 8,
+      "completed_at": "2026-03-31T00:30:00Z"
+    },
+    {
+      "id": "T026",
+      "title": "Generate 20 FastRoute cards for collines_dolmens",
+      "domain": "narrative",
+      "completed_cycle": 8,
+      "completed_at": "2026-03-31T00:30:00Z"
+    },
+    {
+      "id": "T027",
+      "title": "Generate 20 FastRoute cards for iles_mystiques",
+      "domain": "narrative",
+      "completed_cycle": 8,
+      "completed_at": "2026-03-31T00:30:00Z"
     }
   ]
 }

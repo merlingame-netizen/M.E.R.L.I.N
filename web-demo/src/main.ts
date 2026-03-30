@@ -25,6 +25,8 @@ import { MinigameCourse } from './minigames/mg_course';
 import { MinigameFouille } from './minigames/mg_fouille';
 import { MinigameOmbres } from './minigames/mg_ombres';
 import { MinigameVolonte } from './minigames/mg_volonte';
+import { MinigameRegard } from './minigames/mg_regard';
+import { MinigameEcho } from './minigames/mg_echo';
 import { initOghamPanel, showOghamPanel, hideOghamPanel } from './ui/OghamPanel';
 
 // --- Config ---
@@ -196,6 +198,10 @@ function createMinigame(id: string, container: HTMLElement) {
       return new MinigameOmbres(container);
     case 'volonte':
       return new MinigameVolonte(container);
+    case 'regard':
+      return new MinigameRegard(container);
+    case 'echo':
+      return new MinigameEcho(container);
     case 'traces':
     default:
       // Remaining minigames fall back to Traces

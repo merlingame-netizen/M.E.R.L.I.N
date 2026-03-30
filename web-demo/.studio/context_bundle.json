@@ -1,16 +1,16 @@
 {
   "_comment": "Contexte pre-calcule par le director en debut de cycle. Lu par les agents a la place de tous les docs.",
   "_usage": "Director ecrit ce fichier avant de dispatcher. Agents lisent UNIQUEMENT ce fichier pour le contexte.",
-  "cycle": 7,
-  "timestamp": "2026-03-30T23:30:00Z",
+  "cycle": 8,
+  "timestamp": "2026-03-31T00:30:00Z",
   "selected_tasks": [
-    {"id": "T020", "title": "Implement fouille minigame (find hidden object in cluttered scene)", "domain": "gameplay", "agent": "merlin-gameplay-programmer"},
-    {"id": "T021", "title": "Implement ombres minigame (stealth corridor navigation)", "domain": "gameplay", "agent": "merlin-gameplay-programmer"},
-    {"id": "T022", "title": "Generate 20 FastRoute cards for marais_korrigans + ankou", "domain": "narrative", "agent": "merlin-narrative-designer"},
-    {"id": "T023", "title": "Implement volonte minigame (resist distractions, hold focus)", "domain": "gameplay", "agent": "merlin-gameplay-programmer"}
+    {"id": "T024", "title": "Implement regard minigame (memory sequence)", "domain": "gameplay", "agent": "merlin-gameplay-programmer"},
+    {"id": "T025", "title": "Implement echo minigame (sound direction)", "domain": "gameplay", "agent": "merlin-gameplay-programmer"},
+    {"id": "T026", "title": "Generate 20 FastRoute cards for collines_dolmens + anciens", "domain": "narrative", "agent": "merlin-narrative-designer"},
+    {"id": "T027", "title": "Generate 20 FastRoute cards for iles_mystiques + niamh", "domain": "narrative", "agent": "merlin-narrative-designer"}
   ],
   "changed_files_by_domain": {
-    "gameplay": ["web-demo/src/minigames/mg_fouille.ts", "web-demo/src/minigames/mg_ombres.ts", "web-demo/src/minigames/mg_volonte.ts", "web-demo/src/main.ts"],
+    "gameplay": ["web-demo/src/minigames/mg_regard.ts", "web-demo/src/minigames/mg_echo.ts", "web-demo/src/main.ts"],
     "visual": [],
     "narrative": ["web-demo/src/game/CardSystem.ts"],
     "llm": [],
@@ -24,22 +24,27 @@
       "effects_per_option": 3,
       "score_bonus_cap": 2.0
     },
+    "card_constraints": {
+      "heal_per_option_max": 7,
+      "heal_options_per_card_max": 1,
+      "rep_per_option_max": 10,
+      "dmg_per_option_max": 5
+    },
     "life_drain_per_card": 1,
     "life_max": 100,
     "factions": ["druides", "anciens", "korrigans", "niamh", "ankou"],
     "minigames_done": ["traces", "runes", "equilibre", "herboristerie", "negociation", "combat_rituel", "apaisement", "sang_froid", "course", "fouille", "ombres", "volonte"],
-    "minigames_todo": ["regard", "echo"],
+    "minigames_adding": ["regard", "echo"],
     "minigame_base_pattern": "extends MinigameBase, setup()+render()+cleanup(), canvas-based, score 0-100, finish(score) to end",
     "fastroute_templates_count": 126,
-    "biome_current": "marais_korrigans",
-    "ogham_categories": ["reveal", "protection", "boost", "narrative", "recovery", "special"],
-    "card_templates_adding": "20 marais_korrigans + ankou",
-    "bundle_optimization": "manual chunks: three-core (529KB cached), index (148KB), minigames (60KB)"
+    "fastroute_templates_target": 166,
+    "biomes_adding": ["collines_dolmens", "iles_mystiques"],
+    "bundle_optimization": "manual chunks: three-core (529KB cached), index app code, minigames chunk"
   },
   "agent_outputs_summary": {
-    "gameplay": {"last_cycle": 7, "status": "in-progress", "summary": "fouille (find hidden object, 12s) + ombres (stealth corridor, 10s) + volonte (resist distractions, 10s)"},
+    "gameplay": {"last_cycle": 7, "status": "pending", "summary": "regard (memory sequence) + echo (sound direction) -- last 2 minigames"},
     "visual": {"last_cycle": 6, "status": "completed", "summary": "Bundle optimization via manual chunks: app code 208KB"},
-    "narrative": {"last_cycle": 7, "status": "in-progress", "summary": "20 FastRoute cards for marais_korrigans + ankou (bog/death themes)"},
+    "narrative": {"last_cycle": 7, "status": "pending", "summary": "20 cards collines_dolmens + 20 cards iles_mystiques (40 total, final content)"},
     "qa": {"last_cycle": 7, "status": "pending", "summary": "Awaiting build verification"}
   }
 }

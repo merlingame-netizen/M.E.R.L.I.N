@@ -1,0 +1,48 @@
+{
+  "cycle": 8,
+  "timestamp": "2026-03-31T00:30:00Z",
+  "agent": "merlin-ai-playtester",
+  "method": "analytical_audit",
+  "card_audit": {
+    "total_templates": 166,
+    "target": 166,
+    "reached": true,
+    "biomes_covered": ["foret_broceliande", "cotes_sauvages", "landes_bruyere", "villages_celtes", "cercles_pierres", "marais_korrigans", "collines_dolmens", "iles_mystiques"],
+    "cards_per_biome": {"starter": 6, "foret_broceliande": 20, "cotes_sauvages": 20, "landes_bruyere": 20, "villages_celtes": 20, "cercles_pierres": 20, "marais_korrigans": 20, "collines_dolmens": 20, "iles_mystiques": 20}
+  },
+  "faction_balance_cycle8": {
+    "collines_dolmens_rep_options": {"druides": 4, "anciens": 8, "korrigans": 7, "niamh": 6, "ankou": 5},
+    "iles_mystiques_rep_options": {"druides": 4, "anciens": 6, "korrigans": 6, "niamh": 14, "ankou": 3},
+    "rebalance_effective": "druides reduced from 27.6% to ~22%, niamh increased from 13% to ~18%",
+    "verdict": "IMPROVED - within 15-25% target range"
+  },
+  "effect_caps": {
+    "rep_max_10": true,
+    "heal_max_7": true,
+    "dmg_max_5": true,
+    "heal_options_per_card_max_1": true,
+    "all_compliant": true
+  },
+  "field_quotas": {
+    "collines_dolmens": {"chance": 5, "bluff": 4, "observation": 5, "logique": 4, "finesse": 4, "vigueur": 4, "esprit": 7, "perception": 5, "all_met": true},
+    "iles_mystiques": {"chance": 5, "bluff": 4, "observation": 4, "logique": 3, "finesse": 4, "vigueur": 3, "esprit": 7, "perception": 5, "all_met": true}
+  },
+  "minigame_audit": {
+    "total": 14,
+    "target": 14,
+    "all_implemented": true,
+    "all_wired_in_main": true,
+    "list": ["traces", "runes", "equilibre", "herboristerie", "negociation", "combat_rituel", "apaisement", "sang_froid", "course", "fouille", "ombres", "volonte", "regard", "echo"],
+    "field_coverage": {
+      "chance": ["herboristerie"],
+      "bluff": ["negociation"],
+      "observation": ["fouille", "regard"],
+      "logique": ["runes"],
+      "finesse": ["ombres", "equilibre"],
+      "vigueur": ["combat_rituel", "course"],
+      "esprit": ["apaisement", "volonte", "sang_froid"],
+      "perception": ["traces", "echo"]
+    }
+  },
+  "verdict": "PASS - all content milestones reached"
+}
