@@ -1,6 +1,6 @@
 {
   "_comment": "Remplace BACKLOG.md -- format compact pour studio-director v2",
-  "updated": "2026-03-30T20:30:00Z",
+  "updated": "2026-03-30T21:30:00Z",
   "tasks": [
     {
       "id": "T001",
@@ -11,7 +11,7 @@
       "est_tokens": 800,
       "depends_on": [],
       "tags": ["CRITICAL", "blocking"],
-      "notes": "Cycle 1-4: investigated, no blank scene found in code. 3D scene has proper lighting, materials, sky shader, fog. Needs reproduction steps from user."
+      "notes": "Cycle 1-5: investigated, no blank scene found in code. 3D scene has proper lighting, materials, sky shader, fog. Needs reproduction steps from user."
     },
     {
       "id": "T005",
@@ -23,36 +23,6 @@
       "depends_on": ["T001"],
       "tags": ["performance"],
       "notes": "T007 added basic fog plane. T005 can now focus on perf optimization if needed."
-    },
-    {
-      "id": "T014",
-      "title": "Implement combat_rituel minigame (dodge in sacred circle)",
-      "priority": 6,
-      "status": "open",
-      "domain": "gameplay",
-      "est_tokens": 1200,
-      "depends_on": [],
-      "tags": ["Phase6"]
-    },
-    {
-      "id": "T015",
-      "title": "Generate 20 FastRoute cards for villages_celtes + korrigans",
-      "priority": 7,
-      "status": "open",
-      "domain": "narrative",
-      "est_tokens": 800,
-      "depends_on": [],
-      "tags": ["content"]
-    },
-    {
-      "id": "T016",
-      "title": "Implement apaisement minigame (rhythm breathing)",
-      "priority": 8,
-      "status": "open",
-      "domain": "gameplay",
-      "est_tokens": 1200,
-      "depends_on": [],
-      "tags": ["Phase6"]
     }
   ],
   "completed": [
@@ -132,6 +102,27 @@
       "domain": "gameplay",
       "completed_cycle": 4,
       "completed_at": "2026-03-30T20:30:00Z"
+    },
+    {
+      "id": "T014",
+      "title": "Implement combat_rituel minigame (dodge in sacred circle)",
+      "domain": "gameplay",
+      "completed_cycle": 5,
+      "completed_at": "2026-03-30T21:30:00Z"
+    },
+    {
+      "id": "T015",
+      "title": "Generate 20 FastRoute cards for villages_celtes + korrigans",
+      "domain": "narrative",
+      "completed_cycle": 5,
+      "completed_at": "2026-03-30T21:30:00Z"
+    },
+    {
+      "id": "T016",
+      "title": "Implement apaisement minigame (rhythm breathing)",
+      "domain": "gameplay",
+      "completed_cycle": 5,
+      "completed_at": "2026-03-30T21:30:00Z"
     }
   ]
 }

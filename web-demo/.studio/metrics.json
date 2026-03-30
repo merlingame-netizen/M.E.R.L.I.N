@@ -1,13 +1,13 @@
 {
   "_comment": "Metriques par cycle -- remplace METRICS.md. Ecrit par merlin-qa-lead apres chaque cycle.",
-  "cycle": 4,
-  "timestamp": "2026-03-30T20:30:00Z",
+  "cycle": 5,
+  "timestamp": "2026-03-30T21:30:00Z",
   "ts_errors": 0,
-  "bundle_kb": 683,
+  "bundle_kb": 709,
   "tests_pass": 0,
   "load_ms": 0,
   "errors_runtime": 0,
   "build_ok": true,
   "smoke_pass": true,
-  "notes": "Cycle 4: +negociation minigame (scrolling words, faction keywords, combo system, 12s timer), +20 FastRoute cards for landes_bruyere+anciens (moors/barrows/cairns/heather themes), +ogham effect execution wired into EffectEngine and game loop (immediate effects: heal/currency/sacrifice + card modifiers: block negative/cancel negatives/reduce damage/double positives/invert). Bundle +3.57% (659->683 KB). 5/14 minigames done. 66 card templates total."
+  "notes": "Cycle 5: +combat_rituel minigame (circular dodge arena, rotating arc obstacles, 10s timer, survival+center bonus scoring), +apaisement minigame (breathing rhythm sync, pulsing circle expand/contract, 12s timer, click accuracy scoring), +20 FastRoute cards for villages_celtes+korrigans (market days, blacksmiths, traveling bards, fairy doors, mischievous pranks, secret passages, talking tools, midnight dances). Bundle +3.81% (683->709 KB). 7/14 minigames done. 86 card templates total (6+20+20+20+20)."
 }

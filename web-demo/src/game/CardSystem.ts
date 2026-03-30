@@ -589,6 +589,172 @@ const FASTROUTE_TEMPLATES: readonly {
       { verb: 'charmer', text: 'Tu leves le bras, invitant le faucon a se poser.', effects: ['ADD_REPUTATION:korrigans:5', 'ADD_BIOME_CURRENCY:5'] },
     ],
   },
+  // ═══════════════════════════════════════════════════════════════════════════
+  // BIOME: villages_celtes — FACTION: korrigans (20 templates, cycle 5)
+  // Themes: market days, blacksmiths, traveling bards, hidden fairy doors,
+  //         mischievous pranks, secret passages, borrowed tools, midnight dances
+  // Caps: rep ≤10, heal ≤8, dmg ≤5
+  // ═══════════════════════════════════════════════════════════════════════════
+  {
+    narrative: 'Le jour du marche bat son plein sur la place du village. Entre les etals de miel et de lin, un korrigan deguise en marchand vend des pommes qui changent de couleur a chaque regard. "Trois pour le prix d\'une ame !" crie-t-il.',
+    options: [
+      { verb: 'marchander', text: 'Tu negocies le prix avec l\'astuce d\'un korrigan.', effects: ['ADD_REPUTATION:korrigans:8', 'ADD_BIOME_CURRENCY:6'] },
+      { verb: 'observer', text: 'Tu etudies les pommes magiques sans toucher.', effects: ['ADD_ANAM:4', 'HEAL_LIFE:5'] },
+      { verb: 'apaiser', text: 'Tu calmes la foule mefiante autour de l\'etal.', effects: ['ADD_REPUTATION:niamh:5', 'ADD_REPUTATION:korrigans:4'] },
+    ],
+  },
+  {
+    narrative: 'Le forgeron du village frappe sans relache sur son enclume, mais les etincelles forment des runes dans l\'air. Chaque coup de marteau chante une note differente, composant une melodie ancienne que seul le fer connait.',
+    options: [
+      { verb: 'dechiffrer', text: 'Tu lis les runes forgees dans les etincelles.', effects: ['ADD_ANAM:5', 'ADD_REPUTATION:anciens:6'] },
+      { verb: 'aider', text: 'Tu actionnes le soufflet pour aviver les flammes.', effects: ['ADD_REPUTATION:korrigans:7', 'HEAL_LIFE:4'] },
+      { verb: 'combattre', text: 'Tu defies le forgeron a un concours de force.', effects: ['ADD_BIOME_CURRENCY:8', 'DAMAGE_LIFE:4'] },
+    ],
+  },
+  {
+    narrative: 'Un barde itinerant accorde sa harpe sur le pont de pierre. Ses doigts effleurent les cordes et les pierres du pont commencent a vibrer en harmonie. Les poissons de la riviere sautent au rythme de la musique.',
+    options: [
+      { verb: 'parler', text: 'Tu partages tes propres histoires avec le barde.', effects: ['ADD_REPUTATION:korrigans:6', 'ADD_REPUTATION:niamh:4'] },
+      { verb: 'mediter', text: 'Tu fermes les yeux et te laisses porter par la melodie.', effects: ['HEAL_LIFE:8', 'ADD_REPUTATION:druides:3'] },
+      { verb: 'danser', text: 'Tu danses sur le pont, faisant trembler les pierres.', effects: ['ADD_BIOME_CURRENCY:5', 'ADD_REPUTATION:korrigans:5'] },
+    ],
+  },
+  {
+    narrative: 'Derriere la taverne, une porte minus­cule est sculptee dans le tronc d\'un vieux sureau. Des rires etouffes s\'en echappent, et une minuscule lumiere doree pulse au rythme d\'une musique inaudible.',
+    options: [
+      { verb: 'se faufiler', text: 'Tu te penches et frappes trois coups sur la porte feerique.', effects: ['ADD_REPUTATION:korrigans:10', 'DAMAGE_LIFE:3'] },
+      { verb: 'ecouter', text: 'Tu colles l\'oreille au tronc pour saisir les murmures.', effects: ['ADD_ANAM:6', 'ADD_REPUTATION:korrigans:4'] },
+      { verb: 'proteger', text: 'Tu plantes un cercle de houx autour du sureau.', effects: ['ADD_REPUTATION:druides:5', 'HEAL_LIFE:5'] },
+    ],
+  },
+  {
+    narrative: 'Les poules du village courent en cercles parfaits autour du puits, les yeux vitreux. Le fermier jure que c\'est un tour de korrigan. Un rire cristallin resonne depuis l\'interieur du puits.',
+    options: [
+      { verb: 'resoudre', text: 'Tu descends dans le puits chercher le farceur.', effects: ['ADD_REPUTATION:korrigans:8', 'DAMAGE_LIFE:4'] },
+      { verb: 'apaiser', text: 'Tu brises le sortilege avec une comptine ancienne.', effects: ['HEAL_LIFE:6', 'ADD_REPUTATION:anciens:5'] },
+      { verb: 'ruser', text: 'Tu proposes au korrigan un meilleur tour.', effects: ['ADD_REPUTATION:korrigans:9', 'ADD_BIOME_CURRENCY:4'] },
+    ],
+  },
+  {
+    narrative: 'Un passage secret s\'ouvre dans le mur de l\'eglise desaffectee quand le soleil frappe une pierre precise a midi. Derriere, un escalier en spirale descend dans une obscurite parfumee d\'herbes sechees.',
+    options: [
+      { verb: 'explorer', text: 'Tu descends prudemment les marches usees par le temps.', effects: ['ADD_BIOME_CURRENCY:7', 'DAMAGE_LIFE:3'] },
+      { verb: 'etudier', text: 'Tu examines les inscriptions gravees sur les murs.', effects: ['ADD_ANAM:5', 'ADD_REPUTATION:anciens:6'] },
+      { verb: 'invoquer', text: 'Tu appelles les esprits gardiens du passage.', effects: ['ADD_REPUTATION:korrigans:7', 'ADD_REPUTATION:ankou:3'] },
+    ],
+  },
+  {
+    narrative: 'Un paysan se plaint que sa pelle parle. Effectivement, l\'outil marmonne des insultes a chaque pelletee de terre. "C\'est la derniere fois que j\'emprunte quoi que ce soit a un korrigan," soupire-t-il.',
+    options: [
+      { verb: 'marchander', text: 'Tu negocies avec la pelle pour qu\'elle se taise.', effects: ['ADD_REPUTATION:korrigans:8', 'ADD_ANAM:3'] },
+      { verb: 'dechiffrer', text: 'Tu ecoutes les insultes — elles cachent un message code.', effects: ['ADD_ANAM:6', 'ADD_REPUTATION:korrigans:5'] },
+      { verb: 'apaiser', text: 'Tu chantes une berceuse a l\'outil enchante.', effects: ['HEAL_LIFE:5', 'ADD_REPUTATION:niamh:5'] },
+    ],
+  },
+  {
+    narrative: 'A minuit, la fontaine du village se met a couler du cidre dore. Les korrigans dansent autour en une ronde effrenable. Quiconque les rejoint dansera jusqu\'a l\'aube — mais recevra un don en echange.',
+    options: [
+      { verb: 'danser', text: 'Tu rejoins la ronde des korrigans sans hesiter.', effects: ['ADD_REPUTATION:korrigans:10', 'DAMAGE_LIFE:5'] },
+      { verb: 'observer', text: 'Tu regardes la danse, memorisant les pas secrets.', effects: ['ADD_ANAM:5', 'HEAL_LIFE:4'] },
+      { verb: 'offrir', text: 'Tu deposes un present au bord de la fontaine.', effects: ['ADD_REPUTATION:korrigans:7', 'ADD_BIOME_CURRENCY:5'] },
+    ],
+  },
+  {
+    narrative: 'Le toit de la maison du druide est couvert de mousse lumines­cente qui trace une carte du ciel. Ce soir, les etoiles sur le toit ne correspondent plus au vrai ciel — elles montrent un futur possible.',
+    options: [
+      { verb: 'decoder', text: 'Tu compares les deux ciels pour lire la prophetie.', effects: ['ADD_ANAM:7', 'ADD_REPUTATION:druides:5'] },
+      { verb: 'mediter', text: 'Tu t\'allonges sous la mousse et laisses la lumiere t\'envahir.', effects: ['HEAL_LIFE:7', 'ADD_REPUTATION:niamh:4'] },
+      { verb: 'gratter', text: 'Tu preleves un echantillon de mousse propheti­que.', effects: ['ADD_BIOME_CURRENCY:6', 'ADD_REPUTATION:korrigans:4'] },
+    ],
+  },
+  {
+    narrative: 'L\'aubergiste sert une soupe dont le fumet change selon qui la regarde. Pour toi, elle sent la foret apres la pluie. Le chat de l\'auberge, lui, fixe le bol avec une intelligence suspecte.',
+    options: [
+      { verb: 'gouter', text: 'Tu bois la soupe en acceptant le risque.', effects: ['HEAL_LIFE:8', 'ADD_REPUTATION:korrigans:3'] },
+      { verb: 'flairer', text: 'Tu analyses les ingredients par l\'odeur.', effects: ['ADD_ANAM:4', 'ADD_REPUTATION:druides:5'] },
+      { verb: 'ruser', text: 'Tu echanges ton bol avec celui du chat.', effects: ['ADD_REPUTATION:korrigans:8', 'ADD_BIOME_CURRENCY:4'] },
+    ],
+  },
+  {
+    narrative: 'Le lavoir du village revele des images dans l\'eau de rinçage. Les lavandieres y lisent l\'avenir entre deux draps — aujourd\'hui, elles voient ton visage dans les plis mouilles.',
+    options: [
+      { verb: 'ecouter', text: 'Tu demandes aux lavandieres ce qu\'elles ont vu.', effects: ['ADD_ANAM:5', 'ADD_REPUTATION:anciens:6'] },
+      { verb: 'plonger', text: 'Tu plonges tes mains dans l\'eau pour voir toi-meme.', effects: ['ADD_REPUTATION:niamh:6', 'DAMAGE_LIFE:3'] },
+      { verb: 'offrir', text: 'Tu offres tes services pour aider au lavage.', effects: ['HEAL_LIFE:4', 'ADD_REPUTATION:korrigans:6'] },
+    ],
+  },
+  {
+    narrative: 'Un enfant du village jure avoir vu sa toupie tourner toute seule pendant la nuit. Quand tu l\'examines, elle porte de minuscules gravures — et tourne effectivement quand personne ne regarde.',
+    options: [
+      { verb: 'dechiffrer', text: 'Tu etudies les gravures microscopiques sur la toupie.', effects: ['ADD_ANAM:6', 'ADD_REPUTATION:korrigans:5'] },
+      { verb: 'jouer', text: 'Tu lances la toupie et observes sa danse.', effects: ['ADD_REPUTATION:korrigans:7', 'ADD_BIOME_CURRENCY:5'] },
+      { verb: 'proteger', text: 'Tu enveloppes la toupie dans une feuille de gui.', effects: ['ADD_REPUTATION:druides:5', 'HEAL_LIFE:5'] },
+    ],
+  },
+  {
+    narrative: 'Le cimetiere du village borde un cercle de champignons parfait. Les anciens disent que c\'est une porte entre les mondes. Ce soir, les champignons emettent une lueur violette palpitante.',
+    options: [
+      { verb: 'invoquer', text: 'Tu t\'agenouilles dans le cercle et appelles les esprits.', effects: ['ADD_REPUTATION:ankou:6', 'ADD_REPUTATION:korrigans:5'] },
+      { verb: 'observer', text: 'Tu dessines le motif exact du cercle de champignons.', effects: ['ADD_ANAM:5', 'ADD_REPUTATION:anciens:5'] },
+      { verb: 'cueillir', text: 'Tu recoltes un champignon luminescent avec precaution.', effects: ['ADD_BIOME_CURRENCY:6', 'DAMAGE_LIFE:4'] },
+    ],
+  },
+  {
+    narrative: 'La route entre deux villages est gardee par un pont qu\'aucun cheval ne veut traverser. Sous l\'arche, des yeux jaunes clignotent et une voix rauque demande un peage en enigmes.',
+    options: [
+      { verb: 'resoudre', text: 'Tu acceptes l\'enigme du gardien du pont.', effects: ['ADD_REPUTATION:korrigans:9', 'ADD_ANAM:4'] },
+      { verb: 'combattre', text: 'Tu franchis le pont par la force.', effects: ['ADD_BIOME_CURRENCY:7', 'DAMAGE_LIFE:5'] },
+      { verb: 'charmer', text: 'Tu flattes le troll avec des compliments elabores.', effects: ['ADD_REPUTATION:korrigans:7', 'HEAL_LIFE:3'] },
+    ],
+  },
+  {
+    narrative: 'La tisserande du village tisse une tapisserie qui bouge. Les personnages brodes marchent, combattent et mangent dans leur monde de fil. Elle cherche quelqu\'un pour lui fournir le fil de la fin de l\'histoire.',
+    options: [
+      { verb: 'aider', text: 'Tu files le lin magique pour completer la tapisserie.', effects: ['ADD_REPUTATION:anciens:7', 'ADD_REPUTATION:korrigans:4'] },
+      { verb: 'etudier', text: 'Tu dechiffres l\'histoire brodee dans le tissu.', effects: ['ADD_ANAM:6', 'ADD_REPUTATION:niamh:4'] },
+      { verb: 'couper', text: 'Tu tranches un fil pour liberer un personnage brode.', effects: ['ADD_REPUTATION:korrigans:8', 'DAMAGE_LIFE:3'] },
+    ],
+  },
+  {
+    narrative: 'Un coq chante a rebours — du soir vers le matin. Le temps semble ralentir dans la ferme ou il perche. Les korrigans l\'auraient enchante pour gagner quelques heures de nuit supplementaires.',
+    options: [
+      { verb: 'decoder', text: 'Tu ecoutes le chant inverse pour comprendre le sortilege.', effects: ['ADD_ANAM:5', 'ADD_REPUTATION:korrigans:6'] },
+      { verb: 'apaiser', text: 'Tu nourris le coq avec du grain beni pour le delivrer.', effects: ['HEAL_LIFE:6', 'ADD_REPUTATION:druides:5'] },
+      { verb: 'profiter', text: 'Tu profites du temps ralenti pour explorer la ferme.', effects: ['ADD_BIOME_CURRENCY:7', 'ADD_REPUTATION:korrigans:4'] },
+    ],
+  },
+  {
+    narrative: 'Le puits du village ancien est scelle depuis des generations. Mais cette nuit, le couvercle de pierre vibre et un filet de brume argentee s\'echappe. Les anciens disent qu\'un tresor de korrigan dort au fond.',
+    options: [
+      { verb: 'explorer', text: 'Tu descelles le puits et descends dans les tenebres.', effects: ['ADD_BIOME_CURRENCY:8', 'DAMAGE_LIFE:5'] },
+      { verb: 'ecouter', text: 'Tu presses l\'oreille contre la pierre scellee.', effects: ['ADD_ANAM:5', 'ADD_REPUTATION:korrigans:6'] },
+      { verb: 'proteger', text: 'Tu renforces le sceau avec des symboles druidiques.', effects: ['ADD_REPUTATION:druides:6', 'HEAL_LIFE:5'] },
+    ],
+  },
+  {
+    narrative: 'Un chat noir portant un collier d\'or traverse la place du marche. Chaque villageois qu\'il frole trouve une piece de cuivre dans sa poche. Le chat te regarde fixement et s\'assied a tes pieds.',
+    options: [
+      { verb: 'caresser', text: 'Tu te penches et gratte le chat derriere les oreilles.', effects: ['ADD_REPUTATION:korrigans:7', 'ADD_BIOME_CURRENCY:6'] },
+      { verb: 'suivre', text: 'Tu suis le chat quand il repart vers la foret.', effects: ['ADD_ANAM:4', 'ADD_REPUTATION:niamh:5'] },
+      { verb: 'examiner', text: 'Tu inspectes les runes gravees sur le collier d\'or.', effects: ['ADD_ANAM:6', 'ADD_REPUTATION:korrigans:5'] },
+    ],
+  },
+  {
+    narrative: 'Le moulin a eau du village tourne a l\'envers depuis l\'aube, mais la farine produite est d\'un blanc lumineux qui guerit les maux de tete. La meuniere soupçonne un bienfait de korrigan — ou un piege.',
+    options: [
+      { verb: 'gouter', text: 'Tu goutes la farine miraculeuse sans crainte.', effects: ['HEAL_LIFE:7', 'ADD_REPUTATION:korrigans:4'] },
+      { verb: 'resoudre', text: 'Tu examines le mecanisme inverse du moulin.', effects: ['ADD_ANAM:5', 'ADD_REPUTATION:korrigans:6'] },
+      { verb: 'distribuer', text: 'Tu partages la farine guerisseuse avec le village.', effects: ['ADD_REPUTATION:anciens:5', 'ADD_REPUTATION:korrigans:5'] },
+    ],
+  },
+  {
+    narrative: 'L\'ecole du village est vide depuis des jours — les enfants ont tous suivi un korrigan joueur de flute dans la colline. Les parents sont inquiets mais les enfants reviennent chaque soir, les poches pleines de baies inconnues.',
+    options: [
+      { verb: 'suivre', text: 'Tu suis la piste du joueur de flute dans la colline.', effects: ['ADD_REPUTATION:korrigans:9', 'DAMAGE_LIFE:4'] },
+      { verb: 'parler', text: 'Tu interroges les enfants sur leurs aventures.', effects: ['ADD_ANAM:5', 'ADD_REPUTATION:korrigans:5'] },
+      { verb: 'proteger', text: 'Tu negocies avec le korrigan pour limiter les escapades.', effects: ['HEAL_LIFE:5', 'ADD_REPUTATION:anciens:6'] },
+    ],
+  },
 ];
 
 /** Generate a card using FastRoute (hardcoded templates). */

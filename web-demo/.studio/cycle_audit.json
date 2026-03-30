@@ -106,6 +106,33 @@
       ],
       "summary": "Implemented negociation minigame (scrolling word-based persuasion targeting faction keywords, combo system, 12s timer, score from faction word picks + combo bonus - neutral penalty + time bonus). Added 20 FastRoute cards for landes_bruyere+anciens (celtic moors themes: tumuli, cairns, stone circles, wild ponies, heather storms, ancient oaths, peat bogs, warrior processions). Wired ogham effect execution into EffectEngine with applyOghamEffect() for immediate effects (heal, currency, sacrifice) and processOghamModifiers() for card effect modifiers (block/cancel negatives, reduce high damage, double positives, invert effects). Game loop updated: ogham effects applied after selection, card effects processed through ogham modifiers, activeOgham cleared after use. 3/3 tasks completed. Bundle +3.64% (659->683 KB), under 692 KB WARN threshold.",
       "agents_dispatched": ["merlin-gameplay-programmer", "merlin-narrative-designer", "merlin-qa-lead"]
+    },
+    {
+      "cycle": 5,
+      "timestamp": "2026-03-30T21:30:00Z",
+      "tasks_attempted": ["T014", "T015", "T016"],
+      "tasks_completed": ["T014", "T015", "T016"],
+      "tasks_deferred": [],
+      "gate": {
+        "ts_errors": 0,
+        "build_ok": true,
+        "bundle_kb": 709,
+        "bundle_delta_pct": 3.81,
+        "tests_pass": 0,
+        "verdict": "PROCEED"
+      },
+      "files_changed": [
+        "web-demo/src/minigames/mg_combat_rituel.ts",
+        "web-demo/src/minigames/mg_apaisement.ts",
+        "web-demo/src/game/CardSystem.ts",
+        "web-demo/src/main.ts",
+        "web-demo/.studio/backlog.json",
+        "web-demo/.studio/metrics.json",
+        "web-demo/.studio/context_bundle.json",
+        "web-demo/.studio/cycle_audit.json"
+      ],
+      "summary": "Implemented combat_rituel minigame (circular dodge arena with rotating arc obstacles at various radii/speeds, 10s timer, score = survival time % + center bonus zone %). Implemented apaisement minigame (breathing rhythm sync with pulsing circle expand/contract cycle, 12s timer, click at peaks for accuracy, score = avg accuracy * tap count bonus). Added 20 FastRoute cards for villages_celtes+korrigans (market days, blacksmiths, traveling bards, hidden fairy doors, mischievous pranks, secret passages, talking tools, midnight dances, prophetic moss, enchanted mills). All caps respected (rep<=10, heal<=8, dmg<=5). 3/3 tasks completed. Bundle +3.81% (683->709 KB), under 717 KB WARN threshold. 7/14 minigames done. 86 card templates total.",
+      "agents_dispatched": ["merlin-gameplay-programmer", "merlin-narrative-designer", "merlin-qa-lead"]
     }
   ]
 }

@@ -1,0 +1,340 @@
+// =============================================================================
+// Minigame: Combat Rituel -- Dodge obstacles in a sacred circle
+// Circular dodge arena: player cursor avoids rotating obstacles. 10s timer.
+// Score = survival time percentage + center bonus (staying near center is risky
+// but awards bonus). Canvas-based.
+// =============================================================================
+
+import { MinigameBase } from './MinigameBase';
+
+/** Immutable obstacle descriptor. */
+interface Obstacle {
+  readonly angle: number;      // radians, position on the circle
+  readonly speed: number;      // radians per second
+  readonly width: number;      // angular width in radians
+  readonly radius: number;     // distance from center
+  readonly thickness: number;  // radial thickness
+}
+
+/** Pick a random number between min and max. */
+function randRange(min: number, max: number): number {
+  return min + Math.random() * (max - min);
+}
+
+export class MinigameCombatRituel extends MinigameBase {
+  private canvas: HTMLCanvasElement | null = null;
+  private ctx: CanvasRenderingContext2D | null = null;
+  private animFrame = 0;
+  private timerInterval = 0;
+
+  // Canvas dimensions
+  private readonly canvasW = 380;
+  private readonly canvasH = 380;
+  private readonly centerX = 190;
+  private readonly centerY = 190;
+  private readonly arenaRadius = 150;
+
+  // Game config
+  private readonly totalTime = 10;
+  private readonly obstacleCount = 5;
+  private readonly centerBonusRadius = 40; // px from center for bonus zone
+
+  // Game state
+  private playerX = 190;
+  private playerY = 190;
+  private obstacles: Obstacle[] = [];
+  private timeLeft = 10;
+  private elapsedTime = 0;
+  private survivalTime = 0;
+  private centerTime = 0;  // time spent near center
+  private hit = false;
+  private hitFlash = 0;
+  private pulsePhase = 0;
+
+  protected setup(): void {
+    this.container.innerHTML = '';
+
+    // Title
+    const title = document.createElement('div');
+    title.textContent = 'COMBAT RITUEL -- Esquive dans le cercle sacre';
+    title.style.cssText = 'color:#e8dcc8;font-size:20px;text-align:center;margin-bottom:4px;font-family:system-ui;';
+    this.container.appendChild(title);
+
+    // Instruction
+    const instr = document.createElement('div');
+    instr.textContent = 'Deplace ton curseur pour esquiver. Le centre donne un bonus.';
+    instr.style.cssText = 'color:#cd853f;font-size:13px;text-align:center;margin-bottom:8px;font-family:system-ui;';
+    this.container.appendChild(instr);
+
+    // Timer bar
+    const timerBar = document.createElement('div');
+    timerBar.id = 'mg-combat-timer';
+    timerBar.style.cssText = `width:${this.canvasW}px;height:8px;background:rgba(255,255,255,0.1);border-radius:4px;margin:0 auto 8px;overflow:hidden;`;
+    const timerFill = document.createElement('div');
+    timerFill.id = 'mg-combat-timer-fill';
+    timerFill.style.cssText = 'height:100%;width:100%;background:#8b2020;border-radius:4px;transition:width 0.1s linear;';
+    timerBar.appendChild(timerFill);
+    this.container.appendChild(timerBar);
+
+    // Canvas
+    this.canvas = document.createElement('canvas');
+    this.canvas.width = this.canvasW;
+    this.canvas.height = this.canvasH;
+    this.canvas.style.cssText = 'border-radius:50%;background:rgba(15,15,25,0.9);border:2px solid rgba(139,32,32,0.4);cursor:none;display:block;margin:0 auto;touch-action:none;';
+    this.container.appendChild(this.canvas);
+    this.ctx = this.canvas.getContext('2d');
+
+    // Status display
+    const statusEl = document.createElement('div');
+    statusEl.id = 'mg-combat-status';
+    statusEl.style.cssText = `width:${this.canvasW}px;min-height:24px;margin:8px auto 0;color:rgba(232,220,200,0.6);font-size:13px;text-align:center;font-family:system-ui;`;
+    statusEl.textContent = 'Survie: 0.0s';
+    this.container.appendChild(statusEl);
+
+    // Input -- pointer move
+    this.canvas.addEventListener('pointermove', this.onPointerMove);
+    this.canvas.addEventListener('pointerdown', this.onPointerMove);
+
+    // Reset state
+    this.playerX = this.centerX;
+    this.playerY = this.centerY;
+    this.timeLeft = this.totalTime;
+    this.elapsedTime = 0;
+    this.survivalTime = 0;
+    this.centerTime = 0;
+    this.hit = false;
+    this.hitFlash = 0;
+    this.pulsePhase = 0;
+
+    // Generate obstacles -- rotating arcs at various radii
+    this.obstacles = [];
+    for (let i = 0; i < this.obstacleCount; i++) {
+      this.obstacles = [
+        ...this.obstacles,
+        {
+          angle: randRange(0, Math.PI * 2),
+          speed: randRange(0.8, 2.5) * (Math.random() > 0.5 ? 1 : -1),
+          width: randRange(0.4, 1.0),   // angular width
+          radius: randRange(50, 130),     // distance from center
+          thickness: randRange(12, 24),   // radial thickness
+        },
+      ];
+    }
+
+    // Timer
+    this.timerInterval = window.setInterval(() => {
+      this.timeLeft -= 0.1;
+      const pct = Math.max(0, (this.timeLeft / this.totalTime) * 100);
+      const fill = document.getElementById('mg-combat-timer-fill');
+      if (fill) fill.style.width = `${pct}%`;
+      if (this.timeLeft <= 0) {
+        this.endGame();
+      }
+    }, 100);
+  }
+
+  private onPointerMove = (e: PointerEvent): void => {
+    if (!this.canvas) return;
+    const rect = this.canvas.getBoundingClientRect();
+    this.playerX = (e.clientX - rect.left) * (this.canvas.width / rect.width);
+    this.playerY = (e.clientY - rect.top) * (this.canvas.height / rect.height);
+
+    // Clamp player to arena circle
+    const dx = this.playerX - this.centerX;
+    const dy = this.playerY - this.centerY;
+    const dist = Math.sqrt(dx * dx + dy * dy);
+    if (dist > this.arenaRadius - 8) {
+      const scale = (this.arenaRadius - 8) / dist;
+      this.playerX = this.centerX + dx * scale;
+      this.playerY = this.centerY + dy * scale;
+    }
+  };
+
+  private checkCollision(): boolean {
+    const px = this.playerX - this.centerX;
+    const py = this.playerY - this.centerY;
+    const playerDist = Math.sqrt(px * px + py * py);
+    const playerAngle = Math.atan2(py, px);
+
+    for (const obs of this.obstacles) {
+      // Check radial overlap (player is a ~8px circle)
+      const rMin = obs.radius - obs.thickness / 2;
+      const rMax = obs.radius + obs.thickness / 2;
+      if (playerDist + 6 < rMin || playerDist - 6 > rMax) continue;
+
+      // Check angular overlap
+      const halfWidth = obs.width / 2;
+      let angleDiff = playerAngle - obs.angle;
+      // Normalize to [-PI, PI]
+      while (angleDiff > Math.PI) angleDiff -= Math.PI * 2;
+      while (angleDiff < -Math.PI) angleDiff += Math.PI * 2;
+
+      if (Math.abs(angleDiff) < halfWidth + 0.08) {
+        return true;
+      }
+    }
+    return false;
+  }
+
+  private endGame(): void {
+    clearInterval(this.timerInterval);
+    cancelAnimationFrame(this.animFrame);
+    this.canvas?.removeEventListener('pointermove', this.onPointerMove);
+    this.canvas?.removeEventListener('pointerdown', this.onPointerMove);
+
+    // Score = survival time percentage (0-80) + center bonus (0-20)
+    const survivalPct = (this.survivalTime / this.totalTime) * 80;
+    const centerPct = this.totalTime > 0
+      ? (this.centerTime / this.totalTime) * 20
+      : 0;
+
+    const finalScore = Math.min(100, survivalPct + centerPct);
+    this.finish(finalScore);
+  }
+
+  protected render(): void {
+    if (!this.ctx || !this.canvas) return;
+    const ctx = this.ctx;
+    const dt = 1 / 60;
+    this.elapsedTime += dt;
+    this.pulsePhase += dt;
+
+    // Update obstacle angles
+    this.obstacles = this.obstacles.map((obs) => ({
+      ...obs,
+      angle: obs.angle + obs.speed * dt,
+    }));
+
+    // Check collision
+    if (this.checkCollision()) {
+      if (!this.hit) {
+        this.hit = true;
+        this.hitFlash = 0.5;
+      }
+    } else {
+      this.hit = false;
+      this.survivalTime += dt;
+
+      // Check center bonus
+      const dx = this.playerX - this.centerX;
+      const dy = this.playerY - this.centerY;
+      if (Math.sqrt(dx * dx + dy * dy) < this.centerBonusRadius) {
+        this.centerTime += dt;
+      }
+    }
+
+    // Hit flash decay
+    if (this.hitFlash > 0) this.hitFlash -= dt * 2;
+
+    // Update status
+    const statusEl = document.getElementById('mg-combat-status');
+    if (statusEl) {
+      statusEl.textContent = `Survie: ${this.survivalTime.toFixed(1)}s | Centre: ${this.centerTime.toFixed(1)}s`;
+    }
+
+    // Clear
+    ctx.clearRect(0, 0, this.canvasW, this.canvasH);
+
+    // Arena circle
+    ctx.beginPath();
+    ctx.arc(this.centerX, this.centerY, this.arenaRadius, 0, Math.PI * 2);
+    const arenaGrad = ctx.createRadialGradient(
+      this.centerX, this.centerY, 0,
+      this.centerX, this.centerY, this.arenaRadius
+    );
+    arenaGrad.addColorStop(0, 'rgba(30,15,15,0.95)');
+    arenaGrad.addColorStop(0.7, 'rgba(20,10,10,0.9)');
+    arenaGrad.addColorStop(1, 'rgba(10,5,5,0.85)');
+    ctx.fillStyle = arenaGrad;
+    ctx.fill();
+
+    // Hit flash overlay
+    if (this.hitFlash > 0) {
+      ctx.beginPath();
+      ctx.arc(this.centerX, this.centerY, this.arenaRadius, 0, Math.PI * 2);
+      ctx.fillStyle = `rgba(200,40,40,${this.hitFlash * 0.3})`;
+      ctx.fill();
+    }
+
+    // Center bonus zone
+    const centerPulse = 0.15 + Math.sin(this.pulsePhase * 3) * 0.08;
+    ctx.beginPath();
+    ctx.arc(this.centerX, this.centerY, this.centerBonusRadius, 0, Math.PI * 2);
+    ctx.fillStyle = `rgba(200,170,60,${centerPulse})`;
+    ctx.fill();
+    ctx.strokeStyle = `rgba(200,170,60,${centerPulse + 0.1})`;
+    ctx.lineWidth = 1;
+    ctx.stroke();
+
+    // Sacred circle border marks (8 runes)
+    for (let i = 0; i < 8; i++) {
+      const a = (i / 8) * Math.PI * 2 + this.pulsePhase * 0.2;
+      const rx = this.centerX + Math.cos(a) * (this.arenaRadius - 4);
+      const ry = this.centerY + Math.sin(a) * (this.arenaRadius - 4);
+      ctx.fillStyle = 'rgba(139,32,32,0.5)';
+      ctx.font = '12px system-ui';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText('\u1680', rx, ry); // ogham space mark as decoration
+    }
+
+    // Draw obstacles (rotating arcs)
+    for (const obs of this.obstacles) {
+      const startAngle = obs.angle - obs.width / 2;
+      const endAngle = obs.angle + obs.width / 2;
+      const rInner = obs.radius - obs.thickness / 2;
+      const rOuter = obs.radius + obs.thickness / 2;
+
+      ctx.beginPath();
+      ctx.arc(this.centerX, this.centerY, rOuter, startAngle, endAngle);
+      ctx.arc(this.centerX, this.centerY, rInner, endAngle, startAngle, true);
+      ctx.closePath();
+
+      const obsPulse = 0.6 + Math.sin(this.pulsePhase * 4 + obs.angle) * 0.2;
+      ctx.fillStyle = `rgba(180,50,50,${obsPulse})`;
+      ctx.fill();
+      ctx.strokeStyle = `rgba(220,80,80,${obsPulse * 0.7})`;
+      ctx.lineWidth = 1.5;
+      ctx.stroke();
+    }
+
+    // Draw player cursor
+    const px = this.playerX;
+    const py = this.playerY;
+
+    // Player glow
+    const playerGrad = ctx.createRadialGradient(px, py, 0, px, py, 16);
+    playerGrad.addColorStop(0, this.hit ? 'rgba(200,60,60,0.6)' : 'rgba(200,180,100,0.4)');
+    playerGrad.addColorStop(1, 'rgba(0,0,0,0)');
+    ctx.fillStyle = playerGrad;
+    ctx.beginPath();
+    ctx.arc(px, py, 16, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Player dot
+    ctx.beginPath();
+    ctx.arc(px, py, 6, 0, Math.PI * 2);
+    ctx.fillStyle = this.hit ? '#c84040' : '#e8dcc8';
+    ctx.fill();
+    ctx.strokeStyle = this.hit ? '#ff6060' : '#cd853f';
+    ctx.lineWidth = 2;
+    ctx.stroke();
+
+    // Arena border ring
+    ctx.beginPath();
+    ctx.arc(this.centerX, this.centerY, this.arenaRadius, 0, Math.PI * 2);
+    ctx.strokeStyle = `rgba(139,32,32,${0.4 + Math.sin(this.pulsePhase * 2) * 0.1})`;
+    ctx.lineWidth = 2;
+    ctx.stroke();
+
+    this.animFrame = requestAnimationFrame(() => this.render());
+  }
+
+  protected cleanup(): void {
+    clearInterval(this.timerInterval);
+    cancelAnimationFrame(this.animFrame);
+    this.canvas?.removeEventListener('pointermove', this.onPointerMove);
+    this.canvas?.removeEventListener('pointerdown', this.onPointerMove);
+    super.cleanup();
+  }
+}

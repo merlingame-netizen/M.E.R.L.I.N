@@ -1,15 +1,15 @@
 {
   "_comment": "Contexte pre-calcule par le director en debut de cycle. Lu par les agents a la place de tous les docs.",
   "_usage": "Director ecrit ce fichier avant de dispatcher. Agents lisent UNIQUEMENT ce fichier pour le contexte.",
-  "cycle": 4,
-  "timestamp": "2026-03-30T20:00:00Z",
+  "cycle": 5,
+  "timestamp": "2026-03-30T21:00:00Z",
   "selected_tasks": [
-    {"id": "T011", "title": "Implement negociation minigame (word-based persuasion)", "domain": "gameplay", "agent": "merlin-gameplay-programmer"},
-    {"id": "T012", "title": "Generate 20 FastRoute cards for landes_bruyere + anciens", "domain": "narrative", "agent": "merlin-narrative-designer"},
-    {"id": "T013", "title": "Ogham effect execution -- wire ogham effects into EffectEngine", "domain": "gameplay", "agent": "merlin-gameplay-programmer"}
+    {"id": "T014", "title": "Implement combat_rituel minigame (dodge in sacred circle)", "domain": "gameplay", "agent": "merlin-gameplay-programmer"},
+    {"id": "T016", "title": "Implement apaisement minigame (rhythm breathing)", "domain": "gameplay", "agent": "merlin-gameplay-programmer"},
+    {"id": "T015", "title": "Generate 20 FastRoute cards for villages_celtes + korrigans", "domain": "narrative", "agent": "merlin-narrative-designer"}
   ],
   "changed_files_by_domain": {
-    "gameplay": ["web-demo/src/minigames/mg_negociation.ts", "web-demo/src/main.ts", "web-demo/src/game/EffectEngine.ts"],
+    "gameplay": ["web-demo/src/minigames/mg_combat_rituel.ts", "web-demo/src/minigames/mg_apaisement.ts", "web-demo/src/main.ts"],
     "visual": [],
     "narrative": ["web-demo/src/game/CardSystem.ts"],
     "llm": [],
@@ -26,19 +26,19 @@
     "life_drain_per_card": 1,
     "life_max": 100,
     "factions": ["druides", "anciens", "korrigans", "niamh", "ankou"],
-    "minigames_done": ["traces", "runes", "equilibre", "herboristerie"],
-    "minigames_implementing": ["negociation"],
-    "minigames_todo": ["combat_rituel", "apaisement", "sang_froid", "course", "fouille", "ombres", "volonte", "regard", "echo"],
+    "minigames_done": ["traces", "runes", "equilibre", "herboristerie", "negociation"],
+    "minigames_implementing": ["combat_rituel", "apaisement"],
+    "minigames_todo": ["sang_froid", "course", "fouille", "ombres", "volonte", "regard", "echo"],
     "minigame_base_pattern": "extends MinigameBase, setup()+render()+cleanup(), canvas-based, score 0-100, finish(score) to end",
-    "fastroute_templates_count": 46,
+    "fastroute_templates_count": 66,
     "biome_current": "cotes_sauvages",
     "ogham_categories": ["reveal", "protection", "boost", "narrative", "recovery", "special"],
-    "ogham_effects_to_wire": ["reveal_one_option", "reveal_all_options", "block_first_negative", "heal_immediate", "double_positives", "add_biome_currency", "reduce_high_damage", "cancel_all_negatives", "replace_worst_option", "regenerate_all_options", "heal_and_cost", "currency_and_heal", "invert_effects", "sacrifice_trade"]
+    "card_templates_adding": "20 villages_celtes + korrigans"
   },
   "agent_outputs_summary": {
-    "gameplay": {"last_cycle": 3, "status": "completed", "summary": "Herboristerie minigame + Ogham panel UI"},
+    "gameplay": {"last_cycle": 4, "status": "completed", "summary": "Negociation minigame + Ogham effect execution"},
     "visual": {"last_cycle": 2, "status": "needs-repro", "summary": "T001 deferred"},
-    "narrative": {"last_cycle": 3, "status": "completed", "summary": "20 FastRoute cards for cotes_sauvages + niamh"},
-    "qa": {"last_cycle": 3, "status": "passed", "summary": "ts_errors=0, build_ok, bundle=659KB (+3.6%)"}
+    "narrative": {"last_cycle": 4, "status": "completed", "summary": "20 FastRoute cards for landes_bruyere + anciens"},
+    "qa": {"last_cycle": 4, "status": "passed", "summary": "ts_errors=0, build_ok, bundle=683KB (+3.6%)"}
   }
 }
