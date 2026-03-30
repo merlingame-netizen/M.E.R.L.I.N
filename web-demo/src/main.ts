@@ -14,6 +14,7 @@ import { showCard, hideCard } from './ui/CardOverlay';
 import { initHUD, updateHUD } from './ui/HUD';
 import { fadeIn, fadeOut, crossFade } from './ui/Transitions';
 import { MinigameTraces } from './minigames/mg_traces';
+import { MinigameRunes } from './minigames/mg_runes';
 
 // --- Config ---
 const WALK_SECONDS_BEFORE_CARD = 6; // Seconds of walking before showing a card
@@ -143,9 +144,14 @@ async function gameLoop(
 }
 
 function createMinigame(id: string, container: HTMLElement) {
-  // For now, all minigames use Traces as placeholder
-  // TODO: implement all 14 minigames
-  return new MinigameTraces(container);
+  switch (id) {
+    case 'runes':
+      return new MinigameRunes(container);
+    case 'traces':
+    default:
+      // Remaining minigames fall back to Traces
+      return new MinigameTraces(container);
+  }
 }
 
 async function showEndScreen(message: string): Promise<void> {

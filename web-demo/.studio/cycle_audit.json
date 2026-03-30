@@ -1,0 +1,31 @@
+{
+  "_comment": "Audit trail des 20 derniers cycles -- decisions ROLLBACK/PROCEED basees sur donnees objectives.",
+  "max_entries": 20,
+  "cycles": [
+    {
+      "cycle": 1,
+      "timestamp": "2026-03-30T17:45:00Z",
+      "tasks_attempted": ["T001", "T002", "T003"],
+      "tasks_completed": ["T002", "T003"],
+      "tasks_deferred": ["T001"],
+      "gate": {
+        "ts_errors": 0,
+        "build_ok": true,
+        "bundle_kb": 624,
+        "bundle_delta_pct": 2.97,
+        "tests_pass": 0,
+        "verdict": "PROCEED"
+      },
+      "files_changed": [
+        "web-demo/src/minigames/mg_runes.ts",
+        "web-demo/src/game/CardSystem.ts",
+        "web-demo/src/main.ts",
+        "web-demo/.studio/backlog.json",
+        "web-demo/.studio/metrics.json",
+        "web-demo/.studio/context_bundle.json"
+      ],
+      "summary": "Implemented runes minigame (ogham pair-matching, canvas-based, 4x4 grid, 15s timer, score 0-100). Added 20 FastRoute card templates for foret_broceliande+druides covering all 8 lexical fields and 5 factions. T001 (blank scenes) investigated but no issue found in code -- marked needs-repro.",
+      "agents_dispatched": ["merlin-gameplay-programmer", "merlin-narrative-designer", "merlin-qa-lead"]
+    }
+  ]
+}

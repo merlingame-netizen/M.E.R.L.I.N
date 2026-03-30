@@ -1,0 +1,53 @@
+{
+  "_comment": "Remplace BACKLOG.md -- format compact pour studio-director v2",
+  "updated": "2026-03-30T17:45:00Z",
+  "tasks": [
+    {
+      "id": "T001",
+      "title": "Fix white/blank scenes -- diagnose rendering issue",
+      "priority": 1,
+      "status": "needs-repro",
+      "domain": "visual",
+      "est_tokens": 800,
+      "depends_on": [],
+      "tags": ["CRITICAL", "blocking"],
+      "notes": "Cycle 1: investigated, no blank scene found in code. 3D scene has proper lighting, materials, sky shader. Needs reproduction steps from user."
+    },
+    {
+      "id": "T004",
+      "title": "Implement equilibre minigame (balance on path)",
+      "priority": 4,
+      "status": "open",
+      "domain": "gameplay",
+      "est_tokens": 1200,
+      "depends_on": [],
+      "tags": ["Phase6"]
+    },
+    {
+      "id": "T005",
+      "title": "Fog shader optimization -- maintain 60fps on GTX 1060",
+      "priority": 5,
+      "status": "open",
+      "domain": "visual",
+      "est_tokens": 900,
+      "depends_on": ["T001"],
+      "tags": ["performance"]
+    }
+  ],
+  "completed": [
+    {
+      "id": "T002",
+      "title": "Implement runes minigame (canvas-based, score 0-100)",
+      "domain": "gameplay",
+      "completed_cycle": 1,
+      "completed_at": "2026-03-30T17:45:00Z"
+    },
+    {
+      "id": "T003",
+      "title": "Generate 20 FastRoute cards for foret_broceliande + druides",
+      "domain": "narrative",
+      "completed_cycle": 1,
+      "completed_at": "2026-03-30T17:45:00Z"
+    }
+  ]
+}
