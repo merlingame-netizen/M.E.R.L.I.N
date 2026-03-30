@@ -944,8 +944,19 @@ const FALLBACK_INTRO_TEXT: String = "Les brumes de Broceliande se levent lenteme
 ## Encounter callback — auto-walk paused, show card overlay on 3D
 func _on_encounter_reached(enc_idx: int) -> void:
 	print("[Forest3D] Encounter %d — showing card overlay" % enc_idx)
+
+	# Brief anticipation — show text before card popup
 	if is_instance_valid(objective_label):
-		objective_label.text = "Rencontre %d" % (enc_idx + 1)
+		objective_label.text = "Une presence dans la brume..."
+	if is_instance_valid(status_label):
+		status_label.text = "Rencontre %d / 5" % (enc_idx + 1)
+
+	# SFX: mysterious chime
+	if is_instance_valid(SFXManager):
+		SFXManager.play("encounter")
+
+	# Brief dramatic pause (1.5s) — player sees the forest freeze
+	await get_tree().create_timer(1.5).timeout
 
 	# Release mouse for UI interaction
 	Input.set_mouse_mode(Input.MOUSE_MODE_VISIBLE)
@@ -1027,6 +1038,11 @@ func _get_encounter_card(enc_idx: int) -> Dictionary:
 		{"title": "Le Dolmen du Passage", "text": "Deux pierres massives soutiennent une dalle de granit. L'air entre les pierres est plus froid, plus dense. Quelque chose attend de l'autre cote.", "choices": [{"label": "Traverser le passage"}, {"label": "Toucher les pierres"}, {"label": "Deposer un present"}]},
 		{"title": "Le Loup de Brume", "text": "Une silhouette grise se dessine dans le brouillard. Deux yeux ambres vous fixent sans ciller. Le loup ne montre ni agressivite ni peur.", "choices": [{"label": "Soutenir son regard"}, {"label": "Tendre la main"}, {"label": "Reculer lentement"}]},
 		{"title": "Le Chene de Merlin", "text": "Un chene immense deploie ses branches comme des bras protecteurs. Son tronc porte les cicatrices de mille saisons. Les druides y ont grave des symboles de pouvoir.", "choices": [{"label": "Toucher l'ecorce"}, {"label": "Grimper dans l'arbre"}, {"label": "Graver son nom"}]},
+		{"title": "Le Conseil des Druides", "text": "Trois silhouettes encapuchonnees se tiennent en cercle autour d'un feu vert. Leurs chants s'elevent comme de la fumee. Ils semblent attendre quelqu'un.", "choices": [{"label": "Rejoindre le cercle"}, {"label": "Ecouter leurs chants"}, {"label": "Offrir du gui"}]},
+		{"title": "La Danse des Korrigans", "text": "Des etres minuscules dansent en ronde dans une clairiere baignee de lune. Leurs rires tintent comme des clochettes. Le sol sous leurs pieds brille d'or.", "choices": [{"label": "Danser avec eux"}, {"label": "Voler une piece d'or"}, {"label": "Applaudir"}]},
+		{"title": "Le Reflet de Niamh", "text": "Un lac immobile reflete un ciel qui n'est pas le votre. Une silhouette feminine se dessine sous la surface. Sa voix murmure des promesses de Tir na nOg.", "choices": [{"label": "Plonger la main"}, {"label": "Chanter pour elle"}, {"label": "Detourner le regard"}]},
+		{"title": "La Stele des Anciens", "text": "Une pierre dressee porte des inscriptions dans une langue oubliee. Le vent qui la caresse produit un son grave et melodieux. Les ancetres parlent a travers elle.", "choices": [{"label": "Dechiffrer les signes"}, {"label": "Poser le front contre la pierre"}, {"label": "Graver un ogham"}]},
+		{"title": "L'Ombre de l'Ankou", "text": "Une charette grince dans le brouillard. Une silhouette haute et maigre la pousse lentement. Ses yeux sont des trous noirs dans un visage de craie. Il ne menace pas — il observe.", "choices": [{"label": "L'affronter du regard"}, {"label": "Offrir un objet"}, {"label": "Fuir dans la brume"}]},
 	]
 	# Shuffle based on encounter index for variety
 	var idx: int = (enc_idx * 7 + 3) % fallback_cards.size()
