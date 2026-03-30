@@ -991,6 +991,22 @@ func _on_encounter_reached(enc_idx: int) -> void:
 				_on_run_complete()
 				return
 
+		# Show life change feedback on HUD
+		var life_change: int = 0
+		if score >= 80:
+			life_change = 4  # +5 heal - 1 drain = +4 net
+		elif score < 30:
+			life_change = -9  # -8 damage - 1 drain = -9 net
+		else:
+			life_change = -1  # just drain
+		if is_instance_valid(status_label):
+			if life_change > 0:
+				status_label.text = "+%d PV — La foret te sourit." % life_change
+			elif life_change < -5:
+				status_label.text = "%d PV — Les ombres s'epaississent..." % life_change
+			else:
+				status_label.text = "%d PV — Le sentier continue." % life_change
+
 		# Re-capture mouse for walk
 		Input.set_mouse_mode(Input.MOUSE_MODE_CAPTURED)
 		if is_instance_valid(objective_label):
