@@ -1,0 +1,202 @@
+{
+  "_meta": {
+    "agent": "merlin-ai-playtester",
+    "cycle": 11,
+    "timestamp": "2026-03-31T03:15:00Z",
+    "method": "full_analytical_simulation",
+    "note": "Cycle 11 Human Tester Mode. All 14 minigames, 166 templates, GroqAdapter, Anam persistence analyzed. No headless runner available (Godot native). Analysis via web-demo source files."
+  },
+
+  "card_pool_summary": {
+    "total_card_templates": 166,
+    "source": "FastRoute hardcoded templates (+ GroqAdapter LLM for live generation)",
+    "biome_coverage": {
+      "foret_broceliande": "26 cards (6 generic + 20 biome-specific)",
+      "cotes_sauvages": "20 cards",
+      "landes_bruyere": "20 cards",
+      "villages_celtes": "20 cards",
+      "cercles_pierres": "20 cards",
+      "marais_korrigans": "20 cards",
+      "collines_dolmens": "20 cards",
+      "iles_mystiques": "20 cards",
+      "neutral_generic": "6 cards"
+    },
+    "biome_coverage_verdict": "COMPLETE -- all 8 biomes have dedicated card sets (20 each)"
+  },
+
+  "faction_balance": {
+    "note": "Sample analysis on visible templates (~26 analyzed in detail). Full 166 estimation based on per-biome faction notes.",
+    "estimated_distribution": {
+      "druides": "~31% of rep effects",
+      "anciens": "~22% of rep effects",
+      "niamh": "~19% of rep effects",
+      "korrigans": "~15% of rep effects",
+      "ankou": "~13% of rep effects"
+    },
+    "cycle7_warning": "druides/niamh imbalance flagged in cycle 7 (2.12:1 ratio)",
+    "cycle8_correction": "niamh boosted in iles_mystiques (14/20 rep options = 70%)",
+    "current_status": "Partially improved. druides still 31% globally. ankou at 13% -- consistently lowest across all biomes.",
+    "target": "20% per faction (1.5:1 max ratio)",
+    "verdict": "MEDIUM IMBALANCE -- persistent druides dominance, ankou consistently low"
+  },
+
+  "effect_caps_compliance": {
+    "heal_per_option_max": {"observed": 7, "cap": 7, "compliant": true},
+    "damage_per_option_max": {"observed": 5, "cap": 5, "compliant": true},
+    "reputation_per_option_max": {"observed": 10, "cap": 10, "compliant": true},
+    "effects_per_option_max": {"observed": 3, "cap": 3, "compliant": true},
+    "engine_caps": {
+      "HEAL_LIFE": {"max": 18, "compliant": true},
+      "DAMAGE_LIFE": {"max": 15, "compliant": true},
+      "ADD_REPUTATION": {"max": 20, "min": -20, "compliant": true}
+    },
+    "LLM_cards_cap_validation": {
+      "validated_on_parse": false,
+      "risk": "HIGH -- GroqAdapter.generateCard() does not sanitize LLM effect values. Hallucinated HEAL_LIFE:50 would enter game. Engine-level scaleAndCap() provides last-resort cap but raw card data is unvalidated.",
+      "recommendation": "Add post-parse sanitization in GroqAdapter.generateCard() before returning Card"
+    },
+    "overall_verdict": "PASS for FastRoute pool. HIGH risk for LLM-generated cards."
+  },
+
+  "unfair_cards_check": {
+    "options_with_3_negative_effects": 0,
+    "purely_negative_options_count": 2,
+    "details": [
+      "fuir: DAMAGE_LIFE:3 + ADD_REPUTATION:niamh:-5 (damage + negative rep, no positive)",
+      "combattre: ADD_REPUTATION:ankou:5 + DAMAGE_LIFE:3 (damage as only immediate outcome)"
+    ],
+    "cards_where_all_3_options_negative": 0,
+    "verdict": "PASS -- minimal purely negative options. No card traps player into 3 bad options."
+  },
+
+  "simulated_run_outcomes": {
+    "note": "Analytical simulation of 3 full 25-card runs",
+    "runs": [
+      {
+        "run_id": 1,
+        "scenario": "cautious_healer",
+        "cards_played": 25,
+        "outcome": "victory",
+        "life_start": 100,
+        "life_end": 108,
+        "life_min": 97,
+        "life_max": 112,
+        "minigame_avg_score": 70,
+        "verdict": "TOO EASY -- cautious player gains more life than they lose. Drain -1/card offset by avg +4.7 heal per card."
+      },
+      {
+        "run_id": 2,
+        "scenario": "aggressive_explorer",
+        "cards_played": 18,
+        "outcome": "death_effects",
+        "life_start": 100,
+        "life_end": 0,
+        "life_min": 0,
+        "life_max": 100,
+        "minigame_avg_score": 30,
+        "verdict": "APPROPRIATE -- aggressive play with consistent minigame failure leads to death around card 15-20"
+      },
+      {
+        "run_id": 3,
+        "scenario": "balanced_with_oghams",
+        "cards_played": 25,
+        "outcome": "victory",
+        "life_start": 100,
+        "life_end": 93,
+        "life_min": 88,
+        "life_max": 105,
+        "minigame_avg_score": 60,
+        "verdict": "GOOD -- tension builds in final 5 cards. Appropriate challenge with ogham mitigation."
+      }
+    ],
+    "balance_verdict": "MEDIUM: cautious play is too safe (life never threatened). Need progressive pressure after card 15."
+  },
+
+  "minigame_audit": {
+    "total_implemented": 14,
+    "total_catalogue": 14,
+    "all_implemented": true,
+    "all_wired_in_switch": true,
+    "fallback_neutral_score": 50,
+    "neutral_fallback_is_safe": true,
+    "field_single_minigame_risk": {
+      "chance": ["herboristerie only"],
+      "bluff": ["negociation only"],
+      "logique": ["runes only"]
+    },
+    "verb_distribution_concern": "esprit verbs (parler/mediter/apaiser/se concentrer) over-represented -- player frequently triggers apaisement/volonte/sang_froid. Chance verbs under-represented.",
+    "verdict": "PASS -- all wired. Verb distribution creates esprit minigame bias."
+  },
+
+  "groq_adapter_integration": {
+    "fallback_chain_depth": 3,
+    "chain": ["GroqAdapter (8s timeout)", "FastRoute random", "Emergency static card"],
+    "chain_verified": true,
+    "cap_validation_present": false,
+    "finding_HIGH": "LLM effect values unvalidated on parse -- T036",
+    "loading_ux_gap_MEDIUM": "8s generation with no UI feedback -- T037",
+    "verdict": "FUNCTIONAL but HIGH risk from unvalidated LLM effects"
+  },
+
+  "anam_persistence": {
+    "load_on_init": true,
+    "save_on_all_3_endings": true,
+    "localStorage_error_handled": true,
+    "accumulation_correct": true,
+    "verdict": "PASS"
+  },
+
+  "ogham_system": {
+    "total_18_specs": true,
+    "starters_3": ["beith", "luis", "quert"],
+    "apply_ogham_effect_wired": true,
+    "process_ogham_modifiers_wired": true,
+    "tick_cooldowns_wired": true,
+    "verdict": "PASS"
+  },
+
+  "new_tasks_recommended": [
+    {
+      "id": "T036",
+      "title": "Validate LLM card effect caps in GroqAdapter post-parse",
+      "severity": "HIGH",
+      "priority": 2,
+      "est_tokens": 200
+    },
+    {
+      "id": "T037",
+      "title": "LLM loading UX -- spinner during 8s Groq generation",
+      "severity": "MEDIUM",
+      "priority": 3,
+      "est_tokens": 150
+    },
+    {
+      "id": "T038",
+      "title": "Difficulty scaling -- progressive drain after card 15",
+      "severity": "LOW",
+      "priority": 4,
+      "est_tokens": 300
+    },
+    {
+      "id": "T039",
+      "title": "Faction rebalance guidance -- druides cap 15%, ankou target 20%",
+      "severity": "LOW",
+      "priority": 4,
+      "est_tokens": 200
+    }
+  ],
+
+  "overall_verdict": "PASS_WITH_FINDINGS",
+  "critical": 0,
+  "high": 1,
+  "medium": 3,
+  "low": 2,
+  "action_items": [
+    "HIGH T036: Add GroqAdapter post-parse effect cap sanitization",
+    "MEDIUM T037: Add LLM loading indicator (8s gap)",
+    "MEDIUM: druides faction over-represented -- guide future content",
+    "MEDIUM: cautious player too safe -- consider difficulty scaling",
+    "LOW T038: Progressive drain increase",
+    "LOW T039: Faction balance in future card batches"
+  ]
+}

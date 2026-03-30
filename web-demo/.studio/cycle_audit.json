@@ -352,5 +352,67 @@
         }
       }
     }
+    ,{
+      "cycle": 11,
+      "timestamp": "2026-03-31T03:30:00Z",
+      "mode": "human_tester_mode",
+      "tasks_attempted": ["C11-PT", "C11-VQ", "C11-MA", "T036", "T037"],
+      "tasks_completed": ["C11-PT", "C11-VQ", "C11-MA", "T036", "T037"],
+      "tasks_deferred": ["T038", "T039"],
+      "gate": {
+        "ts_errors": 0,
+        "build_ok": true,
+        "bundle_kb": 289,
+        "bundle_delta_pct": 0.0,
+        "tests_pass": 0,
+        "verdict": "PROCEED"
+      },
+      "files_changed": [
+        "web-demo/src/llm/GroqAdapter.ts",
+        "web-demo/src/main.ts",
+        "web-demo/.studio/backlog.json",
+        "web-demo/.studio/metrics.json",
+        "web-demo/.studio/context_bundle.json",
+        "web-demo/.studio/worker_playtester.json",
+        "web-demo/.studio/worker_visual_qa.json",
+        "web-demo/.studio/worker_gameplay.json",
+        "web-demo/.studio/worker_metrics.json",
+        "web-demo/.studio/cycle_audit.json",
+        "tools/autodev/playtest_reports/playtest_report.json",
+        "tools/autodev/playtest_reports/visual_regression.json"
+      ],
+      "summary": "HUMAN TESTER MODE. Full analytical playtesting (3 simulated runs), visual QA regression check, cross-cycle metrics analysis. Findings: HIGH T036 (GroqAdapter not validating LLM effect caps -- fixed: added sanitizeEffectCap() clamping HEAL<=7, DAMAGE<=5, REP<=-10/+10), MEDIUM T037 (8s LLM generation blackout -- fixed: showLLMLoadingHint() pill indicator at bottom-center). MEDIUM findings (no escalation): druides over-represented 31% in card pool, cautious player never dies. New open tasks T038 (difficulty scaling) and T039 (faction rebalance guidance). Bundle unchanged 289KB. Zero TS errors. Code review APPROVED.",
+      "agents_dispatched": ["merlin-ai-playtester", "merlin-visual-qa", "merlin-metrics-analyzer", "merlin-gameplay-programmer"],
+      "qa_extended": {
+        "playtester": {
+          "method": "full_analytical_simulation",
+          "runs": 3,
+          "effect_caps_compliant": true,
+          "groq_cap_validation_issue_fixed": true,
+          "anam_persistence_correct": true,
+          "difficulty_curve": "cautious player too safe (MEDIUM)",
+          "faction_imbalance": "druides 31% (MEDIUM)",
+          "verdict": "PASS_WITH_FINDINGS"
+        },
+        "visual_qa": {
+          "method": "source_file_analysis",
+          "hud_elements": 8,
+          "hud_intact": true,
+          "loading_screen_intact": true,
+          "no_white_screen_risk_web_demo": true,
+          "llm_loading_gap_fixed": true,
+          "verdict": "PASS_WITH_NOTES"
+        },
+        "metrics_analyzer": {
+          "cycles_analyzed": 10,
+          "ts_errors_all_cycles": 0,
+          "zero_regressions": true,
+          "bundle_plateau_since_c9": true,
+          "all_milestones_complete": true,
+          "new_technical_debt_items": ["T036 (fixed)", "T037 (fixed)", "T038 (open)", "T039 (open)"],
+          "verdict": "HEALTHY"
+        }
+      }
+    }
   ]
 }

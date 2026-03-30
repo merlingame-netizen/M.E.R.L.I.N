@@ -1,0 +1,121 @@
+{
+  "_meta": {
+    "agent": "merlin-visual-qa",
+    "cycle": 11,
+    "timestamp": "2026-03-31T03:15:00Z",
+    "method": "source_file_text_analysis",
+    "note": "Cycle 11 Human Tester Mode. No editor needed. Text analysis of web-demo source files. Godot scenes not in scope (T001 still deferred)."
+  },
+
+  "regression_check_since_cycle10": {
+    "files_changed_in_cycle10": ["web-demo/src/main.ts", "web-demo/index.html", "web-demo/vite.config.ts", "web-demo/src/llm/GroqAdapter.ts"],
+    "files_changed_in_cycle11": [],
+    "regressions_found": 0,
+    "verdict": "NO REGRESSION"
+  },
+
+  "hud_audit": {
+    "file": "web-demo/src/ui/HUD.ts",
+    "elements": {
+      "life_bar": {"id": "life-fill", "present": true, "gradient": "brown-to-gold", "transition": "width 0.5s ease"},
+      "faction_bars_x5": {
+        "present": true,
+        "factions": ["druides", "anciens", "korrigans", "niamh", "ankou"],
+        "colors": {"druides": "#5a9a5a", "anciens": "#8b8b6a", "korrigans": "#9a6a5a", "niamh": "#6a8a9a", "ankou": "#7a5a7a"},
+        "dynamic_width_from_store": true
+      },
+      "anam_counter": {"id": "anam-value", "present": true, "color": "#cd853f"},
+      "biome_currency": {"id": "currency-value", "present": true, "color": "#8fbc8f"},
+      "cards_count": {"id": "cards-count", "present": true},
+      "biome_name": {"id": "biome-name", "present": true}
+    },
+    "store_wired": true,
+    "pointer_events_none": true,
+    "z_index": 10,
+    "verdict": "PASS -- all 8 HUD elements present and correctly wired"
+  },
+
+  "loading_screen_audit": {
+    "file": "web-demo/index.html",
+    "present": true,
+    "z_index": 100,
+    "title": "M.E.R.L.I.N. -- Le Jeu des Oghams",
+    "spinner_type": "double-ring counter-rotating pseudo-elements",
+    "spinner_size_px": 64,
+    "spinner_inner_ring": "border-left/right #cd853f rotates reverse 1.8s",
+    "spinner_outer_ring": "border-top/bottom #cd853f rotates 1.2s",
+    "fade_out_on_init": "opacity 0 + display none after 500ms",
+    "verdict": "PASS"
+  },
+
+  "overlay_audit": {
+    "card_overlay": {
+      "id": "card-overlay",
+      "visible_class": "display:flex",
+      "z_index": 20,
+      "background": "rgba(10,10,18,0.85)",
+      "card_container_present": true,
+      "verdict": "PASS"
+    },
+    "minigame_overlay": {
+      "id": "minigame-overlay",
+      "visible_class": "display:flex",
+      "z_index": 30,
+      "background": "rgba(10,10,18,0.90)",
+      "container_id": "minigame-container",
+      "verdict": "PASS"
+    },
+    "fade_overlay": {
+      "id": "fade-overlay",
+      "z_index": 50,
+      "transition": "opacity 0.8s ease",
+      "initial_opacity": 0,
+      "active_class_opacity_1": true,
+      "verdict": "PASS"
+    }
+  },
+
+  "white_screen_risk_web_demo": {
+    "html_body_background": "#0a0a12 -- always visible",
+    "loading_screen_covers_until_three_ready": true,
+    "three_js_canvas_full_viewport": true,
+    "risk_assessment": "NONE -- dark background visible at all times. T001 is Godot engine only.",
+    "verdict": "PASS -- no white screen risk in web-demo"
+  },
+
+  "findings": [
+    {
+      "severity": "MEDIUM",
+      "type": "UX_GAP",
+      "id": "VQ-11-01",
+      "title": "8s LLM generation period has no UI feedback",
+      "description": "When GroqAdapter is generating a card (up to 8s timeout), main.ts awaits llm.generateCard() before calling showCard(). During this period, card-overlay is not yet shown. User sees the fade-black screen with no progress indicator. May be perceived as freeze.",
+      "location": "web-demo/src/main.ts lines 123-148 (card generation block)",
+      "recommendation": "Show card-overlay with 'Merlin consulte les etoiles...' before awaiting LLM. Replace content with actual card when received.",
+      "task": "T037",
+      "status": "NEW"
+    }
+  ],
+
+  "screenshots_check": {
+    "directory": "tools/autodev/playtest_reports/screenshots/",
+    "available": false,
+    "png_under_5kb_white_screen_indicator": "not applicable",
+    "note": "No screenshot infrastructure. Text analysis only."
+  },
+
+  "vite_config_audit": {
+    "all_14_minigames_in_manual_chunks": true,
+    "compressed_size_reporting": true,
+    "bundle_chunks": 3,
+    "verdict": "PASS"
+  },
+
+  "overall_verdict": "PASS_WITH_NOTES",
+  "critical_issues": 0,
+  "high_issues": 0,
+  "medium_issues": 1,
+  "low_issues": 0,
+  "summary": "No visual regressions since cycle 10. All HUD elements present, loading screen functional (Celtic knot double-ring spinner), all overlays correctly layered (z-index: card=20, minigame=30, fade=50, loading=100). web-demo has zero white-screen risk (#0a0a12 dark background always present). MEDIUM: 8s LLM generation shows no UI feedback -- T037.",
+  "next_steps": ["T037: Add LLM loading indicator (estimated 150 tokens, visual agent)"]
+}

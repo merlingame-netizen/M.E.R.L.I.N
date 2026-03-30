@@ -1,60 +1,97 @@
 {
   "_comment": "Contexte pre-calcule par le director en debut de cycle. Lu par les agents a la place de tous les docs.",
   "_usage": "Director ecrit ce fichier avant de dispatcher. Agents lisent UNIQUEMENT ce fichier pour le contexte.",
-  "cycle": 9,
-  "timestamp": "2026-03-31T01:30:00Z",
-  "phase": "polish_integration",
+  "cycle": 11,
+  "timestamp": "2026-03-31T03:00:00Z",
+  "mode": "human_tester_mode",
+  "focus": "extensive_playtesting_visual_qa_metrics",
   "selected_tasks": [
-    {"id": "T028", "title": "Full loop integration audit", "domain": "gameplay", "agent": "merlin-gameplay-programmer"},
-    {"id": "T029", "title": "Error resilience — try/catch LLM + minigame", "domain": "gameplay", "agent": "merlin-gameplay-programmer"},
-    {"id": "T030", "title": "T001 white scenes diagnostic (code-only)", "domain": "visual", "agent": "merlin-tech-artist"},
-    {"id": "T031", "title": "Card quality pass — 166 templates", "domain": "narrative", "agent": "merlin-narrative-designer"}
+    {"id": "C11-PT", "title": "Full AI playtesting -- GroqAdapter+Anam+14 minigames", "domain": "playtester", "agent": "merlin-ai-playtester"},
+    {"id": "C11-VQ", "title": "Visual QA regression check since cycle 10", "domain": "visual", "agent": "merlin-visual-qa"},
+    {"id": "C11-MA", "title": "Cross-cycle metrics analysis cycles 1-11", "domain": "metrics", "agent": "merlin-metrics-analyzer"}
   ],
-  "changed_files_by_domain": {
-    "gameplay": ["web-demo/src/main.ts", "web-demo/src/game/CardSystem.ts", "web-demo/src/game/EffectEngine.ts"],
-    "visual": [],
-    "narrative": ["web-demo/src/game/CardSystem.ts"],
-    "llm": [],
-    "qa": []
+  "state_summary": {
+    "all_dev_tasks_done_or_blocked": true,
+    "minigames_count": 14,
+    "fastroute_templates_count": 166,
+    "biomes_covered": 9,
+    "ts_errors": 0,
+    "bundle_kb_app": 289,
+    "bundle_kb_gzip_total": 209,
+    "bundle_kb_total": 818,
+    "deployment_url": "https://web-export-pi.vercel.app",
+    "groq_adapter_model": "llama3-8b-8192",
+    "groq_timeout_ms": 8000,
+    "anam_persistence": "localStorage key merlin_anam"
   },
+  "game_loop_steps": [
+    "1.WALK(6s)", "2.DRAIN(-1 life)", "3.CHECK_DEATH", "3b.OGHAM_PANEL",
+    "4.FADE+CARD_GEN", "5.CARD_SHOW+CHOICE", "6.MINIGAME", "7.SCORE+MULTIPLIER",
+    "8.APPLY_EFFECTS(ogham_modifiers)", "9.TICK_COOLDOWNS", "10.CHECK_DEATH",
+    "11.CHECK_VICTORY(cardsPlayed>=25+rail.complete)"
+  ],
+  "minigames_list": ["traces", "runes", "equilibre", "herboristerie", "negociation",
+    "combat_rituel", "apaisement", "sang_froid", "course", "fouille",
+    "ombres", "volonte", "regard", "echo"],
   "key_constants": {
-    "effect_caps": {
-      "reputation_per_card": 20,
-      "heal_max": 18,
-      "damage_max": 15,
-      "effects_per_option": 3,
-      "score_bonus_cap": 2.0
+    "EFFECT_CAPS_card": {
+      "HEAL_LIFE_max": 7,
+      "DAMAGE_LIFE_max": 5,
+      "ADD_REPUTATION_max": 10,
+      "heal_options_per_card": 1
     },
-    "card_constraints": {
-      "heal_per_option_max": 7,
-      "heal_options_per_card_max": 1,
-      "rep_per_option_max": 10,
-      "dmg_per_option_max": 5
+    "EFFECT_CAPS_engine": {
+      "ADD_REPUTATION_max": 20,
+      "HEAL_LIFE_max": 18,
+      "DAMAGE_LIFE_max": 15
     },
+    "score_bonus_cap_multiplier": 2.0,
     "life_drain_per_card": 1,
     "life_max": 100,
     "factions": ["druides", "anciens", "korrigans", "niamh", "ankou"],
-    "minigames_done": ["traces", "runes", "equilibre", "herboristerie", "negociation", "combat_rituel", "apaisement", "sang_froid", "course", "fouille", "ombres", "volonte", "regard", "echo"],
-    "minigames_adding": [],
-    "minigame_base_pattern": "extends MinigameBase, setup()+render()+cleanup(), canvas-based, score 0-100, finish(score) to end",
-    "fastroute_templates_count": 166,
-    "fastroute_templates_target": 166,
-    "bundle_optimization": "manual chunks: three-core (529KB cached), index app code, minigames chunk"
+    "minigame_neutral_fallback_score": 50,
+    "victory_condition": "cardsPlayed >= 25 AND rail.isComplete()",
+    "walk_seconds": 6
   },
-  "agent_outputs_summary": {
-    "gameplay": {"last_cycle": 8, "status": "pending", "summary": "Integration audit + error resilience"},
-    "visual": {"last_cycle": 6, "status": "pending", "summary": "T001 white scenes diagnosis (code-only)"},
-    "narrative": {"last_cycle": 8, "status": "pending", "summary": "Quality pass on 166 card templates"},
-    "qa": {"last_cycle": 8, "status": "pending", "summary": "Full quality gate + bundle check"}
+  "known_issues": {
+    "T001": "White scenes Godot editor -- not web-demo, requires editor, deferred",
+    "T005": "Fog shader perf blocked by T001 -- deferred"
   },
-  "integration_audit_checklist": {
-    "14_minigames_in_switch": "VERIFY",
-    "ogham_panel_wired": "VERIFY",
-    "ogham_effect_called": "VERIFY",
-    "ogham_modifiers_called": "VERIFY",
-    "save_load_present": "VERIFY",
-    "try_catch_llm": "ADD",
-    "try_catch_minigame": "ADD",
-    "fastroute_fallback": "VERIFY"
+  "cycle10_gate": {
+    "ts_errors": 0,
+    "bundle_kb_app": 289,
+    "smoke_pass": true,
+    "build_ok": true,
+    "verdict": "PROCEED"
+  },
+  "regression_thresholds_cycle11": {
+    "ts_errors": "== 0 (BLOCK)",
+    "bundle_kb_app_max": 304,
+    "runtime_errors": "== 0 (BLOCK)",
+    "smoke_pass": "true (BLOCK)"
+  },
+  "cycle_history_summary": {
+    "c1":  {"bundle_kb": 624, "minigames": 1, "cards": 20},
+    "c2":  {"bundle_kb": 636, "minigames": 2, "cards": 20},
+    "c3":  {"bundle_kb": 659, "minigames": 3, "cards": 20},
+    "c4":  {"bundle_kb": 683, "minigames": 4, "cards": 20},
+    "c5":  {"bundle_kb": 709, "minigames": 6, "cards": 20},
+    "c6":  {"bundle_kb_app": 208, "minigames": 8, "cards": 20, "note": "bundle optimization"},
+    "c7":  {"bundle_kb_app": 242, "minigames": 12, "cards": 20},
+    "c8":  {"bundle_kb_app": 283, "minigames": 14, "cards": 40},
+    "c9":  {"bundle_kb_app": 284, "minigames": 14, "cards": 0, "note": "polish+resilience"},
+    "c10": {"bundle_kb_app": 289, "minigames": 14, "cards": 0, "note": "groq+anam+loading"}
+  },
+  "changed_files_by_domain": {
+    "gameplay": [],
+    "visual": [],
+    "narrative": [],
+    "qa": [],
+    "playtester": ["analysis only -- no code changes in cycle 11"],
+    "metrics": ["analysis only -- no code changes in cycle 11"]
+  },
+  "dispatch_wave": {
+    "wave1_parallel": ["merlin-ai-playtester", "merlin-visual-qa", "merlin-metrics-analyzer"],
+    "wave2_conditional": ["merlin-balance-tuner if balance issues", "merlin-gameplay-programmer if bugs found", "merlin-narrative-designer if content gaps identified"]
   }
 }

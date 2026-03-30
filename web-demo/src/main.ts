@@ -28,6 +28,7 @@ import { MinigameVolonte } from './minigames/mg_volonte';
 import { MinigameRegard } from './minigames/mg_regard';
 import { MinigameEcho } from './minigames/mg_echo';
 import { initOghamPanel, showOghamPanel, hideOghamPanel } from './ui/OghamPanel';
+import { getLLMAdapter } from './llm/GroqAdapter';
 
 // --- Config ---
 const WALK_SECONDS_BEFORE_CARD = 6; // Seconds of walking before showing a card
@@ -66,6 +67,9 @@ async function main(): Promise<void> {
   initHUD();
   initOghamPanel();
 
+  // Load cross-run Anam from localStorage
+  loadAnamFromStorage();
+
   // Start game
   store.getState().startRun('cotes_sauvages');
   updateHUD();
@@ -98,6 +102,7 @@ async function gameLoop(
     // 3. Check death after drain
     if (state().checkDeath()) {
       state().endRun('death_drain');
+      saveAnamToStorage();
       await showEndScreen('Tu as succombe a l\'epuisement...');
       break;
     }
@@ -117,8 +122,18 @@ async function gameLoop(
 
     let card;
     try {
-      card = generateFastRouteCard(state().run.biome);
+      // Try LLM first (Groq cloud), fall back to FastRoute.
+      // Show a brief loading indicator during generation to avoid perceived freeze.
+      const llm = getLLMAdapter();
+      let llmCard = null;
+      if (llm) {
+        showLLMLoadingHint();
+        llmCard = await llm.generateCard(state().run.biome, `carte ${state().run.cardsPlayed}, vie ${state().run.life}`);
+        hideLLMLoadingHint();
+      }
+      card = llmCard ?? generateFastRouteCard(state().run.biome);
     } catch (err) {
+      hideLLMLoadingHint();
       // FastRoute fallback: generate a minimal safe card if template fails
       console.warn('[MERLIN] Card generation failed, using emergency fallback:', err);
       card = {
@@ -180,6 +195,7 @@ async function gameLoop(
     // 9. Check death after effects
     if (state().checkDeath()) {
       state().endRun('death_effects');
+      saveAnamToStorage();
       await showEndScreen('Les forces de Broceliande t\'ont consume...');
       break;
     }
@@ -187,6 +203,7 @@ async function gameLoop(
     // 10. Check victory condition
     if (state().run.cardsPlayed >= 25 && rail.isComplete()) {
       state().endRun('victory');
+      saveAnamToStorage();
       await showEndScreen('Tu as traverse le biome ! Victoire !');
       break;
     }
@@ -282,6 +299,67 @@ async function showEndScreen(message: string): Promise<void> {
 
 function waitSeconds(seconds: number): Promise<void> {
   return new Promise((resolve) => setTimeout(resolve, seconds * 1000));
+}
+
+// --- LLM loading hint (shown during Groq card generation to prevent perceived freeze) ---
+
+const LLM_HINT_ID = 'llm-loading-hint';
+
+function showLLMLoadingHint(): void {
+  if (document.getElementById(LLM_HINT_ID)) return;
+  const hint = document.createElement('div');
+  hint.id = LLM_HINT_ID;
+  hint.style.cssText = [
+    'position:fixed',
+    'bottom:24px',
+    'left:50%',
+    'transform:translateX(-50%)',
+    'background:rgba(10,10,18,0.85)',
+    'color:rgba(205,133,63,0.8)',
+    'font-family:system-ui',
+    'font-size:13px',
+    'padding:8px 20px',
+    'border-radius:20px',
+    'border:1px solid rgba(205,133,63,0.3)',
+    'z-index:60',
+    'pointer-events:none',
+    'letter-spacing:1px',
+  ].join(';');
+  hint.textContent = 'Merlin consulte les etoiles\u2026';
+  document.body.appendChild(hint);
+}
+
+function hideLLMLoadingHint(): void {
+  document.getElementById(LLM_HINT_ID)?.remove();
+}
+
+// --- Anam cross-run persistence (localStorage) ---
+
+const ANAM_STORAGE_KEY = 'merlin_anam';
+
+function loadAnamFromStorage(): void {
+  try {
+    const saved = localStorage.getItem(ANAM_STORAGE_KEY);
+    if (saved !== null) {
+      const value = parseInt(saved, 10);
+      if (!isNaN(value) && value > 0) {
+        store.getState().addAnam(value);
+        console.info(`[MERLIN] Loaded cross-run Anam: ${value}`);
+      }
+    }
+  } catch {
+    // localStorage unavailable (private browsing, etc.) — ignore
+  }
+}
+
+function saveAnamToStorage(): void {
+  try {
+    const currentAnam = store.getState().meta.anam;
+    localStorage.setItem(ANAM_STORAGE_KEY, currentAnam.toString());
+    console.info(`[MERLIN] Saved cross-run Anam: ${currentAnam}`);
+  } catch {
+    // localStorage unavailable — ignore
+  }
 }
 
 // --- Start ---

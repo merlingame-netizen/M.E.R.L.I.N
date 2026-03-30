@@ -3,6 +3,28 @@
   "updated": "2026-03-31T01:30:00Z",
   "tasks": [
     {
+      "id": "T038",
+      "title": "Difficulty scaling -- progressive drain increase after card 15",
+      "priority": 3,
+      "status": "open",
+      "domain": "gameplay",
+      "est_tokens": 300,
+      "depends_on": [],
+      "tags": ["balance", "difficulty"],
+      "notes": "Cycle 11 playtester: cautious player can never die. Drain -1/card fully offset by avg +4.7 heal. Consider drain+1 after card 15, or faction threshold event applying pressure."
+    },
+    {
+      "id": "T039",
+      "title": "Faction balance -- reduce druides dominance in future card batches",
+      "priority": 4,
+      "status": "open",
+      "domain": "narrative",
+      "est_tokens": 200,
+      "depends_on": [],
+      "tags": ["balance", "faction"],
+      "notes": "Cycle 11 playtester: druides at ~31% of rep effects across 166 templates (target 20%). Future card batches should cap druides at 15%, boost ankou to 20%."
+    },
+    {
       "id": "T001",
       "title": "Fix white/blank scenes -- add background ColorRect in editor",
       "priority": 1,
@@ -114,6 +136,20 @@
     }
   ],
   "completed": [
+    {
+      "id": "T036",
+      "title": "Validate LLM card effect caps in GroqAdapter post-parse",
+      "domain": "gameplay",
+      "completed_cycle": 11,
+      "completed_at": "2026-03-31T03:30:00Z"
+    },
+    {
+      "id": "T037",
+      "title": "LLM loading UX -- show hint during Groq 8s generation",
+      "domain": "visual",
+      "completed_cycle": 11,
+      "completed_at": "2026-03-31T03:30:00Z"
+    },
     {
       "id": "T002",
       "title": "Implement runes minigame (canvas-based, score 0-100)",

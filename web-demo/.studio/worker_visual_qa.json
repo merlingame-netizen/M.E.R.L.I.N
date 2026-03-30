@@ -1,17 +1,122 @@
 {
-  "worker": "merlin-visual-qa",
-  "cycle": 8,
-  "status": "COMPLETE",
-  "started_at": "2026-03-31T00:25:00Z",
-  "completed_at": "2026-03-31T00:30:00Z",
-  "duration_s": 300,
-  "method": "code_analysis",
-  "findings_count": {
-    "pass": 5,
-    "warning": 0,
-    "fail": 0
+  "agent": "merlin-visual-qa",
+  "cycle": 11,
+  "timestamp": "2026-03-31T03:15:00Z",
+  "status": "PASS_WITH_NOTES",
+  "confidence": 0.92,
+  "method": "source_file_analysis_no_editor",
+
+  "hud_audit": {
+    "file": "web-demo/src/ui/HUD.ts",
+    "elements_present": {
+      "life_bar": true,
+      "life_fill_gradient": true,
+      "faction_bars_x5": true,
+      "faction_labels_x5": true,
+      "anam_counter": true,
+      "biome_currency": true,
+      "cards_count": true,
+      "biome_name": true
+    },
+    "faction_colors_defined": true,
+    "hud_z_index": 10,
+    "pointer_events_none": true,
+    "dynamic_build_faction_panel": true,
+    "verdict": "PASS -- all 8 HUD elements present and correctly styled"
   },
-  "summary": "No visual regressions. HUD.ts untouched. New minigames (mg_regard.ts, mg_echo.ts) follow MinigameBase canvas pattern with proper cleanup (cancelAnimationFrame, removeEventListener, super.cleanup). CardSystem.ts: 40 templates appended to FASTROUTE_TEMPLATES without modifying existing entries. main.ts: 2 imports + 2 switch cases added, no existing code modified.",
-  "output_path": "tools/autodev/playtest_reports/visual_regression_cycle8.json",
-  "verdict": "PASS"
+
+  "loading_screen_audit": {
+    "file": "web-demo/index.html",
+    "spinner_present": true,
+    "spinner_type": "double-ring counter-rotating (::before + ::after pseudo-elements)",
+    "spinner_color": "#cd853f (Celtic gold)",
+    "spinner_size_px": 64,
+    "loading_text": "M.E.R.L.I.N. (h1) + status text (p)",
+    "loading_z_index": 100,
+    "fade_out_on_init": "opacity transition 0.5s then display:none",
+    "verdict": "PASS"
+  },
+
+  "card_overlay_audit": {
+    "css_present": true,
+    "visible_class_adds_flex": true,
+    "z_index": 20,
+    "background_rgba": "rgba(10,10,18,0.85)",
+    "card_container_max_width": "700px",
+    "narrative_italic_style": true,
+    "option_hover_transitions": true,
+    "verdict": "PASS"
+  },
+
+  "minigame_overlay_audit": {
+    "css_present": true,
+    "visible_class_adds_flex": true,
+    "z_index": 30,
+    "background_rgba": "rgba(10,10,18,0.90)",
+    "container_element": "#minigame-container",
+    "verdict": "PASS"
+  },
+
+  "fade_overlay_audit": {
+    "css_present": true,
+    "z_index": 50,
+    "transition_duration_ms": 800,
+    "initial_opacity": 0,
+    "active_class_sets_opacity_1": true,
+    "verdict": "PASS"
+  },
+
+  "white_screen_risk_web_demo": {
+    "background_html": "#0a0a12 (dark navy) on html+body",
+    "background_app": "Three.js canvas covers app div",
+    "loading_screen_covers_until_ready": true,
+    "three_js_scene_builds_before_hide_loading": true,
+    "risk_level": "NONE in web-demo",
+    "note": "T001 white screen issue is Godot engine scenes only, not web-demo. web-demo has proper #0a0a12 fallback background at all times."
+  },
+
+  "groq_loading_ux_gap": {
+    "severity": "MEDIUM",
+    "finding": "After card fade-in (300ms fadeOut), game awaits showCard() which first calls getLLMAdapter() and llm.generateCard() (up to 8s). During this await, the card-overlay is NOT yet shown (showCard() shows it after generation). User sees black fade screen for up to 8 seconds with no feedback.",
+    "location": "web-demo/src/main.ts lines 120-148",
+    "recommendation": "Show card-overlay with 'Merlin consulte les etoiles...' text immediately before LLM call, replace with actual card when ready.",
+    "task": "T037"
+  },
+
+  "regression_check_cycle10": {
+    "loading_screen_present_since_cycle10": true,
+    "vite_chunks_intact": true,
+    "hud_unchanged_since_cycle2": true,
+    "ogham_panel_unchanged_since_cycle3": true,
+    "try_catch_guards_unchanged_since_cycle9": true,
+    "minigame_switch_14_cases": true,
+    "no_css_removed": true,
+    "verdict": "NO REGRESSION since cycle 10"
+  },
+
+  "visual_regression_items": [
+    {
+      "severity": "MEDIUM",
+      "type": "UX_GAP",
+      "description": "8s LLM loading blackout in card overlay",
+      "status": "NEW FINDING",
+      "task": "T037"
+    }
+  ],
+
+  "screenshots_check": {
+    "directory": "tools/autodev/playtest_reports/screenshots/",
+    "available": false,
+    "white_screen_png_under_5kb": "not applicable -- no screenshots",
+    "note": "No headless screenshots available. Visual assessment is text/code analysis only."
+  },
+
+  "overall_verdict": "PASS_WITH_NOTES",
+  "critical_issues": 0,
+  "high_issues": 0,
+  "medium_issues": 1,
+  "low_issues": 0,
+  "summary": "No visual regressions since cycle 10. All 8 HUD elements present. Loading screen with Celtic knot spinner functional. Minigame and card overlays correctly styled. web-demo has no white-screen risk (dark background #0a0a12 always visible). MEDIUM: 8s LLM generation period shows no UI feedback -- user may perceive freeze.",
+  "blockers": [],
+  "next_steps": ["T037: Add LLM loading indicator in card-overlay before generateCard() completes"]
 }

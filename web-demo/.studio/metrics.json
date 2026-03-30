@@ -1,10 +1,10 @@
 {
   "_comment": "Metriques par cycle -- remplace METRICS.md. Ecrit par merlin-qa-lead apres chaque cycle.",
-  "cycle": 9,
-  "timestamp": "2026-03-31T01:30:00Z",
+  "cycle": 11,
+  "timestamp": "2026-03-31T03:30:00Z",
   "ts_errors": 0,
-  "bundle_kb": 284,
-  "bundle_kb_total": 813,
+  "bundle_kb": 289,
+  "bundle_kb_total": 818,
   "bundle_kb_vendor": 529,
   "bundle_chunks": 3,
   "tests_pass": 0,
@@ -12,5 +12,5 @@
   "errors_runtime": 0,
   "build_ok": true,
   "smoke_pass": true,
-  "notes": "Cycle 9 POLISH & INTEGRATION: Integration audit verified all 14 minigames in createMinigame() switch, OghamPanel wired before card phase, EffectEngine.applyOghamEffect() + processOghamModifiers() correctly called, game loop 11-step flow intact. Error resilience added: 3 try/catch guards (card generation with emergency fallback, minigame with neutral score 50, effect application with skip). T001 white scenes diagnosed: root cause is plain Node root in .tscn files + no background ColorRect — fix requires Godot editor. Card quality pass: 166 templates all have 3 options, no narrative under 20 or over 200 words, no duplicate verbs per card, all effects non-empty. Bundle 284KB (+1KB from try/catch code), under 370KB WARN. Zero TS errors."
+  "notes": "Cycle 11 HUMAN TESTER MODE: Extensive playtesting (3 simulated runs), visual QA, cross-cycle metrics analysis. Fixed T036 (GroqAdapter LLM effect cap sanitization -- HIGH) and T037 (LLM loading hint 'Merlin consulte les etoiles' -- MEDIUM). New backlog tasks T038/T039 for balance work. Bundle unchanged at 289KB app (analysis + small fixes cycle). Zero TS errors. No regressions."
 }
