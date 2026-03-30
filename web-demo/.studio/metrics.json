@@ -1,13 +1,13 @@
 {
   "_comment": "Metriques par cycle -- remplace METRICS.md. Ecrit par merlin-qa-lead apres chaque cycle.",
-  "cycle": 2,
-  "timestamp": "2026-03-30T18:30:00Z",
+  "cycle": 3,
+  "timestamp": "2026-03-30T19:00:00Z",
   "ts_errors": 0,
-  "bundle_kb": 636,
+  "bundle_kb": 659,
   "tests_pass": 0,
   "load_ms": 0,
   "errors_runtime": 0,
   "build_ok": true,
   "smoke_pass": true,
-  "notes": "Cycle 2: +equilibre minigame (balance/wind, 12s timer, score=zone%), +enhanced HUD (5 faction bars, anam, biome currency), +fog shader plane (animated sin-wave noise, edge fade). Bundle +1.9% (624->636 KB)."
+  "notes": "Cycle 3: +herboristerie minigame (5x4 plant grid, 15s timer, identify target plant among toxic/safe, score formula with time bonus), +20 FastRoute cards for cotes_sauvages+niamh (coastal celtic themes, balanced effects), +Ogham activation UI (slot panel before card, cooldown display, skip option). Bundle +3.6% (636->659 KB). 4/14 minigames done. 46 card templates total."
 }

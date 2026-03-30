@@ -52,6 +52,33 @@
       ],
       "summary": "Implemented equilibre minigame (balance cursor with wind gusts, 12s timer, score = % time in safe zone). Enhanced HUD with 5 faction reputation bars, anam counter, biome currency display with dynamic label. Added animated fog shader plane to CoastBiome (sin-wave noise, edge fade, time-driven animation). All 3/3 tasks completed. Bundle +1.92%.",
       "agents_dispatched": ["merlin-gameplay-programmer", "merlin-tech-artist", "merlin-qa-lead"]
+    },
+    {
+      "cycle": 3,
+      "timestamp": "2026-03-30T19:00:00Z",
+      "tasks_attempted": ["T008", "T009", "T010"],
+      "tasks_completed": ["T008", "T009", "T010"],
+      "tasks_deferred": [],
+      "gate": {
+        "ts_errors": 0,
+        "build_ok": true,
+        "bundle_kb": 659,
+        "bundle_delta_pct": 3.62,
+        "tests_pass": 0,
+        "verdict": "PROCEED"
+      },
+      "files_changed": [
+        "web-demo/src/minigames/mg_herboristerie.ts",
+        "web-demo/src/ui/OghamPanel.ts",
+        "web-demo/src/main.ts",
+        "web-demo/src/game/CardSystem.ts",
+        "web-demo/.studio/backlog.json",
+        "web-demo/.studio/metrics.json",
+        "web-demo/.studio/context_bundle.json",
+        "web-demo/.studio/cycle_audit.json"
+      ],
+      "summary": "Implemented herboristerie minigame (5x4 grid, identify target plant among toxic/safe, 15s timer, score with time bonus + wrong-pick penalty). Added 20 FastRoute cards for cotes_sauvages+niamh (coastal celtic themes: shipwrecks, sea caves, selkies, tidal pools, lighthouses). Added Ogham activation UI panel (slot system showing equipped oghams with cooldown indicators, skip button, shown before each card). 3/3 tasks completed. Bundle +3.62% (636->659 KB), well under 668 KB block threshold.",
+      "agents_dispatched": ["merlin-gameplay-programmer", "merlin-narrative-designer", "merlin-qa-lead"]
     }
   ]
 }

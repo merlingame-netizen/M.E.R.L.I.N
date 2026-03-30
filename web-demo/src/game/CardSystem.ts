@@ -267,6 +267,167 @@ const FASTROUTE_TEMPLATES: readonly {
       { verb: 'resoudre', text: 'Tu cherches a comprendre pourquoi le saule pleure.', effects: ['ADD_ANAM:6', 'ADD_REPUTATION:druides:6'] },
     ],
   },
+  // --- cotes_sauvages + niamh (20 cards) ---
+  {
+    narrative: 'Les vagues se brisent contre des rochers noirs sculptes par les siecles. Entre deux affleurements, un bassin naturel miroite d\'un bleu surnaturel. Une silhouette feminine flotte juste sous la surface.',
+    options: [
+      { verb: 'parler', text: 'Tu t\'adresses a la silhouette, ta voix couvrant le ressac.', effects: ['ADD_REPUTATION:niamh:10', 'HEAL_LIFE:5'] },
+      { verb: 'observer', text: 'Tu etudies le bassin, cherchant a comprendre ce phenomene.', effects: ['ADD_ANAM:5', 'ADD_REPUTATION:druides:4'] },
+      { verb: 'tenter sa chance', text: 'Tu plonges la main dans l\'eau lumineuse.', effects: ['ADD_BIOME_CURRENCY:8', 'DAMAGE_LIFE:4'] },
+    ],
+  },
+  {
+    narrative: 'Un phare en ruine domine la falaise. Sa lanterne brisee laisse passer le vent sale. Au pied de la tour, des coquillages forment un motif en spirale qui pulse d\'une lumiere bleutee.',
+    options: [
+      { verb: 'dechiffrer', text: 'Tu etudies la spirale de coquillages, cherchant un message.', effects: ['ADD_ANAM:7', 'ADD_REPUTATION:anciens:5'] },
+      { verb: 'escalader', text: 'Tu grimpes les marches du phare pour voir au-dela de l\'horizon.', effects: ['ADD_BIOME_CURRENCY:6', 'DAMAGE_LIFE:3'] },
+      { verb: 'ecouter', text: 'Tu fermes les yeux et laisses le vent te raconter l\'histoire du phare.', effects: ['HEAL_LIFE:4', 'ADD_REPUTATION:niamh:6'] },
+    ],
+  },
+  {
+    narrative: 'Une grotte marine s\'ouvre dans la falaise, accessible uniquement a maree basse. A l\'interieur, des stalactites cristallines chantent quand le vent s\'engouffre. Des offrandes anciennes jonchent le sol.',
+    options: [
+      { verb: 'se faufiler', text: 'Tu te glisses dans la grotte avant que la maree ne remonte.', effects: ['ADD_BIOME_CURRENCY:9', 'DAMAGE_LIFE:5'] },
+      { verb: 'mediter', text: 'Tu t\'assieds a l\'entree et ecoutes le chant des cristaux.', effects: ['HEAL_LIFE:6', 'ADD_REPUTATION:niamh:8'] },
+      { verb: 'examiner', text: 'Tu etudies les offrandes pour comprendre qui venait ici.', effects: ['ADD_ANAM:6', 'ADD_REPUTATION:anciens:6'] },
+    ],
+  },
+  {
+    narrative: 'Un banc de poissons argentees saute hors de l\'eau en formation parfaite, dessinant un arc-en-ciel d\'ecailles. Derriere eux, un dauphin blanc t\'observe avec une intelligence troublante.',
+    options: [
+      { verb: 's\'approcher', text: 'Tu avances dans l\'eau jusqu\'aux genoux vers le dauphin.', effects: ['ADD_REPUTATION:niamh:9', 'HEAL_LIFE:4'] },
+      { verb: 'fixer', text: 'Tu memorises chaque detail de cette vision marine.', effects: ['ADD_ANAM:5', 'HEAL_LIFE:3'] },
+      { verb: 'courir', text: 'Tu longes la cote en suivant le banc de poissons.', effects: ['ADD_BIOME_CURRENCY:5', 'ADD_REPUTATION:korrigans:4'] },
+    ],
+  },
+  {
+    narrative: 'Le sentier cotier s\'effondre devant toi, revele par l\'erosion. Dans la coupe de terre, des ossements anciens brillent d\'un eclat nacre. La mer gronde en contrebas.',
+    options: [
+      { verb: 'resister mentalement', text: 'Tu affrontes le vertige et le poids de la mort ancienne.', effects: ['ADD_REPUTATION:ankou:7', 'ADD_ANAM:4'] },
+      { verb: 'contourner', text: 'Tu fais un detour par les rochers pour eviter l\'eboulement.', effects: ['HEAL_LIFE:3', 'ADD_BIOME_CURRENCY:4'] },
+      { verb: 'cueillir', text: 'Tu recuperes un fragment nacre — un talisman peut-etre.', effects: ['ADD_BIOME_CURRENCY:7', 'DAMAGE_LIFE:3'] },
+    ],
+  },
+  {
+    narrative: 'Une source d\'eau douce jaillit directement de la falaise, tombant en cascade dans la mer. La ou les eaux se melangent, un brouillard irise se forme, revelant des formes fugaces.',
+    options: [
+      { verb: 'se concentrer', text: 'Tu fixes le brouillard, tentant de discerner les formes.', effects: ['ADD_REPUTATION:niamh:7', 'ADD_ANAM:5'] },
+      { verb: 'cueillir', text: 'Tu remplis ta gourde a la source d\'eau douce.', effects: ['HEAL_LIFE:6', 'ADD_BIOME_CURRENCY:3'] },
+      { verb: 'combattre', text: 'Tu traverses le rideau de brouillard sans hesiter.', effects: ['ADD_REPUTATION:ankou:5', 'DAMAGE_LIFE:4'] },
+    ],
+  },
+  {
+    narrative: 'Un cercle de menhirs se dresse sur un promontoire battu par les vents. Chaque pierre est polie par le sel marin. Au centre, une dalle plate porte les traces de feux anciens.',
+    options: [
+      { verb: 'analyser', text: 'Tu etudies les traces de rituels sur la dalle centrale.', effects: ['ADD_ANAM:7', 'ADD_REPUTATION:druides:5'] },
+      { verb: 'apaiser', text: 'Tu allumes un petit feu symbolique sur la dalle.', effects: ['HEAL_LIFE:5', 'ADD_REPUTATION:anciens:7'] },
+      { verb: 'fouiller a l\'aveugle', text: 'Tu fouilles autour des menhirs, cherchant des objets caches.', effects: ['ADD_BIOME_CURRENCY:8', 'DAMAGE_LIFE:3'] },
+    ],
+  },
+  {
+    narrative: 'Une vieille barque echouee porte encore ses filets. Dans les mailles, des etoiles de mer phosphorescentes brillent comme des lanternes. Un chant melancolique monte des profondeurs.',
+    options: [
+      { verb: 'ecouter', text: 'Tu t\'allonges dans la barque et laisses le chant te bercer.', effects: ['HEAL_LIFE:7', 'ADD_REPUTATION:niamh:6'] },
+      { verb: 'marchander', text: 'Tu prends quelques etoiles pour les echanger plus tard.', effects: ['ADD_BIOME_CURRENCY:7', 'ADD_REPUTATION:niamh:-3'] },
+      { verb: 'suivre', text: 'Tu suis le chant vers les rochers au large.', effects: ['ADD_REPUTATION:niamh:8', 'DAMAGE_LIFE:3'] },
+    ],
+  },
+  {
+    narrative: 'Des algues geantes s\'echouent sur le rivage apres la tempete. Entre leurs frondes, des pierres polies portent des gravures oghamiques inconnues. L\'air sent l\'iode et le mystere.',
+    options: [
+      { verb: 'dechiffrer', text: 'Tu rassembles les pierres et tentes de lire les oghams.', effects: ['ADD_ANAM:8', 'ADD_REPUTATION:druides:4'] },
+      { verb: 'sentir', text: 'Tu suis ton instinct et choisis la pierre qui vibre le plus.', effects: ['ADD_REPUTATION:niamh:6', 'HEAL_LIFE:4'] },
+      { verb: 'fuir', text: 'L\'etrangete de la scene t\'inquiete. Tu t\'eloignes.', effects: ['HEAL_LIFE:2', 'ADD_BIOME_CURRENCY:3'] },
+    ],
+  },
+  {
+    narrative: 'Un pecheur solitaire repare ses filets sur un rocher plat. Ses yeux sont d\'un gris identique a la mer. Il ne leve pas la tete mais dit : "La mer prend et la mer rend. Que cherches-tu ?"',
+    options: [
+      { verb: 'parler', text: 'Tu lui confies ta quete avec sincerite.', effects: ['ADD_REPUTATION:niamh:5', 'ADD_REPUTATION:anciens:5'] },
+      { verb: 'negocier', text: 'Tu proposes ton aide en echange d\'informations.', effects: ['ADD_BIOME_CURRENCY:6', 'ADD_REPUTATION:korrigans:4'] },
+      { verb: 'observer', text: 'Tu t\'assieds en silence et regardes ses mains travailler.', effects: ['HEAL_LIFE:4', 'ADD_ANAM:4'] },
+    ],
+  },
+  {
+    narrative: 'La maree descendante revele un passage entre deux ilots rocheux. Le fond sablonneux est parseme de coquillages dores. Mais les nuages s\'amoncellent et la maree ne tardera pas.',
+    options: [
+      { verb: 'courir', text: 'Tu traverses en courant avant que la mer ne revienne.', effects: ['ADD_BIOME_CURRENCY:8', 'DAMAGE_LIFE:4'] },
+      { verb: 'attendre', text: 'Tu restes sur la rive et observes le cycle de la mer.', effects: ['HEAL_LIFE:5', 'ADD_REPUTATION:niamh:5'] },
+      { verb: 'deviner', text: 'Tu estimes le temps qu\'il te reste et calcules ton parcours.', effects: ['ADD_BIOME_CURRENCY:5', 'ADD_ANAM:4'] },
+    ],
+  },
+  {
+    narrative: 'Un rocher en forme de trone se dresse face a l\'ocean. Des traces d\'usure montrent que quelqu\'un s\'y assied regulierement. De ce point, on voit trois iles a l\'horizon, alignees comme des perles.',
+    options: [
+      { verb: 'mediter', text: 'Tu t\'assieds sur le trone de pierre et fixes l\'horizon.', effects: ['HEAL_LIFE:6', 'ADD_REPUTATION:niamh:7'] },
+      { verb: 'scruter', text: 'Tu observes les iles, cherchant des signes de vie.', effects: ['ADD_ANAM:5', 'ADD_REPUTATION:anciens:4'] },
+      { verb: 'escalader', text: 'Tu grimpes plus haut pour avoir une vue panoramique.', effects: ['ADD_BIOME_CURRENCY:5', 'DAMAGE_LIFE:2'] },
+    ],
+  },
+  {
+    narrative: 'Un phoque gris repose sur un rocher, sa fourrure brillante de gouttelettes. Il te fixe sans crainte. Les legendes disent que les selkies prennent forme humaine a la pleine lune.',
+    options: [
+      { verb: 'amadouer', text: 'Tu t\'approches lentement, paumes ouvertes, en murmurant.', effects: ['ADD_REPUTATION:niamh:8', 'HEAL_LIFE:3'] },
+      { verb: 'interpreter', text: 'Tu cherches dans tes souvenirs les legendes des selkies.', effects: ['ADD_ANAM:6', 'ADD_REPUTATION:druides:4'] },
+      { verb: 'pister', text: 'Tu suis les traces du phoque vers sa colonie.', effects: ['ADD_BIOME_CURRENCY:6', 'ADD_REPUTATION:korrigans:3'] },
+    ],
+  },
+  {
+    narrative: 'Le vent apporte des flocons d\'ecume qui ressemblent a des plumes blanches. Ils se posent sur tes epaules comme des benedictions. Chaque flocon qui touche ta peau laisse une sensation de fraicheur bienfaisante.',
+    options: [
+      { verb: 'accepter', text: 'Tu ouvres les bras et accueilles l\'ecume comme un don.', effects: ['HEAL_LIFE:8', 'ADD_REPUTATION:niamh:5'] },
+      { verb: 'examiner', text: 'Tu captures un flocon et l\'observes fondre lentement.', effects: ['ADD_ANAM:4', 'ADD_REPUTATION:druides:5'] },
+      { verb: 'resister physiquement', text: 'Tu avances face au vent, chaque pas une victoire.', effects: ['ADD_REPUTATION:ankou:5', 'ADD_BIOME_CURRENCY:4'] },
+    ],
+  },
+  {
+    narrative: 'Une arche naturelle de roche rouge enjambe une crique etroite. L\'eau en dessous est si claire qu\'on voit le fond a dix metres. Des hippocampes dansent entre les algues.',
+    options: [
+      { verb: 'se faufiler', text: 'Tu passes sous l\'arche en longeant la paroi rocheuse.', effects: ['ADD_BIOME_CURRENCY:6', 'ADD_REPUTATION:niamh:4'] },
+      { verb: 'flairer', text: 'Tu sens l\'air marin charge de sel et d\'algues medicinales.', effects: ['HEAL_LIFE:5', 'ADD_REPUTATION:korrigans:4'] },
+      { verb: 'se concentrer', text: 'Tu projettes ta conscience vers les hippocampes dansants.', effects: ['ADD_REPUTATION:niamh:7', 'ADD_ANAM:4'] },
+    ],
+  },
+  {
+    narrative: 'Un cairn immense se dresse au bord de la falaise, construit de galets blancs et noirs en alternance. A son sommet, une coupe de bronze recueille l\'eau de pluie. L\'eau luit d\'une lueur argentee.',
+    options: [
+      { verb: 'memoriser', text: 'Tu graves dans ta memoire le motif noir et blanc du cairn.', effects: ['ADD_ANAM:6', 'ADD_REPUTATION:anciens:6'] },
+      { verb: 'apaiser', text: 'Tu verses quelques gouttes de l\'eau sacree sur tes mains.', effects: ['HEAL_LIFE:7', 'ADD_REPUTATION:niamh:5'] },
+      { verb: 'forcer', text: 'Tu tentes de soulever la coupe de bronze.', effects: ['ADD_BIOME_CURRENCY:8', 'DAMAGE_LIFE:5'] },
+    ],
+  },
+  {
+    narrative: 'Les restes d\'un naufrage emergent du sable a maree basse. La proue sculptee represente une femme aux yeux fermes. Des coraux ont pousse sur ses traits, lui donnant une couronne vivante.',
+    options: [
+      { verb: 'decoder', text: 'Tu cherches le nom du navire parmi les planches brisees.', effects: ['ADD_ANAM:5', 'ADD_REPUTATION:anciens:6'] },
+      { verb: 'calmer', text: 'Tu rends hommage aux marins perdus en silence.', effects: ['HEAL_LIFE:5', 'ADD_REPUTATION:niamh:6'] },
+      { verb: 'fouiller a l\'aveugle', text: 'Tu fouilles l\'epave a la recherche de tresors.', effects: ['ADD_BIOME_CURRENCY:9', 'DAMAGE_LIFE:4'] },
+    ],
+  },
+  {
+    narrative: 'Un sentier de pierres plates traverse une vasiere ou des oiseaux limicoles cherchent leur nourriture. Le ciel se reflete parfaitement dans la boue argentee, creant un monde miroir.',
+    options: [
+      { verb: 'suivre', text: 'Tu suis le sentier de pierres avec precaution.', effects: ['ADD_BIOME_CURRENCY:5', 'HEAL_LIFE:3'] },
+      { verb: 'tendre l\'oreille', text: 'Tu ecoutes les cris des oiseaux, cherchant un message.', effects: ['ADD_REPUTATION:niamh:5', 'ADD_ANAM:5'] },
+      { verb: 'endurer', text: 'Tu traverses la vasiere a pied, enfonçant dans la boue.', effects: ['ADD_REPUTATION:ankou:4', 'DAMAGE_LIFE:3'] },
+    ],
+  },
+  {
+    narrative: 'Une mare de maree forme un miroir parfait dans un creux de rocher. En te penchant, ton reflet ne bouge pas avec toi — il sourit quand tu fronces les sourcils, et te fait signe de la main.',
+    options: [
+      { verb: 'se concentrer', text: 'Tu fixes le reflet et tentes de communiquer avec lui.', effects: ['ADD_REPUTATION:niamh:9', 'ADD_ANAM:5'] },
+      { verb: 'mentir', text: 'Tu pretends ne rien voir et continues ton chemin.', effects: ['ADD_BIOME_CURRENCY:4', 'ADD_REPUTATION:niamh:-4'] },
+      { verb: 'resister mentalement', text: 'Tu refuses de ceder a l\'illusion et detournes le regard.', effects: ['HEAL_LIFE:4', 'ADD_REPUTATION:anciens:5'] },
+    ],
+  },
+  {
+    narrative: 'Au bout d\'une jetee de pierres disjointes, un feu follet bleu danse au-dessus de l\'eau. Il pulse au rythme des vagues, comme un coeur marin. D\'autres lumieres repondent au loin, depuis les iles.',
+    options: [
+      { verb: 'charmer', text: 'Tu chantes un air ancien pour attirer le feu follet.', effects: ['ADD_REPUTATION:niamh:8', 'ADD_REPUTATION:korrigans:4'] },
+      { verb: 'analyser', text: 'Tu etudies le rythme des pulsations, cherchant un code.', effects: ['ADD_ANAM:7', 'ADD_REPUTATION:druides:4'] },
+      { verb: 'esquiver', text: 'Tu contournes la jetee, mefiant des lumieres trompeuses.', effects: ['HEAL_LIFE:3', 'ADD_BIOME_CURRENCY:5'] },
+    ],
+  },
 ];
 
 /** Generate a card using FastRoute (hardcoded templates). */

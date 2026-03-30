@@ -16,6 +16,8 @@ import { fadeIn, fadeOut, crossFade } from './ui/Transitions';
 import { MinigameTraces } from './minigames/mg_traces';
 import { MinigameRunes } from './minigames/mg_runes';
 import { MinigameEquilibre } from './minigames/mg_equilibre';
+import { MinigameHerboristerie } from './minigames/mg_herboristerie';
+import { initOghamPanel, showOghamPanel, hideOghamPanel } from './ui/OghamPanel';
 
 // --- Config ---
 const WALK_SECONDS_BEFORE_CARD = 6; // Seconds of walking before showing a card
@@ -50,8 +52,9 @@ async function main(): Promise<void> {
   loading.style.transition = 'opacity 0.5s';
   setTimeout(() => { loading.style.display = 'none'; }, 500);
 
-  // Init HUD
+  // Init HUD + Ogham panel
   initHUD();
+  initOghamPanel();
 
   // Start game
   store.getState().startRun('cotes_sauvages');
@@ -88,6 +91,13 @@ async function gameLoop(
       await showEndScreen('Tu as succombe a l\'epuisement...');
       break;
     }
+
+    // 3b. OGHAM phase — let player equip/use an ogham before card
+    const oghamChoice = await showOghamPanel();
+    if (oghamChoice) {
+      state().useOgham(oghamChoice);
+    }
+    hideOghamPanel();
 
     // 4. CARD phase — fade to card overlay
     await fadeIn(600);
@@ -150,6 +160,8 @@ function createMinigame(id: string, container: HTMLElement) {
       return new MinigameRunes(container);
     case 'equilibre':
       return new MinigameEquilibre(container);
+    case 'herboristerie':
+      return new MinigameHerboristerie(container);
     case 'traces':
     default:
       // Remaining minigames fall back to Traces

@@ -1,15 +1,15 @@
 {
   "_comment": "Contexte pre-calcule par le director en debut de cycle. Lu par les agents a la place de tous les docs.",
   "_usage": "Director ecrit ce fichier avant de dispatcher. Agents lisent UNIQUEMENT ce fichier pour le contexte.",
-  "cycle": 2,
-  "timestamp": "2026-03-30T18:00:00Z",
+  "cycle": 3,
+  "timestamp": "2026-03-30T19:00:00Z",
   "selected_tasks": [
-    {"id": "T004", "title": "Implement equilibre minigame (balance on path)", "domain": "gameplay", "agent": "merlin-gameplay-programmer"},
-    {"id": "T006", "title": "Enhanced HUD -- faction bars, anam counter, biome currency", "domain": "visual", "agent": "merlin-tech-artist"},
-    {"id": "T007", "title": "Add volumetric fog to CoastBiome scene", "domain": "visual", "agent": "merlin-tech-artist"}
+    {"id": "T008", "title": "Implement herboristerie minigame (identify plants)", "domain": "gameplay", "agent": "merlin-gameplay-programmer"},
+    {"id": "T009", "title": "Generate 20 FastRoute cards for cotes_sauvages + niamh", "domain": "narrative", "agent": "merlin-narrative-designer"},
+    {"id": "T010", "title": "Add Ogham activation UI -- equip/use before card choice", "domain": "gameplay", "agent": "merlin-gameplay-programmer"}
   ],
   "changed_files_by_domain": {
-    "gameplay": ["web-demo/src/minigames/mg_runes.ts", "web-demo/src/main.ts"],
+    "gameplay": ["web-demo/src/minigames/mg_herboristerie.ts", "web-demo/src/main.ts", "web-demo/src/ui/OghamPanel.ts"],
     "visual": ["web-demo/src/scenes/CoastBiome.ts", "web-demo/src/ui/HUD.ts"],
     "narrative": ["web-demo/src/game/CardSystem.ts"],
     "llm": [],
@@ -26,17 +26,17 @@
     "life_drain_per_card": 1,
     "life_max": 100,
     "factions": ["druides", "anciens", "korrigans", "niamh", "ankou"],
-    "minigames_done": ["traces", "runes"],
-    "minigames_implementing": ["equilibre"],
-    "minigames_todo": ["herboristerie", "negociation", "combat_rituel", "apaisement", "sang_froid", "course", "fouille", "ombres", "volonte", "regard", "echo"],
+    "minigames_done": ["traces", "runes", "equilibre", "herboristerie"],
+    "minigames_implementing": [],
+    "minigames_todo": ["negociation", "combat_rituel", "apaisement", "sang_froid", "course", "fouille", "ombres", "volonte", "regard", "echo"],
     "minigame_base_pattern": "extends MinigameBase, setup()+render()+cleanup(), canvas-based, score 0-100, finish(score) to end",
-    "fastroute_templates_count": 26,
+    "fastroute_templates_count": 46,
     "biome_current": "cotes_sauvages"
   },
   "agent_outputs_summary": {
-    "gameplay": {"last_cycle": 1, "status": "completed", "summary": "Runes minigame done (4x4 grid, pair matching, 15s timer)"},
-    "visual": {"last_cycle": 1, "status": "needs-repro", "summary": "T001 deferred -- no blank scene in code"},
-    "narrative": {"last_cycle": 1, "status": "completed", "summary": "20 FastRoute cards for foret_broceliande + druides added"},
-    "qa": {"last_cycle": 1, "status": "passed", "summary": "ts_errors=0, build_ok, bundle=624KB"}
+    "gameplay": {"last_cycle": 3, "status": "completed", "summary": "Herboristerie minigame (5x4 grid plant identification, 15s timer) + Ogham panel UI (slot system, cooldown display, skip option)"},
+    "visual": {"last_cycle": 2, "status": "needs-repro", "summary": "T001 deferred -- no blank scene in code"},
+    "narrative": {"last_cycle": 3, "status": "completed", "summary": "20 FastRoute cards for cotes_sauvages + niamh faction added (coastal celtic themes)"},
+    "qa": {"last_cycle": 3, "status": "passed", "summary": "ts_errors=0, build_ok, bundle=659KB (+3.6%)"}
   }
 }

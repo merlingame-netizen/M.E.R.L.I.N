@@ -1,0 +1,198 @@
+// =============================================================================
+// Ogham Panel -- Equip/activate ogham before card choice
+// Shows equipped oghams as clickable slots. Player picks one (or skips).
+// Returns the selected ogham id or null if skipped.
+// =============================================================================
+
+import { store } from '../game/Store';
+import { OGHAM_SPECS, type OghamSpec } from '../game/Constants';
+
+// --- Panel state ---
+let panelEl: HTMLElement | null = null;
+let resolveChoice: ((oghamId: string | null) => void) | null = null;
+
+/** Build the ogham panel DOM (called once at init). */
+export function initOghamPanel(): void {
+  const app = document.getElementById('app');
+  if (!app || document.getElementById('ogham-panel-overlay')) return;
+
+  const overlay = document.createElement('div');
+  overlay.id = 'ogham-panel-overlay';
+  overlay.style.cssText = [
+    'position:fixed',
+    'inset:0',
+    'background:rgba(0,0,0,0.6)',
+    'display:none',
+    'align-items:center',
+    'justify-content:center',
+    'z-index:200',
+    'font-family:system-ui',
+  ].join(';');
+
+  const panel = document.createElement('div');
+  panel.id = 'ogham-panel';
+  panel.style.cssText = [
+    'background:rgba(20,20,30,0.95)',
+    'border:1px solid rgba(205,133,63,0.4)',
+    'border-radius:16px',
+    'padding:24px',
+    'max-width:480px',
+    'width:90%',
+    'text-align:center',
+  ].join(';');
+
+  overlay.appendChild(panel);
+  app.appendChild(overlay);
+  panelEl = panel;
+}
+
+/** Show the ogham panel and wait for player choice. */
+export function showOghamPanel(): Promise<string | null> {
+  return new Promise((resolve) => {
+    const state = store.getState();
+    const equipped = state.meta.oghamsEquipped;
+
+    // If no oghams equipped, skip immediately
+    if (equipped.length === 0) {
+      resolve(null);
+      return;
+    }
+
+    resolveChoice = resolve;
+
+    const overlay = document.getElementById('ogham-panel-overlay');
+    if (!overlay || !panelEl) {
+      resolve(null);
+      return;
+    }
+
+    // Build panel content
+    panelEl.innerHTML = '';
+
+    // Title
+    const title = document.createElement('div');
+    title.textContent = 'Activer un Ogham ?';
+    title.style.cssText = 'color:#cd853f;font-size:20px;margin-bottom:6px;';
+    panelEl.appendChild(title);
+
+    // Subtitle
+    const sub = document.createElement('div');
+    sub.textContent = 'Choisis un ogham avant de voir la carte, ou passe.';
+    sub.style.cssText = 'color:rgba(232,220,200,0.5);font-size:13px;margin-bottom:20px;';
+    panelEl.appendChild(sub);
+
+    // Ogham slots grid
+    const grid = document.createElement('div');
+    grid.style.cssText = 'display:flex;flex-wrap:wrap;gap:12px;justify-content:center;margin-bottom:20px;';
+
+    for (const oghamId of equipped) {
+      const spec = OGHAM_SPECS[oghamId];
+      if (!spec) continue;
+
+      const cooldown = state.run.oghamCooldowns[oghamId] ?? 0;
+      const isAvailable = cooldown <= 0;
+
+      const slot = document.createElement('button');
+      slot.style.cssText = [
+        'width:100px',
+        'padding:12px 8px',
+        'border-radius:10px',
+        'border:1px solid',
+        `border-color:${isAvailable ? 'rgba(205,133,63,0.5)' : 'rgba(100,100,100,0.3)'}`,
+        `background:${isAvailable ? 'rgba(139,69,19,0.2)' : 'rgba(40,40,50,0.4)'}`,
+        'cursor:' + (isAvailable ? 'pointer' : 'not-allowed'),
+        `opacity:${isAvailable ? '1' : '0.5'}`,
+        'display:flex',
+        'flex-direction:column',
+        'align-items:center',
+        'gap:4px',
+        'transition:background 0.2s, border-color 0.2s',
+      ].join(';');
+
+      // Ogham unicode symbol
+      const symbolEl = document.createElement('div');
+      symbolEl.textContent = spec.unicode;
+      symbolEl.style.cssText = 'font-size:28px;color:#e8dcc8;line-height:1;';
+      slot.appendChild(symbolEl);
+
+      // Ogham name
+      const nameEl = document.createElement('div');
+      nameEl.textContent = spec.name;
+      nameEl.style.cssText = `font-size:11px;color:${isAvailable ? '#cd853f' : 'rgba(150,150,150,0.6)'};`;
+      slot.appendChild(nameEl);
+
+      // Cooldown or category
+      const infoEl = document.createElement('div');
+      if (cooldown > 0) {
+        infoEl.textContent = `CD: ${cooldown}`;
+        infoEl.style.cssText = 'font-size:10px;color:rgba(200,100,100,0.7);';
+      } else {
+        infoEl.textContent = spec.category;
+        infoEl.style.cssText = 'font-size:10px;color:rgba(232,220,200,0.4);';
+      }
+      slot.appendChild(infoEl);
+
+      // Tooltip-like description on hover
+      slot.title = `${spec.description} (CD: ${spec.cooldown} cartes)`;
+
+      if (isAvailable) {
+        slot.addEventListener('click', () => selectOgham(oghamId));
+        slot.addEventListener('mouseenter', () => {
+          slot.style.background = 'rgba(139,69,19,0.4)';
+          slot.style.borderColor = 'rgba(205,133,63,0.8)';
+        });
+        slot.addEventListener('mouseleave', () => {
+          slot.style.background = 'rgba(139,69,19,0.2)';
+          slot.style.borderColor = 'rgba(205,133,63,0.5)';
+        });
+      }
+
+      grid.appendChild(slot);
+    }
+
+    panelEl.appendChild(grid);
+
+    // Skip button
+    const skipBtn = document.createElement('button');
+    skipBtn.textContent = 'Passer';
+    skipBtn.style.cssText = [
+      'padding:10px 32px',
+      'font-size:14px',
+      'cursor:pointer',
+      'background:rgba(80,80,90,0.3)',
+      'color:rgba(232,220,200,0.7)',
+      'border:1px solid rgba(150,150,150,0.3)',
+      'border-radius:8px',
+      'font-family:system-ui',
+      'transition:background 0.2s',
+    ].join(';');
+    skipBtn.addEventListener('click', () => selectOgham(null));
+    skipBtn.addEventListener('mouseenter', () => {
+      skipBtn.style.background = 'rgba(80,80,90,0.5)';
+    });
+    skipBtn.addEventListener('mouseleave', () => {
+      skipBtn.style.background = 'rgba(80,80,90,0.3)';
+    });
+    panelEl.appendChild(skipBtn);
+
+    // Show overlay
+    overlay.style.display = 'flex';
+  });
+}
+
+function selectOgham(oghamId: string | null): void {
+  const overlay = document.getElementById('ogham-panel-overlay');
+  if (overlay) overlay.style.display = 'none';
+
+  if (resolveChoice) {
+    resolveChoice(oghamId);
+    resolveChoice = null;
+  }
+}
+
+/** Hide the ogham panel (cleanup). */
+export function hideOghamPanel(): void {
+  const overlay = document.getElementById('ogham-panel-overlay');
+  if (overlay) overlay.style.display = 'none';
+  resolveChoice = null;
+}
