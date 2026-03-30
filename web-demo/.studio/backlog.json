@@ -1,6 +1,6 @@
 {
   "_comment": "Remplace BACKLOG.md -- format compact pour studio-director v2",
-  "updated": "2026-03-30T19:00:00Z",
+  "updated": "2026-03-30T20:30:00Z",
   "tasks": [
     {
       "id": "T001",
@@ -11,7 +11,7 @@
       "est_tokens": 800,
       "depends_on": [],
       "tags": ["CRITICAL", "blocking"],
-      "notes": "Cycle 1+2+3: investigated, no blank scene found in code. 3D scene has proper lighting, materials, sky shader, fog. Needs reproduction steps from user."
+      "notes": "Cycle 1-4: investigated, no blank scene found in code. 3D scene has proper lighting, materials, sky shader, fog. Needs reproduction steps from user."
     },
     {
       "id": "T005",
@@ -25,8 +25,8 @@
       "notes": "T007 added basic fog plane. T005 can now focus on perf optimization if needed."
     },
     {
-      "id": "T011",
-      "title": "Implement negociation minigame (word-based persuasion)",
+      "id": "T014",
+      "title": "Implement combat_rituel minigame (dodge in sacred circle)",
       "priority": 6,
       "status": "open",
       "domain": "gameplay",
@@ -35,8 +35,8 @@
       "tags": ["Phase6"]
     },
     {
-      "id": "T012",
-      "title": "Generate 20 FastRoute cards for landes_bruyere + anciens",
+      "id": "T015",
+      "title": "Generate 20 FastRoute cards for villages_celtes + korrigans",
       "priority": 7,
       "status": "open",
       "domain": "narrative",
@@ -45,15 +45,14 @@
       "tags": ["content"]
     },
     {
-      "id": "T013",
-      "title": "Ogham effect execution -- wire ogham effects into EffectEngine",
+      "id": "T016",
+      "title": "Implement apaisement minigame (rhythm breathing)",
       "priority": 8,
       "status": "open",
       "domain": "gameplay",
-      "est_tokens": 1500,
-      "depends_on": ["T010"],
-      "tags": ["Phase6", "core-loop"],
-      "notes": "T010 added the UI. Now wire actual ogham effects (reveal, protect, boost, etc) into the game loop."
+      "est_tokens": 1200,
+      "depends_on": [],
+      "tags": ["Phase6"]
     }
   ],
   "completed": [
@@ -112,6 +111,27 @@
       "domain": "gameplay",
       "completed_cycle": 3,
       "completed_at": "2026-03-30T19:00:00Z"
+    },
+    {
+      "id": "T011",
+      "title": "Implement negociation minigame (word-based persuasion)",
+      "domain": "gameplay",
+      "completed_cycle": 4,
+      "completed_at": "2026-03-30T20:30:00Z"
+    },
+    {
+      "id": "T012",
+      "title": "Generate 20 FastRoute cards for landes_bruyere + anciens",
+      "domain": "narrative",
+      "completed_cycle": 4,
+      "completed_at": "2026-03-30T20:30:00Z"
+    },
+    {
+      "id": "T013",
+      "title": "Ogham effect execution -- wire ogham effects into EffectEngine",
+      "domain": "gameplay",
+      "completed_cycle": 4,
+      "completed_at": "2026-03-30T20:30:00Z"
     }
   ]
 }

@@ -428,6 +428,167 @@ const FASTROUTE_TEMPLATES: readonly {
       { verb: 'esquiver', text: 'Tu contournes la jetee, mefiant des lumieres trompeuses.', effects: ['HEAL_LIFE:3', 'ADD_BIOME_CURRENCY:5'] },
     ],
   },
+  // --- landes_bruyere + anciens (20 cards) ---
+  {
+    narrative: 'Un tumulus couvert de bruyere violette se dresse au milieu de la lande. Le vent siffle entre les pierres empilees a son sommet, produisant une melodie plaintive. Des traces de pas anciens sont gravees dans la roche.',
+    options: [
+      { verb: 'examiner', text: 'Tu etudies les pierres empilees et les gravures sur le tumulus.', effects: ['ADD_ANAM:6', 'ADD_REPUTATION:anciens:8'] },
+      { verb: 'ecouter', text: 'Tu laisses la melodie du vent te guider vers un message cache.', effects: ['HEAL_LIFE:5', 'ADD_REPUTATION:druides:5'] },
+      { verb: 'fouiller a l\'aveugle', text: 'Tu cherches une entree dans le tumulus.', effects: ['ADD_BIOME_CURRENCY:7', 'DAMAGE_LIFE:4'] },
+    ],
+  },
+  {
+    narrative: 'Un cercle de pierres basses emerge de la bruyere, a peine visible sous le tapis violet. Au centre, une pierre plate porte un bol de pierre rempli d\'eau de pluie. Des runes oghamiques encerclent le bol.',
+    options: [
+      { verb: 'dechiffrer', text: 'Tu te penches pour lire les runes autour du bol sacre.', effects: ['ADD_ANAM:7', 'ADD_REPUTATION:anciens:6'] },
+      { verb: 'mediter', text: 'Tu t\'assieds au bord du cercle et honores l\'ancien lieu.', effects: ['HEAL_LIFE:6', 'ADD_REPUTATION:anciens:7'] },
+      { verb: 'tenter sa chance', text: 'Tu bois une gorgee de l\'eau du bol de pierre.', effects: ['ADD_BIOME_CURRENCY:6', 'DAMAGE_LIFE:3'] },
+    ],
+  },
+  {
+    narrative: 'Des poneys sauvages broutent la bruyere a flanc de colline. Leur chef, un etalon gris au regard fier, s\'avance vers toi. Sa criniere flotte comme un drapeau dans le vent des landes.',
+    options: [
+      { verb: 'amadouer', text: 'Tu tends la main ouverte vers l\'etalon, paumes vers le ciel.', effects: ['ADD_REPUTATION:anciens:8', 'HEAL_LIFE:4'] },
+      { verb: 'observer', text: 'Tu etudies le troupeau a distance, notant leur comportement.', effects: ['ADD_ANAM:5', 'ADD_REPUTATION:druides:5'] },
+      { verb: 'fuir', text: 'Tu recules devant la puissance de l\'animal sauvage.', effects: ['HEAL_LIFE:2', 'ADD_BIOME_CURRENCY:4'] },
+    ],
+  },
+  {
+    narrative: 'Un cairn massif marque un carrefour de sentiers oublies. Chaque voyageur y a depose sa pierre au fil des siecles. Une inscription usee dit: "Souviens-toi du serment." Un corbeau croasse depuis le sommet.',
+    options: [
+      { verb: 'accepter', text: 'Tu deposes ta propre pierre et prononces un serment silencieux.', effects: ['ADD_REPUTATION:anciens:10', 'HEAL_LIFE:3'] },
+      { verb: 'analyser', text: 'Tu etudies les differentes pierres, cherchant des indices.', effects: ['ADD_ANAM:6', 'ADD_REPUTATION:druides:4'] },
+      { verb: 'contourner', text: 'Tu evites le cairn, peu desireux de t\'engager.', effects: ['ADD_BIOME_CURRENCY:5', 'ADD_REPUTATION:anciens:-3'] },
+    ],
+  },
+  {
+    narrative: 'Un orage violet s\'amoncelle au-dessus des landes. Les eclairs frappent un menhir solitaire encore et encore, mais la pierre ne se fend pas. Chaque impact fait briller les oghams graves dans le granite.',
+    options: [
+      { verb: 'se concentrer', text: 'Tu fixes les oghams illumines, tentant de les memoriser.', effects: ['ADD_ANAM:8', 'ADD_REPUTATION:anciens:5'] },
+      { verb: 'resister physiquement', text: 'Tu affrontes la tempete pour atteindre le menhir.', effects: ['ADD_REPUTATION:ankou:6', 'DAMAGE_LIFE:5'] },
+      { verb: 'attendre', text: 'Tu te mets a l\'abri et observes le spectacle naturel.', effects: ['HEAL_LIFE:4', 'ADD_REPUTATION:druides:5'] },
+    ],
+  },
+  {
+    narrative: 'Un vieux berger se tient pres d\'un muret de pierres seches, son chien couche a ses pieds. Il sculpte un baton de frene sans te regarder. "Les anciens savaient lire le vent," dit-il simplement.',
+    options: [
+      { verb: 'parler', text: 'Tu t\'assieds pres du berger et lui demandes ses histoires.', effects: ['ADD_REPUTATION:anciens:8', 'ADD_ANAM:4'] },
+      { verb: 'scruter', text: 'Tu observes les motifs qu\'il grave dans le bois de frene.', effects: ['ADD_ANAM:5', 'ADD_REPUTATION:druides:6'] },
+      { verb: 'marchander', text: 'Tu proposes d\'echanger un service contre le baton.', effects: ['ADD_BIOME_CURRENCY:7', 'ADD_REPUTATION:korrigans:4'] },
+    ],
+  },
+  {
+    narrative: 'Un dolmen effondre git a moitie dans la tourbe. Sa table de pierre brisee revele une chambre souterraine ou des racines de bruyere forment un reseau luminescent. Un bourdonnement grave emane des profondeurs.',
+    options: [
+      { verb: 'se faufiler', text: 'Tu te glisses dans la chambre souterraine du dolmen.', effects: ['ADD_BIOME_CURRENCY:8', 'DAMAGE_LIFE:4'] },
+      { verb: 'apaiser', text: 'Tu poses les mains sur la pierre et murmures des mots anciens.', effects: ['HEAL_LIFE:7', 'ADD_REPUTATION:anciens:6'] },
+      { verb: 'etudier', text: 'Tu notes les motifs luminescents des racines sans entrer.', effects: ['ADD_ANAM:6', 'ADD_REPUTATION:druides:5'] },
+    ],
+  },
+  {
+    narrative: 'La bruyere s\'ecarte pour reveler un sentier pave de dalles gravees. Chaque dalle porte le nom d\'un ancetre oublie. Marcher dessus te donne l\'impression de fouler l\'histoire elle-meme.',
+    options: [
+      { verb: 'memoriser', text: 'Tu lis chaque nom a voix haute, les gravant dans ta memoire.', effects: ['ADD_REPUTATION:anciens:10', 'ADD_ANAM:5'] },
+      { verb: 'resoudre', text: 'Tu cherches un ordre logique dans les noms et les dalles.', effects: ['ADD_ANAM:7', 'ADD_REPUTATION:anciens:4'] },
+      { verb: 'courir', text: 'Tu traverses le sentier en courant, sans t\'attarder.', effects: ['ADD_BIOME_CURRENCY:5', 'DAMAGE_LIFE:2'] },
+    ],
+  },
+  {
+    narrative: 'Un puits celtique s\'ouvre dans la lande, son margelle de granit couverte de lichen orange. L\'eau au fond reflète non pas le ciel mais un reseau d\'etoiles, meme en plein jour.',
+    options: [
+      { verb: 'deviner', text: 'Tu jettes une pierre et ecoutes le son qu\'elle fait en touchant l\'eau.', effects: ['ADD_BIOME_CURRENCY:6', 'ADD_REPUTATION:anciens:5'] },
+      { verb: 'se concentrer', text: 'Tu fixes le reflet etoile, cherchant un message celeste.', effects: ['ADD_ANAM:6', 'ADD_REPUTATION:niamh:5'] },
+      { verb: 'refuser', text: 'Tu detournes le regard — certains mysteres doivent rester scelles.', effects: ['HEAL_LIFE:4', 'ADD_REPUTATION:anciens:6'] },
+    ],
+  },
+  {
+    narrative: 'Un alignement de menhirs traverse la lande sur des centaines de metres. A l\'extremite, le dernier menhir est fendu en deux, et entre les moities pousse un sorbier charge de baies rouges.',
+    options: [
+      { verb: 'cueillir', text: 'Tu cueilles des baies de sorbier — protection des anciens.', effects: ['ADD_BIOME_CURRENCY:5', 'ADD_REPUTATION:anciens:7'] },
+      { verb: 'examiner', text: 'Tu etudies comment le menhir s\'est fendu au fil des siecles.', effects: ['ADD_ANAM:5', 'ADD_REPUTATION:anciens:6'] },
+      { verb: 'pousser', text: 'Tu tentes de rassembler les deux moities du menhir.', effects: ['DAMAGE_LIFE:5', 'ADD_REPUTATION:ankou:5'] },
+    ],
+  },
+  {
+    narrative: 'Des tourbières noires s\'etendent a perte de vue, parsemees d\'iles de bruyere. Sur l\'une d\'elles, un feu de tourbe brule sans fumee, entretenu par personne. Son odeur acre et ancienne porte des visions.',
+    options: [
+      { verb: 'se concentrer', text: 'Tu t\'approches du feu et laisses les visions venir.', effects: ['ADD_REPUTATION:anciens:8', 'ADD_ANAM:6'] },
+      { verb: 'resister mentalement', text: 'Tu repousses les visions et gardes l\'esprit clair.', effects: ['HEAL_LIFE:5', 'ADD_REPUTATION:ankou:4'] },
+      { verb: 'chercher au hasard', text: 'Tu fouilles autour du feu, cherchant qui l\'a allume.', effects: ['ADD_BIOME_CURRENCY:6', 'DAMAGE_LIFE:3'] },
+    ],
+  },
+  {
+    narrative: 'Un chant grave monte de la terre. Les pierres vibrent sous tes pieds. Au loin, une procession spectrale traverse la lande — des guerriers anciens portant des boucliers ronds ornes de spirales.',
+    options: [
+      { verb: 'mediter', text: 'Tu t\'agenouilles et honores la procession des guerriers tombes.', effects: ['ADD_REPUTATION:anciens:10', 'HEAL_LIFE:4'] },
+      { verb: 'combattre', text: 'Tu brandis un baton et te joins a la procession fantome.', effects: ['ADD_REPUTATION:ankou:7', 'DAMAGE_LIFE:4'] },
+      { verb: 'fixer', text: 'Tu observes chaque detail des spectres — armes, visages, symboles.', effects: ['ADD_ANAM:7', 'ADD_REPUTATION:anciens:4'] },
+    ],
+  },
+  {
+    narrative: 'Un ruisseau serpente entre les collines, ses berges tapissees de menthe sauvage. A un coude, un gue de pierres plates traverse le courant. Sur la rive opposee, un cercle de champignons forme une porte ferique.',
+    options: [
+      { verb: 'traverser', text: 'Tu franchis le gue prudemment, pierre apres pierre.', effects: ['ADD_BIOME_CURRENCY:5', 'HEAL_LIFE:3'] },
+      { verb: 'inspecter', text: 'Tu examines le cercle de champignons sans le franchir.', effects: ['ADD_ANAM:5', 'ADD_REPUTATION:korrigans:6'] },
+      { verb: 'calmer', text: 'Tu t\'assieds au bord du ruisseau et respires la menthe.', effects: ['HEAL_LIFE:6', 'ADD_REPUTATION:anciens:5'] },
+    ],
+  },
+  {
+    narrative: 'Un tertre funeraire s\'ouvre sur la lande, son entree basse gardee par deux pierres sculptees en forme de loups. A l\'interieur, l\'obscurite est totale mais une chaleur etrange en emane.',
+    options: [
+      { verb: 'se faufiler', text: 'Tu te glisses entre les loups de pierre et penetres dans le tertre.', effects: ['ADD_BIOME_CURRENCY:9', 'DAMAGE_LIFE:5'] },
+      { verb: 'apaiser', text: 'Tu deposes une offrande devant les gardiens et attends.', effects: ['ADD_REPUTATION:anciens:9', 'HEAL_LIFE:3'] },
+      { verb: 'interpreter', text: 'Tu etudies les sculptures de loups, y cherchant un clan.', effects: ['ADD_ANAM:6', 'ADD_REPUTATION:anciens:5'] },
+    ],
+  },
+  {
+    narrative: 'Le brouillard tombe sur la lande comme un voile. Des lumieres dansent au loin — feux follets ou lanternes de voyageurs? Un poteau de bois grave d\'oghams emerge du sol, indiquant trois directions.',
+    options: [
+      { verb: 'dechiffrer', text: 'Tu lis les oghams sur le poteau, cherchant le bon chemin.', effects: ['ADD_ANAM:7', 'ADD_REPUTATION:anciens:6'] },
+      { verb: 'suivre', text: 'Tu suis les lumieres dansantes dans le brouillard.', effects: ['ADD_REPUTATION:korrigans:5', 'DAMAGE_LIFE:3'] },
+      { verb: 'endurer', text: 'Tu attends que le brouillard se leve, patient et stoique.', effects: ['HEAL_LIFE:5', 'ADD_REPUTATION:anciens:6'] },
+    ],
+  },
+  {
+    narrative: 'Une source chaude bouillonne au creux d\'une cuvette de pierre. La vapeur qui s\'en echappe dessine des visages ephemeres — les ancetres qui veillent. L\'eau sent le soufre et le fer.',
+    options: [
+      { verb: 'observer', text: 'Tu etudies les visages de vapeur, y reconnaissant des traits.', effects: ['ADD_REPUTATION:anciens:7', 'ADD_ANAM:5'] },
+      { verb: 'cueillir', text: 'Tu remplis ta gourde d\'eau chaude minerale.', effects: ['HEAL_LIFE:8', 'ADD_BIOME_CURRENCY:3'] },
+      { verb: 'resoudre', text: 'Tu cherches l\'origine geologique de cette source.', effects: ['ADD_ANAM:6', 'ADD_REPUTATION:druides:5'] },
+    ],
+  },
+  {
+    narrative: 'Un if millenaire pousse au centre d\'un enclos de pierres. Son tronc tordu porte les cicatrices de mille hivers. A ses pieds, des offrandes recentes — fleurs sechees, rubans, pieces de cuivre.',
+    options: [
+      { verb: 'accepter', text: 'Tu ajoutes ta propre offrande et prononces une priere ancienne.', effects: ['ADD_REPUTATION:anciens:9', 'HEAL_LIFE:5'] },
+      { verb: 'decoder', text: 'Tu etudies les offrandes pour comprendre qui vient encore ici.', effects: ['ADD_ANAM:5', 'ADD_REPUTATION:anciens:5'] },
+      { verb: 'escalader', text: 'Tu grimpes dans l\'if pour voir plus loin sur la lande.', effects: ['ADD_BIOME_CURRENCY:6', 'DAMAGE_LIFE:3'] },
+    ],
+  },
+  {
+    narrative: 'Le vent emporte des graines de chardon geant qui volent comme des etoiles blanches au-dessus de la bruyere. Certaines se posent sur ta peau et y laissent des marques ephemeres en forme d\'oghams.',
+    options: [
+      { verb: 'memoriser', text: 'Tu lis les oghams dessines par les graines sur ta peau.', effects: ['ADD_ANAM:7', 'ADD_REPUTATION:anciens:6'] },
+      { verb: 'flairer', text: 'Tu suis le courant de graines vers leur source.', effects: ['ADD_BIOME_CURRENCY:5', 'ADD_REPUTATION:druides:5'] },
+      { verb: 'se concentrer', text: 'Tu fermes les yeux et laisses le vent parler a travers les graines.', effects: ['HEAL_LIFE:5', 'ADD_REPUTATION:niamh:5'] },
+    ],
+  },
+  {
+    narrative: 'Un mur de pierres seches traverse la lande, vestige d\'une frontiere oubliee entre deux clans. Chaque pierre a ete placee avec soin, sans mortier, tenant par sa seule forme. Une breche invite au passage.',
+    options: [
+      { verb: 'resoudre', text: 'Tu repares la breche en trouvant la pierre manquante.', effects: ['ADD_REPUTATION:anciens:8', 'HEAL_LIFE:3'] },
+      { verb: 'se faufiler', text: 'Tu passes par la breche vers le territoire inconnu.', effects: ['ADD_BIOME_CURRENCY:7', 'DAMAGE_LIFE:3'] },
+      { verb: 'etudier', text: 'Tu analyses la technique de construction du mur ancien.', effects: ['ADD_ANAM:6', 'ADD_REPUTATION:anciens:5'] },
+    ],
+  },
+  {
+    narrative: 'Au sommet d\'une colline battue par le vent, un faucon crecerelle plane immobile dans le ciel. En dessous, la lande entiere s\'etend comme une mer violette. Un autel de pierre plate domine le panorama.',
+    options: [
+      { verb: 'mediter', text: 'Tu t\'assieds a l\'autel et contemples l\'immensite de la lande.', effects: ['HEAL_LIFE:7', 'ADD_REPUTATION:anciens:7'] },
+      { verb: 'scruter', text: 'Tu suis le regard du faucon, cherchant ce qu\'il surveille.', effects: ['ADD_ANAM:5', 'ADD_REPUTATION:druides:5'] },
+      { verb: 'charmer', text: 'Tu leves le bras, invitant le faucon a se poser.', effects: ['ADD_REPUTATION:korrigans:5', 'ADD_BIOME_CURRENCY:5'] },
+    ],
+  },
 ];
 
 /** Generate a card using FastRoute (hardcoded templates). */

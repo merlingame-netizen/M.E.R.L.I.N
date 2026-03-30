@@ -1,16 +1,16 @@
 {
   "_comment": "Contexte pre-calcule par le director en debut de cycle. Lu par les agents a la place de tous les docs.",
   "_usage": "Director ecrit ce fichier avant de dispatcher. Agents lisent UNIQUEMENT ce fichier pour le contexte.",
-  "cycle": 3,
-  "timestamp": "2026-03-30T19:00:00Z",
+  "cycle": 4,
+  "timestamp": "2026-03-30T20:00:00Z",
   "selected_tasks": [
-    {"id": "T008", "title": "Implement herboristerie minigame (identify plants)", "domain": "gameplay", "agent": "merlin-gameplay-programmer"},
-    {"id": "T009", "title": "Generate 20 FastRoute cards for cotes_sauvages + niamh", "domain": "narrative", "agent": "merlin-narrative-designer"},
-    {"id": "T010", "title": "Add Ogham activation UI -- equip/use before card choice", "domain": "gameplay", "agent": "merlin-gameplay-programmer"}
+    {"id": "T011", "title": "Implement negociation minigame (word-based persuasion)", "domain": "gameplay", "agent": "merlin-gameplay-programmer"},
+    {"id": "T012", "title": "Generate 20 FastRoute cards for landes_bruyere + anciens", "domain": "narrative", "agent": "merlin-narrative-designer"},
+    {"id": "T013", "title": "Ogham effect execution -- wire ogham effects into EffectEngine", "domain": "gameplay", "agent": "merlin-gameplay-programmer"}
   ],
   "changed_files_by_domain": {
-    "gameplay": ["web-demo/src/minigames/mg_herboristerie.ts", "web-demo/src/main.ts", "web-demo/src/ui/OghamPanel.ts"],
-    "visual": ["web-demo/src/scenes/CoastBiome.ts", "web-demo/src/ui/HUD.ts"],
+    "gameplay": ["web-demo/src/minigames/mg_negociation.ts", "web-demo/src/main.ts", "web-demo/src/game/EffectEngine.ts"],
+    "visual": [],
     "narrative": ["web-demo/src/game/CardSystem.ts"],
     "llm": [],
     "qa": []
@@ -27,16 +27,18 @@
     "life_max": 100,
     "factions": ["druides", "anciens", "korrigans", "niamh", "ankou"],
     "minigames_done": ["traces", "runes", "equilibre", "herboristerie"],
-    "minigames_implementing": [],
-    "minigames_todo": ["negociation", "combat_rituel", "apaisement", "sang_froid", "course", "fouille", "ombres", "volonte", "regard", "echo"],
+    "minigames_implementing": ["negociation"],
+    "minigames_todo": ["combat_rituel", "apaisement", "sang_froid", "course", "fouille", "ombres", "volonte", "regard", "echo"],
     "minigame_base_pattern": "extends MinigameBase, setup()+render()+cleanup(), canvas-based, score 0-100, finish(score) to end",
     "fastroute_templates_count": 46,
-    "biome_current": "cotes_sauvages"
+    "biome_current": "cotes_sauvages",
+    "ogham_categories": ["reveal", "protection", "boost", "narrative", "recovery", "special"],
+    "ogham_effects_to_wire": ["reveal_one_option", "reveal_all_options", "block_first_negative", "heal_immediate", "double_positives", "add_biome_currency", "reduce_high_damage", "cancel_all_negatives", "replace_worst_option", "regenerate_all_options", "heal_and_cost", "currency_and_heal", "invert_effects", "sacrifice_trade"]
   },
   "agent_outputs_summary": {
-    "gameplay": {"last_cycle": 3, "status": "completed", "summary": "Herboristerie minigame (5x4 grid plant identification, 15s timer) + Ogham panel UI (slot system, cooldown display, skip option)"},
-    "visual": {"last_cycle": 2, "status": "needs-repro", "summary": "T001 deferred -- no blank scene in code"},
-    "narrative": {"last_cycle": 3, "status": "completed", "summary": "20 FastRoute cards for cotes_sauvages + niamh faction added (coastal celtic themes)"},
+    "gameplay": {"last_cycle": 3, "status": "completed", "summary": "Herboristerie minigame + Ogham panel UI"},
+    "visual": {"last_cycle": 2, "status": "needs-repro", "summary": "T001 deferred"},
+    "narrative": {"last_cycle": 3, "status": "completed", "summary": "20 FastRoute cards for cotes_sauvages + niamh"},
     "qa": {"last_cycle": 3, "status": "passed", "summary": "ts_errors=0, build_ok, bundle=659KB (+3.6%)"}
   }
 }

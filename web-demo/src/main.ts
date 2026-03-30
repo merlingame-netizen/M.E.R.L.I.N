@@ -9,7 +9,7 @@ import { buildCoastScene } from './scenes/CoastBiome';
 import { store } from './game/Store';
 import { BIOMES, getMultiplier, getMultiplierLabel } from './game/Constants';
 import { generateFastRouteCard, detectMinigame } from './game/CardSystem';
-import { applyEffects } from './game/EffectEngine';
+import { applyEffects, applyOghamEffect, processOghamModifiers } from './game/EffectEngine';
 import { showCard, hideCard } from './ui/CardOverlay';
 import { initHUD, updateHUD } from './ui/HUD';
 import { fadeIn, fadeOut, crossFade } from './ui/Transitions';
@@ -17,6 +17,7 @@ import { MinigameTraces } from './minigames/mg_traces';
 import { MinigameRunes } from './minigames/mg_runes';
 import { MinigameEquilibre } from './minigames/mg_equilibre';
 import { MinigameHerboristerie } from './minigames/mg_herboristerie';
+import { MinigameNegociation } from './minigames/mg_negociation';
 import { initOghamPanel, showOghamPanel, hideOghamPanel } from './ui/OghamPanel';
 
 // --- Config ---
@@ -96,6 +97,9 @@ async function gameLoop(
     const oghamChoice = await showOghamPanel();
     if (oghamChoice) {
       state().useOgham(oghamChoice);
+      // Apply immediate ogham effects (heal, currency, sacrifice, etc.)
+      applyOghamEffect(oghamChoice);
+      updateHUD();
     }
     hideOghamPanel();
 
@@ -121,12 +125,19 @@ async function gameLoop(
     const multiplier = getMultiplier(result.score);
     const label = getMultiplierLabel(result.score);
 
-    // 7. APPLY EFFECTS
+    // 7. APPLY EFFECTS (with ogham modifiers if active)
     const option = card.options[chosenOption];
-    const effectResult = applyEffects(option.effects, multiplier);
+    const activeOgham = state().run.activeOgham;
+    const modifiedEffects = activeOgham
+      ? processOghamModifiers(option.effects, activeOgham)
+      : option.effects;
+    const effectResult = applyEffects(modifiedEffects, multiplier);
 
-    // 8. Tick ogham cooldowns
+    // 8. Tick ogham cooldowns + clear active ogham
     state().tickCooldowns();
+    if (activeOgham) {
+      state().setActiveOgham('');
+    }
     updateHUD();
 
     // 9. Check death after effects
@@ -162,6 +173,8 @@ function createMinigame(id: string, container: HTMLElement) {
       return new MinigameEquilibre(container);
     case 'herboristerie':
       return new MinigameHerboristerie(container);
+    case 'negociation':
+      return new MinigameNegociation(container);
     case 'traces':
     default:
       // Remaining minigames fall back to Traces

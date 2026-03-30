@@ -79,6 +79,33 @@
       ],
       "summary": "Implemented herboristerie minigame (5x4 grid, identify target plant among toxic/safe, 15s timer, score with time bonus + wrong-pick penalty). Added 20 FastRoute cards for cotes_sauvages+niamh (coastal celtic themes: shipwrecks, sea caves, selkies, tidal pools, lighthouses). Added Ogham activation UI panel (slot system showing equipped oghams with cooldown indicators, skip button, shown before each card). 3/3 tasks completed. Bundle +3.62% (636->659 KB), well under 668 KB block threshold.",
       "agents_dispatched": ["merlin-gameplay-programmer", "merlin-narrative-designer", "merlin-qa-lead"]
+    },
+    {
+      "cycle": 4,
+      "timestamp": "2026-03-30T20:30:00Z",
+      "tasks_attempted": ["T011", "T012", "T013"],
+      "tasks_completed": ["T011", "T012", "T013"],
+      "tasks_deferred": [],
+      "gate": {
+        "ts_errors": 0,
+        "build_ok": true,
+        "bundle_kb": 683,
+        "bundle_delta_pct": 3.64,
+        "tests_pass": 0,
+        "verdict": "PROCEED"
+      },
+      "files_changed": [
+        "web-demo/src/minigames/mg_negociation.ts",
+        "web-demo/src/game/EffectEngine.ts",
+        "web-demo/src/game/CardSystem.ts",
+        "web-demo/src/main.ts",
+        "web-demo/.studio/backlog.json",
+        "web-demo/.studio/metrics.json",
+        "web-demo/.studio/context_bundle.json",
+        "web-demo/.studio/cycle_audit.json"
+      ],
+      "summary": "Implemented negociation minigame (scrolling word-based persuasion targeting faction keywords, combo system, 12s timer, score from faction word picks + combo bonus - neutral penalty + time bonus). Added 20 FastRoute cards for landes_bruyere+anciens (celtic moors themes: tumuli, cairns, stone circles, wild ponies, heather storms, ancient oaths, peat bogs, warrior processions). Wired ogham effect execution into EffectEngine with applyOghamEffect() for immediate effects (heal, currency, sacrifice) and processOghamModifiers() for card effect modifiers (block/cancel negatives, reduce high damage, double positives, invert effects). Game loop updated: ogham effects applied after selection, card effects processed through ogham modifiers, activeOgham cleared after use. 3/3 tasks completed. Bundle +3.64% (659->683 KB), under 692 KB WARN threshold.",
+      "agents_dispatched": ["merlin-gameplay-programmer", "merlin-narrative-designer", "merlin-qa-lead"]
     }
   ]
 }
