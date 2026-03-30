@@ -157,7 +157,35 @@ func _on_choice(idx: int) -> void:
 
 	_title_label.text = "%s — %d/100" % [tier, score]
 	_title_label.add_theme_color_override("font_color", tier_color)
-	_text_label.text = str(choice.get("label", "")) + "\n\nLes esprits de la foret repondent..."
+
+	# Narrative response based on score
+	var response: String = ""
+	if score >= 95:
+		response = "Les etoiles s'alignent. Le pouvoir des anciens coule en toi."
+	elif score >= 80:
+		response = "La foret approuve ton choix. Les esprits sourient."
+	elif score >= 50:
+		response = "Un resultat mitige. La brume hesite entre ombre et lumiere."
+	elif score >= 20:
+		response = "Les esprits detournent le regard. Le prix sera lourd."
+	else:
+		response = "Un echec cuisant. La foret gronde de mecontentement."
+
+	_text_label.text = str(choice.get("label", "")) + "\n\n" + response
+
+	# SFX based on tier
+	if is_instance_valid(SFXManager):
+		if score >= 80:
+			SFXManager.play("success")
+		elif score < 50:
+			SFXManager.play("fail")
+		else:
+			SFXManager.play("neutral")
+
+	# Brief pulse effect on the background
+	var pulse_tw: Tween = create_tween()
+	pulse_tw.tween_property(_bg, "color:a", 0.92, 0.2)
+	pulse_tw.tween_property(_bg, "color:a", 0.85, 0.3)
 
 	await get_tree().create_timer(2.5).timeout
 
