@@ -1,10 +1,10 @@
 {
   "_comment": "Metriques par cycle -- remplace METRICS.md. Ecrit par merlin-qa-lead apres chaque cycle.",
-  "cycle": 6,
-  "timestamp": "2026-03-30T22:30:00Z",
+  "cycle": 7,
+  "timestamp": "2026-03-30T23:30:00Z",
   "ts_errors": 0,
-  "bundle_kb": 208,
-  "bundle_kb_total": 737,
+  "bundle_kb": 242,
+  "bundle_kb_total": 771,
   "bundle_kb_vendor": 529,
   "bundle_chunks": 3,
   "tests_pass": 0,
@@ -12,5 +12,5 @@
   "errors_runtime": 0,
   "build_ok": true,
   "smoke_pass": true,
-  "notes": "Cycle 6: Bundle optimization via Vite manual chunks (709KB monolith -> 3 chunks: index 148KB + minigames 60KB + three-core 529KB vendor). App code now 208KB (-70.7% from 709KB). +sang_froid minigame (shrinking safe zone, cursor tracking, drifting zone center, 10s timer, score = % time inside). +course minigame (QTE symbol chase, ogham symbols, 8 rounds x 1.5s, click target among decoys, score = hits/rounds * 100). +20 FastRoute cards for cercles_pierres+druides (equinox rituals, ley line convergences, time slips, ogham inscriptions, stargazing druids, sacred geometry, underground chambers, solstice fires, druide healers, singing stones). 9/14 minigames done. 106 card templates total (86+20). All caps respected (rep<=10, heal<=8, dmg<=5)."
+  "notes": "Cycle 7: +3 minigames (fouille: find hidden object among 15 decoys with 2s shuffle, 12s timer, early find bonus; ombres: stealth corridor navigation with narrowing winding path, 10s timer, collision penalty; volonte: hold cursor on pulsing center circle vs flashing distractor squares, 10s timer, focus %). +20 FastRoute cards for marais_korrigans+ankou (bog/death themes: will-o-wisps, drowned crossroads, ghostly washerwomen, bog bodies, ankou's cart, death omens, spectral processions, ancestor bargains, mortal coil choices, singing reeds, spectral door). 12/14 minigames done. 126 card templates total (106+20). All caps respected (rep<=10, heal<=8, dmg<=5). App bundle 242KB (+34KB from 20 card templates), under 280KB WARN threshold."
 }

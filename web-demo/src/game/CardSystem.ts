@@ -916,6 +916,167 @@ const FASTROUTE_TEMPLATES: readonly {
       { verb: 'tenter sa chance', text: 'Tu frappes la pierre pour amplifier sa note.', effects: ['ADD_BIOME_CURRENCY:6', 'DAMAGE_LIFE:3'] },
     ],
   },
+  // --- marais_korrigans + ankou (20 cards) ---
+  {
+    narrative: 'Des feux follets dansent au-dessus des eaux noires du marais. Leur lumiere bleue attire et egare — des voyageurs suivent ces lueurs pendant des jours avant de revenir a leur point de depart, si toutefois ils reviennent.',
+    options: [
+      { verb: 'observer', text: 'Tu etudies le mouvement des feux follets, cherchant un schema.', effects: ['ADD_ANAM:6', 'ADD_REPUTATION:ankou:5'] },
+      { verb: 'suivre', text: 'Tu suis la lueur la plus brillante, confiant en ton sens de l\'orientation.', effects: ['ADD_BIOME_CURRENCY:7', 'DAMAGE_LIFE:4'] },
+      { verb: 'apaiser', text: 'Tu murmures une priere pour les ames errantes qui alimentent ces flammes.', effects: ['HEAL_LIFE:6', 'ADD_REPUTATION:ankou:8'] },
+    ],
+  },
+  {
+    narrative: 'Un carrefour noye sous quelques pouces d\'eau sombre. Trois chemins s\'offrent a toi, chacun marque d\'un cairn de pierres mouillees. Au centre, une croix de bois pourri porte des rubans decolores — offrandes aux morts.',
+    options: [
+      { verb: 'dechiffrer', text: 'Tu examines les rubans, cherchant des noms ou des symboles.', effects: ['ADD_ANAM:5', 'ADD_REPUTATION:ankou:7'] },
+      { verb: 'proteger', text: 'Tu remplaces la croix pourrie par une branche de houx fraiche.', effects: ['HEAL_LIFE:5', 'ADD_REPUTATION:anciens:6'] },
+      { verb: 'fuir', text: 'Le lieu te glace. Tu prends le premier chemin sans reflechir.', effects: ['DAMAGE_LIFE:3', 'ADD_BIOME_CURRENCY:5'] },
+    ],
+  },
+  {
+    narrative: 'Des lavandieres fantomatiques battent du linge au bord d\'une mare stagnante. Leurs coups reguliers resonnent dans le brouillard. On dit qu\'elles lavent les linceuls de ceux qui vont bientot mourir.',
+    options: [
+      { verb: 'parler', text: 'Tu salues les lavandieres et leur demandes pour qui elles lavent ce soir.', effects: ['ADD_REPUTATION:ankou:10', 'DAMAGE_LIFE:5'] },
+      { verb: 'observer', text: 'Tu regardes de loin, comptant les linceuls etendus.', effects: ['ADD_ANAM:7', 'ADD_REPUTATION:ankou:5'] },
+      { verb: 'apaiser', text: 'Tu chantes un air ancien pour accompagner leur travail.', effects: ['HEAL_LIFE:7', 'ADD_REPUTATION:ankou:6'] },
+    ],
+  },
+  {
+    narrative: 'Tes pieds s\'enfoncent dans la tourbe et tu decouvres un visage sous la surface — un corps conserve depuis des siecles, les traits intacts, les yeux clos. Ses mains tiennent encore une branche d\'if.',
+    options: [
+      { verb: 'examiner', text: 'Tu degages delicatement le corps pour comprendre son histoire.', effects: ['ADD_ANAM:8', 'ADD_REPUTATION:ankou:7'] },
+      { verb: 'proteger', text: 'Tu recouvres le corps de tourbe fraiche et marques l\'endroit.', effects: ['HEAL_LIFE:4', 'ADD_REPUTATION:anciens:8'] },
+      { verb: 'cueillir', text: 'Tu prends la branche d\'if de ses mains — un talisman contre la mort.', effects: ['ADD_BIOME_CURRENCY:8', 'DAMAGE_LIFE:5'] },
+    ],
+  },
+  {
+    narrative: 'La charrette de l\'Ankou grince dans le brouillard. Tu ne la vois pas encore mais tu l\'entends — le crissement des roues, le souffle du cheval squelettique. Un vieil homme te fait signe de te cacher derriere un saule.',
+    options: [
+      { verb: 'se cacher', text: 'Tu te blottis derriere le saule, retenant ton souffle.', effects: ['HEAL_LIFE:5', 'ADD_REPUTATION:ankou:4'] },
+      { verb: 'combattre', text: 'Tu fais face a la charrette, brandissant une torche.', effects: ['DAMAGE_LIFE:5', 'ADD_REPUTATION:ankou:10'] },
+      { verb: 'parler', text: 'Tu interpelles l\'Ankou — tu as des questions pour le passeur.', effects: ['ADD_ANAM:7', 'ADD_REPUTATION:ankou:9'] },
+    ],
+  },
+  {
+    narrative: 'Un crapaud enorme te fixe depuis un nenuphar. Ses yeux sont dores et bien trop intelligents pour un batracien. Un korrigan des marais se cache peut-etre sous cette forme, attendant qu\'on le libere.',
+    options: [
+      { verb: 'parler', text: 'Tu t\'adresses au crapaud avec les formules de politesse korriganes.', effects: ['ADD_REPUTATION:korrigans:8', 'ADD_ANAM:4'] },
+      { verb: 'observer', text: 'Tu attends patiemment de voir si le crapaud revele sa vraie nature.', effects: ['ADD_ANAM:5', 'ADD_REPUTATION:korrigans:5'] },
+      { verb: 'tenter sa chance', text: 'Tu embrasses le crapaud — les legendes disent que ca marche.', effects: ['ADD_BIOME_CURRENCY:6', 'DAMAGE_LIFE:3'] },
+    ],
+  },
+  {
+    narrative: 'Des presages de mort flottent dans l\'air du marais : un corbeau croasse trois fois, un miroir d\'eau reflete un visage qui n\'est pas le tien, une chandelle s\'allume seule sur un rocher. Le voile entre les mondes est mince ici.',
+    options: [
+      { verb: 'scruter', text: 'Tu fixes le reflet dans l\'eau, cherchant un message.', effects: ['ADD_ANAM:6', 'ADD_REPUTATION:ankou:8'] },
+      { verb: 'apaiser', text: 'Tu allumes une offrande de sauge pour calmer les signes.', effects: ['HEAL_LIFE:6', 'ADD_REPUTATION:ankou:6'] },
+      { verb: 'fuir', text: 'Tu tournes les talons — certains signes ne doivent pas etre ignores.', effects: ['DAMAGE_LIFE:2', 'ADD_REPUTATION:anciens:4'] },
+    ],
+  },
+  {
+    narrative: 'Une procession spectrale traverse le marais a la tombee de la nuit. Des silhouettes translucides marchent en file indienne, portant des bougies dont la flamme ne vacille pas. Leur chant est beau et terrifiant.',
+    options: [
+      { verb: 'suivre', text: 'Tu emboites le pas a la procession, porte par le chant.', effects: ['ADD_ANAM:8', 'ADD_REPUTATION:ankou:9'] },
+      { verb: 'ecouter', text: 'Tu restes immobile et laisses le chant te traverser.', effects: ['HEAL_LIFE:7', 'ADD_REPUTATION:ankou:6'] },
+      { verb: 'se cacher', text: 'Tu te couches dans les roseaux jusqu\'a ce qu\'ils passent.', effects: ['ADD_BIOME_CURRENCY:5', 'ADD_REPUTATION:anciens:4'] },
+    ],
+  },
+  {
+    narrative: 'Un autel de pierres mousseuses emerge de la tourbe. Des os blanchis forment un motif en spirale autour — des offrandes a l\'Ankou datant de plusieurs generations. Quelqu\'un a depose des fleurs fraiches ce matin.',
+    options: [
+      { verb: 'mediter', text: 'Tu t\'agenouilles devant l\'autel et medites sur la mortalite.', effects: ['HEAL_LIFE:8', 'ADD_REPUTATION:ankou:8'] },
+      { verb: 'examiner', text: 'Tu etudies le motif en spirale, cherchant une signification.', effects: ['ADD_ANAM:6', 'ADD_REPUTATION:ankou:7'] },
+      { verb: 'cueillir', text: 'Tu prends les fleurs fraiches — elles pourraient avoir des vertus.', effects: ['ADD_BIOME_CURRENCY:7', 'DAMAGE_LIFE:4'] },
+    ],
+  },
+  {
+    narrative: 'Un marchandage avec les morts : un spectre te propose de reveler l\'emplacement d\'un tresor enfoui en echange d\'un souvenir — ton plus beau souvenir d\'enfance, qu\'il emportera pour l\'eternite.',
+    options: [
+      { verb: 'marchander', text: 'Tu negocies : un souvenir moins precieux contre une partie du tresor.', effects: ['ADD_BIOME_CURRENCY:9', 'ADD_REPUTATION:ankou:5'] },
+      { verb: 'refuser', text: 'Tu refuses le marche — tes souvenirs valent plus que tout or.', effects: ['HEAL_LIFE:5', 'ADD_REPUTATION:anciens:7'] },
+      { verb: 'se concentrer', text: 'Tu tentes de percevoir l\'emplacement du tresor par toi-meme.', effects: ['ADD_ANAM:7', 'DAMAGE_LIFE:3'] },
+    ],
+  },
+  {
+    narrative: 'Le fil mortel se tend : tu sens ta propre mortalite peser sur tes epaules comme un manteau de plomb. Chaque pas dans le marais te rapproche du moment ou tu devras choisir — continuer ou faire demi-tour.',
+    options: [
+      { verb: 'resister mentalement', text: 'Tu serres les poings et avances, refusant le doute.', effects: ['ADD_REPUTATION:ankou:7', 'ADD_REPUTATION:anciens:5'] },
+      { verb: 'apaiser', text: 'Tu acceptes le poids et respires — la mort fait partie du cycle.', effects: ['HEAL_LIFE:8', 'ADD_REPUTATION:ankou:6'] },
+      { verb: 'combattre', text: 'Tu cries ta rage contre le brouillard, defiant la fatalite.', effects: ['DAMAGE_LIFE:4', 'ADD_REPUTATION:ankou:10'] },
+    ],
+  },
+  {
+    narrative: 'Un pont de bois vermoulu enjambe un ruisseau d\'eau noire. Sous le pont, quelque chose remue — trop gros pour un poisson, trop lent pour un animal. Une main pale emerge brievement avant de replonger.',
+    options: [
+      { verb: 'observer', text: 'Tu te penches prudemment pour voir ce qui se cache sous le pont.', effects: ['ADD_ANAM:5', 'ADD_REPUTATION:ankou:6'] },
+      { verb: 'traverser', text: 'Tu traverses vite, les planches craquant sous tes pieds.', effects: ['ADD_BIOME_CURRENCY:6', 'DAMAGE_LIFE:3'] },
+      { verb: 'parler', text: 'Tu appelles l\'etre sous le pont, offrant ton aide.', effects: ['HEAL_LIFE:5', 'ADD_REPUTATION:ankou:8'] },
+    ],
+  },
+  {
+    narrative: 'Les roseaux chantent quand le vent souffle — mais ce ne sont pas des roseaux ordinaires. Ils ont pousse sur d\'anciennes tombes et les ames des defunts s\'expriment a travers eux, racontant des bribes de leur vie passee.',
+    options: [
+      { verb: 'ecouter', text: 'Tu t\'assieds parmi les roseaux et ecoutes leurs histoires.', effects: ['ADD_ANAM:7', 'ADD_REPUTATION:ankou:7'] },
+      { verb: 'cueillir', text: 'Tu coupes un roseau pour en faire une flute a messages.', effects: ['ADD_BIOME_CURRENCY:6', 'DAMAGE_LIFE:3'] },
+      { verb: 'proteger', text: 'Tu plantes de nouveaux roseaux pour que d\'autres voix puissent parler.', effects: ['HEAL_LIFE:5', 'ADD_REPUTATION:anciens:6'] },
+    ],
+  },
+  {
+    narrative: 'Un korrigan des marais t\'offre un marche : il connait un passage sec a travers la tourbiere, mais en echange il veut ta prochaine nuit de sommeil — tu ne dormiras pas pendant 24 heures.',
+    options: [
+      { verb: 'marchander', text: 'Tu acceptes le marche — un jour sans sommeil contre un passage sur.', effects: ['ADD_BIOME_CURRENCY:8', 'DAMAGE_LIFE:4'] },
+      { verb: 'refuser', text: 'Tu refuses et cherches ton propre chemin.', effects: ['HEAL_LIFE:3', 'ADD_REPUTATION:anciens:5'] },
+      { verb: 'dechiffrer', text: 'Tu cherches le passage toi-meme en lisant les signes du terrain.', effects: ['ADD_ANAM:6', 'ADD_REPUTATION:korrigans:4'] },
+    ],
+  },
+  {
+    narrative: 'Une ile minuscule au milieu du marais porte un seul arbre — un if millenaire dont les racines plongent dans l\'eau noire. Ses branches portent des rubans de toutes les couleurs, noues par des generations de pelerins.',
+    options: [
+      { verb: 'mediter', text: 'Tu t\'assieds sous l\'if et medites sur le cycle vie-mort-renaissance.', effects: ['HEAL_LIFE:7', 'ADD_REPUTATION:ankou:9'] },
+      { verb: 'observer', text: 'Tu lis les messages sur les rubans les plus anciens.', effects: ['ADD_ANAM:6', 'ADD_REPUTATION:anciens:6'] },
+      { verb: 'nouer', text: 'Tu attaches ton propre ruban avec un voeu pour les vivants et les morts.', effects: ['ADD_REPUTATION:ankou:7', 'ADD_REPUTATION:druides:4'] },
+    ],
+  },
+  {
+    narrative: 'Le brouillard s\'epaissit jusqu\'a devenir tangible. Tu peux le saisir en paquets cotonneux entre tes doigts. Dans cette brume solide, des formes emergent — visages de ceux que tu as connus, perdus, oublies.',
+    options: [
+      { verb: 's\'approcher', text: 'Tu tends la main vers le visage le plus familier.', effects: ['ADD_REPUTATION:ankou:8', 'DAMAGE_LIFE:4'] },
+      { verb: 'resister mentalement', text: 'Tu fermes les yeux et ancres tes pieds dans la tourbe.', effects: ['HEAL_LIFE:5', 'ADD_REPUTATION:anciens:7'] },
+      { verb: 'apaiser', text: 'Tu murmures les noms un a un, reconnaissant chaque visage.', effects: ['ADD_ANAM:7', 'ADD_REPUTATION:ankou:6'] },
+    ],
+  },
+  {
+    narrative: 'Des champignons luminescents tracent un cercle parfait dans la clairiere — un rond de sorcieres. Au centre, une coupe en bois deborde d\'une liqueur sombre. Les korrigans du marais l\'ont preparee pour un rituel de renouveau.',
+    options: [
+      { verb: 'boire', text: 'Tu bois une gorgee de la liqueur noire.', effects: ['ADD_BIOME_CURRENCY:8', 'DAMAGE_LIFE:5'] },
+      { verb: 'examiner', text: 'Tu etudies les champignons, cherchant des proprietes medicinales.', effects: ['ADD_ANAM:5', 'ADD_REPUTATION:korrigans:6'] },
+      { verb: 'apaiser', text: 'Tu verses la liqueur sur la terre en offrande aux esprits du marais.', effects: ['HEAL_LIFE:6', 'ADD_REPUTATION:ankou:8'] },
+    ],
+  },
+  {
+    narrative: 'Un courage inattendu te saisit devant un gouffre de tourbe. D\'autres voyageurs sont passes ici et n\'ont pas ose sauter. Leurs traces s\'arretent au bord. Mais de l\'autre cote, une lumiere verte promet un sanctuaire.',
+    options: [
+      { verb: 'escalader', text: 'Tu descends dans le gouffre pour trouver un passage au fond.', effects: ['ADD_BIOME_CURRENCY:7', 'DAMAGE_LIFE:5'] },
+      { verb: 'se concentrer', text: 'Tu rassembles ton courage et sautes au-dessus du gouffre.', effects: ['ADD_REPUTATION:ankou:8', 'ADD_REPUTATION:anciens:5'] },
+      { verb: 'observer', text: 'Tu longes le bord jusqu\'a trouver un passage plus etroit.', effects: ['HEAL_LIFE:4', 'ADD_ANAM:5'] },
+    ],
+  },
+  {
+    narrative: 'La mort elle-meme te parle — non pas l\'Ankou, mais le concept pur, une voix sans forme dans l\'eau noire. Elle te pose une enigme : "Qu\'est-ce qui meurt chaque soir et renait chaque matin ?"',
+    options: [
+      { verb: 'dechiffrer', text: 'Tu reflechis longuement avant de repondre : "Le jour."', effects: ['ADD_ANAM:8', 'ADD_REPUTATION:ankou:10'] },
+      { verb: 'parler', text: 'Tu reponds sans hesiter : "L\'espoir."', effects: ['HEAL_LIFE:6', 'ADD_REPUTATION:ankou:7'] },
+      { verb: 'refuser', text: 'Tu refuses de repondre — certaines enigmes sont des pieges.', effects: ['ADD_REPUTATION:anciens:6', 'DAMAGE_LIFE:3'] },
+    ],
+  },
+  {
+    narrative: 'Au fond du marais, une porte de pierre se dresse, impossible et solitaire. Pas de mur, pas de maison — juste une porte. De l\'autre cote, tu vois le meme marais mais baigne d\'une lumiere doree, et les morts y marchent paisiblement.',
+    options: [
+      { verb: 'traverser', text: 'Tu franchis le seuil pour rejoindre les morts paisibles.', effects: ['ADD_REPUTATION:ankou:10', 'DAMAGE_LIFE:5'] },
+      { verb: 'observer', text: 'Tu regardes a travers sans franchir, absorbant la vision.', effects: ['ADD_ANAM:7', 'ADD_REPUTATION:ankou:6'] },
+      { verb: 'proteger', text: 'Tu scelles la porte avec un rituel de gui — les mondes doivent rester separes.', effects: ['HEAL_LIFE:7', 'ADD_REPUTATION:druides:5'] },
+    ],
+  },
 ];
 
 /** Generate a card using FastRoute (hardcoded templates). */

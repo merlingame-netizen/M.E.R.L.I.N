@@ -164,6 +164,37 @@
       ],
       "summary": "Bundle optimization: Vite manual chunks split 709KB monolith into 3 chunks (three-core 529KB vendor + index 148KB app + minigames 60KB). App code now 208KB (-70.7%). Implemented sang_froid minigame (cursor tracking in progressively shrinking + drifting safe zone, 10s timer, score = % time inside). Implemented course minigame (QTE symbol chase with ogham characters, 8 rounds x 1.5s window, click target among 4 decoys, score = hits/rounds * 100). Added 20 FastRoute cards for cercles_pierres+druides (equinox rituals, ley line convergences, time slips, ogham inscriptions awakening, stargazing druids, sacred geometry, underground chambers, solstice fires, druide singing stones, healing rituals). All caps respected (rep<=10, heal<=8, dmg<=5). 4/4 tasks completed. 9/14 minigames done. 106 card templates total.",
       "agents_dispatched": ["merlin-tech-artist", "merlin-gameplay-programmer", "merlin-narrative-designer", "merlin-qa-lead"]
+    },
+    {
+      "cycle": 7,
+      "timestamp": "2026-03-30T23:30:00Z",
+      "tasks_attempted": ["T020", "T021", "T022", "T023"],
+      "tasks_completed": ["T020", "T021", "T022", "T023"],
+      "tasks_deferred": [],
+      "gate": {
+        "ts_errors": 0,
+        "build_ok": true,
+        "bundle_kb": 242,
+        "bundle_kb_total": 771,
+        "bundle_kb_vendor": 529,
+        "bundle_chunks": 3,
+        "bundle_delta_pct": 16.3,
+        "tests_pass": 0,
+        "verdict": "PROCEED"
+      },
+      "files_changed": [
+        "web-demo/src/minigames/mg_fouille.ts",
+        "web-demo/src/minigames/mg_ombres.ts",
+        "web-demo/src/minigames/mg_volonte.ts",
+        "web-demo/src/game/CardSystem.ts",
+        "web-demo/src/main.ts",
+        "web-demo/.studio/backlog.json",
+        "web-demo/.studio/metrics.json",
+        "web-demo/.studio/context_bundle.json",
+        "web-demo/.studio/cycle_audit.json"
+      ],
+      "summary": "Implemented 3 new minigames: fouille (find target object 'Cle Ogham' etc among 15 decoy labels, 4-column grid with jitter, 2s position shuffle, 12s timer, score = 50 base + early find bonus), ombres (stealth corridor with sinusoidal winding path that narrows from 55px to 18px half-width, 40 segments, cursor-driven progress, collision penalty on score, 10s timer), volonte (hold cursor on pulsing center circle r=30 vs flashing colored distractor squares spawning every 0.6s accelerating, max 12 active, 10s timer, score = % time on target). Added 20 FastRoute cards for marais_korrigans+ankou (will-o-wisps, drowned crossroads, ghostly washerwomen/lavandieres, bog bodies, ankou's cart, death omens, spectral processions, ancestor bargains, singing reeds, spectral door to otherworld). All caps respected (rep<=10, heal<=8, dmg<=5). 4/4 tasks completed. 12/14 minigames done. 126 card templates total (106+20). App bundle 242KB (+34KB from card templates), under 280KB WARN. Remaining: regard + echo minigames, collines_dolmens + iles_mystiques card sets.",
+      "agents_dispatched": ["merlin-gameplay-programmer", "merlin-narrative-designer", "merlin-qa-lead"]
     }
   ]
 }

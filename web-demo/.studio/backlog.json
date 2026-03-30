@@ -1,6 +1,6 @@
 {
   "_comment": "Remplace BACKLOG.md -- format compact pour studio-director v2",
-  "updated": "2026-03-30T22:30:00Z",
+  "updated": "2026-03-30T23:30:00Z",
   "tasks": [
     {
       "id": "T001",
@@ -23,6 +23,50 @@
       "depends_on": ["T001"],
       "tags": ["performance"],
       "notes": "T007 added basic fog plane. T005 can now focus on perf optimization if needed."
+    },
+    {
+      "id": "T024",
+      "title": "Implement regard minigame (memorize/reproduce shapes)",
+      "priority": 2,
+      "status": "open",
+      "domain": "gameplay",
+      "est_tokens": 600,
+      "depends_on": [],
+      "tags": ["minigame"],
+      "notes": "13th minigame. Pattern: memorize sequence of shapes, then reproduce. Lexical field: perception."
+    },
+    {
+      "id": "T025",
+      "title": "Implement echo minigame (follow sound intensity)",
+      "priority": 2,
+      "status": "open",
+      "domain": "gameplay",
+      "est_tokens": 600,
+      "depends_on": [],
+      "tags": ["minigame"],
+      "notes": "14th and final minigame. Follow audio intensity toward source. Lexical field: perception."
+    },
+    {
+      "id": "T026",
+      "title": "Generate 20 FastRoute cards for collines_dolmens + anciens",
+      "priority": 3,
+      "status": "open",
+      "domain": "narrative",
+      "est_tokens": 500,
+      "depends_on": [],
+      "tags": ["content"],
+      "notes": "8th biome card set. Hill/ancestor themes: dolmens, cairns, hillforts, ancient oaths, tribal gatherings."
+    },
+    {
+      "id": "T027",
+      "title": "Generate 20 FastRoute cards for iles_mystiques + niamh",
+      "priority": 3,
+      "status": "open",
+      "domain": "narrative",
+      "est_tokens": 500,
+      "depends_on": [],
+      "tags": ["content"],
+      "notes": "9th and final biome card set. Island/otherworld themes: Tir na nOg, sea journeys, Niamh encounters."
     }
   ],
   "completed": [
@@ -151,6 +195,34 @@
       "domain": "visual",
       "completed_cycle": 6,
       "completed_at": "2026-03-30T22:30:00Z"
+    },
+    {
+      "id": "T020",
+      "title": "Implement fouille minigame (find hidden object among decoys)",
+      "domain": "gameplay",
+      "completed_cycle": 7,
+      "completed_at": "2026-03-30T23:30:00Z"
+    },
+    {
+      "id": "T021",
+      "title": "Implement ombres minigame (stealth corridor navigation)",
+      "domain": "gameplay",
+      "completed_cycle": 7,
+      "completed_at": "2026-03-30T23:30:00Z"
+    },
+    {
+      "id": "T022",
+      "title": "Generate 20 FastRoute cards for marais_korrigans + ankou",
+      "domain": "narrative",
+      "completed_cycle": 7,
+      "completed_at": "2026-03-30T23:30:00Z"
+    },
+    {
+      "id": "T023",
+      "title": "Implement volonte minigame (resist distractions, hold focus)",
+      "domain": "gameplay",
+      "completed_cycle": 7,
+      "completed_at": "2026-03-30T23:30:00Z"
     }
   ]
 }
