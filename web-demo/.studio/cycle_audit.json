@@ -26,6 +26,32 @@
       ],
       "summary": "Implemented runes minigame (ogham pair-matching, canvas-based, 4x4 grid, 15s timer, score 0-100). Added 20 FastRoute card templates for foret_broceliande+druides covering all 8 lexical fields and 5 factions. T001 (blank scenes) investigated but no issue found in code -- marked needs-repro.",
       "agents_dispatched": ["merlin-gameplay-programmer", "merlin-narrative-designer", "merlin-qa-lead"]
+    },
+    {
+      "cycle": 2,
+      "timestamp": "2026-03-30T18:30:00Z",
+      "tasks_attempted": ["T004", "T006", "T007"],
+      "tasks_completed": ["T004", "T006", "T007"],
+      "tasks_deferred": [],
+      "gate": {
+        "ts_errors": 0,
+        "build_ok": true,
+        "bundle_kb": 636,
+        "bundle_delta_pct": 1.92,
+        "tests_pass": 0,
+        "verdict": "PROCEED"
+      },
+      "files_changed": [
+        "web-demo/src/minigames/mg_equilibre.ts",
+        "web-demo/src/main.ts",
+        "web-demo/src/ui/HUD.ts",
+        "web-demo/src/scenes/CoastBiome.ts",
+        "web-demo/.studio/backlog.json",
+        "web-demo/.studio/metrics.json",
+        "web-demo/.studio/context_bundle.json"
+      ],
+      "summary": "Implemented equilibre minigame (balance cursor with wind gusts, 12s timer, score = % time in safe zone). Enhanced HUD with 5 faction reputation bars, anam counter, biome currency display with dynamic label. Added animated fog shader plane to CoastBiome (sin-wave noise, edge fade, time-driven animation). All 3/3 tasks completed. Bundle +1.92%.",
+      "agents_dispatched": ["merlin-gameplay-programmer", "merlin-tech-artist", "merlin-qa-lead"]
     }
   ]
 }

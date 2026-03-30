@@ -133,6 +133,56 @@ function createRocks(count: number): THREE.Group {
   return group;
 }
 
+/** Ground-level fog plane with animated opacity. */
+function createFog(): THREE.Mesh {
+  const geo = new THREE.PlaneGeometry(180, 180, 1, 1);
+  const mat = new THREE.ShaderMaterial({
+    uniforms: {
+      uTime: { value: 0 },
+      uFogColor: { value: new THREE.Color(0xaabbcc) },
+      uDensity: { value: 0.35 },
+    },
+    vertexShader: `
+      varying vec2 vUv;
+      void main() {
+        vUv = uv;
+        gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+      }
+    `,
+    fragmentShader: `
+      uniform float uTime;
+      uniform vec3 uFogColor;
+      uniform float uDensity;
+      varying vec2 vUv;
+
+      // Simple noise approximation using sin waves
+      float noise(vec2 p) {
+        return sin(p.x * 1.7 + uTime * 0.3) * cos(p.y * 2.3 + uTime * 0.2)
+             + sin(p.x * 3.1 - uTime * 0.15) * 0.5
+             + cos(p.y * 1.9 + uTime * 0.25) * 0.5;
+      }
+
+      void main() {
+        vec2 p = vUv * 6.0 - 3.0;
+        float n = noise(p) * 0.5 + 0.5;
+        // Fade at edges so fog blends into scene
+        float edgeFade = smoothstep(0.0, 0.25, vUv.x) * smoothstep(1.0, 0.75, vUv.x)
+                       * smoothstep(0.0, 0.25, vUv.y) * smoothstep(1.0, 0.75, vUv.y);
+        float alpha = n * uDensity * edgeFade;
+        gl_FragColor = vec4(uFogColor, alpha);
+      }
+    `,
+    transparent: true,
+    depthWrite: false,
+    side: THREE.DoubleSide,
+  });
+  const mesh = new THREE.Mesh(geo, mat);
+  mesh.rotation.x = -Math.PI / 2;
+  mesh.position.set(0, 0.8, 0);
+  mesh.name = 'fog_plane';
+  return mesh;
+}
+
 /** Standing stones / menhirs. */
 function createMenhirs(count: number): THREE.Group {
   const group = new THREE.Group();
@@ -171,6 +221,7 @@ export async function buildCoastScene(): Promise<BiomeSceneResult> {
   group.add(createTrees(25));
   group.add(createRocks(15));
   group.add(createMenhirs(5));
+  group.add(createFog());
 
   // Try loading GLB assets (non-blocking — fallback to procedural if fails)
   const glbBase = '/assets/';
@@ -202,9 +253,18 @@ export async function buildCoastScene(): Promise<BiomeSceneResult> {
     (c) => c instanceof THREE.Mesh && (c as THREE.Mesh).position.x > 50
   ) as THREE.Mesh | undefined;
 
+  // Fog animation
+  const fogMesh = group.children.find(
+    (c) => c instanceof THREE.Mesh && c.name === 'fog_plane'
+  ) as THREE.Mesh | undefined;
+
   const update = (dt: number): void => {
     if (oceanMesh) {
       oceanMesh.position.y = -0.5 + Math.sin(performance.now() * 0.001) * 0.15;
+    }
+    if (fogMesh) {
+      const fogMat = fogMesh.material as THREE.ShaderMaterial;
+      fogMat.uniforms.uTime.value = performance.now() * 0.001;
     }
   };
 

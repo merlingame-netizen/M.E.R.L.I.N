@@ -1,13 +1,13 @@
 {
   "_comment": "Metriques par cycle -- remplace METRICS.md. Ecrit par merlin-qa-lead apres chaque cycle.",
-  "cycle": 1,
-  "timestamp": "2026-03-30T17:45:00Z",
+  "cycle": 2,
+  "timestamp": "2026-03-30T18:30:00Z",
   "ts_errors": 0,
-  "bundle_kb": 624,
+  "bundle_kb": 636,
   "tests_pass": 0,
   "load_ms": 0,
   "errors_runtime": 0,
   "build_ok": true,
   "smoke_pass": true,
-  "notes": "Cycle 1: +runes minigame, +20 FastRoute cards (foret_broceliande/druides). Bundle +2.97% (606->624 KB)."
+  "notes": "Cycle 2: +equilibre minigame (balance/wind, 12s timer, score=zone%), +enhanced HUD (5 faction bars, anam, biome currency), +fog shader plane (animated sin-wave noise, edge fade). Bundle +1.9% (624->636 KB)."
 }

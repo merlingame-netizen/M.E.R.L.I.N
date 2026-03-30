@@ -1,16 +1,16 @@
 {
   "_comment": "Contexte pre-calcule par le director en debut de cycle. Lu par les agents a la place de tous les docs.",
   "_usage": "Director ecrit ce fichier avant de dispatcher. Agents lisent UNIQUEMENT ce fichier pour le contexte.",
-  "cycle": 1,
-  "timestamp": "2026-03-30T17:30:00Z",
+  "cycle": 2,
+  "timestamp": "2026-03-30T18:00:00Z",
   "selected_tasks": [
-    {"id": "T001", "title": "Fix white/blank scenes", "domain": "visual", "verdict": "investigated-no-repro", "notes": "3D scene has proper lighting, materials, sky shader. No blank scene detected in code. Marking as needs-repro."},
-    {"id": "T003", "title": "Generate 20 FastRoute cards for foret_broceliande + druides", "domain": "narrative", "agent": "merlin-narrative-designer"},
-    {"id": "T002", "title": "Implement runes minigame (canvas-based, score 0-100)", "domain": "gameplay", "agent": "merlin-gameplay-programmer"}
+    {"id": "T004", "title": "Implement equilibre minigame (balance on path)", "domain": "gameplay", "agent": "merlin-gameplay-programmer"},
+    {"id": "T006", "title": "Enhanced HUD -- faction bars, anam counter, biome currency", "domain": "visual", "agent": "merlin-tech-artist"},
+    {"id": "T007", "title": "Add volumetric fog to CoastBiome scene", "domain": "visual", "agent": "merlin-tech-artist"}
   ],
   "changed_files_by_domain": {
     "gameplay": ["web-demo/src/minigames/mg_runes.ts", "web-demo/src/main.ts"],
-    "visual": [],
+    "visual": ["web-demo/src/scenes/CoastBiome.ts", "web-demo/src/ui/HUD.ts"],
     "narrative": ["web-demo/src/game/CardSystem.ts"],
     "llm": [],
     "qa": []
@@ -20,34 +20,23 @@
       "reputation_per_card": 20,
       "heal_max": 18,
       "damage_max": 15,
-      "crit_damage_max": 22,
-      "crit_heal_max": 5,
-      "biome_currency_max": 10,
       "effects_per_option": 3,
       "score_bonus_cap": 2.0
     },
     "life_drain_per_card": 1,
+    "life_max": 100,
     "factions": ["druides", "anciens", "korrigans", "niamh", "ankou"],
-    "verbs_per_field": {
-      "chance": ["cueillir", "chercher au hasard", "tenter sa chance", "deviner", "fouiller a l'aveugle"],
-      "bluff": ["marchander", "convaincre", "mentir", "negocier", "charmer", "amadouer"],
-      "observation": ["observer", "scruter", "memoriser", "examiner", "fixer", "inspecter"],
-      "logique": ["dechiffrer", "analyser", "resoudre", "decoder", "interpreter", "etudier"],
-      "finesse": ["se faufiler", "esquiver", "contourner", "se cacher", "escalader", "traverser"],
-      "vigueur": ["combattre", "courir", "fuir", "forcer", "pousser", "resister physiquement"],
-      "esprit": ["calmer", "apaiser", "mediter", "resister mentalement", "se concentrer", "endurer", "parler", "accepter", "refuser", "attendre", "s'approcher"],
-      "perception": ["ecouter", "suivre", "pister", "sentir", "flairer", "tendre l'oreille"]
-    },
-    "minigames_done": ["traces"],
-    "minigames_implementing": ["runes"],
-    "minigames_todo": ["equilibre", "herboristerie", "negociation", "combat_rituel", "apaisement", "sang_froid", "course", "fouille", "ombres", "volonte", "regard", "echo"],
-    "fastroute_templates_count_before": 6,
-    "fastroute_templates_target": 26
+    "minigames_done": ["traces", "runes"],
+    "minigames_implementing": ["equilibre"],
+    "minigames_todo": ["herboristerie", "negociation", "combat_rituel", "apaisement", "sang_froid", "course", "fouille", "ombres", "volonte", "regard", "echo"],
+    "minigame_base_pattern": "extends MinigameBase, setup()+render()+cleanup(), canvas-based, score 0-100, finish(score) to end",
+    "fastroute_templates_count": 26,
+    "biome_current": "cotes_sauvages"
   },
   "agent_outputs_summary": {
-    "gameplay": {"last_cycle": 0, "status": "dispatched", "summary": "Implementing runes minigame"},
-    "visual": {"last_cycle": 0, "status": "investigated", "summary": "T001 needs reproduction steps - no blank scene in code"},
-    "narrative": {"last_cycle": 0, "status": "dispatched", "summary": "Generating 20 FastRoute cards for foret_broceliande + druides"},
-    "qa": {"last_cycle": 0, "status": "pending", "summary": "Will run after implementation"}
+    "gameplay": {"last_cycle": 1, "status": "completed", "summary": "Runes minigame done (4x4 grid, pair matching, 15s timer)"},
+    "visual": {"last_cycle": 1, "status": "needs-repro", "summary": "T001 deferred -- no blank scene in code"},
+    "narrative": {"last_cycle": 1, "status": "completed", "summary": "20 FastRoute cards for foret_broceliande + druides added"},
+    "qa": {"last_cycle": 1, "status": "passed", "summary": "ts_errors=0, build_ok, bundle=624KB"}
   }
 }

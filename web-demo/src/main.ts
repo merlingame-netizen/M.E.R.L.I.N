@@ -15,6 +15,7 @@ import { initHUD, updateHUD } from './ui/HUD';
 import { fadeIn, fadeOut, crossFade } from './ui/Transitions';
 import { MinigameTraces } from './minigames/mg_traces';
 import { MinigameRunes } from './minigames/mg_runes';
+import { MinigameEquilibre } from './minigames/mg_equilibre';
 
 // --- Config ---
 const WALK_SECONDS_BEFORE_CARD = 6; // Seconds of walking before showing a card
@@ -147,6 +148,8 @@ function createMinigame(id: string, container: HTMLElement) {
   switch (id) {
     case 'runes':
       return new MinigameRunes(container);
+    case 'equilibre':
+      return new MinigameEquilibre(container);
     case 'traces':
     default:
       // Remaining minigames fall back to Traces
