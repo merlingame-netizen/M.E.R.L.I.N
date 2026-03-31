@@ -69,6 +69,8 @@ export class MinigameRunes extends MinigameBase {
     const canvasHeight = this.gridRows * (this.tileSize + this.tilePad) + this.tilePad;
 
     this.canvas = document.createElement('canvas');
+    this.canvas.setAttribute('aria-label', '');
+    this.canvas.setAttribute('role', 'application');
     this.canvas.width = canvasWidth;
     this.canvas.height = canvasHeight;
     this.canvas.style.cssText = 'border-radius:12px;background:rgba(20,20,30,0.8);border:1px solid rgba(205,133,63,0.3);cursor:pointer;display:block;margin:0 auto;';
@@ -78,8 +80,9 @@ export class MinigameRunes extends MinigameBase {
     // Generate tiles: 8 pairs = 16 tiles in a 4x4 grid
     this.generateTiles();
 
-    // Click handler
+    // Click + touch handler (pointerdown covers mouse and touch devices)
     this.canvas.addEventListener('click', this.onClick);
+    this.canvas.addEventListener('pointerdown', this.onClick);
 
     // Timer
     this.timeLeft = this.totalTime;
@@ -185,6 +188,7 @@ export class MinigameRunes extends MinigameBase {
     clearTimeout(this.revealTimeout);
     cancelAnimationFrame(this.animFrame);
     this.canvas?.removeEventListener('click', this.onClick);
+    this.canvas?.removeEventListener('pointerdown', this.onClick);
 
     // Score: base on pairs found + time bonus
     const pairScore = (this.matchedCount / this.totalPairs) * 70;
@@ -285,6 +289,7 @@ export class MinigameRunes extends MinigameBase {
     clearTimeout(this.revealTimeout);
     cancelAnimationFrame(this.animFrame);
     this.canvas?.removeEventListener('click', this.onClick);
+    this.canvas?.removeEventListener('pointerdown', this.onClick);
     super.cleanup();
   }
 }

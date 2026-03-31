@@ -1,28 +1,28 @@
 {
   "_comment": "Remplace BACKLOG.md -- format compact pour studio-director v2",
-  "updated": "2026-03-31T22:30:00Z",
+  "updated": "2026-04-01T00:10:00Z",
   "tasks": [
     {
-      "id": "T052",
-      "title": "Ogham panel shows locked/unlocked state — grey out locked oghams, show rep threshold hint",
+      "id": "T058",
+      "title": "SFX implementation — hook Web Audio API tones to merlin_sfx event bus",
       "priority": 3,
       "status": "open",
       "domain": "gameplay",
-      "est_tokens": 300,
-      "depends_on": ["T049"],
-      "tags": ["ux", "progression"],
-      "notes": "T049 wired unlock logic. OghamPanel.ts should now reflect locked state: grey out oghams not in meta.oghamsEquipped, show tooltip 'Reputacion [faction] 50 requise' for locked ones. Improves progression legibility."
+      "est_tokens": 400,
+      "depends_on": ["T056"],
+      "tags": ["audio", "ux"],
+      "notes": "T056 event bus wired. Create src/audio/SFXManager.ts listening to window merlin_sfx. Procedural Web Audio API only — no external assets. flip: short ping. win: ascending arpeggio. lose: descending tone. unlock: bell chord. end: sustained fade. Initialize in main.ts after loadTemplates()."
     },
     {
-      "id": "T053",
-      "title": "Persist meta state to localStorage — oghamsUnlocked, factionRep, totalRuns survive page refresh",
-      "priority": 2,
+      "id": "T059",
+      "title": "Mobile layout pass — verify card overlay and minigame canvases fit on 375px viewport",
+      "priority": 3,
       "status": "open",
-      "domain": "gameplay",
-      "est_tokens": 350,
-      "depends_on": ["T049", "T050"],
-      "tags": ["persistence", "meta"],
-      "notes": "Currently only Anam is saved to localStorage (ANAM_STORAGE_KEY). oghamsUnlocked and factionRep are also cross-run state and should be persisted. Add loadMetaFromStorage() / saveMetaFromStorage() calls alongside existing anam persistence in main.ts."
+      "domain": "visual",
+      "est_tokens": 300,
+      "depends_on": ["T057"],
+      "tags": ["mobile", "ux"],
+      "notes": "T057 added touch support. Verify CSS on narrow screens: minigame canvases 380-400px wide may overflow 375px viewport. Add max-width:100% + max-height on canvas elements. Scale minigame title font-size for mobile. Check card-container padding at 375px."
     },
     {
       "id": "T043",
@@ -158,6 +158,34 @@
     }
   ],
   "completed": [
+    {
+      "id": "T057",
+      "title": "Touch support — pointerdown on mg_runes+mg_traces, touch-action:none on canvas CSS",
+      "domain": "gameplay",
+      "completed_cycle": 20,
+      "completed_at": "2026-04-01T00:10:00Z"
+    },
+    {
+      "id": "T056",
+      "title": "SFX event bus — playSound() dispatches merlin_sfx CustomEvent, wired at flip/win/lose/unlock/end",
+      "domain": "gameplay",
+      "completed_cycle": 20,
+      "completed_at": "2026-04-01T00:10:00Z"
+    },
+    {
+      "id": "T053",
+      "title": "Persist meta state to localStorage — oghamsUnlocked, factionRep, totalRuns",
+      "domain": "gameplay",
+      "completed_cycle": 19,
+      "completed_at": "2026-03-31T23:45:00Z"
+    },
+    {
+      "id": "T052",
+      "title": "Ogham panel locked/unlocked state — grey out locked oghams, show rep threshold hint",
+      "domain": "gameplay",
+      "completed_cycle": 19,
+      "completed_at": "2026-03-31T23:45:00Z"
+    },
     {
       "id": "T049",
       "title": "Ogham unlock progression — faction rep crosses 50 unlocks branch Ogham + toast",

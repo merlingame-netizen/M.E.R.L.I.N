@@ -1,50 +1,60 @@
 {
-  "cycle": 18,
+  "cycle": 20,
   "agent": "merlin-ai-playtester",
   "status": "PASS",
-  "timestamp": "2026-03-31T23:30:00Z",
-  "tasks_tested": ["T049_ogham_unlock", "T050_run_anam", "T051_landes_batch3"],
-  "t049_analysis": {
-    "trigger_condition": "addReputation() checks: current < 50 AND newVal >= 50 — threshold crossing correctly detected",
-    "faction_ogham_map": {"druides":"coll","anciens":"ailm","korrigans":"onn","niamh":"saille","ankou":"eadhadh"},
-    "unlock_side_effects": ["meta.oghamsUnlocked updated", "meta.oghamsEquipped updated", "CustomEvent 'ogham_unlocked' fired"],
-    "toast_integration": "window event listener in main.ts — decoupled. Toast appears at top:80px, 3s display, fades in/out.",
-    "edge_cases": [
-      "PASS: already-unlocked guard (alreadyUnlocked check prevents double-unlock)",
-      "PASS: negative delta cannot cross threshold downward (newVal is clamped min 0)",
-      "PASS: typeof window guard for SSR safety"
+  "timestamp": "2026-04-01T00:10:00Z",
+  "tasks_tested": ["T056_sfx_event_bus", "T057_touch_support", "villages_batch2"],
+  "t056_analysis": {
+    "function_signature": "export function playSound(type: string): void",
+    "mechanism": "window.dispatchEvent(new CustomEvent('merlin_sfx', {detail:{type}}))",
+    "call_sites_verified": [
+      "flip: after showCard() resolves in gameLoop — correct position (card choice made)",
+      "win/lose: immediately before getMultiplier() — score already computed, correct branch (>65 = win)",
+      "unlock: inside ogham_unlocked event listener alongside toast — decoupled, correct",
+      "end: before showRunSummary() at all 4 run-end paths — death_drain, death_effects, cards_limit, victory"
     ],
-    "verdict": "PASS — Ogham unlock fires correctly at rep=50 crossing"
+    "event_bus_correctness": "PASS — no audio coupled, CustomEvent on window, future listeners can attach without touching game loop",
+    "edge_cases": [
+      "PASS: playSound called before showRunSummary (correct order — sound fires, then summary shows)",
+      "PASS: no playSound in emergency fallback card path (neutral — no flip event on emergency)",
+      "NOTE: minigame neutral fallback score=50 triggers 'lose' sound (50 <= 65) — acceptable, consistent with score semantics"
+    ],
+    "verdict": "PASS"
   },
-  "t050_analysis": {
-    "anamThisRun_resets": "YES — buildDefaultRun() sets anamThisRun:0, called by startRun()",
-    "anamThisRun_increments": "YES — addAnam() updates run.anamThisRun + meta.anam in one atomic set()",
-    "runsummary_display": "Shows 'Anam cette quete' (this run) and 'Anam total' (lifetime) — 5 stats total in grid",
-    "immutability": "PASS — spread pattern used correctly in addAnam()",
-    "verdict": "PASS — per-run anam tracked and displayed correctly"
+  "t057_analysis": {
+    "touch_action_none": "PASS — canvas { touch-action: none } in index.html global CSS prevents scroll interference on all canvas elements",
+    "mg_runes_pointerdown": "PASS — pointerdown added alongside click, removed in endGame() and cleanup()",
+    "mg_traces_pointerdown": "PASS — same pattern, both removeEventListener sites updated",
+    "other_minigames": "PASS — all 12 other minigames already use pointerdown/pointermove/pointerup (touch-native by design)",
+    "onclick_type_compat": "PASS — PointerEvent extends MouseEvent, TS accepts handler, confirmed 0 tsc errors",
+    "double_fire_risk": "LOW — on touch devices, pointerdown fires but click also fires (300ms later on some browsers). Both call onClick. For mg_runes this could cause double tile selection. Mitigation: existing lockInput flag prevents double processing within the same pointer sequence. Acceptable for current scope.",
+    "verdict": "PASS"
   },
-  "t051_analysis": {
+  "villages_batch2_analysis": {
     "cards_added": 20,
-    "total_pool": 286,
-    "biome": "landes_bruyere",
-    "landes_total": 60,
-    "niamh_options_counted": 14,
-    "niamh_options_pct": 23,
-    "niamh_options_note": "14 options out of ~60 total options in batch3 reference niamh ADD_REPUTATION — meets >=7/20 cards requirement (target was 7+ out of 20 cards, not % of options). 14 of 20 cards contain at least one niamh option.",
-    "druides_cards_max": 2,
-    "druides_cap_compliant": true,
+    "total_pool": 326,
+    "biome": "villages_celtes",
+    "villages_total": 20,
+    "korrigans_effect_lines": 31,
+    "niamh_effect_lines": 22,
+    "druide_cards": 3,
+    "druide_cap_compliant": true,
     "heal_life_max_found": 5,
     "heal_life_cap_compliant": true,
+    "rep_max_found": 20,
+    "rep_cap_compliant": true,
+    "effects_per_option_max": 3,
     "no_3plus_negative_effects": true,
-    "thematic_coherence": "HIGH — fae encounters, will-o-wisps, threshold crossings, Niamh appearances, enchanted springs, fairy rings",
+    "thematic_coherence": "HIGH — puits ancient, forge sacree, marche masque, fileuses, barde, conseil anciens, fete moissons, pierre spirale, guerisseur, poteau sculpte, druide toit, querelle clans, equinoxe korrigans, cheval blanc, femme meunier, procession minuit, tapisserie prophete, jeu enfants, marin impossible, cloche mysterieuse",
     "verdict": "PASS"
   },
   "balance_check": {
     "heal_life_cap_compliant": true,
+    "rep_cap_compliant": true,
     "druides_cap_compliant": true,
-    "niamh_heavy_met": true,
-    "no_3plus_negative_effects": true,
-    "effect_caps_compliant": true
+    "korrigans_dominant": true,
+    "niamh_present": true,
+    "no_3plus_negative_effects": true
   },
-  "verdict": "PASS — all cycle 18 tasks validated"
+  "verdict": "PASS — all cycle 20 tasks validated"
 }

@@ -44,6 +44,8 @@ export class MinigameTraces extends MinigameBase {
 
     // Canvas
     this.canvas = document.createElement('canvas');
+    this.canvas.setAttribute('aria-label', '');
+    this.canvas.setAttribute('role', 'application');
     this.canvas.width = 400;
     this.canvas.height = 400;
     this.canvas.style.cssText = 'border-radius:12px;background:rgba(20,30,20,0.8);border:1px solid rgba(205,133,63,0.3);cursor:pointer;';
@@ -60,8 +62,9 @@ export class MinigameTraces extends MinigameBase {
       this.footprints.push({ x, y, index: i, hit: false });
     }
 
-    // Click handler
+    // Click + touch handler (pointerdown covers mouse and touch devices)
     this.canvas.addEventListener('click', this.onClick);
+    this.canvas.addEventListener('pointerdown', this.onClick);
 
     // Timer
     this.timeLeft = this.totalTime;
@@ -99,6 +102,7 @@ export class MinigameTraces extends MinigameBase {
     clearInterval(this.timerInterval);
     cancelAnimationFrame(this.animFrame);
     this.canvas?.removeEventListener('click', this.onClick);
+    this.canvas?.removeEventListener('pointerdown', this.onClick);
 
     const hitCount = this.footprints.filter((f) => f.hit).length;
     const timeBonus = Math.max(0, this.timeLeft / this.totalTime) * 20;
@@ -172,6 +176,7 @@ export class MinigameTraces extends MinigameBase {
     clearInterval(this.timerInterval);
     cancelAnimationFrame(this.animFrame);
     this.canvas?.removeEventListener('click', this.onClick);
+    this.canvas?.removeEventListener('pointerdown', this.onClick);
     super.cleanup();
   }
 }

@@ -1,25 +1,26 @@
 {
   "agent": "merlin-gameplay-programmer",
-  "cycle": 19,
-  "timestamp": "2026-03-31T23:55:00Z",
+  "cycle": 20,
+  "timestamp": "2026-03-31T23:58:00Z",
   "status": "PASS",
   "tasks": {
-    "T053": {
+    "T056": {
       "status": "DONE",
-      "notes": "loadMetaFromStorage() / saveMetaToStorage() added to main.ts. Persists oghamsUnlocked (merged with starters), factionRep (clamped 0-100), totalRuns. Storage key: merlin_meta (JSON). load called after loadAnamFromStorage() at init. save called at all 4 run-end points (death_drain, death_effects, cards_limit, victory) alongside saveAnamToStorage()."
+      "notes": "playSound(type: string) exported from bottom of main.ts. Dispatches CustomEvent('merlin_sfx', {detail:{type}}) on window. Wired at: card flip (after showCard resolves), minigame score (win if score>65, lose otherwise), ogham_unlocked listener (unlock), all 4 run-end paths (end). No actual audio — event bus only."
     },
-    "T052": {
+    "T057": {
       "status": "DONE",
-      "notes": "OghamPanel.showOghamPanel() now iterates all 18 OGHAM_SPECS keys instead of oghamsEquipped only. Locked oghams (not in meta.oghamsUnlocked): opacity:0.35, cursor:not-allowed, status row shows lock emoji + 'rep 50', tooltip shows faction name + 'reputation 50 requise'. On-cooldown oghams: opacity:0.5. Available oghams: full opacity + hover effects. resolveChoice set only after DOM guard passes (bug fix). Skip button given id='ogham-skip-btn' for keyboard shortcut."
+      "notes": "touch-action: none added to canvas global CSS rule in index.html. mg_runes.ts + mg_traces.ts: pointerdown listener added alongside existing click listener on canvas. Both listeners removed in endGame() and cleanup(). All other 12 minigames already use pointer* events (already touch-native). onClick handlers typed MouseEvent — PointerEvent extends MouseEvent so compatible, tsc confirms 0 errors."
     },
-    "T054": {
+    "perf_cache": {
       "status": "DONE",
-      "notes": "document.addEventListener('keydown') added before main() call. Space: clicks first .card-option in #card-overlay when visible. Escape: clicks #ogham-skip-btn if ogham panel open, else clicks first button in #run-summary-overlay. Guards against INPUT/TEXTAREA focus."
+      "notes": "vercel.json updated: headers array added with Cache-Control: public, max-age=86400, stale-while-revalidate=3600 for source /data/cards.json. Will take effect on next Vercel deploy."
     }
   },
   "ts_errors": 0,
   "build_ok": true,
-  "bundle_kb_app": 100.25,
-  "bundle_delta_kb": 1.88,
-  "bundle_delta_pct": 1.91
+  "bundle_kb_app": 100.43,
+  "bundle_kb_gzip": 30.81,
+  "bundle_delta_kb": 0.18,
+  "build_time_s": 2.44
 }

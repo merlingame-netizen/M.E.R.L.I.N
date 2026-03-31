@@ -110,6 +110,7 @@ async function gameLoop(
       state().endRun('death_drain');
       saveAnamToStorage();
       saveMetaToStorage();
+      playSound('end');
       await showRunSummary('death');
       break;
     }
@@ -158,6 +159,7 @@ async function gameLoop(
     await fadeOut(300);
 
     const chosenOption = await showCard(card);
+    playSound('flip');
 
     // 5. MINIGAME phase
     const minigameId = detectMinigame(card, chosenOption);
@@ -176,6 +178,7 @@ async function gameLoop(
     }
 
     // 6. SCORE → multiplier
+    playSound(result.score > 65 ? 'win' : 'lose');
     const multiplier = getMultiplier(result.score);
     const label = getMultiplierLabel(result.score);
 
@@ -204,6 +207,7 @@ async function gameLoop(
       state().endRun('death_effects');
       saveAnamToStorage();
       saveMetaToStorage();
+      playSound('end');
       await showRunSummary('death');
       break;
     }
@@ -213,6 +217,7 @@ async function gameLoop(
       state().endRun('cards_limit');
       saveAnamToStorage();
       saveMetaToStorage();
+      playSound('end');
       await showRunSummary('cards_limit');
       break;
     }
@@ -222,6 +227,7 @@ async function gameLoop(
       state().endRun('victory');
       saveAnamToStorage();
       saveMetaToStorage();
+      playSound('end');
       await showRunSummary('victory');
       break;
     }
@@ -528,6 +534,7 @@ window.addEventListener('ogham_unlocked', (evt: Event) => {
   const detail = (evt as CustomEvent<{ oghamId: string; oghamName: string }>).detail;
   if (detail?.oghamName) {
     showOghamUnlockToast(detail.oghamName);
+    playSound('unlock');
   }
 });
 
@@ -566,6 +573,15 @@ document.addEventListener('keydown', (evt: KeyboardEvent) => {
     }
   }
 });
+
+// --- SFX event bus (T056) ---
+// Dispatches a CustomEvent on window so any future audio layer can listen
+// without coupling to the game loop. No actual audio is produced here.
+// Usage: window.addEventListener('merlin_sfx', (e) => { /* e.detail.type */ });
+
+export function playSound(type: string): void {
+  window.dispatchEvent(new CustomEvent('merlin_sfx', { detail: { type } }));
+}
 
 // --- Start ---
 main().catch(console.error);
