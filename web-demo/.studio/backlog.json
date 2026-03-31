@@ -3,6 +3,72 @@
   "updated": "2026-04-01T00:10:00Z",
   "tasks": [
     {
+      "id": "T060",
+      "title": "Boot screen — Celtic logo SVG + animated progress bar before main menu",
+      "priority": 1,
+      "status": "open",
+      "domain": "visual",
+      "est_tokens": 300,
+      "depends_on": [],
+      "tags": ["ux", "cinematic"],
+      "notes": "Add #boot-screen div above #loading in index.html. Celtic knot SVG (pure CSS or inline SVG path). Animated progress bar 0->100% over 2.5s. After complete: fade out boot-screen, reveal main menu scene. z-index 200."
+    },
+    {
+      "id": "T061",
+      "title": "Main menu cinematic — Three.js cliff+sea scene, animated waves, camera dolly to tower",
+      "priority": 1,
+      "status": "open",
+      "domain": "visual",
+      "est_tokens": 500,
+      "depends_on": ["T060"],
+      "tags": ["cinematic", "3d", "ux"],
+      "notes": "New web-demo/src/scenes/MainMenuScene.ts. Cliff geometry + animated ocean (sine wave vertex shader). Animated fog. Static tower silhouette. Camera dolly path (CatmullRom, lerp 4s) from cliff viewpoint to tower window. Expose initMainMenu(container), startMenuDolly(), onDollyComplete callback."
+    },
+    {
+      "id": "T062",
+      "title": "Merlin's lair hub — clickable 3D interior with 4 navigation zones",
+      "priority": 1,
+      "status": "open",
+      "domain": "visual",
+      "est_tokens": 700,
+      "depends_on": ["T061"],
+      "tags": ["cinematic", "3d", "ux", "deferred"],
+      "notes": "DEFERRED to cycle 22. Interior scene: map/scroll → biome select, crystal ball → settings, bookshelf → lore, door/window → start run. Raycaster click zones. LairScene.ts."
+    },
+    {
+      "id": "T063",
+      "title": "Forest walk rework — fixed rail path, bob-head, no free camera",
+      "priority": 1,
+      "status": "open",
+      "domain": "gameplay",
+      "est_tokens": 350,
+      "depends_on": [],
+      "tags": ["3d", "camera", "ux"],
+      "notes": "In CameraRail.ts: add bob-head (sinusoidal Y offset, 2Hz, amplitude 0.04). Remove/lock any OrbitControls. Auto-advance at 0.8 units/sec. Rail uses existing CatmullRom spline. Apply to CoastBiome scene."
+    },
+    {
+      "id": "T064",
+      "title": "VFX pass — god rays, candle particles, sea spray, dust motes",
+      "priority": 2,
+      "status": "open",
+      "domain": "visual",
+      "est_tokens": 500,
+      "depends_on": ["T061"],
+      "tags": ["vfx", "3d"],
+      "notes": "God ray: additive sprite above cliff horizon (SpriteMaterial, AdditiveBlending, animated opacity). Sea spray: Points geometry 200 particles, random upward velocity, reset at apex, fade on lifetime. Dust motes in future LairScene."
+    },
+    {
+      "id": "T065",
+      "title": "Scene transition manager — fade overlay between BOOT→MENU→LAIR→GAME states",
+      "priority": 2,
+      "status": "open",
+      "domain": "gameplay",
+      "est_tokens": 250,
+      "depends_on": ["T060"],
+      "tags": ["ux", "architecture"],
+      "notes": "New web-demo/src/ui/SceneTransition.ts. Black div overlay, opacity transition 0.6s. API: transition(fromState, toState, onMidpoint). State enum: BOOT, MENU, LAIR, GAME. Used by main.ts state machine."
+    },
+    {
       "id": "T058",
       "title": "SFX implementation — hook Web Audio API tones to merlin_sfx event bus",
       "priority": 3,

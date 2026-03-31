@@ -4,12 +4,17 @@
 
 import * as THREE from 'three';
 
+// T063 bob-head constants — 2 Hz frequency, 0.04 amplitude
+const BOB_FREQUENCY = 2.0;  // Hz
+const BOB_AMPLITUDE = 0.04; // world units vertical
+
 export class CameraRail {
   private readonly curve: THREE.CatmullRomCurve3;
   private progress = 0;
   private speed = 0.008; // Progress per second (0-1 range)
   private paused = false;
   private readonly lookOffset = new THREE.Vector3(0, 1.5, 0);
+  private elapsedMoving = 0; // accumulated time while not paused (for bob)
 
   constructor(points: THREE.Vector3[]) {
     this.curve = new THREE.CatmullRomCurve3(points, false, 'catmullrom', 0.5);
@@ -75,13 +80,19 @@ export class CameraRail {
     this.paused = false;
   }
 
-  /** Update camera position along the spline. */
+  /** Update camera position along the spline. T063: bob-head Y offset applied. */
   update(camera: THREE.PerspectiveCamera, dt: number): void {
     if (this.paused || this.progress >= 1) return;
 
+    this.elapsedMoving += dt;
     this.progress = Math.min(1, this.progress + this.speed * dt);
 
     const position = this.curve.getPointAt(this.progress);
+
+    // T063: Bob-head — sinusoidal Y offset simulating walking motion
+    const bob = Math.sin(this.elapsedMoving * BOB_FREQUENCY * Math.PI * 2) * BOB_AMPLITUDE;
+    position.y += bob;
+
     camera.position.copy(position);
 
     // Look ahead on the curve

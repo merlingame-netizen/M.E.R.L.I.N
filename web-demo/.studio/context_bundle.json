@@ -1,60 +1,38 @@
 {
-  "_comment": "Contexte pre-calcule par le director. Cycle 20.",
-  "cycle": 20,
-  "timestamp": "2026-03-31T23:55:00Z",
-  "mode": "autonomous_dev",
-  "selected_tasks": ["T056", "T057_revised", "villages_batch2", "perf_cache"],
-  "prev_metrics": {
+  "cycle": 21,
+  "timestamp": "2026-03-31T00:00:00Z",
+  "selected_tasks": ["T060", "T061", "T063", "T064", "T065", "iles_batch2"],
+  "deferred_tasks": ["T062"],
+  "baseline": {
     "ts_errors": 0,
-    "bundle_kb_app": 100.25,
-    "cards_total": 306,
-    "build_ok": true
+    "bundle_kb_app": 100.43,
+    "bundle_kb_vendor": 529.01,
+    "cards_total": 326,
+    "minigames_count": 14
   },
-  "key_findings": {
-    "minigames_events": "ALL minigames use pointer* events — already touch-compatible. Only mg_runes.ts and mg_traces.ts use 'click'. T057 scope: add touch-action:none CSS on canvases + migrate runes/traces 'click' to 'pointerdown' for consistency.",
-    "villages_celtes_cards": "0 biome-tagged villages_celtes cards exist. The 20 from T015 cycle5 lack biome field. Batch2 must include biome:'villages_celtes'.",
-    "vercel_json": "vercel.json has no headers section. Add Cache-Control for /data/cards.json."
+  "gates": {
+    "ts_errors": { "threshold": 0, "action": "BLOCK" },
+    "bundle_kb_app": { "threshold": 220, "action": "WARN" },
+    "runtime_errors": { "threshold": 0, "action": "BLOCK" }
   },
-  "card_structure_ref": {
-    "narrative": "string (French, 1-2 sentences, second-person 'tu')",
-    "biome": "villages_celtes",
-    "options": [
-      {"verb": "string (from closed list)", "text": "string (1 sentence)", "effects": ["ADD_REPUTATION:faction:N", "HEAL_LIFE:N"]}
-    ]
+  "key_files": {
+    "entry": "web-demo/src/main.ts",
+    "html": "web-demo/index.html",
+    "coast_scene": "web-demo/src/scenes/CoastBiome.ts",
+    "camera_rail": "web-demo/src/engine/CameraRail.ts",
+    "cards_data": "web-demo/public/data/cards.json"
   },
-  "constraints_villages_batch2": {
-    "faction_options_mix": "korrigans >= 8/20 options, niamh >= 4/20 options, druides total <= 3 cards",
-    "heal_life_max_per_option": 5,
-    "damage_life_max_per_option": 15,
-    "rep_max_per_option": 20,
-    "effects_per_option_max": 3,
-    "cards_count": 20,
-    "biome_field": "villages_celtes",
-    "themes": "fetes villageoises, forge, marche, puits du village, assemblée des anciens, festival des korrigans, fete des moissons, druide du village, barde itinerant"
+  "arch_notes": {
+    "three_js": "vendor chunk 529KB, already split via vite manual chunks",
+    "scene_manager": "web-demo/src/engine/SceneManager.ts — owns renderer + camera",
+    "camera_rail": "CatmullRomCurve3 spline, progress 0-1, setSpeed(). Has createCoastalPath() + createForestPath(). Already pauses during card overlays.",
+    "coast_biome": "buildCoastScene() returns {group, update(dt)}. Has ocean plane (basic MeshStandard), sky sphere (shader), ground, fog.",
+    "state_machine": "main.ts currently: loading -> game directly. No BOOT/MENU states yet. Insert BOOT->MENU->GAME flow before line 44 (SceneManager init).",
+    "loading_div": "#loading div z-index 100 in index.html. Boot screen needs z-index 200 above it."
   },
-  "T056_context": {
-    "file": "web-demo/src/main.ts",
-    "pattern": "Add playSound(type: string) function at bottom of main.ts. Dispatches window.dispatchEvent(new CustomEvent('merlin_sfx', {detail:{type}})).",
-    "wiring_points": {
-      "flip": "After showCard() resolves in gameLoop (line ~183)",
-      "win": "After minigame score > 65 branch in switch",
-      "lose": "After minigame score <= 65 branch",
-      "unlock": "After ogham unlock toast in ogham progression code",
-      "end": "After showRunSummary() calls"
-    }
-  },
-  "T057_context": {
-    "finding": "All canvas minigames already use pointer* events (touch-native). Only mg_runes.ts and mg_traces.ts use 'click' event.",
-    "action": "1) In MinigameBase.ts or each canvas setup: add canvas.style.touchAction = 'none'. 2) In mg_runes.ts + mg_traces.ts: add pointerdown listener alongside/instead of click for touch-friendliness.",
-    "css_alternative": "Add touch-action: none to canvas in index.html or vite-injected style"
-  },
-  "perf_cache_context": {
-    "file": "web-demo/vercel.json",
-    "current": "{buildCommand, outputDirectory, framework}",
-    "add": "headers array: path /data/cards.json -> Cache-Control: public, max-age=86400, stale-while-revalidate=3600"
-  },
-  "regression_gate": {
-    "ts_errors": "BLOCK if > 0",
-    "bundle_app_kb": "WARN if > 220"
-  }
+  "changed_files_cycle20": [
+    "web-demo/src/main.ts",
+    "web-demo/public/data/cards.json",
+    "web-demo/src/ui/CardOverlay.ts"
+  ]
 }

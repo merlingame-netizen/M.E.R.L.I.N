@@ -30,15 +30,106 @@ import { MinigameEcho } from './minigames/mg_echo';
 import { initOghamPanel, showOghamPanel, hideOghamPanel } from './ui/OghamPanel';
 import { getLLMAdapter } from './llm/GroqAdapter';
 import { showRunSummary } from './ui/RunSummary';
+import { initMainMenu } from './scenes/MainMenuScene';
+import { cutToBlack, revealFromBlack } from './ui/SceneTransition';
 
 // --- Config ---
 const WALK_SECONDS_BEFORE_CARD = 6; // Seconds of walking before showing a card
 const WALK_SPEED = 0.04; // Rail progress per second
 
+// --- Boot Screen (T060) ---
+// Shows Celtic logo + progress bar for 2.5s, then transitions to main menu.
+async function runBootScreen(): Promise<void> {
+  const bootScreen = document.getElementById('boot-screen');
+  if (!bootScreen) return;
+
+  const statusEl = document.getElementById('boot-status-text');
+  const statusMessages = [
+    'Initialisation...',
+    'Chargement des Oghams...',
+    'Eveil du monde celtique...',
+    'Merlin vous attend...',
+  ];
+  let msgIndex = 0;
+  const msgInterval = setInterval(() => {
+    msgIndex = (msgIndex + 1) % statusMessages.length;
+    if (statusEl) statusEl.textContent = statusMessages[msgIndex] ?? '';
+  }, 650);
+
+  // Wait for the CSS progress bar animation (2.5s) + small buffer
+  await waitSeconds(2.6);
+  clearInterval(msgInterval);
+
+  // Fade out boot screen
+  bootScreen.classList.add('hidden');
+  await waitSeconds(0.85); // match CSS transition 0.8s
+  bootScreen.style.display = 'none';
+}
+
+// --- Main Menu (T061) ---
+// Runs the cinematic Three.js cliff/sea scene. Resolves when player clicks Start.
+async function runMainMenu(): Promise<void> {
+  const wrapper = document.getElementById('menu-canvas-wrapper');
+  const overlay = document.getElementById('main-menu-overlay');
+  const startBtn = document.getElementById('menu-start-btn');
+  if (!wrapper || !overlay || !startBtn) return;
+
+  wrapper.classList.add('visible');
+
+  const menu = initMainMenu(wrapper);
+
+  // Animation loop for the menu scene
+  let menuAnimId = 0;
+  let lastTime = performance.now();
+  const tick = (): void => {
+    menuAnimId = requestAnimationFrame(tick);
+    const now = performance.now();
+    const dt = Math.min((now - lastTime) / 1000, 0.05);
+    lastTime = now;
+    menu.update(dt);
+  };
+  tick();
+
+  // Show menu UI after brief delay (let scene render first)
+  await waitSeconds(0.4);
+  overlay.classList.add('visible');
+
+  // Wait for player to click Start
+  await new Promise<void>((resolve) => {
+    startBtn.addEventListener('click', () => resolve(), { once: true });
+  });
+
+  // Transition: start dolly then cut to game
+  overlay.classList.remove('visible');
+  cutToBlack();
+
+  // Wait for dolly to play (camera flies to tower), then clean up
+  await new Promise<void>((resolve) => {
+    menu.startDolly(resolve);
+    // Safety timeout: if dolly never completes, resolve after 6s
+    setTimeout(resolve, 6000);
+  });
+
+  cancelAnimationFrame(menuAnimId);
+  menu.dispose();
+  wrapper.classList.remove('visible');
+  wrapper.style.display = 'none';
+}
+
 // --- Bootstrap ---
 async function main(): Promise<void> {
   const app = document.getElementById('app')!;
   const loading = document.getElementById('loading')!;
+
+  // Phase 1: Boot screen (T060)
+  await runBootScreen();
+
+  // Phase 2: Main menu cinematic (T061)
+  await runMainMenu();
+
+  // Phase 3: Reveal and enter game
+  loading.style.display = 'flex';
+  loading.style.opacity = '1';
 
   // Init scene
   const sceneManager = new SceneManager(app);
@@ -59,10 +150,11 @@ async function main(): Promise<void> {
   // Start renderer
   sceneManager.start();
 
-  // Hide loading screen
+  // Hide loading screen and reveal game (clear scene-transition black overlay)
   loading.style.opacity = '0';
   loading.style.transition = 'opacity 0.5s';
   setTimeout(() => { loading.style.display = 'none'; }, 500);
+  revealFromBlack(600);
 
   // Init HUD + Ogham panel
   initHUD();
