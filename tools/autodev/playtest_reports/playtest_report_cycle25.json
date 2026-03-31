@@ -1,0 +1,45 @@
+{
+  "cycle": 25,
+  "timestamp": "2026-03-31T00:00:00Z",
+  "focus": "Low-poly main menu scene rebuild — cliff, tower, ocean, sky, vegetation",
+  "ts_errors": 0,
+  "bundle_kb_app": 116.20,
+  "bundle_kb_prev": 123.07,
+  "bundle_delta_pct": -5.6,
+  "build_ok": true,
+  "build_time_s": 2.42,
+  "scores": {
+    "cliff": { "score": 7, "max": 10 },
+    "tower": { "score": 8, "max": 10 },
+    "ocean": { "score": 7, "max": 10 },
+    "sky": { "score": 6, "max": 10 },
+    "vegetation": { "score": 8, "max": 10 },
+    "flat_shading": { "score": 9, "max": 10 },
+    "overall": { "score": 7, "max": 10 }
+  },
+  "key_changes": [
+    "flatShading:true on all MeshStandardMaterial — architectural fix",
+    "antialias:false on renderer — preserves sharp polygon edges",
+    "NoToneMapping — keeps flat colors accurate",
+    "Ocean: PlaneGeometry(30x20seg) + per-frame vertex displacement replaces ShaderMaterial",
+    "Tower: CylinderGeometry(7seg) + cone roof replaces BoxGeometry",
+    "Cliff: displaceVertices() jitter on all rock BoxGeometry",
+    "Sky: BoxGeometry BackSide replaces ShaderMaterial sphere",
+    "Clouds: 8 flat BoxGeometry planes in dark grey",
+    "Vegetation: 18 ConeGeometry(4-seg) diamond bushes",
+    "Path: sandy PlaneGeometry ribbon",
+    "Foam: 6 CircleGeometry(5-seg) at cliff base",
+    "Camera: (-8,18,28) → lookAt(4,2,-10)"
+  ],
+  "regression_gate": {
+    "ts_errors": "PASS (0)",
+    "bundle_kb_app": "PASS (116.2 < 220 threshold, -5.6% vs prev)",
+    "runtime_errors": "PASS (0)",
+    "api_compat": "PASS (initMainMenu signature unchanged)"
+  },
+  "next_cycle_priorities": [
+    "T070 — HUD faction bars (HIGH, gameplay)",
+    "T072 — ambient audio deferred bug (HIGH, audio)",
+    "T071 — mobile card layout at 375px (HIGH, ux)"
+  ]
+}

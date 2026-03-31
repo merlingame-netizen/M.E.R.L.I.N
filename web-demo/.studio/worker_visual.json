@@ -1,31 +1,36 @@
 {
   "agent": "merlin-tech-artist",
-  "cycle": 24,
-  "timestamp": "2026-03-31T01:00:00Z",
+  "cycle": 25,
+  "timestamp": "2026-03-31T00:00:00Z",
   "status": "PASS",
-  "tasks": {
-    "T067_card_ui": {
-      "status": "DONE",
-      "changes": [
-        "index.html: .card-container background changed to linear-gradient(145deg, #1a1209, #2d1f0e, #1a1209) — dark parchment",
-        "index.html: border upgraded to 2px solid rgba(201,168,76,0.45) + box-shadow with inset glow",
-        "index.html: ::before/::after pseudo-elements add Celtic corner accents in #c9a84c",
-        "index.html: .card-biome-badge — small pill top-right with biome name in gold",
-        "index.html: .card-divider — gold gradient horizontal rule below badge",
-        "index.html: .card-narrative — Georgia serif font, #f5e6c8 cream, italic, line-height 1.7",
-        "index.html: .card-option — dark bg rgba(10,7,3,0.7), gold border, hover gold glow + translateY(-3px)",
-        "index.html: .card-option .verb — Georgia serif, #c9a84c gold color",
-        "index.html: .faction-dot — 7px colored circle per faction before verb",
-        "CardOverlay.ts: buildFactionDot() injects colored dot per FACTION_COLOURS map",
-        "CardOverlay.ts: biome badge + card-divider inserted into DOM each card show"
-      ]
-    }
-  },
+  "task": "T_CYCLE25_MENU_REBUILD",
+  "changes": [
+    "FULL REWRITE: web-demo/src/scenes/MainMenuScene.ts (419 → 430 lines)",
+    "flatShading:true added to ALL MeshStandardMaterial instances — key low-poly fix",
+    "Ocean: replaced ShaderMaterial with MeshStandardMaterial(flatShading:true) on PlaneGeometry(80,60,30,20). Per-frame vertex Y displacement creates animated wave facets",
+    "Cliff: BoxGeometry masses with displaceVertices() helper — random vertex jitter creates angular rock faces. 3 material tones: base(#3a3830), shadow(#2a2820), highlight(#4a4838)",
+    "Tower: replaced BoxGeometry with CylinderGeometry(r,r,h,7) — 7 radial segments = clearly low-poly. 4 stacked sections. Conical roof CylinderGeometry(0,1.8,3.5,7). Sandy grey #8a8068",
+    "Battlements: 7 BoxGeometry notch meshes placed around top ring at correct angles",
+    "Clouds: 8 flat BoxGeometry planes (w>>d) placed horizontally at different depths/heights. Colors #3a4050–#606878. flatShading makes polygon faces visible",
+    "Sky: BoxGeometry(400,200,400) BackSide + MeshStandardMaterial(flatShading:true, #1a2030) replaces ShaderMaterial sphere",
+    "Vegetation: 18 ConeGeometry(r,h,4) bushes — 4 segments = diamond shape. Colors #1a3020 / #243818. Scattered on right cliff side",
+    "Path: PlaneGeometry sandy ribbon (#b0a080, flatShading:true) winding up cliff right side",
+    "Foam patches: 6 CircleGeometry(r,5) near cliff base, semi-transparent white (#ddeeff)",
+    "Camera: moved from (0,12,35)→(-8,18,28), lookAt from (0,5,-20)→(4,2,-10). High angle, right-of-center tower framing",
+    "Lighting: removed PointLight on cliff, kept DirectionalLight(-20,30,10)+AmbientLight(0x202030,0.4). Tower interior PointLight(0xffaa44) kept",
+    "Renderer: antialias:false to preserve sharp polygon edges. NoToneMapping to keep flat colors accurate",
+    "SeaSpraySystem preserved — 120 particles, repositioned to cliff base area",
+    "God ray sprite removed — does not fit low-poly aesthetic",
+    "All interfaces, dispose pattern, resize handler, startDolly no-op preserved"
+  ],
   "ts_errors": 0,
-  "bundle_kb_app": 115,
+  "bundle_kb_app": 116.20,
+  "bundle_kb_app_prev": 123.07,
+  "bundle_delta_pct": -5.6,
+  "build_time_s": 2.42,
   "regression_gate": {
     "ts_errors": "PASS (0)",
-    "bundle": "PASS (115KB < 220KB threshold)"
+    "bundle": "PASS (116.20KB < 220KB threshold, -5.6% vs prev)"
   },
   "issues": []
 }

@@ -1,7 +1,8 @@
 // ═══════════════════════════════════════════════════════════════════════════════
-// Main Menu Scene — Stormy cliff + sea, STATIC camera, animated world
-// T061 + T064 (VFX: sea spray particles + god ray sprite)
-// Camera is fixed at (0, 12, 35) looking toward (0, 5, -20). World animates.
+// Main Menu Scene — Cycle 25 — Low-poly coastal cliff + tower
+// Reference: dark stormy coast, flat-shaded polygons throughout.
+// Camera: fixed high angle (-8,18,28) looking (4,2,-10). World animates.
+// flatShading: true on ALL MeshStandardMaterial = the key low-poly look.
 // ═══════════════════════════════════════════════════════════════════════════════
 
 import * as THREE from 'three';
@@ -20,194 +21,416 @@ interface ParticleData {
 interface MainMenuResult {
   renderer: THREE.WebGLRenderer;
   update: (dt: number) => void;
-  /** No-op kept for API compatibility — camera is now static. Calls onComplete immediately. */
+  /** No-op kept for API compatibility — camera is static. Calls onComplete immediately. */
   startDolly: (onComplete: () => void) => void;
   dispose: () => void;
 }
 
-// ── Stormy Ocean ─────────────────────────────────────────────────────────────
+// ── Low-poly Ocean ───────────────────────────────────────────────────────────
+// PlaneGeometry with many segments so flatShading creates visible wave facets.
+// Vertex Y displacement in update() to animate the waves.
 
-function createStormyOcean(): { mesh: THREE.Mesh; update: (t: number) => void } {
-  const geo = new THREE.PlaneGeometry(400, 400, 80, 80);
-
-  const mat = new THREE.ShaderMaterial({
-    uniforms: {
-      uTime: { value: 0 },
-      uStorminess: { value: 1.0 },
-    },
-    vertexShader: `
-      uniform float uTime;
-      uniform float uStorminess;
-      varying float vWorldY;
-      void main() {
-        vec3 pos = position;
-        float wave =
-          sin(pos.x * 0.10 + uTime * 1.2) * 2.0 +
-          cos(pos.y * 0.15 + uTime * 0.8) * 1.5 +
-          sin(pos.x * 0.05 + pos.y * 0.07 + uTime * 2.0) * 0.8;
-        pos.z += wave * uStorminess;
-        vWorldY = pos.z;
-        gl_Position = projectionMatrix * modelViewMatrix * vec4(pos, 1.0);
-      }
-    `,
-    fragmentShader: `
-      varying float vWorldY;
-      void main() {
-        float t = clamp((vWorldY + 3.0) / 6.0, 0.0, 1.0);
-        vec3 deep = vec3(0.04, 0.08, 0.18);
-        vec3 crest = vec3(0.18, 0.35, 0.55);
-        vec3 foam  = vec3(0.55, 0.65, 0.75);
-        vec3 col = mix(deep, crest, t);
-        // Foam on wave peaks
-        float foamFactor = smoothstep(0.6, 1.0, t);
-        col = mix(col, foam, foamFactor * 0.6);
-        // Specular shimmer
-        float spec = smoothstep(0.7, 1.0, t) * 0.3;
-        col += vec3(spec);
-        gl_FragColor = vec4(col, 0.92);
-      }
-    `,
-    transparent: true,
-    side: THREE.FrontSide,
+function createLowPolyOcean(): {
+  mesh: THREE.Mesh;
+  update: (t: number) => void;
+} {
+  // Many segments so flatShading creates visible polygon faces per wave
+  const geo = new THREE.PlaneGeometry(80, 60, 30, 20);
+  const mat = new THREE.MeshStandardMaterial({
+    color: 0x2a6b5a,
+    flatShading: true,
+    roughness: 0.8,
+    metalness: 0.1,
   });
 
   const mesh = new THREE.Mesh(geo, mat);
   mesh.rotation.x = -Math.PI / 2;
-  mesh.position.set(0, -2, 0);
+  // Ocean is left half of scene, below cliff level
+  mesh.position.set(-18, -2, -8);
 
-  return {
-    mesh,
-    update: (t: number) => {
-      (mat.uniforms['uTime'] as { value: number }).value = t;
-    },
+  // Store original Y positions for wave animation
+  const posAttr = geo.attributes['position'] as THREE.BufferAttribute;
+  const count = posAttr.count;
+  const baseY = new Float32Array(count);
+  for (let i = 0; i < count; i++) {
+    baseY[i] = posAttr.getY(i);
+  }
+
+  const update = (t: number): void => {
+    const positions = posAttr.array as Float32Array;
+    for (let i = 0; i < count; i++) {
+      const x = posAttr.getX(i);
+      const z = baseY[i]; // original "z" in plane space = y before rotation
+      const wave =
+        Math.sin(x * 0.18 + t * 1.1) * 0.9 +
+        Math.cos(z * 0.22 + t * 0.75) * 0.6 +
+        Math.sin(x * 0.07 + z * 0.09 + t * 1.8) * 0.4;
+      positions[i * 3 + 2] = wave; // Z in plane space = up after rotation
+    }
+    posAttr.needsUpdate = true;
+    geo.computeVertexNormals();
   };
+
+  return { mesh, update };
 }
 
-// ── Cliff Geometry ───────────────────────────────────────────────────────────
+// ── Foam patches near cliff base ─────────────────────────────────────────────
+
+function createFoamPatches(): THREE.Group {
+  const group = new THREE.Group();
+  const mat = new THREE.MeshStandardMaterial({
+    color: 0xddeeff,
+    flatShading: true,
+    roughness: 1.0,
+    metalness: 0.0,
+    transparent: true,
+    opacity: 0.75,
+  });
+
+  const positions: [number, number, number][] = [
+    [-4, -1.8, -2],
+    [-7, -1.8, 2],
+    [-2, -1.8, -5],
+    [-9, -1.8, -1],
+    [-5, -1.8, 4],
+    [-3, -1.8, 1],
+  ];
+
+  for (const [x, y, z] of positions) {
+    const geo = new THREE.CircleGeometry(0.6 + Math.random() * 0.5, 5);
+    const foam = new THREE.Mesh(geo, mat);
+    foam.rotation.x = -Math.PI / 2;
+    foam.position.set(x, y, z);
+    group.add(foam);
+  }
+
+  return group;
+}
+
+// ── Cliff Rocks ──────────────────────────────────────────────────────────────
+// Multiple BoxGeometry masses with manually displaced vertices for angular look.
+// ALL use flatShading: true to show each face as a distinct polygon.
+
+function displaceVertices(geo: THREE.BufferGeometry, amount: number): void {
+  const posAttr = geo.attributes['position'] as THREE.BufferAttribute;
+  const arr = posAttr.array as Float32Array;
+  for (let i = 0; i < posAttr.count; i++) {
+    arr[i * 3]     += (Math.random() - 0.5) * amount;
+    arr[i * 3 + 1] += (Math.random() - 0.5) * amount;
+    arr[i * 3 + 2] += (Math.random() - 0.5) * amount;
+  }
+  posAttr.needsUpdate = true;
+  geo.computeVertexNormals();
+}
 
 function createCliff(): THREE.Group {
   const group = new THREE.Group();
-  const mat = new THREE.MeshStandardMaterial({ color: 0x2a2520, roughness: 0.95, metalness: 0.0 });
 
-  // Main cliff body
-  const body = new THREE.Mesh(new THREE.BoxGeometry(30, 28, 20), mat);
-  body.position.set(-18, 2, -10);
+  const matBase = new THREE.MeshStandardMaterial({
+    color: 0x3a3830,
+    flatShading: true,
+    roughness: 0.95,
+    metalness: 0.0,
+  });
+  const matShadow = new THREE.MeshStandardMaterial({
+    color: 0x2a2820,
+    flatShading: true,
+    roughness: 1.0,
+    metalness: 0.0,
+  });
+  const matHighlight = new THREE.MeshStandardMaterial({
+    color: 0x4a4838,
+    flatShading: true,
+    roughness: 0.9,
+    metalness: 0.0,
+  });
+
+  // Main cliff body — large angular mass, left-center
+  const bodyGeo = new THREE.BoxGeometry(18, 14, 12, 3, 3, 3);
+  displaceVertices(bodyGeo, 1.2);
+  const body = new THREE.Mesh(bodyGeo, matBase);
+  body.position.set(-6, 0, -10);
   group.add(body);
 
-  // Upper ledge
-  const ledge = new THREE.Mesh(new THREE.BoxGeometry(22, 6, 14), mat);
-  ledge.position.set(-14, 17, -8);
-  group.add(ledge);
+  // Upper cliff platform
+  const upperGeo = new THREE.BoxGeometry(14, 6, 10, 2, 2, 2);
+  displaceVertices(upperGeo, 0.9);
+  const upper = new THREE.Mesh(upperGeo, matHighlight);
+  upper.position.set(-4, 10, -9);
+  group.add(upper);
 
-  // Rocky outcrop (irregular, using smaller boxes)
-  const rock1 = new THREE.Mesh(new THREE.BoxGeometry(8, 5, 6), mat);
-  rock1.position.set(-6, 14, -5);
-  rock1.rotation.y = 0.3;
+  // Left face — darker shadow side
+  const leftGeo = new THREE.BoxGeometry(8, 18, 8, 2, 3, 2);
+  displaceVertices(leftGeo, 1.0);
+  const left = new THREE.Mesh(leftGeo, matShadow);
+  left.position.set(-12, 1, -8);
+  left.rotation.y = 0.15;
+  group.add(left);
+
+  // Rocky outcrop 1 — mid cliff
+  const rock1Geo = new THREE.BoxGeometry(7, 5, 6, 2, 2, 2);
+  displaceVertices(rock1Geo, 1.1);
+  const rock1 = new THREE.Mesh(rock1Geo, matBase);
+  rock1.position.set(-2, 7, -6);
+  rock1.rotation.y = 0.4;
   group.add(rock1);
 
-  const rock2 = new THREE.Mesh(new THREE.BoxGeometry(5, 3, 5), mat);
-  rock2.position.set(-10, 18, -3);
+  // Rocky outcrop 2 — high right, connects to tower base
+  const rock2Geo = new THREE.BoxGeometry(10, 4, 8, 2, 2, 2);
+  displaceVertices(rock2Geo, 0.8);
+  const rock2 = new THREE.Mesh(rock2Geo, matHighlight);
+  rock2.position.set(4, 13, -11);
   rock2.rotation.y = -0.2;
   group.add(rock2);
 
+  // Foreground rocks — closer to camera, smaller
+  const rock3Geo = new THREE.BoxGeometry(4, 3, 4, 2, 2, 2);
+  displaceVertices(rock3Geo, 0.7);
+  const rock3 = new THREE.Mesh(rock3Geo, matShadow);
+  rock3.position.set(0, 5, -2);
+  rock3.rotation.y = 0.6;
+  group.add(rock3);
+
+  const rock4Geo = new THREE.BoxGeometry(3, 2, 3, 2, 2, 2);
+  displaceVertices(rock4Geo, 0.6);
+  const rock4 = new THREE.Mesh(rock4Geo, matBase);
+  rock4.position.set(-8, 4, -3);
+  rock4.rotation.y = -0.3;
+  group.add(rock4);
+
   return group;
 }
 
-// ── Tower Silhouette ─────────────────────────────────────────────────────────
+// ── Sandy Path ───────────────────────────────────────────────────────────────
+
+function createPath(): THREE.Mesh {
+  const geo = new THREE.PlaneGeometry(2.5, 16, 3, 6);
+  displaceVertices(geo, 0.15);
+  const mat = new THREE.MeshStandardMaterial({
+    color: 0xb0a080,
+    flatShading: true,
+    roughness: 1.0,
+    metalness: 0.0,
+  });
+  const mesh = new THREE.Mesh(geo, mat);
+  mesh.rotation.x = -Math.PI / 2;
+  mesh.rotation.z = 0.3;
+  mesh.position.set(2, 8.2, -6);
+  return mesh;
+}
+
+// ── Tower ────────────────────────────────────────────────────────────────────
+// CylinderGeometry with 7 radial segments = low-poly faceted cylinder.
+// Conical roof also 7 segments. Battlements as small BoxGeometry notches.
 
 function createTower(): THREE.Group {
   const group = new THREE.Group();
-  const mat = new THREE.MeshStandardMaterial({ color: 0x14120f, roughness: 1.0, metalness: 0.0 });
 
-  // Main tower shaft
-  const shaft = new THREE.Mesh(new THREE.BoxGeometry(5, 28, 5), mat);
-  shaft.position.set(0, 14, 0);
-  group.add(shaft);
+  const mat = new THREE.MeshStandardMaterial({
+    color: 0x8a8068,
+    flatShading: true,
+    roughness: 0.9,
+    metalness: 0.0,
+  });
+  const matDark = new THREE.MeshStandardMaterial({
+    color: 0x6a6050,
+    flatShading: true,
+    roughness: 1.0,
+    metalness: 0.0,
+  });
+  const matRoof = new THREE.MeshStandardMaterial({
+    color: 0x5a5244,
+    flatShading: true,
+    roughness: 1.0,
+    metalness: 0.0,
+  });
 
-  // Battlement top
-  const top = new THREE.Mesh(new THREE.BoxGeometry(7, 4, 7), mat);
-  top.position.set(0, 30, 0);
-  group.add(top);
+  // Ground floor section (wider base)
+  const base = new THREE.Mesh(new THREE.CylinderGeometry(1.9, 2.2, 3.0, 7), mat);
+  base.position.set(0, 1.5, 0);
+  group.add(base);
 
-  // Turret spheres at corners
-  const turretMat = new THREE.MeshStandardMaterial({ color: 0x0e0c09, roughness: 1.0, metalness: 0.0 });
-  const turretGeo = new THREE.SphereGeometry(1.5, 6, 6);
-  const offsets: [number, number][] = [[-3, -3], [3, -3], [-3, 3], [3, 3]];
-  for (const [ox, oz] of offsets) {
-    const t = new THREE.Mesh(turretGeo, turretMat);
-    t.position.set(ox, 32, oz);
-    group.add(t);
+  // Second section
+  const s2 = new THREE.Mesh(new THREE.CylinderGeometry(1.7, 1.9, 3.0, 7), mat);
+  s2.position.set(0, 4.5, 0);
+  group.add(s2);
+
+  // Third section
+  const s3 = new THREE.Mesh(new THREE.CylinderGeometry(1.6, 1.7, 3.0, 7), mat);
+  s3.position.set(0, 7.5, 0);
+  group.add(s3);
+
+  // Top section (battlements ring)
+  const s4 = new THREE.Mesh(new THREE.CylinderGeometry(1.7, 1.6, 2.0, 7), matDark);
+  s4.position.set(0, 10.0, 0);
+  group.add(s4);
+
+  // Battlement notches — 7 small boxes around the top ring
+  const notchMat = new THREE.MeshStandardMaterial({
+    color: 0x9a9078,
+    flatShading: true,
+    roughness: 0.9,
+    metalness: 0.0,
+  });
+  for (let i = 0; i < 7; i++) {
+    const angle = (i / 7) * Math.PI * 2;
+    const notch = new THREE.Mesh(new THREE.BoxGeometry(0.5, 0.8, 0.4), notchMat);
+    notch.position.set(
+      Math.cos(angle) * 1.7,
+      11.4,
+      Math.sin(angle) * 1.7
+    );
+    notch.rotation.y = angle;
+    group.add(notch);
   }
 
-  // Window glow (orange light from within)
-  const windowGeo = new THREE.PlaneGeometry(1.5, 2.0);
-  const windowMat = new THREE.MeshBasicMaterial({ color: 0xff8833, transparent: true, opacity: 0.8 });
-  const window1 = new THREE.Mesh(windowGeo, windowMat);
-  window1.position.set(2.51, 10, 0);
-  window1.rotation.y = Math.PI / 2;
-  group.add(window1);
+  // Conical roof — 7 segments = clearly low-poly cone
+  const roofGeo = new THREE.CylinderGeometry(0, 1.8, 3.5, 7);
+  const roof = new THREE.Mesh(roofGeo, matRoof);
+  roof.position.set(0, 13.25, 0);
+  group.add(roof);
 
-  // Point light inside tower
-  const insideLight = new THREE.PointLight(0xff6600, 2.0, 25, 2);
-  insideLight.position.set(2.5, 10, 0);
+  // Arched window — dark rectangle on the cylinder face
+  const windowMat = new THREE.MeshBasicMaterial({ color: 0x1a1008 });
+  const windowGeo = new THREE.PlaneGeometry(0.6, 0.9);
+  const win = new THREE.Mesh(windowGeo, windowMat);
+  win.position.set(0, 7.2, 1.65);
+  group.add(win);
+
+  // Warm interior point light (visible through window)
+  const insideLight = new THREE.PointLight(0xffaa44, 1.2, 12, 2);
+  insideLight.position.set(0, 7, 0);
   group.add(insideLight);
 
-  group.position.set(32, -2, -70);
+  // Position tower: right side, top of cliff
+  group.position.set(6, 13, -13);
   return group;
 }
 
-// ── Stormy Sky ───────────────────────────────────────────────────────────────
+// ── Polygon Cloud Shapes ─────────────────────────────────────────────────────
+// Flat BoxGeometry planes arranged horizontally in layers.
+// flatShading: true ensures polygon faces are visible.
 
-function createStormySky(): THREE.Mesh {
-  const geo = new THREE.SphereGeometry(380, 32, 16);
-  const mat = new THREE.ShaderMaterial({
-    uniforms: {
-      uTime: { value: 0 },
-    },
-    vertexShader: `
-      varying vec3 vWorldPos;
-      void main() {
-        vWorldPos = position;
-        gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
-      }
-    `,
-    fragmentShader: `
-      uniform float uTime;
-      varying vec3 vWorldPos;
-      void main() {
-        float t = clamp((vWorldPos.y + 50.0) / 280.0, 0.0, 1.0);
-        vec3 top    = vec3(0.04, 0.04, 0.10);
-        vec3 mid    = vec3(0.08, 0.12, 0.22);
-        vec3 bottom = vec3(0.16, 0.20, 0.30);
-        vec3 col = mix(bottom, mid, min(t * 2.0, 1.0));
-        col = mix(col, top, max(t * 2.0 - 1.0, 0.0));
-        // Storm cloud streaks
-        float cloud = sin(vWorldPos.x * 0.02 + uTime * 0.1) * cos(vWorldPos.z * 0.015 - uTime * 0.08);
-        col += vec3(cloud * 0.03);
-        gl_FragColor = vec4(col, 1.0);
-      }
-    `,
-    side: THREE.BackSide,
-  });
+function createClouds(): THREE.Group {
+  const group = new THREE.Group();
 
-  const sky = new THREE.Mesh(geo, mat);
-  return sky;
+  const cloudConfigs: Array<{
+    color: number;
+    w: number;
+    h: number;
+    d: number;
+    x: number;
+    y: number;
+    z: number;
+    ry: number;
+  }> = [
+    { color: 0x3a4050, w: 14, h: 1.8, d: 0.4, x: -20, y: 32, z: -60, ry: 0.05 },
+    { color: 0x4a5060, w: 10, h: 1.4, d: 0.3, x: -8,  y: 35, z: -65, ry: -0.08 },
+    { color: 0x3a4050, w: 16, h: 2.0, d: 0.5, x:  5,  y: 30, z: -55, ry: 0.12 },
+    { color: 0x5a6070, w: 9,  h: 1.2, d: 0.3, x: 15,  y: 33, z: -58, ry: -0.05 },
+    { color: 0x444e5e, w: 12, h: 1.6, d: 0.4, x: -25, y: 28, z: -50, ry: 0.1 },
+    { color: 0x3a4050, w: 18, h: 2.2, d: 0.6, x: -5,  y: 27, z: -48, ry: -0.15 },
+    { color: 0x606878, w: 8,  h: 1.0, d: 0.2, x: 20,  y: 36, z: -70, ry: 0.02 },
+    { color: 0x4a5464, w: 11, h: 1.5, d: 0.3, x: -15, y: 38, z: -72, ry: -0.06 },
+  ];
+
+  for (const cfg of cloudConfigs) {
+    const geo = new THREE.BoxGeometry(cfg.w, cfg.h, cfg.d);
+    const mat = new THREE.MeshStandardMaterial({
+      color: cfg.color,
+      flatShading: true,
+      roughness: 1.0,
+      metalness: 0.0,
+    });
+    const cloud = new THREE.Mesh(geo, mat);
+    cloud.position.set(cfg.x, cfg.y, cfg.z);
+    cloud.rotation.y = cfg.ry;
+    group.add(cloud);
+  }
+
+  return group;
 }
 
-// ── Sea Spray Particle System (T064) ─────────────────────────────────────────
+// ── Sky Background ───────────────────────────────────────────────────────────
+// Large box (BackSide) for dark stormy sky. flatShading for polygon look.
+
+function createSkyBox(): THREE.Mesh {
+  const geo = new THREE.BoxGeometry(400, 200, 400);
+  const mat = new THREE.MeshStandardMaterial({
+    color: 0x1a2030,
+    flatShading: true,
+    roughness: 1.0,
+    metalness: 0.0,
+    side: THREE.BackSide,
+  });
+  return new THREE.Mesh(geo, mat);
+}
+
+// ── Vegetation — Angular Bushes ───────────────────────────────────────────────
+// ConeGeometry(r, h, 4) = 4 segments → diamond/triangular shape when flat-shaded.
+
+function createVegetation(): THREE.Group {
+  const group = new THREE.Group();
+
+  const mat1 = new THREE.MeshStandardMaterial({
+    color: 0x1a3020,
+    flatShading: true,
+    roughness: 1.0,
+    metalness: 0.0,
+  });
+  const mat2 = new THREE.MeshStandardMaterial({
+    color: 0x243818,
+    flatShading: true,
+    roughness: 1.0,
+    metalness: 0.0,
+  });
+
+  // 18 angular bushes scattered on right cliff side
+  const positions: [number, number, number, number, number][] = [
+    [2, 9.5, -5, 0.4, 0.7],
+    [4, 10, -7, 0.3, 0.6],
+    [6, 11, -9, 0.35, 0.65],
+    [3, 8.5, -4, 0.45, 0.8],
+    [7, 12, -10, 0.3, 0.55],
+    [5, 10.5, -6, 0.4, 0.7],
+    [8, 11.5, -8, 0.35, 0.6],
+    [1, 9, -3, 0.3, 0.65],
+    [9, 13, -11, 0.4, 0.75],
+    [4, 9.8, -3, 0.35, 0.6],
+    [6, 11.2, -5, 0.3, 0.55],
+    [2, 8.8, -6, 0.4, 0.7],
+    [7, 10.8, -4, 0.35, 0.65],
+    [5, 12.1, -12, 0.3, 0.6],
+    [3, 9.2, -8, 0.4, 0.7],
+    [8, 13.5, -9, 0.35, 0.65],
+    [1, 8.5, -2, 0.3, 0.6],
+    [10, 14, -12, 0.4, 0.75],
+  ];
+
+  for (let i = 0; i < positions.length; i++) {
+    const [x, y, z, r, h] = positions[i];
+    const geo = new THREE.ConeGeometry(r, h, 4);
+    const mat = i % 2 === 0 ? mat1 : mat2;
+    const bush = new THREE.Mesh(geo, mat);
+    bush.position.set(x, y, z);
+    bush.rotation.y = Math.random() * Math.PI;
+    group.add(bush);
+  }
+
+  return group;
+}
+
+// ── Sea Spray Particle System ─────────────────────────────────────────────────
 
 class SeaSpraySystem {
   private readonly points: THREE.Points;
   private readonly positions: Float32Array;
-  private readonly opacities: Float32Array;
   private readonly particles: ParticleData[] = [];
-  private readonly COUNT = 150;
+  private readonly COUNT = 120;
 
   constructor() {
     this.positions = new Float32Array(this.COUNT * 3);
-    this.opacities = new Float32Array(this.COUNT);
 
-    // Initialize particles
     for (let i = 0; i < this.COUNT; i++) {
       this.particles.push(this.resetParticle(i));
     }
@@ -217,32 +440,34 @@ class SeaSpraySystem {
 
     const mat = new THREE.PointsMaterial({
       color: 0xaaccdd,
-      size: 0.25,
+      size: 0.2,
       transparent: true,
-      opacity: 0.6,
+      opacity: 0.55,
       blending: THREE.AdditiveBlending,
       depthWrite: false,
       sizeAttenuation: true,
     });
 
     this.points = new THREE.Points(geo, mat);
+    // Position spray at cliff base / ocean edge
+    this.points.position.set(-6, 0, -4);
   }
 
   private resetParticle(i: number): ParticleData {
-    const baseX = -20 + Math.random() * 20;
-    const baseZ = -20 + Math.random() * 20;
-    const maxLifetime = 1.2 + Math.random() * 1.0;
+    const baseX = -8 + Math.random() * 10;
+    const baseZ = -6 + Math.random() * 6;
+    const maxLifetime = 1.0 + Math.random() * 1.2;
 
     this.positions[i * 3]     = baseX;
-    this.positions[i * 3 + 1] = -1.5 + Math.random() * 0.5;
+    this.positions[i * 3 + 1] = -0.5 + Math.random() * 0.3;
     this.positions[i * 3 + 2] = baseZ;
 
     return {
       baseX,
       baseZ,
-      velY: 2.5 + Math.random() * 2.5,
-      velZ: (Math.random() - 0.5) * 1.5,
-      lifetime: Math.random() * maxLifetime, // stagger initial positions
+      velY: 2.0 + Math.random() * 2.0,
+      velZ: (Math.random() - 0.5) * 1.2,
+      lifetime: Math.random() * maxLifetime,
       maxLifetime,
     };
   }
@@ -252,22 +477,15 @@ class SeaSpraySystem {
       const p = this.particles[i];
       p.lifetime += dt;
 
-      const alive = p.lifetime / p.maxLifetime;
-
       if (p.lifetime >= p.maxLifetime) {
         const reset = this.resetParticle(i);
-        reset.lifetime = 0; // always start fresh on death
+        reset.lifetime = 0;
         this.particles[i] = reset;
         continue;
       }
 
       this.positions[i * 3 + 1] += p.velY * dt;
       this.positions[i * 3 + 2] += p.velZ * dt;
-
-      // Fade in then out
-      this.opacities[i] = alive < 0.2
-        ? alive / 0.2
-        : 1.0 - (alive - 0.2) / 0.8;
     }
 
     const posAttr = this.points.geometry.getAttribute('position') as THREE.BufferAttribute;
@@ -279,114 +497,83 @@ class SeaSpraySystem {
   }
 }
 
-// ── God Ray Sprite (T064) ────────────────────────────────────────────────────
-
-function createGodRay(): { sprite: THREE.Sprite; update: (t: number) => void } {
-  const mat = new THREE.SpriteMaterial({
-    color: 0xffeeaa,
-    transparent: true,
-    opacity: 0.15,
-    blending: THREE.AdditiveBlending,
-    depthWrite: false,
-  });
-
-  const sprite = new THREE.Sprite(mat);
-  sprite.position.set(12, 28, -22);
-  sprite.scale.set(28, 65, 1);
-
-  return {
-    sprite,
-    update: (t: number) => {
-      mat.opacity = 0.12 + Math.sin(t * 0.7) * 0.05;
-    },
-  };
-}
-
 // ── Public: initMainMenu ─────────────────────────────────────────────────────
 
 export function initMainMenu(container: HTMLElement): MainMenuResult {
-  // Scene
   const scene = new THREE.Scene();
-  scene.fog = new THREE.FogExp2(0x1a2030, 0.008);
+  scene.background = new THREE.Color(0x1a2030);
+  scene.fog = new THREE.FogExp2(0x1a2030, 0.012);
 
-  // Camera — STATIC, locked at a beautiful angle. World animates, camera does not.
+  // Camera: fixed high angle, looking right-to-left over the cliff
   const camera = new THREE.PerspectiveCamera(
-    60,
+    55,
     container.clientWidth / container.clientHeight,
     0.1,
-    800
+    600
   );
-  camera.position.set(0, 12, 35);
-  camera.lookAt(new THREE.Vector3(0, 5, -20));
+  camera.position.set(-8, 18, 28);
+  camera.lookAt(new THREE.Vector3(4, 2, -10));
 
-  // Renderer
+  // Renderer — no antialias keeps the sharp polygon edges of flat shading
   const renderer = new THREE.WebGLRenderer({
-    antialias: true,
+    antialias: false,
     alpha: false,
   });
   renderer.setSize(container.clientWidth, container.clientHeight);
-  renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-  renderer.toneMapping = THREE.ACESFilmicToneMapping;
-  renderer.toneMappingExposure = 0.85;
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio, 1.5));
+  renderer.toneMapping = THREE.NoToneMapping;
   container.appendChild(renderer.domElement);
 
-  // Resize
-  const onResize = () => {
+  // Resize handler
+  const onResize = (): void => {
     camera.aspect = container.clientWidth / container.clientHeight;
     camera.updateProjectionMatrix();
     renderer.setSize(container.clientWidth, container.clientHeight);
   };
   window.addEventListener('resize', onResize);
 
-  // Lighting
-  const ambient = new THREE.AmbientLight(0x334455, 0.5);
+  // Lighting — single directional from top-left (storm light)
+  const ambient = new THREE.AmbientLight(0x202030, 0.4);
   scene.add(ambient);
 
-  const cliffLight = new THREE.PointLight(0xffaa44, 1.5, 80, 1.5);
-  cliffLight.position.set(-14, 22, -5);
-  scene.add(cliffLight);
+  const stormLight = new THREE.DirectionalLight(0x8899bb, 1.2);
+  stormLight.position.set(-20, 30, 10);
+  scene.add(stormLight);
 
-  const moonLight = new THREE.DirectionalLight(0x8899bb, 0.4);
-  moonLight.position.set(-20, 40, 20);
-  scene.add(moonLight);
+  // Build scene
+  const skyBox = createSkyBox();
+  scene.add(skyBox);
 
-  // Build scene elements
-  const ocean = createStormyOcean();
+  const clouds = createClouds();
+  scene.add(clouds);
+
+  const ocean = createLowPolyOcean();
   scene.add(ocean.mesh);
+
+  const foam = createFoamPatches();
+  scene.add(foam);
 
   const cliff = createCliff();
   scene.add(cliff);
 
+  const path = createPath();
+  scene.add(path);
+
   const tower = createTower();
   scene.add(tower);
 
-  const sky = createStormySky();
-  scene.add(sky);
+  const veg = createVegetation();
+  scene.add(veg);
 
   const spray = new SeaSpraySystem();
   scene.add(spray.object);
 
-  const godRay = createGodRay();
-  scene.add(godRay.sprite);
-
-  // Elapsed time accumulator for world animation
   let elapsedTime = 0;
 
-  // Animation loop (called from main.ts) — camera is static, world animates
   const update = (dt: number): void => {
     elapsedTime += dt;
-
     ocean.update(elapsedTime);
-    godRay.update(elapsedTime);
     spray.update(dt);
-
-    // Animate sky time uniform
-    const skyMat = sky.material as THREE.ShaderMaterial;
-    (skyMat.uniforms['uTime'] as { value: number }).value = elapsedTime;
-
-    // Subtle cliff light flicker
-    cliffLight.intensity = 1.4 + Math.sin(elapsedTime * 3.1) * 0.15;
-
     renderer.render(scene, camera);
   };
 
@@ -397,8 +584,6 @@ export function initMainMenu(container: HTMLElement): MainMenuResult {
 
   const dispose = (): void => {
     window.removeEventListener('resize', onResize);
-    renderer.dispose();
-    // Dispose geometries + materials
     scene.traverse((obj) => {
       if (obj instanceof THREE.Mesh || obj instanceof THREE.Points) {
         obj.geometry.dispose();
@@ -409,6 +594,7 @@ export function initMainMenu(container: HTMLElement): MainMenuResult {
         }
       }
     });
+    renderer.dispose();
     if (renderer.domElement.parentNode) {
       renderer.domElement.parentNode.removeChild(renderer.domElement);
     }

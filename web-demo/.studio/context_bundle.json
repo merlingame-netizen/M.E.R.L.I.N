@@ -1,39 +1,60 @@
 {
-  "cycle": 24,
+  "cycle": 25,
   "generated_at": "2026-03-31T00:00:00Z",
-  "top_tasks": ["T066", "T067", "T068", "T069"],
-  "changed_files_last_cycle": [
-    "web-demo/src/audio/SFXManager.ts",
-    "web-demo/src/main.ts",
-    "web-demo/index.html",
-    "web-demo/src/ui/CardOverlay.ts"
+  "top_tasks": ["T_CYCLE25_MENU_REBUILD"],
+  "changed_files_this_cycle": [
+    "web-demo/src/scenes/MainMenuScene.ts"
   ],
   "key_constants": {
-    "card_gold": "#c9a84c",
-    "card_parchment_bg": "linear-gradient(145deg, #1a1209, #2d1f0e, #1a1209)",
-    "card_cream_text": "#f5e6c8",
-    "ambient_menu_freq": 55,
-    "ambient_forest_freq": 65,
-    "ambient_gain": 0.05,
-    "sfx_manager_file": "web-demo/src/audio/SFXManager.ts",
-    "card_overlay_file": "web-demo/src/ui/CardOverlay.ts",
-    "index_html_file": "web-demo/index.html",
-    "main_ts_file": "web-demo/src/main.ts"
+    "rock_base": "0x3a3830",
+    "rock_shadow": "0x2a2820",
+    "rock_highlight": "0x4a4838",
+    "tower_color": "0x8a8068",
+    "ocean_base": "0x2a6b5a",
+    "sky_bg": "0x1a2030",
+    "cloud_dark": "0x3a4050",
+    "cloud_light": "0x5a6070",
+    "bush_dark": "0x1a3020",
+    "bush_light": "0x243818",
+    "path_color": "0xb0a080",
+    "ambient_color": "0x202030",
+    "ambient_intensity": 0.4,
+    "camera_pos": "(-8, 18, 28)",
+    "camera_lookat": "(4, 2, -10)"
   },
+  "current_file_issues": [
+    "ShaderMaterial on ocean — smooth, not low-poly flatShading",
+    "ShaderMaterial on sky — no polygon cloud shapes",
+    "Tower uses BoxGeometry not CylinderGeometry(r,r,h,7)",
+    "Tower color too dark (0x14120f), should be 0x8a8068",
+    "Camera position wrong: needs (-8,18,28) looking (4,2,-10)",
+    "No vegetation (ConeGeometry 4-segment bushes)",
+    "No flatShading:true on any material",
+    "No polygon cloud shapes (BoxGeometry flat planes)"
+  ],
+  "keep_from_current_file": [
+    "SeaSpraySystem class (positions, opacities, particles, COUNT=150, PointsMaterial)",
+    "MainMenuResult interface",
+    "ParticleData interface",
+    "startDolly no-op pattern",
+    "dispose pattern with scene.traverse",
+    "window resize handler",
+    "initMainMenu(container) export signature"
+  ],
   "architecture_notes": {
-    "sfx": "SFXManager.ts exports initSFXManager(). AudioContext created lazily. Uses CustomEvent 'merlin_sfx'. Add startAmbient(type)/stopAmbient() as module-level exports.",
-    "card_rendering": "CardOverlay.ts showCard() creates .card-option divs. CSS in index.html. Card HTML structure: #card-overlay > .card-container > .card-narrative + .card-options > .card-option(.verb+.desc)",
-    "boot": "runBootScreen() in main.ts waits 2.6s then fades boot-screen. Boot skip: listen for click/keydown during the wait and resolve early.",
-    "card_types": "Card has: narrative(string), options(array of {verb, text, effects[]}). Effects: {type:'ADD_REPUTATION'|'HEAL_LIFE'|'DAMAGE_LIFE'|'PROMISE', faction?:string, amount:number}"
+    "entry": "initMainMenu(container: HTMLElement): MainMenuResult",
+    "called_from": "main.ts runMainMenu()",
+    "update_called": "per-frame with dt in seconds",
+    "renderer": "returned in MainMenuResult.renderer"
   },
   "last_cycle_status": {
     "ts_errors": 0,
-    "bundle_kb": 123,
+    "bundle_kb_app": 123,
     "cards": 366,
     "commit": "fc3e206"
   },
   "regression_gate": {
     "ts_errors": 0,
-    "bundle_kb_warn": 220
+    "bundle_kb_app_warn": 220
   }
 }
