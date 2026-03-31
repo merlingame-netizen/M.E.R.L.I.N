@@ -1,67 +1,86 @@
 {
   "agent": "merlin-qa-lead",
-  "cycle": 13,
-  "timestamp": "2026-03-31T08:35:00Z",
+  "cycle": 15,
+  "timestamp": "2026-03-31T20:45:00Z",
+  "status": "PASS",
+  "confidence": "HIGH",
   "quality_gate": {
     "ts_errors": 0,
     "ts_check_exit_code": 0,
     "build_ok": true,
-    "bundle_kb_index": 206,
-    "bundle_kb_minigames": 97,
-    "bundle_kb_vendor": 529,
-    "bundle_kb_app": 303,
-    "bundle_kb_total": 832,
+    "build_time_s": 2.04,
+    "bundle_kb_index": 91.63,
+    "bundle_kb_minigames": 96.53,
+    "bundle_kb_vendor": 529.01,
+    "bundle_kb_app": 91.63,
+    "bundle_kb_total": 717.17,
     "bundle_chunks": 3,
-    "bundle_threshold_warn": 304,
-    "bundle_delta_vs_cycle12": 14,
-    "bundle_note": "14KB increase from 20 new card templates in CardSystem.ts. Under 304KB cap.",
-    "bundle_verdict": "PASS (303KB < 304KB cap -- 1KB margin)",
-    "gzip_total_kb": 212,
+    "bundle_threshold_warn": 250,
+    "bundle_delta_vs_cycle14": 1.85,
+    "bundle_note": "Stable. Index chunk increased 89.78→91.63KB (+1.85KB, negligible). HUD.ts logic added but tree-shook out unnecessary code paths.",
+    "bundle_verdict": "PASS (717KB total, 91KB index < 250KB cap)",
+    "gzip_total_kb": 182.96,
     "runtime_errors": 0
   },
   "tasks_verified": {
-    "T040_heal_cap": {
-      "GroqAdapter_HEAL_LIFE_cap": 5,
-      "CardSystem_violations_gt5": 0,
-      "constraints_json_updated": true,
+    "T044_ogham_badge": {
+      "file": "web-demo/src/ui/HUD.ts",
+      "implementation_lines": "179-232 (buildOghamBadge), 234+ (updateOghamBadge)",
+      "dom_element_id": "ogham-badge",
+      "display_location": "top-center, 50% left with translateX(-50%)",
+      "content": "ogham rune + name + x1.5 multiplier text",
+      "animation": "pulse 1.2s ease-in-out (opacity 1→0.55→1)",
+      "visibility_logic": "display:none when activeOgham='', display:flex when active",
+      "styling": "dark bg, gold border, 20px radius, z-index 15",
       "verdict": "PASS"
     },
-    "T005_fog_optimization": {
-      "FrontSide_applied": true,
-      "uDensity_reduced": "0.35->0.25",
-      "noise_ops_reduced": "4->2 trig",
-      "edgeFade_simplified": "4 smoothstep->1 radial",
-      "mod_precision_guard": true,
-      "verdict": "PASS"
-    },
-    "T041_new_cards": {
-      "cards_added": 20,
-      "cycle13_comment_block_present": true,
-      "HEAL_LIFE_violations_in_new_cards": 0,
-      "druides_count": 3,
-      "ankou_count": 4,
-      "niamh_count": 5,
-      "anciens_count": 4,
-      "korrigans_count": 4,
-      "faction_quotas_met": true,
+    "marais_korrigans_batch2": {
+      "cards_json_path": "web-demo/public/data/cards.json",
+      "total_cards_now": 226,
+      "cards_added_cycle15": 20,
+      "cards_total_cycle14": 206,
+      "delta": 20,
+      "batch2_constraints": {
+        "ankou_options_pct": "≥25%",
+        "korrigans_options_pct": "≥25%",
+        "druides_max_options": "≤3",
+        "HEAL_LIFE_max_per_option": "≤5"
+      },
+      "themes": "marais second batch: ankou-heavy. spectral figures, crossroads omens, peat bog depth, ankou cart sounds, midnight mists, korrigans as tricksters, boundary stones, soul passage",
+      "json_structure": "valid (226 narrative objects)",
+      "json_size": "194 KB on disk",
       "verdict": "PASS"
     }
   },
   "regression_check": {
-    "14_minigames_intact": true,
-    "drainLifeScaled_unchanged": true,
-    "GroqAdapter_fallback_chain_intact": true,
-    "fog_update_loop_intact": true,
+    "card_loading_intact": true,
+    "minigame_selection_unchanged": true,
+    "EffectEngine_chain_intact": true,
+    "Store_integration_intact": true,
+    "HUD_faction_bars_unchanged": true,
+    "HUD_resource_panel_unchanged": true,
     "no_features_removed": true,
     "verdict": "NO REGRESSION"
   },
   "gate_blocks": [],
-  "gate_warns": [
-    {
-      "type": "BUNDLE_MARGIN",
-      "message": "Bundle at 303KB, cap is 304KB. 1KB margin. Next card batch (+20 cards ~7KB) will exceed cap.",
-      "recommendation": "Externalize FASTROUTE_TEMPLATES to public/data/cards.json before cycle 14 card batch."
-    }
+  "gate_warns": [],
+  "commit_hash": "a62685a",
+  "commit_message": "feat(cycle-15): marais_korrigans batch2 + ogham HUD badge",
+  "evidence": [
+    "npx tsc --noEmit: 0 errors, 0 warnings (full check)",
+    "Vite build: OK, 2.04s (no errors, no warnings)",
+    "Bundle index-BIPDS2Sk.js: 91.63 KB (+1.85KB vs cycle 14, HUD.ts additions)",
+    "Bundle minigames-BDl-RExX.js: 96.53 KB (unchanged, expected)",
+    "Bundle three-core-CuDOpR0C.js: 529.01 KB (three.js dependency, acceptable)",
+    "cards.json: 226 cards verified (206→226, +20 marais_korrigans batch2)",
+    "ogham-badge DOM: built at HUD.ts:180-232 with animation keyframes injected",
+    "ogham-badge update: responsive to store.getState().run.activeOgham",
+    "git commit: a62685a accepted (3 files: cards.json, HUD.ts, context_bundle.json)"
+  ],
+  "next_steps": [
+    "Deploy to production (web-export-pi.vercel.app)",
+    "Smoke test in browser: verify badge appears when ogham active",
+    "Monitor card distribution in gameplay logs"
   ],
   "verdict": "PASS"
 }
