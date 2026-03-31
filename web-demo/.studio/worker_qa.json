@@ -1,58 +1,67 @@
 {
-  "cycle": 12,
   "agent": "merlin-qa-lead",
-  "timestamp": "2026-03-31T05:50:00Z",
+  "cycle": 13,
+  "timestamp": "2026-03-31T08:35:00Z",
   "quality_gate": {
     "ts_errors": 0,
     "ts_check_exit_code": 0,
     "build_ok": true,
-    "bundle_kb_index": 192,
+    "bundle_kb_index": 206,
     "bundle_kb_minigames": 97,
     "bundle_kb_vendor": 529,
-    "bundle_kb_app": 289,
-    "bundle_kb_total": 818,
+    "bundle_kb_app": 303,
+    "bundle_kb_total": 832,
     "bundle_chunks": 3,
     "bundle_threshold_warn": 304,
-    "bundle_delta_vs_cycle11": 0,
-    "bundle_verdict": "PASS (289KB unchanged)",
-    "gzip_total_kb": 209,
-    "validate_step0": "PASS (exit 0, zero new errors from scene changes)",
+    "bundle_delta_vs_cycle12": 14,
+    "bundle_note": "14KB increase from 20 new card templates in CardSystem.ts. Under 304KB cap.",
+    "bundle_verdict": "PASS (303KB < 304KB cap -- 1KB margin)",
+    "gzip_total_kb": 212,
     "runtime_errors": 0
   },
   "tasks_verified": {
-    "T001_white_scenes": {
-      "scenes_fixed": 3,
-      "technique": "CanvasLayer(layer=-10)+ColorRect(anchors_preset=15,color=#0a0a12)",
-      "project_godot_clear_color": true,
-      "parse_errors_introduced": 0,
+    "T040_heal_cap": {
+      "GroqAdapter_HEAL_LIFE_cap": 5,
+      "CardSystem_violations_gt5": 0,
+      "constraints_json_updated": true,
       "verdict": "PASS"
     },
-    "T038_drain_scaling": {
-      "constants_added": 4,
-      "store_action_added": "drainLifeScaled()",
-      "main_ts_updated": true,
-      "immutable_pattern": true,
-      "ts_errors": 0,
+    "T005_fog_optimization": {
+      "FrontSide_applied": true,
+      "uDensity_reduced": "0.35->0.25",
+      "noise_ops_reduced": "4->2 trig",
+      "edgeFade_simplified": "4 smoothstep->1 radial",
+      "mod_precision_guard": true,
       "verdict": "PASS"
     },
-    "T039_faction_balance": {
-      "constraints_file_updated": true,
-      "druides_capped_at_15pct": true,
-      "ankou_boosted_to_20pct": true,
-      "no_code_changed": true,
+    "T041_new_cards": {
+      "cards_added": 20,
+      "cycle13_comment_block_present": true,
+      "HEAL_LIFE_violations_in_new_cards": 0,
+      "druides_count": 3,
+      "ankou_count": 4,
+      "niamh_count": 5,
+      "anciens_count": 4,
+      "korrigans_count": 4,
+      "faction_quotas_met": true,
       "verdict": "PASS"
     }
   },
   "regression_check": {
-    "14_minigames_in_switch": true,
-    "ogham_panel_wired": true,
-    "3_try_catch_guards": true,
-    "emergency_fallback_card": true,
-    "drainLife_still_exists": true,
+    "14_minigames_intact": true,
+    "drainLifeScaled_unchanged": true,
+    "GroqAdapter_fallback_chain_intact": true,
+    "fog_update_loop_intact": true,
     "no_features_removed": true,
     "verdict": "NO REGRESSION"
   },
   "gate_blocks": [],
-  "gate_warns": [],
+  "gate_warns": [
+    {
+      "type": "BUNDLE_MARGIN",
+      "message": "Bundle at 303KB, cap is 304KB. 1KB margin. Next card batch (+20 cards ~7KB) will exceed cap.",
+      "recommendation": "Externalize FASTROUTE_TEMPLATES to public/data/cards.json before cycle 14 card batch."
+    }
+  ],
   "verdict": "PASS"
 }

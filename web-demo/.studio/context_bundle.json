@@ -1,14 +1,14 @@
 {
   "_comment": "Contexte pre-calcule par le director en debut de cycle. Lu par les agents a la place de tous les docs.",
   "_usage": "Director ecrit ce fichier avant de dispatcher. Agents lisent UNIQUEMENT ce fichier pour le contexte.",
-  "cycle": 12,
-  "timestamp": "2026-03-31T06:00:00Z",
+  "cycle": 13,
+  "timestamp": "2026-03-31T08:00:00Z",
   "mode": "autonomous_dev",
-  "focus": "T001_white_scenes_CRITICAL + T038_difficulty_scaling + T039_faction_balance",
+  "focus": "T040_heal_balance + T005_fog_optimization + new_cards_druides_light_batch2",
   "selected_tasks": [
-    {"id": "T001", "title": "Fix white/blank Godot scenes -- add CanvasLayer+ColorRect, fix MerlinCabinHub parse error", "domain": "visual", "agent": "merlin-tech-artist", "priority": 1},
-    {"id": "T038", "title": "Difficulty scaling -- progressive drain -1 to -2 after card 15", "domain": "gameplay", "agent": "merlin-gameplay-programmer", "priority": 3},
-    {"id": "T039", "title": "Faction balance -- cap druides at 15%, boost ankou to 20% in card_generation_constraints.json", "domain": "narrative", "agent": "merlin-narrative-designer", "priority": 4}
+    {"id": "T040", "title": "Reduce avg heal ceiling: HEAL_LIFE_max 7->5, GroqAdapter cap 7->5, constraints updated", "domain": "gameplay", "agent": "merlin-gameplay-programmer", "priority": 3},
+    {"id": "T005", "title": "Fog shader optimization -- simplify GLSL, reduce sin/cos calls, LOD-based density, target 60fps GTX 1060", "domain": "visual", "agent": "merlin-tech-artist", "priority": 2},
+    {"id": "T041", "title": "Generate 20 new FastRoute cards (druides<=3, ankou>=4, all field quotas, heal<=5)", "domain": "narrative", "agent": "merlin-narrative-designer", "priority": 3}
   ],
   "state_summary": {
     "all_dev_tasks_done_or_blocked": true,
@@ -24,81 +24,100 @@
     "groq_timeout_ms": 8000,
     "anam_persistence": "localStorage key merlin_anam"
   },
-  "game_loop_steps": [
-    "1.WALK(6s)", "2.DRAIN(-1 life)", "3.CHECK_DEATH", "3b.OGHAM_PANEL",
-    "4.FADE+CARD_GEN", "5.CARD_SHOW+CHOICE", "6.MINIGAME", "7.SCORE+MULTIPLIER",
-    "8.APPLY_EFFECTS(ogham_modifiers)", "9.TICK_COOLDOWNS", "10.CHECK_DEATH",
-    "11.CHECK_VICTORY(cardsPlayed>=25+rail.complete)"
-  ],
-  "minigames_list": ["traces", "runes", "equilibre", "herboristerie", "negociation",
-    "combat_rituel", "apaisement", "sang_froid", "course", "fouille",
-    "ombres", "volonte", "regard", "echo"],
+  "cycle12_completed": {
+    "T001": "White scenes fixed -- CanvasLayer+ColorRect in MerlinGame, MerlinCabinHub, Menu3DPC",
+    "T038": "3-stage drain scaling -- drainLifeScaled() in Store.ts, constants in Constants.ts",
+    "T039": "Faction constraints locked -- druides<=15%, ankou>=20% in card_generation_constraints.json"
+  },
   "key_constants": {
-    "EFFECT_CAPS_card": {
-      "HEAL_LIFE_max": 7,
-      "DAMAGE_LIFE_max": 5,
-      "ADD_REPUTATION_max": 10,
-      "heal_options_per_card": 1
-    },
-    "EFFECT_CAPS_engine": {
-      "ADD_REPUTATION_max": 20,
-      "HEAL_LIFE_max": 18,
-      "DAMAGE_LIFE_max": 15
-    },
-    "score_bonus_cap_multiplier": 2.0,
-    "life_drain_base": 1,
-    "life_drain_late_game": 2,
-    "late_game_threshold_card": 15,
+    "HEAL_LIFE_card_max_CURRENT": 7,
+    "HEAL_LIFE_card_max_TARGET": 5,
+    "HEAL_LIFE_engine_cap": 18,
+    "DAMAGE_LIFE_card_max": 5,
+    "DAMAGE_LIFE_engine_cap": 15,
+    "ADD_REPUTATION_card_max": 10,
+    "ADD_REPUTATION_engine_cap": 20,
+    "heal_options_per_card": 1,
+    "drain_stage1_cards_1_15": 1,
+    "drain_stage2_cards_16_25": 2,
+    "drain_stage3_cards_26plus": 3,
+    "avg_heal_cycle12": 4.7,
+    "avg_heal_target_cycle13": 3.5,
     "life_max": 100,
     "factions": ["druides", "anciens", "korrigans", "niamh", "ankou"],
-    "faction_caps_cycle12": {"druides": 0.15, "ankou": 0.20},
-    "minigame_neutral_fallback_score": 50,
-    "victory_condition": "cardsPlayed >= 25 AND rail.isComplete()",
-    "walk_seconds": 6
+    "faction_caps": {"druides_max": 0.15, "ankou_min": 0.20},
+    "faction_per_20_batch": {"druides_max": 3, "ankou_min": 4, "niamh_target": 5, "anciens_target": 4, "korrigans_target": 4},
+    "score_bonus_cap_multiplier": 2.0,
+    "victory_condition": "cardsPlayed >= 25 AND rail.isComplete()"
   },
-  "known_issues": {
-    "T001": "White scenes: plain Node root in .tscn files, no ColorRect background. MerlinCabinHub also has parse error in linked script. UNBLOCKED: .tscn text editing preferred. Pattern: insert CanvasLayer(layer=-10)+ColorRect(anchors_preset=15, color=Color(0.04,0.04,0.07,1)) nodes after root [node] line.",
-    "T038": "Drain -1/card fully offset by avg +4.7 heal. Fix: after card 15, drain becomes -2. One conditional in game loop drain step.",
-    "T039": "Druides at 31% of rep effects in 166 templates (target 20%). Fix: update card_generation_constraints.json caps: druides_max=0.15, ankou_min=0.20.",
-    "T005": "Fog shader perf -- open but low priority after T001"
-  },
-  "tscn_fix_pattern": {
-    "description": "Insert after root [node] block, before first child node",
-    "godot_version_note": "Godot 4.x .tscn format -- no gd_scene version needed for nodes",
-    "nodes_to_add": [
-      "[node name=\"Background\" type=\"CanvasLayer\" parent=\".\"]",
-      "layer = -10",
-      "",
-      "[node name=\"BG\" type=\"ColorRect\" parent=\"Background\"]",
-      "anchors_preset = 15",
-      "anchor_right = 1.0",
-      "anchor_bottom = 1.0",
-      "color = Color(0.04, 0.04, 0.07, 1)"
+  "files_to_modify": {
+    "T040": [
+      "web-demo/src/llm/GroqAdapter.ts -- LLM_EFFECT_CAPS.HEAL_LIFE: 7 -> 5 (line 34)",
+      "web-demo/.studio/card_generation_constraints.json -- heal_constraints.max_heal_per_option: 7 -> 5",
+      "web-demo/src/game/Constants.ts -- EFFECT_CAPS.HEAL_LIFE stays 18 (engine cap, do NOT change)"
+    ],
+    "T005": [
+      "web-demo/src/scenes/CoastBiome.ts -- createFog() function (lines 137-184)",
+      "Optimization targets: reduce noise() sin/cos from 4 calls to 2, remove PlaneGeometry segments (already 1x1 = good), add distance-based density LOD, reduce uDensity from 0.35 to 0.25"
+    ],
+    "T041": [
+      "web-demo/public/data/cards_*.json -- check existing structure",
+      "web-demo/src/game/CardSystem.ts -- FASTROUTE_CARDS array or equivalent"
     ]
   },
-  "cycle11_gate": {
-    "ts_errors": 0,
-    "bundle_kb_app": 289,
-    "smoke_pass": true,
-    "build_ok": true,
-    "verdict": "PROCEED"
+  "fog_shader_analysis": {
+    "current_geometry": "PlaneGeometry(180, 180, 1, 1) -- already minimal segments, GOOD",
+    "current_material": "ShaderMaterial transparent depthWrite=false DoubleSide",
+    "current_fragment_ops": "noise() = 4 trig calls + smoothstep*4 for edge fade = 8+ ops per fragment",
+    "optimization_plan": [
+      "Reduce noise() to 2 trig calls (drop the extra 0.5-weighted terms)",
+      "Cache edgeFade as a single smoothstep on distance-from-center (1 op vs 4 smoothsteps)",
+      "Lower uDensity from 0.35 to 0.25 (reduces alpha overdraw)",
+      "Consider adding uTime modulo 1000.0 to avoid float precision drift on long sessions",
+      "Side: DoubleSide -> FrontSide (fog seen from above only, halves rasterization)"
+    ],
+    "expected_gain": "~30-40% fragment shader cost reduction on tile-based GPUs"
   },
-  "regression_thresholds_cycle12": {
+  "narrative_constraints_cycle13": {
+    "batch_name": "druides_light_batch2",
+    "card_count": 20,
+    "heal_max_per_option": 5,
+    "druides_max": 3,
+    "ankou_min": 4,
+    "niamh_target": 5,
+    "anciens_target": 4,
+    "korrigans_target": 4,
+    "field_quotas": {
+      "chance": ">=4", "bluff": ">=3", "observation": ">=3",
+      "logique": ">=3", "finesse": ">=3", "vigueur": ">=3",
+      "esprit": "<=8", "perception": ">=3"
+    },
+    "themes": "Mixed biomes -- emphasize druidic knowledge, ancestral wisdom, korrigan mischief, niamh healing, ankou threshold/death passage. Avoid druide-centric stories.",
+    "effect_format": "HEAL_LIFE:N (max 5), DAMAGE_LIFE:N (max 5), ADD_REPUTATION:faction:N (max 10), ADD_ANAM:N, ADD_BIOME_CURRENCY:N"
+  },
+  "regression_thresholds_cycle13": {
     "ts_errors": "== 0 (BLOCK)",
     "bundle_kb_app_max": 304,
     "runtime_errors": "== 0 (BLOCK)",
     "smoke_pass": "true (BLOCK)"
   },
   "cycle_history_summary": {
-    "c6":  {"bundle_kb_app": 208, "minigames": 8, "cards": 20, "note": "bundle optimization"},
-    "c7":  {"bundle_kb_app": 242, "minigames": 12, "cards": 20},
     "c8":  {"bundle_kb_app": 283, "minigames": 14, "cards": 40},
     "c9":  {"bundle_kb_app": 284, "minigames": 14, "cards": 0, "note": "polish+resilience"},
     "c10": {"bundle_kb_app": 289, "minigames": 14, "cards": 0, "note": "groq+anam+loading"},
-    "c11": {"bundle_kb_app": 289, "minigames": 14, "cards": 0, "note": "groq caps+loading hint"}
+    "c11": {"bundle_kb_app": 289, "minigames": 14, "cards": 0, "note": "groq caps+loading hint"},
+    "c12": {"bundle_kb_app": 289, "minigames": 14, "cards": 0, "note": "white scenes+drain scaling+faction balance"}
   },
   "dispatch_wave": {
-    "wave1_parallel": ["merlin-tech-artist (T001)", "merlin-gameplay-programmer (T038)", "merlin-narrative-designer (T039)"],
-    "wave2_parallel": ["merlin-qa-lead (TS+build)", "merlin-ai-playtester", "merlin-visual-qa"]
+    "wave1_parallel": [
+      "merlin-gameplay-programmer (T040 -- heal cap)",
+      "merlin-tech-artist (T005 -- fog optimization)",
+      "merlin-narrative-designer (T041 -- 20 new cards)"
+    ],
+    "wave2_parallel": [
+      "merlin-qa-lead (TS check + build)",
+      "merlin-ai-playtester (verify T040 net-heal)",
+      "merlin-visual-qa (fog regression check)"
+    ]
   }
 }

@@ -31,7 +31,7 @@ interface GroqChatResponse {
 // --- Card-level effect caps (mirrors GAME_DESIGN_BIBLE v2.4 per-option limits) ---
 // These are tighter than the engine-level EFFECT_CAPS and apply to raw LLM output.
 const LLM_EFFECT_CAPS: Record<string, number> = {
-  HEAL_LIFE: 7,
+  HEAL_LIFE: 5,
   DAMAGE_LIFE: 5,
   ADD_REPUTATION: 10,
   ADD_ANAM: 10,
@@ -116,7 +116,7 @@ Reponds UNIQUEMENT en JSON valide avec cette structure exacte:
 Verbes autorises: observer, ecouter, chercher, examiner, negocier, mentir, bluffer, flatter, resoudre, analyser, deduire, calculer, crocheter, esquiver, sculpter, doser, frapper, soulever, pousser, briser, mediter, chanter, invoquer, prier, deviner, sentir, toucher, gouter, lancer, parier, defier, improviser, persuader, consoler, inspirer, menacer, voler, trahir, seduire, dissimuler, contourner, sacrifier, attendre, avancer, fuir.
 Champs lexicaux: observation, bluff, logique, finesse, vigueur, esprit, perception, chance.
 Factions: druides, anciens, korrigans, niamh, ankou.
-Effets: HEAL_LIFE:N (max 7), DAMAGE_LIFE:N (max 5), ADD_REPUTATION:faction:N (max 10), ADD_ANAM:N, ADD_BIOME_CURRENCY:N.
+Effets: HEAL_LIFE:N (max 5), DAMAGE_LIFE:N (max 5), ADD_REPUTATION:faction:N (max 10), ADD_ANAM:N, ADD_BIOME_CURRENCY:N.
 TOUJOURS 3 options. Caps stricts. Pas de narration > 200 mots.`;
 
     const userPrompt = `Biome: ${biome}. Contexte: ${context}. Genere une rencontre unique.`;

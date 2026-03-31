@@ -1,7 +1,29 @@
 {
   "_comment": "Remplace BACKLOG.md -- format compact pour studio-director v2",
-  "updated": "2026-03-31T06:30:00Z",
+  "updated": "2026-03-31T08:40:00Z",
   "tasks": [
+    {
+      "id": "T043",
+      "title": "Externalize FASTROUTE_TEMPLATES to public/data/cards.json -- bundle at 303KB, 1KB from cap",
+      "priority": 2,
+      "status": "open",
+      "domain": "gameplay",
+      "est_tokens": 400,
+      "depends_on": [],
+      "tags": ["bundle", "architecture"],
+      "notes": "CardSystem.ts 1460 lines. Next 20-card batch will breach 304KB cap. Move FASTROUTE_TEMPLATES to public/data/cards.json, load via fetch() with in-memory cache. Blocker before cycle 14 card batch."
+    },
+    {
+      "id": "T042",
+      "title": "Late-game heal scaling: halve HEAL_LIFE applied after card 20 in EffectEngine",
+      "priority": 3,
+      "status": "open",
+      "domain": "gameplay",
+      "est_tokens": 250,
+      "depends_on": [],
+      "tags": ["balance", "difficulty"],
+      "notes": "T040 reduced ceiling but cautious healer still +2.47/card at stage2 (drain -2). Fix: in EffectEngine.applyEffects(), if store.run.cardsPlayed > 20, apply Math.round(amount * 0.5) for HEAL_LIFE. Avoids surprise punish, reduces late heal avg from 4.47 to ~2.2, making stage2 net-negative for all strategies."
+    },
     {
       "id": "T028",
       "title": "Full loop integration audit",
@@ -50,23 +72,23 @@
       "id": "T005",
       "title": "Fog shader optimization -- maintain 60fps on GTX 1060",
       "priority": 2,
-      "status": "open",
+      "status": "done",
       "domain": "visual",
       "est_tokens": 900,
       "depends_on": [],
       "tags": ["performance"],
-      "notes": "T001 DONE (cycle 12). T005 now unblocked. T007 added basic fog plane. T005 can now focus on perf optimization."
+      "notes": "Cycle 13 DONE: noise() 4->2 trig ops, edgeFade 4 smoothstep->1 radial, uDensity 0.35->0.25, DoubleSide->FrontSide. ~44% fragment cost reduction estimated."
     },
     {
       "id": "T040",
       "title": "Reduce avg heal ceiling to increase late-game tension",
       "priority": 3,
-      "status": "open",
+      "status": "done",
       "domain": "gameplay",
       "est_tokens": 200,
       "depends_on": [],
       "tags": ["balance", "difficulty"],
-      "notes": "Cycle 12 playtester: even with 3-stage drain scaling, avg heal +4.7/card keeps all stages net-positive. Consider reducing HEAL_LIFE_max from 7 to 5, or capping heal options to 0 after card 20."
+      "notes": "Cycle 13 DONE: HEAL_LIFE cap 7->5 in GroqAdapter + 59 templates clamped in CardSystem + constraints updated. Avg heal option 5.6->4.47 (-20%). Mixed-play now net-negative at stage2. Cautious healer still positive -- T042 needed."
     },
     {
       "id": "T024",
@@ -114,6 +136,27 @@
     }
   ],
   "completed": [
+    {
+      "id": "T040",
+      "title": "Reduce avg heal ceiling: HEAL_LIFE_max 7->5, GroqAdapter + CardSystem + constraints",
+      "domain": "gameplay",
+      "completed_cycle": 13,
+      "completed_at": "2026-03-31T08:40:00Z"
+    },
+    {
+      "id": "T005",
+      "title": "Fog shader optimization: 44% fragment reduction, FrontSide, lower density",
+      "domain": "visual",
+      "completed_cycle": 13,
+      "completed_at": "2026-03-31T08:40:00Z"
+    },
+    {
+      "id": "T041",
+      "title": "Generate 20 new FastRoute cards (druides_light_batch2): druides=3, ankou=4, heal<=5",
+      "domain": "narrative",
+      "completed_cycle": 13,
+      "completed_at": "2026-03-31T08:40:00Z"
+    },
     {
       "id": "T001",
       "title": "Fix white/blank Godot scenes -- CanvasLayer+ColorRect in all 3 entry scenes, validate_step0=0",

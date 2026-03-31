@@ -77,7 +77,7 @@ const FASTROUTE_TEMPLATES: readonly {
   {
     narrative: 'Au bord d\'un lac immobile, une silhouette feminine se tient sur l\'eau. Niamh, la dame du lac, te fixe de ses yeux d\'argent. "Qu\'es-tu venu chercher ici, mortel ?" murmure-t-elle.',
     options: [
-      { verb: 'parler', text: 'Tu reponds avec respect, partageant ta quete.', effects: ['ADD_REPUTATION:niamh:10', 'HEAL_LIFE:8'] },
+      { verb: 'parler', text: 'Tu reponds avec respect, partageant ta quete.', effects: ['ADD_REPUTATION:niamh:10', 'HEAL_LIFE:5'] },
       { verb: 'se concentrer', text: 'Tu restes silencieux, laissant ton esprit parler.', effects: ['ADD_REPUTATION:niamh:5', 'ADD_REPUTATION:druides:5'] },
       { verb: 'fuir', text: 'L\'aura surnaturelle t\'effraie. Tu recules.', effects: ['DAMAGE_LIFE:3', 'ADD_REPUTATION:niamh:-5'] },
     ],
@@ -110,7 +110,7 @@ const FASTROUTE_TEMPLATES: readonly {
   {
     narrative: 'Un chene sacre se dresse au coeur d\'une clairiere baignee de lumiere doree. Ses branches portent des rubans de tissu noues par des generations de druides. Un corbeau blanc t\'observe depuis la cime.',
     options: [
-      { verb: 'mediter', text: 'Tu t\'assieds au pied du chene et fermes les yeux, absorbant l\'energie ancienne.', effects: ['HEAL_LIFE:6', 'ADD_REPUTATION:druides:8'] },
+      { verb: 'mediter', text: 'Tu t\'assieds au pied du chene et fermes les yeux, absorbant l\'energie ancienne.', effects: ['HEAL_LIFE:5', 'ADD_REPUTATION:druides:8'] },
       { verb: 'escalader', text: 'Tu grimpes le long du tronc rugueux pour atteindre le corbeau.', effects: ['ADD_BIOME_CURRENCY:6', 'DAMAGE_LIFE:3'] },
       { verb: 'observer', text: 'Tu etudies les rubans, cherchant des motifs dans leurs couleurs.', effects: ['ADD_ANAM:4', 'ADD_REPUTATION:anciens:5'] },
     ],
@@ -151,7 +151,7 @@ const FASTROUTE_TEMPLATES: readonly {
     narrative: 'Les ruines d\'un nemeton apparaissent entre les arbres. Quatre piliers de granit marquent les points cardinaux, et au centre, une dalle gravee pulse d\'une lumiere verte a chaque battement de ton coeur.',
     options: [
       { verb: 'examiner', text: 'Tu etudies les gravures sur les piliers un par un.', effects: ['ADD_ANAM:6', 'ADD_REPUTATION:anciens:8'] },
-      { verb: 'apaiser', text: 'Tu poses les mains sur la dalle et synchronises ta respiration.', effects: ['HEAL_LIFE:8', 'ADD_REPUTATION:druides:5'] },
+      { verb: 'apaiser', text: 'Tu poses les mains sur la dalle et synchronises ta respiration.', effects: ['HEAL_LIFE:5', 'ADD_REPUTATION:druides:5'] },
       { verb: 'forcer', text: 'Tu tentes de soulever la dalle centrale.', effects: ['ADD_BIOME_CURRENCY:8', 'DAMAGE_LIFE:6'] },
     ],
   },
@@ -166,7 +166,7 @@ const FASTROUTE_TEMPLATES: readonly {
   {
     narrative: 'Une colonne de fumee bleue s\'eleve d\'un foyer cache entre les racines d\'un hetre immense. L\'odeur de sauge et de verveine emplit l\'air. Une voix feminile chante un air ancien.',
     options: [
-      { verb: 'ecouter', text: 'Tu t\'assieds et laisses le chant te bercer.', effects: ['HEAL_LIFE:6', 'ADD_REPUTATION:druides:5'] },
+      { verb: 'ecouter', text: 'Tu t\'assieds et laisses le chant te bercer.', effects: ['HEAL_LIFE:5', 'ADD_REPUTATION:druides:5'] },
       { verb: 'charmer', text: 'Tu ajoutes ta voix au chant, improvisant une harmonie.', effects: ['ADD_REPUTATION:niamh:7', 'ADD_ANAM:3'] },
       { verb: 'inspecter', text: 'Tu cherches l\'origine du feu et de la chanteuse.', effects: ['ADD_BIOME_CURRENCY:5', 'ADD_REPUTATION:korrigans:4'] },
     ],
@@ -224,7 +224,7 @@ const FASTROUTE_TEMPLATES: readonly {
     options: [
       { verb: 'cueillir', text: 'Tu recoltes les fleurs ephemeres avant qu\'elles ne fanent.', effects: ['ADD_BIOME_CURRENCY:7', 'ADD_REPUTATION:druides:4'] },
       { verb: 'fixer', text: 'Tu observes le phenomene avec attention, gravant le spectacle.', effects: ['ADD_ANAM:5', 'HEAL_LIFE:4'] },
-      { verb: 'courir', text: 'Tu cours sous la pluie magique, bras eccartes, riant.', effects: ['HEAL_LIFE:6', 'ADD_REPUTATION:niamh:5'] },
+      { verb: 'courir', text: 'Tu cours sous la pluie magique, bras eccartes, riant.', effects: ['HEAL_LIFE:5', 'ADD_REPUTATION:niamh:5'] },
     ],
   },
   {
@@ -262,7 +262,7 @@ const FASTROUTE_TEMPLATES: readonly {
   {
     narrative: 'Au pied d\'un saule pleureur, une harpe de bois repose contre le tronc. Ses cordes vibrent seules, jouant un air triste et beau. Des larmes de seve coulent le long de l\'ecorce.',
     options: [
-      { verb: 'apaiser', text: 'Tu poses les mains sur les cordes, apaisant leur chant.', effects: ['HEAL_LIFE:7', 'ADD_REPUTATION:niamh:7'] },
+      { verb: 'apaiser', text: 'Tu poses les mains sur les cordes, apaisant leur chant.', effects: ['HEAL_LIFE:5', 'ADD_REPUTATION:niamh:7'] },
       { verb: 'marchander', text: 'Tu proposes un marche a l\'esprit de l\'arbre — un chant contre un secret.', effects: ['ADD_BIOME_CURRENCY:6', 'ADD_REPUTATION:korrigans:5'] },
       { verb: 'resoudre', text: 'Tu cherches a comprendre pourquoi le saule pleure.', effects: ['ADD_ANAM:6', 'ADD_REPUTATION:druides:6'] },
     ],
@@ -288,7 +288,7 @@ const FASTROUTE_TEMPLATES: readonly {
     narrative: 'Une grotte marine s\'ouvre dans la falaise, accessible uniquement a maree basse. A l\'interieur, des stalactites cristallines chantent quand le vent s\'engouffre. Des offrandes anciennes jonchent le sol.',
     options: [
       { verb: 'se faufiler', text: 'Tu te glisses dans la grotte avant que la maree ne remonte.', effects: ['ADD_BIOME_CURRENCY:9', 'DAMAGE_LIFE:5'] },
-      { verb: 'mediter', text: 'Tu t\'assieds a l\'entree et ecoutes le chant des cristaux.', effects: ['HEAL_LIFE:6', 'ADD_REPUTATION:niamh:8'] },
+      { verb: 'mediter', text: 'Tu t\'assieds a l\'entree et ecoutes le chant des cristaux.', effects: ['HEAL_LIFE:5', 'ADD_REPUTATION:niamh:8'] },
       { verb: 'examiner', text: 'Tu etudies les offrandes pour comprendre qui venait ici.', effects: ['ADD_ANAM:6', 'ADD_REPUTATION:anciens:6'] },
     ],
   },
@@ -312,7 +312,7 @@ const FASTROUTE_TEMPLATES: readonly {
     narrative: 'Une source d\'eau douce jaillit directement de la falaise, tombant en cascade dans la mer. La ou les eaux se melangent, un brouillard irise se forme, revelant des formes fugaces.',
     options: [
       { verb: 'se concentrer', text: 'Tu fixes le brouillard, tentant de discerner les formes.', effects: ['ADD_REPUTATION:niamh:7', 'ADD_ANAM:5'] },
-      { verb: 'cueillir', text: 'Tu remplis ta gourde a la source d\'eau douce.', effects: ['HEAL_LIFE:6', 'ADD_BIOME_CURRENCY:3'] },
+      { verb: 'cueillir', text: 'Tu remplis ta gourde a la source d\'eau douce.', effects: ['HEAL_LIFE:5', 'ADD_BIOME_CURRENCY:3'] },
       { verb: 'combattre', text: 'Tu traverses le rideau de brouillard sans hesiter.', effects: ['ADD_REPUTATION:ankou:5', 'DAMAGE_LIFE:4'] },
     ],
   },
@@ -327,7 +327,7 @@ const FASTROUTE_TEMPLATES: readonly {
   {
     narrative: 'Une vieille barque echouee porte encore ses filets. Dans les mailles, des etoiles de mer phosphorescentes brillent comme des lanternes. Un chant melancolique monte des profondeurs.',
     options: [
-      { verb: 'ecouter', text: 'Tu t\'allonges dans la barque et laisses le chant te bercer.', effects: ['HEAL_LIFE:7', 'ADD_REPUTATION:niamh:6'] },
+      { verb: 'ecouter', text: 'Tu t\'allonges dans la barque et laisses le chant te bercer.', effects: ['HEAL_LIFE:5', 'ADD_REPUTATION:niamh:6'] },
       { verb: 'marchander', text: 'Tu prends quelques etoiles pour les echanger plus tard.', effects: ['ADD_BIOME_CURRENCY:7', 'ADD_REPUTATION:niamh:-3'] },
       { verb: 'suivre', text: 'Tu suis le chant vers les rochers au large.', effects: ['ADD_REPUTATION:niamh:8', 'DAMAGE_LIFE:3'] },
     ],
@@ -359,7 +359,7 @@ const FASTROUTE_TEMPLATES: readonly {
   {
     narrative: 'Un rocher en forme de trone se dresse face a l\'ocean. Des traces d\'usure montrent que quelqu\'un s\'y assied regulierement. De ce point, on voit trois iles a l\'horizon, alignees comme des perles.',
     options: [
-      { verb: 'mediter', text: 'Tu t\'assieds sur le trone de pierre et fixes l\'horizon.', effects: ['HEAL_LIFE:6', 'ADD_REPUTATION:niamh:7'] },
+      { verb: 'mediter', text: 'Tu t\'assieds sur le trone de pierre et fixes l\'horizon.', effects: ['HEAL_LIFE:5', 'ADD_REPUTATION:niamh:7'] },
       { verb: 'scruter', text: 'Tu observes les iles, cherchant des signes de vie.', effects: ['ADD_ANAM:5', 'ADD_REPUTATION:anciens:4'] },
       { verb: 'escalader', text: 'Tu grimpes plus haut pour avoir une vue panoramique.', effects: ['ADD_BIOME_CURRENCY:5', 'DAMAGE_LIFE:2'] },
     ],
@@ -375,7 +375,7 @@ const FASTROUTE_TEMPLATES: readonly {
   {
     narrative: 'Le vent apporte des flocons d\'ecume qui ressemblent a des plumes blanches. Ils se posent sur tes epaules comme des benedictions. Chaque flocon qui touche ta peau laisse une sensation de fraicheur bienfaisante.',
     options: [
-      { verb: 'accepter', text: 'Tu ouvres les bras et accueilles l\'ecume comme un don.', effects: ['HEAL_LIFE:8', 'ADD_REPUTATION:niamh:5'] },
+      { verb: 'accepter', text: 'Tu ouvres les bras et accueilles l\'ecume comme un don.', effects: ['HEAL_LIFE:5', 'ADD_REPUTATION:niamh:5'] },
       { verb: 'examiner', text: 'Tu captures un flocon et l\'observes fondre lentement.', effects: ['ADD_ANAM:4', 'ADD_REPUTATION:druides:5'] },
       { verb: 'resister physiquement', text: 'Tu avances face au vent, chaque pas une victoire.', effects: ['ADD_REPUTATION:ankou:5', 'ADD_BIOME_CURRENCY:4'] },
     ],
@@ -392,7 +392,7 @@ const FASTROUTE_TEMPLATES: readonly {
     narrative: 'Un cairn immense se dresse au bord de la falaise, construit de galets blancs et noirs en alternance. A son sommet, une coupe de bronze recueille l\'eau de pluie. L\'eau luit d\'une lueur argentee.',
     options: [
       { verb: 'memoriser', text: 'Tu graves dans ta memoire le motif noir et blanc du cairn.', effects: ['ADD_ANAM:6', 'ADD_REPUTATION:anciens:6'] },
-      { verb: 'apaiser', text: 'Tu verses quelques gouttes de l\'eau sacree sur tes mains.', effects: ['HEAL_LIFE:7', 'ADD_REPUTATION:niamh:5'] },
+      { verb: 'apaiser', text: 'Tu verses quelques gouttes de l\'eau sacree sur tes mains.', effects: ['HEAL_LIFE:5', 'ADD_REPUTATION:niamh:5'] },
       { verb: 'forcer', text: 'Tu tentes de soulever la coupe de bronze.', effects: ['ADD_BIOME_CURRENCY:8', 'DAMAGE_LIFE:5'] },
     ],
   },
@@ -441,7 +441,7 @@ const FASTROUTE_TEMPLATES: readonly {
     narrative: 'Un cercle de pierres basses emerge de la bruyere, a peine visible sous le tapis violet. Au centre, une pierre plate porte un bol de pierre rempli d\'eau de pluie. Des runes oghamiques encerclent le bol.',
     options: [
       { verb: 'dechiffrer', text: 'Tu te penches pour lire les runes autour du bol sacre.', effects: ['ADD_ANAM:7', 'ADD_REPUTATION:anciens:6'] },
-      { verb: 'mediter', text: 'Tu t\'assieds au bord du cercle et honores l\'ancien lieu.', effects: ['HEAL_LIFE:6', 'ADD_REPUTATION:anciens:7'] },
+      { verb: 'mediter', text: 'Tu t\'assieds au bord du cercle et honores l\'ancien lieu.', effects: ['HEAL_LIFE:5', 'ADD_REPUTATION:anciens:7'] },
       { verb: 'tenter sa chance', text: 'Tu bois une gorgee de l\'eau du bol de pierre.', effects: ['ADD_BIOME_CURRENCY:6', 'DAMAGE_LIFE:3'] },
     ],
   },
@@ -481,7 +481,7 @@ const FASTROUTE_TEMPLATES: readonly {
     narrative: 'Un dolmen effondre git a moitie dans la tourbe. Sa table de pierre brisee revele une chambre souterraine ou des racines de bruyere forment un reseau luminescent. Un bourdonnement grave emane des profondeurs.',
     options: [
       { verb: 'se faufiler', text: 'Tu te glisses dans la chambre souterraine du dolmen.', effects: ['ADD_BIOME_CURRENCY:8', 'DAMAGE_LIFE:4'] },
-      { verb: 'apaiser', text: 'Tu poses les mains sur la pierre et murmures des mots anciens.', effects: ['HEAL_LIFE:7', 'ADD_REPUTATION:anciens:6'] },
+      { verb: 'apaiser', text: 'Tu poses les mains sur la pierre et murmures des mots anciens.', effects: ['HEAL_LIFE:5', 'ADD_REPUTATION:anciens:6'] },
       { verb: 'etudier', text: 'Tu notes les motifs luminescents des racines sans entrer.', effects: ['ADD_ANAM:6', 'ADD_REPUTATION:druides:5'] },
     ],
   },
@@ -530,7 +530,7 @@ const FASTROUTE_TEMPLATES: readonly {
     options: [
       { verb: 'traverser', text: 'Tu franchis le gue prudemment, pierre apres pierre.', effects: ['ADD_BIOME_CURRENCY:5', 'HEAL_LIFE:3'] },
       { verb: 'inspecter', text: 'Tu examines le cercle de champignons sans le franchir.', effects: ['ADD_ANAM:5', 'ADD_REPUTATION:korrigans:6'] },
-      { verb: 'calmer', text: 'Tu t\'assieds au bord du ruisseau et respires la menthe.', effects: ['HEAL_LIFE:6', 'ADD_REPUTATION:anciens:5'] },
+      { verb: 'calmer', text: 'Tu t\'assieds au bord du ruisseau et respires la menthe.', effects: ['HEAL_LIFE:5', 'ADD_REPUTATION:anciens:5'] },
     ],
   },
   {
@@ -553,7 +553,7 @@ const FASTROUTE_TEMPLATES: readonly {
     narrative: 'Une source chaude bouillonne au creux d\'une cuvette de pierre. La vapeur qui s\'en echappe dessine des visages ephemeres — les ancetres qui veillent. L\'eau sent le soufre et le fer.',
     options: [
       { verb: 'observer', text: 'Tu etudies les visages de vapeur, y reconnaissant des traits.', effects: ['ADD_REPUTATION:anciens:7', 'ADD_ANAM:5'] },
-      { verb: 'cueillir', text: 'Tu remplis ta gourde d\'eau chaude minerale.', effects: ['HEAL_LIFE:8', 'ADD_BIOME_CURRENCY:3'] },
+      { verb: 'cueillir', text: 'Tu remplis ta gourde d\'eau chaude minerale.', effects: ['HEAL_LIFE:5', 'ADD_BIOME_CURRENCY:3'] },
       { verb: 'resoudre', text: 'Tu cherches l\'origine geologique de cette source.', effects: ['ADD_ANAM:6', 'ADD_REPUTATION:druides:5'] },
     ],
   },
@@ -584,7 +584,7 @@ const FASTROUTE_TEMPLATES: readonly {
   {
     narrative: 'Au sommet d\'une colline battue par le vent, un faucon crecerelle plane immobile dans le ciel. En dessous, la lande entiere s\'etend comme une mer violette. Un autel de pierre plate domine le panorama.',
     options: [
-      { verb: 'mediter', text: 'Tu t\'assieds a l\'autel et contemples l\'immensite de la lande.', effects: ['HEAL_LIFE:7', 'ADD_REPUTATION:anciens:7'] },
+      { verb: 'mediter', text: 'Tu t\'assieds a l\'autel et contemples l\'immensite de la lande.', effects: ['HEAL_LIFE:5', 'ADD_REPUTATION:anciens:7'] },
       { verb: 'scruter', text: 'Tu suis le regard du faucon, cherchant ce qu\'il surveille.', effects: ['ADD_ANAM:5', 'ADD_REPUTATION:druides:5'] },
       { verb: 'charmer', text: 'Tu leves le bras, invitant le faucon a se poser.', effects: ['ADD_REPUTATION:korrigans:5', 'ADD_BIOME_CURRENCY:5'] },
     ],
@@ -615,7 +615,7 @@ const FASTROUTE_TEMPLATES: readonly {
     narrative: 'Un barde itinerant accorde sa harpe sur le pont de pierre. Ses doigts effleurent les cordes et les pierres du pont commencent a vibrer en harmonie. Les poissons de la riviere sautent au rythme de la musique.',
     options: [
       { verb: 'parler', text: 'Tu partages tes propres histoires avec le barde.', effects: ['ADD_REPUTATION:korrigans:6', 'ADD_REPUTATION:niamh:4'] },
-      { verb: 'mediter', text: 'Tu fermes les yeux et te laisses porter par la melodie.', effects: ['HEAL_LIFE:8', 'ADD_REPUTATION:druides:3'] },
+      { verb: 'mediter', text: 'Tu fermes les yeux et te laisses porter par la melodie.', effects: ['HEAL_LIFE:5', 'ADD_REPUTATION:druides:3'] },
       { verb: 'danser', text: 'Tu danses sur le pont, faisant trembler les pierres.', effects: ['ADD_BIOME_CURRENCY:5', 'ADD_REPUTATION:korrigans:5'] },
     ],
   },
@@ -631,7 +631,7 @@ const FASTROUTE_TEMPLATES: readonly {
     narrative: 'Les poules du village courent en cercles parfaits autour du puits, les yeux vitreux. Le fermier jure que c\'est un tour de korrigan. Un rire cristallin resonne depuis l\'interieur du puits.',
     options: [
       { verb: 'resoudre', text: 'Tu descends dans le puits chercher le farceur.', effects: ['ADD_REPUTATION:korrigans:8', 'DAMAGE_LIFE:4'] },
-      { verb: 'apaiser', text: 'Tu brises le sortilege avec une comptine ancienne.', effects: ['HEAL_LIFE:6', 'ADD_REPUTATION:anciens:5'] },
+      { verb: 'apaiser', text: 'Tu brises le sortilege avec une comptine ancienne.', effects: ['HEAL_LIFE:5', 'ADD_REPUTATION:anciens:5'] },
       { verb: 'ruser', text: 'Tu proposes au korrigan un meilleur tour.', effects: ['ADD_REPUTATION:korrigans:9', 'ADD_BIOME_CURRENCY:4'] },
     ],
   },
@@ -663,14 +663,14 @@ const FASTROUTE_TEMPLATES: readonly {
     narrative: 'Le toit de la maison du druide est couvert de mousse lumines­cente qui trace une carte du ciel. Ce soir, les etoiles sur le toit ne correspondent plus au vrai ciel — elles montrent un futur possible.',
     options: [
       { verb: 'decoder', text: 'Tu compares les deux ciels pour lire la prophetie.', effects: ['ADD_ANAM:7', 'ADD_REPUTATION:druides:5'] },
-      { verb: 'mediter', text: 'Tu t\'allonges sous la mousse et laisses la lumiere t\'envahir.', effects: ['HEAL_LIFE:7', 'ADD_REPUTATION:niamh:4'] },
+      { verb: 'mediter', text: 'Tu t\'allonges sous la mousse et laisses la lumiere t\'envahir.', effects: ['HEAL_LIFE:5', 'ADD_REPUTATION:niamh:4'] },
       { verb: 'gratter', text: 'Tu preleves un echantillon de mousse propheti­que.', effects: ['ADD_BIOME_CURRENCY:6', 'ADD_REPUTATION:korrigans:4'] },
     ],
   },
   {
     narrative: 'L\'aubergiste sert une soupe dont le fumet change selon qui la regarde. Pour toi, elle sent la foret apres la pluie. Le chat de l\'auberge, lui, fixe le bol avec une intelligence suspecte.',
     options: [
-      { verb: 'gouter', text: 'Tu bois la soupe en acceptant le risque.', effects: ['HEAL_LIFE:8', 'ADD_REPUTATION:korrigans:3'] },
+      { verb: 'gouter', text: 'Tu bois la soupe en acceptant le risque.', effects: ['HEAL_LIFE:5', 'ADD_REPUTATION:korrigans:3'] },
       { verb: 'flairer', text: 'Tu analyses les ingredients par l\'odeur.', effects: ['ADD_ANAM:4', 'ADD_REPUTATION:druides:5'] },
       { verb: 'ruser', text: 'Tu echanges ton bol avec celui du chat.', effects: ['ADD_REPUTATION:korrigans:8', 'ADD_BIOME_CURRENCY:4'] },
     ],
@@ -719,7 +719,7 @@ const FASTROUTE_TEMPLATES: readonly {
     narrative: 'Un coq chante a rebours — du soir vers le matin. Le temps semble ralentir dans la ferme ou il perche. Les korrigans l\'auraient enchante pour gagner quelques heures de nuit supplementaires.',
     options: [
       { verb: 'decoder', text: 'Tu ecoutes le chant inverse pour comprendre le sortilege.', effects: ['ADD_ANAM:5', 'ADD_REPUTATION:korrigans:6'] },
-      { verb: 'apaiser', text: 'Tu nourris le coq avec du grain beni pour le delivrer.', effects: ['HEAL_LIFE:6', 'ADD_REPUTATION:druides:5'] },
+      { verb: 'apaiser', text: 'Tu nourris le coq avec du grain beni pour le delivrer.', effects: ['HEAL_LIFE:5', 'ADD_REPUTATION:druides:5'] },
       { verb: 'profiter', text: 'Tu profites du temps ralenti pour explorer la ferme.', effects: ['ADD_BIOME_CURRENCY:7', 'ADD_REPUTATION:korrigans:4'] },
     ],
   },
@@ -742,7 +742,7 @@ const FASTROUTE_TEMPLATES: readonly {
   {
     narrative: 'Le moulin a eau du village tourne a l\'envers depuis l\'aube, mais la farine produite est d\'un blanc lumineux qui guerit les maux de tete. La meuniere soupçonne un bienfait de korrigan — ou un piege.',
     options: [
-      { verb: 'gouter', text: 'Tu goutes la farine miraculeuse sans crainte.', effects: ['HEAL_LIFE:7', 'ADD_REPUTATION:korrigans:4'] },
+      { verb: 'gouter', text: 'Tu goutes la farine miraculeuse sans crainte.', effects: ['HEAL_LIFE:5', 'ADD_REPUTATION:korrigans:4'] },
       { verb: 'resoudre', text: 'Tu examines le mecanisme inverse du moulin.', effects: ['ADD_ANAM:5', 'ADD_REPUTATION:korrigans:6'] },
       { verb: 'distribuer', text: 'Tu partages la farine guerisseuse avec le village.', effects: ['ADD_REPUTATION:anciens:5', 'ADD_REPUTATION:korrigans:5'] },
     ],
@@ -759,7 +759,7 @@ const FASTROUTE_TEMPLATES: readonly {
   {
     narrative: 'Un cercle de douze menhirs se dresse au sommet d\'une colline battue par le vent. L\'equinoxe approche et des druides en robes blanches disposent des torches entre les pierres, murmurant des invocations anciennes.',
     options: [
-      { verb: 'mediter', text: 'Tu t\'agenouilles au centre du cercle et synchronises ta respiration avec les chants.', effects: ['HEAL_LIFE:7', 'ADD_REPUTATION:druides:10'] },
+      { verb: 'mediter', text: 'Tu t\'agenouilles au centre du cercle et synchronises ta respiration avec les chants.', effects: ['HEAL_LIFE:5', 'ADD_REPUTATION:druides:10'] },
       { verb: 'observer', text: 'Tu etudies la disposition des torches, cherchant un motif astronomique.', effects: ['ADD_ANAM:6', 'ADD_REPUTATION:druides:5'] },
       { verb: 'fuir', text: 'L\'energie qui monte te glace le sang. Tu recules dans l\'obscurite.', effects: ['DAMAGE_LIFE:3', 'ADD_REPUTATION:ankou:4'] },
     ],
@@ -775,7 +775,7 @@ const FASTROUTE_TEMPLATES: readonly {
   {
     narrative: 'Le temps glisse — un instant tu es sous la lune, l\'instant d\'apres le soleil brule. Les ombres des menhirs tournent en cercles fous. Un druide te fixe, immobile dans la tempete temporelle, et tend une main calme.',
     options: [
-      { verb: 's\'approcher', text: 'Tu saisis la main du druide, acceptant son ancrage.', effects: ['HEAL_LIFE:8', 'ADD_REPUTATION:druides:9'] },
+      { verb: 's\'approcher', text: 'Tu saisis la main du druide, acceptant son ancrage.', effects: ['HEAL_LIFE:5', 'ADD_REPUTATION:druides:9'] },
       { verb: 'resister mentalement', text: 'Tu ancres ton esprit dans le present, refusant la derive.', effects: ['ADD_REPUTATION:anciens:7', 'ADD_ANAM:4'] },
       { verb: 'courir', text: 'Tu traverses le cercle en courant, surfant sur les vagues du temps.', effects: ['ADD_BIOME_CURRENCY:8', 'DAMAGE_LIFE:5'] },
     ],
@@ -792,7 +792,7 @@ const FASTROUTE_TEMPLATES: readonly {
     narrative: 'Des druides-astronomes pointent vers la constellation du Cerf qui se leve entre deux menhirs. Selon eux, cet alignement ne se produit qu\'une fois par siecle et confere le don de double vue a qui sait regarder.',
     options: [
       { verb: 'scruter', text: 'Tu fixes la constellation a travers l\'arche de pierre.', effects: ['ADD_ANAM:7', 'ADD_REPUTATION:druides:8'] },
-      { verb: 'mediter', text: 'Tu medites sous les etoiles, ouvrant ton esprit a la vision.', effects: ['HEAL_LIFE:6', 'ADD_REPUTATION:druides:6'] },
+      { verb: 'mediter', text: 'Tu medites sous les etoiles, ouvrant ton esprit a la vision.', effects: ['HEAL_LIFE:5', 'ADD_REPUTATION:druides:6'] },
       { verb: 'marchander', text: 'Tu proposes un service aux druides en echange de leur savoir stellaire.', effects: ['ADD_BIOME_CURRENCY:6', 'ADD_REPUTATION:druides:3'] },
     ],
   },
@@ -800,7 +800,7 @@ const FASTROUTE_TEMPLATES: readonly {
     narrative: 'La geometrie sacree du cercle revele ses secrets : chaque pierre est placee selon un angle precis, formant un dodecagone parfait. Au centre, une dalle hexagonale est gravee de spirales triples.',
     options: [
       { verb: 'examiner', text: 'Tu mesures les angles et decouvres un message cache dans la geometrie.', effects: ['ADD_ANAM:6', 'ADD_REPUTATION:druides:9'] },
-      { verb: 'apaiser', text: 'Tu t\'assieds sur la dalle et laisses les spirales calmer ton esprit.', effects: ['HEAL_LIFE:7', 'ADD_REPUTATION:druides:5'] },
+      { verb: 'apaiser', text: 'Tu t\'assieds sur la dalle et laisses les spirales calmer ton esprit.', effects: ['HEAL_LIFE:5', 'ADD_REPUTATION:druides:5'] },
       { verb: 'forcer', text: 'Tu tentes de soulever la dalle hexagonale.', effects: ['ADD_BIOME_CURRENCY:8', 'DAMAGE_LIFE:5'] },
     ],
   },
@@ -817,7 +817,7 @@ const FASTROUTE_TEMPLATES: readonly {
     options: [
       { verb: 'cueillir', text: 'Tu attrapes une etincelle d\'or dans ta paume ouverte.', effects: ['ADD_BIOME_CURRENCY:8', 'DAMAGE_LIFE:3'] },
       { verb: 'ecouter', text: 'Tu ecoutes le craquement des flammes, y cherchant des presages.', effects: ['ADD_ANAM:5', 'ADD_REPUTATION:druides:7'] },
-      { verb: 'apaiser', text: 'Tu danses avec les silhouettes de flamme, trouvant la paix.', effects: ['HEAL_LIFE:8', 'ADD_REPUTATION:druides:5'] },
+      { verb: 'apaiser', text: 'Tu danses avec les silhouettes de flamme, trouvant la paix.', effects: ['HEAL_LIFE:5', 'ADD_REPUTATION:druides:5'] },
     ],
   },
   {
@@ -840,14 +840,14 @@ const FASTROUTE_TEMPLATES: readonly {
     narrative: 'Un cercle interieur de sept petites pierres apparait quand la rosee du matin les revele. Elles ne sont visibles qu\'a l\'aube et forment un heptagone parfait, chaque pierre gravee d\'un ogham different.',
     options: [
       { verb: 'dechiffrer', text: 'Tu copies les sept oghams dans la terre avant que la rosee ne seche.', effects: ['ADD_ANAM:8', 'ADD_REPUTATION:druides:6'] },
-      { verb: 'sentir', text: 'Tu touches chaque pierre, sentant leur energie distincte.', effects: ['HEAL_LIFE:6', 'ADD_REPUTATION:druides:7'] },
+      { verb: 'sentir', text: 'Tu touches chaque pierre, sentant leur energie distincte.', effects: ['HEAL_LIFE:5', 'ADD_REPUTATION:druides:7'] },
       { verb: 'tenter sa chance', text: 'Tu retires l\'une des petites pierres de son emplacement.', effects: ['ADD_BIOME_CURRENCY:9', 'DAMAGE_LIFE:5'] },
     ],
   },
   {
     narrative: 'Un druide aveugle chante au centre du cercle. Sa voix fait vibrer les menhirs, et des harmoniques invisibles font fleurir du lichen bleu sur la pierre. Il chante depuis trois jours sans s\'arreter.',
     options: [
-      { verb: 'apaiser', text: 'Tu t\'assieds pres de lui et fredonnes en harmonie.', effects: ['HEAL_LIFE:8', 'ADD_REPUTATION:druides:8'] },
+      { verb: 'apaiser', text: 'Tu t\'assieds pres de lui et fredonnes en harmonie.', effects: ['HEAL_LIFE:5', 'ADD_REPUTATION:druides:8'] },
       { verb: 'observer', text: 'Tu etudies le lichen bleu qui fleurit sous sa voix.', effects: ['ADD_ANAM:6', 'ADD_REPUTATION:druides:5'] },
       { verb: 'distribuer', text: 'Tu apportes eau et nourriture au chanteur infatigable.', effects: ['ADD_REPUTATION:druides:7', 'ADD_REPUTATION:anciens:5'] },
     ],
@@ -856,7 +856,7 @@ const FASTROUTE_TEMPLATES: readonly {
     narrative: 'Deux ley lines se croisent exactement sous la pierre-mere du cercle. A minuit, l\'intersection pulse et projette des eclairs horizontaux d\'un bleu electrique entre les menhirs. Les druides veillent, solennels.',
     options: [
       { verb: 'examiner', text: 'Tu traces la trajectoire des eclairs, cartographiant les ley lines.', effects: ['ADD_ANAM:7', 'ADD_REPUTATION:druides:9'] },
-      { verb: 'se concentrer', text: 'Tu te places a l\'intersection et absorbes l\'energie.', effects: ['HEAL_LIFE:6', 'DAMAGE_LIFE:2', 'ADD_REPUTATION:druides:6'] },
+      { verb: 'se concentrer', text: 'Tu te places a l\'intersection et absorbes l\'energie.', effects: ['HEAL_LIFE:5', 'DAMAGE_LIFE:2', 'ADD_REPUTATION:druides:6'] },
       { verb: 'proteger', text: 'Tu montes la garde avec les druides toute la nuit.', effects: ['ADD_REPUTATION:druides:8', 'ADD_REPUTATION:anciens:4'] },
     ],
   },
@@ -865,7 +865,7 @@ const FASTROUTE_TEMPLATES: readonly {
     options: [
       { verb: 'dechiffrer', text: 'Tu denoues les couches d\'oghams, lisant l\'histoire millenaire.', effects: ['ADD_ANAM:8', 'ADD_REPUTATION:druides:7'] },
       { verb: 'cueillir', text: 'Tu cueilles une grappe de baies rouges hivernales.', effects: ['HEAL_LIFE:5', 'ADD_BIOME_CURRENCY:5'] },
-      { verb: 'mediter', text: 'Tu t\'adosses au tronc et laisses l\'arbre te parler.', effects: ['HEAL_LIFE:7', 'ADD_REPUTATION:druides:6'] },
+      { verb: 'mediter', text: 'Tu t\'adosses au tronc et laisses l\'arbre te parler.', effects: ['HEAL_LIFE:5', 'ADD_REPUTATION:druides:6'] },
     ],
   },
   {
@@ -879,7 +879,7 @@ const FASTROUTE_TEMPLATES: readonly {
   {
     narrative: 'Un brouillard dense enveloppe le cercle de pierres, et les sons se distordent. Tes pas de gauche sonnent comme des tambours, ceux de droite comme des cloches. Un druide emerge du brouillard, portant une harpe d\'os.',
     options: [
-      { verb: 'ecouter', text: 'Tu t\'arretes pour ecouter la harpe d\'os, fascinee par ses harmoniques.', effects: ['HEAL_LIFE:6', 'ADD_REPUTATION:druides:9'] },
+      { verb: 'ecouter', text: 'Tu t\'arretes pour ecouter la harpe d\'os, fascinee par ses harmoniques.', effects: ['HEAL_LIFE:5', 'ADD_REPUTATION:druides:9'] },
       { verb: 'suivre', text: 'Tu suis le druide harpiste dans le brouillard.', effects: ['ADD_ANAM:6', 'ADD_REPUTATION:druides:6'] },
       { verb: 'pister', text: 'Tu cherches la source du brouillard, suspectant un enchantement.', effects: ['ADD_BIOME_CURRENCY:6', 'ADD_REPUTATION:korrigans:4'] },
     ],
@@ -896,14 +896,14 @@ const FASTROUTE_TEMPLATES: readonly {
     narrative: 'La nuit de Samhain, les menhirs semblent s\'animer. Leurs ombres bougent independamment, formant un cercle dansant. Les druides affirment que les esprits des batisseurs reviennent ce soir-la pour verifier leur oeuvre.',
     options: [
       { verb: 'observer', text: 'Tu regardes la danse des ombres, cherchant un message.', effects: ['ADD_ANAM:6', 'ADD_REPUTATION:druides:7'] },
-      { verb: 'apaiser', text: 'Tu chantes un hymne d\'accueil pour les esprits batisseurs.', effects: ['HEAL_LIFE:7', 'ADD_REPUTATION:druides:8'] },
+      { verb: 'apaiser', text: 'Tu chantes un hymne d\'accueil pour les esprits batisseurs.', effects: ['HEAL_LIFE:5', 'ADD_REPUTATION:druides:8'] },
       { verb: 'combattre', text: 'Tu brandis ta torche contre les ombres mouvantes.', effects: ['DAMAGE_LIFE:4', 'ADD_REPUTATION:ankou:6'] },
     ],
   },
   {
     narrative: 'Trois druides en cercle autour de la pierre-autel executent un rituel de guerison. Leurs bras dessinent des spirales dans l\'air et l\'herbe sous leurs pieds verdit a vue d\'oeil. Ils t\'invitent a rejoindre le cercle.',
     options: [
-      { verb: 'apaiser', text: 'Tu joins tes mains aux leurs et participes au rituel de guerison.', effects: ['HEAL_LIFE:8', 'ADD_REPUTATION:druides:10'] },
+      { verb: 'apaiser', text: 'Tu joins tes mains aux leurs et participes au rituel de guerison.', effects: ['HEAL_LIFE:5', 'ADD_REPUTATION:druides:10'] },
       { verb: 'observer', text: 'Tu memorises leurs gestes pour reproduire le rituel plus tard.', effects: ['ADD_ANAM:7', 'ADD_REPUTATION:druides:5'] },
       { verb: 'marchander', text: 'Tu proposes des herbes rares en echange de leur enseignement.', effects: ['ADD_BIOME_CURRENCY:5', 'ADD_REPUTATION:druides:6'] },
     ],
@@ -911,7 +911,7 @@ const FASTROUTE_TEMPLATES: readonly {
   {
     narrative: 'Un menhir isole au bord du cercle vibre d\'une note basse quand tu le touches. Un druide t\'explique que cette pierre est le diapason du cercle — elle accorde toutes les autres. Elle attend un nouveau gardien.',
     options: [
-      { verb: 'se concentrer', text: 'Tu poses les deux mains sur la pierre et laisses sa vibration t\'envahir.', effects: ['HEAL_LIFE:6', 'ADD_REPUTATION:druides:9'] },
+      { verb: 'se concentrer', text: 'Tu poses les deux mains sur la pierre et laisses sa vibration t\'envahir.', effects: ['HEAL_LIFE:5', 'ADD_REPUTATION:druides:9'] },
       { verb: 'parler', text: 'Tu promets au druide de proteger le cercle sur ta route.', effects: ['ADD_REPUTATION:druides:8', 'ADD_REPUTATION:anciens:5'] },
       { verb: 'tenter sa chance', text: 'Tu frappes la pierre pour amplifier sa note.', effects: ['ADD_BIOME_CURRENCY:6', 'DAMAGE_LIFE:3'] },
     ],
@@ -922,7 +922,7 @@ const FASTROUTE_TEMPLATES: readonly {
     options: [
       { verb: 'observer', text: 'Tu etudies le mouvement des feux follets, cherchant un schema.', effects: ['ADD_ANAM:6', 'ADD_REPUTATION:ankou:5'] },
       { verb: 'suivre', text: 'Tu suis la lueur la plus brillante, confiant en ton sens de l\'orientation.', effects: ['ADD_BIOME_CURRENCY:7', 'DAMAGE_LIFE:4'] },
-      { verb: 'apaiser', text: 'Tu murmures une priere pour les ames errantes qui alimentent ces flammes.', effects: ['HEAL_LIFE:6', 'ADD_REPUTATION:ankou:8'] },
+      { verb: 'apaiser', text: 'Tu murmures une priere pour les ames errantes qui alimentent ces flammes.', effects: ['HEAL_LIFE:5', 'ADD_REPUTATION:ankou:8'] },
     ],
   },
   {
@@ -938,7 +938,7 @@ const FASTROUTE_TEMPLATES: readonly {
     options: [
       { verb: 'parler', text: 'Tu salues les lavandieres et leur demandes pour qui elles lavent ce soir.', effects: ['ADD_REPUTATION:ankou:10', 'DAMAGE_LIFE:5'] },
       { verb: 'observer', text: 'Tu regardes de loin, comptant les linceuls etendus.', effects: ['ADD_ANAM:7', 'ADD_REPUTATION:ankou:5'] },
-      { verb: 'apaiser', text: 'Tu chantes un air ancien pour accompagner leur travail.', effects: ['HEAL_LIFE:7', 'ADD_REPUTATION:ankou:6'] },
+      { verb: 'apaiser', text: 'Tu chantes un air ancien pour accompagner leur travail.', effects: ['HEAL_LIFE:5', 'ADD_REPUTATION:ankou:6'] },
     ],
   },
   {
@@ -969,7 +969,7 @@ const FASTROUTE_TEMPLATES: readonly {
     narrative: 'Des presages de mort flottent dans l\'air du marais : un corbeau croasse trois fois, un miroir d\'eau reflete un visage qui n\'est pas le tien, une chandelle s\'allume seule sur un rocher. Le voile entre les mondes est mince ici.',
     options: [
       { verb: 'scruter', text: 'Tu fixes le reflet dans l\'eau, cherchant un message.', effects: ['ADD_ANAM:6', 'ADD_REPUTATION:ankou:8'] },
-      { verb: 'apaiser', text: 'Tu allumes une offrande de sauge pour calmer les signes.', effects: ['HEAL_LIFE:6', 'ADD_REPUTATION:ankou:6'] },
+      { verb: 'apaiser', text: 'Tu allumes une offrande de sauge pour calmer les signes.', effects: ['HEAL_LIFE:5', 'ADD_REPUTATION:ankou:6'] },
       { verb: 'fuir', text: 'Tu tournes les talons — certains signes ne doivent pas etre ignores.', effects: ['DAMAGE_LIFE:2', 'ADD_REPUTATION:anciens:4'] },
     ],
   },
@@ -977,14 +977,14 @@ const FASTROUTE_TEMPLATES: readonly {
     narrative: 'Une procession spectrale traverse le marais a la tombee de la nuit. Des silhouettes translucides marchent en file indienne, portant des bougies dont la flamme ne vacille pas. Leur chant est beau et terrifiant.',
     options: [
       { verb: 'suivre', text: 'Tu emboites le pas a la procession, porte par le chant.', effects: ['ADD_ANAM:8', 'ADD_REPUTATION:ankou:9'] },
-      { verb: 'ecouter', text: 'Tu restes immobile et laisses le chant te traverser.', effects: ['HEAL_LIFE:7', 'ADD_REPUTATION:ankou:6'] },
+      { verb: 'ecouter', text: 'Tu restes immobile et laisses le chant te traverser.', effects: ['HEAL_LIFE:5', 'ADD_REPUTATION:ankou:6'] },
       { verb: 'se cacher', text: 'Tu te couches dans les roseaux jusqu\'a ce qu\'ils passent.', effects: ['ADD_BIOME_CURRENCY:5', 'ADD_REPUTATION:anciens:4'] },
     ],
   },
   {
     narrative: 'Un autel de pierres mousseuses emerge de la tourbe. Des os blanchis forment un motif en spirale autour — des offrandes a l\'Ankou datant de plusieurs generations. Quelqu\'un a depose des fleurs fraiches ce matin.',
     options: [
-      { verb: 'mediter', text: 'Tu t\'agenouilles devant l\'autel et medites sur la mortalite.', effects: ['HEAL_LIFE:8', 'ADD_REPUTATION:ankou:8'] },
+      { verb: 'mediter', text: 'Tu t\'agenouilles devant l\'autel et medites sur la mortalite.', effects: ['HEAL_LIFE:5', 'ADD_REPUTATION:ankou:8'] },
       { verb: 'examiner', text: 'Tu etudies le motif en spirale, cherchant une signification.', effects: ['ADD_ANAM:6', 'ADD_REPUTATION:ankou:7'] },
       { verb: 'cueillir', text: 'Tu prends les fleurs fraiches — elles pourraient avoir des vertus.', effects: ['ADD_BIOME_CURRENCY:7', 'DAMAGE_LIFE:4'] },
     ],
@@ -1001,7 +1001,7 @@ const FASTROUTE_TEMPLATES: readonly {
     narrative: 'Le fil mortel se tend : tu sens ta propre mortalite peser sur tes epaules comme un manteau de plomb. Chaque pas dans le marais te rapproche du moment ou tu devras choisir — continuer ou faire demi-tour.',
     options: [
       { verb: 'resister mentalement', text: 'Tu serres les poings et avances, refusant le doute.', effects: ['ADD_REPUTATION:ankou:7', 'ADD_REPUTATION:anciens:5'] },
-      { verb: 'apaiser', text: 'Tu acceptes le poids et respires — la mort fait partie du cycle.', effects: ['HEAL_LIFE:8', 'ADD_REPUTATION:ankou:6'] },
+      { verb: 'apaiser', text: 'Tu acceptes le poids et respires — la mort fait partie du cycle.', effects: ['HEAL_LIFE:5', 'ADD_REPUTATION:ankou:6'] },
       { verb: 'combattre', text: 'Tu cries ta rage contre le brouillard, defiant la fatalite.', effects: ['DAMAGE_LIFE:4', 'ADD_REPUTATION:ankou:10'] },
     ],
   },
@@ -1032,7 +1032,7 @@ const FASTROUTE_TEMPLATES: readonly {
   {
     narrative: 'Une ile minuscule au milieu du marais porte un seul arbre — un if millenaire dont les racines plongent dans l\'eau noire. Ses branches portent des rubans de toutes les couleurs, noues par des generations de pelerins.',
     options: [
-      { verb: 'mediter', text: 'Tu t\'assieds sous l\'if et medites sur le cycle vie-mort-renaissance.', effects: ['HEAL_LIFE:7', 'ADD_REPUTATION:ankou:9'] },
+      { verb: 'mediter', text: 'Tu t\'assieds sous l\'if et medites sur le cycle vie-mort-renaissance.', effects: ['HEAL_LIFE:5', 'ADD_REPUTATION:ankou:9'] },
       { verb: 'observer', text: 'Tu lis les messages sur les rubans les plus anciens.', effects: ['ADD_ANAM:6', 'ADD_REPUTATION:anciens:6'] },
       { verb: 'nouer', text: 'Tu attaches ton propre ruban avec un voeu pour les vivants et les morts.', effects: ['ADD_REPUTATION:ankou:7', 'ADD_REPUTATION:druides:4'] },
     ],
@@ -1050,7 +1050,7 @@ const FASTROUTE_TEMPLATES: readonly {
     options: [
       { verb: 'boire', text: 'Tu bois une gorgee de la liqueur noire.', effects: ['ADD_BIOME_CURRENCY:8', 'DAMAGE_LIFE:5'] },
       { verb: 'examiner', text: 'Tu etudies les champignons, cherchant des proprietes medicinales.', effects: ['ADD_ANAM:5', 'ADD_REPUTATION:korrigans:6'] },
-      { verb: 'apaiser', text: 'Tu verses la liqueur sur la terre en offrande aux esprits du marais.', effects: ['HEAL_LIFE:6', 'ADD_REPUTATION:ankou:8'] },
+      { verb: 'apaiser', text: 'Tu verses la liqueur sur la terre en offrande aux esprits du marais.', effects: ['HEAL_LIFE:5', 'ADD_REPUTATION:ankou:8'] },
     ],
   },
   {
@@ -1065,7 +1065,7 @@ const FASTROUTE_TEMPLATES: readonly {
     narrative: 'La mort elle-meme te parle — non pas l\'Ankou, mais le concept pur, une voix sans forme dans l\'eau noire. Elle te pose une enigme : "Qu\'est-ce qui meurt chaque soir et renait chaque matin ?"',
     options: [
       { verb: 'dechiffrer', text: 'Tu reflechis longuement avant de repondre : "Le jour."', effects: ['ADD_ANAM:8', 'ADD_REPUTATION:ankou:10'] },
-      { verb: 'parler', text: 'Tu reponds sans hesiter : "L\'espoir."', effects: ['HEAL_LIFE:6', 'ADD_REPUTATION:ankou:7'] },
+      { verb: 'parler', text: 'Tu reponds sans hesiter : "L\'espoir."', effects: ['HEAL_LIFE:5', 'ADD_REPUTATION:ankou:7'] },
       { verb: 'refuser', text: 'Tu refuses de repondre — certaines enigmes sont des pieges.', effects: ['ADD_REPUTATION:anciens:6', 'DAMAGE_LIFE:3'] },
     ],
   },
@@ -1074,7 +1074,7 @@ const FASTROUTE_TEMPLATES: readonly {
     options: [
       { verb: 'traverser', text: 'Tu franchis le seuil pour rejoindre les morts paisibles.', effects: ['ADD_REPUTATION:ankou:10', 'DAMAGE_LIFE:5'] },
       { verb: 'observer', text: 'Tu regardes a travers sans franchir, absorbant la vision.', effects: ['ADD_ANAM:7', 'ADD_REPUTATION:ankou:6'] },
-      { verb: 'proteger', text: 'Tu scelles la porte avec un rituel de gui — les mondes doivent rester separes.', effects: ['HEAL_LIFE:7', 'ADD_REPUTATION:druides:5'] },
+      { verb: 'proteger', text: 'Tu scelles la porte avec un rituel de gui — les mondes doivent rester separes.', effects: ['HEAL_LIFE:5', 'ADD_REPUTATION:druides:5'] },
     ],
   },
   // ═══════════════════════════════════════════════════════════════════════════
@@ -1088,7 +1088,7 @@ const FASTROUTE_TEMPLATES: readonly {
     narrative: 'Le dolmen se dresse contre le ciel d\'hiver, ses trois pierres massives formant un portail vers le passe. Une lumiere pale filtre entre les megalithes, revelant des gravures en spirale qui semblent tourner lentement.',
     options: [
       { verb: 'examiner', text: 'Tu etudies les gravures spiralees, cherchant leur signification.', effects: ['ADD_ANAM:5', 'ADD_REPUTATION:anciens:8'] },
-      { verb: 'tenter sa chance', text: 'Tu poses ta main sur la pierre centrale, esperant une vision.', effects: ['HEAL_LIFE:7', 'ADD_REPUTATION:anciens:5'] },
+      { verb: 'tenter sa chance', text: 'Tu poses ta main sur la pierre centrale, esperant une vision.', effects: ['HEAL_LIFE:5', 'ADD_REPUTATION:anciens:5'] },
       { verb: 'se faufiler', text: 'Tu te glisses entre les megalithes pour explorer l\'autre cote.', effects: ['ADD_BIOME_CURRENCY:6', 'DAMAGE_LIFE:3'] },
     ],
   },
@@ -1121,7 +1121,7 @@ const FASTROUTE_TEMPLATES: readonly {
     options: [
       { verb: 'memoriser', text: 'Tu memorises la disposition des cristaux et leur alignement solaire.', effects: ['ADD_REPUTATION:druides:7', 'ADD_ANAM:5'] },
       { verb: 'fouiller a l\'aveugle', text: 'Tu cherches des tresors parmi les offrandes funeraires.', effects: ['ADD_BIOME_CURRENCY:9', 'DAMAGE_LIFE:5'] },
-      { verb: 'mediter', text: 'Tu t\'assieds face au crane et ecoutes les morts.', effects: ['HEAL_LIFE:6', 'ADD_REPUTATION:ankou:8'] },
+      { verb: 'mediter', text: 'Tu t\'assieds face au crane et ecoutes les morts.', effects: ['HEAL_LIFE:5', 'ADD_REPUTATION:ankou:8'] },
     ],
   },
   {
@@ -1145,7 +1145,7 @@ const FASTROUTE_TEMPLATES: readonly {
     options: [
       { verb: 'ecouter', text: 'Tu tends l\'oreille pour capter les noms murmures par la source.', effects: ['ADD_REPUTATION:anciens:10', 'ADD_ANAM:4'] },
       { verb: 'chercher au hasard', text: 'Tu plonges la main dans l\'eau, esperant toucher une lame ancienne.', effects: ['ADD_BIOME_CURRENCY:8', 'DAMAGE_LIFE:3'] },
-      { verb: 'apaiser', text: 'Tu bois l\'eau sacree et sens une force ancienne te guerir.', effects: ['HEAL_LIFE:7', 'ADD_REPUTATION:niamh:4'] },
+      { verb: 'apaiser', text: 'Tu bois l\'eau sacree et sens une force ancienne te guerir.', effects: ['HEAL_LIFE:5', 'ADD_REPUTATION:niamh:4'] },
     ],
   },
   {
@@ -1185,7 +1185,7 @@ const FASTROUTE_TEMPLATES: readonly {
     options: [
       { verb: 'accepter', text: 'Tu prends l\'epee et acceptes la garde du tumulus.', effects: ['ADD_REPUTATION:anciens:10', 'DAMAGE_LIFE:4'] },
       { verb: 'tenter sa chance', text: 'Tu proposes un jeu de des — le perdant reste.', effects: ['ADD_BIOME_CURRENCY:7', 'ADD_REPUTATION:korrigans:6'] },
-      { verb: 'calmer', text: 'Tu parles doucement au guerrier, l\'aidant a trouver la paix.', effects: ['HEAL_LIFE:6', 'ADD_REPUTATION:ankou:7'] },
+      { verb: 'calmer', text: 'Tu parles doucement au guerrier, l\'aidant a trouver la paix.', effects: ['HEAL_LIFE:5', 'ADD_REPUTATION:ankou:7'] },
     ],
   },
   {
@@ -1209,7 +1209,7 @@ const FASTROUTE_TEMPLATES: readonly {
     options: [
       { verb: 'scruter', text: 'Tu dechiffres les runes de sang seche sur l\'autel.', effects: ['ADD_REPUTATION:ankou:9', 'ADD_ANAM:4'] },
       { verb: 'se faufiler', text: 'Tu passes devant le loup endormi sans le reveiller.', effects: ['ADD_BIOME_CURRENCY:6', 'ADD_REPUTATION:korrigans:5'] },
-      { verb: 'apaiser', text: 'Tu caresses doucement le loup blanc, qui ouvre un oeil d\'or.', effects: ['HEAL_LIFE:6', 'ADD_REPUTATION:niamh:7'] },
+      { verb: 'apaiser', text: 'Tu caresses doucement le loup blanc, qui ouvre un oeil d\'or.', effects: ['HEAL_LIFE:5', 'ADD_REPUTATION:niamh:7'] },
     ],
   },
   {
@@ -1239,7 +1239,7 @@ const FASTROUTE_TEMPLATES: readonly {
   {
     narrative: 'La derniere colline de la chaine est la plus haute. A son sommet, un menhir solitaire pointe vers l\'etoile polaire. Des generations de voyageurs ont depose des cailloux a sa base, formant un monticule de gratitude.',
     options: [
-      { verb: 'mediter', text: 'Tu ajoutes ta pierre et medites sur ton voyage.', effects: ['HEAL_LIFE:7', 'ADD_REPUTATION:anciens:6'] },
+      { verb: 'mediter', text: 'Tu ajoutes ta pierre et medites sur ton voyage.', effects: ['HEAL_LIFE:5', 'ADD_REPUTATION:anciens:6'] },
       { verb: 'mentir', text: 'Tu pretends avoir accompli un exploit pour impressionner les esprits.', effects: ['ADD_BIOME_CURRENCY:7', 'ADD_REPUTATION:korrigans:5'] },
       { verb: 'pister', text: 'Tu suis l\'alignement du menhir vers d\'autres sites sacres.', effects: ['ADD_ANAM:5', 'ADD_REPUTATION:niamh:7'] },
     ],
@@ -1263,7 +1263,7 @@ const FASTROUTE_TEMPLATES: readonly {
     narrative: 'Un verger de pommiers d\'argent s\'etend sur l\'ile, leurs fruits brillant comme des lunes miniatures. Chaque pomme contient un souvenir oublie. Une femme aux yeux d\'emeraude cueille les fruits avec une reverence infinie.',
     options: [
       { verb: 'observer', text: 'Tu observes la femme cueillir, apprenant ses gestes rituels.', effects: ['ADD_REPUTATION:niamh:10', 'ADD_ANAM:3'] },
-      { verb: 'cueillir', text: 'Tu cueilles une pomme d\'argent et la croques.', effects: ['HEAL_LIFE:7', 'ADD_REPUTATION:druides:4'] },
+      { verb: 'cueillir', text: 'Tu cueilles une pomme d\'argent et la croques.', effects: ['HEAL_LIFE:5', 'ADD_REPUTATION:druides:4'] },
       { verb: 'marchander', text: 'Tu proposes un echange — un souvenir de ton monde contre une pomme.', effects: ['ADD_BIOME_CURRENCY:8', 'ADD_REPUTATION:korrigans:5'] },
     ],
   },
@@ -1272,7 +1272,7 @@ const FASTROUTE_TEMPLATES: readonly {
     options: [
       { verb: 'analyser', text: 'Tu etudies le sablier, cherchant a comprendre son mecanisme.', effects: ['ADD_ANAM:7', 'ADD_REPUTATION:anciens:6'] },
       { verb: 'tenter sa chance', text: 'Tu retournes le sablier pour voir ce qui se passe.', effects: ['ADD_BIOME_CURRENCY:7', 'DAMAGE_LIFE:5'] },
-      { verb: 'calmer', text: 'Tu acceptes la stase et laisses le temps te traverser.', effects: ['HEAL_LIFE:6', 'ADD_REPUTATION:niamh:7'] },
+      { verb: 'calmer', text: 'Tu acceptes la stase et laisses le temps te traverser.', effects: ['HEAL_LIFE:5', 'ADD_REPUTATION:niamh:7'] },
     ],
   },
   {
@@ -1303,7 +1303,7 @@ const FASTROUTE_TEMPLATES: readonly {
     narrative: 'Un arbre epineux pousse seul au centre de l\'ile, ses branches couvertes de rubans de tissu noues par des pelerins d\'un autre temps. Chaque ruban porte un voeu ecrit dans une langue que tu ne connais pas.',
     options: [
       { verb: 'dechiffrer', text: 'Tu essaies de dechiffrer les voeux ecrits sur les rubans.', effects: ['ADD_ANAM:6', 'ADD_REPUTATION:druides:7'] },
-      { verb: 'tenter sa chance', text: 'Tu noues ton propre ruban avec un voeu muet.', effects: ['HEAL_LIFE:7', 'ADD_REPUTATION:niamh:5'] },
+      { verb: 'tenter sa chance', text: 'Tu noues ton propre ruban avec un voeu muet.', effects: ['HEAL_LIFE:5', 'ADD_REPUTATION:niamh:5'] },
       { verb: 'se cacher', text: 'Tu te blottis sous l\'arbre pour te reposer a l\'abri du vent.', effects: ['ADD_BIOME_CURRENCY:5', 'ADD_REPUTATION:korrigans:6'] },
     ],
   },
@@ -1350,7 +1350,7 @@ const FASTROUTE_TEMPLATES: readonly {
   {
     narrative: 'Morgane la fay apparait sur la plage, vetue de brume et de lumiere de lune. Elle tient un calice d\'or rempli d\'un liquide qui change de couleur a chaque seconde. "Bois et oublie, ou refuse et souviens-toi," dit-elle.',
     options: [
-      { verb: 'accepter', text: 'Tu bois du calice, laissant les couleurs envahir ta vision.', effects: ['HEAL_LIFE:7', 'ADD_REPUTATION:niamh:8'] },
+      { verb: 'accepter', text: 'Tu bois du calice, laissant les couleurs envahir ta vision.', effects: ['HEAL_LIFE:5', 'ADD_REPUTATION:niamh:8'] },
       { verb: 'refuser', text: 'Tu refuses poliment, preferant garder tes souvenirs.', effects: ['ADD_REPUTATION:anciens:8', 'ADD_ANAM:5'] },
       { verb: 'negocier', text: 'Tu proposes de boire la moitie — oublier un peu, se souvenir un peu.', effects: ['ADD_BIOME_CURRENCY:7', 'ADD_REPUTATION:korrigans:6'] },
     ],
@@ -1374,7 +1374,7 @@ const FASTROUTE_TEMPLATES: readonly {
   {
     narrative: 'Une fontaine de corail rose jaillit au centre de l\'ile, son eau montant en spirale avant de se disperser en pluie fine. Chaque goutte contient une minuscule etoile qui s\'eteint en touchant le sol.',
     options: [
-      { verb: 'se concentrer', text: 'Tu te tiens sous la pluie d\'etoiles, absorbant leur lumiere.', effects: ['HEAL_LIFE:6', 'ADD_REPUTATION:niamh:7'] },
+      { verb: 'se concentrer', text: 'Tu te tiens sous la pluie d\'etoiles, absorbant leur lumiere.', effects: ['HEAL_LIFE:5', 'ADD_REPUTATION:niamh:7'] },
       { verb: 'chercher au hasard', text: 'Tu essaies d\'attraper les etoiles avant qu\'elles ne s\'eteignent.', effects: ['ADD_BIOME_CURRENCY:7', 'ADD_REPUTATION:druides:5'] },
       { verb: 'fuir', text: 'La beaute est trop intense — tu t\'eloignes, aveugle.', effects: ['DAMAGE_LIFE:3', 'ADD_REPUTATION:ankou:6'] },
     ],
@@ -1392,7 +1392,7 @@ const FASTROUTE_TEMPLATES: readonly {
     options: [
       { verb: 'suivre', text: 'Tu suis la lueur doree, marchant sur l\'eau sans y penser.', effects: ['ADD_REPUTATION:niamh:10', 'DAMAGE_LIFE:3'] },
       { verb: 'analyser', text: 'Tu calcules la distance et la direction optimale.', effects: ['ADD_ANAM:6', 'ADD_REPUTATION:druides:6'] },
-      { verb: 'attendre', text: 'Tu attends que la brume se dissipe pour y voir plus clair.', effects: ['HEAL_LIFE:6', 'ADD_REPUTATION:anciens:5'] },
+      { verb: 'attendre', text: 'Tu attends que la brume se dissipe pour y voir plus clair.', effects: ['HEAL_LIFE:5', 'ADD_REPUTATION:anciens:5'] },
     ],
   },
   {
@@ -1406,9 +1406,214 @@ const FASTROUTE_TEMPLATES: readonly {
   {
     narrative: 'La derniere ile est Avalon elle-meme. Les pommiers sont en fleur malgre l\'hiver. Des fees dansent dans les branches, et la musique est si belle qu\'elle guerit les blessures de l\'ame. Mais pour y rester, il faut tout abandonner.',
     options: [
-      { verb: 'mediter', text: 'Tu medites sous les pommiers en fleur, absorbant la paix d\'Avalon.', effects: ['HEAL_LIFE:7', 'ADD_REPUTATION:niamh:8'] },
+      { verb: 'mediter', text: 'Tu medites sous les pommiers en fleur, absorbant la paix d\'Avalon.', effects: ['HEAL_LIFE:5', 'ADD_REPUTATION:niamh:8'] },
       { verb: 'etudier', text: 'Tu etudies les plantes d\'Avalon, notant leurs proprietes uniques.', effects: ['ADD_ANAM:7', 'ADD_REPUTATION:druides:6'] },
       { verb: 'contourner', text: 'Tu explores le tour de l\'ile, cherchant un passage vers d\'autres mondes.', effects: ['ADD_BIOME_CURRENCY:6', 'ADD_REPUTATION:korrigans:7'] },
+    ],
+  },
+
+  // ── Cycle 13 batch: druides_light_batch2 (20 cards) ──────────────────────────
+  // Constraints: druides<=3, ankou>=4, niamh=5, anciens=4, korrigans=4
+  // Heal cap: HEAL_LIFE<=5. Field quotas met across batch.
+  // ─────────────────────────────────────────────────────────────────────────────
+
+  // Card C13-01 — ankou — perception / finesse / esprit
+  {
+    narrative: 'Un vieillard en cape noire est assis au croisement de deux chemins. Son visage est caché sous un capuchon, mais ses mains — des mains de cendres — tiennent une balance dont les plateaux ne bougent pas. Il ne parle pas. Il attend.',
+    options: [
+      { verb: 'pister', text: 'Tu scrutes le sol pour comprendre combien de voyageurs sont passes ici.', effects: ['ADD_REPUTATION:anciens:7', 'ADD_ANAM:4'] },
+      { verb: 'se faufiler', text: 'Tu contournes le vieillard sans croiser son regard.', effects: ['ADD_BIOME_CURRENCY:5', 'DAMAGE_LIFE:2'] },
+      { verb: 'accepter', text: 'Tu poses ta main sur la balance et laisses les plateaux decider.', effects: ['ADD_REPUTATION:ankou:9', 'DAMAGE_LIFE:4'] },
+    ],
+  },
+
+  // Card C13-02 — niamh — chance / bluff / observation
+  {
+    narrative: 'Une source jaillit d\'un rocher poli, transparente comme du cristal. Une voix feminine murmure depuis l\'eau : "Bois si tu oses. Ce que tu perds, tu le retrouves transforme." Des fleurs inconnues poussent autour sans soleil.',
+    options: [
+      { verb: 'deviner', text: 'Tu fermes les yeux et bois une gorgée, laissant le destin choisir.', effects: ['HEAL_LIFE:5', 'ADD_REPUTATION:niamh:8'] },
+      { verb: 'convaincre', text: 'Tu parles a la source, promettant de partager sa lecon avec les autres.', effects: ['ADD_REPUTATION:niamh:6', 'ADD_ANAM:5'] },
+      { verb: 'examiner', text: 'Tu observes les fleurs, cherchant un indice sur la nature de l\'eau.', effects: ['ADD_BIOME_CURRENCY:6', 'ADD_REPUTATION:anciens:5'] },
+    ],
+  },
+
+  // Card C13-03 — korrigans — logique / chance / vigueur
+  {
+    narrative: 'Trois korrigans dansent autour d\'un tas de pierres en chantant un compte de nombres premiers. L\'un s\'arrete et te pointe du doigt : "Trouve le suivant dans la sequence ou porte nos pierres jusqu\'au prochain dolmen !"',
+    options: [
+      { verb: 'resoudre', text: 'Tu calcules mentalement la sequence et announces le bon nombre.', effects: ['ADD_REPUTATION:korrigans:9', 'ADD_ANAM:4'] },
+      { verb: 'tenter sa chance', text: 'Tu lances un chiffre au hasard avec un sourire confiant.', effects: ['ADD_BIOME_CURRENCY:7', 'DAMAGE_LIFE:3'] },
+      { verb: 'forcer', text: 'Tu charges les pierres sur ton dos sans negocier.', effects: ['ADD_REPUTATION:anciens:6', 'DAMAGE_LIFE:5'] },
+    ],
+  },
+
+  // Card C13-04 — ankou — esprit / observation / finesse
+  {
+    narrative: 'Une charette sans conducteur avance lentement sur la lande brumeuse, ses roues grincant sur chaque pierre. Elle s\'arrete devant toi. Il n\'y a rien dedans — seulement une odeur de fleurs fanees et l\'echo de noms oublies.',
+    options: [
+      { verb: 'resister mentalement', text: 'Tu repousses la fascination morbide et restes plante sur place.', effects: ['ADD_REPUTATION:ankou:7', 'HEAL_LIFE:3'] },
+      { verb: 'scruter', text: 'Tu inspectes la charette en detail, cherchant un message cache.', effects: ['ADD_ANAM:6', 'ADD_REPUTATION:anciens:5'] },
+      { verb: 'contourner', text: 'Tu fais un grand detour dans les bruyeres pour l\'eviter.', effects: ['ADD_BIOME_CURRENCY:4', 'ADD_REPUTATION:korrigans:5'] },
+    ],
+  },
+
+  // Card C13-05 — anciens — logique / perception / bluff
+  {
+    narrative: 'Un dolmen porte une inscription en vieux breton que personne ne lit depuis des siecles. Les lettres semblent changer de position a chaque fois que tu regardes ailleurs. Un renard roux observe la scene, assis en sphinx.',
+    options: [
+      { verb: 'dechiffrer', text: 'Tu copies soigneusement les symboles et tentes de les decoder.', effects: ['ADD_REPUTATION:anciens:9', 'ADD_ANAM:4'] },
+      { verb: 'ecouter', text: 'Tu fermes les yeux et laisses le vent te souffler la signification.', effects: ['HEAL_LIFE:4', 'ADD_REPUTATION:niamh:5'] },
+      { verb: 'amadouer', text: 'Tu offres de la nourriture au renard, esperant qu\'il connaisse la reponse.', effects: ['ADD_BIOME_CURRENCY:5', 'ADD_REPUTATION:korrigans:6'] },
+    ],
+  },
+
+  // Card C13-06 — niamh — esprit / chance / vigueur
+  {
+    narrative: 'Un cygne blanc est piege sous un filet de roseaux tresses. Il te regarde avec des yeux d\'une intelligence troublante. En t\'approchant, tu entends une musique qui sort de son bec — une melodie qui te rappelle un souvenir que tu n\'as pas vecu.',
+    options: [
+      { verb: 'calmer', text: 'Tu chantes doucement pour rassurer le cygne avant de le liberer.', effects: ['ADD_REPUTATION:niamh:8', 'HEAL_LIFE:4'] },
+      { verb: 'cueillir', text: 'Tu coupes les roseaux au hasard, esperant liberer le cygne rapidement.', effects: ['ADD_BIOME_CURRENCY:5', 'DAMAGE_LIFE:2'] },
+      { verb: 'courir', text: 'Tu cours chercher de l\'aide dans le village le plus proche.', effects: ['ADD_REPUTATION:anciens:6', 'ADD_ANAM:3'] },
+    ],
+  },
+
+  // Card C13-07 — druides — observation / esprit / finesse
+  {
+    narrative: 'Un cercle de chenes aux racines entrelacees forme une chambre naturelle. Au centre, une flamme verte brule sans combustible depuis — selon les traces — plusieurs siecles. Un druide en meditation te demande si tu viens pour apprendre ou pour prendre.',
+    options: [
+      { verb: 'memoriser', text: 'Tu observes la flamme en silence, gravant chaque detail dans ta memoire.', effects: ['ADD_REPUTATION:druides:8', 'ADD_ANAM:5'] },
+      { verb: 'mediter', text: 'Tu t\'assieds en face du druide et entres en meditation commune.', effects: ['HEAL_LIFE:5', 'ADD_REPUTATION:anciens:6'] },
+      { verb: 'esquiver', text: 'Tu longes les racines sans toucher au cercle, en observateur invisible.', effects: ['ADD_BIOME_CURRENCY:5', 'ADD_REPUTATION:korrigans:4'] },
+    ],
+  },
+
+  // Card C13-08 — ankou — perception / logique / bluff
+  {
+    narrative: 'Un pont de pierre enjambe un ravin invisible dans la brume. De l\'autre cote, une silhouette attend. Elle porte tes traits exacts, ton manteau, ton sac. Elle leve la main en signe de bienvenue — ou d\'avertissement.',
+    options: [
+      { verb: 'sentir', text: 'Tu fermes les yeux et sens l\'air pour distinguer l\'ame de l\'illusion.', effects: ['ADD_REPUTATION:ankou:8', 'ADD_ANAM:5'] },
+      { verb: 'analyser', text: 'Tu etudies les differences entre ton reflet et l\'original.', effects: ['ADD_REPUTATION:anciens:7', 'DAMAGE_LIFE:2'] },
+      { verb: 'mentir', text: 'Tu cries de l\'autre rive : "Je ne suis pas celui que tu attends."', effects: ['ADD_BIOME_CURRENCY:6', 'ADD_REPUTATION:korrigans:5'] },
+    ],
+  },
+
+  // Card C13-09 — korrigans — finesse / chance / bluff
+  {
+    narrative: 'Une troupe de korrigans organise un marche nocturne dans un creux de falaise. Ils vendent des objets volés au sommeil des humains — des reves materialises en petits globes lumineux. L\'un d\'eux te propose un echange suspect.',
+    options: [
+      { verb: 'se faufiler', text: 'Tu te glisses entre les etals pour recuperer un globe sans payer.', effects: ['ADD_REPUTATION:korrigans:8', 'DAMAGE_LIFE:3'] },
+      { verb: 'fouiller a l\'aveugle', text: 'Tu plonges la main dans un sac ferme et prends ce que tu trouves.', effects: ['ADD_BIOME_CURRENCY:8', 'DAMAGE_LIFE:2'] },
+      { verb: 'negocier', text: 'Tu marchandes avec le korrigan le plus vieux, en te montrant futé.', effects: ['ADD_REPUTATION:korrigans:7', 'ADD_ANAM:4'] },
+    ],
+  },
+
+  // Card C13-10 — niamh — esprit / perception / logique
+  {
+    narrative: 'Une harpe de bois flotté est posee contre un rocher au bord de la mer. Personne ne la joue mais elle emet une note continue, grave et pure. La maree monte lentement vers l\'instrument sans jamais l\'atteindre.',
+    options: [
+      { verb: 'apaiser', text: 'Tu poses les mains sur les cordes et laisses la note changer en accord.', effects: ['HEAL_LIFE:5', 'ADD_REPUTATION:niamh:7'] },
+      { verb: 'tendre l\'oreille', text: 'Tu ecoutes sans bouger, cherchant la signification de la note.', effects: ['ADD_ANAM:5', 'ADD_REPUTATION:anciens:6'] },
+      { verb: 'interpreter', text: 'Tu analyses les vibrations et leurs harmoniques naturelles.', effects: ['ADD_REPUTATION:druides:5', 'ADD_BIOME_CURRENCY:4'] },
+    ],
+  },
+
+  // Card C13-11 — anciens — vigueur / observation / esprit
+  {
+    narrative: 'Un menhir de dix metres est couche sur le flanc, brise en deux. Des villageois debattent pour savoir si les Anciens ont voulu le renverser ou si c\'est une punition divine. Ton avis est sollicite par les plus ages.',
+    options: [
+      { verb: 'pousser', text: 'Tu organises un effort collectif pour redresser le menhir.', effects: ['ADD_REPUTATION:anciens:8', 'DAMAGE_LIFE:3'] },
+      { verb: 'fixer', text: 'Tu etudies la cassure pour comprendre comment et quand c\'est arrive.', effects: ['ADD_ANAM:5', 'ADD_REPUTATION:druides:5'] },
+      { verb: 'endurer', text: 'Tu ecoutes les deux camps jusqu\'a trouver un consensus.', effects: ['HEAL_LIFE:4', 'ADD_REPUTATION:korrigans:4'] },
+    ],
+  },
+
+  // Card C13-12 — ankou — chance / finesse / vigueur
+  {
+    narrative: 'Un passage sous un dolmen s\'ouvre sur un couloir de pierre qui descend. A mi-chemin, tu entends des voix qui recitent des noms — les tiens y figurent, mais conjugues au passe. Le couloir se retrecie a mesure que tu avances.',
+    options: [
+      { verb: 'tenter sa chance', text: 'Tu continues sans regarder en arriere, acceptant ce que tu trouveras.', effects: ['ADD_REPUTATION:ankou:9', 'DAMAGE_LIFE:4'] },
+      { verb: 'se cacher', text: 'Tu te plaqures contre la paroi et attends que les voix se taisent.', effects: ['ADD_BIOME_CURRENCY:4', 'ADD_ANAM:4'] },
+      { verb: 'fuir', text: 'Tu rebrousses chemin en courant, le coeur battant.', effects: ['ADD_REPUTATION:niamh:5', 'DAMAGE_LIFE:2'] },
+    ],
+  },
+
+  // Card C13-13 — niamh — bluff / observation / chance
+  {
+    narrative: 'Une fee des eaux emerge d\'un lac en portant un miroir d\'argent. Elle te montre ton reflet mais il est celui que tu seras dans vingt ans. Elle propose de le changer contre un secret que tu n\'as jamais dit a personne.',
+    options: [
+      { verb: 'charmer', text: 'Tu la complimentes sur son miroir et lui promets un secret inavouable.', effects: ['ADD_REPUTATION:niamh:9', 'ADD_ANAM:4'] },
+      { verb: 'examiner', text: 'Tu inspectes le miroir de pres pour detecter l\'illusion.', effects: ['ADD_BIOME_CURRENCY:5', 'ADD_REPUTATION:anciens:5'] },
+      { verb: 'chercher au hasard', text: 'Tu fermes les yeux et chuchotes le premier secret qui te vient.', effects: ['HEAL_LIFE:4', 'ADD_REPUTATION:niamh:5'] },
+    ],
+  },
+
+  // Card C13-14 — korrigans — perception / finesse / vigueur
+  {
+    narrative: 'Un piege de korrigans est tendu en travers du chemin — un reseau de fils de soie d\'araignee enchantee qui sonne une clochette si on le touche. En dessous, un coffre de chene attend. Les korrigans observent depuis les arbres.',
+    options: [
+      { verb: 'pister', text: 'Tu traces le parcours des fils pour trouver un passage non piege.', effects: ['ADD_REPUTATION:korrigans:7', 'ADD_ANAM:4'] },
+      { verb: 'escalader', text: 'Tu grimpes a l\'arbre pour passer par-dessus le reseau.', effects: ['ADD_BIOME_CURRENCY:6', 'DAMAGE_LIFE:2'] },
+      { verb: 'resister physiquement', text: 'Tu traverses le reseau a la force brute, acceptant de declencher la clochette.', effects: ['ADD_REPUTATION:anciens:5', 'DAMAGE_LIFE:4'] },
+    ],
+  },
+
+  // Card C13-15 — druides — logique / esprit / bluff
+  {
+    narrative: 'Une bibliotheque de pierres gravees est disposee en cercle dans une clairiere. Chaque pierre raconte un fragment d\'une loi ancienne. La derniere pierre est vierge. Deux druides se disputent ce qu\'il faut y graver.',
+    options: [
+      { verb: 'decoder', text: 'Tu lis toutes les pierres dans l\'ordre pour deduire la loi manquante.', effects: ['ADD_REPUTATION:druides:8', 'ADD_ANAM:5'] },
+      { verb: 'se concentrer', text: 'Tu fermes les yeux et laisses la reponse monter d\'elle-meme.', effects: ['ADD_REPUTATION:anciens:6', 'HEAL_LIFE:3'] },
+      { verb: 'convaincre', text: 'Tu proposes ta propre version de la loi et defends ta position.', effects: ['ADD_REPUTATION:korrigans:6', 'ADD_BIOME_CURRENCY:4'] },
+    ],
+  },
+
+  // Card C13-16 — anciens — vigueur / chance / perception
+  {
+    narrative: 'Une fontaine sacree est obstruee par un eboulement recent. Les anciens du village disent que la source guerissait les maladies depuis des generations. Personne n\'a la force de deplacer les rochers seul.',
+    options: [
+      { verb: 'briser', text: 'Tu frappes les plus petits rochers avec une pierre tranchante.', effects: ['ADD_REPUTATION:anciens:8', 'DAMAGE_LIFE:4'] },
+      { verb: 'deviner', text: 'Tu cherches au toucher le rocher-cle dont le deplacement liberera les autres.', effects: ['HEAL_LIFE:5', 'ADD_ANAM:4'] },
+      { verb: 'flairer', text: 'Tu suis l\'odeur de l\'eau pour trouver une issue alternative.', effects: ['ADD_BIOME_CURRENCY:5', 'ADD_REPUTATION:niamh:5'] },
+    ],
+  },
+
+  // Card C13-17 — ankou — esprit / logique / observation
+  {
+    narrative: 'Un arbre mort au centre d\'une tourbiere est couvert de tresses de cheveux humains. Chaque tresse porte un noeud different. Un corbeau noir sur la branche superieure tourne la tete de 180 degres pour te regarder.',
+    options: [
+      { verb: 'accepter', text: 'Tu attaches une meche de tes propres cheveux a l\'arbre en signe de respect.', effects: ['ADD_REPUTATION:ankou:8', 'ADD_ANAM:5'] },
+      { verb: 'etudier', text: 'Tu comptes les noeuds et cherches un schema dans les tresses.', effects: ['ADD_REPUTATION:anciens:7', 'ADD_BIOME_CURRENCY:3'] },
+      { verb: 'inspecter', text: 'Tu examines le corbeau sans le toucher, cherchant l\'intelligence derriere ses yeux.', effects: ['ADD_ANAM:5', 'DAMAGE_LIFE:2'] },
+    ],
+  },
+
+  // Card C13-18 — niamh — finesse / esprit / bluff
+  {
+    narrative: 'Une barque nacree est amarree a un ponton de mousse. Aucun batelier visible. Mais la barque se balance comme si quelqu\'un l\'attendait. Une inscription sur la proue dit : "Elle porte qui merite la traversee."',
+    options: [
+      { verb: 'traverser', text: 'Tu montes dans la barque et la laisses te mener ou elle veut.', effects: ['ADD_REPUTATION:niamh:9', 'HEAL_LIFE:4'] },
+      { verb: 'refuser', text: 'Tu restes sur le ponton et attends que le batelier se montre.', effects: ['ADD_ANAM:5', 'ADD_REPUTATION:anciens:5'] },
+      { verb: 'flatter', text: 'Tu parles a la barque comme a une personne, la remerciant de t\'attendre.', effects: ['ADD_REPUTATION:korrigans:6', 'ADD_BIOME_CURRENCY:4'] },
+    ],
+  },
+
+  // Card C13-19 — korrigans — chance / vigueur / perception
+  {
+    narrative: 'Un marais scintille de feux follets orange et bleus. Les korrigans du coin disent que les bleus portent bonheur, les oranges portent malheur. Mais ils changent de couleur quand on les regarde directement.',
+    options: [
+      { verb: 'cueillir', text: 'Tu tends la main vers un feu au hasard, acceptant sa nature.', effects: ['ADD_BIOME_CURRENCY:8', 'DAMAGE_LIFE:3'] },
+      { verb: 'combattre', text: 'Tu frappes l\'air pour disperser les feux et ouvrir un passage.', effects: ['ADD_REPUTATION:korrigans:6', 'DAMAGE_LIFE:2'] },
+      { verb: 'suivre', text: 'Tu suis les feux bleus a la peripherie de ta vision.', effects: ['HEAL_LIFE:4', 'ADD_ANAM:4'] },
+    ],
+  },
+
+  // Card C13-20 — anciens — observation / logique / esprit
+  {
+    narrative: 'Un calendrier solaire grave dans le calcaire indique une date future : demain. Le calcul est parfait, les ombres projettent exactement l\'heure. Les anciens du village savent ce que demain signifie, mais personne ne le dit a voix haute.',
+    options: [
+      { verb: 'memoriser', text: 'Tu passes une heure a reproduire le calendrier en detail dans ton carnet.', effects: ['ADD_REPUTATION:anciens:9', 'ADD_ANAM:5'] },
+      { verb: 'interpreter', text: 'Tu calcules ce que la date implique selon les cycles lunaires.', effects: ['ADD_REPUTATION:druides:5', 'ADD_BIOME_CURRENCY:4'] },
+      { verb: 'attendre', text: 'Tu restes assis pres du calendrier jusqu\'au coucher du soleil, a mediter.', effects: ['HEAL_LIFE:5', 'ADD_REPUTATION:niamh:5'] },
     ],
   },
 ];

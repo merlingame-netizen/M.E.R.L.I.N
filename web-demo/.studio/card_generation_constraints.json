@@ -12,8 +12,9 @@
     "perception": {"min": 3}
   },
   "heal_constraints": {
-    "max_heal_per_option": 7,
-    "max_heal_options_per_card": 1
+    "max_heal_per_option": 5,
+    "max_heal_options_per_card": 1,
+    "_note_cycle13": "Reduced from 7 to 5 to make stage2 drain (-2/card) net-negative for cautious players. Avg heal target: 3.5 (was 4.7)."
   },
   "faction_balance_targets": {
     "druides": {"target_pct": 15, "cap_pct": 15},

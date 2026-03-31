@@ -1,34 +1,63 @@
 {
   "agent": "merlin-gameplay-programmer",
-  "cycle": 12,
-  "task": "T038",
-  "timestamp": "2026-03-31T05:30:00Z",
-  "description": "Progressive drain scaling — T038. Drain increases from -1 to -2 after card 15, then -3 after card 25.",
+  "cycle": 13,
+  "task": "T040",
+  "timestamp": "2026-03-31T08:30:00Z",
+  "status": "PASS",
   "changes": [
     {
-      "file": "web-demo/src/game/Constants.ts",
-      "additions": [
-        "LIFE_DRAIN_THRESHOLD_STAGE2 = 15",
-        "LIFE_DRAIN_THRESHOLD_STAGE3 = 25",
-        "LIFE_DRAIN_STAGE2 = 2",
-        "LIFE_DRAIN_STAGE3 = 3"
-      ]
+      "file": "web-demo/src/llm/GroqAdapter.ts",
+      "change": "LLM_EFFECT_CAPS.HEAL_LIFE: 7 -> 5",
+      "line": 34,
+      "note": "System prompt comment also updated: 'HEAL_LIFE:N (max 5)'"
     },
     {
-      "file": "web-demo/src/game/Store.ts",
-      "additions": [
-        "drainLifeScaled() action — reads cardsPlayed, picks drain amount from staged thresholds, applies immutable update",
-        "Imported 4 new drain constants from Constants.ts"
-      ],
-      "interface_updated": "GameActions — added drainLifeScaled: () => void"
+      "file": "web-demo/src/game/CardSystem.ts",
+      "change": "HEAL_LIFE:6/7/8 clamped to HEAL_LIFE:5 across all FASTROUTE_TEMPLATES",
+      "stats": {
+        "HEAL_LIFE_6_clamped": 25,
+        "HEAL_LIFE_7_clamped": 22,
+        "HEAL_LIFE_8_clamped": 12,
+        "total_clamped": 59,
+        "HEAL_LIFE_violations_remaining": 0
+      }
     },
     {
-      "file": "web-demo/src/main.ts",
-      "change": "Game loop step 2: state().drainLife() replaced with state().drainLifeScaled()"
+      "file": "web-demo/.studio/card_generation_constraints.json",
+      "change": "heal_constraints.max_heal_per_option: 7 -> 5",
+      "note": "Added _note_cycle13 documenting rationale"
     }
   ],
-  "design_rationale": "cardsPlayed is read BEFORE incrementCardsPlayed() in the same loop iteration. So at drain call: cardsPlayed=0 on card 1, cardsPlayed=14 on card 15 (stage2 triggers at >=15 — i.e. the 16th card). This means stage2 starts around card 16 in UX terms. Intentional — gives player 15 safe cards before pressure escalates.",
-  "balance_impact": "Cards 1-15: drain -1/card (15 hp total). Cards 16-25: drain -2/card (20 hp over 10 cards). Cards 26+: drain -3/card. With avg heal +4.7/card, stage1 is net positive (+3.7), stage2 is net positive (+2.7), stage3 is net positive (+1.7). Player still viable but not immune. Combined with faction events this creates meaningful late-run tension.",
-  "ts_errors_after": 0,
+  "validation": {
+    "ts_errors": 0,
+    "HEAL_LIFE_violations_in_CardSystem": 0,
+    "GroqAdapter_HEAL_cap": 5,
+    "constraints_json_updated": true
+  },
+  "distribution_post_clamp": {
+    "HEAL_LIFE_5": 111,
+    "HEAL_LIFE_4": 34,
+    "HEAL_LIFE_3": 24,
+    "HEAL_LIFE_2": 4,
+    "total_heal_effects": 173
+  },
+  "avg_heal_analysis": {
+    "weighted_avg_heal_option": 4.47,
+    "old_weighted_avg": 5.6,
+    "improvement_pct": 20,
+    "cautious_healer_stage1_net": "+3.47 (drain -1)",
+    "cautious_healer_stage2_net": "+2.47 (drain -2) -- still positive",
+    "cautious_healer_stage3_net": "+1.47 (drain -3) -- still positive",
+    "mixed_play_stage2_net": "-0.72 (net-negative for non-healer focus)",
+    "note": "T040 reduces ceiling by 20% but dedicated healer still survives all stages. T042 needed for full pressure."
+  },
+  "next_task_recommendation": {
+    "id": "T042",
+    "title": "Late-game heal context nerf: reduce heal options after card 20, or add drain milestone event",
+    "priority": 3,
+    "domain": "gameplay",
+    "severity": "MEDIUM",
+    "est_tokens": 250
+  },
   "verdict": "PASS"
 }

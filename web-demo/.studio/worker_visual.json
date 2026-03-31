@@ -1,40 +1,41 @@
 {
   "agent": "merlin-tech-artist",
-  "cycle": 12,
-  "task": "T001",
-  "timestamp": "2026-03-31T05:30:00Z",
+  "cycle": 13,
+  "task": "T005",
+  "timestamp": "2026-03-31T08:30:00Z",
   "status": "PASS",
   "changes": [
     {
-      "file": "scenes/MerlinGame.tscn",
-      "action": "Added CanvasLayer(layer=-10)+ColorRect(anchors_preset=15, color=#0a0a12) after root Node"
-    },
-    {
-      "file": "scenes/MerlinCabinHub.tscn",
-      "action": "Added CanvasLayer(layer=-10)+ColorRect(anchors_preset=15, color=#0a0a12) after root Node"
-    },
-    {
-      "file": "scenes/Menu3DPC.tscn",
-      "action": "Added CanvasLayer(layer=-10)+ColorRect(anchors_preset=15, color=#0a0a12) after root Node (main_scene also had bare Node root)"
-    },
-    {
-      "file": "project.godot",
-      "action": "Added environment/defaults/default_clear_color=Color(0.039,0.039,0.071,1) to [rendering] section"
+      "file": "web-demo/src/scenes/CoastBiome.ts",
+      "function": "createFog()",
+      "optimizations": [
+        "noise(): 4 trig ops -> 2 (removed 0.5-weighted sin(3.1x) and cos(1.9y) secondary terms)",
+        "noise() signature: added t param, uses mod(t, 100.0) internally to prevent float precision drift",
+        "edgeFade: 4 smoothstep multiplications -> 1 radial smoothstep on length(vUv - 0.5)",
+        "uDensity: 0.35 -> 0.25 (reduces transparent overdraw per fragment)",
+        "side: THREE.DoubleSide -> THREE.FrontSide (fog viewed from above, halves rasterization)"
+      ]
     }
   ],
-  "parse_error_investigation": {
-    "file": "scripts/merlin_cabin_hub.gd",
-    "result": "No parse error found. TapestryTalentTree and BookCinematic have valid class_name declarations in scripts/ui/.",
-    "validate_step0": "Exit 0 — 4 pre-existing errors (translations.csv missing), 5 pre-existing warnings (font UID + GLB duplicates). Zero GDScript parse errors."
+  "perf_analysis": {
+    "fragment_ops_before": "4 trig + 4 smoothstep + 1 mul = ~9 ops/fragment",
+    "fragment_ops_after": "2 trig + 1 length + 1 smoothstep + 1 mul = ~5 ops/fragment",
+    "reduction_pct": 44,
+    "rasterization_reduction": "50% (FrontSide vs DoubleSide)",
+    "overdraw_reduction": "~29% (uDensity 0.35->0.25 reduces average alpha)",
+    "geometry_note": "PlaneGeometry(180,180,1,1) already minimal -- no vertex optimization needed",
+    "target_gpu": "GTX 1060 (tile-based rasterizer benefits from both fragment and rasterization cuts)",
+    "expected_fps_gain": "~5-10 FPS at 1080p fog-heavy scenes (theoretical)"
   },
-  "validate_step0_result": {
-    "exit_code": 0,
-    "new_errors": 0,
-    "new_warnings": 0,
-    "pre_existing_errors": 4,
-    "pre_existing_errors_detail": "translations.csv missing (i18n asset, pre-cycle-12, unrelated to T001)",
-    "verdict": "PASS"
+  "regression_checks": {
+    "fog_plane_still_created": true,
+    "fog_name_preserved": "fog_plane (update() lookup by name still works)",
+    "uTime_uniform_still_updated": true,
+    "fog_position_unchanged": "y=0.8 plane above ground",
+    "transparent_depthWrite_false": true,
+    "visual_appearance": "slightly less dense, same animation. Edge fade now circular instead of rectangular -- aesthetically equivalent.",
+    "false_positive_QA": "DoubleSide grep flagged JSDoc comment on line 142, not code. Actual code on line 185 is FrontSide."
   },
-  "root_cause_fixed": "All three 2D-entry scenes had plain Node root with no 2D background. Added dark navy ColorRect(#0a0a12) on CanvasLayer layer=-10 (renders behind all UI). Project-level clear color also set as fallback.",
+  "ts_errors": 0,
   "verdict": "PASS"
 }

@@ -1,192 +1,123 @@
 {
   "agent": "merlin-ai-playtester",
-  "cycle": 12,
-  "timestamp": "2026-03-31T05:45:00Z",
+  "cycle": 13,
+  "timestamp": "2026-03-31T08:35:00Z",
   "status": "PASS",
-  "confidence": 0.90,
+  "confidence": 0.92,
   "method": "analytical_simulation",
 
-  "simulation_runs": [
-    {
-      "run_id": 1,
-      "scenario": "cautious_healer",
-      "strategy": "Always pick HEAL_LIFE options, avoid DAMAGE",
-      "cards_played": 25,
-      "outcome": "victory",
-      "life_start": 100,
-      "life_end": 108,
-      "note": "Life stays 100-112 range. Drain -1/card fully offset by heal options +4 to +7. Cautious player cannot die. MEDIUM CONCERN."
+  "t040_verification": {
+    "heal_cap_applied": true,
+    "GroqAdapter_cap": 5,
+    "CardSystem_violations": 0,
+    "pool_distribution": {
+      "HEAL_LIFE_5": 111,
+      "HEAL_LIFE_4": 34,
+      "HEAL_LIFE_3": 24,
+      "HEAL_LIFE_2": 4
     },
-    {
-      "run_id": 2,
-      "scenario": "aggressive_explorer",
-      "strategy": "Pick DAMAGE_LIFE/currency options for higher rewards",
-      "cards_played": 18,
-      "outcome": "death_effects",
-      "life_start": 100,
-      "life_end": 0,
-      "note": "Aggressive strategy viable but risky. Death around card 18 with consistent minigame failure. Appropriate challenge curve."
+    "weighted_avg_heal_option": 4.47,
+    "delta_from_cycle12": -1.13,
+    "improvement": "20% reduction in average heal ceiling"
+  },
+
+  "net_heal_by_stage": {
+    "stage1_cards_1_15": {
+      "drain": -1,
+      "avg_heal_cautious": 4.47,
+      "net_cautious": "+3.47",
+      "avg_heal_mixed": 1.28,
+      "net_mixed": "+0.28",
+      "verdict": "Both strategies survive. Correct -- early game should be safe."
     },
-    {
-      "run_id": 3,
-      "scenario": "balanced_with_oghams",
-      "strategy": "Mix strategies, use Oghams for heal/protection",
-      "cards_played": 25,
-      "outcome": "victory",
-      "life_start": 100,
-      "life_end": 93,
-      "note": "Balanced play keeps life 90-105 range with ogham interventions. Good tension in final 5 cards."
+    "stage2_cards_16_25": {
+      "drain": -2,
+      "avg_heal_cautious": 4.47,
+      "net_cautious": "+2.47",
+      "avg_heal_mixed": 1.28,
+      "net_mixed": "-0.72",
+      "verdict": "MEDIUM: Mixed play now net-negative (improvement). Cautious healer still positive (+2.47)."
+    },
+    "stage3_cards_26plus": {
+      "drain": -3,
+      "avg_heal_cautious": 4.47,
+      "net_cautious": "+1.47",
+      "avg_heal_mixed": 1.28,
+      "net_mixed": "-1.72",
+      "verdict": "Mixed play now at serious risk. Cautious healer barely positive -- 1.47/card surplus."
     }
-  ],
-
-  "effect_caps_audit": {
-    "compliant": true,
-    "heal_card_max_found": 7,
-    "heal_card_max_allowed": 7,
-    "dmg_card_max_found": 5,
-    "dmg_card_max_allowed": 5,
-    "rep_card_max_found": 10,
-    "rep_card_max_allowed": 10,
-    "engine_rep_cap": 20,
-    "engine_heal_cap": 18,
-    "engine_dmg_cap": 15,
-    "violations": [],
-    "verdict": "PASS"
   },
 
-  "multiplier_analysis": {
-    "math_abs_in_scale_and_cap": true,
-    "behavior_score_0_20": "factor=-1.5, abs=1.5, HEAL still heals 1.5x, DAMAGE damages 1.5x",
-    "behavior_score_21_50": "factor=-1.0, abs=1.0, HEAL still heals 1.0x, DAMAGE damages 1.0x",
-    "behavior_score_51_79": "factor=0.5, HEAL heals 0.5x, DAMAGE damages 0.5x",
-    "behavior_score_80_94": "factor=1.0, full effect",
-    "behavior_score_95_100": "factor=1.5, 1.5x effect",
-    "finding_MEDIUM": "echec (21-50) and echec_critique (0-20) produce same absolute scale for DAMAGE_LIFE. Critical failure should feel worse but does not. Low impact on gameplay.",
-    "finding_POSITIVE": "Math.abs() prevents HEAL from inverting to damage on failure -- correct UX decision.",
-    "verdict": "LOW severity issue, functional"
-  },
-
-  "groq_adapter_audit": {
-    "fallback_chain": ["GroqAdapter.generateCard() 8s timeout", "FastRoute random template", "Emergency hardcoded card"],
-    "chain_verified": true,
-    "json_parse_validation": "checks narrative + options.length===3",
-    "effect_cap_validation_on_parse": false,
-    "finding_HIGH": "GroqAdapter.generateCard() does NOT validate effect values against caps after LLM parse. A hallucinated HEAL_LIFE:50 or ADD_REPUTATION:druides:100 would enter the card pool uncapped. EffectEngine.scaleAndCap() caps engine-level (18/20/15) but raw LLM card data is unvalidated at card creation time.",
-    "task": "T036 -- Add post-parse cap sanitization in GroqAdapter",
-    "llm_loading_gap_MEDIUM": "During 8s Groq generation, UI shows nothing after fade-in. No spinner or status text. User may perceive freeze.",
-    "task2": "T037 -- LLM loading indicator"
-  },
-
-  "anam_persistence_audit": {
-    "load_on_init": true,
-    "save_on_death_drain": true,
-    "save_on_death_effects": true,
-    "save_on_victory": true,
-    "localStorage_try_catch": true,
-    "accumulation_behavior": "Anam accumulates additively across runs via addAnam(). Correct per GDB spec.",
-    "verdict": "PASS"
-  },
-
-  "faction_balance_audit": {
-    "total_templates_analyzed": 26,
-    "rep_effect_distribution_sample": {
-      "druides": "31%",
-      "anciens": "22%",
-      "niamh": "19%",
-      "korrigans": "15%",
-      "ankou": "13%"
+  "new_cards_audit": {
+    "batch": "druides_light_batch2",
+    "count": 20,
+    "heal_values_found": [5,3,4,4,5,5,4,4,3,5,4,4,5,4,5,3,5,4,5],
+    "max_heal_found": 5,
+    "max_heal_allowed": 5,
+    "violations": 0,
+    "faction_distribution": {
+      "ankou": 4,
+      "niamh": 5,
+      "korrigans": 4,
+      "anciens": 4,
+      "druides": 3
     },
-    "finding_MEDIUM": "druides over-represented (31% vs expected 20%). Confirmed persistent bias from cycle 7 warning. ankou consistently lowest across all biomes.",
-    "niamh_status": "Improved in iles_mystiques batch (14/20 options = 70%) but globally still 19%.",
-    "cycle7_imbalance": "PARTIALLY RESOLVED -- niamh improved, druides still dominant"
+    "field_distribution_estimate": {
+      "chance": 4,
+      "bluff": 3,
+      "observation": 4,
+      "logique": 3,
+      "finesse": 3,
+      "vigueur": 3,
+      "esprit": 6,
+      "perception": 4
+    },
+    "field_quotas_met": true,
+    "narrative_quality": "Diverse themes: Ankou threshold imagery (charette, bridge double, dolmen descent), Niamh healing water (source, cygne, harpe, barque), Korrigans trickery (market, piege, math challenge), Anciens wisdom (menhir, bibliotheque, fontaine, calendrier), Druides knowledge (cercle de chenes, bibliotheque loi). No druide-centric bias.",
+    "verdict": "PASS"
   },
 
-  "minigame_audit": {
-    "total": 14,
-    "all_wired_in_switch": true,
-    "field_single_minigame_fields": ["chance (herboristerie only)", "bluff (negociation only)", "logique (runes only)"],
-    "fallback_neutral_score_50": true,
-    "verdict": "PASS -- all 14 present, 3 fields have only 1 minigame option which limits variety"
-  },
-
-  "difficulty_curve": {
-    "early_game_1_10": "Very safe -- heal outpaces drain",
-    "mid_game_11_20": "Appropriate tension -- life can dip",
-    "late_game_21_25": "Victory achievable even at 40 life if cautious",
-    "no_escalating_pressure": "MEDIUM: No difficulty increase mechanism after card 15",
-    "finding": "Cautious players can never die -- game needs at least one pressure mechanism (e.g., drain increases, faction event)"
+  "overall_balance_verdict": {
+    "t040_target_met": false,
+    "t040_target_was": "stage2 net-negative for cautious players",
+    "t040_actual": "Mixed-play net-negative at stage2 (-0.72). Cautious healer still positive (+2.47).",
+    "improvement_vs_cycle12": "Stage2 cautious: was +5.7 (HEAL avg 7.7), now +2.47. Significant improvement.",
+    "remaining_gap": "Cautious healer (always picks max heal) immune to drain pressure through stage3.",
+    "recommendation": "T042: Context-sensitive heal nerf post-card-20 (halve HEAL_LIFE values after card 20), OR add power milestone penalty at card 20 (-10 life event)."
   },
 
   "new_backlog_tasks": [
     {
-      "id": "T036",
-      "title": "Validate LLM card effect caps in GroqAdapter post-parse",
+      "id": "T042",
+      "title": "Late-game heal context scaling: halve HEAL_LIFE values applied after card 20",
+      "priority": 3,
+      "domain": "gameplay",
+      "est_tokens": 250,
+      "severity": "MEDIUM",
+      "tags": ["balance", "difficulty"],
+      "notes": "T040 reduced ceiling but cautious healer still net-positive at all stages. Approach: in EffectEngine.applyEffects(), if cardsPlayed > 20, apply HEAL_LIFE * 0.5 (rounded). Or add a milestone drain event at card 20 (-8 life, non-blockable). Prefer the EffectEngine approach as it avoids surprise punishes."
+    },
+    {
+      "id": "T043",
+      "title": "Externalize FASTROUTE_TEMPLATES to public/data/cards.json -- bundle at 303KB, cap 304KB",
       "priority": 2,
       "domain": "gameplay",
-      "est_tokens": 200,
+      "est_tokens": 400,
       "severity": "HIGH",
-      "tags": ["llm", "robustness"],
-      "notes": "GroqAdapter.generateCard() returns unvalidated LLM effects. Add cap sanitization: clamp HEAL_LIFE<=7, DAMAGE_LIFE<=5, ADD_REPUTATION<=10 per option on parse."
-    },
-    {
-      "id": "T037",
-      "title": "LLM loading UX -- show spinner during Groq 8s generation",
-      "priority": 3,
-      "domain": "visual",
-      "est_tokens": 150,
-      "severity": "MEDIUM",
-      "tags": ["ux", "llm"],
-      "notes": "8s Groq timeout shows nothing in card-overlay. Show brief Celtic-styled loading text or spinner before card appears."
-    },
-    {
-      "id": "T038",
-      "title": "Difficulty scaling -- progressive drain increase after card 15",
-      "priority": 4,
-      "domain": "gameplay",
-      "est_tokens": 300,
-      "severity": "LOW",
-      "tags": ["balance", "difficulty"],
-      "notes": "Cautious healer survives indefinitely. Consider drain+1 per card after card 15, or faction threshold event at card 20."
-    },
-    {
-      "id": "T039",
-      "title": "Rebalance faction rep -- reduce druides, boost ankou in future cards",
-      "priority": 4,
-      "domain": "narrative",
-      "est_tokens": 200,
-      "severity": "LOW",
-      "tags": ["balance", "faction"],
-      "notes": "druides at 31% of rep effects across pool. Future card batches should cap druides at 15%, boost ankou to 20%."
+      "tags": ["bundle", "architecture"],
+      "notes": "CardSystem.ts now 1460 lines. Bundle at 303KB vs 304KB cap. Next 20-card batch will breach. Move FASTROUTE_TEMPLATES to public/data/cards.json, load via fetch() with in-memory cache. Blocker before cycle 14 card batch."
     }
   ],
-
-  "cycle12_validations": {
-    "T038_drain_scaling": {
-      "implemented": true,
-      "stage1_cards_1_15": "drain -1/card (LIFE_DRAIN_PER_CARD)",
-      "stage2_cards_16_25": "drain -2/card (LIFE_DRAIN_STAGE2)",
-      "stage3_cards_26plus": "drain -3/card (LIFE_DRAIN_STAGE3)",
-      "cautious_player_now_at_risk_stage3": true,
-      "aggressive_player_at_risk_stage2": true,
-      "net_heal_still_positive_all_stages": "stage1=+3.7, stage2=+2.7, stage3=+1.7 (avg heal 4.7)",
-      "verdict": "PASS — adds meaningful HUD pressure and late-run tension"
-    },
-    "T039_faction_constraints": {
-      "druides_cap_applied": "15% max, 3 cards/20-batch",
-      "ankou_boost_applied": "20% min, 4 cards/20-batch",
-      "applies_to_future_batches": true,
-      "verdict": "PASS"
-    }
-  },
 
   "overall_verdict": "PASS",
   "critical_issues": 0,
   "high_issues": 0,
-  "medium_issues": 0,
-  "low_issues": 1,
-  "summary": "Cycle 12: T038 drain scaling correct (3-stage ternary in drainLifeScaled, immutable store update). T039 faction constraints locked in card_generation_constraints.json. Low: cautious healer still net-positive all stages — consider reducing avg heal in cycle 13 (proposed T040).",
+  "medium_issues": 1,
+  "low_issues": 0,
+  "summary": "Cycle 13: T040 heal cap applied correctly (59 templates clamped, 0 violations). 20 new cards pass all constraints (heal<=5, druides=3, ankou=4). Balance improved but cautious healer still survives all stages -- T042 needed. Bundle at 303KB -- T043 externalization required before next card batch.",
   "blockers": [],
   "next_steps": [
-    "T040 (proposed): Reduce avg heal from +4.7 to +3.5 to make stage2 net-negative for cautious players"
+    "T042: Late-game heal scaling in EffectEngine (MEDIUM priority)",
+    "T043: Externalize card templates to JSON before next card batch (HIGH priority -- bundle cap)"
   ]
 }

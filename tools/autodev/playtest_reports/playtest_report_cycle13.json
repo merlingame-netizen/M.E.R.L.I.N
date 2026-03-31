@@ -1,0 +1,75 @@
+{
+  "cycle": 13,
+  "timestamp": "2026-03-31T08:35:00Z",
+  "method": "analytical_simulation",
+
+  "tasks_completed": {
+    "T040": {
+      "description": "HEAL_LIFE cap reduced 7->5 in GroqAdapter + CardSystem (59 templates clamped) + card_generation_constraints.json",
+      "status": "DONE",
+      "balance_impact": "20% reduction in avg heal ceiling. Mixed-play now net-negative at stage2 (-0.72/card). Cautious healer still positive (+2.47 at stage2)."
+    },
+    "T005": {
+      "description": "Fog shader optimized: 44% fewer fragment ops, 50% rasterization reduction (FrontSide), 29% overdraw reduction",
+      "status": "DONE",
+      "perf_impact": "~35-44% fragment shader cost reduction on GTX 1060 estimated"
+    },
+    "T041": {
+      "description": "20 new FastRoute cards added (druides_light_batch2): druides=3, ankou=4, niamh=5, anciens=4, korrigans=4",
+      "status": "DONE",
+      "cards_total": 186,
+      "heal_violations": 0
+    }
+  },
+
+  "balance_simulation": {
+    "runs": [
+      {
+        "scenario": "cautious_healer_post_T040",
+        "cards_played": 25,
+        "outcome": "victory",
+        "life_end": 102,
+        "note": "Avg heal 4.47/card. Stage2 net +2.47. Cautious player still cannot die. MEDIUM concern persists."
+      },
+      {
+        "scenario": "mixed_play_post_T040",
+        "cards_played": 25,
+        "outcome": "victory_low_life",
+        "life_end": 38,
+        "note": "Mixed strategy now net-negative at stage2 (-0.72/card). Real tension in cards 16-25."
+      },
+      {
+        "scenario": "aggressive_explorer_post_T040",
+        "cards_played": 20,
+        "outcome": "death",
+        "life_end": 0,
+        "note": "Aggressive play at risk by card 20 with consistent minigame failure. Appropriate."
+      }
+    ]
+  },
+
+  "new_tasks_proposed": [
+    {
+      "id": "T042",
+      "title": "Late-game heal scaling: halve HEAL_LIFE after card 20 in EffectEngine",
+      "priority": 3,
+      "domain": "gameplay",
+      "severity": "MEDIUM"
+    },
+    {
+      "id": "T043",
+      "title": "Externalize FASTROUTE_TEMPLATES to JSON -- bundle at 303KB, 1KB from cap",
+      "priority": 2,
+      "domain": "gameplay",
+      "severity": "HIGH"
+    }
+  ],
+
+  "regression_gate": {
+    "ts_errors": 0,
+    "bundle_kb_app": 303,
+    "bundle_cap_kb": 304,
+    "runtime_errors": 0,
+    "verdict": "PASS"
+  }
+}

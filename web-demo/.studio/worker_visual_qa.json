@@ -1,139 +1,56 @@
 {
   "agent": "merlin-visual-qa",
-  "cycle": 12,
-  "timestamp": "2026-03-31T05:45:00Z",
+  "cycle": 13,
+  "timestamp": "2026-03-31T08:35:00Z",
   "status": "PASS",
-  "confidence": 0.94,
+  "confidence": 0.95,
   "method": "source_file_analysis_no_editor",
 
-  "hud_audit": {
-    "file": "web-demo/src/ui/HUD.ts",
-    "elements_present": {
-      "life_bar": true,
-      "life_fill_gradient": true,
-      "faction_bars_x5": true,
-      "faction_labels_x5": true,
-      "anam_counter": true,
-      "biome_currency": true,
-      "cards_count": true,
-      "biome_name": true
+  "fog_optimization_audit": {
+    "file": "web-demo/src/scenes/CoastBiome.ts",
+    "checks": {
+      "FrontSide_applied": true,
+      "DoubleSide_in_code": false,
+      "DoubleSide_in_comment_only": true,
+      "uDensity_value": 0.25,
+      "uDensity_was": 0.35,
+      "mod_time_precision": true,
+      "noise_trig_ops": 2,
+      "edgeFade_radial": true,
+      "smoothstep_in_fog_shader": 1,
+      "geometry_segments": "1x1 (unchanged, already minimal)"
     },
-    "faction_colors_defined": true,
-    "hud_z_index": 10,
-    "pointer_events_none": true,
-    "dynamic_build_faction_panel": true,
-    "verdict": "PASS -- all 8 HUD elements present and correctly styled"
-  },
-
-  "loading_screen_audit": {
-    "file": "web-demo/index.html",
-    "spinner_present": true,
-    "spinner_type": "double-ring counter-rotating (::before + ::after pseudo-elements)",
-    "spinner_color": "#cd853f (Celtic gold)",
-    "spinner_size_px": 64,
-    "loading_text": "M.E.R.L.I.N. (h1) + status text (p)",
-    "loading_z_index": 100,
-    "fade_out_on_init": "opacity transition 0.5s then display:none",
+    "false_positive_resolved": "DoubleSide grep hit line 142 (JSDoc). Actual material code line 185: THREE.FrontSide.",
+    "visual_regression_risk": "LOW -- fog slightly less dense (0.25 vs 0.35) and circular edge fade vs rectangular. Aesthetically acceptable. Fog still visible and animated.",
     "verdict": "PASS"
   },
 
-  "card_overlay_audit": {
-    "css_present": true,
-    "visible_class_adds_flex": true,
-    "z_index": 20,
-    "background_rgba": "rgba(10,10,18,0.85)",
-    "card_container_max_width": "700px",
-    "narrative_italic_style": true,
-    "option_hover_transitions": true,
+  "hud_regression_check": {
+    "file": "web-demo/src/ui/HUD.ts",
+    "changed_this_cycle": false,
+    "verdict": "NO REGRESSION (unchanged)"
+  },
+
+  "card_overlay_regression_check": {
+    "changed_this_cycle": false,
+    "verdict": "NO REGRESSION (unchanged)"
+  },
+
+  "coastbiome_update_loop": {
+    "fog_update_still_wired": true,
+    "uTime_updated_each_frame": true,
+    "ocean_animation_intact": true,
     "verdict": "PASS"
   },
 
-  "minigame_overlay_audit": {
-    "css_present": true,
-    "visible_class_adds_flex": true,
-    "z_index": 30,
-    "background_rgba": "rgba(10,10,18,0.90)",
-    "container_element": "#minigame-container",
-    "verdict": "PASS"
-  },
-
-  "fade_overlay_audit": {
-    "css_present": true,
-    "z_index": 50,
-    "transition_duration_ms": 800,
-    "initial_opacity": 0,
-    "active_class_sets_opacity_1": true,
-    "verdict": "PASS"
-  },
-
-  "white_screen_risk_web_demo": {
-    "background_html": "#0a0a12 (dark navy) on html+body",
-    "background_app": "Three.js canvas covers app div",
-    "loading_screen_covers_until_ready": true,
-    "three_js_scene_builds_before_hide_loading": true,
-    "risk_level": "NONE in web-demo",
-    "note": "T001 white screen issue is Godot engine scenes only, not web-demo. web-demo has proper #0a0a12 fallback background at all times."
-  },
-
-  "groq_loading_ux_gap": {
-    "severity": "MEDIUM",
-    "finding": "After card fade-in (300ms fadeOut), game awaits showCard() which first calls getLLMAdapter() and llm.generateCard() (up to 8s). During this await, the card-overlay is NOT yet shown (showCard() shows it after generation). User sees black fade screen for up to 8 seconds with no feedback.",
-    "location": "web-demo/src/main.ts lines 120-148",
-    "recommendation": "Show card-overlay with 'Merlin consulte les etoiles...' text immediately before LLM call, replace with actual card when ready.",
-    "task": "T037"
-  },
-
-  "regression_check_cycle10": {
-    "loading_screen_present_since_cycle10": true,
-    "vite_chunks_intact": true,
-    "hud_unchanged_since_cycle2": true,
-    "ogham_panel_unchanged_since_cycle3": true,
-    "try_catch_guards_unchanged_since_cycle9": true,
-    "minigame_switch_14_cases": true,
-    "no_css_removed": true,
-    "verdict": "NO REGRESSION since cycle 10"
-  },
-
-  "visual_regression_items": [
-    {
-      "severity": "MEDIUM",
-      "type": "UX_GAP",
-      "description": "8s LLM loading blackout in card overlay",
-      "status": "NEW FINDING",
-      "task": "T037"
-    }
-  ],
-
-  "screenshots_check": {
-    "directory": "tools/autodev/playtest_reports/screenshots/",
-    "available": false,
-    "white_screen_png_under_5kb": "not applicable -- no screenshots",
-    "note": "No headless screenshots available. Visual assessment is text/code analysis only."
-  },
-
-  "t001_godot_fix_verified": {
-    "scenes_fixed": ["scenes/Menu3DPC.tscn", "scenes/MerlinGame.tscn", "scenes/MerlinCabinHub.tscn"],
-    "technique": "CanvasLayer layer=-10 + ColorRect anchors_preset=15 color=#0a0a12 inserted after root Node in each .tscn",
-    "project_godot_clear_color": "Color(0.039,0.039,0.071,1) added to [rendering] section",
-    "validate_step0": "EXIT:0 — zero new parse errors from scene changes",
-    "white_screen_resolved": true
-  },
-
-  "regression_check_since_cycle11": {
-    "web_demo_changed_files": ["src/game/Constants.ts (4 new drain constants)", "src/game/Store.ts (drainLifeScaled action)", "src/main.ts (drainLifeScaled call)"],
-    "hud_unchanged": true,
-    "overlays_unchanged": true,
-    "loading_screen_unchanged": true,
-    "css_unchanged": true,
-    "verdict": "NO REGRESSION"
-  },
+  "visual_regression_items": [],
 
   "overall_verdict": "PASS",
   "critical_issues": 0,
   "high_issues": 0,
   "medium_issues": 0,
   "low_issues": 0,
-  "summary": "Cycle 12: T001 white scenes FIXED — CanvasLayer+ColorRect background in all 3 entry scenes. No web-demo visual regressions. All 8 HUD elements, all overlays, loading screen unchanged. T037 (LLM loading hint) resolved in cycle 11. Zero issues.",
+  "summary": "Cycle 13: Fog shader optimization visually safe. All other visual systems unchanged. No regressions.",
   "blockers": [],
   "next_steps": []
 }
