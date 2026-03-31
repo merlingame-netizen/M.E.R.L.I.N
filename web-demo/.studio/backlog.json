@@ -1,23 +1,23 @@
 {
   "_comment": "Remplace BACKLOG.md -- format compact pour studio-director v2",
-  "updated": "2026-03-31T08:40:00Z",
+  "updated": "2026-03-31T21:30:00Z",
   "tasks": [
     {
       "id": "T043",
       "title": "Externalize FASTROUTE_TEMPLATES to public/data/cards.json -- bundle at 303KB, 1KB from cap",
       "priority": 2,
-      "status": "open",
+      "status": "done",
       "domain": "gameplay",
       "est_tokens": 400,
       "depends_on": [],
       "tags": ["bundle", "architecture"],
-      "notes": "CardSystem.ts 1460 lines. Next 20-card batch will breach 304KB cap. Move FASTROUTE_TEMPLATES to public/data/cards.json, load via fetch() with in-memory cache. Blocker before cycle 14 card batch."
+      "notes": "DONE cycle 14. CardSystem.ts now loads via fetch() from public/data/cards.json. Bundle dropped to 91KB app."
     },
     {
       "id": "T042",
       "title": "Late-game heal scaling: halve HEAL_LIFE applied after card 20 in EffectEngine",
       "priority": 3,
-      "status": "open",
+      "status": "done",
       "domain": "gameplay",
       "est_tokens": 250,
       "depends_on": [],

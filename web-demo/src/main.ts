@@ -76,6 +76,7 @@ async function main(): Promise<void> {
   // Start game
   store.getState().startRun('cotes_sauvages');
   updateHUD();
+  showBiomeToast('cotes_sauvages');
 
   // --- Gameplay Loop ---
   await gameLoop(sceneManager, rail, biomeResult.update);
@@ -334,6 +335,71 @@ function showLLMLoadingHint(): void {
 
 function hideLLMLoadingHint(): void {
   document.getElementById(LLM_HINT_ID)?.remove();
+}
+
+// --- Biome toast (T045: 2s overlay shown on run start and biome entry) ---
+
+const BIOME_TOAST_ID = 'biome-toast';
+
+/** Biome display labels (French, shown in toast). */
+const BIOME_LABELS: Readonly<Record<string, string>> = {
+  cotes_sauvages: 'Cotes Sauvages',
+  foret_broceliande: 'Foret de Broceliande',
+  marais_korrigans: 'Marais des Korrigans',
+  landes_bruyere: 'Landes de Bruyere',
+  cercles_pierres: 'Cercles de Pierres',
+  villages_celtes: 'Villages Celtes',
+  collines_dolmens: 'Collines aux Dolmens',
+  iles_mystiques: 'Iles Mystiques',
+} as const;
+
+/**
+ * Show a 2-second biome name toast overlay.
+ * Fades in over 300 ms, stays visible for 1.4 s, fades out over 300 ms.
+ * Safe to call during any phase — removes itself automatically.
+ */
+function showBiomeToast(biomeId: string): void {
+  // Remove any existing toast immediately
+  document.getElementById(BIOME_TOAST_ID)?.remove();
+
+  const label = BIOME_LABELS[biomeId] ?? biomeId;
+  const toast = document.createElement('div');
+  toast.id = BIOME_TOAST_ID;
+  toast.setAttribute('aria-live', 'polite');
+  toast.setAttribute('role', 'status');
+  toast.style.cssText = [
+    'position:fixed',
+    'bottom:80px',
+    'left:50%',
+    'transform:translateX(-50%)',
+    'background:rgba(10,10,18,0.88)',
+    'color:rgba(205,133,63,0.95)',
+    'font-family:system-ui',
+    'font-size:15px',
+    'font-weight:600',
+    'letter-spacing:2px',
+    'text-transform:uppercase',
+    'padding:10px 28px',
+    'border-radius:24px',
+    'border:1px solid rgba(205,133,63,0.4)',
+    'z-index:55',
+    'pointer-events:none',
+    'opacity:0',
+    'transition:opacity 0.3s ease',
+  ].join(';');
+  toast.textContent = label;
+  document.body.appendChild(toast);
+
+  // Fade in
+  requestAnimationFrame(() => {
+    requestAnimationFrame(() => { toast.style.opacity = '1'; });
+  });
+
+  // Fade out after 1.7 s, then remove
+  setTimeout(() => {
+    toast.style.opacity = '0';
+    setTimeout(() => { toast.remove(); }, 300);
+  }, 1700);
 }
 
 // --- Anam cross-run persistence (localStorage) ---
