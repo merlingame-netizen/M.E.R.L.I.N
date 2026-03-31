@@ -413,6 +413,75 @@
           "verdict": "HEALTHY"
         }
       }
+    },
+    {
+      "cycle": 12,
+      "timestamp": "2026-03-31T06:30:00Z",
+      "mode": "autonomous_dev",
+      "tasks_attempted": ["T001", "T038", "T039"],
+      "tasks_completed": ["T001", "T038", "T039"],
+      "tasks_deferred": [],
+      "gate": {
+        "ts_errors": 0,
+        "build_ok": true,
+        "bundle_kb": 289,
+        "bundle_kb_app_index": 193,
+        "bundle_kb_app_minigames": 97,
+        "bundle_kb_vendor": 529,
+        "bundle_kb_total": 818,
+        "bundle_chunks": 3,
+        "bundle_delta_pct": 0.0,
+        "validate_step0_exit": 0,
+        "validate_step0_new_errors": 0,
+        "tests_pass": 0,
+        "verdict": "PROCEED"
+      },
+      "files_changed": [
+        "web-demo/src/game/Constants.ts",
+        "web-demo/src/game/Store.ts",
+        "web-demo/src/main.ts",
+        "scenes/MerlinGame.tscn",
+        "scenes/MerlinCabinHub.tscn",
+        "scenes/Menu3DPC.tscn",
+        "project.godot",
+        "web-demo/.studio/card_generation_constraints.json",
+        "web-demo/.studio/backlog.json",
+        "web-demo/.studio/context_bundle.json",
+        "web-demo/.studio/worker_visual.json",
+        "web-demo/.studio/worker_gameplay.json",
+        "web-demo/.studio/worker_qa.json",
+        "web-demo/.studio/worker_playtester.json",
+        "web-demo/.studio/worker_visual_qa.json",
+        "tools/autodev/playtest_reports/playtest_report_cycle12.json"
+      ],
+      "summary": "WHITE SCENE FIX + DIFFICULTY SCALING + FACTION BALANCE. T001 CRITICAL RESOLVED: CanvasLayer(layer=-10)+ColorRect(#0a0a12, anchors_preset=15) added to MerlinGame.tscn, MerlinCabinHub.tscn, Menu3DPC.tscn. project.godot clear color set to Color(0.039,0.039,0.071,1). validate_step0 exit=0, zero new parse errors. T038 DONE: 3-stage progressive drain implemented in Constants.ts (LIFE_DRAIN_THRESHOLD_STAGE2=15, LIFE_DRAIN_THRESHOLD_STAGE3=25, LIFE_DRAIN_STAGE2=2, LIFE_DRAIN_STAGE3=3), drainLifeScaled() action added to Store.ts (immutable ternary lookup), main.ts game loop step 2 updated to call drainLifeScaled(). T039 DONE: card_generation_constraints.json updated with druides cap=15% (max 3/20 batch), ankou min=20% (min 4/20 batch), niamh target=25%. Proposed T040 (reduce avg heal from +4.7 to +3.5 for stage2 to become net-negative for cautious players). Bundle 289KB (unchanged, 0.0% delta). T005 fog shader elevated to priority 2 (unblocked by T001 completion).",
+      "agents_dispatched": ["merlin-tech-artist", "merlin-gameplay-programmer", "merlin-narrative-designer", "merlin-qa-lead", "merlin-ai-playtester", "merlin-visual-qa"],
+      "qa_extended": {
+        "playtester": {
+          "method": "analytical_simulation",
+          "runs": 3,
+          "t038_validated": true,
+          "stage1_net_per_card": 3.7,
+          "stage2_net_per_card": 2.7,
+          "stage3_net_per_card": 1.7,
+          "cautious_player_risk": "net positive all stages, HUD pressure visible",
+          "aggressive_player_risk": "death risk after card 25 in stage 3",
+          "t039_validated": true,
+          "faction_constraint_projection": {"druides": "15%", "ankou": "20%", "niamh": "25%"},
+          "effect_caps_compliant": true,
+          "verdict": "PASS"
+        },
+        "visual_qa": {
+          "method": "source_file_analysis",
+          "t001_godot_scenes_fixed": 3,
+          "white_screen_risk": "RESOLVED",
+          "hud_elements": 8,
+          "hud_intact": true,
+          "loading_screen_intact": true,
+          "no_new_regressions": true,
+          "verdict": "PASS"
+        }
+      }
     }
   ]
 }

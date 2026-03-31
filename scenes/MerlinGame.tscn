@@ -6,4 +6,15 @@
 [node name="MerlinGame" type="Node"]
 script = ExtResource("1_controller")
 
+[node name="Background" type="CanvasLayer" parent="."]
+layer = -10
+
+[node name="BG" type="ColorRect" parent="Background"]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+color = Color(0.039, 0.039, 0.071, 1)
+
 [node name="MerlinGameUI" parent="." instance=ExtResource("2_ui_scene")]

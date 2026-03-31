@@ -74,3 +74,4 @@ low_spec_mode=true
 
 renderer/rendering_method="gl_compatibility"
 renderer/rendering_method.mobile="gl_compatibility"
+environment/defaults/default_clear_color=Color(0.039, 0.039, 0.071, 1)

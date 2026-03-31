@@ -1,14 +1,14 @@
 {
   "_comment": "Contexte pre-calcule par le director en debut de cycle. Lu par les agents a la place de tous les docs.",
   "_usage": "Director ecrit ce fichier avant de dispatcher. Agents lisent UNIQUEMENT ce fichier pour le contexte.",
-  "cycle": 11,
-  "timestamp": "2026-03-31T03:00:00Z",
-  "mode": "human_tester_mode",
-  "focus": "extensive_playtesting_visual_qa_metrics",
+  "cycle": 12,
+  "timestamp": "2026-03-31T06:00:00Z",
+  "mode": "autonomous_dev",
+  "focus": "T001_white_scenes_CRITICAL + T038_difficulty_scaling + T039_faction_balance",
   "selected_tasks": [
-    {"id": "C11-PT", "title": "Full AI playtesting -- GroqAdapter+Anam+14 minigames", "domain": "playtester", "agent": "merlin-ai-playtester"},
-    {"id": "C11-VQ", "title": "Visual QA regression check since cycle 10", "domain": "visual", "agent": "merlin-visual-qa"},
-    {"id": "C11-MA", "title": "Cross-cycle metrics analysis cycles 1-11", "domain": "metrics", "agent": "merlin-metrics-analyzer"}
+    {"id": "T001", "title": "Fix white/blank Godot scenes -- add CanvasLayer+ColorRect, fix MerlinCabinHub parse error", "domain": "visual", "agent": "merlin-tech-artist", "priority": 1},
+    {"id": "T038", "title": "Difficulty scaling -- progressive drain -1 to -2 after card 15", "domain": "gameplay", "agent": "merlin-gameplay-programmer", "priority": 3},
+    {"id": "T039", "title": "Faction balance -- cap druides at 15%, boost ankou to 20% in card_generation_constraints.json", "domain": "narrative", "agent": "merlin-narrative-designer", "priority": 4}
   ],
   "state_summary": {
     "all_dev_tasks_done_or_blocked": true,
@@ -46,52 +46,59 @@
       "DAMAGE_LIFE_max": 15
     },
     "score_bonus_cap_multiplier": 2.0,
-    "life_drain_per_card": 1,
+    "life_drain_base": 1,
+    "life_drain_late_game": 2,
+    "late_game_threshold_card": 15,
     "life_max": 100,
     "factions": ["druides", "anciens", "korrigans", "niamh", "ankou"],
+    "faction_caps_cycle12": {"druides": 0.15, "ankou": 0.20},
     "minigame_neutral_fallback_score": 50,
     "victory_condition": "cardsPlayed >= 25 AND rail.isComplete()",
     "walk_seconds": 6
   },
   "known_issues": {
-    "T001": "White scenes Godot editor -- not web-demo, requires editor, deferred",
-    "T005": "Fog shader perf blocked by T001 -- deferred"
+    "T001": "White scenes: plain Node root in .tscn files, no ColorRect background. MerlinCabinHub also has parse error in linked script. UNBLOCKED: .tscn text editing preferred. Pattern: insert CanvasLayer(layer=-10)+ColorRect(anchors_preset=15, color=Color(0.04,0.04,0.07,1)) nodes after root [node] line.",
+    "T038": "Drain -1/card fully offset by avg +4.7 heal. Fix: after card 15, drain becomes -2. One conditional in game loop drain step.",
+    "T039": "Druides at 31% of rep effects in 166 templates (target 20%). Fix: update card_generation_constraints.json caps: druides_max=0.15, ankou_min=0.20.",
+    "T005": "Fog shader perf -- open but low priority after T001"
   },
-  "cycle10_gate": {
+  "tscn_fix_pattern": {
+    "description": "Insert after root [node] block, before first child node",
+    "godot_version_note": "Godot 4.x .tscn format -- no gd_scene version needed for nodes",
+    "nodes_to_add": [
+      "[node name=\"Background\" type=\"CanvasLayer\" parent=\".\"]",
+      "layer = -10",
+      "",
+      "[node name=\"BG\" type=\"ColorRect\" parent=\"Background\"]",
+      "anchors_preset = 15",
+      "anchor_right = 1.0",
+      "anchor_bottom = 1.0",
+      "color = Color(0.04, 0.04, 0.07, 1)"
+    ]
+  },
+  "cycle11_gate": {
     "ts_errors": 0,
     "bundle_kb_app": 289,
     "smoke_pass": true,
     "build_ok": true,
     "verdict": "PROCEED"
   },
-  "regression_thresholds_cycle11": {
+  "regression_thresholds_cycle12": {
     "ts_errors": "== 0 (BLOCK)",
     "bundle_kb_app_max": 304,
     "runtime_errors": "== 0 (BLOCK)",
     "smoke_pass": "true (BLOCK)"
   },
   "cycle_history_summary": {
-    "c1":  {"bundle_kb": 624, "minigames": 1, "cards": 20},
-    "c2":  {"bundle_kb": 636, "minigames": 2, "cards": 20},
-    "c3":  {"bundle_kb": 659, "minigames": 3, "cards": 20},
-    "c4":  {"bundle_kb": 683, "minigames": 4, "cards": 20},
-    "c5":  {"bundle_kb": 709, "minigames": 6, "cards": 20},
     "c6":  {"bundle_kb_app": 208, "minigames": 8, "cards": 20, "note": "bundle optimization"},
     "c7":  {"bundle_kb_app": 242, "minigames": 12, "cards": 20},
     "c8":  {"bundle_kb_app": 283, "minigames": 14, "cards": 40},
     "c9":  {"bundle_kb_app": 284, "minigames": 14, "cards": 0, "note": "polish+resilience"},
-    "c10": {"bundle_kb_app": 289, "minigames": 14, "cards": 0, "note": "groq+anam+loading"}
-  },
-  "changed_files_by_domain": {
-    "gameplay": [],
-    "visual": [],
-    "narrative": [],
-    "qa": [],
-    "playtester": ["analysis only -- no code changes in cycle 11"],
-    "metrics": ["analysis only -- no code changes in cycle 11"]
+    "c10": {"bundle_kb_app": 289, "minigames": 14, "cards": 0, "note": "groq+anam+loading"},
+    "c11": {"bundle_kb_app": 289, "minigames": 14, "cards": 0, "note": "groq caps+loading hint"}
   },
   "dispatch_wave": {
-    "wave1_parallel": ["merlin-ai-playtester", "merlin-visual-qa", "merlin-metrics-analyzer"],
-    "wave2_conditional": ["merlin-balance-tuner if balance issues", "merlin-gameplay-programmer if bugs found", "merlin-narrative-designer if content gaps identified"]
+    "wave1_parallel": ["merlin-tech-artist (T001)", "merlin-gameplay-programmer (T038)", "merlin-narrative-designer (T039)"],
+    "wave2_parallel": ["merlin-qa-lead (TS+build)", "merlin-ai-playtester", "merlin-visual-qa"]
   }
 }

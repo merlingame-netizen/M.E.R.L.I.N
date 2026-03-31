@@ -7,6 +7,8 @@ import { createStore } from 'zustand/vanilla';
 import {
   FACTIONS, type FactionId,
   LIFE_START, LIFE_MAX, LIFE_DRAIN_PER_CARD,
+  LIFE_DRAIN_STAGE2, LIFE_DRAIN_STAGE3,
+  LIFE_DRAIN_THRESHOLD_STAGE2, LIFE_DRAIN_THRESHOLD_STAGE3,
   FACTION_SCORE_START, FACTION_CAP_PER_CARD,
   OGHAM_STARTER_SKILLS, OGHAM_SPECS,
   BIOME_DEFAULT, MIN_CARDS_FOR_VICTORY,
@@ -65,6 +67,8 @@ export interface GameActions {
   damageLife: (amount: number) => void;
   healLife: (amount: number) => void;
   drainLife: () => void;
+  /** Drain life by a scaled amount based on cards already played (T038). */
+  drainLifeScaled: () => void;
   addReputation: (faction: FactionId, delta: number) => void;
   addAnam: (amount: number) => void;
   addBiomeCurrency: (amount: number) => void;
@@ -165,6 +169,20 @@ export const store = createStore<MerlinStore>((set, get) => ({
       life: Math.max(0, s.run.life - LIFE_DRAIN_PER_CARD),
     },
   })),
+
+  drainLifeScaled: () => set((s) => {
+    const played = s.run.cardsPlayed;
+    const amount =
+      played >= LIFE_DRAIN_THRESHOLD_STAGE3 ? LIFE_DRAIN_STAGE3 :
+      played >= LIFE_DRAIN_THRESHOLD_STAGE2 ? LIFE_DRAIN_STAGE2 :
+      LIFE_DRAIN_PER_CARD;
+    return {
+      run: {
+        ...s.run,
+        life: Math.max(0, s.run.life - amount),
+      },
+    };
+  }),
 
   addReputation: (faction, delta) => set((s) => {
     const capped = Math.max(-FACTION_CAP_PER_CARD, Math.min(FACTION_CAP_PER_CARD, delta));

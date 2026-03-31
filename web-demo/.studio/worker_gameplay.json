@@ -1,32 +1,34 @@
 {
-  "cycle": 11,
   "agent": "merlin-gameplay-programmer",
-  "tasks": ["T036", "T037"],
-  "timestamp": "2026-03-31T03:30:00Z",
-  "T036_groq_cap_validation": {
-    "file": "web-demo/src/llm/GroqAdapter.ts",
-    "description": "Added sanitizeEffectCap() pure function + LLM_EFFECT_CAPS constants. Applied to all 3 options after LLM parse. Clamps HEAL_LIFE<=7, DAMAGE_LIFE<=5, ADD_REPUTATION<=-10/+10, ADD_ANAM<=10, ADD_BIOME_CURRENCY<=10. Handles both CODE:N and CODE:faction:N formats. Unknown codes pass through unchanged.",
-    "function_added": "sanitizeEffectCap(effect: string): string",
-    "constants_added": "LLM_EFFECT_CAPS: Record<string, number>",
-    "integration_point": "GroqAdapter.generateCard() after JSON.parse validation, before Card construction",
-    "severity_fixed": "HIGH"
-  },
-  "T037_llm_loading_hint": {
-    "file": "web-demo/src/main.ts",
-    "description": "Added showLLMLoadingHint() / hideLLMLoadingHint() functions. Hint is a fixed-position pill at bottom-center (z-index:60) showing 'Merlin consulte les etoiles...' during Groq generation. Shown before generateCard() await, hidden on success, null return, and catch paths. pointer-events:none, DOM removed on hide (no leak).",
-    "element_id": "llm-loading-hint",
-    "z_index": 60,
-    "severity_fixed": "MEDIUM"
-  },
-  "code_review": {
-    "status": "APPROVED",
-    "critical": 0,
-    "high": 0,
-    "medium": 1,
-    "low": 1,
-    "medium_note": "Double cast (unknown as readonly tuple) acceptable given upstream length===3 guard",
-    "low_note": "parts.length===0 guard after split() is dead code but harmless"
-  },
+  "cycle": 12,
+  "task": "T038",
+  "timestamp": "2026-03-31T05:30:00Z",
+  "description": "Progressive drain scaling — T038. Drain increases from -1 to -2 after card 15, then -3 after card 25.",
+  "changes": [
+    {
+      "file": "web-demo/src/game/Constants.ts",
+      "additions": [
+        "LIFE_DRAIN_THRESHOLD_STAGE2 = 15",
+        "LIFE_DRAIN_THRESHOLD_STAGE3 = 25",
+        "LIFE_DRAIN_STAGE2 = 2",
+        "LIFE_DRAIN_STAGE3 = 3"
+      ]
+    },
+    {
+      "file": "web-demo/src/game/Store.ts",
+      "additions": [
+        "drainLifeScaled() action — reads cardsPlayed, picks drain amount from staged thresholds, applies immutable update",
+        "Imported 4 new drain constants from Constants.ts"
+      ],
+      "interface_updated": "GameActions — added drainLifeScaled: () => void"
+    },
+    {
+      "file": "web-demo/src/main.ts",
+      "change": "Game loop step 2: state().drainLife() replaced with state().drainLifeScaled()"
+    }
+  ],
+  "design_rationale": "cardsPlayed is read BEFORE incrementCardsPlayed() in the same loop iteration. So at drain call: cardsPlayed=0 on card 1, cardsPlayed=14 on card 15 (stage2 triggers at >=15 — i.e. the 16th card). This means stage2 starts around card 16 in UX terms. Intentional — gives player 15 safe cards before pressure escalates.",
+  "balance_impact": "Cards 1-15: drain -1/card (15 hp total). Cards 16-25: drain -2/card (20 hp over 10 cards). Cards 26+: drain -3/card. With avg heal +4.7/card, stage1 is net positive (+3.7), stage2 is net positive (+2.7), stage3 is net positive (+1.7). Player still viable but not immune. Combined with faction events this creates meaningful late-run tension.",
   "ts_errors_after": 0,
   "verdict": "PASS"
 }

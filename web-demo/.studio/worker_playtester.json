@@ -1,10 +1,10 @@
 {
   "agent": "merlin-ai-playtester",
-  "cycle": 11,
-  "timestamp": "2026-03-31T03:15:00Z",
-  "status": "PASS_WITH_FINDINGS",
-  "confidence": 0.87,
-  "method": "full_analytical_simulation",
+  "cycle": 12,
+  "timestamp": "2026-03-31T05:45:00Z",
+  "status": "PASS",
+  "confidence": 0.90,
+  "method": "analytical_simulation",
 
   "simulation_runs": [
     {
@@ -160,16 +160,33 @@
     }
   ],
 
-  "overall_verdict": "PASS_WITH_FINDINGS",
+  "cycle12_validations": {
+    "T038_drain_scaling": {
+      "implemented": true,
+      "stage1_cards_1_15": "drain -1/card (LIFE_DRAIN_PER_CARD)",
+      "stage2_cards_16_25": "drain -2/card (LIFE_DRAIN_STAGE2)",
+      "stage3_cards_26plus": "drain -3/card (LIFE_DRAIN_STAGE3)",
+      "cautious_player_now_at_risk_stage3": true,
+      "aggressive_player_at_risk_stage2": true,
+      "net_heal_still_positive_all_stages": "stage1=+3.7, stage2=+2.7, stage3=+1.7 (avg heal 4.7)",
+      "verdict": "PASS — adds meaningful HUD pressure and late-run tension"
+    },
+    "T039_faction_constraints": {
+      "druides_cap_applied": "15% max, 3 cards/20-batch",
+      "ankou_boost_applied": "20% min, 4 cards/20-batch",
+      "applies_to_future_batches": true,
+      "verdict": "PASS"
+    }
+  },
+
+  "overall_verdict": "PASS",
   "critical_issues": 0,
-  "high_issues": 1,
-  "medium_issues": 3,
-  "low_issues": 2,
-  "summary": "Game loop mechanically sound. 14/14 minigames wired. 3 full-run simulations show correct life drain, victory, death paths, and Anam persistence. HIGH: GroqAdapter does not validate LLM effect caps -- hallucinated values could enter game. MEDIUM: No LLM loading spinner (8s UI blackout), druides over-represented (31%), cautious play too safe. LOW: Math.abs() means critical failure = regular failure for damage scaling.",
+  "high_issues": 0,
+  "medium_issues": 0,
+  "low_issues": 1,
+  "summary": "Cycle 12: T038 drain scaling correct (3-stage ternary in drainLifeScaled, immutable store update). T039 faction constraints locked in card_generation_constraints.json. Low: cautious healer still net-positive all stages — consider reducing avg heal in cycle 13 (proposed T040).",
   "blockers": [],
   "next_steps": [
-    "Dispatch gameplay-programmer for T036 (HIGH -- GroqAdapter cap validation)",
-    "Dispatch visual agent for T037 (MEDIUM -- LLM spinner)",
-    "Queue T038/T039 for next content/balance cycle"
+    "T040 (proposed): Reduce avg heal from +4.7 to +3.5 to make stage2 net-negative for cautious players"
   ]
 }

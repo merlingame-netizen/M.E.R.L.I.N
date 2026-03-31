@@ -94,8 +94,8 @@ async function gameLoop(
     // Check if run still active
     if (!state().run.active) break;
 
-    // 2. DRAIN life (-1 per card)
-    state().drainLife();
+    // 2. DRAIN life (T038: -1 base, -2 after card 15, -3 after card 25)
+    state().drainLifeScaled();
     state().incrementCardsPlayed();
     updateHUD();
 

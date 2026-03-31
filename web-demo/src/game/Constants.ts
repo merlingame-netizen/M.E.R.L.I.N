@@ -15,6 +15,14 @@ export const FACTION_CAP_PER_CARD = 20;
 export const LIFE_MAX = 100;
 export const LIFE_START = 100;
 export const LIFE_DRAIN_PER_CARD = 1;
+/** After this many cards played, drain increases to LIFE_DRAIN_STAGE2. */
+export const LIFE_DRAIN_THRESHOLD_STAGE2 = 15;
+/** After this many cards played, drain increases to LIFE_DRAIN_STAGE3. */
+export const LIFE_DRAIN_THRESHOLD_STAGE3 = 25;
+/** Drain amount per card for cards 15-24 (escalating pressure mid-run). */
+export const LIFE_DRAIN_STAGE2 = 2;
+/** Drain amount per card for cards 25+ (late-run tension). */
+export const LIFE_DRAIN_STAGE3 = 3;
 export const LIFE_LOW_THRESHOLD = 25;
 export const LIFE_EVENT_FAIL_DAMAGE = 6;
 export const LIFE_HEAL_PER_REST = 18;

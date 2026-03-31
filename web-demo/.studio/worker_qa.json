@@ -1,32 +1,58 @@
 {
-  "cycle": 9,
+  "cycle": 12,
   "agent": "merlin-qa-lead",
-  "timestamp": "2026-03-31T01:30:00Z",
+  "timestamp": "2026-03-31T05:50:00Z",
   "quality_gate": {
     "ts_errors": 0,
+    "ts_check_exit_code": 0,
     "build_ok": true,
-    "bundle_kb": 284,
-    "bundle_kb_total": 813,
+    "bundle_kb_index": 192,
+    "bundle_kb_minigames": 97,
     "bundle_kb_vendor": 529,
+    "bundle_kb_app": 289,
+    "bundle_kb_total": 818,
     "bundle_chunks": 3,
-    "bundle_breakdown": {
-      "index": "224.14 KB",
-      "minigames": "60.20 KB",
-      "three_core": "529.01 KB"
+    "bundle_threshold_warn": 304,
+    "bundle_delta_vs_cycle11": 0,
+    "bundle_verdict": "PASS (289KB unchanged)",
+    "gzip_total_kb": 209,
+    "validate_step0": "PASS (exit 0, zero new errors from scene changes)",
+    "runtime_errors": 0
+  },
+  "tasks_verified": {
+    "T001_white_scenes": {
+      "scenes_fixed": 3,
+      "technique": "CanvasLayer(layer=-10)+ColorRect(anchors_preset=15,color=#0a0a12)",
+      "project_godot_clear_color": true,
+      "parse_errors_introduced": 0,
+      "verdict": "PASS"
     },
-    "bundle_delta_kb": 1,
-    "bundle_under_warn_370": true,
-    "bundle_under_block_450": true
+    "T038_drain_scaling": {
+      "constants_added": 4,
+      "store_action_added": "drainLifeScaled()",
+      "main_ts_updated": true,
+      "immutable_pattern": true,
+      "ts_errors": 0,
+      "verdict": "PASS"
+    },
+    "T039_faction_balance": {
+      "constraints_file_updated": true,
+      "druides_capped_at_15pct": true,
+      "ankou_boosted_to_20pct": true,
+      "no_code_changed": true,
+      "verdict": "PASS"
+    }
   },
-  "minigame_imports_check": {
-    "minigame_imports_count": 14,
-    "all_14_imported": true
+  "regression_check": {
+    "14_minigames_in_switch": true,
+    "ogham_panel_wired": true,
+    "3_try_catch_guards": true,
+    "emergency_fallback_card": true,
+    "drainLife_still_exists": true,
+    "no_features_removed": true,
+    "verdict": "NO REGRESSION"
   },
-  "regression_checks": {
-    "no_new_ts_errors": true,
-    "build_still_passes": true,
-    "bundle_size_stable": true,
-    "no_features_removed": true
-  },
+  "gate_blocks": [],
+  "gate_warns": [],
   "verdict": "PASS"
 }

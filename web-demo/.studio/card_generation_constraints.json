@@ -1,6 +1,6 @@
 {
   "_comment": "Constraints for narrative-designer when generating card batches. Enforced from cycle 8+.",
-  "updated_cycle": 7,
+  "updated_cycle": 12,
   "field_quotas_per_20_cards": {
     "chance": {"min": 4},
     "bluff": {"min": 3},
@@ -16,14 +16,24 @@
     "max_heal_options_per_card": 1
   },
   "faction_balance_targets": {
-    "druides": {"target_pct": 20},
+    "druides": {"target_pct": 15, "cap_pct": 15},
     "anciens": {"target_pct": 20},
     "korrigans": {"target_pct": 20},
-    "niamh": {"target_pct": 20},
-    "ankou": {"target_pct": 20}
+    "niamh": {"target_pct": 25},
+    "ankou": {"target_pct": 20, "min_pct": 20}
   },
-  "faction_cycle8_adjustments": {
-    "niamh": "+4 cards emphasis in collines_dolmens + iles_mystiques batches",
-    "druides": "reduce to 3-4 cards per 20 (currently over-represented)"
+  "faction_cycle12_adjustments": {
+    "druides": "CAP at 15% — currently ~31% across 166 templates (over-represented). Max 3 druides cards per 20-card batch.",
+    "ankou": "BOOST to 20% minimum — currently under-represented. Min 4 ankou cards per 20-card batch. Prefer mortality/fate/passage themes.",
+    "niamh": "Slight boost to 25% — lake/magic/healing themes. Good counterweight to ankou pressure.",
+    "anciens": "Hold at 20% — wisdom/memory themes. Stable.",
+    "korrigans": "Hold at 20% — trickster/nature themes. Stable."
+  },
+  "faction_cards_per_20_batch": {
+    "druides": {"max": 3},
+    "anciens": {"target": 4},
+    "korrigans": {"target": 4},
+    "niamh": {"target": 5},
+    "ankou": {"min": 4}
   }
 }
