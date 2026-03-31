@@ -71,8 +71,9 @@ async function main(): Promise<void> {
   // T043: Load FastRoute card templates from /data/cards.json before game starts
   await loadTemplates();
 
-  // Load cross-run Anam from localStorage
+  // Load cross-run Anam + meta from localStorage (T053)
   loadAnamFromStorage();
+  loadMetaFromStorage();
 
   // Start game
   store.getState().startRun('cotes_sauvages');
@@ -108,6 +109,7 @@ async function gameLoop(
     if (state().checkDeath()) {
       state().endRun('death_drain');
       saveAnamToStorage();
+      saveMetaToStorage();
       await showRunSummary('death');
       break;
     }
@@ -201,6 +203,7 @@ async function gameLoop(
     if (state().checkDeath()) {
       state().endRun('death_effects');
       saveAnamToStorage();
+      saveMetaToStorage();
       await showRunSummary('death');
       break;
     }
@@ -209,6 +212,7 @@ async function gameLoop(
     if (state().run.cardsPlayed >= 30) {
       state().endRun('cards_limit');
       saveAnamToStorage();
+      saveMetaToStorage();
       await showRunSummary('cards_limit');
       break;
     }
@@ -217,6 +221,7 @@ async function gameLoop(
     if (state().run.cardsPlayed >= 25 && rail.isComplete()) {
       state().endRun('victory');
       saveAnamToStorage();
+      saveMetaToStorage();
       await showRunSummary('victory');
       break;
     }
@@ -380,7 +385,6 @@ function loadAnamFromStorage(): void {
       const value = parseInt(saved, 10);
       if (!isNaN(value) && value > 0) {
         store.getState().addAnam(value);
-        console.info(`[MERLIN] Loaded cross-run Anam: ${value}`);
       }
     }
   } catch {
@@ -392,7 +396,83 @@ function saveAnamToStorage(): void {
   try {
     const currentAnam = store.getState().meta.anam;
     localStorage.setItem(ANAM_STORAGE_KEY, currentAnam.toString());
-    console.info(`[MERLIN] Saved cross-run Anam: ${currentAnam}`);
+  } catch {
+    // localStorage unavailable — ignore
+  }
+}
+
+// --- Meta cross-run persistence (T053) ---
+// Persists oghamsUnlocked, factionRep, totalRuns alongside existing anam persistence.
+
+const META_STORAGE_KEY = 'merlin_meta';
+
+interface PersistedMeta {
+  readonly oghamsUnlocked: string[];
+  readonly factionRep: Record<string, number>;
+  readonly totalRuns: number;
+}
+
+function loadMetaFromStorage(): void {
+  try {
+    const saved = localStorage.getItem(META_STORAGE_KEY);
+    if (saved === null) return;
+    const parsed: unknown = JSON.parse(saved);
+    if (typeof parsed !== 'object' || parsed === null) return;
+    const data = parsed as Partial<PersistedMeta>;
+
+    const state = store.getState();
+
+    // Restore oghamsUnlocked — merge with current (starter oghams already set)
+    if (Array.isArray(data.oghamsUnlocked) && data.oghamsUnlocked.length > 0) {
+      const current = state.meta.oghamsUnlocked;
+      const merged = Array.from(new Set([...current, ...data.oghamsUnlocked]));
+      if (merged.length > current.length) {
+        store.setState((s) => ({
+          meta: {
+            ...s.meta,
+            oghamsUnlocked: merged,
+            oghamsEquipped: merged,
+          },
+        }));
+      }
+    }
+
+    // Restore factionRep
+    if (typeof data.factionRep === 'object' && data.factionRep !== null) {
+      const fr = data.factionRep;
+      store.setState((s) => ({
+        meta: {
+          ...s.meta,
+          factionRep: {
+            ...s.meta.factionRep,
+            ...Object.fromEntries(
+              Object.entries(fr).map(([k, v]) => [k, typeof v === 'number' ? Math.max(0, Math.min(100, v)) : 0])
+            ),
+          },
+        },
+      }));
+    }
+
+    // Restore totalRuns
+    if (typeof data.totalRuns === 'number' && data.totalRuns > 0) {
+      store.setState((s) => ({
+        meta: { ...s.meta, totalRuns: data.totalRuns as number },
+      }));
+    }
+  } catch {
+    // Corrupt or unavailable — ignore, start fresh
+  }
+}
+
+function saveMetaToStorage(): void {
+  try {
+    const meta = store.getState().meta;
+    const data: PersistedMeta = {
+      oghamsUnlocked: [...meta.oghamsUnlocked],
+      factionRep: { ...meta.factionRep },
+      totalRuns: meta.totalRuns,
+    };
+    localStorage.setItem(META_STORAGE_KEY, JSON.stringify(data));
   } catch {
     // localStorage unavailable — ignore
   }
@@ -448,6 +528,42 @@ window.addEventListener('ogham_unlocked', (evt: Event) => {
   const detail = (evt as CustomEvent<{ oghamId: string; oghamName: string }>).detail;
   if (detail?.oghamName) {
     showOghamUnlockToast(detail.oghamName);
+  }
+});
+
+// --- Keyboard shortcuts (T054) ---
+// Space: click first card option when card overlay is visible
+// Escape: close Ogham panel (skip) or dismiss RunSummary (click Rejouer)
+
+document.addEventListener('keydown', (evt: KeyboardEvent) => {
+  // Ignore key events originating from input/textarea elements
+  const target = evt.target as HTMLElement;
+  if (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA') return;
+
+  if (evt.code === 'Space') {
+    evt.preventDefault();
+    // Click the first available card option
+    const cardOverlay = document.getElementById('card-overlay');
+    if (cardOverlay?.classList.contains('visible')) {
+      const firstOption = cardOverlay.querySelector<HTMLElement>('.card-option');
+      firstOption?.click();
+    }
+  }
+
+  if (evt.code === 'Escape') {
+    // Close Ogham panel (simulate "Passer" / skip)
+    const oghamOverlay = document.getElementById('ogham-panel-overlay');
+    if (oghamOverlay && oghamOverlay.style.display !== 'none') {
+      const skipBtn = oghamOverlay.querySelector<HTMLElement>('#ogham-skip-btn');
+      skipBtn?.click();
+      return;
+    }
+    // Dismiss RunSummary (click Rejouer)
+    const summaryOverlay = document.getElementById('run-summary-overlay');
+    if (summaryOverlay) {
+      const replayBtn = summaryOverlay.querySelector<HTMLElement>('button');
+      replayBtn?.click();
+    }
   }
 });
 

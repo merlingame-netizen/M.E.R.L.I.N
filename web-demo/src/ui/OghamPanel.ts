@@ -50,21 +50,14 @@ export function initOghamPanel(): void {
 export function showOghamPanel(): Promise<string | null> {
   return new Promise((resolve) => {
     const state = store.getState();
-    const equipped = state.meta.oghamsEquipped;
-
-    // If no oghams equipped, skip immediately
-    if (equipped.length === 0) {
-      resolve(null);
-      return;
-    }
-
-    resolveChoice = resolve;
 
     const overlay = document.getElementById('ogham-panel-overlay');
     if (!overlay || !panelEl) {
       resolve(null);
       return;
     }
+
+    resolveChoice = resolve;
 
     // Build panel content
     panelEl.innerHTML = '';
@@ -81,16 +74,27 @@ export function showOghamPanel(): Promise<string | null> {
     sub.style.cssText = 'color:rgba(232,220,200,0.5);font-size:13px;margin-bottom:20px;';
     panelEl.appendChild(sub);
 
-    // Ogham slots grid
+    // Ogham slots grid — T052: show ALL oghams, grey out locked ones
+    // Faction names for locked tooltip (ogham branch -> faction display label)
+    const BRANCH_LABEL: Readonly<Record<string, string>> = {
+      central:   'Starter',
+      druides:   'Druides',
+      anciens:   'Anciens',
+      korrigans: 'Korrigans',
+      niamh:     'Niamh',
+      ankou:     'Ankou',
+    } as const;
+
     const grid = document.createElement('div');
     grid.style.cssText = 'display:flex;flex-wrap:wrap;gap:12px;justify-content:center;margin-bottom:20px;';
 
-    for (const oghamId of equipped) {
+    for (const oghamId of Object.keys(OGHAM_SPECS)) {
       const spec = OGHAM_SPECS[oghamId];
       if (!spec) continue;
 
-      const cooldown = state.run.oghamCooldowns[oghamId] ?? 0;
-      const isAvailable = cooldown <= 0;
+      const isUnlocked = state.meta.oghamsUnlocked.includes(oghamId);
+      const cooldown = isUnlocked ? (state.run.oghamCooldowns[oghamId] ?? 0) : 0;
+      const isAvailable = isUnlocked && cooldown <= 0;
 
       const slot = document.createElement('button');
       slot.style.cssText = [
@@ -101,7 +105,7 @@ export function showOghamPanel(): Promise<string | null> {
         `border-color:${isAvailable ? 'rgba(205,133,63,0.5)' : 'rgba(100,100,100,0.3)'}`,
         `background:${isAvailable ? 'rgba(139,69,19,0.2)' : 'rgba(40,40,50,0.4)'}`,
         'cursor:' + (isAvailable ? 'pointer' : 'not-allowed'),
-        `opacity:${isAvailable ? '1' : '0.5'}`,
+        `opacity:${isUnlocked ? (isAvailable ? '1' : '0.5') : '0.35'}`,
         'display:flex',
         'flex-direction:column',
         'align-items:center',
@@ -112,7 +116,7 @@ export function showOghamPanel(): Promise<string | null> {
       // Ogham unicode symbol
       const symbolEl = document.createElement('div');
       symbolEl.textContent = spec.unicode;
-      symbolEl.style.cssText = 'font-size:28px;color:#e8dcc8;line-height:1;';
+      symbolEl.style.cssText = `font-size:28px;color:${isUnlocked ? '#e8dcc8' : 'rgba(180,180,180,0.4)'};line-height:1;`;
       slot.appendChild(symbolEl);
 
       // Ogham name
@@ -121,19 +125,23 @@ export function showOghamPanel(): Promise<string | null> {
       nameEl.style.cssText = `font-size:11px;color:${isAvailable ? '#cd853f' : 'rgba(150,150,150,0.6)'};`;
       slot.appendChild(nameEl);
 
-      // Cooldown or category
+      // Status row: lock icon, cooldown, or category
       const infoEl = document.createElement('div');
-      if (cooldown > 0) {
+      if (!isUnlocked) {
+        const branchLabel = BRANCH_LABEL[spec.branch] ?? spec.branch;
+        infoEl.textContent = '\uD83D\uDD12 rep 50';
+        infoEl.style.cssText = 'font-size:10px;color:rgba(180,140,100,0.6);';
+        slot.title = `D\u00e9bloquez ${branchLabel} \u2014 r\u00e9putation 50 requise`;
+      } else if (cooldown > 0) {
         infoEl.textContent = `CD: ${cooldown}`;
         infoEl.style.cssText = 'font-size:10px;color:rgba(200,100,100,0.7);';
+        slot.title = `${spec.description} (recharge dans ${cooldown} cartes)`;
       } else {
         infoEl.textContent = spec.category;
         infoEl.style.cssText = 'font-size:10px;color:rgba(232,220,200,0.4);';
+        slot.title = `${spec.description} (CD: ${spec.cooldown} cartes)`;
       }
       slot.appendChild(infoEl);
-
-      // Tooltip-like description on hover
-      slot.title = `${spec.description} (CD: ${spec.cooldown} cartes)`;
 
       if (isAvailable) {
         slot.addEventListener('click', () => selectOgham(oghamId));
@@ -154,6 +162,7 @@ export function showOghamPanel(): Promise<string | null> {
 
     // Skip button
     const skipBtn = document.createElement('button');
+    skipBtn.id = 'ogham-skip-btn';
     skipBtn.textContent = 'Passer';
     skipBtn.style.cssText = [
       'padding:10px 32px',

@@ -1,88 +1,54 @@
 {
   "_comment": "Contexte pre-calcule par le director en debut de cycle. Lu par les agents a la place de tous les docs.",
-  "cycle": 18,
-  "timestamp": "2026-03-31T23:00:00Z",
+  "cycle": 19,
+  "timestamp": "2026-03-31T23:45:00Z",
   "mode": "autonomous_dev",
-  "focus": "T050 run_anam + T049 Ogham unlock at rep50 + T051 landes_bruyere batch3",
-  "selected_tasks": [
-    {"id": "T050", "title": "Add run_anam counter to RunState, reset on startRun(), increment alongside meta.anam. RunSummary shows run_anam (this run) + meta.anam (total).", "domain": "gameplay", "agent": "merlin-gameplay-programmer", "priority": 1},
-    {"id": "T049", "title": "When faction rep crosses 50 threshold, unlock corresponding branch Ogham. Show toast 'Ogham [name] deverrouille'. Wire into addReputation() in Store.ts.", "domain": "gameplay", "agent": "merlin-gameplay-programmer", "priority": 2},
-    {"id": "T051", "title": "20 landes_bruyere batch3 cards, niamh>=35% (7+/20 options), druides<=3, HEAL_LIFE<=5. Append to public/data/cards.json.", "domain": "narrative", "agent": "merlin-narrative-designer", "priority": 3}
-  ],
-  "state_summary": {
-    "bundle_kb_app": 96.83,
-    "bundle_kb_total": 722.62,
-    "bundle_cap_kb_warn": 220,
+  "selected_tasks": ["T053", "T052", "cercles_batch2", "T054"],
+  "prev_metrics": {
     "ts_errors": 0,
-    "cards_total": 266,
-    "minigames_count": 14,
-    "deployment_url": "https://web-export-pi.vercel.app"
+    "bundle_kb_app": 98.37,
+    "cards_total": 286,
+    "build_ok": true
+  },
+  "key_files": {
+    "main_ts": "web-demo/src/main.ts",
+    "store_ts": "web-demo/src/game/Store.ts",
+    "ogham_panel_ts": "web-demo/src/ui/OghamPanel.ts",
+    "cards_json": "web-demo/public/data/cards.json"
   },
   "key_constants": {
+    "ANAM_STORAGE_KEY": "merlin_anam",
+    "META_STORAGE_KEY": "merlin_meta",
     "FACTION_THRESHOLD_CONTENT": 50,
-    "FACTIONS": ["druides", "anciens", "korrigans", "niamh", "ankou"],
-    "OGHAM_SPECS_by_branch": {
-      "druides": ["coll", "duir", "nuin"],
-      "anciens": ["ailm", "tinne", "straif"],
-      "korrigans": ["onn", "huath", "muin"],
-      "niamh": ["gort", "saille", "ruis"],
-      "ankou": ["eadhadh", "ioho", "ur"]
-    },
-    "tier1_branch_oghams": {
-      "druides": "coll (tier1)",
-      "anciens": "ailm (tier1)",
-      "korrigans": "onn (tier1)",
-      "niamh": "saille (tier1)",
-      "ankou": "eadhadh (tier1)"
-    },
-    "HEAL_LIFE_card_max": 5,
-    "HEAL_LIFE_engine_cap": 18,
-    "DAMAGE_LIFE_engine_cap": 15,
-    "ADD_REPUTATION_engine_cap": 20
+    "FACTIONS": ["druides","anciens","korrigans","niamh","ankou"]
   },
-  "store_analysis": {
-    "RunState_current_fields": ["active","biome","life","cardsPlayed","day","factions","activeOgham","oghamCooldowns","oghamsDiscovered","promises","karma","tension","biomeCurrency"],
-    "RunState_needs": "add 'anamThisRun: number' field, reset to 0 in buildDefaultRun()",
-    "MetaState_current_fields": ["anam","factionRep","totalRuns","totalCardsPlayed","endingsSeen","oghamsUnlocked","oghamsEquipped","talentsUnlocked"],
-    "addAnam_current": "increments meta.anam only — must also increment run.anamThisRun",
-    "addReputation_current": "updates run.factions + meta.factionRep — must check threshold crossing and unlock Ogham",
-    "oghamsUnlocked_initial": ["beith","luis","quert"],
-    "unlock_logic": "if previous_rep < 50 AND new_rep >= 50: unlock tier1 Ogham for that faction (if not already unlocked); dispatch toast via window event or callback"
+  "T053_context": {
+    "existing_pattern": "loadAnamFromStorage()/saveAnamToStorage() in main.ts lines 372-399",
+    "save_calls": "saveAnamToStorage() at 4 places (death_drain, death_effects, cards_limit, victory)",
+    "what_to_persist": ["meta.oghamsUnlocked", "meta.factionRep", "meta.totalRuns"],
+    "storage_key": "merlin_meta (JSON object)",
+    "load_init_line": 75
   },
-  "t050_brief": {
-    "changes": [
-      "RunState: add 'readonly anamThisRun: number'",
-      "buildDefaultRun(): anamThisRun: 0",
-      "addAnam(amount): also set run: { ...s.run, anamThisRun: s.run.anamThisRun + amount }",
-      "RunSummary.ts: show anamThisRun (earned this run) + meta.anam (lifetime total)"
-    ],
-    "file": "web-demo/src/game/Store.ts + web-demo/src/ui/RunSummary.ts"
+  "T052_context": {
+    "file": "web-demo/src/ui/OghamPanel.ts",
+    "showOghamPanel_currently": "shows only meta.oghamsEquipped (lines 88-151)",
+    "need": "Show ALL oghams from OGHAM_SPECS keys, grey out those NOT in meta.oghamsUnlocked with opacity:0.35 cursor:not-allowed, tooltip shows faction name + rep 50 requirement",
+    "faction_map": {"coll":"druides","ailm":"anciens","onn":"korrigans","saille":"niamh","eadhadh":"ankou"},
+    "ogham_specs_import": "already imported from Constants"
   },
-  "t049_brief": {
-    "faction_to_ogham": {"druides":"coll","anciens":"ailm","korrigans":"onn","niamh":"saille","ankou":"eadhadh"},
-    "trigger": "addReputation() — when s.run.factions[faction] < 50 AND newVal >= 50",
-    "action": "if ogham not in s.meta.oghamsUnlocked: add to oghamsUnlocked + oghamsEquipped; dispatch CustomEvent 'ogham_unlocked' with detail {oghamId, oghamName}",
-    "toast": "main.ts or HUD.ts — listen for 'ogham_unlocked' event, show toast 'Ogham [nom] deverrouille' for 3s",
-    "file": "web-demo/src/game/Store.ts + web-demo/src/main.ts (toast display)"
+  "T054_context": {
+    "file": "web-demo/src/main.ts",
+    "shortcuts": ["Space -> resolve active showCard promise (advance card result)", "Escape -> hideOghamPanel() or close RunSummary"],
+    "pattern": "Add document.addEventListener at bottom of main() before gameLoop, use a module-level flag for active overlay"
   },
-  "t051_brief": {
-    "cards_json_path": "web-demo/public/data/cards.json",
-    "biome": "landes_bruyere",
-    "total_new": 20,
-    "themes": "niamh-heavy landes batch3: fae encounters on the heath, will-o-wisp guides, threshold crossings, enchanted moors, fairy rings, mist paths leading to faerie, niamh appearing as guide or trickster, boundary places between worlds, golden light over purple heather, enchanted springs hidden in bracken",
-    "constraints": {
-      "niamh_options_pct_min": 35,
-      "niamh_options_min_count": 7,
-      "druides_cards_max": 3,
-      "HEAL_LIFE_max_per_option": 5,
-      "effects_per_option_max": 3,
-      "no_3plus_negative_effects": true,
-      "allowed_effects": ["HEAL_LIFE:1-5", "DAMAGE_LIFE:1-8", "ADD_REPUTATION:faction:1-15", "ADD_ANAM:1-5", "ADD_BIOME_CURRENCY:1-5"]
-    }
-  },
-  "regression_thresholds": {
-    "ts_errors": "== 0 (BLOCK)",
-    "bundle_kb_app_max": 220,
-    "runtime_errors": "== 0 (BLOCK)"
+  "cercles_batch2_context": {
+    "biome": "cercles_pierres",
+    "target_new_cards": 20,
+    "faction_distribution": "korrigans=6/20 (30%), anciens=5/20 (25%), druides<=3/20, niamh=3/20, ankou=3/20",
+    "heal_cap": 5,
+    "rep_cap": 20,
+    "dmg_cap": 15,
+    "field_themes": "megalithes, alignements, equinoxes, rituels pierre, chants ancestraux",
+    "current_batch1_done": true
   }
 }

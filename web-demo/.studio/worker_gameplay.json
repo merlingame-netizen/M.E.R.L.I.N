@@ -1,37 +1,25 @@
 {
   "agent": "merlin-gameplay-programmer",
-  "cycle": 18,
-  "timestamp": "2026-03-31T23:30:00Z",
+  "cycle": 19,
+  "timestamp": "2026-03-31T23:55:00Z",
   "status": "PASS",
   "tasks": {
-    "T050": {
+    "T053": {
       "status": "DONE",
-      "description": "Per-run anam counter — anamThisRun added to RunState",
-      "details": [
-        "RunState interface: added 'readonly anamThisRun: number'",
-        "buildDefaultRun(): anamThisRun: 0 (resets automatically on startRun() via buildDefaultRun())",
-        "addAnam(amount): now updates both run.anamThisRun and meta.anam in one immutable set()",
-        "RunSummary.ts: addStat grid now shows 'Anam cette quete' (run.anamThisRun) + 'Anam total' (meta.anam) as separate cells — 5 stats total in grid"
-      ]
+      "notes": "loadMetaFromStorage() / saveMetaToStorage() added to main.ts. Persists oghamsUnlocked (merged with starters), factionRep (clamped 0-100), totalRuns. Storage key: merlin_meta (JSON). load called after loadAnamFromStorage() at init. save called at all 4 run-end points (death_drain, death_effects, cards_limit, victory) alongside saveAnamToStorage()."
     },
-    "T049": {
+    "T052": {
       "status": "DONE",
-      "description": "Ogham unlock at faction rep=50 threshold crossing",
-      "details": [
-        "addReputation() in Store.ts: detects threshold crossing (current<50 AND newVal>=50)",
-        "Faction->Ogham map: druides->coll, anciens->ailm, korrigans->onn, niamh->saille, ankou->eadhadh",
-        "On unlock: adds to meta.oghamsUnlocked + meta.oghamsEquipped (immutable spread)",
-        "Fires CustomEvent 'ogham_unlocked' on window with {oghamId, oghamName} — decoupled from UI",
-        "main.ts: showOghamUnlockToast() renders toast at top:80px for 3s, fade in/out 350ms, rune prefix symbol, z-index:65",
-        "window.addEventListener('ogham_unlocked') wired before main() call",
-        "FACTION_THRESHOLD_CONTENT added to Store.ts imports from Constants"
-      ]
+      "notes": "OghamPanel.showOghamPanel() now iterates all 18 OGHAM_SPECS keys instead of oghamsEquipped only. Locked oghams (not in meta.oghamsUnlocked): opacity:0.35, cursor:not-allowed, status row shows lock emoji + 'rep 50', tooltip shows faction name + 'reputation 50 requise'. On-cooldown oghams: opacity:0.5. Available oghams: full opacity + hover effects. resolveChoice set only after DOM guard passes (bug fix). Skip button given id='ogham-skip-btn' for keyboard shortcut."
+    },
+    "T054": {
+      "status": "DONE",
+      "notes": "document.addEventListener('keydown') added before main() call. Space: clicks first .card-option in #card-overlay when visible. Escape: clicks #ogham-skip-btn if ogham panel open, else clicks first button in #run-summary-overlay. Guards against INPUT/TEXTAREA focus."
     }
   },
   "ts_errors": 0,
-  "bundle_kb_app": 98.37,
-  "bundle_kb_gzip": 30.14,
   "build_ok": true,
-  "build_time_s": 2.01,
-  "verdict": "PASS"
+  "bundle_kb_app": 100.25,
+  "bundle_delta_kb": 1.88,
+  "bundle_delta_pct": 1.91
 }
