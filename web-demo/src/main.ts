@@ -7,12 +7,12 @@ import { SceneManager } from './engine/SceneManager';
 import { CameraRail } from './engine/CameraRail';
 import { buildCoastScene } from './scenes/CoastBiome';
 import { store } from './game/Store';
-import { BIOMES, getMultiplier, getMultiplierLabel } from './game/Constants';
+import { getMultiplier, getMultiplierLabel } from './game/Constants';
 import { generateFastRouteCard, detectMinigame, loadTemplates } from './game/CardSystem';
 import { applyEffects, applyOghamEffect, processOghamModifiers } from './game/EffectEngine';
-import { showCard, hideCard } from './ui/CardOverlay';
+import { showCard } from './ui/CardOverlay';
 import { initHUD, updateHUD } from './ui/HUD';
-import { fadeIn, fadeOut, crossFade } from './ui/Transitions';
+import { fadeIn, fadeOut } from './ui/Transitions';
 import { MinigameTraces } from './minigames/mg_traces';
 import { MinigameRunes } from './minigames/mg_runes';
 import { MinigameEquilibre } from './minigames/mg_equilibre';
@@ -29,6 +29,7 @@ import { MinigameRegard } from './minigames/mg_regard';
 import { MinigameEcho } from './minigames/mg_echo';
 import { initOghamPanel, showOghamPanel, hideOghamPanel } from './ui/OghamPanel';
 import { getLLMAdapter } from './llm/GroqAdapter';
+import { showRunSummary } from './ui/RunSummary';
 
 // --- Config ---
 const WALK_SECONDS_BEFORE_CARD = 6; // Seconds of walking before showing a card
@@ -107,7 +108,7 @@ async function gameLoop(
     if (state().checkDeath()) {
       state().endRun('death_drain');
       saveAnamToStorage();
-      await showEndScreen('Tu as succombe a l\'epuisement...');
+      await showRunSummary('death');
       break;
     }
 
@@ -200,15 +201,23 @@ async function gameLoop(
     if (state().checkDeath()) {
       state().endRun('death_effects');
       saveAnamToStorage();
-      await showEndScreen('Les forces de Broceliande t\'ont consume...');
+      await showRunSummary('death');
       break;
     }
 
-    // 10. Check victory condition
+    // 10a. Check 30-card limit (T046)
+    if (state().run.cardsPlayed >= 30) {
+      state().endRun('cards_limit');
+      saveAnamToStorage();
+      await showRunSummary('cards_limit');
+      break;
+    }
+
+    // 10b. Check victory condition (rail complete + min cards)
     if (state().run.cardsPlayed >= 25 && rail.isComplete()) {
       state().endRun('victory');
       saveAnamToStorage();
-      await showEndScreen('Tu as traverse le biome ! Victoire !');
+      await showRunSummary('victory');
       break;
     }
 
@@ -258,48 +267,6 @@ function createMinigame(id: string, container: HTMLElement) {
   }
 }
 
-async function showEndScreen(message: string): Promise<void> {
-  const state = store.getState();
-  await fadeIn(800);
-
-  const overlay = document.getElementById('card-overlay')!;
-  const textEl = document.getElementById('card-text')!;
-  const optionsEl = document.getElementById('card-options')!;
-
-  textEl.textContent = message;
-  optionsEl.innerHTML = '';
-
-  const statsDiv = document.createElement('div');
-  statsDiv.style.cssText = 'text-align:center;color:#e8dcc8;font-family:system-ui;';
-  statsDiv.innerHTML = `
-    <div style="font-size:24px;margin-bottom:16px;color:#cd853f;">Fin de la quete</div>
-    <div style="font-size:16px;margin-bottom:8px;">Cartes jouees: ${state.run.cardsPlayed}</div>
-    <div style="font-size:16px;margin-bottom:8px;">Vie restante: ${state.run.life}</div>
-    <div style="font-size:16px;margin-bottom:24px;">Anam gagne: ${state.meta.anam}</div>
-    <button id="restart-btn" style="
-      padding:12px 32px;font-size:16px;cursor:pointer;
-      background:rgba(139,69,19,0.3);color:#e8dcc8;
-      border:1px solid rgba(205,133,63,0.5);border-radius:8px;
-      font-family:system-ui;
-    ">Rejouer</button>
-  `;
-  optionsEl.appendChild(statsDiv);
-
-  overlay.classList.add('visible');
-  await fadeOut(800);
-
-  // Wait for restart
-  await new Promise<void>((resolve) => {
-    document.getElementById('restart-btn')?.addEventListener('click', () => {
-      hideCard();
-      store.getState().reset();
-      resolve();
-    });
-  });
-
-  // Restart
-  window.location.reload();
-}
 
 function waitSeconds(seconds: number): Promise<void> {
   return new Promise((resolve) => setTimeout(resolve, seconds * 1000));

@@ -1,0 +1,59 @@
+{
+  "cycle": 17,
+  "timestamp": "2026-03-31T22:30:00Z",
+  "agent": "merlin-ai-playtester",
+  "status": "PASS",
+  "tasks_validated": ["landes_batch2", "T046", "T047"],
+  "card_pool": {
+    "total": 266,
+    "added_this_cycle": 20,
+    "biome": "landes_bruyere (batch 2 of 3)"
+  },
+  "landes_batch2_validation": {
+    "anciens_options_pct": 78,
+    "anciens_options_target_min_pct": 35,
+    "druides_cards": 3,
+    "druides_cards_max": 3,
+    "heal_life_max_found": 5,
+    "heal_life_cap": 5,
+    "heal_violations": 0,
+    "ogham_references": ["Beith (card 3)", "Nion (card 16)", "Luis (card 13)"],
+    "no_3plus_negative_effects": true,
+    "thematic_coherence": "HIGH",
+    "verdict": "PASS"
+  },
+  "t046_run_summary_validation": {
+    "trigger_death_drain": "step 3 in game loop — life<=0 after drainLifeScaled()",
+    "trigger_death_effects": "step 9 in game loop — life<=0 after applyEffects()",
+    "trigger_cards_limit": "step 10a — cardsPlayed >= 30 (NEW trigger, previously missing)",
+    "trigger_victory": "step 10b — cardsPlayed >= 25 AND rail.isComplete()",
+    "stats_panel": {
+      "cards_played": "state.run.cardsPlayed",
+      "anam": "state.meta.anam",
+      "life_remaining": "Math.max(0, state.run.life)",
+      "biome": "BIOME_LABELS[state.run.biome]",
+      "factions": "all 5 from state.run.factions with color-coded bars"
+    },
+    "ui_elements": ["dark overlay z-index:70", "Celtic header 'Fin de Quete'", "reason message italic", "2-column stats grid", "5 faction progress bars", "Rejouer button with hover"],
+    "cleanup": "overlay.remove() + store.reset() + window.location.reload() on restart",
+    "verdict": "PASS"
+  },
+  "t047_card_flip_validation": {
+    "css_keyframes": "card-flip-in: 0%=0deg, 45%=90deg (hidden), 55%=-90deg, 100%=0deg",
+    "duration": "0.4s ease-in-out",
+    "perspective": "1000px on .card-container",
+    "trigger_location": "CardOverlay.showCard() after overlay.classList.add('visible')",
+    "cleanup": "class removed after 420ms via setTimeout",
+    "reflow_trick": "void container.offsetWidth ensures re-animation on repeated calls",
+    "verdict": "PASS"
+  },
+  "regression_check": {
+    "ts_errors": 0,
+    "build_ok": true,
+    "bundle_kb_app": 96.83,
+    "bundle_within_220kb_threshold": true,
+    "showEndScreen_removed": true,
+    "unused_imports_cleaned": ["BIOMES", "hideCard", "crossFade"],
+    "verdict": "PASS"
+  }
+}

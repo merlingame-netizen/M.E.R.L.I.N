@@ -1,123 +1,37 @@
 {
+  "cycle": 17,
   "agent": "merlin-ai-playtester",
-  "cycle": 13,
-  "timestamp": "2026-03-31T08:35:00Z",
   "status": "PASS",
-  "confidence": 0.92,
-  "method": "analytical_simulation",
-
-  "t040_verification": {
-    "heal_cap_applied": true,
-    "GroqAdapter_cap": 5,
-    "CardSystem_violations": 0,
-    "pool_distribution": {
-      "HEAL_LIFE_5": 111,
-      "HEAL_LIFE_4": 34,
-      "HEAL_LIFE_3": 24,
-      "HEAL_LIFE_2": 4
-    },
-    "weighted_avg_heal_option": 4.47,
-    "delta_from_cycle12": -1.13,
-    "improvement": "20% reduction in average heal ceiling"
+  "timestamp": "2026-03-31T22:30:00Z",
+  "tasks_tested": ["T046_run_summary", "T047_card_flip", "landes_batch2"],
+  "t046_analysis": {
+    "trigger_death": "showRunSummary('death') called at step 3 (drain) and step 9 (effects) — both paths covered",
+    "trigger_cards_limit": "showRunSummary('cards_limit') at step 10a when cardsPlayed >= 30 — new check inserted before victory check",
+    "trigger_victory": "showRunSummary('victory') at step 10b (rail complete + 25 cards) — original condition preserved",
+    "stats_shown": ["cardsPlayed", "anam (meta.anam)", "life remaining", "biome label", "all 5 faction reputations with bars"],
+    "verdict": "PASS — all 3 trigger paths covered, stats sourced correctly from store state"
   },
-
-  "net_heal_by_stage": {
-    "stage1_cards_1_15": {
-      "drain": -1,
-      "avg_heal_cautious": 4.47,
-      "net_cautious": "+3.47",
-      "avg_heal_mixed": 1.28,
-      "net_mixed": "+0.28",
-      "verdict": "Both strategies survive. Correct -- early game should be safe."
-    },
-    "stage2_cards_16_25": {
-      "drain": -2,
-      "avg_heal_cautious": 4.47,
-      "net_cautious": "+2.47",
-      "avg_heal_mixed": 1.28,
-      "net_mixed": "-0.72",
-      "verdict": "MEDIUM: Mixed play now net-negative (improvement). Cautious healer still positive (+2.47)."
-    },
-    "stage3_cards_26plus": {
-      "drain": -3,
-      "avg_heal_cautious": 4.47,
-      "net_cautious": "+1.47",
-      "avg_heal_mixed": 1.28,
-      "net_mixed": "-1.72",
-      "verdict": "Mixed play now at serious risk. Cautious healer barely positive -- 1.47/card surplus."
-    }
-  },
-
-  "new_cards_audit": {
-    "batch": "druides_light_batch2",
-    "count": 20,
-    "heal_values_found": [5,3,4,4,5,5,4,4,3,5,4,4,5,4,5,3,5,4,5],
-    "max_heal_found": 5,
-    "max_heal_allowed": 5,
-    "violations": 0,
-    "faction_distribution": {
-      "ankou": 4,
-      "niamh": 5,
-      "korrigans": 4,
-      "anciens": 4,
-      "druides": 3
-    },
-    "field_distribution_estimate": {
-      "chance": 4,
-      "bluff": 3,
-      "observation": 4,
-      "logique": 3,
-      "finesse": 3,
-      "vigueur": 3,
-      "esprit": 6,
-      "perception": 4
-    },
-    "field_quotas_met": true,
-    "narrative_quality": "Diverse themes: Ankou threshold imagery (charette, bridge double, dolmen descent), Niamh healing water (source, cygne, harpe, barque), Korrigans trickery (market, piege, math challenge), Anciens wisdom (menhir, bibliotheque, fontaine, calendrier), Druides knowledge (cercle de chenes, bibliotheque loi). No druide-centric bias.",
+  "t047_analysis": {
+    "animation": "rotateY 0->90->-90->0 over 0.4s — creates convincing flip illusion",
+    "trigger": "every showCard() call — correct, fires on each new card in the loop",
+    "cleanup": "class removed after 420ms — no interference with hover transitions",
     "verdict": "PASS"
   },
-
-  "overall_balance_verdict": {
-    "t040_target_met": false,
-    "t040_target_was": "stage2 net-negative for cautious players",
-    "t040_actual": "Mixed-play net-negative at stage2 (-0.72). Cautious healer still positive (+2.47).",
-    "improvement_vs_cycle12": "Stage2 cautious: was +5.7 (HEAL avg 7.7), now +2.47. Significant improvement.",
-    "remaining_gap": "Cautious healer (always picks max heal) immune to drain pressure through stage3.",
-    "recommendation": "T042: Context-sensitive heal nerf post-card-20 (halve HEAL_LIFE values after card 20), OR add power milestone penalty at card 20 (-10 life event)."
+  "landes_batch2_analysis": {
+    "cards_added": 20,
+    "total_pool": 266,
+    "anciens_options_pct": 78,
+    "druides_cards": 3,
+    "heal_life_max_found": 5,
+    "ogham_references": 3,
+    "thematic_coherence": "HIGH — moorland/ancestor themes consistent across all 20 cards",
+    "verdict": "PASS"
   },
-
-  "new_backlog_tasks": [
-    {
-      "id": "T042",
-      "title": "Late-game heal context scaling: halve HEAL_LIFE values applied after card 20",
-      "priority": 3,
-      "domain": "gameplay",
-      "est_tokens": 250,
-      "severity": "MEDIUM",
-      "tags": ["balance", "difficulty"],
-      "notes": "T040 reduced ceiling but cautious healer still net-positive at all stages. Approach: in EffectEngine.applyEffects(), if cardsPlayed > 20, apply HEAL_LIFE * 0.5 (rounded). Or add a milestone drain event at card 20 (-8 life, non-blockable). Prefer the EffectEngine approach as it avoids surprise punishes."
-    },
-    {
-      "id": "T043",
-      "title": "Externalize FASTROUTE_TEMPLATES to public/data/cards.json -- bundle at 303KB, cap 304KB",
-      "priority": 2,
-      "domain": "gameplay",
-      "est_tokens": 400,
-      "severity": "HIGH",
-      "tags": ["bundle", "architecture"],
-      "notes": "CardSystem.ts now 1460 lines. Bundle at 303KB vs 304KB cap. Next 20-card batch will breach. Move FASTROUTE_TEMPLATES to public/data/cards.json, load via fetch() with in-memory cache. Blocker before cycle 14 card batch."
-    }
-  ],
-
-  "overall_verdict": "PASS",
-  "critical_issues": 0,
-  "high_issues": 0,
-  "medium_issues": 1,
-  "low_issues": 0,
-  "summary": "Cycle 13: T040 heal cap applied correctly (59 templates clamped, 0 violations). 20 new cards pass all constraints (heal<=5, druides=3, ankou=4). Balance improved but cautious healer still survives all stages -- T042 needed. Bundle at 303KB -- T043 externalization required before next card batch.",
-  "blockers": [],
-  "next_steps": [
-    "T042: Late-game heal scaling in EffectEngine (MEDIUM priority)",
-    "T043: Externalize card templates to JSON before next card batch (HIGH priority -- bundle cap)"
-  ]
+  "balance_check": {
+    "heal_life_cap_compliant": true,
+    "druides_cap_compliant": true,
+    "anciens_minimum_met": true,
+    "no_3plus_negative_effects": true
+  },
+  "verdict": "PASS — all cycle 17 tasks validated"
 }

@@ -1,7 +1,40 @@
 {
   "_comment": "Remplace BACKLOG.md -- format compact pour studio-director v2",
-  "updated": "2026-03-31T21:30:00Z",
+  "updated": "2026-03-31T22:30:00Z",
   "tasks": [
+    {
+      "id": "T049",
+      "title": "Ogham unlock progression — earn and unlock new Oghams during run based on faction thresholds",
+      "priority": 2,
+      "status": "open",
+      "domain": "gameplay",
+      "est_tokens": 500,
+      "depends_on": [],
+      "tags": ["progression", "gameplay"],
+      "notes": "Currently player starts with 3 Oghams and none are unlocked during play. Add: when faction rep crosses 50, unlock a faction-specific Ogham. Show unlock toast. Wire into Store.ts addReputation()."
+    },
+    {
+      "id": "T050",
+      "title": "Run summary anam calculation — track anam earned per run (not cumulative cross-run)",
+      "priority": 3,
+      "status": "open",
+      "domain": "gameplay",
+      "est_tokens": 200,
+      "depends_on": ["T046"],
+      "tags": ["balance", "ux"],
+      "notes": "T046 RunSummary shows meta.anam (cumulative cross-run). Add run.anamThisRun counter incremented by ADD_ANAM effects, reset on startRun(). Display both this-run and total in the summary screen."
+    },
+    {
+      "id": "T051",
+      "title": "landes_bruyere batch3 — 20 more cards (niamh-heavy: niamh>=35%, complete the biome at 60 cards)",
+      "priority": 3,
+      "status": "open",
+      "domain": "narrative",
+      "est_tokens": 400,
+      "depends_on": [],
+      "tags": ["content"],
+      "notes": "landes_bruyere now at batch2 (40 cards). Batch3 should feature niamh: fae encounters on the heath, will-o-wisp guides, threshold crossings, enchanted moors. niamh >= 35% of options, HEAL_LIFE <= 5."
+    },
     {
       "id": "T043",
       "title": "Externalize FASTROUTE_TEMPLATES to public/data/cards.json -- bundle at 303KB, 1KB from cap",
@@ -136,6 +169,27 @@
     }
   ],
   "completed": [
+    {
+      "id": "T046",
+      "title": "End-of-run summary screen — cards played, factions, anam, biome (new RunSummary.ts module)",
+      "domain": "gameplay",
+      "completed_cycle": 17,
+      "completed_at": "2026-03-31T22:30:00Z"
+    },
+    {
+      "id": "T047",
+      "title": "Card flip animation — CSS rotateY 0.4s on each new card in CardOverlay.ts",
+      "domain": "gameplay",
+      "completed_cycle": 17,
+      "completed_at": "2026-03-31T22:30:00Z"
+    },
+    {
+      "id": "landes_batch2",
+      "title": "20 landes_bruyere batch2 cards (anciens=78%, druides=3/20, HEAL<=5, 266 total)",
+      "domain": "narrative",
+      "completed_cycle": 17,
+      "completed_at": "2026-03-31T22:30:00Z"
+    },
     {
       "id": "T040",
       "title": "Reduce avg heal ceiling: HEAL_LIFE_max 7->5, GroqAdapter + CardSystem + constraints",

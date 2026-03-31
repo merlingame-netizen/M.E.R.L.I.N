@@ -1,29 +1,27 @@
 {
   "_comment": "Contexte pre-calcule par le director en debut de cycle. Lu par les agents a la place de tous les docs.",
-  "cycle": 16,
-  "timestamp": "2026-03-31T21:00:00Z",
+  "cycle": 17,
+  "timestamp": "2026-03-31T22:00:00Z",
   "mode": "autonomous_dev",
-  "focus": "T040-deep-confirm + biome-toast + foret_batch2 + aria-labels",
+  "focus": "landes_batch2 + T046 run summary + T047 card flip animation",
   "selected_tasks": [
-    {"id": "T040-confirm", "title": "5 cautious healer deep runs -- confirm net drain math post-T042", "domain": "qa", "agent": "merlin-ai-playtester", "priority": 2},
-    {"id": "T045", "title": "Biome toast: 2s overlay when entering new biome section", "domain": "gameplay+visual", "agent": "merlin-gameplay-programmer", "priority": 3},
-    {"id": "T046", "title": "20 new foret_broceliande batch2 cards (Ogham-rich, druides<=30%, anciens>=25%)", "domain": "narrative", "agent": "merlin-narrative-designer", "priority": 2},
-    {"id": "T047", "title": "aria-label on all 14 minigame canvases for accessibility", "domain": "gameplay", "agent": "merlin-gameplay-programmer", "priority": 3}
+    {"id": "T048_landes_batch2", "title": "20 landes_bruyere batch2 cards (anciens>=35%, druides<=3 cards, HEAL_LIFE<=5)", "domain": "narrative", "agent": "merlin-narrative-designer", "priority": 1},
+    {"id": "T046", "title": "End-of-run summary overlay (life=0 or 30 cards played)", "domain": "gameplay", "agent": "merlin-gameplay-programmer", "priority": 2},
+    {"id": "T047", "title": "Card flip animation CSS rotateY 0->180->0, 0.4s", "domain": "gameplay", "agent": "merlin-gameplay-programmer", "priority": 3}
   ],
   "state_summary": {
-    "bundle_kb_app": 91.63,
-    "bundle_kb_total": 717.17,
+    "bundle_kb_app": 92.79,
+    "bundle_kb_total": 702.59,
     "bundle_cap_kb_warn": 220,
     "ts_errors": 0,
     "validate_step0": 0,
     "minigames_count": 14,
-    "total_cards_in_json": 226,
+    "total_cards_in_json": 246,
     "deployment_url": "https://web-export-pi.vercel.app"
   },
-  "cycle15_completed": {
-    "T044": "Ogham HUD badge (top-center, pulsing, x1.5 text) added in HUD.ts",
-    "marais_batch2": "20 new marais_korrigans cards appended to cards.json (226 total)",
-    "T042": "HEAL_LIFE halved after card 20 in EffectEngine (Math.max(1, Math.floor(raw*0.5)))"
+  "cycle16_completed": {
+    "foret_batch2": "20 foret_broceliande cards appended (246 total)",
+    "T045": "biome toast 2s overlay on run start + entry"
   },
   "key_constants": {
     "HEAL_LIFE_card_max": 5,
@@ -36,75 +34,33 @@
     "late_heal_scale_threshold": 20,
     "late_heal_multiplier": 0.5
   },
-  "t040_playtester_brief": {
-    "strategy": "cautious healer -- always pick highest HEAL_LIFE option",
-    "runs": 5,
-    "check_per_stage": {
-      "stage1_cards_1_15": "drain -1/card, avg heal ~4.47 -> net ~+3.47 (expected positive, healing phase)",
-      "stage2_cards_16_25": "drain -2/card, heal halved after card 20: avg ~2.2 -> net +0.2 (marginal, should be near-zero)",
-      "stage3_cards_26plus": "drain -3/card, heal ~2.2 -> net -0.8 (expected net-negative)"
-    },
-    "verdict_pass": "stage2 net per card <= +0.5, stage3 net per card < 0",
-    "verdict_fail": "stage2 net > +0.5 consistently -> escalate T045-balance"
-  },
-  "biome_toast_brief": {
-    "file": "web-demo/src/main.ts",
-    "approach": "On run start and on every ~8th card, show a 2s toast overlay with current biome label",
-    "biome_label_source": "BIOMES constant from Constants.ts, store.getState().run.biome",
-    "toast_id": "biome-toast",
-    "toast_style": "position:absolute, bottom:80px, left:50%, transform:translateX(-50%), bg dark, text amber, fade-in 300ms, fade-out 300ms, auto-dismiss 2s",
-    "trigger": "on biome change (run start) or manually every 8 cards to remind player",
-    "prefer_simple": "just add showBiomeToast(biomeName) utility + call it in main.ts on run start"
-  },
-  "foret_batch2_brief": {
+  "landes_batch2_brief": {
     "cards_json_path": "web-demo/public/data/cards.json",
-    "format": "[{narrative: string, options: [{verb, text, effects: string[]}x3]}, ...]",
-    "append_location": "Before the final ] -- insert 20 new card objects with leading , separator",
-    "themes": "foret broceliande second batch: druides second set. Oak groves with ancient Ogham stones, druid initiations, moon rituals by standing stones, sacred wells, mistletoe harvest, ancestral memory in tree rings, spirits of the forest, old druid debates about Ogham meanings. Richer in Ogham lore than batch1.",
+    "format": "[{narrative: string, biome: string, options: [{verb, text, effects: string[]}x3]}, ...]",
+    "append_location": "Before the final ] -- insert 20 new card objects with leading comma separator",
+    "themes": "landes bruyere second batch: anciens-heavy. Themes: elder druids who have left the groves and now tend to moorlands; ancient megaliths on misty heaths; rites of autumn equinox on open landes; ancestors speaking through standing stones; wind-swept prophecies; burial mounds of forgotten kings; heather blooming under low clouds; travellers lost in fog; peat bogs preserving old memories; crossroads where ancestors linger.",
     "constraints": {
       "total_new_cards": 20,
-      "druides_options_pct_max": 30,
-      "anciens_options_pct_min": 25,
+      "biome": "landes_bruyere",
+      "anciens_options_pct_min": 35,
+      "druides_cards_max": 3,
       "HEAL_LIFE_max_per_option": 5,
-      "ogham_references": "at least 8 of 20 cards must reference an Ogham name (Beith, Luis, Nion, Fearn, Sail, Huath, Dair, Tinne, Coll, Quert, Muin, Gort, nGetal, Straif, Ruis) in narrative or options",
-      "effects_per_option": "1-3 effects, no option with 3+ DAMAGE effects",
+      "effects_per_option": "1-3 effects, no option with 3+ negative effects",
       "allowed_effects": ["HEAL_LIFE:1-5", "DAMAGE_LIFE:1-8", "ADD_REPUTATION:druides/anciens/korrigans/niamh/ankou:1-15", "ADD_ANAM:1-5", "ADD_BIOME_CURRENCY:1-5"]
     }
   },
-  "aria_label_brief": {
-    "minigame_files": [
-      "web-demo/src/minigames/mg_apaisement.ts",
-      "web-demo/src/minigames/mg_combat_rituel.ts",
-      "web-demo/src/minigames/mg_course.ts",
-      "web-demo/src/minigames/mg_echo.ts",
-      "web-demo/src/minigames/mg_equilibre.ts",
-      "web-demo/src/minigames/mg_fouille.ts",
-      "web-demo/src/minigames/mg_herboristerie.ts",
-      "web-demo/src/minigames/mg_negociation.ts",
-      "web-demo/src/minigames/mg_ombres.ts",
-      "web-demo/src/minigames/mg_regard.ts",
-      "web-demo/src/minigames/mg_runes.ts",
-      "web-demo/src/minigames/mg_sang_froid.ts",
-      "web-demo/src/minigames/mg_traces.ts",
-      "web-demo/src/minigames/mg_volonte.ts"
-    ],
-    "pattern": "After createElement('canvas'), add: this.canvas.setAttribute('aria-label', '<descriptive name>');\n  this.canvas.setAttribute('role', 'application');",
-    "label_map": {
-      "mg_apaisement": "Minijeu apaisement : exercice de respiration rythmique",
-      "mg_combat_rituel": "Minijeu combat rituel : esquiver dans le cercle sacre",
-      "mg_course": "Minijeu course : chasser les symboles qui fuient",
-      "mg_echo": "Minijeu echo : reperer la direction du son",
-      "mg_equilibre": "Minijeu equilibre : maintenir l'equilibre sur le sentier",
-      "mg_fouille": "Minijeu fouille : trouver l'objet cache parmi les leurres",
-      "mg_herboristerie": "Minijeu herboristerie : identifier les plantes medicinales",
-      "mg_negociation": "Minijeu negociation : persuader par les mots",
-      "mg_ombres": "Minijeu ombres : traverser le couloir dans l'ombre",
-      "mg_regard": "Minijeu regard : memoriser et reproduire la sequence",
-      "mg_runes": "Minijeu runes : associer les paires d'oghams",
-      "mg_sang_froid": "Minijeu sang-froid : maintenir le curseur dans la zone",
-      "mg_traces": "Minijeu traces : suivre les empreintes",
-      "mg_volonte": "Minijeu volonte : resister aux distractions, garder le focus"
-    }
+  "t046_brief": {
+    "trigger": "life <= 0 OR store.run.cardsPlayed >= 30",
+    "display": "Overlay with: cards played count, faction rep gains (all 5), anam earned, biome reached",
+    "file_options": ["web-demo/src/ui/RunSummary.ts (new, preferred)", "web-demo/src/main.ts (inline if smaller)"],
+    "style": "dark semi-transparent overlay, centered panel, Celtic-style header text, restart button",
+    "store_fields": "store.getState(): run.cardsPlayed, run.biome, factions.{druides,anciens,korrigans,niamh,ankou}.reputation, run.anamEarned or accumulate from effects"
+  },
+  "t047_brief": {
+    "trigger": "every time a new card is displayed (card choice phase start)",
+    "animation": "CSS rotateY 0->90deg (front disappears, 0.2s) then 90->0deg (back=content appears, 0.2s), total 0.4s",
+    "file": "web-demo/src/ui/CardDisplay.ts or equivalent card rendering code",
+    "approach": "add .card-flip class, CSS @keyframes flip, call .classList.add('card-flip') then remove after 400ms"
   },
   "regression_thresholds": {
     "ts_errors": "== 0 (BLOCK)",
