@@ -1,15 +1,36 @@
 {
   "agent": "merlin-tech-artist",
-  "cycle": 22,
-  "timestamp": "2026-03-31T01:30:00Z",
+  "cycle": 23,
+  "timestamp": "2026-03-31T00:30:00Z",
   "status": "PASS",
-  "tasks_done": ["T062", "T064"],
-  "ts_errors": 0,
-  "build_ok": true,
-  "bundle_kb_app": 123.07,
-  "bundle_kb_vendor": 532.77,
-  "build_time_s": 2.82,
-  "files_created": ["web-demo/src/scenes/MerlinLairScene.ts"],
-  "files_modified": ["web-demo/index.html"],
-  "notes": "T062: MerlinLairScene.ts 470 lines. 3D interior: stone walls (BoxGeometry 0x3a3228), flagstone floor, ceiling, 4 wooden cross-beams (0x3d2b1a), mortar lines (7 slabs). 4 raycaster zones: map=BoxGeometry scroll on table, crystal=SphereGeometry 0x9060cc emissive purple PointLight 2.5 range 8, bookshelf=3-row 18-book frame with invisible BoxGeometry hitTarget, door=frame+panel+iron straps+light sliver+PointLight 0xffdd66. Raycaster: mousemove+click, scale 1.0→1.05 hover, cursor:pointer. Camera fixed PerspectiveCamera(62) [0,0.5,7] lookAt [0,0,-4], sway sin(t*0.94)*0.1 x + sin(t*0.72)*0.06 y. Fog 0x0d0a08 near=12 far=28. T064: 3 candles — each: CylinderGeometry body+wick, PointLight 1.8 range 4.5 + 20 orange particles AdditiveBlending upward drift maxLife=1.2s with horizontal jitter. Flicker: 3-frequency sin layering (7.3Hz/13.1Hz/3.7Hz). 80 dust motes Points 0.35 opacity wrap-bounds drift. Cauldron: SphereGeometry scale.y=0.8, 3 legs, PointLight 0x22cc44, 30 green steam particles. Potions: 3 emissive cylinders+necks. Skull: SphereGeometry cranium+jaw. dispose() cleans all geometries+materials+event listeners."
+  "fixes_applied": [
+    {
+      "id": "FIX1_BOOT_FULLSCREEN",
+      "file": "web-demo/index.html",
+      "change": "#boot-screen: position:absolute -> position:fixed, top:0 left:0 width:100vw height:100vh, z-index:200 -> 9999, background:#0a0a12 -> #000, added overflow:hidden",
+      "result": "Boot screen now covers full viewport including sides. No 3D bleed-through possible. Black background ensures true black border on all sides."
+    },
+    {
+      "id": "FIX2_STATIC_CAMERA",
+      "file": "web-demo/src/scenes/MainMenuScene.ts",
+      "change": "Removed createDollyPath() (CatmullRomCurve3). Removed dollyActive/dollyProgress/dollyCallback/DOLLY_DURATION state. Camera fixed at (0,12,35) lookAt (0,5,-20). startDolly() is now no-op calling onComplete immediately. 0.4s button delay removed.",
+      "result": "Camera fully static. Button visible immediately on menu load. World animates (waves, sky, spray, cliff light flicker). No rotation or orbit."
+    },
+    {
+      "id": "FIX3_REMOVE_SURMENU",
+      "file": "web-demo/src/main.ts",
+      "change": "Removed import of initMerlinLair. Removed entire runMerlinLair() async function. Removed await runMerlinLair() from main(). Flow: runBootScreen -> runMainMenu -> game.",
+      "result": "No lair hub between menu and game. Clean direct flow after button click."
+    }
+  ],
+  "regression_gate": {
+    "ts_errors": 0,
+    "ts_errors_status": "PASS",
+    "bundle_app_kb": 110.92,
+    "bundle_app_threshold_kb": 220,
+    "bundle_status": "PASS",
+    "build_clean": true,
+    "bundle_delta_kb": -12.08,
+    "bundle_note": "Decreased vs cycle 22 (123KB) — MerlinLairScene no longer imported"
+  }
 }

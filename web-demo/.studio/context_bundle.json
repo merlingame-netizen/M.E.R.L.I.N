@@ -1,52 +1,37 @@
 {
-  "cycle": 22,
-  "timestamp": "2026-03-31T01:10:00Z",
-  "top_tasks": ["T062", "T058", "cotes_sauvages_batch2"],
-  "state_machine_current": "BOOT→MENU(cliff dolly)→GAME",
-  "state_machine_target": "BOOT→MENU(cliff dolly)→LAIR(clickable 3D interior)→GAME",
-  "main_ts_phases": {
-    "runBootScreen": "lines 42-67 — CSS progress bar 2.5s, fade out",
-    "runMainMenu": "lines 71-117 — initMainMenu(wrapper), startDolly(resolve), dispose",
-    "main_bootstrap": "lines 119+ — after runMainMenu() resolves, goes straight to game (loading div, SceneManager, buildCoastScene)"
+  "cycle": 23,
+  "timestamp": "2026-03-31T00:00:00Z",
+  "selected_tasks": ["FIX-BOOT", "FIX-MENU-CAM", "FIX-SURMENU"],
+  "changed_files_since_c22": [
+    "web-demo/index.html",
+    "web-demo/src/main.ts",
+    "web-demo/src/scenes/MainMenuScene.ts"
+  ],
+  "known_issues": {
+    "boot_bleed": "position:absolute on #boot-screen allows 3D canvas to show through sides. Must be position:fixed with 100vw/100vh. Also Three.js renderer is initialized while boot screen is still active.",
+    "camera_dolly": "MainMenuScene.ts has CatmullRomCurve3 dolly path active after button click (startDolly). User wants FIXED static camera at (0,12,35) looking at (0,5,-20). World animates, camera does not.",
+    "sur_menu": "After main menu, Merlin's Lair (MerlinLairScene) is shown as an intermediate hub before the game. User wants: boot -> static menu -> click -> game directly. The lair scene is the 'sur-menu' to remove."
   },
-  "new_phase_needed": "runMerlinLair() between runMainMenu() and main game loop",
-  "insert_point": "main.ts line 128 — after await runMainMenu(), before loading.style.display='flex'",
-  "baseline": {
+  "constants": {
+    "STATIC_CAM_POS": "(0, 12, 35)",
+    "STATIC_CAM_LOOK": "(0, 5, -20)",
+    "boot_duration": "2.5s CSS animation + 0.1s buffer",
+    "regression_gate": "ts_errors==0 BLOCK, bundle_app<220KB WARN"
+  },
+  "last_cycle_status": {
     "ts_errors": 0,
-    "bundle_kb_app": 108.88,
-    "bundle_kb_vendor": 531.27,
-    "cards_total": 346,
-    "minigames_count": 14
+    "bundle_kb": 123,
+    "cards": 366,
+    "commit": "457e9e2"
+  },
+  "fix_specs": {
+    "fix1_boot": "index.html: change #boot-screen from position:absolute to position:fixed, top:0 left:0 width:100vw height:100vh z-index:9999 background:#000. The #app div must remain but the 3D scene is not initialized until after boot completes (Three.js not called during boot).",
+    "fix2_static_camera": "MainMenuScene.ts: REMOVE createDollyPath(), REMOVE dollyActive/dollyProgress/dollyCallback/DOLLY_DURATION variables. Camera set once: position (0,12,35) lookAt (0,5,-20). startDolly() is replaced with no-op that calls callback immediately after 0ms. Show button immediately (remove 0.4s delay). Keep world animation (waves, sky, particles, cliff light).",
+    "fix3_remove_lair": "main.ts: REMOVE the await runMerlinLair() call. Flow: runBootScreen() -> runMainMenu() -> [game init]. Keep lair HTML divs in index.html (harmless, display:none). Remove lair-related imports from main.ts."
   },
   "gates": {
     "ts_errors": { "threshold": 0, "action": "BLOCK" },
     "bundle_kb_app": { "threshold": 220, "action": "WARN" },
     "runtime_errors": { "threshold": 0, "action": "BLOCK" }
-  },
-  "key_files": {
-    "entry": "web-demo/src/main.ts",
-    "html": "web-demo/index.html",
-    "main_menu_scene": "web-demo/src/scenes/MainMenuScene.ts",
-    "scene_transition": "web-demo/src/ui/SceneTransition.ts",
-    "coast_scene": "web-demo/src/scenes/CoastBiome.ts",
-    "cards_data": "web-demo/public/data/cards.json"
-  },
-  "arch_notes": {
-    "three_js": "vendor chunk 531KB, split via vite manual chunks",
-    "scene_transition": "cutToBlack() + revealFromBlack(ms) — already used in main.ts",
-    "main_menu_pattern": "initMainMenu(wrapper) returns {update(dt), startDolly(cb), dispose()}. Follow same pattern for MerlinLairScene.",
-    "lair_div_needed": "Add #lair-canvas-wrapper div to index.html (same pattern as #menu-canvas-wrapper). Hidden by default.",
-    "raycaster_pattern": "Three.js Raycaster: raycaster.setFromCamera(mouse, camera), raycaster.intersectObjects([...targets]). On click intersect: open overlay.",
-    "sfx_event_bus": "window.dispatchEvent(new CustomEvent('merlin_sfx', {detail:{sound:'flip'}})) wired in CardSystem+EffectEngine at flip/win/lose/unlock/end"
-  },
-  "faction_constraints_cotes_batch2": {
-    "biome": "cotes_sauvages",
-    "count": 20,
-    "niamh_options_pct": 35,
-    "ankou_options_pct": 20,
-    "HEAL_LIFE_max": 5,
-    "DMG_LIFE_max": 15,
-    "REP_max_per_card": 20,
-    "negative_effects_per_option_max": 2
   }
 }

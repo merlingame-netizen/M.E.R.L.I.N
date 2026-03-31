@@ -1,0 +1,239 @@
+{
+  "agent": "merlin-ai-playtester",
+  "cycle": 23,
+  "mode": "DEEP_SCAN",
+  "timestamp": "2026-03-31T00:30:00Z",
+  "url": "https://web-export-pi.vercel.app",
+  "overall_score": 6.1,
+  "critical_issues": 0,
+  "high_issues": 3,
+  "medium_issues": 7,
+  "low_issues": 5,
+
+  "sections": {
+    "boot": {
+      "score": 7,
+      "description": "CeltOS-style green terminal boot concept. SVG Celtic knot logo with animated rotating dashed ring. Progress bar animation 2.5s. Status text cycles through 4 messages.",
+      "positives": [
+        "Concept is strong — Celtic tech-aesthetic fits the game theme",
+        "Progress bar animation timing (2.5s) feels right for a game boot",
+        "SVG knot is handsome and unique",
+        "Status messages (Oghams, monde celtique) are thematic"
+      ],
+      "criticisms": [
+        "FIXED THIS CYCLE: position:absolute caused 3D bleed-through on sides. Now position:fixed.",
+        "The boot logo is bronze/amber — not CeltOS green. The mission brief describes it as a green terminal but the implementation is amber on dark. This is fine aesthetically but mismatches the description.",
+        "No click-to-skip. Users who have seen the boot must wait 2.5s every single time. After 5 sessions this becomes irritating. Consider: click anywhere to skip after 1.0s.",
+        "Boot duration: 2.6s wait + 0.85s fade = 3.45s total before menu appears. This is long. Industry standard for web games is 1.5-2s max.",
+        "No version number or build identifier visible during boot. Useful for QA."
+      ],
+      "severity": "MEDIUM"
+    },
+
+    "menu": {
+      "score": 7,
+      "description": "Three.js stormy cliff + ocean scene. CatmullRom dolly REMOVED this cycle. Camera now static at (0,12,35). Animated waves (vertex shader), storm sky, sea spray particles, god ray sprite, tower silhouette.",
+      "positives": [
+        "FIXED THIS CYCLE: Camera is now static. No more unsettling rotation.",
+        "FIXED THIS CYCLE: Button visible immediately, no 0.4s delay.",
+        "Wave shader is genuinely beautiful — foam crests, specular shimmer, deep-to-crest gradient.",
+        "Tower window glow (orange point light) creates strong visual anchor.",
+        "God ray sprite adds atmospheric depth.",
+        "Sea spray particles (150 count) are subtle and effective.",
+        "Cliff light flicker is a nice touch."
+      ],
+      "criticisms": [
+        "The camera angle (0,12,35) looking at (0,5,-20) shows mostly ocean foreground with cliff left and tower distant right. The tower is the emotional focus but appears small. Consider moving lookAt toward (8,6,-40) to better frame tower.",
+        "Title text ('M.E.R.L.I.N.' + 'Le Jeu des Oghams') rendered as HTML overlay — not integrated into 3D world. Looks slightly disconnected. A world-space billboard would be more immersive.",
+        "Button label 'Commencer le Voyage' has 4px letter-spacing — reads well but is very understated. Needs a subtle glow pulse animation to draw attention on a static scene.",
+        "No ambient sound during menu. A looping ocean storm audio would dramatically increase immersion (even 10 seconds looped).",
+        "Menu has no 'About' or 'Credits' — minor but expected for any released game.",
+        "The fog (FogExp2, density 0.008) may thin out the cliff too much from static camera position — cliff geometry starts at x=-18 which may be partially fogged.",
+        "No mobile responsiveness check on the menu canvas — canvas fills container but no touch-start for mobile start."
+      ],
+      "severity": "MEDIUM"
+    },
+
+    "lair": {
+      "score": "N/A",
+      "description": "Merlin's Lair (MerlinLairScene) REMOVED this cycle per user request. Was an intermediate hub between menu and game with 4 clickable zones. Removal eliminates the 'sur-menu' problem.",
+      "positives": [
+        "Correct decision: the lair added 1-2 clicks with no gameplay payoff at current state.",
+        "HTML divs preserved in index.html for future re-integration."
+      ],
+      "criticisms": [
+        "The lair was a beautiful 3D scene with candles, cauldron, bookshelf — its removal is a loss of atmosphere. Should be re-added as a dedicated menu option or post-run screen rather than mandatory gateway.",
+        "Users who reload will lose lair entirely with no alternative. Consider a 'Return to Lair' button in the run summary or main menu."
+      ],
+      "severity": "LOW"
+    },
+
+    "game_ui": {
+      "score": 5,
+      "description": "Card overlay (semi-transparent dark panel), 3 options, narrative text, faction/life HUD at top.",
+      "positives": [
+        "Card flip animation (rotateY 0.4s) is smooth and satisfying.",
+        "Card narrative is centered italic — correct stylistic choice.",
+        "Life bar gradient (dark red -> amber) is thematic.",
+        "Option hover state (translateY -2px + border brighten) is clear and responsive."
+      ],
+      "criticisms": [
+        "HIGH: HUD faction bars are present in code (initHUD) but their visual state during play is never verified. The HUD left panel only shows 'Vie' label + life bar. Faction bars may be below viewport or collapsed if CSS is missing.",
+        "HIGH: Card container max-width 700px — on a 1920px monitor this appears as a narrow centered strip. Cards feel like a web form, not a game card. Should be wider (900px) or use a more dramatic visual treatment.",
+        "MEDIUM: Card option descriptions (the .desc text, opacity 0.7, 13px) are too small and faded. On a laptop at arm's length these are unreadable. Bump to 14px opacity 0.85.",
+        "MEDIUM: No card art. Every card presents as plain text on a dark panel. Even a simple faction-colored border or a small icon would dramatically improve readability and identity.",
+        "MEDIUM: The verb label (.verb, bold 16px) and description overlap semantically — both describe what the action does. The distinction is unclear to new players. Consider: verb = action name, desc = consequence.",
+        "MEDIUM: Effect preview missing. Player cannot see what effects an option will apply before choosing. This is a major UX gap — the game's core loop requires informed choice but effects are revealed post-choice only.",
+        "LOW: 'Carte 0' counter in HUD counts up but the label format is sparse. 'Carte 3/30' would be far more informative.",
+        "LOW: Biome name in top-right HUD is static text. No icon, no visual distinction from other HUD elements."
+      ],
+      "severity": "HIGH"
+    },
+
+    "minigames": {
+      "score": 6,
+      "description": "14 minigames total. All functional with neutral score fallback (50). No crashes observed in code. Canvas-based.",
+      "positives": [
+        "14 distinct minigame types is impressive breadth.",
+        "Neutral score fallback (50) prevents game crashes gracefully.",
+        "Each minigame is self-contained in its own file — good architecture.",
+        "Touch support added (cycle 20) for runes and traces."
+      ],
+      "criticisms": [
+        "HIGH: Minigame overlay uses `display:none -> flex` toggle — this means the canvas is re-created on each card. For canvas-based minigames this causes a brief repaint flash. Should pre-render or use visibility:hidden.",
+        "MEDIUM: No minigame title shown before play begins. Player has no warning that 'you are about to play a memory game' vs 'a reflex game'. A 1-second title card would set expectations.",
+        "MEDIUM: No difficulty progression across cards. Card 1 and card 29 use the same minigame difficulty. Should scale with cardsPlayed.",
+        "MEDIUM: Minigame result feedback is only the audio event (win/lose sound). No visual score display before returning to 3D walk. A brief '73 — Excellent' flash would reinforce the loop.",
+        "MEDIUM: Only traces and runes have touch support — the other 12 minigames may be unplayable on mobile.",
+        "LOW: Minigame selection uses detectMinigame(card, option) — unclear if distribution is balanced. Some minigames may appear rarely or never depending on card biome/field mapping.",
+        "LOW: No restart option if player misclicks or wants to retry — minigame commits on first input in several implementations."
+      ],
+      "severity": "HIGH"
+    },
+
+    "hud": {
+      "score": 5,
+      "description": "Top bar: life label + life bar left, card counter center, biome name right. Faction bars presumably below.",
+      "positives": [
+        "Life bar transition (0.5s ease) is smooth.",
+        "HUD is always visible (z-index:10, pointer-events:none) — correct.",
+        "Biome toast (2s, fade in/out) is clean and informative."
+      ],
+      "criticisms": [
+        "HIGH: Faction reputation bars are referenced in initHUD() but their DOM structure in index.html is not visible in the current HUD div. The five faction bars (druides, niamh, anciens, korrigans, ankou) are critical game information and may not be rendering correctly.",
+        "MEDIUM: Life bar at 200px fixed width. On mobile (375px viewport) this is 53% of screen — fine. But on 4K it looks tiny. Should use vw-based or min/max width.",
+        "MEDIUM: Anam counter is not visible in the HUD HTML as read — it may be injected by initHUD() but if JS fails, player has no anam visibility.",
+        "MEDIUM: No Ogham status in HUD. Which oghams are equipped/active/on cooldown? This information is only accessible via the OghamPanel popup.",
+        "LOW: Card counter resets to 0 on each run — correct. But 'Carte 0' on first display (before first card) looks like a bug to new players. Should say 'Debut du voyage' or hide until card 1."
+      ],
+      "severity": "HIGH"
+    },
+
+    "audio": {
+      "score": 6,
+      "description": "SFXManager.ts: Web Audio API procedural tones for flip/win/lose/unlock/end. AudioContext resumed on first user interaction. No ambient/music.",
+      "positives": [
+        "Procedural SFX is creative and avoids asset loading.",
+        "Silent-fail wrapper is correct for browser audio policy.",
+        "5 distinct event types (flip/win/lose/unlock/end) cover main game beats.",
+        "AudioContext resume on first click is implemented correctly."
+      ],
+      "criticisms": [
+        "HIGH: Zero ambient audio. The stormy menu scene and forest walk have complete silence except for SFX events. This is the single biggest atmospheric gap. Even a 10-second looped ocean/wind audio would transform the experience.",
+        "MEDIUM: Procedural tones may sound synthetic or jarring depending on the Web Audio oscillator parameters. Without hearing them, risk of 'annoying beeps' vs 'satisfying chimes' is unverified.",
+        "MEDIUM: No volume control or mute button. Players who find SFX distracting have no option to disable.",
+        "LOW: 'end' sound on death and on victory uses same event. These should be differentiated (loss = somber, victory = triumphant).",
+        "LOW: No SFX on menu button hover or click — the main menu feels silent during navigation."
+      ],
+      "severity": "HIGH"
+    },
+
+    "summary_screen": {
+      "score": 7,
+      "description": "RunSummary.ts — end-of-run overlay showing cards played, factions, anam, biome. Replay button. Space/Escape keyboard shortcut to dismiss.",
+      "positives": [
+        "Run summary is implemented and functional.",
+        "Shows per-run anam vs lifetime total (T050 done).",
+        "Keyboard shortcut (Escape -> replay) is thoughtful.",
+        "Three end conditions handled: death, cards_limit, victory."
+      ],
+      "criticisms": [
+        "MEDIUM: No visual distinction between death/victory/cards_limit endings. All three show the same summary screen. A death screen should feel different from a victory screen — different color palette, different message.",
+        "MEDIUM: Faction rep changes during the run are shown as final values only. A delta display (+12 druides, -5 ankou) would make the run feel more meaningful.",
+        "MEDIUM: No best-run tracking. Is this run better than previous runs? Without comparison, replayability motivation is low.",
+        "LOW: 'Rejouer' button label is functional but uninspiring. 'Nouveau Voyage' would be more thematic.",
+        "LOW: No share/screenshot functionality — missed social engagement opportunity."
+      ],
+      "severity": "MEDIUM"
+    }
+  },
+
+  "top_priorities": [
+    {
+      "rank": 1,
+      "issue": "Ambient audio — zero sound during menu and 3D walk",
+      "impact": "Atmosphere is devastated by silence. Single highest-ROI improvement.",
+      "effort": "MEDIUM",
+      "severity": "HIGH"
+    },
+    {
+      "rank": 2,
+      "issue": "Effect preview before card choice",
+      "impact": "Players cannot make informed decisions. Core loop is undermined.",
+      "effort": "LOW",
+      "severity": "HIGH"
+    },
+    {
+      "rank": 3,
+      "issue": "Faction bars HUD verification",
+      "impact": "5 faction bars are core to the game design but may not be visible.",
+      "effort": "LOW",
+      "severity": "HIGH"
+    },
+    {
+      "rank": 4,
+      "issue": "Card container visual design — too narrow, no art",
+      "impact": "Cards look like web forms not game cards. First impression suffers.",
+      "effort": "MEDIUM",
+      "severity": "HIGH"
+    },
+    {
+      "rank": 5,
+      "issue": "Boot skip on click + reduce total boot time",
+      "impact": "3.45s is too long for repeat players. Friction accumulates.",
+      "effort": "LOW",
+      "severity": "MEDIUM"
+    },
+    {
+      "rank": 6,
+      "issue": "Minigame title card + difficulty scaling",
+      "impact": "No context before playing. No progression across 30 cards.",
+      "effort": "MEDIUM",
+      "severity": "MEDIUM"
+    },
+    {
+      "rank": 7,
+      "issue": "Death vs Victory screen differentiation",
+      "impact": "Emotional climax of each run feels identical regardless of outcome.",
+      "effort": "LOW",
+      "severity": "MEDIUM"
+    }
+  ],
+
+  "what_works_well": [
+    "Wave shader is genuinely beautiful — storm ocean with foam crests and specular shimmer",
+    "14 distinct minigames shows real craft and breadth",
+    "366 cards with biome/faction diversity gives strong replayability",
+    "Card flip animation feels satisfying and responsive",
+    "Boot screen concept (Celtic CeltOS terminal) is original and thematic",
+    "Error resilience (try/catch on LLM + minigames + effects) is production-quality",
+    "Anam cross-run persistence adds meaningful meta-progression"
+  ],
+
+  "game_feel_verdict": "The technical foundation is solid. The game loop works end-to-end. The visual scene (stormy cliff) is genuinely beautiful. But the experience is let down by three major gaps: zero ambient audio, no effect preview before choice, and card UI that looks like a form. Fix these three and the game moves from prototype to shippable demo.",
+
+  "output_files": [
+    "tools/autodev/playtest_reports/playtest_report_cycle23.json",
+    "web-demo/.studio/worker_playtester.json"
+  ]
+}

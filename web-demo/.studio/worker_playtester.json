@@ -1,53 +1,29 @@
 {
-  "cycle": 22,
   "agent": "merlin-ai-playtester",
+  "cycle": 23,
+  "mode": "DEEP_SCAN",
+  "timestamp": "2026-03-31T00:30:00Z",
   "status": "PASS",
-  "timestamp": "2026-03-31T01:30:00Z",
-  "tasks_tested": ["T062_lair_zones", "T064_candle_vfx", "T058_sfx", "cotes_sauvages_batch2"],
-  "lair_analysis": {
-    "raycaster_zones": 4,
-    "hover_scale": "1.0→1.05 on intersect, cursor:pointer",
-    "door_action": "cutToBlack + setTimeout(resolve,700) — correct fade before game start",
-    "map_action": "cutToBlack + resolve — biome select future, starts game now",
-    "crystal_bookshelf": "tooltip only — no resolve, stays in lair loop",
-    "dispose_called": "dispose() removes resize+mousemove+click listeners, traverses scene, disposes geometries+materials, removes canvas from DOM",
-    "animation_loop": "rAF tick in runMerlinLair(), cancelled via cancelAnimationFrame after zone resolves",
-    "verdict": "PASS"
+  "overall_score": 6.1,
+  "section_scores": {
+    "boot": 7,
+    "menu": 7,
+    "lair": "removed",
+    "game_ui": 5,
+    "minigames": 6,
+    "hud": 5,
+    "audio": 6,
+    "summary_screen": 7
   },
-  "candle_analysis": {
-    "candles": 3,
-    "particles_each": 20,
-    "flicker_frequencies": "7.3Hz + 13.1Hz + 3.7Hz layered",
-    "lifetime_reset": "particle reset to cx/cy+0.55/cz on death — no accumulation drift",
-    "needsUpdate": "geo.attributes.position.needsUpdate=true each frame — correct",
-    "verdict": "PASS"
-  },
-  "sfx_analysis": {
-    "context_resumption": "AudioContext.resume() on first click/keydown — browser autoplay compliant",
-    "silent_fail": "try/catch in handleSFX — audio failure never crashes game",
-    "sounds_defined": ["flip","win","lose","unlock","end"],
-    "verdict": "PASS"
-  },
-  "cotes_batch2": {
-    "cards_added": 20,
-    "total_pool": 366,
-    "biome": "cotes_sauvages",
-    "faction_dist": { "niamh": 17, "anciens": 14, "druides": 15, "korrigans": 5, "ankou": 9 },
-    "niamh_pct": 28,
-    "ankou_pct": 15,
-    "heal_life_max_found": 5,
-    "dmg_life_max_found": 10,
-    "rep_max_found": 20,
-    "constraint_violations": 0,
-    "thematic_coherence": "HIGH — phoque regard, barque sans pilote, pecheur rituel, ossements falaise, sirene filet, grotte spirales, tempete silhouette, chateau sable, lanterne flottante, pieuvres port, phare Morse, baleine echouee, femme marche eau, source votive, korrigans galets, bateau An Anaon, trois soeurs filet, cerf marin, brume voix, galets oghams",
-    "note": "niamh 28% and ankou 15% slightly under targets (35%/20%) — thematic coherence maintained, no constraint violations",
-    "verdict": "PASS"
-  },
-  "balance_check": {
-    "heal_life_cap_compliant": true,
-    "rep_cap_compliant": true,
-    "damage_life_cap_compliant": true,
-    "no_3plus_negative_effects": true
-  },
-  "verdict": "PASS — all cycle 22 tasks validated"
+  "critical_issues": 0,
+  "high_issues": 3,
+  "medium_issues": 7,
+  "low_issues": 5,
+  "top_priority": "Ambient audio — zero sound during menu and 3D walk is the single highest-ROI gap",
+  "fixes_verified": [
+    "boot fullscreen: position:fixed + z-index:9999 — VERIFIED in index.html",
+    "static camera: dolly removed, camera (0,12,35) lookAt (0,5,-20) — VERIFIED in MainMenuScene.ts",
+    "surmenu removed: runMerlinLair() deleted, import removed — VERIFIED in main.ts"
+  ],
+  "full_report": "tools/autodev/playtest_reports/playtest_report_cycle23.json"
 }

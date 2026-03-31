@@ -12,17 +12,19 @@
 
     /* ── Boot Screen (T060) ── */
     #boot-screen {
-      position: absolute;
-      top: 0; left: 0; right: 0; bottom: 0;
+      position: fixed;
+      top: 0; left: 0;
+      width: 100vw; height: 100vh;
       display: flex;
       flex-direction: column;
       justify-content: center;
       align-items: center;
-      background: #0a0a12;
-      z-index: 200;
+      background: #000;
+      z-index: 9999;
       font-family: 'Segoe UI', system-ui, sans-serif;
       color: #cd853f;
       transition: opacity 0.8s ease;
+      overflow: hidden;
     }
     #boot-screen.hidden { opacity: 0; pointer-events: none; }
     .boot-logo {

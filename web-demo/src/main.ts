@@ -31,7 +31,6 @@ import { initOghamPanel, showOghamPanel, hideOghamPanel } from './ui/OghamPanel'
 import { getLLMAdapter } from './llm/GroqAdapter';
 import { showRunSummary } from './ui/RunSummary';
 import { initMainMenu } from './scenes/MainMenuScene';
-import { initMerlinLair } from './scenes/MerlinLairScene';
 import { cutToBlack, revealFromBlack } from './ui/SceneTransition';
 import { initSFXManager } from './audio/SFXManager';
 
@@ -92,8 +91,7 @@ async function runMainMenu(): Promise<void> {
   };
   tick();
 
-  // Show menu UI after brief delay (let scene render first)
-  await waitSeconds(0.4);
+  // Show menu UI immediately — camera is static, no dolly to wait for
   overlay.classList.add('visible');
 
   // Wait for player to click Start
@@ -101,15 +99,13 @@ async function runMainMenu(): Promise<void> {
     startBtn.addEventListener('click', () => resolve(), { once: true });
   });
 
-  // Transition: start dolly then cut to game
+  // Transition: fade to black then go to game
   overlay.classList.remove('visible');
   cutToBlack();
 
-  // Wait for dolly to play (camera flies to tower), then clean up
+  // startDolly is now a no-op that calls onComplete immediately
   await new Promise<void>((resolve) => {
     menu.startDolly(resolve);
-    // Safety timeout: if dolly never completes, resolve after 6s
-    setTimeout(resolve, 6000);
   });
 
   cancelAnimationFrame(menuAnimId);
@@ -118,79 +114,6 @@ async function runMainMenu(): Promise<void> {
   wrapper.style.display = 'none';
 }
 
-// --- Merlin's Lair Hub (T062) ---
-// Shows the clickable 3D interior after the main menu dolly.
-// Resolves when player clicks Door (start run) or Map (biome select, future).
-// Other zones (crystal→settings, bookshelf→lore) show tooltip-only for now.
-async function runMerlinLair(): Promise<void> {
-  const wrapper = document.getElementById('lair-canvas-wrapper');
-  const tooltip = document.getElementById('lair-tooltip');
-  if (!wrapper) return;
-
-  wrapper.classList.add('visible');
-
-  const lair = initMerlinLair(wrapper);
-
-  // Zone label map for tooltip
-  const zoneLabels: Record<string, string> = {
-    map: 'Choisir un Biome',
-    crystal: 'Parametres',
-    bookshelf: 'Collection de Cartes',
-    door: 'Commencer le Voyage',
-  };
-
-  // Show tooltip on zone hover by intercepting mousemove
-  const canvas = wrapper.querySelector('canvas');
-  if (canvas && tooltip) {
-    canvas.addEventListener('mousemove', () => {
-      // Tooltip text set by lair click handler — we detect cursor:pointer state
-      const isHovering = canvas.style.cursor === 'pointer';
-      if (!isHovering) {
-        tooltip.classList.remove('visible');
-      }
-    });
-  }
-
-  // Animation loop
-  let lairAnimId = 0;
-  let lastTime = performance.now();
-  const tick = (): void => {
-    lairAnimId = requestAnimationFrame(tick);
-    const now = performance.now();
-    const dt = Math.min((now - lastTime) / 1000, 0.05);
-    lastTime = now;
-    lair.update(dt);
-  };
-  tick();
-
-  // Wait for player to click a zone
-  await new Promise<void>((resolve) => {
-    lair.onZoneClick((zone) => {
-      if (tooltip) {
-        tooltip.textContent = zoneLabels[zone] ?? '';
-        tooltip.classList.add('visible');
-        setTimeout(() => tooltip.classList.remove('visible'), 800);
-      }
-
-      if (zone === 'door') {
-        // Fade to black then start game
-        cutToBlack();
-        setTimeout(resolve, 700);
-      } else if (zone === 'map') {
-        // Future: biome selection overlay. For now start game with default biome.
-        cutToBlack();
-        setTimeout(resolve, 700);
-      }
-      // crystal / bookshelf: show tooltip only, stay in lair
-    });
-  });
-
-  cancelAnimationFrame(lairAnimId);
-  lair.dispose();
-  wrapper.classList.remove('visible');
-  wrapper.style.display = 'none';
-  if (tooltip) tooltip.classList.remove('visible');
-}
 
 // --- Bootstrap ---
 async function main(): Promise<void> {
@@ -203,13 +126,10 @@ async function main(): Promise<void> {
   // Phase 1: Boot screen (T060)
   await runBootScreen();
 
-  // Phase 2: Main menu cinematic (T061)
+  // Phase 2: Main menu (static camera, T061)
   await runMainMenu();
 
-  // Phase 3: Merlin's Lair hub (T062)
-  await runMerlinLair();
-
-  // Phase 4: Reveal and enter game
+  // Phase 3: Reveal and enter game
   loading.style.display = 'flex';
   loading.style.opacity = '1';
 

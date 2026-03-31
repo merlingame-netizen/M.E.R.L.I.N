@@ -1,6 +1,7 @@
 // ═══════════════════════════════════════════════════════════════════════════════
-// Main Menu Scene — Cinematic stormy cliff + sea with camera dolly to tower
+// Main Menu Scene — Stormy cliff + sea, STATIC camera, animated world
 // T061 + T064 (VFX: sea spray particles + god ray sprite)
+// Camera is fixed at (0, 12, 35) looking toward (0, 5, -20). World animates.
 // ═══════════════════════════════════════════════════════════════════════════════
 
 import * as THREE from 'three';
@@ -19,6 +20,7 @@ interface ParticleData {
 interface MainMenuResult {
   renderer: THREE.WebGLRenderer;
   update: (dt: number) => void;
+  /** No-op kept for API compatibility — camera is now static. Calls onComplete immediately. */
   startDolly: (onComplete: () => void) => void;
   dispose: () => void;
 }
@@ -300,23 +302,6 @@ function createGodRay(): { sprite: THREE.Sprite; update: (t: number) => void } {
   };
 }
 
-// ── Camera Dolly Path ─────────────────────────────────────────────────────────
-
-function createDollyPath(): THREE.CatmullRomCurve3 {
-  return new THREE.CatmullRomCurve3(
-    [
-      new THREE.Vector3(0, 8, 30),
-      new THREE.Vector3(6, 10, 18),
-      new THREE.Vector3(16, 12, 4),
-      new THREE.Vector3(26, 10, -18),
-      new THREE.Vector3(32, 7, -40),
-    ],
-    false,
-    'catmullrom',
-    0.5
-  );
-}
-
 // ── Public: initMainMenu ─────────────────────────────────────────────────────
 
 export function initMainMenu(container: HTMLElement): MainMenuResult {
@@ -324,15 +309,15 @@ export function initMainMenu(container: HTMLElement): MainMenuResult {
   const scene = new THREE.Scene();
   scene.fog = new THREE.FogExp2(0x1a2030, 0.008);
 
-  // Camera
+  // Camera — STATIC, locked at a beautiful angle. World animates, camera does not.
   const camera = new THREE.PerspectiveCamera(
     60,
     container.clientWidth / container.clientHeight,
     0.1,
     800
   );
-  camera.position.set(0, 8, 30);
-  camera.lookAt(new THREE.Vector3(16, 4, -30));
+  camera.position.set(0, 12, 35);
+  camera.lookAt(new THREE.Vector3(0, 5, -20));
 
   // Renderer
   const renderer = new THREE.WebGLRenderer({
@@ -384,15 +369,10 @@ export function initMainMenu(container: HTMLElement): MainMenuResult {
   const godRay = createGodRay();
   scene.add(godRay.sprite);
 
-  // Dolly state
-  const dollyPath = createDollyPath();
-  let dollyActive = false;
-  let dollyProgress = 0;
-  const DOLLY_DURATION = 5.0; // seconds
-  let dollyCallback: (() => void) | null = null;
+  // Elapsed time accumulator for world animation
   let elapsedTime = 0;
 
-  // Animation loop (called from main.ts)
+  // Animation loop (called from main.ts) — camera is static, world animates
   const update = (dt: number): void => {
     elapsedTime += dt;
 
@@ -407,33 +387,12 @@ export function initMainMenu(container: HTMLElement): MainMenuResult {
     // Subtle cliff light flicker
     cliffLight.intensity = 1.4 + Math.sin(elapsedTime * 3.1) * 0.15;
 
-    if (dollyActive) {
-      dollyProgress += dt / DOLLY_DURATION;
-      if (dollyProgress >= 1.0) {
-        dollyProgress = 1.0;
-        dollyActive = false;
-        if (dollyCallback) {
-          dollyCallback();
-          dollyCallback = null;
-        }
-      }
-      const pos = dollyPath.getPointAt(dollyProgress);
-      camera.position.copy(pos);
-
-      // Look toward tower with slight easing
-      const lookTarget = new THREE.Vector3(32, 4, -70);
-      const lookIntermediates = dollyPath.getPointAt(Math.min(dollyProgress + 0.05, 1.0));
-      const lerpTarget = new THREE.Vector3().lerpVectors(lookIntermediates, lookTarget, dollyProgress);
-      camera.lookAt(lerpTarget);
-    }
-
     renderer.render(scene, camera);
   };
 
+  // No-op: camera is static. Calls onComplete immediately for flow compatibility.
   const startDolly = (onComplete: () => void): void => {
-    dollyProgress = 0;
-    dollyActive = true;
-    dollyCallback = onComplete;
+    onComplete();
   };
 
   const dispose = (): void => {
