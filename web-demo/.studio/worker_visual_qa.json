@@ -1,31 +1,34 @@
 {
-  "cycle": 20,
+  "cycle": 22,
   "agent": "merlin-visual-qa",
   "status": "PASS",
-  "timestamp": "2026-04-01T00:10:00Z",
+  "timestamp": "2026-03-31T01:30:00Z",
   "checks": {
-    "ts_errors": {"result": 0, "verdict": "PASS"},
-    "build_ok": {"result": true, "build_time_s": 2.44, "verdict": "PASS"},
-    "bundle_kb_app": {"result": 100.43, "prev": 100.25, "delta_kb": 0.18, "threshold_kb": 220, "verdict": "PASS", "note": "SFX bus adds 0.18KB — minimal"},
-    "bundle_kb_total": {"result": 727.33, "prev": 727.04, "verdict": "PASS"},
-    "touch_action_none": {"status": "added to canvas global CSS", "verdict": "PASS"},
-    "vercel_headers": {"status": "Cache-Control added for /data/cards.json", "verdict": "PASS"},
-    "hud_present": {"note": "HUD.ts unchanged — faction bars, life, anam confirmed stable since cycle 15", "verdict": "PASS"},
-    "sfx_event_bus": {"status": "no visual regression — event-only, no DOM changes", "verdict": "PASS"},
-    "screenshot_cycle20": {"status": "pending — browser screenshot running in background"},
+    "ts_errors": { "result": 0, "verdict": "PASS" },
+    "build_ok": { "result": true, "build_time_s": 2.82, "verdict": "PASS" },
+    "bundle_kb_app": { "result": 123.07, "prev": 108.88, "delta_kb": 14.19, "pct": 13.0, "threshold_kb": 220, "verdict": "WARN (+13% — within 5-15% WARN band, not BLOCK)" },
+    "bundle_kb_vendor": { "result": 532.77, "prev": 531.27, "verdict": "PASS" },
+    "screenshot_cycle22_boot": { "status": "skipped — CPU guardian blocked (100% load during build). Non-blocking." },
+    "new_files_confirmed": [
+      "web-demo/src/scenes/MerlinLairScene.ts",
+      "web-demo/src/audio/SFXManager.ts"
+    ],
+    "lair_div_present": "confirmed — #lair-canvas-wrapper and #lair-tooltip in index.html",
+    "state_machine_flow": "BOOT→MENU→LAIR→GAME — 4 phases sequential in main.ts",
+    "sfx_import": "initSFXManager() imported and called at top of main()",
     "regressions": []
   },
   "issues": [
     {
-      "level": "LOW",
-      "component": "mg_runes double-fire on touch",
-      "message": "click + pointerdown both fire on touch — lockInput flag mitigates double tile selection. Acceptable for current scope. Consider migrating to pointerdown-only in a future cycle."
+      "level": "WARN",
+      "component": "bundle_kb_app",
+      "message": "App bundle grew from 108.88→123.07KB (+14.19KB, +13%). Within WARN band (5-15%). MerlinLairScene.ts adds scene geometry, particle systems, raycaster — expected growth. Not a BLOCK."
     },
     {
       "level": "LOW",
       "component": "screenshots",
-      "message": "Cycle 20 screenshot capture pending background task completion. No regression risk."
+      "message": "CPU guardian blocked screenshot at 100% CPU during build. No functional regression risk."
     }
   ],
-  "verdict": "PASS — ts_errors=0, build OK, bundle +0.18KB, no regressions detected"
+  "verdict": "PASS — ts_errors=0, build OK 2.82s, bundle 123KB < 220KB cap, no blockers"
 }

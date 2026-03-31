@@ -135,6 +135,37 @@
     }
     #menu-canvas-wrapper.visible { display: block; }
 
+    /* ── Merlin's Lair Canvas Wrapper (T062) ── */
+    #lair-canvas-wrapper {
+      position: absolute;
+      top: 0; left: 0; right: 0; bottom: 0;
+      z-index: 85;
+      display: none;
+    }
+    #lair-canvas-wrapper.visible { display: block; }
+
+    /* ── Lair Zone Tooltip ── */
+    #lair-tooltip {
+      position: absolute;
+      bottom: 48px;
+      left: 50%;
+      transform: translateX(-50%);
+      padding: 10px 28px;
+      background: rgba(10, 8, 5, 0.82);
+      border: 1px solid rgba(205,133,63,0.4);
+      border-radius: 6px;
+      color: #e8dcc8;
+      font-family: 'Segoe UI', system-ui, sans-serif;
+      font-size: 14px;
+      letter-spacing: 3px;
+      text-transform: uppercase;
+      pointer-events: none;
+      z-index: 90;
+      opacity: 0;
+      transition: opacity 0.25s ease;
+    }
+    #lair-tooltip.visible { opacity: 1; }
+
     /* HUD overlay */
     #hud {
       position: absolute;
@@ -345,6 +376,10 @@
     </div>
     <!-- Main Menu Canvas Wrapper (Three.js cinematic) -->
     <div id="menu-canvas-wrapper"></div>
+    <!-- Merlin's Lair Canvas Wrapper (T062) -->
+    <div id="lair-canvas-wrapper"></div>
+    <!-- Lair zone hover tooltip -->
+    <div id="lair-tooltip"></div>
     <!-- Main Menu UI Overlay -->
     <div id="main-menu-overlay">
       <div class="menu-title-block">

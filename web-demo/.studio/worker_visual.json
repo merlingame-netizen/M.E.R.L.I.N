@@ -1,31 +1,15 @@
 {
-  "agent": "merlin-narrative-designer",
-  "cycle": 17,
-  "timestamp": "2026-03-31T22:30:00Z",
+  "agent": "merlin-tech-artist",
+  "cycle": 22,
+  "timestamp": "2026-03-31T01:30:00Z",
   "status": "PASS",
-  "task": "landes_bruyere_batch2",
-  "details": {
-    "cards_added": 20,
-    "total_cards": 266,
-    "biome": "landes_bruyere (thematic — pool is biome-agnostic in cards.json)",
-    "anciens_options": "47/60 = 78% (target >= 35% — well exceeded)",
-    "druides_cards": 3,
-    "druides_cards_max": 3,
-    "heal_life_violations": 0,
-    "heal_life_max": 5,
-    "ogham_references": ["Beith (card 3 — flock markings)", "Nion (card 16 — road cross ochre)", "Luis (card 13 — ancestor effigy)"],
-    "fix_applied": "druides count reduced from 6 to 3 by replacing minor secondary druides effects on cards 0/4/9 with ADD_ANAM or ADD_BIOME_CURRENCY",
-    "themes_sample": [
-      "cairn prayers and ancestral memory",
-      "split menhir energy portal",
-      "ogham Beith-marked flock",
-      "moss fountain offerings",
-      "equinox sun calculation circle",
-      "tumulus guardian vigil",
-      "white-haired women procession with torch",
-      "fox messenger with mistletoe",
-      "Veilleurs funerary monument",
-      "reed effigy grief ritual in peat bog"
-    ]
-  }
+  "tasks_done": ["T062", "T064"],
+  "ts_errors": 0,
+  "build_ok": true,
+  "bundle_kb_app": 123.07,
+  "bundle_kb_vendor": 532.77,
+  "build_time_s": 2.82,
+  "files_created": ["web-demo/src/scenes/MerlinLairScene.ts"],
+  "files_modified": ["web-demo/index.html"],
+  "notes": "T062: MerlinLairScene.ts 470 lines. 3D interior: stone walls (BoxGeometry 0x3a3228), flagstone floor, ceiling, 4 wooden cross-beams (0x3d2b1a), mortar lines (7 slabs). 4 raycaster zones: map=BoxGeometry scroll on table, crystal=SphereGeometry 0x9060cc emissive purple PointLight 2.5 range 8, bookshelf=3-row 18-book frame with invisible BoxGeometry hitTarget, door=frame+panel+iron straps+light sliver+PointLight 0xffdd66. Raycaster: mousemove+click, scale 1.0→1.05 hover, cursor:pointer. Camera fixed PerspectiveCamera(62) [0,0.5,7] lookAt [0,0,-4], sway sin(t*0.94)*0.1 x + sin(t*0.72)*0.06 y. Fog 0x0d0a08 near=12 far=28. T064: 3 candles — each: CylinderGeometry body+wick, PointLight 1.8 range 4.5 + 20 orange particles AdditiveBlending upward drift maxLife=1.2s with horizontal jitter. Flicker: 3-frequency sin layering (7.3Hz/13.1Hz/3.7Hz). 80 dust motes Points 0.35 opacity wrap-bounds drift. Cauldron: SphereGeometry scale.y=0.8, 3 legs, PointLight 0x22cc44, 30 green steam particles. Potions: 3 emissive cylinders+necks. Skull: SphereGeometry cranium+jaw. dispose() cleans all geometries+materials+event listeners."
 }

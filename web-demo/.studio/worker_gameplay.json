@@ -1,26 +1,11 @@
 {
   "agent": "merlin-gameplay-programmer",
-  "cycle": 20,
-  "timestamp": "2026-03-31T23:58:00Z",
+  "cycle": 22,
+  "timestamp": "2026-03-31T01:30:00Z",
   "status": "PASS",
-  "tasks": {
-    "T056": {
-      "status": "DONE",
-      "notes": "playSound(type: string) exported from bottom of main.ts. Dispatches CustomEvent('merlin_sfx', {detail:{type}}) on window. Wired at: card flip (after showCard resolves), minigame score (win if score>65, lose otherwise), ogham_unlocked listener (unlock), all 4 run-end paths (end). No actual audio — event bus only."
-    },
-    "T057": {
-      "status": "DONE",
-      "notes": "touch-action: none added to canvas global CSS rule in index.html. mg_runes.ts + mg_traces.ts: pointerdown listener added alongside existing click listener on canvas. Both listeners removed in endGame() and cleanup(). All other 12 minigames already use pointer* events (already touch-native). onClick handlers typed MouseEvent — PointerEvent extends MouseEvent so compatible, tsc confirms 0 errors."
-    },
-    "perf_cache": {
-      "status": "DONE",
-      "notes": "vercel.json updated: headers array added with Cache-Control: public, max-age=86400, stale-while-revalidate=3600 for source /data/cards.json. Will take effect on next Vercel deploy."
-    }
-  },
+  "tasks_done": ["T058", "state_machine_LAIR"],
   "ts_errors": 0,
   "build_ok": true,
-  "bundle_kb_app": 100.43,
-  "bundle_kb_gzip": 30.81,
-  "bundle_delta_kb": 0.18,
-  "build_time_s": 2.44
+  "bundle_kb_app": 123.07,
+  "notes": "T058: web-demo/src/audio/SFXManager.ts created. Web Audio API procedural synthesis — no external assets. flip: 440Hz ping 80ms + 880Hz shimmer 40ms. win: C4-E4-G4-C5 ascending arpeggio 80ms each + C3 pad. lose: 220→100Hz exponential glide 400ms + bandpass noise thud. unlock: 880Hz bell + partials 1318/1760Hz + 2 reverb echoes at +80ms/+180ms + 2637Hz shimmer. end: C3-E3-G3-C4 chord 3s fade. AudioContext resumes on first click/keydown (browser autoplay policy). Listens to window merlin_sfx CustomEvent. state_machine: main.ts — runMerlinLair() inserted between runMainMenu() and game bootstrap. initSFXManager() called at top of main() before boot. Lair loop: rAF tick, zone tooltip, Door/Map resolve+cutToBlack, Crystal/Bookshelf tooltip-only. index.html: #lair-canvas-wrapper + #lair-tooltip divs + CSS added."
 }

@@ -1,0 +1,62 @@
+{
+  "cycle": 22,
+  "timestamp": "2026-03-31T01:30:00Z",
+  "status": "PASS",
+  "summary": "Merlin's lair clickable hub + candle VFX + Web Audio SFX + 20 cotes_sauvages cards",
+  "tasks_completed": {
+    "T062": {
+      "title": "Merlin's lair hub — clickable 3D interior with 4 navigation zones",
+      "file": "web-demo/src/scenes/MerlinLairScene.ts",
+      "status": "DONE",
+      "zones": ["map (scroll on table)", "crystal ball (purple emissive)", "bookshelf (3 rows 18 books)", "door (light underneath)"],
+      "vfx": "3 candle flicker + 20 particles each, 80 dust motes, cauldron green steam 30 particles, 3 potion bottles, skull",
+      "camera": "fixed with 0.002-amplitude sway at 0.3Hz",
+      "raycaster": "hover scale 1.05 + cursor:pointer, click dispatches zone to callback"
+    },
+    "T064_candles": {
+      "title": "Candle particle system — 3 candles, orange Points, 20 particles each, upward drift",
+      "status": "DONE",
+      "detail": "multi-frequency flicker (7.3+13.1+3.7 Hz), particles reset to flame origin on death, AdditiveBlending"
+    },
+    "T058": {
+      "title": "SFX implementation — Web Audio API tones wired to merlin_sfx event bus",
+      "file": "web-demo/src/audio/SFXManager.ts",
+      "status": "DONE",
+      "sounds": {
+        "flip": "440Hz ping 80ms + 880Hz shimmer",
+        "win": "C4-E4-G4-C5 arpeggio + C3 pad",
+        "lose": "220→100Hz exponential glide + bandpass noise",
+        "unlock": "880Hz bell + 3 partials + 2 reverb echoes",
+        "end": "C3-E3-G3-C4 chord 3s fade"
+      }
+    },
+    "state_machine": {
+      "title": "BOOT→MENU→LAIR→GAME wired in main.ts",
+      "status": "DONE",
+      "detail": "runMerlinLair() inserted, initSFXManager() at startup, lair tooltip system"
+    },
+    "cotes_sauvages_batch2": {
+      "title": "20 cards for cotes_sauvages biome",
+      "status": "DONE",
+      "cards_added": 20,
+      "total_pool": 366,
+      "faction_dist": { "niamh": 17, "anciens": 14, "druides": 15, "korrigans": 5, "ankou": 9 },
+      "constraint_violations": 0
+    }
+  },
+  "regression_gate": {
+    "ts_errors": { "value": 0, "threshold": 0, "result": "PASS" },
+    "build_ok": { "value": true, "result": "PASS" },
+    "bundle_kb_app": { "value": 123.07, "prev": 108.88, "threshold": 220, "result": "WARN (+13% — within band)" },
+    "runtime_errors": { "value": 0, "threshold": 0, "result": "PASS" }
+  },
+  "metrics": {
+    "bundle_kb_app": 123.07,
+    "bundle_kb_vendor": 532.77,
+    "bundle_kb_minigames": 98.19,
+    "build_time_s": 2.82,
+    "cards_total": 366,
+    "minigames_count": 14,
+    "ts_errors": 0
+  }
+}

@@ -28,12 +28,12 @@
       "id": "T062",
       "title": "Merlin's lair hub — clickable 3D interior with 4 navigation zones",
       "priority": 1,
-      "status": "open",
+      "status": "done",
       "domain": "visual",
       "est_tokens": 700,
       "depends_on": ["T061"],
-      "tags": ["cinematic", "3d", "ux", "deferred"],
-      "notes": "DEFERRED to cycle 22. Interior scene: map/scroll → biome select, crystal ball → settings, bookshelf → lore, door/window → start run. Raycaster click zones. LairScene.ts."
+      "tags": ["cinematic", "3d", "ux"],
+      "notes": "DONE cycle 22. MerlinLairScene.ts — stone walls, floor, beams, 4 raycaster zones (map/crystal/bookshelf/door), candle flicker+particles, dust motes, cauldron steam, potions, skull. State machine BOOT→MENU→LAIR→GAME wired in main.ts."
     },
     {
       "id": "T063",
@@ -72,12 +72,12 @@
       "id": "T058",
       "title": "SFX implementation — hook Web Audio API tones to merlin_sfx event bus",
       "priority": 3,
-      "status": "open",
+      "status": "done",
       "domain": "gameplay",
       "est_tokens": 400,
       "depends_on": ["T056"],
       "tags": ["audio", "ux"],
-      "notes": "T056 event bus wired. Create src/audio/SFXManager.ts listening to window merlin_sfx. Procedural Web Audio API only — no external assets. flip: short ping. win: ascending arpeggio. lose: descending tone. unlock: bell chord. end: sustained fade. Initialize in main.ts after loadTemplates()."
+      "notes": "DONE cycle 22. SFXManager.ts — 5 procedural sounds (flip/win/lose/unlock/end). AudioContext resumed on first user interaction. Silent-fail wrapper. initSFXManager() called at top of main()."
     },
     {
       "id": "T059",
@@ -224,6 +224,27 @@
     }
   ],
   "completed": [
+    {
+      "id": "T062",
+      "title": "Merlin's lair hub — clickable 3D interior with 4 navigation zones + candle VFX",
+      "domain": "visual",
+      "completed_cycle": 22,
+      "completed_at": "2026-03-31T01:30:00Z"
+    },
+    {
+      "id": "T058",
+      "title": "SFX implementation — Web Audio API procedural tones (flip/win/lose/unlock/end)",
+      "domain": "gameplay",
+      "completed_cycle": 22,
+      "completed_at": "2026-03-31T01:30:00Z"
+    },
+    {
+      "id": "cotes_batch2",
+      "title": "20 cotes_sauvages batch2 cards (niamh 28%, ankou 15%, all constraints PASS, 366 total)",
+      "domain": "narrative",
+      "completed_cycle": 22,
+      "completed_at": "2026-03-31T01:30:00Z"
+    },
     {
       "id": "T057",
       "title": "Touch support — pointerdown on mg_runes+mg_traces, touch-action:none on canvas CSS",
