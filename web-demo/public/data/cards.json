@@ -1,0 +1,5559 @@
+[
+  {
+    "narrative": "Une brume epaisse s'eleve entre les chenes centenaires. Des murmures anciens resonnent dans le feuillage. Un sentier se dessine, a peine visible, menant vers une clairiere ou scintille une lumiere doree.",
+    "options": [
+      {
+        "verb": "observer",
+        "text": "Tu scrutes la brume, cherchant un signe dans les volutes argentees.",
+        "effects": [
+          "HEAL_LIFE:3",
+          "ADD_REPUTATION:druides:5"
+        ]
+      },
+      {
+        "verb": "se faufiler",
+        "text": "Tu te glisses entre les racines noueuses vers la lumiere.",
+        "effects": [
+          "ADD_BIOME_CURRENCY:5",
+          "DAMAGE_LIFE:2"
+        ]
+      },
+      {
+        "verb": "apaiser",
+        "text": "Tu respires profondement, laissant la foret te guider.",
+        "effects": [
+          "HEAL_LIFE:5",
+          "ADD_REPUTATION:niamh:3"
+        ]
+      }
+    ]
+  },
+  {
+    "narrative": "Un korrigan surgit d'un tertre moussu, ses yeux brillant d'une malice millenaire. Il brandit un caillou grave de runes et te lance un defi : deviner le symbole cache dans la pierre.",
+    "options": [
+      {
+        "verb": "dechiffrer",
+        "text": "Tu te concentres sur les gravures, cherchant le motif cache.",
+        "effects": [
+          "ADD_REPUTATION:korrigans:8",
+          "ADD_ANAM:3"
+        ]
+      },
+      {
+        "verb": "marchander",
+        "text": "Tu proposes un echange plutot qu'un defi.",
+        "effects": [
+          "ADD_BIOME_CURRENCY:8",
+          "ADD_REPUTATION:korrigans:-3"
+        ]
+      },
+      {
+        "verb": "combattre",
+        "text": "Tu refuses le jeu et montres ta force.",
+        "effects": [
+          "DAMAGE_LIFE:5",
+          "ADD_REPUTATION:ankou:5"
+        ]
+      }
+    ]
+  },
+  {
+    "narrative": "Au bord d'un lac immobile, une silhouette feminine se tient sur l'eau. Niamh, la dame du lac, te fixe de ses yeux d'argent. \"Qu'es-tu venu chercher ici, mortel ?\" murmure-t-elle.",
+    "options": [
+      {
+        "verb": "parler",
+        "text": "Tu reponds avec respect, partageant ta quete.",
+        "effects": [
+          "ADD_REPUTATION:niamh:10",
+          "HEAL_LIFE:5"
+        ]
+      },
+      {
+        "verb": "se concentrer",
+        "text": "Tu restes silencieux, laissant ton esprit parler.",
+        "effects": [
+          "ADD_REPUTATION:niamh:5",
+          "ADD_REPUTATION:druides:5"
+        ]
+      },
+      {
+        "verb": "fuir",
+        "text": "L'aura surnaturelle t'effraie. Tu recules.",
+        "effects": [
+          "DAMAGE_LIFE:3",
+          "ADD_REPUTATION:niamh:-5"
+        ]
+      }
+    ]
+  },
+  {
+    "narrative": "Un cairn imposant se dresse a la croisee de deux sentiers. Des ossements blanchis tapissent sa base. Un vent glacial souffle du nord, portant l'odeur de la tourbe et du fer.",
+    "options": [
+      {
+        "verb": "fouiller a l'aveugle",
+        "text": "Tu fouilles parmi les offrandes deposees au pied du cairn.",
+        "effects": [
+          "ADD_BIOME_CURRENCY:10",
+          "DAMAGE_LIFE:4"
+        ]
+      },
+      {
+        "verb": "mediter",
+        "text": "Tu t'agenouilles et honores les ancetres.",
+        "effects": [
+          "ADD_REPUTATION:anciens:10",
+          "HEAL_LIFE:3"
+        ]
+      },
+      {
+        "verb": "pister",
+        "text": "Tu suis les traces qui s'eloignent du cairn.",
+        "effects": [
+          "ADD_REPUTATION:ankou:3",
+          "ADD_ANAM:5"
+        ]
+      }
+    ]
+  },
+  {
+    "narrative": "Le sol tremble sous tes pieds. Les racines d'un if millenaire percent la terre, revelant une cavite ou pulse une lueur verdatre. Un druide age t'observe depuis l'ombre des branches.",
+    "options": [
+      {
+        "verb": "examiner",
+        "text": "Tu t'approches prudemment de la cavite lumineuse.",
+        "effects": [
+          "ADD_ANAM:5",
+          "ADD_REPUTATION:druides:8"
+        ]
+      },
+      {
+        "verb": "resister mentalement",
+        "text": "Tu fermes les yeux, refusant l'appel de la lumiere.",
+        "effects": [
+          "HEAL_LIFE:5",
+          "ADD_REPUTATION:anciens:5"
+        ]
+      },
+      {
+        "verb": "escalader",
+        "text": "Tu grimpes dans l'arbre pour avoir une meilleure vue.",
+        "effects": [
+          "ADD_BIOME_CURRENCY:6",
+          "DAMAGE_LIFE:3"
+        ]
+      }
+    ]
+  },
+  {
+    "narrative": "Une melodie lointaine guide tes pas vers un cercle de pierres dressees. Chaque menhir porte un ogham different, et la musique semble provenir du centre exact du cercle.",
+    "options": [
+      {
+        "verb": "ecouter",
+        "text": "Tu tends l'oreille, laissant la melodie te guider.",
+        "effects": [
+          "HEAL_LIFE:4",
+          "ADD_REPUTATION:druides:6"
+        ]
+      },
+      {
+        "verb": "dechiffrer",
+        "text": "Tu etudies les oghams graves dans la pierre.",
+        "effects": [
+          "ADD_ANAM:8",
+          "ADD_REPUTATION:anciens:4"
+        ]
+      },
+      {
+        "verb": "courir",
+        "text": "Tu traverses le cercle en courant, bravant l'inconnu.",
+        "effects": [
+          "ADD_BIOME_CURRENCY:7",
+          "DAMAGE_LIFE:5",
+          "ADD_REPUTATION:ankou:3"
+        ]
+      }
+    ]
+  },
+  {
+    "narrative": "Un chene sacre se dresse au coeur d'une clairiere baignee de lumiere doree. Ses branches portent des rubans de tissu noues par des generations de druides. Un corbeau blanc t'observe depuis la cime.",
+    "options": [
+      {
+        "verb": "mediter",
+        "text": "Tu t'assieds au pied du chene et fermes les yeux, absorbant l'energie ancienne.",
+        "effects": [
+          "HEAL_LIFE:5",
+          "ADD_REPUTATION:druides:8"
+        ]
+      },
+      {
+        "verb": "escalader",
+        "text": "Tu grimpes le long du tronc rugueux pour atteindre le corbeau.",
+        "effects": [
+          "ADD_BIOME_CURRENCY:6",
+          "DAMAGE_LIFE:3"
+        ]
+      },
+      {
+        "verb": "observer",
+        "text": "Tu etudies les rubans, cherchant des motifs dans leurs couleurs.",
+        "effects": [
+          "ADD_ANAM:4",
+          "ADD_REPUTATION:anciens:5"
+        ]
+      }
+    ]
+  },
+  {
+    "narrative": "Une source jaillit entre des racines enchevelrees, son eau d'un bleu impossible. Un druide agenouille y trempe une branche de gui, murmurant des paroles que le vent t'apporte par bribes.",
+    "options": [
+      {
+        "verb": "parler",
+        "text": "Tu t'approches du druide et lui adresses la parole avec respect.",
+        "effects": [
+          "ADD_REPUTATION:druides:10",
+          "HEAL_LIFE:4"
+        ]
+      },
+      {
+        "verb": "cueillir",
+        "text": "Tu cueillis discretement du gui sur une branche basse.",
+        "effects": [
+          "ADD_BIOME_CURRENCY:8",
+          "ADD_REPUTATION:druides:-4"
+        ]
+      },
+      {
+        "verb": "scruter",
+        "text": "Tu observes le rituel a distance, memorisant chaque geste.",
+        "effects": [
+          "ADD_ANAM:6",
+          "ADD_REPUTATION:druides:3"
+        ]
+      }
+    ]
+  },
+  {
+    "narrative": "Le sentier se divise en trois. A gauche, des champignons luminescents forment un chemin ferique. Au centre, des empreintes de loup menent dans l'obscurite. A droite, une fumee parfumee s'eleve.",
+    "options": [
+      {
+        "verb": "suivre",
+        "text": "Tu suis la lumiere des champignons, fascinee par leur eclat.",
+        "effects": [
+          "ADD_BIOME_CURRENCY:5",
+          "HEAL_LIFE:3"
+        ]
+      },
+      {
+        "verb": "pister",
+        "text": "Tu suis les empreintes de loup dans l'ombre.",
+        "effects": [
+          "ADD_REPUTATION:ankou:6",
+          "DAMAGE_LIFE:2"
+        ]
+      },
+      {
+        "verb": "sentir",
+        "text": "Tu te diriges vers la fumee, intriguee par son parfum.",
+        "effects": [
+          "HEAL_LIFE:5",
+          "ADD_REPUTATION:druides:5"
+        ]
+      }
+    ]
+  },
+  {
+    "narrative": "Un cercle de pierres mousseuses entoure un bassin d'eau noire. Des libellules aux ailes dorees dansent a la surface. Le reflet dans l'eau ne montre pas le ciel mais un reseau d'oghams entrelaces.",
+    "options": [
+      {
+        "verb": "dechiffrer",
+        "text": "Tu te penches pour lire les oghams dans le reflet.",
+        "effects": [
+          "ADD_ANAM:8",
+          "ADD_REPUTATION:druides:6"
+        ]
+      },
+      {
+        "verb": "tenter sa chance",
+        "text": "Tu plonges la main dans l'eau noire.",
+        "effects": [
+          "ADD_BIOME_CURRENCY:10",
+          "DAMAGE_LIFE:5"
+        ]
+      },
+      {
+        "verb": "se concentrer",
+        "text": "Tu fermes les yeux et laisses les symboles venir a toi.",
+        "effects": [
+          "HEAL_LIFE:4",
+          "ADD_REPUTATION:niamh:5"
+        ]
+      }
+    ]
+  },
+  {
+    "narrative": "Une biche blanche traverse le sentier devant toi, s'arretant un instant pour te fixer de ses yeux d'ambre. Derriere elle, la foret semble s'ouvrir sur un passage secret entre les fougeres geantes.",
+    "options": [
+      {
+        "verb": "s'approcher",
+        "text": "Tu avances lentement vers la biche, la main tendue.",
+        "effects": [
+          "ADD_REPUTATION:niamh:8",
+          "HEAL_LIFE:5"
+        ]
+      },
+      {
+        "verb": "se faufiler",
+        "text": "Tu te glisses vers le passage secret qu'elle a revele.",
+        "effects": [
+          "ADD_BIOME_CURRENCY:7",
+          "ADD_REPUTATION:korrigans:3"
+        ]
+      },
+      {
+        "verb": "attendre",
+        "text": "Tu restes immobile, laissant la scene se deployer.",
+        "effects": [
+          "HEAL_LIFE:3",
+          "ADD_ANAM:4"
+        ]
+      }
+    ]
+  },
+  {
+    "narrative": "Les ruines d'un nemeton apparaissent entre les arbres. Quatre piliers de granit marquent les points cardinaux, et au centre, une dalle gravee pulse d'une lumiere verte a chaque battement de ton coeur.",
+    "options": [
+      {
+        "verb": "examiner",
+        "text": "Tu etudies les gravures sur les piliers un par un.",
+        "effects": [
+          "ADD_ANAM:6",
+          "ADD_REPUTATION:anciens:8"
+        ]
+      },
+      {
+        "verb": "apaiser",
+        "text": "Tu poses les mains sur la dalle et synchronises ta respiration.",
+        "effects": [
+          "HEAL_LIFE:5",
+          "ADD_REPUTATION:druides:5"
+        ]
+      },
+      {
+        "verb": "forcer",
+        "text": "Tu tentes de soulever la dalle centrale.",
+        "effects": [
+          "ADD_BIOME_CURRENCY:8",
+          "DAMAGE_LIFE:6"
+        ]
+      }
+    ]
+  },
+  {
+    "narrative": "Un vieil if se tord au bord d'un precipice, ses racines a moitie dans le vide. Dans ses branches, des dizaines de corbeaux noirs se taisent a ton approche. Un crane humain est encastre dans le tronc.",
+    "options": [
+      {
+        "verb": "resister mentalement",
+        "text": "Tu affrontes l'aura sinistre de l'arbre sans ciller.",
+        "effects": [
+          "ADD_REPUTATION:ankou:8",
+          "ADD_ANAM:5"
+        ]
+      },
+      {
+        "verb": "contourner",
+        "text": "Tu fais un large detour pour eviter cet arbre maudit.",
+        "effects": [
+          "HEAL_LIFE:2",
+          "ADD_BIOME_CURRENCY:3"
+        ]
+      },
+      {
+        "verb": "analyser",
+        "text": "Tu cherches a comprendre pourquoi les druides ont place ce crane ici.",
+        "effects": [
+          "ADD_REPUTATION:druides:6",
+          "ADD_REPUTATION:anciens:4"
+        ]
+      }
+    ]
+  },
+  {
+    "narrative": "Une colonne de fumee bleue s'eleve d'un foyer cache entre les racines d'un hetre immense. L'odeur de sauge et de verveine emplit l'air. Une voix feminile chante un air ancien.",
+    "options": [
+      {
+        "verb": "ecouter",
+        "text": "Tu t'assieds et laisses le chant te bercer.",
+        "effects": [
+          "HEAL_LIFE:5",
+          "ADD_REPUTATION:druides:5"
+        ]
+      },
+      {
+        "verb": "charmer",
+        "text": "Tu ajoutes ta voix au chant, improvisant une harmonie.",
+        "effects": [
+          "ADD_REPUTATION:niamh:7",
+          "ADD_ANAM:3"
+        ]
+      },
+      {
+        "verb": "inspecter",
+        "text": "Tu cherches l'origine du feu et de la chanteuse.",
+        "effects": [
+          "ADD_BIOME_CURRENCY:5",
+          "ADD_REPUTATION:korrigans:4"
+        ]
+      }
+    ]
+  },
+  {
+    "narrative": "Le sol vibre sous tes pieds. Les arbres autour de toi semblent se rapprocher, leurs branches formant une voute impenetrable. Une luciole solitaire pulse devant toi, comme pour te guider.",
+    "options": [
+      {
+        "verb": "suivre",
+        "text": "Tu suis la luciole a travers le labyrinthe de branches.",
+        "effects": [
+          "ADD_BIOME_CURRENCY:6",
+          "HEAL_LIFE:3"
+        ]
+      },
+      {
+        "verb": "resister physiquement",
+        "text": "Tu repousses les branches et forces ton chemin.",
+        "effects": [
+          "DAMAGE_LIFE:4",
+          "ADD_REPUTATION:ankou:5"
+        ]
+      },
+      {
+        "verb": "calmer",
+        "text": "Tu murmures des mots d'apaisement a la foret elle-meme.",
+        "effects": [
+          "HEAL_LIFE:5",
+          "ADD_REPUTATION:druides:7"
+        ]
+      }
+    ]
+  },
+  {
+    "narrative": "Un dolmen couvert de mousse se revele au detour du chemin. Sous sa table de pierre, un renard roux monte la garde. A ses pieds, des fragments d'ambre brillent faiblement.",
+    "options": [
+      {
+        "verb": "amadouer",
+        "text": "Tu t'accroupis et tends la main vers le renard.",
+        "effects": [
+          "ADD_REPUTATION:korrigans:6",
+          "HEAL_LIFE:3"
+        ]
+      },
+      {
+        "verb": "fouiller a l'aveugle",
+        "text": "Tu ramasses les fragments d'ambre, risquant la morsure.",
+        "effects": [
+          "ADD_BIOME_CURRENCY:9",
+          "DAMAGE_LIFE:4"
+        ]
+      },
+      {
+        "verb": "memoriser",
+        "text": "Tu graves la scene dans ta memoire — le renard, l'ambre, la pierre.",
+        "effects": [
+          "ADD_ANAM:5",
+          "ADD_REPUTATION:anciens:5"
+        ]
+      }
+    ]
+  },
+  {
+    "narrative": "Un pont de bois enjambe un ruisseau murmurant. Chaque planche porte un ogham different. Le pont oscille doucement, comme s'il respirait. De l'autre cote, un bosquet de bouleaux blancs brille dans la penombre.",
+    "options": [
+      {
+        "verb": "dechiffrer",
+        "text": "Tu lis chaque ogham en traversant, un pas apres l'autre.",
+        "effects": [
+          "ADD_ANAM:7",
+          "ADD_REPUTATION:druides:5"
+        ]
+      },
+      {
+        "verb": "esquiver",
+        "text": "Tu traverses en courant, evitant les planches qui semblent fragiles.",
+        "effects": [
+          "ADD_BIOME_CURRENCY:5",
+          "DAMAGE_LIFE:2"
+        ]
+      },
+      {
+        "verb": "endurer",
+        "text": "Tu traverses lentement malgre le vertige, chaque pas delibere.",
+        "effects": [
+          "HEAL_LIFE:4",
+          "ADD_REPUTATION:anciens:6"
+        ]
+      }
+    ]
+  },
+  {
+    "narrative": "Une clairiere parfaite s'ouvre devant toi, bordee de menhirs graves. Au centre, un chaudron de bronze repose sur trois pierres. Un liquide argente y bouillonne sans source de chaleur visible.",
+    "options": [
+      {
+        "verb": "deviner",
+        "text": "Tu tentes de deviner la nature du breuvage par son odeur.",
+        "effects": [
+          "ADD_BIOME_CURRENCY:6",
+          "ADD_REPUTATION:druides:4"
+        ]
+      },
+      {
+        "verb": "decoder",
+        "text": "Tu etudies les gravures sur le chaudron pour comprendre son usage.",
+        "effects": [
+          "ADD_ANAM:6",
+          "ADD_REPUTATION:anciens:6"
+        ]
+      },
+      {
+        "verb": "se cacher",
+        "text": "Tu te dissimules et observes — quelqu'un viendra surement.",
+        "effects": [
+          "HEAL_LIFE:3",
+          "ADD_REPUTATION:korrigans:5"
+        ]
+      }
+    ]
+  },
+  {
+    "narrative": "Des chants d'oiseaux impossibles emplissent l'air — des melodies qui forment des mots en ancien gaelique. Les feuilles des arbres se teintent d'or a chaque note, puis retrouvent leur vert.",
+    "options": [
+      {
+        "verb": "flairer",
+        "text": "Tu suis ton instinct, laissant les sons te mener vers leur source.",
+        "effects": [
+          "ADD_REPUTATION:niamh:6",
+          "HEAL_LIFE:4"
+        ]
+      },
+      {
+        "verb": "interpreter",
+        "text": "Tu traduis les paroles anciennes, piegeant leur sens.",
+        "effects": [
+          "ADD_ANAM:7",
+          "ADD_REPUTATION:druides:5"
+        ]
+      },
+      {
+        "verb": "combattre",
+        "text": "Tu chantes plus fort, defiant les voix de la foret.",
+        "effects": [
+          "ADD_REPUTATION:ankou:5",
+          "DAMAGE_LIFE:3"
+        ]
+      }
+    ]
+  },
+  {
+    "narrative": "Un arbre creux t'invite a passer. A l'interieur du tronc, l'espace semble plus grand que possible. Des racines forment un escalier en spirale qui descend dans les tenebres.",
+    "options": [
+      {
+        "verb": "se faufiler",
+        "text": "Tu te glisses dans le tronc et descends l'escalier vegetal.",
+        "effects": [
+          "ADD_BIOME_CURRENCY:8",
+          "DAMAGE_LIFE:3"
+        ]
+      },
+      {
+        "verb": "refuser",
+        "text": "Tu refuses l'invitation et poursuis ton chemin en surface.",
+        "effects": [
+          "HEAL_LIFE:3",
+          "ADD_REPUTATION:anciens:4"
+        ]
+      },
+      {
+        "verb": "etudier",
+        "text": "Tu examines le phenomene sans entrer, notant chaque detail.",
+        "effects": [
+          "ADD_ANAM:5",
+          "ADD_REPUTATION:druides:6"
+        ]
+      }
+    ]
+  },
+  {
+    "narrative": "Une pluie fine commence a tomber, mais chaque goutte brille d'un eclat vert emeraude. Partout ou l'eau touche le sol, de minuscules fleurs blanches eclosent instantanement.",
+    "options": [
+      {
+        "verb": "cueillir",
+        "text": "Tu recoltes les fleurs ephemeres avant qu'elles ne fanent.",
+        "effects": [
+          "ADD_BIOME_CURRENCY:7",
+          "ADD_REPUTATION:druides:4"
+        ]
+      },
+      {
+        "verb": "fixer",
+        "text": "Tu observes le phenomene avec attention, gravant le spectacle.",
+        "effects": [
+          "ADD_ANAM:5",
+          "HEAL_LIFE:4"
+        ]
+      },
+      {
+        "verb": "courir",
+        "text": "Tu cours sous la pluie magique, bras eccartes, riant.",
+        "effects": [
+          "HEAL_LIFE:5",
+          "ADD_REPUTATION:niamh:5"
+        ]
+      }
+    ]
+  },
+  {
+    "narrative": "Un loup gris emerge du brouillard, son regard intelligent et calme. Il porte un collier tresse de lierre. Derriere lui, trois louvetaux jouent entre les fougeres.",
+    "options": [
+      {
+        "verb": "negocier",
+        "text": "Tu t'adresses au loup comme a un egal, offrant du respect.",
+        "effects": [
+          "ADD_REPUTATION:druides:7",
+          "ADD_REPUTATION:korrigans:4"
+        ]
+      },
+      {
+        "verb": "fuir",
+        "text": "Tu recules lentement, sans briser le contact visuel.",
+        "effects": [
+          "HEAL_LIFE:2",
+          "ADD_BIOME_CURRENCY:3"
+        ]
+      },
+      {
+        "verb": "se concentrer",
+        "text": "Tu projettes des pensees de paix vers le loup.",
+        "effects": [
+          "HEAL_LIFE:5",
+          "ADD_REPUTATION:niamh:6"
+        ]
+      }
+    ]
+  },
+  {
+    "narrative": "Une toile d'araignee geante s'etend entre deux chenes, chaque fil incrustes de rosee qui brille comme des diamants. Au centre, un motif complexe ressemble a une carte du ciel.",
+    "options": [
+      {
+        "verb": "analyser",
+        "text": "Tu decryptes la carte celeste tissee dans la soie.",
+        "effects": [
+          "ADD_ANAM:7",
+          "ADD_REPUTATION:druides:6"
+        ]
+      },
+      {
+        "verb": "traverser",
+        "text": "Tu passes sous la toile en rampant, evitant les fils.",
+        "effects": [
+          "ADD_BIOME_CURRENCY:5",
+          "DAMAGE_LIFE:2"
+        ]
+      },
+      {
+        "verb": "tendre l'oreille",
+        "text": "Tu ecoutes les vibrations de la toile, qui semble chanter.",
+        "effects": [
+          "HEAL_LIFE:4",
+          "ADD_REPUTATION:anciens:5"
+        ]
+      }
+    ]
+  },
+  {
+    "narrative": "Un tertre de terre recouvert de trefles a quatre feuilles se dresse au milieu du chemin. Une porte minuscule, pas plus haute qu'un genou, est enchassee dans sa base.",
+    "options": [
+      {
+        "verb": "convaincre",
+        "text": "Tu parles a travers la porte, implorant les korrigans de t'aider.",
+        "effects": [
+          "ADD_REPUTATION:korrigans:8",
+          "ADD_ANAM:3"
+        ]
+      },
+      {
+        "verb": "pousser",
+        "text": "Tu pousses la petite porte de toutes tes forces.",
+        "effects": [
+          "ADD_BIOME_CURRENCY:6",
+          "DAMAGE_LIFE:4",
+          "ADD_REPUTATION:korrigans:-3"
+        ]
+      },
+      {
+        "verb": "accepter",
+        "text": "Tu deposes une offrande et attends patiemment.",
+        "effects": [
+          "HEAL_LIFE:5",
+          "ADD_REPUTATION:druides:5"
+        ]
+      }
+    ]
+  },
+  {
+    "narrative": "Le tonnerre gronde au loin, mais aucun eclair n'illumine le ciel. Les arbres frissonnent, et tu realises que le grondement vient de sous la terre. Un vieux druide apparait, appuye sur un baton de frene.",
+    "options": [
+      {
+        "verb": "parler",
+        "text": "Tu salues le druide et lui demandes l'explication du grondement.",
+        "effects": [
+          "ADD_REPUTATION:druides:10",
+          "ADD_ANAM:5"
+        ]
+      },
+      {
+        "verb": "mentir",
+        "text": "Tu pretends etre un initie pour gagner sa confiance.",
+        "effects": [
+          "ADD_BIOME_CURRENCY:8",
+          "ADD_REPUTATION:druides:-5"
+        ]
+      },
+      {
+        "verb": "resoudre",
+        "text": "Tu cherches toi-meme l'origine du grondement souterrain.",
+        "effects": [
+          "ADD_ANAM:6",
+          "ADD_REPUTATION:anciens:5"
+        ]
+      }
+    ]
+  },
+  {
+    "narrative": "Au pied d'un saule pleureur, une harpe de bois repose contre le tronc. Ses cordes vibrent seules, jouant un air triste et beau. Des larmes de seve coulent le long de l'ecorce.",
+    "options": [
+      {
+        "verb": "apaiser",
+        "text": "Tu poses les mains sur les cordes, apaisant leur chant.",
+        "effects": [
+          "HEAL_LIFE:5",
+          "ADD_REPUTATION:niamh:7"
+        ]
+      },
+      {
+        "verb": "marchander",
+        "text": "Tu proposes un marche a l'esprit de l'arbre — un chant contre un secret.",
+        "effects": [
+          "ADD_BIOME_CURRENCY:6",
+          "ADD_REPUTATION:korrigans:5"
+        ]
+      },
+      {
+        "verb": "resoudre",
+        "text": "Tu cherches a comprendre pourquoi le saule pleure.",
+        "effects": [
+          "ADD_ANAM:6",
+          "ADD_REPUTATION:druides:6"
+        ]
+      }
+    ]
+  },
+  {
+    "narrative": "Les vagues se brisent contre des rochers noirs sculptes par les siecles. Entre deux affleurements, un bassin naturel miroite d'un bleu surnaturel. Une silhouette feminine flotte juste sous la surface.",
+    "options": [
+      {
+        "verb": "parler",
+        "text": "Tu t'adresses a la silhouette, ta voix couvrant le ressac.",
+        "effects": [
+          "ADD_REPUTATION:niamh:10",
+          "HEAL_LIFE:5"
+        ]
+      },
+      {
+        "verb": "observer",
+        "text": "Tu etudies le bassin, cherchant a comprendre ce phenomene.",
+        "effects": [
+          "ADD_ANAM:5",
+          "ADD_REPUTATION:druides:4"
+        ]
+      },
+      {
+        "verb": "tenter sa chance",
+        "text": "Tu plonges la main dans l'eau lumineuse.",
+        "effects": [
+          "ADD_BIOME_CURRENCY:8",
+          "DAMAGE_LIFE:4"
+        ]
+      }
+    ]
+  },
+  {
+    "narrative": "Un phare en ruine domine la falaise. Sa lanterne brisee laisse passer le vent sale. Au pied de la tour, des coquillages forment un motif en spirale qui pulse d'une lumiere bleutee.",
+    "options": [
+      {
+        "verb": "dechiffrer",
+        "text": "Tu etudies la spirale de coquillages, cherchant un message.",
+        "effects": [
+          "ADD_ANAM:7",
+          "ADD_REPUTATION:anciens:5"
+        ]
+      },
+      {
+        "verb": "escalader",
+        "text": "Tu grimpes les marches du phare pour voir au-dela de l'horizon.",
+        "effects": [
+          "ADD_BIOME_CURRENCY:6",
+          "DAMAGE_LIFE:3"
+        ]
+      },
+      {
+        "verb": "ecouter",
+        "text": "Tu fermes les yeux et laisses le vent te raconter l'histoire du phare.",
+        "effects": [
+          "HEAL_LIFE:4",
+          "ADD_REPUTATION:niamh:6"
+        ]
+      }
+    ]
+  },
+  {
+    "narrative": "Une grotte marine s'ouvre dans la falaise, accessible uniquement a maree basse. A l'interieur, des stalactites cristallines chantent quand le vent s'engouffre. Des offrandes anciennes jonchent le sol.",
+    "options": [
+      {
+        "verb": "se faufiler",
+        "text": "Tu te glisses dans la grotte avant que la maree ne remonte.",
+        "effects": [
+          "ADD_BIOME_CURRENCY:9",
+          "DAMAGE_LIFE:5"
+        ]
+      },
+      {
+        "verb": "mediter",
+        "text": "Tu t'assieds a l'entree et ecoutes le chant des cristaux.",
+        "effects": [
+          "HEAL_LIFE:5",
+          "ADD_REPUTATION:niamh:8"
+        ]
+      },
+      {
+        "verb": "examiner",
+        "text": "Tu etudies les offrandes pour comprendre qui venait ici.",
+        "effects": [
+          "ADD_ANAM:6",
+          "ADD_REPUTATION:anciens:6"
+        ]
+      }
+    ]
+  },
+  {
+    "narrative": "Un banc de poissons argentees saute hors de l'eau en formation parfaite, dessinant un arc-en-ciel d'ecailles. Derriere eux, un dauphin blanc t'observe avec une intelligence troublante.",
+    "options": [
+      {
+        "verb": "s'approcher",
+        "text": "Tu avances dans l'eau jusqu'aux genoux vers le dauphin.",
+        "effects": [
+          "ADD_REPUTATION:niamh:9",
+          "HEAL_LIFE:4"
+        ]
+      },
+      {
+        "verb": "fixer",
+        "text": "Tu memorises chaque detail de cette vision marine.",
+        "effects": [
+          "ADD_ANAM:5",
+          "HEAL_LIFE:3"
+        ]
+      },
+      {
+        "verb": "courir",
+        "text": "Tu longes la cote en suivant le banc de poissons.",
+        "effects": [
+          "ADD_BIOME_CURRENCY:5",
+          "ADD_REPUTATION:korrigans:4"
+        ]
+      }
+    ]
+  },
+  {
+    "narrative": "Le sentier cotier s'effondre devant toi, revele par l'erosion. Dans la coupe de terre, des ossements anciens brillent d'un eclat nacre. La mer gronde en contrebas.",
+    "options": [
+      {
+        "verb": "resister mentalement",
+        "text": "Tu affrontes le vertige et le poids de la mort ancienne.",
+        "effects": [
+          "ADD_REPUTATION:ankou:7",
+          "ADD_ANAM:4"
+        ]
+      },
+      {
+        "verb": "contourner",
+        "text": "Tu fais un detour par les rochers pour eviter l'eboulement.",
+        "effects": [
+          "HEAL_LIFE:3",
+          "ADD_BIOME_CURRENCY:4"
+        ]
+      },
+      {
+        "verb": "cueillir",
+        "text": "Tu recuperes un fragment nacre — un talisman peut-etre.",
+        "effects": [
+          "ADD_BIOME_CURRENCY:7",
+          "DAMAGE_LIFE:3"
+        ]
+      }
+    ]
+  },
+  {
+    "narrative": "Une source d'eau douce jaillit directement de la falaise, tombant en cascade dans la mer. La ou les eaux se melangent, un brouillard irise se forme, revelant des formes fugaces.",
+    "options": [
+      {
+        "verb": "se concentrer",
+        "text": "Tu fixes le brouillard, tentant de discerner les formes.",
+        "effects": [
+          "ADD_REPUTATION:niamh:7",
+          "ADD_ANAM:5"
+        ]
+      },
+      {
+        "verb": "cueillir",
+        "text": "Tu remplis ta gourde a la source d'eau douce.",
+        "effects": [
+          "HEAL_LIFE:5",
+          "ADD_BIOME_CURRENCY:3"
+        ]
+      },
+      {
+        "verb": "combattre",
+        "text": "Tu traverses le rideau de brouillard sans hesiter.",
+        "effects": [
+          "ADD_REPUTATION:ankou:5",
+          "DAMAGE_LIFE:4"
+        ]
+      }
+    ]
+  },
+  {
+    "narrative": "Un cercle de menhirs se dresse sur un promontoire battu par les vents. Chaque pierre est polie par le sel marin. Au centre, une dalle plate porte les traces de feux anciens.",
+    "options": [
+      {
+        "verb": "analyser",
+        "text": "Tu etudies les traces de rituels sur la dalle centrale.",
+        "effects": [
+          "ADD_ANAM:7",
+          "ADD_REPUTATION:druides:5"
+        ]
+      },
+      {
+        "verb": "apaiser",
+        "text": "Tu allumes un petit feu symbolique sur la dalle.",
+        "effects": [
+          "HEAL_LIFE:5",
+          "ADD_REPUTATION:anciens:7"
+        ]
+      },
+      {
+        "verb": "fouiller a l'aveugle",
+        "text": "Tu fouilles autour des menhirs, cherchant des objets caches.",
+        "effects": [
+          "ADD_BIOME_CURRENCY:8",
+          "DAMAGE_LIFE:3"
+        ]
+      }
+    ]
+  },
+  {
+    "narrative": "Une vieille barque echouee porte encore ses filets. Dans les mailles, des etoiles de mer phosphorescentes brillent comme des lanternes. Un chant melancolique monte des profondeurs.",
+    "options": [
+      {
+        "verb": "ecouter",
+        "text": "Tu t'allonges dans la barque et laisses le chant te bercer.",
+        "effects": [
+          "HEAL_LIFE:5",
+          "ADD_REPUTATION:niamh:6"
+        ]
+      },
+      {
+        "verb": "marchander",
+        "text": "Tu prends quelques etoiles pour les echanger plus tard.",
+        "effects": [
+          "ADD_BIOME_CURRENCY:7",
+          "ADD_REPUTATION:niamh:-3"
+        ]
+      },
+      {
+        "verb": "suivre",
+        "text": "Tu suis le chant vers les rochers au large.",
+        "effects": [
+          "ADD_REPUTATION:niamh:8",
+          "DAMAGE_LIFE:3"
+        ]
+      }
+    ]
+  },
+  {
+    "narrative": "Des algues geantes s'echouent sur le rivage apres la tempete. Entre leurs frondes, des pierres polies portent des gravures oghamiques inconnues. L'air sent l'iode et le mystere.",
+    "options": [
+      {
+        "verb": "dechiffrer",
+        "text": "Tu rassembles les pierres et tentes de lire les oghams.",
+        "effects": [
+          "ADD_ANAM:8",
+          "ADD_REPUTATION:druides:4"
+        ]
+      },
+      {
+        "verb": "sentir",
+        "text": "Tu suis ton instinct et choisis la pierre qui vibre le plus.",
+        "effects": [
+          "ADD_REPUTATION:niamh:6",
+          "HEAL_LIFE:4"
+        ]
+      },
+      {
+        "verb": "fuir",
+        "text": "L'etrangete de la scene t'inquiete. Tu t'eloignes.",
+        "effects": [
+          "HEAL_LIFE:2",
+          "ADD_BIOME_CURRENCY:3"
+        ]
+      }
+    ]
+  },
+  {
+    "narrative": "Un pecheur solitaire repare ses filets sur un rocher plat. Ses yeux sont d'un gris identique a la mer. Il ne leve pas la tete mais dit : \"La mer prend et la mer rend. Que cherches-tu ?\"",
+    "options": [
+      {
+        "verb": "parler",
+        "text": "Tu lui confies ta quete avec sincerite.",
+        "effects": [
+          "ADD_REPUTATION:niamh:5",
+          "ADD_REPUTATION:anciens:5"
+        ]
+      },
+      {
+        "verb": "negocier",
+        "text": "Tu proposes ton aide en echange d'informations.",
+        "effects": [
+          "ADD_BIOME_CURRENCY:6",
+          "ADD_REPUTATION:korrigans:4"
+        ]
+      },
+      {
+        "verb": "observer",
+        "text": "Tu t'assieds en silence et regardes ses mains travailler.",
+        "effects": [
+          "HEAL_LIFE:4",
+          "ADD_ANAM:4"
+        ]
+      }
+    ]
+  },
+  {
+    "narrative": "La maree descendante revele un passage entre deux ilots rocheux. Le fond sablonneux est parseme de coquillages dores. Mais les nuages s'amoncellent et la maree ne tardera pas.",
+    "options": [
+      {
+        "verb": "courir",
+        "text": "Tu traverses en courant avant que la mer ne revienne.",
+        "effects": [
+          "ADD_BIOME_CURRENCY:8",
+          "DAMAGE_LIFE:4"
+        ]
+      },
+      {
+        "verb": "attendre",
+        "text": "Tu restes sur la rive et observes le cycle de la mer.",
+        "effects": [
+          "HEAL_LIFE:5",
+          "ADD_REPUTATION:niamh:5"
+        ]
+      },
+      {
+        "verb": "deviner",
+        "text": "Tu estimes le temps qu'il te reste et calcules ton parcours.",
+        "effects": [
+          "ADD_BIOME_CURRENCY:5",
+          "ADD_ANAM:4"
+        ]
+      }
+    ]
+  },
+  {
+    "narrative": "Un rocher en forme de trone se dresse face a l'ocean. Des traces d'usure montrent que quelqu'un s'y assied regulierement. De ce point, on voit trois iles a l'horizon, alignees comme des perles.",
+    "options": [
+      {
+        "verb": "mediter",
+        "text": "Tu t'assieds sur le trone de pierre et fixes l'horizon.",
+        "effects": [
+          "HEAL_LIFE:5",
+          "ADD_REPUTATION:niamh:7"
+        ]
+      },
+      {
+        "verb": "scruter",
+        "text": "Tu observes les iles, cherchant des signes de vie.",
+        "effects": [
+          "ADD_ANAM:5",
+          "ADD_REPUTATION:anciens:4"
+        ]
+      },
+      {
+        "verb": "escalader",
+        "text": "Tu grimpes plus haut pour avoir une vue panoramique.",
+        "effects": [
+          "ADD_BIOME_CURRENCY:5",
+          "DAMAGE_LIFE:2"
+        ]
+      }
+    ]
+  },
+  {
+    "narrative": "Un phoque gris repose sur un rocher, sa fourrure brillante de gouttelettes. Il te fixe sans crainte. Les legendes disent que les selkies prennent forme humaine a la pleine lune.",
+    "options": [
+      {
+        "verb": "amadouer",
+        "text": "Tu t'approches lentement, paumes ouvertes, en murmurant.",
+        "effects": [
+          "ADD_REPUTATION:niamh:8",
+          "HEAL_LIFE:3"
+        ]
+      },
+      {
+        "verb": "interpreter",
+        "text": "Tu cherches dans tes souvenirs les legendes des selkies.",
+        "effects": [
+          "ADD_ANAM:6",
+          "ADD_REPUTATION:druides:4"
+        ]
+      },
+      {
+        "verb": "pister",
+        "text": "Tu suis les traces du phoque vers sa colonie.",
+        "effects": [
+          "ADD_BIOME_CURRENCY:6",
+          "ADD_REPUTATION:korrigans:3"
+        ]
+      }
+    ]
+  },
+  {
+    "narrative": "Le vent apporte des flocons d'ecume qui ressemblent a des plumes blanches. Ils se posent sur tes epaules comme des benedictions. Chaque flocon qui touche ta peau laisse une sensation de fraicheur bienfaisante.",
+    "options": [
+      {
+        "verb": "accepter",
+        "text": "Tu ouvres les bras et accueilles l'ecume comme un don.",
+        "effects": [
+          "HEAL_LIFE:5",
+          "ADD_REPUTATION:niamh:5"
+        ]
+      },
+      {
+        "verb": "examiner",
+        "text": "Tu captures un flocon et l'observes fondre lentement.",
+        "effects": [
+          "ADD_ANAM:4",
+          "ADD_REPUTATION:druides:5"
+        ]
+      },
+      {
+        "verb": "resister physiquement",
+        "text": "Tu avances face au vent, chaque pas une victoire.",
+        "effects": [
+          "ADD_REPUTATION:ankou:5",
+          "ADD_BIOME_CURRENCY:4"
+        ]
+      }
+    ]
+  },
+  {
+    "narrative": "Une arche naturelle de roche rouge enjambe une crique etroite. L'eau en dessous est si claire qu'on voit le fond a dix metres. Des hippocampes dansent entre les algues.",
+    "options": [
+      {
+        "verb": "se faufiler",
+        "text": "Tu passes sous l'arche en longeant la paroi rocheuse.",
+        "effects": [
+          "ADD_BIOME_CURRENCY:6",
+          "ADD_REPUTATION:niamh:4"
+        ]
+      },
+      {
+        "verb": "flairer",
+        "text": "Tu sens l'air marin charge de sel et d'algues medicinales.",
+        "effects": [
+          "HEAL_LIFE:5",
+          "ADD_REPUTATION:korrigans:4"
+        ]
+      },
+      {
+        "verb": "se concentrer",
+        "text": "Tu projettes ta conscience vers les hippocampes dansants.",
+        "effects": [
+          "ADD_REPUTATION:niamh:7",
+          "ADD_ANAM:4"
+        ]
+      }
+    ]
+  },
+  {
+    "narrative": "Un cairn immense se dresse au bord de la falaise, construit de galets blancs et noirs en alternance. A son sommet, une coupe de bronze recueille l'eau de pluie. L'eau luit d'une lueur argentee.",
+    "options": [
+      {
+        "verb": "memoriser",
+        "text": "Tu graves dans ta memoire le motif noir et blanc du cairn.",
+        "effects": [
+          "ADD_ANAM:6",
+          "ADD_REPUTATION:anciens:6"
+        ]
+      },
+      {
+        "verb": "apaiser",
+        "text": "Tu verses quelques gouttes de l'eau sacree sur tes mains.",
+        "effects": [
+          "HEAL_LIFE:5",
+          "ADD_REPUTATION:niamh:5"
+        ]
+      },
+      {
+        "verb": "forcer",
+        "text": "Tu tentes de soulever la coupe de bronze.",
+        "effects": [
+          "ADD_BIOME_CURRENCY:8",
+          "DAMAGE_LIFE:5"
+        ]
+      }
+    ]
+  },
+  {
+    "narrative": "Les restes d'un naufrage emergent du sable a maree basse. La proue sculptee represente une femme aux yeux fermes. Des coraux ont pousse sur ses traits, lui donnant une couronne vivante.",
+    "options": [
+      {
+        "verb": "decoder",
+        "text": "Tu cherches le nom du navire parmi les planches brisees.",
+        "effects": [
+          "ADD_ANAM:5",
+          "ADD_REPUTATION:anciens:6"
+        ]
+      },
+      {
+        "verb": "calmer",
+        "text": "Tu rends hommage aux marins perdus en silence.",
+        "effects": [
+          "HEAL_LIFE:5",
+          "ADD_REPUTATION:niamh:6"
+        ]
+      },
+      {
+        "verb": "fouiller a l'aveugle",
+        "text": "Tu fouilles l'epave a la recherche de tresors.",
+        "effects": [
+          "ADD_BIOME_CURRENCY:9",
+          "DAMAGE_LIFE:4"
+        ]
+      }
+    ]
+  },
+  {
+    "narrative": "Un sentier de pierres plates traverse une vasiere ou des oiseaux limicoles cherchent leur nourriture. Le ciel se reflete parfaitement dans la boue argentee, creant un monde miroir.",
+    "options": [
+      {
+        "verb": "suivre",
+        "text": "Tu suis le sentier de pierres avec precaution.",
+        "effects": [
+          "ADD_BIOME_CURRENCY:5",
+          "HEAL_LIFE:3"
+        ]
+      },
+      {
+        "verb": "tendre l'oreille",
+        "text": "Tu ecoutes les cris des oiseaux, cherchant un message.",
+        "effects": [
+          "ADD_REPUTATION:niamh:5",
+          "ADD_ANAM:5"
+        ]
+      },
+      {
+        "verb": "endurer",
+        "text": "Tu traverses la vasiere a pied, enfonçant dans la boue.",
+        "effects": [
+          "ADD_REPUTATION:ankou:4",
+          "DAMAGE_LIFE:3"
+        ]
+      }
+    ]
+  },
+  {
+    "narrative": "Une mare de maree forme un miroir parfait dans un creux de rocher. En te penchant, ton reflet ne bouge pas avec toi — il sourit quand tu fronces les sourcils, et te fait signe de la main.",
+    "options": [
+      {
+        "verb": "se concentrer",
+        "text": "Tu fixes le reflet et tentes de communiquer avec lui.",
+        "effects": [
+          "ADD_REPUTATION:niamh:9",
+          "ADD_ANAM:5"
+        ]
+      },
+      {
+        "verb": "mentir",
+        "text": "Tu pretends ne rien voir et continues ton chemin.",
+        "effects": [
+          "ADD_BIOME_CURRENCY:4",
+          "ADD_REPUTATION:niamh:-4"
+        ]
+      },
+      {
+        "verb": "resister mentalement",
+        "text": "Tu refuses de ceder a l'illusion et detournes le regard.",
+        "effects": [
+          "HEAL_LIFE:4",
+          "ADD_REPUTATION:anciens:5"
+        ]
+      }
+    ]
+  },
+  {
+    "narrative": "Au bout d'une jetee de pierres disjointes, un feu follet bleu danse au-dessus de l'eau. Il pulse au rythme des vagues, comme un coeur marin. D'autres lumieres repondent au loin, depuis les iles.",
+    "options": [
+      {
+        "verb": "charmer",
+        "text": "Tu chantes un air ancien pour attirer le feu follet.",
+        "effects": [
+          "ADD_REPUTATION:niamh:8",
+          "ADD_REPUTATION:korrigans:4"
+        ]
+      },
+      {
+        "verb": "analyser",
+        "text": "Tu etudies le rythme des pulsations, cherchant un code.",
+        "effects": [
+          "ADD_ANAM:7",
+          "ADD_REPUTATION:druides:4"
+        ]
+      },
+      {
+        "verb": "esquiver",
+        "text": "Tu contournes la jetee, mefiant des lumieres trompeuses.",
+        "effects": [
+          "HEAL_LIFE:3",
+          "ADD_BIOME_CURRENCY:5"
+        ]
+      }
+    ]
+  },
+  {
+    "narrative": "Un tumulus couvert de bruyere violette se dresse au milieu de la lande. Le vent siffle entre les pierres empilees a son sommet, produisant une melodie plaintive. Des traces de pas anciens sont gravees dans la roche.",
+    "options": [
+      {
+        "verb": "examiner",
+        "text": "Tu etudies les pierres empilees et les gravures sur le tumulus.",
+        "effects": [
+          "ADD_ANAM:6",
+          "ADD_REPUTATION:anciens:8"
+        ]
+      },
+      {
+        "verb": "ecouter",
+        "text": "Tu laisses la melodie du vent te guider vers un message cache.",
+        "effects": [
+          "HEAL_LIFE:5",
+          "ADD_REPUTATION:druides:5"
+        ]
+      },
+      {
+        "verb": "fouiller a l'aveugle",
+        "text": "Tu cherches une entree dans le tumulus.",
+        "effects": [
+          "ADD_BIOME_CURRENCY:7",
+          "DAMAGE_LIFE:4"
+        ]
+      }
+    ]
+  },
+  {
+    "narrative": "Un cercle de pierres basses emerge de la bruyere, a peine visible sous le tapis violet. Au centre, une pierre plate porte un bol de pierre rempli d'eau de pluie. Des runes oghamiques encerclent le bol.",
+    "options": [
+      {
+        "verb": "dechiffrer",
+        "text": "Tu te penches pour lire les runes autour du bol sacre.",
+        "effects": [
+          "ADD_ANAM:7",
+          "ADD_REPUTATION:anciens:6"
+        ]
+      },
+      {
+        "verb": "mediter",
+        "text": "Tu t'assieds au bord du cercle et honores l'ancien lieu.",
+        "effects": [
+          "HEAL_LIFE:5",
+          "ADD_REPUTATION:anciens:7"
+        ]
+      },
+      {
+        "verb": "tenter sa chance",
+        "text": "Tu bois une gorgee de l'eau du bol de pierre.",
+        "effects": [
+          "ADD_BIOME_CURRENCY:6",
+          "DAMAGE_LIFE:3"
+        ]
+      }
+    ]
+  },
+  {
+    "narrative": "Des poneys sauvages broutent la bruyere a flanc de colline. Leur chef, un etalon gris au regard fier, s'avance vers toi. Sa criniere flotte comme un drapeau dans le vent des landes.",
+    "options": [
+      {
+        "verb": "amadouer",
+        "text": "Tu tends la main ouverte vers l'etalon, paumes vers le ciel.",
+        "effects": [
+          "ADD_REPUTATION:anciens:8",
+          "HEAL_LIFE:4"
+        ]
+      },
+      {
+        "verb": "observer",
+        "text": "Tu etudies le troupeau a distance, notant leur comportement.",
+        "effects": [
+          "ADD_ANAM:5",
+          "ADD_REPUTATION:druides:5"
+        ]
+      },
+      {
+        "verb": "fuir",
+        "text": "Tu recules devant la puissance de l'animal sauvage.",
+        "effects": [
+          "HEAL_LIFE:2",
+          "ADD_BIOME_CURRENCY:4"
+        ]
+      }
+    ]
+  },
+  {
+    "narrative": "Un cairn massif marque un carrefour de sentiers oublies. Chaque voyageur y a depose sa pierre au fil des siecles. Une inscription usee dit: \"Souviens-toi du serment.\" Un corbeau croasse depuis le sommet.",
+    "options": [
+      {
+        "verb": "accepter",
+        "text": "Tu deposes ta propre pierre et prononces un serment silencieux.",
+        "effects": [
+          "ADD_REPUTATION:anciens:10",
+          "HEAL_LIFE:3"
+        ]
+      },
+      {
+        "verb": "analyser",
+        "text": "Tu etudies les differentes pierres, cherchant des indices.",
+        "effects": [
+          "ADD_ANAM:6",
+          "ADD_REPUTATION:druides:4"
+        ]
+      },
+      {
+        "verb": "contourner",
+        "text": "Tu evites le cairn, peu desireux de t'engager.",
+        "effects": [
+          "ADD_BIOME_CURRENCY:5",
+          "ADD_REPUTATION:anciens:-3"
+        ]
+      }
+    ]
+  },
+  {
+    "narrative": "Un orage violet s'amoncelle au-dessus des landes. Les eclairs frappent un menhir solitaire encore et encore, mais la pierre ne se fend pas. Chaque impact fait briller les oghams graves dans le granite.",
+    "options": [
+      {
+        "verb": "se concentrer",
+        "text": "Tu fixes les oghams illumines, tentant de les memoriser.",
+        "effects": [
+          "ADD_ANAM:8",
+          "ADD_REPUTATION:anciens:5"
+        ]
+      },
+      {
+        "verb": "resister physiquement",
+        "text": "Tu affrontes la tempete pour atteindre le menhir.",
+        "effects": [
+          "ADD_REPUTATION:ankou:6",
+          "DAMAGE_LIFE:5"
+        ]
+      },
+      {
+        "verb": "attendre",
+        "text": "Tu te mets a l'abri et observes le spectacle naturel.",
+        "effects": [
+          "HEAL_LIFE:4",
+          "ADD_REPUTATION:druides:5"
+        ]
+      }
+    ]
+  },
+  {
+    "narrative": "Un vieux berger se tient pres d'un muret de pierres seches, son chien couche a ses pieds. Il sculpte un baton de frene sans te regarder. \"Les anciens savaient lire le vent,\" dit-il simplement.",
+    "options": [
+      {
+        "verb": "parler",
+        "text": "Tu t'assieds pres du berger et lui demandes ses histoires.",
+        "effects": [
+          "ADD_REPUTATION:anciens:8",
+          "ADD_ANAM:4"
+        ]
+      },
+      {
+        "verb": "scruter",
+        "text": "Tu observes les motifs qu'il grave dans le bois de frene.",
+        "effects": [
+          "ADD_ANAM:5",
+          "ADD_REPUTATION:druides:6"
+        ]
+      },
+      {
+        "verb": "marchander",
+        "text": "Tu proposes d'echanger un service contre le baton.",
+        "effects": [
+          "ADD_BIOME_CURRENCY:7",
+          "ADD_REPUTATION:korrigans:4"
+        ]
+      }
+    ]
+  },
+  {
+    "narrative": "Un dolmen effondre git a moitie dans la tourbe. Sa table de pierre brisee revele une chambre souterraine ou des racines de bruyere forment un reseau luminescent. Un bourdonnement grave emane des profondeurs.",
+    "options": [
+      {
+        "verb": "se faufiler",
+        "text": "Tu te glisses dans la chambre souterraine du dolmen.",
+        "effects": [
+          "ADD_BIOME_CURRENCY:8",
+          "DAMAGE_LIFE:4"
+        ]
+      },
+      {
+        "verb": "apaiser",
+        "text": "Tu poses les mains sur la pierre et murmures des mots anciens.",
+        "effects": [
+          "HEAL_LIFE:5",
+          "ADD_REPUTATION:anciens:6"
+        ]
+      },
+      {
+        "verb": "etudier",
+        "text": "Tu notes les motifs luminescents des racines sans entrer.",
+        "effects": [
+          "ADD_ANAM:6",
+          "ADD_REPUTATION:druides:5"
+        ]
+      }
+    ]
+  },
+  {
+    "narrative": "La bruyere s'ecarte pour reveler un sentier pave de dalles gravees. Chaque dalle porte le nom d'un ancetre oublie. Marcher dessus te donne l'impression de fouler l'histoire elle-meme.",
+    "options": [
+      {
+        "verb": "memoriser",
+        "text": "Tu lis chaque nom a voix haute, les gravant dans ta memoire.",
+        "effects": [
+          "ADD_REPUTATION:anciens:10",
+          "ADD_ANAM:5"
+        ]
+      },
+      {
+        "verb": "resoudre",
+        "text": "Tu cherches un ordre logique dans les noms et les dalles.",
+        "effects": [
+          "ADD_ANAM:7",
+          "ADD_REPUTATION:anciens:4"
+        ]
+      },
+      {
+        "verb": "courir",
+        "text": "Tu traverses le sentier en courant, sans t'attarder.",
+        "effects": [
+          "ADD_BIOME_CURRENCY:5",
+          "DAMAGE_LIFE:2"
+        ]
+      }
+    ]
+  },
+  {
+    "narrative": "Un puits celtique s'ouvre dans la lande, son margelle de granit couverte de lichen orange. L'eau au fond reflète non pas le ciel mais un reseau d'etoiles, meme en plein jour.",
+    "options": [
+      {
+        "verb": "deviner",
+        "text": "Tu jettes une pierre et ecoutes le son qu'elle fait en touchant l'eau.",
+        "effects": [
+          "ADD_BIOME_CURRENCY:6",
+          "ADD_REPUTATION:anciens:5"
+        ]
+      },
+      {
+        "verb": "se concentrer",
+        "text": "Tu fixes le reflet etoile, cherchant un message celeste.",
+        "effects": [
+          "ADD_ANAM:6",
+          "ADD_REPUTATION:niamh:5"
+        ]
+      },
+      {
+        "verb": "refuser",
+        "text": "Tu detournes le regard — certains mysteres doivent rester scelles.",
+        "effects": [
+          "HEAL_LIFE:4",
+          "ADD_REPUTATION:anciens:6"
+        ]
+      }
+    ]
+  },
+  {
+    "narrative": "Un alignement de menhirs traverse la lande sur des centaines de metres. A l'extremite, le dernier menhir est fendu en deux, et entre les moities pousse un sorbier charge de baies rouges.",
+    "options": [
+      {
+        "verb": "cueillir",
+        "text": "Tu cueilles des baies de sorbier — protection des anciens.",
+        "effects": [
+          "ADD_BIOME_CURRENCY:5",
+          "ADD_REPUTATION:anciens:7"
+        ]
+      },
+      {
+        "verb": "examiner",
+        "text": "Tu etudies comment le menhir s'est fendu au fil des siecles.",
+        "effects": [
+          "ADD_ANAM:5",
+          "ADD_REPUTATION:anciens:6"
+        ]
+      },
+      {
+        "verb": "pousser",
+        "text": "Tu tentes de rassembler les deux moities du menhir.",
+        "effects": [
+          "DAMAGE_LIFE:5",
+          "ADD_REPUTATION:ankou:5"
+        ]
+      }
+    ]
+  },
+  {
+    "narrative": "Des tourbières noires s'etendent a perte de vue, parsemees d'iles de bruyere. Sur l'une d'elles, un feu de tourbe brule sans fumee, entretenu par personne. Son odeur acre et ancienne porte des visions.",
+    "options": [
+      {
+        "verb": "se concentrer",
+        "text": "Tu t'approches du feu et laisses les visions venir.",
+        "effects": [
+          "ADD_REPUTATION:anciens:8",
+          "ADD_ANAM:6"
+        ]
+      },
+      {
+        "verb": "resister mentalement",
+        "text": "Tu repousses les visions et gardes l'esprit clair.",
+        "effects": [
+          "HEAL_LIFE:5",
+          "ADD_REPUTATION:ankou:4"
+        ]
+      },
+      {
+        "verb": "chercher au hasard",
+        "text": "Tu fouilles autour du feu, cherchant qui l'a allume.",
+        "effects": [
+          "ADD_BIOME_CURRENCY:6",
+          "DAMAGE_LIFE:3"
+        ]
+      }
+    ]
+  },
+  {
+    "narrative": "Un chant grave monte de la terre. Les pierres vibrent sous tes pieds. Au loin, une procession spectrale traverse la lande — des guerriers anciens portant des boucliers ronds ornes de spirales.",
+    "options": [
+      {
+        "verb": "mediter",
+        "text": "Tu t'agenouilles et honores la procession des guerriers tombes.",
+        "effects": [
+          "ADD_REPUTATION:anciens:10",
+          "HEAL_LIFE:4"
+        ]
+      },
+      {
+        "verb": "combattre",
+        "text": "Tu brandis un baton et te joins a la procession fantome.",
+        "effects": [
+          "ADD_REPUTATION:ankou:7",
+          "DAMAGE_LIFE:4"
+        ]
+      },
+      {
+        "verb": "fixer",
+        "text": "Tu observes chaque detail des spectres — armes, visages, symboles.",
+        "effects": [
+          "ADD_ANAM:7",
+          "ADD_REPUTATION:anciens:4"
+        ]
+      }
+    ]
+  },
+  {
+    "narrative": "Un ruisseau serpente entre les collines, ses berges tapissees de menthe sauvage. A un coude, un gue de pierres plates traverse le courant. Sur la rive opposee, un cercle de champignons forme une porte ferique.",
+    "options": [
+      {
+        "verb": "traverser",
+        "text": "Tu franchis le gue prudemment, pierre apres pierre.",
+        "effects": [
+          "ADD_BIOME_CURRENCY:5",
+          "HEAL_LIFE:3"
+        ]
+      },
+      {
+        "verb": "inspecter",
+        "text": "Tu examines le cercle de champignons sans le franchir.",
+        "effects": [
+          "ADD_ANAM:5",
+          "ADD_REPUTATION:korrigans:6"
+        ]
+      },
+      {
+        "verb": "calmer",
+        "text": "Tu t'assieds au bord du ruisseau et respires la menthe.",
+        "effects": [
+          "HEAL_LIFE:5",
+          "ADD_REPUTATION:anciens:5"
+        ]
+      }
+    ]
+  },
+  {
+    "narrative": "Un tertre funeraire s'ouvre sur la lande, son entree basse gardee par deux pierres sculptees en forme de loups. A l'interieur, l'obscurite est totale mais une chaleur etrange en emane.",
+    "options": [
+      {
+        "verb": "se faufiler",
+        "text": "Tu te glisses entre les loups de pierre et penetres dans le tertre.",
+        "effects": [
+          "ADD_BIOME_CURRENCY:9",
+          "DAMAGE_LIFE:5"
+        ]
+      },
+      {
+        "verb": "apaiser",
+        "text": "Tu deposes une offrande devant les gardiens et attends.",
+        "effects": [
+          "ADD_REPUTATION:anciens:9",
+          "HEAL_LIFE:3"
+        ]
+      },
+      {
+        "verb": "interpreter",
+        "text": "Tu etudies les sculptures de loups, y cherchant un clan.",
+        "effects": [
+          "ADD_ANAM:6",
+          "ADD_REPUTATION:anciens:5"
+        ]
+      }
+    ]
+  },
+  {
+    "narrative": "Le brouillard tombe sur la lande comme un voile. Des lumieres dansent au loin — feux follets ou lanternes de voyageurs? Un poteau de bois grave d'oghams emerge du sol, indiquant trois directions.",
+    "options": [
+      {
+        "verb": "dechiffrer",
+        "text": "Tu lis les oghams sur le poteau, cherchant le bon chemin.",
+        "effects": [
+          "ADD_ANAM:7",
+          "ADD_REPUTATION:anciens:6"
+        ]
+      },
+      {
+        "verb": "suivre",
+        "text": "Tu suis les lumieres dansantes dans le brouillard.",
+        "effects": [
+          "ADD_REPUTATION:korrigans:5",
+          "DAMAGE_LIFE:3"
+        ]
+      },
+      {
+        "verb": "endurer",
+        "text": "Tu attends que le brouillard se leve, patient et stoique.",
+        "effects": [
+          "HEAL_LIFE:5",
+          "ADD_REPUTATION:anciens:6"
+        ]
+      }
+    ]
+  },
+  {
+    "narrative": "Une source chaude bouillonne au creux d'une cuvette de pierre. La vapeur qui s'en echappe dessine des visages ephemeres — les ancetres qui veillent. L'eau sent le soufre et le fer.",
+    "options": [
+      {
+        "verb": "observer",
+        "text": "Tu etudies les visages de vapeur, y reconnaissant des traits.",
+        "effects": [
+          "ADD_REPUTATION:anciens:7",
+          "ADD_ANAM:5"
+        ]
+      },
+      {
+        "verb": "cueillir",
+        "text": "Tu remplis ta gourde d'eau chaude minerale.",
+        "effects": [
+          "HEAL_LIFE:5",
+          "ADD_BIOME_CURRENCY:3"
+        ]
+      },
+      {
+        "verb": "resoudre",
+        "text": "Tu cherches l'origine geologique de cette source.",
+        "effects": [
+          "ADD_ANAM:6",
+          "ADD_REPUTATION:druides:5"
+        ]
+      }
+    ]
+  },
+  {
+    "narrative": "Un if millenaire pousse au centre d'un enclos de pierres. Son tronc tordu porte les cicatrices de mille hivers. A ses pieds, des offrandes recentes — fleurs sechees, rubans, pieces de cuivre.",
+    "options": [
+      {
+        "verb": "accepter",
+        "text": "Tu ajoutes ta propre offrande et prononces une priere ancienne.",
+        "effects": [
+          "ADD_REPUTATION:anciens:9",
+          "HEAL_LIFE:5"
+        ]
+      },
+      {
+        "verb": "decoder",
+        "text": "Tu etudies les offrandes pour comprendre qui vient encore ici.",
+        "effects": [
+          "ADD_ANAM:5",
+          "ADD_REPUTATION:anciens:5"
+        ]
+      },
+      {
+        "verb": "escalader",
+        "text": "Tu grimpes dans l'if pour voir plus loin sur la lande.",
+        "effects": [
+          "ADD_BIOME_CURRENCY:6",
+          "DAMAGE_LIFE:3"
+        ]
+      }
+    ]
+  },
+  {
+    "narrative": "Le vent emporte des graines de chardon geant qui volent comme des etoiles blanches au-dessus de la bruyere. Certaines se posent sur ta peau et y laissent des marques ephemeres en forme d'oghams.",
+    "options": [
+      {
+        "verb": "memoriser",
+        "text": "Tu lis les oghams dessines par les graines sur ta peau.",
+        "effects": [
+          "ADD_ANAM:7",
+          "ADD_REPUTATION:anciens:6"
+        ]
+      },
+      {
+        "verb": "flairer",
+        "text": "Tu suis le courant de graines vers leur source.",
+        "effects": [
+          "ADD_BIOME_CURRENCY:5",
+          "ADD_REPUTATION:druides:5"
+        ]
+      },
+      {
+        "verb": "se concentrer",
+        "text": "Tu fermes les yeux et laisses le vent parler a travers les graines.",
+        "effects": [
+          "HEAL_LIFE:5",
+          "ADD_REPUTATION:niamh:5"
+        ]
+      }
+    ]
+  },
+  {
+    "narrative": "Un mur de pierres seches traverse la lande, vestige d'une frontiere oubliee entre deux clans. Chaque pierre a ete placee avec soin, sans mortier, tenant par sa seule forme. Une breche invite au passage.",
+    "options": [
+      {
+        "verb": "resoudre",
+        "text": "Tu repares la breche en trouvant la pierre manquante.",
+        "effects": [
+          "ADD_REPUTATION:anciens:8",
+          "HEAL_LIFE:3"
+        ]
+      },
+      {
+        "verb": "se faufiler",
+        "text": "Tu passes par la breche vers le territoire inconnu.",
+        "effects": [
+          "ADD_BIOME_CURRENCY:7",
+          "DAMAGE_LIFE:3"
+        ]
+      },
+      {
+        "verb": "etudier",
+        "text": "Tu analyses la technique de construction du mur ancien.",
+        "effects": [
+          "ADD_ANAM:6",
+          "ADD_REPUTATION:anciens:5"
+        ]
+      }
+    ]
+  },
+  {
+    "narrative": "Au sommet d'une colline battue par le vent, un faucon crecerelle plane immobile dans le ciel. En dessous, la lande entiere s'etend comme une mer violette. Un autel de pierre plate domine le panorama.",
+    "options": [
+      {
+        "verb": "mediter",
+        "text": "Tu t'assieds a l'autel et contemples l'immensite de la lande.",
+        "effects": [
+          "HEAL_LIFE:5",
+          "ADD_REPUTATION:anciens:7"
+        ]
+      },
+      {
+        "verb": "scruter",
+        "text": "Tu suis le regard du faucon, cherchant ce qu'il surveille.",
+        "effects": [
+          "ADD_ANAM:5",
+          "ADD_REPUTATION:druides:5"
+        ]
+      },
+      {
+        "verb": "charmer",
+        "text": "Tu leves le bras, invitant le faucon a se poser.",
+        "effects": [
+          "ADD_REPUTATION:korrigans:5",
+          "ADD_BIOME_CURRENCY:5"
+        ]
+      }
+    ]
+  },
+  {
+    "narrative": "Le jour du marche bat son plein sur la place du village. Entre les etals de miel et de lin, un korrigan deguise en marchand vend des pommes qui changent de couleur a chaque regard. \"Trois pour le prix d'une ame !\" crie-t-il.",
+    "options": [
+      {
+        "verb": "marchander",
+        "text": "Tu negocies le prix avec l'astuce d'un korrigan.",
+        "effects": [
+          "ADD_REPUTATION:korrigans:8",
+          "ADD_BIOME_CURRENCY:6"
+        ]
+      },
+      {
+        "verb": "observer",
+        "text": "Tu etudies les pommes magiques sans toucher.",
+        "effects": [
+          "ADD_ANAM:4",
+          "HEAL_LIFE:5"
+        ]
+      },
+      {
+        "verb": "apaiser",
+        "text": "Tu calmes la foule mefiante autour de l'etal.",
+        "effects": [
+          "ADD_REPUTATION:niamh:5",
+          "ADD_REPUTATION:korrigans:4"
+        ]
+      }
+    ]
+  },
+  {
+    "narrative": "Le forgeron du village frappe sans relache sur son enclume, mais les etincelles forment des runes dans l'air. Chaque coup de marteau chante une note differente, composant une melodie ancienne que seul le fer connait.",
+    "options": [
+      {
+        "verb": "dechiffrer",
+        "text": "Tu lis les runes forgees dans les etincelles.",
+        "effects": [
+          "ADD_ANAM:5",
+          "ADD_REPUTATION:anciens:6"
+        ]
+      },
+      {
+        "verb": "aider",
+        "text": "Tu actionnes le soufflet pour aviver les flammes.",
+        "effects": [
+          "ADD_REPUTATION:korrigans:7",
+          "HEAL_LIFE:4"
+        ]
+      },
+      {
+        "verb": "combattre",
+        "text": "Tu defies le forgeron a un concours de force.",
+        "effects": [
+          "ADD_BIOME_CURRENCY:8",
+          "DAMAGE_LIFE:4"
+        ]
+      }
+    ]
+  },
+  {
+    "narrative": "Un barde itinerant accorde sa harpe sur le pont de pierre. Ses doigts effleurent les cordes et les pierres du pont commencent a vibrer en harmonie. Les poissons de la riviere sautent au rythme de la musique.",
+    "options": [
+      {
+        "verb": "parler",
+        "text": "Tu partages tes propres histoires avec le barde.",
+        "effects": [
+          "ADD_REPUTATION:korrigans:6",
+          "ADD_REPUTATION:niamh:4"
+        ]
+      },
+      {
+        "verb": "mediter",
+        "text": "Tu fermes les yeux et te laisses porter par la melodie.",
+        "effects": [
+          "HEAL_LIFE:5",
+          "ADD_REPUTATION:druides:3"
+        ]
+      },
+      {
+        "verb": "danser",
+        "text": "Tu danses sur le pont, faisant trembler les pierres.",
+        "effects": [
+          "ADD_BIOME_CURRENCY:5",
+          "ADD_REPUTATION:korrigans:5"
+        ]
+      }
+    ]
+  },
+  {
+    "narrative": "Derriere la taverne, une porte minus­cule est sculptee dans le tronc d'un vieux sureau. Des rires etouffes s'en echappent, et une minuscule lumiere doree pulse au rythme d'une musique inaudible.",
+    "options": [
+      {
+        "verb": "se faufiler",
+        "text": "Tu te penches et frappes trois coups sur la porte feerique.",
+        "effects": [
+          "ADD_REPUTATION:korrigans:10",
+          "DAMAGE_LIFE:3"
+        ]
+      },
+      {
+        "verb": "ecouter",
+        "text": "Tu colles l'oreille au tronc pour saisir les murmures.",
+        "effects": [
+          "ADD_ANAM:6",
+          "ADD_REPUTATION:korrigans:4"
+        ]
+      },
+      {
+        "verb": "proteger",
+        "text": "Tu plantes un cercle de houx autour du sureau.",
+        "effects": [
+          "ADD_REPUTATION:druides:5",
+          "HEAL_LIFE:5"
+        ]
+      }
+    ]
+  },
+  {
+    "narrative": "Les poules du village courent en cercles parfaits autour du puits, les yeux vitreux. Le fermier jure que c'est un tour de korrigan. Un rire cristallin resonne depuis l'interieur du puits.",
+    "options": [
+      {
+        "verb": "resoudre",
+        "text": "Tu descends dans le puits chercher le farceur.",
+        "effects": [
+          "ADD_REPUTATION:korrigans:8",
+          "DAMAGE_LIFE:4"
+        ]
+      },
+      {
+        "verb": "apaiser",
+        "text": "Tu brises le sortilege avec une comptine ancienne.",
+        "effects": [
+          "HEAL_LIFE:5",
+          "ADD_REPUTATION:anciens:5"
+        ]
+      },
+      {
+        "verb": "ruser",
+        "text": "Tu proposes au korrigan un meilleur tour.",
+        "effects": [
+          "ADD_REPUTATION:korrigans:9",
+          "ADD_BIOME_CURRENCY:4"
+        ]
+      }
+    ]
+  },
+  {
+    "narrative": "Un passage secret s'ouvre dans le mur de l'eglise desaffectee quand le soleil frappe une pierre precise a midi. Derriere, un escalier en spirale descend dans une obscurite parfumee d'herbes sechees.",
+    "options": [
+      {
+        "verb": "explorer",
+        "text": "Tu descends prudemment les marches usees par le temps.",
+        "effects": [
+          "ADD_BIOME_CURRENCY:7",
+          "DAMAGE_LIFE:3"
+        ]
+      },
+      {
+        "verb": "etudier",
+        "text": "Tu examines les inscriptions gravees sur les murs.",
+        "effects": [
+          "ADD_ANAM:5",
+          "ADD_REPUTATION:anciens:6"
+        ]
+      },
+      {
+        "verb": "invoquer",
+        "text": "Tu appelles les esprits gardiens du passage.",
+        "effects": [
+          "ADD_REPUTATION:korrigans:7",
+          "ADD_REPUTATION:ankou:3"
+        ]
+      }
+    ]
+  },
+  {
+    "narrative": "Un paysan se plaint que sa pelle parle. Effectivement, l'outil marmonne des insultes a chaque pelletee de terre. \"C'est la derniere fois que j'emprunte quoi que ce soit a un korrigan,\" soupire-t-il.",
+    "options": [
+      {
+        "verb": "marchander",
+        "text": "Tu negocies avec la pelle pour qu'elle se taise.",
+        "effects": [
+          "ADD_REPUTATION:korrigans:8",
+          "ADD_ANAM:3"
+        ]
+      },
+      {
+        "verb": "dechiffrer",
+        "text": "Tu ecoutes les insultes — elles cachent un message code.",
+        "effects": [
+          "ADD_ANAM:6",
+          "ADD_REPUTATION:korrigans:5"
+        ]
+      },
+      {
+        "verb": "apaiser",
+        "text": "Tu chantes une berceuse a l'outil enchante.",
+        "effects": [
+          "HEAL_LIFE:5",
+          "ADD_REPUTATION:niamh:5"
+        ]
+      }
+    ]
+  },
+  {
+    "narrative": "A minuit, la fontaine du village se met a couler du cidre dore. Les korrigans dansent autour en une ronde effrenable. Quiconque les rejoint dansera jusqu'a l'aube — mais recevra un don en echange.",
+    "options": [
+      {
+        "verb": "danser",
+        "text": "Tu rejoins la ronde des korrigans sans hesiter.",
+        "effects": [
+          "ADD_REPUTATION:korrigans:10",
+          "DAMAGE_LIFE:5"
+        ]
+      },
+      {
+        "verb": "observer",
+        "text": "Tu regardes la danse, memorisant les pas secrets.",
+        "effects": [
+          "ADD_ANAM:5",
+          "HEAL_LIFE:4"
+        ]
+      },
+      {
+        "verb": "offrir",
+        "text": "Tu deposes un present au bord de la fontaine.",
+        "effects": [
+          "ADD_REPUTATION:korrigans:7",
+          "ADD_BIOME_CURRENCY:5"
+        ]
+      }
+    ]
+  },
+  {
+    "narrative": "Le toit de la maison du druide est couvert de mousse lumines­cente qui trace une carte du ciel. Ce soir, les etoiles sur le toit ne correspondent plus au vrai ciel — elles montrent un futur possible.",
+    "options": [
+      {
+        "verb": "decoder",
+        "text": "Tu compares les deux ciels pour lire la prophetie.",
+        "effects": [
+          "ADD_ANAM:7",
+          "ADD_REPUTATION:druides:5"
+        ]
+      },
+      {
+        "verb": "mediter",
+        "text": "Tu t'allonges sous la mousse et laisses la lumiere t'envahir.",
+        "effects": [
+          "HEAL_LIFE:5",
+          "ADD_REPUTATION:niamh:4"
+        ]
+      },
+      {
+        "verb": "gratter",
+        "text": "Tu preleves un echantillon de mousse propheti­que.",
+        "effects": [
+          "ADD_BIOME_CURRENCY:6",
+          "ADD_REPUTATION:korrigans:4"
+        ]
+      }
+    ]
+  },
+  {
+    "narrative": "L'aubergiste sert une soupe dont le fumet change selon qui la regarde. Pour toi, elle sent la foret apres la pluie. Le chat de l'auberge, lui, fixe le bol avec une intelligence suspecte.",
+    "options": [
+      {
+        "verb": "gouter",
+        "text": "Tu bois la soupe en acceptant le risque.",
+        "effects": [
+          "HEAL_LIFE:5",
+          "ADD_REPUTATION:korrigans:3"
+        ]
+      },
+      {
+        "verb": "flairer",
+        "text": "Tu analyses les ingredients par l'odeur.",
+        "effects": [
+          "ADD_ANAM:4",
+          "ADD_REPUTATION:druides:5"
+        ]
+      },
+      {
+        "verb": "ruser",
+        "text": "Tu echanges ton bol avec celui du chat.",
+        "effects": [
+          "ADD_REPUTATION:korrigans:8",
+          "ADD_BIOME_CURRENCY:4"
+        ]
+      }
+    ]
+  },
+  {
+    "narrative": "Le lavoir du village revele des images dans l'eau de rinçage. Les lavandieres y lisent l'avenir entre deux draps — aujourd'hui, elles voient ton visage dans les plis mouilles.",
+    "options": [
+      {
+        "verb": "ecouter",
+        "text": "Tu demandes aux lavandieres ce qu'elles ont vu.",
+        "effects": [
+          "ADD_ANAM:5",
+          "ADD_REPUTATION:anciens:6"
+        ]
+      },
+      {
+        "verb": "plonger",
+        "text": "Tu plonges tes mains dans l'eau pour voir toi-meme.",
+        "effects": [
+          "ADD_REPUTATION:niamh:6",
+          "DAMAGE_LIFE:3"
+        ]
+      },
+      {
+        "verb": "offrir",
+        "text": "Tu offres tes services pour aider au lavage.",
+        "effects": [
+          "HEAL_LIFE:4",
+          "ADD_REPUTATION:korrigans:6"
+        ]
+      }
+    ]
+  },
+  {
+    "narrative": "Un enfant du village jure avoir vu sa toupie tourner toute seule pendant la nuit. Quand tu l'examines, elle porte de minuscules gravures — et tourne effectivement quand personne ne regarde.",
+    "options": [
+      {
+        "verb": "dechiffrer",
+        "text": "Tu etudies les gravures microscopiques sur la toupie.",
+        "effects": [
+          "ADD_ANAM:6",
+          "ADD_REPUTATION:korrigans:5"
+        ]
+      },
+      {
+        "verb": "jouer",
+        "text": "Tu lances la toupie et observes sa danse.",
+        "effects": [
+          "ADD_REPUTATION:korrigans:7",
+          "ADD_BIOME_CURRENCY:5"
+        ]
+      },
+      {
+        "verb": "proteger",
+        "text": "Tu enveloppes la toupie dans une feuille de gui.",
+        "effects": [
+          "ADD_REPUTATION:druides:5",
+          "HEAL_LIFE:5"
+        ]
+      }
+    ]
+  },
+  {
+    "narrative": "Le cimetiere du village borde un cercle de champignons parfait. Les anciens disent que c'est une porte entre les mondes. Ce soir, les champignons emettent une lueur violette palpitante.",
+    "options": [
+      {
+        "verb": "invoquer",
+        "text": "Tu t'agenouilles dans le cercle et appelles les esprits.",
+        "effects": [
+          "ADD_REPUTATION:ankou:6",
+          "ADD_REPUTATION:korrigans:5"
+        ]
+      },
+      {
+        "verb": "observer",
+        "text": "Tu dessines le motif exact du cercle de champignons.",
+        "effects": [
+          "ADD_ANAM:5",
+          "ADD_REPUTATION:anciens:5"
+        ]
+      },
+      {
+        "verb": "cueillir",
+        "text": "Tu recoltes un champignon luminescent avec precaution.",
+        "effects": [
+          "ADD_BIOME_CURRENCY:6",
+          "DAMAGE_LIFE:4"
+        ]
+      }
+    ]
+  },
+  {
+    "narrative": "La route entre deux villages est gardee par un pont qu'aucun cheval ne veut traverser. Sous l'arche, des yeux jaunes clignotent et une voix rauque demande un peage en enigmes.",
+    "options": [
+      {
+        "verb": "resoudre",
+        "text": "Tu acceptes l'enigme du gardien du pont.",
+        "effects": [
+          "ADD_REPUTATION:korrigans:9",
+          "ADD_ANAM:4"
+        ]
+      },
+      {
+        "verb": "combattre",
+        "text": "Tu franchis le pont par la force.",
+        "effects": [
+          "ADD_BIOME_CURRENCY:7",
+          "DAMAGE_LIFE:5"
+        ]
+      },
+      {
+        "verb": "charmer",
+        "text": "Tu flattes le troll avec des compliments elabores.",
+        "effects": [
+          "ADD_REPUTATION:korrigans:7",
+          "HEAL_LIFE:3"
+        ]
+      }
+    ]
+  },
+  {
+    "narrative": "La tisserande du village tisse une tapisserie qui bouge. Les personnages brodes marchent, combattent et mangent dans leur monde de fil. Elle cherche quelqu'un pour lui fournir le fil de la fin de l'histoire.",
+    "options": [
+      {
+        "verb": "aider",
+        "text": "Tu files le lin magique pour completer la tapisserie.",
+        "effects": [
+          "ADD_REPUTATION:anciens:7",
+          "ADD_REPUTATION:korrigans:4"
+        ]
+      },
+      {
+        "verb": "etudier",
+        "text": "Tu dechiffres l'histoire brodee dans le tissu.",
+        "effects": [
+          "ADD_ANAM:6",
+          "ADD_REPUTATION:niamh:4"
+        ]
+      },
+      {
+        "verb": "couper",
+        "text": "Tu tranches un fil pour liberer un personnage brode.",
+        "effects": [
+          "ADD_REPUTATION:korrigans:8",
+          "DAMAGE_LIFE:3"
+        ]
+      }
+    ]
+  },
+  {
+    "narrative": "Un coq chante a rebours — du soir vers le matin. Le temps semble ralentir dans la ferme ou il perche. Les korrigans l'auraient enchante pour gagner quelques heures de nuit supplementaires.",
+    "options": [
+      {
+        "verb": "decoder",
+        "text": "Tu ecoutes le chant inverse pour comprendre le sortilege.",
+        "effects": [
+          "ADD_ANAM:5",
+          "ADD_REPUTATION:korrigans:6"
+        ]
+      },
+      {
+        "verb": "apaiser",
+        "text": "Tu nourris le coq avec du grain beni pour le delivrer.",
+        "effects": [
+          "HEAL_LIFE:5",
+          "ADD_REPUTATION:druides:5"
+        ]
+      },
+      {
+        "verb": "profiter",
+        "text": "Tu profites du temps ralenti pour explorer la ferme.",
+        "effects": [
+          "ADD_BIOME_CURRENCY:7",
+          "ADD_REPUTATION:korrigans:4"
+        ]
+      }
+    ]
+  },
+  {
+    "narrative": "Le puits du village ancien est scelle depuis des generations. Mais cette nuit, le couvercle de pierre vibre et un filet de brume argentee s'echappe. Les anciens disent qu'un tresor de korrigan dort au fond.",
+    "options": [
+      {
+        "verb": "explorer",
+        "text": "Tu descelles le puits et descends dans les tenebres.",
+        "effects": [
+          "ADD_BIOME_CURRENCY:8",
+          "DAMAGE_LIFE:5"
+        ]
+      },
+      {
+        "verb": "ecouter",
+        "text": "Tu presses l'oreille contre la pierre scellee.",
+        "effects": [
+          "ADD_ANAM:5",
+          "ADD_REPUTATION:korrigans:6"
+        ]
+      },
+      {
+        "verb": "proteger",
+        "text": "Tu renforces le sceau avec des symboles druidiques.",
+        "effects": [
+          "ADD_REPUTATION:druides:6",
+          "HEAL_LIFE:5"
+        ]
+      }
+    ]
+  },
+  {
+    "narrative": "Un chat noir portant un collier d'or traverse la place du marche. Chaque villageois qu'il frole trouve une piece de cuivre dans sa poche. Le chat te regarde fixement et s'assied a tes pieds.",
+    "options": [
+      {
+        "verb": "caresser",
+        "text": "Tu te penches et gratte le chat derriere les oreilles.",
+        "effects": [
+          "ADD_REPUTATION:korrigans:7",
+          "ADD_BIOME_CURRENCY:6"
+        ]
+      },
+      {
+        "verb": "suivre",
+        "text": "Tu suis le chat quand il repart vers la foret.",
+        "effects": [
+          "ADD_ANAM:4",
+          "ADD_REPUTATION:niamh:5"
+        ]
+      },
+      {
+        "verb": "examiner",
+        "text": "Tu inspectes les runes gravees sur le collier d'or.",
+        "effects": [
+          "ADD_ANAM:6",
+          "ADD_REPUTATION:korrigans:5"
+        ]
+      }
+    ]
+  },
+  {
+    "narrative": "Le moulin a eau du village tourne a l'envers depuis l'aube, mais la farine produite est d'un blanc lumineux qui guerit les maux de tete. La meuniere soupçonne un bienfait de korrigan — ou un piege.",
+    "options": [
+      {
+        "verb": "gouter",
+        "text": "Tu goutes la farine miraculeuse sans crainte.",
+        "effects": [
+          "HEAL_LIFE:5",
+          "ADD_REPUTATION:korrigans:4"
+        ]
+      },
+      {
+        "verb": "resoudre",
+        "text": "Tu examines le mecanisme inverse du moulin.",
+        "effects": [
+          "ADD_ANAM:5",
+          "ADD_REPUTATION:korrigans:6"
+        ]
+      },
+      {
+        "verb": "distribuer",
+        "text": "Tu partages la farine guerisseuse avec le village.",
+        "effects": [
+          "ADD_REPUTATION:anciens:5",
+          "ADD_REPUTATION:korrigans:5"
+        ]
+      }
+    ]
+  },
+  {
+    "narrative": "L'ecole du village est vide depuis des jours — les enfants ont tous suivi un korrigan joueur de flute dans la colline. Les parents sont inquiets mais les enfants reviennent chaque soir, les poches pleines de baies inconnues.",
+    "options": [
+      {
+        "verb": "suivre",
+        "text": "Tu suis la piste du joueur de flute dans la colline.",
+        "effects": [
+          "ADD_REPUTATION:korrigans:9",
+          "DAMAGE_LIFE:4"
+        ]
+      },
+      {
+        "verb": "parler",
+        "text": "Tu interroges les enfants sur leurs aventures.",
+        "effects": [
+          "ADD_ANAM:5",
+          "ADD_REPUTATION:korrigans:5"
+        ]
+      },
+      {
+        "verb": "proteger",
+        "text": "Tu negocies avec le korrigan pour limiter les escapades.",
+        "effects": [
+          "HEAL_LIFE:5",
+          "ADD_REPUTATION:anciens:6"
+        ]
+      }
+    ]
+  },
+  {
+    "narrative": "Un cercle de douze menhirs se dresse au sommet d'une colline battue par le vent. L'equinoxe approche et des druides en robes blanches disposent des torches entre les pierres, murmurant des invocations anciennes.",
+    "options": [
+      {
+        "verb": "mediter",
+        "text": "Tu t'agenouilles au centre du cercle et synchronises ta respiration avec les chants.",
+        "effects": [
+          "HEAL_LIFE:5",
+          "ADD_REPUTATION:druides:10"
+        ]
+      },
+      {
+        "verb": "observer",
+        "text": "Tu etudies la disposition des torches, cherchant un motif astronomique.",
+        "effects": [
+          "ADD_ANAM:6",
+          "ADD_REPUTATION:druides:5"
+        ]
+      },
+      {
+        "verb": "fuir",
+        "text": "L'energie qui monte te glace le sang. Tu recules dans l'obscurite.",
+        "effects": [
+          "DAMAGE_LIFE:3",
+          "ADD_REPUTATION:ankou:4"
+        ]
+      }
+    ]
+  },
+  {
+    "narrative": "Les lignes de ley convergent sous tes pieds — tu le sens dans la vibration du sol. Deux menhirs jumeaux encadrent un passage ou l'air ondule comme au-dessus d'un feu, bien qu'aucune flamme ne brule.",
+    "options": [
+      {
+        "verb": "examiner",
+        "text": "Tu tends la main dans l'air ondulant entre les menhirs.",
+        "effects": [
+          "ADD_ANAM:8",
+          "ADD_REPUTATION:druides:6"
+        ]
+      },
+      {
+        "verb": "se concentrer",
+        "text": "Tu fermes les yeux et laisses la vibration guider tes pensees.",
+        "effects": [
+          "HEAL_LIFE:5",
+          "ADD_REPUTATION:druides:8"
+        ]
+      },
+      {
+        "verb": "escalader",
+        "text": "Tu grimpes sur l'un des menhirs pour voir au-dela du passage.",
+        "effects": [
+          "ADD_BIOME_CURRENCY:7",
+          "DAMAGE_LIFE:4"
+        ]
+      }
+    ]
+  },
+  {
+    "narrative": "Le temps glisse — un instant tu es sous la lune, l'instant d'apres le soleil brule. Les ombres des menhirs tournent en cercles fous. Un druide te fixe, immobile dans la tempete temporelle, et tend une main calme.",
+    "options": [
+      {
+        "verb": "s'approcher",
+        "text": "Tu saisis la main du druide, acceptant son ancrage.",
+        "effects": [
+          "HEAL_LIFE:5",
+          "ADD_REPUTATION:druides:9"
+        ]
+      },
+      {
+        "verb": "resister mentalement",
+        "text": "Tu ancres ton esprit dans le present, refusant la derive.",
+        "effects": [
+          "ADD_REPUTATION:anciens:7",
+          "ADD_ANAM:4"
+        ]
+      },
+      {
+        "verb": "courir",
+        "text": "Tu traverses le cercle en courant, surfant sur les vagues du temps.",
+        "effects": [
+          "ADD_BIOME_CURRENCY:8",
+          "DAMAGE_LIFE:5"
+        ]
+      }
+    ]
+  },
+  {
+    "narrative": "Des oghams luisent sur un pilier central du cercle, pulsant d'une lumiere verdatre qui s'intensifie a mesure que tu approches. Chaque symbole semble raconter un fragment d'histoire oubliee.",
+    "options": [
+      {
+        "verb": "dechiffrer",
+        "text": "Tu traces les oghams du bout des doigts, absorbant leur savoir.",
+        "effects": [
+          "ADD_ANAM:8",
+          "ADD_REPUTATION:druides:7"
+        ]
+      },
+      {
+        "verb": "ecouter",
+        "text": "Tu restes immobile, laissant les symboles murmurer leur histoire.",
+        "effects": [
+          "HEAL_LIFE:5",
+          "ADD_REPUTATION:anciens:6"
+        ]
+      },
+      {
+        "verb": "tenter sa chance",
+        "text": "Tu presses ta paume contre le pilier, invoquant sa puissance.",
+        "effects": [
+          "ADD_BIOME_CURRENCY:9",
+          "DAMAGE_LIFE:4"
+        ]
+      }
+    ]
+  },
+  {
+    "narrative": "Des druides-astronomes pointent vers la constellation du Cerf qui se leve entre deux menhirs. Selon eux, cet alignement ne se produit qu'une fois par siecle et confere le don de double vue a qui sait regarder.",
+    "options": [
+      {
+        "verb": "scruter",
+        "text": "Tu fixes la constellation a travers l'arche de pierre.",
+        "effects": [
+          "ADD_ANAM:7",
+          "ADD_REPUTATION:druides:8"
+        ]
+      },
+      {
+        "verb": "mediter",
+        "text": "Tu medites sous les etoiles, ouvrant ton esprit a la vision.",
+        "effects": [
+          "HEAL_LIFE:5",
+          "ADD_REPUTATION:druides:6"
+        ]
+      },
+      {
+        "verb": "marchander",
+        "text": "Tu proposes un service aux druides en echange de leur savoir stellaire.",
+        "effects": [
+          "ADD_BIOME_CURRENCY:6",
+          "ADD_REPUTATION:druides:3"
+        ]
+      }
+    ]
+  },
+  {
+    "narrative": "La geometrie sacree du cercle revele ses secrets : chaque pierre est placee selon un angle precis, formant un dodecagone parfait. Au centre, une dalle hexagonale est gravee de spirales triples.",
+    "options": [
+      {
+        "verb": "examiner",
+        "text": "Tu mesures les angles et decouvres un message cache dans la geometrie.",
+        "effects": [
+          "ADD_ANAM:6",
+          "ADD_REPUTATION:druides:9"
+        ]
+      },
+      {
+        "verb": "apaiser",
+        "text": "Tu t'assieds sur la dalle et laisses les spirales calmer ton esprit.",
+        "effects": [
+          "HEAL_LIFE:5",
+          "ADD_REPUTATION:druides:5"
+        ]
+      },
+      {
+        "verb": "forcer",
+        "text": "Tu tentes de soulever la dalle hexagonale.",
+        "effects": [
+          "ADD_BIOME_CURRENCY:8",
+          "DAMAGE_LIFE:5"
+        ]
+      }
+    ]
+  },
+  {
+    "narrative": "Sous le plus grand menhir, un passage s'ouvre dans la terre. Des marches taillees dans la roche menent vers une chambre souterraine ou brulent des bougies que personne n'a allumees depuis des siecles.",
+    "options": [
+      {
+        "verb": "se faufiler",
+        "text": "Tu descends les marches vers la chambre cachee.",
+        "effects": [
+          "ADD_BIOME_CURRENCY:7",
+          "ADD_REPUTATION:anciens:6"
+        ]
+      },
+      {
+        "verb": "observer",
+        "text": "Tu etudies les marques sur les marches avant de descendre.",
+        "effects": [
+          "ADD_ANAM:5",
+          "ADD_REPUTATION:druides:7"
+        ]
+      },
+      {
+        "verb": "proteger",
+        "text": "Tu scelles l'entree pour empecher les profanateurs d'y acceder.",
+        "effects": [
+          "HEAL_LIFE:4",
+          "ADD_REPUTATION:druides:8"
+        ]
+      }
+    ]
+  },
+  {
+    "narrative": "Les feux du solstice brulent entre les pierres dressees. Les flammes dessinent des silhouettes dansantes — des guerriers, des biches, des arbres. Les druides jettent du gui dans le brasier, et chaque branche produit une etincelle d'or.",
+    "options": [
+      {
+        "verb": "cueillir",
+        "text": "Tu attrapes une etincelle d'or dans ta paume ouverte.",
+        "effects": [
+          "ADD_BIOME_CURRENCY:8",
+          "DAMAGE_LIFE:3"
+        ]
+      },
+      {
+        "verb": "ecouter",
+        "text": "Tu ecoutes le craquement des flammes, y cherchant des presages.",
+        "effects": [
+          "ADD_ANAM:5",
+          "ADD_REPUTATION:druides:7"
+        ]
+      },
+      {
+        "verb": "apaiser",
+        "text": "Tu danses avec les silhouettes de flamme, trouvant la paix.",
+        "effects": [
+          "HEAL_LIFE:5",
+          "ADD_REPUTATION:druides:5"
+        ]
+      }
+    ]
+  },
+  {
+    "narrative": "Un dolmen massif occupe le centre du cercle, sa dalle superieure couverte de lichens dores. Dessous, l'espace est assez grand pour une personne. Les druides disent que quiconque y passe la nuit recoit des reves prophetiques.",
+    "options": [
+      {
+        "verb": "se concentrer",
+        "text": "Tu te glisses sous le dolmen et fermes les yeux.",
+        "effects": [
+          "ADD_ANAM:7",
+          "ADD_REPUTATION:druides:6"
+        ]
+      },
+      {
+        "verb": "scruter",
+        "text": "Tu examines les lichens dores, cherchant des motifs.",
+        "effects": [
+          "ADD_REPUTATION:druides:8",
+          "HEAL_LIFE:3"
+        ]
+      },
+      {
+        "verb": "combattre",
+        "text": "Tu refuses la tentation et frappes la pierre de ton baton.",
+        "effects": [
+          "DAMAGE_LIFE:4",
+          "ADD_REPUTATION:ankou:5"
+        ]
+      }
+    ]
+  },
+  {
+    "narrative": "L'alignement des pierres cree un couloir de vent ou soufflent des murmures en vieux gaelique. Les mots se forment presque — des noms, des lieux, des avertissements — avant de se dissoudre.",
+    "options": [
+      {
+        "verb": "ecouter",
+        "text": "Tu tends l'oreille, pieçant les fragments de murmures.",
+        "effects": [
+          "HEAL_LIFE:5",
+          "ADD_REPUTATION:druides:8"
+        ]
+      },
+      {
+        "verb": "parler",
+        "text": "Tu reponds aux murmures en gaelique, partageant ton propre nom.",
+        "effects": [
+          "ADD_REPUTATION:druides:10",
+          "ADD_ANAM:3"
+        ]
+      },
+      {
+        "verb": "fuir",
+        "text": "Les voix te glacent. Tu quittes le couloir de vent.",
+        "effects": [
+          "DAMAGE_LIFE:2",
+          "ADD_REPUTATION:korrigans:4"
+        ]
+      }
+    ]
+  },
+  {
+    "narrative": "Un cercle interieur de sept petites pierres apparait quand la rosee du matin les revele. Elles ne sont visibles qu'a l'aube et forment un heptagone parfait, chaque pierre gravee d'un ogham different.",
+    "options": [
+      {
+        "verb": "dechiffrer",
+        "text": "Tu copies les sept oghams dans la terre avant que la rosee ne seche.",
+        "effects": [
+          "ADD_ANAM:8",
+          "ADD_REPUTATION:druides:6"
+        ]
+      },
+      {
+        "verb": "sentir",
+        "text": "Tu touches chaque pierre, sentant leur energie distincte.",
+        "effects": [
+          "HEAL_LIFE:5",
+          "ADD_REPUTATION:druides:7"
+        ]
+      },
+      {
+        "verb": "tenter sa chance",
+        "text": "Tu retires l'une des petites pierres de son emplacement.",
+        "effects": [
+          "ADD_BIOME_CURRENCY:9",
+          "DAMAGE_LIFE:5"
+        ]
+      }
+    ]
+  },
+  {
+    "narrative": "Un druide aveugle chante au centre du cercle. Sa voix fait vibrer les menhirs, et des harmoniques invisibles font fleurir du lichen bleu sur la pierre. Il chante depuis trois jours sans s'arreter.",
+    "options": [
+      {
+        "verb": "apaiser",
+        "text": "Tu t'assieds pres de lui et fredonnes en harmonie.",
+        "effects": [
+          "HEAL_LIFE:5",
+          "ADD_REPUTATION:druides:8"
+        ]
+      },
+      {
+        "verb": "observer",
+        "text": "Tu etudies le lichen bleu qui fleurit sous sa voix.",
+        "effects": [
+          "ADD_ANAM:6",
+          "ADD_REPUTATION:druides:5"
+        ]
+      },
+      {
+        "verb": "distribuer",
+        "text": "Tu apportes eau et nourriture au chanteur infatigable.",
+        "effects": [
+          "ADD_REPUTATION:druides:7",
+          "ADD_REPUTATION:anciens:5"
+        ]
+      }
+    ]
+  },
+  {
+    "narrative": "Deux ley lines se croisent exactement sous la pierre-mere du cercle. A minuit, l'intersection pulse et projette des eclairs horizontaux d'un bleu electrique entre les menhirs. Les druides veillent, solennels.",
+    "options": [
+      {
+        "verb": "examiner",
+        "text": "Tu traces la trajectoire des eclairs, cartographiant les ley lines.",
+        "effects": [
+          "ADD_ANAM:7",
+          "ADD_REPUTATION:druides:9"
+        ]
+      },
+      {
+        "verb": "se concentrer",
+        "text": "Tu te places a l'intersection et absorbes l'energie.",
+        "effects": [
+          "HEAL_LIFE:5",
+          "DAMAGE_LIFE:2",
+          "ADD_REPUTATION:druides:6"
+        ]
+      },
+      {
+        "verb": "proteger",
+        "text": "Tu montes la garde avec les druides toute la nuit.",
+        "effects": [
+          "ADD_REPUTATION:druides:8",
+          "ADD_REPUTATION:anciens:4"
+        ]
+      }
+    ]
+  },
+  {
+    "narrative": "Le cercle de pierres entoure un if noueux dont les racines enserrent les menhirs comme des doigts. L'arbre porte des baies rouges en plein hiver et son tronc est grave de dizaines d'oghams superposes.",
+    "options": [
+      {
+        "verb": "dechiffrer",
+        "text": "Tu denoues les couches d'oghams, lisant l'histoire millenaire.",
+        "effects": [
+          "ADD_ANAM:8",
+          "ADD_REPUTATION:druides:7"
+        ]
+      },
+      {
+        "verb": "cueillir",
+        "text": "Tu cueilles une grappe de baies rouges hivernales.",
+        "effects": [
+          "HEAL_LIFE:5",
+          "ADD_BIOME_CURRENCY:5"
+        ]
+      },
+      {
+        "verb": "mediter",
+        "text": "Tu t'adosses au tronc et laisses l'arbre te parler.",
+        "effects": [
+          "HEAL_LIFE:5",
+          "ADD_REPUTATION:druides:6"
+        ]
+      }
+    ]
+  },
+  {
+    "narrative": "Une excavation recente au pied d'un menhir a revele une chambre mortuaire intacte. Des poteries, des bijoux de bronze et un crane trephine reposent sur un lit de fougeres petrifiees.",
+    "options": [
+      {
+        "verb": "fouiller a l'aveugle",
+        "text": "Tu examines les artefacts avec precaution et respect.",
+        "effects": [
+          "ADD_BIOME_CURRENCY:8",
+          "ADD_REPUTATION:anciens:6"
+        ]
+      },
+      {
+        "verb": "mediter",
+        "text": "Tu honores le defunt par une priere silencieuse.",
+        "effects": [
+          "HEAL_LIFE:5",
+          "ADD_REPUTATION:druides:8"
+        ]
+      },
+      {
+        "verb": "resister mentalement",
+        "text": "L'aura de la tombe est lourde. Tu resistes a son emprise.",
+        "effects": [
+          "ADD_ANAM:5",
+          "ADD_REPUTATION:ankou:5"
+        ]
+      }
+    ]
+  },
+  {
+    "narrative": "Un brouillard dense enveloppe le cercle de pierres, et les sons se distordent. Tes pas de gauche sonnent comme des tambours, ceux de droite comme des cloches. Un druide emerge du brouillard, portant une harpe d'os.",
+    "options": [
+      {
+        "verb": "ecouter",
+        "text": "Tu t'arretes pour ecouter la harpe d'os, fascinee par ses harmoniques.",
+        "effects": [
+          "HEAL_LIFE:5",
+          "ADD_REPUTATION:druides:9"
+        ]
+      },
+      {
+        "verb": "suivre",
+        "text": "Tu suis le druide harpiste dans le brouillard.",
+        "effects": [
+          "ADD_ANAM:6",
+          "ADD_REPUTATION:druides:6"
+        ]
+      },
+      {
+        "verb": "pister",
+        "text": "Tu cherches la source du brouillard, suspectant un enchantement.",
+        "effects": [
+          "ADD_BIOME_CURRENCY:6",
+          "ADD_REPUTATION:korrigans:4"
+        ]
+      }
+    ]
+  },
+  {
+    "narrative": "Au lever du soleil, la lumiere traverse un trou dans la pierre-mere et projette un faisceau dore sur une dalle au sol. Le spot lumineux revele des spirales triples gravees, invisibles en toute autre lumiere.",
+    "options": [
+      {
+        "verb": "examiner",
+        "text": "Tu te penches sur les spirales revelees par la lumiere.",
+        "effects": [
+          "ADD_ANAM:7",
+          "ADD_REPUTATION:druides:8"
+        ]
+      },
+      {
+        "verb": "attendre",
+        "text": "Tu attends de voir ou le faisceau se deplace au fil des heures.",
+        "effects": [
+          "HEAL_LIFE:4",
+          "ADD_REPUTATION:anciens:7"
+        ]
+      },
+      {
+        "verb": "escalader",
+        "text": "Tu grimpes jusqu'au trou dans la pierre-mere pour regarder au travers.",
+        "effects": [
+          "ADD_BIOME_CURRENCY:7",
+          "DAMAGE_LIFE:3"
+        ]
+      }
+    ]
+  },
+  {
+    "narrative": "La nuit de Samhain, les menhirs semblent s'animer. Leurs ombres bougent independamment, formant un cercle dansant. Les druides affirment que les esprits des batisseurs reviennent ce soir-la pour verifier leur oeuvre.",
+    "options": [
+      {
+        "verb": "observer",
+        "text": "Tu regardes la danse des ombres, cherchant un message.",
+        "effects": [
+          "ADD_ANAM:6",
+          "ADD_REPUTATION:druides:7"
+        ]
+      },
+      {
+        "verb": "apaiser",
+        "text": "Tu chantes un hymne d'accueil pour les esprits batisseurs.",
+        "effects": [
+          "HEAL_LIFE:5",
+          "ADD_REPUTATION:druides:8"
+        ]
+      },
+      {
+        "verb": "combattre",
+        "text": "Tu brandis ta torche contre les ombres mouvantes.",
+        "effects": [
+          "DAMAGE_LIFE:4",
+          "ADD_REPUTATION:ankou:6"
+        ]
+      }
+    ]
+  },
+  {
+    "narrative": "Trois druides en cercle autour de la pierre-autel executent un rituel de guerison. Leurs bras dessinent des spirales dans l'air et l'herbe sous leurs pieds verdit a vue d'oeil. Ils t'invitent a rejoindre le cercle.",
+    "options": [
+      {
+        "verb": "apaiser",
+        "text": "Tu joins tes mains aux leurs et participes au rituel de guerison.",
+        "effects": [
+          "HEAL_LIFE:5",
+          "ADD_REPUTATION:druides:10"
+        ]
+      },
+      {
+        "verb": "observer",
+        "text": "Tu memorises leurs gestes pour reproduire le rituel plus tard.",
+        "effects": [
+          "ADD_ANAM:7",
+          "ADD_REPUTATION:druides:5"
+        ]
+      },
+      {
+        "verb": "marchander",
+        "text": "Tu proposes des herbes rares en echange de leur enseignement.",
+        "effects": [
+          "ADD_BIOME_CURRENCY:5",
+          "ADD_REPUTATION:druides:6"
+        ]
+      }
+    ]
+  },
+  {
+    "narrative": "Un menhir isole au bord du cercle vibre d'une note basse quand tu le touches. Un druide t'explique que cette pierre est le diapason du cercle — elle accorde toutes les autres. Elle attend un nouveau gardien.",
+    "options": [
+      {
+        "verb": "se concentrer",
+        "text": "Tu poses les deux mains sur la pierre et laisses sa vibration t'envahir.",
+        "effects": [
+          "HEAL_LIFE:5",
+          "ADD_REPUTATION:druides:9"
+        ]
+      },
+      {
+        "verb": "parler",
+        "text": "Tu promets au druide de proteger le cercle sur ta route.",
+        "effects": [
+          "ADD_REPUTATION:druides:8",
+          "ADD_REPUTATION:anciens:5"
+        ]
+      },
+      {
+        "verb": "tenter sa chance",
+        "text": "Tu frappes la pierre pour amplifier sa note.",
+        "effects": [
+          "ADD_BIOME_CURRENCY:6",
+          "DAMAGE_LIFE:3"
+        ]
+      }
+    ]
+  },
+  {
+    "narrative": "Des feux follets dansent au-dessus des eaux noires du marais. Leur lumiere bleue attire et egare — des voyageurs suivent ces lueurs pendant des jours avant de revenir a leur point de depart, si toutefois ils reviennent.",
+    "options": [
+      {
+        "verb": "observer",
+        "text": "Tu etudies le mouvement des feux follets, cherchant un schema.",
+        "effects": [
+          "ADD_ANAM:6",
+          "ADD_REPUTATION:ankou:5"
+        ]
+      },
+      {
+        "verb": "suivre",
+        "text": "Tu suis la lueur la plus brillante, confiant en ton sens de l'orientation.",
+        "effects": [
+          "ADD_BIOME_CURRENCY:7",
+          "DAMAGE_LIFE:4"
+        ]
+      },
+      {
+        "verb": "apaiser",
+        "text": "Tu murmures une priere pour les ames errantes qui alimentent ces flammes.",
+        "effects": [
+          "HEAL_LIFE:5",
+          "ADD_REPUTATION:ankou:8"
+        ]
+      }
+    ]
+  },
+  {
+    "narrative": "Un carrefour noye sous quelques pouces d'eau sombre. Trois chemins s'offrent a toi, chacun marque d'un cairn de pierres mouillees. Au centre, une croix de bois pourri porte des rubans decolores — offrandes aux morts.",
+    "options": [
+      {
+        "verb": "dechiffrer",
+        "text": "Tu examines les rubans, cherchant des noms ou des symboles.",
+        "effects": [
+          "ADD_ANAM:5",
+          "ADD_REPUTATION:ankou:7"
+        ]
+      },
+      {
+        "verb": "proteger",
+        "text": "Tu remplaces la croix pourrie par une branche de houx fraiche.",
+        "effects": [
+          "HEAL_LIFE:5",
+          "ADD_REPUTATION:anciens:6"
+        ]
+      },
+      {
+        "verb": "fuir",
+        "text": "Le lieu te glace. Tu prends le premier chemin sans reflechir.",
+        "effects": [
+          "DAMAGE_LIFE:3",
+          "ADD_BIOME_CURRENCY:5"
+        ]
+      }
+    ]
+  },
+  {
+    "narrative": "Des lavandieres fantomatiques battent du linge au bord d'une mare stagnante. Leurs coups reguliers resonnent dans le brouillard. On dit qu'elles lavent les linceuls de ceux qui vont bientot mourir.",
+    "options": [
+      {
+        "verb": "parler",
+        "text": "Tu salues les lavandieres et leur demandes pour qui elles lavent ce soir.",
+        "effects": [
+          "ADD_REPUTATION:ankou:10",
+          "DAMAGE_LIFE:5"
+        ]
+      },
+      {
+        "verb": "observer",
+        "text": "Tu regardes de loin, comptant les linceuls etendus.",
+        "effects": [
+          "ADD_ANAM:7",
+          "ADD_REPUTATION:ankou:5"
+        ]
+      },
+      {
+        "verb": "apaiser",
+        "text": "Tu chantes un air ancien pour accompagner leur travail.",
+        "effects": [
+          "HEAL_LIFE:5",
+          "ADD_REPUTATION:ankou:6"
+        ]
+      }
+    ]
+  },
+  {
+    "narrative": "Tes pieds s'enfoncent dans la tourbe et tu decouvres un visage sous la surface — un corps conserve depuis des siecles, les traits intacts, les yeux clos. Ses mains tiennent encore une branche d'if.",
+    "options": [
+      {
+        "verb": "examiner",
+        "text": "Tu degages delicatement le corps pour comprendre son histoire.",
+        "effects": [
+          "ADD_ANAM:8",
+          "ADD_REPUTATION:ankou:7"
+        ]
+      },
+      {
+        "verb": "proteger",
+        "text": "Tu recouvres le corps de tourbe fraiche et marques l'endroit.",
+        "effects": [
+          "HEAL_LIFE:4",
+          "ADD_REPUTATION:anciens:8"
+        ]
+      },
+      {
+        "verb": "cueillir",
+        "text": "Tu prends la branche d'if de ses mains — un talisman contre la mort.",
+        "effects": [
+          "ADD_BIOME_CURRENCY:8",
+          "DAMAGE_LIFE:5"
+        ]
+      }
+    ]
+  },
+  {
+    "narrative": "La charrette de l'Ankou grince dans le brouillard. Tu ne la vois pas encore mais tu l'entends — le crissement des roues, le souffle du cheval squelettique. Un vieil homme te fait signe de te cacher derriere un saule.",
+    "options": [
+      {
+        "verb": "se cacher",
+        "text": "Tu te blottis derriere le saule, retenant ton souffle.",
+        "effects": [
+          "HEAL_LIFE:5",
+          "ADD_REPUTATION:ankou:4"
+        ]
+      },
+      {
+        "verb": "combattre",
+        "text": "Tu fais face a la charrette, brandissant une torche.",
+        "effects": [
+          "DAMAGE_LIFE:5",
+          "ADD_REPUTATION:ankou:10"
+        ]
+      },
+      {
+        "verb": "parler",
+        "text": "Tu interpelles l'Ankou — tu as des questions pour le passeur.",
+        "effects": [
+          "ADD_ANAM:7",
+          "ADD_REPUTATION:ankou:9"
+        ]
+      }
+    ]
+  },
+  {
+    "narrative": "Un crapaud enorme te fixe depuis un nenuphar. Ses yeux sont dores et bien trop intelligents pour un batracien. Un korrigan des marais se cache peut-etre sous cette forme, attendant qu'on le libere.",
+    "options": [
+      {
+        "verb": "parler",
+        "text": "Tu t'adresses au crapaud avec les formules de politesse korriganes.",
+        "effects": [
+          "ADD_REPUTATION:korrigans:8",
+          "ADD_ANAM:4"
+        ]
+      },
+      {
+        "verb": "observer",
+        "text": "Tu attends patiemment de voir si le crapaud revele sa vraie nature.",
+        "effects": [
+          "ADD_ANAM:5",
+          "ADD_REPUTATION:korrigans:5"
+        ]
+      },
+      {
+        "verb": "tenter sa chance",
+        "text": "Tu embrasses le crapaud — les legendes disent que ca marche.",
+        "effects": [
+          "ADD_BIOME_CURRENCY:6",
+          "DAMAGE_LIFE:3"
+        ]
+      }
+    ]
+  },
+  {
+    "narrative": "Des presages de mort flottent dans l'air du marais : un corbeau croasse trois fois, un miroir d'eau reflete un visage qui n'est pas le tien, une chandelle s'allume seule sur un rocher. Le voile entre les mondes est mince ici.",
+    "options": [
+      {
+        "verb": "scruter",
+        "text": "Tu fixes le reflet dans l'eau, cherchant un message.",
+        "effects": [
+          "ADD_ANAM:6",
+          "ADD_REPUTATION:ankou:8"
+        ]
+      },
+      {
+        "verb": "apaiser",
+        "text": "Tu allumes une offrande de sauge pour calmer les signes.",
+        "effects": [
+          "HEAL_LIFE:5",
+          "ADD_REPUTATION:ankou:6"
+        ]
+      },
+      {
+        "verb": "fuir",
+        "text": "Tu tournes les talons — certains signes ne doivent pas etre ignores.",
+        "effects": [
+          "DAMAGE_LIFE:2",
+          "ADD_REPUTATION:anciens:4"
+        ]
+      }
+    ]
+  },
+  {
+    "narrative": "Une procession spectrale traverse le marais a la tombee de la nuit. Des silhouettes translucides marchent en file indienne, portant des bougies dont la flamme ne vacille pas. Leur chant est beau et terrifiant.",
+    "options": [
+      {
+        "verb": "suivre",
+        "text": "Tu emboites le pas a la procession, porte par le chant.",
+        "effects": [
+          "ADD_ANAM:8",
+          "ADD_REPUTATION:ankou:9"
+        ]
+      },
+      {
+        "verb": "ecouter",
+        "text": "Tu restes immobile et laisses le chant te traverser.",
+        "effects": [
+          "HEAL_LIFE:5",
+          "ADD_REPUTATION:ankou:6"
+        ]
+      },
+      {
+        "verb": "se cacher",
+        "text": "Tu te couches dans les roseaux jusqu'a ce qu'ils passent.",
+        "effects": [
+          "ADD_BIOME_CURRENCY:5",
+          "ADD_REPUTATION:anciens:4"
+        ]
+      }
+    ]
+  },
+  {
+    "narrative": "Un autel de pierres mousseuses emerge de la tourbe. Des os blanchis forment un motif en spirale autour — des offrandes a l'Ankou datant de plusieurs generations. Quelqu'un a depose des fleurs fraiches ce matin.",
+    "options": [
+      {
+        "verb": "mediter",
+        "text": "Tu t'agenouilles devant l'autel et medites sur la mortalite.",
+        "effects": [
+          "HEAL_LIFE:5",
+          "ADD_REPUTATION:ankou:8"
+        ]
+      },
+      {
+        "verb": "examiner",
+        "text": "Tu etudies le motif en spirale, cherchant une signification.",
+        "effects": [
+          "ADD_ANAM:6",
+          "ADD_REPUTATION:ankou:7"
+        ]
+      },
+      {
+        "verb": "cueillir",
+        "text": "Tu prends les fleurs fraiches — elles pourraient avoir des vertus.",
+        "effects": [
+          "ADD_BIOME_CURRENCY:7",
+          "DAMAGE_LIFE:4"
+        ]
+      }
+    ]
+  },
+  {
+    "narrative": "Un marchandage avec les morts : un spectre te propose de reveler l'emplacement d'un tresor enfoui en echange d'un souvenir — ton plus beau souvenir d'enfance, qu'il emportera pour l'eternite.",
+    "options": [
+      {
+        "verb": "marchander",
+        "text": "Tu negocies : un souvenir moins precieux contre une partie du tresor.",
+        "effects": [
+          "ADD_BIOME_CURRENCY:9",
+          "ADD_REPUTATION:ankou:5"
+        ]
+      },
+      {
+        "verb": "refuser",
+        "text": "Tu refuses le marche — tes souvenirs valent plus que tout or.",
+        "effects": [
+          "HEAL_LIFE:5",
+          "ADD_REPUTATION:anciens:7"
+        ]
+      },
+      {
+        "verb": "se concentrer",
+        "text": "Tu tentes de percevoir l'emplacement du tresor par toi-meme.",
+        "effects": [
+          "ADD_ANAM:7",
+          "DAMAGE_LIFE:3"
+        ]
+      }
+    ]
+  },
+  {
+    "narrative": "Le fil mortel se tend : tu sens ta propre mortalite peser sur tes epaules comme un manteau de plomb. Chaque pas dans le marais te rapproche du moment ou tu devras choisir — continuer ou faire demi-tour.",
+    "options": [
+      {
+        "verb": "resister mentalement",
+        "text": "Tu serres les poings et avances, refusant le doute.",
+        "effects": [
+          "ADD_REPUTATION:ankou:7",
+          "ADD_REPUTATION:anciens:5"
+        ]
+      },
+      {
+        "verb": "apaiser",
+        "text": "Tu acceptes le poids et respires — la mort fait partie du cycle.",
+        "effects": [
+          "HEAL_LIFE:5",
+          "ADD_REPUTATION:ankou:6"
+        ]
+      },
+      {
+        "verb": "combattre",
+        "text": "Tu cries ta rage contre le brouillard, defiant la fatalite.",
+        "effects": [
+          "DAMAGE_LIFE:4",
+          "ADD_REPUTATION:ankou:10"
+        ]
+      }
+    ]
+  },
+  {
+    "narrative": "Un pont de bois vermoulu enjambe un ruisseau d'eau noire. Sous le pont, quelque chose remue — trop gros pour un poisson, trop lent pour un animal. Une main pale emerge brievement avant de replonger.",
+    "options": [
+      {
+        "verb": "observer",
+        "text": "Tu te penches prudemment pour voir ce qui se cache sous le pont.",
+        "effects": [
+          "ADD_ANAM:5",
+          "ADD_REPUTATION:ankou:6"
+        ]
+      },
+      {
+        "verb": "traverser",
+        "text": "Tu traverses vite, les planches craquant sous tes pieds.",
+        "effects": [
+          "ADD_BIOME_CURRENCY:6",
+          "DAMAGE_LIFE:3"
+        ]
+      },
+      {
+        "verb": "parler",
+        "text": "Tu appelles l'etre sous le pont, offrant ton aide.",
+        "effects": [
+          "HEAL_LIFE:5",
+          "ADD_REPUTATION:ankou:8"
+        ]
+      }
+    ]
+  },
+  {
+    "narrative": "Les roseaux chantent quand le vent souffle — mais ce ne sont pas des roseaux ordinaires. Ils ont pousse sur d'anciennes tombes et les ames des defunts s'expriment a travers eux, racontant des bribes de leur vie passee.",
+    "options": [
+      {
+        "verb": "ecouter",
+        "text": "Tu t'assieds parmi les roseaux et ecoutes leurs histoires.",
+        "effects": [
+          "ADD_ANAM:7",
+          "ADD_REPUTATION:ankou:7"
+        ]
+      },
+      {
+        "verb": "cueillir",
+        "text": "Tu coupes un roseau pour en faire une flute a messages.",
+        "effects": [
+          "ADD_BIOME_CURRENCY:6",
+          "DAMAGE_LIFE:3"
+        ]
+      },
+      {
+        "verb": "proteger",
+        "text": "Tu plantes de nouveaux roseaux pour que d'autres voix puissent parler.",
+        "effects": [
+          "HEAL_LIFE:5",
+          "ADD_REPUTATION:anciens:6"
+        ]
+      }
+    ]
+  },
+  {
+    "narrative": "Un korrigan des marais t'offre un marche : il connait un passage sec a travers la tourbiere, mais en echange il veut ta prochaine nuit de sommeil — tu ne dormiras pas pendant 24 heures.",
+    "options": [
+      {
+        "verb": "marchander",
+        "text": "Tu acceptes le marche — un jour sans sommeil contre un passage sur.",
+        "effects": [
+          "ADD_BIOME_CURRENCY:8",
+          "DAMAGE_LIFE:4"
+        ]
+      },
+      {
+        "verb": "refuser",
+        "text": "Tu refuses et cherches ton propre chemin.",
+        "effects": [
+          "HEAL_LIFE:3",
+          "ADD_REPUTATION:anciens:5"
+        ]
+      },
+      {
+        "verb": "dechiffrer",
+        "text": "Tu cherches le passage toi-meme en lisant les signes du terrain.",
+        "effects": [
+          "ADD_ANAM:6",
+          "ADD_REPUTATION:korrigans:4"
+        ]
+      }
+    ]
+  },
+  {
+    "narrative": "Une ile minuscule au milieu du marais porte un seul arbre — un if millenaire dont les racines plongent dans l'eau noire. Ses branches portent des rubans de toutes les couleurs, noues par des generations de pelerins.",
+    "options": [
+      {
+        "verb": "mediter",
+        "text": "Tu t'assieds sous l'if et medites sur le cycle vie-mort-renaissance.",
+        "effects": [
+          "HEAL_LIFE:5",
+          "ADD_REPUTATION:ankou:9"
+        ]
+      },
+      {
+        "verb": "observer",
+        "text": "Tu lis les messages sur les rubans les plus anciens.",
+        "effects": [
+          "ADD_ANAM:6",
+          "ADD_REPUTATION:anciens:6"
+        ]
+      },
+      {
+        "verb": "nouer",
+        "text": "Tu attaches ton propre ruban avec un voeu pour les vivants et les morts.",
+        "effects": [
+          "ADD_REPUTATION:ankou:7",
+          "ADD_REPUTATION:druides:4"
+        ]
+      }
+    ]
+  },
+  {
+    "narrative": "Le brouillard s'epaissit jusqu'a devenir tangible. Tu peux le saisir en paquets cotonneux entre tes doigts. Dans cette brume solide, des formes emergent — visages de ceux que tu as connus, perdus, oublies.",
+    "options": [
+      {
+        "verb": "s'approcher",
+        "text": "Tu tends la main vers le visage le plus familier.",
+        "effects": [
+          "ADD_REPUTATION:ankou:8",
+          "DAMAGE_LIFE:4"
+        ]
+      },
+      {
+        "verb": "resister mentalement",
+        "text": "Tu fermes les yeux et ancres tes pieds dans la tourbe.",
+        "effects": [
+          "HEAL_LIFE:5",
+          "ADD_REPUTATION:anciens:7"
+        ]
+      },
+      {
+        "verb": "apaiser",
+        "text": "Tu murmures les noms un a un, reconnaissant chaque visage.",
+        "effects": [
+          "ADD_ANAM:7",
+          "ADD_REPUTATION:ankou:6"
+        ]
+      }
+    ]
+  },
+  {
+    "narrative": "Des champignons luminescents tracent un cercle parfait dans la clairiere — un rond de sorcieres. Au centre, une coupe en bois deborde d'une liqueur sombre. Les korrigans du marais l'ont preparee pour un rituel de renouveau.",
+    "options": [
+      {
+        "verb": "boire",
+        "text": "Tu bois une gorgee de la liqueur noire.",
+        "effects": [
+          "ADD_BIOME_CURRENCY:8",
+          "DAMAGE_LIFE:5"
+        ]
+      },
+      {
+        "verb": "examiner",
+        "text": "Tu etudies les champignons, cherchant des proprietes medicinales.",
+        "effects": [
+          "ADD_ANAM:5",
+          "ADD_REPUTATION:korrigans:6"
+        ]
+      },
+      {
+        "verb": "apaiser",
+        "text": "Tu verses la liqueur sur la terre en offrande aux esprits du marais.",
+        "effects": [
+          "HEAL_LIFE:5",
+          "ADD_REPUTATION:ankou:8"
+        ]
+      }
+    ]
+  },
+  {
+    "narrative": "Un courage inattendu te saisit devant un gouffre de tourbe. D'autres voyageurs sont passes ici et n'ont pas ose sauter. Leurs traces s'arretent au bord. Mais de l'autre cote, une lumiere verte promet un sanctuaire.",
+    "options": [
+      {
+        "verb": "escalader",
+        "text": "Tu descends dans le gouffre pour trouver un passage au fond.",
+        "effects": [
+          "ADD_BIOME_CURRENCY:7",
+          "DAMAGE_LIFE:5"
+        ]
+      },
+      {
+        "verb": "se concentrer",
+        "text": "Tu rassembles ton courage et sautes au-dessus du gouffre.",
+        "effects": [
+          "ADD_REPUTATION:ankou:8",
+          "ADD_REPUTATION:anciens:5"
+        ]
+      },
+      {
+        "verb": "observer",
+        "text": "Tu longes le bord jusqu'a trouver un passage plus etroit.",
+        "effects": [
+          "HEAL_LIFE:4",
+          "ADD_ANAM:5"
+        ]
+      }
+    ]
+  },
+  {
+    "narrative": "La mort elle-meme te parle — non pas l'Ankou, mais le concept pur, une voix sans forme dans l'eau noire. Elle te pose une enigme : \"Qu'est-ce qui meurt chaque soir et renait chaque matin ?\"",
+    "options": [
+      {
+        "verb": "dechiffrer",
+        "text": "Tu reflechis longuement avant de repondre : \"Le jour.\"",
+        "effects": [
+          "ADD_ANAM:8",
+          "ADD_REPUTATION:ankou:10"
+        ]
+      },
+      {
+        "verb": "parler",
+        "text": "Tu reponds sans hesiter : \"L'espoir.\"",
+        "effects": [
+          "HEAL_LIFE:5",
+          "ADD_REPUTATION:ankou:7"
+        ]
+      },
+      {
+        "verb": "refuser",
+        "text": "Tu refuses de repondre — certaines enigmes sont des pieges.",
+        "effects": [
+          "ADD_REPUTATION:anciens:6",
+          "DAMAGE_LIFE:3"
+        ]
+      }
+    ]
+  },
+  {
+    "narrative": "Au fond du marais, une porte de pierre se dresse, impossible et solitaire. Pas de mur, pas de maison — juste une porte. De l'autre cote, tu vois le meme marais mais baigne d'une lumiere doree, et les morts y marchent paisiblement.",
+    "options": [
+      {
+        "verb": "traverser",
+        "text": "Tu franchis le seuil pour rejoindre les morts paisibles.",
+        "effects": [
+          "ADD_REPUTATION:ankou:10",
+          "DAMAGE_LIFE:5"
+        ]
+      },
+      {
+        "verb": "observer",
+        "text": "Tu regardes a travers sans franchir, absorbant la vision.",
+        "effects": [
+          "ADD_ANAM:7",
+          "ADD_REPUTATION:ankou:6"
+        ]
+      },
+      {
+        "verb": "proteger",
+        "text": "Tu scelles la porte avec un rituel de gui — les mondes doivent rester separes.",
+        "effects": [
+          "HEAL_LIFE:5",
+          "ADD_REPUTATION:druides:5"
+        ]
+      }
+    ]
+  },
+  {
+    "narrative": "Le dolmen se dresse contre le ciel d'hiver, ses trois pierres massives formant un portail vers le passe. Une lumiere pale filtre entre les megalithes, revelant des gravures en spirale qui semblent tourner lentement.",
+    "options": [
+      {
+        "verb": "examiner",
+        "text": "Tu etudies les gravures spiralees, cherchant leur signification.",
+        "effects": [
+          "ADD_ANAM:5",
+          "ADD_REPUTATION:anciens:8"
+        ]
+      },
+      {
+        "verb": "tenter sa chance",
+        "text": "Tu poses ta main sur la pierre centrale, esperant une vision.",
+        "effects": [
+          "HEAL_LIFE:5",
+          "ADD_REPUTATION:anciens:5"
+        ]
+      },
+      {
+        "verb": "se faufiler",
+        "text": "Tu te glisses entre les megalithes pour explorer l'autre cote.",
+        "effects": [
+          "ADD_BIOME_CURRENCY:6",
+          "DAMAGE_LIFE:3"
+        ]
+      }
+    ]
+  },
+  {
+    "narrative": "Au sommet de la colline, un tumulus s'ouvre sur un couloir obscur. Des os graves de runes tapissent les murs. Un gardien spectral, guerrier d'un autre age, bloque le passage, sa lance de lumiere pointee vers toi.",
+    "options": [
+      {
+        "verb": "combattre",
+        "text": "Tu fais face au gardien, montrant ta valeur au combat.",
+        "effects": [
+          "ADD_REPUTATION:ankou:9",
+          "DAMAGE_LIFE:5"
+        ]
+      },
+      {
+        "verb": "parler",
+        "text": "Tu salues le guerrier dans la langue ancienne.",
+        "effects": [
+          "ADD_REPUTATION:anciens:7",
+          "HEAL_LIFE:4"
+        ]
+      },
+      {
+        "verb": "observer",
+        "text": "Tu etudies ses mouvements, cherchant une faille dans sa garde.",
+        "effects": [
+          "ADD_ANAM:4",
+          "ADD_REPUTATION:korrigans:6"
+        ]
+      }
+    ]
+  },
+  {
+    "narrative": "Un feu brule au sommet du fort en ruine. Des silhouettes dansent autour des flammes, ni vivantes ni mortes. Elles t'invitent a les rejoindre d'un geste lent, leurs visages illumines par les braises.",
+    "options": [
+      {
+        "verb": "deviner",
+        "text": "Tu tentes de comprendre le sens de leur danse rituelle.",
+        "effects": [
+          "ADD_REPUTATION:druides:8",
+          "ADD_ANAM:3"
+        ]
+      },
+      {
+        "verb": "negocier",
+        "text": "Tu proposes un echange : ta chaleur contre leur savoir.",
+        "effects": [
+          "ADD_BIOME_CURRENCY:7",
+          "ADD_REPUTATION:ankou:5"
+        ]
+      },
+      {
+        "verb": "fuir",
+        "text": "La scene est trop etrange — tu redescends la colline.",
+        "effects": [
+          "DAMAGE_LIFE:2",
+          "ADD_REPUTATION:korrigans:4"
+        ]
+      }
+    ]
+  },
+  {
+    "narrative": "Un cairn de pierres blanches marque la frontiere entre deux territoires anciens. Des serments graves dans la roche promettent malheur a qui franchit sans autorisation. Un vent glacial siffle entre les pierres.",
+    "options": [
+      {
+        "verb": "dechiffrer",
+        "text": "Tu dechiffres les serments graves, apprenant l'histoire du lieu.",
+        "effects": [
+          "ADD_ANAM:6",
+          "ADD_REPUTATION:anciens:7"
+        ]
+      },
+      {
+        "verb": "escalader",
+        "text": "Tu franchis le cairn en grimpant par-dessus.",
+        "effects": [
+          "ADD_BIOME_CURRENCY:8",
+          "DAMAGE_LIFE:4"
+        ]
+      },
+      {
+        "verb": "amadouer",
+        "text": "Tu deposes une offrande au pied du cairn pour apaiser les esprits.",
+        "effects": [
+          "HEAL_LIFE:5",
+          "ADD_REPUTATION:niamh:6"
+        ]
+      }
+    ]
+  },
+  {
+    "narrative": "Une tombe a couloir s'ouvre a l'aube, la lumiere du soleil penetrant jusqu'a la chambre funeraire. Les murs brillent de cristaux incrustes. Au centre, un crane humain orne de feuilles d'or te fixe de ses orbites vides.",
+    "options": [
+      {
+        "verb": "memoriser",
+        "text": "Tu memorises la disposition des cristaux et leur alignement solaire.",
+        "effects": [
+          "ADD_REPUTATION:druides:7",
+          "ADD_ANAM:5"
+        ]
+      },
+      {
+        "verb": "fouiller a l'aveugle",
+        "text": "Tu cherches des tresors parmi les offrandes funeraires.",
+        "effects": [
+          "ADD_BIOME_CURRENCY:9",
+          "DAMAGE_LIFE:5"
+        ]
+      },
+      {
+        "verb": "mediter",
+        "text": "Tu t'assieds face au crane et ecoutes les morts.",
+        "effects": [
+          "HEAL_LIFE:5",
+          "ADD_REPUTATION:ankou:8"
+        ]
+      }
+    ]
+  },
+  {
+    "narrative": "Des pierres dressees forment un cercle au sommet de la colline. Chacune porte le visage sculpte d'un ancetre different. L'une d'elles pleure des larmes de resine ambre qui durcissent en tombant.",
+    "options": [
+      {
+        "verb": "pister",
+        "text": "Tu suis la trace de resine jusqu'a sa source dans la pierre.",
+        "effects": [
+          "ADD_REPUTATION:korrigans:8",
+          "ADD_BIOME_CURRENCY:5"
+        ]
+      },
+      {
+        "verb": "convaincre",
+        "text": "Tu parles a la pierre qui pleure, promettant de porter son message.",
+        "effects": [
+          "ADD_REPUTATION:niamh:9",
+          "HEAL_LIFE:3"
+        ]
+      },
+      {
+        "verb": "analyser",
+        "text": "Tu analyses la composition de la resine, cherchant ses proprietes.",
+        "effects": [
+          "ADD_ANAM:6",
+          "ADD_REPUTATION:druides:5"
+        ]
+      }
+    ]
+  },
+  {
+    "narrative": "Un berger spectral garde un troupeau de moutons blancs sur les pentes. Ses betes broutent l'herbe rase, mais ne laissent aucune trace. Il leve la tete a ton approche et designe un chemin qui mene a un village en ruine.",
+    "options": [
+      {
+        "verb": "suivre",
+        "text": "Tu suis le chemin indique vers le village abandonne.",
+        "effects": [
+          "ADD_BIOME_CURRENCY:6",
+          "ADD_REPUTATION:anciens:7"
+        ]
+      },
+      {
+        "verb": "charmer",
+        "text": "Tu essaies de gagner la confiance du berger fantome.",
+        "effects": [
+          "ADD_REPUTATION:niamh:8",
+          "ADD_ANAM:3"
+        ]
+      },
+      {
+        "verb": "courir",
+        "text": "Tu traverses le troupeau en courant, bousculant les moutons spectres.",
+        "effects": [
+          "DAMAGE_LIFE:4",
+          "ADD_REPUTATION:korrigans:7"
+        ]
+      }
+    ]
+  },
+  {
+    "narrative": "Une source sacree jaillit du flanc de la colline, son eau si claire qu'elle semble lumineuse. Des guerriers d'autrefois venaient y tremper leurs lames avant la bataille. L'eau murmure des noms oublies.",
+    "options": [
+      {
+        "verb": "ecouter",
+        "text": "Tu tends l'oreille pour capter les noms murmures par la source.",
+        "effects": [
+          "ADD_REPUTATION:anciens:10",
+          "ADD_ANAM:4"
+        ]
+      },
+      {
+        "verb": "chercher au hasard",
+        "text": "Tu plonges la main dans l'eau, esperant toucher une lame ancienne.",
+        "effects": [
+          "ADD_BIOME_CURRENCY:8",
+          "DAMAGE_LIFE:3"
+        ]
+      },
+      {
+        "verb": "apaiser",
+        "text": "Tu bois l'eau sacree et sens une force ancienne te guerir.",
+        "effects": [
+          "HEAL_LIFE:5",
+          "ADD_REPUTATION:niamh:4"
+        ]
+      }
+    ]
+  },
+  {
+    "narrative": "Un tertre funeraire s'est effondre, revelant une chambre ornee de fresques. Les peintures montrent un roi celte recevant un ogham des mains d'un druide. Les couleurs sont encore vives apres des millenaires.",
+    "options": [
+      {
+        "verb": "inspecter",
+        "text": "Tu inspectes chaque fresque, notant les details du rituel.",
+        "effects": [
+          "ADD_REPUTATION:druides:9",
+          "ADD_ANAM:5"
+        ]
+      },
+      {
+        "verb": "contourner",
+        "text": "Tu contournes le tertre effondre pour chercher d'autres entrees.",
+        "effects": [
+          "ADD_BIOME_CURRENCY:5",
+          "ADD_REPUTATION:korrigans:6"
+        ]
+      },
+      {
+        "verb": "mentir",
+        "text": "Tu pretends etre l'heritier du roi pour activer les fresques.",
+        "effects": [
+          "DAMAGE_LIFE:3",
+          "ADD_REPUTATION:ankou:8"
+        ]
+      }
+    ]
+  },
+  {
+    "narrative": "Deux collines jumelles encadrent une vallee etroite. Au fond, un dolmen massif porte des chaines rouillees. On dit qu'un serment brise peut etre renouvele ici, a condition d'y laisser quelque chose de precieux.",
+    "options": [
+      {
+        "verb": "resister physiquement",
+        "text": "Tu tires sur les chaines pour liberer ce qui est enchaine.",
+        "effects": [
+          "ADD_REPUTATION:ankou:7",
+          "DAMAGE_LIFE:5"
+        ]
+      },
+      {
+        "verb": "marchander",
+        "text": "Tu negocies avec l'esprit du dolmen — un souvenir contre un serment.",
+        "effects": [
+          "ADD_REPUTATION:korrigans:8",
+          "ADD_BIOME_CURRENCY:4"
+        ]
+      },
+      {
+        "verb": "sentir",
+        "text": "Tu fais confiance a ton instinct pour comprendre ce qui est enchaine.",
+        "effects": [
+          "HEAL_LIFE:5",
+          "ADD_REPUTATION:anciens:7"
+        ]
+      }
+    ]
+  },
+  {
+    "narrative": "Un cercle de menhirs entoure un chene mort. Ses branches nues pointent vers le ciel comme des doigts accuses. A sa base, une cavite contient un nid de corbeau avec trois oeufs d'argent.",
+    "options": [
+      {
+        "verb": "cueillir",
+        "text": "Tu prends un oeuf d'argent, fascine par son eclat froid.",
+        "effects": [
+          "ADD_BIOME_CURRENCY:9",
+          "ADD_REPUTATION:ankou:5"
+        ]
+      },
+      {
+        "verb": "decoder",
+        "text": "Tu cherches la signification du chene mort au milieu des menhirs.",
+        "effects": [
+          "ADD_ANAM:5",
+          "ADD_REPUTATION:druides:6"
+        ]
+      },
+      {
+        "verb": "esquiver",
+        "text": "Tu evites le chene et longes les menhirs, cherchant un autre passage.",
+        "effects": [
+          "HEAL_LIFE:4",
+          "ADD_REPUTATION:korrigans:5"
+        ]
+      }
+    ]
+  },
+  {
+    "narrative": "Une procession de torches descend la colline dans la nuit. Les porteurs sont des femmes voilees qui chantent un threne funebre. Elles deposent des offrandes sur chaque pierre dressee qu'elles croisent.",
+    "options": [
+      {
+        "verb": "flairer",
+        "text": "Tu humes l'encens des torches, reconnaissant des plantes rituelles.",
+        "effects": [
+          "ADD_REPUTATION:niamh:7",
+          "HEAL_LIFE:5"
+        ]
+      },
+      {
+        "verb": "convaincre",
+        "text": "Tu rejoins la procession et offres tes services aux pleureuses.",
+        "effects": [
+          "ADD_REPUTATION:anciens:8",
+          "ADD_ANAM:4"
+        ]
+      },
+      {
+        "verb": "se cacher",
+        "text": "Tu te caches derriere un menhir pour observer sans etre vu.",
+        "effects": [
+          "ADD_BIOME_CURRENCY:5",
+          "ADD_REPUTATION:korrigans:6"
+        ]
+      }
+    ]
+  },
+  {
+    "narrative": "Un vieux guerrier est assis devant l'entree d'un tumulus, son epee plantee dans le sol. Il te dit qu'il attend la releve depuis trois cents ans. \"Prends ma place ou aide-moi a partir,\" murmure-t-il.",
+    "options": [
+      {
+        "verb": "accepter",
+        "text": "Tu prends l'epee et acceptes la garde du tumulus.",
+        "effects": [
+          "ADD_REPUTATION:anciens:10",
+          "DAMAGE_LIFE:4"
+        ]
+      },
+      {
+        "verb": "tenter sa chance",
+        "text": "Tu proposes un jeu de des — le perdant reste.",
+        "effects": [
+          "ADD_BIOME_CURRENCY:7",
+          "ADD_REPUTATION:korrigans:6"
+        ]
+      },
+      {
+        "verb": "calmer",
+        "text": "Tu parles doucement au guerrier, l'aidant a trouver la paix.",
+        "effects": [
+          "HEAL_LIFE:5",
+          "ADD_REPUTATION:ankou:7"
+        ]
+      }
+    ]
+  },
+  {
+    "narrative": "La brume matinale revele un champ de pierres tombales, chacune gravee d'un arbre different. Un if, un chene, un bouleau... Les arbres graves semblent pousser hors de la pierre, formant une foret minerale.",
+    "options": [
+      {
+        "verb": "fixer",
+        "text": "Tu fixes intensement les gravures, cherchant le motif cache.",
+        "effects": [
+          "ADD_REPUTATION:druides:7",
+          "ADD_ANAM:6"
+        ]
+      },
+      {
+        "verb": "forcer",
+        "text": "Tu deracines une pierre tombale pour voir ce qu'il y a dessous.",
+        "effects": [
+          "ADD_BIOME_CURRENCY:8",
+          "DAMAGE_LIFE:5"
+        ]
+      },
+      {
+        "verb": "attendre",
+        "text": "Tu attends que la brume se dissipe pour mieux voir.",
+        "effects": [
+          "HEAL_LIFE:5",
+          "ADD_REPUTATION:niamh:6"
+        ]
+      }
+    ]
+  },
+  {
+    "narrative": "Un pont de dalles traverse un ravin entre deux collines. Chaque dalle porte un ogham different. On dit que seul celui qui marche sur les bons oghams dans le bon ordre atteindra l'autre cote.",
+    "options": [
+      {
+        "verb": "resoudre",
+        "text": "Tu etudies la sequence d'oghams et cherches la logique.",
+        "effects": [
+          "ADD_ANAM:7",
+          "ADD_REPUTATION:anciens:6"
+        ]
+      },
+      {
+        "verb": "deviner",
+        "text": "Tu avances en choisissant les dalles au hasard.",
+        "effects": [
+          "ADD_BIOME_CURRENCY:6",
+          "DAMAGE_LIFE:4"
+        ]
+      },
+      {
+        "verb": "tendre l'oreille",
+        "text": "Tu ecoutes le vent qui siffle entre les dalles — il chante la sequence.",
+        "effects": [
+          "HEAL_LIFE:4",
+          "ADD_REPUTATION:niamh:8"
+        ]
+      }
+    ]
+  },
+  {
+    "narrative": "Un autel de sacrifice se dresse au carrefour de trois sentiers. Du sang seche forme des runes sur sa surface. Un loup blanc dort a ses pieds, sa fourrure tachetee de rouille ancienne.",
+    "options": [
+      {
+        "verb": "scruter",
+        "text": "Tu dechiffres les runes de sang seche sur l'autel.",
+        "effects": [
+          "ADD_REPUTATION:ankou:9",
+          "ADD_ANAM:4"
+        ]
+      },
+      {
+        "verb": "se faufiler",
+        "text": "Tu passes devant le loup endormi sans le reveiller.",
+        "effects": [
+          "ADD_BIOME_CURRENCY:6",
+          "ADD_REPUTATION:korrigans:5"
+        ]
+      },
+      {
+        "verb": "apaiser",
+        "text": "Tu caresses doucement le loup blanc, qui ouvre un oeil d'or.",
+        "effects": [
+          "HEAL_LIFE:5",
+          "ADD_REPUTATION:niamh:7"
+        ]
+      }
+    ]
+  },
+  {
+    "narrative": "Un puits profond perce le sommet de la colline. Des echos montent des profondeurs — des voix qui repetent tes pensees les plus secretes. Un seau en bronze pend a une chaine, couvert de vert-de-gris.",
+    "options": [
+      {
+        "verb": "ecouter",
+        "text": "Tu ecoutes les echos, essayant de demeler tes pensees des leurs.",
+        "effects": [
+          "ADD_REPUTATION:niamh:8",
+          "ADD_ANAM:5"
+        ]
+      },
+      {
+        "verb": "fouiller a l'aveugle",
+        "text": "Tu descends le seau pour voir ce que le puits contient.",
+        "effects": [
+          "ADD_BIOME_CURRENCY:7",
+          "DAMAGE_LIFE:3"
+        ]
+      },
+      {
+        "verb": "endurer",
+        "text": "Tu resistes aux voix, gardant tes secrets pour toi.",
+        "effects": [
+          "HEAL_LIFE:5",
+          "ADD_REPUTATION:anciens:6"
+        ]
+      }
+    ]
+  },
+  {
+    "narrative": "Des ruines de fortification couronnent la colline, leurs murs effondres formant un labyrinthe de pierre. Au centre, un feu de tourbe brule sans combustible visible, projetant des ombres dansantes sur les murs.",
+    "options": [
+      {
+        "verb": "interpreter",
+        "text": "Tu lis l'avenir dans les ombres projetees par le feu.",
+        "effects": [
+          "ADD_REPUTATION:druides:8",
+          "ADD_ANAM:4"
+        ]
+      },
+      {
+        "verb": "traverser",
+        "text": "Tu traverses le labyrinthe de ruines vers le feu central.",
+        "effects": [
+          "ADD_BIOME_CURRENCY:5",
+          "DAMAGE_LIFE:4"
+        ]
+      },
+      {
+        "verb": "charmer",
+        "text": "Tu chantes une melodie pour accompagner les ombres dansantes.",
+        "effects": [
+          "HEAL_LIFE:5",
+          "ADD_REPUTATION:korrigans:7"
+        ]
+      }
+    ]
+  },
+  {
+    "narrative": "Un dolmen penche dangereusement, sa pierre de couverture glissant lentement au fil des siecles. En dessous, un espace sacre abrite des inscriptions que personne n'a lues depuis des generations.",
+    "options": [
+      {
+        "verb": "etudier",
+        "text": "Tu rampes sous le dolmen pour etudier les inscriptions cachees.",
+        "effects": [
+          "ADD_ANAM:6",
+          "ADD_REPUTATION:anciens:8"
+        ]
+      },
+      {
+        "verb": "resister physiquement",
+        "text": "Tu tentes de stabiliser la pierre de couverture avec des cales.",
+        "effects": [
+          "ADD_REPUTATION:korrigans:6",
+          "DAMAGE_LIFE:5"
+        ]
+      },
+      {
+        "verb": "chercher au hasard",
+        "text": "Tu fouilles autour du dolmen, esperant trouver des artefacts tombes.",
+        "effects": [
+          "ADD_BIOME_CURRENCY:8",
+          "HEAL_LIFE:3"
+        ]
+      }
+    ]
+  },
+  {
+    "narrative": "La derniere colline de la chaine est la plus haute. A son sommet, un menhir solitaire pointe vers l'etoile polaire. Des generations de voyageurs ont depose des cailloux a sa base, formant un monticule de gratitude.",
+    "options": [
+      {
+        "verb": "mediter",
+        "text": "Tu ajoutes ta pierre et medites sur ton voyage.",
+        "effects": [
+          "HEAL_LIFE:5",
+          "ADD_REPUTATION:anciens:6"
+        ]
+      },
+      {
+        "verb": "mentir",
+        "text": "Tu pretends avoir accompli un exploit pour impressionner les esprits.",
+        "effects": [
+          "ADD_BIOME_CURRENCY:7",
+          "ADD_REPUTATION:korrigans:5"
+        ]
+      },
+      {
+        "verb": "pister",
+        "text": "Tu suis l'alignement du menhir vers d'autres sites sacres.",
+        "effects": [
+          "ADD_ANAM:5",
+          "ADD_REPUTATION:niamh:7"
+        ]
+      }
+    ]
+  },
+  {
+    "narrative": "La brume se leve sur les eaux immobiles, revelant une ile qui n'existait pas hier. Ses contours changent a chaque battement de coeur, comme un reve qui hesite a prendre forme. Un passeur attend sur la rive, sa barque faite d'os de baleine.",
+    "options": [
+      {
+        "verb": "parler",
+        "text": "Tu demandes au passeur le prix de la traversee.",
+        "effects": [
+          "ADD_REPUTATION:niamh:9",
+          "ADD_BIOME_CURRENCY:4"
+        ]
+      },
+      {
+        "verb": "deviner",
+        "text": "Tu tentes de deviner le nom de l'ile avant d'embarquer.",
+        "effects": [
+          "ADD_ANAM:6",
+          "ADD_REPUTATION:anciens:5"
+        ]
+      },
+      {
+        "verb": "courir",
+        "text": "Tu sautes dans la barque sans attendre la permission.",
+        "effects": [
+          "DAMAGE_LIFE:4",
+          "ADD_REPUTATION:korrigans:7"
+        ]
+      }
+    ]
+  },
+  {
+    "narrative": "Un verger de pommiers d'argent s'etend sur l'ile, leurs fruits brillant comme des lunes miniatures. Chaque pomme contient un souvenir oublie. Une femme aux yeux d'emeraude cueille les fruits avec une reverence infinie.",
+    "options": [
+      {
+        "verb": "observer",
+        "text": "Tu observes la femme cueillir, apprenant ses gestes rituels.",
+        "effects": [
+          "ADD_REPUTATION:niamh:10",
+          "ADD_ANAM:3"
+        ]
+      },
+      {
+        "verb": "cueillir",
+        "text": "Tu cueilles une pomme d'argent et la croques.",
+        "effects": [
+          "HEAL_LIFE:5",
+          "ADD_REPUTATION:druides:4"
+        ]
+      },
+      {
+        "verb": "marchander",
+        "text": "Tu proposes un echange — un souvenir de ton monde contre une pomme.",
+        "effects": [
+          "ADD_BIOME_CURRENCY:8",
+          "ADD_REPUTATION:korrigans:5"
+        ]
+      }
+    ]
+  },
+  {
+    "narrative": "Le temps s'est arrete sur cette ile. Les vagues sont figees en mid-air, les oiseaux suspendus dans le ciel. Seul toi peux bouger. Au centre de l'ile, un sablier enorme mesure un temps qui n'est pas le tien.",
+    "options": [
+      {
+        "verb": "analyser",
+        "text": "Tu etudies le sablier, cherchant a comprendre son mecanisme.",
+        "effects": [
+          "ADD_ANAM:7",
+          "ADD_REPUTATION:anciens:6"
+        ]
+      },
+      {
+        "verb": "tenter sa chance",
+        "text": "Tu retournes le sablier pour voir ce qui se passe.",
+        "effects": [
+          "ADD_BIOME_CURRENCY:7",
+          "DAMAGE_LIFE:5"
+        ]
+      },
+      {
+        "verb": "calmer",
+        "text": "Tu acceptes la stase et laisses le temps te traverser.",
+        "effects": [
+          "HEAL_LIFE:5",
+          "ADD_REPUTATION:niamh:7"
+        ]
+      }
+    ]
+  },
+  {
+    "narrative": "Des selkies nagent autour de l'ile, leurs peaux de phoque empilees sur les rochers. L'une d'elles, sous forme humaine, te demande si tu as vu sa peau — elle a ete volee par un pecheur il y a cent ans.",
+    "options": [
+      {
+        "verb": "pister",
+        "text": "Tu suis les indices pour retrouver la peau volee.",
+        "effects": [
+          "ADD_REPUTATION:niamh:8",
+          "ADD_BIOME_CURRENCY:5"
+        ]
+      },
+      {
+        "verb": "mentir",
+        "text": "Tu pretends savoir ou est la peau pour gagner sa confiance.",
+        "effects": [
+          "ADD_REPUTATION:korrigans:7",
+          "DAMAGE_LIFE:3"
+        ]
+      },
+      {
+        "verb": "resister mentalement",
+        "text": "Tu resistes a l'envie de voler une peau toi-meme.",
+        "effects": [
+          "HEAL_LIFE:5",
+          "ADD_REPUTATION:anciens:7"
+        ]
+      }
+    ]
+  },
+  {
+    "narrative": "Un phare abandonne se dresse sur le point le plus haut de l'ile. Sa lumiere tourne encore, mais elle n'eclaire rien de visible — sauf, parfois, d'autres iles au loin qui disparaissent quand on cligne des yeux.",
+    "options": [
+      {
+        "verb": "fixer",
+        "text": "Tu fixes le faisceau lumineux, essayant de ne pas cligner.",
+        "effects": [
+          "ADD_REPUTATION:niamh:7",
+          "ADD_ANAM:5"
+        ]
+      },
+      {
+        "verb": "escalader",
+        "text": "Tu grimpes au sommet du phare pour avoir une meilleure vue.",
+        "effects": [
+          "ADD_BIOME_CURRENCY:6",
+          "DAMAGE_LIFE:4"
+        ]
+      },
+      {
+        "verb": "convaincre",
+        "text": "Tu parles au phare, le suppliant de reveler ses secrets.",
+        "effects": [
+          "HEAL_LIFE:4",
+          "ADD_REPUTATION:druides:7"
+        ]
+      }
+    ]
+  },
+  {
+    "narrative": "La mer entre les iles brille d'une lumiere sous-marine. En regardant sous l'eau, tu vois un sentier de pierres rondes qui mene d'ile en ile, juste sous la surface. Des poissons lumineux en marquent le chemin.",
+    "options": [
+      {
+        "verb": "traverser",
+        "text": "Tu marches sur le sentier immerse, l'eau te montant aux chevilles.",
+        "effects": [
+          "ADD_REPUTATION:niamh:9",
+          "DAMAGE_LIFE:3"
+        ]
+      },
+      {
+        "verb": "sentir",
+        "text": "Tu plonges ta main dans l'eau pour sentir le courant te guider.",
+        "effects": [
+          "ADD_ANAM:5",
+          "ADD_REPUTATION:anciens:6"
+        ]
+      },
+      {
+        "verb": "fouiller a l'aveugle",
+        "text": "Tu cherches des pierres precieuses le long du sentier submerge.",
+        "effects": [
+          "ADD_BIOME_CURRENCY:8",
+          "ADD_REPUTATION:korrigans:4"
+        ]
+      }
+    ]
+  },
+  {
+    "narrative": "Un arbre epineux pousse seul au centre de l'ile, ses branches couvertes de rubans de tissu noues par des pelerins d'un autre temps. Chaque ruban porte un voeu ecrit dans une langue que tu ne connais pas.",
+    "options": [
+      {
+        "verb": "dechiffrer",
+        "text": "Tu essaies de dechiffrer les voeux ecrits sur les rubans.",
+        "effects": [
+          "ADD_ANAM:6",
+          "ADD_REPUTATION:druides:7"
+        ]
+      },
+      {
+        "verb": "tenter sa chance",
+        "text": "Tu noues ton propre ruban avec un voeu muet.",
+        "effects": [
+          "HEAL_LIFE:5",
+          "ADD_REPUTATION:niamh:5"
+        ]
+      },
+      {
+        "verb": "se cacher",
+        "text": "Tu te blottis sous l'arbre pour te reposer a l'abri du vent.",
+        "effects": [
+          "ADD_BIOME_CURRENCY:5",
+          "ADD_REPUTATION:korrigans:6"
+        ]
+      }
+    ]
+  },
+  {
+    "narrative": "Des colonnes de basalte emergent de la mer, formant une chaussee des geants en miniature. Au bout, une grotte marine s'ouvre, tapissee de cristaux qui vibrent avec la maree. Un chant doux emane des profondeurs.",
+    "options": [
+      {
+        "verb": "ecouter",
+        "text": "Tu ecoutes le chant des cristaux, laissant la melodie te guider.",
+        "effects": [
+          "ADD_REPUTATION:niamh:8",
+          "HEAL_LIFE:5"
+        ]
+      },
+      {
+        "verb": "examiner",
+        "text": "Tu examines les cristaux, notant leurs frequences de vibration.",
+        "effects": [
+          "ADD_ANAM:5",
+          "ADD_REPUTATION:druides:6"
+        ]
+      },
+      {
+        "verb": "forcer",
+        "text": "Tu detaches un cristal vibrant pour l'emporter.",
+        "effects": [
+          "ADD_BIOME_CURRENCY:9",
+          "DAMAGE_LIFE:5"
+        ]
+      }
+    ]
+  },
+  {
+    "narrative": "Un banc de brume epaisse entoure l'ile suivante. En y penetrant, tu perds toute notion du temps et de l'espace. Des visages familiers apparaissent dans la brume — des gens que tu n'as pas encore rencontres.",
+    "options": [
+      {
+        "verb": "se concentrer",
+        "text": "Tu te concentres sur ta destination, refusant les illusions.",
+        "effects": [
+          "ADD_REPUTATION:anciens:8",
+          "HEAL_LIFE:4"
+        ]
+      },
+      {
+        "verb": "charmer",
+        "text": "Tu engages la conversation avec les visages de brume.",
+        "effects": [
+          "ADD_REPUTATION:niamh:7",
+          "ADD_ANAM:4"
+        ]
+      },
+      {
+        "verb": "contourner",
+        "text": "Tu longes le bord de la brume, cherchant un passage plus clair.",
+        "effects": [
+          "ADD_BIOME_CURRENCY:6",
+          "ADD_REPUTATION:korrigans:5"
+        ]
+      }
+    ]
+  },
+  {
+    "narrative": "Une tour de verre se dresse sur un ilot minuscule, refletant tout sauf celui qui la regarde. A l'interieur, des miroirs sans fin se font face. On dit que celui qui trouve son reflet ici decouvre sa veritable nature.",
+    "options": [
+      {
+        "verb": "scruter",
+        "text": "Tu cherches ton reflet dans les miroirs sans fin.",
+        "effects": [
+          "ADD_REPUTATION:niamh:9",
+          "ADD_ANAM:5"
+        ]
+      },
+      {
+        "verb": "resoudre",
+        "text": "Tu analyses l'agencement des miroirs comme un probleme geometrique.",
+        "effects": [
+          "ADD_REPUTATION:anciens:7",
+          "ADD_BIOME_CURRENCY:4"
+        ]
+      },
+      {
+        "verb": "combattre",
+        "text": "Tu brises un miroir de frustration.",
+        "effects": [
+          "DAMAGE_LIFE:5",
+          "ADD_REPUTATION:ankou:8"
+        ]
+      }
+    ]
+  },
+  {
+    "narrative": "Des chevaux blancs galopent sur les vagues autour de l'ile, leurs crinieres d'ecume se melant aux embruns. L'un d'eux s'arrete devant toi et baisse la tete, t'invitant a monter.",
+    "options": [
+      {
+        "verb": "tenter sa chance",
+        "text": "Tu montes sur le cheval marin, t'accrochant a sa criniere.",
+        "effects": [
+          "ADD_REPUTATION:niamh:10",
+          "DAMAGE_LIFE:4"
+        ]
+      },
+      {
+        "verb": "observer",
+        "text": "Tu observes les chevaux, cherchant un signe dans leur course.",
+        "effects": [
+          "ADD_ANAM:4",
+          "ADD_REPUTATION:anciens:7"
+        ]
+      },
+      {
+        "verb": "amadouer",
+        "text": "Tu offres de l'herbe sacree au cheval pour gagner sa confiance.",
+        "effects": [
+          "HEAL_LIFE:5",
+          "ADD_REPUTATION:druides:6"
+        ]
+      }
+    ]
+  },
+  {
+    "narrative": "Un jardin sous-marin est visible a travers l'eau cristalline. Des algues dorees forment des allees, des coraux sculptent des arches. Des lumieres clignotent dans les profondeurs — des ames en transit vers l'Autre Monde.",
+    "options": [
+      {
+        "verb": "flairer",
+        "text": "Tu humes l'air sale, percevant une fragrance surnaturelle.",
+        "effects": [
+          "ADD_REPUTATION:niamh:7",
+          "HEAL_LIFE:5"
+        ]
+      },
+      {
+        "verb": "decoder",
+        "text": "Tu essaies de comprendre le code des lumieres clignotantes.",
+        "effects": [
+          "ADD_ANAM:6",
+          "ADD_REPUTATION:ankou:6"
+        ]
+      },
+      {
+        "verb": "esquiver",
+        "text": "Tu evites les zones lumineuses, craignant d'etre attire vers le fond.",
+        "effects": [
+          "ADD_BIOME_CURRENCY:6",
+          "ADD_REPUTATION:korrigans:5"
+        ]
+      }
+    ]
+  },
+  {
+    "narrative": "Morgane la fay apparait sur la plage, vetue de brume et de lumiere de lune. Elle tient un calice d'or rempli d'un liquide qui change de couleur a chaque seconde. \"Bois et oublie, ou refuse et souviens-toi,\" dit-elle.",
+    "options": [
+      {
+        "verb": "accepter",
+        "text": "Tu bois du calice, laissant les couleurs envahir ta vision.",
+        "effects": [
+          "HEAL_LIFE:5",
+          "ADD_REPUTATION:niamh:8"
+        ]
+      },
+      {
+        "verb": "refuser",
+        "text": "Tu refuses poliment, preferant garder tes souvenirs.",
+        "effects": [
+          "ADD_REPUTATION:anciens:8",
+          "ADD_ANAM:5"
+        ]
+      },
+      {
+        "verb": "negocier",
+        "text": "Tu proposes de boire la moitie — oublier un peu, se souvenir un peu.",
+        "effects": [
+          "ADD_BIOME_CURRENCY:7",
+          "ADD_REPUTATION:korrigans:6"
+        ]
+      }
+    ]
+  },
+  {
+    "narrative": "Un cercle de pierres immergees entoure un ilot minuscule. A maree basse, les pierres emergent et forment un portail. De l'autre cote, tu apercois Tir na nOg — la Terre de l'Eternelle Jeunesse.",
+    "options": [
+      {
+        "verb": "memoriser",
+        "text": "Tu memorises la configuration des pierres pour revenir un jour.",
+        "effects": [
+          "ADD_ANAM:7",
+          "ADD_REPUTATION:druides:5"
+        ]
+      },
+      {
+        "verb": "se faufiler",
+        "text": "Tu te faufiles entre les pierres avant que la maree ne remonte.",
+        "effects": [
+          "ADD_REPUTATION:niamh:9",
+          "DAMAGE_LIFE:4"
+        ]
+      },
+      {
+        "verb": "endurer",
+        "text": "Tu restes sur l'ilot, attendant que le portail se revele completement.",
+        "effects": [
+          "HEAL_LIFE:5",
+          "ADD_REPUTATION:anciens:7"
+        ]
+      }
+    ]
+  },
+  {
+    "narrative": "Des oiseaux translucides volent en formation au-dessus de l'ile, leurs ailes projetant des arcs-en-ciel sur le sol. Ils chantent une melodie qui raconte l'histoire de toutes les iles perdues.",
+    "options": [
+      {
+        "verb": "tendre l'oreille",
+        "text": "Tu ecoutes leur chant, absorbant l'histoire des iles perdues.",
+        "effects": [
+          "ADD_REPUTATION:niamh:8",
+          "ADD_ANAM:5"
+        ]
+      },
+      {
+        "verb": "deviner",
+        "text": "Tu essaies de predire la prochaine formation des oiseaux.",
+        "effects": [
+          "ADD_BIOME_CURRENCY:6",
+          "ADD_REPUTATION:korrigans:6"
+        ]
+      },
+      {
+        "verb": "resister physiquement",
+        "text": "Tu cours avec les oiseaux, essayant de suivre leur rythme.",
+        "effects": [
+          "DAMAGE_LIFE:3",
+          "ADD_REPUTATION:anciens:7"
+        ]
+      }
+    ]
+  },
+  {
+    "narrative": "Une fontaine de corail rose jaillit au centre de l'ile, son eau montant en spirale avant de se disperser en pluie fine. Chaque goutte contient une minuscule etoile qui s'eteint en touchant le sol.",
+    "options": [
+      {
+        "verb": "se concentrer",
+        "text": "Tu te tiens sous la pluie d'etoiles, absorbant leur lumiere.",
+        "effects": [
+          "HEAL_LIFE:5",
+          "ADD_REPUTATION:niamh:7"
+        ]
+      },
+      {
+        "verb": "chercher au hasard",
+        "text": "Tu essaies d'attraper les etoiles avant qu'elles ne s'eteignent.",
+        "effects": [
+          "ADD_BIOME_CURRENCY:7",
+          "ADD_REPUTATION:druides:5"
+        ]
+      },
+      {
+        "verb": "fuir",
+        "text": "La beaute est trop intense — tu t'eloignes, aveugle.",
+        "effects": [
+          "DAMAGE_LIFE:3",
+          "ADD_REPUTATION:ankou:6"
+        ]
+      }
+    ]
+  },
+  {
+    "narrative": "Un navire fantome est echoue sur la greve, ses voiles de brume se gonflant d'un vent invisible. A son bord, des marins squelettiques jouent aux des avec des pierres runiques. Le capitaine t'invite a jouer.",
+    "options": [
+      {
+        "verb": "marchander",
+        "text": "Tu negocies les regles du jeu avant de t'asseoir.",
+        "effects": [
+          "ADD_REPUTATION:korrigans:8",
+          "ADD_BIOME_CURRENCY:5"
+        ]
+      },
+      {
+        "verb": "inspecter",
+        "text": "Tu examines les des runiques, cherchant des des pipes.",
+        "effects": [
+          "ADD_ANAM:5",
+          "ADD_REPUTATION:ankou:7"
+        ]
+      },
+      {
+        "verb": "apaiser",
+        "text": "Tu offres un toast aux marins disparus avant de jouer.",
+        "effects": [
+          "HEAL_LIFE:5",
+          "ADD_REPUTATION:niamh:6"
+        ]
+      }
+    ]
+  },
+  {
+    "narrative": "L'ile la plus lointaine est a peine visible, juste une lueur doree a l'horizon. Le passeur dit que seuls ceux qui ont le coeur pur peuvent la rejoindre. La brume s'epaissit, et tu dois choisir ta voie.",
+    "options": [
+      {
+        "verb": "suivre",
+        "text": "Tu suis la lueur doree, marchant sur l'eau sans y penser.",
+        "effects": [
+          "ADD_REPUTATION:niamh:10",
+          "DAMAGE_LIFE:3"
+        ]
+      },
+      {
+        "verb": "analyser",
+        "text": "Tu calcules la distance et la direction optimale.",
+        "effects": [
+          "ADD_ANAM:6",
+          "ADD_REPUTATION:druides:6"
+        ]
+      },
+      {
+        "verb": "attendre",
+        "text": "Tu attends que la brume se dissipe pour y voir plus clair.",
+        "effects": [
+          "HEAL_LIFE:5",
+          "ADD_REPUTATION:anciens:5"
+        ]
+      }
+    ]
+  },
+  {
+    "narrative": "Un phoque geant te regarde depuis les rochers, ses yeux noirs refletant des galaxies. Il ouvre la bouche et parle d'une voix humaine : \"Je suis le gardien du passage. Que cherches-tu de l'autre cote ?\"",
+    "options": [
+      {
+        "verb": "parler",
+        "text": "Tu reponds honnetement, partageant ta quete avec le gardien.",
+        "effects": [
+          "ADD_REPUTATION:niamh:9",
+          "HEAL_LIFE:5"
+        ]
+      },
+      {
+        "verb": "mentir",
+        "text": "Tu inventes une raison noble pour cacher tes vraies intentions.",
+        "effects": [
+          "ADD_BIOME_CURRENCY:7",
+          "DAMAGE_LIFE:4"
+        ]
+      },
+      {
+        "verb": "observer",
+        "text": "Tu observes les galaxies dans ses yeux, cherchant une reponse.",
+        "effects": [
+          "ADD_ANAM:5",
+          "ADD_REPUTATION:anciens:8"
+        ]
+      }
+    ]
+  },
+  {
+    "narrative": "La derniere ile est Avalon elle-meme. Les pommiers sont en fleur malgre l'hiver. Des fees dansent dans les branches, et la musique est si belle qu'elle guerit les blessures de l'ame. Mais pour y rester, il faut tout abandonner.",
+    "options": [
+      {
+        "verb": "mediter",
+        "text": "Tu medites sous les pommiers en fleur, absorbant la paix d'Avalon.",
+        "effects": [
+          "HEAL_LIFE:5",
+          "ADD_REPUTATION:niamh:8"
+        ]
+      },
+      {
+        "verb": "etudier",
+        "text": "Tu etudies les plantes d'Avalon, notant leurs proprietes uniques.",
+        "effects": [
+          "ADD_ANAM:7",
+          "ADD_REPUTATION:druides:6"
+        ]
+      },
+      {
+        "verb": "contourner",
+        "text": "Tu explores le tour de l'ile, cherchant un passage vers d'autres mondes.",
+        "effects": [
+          "ADD_BIOME_CURRENCY:6",
+          "ADD_REPUTATION:korrigans:7"
+        ]
+      }
+    ]
+  },
+  {
+    "narrative": "Un vieillard en cape noire est assis au croisement de deux chemins. Son visage est caché sous un capuchon, mais ses mains — des mains de cendres — tiennent une balance dont les plateaux ne bougent pas. Il ne parle pas. Il attend.",
+    "options": [
+      {
+        "verb": "pister",
+        "text": "Tu scrutes le sol pour comprendre combien de voyageurs sont passes ici.",
+        "effects": [
+          "ADD_REPUTATION:anciens:7",
+          "ADD_ANAM:4"
+        ]
+      },
+      {
+        "verb": "se faufiler",
+        "text": "Tu contournes le vieillard sans croiser son regard.",
+        "effects": [
+          "ADD_BIOME_CURRENCY:5",
+          "DAMAGE_LIFE:2"
+        ]
+      },
+      {
+        "verb": "accepter",
+        "text": "Tu poses ta main sur la balance et laisses les plateaux decider.",
+        "effects": [
+          "ADD_REPUTATION:ankou:9",
+          "DAMAGE_LIFE:4"
+        ]
+      }
+    ]
+  },
+  {
+    "narrative": "Une source jaillit d'un rocher poli, transparente comme du cristal. Une voix feminine murmure depuis l'eau : \"Bois si tu oses. Ce que tu perds, tu le retrouves transforme.\" Des fleurs inconnues poussent autour sans soleil.",
+    "options": [
+      {
+        "verb": "deviner",
+        "text": "Tu fermes les yeux et bois une gorgée, laissant le destin choisir.",
+        "effects": [
+          "HEAL_LIFE:5",
+          "ADD_REPUTATION:niamh:8"
+        ]
+      },
+      {
+        "verb": "convaincre",
+        "text": "Tu parles a la source, promettant de partager sa lecon avec les autres.",
+        "effects": [
+          "ADD_REPUTATION:niamh:6",
+          "ADD_ANAM:5"
+        ]
+      },
+      {
+        "verb": "examiner",
+        "text": "Tu observes les fleurs, cherchant un indice sur la nature de l'eau.",
+        "effects": [
+          "ADD_BIOME_CURRENCY:6",
+          "ADD_REPUTATION:anciens:5"
+        ]
+      }
+    ]
+  },
+  {
+    "narrative": "Trois korrigans dansent autour d'un tas de pierres en chantant un compte de nombres premiers. L'un s'arrete et te pointe du doigt : \"Trouve le suivant dans la sequence ou porte nos pierres jusqu'au prochain dolmen !\"",
+    "options": [
+      {
+        "verb": "resoudre",
+        "text": "Tu calcules mentalement la sequence et announces le bon nombre.",
+        "effects": [
+          "ADD_REPUTATION:korrigans:9",
+          "ADD_ANAM:4"
+        ]
+      },
+      {
+        "verb": "tenter sa chance",
+        "text": "Tu lances un chiffre au hasard avec un sourire confiant.",
+        "effects": [
+          "ADD_BIOME_CURRENCY:7",
+          "DAMAGE_LIFE:3"
+        ]
+      },
+      {
+        "verb": "forcer",
+        "text": "Tu charges les pierres sur ton dos sans negocier.",
+        "effects": [
+          "ADD_REPUTATION:anciens:6",
+          "DAMAGE_LIFE:5"
+        ]
+      }
+    ]
+  },
+  {
+    "narrative": "Une charette sans conducteur avance lentement sur la lande brumeuse, ses roues grincant sur chaque pierre. Elle s'arrete devant toi. Il n'y a rien dedans — seulement une odeur de fleurs fanees et l'echo de noms oublies.",
+    "options": [
+      {
+        "verb": "resister mentalement",
+        "text": "Tu repousses la fascination morbide et restes plante sur place.",
+        "effects": [
+          "ADD_REPUTATION:ankou:7",
+          "HEAL_LIFE:3"
+        ]
+      },
+      {
+        "verb": "scruter",
+        "text": "Tu inspectes la charette en detail, cherchant un message cache.",
+        "effects": [
+          "ADD_ANAM:6",
+          "ADD_REPUTATION:anciens:5"
+        ]
+      },
+      {
+        "verb": "contourner",
+        "text": "Tu fais un grand detour dans les bruyeres pour l'eviter.",
+        "effects": [
+          "ADD_BIOME_CURRENCY:4",
+          "ADD_REPUTATION:korrigans:5"
+        ]
+      }
+    ]
+  },
+  {
+    "narrative": "Un dolmen porte une inscription en vieux breton que personne ne lit depuis des siecles. Les lettres semblent changer de position a chaque fois que tu regardes ailleurs. Un renard roux observe la scene, assis en sphinx.",
+    "options": [
+      {
+        "verb": "dechiffrer",
+        "text": "Tu copies soigneusement les symboles et tentes de les decoder.",
+        "effects": [
+          "ADD_REPUTATION:anciens:9",
+          "ADD_ANAM:4"
+        ]
+      },
+      {
+        "verb": "ecouter",
+        "text": "Tu fermes les yeux et laisses le vent te souffler la signification.",
+        "effects": [
+          "HEAL_LIFE:4",
+          "ADD_REPUTATION:niamh:5"
+        ]
+      },
+      {
+        "verb": "amadouer",
+        "text": "Tu offres de la nourriture au renard, esperant qu'il connaisse la reponse.",
+        "effects": [
+          "ADD_BIOME_CURRENCY:5",
+          "ADD_REPUTATION:korrigans:6"
+        ]
+      }
+    ]
+  },
+  {
+    "narrative": "Un cygne blanc est piege sous un filet de roseaux tresses. Il te regarde avec des yeux d'une intelligence troublante. En t'approchant, tu entends une musique qui sort de son bec — une melodie qui te rappelle un souvenir que tu n'as pas vecu.",
+    "options": [
+      {
+        "verb": "calmer",
+        "text": "Tu chantes doucement pour rassurer le cygne avant de le liberer.",
+        "effects": [
+          "ADD_REPUTATION:niamh:8",
+          "HEAL_LIFE:4"
+        ]
+      },
+      {
+        "verb": "cueillir",
+        "text": "Tu coupes les roseaux au hasard, esperant liberer le cygne rapidement.",
+        "effects": [
+          "ADD_BIOME_CURRENCY:5",
+          "DAMAGE_LIFE:2"
+        ]
+      },
+      {
+        "verb": "courir",
+        "text": "Tu cours chercher de l'aide dans le village le plus proche.",
+        "effects": [
+          "ADD_REPUTATION:anciens:6",
+          "ADD_ANAM:3"
+        ]
+      }
+    ]
+  },
+  {
+    "narrative": "Un cercle de chenes aux racines entrelacees forme une chambre naturelle. Au centre, une flamme verte brule sans combustible depuis — selon les traces — plusieurs siecles. Un druide en meditation te demande si tu viens pour apprendre ou pour prendre.",
+    "options": [
+      {
+        "verb": "memoriser",
+        "text": "Tu observes la flamme en silence, gravant chaque detail dans ta memoire.",
+        "effects": [
+          "ADD_REPUTATION:druides:8",
+          "ADD_ANAM:5"
+        ]
+      },
+      {
+        "verb": "mediter",
+        "text": "Tu t'assieds en face du druide et entres en meditation commune.",
+        "effects": [
+          "HEAL_LIFE:5",
+          "ADD_REPUTATION:anciens:6"
+        ]
+      },
+      {
+        "verb": "esquiver",
+        "text": "Tu longes les racines sans toucher au cercle, en observateur invisible.",
+        "effects": [
+          "ADD_BIOME_CURRENCY:5",
+          "ADD_REPUTATION:korrigans:4"
+        ]
+      }
+    ]
+  },
+  {
+    "narrative": "Un pont de pierre enjambe un ravin invisible dans la brume. De l'autre cote, une silhouette attend. Elle porte tes traits exacts, ton manteau, ton sac. Elle leve la main en signe de bienvenue — ou d'avertissement.",
+    "options": [
+      {
+        "verb": "sentir",
+        "text": "Tu fermes les yeux et sens l'air pour distinguer l'ame de l'illusion.",
+        "effects": [
+          "ADD_REPUTATION:ankou:8",
+          "ADD_ANAM:5"
+        ]
+      },
+      {
+        "verb": "analyser",
+        "text": "Tu etudies les differences entre ton reflet et l'original.",
+        "effects": [
+          "ADD_REPUTATION:anciens:7",
+          "DAMAGE_LIFE:2"
+        ]
+      },
+      {
+        "verb": "mentir",
+        "text": "Tu cries de l'autre rive : \"Je ne suis pas celui que tu attends.\"",
+        "effects": [
+          "ADD_BIOME_CURRENCY:6",
+          "ADD_REPUTATION:korrigans:5"
+        ]
+      }
+    ]
+  },
+  {
+    "narrative": "Une troupe de korrigans organise un marche nocturne dans un creux de falaise. Ils vendent des objets volés au sommeil des humains — des reves materialises en petits globes lumineux. L'un d'eux te propose un echange suspect.",
+    "options": [
+      {
+        "verb": "se faufiler",
+        "text": "Tu te glisses entre les etals pour recuperer un globe sans payer.",
+        "effects": [
+          "ADD_REPUTATION:korrigans:8",
+          "DAMAGE_LIFE:3"
+        ]
+      },
+      {
+        "verb": "fouiller a l'aveugle",
+        "text": "Tu plonges la main dans un sac ferme et prends ce que tu trouves.",
+        "effects": [
+          "ADD_BIOME_CURRENCY:8",
+          "DAMAGE_LIFE:2"
+        ]
+      },
+      {
+        "verb": "negocier",
+        "text": "Tu marchandes avec le korrigan le plus vieux, en te montrant futé.",
+        "effects": [
+          "ADD_REPUTATION:korrigans:7",
+          "ADD_ANAM:4"
+        ]
+      }
+    ]
+  },
+  {
+    "narrative": "Une harpe de bois flotté est posee contre un rocher au bord de la mer. Personne ne la joue mais elle emet une note continue, grave et pure. La maree monte lentement vers l'instrument sans jamais l'atteindre.",
+    "options": [
+      {
+        "verb": "apaiser",
+        "text": "Tu poses les mains sur les cordes et laisses la note changer en accord.",
+        "effects": [
+          "HEAL_LIFE:5",
+          "ADD_REPUTATION:niamh:7"
+        ]
+      },
+      {
+        "verb": "tendre l'oreille",
+        "text": "Tu ecoutes sans bouger, cherchant la signification de la note.",
+        "effects": [
+          "ADD_ANAM:5",
+          "ADD_REPUTATION:anciens:6"
+        ]
+      },
+      {
+        "verb": "interpreter",
+        "text": "Tu analyses les vibrations et leurs harmoniques naturelles.",
+        "effects": [
+          "ADD_REPUTATION:druides:5",
+          "ADD_BIOME_CURRENCY:4"
+        ]
+      }
+    ]
+  },
+  {
+    "narrative": "Un menhir de dix metres est couche sur le flanc, brise en deux. Des villageois debattent pour savoir si les Anciens ont voulu le renverser ou si c'est une punition divine. Ton avis est sollicite par les plus ages.",
+    "options": [
+      {
+        "verb": "pousser",
+        "text": "Tu organises un effort collectif pour redresser le menhir.",
+        "effects": [
+          "ADD_REPUTATION:anciens:8",
+          "DAMAGE_LIFE:3"
+        ]
+      },
+      {
+        "verb": "fixer",
+        "text": "Tu etudies la cassure pour comprendre comment et quand c'est arrive.",
+        "effects": [
+          "ADD_ANAM:5",
+          "ADD_REPUTATION:druides:5"
+        ]
+      },
+      {
+        "verb": "endurer",
+        "text": "Tu ecoutes les deux camps jusqu'a trouver un consensus.",
+        "effects": [
+          "HEAL_LIFE:4",
+          "ADD_REPUTATION:korrigans:4"
+        ]
+      }
+    ]
+  },
+  {
+    "narrative": "Un passage sous un dolmen s'ouvre sur un couloir de pierre qui descend. A mi-chemin, tu entends des voix qui recitent des noms — les tiens y figurent, mais conjugues au passe. Le couloir se retrecie a mesure que tu avances.",
+    "options": [
+      {
+        "verb": "tenter sa chance",
+        "text": "Tu continues sans regarder en arriere, acceptant ce que tu trouveras.",
+        "effects": [
+          "ADD_REPUTATION:ankou:9",
+          "DAMAGE_LIFE:4"
+        ]
+      },
+      {
+        "verb": "se cacher",
+        "text": "Tu te plaqures contre la paroi et attends que les voix se taisent.",
+        "effects": [
+          "ADD_BIOME_CURRENCY:4",
+          "ADD_ANAM:4"
+        ]
+      },
+      {
+        "verb": "fuir",
+        "text": "Tu rebrousses chemin en courant, le coeur battant.",
+        "effects": [
+          "ADD_REPUTATION:niamh:5",
+          "DAMAGE_LIFE:2"
+        ]
+      }
+    ]
+  },
+  {
+    "narrative": "Une fee des eaux emerge d'un lac en portant un miroir d'argent. Elle te montre ton reflet mais il est celui que tu seras dans vingt ans. Elle propose de le changer contre un secret que tu n'as jamais dit a personne.",
+    "options": [
+      {
+        "verb": "charmer",
+        "text": "Tu la complimentes sur son miroir et lui promets un secret inavouable.",
+        "effects": [
+          "ADD_REPUTATION:niamh:9",
+          "ADD_ANAM:4"
+        ]
+      },
+      {
+        "verb": "examiner",
+        "text": "Tu inspectes le miroir de pres pour detecter l'illusion.",
+        "effects": [
+          "ADD_BIOME_CURRENCY:5",
+          "ADD_REPUTATION:anciens:5"
+        ]
+      },
+      {
+        "verb": "chercher au hasard",
+        "text": "Tu fermes les yeux et chuchotes le premier secret qui te vient.",
+        "effects": [
+          "HEAL_LIFE:4",
+          "ADD_REPUTATION:niamh:5"
+        ]
+      }
+    ]
+  },
+  {
+    "narrative": "Un piege de korrigans est tendu en travers du chemin — un reseau de fils de soie d'araignee enchantee qui sonne une clochette si on le touche. En dessous, un coffre de chene attend. Les korrigans observent depuis les arbres.",
+    "options": [
+      {
+        "verb": "pister",
+        "text": "Tu traces le parcours des fils pour trouver un passage non piege.",
+        "effects": [
+          "ADD_REPUTATION:korrigans:7",
+          "ADD_ANAM:4"
+        ]
+      },
+      {
+        "verb": "escalader",
+        "text": "Tu grimpes a l'arbre pour passer par-dessus le reseau.",
+        "effects": [
+          "ADD_BIOME_CURRENCY:6",
+          "DAMAGE_LIFE:2"
+        ]
+      },
+      {
+        "verb": "resister physiquement",
+        "text": "Tu traverses le reseau a la force brute, acceptant de declencher la clochette.",
+        "effects": [
+          "ADD_REPUTATION:anciens:5",
+          "DAMAGE_LIFE:4"
+        ]
+      }
+    ]
+  },
+  {
+    "narrative": "Une bibliotheque de pierres gravees est disposee en cercle dans une clairiere. Chaque pierre raconte un fragment d'une loi ancienne. La derniere pierre est vierge. Deux druides se disputent ce qu'il faut y graver.",
+    "options": [
+      {
+        "verb": "decoder",
+        "text": "Tu lis toutes les pierres dans l'ordre pour deduire la loi manquante.",
+        "effects": [
+          "ADD_REPUTATION:druides:8",
+          "ADD_ANAM:5"
+        ]
+      },
+      {
+        "verb": "se concentrer",
+        "text": "Tu fermes les yeux et laisses la reponse monter d'elle-meme.",
+        "effects": [
+          "ADD_REPUTATION:anciens:6",
+          "HEAL_LIFE:3"
+        ]
+      },
+      {
+        "verb": "convaincre",
+        "text": "Tu proposes ta propre version de la loi et defends ta position.",
+        "effects": [
+          "ADD_REPUTATION:korrigans:6",
+          "ADD_BIOME_CURRENCY:4"
+        ]
+      }
+    ]
+  },
+  {
+    "narrative": "Une fontaine sacree est obstruee par un eboulement recent. Les anciens du village disent que la source guerissait les maladies depuis des generations. Personne n'a la force de deplacer les rochers seul.",
+    "options": [
+      {
+        "verb": "briser",
+        "text": "Tu frappes les plus petits rochers avec une pierre tranchante.",
+        "effects": [
+          "ADD_REPUTATION:anciens:8",
+          "DAMAGE_LIFE:4"
+        ]
+      },
+      {
+        "verb": "deviner",
+        "text": "Tu cherches au toucher le rocher-cle dont le deplacement liberera les autres.",
+        "effects": [
+          "HEAL_LIFE:5",
+          "ADD_ANAM:4"
+        ]
+      },
+      {
+        "verb": "flairer",
+        "text": "Tu suis l'odeur de l'eau pour trouver une issue alternative.",
+        "effects": [
+          "ADD_BIOME_CURRENCY:5",
+          "ADD_REPUTATION:niamh:5"
+        ]
+      }
+    ]
+  },
+  {
+    "narrative": "Un arbre mort au centre d'une tourbiere est couvert de tresses de cheveux humains. Chaque tresse porte un noeud different. Un corbeau noir sur la branche superieure tourne la tete de 180 degres pour te regarder.",
+    "options": [
+      {
+        "verb": "accepter",
+        "text": "Tu attaches une meche de tes propres cheveux a l'arbre en signe de respect.",
+        "effects": [
+          "ADD_REPUTATION:ankou:8",
+          "ADD_ANAM:5"
+        ]
+      },
+      {
+        "verb": "etudier",
+        "text": "Tu comptes les noeuds et cherches un schema dans les tresses.",
+        "effects": [
+          "ADD_REPUTATION:anciens:7",
+          "ADD_BIOME_CURRENCY:3"
+        ]
+      },
+      {
+        "verb": "inspecter",
+        "text": "Tu examines le corbeau sans le toucher, cherchant l'intelligence derriere ses yeux.",
+        "effects": [
+          "ADD_ANAM:5",
+          "DAMAGE_LIFE:2"
+        ]
+      }
+    ]
+  },
+  {
+    "narrative": "Une barque nacree est amarree a un ponton de mousse. Aucun batelier visible. Mais la barque se balance comme si quelqu'un l'attendait. Une inscription sur la proue dit : \"Elle porte qui merite la traversee.\"",
+    "options": [
+      {
+        "verb": "traverser",
+        "text": "Tu montes dans la barque et la laisses te mener ou elle veut.",
+        "effects": [
+          "ADD_REPUTATION:niamh:9",
+          "HEAL_LIFE:4"
+        ]
+      },
+      {
+        "verb": "refuser",
+        "text": "Tu restes sur le ponton et attends que le batelier se montre.",
+        "effects": [
+          "ADD_ANAM:5",
+          "ADD_REPUTATION:anciens:5"
+        ]
+      },
+      {
+        "verb": "flatter",
+        "text": "Tu parles a la barque comme a une personne, la remerciant de t'attendre.",
+        "effects": [
+          "ADD_REPUTATION:korrigans:6",
+          "ADD_BIOME_CURRENCY:4"
+        ]
+      }
+    ]
+  },
+  {
+    "narrative": "Un marais scintille de feux follets orange et bleus. Les korrigans du coin disent que les bleus portent bonheur, les oranges portent malheur. Mais ils changent de couleur quand on les regarde directement.",
+    "options": [
+      {
+        "verb": "cueillir",
+        "text": "Tu tends la main vers un feu au hasard, acceptant sa nature.",
+        "effects": [
+          "ADD_BIOME_CURRENCY:8",
+          "DAMAGE_LIFE:3"
+        ]
+      },
+      {
+        "verb": "combattre",
+        "text": "Tu frappes l'air pour disperser les feux et ouvrir un passage.",
+        "effects": [
+          "ADD_REPUTATION:korrigans:6",
+          "DAMAGE_LIFE:2"
+        ]
+      },
+      {
+        "verb": "suivre",
+        "text": "Tu suis les feux bleus a la peripherie de ta vision.",
+        "effects": [
+          "HEAL_LIFE:4",
+          "ADD_ANAM:4"
+        ]
+      }
+    ]
+  },
+  {
+    "narrative": "Un calendrier solaire grave dans le calcaire indique une date future : demain. Le calcul est parfait, les ombres projettent exactement l'heure. Les anciens du village savent ce que demain signifie, mais personne ne le dit a voix haute.",
+    "options": [
+      {
+        "verb": "memoriser",
+        "text": "Tu passes une heure a reproduire le calendrier en detail dans ton carnet.",
+        "effects": [
+          "ADD_REPUTATION:anciens:9",
+          "ADD_ANAM:5"
+        ]
+      },
+      {
+        "verb": "interpreter",
+        "text": "Tu calcules ce que la date implique selon les cycles lunaires.",
+        "effects": [
+          "ADD_REPUTATION:druides:5",
+          "ADD_BIOME_CURRENCY:4"
+        ]
+      },
+      {
+        "verb": "attendre",
+        "text": "Tu restes assis pres du calendrier jusqu'au coucher du soleil, a mediter.",
+        "effects": [
+          "HEAL_LIFE:5",
+          "ADD_REPUTATION:niamh:5"
+        ]
+      }
+    ]
+  },
+  {
+    "narrative": "Un chien noir de la taille d'un veau bloque le sentier du marais. Ses yeux sont deux braises rouges qui ne clignotent pas. Il ne grogne pas, ne bouge pas. Les anciens disent que le chien noir guide les ames — ou les devore.",
+    "options": [
+      { "verb": "pister", "text": "Tu etudies le sol autour du chien, cherchant par ou il est venu.", "effects": ["ADD_REPUTATION:ankou:7", "ADD_ANAM:4"] },
+      { "verb": "apaiser", "text": "Tu t'accroupis et lui parles doucement, sans contact visuel.", "effects": ["HEAL_LIFE:4", "ADD_REPUTATION:niamh:5"] },
+      { "verb": "resister mentalement", "text": "Tu fixes les braises rouges et refuses de detourner les yeux.", "effects": ["ADD_REPUTATION:ankou:9", "DAMAGE_LIFE:3"] }
+    ]
+  },
+  {
+    "narrative": "La charrette de l'Ankou est enlisee dans la tourbe. Le passeur des morts te regarde — son visage porte les traits de quelqu'un que tu as connu, mais ses mains sont de bois et d'os. Il tend l'une d'elles vers toi.",
+    "options": [
+      { "verb": "tenter sa chance", "text": "Tu saisis la main d'os et tires de toutes tes forces.", "effects": ["ADD_REPUTATION:ankou:8", "DAMAGE_LIFE:4"] },
+      { "verb": "mentir", "text": "Tu pretends ne pas comprendre ce qu'il demande.", "effects": ["ADD_BIOME_CURRENCY:6", "ADD_REPUTATION:korrigans:4"] },
+      { "verb": "resister physiquement", "text": "Tu cales tes pieds dans la boue et pousses la roue.", "effects": ["ADD_REPUTATION:anciens:7", "DAMAGE_LIFE:3"] }
+    ]
+  },
+  {
+    "narrative": "Trois korrigans des marais jouent aux osselets sur un rondin flottant. Ils te proposent une partie : si tu gagnes, ils te montrent le passage sec. Si tu perds, tu portes leurs sacs jusqu'au prochain tertre. Les osselets luisent d'un vert pale.",
+    "options": [
+      { "verb": "resoudre", "text": "Tu etudies les regles du jeu et joues avec methode.", "effects": ["ADD_REPUTATION:korrigans:8", "ADD_BIOME_CURRENCY:5"] },
+      { "verb": "deviner", "text": "Tu joues a l'instinct, ignorant les subtilites des regles.", "effects": ["ADD_BIOME_CURRENCY:7", "DAMAGE_LIFE:2"] },
+      { "verb": "se faufiler", "text": "Tu fais semblant de jouer tout en repérant le passage qu'ils gardent.", "effects": ["ADD_REPUTATION:korrigans:6", "ADD_ANAM:3"] }
+    ]
+  },
+  {
+    "narrative": "Une balance d'or est suspendue entre deux arbres morts, oscillant sans vent. Sur un plateau, une plume noire. Sur l'autre, une pierre blanche. Un souffle glacial t'indique que la balance mesure quelque chose qui t'appartient.",
+    "options": [
+      { "verb": "observer", "text": "Tu etudies l'oscillation de la balance sans jamais la toucher.", "effects": ["ADD_ANAM:6", "ADD_REPUTATION:ankou:7"] },
+      { "verb": "se concentrer", "text": "Tu fermes les yeux et explores ce que la balance pourrait peser en toi.", "effects": ["HEAL_LIFE:3", "ADD_REPUTATION:druides:6"] },
+      { "verb": "accepter", "text": "Tu deposes ta main sur le plateau vide, offrant ton poids a la mesure.", "effects": ["ADD_REPUTATION:ankou:10", "DAMAGE_LIFE:4"] }
+    ]
+  },
+  {
+    "narrative": "Une femme vetue de blanc se tient au bord d'un etang noir, lavant des vetements invisibles. Elle chante un air doux qui contraste avec le froid du lieu. Ses bras sont translucides jusqu'aux coudes.",
+    "options": [
+      { "verb": "ecouter", "text": "Tu t'assieds a distance et laisses le chant te traverser.", "effects": ["HEAL_LIFE:5", "ADD_REPUTATION:niamh:7"] },
+      { "verb": "parler", "text": "Tu lui demandes pour qui elle lave ce soir.", "effects": ["ADD_ANAM:5", "ADD_REPUTATION:ankou:6"] },
+      { "verb": "convaincre", "text": "Tu lui proposes de l'aider en echange d'un passage sur.", "effects": ["ADD_BIOME_CURRENCY:5", "ADD_REPUTATION:korrigans:5"] }
+    ]
+  },
+  {
+    "narrative": "Un cairn marque le milieu exact du marais. Chaque pierre a ete posee par quelqu'un qui a traverse le passage entre la vie et la mort. Les plus anciennes portent des noms graves en ogham. La tienne manque.",
+    "options": [
+      { "verb": "dechiffrer", "text": "Tu lis les noms oghamiques, apprenant qui est passe avant toi.", "effects": ["ADD_ANAM:7", "ADD_REPUTATION:anciens:8"] },
+      { "verb": "analyser", "text": "Tu etudies l'architecture du cairn pour estimer son anciennete.", "effects": ["ADD_REPUTATION:anciens:6", "ADD_BIOME_CURRENCY:4"] },
+      { "verb": "accepter", "text": "Tu graves ton nom sur une pierre et la poses au sommet du cairn.", "effects": ["ADD_REPUTATION:ankou:8", "HEAL_LIFE:3"] }
+    ]
+  },
+  {
+    "narrative": "Un pont de corde enjambe une tourbiere profonde. A mi-chemin, les cordes commencent a se defaire fibre par fibre. De l'autre cote, une lumiere chaude promet abri et repos. En dessous, le noir absolu du marecage.",
+    "options": [
+      { "verb": "traverser", "text": "Tu acceleres, courant pour atteindre l'autre rive avant la rupture.", "effects": ["ADD_REPUTATION:ankou:7", "DAMAGE_LIFE:4"] },
+      { "verb": "tenter sa chance", "text": "Tu testes chaque section avant de poser le pied, methodique.", "effects": ["ADD_BIOME_CURRENCY:6", "HEAL_LIFE:3"] },
+      { "verb": "escalader", "text": "Tu contournes par les berges, cherchant un autre passage.", "effects": ["ADD_REPUTATION:anciens:5", "DAMAGE_LIFE:2"] }
+    ]
+  },
+  {
+    "narrative": "Un korrigan masque te propose un marche etrange : une carte du marais garantie fausse si payee au prix plein, vraie si marchandee. Son sourire cache quelque chose de deliberement paradoxal.",
+    "options": [
+      { "verb": "marchander", "text": "Tu joues le jeu et proposes la moitie du prix avec aplomb.", "effects": ["ADD_REPUTATION:korrigans:8", "ADD_BIOME_CURRENCY:4"] },
+      { "verb": "esquiver", "text": "Tu fais semblant de partir, esperant qu'il te rappelle.", "effects": ["ADD_ANAM:4", "ADD_REPUTATION:korrigans:6"] },
+      { "verb": "se faufiler", "text": "Tu memorises la carte d'un coup d'oeil rapide sans l'acheter.", "effects": ["ADD_BIOME_CURRENCY:5", "ADD_REPUTATION:niamh:4"] }
+    ]
+  },
+  {
+    "narrative": "L'Ankou t'adresse la parole — une voix sans corps, venue de la tourbe elle-meme. 'Tu traverses mon domaine. Donne-moi une raison de ne pas te compter parmi les miens ce soir.' Il attend, patient comme la mort.",
+    "options": [
+      { "verb": "parler", "text": "Tu reponds avec honnetete — ta quete, tes raisons, ta vie.", "effects": ["ADD_REPUTATION:ankou:9", "HEAL_LIFE:4"] },
+      { "verb": "dechiffrer", "text": "Tu cherches dans la question elle-meme un indice sur la bonne reponse.", "effects": ["ADD_ANAM:6", "ADD_REPUTATION:anciens:5"] },
+      { "verb": "resister mentalement", "text": "Tu refuses de te justifier — personne ne doit de compte a la mort.", "effects": ["ADD_REPUTATION:ankou:8", "DAMAGE_LIFE:3"] }
+    ]
+  },
+  {
+    "narrative": "Des fleurs de nenuphar blanc s'ouvrent a minuit sur un etang immobile. Chacune projette un rayon de lumiere qui dessine un visage dans l'eau — des visages de disparus que tu as connus.",
+    "options": [
+      { "verb": "se concentrer", "text": "Tu fixes le visage le plus familier dans l'eau, cherchant un message.", "effects": ["ADD_REPUTATION:niamh:8", "ADD_ANAM:5"] },
+      { "verb": "scruter", "text": "Tu etudies tous les visages pour comprendre leur schema commun.", "effects": ["ADD_REPUTATION:anciens:6", "HEAL_LIFE:3"] },
+      { "verb": "apaiser", "text": "Tu murmures un adieu a chaque visage et regardes les fleurs se fermer.", "effects": ["HEAL_LIFE:5", "ADD_REPUTATION:ankou:6"] }
+    ]
+  },
+  {
+    "narrative": "Un squelette de cheval emerge a demi de la tourbe, immobile depuis des siecles. Autour de son cou pend une clochette de bronze sans trace de rouille. Les korrigans evitent cet endroit meme en plein jour.",
+    "options": [
+      { "verb": "cueillir", "text": "Tu retires la clochette du cou de l'ossature avec precaution.", "effects": ["ADD_BIOME_CURRENCY:8", "DAMAGE_LIFE:4"] },
+      { "verb": "examiner", "text": "Tu etudies les gravures sur la clochette sans la toucher.", "effects": ["ADD_ANAM:5", "ADD_REPUTATION:ankou:7"] },
+      { "verb": "apaiser", "text": "Tu deposes des herbes sechees pres du crane du cheval en silence.", "effects": ["HEAL_LIFE:4", "ADD_REPUTATION:druides:5"] }
+    ]
+  },
+  {
+    "narrative": "Des korrigans ont construit un labyrinthe de roseaux tresses au bord du marais. A son centre scintille quelque chose de precieux. Ils parient entre eux sur le temps que tu mettras a te perdre.",
+    "options": [
+      { "verb": "pister", "text": "Tu traces les motifs du labyrinthe depuis l'exterieur avant d'entrer.", "effects": ["ADD_REPUTATION:korrigans:7", "ADD_BIOME_CURRENCY:5"] },
+      { "verb": "se faufiler", "text": "Tu suis instinctivement la direction de la lumiere interieure.", "effects": ["ADD_BIOME_CURRENCY:7", "DAMAGE_LIFE:2"] },
+      { "verb": "resoudre", "text": "Tu appliques la regle de la main droite pour cartographier le parcours.", "effects": ["ADD_ANAM:5", "ADD_REPUTATION:anciens:5"] }
+    ]
+  },
+  {
+    "narrative": "Un miroir brise en sept morceaux est dispose en cercle dans une clairiere. Chaque fragment reflete un moment different — passe, present et futur melanges. L'un d'eux montre un instant qui n'a pas encore eu lieu.",
+    "options": [
+      { "verb": "observer", "text": "Tu examines chaque fragment sans les toucher, cataloguant les scenes.", "effects": ["ADD_ANAM:7", "ADD_REPUTATION:ankou:7"] },
+      { "verb": "interpreter", "text": "Tu cherches le fil narratif qui relie tous les fragments entre eux.", "effects": ["ADD_REPUTATION:druides:6", "ADD_BIOME_CURRENCY:4"] },
+      { "verb": "refuser", "text": "Tu te detournes — certains futurs ne doivent pas etre connus.", "effects": ["HEAL_LIFE:5", "ADD_REPUTATION:anciens:6"] }
+    ]
+  },
+  {
+    "narrative": "Des ossements anciens affleurent de la tourbe apres les pluies recentes. Un creux en forme de silhouette indique qu'un corps a ete retire tres recemment. Les traces autour sont fraiches de quelques heures.",
+    "options": [
+      { "verb": "pister", "text": "Tu suis les traces pour comprendre qui est venu ici.", "effects": ["ADD_REPUTATION:anciens:8", "ADD_ANAM:4"] },
+      { "verb": "proteger", "text": "Tu recouvres soigneusement les ossements de tourbe fraiche.", "effects": ["HEAL_LIFE:4", "ADD_REPUTATION:druides:5"] },
+      { "verb": "endurer", "text": "Tu restes immobile un long moment, rendant hommage au lieu.", "effects": ["ADD_REPUTATION:ankou:7", "HEAL_LIFE:3"] }
+    ]
+  },
+  {
+    "narrative": "La brume se solidifie autour de toi en une cage de vapeur froide. Elle n'est pas hostile — juste presente. L'Ankou teste ta reaction face a ce qui ne peut etre combattu, seulement endure ou accepte.",
+    "options": [
+      { "verb": "accepter", "text": "Tu te detends et laisses la cage de brume exister autour de toi.", "effects": ["ADD_REPUTATION:ankou:9", "HEAL_LIFE:4"] },
+      { "verb": "tenter sa chance", "text": "Tu marches en avant, ignorant la brume, esperant la traverser.", "effects": ["ADD_BIOME_CURRENCY:5", "DAMAGE_LIFE:2"] },
+      { "verb": "escalader", "text": "Tu tentes de depasser la brume en montant sur un rondin flottant.", "effects": ["ADD_ANAM:4", "ADD_REPUTATION:korrigans:5"] }
+    ]
+  },
+  {
+    "narrative": "Un korrigan solitaire pose des pierres sur un muret imaginaire au milieu de l'eau. Les pierres flottent. Il s'arrete et te regarde : 'Je cherche un assistant. La qualite requise : voir ce que les autres ne voient pas.'",
+    "options": [
+      { "verb": "deviner", "text": "Tu tentes de comprendre le schema dans les pierres flottantes.", "effects": ["ADD_REPUTATION:korrigans:7", "ADD_ANAM:4"] },
+      { "verb": "observer", "text": "Tu regardes en silence, laissant le motif se reveler de lui-meme.", "effects": ["ADD_REPUTATION:niamh:5", "ADD_BIOME_CURRENCY:4"] },
+      { "verb": "resoudre", "text": "Tu poses ta propre pierre a l'emplacement logique suivant.", "effects": ["ADD_REPUTATION:anciens:6", "ADD_ANAM:5"] }
+    ]
+  },
+  {
+    "narrative": "Le voile entre les mondes est si mince ici que tu vois les morts a leurs occupations quotidiennes, superimposees sur le marais. L'un d'eux — un paysan d'un autre siecle — te voit aussi et semble surpris.",
+    "options": [
+      { "verb": "parler", "text": "Tu l'interpelles doucement dans la langue ancienne.", "effects": ["ADD_REPUTATION:ankou:8", "ADD_ANAM:5"] },
+      { "verb": "convaincre", "text": "Tu lui expliques avec calme que tu es vivant et que ce monde lui appartient.", "effects": ["ADD_REPUTATION:anciens:7", "HEAL_LIFE:3"] },
+      { "verb": "charmer", "text": "Tu lui souris et continues ton chemin, normalisant la rencontre.", "effects": ["ADD_BIOME_CURRENCY:5", "ADD_REPUTATION:korrigans:5"] }
+    ]
+  },
+  {
+    "narrative": "Une source d'eau chaude jaillit de la tourbe, formant une vasque naturelle. La vapeur dessine des silhouettes — un enfant qui joue, une vieille femme qui tisse, un homme qui marche. Les sources chaudes sont associees aux passages de Niamh.",
+    "options": [
+      { "verb": "se concentrer", "text": "Tu fixes les formes de vapeur, cherchant un message pour toi.", "effects": ["ADD_REPUTATION:niamh:8", "ADD_ANAM:4"] },
+      { "verb": "examiner", "text": "Tu testes la temperature de l'eau du bout des doigts.", "effects": ["HEAL_LIFE:5", "ADD_REPUTATION:anciens:5"] },
+      { "verb": "scruter", "text": "Tu cherches la source geologique de la chaleur sous la surface.", "effects": ["ADD_BIOME_CURRENCY:5", "ADD_REPUTATION:druides:4"] }
+    ]
+  },
+  {
+    "narrative": "Une croix de bois noir marque le point ou trois personnes sont enterrees au meme endroit, a trois epoques differentes. Le sol vibre doucement sous tes pieds. Les trois presences ne sont pas hostiles — elles sont curieuses.",
+    "options": [
+      { "verb": "pister", "text": "Tu examines les strates de la terre pour dater les sepultures.", "effects": ["ADD_ANAM:5", "ADD_REPUTATION:ankou:7"] },
+      { "verb": "apaiser", "text": "Tu allumes un petit feu et chantes pour les trois presences.", "effects": ["HEAL_LIFE:5", "ADD_REPUTATION:ankou:6"] },
+      { "verb": "courir", "text": "Tu traverses le lieu en courant, portant leur curiosite avec toi.", "effects": ["ADD_BIOME_CURRENCY:6", "DAMAGE_LIFE:3"] }
+    ]
+  },
+  {
+    "narrative": "Au centre du marais, une butte de tourbe porte les cendres d'un tres ancien feu de joie. Elles forment encore un cercle parfait. Un baton de bois vert — coupe aujourd'hui — repose au milieu des cendres.",
+    "options": [
+      { "verb": "etudier", "text": "Tu analyses les cendres et le baton pour comprendre le rituel.", "effects": ["ADD_REPUTATION:anciens:9", "ADD_ANAM:5"] },
+      { "verb": "interpreter", "text": "Tu deduis de l'alignement des cendres quand et pourquoi ce feu a brule.", "effects": ["ADD_REPUTATION:druides:6", "ADD_BIOME_CURRENCY:4"] },
+      { "verb": "accepter", "text": "Tu allumes le baton vert et le poses dans les cendres pour continuer le rituel.", "effects": ["ADD_REPUTATION:ankou:8", "HEAL_LIFE:4"] }
+    ]
+  }
+]

@@ -100,7 +100,13 @@ export function applyEffects(effects: readonly string[], multiplier = 1.0): Effe
       }
       case 'HEAL_LIFE': {
         const raw = parseInt(args[0], 10) || 0;
-        const scaled = scaleAndCap(code, raw, multiplier);
+        // T042: Late-game heal scaling — halve HEAL_LIFE after card 20 to ensure
+        // net-negative outcome at stage2 (drain -2) and stage3 (drain -3).
+        // avg heal 4.47 -> ~2.2 at late game; stage2 net = 2.2 - 2 = +0.2 (marginal),
+        // stage3 net = 2.2 - 3 = -0.8 (net negative as intended).
+        const cardsPlayed = store.getState().run.cardsPlayed;
+        const lateGameRaw = cardsPlayed >= 20 ? Math.max(1, Math.floor(raw * 0.5)) : raw;
+        const scaled = scaleAndCap(code, lateGameRaw, multiplier);
         store.getState().healLife(scaled);
         applied.push(effectStr);
         break;

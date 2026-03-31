@@ -11,6 +11,7 @@ export default defineConfig({
     outDir: 'dist',
     sourcemap: true,
     chunkSizeWarningLimit: 550, // three.js core is ~529KB, suppress known vendor warning
+    reportCompressedSize: true,
     rollupOptions: {
       output: {
         manualChunks: {
@@ -25,6 +26,11 @@ export default defineConfig({
             './src/minigames/mg_apaisement.ts',
             './src/minigames/mg_sang_froid.ts',
             './src/minigames/mg_course.ts',
+            './src/minigames/mg_fouille.ts',
+            './src/minigames/mg_ombres.ts',
+            './src/minigames/mg_volonte.ts',
+            './src/minigames/mg_regard.ts',
+            './src/minigames/mg_echo.ts',
             './src/minigames/MinigameBase.ts',
           ],
         },

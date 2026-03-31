@@ -8,7 +8,7 @@ import { CameraRail } from './engine/CameraRail';
 import { buildCoastScene } from './scenes/CoastBiome';
 import { store } from './game/Store';
 import { BIOMES, getMultiplier, getMultiplierLabel } from './game/Constants';
-import { generateFastRouteCard, detectMinigame } from './game/CardSystem';
+import { generateFastRouteCard, detectMinigame, loadTemplates } from './game/CardSystem';
 import { applyEffects, applyOghamEffect, processOghamModifiers } from './game/EffectEngine';
 import { showCard, hideCard } from './ui/CardOverlay';
 import { initHUD, updateHUD } from './ui/HUD';
@@ -66,6 +66,9 @@ async function main(): Promise<void> {
   // Init HUD + Ogham panel
   initHUD();
   initOghamPanel();
+
+  // T043: Load FastRoute card templates from /data/cards.json before game starts
+  await loadTemplates();
 
   // Load cross-run Anam from localStorage
   loadAnamFromStorage();
