@@ -1,5 +1,5 @@
 // ═══════════════════════════════════════════════════════════════════════════════
-// Main Menu Scene — Cycle 25 — Low-poly coastal cliff + tower
+// Main Menu Scene — Cycle 26 — Low-poly coastal cliff + tower
 // Reference: dark stormy coast, flat-shaded polygons throughout.
 // Camera: fixed high angle (-8,18,28) looking (4,2,-10). World animates.
 // flatShading: true on ALL MeshStandardMaterial = the key low-poly look.
@@ -30,10 +30,13 @@ interface MainMenuResult {
 // PlaneGeometry with many segments so flatShading creates visible wave facets.
 // Vertex Y displacement in update() to animate the waves.
 
-function createLowPolyOcean(): {
+interface OceanResult {
   mesh: THREE.Mesh;
+  horizonPlane: THREE.Mesh;
   update: (t: number) => void;
-} {
+}
+
+function createLowPolyOcean(): OceanResult {
   // Many segments so flatShading creates visible polygon faces per wave
   const geo = new THREE.PlaneGeometry(80, 60, 30, 20);
   const mat = new THREE.MeshStandardMaterial({
@@ -47,6 +50,18 @@ function createLowPolyOcean(): {
   mesh.rotation.x = -Math.PI / 2;
   // Ocean is left half of scene, below cliff level
   mesh.position.set(-18, -2, -8);
+
+  // Horizon plane: lighter teal plane far back to create depth gradient
+  const horizonGeo = new THREE.PlaneGeometry(120, 50, 12, 6);
+  const horizonMat = new THREE.MeshStandardMaterial({
+    color: 0x3a8070,
+    flatShading: true,
+    roughness: 0.9,
+    metalness: 0.05,
+  });
+  const horizonPlane = new THREE.Mesh(horizonGeo, horizonMat);
+  horizonPlane.rotation.x = -Math.PI / 2;
+  horizonPlane.position.set(-10, -2, -45);
 
   // Store original Y positions for wave animation
   const posAttr = geo.attributes['position'] as THREE.BufferAttribute;
@@ -62,7 +77,7 @@ function createLowPolyOcean(): {
       const x = posAttr.getX(i);
       const z = baseY[i]; // original "z" in plane space = y before rotation
       const wave =
-        Math.sin(x * 0.18 + t * 1.1) * 0.9 +
+        Math.sin(x * 0.18 + t * 1.1) * 0.8 +
         Math.cos(z * 0.22 + t * 0.75) * 0.6 +
         Math.sin(x * 0.07 + z * 0.09 + t * 1.8) * 0.4;
       positions[i * 3 + 2] = wave; // Z in plane space = up after rotation
@@ -71,7 +86,7 @@ function createLowPolyOcean(): {
     geo.computeVertexNormals();
   };
 
-  return { mesh, update };
+  return { mesh, horizonPlane, update };
 }
 
 // ── Foam patches near cliff base ─────────────────────────────────────────────
@@ -94,6 +109,25 @@ function createFoamPatches(): THREE.Group {
     [-9, -1.8, -1],
     [-5, -1.8, 4],
     [-3, -1.8, 1],
+    [-6, -1.8, -4],
+    [-10, -1.8, 3],
+    [-1, -1.8, -3],
+    [-8, -1.8, -3],
+    [-11, -1.8, 1],
+    [-4, -1.8, 5],
+    [-6, -1.8, 6],
+    [-2, -1.8, 2],
+    [-13, -1.8, -1],
+    [-3, -1.8, -6],
+    [-7, -1.8, -5],
+    [-9, -1.8, 4],
+    [-5, -1.8, -7],
+    [-11, -1.8, -4],
+    [-14, -1.8, 2],
+    [-12, -1.8, 5],
+    [-1, -1.8, -7],
+    [-8, -1.8, 7],
+    [-10, -1.8, -6],
   ];
 
   for (const [x, y, z] of positions) {
@@ -145,58 +179,88 @@ function createCliff(): THREE.Group {
     metalness: 0.0,
   });
 
-  // Main cliff body — large angular mass, left-center
-  const bodyGeo = new THREE.BoxGeometry(18, 14, 12, 3, 3, 3);
-  displaceVertices(bodyGeo, 1.2);
+  // Main cliff body — large angular mass, left-center (4,4,4 segments for coarser facets)
+  const bodyGeo = new THREE.BoxGeometry(18, 14, 12, 4, 4, 4);
+  displaceVertices(bodyGeo, 2.0);
   const body = new THREE.Mesh(bodyGeo, matBase);
   body.position.set(-6, 0, -10);
   group.add(body);
 
-  // Upper cliff platform
-  const upperGeo = new THREE.BoxGeometry(14, 6, 10, 2, 2, 2);
-  displaceVertices(upperGeo, 0.9);
+  // Upper cliff platform (4 segs, stronger displacement)
+  const upperGeo = new THREE.BoxGeometry(14, 6, 10, 4, 4, 4);
+  displaceVertices(upperGeo, 1.8);
   const upper = new THREE.Mesh(upperGeo, matHighlight);
   upper.position.set(-4, 10, -9);
   group.add(upper);
 
-  // Left face — darker shadow side
-  const leftGeo = new THREE.BoxGeometry(8, 18, 8, 2, 3, 2);
-  displaceVertices(leftGeo, 1.0);
+  // Left face — darker shadow side (more segments = more angular silhouette)
+  const leftGeo = new THREE.BoxGeometry(8, 18, 8, 4, 4, 4);
+  displaceVertices(leftGeo, 2.0);
   const left = new THREE.Mesh(leftGeo, matShadow);
   left.position.set(-12, 1, -8);
   left.rotation.y = 0.15;
   group.add(left);
 
   // Rocky outcrop 1 — mid cliff
-  const rock1Geo = new THREE.BoxGeometry(7, 5, 6, 2, 2, 2);
-  displaceVertices(rock1Geo, 1.1);
+  const rock1Geo = new THREE.BoxGeometry(7, 5, 6, 4, 4, 4);
+  displaceVertices(rock1Geo, 1.8);
   const rock1 = new THREE.Mesh(rock1Geo, matBase);
   rock1.position.set(-2, 7, -6);
   rock1.rotation.y = 0.4;
   group.add(rock1);
 
   // Rocky outcrop 2 — high right, connects to tower base
-  const rock2Geo = new THREE.BoxGeometry(10, 4, 8, 2, 2, 2);
-  displaceVertices(rock2Geo, 0.8);
+  const rock2Geo = new THREE.BoxGeometry(10, 4, 8, 4, 4, 4);
+  displaceVertices(rock2Geo, 1.6);
   const rock2 = new THREE.Mesh(rock2Geo, matHighlight);
   rock2.position.set(4, 13, -11);
   rock2.rotation.y = -0.2;
   group.add(rock2);
 
-  // Foreground rocks — closer to camera, smaller
-  const rock3Geo = new THREE.BoxGeometry(4, 3, 4, 2, 2, 2);
-  displaceVertices(rock3Geo, 0.7);
+  // Foreground rocks — closer to camera (depth layering, darker)
+  const rock3Geo = new THREE.BoxGeometry(4, 3, 4, 4, 4, 4);
+  displaceVertices(rock3Geo, 1.4);
   const rock3 = new THREE.Mesh(rock3Geo, matShadow);
   rock3.position.set(0, 5, -2);
   rock3.rotation.y = 0.6;
   group.add(rock3);
 
-  const rock4Geo = new THREE.BoxGeometry(3, 2, 3, 2, 2, 2);
-  displaceVertices(rock4Geo, 0.6);
+  const rock4Geo = new THREE.BoxGeometry(3, 2, 3, 4, 4, 4);
+  displaceVertices(rock4Geo, 1.2);
   const rock4 = new THREE.Mesh(rock4Geo, matBase);
   rock4.position.set(-8, 4, -3);
   rock4.rotation.y = -0.3;
   group.add(rock4);
+
+  // Three additional foreground rock masses for depth layering
+  const rock5Geo = new THREE.BoxGeometry(5, 4, 4, 4, 4, 4);
+  displaceVertices(rock5Geo, 1.6);
+  const rock5 = new THREE.Mesh(rock5Geo, matShadow);
+  rock5.position.set(-15, 2, -5);
+  rock5.rotation.y = 0.9;
+  group.add(rock5);
+
+  const rock6Geo = new THREE.BoxGeometry(6, 3, 5, 4, 4, 4);
+  displaceVertices(rock6Geo, 1.5);
+  const rock6 = new THREE.Mesh(rock6Geo, matBase);
+  rock6.position.set(-18, 1, -12);
+  rock6.rotation.y = -0.5;
+  group.add(rock6);
+
+  const rock7Geo = new THREE.BoxGeometry(4, 5, 4, 4, 4, 4);
+  displaceVertices(rock7Geo, 1.7);
+  const rock7 = new THREE.Mesh(rock7Geo, matShadow);
+  rock7.position.set(2, 3, -3);
+  rock7.rotation.y = 1.2;
+  group.add(rock7);
+
+  // Large waterline rock — partially submerged at ocean edge
+  const waterRockGeo = new THREE.BoxGeometry(8, 5, 6, 4, 4, 4);
+  displaceVertices(waterRockGeo, 1.8);
+  const waterRock = new THREE.Mesh(waterRockGeo, matShadow);
+  waterRock.position.set(-14, -1, -3);
+  waterRock.rotation.y = 0.25;
+  group.add(waterRock);
 
   return group;
 }
@@ -308,30 +372,46 @@ function createTower(): THREE.Group {
 }
 
 // ── Polygon Cloud Shapes ─────────────────────────────────────────────────────
-// Flat BoxGeometry planes arranged horizontally in layers.
-// flatShading: true ensures polygon faces are visible.
+// Flat BoxGeometry planes at varied z-depths (-20 to -80) for parallax.
+// Each cloud has slight rx/rz tilt for organic feel.
+// Wispy high-altitude clouds: very flat h=0.3, wide 25-40 units.
+// Slow x-drift animation (0.002 units/frame) via update().
 
-function createClouds(): THREE.Group {
+interface CloudConfig {
+  color: number;
+  w: number;
+  h: number;
+  d: number;
+  x: number;
+  y: number;
+  z: number;
+  ry: number;
+  rx: number;
+  rz: number;
+}
+
+function createClouds(): { group: THREE.Group; update: (t: number) => void } {
   const group = new THREE.Group();
 
-  const cloudConfigs: Array<{
-    color: number;
-    w: number;
-    h: number;
-    d: number;
-    x: number;
-    y: number;
-    z: number;
-    ry: number;
-  }> = [
-    { color: 0x3a4050, w: 14, h: 1.8, d: 0.4, x: -20, y: 32, z: -60, ry: 0.05 },
-    { color: 0x4a5060, w: 10, h: 1.4, d: 0.3, x: -8,  y: 35, z: -65, ry: -0.08 },
-    { color: 0x3a4050, w: 16, h: 2.0, d: 0.5, x:  5,  y: 30, z: -55, ry: 0.12 },
-    { color: 0x5a6070, w: 9,  h: 1.2, d: 0.3, x: 15,  y: 33, z: -58, ry: -0.05 },
-    { color: 0x444e5e, w: 12, h: 1.6, d: 0.4, x: -25, y: 28, z: -50, ry: 0.1 },
-    { color: 0x3a4050, w: 18, h: 2.2, d: 0.6, x: -5,  y: 27, z: -48, ry: -0.15 },
-    { color: 0x606878, w: 8,  h: 1.0, d: 0.2, x: 20,  y: 36, z: -70, ry: 0.02 },
-    { color: 0x4a5464, w: 11, h: 1.5, d: 0.3, x: -15, y: 38, z: -72, ry: -0.06 },
+  const cloudConfigs: CloudConfig[] = [
+    // Mid-depth storm clouds
+    { color: 0x2d3545, w: 14, h: 1.8, d: 0.4, x: -20, y: 32, z: -40, ry: 0.05,  rx: -0.03, rz:  0.01 },
+    { color: 0x3a4555, w: 10, h: 1.4, d: 0.3, x:  -8, y: 35, z: -45, ry: -0.08, rx:  0.04, rz: -0.02 },
+    { color: 0x2d3545, w: 16, h: 2.0, d: 0.5, x:   5, y: 30, z: -35, ry: 0.12,  rx: -0.05, rz:  0.02 },
+    { color: 0x505f70, w:  9, h: 1.2, d: 0.3, x:  15, y: 33, z: -42, ry: -0.05, rx:  0.02, rz: -0.01 },
+    { color: 0x3d4a5a, w: 12, h: 1.6, d: 0.4, x: -25, y: 28, z: -38, ry: 0.1,   rx: -0.04, rz:  0.015},
+    { color: 0x2d3545, w: 18, h: 2.2, d: 0.6, x:  -5, y: 27, z: -32, ry: -0.15, rx:  0.05, rz: -0.02 },
+    // Deep clouds (further back)
+    { color: 0x5a6575, w:  8, h: 1.0, d: 0.2, x:  20, y: 36, z: -60, ry: 0.02,  rx: -0.02, rz:  0.01 },
+    { color: 0x4a5565, w: 11, h: 1.5, d: 0.3, x: -15, y: 38, z: -65, ry: -0.06, rx:  0.03, rz: -0.015},
+    { color: 0x6a7585, w: 20, h: 2.4, d: 0.5, x:   0, y: 25, z: -70, ry: 0.08,  rx: -0.03, rz:  0.02 },
+    { color: 0x3d4a5a, w: 13, h: 1.7, d: 0.4, x: -30, y: 31, z: -55, ry: -0.1,  rx:  0.04, rz: -0.01 },
+    { color: 0x2d3545, w: 15, h: 1.9, d: 0.4, x:  25, y: 29, z: -50, ry: 0.07,  rx: -0.05, rz:  0.02 },
+    // Very far background mass
+    { color: 0x1e2535, w: 30, h: 3.0, d: 0.7, x:  -5, y: 22, z: -80, ry: 0.03,  rx:  0.01, rz: -0.005},
+    // High-altitude wispy clouds (h=0.3, very flat)
+    { color: 0x6a7585, w: 35, h: 0.3, d: 0.2, x:  -10, y: 45, z: -75, ry: -0.04, rx: -0.01, rz:  0.005},
+    { color: 0x5f6e7e, w: 28, h: 0.3, d: 0.15, x: 15, y: 48, z: -80, ry: 0.06,  rx:  0.01, rz: -0.005},
   ];
 
   for (const cfg of cloudConfigs) {
@@ -344,11 +424,26 @@ function createClouds(): THREE.Group {
     });
     const cloud = new THREE.Mesh(geo, mat);
     cloud.position.set(cfg.x, cfg.y, cfg.z);
-    cloud.rotation.y = cfg.ry;
+    cloud.rotation.set(cfg.rx, cfg.ry, cfg.rz);
     group.add(cloud);
   }
 
-  return group;
+  // Slow x-drift: 0.002 units/frame (frame ~16ms → ~0.12 units/s)
+  const update = (t: number): void => {
+    group.children.forEach((child, i) => {
+      // Each cloud drifts at slightly different speed for parallax
+      const speed = 0.002 + i * 0.0002;
+      child.position.x += speed;
+      // Wrap around: if cloud drifts too far right, teleport left
+      if (child.position.x > 60) {
+        child.position.x -= 120;
+      }
+    });
+    // suppress unused t warning
+    void t;
+  };
+
+  return { group, update };
 }
 
 // ── Sky Background ───────────────────────────────────────────────────────────
@@ -545,10 +640,11 @@ export function initMainMenu(container: HTMLElement): MainMenuResult {
   scene.add(skyBox);
 
   const clouds = createClouds();
-  scene.add(clouds);
+  scene.add(clouds.group);
 
   const ocean = createLowPolyOcean();
   scene.add(ocean.mesh);
+  scene.add(ocean.horizonPlane);
 
   const foam = createFoamPatches();
   scene.add(foam);
@@ -573,6 +669,7 @@ export function initMainMenu(container: HTMLElement): MainMenuResult {
   const update = (dt: number): void => {
     elapsedTime += dt;
     ocean.update(elapsedTime);
+    clouds.update(elapsedTime);
     spray.update(dt);
     renderer.render(scene, camera);
   };

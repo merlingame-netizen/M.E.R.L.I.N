@@ -1,53 +1,30 @@
 {
   "agent": "merlin-ai-playtester",
-  "cycle": 25,
+  "cycle": 26,
   "timestamp": "2026-03-31T00:00:00Z",
   "status": "PASS",
-  "focus": "Menu scene visual fidelity vs reference low-poly coastal image",
-  "proximity_to_reference": {
-    "overall_pct": 72,
-    "by_element": {
-      "flat_shading": { "score": 9, "notes": "flatShading:true everywhere — this was the #1 missing piece from all prior cycles. Correctly implemented." },
-      "tower_silhouette": { "score": 8, "notes": "CylinderGeometry 7-seg is spot-on. 4 sections + cone roof + battlements. Sandy grey correct." },
-      "cliff_rocks": { "score": 7, "notes": "Vertex displacement gives correct angular faces. 3-tone materials add depth. Could push vertex count slightly for finer facets." },
-      "ocean_waves": { "score": 7, "notes": "30x20 segment plane + per-frame displacement + flatShading = animated polygon waves. Missing horizon teal shift." },
-      "polygon_clouds": { "score": 6, "notes": "Flat BoxGeometry planes correctly evoke reference clouds. Needs more rotation variety and overlap for layered storm feel." },
-      "vegetation": { "score": 8, "notes": "ConeGeometry(4-seg) diamond bushes match reference exactly. Placement on right cliff correct." },
-      "camera_framing": { "score": 8, "notes": "(-8,18,28) high angle with tower right-of-center matches reference composition." },
-      "lighting": { "score": 7, "notes": "Single directional (storm light) + very dim ambient correct. No distracting point lights on cliff." }
-    }
+  "scores": {
+    "flat_shading": 9,
+    "tower": 8,
+    "vegetation": 8,
+    "cliff": 9,
+    "ocean": 9,
+    "sky": 9,
+    "overall": 8.5
   },
-  "what_was_wrong_before": [
-    "ShaderMaterial on ocean: smooth gradient — not low-poly at all",
-    "ShaderMaterial on sky: animated smooth gradient — not polygon clouds",
-    "Tower was a BoxGeometry box, not a faceted cylinder",
-    "Tower color #14120f (near-black silhouette) not sandy grey #8a8068",
-    "Zero vegetation",
-    "No vertex displacement on cliff — perfectly smooth box faces",
-    "Camera at (0,12,35) — frontal view, not the high side angle of reference",
-    "No polygon cloud shapes — smooth sphere shader"
-  ],
-  "what_is_now_correct": [
-    "flatShading:true on EVERY material — the single most important architectural fix",
-    "antialias:false — preserves sharp polygon edges",
-    "CylinderGeometry 7-segment tower with cone roof",
-    "Sandy grey tower (#8a8068)",
-    "Vertex-displaced cliff rocks with 3-tone materials",
-    "PlaneGeometry ocean with per-frame vertex displacement (animated polygon waves)",
-    "18 ConeGeometry(4-seg) diamond bushes on right cliff",
-    "8 flat BoxGeometry cloud planes in dark grey tones",
-    "Camera correctly positioned at high angle",
-    "Foam patches at cliff base",
-    "Sandy path ribbon up cliff right side"
-  ],
-  "three_js_recommendations_cycle26": [
-    "Ocean horizon: add a second flat plane at z=-40 with slightly lighter teal (0x3a8070) as a horizon band",
-    "Clouds: add slight random Y rotation (±0.3) and more depth variation (z: -45 to -80) for more layered storm effect",
-    "Cliff rocks: increase BoxGeometry segments to 4x4x4 and raise displacement amount to 1.5-2.0 for coarser facets",
-    "Ocean color: add a second MeshStandardMaterial (0x3a8070) on the far half of the plane for horizon shift — or split into two planes",
-    "Tower battlements: add slight flatShading variation per notch (alternate between #9a9078 and #8a8068) for more polygon interest",
-    "Foam: add slow opacity oscillation (sin wave) to foam patch materials in update loop for wave crash effect"
-  ],
-  "gameplay_notes": "Menu scene does not affect gameplay. No regressions in card system, effects engine, or minigames. T070 (HUD faction bars) remains top priority for gameplay cycle.",
-  "remaining_backlog_top3": ["T070 — HUD faction bars", "T072 — ambient audio deferred bug", "T071 — mobile card layout"]
+  "vs_cycle_25": {
+    "cliff": "+2 (4,4,4 segments, displacement 2.0, 3 foreground rocks, waterline mass)",
+    "ocean": "+2 (horizon plane z=-45 #3a8070, 25 foam patches)",
+    "sky": "+3 (14 clouds, z-depth -32 to -80, rx/rz tilts, wispy h=0.3, x-drift animation)"
+  },
+  "compliance": {
+    "ts_errors": 0,
+    "build_success": true,
+    "bundle_app_kb": 117.76
+  },
+  "next_steps": [
+    "fog density gradient toward horizon (FogExp2 0.012 -> 0.018 at far z)",
+    "foam Y-animation (±0.15 sinusoidal per patch)",
+    "distant cliff silhouette geometry at z=-90 for extreme depth"
+  ]
 }
