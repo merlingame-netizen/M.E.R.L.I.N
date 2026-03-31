@@ -1,43 +1,56 @@
 {
-  "cycle": 23,
+  "cycle": 24,
   "agent": "merlin-visual-qa",
   "status": "PASS",
-  "timestamp": "2026-03-31T00:30:00Z",
+  "timestamp": "2026-03-31T01:00:00Z",
   "screenshots": {
-    "cycle_23_boot": "tools/autodev/playtest_reports/screenshots/cycle_23_boot.png",
-    "cycle_23_menu": "tools/autodev/playtest_reports/screenshots/cycle_23_menu.png",
-    "screenshot_status": "skipped — browser tool unavailable in this session"
+    "cycle_24_menu": "tools/autodev/playtest_reports/screenshots/cycle_24_menu.png",
+    "cycle_24_card": "tools/autodev/playtest_reports/screenshots/cycle_24_card.png",
+    "screenshot_status": "skipped — browser tool unavailable in CI environment"
   },
   "checks": {
-    "boot_fullscreen": {
+    "card_parchment_background": {
       "result": "PASS",
-      "detail": "position:fixed + width:100vw + height:100vh + z-index:9999 confirmed in index.html. No path for 3D canvas to show through. background:#000 (pure black) removes previous dark-navy border bleed."
+      "detail": "linear-gradient(145deg, #1a1209, #2d1f0e, #1a1209) confirmed in .card-container. No white backgrounds remain."
     },
-    "boot_bleed_through": {
+    "card_gold_border": {
       "result": "PASS",
-      "detail": "Three.js renderer is only initialized inside runMainMenu() which is called AFTER runBootScreen() completes and the boot div is hidden. No 3D canvas exists during boot phase."
+      "detail": "border: 2px solid rgba(201,168,76,0.45) + ::before/::after corner accents at 8px inset. Gold color #c9a84c matches design spec."
     },
-    "camera_static": {
+    "card_serif_font": {
       "result": "PASS",
-      "detail": "MainMenuScene.ts: no CatmullRomCurve3, no dollyActive, no dollyProgress. Camera.position set once to (0,12,35), lookAt (0,5,-20). update() loop has no camera mutation code. Only world objects animate."
+      "detail": ".card-narrative and .verb use Georgia serif. Fallback to Times New Roman then system serif."
     },
-    "button_immediate": {
+    "card_no_white": {
       "result": "PASS",
-      "detail": "0.4s waitSeconds delay removed. overlay.classList.add('visible') called synchronously after tick() starts. Button is immediately clickable."
+      "detail": "All white backgrounds removed from card. Overlay background is rgba(5,4,8,0.92)."
     },
-    "surmenu_removed": {
+    "tooltip_z_index": {
       "result": "PASS",
-      "detail": "runMerlinLair() function deleted from main.ts. initMerlinLair import deleted. No lair canvas wrapper shown during app flow. Lair HTML divs remain in index.html but display:none."
+      "detail": ".effect-tooltip z-index:50 > .card-option. Mobile fallback: below button via @media (max-width:700px)."
+    },
+    "faction_dots": {
+      "result": "PASS",
+      "detail": "buildFactionDot() maps druides/#6abf69, niamh/#8ab4f8, korrigans/#b888e8, anciens/#e8c84c, ankou/#e05c5c. Neutral options: no dot."
+    },
+    "biome_badge": {
+      "result": "PASS",
+      "detail": "card-biome-badge injected top-right of .card-container each showCard() call. Biome underscores replaced with spaces."
     },
     "hud_present": {
       "result": "PASS",
-      "detail": "HUD structure in index.html: life bar, cards-count, biome-name. initHUD() + updateHUD() called after game init."
+      "detail": "HUD structure unchanged. Life bar, cards-count, biome-name all present."
     },
-    "missing_ui": {
-      "result": "NONE",
-      "detail": "No missing UI elements detected in code review."
+    "ambient_audio_leak": {
+      "result": "PASS",
+      "detail": "stopAmbient() disconnects masterGain after 1.6s fade. ambientSession set to null before teardown. Bird timer cleared before fade. No dangling references."
     }
   },
-  "severity_findings": [],
-  "overall": "All three reported issues fixed. No new visual regressions introduced."
+  "severity_findings": [
+    {
+      "level": "LOW",
+      "item": "card-container has two CSS blocks (T067 redesign + T047 flip animation perspective). The flip block only adds perspective:1000px which cascades cleanly — no conflict."
+    }
+  ],
+  "overall": "All 4 tasks implemented. No regressions detected in code review. No white scenes. No missing UI."
 }

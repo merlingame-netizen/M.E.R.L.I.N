@@ -196,59 +196,170 @@
     }
     #hud .info { font-size: 14px; opacity: 0.8; }
 
-    /* Card overlay */
+    /* ── Card overlay (T067: parchment card redesign) ── */
     #card-overlay {
       position: absolute;
       top: 0; left: 0; right: 0; bottom: 0;
       display: none;
       justify-content: center;
       align-items: center;
-      background: rgba(10, 10, 18, 0.85);
+      background: rgba(5, 4, 8, 0.92);
       z-index: 20;
       font-family: 'Segoe UI', system-ui, sans-serif;
     }
     #card-overlay.visible { display: flex; }
 
     .card-container {
-      max-width: 700px;
-      width: 90%;
-      padding: 40px;
-      background: linear-gradient(145deg, rgba(30,25,20,0.95), rgba(15,12,10,0.98));
-      border: 1px solid rgba(205,133,63,0.3);
-      border-radius: 16px;
-      color: #e8dcc8;
+      max-width: 680px;
+      width: 92%;
+      padding: 36px 32px 32px;
+      background: linear-gradient(145deg, #1a1209, #2d1f0e, #1a1209);
+      border: 2px solid rgba(201,168,76,0.45);
+      border-radius: 12px;
+      color: #f5e6c8;
+      position: relative;
+      box-shadow:
+        0 0 0 1px rgba(201,168,76,0.12),
+        inset 0 0 60px rgba(0,0,0,0.5),
+        0 8px 40px rgba(0,0,0,0.8);
+    }
+    /* Celtic corner accents */
+    .card-container::before,
+    .card-container::after {
+      content: '';
+      position: absolute;
+      width: 28px; height: 28px;
+      border-color: #c9a84c;
+      border-style: solid;
+      opacity: 0.6;
+    }
+    .card-container::before {
+      top: 8px; left: 8px;
+      border-width: 2px 0 0 2px;
+      border-radius: 4px 0 0 0;
+    }
+    .card-container::after {
+      bottom: 8px; right: 8px;
+      border-width: 0 2px 2px 0;
+      border-radius: 0 0 4px 0;
+    }
+    /* Biome badge top-right */
+    .card-biome-badge {
+      position: absolute;
+      top: 12px; right: 16px;
+      font-size: 10px;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      color: #c9a84c;
+      opacity: 0.65;
+      padding: 3px 8px;
+      border: 1px solid rgba(201,168,76,0.3);
+      border-radius: 10px;
+      background: rgba(0,0,0,0.3);
+    }
+    /* Decorative gold top-line separator */
+    .card-divider {
+      width: 60%; height: 1px;
+      background: linear-gradient(90deg, transparent, rgba(201,168,76,0.5), transparent);
+      margin: 0 auto 24px;
     }
     .card-narrative {
-      font-size: 18px;
-      line-height: 1.6;
-      margin-bottom: 32px;
+      font-family: Georgia, 'Times New Roman', serif;
+      font-size: 17px;
+      line-height: 1.7;
+      margin-bottom: 28px;
       font-style: italic;
       text-align: center;
+      color: #f5e6c8;
+      text-shadow: 0 1px 3px rgba(0,0,0,0.6);
     }
     .card-options {
       display: flex;
-      gap: 16px;
+      gap: 12px;
       justify-content: center;
+      flex-wrap: wrap;
     }
     .card-option {
       flex: 1;
-      max-width: 200px;
-      padding: 16px;
-      background: rgba(139,69,19,0.15);
-      border: 1px solid rgba(205,133,63,0.4);
-      border-radius: 12px;
+      min-width: 160px;
+      max-width: 210px;
+      padding: 14px 12px;
+      background: rgba(10, 7, 3, 0.7);
+      border: 1px solid rgba(201,168,76,0.35);
+      border-radius: 8px;
       cursor: pointer;
       text-align: center;
-      transition: all 0.3s ease;
+      transition: all 0.25s ease;
       pointer-events: all;
+      position: relative;
     }
     .card-option:hover {
-      background: rgba(139,69,19,0.35);
-      border-color: rgba(205,133,63,0.8);
-      transform: translateY(-2px);
+      background: rgba(35, 22, 6, 0.9);
+      border-color: rgba(201,168,76,0.85);
+      transform: translateY(-3px);
+      box-shadow: 0 0 18px rgba(201,168,76,0.2), inset 0 0 12px rgba(201,168,76,0.05);
     }
-    .card-option .verb { font-weight: bold; font-size: 16px; margin-bottom: 8px; }
-    .card-option .desc { font-size: 13px; opacity: 0.7; }
+    .card-option .verb {
+      font-family: Georgia, serif;
+      font-weight: bold;
+      font-size: 15px;
+      margin-bottom: 7px;
+      color: #c9a84c;
+      letter-spacing: 0.5px;
+    }
+    .card-option .desc {
+      font-size: 12px;
+      opacity: 0.75;
+      color: #e8d4aa;
+      line-height: 1.4;
+    }
+    /* Faction dot indicator */
+    .card-option .faction-dot {
+      display: inline-block;
+      width: 7px; height: 7px;
+      border-radius: 50%;
+      margin-right: 5px;
+      vertical-align: middle;
+      opacity: 0.8;
+    }
+    /* Effect preview tooltip (T068) */
+    .effect-tooltip {
+      position: absolute;
+      left: calc(100% + 10px);
+      top: 50%;
+      transform: translateY(-50%);
+      min-width: 140px;
+      max-width: 180px;
+      padding: 10px 12px;
+      background: rgba(10, 7, 3, 0.96);
+      border: 1px solid rgba(201,168,76,0.45);
+      border-radius: 8px;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.7);
+      z-index: 50;
+      pointer-events: none;
+      opacity: 0;
+      transition: opacity 0.15s ease;
+      white-space: nowrap;
+    }
+    .card-option:hover .effect-tooltip {
+      opacity: 1;
+    }
+    /* On narrow screens: tooltip goes below */
+    @media (max-width: 700px) {
+      .effect-tooltip {
+        left: 50%;
+        top: calc(100% + 8px);
+        transform: translateX(-50%);
+      }
+    }
+    .effect-tooltip .effect-line {
+      font-size: 11px;
+      line-height: 1.8;
+      color: #e8d4aa;
+    }
+    .effect-tooltip .effect-pos { color: #7dce82; }
+    .effect-tooltip .effect-neg { color: #e05c5c; }
+    .effect-tooltip .effect-neu { color: #c9a84c; }
 
     /* Minigame overlay */
     #minigame-overlay {

@@ -1,11 +1,29 @@
 {
   "agent": "merlin-gameplay-programmer",
-  "cycle": 22,
-  "timestamp": "2026-03-31T01:30:00Z",
+  "cycle": 24,
+  "timestamp": "2026-03-31T01:00:00Z",
   "status": "PASS",
-  "tasks_done": ["T058", "state_machine_LAIR"],
+  "tasks": {
+    "T066_ambient_audio": {
+      "status": "DONE",
+      "details": "startAmbient(type)/stopAmbient() added to SFXManager.ts. Shared AudioContext (sharedCtx). Menu: 55Hz sine drone + 2x harmonic + lowpass wind noise 400Hz cutoff. Forest: 65Hz drone + 350Hz wind + random bird chirps every 4-12s. 2s fade-in on master gain (gain 0.05). stopAmbient(): 1.5s fade-out then disconnects all nodes + cancels bird timer. Wired in main.ts: startAmbient('menu') on menu entry, stopAmbient() on Start click, startAmbient('forest') after sceneManager.start()."
+    },
+    "T068_effect_preview": {
+      "status": "DONE",
+      "details": "buildEffectTooltip() in CardOverlay.ts parses effect strings (HEAL_LIFE/DAMAGE_LIFE/ADD_REPUTATION/PROMISE). Tooltip div appended inside .card-option, opacity:0 default, opacity:1 on CSS :hover. Color-coded via .effect-pos/.effect-neg/.effect-neu classes. Mobile: repositions below button via @media max-width:700px."
+    },
+    "T069_boot_skip": {
+      "status": "DONE",
+      "details": "runBootScreen() wraps wait in Promise with resolved-flag guard. Resolves on click, keydown, or 2.6s auto — whichever first. Both listeners explicitly removed on resolve to prevent listener leak."
+    }
+  },
   "ts_errors": 0,
-  "build_ok": true,
-  "bundle_kb_app": 123.07,
-  "notes": "T058: web-demo/src/audio/SFXManager.ts created. Web Audio API procedural synthesis — no external assets. flip: 440Hz ping 80ms + 880Hz shimmer 40ms. win: C4-E4-G4-C5 ascending arpeggio 80ms each + C3 pad. lose: 220→100Hz exponential glide 400ms + bandpass noise thud. unlock: 880Hz bell + partials 1318/1760Hz + 2 reverb echoes at +80ms/+180ms + 2637Hz shimmer. end: C3-E3-G3-C4 chord 3s fade. AudioContext resumes on first click/keydown (browser autoplay policy). Listens to window merlin_sfx CustomEvent. state_machine: main.ts — runMerlinLair() inserted between runMainMenu() and game bootstrap. initSFXManager() called at top of main() before boot. Lair loop: rAF tick, zone tooltip, Door/Map resolve+cutToBlack, Crystal/Bookshelf tooltip-only. index.html: #lair-canvas-wrapper + #lair-tooltip divs + CSS added."
+  "bundle_kb_app": 115,
+  "bundle_delta": "+4KB vs cycle 23 (111KB) — within 5% WARN, no BLOCK",
+  "code_review_findings": [
+    "FIXED: T069 listener leak — resolved flag + removeEventListener on both click and keydown",
+    "LOW: parseEffect uses innerHTML with server-controlled strings — acceptable risk, no user input path",
+    "LOW: eff as string cast in buildEffectTooltip is redundant but harmless (effects already readonly string[])"
+  ],
+  "issues": []
 }

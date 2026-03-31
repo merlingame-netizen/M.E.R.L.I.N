@@ -32,14 +32,15 @@ import { getLLMAdapter } from './llm/GroqAdapter';
 import { showRunSummary } from './ui/RunSummary';
 import { initMainMenu } from './scenes/MainMenuScene';
 import { cutToBlack, revealFromBlack } from './ui/SceneTransition';
-import { initSFXManager } from './audio/SFXManager';
+import { initSFXManager, startAmbient, stopAmbient } from './audio/SFXManager';
 
 // --- Config ---
 const WALK_SECONDS_BEFORE_CARD = 6; // Seconds of walking before showing a card
 const WALK_SPEED = 0.04; // Rail progress per second
 
-// --- Boot Screen (T060) ---
+// --- Boot Screen (T060 + T069) ---
 // Shows Celtic logo + progress bar for 2.5s, then transitions to main menu.
+// T069: Any click or keypress during boot skips the remaining wait immediately.
 async function runBootScreen(): Promise<void> {
   const bootScreen = document.getElementById('boot-screen');
   if (!bootScreen) return;
@@ -57,8 +58,22 @@ async function runBootScreen(): Promise<void> {
     if (statusEl) statusEl.textContent = statusMessages[msgIndex] ?? '';
   }, 650);
 
-  // Wait for the CSS progress bar animation (2.5s) + small buffer
-  await waitSeconds(2.6);
+  // T069: resolve immediately on click or keypress (listeners cleaned up on resolve)
+  await new Promise<void>((resolve) => {
+    let resolved = false;
+    const skip = (): void => {
+      if (resolved) return;
+      resolved = true;
+      document.removeEventListener('click', skip);
+      document.removeEventListener('keydown', skip);
+      resolve();
+    };
+    document.addEventListener('click', skip, { once: true });
+    document.addEventListener('keydown', skip, { once: true });
+    // Auto-resolve after 2.6s (normal duration)
+    waitSeconds(2.6).then(skip);
+  });
+
   clearInterval(msgInterval);
 
   // Fade out boot screen
@@ -91,6 +106,9 @@ async function runMainMenu(): Promise<void> {
   };
   tick();
 
+  // T066: Start menu ambient audio (gentle wind drone, 55Hz)
+  startAmbient('menu');
+
   // Show menu UI immediately — camera is static, no dolly to wait for
   overlay.classList.add('visible');
 
@@ -98,6 +116,9 @@ async function runMainMenu(): Promise<void> {
   await new Promise<void>((resolve) => {
     startBtn.addEventListener('click', () => resolve(), { once: true });
   });
+
+  // T066: Stop menu ambient, transition to forest ambient
+  stopAmbient();
 
   // Transition: fade to black then go to game
   overlay.classList.remove('visible');
@@ -151,6 +172,9 @@ async function main(): Promise<void> {
 
   // Start renderer
   sceneManager.start();
+
+  // T066: Start forest ambient (wind + bird chirps) as game world reveals
+  startAmbient('forest');
 
   // Hide loading screen and reveal game (clear scene-transition black overlay)
   loading.style.opacity = '0';

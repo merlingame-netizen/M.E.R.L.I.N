@@ -1,21 +1,38 @@
 // ═══════════════════════════════════════════════════════════════════════════════
 // SFX Manager — Web Audio API procedural tones (T058)
+// T066: Ambient audio — startAmbient(type) / stopAmbient()
 // Listens to window 'merlin_sfx' CustomEvent dispatched by CardSystem/EffectEngine
 // No external assets — pure procedural synthesis
 // ═══════════════════════════════════════════════════════════════════════════════
 
 type SFXName = 'flip' | 'win' | 'lose' | 'unlock' | 'end';
+type AmbientType = 'menu' | 'forest';
 
 interface SFXEvent {
   sound: SFXName;
 }
 
+// ── Shared AudioContext (module-level, created lazily on first interaction) ──
+
+let sharedCtx: AudioContext | null = null;
+
 function getOrCreateContext(): AudioContext | null {
   try {
-    return new AudioContext();
+    if (!sharedCtx) {
+      sharedCtx = new AudioContext();
+    }
+    return sharedCtx;
   } catch {
     return null;
   }
+}
+
+function ensureContext(): AudioContext | null {
+  const ctx = getOrCreateContext();
+  if (ctx && ctx.state === 'suspended') {
+    ctx.resume().catch(() => undefined);
+  }
+  return ctx;
 }
 
 // ── Synthesis helpers ────────────────────────────────────────────────────────
@@ -155,21 +172,213 @@ function playEnd(ctx: AudioContext): void {
   }
 }
 
+// ── Ambient audio (T066) ────────────────────────────────────────────────────
+
+/** Nodes kept alive for the current ambient session so we can stop them. */
+interface AmbientSession {
+  masterGain: GainNode;
+  oscillators: OscillatorNode[];
+  noiseSource: AudioBufferSourceNode | null;
+  birdTimer: ReturnType<typeof setTimeout> | null;
+}
+
+let ambientSession: AmbientSession | null = null;
+
+/**
+ * Create a long (30s looping) noise buffer filtered to simulate wind.
+ * Lower cutoff = deeper wind rumble.
+ */
+function createWindNoise(ctx: AudioContext, master: GainNode, cutoffHz: number): AudioBufferSourceNode {
+  const duration = 30;
+  const bufSize = ctx.sampleRate * duration;
+  const buffer = ctx.createBuffer(1, bufSize, ctx.sampleRate);
+  const data = buffer.getChannelData(0);
+  // Pink-ish noise: simple running average to tilt spectrum
+  let lastVal = 0;
+  for (let i = 0; i < bufSize; i++) {
+    const white = Math.random() * 2 - 1;
+    lastVal = (lastVal + 0.08 * white) / 1.08;
+    data[i] = lastVal * 8; // compensate gain loss from filtering
+  }
+
+  const source = ctx.createBufferSource();
+  source.buffer = buffer;
+  source.loop = true;
+
+  const lpf = ctx.createBiquadFilter();
+  lpf.type = 'lowpass';
+  lpf.frequency.setValueAtTime(cutoffHz, ctx.currentTime);
+  lpf.Q.value = 0.7;
+
+  // Gentle gain flutter to simulate gusting
+  const flutter = ctx.createGain();
+  flutter.gain.setValueAtTime(1.0, ctx.currentTime);
+
+  source.connect(lpf);
+  lpf.connect(flutter);
+  flutter.connect(master);
+  source.start(ctx.currentTime);
+  return source;
+}
+
+/**
+ * Schedule a single bird chirp: a short rising sine sweep 800→1200Hz, 120ms.
+ */
+function playBirdChirp(ctx: AudioContext, master: GainNode): void {
+  const t = ctx.currentTime;
+  const osc = ctx.createOscillator();
+  const gain = ctx.createGain();
+  osc.type = 'sine';
+  osc.frequency.setValueAtTime(800, t);
+  osc.frequency.exponentialRampToValueAtTime(1200, t + 0.12);
+  gain.gain.setValueAtTime(0, t);
+  gain.gain.linearRampToValueAtTime(0.06, t + 0.02);
+  gain.gain.setValueAtTime(0.06, t + 0.09);
+  gain.gain.linearRampToValueAtTime(0, t + 0.14);
+  osc.connect(gain);
+  gain.connect(master);
+  osc.start(t);
+  osc.stop(t + 0.15);
+}
+
+/**
+ * Start looping bird chirps at random 4-12s intervals.
+ * Returns the handle so we can cancel it.
+ */
+function scheduleBirds(
+  ctx: AudioContext,
+  master: GainNode,
+  session: AmbientSession
+): void {
+  const scheduleNext = (): void => {
+    const delayMs = (4 + Math.random() * 8) * 1000;
+    session.birdTimer = setTimeout(() => {
+      if (!ambientSession) return; // stopped
+      try { playBirdChirp(ctx, master); } catch { /* silent fail */ }
+      scheduleNext();
+    }, delayMs);
+  };
+  scheduleNext();
+}
+
+/**
+ * T066 — Start procedural ambient audio.
+ * 'menu':   55Hz drone + lowpass wind (400Hz cutoff). Gain 0.05.
+ * 'forest': 65Hz drone + lowpass wind (350Hz cutoff) + bird chirps. Gain 0.05.
+ * Silent-fails if AudioContext unavailable (browser policy, no interaction yet).
+ */
+export function startAmbient(type: AmbientType): void {
+  stopAmbient(); // stop any previous session first
+
+  const ctx = ensureContext();
+  if (!ctx) return;
+
+  // If context is still suspended (no user interaction yet), defer
+  if (ctx.state === 'suspended') {
+    // Will be retried via resumeOnInteraction -> called again externally
+    return;
+  }
+
+  try {
+    const master = ctx.createGain();
+    const targetGain = 0.05;
+    master.gain.setValueAtTime(0, ctx.currentTime);
+    master.gain.linearRampToValueAtTime(targetGain, ctx.currentTime + 2.0); // 2s fade-in
+    master.connect(ctx.destination);
+
+    const droneFreq = type === 'menu' ? 55 : 65;
+    const windCutoff = type === 'menu' ? 400 : 350;
+
+    // Low drone oscillator (sine, very quiet)
+    const drone = ctx.createOscillator();
+    drone.type = 'sine';
+    drone.frequency.setValueAtTime(droneFreq, ctx.currentTime);
+    const droneGain = ctx.createGain();
+    droneGain.gain.setValueAtTime(0.3, ctx.currentTime);
+    drone.connect(droneGain);
+    droneGain.connect(master);
+    drone.start(ctx.currentTime);
+
+    // Second harmonic at 2× freq, even quieter
+    const harmonic = ctx.createOscillator();
+    harmonic.type = 'sine';
+    harmonic.frequency.setValueAtTime(droneFreq * 2, ctx.currentTime);
+    const harmonicGain = ctx.createGain();
+    harmonicGain.gain.setValueAtTime(0.08, ctx.currentTime);
+    harmonic.connect(harmonicGain);
+    harmonicGain.connect(master);
+    harmonic.start(ctx.currentTime);
+
+    // Wind noise
+    const noiseSource = createWindNoise(ctx, master, windCutoff);
+
+    const session: AmbientSession = {
+      masterGain: master,
+      oscillators: [drone, harmonic],
+      noiseSource,
+      birdTimer: null,
+    };
+
+    ambientSession = session;
+
+    // Forest only: schedule bird chirps
+    if (type === 'forest') {
+      scheduleBirds(ctx, master, session);
+    }
+  } catch {
+    // Silent-fail — audio is non-critical
+  }
+}
+
+/**
+ * T066 — Stop ambient audio with a short fade-out.
+ */
+export function stopAmbient(): void {
+  if (!ambientSession) return;
+
+  const session = ambientSession;
+  ambientSession = null;
+
+  // Cancel bird timer
+  if (session.birdTimer !== null) {
+    clearTimeout(session.birdTimer);
+    session.birdTimer = null;
+  }
+
+  const ctx = sharedCtx;
+  if (!ctx) return;
+
+  try {
+    const now = ctx.currentTime;
+    const fadeEnd = now + 1.5;
+
+    // Fade master gain to 0
+    session.masterGain.gain.cancelScheduledValues(now);
+    session.masterGain.gain.setValueAtTime(session.masterGain.gain.value, now);
+    session.masterGain.gain.linearRampToValueAtTime(0, fadeEnd);
+
+    // Stop oscillators and noise after fade
+    setTimeout(() => {
+      try {
+        for (const osc of session.oscillators) {
+          osc.stop();
+        }
+        if (session.noiseSource) {
+          session.noiseSource.stop();
+        }
+        session.masterGain.disconnect();
+      } catch {
+        // Already stopped — ignore
+      }
+    }, 1600);
+  } catch {
+    // Silent fail
+  }
+}
+
 // ── SFX Manager init ─────────────────────────────────────────────────────────
 
 export function initSFXManager(): void {
-  let ctx: AudioContext | null = null;
-
-  const ensureContext = (): AudioContext | null => {
-    if (!ctx) {
-      ctx = getOrCreateContext();
-    }
-    if (ctx && ctx.state === 'suspended') {
-      ctx.resume().catch(() => undefined);
-    }
-    return ctx;
-  };
-
   const dispatch: Record<SFXName, (c: AudioContext) => void> = {
     flip: playFlip,
     win: playWin,
@@ -195,8 +404,8 @@ export function initSFXManager(): void {
 
   // Resume context on first user interaction (browser autoplay policy)
   const resumeOnInteraction = (): void => {
-    if (ctx && ctx.state === 'suspended') {
-      ctx.resume().catch(() => undefined);
+    if (sharedCtx && sharedCtx.state === 'suspended') {
+      sharedCtx.resume().catch(() => undefined);
     }
   };
 

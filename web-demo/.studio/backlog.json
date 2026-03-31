@@ -1,7 +1,73 @@
 {
   "_comment": "Remplace BACKLOG.md -- format compact pour studio-director v2",
-  "updated": "2026-04-01T00:10:00Z",
+  "updated": "2026-03-31T01:00:00Z",
   "tasks": [
+    {
+      "id": "T070",
+      "title": "HUD faction bars — show 5 faction rep bars in HUD overlay",
+      "priority": 1,
+      "status": "open",
+      "domain": "visual",
+      "est_tokens": 250,
+      "depends_on": [],
+      "tags": ["ux", "hud"],
+      "notes": "Add 5 mini reputation bars to #hud. Use FACTION_COLOURS from CardOverlay (druides/#6abf69, niamh/#8ab4f8, korrigans/#b888e8, anciens/#e8c84c, ankou/#e05c5c). Bar width = rep/100 * 60px. Show faction initial + bar. Update in updateHUD(). HUD.ts + index.html CSS."
+    },
+    {
+      "id": "T072",
+      "title": "Ambient audio deferred bug — menu silent when no interaction during boot",
+      "priority": 1,
+      "status": "open",
+      "domain": "gameplay",
+      "est_tokens": 150,
+      "depends_on": [],
+      "tags": ["audio", "bug"],
+      "notes": "startAmbient('menu') fires before first user interaction if player does not click/type during boot. AudioContext stays suspended. Fix: in runMainMenu(), after startAmbient('menu'), check if ambientSession is null (early-return happened) and retry startAmbient('menu') after the next user gesture. Or: move startAmbient call inside the start-button click handler."
+    },
+    {
+      "id": "T071",
+      "title": "Card options mobile layout — 3-column breaks at 375px narrow viewport",
+      "priority": 2,
+      "status": "open",
+      "domain": "visual",
+      "est_tokens": 100,
+      "depends_on": [],
+      "tags": ["mobile", "ux"],
+      "notes": "Add @media (max-width:560px) { .card-options { flex-direction:column; } .card-option { max-width:100%; min-width:unset; } } to index.html. Also verify tooltip repositions below button on mobile (already has @media 700px rule)."
+    },
+    {
+      "id": "T073",
+      "title": "Card selection feedback — brief highlight before overlay disappears",
+      "priority": 2,
+      "status": "open",
+      "domain": "visual",
+      "est_tokens": 120,
+      "depends_on": [],
+      "tags": ["ux", "feedback"],
+      "notes": "In CardOverlay.ts showCard(): on option click, add class card-option-selected to clicked btn (gold bg flash: background rgba(201,168,76,0.3), border-color #c9a84c). Call hideCard() after 200ms delay instead of immediately. CSS: .card-option-selected { background: rgba(201,168,76,0.3); border-color: #c9a84c; transition: none; }"
+    },
+    {
+      "id": "T074",
+      "title": "Minigame overlay visual distinction — subtle blue tint vs card dark bg",
+      "priority": 3,
+      "status": "open",
+      "domain": "visual",
+      "est_tokens": 80,
+      "depends_on": [],
+      "tags": ["ux", "visual"],
+      "notes": "Change #minigame-overlay background from rgba(10,10,18,0.9) to rgba(5,8,18,0.93) — slightly more blue to signal action/combat mode vs narrative card mode. One-line CSS change in index.html."
+    },
+    {
+      "id": "T075",
+      "title": "Boot progress bar snaps to 100% on skip",
+      "priority": 3,
+      "status": "open",
+      "domain": "visual",
+      "est_tokens": 80,
+      "depends_on": [],
+      "tags": ["ux", "boot"],
+      "notes": "When boot is skipped early (T069), the progress bar CSS animation is mid-way. On skip: JS sets .boot-progress-fill style animation to 'none' and width to '100%' before triggering the fade. Gives satisfying snap-to-complete feel."
+    },
     {
       "id": "T060",
       "title": "Boot screen — Celtic logo SVG + animated progress bar before main menu",
@@ -224,6 +290,34 @@
     }
   ],
   "completed": [
+    {
+      "id": "T069",
+      "title": "Boot skip on click/keypress — resolve early with cleaned-up listeners",
+      "domain": "gameplay",
+      "completed_cycle": 24,
+      "completed_at": "2026-03-31T01:00:00Z"
+    },
+    {
+      "id": "T068",
+      "title": "Effect preview tooltip on hover — color-coded effects per card option",
+      "domain": "gameplay",
+      "completed_cycle": 24,
+      "completed_at": "2026-03-31T01:00:00Z"
+    },
+    {
+      "id": "T067",
+      "title": "Card UI visual redesign — dark parchment, Celtic corners, gold serif, faction dots, biome badge",
+      "domain": "visual",
+      "completed_cycle": 24,
+      "completed_at": "2026-03-31T01:00:00Z"
+    },
+    {
+      "id": "T066",
+      "title": "Ambient audio — menu wind drone (55Hz) + forest drone/wind/birds (65Hz)",
+      "domain": "gameplay",
+      "completed_cycle": 24,
+      "completed_at": "2026-03-31T01:00:00Z"
+    },
     {
       "id": "T062",
       "title": "Merlin's lair hub — clickable 3D interior with 4 navigation zones + candle VFX",

@@ -1,29 +1,69 @@
 {
   "agent": "merlin-ai-playtester",
-  "cycle": 23,
-  "mode": "DEEP_SCAN",
-  "timestamp": "2026-03-31T00:30:00Z",
+  "cycle": 24,
+  "timestamp": "2026-03-31T01:00:00Z",
   "status": "PASS",
-  "overall_score": 6.1,
+  "overall_score": 7.2,
   "section_scores": {
-    "boot": 7,
-    "menu": 7,
-    "lair": "removed",
-    "game_ui": 5,
+    "boot": 8,
+    "menu_ambient": 7,
+    "card_ui": 8,
+    "effect_preview": 8,
     "minigames": 6,
     "hud": 5,
-    "audio": 6,
+    "audio_sfx": 7,
     "summary_screen": 7
   },
-  "critical_issues": 0,
-  "high_issues": 3,
-  "medium_issues": 7,
-  "low_issues": 5,
-  "top_priority": "Ambient audio — zero sound during menu and 3D walk is the single highest-ROI gap",
-  "fixes_verified": [
-    "boot fullscreen: position:fixed + z-index:9999 — VERIFIED in index.html",
-    "static camera: dolly removed, camera (0,12,35) lookAt (0,5,-20) — VERIFIED in MainMenuScene.ts",
-    "surmenu removed: runMerlinLair() deleted, import removed — VERIFIED in main.ts"
+  "improvements_vs_c23": [
+    "T067: Card UI — massive visual upgrade. Dark parchment + Celtic corners + gold serif = now looks like an actual game card, not a form. Score 5->8.",
+    "T066: Ambient audio — menu drone fills dead silence during menu wait. Forest wind + birds adds world presence during 3D walk. Score: fills the #1 gap from cycle 23.",
+    "T068: Effect preview — hover tooltip shows exact effects before committing. Reduces blind choice friction significantly.",
+    "T069: Boot skip — impatient players no longer stuck 2.6s. UX micro-improvement."
   ],
-  "full_report": "tools/autodev/playtest_reports/playtest_report_cycle23.json"
+  "remaining_issues": [
+    {
+      "priority": "HIGH",
+      "id": "T070",
+      "title": "HUD faction bars missing — only life bar visible",
+      "detail": "HUD shows Vie / Carte N / biome name. No faction reputation bars. The 5 factions are tracked internally but not visible to player. Player has no feedback on what their choices are doing to faction standings until run summary.",
+      "suggested_fix": "Add 5 mini faction bars (20px wide each or compact row) to HUD. Use FACTION_COLOURS from CardOverlay. Show faction name + bar fill 0-100."
+    },
+    {
+      "priority": "HIGH",
+      "id": "T071",
+      "title": "Card options vertical on mobile — layout breaks at 375px",
+      "detail": "Three .card-option with max-width:210px in a flex row causes overflow or wrap to 1-column on narrow viewports. The wrap breakpoint needs explicit handling.",
+      "suggested_fix": "Add @media (max-width:560px) { .card-options { flex-direction:column; } .card-option { max-width:100%; } } to index.html"
+    },
+    {
+      "priority": "MEDIUM",
+      "id": "T072",
+      "title": "Ambient audio deferred on fresh page load — menu starts silent",
+      "detail": "startAmbient('menu') is called before user clicks Start (first interaction is the boot skip). If user does NOT interact during boot, context is suspended when startAmbient fires. The early-return silently does nothing.",
+      "suggested_fix": "After startAmbient('menu') call in runMainMenu(), add a one-time click listener on the menu start button that calls startAmbient('menu') again if ambientSession is null. Or: move startAmbient('menu') to after the first click is confirmed."
+    },
+    {
+      "priority": "MEDIUM",
+      "id": "T073",
+      "title": "No visual feedback on card selection — which option was chosen?",
+      "detail": "After clicking an option, the card immediately disappears (hideCard()). No selection highlight, no brief confirmation. Feels abrupt.",
+      "suggested_fix": "Add 200ms delay in hideCard — first apply .card-option-selected CSS class to clicked button (gold background flash), then remove overlay after 200ms."
+    },
+    {
+      "priority": "MEDIUM",
+      "id": "T074",
+      "title": "Minigame overlay uses same dark background as card — no visual distinction",
+      "detail": "Both #card-overlay and #minigame-overlay use near-identical dark backgrounds. Player loses context of state transition.",
+      "suggested_fix": "Give #minigame-overlay a slightly different tint — e.g. rgba(5, 8, 18, 0.93) with a subtle blue tone to signal combat/action mode."
+    },
+    {
+      "priority": "LOW",
+      "id": "T075",
+      "title": "Boot progress bar does not pause on skip — jumps to 100% visually",
+      "detail": "When player clicks to skip boot, the CSS animation continues at its own pace. No jump-to-100% feedback before fade.",
+      "suggested_fix": "On skip: set .boot-progress-fill animation-duration to 0.1s and animation-fill-mode: forwards to snap it to 100% before fade."
+    }
+  ],
+  "brutal_critique": "Cycle 24 is a genuine step up. The card UI redesign alone makes the game feel like a real product instead of a prototype. The ambient audio fills the most oppressive gap (dead silence). Effect preview removes the biggest decision-friction. However: the HUD still shows almost nothing meaningful to the player — no faction visibility, no ogham cost preview, no run progress sense. The game loop exists but the player is flying blind. Next cycle must tackle HUD faction bars (T070) and the ambient deferred-context bug (T072).",
+  "full_report": "tools/autodev/playtest_reports/playtest_report_cycle24.json"
 }

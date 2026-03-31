@@ -1,36 +1,31 @@
 {
   "agent": "merlin-tech-artist",
-  "cycle": 23,
-  "timestamp": "2026-03-31T00:30:00Z",
+  "cycle": 24,
+  "timestamp": "2026-03-31T01:00:00Z",
   "status": "PASS",
-  "fixes_applied": [
-    {
-      "id": "FIX1_BOOT_FULLSCREEN",
-      "file": "web-demo/index.html",
-      "change": "#boot-screen: position:absolute -> position:fixed, top:0 left:0 width:100vw height:100vh, z-index:200 -> 9999, background:#0a0a12 -> #000, added overflow:hidden",
-      "result": "Boot screen now covers full viewport including sides. No 3D bleed-through possible. Black background ensures true black border on all sides."
-    },
-    {
-      "id": "FIX2_STATIC_CAMERA",
-      "file": "web-demo/src/scenes/MainMenuScene.ts",
-      "change": "Removed createDollyPath() (CatmullRomCurve3). Removed dollyActive/dollyProgress/dollyCallback/DOLLY_DURATION state. Camera fixed at (0,12,35) lookAt (0,5,-20). startDolly() is now no-op calling onComplete immediately. 0.4s button delay removed.",
-      "result": "Camera fully static. Button visible immediately on menu load. World animates (waves, sky, spray, cliff light flicker). No rotation or orbit."
-    },
-    {
-      "id": "FIX3_REMOVE_SURMENU",
-      "file": "web-demo/src/main.ts",
-      "change": "Removed import of initMerlinLair. Removed entire runMerlinLair() async function. Removed await runMerlinLair() from main(). Flow: runBootScreen -> runMainMenu -> game.",
-      "result": "No lair hub between menu and game. Clean direct flow after button click."
+  "tasks": {
+    "T067_card_ui": {
+      "status": "DONE",
+      "changes": [
+        "index.html: .card-container background changed to linear-gradient(145deg, #1a1209, #2d1f0e, #1a1209) — dark parchment",
+        "index.html: border upgraded to 2px solid rgba(201,168,76,0.45) + box-shadow with inset glow",
+        "index.html: ::before/::after pseudo-elements add Celtic corner accents in #c9a84c",
+        "index.html: .card-biome-badge — small pill top-right with biome name in gold",
+        "index.html: .card-divider — gold gradient horizontal rule below badge",
+        "index.html: .card-narrative — Georgia serif font, #f5e6c8 cream, italic, line-height 1.7",
+        "index.html: .card-option — dark bg rgba(10,7,3,0.7), gold border, hover gold glow + translateY(-3px)",
+        "index.html: .card-option .verb — Georgia serif, #c9a84c gold color",
+        "index.html: .faction-dot — 7px colored circle per faction before verb",
+        "CardOverlay.ts: buildFactionDot() injects colored dot per FACTION_COLOURS map",
+        "CardOverlay.ts: biome badge + card-divider inserted into DOM each card show"
+      ]
     }
-  ],
+  },
+  "ts_errors": 0,
+  "bundle_kb_app": 115,
   "regression_gate": {
-    "ts_errors": 0,
-    "ts_errors_status": "PASS",
-    "bundle_app_kb": 110.92,
-    "bundle_app_threshold_kb": 220,
-    "bundle_status": "PASS",
-    "build_clean": true,
-    "bundle_delta_kb": -12.08,
-    "bundle_note": "Decreased vs cycle 22 (123KB) — MerlinLairScene no longer imported"
-  }
+    "ts_errors": "PASS (0)",
+    "bundle": "PASS (115KB < 220KB threshold)"
+  },
+  "issues": []
 }

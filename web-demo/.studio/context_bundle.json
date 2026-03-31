@@ -1,37 +1,39 @@
 {
-  "cycle": 23,
-  "timestamp": "2026-03-31T00:00:00Z",
-  "selected_tasks": ["FIX-BOOT", "FIX-MENU-CAM", "FIX-SURMENU"],
-  "changed_files_since_c22": [
-    "web-demo/index.html",
+  "cycle": 24,
+  "generated_at": "2026-03-31T00:00:00Z",
+  "top_tasks": ["T066", "T067", "T068", "T069"],
+  "changed_files_last_cycle": [
+    "web-demo/src/audio/SFXManager.ts",
     "web-demo/src/main.ts",
-    "web-demo/src/scenes/MainMenuScene.ts"
+    "web-demo/index.html",
+    "web-demo/src/ui/CardOverlay.ts"
   ],
-  "known_issues": {
-    "boot_bleed": "position:absolute on #boot-screen allows 3D canvas to show through sides. Must be position:fixed with 100vw/100vh. Also Three.js renderer is initialized while boot screen is still active.",
-    "camera_dolly": "MainMenuScene.ts has CatmullRomCurve3 dolly path active after button click (startDolly). User wants FIXED static camera at (0,12,35) looking at (0,5,-20). World animates, camera does not.",
-    "sur_menu": "After main menu, Merlin's Lair (MerlinLairScene) is shown as an intermediate hub before the game. User wants: boot -> static menu -> click -> game directly. The lair scene is the 'sur-menu' to remove."
+  "key_constants": {
+    "card_gold": "#c9a84c",
+    "card_parchment_bg": "linear-gradient(145deg, #1a1209, #2d1f0e, #1a1209)",
+    "card_cream_text": "#f5e6c8",
+    "ambient_menu_freq": 55,
+    "ambient_forest_freq": 65,
+    "ambient_gain": 0.05,
+    "sfx_manager_file": "web-demo/src/audio/SFXManager.ts",
+    "card_overlay_file": "web-demo/src/ui/CardOverlay.ts",
+    "index_html_file": "web-demo/index.html",
+    "main_ts_file": "web-demo/src/main.ts"
   },
-  "constants": {
-    "STATIC_CAM_POS": "(0, 12, 35)",
-    "STATIC_CAM_LOOK": "(0, 5, -20)",
-    "boot_duration": "2.5s CSS animation + 0.1s buffer",
-    "regression_gate": "ts_errors==0 BLOCK, bundle_app<220KB WARN"
+  "architecture_notes": {
+    "sfx": "SFXManager.ts exports initSFXManager(). AudioContext created lazily. Uses CustomEvent 'merlin_sfx'. Add startAmbient(type)/stopAmbient() as module-level exports.",
+    "card_rendering": "CardOverlay.ts showCard() creates .card-option divs. CSS in index.html. Card HTML structure: #card-overlay > .card-container > .card-narrative + .card-options > .card-option(.verb+.desc)",
+    "boot": "runBootScreen() in main.ts waits 2.6s then fades boot-screen. Boot skip: listen for click/keydown during the wait and resolve early.",
+    "card_types": "Card has: narrative(string), options(array of {verb, text, effects[]}). Effects: {type:'ADD_REPUTATION'|'HEAL_LIFE'|'DAMAGE_LIFE'|'PROMISE', faction?:string, amount:number}"
   },
   "last_cycle_status": {
     "ts_errors": 0,
     "bundle_kb": 123,
     "cards": 366,
-    "commit": "457e9e2"
+    "commit": "fc3e206"
   },
-  "fix_specs": {
-    "fix1_boot": "index.html: change #boot-screen from position:absolute to position:fixed, top:0 left:0 width:100vw height:100vh z-index:9999 background:#000. The #app div must remain but the 3D scene is not initialized until after boot completes (Three.js not called during boot).",
-    "fix2_static_camera": "MainMenuScene.ts: REMOVE createDollyPath(), REMOVE dollyActive/dollyProgress/dollyCallback/DOLLY_DURATION variables. Camera set once: position (0,12,35) lookAt (0,5,-20). startDolly() is replaced with no-op that calls callback immediately after 0ms. Show button immediately (remove 0.4s delay). Keep world animation (waves, sky, particles, cliff light).",
-    "fix3_remove_lair": "main.ts: REMOVE the await runMerlinLair() call. Flow: runBootScreen() -> runMainMenu() -> [game init]. Keep lair HTML divs in index.html (harmless, display:none). Remove lair-related imports from main.ts."
-  },
-  "gates": {
-    "ts_errors": { "threshold": 0, "action": "BLOCK" },
-    "bundle_kb_app": { "threshold": 220, "action": "WARN" },
-    "runtime_errors": { "threshold": 0, "action": "BLOCK" }
+  "regression_gate": {
+    "ts_errors": 0,
+    "bundle_kb_warn": 220
   }
 }
