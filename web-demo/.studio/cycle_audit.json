@@ -3,6 +3,48 @@
   "max_entries": 20,
   "cycles": [
     {
+      "cycle": 20,
+      "timestamp": "2026-04-01T00:10:00Z",
+      "tasks_attempted": ["T056", "T057", "villages_celtes_batch2", "perf_cache"],
+      "tasks_completed": ["T056", "T057", "villages_celtes_batch2", "perf_cache"],
+      "tasks_deferred": [],
+      "gate": {
+        "ts_errors": 0,
+        "build_ok": true,
+        "bundle_kb_app": 100.43,
+        "bundle_delta_kb": 0.18,
+        "bundle_delta_pct": 0.18,
+        "tests_pass": 0,
+        "verdict": "PROCEED"
+      },
+      "files_changed": [
+        "web-demo/src/main.ts",
+        "web-demo/src/minigames/mg_runes.ts",
+        "web-demo/src/minigames/mg_traces.ts",
+        "web-demo/index.html",
+        "web-demo/vercel.json",
+        "web-demo/public/data/cards.json",
+        "web-demo/.studio/backlog.json",
+        "web-demo/.studio/metrics.json",
+        "web-demo/.studio/context_bundle.json",
+        "web-demo/.studio/worker_gameplay.json",
+        "web-demo/.studio/worker_playtester.json",
+        "web-demo/.studio/worker_visual_qa.json",
+        "tools/autodev/playtest_reports/playtest_report_cycle20.json"
+      ],
+      "summary": "T056: SFX event bus — playSound(type) exported from main.ts, dispatches CustomEvent('merlin_sfx') on window. Wired at: flip (after showCard), win/lose (score threshold >65), unlock (ogham_unlocked listener), end (all 4 run-end paths). T057: touch support — touch-action:none on canvas global CSS, pointerdown listener added to mg_runes+mg_traces alongside click, cleanups updated. All other 12 minigames already pointer*-based. Villages batch2: 20 new cards (326 total), korrigans 31 opts, niamh 22 opts, druides=3 (cap compliant after fix), heal<=5, rep<=20. Perf: vercel.json Cache-Control for /data/cards.json. Bundle +0.18KB. TS: 0. Build: 2.44s. New tasks: T058 (SFX Web Audio impl), T059 (mobile layout 375px).",
+      "qa_extended": {
+        "playtester": "PASS — SFX bus call sites verified (5/5), touch pointerdown+cleanup correct, villages batch2 constraints all met",
+        "visual_qa": "PASS — bundle +0.18KB within threshold, touch-action:none correct, no regressions. Screenshots skipped (CPU guardian + browser tool unavailable).",
+        "code_review": "PASS — no CRITICAL/HIGH issues. MEDIUM: mg_traces double-fire risk on touch (no lockInput flag), logged and accepted for current scope.",
+        "new_tasks_found": ["T058", "T059"]
+      },
+      "agents_dispatched": ["merlin-gameplay-programmer (director)", "merlin-ai-playtester (director)", "merlin-visual-qa (director)", "merlin-narrative-designer (director)"],
+      "commit": "14e685c",
+      "pushed": true,
+      "vercel_deploy": "triggered — https://web-export-pi.vercel.app"
+    },
+    {
       "cycle": 18,
       "timestamp": "2026-03-31T23:30:00Z",
       "tasks_attempted": ["T050", "T049", "T051"],
