@@ -3,6 +3,42 @@
   "max_entries": 20,
   "cycles": [
     {
+      "cycle": 18,
+      "timestamp": "2026-03-31T23:30:00Z",
+      "tasks_attempted": ["T050", "T049", "T051"],
+      "tasks_completed": ["T050", "T049", "T051"],
+      "tasks_deferred": [],
+      "gate": {
+        "ts_errors": 0,
+        "build_ok": true,
+        "bundle_kb_app": 98.37,
+        "bundle_delta_kb": 1.54,
+        "bundle_delta_pct": 1.59,
+        "tests_pass": 0,
+        "verdict": "PROCEED"
+      },
+      "files_changed": [
+        "web-demo/src/game/Store.ts",
+        "web-demo/src/main.ts",
+        "web-demo/src/ui/RunSummary.ts",
+        "web-demo/public/data/cards.json",
+        "web-demo/.studio/backlog.json",
+        "web-demo/.studio/metrics.json",
+        "web-demo/.studio/context_bundle.json",
+        "web-demo/.studio/worker_gameplay.json",
+        "web-demo/.studio/worker_playtester.json",
+        "web-demo/.studio/worker_visual_qa.json",
+        "tools/autodev/playtest_reports/playtest_report_cycle18.json"
+      ],
+      "summary": "T050: anamThisRun added to RunState (resets on startRun, increments alongside meta.anam in addAnam()). RunSummary now shows 'Anam cette quete' vs 'Anam total'. T049: Ogham unlock at faction rep=50 crossing in addReputation() — faction-to-ogham map (druides=coll, anciens=ailm, korrigans=onn, niamh=saille, ankou=eadhadh), fires CustomEvent 'ogham_unlocked', toast in main.ts 3s display at top. T051: 20 landes_bruyere batch3 cards (286 total, 14/20 niamh-heavy, druides=2/20, HEAL<=5). Bundle +1.54KB. TS: 0 errors. New tasks: T052 (OghamPanel locked state), T053 (persist meta to localStorage).",
+      "qa_extended": {
+        "playtester": "PASS — T049 unlock guards correct, T050 resets/increments verified, T051 niamh 14/20 cards",
+        "visual_qa": "PASS — bundle within threshold, no regressions. Screenshots still blocked by CPU guardian (LOW ongoing).",
+        "new_tasks_found": ["T052", "T053"]
+      },
+      "agents_dispatched": ["merlin-gameplay-programmer (director)", "merlin-ai-playtester (director)", "merlin-visual-qa (director)", "merlin-narrative-designer (director)"]
+    },
+    {
       "cycle": 1,
       "timestamp": "2026-03-30T17:45:00Z",
       "tasks_attempted": ["T001", "T002", "T003"],

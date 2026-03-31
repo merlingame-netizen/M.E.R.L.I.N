@@ -3,37 +3,26 @@
   "updated": "2026-03-31T22:30:00Z",
   "tasks": [
     {
-      "id": "T049",
-      "title": "Ogham unlock progression — earn and unlock new Oghams during run based on faction thresholds",
+      "id": "T052",
+      "title": "Ogham panel shows locked/unlocked state — grey out locked oghams, show rep threshold hint",
+      "priority": 3,
+      "status": "open",
+      "domain": "gameplay",
+      "est_tokens": 300,
+      "depends_on": ["T049"],
+      "tags": ["ux", "progression"],
+      "notes": "T049 wired unlock logic. OghamPanel.ts should now reflect locked state: grey out oghams not in meta.oghamsEquipped, show tooltip 'Reputacion [faction] 50 requise' for locked ones. Improves progression legibility."
+    },
+    {
+      "id": "T053",
+      "title": "Persist meta state to localStorage — oghamsUnlocked, factionRep, totalRuns survive page refresh",
       "priority": 2,
       "status": "open",
       "domain": "gameplay",
-      "est_tokens": 500,
-      "depends_on": [],
-      "tags": ["progression", "gameplay"],
-      "notes": "Currently player starts with 3 Oghams and none are unlocked during play. Add: when faction rep crosses 50, unlock a faction-specific Ogham. Show unlock toast. Wire into Store.ts addReputation()."
-    },
-    {
-      "id": "T050",
-      "title": "Run summary anam calculation — track anam earned per run (not cumulative cross-run)",
-      "priority": 3,
-      "status": "open",
-      "domain": "gameplay",
-      "est_tokens": 200,
-      "depends_on": ["T046"],
-      "tags": ["balance", "ux"],
-      "notes": "T046 RunSummary shows meta.anam (cumulative cross-run). Add run.anamThisRun counter incremented by ADD_ANAM effects, reset on startRun(). Display both this-run and total in the summary screen."
-    },
-    {
-      "id": "T051",
-      "title": "landes_bruyere batch3 — 20 more cards (niamh-heavy: niamh>=35%, complete the biome at 60 cards)",
-      "priority": 3,
-      "status": "open",
-      "domain": "narrative",
-      "est_tokens": 400,
-      "depends_on": [],
-      "tags": ["content"],
-      "notes": "landes_bruyere now at batch2 (40 cards). Batch3 should feature niamh: fae encounters on the heath, will-o-wisp guides, threshold crossings, enchanted moors. niamh >= 35% of options, HEAL_LIFE <= 5."
+      "est_tokens": 350,
+      "depends_on": ["T049", "T050"],
+      "tags": ["persistence", "meta"],
+      "notes": "Currently only Anam is saved to localStorage (ANAM_STORAGE_KEY). oghamsUnlocked and factionRep are also cross-run state and should be persisted. Add loadMetaFromStorage() / saveMetaFromStorage() calls alongside existing anam persistence in main.ts."
     },
     {
       "id": "T043",
@@ -169,6 +158,27 @@
     }
   ],
   "completed": [
+    {
+      "id": "T049",
+      "title": "Ogham unlock progression — faction rep crosses 50 unlocks branch Ogham + toast",
+      "domain": "gameplay",
+      "completed_cycle": 18,
+      "completed_at": "2026-03-31T23:30:00Z"
+    },
+    {
+      "id": "T050",
+      "title": "Per-run anam counter (anamThisRun) — RunSummary shows this-run vs lifetime total",
+      "domain": "gameplay",
+      "completed_cycle": 18,
+      "completed_at": "2026-03-31T23:30:00Z"
+    },
+    {
+      "id": "T051",
+      "title": "landes_bruyere batch3 — 20 niamh-heavy cards (14/20 niamh options, 286 total)",
+      "domain": "narrative",
+      "completed_cycle": 18,
+      "completed_at": "2026-03-31T23:30:00Z"
+    },
     {
       "id": "T046",
       "title": "End-of-run summary screen — cards played, factions, anam, biome (new RunSummary.ts module)",

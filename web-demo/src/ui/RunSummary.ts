@@ -170,7 +170,8 @@ export async function showRunSummary(reason: 'death' | 'victory' | 'cards_limit'
   };
 
   addStat('Cartes jouees', state.run.cardsPlayed);
-  addStat('Anam gagne', state.meta.anam);
+  addStat('Anam cette quete', state.run.anamThisRun);
+  addStat('Anam total', state.meta.anam);
   addStat('Vie restante', Math.max(0, state.run.life));
   addStat('Biome atteint', biomeLabel);
 

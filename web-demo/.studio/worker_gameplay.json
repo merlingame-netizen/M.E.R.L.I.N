@@ -1,35 +1,37 @@
 {
   "agent": "merlin-gameplay-programmer",
-  "cycle": 17,
-  "timestamp": "2026-03-31T22:30:00Z",
+  "cycle": 18,
+  "timestamp": "2026-03-31T23:30:00Z",
   "status": "PASS",
   "tasks": {
-    "T046": {
+    "T050": {
       "status": "DONE",
-      "description": "End-of-run summary overlay — new module src/ui/RunSummary.ts",
+      "description": "Per-run anam counter — anamThisRun added to RunState",
       "details": [
-        "showRunSummary(reason) exported: reason = 'death' | 'victory' | 'cards_limit'",
-        "Triggers: life<=0 (death drain + death effects), cardsPlayed>=30 (new step 10a), rail+25 (victory)",
-        "Panel shows: cards played, anam earned, life remaining, biome label (all 4 stats grid)",
-        "5 faction bars with color-coded progress bars (druides=green, anciens=amber, korrigans=purple, niamh=teal, ankou=red)",
-        "Dark overlay z-index:70, Celtic header 'Fin de Quete', reason message, Rejouer button with hover",
-        "Old showEndScreen removed from main.ts; unused imports cleaned (BIOMES, hideCard, crossFade)"
+        "RunState interface: added 'readonly anamThisRun: number'",
+        "buildDefaultRun(): anamThisRun: 0 (resets automatically on startRun() via buildDefaultRun())",
+        "addAnam(amount): now updates both run.anamThisRun and meta.anam in one immutable set()",
+        "RunSummary.ts: addStat grid now shows 'Anam cette quete' (run.anamThisRun) + 'Anam total' (meta.anam) as separate cells — 5 stats total in grid"
       ]
     },
-    "T047": {
+    "T049": {
       "status": "DONE",
-      "description": "Card flip CSS animation — 0.4s rotateY on every new card",
+      "description": "Ogham unlock at faction rep=50 threshold crossing",
       "details": [
-        "index.html: @keyframes card-flip-in 0%=0deg -> 45%=90deg (disappear) -> 55%=-90deg -> 100%=0deg (appear)",
-        "CardOverlay.ts: triggerFlipAnimation() — void offsetWidth reflow trick, class removed after 420ms",
-        "showCard() calls triggerFlipAnimation() after overlay.classList.add('visible')",
-        "perspective:1000px on .card-container for realistic 3D depth"
+        "addReputation() in Store.ts: detects threshold crossing (current<50 AND newVal>=50)",
+        "Faction->Ogham map: druides->coll, anciens->ailm, korrigans->onn, niamh->saille, ankou->eadhadh",
+        "On unlock: adds to meta.oghamsUnlocked + meta.oghamsEquipped (immutable spread)",
+        "Fires CustomEvent 'ogham_unlocked' on window with {oghamId, oghamName} — decoupled from UI",
+        "main.ts: showOghamUnlockToast() renders toast at top:80px for 3s, fade in/out 350ms, rune prefix symbol, z-index:65",
+        "window.addEventListener('ogham_unlocked') wired before main() call",
+        "FACTION_THRESHOLD_CONTENT added to Store.ts imports from Constants"
       ]
     }
   },
   "ts_errors": 0,
-  "bundle_kb_app": 96.83,
-  "bundle_kb_gzip": 29.73,
+  "bundle_kb_app": 98.37,
+  "bundle_kb_gzip": 30.14,
   "build_ok": true,
-  "build_time_s": 5.43
+  "build_time_s": 2.01,
+  "verdict": "PASS"
 }

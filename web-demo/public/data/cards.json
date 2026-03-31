@@ -7715,5 +7715,608 @@
         ]
       }
     ]
+  },
+  {
+    "narrative": "Une lueur dansante apparait dans la bruyere, vacillant comme une flamme sans source. Elle s'arrete, t'attend. Les anciens disent que les feux follets guident ceux qui savent les suivre — et egarent les autres.",
+    "biome": "landes_bruyere",
+    "options": [
+      {
+        "verb": "suivre",
+        "text": "Tu suis la lumiere a travers la lande, laissant ton instinct guider tes pas vers l'inconnu.",
+        "effects": [
+          "ADD_REPUTATION:niamh:13",
+          "ADD_ANAM:3"
+        ]
+      },
+      {
+        "verb": "observer",
+        "text": "Tu etudies le mouvement du feu follet, cherchant un schema dans sa danse erratique.",
+        "effects": [
+          "ADD_REPUTATION:anciens:9",
+          "ADD_BIOME_CURRENCY:2"
+        ]
+      },
+      {
+        "verb": "resister mentalement",
+        "text": "Tu te rappelles les mises en garde et refuses de ceder a l'attrait de la lumiere.",
+        "effects": [
+          "ADD_REPUTATION:druides:7",
+          "HEAL_LIFE:4"
+        ]
+      }
+    ]
+  },
+  {
+    "narrative": "Niamh se tient au bord d'un anneau de champignons, ses cheveux d'or palissant dans la lumiere grise du matin. Elle te tend la main en souriant, une invitation muette a franchir le cercle.",
+    "biome": "landes_bruyere",
+    "options": [
+      {
+        "verb": "s'approcher",
+        "text": "Tu t'avances vers Niamh, prenant sa main froide comme la rosee et entrant dans le cercle de fees.",
+        "effects": [
+          "ADD_REPUTATION:niamh:15",
+          "ADD_ANAM:4"
+        ]
+      },
+      {
+        "verb": "parler",
+        "text": "Tu lui demandes ce qui attend au-dela du cercle avant de t'engager dans quoi que ce soit.",
+        "effects": [
+          "ADD_REPUTATION:niamh:8",
+          "ADD_REPUTATION:anciens:5"
+        ]
+      },
+      {
+        "verb": "refuser",
+        "text": "Tu declins poliment, te souvenant que certains seuils ne se franchissent qu'a sens unique.",
+        "effects": [
+          "ADD_REPUTATION:druides:10",
+          "HEAL_LIFE:3"
+        ]
+      }
+    ]
+  },
+  {
+    "narrative": "Un sentier brumeux traverse la lande, si etroit qu'on le croirait trace par des mains d'enfants ou de creatures plus petites. De chaque cote, la bruyere forme des murs silencieux.",
+    "biome": "landes_bruyere",
+    "options": [
+      {
+        "verb": "se faufiler",
+        "text": "Tu t'engages sur le sentier etroit, courbant le dos pour passer sans deranger les haies de bruyere.",
+        "effects": [
+          "ADD_REPUTATION:niamh:10",
+          "ADD_BIOME_CURRENCY:3"
+        ]
+      },
+      {
+        "verb": "pister",
+        "text": "Tu examines les traces dans la boue du sentier pour comprendre qui l'a emprunte recemment.",
+        "effects": [
+          "ADD_REPUTATION:anciens:11",
+          "ADD_ANAM:2"
+        ]
+      },
+      {
+        "verb": "contourner",
+        "text": "Tu preferes longer la lande plutot que d'emprunter un chemin trop petit pour un humain.",
+        "effects": [
+          "ADD_REPUTATION:korrigans:8",
+          "DAMAGE_LIFE:3"
+        ]
+      }
+    ]
+  },
+  {
+    "narrative": "Une source cachee chante sous les fougeres. L'eau en est d'un bleu etrange, presque lumineux. On dit que les sources enchantees de la lande revelent la verite a ceux qui osent y plonger le regard.",
+    "biome": "landes_bruyere",
+    "options": [
+      {
+        "verb": "fixer",
+        "text": "Tu te penches sur l'eau bleue et plonges ton regard dans ses profondeurs chatoyantes.",
+        "effects": [
+          "ADD_REPUTATION:niamh:12",
+          "ADD_ANAM:3"
+        ]
+      },
+      {
+        "verb": "cueillir",
+        "text": "Tu ramasses les herbes qui bordent la source, guidee par l'odeur douce-amere qui s'en degage.",
+        "effects": [
+          "ADD_REPUTATION:anciens:10",
+          "HEAL_LIFE:4"
+        ]
+      },
+      {
+        "verb": "ecouter",
+        "text": "Tu fermes les yeux et ecoutes le chant de la source, cherchant un message dans son murmure.",
+        "effects": [
+          "ADD_REPUTATION:niamh:9",
+          "ADD_BIOME_CURRENCY:2"
+        ]
+      }
+    ]
+  },
+  {
+    "narrative": "Le brouillard s'epaissit soudain autour de toi, formant des silhouettes floues qui ressemblent a des visages. Une voix douce, celle de Niamh peut-etre, murmure ton nom depuis l'obscurite laiteuse.",
+    "biome": "landes_bruyere",
+    "options": [
+      {
+        "verb": "accepter",
+        "text": "Tu acceptes la presence des ombres et reponds a l'appel de la voix avec confiance.",
+        "effects": [
+          "ADD_REPUTATION:niamh:13",
+          "ADD_ANAM:2"
+        ]
+      },
+      {
+        "verb": "resister mentalement",
+        "text": "Tu ancres ton esprit dans le reel, refusant de te laisser entrainer par les murmures du brouillard.",
+        "effects": [
+          "ADD_REPUTATION:anciens:9",
+          "HEAL_LIFE:3"
+        ]
+      },
+      {
+        "verb": "attendre",
+        "text": "Tu restes immobile, laissant le brouillard se dissiper de lui-meme plutot que de reagir.",
+        "effects": [
+          "ADD_REPUTATION:korrigans:7",
+          "ADD_BIOME_CURRENCY:3"
+        ]
+      }
+    ]
+  },
+  {
+    "narrative": "Un pont de pierre moussue enjambe un ruisseau noir comme de l'encre. Au milieu du pont, une silhouette fine aux ailes translucides vous regarde passer. Ses yeux ont la couleur du ciel juste avant l'aube.",
+    "biome": "landes_bruyere",
+    "options": [
+      {
+        "verb": "s'approcher",
+        "text": "Tu marches vers la creature aillee, la main ouverte en signe de paix.",
+        "effects": [
+          "ADD_REPUTATION:niamh:14",
+          "ADD_ANAM:3"
+        ]
+      },
+      {
+        "verb": "marchander",
+        "text": "Tu proposes un echange — un secret contre un passage libre sur le pont.",
+        "effects": [
+          "ADD_REPUTATION:korrigans:10",
+          "ADD_BIOME_CURRENCY:4"
+        ]
+      },
+      {
+        "verb": "traverser",
+        "text": "Tu traverses le pont d'un pas assure, faisant comme si la creature n'etait pas la.",
+        "effects": [
+          "ADD_REPUTATION:ankou:8",
+          "DAMAGE_LIFE:4"
+        ]
+      }
+    ]
+  },
+  {
+    "narrative": "La lande s'ouvre sur un cercle de pierres dresses, bien plus petit que ceux des anciens mais vibrant d'une energie jeune et vive. La mousse qui les couvre a la couleur etrange de l'emeraude sous la pluie.",
+    "biome": "landes_bruyere",
+    "options": [
+      {
+        "verb": "toucher",
+        "text": "Tu poses les deux mains sur la pierre centrale et laisses l'energie du lieu te traverser.",
+        "effects": [
+          "ADD_REPUTATION:niamh:11",
+          "ADD_ANAM:4",
+          "DAMAGE_LIFE:2"
+        ]
+      },
+      {
+        "verb": "etudier",
+        "text": "Tu examines les gravures sur les pierres, cherchant les signes des anciens qui ont erige ce lieu.",
+        "effects": [
+          "ADD_REPUTATION:anciens:12",
+          "ADD_BIOME_CURRENCY:3"
+        ]
+      },
+      {
+        "verb": "mediter",
+        "text": "Tu t'assois au centre du cercle et laisses ton esprit s'ouvrir aux resonances du lieu.",
+        "effects": [
+          "ADD_REPUTATION:druides:9",
+          "HEAL_LIFE:5"
+        ]
+      }
+    ]
+  },
+  {
+    "narrative": "Un renard aux reflets d'argent croise ta route et s'arrete, la tete inclinee. Il ne fuit pas. Son regard est d'une intelligence troublante, comme s'il attendait quelque chose de ta part.",
+    "biome": "landes_bruyere",
+    "options": [
+      {
+        "verb": "suivre",
+        "text": "Tu suis le renard d'argent a travers la bruyere, confiant qu'il te menera quelque part de significatif.",
+        "effects": [
+          "ADD_REPUTATION:niamh:12",
+          "ADD_ANAM:3"
+        ]
+      },
+      {
+        "verb": "observer",
+        "text": "Tu l'observes sans bouger, memorisant chaque detail de sa silhouette argentee.",
+        "effects": [
+          "ADD_REPUTATION:anciens:8",
+          "ADD_BIOME_CURRENCY:2"
+        ]
+      },
+      {
+        "verb": "s'approcher",
+        "text": "Tu t'approches lentement, la main tendue, pour voir si la creature accepte le contact.",
+        "effects": [
+          "ADD_REPUTATION:niamh:9",
+          "HEAL_LIFE:3"
+        ]
+      }
+    ]
+  },
+  {
+    "narrative": "Une chanson monte de la lande, une melodie sans paroles qui semble naitre de la bruyere elle-meme. La musique est douce mais chargee d'une nostalgie si profonde qu'elle serre la gorge.",
+    "biome": "landes_bruyere",
+    "options": [
+      {
+        "verb": "ecouter",
+        "text": "Tu t'assieds dans la bruyere et ecoutes la melodie jusqu'a ce qu'elle s'eteigne naturellement.",
+        "effects": [
+          "ADD_REPUTATION:niamh:13",
+          "ADD_ANAM:4"
+        ]
+      },
+      {
+        "verb": "chanter",
+        "text": "Tu reprends la melodie a voix basse, offrant ta propre voix en reponse au chant de la lande.",
+        "effects": [
+          "ADD_REPUTATION:niamh:10",
+          "ADD_REPUTATION:anciens:5"
+        ]
+      },
+      {
+        "verb": "pister",
+        "text": "Tu cherches l'origine de la chanson, te deplacant prudemment vers sa source.",
+        "effects": [
+          "ADD_REPUTATION:korrigans:8",
+          "ADD_BIOME_CURRENCY:3"
+        ]
+      }
+    ]
+  },
+  {
+    "narrative": "Le crepuscule peint la lande en violet et or. Un vieux berger assis sur une roche te regarde approcher. Ses yeux sont clairs comme ceux d'un enfant, mais ses mains portent les rides de cent hivers.",
+    "biome": "landes_bruyere",
+    "options": [
+      {
+        "verb": "parler",
+        "text": "Tu t'assieds aupres du berger et lui demandes les secrets de la lande qu'il garde depuis si longtemps.",
+        "effects": [
+          "ADD_REPUTATION:anciens:14",
+          "ADD_ANAM:3"
+        ]
+      },
+      {
+        "verb": "ecouter",
+        "text": "Tu l'invites a parler sans l'interrompre, recueillant chaque mot comme une graine precieuse.",
+        "effects": [
+          "ADD_REPUTATION:anciens:11",
+          "HEAL_LIFE:4"
+        ]
+      },
+      {
+        "verb": "aider",
+        "text": "Tu proposes d'aider le berger a rassembler son troupeau avant que la nuit tombe completement.",
+        "effects": [
+          "ADD_REPUTATION:korrigans:9",
+          "ADD_BIOME_CURRENCY:3"
+        ]
+      }
+    ]
+  },
+  {
+    "narrative": "Une mare stagnante reflète un ciel qui n'est pas celui au-dessus de ta tete. Dans l'eau noire, les etoiles brillent alors qu'il fait jour. Un passage vers l'autre monde, peut-etre.",
+    "biome": "landes_bruyere",
+    "options": [
+      {
+        "verb": "fixer",
+        "text": "Tu plonges ton regard dans la mare, cherchant a lire les etoiles inversees comme un augure.",
+        "effects": [
+          "ADD_REPUTATION:niamh:12",
+          "ADD_ANAM:5"
+        ]
+      },
+      {
+        "verb": "analyser",
+        "text": "Tu etudies le phenomene de maniere rationnelle, cherchant une explication naturelle au mirage.",
+        "effects": [
+          "ADD_REPUTATION:anciens:10",
+          "ADD_BIOME_CURRENCY:2"
+        ]
+      },
+      {
+        "verb": "accepter",
+        "text": "Tu acceptes le mystere sans le questionner et continues ta route en portant sa memoire.",
+        "effects": [
+          "ADD_REPUTATION:ankou:9",
+          "HEAL_LIFE:2"
+        ]
+      }
+    ]
+  },
+  {
+    "narrative": "Une femme en blanc traverse la lande a grands pas, portant un panier d'herbes dont tu ne reconnais aucune. Elle ne regarde pas dans ta direction mais ralentit legerement en passant pres de toi.",
+    "biome": "landes_bruyere",
+    "options": [
+      {
+        "verb": "parler",
+        "text": "Tu interpelles la femme, lui demandant d'ou viennent ces herbes aux couleurs si etranges.",
+        "effects": [
+          "ADD_REPUTATION:niamh:11",
+          "ADD_ANAM:3"
+        ]
+      },
+      {
+        "verb": "suivre",
+        "text": "Tu la suis discretement a distance, curieux de savoir ou elle se rend avec ces herbes.",
+        "effects": [
+          "ADD_REPUTATION:niamh:9",
+          "ADD_BIOME_CURRENCY:3"
+        ]
+      },
+      {
+        "verb": "observer",
+        "text": "Tu la laisses passer et observes son chemin depuis la distance sans intervenir.",
+        "effects": [
+          "ADD_REPUTATION:anciens:8",
+          "HEAL_LIFE:3"
+        ]
+      }
+    ]
+  },
+  {
+    "narrative": "Un noeud de bruyere centenaire forme une arche naturelle au-dessus du sentier. Ses branches torsadees dessinent des visages dans le bois gris. En le franchissant, tu senses que quelque chose change.",
+    "biome": "landes_bruyere",
+    "options": [
+      {
+        "verb": "traverser",
+        "text": "Tu franchis l'arche avec respect, conscient de passer d'un espace a un autre.",
+        "effects": [
+          "ADD_REPUTATION:niamh:10",
+          "ADD_ANAM:3"
+        ]
+      },
+      {
+        "verb": "examiner",
+        "text": "Tu etudies les visages dans le bois torsade, cherchant a identifier les ancetres qu'ils representent.",
+        "effects": [
+          "ADD_REPUTATION:anciens:12",
+          "ADD_BIOME_CURRENCY:2"
+        ]
+      },
+      {
+        "verb": "contourner",
+        "text": "Tu contournes l'arche par precaution, preferant ne pas franchir un seuil que tu ne comprends pas.",
+        "effects": [
+          "ADD_REPUTATION:druides:8",
+          "HEAL_LIFE:4"
+        ]
+      }
+    ]
+  },
+  {
+    "narrative": "La nuit tombe vite sur la lande. Tu cherches un abri quand tu vois une lumiere dans une tourbe creusee. A l'interieur, un feu de bruyere et des traces recentes d'occupation, mais personne.",
+    "biome": "landes_bruyere",
+    "options": [
+      {
+        "verb": "s'approcher",
+        "text": "Tu entres prudemment dans l'abri de tourbe, te rechauffant au feu sans te l'approprier.",
+        "effects": [
+          "ADD_REPUTATION:korrigans:10",
+          "HEAL_LIFE:5"
+        ]
+      },
+      {
+        "verb": "attendre",
+        "text": "Tu restes a l'exterieur et attends le retour du proprietaire avant de prendre quoi que ce soit.",
+        "effects": [
+          "ADD_REPUTATION:anciens:11",
+          "ADD_ANAM:2"
+        ]
+      },
+      {
+        "verb": "chercher au hasard",
+        "text": "Tu fouilles rapidement les affaires laissees sur place, cherchant quelque chose d'utile pour la nuit.",
+        "effects": [
+          "ADD_REPUTATION:ankou:7",
+          "ADD_BIOME_CURRENCY:4",
+          "DAMAGE_LIFE:3"
+        ]
+      }
+    ]
+  },
+  {
+    "narrative": "Un enfant aux pieds nus court devant toi en riant, laissant des empreintes lumineuses sur la terre de la lande. Il s'arrete, se retourne, et tu vois que ses yeux sont deux petites lunes.",
+    "biome": "landes_bruyere",
+    "options": [
+      {
+        "verb": "s'approcher",
+        "text": "Tu t'approches de l'enfant-lune avec douceur, cherchant a communiquer sans l'effrayer.",
+        "effects": [
+          "ADD_REPUTATION:niamh:14",
+          "ADD_ANAM:4"
+        ]
+      },
+      {
+        "verb": "suivre",
+        "text": "Tu suis les empreintes lumineuses qu'il laisse, meme apres qu'il a disparu.",
+        "effects": [
+          "ADD_REPUTATION:niamh:11",
+          "ADD_BIOME_CURRENCY:3"
+        ]
+      },
+      {
+        "verb": "resister mentalement",
+        "text": "Tu reconnais les signes d'une creature faerique et ancres ton esprit dans la realite.",
+        "effects": [
+          "ADD_REPUTATION:druides:9",
+          "HEAL_LIFE:4"
+        ]
+      }
+    ]
+  },
+  {
+    "narrative": "Un tumulus se profile a l'horizon, surmonte d'une pierre dressee couverte de lichen orange. L'air autour est different — plus chargé, plus lourd. Les anciens dormaient ici depuis des siecles.",
+    "biome": "landes_bruyere",
+    "options": [
+      {
+        "verb": "s'approcher",
+        "text": "Tu approches du tumulus avec respect, posant la main sur la pierre tiede malgre la fraicheur de l'air.",
+        "effects": [
+          "ADD_REPUTATION:anciens:13",
+          "ADD_ANAM:3"
+        ]
+      },
+      {
+        "verb": "mediter",
+        "text": "Tu t'assieds face au tumulus et laisses la presence des anciens t'envelopper en silence.",
+        "effects": [
+          "ADD_REPUTATION:anciens:10",
+          "HEAL_LIFE:4"
+        ]
+      },
+      {
+        "verb": "interpreter",
+        "text": "Tu lis les gravures sur la pierre dressee, dechiffrant les signes laisses par les batisseurs.",
+        "effects": [
+          "ADD_REPUTATION:druides:8",
+          "ADD_BIOME_CURRENCY:3"
+        ]
+      }
+    ]
+  },
+  {
+    "narrative": "Le vent se leve brusquement et dans son souffle tu entends des mots — pas des murmures, des phrases claires. Quelqu'un te parle depuis l'air lui-meme, dans une langue que tu comprends sans l'avoir apprise.",
+    "biome": "landes_bruyere",
+    "options": [
+      {
+        "verb": "ecouter",
+        "text": "Tu te tais et ecoutes de toutes tes forces, memorisant chaque mot que le vent te confie.",
+        "effects": [
+          "ADD_REPUTATION:niamh:13",
+          "ADD_ANAM:4"
+        ]
+      },
+      {
+        "verb": "repondre",
+        "text": "Tu reponds a voix haute au vent, engageant une conversation avec ce qui parle a travers lui.",
+        "effects": [
+          "ADD_REPUTATION:niamh:10",
+          "ADD_REPUTATION:anciens:6"
+        ]
+      },
+      {
+        "verb": "resister mentalement",
+        "text": "Tu bloques les voix par une discipline mentale apprise, refusant de te laisser influencer.",
+        "effects": [
+          "ADD_REPUTATION:druides:10",
+          "HEAL_LIFE:3"
+        ]
+      }
+    ]
+  },
+  {
+    "narrative": "Trois chemins se rejoignent sur la lande en un carrefour marque par une croix de pierre. Sous chaque bras de la croix, une offrande differente — une plume noire, une fleur de bruyere, un os blanchi.",
+    "biome": "landes_bruyere",
+    "options": [
+      {
+        "verb": "examiner",
+        "text": "Tu etudies les offrandes avec soin, cherchant a comprendre la nature de chaque don laisse ici.",
+        "effects": [
+          "ADD_REPUTATION:anciens:12",
+          "ADD_ANAM:2"
+        ]
+      },
+      {
+        "verb": "ajouter une offrande",
+        "text": "Tu laisses quelque chose de toi-meme — une meche de cheveux, un souffle — au carrefour des chemins.",
+        "effects": [
+          "ADD_REPUTATION:ankou:10",
+          "ADD_REPUTATION:niamh:7"
+        ]
+      },
+      {
+        "verb": "passer",
+        "text": "Tu passes le carrefour sans t'arreter, respectant les offrandes sans y toucher ni t'y attarder.",
+        "effects": [
+          "ADD_REPUTATION:korrigans:8",
+          "ADD_BIOME_CURRENCY:3"
+        ]
+      }
+    ]
+  },
+  {
+    "narrative": "Niamh t'attend assise sur un rocher plat couvert de mousse argentee. Elle ne dit rien mais te regarde avec une intensite douce, comme si elle lisait quelque chose dans ton visage que toi-meme tu ne connais pas.",
+    "biome": "landes_bruyere",
+    "options": [
+      {
+        "verb": "s'asseoir",
+        "text": "Tu t'assieds a cote d'elle sur la roche et laisses le silence entre vous devenir confortable.",
+        "effects": [
+          "ADD_REPUTATION:niamh:15",
+          "ADD_ANAM:5"
+        ]
+      },
+      {
+        "verb": "parler",
+        "text": "Tu lui poses la question qui te tourmente depuis le debut de ta traversee de la lande.",
+        "effects": [
+          "ADD_REPUTATION:niamh:12",
+          "ADD_ANAM:3"
+        ]
+      },
+      {
+        "verb": "attendre",
+        "text": "Tu restes debout et attends qu'elle prenne la parole en premier, lui laissant le controle de la rencontre.",
+        "effects": [
+          "ADD_REPUTATION:niamh:9",
+          "HEAL_LIFE:4"
+        ]
+      }
+    ]
+  },
+  {
+    "narrative": "Un brouillard d'or roule sur la lande depuis l'ouest, laissant dans son sillage une bruyere aux teintes impossibles — pourpre, argent, bleu nuit. Il avance vers toi avec la lenteur d'une maree.",
+    "biome": "landes_bruyere",
+    "options": [
+      {
+        "verb": "attendre",
+        "text": "Tu restes immobile et laisses le brouillard d'or te traverser, confiant dans sa nature bienveillante.",
+        "effects": [
+          "ADD_REPUTATION:niamh:13",
+          "HEAL_LIFE:5",
+          "ADD_ANAM:2"
+        ]
+      },
+      {
+        "verb": "fuir",
+        "text": "Tu te mets a courir a rebours du brouillard, refusant d'etre enveloppe par ce que tu ne comprends pas.",
+        "effects": [
+          "ADD_REPUTATION:ankou:8",
+          "DAMAGE_LIFE:4"
+        ]
+      },
+      {
+        "verb": "observer",
+        "text": "Tu t'accroupis et observes le brouillard au ras du sol, cherchant a comprendre ce qu'il porte avec lui.",
+        "effects": [
+          "ADD_REPUTATION:anciens:10",
+          "ADD_BIOME_CURRENCY:3"
+        ]
+      }
+    ]
   }
 ]

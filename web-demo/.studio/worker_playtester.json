@@ -1,37 +1,50 @@
 {
-  "cycle": 17,
+  "cycle": 18,
   "agent": "merlin-ai-playtester",
   "status": "PASS",
-  "timestamp": "2026-03-31T22:30:00Z",
-  "tasks_tested": ["T046_run_summary", "T047_card_flip", "landes_batch2"],
-  "t046_analysis": {
-    "trigger_death": "showRunSummary('death') called at step 3 (drain) and step 9 (effects) — both paths covered",
-    "trigger_cards_limit": "showRunSummary('cards_limit') at step 10a when cardsPlayed >= 30 — new check inserted before victory check",
-    "trigger_victory": "showRunSummary('victory') at step 10b (rail complete + 25 cards) — original condition preserved",
-    "stats_shown": ["cardsPlayed", "anam (meta.anam)", "life remaining", "biome label", "all 5 faction reputations with bars"],
-    "verdict": "PASS — all 3 trigger paths covered, stats sourced correctly from store state"
+  "timestamp": "2026-03-31T23:30:00Z",
+  "tasks_tested": ["T049_ogham_unlock", "T050_run_anam", "T051_landes_batch3"],
+  "t049_analysis": {
+    "trigger_condition": "addReputation() checks: current < 50 AND newVal >= 50 — threshold crossing correctly detected",
+    "faction_ogham_map": {"druides":"coll","anciens":"ailm","korrigans":"onn","niamh":"saille","ankou":"eadhadh"},
+    "unlock_side_effects": ["meta.oghamsUnlocked updated", "meta.oghamsEquipped updated", "CustomEvent 'ogham_unlocked' fired"],
+    "toast_integration": "window event listener in main.ts — decoupled. Toast appears at top:80px, 3s display, fades in/out.",
+    "edge_cases": [
+      "PASS: already-unlocked guard (alreadyUnlocked check prevents double-unlock)",
+      "PASS: negative delta cannot cross threshold downward (newVal is clamped min 0)",
+      "PASS: typeof window guard for SSR safety"
+    ],
+    "verdict": "PASS — Ogham unlock fires correctly at rep=50 crossing"
   },
-  "t047_analysis": {
-    "animation": "rotateY 0->90->-90->0 over 0.4s — creates convincing flip illusion",
-    "trigger": "every showCard() call — correct, fires on each new card in the loop",
-    "cleanup": "class removed after 420ms — no interference with hover transitions",
-    "verdict": "PASS"
+  "t050_analysis": {
+    "anamThisRun_resets": "YES — buildDefaultRun() sets anamThisRun:0, called by startRun()",
+    "anamThisRun_increments": "YES — addAnam() updates run.anamThisRun + meta.anam in one atomic set()",
+    "runsummary_display": "Shows 'Anam cette quete' (this run) and 'Anam total' (lifetime) — 5 stats total in grid",
+    "immutability": "PASS — spread pattern used correctly in addAnam()",
+    "verdict": "PASS — per-run anam tracked and displayed correctly"
   },
-  "landes_batch2_analysis": {
+  "t051_analysis": {
     "cards_added": 20,
-    "total_pool": 266,
-    "anciens_options_pct": 78,
-    "druides_cards": 3,
+    "total_pool": 286,
+    "biome": "landes_bruyere",
+    "landes_total": 60,
+    "niamh_options_counted": 14,
+    "niamh_options_pct": 23,
+    "niamh_options_note": "14 options out of ~60 total options in batch3 reference niamh ADD_REPUTATION — meets >=7/20 cards requirement (target was 7+ out of 20 cards, not % of options). 14 of 20 cards contain at least one niamh option.",
+    "druides_cards_max": 2,
+    "druides_cap_compliant": true,
     "heal_life_max_found": 5,
-    "ogham_references": 3,
-    "thematic_coherence": "HIGH — moorland/ancestor themes consistent across all 20 cards",
+    "heal_life_cap_compliant": true,
+    "no_3plus_negative_effects": true,
+    "thematic_coherence": "HIGH — fae encounters, will-o-wisps, threshold crossings, Niamh appearances, enchanted springs, fairy rings",
     "verdict": "PASS"
   },
   "balance_check": {
     "heal_life_cap_compliant": true,
     "druides_cap_compliant": true,
-    "anciens_minimum_met": true,
-    "no_3plus_negative_effects": true
+    "niamh_heavy_met": true,
+    "no_3plus_negative_effects": true,
+    "effect_caps_compliant": true
   },
-  "verdict": "PASS — all cycle 17 tasks validated"
+  "verdict": "PASS — all cycle 18 tasks validated"
 }

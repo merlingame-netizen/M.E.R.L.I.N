@@ -1,0 +1,54 @@
+{
+  "cycle": 18,
+  "timestamp": "2026-03-31T23:30:00Z",
+  "verdict": "PASS",
+  "tasks": {
+    "T049_ogham_unlock": {
+      "verdict": "PASS",
+      "trigger": "addReputation() in Store.ts — threshold crossing current<50 AND newVal>=50",
+      "faction_ogham_map": {
+        "druides": "coll (Noisetier, tier1, reveal)",
+        "anciens": "ailm (Sapin, tier1, reveal)",
+        "korrigans": "onn (Ajonc, tier1, boost)",
+        "niamh": "saille (Saule, tier1, recovery)",
+        "ankou": "eadhadh (Tremble, tier1, protection)"
+      },
+      "unlock_guards": ["already-unlocked check prevents duplicate", "typeof window guard for SSR"],
+      "toast": "showOghamUnlockToast() — top:80px, z-index:65, 3s display, rune symbol prefix",
+      "decoupling": "Store fires CustomEvent, main.ts listens — no direct import coupling"
+    },
+    "T050_run_anam": {
+      "verdict": "PASS",
+      "run_anam_resets": true,
+      "run_anam_increments": "alongside meta.anam in addAnam() — single atomic set()",
+      "display": "RunSummary 5-stat grid: Cartes jouees / Anam cette quete / Anam total / Vie restante / Biome atteint"
+    },
+    "T051_landes_batch3": {
+      "verdict": "PASS",
+      "cards_added": 20,
+      "total_pool": 286,
+      "landes_bruyere_total": 60,
+      "niamh_cards_with_option": 14,
+      "niamh_pct_of_batch": 70,
+      "druides_cards": 2,
+      "heal_life_max": 5,
+      "no_3plus_negatives": true,
+      "themes": ["feux follets", "Niamh directe", "anneau de fees", "source enchantee", "brouillard d'or", "enfant-lune", "carrefour", "tumulus", "voix du vent"]
+    }
+  },
+  "regression_gate": {
+    "ts_errors": 0,
+    "ts_gate": "PASS",
+    "bundle_kb_app": 98.37,
+    "bundle_prev": 96.83,
+    "bundle_delta_kb": 1.54,
+    "bundle_gate": "PASS",
+    "build_ok": true,
+    "build_gate": "PASS",
+    "runtime_errors_expected": 0
+  },
+  "new_tasks_identified": [
+    "T052: OghamPanel locked/unlocked visual state (grey out + tooltip)",
+    "T053: Persist meta.oghamsUnlocked + meta.factionRep to localStorage"
+  ]
+}

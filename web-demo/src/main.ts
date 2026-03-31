@@ -398,5 +398,58 @@ function saveAnamToStorage(): void {
   }
 }
 
+// --- Ogham unlock toast (T049) ---
+// Listens for 'ogham_unlocked' events dispatched by Store.addReputation()
+// when faction rep crosses the 50 threshold for the first time.
+
+const OGHAM_TOAST_ID = 'ogham-unlock-toast';
+
+function showOghamUnlockToast(oghamName: string): void {
+  document.getElementById(OGHAM_TOAST_ID)?.remove();
+
+  const toast = document.createElement('div');
+  toast.id = OGHAM_TOAST_ID;
+  toast.setAttribute('aria-live', 'assertive');
+  toast.setAttribute('role', 'status');
+  toast.style.cssText = [
+    'position:fixed',
+    'top:80px',
+    'left:50%',
+    'transform:translateX(-50%)',
+    'background:rgba(10,10,18,0.92)',
+    'color:rgba(205,133,63,0.98)',
+    'font-family:system-ui',
+    'font-size:14px',
+    'font-weight:600',
+    'letter-spacing:1.5px',
+    'padding:10px 28px',
+    'border-radius:24px',
+    'border:1px solid rgba(205,133,63,0.55)',
+    'z-index:65',
+    'pointer-events:none',
+    'opacity:0',
+    'transition:opacity 0.35s ease',
+    'text-align:center',
+  ].join(';');
+  toast.textContent = `\u16AA Ogham ${oghamName} d\u00e9verrouill\u00e9`;
+  document.body.appendChild(toast);
+
+  requestAnimationFrame(() => {
+    requestAnimationFrame(() => { toast.style.opacity = '1'; });
+  });
+
+  setTimeout(() => {
+    toast.style.opacity = '0';
+    setTimeout(() => { toast.remove(); }, 350);
+  }, 3000);
+}
+
+window.addEventListener('ogham_unlocked', (evt: Event) => {
+  const detail = (evt as CustomEvent<{ oghamId: string; oghamName: string }>).detail;
+  if (detail?.oghamName) {
+    showOghamUnlockToast(detail.oghamName);
+  }
+});
+
 // --- Start ---
 main().catch(console.error);

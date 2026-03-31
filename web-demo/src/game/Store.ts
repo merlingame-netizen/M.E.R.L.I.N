@@ -9,7 +9,7 @@ import {
   LIFE_START, LIFE_MAX, LIFE_DRAIN_PER_CARD,
   LIFE_DRAIN_STAGE2, LIFE_DRAIN_STAGE3,
   LIFE_DRAIN_THRESHOLD_STAGE2, LIFE_DRAIN_THRESHOLD_STAGE3,
-  FACTION_SCORE_START, FACTION_CAP_PER_CARD,
+  FACTION_SCORE_START, FACTION_CAP_PER_CARD, FACTION_THRESHOLD_CONTENT,
   OGHAM_STARTER_SKILLS, OGHAM_SPECS,
   BIOME_DEFAULT, MIN_CARDS_FOR_VICTORY,
   getMultiplier, getMultiplierLabel,
@@ -33,6 +33,8 @@ export interface RunState {
   readonly karma: number;
   readonly tension: number;
   readonly biomeCurrency: number;
+  /** Anam earned in the current run only (T050). Reset to 0 on startRun(). */
+  readonly anamThisRun: number;
 }
 
 export interface Promise {
@@ -106,6 +108,7 @@ function buildDefaultRun(): RunState {
     karma: 0,
     tension: 0,
     biomeCurrency: 0,
+    anamThisRun: 0,
   };
 }
 
@@ -188,6 +191,38 @@ export const store = createStore<MerlinStore>((set, get) => ({
     const capped = Math.max(-FACTION_CAP_PER_CARD, Math.min(FACTION_CAP_PER_CARD, delta));
     const current = s.run.factions[faction] ?? 0;
     const newVal = Math.max(0, Math.min(100, current + capped));
+
+    // T049: unlock faction Ogham when rep crosses FACTION_THRESHOLD_CONTENT (50)
+    const FACTION_OGHAM_UNLOCK: Readonly<Record<string, string>> = {
+      druides: 'coll',
+      anciens: 'ailm',
+      korrigans: 'onn',
+      niamh: 'saille',
+      ankou: 'eadhadh',
+    };
+    const oghamToUnlock = FACTION_OGHAM_UNLOCK[faction];
+    const crossedThreshold = current < FACTION_THRESHOLD_CONTENT && newVal >= FACTION_THRESHOLD_CONTENT;
+    const alreadyUnlocked = s.meta.oghamsUnlocked.includes(oghamToUnlock ?? '');
+    const shouldUnlock = crossedThreshold && oghamToUnlock !== undefined && !alreadyUnlocked;
+
+    const newUnlocked = shouldUnlock
+      ? [...s.meta.oghamsUnlocked, oghamToUnlock]
+      : s.meta.oghamsUnlocked;
+    const newEquipped = shouldUnlock
+      ? [...s.meta.oghamsEquipped, oghamToUnlock]
+      : s.meta.oghamsEquipped;
+
+    if (shouldUnlock) {
+      const spec = OGHAM_SPECS[oghamToUnlock];
+      const oghamName = spec?.name ?? oghamToUnlock;
+      // Fire a DOM event so HUD/main.ts can show a toast without coupling to Store
+      if (typeof window !== 'undefined') {
+        window.dispatchEvent(
+          new CustomEvent('ogham_unlocked', { detail: { oghamId: oghamToUnlock, oghamName } })
+        );
+      }
+    }
+
     return {
       run: {
         ...s.run,
@@ -196,11 +231,14 @@ export const store = createStore<MerlinStore>((set, get) => ({
       meta: {
         ...s.meta,
         factionRep: { ...s.meta.factionRep, [faction]: newVal },
+        oghamsUnlocked: newUnlocked,
+        oghamsEquipped: newEquipped,
       },
     };
   }),
 
   addAnam: (amount) => set((s) => ({
+    run: { ...s.run, anamThisRun: s.run.anamThisRun + amount },
     meta: { ...s.meta, anam: s.meta.anam + amount },
   })),
 
