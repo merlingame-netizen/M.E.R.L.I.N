@@ -1,123 +1,76 @@
 {
   "_comment": "Contexte pre-calcule par le director en debut de cycle. Lu par les agents a la place de tous les docs.",
-  "_usage": "Director ecrit ce fichier avant de dispatcher. Agents lisent UNIQUEMENT ce fichier pour le contexte.",
-  "cycle": 13,
-  "timestamp": "2026-03-31T08:00:00Z",
+  "cycle": 15,
+  "timestamp": "2026-03-31T10:00:00Z",
   "mode": "autonomous_dev",
-  "focus": "T040_heal_balance + T005_fog_optimization + new_cards_druides_light_batch2",
+  "focus": "T040_verify + T044_ogham_badge + marais_korrigans_batch2 + screenshots",
   "selected_tasks": [
-    {"id": "T040", "title": "Reduce avg heal ceiling: HEAL_LIFE_max 7->5, GroqAdapter cap 7->5, constraints updated", "domain": "gameplay", "agent": "merlin-gameplay-programmer", "priority": 3},
-    {"id": "T005", "title": "Fog shader optimization -- simplify GLSL, reduce sin/cos calls, LOD-based density, target 60fps GTX 1060", "domain": "visual", "agent": "merlin-tech-artist", "priority": 2},
-    {"id": "T041", "title": "Generate 20 new FastRoute cards (druides<=3, ankou>=4, all field quotas, heal<=5)", "domain": "narrative", "agent": "merlin-narrative-designer", "priority": 3}
+    {"id": "T040-verify", "title": "Confirm via playtester that cautious healer is now net-negative at stage2 post-T042", "domain": "qa", "agent": "merlin-ai-playtester", "priority": 2},
+    {"id": "T044", "title": "Add ogham multiplier badge in HUD -- when activeOgham != '', show badge near score", "domain": "visual+gameplay", "agent": "merlin-gameplay-programmer", "priority": 3},
+    {"id": "marais_batch2", "title": "Generate 20 new cards for marais_korrigans (ankou 25%, korrigans 25%, druides <=3, HEAL_LIFE<=5)", "domain": "narrative", "agent": "merlin-narrative-designer", "priority": 2}
   ],
   "state_summary": {
-    "all_dev_tasks_done_or_blocked": true,
-    "minigames_count": 14,
-    "fastroute_templates_count": 166,
-    "biomes_covered": 9,
+    "bundle_kb_app": 90,
+    "bundle_kb_gzip": 182,
+    "bundle_cap_kb_warn": 220,
     "ts_errors": 0,
-    "bundle_kb_app": 289,
-    "bundle_kb_gzip_total": 209,
-    "bundle_kb_total": 818,
-    "deployment_url": "https://web-export-pi.vercel.app",
-    "groq_adapter_model": "llama3-8b-8192",
-    "groq_timeout_ms": 8000,
-    "anam_persistence": "localStorage key merlin_anam"
+    "validate_step0": 0,
+    "minigames_count": 14,
+    "total_cards_in_json": 206,
+    "deployment_url": "https://web-export-pi.vercel.app"
   },
-  "cycle12_completed": {
-    "T001": "White scenes fixed -- CanvasLayer+ColorRect in MerlinGame, MerlinCabinHub, Menu3DPC",
-    "T038": "3-stage drain scaling -- drainLifeScaled() in Store.ts, constants in Constants.ts",
-    "T039": "Faction constraints locked -- druides<=15%, ankou>=20% in card_generation_constraints.json"
+  "cycle14_completed": {
+    "T043": "FASTROUTE_TEMPLATES externalized to public/data/cards.json, bundle dropped to 90KB app",
+    "T042": "HEAL_LIFE halved after card 20 in EffectEngine (Math.max(1, Math.floor(raw*0.5)))"
   },
   "key_constants": {
-    "HEAL_LIFE_card_max_CURRENT": 7,
-    "HEAL_LIFE_card_max_TARGET": 5,
+    "HEAL_LIFE_card_max": 5,
     "HEAL_LIFE_engine_cap": 18,
-    "DAMAGE_LIFE_card_max": 5,
     "DAMAGE_LIFE_engine_cap": 15,
-    "ADD_REPUTATION_card_max": 10,
     "ADD_REPUTATION_engine_cap": 20,
-    "heal_options_per_card": 1,
     "drain_stage1_cards_1_15": 1,
     "drain_stage2_cards_16_25": 2,
     "drain_stage3_cards_26plus": 3,
-    "avg_heal_cycle12": 4.7,
-    "avg_heal_target_cycle13": 3.5,
-    "life_max": 100,
-    "factions": ["druides", "anciens", "korrigans", "niamh", "ankou"],
-    "faction_caps": {"druides_max": 0.15, "ankou_min": 0.20},
-    "faction_per_20_batch": {"druides_max": 3, "ankou_min": 4, "niamh_target": 5, "anciens_target": 4, "korrigans_target": 4},
-    "score_bonus_cap_multiplier": 2.0,
-    "victory_condition": "cardsPlayed >= 25 AND rail.isComplete()"
+    "late_heal_scale_threshold": 20,
+    "late_heal_multiplier": 0.5,
+    "marais_korrigans_batch2_constraints": {
+      "ankou_options_pct": 25,
+      "korrigans_options_pct": 25,
+      "druides_max_options": 3,
+      "HEAL_LIFE_max_per_option": 5,
+      "total_cards": 20,
+      "themes": "marais second batch: ankou-heavy. spectral figures, crossroads omens, peat bog depth, ankou cart sounds, midnight mists, korrigans as tricksters, boundary stones, soul passage"
+    }
   },
-  "files_to_modify": {
-    "T040": [
-      "web-demo/src/llm/GroqAdapter.ts -- LLM_EFFECT_CAPS.HEAL_LIFE: 7 -> 5 (line 34)",
-      "web-demo/.studio/card_generation_constraints.json -- heal_constraints.max_heal_per_option: 7 -> 5",
-      "web-demo/src/game/Constants.ts -- EFFECT_CAPS.HEAL_LIFE stays 18 (engine cap, do NOT change)"
-    ],
-    "T005": [
-      "web-demo/src/scenes/CoastBiome.ts -- createFog() function (lines 137-184)",
-      "Optimization targets: reduce noise() sin/cos from 4 calls to 2, remove PlaneGeometry segments (already 1x1 = good), add distance-based density LOD, reduce uDensity from 0.35 to 0.25"
-    ],
-    "T041": [
-      "web-demo/public/data/cards_*.json -- check existing structure",
-      "web-demo/src/game/CardSystem.ts -- FASTROUTE_CARDS array or equivalent"
-    ]
+  "T044_hud_badge_details": {
+    "file": "web-demo/src/ui/HUD.ts",
+    "current_lines": 184,
+    "activeOgham_from_store": "store.getState().run.activeOgham (string, empty string = none active)",
+    "ogham_name_lookup": "OGHAM_SPECS[activeOgham]?.name",
+    "display_text": "When activeOgham != '', show badge: '[oghamUnicode] x1.5' near score or top-center of HUD",
+    "badge_id": "ogham-badge",
+    "badge_style": "position:absolute, top:8px, left:50%, transform:translateX(-50%), gold color, pulsing opacity animation, z-index:15",
+    "imports_needed": "OGHAM_SPECS already in Constants.ts -- add to import in HUD.ts",
+    "build_in_update": "In updateHUD(): check activeOgham, show/hide badge, update text",
+    "validation": "cd web-demo && npx tsc --noEmit"
   },
-  "fog_shader_analysis": {
-    "current_geometry": "PlaneGeometry(180, 180, 1, 1) -- already minimal segments, GOOD",
-    "current_material": "ShaderMaterial transparent depthWrite=false DoubleSide",
-    "current_fragment_ops": "noise() = 4 trig calls + smoothstep*4 for edge fade = 8+ ops per fragment",
-    "optimization_plan": [
-      "Reduce noise() to 2 trig calls (drop the extra 0.5-weighted terms)",
-      "Cache edgeFade as a single smoothstep on distance-from-center (1 op vs 4 smoothsteps)",
-      "Lower uDensity from 0.35 to 0.25 (reduces alpha overdraw)",
-      "Consider adding uTime modulo 1000.0 to avoid float precision drift on long sessions",
-      "Side: DoubleSide -> FrontSide (fog seen from above only, halves rasterization)"
-    ],
-    "expected_gain": "~30-40% fragment shader cost reduction on tile-based GPUs"
+  "cards_json": {
+    "path": "c:/Users/PGNK2128/Godot-MCP/web-demo/public/data/cards.json",
+    "lines": 5558,
+    "total_entries": 206,
+    "format": "[{narrative: string, options: [{verb, text, effects: string[]}x3]}, ...]",
+    "append_location": "Before the final ] -- insert 20 new card objects with , separator"
   },
-  "narrative_constraints_cycle13": {
-    "batch_name": "druides_light_batch2",
-    "card_count": 20,
-    "heal_max_per_option": 5,
-    "druides_max": 3,
-    "ankou_min": 4,
-    "niamh_target": 5,
-    "anciens_target": 4,
-    "korrigans_target": 4,
-    "field_quotas": {
-      "chance": ">=4", "bluff": ">=3", "observation": ">=3",
-      "logique": ">=3", "finesse": ">=3", "vigueur": ">=3",
-      "esprit": "<=8", "perception": ">=3"
-    },
-    "themes": "Mixed biomes -- emphasize druidic knowledge, ancestral wisdom, korrigan mischief, niamh healing, ankou threshold/death passage. Avoid druide-centric stories.",
-    "effect_format": "HEAL_LIFE:N (max 5), DAMAGE_LIFE:N (max 5), ADD_REPUTATION:faction:N (max 10), ADD_ANAM:N, ADD_BIOME_CURRENCY:N"
+  "hud_ts_structure": {
+    "buildFactionPanel": "lines 31-76",
+    "buildResourcePanel": "lines 79-133",
+    "updateHUD": "lines 135-175",
+    "initHUD": "lines 178-183"
   },
-  "regression_thresholds_cycle13": {
+  "regression_thresholds": {
     "ts_errors": "== 0 (BLOCK)",
-    "bundle_kb_app_max": 304,
+    "bundle_kb_app_max": 220,
     "runtime_errors": "== 0 (BLOCK)",
     "smoke_pass": "true (BLOCK)"
-  },
-  "cycle_history_summary": {
-    "c8":  {"bundle_kb_app": 283, "minigames": 14, "cards": 40},
-    "c9":  {"bundle_kb_app": 284, "minigames": 14, "cards": 0, "note": "polish+resilience"},
-    "c10": {"bundle_kb_app": 289, "minigames": 14, "cards": 0, "note": "groq+anam+loading"},
-    "c11": {"bundle_kb_app": 289, "minigames": 14, "cards": 0, "note": "groq caps+loading hint"},
-    "c12": {"bundle_kb_app": 289, "minigames": 14, "cards": 0, "note": "white scenes+drain scaling+faction balance"}
-  },
-  "dispatch_wave": {
-    "wave1_parallel": [
-      "merlin-gameplay-programmer (T040 -- heal cap)",
-      "merlin-tech-artist (T005 -- fog optimization)",
-      "merlin-narrative-designer (T041 -- 20 new cards)"
-    ],
-    "wave2_parallel": [
-      "merlin-qa-lead (TS check + build)",
-      "merlin-ai-playtester (verify T040 net-heal)",
-      "merlin-visual-qa (fog regression check)"
-    ]
   }
 }

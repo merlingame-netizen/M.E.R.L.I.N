@@ -5555,5 +5555,165 @@
       { "verb": "interpreter", "text": "Tu deduis de l'alignement des cendres quand et pourquoi ce feu a brule.", "effects": ["ADD_REPUTATION:druides:6", "ADD_BIOME_CURRENCY:4"] },
       { "verb": "accepter", "text": "Tu allumes le baton vert et le poses dans les cendres pour continuer le rituel.", "effects": ["ADD_REPUTATION:ankou:8", "HEAL_LIFE:4"] }
     ]
+  },
+  {
+    "narrative": "Une cloche sonne dans les profondeurs du marais — mais il n'y a ni clocher ni village. Le son vient de sous la tourbe. Chaque coup fait vibrer l'eau noire autour de tes pieds. Les anciens disent que la cloche de l'Ankou sonne sept fois avant chaque mort.",
+    "options": [
+      { "verb": "compter", "text": "Tu comptes les coups avec precision, les yeux fermes.", "effects": ["ADD_REPUTATION:ankou:9", "ADD_ANAM:5"] },
+      { "verb": "plonger les mains", "text": "Tu enfonces les mains dans la tourbe pour trouver la source du son.", "effects": ["ADD_REPUTATION:korrigans:7", "DAMAGE_LIFE:4"] },
+      { "verb": "chanter", "text": "Tu reponds a la cloche par une vieille melodie apprise de ta grand-mere.", "effects": ["HEAL_LIFE:5", "ADD_REPUTATION:niamh:6"] }
+    ]
+  },
+  {
+    "narrative": "Au carrefour de minuit, une silhouette encapuchonnee tient une balance de bronze. Dans chaque plateau : une plume blanche et quelque chose d'opaque que tu ne peux pas identifier. Elle te regarde sans te voir.",
+    "options": [
+      { "verb": "observer", "text": "Tu etudies la balance et ses plateaux sans approcher.", "effects": ["ADD_REPUTATION:ankou:8", "ADD_ANAM:6"] },
+      { "verb": "negocier", "text": "Tu lui proposes une piece de monnaie pour en savoir plus.", "effects": ["ADD_BIOME_CURRENCY:6", "ADD_REPUTATION:korrigans:5"] },
+      { "verb": "toucher la balance", "text": "Tu poses un doigt sur le bord du plateau de la plume.", "effects": ["ADD_REPUTATION:ankou:10", "DAMAGE_LIFE:5"] }
+    ]
+  },
+  {
+    "narrative": "La tourbe s'est ouverte sur une cavite verticale, large d'un bras tendu. En dessous, une lumiere verte pulse lentement. Un parfum de fougere et de sel remonte. Quelque chose dans la cavite respire.",
+    "options": [
+      { "verb": "scruter", "text": "Tu allonges le cou au-dessus du trou, les yeux ecarquilles.", "effects": ["ADD_REPUTATION:ankou:7", "ADD_BIOME_CURRENCY:5"] },
+      { "verb": "ecouter", "text": "Tu fermes les yeux et te concentres sur la respiration en dessous.", "effects": ["ADD_ANAM:7", "ADD_REPUTATION:niamh:4"] },
+      { "verb": "refermer", "text": "Tu pousses de la tourbe avec ton pied pour combler l'ouverture.", "effects": ["ADD_REPUTATION:korrigans:6", "HEAL_LIFE:3"] }
+    ]
+  },
+  {
+    "narrative": "Un korrigan borgne assis sur une pierre phosphorescente te propose une devinette : 'Je n'ai pas de corps mais je laisse des traces. Je n'ai pas de voix mais on m'entend apres.' Il attend, l'oeil unique brillant de malice.",
+    "options": [
+      { "verb": "deviner", "text": "Tu reponds : 'Le vent.' Il hoche la tete lentement.", "effects": ["ADD_REPUTATION:korrigans:9", "ADD_BIOME_CURRENCY:6"] },
+      { "verb": "bluffer", "text": "Tu proposes une reponse confident sans en etre sur.", "effects": ["ADD_REPUTATION:korrigans:6", "DAMAGE_LIFE:3"] },
+      { "verb": "refuser", "text": "Tu lui demandes pourquoi il pose cette question plutot que d'y repondre.", "effects": ["ADD_REPUTATION:anciens:7", "ADD_ANAM:4"] }
+    ]
+  },
+  {
+    "narrative": "Un sifflet d'os depasse de la vase au bord d'un etang noir. Il est sculpte avec soin — des oghams courent le long du tube. Quand le vent passe dessus, il emet une note unique et profonde qui fait fuir les oiseaux.",
+    "options": [
+      { "verb": "saisir", "text": "Tu tires le sifflet de la vase et le nettoies avec ta manche.", "effects": ["ADD_REPUTATION:ankou:8", "ADD_ANAM:5"] },
+      { "verb": "souffler dedans", "text": "Tu portes le sifflet a tes levres et souffles une longue note.", "effects": ["ADD_REPUTATION:ankou:7", "DAMAGE_LIFE:3"] },
+      { "verb": "laisser en place", "text": "Tu le laisses dans la vase et notes sa position exacte.", "effects": ["ADD_REPUTATION:korrigans:5", "ADD_BIOME_CURRENCY:4"] }
+    ]
+  },
+  {
+    "narrative": "Une surface d'eau parfaitement immobile te renvoie ton reflet — mais le reflet a les yeux fermes. Quand tu bouges la main, le reflet ne la suit pas. Quand tu parles, il ouvre lentement la bouche.",
+    "options": [
+      { "verb": "parler au reflet", "text": "Tu lui poses une question sur ce qu'il voit de l'autre cote.", "effects": ["ADD_REPUTATION:ankou:9", "ADD_ANAM:6"] },
+      { "verb": "briser la surface", "text": "Tu lances une pierre dans l'eau pour dissoudre l'image.", "effects": ["ADD_REPUTATION:korrigans:6", "DAMAGE_LIFE:2"] },
+      { "verb": "imiter le reflet", "text": "Tu fermes les yeux et laisses le silence s'installer.", "effects": ["HEAL_LIFE:4", "ADD_REPUTATION:niamh:7"] }
+    ]
+  },
+  {
+    "narrative": "Deux korrigans tendent une corde invisible entre deux joncs. Chaque voyageur qui passe accroche quelque chose sur la corde — une plume, une dent, un bout de tissu. Ils t'indiquent que c'est le prix du passage.",
+    "options": [
+      { "verb": "payer", "text": "Tu accroches une meche de tes cheveux a la corde sans negocier.", "effects": ["ADD_REPUTATION:korrigans:8", "ADD_BIOME_CURRENCY:5"] },
+      { "verb": "marchander", "text": "Tu demandes ce que valent les objets deja accroches.", "effects": ["ADD_REPUTATION:korrigans:7", "ADD_ANAM:4"] },
+      { "verb": "contourner", "text": "Tu cherches un autre passage, barbotant dans la vase jusqu'aux genoux.", "effects": ["ADD_BIOME_CURRENCY:4", "DAMAGE_LIFE:3"] }
+    ]
+  },
+  {
+    "narrative": "Une vieille femme tisse un linceul blanc sous un arbre mort. Ses doigts sont rapides et ne s'arretent pas. Elle chante une complainte dont tu comprends chaque mot — c'est l'histoire de ta propre vie, racontee jusqu'a hier.",
+    "options": [
+      { "verb": "ecouter", "text": "Tu t'assieds en tailleur et ecoutes sans l'interrompre.", "effects": ["ADD_REPUTATION:ankou:9", "ADD_ANAM:7"] },
+      { "verb": "corriger", "text": "Tu l'interromps pour corriger un detail inexact sur toi.", "effects": ["ADD_REPUTATION:anciens:8", "DAMAGE_LIFE:2"] },
+      { "verb": "continuer la chanson", "text": "Tu chantes la suite, inventant ce qui vient apres hier.", "effects": ["ADD_REPUTATION:niamh:8", "HEAL_LIFE:4"] }
+    ]
+  },
+  {
+    "narrative": "Un marche s'est installe sur une butte seche au milieu du marais. Les vendeurs sont des ombres qui proposent des souvenirs — pas des objets, mais des instants perdus. Le prix est toujours un souvenir en echange.",
+    "options": [
+      { "verb": "acheter", "text": "Tu choisis un instant lumineux et en donnes un autre en echange.", "effects": ["ADD_ANAM:8", "ADD_REPUTATION:ankou:6"] },
+      { "verb": "refuser", "text": "Tu refuses poliment et observes les autres acheteurs.", "effects": ["ADD_REPUTATION:korrigans:5", "ADD_BIOME_CURRENCY:4"] },
+      { "verb": "vendre", "text": "Tu proposes d'abord un de tes souvenirs et attends une offre.", "effects": ["ADD_BIOME_CURRENCY:7", "ADD_REPUTATION:anciens:5"] }
+    ]
+  },
+  {
+    "narrative": "Une pierre de seuil barre le sentier — trop haute pour enjamber, trop lisse pour grimper. Des inscriptions en ogham la couvrent. Un gardien invisible pose une condition que tu ressens plus que tu ne l'entends : prouve que tu merites de passer.",
+    "options": [
+      { "verb": "dechiffrer", "text": "Tu lis les oghams a voix haute dans le bon ordre.", "effects": ["ADD_REPUTATION:ankou:8", "ADD_BIOME_CURRENCY:5"] },
+      { "verb": "s'incliner", "text": "Tu t'inclines profondement devant la pierre et attends.", "effects": ["ADD_REPUTATION:anciens:9", "HEAL_LIFE:3"] },
+      { "verb": "chercher", "text": "Tu cherches une fissure, un angle, un autre chemin connu des seuls korrigans.", "effects": ["ADD_REPUTATION:korrigans:7", "DAMAGE_LIFE:2"] }
+    ]
+  },
+  {
+    "narrative": "Des chevaux blancs au pelage de brume galopent sur l'eau sans s'enfoncer. Leurs sabots ne font aucun bruit. L'un d'eux s'arrete et te fixe — ses yeux sont le meme gris que le ciel avant la pluie.",
+    "options": [
+      { "verb": "s'approcher lentement", "text": "Tu tends la main et avances pas a pas sans quitter son regard.", "effects": ["ADD_REPUTATION:niamh:9", "ADD_ANAM:5"] },
+      { "verb": "reculer", "text": "Tu recules sans te retourner jusqu'a la rive solide.", "effects": ["ADD_REPUTATION:ankou:6", "HEAL_LIFE:4"] },
+      { "verb": "observer", "text": "Tu restes immobile et regardes le troupeau passer.", "effects": ["ADD_BIOME_CURRENCY:5", "ADD_REPUTATION:korrigans:4"] }
+    ]
+  },
+  {
+    "narrative": "Une chandelle noire brule seule au centre d'un cercle de pierres plates, sans fondre, sans vaciller. Sa lumiere n'eclaire pas — elle absorbe. La chandelle de mort illumine l'invisible et dissimule le visible.",
+    "options": [
+      { "verb": "eteindre", "text": "Tu souffles sur la flamme d'un seul souffle fort.", "effects": ["ADD_REPUTATION:ankou:10", "DAMAGE_LIFE:4"] },
+      { "verb": "prier", "text": "Tu recites une protection ancienne les mains jointes.", "effects": ["ADD_REPUTATION:druides:5", "HEAL_LIFE:4"] },
+      { "verb": "contourner", "text": "Tu fais le tour du cercle de pierres en gardant tes yeux baisses.", "effects": ["ADD_REPUTATION:korrigans:6", "ADD_BIOME_CURRENCY:4"] }
+    ]
+  },
+  {
+    "narrative": "Un passage s'ouvre dans un tertre couvert de mousse verte et noire. A l'interieur, une lumiere ambre pulse doucement. Des voix chantent dans une langue que tu ne connais pas — mais dont tu comprends l'emotion : bienvenue.",
+    "options": [
+      { "verb": "entrer", "text": "Tu franchis le seuil d'un pas decide, la tete basse pour eviter le linteau.", "effects": ["ADD_REPUTATION:ankou:9", "ADD_ANAM:7"] },
+      { "verb": "ecouter depuis le seuil", "text": "Tu restes a l'entree et recois le chant sans entrer.", "effects": ["ADD_ANAM:6", "ADD_REPUTATION:niamh:6"] },
+      { "verb": "repondre en chantant", "text": "Tu chantes une note de retour vers l'interieur du tertre.", "effects": ["ADD_REPUTATION:korrigans:7", "HEAL_LIFE:3"] }
+    ]
+  },
+  {
+    "narrative": "Un korrigan te reclame une dette ancienne — pas la tienne, mais celle d'un ancetre que tu n'as jamais connu. Il sort un parchemin noirci de sous son manteau et pointe un nom qui ressemble au tien.",
+    "options": [
+      { "verb": "negocier", "text": "Tu contestes la dette point par point, en demandant les preuves.", "effects": ["ADD_REPUTATION:korrigans:8", "ADD_BIOME_CURRENCY:5"] },
+      { "verb": "payer symboliquement", "text": "Tu lui offres ta piece la plus ancienne en gage de bonne foi.", "effects": ["ADD_REPUTATION:anciens:7", "ADD_BIOME_CURRENCY:4"] },
+      { "verb": "ignorer", "text": "Tu passes sans repondre, les yeux droit devant toi.", "effects": ["ADD_REPUTATION:ankou:7", "DAMAGE_LIFE:3"] }
+    ]
+  },
+  {
+    "narrative": "La brume forme des visages — pas des visages quelconques, mais ceux de personnes que tu as perdues. Ils ne parlent pas mais leurs expressions sont claires : ils t'observent avec un melange de tendresse et d'attente.",
+    "options": [
+      { "verb": "tendre les mains", "text": "Tu leves les bras vers les visages de brume.", "effects": ["ADD_REPUTATION:ankou:8", "ADD_ANAM:8"] },
+      { "verb": "nommer chaque visage", "text": "Tu prononces leurs noms a voix haute, un par un.", "effects": ["ADD_REPUTATION:anciens:8", "ADD_ANAM:6"] },
+      { "verb": "avancer a travers", "text": "Tu traverses les visages en murmurant que tu te souviens.", "effects": ["HEAL_LIFE:5", "ADD_REPUTATION:niamh:7"] }
+    ]
+  },
+  {
+    "narrative": "Un peage de minuit : un vieux korrigan avec une lanterne vert-de-gris bloque le pont de bois pourri au-dessus d'un ru noir. Il ne demande pas de monnaie — il veut une chanson, une histoire, ou un secret.",
+    "options": [
+      { "verb": "chanter", "text": "Tu entames une complainte bretonne que tu connais depuis l'enfance.", "effects": ["ADD_REPUTATION:korrigans:9", "HEAL_LIFE:4"] },
+      { "verb": "raconter", "text": "Tu lui nарrates une histoire vraie dont tu n'as jamais parle a personne.", "effects": ["ADD_REPUTATION:korrigans:8", "ADD_ANAM:5"] },
+      { "verb": "confier un secret", "text": "Tu lui souffles quelque chose a l'oreille en le regardant dans les yeux.", "effects": ["ADD_BIOME_CURRENCY:7", "ADD_REPUTATION:ankou:5"] }
+    ]
+  },
+  {
+    "narrative": "La mousse qui couvre les pierres du marais brille d'une phosphorescence douce. En y regardant de pres, chaque point lumineux forme une lettre d'un alphabet inconnu. L'ensemble compose un texte lisible uniquement la nuit.",
+    "options": [
+      { "verb": "copier", "text": "Tu retranscris le texte sur ta main avec de la suie.", "effects": ["ADD_REPUTATION:druides:6", "ADD_ANAM:5"] },
+      { "verb": "lire a voix haute", "text": "Tu prononces les mots comme ils te semblent sonner.", "effects": ["ADD_REPUTATION:ankou:7", "DAMAGE_LIFE:2"] },
+      { "verb": "couvrir la mousse", "text": "Tu poses tes paumes sur les pierres pour absorber le texte par contact.", "effects": ["ADD_REPUTATION:korrigans:7", "HEAL_LIFE:3"] }
+    ]
+  },
+  {
+    "narrative": "Une barque vide derive vers toi sur l'eau noire. Elle n'a pas de rame, pas de voile — mais elle avance contre le courant. Une corde effilochee pend de la proue. Elle s'arrete a trente centimetres de la rive, comme si elle attendait.",
+    "options": [
+      { "verb": "monter", "text": "Tu enjambes le bord et t'assieds en silence.", "effects": ["ADD_REPUTATION:ankou:10", "ADD_ANAM:6"] },
+      { "verb": "attraper la corde", "text": "Tu saisis la corde pour empecher la barque de repartir.", "effects": ["ADD_REPUTATION:korrigans:6", "ADD_BIOME_CURRENCY:5"] },
+      { "verb": "pousser la barque", "text": "Tu la repousses doucement vers le large.", "effects": ["ADD_REPUTATION:niamh:7", "HEAL_LIFE:4"] }
+    ]
+  },
+  {
+    "narrative": "Un souffle chaud s'echappe d'une fissure dans la tourbe — dernier souffle d'une creature ou d'une personne enterree depuis longtemps. Autour de la fissure, des fleurs minuscules ont pousse en cercle, blanches et sans odeur.",
+    "options": [
+      { "verb": "s'agenouiller", "text": "Tu poses un genou a terre et ecoutes si le souffle porte des mots.", "effects": ["ADD_REPUTATION:ankou:9", "ADD_ANAM:7"] },
+      { "verb": "cueillir une fleur", "text": "Tu en prends une et la gardes entre deux pages de ta memoire.", "effects": ["ADD_REPUTATION:korrigans:5", "ADD_BIOME_CURRENCY:5"] },
+      { "verb": "repondre", "text": "Tu souffles doucement dans la fissure en signe de reconnaissance.", "effects": ["HEAL_LIFE:5", "ADD_REPUTATION:anciens:6"] }
+    ]
+  },
+  {
+    "narrative": "Trois korrigans en cape de joncs te demandent de choisir entre trois chemins identiques en apparence. Ils se disputent en chuchotant sur lequel est le bon. L'un d'eux te fait un clin d'oeil — les deux autres ne l'ont pas vu.",
+    "options": [
+      { "verb": "suivre le conseil discret", "text": "Tu prends le chemin indique par le clin d'oeil.", "effects": ["ADD_REPUTATION:korrigans:9", "ADD_BIOME_CURRENCY:6"] },
+      { "verb": "chercher des indices", "text": "Tu examines les trois entrees a la recherche de differences.", "effects": ["ADD_REPUTATION:anciens:7", "ADD_ANAM:4"] },
+      { "verb": "choisir sans reflechir", "text": "Tu fermes les yeux et avances dans le chemin du milieu.", "effects": ["ADD_BIOME_CURRENCY:5", "DAMAGE_LIFE:3"] }
+    ]
   }
 ]

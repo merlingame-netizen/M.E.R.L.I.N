@@ -3,7 +3,7 @@
 // =============================================================================
 
 import { store } from '../game/Store';
-import { LIFE_MAX, BIOMES, FACTIONS, type FactionId } from '../game/Constants';
+import { LIFE_MAX, BIOMES, FACTIONS, OGHAM_SPECS, type FactionId } from '../game/Constants';
 
 // --- Faction display config (immutable) ---
 const FACTION_COLORS: Readonly<Record<FactionId, string>> = {
@@ -172,12 +172,108 @@ export function updateHUD(): void {
   if (currLabel && biome) {
     currLabel.textContent = biome.currency_name;
   }
+
+  updateOghamBadge();
+}
+
+/** Build the ogham active badge (top-center). Hidden by default. */
+function buildOghamBadge(): void {
+  const hud = document.getElementById('hud');
+  if (!hud || document.getElementById('ogham-badge')) return;
+
+  const badge = document.createElement('div');
+  badge.id = 'ogham-badge';
+  badge.style.cssText = [
+    'position:absolute',
+    'top:8px',
+    'left:50%',
+    'transform:translateX(-50%)',
+    'display:none',
+    'align-items:center',
+    'gap:6px',
+    'pointer-events:none',
+    'z-index:15',
+    'background:rgba(0,0,0,0.55)',
+    'border:1px solid rgba(205,170,80,0.6)',
+    'border-radius:20px',
+    'padding:3px 12px',
+  ].join(';');
+
+  const runeSpan = document.createElement('span');
+  runeSpan.id = 'ogham-badge-rune';
+  runeSpan.style.cssText = 'color:#f0c040;font-size:18px;line-height:1;';
+  badge.appendChild(runeSpan);
+
+  const nameSpan = document.createElement('span');
+  nameSpan.id = 'ogham-badge-name';
+  nameSpan.style.cssText = 'color:#f0c040;font-size:11px;font-family:system-ui;font-weight:600;letter-spacing:0.04em;';
+  badge.appendChild(nameSpan);
+
+  const multSpan = document.createElement('span');
+  multSpan.id = 'ogham-badge-mult';
+  multSpan.style.cssText = [
+    'color:#ffe680',
+    'font-size:13px',
+    'font-family:system-ui',
+    'font-weight:bold',
+    'animation:ogham-pulse 1.2s ease-in-out infinite',
+  ].join(';');
+  badge.appendChild(multSpan);
+
+  // Keyframe injection (once)
+  if (!document.getElementById('ogham-badge-style')) {
+    const style = document.createElement('style');
+    style.id = 'ogham-badge-style';
+    style.textContent = '@keyframes ogham-pulse{0%,100%{opacity:1}50%{opacity:0.55}}';
+    document.head.appendChild(style);
+  }
+
+  hud.appendChild(badge);
+}
+
+/** Update the ogham badge visibility and content from current store state. */
+function updateOghamBadge(): void {
+  const badge = document.getElementById('ogham-badge');
+  if (!badge) return;
+
+  const activeOgham = store.getState().run.activeOgham;
+  if (!activeOgham) {
+    badge.style.display = 'none';
+    return;
+  }
+
+  const spec = OGHAM_SPECS[activeOgham];
+  if (!spec) {
+    badge.style.display = 'none';
+    return;
+  }
+
+  const runeEl = document.getElementById('ogham-badge-rune');
+  const nameEl = document.getElementById('ogham-badge-name');
+  const multEl = document.getElementById('ogham-badge-mult');
+
+  if (runeEl) runeEl.textContent = spec.unicode;
+  if (nameEl) nameEl.textContent = spec.name;
+  if (multEl) {
+    // Show effect label: multiplier oghams show "x2", protection shows shield, etc.
+    const params = spec.effect_params as Record<string, unknown>;
+    if (typeof params['multiplier'] === 'number') {
+      multEl.textContent = ` \u00d7${params['multiplier']}`;
+    } else if (spec.category === 'protection') {
+      multEl.textContent = ' prot.';
+    } else {
+      multEl.textContent = ' actif';
+    }
+  }
+
+  badge.style.display = 'flex';
 }
 
 /** Subscribe to store changes and auto-update HUD. */
 export function initHUD(): void {
   buildFactionPanel();
   buildResourcePanel();
+  buildOghamBadge();
   store.subscribe(updateHUD);
   updateHUD();
 }
