@@ -7,11 +7,11 @@ import { LIFE_MAX, BIOMES, FACTIONS, OGHAM_SPECS, type FactionId } from '../game
 
 // --- Faction display config (immutable) ---
 const FACTION_COLORS: Readonly<Record<FactionId, string>> = {
-  druides: '#5a9a5a',
-  anciens: '#8b8b6a',
-  korrigans: '#9a6a5a',
-  niamh: '#6a8a9a',
-  ankou: '#7a5a7a',
+  druides: '#6abf69',
+  anciens: '#e8c84c',
+  korrigans: '#b888e8',
+  niamh: '#8ab4f8',
+  ankou: '#e05c5c',
 } as const;
 
 const FACTION_LABELS: Readonly<Record<FactionId, string>> = {

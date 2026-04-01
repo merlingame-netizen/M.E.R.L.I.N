@@ -1,30 +1,34 @@
 {
   "agent": "merlin-ai-playtester",
-  "cycle": 26,
-  "timestamp": "2026-03-31T00:00:00Z",
+  "cycle": 27,
+  "timestamp": "2026-03-31T15:45:00Z",
   "status": "PASS",
-  "scores": {
-    "flat_shading": 9,
-    "tower": 8,
-    "vegetation": 8,
-    "cliff": 9,
-    "ocean": 9,
-    "sky": 9,
-    "overall": 8.5
-  },
-  "vs_cycle_25": {
-    "cliff": "+2 (4,4,4 segments, displacement 2.0, 3 foreground rocks, waterline mass)",
-    "ocean": "+2 (horizon plane z=-45 #3a8070, 25 foam patches)",
-    "sky": "+3 (14 clouds, z-depth -32 to -80, rx/rz tilts, wispy h=0.3, x-drift animation)"
-  },
-  "compliance": {
-    "ts_errors": 0,
-    "build_success": true,
-    "bundle_app_kb": 117.76
-  },
-  "next_steps": [
-    "fog density gradient toward horizon (FogExp2 0.012 -> 0.018 at far z)",
-    "foam Y-animation (±0.15 sinusoidal per patch)",
-    "distant cliff silhouette geometry at z=-90 for extreme depth"
-  ]
+  "analysis": {
+    "menu_atmosphere": {
+      "fog": "CONFIRMED present — FogExp2(0x1a2030, 0.012). Distant geometry at z=-90 now fades into fog naturally. Score: +0.5 atmospheric depth.",
+      "foam_animation": "25 foam patches now bob on sinusoidal Y (amplitude 0.003, freq 1.5Hz, staggered phases). Living sea feel vs static patches. Score: +0.3.",
+      "distant_silhouette": "BoxGeometry(60,20,2) at z=-90 creates layered horizon. At FogExp2 0.012, this slab is heavily attenuated (~exp(-0.012*90)^2 = ~37% visibility). Atmospheric.",
+      "estimated_score": 9.0
+    },
+    "hud_readability": {
+      "faction_bars": "VERIFIED — buildFactionPanel + updateHUD + store.subscribe chain confirmed. Colors upgraded to vivid palette (green/yellow/purple/blue/red). Bars visible even at rep=5 (4px fill on 80px track).",
+      "life_bar": "3-color gradient (green/orange/red) at 50%/25% thresholds — clear.",
+      "anam_counter": "Top-right, amber color, bold — readable.",
+      "score": 8.5
+    },
+    "audio_feedback": {
+      "ambient_fix": "T072 resolved. pendingAmbientType queues the ambient type when AudioContext suspended. First click/keypress triggers resume then immediate startAmbient retry. No longer silent on boot.",
+      "sfx_coverage": "flip/win/lose/unlock/end all wired. Forest ambient (65Hz + birds) plays during gameplay.",
+      "score": 9.0
+    },
+    "effect_caps_compliance": {
+      "rep_cap": "PASS (max 20 per card — enforced in GroqAdapter + constraints)",
+      "heal_cap": "PASS (max 5 after T040/T042)",
+      "dmg_cap": "PASS (max 15)",
+      "negative_effects": "PASS (no card with 3+ negative effects)"
+    },
+    "overall_assessment": "Cycle 27 delivers three surgical improvements: foam animation adds micro-life to the ocean surface, the distant silhouette creates a third depth layer behind the cliff, and the audio bug fix means players hear the ambient drone from their first interaction. HUD faction bars are now vivid and readable. No regressions detected.",
+    "estimated_menu_score": 9.0,
+    "priority_remaining": ["T071 mobile layout", "T073 card selection feedback"]
+  }
 }

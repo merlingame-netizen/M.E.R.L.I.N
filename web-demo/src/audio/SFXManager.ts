@@ -273,9 +273,10 @@ export function startAmbient(type: AmbientType): void {
   const ctx = ensureContext();
   if (!ctx) return;
 
-  // If context is still suspended (no user interaction yet), defer
+  // If context is still suspended (no user interaction yet), queue and defer.
+  // T072: resumeOnInteraction will call startAmbient(pendingAmbientType) after resume.
   if (ctx.state === 'suspended') {
-    // Will be retried via resumeOnInteraction -> called again externally
+    pendingAmbientType = type;
     return;
   }
 
@@ -378,6 +379,9 @@ export function stopAmbient(): void {
 
 // ── SFX Manager init ─────────────────────────────────────────────────────────
 
+/** T072: Queue ambient type when AudioContext is suspended at call time. */
+let pendingAmbientType: AmbientType | null = null;
+
 export function initSFXManager(): void {
   const dispatch: Record<SFXName, (c: AudioContext) => void> = {
     flip: playFlip,
@@ -402,10 +406,17 @@ export function initSFXManager(): void {
     }
   };
 
-  // Resume context on first user interaction (browser autoplay policy)
+  // T072: Resume context on first user interaction, then retry any pending ambient
   const resumeOnInteraction = (): void => {
     if (sharedCtx && sharedCtx.state === 'suspended') {
-      sharedCtx.resume().catch(() => undefined);
+      sharedCtx.resume().then(() => {
+        // Retry queued ambient now that context is running
+        if (pendingAmbientType !== null && ambientSession === null) {
+          const type = pendingAmbientType;
+          pendingAmbientType = null;
+          startAmbient(type);
+        }
+      }).catch(() => undefined);
     }
   };
 

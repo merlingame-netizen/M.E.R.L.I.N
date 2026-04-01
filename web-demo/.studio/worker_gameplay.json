@@ -1,29 +1,27 @@
 {
   "agent": "merlin-gameplay-programmer",
-  "cycle": 24,
-  "timestamp": "2026-03-31T01:00:00Z",
+  "cycle": 27,
+  "timestamp": "2026-03-31T15:45:00Z",
   "status": "PASS",
   "tasks": {
-    "T066_ambient_audio": {
+    "T072_audio_context_fix": {
       "status": "DONE",
-      "details": "startAmbient(type)/stopAmbient() added to SFXManager.ts. Shared AudioContext (sharedCtx). Menu: 55Hz sine drone + 2x harmonic + lowpass wind noise 400Hz cutoff. Forest: 65Hz drone + 350Hz wind + random bird chirps every 4-12s. 2s fade-in on master gain (gain 0.05). stopAmbient(): 1.5s fade-out then disconnects all nodes + cancels bird timer. Wired in main.ts: startAmbient('menu') on menu entry, stopAmbient() on Start click, startAmbient('forest') after sceneManager.start()."
+      "file": "web-demo/src/audio/SFXManager.ts",
+      "changes": [
+        "Added module-level pendingAmbientType: AmbientType | null = null",
+        "startAmbient(): when ctx.state === 'suspended', sets pendingAmbientType = type and returns (instead of silent drop)",
+        "resumeOnInteraction(): after ctx.resume() resolves, if pendingAmbientType !== null and ambientSession === null, calls startAmbient(pendingAmbientType) — then clears queue",
+        "Fix ensures menu ambient (55Hz drone) plays as soon as user clicks or presses a key, even if boot screen auto-dismissed before interaction"
+      ]
     },
-    "T068_effect_preview": {
-      "status": "DONE",
-      "details": "buildEffectTooltip() in CardOverlay.ts parses effect strings (HEAL_LIFE/DAMAGE_LIFE/ADD_REPUTATION/PROMISE). Tooltip div appended inside .card-option, opacity:0 default, opacity:1 on CSS :hover. Color-coded via .effect-pos/.effect-neg/.effect-neu classes. Mobile: repositions below button via @media max-width:700px."
-    },
-    "T069_boot_skip": {
-      "status": "DONE",
-      "details": "runBootScreen() wraps wait in Promise with resolved-flag guard. Resolves on click, keydown, or 2.6s auto — whichever first. Both listeners explicitly removed on resolve to prevent listener leak."
+    "T070_hud_faction_bars": {
+      "status": "VERIFIED + ENHANCED",
+      "file": "web-demo/src/ui/HUD.ts",
+      "finding": "Faction bars are fully implemented: buildFactionPanel() creates 5 rows (label+80px track+fill+value), initHUD() calls buildFactionPanel() + store.subscribe(updateHUD), updateHUD() iterates FACTIONS and sets faction-fill-{faction} width + faction-val-{faction} text. Logic is correct.",
+      "enhancement": "Upgraded FACTION_COLORS from dim palette to vivid spec from backlog: druides=#6abf69 anciens=#e8c84c korrigans=#b888e8 niamh=#8ab4f8 ankou=#e05c5c. Makes bars visually readable at low rep values."
     }
   },
   "ts_errors": 0,
-  "bundle_kb_app": 115,
-  "bundle_delta": "+4KB vs cycle 23 (111KB) — within 5% WARN, no BLOCK",
-  "code_review_findings": [
-    "FIXED: T069 listener leak — resolved flag + removeEventListener on both click and keydown",
-    "LOW: parseEffect uses innerHTML with server-controlled strings — acceptable risk, no user input path",
-    "LOW: eff as string cast in buildEffectTooltip is redundant but harmless (effects already readonly string[])"
-  ],
+  "bundle_kb_app": 118.24,
   "issues": []
 }

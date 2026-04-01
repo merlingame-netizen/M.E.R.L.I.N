@@ -6,23 +6,23 @@
       "id": "T070",
       "title": "HUD faction bars — show 5 faction rep bars in HUD overlay",
       "priority": 1,
-      "status": "open",
+      "status": "done",
       "domain": "visual",
       "est_tokens": 250,
       "depends_on": [],
       "tags": ["ux", "hud"],
-      "notes": "Add 5 mini reputation bars to #hud. Use FACTION_COLOURS from CardOverlay (druides/#6abf69, niamh/#8ab4f8, korrigans/#b888e8, anciens/#e8c84c, ankou/#e05c5c). Bar width = rep/100 * 60px. Show faction initial + bar. Update in updateHUD(). HUD.ts + index.html CSS."
+      "notes": "DONE cycle 27. Verified fully implemented (buildFactionPanel+updateHUD+store.subscribe). Upgraded FACTION_COLORS to vivid palette: druides=#6abf69 anciens=#e8c84c korrigans=#b888e8 niamh=#8ab4f8 ankou=#e05c5c."
     },
     {
       "id": "T072",
       "title": "Ambient audio deferred bug — menu silent when no interaction during boot",
       "priority": 1,
-      "status": "open",
+      "status": "done",
       "domain": "gameplay",
       "est_tokens": 150,
       "depends_on": [],
       "tags": ["audio", "bug"],
-      "notes": "startAmbient('menu') fires before first user interaction if player does not click/type during boot. AudioContext stays suspended. Fix: in runMainMenu(), after startAmbient('menu'), check if ambientSession is null (early-return happened) and retry startAmbient('menu') after the next user gesture. Or: move startAmbient call inside the start-button click handler."
+      "notes": "DONE cycle 27. Added pendingAmbientType: AmbientType | null to SFXManager.ts. startAmbient() queues type when ctx suspended. resumeOnInteraction() retries startAmbient(pendingAmbientType) after ctx.resume() resolves."
     },
     {
       "id": "T071",

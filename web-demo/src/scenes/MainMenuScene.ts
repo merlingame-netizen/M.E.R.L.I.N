@@ -91,7 +91,12 @@ function createLowPolyOcean(): OceanResult {
 
 // ── Foam patches near cliff base ─────────────────────────────────────────────
 
-function createFoamPatches(): THREE.Group {
+interface FoamPatchResult {
+  group: THREE.Group;
+  update: (t: number) => void;
+}
+
+function createFoamPatches(): FoamPatchResult {
   const group = new THREE.Group();
   const mat = new THREE.MeshStandardMaterial({
     color: 0xddeeff,
@@ -130,15 +135,29 @@ function createFoamPatches(): THREE.Group {
     [-10, -1.8, -6],
   ];
 
-  for (const [x, y, z] of positions) {
+  for (let i = 0; i < positions.length; i++) {
+    const [x, y, z] = positions[i];
     const geo = new THREE.CircleGeometry(0.6 + Math.random() * 0.5, 5);
     const foam = new THREE.Mesh(geo, mat);
     foam.rotation.x = -Math.PI / 2;
     foam.position.set(x, y, z);
+    // Store base Y and per-patch phase offset for Y-animation
+    foam.userData['baseY'] = y;
+    foam.userData['phase'] = i * 0.42; // spread phases across patches
     group.add(foam);
   }
 
-  return group;
+  // Animate each foam patch with a gentle sinusoidal Y bob — living sea feel
+  const update = (t: number): void => {
+    for (const child of group.children) {
+      const mesh = child as THREE.Mesh;
+      const baseY = mesh.userData['baseY'] as number;
+      const phase = mesh.userData['phase'] as number;
+      mesh.position.y = baseY + Math.sin(t * 1.5 + phase) * 0.003;
+    }
+  };
+
+  return { group, update };
 }
 
 // ── Cliff Rocks ──────────────────────────────────────────────────────────────
@@ -263,6 +282,22 @@ function createCliff(): THREE.Group {
   group.add(waterRock);
 
   return group;
+}
+
+// ── Distant Cliff Silhouette ─────────────────────────────────────────────────
+// Pure flat dark slab at z=-90 — no detail, pure depth silhouette.
+
+function createDistantSilhouette(): THREE.Mesh {
+  const geo = new THREE.BoxGeometry(60, 20, 2);
+  const mat = new THREE.MeshStandardMaterial({
+    color: 0x1a1e28,
+    flatShading: true,
+    roughness: 1.0,
+    metalness: 0.0,
+  });
+  const mesh = new THREE.Mesh(geo, mat);
+  mesh.position.set(0, 5, -90);
+  return mesh;
 }
 
 // ── Sandy Path ───────────────────────────────────────────────────────────────
@@ -647,7 +682,10 @@ export function initMainMenu(container: HTMLElement): MainMenuResult {
   scene.add(ocean.horizonPlane);
 
   const foam = createFoamPatches();
-  scene.add(foam);
+  scene.add(foam.group);
+
+  const distantSilhouette = createDistantSilhouette();
+  scene.add(distantSilhouette);
 
   const cliff = createCliff();
   scene.add(cliff);
@@ -670,6 +708,7 @@ export function initMainMenu(container: HTMLElement): MainMenuResult {
     elapsedTime += dt;
     ocean.update(elapsedTime);
     clouds.update(elapsedTime);
+    foam.update(elapsedTime);
     spray.update(dt);
     renderer.render(scene, camera);
   };

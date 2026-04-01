@@ -1,60 +1,37 @@
 {
-  "cycle": 25,
-  "generated_at": "2026-03-31T00:00:00Z",
-  "top_tasks": ["T_CYCLE25_MENU_REBUILD"],
-  "changed_files_this_cycle": [
-    "web-demo/src/scenes/MainMenuScene.ts"
-  ],
+  "cycle": 27,
+  "generated_at": "2026-03-31T15:30:00Z",
+  "top_tasks": ["menu-polish-foam-silhouette", "T072-audio-context", "T070-hud-verify"],
+  "changed_files_this_cycle": [],
+  "findings": {
+    "MainMenuScene": {
+      "fog": "ALREADY PRESENT line 600 — FogExp2(0x1a2030,0.012). No change needed.",
+      "foam_y_anim": "MISSING — foam group is in scene but update() does NOT animate foam Y. Foam has 25 patches at y=-1.8. Need to track them and animate.",
+      "distant_silhouette": "MISSING — no BoxGeometry at z=-90. Add one dark slab #1a1e28 at y=5."
+    },
+    "HUD": {
+      "status": "FULLY IMPLEMENTED — buildFactionPanel+updateHUD+store.subscribe all present in HUD.ts",
+      "bar_width": "80px track, fill = rep%. Colors: druides=#5a9a5a anciens=#8b8b6a korrigans=#9a6a5a niamh=#6a8a9a ankou=#7a5a7a",
+      "issue": "Colors are dim. Backlog wants brighter: druides=#6abf69 niamh=#8ab4f8 korrigans=#b888e8 anciens=#e8c84c ankou=#e05c5c"
+    },
+    "SFXManager": {
+      "bug": "startAmbient early-returns when AudioContext suspended. resumeOnInteraction calls ctx.resume() but NEVER retries startAmbient. Menu stays silent.",
+      "fix": "Add pendingAmbientType variable. startAmbient sets it before returning if suspended. resumeOnInteraction calls startAmbient(pendingAmbientType) after resume."
+    }
+  },
   "key_constants": {
-    "rock_base": "0x3a3830",
-    "rock_shadow": "0x2a2820",
-    "rock_highlight": "0x4a4838",
-    "tower_color": "0x8a8068",
-    "ocean_base": "0x2a6b5a",
-    "sky_bg": "0x1a2030",
-    "cloud_dark": "0x3a4050",
-    "cloud_light": "0x5a6070",
-    "bush_dark": "0x1a3020",
-    "bush_light": "0x243818",
-    "path_color": "0xb0a080",
-    "ambient_color": "0x202030",
-    "ambient_intensity": 0.4,
-    "camera_pos": "(-8, 18, 28)",
-    "camera_lookat": "(4, 2, -10)"
-  },
-  "current_file_issues": [
-    "ShaderMaterial on ocean — smooth, not low-poly flatShading",
-    "ShaderMaterial on sky — no polygon cloud shapes",
-    "Tower uses BoxGeometry not CylinderGeometry(r,r,h,7)",
-    "Tower color too dark (0x14120f), should be 0x8a8068",
-    "Camera position wrong: needs (-8,18,28) looking (4,2,-10)",
-    "No vegetation (ConeGeometry 4-segment bushes)",
-    "No flatShading:true on any material",
-    "No polygon cloud shapes (BoxGeometry flat planes)"
-  ],
-  "keep_from_current_file": [
-    "SeaSpraySystem class (positions, opacities, particles, COUNT=150, PointsMaterial)",
-    "MainMenuResult interface",
-    "ParticleData interface",
-    "startDolly no-op pattern",
-    "dispose pattern with scene.traverse",
-    "window resize handler",
-    "initMainMenu(container) export signature"
-  ],
-  "architecture_notes": {
-    "entry": "initMainMenu(container: HTMLElement): MainMenuResult",
-    "called_from": "main.ts runMainMenu()",
-    "update_called": "per-frame with dt in seconds",
-    "renderer": "returned in MainMenuResult.renderer"
-  },
-  "last_cycle_status": {
-    "ts_errors": 0,
-    "bundle_kb_app": 123,
-    "cards": 366,
-    "commit": "fc3e206"
+    "fog": "FogExp2(0x1a2030, 0.012) — already in scene",
+    "foam_y": "-1.8 base, animate +sin(time*1.5+phase)*0.003",
+    "silhouette_z": "-90, y=5, color=#1a1e28",
+    "sky_bg": "0x1a2030"
   },
   "regression_gate": {
     "ts_errors": 0,
     "bundle_kb_app_warn": 220
+  },
+  "prev_metrics": {
+    "ts_errors": 0,
+    "bundle_kb_app": 116.20,
+    "cards_total": 366
   }
 }

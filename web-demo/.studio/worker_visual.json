@@ -1,36 +1,40 @@
 {
   "agent": "merlin-tech-artist",
-  "cycle": 25,
-  "timestamp": "2026-03-31T00:00:00Z",
+  "cycle": 27,
+  "timestamp": "2026-03-31T15:45:00Z",
   "status": "PASS",
-  "task": "T_CYCLE25_MENU_REBUILD",
-  "changes": [
-    "FULL REWRITE: web-demo/src/scenes/MainMenuScene.ts (419 → 430 lines)",
-    "flatShading:true added to ALL MeshStandardMaterial instances — key low-poly fix",
-    "Ocean: replaced ShaderMaterial with MeshStandardMaterial(flatShading:true) on PlaneGeometry(80,60,30,20). Per-frame vertex Y displacement creates animated wave facets",
-    "Cliff: BoxGeometry masses with displaceVertices() helper — random vertex jitter creates angular rock faces. 3 material tones: base(#3a3830), shadow(#2a2820), highlight(#4a4838)",
-    "Tower: replaced BoxGeometry with CylinderGeometry(r,r,h,7) — 7 radial segments = clearly low-poly. 4 stacked sections. Conical roof CylinderGeometry(0,1.8,3.5,7). Sandy grey #8a8068",
-    "Battlements: 7 BoxGeometry notch meshes placed around top ring at correct angles",
-    "Clouds: 8 flat BoxGeometry planes (w>>d) placed horizontally at different depths/heights. Colors #3a4050–#606878. flatShading makes polygon faces visible",
-    "Sky: BoxGeometry(400,200,400) BackSide + MeshStandardMaterial(flatShading:true, #1a2030) replaces ShaderMaterial sphere",
-    "Vegetation: 18 ConeGeometry(r,h,4) bushes — 4 segments = diamond shape. Colors #1a3020 / #243818. Scattered on right cliff side",
-    "Path: PlaneGeometry sandy ribbon (#b0a080, flatShading:true) winding up cliff right side",
-    "Foam patches: 6 CircleGeometry(r,5) near cliff base, semi-transparent white (#ddeeff)",
-    "Camera: moved from (0,12,35)→(-8,18,28), lookAt from (0,5,-20)→(4,2,-10). High angle, right-of-center tower framing",
-    "Lighting: removed PointLight on cliff, kept DirectionalLight(-20,30,10)+AmbientLight(0x202030,0.4). Tower interior PointLight(0xffaa44) kept",
-    "Renderer: antialias:false to preserve sharp polygon edges. NoToneMapping to keep flat colors accurate",
-    "SeaSpraySystem preserved — 120 particles, repositioned to cliff base area",
-    "God ray sprite removed — does not fit low-poly aesthetic",
-    "All interfaces, dispose pattern, resize handler, startDolly no-op preserved"
-  ],
-  "ts_errors": 0,
-  "bundle_kb_app": 116.20,
-  "bundle_kb_app_prev": 123.07,
-  "bundle_delta_pct": -5.6,
-  "build_time_s": 2.42,
-  "regression_gate": {
-    "ts_errors": "PASS (0)",
-    "bundle": "PASS (116.20KB < 220KB threshold, -5.6% vs prev)"
+  "tasks": {
+    "menu_fog": {
+      "status": "ALREADY PRESENT",
+      "note": "FogExp2(0x1a2030, 0.012) was already set on scene at line 600 from cycle 26. No change needed."
+    },
+    "foam_y_animation": {
+      "status": "DONE",
+      "file": "web-demo/src/scenes/MainMenuScene.ts",
+      "changes": [
+        "Introduced FoamPatchResult interface { group: THREE.Group; update: (t: number) => void }",
+        "createFoamPatches() now returns FoamPatchResult instead of plain THREE.Group",
+        "Each foam mesh gets userData.baseY (original y=-1.8) and userData.phase (i * 0.42 radians) at creation",
+        "update(t) iterates group.children and sets mesh.position.y = baseY + Math.sin(t*1.5 + phase) * 0.003",
+        "Wired into main update() loop: foam.update(elapsedTime) alongside ocean, clouds, spray",
+        "scene.add(foam.group) instead of scene.add(foam)"
+      ]
+    },
+    "distant_cliff_silhouette": {
+      "status": "DONE",
+      "file": "web-demo/src/scenes/MainMenuScene.ts",
+      "changes": [
+        "Added createDistantSilhouette(): BoxGeometry(60,20,2) at position (0,5,-90)",
+        "Material: MeshStandardMaterial color=0x1a1e28, flatShading:true, roughness:1.0",
+        "Added scene.add(distantSilhouette) in initMainMenu() after foam group",
+        "Pure depth silhouette — no displacement, no detail — matches stormy horizon aesthetic"
+      ]
+    }
   },
+  "ts_errors": 0,
+  "bundle_kb_app": 118.24,
+  "bundle_delta_kb": 2.04,
+  "bundle_delta_pct": 1.75,
+  "gate_bundle": "PASS (118.24KB, +1.75% vs 116.20KB prev — under 5% WARN)",
   "issues": []
 }
