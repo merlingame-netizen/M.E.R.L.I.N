@@ -361,6 +361,24 @@
     .effect-tooltip .effect-neg { color: #e05c5c; }
     .effect-tooltip .effect-neu { color: #c9a84c; }
 
+    /* T073: Card selection gold flash */
+    .card-option-selected {
+      background: rgba(201, 168, 76, 0.3) !important;
+      border-color: #c9a84c !important;
+      transition: none !important;
+    }
+
+    /* T071: Mobile card layout — stack vertically on narrow viewports */
+    @media (max-width: 560px) {
+      .card-options {
+        flex-direction: column;
+      }
+      .card-option {
+        max-width: 100%;
+        min-width: unset;
+      }
+    }
+
     /* Minigame overlay */
     #minigame-overlay {
       position: absolute;
@@ -368,7 +386,7 @@
       display: none;
       justify-content: center;
       align-items: center;
-      background: rgba(10, 10, 18, 0.9);
+      background: rgba(5, 8, 18, 0.93);
       z-index: 30;
       font-family: 'Segoe UI', system-ui, sans-serif;
       color: #e8dcc8;

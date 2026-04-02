@@ -180,8 +180,12 @@ export function showCard(card: Card): Promise<number> {
       if (tooltip) btn.appendChild(tooltip);
 
       btn.addEventListener('click', () => {
-        hideCard();
-        resolve(index);
+        // T073: Brief gold highlight before overlay hides (200ms feedback)
+        btn.classList.add('card-option-selected');
+        setTimeout(() => {
+          hideCard();
+          resolve(index);
+        }, 200);
       });
 
       optContainer.appendChild(btn);

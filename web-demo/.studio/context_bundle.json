@@ -1,37 +1,23 @@
 {
-  "cycle": 27,
-  "generated_at": "2026-03-31T15:30:00Z",
-  "top_tasks": ["menu-polish-foam-silhouette", "T072-audio-context", "T070-hud-verify"],
+  "cycle": 28,
+  "generated_at": "2026-04-02T00:00:00Z",
+  "top_tasks": ["T073", "T075", "T071", "T074"],
   "changed_files_this_cycle": [],
-  "findings": {
-    "MainMenuScene": {
-      "fog": "ALREADY PRESENT line 600 — FogExp2(0x1a2030,0.012). No change needed.",
-      "foam_y_anim": "MISSING — foam group is in scene but update() does NOT animate foam Y. Foam has 25 patches at y=-1.8. Need to track them and animate.",
-      "distant_silhouette": "MISSING — no BoxGeometry at z=-90. Add one dark slab #1a1e28 at y=5."
-    },
-    "HUD": {
-      "status": "FULLY IMPLEMENTED — buildFactionPanel+updateHUD+store.subscribe all present in HUD.ts",
-      "bar_width": "80px track, fill = rep%. Colors: druides=#5a9a5a anciens=#8b8b6a korrigans=#9a6a5a niamh=#6a8a9a ankou=#7a5a7a",
-      "issue": "Colors are dim. Backlog wants brighter: druides=#6abf69 niamh=#8ab4f8 korrigans=#b888e8 anciens=#e8c84c ankou=#e05c5c"
-    },
-    "SFXManager": {
-      "bug": "startAmbient early-returns when AudioContext suspended. resumeOnInteraction calls ctx.resume() but NEVER retries startAmbient. Menu stays silent.",
-      "fix": "Add pendingAmbientType variable. startAmbient sets it before returning if suspended. resumeOnInteraction calls startAmbient(pendingAmbientType) after resume."
-    }
-  },
-  "key_constants": {
-    "fog": "FogExp2(0x1a2030, 0.012) — already in scene",
-    "foam_y": "-1.8 base, animate +sin(time*1.5+phase)*0.003",
-    "silhouette_z": "-90, y=5, color=#1a1e28",
-    "sky_bg": "0x1a2030"
+  "prev_metrics": {
+    "ts_errors": 0,
+    "bundle_kb_app": 118,
+    "cards_total": 366
   },
   "regression_gate": {
     "ts_errors": 0,
     "bundle_kb_app_warn": 220
   },
-  "prev_metrics": {
-    "ts_errors": 0,
-    "bundle_kb_app": 116.20,
-    "cards_total": 366
-  }
+  "key_constants": {
+    "card_selected_bg": "rgba(201,168,76,0.3)",
+    "card_selected_border": "#c9a84c",
+    "card_feedback_delay_ms": 200,
+    "minigame_overlay_bg_new": "rgba(5,8,18,0.93)",
+    "mobile_breakpoint_px": 560
+  },
+  "deploy_url": "https://web-export-pi.vercel.app"
 }

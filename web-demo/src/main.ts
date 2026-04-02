@@ -66,6 +66,12 @@ async function runBootScreen(): Promise<void> {
       resolved = true;
       document.removeEventListener('click', skip);
       document.removeEventListener('keydown', skip);
+      // T075: Snap progress bar to 100% on early skip
+      const fill = document.querySelector<HTMLElement>('.boot-progress-fill');
+      if (fill) {
+        fill.style.animation = 'none';
+        fill.style.width = '100%';
+      }
       resolve();
     };
     document.addEventListener('click', skip, { once: true });
