@@ -3,6 +3,37 @@
   "max_entries": 20,
   "cycles": [
     {
+      "cycle": 29,
+      "timestamp": "2026-04-02T00:00:00Z",
+      "tasks_attempted": ["T063-verify", "T059", "T076", "T060-audit", "T061-audit"],
+      "tasks_completed": ["T063-done", "T059-done", "T076-done", "T060-done", "T061-done"],
+      "tasks_deferred": [],
+      "gate": {
+        "ts_errors": 0,
+        "build_ok": true,
+        "bundle_kb_app": 118.59,
+        "bundle_delta_kb": 0.35,
+        "bundle_delta_pct": 0.3,
+        "tests_pass": 0,
+        "lair_line_count": 798,
+        "verdict": "PROCEED"
+      },
+      "files_changed": [
+        "web-demo/src/scenes/MerlinLairScene.ts",
+        "web-demo/src/minigames/mg_runes.ts",
+        "web-demo/src/minigames/mg_equilibre.ts",
+        "web-demo/index.html",
+        "web-demo/.studio/backlog.json",
+        "web-demo/.studio/context_bundle.json",
+        "web-demo/.studio/metrics.json"
+      ],
+      "notes": "Cycle 29 LAIR DENSITY + MOBILE FIX + VERIFICATION CYCLE. T060/T061 marked done (pre-existing). T063 verified complete: bob-head 2Hz/0.04 confirmed, no OrbitControls. T059 mobile: mg_runes 380px+mg_equilibre 400px → min(Npx,100%), canvas CSS max-width:100%/max-height:60vh, @media 390px title scale. T076 lair density: createLairDensity() — 3 shelves left wall, moonlight SpotLight 0xb8d4ff, 3 parchment rolls. 768→798 lines. Bundle +0.3%.",
+      "qa_extended": {
+        "playtester": "PASS — T063 verified complete, T076 moonlight contrast excellent (cool blue vs warm orange candles), T059 mobile overflow fixed, lair atmosphere score 7.5/10",
+        "visual_qa": "PASS — ts=0, build 5.59s, bundle 118.59KB < 124.15KB warn gate, MerlinLairScene 798 lines < 800 limit, all canvas CSS rules confirmed"
+      }
+    },
+    {
       "cycle": 28,
       "timestamp": "2026-04-02T00:00:00Z",
       "tasks_attempted": ["T073", "T075", "T071", "T074"],

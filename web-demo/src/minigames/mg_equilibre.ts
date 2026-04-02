@@ -63,7 +63,7 @@ export class MinigameEquilibre extends MinigameBase {
     // Timer bar
     const timerBar = document.createElement('div');
     timerBar.id = 'mg-eq-timer';
-    timerBar.style.cssText = 'width:400px;height:8px;background:rgba(255,255,255,0.1);border-radius:4px;margin:0 auto 12px;overflow:hidden;';
+    timerBar.style.cssText = 'width:min(400px,100%);height:8px;background:rgba(255,255,255,0.1);border-radius:4px;margin:0 auto 12px;overflow:hidden;';
     const timerFill = document.createElement('div');
     timerFill.id = 'mg-eq-timer-fill';
     timerFill.style.cssText = 'height:100%;width:100%;background:#cd853f;border-radius:4px;transition:width 0.1s linear;';
@@ -72,6 +72,8 @@ export class MinigameEquilibre extends MinigameBase {
 
     // Canvas
     this.canvas = document.createElement('canvas');
+    this.canvas.setAttribute('aria-label', '');
+    this.canvas.setAttribute('role', 'application');
     this.canvas.width = this.canvasW;
     this.canvas.height = this.canvasH;
     this.canvas.style.cssText = 'border-radius:12px;background:rgba(20,20,30,0.8);border:1px solid rgba(205,133,63,0.3);cursor:pointer;display:block;margin:0 auto;touch-action:none;';

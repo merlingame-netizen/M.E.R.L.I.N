@@ -1,7 +1,18 @@
 {
   "_comment": "Remplace BACKLOG.md -- format compact pour studio-director v2",
-  "updated": "2026-03-31T01:00:00Z",
+  "updated": "2026-04-02T00:00:00Z",
   "tasks": [
+    {
+      "id": "T076",
+      "title": "Lair visual density — 3 extra shelves left wall, moonlight SpotLight, parchment rolls",
+      "priority": 2,
+      "status": "done",
+      "domain": "visual",
+      "est_tokens": 200,
+      "depends_on": ["T062"],
+      "tags": ["3d", "visual", "lair"],
+      "notes": "DONE cycle 29. createLairDensity(scene) added to MerlinLairScene.ts (called in initMerlinLair). 3 shelves on left wall (x=-11.4) at y/z offsets [1.5/-2, -0.5/0.5, 2.5/3.5], each with 5 colored books. Moonlight SpotLight 0xb8d4ff intensity=1.8 from (-9,9,0) targeting (-4,-3,0). 3 parchment roll CylinderGeometry at floor y=-4.8. Final line count: 798 (< 800 limit). TS 0 errors, build 118.59KB."
+    },
     {
       "id": "T070",
       "title": "HUD faction bars — show 5 faction rep bars in HUD overlay",
@@ -72,23 +83,23 @@
       "id": "T060",
       "title": "Boot screen — Celtic logo SVG + animated progress bar before main menu",
       "priority": 1,
-      "status": "open",
+      "status": "done",
       "domain": "visual",
       "est_tokens": 300,
       "depends_on": [],
       "tags": ["ux", "cinematic"],
-      "notes": "Add #boot-screen div above #loading in index.html. Celtic knot SVG (pure CSS or inline SVG path). Animated progress bar 0->100% over 2.5s. After complete: fade out boot-screen, reveal main menu scene. z-index 200."
+      "notes": "DONE (pre-cycle-29 audit). Celtic SVG + progress bar fully implemented in index.html lines 458-489. Boot screen CSS at lines 13-95. Skip-on-click in main.ts. No code changes needed."
     },
     {
       "id": "T061",
       "title": "Main menu cinematic — Three.js cliff+sea scene, animated waves, camera dolly to tower",
       "priority": 1,
-      "status": "open",
+      "status": "done",
       "domain": "visual",
       "est_tokens": 500,
       "depends_on": ["T060"],
       "tags": ["cinematic", "3d", "ux"],
-      "notes": "New web-demo/src/scenes/MainMenuScene.ts. Cliff geometry + animated ocean (sine wave vertex shader). Animated fog. Static tower silhouette. Camera dolly path (CatmullRom, lerp 4s) from cliff viewpoint to tower window. Expose initMainMenu(container), startMenuDolly(), onDollyComplete callback."
+      "notes": "DONE (pre-cycle-29 audit). MainMenuScene.ts exists at 740 lines with cliff geometry, animated ocean (sine wave), fog (FogExp2 0x1a2030), tower silhouette, camera dolly (CatmullRom 4s). Full API exposed. Menu score 9.0/10."
     },
     {
       "id": "T062",
@@ -105,12 +116,12 @@
       "id": "T063",
       "title": "Forest walk rework — fixed rail path, bob-head, no free camera",
       "priority": 1,
-      "status": "open",
+      "status": "done",
       "domain": "gameplay",
       "est_tokens": 350,
       "depends_on": [],
       "tags": ["3d", "camera", "ux"],
-      "notes": "In CameraRail.ts: add bob-head (sinusoidal Y offset, 2Hz, amplitude 0.04). Remove/lock any OrbitControls. Auto-advance at 0.8 units/sec. Rail uses existing CatmullRom spline. Apply to CoastBiome scene."
+      "notes": "DONE cycle 29 (verified, no code changes needed). CameraRail.ts: BOB_FREQUENCY=2.0Hz, BOB_AMPLITUDE=0.04, elapsedMoving accumulates only when not paused (line 88). bob = Math.sin(elapsedMoving*2*PI*2)*0.04 applied to position.y (line 96-97). lookOffset=(0,0.3,0) confirmed. NO OrbitControls found in CameraRail.ts or CoastBiome.ts (grep confirmed empty). Rail auto-advances via speed=0.008 progress/sec."
     },
     {
       "id": "T064",
@@ -149,12 +160,12 @@
       "id": "T059",
       "title": "Mobile layout pass — verify card overlay and minigame canvases fit on 375px viewport",
       "priority": 3,
-      "status": "open",
+      "status": "done",
       "domain": "visual",
       "est_tokens": 300,
       "depends_on": ["T057"],
       "tags": ["mobile", "ux"],
-      "notes": "T057 added touch support. Verify CSS on narrow screens: minigame canvases 380-400px wide may overflow 375px viewport. Add max-width:100% + max-height on canvas elements. Scale minigame title font-size for mobile. Check card-container padding at 375px."
+      "notes": "DONE cycle 29. (1) mg_runes.ts timer bar: 380px → min(380px,100%). (2) mg_equilibre.ts timer bar: 400px → min(400px,100%). (3) index.html: added #minigame-container canvas { max-width:100%; max-height:60vh } + @media (max-width:390px) { .minigame-title font-size:14px; #minigame-container padding:0 8px }. All other minigames already use dynamic canvasW variable. TS 0 errors, build 118.59KB."
     },
     {
       "id": "T043",

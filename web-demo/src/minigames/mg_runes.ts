@@ -57,7 +57,7 @@ export class MinigameRunes extends MinigameBase {
     // Timer bar
     const timerBar = document.createElement('div');
     timerBar.id = 'mg-runes-timer';
-    timerBar.style.cssText = 'width:380px;height:8px;background:rgba(255,255,255,0.1);border-radius:4px;margin:0 auto 16px;overflow:hidden;';
+    timerBar.style.cssText = 'width:min(380px,100%);height:8px;background:rgba(255,255,255,0.1);border-radius:4px;margin:0 auto 16px;overflow:hidden;';
     const timerFill = document.createElement('div');
     timerFill.id = 'mg-runes-timer-fill';
     timerFill.style.cssText = 'height:100%;width:100%;background:#cd853f;border-radius:4px;transition:width 0.1s linear;';

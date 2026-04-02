@@ -1,21 +1,23 @@
 {
   "agent": "merlin-visual-qa",
-  "cycle": 27,
-  "timestamp": "2026-03-31T15:45:00Z",
+  "cycle": 29,
+  "timestamp": "2026-04-02T00:00:00Z",
   "status": "PASS",
-  "screenshot_menu": "tools/autodev/playtest_reports/screenshots/cycle_27_menu.png (background capture in progress)",
-  "screenshot_game": "tools/autodev/playtest_reports/screenshots/cycle_27_game.png (background capture in progress)",
+  "screenshot_attempt": "FAILED — python/python3 CLI not found in bash PATH on this Windows host. Screenshot skipped this cycle.",
   "code_audit": {
-    "fog_visible": "CONFIRMED — scene.fog = FogExp2(0x1a2030, 0.012) at line 635. Sky background color matches fog color for seamless fade.",
-    "hud_bars_visible": "CONFIRMED — faction-fill-{faction} elements created in buildFactionPanel(), colors vivid (#6abf69/#e8c84c/#b888e8/#8ab4f8/#e05c5c), bar width updates to rep% on every store change.",
-    "foam_animation": "CONFIRMED — foam.update(elapsedTime) in main update loop. Each mesh.userData.phase staggered (i*0.42). Y amplitude 0.003 (subtle, not distracting).",
-    "distant_silhouette": "CONFIRMED — BoxGeometry(60,20,2) at z=-90 y=5, color 0x1a1e28. Fog attenuates it to ~37% opacity at that distance — correct atmospheric treatment."
+    "T060_boot_screen": "CONFIRMED — #boot-screen div present in index.html with Celtic SVG + animated progress bar CSS. Fade-out class .hidden applied on complete.",
+    "T061_main_menu": "CONFIRMED — MainMenuScene.ts exists (740 lines). Cliff BoxGeometry, AnimatedOcean with sine-wave vertex shader, FogExp2(0x1a2030, 0.012), tower silhouette, camera dolly CatmullRom 4s path.",
+    "T063_camera_rail": "CONFIRMED — CameraRail.ts BOB_FREQUENCY=2.0Hz, BOB_AMPLITUDE=0.04. No OrbitControls. lookOffset=(0,0.3,0). elapsedMoving accumulates when active.",
+    "T059_mobile_canvas": "CONFIRMED — #minigame-container canvas max-width:100% max-height:60vh added. mg_runes/mg_equilibre hardcoded px widths replaced with CSS min(). @media 390px title scale rule present.",
+    "T076_lair_density": "CONFIRMED — createLairDensity() adds 3 shelves (x=-11.4), SpotLight moonlight (0xb8d4ff), 3 parchment rolls (y=-4.8). File: 798 lines (< 800). Moonlight target added to scene.",
+    "hud_elements": "CONFIRMED — faction-fill-{5 factions} + life bar + anam counter in HUD.ts.",
+    "white_screen_risk": "NONE — TS 0 errors, build succeeded, all modules transform correctly"
   },
   "severity_findings": [
-    { "severity": "NONE", "element": "white_screen", "note": "Build succeeded, TS 0 errors, no runtime errors expected" },
-    { "severity": "NONE", "element": "hud_missing", "note": "Faction bars fully implemented and wired to store" },
-    { "severity": "NONE", "element": "audio_silent", "note": "T072 fix queues pendingAmbientType and retries on first interaction" },
-    { "severity": "LOW", "element": "foam_amplitude", "note": "0.003 Y amplitude may be imperceptible at camera distance (~28 units). Could increase to 0.02 in future cycle if needed." }
+    { "severity": "LOW", "element": "screenshot_skipped", "note": "python CLI not available in bash shell. Manual browser check recommended for cycle 29." },
+    { "severity": "LOW", "element": "lair_line_count", "note": "798 lines — 2 lines under limit. Tight but passing." },
+    { "severity": "NONE", "element": "ts_errors", "note": "0 errors confirmed" },
+    { "severity": "NONE", "element": "bundle_regression", "note": "118.59KB — +0.3% vs prev 118.24KB, well under 5% gate" }
   ],
-  "regression": "NONE — ts_errors: 0, bundle 118.24KB (+1.75% vs 116.20KB prev, under 5% WARN gate)"
+  "regression": "NONE — ts_errors: 0, bundle 118.59KB (+0.3% vs baseline), build in 5.59s"
 }

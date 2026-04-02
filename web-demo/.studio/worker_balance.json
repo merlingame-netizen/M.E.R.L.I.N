@@ -1,0 +1,26 @@
+{
+  "agent": "merlin-narrative-designer",
+  "cycle": 12,
+  "task": "T039",
+  "timestamp": "2026-03-31T05:30:00Z",
+  "status": "PASS",
+  "changes": [
+    {
+      "file": "web-demo/.studio/card_generation_constraints.json",
+      "updated_cycle": 12,
+      "faction_balance_targets": {
+        "druides": "CAPPED at 15% (was target 20%) — max 3 cards per 20-batch",
+        "ankou": "BOOSTED to 20% minimum — min 4 cards per 20-batch",
+        "niamh": "SLIGHT BOOST to 25% target for water/healing counterweight",
+        "anciens": "HELD at 20%",
+        "korrigans": "HELD at 20%"
+      },
+      "added_section": "faction_cards_per_20_batch with per-faction min/max/target card counts"
+    }
+  ],
+  "rationale": "Cycle 11 playtester found druides at ~31% of rep effects across 166 templates (target was 20%). Capping at 15% with hard max 3 cards/batch corrects the drift. Boosting ankou to 20% minimum adds mortality/fate tension that pairs with T038 difficulty scaling. niamh healing boost creates strategic choice: lean into healing to offset scaling drain.",
+  "no_code_changed": true,
+  "no_existing_cards_modified": true,
+  "applies_to": "Future card batches only (cycle 13+)",
+  "verdict": "PASS"
+}

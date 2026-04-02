@@ -1,25 +1,37 @@
 {
   "agent": "merlin-gameplay-programmer",
-  "cycle": 28,
+  "cycle": 29,
   "timestamp": "2026-04-02T00:00:00Z",
   "status": "PASS",
   "tasks": {
-    "T073_card_selection_feedback": {
-      "status": "DONE",
-      "file": "web-demo/src/ui/CardOverlay.ts",
-      "changes": [
-        "Click handler: btn.classList.add('card-option-selected') immediately on click",
-        "hideCard() + resolve(index) deferred 200ms via setTimeout (was immediate)",
-        "CSS .card-option-selected added to index.html: background rgba(201,168,76,0.3), border-color #c9a84c, transition:none"
-      ]
+    "T063_forest_walk_verification": {
+      "status": "VERIFIED_NO_CHANGES_NEEDED",
+      "files_checked": ["web-demo/src/engine/CameraRail.ts", "web-demo/src/scenes/CoastBiome.ts"],
+      "findings": [
+        "BOB_FREQUENCY=2.0 Hz confirmed (line 8)",
+        "BOB_AMPLITUDE=0.04 confirmed (line 9)",
+        "elapsedMoving accumulates only when not paused (line 88: this.elapsedMoving += dt)",
+        "bob = Math.sin(elapsedMoving * 2 * PI * 2) * 0.04 applied to position.y (lines 96-97)",
+        "lookOffset=(0, 0.3, 0) confirmed (line 16)",
+        "NO OrbitControls import or usage found in CameraRail.ts",
+        "NO OrbitControls import or usage found in CoastBiome.ts",
+        "Rail auto-advances at speed=0.008 progress/sec (line 14)"
+      ],
+      "action": "Backlog T063 marked done — all requirements already implemented"
     },
-    "T075_boot_skip_snap": {
+    "T059_mobile_canvas": {
       "status": "DONE",
-      "file": "web-demo/src/main.ts",
+      "files_changed": [
+        "web-demo/src/minigames/mg_runes.ts",
+        "web-demo/src/minigames/mg_equilibre.ts",
+        "web-demo/index.html"
+      ],
       "changes": [
-        "skip() in runBootScreen(): queries .boot-progress-fill",
-        "Sets fill.style.animation = 'none' and fill.style.width = '100%' before resolve()",
-        "Guards: only runs when fill element is present (null-safe)"
+        "mg_runes.ts line 60: timerBar width 380px → min(380px,100%) — prevents overflow on 375px",
+        "mg_equilibre.ts line 66: timerBar width 400px → min(400px,100%) — prevents overflow on 375px",
+        "index.html: added #minigame-container canvas { max-width:100%; max-height:60vh }",
+        "index.html: added @media (max-width:390px) — .minigame-title font-size:14px, #minigame-container padding:0 8px",
+        "All other 12 minigames already use dynamic canvasW variable — no overflow risk"
       ]
     }
   },

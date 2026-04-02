@@ -1,34 +1,39 @@
 {
   "agent": "merlin-ai-playtester",
-  "cycle": 27,
-  "timestamp": "2026-03-31T15:45:00Z",
+  "cycle": 29,
+  "timestamp": "2026-04-02T00:00:00Z",
   "status": "PASS",
   "analysis": {
-    "menu_atmosphere": {
-      "fog": "CONFIRMED present — FogExp2(0x1a2030, 0.012). Distant geometry at z=-90 now fades into fog naturally. Score: +0.5 atmospheric depth.",
-      "foam_animation": "25 foam patches now bob on sinusoidal Y (amplitude 0.003, freq 1.5Hz, staggered phases). Living sea feel vs static patches. Score: +0.3.",
-      "distant_silhouette": "BoxGeometry(60,20,2) at z=-90 creates layered horizon. At FogExp2 0.012, this slab is heavily attenuated (~exp(-0.012*90)^2 = ~37% visibility). Atmospheric.",
-      "estimated_score": 9.0
+    "forest_walk_T063": {
+      "status": "VERIFIED_COMPLETE",
+      "bob_head": "CameraRail bob-head is correctly implemented: 2Hz sinusoidal Y offset with amplitude 0.04 world units. This gives the player a walking gait feel — subtle enough not to cause motion sickness, pronounced enough to convey locomotion. elapsedMoving only advances when not paused, so the bob phase stays coherent across pause/resume cycles.",
+      "no_free_camera": "OrbitControls entirely absent from CameraRail and CoastBiome files. Player has zero camera control — the rail is fully automatic. Combined with CatmullRom spline and speed=0.008, the traversal feels authored and cinematic rather than exploratory.",
+      "lookAhead": "lookOffset=(0, 0.3, 0) slightly tilts gaze upward — natural for walking through environment, avoids staring at floor.",
+      "score": "8.5/10 — solid rail walker implementation. Improvement opportunity: add slight horizontal sway (lookAhead X oscillation at 0.5Hz) for more organic feel in future cycle."
     },
-    "hud_readability": {
-      "faction_bars": "VERIFIED — buildFactionPanel + updateHUD + store.subscribe chain confirmed. Colors upgraded to vivid palette (green/yellow/purple/blue/red). Bars visible even at rep=5 (4px fill on 80px track).",
-      "life_bar": "3-color gradient (green/orange/red) at 50%/25% thresholds — clear.",
-      "anam_counter": "Top-right, amber color, bold — readable.",
-      "score": 8.5
+    "lair_scene_T076": {
+      "density_assessment": "The three additional shelves on the left wall fill what was previously empty stone. At x=-11.4, they create visual depth and frame the space — the eye now travels left and finds content (books) rather than bare wall. The staggered Y and Z positions avoid a uniform grid feel.",
+      "moonlight_shaft": "SpotLight 0xb8d4ff (cool blue-white) at angle PI/9 creates a narrow shaft from the top-left. Against the warm orange candlelight (0xff6622), this color contrast is atmospheric and evocative of Celtic moonlight through a stone window. Intensity 1.8 is strong — may wash out if candle intensity is low, but acceptable for visual impact.",
+      "parchment_rolls": "Three CylinderGeometry rolls on the floor (y=-4.8) with varied rotation.y add narrative clutter. Small (r=0.07) but convincing as scattered scrolls. Color 0xd4b878 (warm parchment) reads well against the dark flagstone floor.",
+      "overall_lair_score": "7.5/10 — room feels more inhabited. Next improvement: add a flickering light source near the window to animate the moonlight shaft (currently static SpotLight)."
     },
-    "audio_feedback": {
-      "ambient_fix": "T072 resolved. pendingAmbientType queues the ambient type when AudioContext suspended. First click/keypress triggers resume then immediate startAmbient retry. No longer silent on boot.",
-      "sfx_coverage": "flip/win/lose/unlock/end all wired. Forest ambient (65Hz + birds) plays during gameplay.",
-      "score": 9.0
+    "mobile_T059": {
+      "assessment": "The min() CSS function is the correct approach for timer bars — they'll shrink gracefully on 375px without breaking layout. The max-width:100% on canvas prevents Three.js/canvas overflow. The @media 390px title font reduction is conservative (14px from likely 16-18px base) and appropriate.",
+      "risk": "LOW — canvases that size themselves via game logic (width=gridCols*tileSize etc.) may still set pixel widths on the canvas element itself. The CSS max-width constrains the display size but the canvas buffer resolution stays at its pixel dimensions — correct behavior for HiDPI-aware rendering."
     },
     "effect_caps_compliance": {
-      "rep_cap": "PASS (max 20 per card — enforced in GroqAdapter + constraints)",
-      "heal_cap": "PASS (max 5 after T040/T042)",
-      "dmg_cap": "PASS (max 15)",
+      "rep_cap": "PASS (≤20 per card)",
+      "heal_cap": "PASS (≤5 post T040/T042)",
+      "dmg_cap": "PASS (≤15)",
       "negative_effects": "PASS (no card with 3+ negative effects)"
     },
-    "overall_assessment": "Cycle 27 delivers three surgical improvements: foam animation adds micro-life to the ocean surface, the distant silhouette creates a third depth layer behind the cliff, and the audio bug fix means players hear the ambient drone from their first interaction. HUD faction bars are now vivid and readable. No regressions detected.",
-    "estimated_menu_score": 9.0,
-    "priority_remaining": ["T071 mobile layout", "T073 card selection feedback"]
+    "overall_assessment": "Cycle 29 is a verification and density cycle: T063 confirms the forest walk system was already complete (no regressions from previous cycles), T059 addresses the last mobile overflow edge cases, and T076 adds meaningful visual density to the lair. The moonlight shaft is the standout addition — it creates a strong second light source that contrasts beautifully with the candlelight. The game continues to feel more complete and atmospheric with each cycle.",
+    "estimated_scores": {
+      "lair_atmosphere": 7.5,
+      "mobile_polish": 8.0,
+      "forest_walk": 8.5,
+      "menu_unchanged": 9.0
+    },
+    "priority_remaining": ["T064 (VFX pass god rays)", "T065 (scene transition manager)", "T062 lair window light animation"]
   }
 }
