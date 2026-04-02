@@ -1,40 +1,31 @@
 {
   "agent": "merlin-tech-artist",
-  "cycle": 27,
-  "timestamp": "2026-03-31T15:45:00Z",
+  "cycle": 28,
+  "timestamp": "2026-04-02T00:00:00Z",
   "status": "PASS",
   "tasks": {
-    "menu_fog": {
-      "status": "ALREADY PRESENT",
-      "note": "FogExp2(0x1a2030, 0.012) was already set on scene at line 600 from cycle 26. No change needed."
-    },
-    "foam_y_animation": {
+    "T071_mobile_card_layout": {
       "status": "DONE",
-      "file": "web-demo/src/scenes/MainMenuScene.ts",
+      "file": "web-demo/index.html",
       "changes": [
-        "Introduced FoamPatchResult interface { group: THREE.Group; update: (t: number) => void }",
-        "createFoamPatches() now returns FoamPatchResult instead of plain THREE.Group",
-        "Each foam mesh gets userData.baseY (original y=-1.8) and userData.phase (i * 0.42 radians) at creation",
-        "update(t) iterates group.children and sets mesh.position.y = baseY + Math.sin(t*1.5 + phase) * 0.003",
-        "Wired into main update() loop: foam.update(elapsedTime) alongside ocean, clouds, spray",
-        "scene.add(foam.group) instead of scene.add(foam)"
+        "@media (max-width:560px) block added after existing @media 700px tooltip rule",
+        ".card-options { flex-direction: column } — stacks vertically on narrow screens",
+        ".card-option { max-width: 100%; min-width: unset } — cards fill full width"
       ]
     },
-    "distant_cliff_silhouette": {
+    "T074_minigame_tint": {
       "status": "DONE",
-      "file": "web-demo/src/scenes/MainMenuScene.ts",
+      "file": "web-demo/index.html",
       "changes": [
-        "Added createDistantSilhouette(): BoxGeometry(60,20,2) at position (0,5,-90)",
-        "Material: MeshStandardMaterial color=0x1a1e28, flatShading:true, roughness:1.0",
-        "Added scene.add(distantSilhouette) in initMainMenu() after foam group",
-        "Pure depth silhouette — no displacement, no detail — matches stormy horizon aesthetic"
+        "#minigame-overlay background: rgba(10,10,18,0.9) -> rgba(5,8,18,0.93)",
+        "Deeper blue-black tint visually signals action/combat mode vs narrative card mode"
       ]
     }
   },
   "ts_errors": 0,
-  "bundle_kb_app": 118.24,
-  "bundle_delta_kb": 2.04,
-  "bundle_delta_pct": 1.75,
-  "gate_bundle": "PASS (118.24KB, +1.75% vs 116.20KB prev — under 5% WARN)",
+  "bundle_kb_app": 118.59,
+  "bundle_delta_kb": 0.59,
+  "bundle_delta_pct": 0.5,
+  "gate_bundle": "PASS (118.59KB, +0.5% vs 118KB prev — under 5% WARN)",
   "issues": []
 }

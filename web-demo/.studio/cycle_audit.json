@@ -3,6 +3,131 @@
   "max_entries": 20,
   "cycles": [
     {
+      "cycle": 28,
+      "timestamp": "2026-04-02T00:00:00Z",
+      "tasks_attempted": ["T073", "T075", "T071", "T074"],
+      "tasks_completed": ["T073", "T075", "T071", "T074"],
+      "tasks_deferred": [],
+      "gate": {
+        "ts_errors": 0,
+        "build_ok": true,
+        "bundle_kb_app": 118.59,
+        "bundle_delta_kb": 0.59,
+        "bundle_delta_pct": 0.5,
+        "tests_pass": 0,
+        "verdict": "PROCEED"
+      },
+      "files_changed": [
+        "web-demo/index.html",
+        "web-demo/src/ui/CardOverlay.ts",
+        "web-demo/src/main.ts",
+        "web-demo/.studio/context_bundle.json"
+      ],
+      "commit": "d587c2b",
+      "notes": "Cycle 28 UX polish sprint. T073: gold flash on card select (200ms delay, .card-option-selected class). T075: boot skip snaps progress bar to 100% (animation:none, width:100%). T071: @media(max-width:560px) stacks card-options vertically for mobile. T074: minigame overlay rgba(5,8,18,0.93) deeper blue vs card mode. Bundle +0.5%. TS 0 errors.",
+      "qa_extended": {
+        "playtester": "PASS — card feedback responsive, boot skip satisfying, mobile layout stacks cleanly",
+        "visual_qa": "PASS — ts=0, build clean 4.27s, bundle 118.59KB < 220KB cap, all 4 changes verified in source"
+      }
+    },
+    {
+      "cycle": 27,
+      "timestamp": "2026-03-31T15:45:00Z",
+      "tasks_attempted": ["menu-foam-y-anim", "menu-distant-silhouette", "T070-verify", "T072-audio-fix"],
+      "tasks_completed": ["menu-foam-y-anim", "menu-distant-silhouette", "T070-done", "T072-done"],
+      "tasks_deferred": [],
+      "gate": {
+        "ts_errors": 0,
+        "build_ok": true,
+        "bundle_kb_app": 118.24,
+        "bundle_delta_kb": 2.04,
+        "bundle_delta_pct": 1.75,
+        "tests_pass": 0,
+        "verdict": "PROCEED"
+      },
+      "files_changed": [
+        "web-demo/src/scenes/MainMenuScene.ts",
+        "web-demo/src/audio/SFXManager.ts",
+        "web-demo/src/ui/HUD.ts"
+      ],
+      "commit": "6822a52",
+      "notes": "Cycle 27 menu final polish. Foam Y-animation (sin(t*1.5+phase)*0.003, 25 patches staggered). Distant silhouette BoxGeometry(60,20,2) at z=-90. Fog confirmed already present. T070 HUD bars verified + vivid color upgrade. T072 audio: pendingAmbientType queue in SFXManager — no more silent menu on boot. Bundle +1.75%. TS 0 errors.",
+      "qa_extended": {
+        "playtester": "PASS — menu score 8.5->9.0, HUD bars readable, audio fix confirmed, no cap violations",
+        "visual_qa": "PASS — ts=0, build 2.22s, bundle 118.24KB < 220KB cap, foam/silhouette/fog confirmed in code"
+      }
+    },
+    {
+      "cycle": 22,
+      "timestamp": "2026-03-31T01:30:00Z",
+      "tasks_attempted": ["T062", "T064_candles", "T058", "state_machine_LAIR", "cotes_sauvages_batch2"],
+      "tasks_completed": ["T062", "T064_candles", "T058", "state_machine_LAIR", "cotes_sauvages_batch2"],
+      "tasks_deferred": [],
+      "gate": {
+        "ts_errors": 0,
+        "build_ok": true,
+        "bundle_kb_app": 123.07,
+        "bundle_delta_kb": 14.19,
+        "bundle_delta_pct": 13.0,
+        "tests_pass": 0,
+        "verdict": "PROCEED"
+      },
+      "files_changed": [
+        "web-demo/src/scenes/MerlinLairScene.ts",
+        "web-demo/src/audio/SFXManager.ts",
+        "web-demo/src/main.ts",
+        "web-demo/index.html",
+        "web-demo/public/data/cards.json"
+      ],
+      "commit": "457e9e2",
+      "notes": "T062 full 3D lair hub (4 raycaster zones + candle VFX + dust + steam + potions + skull). T058 Web Audio SFX (5 procedural sounds). State machine BOOT→MENU→LAIR→GAME. 20 cotes_sauvages cards (366 total). Bundle +13% WARN (within band). TS 0 errors.",
+      "qa_extended": {
+        "playtester": "PASS — all effect caps compliant, lair zones correct, SFX silent-fail",
+        "visual_qa": "PASS — ts=0, build 2.82s, bundle 123KB < 220KB cap, screenshot skipped (CPU guardian)"
+      }
+    },
+    {
+      "cycle": 21,
+      "timestamp": "2026-03-31T01:00:00Z",
+      "tasks_attempted": ["T060", "T061", "T063", "T064", "T065", "iles_mystiques_batch2"],
+      "tasks_completed": ["T060", "T061", "T063", "T064_partial", "T065", "iles_mystiques_batch2"],
+      "tasks_deferred": ["T062_merlin_lair_hub"],
+      "gate": {
+        "ts_errors": 0,
+        "build_ok": true,
+        "bundle_kb_app": 108.88,
+        "bundle_delta_kb": 8.45,
+        "bundle_delta_pct": 8.4,
+        "tests_pass": 0,
+        "verdict": "PROCEED"
+      },
+      "files_changed": [
+        "web-demo/index.html",
+        "web-demo/src/engine/CameraRail.ts",
+        "web-demo/src/main.ts",
+        "web-demo/src/scenes/MainMenuScene.ts",
+        "web-demo/src/ui/SceneTransition.ts",
+        "web-demo/public/data/cards.json",
+        "tools/autodev/scripts/append_iles_batch2.py",
+        "web-demo/.studio/backlog.json",
+        "web-demo/.studio/context_bundle.json",
+        "web-demo/.studio/metrics.json",
+        "web-demo/.studio/worker_visual.json",
+        "web-demo/.studio/worker_gameplay.json",
+        "web-demo/.studio/worker_playtester.json"
+      ],
+      "summary": "MAJOR VISUAL OVERHAUL. T060: Celtic knot SVG boot screen (inline SVG, CSS progress bar 2.5s, 4-message status cycling, 0.8s fade-out). T061: MainMenuScene.ts 459 lines — stormy ocean vertex shader (sine waves, 80x80 plane), cliff geometry, tower silhouette with window glow+PointLight, dark stormy sky ShaderMaterial, FogExp2 scene fog, CatmullRom dolly path (cliff->tower 5s, with safety timeout). Menu overlay: M.E.R.L.I.N. title + Commencer le Voyage button. T063: CameraRail bob-head (BOB_FREQUENCY=2Hz, BOB_AMPLITUDE=0.04, pauses with rail, elapsedMoving accumulator). T064: SeaSpraySystem (150 pts, AdditiveBlending, lifetime-based y-fade, position reset) + god ray Sprite (AdditiveBlending, sin-animated opacity 0.12-0.17). T065: SceneTransition.ts (SceneState enum, cutToBlack/revealFromBlack/transition API, singleton overlay div). main.ts: BOOT->MENU->GAME state machine with runBootScreen() + runMainMenu() async phases. Cards: 326->346 (+20 iles_mystiques batch2, niamh 53%, anciens 37%, all constraints PASS). Bundle: 100.43->108.88KB (+8.4%). TS: 0. Build: 2.94s. Deferred: T062 (Merlin lair clickable hub) -> cycle 22.",
+      "qa_extended": {
+        "playtester": "PASS — boot screen sequencing correct (CSS-only progress, no JS race), menu rAF loop cancelled, dolly safety timeout, sprite particle lifecycle correct, iles cards all constraints met (niamh 53%, heal<=5, rep<=20)",
+        "visual_qa": "PASS — no white screen risk (boot screen shows immediately, CSS-only), bundle +8.4% (under 220KB WARN cap), no regressions to game loop",
+        "code_review": "PASS — no CRITICAL/HIGH. MEDIUM: SceneTransition.transition() resolves even if midpoint() throws (acceptable for UI fade). LOW: insideLight not animatable externally (acceptable for static effect)."
+      },
+      "agents_dispatched": ["merlin-tech-artist (director)", "merlin-gameplay-programmer (director)", "merlin-narrative-designer (director)", "merlin-ai-playtester (director)"],
+      "commit": "2857669",
+      "pushed": true,
+      "vercel_deploy": "triggered — https://web-export-pi.vercel.app"
+    },
+    {
       "cycle": 20,
       "timestamp": "2026-04-01T00:10:00Z",
       "tasks_attempted": ["T056", "T057", "villages_celtes_batch2", "perf_cache"],

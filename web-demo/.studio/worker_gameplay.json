@@ -1,27 +1,29 @@
 {
   "agent": "merlin-gameplay-programmer",
-  "cycle": 27,
-  "timestamp": "2026-03-31T15:45:00Z",
+  "cycle": 28,
+  "timestamp": "2026-04-02T00:00:00Z",
   "status": "PASS",
   "tasks": {
-    "T072_audio_context_fix": {
+    "T073_card_selection_feedback": {
       "status": "DONE",
-      "file": "web-demo/src/audio/SFXManager.ts",
+      "file": "web-demo/src/ui/CardOverlay.ts",
       "changes": [
-        "Added module-level pendingAmbientType: AmbientType | null = null",
-        "startAmbient(): when ctx.state === 'suspended', sets pendingAmbientType = type and returns (instead of silent drop)",
-        "resumeOnInteraction(): after ctx.resume() resolves, if pendingAmbientType !== null and ambientSession === null, calls startAmbient(pendingAmbientType) — then clears queue",
-        "Fix ensures menu ambient (55Hz drone) plays as soon as user clicks or presses a key, even if boot screen auto-dismissed before interaction"
+        "Click handler: btn.classList.add('card-option-selected') immediately on click",
+        "hideCard() + resolve(index) deferred 200ms via setTimeout (was immediate)",
+        "CSS .card-option-selected added to index.html: background rgba(201,168,76,0.3), border-color #c9a84c, transition:none"
       ]
     },
-    "T070_hud_faction_bars": {
-      "status": "VERIFIED + ENHANCED",
-      "file": "web-demo/src/ui/HUD.ts",
-      "finding": "Faction bars are fully implemented: buildFactionPanel() creates 5 rows (label+80px track+fill+value), initHUD() calls buildFactionPanel() + store.subscribe(updateHUD), updateHUD() iterates FACTIONS and sets faction-fill-{faction} width + faction-val-{faction} text. Logic is correct.",
-      "enhancement": "Upgraded FACTION_COLORS from dim palette to vivid spec from backlog: druides=#6abf69 anciens=#e8c84c korrigans=#b888e8 niamh=#8ab4f8 ankou=#e05c5c. Makes bars visually readable at low rep values."
+    "T075_boot_skip_snap": {
+      "status": "DONE",
+      "file": "web-demo/src/main.ts",
+      "changes": [
+        "skip() in runBootScreen(): queries .boot-progress-fill",
+        "Sets fill.style.animation = 'none' and fill.style.width = '100%' before resolve()",
+        "Guards: only runs when fill element is present (null-safe)"
+      ]
     }
   },
   "ts_errors": 0,
-  "bundle_kb_app": 118.24,
+  "bundle_kb_app": 118.59,
   "issues": []
 }

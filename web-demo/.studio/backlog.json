@@ -28,45 +28,45 @@
       "id": "T071",
       "title": "Card options mobile layout — 3-column breaks at 375px narrow viewport",
       "priority": 2,
-      "status": "open",
+      "status": "done",
       "domain": "visual",
       "est_tokens": 100,
       "depends_on": [],
       "tags": ["mobile", "ux"],
-      "notes": "Add @media (max-width:560px) { .card-options { flex-direction:column; } .card-option { max-width:100%; min-width:unset; } } to index.html. Also verify tooltip repositions below button on mobile (already has @media 700px rule)."
+      "notes": "DONE cycle 28. @media (max-width:560px) { .card-options { flex-direction:column } .card-option { max-width:100%; min-width:unset } } added to index.html. Tooltip @media 700px rule already present."
     },
     {
       "id": "T073",
       "title": "Card selection feedback — brief highlight before overlay disappears",
       "priority": 2,
-      "status": "open",
+      "status": "done",
       "domain": "visual",
       "est_tokens": 120,
       "depends_on": [],
       "tags": ["ux", "feedback"],
-      "notes": "In CardOverlay.ts showCard(): on option click, add class card-option-selected to clicked btn (gold bg flash: background rgba(201,168,76,0.3), border-color #c9a84c). Call hideCard() after 200ms delay instead of immediately. CSS: .card-option-selected { background: rgba(201,168,76,0.3); border-color: #c9a84c; transition: none; }"
+      "notes": "DONE cycle 28. CardOverlay.ts: btn.classList.add('card-option-selected'), hideCard()+resolve() deferred 200ms via setTimeout. CSS .card-option-selected { background:rgba(201,168,76,0.3); border-color:#c9a84c; transition:none } added to index.html."
     },
     {
       "id": "T074",
       "title": "Minigame overlay visual distinction — subtle blue tint vs card dark bg",
       "priority": 3,
-      "status": "open",
+      "status": "done",
       "domain": "visual",
       "est_tokens": 80,
       "depends_on": [],
       "tags": ["ux", "visual"],
-      "notes": "Change #minigame-overlay background from rgba(10,10,18,0.9) to rgba(5,8,18,0.93) — slightly more blue to signal action/combat mode vs narrative card mode. One-line CSS change in index.html."
+      "notes": "DONE cycle 28. #minigame-overlay background changed from rgba(10,10,18,0.9) to rgba(5,8,18,0.93) in index.html."
     },
     {
       "id": "T075",
       "title": "Boot progress bar snaps to 100% on skip",
       "priority": 3,
-      "status": "open",
+      "status": "done",
       "domain": "visual",
       "est_tokens": 80,
       "depends_on": [],
       "tags": ["ux", "boot"],
-      "notes": "When boot is skipped early (T069), the progress bar CSS animation is mid-way. On skip: JS sets .boot-progress-fill style animation to 'none' and width to '100%' before triggering the fade. Gives satisfying snap-to-complete feel."
+      "notes": "DONE cycle 28. main.ts skip(): querySelector('.boot-progress-fill') then style.animation='none', style.width='100%' before resolve(). Satisfying snap-to-complete on early skip."
     },
     {
       "id": "T060",
