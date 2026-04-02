@@ -13,7 +13,7 @@ export class CameraRail {
   private progress = 0;
   private speed = 0.008; // Progress per second (0-1 range)
   private paused = false;
-  private readonly lookOffset = new THREE.Vector3(0, 1.5, 0);
+  private readonly lookOffset = new THREE.Vector3(0, 0.3, 0);
   private elapsedMoving = 0; // accumulated time while not paused (for bob)
 
   constructor(points: THREE.Vector3[]) {
@@ -85,7 +85,9 @@ export class CameraRail {
     if (this.paused || this.progress >= 1) return;
 
     this.elapsedMoving += dt;
-    this.progress = Math.min(1, this.progress + this.speed * dt);
+    // Velocity fade-in: ramp from 50% to 100% speed over first 3 seconds
+    const velocityScale = Math.min(1, 0.5 + this.elapsedMoving / 6);
+    this.progress = Math.min(1, this.progress + this.speed * dt * velocityScale);
 
     const position = this.curve.getPointAt(this.progress);
 
@@ -95,8 +97,8 @@ export class CameraRail {
 
     camera.position.copy(position);
 
-    // Look ahead on the curve
-    const lookProgress = Math.min(1, this.progress + 0.02);
+    // Look ahead on the curve — 0.08 lookahead avoids upward tilt at rail start
+    const lookProgress = Math.min(1, this.progress + 0.08);
     const lookAt = this.curve.getPointAt(lookProgress);
     lookAt.add(this.lookOffset);
     camera.lookAt(lookAt);

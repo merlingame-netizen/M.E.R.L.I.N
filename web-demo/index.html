@@ -454,9 +454,8 @@
   </style>
 </head>
 <body>
-  <div id="app">
-    <!-- Boot Screen T060 -->
-    <div id="boot-screen">
+  <!-- Boot Screen T060 — outside #app to prevent composite z-index black patch (Bug 1 fix) -->
+  <div id="boot-screen">
       <svg class="boot-logo" viewBox="0 0 120 120" fill="none" xmlns="http://www.w3.org/2000/svg">
         <!-- Celtic knot: interlaced triquetra-inspired design -->
         <circle cx="60" cy="60" r="54" stroke="rgba(205,133,63,0.15)" stroke-width="1"/>
@@ -487,6 +486,7 @@
       </div>
       <div class="boot-status" id="boot-status-text">Initialisation...</div>
     </div>
+  <div id="app">
     <!-- Main Menu Canvas Wrapper (Three.js cinematic) -->
     <div id="menu-canvas-wrapper"></div>
     <!-- Merlin's Lair Canvas Wrapper (T062) -->
