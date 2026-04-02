@@ -78,6 +78,7 @@ export class CameraRail {
   reset(): void {
     this.progress = 0;
     this.paused = false;
+    this.elapsedMoving = 0;
   }
 
   /** Update camera position along the spline. T063: bob-head Y offset applied. */

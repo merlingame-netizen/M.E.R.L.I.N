@@ -76,9 +76,12 @@ async function runBootScreen(): Promise<void> {
 
   clearInterval(msgInterval);
 
-  // Fade out boot screen — use transitionend to avoid black patch (Bug 1 fix)
+  // Fade out boot screen — race transitionend vs timeout (handles prefers-reduced-motion)
   bootScreen.classList.add('hidden');
-  await new Promise<void>(res => bootScreen.addEventListener('transitionend', () => res(), { once: true }));
+  await Promise.race([
+    new Promise<void>(res => bootScreen.addEventListener('transitionend', () => res(), { once: true })),
+    new Promise<void>(res => setTimeout(res, 1000)), // 0.8s transition + 200ms margin
+  ]);
   bootScreen.style.display = 'none';
 }
 
