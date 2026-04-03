@@ -8,25 +8,13 @@ import { CameraRail } from './engine/CameraRail';
 import { buildCoastScene } from './scenes/CoastBiome';
 import { store } from './game/Store';
 import { getMultiplier, getMultiplierLabel } from './game/Constants';
-import { generateFastRouteCard, detectMinigame, loadTemplates } from './game/CardSystem';
+import { generateFastRouteCard, detectMinigame, loadTemplates, verbToField } from './game/CardSystem';
 import { applyEffects, applyOghamEffect, processOghamModifiers } from './game/EffectEngine';
 import { showCard } from './ui/CardOverlay';
 import { initHUD, updateHUD } from './ui/HUD';
 import { fadeIn, fadeOut } from './ui/Transitions';
-import { MinigameTraces } from './minigames/mg_traces';
-import { MinigameRunes } from './minigames/mg_runes';
-import { MinigameEquilibre } from './minigames/mg_equilibre';
-import { MinigameHerboristerie } from './minigames/mg_herboristerie';
-import { MinigameNegociation } from './minigames/mg_negociation';
-import { MinigameCombatRituel } from './minigames/mg_combat_rituel';
-import { MinigameApaisement } from './minigames/mg_apaisement';
-import { MinigameSangFroid } from './minigames/mg_sang_froid';
-import { MinigameCourse } from './minigames/mg_course';
-import { MinigameFouille } from './minigames/mg_fouille';
-import { MinigameOmbres } from './minigames/mg_ombres';
-import { MinigameVolonte } from './minigames/mg_volonte';
-import { MinigameRegard } from './minigames/mg_regard';
-import { MinigameEcho } from './minigames/mg_echo';
+// Minigames are lazy-loaded on first use (dynamic import) to defer the ~21KB chunk
+// until the player actually enters a run. vite.config.ts lets Rollup auto-split them.
 import { initOghamPanel, showOghamPanel, hideOghamPanel } from './ui/OghamPanel';
 import { getLLMAdapter } from './llm/GroqAdapter';
 import { showRunSummary } from './ui/RunSummary';
@@ -407,10 +395,10 @@ async function gameLoop(
         id: `card_emergency_${Date.now()}`,
         narrative: 'Le brouillard se leve, revelant un sentier paisible devant toi.',
         options: [
-          { verb: 'observer', text: 'Tu observes les alentours calmement.', field: 'observation', effects: ['HEAL_LIFE:3'] },
-          { verb: 'avancer', text: 'Tu poursuis ta route avec prudence.', field: 'esprit', effects: ['ADD_ANAM:2'] },
-          { verb: 'attendre', text: 'Tu fais une pause pour reprendre tes forces.', field: 'esprit', effects: ['HEAL_LIFE:2'] },
-        ] as const,
+          { verb: 'observer', text: 'Tu observes les alentours calmement.', field: verbToField('observer'), effects: ['HEAL_LIFE:3'] as const },
+          { verb: 'avancer',  text: 'Tu poursuis ta route avec prudence.',  field: verbToField('avancer'),  effects: ['ADD_ANAM:2'] as const },
+          { verb: 'attendre', text: 'Tu fais une pause pour reprendre tes forces.', field: verbToField('attendre'), effects: ['HEAL_LIFE:2'] as const },
+        ] as readonly [import('./game/CardSystem').CardOption, import('./game/CardSystem').CardOption, import('./game/CardSystem').CardOption],
         biome: state().run.biome,
         source: 'fastroute' as const,
       };
@@ -428,7 +416,7 @@ async function gameLoop(
     let result = { score: 50 }; // neutral fallback
     try {
       minigameOverlay.classList.add('visible');
-      const minigame = createMinigame(minigameId, minigameContainer);
+      const minigame = await createMinigame(minigameId, minigameContainer);
       result = await minigame.play();
     } catch (err) {
       console.warn(`[MERLIN] Minigame '${minigameId}' failed, using neutral score 50:`, err);
@@ -495,46 +483,19 @@ async function gameLoop(
     await fadeIn(400);
     await fadeOut(400);
 
-    // Reset rail if complete
+    // Reset rail if complete — play audio cue so player notices world cycling
     if (rail.isComplete()) {
+      playSound('ambient_transition');
       rail.reset();
     }
   }
 }
 
-function createMinigame(id: string, container: HTMLElement) {
-  switch (id) {
-    case 'runes':
-      return new MinigameRunes(container);
-    case 'equilibre':
-      return new MinigameEquilibre(container);
-    case 'herboristerie':
-      return new MinigameHerboristerie(container);
-    case 'negociation':
-      return new MinigameNegociation(container);
-    case 'combat_rituel':
-      return new MinigameCombatRituel(container);
-    case 'apaisement':
-      return new MinigameApaisement(container);
-    case 'sang_froid':
-      return new MinigameSangFroid(container);
-    case 'course':
-      return new MinigameCourse(container);
-    case 'fouille':
-      return new MinigameFouille(container);
-    case 'ombres':
-      return new MinigameOmbres(container);
-    case 'volonte':
-      return new MinigameVolonte(container);
-    case 'regard':
-      return new MinigameRegard(container);
-    case 'echo':
-      return new MinigameEcho(container);
-    case 'traces':
-    default:
-      // Remaining minigames fall back to Traces
-      return new MinigameTraces(container);
-  }
+async function createMinigame(id: string, container: HTMLElement) {
+  // Single dynamic import — Rollup bundles all 14 minigames into one deferred chunk
+  // (see vite.config.ts manualChunks). Chunk is cached after first run entry.
+  const { createMinigameById } = await import('./minigames/MinigameRegistry');
+  return createMinigameById(id, container);
 }
 
 
@@ -550,6 +511,8 @@ function showLLMLoadingHint(): void {
   if (document.getElementById(LLM_HINT_ID)) return;
   const hint = document.createElement('div');
   hint.id = LLM_HINT_ID;
+  hint.setAttribute('role', 'status');
+  hint.setAttribute('aria-live', 'polite');
   hint.style.cssText = [
     'position:fixed',
     'bottom:24px',

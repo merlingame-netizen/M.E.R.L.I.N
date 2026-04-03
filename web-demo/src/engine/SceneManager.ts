@@ -39,6 +39,8 @@ export class SceneManager {
     this.renderer.toneMapping = THREE.ACESFilmicToneMapping;
     this.renderer.toneMappingExposure = 0.9;
     container.appendChild(this.renderer.domElement);
+    this.renderer.domElement.setAttribute('role', 'img');
+    this.renderer.domElement.setAttribute('aria-label', 'Scène 3D — Chemin celtique de Merlin, paysage breton animé');
 
     // Lighting
     this.setupLighting();

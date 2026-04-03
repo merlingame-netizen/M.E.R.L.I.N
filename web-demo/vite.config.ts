@@ -16,21 +16,11 @@ export default defineConfig({
       output: {
         manualChunks: {
           'three-core': ['three'],
+          // Minigames chunk: deferred until first run (dynamic import in createMinigame).
+          // Listing them here groups all 14 files + base into one cache-friendly chunk
+          // instead of 15 individual micro-requests.
           'minigames': [
-            './src/minigames/mg_traces.ts',
-            './src/minigames/mg_runes.ts',
-            './src/minigames/mg_equilibre.ts',
-            './src/minigames/mg_herboristerie.ts',
-            './src/minigames/mg_negociation.ts',
-            './src/minigames/mg_combat_rituel.ts',
-            './src/minigames/mg_apaisement.ts',
-            './src/minigames/mg_sang_froid.ts',
-            './src/minigames/mg_course.ts',
-            './src/minigames/mg_fouille.ts',
-            './src/minigames/mg_ombres.ts',
-            './src/minigames/mg_volonte.ts',
-            './src/minigames/mg_regard.ts',
-            './src/minigames/mg_echo.ts',
+            './src/minigames/MinigameRegistry.ts',
             './src/minigames/MinigameBase.ts',
           ],
         },
