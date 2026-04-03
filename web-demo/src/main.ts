@@ -429,7 +429,8 @@ async function gameLoop(
     }
 
     // 6. SCORE → multiplier
-    playSound(result.score > 65 ? 'win' : 'lose');
+    // Align with MULTIPLIER_TABLE: reussite tier starts at 80 (BUG-C62-06)
+    playSound(result.score >= 80 ? 'win' : 'lose');
     const multiplier = getMultiplier(result.score);
     const label = getMultiplierLabel(result.score);
 
