@@ -106,13 +106,13 @@ export class MinigameVolonte extends MinigameBase {
     this.canvas.addEventListener('pointermove', this.onPointerMove);
     this.canvas.addEventListener('pointerdown', this.onPointerMove);
 
-    // Reset state
-    this.cursorX = this.centerX;
-    this.cursorY = this.centerY;
+    // Reset state — cursor at (0,0) so idle player starts OUTSIDE the target (dist≈269 > radius 30).
+    this.cursorX = 0;
+    this.cursorY = 0;
     this.timeLeft = this.totalTime;
     this.elapsedTime = 0;
     this.timeOnTarget = 0;
-    this.isOnTarget = true;
+    this.isOnTarget = false;
     this.pulsePhase = 0;
     this.distractors = [];
     this.nextSpawn = 0.5;

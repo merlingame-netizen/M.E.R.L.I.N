@@ -98,9 +98,9 @@ export class MinigameSangFroid extends MinigameBase {
     this.canvas.addEventListener('pointermove', this.onPointerMove);
     this.canvas.addEventListener('pointerdown', this.onPointerMove);
 
-    // Reset state
-    this.cursorX = this.centerX;
-    this.cursorY = this.centerY;
+    // Reset state — cursor at (0,0) so idle player starts OUTSIDE the zone (dist≈269 > radius 120).
+    this.cursorX = 0;
+    this.cursorY = 0;
     this.zoneX = this.centerX;
     this.zoneY = this.centerY;
     this.zoneDrift = { vx: this.randomDrift(), vy: this.randomDrift() };
@@ -109,7 +109,7 @@ export class MinigameSangFroid extends MinigameBase {
     this.timeInside = 0;
     this.currentRadius = this.startRadius;
     this.pulsePhase = 0;
-    this.isInside = true;
+    this.isInside = false;
     this.nextDriftChange = 2;
 
     // Timer
