@@ -239,6 +239,10 @@ async function runMerlinLair(app: HTMLElement): Promise<void> {
   });
 
   cancelAnimationFrame(rafId);
+  // BUG-06: clear in-flight toast timers before dispose to avoid stale DOM writes
+  if (activeToastFadeId !== null) { clearTimeout(activeToastFadeId); activeToastFadeId = null; }
+  if (activeToastRemoveId !== null) { clearTimeout(activeToastRemoveId); activeToastRemoveId = null; }
+  activeToast = null; // Timers cleared above — toast element hidden with wrapper
   cutToBlack();
   await new Promise<void>((res) => setTimeout(res, 300));
   lair.dispose();
@@ -253,65 +257,85 @@ async function main(): Promise<void> {
   // SFX: init early so first interaction resumes AudioContext
   initSFXManager();
 
+  // BUG-01: Save cross-run data on sudden tab close or mobile backgrounding
+  const emergencySave = (): void => { saveAnamToStorage(); saveMetaToStorage(); };
+  window.addEventListener('beforeunload', emergencySave);
+  document.addEventListener('visibilitychange', () => {
+    if (document.visibilityState === 'hidden') emergencySave();
+  });
+
   // Phase 1: Boot screen (T060)
   await runBootScreen();
 
-  // Phase 2: Main menu (static camera, T061)
+  // Phase 2: Main menu (once — never shown again between runs)
   await runMainMenu();
 
-  // Phase 2b: Lair Hub — 3D interior, player navigates 5 zones, door = start run
-  await runMerlinLair(app);
-
-  // Phase 3: Reveal and enter game
-  loading.style.display = 'flex';
-  loading.style.opacity = '1';
-
-  // Init scene
-  const sceneManager = new SceneManager(app);
-
-  // Build biome
-  const biomeResult = await buildCoastScene();
-  sceneManager.scene.add(biomeResult.group);
-
-  // Camera rail
-  const rail = CameraRail.createCoastalPath();
-  rail.setSpeed(WALK_SPEED);
-
-  sceneManager.onUpdate((dt) => {
-    rail.update(sceneManager.camera, dt);
-    biomeResult.update(dt);
-  });
-
-  // Start renderer
-  sceneManager.start();
-
-  // T066: Start forest ambient (wind + bird chirps) as game world reveals
-  startAmbient('forest');
-
-  // Hide loading screen and reveal game (clear scene-transition black overlay)
-  loading.style.opacity = '0';
-  loading.style.transition = 'opacity 0.5s';
-  setTimeout(() => { loading.style.display = 'none'; }, 500);
-  revealFromBlack(600);
-
-  // Init HUD + Ogham panel
-  initHUD();
-  initOghamPanel();
-
-  // T043: Load FastRoute card templates from /data/cards.json before game starts
+  // T043: Load FastRoute card templates once (shared across all runs)
   await loadTemplates();
 
-  // Load cross-run Anam + meta from localStorage (T053)
-  loadAnamFromStorage();
-  loadMetaFromStorage();
+  // BUG-03: Outer run loop — lair → walk → run → lair → walk → run ...
+  // Without this the page is a dead-end after the first run.
+  while (true) {
+    // Phase 2b: Lair Hub — 3D interior, player navigates 5 zones, door = start run
+    await runMerlinLair(app);
 
-  // Start game
-  store.getState().startRun('cotes_sauvages');
-  updateHUD();
-  showBiomeToast('cotes_sauvages');
+    // Phase 3: Reveal and enter game
+    loading.style.display = 'flex';
+    loading.style.opacity = '1';
 
-  // --- Gameplay Loop ---
-  await gameLoop(sceneManager, rail, biomeResult.update);
+    // Init scene (fresh per run)
+    const sceneManager = new SceneManager(app);
+
+    // Build biome
+    const biomeResult = await buildCoastScene();
+    sceneManager.scene.add(biomeResult.group);
+
+    // Camera rail
+    const rail = CameraRail.createCoastalPath();
+    rail.setSpeed(WALK_SPEED);
+
+    sceneManager.onUpdate((dt) => {
+      rail.update(sceneManager.camera, dt);
+      biomeResult.update(dt);
+    });
+
+    // Start renderer
+    sceneManager.start();
+
+    // T066: Start forest ambient (wind + bird chirps) as game world reveals
+    startAmbient('forest');
+
+    // Hide loading screen and reveal game (clear scene-transition black overlay)
+    loading.style.opacity = '0';
+    loading.style.transition = 'opacity 0.5s';
+    setTimeout(() => { loading.style.display = 'none'; }, 500);
+    revealFromBlack(600);
+
+    // Init HUD + Ogham panel
+    initHUD();
+    initOghamPanel();
+
+    // Load cross-run Anam + meta from localStorage (T053)
+    loadAnamFromStorage();
+    loadMetaFromStorage();
+
+    // Start run
+    store.getState().startRun('cotes_sauvages');
+    updateHUD();
+    showBiomeToast('cotes_sauvages');
+
+    // --- Gameplay Loop ---
+    await gameLoop(sceneManager, rail, biomeResult.update);
+
+    // BUG-02: Stop renderer rAF + biome update loop after run ends to free GPU/CPU
+    sceneManager.stop();
+    stopAmbient();
+    biomeResult.dispose();
+
+    // Fade to black before returning to lair for next run
+    cutToBlack();
+    await waitSeconds(0.5);
+  }
 }
 
 async function gameLoop(
