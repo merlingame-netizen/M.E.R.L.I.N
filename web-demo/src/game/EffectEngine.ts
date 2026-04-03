@@ -142,19 +142,35 @@ export function applyEffects(effects: readonly string[], multiplier = 1.0): Effe
       case 'ADD_PROMISE': {
         const promiseId = args[0] ?? '';
         const deadline = Math.max(1, parseInt(args[1] ?? '5', 10) || 5);
-        // args[2] is the optional human-readable label (e.g. "Alliance avec Merlin")
-        const label = args[2] ?? undefined;
+        // args[2+] joined with ':' so labels containing colons are preserved
+        const label = args.slice(2).join(':') || undefined;
         store.getState().addPromise(promiseId, deadline, label);
         applied.push(effectStr);
         break;
       }
       case 'FULFILL_PROMISE': {
-        store.getState().fulfillPromise(args[0] ?? '');
+        const fulfillId = args[0] ?? '';
+        const isActive = store.getState().run.promises.some(
+          (p) => p.id === fulfillId && p.status === 'active'
+        );
+        store.getState().fulfillPromise(fulfillId);
+        if (isActive) {
+          // Moral reward: +5 anam for keeping a promise (scaled by multiplier)
+          store.getState().addAnam(scaleAndCap('ADD_ANAM', 5, multiplier));
+        }
         applied.push(effectStr);
         break;
       }
       case 'BREAK_PROMISE': {
-        store.getState().breakPromise(args[0] ?? '');
+        const breakId = args[0] ?? '';
+        const wasActive = store.getState().run.promises.some(
+          (p) => p.id === breakId && p.status === 'active'
+        );
+        store.getState().breakPromise(breakId);
+        if (wasActive) {
+          // Karmic toll: -5 life for breaking a promise (flat, unscaled by multiplier)
+          store.getState().damageLife(5);
+        }
         applied.push(effectStr);
         break;
       }
