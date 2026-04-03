@@ -220,8 +220,8 @@ async function runMerlinLair(app: HTMLElement): Promise<void> {
   await new Promise<void>((resolve) => {
     lair.onZoneClick((zone) => {
       if (zone === 'door') {
-        showZoneToast('door'); // brief "Entrer dans la forêt" confirms the action before fade
-        resolve();
+        showZoneToast('door'); // "Entrer dans la forêt" — 400ms readable before cutToBlack
+        setTimeout(resolve, 400);
         return;
       }
       showZoneToast(zone);

@@ -474,6 +474,7 @@ function createDustMotes(): DustSystem {
 
 interface CauldronSystem {
   group: THREE.Group;
+  body: THREE.Mesh;
   glow: THREE.PointLight;
   positions: Float32Array;
   velocities: Float32Array;
@@ -483,7 +484,7 @@ interface CauldronSystem {
 }
 
 function createCauldron(scene: THREE.Scene): CauldronSystem {
-  const ironMat = new THREE.MeshStandardMaterial({ color: 0x1a1a1a, roughness: 0.5, metalness: 0.6, flatShading: true });
+  const ironMat = new THREE.MeshStandardMaterial({ color: 0x1a1a1a, roughness: 0.5, metalness: 0.6, flatShading: true, emissive: 0x00aa33, emissiveIntensity: 0.0 });
   const steamMat = new THREE.PointsMaterial({
     color: 0x44cc88,
     size: 0.12,
@@ -559,7 +560,7 @@ function createCauldron(scene: THREE.Scene): CauldronSystem {
     geo.attributes['position']!.needsUpdate = true;
   };
 
-  return { group, glow, positions, velocities, lifetimes, geo, update };
+  return { group, body, glow, positions, velocities, lifetimes, geo, update };
 }
 
 // ── Potion Bottles ────────────────────────────────────────────────────────────
@@ -678,12 +679,12 @@ export function initMerlinLair(container: HTMLElement): LairResult {
   scene.add(createSkull());
   createLairDensity(scene);
 
-  // Cauldron interactive hit target (sphere r=1.2, oracle Merlin dialogue zone)
+  // Cauldron interactive hit target (sphere r=0.9, aligned to GLB rim ~y=-4.0)
   const cauldronHit = new THREE.Mesh(
-    new THREE.SphereGeometry(1.2, 8, 6),
+    new THREE.SphereGeometry(0.9, 8, 6),
     new THREE.MeshBasicMaterial({ visible: false })
   );
-  cauldronHit.position.set(2, -3.0, -7);
+  cauldronHit.position.set(2, -4.0, -7);
   scene.add(cauldronHit);
 
   // Forest window + day/night/season cycle
@@ -699,7 +700,7 @@ export function initMerlinLair(container: HTMLElement): LairResult {
     { mesh: crystalData.hitTarget, zone: 'crystal', hovered: false, baseEmissive: 0.6  },
     { mesh: shelfHit,            zone: 'bookshelf', hovered: false, visualMesh: shelfFrame, baseEmissive: 0.0 },
     { mesh: doorHit,             zone: 'door',      hovered: false, visualMesh: doorPanel,  baseEmissive: 0.05 },
-    { mesh: cauldronHit,         zone: 'cauldron',  hovered: false, baseEmissive: 0.0 },
+    { mesh: cauldronHit,         zone: 'cauldron',  hovered: false, visualMesh: cauldron.body, baseEmissive: 0.0 },
   ];
 
   const raycaster = new THREE.Raycaster();
