@@ -190,8 +190,13 @@ async function runMerlinLair(app: HTMLElement): Promise<void> {
     door:      { title: 'Entrer dans la forêt', sub: '→ Commencer l\'aventure' },
   };
   let activeToast: HTMLDivElement | null = null;
+  let activeToastFadeId: ReturnType<typeof setTimeout> | null = null;
+  let activeToastRemoveId: ReturnType<typeof setTimeout> | null = null;
 
   const showZoneToast = (zone: string): void => {
+    // Cancel any in-flight fade/remove timers before replacing the toast
+    if (activeToastFadeId !== null) { clearTimeout(activeToastFadeId); activeToastFadeId = null; }
+    if (activeToastRemoveId !== null) { clearTimeout(activeToastRemoveId); activeToastRemoveId = null; }
     if (activeToast) { activeToast.remove(); activeToast = null; }
     const entry = ZONE_LABELS[zone] ?? { title: zone, sub: '' };
     const toast = document.createElement('div');
@@ -210,9 +215,14 @@ async function runMerlinLair(app: HTMLElement): Promise<void> {
     wrapper!.appendChild(toast);
     activeToast = toast;
     requestAnimationFrame(() => requestAnimationFrame(() => { toast.style.opacity = '1'; }));
-    setTimeout(() => {
+    activeToastFadeId = setTimeout(() => {
+      activeToastFadeId = null;
       toast.style.opacity = '0';
-      setTimeout(() => { toast.remove(); if (activeToast === toast) activeToast = null; }, 220);
+      activeToastRemoveId = setTimeout(() => {
+        activeToastRemoveId = null;
+        toast.remove();
+        if (activeToast === toast) activeToast = null;
+      }, 220);
     }, 1800);
   };
 
