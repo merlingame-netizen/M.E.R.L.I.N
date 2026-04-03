@@ -83,7 +83,8 @@ function createLowPolyOcean(): OceanResult {
       positions[i * 3 + 2] = wave; // Z in plane space = up after rotation
     }
     posAttr.needsUpdate = true;
-    geo.computeVertexNormals();
+    // flatShading:true — GPU computes per-face normals from vertex positions at render time.
+    // computeVertexNormals() is unnecessary and was wasting ~1-2ms/frame on mobile.
   };
 
   return { mesh, horizonPlane, update };
@@ -680,6 +681,8 @@ export function initMainMenu(container: HTMLElement): MainMenuResult {
   renderer.setPixelRatio(Math.min(window.devicePixelRatio, 1.5));
   renderer.toneMapping = THREE.NoToneMapping;
   container.appendChild(renderer.domElement);
+  renderer.domElement.setAttribute('role', 'img');
+  renderer.domElement.setAttribute('aria-label', 'Scène 3D — Côte rocheuse de Bretagne, tour de Merlin sous un ciel orageux');
 
   // Resize handler
   const onResize = (): void => {
