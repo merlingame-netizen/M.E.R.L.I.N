@@ -264,7 +264,7 @@ export class MinigameNegociation extends MinigameBase {
     const penalty = neutralPicked * 3;
     const timeBonus = this.timeLeft > 0 ? (this.timeLeft / this.totalTime) * 15 : 0;
 
-    const finalScore = Math.max(0, factionScore + comboBonus - penalty + timeBonus);
+    const finalScore = Math.min(100, Math.max(0, factionScore + comboBonus - penalty + timeBonus));
     this.finish(finalScore);
   }
 
