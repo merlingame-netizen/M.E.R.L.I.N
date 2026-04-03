@@ -53,7 +53,7 @@ export class MinigameTraces extends MinigameBase {
     this.canvas.setAttribute('role', 'application');
     this.canvas.width = 400;
     this.canvas.height = 400;
-    this.canvas.style.cssText = 'border-radius:12px;background:rgba(20,30,20,0.8);border:1px solid rgba(205,133,63,0.3);cursor:pointer;';
+    this.canvas.style.cssText = 'border-radius:12px;background:rgba(20,30,20,0.8);border:1px solid rgba(205,133,63,0.3);cursor:pointer;touch-action:none;';
     this.container.appendChild(this.canvas);
     this.ctx = this.canvas.getContext('2d');
 
