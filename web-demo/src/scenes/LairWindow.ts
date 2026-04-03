@@ -74,7 +74,7 @@ export function createLairWindow(scene: THREE.Scene): WindowResult {
   const group = new THREE.Group();
 
   // Stone window frame (back wall z=-9.75)
-  const frameMat = new THREE.MeshStandardMaterial({ color: 0x2e2924, roughness: 0.98, metalness: 0.0 });
+  const frameMat = new THREE.MeshStandardMaterial({ color: 0x2e2924, roughness: 0.98, metalness: 0.0, flatShading: true });
   // Left jamb
   const jambL = new THREE.Mesh(new THREE.BoxGeometry(0.4, 4.4, 0.5), frameMat);
   jambL.position.set(2.6, 3.5, -9.75);
@@ -114,7 +114,7 @@ export function createLairWindow(scene: THREE.Scene): WindowResult {
 
   // ── Forest exterior (behind glass, at z=-10.6) ────────────────────────────
 
-  const treeMat = new THREE.MeshStandardMaterial({ color: 0x2e6e2e, roughness: 1.0, metalness: 0.0 });
+  const treeMat = new THREE.MeshStandardMaterial({ color: 0x2e6e2e, roughness: 1.0, metalness: 0.0, flatShading: true });
 
   // Sky backdrop (flat plane behind trees)
   const skyMat = new THREE.MeshBasicMaterial({ color: 0x8ab4d4, side: THREE.FrontSide });
