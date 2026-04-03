@@ -646,9 +646,9 @@ function createGodRay(): { mesh: THREE.Mesh; update: (dt: number) => void } {
   let elapsed = 0;
   const update = (dt: number): void => {
     elapsed += dt;
-    // Gentle opacity pulse 0.15..0.45 over ~3s period
+    // Subtle opacity pulse 0.12..0.28 — reduced range for mobile readability
     (mesh.material as THREE.MeshBasicMaterial).opacity =
-      0.30 + Math.sin(elapsed * (Math.PI * 2) / 3.0) * 0.15;
+      0.20 + Math.sin(elapsed * (Math.PI * 2) / 3.0) * 0.08;
   };
 
   return { mesh, update };

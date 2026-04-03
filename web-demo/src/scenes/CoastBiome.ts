@@ -375,7 +375,8 @@ export async function buildCoastScene(): Promise<BiomeSceneResult> {
         arr[i * 3 + 2] = wave;
       }
       posAttr.needsUpdate = true;
-      oceanMesh.geometry.computeVertexNormals();
+      // Throttle normal recompute to every 3rd frame — halves CPU cost on mobile
+      if (Math.round(t * 60) % 3 === 0) oceanMesh.geometry.computeVertexNormals();
     }
     if (fogMesh) {
       const fogMat = fogMesh.material as THREE.ShaderMaterial;
