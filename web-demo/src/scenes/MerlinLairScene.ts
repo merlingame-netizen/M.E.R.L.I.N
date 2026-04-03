@@ -29,10 +29,10 @@ export type { LairTimeParams };
 
 // ── Stone Walls + Floor + Ceiling ────────────────────────────────────────────
 
-function createWalls(): THREE.Group {
+function createWalls(): { group: THREE.Group; floorMesh: THREE.Mesh } {
   const group = new THREE.Group();
-  const stoneMat = new THREE.MeshStandardMaterial({ color: 0x3a3228, roughness: 0.95, metalness: 0.0 });
-  const mortarMat = new THREE.MeshStandardMaterial({ color: 0x2a2420, roughness: 1.0, metalness: 0.0 });
+  const stoneMat = new THREE.MeshStandardMaterial({ color: 0x3a3228, roughness: 0.95, metalness: 0.0, flatShading: true });
+  const mortarMat = new THREE.MeshStandardMaterial({ color: 0x2a2420, roughness: 1.0, metalness: 0.0, flatShading: true });
 
   // Back wall
   const back = new THREE.Mesh(new THREE.BoxGeometry(24, 16, 0.5), stoneMat);
@@ -50,19 +50,19 @@ function createWalls(): THREE.Group {
   group.add(right);
 
   // Flagstone floor
-  const floorMat = new THREE.MeshStandardMaterial({ color: 0x201c18, roughness: 0.9, metalness: 0.0 });
+  const floorMat = new THREE.MeshStandardMaterial({ color: 0x201c18, roughness: 0.9, metalness: 0.0, flatShading: true });
   const floor = new THREE.Mesh(new THREE.BoxGeometry(24, 0.3, 20), floorMat);
   floor.position.set(0, -5, 0);
   group.add(floor);
 
   // Ceiling
-  const ceilMat = new THREE.MeshStandardMaterial({ color: 0x1a1610, roughness: 1.0, metalness: 0.0 });
+  const ceilMat = new THREE.MeshStandardMaterial({ color: 0x1a1610, roughness: 1.0, metalness: 0.0, flatShading: true });
   const ceil = new THREE.Mesh(new THREE.BoxGeometry(24, 0.4, 20), ceilMat);
   ceil.position.set(0, 11, 0);
   group.add(ceil);
 
   // Wooden beams
-  const beamMat = new THREE.MeshStandardMaterial({ color: 0x3d2b1a, roughness: 0.85, metalness: 0.0 });
+  const beamMat = new THREE.MeshStandardMaterial({ color: 0x3d2b1a, roughness: 0.85, metalness: 0.0, flatShading: true });
   const beamPositions: Array<[number, number, number]> = [[-4, 10.5, -5], [4, 10.5, -5], [-4, 10.5, 3], [4, 10.5, 3]];
   for (const [x, y, z] of beamPositions) {
     const beam = new THREE.Mesh(new THREE.BoxGeometry(1.2, 0.8, 0.8), beamMat);
@@ -84,20 +84,21 @@ function createWalls(): THREE.Group {
     group.add(mortar);
   }
 
-  return group;
+  return { group, floorMesh: floor };
 }
 
 // ── Table with Map/Scroll ────────────────────────────────────────────────────
 
 function createMapTable(): { group: THREE.Group; hitTarget: THREE.Mesh } {
   const group = new THREE.Group();
-  const woodMat = new THREE.MeshStandardMaterial({ color: 0x4a3520, roughness: 0.8, metalness: 0.0 });
+  const woodMat = new THREE.MeshStandardMaterial({ color: 0x4a3520, roughness: 0.8, metalness: 0.0, flatShading: true });
   const mapMat = new THREE.MeshStandardMaterial({
     color: 0xc8a96e,
     roughness: 0.6,
     metalness: 0.0,
     emissive: 0x3a2a10,
     emissiveIntensity: 0.15,
+    flatShading: true,
   });
 
   // Table top
@@ -121,7 +122,7 @@ function createMapTable(): { group: THREE.Group; hitTarget: THREE.Mesh } {
   // Scroll border
   const scrollBorder = new THREE.Mesh(
     new THREE.BoxGeometry(3.1, 0.06, 0.15),
-    new THREE.MeshStandardMaterial({ color: 0x8b6a3a, roughness: 0.7, metalness: 0.1 })
+    new THREE.MeshStandardMaterial({ color: 0x8b6a3a, roughness: 0.7, metalness: 0.1, flatShading: true })
   );
   scrollBorder.position.set(-5, -1.87, -4.0);
   group.add(scrollBorder);
@@ -141,7 +142,7 @@ interface CrystalResult {
 
 function createCrystalBall(): CrystalResult {
   const group = new THREE.Group();
-  const pedestalMat = new THREE.MeshStandardMaterial({ color: 0x2a2220, roughness: 0.6, metalness: 0.3 });
+  const pedestalMat = new THREE.MeshStandardMaterial({ color: 0x2a2220, roughness: 0.6, metalness: 0.3, flatShading: true });
   const crystalMat = new THREE.MeshStandardMaterial({
     color: 0x9060cc,
     roughness: 0.05,
@@ -150,6 +151,7 @@ function createCrystalBall(): CrystalResult {
     opacity: 0.82,
     emissive: 0x6030aa,
     emissiveIntensity: 0.6,
+    flatShading: true,
   });
 
   // Pedestal
@@ -174,7 +176,7 @@ function createCrystalBall(): CrystalResult {
 
 function createBookshelf(): { group: THREE.Group; hitTarget: THREE.Mesh } {
   const group = new THREE.Group();
-  const shelfMat = new THREE.MeshStandardMaterial({ color: 0x3d2b1a, roughness: 0.85, metalness: 0.0 });
+  const shelfMat = new THREE.MeshStandardMaterial({ color: 0x3d2b1a, roughness: 0.85, metalness: 0.0, flatShading: true });
   const bookColors = [0x8b2020, 0x1a4a2a, 0x1a2a5a, 0x5a3a10, 0x4a1060, 0x6a2010];
 
   // Shelf frame
@@ -194,7 +196,7 @@ function createBookshelf(): { group: THREE.Group; hitTarget: THREE.Mesh } {
       const bookH = 1.0 + (b * 0.11) % 0.5;
       const book = new THREE.Mesh(
         new THREE.BoxGeometry(bookW, bookH, 0.58),
-        new THREE.MeshStandardMaterial({ color: bookColors[b % bookColors.length]!, roughness: 0.8, metalness: 0.0 })
+        new THREE.MeshStandardMaterial({ color: bookColors[b % bookColors.length]!, roughness: 0.8, metalness: 0.0, flatShading: true })
       );
       book.position.set(8 + xOff + bookW / 2, -0.45 + row * 1.7 + bookH / 2, -8);
       book.rotation.y = (b % 2 === 0 ? 1 : -1) * 0.04;
@@ -224,8 +226,8 @@ interface DoorResult {
 
 function createDoor(): DoorResult {
   const group = new THREE.Group();
-  const doorMat = new THREE.MeshStandardMaterial({ color: 0x2e1f0e, roughness: 0.9, metalness: 0.05 });
-  const ironMat = new THREE.MeshStandardMaterial({ color: 0x2a2828, roughness: 0.5, metalness: 0.7 });
+  const doorMat = new THREE.MeshStandardMaterial({ color: 0x2e1f0e, roughness: 0.9, metalness: 0.05, flatShading: true });
+  const ironMat = new THREE.MeshStandardMaterial({ color: 0x2a2828, roughness: 0.5, metalness: 0.7, flatShading: true });
   const lightMat = new THREE.MeshBasicMaterial({ color: 0xffdd88, transparent: true, opacity: 0.85 });
 
   // Door frame
@@ -299,8 +301,9 @@ function createCandles(scene: THREE.Scene): CandleData[] {
     metalness: 0.0,
     emissive: 0x554400,
     emissiveIntensity: 0.3,
+    flatShading: true,
   });
-  const wickMat = new THREE.MeshStandardMaterial({ color: 0x111111, roughness: 1.0 });
+  const wickMat = new THREE.MeshStandardMaterial({ color: 0x111111, roughness: 1.0, flatShading: true });
 
   const candles: CandleData[] = [];
 
@@ -475,7 +478,7 @@ interface CauldronSystem {
 }
 
 function createCauldron(scene: THREE.Scene): CauldronSystem {
-  const ironMat = new THREE.MeshStandardMaterial({ color: 0x1a1a1a, roughness: 0.5, metalness: 0.6 });
+  const ironMat = new THREE.MeshStandardMaterial({ color: 0x1a1a1a, roughness: 0.5, metalness: 0.6, flatShading: true });
   const steamMat = new THREE.PointsMaterial({
     color: 0x44cc88,
     size: 0.12,
@@ -642,7 +645,8 @@ export function initMerlinLair(container: HTMLElement): LairResult {
 
   // Build scene elements
   setupLighting(scene);
-  scene.add(createWalls());
+  const { group: wallsGroup, floorMesh } = createWalls();
+  scene.add(wallsGroup);
 
   const { group: mapGroup, hitTarget: mapHit } = createMapTable();
   scene.add(mapGroup);
@@ -678,7 +682,7 @@ export function initMerlinLair(container: HTMLElement): LairResult {
 
   // GLB asset overlays (async — procedural fallbacks remain if GLB unavailable).
   // Pass procedural groups so table_druidique.glb + bibliotheque.glb hide them on load (fixes z-fighting).
-  loadLairGLBs(scene, { mapGroup, shelfGroup });
+  loadLairGLBs(scene, { mapGroup, shelfGroup, floorMesh });
 
   // Interactive zones for raycasting
   const interactives: InteractiveObject[] = [

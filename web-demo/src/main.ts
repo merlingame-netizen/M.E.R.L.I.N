@@ -31,6 +31,7 @@ import { initOghamPanel, showOghamPanel, hideOghamPanel } from './ui/OghamPanel'
 import { getLLMAdapter } from './llm/GroqAdapter';
 import { showRunSummary } from './ui/RunSummary';
 import { initMainMenu } from './scenes/MainMenuScene';
+import { initMerlinLair } from './scenes/MerlinLairScene';
 import { cutToBlack, revealFromBlack } from './ui/SceneTransition';
 import { initSFXManager, startAmbient, stopAmbient } from './audio/SFXManager';
 
@@ -145,6 +146,90 @@ async function runMainMenu(): Promise<void> {
 }
 
 
+// --- Lair Hub ---
+async function runMerlinLair(app: HTMLElement): Promise<void> {
+  // Create wrapper div dynamically (static placement in index.html preferred)
+  let wrapper = document.getElementById('lair-canvas-wrapper') as HTMLDivElement | null;
+  if (!wrapper) {
+    wrapper = document.createElement('div');
+    wrapper.id = 'lair-canvas-wrapper';
+    wrapper.style.cssText = 'position:fixed;inset:0;width:100%;height:100%;z-index:10;';
+    (app.parentElement ?? document.body).appendChild(wrapper);
+  }
+  wrapper.style.display = 'block';
+
+  revealFromBlack(800);
+
+  const lair = initMerlinLair(wrapper);
+
+  // Wire real-time clock to day/night/season — purely cosmetic
+  const now = new Date();
+  const seasonIndex = Math.floor(((now.getMonth() + 1) % 12) / 3);
+  lair.setTime({
+    hour: now.getHours() + now.getMinutes() / 60,
+    season: (['winter', 'spring', 'summer', 'autumn'] as const)[seasonIndex] ?? 'spring',
+  });
+
+  let rafId = 0;
+  let lastTs = performance.now();
+  const tick = (): void => {
+    rafId = requestAnimationFrame(tick);
+    const t = performance.now();
+    const dt = Math.min((t - lastTs) / 1000, 0.05);
+    lastTs = t;
+    lair.update(dt);
+  };
+  tick();
+
+  // Zone labels shown as brief toast for non-door zones
+  const ZONE_LABELS: Record<string, string> = {
+    map:       'Carte des Biomes',
+    crystal:   'Pierre des Oghams',
+    bookshelf: 'Journal de Merlin',
+    cauldron:  'Chaudron Druidique',
+  };
+  let activeToast: HTMLDivElement | null = null;
+
+  const showZoneToast = (zone: string): void => {
+    if (activeToast) { activeToast.remove(); activeToast = null; }
+    const label = ZONE_LABELS[zone] ?? zone;
+    const toast = document.createElement('div');
+    toast.style.cssText = [
+      'position:absolute;bottom:15%;left:50%;transform:translateX(-50%);',
+      'background:rgba(10,8,4,0.88);border:1px solid rgba(160,110,50,0.6);',
+      'border-radius:6px;padding:10px 24px;pointer-events:none;z-index:20;',
+      'color:#c8a050;font-family:Georgia,serif;font-size:clamp(13px,2.5vw,16px);',
+      'letter-spacing:0.08em;text-align:center;',
+      'opacity:0;transition:opacity 0.2s ease;',
+    ].join('');
+    toast.innerHTML = `${label}<br><span style="color:rgba(180,150,90,0.6);font-size:0.8em;font-style:italic;">Bientôt disponible</span>`;
+    wrapper!.appendChild(toast);
+    activeToast = toast;
+    requestAnimationFrame(() => requestAnimationFrame(() => { toast.style.opacity = '1'; }));
+    setTimeout(() => {
+      toast.style.opacity = '0';
+      setTimeout(() => { toast.remove(); if (activeToast === toast) activeToast = null; }, 220);
+    }, 1800);
+  };
+
+  // Wait for door click (only zone that starts a run)
+  await new Promise<void>((resolve) => {
+    lair.onZoneClick((zone) => {
+      if (zone === 'door') {
+        resolve();
+        return;
+      }
+      showZoneToast(zone);
+    });
+  });
+
+  cancelAnimationFrame(rafId);
+  cutToBlack();
+  await new Promise<void>((res) => setTimeout(res, 300));
+  lair.dispose();
+  wrapper.style.display = 'none';
+}
+
 // --- Bootstrap ---
 async function main(): Promise<void> {
   const app = document.getElementById('app')!;
@@ -158,6 +243,9 @@ async function main(): Promise<void> {
 
   // Phase 2: Main menu (static camera, T061)
   await runMainMenu();
+
+  // Phase 2b: Lair Hub — 3D interior, player navigates 5 zones, door = start run
+  await runMerlinLair(app);
 
   // Phase 3: Reveal and enter game
   loading.style.display = 'flex';

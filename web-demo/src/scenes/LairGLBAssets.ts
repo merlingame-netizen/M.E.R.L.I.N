@@ -14,6 +14,7 @@ const CANDLE_POSITIONS: Array<[number, number, number]> = [
 export interface LairProceduralGroups {
   mapGroup: THREE.Group;
   shelfGroup: THREE.Group;
+  floorMesh?: THREE.Mesh;
 }
 
 export function loadLairGLBs(
@@ -59,4 +60,13 @@ export function loadLairGLBs(
     scene.add(gltf.scene);
     if (proceduralGroups) proceduralGroups.shelfGroup.visible = false;
   }).catch(() => { /* procedural bookshelf remains */ });
+
+  // Sol pierre: Blender flagstone floor (97 polys, vertex-colored).
+  // Positioned 0.02 above procedural floor to avoid z-fighting without needing a mesh ref.
+  loadGLB('/sol_pierre.glb').then((gltf) => {
+    gltf.scene.position.set(0, -4.98, 0);
+    gltf.scene.scale.set(1.0, 1.0, 1.0);
+    scene.add(gltf.scene);
+    if (proceduralGroups?.floorMesh) proceduralGroups.floorMesh.visible = false;
+  }).catch(() => { /* procedural floor remains */ });
 }
