@@ -205,7 +205,8 @@ export class MinigameApaisement extends MinigameBase {
     const tapBonus = Math.min(1.0, tapCount / 4); // penalize if fewer than 4 taps
     const finalScore = avgAccuracy * tapBonus * 100;
 
-    this.finish(finalScore);
+    // Floor of 10 for any engaged player (≥1 tap) — distinguishes participation from idle
+    this.finish(Math.max(10, finalScore));
   }
 
   protected render(): void {

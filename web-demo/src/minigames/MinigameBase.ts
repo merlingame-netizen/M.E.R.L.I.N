@@ -15,6 +15,17 @@ export interface MinigameResult {
 
 // ── Outcome helpers ───────────────────────────────────────────────────────────
 
+/**
+ * Normalise a raw score to the 0-100 integer range.
+ * Non-finite values (NaN, ±Infinity) map to 0 rather than silently becoming
+ * 'maitrise' (all NaN comparisons are false, so scoreToOutcome would fall
+ * through to the final return). Call this before any outcome decision.
+ */
+export function validateScore(score: number): number {
+  const safe = Number.isFinite(score) ? score : 0;
+  return Math.max(0, Math.min(100, Math.round(safe)));
+}
+
 export function scoreToOutcome(score: number): OutcomeLevel {
   if (score <= 25) return 'desastre';
   if (score <= 50) return 'echec';
@@ -207,8 +218,7 @@ export abstract class MinigameBase {
     if (this.finished) return;  // BUG-05: idempotent guard
     this.finished = true;
 
-    const safe = Number.isFinite(score) ? score : 0;
-    const clamped = Math.max(0, Math.min(100, Math.round(safe)));
+    const clamped = validateScore(score);
     const level = scoreToOutcome(clamped);
     const timeSpent = (performance.now() - this.startTime) / 1000;
 
