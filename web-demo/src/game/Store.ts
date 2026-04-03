@@ -41,6 +41,8 @@ export interface RunState {
 
 export interface Promise {
   readonly id: string;
+  /** Human-readable label shown in RunSummary (falls back to id if absent). */
+  readonly label: string;
   readonly madeAtCard: number;
   readonly deadlineCards: number;
   readonly status: 'active' | 'fulfilled' | 'expired' | 'broken';
@@ -82,7 +84,7 @@ export interface GameActions {
   tickCooldowns: () => void;
   endRun: (ending?: string) => void;
   checkDeath: () => boolean;
-  addPromise: (id: string, deadlineCards: number) => void;
+  addPromise: (id: string, deadlineCards: number, label?: string) => void;
   fulfillPromise: (id: string) => void;
   breakPromise: (id: string) => void;
   reset: () => void;
@@ -305,15 +307,19 @@ export const store = createStore<MerlinStore>((set, get) => ({
     return { run: { ...s.run, oghamCooldowns: newCooldowns } };
   }),
 
-  addPromise: (id, deadlineCards) => set((s) => ({
-    run: {
-      ...s.run,
-      promises: [
-        ...s.run.promises,
-        { id, madeAtCard: s.run.cardsPlayed, deadlineCards, status: 'active' as const },
-      ],
-    },
-  })),
+  addPromise: (id, deadlineCards, label) => set((s) => {
+    // Dedup: silently ignore if an active promise with this id already exists
+    if (s.run.promises.some((p) => p.id === id && p.status === 'active')) return s;
+    return {
+      run: {
+        ...s.run,
+        promises: [
+          ...s.run.promises,
+          { id, label: label ?? id, madeAtCard: s.run.cardsPlayed, deadlineCards, status: 'active' as const },
+        ],
+      },
+    };
+  }),
 
   fulfillPromise: (id) => set((s) => ({
     run: {

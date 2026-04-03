@@ -46,7 +46,8 @@ function parseEffect(effectCode: string): ParsedEffect {
   }
   const expected = VALID_CODES[code];
   const args = parts.slice(1);
-  if (args.length !== expected) {
+  // Accept extra args (>= minimum) so optional trailing params like label are allowed
+  if (args.length < expected) {
     return { ok: false, code, args, error: `Bad arg count for ${code}: expected ${expected}, got ${args.length}` };
   }
   return { ok: true, code, args };
@@ -141,7 +142,9 @@ export function applyEffects(effects: readonly string[], multiplier = 1.0): Effe
       case 'ADD_PROMISE': {
         const promiseId = args[0] ?? '';
         const deadline = Math.max(1, parseInt(args[1] ?? '5', 10) || 5);
-        store.getState().addPromise(promiseId, deadline);
+        // args[2] is the optional human-readable label (e.g. "Alliance avec Merlin")
+        const label = args[2] ?? undefined;
+        store.getState().addPromise(promiseId, deadline, label);
         applied.push(effectStr);
         break;
       }

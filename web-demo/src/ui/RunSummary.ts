@@ -222,30 +222,29 @@ export async function showRunSummary(reason: 'death' | 'victory' | 'cards_limit'
 
     const promisesEl = document.createElement('div');
     promisesEl.style.cssText = 'margin-bottom:24px;text-align:left;';
-    const fulfilled = promises.filter((p) => p.status === 'fulfilled').length;
-    const broken    = promises.filter((p) => p.status === 'broken').length;
-    const expired   = promises.filter((p) => p.status === 'expired').length;
-    const active    = promises.filter((p) => p.status === 'active').length;
 
-    const addPromiseRow = (label: string, count: number, color: string): void => {
-      if (count === 0) return;
+    const STATUS_META: Readonly<Record<string, { icon: string; color: string }>> = {
+      fulfilled: { icon: '✓', color: '#7cb87c' },
+      broken:    { icon: '✗', color: '#b87c7c' },
+      expired:   { icon: '⏱', color: '#cd853f' },
+      active:    { icon: '…', color: '#a0a0b8' },
+    } as const;
+
+    for (const p of promises) {
+      const meta = STATUS_META[p.status] ?? STATUS_META['active']!;
       const row = document.createElement('div');
-      row.style.cssText = 'display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;font-size:13px;';
-      const labelEl = document.createElement('span');
-      labelEl.style.color = color;
-      labelEl.textContent = label;
-      const countEl = document.createElement('span');
-      countEl.style.cssText = `color:${color};font-weight:600;`;
-      countEl.textContent = String(count);
-      row.appendChild(labelEl);
-      row.appendChild(countEl);
+      row.style.cssText = 'display:flex;gap:8px;align-items:center;margin-bottom:6px;font-size:13px;';
+      const iconEl = document.createElement('span');
+      iconEl.setAttribute('aria-hidden', 'true');
+      iconEl.style.cssText = `color:${meta.color};width:14px;text-align:center;flex-shrink:0;`;
+      iconEl.textContent = meta.icon;
+      const nameEl = document.createElement('span');
+      nameEl.style.cssText = `color:${meta.color};flex:1;`;
+      nameEl.textContent = p.label;
+      row.appendChild(iconEl);
+      row.appendChild(nameEl);
       promisesEl.appendChild(row);
-    };
-
-    addPromiseRow('Promesses tenues',   fulfilled, '#7cb87c');
-    addPromiseRow('Promesses rompues',  broken,    '#b87c7c');
-    addPromiseRow('Promesses expirees', expired,   '#cd853f');
-    addPromiseRow('Promesses ouvertes', active,    '#a0a0b8');
+    }
     panel.appendChild(promisesEl);
   }
 
