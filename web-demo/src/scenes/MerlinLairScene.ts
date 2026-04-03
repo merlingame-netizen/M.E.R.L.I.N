@@ -695,7 +695,15 @@ export function initMerlinLair(container: HTMLElement): LairResult {
 
   // GLB asset overlays (async — procedural fallbacks remain if GLB unavailable).
   // Pass procedural groups so table_druidique.glb + bibliotheque.glb hide them on load (fixes z-fighting).
-  loadLairGLBs(scene, { mapGroup, shelfGroup, floorMesh, wallsGroup, cauldronGroup: cauldron.group, candleGroup });
+  loadLairGLBs(scene, {
+    mapGroup, shelfGroup, floorMesh, wallsGroup,
+    cauldronGroup: cauldron.group, candleGroup,
+    // When GLB loads, swap visualMesh to the GLB body so hover emissive works on GLB path
+    onCauldronGLBLoaded: (mesh) => {
+      const entry = interactives.find((i) => i.zone === 'cauldron');
+      if (entry) entry.visualMesh = mesh;
+    },
+  });
 
   // Interactive zones for raycasting (visualMesh = visible mesh for emissive boost)
   const interactives: InteractiveObject[] = [

@@ -18,6 +18,7 @@ export interface LairProceduralGroups {
   wallsGroup?: THREE.Group;    // full walls group hidden when mur_pierre.glb loads
   cauldronGroup?: THREE.Group; // procedural cauldron body+legs hidden when cauldron_merlin.glb loads
   candleGroup?: THREE.Group;   // procedural candle bodies+wicks+light hidden when bougie.glb loads
+  onCauldronGLBLoaded?: (bodyMesh: THREE.Mesh) => void; // callback to update visualMesh in interactives[]
 }
 
 export function loadLairGLBs(
@@ -37,6 +38,17 @@ export function loadLairGLBs(
     gltf.scene.scale.setScalar(0.72);
     scene.add(gltf.scene);
     if (proceduralGroups?.cauldronGroup) proceduralGroups.cauldronGroup.visible = false;
+    // Update interactives[] visualMesh to the GLB body so hover emissive works on GLB path
+    if (proceduralGroups?.onCauldronGLBLoaded) {
+      const glbMeshes: THREE.Mesh[] = [];
+      gltf.scene.traverse((child) => { if (child instanceof THREE.Mesh) glbMeshes.push(child); });
+      const bodyMesh = glbMeshes[0];
+      if (bodyMesh) {
+        (bodyMesh.material as THREE.MeshStandardMaterial).emissive = new THREE.Color(0x00aa33);
+        (bodyMesh.material as THREE.MeshStandardMaterial).emissiveIntensity = 0.0;
+        proceduralGroups.onCauldronGLBLoaded(bodyMesh);
+      }
+    }
   }).catch(() => { /* procedural cauldron remains */ });
 
   // Bougies: 3 instances, scale 0.42 for candle-height consistency
