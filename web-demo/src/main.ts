@@ -183,7 +183,7 @@ async function runMerlinLair(app: HTMLElement): Promise<void> {
 
   // Zone labels shown as brief toast for non-door zones
   const ZONE_LABELS: Record<string, { title: string; sub: string }> = {
-    map:       { title: 'Carte des Biomes',    sub: 'Les chemins se révèlent en marchant' },
+    map:       { title: 'Carte des Biomes',    sub: 'Les slighe s\'ouvrent aux voyageurs initiés' },
     crystal:   { title: 'Pierre des Oghams',   sub: 'Les runes ne répondent pas encore' },
     bookshelf: { title: 'Journal de Merlin',   sub: 'Les pages sont encore en gestation' },
     cauldron:  { title: 'Chaudron Druidique',  sub: 'L\'anam doit d\'abord s\'éveiller' },
