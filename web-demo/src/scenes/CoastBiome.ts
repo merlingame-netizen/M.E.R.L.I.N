@@ -273,6 +273,7 @@ function createMenhirs(count: number): THREE.Group {
 export interface BiomeSceneResult {
   readonly group: THREE.Group;
   readonly update: (dt: number) => void;
+  readonly dispose: () => void;
 }
 
 /**
@@ -382,8 +383,7 @@ export async function buildCoastScene(): Promise<BiomeSceneResult> {
         arr[i * 3 + 2] = wave;
       }
       posAttr.needsUpdate = true;
-      // Throttle normal recompute to every 3rd frame — halves CPU cost on mobile
-      if (Math.round(t * 60) % 3 === 0) oceanMesh.geometry.computeVertexNormals();
+      // flatShading:true — GPU computes per-face normals, no JS recompute needed
     }
     if (fogMesh) {
       const fogMat = fogMesh.material as THREE.ShaderMaterial;
@@ -391,5 +391,19 @@ export async function buildCoastScene(): Promise<BiomeSceneResult> {
     }
   };
 
-  return { group, update };
+  const dispose = (): void => {
+    group.traverse((child) => {
+      if (child instanceof THREE.Mesh) {
+        child.geometry.dispose();
+        if (Array.isArray(child.material)) {
+          child.material.forEach((m) => m.dispose());
+        } else {
+          (child.material as THREE.Material).dispose();
+        }
+      }
+    });
+    group.clear();
+  };
+
+  return { group, update, dispose };
 }
