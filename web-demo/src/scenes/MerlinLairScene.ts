@@ -513,7 +513,7 @@ function createCauldron(scene: THREE.Scene): CauldronSystem {
   // Green glow
   const glow = new THREE.PointLight(0x22cc44, 1.2, 3.5, 2);
   glow.position.set(2, -3.2, -7);
-  scene.add(glow);
+  group.add(glow);
 
   // Steam particles
   const N = 30;
@@ -536,7 +536,7 @@ function createCauldron(scene: THREE.Scene): CauldronSystem {
   const geo = new THREE.BufferGeometry();
   geo.setAttribute('position', new THREE.BufferAttribute(positions, 3));
   const steamPoints = new THREE.Points(geo, steamMat);
-  scene.add(steamPoints);
+  group.add(steamPoints);
 
   const update = (t: number, dt: number): void => {
     glow.intensity = 1.1 + Math.sin(t * 2.3) * 0.15;
