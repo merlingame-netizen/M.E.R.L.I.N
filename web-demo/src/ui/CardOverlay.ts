@@ -160,6 +160,9 @@ export function showCard(card: Card): Promise<number> {
     card.options.forEach((option, index) => {
       const btn = document.createElement('div');
       btn.className = 'card-option';
+      btn.setAttribute('role', 'button');
+      btn.setAttribute('tabindex', '0');
+      btn.setAttribute('aria-label', `${option.verb} — ${option.text}`);
 
       // Faction dot (T067)
       const dot = buildFactionDot(option);
@@ -179,13 +182,22 @@ export function showCard(card: Card): Promise<number> {
       const tooltip = buildEffectTooltip(option);
       if (tooltip) btn.appendChild(tooltip);
 
-      btn.addEventListener('click', () => {
+      const activate = (): void => {
         // T073: Brief gold highlight before overlay hides (200ms feedback)
         btn.classList.add('card-option-selected');
         setTimeout(() => {
           hideCard();
           resolve(index);
         }, 200);
+      };
+
+      btn.addEventListener('click', activate);
+      // Keyboard activation: Enter and Space — WCAG 2.1.1
+      btn.addEventListener('keydown', (e: KeyboardEvent) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          activate();
+        }
       });
 
       optContainer.appendChild(btn);
@@ -194,6 +206,11 @@ export function showCard(card: Card): Promise<number> {
     overlay().classList.add('visible');
     // Play flip animation each time a new card is shown
     triggerFlipAnimation();
+    // Focus first option so keyboard users don't need to Tab from previous element
+    requestAnimationFrame(() => {
+      const first = optContainer.querySelector<HTMLElement>('[role="button"]');
+      if (first) first.focus();
+    });
   });
 }
 
