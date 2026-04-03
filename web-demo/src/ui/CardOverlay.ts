@@ -109,7 +109,9 @@ function buildFactionDot(option: CardOption): HTMLElement | null {
         dot.style.opacity = '0.55';
         dot.style.outline = '1px dashed rgba(255,80,80,0.7)';
       }
-      dot.title = `${parts[1]}${delta !== 0 ? ` (${delta > 0 ? '+' : ''}${delta})` : ''}`;
+      const dotLabel = `${parts[1]}${delta !== 0 ? ` (${delta > 0 ? '+' : ''}${delta})` : ''}`;
+      dot.title = dotLabel;
+      dot.setAttribute('aria-label', dotLabel);
       dots.push(dot);
     }
   }

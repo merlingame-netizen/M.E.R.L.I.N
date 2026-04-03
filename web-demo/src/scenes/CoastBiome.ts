@@ -361,23 +361,31 @@ export async function buildCoastScene(): Promise<BiomeSceneResult> {
     (c) => c instanceof THREE.Mesh && c.name === 'fog_plane'
   ) as THREE.Mesh | undefined;
 
+  // Track whether to skip ocean vertex update this frame (low-FPS adaptive LOD)
+  let _skipOceanFrame = false;
+
   const update = (dt: number): void => {
     const t = performance.now() * 0.001;
-    // Animate low-poly ocean vertices for faceted wave look
+    // Animate low-poly ocean vertices for faceted wave look.
+    // Low-FPS adaptive: skip every other frame when dt > 33ms (<30fps) to keep
+    // the game loop responsive on mobile/low-end hardware.
     if (oceanMesh && oceanBaseY) {
-      const posAttr = oceanMesh.geometry.attributes['position'] as THREE.BufferAttribute;
-      const arr = posAttr.array as Float32Array;
-      for (let i = 0; i < posAttr.count; i++) {
-        // PlaneGeometry stores X and Y in local space; after mesh.rotation.x=-PI/2
-        // local-X stays world-X, local-Y becomes world-Z. Named accordingly to
-        // prevent future "fix" that swaps indices and silently breaks wave topology.
-        const bx = oceanBaseY[i * 3] ?? 0;
-        const by_local = oceanBaseY[i * 3 + 1] ?? 0; // local-Y = world-Z post-rotation
-        const wave = Math.sin(bx * 0.12 + t * 0.9) * 0.9 + Math.cos(by_local * 0.09 + t * 0.7) * 0.6;
-        arr[i * 3 + 2] = wave;
+      _skipOceanFrame = !_skipOceanFrame;
+      if (!_skipOceanFrame || dt <= 0.033) {
+        const posAttr = oceanMesh.geometry.attributes['position'] as THREE.BufferAttribute;
+        const arr = posAttr.array as Float32Array;
+        for (let i = 0; i < posAttr.count; i++) {
+          // PlaneGeometry stores X and Y in local space; after mesh.rotation.x=-PI/2
+          // local-X stays world-X, local-Y becomes world-Z. Named accordingly to
+          // prevent future "fix" that swaps indices and silently breaks wave topology.
+          const bx = oceanBaseY[i * 3] ?? 0;
+          const by_local = oceanBaseY[i * 3 + 1] ?? 0; // local-Y = world-Z post-rotation
+          const wave = Math.sin(bx * 0.12 + t * 0.9) * 0.9 + Math.cos(by_local * 0.09 + t * 0.7) * 0.6;
+          arr[i * 3 + 2] = wave;
+        }
+        posAttr.needsUpdate = true;
+        // flatShading:true — GPU computes per-face normals, no JS recompute needed
       }
-      posAttr.needsUpdate = true;
-      // flatShading:true — GPU computes per-face normals, no JS recompute needed
     }
     if (fogMesh) {
       const fogMat = fogMesh.material as THREE.ShaderMaterial;
