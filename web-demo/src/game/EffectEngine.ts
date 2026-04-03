@@ -155,8 +155,10 @@ export function applyEffects(effects: readonly string[], multiplier = 1.0): Effe
         );
         store.getState().fulfillPromise(fulfillId);
         if (isActive) {
-          // Moral reward: +5 anam for keeping a promise (scaled by multiplier)
-          store.getState().addAnam(scaleAndCap('ADD_ANAM', 5, multiplier));
+          // Moral reward: flat +5 anam — mirrors BREAK_PROMISE flat -5 life.
+          // Not scaled by multiplier: keeping a promise is equally virtuous
+          // regardless of minigame performance.
+          store.getState().addAnam(5);
         }
         applied.push(effectStr);
         break;
@@ -174,16 +176,23 @@ export function applyEffects(effects: readonly string[], multiplier = 1.0): Effe
         applied.push(effectStr);
         break;
       }
+      case 'UNLOCK_OGHAM': {
+        const oghamId = args[0] ?? '';
+        store.getState().unlockOgham(oghamId);
+        applied.push(effectStr);
+        break;
+      }
       case 'PLAY_SFX':
       case 'SHOW_DIALOG':
         // Fire-and-forget UI effects — handled by UI layer
         applied.push(effectStr);
         break;
       default:
-        // Known future codes (ADD_KARMA, ADD_TENSION, PROGRESS_MISSION, SET_FLAG,
-        // ADD_TAG, REMOVE_TAG, UNLOCK_OGHAM) reach here as no-ops — state unchanged.
-        // Parsed and accepted so card templates using future codes don't get rejected.
-        applied.push(effectStr);
+        // Future codes (ADD_KARMA, ADD_TENSION, PROGRESS_MISSION, SET_FLAG,
+        // ADD_TAG, REMOVE_TAG) are validated but not yet implemented.
+        // Push to rejected[] so callers can surface them without silently
+        // treating unexecuted effects as successful.
+        rejected.push(effectStr);
         break;
     }
   }

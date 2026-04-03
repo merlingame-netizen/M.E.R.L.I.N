@@ -87,6 +87,8 @@ export interface GameActions {
   addPromise: (id: string, deadlineCards: number, label?: string) => void;
   fulfillPromise: (id: string) => void;
   breakPromise: (id: string) => void;
+  /** Unlock an ogham by id — no-op if already unlocked. Fires ogham_unlocked DOM event. */
+  unlockOgham: (oghamId: string) => void;
   reset: () => void;
 }
 
@@ -338,6 +340,23 @@ export const store = createStore<MerlinStore>((set, get) => ({
       ),
     },
   })),
+
+  unlockOgham: (oghamId) => {
+    const s = get();
+    if (!oghamId || s.meta.oghamsUnlocked.includes(oghamId)) return;
+    const spec = OGHAM_SPECS[oghamId];
+    const oghamName = spec?.name ?? oghamId;
+    set((s) => ({
+      meta: {
+        ...s.meta,
+        oghamsUnlocked: [...s.meta.oghamsUnlocked, oghamId],
+        oghamsEquipped: [...s.meta.oghamsEquipped, oghamId],
+      },
+    }));
+    if (typeof window !== 'undefined') {
+      window.dispatchEvent(new CustomEvent('ogham_unlocked', { detail: { oghamId, oghamName } }));
+    }
+  },
 
   endRun: (ending) => set((s) => ({
     phase: 'end' as GamePhase,
