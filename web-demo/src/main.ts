@@ -140,7 +140,81 @@ async function runMainMenu(): Promise<void> {
 
 
 // --- Lair Hub ---
-async function runMerlinLair(app: HTMLElement): Promise<void> {
+// ── Biome picker overlay ──────────────────────────────────────────────────────
+// Shows an 8-option Celtic biome selector inside the lair wrapper.
+// Only cotes_sauvages currently has a 3D walk scene; the others are accepted
+// by the Store and show the correct toast but share the same 3D backdrop
+// until individual biome scenes are built.
+function showBiomePicker(container: HTMLElement): Promise<string> {
+  return new Promise((resolve) => {
+    const overlay = document.createElement('div');
+    overlay.setAttribute('role', 'dialog');
+    overlay.setAttribute('aria-modal', 'true');
+    overlay.setAttribute('aria-label', 'Choisir un biome');
+    overlay.style.cssText = [
+      'position:absolute;inset:0;z-index:30;',
+      'display:flex;flex-direction:column;align-items:center;justify-content:center;',
+      'background:rgba(5,4,2,0.88);backdrop-filter:blur(2px);',
+      'opacity:0;transition:opacity 0.2s ease;',
+    ].join('');
+
+    const title = document.createElement('div');
+    title.textContent = 'Choisir un Biome';
+    title.style.cssText = [
+      'color:#c8a050;font-family:Georgia,serif;font-size:clamp(14px,3vw,20px);',
+      'letter-spacing:0.15em;margin-bottom:16px;text-shadow:0 0 10px rgba(200,160,80,0.5);',
+    ].join('');
+    overlay.appendChild(title);
+
+    const grid = document.createElement('div');
+    grid.style.cssText = 'display:grid;grid-template-columns:1fr 1fr;gap:8px;max-width:380px;width:90%;';
+    overlay.appendChild(grid);
+
+    const BIOME_ENTRIES: Array<[string, string]> = [
+      ['cotes_sauvages',    'Côtes Sauvages'],
+      ['foret_broceliande', 'Forêt de Brocéliande'],
+      ['marais_korrigans',  'Marais des Korrigans'],
+      ['landes_bruyere',    'Landes de Bruyère'],
+      ['cercles_pierres',   'Cercles de Pierres'],
+      ['villages_celtes',   'Villages Celtes'],
+      ['collines_dolmens',  'Collines aux Dolmens'],
+      ['iles_mystiques',    'Îles Mystiques'],
+    ];
+
+    for (const [id, label] of BIOME_ENTRIES) {
+      const btn = document.createElement('button');
+      btn.textContent = label;
+      btn.setAttribute('aria-label', `Biome: ${label}`);
+      btn.style.cssText = [
+        'background:rgba(30,22,10,0.9);border:1px solid rgba(160,110,50,0.45);border-radius:6px;',
+        'color:rgba(200,170,100,0.85);font-family:Georgia,serif;font-size:clamp(10px,2vw,13px);',
+        'padding:10px 8px;cursor:pointer;letter-spacing:0.05em;text-align:center;',
+        'transition:background 0.15s,border-color 0.15s,color 0.15s;',
+      ].join('');
+      btn.addEventListener('pointerenter', () => {
+        btn.style.background = 'rgba(60,42,15,0.95)';
+        btn.style.borderColor = 'rgba(200,150,60,0.8)';
+        btn.style.color = '#e8c870';
+      });
+      btn.addEventListener('pointerleave', () => {
+        btn.style.background = 'rgba(30,22,10,0.9)';
+        btn.style.borderColor = 'rgba(160,110,50,0.45)';
+        btn.style.color = 'rgba(200,170,100,0.85)';
+      });
+      btn.addEventListener('click', () => {
+        overlay.style.opacity = '0';
+        setTimeout(() => overlay.remove(), 220);
+        resolve(id);
+      });
+      grid.appendChild(btn);
+    }
+
+    container.appendChild(overlay);
+    requestAnimationFrame(() => requestAnimationFrame(() => { overlay.style.opacity = '1'; }));
+  });
+}
+
+async function runMerlinLair(app: HTMLElement): Promise<string> {
   // Create wrapper div dynamically (static placement in index.html preferred)
   let wrapper = document.getElementById('lair-canvas-wrapper') as HTMLDivElement | null;
   if (!wrapper) {
@@ -174,9 +248,12 @@ async function runMerlinLair(app: HTMLElement): Promise<void> {
   };
   tick();
 
+  // Chosen biome — defaults to cotes_sauvages until player picks via map zone.
+  let selectedBiomeId = 'cotes_sauvages';
+
   // Zone labels shown as brief toast for non-door zones
   const ZONE_LABELS: Record<string, { title: string; sub: string }> = {
-    map:       { title: 'Carte des Biomes',    sub: 'Les slighe s\'ouvrent aux voyageurs initiés' },
+    map:       { title: 'Carte des Biomes',    sub: 'Choisissez votre destination' },
     crystal:   { title: 'Pierre des Oghams',   sub: 'Les runes ne répondent pas encore' },
     bookshelf: { title: 'Journal de Merlin',   sub: 'Les pages sont encore en gestation' },
     cauldron:  { title: 'Chaudron Druidique',  sub: 'L\'anam doit d\'abord s\'éveiller' },
@@ -221,10 +298,35 @@ async function runMerlinLair(app: HTMLElement): Promise<void> {
 
   // Wait for door click (only zone that starts a run)
   await new Promise<void>((resolve) => {
-    lair.onZoneClick((zone) => {
+    lair.onZoneClick(async (zone) => {
       if (zone === 'door') {
         showZoneToast('door'); // "Entrer dans la forêt" — 400ms readable before cutToBlack
         setTimeout(resolve, 400);
+        return;
+      }
+      if (zone === 'map') {
+        // Biome picker — shows 8-option overlay, player selects destination
+        selectedBiomeId = await showBiomePicker(wrapper!);
+        const pickedLabel = BIOME_LABELS[selectedBiomeId] ?? selectedBiomeId;
+        showZoneToast('map'); // brief "Carte des Biomes / Choisissez…" toast replaced
+        // Show chosen biome confirmation
+        const confirmToast = document.createElement('div');
+        confirmToast.style.cssText = [
+          'position:absolute;bottom:8%;left:50%;transform:translateX(-50%);',
+          'background:rgba(10,8,4,0.9);border:1px solid rgba(200,150,60,0.6);',
+          'border-radius:6px;padding:8px 20px;pointer-events:none;z-index:20;',
+          'color:#e8c870;font-family:Georgia,serif;font-size:clamp(12px,2.2vw,15px);',
+          'letter-spacing:0.07em;text-align:center;opacity:0;transition:opacity 0.2s;',
+        ].join('');
+        confirmToast.setAttribute('role', 'status');
+        confirmToast.setAttribute('aria-live', 'polite');
+        confirmToast.textContent = `Destination : ${pickedLabel}`;
+        wrapper!.appendChild(confirmToast);
+        requestAnimationFrame(() => requestAnimationFrame(() => { confirmToast.style.opacity = '1'; }));
+        setTimeout(() => {
+          confirmToast.style.opacity = '0';
+          setTimeout(() => confirmToast.remove(), 220);
+        }, 2200);
         return;
       }
       showZoneToast(zone);
@@ -240,6 +342,7 @@ async function runMerlinLair(app: HTMLElement): Promise<void> {
   await new Promise<void>((res) => setTimeout(res, 300));
   lair.dispose();
   wrapper.style.display = 'none';
+  return selectedBiomeId;
 }
 
 // --- Bootstrap ---
@@ -269,8 +372,8 @@ async function main(): Promise<void> {
   // BUG-03: Outer run loop — lair → walk → run → lair → walk → run ...
   // Without this the page is a dead-end after the first run.
   while (true) {
-    // Phase 2b: Lair Hub — 3D interior, player navigates 5 zones, door = start run
-    await runMerlinLair(app);
+    // Phase 2b: Lair Hub — returns the biome chosen at the map zone (defaults to cotes_sauvages)
+    const chosenBiome = await runMerlinLair(app);
 
     // Phase 3: Reveal and enter game
     loading.style.display = 'flex';
@@ -279,7 +382,8 @@ async function main(): Promise<void> {
     // Init scene (fresh per run)
     const sceneManager = new SceneManager(app);
 
-    // Build biome
+    // Build biome — only cotes_sauvages has a 3D walk scene for now;
+    // all other biomes share this backdrop until their scenes are implemented.
     const biomeResult = await buildCoastScene();
     sceneManager.scene.add(biomeResult.group);
 
@@ -312,10 +416,10 @@ async function main(): Promise<void> {
     loadAnamFromStorage();
     loadMetaFromStorage();
 
-    // Start run
-    store.getState().startRun('cotes_sauvages');
+    // Start run with the biome the player chose at the map zone
+    store.getState().startRun(chosenBiome);
     updateHUD();
-    showBiomeToast('cotes_sauvages');
+    showBiomeToast(chosenBiome);
 
     // --- Gameplay Loop ---
     await gameLoop(sceneManager, rail, biomeResult.update);

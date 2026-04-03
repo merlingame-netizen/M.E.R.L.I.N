@@ -116,7 +116,7 @@ export class MinigameHerboristerie extends MinigameBase {
 
     // Canvas
     this.canvas = document.createElement('canvas');
-    this.canvas.setAttribute('aria-label', `Herboristerie — cliquez sur les plantes ${this.targetPlant.name || ''} et évitez les plantes toxiques`);
+    // aria-label set after buildGrid() below — targetPlant.name is populated there.
     this.canvas.setAttribute('role', 'application');
     this.canvas.tabIndex = 0; // required for keyboard events to fire on canvas
     this.canvas.width = this.canvasW;
@@ -125,8 +125,9 @@ export class MinigameHerboristerie extends MinigameBase {
     this.container.appendChild(this.canvas);
     this.ctx = this.canvas.getContext('2d');
 
-    // Build grid
+    // Build grid — populates this.targetPlant before aria-label is set
     this.buildGrid();
+    this.canvas.setAttribute('aria-label', `Herboristerie — cliquez sur les plantes ${this.targetPlant.name || ''} et évitez les plantes toxiques`);
 
     // Input
     this.canvas.addEventListener('pointerdown', this.onPointerDown);
