@@ -67,6 +67,8 @@ export class MinigameOmbres extends MinigameBase {
 
     // Canvas
     this.canvas = document.createElement('canvas');
+    this.canvas.setAttribute('aria-label', '');
+    this.canvas.setAttribute('role', 'application');
     this.canvas.width = this.canvasW;
     this.canvas.height = this.canvasH;
     this.canvas.style.cssText = 'border-radius:12px;background:rgba(10,10,20,0.95);border:2px solid rgba(80,60,120,0.4);cursor:none;display:block;margin:0 auto;touch-action:none;';

@@ -78,6 +78,8 @@ export class MinigameVolonte extends MinigameBase {
 
     // Canvas
     this.canvas = document.createElement('canvas');
+    this.canvas.setAttribute('aria-label', '');
+    this.canvas.setAttribute('role', 'application');
     this.canvas.width = this.canvasW;
     this.canvas.height = this.canvasH;
     this.canvas.style.cssText = 'border-radius:12px;background:rgba(12,12,18,0.95);border:2px solid rgba(100,80,160,0.4);cursor:crosshair;display:block;margin:0 auto;touch-action:none;';

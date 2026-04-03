@@ -71,6 +71,8 @@ export class MinigameSangFroid extends MinigameBase {
 
     // Canvas
     this.canvas = document.createElement('canvas');
+    this.canvas.setAttribute('aria-label', '');
+    this.canvas.setAttribute('role', 'application');
     this.canvas.width = this.canvasW;
     this.canvas.height = this.canvasH;
     this.canvas.style.cssText = 'border-radius:12px;background:rgba(15,20,15,0.9);border:2px solid rgba(46,107,79,0.4);cursor:crosshair;display:block;margin:0 auto;touch-action:none;';

@@ -78,6 +78,8 @@ export class MinigameCombatRituel extends MinigameBase {
 
     // Canvas
     this.canvas = document.createElement('canvas');
+    this.canvas.setAttribute('aria-label', '');
+    this.canvas.setAttribute('role', 'application');
     this.canvas.width = this.canvasW;
     this.canvas.height = this.canvasH;
     this.canvas.style.cssText = 'border-radius:50%;background:rgba(15,15,25,0.9);border:2px solid rgba(139,32,32,0.4);cursor:none;display:block;margin:0 auto;touch-action:none;';

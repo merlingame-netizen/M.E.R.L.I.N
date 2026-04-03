@@ -1,0 +1,23 @@
+[
+  {
+    narrative: "Une brume epaisse s'eleve entre les chenes centenaires. Des murmures anciens resonnent dans le feuillage. Un sentier se dessine, a peine visible, menant vers une clairiere ou scintille une lumiere doree.",
+    options: [
+      { verb: "observer", text: "Tu scrutes la brume, cherchant un signe dans les volutes argentees.", effects: ["HEAL_LIFE:3", "ADD_REPUTATION:druides:5"] },
+      { verb: "se faufiler", text: "Tu te glisses entre les racines noueuses vers la lumiere.", effects: ["ADD_BIOME_CURRENCY:5", "DAMAGE_LIFE:2"] },
+      { verb: "apaiser", text: "Tu respires profondement, laissant la foret te guider.", effects: ["HEAL_LIFE:5", "ADD_REPUTATION:niamh:3"] }
+    ]
+  },
+  {
+    narrative: "Un korrigan surgit d'un tertre moussu, ses yeux brillant d'une malice millenaire. Il brandit un caillou grave de runes et te lance un defi : deviner le symbole cache dans la pierre.",
+    options: [
+      { verb: "dechiffrer", text: "Tu te concentres sur les gravures, cherchant le motif cache.", effects: ["ADD_REPUTATION:korrigans:8", "ADD_ANAM:3"] },
+      { verb: "marchander", text: "Tu proposes un echange plutot qu'un defi.", effects: ["ADD_BIOME_CURRENCY:8", "ADD_REPUTATION:korrigans:-3"] },
+      { verb: "combattre", text: "Tu refuses le jeu et montres ta force.", effects: ["DAMAGE_LIFE:5", "ADD_REPUTATION:ankou:5"] }
+    ]
+  },
+  {
+    narrative: "Au bord d'un lac immobile, une silhouette feminine se tient sur l'eau. Niamh, la dame du lac, te fixe de ses yeux d'argent. \"Qu'es-tu venu chercher ici, mortel ?\" murmure-t-elle.",
+    options: [
+      { verb: "parler", text: "Tu reponds avec respect, partageant ta quete.", effects: ["ADD_REPUTATION:niamh:10", "HEAL_LIFE:5"] },
+      { verb: "se concentrer", text: "Tu restes silencieux, laissant ton esprit parler.", effects: ["ADD_REPUTATION:niamh:5", "ADD_REPUTATION:druides:5"] },
+      { verb: "fuir", text: "L'aura surnaturelle t'effraie. Tu recules.", effects: ["DAMAGE_LIFE:3", "ADD_REPUTATION:niamh:-
