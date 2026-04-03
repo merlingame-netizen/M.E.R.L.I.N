@@ -10,6 +10,7 @@ import { OGHAM_SPECS, type OghamSpec } from '../game/Constants';
 // --- Panel state ---
 let panelEl: HTMLElement | null = null;
 let resolveChoice: ((oghamId: string | null) => void) | null = null;
+let escapeHandler: ((e: KeyboardEvent) => void) | null = null;
 
 /** Build the ogham panel DOM (called once at init). */
 export function initOghamPanel(): void {
@@ -18,6 +19,9 @@ export function initOghamPanel(): void {
 
   const overlay = document.createElement('div');
   overlay.id = 'ogham-panel-overlay';
+  overlay.setAttribute('role', 'dialog');
+  overlay.setAttribute('aria-modal', 'true');
+  overlay.setAttribute('aria-label', 'Sélection d\'Ogham — activer un pouvoir runique');
   overlay.style.cssText = [
     'position:fixed',
     'inset:0',
@@ -59,6 +63,11 @@ export function showOghamPanel(): Promise<string | null> {
 
     resolveChoice = resolve;
 
+    // Escape key handler — remove previous before adding (guard against double-show)
+    if (escapeHandler) document.removeEventListener('keydown', escapeHandler);
+    escapeHandler = (e: KeyboardEvent) => { if (e.key === 'Escape') selectOgham(null); };
+    document.addEventListener('keydown', escapeHandler);
+
     // Build panel content
     panelEl.innerHTML = '';
 
@@ -97,6 +106,8 @@ export function showOghamPanel(): Promise<string | null> {
       const isAvailable = isUnlocked && cooldown <= 0;
 
       const slot = document.createElement('button');
+      slot.setAttribute('aria-label', `${spec.name} — ${spec.description}`);
+      slot.setAttribute('aria-disabled', String(!isAvailable));
       slot.style.cssText = [
         'width:100px',
         'padding:12px 8px',
@@ -190,6 +201,12 @@ export function showOghamPanel(): Promise<string | null> {
 }
 
 function selectOgham(oghamId: string | null): void {
+  // Remove escape handler immediately to prevent double-fire
+  if (escapeHandler) {
+    document.removeEventListener('keydown', escapeHandler);
+    escapeHandler = null;
+  }
+
   const overlay = document.getElementById('ogham-panel-overlay');
   if (overlay) overlay.style.display = 'none';
 
@@ -199,9 +216,17 @@ function selectOgham(oghamId: string | null): void {
   }
 }
 
-/** Hide the ogham panel (cleanup). */
+/** Hide the ogham panel (cleanup). Call resolves any pending Promise to avoid async deadlock. */
 export function hideOghamPanel(): void {
+  if (escapeHandler) {
+    document.removeEventListener('keydown', escapeHandler);
+    escapeHandler = null;
+  }
   const overlay = document.getElementById('ogham-panel-overlay');
   if (overlay) overlay.style.display = 'none';
-  resolveChoice = null;
+  // Resolve pending promise to prevent async deadlock on scene transitions (BUG-C58-03)
+  if (resolveChoice) {
+    resolveChoice(null);
+    resolveChoice = null;
+  }
 }

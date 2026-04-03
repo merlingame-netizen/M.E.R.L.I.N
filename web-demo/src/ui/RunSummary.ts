@@ -32,9 +32,9 @@ const SUMMARY_OVERLAY_ID = 'run-summary-overlay';
 
 /**
  * Builds a faction row element.
- * Returns null if reputation is 0 (not gained this run).
+ * Shows current reputation bar + delta annotation from this run.
  */
-function buildFactionRow(factionId: string, reputation: number): HTMLElement {
+function buildFactionRow(factionId: string, reputation: number, delta: number): HTMLElement {
   const meta = FACTION_META[factionId] ?? { label: factionId, color: '#e8dcc8' };
   const row = document.createElement('div');
   row.style.cssText = [
@@ -75,6 +75,16 @@ function buildFactionRow(factionId: string, reputation: number): HTMLElement {
   row.appendChild(label);
   row.appendChild(barTrack);
   row.appendChild(score);
+
+  // Delta annotation (+N / -N) from this run
+  if (delta !== 0) {
+    const deltaEl = document.createElement('span');
+    const isPositive = delta > 0;
+    deltaEl.style.cssText = `font-size:11px;min-width:32px;text-align:right;color:${isPositive ? '#7cb87c' : '#b87c7c'};`;
+    deltaEl.textContent = `${isPositive ? '+' : ''}${delta}`;
+    row.appendChild(deltaEl);
+  }
+
   return row;
 }
 
@@ -188,12 +198,13 @@ export async function showRunSummary(reason: 'death' | 'victory' | 'cards_limit'
   factionHeader.textContent = 'Reputation des factions';
   panel.appendChild(factionHeader);
 
-  // Faction bars — show all 5 factions
+  // Faction bars — show all 5 factions with delta annotation
   const factionsEl = document.createElement('div');
   factionsEl.style.cssText = 'margin-bottom:24px;';
   const factions = state.run.factions as Record<string, number>;
+  const deltas = state.run.factionDeltaThisRun as Record<string, number>;
   Object.entries(factions).forEach(([id, rep]) => {
-    factionsEl.appendChild(buildFactionRow(id, rep));
+    factionsEl.appendChild(buildFactionRow(id, rep, deltas[id] ?? 0));
   });
   panel.appendChild(factionsEl);
 

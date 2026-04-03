@@ -35,6 +35,8 @@ export interface RunState {
   readonly biomeCurrency: number;
   /** Anam earned in the current run only (T050). Reset to 0 on startRun(). */
   readonly anamThisRun: number;
+  /** Net reputation delta per faction this run — for RunSummary (+N) display. */
+  readonly factionDeltaThisRun: Readonly<Record<FactionId, number>>;
 }
 
 export interface Promise {
@@ -93,6 +95,12 @@ function buildDefaultFactions(): Record<FactionId, number> {
   return result;
 }
 
+function buildZeroFactions(): Record<FactionId, number> {
+  const result = {} as Record<FactionId, number>;
+  for (const f of FACTIONS) result[f] = 0;
+  return result;
+}
+
 function buildDefaultRun(): RunState {
   return {
     active: false,
@@ -109,6 +117,7 @@ function buildDefaultRun(): RunState {
     tension: 0,
     biomeCurrency: 0,
     anamThisRun: 0,
+    factionDeltaThisRun: buildZeroFactions(),
   };
 }
 
@@ -227,6 +236,10 @@ export const store = createStore<MerlinStore>((set, get) => ({
       run: {
         ...s.run,
         factions: { ...s.run.factions, [faction]: newVal },
+        factionDeltaThisRun: {
+          ...s.run.factionDeltaThisRun,
+          [faction]: (s.run.factionDeltaThisRun[faction] ?? 0) + capped,
+        },
       },
       meta: {
         ...s.meta,
