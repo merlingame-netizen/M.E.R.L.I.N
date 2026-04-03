@@ -22,10 +22,8 @@ const FACTION_LABELS: Readonly<Record<FactionId, string>> = {
   ankou: 'Ankou',
 } as const;
 
-// --- DOM element accessors ---
-const lifeFill = () => document.getElementById('life-fill')!;
-const cardsCount = () => document.getElementById('cards-count')!;
-const biomeName = () => document.getElementById('biome-name')!;
+// DOM element accessors are resolved inside updateHUD() with null guards
+// (consistent with faction/resource/ogham elements below — no ! assertions)
 
 /** Build the faction panel DOM and inject it into the HUD. */
 function buildFactionPanel(): void {
@@ -134,23 +132,29 @@ function buildResourcePanel(): void {
 
 export function updateHUD(): void {
   const state = store.getState();
+
+  // Null-guard static elements — consistent with faction/resource/ogham pattern below
+  const lifeFillEl = document.getElementById('life-fill');
+  const cardsCountEl = document.getElementById('cards-count');
+  const biomeNameEl = document.getElementById('biome-name');
+  if (!lifeFillEl || !cardsCountEl || !biomeNameEl) return;
+
   const lifePercent = (state.run.life / LIFE_MAX) * 100;
-  lifeFill().style.width = `${lifePercent}%`;
+  lifeFillEl.style.width = `${lifePercent}%`;
 
   // Color transitions for life bar
-  const fill = lifeFill();
   if (lifePercent <= 25) {
-    fill.style.background = 'linear-gradient(90deg, #8b0000, #cd5c5c)';
+    lifeFillEl.style.background = 'linear-gradient(90deg, #8b0000, #cd5c5c)';
   } else if (lifePercent <= 50) {
-    fill.style.background = 'linear-gradient(90deg, #8b4513, #cd853f)';
+    lifeFillEl.style.background = 'linear-gradient(90deg, #8b4513, #cd853f)';
   } else {
-    fill.style.background = 'linear-gradient(90deg, #2e6b2e, #5a9a5a)';
+    lifeFillEl.style.background = 'linear-gradient(90deg, #2e6b2e, #5a9a5a)';
   }
 
-  cardsCount().textContent = `Carte ${state.run.cardsPlayed}`;
+  cardsCountEl.textContent = `Carte ${state.run.cardsPlayed}`;
 
   const biome = BIOMES[state.run.biome];
-  biomeName().textContent = biome?.name ?? state.run.biome;
+  biomeNameEl.textContent = biome?.name ?? state.run.biome;
 
   // Update faction bars
   for (const faction of FACTIONS) {

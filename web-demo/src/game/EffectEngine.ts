@@ -144,7 +144,10 @@ export function applyEffects(effects: readonly string[], multiplier = 1.0): Effe
         applied.push(effectStr);
         break;
       default:
-        // Other effects: apply without scaling for now
+        // Known future codes (ADD_KARMA, ADD_TENSION, PROGRESS_MISSION, SET_FLAG,
+        // ADD_TAG, REMOVE_TAG, ADD_PROMISE, FULFILL_PROMISE, BREAK_PROMISE, UNLOCK_OGHAM)
+        // reach here as no-ops — state is unchanged. Warn so authors notice.
+        console.warn(`[EffectEngine] No-op effect (not yet implemented): ${code}`);
         applied.push(effectStr);
         break;
     }

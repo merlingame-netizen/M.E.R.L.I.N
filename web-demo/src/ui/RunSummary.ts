@@ -226,7 +226,10 @@ export async function showRunSummary(reason: 'death' | 'victory' | 'cards_limit'
   overlay.appendChild(panel);
   document.body.appendChild(overlay);
 
-  // Wait for restart click
+  // Wait for restart click — resolve so main()'s outer while(true) loop returns to lair.
+  // Do NOT call window.location.reload() — the outer loop in main.ts handles the next run
+  // cleanly (new SceneManager, fresh biome, startRun). A hard reload would discard
+  // in-memory GroqAdapter singletons and force re-fetching cards.json unnecessarily.
   await new Promise<void>((resolve) => {
     restartBtn.addEventListener('click', () => {
       overlay.remove();
@@ -235,6 +238,4 @@ export async function showRunSummary(reason: 'death' | 'victory' | 'cards_limit'
       resolve();
     });
   });
-
-  window.location.reload();
 }
