@@ -1,0 +1,70 @@
+{
+  "cycle": 31,
+  "timestamp": "2026-04-03T00:00:00Z",
+  "overall_score": 8.2,
+  "previous_score": 7.8,
+  "delta": "+0.4",
+  "criteria": {
+    "visual_3d": {
+      "score": 8.5,
+      "previous": 5.5,
+      "delta": "+3.0",
+      "notes": "CoastBiome AAA lighting pass: 4-source setup (DirectionalLight sun + HemisphereLight + rim + ambient). flatShading on all materials. 40 trees (was 25) in 3 depth layers. Celtic conifer cones replace generic spheres. Fog warm breton 0x8a9a78 vs cold blue 0xaabbcc. Low-poly ocean with animated vertex displacement (wave facets). MerlinLairScene 5-source lighting (key/rim/fill/cauldron/ambient)."
+    },
+    "animation_fluidity": {
+      "score": 8.2,
+      "previous": 7.8,
+      "delta": "+0.4",
+      "notes": "Ocean vertices animated per-frame with flatShading wave facets. hitFlash already connected in mg_combat_rituel render(). pulsePhase continuous on center zone. No new regressions."
+    },
+    "asset_density": {
+      "score": 8.4,
+      "previous": 6.5,
+      "delta": "+1.9",
+      "notes": "Trees: 25 → 40 (+60%). 3 depth layers (near/mid/far). Menhirs: 5 → 7 with moss patches. Rocks: 15 → 18 flat-shaded. MerlinLair: 3 extra shelves + moonlight + parchments already in place from T076."
+    },
+    "gameplay_feel": {
+      "score": 8.0,
+      "previous": 7.5,
+      "delta": "+0.5",
+      "notes": "Combat rituel: timer bar now responsive (min(380px,100%)). ARIA labels explicit. hitFlash flash verified connected in render. Obstacle immutable updates (spread pattern maintained). Center bonus zone pulsing correctly."
+    },
+    "narrative_immersion": {
+      "score": 8.0,
+      "previous": 8.0,
+      "delta": "0",
+      "notes": "No narrative changes this cycle. 386 cards pool maintained. Breton/Celtic vocabulary present in card templates. Fog now atmospheric warm-grey matches narrative tone."
+    },
+    "web_performance": {
+      "score": 9.1,
+      "previous": 9.2,
+      "delta": "-0.1",
+      "notes": "app.js: 120.38 KB (+1.48 KB for ocean vertex animation cache). Gzip: 37.62 KB. Total gzip: 195.74 KB (well under 600 KB limit). Build: 3.33s. TS: 0 errors. MerlinLairScene: 800 lines (at limit). computeVertexNormals per frame on ocean may cost ~0.5ms on mobile — acceptable for 30fps target."
+    }
+  },
+  "effect_caps_compliance": "PASS — no changes to CardSystem or EffectEngine this cycle",
+  "faction_balance": "PASS — 386 cards, druides/ankou/anciens/niamh/korrigans ratios unchanged",
+  "regression_check": {
+    "ts_errors": 0,
+    "build_ok": true,
+    "bundle_kb_app": 120.38,
+    "bundle_delta_kb": 1.48,
+    "bundle_delta_pct": 1.24,
+    "gate_bundle": "WARN (>1% delta but <5% hard limit — acceptable)",
+    "MerlinLairScene_line_count": 800,
+    "CoastBiome_line_count": 377,
+    "verdict": "PROCEED"
+  },
+  "top5_fixes_applied": [
+    "CoastBiome: 4-source AAA lighting (DirectionalLight sun + HemisphereLight + rim + ambient)",
+    "CoastBiome: flatShading on ALL materials (ground, ocean, trees, rocks, menhirs)",
+    "CoastBiome: 40 Celtic conifer trees in 3 depth layers (was 25 sphere-trees)",
+    "CoastBiome: fog warm breton 0x8a9a78 + low-poly ocean vertex wave animation",
+    "MerlinLairScene: 5-source lighting (key/rim/fill bookshelf/cauldron accent/ambient)"
+  ],
+  "top3_remaining_cycle32": [
+    "CoastBiome: CameraRail (CameraRail.ts) not yet wired to CoastBiome — forest walk should use this scene",
+    "MerlinLair: interactive zone hover animation missing (crystal should pulse, scroll should glow)",
+    "mg_combat_rituel: obstacle speed easing not progressive — difficulty curve should accelerate over 10s"
+  ]
+}

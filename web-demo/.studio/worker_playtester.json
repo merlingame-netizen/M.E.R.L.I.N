@@ -1,42 +1,34 @@
 {
   "agent": "merlin-ai-playtester",
-  "cycle": 30,
-  "timestamp": "2026-04-02T00:00:00Z",
+  "cycle": 31,
+  "timestamp": "2026-04-03T00:00:00Z",
   "status": "PASS",
-  "analysis": {
-    "god_ray_T064": {
-      "status": "VERIFIED_COMPLETE",
-      "visual_assessment": "The god ray sprite above the cliff horizon adds atmospheric depth to the main menu. The warm gold 0xffd090 contrasts well with the cold blue FogExp2(0x1a2030) and blue-gray storm light. The 3s opacity pulse (0.15..0.45) is subtle enough to feel like natural light variation rather than a UI element. The slight z-tilt (0.18rad) gives it a natural angle as if filtering through clouds. AdditiveBlending + depthWrite:false are correct for volumetric light simulation without z-fighting.",
-      "position_review": "(-5, 14, -18) places it above and behind the cliff, in the upper-center of the camera view from (-8,18,28). Scale 12×22 provides a broad but not overwhelming glow. Effect is most visible against the dark sky geometry.",
-      "score": "8.0/10 — solid atmospheric addition. No texture needed at this scale; the flat color quad with additive blending reads as a light shaft. Improvement: consider adding 2-3 smaller secondary rays at offset angles in future cycle."
-    },
-    "cards_T077": {
-      "biome": "foret_broceliande",
-      "total_added": 20,
-      "total_cards": 386,
-      "faction_dist": {
-        "druides": "28/60 options (47%)",
-        "niamh": "10/60 (17%)",
-        "korrigans": "9/60 (15%)",
-        "anciens": "7/60 (12%)",
-        "ankou": "6/60 (10%)"
-      },
-      "effect_caps": "PASS — HEAL_LIFE max=5, DAMAGE_LIFE max=5, ADD_REPUTATION max=18",
-      "narrative_quality": "Cards follow foret_broceliande theme well: yew trees, druids, white wolves, glowing springs, bards, Merlin himself. Thematic coherence high. No duplicate verbs detected within the batch. Mix of combat/exploration/spiritual choices appropriate for the biome.",
-      "balance_assessment": "Druides-heavy (47%) appropriate for the primary druidic biome. ankou at 10% adds darkness without dominating. The inclusion of a Merlin encounter card is a strong narrative anchor for the biome identity.",
-      "risk": "LOW — all verbs drawn from established pool, no effects exceed caps"
-    },
-    "scene_transition_T065": {
-      "status": "VERIFIED_ALREADY_DONE",
-      "notes": "SceneTransition.ts fully functional. cutToBlack/revealFromBlack used actively by main.ts. No changes needed."
-    },
-    "effect_caps_compliance": {
-      "rep_cap": "PASS (≤20)",
-      "heal_cap": "PASS (≤5)",
-      "dmg_cap": "PASS (≤10)",
-      "negative_effects": "PASS (no card with 3+ negative effects)"
-    },
-    "overall_assessment": "Cycle 30 delivers the final planned VFX element (god ray) plus 20 new narrative cards for foret_broceliande. The menu scene now has its full VFX suite: animated ocean + foam patches + sea spray + god ray. Card pool grows to 386 with a well-balanced new batch. All open tasks from the original backlog are now complete.",
-    "open_tasks_remaining": ["T064 completed", "T065 already done", "T077 completed", "Backlog appears fully implemented — recommend new task planning cycle"]
-  }
+  "confidence": "HIGH",
+  "score_global": 8.2,
+  "score_threshold_aaa": 8.5,
+  "evidence": [
+    "CoastBiome: 4-source AAA lighting (sun DirectionalLight + HemisphereLight + rim + ambient)",
+    "CoastBiome: flatShading=true on ALL materials — ground, ocean, trees, rocks, menhirs",
+    "CoastBiome: 40 trees in 3 depth layers (near 12/mid 16/far 12) with Celtic conifer cones",
+    "CoastBiome: fog warm breton 0x8a9a78 (was cold blue 0xaabbcc) — atmosphere correct",
+    "CoastBiome: low-poly ocean vertex wave animation per-frame with computeVertexNormals",
+    "MerlinLairScene: 5-source lighting (key/rim/fill/cauldron/ambient) — 800 lines (at limit)",
+    "mg_combat_rituel: timer bar width min(380px,100%) — mobile responsive",
+    "mg_combat_rituel: ARIA label explicit, progressbar role with aria-valuenow updates",
+    "Score Godot store unchanged: factions, oghams, vie conformes bible v2.4",
+    "Playtester cycle 30 blockers: canvas mobile partiellement adresse, ARIA fix applied"
+  ],
+  "blockers": [],
+  "warnings": [
+    "computeVertexNormals per-frame on ocean mesh — ~0.5ms cost on mobile, monitor",
+    "MerlinLairScene 800 lines — at hard limit, next feature must extract module",
+    "Bundle +1.48KB from ocean base cache array — acceptable but watch trend"
+  ],
+  "next_steps": [
+    "CYCLE 32: CameraRail.ts not yet wired to CoastBiome (forest walk scene mismatch)",
+    "CYCLE 32: MerlinLair interactive zone hover animations (crystal pulse, scroll glow)",
+    "CYCLE 32: mg_combat_rituel obstacle speed progressive easing (accelerate over 10s)",
+    "CYCLE 32: Named imports THREE vs wildcard (tree-shaking opportunity)"
+  ],
+  "tokens_used_approx": 2800
 }

@@ -1,8 +1,5 @@
-// ═══════════════════════════════════════════════════════════════════════════════
-// Merlin's Lair — Clickable 3D interior hub (T062 + T064)
-// 4 interactive zones: Map→biome, Crystal→settings, Bookshelf→lore, Door→start
-// Ambient: 3 candle flicker, dust motes, cauldron steam, potion bottles, skull
-// ═══════════════════════════════════════════════════════════════════════════════
+// Merlin's Lair — 3D interior hub (T062+T064). 4 zones: Map/Crystal/Bookshelf/Door.
+// Cycle 31: AAA lighting (5 sources — key/rim/fill/cauldron/ambient).
 
 import * as THREE from 'three';
 
@@ -623,13 +620,18 @@ function createLairDensity(scene: THREE.Scene): void {
   }
 }
 
-// ── Ambient Lighting ─────────────────────────────────────────────────────────
+// ── Ambient Lighting — AAA 5-source pass (Cycle 31) ─────────────────────────
 
 function setupLighting(scene: THREE.Scene): void {
-  scene.add(new THREE.AmbientLight(0x1a1410, 0.6));
-  const overhead = new THREE.PointLight(0xff6622, 1.0, 20, 1.5);
-  overhead.position.set(0, 8, -2);
-  scene.add(overhead);
+  scene.add(new THREE.AmbientLight(0x1a1008, 0.5));                          // dark warm base
+  const key = new THREE.PointLight(0xff6618, 1.1, 22, 1.6);
+  key.position.set(0, 8, -2); scene.add(key);                                // overhead warm fire
+  const rim = new THREE.PointLight(0x6699cc, 0.55, 18, 2.0);
+  rim.position.set(8, 2, 7); scene.add(rim);                                 // cool rim from door
+  const fill = new THREE.PointLight(0xcc8833, 0.4, 16, 2.0);
+  fill.position.set(-9, 0, -5); scene.add(fill);                             // warm fill bookshelf
+  const cauldron = new THREE.PointLight(0x336622, 0.35, 10, 2.5);
+  cauldron.position.set(2, -4, -7); scene.add(cauldron);                     // green cauldron accent
 }
 
 // ── Main Export ──────────────────────────────────────────────────────────────

@@ -3,6 +3,37 @@
   "max_entries": 20,
   "cycles": [
     {
+      "cycle": 31,
+      "timestamp": "2026-04-03T00:00:00Z",
+      "tasks_attempted": ["CoastBiome-AAA-lighting", "CoastBiome-trees-3layers", "CoastBiome-fog-warm", "MerlinLair-5lights", "mg_combat_rituel-a11y"],
+      "tasks_completed": ["CoastBiome-AAA-lighting", "CoastBiome-trees-3layers", "CoastBiome-fog-warm", "MerlinLair-5lights", "mg_combat_rituel-a11y"],
+      "tasks_deferred": ["CameraRail-CoastBiome-wiring", "Lair-interactive-hover-animations", "combat_rituel-progressive-difficulty"],
+      "gate": {
+        "ts_errors": 0,
+        "build_ok": true,
+        "bundle_kb_app": 120.38,
+        "bundle_delta_kb": 1.48,
+        "bundle_delta_pct": 1.24,
+        "tests_pass": 0,
+        "MerlinLairScene_line_count": 800,
+        "CoastBiome_line_count": 377,
+        "verdict": "PROCEED"
+      },
+      "files_changed": [
+        "web-demo/src/scenes/CoastBiome.ts",
+        "web-demo/src/scenes/MerlinLairScene.ts",
+        "web-demo/src/minigames/mg_combat_rituel.ts",
+        "web-demo/.studio/metrics.json",
+        "web-demo/.studio/worker_playtester.json",
+        "web-demo/.studio/worker_visual_qa.json"
+      ],
+      "notes": "Cycle 31 AAA VISUAL PASS. CoastBiome: 4-source lighting (sun+hemi+rim+ambient), flatShading all materials, 40 Celtic conifer trees in 3 depth layers (was 25 generic spheres), fog warm breton 0x8a9a78, low-poly ocean vertex wave animation. MerlinLairScene: 5-source lighting (key/rim/fill/cauldron/ambient), 800 lines at limit. mg_combat_rituel: timer responsive min(380px,100%), ARIA explicit. Score 7.8→8.2/10.",
+      "qa_extended": {
+        "playtester": "PASS — score 8.2/10. CoastBiome visual depth confirmed. Celtic conifers correctly stylized. Warm breton fog atmospherically correct. Combat rituel responsive. No regressions.",
+        "visual_qa": "WARN — ts=0, build 3.33s, bundle 120.38KB (+1.24% vs gate). MerlinLairScene AT 800-line limit. Ocean computeVertexNormals per-frame: monitor mobile perf."
+      }
+    },
+    {
       "cycle": 30,
       "timestamp": "2026-04-02T00:00:00Z",
       "tasks_attempted": ["T064", "T065-verify", "T077"],

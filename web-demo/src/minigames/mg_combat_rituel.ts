@@ -66,10 +66,15 @@ export class MinigameCombatRituel extends MinigameBase {
     instr.style.cssText = 'color:#cd853f;font-size:13px;text-align:center;margin-bottom:8px;font-family:system-ui;';
     this.container.appendChild(instr);
 
-    // Timer bar
+    // Timer bar — responsive width (min of canvas width and 100%)
     const timerBar = document.createElement('div');
     timerBar.id = 'mg-combat-timer';
-    timerBar.style.cssText = `width:${this.canvasW}px;height:8px;background:rgba(255,255,255,0.1);border-radius:4px;margin:0 auto 8px;overflow:hidden;`;
+    timerBar.setAttribute('role', 'progressbar');
+    timerBar.setAttribute('aria-label', 'Temps restant');
+    timerBar.setAttribute('aria-valuemin', '0');
+    timerBar.setAttribute('aria-valuemax', '100');
+    timerBar.setAttribute('aria-valuenow', '100');
+    timerBar.style.cssText = `width:min(${this.canvasW}px,100%);height:8px;background:rgba(255,255,255,0.1);border-radius:4px;margin:0 auto 8px;overflow:hidden;`;
     const timerFill = document.createElement('div');
     timerFill.id = 'mg-combat-timer-fill';
     timerFill.style.cssText = 'height:100%;width:100%;background:#8b2020;border-radius:4px;transition:width 0.1s linear;';
@@ -78,7 +83,7 @@ export class MinigameCombatRituel extends MinigameBase {
 
     // Canvas
     this.canvas = document.createElement('canvas');
-    this.canvas.setAttribute('aria-label', '');
+    this.canvas.setAttribute('aria-label', 'Arène de combat rituel — déplacez le curseur pour esquiver les obstacles');
     this.canvas.setAttribute('role', 'application');
     this.canvas.width = this.canvasW;
     this.canvas.height = this.canvasH;
@@ -129,6 +134,8 @@ export class MinigameCombatRituel extends MinigameBase {
       const pct = Math.max(0, (this.timeLeft / this.totalTime) * 100);
       const fill = document.getElementById('mg-combat-timer-fill');
       if (fill) fill.style.width = `${pct}%`;
+      const bar = document.getElementById('mg-combat-timer');
+      if (bar) bar.setAttribute('aria-valuenow', String(Math.round(pct)));
       if (this.timeLeft <= 0) {
         this.endGame();
       }

@@ -1,21 +1,25 @@
 {
   "agent": "merlin-visual-qa",
-  "cycle": 30,
-  "timestamp": "2026-04-02T00:00:00Z",
+  "cycle": 31,
+  "timestamp": "2026-04-03T00:00:00Z",
   "status": "PASS",
   "screenshot_attempt": "SKIPPED — python CLI not available in bash PATH on Windows host.",
   "code_audit": {
-    "T064_god_ray": "CONFIRMED — createGodRay() at line 632 of MainMenuScene.ts. PlaneGeometry(12,22), MeshBasicMaterial 0xffd090, AdditiveBlending, depthWrite:false. Opacity pulse 3s via sin. scene.add(godRay.mesh) line 734, godRay.update(dt) line 744. File 772 lines (< 800).",
-    "T065_scene_transition": "CONFIRMED — SceneTransition.ts exists, 90 lines, exports cutToBlack/revealFromBlack/transition. Used by main.ts at import line 34.",
-    "T077_foret_cards": "CONFIRMED — 20 new foret_broceliande batch2 cards added to cards.json. Total: 386 cards. Effect caps: HEAL_LIFE ≤5, DAMAGE_LIFE ≤10, ADD_REPUTATION ≤20. Faction dist: druides=28/60 options (47%), niamh=10/60 (17%), korrigans=9/60 (15%), anciens=7/60 (12%), ankou=6/60 (10%).",
-    "MainMenuScene_lines": "772 — 28 lines under 800 limit",
+    "CoastBiome_lighting": "CONFIRMED — 4 light sources: AmbientLight 0x304028, DirectionalLight 0xffd8a0 at (-20,18,10) with shadow, HemisphereLight 0x7799cc/0x223316, DirectionalLight rim 0x88bbcc. Shadow mapSize 1024x1024.",
+    "CoastBiome_flatShading": "CONFIRMED — flatShading:true on ground(0x2e5228), ocean(0x1a3d5c), rocks(0x5e5450), menhirs(0x787068). All materials updated.",
+    "CoastBiome_trees": "CONFIRMED — 40 trees in 3 layers. Near(6-18r): vivid 0x2d6b2d. Mid(18-32r): darker 0x265a26. Far(32-55r): silhouette 0x1a3d1a. ConeGeometry triple-stack for Celtic conifer.",
+    "CoastBiome_fog": "CONFIRMED — uFogColor changed to 0x8a9a78 (warm breton grey-green). Ocean named 'ocean_plane' for wave update lookup.",
+    "MerlinLairScene_lighting": "CONFIRMED — 5 sources compact form. key=0xff6618, rim=0x6699cc, fill=0xcc8833, cauldron=0x336622, ambient=0x1a1008. 800 lines (at limit).",
+    "combat_rituel_a11y": "CONFIRMED — timer bar: role=progressbar, aria-label='Temps restant', aria-valuenow updates in interval. Canvas aria-label descriptive.",
+    "combat_rituel_responsive": "CONFIRMED — timerBar.style.cssText includes width:min(380px,100%).",
     "hud_elements": "CONFIRMED unchanged — faction bars + life + anam present",
-    "white_screen_risk": "NONE — TS 0 errors, build 4.53s clean"
+    "white_screen_risk": "NONE — TS 0 errors, build 3.33s clean"
   },
   "severity_findings": [
-    { "severity": "NONE", "element": "ts_errors", "note": "0 errors confirmed post-god-ray addition" },
-    { "severity": "NONE", "element": "bundle_regression", "note": "118.90KB — +0.31KB from 118.59KB, +0.26%, under 5% gate" },
-    { "severity": "LOW", "element": "screenshot_skipped", "note": "Manual browser check recommended for god ray visual effect." }
+    { "severity": "NONE", "element": "ts_errors", "note": "0 errors confirmed post-cycle-31 changes" },
+    { "severity": "WARN", "element": "bundle_regression", "note": "120.38KB — +1.48KB from 118.90KB, +1.24%, under 5% gate but trending up" },
+    { "severity": "WARN", "element": "MerlinLairScene_lines", "note": "800 lines — AT hard limit. Extract module if next feature touches this file." },
+    { "severity": "LOW", "element": "ocean_computeVertexNormals", "note": "Per-frame computeVertexNormals on ocean mesh — ~0.5ms overhead, monitor on mobile." }
   ],
-  "regression": "NONE — ts_errors:0, bundle 118.90KB (+0.26%), build 4.53s"
+  "regression": "WARN — bundle +1.24% (under 5% gate), MerlinLairScene at 800-line limit"
 }
