@@ -49,13 +49,20 @@ function createOcean(): THREE.Mesh {
   return mesh;
 }
 
-/** Build procedural sky gradient. */
+/**
+ * Celtic Breton sky — overcast moody gradient.
+ * Top: dark slate-grey (0x2a3240) — brooding Celtic sky.
+ * Mid-horizon: warm grey-green (0x5a6a50) — forest haze where sky meets tree line.
+ * Bottom: mist cream (0x8a9a78) — matches fog plane color for seamless blend.
+ * Cycle 33: replaces generic blue 0x4488bb/0xaaccdd.
+ */
 function createSky(): THREE.Mesh {
-  const geo = new THREE.SphereGeometry(150, 32, 32);
+  const geo = new THREE.SphereGeometry(150, 16, 12);
   const mat = new THREE.ShaderMaterial({
     uniforms: {
-      topColor: { value: new THREE.Color(0x4488bb) },
-      bottomColor: { value: new THREE.Color(0xaaccdd) },
+      topColor:    { value: new THREE.Color(0x2a3240) },  // dark slate-grey zenith
+      midColor:    { value: new THREE.Color(0x4a5a48) },  // grey-green mid
+      bottomColor: { value: new THREE.Color(0x8a9a78) },  // warm mist at horizon
     },
     vertexShader: `
       varying vec3 vWorldPosition;
@@ -67,12 +74,15 @@ function createSky(): THREE.Mesh {
     `,
     fragmentShader: `
       uniform vec3 topColor;
+      uniform vec3 midColor;
       uniform vec3 bottomColor;
       varying vec3 vWorldPosition;
       void main() {
-        float h = normalize(vWorldPosition).y;
-        float t = clamp(h * 0.5 + 0.5, 0.0, 1.0);
-        gl_FragColor = vec4(mix(bottomColor, topColor, t), 1.0);
+        float h = clamp(normalize(vWorldPosition).y * 0.5 + 0.5, 0.0, 1.0);
+        vec3 col = h < 0.5
+          ? mix(bottomColor, midColor, h * 2.0)
+          : mix(midColor, topColor, (h - 0.5) * 2.0);
+        gl_FragColor = vec4(col, 1.0);
       }
     `,
     side: THREE.BackSide,

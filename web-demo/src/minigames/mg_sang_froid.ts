@@ -59,10 +59,15 @@ export class MinigameSangFroid extends MinigameBase {
     instr.style.cssText = 'color:#cd853f;font-size:13px;text-align:center;margin-bottom:8px;font-family:system-ui;';
     this.container.appendChild(instr);
 
-    // Timer bar
+    // Timer bar — responsive
     const timerBar = document.createElement('div');
     timerBar.id = 'mg-sf-timer';
-    timerBar.style.cssText = `width:${this.canvasW}px;height:8px;background:rgba(255,255,255,0.1);border-radius:4px;margin:0 auto 8px;overflow:hidden;`;
+    timerBar.setAttribute('role', 'progressbar');
+    timerBar.setAttribute('aria-label', 'Temps restant');
+    timerBar.setAttribute('aria-valuemin', '0');
+    timerBar.setAttribute('aria-valuemax', '100');
+    timerBar.setAttribute('aria-valuenow', '100');
+    timerBar.style.cssText = `width:min(${this.canvasW}px,100%);height:8px;background:rgba(255,255,255,0.1);border-radius:4px;margin:0 auto 8px;overflow:hidden;`;
     const timerFill = document.createElement('div');
     timerFill.id = 'mg-sf-timer-fill';
     timerFill.style.cssText = 'height:100%;width:100%;background:#2e6b4f;border-radius:4px;transition:width 0.1s linear;';
@@ -71,7 +76,7 @@ export class MinigameSangFroid extends MinigameBase {
 
     // Canvas
     this.canvas = document.createElement('canvas');
-    this.canvas.setAttribute('aria-label', '');
+    this.canvas.setAttribute('aria-label', 'Zone de sang-froid — gardez votre curseur dans le cercle qui rétrécit');
     this.canvas.setAttribute('role', 'application');
     this.canvas.width = this.canvasW;
     this.canvas.height = this.canvasH;
@@ -110,6 +115,8 @@ export class MinigameSangFroid extends MinigameBase {
       const pct = Math.max(0, (this.timeLeft / this.totalTime) * 100);
       const fill = document.getElementById('mg-sf-timer-fill');
       if (fill) fill.style.width = `${pct}%`;
+      const bar = document.getElementById('mg-sf-timer');
+      if (bar) bar.setAttribute('aria-valuenow', String(Math.round(pct)));
       if (this.timeLeft <= 0) {
         this.endGame();
       }
@@ -274,13 +281,24 @@ export class MinigameSangFroid extends MinigameBase {
     ctx.lineWidth = 2;
     ctx.stroke();
 
-    // Line from cursor to zone center (visual feedback)
+    // Line from cursor to zone center (visual guide)
     ctx.beginPath();
     ctx.moveTo(cx, cy);
     ctx.lineTo(this.zoneX, this.zoneY);
     ctx.strokeStyle = `rgba(${zoneColor},0.15)`;
     ctx.lineWidth = 1;
     ctx.stroke();
+
+    // HUD: score % in canvas top-left — immediate readable feedback
+    const pct = this.elapsedTime > 0 ? Math.round((this.timeInside / this.elapsedTime) * 100) : 100;
+    ctx.font = 'bold 16px system-ui';
+    ctx.textAlign = 'left';
+    ctx.textBaseline = 'top';
+    ctx.fillStyle = this.isInside ? 'rgba(140,200,120,0.85)' : 'rgba(200,90,50,0.85)';
+    ctx.fillText(`${pct}%`, 10, 10);
+    ctx.font = '12px system-ui';
+    ctx.fillStyle = 'rgba(200,200,180,0.5)';
+    ctx.fillText(`r:${Math.round(this.currentRadius)}`, 10, 30);
 
     this.animFrame = requestAnimationFrame(() => this.render());
   }
