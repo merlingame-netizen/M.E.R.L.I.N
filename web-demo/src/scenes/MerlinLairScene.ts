@@ -31,25 +31,26 @@ export type { LairTimeParams };
 
 // ── Stone Walls + Floor + Ceiling ────────────────────────────────────────────
 
-function createWalls(): { group: THREE.Group; floorMesh: THREE.Mesh } {
+function createWalls(): { group: THREE.Group; floorMesh: THREE.Mesh; wallsGroup: THREE.Group } {
   const group = new THREE.Group();
+  const wallsGroup = new THREE.Group(); // contains only the 3 wall boxes (hidden when mur_pierre.glb loads)
   const stoneMat = new THREE.MeshStandardMaterial({ color: 0x3a3228, roughness: 0.95, metalness: 0.0, flatShading: true });
   const mortarMat = new THREE.MeshStandardMaterial({ color: 0x2a2420, roughness: 1.0, metalness: 0.0, flatShading: true });
 
   // Back wall
   const back = new THREE.Mesh(new THREE.BoxGeometry(24, 16, 0.5), stoneMat);
   back.position.set(0, 3, -10);
-  group.add(back);
+  group.add(back); wallsGroup.add(back);
 
   // Left wall
   const left = new THREE.Mesh(new THREE.BoxGeometry(0.5, 16, 20), stoneMat);
   left.position.set(-12, 3, 0);
-  group.add(left);
+  group.add(left); wallsGroup.add(left);
 
   // Right wall
   const right = new THREE.Mesh(new THREE.BoxGeometry(0.5, 16, 20), stoneMat);
   right.position.set(12, 3, 0);
-  group.add(right);
+  group.add(right); wallsGroup.add(right);
 
   // Flagstone floor
   const floorMat = new THREE.MeshStandardMaterial({ color: 0x201c18, roughness: 0.9, metalness: 0.0, flatShading: true });
@@ -86,7 +87,7 @@ function createWalls(): { group: THREE.Group; floorMesh: THREE.Mesh } {
     group.add(mortar);
   }
 
-  return { group, floorMesh: floor };
+  return { group, floorMesh: floor, wallsGroup };
 }
 
 // ── Table with Map/Scroll ────────────────────────────────────────────────────
@@ -561,7 +562,7 @@ function createCauldron(scene: THREE.Scene): CauldronSystem {
 
 function createPotionBottles(): THREE.Group {
   const group = new THREE.Group();
-  const shelfMat = new THREE.MeshStandardMaterial({ color: 0x3d2b1a, roughness: 0.85 });
+  const shelfMat = new THREE.MeshStandardMaterial({ color: 0x3d2b1a, roughness: 0.85, flatShading: true });
 
   const smallShelf = new THREE.Mesh(new THREE.BoxGeometry(2.5, 0.1, 0.5), shelfMat);
   smallShelf.position.set(6, -3.5, -7.7);
@@ -582,6 +583,7 @@ function createPotionBottles(): THREE.Group {
       opacity: 0.78,
       emissive: b.color,
       emissiveIntensity: 0.25,
+      flatShading: true,
     });
     const bottle = new THREE.Mesh(new THREE.CylinderGeometry(0.12, 0.15, 0.55, 8), mat);
     bottle.position.set(b.x, b.y, b.z);
@@ -598,7 +600,7 @@ function createPotionBottles(): THREE.Group {
 
 function createSkull(): THREE.Group {
   const group = new THREE.Group();
-  const boneMat = new THREE.MeshStandardMaterial({ color: 0xd4c89a, roughness: 0.7, metalness: 0.0 });
+  const boneMat = new THREE.MeshStandardMaterial({ color: 0xd4c89a, roughness: 0.7, metalness: 0.0, flatShading: true });
   const cranium = new THREE.Mesh(new THREE.SphereGeometry(0.22, 8, 7), boneMat);
   cranium.scale.y = 0.85;
   cranium.position.set(9, -1.9, -9);
@@ -648,8 +650,8 @@ export function initMerlinLair(container: HTMLElement): LairResult {
 
   // Build scene elements
   setupLighting(scene);
-  const { group: wallsGroup, floorMesh } = createWalls();
-  scene.add(wallsGroup);
+  const { group: wallsRootGroup, floorMesh, wallsGroup } = createWalls();
+  scene.add(wallsRootGroup);
 
   const { group: mapGroup, hitTarget: mapHit } = createMapTable();
   scene.add(mapGroup);
@@ -685,7 +687,7 @@ export function initMerlinLair(container: HTMLElement): LairResult {
 
   // GLB asset overlays (async — procedural fallbacks remain if GLB unavailable).
   // Pass procedural groups so table_druidique.glb + bibliotheque.glb hide them on load (fixes z-fighting).
-  loadLairGLBs(scene, { mapGroup, shelfGroup, floorMesh });
+  loadLairGLBs(scene, { mapGroup, shelfGroup, floorMesh, wallsGroup });
 
   // Interactive zones for raycasting (visualMesh = visible mesh for emissive boost)
   const interactives: InteractiveObject[] = [

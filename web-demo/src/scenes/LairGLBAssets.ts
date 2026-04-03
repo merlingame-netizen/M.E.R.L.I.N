@@ -15,6 +15,7 @@ export interface LairProceduralGroups {
   mapGroup: THREE.Group;
   shelfGroup: THREE.Group;
   floorMesh?: THREE.Mesh;
+  wallsGroup?: THREE.Group;  // full walls group hidden when mur_pierre.glb loads
 }
 
 export function loadLairGLBs(
@@ -69,4 +70,28 @@ export function loadLairGLBs(
     scene.add(gltf.scene);
     if (proceduralGroups?.floorMesh) proceduralGroups.floorMesh.visible = false;
   }).catch(() => { /* procedural floor remains */ });
+
+  // Mur pierre: Blender stone wall tile (126 polys). Scaled to cover the back wall (24×16 units).
+  // Positioned 0.02 in front of the procedural back wall (z=-10) to avoid z-fighting.
+  // Left and right walls rotated 90° from the same GLB.
+  loadGLB('/mur_pierre.glb').then((gltf) => {
+    // Back wall
+    const back = gltf.scene.clone(true);
+    back.scale.set(24, 16, 1);
+    back.position.set(0, 3, -9.76);
+    scene.add(back);
+    // Left wall (rotated 90° around Y)
+    const left = gltf.scene.clone(true);
+    left.scale.set(20, 16, 1);
+    left.rotation.y = Math.PI / 2;
+    left.position.set(-11.76, 3, 0);
+    scene.add(left);
+    // Right wall (rotated -90° around Y)
+    const right = gltf.scene.clone(true);
+    right.scale.set(20, 16, 1);
+    right.rotation.y = -Math.PI / 2;
+    right.position.set(11.76, 3, 0);
+    scene.add(right);
+    if (proceduralGroups?.wallsGroup) proceduralGroups.wallsGroup.visible = false;
+  }).catch(() => { /* procedural stone walls remain */ });
 }

@@ -182,18 +182,22 @@ async function runMerlinLair(app: HTMLElement): Promise<void> {
   tick();
 
   // Zone labels shown as brief toast for non-door zones
-  const ZONE_LABELS: Record<string, string> = {
-    map:       'Carte des Biomes',
-    crystal:   'Pierre des Oghams',
-    bookshelf: 'Journal de Merlin',
-    cauldron:  'Chaudron Druidique',
+  const ZONE_LABELS: Record<string, { title: string; sub: string }> = {
+    map:       { title: 'Carte des Biomes',    sub: 'Bientôt disponible' },
+    crystal:   { title: 'Pierre des Oghams',   sub: 'Bientôt disponible' },
+    bookshelf: { title: 'Journal de Merlin',   sub: 'Bientôt disponible' },
+    cauldron:  { title: 'Chaudron Druidique',  sub: 'Bientôt disponible' },
+    door:      { title: 'Entrer dans la forêt', sub: '→ Commencer l\'aventure' },
   };
   let activeToast: HTMLDivElement | null = null;
 
   const showZoneToast = (zone: string): void => {
     if (activeToast) { activeToast.remove(); activeToast = null; }
-    const label = ZONE_LABELS[zone] ?? zone;
+    const entry = ZONE_LABELS[zone] ?? { title: zone, sub: '' };
     const toast = document.createElement('div');
+    toast.setAttribute('role', 'status');
+    toast.setAttribute('aria-live', 'polite');
+    toast.setAttribute('aria-atomic', 'true');
     toast.style.cssText = [
       'position:absolute;bottom:15%;left:50%;transform:translateX(-50%);',
       'background:rgba(10,8,4,0.88);border:1px solid rgba(160,110,50,0.6);',
@@ -202,7 +206,7 @@ async function runMerlinLair(app: HTMLElement): Promise<void> {
       'letter-spacing:0.08em;text-align:center;',
       'opacity:0;transition:opacity 0.2s ease;',
     ].join('');
-    toast.innerHTML = `${label}<br><span style="color:rgba(180,150,90,0.6);font-size:0.8em;font-style:italic;">Bientôt disponible</span>`;
+    toast.innerHTML = `${entry.title}${entry.sub ? `<br><span style="color:rgba(180,150,90,0.6);font-size:0.8em;font-style:italic;">${entry.sub}</span>` : ''}`;
     wrapper!.appendChild(toast);
     activeToast = toast;
     requestAnimationFrame(() => requestAnimationFrame(() => { toast.style.opacity = '1'; }));
@@ -216,6 +220,7 @@ async function runMerlinLair(app: HTMLElement): Promise<void> {
   await new Promise<void>((resolve) => {
     lair.onZoneClick((zone) => {
       if (zone === 'door') {
+        showZoneToast('door'); // brief "Entrer dans la forêt" confirms the action before fade
         resolve();
         return;
       }
