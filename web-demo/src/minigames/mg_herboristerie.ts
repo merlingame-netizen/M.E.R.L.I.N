@@ -99,10 +99,15 @@ export class MinigameHerboristerie extends MinigameBase {
     title.style.cssText = 'color:#e8dcc8;font-size:20px;text-align:center;margin-bottom:8px;font-family:system-ui;';
     this.container.appendChild(title);
 
-    // Timer bar
+    // Timer bar — responsive
     const timerBar = document.createElement('div');
     timerBar.id = 'mg-herb-timer';
-    timerBar.style.cssText = `width:${this.canvasW}px;height:8px;background:rgba(255,255,255,0.1);border-radius:4px;margin:0 auto 8px;overflow:hidden;`;
+    timerBar.setAttribute('role', 'progressbar');
+    timerBar.setAttribute('aria-label', 'Temps restant');
+    timerBar.setAttribute('aria-valuemin', '0');
+    timerBar.setAttribute('aria-valuemax', '100');
+    timerBar.setAttribute('aria-valuenow', '100');
+    timerBar.style.cssText = `width:min(${this.canvasW}px,100%);height:8px;background:rgba(255,255,255,0.1);border-radius:4px;margin:0 auto 8px;overflow:hidden;`;
     const timerFill = document.createElement('div');
     timerFill.id = 'mg-herb-timer-fill';
     timerFill.style.cssText = 'height:100%;width:100%;background:#5a9a5a;border-radius:4px;transition:width 0.1s linear;';
@@ -111,7 +116,7 @@ export class MinigameHerboristerie extends MinigameBase {
 
     // Canvas
     this.canvas = document.createElement('canvas');
-    this.canvas.setAttribute('aria-label', '');
+    this.canvas.setAttribute('aria-label', `Herboristerie — cliquez sur les plantes ${this.targetPlant.name || ''} et évitez les plantes toxiques`);
     this.canvas.setAttribute('role', 'application');
     this.canvas.width = this.canvasW;
     this.canvas.height = this.canvasH;
@@ -139,6 +144,8 @@ export class MinigameHerboristerie extends MinigameBase {
       const pct = Math.max(0, (this.timeLeft / this.totalTime) * 100);
       const fill = document.getElementById('mg-herb-timer-fill');
       if (fill) fill.style.width = `${pct}%`;
+      const bar = document.getElementById('mg-herb-timer');
+      if (bar) bar.setAttribute('aria-valuenow', String(Math.round(pct)));
       if (this.timeLeft <= 0) {
         this.endGame();
       }
