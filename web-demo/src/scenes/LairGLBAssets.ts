@@ -42,7 +42,8 @@ export function loadLairGLBs(
     if (proceduralGroups?.onCauldronGLBLoaded) {
       const glbMeshes: THREE.Mesh[] = [];
       gltf.scene.traverse((child) => { if (child instanceof THREE.Mesh) glbMeshes.push(child); });
-      const bodyMesh = glbMeshes[0];
+      // Prefer a mesh named 'body' or 'bowl'; fall back to first mesh if none match
+      const bodyMesh = glbMeshes.find((m) => /body|bowl/i.test(m.name)) ?? glbMeshes[0];
       if (bodyMesh) {
         (bodyMesh.material as THREE.MeshStandardMaterial).emissive = new THREE.Color(0x00aa33);
         (bodyMesh.material as THREE.MeshStandardMaterial).emissiveIntensity = 0.0;

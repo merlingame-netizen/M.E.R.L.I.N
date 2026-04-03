@@ -293,10 +293,11 @@ interface CandleData {
 }
 
 function createCandles(scene: THREE.Scene): { candles: CandleData[]; group: THREE.Group } {
+  // Positions match CANDLE_POSITIONS in LairGLBAssets.ts — procedural fallback aligns to GLB placement
   const candlePositions: Array<[number, number, number]> = [
-    [-5, -1.6, -7],
-    [0, -4.6, -8.5],
-    [3, -3.0, -6],
+    [-5, -4.85, -7],
+    [0, -4.85, -8.5],
+    [3, -4.85, -6],
   ];
 
   const candleMat = new THREE.MeshStandardMaterial({
