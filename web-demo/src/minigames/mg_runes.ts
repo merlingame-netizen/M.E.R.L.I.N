@@ -69,7 +69,7 @@ export class MinigameRunes extends MinigameBase {
     const canvasHeight = this.gridRows * (this.tileSize + this.tilePad) + this.tilePad;
 
     this.canvas = document.createElement('canvas');
-    this.canvas.setAttribute('aria-label', '');
+    this.canvas.setAttribute('aria-label', 'Minigame Runes — tracez la rune correcte sur le canvas');
     this.canvas.setAttribute('role', 'application');
     this.canvas.width = canvasWidth;
     this.canvas.height = canvasHeight;

@@ -93,7 +93,7 @@ export class MinigameEcho extends MinigameBase {
 
     // Canvas
     this.canvas = document.createElement('canvas');
-    this.canvas.setAttribute('aria-label', '');
+    this.canvas.setAttribute('aria-label', 'Minigame Echo — memorisez la direction du son et cliquez sur le bon quadrant');
     this.canvas.setAttribute('role', 'application');
     this.canvas.width = this.canvasW;
     this.canvas.height = this.canvasH;

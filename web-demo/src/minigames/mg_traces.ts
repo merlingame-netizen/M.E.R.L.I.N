@@ -35,7 +35,12 @@ export class MinigameTraces extends MinigameBase {
     // Timer bar
     const timerBar = document.createElement('div');
     timerBar.id = 'mg-timer';
-    timerBar.style.cssText = 'width:400px;height:8px;background:rgba(255,255,255,0.1);border-radius:4px;margin:0 auto 16px;overflow:hidden;';
+    timerBar.setAttribute('role', 'progressbar');
+    timerBar.setAttribute('aria-label', 'Temps restant');
+    timerBar.setAttribute('aria-valuemin', '0');
+    timerBar.setAttribute('aria-valuemax', '100');
+    timerBar.setAttribute('aria-valuenow', '100');
+    timerBar.style.cssText = 'width:min(400px,100%);height:8px;background:rgba(255,255,255,0.1);border-radius:4px;margin:0 auto 16px;overflow:hidden;';
     const timerFill = document.createElement('div');
     timerFill.id = 'mg-timer-fill';
     timerFill.style.cssText = 'height:100%;width:100%;background:#cd853f;border-radius:4px;transition:width 0.1s linear;';
@@ -44,7 +49,7 @@ export class MinigameTraces extends MinigameBase {
 
     // Canvas
     this.canvas = document.createElement('canvas');
-    this.canvas.setAttribute('aria-label', '');
+    this.canvas.setAttribute('aria-label', 'Minigame Traces — suivez le chemin trace avec precision');
     this.canvas.setAttribute('role', 'application');
     this.canvas.width = 400;
     this.canvas.height = 400;

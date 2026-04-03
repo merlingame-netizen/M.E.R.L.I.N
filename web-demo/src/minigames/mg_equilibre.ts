@@ -72,7 +72,7 @@ export class MinigameEquilibre extends MinigameBase {
 
     // Canvas
     this.canvas = document.createElement('canvas');
-    this.canvas.setAttribute('aria-label', '');
+    this.canvas.setAttribute('aria-label', 'Minigame Equilibre — maintenez votre equilibre sur le chemin etroit');
     this.canvas.setAttribute('role', 'application');
     this.canvas.width = this.canvasW;
     this.canvas.height = this.canvasH;
