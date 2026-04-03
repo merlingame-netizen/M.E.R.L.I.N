@@ -208,10 +208,15 @@ export class MinigameCombatRituel extends MinigameBase {
     this.elapsedTime += dt;
     this.pulsePhase += dt;
 
-    // Update obstacle angles
+    // Progressive difficulty: obstacles accelerate exponentially from 1.0x to 2.5x over 10s
+    // Easing: cubic — gentle start, steep end (satisfying escalation without early frustration)
+    const timeRatio = Math.min(1, this.elapsedTime / this.totalTime);
+    const speedMult = 1.0 + (timeRatio * timeRatio * timeRatio) * 1.5;
+
+    // Update obstacle angles with progressive speed multiplier
     this.obstacles = this.obstacles.map((obs) => ({
       ...obs,
-      angle: obs.angle + obs.speed * dt,
+      angle: obs.angle + obs.speed * speedMult * dt,
     }));
 
     // Check collision

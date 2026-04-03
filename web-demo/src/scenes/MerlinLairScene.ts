@@ -591,8 +591,7 @@ function createSkull(): THREE.Group {
   return group;
 }
 
-// ── T076: Lair Density — extra shelves, moonlight shaft, parchment ───────────
-
+// ── T076: Lair Density ────────────────────────────────────────────────────────
 function createLairDensity(scene: THREE.Scene): void {
   const sM = new THREE.MeshStandardMaterial({ color: 0x3d2b1a, roughness: 0.85, metalness: 0.0 });
   const bC = [0x6b1a1a, 0x1a3a6b, 0x2a5a1a, 0x5a4a10, 0x3a1060];
@@ -620,8 +619,7 @@ function createLairDensity(scene: THREE.Scene): void {
   }
 }
 
-// ── Ambient Lighting — AAA 5-source pass (Cycle 31) ─────────────────────────
-
+// ── Ambient Lighting — 5-source pass ────────────────────────────────────────
 function setupLighting(scene: THREE.Scene): void {
   scene.add(new THREE.AmbientLight(0x1a1008, 0.5));                          // dark warm base
   const key = new THREE.PointLight(0xff6618, 1.1, 22, 1.6);
@@ -635,9 +633,7 @@ function setupLighting(scene: THREE.Scene): void {
 }
 
 // ── Main Export ──────────────────────────────────────────────────────────────
-
 export function initMerlinLair(container: HTMLElement): LairResult {
-  // Renderer
   const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: false });
   renderer.setSize(container.clientWidth, container.clientHeight);
   renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
@@ -718,11 +714,15 @@ export function initMerlinLair(container: HTMLElement): LairResult {
       if (currentHovered) {
         currentHovered.hovered = false;
         currentHovered.mesh.scale.setScalar(1.0);
+        const prevMat = (currentHovered.mesh as THREE.Mesh).material as THREE.MeshStandardMaterial;
+        if (prevMat?.emissive) prevMat.emissiveIntensity = 0.15; // restore base emissive
       }
       currentHovered = found;
       if (currentHovered) {
         currentHovered.hovered = true;
         currentHovered.mesh.scale.setScalar(1.05);
+        const mat = (currentHovered.mesh as THREE.Mesh).material as THREE.MeshStandardMaterial;
+        if (mat?.emissive) mat.emissiveIntensity = 0.65; // hover glow feedback < 50ms
         renderer.domElement.style.cursor = 'pointer';
       } else {
         renderer.domElement.style.cursor = 'default';
