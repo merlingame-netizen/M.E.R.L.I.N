@@ -85,6 +85,7 @@ export class MinigameCombatRituel extends MinigameBase {
     this.canvas = document.createElement('canvas');
     this.canvas.setAttribute('aria-label', 'Arène de combat rituel — déplacez le curseur pour esquiver les obstacles');
     this.canvas.setAttribute('role', 'application');
+    this.canvas.tabIndex = 0; // required for keyboard events to fire on canvas
     this.canvas.width = this.canvasW;
     this.canvas.height = this.canvasH;
     this.canvas.style.cssText = 'border-radius:50%;background:rgba(15,15,25,0.9);border:2px solid rgba(139,32,32,0.4);cursor:none;display:block;margin:0 auto;touch-action:none;';

@@ -76,6 +76,7 @@ export class MinigameRunes extends MinigameBase {
     this.canvas = document.createElement('canvas');
     this.canvas.setAttribute('aria-label', 'Minigame Runes — tracez la rune correcte sur le canvas');
     this.canvas.setAttribute('role', 'application');
+    this.canvas.tabIndex = 0; // required for keyboard events to fire on canvas
     this.canvas.width = canvasWidth;
     this.canvas.height = canvasHeight;
     this.canvas.style.cssText = 'border-radius:12px;background:rgba(20,20,30,0.8);border:1px solid rgba(205,133,63,0.3);cursor:pointer;display:block;margin:0 auto;touch-action:none;';

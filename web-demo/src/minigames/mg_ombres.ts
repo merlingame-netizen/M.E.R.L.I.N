@@ -75,6 +75,7 @@ export class MinigameOmbres extends MinigameBase {
     this.canvas = document.createElement('canvas');
     this.canvas.setAttribute('aria-label', 'Minigame Ombres — naviguez dans le couloir en evitant les zones de lumiere');
     this.canvas.setAttribute('role', 'application');
+    this.canvas.tabIndex = 0; // required for keyboard events to fire on canvas
     this.canvas.width = this.canvasW;
     this.canvas.height = this.canvasH;
     this.canvas.style.cssText = 'border-radius:12px;background:rgba(10,10,20,0.95);border:2px solid rgba(80,60,120,0.4);cursor:none;display:block;margin:0 auto;touch-action:none;';

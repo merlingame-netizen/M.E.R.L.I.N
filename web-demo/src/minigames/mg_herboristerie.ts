@@ -118,6 +118,7 @@ export class MinigameHerboristerie extends MinigameBase {
     this.canvas = document.createElement('canvas');
     this.canvas.setAttribute('aria-label', `Herboristerie — cliquez sur les plantes ${this.targetPlant.name || ''} et évitez les plantes toxiques`);
     this.canvas.setAttribute('role', 'application');
+    this.canvas.tabIndex = 0; // required for keyboard events to fire on canvas
     this.canvas.width = this.canvasW;
     this.canvas.height = this.canvasH;
     this.canvas.style.cssText = 'border-radius:12px;background:rgba(20,25,15,0.85);border:1px solid rgba(90,154,90,0.3);cursor:pointer;display:block;margin:0 auto;touch-action:none;';
