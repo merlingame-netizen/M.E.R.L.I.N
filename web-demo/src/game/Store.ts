@@ -82,6 +82,9 @@ export interface GameActions {
   tickCooldowns: () => void;
   endRun: (ending?: string) => void;
   checkDeath: () => boolean;
+  addPromise: (id: string, deadlineCards: number) => void;
+  fulfillPromise: (id: string) => void;
+  breakPromise: (id: string) => void;
   reset: () => void;
 }
 
@@ -294,6 +297,34 @@ export const store = createStore<MerlinStore>((set, get) => ({
     }
     return { run: { ...s.run, oghamCooldowns: newCooldowns } };
   }),
+
+  addPromise: (id, deadlineCards) => set((s) => ({
+    run: {
+      ...s.run,
+      promises: [
+        ...s.run.promises,
+        { id, madeAtCard: s.run.cardsPlayed, deadlineCards, status: 'active' as const },
+      ],
+    },
+  })),
+
+  fulfillPromise: (id) => set((s) => ({
+    run: {
+      ...s.run,
+      promises: s.run.promises.map((p) =>
+        p.id === id && p.status === 'active' ? { ...p, status: 'fulfilled' as const } : p
+      ),
+    },
+  })),
+
+  breakPromise: (id) => set((s) => ({
+    run: {
+      ...s.run,
+      promises: s.run.promises.map((p) =>
+        p.id === id && p.status === 'active' ? { ...p, status: 'broken' as const } : p
+      ),
+    },
+  })),
 
   endRun: (ending) => set((s) => ({
     phase: 'end' as GamePhase,

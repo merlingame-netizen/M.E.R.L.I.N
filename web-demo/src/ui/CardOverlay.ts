@@ -103,6 +103,7 @@ function buildFactionDot(option: CardOption): HTMLElement | null {
       const delta = Number(parts[2] ?? 0);
       const dot = document.createElement('span');
       dot.className = 'faction-dot';
+      dot.setAttribute('role', 'img');
       dot.style.backgroundColor = getFactionColour(parts[1]);
       // Negative delta: dimmed + dashed border so the player notices the cost
       if (delta < 0) {

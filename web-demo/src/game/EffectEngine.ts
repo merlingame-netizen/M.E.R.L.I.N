@@ -138,6 +138,23 @@ export function applyEffects(effects: readonly string[], multiplier = 1.0): Effe
         applied.push(effectStr);
         break;
       }
+      case 'ADD_PROMISE': {
+        const promiseId = args[0] ?? '';
+        const deadline = parseInt(args[1] ?? '5', 10) || 5;
+        store.getState().addPromise(promiseId, deadline);
+        applied.push(effectStr);
+        break;
+      }
+      case 'FULFILL_PROMISE': {
+        store.getState().fulfillPromise(args[0] ?? '');
+        applied.push(effectStr);
+        break;
+      }
+      case 'BREAK_PROMISE': {
+        store.getState().breakPromise(args[0] ?? '');
+        applied.push(effectStr);
+        break;
+      }
       case 'PLAY_SFX':
       case 'SHOW_DIALOG':
         // Fire-and-forget UI effects — handled by UI layer
@@ -145,8 +162,8 @@ export function applyEffects(effects: readonly string[], multiplier = 1.0): Effe
         break;
       default:
         // Known future codes (ADD_KARMA, ADD_TENSION, PROGRESS_MISSION, SET_FLAG,
-        // ADD_TAG, REMOVE_TAG, ADD_PROMISE, FULFILL_PROMISE, BREAK_PROMISE, UNLOCK_OGHAM)
-        // reach here as no-ops — state is unchanged. Warn so authors notice.
+        // ADD_TAG, REMOVE_TAG, UNLOCK_OGHAM) reach here as no-ops — state unchanged.
+        // Warn so card authors notice.
         console.warn(`[EffectEngine] No-op effect (not yet implemented): ${code}`);
         applied.push(effectStr);
         break;
