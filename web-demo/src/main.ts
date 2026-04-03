@@ -21,7 +21,7 @@ import { showRunSummary } from './ui/RunSummary';
 import { initMainMenu } from './scenes/MainMenuScene';
 import { initMerlinLair } from './scenes/MerlinLairScene';
 import { cutToBlack, revealFromBlack } from './ui/SceneTransition';
-import { initSFXManager, startAmbient, stopAmbient } from './audio/SFXManager';
+import { initSFXManager, startAmbient, stopAmbient, biomeToAmbient } from './audio/SFXManager';
 
 // --- Config ---
 const WALK_SECONDS_BEFORE_CARD = 6; // Seconds of walking before showing a card
@@ -399,8 +399,8 @@ async function main(): Promise<void> {
     // Start renderer
     sceneManager.start();
 
-    // T066: Start forest ambient (wind + bird chirps) as game world reveals
-    startAmbient('forest');
+    // T066+C75: Start biome-matched ambient audio as game world reveals
+    startAmbient(biomeToAmbient(chosenBiome));
 
     // Hide loading screen and reveal game (clear scene-transition black overlay)
     loading.style.opacity = '0';

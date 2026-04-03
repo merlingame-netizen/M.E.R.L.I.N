@@ -6,7 +6,7 @@
 // ═══════════════════════════════════════════════════════════════════════════════
 
 type SFXName = 'flip' | 'win' | 'lose' | 'unlock' | 'end';
-type AmbientType = 'menu' | 'forest';
+type AmbientType = 'menu' | 'forest' | 'wind' | 'rain';
 
 interface SFXEvent {
   sound: SFXName;
@@ -242,6 +242,49 @@ function playBirdChirp(ctx: AudioContext, master: GainNode): void {
 }
 
 /**
+ * Single rain drop: a short white-noise burst band-passed to 800-2000Hz, 80ms.
+ */
+function playRainDrop(ctx: AudioContext, master: GainNode): void {
+  const t = ctx.currentTime;
+  const bufSize = Math.floor(ctx.sampleRate * 0.08);
+  const buf = ctx.createBuffer(1, bufSize, ctx.sampleRate);
+  const data = buf.getChannelData(0);
+  for (let i = 0; i < bufSize; i++) data[i] = Math.random() * 2 - 1;
+  const src = ctx.createBufferSource();
+  src.buffer = buf;
+  const bpf = ctx.createBiquadFilter();
+  bpf.type = 'bandpass';
+  bpf.frequency.setValueAtTime(1200, t);
+  bpf.Q.value = 0.8;
+  const dropGain = ctx.createGain();
+  dropGain.gain.setValueAtTime(0, t);
+  dropGain.gain.linearRampToValueAtTime(0.04, t + 0.005);
+  dropGain.gain.linearRampToValueAtTime(0, t + 0.08);
+  src.connect(bpf);
+  bpf.connect(dropGain);
+  dropGain.connect(master);
+  src.start(t);
+  src.stop(t + 0.09);
+}
+
+/** Schedule rain drops at random 0.3-1.4s intervals (dense rain texture). */
+function scheduleRainDrops(
+  ctx: AudioContext,
+  master: GainNode,
+  session: AmbientSession
+): void {
+  const scheduleNext = (): void => {
+    const delayMs = (0.3 + Math.random() * 1.1) * 1000;
+    session.birdTimer = setTimeout(() => {
+      if (!ambientSession) return;
+      try { playRainDrop(ctx, master); } catch { /* silent fail */ }
+      scheduleNext();
+    }, delayMs);
+  };
+  scheduleNext();
+}
+
+/**
  * Start looping bird chirps at random 4-12s intervals.
  * Returns the handle so we can cancel it.
  */
@@ -263,8 +306,10 @@ function scheduleBirds(
 
 /**
  * T066 — Start procedural ambient audio.
- * 'menu':   55Hz drone + lowpass wind (400Hz cutoff). Gain 0.05.
- * 'forest': 65Hz drone + lowpass wind (350Hz cutoff) + bird chirps. Gain 0.05.
+ * 'menu':   55Hz drone + lowpass wind (400Hz). Gain 0.05.
+ * 'forest': 65Hz drone + lowpass wind (350Hz) + bird chirps. Gain 0.05.
+ * 'wind':   42Hz drone + lowpass wind (700Hz, airy coastal feel). Gain 0.05. No birds.
+ * 'rain':   50Hz drone + lowpass wind (500Hz) + dense rain drop bursts. Gain 0.05.
  * Silent-fails if AudioContext unavailable (browser policy, no interaction yet).
  */
 export function startAmbient(type: AmbientType): void {
@@ -287,15 +332,23 @@ export function startAmbient(type: AmbientType): void {
     master.gain.linearRampToValueAtTime(targetGain, ctx.currentTime + 2.0); // 2s fade-in
     master.connect(ctx.destination);
 
-    const droneFreq = type === 'menu' ? 55 : 65;
-    const windCutoff = type === 'menu' ? 400 : 350;
+    const droneFreq =
+      type === 'menu' ? 55 :
+      type === 'wind' ? 42 :
+      type === 'rain' ? 50 : 65;
+    const windCutoff =
+      type === 'menu' ? 400 :
+      type === 'wind' ? 700 :
+      type === 'rain' ? 500 : 350;
+    const droneGainVal =
+      type === 'wind' ? 0.2 : 0.3; // coastal wind feels less grounded
 
     // Low drone oscillator (sine, very quiet)
     const drone = ctx.createOscillator();
     drone.type = 'sine';
     drone.frequency.setValueAtTime(droneFreq, ctx.currentTime);
     const droneGain = ctx.createGain();
-    droneGain.gain.setValueAtTime(0.3, ctx.currentTime);
+    droneGain.gain.setValueAtTime(droneGainVal, ctx.currentTime);
     drone.connect(droneGain);
     droneGain.connect(master);
     drone.start(ctx.currentTime);
@@ -310,7 +363,7 @@ export function startAmbient(type: AmbientType): void {
     harmonicGain.connect(master);
     harmonic.start(ctx.currentTime);
 
-    // Wind noise
+    // Wind / rain noise layer
     const noiseSource = createWindNoise(ctx, master, windCutoff);
 
     const session: AmbientSession = {
@@ -322,13 +375,33 @@ export function startAmbient(type: AmbientType): void {
 
     ambientSession = session;
 
-    // Forest only: schedule bird chirps
     if (type === 'forest') {
       scheduleBirds(ctx, master, session);
+    } else if (type === 'rain') {
+      scheduleRainDrops(ctx, master, session);
     }
+    // 'wind' and 'menu': no stochastic events — pure noise + drone
   } catch {
     // Silent-fail — audio is non-critical
   }
+}
+
+/**
+ * Map a biome ID to the nearest available AmbientType.
+ * Exported so main.ts can call startAmbient(biomeToAmbient(chosenBiome)).
+ */
+export function biomeToAmbient(biomeId: string): AmbientType {
+  const map: Readonly<Record<string, AmbientType>> = {
+    cotes_sauvages:    'wind',    // coastal cliffs — sea wind
+    foret_broceliande: 'forest',  // deep forest — birds + drone
+    marais_korrigans:  'rain',    // swamp — rain drops + mist
+    landes_bruyere:    'wind',    // moorland — exposed wind
+    cercles_pierres:   'wind',    // open stone circles — wind
+    villages_celtes:   'forest',  // sheltered village — ambient forest
+    collines_dolmens:  'wind',    // hilltop dolmens — wind
+    iles_mystiques:    'wind',    // islands — sea wind
+  };
+  return map[biomeId] ?? 'forest';
 }
 
 /**
