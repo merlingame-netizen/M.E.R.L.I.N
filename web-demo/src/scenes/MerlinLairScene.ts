@@ -300,7 +300,9 @@ function createCandles(scene: THREE.Scene): { candles: CandleData[]; group: THRE
     [3, -4.85, -6],
   ];
 
-  const candleMat = new THREE.MeshStandardMaterial({
+  // candleBaseMat is a template only — each body gets its own clone() to prevent
+  // emissive hover bleed across all 3 candles (BUG-L-CANDLE-SHARED-MAT).
+  const candleBaseMat = new THREE.MeshStandardMaterial({
     color: 0xeedd99,
     roughness: 0.9,
     metalness: 0.0,
@@ -325,7 +327,8 @@ function createCandles(scene: THREE.Scene): { candles: CandleData[]; group: THRE
     const [cx, cy, cz] = candlePositions[i]!;
 
     // Candle body + wick added to group (hidden when bougie.glb loads)
-    const body = new THREE.Mesh(new THREE.CylinderGeometry(0.1, 0.12, 0.7, 8), candleMat);
+    // candleBaseMat.clone() ensures each body has an independent material ref.
+    const body = new THREE.Mesh(new THREE.CylinderGeometry(0.1, 0.12, 0.7, 8), candleBaseMat.clone());
     body.position.set(cx, cy, cz);
     group.add(body);
 
@@ -368,7 +371,9 @@ function createCandles(scene: THREE.Scene): { candles: CandleData[]; group: THRE
     });
 
     const points = new THREE.Points(geo, particleMat);
-    scene.add(points);
+    // BUG-L-10-CANDLE-MAT fix: add to group (not scene) so particles are hidden
+    // when bougie.glb loads and candleGroup.visible = false.
+    group.add(points);
 
     candles.push({
       light,
