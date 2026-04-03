@@ -238,8 +238,8 @@ export const store = createStore<MerlinStore>((set, get) => ({
   }),
 
   addAnam: (amount) => set((s) => ({
-    run: { ...s.run, anamThisRun: s.run.anamThisRun + amount },
-    meta: { ...s.meta, anam: s.meta.anam + amount },
+    run: { ...s.run, anamThisRun: Math.max(0, s.run.anamThisRun + amount) },
+    meta: { ...s.meta, anam: Math.max(0, s.meta.anam + amount) },
   })),
 
   addBiomeCurrency: (amount) => set((s) => ({

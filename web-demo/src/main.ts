@@ -348,8 +348,9 @@ async function gameLoop(
     if (!state().run.active) break;
 
     // 2. DRAIN life (T038: -1 base, -2 after card 15, -3 after card 25)
-    state().drainLifeScaled();
+    // incrementCardsPlayed FIRST so drainLifeScaled reads the correct tier
     state().incrementCardsPlayed();
+    state().drainLifeScaled();
     updateHUD();
 
     // 3. Check death after drain
@@ -485,7 +486,7 @@ async function gameLoop(
 
     // Reset rail if complete — play audio cue so player notices world cycling
     if (rail.isComplete()) {
-      playSound('ambient_transition');
+      playSound('unlock'); // audio cue: world is cycling before victory threshold
       rail.reset();
     }
   }
@@ -797,12 +798,12 @@ document.addEventListener('keydown', (evt: KeyboardEvent) => {
 });
 
 // --- SFX event bus (T056) ---
-// Dispatches a CustomEvent on window so any future audio layer can listen
-// without coupling to the game loop. No actual audio is produced here.
-// Usage: window.addEventListener('merlin_sfx', (e) => { /* e.detail.type */ });
+// Dispatches a CustomEvent on window consumed by SFXManager (initSFXManager).
+// SFXManager reads e.detail.sound — key MUST match SFXEvent interface.
+// Registered sounds: flip | win | lose | unlock | end
 
 export function playSound(type: string): void {
-  window.dispatchEvent(new CustomEvent('merlin_sfx', { detail: { type } }));
+  window.dispatchEvent(new CustomEvent('merlin_sfx', { detail: { sound: type } }));
 }
 
 // --- Start ---
