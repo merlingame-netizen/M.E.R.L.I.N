@@ -207,7 +207,8 @@ export abstract class MinigameBase {
     if (this.finished) return;  // BUG-05: idempotent guard
     this.finished = true;
 
-    const clamped = Math.max(0, Math.min(100, Math.round(score)));
+    const safe = Number.isFinite(score) ? score : 0;
+    const clamped = Math.max(0, Math.min(100, Math.round(safe)));
     const level = scoreToOutcome(clamped);
     const timeSpent = (performance.now() - this.startTime) / 1000;
 
