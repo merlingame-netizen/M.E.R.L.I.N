@@ -99,6 +99,11 @@ export class MinigameNegociation extends MinigameBase {
     // Timer bar
     const timerBar = document.createElement('div');
     timerBar.id = 'mg-nego-timer';
+    timerBar.setAttribute('role', 'progressbar');
+    timerBar.setAttribute('aria-label', 'Temps restant');
+    timerBar.setAttribute('aria-valuemin', '0');
+    timerBar.setAttribute('aria-valuemax', '100');
+    timerBar.setAttribute('aria-valuenow', '100');
     timerBar.style.cssText = `width:min(${this.canvasW}px,100%);max-width:${this.canvasW}px;height:8px;background:rgba(255,255,255,0.1);border-radius:4px;margin:0 auto 8px;overflow:hidden;`;
     const timerFill = document.createElement('div');
     timerFill.id = 'mg-nego-timer-fill';
@@ -148,6 +153,8 @@ export class MinigameNegociation extends MinigameBase {
       const pct = Math.max(0, (this.timeLeft / this.totalTime) * 100);
       const fill = document.getElementById('mg-nego-timer-fill');
       if (fill) fill.style.width = `${pct}%`;
+      const bar = document.getElementById('mg-nego-timer');
+      if (bar) bar.setAttribute('aria-valuenow', String(Math.round(pct)));
       if (this.timeLeft <= 0) {
         this.endGame();
       }

@@ -63,6 +63,11 @@ export class MinigameEquilibre extends MinigameBase {
     // Timer bar
     const timerBar = document.createElement('div');
     timerBar.id = 'mg-eq-timer';
+    timerBar.setAttribute('role', 'progressbar');
+    timerBar.setAttribute('aria-label', 'Temps restant');
+    timerBar.setAttribute('aria-valuemin', '0');
+    timerBar.setAttribute('aria-valuemax', '100');
+    timerBar.setAttribute('aria-valuenow', '100');
     timerBar.style.cssText = 'width:min(400px,100%);height:8px;background:rgba(255,255,255,0.1);border-radius:4px;margin:0 auto 12px;overflow:hidden;';
     const timerFill = document.createElement('div');
     timerFill.id = 'mg-eq-timer-fill';
@@ -104,6 +109,8 @@ export class MinigameEquilibre extends MinigameBase {
       const pct = Math.max(0, (this.timeLeft / this.totalTime) * 100);
       const fill = document.getElementById('mg-eq-timer-fill');
       if (fill) fill.style.width = `${pct}%`;
+      const bar = document.getElementById('mg-eq-timer');
+      if (bar) bar.setAttribute('aria-valuenow', String(Math.round(pct)));
       if (this.timeLeft <= 0) {
         this.endGame();
       }

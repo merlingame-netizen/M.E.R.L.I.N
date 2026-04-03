@@ -53,6 +53,7 @@ export class MinigameCourse extends MinigameBase {
   // Game state
   private currentRound = 0;
   private hits = 0;
+  private roundOutcomes: boolean[] = [];
   private roundElapsed = 0;
   private roundActive = false;
   private target: RoundTarget | null = null;
@@ -112,6 +113,7 @@ export class MinigameCourse extends MinigameBase {
     // Reset state
     this.currentRound = 0;
     this.hits = 0;
+    this.roundOutcomes = [];
     this.roundElapsed = 0;
     this.roundActive = false;
     this.target = null;
@@ -182,6 +184,7 @@ export class MinigameCourse extends MinigameBase {
 
     if (dist <= this.hitRadius) {
       this.hits++;
+      this.roundOutcomes = [...this.roundOutcomes, true];
       this.feedback = 'hit';
       this.feedbackTimer = 0.4;
       this.roundActive = false;
@@ -194,6 +197,7 @@ export class MinigameCourse extends MinigameBase {
         return Math.sqrt(ddx * ddx + ddy * ddy) <= this.hitRadius;
       });
       if (clickedDecoy) {
+        this.roundOutcomes = [...this.roundOutcomes, false];
         this.feedback = 'miss';
         this.feedbackTimer = 0.4;
         this.roundActive = false;
@@ -255,6 +259,7 @@ export class MinigameCourse extends MinigameBase {
       this.roundElapsed += dt;
       if (this.roundElapsed >= this.roundTime) {
         // Time expired -- miss
+        this.roundOutcomes = [...this.roundOutcomes, false];
         this.feedback = 'miss';
         this.feedbackTimer = 0.3;
         this.roundActive = false;
@@ -385,11 +390,9 @@ export class MinigameCourse extends MinigameBase {
       ctx.beginPath();
       ctx.arc(dx, dotY, 6, 0, Math.PI * 2);
       if (i < this.currentRound) {
-        // Completed round
-        ctx.fillStyle = i < this.hits + (this.currentRound - this.hits - (i >= this.hits ? 0 : 0))
+        // Completed round — green for hit, red for miss, per roundOutcomes[]
+        ctx.fillStyle = this.roundOutcomes[i]
           ? 'rgba(80,180,80,0.7)' : 'rgba(200,60,60,0.5)';
-        // Simpler: track hits order... just color based on result
-        ctx.fillStyle = 'rgba(140,130,120,0.5)';
         ctx.fill();
       } else if (i === this.currentRound) {
         // Current round

@@ -57,6 +57,11 @@ export class MinigameRunes extends MinigameBase {
     // Timer bar
     const timerBar = document.createElement('div');
     timerBar.id = 'mg-runes-timer';
+    timerBar.setAttribute('role', 'progressbar');
+    timerBar.setAttribute('aria-label', 'Temps restant');
+    timerBar.setAttribute('aria-valuemin', '0');
+    timerBar.setAttribute('aria-valuemax', '100');
+    timerBar.setAttribute('aria-valuenow', '100');
     timerBar.style.cssText = 'width:min(380px,100%);height:8px;background:rgba(255,255,255,0.1);border-radius:4px;margin:0 auto 16px;overflow:hidden;';
     const timerFill = document.createElement('div');
     timerFill.id = 'mg-runes-timer-fill';
@@ -80,8 +85,7 @@ export class MinigameRunes extends MinigameBase {
     // Generate tiles: 8 pairs = 16 tiles in a 4x4 grid
     this.generateTiles();
 
-    // Click + touch handler (pointerdown covers mouse and touch devices)
-    this.canvas.addEventListener('click', this.onClick);
+    // pointerdown covers mouse, touch and stylus — no 'click' needed (avoids double-fire on desktop)
     this.canvas.addEventListener('pointerdown', this.onClick);
 
     // Timer
@@ -95,6 +99,8 @@ export class MinigameRunes extends MinigameBase {
       const pct = Math.max(0, (this.timeLeft / this.totalTime) * 100);
       const fill = document.getElementById('mg-runes-timer-fill');
       if (fill) fill.style.width = `${pct}%`;
+      const bar = document.getElementById('mg-runes-timer');
+      if (bar) bar.setAttribute('aria-valuenow', String(Math.round(pct)));
       if (this.timeLeft <= 0) {
         this.endGame();
       }
@@ -187,7 +193,6 @@ export class MinigameRunes extends MinigameBase {
     clearInterval(this.timerInterval);
     clearTimeout(this.revealTimeout);
     cancelAnimationFrame(this.animFrame);
-    this.canvas?.removeEventListener('click', this.onClick);
     this.canvas?.removeEventListener('pointerdown', this.onClick);
 
     // Score: base on pairs found + time bonus
@@ -288,7 +293,6 @@ export class MinigameRunes extends MinigameBase {
     clearInterval(this.timerInterval);
     clearTimeout(this.revealTimeout);
     cancelAnimationFrame(this.animFrame);
-    this.canvas?.removeEventListener('click', this.onClick);
     this.canvas?.removeEventListener('pointerdown', this.onClick);
     super.cleanup();
   }

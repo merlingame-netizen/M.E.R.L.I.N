@@ -69,6 +69,12 @@ export class MinigameVolonte extends MinigameBase {
 
     // Timer bar
     const timerBar = document.createElement('div');
+    timerBar.id = 'mg-volonte-timer';
+    timerBar.setAttribute('role', 'progressbar');
+    timerBar.setAttribute('aria-label', 'Temps restant');
+    timerBar.setAttribute('aria-valuemin', '0');
+    timerBar.setAttribute('aria-valuemax', '100');
+    timerBar.setAttribute('aria-valuenow', '100');
     timerBar.style.cssText = `width:min(${this.canvasW}px,100%);max-width:${this.canvasW}px;height:8px;background:rgba(255,255,255,0.1);border-radius:4px;margin:0 auto 8px;overflow:hidden;`;
     const timerFill = document.createElement('div');
     timerFill.id = 'mg-volonte-timer-fill';
@@ -115,6 +121,8 @@ export class MinigameVolonte extends MinigameBase {
       const pct = Math.max(0, (this.timeLeft / this.totalTime) * 100);
       const fill = document.getElementById('mg-volonte-timer-fill');
       if (fill) fill.style.width = `${pct}%`;
+      const bar = document.getElementById('mg-volonte-timer');
+      if (bar) bar.setAttribute('aria-valuenow', String(Math.round(pct)));
       if (this.timeLeft <= 0) {
         this.endGame();
       }
@@ -227,9 +235,12 @@ export class MinigameVolonte extends MinigameBase {
       const pulse = Math.sin(age * d.pulseSpeed) * 0.5 + 0.5;
       const currentSize = d.size * (0.8 + pulse * 0.4);
 
-      // Glow
+      // Glow — convert hex color (#rrggbb) to rgba for alpha support
+      const r = parseInt(d.color.slice(1, 3), 16);
+      const g = parseInt(d.color.slice(3, 5), 16);
+      const b = parseInt(d.color.slice(5, 7), 16);
       const glow = ctx.createRadialGradient(d.x, d.y, 0, d.x, d.y, currentSize * 1.5);
-      glow.addColorStop(0, d.color.replace(')', `,${alpha * 0.3})`).replace('rgb', 'rgba'));
+      glow.addColorStop(0, `rgba(${r},${g},${b},${alpha * 0.3})`);
       glow.addColorStop(1, 'rgba(0,0,0,0)');
       ctx.fillStyle = glow;
       ctx.beginPath();

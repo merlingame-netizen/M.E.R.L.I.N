@@ -67,8 +67,7 @@ export class MinigameTraces extends MinigameBase {
       this.footprints.push({ x, y, index: i, hit: false });
     }
 
-    // Click + touch handler (pointerdown covers mouse and touch devices)
-    this.canvas.addEventListener('click', this.onClick);
+    // pointerdown covers mouse, touch and stylus — no 'click' needed (avoids double-fire on desktop)
     this.canvas.addEventListener('pointerdown', this.onClick);
 
     // Timer
@@ -78,6 +77,8 @@ export class MinigameTraces extends MinigameBase {
       const pct = Math.max(0, (this.timeLeft / this.totalTime) * 100);
       const fill = document.getElementById('mg-timer-fill');
       if (fill) fill.style.width = `${pct}%`;
+      const bar = document.getElementById('mg-timer');
+      if (bar) bar.setAttribute('aria-valuenow', String(Math.round(pct)));
       if (this.timeLeft <= 0) {
         this.endGame();
       }
@@ -106,7 +107,6 @@ export class MinigameTraces extends MinigameBase {
   private endGame(): void {
     clearInterval(this.timerInterval);
     cancelAnimationFrame(this.animFrame);
-    this.canvas?.removeEventListener('click', this.onClick);
     this.canvas?.removeEventListener('pointerdown', this.onClick);
 
     const hitCount = this.footprints.filter((f) => f.hit).length;
@@ -180,7 +180,6 @@ export class MinigameTraces extends MinigameBase {
   protected cleanup(): void {
     clearInterval(this.timerInterval);
     cancelAnimationFrame(this.animFrame);
-    this.canvas?.removeEventListener('click', this.onClick);
     this.canvas?.removeEventListener('pointerdown', this.onClick);
     super.cleanup();
   }
