@@ -338,6 +338,11 @@ async function gameLoop(
 ): Promise<void> {
   const state = store.getState;
 
+  // Resolve once before the loop — consistent with CardOverlay null-guard pattern (C61)
+  const minigameContainer = document.getElementById('minigame-container');
+  const minigameOverlay = document.getElementById('minigame-overlay');
+  if (!minigameContainer || !minigameOverlay) return;
+
   while (state().run.active) {
     // 1. WALK phase — camera moves along rail
     rail.resume();
@@ -411,8 +416,6 @@ async function gameLoop(
 
     // 5. MINIGAME phase
     const minigameId = detectMinigame(card, chosenOption);
-    const minigameContainer = document.getElementById('minigame-container')!;
-    const minigameOverlay = document.getElementById('minigame-overlay')!;
 
     let result = { score: 50 }; // neutral fallback
     try {

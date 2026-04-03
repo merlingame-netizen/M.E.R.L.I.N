@@ -83,7 +83,7 @@ function buildEffectTooltip(option: CardOption): HTMLElement | null {
 
     const icon = parsed.positive === true ? '▲' : parsed.positive === false ? '▼' : '◆';
 
-    line.innerHTML = `<span class="${cls}">${icon} ${parsed.label}</span>`;
+    line.innerHTML = `<span class="${cls}"><span aria-hidden="true">${icon}</span> ${parsed.label}</span>`;
     tooltip.appendChild(line);
   }
 
@@ -114,7 +114,7 @@ function buildFactionDot(option: CardOption): HTMLElement | null {
     }
   }
   if (dots.length === 0) return null;
-  if (dots.length === 1) return dots[0]!;
+  if (dots.length === 1) return dots[0] ?? null;
   // Multiple factions: wrap in a flex row
   const container = document.createElement('span');
   container.style.cssText = 'display:inline-flex;gap:2px;align-items:center;';

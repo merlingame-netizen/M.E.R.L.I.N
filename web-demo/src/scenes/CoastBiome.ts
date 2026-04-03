@@ -245,8 +245,6 @@ function createMenhirs(count: number): THREE.Group {
 
   for (let i = 0; i < count; i++) {
     const height = 2.5 + Math.random() * 3.5;
-    // Use DodecahedronGeometry scaled for organic stone look
-    const geo = new THREE.DodecahedronGeometry(0.28, 0);
     const menhir = new THREE.Mesh(new THREE.BoxGeometry(0.55, height, 0.38), mat);
     menhir.castShadow = true;
     menhir.position.set(
@@ -263,9 +261,6 @@ function createMenhirs(count: number): THREE.Group {
     moss.position.set(menhir.position.x, 0.07, menhir.position.z);
     moss.rotation.y = menhir.rotation.y;
     group.add(moss);
-
-    // Void the unused geo
-    geo.dispose();
   }
   return group;
 }
@@ -321,36 +316,32 @@ export async function buildCoastScene(): Promise<BiomeSceneResult> {
   group.add(createMenhirs(7));
   group.add(createFog());
 
-  // Try loading GLB assets (non-blocking — fallback to procedural if fails)
+  // Load GLB assets in parallel — Promise.allSettled so one failure doesn't block others
   const glbBase = '/assets/';
-  const glbFiles = ['cliff_unified.glb', 'cabin_unified.glb', 'crystal_cluster_unified.glb'];
+  const glbConfigs = [
+    { file: 'cliff_unified.glb',           pos: [15, -1, -15] as const, scale: 3   },
+    { file: 'cabin_unified.glb',           pos: [-5, 0,  -8]  as const, scale: 1.5 },
+    { file: 'crystal_cluster_unified.glb', pos: [8,  0,  -3]  as const, scale: 2   },
+  ];
 
-  for (const file of glbFiles) {
-    try {
-      const gltf = await loadGLB(glbBase + file);
-      const model = gltf.scene.clone();
-      // Enforce flat-shading consistency with procedural scene meshes
-      model.traverse((child) => {
-        if (child instanceof THREE.Mesh && child.material instanceof THREE.MeshStandardMaterial) {
-          (child.material as THREE.MeshStandardMaterial).flatShading = true;
-          (child.material as THREE.MeshStandardMaterial).needsUpdate = true;
-        }
-      });
-      // Position each model
-      if (file.includes('cliff')) {
-        model.position.set(15, -1, -15);
-        model.scale.setScalar(3);
-      } else if (file.includes('cabin')) {
-        model.position.set(-5, 0, -8);
-        model.scale.setScalar(1.5);
-      } else if (file.includes('crystal')) {
-        model.position.set(8, 0, -3);
-        model.scale.setScalar(2);
+  const glbResults = await Promise.allSettled(
+    glbConfigs.map(({ file }) => loadGLB(glbBase + file))
+  );
+  for (let i = 0; i < glbResults.length; i++) {
+    const r = glbResults[i];
+    const cfg = glbConfigs[i];
+    if (r.status !== 'fulfilled' || !cfg) continue;
+    const model = r.value.scene.clone();
+    // Enforce flat-shading consistency with procedural scene meshes
+    model.traverse((child) => {
+      if (child instanceof THREE.Mesh && child.material instanceof THREE.MeshStandardMaterial) {
+        (child.material as THREE.MeshStandardMaterial).flatShading = true;
+        (child.material as THREE.MeshStandardMaterial).needsUpdate = true;
       }
-      group.add(model);
-    } catch {
-      // GLB not available — procedural fallback already added
-    }
+    });
+    model.position.set(cfg.pos[0], cfg.pos[1], cfg.pos[2]);
+    model.scale.setScalar(cfg.scale);
+    group.add(model);
   }
 
   // Ocean animation — flat-shaded low-poly wave facets via vertex displacement
