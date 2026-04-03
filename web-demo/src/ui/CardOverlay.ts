@@ -94,21 +94,35 @@ function buildEffectTooltip(option: CardOption): HTMLElement | null {
 }
 
 /**
- * Build the primary faction dot for an option based on its first
- * ADD_REPUTATION effect (T067).
+ * Build faction dots for an option — one per ADD_REPUTATION effect (T067).
+ * Shows all faction impacts (positive and negative) so the player sees full trade-offs.
+ * Returns a container span with 1-N dots, or null if no reputation effects.
  */
 function buildFactionDot(option: CardOption): HTMLElement | null {
+  const dots: HTMLElement[] = [];
   for (const eff of option.effects) {
     const parts = (eff as string).split(':');
     if (parts[0] === 'ADD_REPUTATION' && parts[1]) {
+      const delta = Number(parts[2] ?? 0);
       const dot = document.createElement('span');
       dot.className = 'faction-dot';
       dot.style.backgroundColor = getFactionColour(parts[1]);
-      dot.title = parts[1];
-      return dot;
+      // Negative delta: dimmed + dashed border so the player notices the cost
+      if (delta < 0) {
+        dot.style.opacity = '0.55';
+        dot.style.outline = '1px dashed rgba(255,80,80,0.7)';
+      }
+      dot.title = `${parts[1]}${delta !== 0 ? ` (${delta > 0 ? '+' : ''}${delta})` : ''}`;
+      dots.push(dot);
     }
   }
-  return null;
+  if (dots.length === 0) return null;
+  if (dots.length === 1) return dots[0]!;
+  // Multiple factions: wrap in a flex row
+  const container = document.createElement('span');
+  container.style.cssText = 'display:inline-flex;gap:2px;align-items:center;';
+  dots.forEach((d) => container.appendChild(d));
+  return container;
 }
 
 // ── T047: Card flip animation ──────────────────────────────────────────────

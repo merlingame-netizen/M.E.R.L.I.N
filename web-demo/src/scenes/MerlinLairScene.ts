@@ -162,13 +162,13 @@ function createCrystalBall(): CrystalResult {
   pedestal.position.set(5, -2, -4);
   group.add(pedestal);
 
-  // Crystal sphere (also hit target)
-  const sphere = new THREE.Mesh(new THREE.SphereGeometry(0.7, 16, 16), crystalMat);
+  // Crystal sphere (also hit target) — 8×6 segments for readable low-poly facets
+  const sphere = new THREE.Mesh(new THREE.SphereGeometry(0.7, 8, 6), crystalMat);
   sphere.position.set(5, -1.0, -4);
   group.add(sphere);
 
-  // Purple glow
-  const light = new THREE.PointLight(0x9060cc, 2.5, 8, 2);
+  // Purple glow — range 5 to avoid bleeding onto back wall (was 8)
+  const light = new THREE.PointLight(0x9060cc, 2.5, 5, 2);
   light.position.set(5, -1.0, -4);
   group.add(light);
 
