@@ -16,6 +16,8 @@ interface InteractiveObject {
   mesh: THREE.Object3D;
   zone: LairZone;
   hovered: boolean;
+  visualMesh?: THREE.Mesh;   // visible mesh for emissive boost when hitTarget is invisible
+  baseEmissive?: number;     // emissiveIntensity to restore on unhover
 }
 
 export interface LairResult {
@@ -174,12 +176,12 @@ function createCrystalBall(): CrystalResult {
 
 // ── Bookshelf ─────────────────────────────────────────────────────────────────
 
-function createBookshelf(): { group: THREE.Group; hitTarget: THREE.Mesh } {
+function createBookshelf(): { group: THREE.Group; hitTarget: THREE.Mesh; frame: THREE.Mesh } {
   const group = new THREE.Group();
-  const shelfMat = new THREE.MeshStandardMaterial({ color: 0x3d2b1a, roughness: 0.85, metalness: 0.0, flatShading: true });
+  const shelfMat = new THREE.MeshStandardMaterial({ color: 0x3d2b1a, roughness: 0.85, metalness: 0.0, flatShading: true, emissive: 0x2a1a08, emissiveIntensity: 0.0 });
   const bookColors = [0x8b2020, 0x1a4a2a, 0x1a2a5a, 0x5a3a10, 0x4a1060, 0x6a2010];
 
-  // Shelf frame
+  // Shelf frame — also returned as visualMesh for emissive hover boost
   const frame = new THREE.Mesh(new THREE.BoxGeometry(3.5, 5.5, 0.8), shelfMat);
   frame.position.set(8, 0.5, -8);
   group.add(frame);
@@ -213,7 +215,7 @@ function createBookshelf(): { group: THREE.Group; hitTarget: THREE.Mesh } {
   hitTarget.position.set(8, 0.5, -7.65);
   group.add(hitTarget);
 
-  return { group, hitTarget };
+  return { group, hitTarget, frame };
 }
 
 // ── Door with Light Underneath ────────────────────────────────────────────────
@@ -222,11 +224,12 @@ interface DoorResult {
   group: THREE.Group;
   hitTarget: THREE.Mesh;
   lightBeam: THREE.PointLight;
+  doorPanel: THREE.Mesh;  // visible panel for emissive hover boost
 }
 
 function createDoor(): DoorResult {
   const group = new THREE.Group();
-  const doorMat = new THREE.MeshStandardMaterial({ color: 0x2e1f0e, roughness: 0.9, metalness: 0.05, flatShading: true });
+  const doorMat = new THREE.MeshStandardMaterial({ color: 0x2e1f0e, roughness: 0.9, metalness: 0.05, flatShading: true, emissive: 0x5a3010, emissiveIntensity: 0.05 });
   const ironMat = new THREE.MeshStandardMaterial({ color: 0x2a2828, roughness: 0.5, metalness: 0.7, flatShading: true });
   const lightMat = new THREE.MeshBasicMaterial({ color: 0xffdd88, transparent: true, opacity: 0.85 });
 
@@ -271,7 +274,7 @@ function createDoor(): DoorResult {
   hitTarget.position.set(-9.9, 0.5, 5.5);
   group.add(hitTarget);
 
-  return { group, hitTarget, lightBeam };
+  return { group, hitTarget, lightBeam, doorPanel: door };
 }
 
 // ── Candle System (T064) ──────────────────────────────────────────────────────
@@ -654,10 +657,10 @@ export function initMerlinLair(container: HTMLElement): LairResult {
   const crystalData = createCrystalBall();
   scene.add(crystalData.group);
 
-  const { group: shelfGroup, hitTarget: shelfHit } = createBookshelf();
+  const { group: shelfGroup, hitTarget: shelfHit, frame: shelfFrame } = createBookshelf();
   scene.add(shelfGroup);
 
-  const { group: doorGroup, hitTarget: doorHit, lightBeam: doorLight } = createDoor();
+  const { group: doorGroup, hitTarget: doorHit, lightBeam: doorLight, doorPanel } = createDoor();
   scene.add(doorGroup);
 
   const candles = createCandles(scene);
@@ -684,13 +687,13 @@ export function initMerlinLair(container: HTMLElement): LairResult {
   // Pass procedural groups so table_druidique.glb + bibliotheque.glb hide them on load (fixes z-fighting).
   loadLairGLBs(scene, { mapGroup, shelfGroup, floorMesh });
 
-  // Interactive zones for raycasting
+  // Interactive zones for raycasting (visualMesh = visible mesh for emissive boost)
   const interactives: InteractiveObject[] = [
-    { mesh: mapHit, zone: 'map', hovered: false },           // biome selection
-    { mesh: crystalData.hitTarget, zone: 'crystal', hovered: false },  // oghams equip
-    { mesh: shelfHit, zone: 'bookshelf', hovered: false },  // journal/lore
-    { mesh: doorHit, zone: 'door', hovered: false },         // start run
-    { mesh: cauldronHit, zone: 'cauldron', hovered: false }, // dialogue Merlin LLM
+    { mesh: mapHit,              zone: 'map',       hovered: false, baseEmissive: 0.15 },
+    { mesh: crystalData.hitTarget, zone: 'crystal', hovered: false, baseEmissive: 0.6  },
+    { mesh: shelfHit,            zone: 'bookshelf', hovered: false, visualMesh: shelfFrame, baseEmissive: 0.0 },
+    { mesh: doorHit,             zone: 'door',      hovered: false, visualMesh: doorPanel,  baseEmissive: 0.05 },
+    { mesh: cauldronHit,         zone: 'cauldron',  hovered: false, baseEmissive: 0.0 },
   ];
 
   const raycaster = new THREE.Raycaster();
@@ -708,7 +711,13 @@ export function initMerlinLair(container: HTMLElement): LairResult {
     return interactives.find((i) => i.mesh === hitObj || i.mesh.getObjectById(hitObj.id) !== undefined) ?? null;
   };
 
-  const onMouseMove = (e: MouseEvent): void => {
+  const applyHoverTo = (obj: InteractiveObject, intensity: number): void => {
+    const target = obj.visualMesh ?? (obj.mesh as THREE.Mesh);
+    const mat = target.material as THREE.MeshStandardMaterial;
+    if (mat?.emissive) mat.emissiveIntensity = intensity;
+  };
+
+  const onMouseMove = (e: { clientX: number; clientY: number }): void => {
     const rect = renderer.domElement.getBoundingClientRect();
     mouse.x = ((e.clientX - rect.left) / rect.width) * 2 - 1;
     mouse.y = -((e.clientY - rect.top) / rect.height) * 2 + 1;
@@ -717,15 +726,13 @@ export function initMerlinLair(container: HTMLElement): LairResult {
       if (currentHovered) {
         currentHovered.hovered = false;
         currentHovered.mesh.scale.setScalar(1.0);
-        const prevMat = (currentHovered.mesh as THREE.Mesh).material as THREE.MeshStandardMaterial;
-        if (prevMat?.emissive) prevMat.emissiveIntensity = 0.15; // restore base emissive
+        applyHoverTo(currentHovered, currentHovered.baseEmissive ?? 0.15);
       }
       currentHovered = found;
       if (currentHovered) {
         currentHovered.hovered = true;
         currentHovered.mesh.scale.setScalar(1.05);
-        const mat = (currentHovered.mesh as THREE.Mesh).material as THREE.MeshStandardMaterial;
-        if (mat?.emissive) mat.emissiveIntensity = 0.65; // hover glow feedback < 50ms
+        applyHoverTo(currentHovered, 0.65);
         renderer.domElement.style.cursor = 'pointer';
       } else {
         renderer.domElement.style.cursor = 'default';
@@ -733,7 +740,7 @@ export function initMerlinLair(container: HTMLElement): LairResult {
     }
   };
 
-  const onClick = (e: MouseEvent): void => {
+  const onPointerAction = (e: { clientX: number; clientY: number }): void => {
     const rect = renderer.domElement.getBoundingClientRect();
     mouse.x = ((e.clientX - rect.left) / rect.width) * 2 - 1;
     mouse.y = -((e.clientY - rect.top) / rect.height) * 2 + 1;
@@ -743,8 +750,22 @@ export function initMerlinLair(container: HTMLElement): LairResult {
     }
   };
 
+  // Touch → pointer bridge (BUG-L-06 fix)
+  const onTouchMove = (e: TouchEvent): void => {
+    e.preventDefault();
+    const t = e.touches[0] ?? e.changedTouches[0];
+    if (t) onMouseMove({ clientX: t.clientX, clientY: t.clientY });
+  };
+  const onTouchStart = (e: TouchEvent): void => {
+    e.preventDefault();
+    const t = e.touches[0] ?? e.changedTouches[0];
+    if (t) onPointerAction({ clientX: t.clientX, clientY: t.clientY });
+  };
+
   renderer.domElement.addEventListener('mousemove', onMouseMove);
-  renderer.domElement.addEventListener('click', onClick);
+  renderer.domElement.addEventListener('click', onPointerAction);
+  renderer.domElement.addEventListener('touchmove', onTouchMove, { passive: false });
+  renderer.domElement.addEventListener('touchstart', onTouchStart, { passive: false });
 
   // Update loop
   const update = (dt: number): void => {
@@ -780,7 +801,9 @@ export function initMerlinLair(container: HTMLElement): LairResult {
   const dispose = (): void => {
     window.removeEventListener('resize', onResize);
     renderer.domElement.removeEventListener('mousemove', onMouseMove);
-    renderer.domElement.removeEventListener('click', onClick);
+    renderer.domElement.removeEventListener('click', onPointerAction);
+    renderer.domElement.removeEventListener('touchmove', onTouchMove);
+    renderer.domElement.removeEventListener('touchstart', onTouchStart);
     scene.traverse((obj) => {
       if (obj instanceof THREE.Mesh || obj instanceof THREE.Points) {
         obj.geometry.dispose();
