@@ -473,6 +473,7 @@ function createDustMotes(): DustSystem {
 // ── Cauldron with Green Steam ─────────────────────────────────────────────────
 
 interface CauldronSystem {
+  group: THREE.Group;
   glow: THREE.PointLight;
   positions: Float32Array;
   velocities: Float32Array;
@@ -492,18 +493,21 @@ function createCauldron(scene: THREE.Scene): CauldronSystem {
     depthWrite: false,
   });
 
+  const group = new THREE.Group();
+
   // Cauldron body
   const body = new THREE.Mesh(new THREE.SphereGeometry(0.65, 10, 8), ironMat);
   body.scale.y = 0.8;
   body.position.set(2, -3.8, -7);
-  scene.add(body);
+  group.add(body);
+  scene.add(group);
 
   // Legs
   const legDef: Array<[number, number]> = [[-0.4, -0.3], [0.4, -0.3], [0, 0.5]];
   for (const [lx, lz] of legDef) {
     const leg = new THREE.Mesh(new THREE.CylinderGeometry(0.06, 0.05, 0.5, 5), ironMat);
     leg.position.set(2 + lx, -4.4, -7 + lz);
-    scene.add(leg);
+    group.add(leg);
   }
 
   // Green glow
@@ -555,7 +559,7 @@ function createCauldron(scene: THREE.Scene): CauldronSystem {
     geo.attributes['position']!.needsUpdate = true;
   };
 
-  return { glow, positions, velocities, lifetimes, geo, update };
+  return { group, glow, positions, velocities, lifetimes, geo, update };
 }
 
 // ── Potion Bottles ────────────────────────────────────────────────────────────
@@ -687,7 +691,7 @@ export function initMerlinLair(container: HTMLElement): LairResult {
 
   // GLB asset overlays (async — procedural fallbacks remain if GLB unavailable).
   // Pass procedural groups so table_druidique.glb + bibliotheque.glb hide them on load (fixes z-fighting).
-  loadLairGLBs(scene, { mapGroup, shelfGroup, floorMesh, wallsGroup });
+  loadLairGLBs(scene, { mapGroup, shelfGroup, floorMesh, wallsGroup, cauldronGroup: cauldron.group });
 
   // Interactive zones for raycasting (visualMesh = visible mesh for emissive boost)
   const interactives: InteractiveObject[] = [

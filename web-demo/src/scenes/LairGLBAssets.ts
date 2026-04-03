@@ -15,7 +15,8 @@ export interface LairProceduralGroups {
   mapGroup: THREE.Group;
   shelfGroup: THREE.Group;
   floorMesh?: THREE.Mesh;
-  wallsGroup?: THREE.Group;  // full walls group hidden when mur_pierre.glb loads
+  wallsGroup?: THREE.Group;    // full walls group hidden when mur_pierre.glb loads
+  cauldronGroup?: THREE.Group; // procedural cauldron body+legs hidden when cauldron_merlin.glb loads
 }
 
 export function loadLairGLBs(
@@ -34,6 +35,7 @@ export function loadLairGLBs(
     gltf.scene.position.set(2, -4.65, -7);
     gltf.scene.scale.setScalar(0.72);
     scene.add(gltf.scene);
+    if (proceduralGroups?.cauldronGroup) proceduralGroups.cauldronGroup.visible = false;
   }).catch(() => { /* procedural cauldron remains */ });
 
   // Bougies: 3 instances, scale 0.42 for candle-height consistency
@@ -71,27 +73,33 @@ export function loadLairGLBs(
     if (proceduralGroups?.floorMesh) proceduralGroups.floorMesh.visible = false;
   }).catch(() => { /* procedural floor remains */ });
 
-  // Mur pierre: Blender stone wall tile (126 polys). Scaled to cover the back wall (24×16 units).
-  // Positioned 0.02 in front of the procedural back wall (z=-10) to avoid z-fighting.
-  // Left and right walls rotated 90° from the same GLB.
+  // Mur pierre: Blender stone tile (5 rows × 4 stones = 126 polys).
+  // Tiled in a grid to preserve stone aspect ratio (avoid 6× horizontal stretch).
+  // Back wall: 6 tiles × 4u wide = 24u total. Left/right: 5 tiles × 4u = 20u total.
   loadGLB('/mur_pierre.glb').then((gltf) => {
-    // Back wall
-    const back = gltf.scene.clone(true);
-    back.scale.set(24, 16, 1);
-    back.position.set(0, 3, -9.76);
-    scene.add(back);
-    // Left wall (rotated 90° around Y)
-    const left = gltf.scene.clone(true);
-    left.scale.set(20, 16, 1);
-    left.rotation.y = Math.PI / 2;
-    left.position.set(-11.76, 3, 0);
-    scene.add(left);
-    // Right wall (rotated -90° around Y)
-    const right = gltf.scene.clone(true);
-    right.scale.set(20, 16, 1);
-    right.rotation.y = -Math.PI / 2;
-    right.position.set(11.76, 3, 0);
-    scene.add(right);
+    // Back wall: 6 tiles side by side (z-offset 0.02 in front of procedural wall)
+    for (let i = 0; i < 6; i++) {
+      const tile = gltf.scene.clone(true);
+      tile.scale.set(4, 16, 1);
+      tile.position.set(-10 + i * 4, 3, -9.76);
+      scene.add(tile);
+    }
+    // Left wall: 5 tiles along depth, rotated 90°
+    for (let i = 0; i < 5; i++) {
+      const tile = gltf.scene.clone(true);
+      tile.scale.set(4, 16, 1);
+      tile.rotation.y = Math.PI / 2;
+      tile.position.set(-11.76, 3, -8 + i * 4);
+      scene.add(tile);
+    }
+    // Right wall: 5 tiles along depth, rotated -90°
+    for (let i = 0; i < 5; i++) {
+      const tile = gltf.scene.clone(true);
+      tile.scale.set(4, 16, 1);
+      tile.rotation.y = -Math.PI / 2;
+      tile.position.set(11.76, 3, -8 + i * 4);
+      scene.add(tile);
+    }
     if (proceduralGroups?.wallsGroup) proceduralGroups.wallsGroup.visible = false;
   }).catch(() => { /* procedural stone walls remain */ });
 }
