@@ -148,7 +148,7 @@ function createCrystalBall(): CrystalResult {
   const pedestalMat = new THREE.MeshStandardMaterial({ color: 0x2a2220, roughness: 0.6, metalness: 0.3, flatShading: true });
   const crystalMat = new THREE.MeshStandardMaterial({
     color: 0x9060cc,
-    roughness: 0.05,
+    roughness: 0.25,
     metalness: 0.1,
     transparent: true,
     opacity: 0.82,
@@ -292,7 +292,7 @@ interface CandleData {
   cz: number;
 }
 
-function createCandles(scene: THREE.Scene): CandleData[] {
+function createCandles(scene: THREE.Scene): { candles: CandleData[]; group: THREE.Group } {
   const candlePositions: Array<[number, number, number]> = [
     [-5, -1.6, -7],
     [0, -4.6, -8.5],
@@ -310,25 +310,28 @@ function createCandles(scene: THREE.Scene): CandleData[] {
   const wickMat = new THREE.MeshStandardMaterial({ color: 0x111111, roughness: 1.0, flatShading: true });
 
   const candles: CandleData[] = [];
+  // group holds bodies + wicks + sharedLight — hidden when bougie.glb loads
+  const group = new THREE.Group();
+  scene.add(group);
 
   // Single shared PointLight covers all 3 candles — saves 2 GPU light slots vs individual lights.
   // Positioned at centroid of the 3 candle positions, larger range to cover all.
   const sharedLight = new THREE.PointLight(0xff9933, 1.8, 9, 2);
   sharedLight.position.set((-5 + 0 + 3) / 3, (-1.6 + -4.6 + -3.0) / 3 + 0.55, (-7 + -8.5 + -6) / 3);
-  scene.add(sharedLight);
+  group.add(sharedLight);
 
   for (let i = 0; i < candlePositions.length; i++) {
     const [cx, cy, cz] = candlePositions[i]!;
 
-    // Candle body
+    // Candle body + wick added to group (hidden when bougie.glb loads)
     const body = new THREE.Mesh(new THREE.CylinderGeometry(0.1, 0.12, 0.7, 8), candleMat);
     body.position.set(cx, cy, cz);
-    scene.add(body);
+    group.add(body);
 
     // Wick
     const wick = new THREE.Mesh(new THREE.CylinderGeometry(0.012, 0.012, 0.1, 4), wickMat);
     wick.position.set(cx, cy + 0.4, cz);
-    scene.add(wick);
+    group.add(wick);
 
     // All candles reference the shared light; updateCandles drives intensity from last candle's flicker.
     const light = sharedLight;
@@ -379,7 +382,7 @@ function createCandles(scene: THREE.Scene): CandleData[] {
     });
   }
 
-  return candles;
+  return { candles, group };
 }
 
 function updateCandles(candles: CandleData[], dt: number, t: number): void {
@@ -567,7 +570,7 @@ function createCauldron(scene: THREE.Scene): CauldronSystem {
 
 function createPotionBottles(): THREE.Group {
   const group = new THREE.Group();
-  const shelfMat = new THREE.MeshStandardMaterial({ color: 0x3d2b1a, roughness: 0.85, flatShading: true });
+  const shelfMat = new THREE.MeshStandardMaterial({ color: 0x3d2b1a, roughness: 0.85, metalness: 0.0, flatShading: true });
 
   const smallShelf = new THREE.Mesh(new THREE.BoxGeometry(2.5, 0.1, 0.5), shelfMat);
   smallShelf.position.set(6, -3.5, -7.7);
@@ -670,7 +673,7 @@ export function initMerlinLair(container: HTMLElement): LairResult {
   const { group: doorGroup, hitTarget: doorHit, lightBeam: doorLight, doorPanel } = createDoor();
   scene.add(doorGroup);
 
-  const candles = createCandles(scene);
+  const { candles, group: candleGroup } = createCandles(scene);
   const dust = createDustMotes();
   scene.add(dust.points);
 
@@ -692,7 +695,7 @@ export function initMerlinLair(container: HTMLElement): LairResult {
 
   // GLB asset overlays (async — procedural fallbacks remain if GLB unavailable).
   // Pass procedural groups so table_druidique.glb + bibliotheque.glb hide them on load (fixes z-fighting).
-  loadLairGLBs(scene, { mapGroup, shelfGroup, floorMesh, wallsGroup, cauldronGroup: cauldron.group });
+  loadLairGLBs(scene, { mapGroup, shelfGroup, floorMesh, wallsGroup, cauldronGroup: cauldron.group, candleGroup });
 
   // Interactive zones for raycasting (visualMesh = visible mesh for emissive boost)
   const interactives: InteractiveObject[] = [

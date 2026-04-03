@@ -17,6 +17,7 @@ export interface LairProceduralGroups {
   floorMesh?: THREE.Mesh;
   wallsGroup?: THREE.Group;    // full walls group hidden when mur_pierre.glb loads
   cauldronGroup?: THREE.Group; // procedural cauldron body+legs hidden when cauldron_merlin.glb loads
+  candleGroup?: THREE.Group;   // procedural candle bodies+wicks+light hidden when bougie.glb loads
 }
 
 export function loadLairGLBs(
@@ -46,6 +47,7 @@ export function loadLairGLBs(
       clone.position.set(cx, cy, cz);
       scene.add(clone);
     }
+    if (proceduralGroups?.candleGroup) proceduralGroups.candleGroup.visible = false;
   }).catch(() => { /* procedural candle bodies remain */ });
 
   // Table druidique: anchored to map-table zone. Hide procedural mapGroup on success.
