@@ -58,7 +58,7 @@ export class MinigameOmbres extends MinigameBase {
 
     // Timer bar
     const timerBar = document.createElement('div');
-    timerBar.style.cssText = `width:${this.canvasW}px;height:8px;background:rgba(255,255,255,0.1);border-radius:4px;margin:0 auto 8px;overflow:hidden;`;
+    timerBar.style.cssText = `width:min(${this.canvasW}px,100%);max-width:${this.canvasW}px;height:8px;background:rgba(255,255,255,0.1);border-radius:4px;margin:0 auto 8px;overflow:hidden;`;
     const timerFill = document.createElement('div');
     timerFill.id = 'mg-ombres-timer-fill';
     timerFill.style.cssText = 'height:100%;width:100%;background:#2e6b4f;border-radius:4px;transition:width 0.1s linear;';
@@ -78,7 +78,7 @@ export class MinigameOmbres extends MinigameBase {
     // Status
     const statusEl = document.createElement('div');
     statusEl.id = 'mg-ombres-status';
-    statusEl.style.cssText = `width:${this.canvasW}px;min-height:24px;margin:8px auto 0;color:rgba(232,220,200,0.6);font-size:13px;text-align:center;font-family:system-ui;`;
+    statusEl.style.cssText = `width:min(${this.canvasW}px,100%);max-width:${this.canvasW}px;min-height:24px;margin:8px auto 0;color:rgba(232,220,200,0.6);font-size:13px;text-align:center;font-family:system-ui;`;
     statusEl.textContent = 'Progression: 0%';
     this.container.appendChild(statusEl);
 

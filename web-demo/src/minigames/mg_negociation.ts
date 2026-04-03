@@ -99,7 +99,7 @@ export class MinigameNegociation extends MinigameBase {
     // Timer bar
     const timerBar = document.createElement('div');
     timerBar.id = 'mg-nego-timer';
-    timerBar.style.cssText = `width:${this.canvasW}px;height:8px;background:rgba(255,255,255,0.1);border-radius:4px;margin:0 auto 8px;overflow:hidden;`;
+    timerBar.style.cssText = `width:min(${this.canvasW}px,100%);max-width:${this.canvasW}px;height:8px;background:rgba(255,255,255,0.1);border-radius:4px;margin:0 auto 8px;overflow:hidden;`;
     const timerFill = document.createElement('div');
     timerFill.id = 'mg-nego-timer-fill';
     timerFill.style.cssText = 'height:100%;width:100%;background:#8b6914;border-radius:4px;transition:width 0.1s linear;';
@@ -119,7 +119,7 @@ export class MinigameNegociation extends MinigameBase {
     // Sequence display
     const seqLabel = document.createElement('div');
     seqLabel.id = 'mg-nego-sequence';
-    seqLabel.style.cssText = `width:${this.canvasW}px;min-height:24px;margin:8px auto 0;color:rgba(232,220,200,0.6);font-size:12px;text-align:center;font-family:system-ui;overflow:hidden;white-space:nowrap;text-overflow:ellipsis;`;
+    seqLabel.style.cssText = `width:min(${this.canvasW}px,100%);max-width:${this.canvasW}px;min-height:24px;margin:8px auto 0;color:rgba(232,220,200,0.6);font-size:12px;text-align:center;font-family:system-ui;overflow:hidden;white-space:nowrap;text-overflow:ellipsis;`;
     seqLabel.textContent = 'Sequence: ...';
     this.container.appendChild(seqLabel);
 

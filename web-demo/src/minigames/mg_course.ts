@@ -85,7 +85,7 @@ export class MinigameCourse extends MinigameBase {
     // Round indicator
     const roundEl = document.createElement('div');
     roundEl.id = 'mg-course-round';
-    roundEl.style.cssText = `width:${this.canvasW}px;height:24px;margin:0 auto 8px;color:rgba(232,220,200,0.7);font-size:14px;text-align:center;font-family:system-ui;line-height:24px;`;
+    roundEl.style.cssText = `width:min(${this.canvasW}px,100%);max-width:${this.canvasW}px;height:24px;margin:0 auto 8px;color:rgba(232,220,200,0.7);font-size:14px;text-align:center;font-family:system-ui;line-height:24px;`;
     roundEl.textContent = `Manche 1 / ${this.totalRounds}`;
     this.container.appendChild(roundEl);
 
@@ -102,7 +102,7 @@ export class MinigameCourse extends MinigameBase {
     // Status
     const statusEl = document.createElement('div');
     statusEl.id = 'mg-course-status';
-    statusEl.style.cssText = `width:${this.canvasW}px;min-height:24px;margin:8px auto 0;color:rgba(232,220,200,0.6);font-size:13px;text-align:center;font-family:system-ui;`;
+    statusEl.style.cssText = `width:min(${this.canvasW}px,100%);max-width:${this.canvasW}px;min-height:24px;margin:8px auto 0;color:rgba(232,220,200,0.6);font-size:13px;text-align:center;font-family:system-ui;`;
     statusEl.textContent = 'Touches: 0 / 0';
     this.container.appendChild(statusEl);
 
