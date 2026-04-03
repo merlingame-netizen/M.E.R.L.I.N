@@ -187,14 +187,30 @@ export abstract class MinigameBase {
   protected resolve: ((result: MinigameResult) => void) | null = null;
   // BUG-05 fix: guard against double-finish (timer expiry + external call race)
   private finished = false;
+  // Real-delta tracking — reset to 0 each play() so first frame returns 1/60 as safe default.
+  private lastRenderMs = 0;
 
   constructor(container: HTMLElement) {
     this.container = container;
   }
 
+  /**
+   * Real delta time (seconds) since the previous render() call.
+   * First call of a play session returns 1/60 (safe default).
+   * Capped at 100ms to suppress post-tab-switch / DevTools spikes.
+   * Subclasses replace `const dt = 1/60` with `const dt = this.getDeltaTime()`.
+   */
+  protected getDeltaTime(): number {
+    const now = performance.now();
+    const dt = this.lastRenderMs === 0 ? 1 / 60 : Math.min((now - this.lastRenderMs) / 1000, 0.1);
+    this.lastRenderMs = now;
+    return dt;
+  }
+
   /** Start the minigame and return a promise that resolves with the result. */
   play(): Promise<MinigameResult> {
     this.finished = false;
+    this.lastRenderMs = 0; // reset so getDeltaTime() returns 1/60 on first frame
     return new Promise((resolve) => {
       this.resolve = resolve;
       this.startTime = performance.now();

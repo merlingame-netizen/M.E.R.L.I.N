@@ -242,7 +242,7 @@ export class MinigameCourse extends MinigameBase {
   protected render(): void {
     if (!this.ctx || !this.canvas || this.gameOver) return;
     const ctx = this.ctx;
-    const dt = 1 / 60;
+    const dt = this.getDeltaTime();
     this.pulsePhase += dt;
 
     // Handle transition

@@ -176,7 +176,7 @@ export class MinigameEquilibre extends MinigameBase {
   protected render(): void {
     if (!this.ctx || !this.canvas) return;
     const ctx = this.ctx;
-    const dt = 1 / 60; // approximate frame time
+    const dt = this.getDeltaTime(); // approximate frame time
     this.elapsedTime += dt;
 
     // --- Physics ---

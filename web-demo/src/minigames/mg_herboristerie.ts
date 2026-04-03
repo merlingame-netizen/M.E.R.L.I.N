@@ -281,7 +281,7 @@ export class MinigameHerboristerie extends MinigameBase {
   protected render(): void {
     if (!this.ctx || !this.canvas) return;
     const ctx = this.ctx;
-    const dt = 1 / 60;
+    const dt = this.getDeltaTime();
     this.elapsedTime += dt;
 
     // Decay shake
