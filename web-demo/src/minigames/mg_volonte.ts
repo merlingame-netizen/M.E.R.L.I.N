@@ -41,12 +41,14 @@ export class MinigameVolonte extends MinigameBase {
   private readonly maxDistractors = 12;
 
   // Game state
-  private cursorX = 190;
-  private cursorY = 190;
+  // Cursor starts at (0,0) — outside the target radius of 30px at (190,190).
+  // Distance (0,0)→(190,190) ≈ 269px >> 30px, so idle player starts outside target.
+  private cursorX = 0;
+  private cursorY = 0;
   private timeLeft = 10;
   private elapsedTime = 0;
   private timeOnTarget = 0;
-  private isOnTarget = true;
+  private isOnTarget = false;  // re-evaluated each frame; init false prevents free credit
   private pulsePhase = 0;
   private distractors: Distractor[] = [];
   private nextSpawn = 0.5;

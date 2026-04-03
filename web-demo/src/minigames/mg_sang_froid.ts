@@ -31,8 +31,10 @@ export class MinigameSangFroid extends MinigameBase {
   private readonly driftSpeed = 18;    // max drift speed px/s
 
   // Game state
-  private cursorX = 190;
-  private cursorY = 190;
+  // Cursor starts at (0,0) — outside the initial zone radius of 120px centred at (190,190).
+  // Distance (0,0)→(190,190) ≈ 269px >> 120px, so an idle player immediately starts outside.
+  private cursorX = 0;
+  private cursorY = 0;
   private zoneX = 190;
   private zoneY = 190;
   private zoneDrift: Drift = { vx: 0, vy: 0 };
@@ -41,7 +43,7 @@ export class MinigameSangFroid extends MinigameBase {
   private timeInside = 0;
   private currentRadius = 120;
   private pulsePhase = 0;
-  private isInside = true;
+  private isInside = false;  // re-evaluated each frame; init false prevents 1-frame free credit
   private nextDriftChange = 2;
 
   protected setup(): void {
