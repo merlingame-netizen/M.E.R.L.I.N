@@ -114,35 +114,40 @@ async function runMainMenu(): Promise<void> {
     lastTime = now;
     menu.update(dt);
   };
-  tick();
 
-  // T066: Start menu ambient audio (gentle wind drone, 55Hz)
-  startAmbient('menu');
+  // BUG-C53-03: protect RAF against WebGL context loss on mobile (initMainMenu throws)
+  // try/finally guarantees cancelAnimationFrame is always called even on failure.
+  try {
+    tick();
 
-  // Show menu UI immediately — camera is static, no dolly to wait for
-  overlay.classList.add('visible');
+    // T066: Start menu ambient audio (gentle wind drone, 55Hz)
+    startAmbient('menu');
 
-  // Wait for player to click Start
-  await new Promise<void>((resolve) => {
-    startBtn.addEventListener('click', () => resolve(), { once: true });
-  });
+    // Show menu UI immediately — camera is static, no dolly to wait for
+    overlay.classList.add('visible');
 
-  // T066: Stop menu ambient, transition to forest ambient
-  stopAmbient();
+    // Wait for player to click Start
+    await new Promise<void>((resolve) => {
+      startBtn.addEventListener('click', () => resolve(), { once: true });
+    });
 
-  // Transition: fade to black then go to game
-  overlay.classList.remove('visible');
-  cutToBlack();
+    // T066: Stop menu ambient, transition to forest ambient
+    stopAmbient();
 
-  // startDolly is now a no-op that calls onComplete immediately
-  await new Promise<void>((resolve) => {
-    menu.startDolly(resolve);
-  });
+    // Transition: fade to black then go to game
+    overlay.classList.remove('visible');
+    cutToBlack();
 
-  cancelAnimationFrame(menuAnimId);
-  menu.dispose();
-  wrapper.classList.remove('visible');
-  wrapper.style.display = 'none';
+    // startDolly is now a no-op that calls onComplete immediately
+    await new Promise<void>((resolve) => {
+      menu.startDolly(resolve);
+    });
+  } finally {
+    cancelAnimationFrame(menuAnimId);
+    menu.dispose();
+    wrapper.classList.remove('visible');
+    wrapper.style.display = 'none';
+  }
 }
 
 

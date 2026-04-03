@@ -377,9 +377,12 @@ export async function buildCoastScene(): Promise<BiomeSceneResult> {
       const posAttr = oceanMesh.geometry.attributes['position'] as THREE.BufferAttribute;
       const arr = posAttr.array as Float32Array;
       for (let i = 0; i < posAttr.count; i++) {
+        // PlaneGeometry stores X and Y in local space; after mesh.rotation.x=-PI/2
+        // local-X stays world-X, local-Y becomes world-Z. Named accordingly to
+        // prevent future "fix" that swaps indices and silently breaks wave topology.
         const bx = oceanBaseY[i * 3] ?? 0;
-        const bz = oceanBaseY[i * 3 + 1] ?? 0;
-        const wave = Math.sin(bx * 0.12 + t * 0.9) * 0.9 + Math.cos(bz * 0.09 + t * 0.7) * 0.6;
+        const by_local = oceanBaseY[i * 3 + 1] ?? 0; // local-Y = world-Z post-rotation
+        const wave = Math.sin(bx * 0.12 + t * 0.9) * 0.9 + Math.cos(by_local * 0.09 + t * 0.7) * 0.6;
         arr[i * 3 + 2] = wave;
       }
       posAttr.needsUpdate = true;
