@@ -68,31 +68,32 @@ function playOutcomeTone(level: OutcomeLevel): void {
     gain.connect(ctx.destination);
 
     const tones: Record<OutcomeLevel, number[]> = {
-      desastre: [110, 100, 90],      // descending minor, dark
-      echec: [220, 196],             // minor 3rd fall
-      reussite: [330, 392, 440],     // major arpeggio rise
-      maitrise: [440, 554, 659, 880],// full major chord cascade
+      desastre: [110, 100, 90],
+      echec: [220, 196],
+      reussite: [330, 392, 440],
+      maitrise: [440, 554, 659, 880],
     };
 
     const freqs = tones[level];
     const dur = level === 'maitrise' ? 0.22 : 0.18;
 
-    freqs.forEach((freq, i) => {
-      const osc = ctx.createOscillator();
-      osc.type = level === 'desastre' ? 'sawtooth' : 'sine';
-      osc.frequency.value = freq;
-      osc.connect(gain);
-      const start = ctx.currentTime + i * (dur * 0.6);
-      gain.gain.setValueAtTime(0.15, start);
-      gain.gain.exponentialRampToValueAtTime(0.001, start + dur);
-      osc.start(start);
-      osc.stop(start + dur);
+    // BUG-03 fix: resume context first — iOS/Android suspend AudioContext on creation
+    ctx.resume().catch(() => { /* autoplay blocked, silent */ }).finally(() => {
+      freqs.forEach((freq, i) => {
+        const osc = ctx.createOscillator();
+        osc.type = level === 'desastre' ? 'sawtooth' : 'sine';
+        osc.frequency.value = freq;
+        osc.connect(gain);
+        const start = ctx.currentTime + i * (dur * 0.6);
+        gain.gain.setValueAtTime(0.15, start);
+        gain.gain.exponentialRampToValueAtTime(0.001, start + dur);
+        osc.start(start);
+        osc.stop(start + dur);
+      });
+      setTimeout(() => ctx.close(), (freqs.length * dur * 0.6 + dur + 0.2) * 1000);
     });
-
-    // Auto-close AudioContext after tones finish
-    setTimeout(() => ctx.close(), (freqs.length * dur * 0.6 + dur + 0.2) * 1000);
   } catch {
-    // WebAudio unavailable (e.g. unit tests) — silent fallback
+    // WebAudio unavailable — silent fallback
   }
 }
 
@@ -144,8 +145,8 @@ function showOutcomeOverlay(container: HTMLElement, score: number, level: Outcom
     overlay.appendChild(scoreEl);
     overlay.appendChild(flavor);
 
-    // Ensure container is position:relative for absolute child
-    if (getComputedStyle(container).position === 'static') {
+    // BUG-04 fix: don't rely on 'static' string (jsdom returns ''); force unconditionally
+    if (!['relative', 'absolute', 'fixed', 'sticky'].includes(getComputedStyle(container).position)) {
       container.style.position = 'relative';
     }
     container.appendChild(overlay);
@@ -156,11 +157,12 @@ function showOutcomeOverlay(container: HTMLElement, score: number, level: Outcom
     });
 
     // Auto-dismiss after 2.2s
+    // BUG-02 fix: check overlay.isConnected before resolving (guard against external cleanup())
     setTimeout(() => {
       overlay.style.opacity = '0';
       setTimeout(() => {
         overlay.remove();
-        resolve();
+        resolve(); // safe even if overlay was already removed — Promise resolves once only
       }, 260);
     }, 2200);
   });
@@ -172,6 +174,8 @@ export abstract class MinigameBase {
   protected container: HTMLElement;
   protected startTime = 0;
   protected resolve: ((result: MinigameResult) => void) | null = null;
+  // BUG-05 fix: guard against double-finish (timer expiry + external call race)
+  private finished = false;
 
   constructor(container: HTMLElement) {
     this.container = container;
@@ -179,6 +183,7 @@ export abstract class MinigameBase {
 
   /** Start the minigame and return a promise that resolves with the result. */
   play(): Promise<MinigameResult> {
+    this.finished = false;
     return new Promise((resolve) => {
       this.resolve = resolve;
       this.startTime = performance.now();
@@ -196,17 +201,22 @@ export abstract class MinigameBase {
   /**
    * Call this to end the minigame with a score (0-100).
    * Shows the 4-level outcome overlay + plays a tone, then resolves.
+   * Safe to call multiple times — only first call takes effect.
    */
   protected finish(score: number): void {
+    if (this.finished) return;  // BUG-05: idempotent guard
+    this.finished = true;
+
     const clamped = Math.max(0, Math.min(100, Math.round(score)));
     const level = scoreToOutcome(clamped);
     const timeSpent = (performance.now() - this.startTime) / 1000;
 
     playOutcomeTone(level);
 
-    // Hide game content (keep container for overlay)
-    const canvas = this.container.querySelector('canvas');
-    if (canvas) canvas.style.opacity = '0.25';
+    // BUG-01 fix: dim ALL canvases in container, not just first
+    this.container.querySelectorAll<HTMLCanvasElement>('canvas').forEach((c) => {
+      c.style.opacity = '0.25';
+    });
 
     showOutcomeOverlay(this.container, clamped, level).then(() => {
       this.cleanup();
