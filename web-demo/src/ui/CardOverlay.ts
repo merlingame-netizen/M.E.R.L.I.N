@@ -6,9 +6,6 @@
 
 import type { Card, CardOption } from '../game/CardSystem';
 
-const overlay = () => document.getElementById('card-overlay')!;
-const textEl = () => document.getElementById('card-text')!;
-const optionsEl = () => document.getElementById('card-options')!;
 const cardContainer = () => document.querySelector<HTMLElement>('.card-container');
 
 // ── Faction colour map (T067) ──────────────────────────────────────────────
@@ -144,8 +141,14 @@ function triggerFlipAnimation(): void {
 
 export function showCard(card: Card): Promise<number> {
   return new Promise((resolve) => {
+    // Null-guard DOM elements — consistent with HUD pattern (C57)
+    const overlayEl = document.getElementById('card-overlay');
+    const narrativeEl = document.getElementById('card-text');
+    const optContainer = document.getElementById('card-options');
+    if (!overlayEl || !narrativeEl || !optContainer) { resolve(0); return; }
+
     // Narrative text (T067: keep existing element, styled via CSS)
-    textEl().textContent = card.narrative;
+    narrativeEl.textContent = card.narrative;
 
     // Biome badge (T067)
     const existingBadge = cardContainer()?.querySelector('.card-biome-badge');
@@ -167,8 +170,7 @@ export function showCard(card: Card): Promise<number> {
       if (narrativeEl) container.insertBefore(divider, narrativeEl);
     }
 
-    // Options (T067 + T068)
-    const optContainer = optionsEl();
+    // Options (T067 + T068) — optContainer already resolved above
     optContainer.innerHTML = '';
 
     card.options.forEach((option, index) => {
@@ -217,7 +219,7 @@ export function showCard(card: Card): Promise<number> {
       optContainer.appendChild(btn);
     });
 
-    overlay().classList.add('visible');
+    overlayEl.classList.add('visible');
     // Play flip animation each time a new card is shown
     triggerFlipAnimation();
     // Focus first option so keyboard users don't need to Tab from previous element
@@ -229,5 +231,6 @@ export function showCard(card: Card): Promise<number> {
 }
 
 export function hideCard(): void {
-  overlay().classList.remove('visible');
+  const overlayEl = document.getElementById('card-overlay');
+  if (overlayEl) overlayEl.classList.remove('visible');
 }
