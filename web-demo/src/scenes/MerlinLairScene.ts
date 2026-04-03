@@ -9,7 +9,8 @@ import { createLairWindow, type LairTimeParams } from './LairWindow';
 
 // ── Types ────────────────────────────────────────────────────────────────────
 
-export type LairZone = 'map' | 'crystal' | 'bookshelf' | 'door';
+// GDB mapping: map=biome, crystal=oghams, bookshelf=journal, door=run, cauldron=dialogue_merlin
+export type LairZone = 'map' | 'crystal' | 'bookshelf' | 'door' | 'cauldron';
 
 interface InteractiveObject {
   mesh: THREE.Object3D;
@@ -606,7 +607,10 @@ function setupLighting(scene: THREE.Scene): void {
   const rim = new THREE.PointLight(0x6699cc, 0.55, 18, 2.0);
   rim.position.set(8, 2, 7); scene.add(rim);                                 // cool rim from door
   const fill = new THREE.PointLight(0xcc8833, 0.4, 16, 2.0);
-  fill.position.set(-9, 0, -5); scene.add(fill);                             // warm fill bookshelf
+  fill.position.set(-9, 0, -5); scene.add(fill);                             // warm fill left wall
+  // Dedicated fill for bookshelf (right wall x=+8) — was unlit by left-side fill
+  const shelfFill = new THREE.PointLight(0xaa6622, 0.8, 6, 2.0);
+  shelfFill.position.set(9, 2, -7); scene.add(shelfFill);                   // bookshelf book spines
   const cauldron = new THREE.PointLight(0x336622, 0.35, 10, 2.5);
   cauldron.position.set(2, -4, -7); scene.add(cauldron);                     // green cauldron accent
 }
@@ -661,6 +665,14 @@ export function initMerlinLair(container: HTMLElement): LairResult {
   scene.add(createSkull());
   createLairDensity(scene);
 
+  // Cauldron interactive hit target (sphere r=1.2, oracle Merlin dialogue zone)
+  const cauldronHit = new THREE.Mesh(
+    new THREE.SphereGeometry(1.2, 8, 6),
+    new THREE.MeshBasicMaterial({ visible: false })
+  );
+  cauldronHit.position.set(2, -3.0, -7);
+  scene.add(cauldronHit);
+
   // Forest window + day/night/season cycle
   const lairWindow = createLairWindow(scene);
 
@@ -669,10 +681,11 @@ export function initMerlinLair(container: HTMLElement): LairResult {
 
   // Interactive zones for raycasting
   const interactives: InteractiveObject[] = [
-    { mesh: mapHit, zone: 'map', hovered: false },
-    { mesh: crystalData.hitTarget, zone: 'crystal', hovered: false },
-    { mesh: shelfHit, zone: 'bookshelf', hovered: false },
-    { mesh: doorHit, zone: 'door', hovered: false },
+    { mesh: mapHit, zone: 'map', hovered: false },           // biome selection
+    { mesh: crystalData.hitTarget, zone: 'crystal', hovered: false },  // oghams equip
+    { mesh: shelfHit, zone: 'bookshelf', hovered: false },  // journal/lore
+    { mesh: doorHit, zone: 'door', hovered: false },         // start run
+    { mesh: cauldronHit, zone: 'cauldron', hovered: false }, // dialogue Merlin LLM
   ];
 
   const raycaster = new THREE.Raycaster();
