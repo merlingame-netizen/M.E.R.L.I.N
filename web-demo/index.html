@@ -472,6 +472,24 @@
     @keyframes spin { to { transform: rotate(360deg); } }
     @keyframes spin-slow { to { transform: rotate(360deg); } }
 
+    /* LLM loading hint — shown during Groq card generation (BUG-C60-02 fix) */
+    .llm-loading-hint {
+      position: fixed;
+      bottom: 24px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: rgba(10,10,18,0.85);
+      color: rgba(205,133,63,0.8);
+      font-family: system-ui, 'Segoe UI', sans-serif;
+      font-size: 13px;
+      padding: 8px 20px;
+      border-radius: 20px;
+      border: 1px solid rgba(205,133,63,0.3);
+      z-index: 60;
+      pointer-events: none;
+      letter-spacing: 1px;
+    }
+
     /* T047: Card flip animation — rotateY 0->90 (hide front) then 0->0 (reveal content) */
     .card-container {
       perspective: 1000px;

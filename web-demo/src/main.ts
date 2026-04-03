@@ -514,22 +514,7 @@ function showLLMLoadingHint(): void {
   hint.id = LLM_HINT_ID;
   hint.setAttribute('role', 'status');
   hint.setAttribute('aria-live', 'polite');
-  hint.style.cssText = [
-    'position:fixed',
-    'bottom:24px',
-    'left:50%',
-    'transform:translateX(-50%)',
-    'background:rgba(10,10,18,0.85)',
-    'color:rgba(205,133,63,0.8)',
-    'font-family:system-ui',
-    'font-size:13px',
-    'padding:8px 20px',
-    'border-radius:20px',
-    'border:1px solid rgba(205,133,63,0.3)',
-    'z-index:60',
-    'pointer-events:none',
-    'letter-spacing:1px',
-  ].join(';');
+  hint.className = 'llm-loading-hint';
   hint.textContent = 'Merlin consulte les etoiles\u2026';
   document.body.appendChild(hint);
 }
