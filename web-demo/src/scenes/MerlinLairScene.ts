@@ -1,8 +1,11 @@
 // Merlin's Lair — 3D interior hub (T062+T064). 4 zones: Map/Crystal/Bookshelf/Door.
 // Cycle 31: AAA lighting (5 sources — key/rim/fill/cauldron/ambient).
+// Cycle 35: Window + forest view + day/night/season cycle. GLB assets: cauldron/bougie/table/biblio.
 
 import * as THREE from 'three';
 import { createLairDensity } from './LairDensity';
+import { loadLairGLBs } from './LairGLBAssets';
+import { createLairWindow, type LairTimeParams } from './LairWindow';
 
 // ── Types ────────────────────────────────────────────────────────────────────
 
@@ -18,7 +21,10 @@ export interface LairResult {
   update: (dt: number) => void;
   dispose: () => void;
   onZoneClick: (cb: (zone: LairZone) => void) => void;
+  setTime: (params: LairTimeParams) => void;
 }
+
+export type { LairTimeParams };
 
 // ── Stone Walls + Floor + Ceiling ────────────────────────────────────────────
 
@@ -655,6 +661,12 @@ export function initMerlinLair(container: HTMLElement): LairResult {
   scene.add(createSkull());
   createLairDensity(scene);
 
+  // Forest window + day/night/season cycle
+  const lairWindow = createLairWindow(scene);
+
+  // GLB asset overlays (async — procedural fallbacks remain if GLB unavailable)
+  loadLairGLBs(scene);
+
   // Interactive zones for raycasting
   const interactives: InteractiveObject[] = [
     { mesh: mapHit, zone: 'map', hovered: false },
@@ -741,6 +753,9 @@ export function initMerlinLair(container: HTMLElement): LairResult {
     // Cauldron steam
     cauldron.update(elapsedTime, dt);
 
+    // Forest window (leaf sway + glass shimmer)
+    lairWindow.update(elapsedTime);
+
     renderer.render(scene, camera);
   };
 
@@ -769,5 +784,9 @@ export function initMerlinLair(container: HTMLElement): LairResult {
     zoneClickCallback = cb;
   };
 
-  return { update, dispose, onZoneClick };
+  const setTime = (params: LairTimeParams): void => {
+    lairWindow.updateTime(params);
+  };
+
+  return { update, dispose, onZoneClick, setTime };
 }
