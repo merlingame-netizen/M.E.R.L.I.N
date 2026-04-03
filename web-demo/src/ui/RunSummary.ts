@@ -208,6 +208,47 @@ export async function showRunSummary(reason: 'death' | 'victory' | 'cards_limit'
   });
   panel.appendChild(factionsEl);
 
+  // Promises section — show moral accountability if any promises were made this run
+  const promises = state.run.promises;
+  if (promises.length > 0) {
+    const div3 = document.createElement('hr');
+    div3.style.cssText = 'border:none;border-top:1px solid rgba(205,133,63,0.2);margin-bottom:16px;';
+    panel.appendChild(div3);
+
+    const promiseHeader = document.createElement('div');
+    promiseHeader.style.cssText = 'font-size:12px;text-transform:uppercase;letter-spacing:2px;opacity:0.5;margin-bottom:12px;text-align:left;';
+    promiseHeader.textContent = 'Promesses';
+    panel.appendChild(promiseHeader);
+
+    const promisesEl = document.createElement('div');
+    promisesEl.style.cssText = 'margin-bottom:24px;text-align:left;';
+    const fulfilled = promises.filter((p) => p.status === 'fulfilled').length;
+    const broken    = promises.filter((p) => p.status === 'broken').length;
+    const expired   = promises.filter((p) => p.status === 'expired').length;
+    const active    = promises.filter((p) => p.status === 'active').length;
+
+    const addPromiseRow = (label: string, count: number, color: string): void => {
+      if (count === 0) return;
+      const row = document.createElement('div');
+      row.style.cssText = 'display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;font-size:13px;';
+      const labelEl = document.createElement('span');
+      labelEl.style.color = color;
+      labelEl.textContent = label;
+      const countEl = document.createElement('span');
+      countEl.style.cssText = `color:${color};font-weight:600;`;
+      countEl.textContent = String(count);
+      row.appendChild(labelEl);
+      row.appendChild(countEl);
+      promisesEl.appendChild(row);
+    };
+
+    addPromiseRow('Promesses tenues',   fulfilled, '#7cb87c');
+    addPromiseRow('Promesses rompues',  broken,    '#b87c7c');
+    addPromiseRow('Promesses expirees', expired,   '#cd853f');
+    addPromiseRow('Promesses ouvertes', active,    '#a0a0b8');
+    panel.appendChild(promisesEl);
+  }
+
   // Restart button
   const restartBtn = document.createElement('button');
   restartBtn.id = 'run-summary-restart';

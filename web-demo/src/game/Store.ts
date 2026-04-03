@@ -262,9 +262,16 @@ export const store = createStore<MerlinStore>((set, get) => ({
     run: { ...s.run, biomeCurrency: s.run.biomeCurrency + amount },
   })),
 
-  incrementCardsPlayed: () => set((s) => ({
-    run: { ...s.run, cardsPlayed: s.run.cardsPlayed + 1 },
-  })),
+  incrementCardsPlayed: () => set((s) => {
+    const newCardsPlayed = s.run.cardsPlayed + 1;
+    // Expire active promises whose deadline has passed
+    const updatedPromises = s.run.promises.map((p) =>
+      p.status === 'active' && newCardsPlayed >= p.madeAtCard + p.deadlineCards
+        ? { ...p, status: 'expired' as const }
+        : p
+    );
+    return { run: { ...s.run, cardsPlayed: newCardsPlayed, promises: updatedPromises } };
+  }),
 
   setActiveOgham: (oghamId) => set((s) => ({
     run: { ...s.run, activeOgham: oghamId },

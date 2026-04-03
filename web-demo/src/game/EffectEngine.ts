@@ -140,7 +140,7 @@ export function applyEffects(effects: readonly string[], multiplier = 1.0): Effe
       }
       case 'ADD_PROMISE': {
         const promiseId = args[0] ?? '';
-        const deadline = parseInt(args[1] ?? '5', 10) || 5;
+        const deadline = Math.max(1, parseInt(args[1] ?? '5', 10) || 5);
         store.getState().addPromise(promiseId, deadline);
         applied.push(effectStr);
         break;

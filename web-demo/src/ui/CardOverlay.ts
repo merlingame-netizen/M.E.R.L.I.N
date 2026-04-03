@@ -118,8 +118,10 @@ function buildFactionDot(option: CardOption): HTMLElement | null {
   }
   if (dots.length === 0) return null;
   if (dots.length === 1) return dots[0] ?? null;
-  // Multiple factions: wrap in a flex row
+  // Multiple factions: wrap in a labelled group for screen readers (WCAG 1.3.1)
   const container = document.createElement('span');
+  container.setAttribute('role', 'group');
+  container.setAttribute('aria-label', 'Impacts de faction');
   container.style.cssText = 'display:inline-flex;gap:2px;align-items:center;';
   dots.forEach((d) => container.appendChild(d));
   return container;
