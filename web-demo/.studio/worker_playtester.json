@@ -1,39 +1,42 @@
 {
   "agent": "merlin-ai-playtester",
-  "cycle": 29,
+  "cycle": 30,
   "timestamp": "2026-04-02T00:00:00Z",
   "status": "PASS",
   "analysis": {
-    "forest_walk_T063": {
+    "god_ray_T064": {
       "status": "VERIFIED_COMPLETE",
-      "bob_head": "CameraRail bob-head is correctly implemented: 2Hz sinusoidal Y offset with amplitude 0.04 world units. This gives the player a walking gait feel — subtle enough not to cause motion sickness, pronounced enough to convey locomotion. elapsedMoving only advances when not paused, so the bob phase stays coherent across pause/resume cycles.",
-      "no_free_camera": "OrbitControls entirely absent from CameraRail and CoastBiome files. Player has zero camera control — the rail is fully automatic. Combined with CatmullRom spline and speed=0.008, the traversal feels authored and cinematic rather than exploratory.",
-      "lookAhead": "lookOffset=(0, 0.3, 0) slightly tilts gaze upward — natural for walking through environment, avoids staring at floor.",
-      "score": "8.5/10 — solid rail walker implementation. Improvement opportunity: add slight horizontal sway (lookAhead X oscillation at 0.5Hz) for more organic feel in future cycle."
+      "visual_assessment": "The god ray sprite above the cliff horizon adds atmospheric depth to the main menu. The warm gold 0xffd090 contrasts well with the cold blue FogExp2(0x1a2030) and blue-gray storm light. The 3s opacity pulse (0.15..0.45) is subtle enough to feel like natural light variation rather than a UI element. The slight z-tilt (0.18rad) gives it a natural angle as if filtering through clouds. AdditiveBlending + depthWrite:false are correct for volumetric light simulation without z-fighting.",
+      "position_review": "(-5, 14, -18) places it above and behind the cliff, in the upper-center of the camera view from (-8,18,28). Scale 12×22 provides a broad but not overwhelming glow. Effect is most visible against the dark sky geometry.",
+      "score": "8.0/10 — solid atmospheric addition. No texture needed at this scale; the flat color quad with additive blending reads as a light shaft. Improvement: consider adding 2-3 smaller secondary rays at offset angles in future cycle."
     },
-    "lair_scene_T076": {
-      "density_assessment": "The three additional shelves on the left wall fill what was previously empty stone. At x=-11.4, they create visual depth and frame the space — the eye now travels left and finds content (books) rather than bare wall. The staggered Y and Z positions avoid a uniform grid feel.",
-      "moonlight_shaft": "SpotLight 0xb8d4ff (cool blue-white) at angle PI/9 creates a narrow shaft from the top-left. Against the warm orange candlelight (0xff6622), this color contrast is atmospheric and evocative of Celtic moonlight through a stone window. Intensity 1.8 is strong — may wash out if candle intensity is low, but acceptable for visual impact.",
-      "parchment_rolls": "Three CylinderGeometry rolls on the floor (y=-4.8) with varied rotation.y add narrative clutter. Small (r=0.07) but convincing as scattered scrolls. Color 0xd4b878 (warm parchment) reads well against the dark flagstone floor.",
-      "overall_lair_score": "7.5/10 — room feels more inhabited. Next improvement: add a flickering light source near the window to animate the moonlight shaft (currently static SpotLight)."
+    "cards_T077": {
+      "biome": "foret_broceliande",
+      "total_added": 20,
+      "total_cards": 386,
+      "faction_dist": {
+        "druides": "28/60 options (47%)",
+        "niamh": "10/60 (17%)",
+        "korrigans": "9/60 (15%)",
+        "anciens": "7/60 (12%)",
+        "ankou": "6/60 (10%)"
+      },
+      "effect_caps": "PASS — HEAL_LIFE max=5, DAMAGE_LIFE max=5, ADD_REPUTATION max=18",
+      "narrative_quality": "Cards follow foret_broceliande theme well: yew trees, druids, white wolves, glowing springs, bards, Merlin himself. Thematic coherence high. No duplicate verbs detected within the batch. Mix of combat/exploration/spiritual choices appropriate for the biome.",
+      "balance_assessment": "Druides-heavy (47%) appropriate for the primary druidic biome. ankou at 10% adds darkness without dominating. The inclusion of a Merlin encounter card is a strong narrative anchor for the biome identity.",
+      "risk": "LOW — all verbs drawn from established pool, no effects exceed caps"
     },
-    "mobile_T059": {
-      "assessment": "The min() CSS function is the correct approach for timer bars — they'll shrink gracefully on 375px without breaking layout. The max-width:100% on canvas prevents Three.js/canvas overflow. The @media 390px title font reduction is conservative (14px from likely 16-18px base) and appropriate.",
-      "risk": "LOW — canvases that size themselves via game logic (width=gridCols*tileSize etc.) may still set pixel widths on the canvas element itself. The CSS max-width constrains the display size but the canvas buffer resolution stays at its pixel dimensions — correct behavior for HiDPI-aware rendering."
+    "scene_transition_T065": {
+      "status": "VERIFIED_ALREADY_DONE",
+      "notes": "SceneTransition.ts fully functional. cutToBlack/revealFromBlack used actively by main.ts. No changes needed."
     },
     "effect_caps_compliance": {
-      "rep_cap": "PASS (≤20 per card)",
-      "heal_cap": "PASS (≤5 post T040/T042)",
-      "dmg_cap": "PASS (≤15)",
+      "rep_cap": "PASS (≤20)",
+      "heal_cap": "PASS (≤5)",
+      "dmg_cap": "PASS (≤10)",
       "negative_effects": "PASS (no card with 3+ negative effects)"
     },
-    "overall_assessment": "Cycle 29 is a verification and density cycle: T063 confirms the forest walk system was already complete (no regressions from previous cycles), T059 addresses the last mobile overflow edge cases, and T076 adds meaningful visual density to the lair. The moonlight shaft is the standout addition — it creates a strong second light source that contrasts beautifully with the candlelight. The game continues to feel more complete and atmospheric with each cycle.",
-    "estimated_scores": {
-      "lair_atmosphere": 7.5,
-      "mobile_polish": 8.0,
-      "forest_walk": 8.5,
-      "menu_unchanged": 9.0
-    },
-    "priority_remaining": ["T064 (VFX pass god rays)", "T065 (scene transition manager)", "T062 lair window light animation"]
+    "overall_assessment": "Cycle 30 delivers the final planned VFX element (god ray) plus 20 new narrative cards for foret_broceliande. The menu scene now has its full VFX suite: animated ocean + foam patches + sea spray + god ray. Card pool grows to 386 with a well-balanced new batch. All open tasks from the original backlog are now complete.",
+    "open_tasks_remaining": ["T064 completed", "T065 already done", "T077 completed", "Backlog appears fully implemented — recommend new task planning cycle"]
   }
 }

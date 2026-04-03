@@ -1,33 +1,35 @@
 {
   "agent": "merlin-tech-artist",
-  "cycle": 29,
+  "cycle": 30,
   "timestamp": "2026-04-02T00:00:00Z",
   "status": "PASS",
   "tasks": {
-    "T076_lair_visual_density": {
+    "T064_god_ray": {
       "status": "DONE",
-      "file": "web-demo/src/scenes/MerlinLairScene.ts",
+      "file": "web-demo/src/scenes/MainMenuScene.ts",
       "changes": [
-        "Added createLairDensity(scene) function — 27 lines compressed to stay under 800-line limit",
-        "3 shelves on left wall (x=-11.4) at positions: y=1.5/z=-2, y=-0.5/z=0.5, y=2.5/z=3.5",
-        "Each shelf has 5 colored books with varied widths/heights (BoxGeometry)",
-        "SpotLight moonlight: color=0xb8d4ff, intensity=1.8, distance=18, angle=PI/9, position=(-9,9,0), target=(-4,-3,0)",
-        "3 parchment rolls (CylinderGeometry r=0.07, h=0.7) at floor y=-4.8 with varied rotation.y",
-        "createLairDensity(scene) called in initMerlinLair after createSkull()",
-        "Final line count: 798 (under 800 limit)"
+        "Added createGodRay() function at line 632 (27 lines)",
+        "PlaneGeometry(12,22) quad with MeshBasicMaterial + AdditiveBlending",
+        "Color 0xffd090 (warm gold), depthWrite:false, DoubleSide",
+        "Position (-5, 14, -18) above cliff horizon, rotation.z=0.18 tilt",
+        "Animated opacity 0.15..0.45 sinusoidal over 3s period",
+        "godRay.update(dt) wired in scene update loop at line 744",
+        "godRay.mesh auto-disposed by scene.traverse() in dispose()"
       ],
-      "line_count_before": 768,
-      "line_count_after": 798,
+      "line_count_before": 740,
+      "line_count_after": 772,
       "line_limit": 800,
-      "gate_lines": "PASS (798 < 800)"
+      "gate_lines": "PASS (772 < 800)"
     },
-    "T060_audit": { "status": "ALREADY_DONE", "notes": "Celtic SVG + progress bar in index.html lines 458-489" },
-    "T061_audit": { "status": "ALREADY_DONE", "notes": "MainMenuScene.ts 740 lines fully implemented" }
+    "T065_scene_transition": {
+      "status": "ALREADY_DONE",
+      "notes": "SceneTransition.ts fully implemented with cutToBlack/revealFromBlack/transition API. Used by main.ts at lines 34,134,192."
+    }
   },
   "ts_errors": 0,
-  "bundle_kb_app": 118.59,
-  "bundle_delta_kb": 0.35,
-  "bundle_delta_pct": 0.3,
-  "gate_bundle": "PASS (118.59KB, +0.3% vs prev 118.24KB)",
+  "bundle_kb_app": 118.90,
+  "bundle_delta_kb": 0.31,
+  "bundle_delta_pct": 0.26,
+  "gate_bundle": "PASS (118.90KB < 124.15KB warn gate, +0.26%)",
   "issues": []
 }

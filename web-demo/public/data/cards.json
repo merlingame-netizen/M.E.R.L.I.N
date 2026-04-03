@@ -10811,5 +10811,665 @@
         ]
       }
     ]
+  },
+  {
+    "biome": "foret_broceliande",
+    "narrative": "Un if millénaire se dresse au centre d'une clairière silencieuse. Son écorce rouge sang est gravée de spirales qui semblent bouger lorsque la lumière change. À ses pieds, des offrandes récentes : plumes, os, craie blanche.",
+    "options": [
+      {
+        "verb": "méditer",
+        "text": "Tu t'assieds sous l'if et vides ton esprit. La forêt parle à travers son silence.",
+        "faction": "druides",
+        "effects": [
+          "ADD_REPUTATION:druides:12",
+          "HEAL_LIFE:4"
+        ]
+      },
+      {
+        "verb": "décrypter",
+        "text": "Tu traces les spirales avec le doigt, cherchant leur logique intérieure.",
+        "faction": "druides",
+        "effects": [
+          "ADD_REPUTATION:druides:9",
+          "ADD_ANAM:5"
+        ]
+      },
+      {
+        "verb": "toucher",
+        "text": "Ta main effleure l'écorce. Une chaleur ancienne remonte le long de ton bras.",
+        "faction": "niamh",
+        "effects": [
+          "ADD_REPUTATION:niamh:7",
+          "DAMAGE_LIFE:2"
+        ]
+      }
+    ]
+  },
+  {
+    "biome": "foret_broceliande",
+    "narrative": "Une meute de loups blancs te barre la route. Leur chef te fixe, immobile, ses yeux dorés comme deux lunes. Ils ne grognent pas. Ils attendent.",
+    "options": [
+      {
+        "verb": "s'incliner",
+        "text": "Tu baisses la tête en signe de respect. Le chef des loups s'écarte lentement.",
+        "faction": "druides",
+        "effects": [
+          "ADD_REPUTATION:druides:14",
+          "ADD_BIOME_CURRENCY:4"
+        ]
+      },
+      {
+        "verb": "résister physiquement",
+        "text": "Tu tiens bon face à leur regard, muscles tendus, respirant lentement.",
+        "faction": "anciens",
+        "effects": [
+          "ADD_REPUTATION:anciens:11",
+          "DAMAGE_LIFE:4"
+        ]
+      },
+      {
+        "verb": "contourner",
+        "text": "Tu fais un détour par les taillis, laissant la meute à sa vigile.",
+        "faction": "korrigans",
+        "effects": [
+          "ADD_REPUTATION:korrigans:8",
+          "ADD_BIOME_CURRENCY:3"
+        ]
+      }
+    ]
+  },
+  {
+    "biome": "foret_broceliande",
+    "narrative": "Une source surgit de nulle part entre deux chênes géants. L'eau est noire comme de l'encre et scintille de reflets violets. Un vieillard assis sur un rocher y trempe ses pieds en souriant.",
+    "options": [
+      {
+        "verb": "consulter",
+        "text": "Tu interroges le vieillard sur la source. Il répond en énigmes que tu commences à comprendre.",
+        "faction": "druides",
+        "effects": [
+          "ADD_REPUTATION:druides:16",
+          "ADD_ANAM:3"
+        ]
+      },
+      {
+        "verb": "boire",
+        "text": "Tu portes l'eau noire à tes lèvres. Elle goûte le fer et la nuit étoilée.",
+        "faction": "ankou",
+        "effects": [
+          "ADD_REPUTATION:ankou:10",
+          "DAMAGE_LIFE:3"
+        ]
+      },
+      {
+        "verb": "observer",
+        "text": "Tu t'assieds à distance et contemples le reflet des arbres dans l'eau sombre.",
+        "faction": "niamh",
+        "effects": [
+          "ADD_REPUTATION:niamh:6",
+          "HEAL_LIFE:3"
+        ]
+      }
+    ]
+  },
+  {
+    "biome": "foret_broceliande",
+    "narrative": "Des feux follets mènent la danse entre les fougères. Chaque fois que tu en approches un, il bondit plus loin. Mais ensemble, ils forment un cercle parfait autour d'un monticule de terre fraîche.",
+    "options": [
+      {
+        "verb": "déterrer",
+        "text": "Tu creuses le monticule avec précaution. Un coffret en bois sculpté apparaît.",
+        "faction": "korrigans",
+        "effects": [
+          "ADD_REPUTATION:korrigans:12",
+          "DAMAGE_LIFE:2"
+        ]
+      },
+      {
+        "verb": "chanter",
+        "text": "Tu fredonnes un air ancien. Les feux follets s'immobilisent, suspendus, puis s'éteignent doucement.",
+        "faction": "druides",
+        "effects": [
+          "ADD_REPUTATION:druides:10",
+          "HEAL_LIFE:4"
+        ]
+      },
+      {
+        "verb": "danser",
+        "text": "Tu rejoins la ronde des feux follets, tournant jusqu'à l'étourdissement.",
+        "faction": "niamh",
+        "effects": [
+          "ADD_REPUTATION:niamh:9",
+          "ADD_ANAM:4"
+        ]
+      }
+    ]
+  },
+  {
+    "biome": "foret_broceliande",
+    "narrative": "Un druide mort depuis longtemps te parle à travers l'écorce d'un vieux hêtre. Sa voix est grésillante comme du bois qui brûle. Il dit qu'il garde un secret que personne ne peut entendre sans en payer le prix.",
+    "options": [
+      {
+        "verb": "écouter",
+        "text": "Tu colles ton oreille à l'écorce. Le secret te traverse comme de l'eau glacée.",
+        "faction": "druides",
+        "effects": [
+          "ADD_REPUTATION:druides:18",
+          "DAMAGE_LIFE:5"
+        ]
+      },
+      {
+        "verb": "refuser",
+        "text": "Tu repousses l'offre. Certaines vérités coûtent trop cher.",
+        "faction": "anciens",
+        "effects": [
+          "ADD_REPUTATION:anciens:8",
+          "HEAL_LIFE:2"
+        ]
+      },
+      {
+        "verb": "marchander",
+        "text": "Tu proposes d'échanger un secret contre un secret.",
+        "faction": "korrigans",
+        "effects": [
+          "ADD_REPUTATION:korrigans:10",
+          "ADD_ANAM:5"
+        ]
+      }
+    ]
+  },
+  {
+    "biome": "foret_broceliande",
+    "narrative": "Un cerf géant aux bois de lumière traverse ta route. Il porte sur son dos une jeune fille endormie, les mains croisées sur une harpe. La forêt se tait à son passage.",
+    "options": [
+      {
+        "verb": "s'approcher",
+        "text": "Tu t'avances vers le cerf, fasciné. Il ralentit et te regarde avec des yeux d'étoile.",
+        "faction": "niamh",
+        "effects": [
+          "ADD_REPUTATION:niamh:14",
+          "ADD_ANAM:3"
+        ]
+      },
+      {
+        "verb": "observer",
+        "text": "Tu restes immobile jusqu'à ce que la vision s'estompe dans les arbres.",
+        "faction": "druides",
+        "effects": [
+          "ADD_REPUTATION:druides:11",
+          "HEAL_LIFE:3"
+        ]
+      },
+      {
+        "verb": "invoquer",
+        "text": "Tu murmures un nom ancien. La jeune fille entrouvre les yeux une fraction de seconde.",
+        "faction": "druides",
+        "effects": [
+          "ADD_REPUTATION:druides:13",
+          "DAMAGE_LIFE:2"
+        ]
+      }
+    ]
+  },
+  {
+    "biome": "foret_broceliande",
+    "narrative": "Une rivière souterraine remonte à la surface, creusant son chemin entre les racines. L'eau chante en une langue que tu ne connais pas mais que ton corps comprend. Sur une pierre plate au milieu du courant : une faucille de bronze.",
+    "options": [
+      {
+        "verb": "prendre",
+        "text": "Tu saisies la faucille. Elle est légère comme une plume et froide comme la rosée.",
+        "faction": "druides",
+        "effects": [
+          "ADD_REPUTATION:druides:15",
+          "DAMAGE_LIFE:3"
+        ]
+      },
+      {
+        "verb": "laisser",
+        "text": "Tu choisis de ne pas toucher l'outil. Certaines choses appartiennent à la forêt.",
+        "faction": "anciens",
+        "effects": [
+          "ADD_REPUTATION:anciens:9",
+          "HEAL_LIFE:4"
+        ]
+      },
+      {
+        "verb": "purifier",
+        "text": "Tu plonges la faucille sous l'eau et récites les mots qu'on t'a appris.",
+        "faction": "druides",
+        "effects": [
+          "ADD_REPUTATION:druides:12",
+          "ADD_BIOME_CURRENCY:4"
+        ]
+      }
+    ]
+  },
+  {
+    "biome": "foret_broceliande",
+    "narrative": "Un village de champignons géants pousse autour d'un chêne mort. Des créatures minuscules s'affairent entre les tiges : elles construisent, plantent, transportent. Elles ignorent ta présence avec une politesse calculée.",
+    "options": [
+      {
+        "verb": "aider",
+        "text": "Tu te mets à leur service, transportant de petits matériaux vers leurs constructions.",
+        "faction": "korrigans",
+        "effects": [
+          "ADD_REPUTATION:korrigans:14",
+          "ADD_BIOME_CURRENCY:5"
+        ]
+      },
+      {
+        "verb": "étudier",
+        "text": "Tu observes leur architecture avec attention. Elle suit des lois que tu ne maîtrises pas encore.",
+        "faction": "druides",
+        "effects": [
+          "ADD_REPUTATION:druides:10",
+          "ADD_ANAM:4"
+        ]
+      },
+      {
+        "verb": "perturber",
+        "text": "Tu poses la main sur leur chantier. Tout s'arrête. Un long silence s'ensuit.",
+        "faction": "ankou",
+        "effects": [
+          "ADD_REPUTATION:ankou:8",
+          "DAMAGE_LIFE:4"
+        ]
+      }
+    ]
+  },
+  {
+    "biome": "foret_broceliande",
+    "narrative": "La forêt semble se rétrécir autour de toi. Les arbres se resserrent, les branches s'entrelacent au-dessus. Mais au bout du couloir végétal s'ouvre une chambre de lumière dorée où pousse un seul pommier chargé de fruits rouges.",
+    "options": [
+      {
+        "verb": "cueillir",
+        "text": "Tu prends une pomme. Elle goûte le miel et les souvenirs d'enfance.",
+        "faction": "niamh",
+        "effects": [
+          "HEAL_LIFE:5",
+          "ADD_REPUTATION:niamh:8"
+        ]
+      },
+      {
+        "verb": "garder",
+        "text": "Tu résistes à l'envie. Le pommier t'appartient peut-être plus ainsi.",
+        "faction": "druides",
+        "effects": [
+          "ADD_REPUTATION:druides:13",
+          "ADD_ANAM:4"
+        ]
+      },
+      {
+        "verb": "partager",
+        "text": "Tu lances des pommes vers la forêt, au hasard. Des rires invisibles te répondent.",
+        "faction": "korrigans",
+        "effects": [
+          "ADD_REPUTATION:korrigans:11",
+          "HEAL_LIFE:3"
+        ]
+      }
+    ]
+  },
+  {
+    "biome": "foret_broceliande",
+    "narrative": "Un homme de boue et de mousse se lève du sol devant toi, clignant des paupières comme s'il émergeait d'un très long sommeil. Il a la forme d'un géant mais la voix d'un enfant. Il te demande ton nom.",
+    "options": [
+      {
+        "verb": "mentir",
+        "text": "Tu lui donnes un faux nom. Il sourit comme s'il savait.",
+        "faction": "korrigans",
+        "effects": [
+          "ADD_REPUTATION:korrigans:9",
+          "ADD_BIOME_CURRENCY:5"
+        ]
+      },
+      {
+        "verb": "révéler",
+        "text": "Tu dis la vérité. Il répète ton nom lentement, comme pour l'apprendre par cœur.",
+        "faction": "druides",
+        "effects": [
+          "ADD_REPUTATION:druides:12",
+          "ADD_ANAM:5"
+        ]
+      },
+      {
+        "verb": "taire",
+        "text": "Tu gardes le silence. L'homme de boue hoche la tête — la réponse lui suffit.",
+        "faction": "anciens",
+        "effects": [
+          "ADD_REPUTATION:anciens:10",
+          "HEAL_LIFE:2"
+        ]
+      }
+    ]
+  },
+  {
+    "biome": "foret_broceliande",
+    "narrative": "Une pluie de feuilles d'or tombe en plein été. Chaque feuille porte gravée une rune différente. Certaines disparaissent au contact du sol ; d'autres s'enfoncent dans la terre comme des graines.",
+    "options": [
+      {
+        "verb": "collecter",
+        "text": "Tu attrapes les feuilles avant qu'elles ne disparaissent, les glissant dans ta besace.",
+        "faction": "druides",
+        "effects": [
+          "ADD_REPUTATION:druides:14",
+          "ADD_BIOME_CURRENCY:6"
+        ]
+      },
+      {
+        "verb": "lire",
+        "text": "Tu déchiffres les runes à la volée. Les mots s'assemblent en une phrase que tu ne pourras pas oublier.",
+        "faction": "druides",
+        "effects": [
+          "ADD_REPUTATION:druides:16",
+          "DAMAGE_LIFE:2"
+        ]
+      },
+      {
+        "verb": "planter",
+        "text": "Tu enfonces toi-même les feuilles dans la terre, là où elles semblent vouloir aller.",
+        "faction": "niamh",
+        "effects": [
+          "ADD_REPUTATION:niamh:10",
+          "ADD_ANAM:4"
+        ]
+      }
+    ]
+  },
+  {
+    "biome": "foret_broceliande",
+    "narrative": "Le fantôme d'un chevalier noir se matérialise au croisement de deux sentiers. Ses armures sont rongées par le temps. Il tient une épée brisée et cherche sa moitié perdue depuis trois siècles.",
+    "options": [
+      {
+        "verb": "guider",
+        "text": "Tu acceptes de l'aider à retrouver l'éclat de lame que la forêt a absorbé.",
+        "faction": "anciens",
+        "effects": [
+          "ADD_REPUTATION:anciens:13",
+          "DAMAGE_LIFE:3"
+        ]
+      },
+      {
+        "verb": "apaiser",
+        "text": "Tu poses la main sur son armure froide et murmures les mots du repos.",
+        "faction": "druides",
+        "effects": [
+          "ADD_REPUTATION:druides:11",
+          "HEAL_LIFE:3"
+        ]
+      },
+      {
+        "verb": "fuir",
+        "text": "Tu t'éloignes rapidement. Les fantômes portent trop de passé pour être aidés ainsi.",
+        "faction": "ankou",
+        "effects": [
+          "ADD_REPUTATION:ankou:7",
+          "ADD_BIOME_CURRENCY:4"
+        ]
+      }
+    ]
+  },
+  {
+    "biome": "foret_broceliande",
+    "narrative": "Une sorcière tisse une toile entre deux frênes. Le fil est fait de lumière lunaire solidifiée. Elle chante en tissant, et sa chanson parle d'un sort que tu reconnais — celui qu'on t'a lancé à la naissance.",
+    "options": [
+      {
+        "verb": "négocier",
+        "text": "Tu proposes ton aide en échange d'informations sur le sort.",
+        "faction": "korrigans",
+        "effects": [
+          "ADD_REPUTATION:korrigans:13",
+          "ADD_ANAM:4"
+        ]
+      },
+      {
+        "verb": "briser",
+        "text": "Tu tranches la toile d'un geste. La sorcière se retourne, surprise puis amusée.",
+        "faction": "ankou",
+        "effects": [
+          "ADD_REPUTATION:ankou:9",
+          "DAMAGE_LIFE:5"
+        ]
+      },
+      {
+        "verb": "tisser",
+        "text": "Tu prends le fil lunaire et continues le travail là où elle s'est arrêtée.",
+        "faction": "druides",
+        "effects": [
+          "ADD_REPUTATION:druides:14",
+          "HEAL_LIFE:2"
+        ]
+      }
+    ]
+  },
+  {
+    "biome": "foret_broceliande",
+    "narrative": "Un arbre creux grand comme une maison abrite une bibliothèque vivante. Les livres ont des racines. Certains saignent d'encre verte. Une plante grimpante lit à voix haute, en langue des oiseaux.",
+    "options": [
+      {
+        "verb": "examiner",
+        "text": "Tu parcours les rayons et choisis un volume qui bat comme un cœur.",
+        "faction": "druides",
+        "effects": [
+          "ADD_REPUTATION:druides:15",
+          "ADD_ANAM:5"
+        ]
+      },
+      {
+        "verb": "écouter",
+        "text": "Tu t'installes et écoutes la plante grimpante. Sa lecture dure le temps d'une heure — ou d'une vie.",
+        "faction": "druides",
+        "effects": [
+          "ADD_REPUTATION:druides:13",
+          "HEAL_LIFE:4"
+        ]
+      },
+      {
+        "verb": "emporter",
+        "text": "Tu glisses un livre saignant dans ton sac. Il se débat légèrement.",
+        "faction": "korrigans",
+        "effects": [
+          "ADD_REPUTATION:korrigans:10",
+          "DAMAGE_LIFE:3"
+        ]
+      }
+    ]
+  },
+  {
+    "biome": "foret_broceliande",
+    "narrative": "Le brouillard se lève d'un coup, révélant un cercle de neuf pierres debout que tu n'avais pas vues. Au centre, un feu brûle sans bois ni combustible. Une voix vient du feu — elle dit ton nom.",
+    "options": [
+      {
+        "verb": "entrer",
+        "text": "Tu franchis le cercle de pierres. La chaleur du feu sans combustible est douce et ancienne.",
+        "faction": "druides",
+        "effects": [
+          "ADD_REPUTATION:druides:17",
+          "DAMAGE_LIFE:4"
+        ]
+      },
+      {
+        "verb": "contempler",
+        "text": "Tu restes à l'extérieur et regardes le feu depuis les pierres. Il ne s'éteint pas.",
+        "faction": "anciens",
+        "effects": [
+          "ADD_REPUTATION:anciens:10",
+          "ADD_ANAM:5"
+        ]
+      },
+      {
+        "verb": "répondre",
+        "text": "Tu dis ton nom à voix haute. La voix du feu répond avec le tien — légèrement différent.",
+        "faction": "niamh",
+        "effects": [
+          "ADD_REPUTATION:niamh:12",
+          "HEAL_LIFE:3"
+        ]
+      }
+    ]
+  },
+  {
+    "biome": "foret_broceliande",
+    "narrative": "Un vieil ours aveugle cherche son chemin entre les arbres. Ses griffes ont creusé des sillons dans la terre sur des mètres. Il renifle l'air et grogne doucement — pas par menace, mais par fatigue.",
+    "options": [
+      {
+        "verb": "guider",
+        "text": "Tu lui parles doucement et le guides vers une clairière où l'herbe est douce.",
+        "faction": "druides",
+        "effects": [
+          "ADD_REPUTATION:druides:12",
+          "HEAL_LIFE:4"
+        ]
+      },
+      {
+        "verb": "soigner",
+        "text": "Tu examines ses pattes blessées et appliques de la résine de sapin sur ses plaies.",
+        "faction": "niamh",
+        "effects": [
+          "ADD_REPUTATION:niamh:11",
+          "HEAL_LIFE:5"
+        ]
+      },
+      {
+        "verb": "s'éloigner",
+        "text": "Tu contournes l'ours prudemment. Sa solitude n'est peut-être pas à partager.",
+        "faction": "ankou",
+        "effects": [
+          "ADD_REPUTATION:ankou:6",
+          "ADD_BIOME_CURRENCY:3"
+        ]
+      }
+    ]
+  },
+  {
+    "biome": "foret_broceliande",
+    "narrative": "Des champignons bioluminescents dessinent un chemin spiralé dans la nuit de la forêt. Leur lumière bleue pulse en cadence, comme un cœur géant sous la terre. Suivre la spirale vers l'intérieur ou vers l'extérieur — les deux directions t'appellent.",
+    "options": [
+      {
+        "verb": "plonger",
+        "text": "Tu suis la spirale vers l'intérieur. Elle t'amène à une chambre souterraine remplie de racines lumineuses.",
+        "faction": "druides",
+        "effects": [
+          "ADD_REPUTATION:druides:13",
+          "ADD_ANAM:6"
+        ]
+      },
+      {
+        "verb": "s'évader",
+        "text": "Tu suis la spirale vers l'extérieur. Elle te mène à une colline avec vue sur toute la forêt.",
+        "faction": "korrigans",
+        "effects": [
+          "ADD_REPUTATION:korrigans:11",
+          "ADD_BIOME_CURRENCY:5"
+        ]
+      },
+      {
+        "verb": "rester immobile",
+        "text": "Tu t'arrêtes au centre de la spirale et laisses la pulsation te traverser.",
+        "faction": "niamh",
+        "effects": [
+          "ADD_REPUTATION:niamh:10",
+          "HEAL_LIFE:3"
+        ]
+      }
+    ]
+  },
+  {
+    "biome": "foret_broceliande",
+    "narrative": "Une chênaie ancienne gronde sous tes pieds. La terre tremble légèrement mais régulièrement — quelque chose de profond respire là-dessous. Un trou dans les racines d'un chêne centenaire révèle un escalier de pierre qui descend dans les ténèbres.",
+    "options": [
+      {
+        "verb": "descendre",
+        "text": "Tu empruntes l'escalier. L'air y est frais, chargé d'humus et d'antique.",
+        "faction": "anciens",
+        "effects": [
+          "ADD_REPUTATION:anciens:14",
+          "DAMAGE_LIFE:4"
+        ]
+      },
+      {
+        "verb": "sceller",
+        "text": "Tu places des pierres sur le trou pour en interdire l'accès. Certaines portes ne doivent pas être ouvertes.",
+        "faction": "druides",
+        "effects": [
+          "ADD_REPUTATION:druides:12",
+          "ADD_BIOME_CURRENCY:4"
+        ]
+      },
+      {
+        "verb": "invoquer",
+        "text": "Tu murmures une incantation vers le trou. Une réponse sourde monte des profondeurs.",
+        "faction": "druides",
+        "effects": [
+          "ADD_REPUTATION:druides:16",
+          "DAMAGE_LIFE:3"
+        ]
+      }
+    ]
+  },
+  {
+    "biome": "foret_broceliande",
+    "narrative": "Merlin lui-même t'observe depuis le sommet d'un rocher couvert de mousse. Il est plus jeune que dans les légendes, les yeux vifs, un bâton d'aubépine à la main. Il ne dit rien. Il teste.",
+    "options": [
+      {
+        "verb": "s'incliner",
+        "text": "Tu t'inclines respectueusement. Il hoche la tête — ce geste avait la bonne profondeur.",
+        "faction": "druides",
+        "effects": [
+          "ADD_REPUTATION:druides:18",
+          "HEAL_LIFE:3"
+        ]
+      },
+      {
+        "verb": "questionner",
+        "text": "Tu lui poses la question qui te brûle les lèvres depuis le début du voyage.",
+        "faction": "druides",
+        "effects": [
+          "ADD_REPUTATION:druides:14",
+          "ADD_ANAM:8"
+        ]
+      },
+      {
+        "verb": "ignorer",
+        "text": "Tu continues ta route sans lever les yeux. Une bonne réponse aussi.",
+        "faction": "ankou",
+        "effects": [
+          "ADD_REPUTATION:ankou:11",
+          "ADD_BIOME_CURRENCY:4"
+        ]
+      }
+    ]
+  },
+  {
+    "biome": "foret_broceliande",
+    "narrative": "Une troupe de bardes errants campe dans la forêt. Leurs feux sont hauts, leurs voix belles. Ils chantent des gestes de héros que personne ne connaît plus. L'un d'eux te fait signe de rejoindre leur cercle.",
+    "options": [
+      {
+        "verb": "chanter",
+        "text": "Tu t'assois et tu offres ta propre chanson. Les bardes s'arrêtent pour écouter.",
+        "faction": "niamh",
+        "effects": [
+          "ADD_REPUTATION:niamh:12",
+          "HEAL_LIFE:4"
+        ]
+      },
+      {
+        "verb": "écouter",
+        "text": "Tu te contentes d'écouter jusqu'à l'aube. Certaines histoires valent mieux reçues qu'offertes.",
+        "faction": "druides",
+        "effects": [
+          "ADD_REPUTATION:druides:11",
+          "ADD_ANAM:5"
+        ]
+      },
+      {
+        "verb": "consigner",
+        "text": "Tu tries de mémoriser les gestes chantés, cherchant les mots anciens qui pourraient t'aider.",
+        "faction": "druides",
+        "effects": [
+          "ADD_REPUTATION:druides:13",
+          "ADD_BIOME_CURRENCY:3"
+        ]
+      }
+    ]
   }
 ]

@@ -1,23 +1,21 @@
 {
   "agent": "merlin-visual-qa",
-  "cycle": 29,
+  "cycle": 30,
   "timestamp": "2026-04-02T00:00:00Z",
   "status": "PASS",
-  "screenshot_attempt": "FAILED — python/python3 CLI not found in bash PATH on this Windows host. Screenshot skipped this cycle.",
+  "screenshot_attempt": "SKIPPED — python CLI not available in bash PATH on Windows host.",
   "code_audit": {
-    "T060_boot_screen": "CONFIRMED — #boot-screen div present in index.html with Celtic SVG + animated progress bar CSS. Fade-out class .hidden applied on complete.",
-    "T061_main_menu": "CONFIRMED — MainMenuScene.ts exists (740 lines). Cliff BoxGeometry, AnimatedOcean with sine-wave vertex shader, FogExp2(0x1a2030, 0.012), tower silhouette, camera dolly CatmullRom 4s path.",
-    "T063_camera_rail": "CONFIRMED — CameraRail.ts BOB_FREQUENCY=2.0Hz, BOB_AMPLITUDE=0.04. No OrbitControls. lookOffset=(0,0.3,0). elapsedMoving accumulates when active.",
-    "T059_mobile_canvas": "CONFIRMED — #minigame-container canvas max-width:100% max-height:60vh added. mg_runes/mg_equilibre hardcoded px widths replaced with CSS min(). @media 390px title scale rule present.",
-    "T076_lair_density": "CONFIRMED — createLairDensity() adds 3 shelves (x=-11.4), SpotLight moonlight (0xb8d4ff), 3 parchment rolls (y=-4.8). File: 798 lines (< 800). Moonlight target added to scene.",
-    "hud_elements": "CONFIRMED — faction-fill-{5 factions} + life bar + anam counter in HUD.ts.",
-    "white_screen_risk": "NONE — TS 0 errors, build succeeded, all modules transform correctly"
+    "T064_god_ray": "CONFIRMED — createGodRay() at line 632 of MainMenuScene.ts. PlaneGeometry(12,22), MeshBasicMaterial 0xffd090, AdditiveBlending, depthWrite:false. Opacity pulse 3s via sin. scene.add(godRay.mesh) line 734, godRay.update(dt) line 744. File 772 lines (< 800).",
+    "T065_scene_transition": "CONFIRMED — SceneTransition.ts exists, 90 lines, exports cutToBlack/revealFromBlack/transition. Used by main.ts at import line 34.",
+    "T077_foret_cards": "CONFIRMED — 20 new foret_broceliande batch2 cards added to cards.json. Total: 386 cards. Effect caps: HEAL_LIFE ≤5, DAMAGE_LIFE ≤10, ADD_REPUTATION ≤20. Faction dist: druides=28/60 options (47%), niamh=10/60 (17%), korrigans=9/60 (15%), anciens=7/60 (12%), ankou=6/60 (10%).",
+    "MainMenuScene_lines": "772 — 28 lines under 800 limit",
+    "hud_elements": "CONFIRMED unchanged — faction bars + life + anam present",
+    "white_screen_risk": "NONE — TS 0 errors, build 4.53s clean"
   },
   "severity_findings": [
-    { "severity": "LOW", "element": "screenshot_skipped", "note": "python CLI not available in bash shell. Manual browser check recommended for cycle 29." },
-    { "severity": "LOW", "element": "lair_line_count", "note": "798 lines — 2 lines under limit. Tight but passing." },
-    { "severity": "NONE", "element": "ts_errors", "note": "0 errors confirmed" },
-    { "severity": "NONE", "element": "bundle_regression", "note": "118.59KB — +0.3% vs prev 118.24KB, well under 5% gate" }
+    { "severity": "NONE", "element": "ts_errors", "note": "0 errors confirmed post-god-ray addition" },
+    { "severity": "NONE", "element": "bundle_regression", "note": "118.90KB — +0.31KB from 118.59KB, +0.26%, under 5% gate" },
+    { "severity": "LOW", "element": "screenshot_skipped", "note": "Manual browser check recommended for god ray visual effect." }
   ],
-  "regression": "NONE — ts_errors: 0, bundle 118.59KB (+0.3% vs baseline), build in 5.59s"
+  "regression": "NONE — ts_errors:0, bundle 118.90KB (+0.26%), build 4.53s"
 }

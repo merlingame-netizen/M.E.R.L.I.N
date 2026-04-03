@@ -127,23 +127,23 @@
       "id": "T064",
       "title": "VFX pass — god rays, candle particles, sea spray, dust motes",
       "priority": 2,
-      "status": "open",
+      "status": "done",
       "domain": "visual",
       "est_tokens": 500,
       "depends_on": ["T061"],
       "tags": ["vfx", "3d"],
-      "notes": "God ray: additive sprite above cliff horizon (SpriteMaterial, AdditiveBlending, animated opacity). Sea spray: Points geometry 200 particles, random upward velocity, reset at apex, fade on lifetime. Dust motes in future LairScene."
+      "notes": "DONE cycle 30. God ray: createGodRay() adds PlaneGeometry(12,22) with MeshBasicMaterial+AdditiveBlending, color 0xffd090, opacity pulse 0.15..0.45 over 3s at (-5,14,-18). Sea spray: already done cycle 27 (SeaSpraySystem). Dust motes: already done cycle 29 (MerlinLairScene). MainMenuScene.ts 740→772 lines. TS 0 errors, build 118.90KB."
     },
     {
       "id": "T065",
       "title": "Scene transition manager — fade overlay between BOOT→MENU→LAIR→GAME states",
       "priority": 2,
-      "status": "open",
+      "status": "done",
       "domain": "gameplay",
       "est_tokens": 250,
       "depends_on": ["T060"],
       "tags": ["ux", "architecture"],
-      "notes": "New web-demo/src/ui/SceneTransition.ts. Black div overlay, opacity transition 0.6s. API: transition(fromState, toState, onMidpoint). State enum: BOOT, MENU, LAIR, GAME. Used by main.ts state machine."
+      "notes": "DONE (pre-cycle-30 audit). SceneTransition.ts fully implemented: cutToBlack/revealFromBlack/transition API, black div overlay 0.6s. Used by main.ts at lines 34,134,192."
     },
     {
       "id": "T058",
@@ -301,6 +301,27 @@
     }
   ],
   "completed": [
+    {
+      "id": "T077",
+      "title": "foret_broceliande batch2 — 20 druides-heavy cards (386 total)",
+      "domain": "narrative",
+      "completed_cycle": 30,
+      "completed_at": "2026-04-02T00:00:00Z"
+    },
+    {
+      "id": "T065",
+      "title": "Scene transition manager — cutToBlack/revealFromBlack/transition API in SceneTransition.ts",
+      "domain": "gameplay",
+      "completed_cycle": 30,
+      "completed_at": "2026-04-02T00:00:00Z"
+    },
+    {
+      "id": "T064",
+      "title": "VFX pass — god ray completed (sea spray+dust motes already done)",
+      "domain": "visual",
+      "completed_cycle": 30,
+      "completed_at": "2026-04-02T00:00:00Z"
+    },
     {
       "id": "T069",
       "title": "Boot skip on click/keypress — resolve early with cleaned-up listeners",

@@ -627,6 +627,33 @@ class SeaSpraySystem {
   }
 }
 
+// ── God Ray — additive glow above cliff horizon ───────────────────────────────
+
+function createGodRay(): { mesh: THREE.Mesh; update: (dt: number) => void } {
+  const geo = new THREE.PlaneGeometry(12, 22);
+  const mat = new THREE.MeshBasicMaterial({
+    color: 0xffd090,
+    transparent: true,
+    opacity: 0.25,
+    blending: THREE.AdditiveBlending,
+    depthWrite: false,
+    side: THREE.DoubleSide,
+  });
+  const mesh = new THREE.Mesh(geo, mat);
+  mesh.position.set(-5, 14, -18);
+  mesh.rotation.z = 0.18; // slight tilt toward cliff
+
+  let elapsed = 0;
+  const update = (dt: number): void => {
+    elapsed += dt;
+    // Gentle opacity pulse 0.15..0.45 over ~3s period
+    (mesh.material as THREE.MeshBasicMaterial).opacity =
+      0.30 + Math.sin(elapsed * (Math.PI * 2) / 3.0) * 0.15;
+  };
+
+  return { mesh, update };
+}
+
 // ── Public: initMainMenu ─────────────────────────────────────────────────────
 
 export function initMainMenu(container: HTMLElement): MainMenuResult {
@@ -702,6 +729,10 @@ export function initMainMenu(container: HTMLElement): MainMenuResult {
   const spray = new SeaSpraySystem();
   scene.add(spray.object);
 
+  // T064: God ray above cliff horizon
+  const godRay = createGodRay();
+  scene.add(godRay.mesh);
+
   let elapsedTime = 0;
 
   const update = (dt: number): void => {
@@ -710,6 +741,7 @@ export function initMainMenu(container: HTMLElement): MainMenuResult {
     clouds.update(elapsedTime);
     foam.update(elapsedTime);
     spray.update(dt);
+    godRay.update(dt);
     renderer.render(scene, camera);
   };
 

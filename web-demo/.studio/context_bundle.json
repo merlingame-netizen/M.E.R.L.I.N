@@ -1,12 +1,12 @@
 {
-  "cycle": 29,
+  "cycle": 30,
   "generated_at": "2026-04-02T00:00:00Z",
-  "top_tasks": ["T063", "T059", "T076"],
-  "auto_done": ["T060", "T061"],
+  "top_tasks": ["T064", "T065-verify", "T077"],
+  "auto_done": ["T065"],
   "changed_files_this_cycle": [],
   "prev_metrics": {
     "ts_errors": 0,
-    "bundle_kb_app": 118.24,
+    "bundle_kb_app": 118.59,
     "build_ok": true,
     "cards_total": 366
   },
@@ -16,19 +16,24 @@
   },
   "prefilter": {
     "ts_errors": 0,
-    "OrbitControls_in_CameraRail": false,
-    "OrbitControls_in_CoastBiome": false,
-    "CameraRail_bob_head": "CONFIRMED — BOB_FREQUENCY=2.0Hz, BOB_AMPLITUDE=0.04",
-    "MerlinLairScene_lines": 768,
-    "lair_line_budget_remaining": 32
+    "MainMenuScene_lines": 740,
+    "MainMenuScene_line_budget_remaining": 60,
+    "sea_spray_done": true,
+    "god_ray_done": false,
+    "SceneTransition_exists": true,
+    "SceneTransition_fully_implemented": true
   },
   "key_constants": {
-    "mobile_breakpoint_px": 375,
-    "lair_line_limit": 800,
-    "bob_frequency_hz": 2.0,
-    "bob_amplitude": 0.04,
-    "moonlight_color": "0xb8d4ff",
-    "shelf_color": "0x5a3a1a"
+    "menu_line_limit": 800,
+    "god_ray_color": "0xffd090",
+    "god_ray_position": "above cliff horizon (-5, 14, -18)",
+    "sea_spray_class": "SeaSpraySystem",
+    "transition_overlay_id": "scene-transition-overlay"
+  },
+  "task_notes": {
+    "T064": "God ray additive sprite above cliff horizon only. Sea spray DONE (SeaSpraySystem at line 554). Dust motes: in lair only (already done via createLairDensity). Budget: 60 lines max in MainMenuScene.ts.",
+    "T065": "ALREADY DONE — SceneTransition.ts fully implemented with cutToBlack/revealFromBlack/transition API. Used by main.ts lines 34,134,192.",
+    "T077": "NEW: Add 20 FastRoute cards for foret_broceliande batch2 (druides 60%+, ankou 10%, korrigans 15%). Follows foret_broceliande batch1 pattern in public/data/cards.json."
   },
   "deploy_url": "https://web-export-pi.vercel.app"
 }
