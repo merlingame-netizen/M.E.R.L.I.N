@@ -157,8 +157,8 @@ export function createLairWindow(scene: THREE.Scene): WindowResult {
   const windowLight = new THREE.SpotLight(0xfff5e0, 1.0, 20, Math.PI / 5, 0.5, 1.8);
   windowLight.position.set(4.0, 5.0, -9.0);
   windowLight.target.position.set(2.5, -2.0, -3.0);  // casts onto floor below
-  scene.add(windowLight);
-  scene.add(windowLight.target);
+  group.add(windowLight);        // in group so it disappears with the window if group.visible=false
+  scene.add(windowLight.target); // target stays in world-space so lookAt works correctly
 
   // ── State ─────────────────────────────────────────────────────────────────
 

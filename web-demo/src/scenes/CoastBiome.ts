@@ -328,6 +328,13 @@ export async function buildCoastScene(): Promise<BiomeSceneResult> {
     try {
       const gltf = await loadGLB(glbBase + file);
       const model = gltf.scene.clone();
+      // Enforce flat-shading consistency with procedural scene meshes
+      model.traverse((child) => {
+        if (child instanceof THREE.Mesh && child.material instanceof THREE.MeshStandardMaterial) {
+          (child.material as THREE.MeshStandardMaterial).flatShading = true;
+          (child.material as THREE.MeshStandardMaterial).needsUpdate = true;
+        }
+      });
       // Position each model
       if (file.includes('cliff')) {
         model.position.set(15, -1, -15);
