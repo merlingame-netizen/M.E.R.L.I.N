@@ -304,6 +304,12 @@ function createCandles(scene: THREE.Scene): CandleData[] {
 
   const candles: CandleData[] = [];
 
+  // Single shared PointLight covers all 3 candles — saves 2 GPU light slots vs individual lights.
+  // Positioned at centroid of the 3 candle positions, larger range to cover all.
+  const sharedLight = new THREE.PointLight(0xff9933, 1.8, 9, 2);
+  sharedLight.position.set((-5 + 0 + 3) / 3, (-1.6 + -4.6 + -3.0) / 3 + 0.55, (-7 + -8.5 + -6) / 3);
+  scene.add(sharedLight);
+
   for (let i = 0; i < candlePositions.length; i++) {
     const [cx, cy, cz] = candlePositions[i]!;
 
@@ -317,10 +323,8 @@ function createCandles(scene: THREE.Scene): CandleData[] {
     wick.position.set(cx, cy + 0.4, cz);
     scene.add(wick);
 
-    // Flame light
-    const light = new THREE.PointLight(0xff9933, 1.8, 4.5, 2);
-    light.position.set(cx, cy + 0.55, cz);
-    scene.add(light);
+    // All candles reference the shared light; updateCandles drives intensity from last candle's flicker.
+    const light = sharedLight;
 
     // Particle system (20 particles, upward drift, orange→transparent)
     const N = 20;
@@ -599,7 +603,7 @@ function createSkull(): THREE.Group {
   return group;
 }
 
-// ── Ambient Lighting — 5-source pass ────────────────────────────────────────
+// ── Ambient Lighting — 3-source pass (mobile-safe: AmbientLight + key + rim + fill = 4) ──
 function setupLighting(scene: THREE.Scene): void {
   scene.add(new THREE.AmbientLight(0x1a1008, 0.5));                          // dark warm base
   const key = new THREE.PointLight(0xff6618, 1.1, 22, 1.6);
@@ -608,11 +612,7 @@ function setupLighting(scene: THREE.Scene): void {
   rim.position.set(8, 2, 7); scene.add(rim);                                 // cool rim from door
   const fill = new THREE.PointLight(0xcc8833, 0.4, 16, 2.0);
   fill.position.set(-9, 0, -5); scene.add(fill);                             // warm fill left wall
-  // Dedicated fill for bookshelf (right wall x=+8) — was unlit by left-side fill
-  const shelfFill = new THREE.PointLight(0xaa6622, 0.8, 6, 2.0);
-  shelfFill.position.set(9, 2, -7); scene.add(shelfFill);                   // bookshelf book spines
-  const cauldron = new THREE.PointLight(0x336622, 0.35, 10, 2.5);
-  cauldron.position.set(2, -4, -7); scene.add(cauldron);                     // green cauldron accent
+  // shelfFill and cauldron accent removed — crystal + CauldronSystem.glow cover those areas
 }
 
 // ── Main Export ──────────────────────────────────────────────────────────────
@@ -676,8 +676,9 @@ export function initMerlinLair(container: HTMLElement): LairResult {
   // Forest window + day/night/season cycle
   const lairWindow = createLairWindow(scene);
 
-  // GLB asset overlays (async — procedural fallbacks remain if GLB unavailable)
-  loadLairGLBs(scene);
+  // GLB asset overlays (async — procedural fallbacks remain if GLB unavailable).
+  // Pass procedural groups so table_druidique.glb + bibliotheque.glb hide them on load (fixes z-fighting).
+  loadLairGLBs(scene, { mapGroup, shelfGroup });
 
   // Interactive zones for raycasting
   const interactives: InteractiveObject[] = [

@@ -1,5 +1,6 @@
 // LairGLBAssets — Async GLB overlays for MerlinLairScene.
-// Each GLB enhances the procedural mesh already visible; fallback = procedural stays.
+// Each GLB replaces the procedural mesh; on success the procedural group is hidden.
+// On load failure, procedural fallback stays visible.
 
 import * as THREE from 'three';
 import { loadGLB } from '../engine/AssetLoader';
@@ -10,7 +11,15 @@ const CANDLE_POSITIONS: Array<[number, number, number]> = [
   [3, -4.85, -6],
 ];
 
-export function loadLairGLBs(scene: THREE.Scene): void {
+export interface LairProceduralGroups {
+  mapGroup: THREE.Group;
+  shelfGroup: THREE.Group;
+}
+
+export function loadLairGLBs(
+  scene: THREE.Scene,
+  proceduralGroups?: LairProceduralGroups,
+): void {
   // Cauldron: Blender low-poly (bois brun + métal sombre, 34 polys, validated)
   loadGLB('/cauldron_merlin.glb').then((gltf) => {
     gltf.scene.traverse((child) => {
@@ -35,17 +44,19 @@ export function loadLairGLBs(scene: THREE.Scene): void {
     }
   }).catch(() => { /* procedural candle bodies remain */ });
 
-  // Table druidique: anchored to map-table zone position
+  // Table druidique: anchored to map-table zone. Hide procedural mapGroup on success.
   loadGLB('/table_druidique.glb').then((gltf) => {
     gltf.scene.position.set(-5, -5.0, -3);
     gltf.scene.scale.setScalar(1.0);
     scene.add(gltf.scene);
+    if (proceduralGroups) proceduralGroups.mapGroup.visible = false;
   }).catch(() => { /* procedural map table remains */ });
 
-  // Bibliothèque: right-wall zone, slight z-scale reduction to fit depth
+  // Bibliothèque: right-wall zone. Hide procedural shelfGroup on success.
   loadGLB('/bibliotheque.glb').then((gltf) => {
     gltf.scene.position.set(8.8, -5.0, -8);
     gltf.scene.scale.set(1.2, 1.0, 0.8);
     scene.add(gltf.scene);
+    if (proceduralGroups) proceduralGroups.shelfGroup.visible = false;
   }).catch(() => { /* procedural bookshelf remains */ });
 }
