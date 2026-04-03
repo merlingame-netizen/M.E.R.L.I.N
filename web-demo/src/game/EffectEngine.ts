@@ -61,6 +61,7 @@ function scaleAndCap(code: string, rawAmount: number, multiplier: number): numbe
     DAMAGE_LIFE: EFFECT_CAPS.DAMAGE_LIFE,
     DAMAGE_CRITICAL: EFFECT_CAPS.DAMAGE_CRITICAL,
     ADD_BIOME_CURRENCY: EFFECT_CAPS.ADD_BIOME_CURRENCY,
+    ADD_ANAM: { max: 20 }, // prevent ADD_ANAM:999 from corrupting cross-run anam
   };
   const cap = capsMap[code];
   if (!cap) return scaled;

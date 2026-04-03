@@ -54,6 +54,7 @@ export function pickMinigame(field: string): string {
 /** Raw shape of a template as stored in cards.json. */
 interface FastRouteTemplate {
   readonly narrative: string;
+  readonly biome?: string; // Optional biome tag — used for biome-filtered pool selection
   readonly options: readonly [
     { readonly verb: string; readonly text: string; readonly effects: readonly string[] },
     { readonly verb: string; readonly text: string; readonly effects: readonly string[] },
@@ -63,6 +64,10 @@ interface FastRouteTemplate {
 
 /** In-memory cache populated by loadTemplates(). */
 let _templates: FastRouteTemplate[] | null = null;
+
+/** Ring buffer tracking the last 3 templates used — prevents consecutive repeats. */
+const _recentTemplates: FastRouteTemplate[] = [];
+const RECENT_CARD_BUFFER = 3;
 
 /**
  * Fetch and cache the card templates from /data/cards.json.
@@ -100,8 +105,21 @@ const EMERGENCY_TEMPLATE: FastRouteTemplate = {
 
 /** Generate a card using FastRoute (templates loaded from /data/cards.json). */
 export function generateFastRouteCard(biome: string): Card {
-  const pool = _templates !== null && _templates.length > 0 ? _templates : [EMERGENCY_TEMPLATE];
-  const template = pick(pool);
+  const allTemplates = _templates !== null && _templates.length > 0 ? _templates : [EMERGENCY_TEMPLATE];
+
+  // BUG-1 fix: prefer biome-tagged pool; fallback to full pool when < 3 tagged cards available
+  const biomePool = allTemplates.filter(t => t.biome === biome);
+  const pool = biomePool.length >= 3 ? biomePool : allTemplates;
+
+  // BUG-2 fix: avoid the last RECENT_CARD_BUFFER templates (prevents consecutive repeats,
+  // critical when biome pool narrows to ~20 cards — 78% repeat chance over 30 cards without this)
+  const available = pool.filter(t => !_recentTemplates.includes(t));
+  const candidates = available.length >= 1 ? available : pool; // fallback if pool is tiny
+  const template = pick(candidates);
+
+  // Update ring buffer (FIFO, max 3 entries)
+  _recentTemplates.push(template);
+  if (_recentTemplates.length > RECENT_CARD_BUFFER) _recentTemplates.shift();
   const options = template.options.map((opt) => ({
     verb: opt.verb,
     text: opt.text,
