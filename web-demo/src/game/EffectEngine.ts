@@ -182,8 +182,7 @@ export function applyEffects(effects: readonly string[], multiplier = 1.0): Effe
       default:
         // Known future codes (ADD_KARMA, ADD_TENSION, PROGRESS_MISSION, SET_FLAG,
         // ADD_TAG, REMOVE_TAG, UNLOCK_OGHAM) reach here as no-ops — state unchanged.
-        // Warn so card authors notice.
-        console.warn(`[EffectEngine] No-op effect (not yet implemented): ${code}`);
+        // Parsed and accepted so card templates using future codes don't get rejected.
         applied.push(effectStr);
         break;
     }

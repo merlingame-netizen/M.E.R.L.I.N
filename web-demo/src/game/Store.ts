@@ -261,7 +261,7 @@ export const store = createStore<MerlinStore>((set, get) => ({
   })),
 
   addBiomeCurrency: (amount) => set((s) => ({
-    run: { ...s.run, biomeCurrency: s.run.biomeCurrency + amount },
+    run: { ...s.run, biomeCurrency: Math.max(0, s.run.biomeCurrency + amount) },
   })),
 
   incrementCardsPlayed: () => set((s) => {
