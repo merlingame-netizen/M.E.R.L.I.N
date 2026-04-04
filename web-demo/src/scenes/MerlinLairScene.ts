@@ -1075,6 +1075,12 @@ export function initMerlinLair(container: HTMLElement): LairResult {
   renderer.domElement.addEventListener('touchend', onTouchEnd);
   renderer.domElement.addEventListener('keydown', onKeyDown);
 
+  // C53: camera sway angular frequencies — computed ONCE at init, not per rAF frame.
+  // Eliminates 4 multiplications/frame (0.3*PI*2 and 0.17*PI*2 are constant; V8 cannot
+  // constant-fold across closure boundaries without an explicit const declaration).
+  const SWAY_X_FREQ = 0.3 * Math.PI * 2;  // 1.885 rad/s (0.3 Hz)
+  const SWAY_Y_FREQ = 0.17 * Math.PI * 2; // 1.068 rad/s (0.17 Hz)
+
   // Update loop
   const update = (dt: number): void => {
     if (lairDisposed) return; // C105: guard stale rAF frame after dispose() on slow devices
@@ -1090,9 +1096,9 @@ export function initMerlinLair(container: HTMLElement): LairResult {
 
     // Camera slow sway — only after entry cinematic to keep pull-in as pure Z track
     if (entryCamDone) {
-      camera.position.x = Math.sin(elapsedTime * 0.3 * Math.PI * 2) * 0.1;
+      camera.position.x = Math.sin(elapsedTime * SWAY_X_FREQ) * 0.1; // C53: SWAY_X_FREQ = 0.3*PI*2 (hoisted)
       // C50: 0.23→0.17Hz — beat period: |0.3-0.23|⁻¹=14.3s (noticeable loop) → |0.3-0.17|⁻¹=7.7s (below perceptual threshold)
-      camera.position.y = 0.5 + Math.sin(elapsedTime * 0.17 * Math.PI * 2) * 0.06;
+      camera.position.y = 0.5 + Math.sin(elapsedTime * SWAY_Y_FREQ) * 0.06; // C53: SWAY_Y_FREQ = 0.17*PI*2 (hoisted)
     } else {
       camera.position.x = 0;   // no lateral drift during cinematic
       camera.position.y = 0.5; // stable Y baseline
@@ -1108,9 +1114,11 @@ export function initMerlinLair(container: HTMLElement): LairResult {
     // C111: also animate GLB material emissive — procedural mat targets hidden sphere post-load (BUG-C46-01)
     if (crystalGLBMat) crystalGLBMat.emissiveIntensity = crystalEmissive;
     // C118: procedural sphere uses -1.0 (always correct); GLB uses crystalGLBBaseY delta (GLB root Y)
-    crystalData.sphere.position.y = -1.0 + Math.sin(elapsedTime * 0.9) * 0.04;
+    // C53: cache float sin — sin(t*0.9) used twice (sphere + GLB); one call instead of two per frame
+    const floatSin = Math.sin(elapsedTime * 0.9);
+    crystalData.sphere.position.y = -1.0 + floatSin * 0.04;
     // C101: sync GLB group float — procedural sphere is hidden post-load, GLB takes its place
-    if (crystalGLBGroup) crystalGLBGroup.position.y = crystalGLBBaseY + Math.sin(elapsedTime * 0.9) * 0.04;
+    if (crystalGLBGroup) crystalGLBGroup.position.y = crystalGLBBaseY + floatSin * 0.04;
 
     // Door light flicker — C101: burst overrides normal flicker during door cinematic
     if (doorFlashing) {
