@@ -27,6 +27,10 @@ export class MinigameCombatRituel extends MinigameBase {
   private animFrame = 0;
   private timerInterval = 0;
   private ended = false;
+  // C119/COMBAT-01: cached DOM refs — was getElementById every frame / every 100ms setInterval
+  private timerFillEl: HTMLElement | null = null;
+  private timerBarEl: HTMLElement | null = null;
+  private statusEl: HTMLElement | null = null;
 
   // Canvas dimensions
   private readonly canvasW = 380;
@@ -104,6 +108,10 @@ export class MinigameCombatRituel extends MinigameBase {
     statusEl.style.cssText = `width:min(${this.canvasW}px,100%);max-width:${this.canvasW}px;min-height:24px;margin:8px auto 0;color:rgba(232,220,200,0.6);font-size:13px;text-align:center;font-family:system-ui;`;
     statusEl.textContent = 'Survie: 0.0s';
     this.container.appendChild(statusEl);
+    // C119/COMBAT-01: cache refs so render() and setInterval don't call getElementById each tick
+    this.timerFillEl = timerFill;
+    this.timerBarEl = timerBar;
+    this.statusEl = statusEl;
 
     // Input -- pointer move
     this.canvas.addEventListener('pointermove', this.onPointerMove);
@@ -143,10 +151,8 @@ export class MinigameCombatRituel extends MinigameBase {
       this.timeLeft -= 0.1;
       this.checkCriticalAlert(this.timeLeft); // C101: fire critical_alert SFX once at 3s
       const pct = Math.max(0, (this.timeLeft / this.totalTime) * 100);
-      const fill = document.getElementById('mg-combat-timer-fill');
-      if (fill) fill.style.width = `${pct}%`;
-      const bar = document.getElementById('mg-combat-timer');
-      if (bar) bar.setAttribute('aria-valuenow', String(Math.round(pct)));
+      if (this.timerFillEl) this.timerFillEl.style.width = `${pct}%`;
+      if (this.timerBarEl) this.timerBarEl.setAttribute('aria-valuenow', String(Math.round(pct)));
       if (this.timeLeft <= 0) {
         this.endGame();
       }
@@ -287,10 +293,7 @@ export class MinigameCombatRituel extends MinigameBase {
     if (this.hitFlash > 0) this.hitFlash -= dt * 2;
 
     // Update status
-    const statusEl = document.getElementById('mg-combat-status');
-    if (statusEl) {
-      statusEl.textContent = `Survie: ${this.survivalTime.toFixed(1)}s | Centre: ${this.centerTime.toFixed(1)}s`;
-    }
+    if (this.statusEl) this.statusEl.textContent = `Survie: ${this.survivalTime.toFixed(1)}s | Centre: ${this.centerTime.toFixed(1)}s`;
 
     // Clear
     ctx.clearRect(0, 0, this.canvasW, this.canvasH);
