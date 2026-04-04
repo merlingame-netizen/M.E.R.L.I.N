@@ -1,78 +1,49 @@
 {
   "state": "idle",
-  "cycle": 94,
-  "objective": "Cycle 94 — C124: mg_volonte display formula + lair stone tile square proportions",
+  "cycle": 95,
+  "objective": "Cycle 95 — C125: mg_ombres live display aligned with score formula (collision penalty)",
   "checkpoint": "complete",
   "audit_summary": {
-    "audit_cycle": "C124",
-    "global_score": 9.83,
+    "audit_cycle": "C125",
+    "global_score": 9.85,
     "verdict": "PROCEED",
     "bugs_fixed": [
-      "C124/VOL-FORMULA-01 (MEDIUM): mg_volonte live 'Focus:%' display used timeOnTarget/elapsedTime — showed 100% at game start (division by near-zero) and diverged from the score formula (timeOnTarget/totalTime * 100). Same pattern as SF-HUD-01 (C121/mg_sang_froid). Fix: use totalTime as denominator in both display and score. Affects every Volonte minigame play.",
-      "C124/LAIR-TILE-01 (LOW→visual quality): InstancedMesh stone wall tiles had ROW_H = 16/3 ≈ 5.33u — tiles 4u wide but 5.33u tall, visible Y-elongation on all 3 lair walls. Fix: ROW_H = 16/4 = 4.0u (square 4×4 tiles). Rows 3→4, instances 48→64. Still 3 draw calls (InstancedMesh). Proportions géométriques score: 7.5→8.5."
+      "C125/OMB-FORMULA-01 (HIGH): mg_ombres live status showed maxProgress*100 (e.g. 85%) but final score applied collision penalty — gap up to 70pts. Player who wall-hugged throughout could see 'Progression: 85%' then receive score ~12. Fix: live display now computes estScore = maxProgress*100*(1-livePenalty*0.85) where livePenalty=collisionTime/totalTime — same formula as endGame(). Shows 'Score: ~N%' or 'COLLISION ! Score: ~N%'. C124-02 from playtester. Third formula-alignment fix (after SF-HUD-01/C121 and VOL-FORMULA-01/C124)."
     ],
-    "c124_verdict": "CLEAR — Volonte formula aligned, wall tiles square. 0 TS errors.",
-    "c124_confirmations": [
-      "mg_volonte.ts: focusPct = timeOnTarget/totalTime (was elapsedTime)",
-      "LairGLBAssets.ts: ROW_H = 16/4 = 4.0u, ROWS = 4. Back wall 24 tiles, left/right 20 each. Total 64.",
-      "Build: main=51.99KB gzip (+0.01KB), minigames=25.42KB gzip. 0 TS errors."
+    "c125_verdict": "CLEAR — Ombres display formula aligned. All 3 display/score divergences now fixed (sang_froid, volonte, ombres). 0 TS errors.",
+    "c125_confirmations": [
+      "mg_ombres.ts: livePenalty = collisionTime/totalTime; estScore = maxProgress*100*(1-livePenalty*0.85)",
+      "Build: main=51.99KB gzip, minigames=25.45KB gzip (+0.02KB). 0 TS errors."
     ],
     "open_issues_deferred": [
       "LOW LAIR-01: No pause() API on LairResult.",
       "LOW: potionBottles bloom (emissiveIntensity=0.25).",
-      "LOW C122-07b: triggerFlipAnimation 420ms timeout not cleared if hideCard() fires within window (cosmetic).",
+      "LOW C122-07b: triggerFlipAnimation 420ms timeout not cleared (cosmetic).",
       "LOW C122-13: _skipOceanFrame naming inversion in CoastBiome.ts.",
-      "LOW C122-16: OghamPanel locked-ogham aria-label missing lock status announcement.",
-      "MEDIUM: applyFlatShading() defined in LairGLBAssets but not called on cauldron/table/biblio/bougie/crystal GLB load paths — potential non-flat shading on imported meshes.",
-      "MEDIUM: No visibilitychange guard in RAF loop — burns CPU/GPU on hidden tabs."
+      "LOW C122-16: OghamPanel locked-ogham aria-label missing lock status.",
+      "MEDIUM: applyFlatShading() not called on cauldron/table/biblio/bougie/crystal GLB paths.",
+      "MEDIUM: No visibilitychange guard in RAF loop."
     ],
     "pushed": true,
-    "build": "0 TS errors, main=51.99KB gzip, minigames=25.42KB gzip"
+    "build": "0 TS errors, main=51.99KB gzip, minigames=25.45KB gzip"
   },
-  "eval_12_criteria_C124": {
-    "flat_shading_coherence": { "score": 9.0, "note": "mur_pierre tileMat flatShading forced inline ✓. applyFlatShading() defined but not applied to cauldron/table/biblio/bougie/crystal load paths — deferred MEDIUM." },
-    "z_fighting_residual": { "score": 9.0, "note": "C122 door panel + C129 mortar fixed. Tiles now 4×4 (square) — no elongation." },
-    "materiaux_qualite": { "score": 9.0, "note": "potionBottles emissive LOW only." },
-    "lighting_dramaturgie": { "score": 8.0, "note": "6 sources + HemiLight animated. No shadow map." },
-    "glb_coverage": { "score": 10.0, "note": "7/7 + isDisposed + cancelGLBFades + raycaster swap callbacks." },
-    "proportions_geometriques": { "score": 8.5, "note": "+1.0: C124 stone tiles square (4×4u). 64 instances, 3 draw calls unchanged." },
-    "bundle_perf": { "score": 9.8, "note": "main=51.99KB, minigames=25.42KB. Zero DOM queries runtime." },
-    "memory_leaks": { "score": 10.0, "note": "keyDownHandlers[] + panelMat traverse + HUD teardown + GLB cancelHandles all clean." },
-    "ux_aria": { "score": 9.8, "note": "ARIA order fix ✓. 1/2/3 + Enter/Space + click ✓. OghamPanel locked aria LOW deferred." },
-    "hover_feedback": { "score": 9.0, "note": "Lair zones + minigame pulsing + card option highlight." },
-    "door_cinematic": { "score": 9.5, "note": "Entry pull-in + door flash + C122 polygonOffset." },
-    "celtic_lore_immersion": { "score": 9.3, "note": "+0.1: Volonte formula fix — player feedback now matches actual score. Zone toasts + ariaLive ✓." }
-  },
-  "global_score_C124": 9.83,
-  "architecture_quality": {
-    "cancelTimers_contract": "14/14 COMPLETE ✓",
-    "ended_guard_render": "14/14 COMPLETE ✓",
-    "tieredValue_coverage": "14/14 minigames",
-    "aria_coverage": "13/13 canvases + HUD + lair zones ✓",
-    "sfx_coverage": "13/13 minigames",
-    "touch_action_none": "14/14 canvases confirmed",
-    "storageKey_per_minigame": "14/14 (C94)",
-    "immutability_minigames": "14/14 COMPLETE ✓",
-    "saveRunEnd_idempotency": "savedThisRun flag 5 break paths (C98)",
-    "getElementById_at_runtime": "ZERO across all 14 minigames + HUD ✓",
-    "hud_cache_module_level": "14 cached refs (C121/HUD-01)",
-    "traces_hitRadius_mobile": "tieredValue([38,30,22,20]) WCAG 2.5.5 ✓ (C121/TRC-03)",
-    "sangfroid_display_score_alignment": "totalTime formula ✓ (C121/SF-HUD-01)",
-    "card_digit_shortcuts": "1/2/3 handler + all cleanup paths (C122/CARD-KB-01)",
-    "door_panel_polygonoffset": "panelMat clone polygonOffset(-1,-2) (C122/DOOR-ZF-01)",
-    "card_aria_order": "visible→textContent NVDA/JAWS fix (C123/CARD-ARIA-01)",
-    "card_keydown_leak": "keyDownHandlers[] safety timeout cleanup (C123/CARD-LEAK-01)",
-    "runsummary_save_compat": "cardsPlayed??0, anamThisRun??0, factionDeltaThisRun??{} (C123)",
-    "volonte_display_formula": "timeOnTarget/totalTime (was elapsedTime) — aligned with score (C124/VOL-FORMULA-01)",
-    "lair_tile_square_proportions": "ROW_H=4.0u (was 5.33u), 4 rows, 64 instances (C124/LAIR-TILE-01)"
+  "display_formula_audit": {
+    "mg_sang_froid": "FIXED C121/SF-HUD-01 — timeInside/totalTime (was elapsedTime)",
+    "mg_volonte": "FIXED C124/VOL-FORMULA-01 — timeOnTarget/totalTime (was elapsedTime)",
+    "mg_ombres": "FIXED C125/OMB-FORMULA-01 — estScore with livePenalty (was maxProgress*100 only)",
+    "mg_traces": "N/A — score is hitCount/footprintCount + timeBonus, no live formula",
+    "mg_herboristerie": "CLEAN — score event-driven (playtester C124)",
+    "mg_regard": "CLEAN — denominator is attemptsTotal (playtester C124)",
+    "mg_negociation": "CLEAN — direct mutation functionally correct (playtester C124)",
+    "remaining_11": "Not yet audited for display/score divergence"
   },
   "cycle_32_progression": {
     "C98": 8.88, "C99": 8.92, "C100": 8.94, "C101": 8.96, "C102": 9.05,
     "C103": 9.08, "C104": 9.12, "C105": 9.18, "C106": 9.25,
     "C116_final_sweep": 9.30, "C118_gpu_pause": 9.40, "C119_immut_dom": 9.50,
     "C120_dom_elimination": 9.60, "C121_hud_cache_trc_sfhud": 9.68, "C122_digits_doorzf": 9.73,
-    "C123_aria_leak_runsummary": 9.78, "C124_volonte_tilesquare": 9.83
+    "C123_aria_leak_runsummary": 9.78, "C124_volonte_tilesquare": 9.83, "C125_ombres_formula": 9.85
   },
   "workers": [],
-  "updated_at": "2026-04-04T23:45:00.000Z"
+  "updated_at": "2026-04-04T23:55:00.000Z"
 }

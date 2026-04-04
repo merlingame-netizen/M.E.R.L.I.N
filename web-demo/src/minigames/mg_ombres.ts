@@ -236,12 +236,15 @@ export class MinigameOmbres extends MinigameBase {
       this.collisionTime += dt;
     }
 
-    // Update status
+    // Update status — C125/OMB-FORMULA-01: show estimated score matching endGame() formula.
+    // Was: maxProgress*100 (ignores collision penalty) — diverged up to 70pts from final score.
+    // Fix: live penalty = collisionTime/totalTime (same as endGame), estScore mirrors the result.
     if (this.statusEl) {
-      const pctProg = Math.round(this.maxProgress * 100);
+      const livePenalty = this.totalTime > 0 ? Math.min(1, this.collisionTime / this.totalTime) : 0;
+      const estScore = Math.round(this.maxProgress * 100 * (1 - livePenalty * 0.85));
       this.statusEl.textContent = this.colliding
-        ? `COLLISION ! Progression: ${pctProg}%`
-        : `Progression: ${pctProg}%`;
+        ? `COLLISION ! Score: ~${estScore}%`
+        : `Score: ~${estScore}%`;
     }
 
     // Clear
