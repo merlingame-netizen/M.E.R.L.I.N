@@ -339,20 +339,20 @@ export class MinigameEquilibre extends MinigameBase {
     // Center dot
     ctx.beginPath();
     ctx.arc(cursorPixelX, this.pathY, 3, 0, Math.PI * 2);
-    ctx.fillStyle = '#e8dcc8';
+    ctx.fillStyle = 'rgba(51,255,102,0.85)';
     ctx.fill();
 
     // Wind indicator arrow
     if (this.windArrowAlpha > 0.01) {
       ctx.save();
       ctx.globalAlpha = this.windArrowAlpha;
-      ctx.fillStyle = '#cd853f';
-      ctx.font = 'bold 28px system-ui';
+      ctx.fillStyle = 'rgba(51,255,102,0.80)';
+      ctx.font = 'bold 28px Courier New';
       ctx.textAlign = 'center';
       ctx.textBaseline = 'middle';
       const arrowChar = this.windArrowDir < 0 ? '\u2190' : '\u2192';
       ctx.fillText(arrowChar, centerX, 40);
-      ctx.font = '14px system-ui';
+      ctx.font = '14px Courier New';
       ctx.fillText('Vent !', centerX, 65);
       ctx.restore();
     }
@@ -365,7 +365,7 @@ export class MinigameEquilibre extends MinigameBase {
       ? Math.round((this.timeInZone / elapsedForScore) * 100)
       : 100;
     ctx.fillStyle = 'rgba(232,220,200,0.7)';
-    ctx.font = '14px system-ui';
+    ctx.font = '14px Courier New';
     ctx.textAlign = 'right';
     ctx.textBaseline = 'top';
     ctx.fillText(`Equilibre: ${currentScore}%`, this.canvasW - 12, 12);

@@ -367,7 +367,7 @@ export class MinigameSangFroid extends MinigameBase {
 
     // HUD: score % in canvas top-left — C121/SF-HUD-01: aligned with score formula (totalTime, not elapsedTime)
     const pct = this.totalTime > 0 ? Math.round((this.timeInside / this.totalTime) * 100) : 100;
-    ctx.font = 'bold 16px system-ui';
+    ctx.font = 'bold 16px Courier New';
     ctx.textAlign = 'left';
     ctx.textBaseline = 'top';
     ctx.fillStyle = this.isInside ? 'rgba(140,200,120,0.85)' : 'rgba(200,90,50,0.85)';

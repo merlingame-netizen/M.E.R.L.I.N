@@ -342,7 +342,7 @@ export class MinigameCombatRituel extends MinigameBase {
       const rx = this.centerX + Math.cos(a) * (this.arenaRadius - 4);
       const ry = this.centerY + Math.sin(a) * (this.arenaRadius - 4);
       ctx.fillStyle = 'rgba(139,32,32,0.5)';
-      ctx.font = '12px system-ui';
+      ctx.font = '12px Courier New';
       ctx.textAlign = 'center';
       ctx.textBaseline = 'middle';
       ctx.fillText('\u1680', rx, ry); // ogham space mark as decoration
@@ -384,9 +384,9 @@ export class MinigameCombatRituel extends MinigameBase {
     // Player dot
     ctx.beginPath();
     ctx.arc(px, py, 6, 0, Math.PI * 2);
-    ctx.fillStyle = this.hit ? '#c84040' : '#e8dcc8';
+    ctx.fillStyle = this.hit ? '#c84040' : 'rgba(51,255,102,0.85)';
     ctx.fill();
-    ctx.strokeStyle = this.hit ? '#ff6060' : '#cd853f';
+    ctx.strokeStyle = this.hit ? '#ff6060' : 'rgba(51,255,102,0.60)';
     ctx.lineWidth = 2;
     ctx.stroke();
 

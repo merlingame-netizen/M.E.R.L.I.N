@@ -380,7 +380,7 @@ export class MinigameNegociation extends MinigameBase {
 
     // Faction indicator at top
     ctx.fillStyle = 'rgba(205,133,63,0.5)';
-    ctx.font = 'bold 13px system-ui';
+    ctx.font = 'bold 13px Courier New';
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
     ctx.fillText(
@@ -393,7 +393,7 @@ export class MinigameNegociation extends MinigameBase {
     if (this.comboCount > 1) {
       const comboPulse = 0.7 + Math.sin(this.pulsePhase * 6) * 0.3;
       ctx.fillStyle = `rgba(255,200,60,${comboPulse})`;
-      ctx.font = 'bold 16px system-ui';
+      ctx.font = 'bold 16px Courier New';
       ctx.textAlign = 'right';
       ctx.fillText(`Combo x${this.comboCount}`, this.canvasW - 12, 16);
     }
@@ -403,7 +403,7 @@ export class MinigameNegociation extends MinigameBase {
     if (this.maxCombo > 0) {
       const capReached = this.maxCombo >= 5;
       ctx.fillStyle = capReached ? 'rgba(255,200,60,0.9)' : 'rgba(255,200,60,0.45)';
-      ctx.font = '11px system-ui';
+      ctx.font = '11px Courier New';
       ctx.textAlign = 'right';
       ctx.fillText(capReached ? 'BONUS MAX \u2713' : `Meilleur: ${this.maxCombo}/5`, this.canvasW - 12, 30);
     }
@@ -411,7 +411,7 @@ export class MinigameNegociation extends MinigameBase {
     // Score display
     const factionPicked = this.pickedSequence.filter((w) => w.isFactionWord).length;
     ctx.fillStyle = 'rgba(232,220,200,0.5)';
-    ctx.font = '12px system-ui';
+    ctx.font = '12px Courier New';
     ctx.textAlign = 'left';
     ctx.fillText(`Mots: ${factionPicked}`, 10, 16);
 
@@ -428,7 +428,7 @@ export class MinigameNegociation extends MinigameBase {
     if (visibleForKb.length === 0 && document.activeElement === this.canvas) {
       ctx.save();
       ctx.fillStyle = 'rgba(205,133,63,0.55)';
-      ctx.font = '11px system-ui';
+      ctx.font = '11px Courier New';
       ctx.textAlign = 'center';
       ctx.textBaseline = 'alphabetic';
       ctx.fillText('⌨ Prêt…', this.canvas.width / 2, this.canvas.height - 16);
@@ -475,7 +475,7 @@ export class MinigameNegociation extends MinigameBase {
       }
 
       // Word text
-      ctx.font = sw.word.isFactionWord ? 'bold 15px system-ui' : '14px system-ui';
+      ctx.font = sw.word.isFactionWord ? 'bold 15px Courier New' : '14px Courier New';
       ctx.textAlign = 'left';
       ctx.textBaseline = 'middle';
 
@@ -493,7 +493,7 @@ export class MinigameNegociation extends MinigameBase {
       // Picked checkmark
       if (sw.picked && sw.word.isFactionWord) {
         ctx.fillStyle = `rgba(90,200,90,${sw.fadeAlpha})`;
-        ctx.font = 'bold 18px system-ui';
+        ctx.font = 'bold 18px Courier New';
         ctx.fillText('\u2713', sw.x + textWidth - 4, sw.y);
       }
     }

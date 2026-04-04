@@ -202,7 +202,7 @@ export class MinigameTraces extends MinigameBase {
         ctx.beginPath();
         ctx.arc(0, 0, 22 * pulse, 0, Math.PI * 2);
         ctx.fill();
-        ctx.fillStyle = '#cd853f';
+        ctx.fillStyle = 'rgba(51,255,102,0.80)';
       } else {
         // Future — dim
         ctx.fillStyle = 'rgba(200,200,200,0.2)';
@@ -215,7 +215,7 @@ export class MinigameTraces extends MinigameBase {
 
       // Index number
       ctx.fillStyle = fp.hit ? '#2d5a2d' : 'rgba(255,255,255,0.5)';
-      ctx.font = '10px system-ui';
+      ctx.font = '10px Courier New';
       ctx.textAlign = 'center';
       ctx.textBaseline = 'middle';
       ctx.fillText(`${fp.index + 1}`, 0, 0);

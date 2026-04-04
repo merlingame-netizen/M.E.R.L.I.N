@@ -304,7 +304,7 @@ export class MinigameApaisement extends MinigameBase {
     if (this.showGuide && this.elapsedTime < 5) {
       const guideAlpha = Math.max(0, 1 - this.elapsedTime / 5);
       ctx.fillStyle = `rgba(90,138,90,${guideAlpha * 0.6})`;
-      ctx.font = '14px system-ui';
+      ctx.font = '14px Courier New';
       ctx.textAlign = 'center';
       ctx.textBaseline = 'middle';
       ctx.fillText('Clique aux extremes', this.centerX, this.centerY + this.maxRadius + 30);
@@ -365,7 +365,7 @@ export class MinigameApaisement extends MinigameBase {
 
     // Phase label
     ctx.fillStyle = 'rgba(232,220,200,0.3)';
-    ctx.font = '12px system-ui';
+    ctx.font = '12px Courier New';
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
     ctx.fillText(
@@ -378,7 +378,7 @@ export class MinigameApaisement extends MinigameBase {
       ctx.save();
       ctx.globalAlpha = this.feedbackAlpha;
       ctx.fillStyle = this.feedbackColor;
-      ctx.font = 'bold 22px system-ui';
+      ctx.font = 'bold 22px Courier New';
       ctx.textAlign = 'center';
       ctx.textBaseline = 'middle';
       ctx.fillText(this.lastTapFeedback, this.centerX, this.centerY + this.maxRadius + 24);

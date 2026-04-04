@@ -387,7 +387,7 @@ export class MinigameFouille extends MinigameBase {
       }
 
       // Text
-      ctx.font = '12px system-ui';
+      ctx.font = '12px Courier New';
       ctx.textAlign = 'center';
       ctx.textBaseline = 'middle';
 
@@ -398,9 +398,9 @@ export class MinigameFouille extends MinigameBase {
         ctx.shadowBlur = 8;
       } else if (obj.isTarget) {
         // Target blends with decoys (same color as decoys)
-        ctx.fillStyle = isHover ? '#e8dcc8' : 'rgba(232,220,200,0.65)';
+        ctx.fillStyle = isHover ? 'rgba(51,255,102,0.90)' : 'rgba(51,255,102,0.65)';
       } else {
-        ctx.fillStyle = isHover ? '#e8dcc8' : 'rgba(232,220,200,0.55)';
+        ctx.fillStyle = isHover ? '#e8dcc8' : 'rgba(51,255,102,0.55)';
       }
 
       ctx.fillText(obj.label, 0, 1);

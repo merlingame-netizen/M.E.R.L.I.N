@@ -310,7 +310,7 @@ export class MinigameRunes extends MinigameBase {
 
         // Question mark
         ctx.fillStyle = 'rgba(205,133,63,0.4)';
-        ctx.font = 'bold 28px system-ui';
+        ctx.font = 'bold 28px Courier New';
         ctx.textAlign = 'center';
         ctx.textBaseline = 'middle';
         ctx.fillText('?', tile.x + this.tileSize / 2, tile.y + this.tileSize / 2);
@@ -326,7 +326,7 @@ export class MinigameRunes extends MinigameBase {
         ctx.stroke();
 
         // Ogham symbol
-        ctx.fillStyle = '#e8dcc8';
+        ctx.fillStyle = 'rgba(51,255,102,0.85)';
         ctx.font = '32px Courier New';
         ctx.textAlign = 'center';
         ctx.textBaseline = 'middle';
@@ -334,7 +334,7 @@ export class MinigameRunes extends MinigameBase {
 
         // Label
         ctx.fillStyle = 'rgba(205,133,63,0.8)';
-        ctx.font = '11px system-ui';
+        ctx.font = '11px Courier New';
         ctx.fillText(tile.label, tile.x + this.tileSize / 2, tile.y + this.tileSize / 2 + 18);
 
       } else {
@@ -356,7 +356,7 @@ export class MinigameRunes extends MinigameBase {
 
         // Label
         ctx.fillStyle = 'rgba(143,188,143,0.5)';
-        ctx.font = '11px system-ui';
+        ctx.font = '11px Courier New';
         ctx.fillText(tile.label, tile.x + this.tileSize / 2, tile.y + this.tileSize / 2 + 18);
       }
 

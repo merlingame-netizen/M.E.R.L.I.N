@@ -349,7 +349,7 @@ export class MinigameVolonte extends MinigameBase {
     ctx.fill();
 
     // "FOCUS" label on target
-    ctx.font = '10px system-ui';
+    ctx.font = '10px Courier New';
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
     ctx.fillStyle = `rgba(${targetColor},0.4)`;

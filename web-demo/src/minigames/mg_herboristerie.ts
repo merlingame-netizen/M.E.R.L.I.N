@@ -406,21 +406,21 @@ export class MinigameHerboristerie extends MinigameBase {
 
     // Target indicator at top
     ctx.fillStyle = 'rgba(232,220,200,0.7)';
-    ctx.font = '14px system-ui';
+    ctx.font = '14px Courier New';
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
     ctx.fillText('Cherche:', this.canvasW / 2 - 40, 25);
 
-    ctx.font = '28px system-ui';
+    ctx.font = '28px Courier New';
     ctx.fillText(this.targetPlant.emoji, this.canvasW / 2 + 10, 25);
 
-    ctx.font = '13px system-ui';
+    ctx.font = '13px Courier New';
     ctx.fillStyle = 'rgba(205,133,63,0.6)';
     ctx.fillText(this.targetPlant.name, this.canvasW / 2 + 50, 25);
 
     // Score display
     ctx.fillStyle = 'rgba(232,220,200,0.6)';
-    ctx.font = '12px system-ui';
+    ctx.font = '12px Courier New';
     ctx.textAlign = 'right';
     ctx.fillText(`${this.correctPicks}/${this.totalTargets}`, this.canvasW - 12, 20);
 
@@ -468,14 +468,14 @@ export class MinigameHerboristerie extends MinigameBase {
 
       // Plant emoji
       if (!cell.picked || cell.correct) {
-        ctx.font = '28px system-ui';
+        ctx.font = '28px Courier New';
         ctx.textAlign = 'center';
         ctx.textBaseline = 'middle';
         ctx.fillStyle = cell.picked ? 'rgba(232,220,200,0.4)' : 'rgba(232,220,200,0.9)';
         ctx.fillText(cell.plant.emoji, x + this.cellSize / 2, y + this.cellSize / 2);
       } else {
         // Wrong pick: show X
-        ctx.font = 'bold 24px system-ui';
+        ctx.font = 'bold 24px Courier New';
         ctx.textAlign = 'center';
         ctx.textBaseline = 'middle';
         ctx.fillStyle = 'rgba(200,80,80,0.6)';
@@ -492,7 +492,7 @@ export class MinigameHerboristerie extends MinigameBase {
       const alpha = Math.min(1, t.life / 0.4);
       const rise = (0.8 - t.life) * 30; // float up 30px over lifetime
       ctx.fillStyle = `rgba(220,80,80,${alpha})`;
-      ctx.font = 'bold 14px system-ui';
+      ctx.font = 'bold 14px Courier New';
       ctx.textAlign = 'center';
       ctx.textBaseline = 'middle';
       ctx.fillText(`\u2212${this.wrongPenalty} pts`, t.x, t.y - rise); // C136: tieredValue not hardcoded 8

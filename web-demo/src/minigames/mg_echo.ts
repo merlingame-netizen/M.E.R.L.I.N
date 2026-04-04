@@ -375,14 +375,14 @@ export class MinigameEcho extends MinigameBase {
       ctx.stroke();
 
       // Direction label
-      ctx.font = '12px system-ui';
+      ctx.font = '12px Courier New';
       ctx.textAlign = 'center';
       ctx.textBaseline = 'middle';
       ctx.fillStyle = `rgba(232,220,200,0.4)`;
       ctx.fillText(q.label, qx, qy + 30);
 
       // Direction arrow
-      ctx.font = '20px system-ui';
+      ctx.font = '20px Courier New';
       ctx.fillStyle = `rgba(232,220,200,0.5)`;
       ctx.fillText(q.symbol, qx, qy);
     }
@@ -433,7 +433,7 @@ export class MinigameEcho extends MinigameBase {
       ctx.fillRect(20, barY, barW * timePct, barH);
 
       // Prompt
-      ctx.font = '16px system-ui';
+      ctx.font = '16px Courier New';
       ctx.textAlign = 'center';
       ctx.textBaseline = 'middle';
       ctx.fillStyle = 'rgba(232,220,200,0.7)';
@@ -456,7 +456,7 @@ export class MinigameEcho extends MinigameBase {
     // Feedback text overlay
     if (this.phase === 'feedback') {
       const fbAlpha = this.feedbackTimer / 0.5;
-      ctx.font = '28px system-ui';
+      ctx.font = '28px Courier New';
       ctx.textAlign = 'center';
       ctx.textBaseline = 'middle';
       ctx.fillStyle = this.feedback === 'hit'

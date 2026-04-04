@@ -344,14 +344,14 @@ export class MinigameCourse extends MinigameBase {
     }
 
     // Prompt -- show which symbol to find (top center)
-    ctx.fillStyle = '#e8dcc8';
-    ctx.font = '14px system-ui';
+    ctx.fillStyle = 'rgba(51,255,102,0.85)';
+    ctx.font = '14px Courier New';
     ctx.textAlign = 'center';
     ctx.textBaseline = 'top';
     ctx.fillText('Trouve:', this.canvasW / 2, 8);
 
     ctx.font = '36px Courier New';
-    ctx.fillStyle = '#cd853f';
+    ctx.fillStyle = 'rgba(51,255,102,0.80)';
     ctx.fillText(this.promptSymbol, this.canvasW / 2, 26);
 
     // Time bar for current round
@@ -433,7 +433,7 @@ export class MinigameCourse extends MinigameBase {
       }
       ctx.fillRect(0, 0, this.canvasW, this.canvasH);
 
-      ctx.font = '32px system-ui';
+      ctx.font = '32px Courier New';
       ctx.textAlign = 'center';
       ctx.textBaseline = 'middle';
       ctx.fillStyle = this.feedback === 'hit'

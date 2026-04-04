@@ -373,8 +373,8 @@ export class MinigameRegard extends MinigameBase {
     // Show phase: display sequence with numbered order
     if (this.phase === 'show') {
       // Show sequence order at top
-      ctx.fillStyle = '#e8dcc8';
-      ctx.font = '14px system-ui';
+      ctx.fillStyle = 'rgba(51,255,102,0.85)';
+      ctx.font = '14px Courier New';
       ctx.textAlign = 'center';
       ctx.textBaseline = 'top';
       ctx.fillText('Sequence:', this.canvasW / 2, 8);
@@ -384,13 +384,13 @@ export class MinigameRegard extends MinigameBase {
       for (let i = 0; i < this.sequence.length; i++) {
         const sx = seqStartX + i * seqSpacing;
         ctx.font = '24px Courier New';
-        ctx.fillStyle = '#cd853f';
+        ctx.fillStyle = 'rgba(51,255,102,0.80)';
         ctx.textAlign = 'center';
         ctx.textBaseline = 'middle';
         ctx.fillText(this.sequence[i], sx, 46);
 
         // Number below
-        ctx.font = '11px system-ui';
+        ctx.font = '11px Courier New';
         ctx.fillStyle = 'rgba(232,220,200,0.5)';
         ctx.fillText(`${i + 1}`, sx, 64);
       }
@@ -446,8 +446,8 @@ export class MinigameRegard extends MinigameBase {
 
       // Show order number during show phase
       if (this.phase === 'show' && cell.isTarget) {
-        ctx.font = '12px system-ui';
-        ctx.fillStyle = '#cd853f';
+        ctx.font = '12px Courier New';
+        ctx.fillStyle = 'rgba(51,255,102,0.80)';
         ctx.fillText(`${cell.targetIndex + 1}`, cell.gridX, cell.gridY + 18);
       }
     }
@@ -460,7 +460,7 @@ export class MinigameRegard extends MinigameBase {
         : `rgba(180,50,50,${fbAlpha * 0.15})`;
       ctx.fillRect(0, 0, this.canvasW, this.canvasH);
 
-      ctx.font = '28px system-ui';
+      ctx.font = '28px Courier New';
       ctx.textAlign = 'center';
       ctx.textBaseline = 'middle';
       ctx.fillStyle = this.feedbackCorrect
