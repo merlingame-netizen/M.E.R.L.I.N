@@ -1,0 +1,432 @@
+{
+  "report_meta": {
+    "cycle": 134,
+    "timestamp": "2026-04-04T00:00:00Z",
+    "auditor": "merlin-ai-playtester",
+    "scope": [
+      "web-demo/src/scenes/CoastBiome.ts",
+      "web-demo/src/scenes/MainMenuScene.ts",
+      "web-demo/src/game/CardSystem.ts",
+      "web-demo/src/game/EffectEngine.ts",
+      "web-demo/src/game/Store.ts",
+      "web-demo/src/scenes/LairWindow.ts"
+    ],
+    "prior_score": 9.97
+  },
+
+  "findings": {
+
+    "CoastBiome": {
+      "verdict": "BUG",
+      "issues": [
+        {
+          "id": "CB-01",
+          "severity": "HIGH",
+          "line": "408-431",
+          "title": "dispose() does not dispose shared layer materials (trunkMat / leafMat / rockMat)",
+          "detail": "createTrees() creates one trunkMat and one leafMat per layer but shares them across N meshes in that layer. createRocks() creates one shared rockMat for all 18 rocks. dispose() collects materials into a Set<Material> via group.traverse() — this SHOULD deduplicate them. However the Set approach is correct only if the material object references are identical (same instance). Because trunkMat/leafMat are created inside the layer loop and used for N meshes in that layer, they ARE the same reference. The Set dedup logic is therefore sound for those. HOWEVER: createMenhirs() creates mat (granite) and mossMat (moss) inside the factory function but they are NOT added to the Set by the current traverse — the traverse only visits Mesh nodes and calls seenMaterials.add(child.material). This IS correct because Mesh.material is the same instance object that was assigned. So this is actually clean. Conclusion after deeper analysis: dispose() is CORRECT for CoastBiome. No leak here.",
+          "verdict_correction": "PASS on materials — see CB-02 for the real issue"
+        },
+        {
+          "id": "CB-02",
+          "severity": "MEDIUM",
+          "line": "328-348",
+          "title": "GLB cloned materials are NOT disposed — they are cloned per-mesh but never tracked",
+          "detail": "Lines 339-344: each GLB mesh gets child.material = (child.material).clone(). These cloned material instances are added to the scene graph under model (which is added to group). dispose() at line 414-431 does group.traverse() and collects all materials into seenMaterials. Since the cloned materials ARE referenced by the traversed meshes, they WILL be collected and disposed. This is correct. On closer inspection no leak — group.traverse() reaches these clones. PASS.",
+          "verdict_correction": "PASS on GLB clone disposal"
+        },
+        {
+          "id": "CB-03",
+          "severity": "MEDIUM",
+          "line": "356-360",
+          "title": "oceanBaseY caches a copy of the entire geometry buffer — memory not freed on dispose()",
+          "detail": "Line 357-360: oceanBaseY = new Float32Array(posAttr.array as Float32Array) allocates a copy of the ocean geometry's position buffer (~24×18×3 = 1296 floats × 4 bytes = ~5KB). This reference is held in the closure scope of buildCoastScene(). dispose() calls group.clear() which removes the mesh from the group and calls geometry.dispose() — but the Float32Array oceanBaseY closure reference is never nulled. The BiomeSceneResult object is returned; the caller holds update and dispose closures. Even after dispose() the JavaScript closure retains oceanBaseY in memory until the entire BiomeSceneResult object is GC'd. Since update() is typically dereferenced alongside dispose(), this is a minor leak only if the caller retains the update function separately without also nulling the result. Low probability in practice but violates the dispose-completeness contract.",
+          "severity_adjusted": "LOW"
+        },
+        {
+          "id": "CB-04",
+          "severity": "LOW",
+          "line": "386",
+          "title": "Wave update logic: _oceanAltFrame toggled before the skip check — first call always updates",
+          "detail": "Line 385: _oceanAltFrame = !_oceanAltFrame is unconditional. Line 386: if (!_oceanAltFrame || dt <= 0.033). On first call: _oceanAltFrame flips from false to true, so the condition is !true || (dt<=0.033). At 60fps dt=0.016 so dt<=0.033 is true, update runs. At 30fps dt=0.033, still true, update runs. Only when dt > 0.033 (below 30fps) does _oceanAltFrame cause a skip on alternate frames. This is the intended behavior per the comment. PASS — logic is correct."
+        },
+        {
+          "id": "CB-05",
+          "severity": "LOW",
+          "line": "395",
+          "title": "Wave formula reads oceanBaseY[i*3+1] as by_local but uses it as world-Z wave input",
+          "detail": "The comment correctly notes that local-Y becomes world-Z after mesh.rotation.x=-PI/2. The wave formula uses by_local in Math.cos(by_local * 0.09 + t * 0.7) — this is intentional. The variable naming is accurate and documented inline. PASS."
+        }
+      ],
+      "summary_verdict": "PASS — After deep analysis all three flagged candidate issues (material dedup, GLB clone disposal, wave logic) are correctly implemented. Only CB-03 is a genuine (LOW) concern: oceanBaseY is held in closure memory past dispose(). No HIGH or CRITICAL bugs."
+    },
+
+    "MainMenuScene": {
+      "verdict": "BUG",
+      "issues": [
+        {
+          "id": "MM-01",
+          "severity": "HIGH",
+          "line": "688-693",
+          "title": "onResize event listener registered as inline arrow — cannot be removed by name",
+          "detail": "Line 688: const onResize = (): void => { ... }. Line 693: window.addEventListener('resize', onResize). Line 757: window.removeEventListener('resize', onResize). This is CORRECT — onResize is a named const in the same closure scope, and removeEventListener receives the same function reference. The listener IS removable. PASS on this specific pattern.",
+          "verdict_correction": "PASS on event listener removal"
+        },
+        {
+          "id": "MM-02",
+          "severity": "HIGH",
+          "line": "756-772",
+          "title": "dispose() does NOT dispose shadow maps for stormLight (DirectionalLight)",
+          "detail": "stormLight (line 699-701) is a DirectionalLight added to scene directly (not as part of a Group). dispose() at line 756 calls scene.traverse() but only disposes Mesh and Points objects — it does NOT handle DirectionalLight.shadow.map. Compare with CoastBiome.ts line 426-429 which explicitly checks (child instanceof DirectionalLight && child.shadow.map) and calls shadow.map.dispose(). In MainMenuScene, stormLight is added to scene without shadow casting enabled (castShadow is not set), so shadow.map will be null at runtime. Therefore no actual leak, but the pattern diverges from CoastBiome's defensive approach. PASS in practice, LOW robustness concern.",
+          "severity_adjusted": "LOW"
+        },
+        {
+          "id": "MM-03",
+          "severity": "HIGH",
+          "line": "756-772",
+          "title": "dispose() does NOT dispose the SpotLight inside createTower()",
+          "detail": "createTower() at line 400-404 creates insideLight = new PointLight(0xffaa44, 1.2, 12, 2) and adds it to the tower Group. The tower Group is added to scene (line 728). dispose() calls scene.traverse() on Mesh and Points nodes only. PointLight objects are traversed by scene.traverse() but the instanceof check (line 759) only handles Mesh | Points — PointLight is neither. PointLight itself has no GPU resource to dispose (it is a JS object). However, if PointLight had a shadow map (it does NOT by default — castShadow is false here), it would leak. As castShadow is not set on insideLight, this is LOW / no practical leak.",
+          "severity_adjusted": "LOW"
+        },
+        {
+          "id": "MM-04",
+          "severity": "MEDIUM",
+          "line": "140-141",
+          "title": "createFoamPatches uses Math.random() for CircleGeometry radius — non-deterministic geometry",
+          "detail": "Line 141: new CircleGeometry(0.6 + Math.random() * 0.5, 5). Math.random() is called at construction time, once per foam patch, so geometry varies each page load. This is cosmetic-only and intentional for organic variation. PASS."
+        },
+        {
+          "id": "MM-05",
+          "severity": "MEDIUM",
+          "line": "469-482",
+          "title": "createClouds update() uses child.position.x += speed — direct mutation pattern flagged by immutability rules",
+          "detail": "Line 471-475: child.position.x += speed and child.position.x -= 120. This mutates the Three.js Vector3 object that is child.position. This is the standard and required Three.js pattern for animating scene objects — immutable copy semantics are not applicable to Three.js object transforms. The coding-style rule about immutability applies to application state (Store), not to Three.js scene graph mutation. PASS in context."
+        },
+        {
+          "id": "MM-06",
+          "severity": "MEDIUM",
+          "line": "606-628",
+          "title": "SeaSpraySystem.update() mutates resetParticle return value to set lifetime=0",
+          "detail": "Line 614: const reset = this.resetParticle(i); reset.lifetime = 0; this.particles[i] = reset. resetParticle() initializes lifetime to Math.random() * maxLifetime (line 601), then the caller immediately overwrites it with 0. This is a post-construction mutation on a local object before it is stored — this is safe (no aliasing) but slightly confusing. The reset object is not readonly so no TypeScript violation. Minor style concern, not a bug.",
+          "severity_adjusted": "LOW"
+        },
+        {
+          "id": "MM-07",
+          "severity": "CRITICAL",
+          "line": "756-772",
+          "title": "dispose() does NOT remove the canvas element from the DOM if renderer.domElement has no parentNode at construction time",
+          "detail": "Lines 769-771: if (renderer.domElement.parentNode) { renderer.domElement.parentNode.removeChild(renderer.domElement); }. This checks parentNode before removal — correct. renderer.domElement is appended to container at line 683: container.appendChild(renderer.domElement). So parentNode will always be non-null after init. PASS — no DOM leak in normal flow.",
+          "verdict_correction": "PASS — the parentNode guard is defensive but correct"
+        },
+        {
+          "id": "MM-08",
+          "severity": "HIGH",
+          "line": "660-683",
+          "title": "Camera aspect ratio division by zero when container has zero dimensions at mount time",
+          "detail": "Line 669: container.clientWidth / container.clientHeight. If container is not yet laid out (clientHeight === 0), this produces Infinity aspect ratio and an invalid PerspectiveCamera. This is a general Three.js scene initialization hazard. onResize corrects it once the DOM is laid out, but the initial camera state is broken until the first resize event fires. Affects SSR/pre-layout scenarios and test environments. Severity: MEDIUM in production (browser always lays out before first frame), HIGH in test environments."
+        },
+        {
+          "id": "MM-09",
+          "severity": "MEDIUM",
+          "line": "667-670",
+          "title": "PerspectiveCamera far plane set to 600 — distant silhouette at z=-90 and clouds at z=-80 are within frustum, but background fog FogExp2(0x1a2030, 0.012) renders foggy distance visually; no geometric clip issue.",
+          "detail": "skyBox BoxGeometry 400x200x400 at origin — its farthest corner is at ~346 units. camera far=600 clips nothing in the scene. PASS."
+        }
+      ],
+      "summary_verdict": "BUG — MM-08 is a genuine MEDIUM issue (container zero-dimension at init time causes Infinity aspect ratio). All other findings are LOW or PASS on deeper analysis. No CRITICAL bugs confirmed."
+    },
+
+    "CardSystem": {
+      "verdict": "BUG",
+      "issues": [
+        {
+          "id": "CS-01",
+          "severity": "HIGH",
+          "line": "124-128",
+          "title": "Type cast via 'as unknown as [CardOption, CardOption, CardOption]' hides compile-time tuple length check",
+          "detail": "Line 124: template.options.map(...) returns CardOption[] (an array of unknown length). The cast as unknown as [CardOption, CardOption, CardOption] bypasses TypeScript's check that the tuple has exactly 3 elements. If a malformed template in cards.json has fewer than 3 options, this produces a Card with options[0..2] where some are undefined, causing a runtime crash downstream when the game loop accesses card.options[2]. The FastRouteTemplate type declares options as a 3-tuple (readonly [..., ..., ...]) so well-formed templates are safe. But cards.json is an external file validated only by the Array.isArray check (line 83) and not by schema validation. An options array with 2 items would pass the load check, reach generateFastRouteCard(), and produce a Card with options[2] === undefined. detectMinigame() handles undefined at line 143 with 'traces' fallback, but game UI accessing card.options[2].verb or .text would throw. MEDIUM in practice (cards.json is controlled), HIGH by defense-in-depth standard.",
+          "severity_adjusted": "MEDIUM"
+        },
+        {
+          "id": "CS-02",
+          "severity": "MEDIUM",
+          "line": "117",
+          "title": "pool.filter using _recentTemplates.includes() — reference equality on objects from the same _templates array",
+          "detail": "Line 117: pool.filter(t => !_recentTemplates.includes(t)). _recentTemplates stores direct references to template objects from _templates. pool is also a slice of _templates (or _templates itself). Since both arrays hold references to the same objects, includes() does reference comparison correctly — identical template objects are excluded. PASS — the logic is correct."
+        },
+        {
+          "id": "CS-03",
+          "severity": "MEDIUM",
+          "line": "66-68",
+          "title": "Module-level mutable state (_templates, _recentTemplates, cardCounter) is not reset between runs",
+          "detail": "cardCounter (line 26), _templates (line 66), _recentTemplates (line 69) are module-level let/const arrays. In a single-page app, these persist for the lifetime of the page. cardCounter incrementing without reset means IDs are always unique across runs — intentional. _recentTemplates not resetting means the anti-repeat buffer carries over between runs — this could suppress biome templates that were played in the previous run's last 3 cards, slightly reducing variety at the start of a new run. Minor quality concern, not a crash bug.",
+          "severity_adjusted": "LOW"
+        },
+        {
+          "id": "CS-04",
+          "severity": "LOW",
+          "line": "83",
+          "title": "loadTemplates() swallows all fetch errors into an empty _templates array without surfacing to caller",
+          "detail": "Lines 85-90: catch swallows all errors; _templates = []. The caller gets no indication of failure. generateFastRouteCard() falls back to EMERGENCY_TEMPLATE when _templates is empty. The game remains playable but on a single static card. For production this is acceptable (network failure fallback), but there is no mechanism for the caller to detect degraded mode. LOW concern."
+        }
+      ],
+      "summary_verdict": "BUG (MEDIUM) — CS-01 is a genuine medium-severity gap: malformed templates with < 3 options pass validation and produce cards with undefined options[2]. All other findings are LOW."
+    },
+
+    "EffectEngine": {
+      "verdict": "BUG",
+      "issues": [
+        {
+          "id": "EE-01",
+          "severity": "HIGH",
+          "line": "84",
+          "title": "applyEffects() calls store.getState() once at the top then calls store.getState().xxx() per effect — stale snapshot anti-pattern",
+          "detail": "Line 84: const s = store.getState(). Variable s is captured once. Lines 99, 109, 122 etc. then call store.getState().damageLife(...), store.getState().healLife(...), etc. (NOT using s). So the actual effect calls go through fresh getState() each time — this is correct behavior via Zustand's subscribe/set mechanism. The s variable is declared but only used at line 153 (FULFILL_PROMISE) and line 225 (applyOghamEffect). The pattern is inconsistent but not incorrect: s is a snapshot for reads, store.getState() calls for writes go through Zustand's setter. PASS on correctness — the stale s is only used for .run.promises.some() reads before calling the setter, and the setter sees the current state at call time. Low risk: if two effects in the same array both modify promises, the second getState() call for the read would see the post-first-effect state (correct), while s would be stale (harmless since s is only used for the .some() boolean read, not for the write). The write (fulfillPromise/breakPromise) operates on the current state inside the Zustand reducer. PASS.",
+          "severity_adjusted": "LOW"
+        },
+        {
+          "id": "EE-02",
+          "severity": "HIGH",
+          "line": "96-99",
+          "title": "DAMAGE_LIFE uses Math.abs() on raw but ADD_REPUTATION negative delta is signed — asymmetric treatment",
+          "detail": "Line 97: const raw = Math.abs(parseInt(args[0], 10) || 0). DAMAGE_LIFE always treats its argument as positive (damage), so Math.abs is correct. ADD_REPUTATION at line 122: const raw = parseInt(args[1], 10) || 0; scaleAndCap(code, raw, multiplier); then store.getState().addReputation(faction, multiplier < 0 ? -scaled : scaled). If args[1] is negative (e.g. 'ADD_REPUTATION:druides:-5'), raw = -5, scaleAndCap(-5, multiplier) passes -5 to Math.round(rawAmount * Math.abs(multiplier)) = Math.round(-5 * 1.0) = -5. Then min/max caps: cap.max=20 and cap.min=-20 (from EFFECT_CAPS.ADD_REPUTATION). So result=-5, then addReputation(faction, multiplier < 0 ? 5 : -5). When multiplier=1.0: addReputation(faction, -5) — reputation decreases. This is intentional for negative reputation effects. The logic works but is subtle: a positive raw with multiplier=1 gives positive rep, negative raw gives negative rep. The multiplier<0 branch inverts the sign again (for Muin ogham invert effect). This appears correct but deserves a comment. LOW — logic is correct, just undocumented."
+        },
+        {
+          "id": "EE-03",
+          "severity": "CRITICAL",
+          "line": "191-197",
+          "title": "default case rejects ADD_KARMA, ADD_TENSION, PROGRESS_MISSION, SET_FLAG, ADD_TAG, REMOVE_TAG as rejected[] — silently failing game design effects",
+          "detail": "Lines 191-196: the default case pushes to rejected[]. VALID_CODES at line 9-27 includes ADD_KARMA, ADD_TENSION, PROGRESS_MISSION, SET_FLAG, ADD_TAG, REMOVE_TAG. These pass parseEffect() validation (they are in VALID_CODES), enter the switch, fall to default, and are pushed to rejected[]. The EffectResult.rejected array is returned to the caller. The comment at lines 192-196 says 'Future codes... push to rejected[] so callers can surface them without silently treating unexecuted effects as successful.' The question is: do game design cards in cards.json currently use any of these codes? If a card template has effects: ['ADD_KARMA:1'] or ['SET_FLAG:quest1:true'], those effects will validate, enter the switch, hit default, and do nothing — with only a rejected[] entry as evidence. Whether the caller surfaces this to the player or logs it is unknown from this file alone. If cards.json contains any of these effect codes in production templates, they silently no-op. This is documented behavior but constitutes a gameplay-breaking silent failure if template authors use these codes expecting them to work.",
+          "severity_note": "CRITICAL only if cards.json uses these codes. The comment acknowledges this as a known state. Severity downgraded to HIGH pending cards.json audit."
+        },
+        {
+          "id": "EE-04",
+          "severity": "MEDIUM",
+          "line": "56-73",
+          "title": "scaleAndCap() applies Math.abs(multiplier) — negative multiplier always treated as positive for damage calculation",
+          "detail": "Line 57: const scaled = Math.round(rawAmount * Math.abs(multiplier)). A negative multiplier (Muin ogham inversion) calls Math.abs() on it, treating -1.2 as 1.2. The inversion of sign is handled separately in ADD_REPUTATION (line 124) via the multiplier < 0 ternary. But for DAMAGE_LIFE, Math.abs(raw) is applied before scaleAndCap(), so the damage amount is always positive regardless of multiplier sign. This means a negative multiplier cannot reduce damage below 0 (i.e., you cannot have a multiplier that converts damage to healing via scaleAndCap alone). This is intentional: DAMAGE_LIFE with negative multiplier should still deal damage (just at a different scale), not heal. The Muin ogham's heal-inversion is handled by processOghamModifiers (line 381) which converts DAMAGE_LIFE to HEAL_LIFE at the string level before applyEffects() is called. Consistent and correct. PASS.",
+          "severity_adjusted": "LOW"
+        },
+        {
+          "id": "EE-05",
+          "severity": "MEDIUM",
+          "line": "258-261",
+          "title": "applyOghamEffect sacrifice_trade (Ur): damageLife(lifeCost) is not capped — can kill player immediately if life < 15",
+          "detail": "Line 267: s.damageLife(lifeCost) where lifeCost defaults to 15. Store.damageLife() clamps life to Math.max(0, ...) so life cannot go below 0. checkDeath() returns true if life <= 0. The Game Design Bible states drain happens BEFORE effect, but applyOghamEffect is called after ogham selection and BEFORE card effects (per the docstring at line 215). If the player has 10 life and activates Ur, they take 15 damage, go to 0, and die. This is a game design edge case — the ogham should probably check life > lifeCost before applying, or the UI should warn. Store.damageLife() correctly clamps to 0, so no data corruption. However the player can softlock into a state where they activated Ur expecting +20 currency but instead died. HIGH game design concern, not a code bug.",
+          "severity_adjusted": "HIGH"
+        },
+        {
+          "id": "EE-06",
+          "severity": "LOW",
+          "line": "225",
+          "title": "applyOghamEffect captures s = store.getState() at function entry, then calls s.healLife() etc. — this is direct method call on store's bound methods",
+          "detail": "Line 225: const s = store.getState(). Lines 231, 240, etc.: s.healLife(capped), s.addBiomeCurrency(capped). In Zustand vanilla store, getState() returns the current state object including the bound action methods. Calling s.healLife() is equivalent to store.getState().healLife() — both trigger Zustand set() correctly. PASS."
+        }
+      ],
+      "summary_verdict": "BUG — EE-03 is HIGH: validated effect codes (ADD_KARMA, ADD_TENSION, PROGRESS_MISSION, SET_FLAG, ADD_TAG, REMOVE_TAG) silently no-op if used in card templates. EE-05 is HIGH: Ur ogham can kill a low-health player who activates it without pre-check."
+    },
+
+    "Store": {
+      "verdict": "BUG",
+      "issues": [
+        {
+          "id": "ST-01",
+          "severity": "HIGH",
+          "line": "260-263",
+          "title": "addAnam() clamps anamThisRun to Math.max(0,...) but meta.anam can go to 0 on BREAK_PROMISE(-5) even if anam was already 0",
+          "detail": "Line 261: run.anamThisRun: Math.max(0, s.run.anamThisRun + amount). Line 262: meta.anam: Math.max(0, s.meta.anam + amount). If amount is negative (from BREAK_PROMISE flat -5 anam, though that currently uses damageLife not addAnam — see EffectEngine line 173-177 which uses damageLife(5) not addAnam(-5)), anam clamps at 0. The current codebase uses addAnam(5) for FULFILL_PROMISE and damageLife(5) for BREAK_PROMISE, so addAnam is never called with a negative amount from EffectEngine. However addAnam is public and nothing prevents a future caller from passing a negative value. The clamp is correct defensive behavior. PASS."
+        },
+        {
+          "id": "ST-02",
+          "severity": "HIGH",
+          "line": "192-204",
+          "title": "drainLifeScaled() reads cardsPlayed from s.run.cardsPlayed BEFORE incrementCardsPlayed() increments it — potential off-by-one on drain tier boundary",
+          "detail": "drainLifeScaled() reads s.run.cardsPlayed to determine the drain tier (stage2/stage3). incrementCardsPlayed() increments cardsPlayed and expires promises. If the game loop calls drainLifeScaled() first and then incrementCardsPlayed(), the drain uses the pre-increment value. On the boundary card (e.g., exactly LIFE_DRAIN_THRESHOLD_STAGE2), drainLifeScaled uses the old count and applies LIFE_DRAIN_PER_CARD instead of LIFE_DRAIN_STAGE2. The player gets a one-card reprieve before the higher drain kicks in. This is a MEDIUM balance bug, not a crash."
+        },
+        {
+          "id": "ST-03",
+          "severity": "CRITICAL",
+          "line": "206-258",
+          "title": "addReputation() writes both run.factions AND meta.factionRep to the same capped value — meta rep is double-capped",
+          "detail": "Line 209: const newVal = Math.max(0, Math.min(100, current + capped)). Line 243: run.factions[faction]: newVal. Line 252: meta.factionRep[faction]: newVal. Both run AND meta are set to the same newVal (the 0-100 clamped run value). The design intent (per GAME_DESIGN_BIBLE and CLAUDE.md) is that factionRep in meta is CROSS-RUN and persists. When a run ends, meta.factionRep should carry forward into the next run's initial factions (see startRun at line 166-168: factions: { ...s.meta.factionRep }). HOWEVER: addReputation writes meta.factionRep with the same capped value as run.factions on every card. This is actually correct: meta.factionRep is kept in sync with run.factions during the run, so at run end, meta.factionRep already holds the final run values. The next run seeds from meta.factionRep. This IS the intended cross-run persistence mechanism. PASS — the design is correct.",
+          "verdict_correction": "PASS — cross-run persistence via live sync is intentional"
+        },
+        {
+          "id": "ST-04",
+          "severity": "HIGH",
+          "line": "301-310",
+          "title": "tickCooldowns() removes cooldown entries that reach 0 by omitting them — oghamCooldowns entries with value 0 are deleted",
+          "detail": "Lines 303-308: remaining = val - 1; if (remaining > 0) { newCooldowns[key] = remaining; }. Entries with val=1 decrement to 0 and are NOT added to newCooldowns — effectively deleted from oghamCooldowns. This means oghamCooldowns only contains active cooldowns (val > 0). useOgham() checks (s.run.oghamCooldowns[oghamId] ?? 0) > 0 — a missing key returns 0, so the ogham is usable. Correct behavior. PASS."
+        },
+        {
+          "id": "ST-05",
+          "severity": "HIGH",
+          "line": "284-299",
+          "title": "useOgham() has TOCTOU race: reads state with get() then sets state separately — two round-trips",
+          "detail": "Lines 285-289: reads s = get() for validation checks (spec, equipped, cooldown). Lines 291-297: set((s) => ...) for the actual update. Between get() and set(), another async dispatch could theoretically modify oghamCooldowns or oghamsEquipped. In practice Zustand vanilla is synchronous (set() is synchronous, no async middleware), so there is no actual race condition in a single-threaded JS environment. PASS.",
+          "severity_adjusted": "LOW"
+        },
+        {
+          "id": "ST-06",
+          "severity": "MEDIUM",
+          "line": "161-168",
+          "title": "startRun() sets run.factions from meta.factionRep but does NOT reset factionDeltaThisRun",
+          "detail": "Line 161-168: startRun spreads buildDefaultRun() which includes factionDeltaThisRun: buildZeroFactions() (line 127). So factionDeltaThisRun IS reset to zero on each new run. PASS.",
+          "verdict_correction": "PASS — factionDeltaThisRun correctly reset via buildDefaultRun()"
+        },
+        {
+          "id": "ST-07",
+          "severity": "MEDIUM",
+          "line": "265-267",
+          "title": "addBiomeCurrency() clamps to Math.max(0,...) — the Ruis ogham explicitly calls addBiomeCurrency(-cost) to deduct currency, but negative deltas are always clamped to 0",
+          "detail": "Line 266: run.biomeCurrency: Math.max(0, s.run.biomeCurrency + amount). When EffectEngine calls s.addBiomeCurrency(-cost) for Ruis (applyOghamEffect line 259), if biomeCurrency=0, the result is Math.max(0, 0 + (-5)) = 0. Currency cannot go negative. This is the correct intended behavior (cannot go into debt). The comment in applyOghamEffect line 259 says 'Currency can go negative as a cost' — this comment is INCORRECT. Store.addBiomeCurrency() prevents it from going negative. The comment is misleading but the Store behavior is correctly defensive. MEDIUM — comment mismatch in EffectEngine creates confusion for maintainers."
+        },
+        {
+          "id": "ST-08",
+          "severity": "HIGH",
+          "line": "269-278",
+          "title": "incrementCardsPlayed() expires promises using madeAtCard + deadlineCards <= newCardsPlayed — edge case: deadline=0 or 1 expires immediately",
+          "detail": "Line 273: newCardsPlayed >= p.madeAtCard + p.deadlineCards. EffectEngine addPromise clamps deadline to Math.max(1, ...) (line 144). So minimum deadline is 1. If a promise is made at card 5 with deadline=1, it expires when cardsPlayed reaches 6 (next incrementCardsPlayed call). This is correct. However the FULFILL_PROMISE effect in EffectEngine (line 151-163) reads run.promises.some() for isActive check BEFORE calling fulfillPromise(). If FULFILL_PROMISE is in the same effects array as an incrementCardsPlayed call happens before it in the game loop, the promise might expire before being fulfilled. The order of operations in the game loop is unknown from this file but is a potential source of edge-case bugs. LOW in practice."
+        }
+      ],
+      "summary_verdict": "BUG — ST-02 is MEDIUM (drain tier off-by-one on boundary cards). ST-07 is MEDIUM (misleading comment in EffectEngine about biomeCurrency going negative when Store prevents it). No CRITICAL data corruption found. Immutability patterns are correctly followed throughout."
+    },
+
+    "LairWindow": {
+      "verdict": "BUG",
+      "issues": [
+        {
+          "id": "LW-01",
+          "severity": "HIGH",
+          "line": "201",
+          "title": "createLairWindow() adds group AND windowLight.target to scene — target is never removed on dispose",
+          "detail": "Line 201: scene.add(group). Line 202: scene.add(windowLight.target). The caller (MerlinLairScene presumably) calls scene.add() for the group. When the lair scene is disposed, if it calls group.dispose() or scene.remove(group), the group is removed. BUT windowLight.target (a plain Object3D at world position) is added directly to scene at line 162 and is NEVER removed in any cleanup path visible in this file. The WindowResult interface (line 14-18) does not include a dispose() method. The caller must manually remove windowLight.target from the scene, but nothing in the returned API signals this requirement. This is a MEMORY LEAK / SCENE CORRUPTION: windowLight.target remains in the scene after the lair window is cleaned up, potentially forever.",
+          "severity": "HIGH"
+        },
+        {
+          "id": "LW-02",
+          "severity": "MEDIUM",
+          "line": "39-41",
+          "title": "hourToLightParams: hour=24 wraps correctly via modulo, but the interface declares '0-24' suggesting 24 is a valid input",
+          "detail": "Line 9: hour: number; // 0-24. Line 41: const h = ((hour % 24) + 24) % 24. hour=24 % 24 = 0, meaning midnight is also represented by 24. This is intentional and correctly handled by the wrap. PASS."
+        },
+        {
+          "id": "LW-03",
+          "severity": "MEDIUM",
+          "line": "174",
+          "title": "updateTime() creates a new Color() object on every call for skyCol and treeCol — GC pressure on frequent calls",
+          "detail": "Lines 175: const skyCol = new Color(SEASON_SKY_COLOR[params.season]). Line 184: const treeCol = new Color(SEASON_TREE_COLOR[params.season]). Line 185: treeMat.color.copy(params.season === 'winter' ? new Color(0x2a2828) : treeCol). updateTime() is called whenever the time of day changes. If called every frame (which would be unusual for a day/night cycle but possible), this allocates 2-3 Color objects per call. At 60fps this is ~120-180 Color allocations/second causing GC pressure. In practice, updateTime() is likely called only when the game time changes (not every frame), making this a LOW concern. But the winter branch always allocates a new Color(0x2a2828) even though 0x2a2828 is a constant — it should be a module-level Color constant.",
+          "severity_adjusted": "LOW"
+        },
+        {
+          "id": "LW-04",
+          "severity": "MEDIUM",
+          "line": "133-135",
+          "title": "treeObjects[] only contains canopy meshes — trunk sway is not animated",
+          "detail": "Line 153: treeObjects.push(canopyMesh) — only canopies are pushed, trunks are not. update() at line 191 rotates treeObjects (canopies only). This means in spring/summer, canopy tops sway but trunks remain static — visually incoherent: the tree crown oscillates while the trunk is rigid. Whether this is intentional (stylized) or a bug depends on design intent. Cosmetic concern, not a crash.",
+          "severity_adjusted": "LOW"
+        },
+        {
+          "id": "LW-05",
+          "severity": "HIGH",
+          "line": "117",
+          "title": "glassMat is shared between glassL and glassR — both panes mutate the same material instance in update()",
+          "detail": "Lines 100-106: glassMat = new MeshStandardMaterial(...). Lines 108-113: glassL and glassR both use glassMat (same instance). update() at line 198 writes glassMat.opacity. This is not a bug — both panes should have the same opacity (they are the same window, same glass). The intent is for both panes to shimmer identically. PASS."
+        },
+        {
+          "id": "LW-06",
+          "severity": "HIGH",
+          "line": "156-162",
+          "title": "windowLight is added to group (correct) but windowLight.target is added to scene (bypasses group cleanup)",
+          "detail": "This is the same issue as LW-01 but re-examined from the disposal angle. Three.js SpotLight.target must be in the scene to work (it uses world-space lookAt). The pattern is required by Three.js, but it creates a disposal hazard. The WindowResult interface should include a dispose() callback that calls scene.remove(windowLight.target). Currently there is no dispose() in the interface, so callers have no API to clean this up safely.",
+          "references": "LW-01"
+        }
+      ],
+      "summary_verdict": "BUG — LW-01/LW-06 is HIGH: windowLight.target is added to scene but no dispose() method exists in WindowResult to remove it, causing a persistent orphaned Object3D after lair scene teardown. LW-03 is LOW (allocations in updateTime). All other findings are PASS or LOW."
+    }
+  },
+
+  "summary": {
+    "critical": 0,
+    "high": 5,
+    "medium": 4,
+    "low": 6,
+    "pass_after_deep_analysis": 14
+  },
+
+  "top_bugs": [
+    {
+      "id": "LW-01",
+      "severity": "HIGH",
+      "file": "web-demo/src/scenes/LairWindow.ts",
+      "line": 162,
+      "issue": "windowLight.target is added to scene via scene.add(windowLight.target) but WindowResult has no dispose() method. The target Object3D is never removed from the scene on lair cleanup, causing a persistent orphaned node after every lair session.",
+      "fix": "Add dispose(): void to the WindowResult interface and implement it as scene.remove(windowLight.target). Callers must invoke it during lair scene teardown."
+    },
+    {
+      "id": "EE-03",
+      "severity": "HIGH",
+      "file": "web-demo/src/game/EffectEngine.ts",
+      "line": 191,
+      "issue": "ADD_KARMA, ADD_TENSION, PROGRESS_MISSION, SET_FLAG, ADD_TAG, REMOVE_TAG are all in VALID_CODES and pass parseEffect() validation, but fall to the default case in the switch and are pushed to rejected[]. Any card template using these codes silently no-ops with no player-visible feedback.",
+      "fix": "Either remove these codes from VALID_CODES until implemented, or implement minimal stub handlers that at least log a warning. Document clearly in effect string authoring guide that these are not yet active."
+    },
+    {
+      "id": "EE-05",
+      "severity": "HIGH",
+      "file": "web-demo/src/game/EffectEngine.ts",
+      "line": 267,
+      "issue": "Ur ogham's sacrifice_trade applies damageLife(15) unconditionally. A player with life < 15 who activates Ur dies immediately from the ogham activation, before receiving the +20 currency benefit. No pre-condition check exists.",
+      "fix": "Guard with: if (s.run.life <= lifeCost) { return { ...result, applied: false, description: 'PV insuffisants' }; } or at minimum display a UI warning when life < lifeCost. Per GDB, ogham effects should not be silently lethal without warning."
+    },
+    {
+      "id": "ST-02",
+      "severity": "MEDIUM",
+      "file": "web-demo/src/game/Store.ts",
+      "line": 192,
+      "issue": "drainLifeScaled() reads cardsPlayed BEFORE incrementCardsPlayed() increments it. On the exact boundary card for stage2/stage3 thresholds, the player gets one extra card at the lower drain rate.",
+      "fix": "Ensure the game loop calls incrementCardsPlayed() before drainLifeScaled(), or pass the post-increment count as a parameter to drainLifeScaled()."
+    },
+    {
+      "id": "ST-07",
+      "severity": "MEDIUM",
+      "file": "web-demo/src/game/EffectEngine.ts",
+      "line": 259,
+      "issue": "Comment at line 259 says 'Currency can go negative as a cost' but Store.addBiomeCurrency() clamps to Math.max(0, ...). Currency CANNOT go negative. Comment is incorrect and misleads future maintainers into expecting debt semantics.",
+      "fix": "Change comment to: 'Currency is clamped at 0 — cost is paid only up to current balance.'"
+    },
+    {
+      "id": "MM-08",
+      "severity": "MEDIUM",
+      "file": "web-demo/src/scenes/MainMenuScene.ts",
+      "line": 669,
+      "issue": "PerspectiveCamera initialized with container.clientWidth / container.clientHeight. If container.clientHeight === 0 at mount time (not yet laid out), aspect ratio is Infinity and the camera matrix is invalid until the first resize event fires.",
+      "fix": "Guard: const h = container.clientHeight > 0 ? container.clientHeight : 1; camera aspect = container.clientWidth / h;"
+    },
+    {
+      "id": "CS-01",
+      "severity": "MEDIUM",
+      "file": "web-demo/src/game/CardSystem.ts",
+      "line": 124,
+      "issue": "template.options.map() result is cast 'as unknown as [CardOption, CardOption, CardOption]' bypassing TypeScript's tuple length check. A malformed template with < 3 options produces card.options[2] === undefined, causing downstream crashes in game UI.",
+      "fix": "Add a runtime guard: if (template.options.length !== 3) fallback to EMERGENCY_TEMPLATE. Or add Zod schema validation in loadTemplates() to reject malformed templates at load time."
+    }
+  ],
+
+  "score_adjustment": {
+    "prior_score": 9.97,
+    "deductions": [
+      { "id": "LW-01", "severity": "HIGH", "deduction": -0.08, "rationale": "SpotLight target orphaned in scene after dispose — memory/scene corruption risk on lair scene restart" },
+      { "id": "EE-03", "severity": "HIGH", "deduction": -0.06, "rationale": "6 validated effect codes silently no-op — silent failure for template authors using ADD_KARMA etc." },
+      { "id": "EE-05", "severity": "HIGH", "deduction": -0.05, "rationale": "Ur ogham can silently kill a player with life < 15 at activation — unexpected death UX" },
+      { "id": "ST-02", "severity": "MEDIUM", "deduction": -0.03, "rationale": "Drain tier off-by-one on boundary — minor balance deviation, 1 card at wrong drain rate" },
+      { "id": "ST-07", "severity": "MEDIUM", "deduction": -0.02, "rationale": "Misleading comment about biomeCurrency going negative — maintainability concern" },
+      { "id": "MM-08", "severity": "MEDIUM", "deduction": -0.02, "rationale": "Zero-dimension container at init produces Infinity aspect ratio — affects test environments" },
+      { "id": "CS-01", "severity": "MEDIUM", "deduction": -0.02, "rationale": "Unsafe tuple cast bypasses template validation — crash risk on malformed cards.json" }
+    ],
+    "total_deduction": -0.28,
+    "new_score": 9.69
+  },
+
+  "worker_output_path": "C:/Users/PGNK2128/Godot-MCP/web-demo/.studio/worker_playtester.json"
+}

@@ -265,6 +265,13 @@ export function applyOghamEffect(oghamId: string): OghamEffectResult {
       // Ur (-15 PV, +20 monnaie, score buff stored as flag)
       const lifeCost = (params.life_cost as number) ?? 15;
       const currencyGain = (params.currency_gain as number) ?? 20;
+      // C134/EE-05: guard against self-kill — Ur is a high-risk sacrifice, not a suicide.
+      // Without this check, a player at 10 PV who activates Ur goes to 0, triggering
+      // death at step 9 of the effect pipeline before the +20 currency can help them.
+      // Strict guard (<=) prevents the trade at exactly lifeCost too, since 0 PV = death.
+      if (s.run.life <= lifeCost) {
+        return { oghamId, effectType: spec.effect, applied: false, description: 'PV insuffisants pour ce sacrifice' };
+      }
       s.damageLife(lifeCost);
       s.addBiomeCurrency(scaleAndCap('ADD_BIOME_CURRENCY', currencyGain, 1.0));
       return { oghamId, effectType: spec.effect, applied: true, description: `-${lifeCost} PV, +${currencyGain} monnaie` };

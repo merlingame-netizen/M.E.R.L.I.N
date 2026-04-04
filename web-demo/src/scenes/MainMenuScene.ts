@@ -663,9 +663,11 @@ export function initMainMenu(container: HTMLElement): MainMenuResult {
   scene.fog = new FogExp2(0x1a2030, 0.012);
 
   // Camera: fixed high angle, looking right-to-left over the cliff
+  // C134/MM-08: guard against Infinity aspect ratio when container has not yet been laid out
+  // (clientHeight === 0 during SSR or before first paint). Infinity aspect clips all geometry.
   const camera = new PerspectiveCamera(
     55,
-    container.clientWidth / container.clientHeight,
+    container.clientWidth / (container.clientHeight > 0 ? container.clientHeight : 1),
     0.1,
     600
   );
@@ -686,7 +688,7 @@ export function initMainMenu(container: HTMLElement): MainMenuResult {
 
   // Resize handler
   const onResize = (): void => {
-    camera.aspect = container.clientWidth / container.clientHeight;
+    camera.aspect = container.clientWidth / (container.clientHeight > 0 ? container.clientHeight : 1);
     camera.updateProjectionMatrix();
     renderer.setSize(container.clientWidth, container.clientHeight);
   };

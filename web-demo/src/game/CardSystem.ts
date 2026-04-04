@@ -121,7 +121,12 @@ export function generateFastRouteCard(biome: string): Card {
   // Update ring buffer (FIFO, max 3 entries)
   _recentTemplates.push(template);
   if (_recentTemplates.length > RECENT_CARD_BUFFER) _recentTemplates.shift();
-  const options = template.options.map((opt) => ({
+  // C134/CS-01: runtime guard — TypeScript 3-tuple enforcement on FastRouteTemplate.options
+  // only applies to static/typed data. cards.json is runtime data: a template with !=3 options
+  // produces card.options[2] === undefined, crashing the UI on option render. Fall back to
+  // EMERGENCY_TEMPLATE so the run continues without a crash.
+  const safeTemplate = template.options.length === 3 ? template : EMERGENCY_TEMPLATE;
+  const options = safeTemplate.options.map((opt) => ({
     verb: opt.verb,
     text: opt.text,
     field: verbToField(opt.verb),
