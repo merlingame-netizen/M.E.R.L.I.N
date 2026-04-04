@@ -482,25 +482,27 @@ async function gameLoop(
     }
     hideOghamPanel();
 
-    // 4. CARD phase — fade to card overlay
-    await fadeIn(600);
+    // 4. CARD phase — start LLM generation and fade simultaneously (C82-03: reduces
+    // black-screen wait from up to 8.6s to max 8s by overlapping the 600ms fade)
+    const llm = getLLMAdapter();
+    type CardOrNull = import('./game/CardSystem').Card | null;
+    let cardGenPromise: Promise<CardOrNull>;
+    if (llm) {
+      showLLMLoadingHint();
+      // C80-01: 8s timeout prevents Groq stall from freezing indefinitely
+      cardGenPromise = Promise.race<CardOrNull>([
+        llm.generateCard(state().run.biome, `carte ${state().run.cardsPlayed}, vie ${state().run.life}`),
+        new Promise<null>((res) => setTimeout(() => res(null), 8_000)),
+      ]);
+    } else {
+      cardGenPromise = Promise.resolve(null);
+    }
+    await fadeIn(600); // runs concurrently with LLM — fade (600ms) overlaps generation
 
     let card;
     try {
-      // Try LLM first (Groq cloud), fall back to FastRoute.
-      // Show a brief loading indicator during generation to avoid perceived freeze.
-      const llm = getLLMAdapter();
-      let llmCard = null;
-      if (llm) {
-        showLLMLoadingHint();
-        // C80-01: 8s timeout prevents Groq stall from freezing the game indefinitely.
-        // Promise.race resolves null on timeout → falls through to FastRoute below.
-        llmCard = await Promise.race<import('./game/CardSystem').Card | null>([
-          llm.generateCard(state().run.biome, `carte ${state().run.cardsPlayed}, vie ${state().run.life}`),
-          new Promise<null>((res) => setTimeout(() => res(null), 8_000)),
-        ]);
-        hideLLMLoadingHint();
-      }
+      const llmCard = await cardGenPromise;
+      hideLLMLoadingHint();
       card = llmCard ?? generateFastRouteCard(state().run.biome);
     } catch (err) {
       hideLLMLoadingHint();

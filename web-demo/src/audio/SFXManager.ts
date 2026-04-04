@@ -5,7 +5,7 @@
 // No external assets — pure procedural synthesis
 // ═══════════════════════════════════════════════════════════════════════════════
 
-type SFXName = 'flip' | 'win' | 'lose' | 'unlock' | 'end';
+type SFXName = 'flip' | 'win' | 'lose' | 'unlock' | 'end' | 'hover';
 type AmbientType = 'menu' | 'forest' | 'wind' | 'rain';
 
 interface SFXEvent {
@@ -100,6 +100,12 @@ function playNoise(
 }
 
 // ── Sound definitions ────────────────────────────────────────────────────────
+
+// hover: C82-01 — very brief (35ms) quiet shimmer on Lair zone enter; non-intrusive
+function playHover(ctx: AudioContext): void {
+  const t = ctx.currentTime;
+  playTone(ctx, 660, t, 0.035, 0.06, 'sine');
+}
 
 // flip: short ping 440Hz, 80ms
 function playFlip(ctx: AudioContext): void {
@@ -457,6 +463,7 @@ let pendingAmbientType: AmbientType | null = null;
 
 export function initSFXManager(): void {
   const dispatch: Record<SFXName, (c: AudioContext) => void> = {
+    hover: playHover,
     flip: playFlip,
     win: playWin,
     lose: playLose,

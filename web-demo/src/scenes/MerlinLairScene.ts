@@ -765,6 +765,8 @@ export function initMerlinLair(container: HTMLElement): LairResult {
         currentHovered.mesh.scale.setScalar(1.05);
         applyHoverTo(currentHovered, 0.65);
         renderer.domElement.style.cursor = 'pointer';
+        // C82-01: subtle shimmer on zone enter — SFXManager listens via window 'merlin_sfx'
+        window.dispatchEvent(new CustomEvent('merlin_sfx', { detail: { sound: 'hover' } }));
       } else {
         renderer.domElement.style.cursor = 'default';
       }
@@ -777,6 +779,8 @@ export function initMerlinLair(container: HTMLElement): LairResult {
     mouse.y = -((e.clientY - rect.top) / rect.height) * 2 + 1;
     const found = getIntersected();
     if (found && zoneClickCallback) {
+      // C82-01: confirm click audio before callback (which may trigger scene transition)
+      window.dispatchEvent(new CustomEvent('merlin_sfx', { detail: { sound: 'flip' } }));
       zoneClickCallback(found.zone);
     }
   };
