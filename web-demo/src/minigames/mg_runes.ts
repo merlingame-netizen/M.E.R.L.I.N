@@ -33,7 +33,8 @@ export class MinigameRunes extends MinigameBase {
   private ctx: CanvasRenderingContext2D | null = null;
   private timerInterval = 0;
   private timeLeft = 30;
-  private totalTime = 30; // C98: scaled by difficultyTier in setup() — 30/25/20/15s
+  private totalTime = 30;    // C103: tieredValue [30,25,20,15]s in setup()
+  private flipBackDelay = 600; // C103: tieredValue [600,550,500,450]ms in setup()
   private readonly gridCols = 4;
   private readonly gridRows = 4;
   private readonly tileSize = 80;
@@ -49,8 +50,9 @@ export class MinigameRunes extends MinigameBase {
   protected setup(): void {
     this.container.innerHTML = '';
 
-    // C98: scale difficulty — tier 0: 30s, tier 1: 25s, tier 2: 20s, tier 3: 15s
-    this.totalTime = 30 - this.difficultyTier * 5;
+    // C103: tieredValue replaces manual arithmetic — consistent with all other minigames
+    this.totalTime    = this.tieredValue([30, 25, 20, 15] as const);
+    this.flipBackDelay = this.tieredValue([600, 550, 500, 450] as const);
 
     // Title
     const title = document.createElement('div');
@@ -195,7 +197,7 @@ export class MinigameRunes extends MinigameBase {
           (tile as { state: string }).state = 'hidden';
           this.firstPick = null;
           this.lockInput = false;
-        }, 600);
+        }, this.flipBackDelay); // C103: tier-scaled [600,550,500,450]ms
       }
     }
   };

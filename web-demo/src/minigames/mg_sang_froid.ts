@@ -26,7 +26,7 @@ export class MinigameSangFroid extends MinigameBase {
   private readonly centerY = 190;
 
   // Game config (endRadius + driftSpeed scaled by difficultyTier in setup())
-  private readonly totalTime = 10;
+  private totalTime = 10; // C103: tieredValue [10,9,8,7]s in setup()
   private readonly startRadius = 120;  // initial safe zone radius
   private endRadius = 28;              // final safe zone radius — scaled by tier
   private driftSpeed = 18;             // max drift speed px/s — scaled by tier
@@ -50,7 +50,8 @@ export class MinigameSangFroid extends MinigameBase {
   protected setup(): void {
     this.container.innerHTML = '';
 
-    // C94: scale difficulty — tier 0: baseline, tier 1-3: smaller endRadius + faster drift
+    // C103: tieredValue for totalTime (was readonly — blocked scaling); C94: endRadius + driftSpeed
+    this.totalTime  = this.tieredValue([10, 9, 8, 7] as const);
     this.endRadius  = 28 - this.difficultyTier * 4; // 28 / 24 / 20 / 16
     this.driftSpeed = 18 + this.difficultyTier * 4; // 18 / 22 / 26 / 30 px/s
 
