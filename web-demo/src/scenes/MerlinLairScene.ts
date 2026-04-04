@@ -424,14 +424,18 @@ function createCandles(scene: Scene): { candles: CandleData[]; group: Group } {
 }
 
 function updateCandles(candles: CandleData[], dt: number, t: number): void {
+  if (candles.length === 0) return;
   const maxLife = 1.2;
+  // C80: flicker hoisted — all 3 candles share sharedLight (same object ref); only the last
+  // iteration's write survived anyway (overwritten twice). Was 9 Math.sin/frame (3×3),
+  // 6 dead. Now 3/frame using candles[0].phase as representative.
+  const ph = candles[0]!.phase;
+  const flicker =
+    Math.sin(t * 7.3 + ph) * 0.25 +
+    Math.sin(t * 13.1 + ph * 2.1) * 0.1 +
+    Math.sin(t * 3.7 + ph * 0.5) * 0.08;
+  candles[0]!.light.intensity = 1.8 + flicker;
   for (const candle of candles) {
-    // Flicker: multi-frequency sin
-    const flicker =
-      Math.sin(t * 7.3 + candle.phase) * 0.25 +
-      Math.sin(t * 13.1 + candle.phase * 2.1) * 0.1 +
-      Math.sin(t * 3.7 + candle.phase * 0.5) * 0.08;
-    candle.light.intensity = 1.8 + flicker;
 
     const N = candle.particleLife.length;
     for (let p = 0; p < N; p++) {
@@ -966,7 +970,8 @@ export function initMerlinLair(container: HTMLElement): LairResult {
     if (found && zoneClickCallback) {
       // C82-01: confirm click audio before callback (which may trigger scene transition)
       window.dispatchEvent(new CustomEvent('merlin_sfx', { detail: { sound: 'flip' } }));
-      ariaLive.textContent = `${ZONE_ARIA_LABELS[found.zone]} activée`;
+      // skull is hover-only (no game action) — announcing "activée" misleads AT users (WCAG 4.1.3)
+      if (found.zone !== 'skull') ariaLive.textContent = `${ZONE_ARIA_LABELS[found.zone]} activée`;
       if (found.zone === 'door') {
         // C101: cinematic flash — 380ms burst before transition to give visual drama
         // C121: guard double-click — second click while flashing would overwrite doorFlashCancelHandle
