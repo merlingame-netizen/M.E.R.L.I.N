@@ -907,9 +907,12 @@ export function initMerlinLair(container: HTMLElement): LairResult {
         zoneToast.appendChild(lbl);
         zoneToast.appendChild(desc);
         zoneToast.style.opacity = '1';
+        // C131: WCAG 4.1.2 — sync aria-label on mouse hover (was only updated on keyboard nav)
+        renderer.domElement.setAttribute('aria-label', `Zone : ${ZONE_ARIA_LABELS[zone]} — Cliquez pour activer`);
       } else {
         renderer.domElement.style.cursor = 'default';
         zoneToast.style.opacity = '0';
+        renderer.domElement.setAttribute('aria-label', 'Antre de Merlin — 5 zones interactives. Tab pour naviguer, Entrée pour activer.');
       }
     }
   };
