@@ -285,6 +285,94 @@ function createForestDebris(): Group {
 
 // ── Will-o'-wisp particles ────────────────────────────────────────────────────
 
+// ── Falling leaf particles ─────────────────────────────────────────────��───────
+// 50 tiny leaf fragments slowly drifting down + gentle X/Z sway — N64 atmosphere bonus.
+
+interface LeafData {
+  x: number; z: number;
+  y: number;       // current Y
+  yStart: number;  // reset height
+  fallSpeed: number;
+  swayPhase: number; swayFreq: number; swayAmp: number;
+}
+
+function createLeafDrift(): { object: Points; update: (dt: number) => void } {
+  const COUNT = 50;
+  const positions = new Float32Array(COUNT * 3);
+  const colors    = new Float32Array(COUNT * 3);
+  const leafData: LeafData[] = [];
+
+  // Palette: dark greens + faded golds (fallen leaves)
+  const palette = [
+    [0.18, 0.48, 0.12],  // dark green
+    [0.24, 0.55, 0.16],  // medium green
+    [0.55, 0.50, 0.12],  // yellow-green
+    [0.45, 0.32, 0.08],  // golden brown (dead leaf)
+  ];
+
+  for (let i = 0; i < COUNT; i++) {
+    const angle = R() * Math.PI * 2;
+    const r = 3 + R() * 32;
+    const x = Math.cos(angle) * r - 5;
+    const z = Math.sin(angle) * r - 20;
+    const yStart = 8 + R() * 12;
+    const y = R() * yStart; // staggered start heights
+
+    leafData.push({
+      x, z, y, yStart,
+      fallSpeed: 0.35 + R() * 0.8,
+      swayPhase: R() * Math.PI * 2,
+      swayFreq: 0.6 + R() * 0.8,
+      swayAmp: 0.3 + R() * 0.7,
+    });
+
+    positions[i * 3]     = x;
+    positions[i * 3 + 1] = y;
+    positions[i * 3 + 2] = z;
+
+    const col = palette[i % palette.length]!;
+    colors[i * 3]     = col[0]!;
+    colors[i * 3 + 1] = col[1]!;
+    colors[i * 3 + 2] = col[2]!;
+  }
+
+  const geo = new BufferGeometry();
+  geo.setAttribute('position', new Float32BufferAttribute(positions, 3));
+  geo.setAttribute('color', new Float32BufferAttribute(colors, 3));
+
+  const mat = new PointsMaterial({
+    size: 0.08,
+    vertexColors: true,
+    transparent: true,
+    opacity: 0.60,
+    sizeAttenuation: true,
+  });
+
+  const object = new Points(geo, mat);
+  let elapsed = 0;
+
+  const update = (dt: number): void => {
+    elapsed += dt;
+    const posAttr = geo.attributes['position'] as BufferAttribute;
+    const arr = posAttr.array as Float32Array;
+
+    for (let i = 0; i < COUNT; i++) {
+      const d = leafData[i]!;
+      d.y -= d.fallSpeed * dt;
+      if (d.y < 0) {
+        d.y = d.yStart; // reset to top
+      }
+      const sway = Math.sin(elapsed * d.swayFreq + d.swayPhase) * d.swayAmp;
+      arr[i * 3]     = d.x + sway;
+      arr[i * 3 + 1] = d.y;
+      arr[i * 3 + 2] = d.z + Math.cos(elapsed * d.swayFreq * 0.7 + d.swayPhase) * d.swayAmp * 0.5;
+    }
+    posAttr.needsUpdate = true;
+  };
+
+  return { object, update };
+}
+
 interface WispData {
   baseX: number;
   baseY: number;
@@ -492,6 +580,9 @@ export async function buildForestScene(): Promise<BiomeSceneResult> {
   const wisps = createWisps();
   group.add(wisps.object);
 
+  const leaves = createLeafDrift();
+  group.add(leaves.object);
+
   // ── Animation state ────────────────────────────────────────────────────────
   let sceneTime = 0;
 
@@ -504,6 +595,9 @@ export async function buildForestScene(): Promise<BiomeSceneResult> {
 
     // Will-o'-wisps orbit
     wisps.update(dt);
+
+    // Falling leaf drift
+    leaves.update(dt);
 
     // C162: animated cloud drift — each band at different speed for parallax
     for (const layer of cloudLayers) {

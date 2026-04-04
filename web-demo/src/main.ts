@@ -786,9 +786,18 @@ async function main(): Promise<void> {
         : CameraRail.createGenericPath();
     rail.setSpeed(WALK_SPEED);
 
+    // Footstep SFX timer — fires 'step' every 0.5s while rail is walking (2Hz bob cadence)
+    let stepTimer = 0;
     sceneManager.onUpdate((dt) => {
       rail.update(sceneManager.camera, dt);
       biomeResult.update(dt);
+      if (!rail.isPaused()) {
+        stepTimer += dt;
+        if (stepTimer >= 0.5) {
+          stepTimer -= 0.5;
+          window.dispatchEvent(new CustomEvent('merlin_sfx', { detail: { sound: 'step' } }));
+        }
+      }
     });
 
     // Start renderer

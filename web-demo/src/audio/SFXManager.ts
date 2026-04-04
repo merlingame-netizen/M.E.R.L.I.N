@@ -6,7 +6,7 @@
 // ═══════════════════════════════════════════════════════════════════════════════
 
 type SFXName = 'flip' | 'win' | 'lose' | 'unlock' | 'end' | 'hover' | 'crystal' | 'cauldron'
-  | 'click' | 'beep' | 'mapDraw' | 'mapZoom' | 'minigame_start';
+  | 'click' | 'beep' | 'mapDraw' | 'mapZoom' | 'minigame_start' | 'step';
 type AmbientType = 'menu' | 'forest' | 'wind' | 'rain';
 
 interface SFXEvent {
@@ -257,6 +257,27 @@ function playCauldron(ctx: AudioContext): void {
   playNoise(ctx, t + 0.05, 0.18, 0.18, 600);
   // Second lighter bubble
   playNoise(ctx, t + 0.16, 0.12, 0.09, 900);
+}
+
+// step: soft footstep on forest floor — low sine thud 90Hz + leaf-crunch noise burst
+// Very quiet (0.06 peak) so it blends under ambient without jarring repetition at 0.5Hz
+function playStep(ctx: AudioContext): void {
+  const t = ctx.currentTime;
+  // Soft ground thud: 90Hz sine, fast attack 5ms, 55ms decay
+  const osc = ctx.createOscillator();
+  const env = ctx.createGain();
+  osc.type = 'sine';
+  osc.frequency.setValueAtTime(90, t);
+  osc.frequency.exponentialRampToValueAtTime(50, t + 0.055);
+  env.gain.setValueAtTime(0, t);
+  env.gain.linearRampToValueAtTime(0.06, t + 0.005);
+  env.gain.linearRampToValueAtTime(0, t + 0.06);
+  osc.connect(env);
+  env.connect(ctx.destination);
+  osc.start(t);
+  osc.stop(t + 0.07);
+  // Leaf/dirt crunch: bandpass noise at 800Hz, 28ms
+  playNoise(ctx, t, 0.028, 0.03, 800);
 }
 
 // ── Ambient audio (T066) ────────────────────────────────────────────────────
@@ -553,7 +574,7 @@ export function playSound(name: SFXName): void {
     hover: playHover, flip: playFlip, win: playWin, lose: playLose,
     unlock: playUnlock, end: playEnd, crystal: playCrystal, cauldron: playCauldron,
     click: playClick, beep: playBeep, mapDraw: playMapDraw, mapZoom: playMapZoom,
-    minigame_start: playMinigameStart,
+    minigame_start: playMinigameStart, step: playStep,
   };
   try { fns[name]?.(ctx); } catch { /* silent fail */ }
 }
@@ -573,6 +594,7 @@ export function initSFXManager(): void {
     mapDraw: playMapDraw,
     mapZoom: playMapZoom,
     minigame_start: playMinigameStart,
+    step: playStep,
   };
 
   const handleSFX = (e: Event): void => {
