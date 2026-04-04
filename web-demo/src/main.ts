@@ -530,6 +530,7 @@ async function gameLoop(
 
     let result = { score: 50 }; // neutral fallback
     try {
+      playSound('flip'); // C82-06: audio cue signalling minigame phase start
       minigameOverlay.classList.add('visible');
       const minigame = await createMinigame(minigameId, minigameContainer);
       result = await minigame.play();
@@ -554,6 +555,10 @@ async function gameLoop(
         ? processOghamModifiers(option.effects, activeOgham)
         : option.effects;
       effectResult = applyEffects(modifiedEffects, multiplier);
+      // C82-04: surface silently-rejected effects for balance tuning visibility
+      if (effectResult.rejected.length > 0) {
+        console.warn('[MERLIN] Rejected effects (not yet implemented):', effectResult.rejected);
+      }
     } catch (err) {
       console.warn('[MERLIN] Effect application failed, skipping effects:', err);
     }
