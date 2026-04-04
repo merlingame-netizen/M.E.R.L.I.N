@@ -747,12 +747,13 @@ export function initMerlinLair(container: HTMLElement): LairResult {
   scene.add(createSkull());
   createLairDensity(scene);
 
-  // Cauldron interactive hit target (sphere r=0.9, aligned to GLB rim ~y=-4.0)
+  // Cauldron interactive hit target (sphere r=0.9, centred on cauldron.body y=-3.8)
+  // C107: aligned to visual center — was y=-4.0 (0.2u below visual, BUG-39-13)
   const cauldronHit = new THREE.Mesh(
     new THREE.SphereGeometry(0.9, 8, 6),
     new THREE.MeshBasicMaterial({ visible: false })
   );
-  cauldronHit.position.set(2, -4.0, -7);
+  cauldronHit.position.set(2, -3.8, -7);
   scene.add(cauldronHit);
 
   // Forest window + day/night/season cycle

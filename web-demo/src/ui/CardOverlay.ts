@@ -83,7 +83,16 @@ function buildEffectTooltip(option: CardOption): HTMLElement | null {
 
     const icon = parsed.positive === true ? '▲' : parsed.positive === false ? '▼' : '◆';
 
-    line.innerHTML = `<span class="${cls}"><span aria-hidden="true">${icon}</span> ${parsed.label}</span>`;
+    // C107: textContent — parsed.label comes from LLM JSON (faction names, raw effect strings)
+    // innerHTML here is a real XSS vector if LLM guardrails fail (default case uses raw effectStr)
+    const spanEl = document.createElement('span');
+    spanEl.className = cls;
+    const iconEl = document.createElement('span');
+    iconEl.setAttribute('aria-hidden', 'true');
+    iconEl.textContent = icon;
+    spanEl.appendChild(iconEl);
+    spanEl.appendChild(document.createTextNode(` ${parsed.label}`));
+    line.appendChild(spanEl);
     tooltip.appendChild(line);
   }
 
