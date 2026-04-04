@@ -369,7 +369,7 @@ async function runMerlinLair(app: HTMLElement): Promise<{ biomeId: string; lairO
 
   // Zone labels shown as brief toast for non-door zones
   const ZONE_LABELS: Record<string, { title: string; sub: string }> = {
-    map:       { title: 'Carte des Biomes',    sub: 'Choisissez votre destination' },
+    map:       { title: 'Carte des Biomes',    sub: 'Vers quelle contrée vous aventurer ?' }, // C45: Celtic register + CTA (was generic "Choisissez votre destination")
     crystal:   { title: 'Pierre des Oghams',   sub: 'Choisissez votre Ogham runique' },
     bookshelf: { title: 'Journal de Merlin',   sub: 'Les pages sont encore en gestation' },
     cauldron:  { title: 'Chaudron Druidique',  sub: 'L\'anam doit d\'abord s\'éveiller' },
@@ -426,8 +426,8 @@ async function runMerlinLair(app: HTMLElement): Promise<{ biomeId: string; lairO
   await new Promise<void>((resolve) => {
     lair.onZoneClick(async (zone) => {
       if (zone === 'door') {
-        showZoneToast('door'); // "Entrer dans la forêt" — 400ms readable before cutToBlack
-        setTimeout(resolve, 400);
+        showZoneToast('door'); // "Entrer dans la forêt" — 600ms total: 200ms fade-in + 400ms fully visible (C45: was 400ms = only 200ms readable)
+        setTimeout(resolve, 600);
         return;
       }
       if (zone === 'crystal') {
