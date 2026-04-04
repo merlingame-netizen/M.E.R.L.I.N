@@ -40,6 +40,13 @@ export class MinigameEquilibre extends MinigameBase {
   private keysDown: Set<string> = new Set();
   private touchSide: 'left' | 'right' | null = null;
 
+  // C34: canvas blur guard — clears held keys when canvas loses focus (prevents stuck-key after
+  // tab-away or modal overlay while ArrowLeft/Right is held)
+  private onBlur = (): void => {
+    this.keysDown.clear();
+    this.touchSide = null;
+  };
+
   // Visual
   private readonly canvasW = 400;
   private readonly canvasH = 200;
@@ -114,12 +121,15 @@ export class MinigameEquilibre extends MinigameBase {
     this.wasInZone = false;
     this.touchSide = null;
 
-    // Input handlers
-    document.addEventListener('keydown', this.onKeyDown);
-    document.addEventListener('keyup', this.onKeyUp);
+    // Input handlers — C34: canvas-scoped keydown/keyup (was document-scoped, risked stuck-key on focus loss).
+    // blur handler clears keysDown if canvas loses focus mid-hold (tab-away, modal, etc.)
+    this.canvas.addEventListener('keydown', this.onKeyDown);
+    this.canvas.addEventListener('keyup', this.onKeyUp);
+    this.canvas.addEventListener('blur', this.onBlur);
     this.canvas.addEventListener('pointerdown', this.onPointerDown);
     this.canvas.addEventListener('pointerup', this.onPointerUp);
     this.canvas.addEventListener('pointerleave', this.onPointerUp);
+    this.canvas.focus(); // ensure canvas receives keys immediately
 
     // Timer
     this.timerInterval = window.setInterval(() => {
@@ -187,8 +197,9 @@ export class MinigameEquilibre extends MinigameBase {
     this.ended = true;
     clearInterval(this.timerInterval);
     cancelAnimationFrame(this.animFrame);
-    document.removeEventListener('keydown', this.onKeyDown);
-    document.removeEventListener('keyup', this.onKeyUp);
+    this.canvas?.removeEventListener('keydown', this.onKeyDown);
+    this.canvas?.removeEventListener('keyup', this.onKeyUp);
+    this.canvas?.removeEventListener('blur', this.onBlur);
     this.canvas?.removeEventListener('pointerdown', this.onPointerDown);
     this.canvas?.removeEventListener('pointerup', this.onPointerUp);
     this.canvas?.removeEventListener('pointerleave', this.onPointerUp);
@@ -353,8 +364,9 @@ export class MinigameEquilibre extends MinigameBase {
   protected cleanup(): void {
     clearInterval(this.timerInterval);
     cancelAnimationFrame(this.animFrame);
-    document.removeEventListener('keydown', this.onKeyDown);
-    document.removeEventListener('keyup', this.onKeyUp);
+    this.canvas?.removeEventListener('keydown', this.onKeyDown);
+    this.canvas?.removeEventListener('keyup', this.onKeyUp);
+    this.canvas?.removeEventListener('blur', this.onBlur);
     this.canvas?.removeEventListener('pointerdown', this.onPointerDown);
     this.canvas?.removeEventListener('pointerup', this.onPointerUp);
     this.canvas?.removeEventListener('pointerleave', this.onPointerUp);

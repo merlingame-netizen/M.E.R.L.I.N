@@ -187,7 +187,7 @@ export function loadLairGLBs(
   loadGLB('/bibliotheque.glb').then((gltf) => {
     if (isDisposed?.()) return; // C81-03
     gltf.scene.position.set(8.8, -5.0, -8);
-    gltf.scene.scale.set(1.2, 1.0, 0.8);
+    gltf.scene.scale.setScalar(1.0); // C34: uniform scale restores Celtic arch proportions (was 1.2,1.0,0.8)
     applyFlatShading(gltf.scene); // C101: match procedural flat-shading aesthetic
     // C125: non-uniform scale risks micro z-fighting against right-wall tiles at x=11.76.
     // Apply polygonOffset matching sol_pierre / mur_pierre pattern: factor=-2, units=-4.
