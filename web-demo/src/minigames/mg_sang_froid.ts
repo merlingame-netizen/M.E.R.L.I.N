@@ -105,7 +105,9 @@ export class MinigameSangFroid extends MinigameBase {
     // C96: keyboard cursor — arrow keys move virtual cursor 10px per press (full keyboard accessibility)
     this.canvas.addEventListener('keydown', this.onKeyDown);
 
-    // Reset state — cursor at (0,0) so idle player starts OUTSIDE the zone (dist≈269 > radius 120).
+    // Reset state — pointer cursor starts at (0,0) so idle player starts OUTSIDE the zone
+    // (dist (0,0)→(190,190) ≈ 269px >> radius 120px — no free time credit).
+    // Keyboard-only players get auto-centered on first ArrowKey press (see onKeyDown).
     this.cursorX = 0;
     this.cursorY = 0;
     this.zoneX = this.centerX;
@@ -146,12 +148,23 @@ export class MinigameSangFroid extends MinigameBase {
   };
 
   // C96: arrow key cursor movement — full keyboard accessibility without pointer device
+  // C98: on first arrow key interaction, cursor jumps from (0,0) to canvas center so
+  // keyboard-only players don't need 26+ presses just to enter the starting zone.
+  // Pointer users always have cursorX/Y updated by pointermove before any keydown fires.
   private onKeyDown = (e: KeyboardEvent): void => {
+    const isArrow = e.key === 'ArrowLeft' || e.key === 'ArrowRight' || e.key === 'ArrowUp' || e.key === 'ArrowDown';
+    if (!isArrow) return;
+    e.preventDefault();
+    // Teleport to center on first keyboard interaction (pointer cursor stays at dist≈269 from start)
+    if (this.cursorX === 0 && this.cursorY === 0) {
+      this.cursorX = this.centerX;
+      this.cursorY = this.centerY;
+    }
     const step = 10;
-    if (e.key === 'ArrowLeft')  { e.preventDefault(); this.cursorX = Math.max(0, this.cursorX - step); }
-    else if (e.key === 'ArrowRight') { e.preventDefault(); this.cursorX = Math.min(this.canvasW, this.cursorX + step); }
-    else if (e.key === 'ArrowUp')    { e.preventDefault(); this.cursorY = Math.max(0, this.cursorY - step); }
-    else if (e.key === 'ArrowDown')  { e.preventDefault(); this.cursorY = Math.min(this.canvasH, this.cursorY + step); }
+    if (e.key === 'ArrowLeft')       this.cursorX = Math.max(0, this.cursorX - step);
+    else if (e.key === 'ArrowRight') this.cursorX = Math.min(this.canvasW, this.cursorX + step);
+    else if (e.key === 'ArrowUp')    this.cursorY = Math.max(0, this.cursorY - step);
+    else if (e.key === 'ArrowDown')  this.cursorY = Math.min(this.canvasH, this.cursorY + step);
   };
 
   private endGame(): void {

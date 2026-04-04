@@ -65,6 +65,29 @@ const PLANT_SETS: readonly {
       { emoji: '\u2736', name: 'Digitale' },
     ],
   },
+  // C98: two additional sets for variety (prevents memorisation after 3 runs)
+  {
+    target: { emoji: '\u2698', name: 'Millepertuis' },    // ⚘ flower — text by default
+    safe: [
+      { emoji: '\u2740', name: 'Bruyere' },
+      { emoji: '\u273F', name: 'Lavande' },
+    ],
+    toxic: [
+      { emoji: '\u2620' + VS15, name: 'Datura' },          // ☠︎
+      { emoji: '\u2736', name: 'Jusquiame' },
+    ],
+  },
+  {
+    target: { emoji: '\u2741', name: 'Menthe sauvage' },  // ✁ — text by default
+    safe: [
+      { emoji: '\u2698', name: 'Achillee' },
+      { emoji: '\u273F', name: 'Valerian' },
+    ],
+    toxic: [
+      { emoji: '\u2620' + VS15, name: 'Colchique' },       // ☠︎
+      { emoji: '\u2736', name: 'Elleborine' },
+    ],
+  },
 ];
 
 export class MinigameHerboristerie extends MinigameBase {
