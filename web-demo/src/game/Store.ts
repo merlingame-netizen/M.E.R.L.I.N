@@ -355,19 +355,30 @@ export const store = createStore<MerlinStore>((set, get) => ({
     },
   })),
 
+  // C149/STORE-UNLOCK-ATOMIC-01: moved dedup check inside set() — consistent with
+  // C144/STORE-02 (useOgham) atomic pattern. The old get()-then-set() approach had a
+  // theoretical TOCTOU window: if addReputation's inline unlock and an UNLOCK_OGHAM
+  // effect both fire for the same oghamId, both could read unlocked=false via get()
+  // before either set() completes (impossible in sync Zustand but fragile on refactor).
+  // New: dedup is inside set() so it is always evaluated against committed state.
+  // The ogham_unlocked event fires only when `fired` is set true inside set().
   unlockOgham: (oghamId) => {
-    const s = get();
-    if (!oghamId || s.meta.oghamsUnlocked.includes(oghamId)) return;
+    if (!oghamId) return;
     const spec = OGHAM_SPECS[oghamId];
     const oghamName = spec?.name ?? oghamId;
-    set((s) => ({
-      meta: {
-        ...s.meta,
-        oghamsUnlocked: [...s.meta.oghamsUnlocked, oghamId],
-        oghamsEquipped: [...s.meta.oghamsEquipped, oghamId],
-      },
-    }));
-    if (typeof window !== 'undefined') {
+    let fired = false;
+    set((s) => {
+      if (s.meta.oghamsUnlocked.includes(oghamId)) return s;
+      fired = true;
+      return {
+        meta: {
+          ...s.meta,
+          oghamsUnlocked: [...s.meta.oghamsUnlocked, oghamId],
+          oghamsEquipped: [...s.meta.oghamsEquipped, oghamId],
+        },
+      };
+    });
+    if (fired && typeof window !== 'undefined') {
       window.dispatchEvent(new CustomEvent('ogham_unlocked', { detail: { oghamId, oghamName } }));
     }
   },

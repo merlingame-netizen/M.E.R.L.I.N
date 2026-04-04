@@ -290,11 +290,14 @@ export async function showRunSummary(reason: 'death' | 'victory' | 'cards_limit'
   restartBtn.addEventListener('blur', () => {
     restartBtn.style.outline = 'none';
   });
-  restartBtn.addEventListener('mouseenter', () => {
+  // C149/RS-HOVER-MOBILE-01: pointerenter/pointerleave fire on mouse AND touch (mobile).
+  // mouseenter/mouseleave only fire for mouse → no hover feedback when tapping "Rejouer".
+  // Same class as C148/OGHAM-HOVER-MOBILE-01 (OghamPanel slots + skip button).
+  restartBtn.addEventListener('pointerenter', () => {
     restartBtn.style.background = 'rgba(139,69,19,0.55)';
     restartBtn.style.borderColor = 'rgba(205,133,63,0.9)';
   });
-  restartBtn.addEventListener('mouseleave', () => {
+  restartBtn.addEventListener('pointerleave', () => {
     restartBtn.style.background = 'rgba(139,69,19,0.3)';
     restartBtn.style.borderColor = 'rgba(205,133,63,0.5)';
   });
