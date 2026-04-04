@@ -761,6 +761,11 @@ export function initMerlinLair(container: HTMLElement): LairResult {
   let crystalGLBGroup: THREE.Group | null = null; // C101: stored to sync float animation to GLB
   let doorFlashing = false;    // C101: door cinematic — lights/emissive burst before transition
   let doorFlashTimer = 0;
+  let doorFlashCancelHandle = 0; // C102: tracked to allow clearTimeout in dispose()
+  // C102: FPS monitoring — adaptive quality drops dust when < 45fps sustained
+  let fpsFrameCount = 0;
+  let fpsElapsed = 0;
+  let lowFpsMode = false;
   loadLairGLBs(scene, {
     mapGroup, shelfGroup, floorMesh, wallsGroup,
     cauldronGroup: cauldron.group, candleGroup,
@@ -877,7 +882,7 @@ export function initMerlinLair(container: HTMLElement): LairResult {
         doorFlashTimer = 0;
         (doorPanel.material as THREE.MeshStandardMaterial).emissiveIntensity = 1.2;
         window.dispatchEvent(new CustomEvent('merlin_sfx', { detail: { sound: 'magic_reveal' } }));
-        setTimeout(() => { doorFlashing = false; cb(found.zone); }, 380);
+        doorFlashCancelHandle = window.setTimeout(() => { doorFlashing = false; cb(found.zone); }, 380);
       } else {
         zoneClickCallback(found.zone);
       }
@@ -981,11 +986,21 @@ export function initMerlinLair(container: HTMLElement): LairResult {
       doorLight.intensity = 2.8 + Math.sin(elapsedTime * 4.1) * 0.3;
     }
 
+    // C102: FPS monitoring — sample every 2s, enable low-fps mode below 45fps
+    fpsFrameCount++;
+    fpsElapsed += dt;
+    if (fpsElapsed >= 2.0) {
+      const fps = fpsFrameCount / fpsElapsed;
+      lowFpsMode = fps < 45;
+      fpsFrameCount = 0;
+      fpsElapsed = 0;
+    }
+
     // Candles (T064)
     updateCandles(candles, dt, elapsedTime);
 
-    // Dust motes
-    dust.update(dt);
+    // Dust motes — C102: skip on low-fps devices (pure cosmetic, saves ~1ms/frame)
+    if (!lowFpsMode) dust.update(dt);
 
     // Cauldron steam
     cauldron.update(elapsedTime, dt);
@@ -998,6 +1013,7 @@ export function initMerlinLair(container: HTMLElement): LairResult {
 
   const dispose = (): void => {
     lairDisposed = true; // C81-03: signal in-flight GLB .then() callbacks to abort
+    clearTimeout(doorFlashCancelHandle); // C102: prevent stale door transition after teardown
     stopAmbient(); // C93-P1: stop forest ambient on scene teardown
     window.removeEventListener('resize', onResize);
     renderer.domElement.removeEventListener('mousemove', onMouseMove);
