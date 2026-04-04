@@ -1,30 +1,28 @@
 {
   "state": "idle",
-  "cycle": 97,
-  "objective": "Cycle 97 — C127: mg_equilibre + mg_combat_rituel display/score formula fixes",
+  "cycle": 100,
+  "objective": "Cycle 100 — C130: _oceanAltFrame rename (C122-13) + fadeInGLB cancel-safety doc (BUG-L-GLBFADE-MURTILE-01)",
   "checkpoint": "complete",
   "audit_summary": {
-    "audit_cycle": "C127",
-    "global_score": 9.89,
+    "audit_cycle": "C130",
+    "global_score": 9.94,
     "verdict": "PROCEED",
     "bugs_fixed": [
-      "C127/EQ-FORMULA-01 (HIGH): mg_equilibre canvas score display used elapsedTime (RAF-accumulated ~60fps) but endGame uses totalTime-timeLeft (interval-tracked ~10fps). At tier 3 (7s), divergence up to 0.5s = proportionally large gap. Fix: canvas display now uses Math.min(totalTime, totalTime-timeLeft+0.001) — same denominator as endGame() and setInterval DOM status. All 3 formula paths now unified.",
-      "C127/COMB-FORMULA-01 (HIGH): mg_combat_rituel showed raw seconds ('Survie: 10.0s | Centre: 3.2s') — implied full score but actual formula is weighted % (survivalTime/totalTime)*80 + (centerTime/totalTime)*20. Gap exceeds 20pts especially at tier 3 (10s total). Fix: live HUD now shows estimated score with component breakdown: 'Score: ~N% (survie X/80, centre Y/20)'."
+      "C130/C122-13 (LOW): Rename _skipOceanFrame → _oceanAltFrame in CoastBiome.ts. The old name implied the flag directly controlled skipping; it actually marks which frame-parity is the skip candidate. Updated declaration comment + toggle + condition. Logic unchanged.",
+      "C130/BUG-L-GLBFADE-MURTILE-01 (MEDIUM-doc): Add cancel-safety documentation to LairGLBAssets.ts fadeInGLB call on shared tileMat. Mid-fade cancel via dispose() is safe because scene.traverse() disposes the shared material; next lair visit clones fresh tileMat from re-loaded GLB. No logic change required."
     ],
-    "c127_verdict": "CLEAR — 5th and 6th formula-alignment fixes. All 14 minigames now audited. 0 TS errors.",
-    "c127_confirmations": [
-      "mg_equilibre.ts: canvas uses Math.min(totalTime, totalTime-timeLeft+0.001) — matches endGame()",
-      "mg_combat_rituel.ts: estSurv=(survivalTime/totalTime)*80, estCtr=(centerTime/totalTime)*20, shows total + breakdown",
-      "Build: main=52.10KB gzip, minigames=25.48KB gzip (+0.03KB). 0 TS errors."
+    "c130_verdict": "CLEAR — Naming corrected, cancel-safety documented. Only LAIR-01 (no pause() API) remains as tracked LOW.",
+    "c130_confirmations": [
+      "CoastBiome.ts: _oceanAltFrame (3 occurrences) + updated comment — C130/C122-13",
+      "LairGLBAssets.ts: 5-line cancel-safety comment block at fadeInGLB(backMesh) — C130/BUG-L-GLBFADE-MURTILE-01",
+      "Build: main=52.11KB gzip, minigames=25.47KB gzip. 0 TS errors.",
+      "Pushed: c5a092b → git@github.com:merlingame-netizen/M.E.R.L.I.N.git main"
     ],
     "open_issues_deferred": [
-      "LOW LAIR-01: No pause() API on LairResult.",
-      "LOW: potionBottles bloom (emissiveIntensity=0.25).",
-      "LOW C122-13: _skipOceanFrame naming inversion in CoastBiome.ts.",
-      "LOW C122-16: OghamPanel locked-ogham aria-label missing lock status."
+      "LOW LAIR-01: No pause() API on LairResult."
     ],
     "pushed": true,
-    "build": "0 TS errors, main=52.10KB gzip, minigames=25.48KB gzip"
+    "build": "0 TS errors, main=52.11KB gzip, minigames=25.47KB gzip"
   },
   "display_formula_audit_COMPLETE": {
     "mg_sang_froid": "FIXED C121/SF-HUD-01",
@@ -48,8 +46,12 @@
     "C116_final_sweep": 9.30, "C118_gpu_pause": 9.40, "C119_immut_dom": 9.50,
     "C120_dom_elimination": 9.60, "C121_hud_cache_trc_sfhud": 9.68, "C122_digits_doorzf": 9.73,
     "C123_aria_leak_runsummary": 9.78, "C124_volonte_tilesquare": 9.83, "C125_ombres_formula": 9.85,
-    "C126_vis_flip": 9.87, "C127_eq_combat_formula": 9.89
+    "C126_vis_flip": 9.87, "C127_eq_combat_formula": 9.89,
+    "C128_clock_delta_aria": 9.91,
+    "C129_tile_aspect_potion": 9.92,
+    "C129b_double_add_regard_guard": 9.93,
+    "C130_ocean_alt_frame_glbfade_doc": 9.94
   },
   "workers": [],
-  "updated_at": "2026-04-05T00:20:00.000Z"
+  "updated_at": "2026-04-05T01:00:00.000Z"
 }

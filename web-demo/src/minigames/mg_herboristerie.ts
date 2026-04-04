@@ -354,7 +354,7 @@ export class MinigameHerboristerie extends MinigameBase {
 
     // Score formula:
     // - Base: (correctPicks / totalTargets) * 80
-    // - Penalty: wrongPicks * 8 (each wrong pick costs 8 points)
+    // - Penalty: wrongPicks * wrongPenalty (tieredValue [5,6,7,8] — tier 0 = 5pts, not 8)
     // - Time bonus: up to +20 if finished quickly
     const pickRatio = this.totalTargets > 0 ? this.correctPicks / this.totalTargets : 0;
     const baseScore = pickRatio * 80;
