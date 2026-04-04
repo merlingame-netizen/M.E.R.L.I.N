@@ -981,7 +981,7 @@ export function initMerlinLair(container: HTMLElement): LairResult {
   // C85-01: zone label map (used by pointer action + keyboard nav + aria-live)
   const ZONE_ARIA_LABELS: Readonly<Record<LairZone, string>> = {
     map:       'Carte des Biomes',
-    crystal:   'Pierre des Oghams',
+    crystal:   'Sph\u00e8re de Vision', // C140/LORE: ogham=pierre runique, pas sph\u00e8re cristal
     bookshelf: 'Journal de Merlin',
     cauldron:  'Chaudron Druidique',
     door:      'Sortie vers l\'aventure',
@@ -992,7 +992,7 @@ export function initMerlinLair(container: HTMLElement): LairResult {
   // References specific mythological anchors: Cerridwen (cauldron goddess), Brocéliande (sacred forest).
   const ZONE_LORE: Readonly<Record<LairZone, string>> = {
     map:       'Quelle contrée de Bretagne t\'appelle ce soir ?',
-    crystal:   'Les runes d\'ogham murmurent dans la pierre sacrée',
+    crystal:   'La sph\u00e8re de cristal r\u00e9v\u00e8le les oghams de la prochaine carte',
     bookshelf: 'Les chroniques de Merlin gardent mémoire de tes actes',
     cauldron:  'Le chaudron de Cerridwen bouillonne de sagesse ancienne',
     door:      'Les bois de Brocéliande t\'attendent, voyageur',

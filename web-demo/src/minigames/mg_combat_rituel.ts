@@ -280,13 +280,14 @@ export class MinigameCombatRituel extends MinigameBase {
       if (this.hit) window.dispatchEvent(new CustomEvent('merlin_sfx', { detail: { sound: 'unlock' } }));
       this.hit = false;
       this.survivalTime += dt;
+    }
 
-      // Check center bonus
-      const dx = this.playerX - this.centerX;
-      const dy = this.playerY - this.centerY;
-      if (Math.sqrt(dx * dx + dy * dy) < this.centerBonusRadius) {
-        this.centerTime += dt;
-      }
+    // C140/COMB-01: center bonus is positional — accumulate independently of hit state
+    // (player at center while absorbing a hit still deserves precision credit)
+    const dx = this.playerX - this.centerX;
+    const dy = this.playerY - this.centerY;
+    if (Math.sqrt(dx * dx + dy * dy) < this.centerBonusRadius) {
+      this.centerTime += dt;
     }
 
     // Hit flash decay
