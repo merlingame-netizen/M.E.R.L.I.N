@@ -551,9 +551,12 @@ function createCauldron(scene: Scene): CauldronSystem {
   const group = new Group();
 
   // Cauldron body
+  // C153/CAULDRON-Y-01: align procedural body Y to GLB position (-4.65) — was -3.8.
+  // LairGLBAssets.ts sets gltf.scene.position.set(2, -4.65, -7) so the GLB loads 0.85u
+  // below the procedural mesh, causing a visible downward pop when the GLB fades in.
   const body = new Mesh(new SphereGeometry(0.65, 10, 8), ironMat);
   body.scale.y = 0.8;
-  body.position.set(2, -3.8, -7);
+  body.position.set(2, -4.65, -7);
   group.add(body);
   // C129/BUG-L-DOUBLE-ADD-01: removed scene.add(group) from here — every other factory returns group and
   // lets the caller add. Internal scene.add() was the architectural root of BUG-L-07 class (easy to lose
@@ -797,13 +800,14 @@ export function initMerlinLair(container: HTMLElement): LairResult {
   const { group: skullGroup, cranium: skullCranium } = createSkull(); scene.add(skullGroup);
   const cleanupLairDensity = createLairDensity(scene, isLowEndMobile); // C35: cleanup for moon.target; C38: lowEnd gate for biblio PointLight
 
-  // Cauldron interactive hit target (sphere r=0.9, centred on cauldron.body y=-3.8)
-  // C107: aligned to visual center — was y=-4.0 (0.2u below visual, BUG-39-13)
+  // Cauldron interactive hit target — C153/CAULDRON-Y-01: aligned to GLB y=-4.65.
+  // Previous: y=-3.8 matched the old procedural body. Now both body and GLB are at -4.65
+  // so the hit target is correct for the entire lair lifecycle (before and after GLB loads).
   const cauldronHit = new Mesh(
     new SphereGeometry(0.9, 8, 6),
     new MeshBasicMaterial({ visible: false })
   );
-  cauldronHit.position.set(2, -3.8, -7);
+  cauldronHit.position.set(2, -4.65, -7);
   scene.add(cauldronHit);
 
   // Forest window + day/night/season cycle

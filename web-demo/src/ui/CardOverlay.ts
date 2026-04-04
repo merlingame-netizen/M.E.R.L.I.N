@@ -217,13 +217,17 @@ export function showCard(card: Card, opts?: { revealEffects?: boolean }): Promis
     overlayEl.setAttribute('aria-modal', 'true');
     overlayEl.setAttribute('aria-label', 'Choix narratif');
 
+    // C153/CO-03: capture cardContainer() once — was called 3× as live DOM queries here.
+    // Three separate querySelector('.card-container') traversals per showCard() is wasteful
+    // on the hot path (called every card). Capture once; null-guard on the outer block suffices.
+    const container = cardContainer();
+
     // Biome badge (T067)
-    const existingBadge = cardContainer()?.querySelector('.card-biome-badge');
+    const existingBadge = container?.querySelector('.card-biome-badge');
     if (existingBadge) existingBadge.remove();
-    const dividerEl = cardContainer()?.querySelector('.card-divider');
+    const dividerEl = container?.querySelector('.card-divider');
     if (dividerEl) dividerEl.remove();
 
-    const container = cardContainer();
     if (container) {
       const badge = document.createElement('div');
       badge.className = 'card-biome-badge';
