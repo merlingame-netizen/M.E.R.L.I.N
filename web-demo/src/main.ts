@@ -214,7 +214,7 @@ function showBiomePicker(container: HTMLElement): Promise<string> {
   });
 }
 
-async function runMerlinLair(app: HTMLElement): Promise<string> {
+async function runMerlinLair(app: HTMLElement): Promise<{ biomeId: string; lairOgham: string | null }> {
   // Create wrapper div dynamically (static placement in index.html preferred)
   let wrapper = document.getElementById('lair-canvas-wrapper') as HTMLDivElement | null;
   if (!wrapper) {
@@ -250,11 +250,13 @@ async function runMerlinLair(app: HTMLElement): Promise<string> {
 
   // Chosen biome — defaults to cotes_sauvages until player picks via map zone.
   let selectedBiomeId = 'cotes_sauvages';
+  // C84: ogham pre-selected in lair, carried into first card of the upcoming run
+  let lairSelectedOgham: string | null = null;
 
   // Zone labels shown as brief toast for non-door zones
   const ZONE_LABELS: Record<string, { title: string; sub: string }> = {
     map:       { title: 'Carte des Biomes',    sub: 'Choisissez votre destination' },
-    crystal:   { title: 'Pierre des Oghams',   sub: 'Les runes ne répondent pas encore' },
+    crystal:   { title: 'Pierre des Oghams',   sub: 'Choisissez votre Ogham runique' },
     bookshelf: { title: 'Journal de Merlin',   sub: 'Les pages sont encore en gestation' },
     cauldron:  { title: 'Chaudron Druidique',  sub: 'L\'anam doit d\'abord s\'éveiller' },
     door:      { title: 'Entrer dans la forêt', sub: '→ Commencer l\'aventure' },
@@ -304,6 +306,14 @@ async function runMerlinLair(app: HTMLElement): Promise<string> {
         setTimeout(resolve, 400);
         return;
       }
+      if (zone === 'crystal') {
+        // C84: show ogham panel for pre-run selection — result carried into first card
+        lairSelectedOgham = await showOghamPanel();
+        if (lairSelectedOgham) {
+          showZoneToast('crystal'); // "Pierre des Oghams / Choisissez votre Ogham runique"
+        }
+        return;
+      }
       if (zone === 'map') {
         // Biome picker — shows 8-option overlay, player selects destination
         selectedBiomeId = await showBiomePicker(wrapper!);
@@ -342,7 +352,7 @@ async function runMerlinLair(app: HTMLElement): Promise<string> {
   await new Promise<void>((res) => setTimeout(res, 300));
   lair.dispose();
   wrapper.style.display = 'none';
-  return selectedBiomeId;
+  return { biomeId: selectedBiomeId, lairOgham: lairSelectedOgham };
 }
 
 // --- Bootstrap ---
@@ -369,11 +379,18 @@ async function main(): Promise<void> {
   // T043: Load FastRoute card templates once (shared across all runs)
   await loadTemplates();
 
+  // C84: Init ogham panel + cross-run data BEFORE first lair visit
+  // (initOghamPanel is idempotent; safe to call again each loop iteration)
+  initOghamPanel();
+  loadAnamFromStorage();
+  loadMetaFromStorage();
+
   // BUG-03: Outer run loop — lair → walk → run → lair → walk → run ...
   // Without this the page is a dead-end after the first run.
   while (true) {
-    // Phase 2b: Lair Hub — returns the biome chosen at the map zone (defaults to cotes_sauvages)
-    const chosenBiome = await runMerlinLair(app);
+    // Phase 2b: Lair Hub — returns chosen biome + optional pre-selected ogham
+    const lairResult = await runMerlinLair(app);
+    const chosenBiome = lairResult.biomeId;
 
     // Phase 3: Reveal and enter game
     loading.style.display = 'flex';
@@ -418,6 +435,10 @@ async function main(): Promise<void> {
 
     // Start run with the biome the player chose at the map zone
     store.getState().startRun(chosenBiome);
+    // C84: apply lair-pre-selected ogham — carried into first card automatically
+    if (lairResult.lairOgham) {
+      store.getState().setActiveOgham(lairResult.lairOgham);
+    }
     updateHUD();
     showBiomeToast(chosenBiome);
 
@@ -473,7 +494,9 @@ async function gameLoop(
     }
 
     // 3b. OGHAM phase — let player equip/use an ogham before card
-    const oghamChoice = await showOghamPanel();
+    // C84: if player pre-selected an ogham in the Lair, use it without showing panel
+    const preSelected = state().run.activeOgham;
+    const oghamChoice = preSelected || await showOghamPanel();
     if (oghamChoice) {
       state().useOgham(oghamChoice);
       // Apply immediate ogham effects (heal, currency, sacrifice, etc.)

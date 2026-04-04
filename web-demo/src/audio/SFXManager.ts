@@ -185,7 +185,7 @@ interface AmbientSession {
   masterGain: GainNode;
   oscillators: OscillatorNode[];
   noiseSource: AudioBufferSourceNode | null;
-  birdTimer: ReturnType<typeof setTimeout> | null;
+  stochasticTimer: ReturnType<typeof setTimeout> | null;
 }
 
 let ambientSession: AmbientSession | null = null;
@@ -281,7 +281,7 @@ function scheduleRainDrops(
 ): void {
   const scheduleNext = (): void => {
     const delayMs = (0.3 + Math.random() * 1.1) * 1000;
-    session.birdTimer = setTimeout(() => {
+    session.stochasticTimer = setTimeout(() => {
       if (!ambientSession) return;
       try { playRainDrop(ctx, master); } catch { /* silent fail */ }
       scheduleNext();
@@ -301,7 +301,7 @@ function scheduleBirds(
 ): void {
   const scheduleNext = (): void => {
     const delayMs = (4 + Math.random() * 8) * 1000;
-    session.birdTimer = setTimeout(() => {
+    session.stochasticTimer = setTimeout(() => {
       if (!ambientSession) return; // stopped
       try { playBirdChirp(ctx, master); } catch { /* silent fail */ }
       scheduleNext();
@@ -376,7 +376,7 @@ export function startAmbient(type: AmbientType): void {
       masterGain: master,
       oscillators: [drone, harmonic],
       noiseSource,
-      birdTimer: null,
+      stochasticTimer: null,
     };
 
     ambientSession = session;
@@ -420,9 +420,9 @@ export function stopAmbient(): void {
   ambientSession = null;
 
   // Cancel bird timer
-  if (session.birdTimer !== null) {
-    clearTimeout(session.birdTimer);
-    session.birdTimer = null;
+  if (session.stochasticTimer !== null) {
+    clearTimeout(session.stochasticTimer);
+    session.stochasticTimer = null;
   }
 
   const ctx = sharedCtx;
