@@ -775,6 +775,7 @@ export function initMerlinLair(container: HTMLElement): LairResult {
   // C81-03: disposed flag prevents late-resolving GLBs from adding to a torn-down scene.
   let lairDisposed = false;
   let crystalGLBGroup: THREE.Group | null = null; // C101: stored to sync float animation to GLB
+  let crystalGLBBaseY = -1.0; // C118: base Y from GLB export root; overwritten by onCrystalGroupLoaded
   // C111: stored to animate GLB emissive in update loop (procedural mat targets hidden sphere post-load)
   let crystalGLBMat: THREE.MeshStandardMaterial | null = null;
   let doorFlashing = false;    // C101: door cinematic — lights/emissive burst before transition
@@ -801,7 +802,8 @@ export function initMerlinLair(container: HTMLElement): LairResult {
       crystalGLBMat = mesh.material as THREE.MeshStandardMaterial;
     },
     // C101: store GLB group so update loop can animate its Y position (float effect)
-    onCrystalGroupLoaded: (group) => { crystalGLBGroup = group; },
+    // C118: also capture base Y so float animation is a delta (not hardcoded -1.0)
+    onCrystalGroupLoaded: (group) => { crystalGLBGroup = group; crystalGLBBaseY = group.position.y; },
   }, () => lairDisposed);
 
   // C93-P1: forest ambient audio — SFXManager handles AudioContext suspension via pendingAmbientType
@@ -815,6 +817,9 @@ export function initMerlinLair(container: HTMLElement): LairResult {
     { mesh: doorHit,             zone: 'door',      hovered: false, visualMesh: doorPanel,  baseEmissive: 0.05 },
     { mesh: cauldronHit,         zone: 'cauldron',  hovered: false, visualMesh: cauldron.body, baseEmissive: 0.0 },
   ];
+
+  // C118: cache crystalEntry ref at init — avoids Array.find() closure allocation in 60fps update loop
+  const crystalEntry = interactives.find((i) => i.zone === 'crystal')!;
 
   const raycaster = new THREE.Raycaster();
   const mouse = new THREE.Vector2();
@@ -1031,15 +1036,15 @@ export function initMerlinLair(container: HTMLElement): LairResult {
     crystalData.light.intensity = 2.2 + Math.sin(elapsedTime * 1.8) * 0.4;
     // C113: boost emissive base when crystal is hovered — unhovered=0.5, hovered=0.9.
     // Without this, update loop overrides applyHoverTo(0.65) every frame → hover invisible.
-    const crystalHovered = interactives.find((i) => i.zone === 'crystal')?.hovered ?? false;
-    const crystalEmissive = (crystalHovered ? 0.9 : 0.5) + Math.sin(elapsedTime * 1.4) * 0.15;
+    // C118: use cached crystalEntry (set at init) — no Array.find() allocation on hot path
+    const crystalEmissive = (crystalEntry.hovered ? 0.9 : 0.5) + Math.sin(elapsedTime * 1.4) * 0.15;
     crystalData.mat.emissiveIntensity = crystalEmissive;
     // C111: also animate GLB material emissive — procedural mat targets hidden sphere post-load (BUG-C46-01)
     if (crystalGLBMat) crystalGLBMat.emissiveIntensity = crystalEmissive;
-    const crystalFloatY = -1.0 + Math.sin(elapsedTime * 0.9) * 0.04;
-    crystalData.sphere.position.y = crystalFloatY;
+    // C118: procedural sphere uses -1.0 (always correct); GLB uses crystalGLBBaseY delta (GLB root Y)
+    crystalData.sphere.position.y = -1.0 + Math.sin(elapsedTime * 0.9) * 0.04;
     // C101: sync GLB group float — procedural sphere is hidden post-load, GLB takes its place
-    if (crystalGLBGroup) crystalGLBGroup.position.y = crystalFloatY;
+    if (crystalGLBGroup) crystalGLBGroup.position.y = crystalGLBBaseY + Math.sin(elapsedTime * 0.9) * 0.04;
 
     // Door light flicker — C101: burst overrides normal flicker during door cinematic
     if (doorFlashing) {
