@@ -159,7 +159,8 @@ function triggerFlipAnimation(): void {
 
 // ── Public API ─────────────────────────────────────────────────────────────
 
-export function showCard(card: Card): Promise<number> {
+// C142/COLL: optional reveal flag — coll ogham (reveal_all_options) makes effects persistently visible
+export function showCard(card: Card, opts?: { revealEffects?: boolean }): Promise<number> {
   return new Promise((resolve) => {
     // One-shot guard: prevents a second option click during the 200ms gold-highlight
     // animation from calling hideCard()+resolve() a second time (resolve is a no-op
@@ -250,9 +251,12 @@ export function showCard(card: Card): Promise<number> {
       btn.appendChild(verbEl);
       btn.appendChild(descEl);
 
-      // Effect tooltip (T068)
+      // Effect tooltip (T068) — C142/COLL: add effects-revealed class when coll ogham active
       const tooltip = buildEffectTooltip(option);
-      if (tooltip) btn.appendChild(tooltip);
+      if (tooltip) {
+        if (opts?.revealEffects) btn.classList.add('effects-revealed');
+        btn.appendChild(tooltip);
+      }
 
       const activate = (): void => {
         if (activated) return;

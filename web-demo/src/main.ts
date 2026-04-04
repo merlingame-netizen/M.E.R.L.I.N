@@ -753,10 +753,11 @@ async function gameLoop(
         // Heuristic: score each option (HEAL/ADD = +1, DAMAGE = -1), replace lowest
         const scoreOpt = (opt: { effects: readonly string[] }) =>
           opt.effects.reduce((s, e) => s + (/^(HEAL|ADD)/.test(e) ? 1 : /^DAMAGE/.test(e) ? -1 : 0), 0);
-        const worstIdx = ([0, 1, 2] as const).reduce<0 | 1 | 2>(
-          (w, i) => (scoreOpt(card.options[i]) < scoreOpt(card.options[w]) ? i : w),
-          0,
-        );
+        // C142/OC-05: randomize tie-break — prevents deterministic idx=0 replacement on equal-scored options
+        const optScores = ([0, 1, 2] as const).map((i) => scoreOpt(card.options[i]));
+        const minScore = Math.min(...optScores);
+        const tied = ([0, 1, 2] as const).filter((i) => optScores[i] === minScore);
+        const worstIdx = tied[Math.floor(Math.random() * tied.length)] as 0 | 1 | 2;
         const opts = [...card.options] as [typeof card.options[0], typeof card.options[1], typeof card.options[2]];
         opts[worstIdx] = fresh.options[worstIdx];
         card = { ...card, options: opts };
@@ -770,7 +771,9 @@ async function gameLoop(
 
     await fadeOut(300);
 
-    const chosenOption = await showCard(card);
+    // C142/COLL: reveal_all_options — pass flag to CardOverlay so all effect tooltips become visible
+    const revealEffects = oghamResult?.applied === true && oghamResult.effectType === 'reveal_all_options';
+    const chosenOption = await showCard(card, { revealEffects });
     playSound('flip');
 
     // 5. MINIGAME phase
