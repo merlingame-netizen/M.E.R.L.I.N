@@ -85,7 +85,7 @@ export class MinigameHerboristerie extends MinigameBase {
   private cells: CellState[] = [];
   private targetPlant: { emoji: string; name: string } = { emoji: '', name: '' };
   private timeLeft = 15;
-  private readonly totalTime = 15;
+  private totalTime = 15; // C94: scaled by difficultyTier in setup()
   private correctPicks = 0;
   private wrongPicks = 0;
   private totalTargets = 0;
@@ -99,6 +99,9 @@ export class MinigameHerboristerie extends MinigameBase {
 
   protected setup(): void {
     this.container.innerHTML = '';
+
+    // C94: scale difficulty — tier 0: 15s, tier 1: 13s, tier 2: 11s, tier 3: 9s
+    this.totalTime = 15 - this.difficultyTier * 2;
 
     // Title
     const title = document.createElement('div');

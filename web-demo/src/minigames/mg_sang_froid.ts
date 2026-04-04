@@ -25,11 +25,11 @@ export class MinigameSangFroid extends MinigameBase {
   private readonly centerX = 190;
   private readonly centerY = 190;
 
-  // Game config
+  // Game config (endRadius + driftSpeed scaled by difficultyTier in setup())
   private readonly totalTime = 10;
   private readonly startRadius = 120;  // initial safe zone radius
-  private readonly endRadius = 28;     // final safe zone radius
-  private readonly driftSpeed = 18;    // max drift speed px/s
+  private endRadius = 28;              // final safe zone radius — scaled by tier
+  private driftSpeed = 18;             // max drift speed px/s — scaled by tier
 
   // Game state
   // Cursor starts at (0,0) — outside the initial zone radius of 120px centred at (190,190).
@@ -49,6 +49,10 @@ export class MinigameSangFroid extends MinigameBase {
 
   protected setup(): void {
     this.container.innerHTML = '';
+
+    // C94: scale difficulty — tier 0: baseline, tier 1-3: smaller endRadius + faster drift
+    this.endRadius  = 28 - this.difficultyTier * 4; // 28 / 24 / 20 / 16
+    this.driftSpeed = 18 + this.difficultyTier * 4; // 18 / 22 / 26 / 30 px/s
 
     // Title
     const title = document.createElement('div');

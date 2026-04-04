@@ -189,6 +189,9 @@ export abstract class MinigameBase {
   private finished = false;
   // Real-delta tracking — reset to 0 each play() so first frame returns 1/60 as safe default.
   private lastRenderMs = 0;
+  // C94: cross-run difficulty tier (0-3) derived from cumulative play count in localStorage.
+  // Tier 0: 0-2 plays, Tier 1: 3-6, Tier 2: 7-11, Tier 3: 12+.
+  protected difficultyTier = 0;
 
   constructor(container: HTMLElement) {
     this.container = container;
@@ -211,6 +214,11 @@ export abstract class MinigameBase {
   play(): Promise<MinigameResult> {
     this.finished = false;
     this.lastRenderMs = 0; // reset so getDeltaTime() returns 1/60 on first frame
+    // C94: compute difficulty tier from cumulative play count
+    try {
+      const plays = parseInt(localStorage.getItem('merlin_mg_plays') ?? '0', 10) || 0;
+      this.difficultyTier = plays < 3 ? 0 : plays < 7 ? 1 : plays < 12 ? 2 : 3;
+    } catch { this.difficultyTier = 0; }
     return new Promise((resolve) => {
       this.resolve = resolve;
       this.startTime = performance.now();
@@ -233,6 +241,12 @@ export abstract class MinigameBase {
   protected finish(score: number): void {
     if (this.finished) return;  // BUG-05: idempotent guard
     this.finished = true;
+
+    // C94: increment cumulative play count for difficulty ramp
+    try {
+      const plays = parseInt(localStorage.getItem('merlin_mg_plays') ?? '0', 10) || 0;
+      localStorage.setItem('merlin_mg_plays', String(plays + 1));
+    } catch { /* localStorage unavailable — difficulty stays static */ }
 
     const clamped = validateScore(score);
     const level = scoreToOutcome(clamped);
