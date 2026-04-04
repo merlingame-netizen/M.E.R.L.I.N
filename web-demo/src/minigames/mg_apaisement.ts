@@ -105,6 +105,8 @@ export class MinigameApaisement extends MinigameBase {
 
     // Input
     this.canvas.addEventListener('pointerdown', this.onPointerDown);
+    // C136: WCAG 2.1.1 — Space/Enter trigger breath tap for keyboard-only players
+    this.canvas.addEventListener('keydown', this.onKeyDown);
 
     // Reset state
     this.timeLeft = this.totalTime;
@@ -162,7 +164,20 @@ export class MinigameApaisement extends MinigameBase {
     return { accuracy: Math.max(0, 0.5 - t * 0.5), phase };
   }
 
+  // C136: WCAG 2.1.1 — keyboard tap (Space/Enter = same effect as pointer tap)
+  private onKeyDown = (e: KeyboardEvent): void => {
+    if (e.key !== ' ' && e.key !== 'Enter') return;
+    e.preventDefault();
+    this.registerTap();
+  };
+
   private onPointerDown = (_e: PointerEvent): void => {
+    if (this.timeLeft <= 0) return;
+    this.registerTap();
+  };
+
+  // C136: shared tap logic extracted to avoid duplication between pointer and keyboard paths
+  private registerTap(): void {
     if (this.timeLeft <= 0) return;
     this.showGuide = false;
 
@@ -199,7 +214,7 @@ export class MinigameApaisement extends MinigameBase {
       const avgAcc = this.totalAccuracy / this.taps.length;
       scoreEl.textContent = `Synchronisation: ${Math.round(avgAcc * 100)}% (${this.taps.length} respirations)`;
     }
-  };
+  }
 
   private endGame(): void {
     if (this.ended) return;
@@ -207,6 +222,7 @@ export class MinigameApaisement extends MinigameBase {
     clearInterval(this.timerInterval);
     cancelAnimationFrame(this.animFrame);
     this.canvas?.removeEventListener('pointerdown', this.onPointerDown);
+    this.canvas?.removeEventListener('keydown', this.onKeyDown);
 
     // Score = average accuracy * 100, with a minimum tap count bonus
     // At least 4 taps needed for full score potential
@@ -387,6 +403,7 @@ export class MinigameApaisement extends MinigameBase {
     clearInterval(this.timerInterval);
     cancelAnimationFrame(this.animFrame);
     this.canvas?.removeEventListener('pointerdown', this.onPointerDown);
+    this.canvas?.removeEventListener('keydown', this.onKeyDown);
     super.cleanup();
   }
 }

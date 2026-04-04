@@ -483,7 +483,7 @@ export class MinigameHerboristerie extends MinigameBase {
       ctx.font = 'bold 14px system-ui';
       ctx.textAlign = 'center';
       ctx.textBaseline = 'middle';
-      ctx.fillText('\u22128 pts', t.x, t.y - rise);
+      ctx.fillText(`\u2212${this.wrongPenalty} pts`, t.x, t.y - rise); // C136: tieredValue not hardcoded 8
       t.life -= dt;
     }
 

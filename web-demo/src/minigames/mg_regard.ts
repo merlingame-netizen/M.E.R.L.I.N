@@ -65,6 +65,7 @@ export class MinigameRegard extends MinigameBase {
   private clickedIndex = 0; // next expected index in sequence
   private clickedCells: Set<number> = new Set(); // grid indices already clicked
   private pulsePhase = 0;
+  private kbFocusIdx = -1; // C136: keyboard-focused cell index (-1 = none)
 
   protected setup(): void {
     this.container.innerHTML = '';
@@ -120,6 +121,8 @@ export class MinigameRegard extends MinigameBase {
 
     // Input
     this.canvas.addEventListener('pointerdown', this.onClick);
+    // C136: WCAG 2.1.1 — ArrowKey cell focus + Enter/Space confirm for keyboard-only players
+    this.canvas.addEventListener('keydown', this.onKeyDown);
 
     // Reset state
     this.currentRound = 0;
@@ -127,6 +130,7 @@ export class MinigameRegard extends MinigameBase {
     this.correctTotal = 0;
     this.attemptsTotal = 0;
     this.pulsePhase = 0;
+    this.kbFocusIdx = -1;
 
     this.prepareRound();
   }
@@ -238,12 +242,51 @@ export class MinigameRegard extends MinigameBase {
     }
   };
 
+  // C136: WCAG 2.1.1 — keyboard cell navigation during recall phase.
+  // ArrowKeys move kbFocusIdx through 5×3 grid. Enter/Space confirms the focused cell.
+  private onKeyDown = (e: KeyboardEvent): void => {
+    if (this.phase !== 'recall') return;
+    const isArrow = e.key === 'ArrowLeft' || e.key === 'ArrowRight' || e.key === 'ArrowUp' || e.key === 'ArrowDown';
+    const isConfirm = e.key === 'Enter' || e.key === ' ';
+    if (!isArrow && !isConfirm) return;
+    e.preventDefault();
+    const total = this.gridCols * this.gridRows;
+    if (isArrow) {
+      const cur = this.kbFocusIdx < 0 ? 0 : this.kbFocusIdx;
+      if (e.key === 'ArrowRight')     this.kbFocusIdx = Math.min(total - 1, cur + 1);
+      else if (e.key === 'ArrowLeft') this.kbFocusIdx = Math.max(0, cur - 1);
+      else if (e.key === 'ArrowDown') this.kbFocusIdx = Math.min(total - 1, cur + this.gridCols);
+      else if (e.key === 'ArrowUp')   this.kbFocusIdx = Math.max(0, cur - this.gridCols);
+    } else if (isConfirm && this.kbFocusIdx >= 0) {
+      // Simulate click on the focused cell using its grid coordinates
+      const cell = this.grid[this.kbFocusIdx];
+      if (!cell || this.clickedCells.has(this.kbFocusIdx)) return;
+      // Reuse the exact same hit-detection path as onClick (direct cell index lookup)
+      this.clickedCells.add(this.kbFocusIdx);
+      this.attemptsTotal++;
+      if (cell.isTarget && cell.targetIndex === this.clickedIndex) {
+        this.correctTotal++;
+        this.clickedIndex++;
+        window.dispatchEvent(new CustomEvent('merlin_sfx', { detail: { sound: 'unlock' } }));
+        if (this.clickedIndex >= this.sequence.length) {
+          this.phase = 'feedback'; this.feedbackCorrect = true; this.feedbackTimer = 0.8;
+        }
+      } else {
+        this.phase = 'feedback'; this.feedbackCorrect = false; this.feedbackTimer = 0.8;
+        window.dispatchEvent(new CustomEvent('merlin_sfx', { detail: { sound: 'lose' } }));
+      }
+      const statusEl = document.getElementById('mg-regard-status');
+      if (statusEl) statusEl.textContent = `Correct: ${this.correctTotal} / ${this.attemptsTotal}`;
+    }
+  };
+
   private endGame(): void {
     if (this.ended) return;
     this.ended = true;
     this.phase = 'done';
     cancelAnimationFrame(this.animFrame);
     this.canvas?.removeEventListener('pointerdown', this.onClick);
+    this.canvas?.removeEventListener('keydown', this.onKeyDown);
 
     // Score: total correct sequences vs total sequence lengths
     const totalSymbols = this.roundLengths.reduce((a, b) => a + b, 0);
@@ -355,11 +398,14 @@ export class MinigameRegard extends MinigameBase {
       ctx.arc(cell.gridX, cell.gridY, this.cellSize / 2 - 6, 0, Math.PI * 2);
       ctx.fill();
 
-      // Cell border
-      ctx.strokeStyle = this.phase === 'show' && cell.isTarget
-        ? 'rgba(205,133,63,0.5)'
-        : 'rgba(100,80,140,0.2)';
-      ctx.lineWidth = 1.5;
+      // Cell border — C136: amber ring on keyboard-focused cell for WCAG 2.4.7 Focus Visible
+      const isKbFocus = i === this.kbFocusIdx && this.phase === 'recall';
+      ctx.strokeStyle = isKbFocus
+        ? 'rgba(205,133,63,0.9)'
+        : this.phase === 'show' && cell.isTarget
+          ? 'rgba(205,133,63,0.5)'
+          : 'rgba(100,80,140,0.2)';
+      ctx.lineWidth = isKbFocus ? 2.5 : 1.5;
       ctx.stroke();
 
       // Symbol (always visible -- player must remember ORDER not position)
@@ -426,6 +472,7 @@ export class MinigameRegard extends MinigameBase {
   protected cleanup(): void {
     cancelAnimationFrame(this.animFrame);
     this.canvas?.removeEventListener('pointerdown', this.onClick);
+    this.canvas?.removeEventListener('keydown', this.onKeyDown);
     super.cleanup();
   }
 }
