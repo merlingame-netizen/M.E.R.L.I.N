@@ -6,10 +6,10 @@
 import { MinigameBase } from './MinigameBase';
 
 interface Footprint {
-  x: number;
-  y: number;
-  index: number;
-  hit: boolean;
+  readonly x: number;
+  readonly y: number;
+  readonly index: number;
+  readonly hit: boolean;
 }
 
 export class MinigameTraces extends MinigameBase {
@@ -109,7 +109,7 @@ export class MinigameTraces extends MinigameBase {
     e.preventDefault();
     const target = this.footprints[this.currentIndex];
     if (!target) return;
-    target.hit = true;
+    this.footprints = this.footprints.map((fp, i) => i === this.currentIndex ? { ...fp, hit: true } : fp); // C106: immutable update (TRC-02)
     window.dispatchEvent(new CustomEvent('merlin_sfx', { detail: { sound: 'unlock' } }));
     this.currentIndex++;
     if (this.currentIndex >= this.footprintCount) {
@@ -128,7 +128,7 @@ export class MinigameTraces extends MinigameBase {
 
     const dist = Math.sqrt((mx - target.x) ** 2 + (my - target.y) ** 2);
     if (dist < this.hitRadius) {
-      target.hit = true;
+      this.footprints = this.footprints.map((fp, i) => i === this.currentIndex ? { ...fp, hit: true } : fp); // C106: immutable update (TRC-02)
       // C99: audio feedback — footprint hit (one unlock per step, no duplicate on last)
       window.dispatchEvent(new CustomEvent('merlin_sfx', { detail: { sound: 'unlock' } }));
       this.currentIndex++;
@@ -157,7 +157,7 @@ export class MinigameTraces extends MinigameBase {
   }
 
   protected render(): void {
-    if (!this.ctx || !this.canvas) return;
+    if (!this.ctx || !this.canvas || this.ended) return; // C106: ended guard — prevents zombie rAF if endGame() fires before requestAnimationFrame at bottom of render()
     const ctx = this.ctx;
     this.elapsedTime += this.getDeltaTime(); // C35: accumulate dt for consistent pulse across tab switches
 

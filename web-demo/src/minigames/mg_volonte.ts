@@ -225,7 +225,7 @@ export class MinigameVolonte extends MinigameBase {
   }
 
   protected render(): void {
-    if (!this.ctx || !this.canvas) return;
+    if (!this.ctx || !this.canvas || this.ended) return; // C106: ended guard — prevents zombie rAF if endGame() fires before requestAnimationFrame at bottom of render()
     const ctx = this.ctx;
     const dt = this.getDeltaTime();
     this.elapsedTime += dt;
