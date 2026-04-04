@@ -86,10 +86,12 @@ function sanitizeEffectCap(effect: string): string {
 // --- Config ---
 
 const GROQ_API_URL = 'https://api.groq.com/openai/v1/chat/completions';
-// C157: llama-3.1-8b-instant — faster & better instruction-following than llama3-8b-8192
-// for structured JSON card generation (lower latency under 8s timeout).
-const GROQ_MODEL = 'llama-3.1-8b-instant';
-const REQUEST_TIMEOUT_MS = 9000; // C157: slight increase for JSON mode overhead
+// C156: meta-llama/llama-4-scout-17b-16e-instruct — stronger instruction-following for
+// reliable JSON card generation with correct effect codes and French Celtic narrative.
+const GROQ_MODEL = 'meta-llama/llama-4-scout-17b-16e-instruct';
+// C156: 8s per attempt (retry×2 with temperature escalation — total budget ~26s before
+// main.ts race timeout at 8s kicks in; retries run within GroqAdapter itself).
+const REQUEST_TIMEOUT_MS = 8000;
 
 // --- Adapter ---
 
@@ -129,63 +131,86 @@ export class GroqAdapter {
    * Returns null on any failure (caller should fallback to FastRoute).
    */
   async generateCard(biome: string, context: string): Promise<Card | null> {
-    // C157: per-biome atmosphere injected into system prompt for thematic variety
+    // C156/C157: per-biome atmosphere injected into system prompt for thematic variety
     const biomeAtmosphere: Readonly<Record<string, string>> = {
       cotes_sauvages:    'Falaises bretonnes battues par les vents, embruns marins, mouettes en vol.',
       foret_broceliande: 'Foret profonde et mystique de Broceliande, lucioles, chenes millenaires, murmures anciens, pierres oghamiques.',
       marais_korrigans:  'Marecages gluants hantes par les Korrigans, brume verte, feux follets, roseaux sifflants.',
-      landes_bruyere:    'Landes desertes de bruyere violette, vent mordant, crows tournoyants, megalithes dresses.',
+      landes_bruyere:    'Landes desertes de bruyere violette, vent mordant, corbeaux tournoyants, megalithes dresses.',
       cercles_pierres:   'Cercle de menhirs sous la pleine lune, energie leyline palpable, ombres dansantes, silence sacre.',
       villages_celtes:   'Village celtique anime, forge, marche aux herbes, druides en errance, enfants jouant entre les huttes.',
       collines_dolmens:  'Collines aux tombes ancestrales, dolmens moussus, vent qui porte les voix des ancetres, herbe haute.',
-      iles_mystiques:    'Ile brumeuse au large, phoque qui parle, plage de gales noirs, cimetiere marin, lumiere etrange.',
+      iles_mystiques:    'Ile brumeuse au large, phoque qui parle, plage de galets noirs, cimetiere marin, lumiere etrange.',
     };
     const atmosphere = biomeAtmosphere[biome] ?? 'Paysage celtique mysterieux de Bretagne.';
 
-    const systemPrompt = `Tu es le narrateur du jeu de cartes celtique MERLIN. Atmosphère: ${atmosphere}
-Reponds UNIQUEMENT en JSON valide avec cette structure exacte (pas de texte avant ou apres):
-{"narrative":"Description de la scene (40-80 mots, style celtique poetique, present de narration)","options":[{"verb":"observer","text":"Action 1 (10-20 mots)","field":"observation","effects":["HEAL_LIFE:3"]},{"verb":"negocier","text":"Action 2","field":"bluff","effects":["ADD_REPUTATION:druides:5"]},{"verb":"fuir","text":"Action 3","field":"vigueur","effects":["DAMAGE_LIFE:2"]}]}
-Verbes autorises: observer,ecouter,chercher,examiner,negocier,mentir,bluffer,flatter,resoudre,analyser,deduire,calculer,crocheter,esquiver,sculpter,doser,frapper,soulever,pousser,briser,mediter,chanter,invoquer,prier,deviner,sentir,toucher,gouter,lancer,parier,defier,improviser,persuader,consoler,inspirer,menacer,voler,trahir,seduire,dissimuler,contourner,sacrifier,attendre,avancer,fuir.
-Champs lexicaux: observation,bluff,logique,finesse,vigueur,esprit,perception,chance.
-Factions: druides,anciens,korrigans,niamh,ankou.
-Effets: HEAL_LIFE:N(max 5),DAMAGE_LIFE:N(max 5),ADD_REPUTATION:faction:N(max 10),ADD_ANAM:N.
-REGLES: exactement 3 options, chaque option 1-2 effets, verbes de la liste uniquement, JSON pur sans markdown.`;
+    // C156: more explicit JSON schema with filled example values to anchor LLM output format.
+    // Three-attempt retry with temperature escalation: 0.7 (strict) → 0.9 → 1.0 (creative fallback).
+    const systemPrompt = `Tu es le narrateur du jeu de cartes MERLIN (celtique bretagne). Atmosphere: ${atmosphere}
+REGLE ABSOLUE: Reponds UNIQUEMENT avec du JSON valide. Aucun texte, aucun markdown, aucune explication. Le JSON doit commencer par { et finir par }.
 
-    const userPrompt = `Biome: ${biome}. ${context}. Genere une rencontre unique et coherente avec l'atmosphere.`;
+Structure JSON obligatoire (copie exactement les champs, remplace seulement les valeurs):
+{"narrative":"[40-80 mots en francais, style poetique celtique, present de narration, decrit la scene]","options":[{"verb":"observer","text":"[10-20 mots, action concrete du joueur]","field":"observation","effects":["HEAL_LIFE:3"]},{"verb":"negocier","text":"[10-20 mots]","field":"bluff","effects":["ADD_REPUTATION:druides:5"]},{"verb":"fuir","text":"[10-20 mots]","field":"vigueur","effects":["DAMAGE_LIFE:2"]}]}
 
-    try {
-      // C157: pass jsonMode=true — Groq JSON mode prevents LLM from wrapping output in markdown
-      const response = await this.chatCompletion([
-        { role: 'system', content: systemPrompt },
-        { role: 'user', content: userPrompt },
-      ], 0.8, 600, true);
+Verbes autorises (choisir dans cette liste uniquement): observer,ecouter,chercher,examiner,negocier,mentir,bluffer,flatter,resoudre,analyser,deduire,calculer,crocheter,esquiver,sculpter,doser,frapper,soulever,pousser,briser,mediter,chanter,invoquer,prier,deviner,sentir,toucher,gouter,lancer,parier,defier,improviser,persuader,consoler,inspirer,menacer,voler,trahir,seduire,dissimuler,contourner,sacrifier,attendre,avancer,fuir
+Champs (field): observation,bluff,logique,finesse,vigueur,esprit,perception,chance
+Factions (pour ADD_REPUTATION): druides,anciens,korrigans,niamh,ankou
+Effets valides: HEAL_LIFE:N (N=1-5), DAMAGE_LIFE:N (N=1-5), ADD_REPUTATION:faction:N (N=1-10), ADD_ANAM:N (N=1-5)
+Contraintes: exactement 3 options, 1-2 effets par option, verbes differents, JSON pur.`;
 
-      if (!response) return null;
+    const userPrompt = `Biome: ${biome}. Contexte: ${context}. Genere une rencontre narrative unique.`;
 
-      const parsed = JSON.parse(response);
-      if (!parsed.narrative || !Array.isArray(parsed.options) || parsed.options.length !== 3) {
-        console.warn('[GroqAdapter] Invalid card structure from LLM');
-        return null;
+    // C156: retry×2 with temperature escalation — 0.7 (precise) → 0.9 → 1.0 (creative)
+    const temperatures = [0.7, 0.9, 1.0] as const;
+    for (let attempt = 0; attempt < temperatures.length; attempt++) {
+      const temp = temperatures[attempt]!;
+      try {
+        const response = await this.chatCompletion([
+          { role: 'system', content: systemPrompt },
+          { role: 'user', content: userPrompt },
+        ], temp, 650, true);
+
+        if (!response) {
+          console.info(`[MERLIN] GroqAdapter card attempt ${attempt + 1} returned empty — retrying`);
+          continue;
+        }
+
+        let parsed: unknown;
+        try {
+          // Strip accidental markdown fences if model wraps despite json_object mode
+          const cleaned = response.replace(/^```(?:json)?\s*/i, '').replace(/\s*```$/i, '').trim();
+          parsed = JSON.parse(cleaned);
+        } catch {
+          console.info(`[MERLIN] GroqAdapter card attempt ${attempt + 1} JSON parse failed — retrying`);
+          continue;
+        }
+
+        const p = parsed as Record<string, unknown>;
+        if (!p['narrative'] || !Array.isArray(p['options']) || (p['options'] as unknown[]).length !== 3) {
+          console.info(`[MERLIN] GroqAdapter card attempt ${attempt + 1} invalid structure — retrying`);
+          continue;
+        }
+
+        // Sanitize LLM effect values against card-level caps
+        const sanitizedOptions = (p['options'] as CardOption[]).map((opt) => ({
+          ...opt,
+          effects: (opt.effects as string[]).map((eff) => sanitizeEffectCap(eff)),
+        }));
+
+        return {
+          id: `card_groq_${Date.now()}`,
+          narrative: p['narrative'] as string,
+          options: sanitizedOptions as unknown as readonly [CardOption, CardOption, CardOption],
+          biome,
+          source: 'llm',
+        };
+      } catch (err: unknown) {
+        console.info(`[MERLIN] GroqAdapter card attempt ${attempt + 1} failed:`, err instanceof Error ? err.message : err);
       }
-
-      // Sanitize LLM effect values against card-level caps to prevent hallucinated large values.
-      // Engine-level scaleAndCap() applies a second cap, but raw card data should be clean.
-      const sanitizedOptions = (parsed.options as CardOption[]).map((opt) => ({
-        ...opt,
-        effects: (opt.effects as string[]).map((eff) => sanitizeEffectCap(eff)),
-      }));
-
-      return {
-        id: `card_groq_${Date.now()}`,
-        narrative: parsed.narrative,
-        options: sanitizedOptions as unknown as readonly [CardOption, CardOption, CardOption],
-        biome,
-        source: 'llm',
-      };
-    } catch (err: unknown) {
-      console.warn('[GroqAdapter] Card generation failed:', err instanceof Error ? err.message : err);
-      return null;
     }
+
+    console.warn('[MERLIN] GroqAdapter generateCard: all 3 attempts failed — returning null for FastRoute fallback');
+    return null;
   }
 
   /**
