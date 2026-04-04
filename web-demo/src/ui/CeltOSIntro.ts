@@ -250,9 +250,13 @@ async function runPhase3(container: HTMLDivElement, logoWrap: HTMLDivElement): P
 export async function runCeltOSIntro(): Promise<void> {
   // Create full-screen CRT overlay (z-index above everything)
   const overlay = document.createElement('div');
+  // Hide legacy #boot-screen HTML element (was z-index:9999 — would cover us)
+  const legacyBoot = document.getElementById('boot-screen');
+  if (legacyBoot) legacyBoot.style.display = 'none';
+
   overlay.id = 'celtos-intro';
   overlay.style.cssText = [
-    'position:fixed;inset:0;z-index:2000;',
+    'position:fixed;inset:0;z-index:10000;',
     `background:${CRT.BG};`,
     'display:flex;align-items:center;justify-content:center;',
     'overflow:hidden;',
