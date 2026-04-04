@@ -838,8 +838,11 @@ export function initMerlinLair(container: HTMLElement): LairResult {
 
   const applyHoverTo = (obj: InteractiveObject, intensity: number): void => {
     const target = obj.visualMesh ?? (obj.mesh as THREE.Mesh);
-    const mat = target.material as THREE.MeshStandardMaterial;
-    if (mat?.emissive) mat.emissiveIntensity = intensity;
+    // C119: instanceof guard replaces unsafe cast — MeshBasicMaterial has no emissive property;
+    // GLB swaps (onCauldronGLBLoaded) may bring in non-Standard materials → silent no-op was correct
+    // behaviour but the cast hid the contract. Now it's explicit.
+    if (!(target.material instanceof THREE.MeshStandardMaterial)) return;
+    if (target.material.emissive) target.material.emissiveIntensity = intensity;
   };
 
   const onMouseMove = (e: { clientX: number; clientY: number }): void => {
@@ -1118,6 +1121,9 @@ export function initMerlinLair(container: HTMLElement): LairResult {
       }
     });
     renderer.dispose();
+    // C119: reset cursor BEFORE removeChild — style write has no effect on detached nodes;
+    // prevents persistent 'pointer' cursor leaking onto next scene's container on fast transition
+    renderer.domElement.style.cursor = 'default';
     if (renderer.domElement.parentNode) {
       renderer.domElement.parentNode.removeChild(renderer.domElement);
     }
@@ -1127,7 +1133,6 @@ export function initMerlinLair(container: HTMLElement): LairResult {
     if (zoneToast.parentNode) {
       zoneToast.parentNode.removeChild(zoneToast);
     }
-    renderer.domElement.style.cursor = 'default';
   };
 
   const onZoneClick = (cb: (zone: LairZone) => void): void => {
