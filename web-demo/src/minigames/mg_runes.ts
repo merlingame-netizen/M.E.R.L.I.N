@@ -49,6 +49,7 @@ export class MinigameRunes extends MinigameBase {
   private kbFocusIdx = 0; // C137: keyboard-focused tile index (ArrowKey grid nav)
 
   protected setup(): void {
+    clearTimeout(this.revealTimeout); // C102: cancel any in-flight flip-back timer on re-play
     this.container.innerHTML = '';
 
     // C103: tieredValue replaces manual arithmetic — consistent with all other minigames

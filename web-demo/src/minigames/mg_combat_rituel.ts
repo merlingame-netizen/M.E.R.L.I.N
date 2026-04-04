@@ -218,14 +218,20 @@ export class MinigameCombatRituel extends MinigameBase {
     return false;
   }
 
-  private endGame(): void {
-    if (this.ended) return;
-    this.ended = true;
+  // C102: extract handle teardown into cancelTimers() — called by both endGame() and
+  // MinigameBase.cleanup() (via super). Eliminates the maintenance-trap duplication.
+  protected cancelTimers(): void {
     clearInterval(this.timerInterval);
     cancelAnimationFrame(this.animFrame);
     this.canvas?.removeEventListener('pointermove', this.onPointerMove);
     this.canvas?.removeEventListener('pointerdown', this.onPointerMove);
     this.canvas?.removeEventListener('keydown', this.onKeyDown);
+  }
+
+  private endGame(): void {
+    if (this.ended) return;
+    this.ended = true;
+    this.cancelTimers();
 
     // Score = survival time percentage (0-80) + center bonus (0-20)
     const survivalPct = (this.survivalTime / this.totalTime) * 80;
@@ -385,11 +391,7 @@ export class MinigameCombatRituel extends MinigameBase {
   }
 
   protected cleanup(): void {
-    clearInterval(this.timerInterval);
-    cancelAnimationFrame(this.animFrame);
-    this.canvas?.removeEventListener('pointermove', this.onPointerMove);
-    this.canvas?.removeEventListener('pointerdown', this.onPointerMove);
-    this.canvas?.removeEventListener('keydown', this.onKeyDown);
+    // cancelTimers() is called by super.cleanup() via MinigameBase.cleanup() (BUG-C88-08)
     super.cleanup();
   }
 }
