@@ -1078,9 +1078,14 @@ export function initMerlinLair(container: HTMLElement): LairResult {
       if (t >= 1.0) { camera.position.z = 7; entryCamDone = true; }
     }
 
-    // Camera slow sway (fixed camera, slight oscillation for life)
-    camera.position.x = Math.sin(elapsedTime * 0.3 * Math.PI * 2) * 0.1;
-    camera.position.y = 0.5 + Math.sin(elapsedTime * 0.23 * Math.PI * 2) * 0.06;
+    // Camera slow sway — only after entry cinematic to keep pull-in as pure Z track
+    if (entryCamDone) {
+      camera.position.x = Math.sin(elapsedTime * 0.3 * Math.PI * 2) * 0.1;
+      camera.position.y = 0.5 + Math.sin(elapsedTime * 0.23 * Math.PI * 2) * 0.06;
+    } else {
+      camera.position.x = 0;   // no lateral drift during cinematic
+      camera.position.y = 0.5; // stable Y baseline
+    }
 
     // Crystal ball pulse
     crystalData.light.intensity = 2.2 + Math.sin(elapsedTime * 1.8) * 0.4;

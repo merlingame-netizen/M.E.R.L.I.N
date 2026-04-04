@@ -129,27 +129,28 @@ export function createLairWindow(scene: THREE.Scene): WindowResult {
     { x: 5.0, h: 2.8, w: 0.44, trunkH: 1.0 },
   ];
 
+  // Shared material for all trunks + canopies — all update to the same season color,
+  // so cloning is wasteful (was creating 5 orphaned MeshStandardMaterial instances).
+  // scene.traverse() in Lair dispose() handles disposal via any of the 6 shared-material meshes.
   const treeObjects: THREE.Mesh[] = [];
-  const trunkObjects: THREE.Mesh[] = [];
 
   for (const cfg of treeConfigs) {
-    // Trunk
+    // Trunk — shares treeMat (same color as canopy per season)
     const trunkMesh = new THREE.Mesh(
       new THREE.BoxGeometry(0.12, cfg.trunkH, 0.12),
-      treeMat.clone()
+      treeMat
     );
     trunkMesh.position.set(cfg.x, 1.5 + cfg.trunkH / 2, -10.6);
     group.add(trunkMesh);
-    trunkObjects.push(trunkMesh);
 
-    // Canopy (triangle approximation via cone or box)
+    // Canopy — shares treeMat
     const canopyMesh = new THREE.Mesh(
       new THREE.ConeGeometry(cfg.w, cfg.h, 5),
-      treeMat.clone()
+      treeMat
     );
     canopyMesh.position.set(cfg.x, 1.5 + cfg.trunkH + cfg.h / 2, -10.6);
     group.add(canopyMesh);
-    treeObjects.push(canopyMesh);
+    treeObjects.push(canopyMesh); // only canopies need per-frame sway rotation
   }
 
   // ── Spotlight through window ──────────────────────────────────────────────
@@ -179,13 +180,9 @@ export function createLairWindow(scene: THREE.Scene): WindowResult {
     // Update glass tint
     glassMat.color.copy(skyCol).multiplyScalar(0.6 + dayFactor * 0.4);
 
-    // Update tree foliage color
+    // Update shared tree material color — one write affects all 6 trunk+canopy meshes
     const treeCol = new THREE.Color(SEASON_TREE_COLOR[params.season]);
-    for (const t of [...treeObjects, ...trunkObjects]) {
-      (t.material as THREE.MeshStandardMaterial).color.copy(
-        params.season === 'winter' ? new THREE.Color(0x2a2828) : treeCol
-      );
-    }
+    treeMat.color.copy(params.season === 'winter' ? new THREE.Color(0x2a2828) : treeCol);
   };
 
   const update = (elapsed: number): void => {
