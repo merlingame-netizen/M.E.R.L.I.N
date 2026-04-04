@@ -55,9 +55,9 @@ export class MinigameCombatRituel extends MinigameBase {
   protected setup(): void {
     this.container.innerHTML = '';
 
-    // C99: difficulty scaling — fewer obstacles + more time for new players
-    this.totalTime = 16 - this.difficultyTier * 2;  // 16/14/12/10s
-    this.obstacleCount = 3 + this.difficultyTier;    // 3/4/5/6 obstacles
+    // C103: tieredValue replaces manual arithmetic — consistent with all other minigames
+    this.totalTime     = this.tieredValue([16, 14, 12, 10] as const);
+    this.obstacleCount = this.tieredValue([3, 4, 5, 6] as const);
 
     // Title
     const title = document.createElement('div');

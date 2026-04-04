@@ -34,8 +34,8 @@ export class MinigameVolonte extends MinigameBase {
   private readonly centerX = 190;
   private readonly centerY = 190;
 
-  // Game config — C100: scaled by difficultyTier in setup()
-  private readonly totalTime = 10;
+  // Game config — C100/C103: scaled by difficultyTier in setup()
+  private totalTime = 10; // C103: tieredValue [12,11,10,9]s — was readonly, blocked scaling
   private targetRadius = 30;        // C100: [30,26,22,18]px
   private spawnInterval = 0.6;      // C100: [0.6,0.5,0.4,0.3]s
   private maxDistractors = 12;      // C100: [12,14,16,18]
@@ -59,7 +59,8 @@ export class MinigameVolonte extends MinigameBase {
   protected setup(): void {
     this.container.innerHTML = '';
 
-    // C100: difficulty scaling — smaller target, faster/more distractors
+    // C103: totalTime tier-scaled (was readonly — blocked scaling). C100: other params.
+    this.totalTime      = this.tieredValue([12, 11, 10, 9] as const);
     this.targetRadius   = this.tieredValue([30, 26, 22, 18] as const);
     this.spawnInterval  = this.tieredValue([0.6, 0.5, 0.4, 0.3] as const);
     this.maxDistractors = this.tieredValue([12, 14, 16, 18] as const);
