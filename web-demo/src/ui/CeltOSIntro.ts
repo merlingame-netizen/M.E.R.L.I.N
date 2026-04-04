@@ -18,14 +18,15 @@ const CRT = {
 } as const;
 
 const BOOT_LINES: readonly string[] = [
-  'BIOS POST check...',
-  'Memory: 4096 MB',
-  'Loading druid_core.ko',
-  'Loading ogham_driver.ko',
-  'Ley line scan... FOUND',
-  'LLM: M.E.R.L.I.N.-3B',
-  'Warmup inference...',
-  'Systems ready',
+  'CELTOS v3.1.4 \u2014 LE SYST\u00c8ME DES OGHAMS',
+  '\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500',
+  '> init nemeton_kernel...                   OK',
+  '> load ogham_registry [18 runes]...        OK',
+  '> sync faction_memory [5 factions]...      OK',
+  '> mount brocéliande_matrix...              OK',
+  '> calibrate merlin_resonance...            94%',
+  '> weave ley_line_network...                OK',
+  '> SYSTÈME PRÊT \u2014 BIENVENUE, VOYAGEUR',
 ];
 
 // CELTOS in 5×3 pixel font (23 cols × 5 rows)
@@ -50,38 +51,81 @@ function wait(ms: number): Promise<void> {
 // Phase 1 — CRT terminal boot lines
 // =============================================================================
 
+// Inject blink keyframes once into document head
+function _ensureBlinkStyle(): void {
+  if (document.getElementById('crt-blink-style')) return;
+  const style = document.createElement('style');
+  style.id = 'crt-blink-style';
+  style.textContent =
+    '@keyframes crt-cursor-blink{0%,49%{opacity:1}50%,100%{opacity:0}}';
+  document.head.appendChild(style);
+}
+
 async function runPhase1(container: HTMLDivElement): Promise<void> {
+  _ensureBlinkStyle();
+
   const lineArea = document.createElement('div');
   lineArea.style.cssText = [
-    'position:absolute;left:50%;top:30%;transform:translateX(-50%);',
-    'font-family:"Courier New",monospace;font-size:13px;line-height:22px;',
-    `color:${CRT.DIM};text-align:left;min-width:280px;`,
+    'position:absolute;left:50%;top:28%;transform:translateX(-50%);',
+    'font-family:Courier New,monospace;font-size:13px;line-height:22px;',
+    `color:${CRT.DIM};text-align:left;min-width:320px;`,
   ].join('');
   container.appendChild(lineArea);
 
+  // Blinking cursor element (reused, appended after each line)
+  const cursor = document.createElement('span');
+  cursor.textContent = '\u258b'; // U+258B LOWER FIVE EIGHTHS BLOCK
+  cursor.style.cssText =
+    'animation:crt-cursor-blink 0.8s step-end infinite;margin-left:2px;';
+
   for (let i = 0; i < BOOT_LINES.length; i++) {
     const line = document.createElement('div');
-    line.textContent = BOOT_LINES[i] ?? '';
+    const text = BOOT_LINES[i] ?? '';
     line.style.opacity = '0';
     line.style.transition = 'opacity 0.08s';
     lineArea.appendChild(line);
 
-    await wait(i === 0 ? 80 : 60);
-    line.style.opacity = '0.8';
+    // Show line with cursor
+    await wait(i === 0 ? 80 : 70);
+    line.style.opacity = '0.85';
+
+    const isSeparator = text.startsWith('\u2500');
+    const isHeader = i === 0;
+
+    if (isHeader) {
+      line.style.color = CRT.PHOSPHOR;
+      line.style.opacity = '1';
+      line.textContent = text;
+    } else if (isSeparator) {
+      line.style.color = CRT.BORDER;
+      line.textContent = text;
+    } else {
+      line.textContent = text;
+      line.appendChild(cursor);
+      await wait(120);
+      // Remove cursor from this line before moving to next
+      if (cursor.parentNode === line) line.removeChild(cursor);
+    }
   }
 
-  // Flash all lines to bright, then to amber
-  await wait(150);
+  // After last line, leave cursor visible briefly
+  const lastLine = lineArea.lastElementChild as HTMLElement | null;
+  if (lastLine) lastLine.appendChild(cursor);
+  await wait(300);
+  if (cursor.parentNode) cursor.parentNode.removeChild(cursor);
+
+  // Flash all lines to bright phosphor, then amber
+  await wait(100);
   Array.from(lineArea.children).forEach(el => {
     (el as HTMLElement).style.color = CRT.PHOSPHOR;
     (el as HTMLElement).style.opacity = '1';
   });
-  await wait(100);
+  await wait(120);
   Array.from(lineArea.children).forEach(el => {
     (el as HTMLElement).style.color = CRT.AMBER;
-    (el as HTMLElement).style.transition = 'color 0.1s, opacity 0.4s';
+    (el as HTMLElement).style.transition = 'color 0.15s, opacity 0.4s';
   });
-  await wait(300);
+  await wait(350);
 
   // Fade out boot lines
   lineArea.style.transition = 'opacity 0.4s';
@@ -195,7 +239,8 @@ async function runPhase3(container: HTMLDivElement, logoWrap: HTMLDivElement): P
 
   const fillEl = document.createElement('div');
   fillEl.style.cssText = [
-    `height:100%;width:0%;background:${CRT.PHOSPHOR};`,
+    'height:100%;width:0%;',
+    'background:linear-gradient(90deg,#1a8833,#33ff66);',
     'transition:width 0.4s ease;',
   ].join('');
   trackEl.appendChild(fillEl);
