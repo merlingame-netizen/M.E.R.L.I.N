@@ -75,6 +75,9 @@ export class MinigameCourse extends MinigameBase {
     if (!this.roundActive || this.gameOver) return;
     if (e.key === ' ' || e.key === 'Enter') {
       e.preventDefault();
+      // C40: timing window guard — reject confirm in first 15% of round to prevent mashing.
+      // At tier 3 (0.8s window): 15% = 0.12s dead zone. Mirrors pointer hitRadius spatial constraint.
+      if (this.roundElapsed < this.roundTime * 0.15) return;
       // Keyboard confirms the target directly — QTE equivalent of clicking it
       if (!this.target) return;
       this.hits++;
