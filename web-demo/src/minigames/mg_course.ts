@@ -41,6 +41,9 @@ export class MinigameCourse extends MinigameBase {
   private animFrame = 0;
   private ended = false;
   private endTimeout = 0; // C99: stored so cleanup() can cancel it (MEDIUM bug fix)
+  // C120/COURSE-01: cached DOM refs — was getElementById on each advanceRound() call
+  private roundEl: HTMLElement | null = null;
+  private statusEl: HTMLElement | null = null;
 
   // Canvas dimensions
   private readonly canvasW = 380;
@@ -142,6 +145,9 @@ export class MinigameCourse extends MinigameBase {
     statusEl.style.cssText = `width:min(${this.canvasW}px,100%);max-width:${this.canvasW}px;min-height:24px;margin:8px auto 0;color:rgba(232,220,200,0.6);font-size:13px;text-align:center;font-family:system-ui;`;
     statusEl.textContent = 'Touches: 0 / 0';
     this.container.appendChild(statusEl);
+    // C120/COURSE-01: cache refs for advanceRound()
+    this.roundEl = roundEl;
+    this.statusEl = statusEl;
 
     // Input
     this.canvas.addEventListener('pointerdown', this.onClick);
@@ -251,18 +257,14 @@ export class MinigameCourse extends MinigameBase {
 
   private advanceRound(): void {
     this.currentRound++;
-    const roundEl = document.getElementById('mg-course-round');
-    if (roundEl) {
-      roundEl.textContent = this.currentRound < this.totalRounds
+    if (this.roundEl) {
+      this.roundEl.textContent = this.currentRound < this.totalRounds
         ? `Manche ${this.currentRound + 1} / ${this.totalRounds}`
         : `Termine !`;
     }
 
     // Update status
-    const statusEl = document.getElementById('mg-course-status');
-    if (statusEl) {
-      statusEl.textContent = `Touches: ${this.hits} / ${this.currentRound}`;
-    }
+    if (this.statusEl) this.statusEl.textContent = `Touches: ${this.hits} / ${this.currentRound}`;
 
     if (this.currentRound >= this.totalRounds) {
       // C99 MEDIUM bug fix: store handle so cleanup() can cancel if player exits early
