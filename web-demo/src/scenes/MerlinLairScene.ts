@@ -12,7 +12,7 @@ import { clearGLBCache } from '../engine/AssetLoader';
 // ── Types ────────────────────────────────────────────────────────────────────
 
 // GDB mapping: map=biome, crystal=oghams, bookshelf=journal, door=run, cauldron=dialogue_merlin
-export type LairZone = 'map' | 'crystal' | 'bookshelf' | 'door' | 'cauldron';
+export type LairZone = 'map' | 'crystal' | 'bookshelf' | 'door' | 'cauldron' | 'skull';
 
 interface InteractiveObject {
   mesh: Object3D;
@@ -775,7 +775,7 @@ export function initMerlinLair(container: HTMLElement): LairResult {
 
   const cauldron = createCauldron(scene);
   scene.add(createPotionBottles());
-  scene.add(createSkull());
+  const skullGroup = createSkull(); scene.add(skullGroup);
   const cleanupLairDensity = createLairDensity(scene, isLowEndMobile); // C35: cleanup for moon.target; C38: lowEnd gate for biblio PointLight
 
   // Cauldron interactive hit target (sphere r=0.9, centred on cauldron.body y=-3.8)
@@ -848,6 +848,8 @@ export function initMerlinLair(container: HTMLElement): LairResult {
     { mesh: shelfHit,            zone: 'bookshelf', hovered: false, visualMesh: shelfFrame, baseEmissive: 0.0 },
     { mesh: doorHit,             zone: 'door',      hovered: false, visualMesh: doorPanel,  baseEmissive: 0.05 },
     { mesh: cauldronHit,         zone: 'cauldron',  hovered: false, visualMesh: cauldron.body, baseEmissive: 0.0 },
+    // C78: skull prop hover — shows Celtic lore toast (no click action, no keyboard nav)
+    { mesh: skullGroup,          zone: 'skull',     hovered: false },
   ];
 
   // C38: update ARIA label now that zone count is known (was placeholder "chargement..." set before this array)
@@ -938,6 +940,7 @@ export function initMerlinLair(container: HTMLElement): LairResult {
     bookshelf: 'Journal de Merlin',
     cauldron:  'Chaudron Druidique',
     door:      'Sortie vers l\'aventure',
+    skull:     'Crâne du Sage',
   };
 
   // C110: lore descriptions enhanced — Celtic-immersive atmosphere (was generic UI copy).
@@ -948,6 +951,7 @@ export function initMerlinLair(container: HTMLElement): LairResult {
     bookshelf: 'Les chroniques de Merlin gardent mémoire de tes actes',
     cauldron:  'Le chaudron de Cerridwen bouillonne de sagesse ancienne',
     door:      'Les bois de Brocéliande t\'attendent, voyageur',
+    skull:     'Les anciens druides méditaient face à la mort — gardienne des secrets oubliés',
   };
 
   const onPointerAction = (e: { clientX: number; clientY: number }): void => {
