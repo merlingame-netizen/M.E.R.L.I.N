@@ -231,7 +231,7 @@ function showBiomePicker(container: HTMLElement): Promise<string> {
   });
 }
 
-// C85: Journal panel — bookshelf zone shows cross-run meta stats
+// C85/C164: Journal panel — CRT layout with faction bars and real cross-run stats
 function showJournalPanel(): Promise<void> {
   return new Promise((resolve) => {
     const state = store.getState();
@@ -244,80 +244,126 @@ function showJournalPanel(): Promise<void> {
     overlay.style.cssText = [
       'position:fixed;inset:0;z-index:200;',
       'display:flex;align-items:center;justify-content:center;',
-      'background:rgba(0,0,0,0.65);opacity:0;transition:opacity 0.2s ease;',
+      'background:rgba(0,0,0,0.72);opacity:0;transition:opacity 0.2s ease;',
     ].join('');
 
     const panel = document.createElement('div');
     panel.style.cssText = [
-      `background:rgba(2,8,3,0.97);border:1px solid rgba(51,255,102,0.22);`,
-      `padding:28px 32px;max-width:380px;width:88%;`,
-      `font-family:'Courier New',monospace;color:#33ff66;`,
-      `border-left:3px solid #1a8833;`,
+      'background:rgba(2,8,3,0.97);border:1px solid rgba(51,255,102,0.22);',
+      'padding:26px 30px 22px;max-width:400px;width:90%;',
+      'font-family:Courier New,monospace;color:#33ff66;',
+      'border-left:3px solid #1a8833;',
     ].join('');
 
+    // --- Header ---
     const titleEl = document.createElement('div');
-    titleEl.textContent = '> JOURNAL_MERLIN.dat';
+    titleEl.textContent = '[ JOURNAL DE MERLIN ]';
     titleEl.style.cssText = [
-      `color:#33ff66;font-size:clamp(13px,1.8vw,16px);letter-spacing:0.12em;`,
-      `margin-bottom:4px;font-family:'Courier New',monospace;`,
-      `text-shadow:0 0 8px rgba(51,255,102,0.35);`,
+      'color:#33ff66;font-size:clamp(13px,1.8vw,15px);letter-spacing:0.14em;',
+      'margin-bottom:4px;font-family:Courier New,monospace;',
+      'text-shadow:0 0 8px rgba(51,255,102,0.35);',
     ].join('');
     panel.appendChild(titleEl);
 
-    const subEl = document.createElement('div');
-    subEl.textContent = '> CHRONIQUES_AVENTURIER :: LECTURE';
-    subEl.style.cssText = [
-      `color:rgba(51,255,102,0.45);font-size:10px;letter-spacing:0.06em;margin-bottom:20px;`,
-      `font-family:'Courier New',monospace;`,
-    ].join('');
-    panel.appendChild(subEl);
+    const divider = document.createElement('div');
+    divider.textContent = '\u2501'.repeat(28);
+    divider.style.cssText = 'color:rgba(51,255,102,0.30);font-size:11px;margin-bottom:16px;letter-spacing:0.04em;';
+    panel.appendChild(divider);
 
-    const FACTION_DISPLAY: Record<string, string> = {
-      druides: 'Druides', anciens: 'Anciens', korrigans: 'Korrigans', niamh: 'Niamh', ankou: 'Ankou',
-    };
-    const factionEntries = Object.entries(meta.factionRep).sort((a, b) => b[1] - a[1]);
-    const topFaction = factionEntries[0];
-    const rows: Array<[string, string]> = [
-      ['Anam accumulé', `${Math.floor(meta.anam)}`],
-      ['Aventures vécues', `${meta.totalRuns}`],
-      ['Oghams maîtrisés', `${meta.oghamsUnlocked.length}`],
-    ];
-    if (topFaction && topFaction[1] > 0) {
-      rows.push(['Alliance', `${FACTION_DISPLAY[topFaction[0]] ?? topFaction[0]} — ${topFaction[1]}`]);
+    // Helper: section heading
+    function crtSection(text: string): HTMLDivElement {
+      const h = document.createElement('div');
+      h.textContent = `> ${text}`;
+      h.style.cssText = [
+        'color:rgba(51,255,102,0.70);font-size:11px;letter-spacing:0.08em;',
+        'margin:14px 0 6px;font-family:Courier New,monospace;',
+      ].join('');
+      return h;
     }
 
-    const table = document.createElement('div');
-    table.style.cssText = 'margin-bottom:22px;';
-    for (const [label, value] of rows) {
+    // Helper: key-value row
+    function crtRow(label: string, value: string): HTMLDivElement {
+      const row = document.createElement('div');
+      row.style.cssText = 'display:flex;justify-content:space-between;padding:4px 0;font-size:12px;font-family:Courier New,monospace;';
+      const l = document.createElement('span');
+      l.style.cssText = 'color:rgba(51,255,102,0.55);';
+      l.textContent = label;
+      const v = document.createElement('span');
+      v.style.cssText = 'color:#33ff66;';
+      v.textContent = value;
+      row.appendChild(l);
+      row.appendChild(v);
+      return row;
+    }
+
+    // --- Section: Mémoire des quêtes ---
+    panel.appendChild(crtSection('M\u00c9MOIRE DES QU\u00caTES'));
+    panel.appendChild(crtRow('  Voyages accomplis  :', `${meta.totalRuns}`));
+    panel.appendChild(crtRow('  Anam accumulé      :', `${Math.floor(meta.anam)}`));
+    panel.appendChild(crtRow('  Oghams maîtrisés   :', `${meta.oghamsUnlocked.length} / 18`));
+
+    // --- Section: Alignement des factions ---
+    panel.appendChild(crtSection('ALIGNEMENT DES FACTIONS'));
+
+    const FACTION_ORDER: ReadonlyArray<{ readonly id: string; readonly label: string }> = [
+      { id: 'druides',   label: 'Druides   ' },
+      { id: 'niamh',     label: 'Niamh     ' },
+      { id: 'korrigans', label: 'Korrigans ' },
+      { id: 'anciens',   label: 'Anciens   ' },
+      { id: 'ankou',     label: 'Ankou     ' },
+    ];
+
+    for (const { id, label } of FACTION_ORDER) {
+      const score = Math.round((meta.factionRep as Record<string, number>)[id] ?? 0);
+      const filled = Math.min(10, Math.round(score / 10));
+      const empty = 10 - filled;
+
       const row = document.createElement('div');
       row.style.cssText = [
-        `display:flex;justify-content:space-between;align-items:center;padding:7px 0;`,
-        `border-bottom:1px solid rgba(51,255,102,0.10);`,
+        'display:flex;align-items:center;padding:3px 0;font-size:12px;',
+        'font-family:Courier New,monospace;',
       ].join('');
-      const lEl = document.createElement('span');
-      lEl.style.cssText = `color:rgba(51,255,102,0.55);font-size:12px;font-family:'Courier New',monospace;`;
-      lEl.textContent = label;
-      const vEl = document.createElement('span');
-      vEl.style.cssText = `color:#33ff66;font-size:13px;font-family:'Courier New',monospace;`;
-      vEl.textContent = value;
-      row.appendChild(lEl);
-      row.appendChild(vEl);
-      table.appendChild(row);
-    }
-    panel.appendChild(table);
 
+      const lbl = document.createElement('span');
+      lbl.style.cssText = 'color:rgba(51,255,102,0.55);min-width:90px;';
+      lbl.textContent = `  ${label}`;
+
+      const barFilled = document.createElement('span');
+      barFilled.style.cssText = 'color:#33ff66;';
+      barFilled.textContent = '\u2588'.repeat(filled);
+
+      const barEmpty = document.createElement('span');
+      barEmpty.style.cssText = 'color:rgba(51,255,102,0.15);';
+      barEmpty.textContent = '\u2591'.repeat(empty);
+
+      const scoreEl = document.createElement('span');
+      scoreEl.style.cssText = 'color:#33ff66;margin-left:6px;min-width:24px;text-align:right;';
+      scoreEl.textContent = `${score}`;
+
+      row.appendChild(lbl);
+      row.appendChild(barFilled);
+      row.appendChild(barEmpty);
+      row.appendChild(scoreEl);
+      panel.appendChild(row);
+    }
+
+    // --- Spacer ---
+    const spacer = document.createElement('div');
+    spacer.style.cssText = 'height:18px;';
+    panel.appendChild(spacer);
+
+    // --- Close button ---
     const closeBtn = document.createElement('button');
-    closeBtn.textContent = 'Fermer';
+    closeBtn.textContent = '[ FERMER ]';
     closeBtn.setAttribute('aria-label', 'Fermer le journal');
     closeBtn.style.cssText = [
-      `padding:10px 32px;font-size:12px;cursor:pointer;`,
-      `background:rgba(4,16,6,0.5);color:#33ff66;`,
-      `border:1px solid rgba(51,255,102,0.35);`,
-      `font-family:'Courier New',monospace;transition:background 0.12s;`,
-      `letter-spacing:0.08em;`,
+      'display:block;width:100%;padding:10px 0;font-size:12px;cursor:pointer;',
+      'background:rgba(4,16,6,0.5);color:#33ff66;',
+      'border:1px solid rgba(51,255,102,0.35);',
+      'font-family:Courier New,monospace;transition:background 0.12s;',
+      'letter-spacing:0.14em;',
     ].join('');
     // C151/MAIN-JOURNAL-LEAK-01: named handlers so dismiss() can removeEventListener
-    // before overlay removal — 2 anonymous pointer listeners on detached closeBtn per visit.
     const onCloseBtnEnter = (): void => { closeBtn.style.background = 'rgba(8,30,12,0.85)'; closeBtn.style.borderColor = 'rgba(51,255,102,0.7)'; };
     const onCloseBtnLeave = (): void => { closeBtn.style.background = 'rgba(4,16,6,0.5)'; closeBtn.style.borderColor = 'rgba(51,255,102,0.35)'; };
     closeBtn.addEventListener('pointerenter', onCloseBtnEnter);
@@ -516,12 +562,19 @@ async function runMerlinLair(app: HTMLElement): Promise<{ biomeId: string; lairO
   let lairSelectedOgham: string | null = null;
   // C85: cauldron zone cycles through Merlin quotes
   let cauldronQuoteIdx = -1;
+  // C164: expanded to 12 quotes — vocabulaire celtique authentique
   const MERLIN_QUOTES: readonly string[] = [
-    'Le temps est une rivière qui coule à rebours pour les initiés…',
-    'Chaque Ogham que tu maîtrises ouvre un nouveau chemin dans la forêt.',
-    'Ton Anam grandit avec chaque choix courageux. Garde-le précieux.',
-    'Les factions observent. Ce que tu fais dans l\'ombre forge ta légende.',
-    'La mort n\'est qu\'un passage. L\'Anam, lui, demeure à jamais.',
+    'Le nemeton garde les secrets de ceux qui osent écouter l\'ogham.',
+    'La brume de Brocéliande n\'est que le souffle des Sidhe endormis.',
+    'Chaque korrigan dansant au clair de lune tisse un fil de l\'Awen.',
+    'Les pierres levées murmurent aux voyageurs qui oublient leur nom.',
+    'Ce que le chaudron révèle, seul le silence peut le garder.',
+    'Nimüe m\'a enseigné que la vraie magie est dans l\'oubli du moi.',
+    'L\'Anam ne meurt pas — il migre vers celui qui ose traverser la brume.',
+    'Les druides ne lisent pas les étoiles : ils les écoutent respirer.',
+    'Ton geis te protège autant qu\'il te lie. Porte-le sans fléchir.',
+    'Le monde d\'en-bas n\'est pas sous tes pieds — il est dans tes choix.',
+    'Chaque ogham gravé dans le bois vivant est une prière que l\'arbre exauce.',
     'Brocéliande te connaît mieux que tu ne te connais toi-même.',
   ];
 

@@ -4,10 +4,12 @@
 // Shown after the "Nouvelle Partie" walk animation, before the lair.
 // =============================================================================
 
+// C164: druidic register — 4 lines, 40ms/char, pause 600ms between
 const MERLIN_LINES: readonly string[] = [
-  'Bienvenue, voyageur. Je suis Merlin, gardien des Oghams anciens.',
-  'La forêt de Brocéliande t\'attend. Chaque choix que tu feras forgera ton destin.',
-  'Écoute les runes. Elles murmurent depuis la nuit des temps… Entre.',
+  'Je suis Merlin — né entre deux souffles, gardien du nemeton et des vingt-cinq oghams.',
+  'Brocéliande n\'est pas une forêt. C\'est un miroir. Elle te montrera ce que tu fuis.',
+  'Ton Anam est la seule monnaie qui survive à la mort. Dépense-le avec sagesse.',
+  'Les Sidhe observent. Les druides attendent. Entre, voyageur — et choisis bien.',
 ];
 
 function wait(ms: number): Promise<void> {
@@ -141,7 +143,7 @@ export async function runMerlinIntro(): Promise<void> {
       textEl.style.opacity = '1';
     }
 
-    await typewrite(textEl, MERLIN_LINES[i]!);
+    await typewrite(textEl, MERLIN_LINES[i]!, 40);
     hintEl.style.opacity = '1';
 
     await new Promise<void>((resolve) => {
