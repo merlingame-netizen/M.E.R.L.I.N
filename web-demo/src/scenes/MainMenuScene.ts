@@ -190,7 +190,8 @@ function displaceVertices(geo: BufferGeometry, amount: number): void {
     arr[i * 3 + 2] += (Math.random() - 0.5) * amount;
   }
   posAttr.needsUpdate = true;
-  geo.computeVertexNormals();
+  // flatShading:true — GPU computes per-face normals at render time; computeVertexNormals() here
+  // was wasting ~0.3-0.5ms per call × 11 cliffs = ~3-5ms init on mobile (C175).
 }
 
 function createCliff(): Group {

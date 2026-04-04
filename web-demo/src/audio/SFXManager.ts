@@ -6,7 +6,7 @@
 // ═══════════════════════════════════════════════════════════════════════════════
 
 type SFXName = 'flip' | 'win' | 'lose' | 'unlock' | 'end' | 'hover' | 'crystal' | 'cauldron'
-  | 'click' | 'beep' | 'mapDraw' | 'mapZoom';
+  | 'click' | 'beep' | 'mapDraw' | 'mapZoom' | 'minigame_start';
 type AmbientType = 'menu' | 'forest' | 'wind' | 'rain';
 
 interface SFXEvent {
@@ -209,6 +209,16 @@ function playMapDraw(ctx: AudioContext): void {
   const t = ctx.currentTime;
   playNoise(ctx, t, 0.09, 0.11, 3500);
   playNoise(ctx, t + 0.04, 0.07, 0.07, 4800);
+}
+
+// minigame_start: ascending 2-note N64 cue — 440Hz + 660Hz, 120ms each with short gap
+// Signals the transition into minigame phase (was silent after BUG-C88-03 renamed from 'flip')
+function playMinigameStart(ctx: AudioContext): void {
+  const t = ctx.currentTime;
+  playTone(ctx, 440, t, 0.12, 0.20, 'square');
+  playTone(ctx, 660, t + 0.10, 0.14, 0.22, 'square');
+  // High shimmer accent on top — N64 "level start" quality
+  playTone(ctx, 1320, t + 0.14, 0.10, 0.08, 'sine');
 }
 
 // mapZoom: whoosh dive — 800Hz→80Hz exponential glide, 700ms (zoom-into-map)
@@ -543,6 +553,7 @@ export function playSound(name: SFXName): void {
     hover: playHover, flip: playFlip, win: playWin, lose: playLose,
     unlock: playUnlock, end: playEnd, crystal: playCrystal, cauldron: playCauldron,
     click: playClick, beep: playBeep, mapDraw: playMapDraw, mapZoom: playMapZoom,
+    minigame_start: playMinigameStart,
   };
   try { fns[name]?.(ctx); } catch { /* silent fail */ }
 }
@@ -561,6 +572,7 @@ export function initSFXManager(): void {
     beep: playBeep,
     mapDraw: playMapDraw,
     mapZoom: playMapZoom,
+    minigame_start: playMinigameStart,
   };
 
   const handleSFX = (e: Event): void => {
