@@ -505,9 +505,9 @@ export function biomeToAmbient(biomeId: string): AmbientType {
     marais_korrigans:  'rain',    // swamp — rain drops + mist
     landes_bruyere:    'wind',    // moorland — exposed wind
     cercles_pierres:   'wind',    // open stone circles — wind
-    villages_celtes:   'forest',  // sheltered village — ambient forest
-    collines_dolmens:  'wind',    // hilltop dolmens — wind
-    iles_mystiques:    'wind',    // islands — sea wind
+    monts_brumeux:     'rain',    // misty mountains — rain + low drone
+    plaine_druides:    'forest',  // druid plain — forest hum + wind
+    vallee_anciens:    'wind',    // valley of ancients — deep wind
   };
   return map[biomeId] ?? 'forest';
 }
