@@ -341,6 +341,13 @@ export function teardownHUD(): void {
   _oghamRuneEl = null;
   _oghamNameEl = null;
   _oghamMultEl = null;
+  // C146/HUD-REINIT-01: remove dynamic panels from DOM so buildFactionPanel/buildResourcePanel/
+  // buildOghamBadge fully reconstruct them on the next initHUD() call. Without removal, the
+  // document.getElementById() guards inside each builder return early, leaving all module-level
+  // refs null → faction bars, anam, currency and ogham badge freeze after the first run.
+  document.getElementById('faction-panel')?.remove();
+  document.getElementById('resource-panel')?.remove();
+  document.getElementById('ogham-badge')?.remove();
   // C140/BUG-C140-01: predict toast lives on document.body — remove on run end to avoid z-index:65 overlap on RunSummary
   document.getElementById('merlin-predict-toast')?.remove();
   // C145b/NEW-HUD-01: ogham-badge-style <style> injected into document.head in buildOghamBadge().
