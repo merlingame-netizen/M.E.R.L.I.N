@@ -127,7 +127,12 @@ export function loadLairGLBs(
       scene.add(clone);
       fadeInGLB(clone); // C97: fade-in per clone
     }
-    if (proceduralGroups?.candleGroup) proceduralGroups.candleGroup.visible = false;
+    if (proceduralGroups?.candleGroup) {
+      // C112: hide only non-Light children — sharedLight must stay active for candle warmth post-GLB
+      proceduralGroups.candleGroup.children.forEach((child) => {
+        if (!(child instanceof THREE.Light)) child.visible = false;
+      });
+    }
   }).catch(() => { /* procedural candle bodies remain */ });
 
   // Table druidique: anchored to map-table zone. Hide procedural mapGroup on success.
@@ -159,6 +164,18 @@ export function loadLairGLBs(
     gltf.scene.position.set(0, -4.98, 0);
     gltf.scene.scale.set(1.0, 1.0, 1.0);
     applyFlatShading(gltf.scene); // C101: match procedural flat-shading aesthetic
+    // C112: polygonOffset guards against Z-fighting on 16-bit GPU depth buffers (Mali-T720/Adreno 306).
+    // The 0.02u Y-offset alone is insufficient — at depth ~10u, 16-bit precision is ~0.05u.
+    // Matches mur_pierre pattern: factor=-2, units=-4.
+    gltf.scene.traverse((child) => {
+      if (child instanceof THREE.Mesh) {
+        const m = child.material as THREE.MeshStandardMaterial;
+        m.polygonOffset = true;
+        m.polygonOffsetFactor = -2;
+        m.polygonOffsetUnits = -4;
+        m.needsUpdate = true;
+      }
+    });
     scene.add(gltf.scene);
     fadeInGLB(gltf.scene); // C97
     if (proceduralGroups?.floorMesh) proceduralGroups.floorMesh.visible = false;
