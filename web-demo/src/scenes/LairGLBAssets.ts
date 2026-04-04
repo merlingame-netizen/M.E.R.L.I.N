@@ -54,6 +54,7 @@ export interface LairProceduralGroups {
   crystalSphere?: THREE.Mesh;  // C93-P2: procedural sphere hidden when crystal_ball.glb loads (hitTarget/light stay)
   onCauldronGLBLoaded?: (bodyMesh: THREE.Mesh) => void; // callback to update visualMesh in interactives[]
   onCrystalGLBLoaded?: (mesh: THREE.Mesh) => void;      // C95: callback to swap visualMesh to GLB mesh for hover emissive
+  onCrystalGroupLoaded?: (group: THREE.Group) => void;  // C101: callback to store GLB group ref for float animation
 }
 
 export function loadLairGLBs(
@@ -243,5 +244,7 @@ export function loadLairGLBs(
     if (proceduralGroups?.onCrystalGLBLoaded && glbMeshes.length > 0) {
       proceduralGroups.onCrystalGLBLoaded(glbMeshes[0]!);
     }
+    // C101: pass the GLB group to the scene update loop so it inherits the procedural float animation
+    proceduralGroups?.onCrystalGroupLoaded?.(gltf.scene);
   }).catch(() => { /* procedural crystal sphere remains */ });
 }

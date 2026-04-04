@@ -685,6 +685,17 @@ export function initMerlinLair(container: HTMLElement): LairResult {
   container.style.position = container.style.position || 'relative';
   container.appendChild(ariaLive);
 
+  // C101: zone hover lore toast — sighted players need text context (aria-live only serves screen readers)
+  const zoneToast = document.createElement('div');
+  zoneToast.style.cssText = [
+    'position:absolute;bottom:16px;left:50%;transform:translateX(-50%);',
+    'background:rgba(10,8,6,0.82);border:1px solid rgba(205,133,63,0.35);border-radius:8px;',
+    'padding:8px 18px;font-family:Georgia,serif;text-align:center;',
+    'pointer-events:none;opacity:0;transition:opacity 0.2s ease;',
+    'display:flex;flex-direction:column;gap:2px;line-height:1.4;min-width:180px;',
+  ].join('');
+  container.appendChild(zoneToast);
+
   // Scene + Camera
   const scene = new THREE.Scene();
   scene.fog = new THREE.Fog(0x0d0a08, 12, 28);
@@ -747,6 +758,7 @@ export function initMerlinLair(container: HTMLElement): LairResult {
   // Pass procedural groups so table_druidique.glb + bibliotheque.glb hide them on load (fixes z-fighting).
   // C81-03: disposed flag prevents late-resolving GLBs from adding to a torn-down scene.
   let lairDisposed = false;
+  let crystalGLBGroup: THREE.Group | null = null; // C101: stored to sync float animation to GLB
   loadLairGLBs(scene, {
     mapGroup, shelfGroup, floorMesh, wallsGroup,
     cauldronGroup: cauldron.group, candleGroup,
@@ -761,6 +773,8 @@ export function initMerlinLair(container: HTMLElement): LairResult {
       const entry = interactives.find((i) => i.zone === 'crystal');
       if (entry) entry.visualMesh = mesh;
     },
+    // C101: store GLB group so update loop can animate its Y position (float effect)
+    onCrystalGroupLoaded: (group) => { crystalGLBGroup = group; },
   }, () => lairDisposed);
 
   // C93-P1: forest ambient audio — SFXManager handles AudioContext suspension via pendingAmbientType
@@ -816,8 +830,13 @@ export function initMerlinLair(container: HTMLElement): LairResult {
         renderer.domElement.style.cursor = 'pointer';
         // C82-01: subtle shimmer on zone enter — SFXManager listens via window 'merlin_sfx'
         window.dispatchEvent(new CustomEvent('merlin_sfx', { detail: { sound: 'hover' } }));
+        // C101: show lore toast with zone name + description
+        const zone = currentHovered.zone;
+        zoneToast.innerHTML = `<strong style="color:#cd853f;font-size:15px;">${ZONE_ARIA_LABELS[zone]}</strong><span style="color:rgba(232,220,200,0.7);font-size:12px;">${ZONE_LORE[zone]}</span>`;
+        zoneToast.style.opacity = '1';
       } else {
         renderer.domElement.style.cursor = 'default';
+        zoneToast.style.opacity = '0';
       }
     }
   };
@@ -829,6 +848,15 @@ export function initMerlinLair(container: HTMLElement): LairResult {
     bookshelf: 'Journal de Merlin',
     cauldron:  'Chaudron Druidique',
     door:      'Sortie vers l\'aventure',
+  };
+
+  // C101: lore descriptions for each zone (shown in zoneToast on hover)
+  const ZONE_LORE: Readonly<Record<LairZone, string>> = {
+    map:       'Choisis un biome pour ta prochaine quête',
+    crystal:   'Consulte tes Oghams et leurs pouvoirs druidiques',
+    bookshelf: 'Relis les traces de tes aventures passées',
+    cauldron:  'Dialogue avec Merlin, guide de ton chemin',
+    door:      'Lance-toi dans les terres sauvages',
   };
 
   const onPointerAction = (e: { clientX: number; clientY: number }): void => {
@@ -923,7 +951,10 @@ export function initMerlinLair(container: HTMLElement): LairResult {
     // Crystal ball pulse
     crystalData.light.intensity = 2.2 + Math.sin(elapsedTime * 1.8) * 0.4;
     crystalData.mat.emissiveIntensity = 0.5 + Math.sin(elapsedTime * 1.4) * 0.15;
-    crystalData.sphere.position.y = -1.0 + Math.sin(elapsedTime * 0.9) * 0.04;
+    const crystalFloatY = -1.0 + Math.sin(elapsedTime * 0.9) * 0.04;
+    crystalData.sphere.position.y = crystalFloatY;
+    // C101: sync GLB group float — procedural sphere is hidden post-load, GLB takes its place
+    if (crystalGLBGroup) crystalGLBGroup.position.y = crystalFloatY;
 
     // Door light flicker
     doorLight.intensity = 2.8 + Math.sin(elapsedTime * 4.1) * 0.3;
@@ -969,6 +1000,9 @@ export function initMerlinLair(container: HTMLElement): LairResult {
     }
     if (ariaLive.parentNode) {
       ariaLive.parentNode.removeChild(ariaLive);
+    }
+    if (zoneToast.parentNode) {
+      zoneToast.parentNode.removeChild(zoneToast);
     }
     renderer.domElement.style.cursor = 'default';
   };
