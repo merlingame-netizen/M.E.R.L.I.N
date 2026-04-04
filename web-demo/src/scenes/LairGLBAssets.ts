@@ -104,43 +104,71 @@ export function loadLairGLBs(
     if (proceduralGroups?.floorMesh) proceduralGroups.floorMesh.visible = false;
   }).catch(() => { /* procedural floor remains */ });
 
-  // Mur pierre: Blender stone tile (5 rows × 4 stones = 126 polys).
-  // 3 vertical rows × N horizontal cols to preserve stone aspect ratio (~1:1.07 vs previous 1:3.2).
-  // Wall spans y=-5 to y=11 (height 16). Each row is 16/3 ≈ 5.33u tall.
-  // Back wall: 6 cols × 3 rows = 18 tiles. Left/right: 5 cols × 3 rows = 15 tiles each.
+  // Mur pierre: C87 — InstancedMesh replaces 48 clones (48 draw calls → 3).
+  // 3 InstancedMeshes (one per rotation: back=0°, left=+90°, right=-90°).
+  // Wall spans y=-5 to y=11 (16u height). ROW_H = 16/3 ≈ 5.33u. Scale [4, ROW_H, 1] per tile.
   loadGLB('/mur_pierre.glb').then((gltf) => {
     if (isDisposed?.()) return; // C81-03
+    // Extract first mesh geometry + material from GLB
+    let tileGeo: THREE.BufferGeometry | null = null;
+    let tileMat: THREE.Material | null = null;
+    gltf.scene.traverse((child) => {
+      if (!tileGeo && child instanceof THREE.Mesh) {
+        tileGeo = child.geometry.clone(); // owned copy — safe to dispose independently
+        tileMat = (child.material as THREE.MeshStandardMaterial).clone();
+      }
+    });
+    if (!tileGeo || !tileMat) return;
+
     const ROW_H = 16 / 3;
-    const rowY = (r: number) => -5 + ROW_H * (r + 0.5);
-    // Back wall: 6 cols × 3 rows (z-offset 0.02 in front of procedural wall)
+    const rowY = (r: number): number => -5 + ROW_H * (r + 0.5);
+    const dummy = new THREE.Object3D();
+
+    // Back wall: 18 tiles (6 cols × 3 rows), rotY = 0
+    const backMesh = new THREE.InstancedMesh(tileGeo, tileMat, 18);
+    let idx = 0;
     for (let r = 0; r < 3; r++) {
       for (let i = 0; i < 6; i++) {
-        const tile = gltf.scene.clone(true);
-        tile.scale.set(4, ROW_H, 1);
-        tile.position.set(-10 + i * 4, rowY(r), -9.76);
-        scene.add(tile);
+        dummy.position.set(-10 + i * 4, rowY(r), -9.76);
+        dummy.scale.set(4, ROW_H, 1);
+        dummy.rotation.set(0, 0, 0);
+        dummy.updateMatrix();
+        backMesh.setMatrixAt(idx++, dummy.matrix);
       }
     }
-    // Left wall: 5 cols × 3 rows, rotated 90°
+    backMesh.instanceMatrix.needsUpdate = true;
+    scene.add(backMesh);
+
+    // Left wall: 15 tiles (5 cols × 3 rows), rotY = +90°
+    const leftMesh = new THREE.InstancedMesh(tileGeo, tileMat, 15);
+    idx = 0;
     for (let r = 0; r < 3; r++) {
       for (let i = 0; i < 5; i++) {
-        const tile = gltf.scene.clone(true);
-        tile.scale.set(4, ROW_H, 1);
-        tile.rotation.y = Math.PI / 2;
-        tile.position.set(-11.76, rowY(r), -8 + i * 4);
-        scene.add(tile);
+        dummy.position.set(-11.76, rowY(r), -8 + i * 4);
+        dummy.scale.set(4, ROW_H, 1);
+        dummy.rotation.set(0, Math.PI / 2, 0);
+        dummy.updateMatrix();
+        leftMesh.setMatrixAt(idx++, dummy.matrix);
       }
     }
-    // Right wall: 5 cols × 3 rows, rotated -90°
+    leftMesh.instanceMatrix.needsUpdate = true;
+    scene.add(leftMesh);
+
+    // Right wall: 15 tiles (5 cols × 3 rows), rotY = -90°
+    const rightMesh = new THREE.InstancedMesh(tileGeo, tileMat, 15);
+    idx = 0;
     for (let r = 0; r < 3; r++) {
       for (let i = 0; i < 5; i++) {
-        const tile = gltf.scene.clone(true);
-        tile.scale.set(4, ROW_H, 1);
-        tile.rotation.y = -Math.PI / 2;
-        tile.position.set(11.76, rowY(r), -8 + i * 4);
-        scene.add(tile);
+        dummy.position.set(11.76, rowY(r), -8 + i * 4);
+        dummy.scale.set(4, ROW_H, 1);
+        dummy.rotation.set(0, -Math.PI / 2, 0);
+        dummy.updateMatrix();
+        rightMesh.setMatrixAt(idx++, dummy.matrix);
       }
     }
+    rightMesh.instanceMatrix.needsUpdate = true;
+    scene.add(rightMesh);
+
     if (proceduralGroups?.wallsGroup) proceduralGroups.wallsGroup.visible = false;
   }).catch(() => { /* procedural stone walls remain */ });
 }

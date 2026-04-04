@@ -180,16 +180,20 @@ function createCrystalBall(): CrystalResult {
 function createBookshelf(): { group: THREE.Group; hitTarget: THREE.Mesh; frame: THREE.Mesh } {
   const group = new THREE.Group();
   const shelfMat = new THREE.MeshStandardMaterial({ color: 0x3d2b1a, roughness: 0.85, metalness: 0.0, flatShading: true, emissive: 0x2a1a08, emissiveIntensity: 0.0 });
-  const bookColors = [0x8b2020, 0x1a4a2a, 0x1a2a5a, 0x5a3a10, 0x4a1060, 0x6a2010];
+  // C87: pool of 6 shared book materials — was 18 separate instances (3 rows × 6 books)
+  const bookMatPool = [0x8b2020, 0x1a4a2a, 0x1a2a5a, 0x5a3a10, 0x4a1060, 0x6a2010].map(
+    (c) => new THREE.MeshStandardMaterial({ color: c, roughness: 0.8, metalness: 0.0, flatShading: true })
+  );
 
   // Shelf frame — also returned as visualMesh for emissive hover boost
   const frame = new THREE.Mesh(new THREE.BoxGeometry(3.5, 5.5, 0.8), shelfMat);
   frame.position.set(8, 0.5, -8);
   group.add(frame);
 
-  // 3 shelf rows with books
+  // 3 shelf rows with books — shared shelf geometry + pooled book materials
+  const shelfGeo = new THREE.BoxGeometry(3.2, 0.12, 0.75);
   for (let row = 0; row < 3; row++) {
-    const shelf = new THREE.Mesh(new THREE.BoxGeometry(3.2, 0.12, 0.75), shelfMat);
+    const shelf = new THREE.Mesh(shelfGeo, shelfMat);
     shelf.position.set(8, -1.0 + row * 1.7, -8);
     group.add(shelf);
 
@@ -199,7 +203,7 @@ function createBookshelf(): { group: THREE.Group; hitTarget: THREE.Mesh; frame: 
       const bookH = 1.0 + (b * 0.11) % 0.5;
       const book = new THREE.Mesh(
         new THREE.BoxGeometry(bookW, bookH, 0.58),
-        new THREE.MeshStandardMaterial({ color: bookColors[b % bookColors.length]!, roughness: 0.8, metalness: 0.0, flatShading: true })
+        bookMatPool[b % bookMatPool.length]!   // C87: reuse pooled material
       );
       book.position.set(8 + xOff + bookW / 2, -0.45 + row * 1.7 + bookH / 2, -8);
       book.rotation.y = (b % 2 === 0 ? 1 : -1) * 0.04;
