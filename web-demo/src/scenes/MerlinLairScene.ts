@@ -1102,6 +1102,8 @@ export function initMerlinLair(container: HTMLElement): LairResult {
     renderer.domElement.removeEventListener('touchstart', onTouchStart);
     renderer.domElement.removeEventListener('touchend', onTouchEnd);
     renderer.domElement.removeEventListener('keydown', onKeyDown);
+    // C120: cancel door flash timeout — lairDisposed guard blocks cb() but closure stays alive 380ms
+    clearTimeout(doorFlashCancelHandle);
     scene.traverse((obj) => {
       if (obj instanceof THREE.InstancedMesh) {
         // C109: InstancedMesh.dispose() fires the renderer 'dispose' event so the instanceMatrix

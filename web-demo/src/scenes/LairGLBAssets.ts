@@ -18,10 +18,12 @@ function fadeInGLB(group: THREE.Object3D, durationMs = 400): void {
   const meshes: THREE.Mesh[] = [];
   group.traverse((child) => {
     if (child instanceof THREE.Mesh) {
-      const mat = child.material as THREE.MeshStandardMaterial;
-      mat.transparent = true;
-      mat.opacity = 0;
-      mat.needsUpdate = true;
+      // C120: instanceof guard — Blender GLTF always produces MeshStandardMaterial but guard
+      // prevents silent failure if any future GLB path brings MeshBasicMaterial (matches C119 philosophy)
+      if (!(child.material instanceof THREE.MeshStandardMaterial)) return;
+      child.material.transparent = true;
+      child.material.opacity = 0;
+      child.material.needsUpdate = true;
       meshes.push(child);
     }
   });
@@ -29,15 +31,17 @@ function fadeInGLB(group: THREE.Object3D, durationMs = 400): void {
   const start = performance.now();
   const tick = (): void => {
     const t = Math.min((performance.now() - start) / durationMs, 1);
-    for (const m of meshes) (m.material as THREE.MeshStandardMaterial).opacity = t;
+    for (const m of meshes) {
+      if (m.material instanceof THREE.MeshStandardMaterial) m.material.opacity = t;
+    }
     if (t < 1) {
       requestAnimationFrame(tick);
     } else {
       for (const m of meshes) {
-        const mat = m.material as THREE.MeshStandardMaterial;
-        mat.opacity = 1;
-        mat.transparent = false;
-        mat.needsUpdate = true;
+        if (!(m.material instanceof THREE.MeshStandardMaterial)) continue;
+        m.material.opacity = 1;
+        m.material.transparent = false;
+        m.material.needsUpdate = true;
       }
     }
   };
@@ -48,8 +52,10 @@ function fadeInGLB(group: THREE.Object3D, durationMs = 400): void {
 function applyFlatShading(obj: THREE.Object3D): void {
   obj.traverse((child) => {
     if (child instanceof THREE.Mesh) {
-      (child.material as THREE.MeshStandardMaterial).flatShading = true;
-      (child.material as THREE.MeshStandardMaterial).needsUpdate = true;
+      // C120: instanceof guard — consistent with C119/fadeInGLB; MeshBasicMaterial has no flatShading
+      if (!(child.material instanceof THREE.MeshStandardMaterial)) return;
+      child.material.flatShading = true;
+      child.material.needsUpdate = true;
     }
   });
 }
