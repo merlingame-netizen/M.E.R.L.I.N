@@ -284,11 +284,15 @@ export const store = createStore<MerlinStore>((set, get) => ({
   // C144/STORE-02: atomic — cooldown check merged into set() to eliminate TOCTOU race.
   // Previously: get() read state then set() wrote it — two React scheduler ticks,
   // allowing a second ogham activation to slip through before the first cooldown applied.
+  // C145/STORE-05: run.active guard — using an ogham outside an active run sets activeOgham
+  // and cooldown unnecessarily. endRun() resets both, but the stale activation fires SFX
+  // and DOM events before endRun() clobbers it. Guard eliminates the stale window.
   useOgham: (oghamId) => {
     const spec = OGHAM_SPECS[oghamId];
     if (!spec) return false;
     let applied = false;
     set((s) => {
+      if (!s.run.active) return s;
       if (!s.meta.oghamsEquipped.includes(oghamId)) return s;
       if ((s.run.oghamCooldowns[oghamId] ?? 0) > 0) return s;
       applied = true;

@@ -166,11 +166,11 @@ export class MinigameEcho extends MinigameBase {
     if (clickedQuadrant === this.targetQuadrant) {
       this.hits++;
       this.feedback = 'hit';
-      this.roundOutcomes.push(true); // C103: record hit
+      this.roundOutcomes = [...this.roundOutcomes, true]; // C145/ECHO-02: immutable spread
       window.dispatchEvent(new CustomEvent('merlin_sfx', { detail: { sound: 'unlock' } }));
     } else {
       this.feedback = 'miss';
-      this.roundOutcomes.push(false); // C103: record miss
+      this.roundOutcomes = [...this.roundOutcomes, false]; // C145/ECHO-02: immutable spread
       window.dispatchEvent(new CustomEvent('merlin_sfx', { detail: { sound: 'lose' } }));
     }
 
@@ -202,11 +202,11 @@ export class MinigameEcho extends MinigameBase {
     if (quadrant === this.targetQuadrant) {
       this.hits++;
       this.feedback = 'hit';
-      this.roundOutcomes.push(true); // C103: record hit
+      this.roundOutcomes = [...this.roundOutcomes, true]; // C145/ECHO-02: immutable spread
       window.dispatchEvent(new CustomEvent('merlin_sfx', { detail: { sound: 'unlock' } }));
     } else {
       this.feedback = 'miss';
-      this.roundOutcomes.push(false); // C103: record miss
+      this.roundOutcomes = [...this.roundOutcomes, false]; // C145/ECHO-02: immutable spread
       window.dispatchEvent(new CustomEvent('merlin_sfx', { detail: { sound: 'lose' } }));
     }
     this.phase = 'feedback';
@@ -227,8 +227,8 @@ export class MinigameEcho extends MinigameBase {
     const dx = mx - this.centerX;
     const dy = my - this.centerY;
 
-    // Must be outside a central dead zone
-    if (Math.abs(dx) < 30 && Math.abs(dy) < 30) return -1;
+    // C145/ECHO-03: dead zone 30→20px — 30px overlapped inner 3-8px of quadrant circles (r=45)
+    if (Math.abs(dx) < 20 && Math.abs(dy) < 20) return -1;
 
     // Determine primary direction
     if (Math.abs(dy) > Math.abs(dx)) {
@@ -300,7 +300,7 @@ export class MinigameEcho extends MinigameBase {
       if (this.phaseTimer <= 0 && !this.answered) {
         // Timed out -- miss
         this.feedback = 'miss';
-        this.roundOutcomes.push(false); // C103: timeout = miss
+        this.roundOutcomes = [...this.roundOutcomes, false]; // C145/ECHO-02: immutable spread (timeout = miss)
         this.phase = 'feedback';
         this.feedbackTimer = 0.5;
         this.answered = true;

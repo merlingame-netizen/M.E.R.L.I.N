@@ -398,6 +398,16 @@ export class MinigameNegociation extends MinigameBase {
       ctx.fillText(`Combo x${this.comboCount}`, this.canvasW - 12, 16);
     }
 
+    // C145/NEG-03: maxCombo cap indicator — comboBonus = min(25, maxCombo*5), cap reached at 5 combos.
+    // Without this, player cannot tell when the 25pt bonus is already maxed and further combos add nothing.
+    if (this.maxCombo > 0) {
+      const capReached = this.maxCombo >= 5;
+      ctx.fillStyle = capReached ? 'rgba(255,200,60,0.9)' : 'rgba(255,200,60,0.45)';
+      ctx.font = '11px system-ui';
+      ctx.textAlign = 'right';
+      ctx.fillText(capReached ? 'BONUS MAX \u2713' : `Meilleur: ${this.maxCombo}/5`, this.canvasW - 12, 30);
+    }
+
     // Score display
     const factionPicked = this.pickedSequence.filter((w) => w.isFactionWord).length;
     ctx.fillStyle = 'rgba(232,220,200,0.5)';
