@@ -228,6 +228,7 @@ export class MinigameFouille extends MinigameBase {
         const obj = this.objects[idx];
         if (obj.isTarget) {
           this.found = true;
+          clearInterval(this.timerInterval); // C104: freeze timeLeft at click instant (FOU-01)
           window.dispatchEvent(new CustomEvent('merlin_sfx', { detail: { sound: 'unlock' } }));
           this.showFoundStatus(); // C134: show inline bonus before overlay
           this.foundTimeout = window.setTimeout(() => this.endGame(), 400);
@@ -262,6 +263,7 @@ export class MinigameFouille extends MinigameBase {
     const obj = this.objects[idx];
     if (obj.isTarget) {
       this.found = true;
+      clearInterval(this.timerInterval); // C104: freeze timeLeft at click instant — prevents endGame() 400ms later using a lower timeLeft if tick crosses 0 (FOU-01)
       window.dispatchEvent(new CustomEvent('merlin_sfx', { detail: { sound: 'unlock' } }));
       this.showFoundStatus(); // C134: show inline bonus before overlay
       // Short delay before ending to show the found state (stored to allow clearTimeout)
