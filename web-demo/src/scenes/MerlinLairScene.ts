@@ -152,7 +152,7 @@ interface CrystalResult {
 
 function createCrystalBall(): CrystalResult {
   const group = new Group();
-  const pedestalMat = new MeshStandardMaterial({ color: 0x2a2220, roughness: 0.6, metalness: 0.3, flatShading: true });
+  const pedestalMat = new MeshStandardMaterial({ color: 0x2a2220, roughness: 0.85, metalness: 0.05, flatShading: true }); // C46: dark basalt/slate register (was 0.6/0.3 = polished metal)
   const crystalMat = new MeshStandardMaterial({
     color: 0x9060cc,
     roughness: 0.25,
@@ -878,7 +878,8 @@ export function initMerlinLair(container: HTMLElement): LairResult {
     // GLB swaps (onCauldronGLBLoaded) may bring in non-Standard materials → silent no-op was correct
     // behaviour but the cast hid the contract. Now it's explicit.
     if (!(target.material instanceof MeshStandardMaterial)) return;
-    if (target.material.emissive) target.material.emissiveIntensity = intensity;
+    // C46: Three.js Color is always truthy (object, never null) — guard must check actual channel values
+    if (target.material.emissive.r > 0 || target.material.emissive.g > 0 || target.material.emissive.b > 0) target.material.emissiveIntensity = intensity;
   };
 
   const onMouseMove = (e: { clientX: number; clientY: number }): void => {
