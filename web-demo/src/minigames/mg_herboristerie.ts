@@ -23,19 +23,23 @@ interface CellState {
 }
 
 // Plant pool (curated for celtic herboristerie feel)
+// C92-P1: append U+FE0E (VS-15) to force text-presentation on glyphs that may
+// render as color emoji on Android canvas (☘ U+2618, ☠ U+2620, ⚙ U+2699).
+// U+2740 ❀ U+2741 ✁ U+2736 ✶ U+273F ✿ U+2698 ⚘ are Misc Symbols — text-only by default.
+const VS15 = '\uFE0E';
 const PLANT_SETS: readonly {
   readonly target: { emoji: string; name: string };
   readonly safe: readonly { emoji: string; name: string }[];
   readonly toxic: readonly { emoji: string; name: string }[];
 }[] = [
   {
-    target: { emoji: '\u2618', name: 'Trefle' },          // shamrock
+    target: { emoji: '\u2618' + VS15, name: 'Trefle' },   // ☘︎ shamrock (force text)
     safe: [
       { emoji: '\u2740', name: 'Fleur blanche' },
       { emoji: '\u2741', name: 'Petale' },
     ],
     toxic: [
-      { emoji: '\u2620', name: 'Morelle noire' },         // skull
+      { emoji: '\u2620' + VS15, name: 'Morelle noire' },  // ☠︎ skull (force text)
       { emoji: '\u2736', name: 'Epine toxique' },
     ],
   },
@@ -43,21 +47,21 @@ const PLANT_SETS: readonly {
     target: { emoji: '\u273F', name: 'Gui sacre' },
     safe: [
       { emoji: '\u2740', name: 'Mousse' },
-      { emoji: '\u2698', name: 'Alchimille' },            // alembic
+      { emoji: '\u2698', name: 'Alchimille' },
     ],
     toxic: [
-      { emoji: '\u2620', name: 'Aconit' },
+      { emoji: '\u2620' + VS15, name: 'Aconit' },         // ☠︎ skull (force text)
       { emoji: '\u2736', name: 'Belladone' },
     ],
   },
   {
-    target: { emoji: '\u2699', name: 'Verveine' },        // gear as herb
+    target: { emoji: '\u2699' + VS15, name: 'Verveine' }, // ⚙︎ gear (force text)
     safe: [
       { emoji: '\u2741', name: 'Sauge' },
-      { emoji: '\u2618', name: 'Trefle' },
+      { emoji: '\u2618' + VS15, name: 'Trefle' },          // ☘︎ shamrock (force text)
     ],
     toxic: [
-      { emoji: '\u2620', name: 'Cigue' },
+      { emoji: '\u2620' + VS15, name: 'Cigue' },           // ☠︎ skull (force text)
       { emoji: '\u2736', name: 'Digitale' },
     ],
   },
@@ -90,6 +94,8 @@ export class MinigameHerboristerie extends MinigameBase {
   // Visual feedback
   private flashCells: Map<number, { color: string; alpha: number }> = new Map();
   private shakeAmount = 0;
+  // C92-P2: floating penalty text — shows "−8 pts" near wrong pick for 0.8s
+  private penaltyToasts: Array<{ x: number; y: number; life: number }> = [];
 
   protected setup(): void {
     this.container.innerHTML = '';
@@ -141,6 +147,7 @@ export class MinigameHerboristerie extends MinigameBase {
     this.elapsedTime = 0;
     this.flashCells = new Map();
     this.shakeAmount = 0;
+    this.penaltyToasts = [];
 
     // Timer
     this.timerInterval = window.setInterval(() => {
@@ -254,6 +261,10 @@ export class MinigameHerboristerie extends MinigameBase {
       this.wrongPicks++;
       this.flashCells.set(idx, { color: 'rgba(200,60,60,0.6)', alpha: 1 });
       this.shakeAmount = 6;
+      // C92-P2: spawn floating penalty toast at cell center
+      const col = idx % this.gridCols;
+      const row = Math.floor(idx / this.gridCols);
+      this.penaltyToasts.push({ x: 20 + col * this.cellSize + this.cellSize / 2, y: 60 + row * this.cellSize + this.cellSize / 2, life: 0.8 });
     }
 
     // Check if all targets found
@@ -395,6 +406,19 @@ export class MinigameHerboristerie extends MinigameBase {
         ctx.fillStyle = 'rgba(200,80,80,0.6)';
         ctx.fillText('\u2717', x + this.cellSize / 2, y + this.cellSize / 2);
       }
+    }
+
+    // C92-P2: render floating penalty toasts + decay
+    this.penaltyToasts = this.penaltyToasts.filter((t) => t.life > 0);
+    for (const t of this.penaltyToasts) {
+      const alpha = Math.min(1, t.life / 0.4);
+      const rise = (0.8 - t.life) * 30; // float up 30px over lifetime
+      ctx.fillStyle = `rgba(220,80,80,${alpha})`;
+      ctx.font = 'bold 14px system-ui';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText('\u22128 pts', t.x, t.y - rise);
+      t.life -= dt;
     }
 
     ctx.restore();
