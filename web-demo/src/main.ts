@@ -528,7 +528,7 @@ async function runMerlinLair(app: HTMLElement): Promise<{ biomeId: string; lairO
   // Zone labels shown as brief toast for non-door zones
   const ZONE_LABELS: Record<string, { title: string; sub: string }> = {
     map:       { title: 'Carte des Biomes',    sub: 'Vers quelle contrée vous aventurer ?' }, // C45: Celtic register + CTA (was generic "Choisissez votre destination")
-    crystal:   { title: 'Pierre des Oghams',   sub: 'Choisissez votre Ogham runique' },
+    crystal:   { title: 'Sphère de Cristal',     sub: 'Choisissez votre Ogham runique' },
     bookshelf: { title: 'Journal de Merlin',   sub: 'Les pages sont encore en gestation' },
     cauldron:  { title: 'Chaudron Druidique',  sub: 'L\'anam doit d\'abord s\'éveiller' },
     door:      { title: 'Entrer dans la forêt', sub: '→ Commencer l\'aventure' },
@@ -612,12 +612,53 @@ async function runMerlinLair(app: HTMLElement): Promise<{ biomeId: string; lairO
         return;
       }
       if (zone === 'cauldron') {
-        // C85: Merlin quotes — cycle through 6 druidic whispers
+        // C162: try Groq LLM whisper first, fall back to static quote pool on failure
         playSound('cauldron');
+        const llm = getLLMAdapter();
+        const whisper = llm
+          ? await llm.generateMerlinWhisper(selectedBiomeId).catch(() => null)
+          : null;
         cauldronQuoteIdx = (cauldronQuoteIdx + 1) % MERLIN_QUOTES.length;
+        const quote = whisper ?? MERLIN_QUOTES[cauldronQuoteIdx]!;
         ZONE_LABELS['cauldron']!.title = 'Merlin murmure…';
-        ZONE_LABELS['cauldron']!.sub = MERLIN_QUOTES[cauldronQuoteIdx]!;
+        ZONE_LABELS['cauldron']!.sub = quote;
         showZoneToast('cauldron');
+        return;
+      }
+      if (zone === 'skull') {
+        // C162: skull meditation overlay (3s) — replaces no-op toast
+        playSound('crystal');
+        const med = document.createElement('div');
+        med.style.cssText = [
+          'position:absolute;inset:0;z-index:25;display:flex;flex-direction:column;',
+          'align-items:center;justify-content:center;background:rgba(0,0,0,0.7);',
+          'opacity:0;transition:opacity 0.4s;pointer-events:none;',
+        ].join('');
+        const lines: readonly string[] = [
+          '> MÉDITATION :: CRÂNE DU SAGE',
+          '',
+          '"Les druides méditaient face à la mort',
+          ' pour mieux choisir leur vie."',
+          '',
+          `[ +${Math.floor(Math.random() * 3) + 1} SAGESSE ]`,
+        ];
+        lines.forEach((line) => {
+          const el = document.createElement('div');
+          el.textContent = line;
+          el.style.cssText = [
+            `color:rgba(51,255,102,${line.startsWith('"') ? '0.6' : '0.85'});`,
+            'font-family:Courier New,monospace;',
+            `font-size:${line.startsWith('>') ? '11' : '13'}px;`,
+            'letter-spacing:0.15em;margin:3px 0;text-align:center;',
+          ].join('');
+          med.appendChild(el);
+        });
+        wrapper!.appendChild(med);
+        requestAnimationFrame(() => requestAnimationFrame(() => { med.style.opacity = '1'; }));
+        await new Promise<void>((res) => setTimeout(res, 2800));
+        med.style.opacity = '0';
+        await new Promise<void>((res) => setTimeout(res, 400));
+        med.remove();
         return;
       }
       if (zone === 'map') {

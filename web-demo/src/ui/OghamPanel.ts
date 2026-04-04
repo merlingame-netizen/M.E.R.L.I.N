@@ -189,6 +189,13 @@ export function showOghamPanel(): Promise<string | null> {
 
       if (isAvailable) {
         slot.addEventListener('click', () => selectOgham(oghamId), { signal: slotSignal });
+        // C162/BUG-C131-03: touchend — on mobile pointerenter stays "stuck" after tap (no
+        // pointerleave fires). Adding touchend fires selectOgham and prevents ghost click
+        // via preventDefault(), which also stops the subsequent click event from firing twice.
+        slot.addEventListener('touchend', (e) => {
+          e.preventDefault();
+          selectOgham(oghamId);
+        }, { signal: slotSignal });
         // C148/OGHAM-HOVER-MOBILE-01: pointerenter/pointerleave fire on mouse AND touch (mobile).
         // mouseenter/mouseleave only fire for mouse → no hover feedback on touch screens.
         slot.addEventListener('pointerenter', () => {
@@ -222,6 +229,11 @@ export function showOghamPanel(): Promise<string | null> {
       'transition:background 0.2s',
     ].join(';');
     skipBtn.addEventListener('click', () => selectOgham(null), { signal: slotSignal });
+    // C162/BUG-C131-03: touchend on skipBtn — mirrors same fix applied to slot buttons above.
+    skipBtn.addEventListener('touchend', (e) => {
+      e.preventDefault();
+      selectOgham(null);
+    }, { signal: slotSignal });
     // C148/OGHAM-HOVER-MOBILE-01: pointerenter/pointerleave — consistent with ogham slots above
     skipBtn.addEventListener('pointerenter', () => {
       skipBtn.style.background = 'rgba(80,80,90,0.5)';

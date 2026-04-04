@@ -252,6 +252,47 @@ Style: celtique poetique, present de narration, immersif. Noms liés au biome.`;
   }
 
   /**
+   * Generate a single druidic whisper from Merlin (cauldron zone).
+   * Returns null on failure — caller falls back to static pool.
+   */
+  async generateMerlinWhisper(biome: string): Promise<string | null> {
+    const messages: readonly GroqMessage[] = [
+      {
+        role: 'system',
+        content: `Tu es Merlin, druide celte antique. Réponds avec UNE SEULE phrase mystérieuse et poétique en français (max 12 mots). Vocabulaire celte : ogham, brume, nemeton, awen, korrigan, brocéliande, sidhe. Pas de ponctuation de fin. Pas de guillemets.`,
+      },
+      {
+        role: 'user',
+        content: `Biome actuel : ${biome}. Un murmure du chaudron.`,
+      },
+    ];
+    try {
+      const controller = new AbortController();
+      const timeout = setTimeout(() => controller.abort(), 4000);
+      try {
+        const res = await fetch(GROQ_API_URL, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${this.apiKey}` },
+          body: JSON.stringify({
+            model: this.model,
+            messages,
+            temperature: 0.95,
+            max_tokens: 40,
+          } satisfies GroqChatRequest),
+          signal: controller.signal,
+        });
+        if (!res.ok) return null;
+        const data = await res.json() as GroqChatResponse;
+        return data.choices[0]?.message.content?.trim() ?? null;
+      } finally {
+        clearTimeout(timeout);
+      }
+    } catch {
+      return null;
+    }
+  }
+
+  /**
    * Generate narrative text (e.g., Merlin greeting, encounter flavor).
    * Returns null on failure.
    */
