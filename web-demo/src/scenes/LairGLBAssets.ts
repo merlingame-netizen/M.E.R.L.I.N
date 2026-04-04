@@ -145,9 +145,9 @@ export function loadLairGLBs(
       cancelHandles.push(fadeInGLB(clone, 400, isDisposed)); // C97/C133
     }
     if (proceduralGroups?.candleGroup) {
-      // C112: hide only non-Light children — sharedLight must stay active for candle warmth post-GLB
+      // C112: hide Mesh geometry only — preserves sharedLight AND any Points flame particles in GLB
       proceduralGroups.candleGroup.children.forEach((child) => {
-        if (!(child instanceof Light)) child.visible = false;
+        if (child instanceof Mesh) child.visible = false;
       });
     }
   }).catch(() => { /* procedural candle bodies remain */ });
