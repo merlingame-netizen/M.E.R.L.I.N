@@ -993,18 +993,29 @@ export function initMerlinLair(container: HTMLElement): LairResult {
   };
 
   // Touch → pointer bridge (BUG-L-06 fix)
+  // C95: tap-to-preview — touchstart shows lore toast; touchend activates if no drag occurred.
+  // Previous: touchstart → activate immediately (toast never shown on mobile, UX regression).
+  // Fix: touchstart → hover (shows toast), touchend (no swipe) → activate, touchend (swipe) → clear only.
+  let touchMoved = false;
   const onTouchMove = (e: TouchEvent): void => {
     e.preventDefault();
+    touchMoved = true;
     const t = e.touches[0] ?? e.changedTouches[0];
     if (t) onMouseMove({ clientX: t.clientX, clientY: t.clientY });
   };
   const onTouchStart = (e: TouchEvent): void => {
     e.preventDefault();
+    touchMoved = false;
     const t = e.touches[0] ?? e.changedTouches[0];
-    if (t) onPointerAction({ clientX: t.clientX, clientY: t.clientY });
+    if (t) onMouseMove({ clientX: t.clientX, clientY: t.clientY }); // C95: reveal lore toast on press
   };
   // C85-01: touchend clears hover — prevents zones staying visually stuck on mobile
-  const onTouchEnd = (): void => {
+  // C95: also activates zone on tap-lift (no drag); passes changedTouches coordinate to onPointerAction
+  const onTouchEnd = (e: TouchEvent): void => {
+    if (!touchMoved) {
+      const t = e.changedTouches[0];
+      if (t) onPointerAction({ clientX: t.clientX, clientY: t.clientY }); // C95: activate on clean tap
+    }
     if (currentHovered) {
       currentHovered.hovered = false;
       // C98: scale lerped back to 1.0 in update loop — no setScalar needed here
@@ -1131,7 +1142,8 @@ export function initMerlinLair(container: HTMLElement): LairResult {
     // C118: procedural sphere uses -1.0 (always correct); GLB uses crystalGLBBaseY delta (GLB root Y)
     // C53: cache float sin — sin(t*0.9) used twice (sphere + GLB); one call instead of two per frame
     const floatSin = Math.sin(elapsedTime * 0.9);
-    crystalData.sphere.position.y = -1.0 + floatSin * 0.04;
+    // C95: skip dead write on sphere once GLB has taken over (sphere is hidden, write was wasted every frame)
+    if (!crystalGLBGroup) crystalData.sphere.position.y = -1.0 + floatSin * 0.04;
     // C101: sync GLB group float — procedural sphere is hidden post-load, GLB takes its place
     if (crystalGLBGroup) crystalGLBGroup.position.y = crystalGLBBaseY + floatSin * 0.04;
 
