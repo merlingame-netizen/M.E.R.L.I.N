@@ -109,7 +109,8 @@ export class MinigameHerboristerie extends MinigameBase {
   private cells: CellState[] = [];
   private targetPlant: { emoji: string; name: string } = { emoji: '', name: '' };
   private timeLeft = 15;
-  private totalTime = 15; // C94: scaled by difficultyTier in setup()
+  private totalTime = 15;    // C94: scaled by difficultyTier in setup()
+  private wrongPenalty = 5; // C115: pts deducted per wrong pick — tieredValue-scaled in setup()
   private correctPicks = 0;
   private wrongPicks = 0;
   private totalTargets = 0;
@@ -128,7 +129,9 @@ export class MinigameHerboristerie extends MinigameBase {
     this.container.innerHTML = '';
 
     // C106: tieredValue replaces manual arithmetic — consistent with all other minigames
-    this.totalTime = this.tieredValue([15, 13, 11, 9] as const);
+    this.totalTime    = this.tieredValue([15, 13, 11, 9] as const);
+    // C115: penalty scales with tier — easier tiers use 5pts to avoid discouraging beginners
+    this.wrongPenalty = this.tieredValue([5, 6, 7, 8] as const);
 
     // Title
     const title = document.createElement('div');
@@ -346,7 +349,7 @@ export class MinigameHerboristerie extends MinigameBase {
     // - Time bonus: up to +20 if finished quickly
     const pickRatio = this.totalTargets > 0 ? this.correctPicks / this.totalTargets : 0;
     const baseScore = pickRatio * 80;
-    const penalty = this.wrongPicks * 8;
+    const penalty = this.wrongPicks * this.wrongPenalty; // C115: tieredValue-scaled
     const timeBonus = this.timeLeft > 0 ? (this.timeLeft / this.totalTime) * 20 : 0;
     const score = Math.max(0, baseScore - penalty + timeBonus);
 

@@ -20,6 +20,7 @@ export class MinigameEquilibre extends MinigameBase {
   private animFrame = 0;
   private timerInterval = 0;
   private ended = false;
+  private statusId = 'mg-eq-status'; // C115: balance % live feedback for player + screen readers
 
   // Game state
   private cursorX = 0; // -1 (left edge) to +1 (right edge), 0 = center
@@ -81,6 +82,14 @@ export class MinigameEquilibre extends MinigameBase {
     timerBar.appendChild(timerFill);
     this.container.appendChild(timerBar);
 
+    // C115: status element — shows live balance % so player/screen-reader gets text feedback
+    const statusEl = document.createElement('div');
+    statusEl.id = this.statusId;
+    statusEl.setAttribute('aria-live', 'polite');
+    statusEl.style.cssText = `width:min(400px,100%);max-width:400px;min-height:24px;margin:0 auto 8px;color:rgba(232,220,200,0.6);font-size:13px;text-align:center;font-family:system-ui;`;
+    statusEl.textContent = 'Equilibre: —';
+    this.container.appendChild(statusEl);
+
     // Canvas
     this.canvas = document.createElement('canvas');
     this.canvas.setAttribute('aria-label', 'Minigame Equilibre — maintenez votre equilibre sur le chemin etroit');
@@ -121,6 +130,13 @@ export class MinigameEquilibre extends MinigameBase {
       if (fill) fill.style.width = `${pct}%`;
       const bar = document.getElementById('mg-eq-timer');
       if (bar) bar.setAttribute('aria-valuenow', String(Math.round(pct)));
+      // C115: update balance % — uses timeInZone accumulated in render()
+      const statusEl = document.getElementById(this.statusId);
+      if (statusEl) {
+        const elapsed = Math.min(this.totalTime, this.totalTime - this.timeLeft + 0.001);
+        const zonePct = elapsed > 0 ? Math.round((this.timeInZone / elapsed) * 100) : 100;
+        statusEl.textContent = `Equilibre: ${zonePct}%`;
+      }
       if (this.timeLeft <= 0) {
         this.endGame();
       }
