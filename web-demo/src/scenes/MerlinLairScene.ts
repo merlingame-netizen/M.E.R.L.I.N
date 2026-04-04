@@ -657,7 +657,7 @@ function createSkull(): Group {
   return group;
 }
 
-// ── Ambient Lighting — 5-source pass (degraded to 4 on low-end mobile) ──
+// ── Ambient Lighting — 6-source pass (degraded to 5 on low-end mobile) ── // C52: corrected count (was '5/4', actual 6/5)
 // C89-P2: lowEnd=true skips backAccent PointLight (Mali-G57/Adreno 610 budget ~4 lights at 60fps)
 function setupLighting(scene: Scene, lowEnd = false): void {
   scene.add(new AmbientLight(0x1a1008, 0.3));                          // dark warm base (reduced to balance HemiLight below)

@@ -406,6 +406,17 @@ export class MinigameNegociation extends MinigameBase {
       : -1;
     const kbFocusedRawIdx = kbClampedIdx >= 0 ? visibleForKb[kbClampedIdx].i : -1;
 
+    // C52: WCAG 2.4.7 — keyboard focus visible during empty window (first ~0.6s before words appear)
+    if (visibleForKb.length === 0 && document.activeElement === this.canvas) {
+      ctx.save();
+      ctx.fillStyle = 'rgba(205,133,63,0.55)';
+      ctx.font = '11px system-ui';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'alphabetic';
+      ctx.fillText('⌨ Prêt…', this.canvas.width / 2, this.canvas.height - 16);
+      ctx.restore();
+    }
+
     // Draw scrolling words
     for (const [rawIdx, sw] of this.scrollingWords.entries()) {
       const alpha = sw.picked ? sw.fadeAlpha * 0.4 : 0.9;

@@ -342,6 +342,7 @@ export class MinigameHerboristerie extends MinigameBase {
     clearInterval(this.timerInterval);
     cancelAnimationFrame(this.animFrame);
     this.canvas?.removeEventListener('pointerdown', this.onPointerDown);
+    this.canvas?.removeEventListener('keydown', this.onKeyDown); // C52: symmetric with cleanup() — matches 13/13 other minigames
 
     // Score formula:
     // - Base: (correctPicks / totalTargets) * 80
