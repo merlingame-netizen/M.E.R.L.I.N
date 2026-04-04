@@ -797,7 +797,7 @@ export function initMerlinLair(container: HTMLElement): LairResult {
   let fpsFrameCount = 0;
   let fpsElapsed = 0;
   let lowFpsMode = false;
-  loadLairGLBs(scene, {
+  const cancelGLBFades = loadLairGLBs(scene, { // C133: capture cancel-all to stop in-flight fadeInGLB rAFs on dispose
     mapGroup, shelfGroup, floorMesh, wallsGroup,
     cauldronGroup: cauldron.group, candleGroup,
     crystalSphere: crystalData.sphere,
@@ -1133,6 +1133,7 @@ export function initMerlinLair(container: HTMLElement): LairResult {
 
   const dispose = (): void => {
     lairDisposed = true; // C81-03: signal in-flight GLB .then() callbacks to abort
+    cancelGLBFades(); // C133: stop any in-flight fadeInGLB rAFs immediately (no extra frame after dispose)
     stopAmbient(); // C93-P1: stop forest ambient on scene teardown
     // C117: clear GLB cache before geometry.dispose() — prevents returning disposed-geometry GLTF
     // on second lair visit (cauldron/table/biblio/sol_pierre/crystal_ball added as gltf.scene directly)

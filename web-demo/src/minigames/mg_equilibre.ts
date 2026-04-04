@@ -57,13 +57,13 @@ export class MinigameEquilibre extends MinigameBase {
 
     // Title
     const title = document.createElement('div');
-    title.textContent = 'EQUILIBRE -- Reste au centre du chemin';
+    title.textContent = 'ÉQUILIBRE — Marche sur le fil des druides';
     title.style.cssText = 'color:#e8dcc8;font-size:20px;text-align:center;margin-bottom:16px;font-family:system-ui;';
     this.container.appendChild(title);
 
-    // Instructions
+    // Instructions — C133: Celtic-flavored lore (was generic UI copy)
     const instr = document.createElement('div');
-    instr.textContent = 'Fleches gauche/droite ou touche le canvas';
+    instr.textContent = 'Garde l\'équilibre sur le Chemin d\'Ogham';
     instr.style.cssText = 'color:rgba(205,133,63,0.6);font-size:13px;text-align:center;margin-bottom:12px;font-family:system-ui;';
     this.container.appendChild(instr);
 

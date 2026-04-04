@@ -85,7 +85,11 @@ export function loadLairGLBs(
   proceduralGroups?: LairProceduralGroups,
   // C81-03: caller passes () => true after lair.dispose() fires — prevents late scene.add()
   isDisposed?: () => boolean,
-): void {
+): () => void {
+  // C133: collect cancel handles so dispose() can stop any in-progress fade-in rAFs immediately.
+  // Without this, fadeInGLB rAFs run 1 extra frame after dispose (guarded by isDisposed, but wasteful).
+  const cancelHandles: Array<() => void> = [];
+
   // Cauldron: Blender low-poly (bois brun + métal sombre, 34 polys, validated)
   loadGLB('/cauldron_merlin.glb').then((gltf) => {
     if (isDisposed?.()) return; // C81-03: abort if lair already disposed
@@ -102,7 +106,7 @@ export function loadLairGLBs(
     gltf.scene.position.set(2, -4.65, -7);
     gltf.scene.scale.setScalar(0.72);
     scene.add(gltf.scene);
-    fadeInGLB(gltf.scene, 400, isDisposed); // C97: fade-in on load
+    cancelHandles.push(fadeInGLB(gltf.scene, 400, isDisposed)); // C97/C133
     if (proceduralGroups?.cauldronGroup) proceduralGroups.cauldronGroup.visible = false;
     // Update interactives[] visualMesh to the GLB body so hover emissive works on GLB path
     if (proceduralGroups?.onCauldronGLBLoaded) {
@@ -138,7 +142,7 @@ export function loadLairGLBs(
       clone.scale.setScalar(0.42);
       clone.position.set(cx, cy, cz);
       scene.add(clone);
-      fadeInGLB(clone, 400, isDisposed); // C97: fade-in per clone
+      cancelHandles.push(fadeInGLB(clone, 400, isDisposed)); // C97/C133
     }
     if (proceduralGroups?.candleGroup) {
       // C112: hide only non-Light children — sharedLight must stay active for candle warmth post-GLB
@@ -168,7 +172,7 @@ export function loadLairGLBs(
       }
     });
     scene.add(gltf.scene);
-    fadeInGLB(gltf.scene); // C97
+    cancelHandles.push(fadeInGLB(gltf.scene, 400, isDisposed)); // C97/C133
     if (proceduralGroups) proceduralGroups.mapGroup.visible = false;
     // C121: notify scene so map interactives entry can swap hit target + visualMesh to GLB mesh.
     // Without this, raycaster skips the now-invisible procedural scroll and map zone is unclickable.
@@ -199,7 +203,7 @@ export function loadLairGLBs(
       }
     });
     scene.add(gltf.scene);
-    fadeInGLB(gltf.scene); // C97
+    cancelHandles.push(fadeInGLB(gltf.scene, 400, isDisposed)); // C97/C133
     if (proceduralGroups) proceduralGroups.shelfGroup.visible = false;
     // C122: shelfHit lives inside shelfGroup — becomes invisible to raycaster when group is hidden.
     // Mirror the onMapGLBLoaded pattern to swap interactives entry to the live GLB mesh.
@@ -230,7 +234,7 @@ export function loadLairGLBs(
       }
     });
     scene.add(gltf.scene);
-    fadeInGLB(gltf.scene); // C97
+    cancelHandles.push(fadeInGLB(gltf.scene, 400, isDisposed)); // C97/C133
     if (proceduralGroups?.floorMesh) proceduralGroups.floorMesh.visible = false;
   }).catch(() => { /* procedural floor remains */ });
 
@@ -326,7 +330,7 @@ export function loadLairGLBs(
     gltf.scene.position.set(5, -1.0, -4);
     gltf.scene.scale.setScalar(0.8);
     scene.add(gltf.scene);
-    fadeInGLB(gltf.scene); // C97
+    cancelHandles.push(fadeInGLB(gltf.scene, 400, isDisposed)); // C97/C133
     if (proceduralGroups?.crystalSphere) proceduralGroups.crystalSphere.visible = false;
     if (proceduralGroups?.onCrystalGLBLoaded && glbMeshes.length > 0) {
       proceduralGroups.onCrystalGLBLoaded(glbMeshes[0]!);
@@ -334,4 +338,7 @@ export function loadLairGLBs(
     // C101: pass the GLB group to the scene update loop so it inherits the procedural float animation
     proceduralGroups?.onCrystalGroupLoaded?.(gltf.scene);
   }).catch(() => { /* procedural crystal sphere remains */ });
+
+  // C133: return cancel-all so MerlinLairScene.dispose() can stop any in-flight rAFs immediately
+  return () => { cancelHandles.forEach((cancel) => cancel()); };
 }
