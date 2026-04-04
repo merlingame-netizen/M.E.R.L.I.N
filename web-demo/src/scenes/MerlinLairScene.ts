@@ -173,7 +173,17 @@ function createCrystalBall(): CrystalResult {
   light.position.set(5, -1.0, -4);
   group.add(light);
 
-  return { group, hitTarget: sphere, light, mat: crystalMat, sphere };
+  // C95: separate invisible hit target — survives sphere.visible=false after crystal_ball.glb loads.
+  // THREE.js raycasting skips objects with .visible=false; material.visible=false is transparent
+  // but the object stays raycast-able. Other zones (bookshelf, door, map) use this pattern.
+  const hitSphere = new THREE.Mesh(
+    new THREE.SphereGeometry(0.85, 6, 5),
+    new THREE.MeshBasicMaterial({ visible: false })
+  );
+  hitSphere.position.set(5, -1.0, -4);
+  group.add(hitSphere);
+
+  return { group, hitTarget: hitSphere, light, mat: crystalMat, sphere };
 }
 
 // ── Bookshelf ─────────────────────────────────────────────────────────────────
@@ -746,6 +756,11 @@ export function initMerlinLair(container: HTMLElement): LairResult {
       const entry = interactives.find((i) => i.zone === 'cauldron');
       if (entry) entry.visualMesh = mesh;
     },
+    // C95: swap crystal visualMesh to GLB mesh so hover emissive targets GLB (not hidden sphere)
+    onCrystalGLBLoaded: (mesh) => {
+      const entry = interactives.find((i) => i.zone === 'crystal');
+      if (entry) entry.visualMesh = mesh;
+    },
   }, () => lairDisposed);
 
   // C93-P1: forest ambient audio — SFXManager handles AudioContext suspension via pendingAmbientType
@@ -754,7 +769,7 @@ export function initMerlinLair(container: HTMLElement): LairResult {
   // Interactive zones for raycasting (visualMesh = visible mesh for emissive boost)
   const interactives: InteractiveObject[] = [
     { mesh: mapHit,              zone: 'map',       hovered: false, baseEmissive: 0.15 },
-    { mesh: crystalData.hitTarget, zone: 'crystal', hovered: false, baseEmissive: 0.6  },
+    { mesh: crystalData.hitTarget, zone: 'crystal', hovered: false, visualMesh: crystalData.sphere, baseEmissive: 0.6 },
     { mesh: shelfHit,            zone: 'bookshelf', hovered: false, visualMesh: shelfFrame, baseEmissive: 0.0 },
     { mesh: doorHit,             zone: 'door',      hovered: false, visualMesh: doorPanel,  baseEmissive: 0.05 },
     { mesh: cauldronHit,         zone: 'cauldron',  hovered: false, visualMesh: cauldron.body, baseEmissive: 0.0 },

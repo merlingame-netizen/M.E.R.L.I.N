@@ -20,6 +20,7 @@ export interface LairProceduralGroups {
   candleGroup?: THREE.Group;   // procedural candle bodies+wicks+light hidden when bougie.glb loads
   crystalSphere?: THREE.Mesh;  // C93-P2: procedural sphere hidden when crystal_ball.glb loads (hitTarget/light stay)
   onCauldronGLBLoaded?: (bodyMesh: THREE.Mesh) => void; // callback to update visualMesh in interactives[]
+  onCrystalGLBLoaded?: (mesh: THREE.Mesh) => void;      // C95: callback to swap visualMesh to GLB mesh for hover emissive
 }
 
 export function loadLairGLBs(
@@ -182,17 +183,26 @@ export function loadLairGLBs(
   }).catch(() => { /* procedural stone walls remain */ });
 
   // Crystal ball: C93-P2 — GLB overlay on procedural sphere. hitTarget + PointLight stay active.
+  // C95: emissive purple set on GLB material (matching procedural crystal glow 0x6030aa).
+  // C95: onCrystalGLBLoaded callback updates interactives[] visualMesh so hover emissive targets GLB.
   loadGLB('/crystal_ball.glb').then((gltf) => {
     if (isDisposed?.()) return;
+    const glbMeshes: THREE.Mesh[] = [];
     gltf.scene.traverse((child) => {
       if (child instanceof THREE.Mesh) {
         child.material = (child.material as THREE.MeshStandardMaterial).clone();
+        (child.material as THREE.MeshStandardMaterial).emissive = new THREE.Color(0x6030aa);
+        (child.material as THREE.MeshStandardMaterial).emissiveIntensity = 0.6; // match procedural baseline
         (child.material as THREE.MeshStandardMaterial).needsUpdate = true;
+        glbMeshes.push(child);
       }
     });
     gltf.scene.position.set(5, -1.0, -4);
     gltf.scene.scale.setScalar(0.8);
     scene.add(gltf.scene);
     if (proceduralGroups?.crystalSphere) proceduralGroups.crystalSphere.visible = false;
+    if (proceduralGroups?.onCrystalGLBLoaded && glbMeshes.length > 0) {
+      proceduralGroups.onCrystalGLBLoaded(glbMeshes[0]!);
+    }
   }).catch(() => { /* procedural crystal sphere remains */ });
 }
