@@ -126,8 +126,8 @@ export class MinigameHerboristerie extends MinigameBase {
   protected setup(): void {
     this.container.innerHTML = '';
 
-    // C94: scale difficulty — tier 0: 15s, tier 1: 13s, tier 2: 11s, tier 3: 9s
-    this.totalTime = 15 - this.difficultyTier * 2;
+    // C106: tieredValue replaces manual arithmetic — consistent with all other minigames
+    this.totalTime = this.tieredValue([15, 13, 11, 9] as const);
 
     // Title
     const title = document.createElement('div');

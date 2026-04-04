@@ -45,9 +45,9 @@ export class MinigameOmbres extends MinigameBase {
   protected setup(): void {
     this.container.innerHTML = '';
 
-    // C99: difficulty scaling — wider corridor + more time for new players
-    this.totalTime = 16 - this.difficultyTier * 2;     // 16/14/12/10s
-    this.endHalfWidth = 30 - this.difficultyTier * 4;  // 30/26/22/18px
+    // C106: tieredValue replaces manual arithmetic — consistent with all other minigames
+    this.totalTime    = this.tieredValue([16, 14, 12, 10] as const);
+    this.endHalfWidth = this.tieredValue([30, 26, 22, 18] as const);
 
     // Title
     const title = document.createElement('div');

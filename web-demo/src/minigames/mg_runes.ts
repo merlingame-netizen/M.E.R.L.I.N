@@ -148,7 +148,7 @@ export class MinigameRunes extends MinigameBase {
     }
   }
 
-  private onClick = (e: MouseEvent): void => {
+  private onClick = (e: PointerEvent): void => { // C106: PointerEvent — matches pointerdown listener
     if (this.lockInput || !this.canvas) return;
 
     const rect = this.canvas.getBoundingClientRect();

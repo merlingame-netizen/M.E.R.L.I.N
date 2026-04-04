@@ -73,10 +73,10 @@ export class MinigameCourse extends MinigameBase {
   protected setup(): void {
     this.container.innerHTML = '';
 
-    // C99: difficulty scaling — slower symbols, fewer decoys, larger hitbox for new players
-    this.roundTime  = [2.0, 1.5, 1.1, 0.8][this.difficultyTier] ?? 0.8;
-    this.decoyCount = [2, 4, 5, 6][this.difficultyTier] ?? 6;
-    this.hitRadius  = [40, 32, 26, 20][this.difficultyTier] ?? 20;
+    // C106: tieredValue replaces unsafe array indexing (no ?? fallback needed — clamps to 0-3)
+    this.roundTime  = this.tieredValue([2.0, 1.5, 1.1, 0.8] as const);
+    this.decoyCount = this.tieredValue([2, 4, 5, 6] as const);
+    this.hitRadius  = this.tieredValue([40, 32, 26, 20] as const);
 
     // Title
     const title = document.createElement('div');
