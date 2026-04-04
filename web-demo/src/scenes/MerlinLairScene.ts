@@ -821,6 +821,11 @@ export function initMerlinLair(container: HTMLElement): LairResult {
   let crystalGLBBaseY = -1.0; // C118: base Y from GLB export root; overwritten by onCrystalGroupLoaded
   // C111: stored to animate GLB emissive in update loop (procedural mat targets hidden sphere post-load)
   let crystalGLBMat: MeshStandardMaterial | null = null;
+  // C174: cauldron GLB material for emissive pulsing (same pattern as crystalGLBMat)
+  let cauldronGLBMat: MeshStandardMaterial | null = null;
+  // C174: periodic cauldron bubble SFX — fires every ~4s when !lowFpsMode
+  let bubbleSFXTimer = 0;
+  const BUBBLE_SFX_INTERVAL = 4.2;
   let doorFlashing = false;    // C101: door cinematic — lights/emissive burst before transition
   let doorFlashTimer = 0;
   let doorFlashCancelHandle = 0; // C102: tracked to allow clearTimeout in dispose()
@@ -833,9 +838,11 @@ export function initMerlinLair(container: HTMLElement): LairResult {
     cauldronGroup: cauldron.group, candleGroup,
     crystalSphere: crystalData.sphere,
     // When GLB loads, swap visualMesh to the GLB body so hover emissive works on GLB path
+    // C174: also capture GLB material for emissive pulsing in update loop
     onCauldronGLBLoaded: (mesh) => {
       const entry = interactives.find((i) => i.zone === 'cauldron');
       if (entry) entry.visualMesh = mesh;
+      cauldronGLBMat = mesh.material as MeshStandardMaterial;
     },
     // C95: swap crystal visualMesh to GLB mesh so hover emissive targets GLB (not hidden sphere)
     // C111: also capture GLB material so update loop can animate its emissiveIntensity (BUG-C46-01)
@@ -906,6 +913,9 @@ export function initMerlinLair(container: HTMLElement): LairResult {
 
   // C118: cache crystalEntry ref at init — avoids Array.find() closure allocation in 60fps update loop
   const crystalEntry = interactives.find((i) => i.zone === 'crystal')!;
+  // C174: cache cauldronEntry + skullEntry for emissive animation (same pattern as crystalEntry)
+  const cauldronEntry = interactives.find((i) => i.zone === 'cauldron')!;
+  const skullEntry = interactives.find((i) => i.zone === 'skull')!;
   // C122: cache raycaster targets — interactives.map() on every mousemove allocates a 5-element array at 60fps.
   // Refreshed only in onMapGLBLoaded / onShelfGLBLoaded when entry.mesh changes.
   let raycastTargets: Object3D[] = interactives.map((i) => i.mesh);
@@ -1186,6 +1196,24 @@ export function initMerlinLair(container: HTMLElement): LairResult {
     crystalData.mat.emissiveIntensity = crystalEmissive;
     // C111: also animate GLB material emissive — procedural mat targets hidden sphere post-load (BUG-C46-01)
     if (crystalGLBMat) crystalGLBMat.emissiveIntensity = crystalEmissive;
+
+    // C174: cauldron iron emissive pulse — green hot-metal glow (in sync with glow PointLight 2.3Hz)
+    const cauldronEmissive = (cauldronEntry.hovered ? 0.18 : 0.06) + Math.sin(elapsedTime * 2.3) * 0.04;
+    (cauldron.body.material as MeshStandardMaterial).emissiveIntensity = cauldronEmissive;
+    if (cauldronGLBMat) cauldronGLBMat.emissiveIntensity = cauldronEmissive;
+
+    // C174: skull haunting pulse — slow sinusoidal bone-glow (0.7Hz, offset π to phase against crystal)
+    const skullEmissive = (skullEntry.hovered ? 0.28 : 0.05) + Math.sin(elapsedTime * 0.7 + Math.PI) * 0.03;
+    (skullCranium.material as MeshStandardMaterial).emissiveIntensity = skullEmissive;
+
+    // C174: periodic cauldron bubble SFX — auditory presence without visual spam
+    if (!lowFpsMode) {
+      bubbleSFXTimer += dt;
+      if (bubbleSFXTimer >= BUBBLE_SFX_INTERVAL) {
+        bubbleSFXTimer = 0;
+        window.dispatchEvent(new CustomEvent('merlin_sfx', { detail: { sound: 'cauldron' } }));
+      }
+    }
     // C118: procedural sphere uses -1.0 (always correct); GLB uses crystalGLBBaseY delta (GLB root Y)
     // C53: cache float sin — sin(t*0.9) used twice (sphere + GLB); one call instead of two per frame
     const floatSin = Math.sin(elapsedTime * 0.9);
