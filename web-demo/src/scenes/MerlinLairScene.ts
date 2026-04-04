@@ -699,11 +699,11 @@ export function initMerlinLair(container: HTMLElement): LairResult {
   // C126: link canvas to ariaLive region so AT knows where to read descriptions from
   renderer.domElement.setAttribute('aria-describedby', 'lair-aria-live');
 
-  // C101: zone hover lore toast — sighted players need text context (aria-live only serves screen readers)
+  // C101: zone hover lore toast — visual-only (sighted users). Screen reader announcements go through
+  // ariaLive div (line 692) to avoid double-announcement when keyboard nav updates both regions. (C132)
   const zoneToast = document.createElement('div');
-  // C124: role=status + aria-live so screen readers announce lore text on zone hover (WCAG 2.1 SC 4.1.3)
-  zoneToast.setAttribute('role', 'status');
-  zoneToast.setAttribute('aria-live', 'polite');
+  zoneToast.setAttribute('role', 'presentation'); // C132: visual only — ariaLive handles AT output
+  zoneToast.setAttribute('aria-live', 'off');      // C132: suppress; ariaLive announces mouse hover too
   zoneToast.setAttribute('aria-atomic', 'true');
   zoneToast.style.cssText = [
     'position:absolute;bottom:16px;left:50%;transform:translateX(-50%);',
@@ -909,6 +909,8 @@ export function initMerlinLair(container: HTMLElement): LairResult {
         zoneToast.style.opacity = '1';
         // C131: WCAG 4.1.2 — sync aria-label on mouse hover (was only updated on keyboard nav)
         renderer.domElement.setAttribute('aria-label', `Zone : ${ZONE_ARIA_LABELS[zone]} — Cliquez pour activer`);
+        // C132: announce via ariaLive (zoneToast now aria-live=off to prevent double-announce on keyboard nav)
+        ariaLive.textContent = `${ZONE_ARIA_LABELS[zone]} — ${ZONE_LORE[zone]}`;
       } else {
         renderer.domElement.style.cursor = 'default';
         zoneToast.style.opacity = '0';
